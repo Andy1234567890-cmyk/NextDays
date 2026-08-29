@@ -743,6 +743,40 @@ export async function startAirbnbUebernahme(
   );
 }
 
+export type OAuthRuecksprungResult = {
+  account_id: string;
+  channel_id: string;
+  host_id: string | null;
+  verbunden: boolean;
+};
+
+/**
+ * Der Rücksprung von Airbnb verarbeiten — ERST HIER entsteht etwas.
+ *
+ * Channex hängt nach erfolgreicher Autorisierung
+ * `?success=true&channel_id=<uuid>&token=<token>` an die Rücksprung-Adresse.
+ * Der Weg dorthin legt bewusst NICHTS an: kein Objekt, keine Channex-Property,
+ * kein Konto, keine Verbindung. Bricht jemand bei Airbnb ab — ein gesperrtes
+ * Konto genügt —, bleibt nichts zurück, das aufgeräumt werden müsste.
+ *
+ * Vorgabe des Betreibers vom 29.08.2026: „erst wenn eine verbindung succee da
+ * ist darf bei channex eine Property entstehen".
+ */
+export async function oauthRuecksprung(
+  channelId: string,
+  portalCode = "AirBNB",
+  token?: string | null,
+): Promise<Result<OAuthRuecksprungResult>> {
+  return call<OAuthRuecksprungResult>("/channels/oauth/ruecksprung", {
+    method: "POST",
+    body: {
+      channel_id: channelId,
+      portal_code: portalCode,
+      token: token ?? null,
+    },
+  });
+}
+
 /**
  * Nach dem Autorisieren: die Airbnb-Listings als Objekte übernehmen. Das erste
  * füllt das Gerüst-Objekt, jedes weitere wird ein eigenes Objekt. Idempotent —

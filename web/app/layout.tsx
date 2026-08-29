@@ -6,6 +6,7 @@ import { getLocale } from "next-intl/server";
 import { Toaster } from "sonner";
 
 import { ThemeProvider } from "@/components/theme-provider";
+import { SitzungDebugPanel } from "@/components/sitzung-debug-panel";
 
 import "./globals.css";
 import { IconsRegistrieren } from "@nextdays/icons/registrierung";
@@ -49,6 +50,17 @@ export default async function RootLayout({
           >
             {children}
             <Toaster richColors position="top-right" />
+            {/* Sitzungs-Debugging: zeigt permanent, WELCHER Betrieb angemeldet
+                ist. Steht im ROOT-Layout und nicht im Dashboard-Layout, weil
+                genau der Fall vom 29.08.2026 im Onboarding auftrat — und
+                `(auth)` hat kein eigenes Layout, hätte das Panel dort also
+                nie gesehen. Build-Zeit-Konstanten: in Produktion faellt die
+                Komponente aus dem Bundle (sie nennt Tenant-IDs im Klartext),
+                auf Staging per NEXT_PUBLIC_SITZUNG_DEBUG=1 zuschaltbar. */}
+            {(process.env.NODE_ENV !== "production" ||
+              process.env.NEXT_PUBLIC_SITZUNG_DEBUG === "1") && (
+              <SitzungDebugPanel />
+            )}
           </ThemeProvider>
         </NextIntlClientProvider>
       </body>

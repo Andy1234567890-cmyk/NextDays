@@ -424,8 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – Platforma dla wynajmujących obiekty wakacyjne",
-    "description": "Platforma dla hoteli, agencji i właścicieli obiektów wakacyjnych: channel manager, kalendarz, rezerwacje bezpośrednie, komunikacja z gośćmi i rozliczenia w jednym miejscu. Stworzona w Danii, hostowana w UE. 30 dni za darmo.",
-    "descriptionMitPreis": "Platforma dla hoteli, agencji i właścicieli obiektów wakacyjnych: channel manager, kalendarz, rezerwacje bezpośrednie, komunikacja z gośćmi i rozliczenia w jednym miejscu. Stworzona w Danii, hostowana w UE. Od {preis} miesięcznie. 30 dni za darmo."
+    "description": "Platforma dla hoteli, agencji i właścicieli obiektów wakacyjnych: channel manager, kalendarz, rezerwacje bezpośrednie, komunikacja z gośćmi i rozliczenia w jednym miejscu. Stworzona w Danii, hostowana w UE. 14 dni za darmo.",
+    "descriptionMitPreis": "Platforma dla hoteli, agencji i właścicieli obiektów wakacyjnych: channel manager, kalendarz, rezerwacje bezpośrednie, komunikacja z gośćmi i rozliczenia w jednym miejscu. Stworzona w Danii, hostowana w UE. Od {preis} miesięcznie. 14 dni za darmo."
   },
   "nav": {
     "funktionen": "Funkcje",
@@ -463,7 +463,7 @@
     "headlineHighlight": "rezerwacji",
     "headlinePost": "mniej pracy.",
     "subline": "Platforma dla hoteli, agencji i właścicieli obiektów wakacyjnych: channel manager, kalendarz, rezerwacje bezpośrednie, komunikacja z gośćmi i rozliczenia w jednym miejscu – zbudowana przez wynajmujących, którzy znają tę codzienność.",
-    "ctaTrial": "Testuj 30 dni za darmo",
+    "ctaTrial": "Testuj 14 dni za darmo",
     "ctaDemo": "Zobacz demo",
     "kanaeleLabel": "Połączona z największymi portalami rezerwacyjnymi",
     "eyebrow": "Platforma dla wynajmujących obiekty wakacyjne",
@@ -609,7 +609,7 @@
     },
     "preis": {
       "frage": "Ile kosztuje myNextDays i jak zacząć?",
-      "antwort": "30 dni bezpłatnie, bez okresu minimalnego, bez opłaty wdrożeniowej, wypowiedzenie w każdej chwili. Potem abonament plus niska prowizja od rezerwacji, które przynosimy. Moduły dodatkowe — rozszerzona księgowość z eksportem DATEV, zarządzanie pracownikami albo funkcje hotelowe — dokupujesz tylko wtedy, gdy ich potrzebujesz. Dodaj obiekt, połącz kanały, ruszaj."
+      "antwort": "14 dni bezpłatnie, bez okresu minimalnego, bez opłaty wdrożeniowej, wypowiedzenie w każdej chwili. Potem abonament plus niska prowizja od rezerwacji, które przynosimy. Moduły dodatkowe — rozszerzona księgowość z eksportem DATEV, zarządzanie pracownikami albo funkcje hotelowe — dokupujesz tylko wtedy, gdy ich potrzebujesz. Dodaj obiekt, połącz kanały, ruszaj."
     }
   },
   "benefits": {
@@ -631,13 +631,13 @@
     "preisBanner": {
       "eyebrow": "Cena",
       "heading": "Wszystko dla Twojego obiektu w jednym miejscu",
-      "text": "30 dni za darmo. Bez okresu minimalnego. Rezygnacja w każdej chwili (4 tygodnie do końca miesiąca).",
+      "text": "14 dni za darmo. Bez okresu minimalnego. Rezygnacja w każdej chwili (4 tygodnie do końca miesiąca).",
       "proMonat": "miesięcznie"
     }
   },
   "trial": {
     "eyebrow": "Testuj za darmo",
-    "heading": "Testuj myNextDays przez 30 dni za darmo.",
+    "heading": "Testuj myNextDays przez 14 dni za darmo.",
     "sub": "Bez okresu minimalnego. Rezygnacja w każdej chwili. Wypełnij po prostu ten krótki formularz:",
     "seitenHeading": "Wszystko dla Twojego obiektu w jednym miejscu – większa kontrola, mniej pracy.",
     "perks": {
@@ -855,15 +855,16 @@
     "impressum": "Nota prawna",
     "cookies": "Polityka cookies",
     "avv": "Powierzenie przetwarzania",
-    "kontoLoeschen": "Usuń konto"
+    "kontoLoeschen": "Usuń konto",
+    "newsletterKnopf": "Zapisz się do newslettera"
   },
   "legal": {
     "stand": "Stan na: {datum}"
   },
   "abschluss": {
     "heading": "Gotowy, by zarządzać obiektem z jednego miejsca?",
-    "sub": "Testuj 30 dni za darmo — bez okresu minimalnego, bez opłaty wdrożeniowej, rezygnacja w każdej chwili.",
-    "ctaPrimaer": "Testuj 30 dni za darmo",
+    "sub": "Testuj 14 dni za darmo — bez okresu minimalnego, bez opłaty wdrożeniowej, rezygnacja w każdej chwili.",
+    "ctaPrimaer": "Testuj 14 dni za darmo",
     "ctaSekundaer": "Zobacz cennik"
   },
   "chat": {
@@ -902,14 +903,14 @@
   "preise": {
     "meta": {
       "titel": "Cennik — jeden plan, wszystko w środku | myNextDays",
-      "beschreibung": "Jeden plan z pełnym zakresem funkcji, płatny według liczby obiektów. Bez okresu minimalnego, bez opłaty wdrożeniowej, 30 dni za darmo — kanały, rezerwacje bezpośrednie, komunikacja z gośćmi i rozliczenia w cenie."
+      "beschreibung": "Jeden plan z pełnym zakresem funkcji, płatny według liczby obiektów. Bez okresu minimalnego, bez opłaty wdrożeniowej, 14 dni za darmo — kanały, rezerwacje bezpośrednie, komunikacja z gośćmi i rozliczenia w cenie."
     },
     "hero": {
       "eyebrow": "Cennik",
       "headlinePre": "Jeden plan.",
       "headlineHighlight": "Wszystko w środku.",
       "sub": "Żadnych łamigłówek z pakietami: każda funkcja jest w cenie, niezależnie od tego, czy prowadzisz jeden apartament, czy dwanaście typów pokoi. Płacisz według liczby obiektów — a im więcej ich masz, tym taniej wychodzi każdy.",
-      "testen": "30 dni za darmo",
+      "testen": "14 dni za darmo",
       "laufzeit": "Bez okresu minimalnego",
       "einrichtung": "Bez opłaty wdrożeniowej",
       "eu": "Hosting w UE, RODO"
@@ -925,7 +926,7 @@
       "grundgebuehr": "Opłata podstawowa (z 1. obiektem)",
       "weitereObjekte": "{anzahl, plural, =1 {jeden dodatkowy obiekt} few {# dodatkowe obiekty} many {# dodatkowych obiektów} other {# dodatkowego obiektu}} × {jeObjekt}",
       "netto": "Wszystkie kwoty netto, bez VAT. Rozliczenie miesięczne, można zrezygnować w każdej chwili.",
-      "ctaTesten": "Wypróbuj 30 dni za darmo",
+      "ctaTesten": "Wypróbuj 14 dni za darmo",
       "ctaDemo": "Zobacz demo",
       "inklusivTitel": "W każdym planie",
       "inklusivSub": "Nic, co zaczyna się dopiero w droższym pakiecie — to jest cały zakres.",
@@ -985,7 +986,7 @@
       "sub": "Co wynajmujący chcą wiedzieć przed zmianą — krótko i bez drobnego druku.",
       "laufzeit": {
         "frage": "Czy jest okres minimalny?",
-        "antwort": "Nie. Abonament jest miesięczny i można go wypowiedzieć z czterotygodniowym wyprzedzeniem na koniec miesiąca. Pierwsze 30 dni jest bezpłatne, bez danych płatniczych."
+        "antwort": "Nie. Abonament jest miesięczny i można go anulować z czterotygodniowym wyprzedzeniem na koniec miesiąca. Pierwsze 14 dni jest bezpłatne: dane do płatności podajesz na początku, ale opłata zostanie pobrana dopiero po zakończeniu okresu próbnego. Jeśli anulujesz wcześniej, nic nie płacisz."
       },
       "objektzahl": {
         "frage": "Co się dzieje, gdy dodam obiekty?",
@@ -1030,7 +1031,7 @@
       "eu": "Hosting w UE, zgodność z RODO",
       "start": "Start 1 września 2026",
       "sprachen": "27 krajów, 24 języki",
-      "ctaTrial": "Wypróbuj 30 dni za darmo",
+      "ctaTrial": "Wypróbuj 14 dni za darmo",
       "ctaKontakt": "Napisz do nas"
     },
     "warum": {
@@ -1178,7 +1179,7 @@
   },
   "funktionen": {
     "rahmen": {
-      "ctaTesten": "Testuj 30 dni za darmo",
+      "ctaTesten": "Testuj 14 dni za darmo",
       "ctaDemo": "Zobacz demo",
       "weiter": "Przejdź do pozostałych funkcji",
       "mehr": "Zobacz",

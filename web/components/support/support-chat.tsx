@@ -41,6 +41,7 @@ import {
   startConversation,
   unreadSummary,
 } from "@/lib/support-chat";
+import { HILFE_URL } from "@/lib/marketing-url";
 import { useRealtime } from "@/lib/use-realtime";
 import { useTeamPresence, useTypingChannel } from "@/lib/use-support-channel";
 
@@ -630,7 +631,11 @@ function HilfeCenterHinweis() {
   const t = useTranslations("supportChat");
   return (
     <Link
-      href="/hilfe"
+      // Das Hilfe-Center liegt in der MARKETING-App, nicht hier: ein
+      // hartes "/hilfe" ist in dieser App ein 404 (live 29.08.2026 aus dem
+      // Support-Chat heraus). `HILFE_URL` ist die eine Wahrheit dafuer —
+      // derselbe Weg, den der Marketing-Footer schon nimmt.
+      href={HILFE_URL}
       target="_blank"
       rel="noopener noreferrer"
       className="mt-5 flex items-center gap-2 rounded-2xl border border-border px-3.5 py-3 text-sm transition-colors hover:border-foreground"

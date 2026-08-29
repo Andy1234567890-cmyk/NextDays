@@ -106,12 +106,14 @@ machen es zu einem — und ob es verkauft wird, entscheidet der Kunde.
 from __future__ import annotations
 
 from typing import Any
+from uuid import uuid4
 
 from supabase import Client
 
 from src.core.security import AuthContext
 
 from . import airbnb_listing_import as ali
+from . import airbnb_oauth
 from .airbnb_konten import airbnb_konten
 from .channex_client import ChannexError
 from .common import (
@@ -121,7 +123,7 @@ from .common import (
     log,
 )
 from .content_builder import locale_order_for_country
-from .ota_konten import konto_anlegen
+from .ota_konten import konto_sicherstellen
 
 # Titel des Gerüst-Objekts. Bewusst erkennbar und nicht geraten: solange die
 # echten Airbnb-Daten fehlen, darf hier kein plausibler Fantasiename stehen
@@ -144,7 +146,12 @@ class AirbnbUebernahmeMixin:
         neues_konto: bool = False, redirect_uri: str | None = None,
         account_id: str | None = None,
     ) -> dict[str, Any]:
-        """Übernahme starten, OHNE dass der Kunde ein Objekt anlegt.
+        """Übernahme starten, OHNE dass der Kunde selbst ein Objekt anlegt.
+
+        Der vereinbarte Ablauf (29.08.2026, woertlich):
+            „Objekt anlegen -> Handshake -> Inserate holen -> Objekt
+             aktuallsesieren -> inaktive lassen das hat der user zu
+             entscheiden nicht wir"
 
         Legt (idempotent, Wurzel 2) ein Gerüst-Objekt an, registriert es bei
         Channex und gibt die echte Airbnb-OAuth-URL zurück. Hat der Betrieb
@@ -159,44 +166,371 @@ class AirbnbUebernahmeMixin:
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
 
-        # Ein benanntes Konto ist wie ein neues zu behandeln, was den AUFHÄNGER
-        # angeht: sein Gerüst darf niemals ein Objekt eines anderen Zugangs sein.
-        eigenes_geruest = neues_konto or bool(account_id)
-        property_id = self._geruest_objekt(
-            db, tenant_id, neues_konto=eigenes_geruest
+        log.info(
+            "airbnb_uebernahme_start",
+            tenant_id=tenant_id, portal_code=portal_code,
+            neues_konto=neues_konto, konto_id=account_id,
         )
-        # Das Konto SOFORT anlegen, bevor der erste Channex-Aufruf läuft — und
-        # seine ID zurückgeben. Damit hat das Frontend ab dem ersten Moment einen
-        # stabilen Anker und kann jeden Folge-Aufruf (Link erneut anfordern,
-        # Status prüfen) an DIESES Konto binden.
+
+        # OHNE OBJEKT — Vorgabe des Betreibers vom 29.08.2026:
+        #     „erst airbnb verbindung ohne objekt"
+        #     „erst wenn eine verbindung succee da ist darf bei channex eine
+        #      Property entstehen"
         #
-        # Ohne den Anker gab es nur das Flag `neues_konto`, das einen einzigen
-        # Request überlebte; jeder Folge-Aufruf landete beim autorisierten Kanal
-        # des ersten Zugangs (live am 07.08.2026 dreimal nacheinander).
-        if neues_konto and not account_id:
-            account_id = konto_anlegen(db, tenant_id, portal_code=portal_code)
-        # Ab hier der bestehende, erprobte OAuth-Pfad — kein zweiter Weg zu
-        # Channex (der erste Anlauf dieser Funktion hatte genau das gebaut).
-        # Die Channex-Registrierung des Gerüsts holt `begin_channel_oauth` selbst
-        # nach; sie liegt dort, weil sie für JEDEN noch nicht registrierten
-        # Connect nötig ist — nicht nur für den aus der Übernahme.
-        # `neues_konto` MUSS mit: dort fällt die Entscheidung, ob ein neuer Kanal
-        # entsteht oder der vorhandene wiederverwendet wird. Ohne das Flag wählte
-        # `begin_channel_oauth` den bereits AUTORISIERTEN Kanal — also den von
-        # Konto A —, hängte das neue Gerüst dort an und schickte den Kunden in
-        # den Airbnb-Login von Konto A. Live gemessen am 07.08.2026:
-        # `channex_oauth_kanal_wahl neu_anlegen=False grund=autorisiert`, obwohl
-        # der Aufruf `?neues_konto=true` trug. Ein Kanal IST bei Channex genau
-        # ein Konto — zwei Konten am selben Kanal kann es nicht geben.
-        return self.begin_channel_oauth(
-            ctx,
-            property_id=property_id,
+        # Bis hierher legte diese Stelle ein Geruest-Objekt an, registrierte es
+        # bei Channex und schrieb Konto + Verbindung — alles beim KLICK, vor
+        # jedem Airbnb-Login. Wer den Login nie oeffnete oder abbrach (ein
+        # gesperrtes Airbnb-Konto genuegt), hinterliess das alles. Gemessen am
+        # 29.08.2026 nach drei Klicks ohne einen einzigen Login: 3 Konten,
+        # 3 Verbindungen, 4 Registrierungen, mehrere Properties im Channex-UI.
+        #
+        # Jetzt entsteht hier NICHTS. Es wird ausschliesslich der
+        # Autorisierungslink geholt. Objekt, Property, Konto und Verbindung
+        # entstehen erst mit dem Ruecksprung `?success=true&channel_id=…`.
+        # Gruppe ZUERST pruefen, bevor irgendetwas entsteht. Ohne sie gibt es
+        # keinen Autorisierungslink — dann darf auch kein Objekt angelegt
+        # werden, das anschliessend nutzlos herumsteht (Wurzel 1: kein halber
+        # Zustand nach einem Abbruch).
+        self._gruppe_des_betriebs(db, tenant_id)
+
+        # SCHRITT 1 des vereinbarten Ablaufs:
+        #     Objekt anlegen -> Handshake -> Inserate holen -> Objekt
+        #     aktualisieren -> inaktiv lassen (der Betrieb aktiviert selbst).
+        #
+        # Warum hier ein Objekt entsteht, obwohl frueher „ohne Objekt" stand:
+        # Channex nimmt den Autorisierungslink NUR mit mindestens einer
+        # Property an. Dreimal live gemessen (29.08.2026, Testkonto):
+        #     Feld weggelassen -> 422 properties: should have at least 1 item(s)
+        #     properties: []   -> 422 dieselbe Meldung
+        #     properties: null -> 500 link_generation_error
+        # Es gibt keinen zweiten Endpunkt; `connection_link` ist der einzige
+        # Weg in die Airbnb-OAuth.
+        #
+        # Kosten entstehen dadurch NICHT: Channex rechnet nach AKTIVEN
+        # Kanalverbindungen ab, nicht nach angelegten Objekten
+        # („Properties that are set up but have no active connection are not
+        # billed", channex.io/pricing). Der Kanal entsteht inaktiv und bleibt
+        # es — aktiviert wird ausschliesslich auf Klick des Betriebs
+        # (`channels.activate_channel`).
+        #
+        # `_geruest_objekt` nimmt ein BESTEHENDES Objekt, wenn der Betrieb
+        # eines hat, und legt nur sonst eines an (idempotent, Wurzel 2): ein
+        # abgebrochener Anlauf erzeugt also kein zweites.
+        property_id = self._geruest_objekt(db, tenant_id, neues_konto=neues_konto)
+        channex_property_id = self._registrierung_nachholen_und_lesen(
+            db, tenant_id, property_id
+        )
+        log.info(
+            "airbnb_uebernahme_objekt_bereit",
+            tenant_id=tenant_id, property_id=property_id,
+            channex_property_id=channex_property_id,
+            hinweis="Anker fuer den Handshake - Kanal entsteht inaktiv",
+        )
+
+        return self._airbnb_link_ohne_objekt(
+            db, tenant_id,
             portal_code=portal_code,
-            title=None,
-            neues_konto=neues_konto,
             redirect_uri=redirect_uri,
             account_id=account_id,
+            channex_property_id=channex_property_id,
         )
+
+    def kanal_aus_ruecksprung(
+        self, ctx: AuthContext, *, channel_id: str, portal_code: str = "AirBNB",
+        token: str | None = None,
+    ) -> dict[str, Any]:
+        """Der Ruecksprung von Airbnb — HIER entsteht zum ersten Mal etwas.
+
+        Channex haengt nach erfolgreicher Autorisierung
+        `?success=true&channel_id=<uuid>&token=<token>` an die `redirect_uri`.
+        Diese Methode nimmt die Kanal-ID entgegen, prueft sie GEGEN CHANNEX und
+        legt danach das Konto an.
+
+        Warum erst hier (Vorgabe des Betreibers, 29.08.2026): Bis dahin
+        entstanden Objekt, Channex-Property, Konto und Verbindung schon beim
+        KLICK auf „verbinden". Wer den Airbnb-Login nie oeffnete oder abbrach
+        — ein gesperrtes Airbnb-Konto genuegt —, hinterliess all das. Nach drei
+        Klicks ohne einen einzigen Login standen 3 Konten, 3 Verbindungen und
+        4 Registrierungen in der DB, dazu mehrere Properties im Channex-UI.
+
+        FAIL-CLOSED (Wurzel 5): Der Kanal wird bei Channex nachgelesen, bevor
+        irgendetwas geschrieben wird. Eine Kanal-ID aus der URL ist
+        Client-Eingabe — kaeme sie ungeprueft in die DB, koennte ein fremder
+        Kanal an diesen Betrieb gebunden werden (Wurzel 3).
+        """
+        tenant_id = self._require_tenant(ctx)
+        db = self._require_db()
+
+        log.info(
+            "airbnb_ruecksprung_start",
+            tenant_id=tenant_id, channel_id=channel_id,
+            portal_code=portal_code, token_da=bool(token),
+        )
+
+        # 1) Kanal bei Channex nachlesen. Das ist die Pruefung UND die Quelle
+        #    fuer die Host-ID.
+        try:
+            kanal = self._channex.get_channel(channel_id)
+        except ChannexError as exc:
+            log.warning(
+                "airbnb_ruecksprung_kanal_nicht_lesbar",
+                tenant_id=tenant_id, channel_id=channel_id,
+                status=exc.status_code, grund=exc.message[:200],
+            )
+            raise self._wrap_channex(exc) from exc
+
+        attrs = (kanal.get("data") or {}).get("attributes") or {}
+        gruppe = str(attrs.get("group_id") or "")
+
+        # 2) GEHOERT der Kanal diesem Betrieb? Channex' Gruppe muss unsere
+        #    sein. Ohne diese Pruefung liesse sich per manipulierter URL ein
+        #    fremder Kanal an den eigenen Betrieb haengen (Wurzel 3).
+        eigene = (
+            db.table("channex_group_map")
+            .select("channex_group_id")
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        eigene_gruppe = str(eigene[0]["channex_group_id"]) if eigene else ""
+        if not eigene_gruppe or (gruppe and gruppe != eigene_gruppe):
+            log.warning(
+                "airbnb_ruecksprung_fremde_gruppe",
+                tenant_id=tenant_id, channel_id=channel_id,
+                kanal_gruppe=gruppe, eigene_gruppe=eigene_gruppe,
+            )
+            raise ChannelManagerError(
+                "Dieser Kanal gehoert nicht zu deinem Betrieb.",
+                status_code=403,
+            )
+
+        status = airbnb_oauth.parse_connection_status(kanal)
+        host_id = status["host_id"]
+        verbunden = bool(status["connected"])
+        log.info(
+            "airbnb_ruecksprung_kanal_zustand",
+            tenant_id=tenant_id, channel_id=channel_id,
+            host_id=host_id, verbunden=verbunden,
+            settings_da=bool(attrs.get("settings")),
+        )
+
+        # 3) ERST JETZT das Konto. Idempotent ueber die Kanal-ID (Wurzel 2):
+        #    derselbe Ruecksprung zweimal ergibt dieselbe Zeile.
+        konto_id = konto_sicherstellen(
+            db, tenant_id,
+            portal_code=portal_code, channel_id=channel_id, host_id=host_id,
+        )
+        if not konto_id:
+            log.warning(
+                "airbnb_ruecksprung_kein_konto",
+                tenant_id=tenant_id, channel_id=channel_id,
+            )
+            raise ChannelManagerError(
+                "Das Portal-Konto konnte nicht angelegt werden.",
+                status_code=502,
+            )
+
+        # `connected_at` NUR bei echter Verbindung — es ist der Zeitpunkt der
+        # Bestaetigung durch das PORTAL, nicht unserer Verarbeitung
+        # (Wurzel 5b). Ohne Tokens ist der Kanal zwar da, aber nichts bestaetigt.
+        if verbunden:
+            db.table("ota_account").update(
+                {"connected_at": "now()", "is_active": True, "last_error": None}
+            ).eq("tenant_id", tenant_id).eq("id", konto_id).is_(
+                "connected_at", "null"
+            ).execute()
+
+        log.info(
+            "airbnb_ruecksprung_fertig",
+            tenant_id=tenant_id, channel_id=channel_id,
+            konto_id=konto_id, host_id=host_id, verbunden=verbunden,
+            hinweis="Konto angelegt - Objekte folgen mit der Uebernahme",
+        )
+        return {
+            "account_id": konto_id,
+            "channel_id": channel_id,
+            "host_id": host_id,
+            "verbunden": verbunden,
+        }
+
+    @staticmethod
+    def _gruppe_des_betriebs(db: Client, tenant_id: str) -> str:
+        """Channex-Gruppe des Betriebs — fail-closed, wenn es keine gibt.
+
+        Sie haengt am TENANT, nicht an einer Property. Deshalb laesst sie sich
+        pruefen, BEVOR ein Objekt entsteht: ohne Gruppe gibt es keinen
+        Autorisierungslink, und dann darf auch kein Objekt angelegt werden, das
+        anschliessend nutzlos herumsteht (Wurzel 1 — kein halber Zustand).
+        """
+        grp = (
+            db.table("channex_group_map")
+            .select("channex_group_id")
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not grp:
+            log.warning(
+                "airbnb_link_ohne_gruppe",
+                tenant_id=tenant_id,
+                hinweis="channex_group_map leer - Betrieb nicht bei Channex angelegt",
+            )
+            raise ChannelManagerError(
+                "Dieser Betrieb ist beim Channel-Manager noch nicht angelegt. "
+                "Bitte den Support kontaktieren.",
+                status_code=409,
+            )
+        return str(grp[0]["channex_group_id"])
+
+    def _registrierung_nachholen_und_lesen(
+        self, db: Client, tenant_id: str, property_id: str
+    ) -> str:
+        """Objekt bei Channex registrieren und dessen Channex-UUID liefern.
+
+        `_registrierung_nachholen` (oauth_channels) legt die Channex-Property an
+        und schreibt die Zuordnung nach `channex_property_map`, gibt die UUID
+        aber nicht zurueck. Genau die braucht der Autorisierungslink.
+
+        Idempotent (Wurzel 2): ist das Objekt schon registriert, wird die
+        vorhandene UUID gelesen und NICHT neu angelegt — sonst entstuende bei
+        jedem abgebrochenen Anlauf eine weitere Channex-Property.
+        """
+        vorhanden = (
+            db.table("channex_property_map")
+            .select("channex_property_id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .limit(1)
+            .execute()
+        ).data
+        if vorhanden and vorhanden[0].get("channex_property_id"):
+            channex_property_id = str(vorhanden[0]["channex_property_id"])
+            log.info(
+                "airbnb_registrierung_vorhanden",
+                tenant_id=tenant_id, property_id=property_id,
+                channex_property_id=channex_property_id,
+            )
+            return channex_property_id
+
+        self._registrierung_nachholen(db, tenant_id, property_id)
+
+        neu_gelesen = (
+            db.table("channex_property_map")
+            .select("channex_property_id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not neu_gelesen or not neu_gelesen[0].get("channex_property_id"):
+            # Fail-closed (Wurzel 5): ohne Channex-Property gibt es keinen Link.
+            # Lieber hier mit Grund abbrechen als Channex mit leerem
+            # `properties` anfragen und ein nacktes 422 durchreichen.
+            log.warning(
+                "airbnb_registrierung_fehlgeschlagen",
+                tenant_id=tenant_id, property_id=property_id,
+            )
+            raise ChannelManagerError(
+                "Das Objekt konnte bei den Portalen nicht angelegt werden. "
+                "Bitte versuche es erneut.",
+                status_code=502,
+            )
+        channex_property_id = str(neu_gelesen[0]["channex_property_id"])
+        log.info(
+            "airbnb_registrierung_angelegt",
+            tenant_id=tenant_id, property_id=property_id,
+            channex_property_id=channex_property_id,
+        )
+        return channex_property_id
+
+    def _airbnb_link_ohne_objekt(
+        self, db: Client, tenant_id: str, *, portal_code: str,
+        redirect_uri: str | None, account_id: str | None,
+        channex_property_id: str,
+    ) -> dict[str, Any]:
+        """Airbnb-Autorisierungslink holen — mit dem Objekt als Anker.
+
+        Es entsteht hier KEIN Konto und KEINE Verbindungszeile. Das Objekt und
+        seine Channex-Property hat der Aufrufer (`uebernahme_starten`) bereits
+        bereitgestellt; Channex nimmt den Link nur mit mindestens einer
+        Property an (dreimal live gemessen: weglassen und `[]` -> 422,
+        `null` -> 500).
+
+        Kosten entstehen dadurch nicht: abgerechnet wird nach AKTIVEN
+        Kanalverbindungen, und der Kanal entsteht inaktiv.
+
+        Konto, Verbindung und die Objekte aus den Airbnb-Anzeigen entstehen
+        erst mit dem Ruecksprung `?success=true&channel_id=…&token=…`.
+
+        Jeder Schritt wird protokolliert: dieser Weg laeuft ueber vier
+        Channex-Aufrufe, und faellt einer aus, muss ablesbar sein, welcher.
+        """
+        # 1) Gruppe des Betriebs. Sie haengt am TENANT, nicht an einer
+        #    Property — die Property kommt separat als Anker dazu.
+        group_id = self._gruppe_des_betriebs(db, tenant_id)
+        log.info(
+            "airbnb_link_gruppe", tenant_id=tenant_id, group_id=group_id
+        )
+
+        # 2) Frischer JWT je Versuch (kein Cache).
+        try:
+            one_time = self._channex.create_one_time_token(
+                property_id=None, group_id=group_id, username=tenant_id
+            )
+            jwt = self._channex.exchange_one_time_token(one_time)
+            log.info("airbnb_link_jwt_geholt", tenant_id=tenant_id)
+        except ChannexError as exc:
+            log.warning(
+                "airbnb_link_jwt_fehlgeschlagen",
+                tenant_id=tenant_id, status=exc.status_code,
+                grund=exc.message[:200],
+            )
+            raise self._wrap_channex(exc) from exc
+
+        # 3) Den Link holen. `channel_id` bleibt weg — Channex legt den Kanal
+        #    selbst an, sobald die Autorisierung eintrifft.
+        request_id = str(uuid4())
+        # Lokaler Import: `oauth_channels` ist ein Mixin DERSELBEN Klasse,
+        # ein Modul-Import waere ein Zirkel.
+        from .oauth_channels import _geprueftes_ziel
+
+        ziel = _geprueftes_ziel(redirect_uri)
+        try:
+            oauth_url = self._channex.create_airbnb_connection_link(
+                jwt=jwt,
+                connection_link=airbnb_oauth.connection_link_body(
+                    group_id=group_id,
+                    channex_property_id=channex_property_id,
+                    channel_id=None,
+                    request_id=request_id,
+                    title=self._portal_label(portal_code),
+                    settings=None,
+                    konto_token=account_id,
+                    redirect_uri=ziel,
+                    failure_redirect_uri=ziel,
+                ),
+            )
+        except ChannexError as exc:
+            log.warning(
+                "airbnb_link_fehlgeschlagen",
+                tenant_id=tenant_id, status=exc.status_code,
+                grund=exc.message[:300], request_id=request_id,
+            )
+            raise self._wrap_channex(exc) from exc
+
+        log.info(
+            "airbnb_link_erzeugt",
+            tenant_id=tenant_id, group_id=group_id, request_id=request_id,
+            channex_property_id=channex_property_id, ziel=ziel,
+            hinweis="Kanal entsteht erst beim Ruecksprung - und dann inaktiv",
+        )
+        return {
+            "channel_id": None,
+            "oauth_url": oauth_url,
+            "portal": self._portal_label(portal_code),
+            "status": "pending",
+            "account_id": account_id,
+        }
 
     def _geruest_objekt(
         self, db: Client, tenant_id: str, *, neues_konto: bool = False
@@ -694,7 +1028,30 @@ class AirbnbUebernahmeMixin:
         # ("You may only authorize one property management app to manage your
         # account"). Das ist der Satz, den der Kunde auf airbnb.com sieht, und
         # er gehört hierher, statt ihn als "nicht lesbar" zu verschleiern.
-        if not settings or settings.get("token_invalid"):
+        # ZWEI Faelle, die frueher DIESELBE Meldung bekamen — und das war
+        # irrefuehrend (live am 29.08.2026 im frischen Testkonto: der Kanal war
+        # gerade erst angelegt, `settings_schluessel=[]`, und der Kunde las
+        # trotzdem „in deinem Airbnb-Konto ist bereits eine andere Software
+        # verbunden". Er suchte daraufhin nach einer Verbindung, die es nie
+        # gab).
+        #
+        #   settings LEER            → der OAuth-Durchlauf hat NIE
+        #                              stattgefunden. Der Kanal ist eine
+        #                              Huelle; es fehlt schlicht der Klick auf
+        #                              „Airbnb verbinden".
+        #   settings da, aber
+        #   token_invalid gesetzt    → Airbnb hat die Autorisierung ABGELEHNT
+        #                              oder zurueckgezogen. DAS ist der Fall,
+        #                              in dem meist eine andere Software haengt
+        #                              (Airbnb erlaubt nur EINE).
+        if not settings:
+            raise ChannelManagerError(
+                "Dieses Portal ist noch nicht autorisiert. Klicke auf "
+                "'Airbnb verbinden' und melde dich im Airbnb-Fenster an — "
+                "erst danach können deine Inserate geholt werden.",
+                status_code=409,
+            )
+        if settings.get("token_invalid"):
             raise ChannelManagerError(
                 "Airbnb hat die Verbindung nicht bestätigt. Meist liegt es "
                 "daran, dass in deinem Airbnb-Konto bereits eine andere "

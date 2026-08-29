@@ -329,7 +329,15 @@ export function KontoAboSection() {
         {/* Kennzahlen nebeneinander, durch Trennstriche geteilt */}
         <dl className="mt-5 flex flex-wrap gap-x-8 gap-y-4">
           <Kennzahl
-            label={t("subscription.nextBilling")}
+            // In der Testphase ist dieses Datum NICHT die naechste Abrechnung,
+            // sondern das Ende der Testphase — Stripe fuellt current_period_end
+            // waehrend `trialing` mit dem Trial-Ende. Dasselbe Datum unter dem
+            // falschen Wort waere eine Falschaussage (Wurzel 5b).
+            label={
+              s?.status === "trialing"
+                ? t("subscription.trialEnds")
+                : t("subscription.nextBilling")
+            }
             wert={
               s?.current_period_end
                 ? new Date(s.current_period_end).toLocaleDateString(locale, {

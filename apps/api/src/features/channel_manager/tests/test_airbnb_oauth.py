@@ -82,11 +82,54 @@ def test_parse_status_settings_leer_nennt_abgebrochene_autorisierung() -> None:
 
 
 def test_parse_status_settings_fehlt_nennt_fremde_software() -> None:
-    """`settings is None` ist ein ANDERER Zustand: Channex hat den Kanal seit
-    der Anlage nie angefasst — die Autorisierung kam dort nie an."""
-    st = airbnb_oauth.parse_connection_status({"data": {"attributes": {}}})
+    """`settings is None` NACH einem Versuch: Channex hat den Kanal seit der
+    Anlage nie angefasst — die Autorisierung kam dort nie an."""
+    st = airbnb_oauth.parse_connection_status(
+        {"data": {"attributes": {}}}, versuch_gelaufen=True
+    )
     assert st["connected"] is False
     assert "andere Software" in st["last_error"]
+
+
+def test_parse_status_ohne_versuch_beschuldigt_airbnb_nicht() -> None:
+    """DER Fall vom 29.08.2026.
+
+    Derselbe Kanal-Zustand (`settings is None`), aber es hat NIEMAND geklickt:
+    der Kanal wurde beim Vorbereiten der Uebernahme angelegt und wartet auf den
+    ersten Versuch. Vorher las der Kunde hier „in deinem Airbnb-Konto ist
+    bereits eine andere Software verbunden" und suchte in seinem Airbnb-Konto
+    nach einer Verbindung, die es nie gab — Airbnb hatte nichts abgelehnt, es
+    war nie gefragt worden.
+    """
+    st = airbnb_oauth.parse_connection_status(
+        {"data": {"attributes": {}}}, versuch_gelaufen=False
+    )
+    assert st["connected"] is False
+    assert "andere Software" not in st["last_error"], (
+        "ohne Versuch darf dem Portal nichts vorgeworfen werden"
+    )
+    assert "Noch nicht verbunden" in st["last_error"]
+
+
+def test_parse_status_vorgabe_ist_versuch_gelaufen() -> None:
+    """Die Vorgabe bleibt `True`: ein Aufrufer, der es nicht weiss, bekommt das
+    bisherige Verhalten — keine stille Verhaltensaenderung im Bestand."""
+    ohne_angabe = airbnb_oauth.parse_connection_status({"data": {"attributes": {}}})
+    mit_true = airbnb_oauth.parse_connection_status(
+        {"data": {"attributes": {}}}, versuch_gelaufen=True
+    )
+    assert ohne_angabe["last_error"] == mit_true["last_error"]
+
+
+def test_parse_status_leere_settings_bleibt_abgebrochen() -> None:
+    """`settings == {}` heisst „angekommen, aber ohne Tokens" — das ist ein
+    ABBRUCH und haengt nicht davon ab, ob wir den Versuch protokolliert haben.
+    Der Zustand beweist sich selbst: Channex hat den Kanal angefasst."""
+    for gelaufen in (True, False):
+        st = airbnb_oauth.parse_connection_status(
+            {"data": {"attributes": {"settings": {}}}}, versuch_gelaufen=gelaufen
+        )
+        assert "nicht abgeschlossen" in st["last_error"]
 
 
 def test_parse_status_connected() -> None:

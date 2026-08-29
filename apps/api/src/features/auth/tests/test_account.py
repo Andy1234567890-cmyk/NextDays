@@ -469,3 +469,27 @@ def test_ist_gesperrt_false_for_active() -> None:
     ) = MagicMock(data=[{"deactivated_at": None}])
     svc = AccountService(anon_client=MagicMock(), service_client=service_client)
     assert svc.ist_gesperrt("u-2") is False
+
+
+# --- Betriebsname in /me (29.08.2026) ----------------------------------------
+# Der Onboarding-Assistent belegt „Firmenname" damit vor. Fehlt das Feld, tippt
+# ein frisch registrierter Betrieb denselben Namen ein zweites Mal — die
+# eigentliche Quelle (`tenant_billing_profile`) entsteht ja erst mit diesem
+# Schritt. Das sieht aus, als waere die Eingabe bei der Registrierung verloren
+# gegangen.
+
+
+def test_me_traegt_den_betriebsnamen() -> None:
+    """Das Feld existiert und nimmt den Namen auf."""
+    from src.features.auth.schemas import MeResponse
+
+    me = MeResponse(user_id="u1", tenant_name="Hotel Seeblick")
+    assert me.tenant_name == "Hotel Seeblick"
+
+
+def test_me_ohne_betriebsnamen_ist_none() -> None:
+    """Ohne Namen bleibt es None — kein erfundener Ersatz (Wurzel 4).
+    Die Oberflaeche zeigt dann ein leeres Feld statt eines geratenen Werts."""
+    from src.features.auth.schemas import MeResponse
+
+    assert MeResponse(user_id="u1").tenant_name is None

@@ -424,8 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – La plateforme des loueurs d'hébergements de vacances",
-    "description": "La plateforme pour les hôtels, les agences et les loueurs d'hébergements de vacances : channel manager, calendrier, réservation directe, communication avec les voyageurs et facturation au même endroit. Conçue au Danemark, hébergée dans l'UE. 30 jours d'essai gratuit.",
-    "descriptionMitPreis": "La plateforme pour les hôtels, les agences et les loueurs d'hébergements de vacances : channel manager, calendrier, réservation directe, communication avec les voyageurs et facturation au même endroit. Conçue au Danemark, hébergée dans l'UE. À partir de {preis}/mois. 30 jours d'essai gratuit."
+    "description": "La plateforme pour les hôtels, les agences et les loueurs d'hébergements de vacances : channel manager, calendrier, réservation directe, communication avec les voyageurs et facturation au même endroit. Conçue au Danemark, hébergée dans l'UE. 14 jours d'essai gratuit.",
+    "descriptionMitPreis": "La plateforme pour les hôtels, les agences et les loueurs d'hébergements de vacances : channel manager, calendrier, réservation directe, communication avec les voyageurs et facturation au même endroit. Conçue au Danemark, hébergée dans l'UE. À partir de {preis}/mois. 14 jours d'essai gratuit."
   },
   "nav": {
     "funktionen": "Fonctionnalités",
@@ -463,7 +463,7 @@
     "headlineHighlight": "réservations",
     "headlinePost": "moins d'efforts.",
     "subline": "La plateforme pour les hôtels, les agences et les loueurs d'hébergements de vacances : channel manager, calendrier, réservation directe, communication avec les voyageurs et facturation au même endroit, conçue par des loueurs qui connaissent le quotidien.",
-    "ctaTrial": "Essayer 30 jours gratuitement",
+    "ctaTrial": "Essayer 14 jours gratuitement",
     "ctaDemo": "Voir la démo",
     "kanaeleLabel": "Connecté aux grandes plateformes de réservation",
     "eyebrow": "La plateforme des loueurs d'hébergements de vacances",
@@ -609,7 +609,7 @@
     },
     "preis": {
       "frage": "Combien coûte myNextDays et comment commencer ?",
-      "antwort": "30 jours gratuits, sans durée minimale, sans frais d'installation, résiliable à tout moment. Ensuite un abonnement plus une faible commission sur les réservations que nous apportons. Les modules complémentaires — comptabilité étendue avec export DATEV, gestion du personnel ou fonctions hôtelières — ne s'ajoutent que si vous en avez besoin. Créez un objet, connectez vos canaux, c'est parti."
+      "antwort": "14 jours gratuits, sans durée minimale, sans frais d'installation, résiliable à tout moment. Ensuite un abonnement plus une faible commission sur les réservations que nous apportons. Les modules complémentaires — comptabilité étendue avec export DATEV, gestion du personnel ou fonctions hôtelières — ne s'ajoutent que si vous en avez besoin. Créez un objet, connectez vos canaux, c'est parti."
     }
   },
   "benefits": {
@@ -631,13 +631,13 @@
     "preisBanner": {
       "eyebrow": "Tarif",
       "heading": "Tout ce dont votre hébergement a besoin, au même endroit",
-      "text": "30 jours gratuits. Sans engagement. Résiliable à tout moment (4 semaines avant la fin du mois).",
+      "text": "14 jours gratuits. Sans engagement. Résiliable à tout moment (4 semaines avant la fin du mois).",
       "proMonat": "par mois"
     }
   },
   "trial": {
     "eyebrow": "Essai gratuit",
-    "heading": "Essayez myNextDays gratuitement pendant 30 jours.",
+    "heading": "Essayez myNextDays gratuitement pendant 14 jours.",
     "sub": "Sans engagement. Résiliable à tout moment. Il vous suffit de remplir ce court formulaire :",
     "seitenHeading": "Tout ce dont votre hébergement a besoin au même endroit : plus de contrôle, moins d'efforts.",
     "perks": {
@@ -855,15 +855,16 @@
     "impressum": "Mentions légales",
     "cookies": "Politique de cookies",
     "avv": "Traitement des données",
-    "kontoLoeschen": "Supprimer le compte"
+    "kontoLoeschen": "Supprimer le compte",
+    "newsletterKnopf": "S'inscrire à la newsletter"
   },
   "legal": {
     "stand": "Dernière mise à jour : {datum}"
   },
   "abschluss": {
     "heading": "Prêt à piloter votre hébergement depuis un seul endroit ?",
-    "sub": "Essayez gratuitement pendant 30 jours : sans engagement, sans frais de mise en service, résiliable à tout moment.",
-    "ctaPrimaer": "Essayer 30 jours gratuitement",
+    "sub": "Essayez gratuitement pendant 14 jours : sans engagement, sans frais de mise en service, résiliable à tout moment.",
+    "ctaPrimaer": "Essayer 14 jours gratuitement",
     "ctaSekundaer": "Voir les tarifs"
   },
   "chat": {
@@ -902,14 +903,14 @@
   "preise": {
     "meta": {
       "titel": "Tarifs — une offre, tout compris | myNextDays",
-      "beschreibung": "Une offre avec toutes les fonctions, facturée selon le nombre de logements. Sans durée minimale, sans frais de mise en service, 30 jours gratuits — canaux, réservation directe, communication avec les voyageurs et facturation comprises."
+      "beschreibung": "Une offre avec toutes les fonctions, facturée selon le nombre de logements. Sans durée minimale, sans frais de mise en service, 14 jours gratuits — canaux, réservation directe, communication avec les voyageurs et facturation comprises."
     },
     "hero": {
       "eyebrow": "Tarifs",
       "headlinePre": "Une offre.",
       "headlineHighlight": "Tout compris.",
       "sub": "Pas de casse-tête de formules : toutes les fonctions sont incluses, que vous gériez une location saisonnière ou douze types de chambres. Vous payez selon le nombre de logements — et plus vous en avez, moins chaque logement coûte.",
-      "testen": "30 jours gratuits",
+      "testen": "14 jours gratuits",
       "laufzeit": "Sans durée minimale",
       "einrichtung": "Sans frais de mise en service",
       "eu": "Hébergé dans l'UE, RGPD"
@@ -925,7 +926,7 @@
       "grundgebuehr": "Forfait de base (1er logement inclus)",
       "weitereObjekte": "{anzahl, plural, =1 {un logement supplémentaire} other {# logements supplémentaires}} × {jeObjekt}",
       "netto": "Montants hors taxes. Facturation mensuelle, résiliable à tout moment.",
-      "ctaTesten": "Essayer 30 jours gratuitement",
+      "ctaTesten": "Essayer 14 jours gratuitement",
       "ctaDemo": "Voir la démo",
       "inklusivTitel": "Inclus dans chaque offre",
       "inklusivSub": "Rien qui ne commence que dans une formule plus chère — voici tout le périmètre.",
@@ -985,7 +986,7 @@
       "sub": "Ce que les loueurs veulent savoir avant de changer — court et sans petites lignes.",
       "laufzeit": {
         "frage": "Y a-t-il une durée minimale ?",
-        "antwort": "Non. L'abonnement est mensuel et résiliable avec un préavis de quatre semaines pour la fin du mois. Les 30 premiers jours sont gratuits, sans données de paiement."
+        "antwort": "Non. L'abonnement est mensuel et peut être résilié avec un préavis de quatre semaines à la fin du mois. Les 14 premiers jours sont gratuits : vous enregistrez vos données de paiement au début, mais le prélèvement n'est effectué qu'après la période d'essai. Si vous annulez avant, vous ne payez rien."
       },
       "objektzahl": {
         "frage": "Que se passe-t-il si j'ajoute des logements ?",
@@ -1030,7 +1031,7 @@
       "eu": "Hébergé dans l'UE, conforme au RGPD",
       "start": "Lancement le 1er septembre 2026",
       "sprachen": "27 pays, 24 langues",
-      "ctaTrial": "Essayer 30 jours gratuitement",
+      "ctaTrial": "Essayer 14 jours gratuitement",
       "ctaKontakt": "Écrivez-nous"
     },
     "warum": {
@@ -1178,7 +1179,7 @@
   },
   "funktionen": {
     "rahmen": {
-      "ctaTesten": "Essayer 30 jours gratuitement",
+      "ctaTesten": "Essayer 14 jours gratuitement",
       "ctaDemo": "Voir la démo",
       "weiter": "Voir les autres fonctionnalités",
       "mehr": "Voir",

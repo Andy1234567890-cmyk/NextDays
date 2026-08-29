@@ -424,8 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – nuomotojų platforma atostogų būstams",
-    "description": "Platforma viešbučiams, agentūroms ir atostogų būstų nuomotojams: kanalų valdymo sistema, kalendorius, tiesioginės rezervacijos, bendravimas su svečiais ir apskaita vienoje vietoje. Sukurta Danijoje, talpinama ES. 30 dienų nemokamai.",
-    "descriptionMitPreis": "Platforma viešbučiams, agentūroms ir atostogų būstų nuomotojams: kanalų valdymo sistema, kalendorius, tiesioginės rezervacijos, bendravimas su svečiais ir apskaita vienoje vietoje. Sukurta Danijoje, talpinama ES. Nuo {preis} per mėnesį. 30 dienų nemokamai."
+    "description": "Platforma viešbučiams, agentūroms ir atostogų būstų nuomotojams: kanalų valdymo sistema, kalendorius, tiesioginės rezervacijos, bendravimas su svečiais ir apskaita vienoje vietoje. Sukurta Danijoje, talpinama ES. 14 dienų nemokamai.",
+    "descriptionMitPreis": "Platforma viešbučiams, agentūroms ir atostogų būstų nuomotojams: kanalų valdymo sistema, kalendorius, tiesioginės rezervacijos, bendravimas su svečiais ir apskaita vienoje vietoje. Sukurta Danijoje, talpinama ES. Nuo {preis} per mėnesį. 14 dienų nemokamai."
   },
   "nav": {
     "funktionen": "Funkcijos",
@@ -463,7 +463,7 @@
     "headlineHighlight": "rezervacijų",
     "headlinePost": "mažiau darbo.",
     "subline": "Platforma viešbučiams, agentūroms ir atostogų būstų nuomotojams: kanalų valdymo sistema, kalendorius, tiesioginės rezervacijos, bendravimas su svečiais ir apskaita vienoje vietoje – sukurta nuomotojų, kurie žino kasdienybę.",
-    "ctaTrial": "30 dienų nemokamai",
+    "ctaTrial": "14 dienų nemokamai",
     "ctaDemo": "Peržiūrėkite demonstraciją",
     "kanaeleLabel": "Prijungta prie didžiausių rezervacijų platformų",
     "eyebrow": "Nuomotojų platforma atostogų būstams",
@@ -609,7 +609,7 @@
     },
     "preis": {
       "frage": "Kiek kainuoja myNextDays ir kaip pradėti?",
-      "antwort": "30 dienų nemokamai, be minimalaus termino, be įdiegimo mokesčio, galima atsisakyti bet kada. Vėliau prenumerata plius nedidelis komisinis už mūsų atvestas rezervacijas. Papildomus modulius — išplėstinę buhalteriją su DATEV eksportu, darbuotojų valdymą ar viešbučio funkcijas — įsigyjate tik jei jų reikia. Sukurkite objektą, prijunkite kanalus, pradėkite."
+      "antwort": "14 dienų nemokamai, be minimalaus termino, be įdiegimo mokesčio, galima atsisakyti bet kada. Vėliau prenumerata plius nedidelis komisinis už mūsų atvestas rezervacijas. Papildomus modulius — išplėstinę buhalteriją su DATEV eksportu, darbuotojų valdymą ar viešbučio funkcijas — įsigyjate tik jei jų reikia. Sukurkite objektą, prijunkite kanalus, pradėkite."
     }
   },
   "benefits": {
@@ -631,13 +631,13 @@
     "preisBanner": {
       "eyebrow": "Kaina",
       "heading": "Viskas jūsų apgyvendinimo objektui vienoje vietoje",
-      "text": "30 dienų nemokamai. Be minimalaus termino. Nutraukiama bet kada (4 savaitės iki mėnesio pabaigos).",
+      "text": "14 dienų nemokamai. Be minimalaus termino. Nutraukiama bet kada (4 savaitės iki mėnesio pabaigos).",
       "proMonat": "per mėnesį"
     }
   },
   "trial": {
     "eyebrow": "Nemokamas bandymas",
-    "heading": "Išbandykite myNextDays 30 dienų nemokamai.",
+    "heading": "Išbandykite myNextDays 14 dienų nemokamai.",
     "sub": "Be minimalaus termino. Nutraukiama bet kada. Tiesiog užpildykite šią trumpą formą:",
     "seitenHeading": "Viskas jūsų apgyvendinimo objektui vienoje vietoje – daugiau kontrolės, mažiau darbo.",
     "perks": {
@@ -855,15 +855,16 @@
     "impressum": "Teisinė informacija",
     "cookies": "Slapukų politika",
     "avv": "Duomenų tvarkymas",
-    "kontoLoeschen": "Ištrinti paskyrą"
+    "kontoLoeschen": "Ištrinti paskyrą",
+    "newsletterKnopf": "Prenumeruoti naujienlaiškį"
   },
   "legal": {
     "stand": "Redakcija: {datum}"
   },
   "abschluss": {
     "heading": "Pasiruošę valdyti savo objektą iš vienos vietos?",
-    "sub": "30 dienų nemokamai — be minimalaus termino, be įdiegimo mokesčio, nutraukiama bet kada.",
-    "ctaPrimaer": "30 dienų nemokamai",
+    "sub": "14 dienų nemokamai — be minimalaus termino, be įdiegimo mokesčio, nutraukiama bet kada.",
+    "ctaPrimaer": "14 dienų nemokamai",
     "ctaSekundaer": "Žiūrėti kainas"
   },
   "chat": {
@@ -902,14 +903,14 @@
   "preise": {
     "meta": {
       "titel": "Kainos — vienas planas, viskas įskaičiuota | myNextDays",
-      "beschreibung": "Vienas planas su visomis funkcijomis, mokama pagal objektų skaičių. Be minimalaus termino, be įdiegimo mokesčio, 30 dienų nemokamai — kanalai, tiesioginės rezervacijos, bendravimas su svečiais ir atsiskaitymai įskaičiuoti."
+      "beschreibung": "Vienas planas su visomis funkcijomis, mokama pagal objektų skaičių. Be minimalaus termino, be įdiegimo mokesčio, 14 dienų nemokamai — kanalai, tiesioginės rezervacijos, bendravimas su svečiais ir atsiskaitymai įskaičiuoti."
     },
     "hero": {
       "eyebrow": "Kainos",
       "headlinePre": "Vienas planas.",
       "headlineHighlight": "Viskas įskaičiuota.",
       "sub": "Jokių paketų galvosūkių: kiekviena funkcija įskaičiuota, ar valdote vieną poilsio būstą, ar dvylika kambarių tipų. Mokate pagal objektų skaičių — ir kuo jų daugiau, tuo pigesnis kiekvienas.",
-      "testen": "30 dienų nemokamai",
+      "testen": "14 dienų nemokamai",
       "laufzeit": "Be minimalaus termino",
       "einrichtung": "Be įdiegimo mokesčio",
       "eu": "Talpinama ES, BDAR"
@@ -925,7 +926,7 @@
       "grundgebuehr": "Bazinis mokestis (su 1-uoju objektu)",
       "weitereObjekte": "{anzahl, plural, one {dar # objektas} few {dar # objektai} other {dar # objektų}} × {jeObjekt}",
       "netto": "Visos sumos be PVM. Atsiskaitymas kas mėnesį, galima nutraukti bet kada.",
-      "ctaTesten": "Išbandykite 30 dienų nemokamai",
+      "ctaTesten": "Išbandykite 14 dienų nemokamai",
       "ctaDemo": "Žiūrėti demonstraciją",
       "inklusivTitel": "Įskaičiuota į kiekvieną planą",
       "inklusivSub": "Nieko, kas prasidėtų tik brangesniame pakete — tai visa apimtis.",
@@ -985,7 +986,7 @@
       "sub": "Ką nuomotojai nori žinoti prieš keisdami — trumpai ir be smulkaus šrifto.",
       "laufzeit": {
         "frage": "Ar yra minimalus terminas?",
-        "antwort": "Ne. Prenumerata galioja mėnesiais ir gali būti nutraukta prieš keturias savaites mėnesio pabaigai. Pirmos 30 dienų nemokamos, be mokėjimo duomenų."
+        "antwort": "Ne. Prenumerata yra mėnesinė ir gali būti atšaukta likus keturioms savaitėms iki mėnesio pabaigos. Pirmos 14 dienų yra nemokamos: pradėdami įveskite savo mokėjimo duomenis, tačiau mokėjimas bus nuskaičiuotas tik pasibaigus bandomajam laikotarpiui. Jei atšauksite anksčiau, nieko nemokėsite."
       },
       "objektzahl": {
         "frage": "Kas nutinka, kai pridedu objektų?",
@@ -1030,7 +1031,7 @@
       "eu": "Talpinama ES, atitinka BDAR",
       "start": "Startas 2026 m. rugsėjo 1 d.",
       "sprachen": "27 šalys, 24 kalbos",
-      "ctaTrial": "Išbandykite 30 dienų nemokamai",
+      "ctaTrial": "Išbandykite 14 dienų nemokamai",
       "ctaKontakt": "Parašykite mums"
     },
     "warum": {
@@ -1178,7 +1179,7 @@
   },
   "funktionen": {
     "rahmen": {
-      "ctaTesten": "Išbandykite 30 dienų nemokamai",
+      "ctaTesten": "Išbandykite 14 dienų nemokamai",
       "ctaDemo": "Žiūrėti demonstraciją",
       "weiter": "Toliau prie kitų funkcijų",
       "mehr": "Žiūrėti",

@@ -424,8 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – Plattformen för uthyrare av semesterboenden",
-    "description": "Plattformen för hotell, förmedlare och uthyrare av semesterboenden: channel manager, kalender, direktbokning, gästkommunikation och fakturering på ett ställe. Byggd i Danmark, driftad inom EU. Testa gratis i 30 dagar.",
-    "descriptionMitPreis": "Plattformen för hotell, förmedlare och uthyrare av semesterboenden: channel manager, kalender, direktbokning, gästkommunikation och fakturering på ett ställe. Byggd i Danmark, driftad inom EU. Från {preis} per månad. Testa gratis i 30 dagar."
+    "description": "Plattformen för hotell, förmedlare och uthyrare av semesterboenden: channel manager, kalender, direktbokning, gästkommunikation och fakturering på ett ställe. Byggd i Danmark, driftad inom EU. Testa gratis i 14 dagar.",
+    "descriptionMitPreis": "Plattformen för hotell, förmedlare och uthyrare av semesterboenden: channel manager, kalender, direktbokning, gästkommunikation och fakturering på ett ställe. Byggd i Danmark, driftad inom EU. Från {preis} per månad. Testa gratis i 14 dagar."
   },
   "nav": {
     "funktionen": "Funktioner",
@@ -463,7 +463,7 @@
     "headlineHighlight": "bokningar",
     "headlinePost": "mindre jobb.",
     "subline": "Plattformen för hotell, förmedlare och uthyrare av semesterboenden: channel manager, kalender, direktbokning, gästkommunikation och fakturering på ett ställe – byggd av uthyrare som känner vardagen.",
-    "ctaTrial": "Testa gratis i 30 dagar",
+    "ctaTrial": "Testa gratis i 14 dagar",
     "ctaDemo": "Se demo",
     "kanaeleLabel": "Kopplad till de stora bokningsplattformarna",
     "eyebrow": "Plattformen för uthyrare av semesterboenden",
@@ -609,7 +609,7 @@
     },
     "preis": {
       "frage": "Vad kostar myNextDays och hur börjar jag?",
-      "antwort": "30 dagar gratis, ingen bindningstid, ingen startavgift, uppsägning när som helst. Därefter en prenumeration plus en låg provision på bokningar vi förmedlar. Tilläggsmoduler som utökad bokföring med DATEV-export, personalhantering eller hotellfunktioner läggs till bara om du behöver dem. Skapa objekt, koppla kanaler, kör."
+      "antwort": "14 dagar gratis, ingen bindningstid, ingen startavgift, uppsägning när som helst. Därefter en prenumeration plus en låg provision på bokningar vi förmedlar. Tilläggsmoduler som utökad bokföring med DATEV-export, personalhantering eller hotellfunktioner läggs till bara om du behöver dem. Skapa objekt, koppla kanaler, kör."
     }
   },
   "benefits": {
@@ -631,13 +631,13 @@
     "preisBanner": {
       "eyebrow": "Pris",
       "heading": "Allt för ditt boende på ett ställe",
-      "text": "30 dagar gratis. Ingen bindningstid. Säg upp när du vill (4 veckor till månadsskiftet).",
+      "text": "14 dagar gratis. Ingen bindningstid. Säg upp när du vill (4 veckor till månadsskiftet).",
       "proMonat": "per månad"
     }
   },
   "trial": {
     "eyebrow": "Testa gratis",
-    "heading": "Testa myNextDays gratis i 30 dagar.",
+    "heading": "Testa myNextDays gratis i 14 dagar.",
     "sub": "Ingen bindningstid. Säg upp när du vill. Fyll bara i det här korta formuläret:",
     "seitenHeading": "Allt för ditt boende på ett ställe – mer kontroll, mindre jobb.",
     "perks": {
@@ -855,15 +855,16 @@
     "impressum": "Juridisk information",
     "cookies": "Cookiepolicy",
     "avv": "Personuppgiftsbiträde",
-    "kontoLoeschen": "Radera konto"
+    "kontoLoeschen": "Radera konto",
+    "newsletterKnopf": "Prenumerera på nyhetsbrev"
   },
   "legal": {
     "stand": "Senast uppdaterad: {datum}"
   },
   "abschluss": {
     "heading": "Redo att sköta ditt boende från ett ställe?",
-    "sub": "Testa gratis i 30 dagar – ingen bindningstid, ingen startavgift, säg upp när du vill.",
-    "ctaPrimaer": "Testa gratis i 30 dagar",
+    "sub": "Testa gratis i 14 dagar – ingen bindningstid, ingen startavgift, säg upp när du vill.",
+    "ctaPrimaer": "Testa gratis i 14 dagar",
     "ctaSekundaer": "Se priser"
   },
   "chat": {
@@ -902,14 +903,14 @@
   "preise": {
     "meta": {
       "titel": "Priser — en plan, allt ingår | myNextDays",
-      "beschreibung": "En plan med hela funktionsomfånget, betald efter antal objekt. Ingen bindningstid, ingen startavgift, 30 dagar gratis — kanaler, direktbokning, gästkommunikation och fakturering ingår."
+      "beschreibung": "En plan med hela funktionsomfånget, betald efter antal objekt. Ingen bindningstid, ingen startavgift, 14 dagar gratis — kanaler, direktbokning, gästkommunikation och fakturering ingår."
     },
     "hero": {
       "eyebrow": "Priser",
       "headlinePre": "En plan.",
       "headlineHighlight": "Allt ingår.",
       "sub": "Inget paketpussel: varje funktion ingår, oavsett om du driver en stuga eller tolv rumstyper. Du betalar efter antal objekt — och ju fler du har, desto billigare blir varje objekt.",
-      "testen": "30 dagar gratis",
+      "testen": "14 dagar gratis",
       "laufzeit": "Ingen bindningstid",
       "einrichtung": "Ingen startavgift",
       "eu": "EU-hostad, GDPR"
@@ -925,7 +926,7 @@
       "grundgebuehr": "Grundavgift (inkl. 1:a objektet)",
       "weitereObjekte": "{anzahl, plural, =1 {ett objekt till} other {# objekt till}} × {jeObjekt}",
       "netto": "Alla belopp exklusive moms. Månadsvis fakturering, uppsägningsbart när som helst.",
-      "ctaTesten": "Testa 30 dagar gratis",
+      "ctaTesten": "Testa 14 dagar gratis",
       "ctaDemo": "Se demon",
       "inklusivTitel": "Ingår i varje plan",
       "inklusivSub": "Inget som först börjar i ett dyrare paket — det här är hela omfånget.",
@@ -985,7 +986,7 @@
       "sub": "Vad värdar vill veta före ett byte — kort och utan finstilt.",
       "laufzeit": {
         "frage": "Finns det någon bindningstid?",
-        "antwort": "Nej. Abonnemanget löper månadsvis och kan sägas upp med fyra veckors varsel till månadens slut. De första 30 dagarna är gratis, utan betaluppgifter."
+        "antwort": "Nej. Abonnemanget är månatligt och kan sägas upp med fyra veckors varsel till månadens slut. De första 14 dagarna är gratis: Du anger dina betalningsuppgifter vid start, men debitering sker först efter provperioden. Om du säger upp tidigare betalar du inget."
       },
       "objektzahl": {
         "frage": "Vad händer när jag lägger till objekt?",
@@ -1018,7 +1019,7 @@
   },
   "funktionen": {
     "rahmen": {
-      "ctaTesten": "Testa 30 dagar gratis",
+      "ctaTesten": "Testa 14 dagar gratis",
       "ctaDemo": "Se demon",
       "weiter": "Vidare till de andra funktionerna",
       "mehr": "Se",
@@ -1723,7 +1724,7 @@
       "eu": "EU-hostat, GDPR-säkert",
       "start": "Start 1 september 2026",
       "sprachen": "27 länder, 24 språk",
-      "ctaTrial": "Testa gratis i 30 dagar",
+      "ctaTrial": "Testa gratis i 14 dagar",
       "ctaKontakt": "Skriv till oss"
     },
     "warum": {

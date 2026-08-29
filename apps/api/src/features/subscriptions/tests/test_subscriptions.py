@@ -18,6 +18,7 @@ from stripe import StripeError as _StripeError
 from src.core.config import get_settings
 from src.core.security import AuthContext
 from src.features.payments.webhook import handle_stripe_event
+from src.features.subscriptions.schemas import TESTPHASE_TAGE
 from src.features.subscriptions.service import (
     SubscriptionsError,
     SubscriptionsService,
@@ -1239,4 +1240,79 @@ def test_aufstellung_summe_deckt_sich_mit_der_monatszeile() -> None:
     assert august.booking_count == len(eintraege)
     assert august.commission_total == round(
         sum(e.commission_amount for e in eintraege), 2
+    )
+
+
+# --- Kostenlose Testphase (0488) ---------------------------------------------
+# Die Marketing-Seite wirbt an 14 Stellen je Sprache mit "14 Tage kostenlos
+# testen". Gebaut war davon NICHTS: der Checkout schickte keinen
+# `trial_period_days`, Stripe zog also sofort ein. Der Status `trialing` stand
+# zwar im Enum und wurde von jeder Schranke akzeptiert, aber nie ERZEUGT.
+# Diese Tests halten beide Halften zusammen.
+
+
+def _checkout_svc_mit_abo(zeile: dict):  # noqa: ANN001, ANN202
+    """Checkout-Dienst mit einer vorgegebenen tenant_subscription-Zeile."""
+    db = _db_with_properties(1)
+    db.store["tenant_subscription"] = [zeile]
+    stripe = _CheckoutStripeStub()
+    return SubscriptionsService(service_client=db, stripe=stripe), stripe
+
+
+def test_erster_checkout_bekommt_die_testphase() -> None:
+    """Der beworbene Fall: wer noch nie ein Abo hatte, testet 14 Tage frei."""
+    svc, stripe = _checkout_svc_mit_abo({
+        "tenant_id": "t1", "stripe_customer_id": "cus_ok",
+    })
+    _start(svc, 1)
+    sub = (stripe.params or {})["subscription_data"]
+    assert sub["trial_period_days"] == TESTPHASE_TAGE
+    assert sub["trial_period_days"] == 14
+
+
+def test_testphase_endet_fail_closed_ohne_zahlungsmittel() -> None:
+    """Faellt die Karte bis zum Ablauf weg, endet das Abo — statt in einen
+    unbezahlten Dauerzustand zu kippen (Wurzel 5)."""
+    svc, stripe = _checkout_svc_mit_abo({
+        "tenant_id": "t1", "stripe_customer_id": "cus_ok",
+    })
+    _start(svc, 1)
+    sub = (stripe.params or {})["subscription_data"]
+    assert sub["trial_settings"]["end_behavior"]["missing_payment_method"] == "cancel"
+
+
+def test_zweite_testphase_gibt_es_nicht() -> None:
+    """Wurzel 2: ohne Riegel kuendigt man am vorletzten Tag und schliesst neu
+    ab — beliebig oft kostenlos. `trial_used_at` verhindert genau das."""
+    svc, stripe = _checkout_svc_mit_abo({
+        "tenant_id": "t1",
+        "stripe_customer_id": "cus_ok",
+        "trial_used_at": "2026-08-01T10:00:00+00:00",
+    })
+    _start(svc, 1)
+    sub = (stripe.params or {})["subscription_data"]
+    assert "trial_period_days" not in sub
+    assert "trial_settings" not in sub
+
+
+def test_tenant_id_bleibt_auch_mit_testphase_erhalten() -> None:
+    """Die Metadaten tragen die Tenant-Zuordnung — ohne sie findet der Webhook
+    den Betrieb nicht mehr. Beim Umbau auf `subscription_data` als Variable
+    war genau das die Stelle, an der man sie verlieren kann."""
+    svc, stripe = _checkout_svc_mit_abo({
+        "tenant_id": "t1", "stripe_customer_id": "cus_ok",
+    })
+    _start(svc, 1)
+    sub = (stripe.params or {})["subscription_data"]
+    assert sub["metadata"]["tenant_id"] == "t1"
+
+
+def test_testphase_offen_ohne_zeile() -> None:
+    """Kein Abo je gehabt = Testphase steht zu (fail-open ist hier richtig:
+    der Riegel schuetzt vor Wiederholung, nicht vor dem ersten Mal)."""
+    assert SubscriptionsService._testphase_offen(None) is True  # noqa: SLF001
+    assert SubscriptionsService._testphase_offen({}) is True  # noqa: SLF001
+    assert (  # noqa: SLF001
+        SubscriptionsService._testphase_offen({"trial_used_at": "2026-08-01T10:00:00Z"})
+        is False
     )

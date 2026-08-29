@@ -424,8 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – Platforma pre prenajímateľov rekreačných ubytovaní",
-    "description": "Platforma pre hotely, agentúry a prenajímateľov rekreačných ubytovaní: channel manager, kalendár, priame rezervácie, komunikácia s hosťami a fakturácia na jednom mieste. Vyvinuté v Dánsku, hostované v EÚ. 30 dní zadarmo.",
-    "descriptionMitPreis": "Platforma pre hotely, agentúry a prenajímateľov rekreačných ubytovaní: channel manager, kalendár, priame rezervácie, komunikácia s hosťami a fakturácia na jednom mieste. Vyvinuté v Dánsku, hostované v EÚ. Od {preis} mesačne. 30 dní zadarmo."
+    "description": "Platforma pre hotely, agentúry a prenajímateľov rekreačných ubytovaní: channel manager, kalendár, priame rezervácie, komunikácia s hosťami a fakturácia na jednom mieste. Vyvinuté v Dánsku, hostované v EÚ. 14 dní zadarmo.",
+    "descriptionMitPreis": "Platforma pre hotely, agentúry a prenajímateľov rekreačných ubytovaní: channel manager, kalendár, priame rezervácie, komunikácia s hosťami a fakturácia na jednom mieste. Vyvinuté v Dánsku, hostované v EÚ. Od {preis} mesačne. 14 dní zadarmo."
   },
   "nav": {
     "funktionen": "Funkcie",
@@ -463,7 +463,7 @@
     "headlineHighlight": "rezervácií",
     "headlinePost": "menej práce.",
     "subline": "Platforma pre hotely, agentúry a prenajímateľov rekreačných ubytovaní: channel manager, kalendár, priame rezervácie, komunikácia s hosťami a fakturácia na jednom mieste – vytvorená prenajímateľmi, ktorí tento každodenný chod poznajú.",
-    "ctaTrial": "Vyskúšať 30 dní zadarmo",
+    "ctaTrial": "Vyskúšať 14 dní zadarmo",
     "ctaDemo": "Pozrieť demo",
     "kanaeleLabel": "Prepojené s veľkými rezervačnými portálmi",
     "eyebrow": "Platforma pre prenajímateľov rekreačných ubytovaní",
@@ -609,7 +609,7 @@
     },
     "preis": {
       "frage": "Koľko myNextDays stojí a ako začnem?",
-      "antwort": "30 dní zadarmo, bez minimálnej doby, bez zriaďovacieho poplatku, výpoveď kedykoľvek. Potom predplatné plus nízka provízia z rezervácií, ktoré privedieme. Doplnkové moduly — rozšírené účtovníctvo s exportom DATEV, správa zamestnancov alebo hotelové funkcie — priberiete len, ak ich potrebujete. Založte objekt, pripojte kanály, začnite."
+      "antwort": "14 dní zadarmo, bez minimálnej doby, bez zriaďovacieho poplatku, výpoveď kedykoľvek. Potom predplatné plus nízka provízia z rezervácií, ktoré privedieme. Doplnkové moduly — rozšírené účtovníctvo s exportom DATEV, správa zamestnancov alebo hotelové funkcie — priberiete len, ak ich potrebujete. Založte objekt, pripojte kanály, začnite."
     }
   },
   "benefits": {
@@ -631,13 +631,13 @@
     "preisBanner": {
       "eyebrow": "Cena",
       "heading": "Všetko pre vaše ubytovanie na jednom mieste",
-      "text": "30 dní zadarmo. Bez minimálnej doby viazanosti. Kedykoľvek zrušiteľné (4 týždne ku koncu mesiaca).",
+      "text": "14 dní zadarmo. Bez minimálnej doby viazanosti. Kedykoľvek zrušiteľné (4 týždne ku koncu mesiaca).",
       "proMonat": "mesačne"
     }
   },
   "trial": {
     "eyebrow": "Vyskúšať zadarmo",
-    "heading": "Vyskúšajte myNextDays 30 dní zadarmo.",
+    "heading": "Vyskúšajte myNextDays 14 dní zadarmo.",
     "sub": "Bez minimálnej doby viazanosti. Kedykoľvek zrušiteľné. Stačí vyplniť tento krátky formulár:",
     "seitenHeading": "Všetko pre vaše ubytovanie na jednom mieste – väčšia kontrola, menej práce.",
     "perks": {
@@ -855,15 +855,16 @@
     "impressum": "Právne informácie",
     "cookies": "Zásady cookies",
     "avv": "Spracúvanie údajov",
-    "kontoLoeschen": "Vymazať účet"
+    "kontoLoeschen": "Vymazať účet",
+    "newsletterKnopf": "Prihlásiť sa na odber noviniek"
   },
   "legal": {
     "stand": "Stav ku dňu: {datum}"
   },
   "abschluss": {
     "heading": "Pripravení riadiť svoje ubytovanie z jedného miesta?",
-    "sub": "Vyskúšajte 30 dní zadarmo — bez minimálnej doby viazanosti, bez zriaďovacieho poplatku, kedykoľvek zrušiteľné.",
-    "ctaPrimaer": "Vyskúšať 30 dní zadarmo",
+    "sub": "Vyskúšajte 14 dní zadarmo — bez minimálnej doby viazanosti, bez zriaďovacieho poplatku, kedykoľvek zrušiteľné.",
+    "ctaPrimaer": "Vyskúšať 14 dní zadarmo",
     "ctaSekundaer": "Zobraziť cenník"
   },
   "chat": {
@@ -902,14 +903,14 @@
   "preise": {
     "meta": {
       "titel": "Ceny — jeden tarif, všetko v cene | myNextDays",
-      "beschreibung": "Jeden tarif s plným rozsahom funkcií, platený podľa počtu objektov. Bez minimálnej doby, bez zriaďovacieho poplatku, 30 dní zadarmo — kanály, priame rezervácie, komunikácia s hosťami aj vyúčtovanie v cene."
+      "beschreibung": "Jeden tarif s plným rozsahom funkcií, platený podľa počtu objektov. Bez minimálnej doby, bez zriaďovacieho poplatku, 14 dní zadarmo — kanály, priame rezervácie, komunikácia s hosťami aj vyúčtovanie v cene."
     },
     "hero": {
       "eyebrow": "Ceny",
       "headlinePre": "Jeden tarif.",
       "headlineHighlight": "Všetko v cene.",
       "sub": "Žiadne hádanky s balíkmi: každá funkcia je súčasťou, či prevádzkujete jeden apartmán alebo dvanásť typov izieb. Platíte podľa počtu objektov — a čím viac ich máte, tým lacnejší je každý z nich.",
-      "testen": "30 dní zadarmo",
+      "testen": "14 dní zadarmo",
       "laufzeit": "Bez minimálnej doby",
       "einrichtung": "Bez zriaďovacieho poplatku",
       "eu": "Hosting v EÚ, GDPR"
@@ -925,7 +926,7 @@
       "grundgebuehr": "Základný poplatok (vr. 1. objektu)",
       "weitereObjekte": "{anzahl, plural, =1 {jeden ďalší objekt} few {# ďalšie objekty} many {# ďalších objektov} other {# ďalších objektov}} × {jeObjekt}",
       "netto": "Všetky sumy bez DPH. Mesačné vyúčtovanie, kedykoľvek zrušiteľné.",
-      "ctaTesten": "Vyskúšať 30 dní zadarmo",
+      "ctaTesten": "Vyskúšať 14 dní zadarmo",
       "ctaDemo": "Pozrieť demo",
       "inklusivTitel": "Obsiahnuté v každom tarife",
       "inklusivSub": "Nič, čo začína až v drahšom balíku — toto je celý rozsah.",
@@ -985,7 +986,7 @@
       "sub": "Čo chcú prenajímatelia vedieť pred prechodom — stručne a bez drobného písma.",
       "laufzeit": {
         "frage": "Je tu minimálna doba?",
-        "antwort": "Nie. Predplatné beží mesačne a možno ho vypovedať so štvortýždňovou výpovednou lehotou ku koncu mesiaca. Prvých 30 dní je zadarmo, bez platobných údajov."
+        "antwort": "Nie. Predplatné je mesačné a je možné ho zrušiť štyri týždne pred koncom mesiaca. Prvých 14 dní je zadarmo: Platobné údaje zadáte pri spustení, ale platba sa uskutoční až po skončení skúšobnej fázy. Ak zrušíte predplatné skôr, neplatíte nič."
       },
       "objektzahl": {
         "frage": "Čo sa stane, keď pridám objekty?",
@@ -1030,7 +1031,7 @@
       "eu": "Hosting v EÚ, v súlade s GDPR",
       "start": "Štart 1. septembra 2026",
       "sprachen": "27 krajín, 24 jazykov",
-      "ctaTrial": "Vyskúšať 30 dní zadarmo",
+      "ctaTrial": "Vyskúšať 14 dní zadarmo",
       "ctaKontakt": "Napíšte nám"
     },
     "warum": {
@@ -1178,7 +1179,7 @@
   },
   "funktionen": {
     "rahmen": {
-      "ctaTesten": "Vyskúšať 30 dní zadarmo",
+      "ctaTesten": "Vyskúšať 14 dní zadarmo",
       "ctaDemo": "Pozrieť demo",
       "weiter": "Ďalej k ostatným funkciám",
       "mehr": "Zobraziť",

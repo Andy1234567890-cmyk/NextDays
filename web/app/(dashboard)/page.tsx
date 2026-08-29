@@ -8,16 +8,27 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { ReservationsDashboard } from "@/components/dashboard/reservations-dashboard";
-import { OnboardingWizard } from "@/components/onboarding/onboarding-wizard";
+import { Startbahn } from "@/components/onboarding/startbahn";
 import { PaymentsStatusBanner } from "@/components/zahlungen/payments-status-banner";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { Card, CardContent } from "@nextdays/ui/card";
 import { getMe } from "@/lib/auth";
 import { getNachrichtenKennzahlen } from "@/lib/inbox";
-import { getOnboarding } from "@/lib/onboarding";
+import { getOnboarding, type OnboardingStatus } from "@/lib/onboarding";
 import { getDashboard } from "@/lib/reservations";
 
 export const dynamic = "force-dynamic";
+
+/** Zeigt die Startbahn nur, solange sie etwas zu sagen hat. */
+function StartbahnWennOffen({ status }: { status: OnboardingStatus }) {
+  // Erledigt heißt: Objekt da, Preise da, Kanäle da. Diese drei misst der
+  // Server aus der DB (`_real_progress`) — die Liste verschwindet also, wenn
+  // der Betrieb wirklich fertig ist, nicht wenn er einmal alles weggeklickt hat.
+  const istFertig =
+    status.object_created && status.price_set && status.channels_done;
+  if (istFertig) return null;
+  return <Startbahn status={status} />;
+}
 
 export default async function DashboardPage() {
   const t = await getTranslations("nav");
@@ -25,8 +36,6 @@ export default async function DashboardPage() {
     getOnboarding(),
     getMe(),
   ]);
-  const loginEmail = me?.email ?? null;
-
   // Rollen-Startseite (§4.2/§4.3): Das Reservierungs-Dashboard verlangt
   // VIEW_CALENDAR. Rollen ohne diese Fähigkeit (staff/cleaner) bekämen hier nur
   // eine 403-Fehlerkarte — deshalb auf ihre operative Startseite leiten, statt
@@ -35,14 +44,16 @@ export default async function DashboardPage() {
     redirect("/reservierungen/aufgaben");
   }
 
-  // Onboarding noch offen → Assistent im Dashboard anzeigen.
+  // Onboarding noch offen → auf den Assistenten leiten.
+  //
+  // Weiterleitung statt Einbetten: der Assistent ist seit dem Umbau ein
+  // Vollbild-Schritt mit eigener Schale (Foto rechts, Fortschritt unten). Hier
+  // eingebettet läge er in der Dashboard-Schale und brächte Sidebar und Topbar
+  // doppelt mit. `/onboarding` liest denselben Status und nimmt den Faden am
+  // ersten offenen Schritt wieder auf.
   const status = onboarding.ok ? onboarding.data : null;
   if (status && !status.completed) {
-    return (
-      <div className="mx-auto w-full max-w-3xl">
-        <OnboardingWizard initialStatus={status} loginEmail={loginEmail} />
-      </div>
-    );
+    redirect("/onboarding");
   }
 
   // Beide Quellen der Startseite parallel. Die Nachrichten-Kennzahlen sind
@@ -93,6 +104,20 @@ export default async function DashboardPage() {
           <PaymentsStatusBanner />
         </Suspense>
       )}
+      {/* Die Startbahn führt weiter, wo der Assistent aufhörte: er endete mit
+          einem Link auf /objekte und verschwand, die Strecke bis zum
+          verkaufsfertigen Objekt (Preise, Sperrtermine, Veröffentlichen) fand
+          der Betrieb allein.
+
+          Sie steht ÜBER den Kennzahlen, solange etwas offen ist — ein Betrieb
+          ohne veröffentlichtes Objekt hat noch keine Zahlen, die eine
+          Kopfposition verdienen. Sobald alles erledigt ist, verschwindet sie
+          ersatzlos (`istFertig`), statt als abgehakte Liste liegen zu bleiben.
+
+          Nicht für Demo-Mandanten: dort ist alles längst eingerichtet, und der
+          Demo-Riegel (0407) lehnt jede schreibende Aktion ohnehin ab — die
+          Liste böte also Aufgaben an, die der Besucher nicht ausführen kann. */}
+      {status && !me?.is_demo && <StartbahnWennOffen status={status} />}
       <ReservationsDashboard
         data={dashboard.data}
         nachrichten={kennzahlen.ok ? kennzahlen.data : null}

@@ -3,10 +3,13 @@
 Startet keinen Server beim Import (PROJECT.md). Lokaler Start via uvicorn:
     uvicorn src.main:app --reload
 """
+import contextlib
+import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 import httpx
+import structlog
 from fastapi import APIRouter, FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
@@ -265,8 +268,41 @@ def create_app() -> FastAPI:
         # Log und in der Diagnose, sie darf nicht angreiferkontrolliert sein
         # (Log-Injection, Wurzel 3).
         request.state.request_id = neue_request_id()
+        # Kontext dieses Requests zuruecksetzen, BEVOR er laeuft. Ohne das
+        # traegt ein Request die Bindungen (tenant/user) des vorigen weiter,
+        # solange der Worker-Task wiederverwendet wird — und genau dann zeigt
+        # das Log den falschen Betrieb, was die Diagnose ins Gegenteil
+        # verkehrt.
+        structlog.contextvars.clear_contextvars()
+        structlog.contextvars.bind_contextvars(request_id=request.state.request_id)
 
+        _beginn = time.perf_counter()
         resp = await call_next(request)
+
+        # ZUGRIFFSZEILE mit Betrieb. Uvicorns eigene Zeile ("GET /properties
+        # 200 OK") nennt Pfad und Status, aber nicht, WESSEN Sitzung sie
+        # bekommen hat — und das war am 29.08.2026 die eine fehlende Angabe,
+        # als im Onboarding eines frischen Betriebs die 18 Objekte eines
+        # fremden Betriebs standen. Der `tenant` kommt aus dem Kontext, den
+        # `core.security._sitzung_protokollieren` beim Auflesen des Tokens
+        # gebunden hat; bei oeffentlichen Routen bleibt er leer.
+        # `suppress`: faellt das Logging aus, laesst sich das nicht loggen —
+        # die Antwort geht trotzdem hinaus (Wurzel 5, best-effort-Zweig).
+        with contextlib.suppress(Exception):
+            log.info(
+                "zugriff",
+                # `getattr` mit Vorgabe: oeffentliche Routen (Login, Health,
+                # Webhooks) durchlaufen `get_current_user` nie, dort ist die
+                # Angabe zu Recht leer. Ein "-" macht sichtbar, dass es KEINE
+                # Sitzung gab — ein fehlendes Feld saehe aus wie ein Fehler.
+                tenant=getattr(request.state, "log_tenant", "-"),
+                user=getattr(request.state, "log_user", "-"),
+                rolle=getattr(request.state, "log_rolle", "-"),
+                method=request.method,
+                pfad=request.url.path,
+                status=resp.status_code,
+                dauer_ms=round((time.perf_counter() - _beginn) * 1000),
+            )
 
         # 2FA-Aufforderung: Der Guard (features.auth.mfa_gate) hat den Request
         # durchgelassen, weil die Einrichtungsfrist noch läuft — die

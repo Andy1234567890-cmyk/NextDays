@@ -26,7 +26,10 @@
       "da": "Taani",
       "en": "Inglise"
     },
-    "explain": "Selgitus: {label}"
+    "explain": "Selgitus: {label}",
+    "themeToggle": "Muuda kujundust",
+    "themeToggleLight": "Hele kujundus",
+    "themeToggleDark": "Tume kujundus"
   },
   "legal": {
     "agbLinkLabel": "Üldtingimused",
@@ -118,7 +121,8 @@
     },
     "type": {
       "title": "Mida sa välja üürid?",
-      "text": "Vali tegevusala — see määrab töölaual kasutatavad mõisted ja moodulid."
+      "text": "Vali tegevusala — see määrab töölaual kasutatavad mõisted ja moodulid.",
+      "bald": "Töös"
     },
     "tax": {
       "title": "Maksud ja maksed",
@@ -134,7 +138,7 @@
     },
     "switch": {
       "title": "Olemasolevate objektide import",
-      "intro": "Nii tood oma olemasolevad Bookingu/Airbnb objektid myNextDaysi — ilma topeltbroneeringuteta.",
+      "intro": "Nii toote oma olemasolevad kuulutused myNextDaysi – ilma topeltbroneeringuteta.",
       "cutover": {
         "title": "Tähtis enne ühendamist",
         "a": "Lahuta iga portaal oma senisest süsteemist enne, kui ühendad selle siin — kanali kohta tohib andmeid saata alati ainult ÜKS süsteem.",
@@ -147,21 +151,24 @@
         "title": "Loo objekt",
         "text": "Loo iga olemasoleva kuulutuse kohta üks objekt — sidumiseks piisab nimest, liigist ja põhihinnast.",
         "count": "{count, plural, =0 {Veel ühtegi objekti} one {# objekt} other {# objekti}}",
-        "airbnbHint": "Tuled Airbnbst? Jäta see samm vahele — sinu objektid võetakse üle automaatselt, kui ühendad Airbnbga."
+        "airbnbHint": "Tuled Airbnbst? Jäta see samm vahele — sinu objektid võetakse üle automaatselt, kui ühendad Airbnbga.",
+        "zuordnenHint": "Booking.comi ja teiste portaalide jaoks on teil vaja seda objekti: Ühendamisel vastendatakse portaali toad 1:1 teie objektidega. Ainult Airbnb puhul see samm puudub – seal lisatakse kirjed ühendamisel."
       },
       "step2": {
         "title": "Portaali ühendamine ja sidumine",
         "text": "Ühenda Booking, Airbnb jm ning seo portaali toad 1:1 oma objektidega. Broneeringud ja saadavus tulevad seejärel automaatselt.",
         "connect": "Ühenda portaal",
         "connectMore": "Ühenda veel üks portaal",
-        "alreadyConnected": "Üks portaal on juba ühendatud ja sinu objektid on edastatud — siin ei pea midagi uuesti ühendama. Kasuta valikut „Ühenda veel üks portaal“ ainult TÄIENDAVA portaali jaoks (nt Booking)."
+        "alreadyConnected": "Üks portaal on juba ühendatud ja sinu objektid on edastatud — siin ei pea midagi uuesti ühendama. Kasuta valikut „Ühenda veel üks portaal“ ainult TÄIENDAVA portaali jaoks (nt Booking).",
+        "connectNamed": "Ühenda {portal}",
+        "textNamed": "Ühendage {portale} ja määrake portaali toad 1:1 oma objektidele. Broneeringud ja saadavus tulevad seejärel automaatselt."
       },
       "pull": {
-        "button": "Too objektid portaalist",
         "result": "{count, plural, =0 {Uusi objekte ei leitud} one {# objekt üle võetud} other {# objekti üle võetud}}"
       },
       "finishCta": "Lõpeta import",
       "finishHint": "Palun kinnita kõigepealt ülalolev juhis ja loo vähemalt üks objekt.",
+      "finishHintObjekt": "Looge esmalt vähemalt üks objekt – ilma objektita pole midagi hallata. Lodgify import on vabatahtlik ja pole kohustuslik.",
       "bookings": {
         "title": "Olemasolevate broneeringute sisselugemine",
         "text": "Too ühendatud portaalide broneeringud oma kalendrisse.",
@@ -193,7 +200,32 @@
       },
       "finish": {
         "notRegistered": "Enne kui lõpetad kasutuselevõtu, peab vähemalt üks objekt olema broneerimisportaalidesse edastatud. Ühenda 2. sammus portaal — objekt edastatakse seejuures automaatselt."
+      },
+      "nav": {
+        "zurueck": "Tagasi",
+        "weiter": "Edasi",
+        "zaehler": "Samm {aktuell} / {gesamt}"
+      },
+      "auswahl": {
+        "title": "Millistel portaalidel te täna müüte?",
+        "text": "Seadistame impordi vastavalt. Hiljem saate alati lisada täiendavaid portaale.",
+        "keine": "Ma ei müü veel ühelgi portaalil"
       }
+    },
+    "spaeterEinrichten": "Määra hiljem",
+    "schrittVon": "Samm {aktuell} / {gesamt}",
+    "claim1": "Kõik portaalid, üks kalender – ja teie majutuskohad tulevad kaasa.",
+    "claim2": "Hinnad, saadavus ja sõnumid ühes kohas.",
+    "claim3": "Rohkem aega külalistele, vähem haldamisele.",
+    "usp": {
+      "portale": "Kõik suuremad portaalid ühendatud",
+      "kalender": "Üks kalender kõikidele portaalidele",
+      "doppelt": "Broneeritud ööd blokeerime koheselt kõikjal",
+      "import": "Olemasolevad kuulutused toome teile üle",
+      "zahlung": "Maksed ja väljamaksed kaasas",
+      "preise": "Hallake hooaja ja öö hindu",
+      "posteingang": "Kõigi portaalide külaliste sõnumid ühes postkastis",
+      "app": "Kõik ka rakenduses"
     }
   },
   "nav": {
@@ -6206,6 +6238,7 @@
       "untertitelKanaele": "Valige, kus seda objekti müüakse.",
       "untertitelPruefen": "Kontrollige, mis portaalides muutub.",
       "nichtVerfuegbar": "Praegu pole saadaval",
+      "portalVerbinden": "Ühenda kohe {portal}",
       "weiter": "Edasi",
       "abbrechen": "Loobu",
       "jetztVeroeffentlichen": "Avalda kohe",
@@ -9933,7 +9966,11 @@
       "statusPastDue": "Makse tasumata",
       "statusCanceled": "Lõpetatud",
       "statusUnpaid": "Tasumata",
-      "statusIncomplete": "Lõpetamata"
+      "statusIncomplete": "Lõpetamata",
+      "trialEnds": "Testperiood lõpeb",
+      "trialBannerTitel": "Tasuta prooviperiood",
+      "trialBannerText": "Teie prooviperiood lõpeb {datum}. Pärast seda jätkub teie tellimus automaatselt.",
+      "trialBannerKnopf": "Vaata paketti"
     },
     "users": {
       "noAccess": "Juurdepääs puudub",
@@ -11531,6 +11568,74 @@
       "subtitle": "Tegelikult laekunud raha – arvestatud registreeritud osamaksete, mitte avatud nõuete alusel.",
       "title": "Bilansistatistika",
       "to": "Kuni"
+    }
+  },
+  "startbahn": {
+    "titel": "Alustamine",
+    "fortschritt": "{fertig} / {gesamt} tehtud",
+    "gruppeZaehler": "{fertig} / {gesamt} tehtud",
+    "dauer": "umbes {minuten} minutit",
+    "gruppe": {
+      "kanaele": "Portaalide seadistamine",
+      "verkaufsfertig": "Majutuskohtade müügivalmis seadmine",
+      "grundlagen": "Põhitõed"
+    },
+    "schritt": {
+      "konto": {
+        "titel": "Konto loodud",
+        "text": "Teie ettevõte on seadistatud."
+      },
+      "firma": {
+        "titel": "Ettevõtte andmete sisestamine",
+        "text": "Aadress, käibemaksukohustuslase number ja IBAN – portaalid nõuavad neid ja ilma IBANita ei jõua raha teieni.",
+        "aktion": "Ettevõtte andmetesse"
+      },
+      "verbinden": {
+        "titel": "Ühenda portaal",
+        "text": "Ühendage Airbnb, Booking või Expedia, et broneeringud ja kalendrid sünkrooniksid.",
+        "aktion": "Ühenda portaal"
+      },
+      "objekteHolen": {
+        "titel": "Too majutuskohad portaalist",
+        "text": "Loome teie kuulutustest majutuskohad – te ei pea midagi ümber trükkima. Tähelepanu: kuulutused, mis on seotud muu tarkvaraga, ei tule kaasa.",
+        "gesperrt": "Ühendage esmalt portaal.",
+        "aktion": "Too majutuskohad"
+      },
+      "erstesObjekt": {
+        "titel": "Loo esimene majutuskoht",
+        "text": "Loo oma esimene majutuskoht – puhkemaja või toatüüp.",
+        "aktion": "Loo majutuskoht"
+      },
+      "inhalteHolen": {
+        "titel": "Võta üle sisustus ja reeglid",
+        "text": "Toad, voodid, tühistamisreeglid, sisustus ja tasud on portaalis juba olemas – toome need kõigi majutuskohtade jaoks korraga.",
+        "gesperrt": "Too esmalt oma majutuskohad portaalist.",
+        "aktion": "Võta sisu üle"
+      },
+      "preise": {
+        "titel": "Määra hinnad",
+        "text": "Ilma hinnata ei saa ükski portaal teie majutuskohta müüa.",
+        "gesperrt": "Teil on esmalt vaja majutuskohta.",
+        "aktion": "Määra hinnad"
+      },
+      "sperrtermine": {
+        "titel": "Sisesta broneeritud kuupäevad",
+        "text": "Broneeritud perioodid EI tule impordiga kaasa. Sisestage need enne müüki – vastasel juhul broneeritakse öö kaks korda.",
+        "gesperrt": "Teil on esmalt vaja majutuskohta.",
+        "aktion": "Kalendrisse"
+      },
+      "veroeffentlichen": {
+        "titel": "Avalda majutuskohad",
+        "text": "Kõik kontrollitud? Seejärel avaldage oma majutuskohad portaalides ja turuplatsil.",
+        "gesperrt": "Ainult siis, kui majutuskoht ja hinnad on paigas – vastasel juhul müüte midagi, mis pole veel valmis.",
+        "aktion": "Avalda"
+      },
+      "kanaele": {
+        "titel": "Vali müügikanalid",
+        "text": "Otsustage, milliste portaalide kaudu ja kas turuplatsi kaudu müüakse.",
+        "gesperrt": "Teil on esmalt vaja majutuskohta.",
+        "aktion": "Kanalitesse"
+      }
     }
   }
 }

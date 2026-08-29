@@ -18,6 +18,7 @@ from src.core.security import AuthContext
 from src.core.supabase import load_scoped, public_storage_url
 from src.features.auth.owner_scope import is_owner, owner_property_ids
 from src.features.auth.staff_scope import is_staff, staff_property_ids
+from src.features.properties.verkaufsfertig import verkaufsfertig_pruefen
 from src.jobs.queue import (
     enqueue,
     try_enqueue_airbnb_aktionen,
@@ -1050,9 +1051,9 @@ class PropertiesService(
     def publish(self, ctx: AuthContext, property_id: str) -> PropertyResponse:
         """Objekt veröffentlichen: draft→active + Channex-Sync + Verfügbarkeit.
 
-        Voraussetzung: das Objekt hat mindestens einen Preisplan (rate_plan).
-        Ohne Preis kann es nicht an die Buchungsportale übertragen werden (422,
-        kein Fallback). Idempotent — erneutes Veröffentlichen aktualisiert nur.
+        Voraussetzung: das Objekt ist VERKAUFSFERTIG (`verkaufsfertig.py`) und
+        hat einen Preisplan. Fehlt etwas, nennt der 422 es beim Namen — kein
+        Fallback. Idempotent: erneutes Veröffentlichen aktualisiert nur.
         """
         tenant_id = self._require_tenant(ctx)
         # Veröffentlichen erfordert die abgeschlossene Zahlungs-Einrichtung (Stripe
@@ -1087,6 +1088,9 @@ class PropertiesService(
                 "veröffentlicht und an die Buchungsportale übertragen werden.",
                 status_code=422,
             )
+        # Verkaufsfertig? Begruendung und Regeln in `verkaufsfertig.py`.
+        verkaufsfertig_pruefen(row, PropertyError)
+
         # Währung NICHT hier auflösen und schon gar nicht auf "EUR" defaulten
         # (Wurzel 4). None durchreichen — sync_content bestimmt die Objektwährung
         # selbst (zentrale properties.currency → Rate-Plan) und schlägt fail-closed

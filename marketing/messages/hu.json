@@ -424,8 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – A platform nyaralószállás-kiadóknak",
-    "description": "A platform szállodáknak, ügynökségeknek és nyaralószállás-kiadóknak: channel manager, naptár, közvetlen foglalás, vendégkommunikáció és számlázás egy helyen. Dániában fejlesztve, EU-s tárhelyen. 30 napig ingyenes.",
-    "descriptionMitPreis": "A platform szállodáknak, ügynökségeknek és nyaralószállás-kiadóknak: channel manager, naptár, közvetlen foglalás, vendégkommunikáció és számlázás egy helyen. Dániában fejlesztve, EU-s tárhelyen. {preis}/hó-tól. 30 napig ingyenes."
+    "description": "A platform szállodáknak, ügynökségeknek és nyaralószállás-kiadóknak: channel manager, naptár, közvetlen foglalás, vendégkommunikáció és számlázás egy helyen. Dániában fejlesztve, EU-s tárhelyen. 14 napig ingyenes.",
+    "descriptionMitPreis": "A platform szállodáknak, ügynökségeknek és nyaralószállás-kiadóknak: channel manager, naptár, közvetlen foglalás, vendégkommunikáció és számlázás egy helyen. Dániában fejlesztve, EU-s tárhelyen. {preis}/hó-tól. 14 napig ingyenes."
   },
   "nav": {
     "funktionen": "Funkciók",
@@ -463,7 +463,7 @@
     "headlineHighlight": "foglalás",
     "headlinePost": "kevesebb munkával.",
     "subline": "A platform szállodáknak, ügynökségeknek és nyaralószállás-kiadóknak: channel manager, naptár, közvetlen foglalás, vendégkommunikáció és számlázás egy helyen – olyan kiadók fejlesztették, akik ismerik a mindennapokat.",
-    "ctaTrial": "30 napig ingyen kipróbálom",
+    "ctaTrial": "14 napig ingyen kipróbálom",
     "ctaDemo": "Demó megtekintése",
     "kanaeleLabel": "Összekötve a nagy foglalási platformokkal",
     "eyebrow": "Platform nyaralószállás-kiadóknak",
@@ -609,7 +609,7 @@
     },
     "preis": {
       "frage": "Mennyibe kerül a myNextDays, és hogyan kezdek hozzá?",
-      "antwort": "30 nap ingyen, kötelező futamidő nélkül, telepítési díj nélkül, bármikor felmondható. Utána előfizetés plusz alacsony jutalék az általunk hozott foglalásokra. A kiegészítő modulokat — bővített könyvelés DATEV-exporttal, munkatárs-kezelés vagy hotelfunkciók — csak akkor veszed hozzá, ha kellenek. Objektum létrehozása, csatornák összekötése, indulás."
+      "antwort": "14 nap ingyen, kötelező futamidő nélkül, telepítési díj nélkül, bármikor felmondható. Utána előfizetés plusz alacsony jutalék az általunk hozott foglalásokra. A kiegészítő modulokat — bővített könyvelés DATEV-exporttal, munkatárs-kezelés vagy hotelfunkciók — csak akkor veszed hozzá, ha kellenek. Objektum létrehozása, csatornák összekötése, indulás."
     }
   },
   "benefits": {
@@ -631,13 +631,13 @@
     "preisBanner": {
       "eyebrow": "Ár",
       "heading": "Minden a szálláshelyéhez, egy helyen",
-      "text": "30 napig ingyenes. Nincs minimális futamidő. Bármikor felmondható (4 hét a hónap végére).",
+      "text": "14 napig ingyenes. Nincs minimális futamidő. Bármikor felmondható (4 hét a hónap végére).",
       "proMonat": "havonta"
     }
   },
   "trial": {
     "eyebrow": "Ingyenes próba",
-    "heading": "Próbálja ki a myNextDayst 30 napig ingyen.",
+    "heading": "Próbálja ki a myNextDayst 14 napig ingyen.",
     "sub": "Nincs minimális futamidő. Bármikor felmondható. Csak töltse ki ezt a rövid űrlapot:",
     "seitenHeading": "Minden a szálláshelyéhez egy helyen – több kontroll, kevesebb munka.",
     "perks": {
@@ -855,15 +855,16 @@
     "impressum": "Impresszum",
     "cookies": "Cookie-szabályzat",
     "avv": "Adatfeldolgozás",
-    "kontoLoeschen": "Fiók törlése"
+    "kontoLoeschen": "Fiók törlése",
+    "newsletterKnopf": "Feliratkozás hírlevélre"
   },
   "legal": {
     "stand": "Utolsó frissítés: {datum}"
   },
   "abschluss": {
     "heading": "Készen áll, hogy egy helyről irányítsa a szálláshelyét?",
-    "sub": "Próbálja ki 30 napig ingyen — nincs minimális futamidő, nincs beállítási díj, bármikor felmondható.",
-    "ctaPrimaer": "30 napig ingyen kipróbálom",
+    "sub": "Próbálja ki 14 napig ingyen — nincs minimális futamidő, nincs beállítási díj, bármikor felmondható.",
+    "ctaPrimaer": "14 napig ingyen kipróbálom",
     "ctaSekundaer": "Árak megtekintése"
   },
   "chat": {
@@ -902,14 +903,14 @@
   "preise": {
     "meta": {
       "titel": "Árak — egy csomag, minden benne | myNextDays",
-      "beschreibung": "Egy csomag a teljes funkciókörrel, az ingatlanok száma alapján fizetve. Nincs minimális futamidő, nincs belépési díj, 30 nap ingyen — csatornák, közvetlen foglalás, vendégkommunikáció és számlázás benne."
+      "beschreibung": "Egy csomag a teljes funkciókörrel, az ingatlanok száma alapján fizetve. Nincs minimális futamidő, nincs belépési díj, 14 nap ingyen — csatornák, közvetlen foglalás, vendégkommunikáció és számlázás benne."
     },
     "hero": {
       "eyebrow": "Árak",
       "headlinePre": "Egy csomag.",
       "headlineHighlight": "Minden benne.",
       "sub": "Nincs csomagrejtvény: minden funkció benne van, akár egy nyaralót kezelsz, akár tizenkét szobatípust. Az ingatlanok száma alapján fizetsz — és minél több van, annál olcsóbb egy-egy.",
-      "testen": "30 nap ingyen",
+      "testen": "14 nap ingyen",
       "laufzeit": "Nincs minimális futamidő",
       "einrichtung": "Nincs belépési díj",
       "eu": "EU-s tárhely, GDPR"
@@ -925,7 +926,7 @@
       "grundgebuehr": "Alapdíj (az 1. ingatlannal)",
       "weitereObjekte": "{anzahl, plural, =1 {egy további ingatlan} other {# további ingatlan}} × {jeObjekt}",
       "netto": "Minden összeg nettó, áfa nélkül. Havi számlázás, bármikor felmondható.",
-      "ctaTesten": "30 nap ingyenes próba",
+      "ctaTesten": "14 nap ingyenes próba",
       "ctaDemo": "Demó megtekintése",
       "inklusivTitel": "Minden csomagban benne",
       "inklusivSub": "Semmi, ami csak drágább csomagban indulna — ez a teljes tartalom.",
@@ -985,7 +986,7 @@
       "sub": "Amit a szállásadók tudni akarnak váltás előtt — röviden, apróbetűs rész nélkül.",
       "laufzeit": {
         "frage": "Van minimális futamidő?",
-        "antwort": "Nincs. Az előfizetés havi, és négy hetes felmondási idővel a hónap végére mondható fel. Az első 30 nap ingyenes, fizetési adatok nélkül."
+        "antwort": "Nem. Az előfizetés havonta megújítható, és a hónap végére négy hét felmondási idővel lemondható. Az első 14 nap ingyenes: a fizetési adatokat a kezdetkor meg kell adni, de a terhelés csak a próbaidőszak lejárta után történik. Ha előtte lemondja, nem kell fizetnie semmit."
       },
       "objektzahl": {
         "frage": "Mi történik, ha ingatlant veszek fel?",
@@ -1030,7 +1031,7 @@
       "eu": "EU-s tárhely, GDPR-megfelelés",
       "start": "Indulás 2026. szeptember 1-jén",
       "sprachen": "27 ország, 24 nyelv",
-      "ctaTrial": "30 napig ingyen kipróbálom",
+      "ctaTrial": "14 napig ingyen kipróbálom",
       "ctaKontakt": "Írjon nekünk"
     },
     "warum": {
@@ -1178,7 +1179,7 @@
   },
   "funktionen": {
     "rahmen": {
-      "ctaTesten": "30 napig ingyen kipróbálom",
+      "ctaTesten": "14 napig ingyen kipróbálom",
       "ctaDemo": "Demó megtekintése",
       "weiter": "Tovább a többi funkcióhoz",
       "mehr": "Megnézem",

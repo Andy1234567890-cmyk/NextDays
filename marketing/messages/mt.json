@@ -424,8 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – Il-pjattaforma għal min jikri akkomodazzjoni tal-vaganzi",
-    "description": "Il-pjattaforma għal lukandi, aġenziji u sidien ta' akkomodazzjoni tal-vaganzi: channel manager, kalendarju, booking dirett, komunikazzjoni mal-mistednin u kontabilità f'post wieħed. Mibnija fid-Danimarka, ospitata fl-UE. B'xejn għal 30 jum.",
-    "descriptionMitPreis": "Il-pjattaforma għal lukandi, aġenziji u sidien ta' akkomodazzjoni tal-vaganzi: channel manager, kalendarju, booking dirett, komunikazzjoni mal-mistednin u kontabilità f'post wieħed. Mibnija fid-Danimarka, ospitata fl-UE. Minn {preis} fix-xahar. B'xejn għal 30 jum."
+    "description": "Il-pjattaforma għal lukandi, aġenziji u sidien ta' akkomodazzjoni tal-vaganzi: channel manager, kalendarju, booking dirett, komunikazzjoni mal-mistednin u kontabilità f'post wieħed. Mibnija fid-Danimarka, ospitata fl-UE. B'xejn għal 14 jum.",
+    "descriptionMitPreis": "Il-pjattaforma għal lukandi, aġenziji u sidien ta' akkomodazzjoni tal-vaganzi: channel manager, kalendarju, booking dirett, komunikazzjoni mal-mistednin u kontabilità f'post wieħed. Mibnija fid-Danimarka, ospitata fl-UE. Minn {preis} fix-xahar. B'xejn għal 14 jum."
   },
   "nav": {
     "funktionen": "Funzjonijiet",
@@ -463,7 +463,7 @@
     "headlineHighlight": "bookings",
     "headlinePost": "inqas xogħol.",
     "subline": "Il-pjattaforma għal lukandi, aġenziji u sidien ta' akkomodazzjoni tal-vaganzi: channel manager, kalendarju, booking dirett, komunikazzjoni mal-mistednin u kontabilità f'post wieħed – mibnija minn sidien li jafu x'inhi r-rutina ta' kuljum.",
-    "ctaTrial": "Ipprova 30 jum b'xejn",
+    "ctaTrial": "Ipprova 14 jum b'xejn",
     "ctaDemo": "Ara d-demo",
     "kanaeleLabel": "Konnessa mal-akbar pjattaformi tal-booking",
     "eyebrow": "Il-pjattaforma għal min jikri akkomodazzjoni tal-vaganzi",
@@ -609,7 +609,7 @@
     },
     "preis": {
       "frage": "Kemm tiswa myNextDays u kif nibda?",
-      "antwort": "30 jum b'xejn, mingħajr terminu minimu, mingħajr ħlas ta' installazzjoni, tista' tikkanċella f'kull ħin. Wara, abbonament flimkien ma' kommissjoni żgħira fuq il-bookings li nġibu. Il-moduli addizzjonali — kontabilità estiża b'esportazzjoni DATEV, immaniġġjar tal-persunal jew funzjonijiet tal-lukandi — jiżdiedu biss jekk teħtieġhom. Oħloq proprjetà, qabbad il-kanali, ibda."
+      "antwort": "14 jum b'xejn, mingħajr terminu minimu, mingħajr ħlas ta' installazzjoni, tista' tikkanċella f'kull ħin. Wara, abbonament flimkien ma' kommissjoni żgħira fuq il-bookings li nġibu. Il-moduli addizzjonali — kontabilità estiża b'esportazzjoni DATEV, immaniġġjar tal-persunal jew funzjonijiet tal-lukandi — jiżdiedu biss jekk teħtieġhom. Oħloq proprjetà, qabbad il-kanali, ibda."
     }
   },
   "benefits": {
@@ -631,13 +631,13 @@
     "preisBanner": {
       "eyebrow": "Prezz",
       "heading": "Dak kollu li teħtieġ il-propjetà tiegħek, f'post wieħed",
-      "text": "30 jum b'xejn. Bla perjodu minimu. Ikkanċella meta trid (4 ġimgħat sa tmiem ix-xahar).",
+      "text": "14 jum b'xejn. Bla perjodu minimu. Ikkanċella meta trid (4 ġimgħat sa tmiem ix-xahar).",
       "proMonat": "fix-xahar"
     }
   },
   "trial": {
     "eyebrow": "Prova b'xejn",
-    "heading": "Ipprova myNextDays b'xejn għal 30 jum.",
+    "heading": "Ipprova myNextDays b'xejn għal 14 jum.",
     "sub": "Bla perjodu minimu. Ikkanċella meta trid. Sempliċement imla din il-formola qasira:",
     "seitenHeading": "Dak kollu li teħtieġ il-propjetà tiegħek f'post wieħed – aktar kontroll, inqas xogħol.",
     "perks": {
@@ -855,15 +855,16 @@
     "impressum": "Avviż legali",
     "cookies": "Politika tal-cookies",
     "avv": "Ipproċessar tad-dejta",
-    "kontoLoeschen": "Ħassar il-kont"
+    "kontoLoeschen": "Ħassar il-kont",
+    "newsletterKnopf": "Abbona man-Newsletter"
   },
   "legal": {
     "stand": "L-aħħar aġġornament: {datum}"
   },
   "abschluss": {
     "heading": "Lest biex tmexxi l-propjetà tiegħek minn post wieħed?",
-    "sub": "Ipprova b'xejn għal 30 jum — bla perjodu minimu, bla ħlas ta' setup, ikkanċella meta trid.",
-    "ctaPrimaer": "Ipprova 30 jum b'xejn",
+    "sub": "Ipprova b'xejn għal 14 jum — bla perjodu minimu, bla ħlas ta' setup, ikkanċella meta trid.",
+    "ctaPrimaer": "Ipprova 14 jum b'xejn",
     "ctaSekundaer": "Ara l-prezzijiet"
   },
   "chat": {
@@ -902,14 +903,14 @@
   "preise": {
     "meta": {
       "titel": "Prezzijiet — pjan wieħed, kollox inkluż | myNextDays",
-      "beschreibung": "Pjan wieħed bil-firxa sħiħa ta' funzjonijiet, imħallas skont in-numru ta' proprjetajiet. Bla terminu minimu, bla ħlas ta' installazzjoni, 30 jum b'xejn — kanali, prenotazzjonijiet diretti, komunikazzjoni mal-mistednin u fatturar inklużi."
+      "beschreibung": "Pjan wieħed bil-firxa sħiħa ta' funzjonijiet, imħallas skont in-numru ta' proprjetajiet. Bla terminu minimu, bla ħlas ta' installazzjoni, 14 jum b'xejn — kanali, prenotazzjonijiet diretti, komunikazzjoni mal-mistednin u fatturar inklużi."
     },
     "hero": {
       "eyebrow": "Prezzijiet",
       "headlinePre": "Pjan wieħed.",
       "headlineHighlight": "Kollox inkluż.",
       "sub": "L-ebda taħwid ta' pakketti: kull funzjoni hija inkluża, sew jekk tmexxi appartament tal-vaganzi wieħed jew tnax-il tip ta' kamra. Tħallas skont in-numru ta' proprjetajiet — u aktar ma jkollok, orħos joħroġ kull wieħed.",
-      "testen": "30 jum b'xejn",
+      "testen": "14 jum b'xejn",
       "laufzeit": "Bla terminu minimu",
       "einrichtung": "Bla ħlas ta' installazzjoni",
       "eu": "Ospitat fl-UE, GDPR"
@@ -925,7 +926,7 @@
       "grundgebuehr": "Ħlas bażiku (inkluża l-1 proprjetà)",
       "weitereObjekte": "{anzahl, plural, one {proprjetà waħda oħra} other {# proprjetajiet oħra}} × {jeObjekt}",
       "netto": "L-ammonti kollha mingħajr VAT. Fatturar kull xahar, tista' tikkanċella meta trid.",
-      "ctaTesten": "Ipprova 30 jum b'xejn",
+      "ctaTesten": "Ipprova 14 jum b'xejn",
       "ctaDemo": "Ara d-demo",
       "inklusivTitel": "Inkluż f'kull pjan",
       "inklusivSub": "Xejn li jibda biss f'pakkett ogħla — din hija l-firxa kollha.",
@@ -985,7 +986,7 @@
       "sub": "X'iridu jkunu jafu s-sidien qabel jibdlu — fil-qosor u mingħajr stampar żgħir.",
       "laufzeit": {
         "frage": "Hemm terminu minimu?",
-        "antwort": "Le. L-abbonament jimxi kull xahar u jista' jiġi kkanċellat b'avviż ta' erba' ġimgħat sal-aħħar tax-xahar. L-ewwel 30 jum huma b'xejn, mingħajr dettalji tal-ħlas."
+        "antwort": "Le. L-abbonament huwa ta' kull xahar u jista' jiġi kkanċellat b'erba' ġimgħat qabel tmiem ix-xahar. L-ewwel 14-il jum huma b'xejn: Inti ddaħħal id-dettalji tal-ħlas tiegħek fil-bidu, iżda l-ħlas isir biss wara li jiskadi l-perjodu ta' prova. Jekk tikkanċella qabel, ma tħallas xejn."
       },
       "objektzahl": {
         "frage": "X'jiġri meta nżid proprjetajiet?",
@@ -1030,7 +1031,7 @@
       "eu": "Ospitata fl-UE, konformi mal-GDPR",
       "start": "Tnedija fl-1 ta' Settembru 2026",
       "sprachen": "27 pajjiż, 24 lingwa",
-      "ctaTrial": "Ipprova 30 jum b'xejn",
+      "ctaTrial": "Ipprova 14 jum b'xejn",
       "ctaKontakt": "Ikteblna"
     },
     "warum": {
@@ -1178,7 +1179,7 @@
   },
   "funktionen": {
     "rahmen": {
-      "ctaTesten": "Ipprova 30 jum b'xejn",
+      "ctaTesten": "Ipprova 14 jum b'xejn",
       "ctaDemo": "Ara d-demo",
       "weiter": "Kompli għall-funzjonijiet l-oħra",
       "mehr": "Ara",

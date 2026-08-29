@@ -17,6 +17,7 @@ import { AddressPlacesSearch } from "@/components/address-places-search";
 import { SwitcherImport } from "@/components/onboarding/switcher-import";
 import { ensureChannexAccount } from "@/lib/channex";
 import { Button } from "@nextdays/ui/button";
+import { OnboardingSchale } from "@/components/onboarding/onboarding-schale";
 import { Input } from "@nextdays/ui/input";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import type { AccommodationType } from "@/lib/api";
@@ -49,12 +50,18 @@ export function OnboardingWizard({
   initialStatus,
   loginEmail,
   initialAccommodationType,
+  initialTenantName,
 }: {
   initialStatus?: OnboardingStatus;
   loginEmail?: string | null;
   // Bereits am Betrieb gewählte Betriebsart (tenants.accommodation_type) — belegt
   // die Auswahl in Schritt 2 vor, statt eine erneute Wahl zu erzwingen.
   initialAccommodationType?: AccommodationType | null;
+  // Betriebsname aus der Registrierung (`tenants.name`) — belegt „Firmenname"
+  // vor. Ohne ihn tippt ein frisch registrierter Betrieb denselben Namen ein
+  // zweites Mal: das Feld liest sonst aus `tenant_billing_profile`, und das
+  // entsteht erst mit diesem Schritt.
+  initialTenantName?: string | null;
 }) {
   const router = useRouter();
   const t = useTranslations("onboarding");
@@ -109,6 +116,10 @@ export function OnboardingWizard({
     legalForm: "Einzelunternehmen",
     // Rechnungs-/Firmen-E-Mail mit der Login-E-Mail vorbelegen (editierbar).
     email: loginEmail ?? undefined,
+    // Firmenname mit dem Betriebsnamen aus der Registrierung vorbelegen
+    // (editierbar). Beides ist derselbe Betrieb; ihn zweimal abzufragen
+    // wirkt, als waere die erste Eingabe verloren gegangen.
+    companyName: initialTenantName ?? undefined,
     // Stripe-Kontotyp: Default „Einzelperson" (entspricht dem DB-Default
     // tenant_billing_profile.account_type='individual'). Geburtsdatum bleibt leer
     // bis der Nutzer es ausfüllt — kein erfundener Wert (Projektregel).
@@ -301,9 +312,33 @@ export function OnboardingWizard({
     });
   }
 
+  function ueberspringen() {
+    // Schließt den Assistenten, OHNE `customer_type` zu setzen — anders als
+    // `finish()`, das hart "new" schreibt. Wer hier aussteigt, hat die Weiche
+    // Neu-/Wechselkunde noch gar nicht beantwortet; ihn als Neukunden zu
+    // führen wäre eine erfundene Angabe (Wurzel 4) und gäbe ihm in der
+    // Startbahn die falsche Liste — „Erstes Objekt anlegen" statt seines
+    // Import-Stands.
+    //
+    // Die Pflichtdaten sind damit nicht erlassen, nur verschoben: sie stehen
+    // als offene Zeile in der Startbahn, und ohne sie verkauft kein Portal.
+    startTransition(async () => {
+      await updateOnboarding({ completed: true });
+      router.replace("/");
+      router.refresh();
+    });
+  }
+
+  // Der Schluss-Schritt bietet keinen Ausstieg mehr an — dort IST man draußen.
+  const ueberspringbar = step !== "done";
+
   return (
-    <div className="flex flex-col gap-6">
-      <ProgressBar step={step} />
+    <OnboardingSchale
+      schritt={schrittNummer(step)}
+      gesamt={SCHRITT_ORDNUNG.length}
+      onUeberspringen={ueberspringbar ? ueberspringen : undefined}
+    >
+      <div className="flex flex-col gap-6">
 
       {step === "welcome" && (
         <Card>
@@ -324,11 +359,24 @@ export function OnboardingWizard({
             {t("type.title")}
           </h1>
           <p className="text-muted-foreground">{t("type.text")}</p>
-          <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
+          {/* Untereinander statt nebeneinander: die Spalte ist im geteilten
+              Bildschirm schmal, `sm:grid-cols-2` misst aber die FENSTER-Breite
+              und griff deshalb zu früh — beide Kacheln wurden auf gut 11 rem
+              gequetscht, „Ferienvermietung" brach auf drei Zeilen und das
+              Häkchen lag im Text. Zwei Kacheln untereinander lesen sich hier
+              besser als zwei zerdrückte nebeneinander. */}
+          <div className="grid w-full grid-cols-1 gap-3">
+            {/* Hotel ist im Onboarding NICHT wählbar: das Modul ist noch nicht
+                so weit, und ein Betrieb, der sich hier als Hotel einrichtet,
+                landet in Begriffen und Masken, die ihn ins Leere führen. Die
+                Kachel bleibt trotzdem stehen — sie sagt ehrlich, dass es kommt,
+                statt so zu tun, als gäbe es nur Ferienvermietung.
+                Bestehende Hotel-Betriebe sind davon unberührt; gesperrt ist nur
+                die Neuwahl, nicht der Typ. */}
             {(
               [
-                { value: "vacation_rental", icon: "ph:house-line" },
-                { value: "hotel", icon: "ph:bed" },
+                { value: "vacation_rental", icon: "ph:house-line", bald: false },
+                { value: "hotel", icon: "ph:bed", bald: true },
               ] as const
             ).map((opt) => {
               const active = accommodationType === opt.value;
@@ -337,12 +385,15 @@ export function OnboardingWizard({
                   key={opt.value}
                   type="button"
                   aria-pressed={active}
-                  onClick={() => setAccType(opt.value)}
+                  disabled={opt.bald}
+                  onClick={() => !opt.bald && setAccType(opt.value)}
                   className={cn(
                     "flex items-center gap-3 rounded-(--radius) border p-4 text-left transition",
-                    active
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:bg-secondary/50",
+                    opt.bald
+                      ? "cursor-not-allowed border-border opacity-60"
+                      : active
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:bg-secondary/50",
                   )}
                 >
                   <span
@@ -356,7 +407,14 @@ export function OnboardingWizard({
                     <Icon icon={opt.icon} className="size-5" />
                   </span>
                   <span className="flex min-w-0 flex-col">
-                    <span className="text-sm font-medium">{tAcc(opt.value)}</span>
+                    <span className="flex items-center gap-2 text-sm font-medium">
+                      {tAcc(opt.value)}
+                      {opt.bald && (
+                        <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                          {t("type.bald")}
+                        </span>
+                      )}
+                    </span>
                     <span className="text-xs text-muted-foreground">
                       {tAcc(`${opt.value}Hint`)}
                     </span>
@@ -643,7 +701,13 @@ export function OnboardingWizard({
             {t("branch.title")}
           </h1>
           <p className="text-muted-foreground">{t("branch.text")}</p>
-          <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
+          {/* Untereinander statt nebeneinander: die Spalte ist im geteilten
+              Bildschirm schmal, `sm:grid-cols-2` misst aber die FENSTER-Breite
+              und griff deshalb zu früh — beide Kacheln wurden auf gut 11 rem
+              gequetscht, „Ferienvermietung" brach auf drei Zeilen und das
+              Häkchen lag im Text. Zwei Kacheln untereinander lesen sich hier
+              besser als zwei zerdrückte nebeneinander. */}
+          <div className="grid w-full grid-cols-1 gap-3">
             {(
               [
                 { value: "switch", icon: "ph:arrows-left-right" },
@@ -691,15 +755,15 @@ export function OnboardingWizard({
             {t("switch.title")}
           </h1>
           <p className="text-muted-foreground">{t("switch.intro")}</p>
-          <SwitcherImport accommodationType={accommodationType} />
-          <Button
-            variant="ghost"
-            onClick={() => setStep("branch")}
-            className="self-start"
-          >
-            <Icon icon="ph:arrow-left" className="mr-1 size-4" />
-            {tc("back")}
-          </Button>
+          {/* Der Import führt einen EIGENEN Assistenten mit eigenem Zurück.
+              Ein zweiter Knopf darunter stand doppelt da und war mehrdeutig —
+              der eine ging einen Import-Schritt zurück, der andere aus dem
+              Import heraus. Deshalb hat der innere jetzt beide Aufgaben:
+              auf seiner ersten Ansicht verlässt er den Import. */}
+          <SwitcherImport
+            accommodationType={accommodationType}
+            onVerlassen={() => setStep("branch")}
+          />
         </Card>
       )}
 
@@ -761,7 +825,8 @@ export function OnboardingWizard({
           </div>
         </Card>
       )}
-    </div>
+      </div>
+    </OnboardingSchale>
   );
 }
 
@@ -825,25 +890,17 @@ function Field({
   );
 }
 
-function ProgressBar({ step }: { step: Step }) {
-  const tc = useTranslations("common");
-  // branch/switch/done sind alternative Endzustände nach der Weiche → als letzter
-  // Schritt gezählt (Firmendaten stehen, nur noch Zweig-Aktion).
-  const order: Step[] = ["welcome", "type", "company", "tax", "branch"];
-  const endStates: Step[] = ["branch", "switch", "done"];
-  const idx = endStates.includes(step) ? order.length - 1 : order.indexOf(step);
-  const pct = Math.round((idx / (order.length - 1)) * 100);
-  return (
-    <div className="w-full">
-      <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
-        <div
-          className="h-full rounded-full bg-accent transition-all duration-300"
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      <p className="mt-1 text-xs text-muted-foreground">
-        {tc("stepOf", { current: idx + 1, total: order.length })}
-      </p>
-    </div>
-  );
+/** Schritt-Ordnung für den Fortschritt.
+ *
+ *  `branch`/`switch`/`done` sind alternative Endzustände nach der Weiche und
+ *  zählen als letzter Schritt — die Firmendaten stehen dort schon, offen ist nur
+ *  noch die Zweig-Aktion. */
+const SCHRITT_ORDNUNG: Step[] = ["welcome", "type", "company", "tax", "branch"];
+const SCHRITT_ENDE: Step[] = ["branch", "switch", "done"];
+
+function schrittNummer(step: Step): number {
+  const idx = SCHRITT_ENDE.includes(step)
+    ? SCHRITT_ORDNUNG.length - 1
+    : SCHRITT_ORDNUNG.indexOf(step);
+  return idx + 1;
 }

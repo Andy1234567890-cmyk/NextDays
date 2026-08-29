@@ -26,7 +26,10 @@
       "da": "Danmhairgis",
       "en": "Béarla"
     },
-    "explain": "Míniú ar {label}"
+    "explain": "Míniú ar {label}",
+    "themeToggle": "Athrú Dearaidh",
+    "themeToggleLight": "Dearadh Éadrom",
+    "themeToggleDark": "Dearadh Dorcha"
   },
   "legal": {
     "agbLinkLabel": "Téarmaí",
@@ -118,7 +121,8 @@
     },
     "type": {
       "title": "Cad a ligeann tú ar cíos?",
-      "text": "Roghnaigh an cineál gnó — socraíonn sé téarmaí agus modúil i do dheais."
+      "text": "Roghnaigh an cineál gnó — socraíonn sé téarmaí agus modúil i do dheais.",
+      "bald": "Á siúl"
     },
     "tax": {
       "title": "Cánacha & íocaíochtaí",
@@ -134,7 +138,7 @@
     },
     "switch": {
       "title": "Maoine atá ann cheana a iompórtáil",
-      "intro": "Seo mar a thugann tú do mhaoine Booking/Airbnb atá ann cheana chuig myNextDays — gan áirithintí dúbailte.",
+      "intro": "Conas do liostaí atá ann cheana a fháil chuig myNextDays — gan áirithintí dúbailte.",
       "cutover": {
         "title": "Tábhachtach roimh an nasc",
         "a": "Dícheangail gach tairseach ó do chóras roimhe seo sula gceanglaíonn tú anseo í — ní cheadaítear ach AON chóras amháin a sheolann sonraí in aghaidh gach cainéil.",
@@ -147,21 +151,24 @@
         "title": "Cruthaigh réadmhaoin",
         "text": "Cruthaigh maoin amháin do gach fógra atá ann cheana — is leor ainm, cineál agus bunphraghas chun é a shannadh.",
         "count": "{count, plural, =0 {Gan aon mhaoin go fóill} one {# mhaoin} two {# mhaoin} few {# mhaoin} many {# maoin} other {# maoin}}",
-        "airbnbHint": "Ag teacht ó Airbnb? Scipeáil an chéim seo — déantar do mhaoine a iompórtáil go huathoibríoch nuair a nascann tú Airbnb."
+        "airbnbHint": "Ag teacht ó Airbnb? Scipeáil an chéim seo — déantar do mhaoine a iompórtáil go huathoibríoch nuair a nascann tú Airbnb.",
+        "zuordnenHint": "Maidir le Booking.com agus tairseacha eile, teastaíonn an réadmhaoin seo uait: Nuair a dhéantar nascadh, déantar seomraí na tairsí a mhapáil 1:1 le do réadmhaoine. Ní bhaineann an chéim seo le Airbnb — tagann na liostaí ansin nuair a dhéantar nascadh le."
       },
       "step2": {
         "title": "Tairseach a cheangal agus a shannadh",
         "text": "Ceangail Booking, Airbnb agus eile agus sann seomraí na tairsí 1:1 do do mhaoine. Tagann áirithintí agus infhaighteacht go huathoibríoch ina dhiaidh sin.",
         "connect": "Nasc tairseach",
         "connectMore": "Nasc tairseach eile",
-        "alreadyConnected": "Tá tairseach ceangailte cheana agus tá do mhaoine seolta — ní gá aon rud a cheangal arís anseo. Ná húsáid „Ceangail tairseach eile“ ach le haghaidh tairsí BREISE (m.sh. Booking)."
+        "alreadyConnected": "Tá tairseach ceangailte cheana agus tá do mhaoine seolta — ní gá aon rud a cheangal arís anseo. Ná húsáid „Ceangail tairseach eile“ ach le haghaidh tairsí BREISE (m.sh. Booking).",
+        "connectNamed": "Ceangail {portal}",
+        "textNamed": "Ceangail {portale} agus mapáil seomraí an tairseach 1:1 le d'airíonna. Tiocfaidh áirithintí agus infhaighteacht go huathoibríoch ina dhiaidh sin."
       },
       "pull": {
-        "button": "Faigh na réadmhaoine ón tairseach",
         "result": "{count, plural, =0 {Níor aimsíodh aon mhaoin nua} one {# mhaoin tógtha} two {# mhaoin tógtha} few {# mhaoin tógtha} many {# maoin tógtha} other {# maoin tógtha}}"
       },
       "finishCta": "Críochnaigh an iompórtáil",
       "finishHint": "Deimhnigh an nóta thuas ar dtús agus cruthaigh maoin amháin ar a laghad.",
+      "finishHintObjekt": "Cruthaigh réad amháin ar a laghad ar dtús — níl aon rud le bainistiú gan réad. Tá an t-allmhairiú Lodgify roghnach agus níl sé éigeantach.",
       "bookings": {
         "title": "Áirithintí atá ann a léamh isteach",
         "text": "Tarraing áirithintí do thairseacha ceangailte isteach i do fhéilire.",
@@ -193,7 +200,32 @@
       },
       "finish": {
         "notRegistered": "Ní mór maoin amháin ar a laghad a bheith seolta chuig na tairseacha áirithinte sula gcuireann tú an tús-shocrú i gcrích. Ceangail tairseach i gcéim 2 — seoltar an mhaoin go huathoibríoch leis sin."
+      },
+      "nav": {
+        "zurueck": "Ar ais",
+        "weiter": "Ar aghaidh",
+        "zaehler": "Céim {aktuell} de {gesamt}"
+      },
+      "auswahl": {
+        "title": "Cé na tairseacha ar a ndíolann tú inniu?",
+        "text": "Déanaimid an t-allmhairiú a ailíniú leis sin. Is féidir leat tairseacha breise a nascadh am ar bith níos déanaí.",
+        "keine": "Níl mé ag díol ar aon tairseach fós"
       }
+    },
+    "spaeterEinrichten": "Socrú níos déanaí",
+    "schrittVon": "Céim {aktuell} de {gesamt}",
+    "claim1": "Gach tairseach, féilire amháin — agus tagann do réadmhaoine leat.",
+    "claim2": "Praghsanna, áitíocht agus teachtaireachtaí in aon áit amháin.",
+    "claim3": "Níos mó ama do na haíonna, níos lú ama don riarachán.",
+    "usp": {
+      "portale": "Gach tairseach mhór nasctha",
+      "kalender": "Féilire amháin do gach tairseach",
+      "doppelt": "Cuirimid bac láithreach ar oícheanta curtha in áirithe i ngach áit",
+      "import": "Faighimid do liostaí reatha duit",
+      "zahlung": "Íocaíochtaí isteach agus amach san áireamh",
+      "preise": "Bainistigh praghsanna séasúracha agus oíche",
+      "posteingang": "Teachtaireachtaí aoi ó gach tairseach i mbosca isteach amháin",
+      "app": "Gach rud san aip freisin"
     }
   },
   "nav": {
@@ -6206,6 +6238,7 @@
       "untertitelKanaele": "Roghnaigh cá ndíolfar an réadmhaoin seo.",
       "untertitelPruefen": "Seiceáil cad a athróidh ar na tairseacha.",
       "nichtVerfuegbar": "Níl sé ar fáil faoi láthair",
+      "portalVerbinden": "Ceangail {portal} anois",
       "weiter": "Ar aghaidh",
       "abbrechen": "Cealaigh",
       "jetztVeroeffentlichen": "Foilsigh anois",
@@ -9933,7 +9966,11 @@
       "statusPastDue": "Íocaíocht dlite",
       "statusCanceled": "Cealaithe",
       "statusUnpaid": "Neamhíoctha",
-      "statusIncomplete": "Neamhiomlán"
+      "statusIncomplete": "Neamhiomlán",
+      "trialEnds": "Críoch leis an tréimhse trialach ar",
+      "trialBannerTitel": "Tréimhse trialach saor in aisce",
+      "trialBannerText": "Críochnóidh do thréimhse trialach ar an {datum}. Ina dhiaidh sin, leanfar le do shíntiús go huathoibríoch.",
+      "trialBannerKnopf": "Féach ar an bplean"
     },
     "users": {
       "noAccess": "Gan rochtain",
@@ -11531,6 +11568,74 @@
       "subtitle": "Airgead a fuarthas iarbhír — ríofa trí na híocaíochtaí páirteacha cláraithe, ní trí éilimh oscailte.",
       "title": "Staitisticí cothromaíochta",
       "to": "Go dtí"
+    }
+  },
+  "startbahn": {
+    "titel": "Céimeanna Tosaigh",
+    "fortschritt": "{fertig} as {gesamt} críochnaithe",
+    "gruppeZaehler": "{fertig} / {gesamt} críochnaithe",
+    "dauer": "thart ar {minuten} nóiméad",
+    "gruppe": {
+      "kanaele": "Socraigh Tairseacha",
+      "verkaufsfertig": "Déan réidh le díol",
+      "grundlagen": "Bunúsacha"
+    },
+    "schritt": {
+      "konto": {
+        "titel": "Cuntas Cruthaithe",
+        "text": "Tá do ghnó socraithe."
+      },
+      "firma": {
+        "titel": "Cuir Sonraí Cuideachta Isteach",
+        "text": "Seoladh, Uimhir Chánach agus IBAN — éilíonn na tairseacha iad, agus gan IBAN ní thiocfaidh airgead chugat.",
+        "aktion": "Chun Sonraí Cuideachta"
+      },
+      "verbinden": {
+        "titel": "Ceangail Tairseach",
+        "text": "Ceangail Airbnb, Booking nó Expedia ionas go dtagann áirithintí agus féilirí le chéile.",
+        "aktion": "Ceangail Tairseach"
+      },
+      "objekteHolen": {
+        "titel": "Faigh Réadmhaoine ón Tairseach",
+        "text": "Cruthaímid do liostaí mar réadmhaoine — ní gá duit aon rud a chlóscríobh. Rabhadh: Ní thagann fógraí atá nasctha le bogearraí eile leat.",
+        "gesperrt": "Ceangail tairseach ar dtús.",
+        "aktion": "Faigh Réadmhaoine"
+      },
+      "erstesObjekt": {
+        "titel": "Cruthaigh an Chéad Réadmhaoin",
+        "text": "Cruthaigh do chéad réadmhaoin — lóistín saoire nó cineál seomra.",
+        "aktion": "Cruthaigh Réadmhaoin"
+      },
+      "inhalteHolen": {
+        "titel": "Glac le Trealamh agus Rialacha",
+        "text": "Tá seomraí, leapacha, rialacha cealaithe, trealamh agus táillí ar an tairseach cheana féin — faighimid iad do gach réadmhaoin ag an am céanna.",
+        "gesperrt": "Faigh do réadmhaoine ón tairseach ar dtús.",
+        "aktion": "Glac le hÁbhar"
+      },
+      "preise": {
+        "titel": "Socraigh Praghsanna",
+        "text": "Gan praghas ní féidir le tairseach do réadmhaoin a dhíol.",
+        "gesperrt": "Teastaíonn réadmhaoin uait ar dtús.",
+        "aktion": "Socraigh Praghsanna"
+      },
+      "sperrtermine": {
+        "titel": "Cuir Dátaí Blocáilte Isteach",
+        "text": "NÍ thagann tréimhsí áitithe leis an allmhairiú. Cuir isteach iad sula ndíolann tú — ar shlí eile cuirfear oíche in áirithe faoi dhó.",
+        "gesperrt": "Teastaíonn réadmhaoin uait ar dtús.",
+        "aktion": "Chun an Féilire"
+      },
+      "veroeffentlichen": {
+        "titel": "Foilsigh Réadmhaoine",
+        "text": "Gach rud seiceáilte? Ansin scaoil do réadmhaoine ar na tairseacha agus sa mhargadh.",
+        "gesperrt": "Ach amháin nuair a bhíonn an réadmhaoin agus na praghsanna socraithe — ar shlí eile díolfaidh tú rud éigin nach bhfuil críochnaithe fós.",
+        "aktion": "Foilsigh"
+      },
+      "kanaele": {
+        "titel": "Roghnaigh Bealaí Díolacháin",
+        "text": "Déan cinneadh trína ndíoltar tairseacha agus an ndíoltar tríd an margadh.",
+        "gesperrt": "Teastaíonn réadmhaoin uait ar dtús.",
+        "aktion": "Chun na Cainéil"
+      }
     }
   }
 }

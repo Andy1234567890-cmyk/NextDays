@@ -30,10 +30,13 @@ import {
   listChannelAccounts,
   listChannelConnections,
   listPortals,
+  oauthRuecksprung,
   prepareChannel,
   startAirbnbUebernahme,
   uebernehmeAirbnbListings,
 } from "@/lib/channex";
+import { channelBrand } from "@/lib/channel-logos";
+import { oauthProtokoll } from "@/lib/oauth-protokoll";
 import { listProperties } from "@/lib/properties";
 
 // "oauth" = Airbnb-Verbindung über OAuth-URL (kein Credential): URL öffnen oder
@@ -171,6 +174,9 @@ function buildMappingRows(
 
 export function ChannelConnectButton({
   label,
+  /** Ersetzt das Stecker-Symbol durch ein eigenes Zeichen — im Onboarding das
+   *  ECHTE Portal-Logo, damit „Airbnb verbinden" auch nach Airbnb aussieht. */
+  zeichen,
   variant = "default",
   presetPortalCode,
   presetPropertyId,
@@ -180,6 +186,7 @@ export function ChannelConnectButton({
   onDone,
 }: {
   label?: string;
+  zeichen?: React.ReactNode;
   variant?: "default" | "outline" | "accent";
   // Wenn gesetzt: der Assistent springt beim Öffnen direkt zu diesem Portal
   // (Kanal-Detailseite → „verbinden"), statt die Portal-Auswahl zu zeigen.
@@ -249,6 +256,24 @@ export function ChannelConnectButton({
   // Zeitpunkt, ab dem gepollt wird — begrenzt das Warten (siehe unten).
   const [oauthSince, setOauthSince] = useState<number | null>(null);
   const [oauthAufgegeben, setOauthAufgegeben] = useState(false);
+  // Hat jemand den Autorisierungslink WIRKLICH aufgerufen (geoeffnet oder
+  // kopiert, um ihn dem Eigentuemer zu schicken)?
+  //
+  // Ohne diese Angabe kann die Oberflaeche „noch nichts passiert" nicht von
+  // „das Portal hat abgelehnt" unterscheiden — beides sieht gleich aus: kein
+  // Kanal. Live am 29.08.2026 stand deshalb im frischen Testkonto
+  // „Keine Bestaetigung von Airbnb erhalten … dort ist bereits eine andere
+  // Software verbunden", obwohl der Link nie geoeffnet worden war. Der Kunde
+  // suchte in seinem Airbnb-Konto nach einer Verbindung, die es nie gab.
+  //
+  // Das Gegenstueck im Backend ist `channex_channel_connection.oauth_versuch_at`
+  // (Migration 0487); dieses Flag deckt die Zeit davor ab, in der es noch gar
+  // keine Zeile gibt.
+  const [oauthAufgerufen, setOauthAufgerufen] = useState(false);
+  // Der Portal-Code fuer das Protokoll im Poll-Intervall. Als Ref, damit er den
+  // Effekt nicht neu aufsetzt (siehe Begruendung am Aufgabe-Zweig unten).
+  const portalCodeRef = useRef<string | undefined>(undefined);
+  portalCodeRef.current = selected?.code;
   const [copied, setCopied] = useState(false);
 
   // ALLE Portal-Konten des Betriebs (0304). Eine Agentur führt mehrere Zugänge
@@ -286,6 +311,98 @@ export function ChannelConnectButton({
       }
     });
   }, [open, presetPropertyId]);
+
+  // RÜCKSPRUNG von Airbnb auswerten — hier entsteht zum ersten Mal etwas.
+  //
+  // Channex hängt nach erfolgreicher Autorisierung
+  // `?success=true&channel_id=<uuid>&token=<token>` an die Adresse, die wir als
+  // `redirect_uri` mitgegeben haben (also diese Seite). Bis 29.08.2026 las das
+  // niemand aus: der Server legte stattdessen schon beim KLICK ein Objekt, eine
+  // Channex-Property, ein Konto und eine Verbindung an — auch wenn der Kunde
+  // den Airbnb-Login nie öffnete. Nach drei Abbrüchen standen 3 Konten,
+  // 3 Verbindungen und 4 Registrierungen in der Datenbank.
+  //
+  // Jetzt trägt dieser Rücksprung die ganze Last: vorher entsteht nichts.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const erfolg = params.get("success");
+    const kanal = params.get("channel_id");
+    if (!erfolg) return;
+
+    // Die Parameter SOFORT aus der Adresse entfernen — sonst löst jedes
+    // Neuladen denselben Rücksprung erneut aus, und bei einem Fehlschlag
+    // stünde die Meldung dauerhaft in der Leiste.
+    const sauber = new URL(window.location.href);
+    for (const k of ["success", "channel_id", "token"]) {
+      sauber.searchParams.delete(k);
+    }
+    window.history.replaceState({}, "", sauber.toString());
+
+    if (erfolg !== "true" || !kanal) {
+      // `success=false` ist Airbnbs Absage, kein Fehler unsererseits.
+      setError(
+        "Die Verbindung mit Airbnb wurde nicht abgeschlossen. Du kannst es erneut versuchen.",
+      );
+      setStep("oauth");
+      return;
+    }
+
+    setOpen(true);
+    setStep("oauth");
+    startTransition(async () => {
+      oauthProtokoll("ruecksprung", {
+        portal: "AirBNB",
+        detail: `channel_id=${kanal}`,
+      });
+      const res = await oauthRuecksprung(kanal, "AirBNB", params.get("token"));
+      if (!res.ok) {
+        oauthProtokoll("status_fehler", {
+          portal: "AirBNB",
+          detail: `Ruecksprung abgelehnt: ${res.error}`,
+        });
+        setError(res.error);
+        return;
+      }
+      oauthProtokoll("verbunden", {
+        portal: "AirBNB",
+        detail:
+          `konto=${res.data.account_id} host=${res.data.host_id ?? "-"} ` +
+          `verbunden=${res.data.verbunden}`,
+      });
+      setKontoId(res.data.account_id);
+      setOauthHostId(res.data.host_id);
+      if (!res.data.verbunden) return;
+
+      // Der Handshake steht — JETZT die Inserate holen und daraus die Objekte
+      // anlegen bzw. aktualisieren. Bis 29.08.2026 war das ein eigener Knopf
+      // („Objekte aus Portal holen") im Onboarding: der Kunde musste nach der
+      // Rueckkehr von Airbnb selbst darauf kommen, dass noch ein Schritt fehlt.
+      //
+      // Es bleibt bei NICHT aktivieren: die Objekte entstehen, verkauft wird
+      // erst, wenn der Betrieb das Portal ausdruecklich aktiviert.
+      const geholt = await uebernehmeAirbnbListings(res.data.account_id);
+      if (geholt.ok) {
+        oauthProtokoll("inserate_geholt", {
+          portal: "AirBNB",
+          detail:
+            `neu=${geholt.data.created} aktualisiert=${geholt.data.updated} ` +
+            `uebersprungen=${geholt.data.skipped}`,
+        });
+      }
+      if (!geholt.ok) {
+        oauthProtokoll("inserate_fehlgeschlagen", {
+          portal: "AirBNB",
+          detail: geholt.error,
+        });
+        // Der Handshake ist trotzdem gelungen — der Kunde landet im Mapping und
+        // kann es dort erneut versuchen. Kein Zurueckwerfen auf „nicht
+        // verbunden" (das war frueher der Fall und las sich wie ein Abbruch).
+        setError(geholt.error);
+      }
+      setStep("mapping");
+    });
+    // Nur beim ersten Rendern: der Rücksprung steht genau einmal in der Adresse.
+  }, []);
 
   // Die Konten des Betriebs laden, sobald ein OAuth-Portal gewählt ist.
   // Vorbelegt wird nur bei GENAU EINEM Konto — bei mehreren fragt der Dialog,
@@ -439,14 +556,28 @@ export function ChannelConnectButton({
       // Rücksprungziel aus dem Browser lesen — die Server-Action kennt weder
       // `window` noch die öffentliche Adresse dieser Anwendung.
       const ziel = window.location.href;
-      const res = propertyId
-        ? await beginChannelOAuth({
-            property_id: propertyId,
-            portal_code: portal.code,
-            neues_konto: neuesKonto,
-            redirect_uri: ziel,
-          })
-        : await startAirbnbUebernahme(false, ziel);
+
+      // AIRBNB: immer der objektlose Weg — auch wenn ein Objekt gewählt ist.
+      //
+      // `beginChannelOAuth` registriert das Objekt VOR der Autorisierung bei
+      // Channex. Genau das soll nicht mehr passieren: „erst airbnb verbindung
+      // ohne objekt" (Betreiber, 29.08.2026). Gemessen im Log, nachdem nur
+      // `startAirbnbUebernahme` umgebaut war — der Klick lief trotzdem hier
+      // entlang, weil ein altes Gerüst-Objekt vorausgewählt war, und legte
+      // wieder eine Property an (`POST properties → 201`).
+      //
+      // Die Zuordnung zum Objekt passiert nach dem Rücksprung beim Mapping,
+      // dann ist die Verbindung bestätigt.
+      const istAirbnb = portal.code === "AirBNB";
+      const res =
+        propertyId && !istAirbnb
+          ? await beginChannelOAuth({
+              property_id: propertyId,
+              portal_code: portal.code,
+              neues_konto: neuesKonto,
+              redirect_uri: ziel,
+            })
+          : await startAirbnbUebernahme(neuesKonto, ziel);
       if (res.ok) {
         setOauthUrl(res.data.oauth_url);
       } else {
@@ -519,6 +650,18 @@ export function ChannelConnectButton({
     if (!selected || !propertyId) return;
     const res = await getChannelOAuthStatus(propertyId, selected.code);
     if (res.ok) {
+      oauthProtokoll("status_abgefragt", {
+        portal: selected.code,
+        detail:
+          `verbunden=${res.data.connected} host=${res.data.host_id ?? "-"} ` +
+          `grund=${res.data.last_error ?? "-"}`,
+      });
+      if (res.data.connected) {
+        oauthProtokoll("verbunden", {
+          portal: selected.code,
+          detail: `host=${res.data.host_id ?? "-"}`,
+        });
+      }
       setOauthConnected(res.data.connected);
       setOauthHostId(res.data.host_id);
       // Einen vom Portal gemeldeten Grund ZEIGEN. Vorher wurde `last_error`
@@ -528,11 +671,40 @@ export function ChannelConnectButton({
       setOauthError(res.data.last_error ?? null);
       return;
     }
-    // FEHLER BEENDET DEN POLL. Vorher wurde ein Fehler stillschweigend
+    // 404 = es gibt noch keine Verbindungszeile. Das ist der NORMALZUSTAND vor
+    // der Autorisierung, kein Fehler — der Kanal entsteht erst mit dem
+    // Ruecksprung von Airbnb. Weiter warten, nichts anzeigen.
+    //
+    // Bis 29.08.2026 galt auch dieser 404 als Fehlschlag: er setzte
+    // `oauthAufgegeben` und die Oberflaeche behauptete SOFORT „Keine
+    // Bestaetigung von Airbnb erhalten … dort ist bereits eine andere Software
+    // verbunden" — im frischen Testkonto, in dem nie eine Verbindung bestand.
+    // Genau derselbe Denkfehler wie im Backend (Migration 0487): aus „noch
+    // nichts passiert" wurde eine Anschuldigung gegen das Portal.
+    if (res.status === 404) {
+      oauthProtokoll("status_404", {
+        portal: selected.code,
+        status: 404,
+        detail: "noch keine Verbindungszeile - das ist WARTEN, kein Fehler",
+      });
+      return;
+    }
+
+    // Jeder ANDERE Fehler beendet den Poll. Vorher wurde er stillschweigend
     // verworfen und beim nächsten Takt erneut erzeugt — bei einem bei Channex
     // entfernten Kanal lief das endlos (hunderte 404er, Ratelimit-Verbrauch,
     // während die UI weiter "warten" anzeigte). Ein Statusabruf, der scheitert,
     // ist ein Ergebnis: anzeigen und aufhören (Wurzel 5).
+    oauthProtokoll("status_fehler", {
+      portal: selected.code,
+      status: res.status,
+      detail: res.error,
+    });
+    oauthProtokoll("aufgegeben_fehler", {
+      portal: selected.code,
+      status: res.status,
+      detail: "Statusabruf gescheitert - Poll beendet",
+    });
     setOauthError(res.error);
     setOauthAufgegeben(true);
   }, [propertyId, selected]);
@@ -540,12 +712,19 @@ export function ChannelConnectButton({
   // OAuth-Link öffnen bzw. in die Zwischenablage kopieren (Self-Connect durch
   // den Eigentümer, wenn der Vermieter keinen Airbnb-Zugang hat).
   function openOAuth() {
-    if (oauthUrl) window.open(oauthUrl, "_blank", "noopener,noreferrer");
+    if (!oauthUrl) return;
+    setOauthAufgerufen(true);
+    oauthProtokoll("link_geoeffnet", { portal: selected?.code });
+    window.open(oauthUrl, "_blank", "noopener,noreferrer");
   }
   async function copyOAuth() {
     if (!oauthUrl) return;
     try {
       await navigator.clipboard.writeText(oauthUrl);
+      // Kopieren zaehlt genauso: der Eigentuemer oeffnet den Link dann in
+      // seinem eigenen Browser, und die Bestaetigung kommt trotzdem hier an.
+      setOauthAufgerufen(true);
+      oauthProtokoll("link_kopiert", { portal: selected?.code });
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -588,9 +767,14 @@ export function ChannelConnectButton({
   // erfolgreichem `begin` entsteht. Scheitert das (z.B. 409, weil das Objekt
   // noch nicht bei Channex registriert ist), gibt es nichts zu pollen — vorher
   // lief der 5-Sekunden-Takt dann endlos in 404er (im Serverlog belegt).
+  // `oauthAufgerufen` ist Teil der Bedingung: vor dem Klick gibt es nichts zu
+  // erwarten. Vorher lief der 5-Sekunden-Takt, sobald der Dialog offen war —
+  // nach drei Minuten Danebenstehen behauptete die Oberflaeche, das Portal habe
+  // abgelehnt, und verbrauchte bis dahin 36 Channex-Abfragen aus dem
+  // konto-weiten Budget fuer einen Vorgang, den niemand gestartet hatte.
   const oauthWaiting =
     step === "oauth" && !!selected && !!oauthUrl && !!propertyId &&
-    !oauthConnected && !oauthAufgegeben;
+    oauthAufgerufen && !oauthConnected && !oauthAufgegeben;
 
   // KEIN Realtime-Abo auf channex_channel_connection an dieser Stelle.
   // Es war eine RÜCKKOPPLUNG: der Status-Poll schreibt host_id/last_error per
@@ -620,6 +804,14 @@ export function ChannelConnectButton({
     void checkOAuthStatus();
     const t = window.setInterval(() => {
       if (Date.now() - start > POLL_MAX_MS) {
+        // Portal-Code aus der Ref, NICHT aus `selected`: als Abhaengigkeit
+        // wuerde er den Effekt neu aufsetzen und die drei Minuten bei jeder
+        // Zustandsaenderung von vorn beginnen lassen — der Poll liefe dann nie
+        // in seine Grenze.
+        oauthProtokoll("aufgegeben_zeit", {
+          portal: portalCodeRef.current,
+          detail: `${POLL_MAX_MS / 1000}s ohne Bestaetigung gewartet`,
+        });
         setOauthAufgegeben(true);
         window.clearInterval(t);
         return;
@@ -738,7 +930,15 @@ export function ChannelConnectButton({
             mappings,
           });
       if (res.ok) {
-        setDone(`${selected.label} verbunden und aktiviert.`);
+        // Verbunden ≠ aktiv: die Zuordnung steht, verkauft wird erst, wenn der
+        // Betrieb das Portal selbst aktiviert. Der Text darf das nicht
+        // vorwegnehmen — er hiess bis 29.08.2026 „verbunden und aktiviert",
+        // obwohl die Aktivierung jetzt eine eigene Entscheidung ist.
+        setDone(
+          `${selected.label} verbunden und zugeordnet. ` +
+            "Das Portal ist noch nicht aktiv — aktiviere es, wenn du dort " +
+            "verkaufen willst.",
+        );
         setStep("done");
         onDone?.();
       } else {
@@ -747,10 +947,47 @@ export function ChannelConnectButton({
     });
   }
 
+  // Markenfarbe des vorgewaehlten Portals. Nur wenn EIN Portal feststeht:
+  // ohne `presetPortalCode` fuehrt der Knopf in die Portal-Auswahl und darf
+  // keine einzelne Marke tragen.
+  const marke = channelBrand(presetPortalCode);
+
   return (
     <>
-      <Button type="button" variant={variant} onClick={() => setOpen(true)}>
-        <Icon icon="ph:plugs-connected" className="size-4" />
+      <Button
+        type="button"
+        variant={variant}
+        onClick={() => setOpen(true)}
+        // MARKENFARBE statt Schwarz, wenn das Portal feststeht. Ein Knopf, auf
+        // dem „Airbnb verbinden" steht, der aber wie jeder andere Knopf
+        // aussieht, laesst den Nutzer suchen; in Airbnb-Rot ist er auf einer
+        // Seite mit mehreren Portalen sofort der richtige. Die Farbe kommt aus
+        // `CHANNEL_BRAND` (lib/channel-logos) — dieselbe Wahrheit wie die
+        // Logos, keine hier eingetippte Farbe (Wurzel 4).
+        //
+        // Die Inline-Farben sind Absicht und kein Verstoss gegen „keine
+        // arbitraeren Hex-Werte": es sind FREMDE Markenfarben, die sich
+        // definitionsgemaess nicht aus unseren Design-Token ableiten lassen.
+        // Ohne Eintrag bleibt es beim `variant` — nie eine geratene Farbe.
+        style={
+          marke
+            ? { backgroundColor: marke.farbe, color: marke.text, borderColor: marke.farbe }
+            : undefined
+        }
+      >
+        {zeichen ??
+          (marke ? (
+            // Die Bildmarke ist WEISS in der Datei, nicht `currentColor`:
+            // ein per <img> geladenes SVG rendert als eigenes Dokument ohne
+            // den Farb-Kontext der Seite, `currentColor` faellt dort auf
+            // Schwarz zurueck (live gesehen — schwarze Belo auf rotem Knopf).
+            // Weiss ist hier richtig, weil die Marke ausschliesslich auf der
+            // Markenfarbe sitzt, also immer auf dunklem Grund.
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img src={marke.mark} alt="" className="size-4 shrink-0" />
+          ) : (
+            <Icon icon="ph:plugs-connected" className="size-4" />
+          ))}
         {label ?? t("connectChannels")}
       </Button>
 
@@ -965,11 +1202,15 @@ export function ChannelConnectButton({
                               Keine Bestätigung von {selected.label} erhalten
                             </span>
                             <span>
-                              Das passiert vor allem, wenn in deinem{" "}
-                              {selected.label}-Konto bereits eine andere Software
-                              verbunden ist — dort ist nur EINE erlaubt. Trenne
-                              die alte Verbindung in deinem {selected.label}-Konto
-                              und versuche es dann erneut.
+                              Wir haben drei Minuten auf die Bestätigung
+                              gewartet. Häufigster Grund: In deinem{" "}
+                              {selected.label}-Konto ist bereits eine andere
+                              Software verbunden — dort ist nur EINE erlaubt.
+                              Trenne die alte Verbindung in deinem{" "}
+                              {selected.label}-Konto und versuche es erneut.
+                              Hast du den Vorgang bei {selected.label} nur
+                              abgebrochen oder den Link an den Eigentümer
+                              geschickt, genügt „Erneut prüfen“.
                             </span>
                             <Button
                               variant="outline"
@@ -978,6 +1219,10 @@ export function ChannelConnectButton({
                                 setOauthAufgegeben(false);
                                 setOauthSince(null);
                                 setOauthError(null);
+                                // Der Nutzer prueft erneut — der Versuch gilt
+                                // weiterhin als angestossen, sonst laeuft der
+                                // Poll nach dem Klick nicht wieder an.
+                                setOauthAufgerufen(true);
                               }}
                             >
                               <Icon icon="ph:arrow-clockwise" className="size-4" />

@@ -171,9 +171,83 @@ class OAuthChannelsMixin:
             self._mapping_schliessen(db, tenant_id, channex_property_id)
             channex_property_id = None
         if channex_property_id is None:
-            self._registrierung_nachholen(db, tenant_id, property_id)
-            channex_property_id = self._require_property_mapping(
-                db, tenant_id, property_id
+            # AUFHAENGER STATT NEUANLAGE.
+            #
+            # Channex verlangt fuer den Autorisierungslink mindestens eine
+            # Property (OpenAPI-Spec `Meta.AirbnbConnectionLinkInput`:
+            # `required: [group_id, properties]`, `minItems: 1`; unsere Messung
+            # vom 07.08.2026 bestaetigt es: `properties: []` → 422). Die Spec
+            # verlangt aber NICHT, dass sie neu ist — der Mapping-Guide sagt
+            # ausdruecklich „Choose which properties that will connect to the
+            # channel". Eine BESTEHENDE genuegt also als Aufhaenger, und der
+            # Aufrufer loest sie danach wieder (`_objekt_vom_kanal_loesen`).
+            #
+            # ANLASS (29.08.2026): Bis hierher legte jeder Klick auf „Airbnb
+            # verbinden" eine neue Channex-Property an — vor jeder
+            # Autorisierung. Der Kunde sah sie im Channex-UI stehen, loeschte
+            # sie, klickte erneut, und die naechste entstand. Im Log:
+            #     GET  properties/ac6c2ed2 → 404 (er hatte sie geloescht)
+            #     POST properties          → 201 (die naechste)
+            # Seine Vorgabe: „erst wenn eine verbindung da ist muss channex und
+            # unsere software arbeiten, nicht vorher".
+            aufhaenger = self._registrierte_property_des_betriebs(
+                db, tenant_id, ausser=property_id
+            )
+            if aufhaenger:
+                log.info(
+                    "channex_oauth_aufhaenger_wiederverwendet",
+                    tenant_id=tenant_id, property_id=property_id,
+                    channex_property_id=aufhaenger,
+                    hinweis="keine neue Property angelegt",
+                )
+                channex_property_id = aufhaenger
+            elif portal_code in self._OAUTH_PORTALS:
+                # OAUTH-PORTAL OHNE REGISTRIERTE PROPERTY → GAR KEINE anlegen.
+                #
+                # Vorgabe des Betreibers (29.08.2026): „erst airbnb verbindung
+                # ohne objekt". Der Link wird dann OHNE `properties`-Feld
+                # geholt; Channex legt Property und Kanal an, sobald die
+                # Autorisierung eintrifft.
+                #
+                # Diese Absicherung sitzt im BACKEND und nicht nur im Frontend,
+                # weil genau das schiefging: nachdem `uebernahme_starten`
+                # umgebaut war, lief der Klick trotzdem hier entlang (ein altes
+                # Geruest-Objekt war vorausgewaehlt) und legte wieder eine
+                # Property an — im Log `POST properties → 201`, obwohl niemand
+                # bei Airbnb war.
+                log.info(
+                    "channex_oauth_ohne_property",
+                    tenant_id=tenant_id, property_id=property_id,
+                    portal_code=portal_code,
+                    hinweis="keine Property vor der Autorisierung",
+                )
+                channex_property_id = None
+            else:
+                # Nicht-OAuth-Portale (Booking.com u. a.): dort gibt der Betrieb
+                # eine Hotel-ID ein, es gibt keinen Ruecksprung, der die
+                # Registrierung nachholen koennte. Sie bleibt hier noetig.
+                log.info(
+                    "channex_oauth_property_neu_noetig",
+                    tenant_id=tenant_id, property_id=property_id,
+                    portal_code=portal_code,
+                    grund="Nicht-OAuth-Portal ohne registriertes Objekt",
+                )
+                self._registrierung_nachholen(db, tenant_id, property_id)
+                channex_property_id = self._require_property_mapping(
+                    db, tenant_id, property_id
+                )
+            # GEGENZUSTAND (Wurzel 1): die ALTEN Channex-Properties dieses
+            # Geruests entfernen. Ohne das sammeln sich dort Karteileichen —
+            # live am 29.08.2026 standen fuer EIN Geruest-Objekt zwei
+            # Properties „Airbnb-Uebernahme laeuft" bei Channex, und der Kunde
+            # raeumte sie von Hand auf. Jeder einzelne Schritt war korrekt
+            # (Property weg → Map-Zeile schliessen → neu anlegen); niemand
+            # nahm die entwertete Property mit.
+            #
+            # Erst NACH der neuen Registrierung: scheitert das Anlegen, ist die
+            # alte noch da und nichts ist verloren.
+            self._geruest_property_aufraeumen(
+                db, tenant_id, property_id, behalten=str(channex_property_id)
             )
 
         # Idempotenz (Wurzel 2): existiert für dieses Portal bereits ein
@@ -290,7 +364,13 @@ class OAuthChannelsMixin:
             neu_anlegen=existing_channel_id is None,
         )
 
-        group_id = self._require_group(db, tenant_id, channex_property_id)
+        # `channex_property_id` kann None sein (OAuth-Portal ohne registrierte
+        # Property). `_require_group` liest die Gruppe primaer aus
+        # `channex_group_map` — das haengt am TENANT, nicht an einer Property,
+        # also funktioniert es auch ohne. Nur der Fallback „Gruppe, die diese
+        # Property besitzt" faellt dann weg; fehlt beides, meldet es einen
+        # Konfigurationsfehler statt zu raten.
+        group_id = self._require_group(db, tenant_id, channex_property_id or "")
         channel_title = title or self._portal_label(portal_code)
 
         # Jeden Channex-Aufruf dieses Starts in channex_debug_log schreiben
@@ -358,8 +438,23 @@ class OAuthChannelsMixin:
                     konto_benannt=bool(account_id),
                     war_autorisiert=channel_id == autorisiert,
                 )
-        elif account_id or neues_konto:
-            # NEUE Verbindung: KEINEN Kanal anlegen.
+        else:
+            # JEDE neue Verbindung: KEINEN Kanal anlegen.
+            #
+            # Diese Bedingung hiess bis 29.08.2026 `elif account_id or
+            # neues_konto` — der ERSTE Verbindungsversuch eines frischen
+            # Betriebs (weder Konto benannt noch `neues_konto`) fiel deshalb in
+            # den `else`-Zweig darunter und legte den Kanal per `POST /channels`
+            # vorab an. Live im Log des Kunden:
+            #     POST channels                      → 201
+            #     POST meta/airbnb/connection_link   → 200
+            # Der Kunde oeffnete den Airbnb-Login nie, und trotzdem stand ein
+            # Kanal bei Channex. Nach drei Versuchen: drei Kanaele, drei
+            # `ota_account`-Zeilen, null Verbindungen — alles von Hand
+            # aufzuraeumen.
+            #
+            # Die Regel ist fuer ALLE Faelle dieselbe, es gibt keinen Grund,
+            # sie am ersten Versuch anders zu handhaben.
             #
             # Channex legt ihn selbst an, sobald die Autorisierung eintrifft —
             # Airbnb Connection API, Notes: „when the User connects Airbnb to
@@ -381,38 +476,6 @@ class OAuthChannelsMixin:
                 "channex_oauth_kanal_ueberlassen",
                 tenant_id=tenant_id, property_id=property_id,
                 konto_id=account_id,
-            )
-        else:
-            # 1) Channel inaktiv anlegen (ohne rate_plans/settings — Mapping folgt).
-            attribute: dict[str, Any] = {
-                "channel": portal_code,
-                "group_id": group_id,
-                "is_active": False,
-                "title": channel_title,
-                "properties": [channex_property_id],
-            }
-            try:
-                created = self._channex.create_channel(attribute)
-            except ChannexError as exc:
-                raise self._wrap_channex(exc) from exc
-            channel_id = (created.get("data") or {}).get("id")
-            if not channel_id:
-                raise ChannelManagerError(
-                    "Channex hat keinen Kanal angelegt.", status_code=502
-                )
-            # SOFORT persistieren, nicht erst am Ende (Wurzel 2). Bricht der
-            # Link-Aufruf danach ab, existierte der Channex-Kanal, aber keine
-            # DB-Zeile — und der nächste Klick legte einen ZWEITEN an. Genau so
-            # entstanden vier leere Airbnb-Kanäle für einen Betrieb.
-            self._save_oauth_connection(
-                db, tenant_id,
-                property_id=property_id,
-                channex_property_id=channex_property_id,
-                portal_code=portal_code,
-                channel_id=channel_id,
-                host_id=None,
-                is_active=False,
-                last_error=None,
             )
 
         # Offene Pflichtpunkte prüfen, BEVOR der Kunde zu Airbnb geschickt wird.
@@ -470,6 +533,8 @@ class OAuthChannelsMixin:
                 jwt=jwt,
                 connection_link=airbnb_oauth.connection_link_body(
                     group_id=group_id,
+                    # None = ohne `properties`-Feld. Channex legt die Property
+                    # dann selbst mit der Autorisierung an.
                     channex_property_id=channex_property_id,
                     channel_id=channel_id,
                     request_id=request_id,
@@ -495,14 +560,31 @@ class OAuthChannelsMixin:
             # anfordern; nichts geht verloren.
             raise self._wrap_channex(exc) from exc
 
-        # 3) Verbindung persistieren (noch nicht verbunden: kein host_id, inaktiv).
+        # 3) Verbindung persistieren — NUR wenn es schon einen Kanal gibt.
+        #
+        # `channel_id` ist bei einer NEUEN Verbindung `None`: Channex legt den
+        # Kanal erst an, wenn die Autorisierung eintrifft (Airbnb Connection
+        # API: „when the User connects Airbnb to Channex we will automatically
+        # create a new inactive Channel"). Eine Zeile ohne Kanal waere eine
+        # Verbindung, die es nicht gibt.
+        #
+        # ANLASS (29.08.2026): Der Kunde klickte dreimal auf „Airbnb
+        # verbinden", oeffnete den Airbnb-Login nie — und hatte danach drei
+        # `ota_account`-Zeilen, drei `channex_channel_connection`-Zeilen und
+        # drei Geruest-Registrierungen in der DB. Seine Worte: „erst wenn eine
+        # verbindung da ist muss channex und unsere software arbeiten, nicht
+        # vorher … sonst muessen wir immer an der DB rumschreiben". Er hat
+        # recht: ein abgebrochener Vorgang darf nichts hinterlassen, was
+        # jemand aufraeumen muss.
+        #
+        # Der Rueckweg legt die Zeile an (`finalize_oauth_channel` /
+        # `_save_oauth_connection` dort) — dann steht auch der Kanal fest.
         #
         # NICHT beim zweiten Konto: dort ist `property_id` nur der Aufhänger für
         # den Link und gehört einem ANDEREN Zugang. Eine Zeile darauf hieße „das
         # Objekt hängt an diesem Kanal" — die Oberfläche zeigte es daraufhin als
-        # „Pausiert" (live am 07.08.2026 an „Rævlingehuset"). Das Konto ist oben
-        # schon gespeichert; seine Objekte kommen aus seinen eigenen Listings.
-        if not neues_konto and not account_id:
+        # „Pausiert" (live am 07.08.2026 an „Rævlingehuset").
+        if channel_id and not neues_konto and not account_id:
             self._save_oauth_connection(
                 db, tenant_id,
                 property_id=property_id,
@@ -512,6 +594,14 @@ class OAuthChannelsMixin:
                 host_id=None,
                 is_active=False,
                 last_error=None,
+                versuch_gestartet=True,
+            )
+        elif not channel_id:
+            log.info(
+                "channex_oauth_keine_zeile_ohne_kanal",
+                tenant_id=tenant_id, property_id=property_id,
+                portal_code=portal_code,
+                hinweis="Kanal entsteht erst mit der Autorisierung",
             )
         log.info(
             "channex_oauth_begin",
@@ -1021,6 +1111,152 @@ class OAuthChannelsMixin:
                 channex_property_id=channex_property_id, error=str(exc)[:200],
             )
 
+    def _registrierte_property_des_betriebs(
+        self, db: Client, tenant_id: str, *, ausser: str
+    ) -> str | None:
+        """Eine BESTEHENDE, bei Channex registrierte Property dieses Betriebs.
+
+        Sie dient nur als AUFHAENGER fuer den Airbnb-Autorisierungslink: die
+        Spec verlangt `properties` mit `minItems: 1`, sagt aber nicht, dass die
+        Property neu sein muss. Der Kanal wird danach ohnehin von der Property
+        geloest (`_objekt_vom_kanal_loesen`).
+
+        `ausser` ist das Objekt des laufenden Vorgangs — dessen eigene
+        Registrierung fehlt ja gerade, sonst waeren wir nicht hier.
+
+        `None` heisst: der Betrieb hat noch NICHTS bei Channex. Dann bleibt der
+        Aufrufer bei der Neuanlage, denn ohne Property gibt es keinen Link.
+
+        GEGENGEPRUEFT bei Channex, nicht nur nachgeschlagen: unsere Map-Zeile
+        sagt „registriert", geloescht wurde die Property aber vielleicht dort.
+        Eine tote ID als Aufhaenger brächte `422 property_id does not exist` —
+        derselbe Fehler, den `_property_bei_channex_da` weiter oben schon
+        einmal abfaengt.
+        """
+        zeilen = (
+            db.table("channex_property_map")
+            .select("channex_property_id, property_id")
+            .eq("tenant_id", tenant_id)
+            .is_("deleted_at", "null")
+            .neq("property_id", ausser)
+            .limit(10)
+            .execute()
+        ).data or []
+        for zeile in zeilen:
+            pid = zeile.get("channex_property_id")
+            if pid and self._property_bei_channex_da(str(pid)):
+                return str(pid)
+        return None
+
+    def _geruest_property_aufraeumen(
+        self, db: Client, tenant_id: str, property_id: str, behalten: str
+    ) -> int:
+        """Alte Channex-Properties EINES GERUESTS entfernen.
+
+        WARUM (29.08.2026): Fuer EIN Geruest-Objekt standen bei Channex ZWEI
+        Properties „Airbnb-Uebernahme laeuft" (f07144d2 und 4b759b1c). Der
+        Ablauf dahinter ist je Schritt korrekt: verschwindet eine Property bei
+        Channex, schliesst `_mapping_schliessen` unsere Map-Zeile und der
+        naechste Versuch legt eine neue an. Nur der Gegenzustand fehlte — die
+        GESCHLOSSENE Zeile zeigte weiter auf eine Property, die bei Channex
+        stehen blieb (Wurzel 1). Der Kunde raeumte sie von Hand auf, und das
+        ist kein Zustand, den eine Software ihm zumuten darf.
+
+        ENG BEGRENZT, weil Loeschen unumkehrbar ist:
+          * nur Properties DIESES Objekts (ueber unsere eigenen Map-Zeilen —
+            nie ueber den Titel, der ist bei Channex nicht eindeutig),
+          * nur GESCHLOSSENE Zeilen (`deleted_at` gesetzt),
+          * nie die gerade gueltige (`behalten`),
+          * nur wenn das Objekt ein GERUEST ist (Titel + keine Listing-ID):
+            ein echtes Objekt loescht dieser Weg unter keinen Umstaenden,
+          * OHNE `force`: haengt dort noch ein Kanal, blockt Channex mit 422
+            und wir lassen die Property stehen. Ein Kanal an einer Property
+            heisst, dass dort etwas verkauft werden koennte — das raeumt
+            niemand nebenbei weg (fail-closed, Wurzel 5).
+
+        Gibt die Zahl der geloeschten Properties zurueck (fuer das Log: ein
+        Aufraeumen, das NICHTS traf, sieht sonst aus wie eines, das raeumte).
+        """
+        # Lokaler Import wie in `_geruest_verwerfen` weiter unten:
+        # `airbnb_uebernahme` ist ein Mixin DIESER Klasse, ein Modul-Import
+        # waere ein Zirkel.
+        from .airbnb_uebernahme import GERUEST_TITEL
+
+        prop = (
+            db.table("properties")
+            .select("title, airbnb_listing_id")
+            .eq("id", property_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not prop:
+            log.info(
+                "channex_geruest_aufraeumen_uebersprungen",
+                tenant_id=tenant_id, property_id=property_id,
+                grund="objekt nicht gefunden",
+            )
+            return 0
+        ist_geruest = (
+            prop[0].get("title") == GERUEST_TITEL
+            and not prop[0].get("airbnb_listing_id")
+        )
+        if not ist_geruest:
+            # KEIN Geruest = ein echtes Objekt des Kunden. Hier wird nichts
+            # geloescht, und das gehoert ins Log: es ist die Zusicherung, dass
+            # dieser Weg an echten Objekten vorbeigeht.
+            log.info(
+                "channex_geruest_aufraeumen_uebersprungen",
+                tenant_id=tenant_id, property_id=property_id,
+                grund="kein geruest - echtes objekt",
+            )
+            return 0
+
+        alt_zeilen = (
+            db.table("channex_property_map")
+            .select("channex_property_id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .not_.is_("deleted_at", "null")
+            .execute()
+        ).data or []
+
+        geloescht = 0
+        for zeile in alt_zeilen:
+            pid = zeile.get("channex_property_id")
+            if not pid or pid == behalten:
+                continue
+            try:
+                self._channex.delete_property(str(pid))
+                geloescht += 1
+                log.info(
+                    "channex_geruest_property_geloescht",
+                    tenant_id=tenant_id, property_id=property_id,
+                    channex_property_id=pid,
+                )
+            except ChannexError as exc:
+                # 404 = schon weg (der Normalfall, wenn jemand von Hand
+                # aufgeraeumt hat). 422 = es haengt noch ein Kanal daran, dann
+                # bleibt sie bewusst stehen. Beides ist kein Grund, den
+                # laufenden Verbindungsversuch zu kippen.
+                log.info(
+                    "channex_geruest_property_nicht_geloescht",
+                    tenant_id=tenant_id, channex_property_id=pid,
+                    status=exc.status_code, grund=exc.message[:120],
+                )
+        # ZUSAMMENFASSUNG, auch wenn nichts zu tun war. Ohne sie ist im Log
+        # nicht zu unterscheiden, ob dieser Schritt lief und nichts fand, oder
+        # ob er gar nicht erst dran war (kein Geruest, kein Objekt) — genau die
+        # Frage, die man beim naechsten Karteileichen-Fund stellt.
+        log.info(
+            "channex_geruest_aufraeumen",
+            tenant_id=tenant_id, property_id=property_id,
+            behalten=behalten,
+            geschlossene_zeilen=len(alt_zeilen),
+            geloescht=geloescht,
+        )
+        return geloescht
+
     @staticmethod
     def _kanal_des_kontos(
         db: Client, tenant_id: str, account_id: str, portal_code: str
@@ -1140,17 +1376,49 @@ class OAuthChannelsMixin:
                 .eq("property_id", property_id)
             )
 
-        row = (
+        # ALLE Zeilen des Tripels lesen, nicht die aelteste.
+        #
+        # Es koennen mehrere sein: der Unique-Index enthaelt `ota_account_id`,
+        # und ein zweiter Verbindungsversuch legt ein neues Konto an — also
+        # entsteht eine ZWEITE Zeile neben der alten, statt sie zu ersetzen.
+        # Dazu kommt der 404-Pfad weiter unten: er nullt `channex_channel_id`
+        # der entwerteten Zeile, laesst sie aber stehen.
+        #
+        # `.order("created_at").limit(1)` griff damit auf die AELTESTE — also
+        # ausgerechnet auf die tote Zeile ohne Kanal — und antwortete 404
+        # „Keine OAuth-Verbindung gefunden", waehrend direkt daneben die frische
+        # Verbindung stand. Live gemessen am 29.08.2026: `oauth/begin` legte
+        # Kanal c2241d83 an und speicherte ihn korrekt, der Status-Poll
+        # unmittelbar danach fand nichts.
+        #
+        # Richtig ist die JUENGSTE Zeile MIT Kanal: sie gehoert zum laufenden
+        # Versuch. Zeilen ohne Kanal sind erledigt (entwertet oder nie
+        # zustande gekommen) und duerfen den Poll nicht mehr fuehren.
+        alle = (
             _lesen(
                 db.table("channex_channel_connection").select(
-                    "id, channex_channel_id"
+                    # `oauth_versuch_at` entscheidet ueber die MELDUNG: ohne
+                    # Versuch darf keine Ablehnung durch Airbnb behauptet
+                    # werden (0487).
+                    "id, channex_channel_id, oauth_versuch_at, ota_hotel_id,"
+                    " created_at"
                 )
             )
-            .order("created_at")
-            .limit(1)
+            .order("created_at", desc=True)
             .execute()
-        ).data
-        if not row or not row[0].get("channex_channel_id"):
+        ).data or []
+        row = [z for z in alle if z.get("channex_channel_id")][:1]
+        if not row:
+            log.info(
+                "channex_oauth_status_ohne_kanal",
+                tenant_id=tenant_id, property_id=property_id,
+                portal_code=portal_code,
+                zeilen_gesamt=len(alle),
+                # Ohne diese Zahl sieht ein 404 gleich aus, egal ob GAR KEINE
+                # Zeile existiert oder nur keine mit lebendem Kanal — zwei ganz
+                # verschiedene Lagen.
+                zeilen_ohne_kanal=len(alle),
+            )
             raise ChannelManagerError(
                 "Keine OAuth-Verbindung gefunden.", status_code=404
             )
@@ -1185,18 +1453,45 @@ class OAuthChannelsMixin:
             # die niemals kommen kann. Passiert real, wenn die zugehörige
             # Channex-Property entfernt wird — Channex räumt ihre Kanäle mit.
             if exc.status_code == 404:
+                weg = ("Der Kanal existiert beim Channel-Manager nicht mehr. "
+                       "Bitte neu verbinden.")
                 _scope(
                     db.table("channex_channel_connection").update({
                         "channex_channel_id": None,
                         "is_active": False,
-                        "last_error": "Der Kanal existiert beim Channel-Manager "
-                                      "nicht mehr. Bitte neu verbinden.",
+                        "last_error": weg,
                     })
                 ).execute()
+                # DAS KONTO MIT (Gegenzustand, Wurzel 1). Bis 29.08.2026 wurde
+                # nur die Verbindung geschlossen — die Kontozeile trug danach
+                # weiter die TOTE Kanal-ID und `is_active=true`. Live gemessen
+                # im Testkonto: `channex_channel_connection` sauber geraeumt,
+                # `ota_account` unveraendert auf b93f2620 (bei Channex 404).
+                # Ein Konto, das auf einen nicht mehr existierenden Kanal zeigt,
+                # sieht in jeder Uebersicht wie ein verbundenes Portal aus.
+                kanal_txt = str(channel_id)
+                konten = (
+                    db.table("ota_account")
+                    .update({
+                        "channex_channel_id": None,
+                        "is_active": False,
+                        "last_error": weg,
+                    })
+                    .eq("tenant_id", tenant_id)
+                    .eq("channex_channel_id", kanal_txt)
+                    .execute()
+                ).data or []
+                # Die ZAHL mitloggen, nicht nur „gemacht": ein Update, das NULL
+                # Zeilen trifft, sieht im Log genauso aus wie eines, das raeumt.
+                # Genau daran waere der fehlende Gegenzustand wieder unsichtbar
+                # geworden — er war es monatelang, weil niemand nachsah, ob die
+                # Kontozeile auch mitging.
                 log.warning(
                     "channex_oauth_kanal_verschwunden",
                     tenant_id=tenant_id, property_id=property_id,
                     channel_id=channel_id,
+                    konten_geschlossen=len(konten),
+                    hinweis="Verbindung UND Konto geschlossen",
                 )
                 raise ChannelManagerError(
                     "Die Portal-Verbindung besteht nicht mehr. Verbinde Airbnb "
@@ -1206,7 +1501,18 @@ class OAuthChannelsMixin:
                 ) from exc
             raise self._wrap_channex(exc) from exc
 
-        status = airbnb_oauth.parse_connection_status(got)
+        # Hat je jemand verbunden? Zwei Belege, ODER-verknuepft:
+        #   - `oauth_versuch_at`: wir haben die Autorisierung angestossen (0487)
+        #   - `ota_hotel_id`: es gab schon einmal eine Host-ID, also lief ein
+        #     Versuch — das deckt den BESTAND ab, dessen Zeitpunkt nicht mehr
+        #     rekonstruierbar ist (die Migration fuellt ihn bewusst nicht mit
+        #     einem geratenen Wert, Wurzel 4).
+        versuch_gelaufen = bool(
+            row[0].get("oauth_versuch_at") or row[0].get("ota_hotel_id")
+        )
+        status = airbnb_oauth.parse_connection_status(
+            got, versuch_gelaufen=versuch_gelaufen
+        )
         host_id = status["host_id"]
         connected = status["connected"]
         last_error = status["last_error"]
@@ -1302,8 +1608,16 @@ class OAuthChannelsMixin:
         # antwortete „Zugeordnetes Portal-Zimmer nicht gefunden" (422).
         if account_id:
             frage = frage.eq("ota_account_id", account_id)
-        row = (frage.order("created_at").limit(1).execute()).data
-        channel_id = row[0]["channex_channel_id"] if row else None
+        # DIESELBE Falle wie im Status-Poll oben: `.order("created_at")
+        # .limit(1)` nimmt die AELTESTE Zeile — und das ist bei einem zweiten
+        # Verbindungsversuch die entwertete, deren `channex_channel_id` der
+        # 404-Pfad auf NULL gesetzt hat. `finalize` lief damit ins Leere,
+        # obwohl daneben die frische Verbindung stand. Gewaehlt wird deshalb
+        # die JUENGSTE Zeile MIT Kanal.
+        alle = (frage.order("created_at", desc=True).execute()).data or []
+        mit_kanal = [z for z in alle if z.get("channex_channel_id")]
+        channel_id = mit_kanal[0]["channex_channel_id"] if mit_kanal else None
+        row = mit_kanal[:1]
         if not channel_id and account_id:
             # Für ein neu verbundenes Konto gibt es noch KEINE Verbindungszeile
             # — seine Objekte entstehen erst mit dieser Zuordnung. Der Kanal
@@ -1452,27 +1766,35 @@ class OAuthChannelsMixin:
             property_id=property_id, channel_id=channel_id,
             offene_punkte=offene or "keine",
         )
-        if offene:
-            raise ChannelManagerError(
-                "Das Portal kann noch nicht aktiviert werden, weil Angaben "
-                f"fehlen: {offene}. Ergänze sie am Objekt und versuche es "
-                "erneut.",
-                status_code=422,
-            )
-        try:
-            self._channex.activate_channel(channel_id)
-        except ChannexError as exc:
-            raise self._wrap_channex(exc) from exc
+
+        # NICHT aktivieren. Zuordnen und Aktivieren sind zwei Entscheidungen,
+        # und nur die erste hat der Betrieb hier getroffen.
+        #
+        # Die Aktivierung ist der Punkt, an dem GELD zu fliessen beginnt:
+        # Channex rechnet nach aktiven Kanalverbindungen ab, ein Objekt ohne
+        # aktive Verbindung kostet nichts („Properties that are set up but have
+        # no active connection are not billed", channex.io/pricing, gelesen
+        # 29.08.2026). Sie ist ausserdem der Punkt, an dem das Objekt bei Airbnb
+        # verkauft wird. Beides entscheidet der Betrieb, nicht wir.
+        #
+        # `offene` wird weiterhin ERMITTELT und mitgegeben, damit die Oberflaeche
+        # sagen kann, was der Aktivierung noch im Weg steht — aber ein offener
+        # Punkt ist hier kein Fehler mehr: die Zuordnung ist trotzdem gueltig.
+        # Aktiviert wird ueber `channels.activate_channel` auf Klick; dort wird
+        # `offene` erneut geprueft und als 422 gemeldet.
         log.info(
-            "airbnb_finalize_kanal_aktiviert",
-            property_id=property_id, channel_id=channel_id,
+            "airbnb_finalize_kanal_bleibt_inaktiv",
+            tenant_id=tenant_id, property_id=property_id,
+            portal_code=portal_code, channel_id=channel_id,
+            offene_punkte=offene or "keine",
+            hinweis="Aktivierung entscheidet der Betrieb",
         )
 
-        # Genau die Zeile dieses Kanals aktivieren — nicht alle des Objekts.
-        # Bei zwei Konten am selben Objekt (0304) meldeten sonst beide „aktiv",
-        # obwohl nur eines wirklich verkauft.
+        # Zugeordnet, aber NICHT aktiv: `is_active` bleibt false. Der offene
+        # Readiness-Punkt wird als Hinweis festgehalten, damit die Oberflaeche
+        # ihn zeigen kann, ohne ihn erneut bei Channex zu erfragen.
         db.table("channex_channel_connection").update(
-            {"is_active": True, "last_error": None}
+            {"is_active": False, "last_error": offene or None}
         ).eq("tenant_id", tenant_id).eq("property_id", property_id).eq(
             "ota_portal_code", portal_code
         ).eq("channex_channel_id", channel_id).execute()
@@ -1497,7 +1819,12 @@ class OAuthChannelsMixin:
             "id": channel_id,
             "portal": self._portal_label(portal_code),
             "title": self._portal_label(portal_code),
-            "is_active": True,
+            # Zugeordnet, NICHT aktiv. Stand hier bis 29.08.2026 fest auf True —
+            # eine Falschaussage, seit hier kein `activate` mehr laeuft: die
+            # Oberflaeche haette „aktiviert" gemeldet, waehrend der Kanal bei
+            # Channex auf „Disabled" steht (Wurzel 5b: nicht behaupten, was das
+            # Portal nicht bestaetigt hat).
+            "is_active": False,
         }
 
     @staticmethod
@@ -1698,6 +2025,7 @@ class OAuthChannelsMixin:
         self, db: Client, tenant_id: str, *, property_id: str,
         channex_property_id: str, portal_code: str, channel_id: str,
         host_id: str | None, is_active: bool, last_error: str | None,
+        versuch_gestartet: bool = False,
     ) -> None:
         """Upsert einer OAuth-Verbindung (Airbnb): kein hotel_id-Credential, sondern
         host_id (erst nach Verbindung). Anders als _save_channel_connection, das
@@ -1720,6 +2048,18 @@ class OAuthChannelsMixin:
             "is_active": is_active,
             "last_error": last_error,
         }
+        if versuch_gestartet:
+            # UNSERE Uhr, und sie heisst auch so (0487): „wir haben die
+            # Autorisierung angestossen" — nicht „das Portal hat bestaetigt"
+            # (das steht in `ota_account.connected_at`, Wurzel 5b).
+            #
+            # Ohne diese Angabe kann `parse_connection_status` einen frisch
+            # angelegten Kanal nicht von einem unterscheiden, bei dem Airbnb
+            # nicht geantwortet hat — beide haben `settings is None`. Genau
+            # daran las ein Kunde am 29.08.2026 im FRISCHEN Konto „in deinem
+            # Airbnb-Konto ist bereits eine andere Software verbunden", obwohl
+            # nie jemand geklickt hatte.
+            row["oauth_versuch_at"] = "now()"
         try:
             db.table("channex_channel_connection").upsert(
                 row, on_conflict="property_id,ota_portal_code,ota_account_id"

@@ -424,8 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – Platforma pentru proprietarii de cazări de vacanță",
-    "description": "Platforma pentru hoteluri, agenții și proprietari de cazări de vacanță: channel manager, calendar, rezervare directă, comunicare cu oaspeții și facturare într-un singur loc. Construită în Danemarca, găzduită în UE. 30 de zile gratuit.",
-    "descriptionMitPreis": "Platforma pentru hoteluri, agenții și proprietari de cazări de vacanță: channel manager, calendar, rezervare directă, comunicare cu oaspeții și facturare într-un singur loc. Construită în Danemarca, găzduită în UE. De la {preis}/lună. 30 de zile gratuit."
+    "description": "Platforma pentru hoteluri, agenții și proprietari de cazări de vacanță: channel manager, calendar, rezervare directă, comunicare cu oaspeții și facturare într-un singur loc. Construită în Danemarca, găzduită în UE. 14 de zile gratuit.",
+    "descriptionMitPreis": "Platforma pentru hoteluri, agenții și proprietari de cazări de vacanță: channel manager, calendar, rezervare directă, comunicare cu oaspeții și facturare într-un singur loc. Construită în Danemarca, găzduită în UE. De la {preis}/lună. 14 de zile gratuit."
   },
   "nav": {
     "funktionen": "Funcții",
@@ -463,7 +463,7 @@
     "headlineHighlight": "rezervări",
     "headlinePost": "mai puțin efort.",
     "subline": "Platforma pentru hoteluri, agenții și proprietari de cazări de vacanță: channel manager, calendar, rezervare directă, comunicare cu oaspeții și facturare într-un singur loc, construită de proprietari care cunosc munca de zi cu zi.",
-    "ctaTrial": "Încearcă 30 de zile gratuit",
+    "ctaTrial": "Încearcă 14 de zile gratuit",
     "ctaDemo": "Vezi demonstrația",
     "kanaeleLabel": "Conectată la marile platforme de rezervări",
     "eyebrow": "Platforma pentru proprietarii de cazări de vacanță",
@@ -609,7 +609,7 @@
     },
     "preis": {
       "frage": "Cât costă myNextDays și cum încep?",
-      "antwort": "30 de zile gratuit, fără durată minimă, fără taxă de instalare, se poate anula oricând. Apoi un abonament plus un comision redus la rezervările aduse de noi. Modulele suplimentare — contabilitate extinsă cu export DATEV, gestiunea personalului sau funcții hoteliere — se adaugă doar dacă ai nevoie. Creezi un obiectiv, conectezi canalele, pornești."
+      "antwort": "14 de zile gratuit, fără durată minimă, fără taxă de instalare, se poate anula oricând. Apoi un abonament plus un comision redus la rezervările aduse de noi. Modulele suplimentare — contabilitate extinsă cu export DATEV, gestiunea personalului sau funcții hoteliere — se adaugă doar dacă ai nevoie. Creezi un obiectiv, conectezi canalele, pornești."
     }
   },
   "benefits": {
@@ -631,13 +631,13 @@
     "preisBanner": {
       "eyebrow": "Preț",
       "heading": "Tot ce îi trebuie cazării tale, într-un singur loc",
-      "text": "30 de zile gratuit. Fără perioadă minimă. Anulezi oricând (cu 4 săptămâni înainte de sfârșitul lunii).",
+      "text": "14 de zile gratuit. Fără perioadă minimă. Anulezi oricând (cu 4 săptămâni înainte de sfârșitul lunii).",
       "proMonat": "pe lună"
     }
   },
   "trial": {
     "eyebrow": "Test gratuit",
-    "heading": "Încearcă myNextDays 30 de zile gratuit.",
+    "heading": "Încearcă myNextDays 14 de zile gratuit.",
     "sub": "Fără perioadă minimă. Anulezi oricând. Completează doar acest formular scurt:",
     "seitenHeading": "Tot ce îi trebuie cazării tale într-un singur loc: mai mult control, mai puțin efort.",
     "perks": {
@@ -855,15 +855,16 @@
     "impressum": "Informații legale",
     "cookies": "Politica de cookie-uri",
     "avv": "Prelucrarea datelor",
-    "kontoLoeschen": "Ștergeți contul"
+    "kontoLoeschen": "Ștergeți contul",
+    "newsletterKnopf": "Abonare newsletter"
   },
   "legal": {
     "stand": "Ultima actualizare: {datum}"
   },
   "abschluss": {
     "heading": "Ești gata să îți conduci cazarea dintr-un singur loc?",
-    "sub": "Încearcă 30 de zile gratuit: fără perioadă minimă, fără taxă de instalare, anulezi oricând.",
-    "ctaPrimaer": "Încearcă 30 de zile gratuit",
+    "sub": "Încearcă 14 de zile gratuit: fără perioadă minimă, fără taxă de instalare, anulezi oricând.",
+    "ctaPrimaer": "Încearcă 14 de zile gratuit",
     "ctaSekundaer": "Vezi prețurile"
   },
   "chat": {
@@ -902,14 +903,14 @@
   "preise": {
     "meta": {
       "titel": "Prețuri — un singur plan, totul inclus | myNextDays",
-      "beschreibung": "Un plan cu toate funcțiile, plătit în funcție de numărul de proprietăți. Fără durată minimă, fără taxă de instalare, 30 de zile gratuit — canale, rezervări directe, comunicarea cu oaspeții și facturarea incluse."
+      "beschreibung": "Un plan cu toate funcțiile, plătit în funcție de numărul de proprietăți. Fără durată minimă, fără taxă de instalare, 14 de zile gratuit — canale, rezervări directe, comunicarea cu oaspeții și facturarea incluse."
     },
     "hero": {
       "eyebrow": "Prețuri",
       "headlinePre": "Un singur plan.",
       "headlineHighlight": "Totul inclus.",
       "sub": "Fără puzzle de pachete: fiecare funcție este inclusă, fie că administrezi un apartament de vacanță, fie douăsprezece tipuri de camere. Plătești în funcție de numărul de proprietăți — și cu cât ai mai multe, cu atât fiecare costă mai puțin.",
-      "testen": "30 de zile gratuit",
+      "testen": "14 de zile gratuit",
       "laufzeit": "Fără durată minimă",
       "einrichtung": "Fără taxă de instalare",
       "eu": "Găzduit în UE, GDPR"
@@ -925,7 +926,7 @@
       "grundgebuehr": "Taxă de bază (include prima proprietate)",
       "weitereObjekte": "{anzahl, plural, =1 {încă o proprietate} few {încă # proprietăți} other {încă # de proprietăți}} × {jeObjekt}",
       "netto": "Toate sumele fără TVA. Facturare lunară, se poate anula oricând.",
-      "ctaTesten": "Încearcă 30 de zile gratuit",
+      "ctaTesten": "Încearcă 14 de zile gratuit",
       "ctaDemo": "Vezi demonstrația",
       "inklusivTitel": "Inclus în orice plan",
       "inklusivSub": "Nimic care să înceapă abia într-un pachet mai scump — acesta este întregul conținut.",
@@ -985,7 +986,7 @@
       "sub": "Ce vor să știe gazdele înainte de schimbare — pe scurt și fără litere mici.",
       "laufzeit": {
         "frage": "Există o durată minimă?",
-        "antwort": "Nu. Abonamentul este lunar și poate fi anulat cu preaviz de patru săptămâni la sfârșitul lunii. Primele 30 de zile sunt gratuite, fără date de plată."
+        "antwort": "Nu. Abonamentul este lunar și poate fi anulat cu un preaviz de patru săptămâni la sfârșitul lunii. Primele 14 zile sunt gratuite: introduceți detaliile de plată la început, dar plata va fi procesată numai după încheierea perioadei de încercare. Dacă anulați înainte, nu veți plăti nimic."
       },
       "objektzahl": {
         "frage": "Ce se întâmplă când adaug proprietăți?",
@@ -1030,7 +1031,7 @@
       "eu": "Găzduit în UE, conform GDPR",
       "start": "Lansare la 1 septembrie 2026",
       "sprachen": "27 de țări, 24 de limbi",
-      "ctaTrial": "Încearcă 30 de zile gratuit",
+      "ctaTrial": "Încearcă 14 de zile gratuit",
       "ctaKontakt": "Scrie-ne"
     },
     "warum": {
@@ -1178,7 +1179,7 @@
   },
   "funktionen": {
     "rahmen": {
-      "ctaTesten": "Încearcă 30 de zile gratuit",
+      "ctaTesten": "Încearcă 14 de zile gratuit",
       "ctaDemo": "Vezi demonstrația",
       "weiter": "Mai departe la celelalte funcții",
       "mehr": "Vezi",

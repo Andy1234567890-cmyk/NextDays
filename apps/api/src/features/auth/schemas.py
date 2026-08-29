@@ -342,6 +342,12 @@ class MeResponse(BaseModel):
     # Betriebsmodell (0180): 'pms' (Abo, apps/web) oder 'marketplace' (8%-Fee,
     # plattform/). Steuert, welche Oberfläche/welches Billing gilt.
     account_type: str | None = None
+    # Name des Betriebs (`tenants.name`), eingegeben bei der Registrierung.
+    # Der Onboarding-Assistent belegt damit das Feld „Firmenname" vor: sonst
+    # tippt ein frisch registrierter Betrieb denselben Namen ein zweites Mal,
+    # weil die eigentliche Quelle (`tenant_billing_profile`) zu diesem
+    # Zeitpunkt naturgemaess noch leer ist.
+    tenant_name: str | None = None
     # Standardsprache des Betriebs (0335), zweite Stufe der Mail-Sprachkette.
     # None = nicht erfasst (→ Englisch), kein erfundener Default (Wurzel 4).
     default_language: str | None = None

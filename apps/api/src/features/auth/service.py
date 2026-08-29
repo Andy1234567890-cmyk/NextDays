@@ -882,6 +882,7 @@ class AuthService:
             account_type=tenant_meta.get("account_type"),
             default_language=tenant_meta.get("default_language"),
             country=tenant_meta.get("country"),
+            tenant_name=tenant_meta.get("name"),
         )
 
     def _tenant_meta(self, tenant_id: str | None) -> dict:
@@ -894,8 +895,8 @@ class AuthService:
         row = (
             self._service.table("tenants")
             .select(
-                "accommodation_type, account_type, default_language, country, "
-                "is_demo"
+                "name, accommodation_type, account_type, default_language, "
+                "country, is_demo"
             )
             .eq("id", tenant_id)
             .limit(1)

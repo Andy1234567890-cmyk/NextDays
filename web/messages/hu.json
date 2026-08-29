@@ -26,7 +26,10 @@
       "da": "Dán",
       "en": "Angol"
     },
-    "explain": "Magyarázat: {label}"
+    "explain": "Magyarázat: {label}",
+    "themeToggle": "Téma váltása",
+    "themeToggleLight": "Világos téma",
+    "themeToggleDark": "Sötét téma"
   },
   "legal": {
     "agbLinkLabel": "ÁSZF",
@@ -118,7 +121,8 @@
     },
     "type": {
       "title": "Mit adsz ki?",
-      "text": "Válaszd ki a működési formát — ez határozza meg az irányítópult fogalmait és moduljait."
+      "text": "Válaszd ki a működési formát — ez határozza meg az irányítópult fogalmait és moduljait.",
+      "bald": "Folyamatban"
     },
     "tax": {
       "title": "Adók és fizetések",
@@ -134,7 +138,7 @@
     },
     "switch": {
       "title": "Meglévő ingatlanok importálása",
-      "intro": "Így hozza át meglévő Booking-/Airbnb-ingatlanait a myNextDaysbe — dupla foglalások nélkül.",
+      "intro": "Hogyan hozhatja át meglévő hirdetéseit a myNextDays-re – dupla foglalások nélkül.",
       "cutover": {
         "title": "Fontos a csatlakoztatás előtt",
         "a": "Minden portált válasszon le az eddigi rendszeréről, mielőtt itt összekapcsolja — csatornánként mindig csak EGY rendszer küldhet adatokat.",
@@ -147,21 +151,24 @@
         "title": "Objektum létrehozása",
         "text": "Minden meglévő hirdetéshez hozzon létre egy ingatlant — a hozzárendeléshez elég a név, a fajta és az alapár.",
         "count": "{count, plural, =0 {Még nincs ingatlan} one {# ingatlan} other {# ingatlan}}",
-        "airbnbHint": "Airbnb-ről jön? Hagyja ki ezt a lépést — a szállásai automatikusan átkerülnek, amikor összekapcsolja az Airbnb-t."
+        "airbnbHint": "Airbnb-ről jön? Hagyja ki ezt a lépést — a szállásai automatikusan átkerülnek, amikor összekapcsolja az Airbnb-t.",
+        "zuordnenHint": "A Booking.com és más portálok esetében szüksége van erre az objektumra: A csatlakoztatáskor a portál szobái 1:1 arányban kerülnek hozzárendelésre az Ön objektumaihoz. Csak az Airbnb esetében marad el ez a lépés – ott a hirdetések a csatlakoztatáskor érkeznek."
       },
       "step2": {
         "title": "Portál összekapcsolása és hozzárendelése",
         "text": "Kapcsolja össze a Bookingot, az Airbnb-t és a többit, és rendelje a portál szobáit 1:1 az ingatlanaihoz. A foglalások és az elérhetőség ezután automatikusan érkeznek.",
         "connect": "Portál csatlakoztatása",
         "connectMore": "További portál csatlakoztatása",
-        "alreadyConnected": "Egy portál már össze van kapcsolva, és az ingatlanai át vannak adva — itt nem kell újra összekapcsolni semmit. A „További portál összekapcsolása“ lehetőséget csak EGY TOVÁBBI portálhoz használja (pl. Booking)."
+        "alreadyConnected": "Egy portál már össze van kapcsolva, és az ingatlanai át vannak adva — itt nem kell újra összekapcsolni semmit. A „További portál összekapcsolása“ lehetőséget csak EGY TOVÁBBI portálhoz használja (pl. Booking).",
+        "connectNamed": "{portal} összekapcsolása",
+        "textNamed": "Kapcsolja össze a {portale} portálokat, és rendelje hozzá a portál szobáit 1:1 arányban az objektumaihoz. A foglalások és a rendelkezésre állás ezután automatikusan frissül."
       },
       "pull": {
-        "button": "Objektumok letöltése a portálról",
         "result": "{count, plural, =0 {Nem található új ingatlan} one {# ingatlan átvéve} other {# ingatlan átvéve}}"
       },
       "finishCta": "Importálás befejezése",
       "finishHint": "Kérjük, először hagyja jóvá a fenti tudnivalót, és hozzon létre legalább egy ingatlant.",
+      "finishHintObjekt": "Először hozzon létre legalább egy objektumot – objektum nélkül nincs mit kezelni. A Lodgify importálása opcionális, nem kötelező.",
       "bookings": {
         "title": "Meglévő foglalások beolvasása",
         "text": "Hozza be az összekapcsolt portálok foglalásait a naptárába.",
@@ -193,7 +200,32 @@
       },
       "finish": {
         "notRegistered": "Legalább egy ingatlant át kell adni a foglalási portáloknak, mielőtt befejezi a bevezetést. Kapcsoljon össze egy portált a 2. lépésben — az ingatlan ekkor automatikusan átkerül."
+      },
+      "nav": {
+        "zurueck": "Vissza",
+        "weiter": "Tovább",
+        "zaehler": "{aktuell}/{gesamt} lépés"
+      },
+      "auswahl": {
+        "title": "Mely portálokon értékesít ma?",
+        "text": "Az importálást ehhez igazítjuk. Később bármikor további portálokat csatlakoztathat.",
+        "keine": "Még egyetlen portálon sem értékesítek"
       }
+    },
+    "spaeterEinrichten": "Későbbi beállítás",
+    "schrittVon": "Lépés: {aktuell} / {gesamt}",
+    "claim1": "Minden portál, egy naptár – és az objektumai is jönnek.",
+    "claim2": "Árak, foglaltság és üzenetek egy helyen.",
+    "claim3": "Több idő a vendégekre, kevesebb az adminisztrációra.",
+    "usp": {
+      "portale": "Minden nagy portál csatlakoztatva",
+      "kalender": "Egy naptár az összes portálhoz",
+      "doppelt": "A lefoglalt éjszakákat azonnal zároljuk mindenhol",
+      "import": "Meglévő hirdetéseit áthozzuk Önnek",
+      "zahlung": "Fizetések és kifizetések is",
+      "preise": "Árak szezononként és éjszakánként",
+      "posteingang": "Vendégüzenetek az összes portálról egy postaládában",
+      "app": "Minden az alkalmazásban is"
     }
   },
   "nav": {
@@ -6206,6 +6238,7 @@
       "untertitelKanaele": "Válassza ki, hol értékesítse ezt a szálláshelyet.",
       "untertitelPruefen": "Ellenőrizze, mi változik a portálokon.",
       "nichtVerfuegbar": "Jelenleg nem érhető el",
+      "portalVerbinden": "Csatlakozás a(z) {portal} szolgáltatáshoz",
       "weiter": "Tovább",
       "abbrechen": "Mégse",
       "jetztVeroeffentlichen": "Közzététel most",
@@ -9933,7 +9966,11 @@
       "statusPastDue": "Fizetés esedékes",
       "statusCanceled": "Felmondva",
       "statusUnpaid": "Kifizetetlen",
-      "statusIncomplete": "Hiányos"
+      "statusIncomplete": "Hiányos",
+      "trialEnds": "A próbaidőszak ekkor jár le:",
+      "trialBannerTitel": "Ingyenes próbaidőszak",
+      "trialBannerText": "A próbaidőszak {datum} napon jár le. Ezt követően az előfizetése automatikusan folytatódik.",
+      "trialBannerKnopf": "Csomag megtekintése"
     },
     "users": {
       "noAccess": "Nincs hozzáférés",
@@ -11531,6 +11568,74 @@
       "subtitle": "Ténylegesen beérkezett pénz – a rögzített részleges befizetések alapján számolva, nem a nyitott követelések alapján.",
       "title": "Egyenleg statisztika",
       "to": "Eddig"
+    }
+  },
+  "startbahn": {
+    "titel": "Első lépések",
+    "fortschritt": "{fertig} / {gesamt} kész",
+    "gruppeZaehler": "{fertig} / {gesamt} kész",
+    "dauer": "kb. {minuten} perc",
+    "gruppe": {
+      "kanaele": "Portálok beállítása",
+      "verkaufsfertig": "Objektumok értékesítésre készen",
+      "grundlagen": "Alapok"
+    },
+    "schritt": {
+      "konto": {
+        "titel": "Fiók létrehozva",
+        "text": "Vállalkozása beállítva."
+      },
+      "firma": {
+        "titel": "Cégadatok megadása",
+        "text": "Cím, adószám és IBAN – a portálok igénylik, és IBAN nélkül nem érkezik pénz Önhöz.",
+        "aktion": "Cégadatokhoz"
+      },
+      "verbinden": {
+        "titel": "Portál összekapcsolása",
+        "text": "Kapcsolja össze az Airbnb-t, a Bookingot vagy az Expediát, hogy a foglalások és a naptárak egy helyen fussanak össze.",
+        "aktion": "Portál összekapcsolása"
+      },
+      "objekteHolen": {
+        "titel": "Objektumok lekérése a portálról",
+        "text": "Hirdetéseit objektumként hozzuk létre – Önnek semmit sem kell begépelnie. Figyelem: Azok a hirdetések, amelyek más szoftverhez vannak kötve, nem kerülnek át.",
+        "gesperrt": "Először kapcsoljon össze egy portált.",
+        "aktion": "Objektumok lekérése"
+      },
+      "erstesObjekt": {
+        "titel": "Első objektum létrehozása",
+        "text": "Hozza létre első objektumát – nyaraló vagy szobatípus.",
+        "aktion": "Objektum létrehozása"
+      },
+      "inhalteHolen": {
+        "titel": "Felszereltség és szabályok átvétele",
+        "text": "A szobák, ágyak, lemondási feltételek, felszereltség és díjak már szerepelnek a portálon – ezeket egyszerre lekérjük az összes objektumhoz.",
+        "gesperrt": "Először kérje le objektumait a portálról.",
+        "aktion": "Tartalom átvétele"
+      },
+      "preise": {
+        "titel": "Árak meghatározása",
+        "text": "Ár nélkül egyetlen portál sem tudja értékesíteni az objektumát.",
+        "gesperrt": "Először szüksége van egy objektumra.",
+        "aktion": "Árak meghatározása"
+      },
+      "sperrtermine": {
+        "titel": "Záró dátumok megadása",
+        "text": "A foglalt időszakok NEM kerülnek át az importálás során. Adja meg őket, mielőtt értékesít – különben egy éjszakát kétszer foglalnak le.",
+        "gesperrt": "Először szüksége van egy objektumra.",
+        "aktion": "Naptárhoz"
+      },
+      "veroeffentlichen": {
+        "titel": "Objektumok közzététele",
+        "text": "Mindent ellenőrzött? Akkor tegye közzé objektumait a portálokon és a piactéren.",
+        "gesperrt": "Csak akkor, ha az objektum és az árak készen állnak – különben olyat ad el, ami még nincs kész.",
+        "aktion": "Közzététel"
+      },
+      "kanaele": {
+        "titel": "Értékesítési csatornák kiválasztása",
+        "text": "Döntse el, mely portálokon és a piactéren keresztül történik az értékesítés.",
+        "gesperrt": "Először szüksége van egy objektumra.",
+        "aktion": "Csatornákhoz"
+      }
     }
   }
 }

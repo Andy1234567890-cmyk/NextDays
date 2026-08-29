@@ -424,8 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – The platform for holiday rental hosts",
-    "description": "The platform for hotels, agencies and holiday rental hosts: channel manager, calendar, direct booking, guest messaging and accounting in one place. Built in Denmark, hosted in the EU. Free for 30 days.",
-    "descriptionMitPreis": "The platform for hotels, agencies and holiday rental hosts: channel manager, calendar, direct booking, guest messaging and accounting in one place. Built in Denmark, hosted in the EU. From {preis} per month. Free for 30 days."
+    "description": "The platform for hotels, agencies and holiday rental hosts: channel manager, calendar, direct booking, guest messaging and accounting in one place. Built in Denmark, hosted in the EU. Free for 14 days.",
+    "descriptionMitPreis": "The platform for hotels, agencies and holiday rental hosts: channel manager, calendar, direct booking, guest messaging and accounting in one place. Built in Denmark, hosted in the EU. From {preis} per month. Free for 14 days."
   },
   "nav": {
     "funktionen": "Features",
@@ -463,7 +463,7 @@
     "headlineHighlight": "bookings",
     "headlinePost": "less effort.",
     "subline": "The platform for hotels, agencies and holiday rental hosts: channel manager, calendar, direct booking, guest messaging and accounting in one place — built by hosts who know the daily routine.",
-    "ctaTrial": "Start 30 days free",
+    "ctaTrial": "Start 14 days free",
     "ctaDemo": "Watch demo",
     "kanaeleLabel": "Connected to the major booking platforms",
     "eyebrow": "The platform for holiday rental hosts",
@@ -609,7 +609,7 @@
     },
     "preis": {
       "frage": "What does myNextDays cost and how do I start?",
-      "antwort": "30 days free, no minimum term, no setup fee, cancel any time. After that a subscription plus a small commission on bookings we bring in. Add-on modules such as extended accounting with DATEV export, staff management or hotel functions are only added if you need them. Create a property, connect your channels, go."
+      "antwort": "14 days free, no minimum term, no setup fee, cancel any time. After that a subscription plus a small commission on bookings we bring in. Add-on modules such as extended accounting with DATEV export, staff management or hotel functions are only added if you need them. Create a property, connect your channels, go."
     }
   },
   "benefits": {
@@ -631,13 +631,13 @@
     "preisBanner": {
       "eyebrow": "Pricing",
       "heading": "Everything your property needs, in one place",
-      "text": "Free for 30 days. No minimum term. Cancel any time (four weeks to the end of the month).",
+      "text": "Free for 14 days. No minimum term. Cancel any time (four weeks to the end of the month).",
       "proMonat": "per month"
     }
   },
   "trial": {
     "eyebrow": "Free trial",
-    "heading": "Try myNextDays free for 30 days.",
+    "heading": "Try myNextDays free for 14 days.",
     "sub": "No minimum term. Cancel any time. Just fill in this short form:",
     "seitenHeading": "Everything your property needs in one place — more control, less effort.",
     "perks": {
@@ -855,15 +855,16 @@
     "impressum": "Legal notice",
     "cookies": "Cookie policy",
     "avv": "Data processing",
-    "kontoLoeschen": "Delete account"
+    "kontoLoeschen": "Delete account",
+    "newsletterKnopf": "Subscribe to newsletter"
   },
   "legal": {
     "stand": "Last updated: {datum}"
   },
   "abschluss": {
     "heading": "Ready to run your property from one place?",
-    "sub": "Try it free for 30 days — no minimum term, no setup fee, cancel any time.",
-    "ctaPrimaer": "Start 30 days free",
+    "sub": "Try it free for 14 days — no minimum term, no setup fee, cancel any time.",
+    "ctaPrimaer": "Start 14 days free",
     "ctaSekundaer": "See pricing"
   },
   "chat": {
@@ -902,14 +903,14 @@
   "preise": {
     "meta": {
       "titel": "Pricing — one plan, everything included | myNextDays",
-      "beschreibung": "One plan with the full feature set, priced by the number of properties. No minimum term, no setup fee, 30 days free — channels, direct booking, guest messaging and billing included."
+      "beschreibung": "One plan with the full feature set, priced by the number of properties. No minimum term, no setup fee, 14 days free — channels, direct booking, guest messaging and billing included."
     },
     "hero": {
       "eyebrow": "Pricing",
       "headlinePre": "One plan.",
       "headlineHighlight": "Everything in.",
       "sub": "No package puzzle: every feature is included, whether you run one holiday flat or twelve room types. You pay by the number of properties — and the more you have, the cheaper each one gets.",
-      "testen": "30 days free",
+      "testen": "14 days free",
       "laufzeit": "No minimum term",
       "einrichtung": "No setup fee",
       "eu": "EU-hosted, GDPR"
@@ -925,7 +926,7 @@
       "grundgebuehr": "Base fee (incl. 1st property)",
       "weitereObjekte": "{anzahl, plural, =1 {one more property} other {# more properties}} × {jeObjekt}",
       "netto": "All amounts excluding VAT. Billed monthly, cancel any time.",
-      "ctaTesten": "Start 30 days free",
+      "ctaTesten": "Start 14 days free",
       "ctaDemo": "See the demo",
       "inklusivTitel": "Included in every plan",
       "inklusivSub": "Nothing that only starts in a pricier tier — this is the entire scope.",
@@ -985,7 +986,7 @@
       "sub": "What hosts want to know before switching — short and without small print.",
       "laufzeit": {
         "frage": "Is there a minimum term?",
-        "antwort": "No. The subscription runs monthly and can be cancelled with four weeks' notice to the end of the month. The first 30 days are free, with no payment details."
+        "antwort": "No. The subscription is monthly and can be cancelled with four weeks' notice to the end of the month. The first 14 days are free: you enter your payment details at the start, but payment will only be debited after the trial period. If you cancel beforehand, you pay nothing."
       },
       "objektzahl": {
         "frage": "What happens when I add properties?",
@@ -1018,7 +1019,7 @@
   },
   "funktionen": {
     "rahmen": {
-      "ctaTesten": "Start 30 days free",
+      "ctaTesten": "Start 14 days free",
       "ctaDemo": "See the demo",
       "weiter": "On to the other features",
       "mehr": "View",
@@ -1723,7 +1724,7 @@
       "eu": "EU-hosted, GDPR-compliant",
       "start": "Launching 1 September 2026",
       "sprachen": "27 countries, 24 languages",
-      "ctaTrial": "Try free for 30 days",
+      "ctaTrial": "Try free for 14 days",
       "ctaKontakt": "Write to us"
     },
     "warum": {

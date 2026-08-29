@@ -69,6 +69,8 @@ from .schemas import (
     OAuthBeginRequest,
     OAuthBeginResponse,
     OAuthFinalizeRequest,
+    OAuthRuecksprungRequest,
+    OAuthRuecksprungResponse,
     OAuthStatusResponse,
     ObjektVerkaufResponse,
     ObjektVerkaufStandResponse,
@@ -862,6 +864,37 @@ def channel_oauth_status(
             ctx, property_id=property_id, portal_code=portal_code
         )
         return OAuthStatusResponse(**result)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/channels/oauth/ruecksprung",
+    response_model=OAuthRuecksprungResponse,
+)
+def oauth_ruecksprung(
+    req: OAuthRuecksprungRequest,
+    service: ChannelManagerServiceDep,
+    ctx: _write,
+) -> OAuthRuecksprungResponse:
+    """Der Ruecksprung von Airbnb: `?success=true&channel_id=…&token=…`.
+
+    ERST hier entsteht etwas. Der Weg dorthin (`oauth/begin` bzw. die
+    Uebernahme) legt bewusst NICHTS an — kein Objekt, keine Channex-Property,
+    kein Konto, keine Verbindung. Bricht der Kunde bei Airbnb ab, bleibt nichts
+    zurueck.
+
+    KEIN `property_id` im Pfad: bei der Erstverbindung gibt es noch kein Objekt.
+    Der Kanal ist die Identitaet, alles Weitere haengt an ihm.
+    """
+    try:
+        result = service.kanal_aus_ruecksprung(
+            ctx,
+            channel_id=req.channel_id,
+            portal_code=req.portal_code,
+            token=req.token,
+        )
+        return OAuthRuecksprungResponse(**result)
     except ChannelManagerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

@@ -65,6 +65,9 @@ class Kategorie:
 
 _ALLE_KANAELE = (Kanal.EMAIL, Kanal.SMS, Kanal.PHONE)
 _MAIL_SMS = (Kanal.EMAIL, Kanal.SMS)
+# Nur Mail. Fuer Meldungen mit Tagen Vorlauf, die einen Link tragen —
+# SMS waere hier die falsche Dringlichkeit.
+_MAIL = (Kanal.EMAIL,)
 # Mail + SMS + Push. Nur fuer Ereignisse, die den Betrieb SOFORT erreichen
 # muessen; jede Kategorie hier braucht eine `*_push`-Spalte in der DB.
 _MAIL_SMS_PUSH = (Kanal.EMAIL, Kanal.SMS, Kanal.PUSH)
@@ -182,6 +185,18 @@ KATALOG: tuple[Kategorie, ...] = (
     # koennte, verloere Buchungen, ohne je zu erfahren, dass es sie gab. SMS
     # bleibt waehlbar, weil die Frist knapp sein kann.
     Kategorie("anfrage_offen", Tab.KONTO, "aktivitaet", _MAIL_SMS, email_pflicht=True),
+    # Die kostenlose Testphase laeuft in wenigen Tagen ab (Stripe meldet es drei
+    # Tage vorher per `customer.subscription.trial_will_end`).
+    #
+    # E-MAIL IST PFLICHT, aus demselben Grund wie bei `anfrage_offen`: Nichtstun
+    # ist hier eine ENTSCHEIDUNG mit Geldfolge. Am Tag danach zieht Stripe den
+    # ersten Beitrag ein — wer die Meldung abschalten koennte, wuerde ohne
+    # Vorwarnung belastet. Genau das ist die Beschwerde, die man sich mit einer
+    # abwaehlbaren Erinnerung einhandelt.
+    #
+    # KEIN SMS: die Nachricht traegt einen Link auf die Abo-Seite, und drei Tage
+    # sind reichlich Zeit. SMS ist fuer Fristen von Stunden da.
+    Kategorie("testphase_endet", Tab.KONTO, "konto", _MAIL, email_pflicht=True),
 )
 
 NACH_SCHLUESSEL: dict[str, Kategorie] = {k.schluessel: k for k in KATALOG}

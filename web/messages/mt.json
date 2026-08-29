@@ -26,7 +26,10 @@
       "da": "Daniż",
       "en": "Ingliż"
     },
-    "explain": "Spjegazzjoni ta' {label}"
+    "explain": "Spjegazzjoni ta' {label}",
+    "themeToggle": "Ibdel id-disinn",
+    "themeToggleLight": "Disinn ċar",
+    "themeToggleDark": "Disinn skur"
   },
   "legal": {
     "agbLinkLabel": "Termini u Kundizzjonijiet",
@@ -118,7 +121,8 @@
     },
     "type": {
       "title": "X'tikri?",
-      "text": "Agħżel it-tip ta' negozju — jiddetermina t-termini u l-moduli fid-dashboard tiegħek."
+      "text": "Agħżel it-tip ta' negozju — jiddetermina t-termini u l-moduli fid-dashboard tiegħek.",
+      "bald": "Fil-ħidma"
     },
     "tax": {
       "title": "Taxxi u ħlasijiet",
@@ -134,7 +138,7 @@
     },
     "switch": {
       "title": "Importa l-proprjetajiet eżistenti",
-      "intro": "Hekk iġġib il-proprjetajiet eżistenti tiegħek ta' Booking/Airbnb għal myNextDays — mingħajr prenotazzjonijiet doppji.",
+      "intro": "Kif timporta l-listi eżistenti tiegħek f'myNextDays — mingħajr prenotazzjonijiet doppji.",
       "cutover": {
         "title": "Importanti qabel il-konnessjoni",
         "a": "Aqla' kull portal mis-sistema preċedenti tiegħek qabel tgħaqqdu hawn — għal kull kanal tista' tibgħat data sistema WAĦDA biss.",
@@ -147,21 +151,24 @@
         "title": "Oħloq proprjetà",
         "text": "Oħloq proprjetà għal kull elenkar eżistenti — l-isem, it-tip u l-prezz bażiku huma biżżejjed għall-assenjazzjoni.",
         "count": "{count, plural, =0 {Għadha ebda proprjetà} one {# proprjetà} two {# proprjetajiet} few {# proprjetajiet} many {# proprjetà} other {# proprjetà}}",
-        "airbnbHint": "Ġej minn Airbnb? Aqbeż dan il-pass — il-proprjetajiet tiegħek jiġu importati awtomatikament meta tikkonnettja Airbnb."
+        "airbnbHint": "Ġej minn Airbnb? Aqbeż dan il-pass — il-proprjetajiet tiegħek jiġu importati awtomatikament meta tikkonnettja Airbnb.",
+        "zuordnenHint": "Għal Booking.com u portali oħra, għandek bżonn din il-proprjetà: Meta tikkonnettja, il-kmamar tal-portal jiġu assenjati 1:1 lill-proprjetajiet tiegħek. Dan il-pass mhuwiex meħtieġ biss ma' Airbnb — hemmhekk il-listi jiġu inklużi meta tikkonnettja."
       },
       "step2": {
         "title": "Għaqqad u assenja portal",
         "text": "Għaqqad Booking, Airbnb u oħrajn u assenja l-kmamar tal-portali 1:1 għall-proprjetajiet tiegħek. Il-prenotazzjonijiet u d-disponibbiltà mbagħad jaslu awtomatikament.",
         "connect": "Qabbad il-portal",
         "connectMore": "Qabbad portal ieħor",
-        "alreadyConnected": "Portal huwa diġà konness u l-proprjetajiet tiegħek intbagħtu — hawn ma għandekx bżonn tgħaqqad xejn mill-ġdid. Uża „Għaqqad portal oħra“ biss għal portal ADDIZZJONALI (eż. Booking)."
+        "alreadyConnected": "Portal huwa diġà konness u l-proprjetajiet tiegħek intbagħtu — hawn ma għandekx bżonn tgħaqqad xejn mill-ġdid. Uża „Għaqqad portal oħra“ biss għal portal ADDIZZJONALI (eż. Booking).",
+        "connectNamed": "Qabbad {portal}",
+        "textNamed": "Qabbad {portale} u qabbel il-kmamar tal-portal 1:1 mal-proprjetajiet tiegħek. Il-prenotazzjonijiet u d-disponibbiltà jiġu awtomatikament wara."
       },
       "pull": {
-        "button": "Iġbor il-proprjetajiet mill-portal",
         "result": "{count, plural, =0 {Ma nstabet ebda proprjetà ġdida} one {# proprjetà ttieħdet} two {# proprjetajiet ittieħdu} few {# proprjetajiet ittieħdu} many {# proprjetà ttieħdet} other {# proprjetà ttieħdet}}"
       },
       "finishCta": "Temm l-importazzjoni",
       "finishHint": "L-ewwel ikkonferma l-indikazzjoni ta' hawn fuq u oħloq għall-inqas proprjetà waħda.",
+      "finishHintObjekt": "L-ewwel, oħloq mill-inqas propjetà waħda — mingħajr propjetà, m'hemm xejn x'timmaniġġja. L-importazzjoni ta' Lodgify hija fakultattiva u mhux obbligatorja.",
       "bookings": {
         "title": "Aqra l-prenotazzjonijiet eżistenti",
         "text": "Ġib il-prenotazzjonijiet tal-portali konnessi tiegħek fil-kalendarju tiegħek.",
@@ -193,7 +200,32 @@
       },
       "finish": {
         "notRegistered": "Għall-inqas proprjetà waħda trid tkun ġiet mibgħuta lill-portali tal-prenotazzjonijiet qabel tikkonkludi l-onboarding. Għaqqad portal fil-pass 2 — il-proprjetà tintbagħat awtomatikament."
+      },
+      "nav": {
+        "zurueck": "Lura",
+        "weiter": "Li jmiss",
+        "zaehler": "Pass {aktuell} minn {gesamt}"
+      },
+      "auswahl": {
+        "title": "Fuq liema portali qed tbigħ illum?",
+        "text": "Aħna se niffukaw l-importazzjoni fuq dan. Tista' tikkonnettja aktar portali fi kwalunkwe ħin aktar tard.",
+        "keine": "Għadni ma nbigħ fuq l-ebda portal"
       }
+    },
+    "spaeterEinrichten": "Iffirma aktar tard",
+    "schrittVon": "Pass {aktuell} minn {gesamt}",
+    "claim1": "Il-portali kollha, kalendarju wieħed — u l-proprjetajiet tiegħek jiġu inklużi.",
+    "claim2": "Prezzijiet, okkupazzjoni u messaġġi f'post wieħed.",
+    "claim3": "Iktar ħin għall-klijenti, inqas għall-amministrazzjoni.",
+    "usp": {
+      "portale": "Il-portali ewlenin kollha konnessi",
+      "kalender": "Kalendarju wieħed għall-portali kollha",
+      "doppelt": "Aħna nimblukkaw il-iljieli bbukkjati immedjatament kullimkien",
+      "import": "Aħna nġibu l-listi eżistenti tiegħek",
+      "zahlung": "Ħlasijiet deħlin u ħlasijiet 'il barra inklużi",
+      "preise": "Immaniġġja l-prezzijiet staġjonali u ta' kull lejl",
+      "posteingang": "Messaġġi tal-klijenti mill-portali kollha f'kaxxa postali waħda",
+      "app": "Kollox disponibbli wkoll fl-app"
     }
   },
   "nav": {
@@ -6206,6 +6238,7 @@
       "untertitelKanaele": "Agħżel fejn għandha tinbiegħ din il-propjetà.",
       "untertitelPruefen": "Iċċekkja x’se jinbidel fuq il-portali.",
       "nichtVerfuegbar": "Mhux disponibbli bħalissa",
+      "portalVerbinden": "Qabbad {portal} issa",
       "weiter": "Kompli",
       "abbrechen": "Ikkanċella",
       "jetztVeroeffentlichen": "Ippubblika issa",
@@ -9933,7 +9966,11 @@
       "statusPastDue": "Pagament pendenti",
       "statusCanceled": "Ikkanċellat",
       "statusUnpaid": "Mhux imħallas",
-      "statusIncomplete": "Mhux komplut"
+      "statusIncomplete": "Mhux komplut",
+      "trialEnds": "Il-perjodu ta' prova jintemm fi",
+      "trialBannerTitel": "Perjodu ta' prova b'xejn",
+      "trialBannerText": "Il-perjodu ta' prova tiegħek jintemm fi {datum}. Wara dan, l-abbonament tiegħek jiġġedded awtomatikament.",
+      "trialBannerKnopf": "Ara l-pjan"
     },
     "users": {
       "noAccess": "L-ebda aċċess",
@@ -11531,6 +11568,74 @@
       "subtitle": "Flus attwalment riċevuti — ikkalkulati permezz tal-pagamenti parzjali rreġistrati, mhux permezz ta' talbiet pendenti.",
       "title": "Statistika tal-bilanċ",
       "to": "Sa"
+    }
+  },
+  "startbahn": {
+    "titel": "Bidu",
+    "fortschritt": "{fertig} minn {gesamt} lesti",
+    "gruppeZaehler": "{fertig} / {gesamt} lesti",
+    "dauer": "madwar {minuten} minuti",
+    "gruppe": {
+      "kanaele": "Issettja l-portali",
+      "verkaufsfertig": "Ipprepara l-proprjetajiet għall-bejgħ",
+      "grundlagen": "Bażiku"
+    },
+    "schritt": {
+      "konto": {
+        "titel": "Kont maħluq",
+        "text": "In-negozju tiegħek huwa stabbilit."
+      },
+      "firma": {
+        "titel": "Żid id-dettalji tal-kumpanija",
+        "text": "Indirizz, numru tat-taxxa u IBAN — il-portali jitolbuhom, u mingħajr IBAN ma tirċievi l-ebda flus.",
+        "aktion": "Għad-dettalji tal-kumpanija"
+      },
+      "verbinden": {
+        "titel": "Qabbad portal",
+        "text": "Qabbad Airbnb, Booking jew Expedia biex tgħaqqad il-prenotazzjonijiet u l-kalendarji.",
+        "aktion": "Qabbad portal"
+      },
+      "objekteHolen": {
+        "titel": "Ġib proprjetajiet mill-portal",
+        "text": "Aħna noħolqu l-listi tiegħek bħala proprjetajiet — m'għandekx għalfejn tittajpja xejn. Attenzjoni: Reklami li huma marbuta ma' softwer ieħor ma jiġux inklużi.",
+        "gesperrt": "Qabbad portal l-ewwel.",
+        "aktion": "Ġib proprjetajiet"
+      },
+      "erstesObjekt": {
+        "titel": "Oħloq l-ewwel proprjetà",
+        "text": "Oħloq l-ewwel proprjetà tiegħek — akkomodazzjoni għall-vaganzi jew tip ta' kamra.",
+        "aktion": "Oħloq proprjetà"
+      },
+      "inhalteHolen": {
+        "titel": "Ħu tagħmir u regoli",
+        "text": "Kmamar, sodod, regoli ta' kanċellazzjoni, tagħmir u tariffi diġà jinsabu fuq il-portal — aħna nġibuhom għall-proprjetajiet kollha f'daqqa.",
+        "gesperrt": "L-ewwel ġib il-proprjetajiet tiegħek mill-portal.",
+        "aktion": "Ħu kontenut"
+      },
+      "preise": {
+        "titel": "Issettja l-prezzijiet",
+        "text": "Mingħajr prezz, l-ebda portal ma jista' jbiegħ il-proprjetà tiegħek.",
+        "gesperrt": "L-ewwel għandek bżonn proprjetà.",
+        "aktion": "Issettja l-prezzijiet"
+      },
+      "sperrtermine": {
+        "titel": "Daħħal dati imblukkati",
+        "text": "Perjodi okkupati MHUX jiġu importati. Daħħalhom qabel ma tbigħ — inkella lejl jiġi bbukkjat darbtejn.",
+        "gesperrt": "L-ewwel għandek bżonn proprjetà.",
+        "aktion": "Għall-kalendarju"
+      },
+      "veroeffentlichen": {
+        "titel": "Ippubblika proprjetajiet",
+        "text": "Kollox iċċekkjat? Imbagħad ippubblika l-proprjetajiet tiegħek fuq il-portali u fis-suq.",
+        "gesperrt": "Biss meta l-proprjetà u l-prezzijiet ikunu stabbiliti — inkella tbigħ xi ħaġa li għadha mhix lesta.",
+        "aktion": "Ippubblika"
+      },
+      "kanaele": {
+        "titel": "Agħżel kanali tal-bejgħ",
+        "text": "Iddeċiedi permezz ta' liema portali u jekk permezz tas-suq hux se jsir il-bejgħ.",
+        "gesperrt": "L-ewwel għandek bżonn proprjetà.",
+        "aktion": "Għall-kanali"
+      }
     }
   }
 }

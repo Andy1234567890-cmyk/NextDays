@@ -424,8 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – Platformen for udlejere af feriebolig",
-    "description": "Platformen til hoteller, bureauer og udlejere af ferieboliger: channel manager, kalender, direkte booking, gæstekommunikation og afregning ét sted. Bygget i Danmark, hostet i EU. Prøv gratis i 30 dage.",
-    "descriptionMitPreis": "Platformen til hoteller, bureauer og udlejere af ferieboliger: channel manager, kalender, direkte booking, gæstekommunikation og afregning ét sted. Bygget i Danmark, hostet i EU. Fra {preis} om måneden. Prøv gratis i 30 dage."
+    "description": "Platformen til hoteller, bureauer og udlejere af ferieboliger: channel manager, kalender, direkte booking, gæstekommunikation og afregning ét sted. Bygget i Danmark, hostet i EU. Prøv gratis i 14 dage.",
+    "descriptionMitPreis": "Platformen til hoteller, bureauer og udlejere af ferieboliger: channel manager, kalender, direkte booking, gæstekommunikation og afregning ét sted. Bygget i Danmark, hostet i EU. Fra {preis} om måneden. Prøv gratis i 14 dage."
   },
   "nav": {
     "funktionen": "Funktioner",
@@ -463,7 +463,7 @@
     "headlineHighlight": "bookinger",
     "headlinePost": "mindre besvær.",
     "subline": "Platformen til hoteller, bureauer og udlejere af ferieboliger: channel manager, kalender, direkte booking, gæstekommunikation og afregning ét sted – bygget af udlejere, der kender hverdagen.",
-    "ctaTrial": "Prøv gratis i 30 dage",
+    "ctaTrial": "Prøv gratis i 14 dage",
     "ctaDemo": "Se demo",
     "kanaeleLabel": "Forbundet med de store bookingplatforme",
     "eyebrow": "Platformen for udlejere af ferieboliger",
@@ -609,7 +609,7 @@
     },
     "preis": {
       "frage": "Hvad koster myNextDays, og hvordan kommer jeg i gang?",
-      "antwort": "30 dage gratis, ingen bindingsperiode, ingen oprettelsesgebyr, opsigelse når som helst. Derefter et abonnement plus en lav kommission på formidlede bookinger. Tillægsmoduler som udvidet bogføring med DATEV-eksport, medarbejderstyring eller hotelfunktioner tilkøber du kun, hvis du har brug for dem. Opret objekt, forbind kanaler, kom i gang."
+      "antwort": "14 dage gratis, ingen bindingsperiode, ingen oprettelsesgebyr, opsigelse når som helst. Derefter et abonnement plus en lav kommission på formidlede bookinger. Tillægsmoduler som udvidet bogføring med DATEV-eksport, medarbejderstyring eller hotelfunktioner tilkøber du kun, hvis du har brug for dem. Opret objekt, forbind kanaler, kom i gang."
     }
   },
   "benefits": {
@@ -631,13 +631,13 @@
     "preisBanner": {
       "eyebrow": "Pris",
       "heading": "Alt til din overnatningsvirksomhed ét sted",
-      "text": "30 dage gratis. Ingen bindingsperiode. Kan opsiges når som helst (4 uger til udgangen af måneden).",
+      "text": "14 dage gratis. Ingen bindingsperiode. Kan opsiges når som helst (4 uger til udgangen af måneden).",
       "proMonat": "om måneden"
     }
   },
   "trial": {
     "eyebrow": "Prøv gratis",
-    "heading": "Prøv myNextDays gratis i 30 dage.",
+    "heading": "Prøv myNextDays gratis i 14 dage.",
     "sub": "Ingen bindingsperiode. Kan opsiges når som helst. Udfyld blot denne korte formular:",
     "seitenHeading": "Alt til din overnatningsvirksomhed ét sted – mere kontrol, mindre besvær.",
     "perks": {
@@ -855,15 +855,16 @@
     "impressum": "Juridisk information",
     "cookies": "Cookiepolitik",
     "avv": "Databehandling",
-    "kontoLoeschen": "Slet konto"
+    "kontoLoeschen": "Slet konto",
+    "newsletterKnopf": "Tilmeld nyhedsbrev"
   },
   "legal": {
     "stand": "Senest opdateret: {datum}"
   },
   "abschluss": {
     "heading": "Klar til at styre din overnatningsvirksomhed ét sted?",
-    "sub": "Prøv gratis i 30 dage – ingen bindingsperiode, intet oprettelsesgebyr, kan opsiges når som helst.",
-    "ctaPrimaer": "Prøv gratis i 30 dage",
+    "sub": "Prøv gratis i 14 dage – ingen bindingsperiode, intet oprettelsesgebyr, kan opsiges når som helst.",
+    "ctaPrimaer": "Prøv gratis i 14 dage",
     "ctaSekundaer": "Se priser"
   },
   "chat": {
@@ -902,14 +903,14 @@
   "preise": {
     "meta": {
       "titel": "Priser — én pakke, alt inkluderet | myNextDays",
-      "beschreibung": "Én pakke med det fulde funktionsomfang, betalt efter antal enheder. Ingen bindingsperiode, intet oprettelsesgebyr, 30 dage gratis — kanaler, direkte booking, gæstekommunikation og afregning er med."
+      "beschreibung": "Én pakke med det fulde funktionsomfang, betalt efter antal enheder. Ingen bindingsperiode, intet oprettelsesgebyr, 14 dage gratis — kanaler, direkte booking, gæstekommunikation og afregning er med."
     },
     "hero": {
       "eyebrow": "Priser",
       "headlinePre": "Én pakke.",
       "headlineHighlight": "Alt indeholdt.",
       "sub": "Ingen pakkegåde: alle funktioner er med, uanset om du driver ét feriehus eller tolv værelsestyper. Du betaler efter antal enheder — og jo flere du har, jo billigere bliver hver enkelt.",
-      "testen": "30 dage gratis",
+      "testen": "14 dage gratis",
       "laufzeit": "Ingen bindingsperiode",
       "einrichtung": "Intet oprettelsesgebyr",
       "eu": "EU-hostet, GDPR"
@@ -925,7 +926,7 @@
       "grundgebuehr": "Grundgebyr (inkl. 1. enhed)",
       "weitereObjekte": "{anzahl, plural, =1 {én enhed mere} other {# enheder mere}} × {jeObjekt}",
       "netto": "Alle beløb er ekskl. moms. Månedlig afregning, kan opsiges når som helst.",
-      "ctaTesten": "Prøv 30 dage gratis",
+      "ctaTesten": "Prøv 14 dage gratis",
       "ctaDemo": "Se demoen",
       "inklusivTitel": "Med i enhver pakke",
       "inklusivSub": "Ingen funktioner, der først begynder i en dyrere pakke — det her er hele omfanget.",
@@ -985,7 +986,7 @@
       "sub": "Det udlejere vil vide før et skifte — kort og uden småt med småt.",
       "laufzeit": {
         "frage": "Er der en bindingsperiode?",
-        "antwort": "Nej. Abonnementet løber månedligt og kan opsiges med fire ugers varsel til udgangen af måneden. De første 30 dage er gratis, uden betalingsoplysninger."
+        "antwort": "Nej. Abonnementet er månedligt og kan opsiges med fire ugers varsel til udgangen af en måned. De første 14 dage er gratis: Du indtaster dine betalingsoplysninger ved start, men betalingen trækkes først efter prøveperioden. Hvis du opsiger før, betaler du intet."
       },
       "objektzahl": {
         "frage": "Hvad sker der, når jeg tilføjer enheder?",
@@ -1018,7 +1019,7 @@
   },
   "funktionen": {
     "rahmen": {
-      "ctaTesten": "Prøv 30 dage gratis",
+      "ctaTesten": "Prøv 14 dage gratis",
       "ctaDemo": "Se demoen",
       "weiter": "Videre til de andre funktioner",
       "mehr": "Se",
@@ -1723,7 +1724,7 @@
       "eu": "EU-hostet, GDPR-sikker",
       "start": "Start den 1. september 2026",
       "sprachen": "27 lande, 24 sprog",
-      "ctaTrial": "Prøv gratis i 30 dage",
+      "ctaTrial": "Prøv gratis i 14 dage",
       "ctaKontakt": "Skriv til os"
     },
     "warum": {

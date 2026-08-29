@@ -26,7 +26,10 @@
       "da": "Danish",
       "en": "English"
     },
-    "explain": "Explanation of {label}"
+    "explain": "Explanation of {label}",
+    "themeToggle": "Change design",
+    "themeToggleLight": "Light design",
+    "themeToggleDark": "Dark design"
   },
   "legal": {
     "agbLinkLabel": "Terms",
@@ -118,7 +121,8 @@
     },
     "type": {
       "title": "What do you rent out?",
-      "text": "Choose your business type — it determines terms and modules in your dashboard."
+      "text": "Choose your business type — it determines terms and modules in your dashboard.",
+      "bald": "In progress"
     },
     "tax": {
       "title": "Taxes & payments",
@@ -134,7 +138,7 @@
     },
     "switch": {
       "title": "Import your existing listings",
-      "intro": "Here's how to bring your existing Booking/Airbnb listings to myNextDays — without double bookings.",
+      "intro": "How to import your existing listings to myNextDays — without double bookings.",
       "cutover": {
         "title": "Important before connecting",
         "a": "Disconnect each portal from your previous system before connecting it here — only ONE system may push per channel.",
@@ -147,21 +151,24 @@
         "title": "Create a listing",
         "text": "Create one listing per existing portal listing — name, type and base price are enough to map against.",
         "count": "{count, plural, =0 {No listings yet} one {# listing} other {# listings}}",
-        "airbnbHint": "Coming from Airbnb? Skip this step — your listings are imported automatically when you connect Airbnb."
+        "airbnbHint": "Coming from Airbnb? Skip this step — your listings are imported automatically when you connect Airbnb.",
+        "zuordnenHint": "For Booking.com and other portals, you need this object: When connecting, the portal's rooms are mapped 1:1 to your objects. Only with Airbnb is this step omitted — there, the listings are created upon connection."
       },
       "step2": {
         "title": "Connect portal & map",
         "text": "Connect Booking, Airbnb & co. and map the portal rooms 1:1 to your listings. Bookings and availability then sync automatically.",
         "connect": "Connect portal",
         "connectMore": "Connect another portal",
-        "alreadyConnected": "A portal is already connected and your listings are transferred — no need to connect again here. Use “Connect another portal” only for an ADDITIONAL portal (e.g. Booking)."
+        "alreadyConnected": "A portal is already connected and your listings are transferred — no need to connect again here. Use “Connect another portal” only for an ADDITIONAL portal (e.g. Booking).",
+        "connectNamed": "Connect {portal}",
+        "textNamed": "Connect {portale} and map the portal rooms 1:1 to your properties. Bookings and availability will then be automatically synchronized."
       },
       "pull": {
-        "button": "Pull listings from portal",
         "result": "{count, plural, =0 {No new listings found} one {# listing imported} other {# listings imported}}"
       },
       "finishCta": "Finish import",
       "finishHint": "Please confirm the note above first and create at least one listing.",
+      "finishHintObjekt": "First, create at least one property — without a property, there's nothing to manage. The Lodgify import is optional and not mandatory.",
       "bookings": {
         "title": "Import existing bookings",
         "text": "Pull the reservations from your connected portals into your calendar.",
@@ -193,7 +200,32 @@
       },
       "finish": {
         "notRegistered": "At least one object must be transmitted to the booking portals before you finish onboarding. Connect a portal in step 2 — the object is transmitted automatically."
+      },
+      "nav": {
+        "zurueck": "Back",
+        "weiter": "Next",
+        "zaehler": "Step {aktuell} of {gesamt}"
+      },
+      "auswahl": {
+        "title": "Which portals are you selling on today?",
+        "text": "We will align the import with this. You can connect more portals at any time later.",
+        "keine": "I am not selling on any portal yet"
       }
+    },
+    "spaeterEinrichten": "Set up later",
+    "schrittVon": "Step {aktuell} of {gesamt}",
+    "claim1": "All portals, one calendar — and your properties are included.",
+    "claim2": "Prices, occupancy, and messages in one place.",
+    "claim3": "More time for guests, less for administration.",
+    "usp": {
+      "portale": "All major portals connected",
+      "kalender": "One calendar for all portals",
+      "doppelt": "Booked nights are immediately blocked everywhere",
+      "import": "We'll import your existing listings",
+      "zahlung": "Payments and payouts included",
+      "preise": "Manage seasonal and nightly rates",
+      "posteingang": "Guest messages from all portals in one inbox",
+      "app": "Also available in the app"
     }
   },
   "nav": {
@@ -6227,6 +6259,7 @@
       "untertitelKanaele": "Choose where this property should be sold.",
       "untertitelPruefen": "Review what will change on the portals.",
       "nichtVerfuegbar": "Currently unavailable",
+      "portalVerbinden": "Connect {portal} now",
       "weiter": "Continue",
       "abbrechen": "Cancel",
       "jetztVeroeffentlichen": "Publish now",
@@ -9954,7 +9987,11 @@
       "statusPastDue": "Payment due",
       "statusCanceled": "Cancelled",
       "statusUnpaid": "Unpaid",
-      "statusIncomplete": "Incomplete"
+      "statusIncomplete": "Incomplete",
+      "trialEnds": "Trial ends on",
+      "trialBannerTitel": "Free trial",
+      "trialBannerText": "Your trial ends on {datum}. After that, your subscription will automatically continue.",
+      "trialBannerKnopf": "View plan"
     },
     "users": {
       "noAccess": "No access",
@@ -11552,6 +11589,74 @@
       "subtitle": "Actual money received — calculated from recorded partial payments, not from open receivables.",
       "title": "Balance statistics",
       "to": "To"
+    }
+  },
+  "startbahn": {
+    "titel": "Getting Started",
+    "fortschritt": "{fertig} of {gesamt} completed",
+    "gruppeZaehler": "{fertig} / {gesamt} completed",
+    "dauer": "approx. {minuten} minutes",
+    "gruppe": {
+      "kanaele": "Set up portals",
+      "verkaufsfertig": "Prepare properties for sale",
+      "grundlagen": "Basics"
+    },
+    "schritt": {
+      "konto": {
+        "titel": "Account created",
+        "text": "Your business is set up."
+      },
+      "firma": {
+        "titel": "Enter company data",
+        "text": "Address, tax number, and IBAN — portals require them, and without an IBAN, you won't receive any money.",
+        "aktion": "To company data"
+      },
+      "verbinden": {
+        "titel": "Connect portal",
+        "text": "Connect Airbnb, Booking, or Expedia to consolidate bookings and calendars.",
+        "aktion": "Connect portal"
+      },
+      "objekteHolen": {
+        "titel": "Fetch properties from portal",
+        "text": "We'll create your listings as properties — no need to retype anything. Note: Listings tied to other software will not be imported.",
+        "gesperrt": "Connect a portal first.",
+        "aktion": "Fetch properties"
+      },
+      "erstesObjekt": {
+        "titel": "Create first property",
+        "text": "Create your first property — holiday rental or room type.",
+        "aktion": "Create property"
+      },
+      "inhalteHolen": {
+        "titel": "Import amenities and rules",
+        "text": "Rooms, beds, cancellation policies, amenities, and fees are already on the portal — we'll fetch them for all properties at once.",
+        "gesperrt": "First, fetch your properties from the portal.",
+        "aktion": "Import content"
+      },
+      "preise": {
+        "titel": "Set prices",
+        "text": "Without a price, no portal can sell your property.",
+        "gesperrt": "You need a property first.",
+        "aktion": "Set prices"
+      },
+      "sperrtermine": {
+        "titel": "Enter blocked dates",
+        "text": "Occupied periods are NOT imported. Enter them before you sell — otherwise, a night will be double-booked.",
+        "gesperrt": "You need a property first.",
+        "aktion": "To calendar"
+      },
+      "veroeffentlichen": {
+        "titel": "Publish properties",
+        "text": "Everything checked? Then activate your properties on the portals and in the marketplace.",
+        "gesperrt": "Only when property and prices are set — otherwise, you'll sell something that's not yet ready.",
+        "aktion": "Publish"
+      },
+      "kanaele": {
+        "titel": "Choose sales channels",
+        "text": "Decide which portals and whether to sell via the marketplace.",
+        "gesperrt": "You need a property first.",
+        "aktion": "To channels"
+      }
     }
   }
 }

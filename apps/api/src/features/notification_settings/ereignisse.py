@@ -1200,3 +1200,60 @@ def melde_offene_anfrage(
             thread_id=thread_id,
             error=str(exc)[:200],
         )
+
+
+# --- Testphase endet (0488) ---------------------------------------------------
+SCHLUESSEL_TESTPHASE = "testphase_endet"
+
+
+def melde_testphase_endet(
+    db: Client, *, tenant_id: str, endet_am: str | None
+) -> None:
+    """„Deine kostenlose Testphase endet in wenigen Tagen."
+
+    WOZU: Am Tag nach dem Ablauf zieht Stripe den ersten Beitrag ein. Ohne
+    diese Meldung waere das eine Belastung aus dem Nichts — die Testphase
+    beginnt beim Abschluss und laeuft danach still, niemand merkt sich das
+    Datum. Genau daraus entstehen Rueckbuchungen und Beschwerden.
+
+    AUSGELOEST VON STRIPE, nicht von uns: `customer.subscription.trial_will_end`
+    kommt drei Tage vor dem Ende. Wir rechnen den Zeitpunkt also nicht selbst
+    aus (kein Cron, der eine fremde Frist nachbildet und bei jeder Aenderung
+    auseinanderlaeuft) — die Quelle der Frist ist die Quelle der Meldung.
+
+    `endet_am` ist Stripes `trial_end`, bereits als ISO-Datum. Fehlt es, wird
+    die Meldung OHNE Datum verschickt statt mit einem gerechneten (Wurzel 4:
+    lieber unvollstaendig als plausibel falsch) — die Aufforderung stimmt auch
+    ohne Tag, und im Konto steht das genaue Datum.
+
+    ENTDOPPLUNG ueber den Tenant: Stripe kann das Ereignis wiederholen
+    (Wurzel 2). Ein `dedup_key` je Testphase laesst die zweite Meldung
+    auflaufen, solange die erste ungelesen ist.
+    """
+    try:
+        empfaenger = _betriebsleitung(db, tenant_id)
+        if not empfaenger:
+            log.warning("testphase_meldung_ohne_empfaenger", tenant_id=tenant_id)
+            return
+        dispatcher = _dispatcher(db)
+        titel_key = "benachrichtigung.testphase_endet"
+        for user_id in sorted(empfaenger):
+            dispatcher.sende(
+                user_id=user_id,
+                schluessel=SCHLUESSEL_TESTPHASE,
+                betreff=mail_text(titel_key, _GLOCKEN_SPRACHE),
+                betreff_key=titel_key,
+                text=endet_am or "",
+                tenant_id=tenant_id,
+                # Dorthin, wo die Entscheidung faellt: „Tarif & Abo" mit Status,
+                # Rechnungsadresse und Objektzahl. NICHT /konto/abrechnung —
+                # das ist die AUSZAHLUNG an den Betrieb, die andere Richtung.
+                ziel_pfad="/konto/tarif",
+                dedup_key=f"testphase:{tenant_id}:{endet_am or 'ohne-datum'}",
+            )
+    except Exception as exc:  # noqa: BLE001 — Meldung kippt den Webhook nie
+        log.warning(
+            "testphase_meldung_fehlgeschlagen",
+            tenant_id=tenant_id,
+            error=str(exc)[:200],
+        )

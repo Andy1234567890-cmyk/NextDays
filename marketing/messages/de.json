@@ -424,8 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – Die Vermieter-Plattform für Ferienunterkünfte",
-    "description": "Die Plattform für Hotels, Agenturen und Vermieter von Ferienunterkünften: Channel-Manager, Kalender, Direktbuchung, Gästekommunikation und Abrechnung an einem Ort. In Dänemark gebaut, EU-gehostet. 30 Tage kostenlos testen.",
-    "descriptionMitPreis": "Die Plattform für Hotels, Agenturen und Vermieter von Ferienunterkünften: Channel-Manager, Kalender, Direktbuchung, Gästekommunikation und Abrechnung an einem Ort. In Dänemark gebaut, EU-gehostet. Ab {preis}/Monat. 30 Tage kostenlos testen."
+    "description": "Die Plattform für Hotels, Agenturen und Vermieter von Ferienunterkünften: Channel-Manager, Kalender, Direktbuchung, Gästekommunikation und Abrechnung an einem Ort. In Dänemark gebaut, EU-gehostet. 14 Tage kostenlos testen.",
+    "descriptionMitPreis": "Die Plattform für Hotels, Agenturen und Vermieter von Ferienunterkünften: Channel-Manager, Kalender, Direktbuchung, Gästekommunikation und Abrechnung an einem Ort. In Dänemark gebaut, EU-gehostet. Ab {preis}/Monat. 14 Tage kostenlos testen."
   },
   "nav": {
     "funktionen": "Funktionen",
@@ -463,7 +463,7 @@
     "headlineHighlight": "Buchungen",
     "headlinePost": "weniger Aufwand.",
     "subline": "Die Plattform für Hotels, Agenturen und Vermieter von Ferienunterkünften: Channel-Manager, Kalender, Direktbuchung, Gästekommunikation und Abrechnung an einem Ort – gebaut von Vermietern, die den Alltag kennen.",
-    "ctaTrial": "30 Tage kostenlos testen",
+    "ctaTrial": "14 Tage kostenlos testen",
     "ctaDemo": "Demo ansehen",
     "kanaeleLabel": "Verbunden mit den großen Buchungsplattformen",
     "eyebrow": "Vermieter-Plattform für Ferienunterkünfte",
@@ -609,7 +609,7 @@
     },
     "preis": {
       "frage": "Was kostet myNextDays und wie fange ich an?",
-      "antwort": "30 Tage kostenlos testen, keine Mindestlaufzeit, keine Einrichtungsgebühr, jederzeit kündbar. Danach ein Abo plus eine geringe Provision auf vermittelte Buchungen. Zusatzmodule wie erweiterte Buchhaltung mit DATEV-Export, Mitarbeiter-Management oder Hotel-Funktionen buchst du nur, wenn du sie brauchst. Objekt anlegen, Kanäle verbinden, loslegen."
+      "antwort": "14 Tage kostenlos testen, keine Mindestlaufzeit, keine Einrichtungsgebühr, jederzeit kündbar. Danach ein Abo plus eine geringe Provision auf vermittelte Buchungen. Zusatzmodule wie erweiterte Buchhaltung mit DATEV-Export, Mitarbeiter-Management oder Hotel-Funktionen buchst du nur, wenn du sie brauchst. Objekt anlegen, Kanäle verbinden, loslegen."
     }
   },
   "benefits": {
@@ -631,13 +631,13 @@
     "preisBanner": {
       "eyebrow": "Preis",
       "heading": "Alles für deine Unterkunft an einem Ort",
-      "text": "30 Tage kostenlos. Keine Mindestlaufzeit. Jederzeit kündbar (4 Wochen zum Monatsende).",
+      "text": "14 Tage kostenlos. Keine Mindestlaufzeit. Jederzeit kündbar (4 Wochen zum Monatsende).",
       "proMonat": "pro Monat"
     }
   },
   "trial": {
     "eyebrow": "Kostenlos testen",
-    "heading": "myNextDays 30 Tage kostenlos testen.",
+    "heading": "myNextDays 14 Tage kostenlos testen.",
     "sub": "Keine Mindestlaufzeit. Jederzeit kündbar. Fülle einfach dieses kurze Formular aus:",
     "seitenHeading": "Alles für deine Unterkunft an einem Ort – mehr Kontrolle, weniger Aufwand.",
     "perks": {
@@ -855,15 +855,16 @@
     "impressum": "Impressum",
     "cookies": "Cookie-Richtlinie",
     "avv": "Auftragsverarbeitung",
-    "kontoLoeschen": "Konto löschen"
+    "kontoLoeschen": "Konto löschen",
+    "newsletterKnopf": "Newsletter anmelden"
   },
   "legal": {
     "stand": "Stand: {datum}"
   },
   "abschluss": {
     "heading": "Bereit, deine Unterkunft an einem Ort zu steuern?",
-    "sub": "30 Tage kostenlos testen — keine Mindestlaufzeit, keine Einrichtungsgebühr, jederzeit kündbar.",
-    "ctaPrimaer": "30 Tage kostenlos testen",
+    "sub": "14 Tage kostenlos testen — keine Mindestlaufzeit, keine Einrichtungsgebühr, jederzeit kündbar.",
+    "ctaPrimaer": "14 Tage kostenlos testen",
     "ctaSekundaer": "Preise ansehen"
   },
   "chat": {
@@ -902,14 +903,14 @@
   "preise": {
     "meta": {
       "titel": "Preise — ein Tarif, alles drin | myNextDays",
-      "beschreibung": "Ein Tarif mit vollem Funktionsumfang, bezahlt nach Objektzahl. Keine Mindestlaufzeit, keine Einrichtungsgebühr, 30 Tage kostenlos testen — Portale, Direktbuchung, Gästekommunikation und Abrechnung inklusive."
+      "beschreibung": "Ein Tarif mit vollem Funktionsumfang, bezahlt nach Objektzahl. Keine Mindestlaufzeit, keine Einrichtungsgebühr, 14 Tage kostenlos testen — Portale, Direktbuchung, Gästekommunikation und Abrechnung inklusive."
     },
     "hero": {
       "eyebrow": "Preise",
       "headlinePre": "Ein Tarif.",
       "headlineHighlight": "Alles drin.",
       "sub": "Kein Paket-Rätsel: Jede Funktion ist enthalten — ob du eine Ferienwohnung führst oder zwölf Zimmertypen. Bezahlt wird nach Objektzahl, und je mehr Objekte, desto günstiger wird jedes einzelne.",
-      "testen": "30 Tage kostenlos testen",
+      "testen": "14 Tage kostenlos testen",
       "laufzeit": "Keine Mindestlaufzeit",
       "einrichtung": "Keine Einrichtungsgebühr",
       "eu": "EU-gehostet, DSGVO"
@@ -925,7 +926,7 @@
       "grundgebuehr": "Grundgebühr (inkl. 1. Objekt)",
       "weitereObjekte": "{anzahl, plural, =1 {ein weiteres Objekt} other {# weitere Objekte}} × {jeObjekt}",
       "netto": "Alle Beträge netto, zzgl. Umsatzsteuer. Monatliche Abrechnung, jederzeit kündbar.",
-      "ctaTesten": "30 Tage kostenlos testen",
+      "ctaTesten": "14 Tage kostenlos testen",
       "ctaDemo": "Demo ansehen",
       "inklusivTitel": "In jedem Tarif enthalten",
       "inklusivSub": "Kein Funktionsumfang, der erst im teureren Paket beginnt — das hier ist der ganze Umfang.",
@@ -985,7 +986,7 @@
       "sub": "Was Vermieter vor dem Wechsel wissen wollen — kurz und ohne Kleingedrucktes.",
       "laufzeit": {
         "frage": "Gibt es eine Mindestlaufzeit?",
-        "antwort": "Nein. Das Abo läuft monatlich und ist mit vier Wochen zum Monatsende kündbar. Die ersten 30 Tage sind kostenlos, ohne Zahlungsdaten."
+        "antwort": "Nein. Das Abo läuft monatlich und ist mit vier Wochen zum Monatsende kündbar. Die ersten 14 Tage sind kostenlos: Du hinterlegst beim Start deine Zahlungsdaten, abgebucht wird aber erst nach Ablauf der Testphase. Kündigst du vorher, zahlst du nichts."
       },
       "objektzahl": {
         "frage": "Was passiert, wenn ich Objekte dazunehme?",
@@ -1018,7 +1019,7 @@
   },
   "funktionen": {
     "rahmen": {
-      "ctaTesten": "30 Tage kostenlos testen",
+      "ctaTesten": "14 Tage kostenlos testen",
       "ctaDemo": "Demo ansehen",
       "weiter": "Weiter zu den anderen Funktionen",
       "mehr": "Ansehen",
@@ -1723,7 +1724,7 @@
       "eu": "EU-gehostet, DSGVO-konform",
       "start": "Start am 1. September 2026",
       "sprachen": "27 Länder, 24 Sprachen",
-      "ctaTrial": "30 Tage kostenlos testen",
+      "ctaTrial": "14 Tage kostenlos testen",
       "ctaKontakt": "Schreib uns"
     },
     "warum": {

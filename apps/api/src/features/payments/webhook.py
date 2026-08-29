@@ -11,7 +11,15 @@ Event-ID (``stripe_webhook_event``): ein zweiter Eingang derselben ID wird
 
 Zusätzlich Abo-Billing (features/subscriptions):
   * customer.subscription.created/updated/deleted — tenant_subscription-Status
+  * customer.subscription.trial_will_end         — Testphase endet in 3 Tagen
   * invoice.paid / invoice.payment_failed        — Abo-Zahlstatus
+
+BETRIEBS-VORAUSSETZUNG (0488): `customer.subscription.trial_will_end` muss im
+Stripe-Dashboard fuer diesen Endpunkt AKTIVIERT sein. Fehlt der Haken, bleibt
+die Erinnerung an das Ende der Testphase still aus — ohne Fehler, ohne Log,
+ohne dass irgendein Test es sehen koennte: das Ereignis kommt schlicht nie an.
+Der Betrieb wird dann ohne Vorwarnung belastet. Das ist eine Konfigurations-
+Anforderung wie das Attack-Protection-Captcha (Wurzel 7), kein Code-Problem.
 
 Tenant-Bezug entsteht aus der ``payments``-Row (gateway_ref = PaymentIntent-ID)
 bzw. dem Account; nichts wird geraten. Für Abo-Events kommt der Tenant aus der
@@ -29,6 +37,7 @@ from supabase import Client
 from src.core.logging import get_logger
 from src.features.addons.zahlung import verbuche_checkout_session
 from src.features.donations.service import DonationsService
+from src.features.notification_settings.ereignisse import melde_testphase_endet
 from src.features.payments import stripe_client as sc
 from src.features.payments.nachberechnung import (
     verbuche_checkout_session as verbuche_nachberechnung_session,
@@ -235,6 +244,8 @@ def _dispatch_stripe_event(
         case "customer.subscription.created" | "customer.subscription.updated" | \
                 "customer.subscription.deleted":
             _handle_subscription_event(db, obj)
+        case "customer.subscription.trial_will_end":
+            _handle_trial_will_end(db, obj)
         case "invoice.paid" | "invoice.payment_failed":
             _handle_invoice_event(db, event_type, obj)
         case _:
@@ -316,9 +327,43 @@ def _handle_subscription_event(db: Client, obj: Mapping[str, Any]) -> None:
     qty = _grundtarif_quantity(obj)
     if qty is not None:
         update["reported_property_count"] = qty
+    # Die kostenlose Testphase steht jedem Betrieb genau EINMAL zu. Gestempelt
+    # wird sie hier, weil erst Stripe sie zur Tatsache macht — nicht schon
+    # unsere Absicht beim Checkout (der kann abgebrochen werden). Der Zeitpunkt
+    # kommt aus `trial_start` von Stripe, nicht von unserer Uhr (Wurzel 5b:
+    # unser Empfang ist nicht der Zeitpunkt des fremden Ereignisses).
+    if _field(obj, "status") == "trialing":
+        # Fehlt `trial_start` ausnahmsweise, faellt der Stempel auf den
+        # Empfangszeitpunkt zurueck — bewusst, denn ein LEERER Stempel wuerde
+        # die Testphase erneut freigeben (fail-open). Die Spalte dient dem
+        # Riegel, nicht der Statistik; ein leicht falscher Zeitpunkt ist
+        # harmlos, ein fehlender nicht.
+        update["trial_used_at"] = _iso_from_epoch(
+            _field(obj, "trial_start")
+        ) or datetime.now(UTC).isoformat()
     db.table("tenant_subscription").upsert(update, on_conflict="tenant_id").execute()
     _sync_module_entitlements(db, tenant_id, obj)
     log.info("subscription_synced", tenant_id=tenant_id, status=update["status"])
+
+
+def _handle_trial_will_end(db: Client, obj: Mapping[str, Any]) -> None:
+    """Stripe meldet drei Tage vor Ablauf der Testphase — den Betrieb warnen.
+
+    Warum ueberhaupt: am Tag danach wird der erste Beitrag eingezogen. Ohne
+    Vorwarnung ist das eine Belastung aus dem Nichts, und genau daraus werden
+    Rueckbuchungen. Den Zeitpunkt liefert Stripe, wir rechnen ihn NICHT selbst
+    nach (kein Cron, der eine fremde Frist nachbildet).
+
+    Das Datum kommt aus `trial_end` von Stripe (Wurzel 5b: der Zeitpunkt eines
+    fremden Ereignisses stammt aus der fremden Quelle, nie von unserer Uhr).
+    """
+    tenant_id = _resolve_sub_tenant(db, obj)
+    if not tenant_id:
+        log.warning("trial_will_end_tenant_unresolved", sub_id=_field(obj, "id"))
+        return
+    endet = _iso_from_epoch(_field(obj, "trial_end"))
+    melde_testphase_endet(db, tenant_id=tenant_id, endet_am=endet)
+    log.info("trial_will_end_gemeldet", tenant_id=tenant_id, endet_am=endet)
 
 
 def _sync_module_entitlements(

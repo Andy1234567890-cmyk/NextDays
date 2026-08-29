@@ -13,6 +13,7 @@ tenant-gescopet (Wurzel 3). Stripe-Fehler werden spezifisch übersetzt (Wurzel 5
 """
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from typing import Any
 
@@ -39,6 +40,7 @@ from .schemas import (
     GRUNDTARIF_LOOKUP_KEY,
     MODULE_KEYS,
     MODULE_PRICE_LOOKUP,
+    TESTPHASE_TAGE,
     BillingAddress,
     CommissionMonth,
     CommissionRow,
@@ -335,6 +337,19 @@ class SubscriptionsService(
                     "quantity": 1,
                 }
             )
+        subscription_data: dict[str, Any] = {"metadata": {"tenant_id": tenant_id}}
+        if self._testphase_offen(existing):
+            # Kostenlose Testphase: Stripe zieht erst nach Ablauf ein. Die
+            # Zahlungsmethode wird beim Abschluss hinterlegt (Checkout verlangt
+            # sie im subscription-Modus ohnehin), belastet wird sie nicht.
+            #
+            # `missing_payment_method: cancel` ist die fail-closed-Variante
+            # (Wurzel 5): faellt die Karte bis zum Ablauf weg, endet das Abo,
+            # statt in einen unbezahlten Dauerzustand zu kippen.
+            subscription_data["trial_period_days"] = TESTPHASE_TAGE
+            subscription_data["trial_settings"] = {
+                "end_behavior": {"missing_payment_method": "cancel"}
+            }
         try:
             session = self._stripe.v1.checkout.sessions.create(
                 params={
@@ -344,7 +359,7 @@ class SubscriptionsService(
                     "success_url": success_url,
                     "cancel_url": cancel_url,
                     "client_reference_id": tenant_id,
-                    "subscription_data": {"metadata": {"tenant_id": tenant_id}},
+                    "subscription_data": subscription_data,
                 }
             )
         except _StripeError as exc:
@@ -353,6 +368,23 @@ class SubscriptionsService(
         if not url:
             raise SubscriptionsError("Stripe lieferte keine Checkout-URL.", status_code=502)
         return url
+
+    @staticmethod
+    def _testphase_offen(row: Mapping[str, Any] | None) -> bool:
+        """Steht diesem Betrieb die kostenlose Testphase noch zu?
+
+        EINMAL pro Betrieb (Wurzel 2: real kommt alles doppelt). Ohne diesen
+        Riegel kuendigt man am vorletzten Tag und schliesst neu ab — beliebig
+        oft kostenlos. Gestempelt wird `trial_used_at` vom Webhook, sobald
+        Stripe den Status `trialing` das erste Mal meldet; massgeblich ist
+        also die TATSACHE aus Stripe, nicht unsere Absicht beim Checkout.
+
+        Fehlt die Zeile ganz, hat der Betrieb noch nie ein Abo gehabt — dann
+        steht ihm die Testphase zu.
+        """
+        if row is None:
+            return True
+        return not row.get("trial_used_at")
 
     def create_portal(self, ctx: AuthContext, *, return_url: str) -> str:
         """Stripe Billing-Portal (Zahlungsmethode, Rechnungen, kündigen)."""

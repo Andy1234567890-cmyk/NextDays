@@ -79,7 +79,20 @@ def kanal_auswahl(
     soll sehen, dass es sie gibt und warum sie (noch) nicht gehen. Weglassen
     sähe aus, als gäbe es das Portal nicht.
     """
-    kanaele: list[dict[str, Any]] = []
+    # JE PORTAL eine Zeile, nicht je Verbindungszeile.
+    #
+    # `_kanaele_des_objekts` liefert Zeilen aus `channex_channel_connection`,
+    # und davon kann es zu EINEM Portal mehrere geben: jeder abgebrochene
+    # Verbindungsversuch hinterlaesst eine, ebenso ein zweiter Portal-Zugang
+    # am selben Objekt (0304). Live am 29.08.2026 standen deshalb DREIMAL
+    # „Airbnb — Noch nicht mit diesem Portal verbunden" im Dialog, und React
+    # meldete zusaetzlich „Encountered two children with the same key,
+    # `AirBNB`" (der Schluessel ist der Portal-Code).
+    #
+    # Zusammengefasst wird nach dem BESTEN Zustand: eine verbundene und aktive
+    # Zeile schlaegt eine tote. Sonst haette eine Leiche aus einem Abbruch das
+    # Portal gesperrt, obwohl daneben eine funktionierende Verbindung steht.
+    bester: dict[str, dict[str, Any]] = {}
     for row in _kanaele_des_objekts(db, tenant_id, property_id):
         code = str(row.get("ota_portal_code") or "")
         if not code:
@@ -91,7 +104,7 @@ def kanal_auswahl(
             grund = GRUND_KEIN_KANAL
         elif not aktiv:
             grund = GRUND_INAKTIV
-        kanaele.append({
+        eintrag = {
             "code": code,
             "name": portal_label(code),
             "waehlbar": grund is None,
@@ -100,7 +113,17 @@ def kanal_auswahl(
             "pflicht": False,
             "grund": grund,
             "letzter_fehler": row.get("last_error"),
-        })
+        }
+        vorhanden = bester.get(code)
+        # Rang: waehlbar (2) > verbunden aber inaktiv (1) > kein Kanal (0).
+        rang = 2 if grund is None else (1 if hat_kanal else 0)
+        if vorhanden is None or rang > int(vorhanden["_rang"]):
+            eintrag["_rang"] = rang
+            bester[code] = eintrag
+    kanaele: list[dict[str, Any]] = []
+    for eintrag in bester.values():
+        eintrag.pop("_rang", None)
+        kanaele.append(eintrag)
     kanaele.sort(key=lambda k: (not k["waehlbar"], k["name"]))
     # Der eigene Marktplatz steht IMMER an erster Stelle und ist NICHT
     # abwählbar: myBestDays ist unsere eigene Strecke — ein Objekt, das dort

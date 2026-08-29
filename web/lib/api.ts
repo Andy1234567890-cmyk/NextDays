@@ -137,4 +137,9 @@ export type MeResponse = {
   // und arbeitet auf Deutsch. null = nicht erfasst → länderspezifische Punkte
   // bleiben verborgen, statt ein Land zu raten (Wurzel 4).
   country: string | null;
+  /** Name des Betriebs (`tenants.name`), eingegeben bei der Registrierung.
+   *  Der Onboarding-Assistent belegt damit „Firmenname" vor — sonst tippt ein
+   *  frisch registrierter Betrieb denselben Namen ein zweites Mal, weil die
+   *  eigentliche Quelle (`tenant_billing_profile`) noch leer ist. */
+  tenant_name: string | null;
 };

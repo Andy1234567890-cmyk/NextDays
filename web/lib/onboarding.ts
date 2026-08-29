@@ -15,8 +15,25 @@ export type OnboardingStatus = {
   company_data_set: boolean;
   imported_from_ota: boolean;
   object_created: boolean;
+  /** Anzahl der ECHTEN Objekte — ohne das Gerüst „Airbnb-Übernahme läuft".
+   *  Der Server rechnet sie aus; die Oberfläche zählt NICHT selbst über
+   *  `/properties`, weil dort auch das Gerüst mitkäme. */
+  object_count: number;
   price_set: boolean;
   channels_done: boolean;
+  /** Läuft ein Abo? Zusammen mit `company_data_set` entscheidet es, ob die
+   *  Oberfläche bedienbar ist — ohne beides führt jeder Menüpunkt in eine
+   *  Sackgasse. Serverseitig gemessen, nicht aus einem Flag. */
+  subscription_active: boolean;
+  /** Läuft gerade die kostenlose Testphase (Status genau `trialing`)?
+   *  Getrennt von `subscription_active`, weil beide verschiedene Fragen
+   *  beantworten: „darf der Betrieb arbeiten" (ja, auch im Test) gegenüber
+   *  „wurde schon gezahlt" (nein). */
+  in_trial: boolean;
+  /** Ende der Testphase (ISO-8601, aus Stripe). `null`, wenn keine läuft ODER
+   *  Stripe keinen Wert lieferte — dann zeigt das Band kein Datum statt eines
+   *  gerechneten. */
+  trial_ends_at: string | null;
   completed: boolean;
 };
 

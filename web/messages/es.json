@@ -26,7 +26,10 @@
       "da": "Danés",
       "en": "Inglés"
     },
-    "explain": "Explicación de {label}"
+    "explain": "Explicación de {label}",
+    "themeToggle": "Cambiar diseño",
+    "themeToggleLight": "Diseño claro",
+    "themeToggleDark": "Diseño oscuro"
   },
   "legal": {
     "agbLinkLabel": "Condiciones generales",
@@ -118,7 +121,8 @@
     },
     "type": {
       "title": "¿Qué alquilas?",
-      "text": "Elige el tipo de negocio: determina los términos y módulos de tu panel."
+      "text": "Elige el tipo de negocio: determina los términos y módulos de tu panel.",
+      "bald": "En desarrollo"
     },
     "tax": {
       "title": "Impuestos y pagos",
@@ -134,7 +138,7 @@
     },
     "switch": {
       "title": "Importar alojamientos existentes",
-      "intro": "Así traes tus alojamientos existentes de Booking/Airbnb a myNextDays, sin reservas dobles.",
+      "intro": "Cómo importar sus anuncios existentes a myNextDays, sin reservas duplicadas.",
       "cutover": {
         "title": "Importante antes de conectar",
         "a": "Desconecta cada portal de tu sistema anterior antes de conectarlo aquí: por canal solo puede enviar datos UN sistema.",
@@ -147,21 +151,24 @@
         "title": "Crear objeto",
         "text": "Crea un alojamiento por cada anuncio existente: con el nombre, el tipo y el precio base basta para asignarlo.",
         "count": "{count, plural, =0 {Todavía no hay alojamientos} one {# alojamiento} other {# alojamientos}}",
-        "airbnbHint": "¿Vienes de Airbnb? Omite este paso: tus alojamientos se importan automáticamente al conectar Airbnb."
+        "airbnbHint": "¿Vienes de Airbnb? Omite este paso: tus alojamientos se importan automáticamente al conectar Airbnb.",
+        "zuordnenHint": "Para Booking.com y otros portales, necesita esta propiedad: Al conectar, las habitaciones del portal se asignan 1:1 a sus propiedades. Solo en Airbnb se omite este paso; allí los anuncios se incluyen al conectar."
       },
       "step2": {
         "title": "Conectar y asignar portal",
         "text": "Conecta Booking, Airbnb y demás, y asigna las habitaciones del portal 1:1 a tus alojamientos. Las reservas y la disponibilidad llegan después automáticamente.",
         "connect": "Conectar portal",
         "connectMore": "Conectar otro portal",
-        "alreadyConnected": "Ya hay un portal conectado y tus alojamientos están transmitidos: aquí no necesitas volver a conectar nada. Usa «Conectar otro portal» solo para un portal ADICIONAL (p. ej. Booking)."
+        "alreadyConnected": "Ya hay un portal conectado y tus alojamientos están transmitidos: aquí no necesitas volver a conectar nada. Usa «Conectar otro portal» solo para un portal ADICIONAL (p. ej. Booking).",
+        "connectNamed": "Conectar {portal}",
+        "textNamed": "Conecte {portale} y asigne las habitaciones del portal 1:1 a sus propiedades. Las reservas y la disponibilidad se sincronizarán automáticamente."
       },
       "pull": {
-        "button": "Obtener objetos del portal",
         "result": "{count, plural, =0 {No se han encontrado alojamientos nuevos} one {# alojamiento importado} other {# alojamientos importados}}"
       },
       "finishCta": "Finalizar la importación",
       "finishHint": "Confirma primero la indicación de arriba y crea al menos un alojamiento.",
+      "finishHintObjekt": "Primero, cree al menos un objeto; sin un objeto, no hay nada que gestionar. La importación de Lodgify es opcional y no obligatoria.",
       "bookings": {
         "title": "Importar reservas existentes",
         "text": "Trae las reservas de tus portales conectados a tu calendario.",
@@ -193,7 +200,32 @@
       },
       "finish": {
         "notRegistered": "Al menos un alojamiento debe estar transmitido a los portales de reservas antes de que termines la configuración inicial. Conecta un portal en el paso 2: con ello el alojamiento se transmite automáticamente."
+      },
+      "nav": {
+        "zurueck": "Atrás",
+        "weiter": "Siguiente",
+        "zaehler": "Paso {aktuell} de {gesamt}"
+      },
+      "auswahl": {
+        "title": "¿En qué portales vende hoy?",
+        "text": "Ajustamos la importación en función de esto. Puede conectar más portales en cualquier momento posterior.",
+        "keine": "Todavía no vendo en ningún portal"
       }
+    },
+    "spaeterEinrichten": "Configurar más tarde",
+    "schrittVon": "Paso {aktuell} de {gesamt}",
+    "claim1": "Todos los portales, un calendario, y sus propiedades se importan.",
+    "claim2": "Precios, ocupación y mensajes en un solo lugar.",
+    "claim3": "Más tiempo para los huéspedes, menos para la administración.",
+    "usp": {
+      "portale": "Todos los portales principales conectados",
+      "kalender": "Un calendario para todos los portales",
+      "doppelt": "Bloqueamos las noches reservadas en todas partes de inmediato",
+      "import": "Transferimos sus anuncios existentes",
+      "zahlung": "Pagos y cobros incluidos",
+      "preise": "Gestionar precios por temporada y noche",
+      "posteingang": "Mensajes de huéspedes de todos los portales en una bandeja de entrada",
+      "app": "Todo también en la aplicación"
     }
   },
   "nav": {
@@ -6206,6 +6238,7 @@
       "untertitelKanaele": "Elija dónde se debe vender este alojamiento.",
       "untertitelPruefen": "Compruebe qué cambiará en los portales.",
       "nichtVerfuegbar": "No disponible actualmente",
+      "portalVerbinden": "Conectar {portal} ahora",
       "weiter": "Continuar",
       "abbrechen": "Cancelar",
       "jetztVeroeffentlichen": "Publicar ahora",
@@ -9933,7 +9966,11 @@
       "statusPastDue": "Pago pendiente",
       "statusCanceled": "Cancelada",
       "statusUnpaid": "Sin pagar",
-      "statusIncomplete": "Incompleta"
+      "statusIncomplete": "Incompleta",
+      "trialEnds": "La prueba finaliza el",
+      "trialBannerTitel": "Prueba gratuita",
+      "trialBannerText": "Su prueba finaliza el {datum}. Después, su suscripción se renovará automáticamente.",
+      "trialBannerKnopf": "Ver plan"
     },
     "users": {
       "noAccess": "Sin acceso",
@@ -11531,6 +11568,74 @@
       "subtitle": "Dinero realmente recibido — calculado a partir de los pagos parciales registrados, no de las deudas pendientes.",
       "title": "Estadísticas de balance",
       "to": "Hasta"
+    }
+  },
+  "startbahn": {
+    "titel": "Primeros pasos",
+    "fortschritt": "{fertig} de {gesamt} completado",
+    "gruppeZaehler": "{fertig} / {gesamt} completado",
+    "dauer": "aprox. {minuten} minutos",
+    "gruppe": {
+      "kanaele": "Configurar portales",
+      "verkaufsfertig": "Preparar propiedades para la venta",
+      "grundlagen": "Conceptos básicos"
+    },
+    "schritt": {
+      "konto": {
+        "titel": "Cuenta creada",
+        "text": "Su negocio está configurado."
+      },
+      "firma": {
+        "titel": "Introducir datos de la empresa",
+        "text": "Dirección, número de identificación fiscal e IBAN: los portales los requieren, y sin un IBAN no recibirá dinero.",
+        "aktion": "A los datos de la empresa"
+      },
+      "verbinden": {
+        "titel": "Conectar portal",
+        "text": "Conecte Airbnb, Booking o Expedia para sincronizar reservas y calendarios.",
+        "aktion": "Conectar portal"
+      },
+      "objekteHolen": {
+        "titel": "Obtener propiedades del portal",
+        "text": "Crearemos sus anuncios como propiedades; no tiene que escribir nada. Atención: los anuncios vinculados a otro software no se importarán.",
+        "gesperrt": "Primero conecte un portal.",
+        "aktion": "Obtener propiedades"
+      },
+      "erstesObjekt": {
+        "titel": "Crear primera propiedad",
+        "text": "Cree su primera propiedad: alojamiento vacacional o tipo de habitación.",
+        "aktion": "Crear propiedad"
+      },
+      "inhalteHolen": {
+        "titel": "Adoptar equipamiento y reglas",
+        "text": "Habitaciones, camas, reglas de cancelación, equipamiento y tarifas ya están en el portal; los obtendremos para todas las propiedades a la vez.",
+        "gesperrt": "Primero obtenga sus propiedades del portal.",
+        "aktion": "Adoptar contenido"
+      },
+      "preise": {
+        "titel": "Establecer precios",
+        "text": "Sin precio, ningún portal puede vender su propiedad.",
+        "gesperrt": "Primero necesita una propiedad.",
+        "aktion": "Establecer precios"
+      },
+      "sperrtermine": {
+        "titel": "Introducir fechas bloqueadas",
+        "text": "Los períodos ocupados NO se importan. Introdúzcalos antes de vender, de lo contrario, una noche se reservará dos veces.",
+        "gesperrt": "Primero necesita una propiedad.",
+        "aktion": "Al calendario"
+      },
+      "veroeffentlichen": {
+        "titel": "Publicar propiedades",
+        "text": "¿Todo revisado? Entonces active sus propiedades en los portales y en el marketplace.",
+        "gesperrt": "Solo cuando la propiedad y los precios estén listos, de lo contrario venderá algo que aún no está terminado.",
+        "aktion": "Publicar"
+      },
+      "kanaele": {
+        "titel": "Elegir canales de venta",
+        "text": "Decida a través de qué portales y si se venderá a través del marketplace.",
+        "gesperrt": "Primero necesita una propiedad.",
+        "aktion": "A los canales"
+      }
     }
   }
 }

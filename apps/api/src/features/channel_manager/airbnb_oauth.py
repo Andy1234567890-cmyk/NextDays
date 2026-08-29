@@ -88,7 +88,7 @@ def connection_settings(settings: dict[str, Any] | None) -> dict[str, Any]:
 def connection_link_body(
     *,
     group_id: str,
-    channex_property_id: str,
+    channex_property_id: str | None,
     channel_id: str | None,
     request_id: str,
     title: str,
@@ -151,9 +151,17 @@ def connection_link_body(
         "group_id": group_id,
         "title": title,
         "request_id": request_id,
-        "properties": [channex_property_id],
+        # OHNE Property, wenn keine da ist. Vorgabe des Betreibers vom
+        # 29.08.2026: „erst die verbindung, ohne irgendein Objekt" — es darf
+        # nichts angelegt werden, nur damit dieses Feld gefuellt ist. Ein
+        # leeres Array wird bewusst NICHT geschickt: darauf antwortet Channex
+        # mit 422 („should have at least 1 item(s)", gemessen 07.08.2026), das
+        # Feld ganz wegzulassen ist der einzige Weg, es OHNE Property zu
+        # versuchen.
         "settings": connection_settings(settings),
     }
+    if channex_property_id:
+        body["properties"] = [channex_property_id]
     # Nur beim Wiederverbinden. Channex' eigene Maske macht es genauso
     # (Bundle index-BefbhQp2.js): `...(channelId ? {channelId} : {})`.
     if channel_id:
@@ -169,7 +177,9 @@ def connection_link_body(
     return body
 
 
-def parse_connection_status(channel: dict[str, Any]) -> dict[str, Any]:
+def parse_connection_status(
+    channel: dict[str, Any], *, versuch_gelaufen: bool = True
+) -> dict[str, Any]:
     """Verbindungsstatus aus einem get_channel-Ergebnis lesen.
 
     Liefert {connected, host_id, last_error}:
@@ -182,14 +192,31 @@ def parse_connection_status(channel: dict[str, Any]) -> dict[str, Any]:
     `last_error=None`, und die UI zeigte in beiden Fällen nur „warte auf
     Bestätigung", ohne je einen Grund zu nennen:
       * `settings is None`  → Channex hat den Kanal seit der Anlage nicht
-        angefasst; die Autorisierung ist dort NIE angekommen. Live belegt an
-        einem Kanal, dessen `updated_at` gleich `inserted_at` blieb, während
-        Airbnb „Channex" als verbundenen Dienst führte. Häufigste Ursache laut
-        Channex-Support: am Airbnb-Konto hängt noch eine andere Software —
-        Airbnb erlaubt nur EINE (Channex-Fehlercode `has_already_channel`,
-        „This Airbnb user is already connected").
+        angefasst. Was das BEDEUTET, haengt davon ab, ob ueberhaupt schon ein
+        Versuch lief — deshalb `versuch_gelaufen`:
+          - versuch_gelaufen=True: die Autorisierung ist bei Channex NIE
+            angekommen, obwohl sie angestossen wurde. Live belegt an einem
+            Kanal, dessen `updated_at` gleich `inserted_at` blieb, waehrend
+            Airbnb „Channex" als verbundenen Dienst fuehrte. Haeufigste Ursache
+            laut Channex-Support: am Airbnb-Konto haengt noch eine andere
+            Software — Airbnb erlaubt nur EINE (Channex-Fehlercode
+            `has_already_channel`, „This Airbnb user is already connected").
+          - versuch_gelaufen=False: es hat schlicht NIEMAND geklickt. Der Kanal
+            ist frisch angelegt und wartet auf den ersten Versuch.
       * `settings == {}`    → angekommen, aber ohne Tokens: die Autorisierung
         wurde abgebrochen oder abgelehnt.
+
+    WARUM `versuch_gelaufen` ueberhaupt noetig ist (29.08.2026): Ohne diese
+    Unterscheidung las ein Kunde im FRISCHEN Konto „in deinem Airbnb-Konto ist
+    bereits eine andere Software verbunden" — und suchte in seinem Airbnb-Konto
+    nach einer Verbindung, die es nie gab. Airbnb hatte nichts abgelehnt; es
+    war nie gefragt worden. Ein noch nicht begonnener Vorgang darf nicht als
+    Ablehnung durch das Portal ausgegeben werden (Wurzel 4: keine erfundene
+    Ursache; Wurzel 5b: ein Ereignis, das nicht stattfand, hat keinen Grund).
+
+    Die Vorgabe ist `True`, weil jeder bestehende Aufrufer aus einem laufenden
+    Vorgang kommt — ein neuer Aufrufer, der es nicht weiss, bekommt damit das
+    bisherige Verhalten und keine stille Verhaltensaenderung.
     """
     attrs = (channel.get("data") or {}).get("attributes") or {}
     settings_roh = attrs.get("settings")
@@ -203,6 +230,13 @@ def parse_connection_status(channel: dict[str, Any]) -> dict[str, Any]:
         last_error = "Airbnb-Token ungültig — bitte neu verbinden."
     elif connected:
         last_error = None
+    elif settings_roh is None and not versuch_gelaufen:
+        # Noch niemand hat verbunden. KEINE Schuldzuweisung an Airbnb — hier
+        # ist schlicht noch nichts passiert.
+        last_error = (
+            "Noch nicht verbunden. Klicke auf 'Airbnb verbinden' und "
+            "bestätige den Zugriff im Airbnb-Fenster."
+        )
     elif settings_roh is None:
         last_error = (
             "Airbnb hat die Verbindung nicht an den Kanal übergeben. Das "

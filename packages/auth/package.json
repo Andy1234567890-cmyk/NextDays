@@ -8,7 +8,8 @@
     "./server": "./src/server.ts",
     "./errors": "./src/errors.ts",
     "./types": "./src/types.ts",
-    "./weiterleitung": "./src/weiterleitung.ts"
+    "./weiterleitung": "./src/weiterleitung.ts",
+    "./sitzung-lesen": "./src/sitzung-lesen.ts"
   },
   "peerDependencies": {
     "next": ">=15.5.0"

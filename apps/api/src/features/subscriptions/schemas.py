@@ -11,6 +11,13 @@ from pydantic import BaseModel, Field
 # Stabile Stripe-lookup_keys (decken sich mit deploy/billing/seed_stripe_prices.py).
 GRUNDTARIF_LOOKUP_KEY = "mnd_grundtarif_month"
 
+# Laenge der kostenlosen Testphase in Tagen — EINE Quelle fuer den Checkout,
+# die Erinnerungsmail und die Anzeige der Restlaufzeit. Der Marketing-Text
+# nennt dieselbe Zahl; laeuft sie hier weg, wirbt die Seite mit einer anderen
+# Dauer als die Rechnung liefert (Wurzel 4: keine zweite Quelle derselben
+# Tatsache). Aenderung wirkt nur auf NEUE Testphasen — laufende behaelt Stripe.
+TESTPHASE_TAGE = 14
+
 # module_key (DB/Entitlement)  ->  Stripe-lookup_key des Preises.
 # Modul 4 und 6 haben je zwei Preisvarianten (flat ODER per-unit) — der Kunde
 # wählt eine; hier steht die Default-/Flat-Variante. Modul 5 (Jobmarkt) ist

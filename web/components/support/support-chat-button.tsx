@@ -22,10 +22,22 @@ import { useTranslations } from "next-intl";
 
 import { useSupportChat } from "./support-chat";
 
-export function SupportChatButton() {
+export function SupportChatButton({
+  // IMMER sichtbar, nicht ausblendbar — so im Onboarding eingesetzt.
+  //
+  // Warum das dort anders ist als im Dashboard: Der Ausblenden-Wunsch liegt im
+  // `localStorage` und gilt fuer die ganze Anwendung. Zurueckholen laesst er
+  // sich nur ueber das Konto-Menue — das es im Onboarding NICHT gibt. Ein
+  // Klick auf das kleine „x" war dort also endgueltig, und der Betrieb stand
+  // ohne Weg zu uns da, genau an der Stelle, an der er Fragen hat
+  // (Steuernummer, IBAN, Kleinunternehmer). Live passiert am 29.08.2026.
+  immerSichtbar = false,
+}: {
+  immerSichtbar?: boolean;
+} = {}) {
   const t = useTranslations("supportChat");
   const chat = useSupportChat();
-  if (chat.offen || !chat.knopfSichtbar) return null;
+  if (chat.offen || (!immerSichtbar && !chat.knopfSichtbar)) return null;
   return (
     <div className="group fixed bottom-6 right-6 z-50">
       <button
@@ -42,6 +54,7 @@ export function SupportChatButton() {
           </span>
         )}
       </button>
+      {!immerSichtbar && (
       <button
         type="button"
         onClick={chat.knopfAusblenden}
@@ -51,6 +64,7 @@ export function SupportChatButton() {
       >
         <Icon icon="ph:x" className="size-3.5" />
       </button>
+      )}
     </div>
   );
 }

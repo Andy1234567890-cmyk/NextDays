@@ -26,7 +26,10 @@
       "da": "Dāņu",
       "en": "Angļu"
     },
-    "explain": "Skaidrojums par {label}"
+    "explain": "Skaidrojums par {label}",
+    "themeToggle": "Mainīt dizainu",
+    "themeToggleLight": "Gaišais dizains",
+    "themeToggleDark": "Tumšais dizains"
   },
   "legal": {
     "agbLinkLabel": "Noteikumi",
@@ -118,7 +121,8 @@
     },
     "type": {
       "title": "Ko jūs izīrējat?",
-      "text": "Izvēlieties darbības veidu — tas nosaka jēdzienus un moduļus jūsu panelī."
+      "text": "Izvēlieties darbības veidu — tas nosaka jēdzienus un moduļus jūsu panelī.",
+      "bald": "Notiek darbs"
     },
     "tax": {
       "title": "Nodokļi un maksājumi",
@@ -134,7 +138,7 @@
     },
     "switch": {
       "title": "Esošo objektu imports",
-      "intro": "Tā jūs pārnesat savus esošos Booking/Airbnb objektus uz myNextDays — bez dubultajām rezervācijām.",
+      "intro": "Kā importēt esošos sludinājumus uz myNextDays — bez dubultām rezervācijām.",
       "cutover": {
         "title": "Svarīgi pirms savienošanas",
         "a": "Atvienojiet katru portālu no savas iepriekšējās sistēmas, pirms savienojat to šeit — vienā kanālā datus vienmēr drīkst sūtīt tikai VIENA sistēma.",
@@ -147,21 +151,24 @@
         "title": "Izveidot objektu",
         "text": "Izveidojiet objektu katram esošajam sludinājumam — piešķiršanai pietiek ar nosaukumu, veidu un pamatcenu.",
         "count": "{count, plural, =0 {Vēl nav objektu} zero {# objektu} one {# objekts} other {# objekti}}",
-        "airbnbHint": "Nāc no Airbnb? Izlaid šo soli — tavi objekti tiks pārņemti automātiski, kad savienosi Airbnb."
+        "airbnbHint": "Nāc no Airbnb? Izlaid šo soli — tavi objekti tiks pārņemti automātiski, kad savienosi Airbnb.",
+        "zuordnenHint": "Booking.com un citiem portāliem jums ir nepieciešams šis objekts: savienojot, portāla istabas tiek piesaistītas jūsu objektiem 1:1. Tikai Airbnb šis solis nav nepieciešams — tur sludinājumi tiek pievienoti savienojot."
       },
       "step2": {
         "title": "Portāla savienošana un piešķiršana",
         "text": "Savienojiet Booking, Airbnb un citus un piešķiriet portālu istabas 1:1 saviem objektiem. Rezervācijas un pieejamība pēc tam pienāk automātiski.",
         "connect": "Savienot portālu",
         "connectMore": "Savienot vēl vienu portālu",
-        "alreadyConnected": "Viens portāls jau ir savienots un jūsu objekti ir nosūtīti — šeit nekas nav jāsavieno atkārtoti. Izmantojiet „Savienot citu portālu” tikai PAPILDU portālam (piem., Booking)."
+        "alreadyConnected": "Viens portāls jau ir savienots un jūsu objekti ir nosūtīti — šeit nekas nav jāsavieno atkārtoti. Izmantojiet „Savienot citu portālu” tikai PAPILDU portālam (piem., Booking).",
+        "connectNamed": "Savienot {portal}",
+        "textNamed": "Savienojiet {portale} un piešķiriet portāla numurus 1:1 saviem īpašumiem. Pēc tam rezervācijas un pieejamība tiks automātiski sinhronizētas."
       },
       "pull": {
-        "button": "Iegūt objektus no portāla",
         "result": "{count, plural, =0 {Jauni objekti netika atrasti} zero {Pārņemti # objektu} one {Pārņemts # objekts} other {Pārņemti # objekti}}"
       },
       "finishCta": "Pabeigt importu",
       "finishHint": "Vispirms apstipriniet norādi augšpusē un izveidojiet vismaz vienu objektu.",
+      "finishHintObjekt": "Vispirms izveidojiet vismaz vienu objektu — bez objekta nav ko pārvaldīt. Lodgify imports ir brīvprātīgs un nav obligāts.",
       "bookings": {
         "title": "Esošo rezervāciju ielasīšana",
         "text": "Pārnesiet savu savienoto portālu rezervācijas savā kalendārā.",
@@ -193,7 +200,32 @@
       },
       "finish": {
         "notRegistered": "Pirms sagatavošanas pabeigšanas rezervāciju portāliem jābūt nosūtītam vismaz vienam objektam. 2. solī savienojiet portālu — objekts tiek nosūtīts automātiski."
+      },
+      "nav": {
+        "zurueck": "Atpakaļ",
+        "weiter": "Tālāk",
+        "zaehler": "Solis {aktuell} no {gesamt}"
+      },
+      "auswahl": {
+        "title": "Kuros portālos jūs šodien pārdodat?",
+        "text": "Mēs pielāgosim importu atbilstoši. Jūs jebkurā laikā varat pievienot citus portālus.",
+        "keine": "Es vēl nepārdodu nevienā portālā"
       }
+    },
+    "spaeterEinrichten": "Iestatīt vēlāk",
+    "schrittVon": "Solis {aktuell} no {gesamt}",
+    "claim1": "Visi portāli, viens kalendārs — un jūsu īpašumi tiek sinhronizēti.",
+    "claim2": "Cenas, noslogojums un ziņojumi vienuviet.",
+    "claim3": "Vairāk laika viesiem, mazāk administrēšanai.",
+    "usp": {
+      "portale": "Visi lielākie portāli ir savienoti",
+      "kalender": "Viens kalendārs visiem portāliem",
+      "doppelt": "Mēs nekavējoties bloķējam rezervētās naktis visur",
+      "import": "Mēs pārsūtām jūsu esošos sludinājumus",
+      "zahlung": "Maksājumi un izmaksas iekļautas",
+      "preise": "Pārvaldiet sezonas un nakts cenas",
+      "posteingang": "Viesu ziņas no visiem portāliem vienā iesūtnē",
+      "app": "Viss pieejams arī lietotnē"
     }
   },
   "nav": {
@@ -6206,6 +6238,7 @@
       "untertitelKanaele": "Izvēlieties, kur šis objekts tiks pārdots.",
       "untertitelPruefen": "Pārbaudiet, kas mainīsies portālos.",
       "nichtVerfuegbar": "Pašlaik nav pieejams",
+      "portalVerbinden": "Pievienoties {portal} tagad",
       "weiter": "Tālāk",
       "abbrechen": "Atcelt",
       "jetztVeroeffentlichen": "Publicēt tūlīt",
@@ -9933,7 +9966,11 @@
       "statusPastDue": "Maksājums kavēts",
       "statusCanceled": "Izbeigts",
       "statusUnpaid": "Neapmaksāts",
-      "statusIncomplete": "Nepabeigts"
+      "statusIncomplete": "Nepabeigts",
+      "trialEnds": "Pārbaudes periods beidzas",
+      "trialBannerTitel": "Bezmaksas pārbaudes periods",
+      "trialBannerText": "Jūsu pārbaudes periods beidzas {datum}. Pēc tam jūsu abonements tiks automātiski pagarināts.",
+      "trialBannerKnopf": "Skatīt plānu"
     },
     "users": {
       "noAccess": "Nav piekļuves",
@@ -11531,6 +11568,74 @@
       "subtitle": "Faktiski saņemtā nauda — aprēķināta, pamatojoties uz reģistrētajiem daļējiem maksājumiem, nevis uz atvērtajiem debitoru parādiem.",
       "title": "Bilances statistika",
       "to": "Līdz"
+    }
+  },
+  "startbahn": {
+    "titel": "Pirmie soļi",
+    "fortschritt": "Pabeigti {fertig} no {gesamt}",
+    "gruppeZaehler": "Pabeigti {fertig} / {gesamt}",
+    "dauer": "apmēram {minuten} minūtes",
+    "gruppe": {
+      "kanaele": "Portālu iestatīšana",
+      "verkaufsfertig": "Padarīt īpašumus gatavus pārdošanai",
+      "grundlagen": "Pamati"
+    },
+    "schritt": {
+      "konto": {
+        "titel": "Konts izveidots",
+        "text": "Jūsu uzņēmums ir iestatīts."
+      },
+      "firma": {
+        "titel": "Uzņēmuma datu ievadīšana",
+        "text": "Adrese, nodokļu numurs un IBAN — portāli to pieprasa, un bez IBAN jūs nesaņemsiet naudu.",
+        "aktion": "Uz uzņēmuma datiem"
+      },
+      "verbinden": {
+        "titel": "Savienot portālu",
+        "text": "Savienojiet Airbnb, Booking vai Expedia, lai rezervācijas un kalendāri tiktu sinhronizēti.",
+        "aktion": "Savienot portālu"
+      },
+      "objekteHolen": {
+        "titel": "Iegūt īpašumus no portāla",
+        "text": "Mēs izveidojam jūsu sludinājumus kā īpašumus — jums nekas nav jāpārraksta. Uzmanību: sludinājumi, kas ir saistīti ar citu programmatūru, netiks importēti.",
+        "gesperrt": "Vispirms savienojiet portālu.",
+        "aktion": "Iegūt īpašumus"
+      },
+      "erstesObjekt": {
+        "titel": "Izveidot pirmo īpašumu",
+        "text": "Izveidojiet savu pirmo īpašumu — brīvdienu mājokli vai numura tipu.",
+        "aktion": "Izveidot īpašumu"
+      },
+      "inhalteHolen": {
+        "titel": "Pārņemt aprīkojumu un noteikumus",
+        "text": "Istabas, gultas, atcelšanas noteikumi, aprīkojums un maksas jau ir portālā — mēs tos iegūstam visiem īpašumiem uzreiz.",
+        "gesperrt": "Vispirms iegūstiet savus īpašumus no portāla.",
+        "aktion": "Pārņemt saturu"
+      },
+      "preise": {
+        "titel": "Cenu noteikšana",
+        "text": "Bez cenas neviens portāls nevar pārdot jūsu īpašumu.",
+        "gesperrt": "Vispirms jums ir nepieciešams īpašums.",
+        "aktion": "Cenu noteikšana"
+      },
+      "sperrtermine": {
+        "titel": "Ievadīt bloķētos datumus",
+        "text": "Aizņemtie periodi NETIEK importēti. Ievadiet tos pirms pārdošanas — pretējā gadījumā viena nakts tiks rezervēta divreiz.",
+        "gesperrt": "Vispirms jums ir nepieciešams īpašums.",
+        "aktion": "Uz kalendāru"
+      },
+      "veroeffentlichen": {
+        "titel": "Publicēt īpašumus",
+        "text": "Viss pārbaudīts? Tad publicējiet savus īpašumus portālos un tirgū.",
+        "gesperrt": "Tikai tad, ja īpašums un cenas ir noteiktas — pretējā gadījumā jūs pārdodat kaut ko, kas vēl nav gatavs.",
+        "aktion": "Publicēt"
+      },
+      "kanaele": {
+        "titel": "Izvēlēties pārdošanas kanālus",
+        "text": "Izlemiet, caur kuriem portāliem un vai caur tirgu tiks veikta pārdošana.",
+        "gesperrt": "Vispirms jums ir nepieciešams īpašums.",
+        "aktion": "Uz kanāliem"
+      }
     }
   }
 }

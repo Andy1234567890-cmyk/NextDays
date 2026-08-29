@@ -424,8 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – A plataforma para quem aluga alojamento local",
-    "description": "A plataforma para hotéis, agências e anfitriões de alojamento local: channel manager, calendário, reserva direta, comunicação com hóspedes e faturação num só lugar. Criada na Dinamarca, alojada na UE. 30 dias grátis.",
-    "descriptionMitPreis": "A plataforma para hotéis, agências e anfitriões de alojamento local: channel manager, calendário, reserva direta, comunicação com hóspedes e faturação num só lugar. Criada na Dinamarca, alojada na UE. A partir de {preis}/mês. 30 dias grátis."
+    "description": "A plataforma para hotéis, agências e anfitriões de alojamento local: channel manager, calendário, reserva direta, comunicação com hóspedes e faturação num só lugar. Criada na Dinamarca, alojada na UE. 14 dias grátis.",
+    "descriptionMitPreis": "A plataforma para hotéis, agências e anfitriões de alojamento local: channel manager, calendário, reserva direta, comunicação com hóspedes e faturação num só lugar. Criada na Dinamarca, alojada na UE. A partir de {preis}/mês. 14 dias grátis."
   },
   "nav": {
     "funktionen": "Funcionalidades",
@@ -463,7 +463,7 @@
     "headlineHighlight": "reservas",
     "headlinePost": "menos trabalho.",
     "subline": "A plataforma para hotéis, agências e anfitriões de alojamento local: channel manager, calendário, reserva direta, comunicação com hóspedes e faturação num só lugar, criada por anfitriões que conhecem o dia a dia.",
-    "ctaTrial": "Experimentar 30 dias grátis",
+    "ctaTrial": "Experimentar 14 dias grátis",
     "ctaDemo": "Ver demonstração",
     "kanaeleLabel": "Ligada às grandes plataformas de reservas",
     "eyebrow": "A plataforma para quem aluga alojamento local",
@@ -609,7 +609,7 @@
     },
     "preis": {
       "frage": "Quanto custa o myNextDays e como começo?",
-      "antwort": "30 dias grátis, sem prazo mínimo, sem taxa de instalação, cancelável a qualquer momento. Depois uma subscrição mais uma comissão reduzida sobre as reservas que trazemos. Módulos adicionais — contabilidade ampliada com exportação DATEV, gestão de pessoal ou funções de hotel — só se juntam se precisares. Cria um alojamento, liga os canais, avança."
+      "antwort": "14 dias grátis, sem prazo mínimo, sem taxa de instalação, cancelável a qualquer momento. Depois uma subscrição mais uma comissão reduzida sobre as reservas que trazemos. Módulos adicionais — contabilidade ampliada com exportação DATEV, gestão de pessoal ou funções de hotel — só se juntam se precisares. Cria um alojamento, liga os canais, avança."
     }
   },
   "benefits": {
@@ -631,13 +631,13 @@
     "preisBanner": {
       "eyebrow": "Preço",
       "heading": "Tudo o que o seu alojamento precisa, num só lugar",
-      "text": "30 dias grátis. Sem período mínimo. Cancele quando quiser (4 semanas antes do fim do mês).",
+      "text": "14 dias grátis. Sem período mínimo. Cancele quando quiser (4 semanas antes do fim do mês).",
       "proMonat": "por mês"
     }
   },
   "trial": {
     "eyebrow": "Teste gratuito",
-    "heading": "Experimente a myNextDays 30 dias grátis.",
+    "heading": "Experimente a myNextDays 14 dias grátis.",
     "sub": "Sem período mínimo. Cancele quando quiser. Basta preencher este pequeno formulário:",
     "seitenHeading": "Tudo o que o seu alojamento precisa num só lugar: mais controlo, menos esforço.",
     "perks": {
@@ -855,15 +855,16 @@
     "impressum": "Informação legal",
     "cookies": "Política de cookies",
     "avv": "Tratamento de dados",
-    "kontoLoeschen": "Eliminar conta"
+    "kontoLoeschen": "Eliminar conta",
+    "newsletterKnopf": "Assinar newsletter"
   },
   "legal": {
     "stand": "Última atualização: {datum}"
   },
   "abschluss": {
     "heading": "Pronto para gerir o seu alojamento a partir de um só lugar?",
-    "sub": "Experimente 30 dias grátis: sem período mínimo, sem custos de ativação e cancele quando quiser.",
-    "ctaPrimaer": "Experimentar 30 dias grátis",
+    "sub": "Experimente 14 dias grátis: sem período mínimo, sem custos de ativação e cancele quando quiser.",
+    "ctaPrimaer": "Experimentar 14 dias grátis",
     "ctaSekundaer": "Ver preços"
   },
   "chat": {
@@ -902,14 +903,14 @@
   "preise": {
     "meta": {
       "titel": "Preços — um plano, tudo incluído | myNextDays",
-      "beschreibung": "Um plano com todas as funcionalidades, pago consoante o número de alojamentos. Sem período mínimo, sem taxa de adesão, 30 dias grátis — canais, reserva direta, comunicação com hóspedes e faturação incluídos."
+      "beschreibung": "Um plano com todas as funcionalidades, pago consoante o número de alojamentos. Sem período mínimo, sem taxa de adesão, 14 dias grátis — canais, reserva direta, comunicação com hóspedes e faturação incluídos."
     },
     "hero": {
       "eyebrow": "Preços",
       "headlinePre": "Um plano.",
       "headlineHighlight": "Tudo incluído.",
       "sub": "Sem puzzle de pacotes: todas as funcionalidades estão incluídas, quer gira um alojamento local quer doze tipos de quarto. Paga consoante o número de alojamentos — e quantos mais tiver, mais barato fica cada um.",
-      "testen": "30 dias grátis",
+      "testen": "14 dias grátis",
       "laufzeit": "Sem período mínimo",
       "einrichtung": "Sem taxa de adesão",
       "eu": "Alojado na UE, RGPD"
@@ -925,7 +926,7 @@
       "grundgebuehr": "Taxa base (1.º alojamento incluído)",
       "weitereObjekte": "{anzahl, plural, =1 {mais um alojamento} other {mais # alojamentos}} × {jeObjekt}",
       "netto": "Valores sem IVA. Faturação mensal, cancelável a qualquer momento.",
-      "ctaTesten": "Experimentar 30 dias grátis",
+      "ctaTesten": "Experimentar 14 dias grátis",
       "ctaDemo": "Ver a demonstração",
       "inklusivTitel": "Incluído em qualquer plano",
       "inklusivSub": "Nada que só comece num pacote mais caro — este é todo o âmbito.",
@@ -985,7 +986,7 @@
       "sub": "O que os anfitriões querem saber antes de mudar — breve e sem letras pequenas.",
       "laufzeit": {
         "frage": "Existe um período mínimo?",
-        "antwort": "Não. A subscrição é mensal e pode ser cancelada com quatro semanas de aviso para o fim do mês. Os primeiros 30 dias são grátis, sem dados de pagamento."
+        "antwort": "Não. A assinatura é mensal e pode ser cancelada com quatro semanas de antecedência até o final do mês. Os primeiros 14 dias são gratuitos: você insere seus dados de pagamento no início, mas a cobrança só será feita após o período de teste. Se você cancelar antes, não pagará nada."
       },
       "objektzahl": {
         "frage": "O que acontece se acrescentar alojamentos?",
@@ -1030,7 +1031,7 @@
       "eu": "Alojado na UE, conforme o RGPD",
       "start": "Arranque a 1 de setembro de 2026",
       "sprachen": "27 países, 24 idiomas",
-      "ctaTrial": "Experimentar 30 dias grátis",
+      "ctaTrial": "Experimentar 14 dias grátis",
       "ctaKontakt": "Escreva-nos"
     },
     "warum": {
@@ -1178,7 +1179,7 @@
   },
   "funktionen": {
     "rahmen": {
-      "ctaTesten": "Experimentar 30 dias grátis",
+      "ctaTesten": "Experimentar 14 dias grátis",
       "ctaDemo": "Ver demonstração",
       "weiter": "Continuar para as outras funcionalidades",
       "mehr": "Ver",

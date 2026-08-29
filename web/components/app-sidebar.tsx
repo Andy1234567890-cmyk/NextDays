@@ -408,6 +408,7 @@ export function AppSidebar({
   accommodationType = "vacation_rental",
   country = null,
   istDemo = false,
+  einrichtungOffen = false,
 }: {
   email?: string;
   role?: "admin" | "co_admin" | "owner" | "staff" | "cleaner" | null;
@@ -422,6 +423,19 @@ export function AppSidebar({
   // als nicht öffenbar markiert. Ausblenden würde den Umfang der Software
   // verstecken; der Schutz selbst liegt ohnehin im Backend (`demo_gate`).
   istDemo?: boolean;
+  // Firmendaten ODER Abo fehlen: die Oberflaeche ist dann eine SACKGASSE —
+  // veroeffentlichen geht nicht (422), Geld kann nicht ankommen. Statt den
+  // Betrieb das auf jeder Seite einzeln herausfinden zu lassen, bleibt die
+  // Navigation gesperrt, bis die Einrichtung steht.
+  //
+  // SICHTBAR gesperrt, nicht ausgeblendet — sonst wirkt die Software kleiner,
+  // als sie ist (dieselbe Entscheidung wie beim Vorfuehr-Zugang, 0408).
+  //
+  // Frei bleiben nur die Wege, die aus der Sackgasse HERAUSFUEHREN: das
+  // Dashboard mit seinen „Ersten Schritten" und `/konto`, wo Firmendaten und
+  // Abo hinterlegt werden. Eine Sperre, die auch den Ausweg sperrt, waere
+  // eine Falle.
+  einrichtungOffen?: boolean;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -535,8 +549,10 @@ export function AppSidebar({
             <SidebarMenu>
               {mainItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
-                  {istDemo && istGesperrt(item.href) ? (
+                  {(istDemo && istGesperrt(item.href)) ||
+                  (einrichtungOffen && !istAusweg(item.href)) ? (
                     <DemoGesperrt
+                      grund={istDemo ? "demo" : "einrichtung"}
                       icon={item.icon}
                       label={t(item.key)}
                       tourKey={item.key}
@@ -595,8 +611,10 @@ export function AppSidebar({
                     <SidebarMenu>
                       {items.map((item) => (
                         <SidebarMenuItem key={item.href}>
-                          {istDemo && istGesperrt(item.href) ? (
+                          {(istDemo && istGesperrt(item.href)) ||
+                          (einrichtungOffen && !istAusweg(item.href)) ? (
                             <DemoGesperrt
+                              grund={istDemo ? "demo" : "einrichtung"}
                               icon={item.icon}
                               label={t(item.key)}
                               tourKey={item.key}
@@ -660,8 +678,10 @@ export function AppSidebar({
               <SidebarMenu>
                 {bottomItems.map((item) => (
                   <SidebarMenuItem key={item.href}>
-                    {istDemo && istGesperrt(item.href) ? (
+                    {(istDemo && istGesperrt(item.href)) ||
+                    (einrichtungOffen && !istAusweg(item.href)) ? (
                       <DemoGesperrt
+                        grund={istDemo ? "demo" : "einrichtung"}
                         icon={item.icon}
                         label={t(item.key)}
                         tourKey={item.key}
@@ -867,19 +887,34 @@ export function AppSidebar({
  * fokussierbar-aber-wirkungslos, und Screenreader kündigten eine Schaltfläche
  * an, die nichts tut. Der Punkt trägt stattdessen `title` als Erklärung.
  */
+/** Fuehrt dieser Pfad aus der Einrichtung HERAUS? Der bleibt immer offen. */
+function istAusweg(href: string): boolean {
+  return href === "/" || href.startsWith("/konto");
+}
+
 function DemoGesperrt({
   icon,
   label,
   tourKey,
+  grund = "demo",
 }: {
   icon: string;
   label: string;
   tourKey?: string;
+  // WARUM gesperrt ist — die beiden Gruende sind verschieden und duerfen nicht
+  // denselben Text tragen. „In der Vorfuehrung gesperrt" waere im eigenen
+  // Betrieb schlicht falsch und schickt den Kunden auf die Suche nach einem
+  // Vorfuehr-Modus, den es bei ihm nicht gibt.
+  grund?: "demo" | "einrichtung";
 }) {
   return (
     <div
       data-tour={tourKey}
-      title="In der Vorführung gesperrt — im eigenen Betrieb voll verfügbar"
+      title={
+        grund === "einrichtung"
+          ? "Erst Firmendaten und Abo hinterlegen — dann ist dieser Bereich nutzbar."
+          : "In der Vorführung gesperrt — im eigenen Betrieb voll verfügbar"
+      }
       aria-disabled="true"
       className="flex h-8 w-full items-center gap-2 rounded-(--radius) px-2 text-sm text-sidebar-foreground/50"
     >

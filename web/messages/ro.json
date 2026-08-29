@@ -26,7 +26,10 @@
       "da": "Daneză",
       "en": "Engleză"
     },
-    "explain": "Explicație pentru {label}"
+    "explain": "Explicație pentru {label}",
+    "themeToggle": "Schimbați tema",
+    "themeToggleLight": "Temă deschisă",
+    "themeToggleDark": "Temă închisă"
   },
   "legal": {
     "agbLinkLabel": "Termeni și condiții",
@@ -118,7 +121,8 @@
     },
     "type": {
       "title": "Ce închiriezi?",
-      "text": "Alege tipul de activitate — determină termenii și modulele din panoul tău."
+      "text": "Alege tipul de activitate — determină termenii și modulele din panoul tău.",
+      "bald": "În lucru"
     },
     "tax": {
       "title": "Taxe și plăți",
@@ -134,7 +138,7 @@
     },
     "switch": {
       "title": "Importați proprietățile existente",
-      "intro": "Așa vă aduceți proprietățile existente de pe Booking/Airbnb în myNextDays — fără suprarezervări.",
+      "intro": "Cum să vă aduceți anunțurile existente pe myNextDays — fără rezervări duble.",
       "cutover": {
         "title": "Important înainte de conectare",
         "a": "Deconectați fiecare portal de vechiul dvs. sistem înainte de a-l conecta aici — pe fiecare canal poate trimite date DOAR UN sistem.",
@@ -147,21 +151,24 @@
         "title": "Creează proprietatea",
         "text": "Creați o proprietate pentru fiecare anunț existent — numele, tipul și prețul de bază sunt suficiente pentru atribuire.",
         "count": "{count, plural, =0 {Încă nicio proprietate} one {# proprietate} few {# proprietăți} other {# de proprietăți}}",
-        "airbnbHint": "Vii de la Airbnb? Sari peste acest pas — proprietățile tale sunt preluate automat când conectezi Airbnb."
+        "airbnbHint": "Vii de la Airbnb? Sari peste acest pas — proprietățile tale sunt preluate automat când conectezi Airbnb.",
+        "zuordnenHint": "Pentru Booking.com și alte portaluri, aveți nevoie de această proprietate: La conectare, camerele portalului sunt mapate 1:1 la proprietățile dumneavoastră. Doar la Airbnb acest pas este omis — acolo listările sunt incluse la conectare."
       },
       "step2": {
         "title": "Conectare și atribuire portal",
         "text": "Conectați Booking, Airbnb etc. și atribuiți camerele portalurilor 1:1 proprietăților dvs. Rezervările și disponibilitatea vin apoi automat.",
         "connect": "Conectează portalul",
         "connectMore": "Conectează încă un portal",
-        "alreadyConnected": "Un portal este deja conectat și proprietățile dvs. au fost transmise — nu trebuie să reconectați nimic aici. Folosiți „Conectează alt portal” doar pentru un portal SUPLIMENTAR (de ex. Booking)."
+        "alreadyConnected": "Un portal este deja conectat și proprietățile dvs. au fost transmise — nu trebuie să reconectați nimic aici. Folosiți „Conectează alt portal” doar pentru un portal SUPLIMENTAR (de ex. Booking).",
+        "connectNamed": "Conectați {portal}",
+        "textNamed": "Conectați {portale} și asociați camerele portalului 1:1 cu proprietățile dumneavoastră. Rezervările și disponibilitatea vor fi apoi preluate automat."
       },
       "pull": {
-        "button": "Preia proprietățile din portal",
         "result": "{count, plural, =0 {Nicio proprietate nouă găsită} one {# proprietate preluată} few {# proprietăți preluate} other {# de proprietăți preluate}}"
       },
       "finishCta": "Finalizează importul",
       "finishHint": "Confirmați mai întâi indicația de mai sus și creați cel puțin o proprietate.",
+      "finishHintObjekt": "Creați mai întâi cel puțin un obiect — fără un obiect nu există nimic de gestionat. Importul Lodgify este opțional și nu este obligatoriu.",
       "bookings": {
         "title": "Importați rezervările existente",
         "text": "Aduceți rezervările din portalurile conectate în calendarul dvs.",
@@ -193,7 +200,32 @@
       },
       "finish": {
         "notRegistered": "Cel puțin o proprietate trebuie transmisă către portalurile de rezervări înainte de a finaliza onboardingul. Conectați un portal la pasul 2 — proprietatea este transmisă automat."
+      },
+      "nav": {
+        "zurueck": "Înapoi",
+        "weiter": "Înainte",
+        "zaehler": "Pasul {aktuell} din {gesamt}"
+      },
+      "auswahl": {
+        "title": "Pe ce portaluri vindeți astăzi?",
+        "text": "Vom adapta importul în consecință. Puteți conecta oricând mai multe portaluri ulterior.",
+        "keine": "Nu vând încă pe niciun portal"
       }
+    },
+    "spaeterEinrichten": "Configurați mai târziu",
+    "schrittVon": "Pasul {aktuell} din {gesamt}",
+    "claim1": "Toate portalurile, un singur calendar — și proprietățile dumneavoastră sunt incluse.",
+    "claim2": "Prețuri, disponibilitate și mesaje într-un singur loc.",
+    "claim3": "Mai mult timp pentru oaspeți, mai puțin pentru administrare.",
+    "usp": {
+      "portale": "Toate portalurile majore conectate",
+      "kalender": "Un singur calendar pentru toate portalurile",
+      "doppelt": "Blocăm imediat nopțile rezervate peste tot",
+      "import": "Preluăm anunțurile existente pentru dumneavoastră",
+      "zahlung": "Plăți și încasări incluse",
+      "preise": "Gestionați prețurile pe sezon și pe noapte",
+      "posteingang": "Mesajele oaspeților din toate portalurile într-o singură căsuță poștală",
+      "app": "Totul și în aplicație"
     }
   },
   "nav": {
@@ -6206,6 +6238,7 @@
       "untertitelKanaele": "Alegeți unde va fi vândută această proprietate.",
       "untertitelPruefen": "Verificați ce se modifică pe portaluri.",
       "nichtVerfuegbar": "Momentan indisponibil",
+      "portalVerbinden": "Conectați {portal} acum",
       "weiter": "Continuă",
       "abbrechen": "Anulează",
       "jetztVeroeffentlichen": "Publică acum",
@@ -9933,7 +9966,11 @@
       "statusPastDue": "Plată restantă",
       "statusCanceled": "Încetat",
       "statusUnpaid": "Neplătit",
-      "statusIncomplete": "Incomplet"
+      "statusIncomplete": "Incomplet",
+      "trialEnds": "Perioada de probă se încheie la",
+      "trialBannerTitel": "Perioadă de probă gratuită",
+      "trialBannerText": "Perioada dumneavoastră de probă se încheie la {datum}. După această dată, abonamentul dumneavoastră va continua automat.",
+      "trialBannerKnopf": "Vizualizați planul"
     },
     "users": {
       "noAccess": "Fără acces",
@@ -11531,6 +11568,74 @@
       "subtitle": "Bani efectiv încasați — calculați pe baza plăților parțiale înregistrate, nu pe creanțe deschise.",
       "title": "Statistici bilanț",
       "to": "Până la"
+    }
+  },
+  "startbahn": {
+    "titel": "Primii pași",
+    "fortschritt": "{fertig} din {gesamt} finalizate",
+    "gruppeZaehler": "{fertig} / {gesamt} finalizate",
+    "dauer": "aproximativ {minuten} minute",
+    "gruppe": {
+      "kanaele": "Configurați portaluri",
+      "verkaufsfertig": "Pregătiți proprietățile pentru vânzare",
+      "grundlagen": "Noțiuni de bază"
+    },
+    "schritt": {
+      "konto": {
+        "titel": "Cont creat",
+        "text": "Afacerea dumneavoastră este configurată."
+      },
+      "firma": {
+        "titel": "Introduceți datele companiei",
+        "text": "Adresa, numărul de identificare fiscală și IBAN-ul — portalurile le solicită, iar fără IBAN nu veți primi bani.",
+        "aktion": "La datele companiei"
+      },
+      "verbinden": {
+        "titel": "Conectați portalul",
+        "text": "Conectați Airbnb, Booking sau Expedia pentru a sincroniza rezervările și calendarele.",
+        "aktion": "Conectați portalul"
+      },
+      "objekteHolen": {
+        "titel": "Preluare proprietăți de pe portal",
+        "text": "Vom crea listările dumneavoastră ca proprietăți — nu trebuie să introduceți nimic. Atenție: Anunțurile legate de alt software nu vor fi importate.",
+        "gesperrt": "Conectați mai întâi un portal.",
+        "aktion": "Preluare proprietăți"
+      },
+      "erstesObjekt": {
+        "titel": "Creați prima proprietate",
+        "text": "Creați prima dumneavoastră proprietate — unitate de cazare sau tip de cameră.",
+        "aktion": "Creați proprietatea"
+      },
+      "inhalteHolen": {
+        "titel": "Preluare facilități și reguli",
+        "text": "Camerele, paturile, regulile de anulare, facilitățile și taxele sunt deja pe portal — le preluăm pentru toate proprietățile simultan.",
+        "gesperrt": "Preluati mai întâi proprietățile de pe portal.",
+        "aktion": "Preluare conținut"
+      },
+      "preise": {
+        "titel": "Stabiliți prețurile",
+        "text": "Fără preț, niciun portal nu vă poate vinde proprietatea.",
+        "gesperrt": "Aveți nevoie mai întâi de o proprietate.",
+        "aktion": "Stabiliți prețurile"
+      },
+      "sperrtermine": {
+        "titel": "Introduceți datele de blocare",
+        "text": "Perioadele ocupate NU sunt importate. Introduceți-le înainte de a vinde — altfel o noapte va fi rezervată de două ori.",
+        "gesperrt": "Aveți nevoie mai întâi de o proprietate.",
+        "aktion": "La calendar"
+      },
+      "veroeffentlichen": {
+        "titel": "Publicați proprietățile",
+        "text": "Totul verificat? Atunci activați proprietățile dumneavoastră pe portaluri și în marketplace.",
+        "gesperrt": "Doar când proprietatea și prețurile sunt stabilite — altfel vindeți ceva ce nu este încă gata.",
+        "aktion": "Publicați"
+      },
+      "kanaele": {
+        "titel": "Alegeți canalele de vânzare",
+        "text": "Decideți prin ce portaluri și dacă prin marketplace se va vinde.",
+        "gesperrt": "Aveți nevoie mai întâi de o proprietate.",
+        "aktion": "La canale"
+      }
     }
   }
 }

@@ -26,7 +26,10 @@
       "da": "Danų",
       "en": "Anglų"
     },
-    "explain": "Paaiškinimas apie {label}"
+    "explain": "Paaiškinimas apie {label}",
+    "themeToggle": "Keisti dizainą",
+    "themeToggleLight": "Šviesus dizainas",
+    "themeToggleDark": "Tamsus dizainas"
   },
   "legal": {
     "agbLinkLabel": "Bendrosios sąlygos",
@@ -118,7 +121,8 @@
     },
     "type": {
       "title": "Ką nuomojate?",
-      "text": "Pasirinkite veiklos tipą — jis nustato skydelio sąvokas ir modulius."
+      "text": "Pasirinkite veiklos tipą — jis nustato skydelio sąvokas ir modulius.",
+      "bald": "Vykdoma"
     },
     "tax": {
       "title": "Mokesčiai ir mokėjimai",
@@ -134,7 +138,7 @@
     },
     "switch": {
       "title": "Esamų objektų importas",
-      "intro": "Taip savo esamus „Booking“ / „Airbnb“ objektus perkelsite į myNextDays — be dvigubų rezervacijų.",
+      "intro": "Kaip perkelti esamus skelbimus į „myNextDays“ – be dvigubų užsakymų.",
       "cutover": {
         "title": "Svarbu prieš prijungimą",
         "a": "Kiekvieną portalą atjunkite nuo ankstesnės sistemos prieš prijungdami jį čia — į vieną kanalą duomenis visada gali siųsti tik VIENA sistema.",
@@ -147,21 +151,24 @@
         "title": "Sukurti objektą",
         "text": "Kiekvienam esamam skelbimui sukurkite objektą — priskyrimui pakanka pavadinimo, tipo ir bazinės kainos.",
         "count": "{count, plural, =0 {Objektų dar nėra} one {# objektas} few {# objektai} other {# objektų}}",
-        "airbnbHint": "Ateinate iš Airbnb? Praleiskite šį veiksmą — jūsų objektai bus perkelti automatiškai prijungus Airbnb."
+        "airbnbHint": "Ateinate iš Airbnb? Praleiskite šį veiksmą — jūsų objektai bus perkelti automatiškai prijungus Airbnb.",
+        "zuordnenHint": "„Booking.com“ ir kitiems portalams jums reikalingas šis objektas: jungiant portalo kambariai priskiriami jūsų objektams santykiu 1:1. Tik „Airbnb“ atveju šis žingsnis praleidžiamas – ten skelbimai pateikiami jungiant."
       },
       "step2": {
         "title": "Portalo prijungimas ir priskyrimas",
         "text": "Prijunkite „Booking“, „Airbnb“ ir kitus ir priskirkite portalų kambarius 1:1 savo objektams. Rezervacijos ir pasiekiamumas vėliau atkeliauja automatiškai.",
         "connect": "Prijungti portalą",
         "connectMore": "Prijungti kitą portalą",
-        "alreadyConnected": "Vienas portalas jau prijungtas ir jūsų objektai perduoti — čia nieko iš naujo prijungti nereikia. „Prijungti kitą portalą“ naudokite tik PAPILDOMAM portalui (pvz., „Booking“)."
+        "alreadyConnected": "Vienas portalas jau prijungtas ir jūsų objektai perduoti — čia nieko iš naujo prijungti nereikia. „Prijungti kitą portalą“ naudokite tik PAPILDOMAM portalui (pvz., „Booking“).",
+        "connectNamed": "Prijungti {portal}",
+        "textNamed": "Prijunkite {portale} ir susiekite portalo kambarius 1:1 su savo objektais. Užsakymai ir užimtumas bus automatiškai sinchronizuojami."
       },
       "pull": {
-        "button": "Gauti objektus iš portalo",
         "result": "{count, plural, =0 {Naujų objektų nerasta} one {Perimtas # objektas} few {Perimti # objektai} other {Perimta # objektų}}"
       },
       "finishCta": "Užbaigti importą",
       "finishHint": "Pirmiausia patvirtinkite pastabą viršuje ir sukurkite bent vieną objektą.",
+      "finishHintObjekt": "Pirmiausia sukurkite bent vieną objektą – be objekto nėra ką tvarkyti. „Lodgify“ importas yra neprivalomas ir nėra būtinas.",
       "bookings": {
         "title": "Esamų rezervacijų įkėlimas",
         "text": "Perkelkite savo prijungtų portalų rezervacijas į savo kalendorių.",
@@ -193,7 +200,32 @@
       },
       "finish": {
         "notRegistered": "Prieš baigiant paruošimą į rezervacijų portalus turi būti perduotas bent vienas objektas. 2 veiksme prijunkite portalą — objektas perduodamas automatiškai."
+      },
+      "nav": {
+        "zurueck": "Atgal",
+        "weiter": "Toliau",
+        "zaehler": "Žingsnis {aktuell} iš {gesamt}"
+      },
+      "auswahl": {
+        "title": "Kuriuose portaluose parduodate šiandien?",
+        "text": "Mes sukonfigūruosime importavimą. Vėliau galėsite prijungti daugiau portalų.",
+        "keine": "Dar neparduodu jokiuose portaluose"
       }
+    },
+    "spaeterEinrichten": "Nustatyti vėliau",
+    "schrittVon": "Žingsnis {aktuell} iš {gesamt}",
+    "claim1": "Visi portalai, vienas kalendorius – ir jūsų objektai bus perkelti.",
+    "claim2": "Kainos, užimtumas ir pranešimai vienoje vietoje.",
+    "claim3": "Daugiau laiko svečiams, mažiau – administravimui.",
+    "usp": {
+      "portale": "Visi pagrindiniai portalai prijungti",
+      "kalender": "Vienas kalendorius visiems portalams",
+      "doppelt": "Užsakytos naktys iškart užblokuojamos visur",
+      "import": "Perkelsime esamus skelbimus",
+      "zahlung": "Įmokos ir išmokos įskaičiuotos",
+      "preise": "Valdykite kainas pagal sezoną ir naktį",
+      "posteingang": "Visų portalų svečių pranešimai vienoje pašto dėžutėje",
+      "app": "Viskas ir programėlėje"
     }
   },
   "nav": {
@@ -6206,6 +6238,7 @@
       "untertitelKanaele": "Pasirinkite, kur bus parduodamas šis objektas.",
       "untertitelPruefen": "Patikrinkite, kas pasikeis portaluose.",
       "nichtVerfuegbar": "Šiuo metu nepasiekiama",
+      "portalVerbinden": "Prisijunkite prie {portal} dabar",
       "weiter": "Toliau",
       "abbrechen": "Atšaukti",
       "jetztVeroeffentlichen": "Paskelbti dabar",
@@ -9933,7 +9966,11 @@
       "statusPastDue": "Vėluoja mokėjimas",
       "statusCanceled": "Nutraukta",
       "statusUnpaid": "Neapmokėta",
-      "statusIncomplete": "Nebaigta"
+      "statusIncomplete": "Nebaigta",
+      "trialEnds": "Bandomasis laikotarpis baigiasi",
+      "trialBannerTitel": "Nemokamas bandomasis laikotarpis",
+      "trialBannerText": "Jūsų bandomasis laikotarpis baigiasi {datum}. Po to jūsų prenumerata bus automatiškai pratęsta.",
+      "trialBannerKnopf": "Peržiūrėti planą"
     },
     "users": {
       "noAccess": "Nėra prieigos",
@@ -11531,6 +11568,74 @@
       "subtitle": "Faktiškai gauti pinigai – apskaičiuoti pagal įregistruotus dalinius mokėjimus, o ne pagal neįvykdytus reikalavimus.",
       "title": "Balanso statistika",
       "to": "Iki"
+    }
+  },
+  "startbahn": {
+    "titel": "Pirmieji žingsniai",
+    "fortschritt": "Atlikta {fertig} iš {gesamt}",
+    "gruppeZaehler": "Atlikta {fertig} / {gesamt}",
+    "dauer": "apie {minuten} min.",
+    "gruppe": {
+      "kanaele": "Nustatyti portalus",
+      "verkaufsfertig": "Paruošti objektus pardavimui",
+      "grundlagen": "Pagrindai"
+    },
+    "schritt": {
+      "konto": {
+        "titel": "Paskyra sukurta",
+        "text": "Jūsų verslas nustatytas."
+      },
+      "firma": {
+        "titel": "Įvesti įmonės duomenis",
+        "text": "Adresas, mokesčių numeris ir IBAN – portalai to reikalauja, o be IBAN pinigai jūsų nepasieks.",
+        "aktion": "Įmonės duomenys"
+      },
+      "verbinden": {
+        "titel": "Prijungti portalą",
+        "text": "Prijunkite „Airbnb“, „Booking“ ar „Expedia“, kad užsakymai ir kalendorius būtų sujungti.",
+        "aktion": "Prijungti portalą"
+      },
+      "objekteHolen": {
+        "titel": "Gauti objektus iš portalo",
+        "text": "Jūsų skelbimus sukursime kaip objektus – jums nereikės nieko perrašinėti. Dėmesio: skelbimai, susieti su kita programine įranga, nebus perkelti.",
+        "gesperrt": "Pirmiausia prijunkite portalą.",
+        "aktion": "Gauti objektus"
+      },
+      "erstesObjekt": {
+        "titel": "Sukurti pirmąjį objektą",
+        "text": "Sukurkite savo pirmąjį objektą – atostogų būstą ar kambario tipą.",
+        "aktion": "Sukurti objektą"
+      },
+      "inhalteHolen": {
+        "titel": "Perimti įrangą ir taisykles",
+        "text": "Kambariai, lovos, atšaukimo taisyklės, įranga ir mokesčiai jau yra portale – mes juos gausime visiems objektams iš karto.",
+        "gesperrt": "Pirmiausia gaukite savo objektus iš portalo.",
+        "aktion": "Perimti turinį"
+      },
+      "preise": {
+        "titel": "Nustatyti kainas",
+        "text": "Be kainos joks portalas negali parduoti jūsų objekto.",
+        "gesperrt": "Pirmiausia jums reikia objekto.",
+        "aktion": "Nustatyti kainas"
+      },
+      "sperrtermine": {
+        "titel": "Įvesti užimtumo datas",
+        "text": "Užimti laikotarpiai NEBUS importuojami. Įveskite juos prieš parduodami – kitaip naktis bus užsakyta du kartus.",
+        "gesperrt": "Pirmiausia jums reikia objekto.",
+        "aktion": "Į kalendorių"
+      },
+      "veroeffentlichen": {
+        "titel": "Paskelbti objektus",
+        "text": "Viskas patikrinta? Tada paskelbkite savo objektus portaluose ir prekyvietėje.",
+        "gesperrt": "Tik tada, kai objektas ir kainos yra nustatytos – kitaip parduosite kažką, kas dar nėra paruošta.",
+        "aktion": "Paskelbti"
+      },
+      "kanaele": {
+        "titel": "Pasirinkti pardavimo kanalus",
+        "text": "Nuspręskite, per kuriuos portalus ir ar per prekyvietę bus parduodama.",
+        "gesperrt": "Pirmiausia jums reikia objekto.",
+        "aktion": "Į kanalus"
+      }
     }
   }
 }

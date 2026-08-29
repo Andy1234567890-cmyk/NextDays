@@ -26,7 +26,10 @@
       "da": "Danski",
       "en": "Engleski"
     },
-    "explain": "Objašnjenje za {label}"
+    "explain": "Objašnjenje za {label}",
+    "themeToggle": "Promijeni dizajn",
+    "themeToggleLight": "Svijetli dizajn",
+    "themeToggleDark": "Tamni dizajn"
   },
   "legal": {
     "agbLinkLabel": "Opći uvjeti",
@@ -118,7 +121,8 @@
     },
     "type": {
       "title": "Što iznajmljujete?",
-      "text": "Odaberite vrstu poslovanja — određuje pojmove i module na vašoj nadzornoj ploči."
+      "text": "Odaberite vrstu poslovanja — određuje pojmove i module na vašoj nadzornoj ploči.",
+      "bald": "U izradi"
     },
     "tax": {
       "title": "Porezi i plaćanja",
@@ -134,7 +138,7 @@
     },
     "switch": {
       "title": "Uvoz postojećih objekata",
-      "intro": "Ovako svoje postojeće objekte s Bookinga/Airbnba prenosite u myNextDays — bez dvostrukih rezervacija.",
+      "intro": "Kako prenijeti postojeće oglase na myNextDays — bez dvostrukih rezervacija.",
       "cutover": {
         "title": "Važno prije povezivanja",
         "a": "Svaki portal odvojite od svog dosadašnjeg sustava prije nego što ga povežete ovdje — po kanalu smije podatke slati samo JEDAN sustav.",
@@ -147,21 +151,24 @@
         "title": "Stvori objekt",
         "text": "Za svaki postojeći oglas kreirajte jedan objekt — za dodjelu su dovoljni naziv, vrsta i osnovna cijena.",
         "count": "{count, plural, =0 {Još nema objekata} one {# objekt} few {# objekta} other {# objekata}}",
-        "airbnbHint": "Dolazite s Airbnba? Preskočite ovaj korak — vaši objekti prenose se automatski kada povežete Airbnb."
+        "airbnbHint": "Dolazite s Airbnba? Preskočite ovaj korak — vaši objekti prenose se automatski kada povežete Airbnb.",
+        "zuordnenHint": "Za Booking.com i druge portale trebate ovaj objekt: Prilikom povezivanja, sobe portala dodjeljuju se 1:1 vašim objektima. Samo kod Airbnb-a ovaj korak otpada — tamo se oglasi povezuju automatski."
       },
       "step2": {
         "title": "Povezivanje i dodjela portala",
         "text": "Povežite Booking, Airbnb i druge te sobe portala dodijelite 1:1 svojim objektima. Rezervacije i dostupnost nakon toga dolaze automatski.",
         "connect": "Poveži portal",
         "connectMore": "Poveži još jedan portal",
-        "alreadyConnected": "Jedan portal je već povezan i vaši objekti su preneseni — ovdje ne treba ništa ponovno povezivati. Opciju „Poveži još jedan portal“ koristite samo za DODATNI portal (npr. Booking)."
+        "alreadyConnected": "Jedan portal je već povezan i vaši objekti su preneseni — ovdje ne treba ništa ponovno povezivati. Opciju „Poveži još jedan portal“ koristite samo za DODATNI portal (npr. Booking).",
+        "connectNamed": "Povežite {portal}",
+        "textNamed": "Povežite {portale} i dodijelite sobe s portala 1:1 svojim objektima. Rezervacije i raspoloživost tada će se automatski preuzeti."
       },
       "pull": {
-        "button": "Dohvati objekte s portala",
         "result": "{count, plural, =0 {Nije nađen nijedan novi objekt} one {# objekt preuzet} few {# objekta preuzeta} other {# objekata preuzeto}}"
       },
       "finishCta": "Završi uvoz",
       "finishHint": "Najprije potvrdite uputu iznad i kreirajte najmanje jedan objekt.",
+      "finishHintObjekt": "Prvo izradite barem jedan objekt — bez objekta nema ničega za upravljanje. Uvoz iz Lodgifyja je neobavezan i nije obvezan.",
       "bookings": {
         "title": "Učitavanje postojećih rezervacija",
         "text": "Preuzmite rezervacije svojih povezanih portala u svoj kalendar.",
@@ -193,7 +200,32 @@
       },
       "finish": {
         "notRegistered": "Najmanje jedan objekt mora biti prenesen na portale za rezervacije prije nego što završite početno postavljanje. Povežite portal u koraku 2 — objekt se pri tome prenosi automatski."
+      },
+      "nav": {
+        "zurueck": "Natrag",
+        "weiter": "Dalje",
+        "zaehler": "Korak {aktuell} od {gesamt}"
+      },
+      "auswahl": {
+        "title": "Na kojim portalima prodajete danas?",
+        "text": "Usklađujemo uvoz s tim. Kasnije možete povezati dodatne portale u bilo kojem trenutku.",
+        "keine": "Još ne prodajem ni na jednom portalu"
       }
+    },
+    "spaeterEinrichten": "Postaviti kasnije",
+    "schrittVon": "Korak {aktuell} od {gesamt}",
+    "claim1": "Svi portali, jedan kalendar — i vaši objekti dolaze s vama.",
+    "claim2": "Cijene, popunjenost i poruke na jednom mjestu.",
+    "claim3": "Više vremena za goste, manje za administraciju.",
+    "usp": {
+      "portale": "Svi glavni portali povezani",
+      "kalender": "Jedan kalendar za sve portale",
+      "doppelt": "Zauzete noći odmah blokiramo posvuda",
+      "import": "Preuzimamo vaše postojeće oglase",
+      "zahlung": "Uključena plaćanja i isplate",
+      "preise": "Upravljajte cijenama po sezoni i noćenju",
+      "posteingang": "Poruke gostiju sa svih portala u jednom sandučiću",
+      "app": "Sve je dostupno i u aplikaciji"
     }
   },
   "nav": {
@@ -6206,6 +6238,7 @@
       "untertitelKanaele": "Odaberite gdje se ovaj objekt prodaje.",
       "untertitelPruefen": "Provjerite što će se promijeniti na portalima.",
       "nichtVerfuegbar": "Trenutačno nedostupno",
+      "portalVerbinden": "Povežite se s {portal} sada",
       "weiter": "Dalje",
       "abbrechen": "Odustani",
       "jetztVeroeffentlichen": "Objavi sada",
@@ -9933,7 +9966,11 @@
       "statusPastDue": "Plaćanje dospjelo",
       "statusCanceled": "Raskinuta",
       "statusUnpaid": "Neplaćena",
-      "statusIncomplete": "Nepotpuna"
+      "statusIncomplete": "Nepotpuna",
+      "trialEnds": "Testna faza završava",
+      "trialBannerTitel": "Besplatna proba",
+      "trialBannerText": "Vaša testna faza završava {datum}. Nakon toga, vaša će se pretplata automatski nastaviti.",
+      "trialBannerKnopf": "Pogledajte plan"
     },
     "users": {
       "noAccess": "Nema pristupa",
@@ -11531,6 +11568,74 @@
       "subtitle": "Stvarno primljen novac — izračunat na temelju evidentiranih djelomičnih uplata, a ne otvorenih potraživanja.",
       "title": "Statistika bilance",
       "to": "Do"
+    }
+  },
+  "startbahn": {
+    "titel": "Prvi koraci",
+    "fortschritt": "{fertig} od {gesamt} dovršeno",
+    "gruppeZaehler": "{fertig} / {gesamt} dovršeno",
+    "dauer": "oko {minuten} minuta",
+    "gruppe": {
+      "kanaele": "Postavljanje portala",
+      "verkaufsfertig": "Priprema objekata za prodaju",
+      "grundlagen": "Osnove"
+    },
+    "schritt": {
+      "konto": {
+        "titel": "Račun kreiran",
+        "text": "Vaše poslovanje je postavljeno."
+      },
+      "firma": {
+        "titel": "Unesite podatke tvrtke",
+        "text": "Adresa, porezni broj i IBAN — portali ih zahtijevaju, a bez IBAN-a novac neće stići do vas.",
+        "aktion": "Na podatke tvrtke"
+      },
+      "verbinden": {
+        "titel": "Poveži portal",
+        "text": "Povežite Airbnb, Booking ili Expediju kako bi se rezervacije i kalendari uskladili.",
+        "aktion": "Poveži portal"
+      },
+      "objekteHolen": {
+        "titel": "Dohvati objekte s portala",
+        "text": "Vaše oglase ćemo kreirati kao objekte — ne morate ništa prepisivati. Pažnja: oglasi povezani s drugim softverom neće biti uvezeni.",
+        "gesperrt": "Prvo povežite portal.",
+        "aktion": "Dohvati objekte"
+      },
+      "erstesObjekt": {
+        "titel": "Kreiraj prvi objekt",
+        "text": "Kreirajte svoj prvi objekt — smještaj za odmor ili tip sobe.",
+        "aktion": "Kreiraj objekt"
+      },
+      "inhalteHolen": {
+        "titel": "Preuzmi opremu i pravila",
+        "text": "Sobe, kreveti, pravila otkazivanja, oprema i naknade već su na portalu — mi ćemo ih preuzeti za sve objekte odjednom.",
+        "gesperrt": "Prvo dohvatite svoje objekte s portala.",
+        "aktion": "Preuzmi sadržaj"
+      },
+      "preise": {
+        "titel": "Odredite cijene",
+        "text": "Bez cijene nijedan portal ne može prodati vaš objekt.",
+        "gesperrt": "Prvo vam treba objekt.",
+        "aktion": "Odredite cijene"
+      },
+      "sperrtermine": {
+        "titel": "Unesite datume blokade",
+        "text": "Zauzeti termini NEĆE biti uvezeni. Unesite ih prije prodaje — inače će noć biti dvaput rezervirana.",
+        "gesperrt": "Prvo vam treba objekt.",
+        "aktion": "Na kalendar"
+      },
+      "veroeffentlichen": {
+        "titel": "Objavi objekte",
+        "text": "Sve provjereno? Onda objavite svoje objekte na portalima i na tržnici.",
+        "gesperrt": "Tek kada su objekt i cijene postavljeni — inače prodajete nešto što još nije spremno.",
+        "aktion": "Objavi"
+      },
+      "kanaele": {
+        "titel": "Odaberite kanale prodaje",
+        "text": "Odlučite putem kojih portala i hoće li se prodavati putem tržnice.",
+        "gesperrt": "Prvo vam treba objekt.",
+        "aktion": "Na kanale"
+      }
     }
   }
 }

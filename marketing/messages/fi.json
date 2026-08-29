@@ -424,8 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – Alusta lomamajoituksen vuokraajille",
-    "description": "Alusta hotelleille, välitystoimistoille ja lomamajoituksen vuokraajille: channel manager, kalenteri, suoravaraus, vierasviestintä ja laskutus yhdessä paikassa. Rakennettu Tanskassa, isännöity EU:ssa. Kokeile 30 päivää maksutta.",
-    "descriptionMitPreis": "Alusta hotelleille, välitystoimistoille ja lomamajoituksen vuokraajille: channel manager, kalenteri, suoravaraus, vierasviestintä ja laskutus yhdessä paikassa. Rakennettu Tanskassa, isännöity EU:ssa. Alkaen {preis} kuukaudessa. Kokeile 30 päivää maksutta."
+    "description": "Alusta hotelleille, välitystoimistoille ja lomamajoituksen vuokraajille: channel manager, kalenteri, suoravaraus, vierasviestintä ja laskutus yhdessä paikassa. Rakennettu Tanskassa, isännöity EU:ssa. Kokeile 14 päivää maksutta.",
+    "descriptionMitPreis": "Alusta hotelleille, välitystoimistoille ja lomamajoituksen vuokraajille: channel manager, kalenteri, suoravaraus, vierasviestintä ja laskutus yhdessä paikassa. Rakennettu Tanskassa, isännöity EU:ssa. Alkaen {preis} kuukaudessa. Kokeile 14 päivää maksutta."
   },
   "nav": {
     "funktionen": "Ominaisuudet",
@@ -463,7 +463,7 @@
     "headlineHighlight": "varauksia",
     "headlinePost": "vähemmän vaivaa.",
     "subline": "Alusta hotelleille, välitystoimistoille ja lomamajoituksen vuokraajille: channel manager, kalenteri, suoravaraus, vierasviestintä ja laskutus yhdessä paikassa – rakennettu vuokraajilta, jotka tuntevat arjen.",
-    "ctaTrial": "Kokeile 30 päivää maksutta",
+    "ctaTrial": "Kokeile 14 päivää maksutta",
     "ctaDemo": "Katso demo",
     "kanaeleLabel": "Yhteydessä suuriin varausalustoihin",
     "eyebrow": "Alusta lomamajoituksen vuokraajille",
@@ -609,7 +609,7 @@
     },
     "preis": {
       "frage": "Mitä myNextDays kustantaa ja miten aloitan?",
-      "antwort": "30 päivää maksutta, ei määräaikaa, ei perustamismaksua, irtisanottavissa milloin vain. Sen jälkeen tilaus ja pieni välityspalkkio välittämistämme varauksista. Lisämoduulit — laajennettu kirjanpito DATEV-vienneillä, henkilöstöhallinta tai hotellitoiminnot — otetaan vain jos niitä tarvitset. Luo kohde, kytke kanavat, aloita."
+      "antwort": "14 päivää maksutta, ei määräaikaa, ei perustamismaksua, irtisanottavissa milloin vain. Sen jälkeen tilaus ja pieni välityspalkkio välittämistämme varauksista. Lisämoduulit — laajennettu kirjanpito DATEV-vienneillä, henkilöstöhallinta tai hotellitoiminnot — otetaan vain jos niitä tarvitset. Luo kohde, kytke kanavat, aloita."
     }
   },
   "benefits": {
@@ -631,13 +631,13 @@
     "preisBanner": {
       "eyebrow": "Hinta",
       "heading": "Kaikki majoituskohteellesi yhdessä paikassa",
-      "text": "30 päivää maksutta. Ei määräaikaa. Irtisanottavissa milloin tahansa (4 viikkoa kuukauden loppuun).",
+      "text": "14 päivää maksutta. Ei määräaikaa. Irtisanottavissa milloin tahansa (4 viikkoa kuukauden loppuun).",
       "proMonat": "kuukaudessa"
     }
   },
   "trial": {
     "eyebrow": "Kokeile maksutta",
-    "heading": "Kokeile myNextDaysia 30 päivää maksutta.",
+    "heading": "Kokeile myNextDaysia 14 päivää maksutta.",
     "sub": "Ei määräaikaa. Irtisanottavissa milloin tahansa. Täytä vain tämä lyhyt lomake:",
     "seitenHeading": "Kaikki majoituskohteellesi yhdessä paikassa – enemmän hallintaa, vähemmän vaivaa.",
     "perks": {
@@ -855,15 +855,16 @@
     "impressum": "Oikeudelliset tiedot",
     "cookies": "Evästekäytäntö",
     "avv": "Tietojenkäsittely",
-    "kontoLoeschen": "Poista tili"
+    "kontoLoeschen": "Poista tili",
+    "newsletterKnopf": "Tilaa uutiskirje"
   },
   "legal": {
     "stand": "Viimeksi päivitetty: {datum}"
   },
   "abschluss": {
     "heading": "Valmis hoitamaan majoituskohteesi yhdestä paikasta?",
-    "sub": "Kokeile 30 päivää maksutta – ei määräaikaa, ei käyttöönottomaksua, irtisanottavissa milloin tahansa.",
-    "ctaPrimaer": "Kokeile 30 päivää maksutta",
+    "sub": "Kokeile 14 päivää maksutta – ei määräaikaa, ei käyttöönottomaksua, irtisanottavissa milloin tahansa.",
+    "ctaPrimaer": "Kokeile 14 päivää maksutta",
     "ctaSekundaer": "Katso hinnat"
   },
   "chat": {
@@ -902,14 +903,14 @@
   "preise": {
     "meta": {
       "titel": "Hinnat — yksi paketti, kaikki mukana | myNextDays",
-      "beschreibung": "Yksi paketti, jossa on kaikki toiminnot, hinta kohteiden määrän mukaan. Ei määräaikaa, ei käyttöönottomaksua, 30 päivää ilmaiseksi — kanavat, suorat varaukset, vieraiden viestit ja laskutus mukana."
+      "beschreibung": "Yksi paketti, jossa on kaikki toiminnot, hinta kohteiden määrän mukaan. Ei määräaikaa, ei käyttöönottomaksua, 14 päivää ilmaiseksi — kanavat, suorat varaukset, vieraiden viestit ja laskutus mukana."
     },
     "hero": {
       "eyebrow": "Hinnat",
       "headlinePre": "Yksi paketti.",
       "headlineHighlight": "Kaikki mukana.",
       "sub": "Ei pakettipalapeliä: jokainen toiminto kuuluu hintaan, olipa sinulla yksi loma-asunto tai kaksitoista huonetyyppiä. Maksat kohteiden määrän mukaan — ja mitä enemmän kohteita, sitä edullisemmaksi jokainen tulee.",
-      "testen": "30 päivää ilmaiseksi",
+      "testen": "14 päivää ilmaiseksi",
       "laufzeit": "Ei määräaikaa",
       "einrichtung": "Ei käyttöönottomaksua",
       "eu": "EU-isännöity, GDPR"
@@ -925,7 +926,7 @@
       "grundgebuehr": "Perusmaksu (sis. 1. kohteen)",
       "weitereObjekte": "{anzahl, plural, =1 {yksi kohde lisää} other {# kohdetta lisää}} × {jeObjekt}",
       "netto": "Kaikki summat ilman arvonlisäveroa. Laskutus kuukausittain, irtisanottavissa milloin tahansa.",
-      "ctaTesten": "Kokeile 30 päivää ilmaiseksi",
+      "ctaTesten": "Kokeile 14 päivää ilmaiseksi",
       "ctaDemo": "Katso esittely",
       "inklusivTitel": "Kuuluu jokaiseen pakettiin",
       "inklusivSub": "Mitään ei ole piilotettu kalliimpaan pakettiin — tämä on koko laajuus.",
@@ -985,7 +986,7 @@
       "sub": "Mitä vuokranantajat haluavat tietää ennen vaihtoa — lyhyesti ja ilman pientä präntti.",
       "laufzeit": {
         "frage": "Onko määräaikaa?",
-        "antwort": "Ei. Tilaus on kuukausittainen ja irtisanottavissa neljän viikon varoitusajalla kuukauden loppuun. Ensimmäiset 30 päivää ovat ilmaisia, ilman maksutietoja."
+        "antwort": "Ei. Tilaus on kuukausittainen ja sen voi irtisanoa kuukauden loppuun mennessä neljän viikon irtisanomisajalla. Ensimmäiset 14 päivää ovat ilmaisia: annat maksutietosi aloittaessasi, mutta veloitus tapahtuu vasta kokeilujakson päätyttyä. Jos peruutat sitä ennen, et maksa mitään."
       },
       "objektzahl": {
         "frage": "Mitä tapahtuu, kun lisään kohteita?",
@@ -1030,7 +1031,7 @@
       "eu": "EU:ssa isännöity, GDPR-yhteensopiva",
       "start": "Julkaisu 1. syyskuuta 2026",
       "sprachen": "27 maata, 24 kieltä",
-      "ctaTrial": "Kokeile 30 päivää ilmaiseksi",
+      "ctaTrial": "Kokeile 14 päivää ilmaiseksi",
       "ctaKontakt": "Kirjoita meille"
     },
     "warum": {
@@ -1178,7 +1179,7 @@
   },
   "funktionen": {
     "rahmen": {
-      "ctaTesten": "Kokeile 30 päivää ilmaiseksi",
+      "ctaTesten": "Kokeile 14 päivää ilmaiseksi",
       "ctaDemo": "Katso esittely",
       "weiter": "Eteenpäin muihin ominaisuuksiin",
       "mehr": "Katso",

@@ -27,9 +27,16 @@ import { voranmelden } from "@/lib/newsletter";
 import { pixelEreignisMelden } from "@/lib/pixel";
 
 // Vor dem Start: Klicks auf Login/Registrierung öffnen das Popup.
-// Zum Start auf `false` setzen — dann führen die Knöpfe wieder in die App,
-// ohne dass ein einziger Marketing-Baustein angefasst werden muss.
-const VOR_DEM_START = true;
+//
+// SEIT 29.08.2026 AUS. Die Plattform ist erreichbar, Anmeldung und
+// Registrierung funktionieren — ein Popup davor wäre jetzt die Sackgasse, die
+// es vorher verhindert hat. Die Knöpfe führen wieder in die App
+// (`app-url.ts`), das Popup bleibt für die Newsletter-Anmeldung im Footer.
+//
+// Der Abfang unten greift ohnehin nur bei `href="#voranmeldung"`; steht eine
+// echte App-URL im Link, ist er wirkungslos. Der Schalter macht die Absicht
+// eindeutig, statt sich auf diese Nebenwirkung zu verlassen.
+const VOR_DEM_START = false;
 
 /**
  * Ist das ein Voranmelde-Knopf?
@@ -76,15 +83,33 @@ export function VoranmeldungPopup() {
   // dieser App. Das Demo-Band im Dashboard verlinkt hierher; ohne diese Pruefung
   // laege der Besucher auf der Startseite, und das Popup blieb zu, weil der
   // Klick-Abfang unten nur INNERHALB der Marketing-Seite greift.
+  //
+  // BEWUSST OHNE `VOR_DEM_START`-Riegel (29.08.2026): Dieser Weg ist der
+  // einzige, der das Popup nach dem Start noch oeffnet — der Klick-Abfang
+  // unten ist dann aus. Daran haengen zwei Dinge, die weiterlaufen muessen:
+  // der Newsletter-Knopf im Footer und das Demo-Band im Dashboard. Waere der
+  // Riegel auch hier, waere das Popup mit dem Startschalter stillschweigend
+  // unerreichbar geworden — beide Knoepfe haetten dann nichts mehr getan.
+  //
+  // ZWEI Ausloeser, weil es zwei Faelle gibt: Der Effekt-Lauf deckt den Aufruf
+  // MIT Anker in der Adresse ab (von aussen). `hashchange` deckt den Klick auf
+  // DERSELBEN Seite ab — ohne ihn setzt der Newsletter-Knopf im Footer nur
+  // den Anker, und es passiert nichts: ein Knopf, der aussieht, als taete er
+  // etwas, ist schlimmer als keiner.
   useEffect(() => {
-    if (!VOR_DEM_START) return;
-    if (window.location.hash !== VORANMELDUNG_ZIEL) return;
-    oeffnen("popup_extern");
-    // Anker aus der Adresse entfernen: sonst oeffnet ein Neuladen der Seite das
-    // Popup wieder, obwohl der Besucher es geschlossen hat. Das ist zugleich
-    // der Grund, warum ein erneuter Lauf dieses Effekts (Sprachwechsel aendert
-    // `oeffnen`) nichts doppelt meldet: der Anker ist dann weg.
-    window.history.replaceState(null, "", window.location.pathname);
+    const pruefen = () => {
+      if (window.location.hash !== VORANMELDUNG_ZIEL) return;
+      oeffnen("popup_extern");
+      // Anker aus der Adresse entfernen: sonst oeffnet ein Neuladen der Seite
+      // das Popup wieder, obwohl der Besucher es geschlossen hat. Das ist
+      // zugleich der Grund, warum ein erneuter Lauf dieses Effekts
+      // (Sprachwechsel aendert `oeffnen`) nichts doppelt meldet: der Anker
+      // ist dann weg.
+      window.history.replaceState(null, "", window.location.pathname);
+    };
+    pruefen();
+    window.addEventListener("hashchange", pruefen);
+    return () => window.removeEventListener("hashchange", pruefen);
   }, [oeffnen]);
 
   // Klicks auf App-Links abfangen (Capture-Phase, damit Next.js' Router nicht

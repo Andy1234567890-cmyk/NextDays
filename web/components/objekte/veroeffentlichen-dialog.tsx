@@ -22,6 +22,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@nextdays/ui/dialog";
+import { ChannelConnectButton } from "@/components/channel-manager/channel-connect-button";
 import { CHANNEL_LOGO } from "@/lib/channel-logos";
 import {
   type Kanal,
@@ -117,16 +118,6 @@ export function VeroeffentlichenDialog({
           {schritt === "kanaele" ? t("untertitelKanaele") : t("untertitelPruefen")}
         </DialogDescription>
 
-        {(fehler || sendeFehler) && (
-          <p className="flex items-start gap-2 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">
-            <Icon
-              icon="ph:warning-circle-fill"
-              className="mt-0.5 size-4 shrink-0"
-            />
-            <span>{sendeFehler || fehler}</span>
-          </p>
-        )}
-
         {schritt === "kanaele" ? (
           <div className="flex flex-col gap-2">
             {kanaele.filter((k) => k.waehlbar).map((k) => (
@@ -154,8 +145,36 @@ export function VeroeffentlichenDialog({
                 <p className="text-xs font-medium text-muted-foreground">
                   {t("nichtVerfuegbar")}
                 </p>
+                {/* Verbinden GEHT HIER — kein Verweis auf eine andere Seite.
+                    Bis 29.08.2026 stand hier nur „Noch nicht mit diesem Portal
+                    verbunden": der Betrieb las, was fehlt, aber nicht, wo er es
+                    behebt. Ein Link in den Kanalmanager waere der zweite
+                    Fehler gewesen — er wirft den Nutzer aus dem Dialog, in dem
+                    er gerade ueber das Verkaufen entscheidet, und zurueck
+                    findet er allein.
+
+                    Der Knopf ist der bestehende `ChannelConnectButton` mit
+                    vorbelegtem Portal UND Objekt: derselbe Assistent wie im
+                    Kanalmanager, nur ohne Umweg. Nach dem Verbinden laedt der
+                    Dialog seine Kanaele neu, die Zeile wandert nach oben und
+                    ist waehlbar. */}
                 {gesperrt.map((k) => (
-                  <KanalZeile key={k.code} kanal={k} gewaehlt={false} />
+                  <div key={k.code} className="flex flex-col gap-2">
+                    <KanalZeile kanal={k} gewaehlt={false} />
+                    {k.grund === "nichtVerbunden" && (
+                      <ChannelConnectButton
+                        label={t("portalVerbinden", { portal: k.name })}
+                        variant="outline"
+                        presetPortalCode={k.code}
+                        presetPropertyId={propertyId}
+                        onDone={() => {
+                          void kanaeleLaden(propertyId).then((res) => {
+                            if (!("fehler" in res)) setUebersicht(res);
+                          });
+                        }}
+                      />
+                    )}
+                  </div>
                 ))}
               </div>
             )}
@@ -171,7 +190,21 @@ export function VeroeffentlichenDialog({
           />
         )}
 
-        <div className="mt-2 flex items-center justify-between gap-3">
+        {/* Der Fehler steht UEBER der Knopfleiste, nicht ganz oben.
+            Er erklaert, warum „Jetzt veroeffentlichen" nicht zum Ziel fuehrt —
+            oben stand er losgeloest vor der Kanal-Auswahl und las sich wie
+            eine allgemeine Warnung zur Seite. */}
+        {(fehler || sendeFehler) && (
+          <p className="flex items-start gap-2 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">
+            <Icon
+              icon="ph:warning-circle-fill"
+              className="mt-0.5 size-4 shrink-0"
+            />
+            <span>{sendeFehler || fehler}</span>
+          </p>
+        )}
+
+        <div className="mt-2 flex items-center justify-between gap-3 border-t pt-4">
           <Button variant="ghost" onClick={onClose} disabled={busy}>
             {t("abbrechen")}
           </Button>
@@ -274,43 +307,83 @@ function PruefAnsicht({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap gap-2">
-        {codes.map((c) => (
-          <button
-            key={c}
-            type="button"
-            onClick={() => onTab(c)}
-            className={
-              "rounded-full border px-3 py-1 text-xs font-medium " +
-              (c === aktiv
-                ? "border-accent bg-accent/10 text-accent"
-                : "text-muted-foreground hover:bg-secondary")
-            }
-          >
-            {name(c)}
-          </button>
-        ))}
-      </div>
+      {/* EIN Kanal = EINE Karte, die Kopf und Inhalt zusammenhaelt.
+          Vorher zerfiel dieser Schritt in lose Teile: eine Pille oben links,
+          darunter ein grauer Kasten ohne sichtbaren Bezug dazu. Bei nur einem
+          Kanal — der Normalfall, solange kein Portal verbunden ist — sah das
+          aus wie zwei uebrig gebliebene Bruchstuecke.
 
-      {laedt && (
-        <p className="text-sm text-muted-foreground">{t("laedtVorschau")}</p>
+          Die Portal-Dateien sind WORTMARKEN (mybestdays.png misst 1461x403,
+          also rund 3,6:1). Sie brauchen eine feste HOEHE und freie Breite
+          (`h-6 w-auto`); in eine quadratische Flaeche gezwungen werden sie zu
+          einem Fleck. Der Name steht deshalb NICHT daneben — die Wortmarke
+          nennt ihn bereits. */}
+      {codes.length > 1 && (
+        <div className="flex flex-wrap gap-2">
+          {codes.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => onTab(c)}
+              className={
+                "flex items-center gap-2 rounded-full border px-3 py-2 transition-colors " +
+                (c === aktiv
+                  ? "border-accent bg-accent/10"
+                  : "hover:bg-secondary")
+              }
+            >
+              {CHANNEL_LOGO[c] ? (
+                // eslint-disable-next-line @next/next/no-img-element -- Portal-Logo aus /public
+                <img
+                  src={CHANNEL_LOGO[c]}
+                  alt={name(c)}
+                  className="h-4 w-auto max-w-24 object-contain"
+                />
+              ) : (
+                <span className="text-xs font-medium">{name(c)}</span>
+              )}
+            </button>
+          ))}
+        </div>
       )}
 
-      {!laedt && v && !v.vergleichbar && (
-        <p className="rounded-2xl bg-secondary p-3 text-sm text-muted-foreground">
-          {v.hinweis || t(`gruende.${v.grund ?? "keinIstAbgleich"}`)}
-        </p>
-      )}
+      <div className="overflow-hidden rounded-2xl border">
+        <div className="flex items-center gap-3 border-b bg-secondary/40 px-4 py-3">
+          {aktiv && CHANNEL_LOGO[aktiv] ? (
+            // eslint-disable-next-line @next/next/no-img-element -- Portal-Logo aus /public
+            <img
+              src={CHANNEL_LOGO[aktiv]}
+              alt={name(aktiv)}
+              className="h-6 w-auto max-w-36 object-contain"
+            />
+          ) : (
+            <span className="text-sm font-medium">{aktiv ? name(aktiv) : ""}</span>
+          )}
+        </div>
 
-      {!laedt && v?.vergleichbar && v.felder.length === 0 && (
-        <p className="flex items-center gap-2 rounded-2xl bg-secondary p-3 text-sm">
-          <Icon icon="ph:check-circle-fill" className="size-4 text-success" />
-          {t("keineAenderungen")}
-        </p>
-      )}
+        <div className="p-4">
+          {laedt && (
+            <p className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Icon icon="ph:spinner" className="size-4 animate-spin" />
+              {t("laedtVorschau")}
+            </p>
+          )}
 
-      {!laedt && v?.vergleichbar && v.felder.length > 0 && (
-        <div className="overflow-x-auto">
+        {!laedt && v && !v.vergleichbar && (
+          <p className="text-sm text-muted-foreground">
+            {v.hinweis || t(`gruende.${v.grund ?? "keinIstAbgleich"}`)}
+          </p>
+        )}
+
+        {!laedt && v?.vergleichbar && v.felder.length === 0 && (
+          <p className="flex items-center gap-2 text-sm">
+            <Icon icon="ph:check-circle-fill" className="size-4 text-success" />
+            {t("keineAenderungen")}
+          </p>
+        )}
+
+        {!laedt && v?.vergleichbar && v.felder.length > 0 && (
+          <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="text-xs text-muted-foreground">
               <tr>
@@ -333,8 +406,10 @@ function PruefAnsicht({
               ))}
             </tbody>
           </table>
+          </div>
+        )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

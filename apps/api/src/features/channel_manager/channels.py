@@ -743,17 +743,28 @@ class ChannelsMixin:
         a = (created.get("data") or {}).get("attributes") or {}
         is_active = bool(a.get("is_active"))
 
-        # 4) Aktivieren (Kanäle starten inaktiv).
+        # 4) NICHT aktivieren. Der Kanal bleibt inaktiv, bis der Betrieb selbst
+        # auf „aktivieren" klickt (`activate_channel`).
+        #
+        # Warum das eine Entscheidung des Nutzers ist und keine technische
+        # Nebensache: Die Aktivierung ist die Stelle, an der GELD zu fliessen
+        # beginnt. Channex rechnet nach aktiven Kanalverbindungen ab — ein
+        # Objekt ohne aktive Verbindung kostet nichts („Properties that are set
+        # up but have no active connection are not billed", channex.io/pricing,
+        # gelesen 29.08.2026). Wer hier automatisch aktiviert, entscheidet
+        # ungefragt über die Rechnung des Kunden und schaltet das Objekt
+        # gleichzeitig fuer Gaeste sichtbar.
+        #
+        # Verbunden ≠ aktiv: die Autorisierung ist abgeschlossen, die Zuordnung
+        # steht — verkauft wird erst auf Ansage.
         activate_error: str | None = None
-        if channel_id and not is_active:
-            try:
-                self._channex.activate_channel(channel_id)
-                is_active = True
-            except ChannexError as exc:
-                # Anlegen hat geklappt — Aktivierung kann der Kunde wiederholen.
-                activate_error = exc.message
-                log.warning("channex_channel_activate_failed",
-                            channel_id=channel_id, error=exc.message)
+        log.info(
+            "channex_channel_bleibt_inaktiv",
+            tenant_id=tenant_id, property_id=property_id,
+            portal_code=portal_code, channel_id=channel_id,
+            is_active=is_active,
+            hinweis="Aktivierung entscheidet der Betrieb",
+        )
 
         # Verbindung persistieren: Hotel-ID + erzeugter Channel pro (Objekt, Portal).
         # So bleibt die Verbindung sichtbar/verwaltbar (Status, Trennen, Re-Connect)
@@ -2667,8 +2678,38 @@ class ChannelsMixin:
             .execute()
         ).data or []
         sync = pm[0] if pm else {}
-        out: list[dict[str, Any]] = []
+        # JE PORTAL eine Zeile, nicht je Verbindungszeile.
+        #
+        # `channex_channel_connection` kann zu EINEM Portal mehrere Zeilen
+        # tragen: jeder abgebrochene Verbindungsversuch hinterlaesst eine,
+        # ebenso ein zweiter Portal-Zugang am selben Objekt (0304). Live am
+        # 29.08.2026 standen deshalb DREIMAL „Airbnb" untereinander unter
+        # „PORTALE" — mit drei Schaltern, von denen keiner etwas tat.
+        #
+        # Behalten wird die AUSSAGEKRAEFTIGSTE Zeile: aktiv schlaegt verbunden,
+        # verbunden schlaegt kanallos. Sonst verdeckt eine Leiche aus einem
+        # Abbruch die funktionierende Verbindung, und die Seite meldet
+        # „nicht verbunden", waehrend das Objekt verkauft.
+        bester: dict[str, dict[str, Any]] = {}
         for r in res.data or []:
+            code = str(r.get("ota_portal_code") or "")
+            if not code:
+                continue
+            rang = (2 if r.get("is_active") else 0) + (
+                1 if r.get("channex_channel_id") else 0
+            )
+            vorhanden = bester.get(code)
+            if vorhanden is None or rang > int(vorhanden["__rang"]):
+                bester[code] = {**r, "__rang": rang}
+        if len(bester) < len(res.data or []):
+            log.info(
+                "kanal_verbindungen_zusammengefasst",
+                tenant_id=tenant_id, property_id=property_id,
+                zeilen=len(res.data or []), portale=len(bester),
+            )
+
+        out: list[dict[str, Any]] = []
+        for r in bester.values():
             code = r.get("ota_portal_code")
             out.append(
                 {

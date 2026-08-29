@@ -26,7 +26,10 @@
       "da": "Deens",
       "en": "Engels"
     },
-    "explain": "Toelichting bij {label}"
+    "explain": "Toelichting bij {label}",
+    "themeToggle": "Ontwerp wijzigen",
+    "themeToggleLight": "Licht ontwerp",
+    "themeToggleDark": "Donker ontwerp"
   },
   "legal": {
     "agbLinkLabel": "Algemene voorwaarden",
@@ -118,7 +121,8 @@
     },
     "type": {
       "title": "Wat verhuur je?",
-      "text": "Kies het bedrijfstype — dit bepaalt begrippen en modules in je dashboard."
+      "text": "Kies het bedrijfstype — dit bepaalt begrippen en modules in je dashboard.",
+      "bald": "In bewerking"
     },
     "tax": {
       "title": "Belastingen & betalingen",
@@ -134,7 +138,7 @@
     },
     "switch": {
       "title": "Bestaande objecten importeren",
-      "intro": "Zo breng je je bestaande Booking-/Airbnb-objecten naar myNextDays — zonder dubbele boekingen.",
+      "intro": "Zo brengt u uw bestaande advertenties naar myNextDays — zonder dubbele boekingen.",
       "cutover": {
         "title": "Belangrijk voordat je verbindt",
         "a": "Koppel elk portaal los van je vorige systeem voordat je het hier verbindt — per kanaal mag altijd maar ÉÉN systeem pushen.",
@@ -147,21 +151,24 @@
         "title": "Object aanmaken",
         "text": "Maak voor elke bestaande vermelding een object aan — naam, soort en basisprijs zijn genoeg om toe te wijzen.",
         "count": "{count, plural, =0 {Nog geen objecten} one {# object} other {# objecten}}",
-        "airbnbHint": "Kom je van Airbnb? Sla deze stap over — je objecten worden automatisch overgenomen wanneer je Airbnb verbindt."
+        "airbnbHint": "Kom je van Airbnb? Sla deze stap over — je objecten worden automatisch overgenomen wanneer je Airbnb verbindt.",
+        "zuordnenHint": "Voor Booking.com en andere portals heeft u dit object nodig: Bij het verbinden worden de kamers van de portal 1:1 aan uw objecten toegewezen. Alleen bij Airbnb vervalt deze stap — daar worden de advertenties bij het verbinden meegenomen."
       },
       "step2": {
         "title": "Portaal verbinden & toewijzen",
         "text": "Verbind Booking, Airbnb e.d. en wijs de portaalkamers 1:1 aan je objecten toe. Boekingen en beschikbaarheid komen daarna automatisch.",
         "connect": "Portaal verbinden",
         "connectMore": "Nog een portaal verbinden",
-        "alreadyConnected": "Er is al een portaal verbonden en je objecten zijn verzonden — je hoeft hier niets opnieuw te verbinden. Gebruik „Nog een portaal verbinden” alleen voor een EXTRA portaal (bijv. Booking)."
+        "alreadyConnected": "Er is al een portaal verbonden en je objecten zijn verzonden — je hoeft hier niets opnieuw te verbinden. Gebruik „Nog een portaal verbinden” alleen voor een EXTRA portaal (bijv. Booking).",
+        "connectNamed": "{portal} verbinden",
+        "textNamed": "Verbind {portale} en wijs de portaalkamers 1:1 toe aan uw objecten. Boekingen en beschikbaarheid worden daarna automatisch gesynchroniseerd."
       },
       "pull": {
-        "button": "Objecten uit portaal halen",
         "result": "{count, plural, =0 {Geen nieuwe objecten gevonden} one {# object overgenomen} other {# objecten overgenomen}}"
       },
       "finishCta": "Import afronden",
       "finishHint": "Bevestig eerst de melding hierboven en maak minstens één object aan.",
+      "finishHintObjekt": "Maak eerst minstens één object aan — zonder object is er niets te beheren. De Lodgify-import is vrijwillig en niet verplicht.",
       "bookings": {
         "title": "Bestaande boekingen inlezen",
         "text": "Haal de reserveringen van je verbonden portalen in je kalender.",
@@ -193,7 +200,32 @@
       },
       "finish": {
         "notRegistered": "Er moet minstens één object naar de boekingsportalen zijn verzonden voordat je het onboarding afsluit. Verbind in stap 2 een portaal — daarbij wordt het object automatisch verzonden."
+      },
+      "nav": {
+        "zurueck": "Terug",
+        "weiter": "Verder",
+        "zaehler": "Stap {aktuell} van {gesamt}"
+      },
+      "auswahl": {
+        "title": "Op welke portals verkoopt u vandaag?",
+        "text": "Wij richten de import hierop in. U kunt later op elk moment meer portals koppelen.",
+        "keine": "Ik verkoop nog op geen enkel portal"
       }
+    },
+    "spaeterEinrichten": "Later instellen",
+    "schrittVon": "Stap {aktuell} van {gesamt}",
+    "claim1": "Alle portalen, één kalender — en uw objecten komen mee.",
+    "claim2": "Prijzen, bezetting en berichten op één plek.",
+    "claim3": "Meer tijd voor gasten, minder voor administratie.",
+    "usp": {
+      "portale": "Alle grote portals gekoppeld",
+      "kalender": "Eén kalender voor alle portals",
+      "doppelt": "Geboekte nachten blokkeren we overal direct",
+      "import": "Bestaande advertenties nemen we voor u over",
+      "zahlung": "Betalingen en uitbetalingen inbegrepen",
+      "preise": "Prijzen per seizoen en nacht beheren",
+      "posteingang": "Gastberichten van alle portals in één inbox",
+      "app": "Alles ook in de app"
     }
   },
   "nav": {
@@ -6206,6 +6238,7 @@
       "untertitelKanaele": "Kies waar dit object verkocht moet worden.",
       "untertitelPruefen": "Controleer wat er bij de portalen verandert.",
       "nichtVerfuegbar": "Momenteel niet beschikbaar",
+      "portalVerbinden": "Nu verbinden met {portal}",
       "weiter": "Verder",
       "abbrechen": "Annuleren",
       "jetztVeroeffentlichen": "Nu publiceren",
@@ -9933,7 +9966,11 @@
       "statusPastDue": "Betaling openstaand",
       "statusCanceled": "Opgezegd",
       "statusUnpaid": "Onbetaald",
-      "statusIncomplete": "Onvolledig"
+      "statusIncomplete": "Onvolledig",
+      "trialEnds": "Testperiode eindigt op",
+      "trialBannerTitel": "Gratis proefperiode",
+      "trialBannerText": "Uw proefperiode eindigt op {datum}. Daarna wordt uw abonnement automatisch voortgezet.",
+      "trialBannerKnopf": "Bekijk abonnement"
     },
     "users": {
       "noAccess": "Geen toegang",
@@ -11531,6 +11568,74 @@
       "subtitle": "Werkelijk ontvangen geld — berekend op basis van de geregistreerde deelbetalingen, niet op basis van openstaande vorderingen.",
       "title": "Balansstatistieken",
       "to": "Tot"
+    }
+  },
+  "startbahn": {
+    "titel": "Eerste stappen",
+    "fortschritt": "{fertig} van {gesamt} voltooid",
+    "gruppeZaehler": "{fertig} / {gesamt} voltooid",
+    "dauer": "ongeveer {minuten} minuten",
+    "gruppe": {
+      "kanaele": "Portalen instellen",
+      "verkaufsfertig": "Objecten verkoopklaar maken",
+      "grundlagen": "Basisprincipes"
+    },
+    "schritt": {
+      "konto": {
+        "titel": "Account aangemaakt",
+        "text": "Uw bedrijf is ingesteld."
+      },
+      "firma": {
+        "titel": "Bedrijfsgegevens invullen",
+        "text": "Adres, btw-nummer en IBAN — de portalen vragen erom, en zonder IBAN ontvangt u geen geld.",
+        "aktion": "Naar bedrijfsgegevens"
+      },
+      "verbinden": {
+        "titel": "Portaal verbinden",
+        "text": "Verbind Airbnb, Booking of Expedia, zodat boekingen en kalenders samenkomen.",
+        "aktion": "Portaal verbinden"
+      },
+      "objekteHolen": {
+        "titel": "Objecten van portaal ophalen",
+        "text": "Wij maken uw advertenties aan als objecten — u hoeft niets over te typen. Let op: advertenties die aan andere software zijn gekoppeld, worden niet meegenomen.",
+        "gesperrt": "Verbind eerst een portaal.",
+        "aktion": "Objecten ophalen"
+      },
+      "erstesObjekt": {
+        "titel": "Eerste object aanmaken",
+        "text": "Maak uw eerste object aan — vakantieaccommodatie of kamertype.",
+        "aktion": "Object aanmaken"
+      },
+      "inhalteHolen": {
+        "titel": "Voorzieningen en regels overnemen",
+        "text": "Kamers, bedden, annuleringsvoorwaarden, voorzieningen en kosten staan al op het portaal — wij halen ze voor alle objecten in één keer op.",
+        "gesperrt": "Haal eerst uw objecten op van het portaal.",
+        "aktion": "Inhoud overnemen"
+      },
+      "preise": {
+        "titel": "Prijzen instellen",
+        "text": "Zonder prijs kan geen enkel portaal uw object verkopen.",
+        "gesperrt": "U heeft eerst een object nodig.",
+        "aktion": "Prijzen instellen"
+      },
+      "sperrtermine": {
+        "titel": "Blokkeerdata invoeren",
+        "text": "Bezettingstijden worden NIET meegenomen bij de import. Voer ze in voordat u verkoopt — anders wordt een nacht twee keer geboekt.",
+        "gesperrt": "U heeft eerst een object nodig.",
+        "aktion": "Naar kalender"
+      },
+      "veroeffentlichen": {
+        "titel": "Objecten publiceren",
+        "text": "Alles gecontroleerd? Schakel dan uw objecten vrij op de portalen en in de marktplaats.",
+        "gesperrt": "Pas als object en prijzen zijn ingesteld — anders verkoopt u iets dat nog niet klaar is.",
+        "aktion": "Publiceren"
+      },
+      "kanaele": {
+        "titel": "Verkoopkanalen kiezen",
+        "text": "Beslis via welke portalen en of via de marktplaats wordt verkocht.",
+        "gesperrt": "U heeft eerst een object nodig.",
+        "aktion": "Naar kanalen"
+      }
     }
   }
 }

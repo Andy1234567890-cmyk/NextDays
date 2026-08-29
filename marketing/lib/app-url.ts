@@ -35,11 +35,23 @@
 export const VORANMELDUNG_ZIEL = "#voranmeldung";
 
 /**
- * Basis-URL des Dashboards. Leer, solange die Plattform nicht öffentlich ist.
- * Wird erst zum Start gesetzt (Env `NEXT_PUBLIC_APP_URL`, z. B.
- * `https://app.mynextdays.com`).
+ * Basis-URL des Dashboards.
+ *
+ * ZWEI Variablen, eine Wahrheit: `NEXT_PUBLIC_APP_URL` ist die eigentliche,
+ * `NEXT_PUBLIC_DEMO_URL` der Rückfall. Gemessen am 29.08.2026 war live NUR
+ * die Demo-Variable gesetzt — der Knopf „Demo ansehen" führte deshalb in die
+ * App, während „Anmelden" und „Kostenlos starten" im Voranmelde-Popup
+ * hängenblieben. Beide zeigen auf dieselbe Anwendung; eine davon zu kennen
+ * genügt also, um alle Knöpfe zu verdrahten.
+ *
+ * Ohne beide bleibt es beim Popup — kein erfundener Vorgabewert (Wurzel 4),
+ * denn eine geratene Domain wäre ein toter Knopf.
  */
-export const DASHBOARD_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
+export const DASHBOARD_URL = (
+  process.env.NEXT_PUBLIC_APP_URL ??
+  process.env.NEXT_PUBLIC_DEMO_URL ??
+  ""
+).replace(/\/$/, "");
 
 /** Führen die Knöpfe schon in die App? Nur wenn eine Dashboard-URL gesetzt ist. */
 export const APP_ERREICHBAR = DASHBOARD_URL !== "";
@@ -48,6 +60,16 @@ export const LOGIN_URL = APP_ERREICHBAR
   ? `${DASHBOARD_URL}/login`
   : VORANMELDUNG_ZIEL;
 
+/**
+ * Ziel von „Kostenlos starten" und „14 Tage kostenlos testen".
+ *
+ * `/signup`, NICHT `/onboarding`: Der Assistent verlangt eine Anmeldung und
+ * würde einen Besucher der Marketing-Seite auf `/login?weiter=/onboarding`
+ * abweisen (live geprüft — `/onboarding` antwortet mit 307). Die Registrierung
+ * führt nach Erfolg VON SELBST in den Assistenten
+ * (`signup-form.tsx`: `router.replace("/onboarding")`), der Weg ist also
+ * derselbe — nur ohne die Sackgasse davor.
+ */
 export const SIGNUP_URL = APP_ERREICHBAR
   ? `${DASHBOARD_URL}/signup`
   : VORANMELDUNG_ZIEL;

@@ -424,8 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – Het platform voor verhuurders van vakantieaccommodaties",
-    "description": "Het platform voor hotels, agentschappen en verhuurders van vakantieaccommodaties: channel manager, kalender, directe boekingen, gastcommunicatie en facturatie op één plek. Gebouwd in Denemarken, gehost in de EU. 30 dagen gratis proberen.",
-    "descriptionMitPreis": "Het platform voor hotels, agentschappen en verhuurders van vakantieaccommodaties: channel manager, kalender, directe boekingen, gastcommunicatie en facturatie op één plek. Gebouwd in Denemarken, gehost in de EU. Vanaf {preis} per maand. 30 dagen gratis proberen."
+    "description": "Het platform voor hotels, agentschappen en verhuurders van vakantieaccommodaties: channel manager, kalender, directe boekingen, gastcommunicatie en facturatie op één plek. Gebouwd in Denemarken, gehost in de EU. 14 dagen gratis proberen.",
+    "descriptionMitPreis": "Het platform voor hotels, agentschappen en verhuurders van vakantieaccommodaties: channel manager, kalender, directe boekingen, gastcommunicatie en facturatie op één plek. Gebouwd in Denemarken, gehost in de EU. Vanaf {preis} per maand. 14 dagen gratis proberen."
   },
   "nav": {
     "funktionen": "Functies",
@@ -463,7 +463,7 @@
     "headlineHighlight": "boekingen",
     "headlinePost": "minder werk.",
     "subline": "Het platform voor hotels, agentschappen en verhuurders van vakantieaccommodaties: channel manager, kalender, directe boekingen, gastcommunicatie en facturatie op één plek – gebouwd door verhuurders die de dagelijkse praktijk kennen.",
-    "ctaTrial": "30 dagen gratis proberen",
+    "ctaTrial": "14 dagen gratis proberen",
     "ctaDemo": "Demo bekijken",
     "kanaeleLabel": "Verbonden met de grote boekingsplatforms",
     "eyebrow": "Het platform voor verhuurders van vakantieaccommodaties",
@@ -609,7 +609,7 @@
     },
     "preis": {
       "frage": "Wat kost myNextDays en hoe begin ik?",
-      "antwort": "30 dagen gratis, geen minimumtermijn, geen instelkosten, altijd opzegbaar. Daarna een abonnement plus een lage commissie op boekingen die wij aanbrengen. Extra modules zoals uitgebreide boekhouding met DATEV-export, medewerkersbeheer of hotelfuncties neem je alleen als je ze nodig hebt. Object aanmaken, kanalen verbinden, beginnen."
+      "antwort": "14 dagen gratis, geen minimumtermijn, geen instelkosten, altijd opzegbaar. Daarna een abonnement plus een lage commissie op boekingen die wij aanbrengen. Extra modules zoals uitgebreide boekhouding met DATEV-export, medewerkersbeheer of hotelfuncties neem je alleen als je ze nodig hebt. Object aanmaken, kanalen verbinden, beginnen."
     }
   },
   "benefits": {
@@ -631,13 +631,13 @@
     "preisBanner": {
       "eyebrow": "Prijs",
       "heading": "Alles voor je accommodatie op één plek",
-      "text": "30 dagen gratis. Geen minimale looptijd. Altijd opzegbaar (4 weken tegen het einde van de maand).",
+      "text": "14 dagen gratis. Geen minimale looptijd. Altijd opzegbaar (4 weken tegen het einde van de maand).",
       "proMonat": "per maand"
     }
   },
   "trial": {
     "eyebrow": "Gratis proberen",
-    "heading": "Probeer myNextDays 30 dagen gratis.",
+    "heading": "Probeer myNextDays 14 dagen gratis.",
     "sub": "Geen minimale looptijd. Altijd opzegbaar. Vul gewoon dit korte formulier in:",
     "seitenHeading": "Alles voor je accommodatie op één plek – meer controle, minder werk.",
     "perks": {
@@ -855,15 +855,16 @@
     "impressum": "Colofon",
     "cookies": "Cookiebeleid",
     "avv": "Verwerkersovereenkomst",
-    "kontoLoeschen": "Account verwijderen"
+    "kontoLoeschen": "Account verwijderen",
+    "newsletterKnopf": "Aanmelden voor nieuwsbrief"
   },
   "legal": {
     "stand": "Laatst bijgewerkt: {datum}"
   },
   "abschluss": {
     "heading": "Klaar om je accommodatie vanaf één plek te sturen?",
-    "sub": "30 dagen gratis proberen – geen minimale looptijd, geen instelkosten, altijd opzegbaar.",
-    "ctaPrimaer": "30 dagen gratis proberen",
+    "sub": "14 dagen gratis proberen – geen minimale looptijd, geen instelkosten, altijd opzegbaar.",
+    "ctaPrimaer": "14 dagen gratis proberen",
     "ctaSekundaer": "Prijzen bekijken"
   },
   "chat": {
@@ -902,14 +903,14 @@
   "preise": {
     "meta": {
       "titel": "Prijzen — één abonnement, alles inbegrepen | myNextDays",
-      "beschreibung": "Eén abonnement met de volledige functieomvang, betaald naar het aantal objecten. Geen minimale looptijd, geen instelkosten, 30 dagen gratis — kanalen, directe boekingen, gastcommunicatie en facturatie inbegrepen."
+      "beschreibung": "Eén abonnement met de volledige functieomvang, betaald naar het aantal objecten. Geen minimale looptijd, geen instelkosten, 14 dagen gratis — kanalen, directe boekingen, gastcommunicatie en facturatie inbegrepen."
     },
     "hero": {
       "eyebrow": "Prijzen",
       "headlinePre": "Eén abonnement.",
       "headlineHighlight": "Alles erin.",
       "sub": "Geen pakkettenpuzzel: elke functie zit erin, of je nu één vakantiewoning verhuurt of twaalf kamertypes. Je betaalt naar het aantal objecten — en hoe meer je er hebt, hoe goedkoper elk object wordt.",
-      "testen": "30 dagen gratis",
+      "testen": "14 dagen gratis",
       "laufzeit": "Geen minimale looptijd",
       "einrichtung": "Geen instelkosten",
       "eu": "EU-gehost, AVG"
@@ -925,7 +926,7 @@
       "grundgebuehr": "Basisbedrag (incl. 1e object)",
       "weitereObjekte": "{anzahl, plural, =1 {één extra object} other {# extra objecten}} × {jeObjekt}",
       "netto": "Alle bedragen exclusief btw. Maandelijkse facturatie, altijd opzegbaar.",
-      "ctaTesten": "30 dagen gratis proberen",
+      "ctaTesten": "14 dagen gratis proberen",
       "ctaDemo": "Demo bekijken",
       "inklusivTitel": "In elk abonnement inbegrepen",
       "inklusivSub": "Niets dat pas in een duurder pakket begint — dit is de hele omvang.",
@@ -985,7 +986,7 @@
       "sub": "Wat verhuurders willen weten vóór een overstap — kort en zonder kleine lettertjes.",
       "laufzeit": {
         "frage": "Is er een minimale looptijd?",
-        "antwort": "Nee. Het abonnement loopt maandelijks en is met vier weken opzegtermijn tegen het einde van de maand opzegbaar. De eerste 30 dagen zijn gratis, zonder betaalgegevens."
+        "antwort": "Nee. Het abonnement is maandelijks opzegbaar met een opzegtermijn van vier weken aan het einde van de maand. De eerste 14 dagen zijn gratis: u voert uw betalingsgegevens in bij de start, maar de afschrijving vindt pas plaats na afloop van de proefperiode. Als u eerder opzegt, betaalt u niets."
       },
       "objektzahl": {
         "frage": "Wat gebeurt er als ik objecten toevoeg?",
@@ -1030,7 +1031,7 @@
       "eu": "EU-gehost, AVG-conform",
       "start": "Start op 1 september 2026",
       "sprachen": "27 landen, 24 talen",
-      "ctaTrial": "30 dagen gratis proberen",
+      "ctaTrial": "14 dagen gratis proberen",
       "ctaKontakt": "Schrijf ons"
     },
     "warum": {
@@ -1178,7 +1179,7 @@
   },
   "funktionen": {
     "rahmen": {
-      "ctaTesten": "30 dagen gratis proberen",
+      "ctaTesten": "14 dagen gratis proberen",
       "ctaDemo": "Demo bekijken",
       "weiter": "Verder naar de andere functies",
       "mehr": "Bekijken",

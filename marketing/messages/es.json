@@ -424,8 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – La plataforma para anfitriones de alojamientos turísticos",
-    "description": "La plataforma para hoteles, agencias y anfitriones de alojamientos turísticos: channel manager, calendario, reserva directa, comunicación con huéspedes y facturación en un solo lugar. Creada en Dinamarca, alojada en la UE. 30 días gratis.",
-    "descriptionMitPreis": "La plataforma para hoteles, agencias y anfitriones de alojamientos turísticos: channel manager, calendario, reserva directa, comunicación con huéspedes y facturación en un solo lugar. Creada en Dinamarca, alojada en la UE. Desde {preis}/mes. 30 días gratis."
+    "description": "La plataforma para hoteles, agencias y anfitriones de alojamientos turísticos: channel manager, calendario, reserva directa, comunicación con huéspedes y facturación en un solo lugar. Creada en Dinamarca, alojada en la UE. 14 días gratis.",
+    "descriptionMitPreis": "La plataforma para hoteles, agencias y anfitriones de alojamientos turísticos: channel manager, calendario, reserva directa, comunicación con huéspedes y facturación en un solo lugar. Creada en Dinamarca, alojada en la UE. Desde {preis}/mes. 14 días gratis."
   },
   "nav": {
     "funktionen": "Funciones",
@@ -463,7 +463,7 @@
     "headlineHighlight": "reservas",
     "headlinePost": "menos esfuerzo.",
     "subline": "La plataforma para hoteles, agencias y anfitriones de alojamientos turísticos: channel manager, calendario, reserva directa, comunicación con huéspedes y facturación en un solo lugar, creada por anfitriones que viven el día a día.",
-    "ctaTrial": "Prueba 30 días gratis",
+    "ctaTrial": "Prueba 14 días gratis",
     "ctaDemo": "Ver demo",
     "kanaeleLabel": "Conectado con las grandes plataformas de reservas",
     "eyebrow": "La plataforma para anfitriones de alojamientos turísticos",
@@ -609,7 +609,7 @@
     },
     "preis": {
       "frage": "¿Cuánto cuesta myNextDays y cómo empiezo?",
-      "antwort": "30 días gratis, sin plazo mínimo, sin cuota de instalación, cancelable en cualquier momento. Después una suscripción más una comisión reducida sobre las reservas que traemos. Los módulos adicionales — contabilidad ampliada con exportación DATEV, gestión de personal o funciones de hotel — se añaden solo si los necesitas. Crea un alojamiento, conecta tus canales y empieza."
+      "antwort": "14 días gratis, sin plazo mínimo, sin cuota de instalación, cancelable en cualquier momento. Después una suscripción más una comisión reducida sobre las reservas que traemos. Los módulos adicionales — contabilidad ampliada con exportación DATEV, gestión de personal o funciones de hotel — se añaden solo si los necesitas. Crea un alojamiento, conecta tus canales y empieza."
     }
   },
   "benefits": {
@@ -631,13 +631,13 @@
     "preisBanner": {
       "eyebrow": "Precio",
       "heading": "Todo lo que tu alojamiento necesita, en un solo lugar",
-      "text": "30 días gratis. Sin permanencia. Cancela cuando quieras (4 semanas antes de fin de mes).",
+      "text": "14 días gratis. Sin permanencia. Cancela cuando quieras (4 semanas antes de fin de mes).",
       "proMonat": "al mes"
     }
   },
   "trial": {
     "eyebrow": "Prueba gratuita",
-    "heading": "Prueba myNextDays 30 días gratis.",
+    "heading": "Prueba myNextDays 14 días gratis.",
     "sub": "Sin permanencia. Cancela cuando quieras. Solo rellena este breve formulario:",
     "seitenHeading": "Todo lo que tu alojamiento necesita en un solo lugar: más control, menos esfuerzo.",
     "perks": {
@@ -855,15 +855,16 @@
     "impressum": "Aviso legal",
     "cookies": "Política de cookies",
     "avv": "Tratamiento de datos",
-    "kontoLoeschen": "Eliminar cuenta"
+    "kontoLoeschen": "Eliminar cuenta",
+    "newsletterKnopf": "Suscribirse al boletín"
   },
   "legal": {
     "stand": "Última actualización: {datum}"
   },
   "abschluss": {
     "heading": "¿Listo para gestionar tu alojamiento desde un solo lugar?",
-    "sub": "Pruébalo 30 días gratis: sin permanencia, sin cuota de alta y cancela cuando quieras.",
-    "ctaPrimaer": "Prueba 30 días gratis",
+    "sub": "Pruébalo 14 días gratis: sin permanencia, sin cuota de alta y cancela cuando quieras.",
+    "ctaPrimaer": "Prueba 14 días gratis",
     "ctaSekundaer": "Ver precios"
   },
   "chat": {
@@ -902,14 +903,14 @@
   "preise": {
     "meta": {
       "titel": "Precios — un plan, todo incluido | myNextDays",
-      "beschreibung": "Un plan con todas las funciones, según el número de alojamientos. Sin permanencia, sin cuota de alta, 30 días gratis — canales, reserva directa, comunicación con huéspedes y facturación incluidas."
+      "beschreibung": "Un plan con todas las funciones, según el número de alojamientos. Sin permanencia, sin cuota de alta, 14 días gratis — canales, reserva directa, comunicación con huéspedes y facturación incluidas."
     },
     "hero": {
       "eyebrow": "Precios",
       "headlinePre": "Un plan.",
       "headlineHighlight": "Todo incluido.",
       "sub": "Sin rompecabezas de paquetes: todas las funciones están incluidas, tanto si gestionas un apartamento como doce tipos de habitación. Pagas según el número de alojamientos, y cuantos más tengas, más barato sale cada uno.",
-      "testen": "30 días gratis",
+      "testen": "14 días gratis",
       "laufzeit": "Sin permanencia",
       "einrichtung": "Sin cuota de alta",
       "eu": "Alojado en la UE, RGPD"
@@ -925,7 +926,7 @@
       "grundgebuehr": "Cuota base (1.er alojamiento incluido)",
       "weitereObjekte": "{anzahl, plural, =1 {un alojamiento más} other {# alojamientos más}} × {jeObjekt}",
       "netto": "Importes sin IVA. Facturación mensual, cancelable en cualquier momento.",
-      "ctaTesten": "Probar 30 días gratis",
+      "ctaTesten": "Probar 14 días gratis",
       "ctaDemo": "Ver la demo",
       "inklusivTitel": "Incluido en todos los planes",
       "inklusivSub": "Nada que empiece solo en un paquete más caro: este es todo el alcance.",
@@ -985,7 +986,7 @@
       "sub": "Lo que los anfitriones quieren saber antes de cambiar: breve y sin letra pequeña.",
       "laufzeit": {
         "frage": "¿Hay permanencia mínima?",
-        "antwort": "No. La suscripción es mensual y se cancela con cuatro semanas de preaviso a fin de mes. Los primeros 30 días son gratis, sin datos de pago."
+        "antwort": "No. La suscripción es mensual y se puede cancelar con cuatro semanas de antelación a finales de mes. Los primeros 14 días son gratuitos: al inicio, usted introduce sus datos de pago, pero el cargo no se realiza hasta después del período de prueba. Si cancela antes, no paga nada."
       },
       "objektzahl": {
         "frage": "¿Qué pasa si añado alojamientos?",
@@ -1030,7 +1031,7 @@
       "eu": "Alojado en la UE, conforme al RGPD",
       "start": "Lanzamiento el 1 de septiembre de 2026",
       "sprachen": "27 países, 24 idiomas",
-      "ctaTrial": "Probar 30 días gratis",
+      "ctaTrial": "Probar 14 días gratis",
       "ctaKontakt": "Escríbenos"
     },
     "warum": {
@@ -1178,7 +1179,7 @@
   },
   "funktionen": {
     "rahmen": {
-      "ctaTesten": "Prueba 30 días gratis",
+      "ctaTesten": "Prueba 14 días gratis",
       "ctaDemo": "Ver la demo",
       "weiter": "Ver las demás funciones",
       "mehr": "Ver",

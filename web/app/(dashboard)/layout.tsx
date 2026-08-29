@@ -16,6 +16,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { getOnboarding } from "@/lib/onboarding";
 import { PORTAL_ROLLEN } from "@/lib/rollen-guard";
 import { PFAD_HEADER } from "@/lib/demo-cookie";
 import { loginMitZiel } from "@/lib/rueckziel";
@@ -25,6 +26,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 // vorhanden, damit kein toter Code im Bundle landet.
 import { RealtimeDebugPanel } from "@/components/realtime-debug-panel";
 import { DemoBand } from "@/components/demo-band";
+import { TestphaseBand } from "@/components/testphase-band";
 import { Topbar } from "@/components/topbar";
 import { SupportChatButton } from "@/components/support/support-chat-button";
 import { SupportChatProvider } from "@/components/support/support-chat";
@@ -98,6 +100,44 @@ export default async function DashboardLayout({
     capabilities = [];
   }
 
+  // Firmendaten + Abo: ohne beides ist die Oberflaeche eine SACKGASSE.
+  // Ein Objekt laesst sich dann nicht veroeffentlichen (`publish` lehnt mit
+  // 422 ab: kein Abrechnungsprofil, kein Abo), Geld kann nicht ankommen, und
+  // jeder Menuepunkt fuehrt auf eine Seite, an der der Betrieb nichts
+  // ausrichten kann. Statt ihn dort suchen zu lassen, bleibt die Navigation
+  // gesperrt, bis die Einrichtung steht — sichtbar, damit der Umfang der
+  // Software erkennbar bleibt (dieselbe Entscheidung wie beim Vorfuehr-Zugang,
+  // 0408).
+  //
+  // Beides wird SERVERSEITIG gemessen (`/dashboard/onboarding`), nicht aus
+  // einem Flag gelesen: `company_data_set` stand am 29.08.2026 in 4 Betrieben
+  // auf `true`, waehrend es in der ganzen DB genau EIN Abrechnungsprofil gab.
+  //
+  // Nur fuer die Entscheider: staff/cleaner richten nichts ein, ihnen wuerde
+  // eine gesperrte Oberflaeche nur den Weg zu ihrer Arbeit verstellen.
+  //
+  // NIEMALS im Vorfuehr-Zugang: der hat naturgemaess weder Firmendaten noch
+  // Abo, und die neue Regel wuerde ihm die halbe Oberflaeche zusperren, die er
+  // gerade zeigen soll. Die Demo behaelt AUSSCHLIESSLICH ihre eigene Sperre
+  // (`demo-sperre.ts`, unveraendert).
+  let einrichtungOffen = false;
+  // Laeuft die kostenlose Testphase? Kommt aus demselben Abruf — ein zweiter
+  // waere pro Seitenaufruf eine weitere Rundreise fuer eine Zahl, die schon
+  // unterwegs ist. `null` heisst „laeuft keine": das Band erscheint dann gar
+  // nicht, und ein fehlendes Datum bei laufender Testphase zeigt es ohne Tag
+  // statt mit einem gerechneten (Wurzel 4).
+  let testphaseEndet: string | null = null;
+  let inTestphase = false;
+  if (!me?.is_demo && (role === "admin" || role === "co_admin")) {
+    const stand = await getOnboarding();
+    einrichtungOffen =
+      stand.ok && !(stand.data.company_data_set && stand.data.subscription_active);
+    if (stand.ok) {
+      inTestphase = stand.data.in_trial;
+      testphaseEndet = stand.data.trial_ends_at;
+    }
+  }
+
   return (
     <SidebarProvider>
       {/* Live-Chat mit dem Team: liegt im Layout, damit die Unterhaltung beim
@@ -130,11 +170,13 @@ export default async function DashboardLayout({
           accommodationType={accommodationType}
           country={me?.country ?? null}
           istDemo={Boolean(me?.is_demo)}
+          einrichtungOffen={einrichtungOffen}
         />
         <SidebarInset>
           {/* Ueber allem, auch ueber der Topbar: der Besucher soll wissen, wo
               er ist, BEVOR er etwas anklickt (0407). */}
           {me?.is_demo && <DemoBand />}
+          {inTestphase && <TestphaseBand endetAm={testphaseEndet} />}
           <Topbar />
           {/* Inhaltsbereich — hier kommen später KPI-Kacheln & Charts hinein. */}
           <main className="flex min-h-0 min-w-0 flex-1 flex-col p-4 md:p-6">

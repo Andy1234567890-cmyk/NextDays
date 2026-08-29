@@ -72,8 +72,35 @@ class OnboardingStatus(BaseModel):
     # (Fortschritt des Import-Schritts beim Wechselkunden, nicht nur Absicht).
     imported_from_ota: bool = False
     object_created: bool = False
+    # Anzahl der ECHTEN Objekte — ohne das Geruest „Airbnb-Uebernahme laeuft",
+    # das beim Klick auf „Airbnb verbinden" entsteht und nur den Platz freihaelt.
+    # Die Oberflaeche zeigt diese Zahl („n Objekte uebernommen"); rechnete sie
+    # sie selbst aus `/properties` aus, waere das eine zweite Wahrheit, die vom
+    # Server abweicht, sobald sich der Platzhalter aendert (Wurzel 4).
+    object_count: int = 0
     price_set: bool = False
     channels_done: bool = False
+    # Laeuft ein Abo (`tenant_subscription.status` in active/trialing)?
+    # Zusammen mit `company_data_set` entscheidet es, ob die Oberflaeche
+    # ueberhaupt bedienbar ist: ohne Firmendaten und ohne Abo kann der Betrieb
+    # weder veroeffentlichen noch Geld empfangen — dann fuehrt jeder
+    # Menuepunkt in eine Sackgasse.
+    #
+    # Serverseitig GEMESSEN, nicht aus einem Flag: dasselbe Problem wie bei
+    # `company_data_set`, das am 29.08.2026 in 4 Betrieben auf `true` stand,
+    # waehrend es in der ganzen DB genau EIN Abrechnungsprofil gab.
+    subscription_active: bool = False
+    # Laeuft gerade die kostenlose Testphase (Status genau `trialing`)?
+    # Getrennt von `subscription_active`, weil beide verschiedene Fragen
+    # beantworten: „darf der Betrieb arbeiten" (ja, auch im Test) gegenueber
+    # „wurde schon gezahlt" (nein). Der Hinweis im Dashboard haengt an DIESER
+    # Unterscheidung — ohne sie saehe die Testphase aus wie ein bezahltes Abo.
+    in_trial: bool = False
+    # Ende der Testphase, ISO-8601, aus Stripe (`current_period_end` waehrend
+    # `trialing`). None, wenn keine Testphase laeuft ODER Stripe keinen Wert
+    # geliefert hat — dann zeigt die Oberflaeche kein Datum statt eines
+    # gerechneten (Wurzel 4/5b: fremder Zeitpunkt, fremde Quelle).
+    trial_ends_at: str | None = None
     completed: bool = False
 
 

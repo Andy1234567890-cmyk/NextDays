@@ -40,6 +40,9 @@ MIGRATIONEN = (
     # Vertretung (eigene Kategorie: anderer Empfaenger als task_assigned,
     # mit Push, weil eine offene Vertretung heute gebraucht wird).
     "0415_vertretung_benachrichtigung.sql",
+    # Testphase endet (nur E-Mail: drei Tage Vorlauf, SMS waere die falsche
+    # Dringlichkeit).
+    "0488_testphase_einmalig.sql",
 )
 
 

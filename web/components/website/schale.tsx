@@ -27,6 +27,8 @@ import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
+import { HILFE_URL } from "@/lib/marketing-url";
+
 import { KiProvider } from "./ki/ki-context";
 import { MenueSpalte } from "./menue-spalte";
 import { LEISTE_GRUPPEN, REITER_MENUE, type ReiterId } from "./reiter";
@@ -688,7 +690,8 @@ function GrossPanel({
             ist kein Zierrat — es ist der Weg in die Hilfe genau zu dem, was
             gerade offen ist. */}
         <a
-          href="/hilfe"
+          // Marketing-App, nicht diese hier — "/hilfe" waere ein 404.
+          href={HILFE_URL}
           target="_blank"
           rel="noopener noreferrer"
           aria-label={texte.panelHilfe}

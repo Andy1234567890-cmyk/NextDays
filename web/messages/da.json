@@ -26,7 +26,10 @@
       "da": "Dansk",
       "en": "Engelsk"
     },
-    "explain": "Forklaring til {label}"
+    "explain": "Forklaring til {label}",
+    "themeToggle": "Skift design",
+    "themeToggleLight": "Lyst design",
+    "themeToggleDark": "Mørkt design"
   },
   "legal": {
     "agbLinkLabel": "Vilkår og betingelser",
@@ -118,7 +121,8 @@
     },
     "type": {
       "title": "Hvad udlejer du?",
-      "text": "Vælg virksomhedstype — den bestemmer begreber og moduler i dit dashboard."
+      "text": "Vælg virksomhedstype — den bestemmer begreber og moduler i dit dashboard.",
+      "bald": "Igangværende"
     },
     "tax": {
       "title": "Skat & betalinger",
@@ -134,7 +138,7 @@
     },
     "switch": {
       "title": "Importér eksisterende objekter",
-      "intro": "Sådan flytter du dine eksisterende Booking-/Airbnb-objekter til myNextDays — uden dobbeltbookinger.",
+      "intro": "Sådan får du dine eksisterende annoncer til myNextDays – uden dobbeltbookinger.",
       "cutover": {
         "title": "Vigtigt før tilslutningen",
         "a": "Afbryd hver portal fra dit hidtidige system, før du forbinder den her — der må kun være ÉT system, der sender data pr. kanal.",
@@ -147,21 +151,24 @@
         "title": "Opret objekt",
         "text": "Opret ét objekt pr. eksisterende annonce — navn, type og grundpris er nok til at tildele.",
         "count": "{count, plural, =0 {Endnu ingen objekter} one {# objekt} other {# objekter}}",
-        "airbnbHint": "Kommer du fra Airbnb? Så spring dette trin over — dine boliger overføres automatisk, når du forbinder Airbnb."
+        "airbnbHint": "Kommer du fra Airbnb? Så spring dette trin over — dine boliger overføres automatisk, når du forbinder Airbnb.",
+        "zuordnenHint": "For Booking.com og andre portaler skal du bruge denne ejendom: Ved tilslutning tildeles portalens værelser 1:1 til dine ejendomme. Kun hos Airbnb er dette trin ikke nødvendigt – der oprettes annoncerne ved tilslutning."
       },
       "step2": {
         "title": "Forbind og tildel portal",
         "text": "Forbind Booking, Airbnb m.fl., og tildel portalernes værelser 1:1 til dine objekter. Bookinger og tilgængelighed følger derefter automatisk.",
         "connect": "Tilslut portal",
         "connectMore": "Tilslut endnu en portal",
-        "alreadyConnected": "En portal er allerede forbundet, og dine objekter er overført — du behøver ikke forbinde igen her. Brug kun „Forbind endnu en portal“ til en YDERLIGERE portal (f.eks. Booking)."
+        "alreadyConnected": "En portal er allerede forbundet, og dine objekter er overført — du behøver ikke forbinde igen her. Brug kun „Forbind endnu en portal“ til en YDERLIGERE portal (f.eks. Booking).",
+        "connectNamed": "Forbind {portal}",
+        "textNamed": "Forbind {portale}, og match portalværelserne 1:1 med dine ejendomme. Bookinger og tilgængelighed opdateres derefter automatisk."
       },
       "pull": {
-        "button": "Hent objekter fra portalen",
         "result": "{count, plural, =0 {Ingen nye objekter fundet} one {# objekt overtaget} other {# objekter overtaget}}"
       },
       "finishCta": "Afslut import",
       "finishHint": "Bekræft først bemærkningen ovenfor, og opret mindst ét objekt.",
+      "finishHintObjekt": "Opret først mindst ét objekt – uden et objekt er der intet at administrere. Lodgify-importen er valgfri og ikke et must.",
       "bookings": {
         "title": "Indlæs eksisterende bookinger",
         "text": "Hent reservationerne fra dine forbundne portaler ind i din kalender.",
@@ -193,7 +200,32 @@
       },
       "finish": {
         "notRegistered": "Mindst ét objekt skal være overført til bookingportalerne, før du afslutter onboardingen. Forbind en portal i trin 2 — objektet overføres automatisk."
+      },
+      "nav": {
+        "zurueck": "Tilbage",
+        "weiter": "Næste",
+        "zaehler": "Trin {aktuell} af {gesamt}"
+      },
+      "auswahl": {
+        "title": "På hvilke portaler sælger du i dag?",
+        "text": "Vi tilpasser importen derefter. Du kan til enhver tid tilslutte flere portaler senere.",
+        "keine": "Jeg sælger endnu ikke på nogen portal"
       }
+    },
+    "spaeterEinrichten": "Konfigurer senere",
+    "schrittVon": "Trin {aktuell} af {gesamt}",
+    "claim1": "Alle portaler, én kalender — og dine ejendomme følger med.",
+    "claim2": "Priser, belægning og beskeder samlet ét sted.",
+    "claim3": "Mere tid til gæsterne, mindre til administrationen.",
+    "usp": {
+      "portale": "Alle store portaler tilsluttet",
+      "kalender": "Én kalender for alle portaler",
+      "doppelt": "Vi blokerer bookede nætter med det samme overalt",
+      "import": "Vi importerer dine eksisterende annoncer",
+      "zahlung": "Inklusive betalinger og udbetalinger",
+      "preise": "Administrer priser pr. sæson og nat",
+      "posteingang": "Gæstebeskeder fra alle portaler i én indbakke",
+      "app": "Alt er også i appen"
     }
   },
   "nav": {
@@ -6206,6 +6238,7 @@
       "untertitelKanaele": "Vælg, hvor dette objekt skal sælges.",
       "untertitelPruefen": "Kontrollér, hvad der ændrer sig på portalerne.",
       "nichtVerfuegbar": "Ikke tilgængelig i øjeblikket",
+      "portalVerbinden": "Forbind {portal} nu",
       "weiter": "Videre",
       "abbrechen": "Annullér",
       "jetztVeroeffentlichen": "Udgiv nu",
@@ -9933,7 +9966,11 @@
       "statusPastDue": "Betaling mangler",
       "statusCanceled": "Opsagt",
       "statusUnpaid": "Ubetalt",
-      "statusIncomplete": "Ufuldstændig"
+      "statusIncomplete": "Ufuldstændig",
+      "trialEnds": "Testperioden slutter den",
+      "trialBannerTitel": "Gratis prøveperiode",
+      "trialBannerText": "Din prøveperiode slutter den {datum}. Herefter fortsætter dit abonnement automatisk.",
+      "trialBannerKnopf": "Se plan"
     },
     "users": {
       "noAccess": "Ingen adgang",
@@ -11531,6 +11568,74 @@
       "subtitle": "Faktisk modtagne penge – beregnet ud fra registrerede delbetalinger, ikke udestående fordringer.",
       "title": "Balance statistik",
       "to": "Til"
+    }
+  },
+  "startbahn": {
+    "titel": "Kom i gang",
+    "fortschritt": "{fertig} af {gesamt} udført",
+    "gruppeZaehler": "{fertig} / {gesamt} udført",
+    "dauer": "ca. {minuten} minutter",
+    "gruppe": {
+      "kanaele": "Opsæt portaler",
+      "verkaufsfertig": "Gør ejendomme klar til salg",
+      "grundlagen": "Grundlæggende"
+    },
+    "schritt": {
+      "konto": {
+        "titel": "Konto oprettet",
+        "text": "Din virksomhed er oprettet."
+      },
+      "firma": {
+        "titel": "Indtast virksomhedsdata",
+        "text": "Adresse, skattenummer og IBAN — portalerne kræver dem, og uden IBAN modtager du ingen penge.",
+        "aktion": "Til virksomhedsdata"
+      },
+      "verbinden": {
+        "titel": "Forbind portal",
+        "text": "Forbind Airbnb, Booking eller Expedia, så bookinger og kalendere samles.",
+        "aktion": "Forbind portal"
+      },
+      "objekteHolen": {
+        "titel": "Hent ejendomme fra portalen",
+        "text": "Vi opretter dine annoncer som ejendomme — du behøver ikke at indtaste noget. Bemærk: Annoncer, der er bundet til anden software, overføres ikke.",
+        "gesperrt": "Forbind først en portal.",
+        "aktion": "Hent ejendomme"
+      },
+      "erstesObjekt": {
+        "titel": "Opret første ejendom",
+        "text": "Opret din første ejendom — feriebolig eller værelsestype.",
+        "aktion": "Opret ejendom"
+      },
+      "inhalteHolen": {
+        "titel": "Overfør faciliteter og regler",
+        "text": "Værelser, senge, afbestillingsregler, faciliteter og gebyrer er allerede på portalen — vi henter dem for alle ejendomme på én gang.",
+        "gesperrt": "Hent først dine ejendomme fra portalen.",
+        "aktion": "Overfør indhold"
+      },
+      "preise": {
+        "titel": "Fastlæg priser",
+        "text": "Uden pris kan ingen portal sælge din ejendom.",
+        "gesperrt": "Du skal først have en ejendom.",
+        "aktion": "Fastlæg priser"
+      },
+      "sperrtermine": {
+        "titel": "Indtast spærredatoer",
+        "text": "Optagede perioder overføres IKKE ved import. Indtast dem, før du sælger — ellers bliver en nat booket to gange.",
+        "gesperrt": "Du skal først have en ejendom.",
+        "aktion": "Til kalenderen"
+      },
+      "veroeffentlichen": {
+        "titel": "Udgiv ejendomme",
+        "text": "Alt kontrolleret? Så frigiv dine ejendomme på portalerne og på markedspladsen.",
+        "gesperrt": "Først når ejendom og priser er fastlagt — ellers sælger du noget, der endnu ikke er færdigt.",
+        "aktion": "Udgiv"
+      },
+      "kanaele": {
+        "titel": "Vælg salgskanaler",
+        "text": "Beslut, via hvilke portaler og om der skal sælges via markedspladsen.",
+        "gesperrt": "Du skal først have en ejendom.",
+        "aktion": "Til kanalerne"
+      }
     }
   }
 }

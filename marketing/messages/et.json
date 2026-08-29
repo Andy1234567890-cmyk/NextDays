@@ -424,8 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – Platvorm puhkemajutuse väljaüürijatele",
-    "description": "Platvorm hotellidele, agentuuridele ja puhkemajutuse väljaüürijatele: channel manager, kalender, otsebroneering, külalissuhtlus ja arveldus ühes kohas. Ehitatud Taanis, majutatud EL-is. Proovi 30 päeva tasuta.",
-    "descriptionMitPreis": "Platvorm hotellidele, agentuuridele ja puhkemajutuse väljaüürijatele: channel manager, kalender, otsebroneering, külalissuhtlus ja arveldus ühes kohas. Ehitatud Taanis, majutatud EL-is. Alates {preis} kuus. Proovi 30 päeva tasuta."
+    "description": "Platvorm hotellidele, agentuuridele ja puhkemajutuse väljaüürijatele: channel manager, kalender, otsebroneering, külalissuhtlus ja arveldus ühes kohas. Ehitatud Taanis, majutatud EL-is. Proovi 14 päeva tasuta.",
+    "descriptionMitPreis": "Platvorm hotellidele, agentuuridele ja puhkemajutuse väljaüürijatele: channel manager, kalender, otsebroneering, külalissuhtlus ja arveldus ühes kohas. Ehitatud Taanis, majutatud EL-is. Alates {preis} kuus. Proovi 14 päeva tasuta."
   },
   "nav": {
     "funktionen": "Funktsioonid",
@@ -463,7 +463,7 @@
     "headlineHighlight": "broneeringuid",
     "headlinePost": "vähem vaeva.",
     "subline": "Platvorm hotellidele, agentuuridele ja puhkemajutuse väljaüürijatele: channel manager, kalender, otsebroneering, külalissuhtlus ja arveldus ühes kohas – ehitatud väljaüürijate poolt, kes tunnevad igapäevatööd.",
-    "ctaTrial": "Proovi 30 päeva tasuta",
+    "ctaTrial": "Proovi 14 päeva tasuta",
     "ctaDemo": "Vaata demo",
     "kanaeleLabel": "Ühendatud suurte broneerimisplatvormidega",
     "eyebrow": "Platvorm puhkemajutuse väljaüürijatele",
@@ -609,7 +609,7 @@
     },
     "preis": {
       "frage": "Mis myNextDays kulutab ja kuidas alustan?",
-      "antwort": "30 päeva tasuta, ilma miinimumtähtaega, ilma seadistustasu, lõpetatav igal ajal. Seejärel tellimus pluss väike komisjon meie toodud broneeringutelt. Lisamoodulid — laiendatud raamatupidamine DATEV-ekspordiga, töötajate haldus või hotellifunktsioonid — lisatakse ainult siis, kui neid vajad. Loo objekt, ühenda kanalid, alusta."
+      "antwort": "14 päeva tasuta, ilma miinimumtähtaega, ilma seadistustasu, lõpetatav igal ajal. Seejärel tellimus pluss väike komisjon meie toodud broneeringutelt. Lisamoodulid — laiendatud raamatupidamine DATEV-ekspordiga, töötajate haldus või hotellifunktsioonid — lisatakse ainult siis, kui neid vajad. Loo objekt, ühenda kanalid, alusta."
     }
   },
   "benefits": {
@@ -631,13 +631,13 @@
     "preisBanner": {
       "eyebrow": "Hind",
       "heading": "Kõik sinu majutusettevõtte jaoks ühes kohas",
-      "text": "30 päeva tasuta. Ilma tähtajata. Lõpetatav igal ajal (4 nädalat kuu lõpuni).",
+      "text": "14 päeva tasuta. Ilma tähtajata. Lõpetatav igal ajal (4 nädalat kuu lõpuni).",
       "proMonat": "kuus"
     }
   },
   "trial": {
     "eyebrow": "Proovi tasuta",
-    "heading": "Proovi myNextDaysi 30 päeva tasuta.",
+    "heading": "Proovi myNextDaysi 14 päeva tasuta.",
     "sub": "Ilma tähtajata. Lõpetatav igal ajal. Täida lihtsalt see lühike vorm:",
     "seitenHeading": "Kõik sinu majutusettevõtte jaoks ühes kohas – rohkem kontrolli, vähem vaeva.",
     "perks": {
@@ -855,15 +855,16 @@
     "impressum": "Õiguslik teave",
     "cookies": "Küpsiste poliitika",
     "avv": "Andmete töötlemine",
-    "kontoLoeschen": "Kustuta konto"
+    "kontoLoeschen": "Kustuta konto",
+    "newsletterKnopf": "Liitu uudiskirjaga"
   },
   "legal": {
     "stand": "Viimati uuendatud: {datum}"
   },
   "abschluss": {
     "heading": "Valmis oma majutusettevõtet ühest kohast juhtima?",
-    "sub": "Proovi 30 päeva tasuta – ilma tähtajata, ilma seadistustasuta, lõpetatav igal ajal.",
-    "ctaPrimaer": "Proovi 30 päeva tasuta",
+    "sub": "Proovi 14 päeva tasuta – ilma tähtajata, ilma seadistustasuta, lõpetatav igal ajal.",
+    "ctaPrimaer": "Proovi 14 päeva tasuta",
     "ctaSekundaer": "Vaata hindu"
   },
   "chat": {
@@ -902,14 +903,14 @@
   "preise": {
     "meta": {
       "titel": "Hinnad — üks pakett, kõik sees | myNextDays",
-      "beschreibung": "Üks pakett kogu funktsionaalsusega, hind objektide arvu järgi. Ilma minimaalse tähtajata, ilma seadistustasuta, 30 päeva tasuta — kanalid, otsebroneeringud, külalissuhtlus ja arveldus sees."
+      "beschreibung": "Üks pakett kogu funktsionaalsusega, hind objektide arvu järgi. Ilma minimaalse tähtajata, ilma seadistustasuta, 14 päeva tasuta — kanalid, otsebroneeringud, külalissuhtlus ja arveldus sees."
     },
     "hero": {
       "eyebrow": "Hinnad",
       "headlinePre": "Üks pakett.",
       "headlineHighlight": "Kõik sees.",
       "sub": "Ei mingit pakettide mõistatust: iga funktsioon on sees, olgu sul üks puhkemaja või kaksteist toatüüpi. Maksad objektide arvu järgi — ja mida rohkem neid on, seda odavamaks iga objekt läheb.",
-      "testen": "30 päeva tasuta",
+      "testen": "14 päeva tasuta",
       "laufzeit": "Ilma minimaalse tähtajata",
       "einrichtung": "Ilma seadistustasuta",
       "eu": "Majutatud ELis, GDPR"
@@ -925,7 +926,7 @@
       "grundgebuehr": "Põhitasu (sh 1. objekt)",
       "weitereObjekte": "{anzahl, plural, =1 {üks objekt lisaks} other {# objekti lisaks}} × {jeObjekt}",
       "netto": "Kõik summad käibemaksuta. Kuine arveldus, igal ajal lõpetatav.",
-      "ctaTesten": "Proovi 30 päeva tasuta",
+      "ctaTesten": "Proovi 14 päeva tasuta",
       "ctaDemo": "Vaata demo",
       "inklusivTitel": "Sisaldub igas paketis",
       "inklusivSub": "Midagi ei ole peidetud kallimasse paketti — see ongi kogu maht.",
@@ -985,7 +986,7 @@
       "sub": "Mida majutajad tahavad enne vahetust teada — lühidalt ja ilma peenikese kirjata.",
       "laufzeit": {
         "frage": "Kas on minimaalne tähtaeg?",
-        "antwort": "Ei. Tellimus kestab kuu kaupa ja seda saab lõpetada neljanädalase etteteatamisega kuu lõpuks. Esimesed 30 päeva on tasuta, ilma makseandmeteta."
+        "antwort": "Ei. Tellimus on igakuine ja seda saab tühistada nelja nädala etteteatamisega kuu lõpuks. Esimesed 14 päeva on tasuta: makseandmed sisestatakse alguses, kuid arve esitatakse alles pärast prooviperioodi lõppu. Kui tühistate enne seda, ei maksa te midagi."
       },
       "objektzahl": {
         "frage": "Mis juhtub, kui lisan objekte?",
@@ -1030,7 +1031,7 @@
       "eu": "Majutatud ELis, GDPR-iga kooskõlas",
       "start": "Algus 1. septembril 2026",
       "sprachen": "27 riiki, 24 keelt",
-      "ctaTrial": "Proovi 30 päeva tasuta",
+      "ctaTrial": "Proovi 14 päeva tasuta",
       "ctaKontakt": "Kirjuta meile"
     },
     "warum": {
@@ -1178,7 +1179,7 @@
   },
   "funktionen": {
     "rahmen": {
-      "ctaTesten": "Proovi 30 päeva tasuta",
+      "ctaTesten": "Proovi 14 päeva tasuta",
       "ctaDemo": "Vaata demo",
       "weiter": "Edasi teiste funktsioonide juurde",
       "mehr": "Vaata",

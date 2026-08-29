@@ -127,3 +127,58 @@ export function channelLabelLoose(name: string | null | undefined): string {
   if (!name) return "";
   return LABEL_NORMALISIERT[name.toLowerCase().replace(/[^a-z0-9]/g, "")] ?? name;
 }
+
+/* ------------------------------------------------------------------ */
+/* Markenfarben                                                        */
+/* ------------------------------------------------------------------ */
+
+/** Die MARKENFARBE eines Portals (offizielle Brand-Farbe), und dazu die
+ *  Bildmarke in der Variante, die AUF dieser Farbe funktioniert.
+ *
+ *  Warum das hier steht und nicht an der Schaltfläche: dieselben zwei Angaben
+ *  wurden schon an zwei Stellen gebraucht (Connect-Knopf, USP-Miniaturen) und
+ *  drohten damit die dritte Kopie zu werden — genau das Muster, das Wurzel 4
+ *  verbietet. Die Logo-Zuordnung ist die vorhandene Wahrheit über Portale, also
+ *  gehören sie daneben.
+ *
+ *  `mark` ist bewusst die BILDMARKE ohne Schriftzug: neben einer Beschriftung
+ *  „Airbnb verbinden" stünde der Markenname sonst zweimal. Sie ist in der Datei
+ *  WEISS eingefärbt, weil sie immer auf der Markenfarbe sitzt — `currentColor`
+ *  wäre hier eine Falle: ein per `<img>` geladenes SVG rendert als eigenes
+ *  Dokument ohne den Farb-Kontext der Seite und fiele auf Schwarz zurück.
+ *
+ *  Nur Portale mit einer eindeutigen, offiziellen Markenfarbe stehen hier. Für
+ *  alle anderen gibt es KEINEN Eintrag und die Oberfläche bleibt bei ihrer
+ *  neutralen Gestalt — nie eine geratene Farbe (Wurzel 4). */
+export const CHANNEL_BRAND: Record<
+  string,
+  { farbe: string; text: string; mark: string }
+> = {
+  // Airbnb „Rausch". Der Wert steht NICHT hier, sondern kommt aus
+  // `--channel-airbnb` (globals.css) — dieselbe Farbe faerbt bereits die
+  // Airbnb-Balken im Kalender, und zwei Stellen mit demselben Rot laufen
+  // frueher oder spaeter auseinander. `var(...)` funktioniert ueberall dort,
+  // wo ein CSS-Farbwert erwartet wird, also auch im `style`-Attribut.
+  AirBNB: {
+    farbe: "var(--channel-airbnb)",
+    text: "#FFFFFF",
+    mark: "/channels/airbnb-mark-weiss.svg",
+  },
+  // Booking.com steht bewusst NICHT hier, obwohl seine Markenfarbe (#003580)
+  // bekannt ist: das vorliegende Logo ist mehrfarbig und traegt selbst ein
+  // dunkles Blau (#273b7d), das auf blauem Grund verschwindet. Ein Knopf, auf
+  // dem die Marke unlesbar wird, ist schlechter als der neutrale. Sobald eine
+  // einfarbige Bildmarke vorliegt, kommt der Eintrag dazu — bis dahin lieber
+  // kein Eintrag als ein falscher (Wurzel 4).
+};
+
+/** Markenfarbe + passende Bildmarke eines Portals, oder `null`.
+ *
+ *  `null` heißt „für dieses Portal ist keine Markenfarbe hinterlegt" — die
+ *  Oberfläche bleibt dann bei ihrer neutralen Gestalt. Kein Ersatzwert. */
+export function channelBrand(
+  code: string | null | undefined,
+): { farbe: string; text: string; mark: string } | null {
+  if (!code) return null;
+  return CHANNEL_BRAND[code] ?? null;
+}

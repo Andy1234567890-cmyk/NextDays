@@ -1109,3 +1109,34 @@ class PortalRatenAuswahlResponse(BaseModel):
 
     property_id: str
     portals: list[PortalRatenAuswahlPortal] = Field(default_factory=list)
+
+
+class OAuthRuecksprungRequest(BaseModel):
+    """Der Ruecksprung von Airbnb, wie Channex ihn an die `redirect_uri` haengt.
+
+    Channex haengt bei Erfolg `?success=true&channel_id=<uuid>&token=<token>`
+    an, bei Fehlschlag `?success=false` an die `failure_redirect_uri`
+    (OpenAPI-Spec `Meta.AirbnbConnectionLinkInput`). Der Link gilt zwei Stunden.
+
+    ERST mit diesem Ruecksprung darf etwas entstehen — Vorgabe des Betreibers
+    vom 29.08.2026: „erst wenn eine verbindung succee da ist darf bei channex
+    eine Property entstehen". Vorher wurde beim blossen Klick ein Objekt, eine
+    Channex-Property, ein Konto und eine Verbindungszeile angelegt; brach der
+    Kunde ab, blieb alles davon liegen.
+    """
+
+    channel_id: str
+    """Der Kanal, den CHANNEX nach der Autorisierung angelegt hat."""
+    portal_code: str = "AirBNB"
+    token: str | None = None
+    """Unser eigenes Korrelations-Token (`konto_token`), falls gesetzt — bei
+    einer Agentur mit mehreren Zugaengen die einzige Zuordnung."""
+
+
+class OAuthRuecksprungResponse(BaseModel):
+    account_id: str
+    channel_id: str
+    host_id: str | None = None
+    """Airbnb-Host-ID aus den Tokens des Kanals. `None` = Channex hat den Kanal
+    angelegt, die Tokens sind aber noch nicht da."""
+    verbunden: bool

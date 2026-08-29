@@ -424,8 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – platforma brīvdienu mājokļu iznomātājiem",
-    "description": "Platforma viesnīcām, aģentūrām un brīvdienu mājokļu iznomātājiem: kanālu pārvaldnieks, kalendārs, tiešās rezervācijas, saziņa ar viesiem un norēķini vienuviet. Izstrādāts Dānijā, mitināts ES. 30 dienas bez maksas.",
-    "descriptionMitPreis": "Platforma viesnīcām, aģentūrām un brīvdienu mājokļu iznomātājiem: kanālu pārvaldnieks, kalendārs, tiešās rezervācijas, saziņa ar viesiem un norēķini vienuviet. Izstrādāts Dānijā, mitināts ES. No {preis} mēnesī. 30 dienas bez maksas."
+    "description": "Platforma viesnīcām, aģentūrām un brīvdienu mājokļu iznomātājiem: kanālu pārvaldnieks, kalendārs, tiešās rezervācijas, saziņa ar viesiem un norēķini vienuviet. Izstrādāts Dānijā, mitināts ES. 14 dienas bez maksas.",
+    "descriptionMitPreis": "Platforma viesnīcām, aģentūrām un brīvdienu mājokļu iznomātājiem: kanālu pārvaldnieks, kalendārs, tiešās rezervācijas, saziņa ar viesiem un norēķini vienuviet. Izstrādāts Dānijā, mitināts ES. No {preis} mēnesī. 14 dienas bez maksas."
   },
   "nav": {
     "funktionen": "Funkcijas",
@@ -463,7 +463,7 @@
     "headlineHighlight": "rezervāciju",
     "headlinePost": "mazāk darba.",
     "subline": "Platforma viesnīcām, aģentūrām un brīvdienu mājokļu iznomātājiem: kanālu pārvaldnieks, kalendārs, tiešās rezervācijas, saziņa ar viesiem un norēķini vienuviet – veidota iznomātājiem, kuri pārzina ikdienu.",
-    "ctaTrial": "30 dienas bez maksas",
+    "ctaTrial": "14 dienas bez maksas",
     "ctaDemo": "Skatiet demonstrāciju",
     "kanaeleLabel": "Savienots ar lielākajām rezervāciju platformām",
     "eyebrow": "Platforma brīvdienu mājokļu iznomātājiem",
@@ -609,7 +609,7 @@
     },
     "preis": {
       "frage": "Cik maksā myNextDays un kā sākt?",
-      "antwort": "30 dienas bez maksas, bez minimālā termiņa, bez ieviešanas maksas, atteikties var jebkurā laikā. Pēc tam abonements plus neliela komisija par rezervācijām, ko atvedam. Papildmoduļus — paplašinātu grāmatvedību ar DATEV eksportu, darbinieku pārvaldību vai viesnīcu funkcijas — pievieno tikai tad, ja tie vajadzīgi. Izveido objektu, pieslēdz kanālus, sāc."
+      "antwort": "14 dienas bez maksas, bez minimālā termiņa, bez ieviešanas maksas, atteikties var jebkurā laikā. Pēc tam abonements plus neliela komisija par rezervācijām, ko atvedam. Papildmoduļus — paplašinātu grāmatvedību ar DATEV eksportu, darbinieku pārvaldību vai viesnīcu funkcijas — pievieno tikai tad, ja tie vajadzīgi. Izveido objektu, pieslēdz kanālus, sāc."
     }
   },
   "benefits": {
@@ -631,13 +631,13 @@
     "preisBanner": {
       "eyebrow": "Cena",
       "heading": "Viss jūsu naktsmītnei vienuviet",
-      "text": "30 dienas bez maksas. Bez minimālā termiņa. Atteikšanās jebkurā brīdī (4 nedēļas līdz mēneša beigām).",
+      "text": "14 dienas bez maksas. Bez minimālā termiņa. Atteikšanās jebkurā brīdī (4 nedēļas līdz mēneša beigām).",
       "proMonat": "mēnesī"
     }
   },
   "trial": {
     "eyebrow": "Bezmaksas izmēģinājums",
-    "heading": "Izmēģiniet myNextDays 30 dienas bez maksas.",
+    "heading": "Izmēģiniet myNextDays 14 dienas bez maksas.",
     "sub": "Bez minimālā termiņa. Atteikšanās jebkurā brīdī. Vienkārši aizpildiet šo īso veidlapu:",
     "seitenHeading": "Viss jūsu naktsmītnei vienuviet – vairāk kontroles, mazāk darba.",
     "perks": {
@@ -855,15 +855,16 @@
     "impressum": "Juridiskā informācija",
     "cookies": "Sīkdatņu politika",
     "avv": "Datu apstrāde",
-    "kontoLoeschen": "Dzēst kontu"
+    "kontoLoeschen": "Dzēst kontu",
+    "newsletterKnopf": "Pieteikties jaunumiem"
   },
   "legal": {
     "stand": "Redakcija: {datum}"
   },
   "abschluss": {
     "heading": "Vai esat gatavi vadīt savu naktsmītni no vienas vietas?",
-    "sub": "30 dienas bez maksas — bez minimālā termiņa, bez uzstādīšanas maksas, atteikšanās jebkurā brīdī.",
-    "ctaPrimaer": "30 dienas bez maksas",
+    "sub": "14 dienas bez maksas — bez minimālā termiņa, bez uzstādīšanas maksas, atteikšanās jebkurā brīdī.",
+    "ctaPrimaer": "14 dienas bez maksas",
     "ctaSekundaer": "Skatīt cenas"
   },
   "chat": {
@@ -902,14 +903,14 @@
   "preise": {
     "meta": {
       "titel": "Cenas — viens plāns, viss iekļauts | myNextDays",
-      "beschreibung": "Viens plāns ar pilnu funkciju klāstu, maksa pēc objektu skaita. Bez minimālā termiņa, bez uzstādīšanas maksas, 30 dienas bez maksas — kanāli, tiešās rezervācijas, saziņa ar viesiem un norēķini iekļauti."
+      "beschreibung": "Viens plāns ar pilnu funkciju klāstu, maksa pēc objektu skaita. Bez minimālā termiņa, bez uzstādīšanas maksas, 14 dienas bez maksas — kanāli, tiešās rezervācijas, saziņa ar viesiem un norēķini iekļauti."
     },
     "hero": {
       "eyebrow": "Cenas",
       "headlinePre": "Viens plāns.",
       "headlineHighlight": "Viss iekļauts.",
       "sub": "Nekādu pakešu mīklu: katra funkcija ir iekļauta — vai tu pārvaldi vienu brīvdienu māju vai divpadsmit numuru tipus. Maksā pēc objektu skaita, un jo vairāk to ir, jo lētāks kļūst katrs.",
-      "testen": "30 dienas bez maksas",
+      "testen": "14 dienas bez maksas",
       "laufzeit": "Bez minimālā termiņa",
       "einrichtung": "Bez uzstādīšanas maksas",
       "eu": "Mitināts ES, GDPR"
@@ -925,7 +926,7 @@
       "grundgebuehr": "Pamatmaksa (ieskaitot 1. objektu)",
       "weitereObjekte": "{anzahl, plural, zero {# objektu papildus} =1 {viens objekts papildus} other {# objekti papildus}} × {jeObjekt}",
       "netto": "Visas summas bez PVN. Ikmēneša norēķini, atteikties var jebkurā brīdī.",
-      "ctaTesten": "Izmēģini 30 dienas bez maksas",
+      "ctaTesten": "Izmēģini 14 dienas bez maksas",
       "ctaDemo": "Skatīt demo",
       "inklusivTitel": "Iekļauts katrā plānā",
       "inklusivSub": "Nekā, kas sāktos tikai dārgākā paketē — šis ir viss apjoms.",
@@ -985,7 +986,7 @@
       "sub": "Ko izīrētāji vēlas zināt pirms maiņas — īsi un bez sīkā druka.",
       "laufzeit": {
         "frage": "Vai ir minimālais termiņš?",
-        "antwort": "Nē. Abonements darbojas pa mēnesim un to var izbeigt ar četru nedēļu brīdinājumu uz mēneša beigām. Pirmās 30 dienas ir bez maksas, bez maksājumu datiem."
+        "antwort": "Nē. Abonements ir ikmēneša un to var atcelt katra mēneša beigās ar četru nedēļu iepriekšēju paziņojumu. Pirmās 14 dienas ir bezmaksas: sākotnēji jūs ievadāt savus maksājuma datus, taču maksājums tiks veikts tikai pēc testa perioda beigām. Ja atcelsiet pirms tam, jums nekas nebūs jāmaksā."
       },
       "objektzahl": {
         "frage": "Kas notiek, kad pievienoju objektus?",
@@ -1030,7 +1031,7 @@
       "eu": "Mitināts ES, atbilst VDAR",
       "start": "Sākums 2026. gada 1. septembrī",
       "sprachen": "27 valstis, 24 valodas",
-      "ctaTrial": "Izmēģināt 30 dienas bez maksas",
+      "ctaTrial": "Izmēģināt 14 dienas bez maksas",
       "ctaKontakt": "Rakstiet mums"
     },
     "warum": {
@@ -1178,7 +1179,7 @@
   },
   "funktionen": {
     "rahmen": {
-      "ctaTesten": "Izmēģini 30 dienas bez maksas",
+      "ctaTesten": "Izmēģini 14 dienas bez maksas",
       "ctaDemo": "Skatīt demo",
       "weiter": "Tālāk pie citām funkcijām",
       "mehr": "Skatīt",

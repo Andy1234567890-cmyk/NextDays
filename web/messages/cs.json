@@ -26,7 +26,10 @@
       "da": "Dánština",
       "en": "Angličtina"
     },
-    "explain": "Vysvětlení k {label}"
+    "explain": "Vysvětlení k {label}",
+    "themeToggle": "Změnit design",
+    "themeToggleLight": "Světlý design",
+    "themeToggleDark": "Tmavý design"
   },
   "legal": {
     "agbLinkLabel": "VOP",
@@ -118,7 +121,8 @@
     },
     "type": {
       "title": "Co pronajímáte?",
-      "text": "Zvolte typ provozu — určuje pojmy a moduly ve vašem přehledu."
+      "text": "Zvolte typ provozu — určuje pojmy a moduly ve vašem přehledu.",
+      "bald": "Probíhá"
     },
     "tax": {
       "title": "Daně a platby",
@@ -134,7 +138,7 @@
     },
     "switch": {
       "title": "Import existujících objektů",
-      "intro": "Takto převedete své existující objekty z Bookingu/Airbnb do myNextDays — bez dvojích rezervací.",
+      "intro": "Jak přenést stávající nabídky na myNextDays – bez dvojitých rezervací.",
       "cutover": {
         "title": "Důležité před připojením",
         "a": "Každý portál odpojte od svého dosavadního systému, než ho propojíte zde — na jeden kanál smí odesílat data vždy jen JEDEN systém.",
@@ -147,21 +151,24 @@
         "title": "Vytvořit objekt",
         "text": "Pro každou existující inzerci vytvořte jeden objekt — k přiřazení stačí název, druh a základní cena.",
         "count": "{count, plural, =0 {Zatím žádné objekty} one {# objekt} few {# objekty} many {# objektu} other {# objektů}}",
-        "airbnbHint": "Přecházíte z Airbnb? Tento krok přeskočte — vaše objekty se převedou automaticky při propojení s Airbnb."
+        "airbnbHint": "Přecházíte z Airbnb? Tento krok přeskočte — vaše objekty se převedou automaticky při propojení s Airbnb.",
+        "zuordnenHint": "Pro Booking.com a další portály potřebujete tento objekt: Při připojování jsou pokoje portálu přiřazeny 1:1 k vašim objektům. Pouze u Airbnb tento krok odpadá – tam se inzeráty připojují s."
       },
       "step2": {
         "title": "Propojení a přiřazení portálu",
         "text": "Propojte Booking, Airbnb a další a přiřaďte pokoje portálů 1:1 ke svým objektům. Rezervace a dostupnost pak přicházejí automaticky.",
         "connect": "Připojit portál",
         "connectMore": "Připojit další portál",
-        "alreadyConnected": "Jeden portál je už propojen a vaše objekty jsou přeneseny — zde nemusíte nic propojovat znovu. Volbu „Propojit další portál“ použijte jen pro DALŠÍ portál (např. Booking)."
+        "alreadyConnected": "Jeden portál je už propojen a vaše objekty jsou přeneseny — zde nemusíte nic propojovat znovu. Volbu „Propojit další portál“ použijte jen pro DALŠÍ portál (např. Booking).",
+        "connectNamed": "Připojit {portal}",
+        "textNamed": "Propojte {portale} a přiřaďte pokoje portálu 1:1 k vašim objektům. Rezervace a dostupnost se poté automaticky synchronizují."
       },
       "pull": {
-        "button": "Načíst objekty z portálu",
         "result": "{count, plural, =0 {Nenalezeny žádné nové objekty} one {# objekt převzat} few {# objekty převzaty} many {# objektu převzato} other {# objektů převzato}}"
       },
       "finishCta": "Dokončit import",
       "finishHint": "Nejprve prosím potvrďte pokyn výše a vytvořte alespoň jeden objekt.",
+      "finishHintObjekt": "Nejprve vytvořte alespoň jeden objekt – bez objektu není co spravovat. Import Lodgify je volitelný a není povinný.",
       "bookings": {
         "title": "Načtení existujících rezervací",
         "text": "Načtěte si rezervace ze svých propojených portálů do kalendáře.",
@@ -193,7 +200,32 @@
       },
       "finish": {
         "notRegistered": "Než dokončíte úvodní nastavení, musí být na rezervační portály přenesen alespoň jeden objekt. Propojte portál v kroku 2 — objekt se při tom přenese automaticky."
+      },
+      "nav": {
+        "zurueck": "Zpět",
+        "weiter": "Dále",
+        "zaehler": "Krok {aktuell} z {gesamt}"
+      },
+      "auswahl": {
+        "title": "Na kterých portálech dnes prodáváte?",
+        "text": "Import na to zaměříme. Další portály můžete kdykoli připojit později.",
+        "keine": "Zatím neprodávám na žádném portálu"
       }
+    },
+    "spaeterEinrichten": "Nastavit později",
+    "schrittVon": "Krok {aktuell} z {gesamt}",
+    "claim1": "Všechny portály, jeden kalendář – a vaše objekty se přenesou.",
+    "claim2": "Ceny, obsazenost a zprávy na jednom místě.",
+    "claim3": "Více času pro hosty, méně pro správu.",
+    "usp": {
+      "portale": "Všechny hlavní portály propojeny",
+      "kalender": "Jeden kalendář pro všechny portály",
+      "doppelt": "Obsazené noci okamžitě blokujeme všude",
+      "import": "Převedeme vaše stávající inzeráty",
+      "zahlung": "Včetně plateb a výplat",
+      "preise": "Řízení cen za sezónu a noc",
+      "posteingang": "Zprávy hostů ze všech portálů v jedné schránce",
+      "app": "Vše také v aplikaci"
     }
   },
   "nav": {
@@ -6206,6 +6238,7 @@
       "untertitelKanaele": "Zvolte, kde se má tento objekt prodávat.",
       "untertitelPruefen": "Zkontrolujte, co se na portálech změní.",
       "nichtVerfuegbar": "Momentálně nedostupné",
+      "portalVerbinden": "Připojit {portal} nyní",
       "weiter": "Pokračovat",
       "abbrechen": "Zrušit",
       "jetztVeroeffentlichen": "Publikovat nyní",
@@ -9933,7 +9966,11 @@
       "statusPastDue": "Platba po splatnosti",
       "statusCanceled": "Ukončeno",
       "statusUnpaid": "Nezaplaceno",
-      "statusIncomplete": "Nedokončeno"
+      "statusIncomplete": "Nedokončeno",
+      "trialEnds": "Zkušební verze končí",
+      "trialBannerTitel": "Bezplatná zkušební verze",
+      "trialBannerText": "Vaše zkušební verze končí {datum}. Poté bude vaše předplatné automaticky pokračovat.",
+      "trialBannerKnopf": "Zobrazit tarif"
     },
     "users": {
       "noAccess": "Bez přístupu",
@@ -11531,6 +11568,74 @@
       "subtitle": "Skutečně přijaté peníze – vypočítané z evidovaných dílčích plateb, nikoli z otevřených pohledávek.",
       "title": "Statistiky bilance",
       "to": "Do"
+    }
+  },
+  "startbahn": {
+    "titel": "První kroky",
+    "fortschritt": "Dokončeno: {fertig} z {gesamt}",
+    "gruppeZaehler": "Dokončeno: {fertig} / {gesamt}",
+    "dauer": "přibližně {minuten} minut",
+    "gruppe": {
+      "kanaele": "Nastavit portály",
+      "verkaufsfertig": "Připravit objekty k prodeji",
+      "grundlagen": "Základy"
+    },
+    "schritt": {
+      "konto": {
+        "titel": "Účet vytvořen",
+        "text": "Váš provoz je nastaven."
+      },
+      "firma": {
+        "titel": "Uložit firemní údaje",
+        "text": "Adresa, daňové číslo a IBAN – portály je vyžadují a bez IBANu k vám nepřijdou žádné peníze.",
+        "aktion": "K firemním údajům"
+      },
+      "verbinden": {
+        "titel": "Připojit portál",
+        "text": "Připojte Airbnb, Booking nebo Expedii, aby se rezervace a kalendáře sjednotily.",
+        "aktion": "Připojit portál"
+      },
+      "objekteHolen": {
+        "titel": "Získat objekty z portálu",
+        "text": "Vaše inzeráty uložíme jako objekty – nemusíte nic přepisovat. Upozornění: Inzeráty, které jsou vázány na jiný software, se nepřenášejí.",
+        "gesperrt": "Nejprve připojte portál.",
+        "aktion": "Získat objekty"
+      },
+      "erstesObjekt": {
+        "titel": "Vytvořit první objekt",
+        "text": "Vytvořte svůj první objekt – rekreační ubytování nebo typ pokoje.",
+        "aktion": "Vytvořit objekt"
+      },
+      "inhalteHolen": {
+        "titel": "Převzít vybavení a pravidla",
+        "text": "Pokoje, lůžka, storno podmínky, vybavení a poplatky jsou již na portálu – získáme je pro všechny objekty najednou.",
+        "gesperrt": "Nejprve si stáhněte své objekty z portálu.",
+        "aktion": "Převzít obsah"
+      },
+      "preise": {
+        "titel": "Nastavit ceny",
+        "text": "Bez ceny nemůže žádný portál váš objekt prodat.",
+        "gesperrt": "Nejprve potřebujete objekt.",
+        "aktion": "Nastavit ceny"
+      },
+      "sperrtermine": {
+        "titel": "Zadat blokované termíny",
+        "text": "Obsazené termíny se při importu NEPŘENÁŠEJÍ. Zadejte je před prodejem – jinak bude noc rezervována dvakrát.",
+        "gesperrt": "Nejprve potřebujete objekt.",
+        "aktion": "Do kalendáře"
+      },
+      "veroeffentlichen": {
+        "titel": "Zveřejnit objekty",
+        "text": "Vše zkontrolováno? Pak zveřejněte své objekty na portálech a na tržišti.",
+        "gesperrt": "Teprve až budou objekt a ceny nastaveny – jinak prodáváte něco, co ještě není hotové.",
+        "aktion": "Zveřejnit"
+      },
+      "kanaele": {
+        "titel": "Vybrat prodejní kanály",
+        "text": "Rozhodněte se, přes které portály a zda přes tržiště se bude prodávat.",
+        "gesperrt": "Nejprve potřebujete objekt.",
+        "aktion": "K kanálům"
+      }
     }
   }
 }

@@ -424,8 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – La piattaforma per chi affitta case vacanza",
-    "description": "La piattaforma per hotel, agenzie e host di case vacanza: channel manager, calendario, prenotazione diretta, comunicazione con gli ospiti e fatturazione in un unico posto. Sviluppata in Danimarca, ospitata nell'UE. 30 giorni di prova gratuita.",
-    "descriptionMitPreis": "La piattaforma per hotel, agenzie e host di case vacanza: channel manager, calendario, prenotazione diretta, comunicazione con gli ospiti e fatturazione in un unico posto. Sviluppata in Danimarca, ospitata nell'UE. Da {preis}/mese. 30 giorni di prova gratuita."
+    "description": "La piattaforma per hotel, agenzie e host di case vacanza: channel manager, calendario, prenotazione diretta, comunicazione con gli ospiti e fatturazione in un unico posto. Sviluppata in Danimarca, ospitata nell'UE. 14 giorni di prova gratuita.",
+    "descriptionMitPreis": "La piattaforma per hotel, agenzie e host di case vacanza: channel manager, calendario, prenotazione diretta, comunicazione con gli ospiti e fatturazione in un unico posto. Sviluppata in Danimarca, ospitata nell'UE. Da {preis}/mese. 14 giorni di prova gratuita."
   },
   "nav": {
     "funktionen": "Funzioni",
@@ -463,7 +463,7 @@
     "headlineHighlight": "prenotazioni",
     "headlinePost": "meno fatica.",
     "subline": "La piattaforma per hotel, agenzie e host di case vacanza: channel manager, calendario, prenotazione diretta, comunicazione con gli ospiti e fatturazione in un unico posto, creata da host che vivono questo lavoro ogni giorno.",
-    "ctaTrial": "Prova 30 giorni gratis",
+    "ctaTrial": "Prova 14 giorni gratis",
     "ctaDemo": "Guarda la demo",
     "kanaeleLabel": "Collegata ai grandi portali di prenotazione",
     "eyebrow": "La piattaforma per chi affitta case vacanza",
@@ -609,7 +609,7 @@
     },
     "preis": {
       "frage": "Quanto costa myNextDays e come inizio?",
-      "antwort": "30 giorni gratis, nessuna durata minima, nessun costo di attivazione, disdetta in qualsiasi momento. Poi un abbonamento più una commissione contenuta sulle prenotazioni che portiamo. I moduli aggiuntivi — contabilità estesa con export DATEV, gestione del personale o funzioni per hotel — si aggiungono solo se servono. Crea una struttura, collega i canali, parti."
+      "antwort": "14 giorni gratis, nessuna durata minima, nessun costo di attivazione, disdetta in qualsiasi momento. Poi un abbonamento più una commissione contenuta sulle prenotazioni che portiamo. I moduli aggiuntivi — contabilità estesa con export DATEV, gestione del personale o funzioni per hotel — si aggiungono solo se servono. Crea una struttura, collega i canali, parti."
     }
   },
   "benefits": {
@@ -631,13 +631,13 @@
     "preisBanner": {
       "eyebrow": "Prezzo",
       "heading": "Tutto ciò che serve alla tua struttura, in un unico posto",
-      "text": "30 giorni gratis. Nessun vincolo di durata. Disdici quando vuoi (4 settimane prima della fine del mese).",
+      "text": "14 giorni gratis. Nessun vincolo di durata. Disdici quando vuoi (4 settimane prima della fine del mese).",
       "proMonat": "al mese"
     }
   },
   "trial": {
     "eyebrow": "Prova gratuita",
-    "heading": "Prova myNextDays per 30 giorni gratis.",
+    "heading": "Prova myNextDays per 14 giorni gratis.",
     "sub": "Nessun vincolo di durata. Disdici quando vuoi. Compila solo questo breve modulo:",
     "seitenHeading": "Tutto ciò che serve alla tua struttura in un unico posto: più controllo, meno fatica.",
     "perks": {
@@ -855,15 +855,16 @@
     "impressum": "Note legali",
     "cookies": "Informativa sui cookie",
     "avv": "Trattamento dei dati",
-    "kontoLoeschen": "Elimina account"
+    "kontoLoeschen": "Elimina account",
+    "newsletterKnopf": "Iscriviti alla newsletter"
   },
   "legal": {
     "stand": "Ultimo aggiornamento: {datum}"
   },
   "abschluss": {
     "heading": "Pronto a gestire la tua struttura da un unico posto?",
-    "sub": "Provala gratis per 30 giorni: nessun vincolo di durata, nessun costo di attivazione, disdici quando vuoi.",
-    "ctaPrimaer": "Prova 30 giorni gratis",
+    "sub": "Provala gratis per 14 giorni: nessun vincolo di durata, nessun costo di attivazione, disdici quando vuoi.",
+    "ctaPrimaer": "Prova 14 giorni gratis",
     "ctaSekundaer": "Guarda i prezzi"
   },
   "chat": {
@@ -902,14 +903,14 @@
   "preise": {
     "meta": {
       "titel": "Prezzi — un piano, tutto incluso | myNextDays",
-      "beschreibung": "Un piano con tutte le funzioni, in base al numero di strutture. Nessuna durata minima, nessun costo di attivazione, 30 giorni gratis — canali, prenotazione diretta, comunicazione con gli ospiti e fatturazione inclusi."
+      "beschreibung": "Un piano con tutte le funzioni, in base al numero di strutture. Nessuna durata minima, nessun costo di attivazione, 14 giorni gratis — canali, prenotazione diretta, comunicazione con gli ospiti e fatturazione inclusi."
     },
     "hero": {
       "eyebrow": "Prezzi",
       "headlinePre": "Un piano.",
       "headlineHighlight": "Tutto incluso.",
       "sub": "Niente rompicapo di pacchetti: ogni funzione è inclusa, che tu gestisca una casa vacanze o dodici tipologie di camera. Paghi in base al numero di strutture e più ne hai, meno costa ciascuna.",
-      "testen": "30 giorni gratis",
+      "testen": "14 giorni gratis",
       "laufzeit": "Nessuna durata minima",
       "einrichtung": "Nessun costo di attivazione",
       "eu": "Hosting UE, GDPR"
@@ -925,7 +926,7 @@
       "grundgebuehr": "Quota base (1ª struttura inclusa)",
       "weitereObjekte": "{anzahl, plural, =1 {una struttura in più} other {# strutture in più}} × {jeObjekt}",
       "netto": "Importi IVA esclusa. Fatturazione mensile, disdetta in qualsiasi momento.",
-      "ctaTesten": "Prova 30 giorni gratis",
+      "ctaTesten": "Prova 14 giorni gratis",
       "ctaDemo": "Guarda la demo",
       "inklusivTitel": "Incluso in ogni piano",
       "inklusivSub": "Niente che inizi solo con un pacchetto più caro: questo è l'intero perimetro.",
@@ -985,7 +986,7 @@
       "sub": "Quello che i gestori vogliono sapere prima di cambiare: in breve e senza clausole nascoste.",
       "laufzeit": {
         "frage": "C'è una durata minima?",
-        "antwort": "No. L'abbonamento è mensile e si disdice con quattro settimane di preavviso a fine mese. I primi 30 giorni sono gratis, senza dati di pagamento."
+        "antwort": "No. L'abbonamento è mensile e può essere disdetto con un preavviso di quattro settimane alla fine del mese. I primi 14 giorni sono gratuiti: al momento dell'attivazione si inseriscono i dati di pagamento, ma l'addebito avviene solo dopo la scadenza del periodo di prova. Se si annulla prima, non si paga nulla."
       },
       "objektzahl": {
         "frage": "Cosa succede se aggiungo strutture?",
@@ -1030,7 +1031,7 @@
       "eu": "Hosting nell'UE, conforme al GDPR",
       "start": "Avvio il 1° settembre 2026",
       "sprachen": "27 Paesi, 24 lingue",
-      "ctaTrial": "Prova 30 giorni gratis",
+      "ctaTrial": "Prova 14 giorni gratis",
       "ctaKontakt": "Scrivici"
     },
     "warum": {
@@ -1178,7 +1179,7 @@
   },
   "funktionen": {
     "rahmen": {
-      "ctaTesten": "Prova 30 giorni gratis",
+      "ctaTesten": "Prova 14 giorni gratis",
       "ctaDemo": "Guarda la demo",
       "weiter": "Vai alle altre funzioni",
       "mehr": "Guarda",

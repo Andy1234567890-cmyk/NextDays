@@ -10,7 +10,7 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { Logo } from "@/components/logo";
 import { ANBIETER } from "@/content/legal/anbieter";
 import { RECHTSDOKUMENTE } from "@/content/legal";
-import { AGB_URL, STATUS_URL } from "@/lib/app-url";
+import { AGB_URL, STATUS_URL, VORANMELDUNG_ZIEL } from "@/lib/app-url";
 import { SystemStatus } from "./system-status";
 
 // Spalten: Übersetzungsschlüssel, keine fertigen Texte. `href` gibt es nur,
@@ -155,6 +155,20 @@ export function MarketingFooter() {
             <p className="mt-4 max-w-xs text-sm text-primary-foreground/70">
               {t("claim")}
             </p>
+            {/* Newsletter — der einzige Handlungsaufruf im Footer, deshalb
+                als gefuellter Knopf in der Akzentfarbe. `#voranmeldung` oeffnet
+                das Popup, das die Adresse aufnimmt (Brevo, Double-Opt-in);
+                bleibt das JavaScript aus, passiert nichts Schlimmeres als ein
+                Anker, der auf der Seite bleibt. */}
+            <Link
+              href={VORANMELDUNG_ZIEL}
+              data-cta="newsletter"
+              className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90"
+            >
+              <Icon icon="ph:envelope-simple" className="size-4" />
+              {t("newsletterKnopf")}
+            </Link>
+
             <div className="mt-6 flex flex-col gap-3">
               <p className="text-sm font-medium">{t("appLaden")}</p>
               <div className="flex flex-wrap gap-3">

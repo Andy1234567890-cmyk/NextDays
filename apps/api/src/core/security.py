@@ -7,11 +7,13 @@ beide: zuerst JWKS/ES256 (anhand des `kid` im Token-Header), sonst HS256-Fallbac
 Die Rollen-/Tenant-Auflösung erfolgt aus den JWT-Claims (`app_metadata`) — keine
 Platzhalter-Akzeptanz beliebiger Tokens.
 """
+import contextlib
 import secrets
 from functools import lru_cache
 from typing import Annotated
 
 import jwt
+import structlog
 from fastapi import Depends, Header, HTTPException, Request, status
 from jwt import PyJWKClient
 from jwt.exceptions import PyJWKClientConnectionError
@@ -185,7 +187,59 @@ def get_current_user(
     _mfa_gate(request, ctx)
     _aktiv_gate(ctx)
     _demo_gate(request, ctx)
+    _sitzung_protokollieren(request, ctx)
     return ctx
+
+
+def _sitzung_protokollieren(request: Request, ctx: AuthContext) -> None:
+    """Haengt Betrieb + Nutzer an JEDE weitere Logzeile dieses Requests.
+
+    ANLASS (29.08.2026): Im Onboarding eines frischen Betriebs erschienen die
+    18 Objekte eines FREMDEN Betriebs. Das Backend war korrekt — gemessen
+    lieferte ein Token mit `tenant_id=AirSmil` genau 18, eines mit dem
+    Test-Tenant genau 1. Der Browser schickte schlicht ein fremdes Token. Nur
+    war das aus dem Serverlog NICHT abzulesen: dort stand `GET /properties 200`
+    und sonst nichts. Vier Erklaerungen wurden gebaut und verworfen, bevor
+    jemand den Tenant mass.
+
+    Der Betrieb gehoert deshalb in den Kontext und nicht an eine einzelne
+    Logstelle: `merge_contextvars` traegt ihn ab hier in jede Zeile, auch in
+    die von Services, die von diesem Request nichts wissen. Damit beantwortet
+    schon das blosse Mitlesen der Konsole die Frage „welcher Betrieb war das?".
+
+    Ausschliesslich IDs, gekuerzt auf acht Zeichen — keine E-Mail, kein Name.
+    Acht Zeichen unterscheiden zwei Betriebe zuverlaessig; mehr braucht eine
+    Diagnose nicht, und Personenbezug gehoert nicht ungefragt ins Log.
+    """
+    # `suppress` statt try/except/pass: hier gibt es NICHTS sinnvoll zu
+    # protokollieren — faellt ausgerechnet das Logging aus, kann man den
+    # Ausfall nicht loggen. Der Request laeuft weiter, nur ohne Betriebs-Angabe
+    # in seinen Zeilen (Wurzel 5: best-effort-Zweig, Hauptpfad unberuehrt).
+    with contextlib.suppress(Exception):
+        # ZWEI Wege, und beide werden gebraucht:
+        #
+        # (a) `request.state` — daraus liest die Zugriffszeile in `main.py`.
+        #     NICHT ueber contextvars: FastAPI fuehrt Dependencies in einem
+        #     EIGENEN Task-Kontext aus, dessen Bindungen die aeussere
+        #     Middleware nicht mehr sieht. Genau daran lief der erste Einbau
+        #     vorbei — die Zeile stand da, nur ohne `tenant`, und ein Log, das
+        #     die entscheidende Angabe still weglaesst, ist schlimmer als
+        #     keines (es sieht vollstaendig aus).
+        #
+        # (b) `contextvars` — daraus erben alle Zeilen, die WAEHREND des
+        #     Handlers entstehen (Services, channex_call, Fehler). Dort wirkt
+        #     die Bindung sehr wohl, weil sie im selben Kontext geschrieben
+        #     werden.
+        request.state.log_tenant = (ctx.tenant_id or "KEIN-TENANT")[:8]
+        request.state.log_user = (ctx.user_id or "?")[:8]
+        request.state.log_rolle = ctx.role or "?"
+        request.state.log_aal = ctx.aal
+        structlog.contextvars.bind_contextvars(
+            tenant=request.state.log_tenant,
+            user=request.state.log_user,
+            rolle=request.state.log_rolle,
+            aal=ctx.aal,
+        )
 
 
 def _aktiv_gate(ctx: AuthContext) -> None:

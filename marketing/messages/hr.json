@@ -424,8 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – platforma za iznajmljivače smještaja",
-    "description": "Platforma za hotele, agencije i iznajmljivače apartmana: channel manager, kalendar, izravne rezervacije, komunikacija s gostima i obračun na jednom mjestu. Razvijeno u Danskoj, hostano u EU. 30 dana besplatno.",
-    "descriptionMitPreis": "Platforma za hotele, agencije i iznajmljivače apartmana: channel manager, kalendar, izravne rezervacije, komunikacija s gostima i obračun na jednom mjestu. Razvijeno u Danskoj, hostano u EU. Od {preis} mjesečno. 30 dana besplatno."
+    "description": "Platforma za hotele, agencije i iznajmljivače apartmana: channel manager, kalendar, izravne rezervacije, komunikacija s gostima i obračun na jednom mjestu. Razvijeno u Danskoj, hostano u EU. 14 dana besplatno.",
+    "descriptionMitPreis": "Platforma za hotele, agencije i iznajmljivače apartmana: channel manager, kalendar, izravne rezervacije, komunikacija s gostima i obračun na jednom mjestu. Razvijeno u Danskoj, hostano u EU. Od {preis} mjesečno. 14 dana besplatno."
   },
   "nav": {
     "funktionen": "Funkcije",
@@ -463,7 +463,7 @@
     "headlineHighlight": "rezervacija",
     "headlinePost": "manje truda.",
     "subline": "Platforma za hotele, agencije i iznajmljivače apartmana: channel manager, kalendar, izravne rezervacije, komunikacija s gostima i obračun na jednom mjestu – razvijena od iznajmljivača koji poznaju svakodnevicu.",
-    "ctaTrial": "30 dana besplatno",
+    "ctaTrial": "14 dana besplatno",
     "ctaDemo": "Pogledajte demo",
     "kanaeleLabel": "Povezano s velikim platformama za rezervacije",
     "eyebrow": "Platforma za iznajmljivače smještaja",
@@ -609,7 +609,7 @@
     },
     "preis": {
       "frage": "Koliko košta myNextDays i kako počinjem?",
-      "antwort": "30 dana besplatno, bez minimalnog trajanja, bez naknade za postavljanje, otkaz u svakom trenutku. Nakon toga pretplata plus niska provizija na rezervacije koje dovedemo. Dodatni moduli — prošireno knjigovodstvo s DATEV izvozom, upravljanje zaposlenima ili hotelske funkcije — dodaju se samo ako ti trebaju. Kreiraj objekt, poveži kanale, kreni."
+      "antwort": "14 dana besplatno, bez minimalnog trajanja, bez naknade za postavljanje, otkaz u svakom trenutku. Nakon toga pretplata plus niska provizija na rezervacije koje dovedemo. Dodatni moduli — prošireno knjigovodstvo s DATEV izvozom, upravljanje zaposlenima ili hotelske funkcije — dodaju se samo ako ti trebaju. Kreiraj objekt, poveži kanale, kreni."
     }
   },
   "benefits": {
@@ -631,13 +631,13 @@
     "preisBanner": {
       "eyebrow": "Cijena",
       "heading": "Sve za vaš smještaj na jednom mjestu",
-      "text": "30 dana besplatno. Bez minimalnog trajanja. Otkaz u svakom trenutku (4 tjedna do kraja mjeseca).",
+      "text": "14 dana besplatno. Bez minimalnog trajanja. Otkaz u svakom trenutku (4 tjedna do kraja mjeseca).",
       "proMonat": "mjesečno"
     }
   },
   "trial": {
     "eyebrow": "Besplatno isprobajte",
-    "heading": "Isprobajte myNextDays 30 dana besplatno.",
+    "heading": "Isprobajte myNextDays 14 dana besplatno.",
     "sub": "Bez minimalnog trajanja. Otkaz u svakom trenutku. Ispunite samo ovaj kratki obrazac:",
     "seitenHeading": "Sve za vaš smještaj na jednom mjestu – više kontrole, manje truda.",
     "perks": {
@@ -855,15 +855,16 @@
     "impressum": "Pravne informacije",
     "cookies": "Pravila o kolačićima",
     "avv": "Obrada podataka",
-    "kontoLoeschen": "Brisanje računa"
+    "kontoLoeschen": "Brisanje računa",
+    "newsletterKnopf": "Pretplatite se na newsletter"
   },
   "legal": {
     "stand": "Posljednje ažuriranje: {datum}"
   },
   "abschluss": {
     "heading": "Spremni voditi svoj smještaj s jednog mjesta?",
-    "sub": "30 dana besplatno — bez minimalnog trajanja, bez naknade za postavljanje, otkaz u svakom trenutku.",
-    "ctaPrimaer": "30 dana besplatno",
+    "sub": "14 dana besplatno — bez minimalnog trajanja, bez naknade za postavljanje, otkaz u svakom trenutku.",
+    "ctaPrimaer": "14 dana besplatno",
     "ctaSekundaer": "Pogledajte cijene"
   },
   "chat": {
@@ -902,14 +903,14 @@
   "preise": {
     "meta": {
       "titel": "Cijene — jedan paket, sve uključeno | myNextDays",
-      "beschreibung": "Jedan paket s punim opsegom funkcija, plaćen prema broju objekata. Bez minimalnog trajanja, bez naknade za postavljanje, 30 dana besplatno — kanali, izravne rezervacije, komunikacija s gostima i obračun uključeni."
+      "beschreibung": "Jedan paket s punim opsegom funkcija, plaćen prema broju objekata. Bez minimalnog trajanja, bez naknade za postavljanje, 14 dana besplatno — kanali, izravne rezervacije, komunikacija s gostima i obračun uključeni."
     },
     "hero": {
       "eyebrow": "Cijene",
       "headlinePre": "Jedan paket.",
       "headlineHighlight": "Sve uključeno.",
       "sub": "Bez zagonetki s paketima: svaka je funkcija uključena, vodili vi jedan apartman ili dvanaest tipova soba. Plaćate prema broju objekata — i što ih više imate, to je svaki jeftiniji.",
-      "testen": "30 dana besplatno",
+      "testen": "14 dana besplatno",
       "laufzeit": "Bez minimalnog trajanja",
       "einrichtung": "Bez naknade za postavljanje",
       "eu": "Hosting u EU, GDPR"
@@ -925,7 +926,7 @@
       "grundgebuehr": "Osnovna naknada (uklj. 1. objekt)",
       "weitereObjekte": "{anzahl, plural, =1 {jedan dodatni objekt} few {# dodatna objekta} other {# dodatnih objekata}} × {jeObjekt}",
       "netto": "Svi iznosi bez PDV-a. Mjesečni obračun, otkaz u bilo kojem trenutku.",
-      "ctaTesten": "Isprobajte 30 dana besplatno",
+      "ctaTesten": "Isprobajte 14 dana besplatno",
       "ctaDemo": "Pogledajte demo",
       "inklusivTitel": "Uključeno u svaki paket",
       "inklusivSub": "Ništa što počinje tek u skupljem paketu — ovo je cijeli opseg.",
@@ -985,7 +986,7 @@
       "sub": "Što iznajmljivači žele znati prije prelaska — kratko i bez sitnih slova.",
       "laufzeit": {
         "frage": "Postoji li minimalno trajanje?",
-        "antwort": "Ne. Pretplata teče mjesečno i može se otkazati uz četiri tjedna otkaznog roka na kraju mjeseca. Prvih 30 dana je besplatno, bez podataka o plaćanju."
+        "antwort": "Nein. Pretplata je mjesečna i može se otkazati s otkaznim rokom od četiri tjedna do kraja mjeseca. Prvih 14 dana je besplatno: Podatke za plaćanje unosite na početku, ali naplata se vrši tek nakon isteka probnog razdoblja. Ako otkažete prije, ne plaćate ništa."
       },
       "objektzahl": {
         "frage": "Što se događa kad dodam objekte?",
@@ -1030,7 +1031,7 @@
       "eu": "Hosting u EU, u skladu s GDPR-om",
       "start": "Početak 1. rujna 2026.",
       "sprachen": "27 zemalja, 24 jezika",
-      "ctaTrial": "Isprobajte 30 dana besplatno",
+      "ctaTrial": "Isprobajte 14 dana besplatno",
       "ctaKontakt": "Pišite nam"
     },
     "warum": {
@@ -1178,7 +1179,7 @@
   },
   "funktionen": {
     "rahmen": {
-      "ctaTesten": "Isprobajte 30 dana besplatno",
+      "ctaTesten": "Isprobajte 14 dana besplatno",
       "ctaDemo": "Pogledajte demo",
       "weiter": "Dalje na ostale funkcije",
       "mehr": "Pogledajte",

@@ -26,7 +26,10 @@
       "da": "Danska",
       "en": "Engelska"
     },
-    "explain": "Förklaring till {label}"
+    "explain": "Förklaring till {label}",
+    "themeToggle": "Byt design",
+    "themeToggleLight": "Ljus design",
+    "themeToggleDark": "Mörk design"
   },
   "legal": {
     "agbLinkLabel": "Allmänna villkor",
@@ -118,7 +121,8 @@
     },
     "type": {
       "title": "Vad hyr du ut?",
-      "text": "Välj verksamhetstyp — den styr begrepp och moduler i din panel."
+      "text": "Välj verksamhetstyp — den styr begrepp och moduler i din panel.",
+      "bald": "Pågående"
     },
     "tax": {
       "title": "Skatter & betalningar",
@@ -134,7 +138,7 @@
     },
     "switch": {
       "title": "Importera befintliga objekt",
-      "intro": "Så flyttar du dina befintliga Booking-/Airbnb-objekt till myNextDays — utan dubbelbokningar.",
+      "intro": "Så här importerar du dina befintliga annonser till myNextDays – utan dubbelbokningar.",
       "cutover": {
         "title": "Viktigt innan du ansluter",
         "a": "Koppla bort varje portal från ditt tidigare system innan du ansluter den här — per kanal får bara ETT system pusha.",
@@ -147,21 +151,24 @@
         "title": "Skapa objekt",
         "text": "Lägg upp ett objekt för varje befintlig annons — namn, typ och grundpris räcker för tilldelningen.",
         "count": "{count, plural, =0 {Inga objekt än} one {# objekt} other {# objekt}}",
-        "airbnbHint": "Kommer du från Airbnb? Hoppa över det här steget — dina objekt hämtas automatiskt när du ansluter Airbnb."
+        "airbnbHint": "Kommer du från Airbnb? Hoppa över det här steget — dina objekt hämtas automatiskt när du ansluter Airbnb.",
+        "zuordnenHint": "För Booking.com och andra portaler behöver du detta objekt: Vid anslutning matchas portalens rum 1:1 med dina objekt. Endast för Airbnb utgår detta steg – där läggs annonserna till vid anslutning."
       },
       "step2": {
         "title": "Anslut & tilldela portal",
         "text": "Anslut Booking, Airbnb m.fl. och tilldela portalrummen 1:1 till dina objekt. Bokningar och tillgänglighet kommer därefter automatiskt.",
         "connect": "Anslut portal",
         "connectMore": "Anslut ytterligare en portal",
-        "alreadyConnected": "En portal är redan ansluten och dina objekt är överförda — du behöver inte ansluta något igen här. Använd „Anslut ytterligare portal” bara för en YTTERLIGARE portal (t.ex. Booking)."
+        "alreadyConnected": "En portal är redan ansluten och dina objekt är överförda — du behöver inte ansluta något igen här. Använd „Anslut ytterligare portal” bara för en YTTERLIGARE portal (t.ex. Booking).",
+        "connectNamed": "Anslut {portal}",
+        "textNamed": "Anslut {portale} och mappa portalrummen 1:1 till dina objekt. Bokningar och tillgänglighet synkroniseras sedan automatiskt."
       },
       "pull": {
-        "button": "Hämta objekt från portalen",
         "result": "{count, plural, =0 {Inga nya objekt hittades} one {# objekt hämtat} other {# objekt hämtade}}"
       },
       "finishCta": "Slutför importen",
       "finishHint": "Bekräfta först anvisningen ovan och lägg upp minst ett objekt.",
+      "finishHintObjekt": "Skapa först minst ett objekt – utan objekt finns inget att hantera. Lodgify-importen är frivillig och inget måste.",
       "bookings": {
         "title": "Läs in befintliga bokningar",
         "text": "Hämta reservationerna från dina anslutna portaler till din kalender.",
@@ -193,7 +200,32 @@
       },
       "finish": {
         "notRegistered": "Minst ett objekt måste vara överfört till bokningsportalerna innan du avslutar onboardingen. Anslut en portal i steg 2 — objektet överförs då automatiskt."
+      },
+      "nav": {
+        "zurueck": "Tillbaka",
+        "weiter": "Nästa",
+        "zaehler": "Steg {aktuell} av {gesamt}"
+      },
+      "auswahl": {
+        "title": "På vilka portaler säljer du idag?",
+        "text": "Vi anpassar importen därefter. Du kan ansluta fler portaler senare när som helst.",
+        "keine": "Jag säljer inte på någon portal än"
       }
+    },
+    "spaeterEinrichten": "Ställ in senare",
+    "schrittVon": "Steg {aktuell} av {gesamt}",
+    "claim1": "Alla portaler, en kalender – och dina objekt följer med.",
+    "claim2": "Priser, beläggning och meddelanden på ett ställe.",
+    "claim3": "Mer tid för gästerna, mindre för administrationen.",
+    "usp": {
+      "portale": "Alla stora portaler anslutna",
+      "kalender": "En kalender för alla portaler",
+      "doppelt": "Bokade nätter blockeras omedelbart överallt",
+      "import": "Vi flyttar över befintliga annonser åt dig",
+      "zahlung": "Betalningar och utbetalningar ingår",
+      "preise": "Styr priser per säsong och natt",
+      "posteingang": "Gästmeddelanden från alla portaler i en inkorg",
+      "app": "Allt även i appen"
     }
   },
   "nav": {
@@ -6206,6 +6238,7 @@
       "untertitelKanaele": "Välj var det här objektet ska säljas.",
       "untertitelPruefen": "Kontrollera vad som ändras hos portalerna.",
       "nichtVerfuegbar": "Inte tillgänglig just nu",
+      "portalVerbinden": "Anslut {portal} nu",
       "weiter": "Fortsätt",
       "abbrechen": "Avbryt",
       "jetztVeroeffentlichen": "Publicera nu",
@@ -9933,7 +9966,11 @@
       "statusPastDue": "Betalning saknas",
       "statusCanceled": "Uppsagt",
       "statusUnpaid": "Obetald",
-      "statusIncomplete": "Ofullständig"
+      "statusIncomplete": "Ofullständig",
+      "trialEnds": "Testperioden avslutas",
+      "trialBannerTitel": "Gratis testperiod",
+      "trialBannerText": "Din testperiod avslutas den {datum}. Därefter fortsätter din prenumeration automatiskt.",
+      "trialBannerKnopf": "Visa plan"
     },
     "users": {
       "noAccess": "Ingen åtkomst",
@@ -11531,6 +11568,74 @@
       "subtitle": "Faktiskt mottagna pengar – beräknat utifrån registrerade delbetalningar, inte utifrån öppna fordringar.",
       "title": "Balansstatistik",
       "to": "Till"
+    }
+  },
+  "startbahn": {
+    "titel": "Kom igång",
+    "fortschritt": "{fertig} av {gesamt} klart",
+    "gruppeZaehler": "{fertig} / {gesamt} klart",
+    "dauer": "cirka {minuten} minuter",
+    "gruppe": {
+      "kanaele": "Ställ in portaler",
+      "verkaufsfertig": "Gör objekt redo för försäljning",
+      "grundlagen": "Grundläggande"
+    },
+    "schritt": {
+      "konto": {
+        "titel": "Konto skapat",
+        "text": "Din verksamhet är inställd."
+      },
+      "firma": {
+        "titel": "Ange företagsinformation",
+        "text": "Adress, skattenummer och IBAN – portalerna kräver dem, och utan IBAN får du inga pengar.",
+        "aktion": "Till företagsinformationen"
+      },
+      "verbinden": {
+        "titel": "Anslut portal",
+        "text": "Anslut Airbnb, Booking eller Expedia så att bokningar och kalendrar samlas.",
+        "aktion": "Anslut portal"
+      },
+      "objekteHolen": {
+        "titel": "Hämta objekt från portalen",
+        "text": "Vi skapar dina annonser som objekt – du behöver inte skriva in något. Observera: Annonser som är kopplade till annan programvara följer inte med.",
+        "gesperrt": "Anslut en portal först.",
+        "aktion": "Hämta objekt"
+      },
+      "erstesObjekt": {
+        "titel": "Skapa första objektet",
+        "text": "Skapa ditt första objekt – semesterbostad eller rumstyp.",
+        "aktion": "Skapa objekt"
+      },
+      "inhalteHolen": {
+        "titel": "Ta över utrustning och regler",
+        "text": "Rum, sängar, avbokningsregler, utrustning och avgifter finns redan på portalen – vi hämtar dem för alla objekt på en gång.",
+        "gesperrt": "Hämta först dina objekt från portalen.",
+        "aktion": "Ta över innehåll"
+      },
+      "preise": {
+        "titel": "Ange priser",
+        "text": "Utan pris kan ingen portal sälja ditt objekt.",
+        "gesperrt": "Du behöver ett objekt först.",
+        "aktion": "Ange priser"
+      },
+      "sperrtermine": {
+        "titel": "Ange spärrdatum",
+        "text": "Upptagna perioder följer INTE med vid import. Ange dem innan du säljer – annars bokas en natt två gånger.",
+        "gesperrt": "Du behöver ett objekt först.",
+        "aktion": "Till kalendern"
+      },
+      "veroeffentlichen": {
+        "titel": "Publicera objekt",
+        "text": "Allt kontrollerat? Släpp då dina objekt på portalerna och på marknadsplatsen.",
+        "gesperrt": "Först när objekt och priser är klara – annars säljer du något som inte är färdigt än.",
+        "aktion": "Publicera"
+      },
+      "kanaele": {
+        "titel": "Välj försäljningskanaler",
+        "text": "Bestäm via vilka portaler och om via marknadsplatsen försäljning ska ske.",
+        "gesperrt": "Du behöver ett objekt först.",
+        "aktion": "Till kanalerna"
+      }
     }
   }
 }

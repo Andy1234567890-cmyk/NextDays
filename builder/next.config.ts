@@ -1,3 +1,4 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 import { securityHeaders } from "@nextdays/security-headers";
 
@@ -47,6 +48,12 @@ const IST_DEV = process.env.NODE_ENV !== "production";
 const nextConfig: NextConfig = {
   // Schlankes Runtime-Image für den Dockerfile-Build (node server.js).
   output: "standalone",
+  // Repo-Root deterministisch als File-Tracing-Root, nicht raten lassen: diese
+  // App baut aus dem ROOT-Kontext (Dockerfile-Kopf), ist also auf `packages/`
+  // angewiesen. Relativ zur config-Datei, damit es lokal UND im Container passt
+  // — gleiches Muster wie plattform/. Ohne die Zeile suchte Next die Wurzel
+  // selbst und warnte bei jedem `bun run dev` über mehrere Lockfiles.
+  outputFileTracingRoot: path.join(__dirname, ".."),
   // Kein x-powered-by:Next.js — verrät die Technologie (Version-Leak/Recon).
   poweredByHeader: false,
   // Geteiltes Workspace-Paket liefert TS-Quellen → mit-transpilieren (ADR-0016).

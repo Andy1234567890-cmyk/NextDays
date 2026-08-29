@@ -26,7 +26,10 @@
       "da": "Danois",
       "en": "Anglais"
     },
-    "explain": "Explication de {label}"
+    "explain": "Explication de {label}",
+    "themeToggle": "Changer de thème",
+    "themeToggleLight": "Thème clair",
+    "themeToggleDark": "Thème sombre"
   },
   "legal": {
     "agbLinkLabel": "CGU",
@@ -118,7 +121,8 @@
     },
     "type": {
       "title": "Que louez-vous ?",
-      "text": "Choisissez le type d'établissement — il détermine les termes et modules de votre tableau de bord."
+      "text": "Choisissez le type d'établissement — il détermine les termes et modules de votre tableau de bord.",
+      "bald": "En cours"
     },
     "tax": {
       "title": "Taxes et paiements",
@@ -134,7 +138,7 @@
     },
     "switch": {
       "title": "Importer les logements existants",
-      "intro": "Voici comment transférer vos logements Booking/Airbnb existants vers myNextDays — sans doubles réservations.",
+      "intro": "Comment transférer vos annonces existantes vers myNextDays — sans doubles réservations.",
       "cutover": {
         "title": "Important avant la connexion",
         "a": "Déconnectez chaque portail de votre système précédent avant de le connecter ici — un seul système à la fois peut envoyer des données par canal.",
@@ -147,21 +151,24 @@
         "title": "Créer un logement",
         "text": "Créez un logement pour chaque annonce existante — le nom, le type et le prix de base suffisent pour l'association.",
         "count": "{count, plural, =0 {Aucun logement pour l'instant} one {# logement} other {# logements}}",
-        "airbnbHint": "Vous venez d'Airbnb ? Passez cette étape — vos logements sont importés automatiquement lorsque vous connectez Airbnb."
+        "airbnbHint": "Vous venez d'Airbnb ? Passez cette étape — vos logements sont importés automatiquement lorsque vous connectez Airbnb.",
+        "zuordnenHint": "Pour Booking.com et d'autres portails, vous avez besoin de cet objet : lors de la connexion, les chambres du portail sont attribuées 1:1 à vos objets. Seul Airbnb ne nécessite pas cette étape — les annonces y sont incluses lors de la connexion."
       },
       "step2": {
         "title": "Connecter et associer un portail",
         "text": "Connectez Booking, Airbnb et autres et associez les chambres des portails 1:1 à vos logements. Les réservations et la disponibilité suivent ensuite automatiquement.",
         "connect": "Connecter un portail",
         "connectMore": "Connecter un autre portail",
-        "alreadyConnected": "Un portail est déjà connecté et vos logements sont transmis — vous n'avez rien à reconnecter ici. Utilisez « Connecter un autre portail » uniquement pour un portail SUPPLÉMENTAIRE (p. ex. Booking)."
+        "alreadyConnected": "Un portail est déjà connecté et vos logements sont transmis — vous n'avez rien à reconnecter ici. Utilisez « Connecter un autre portail » uniquement pour un portail SUPPLÉMENTAIRE (p. ex. Booking).",
+        "connectNamed": "Connecter {portal}",
+        "textNamed": "Connectez {portale} et associez les chambres du portail 1:1 à vos objets. Les réservations et les disponibilités sont ensuite automatiquement mises à jour."
       },
       "pull": {
-        "button": "Récupérer les logements du portail",
         "result": "{count, plural, =0 {Aucun nouveau logement trouvé} one {# logement repris} other {# logements repris}}"
       },
       "finishCta": "Terminer l'importation",
       "finishHint": "Veuillez d'abord confirmer la consigne ci-dessus et créer au moins un logement.",
+      "finishHintObjekt": "Créez d'abord au moins un objet — sans objet, il n'y a rien à gérer. L'importation Lodgify est facultative et non obligatoire.",
       "bookings": {
         "title": "Importer les réservations existantes",
         "text": "Récupérez les réservations de vos portails connectés dans votre calendrier.",
@@ -193,7 +200,32 @@
       },
       "finish": {
         "notRegistered": "Au moins un logement doit être transmis aux portails de réservation avant que vous terminiez la configuration initiale. Connectez un portail à l'étape 2 — le logement est alors transmis automatiquement."
+      },
+      "nav": {
+        "zurueck": "Retour",
+        "weiter": "Suivant",
+        "zaehler": "Étape {aktuell} sur {gesamt}"
+      },
+      "auswahl": {
+        "title": "Sur quels portails vendez-vous actuellement ?",
+        "text": "Nous allons configurer l'importation en conséquence. Vous pourrez connecter d'autres portails à tout moment par la suite.",
+        "keine": "Je ne vends sur aucun portail pour le moment"
       }
+    },
+    "spaeterEinrichten": "Configurer plus tard",
+    "schrittVon": "Étape {aktuell} sur {gesamt}",
+    "claim1": "Tous les portails, un seul calendrier — et vos objets sont inclus.",
+    "claim2": "Prix, occupation et messages en un seul endroit.",
+    "claim3": "Plus de temps pour les hôtes, moins pour l'administration.",
+    "usp": {
+      "portale": "Tous les grands portails connectés",
+      "kalender": "Un calendrier pour tous les portails",
+      "doppelt": "Nous bloquons immédiatement les nuits réservées partout",
+      "import": "Nous récupérons vos annonces existantes",
+      "zahlung": "Paiements et décaissements inclus",
+      "preise": "Gérer les prix par saison et par nuit",
+      "posteingang": "Messages des clients de tous les portails dans une seule boîte de réception",
+      "app": "Tout est également disponible dans l'application"
     }
   },
   "nav": {
@@ -6206,6 +6238,7 @@
       "untertitelKanaele": "Choisissez où cet hébergement doit être vendu.",
       "untertitelPruefen": "Vérifiez ce qui va changer sur les portails.",
       "nichtVerfuegbar": "Actuellement indisponible",
+      "portalVerbinden": "Connecter {portal}",
       "weiter": "Continuer",
       "abbrechen": "Annuler",
       "jetztVeroeffentlichen": "Publier maintenant",
@@ -9933,7 +9966,11 @@
       "statusPastDue": "Paiement en attente",
       "statusCanceled": "Résilié",
       "statusUnpaid": "Impayé",
-      "statusIncomplete": "Incomplet"
+      "statusIncomplete": "Incomplet",
+      "trialEnds": "Période d'essai se termine le",
+      "trialBannerTitel": "Période d'essai gratuite",
+      "trialBannerText": "Votre période d'essai se termine le {datum}. Votre abonnement sera ensuite automatiquement renouvelé.",
+      "trialBannerKnopf": "Voir le tarif"
     },
     "users": {
       "noAccess": "Aucun accès",
@@ -11531,6 +11568,74 @@
       "subtitle": "Argent réellement versé — calculé sur les paiements partiels enregistrés, et non sur les créances impayées.",
       "title": "Statistiques du bilan",
       "to": "Au"
+    }
+  },
+  "startbahn": {
+    "titel": "Premiers pas",
+    "fortschritt": "{fertig} sur {gesamt} terminé",
+    "gruppeZaehler": "{fertig} / {gesamt} terminé",
+    "dauer": "environ {minuten} minutes",
+    "gruppe": {
+      "kanaele": "Configurer les portails",
+      "verkaufsfertig": "Préparer les objets à la vente",
+      "grundlagen": "Bases"
+    },
+    "schritt": {
+      "konto": {
+        "titel": "Compte créé",
+        "text": "Votre entreprise est configurée."
+      },
+      "firma": {
+        "titel": "Saisir les données de l'entreprise",
+        "text": "Adresse, numéro fiscal et IBAN — les portails les exigent, et sans IBAN, aucun argent ne vous parviendra.",
+        "aktion": "Vers les données de l'entreprise"
+      },
+      "verbinden": {
+        "titel": "Connecter le portail",
+        "text": "Connectez Airbnb, Booking ou Expedia pour centraliser les réservations et les calendriers.",
+        "aktion": "Connecter le portail"
+      },
+      "objekteHolen": {
+        "titel": "Récupérer les objets du portail",
+        "text": "Nous créons vos annonces comme objets — vous n'avez rien à retaper. Attention : les annonces liées à un autre logiciel ne seront pas importées.",
+        "gesperrt": "Connectez d'abord un portail.",
+        "aktion": "Récupérer les objets"
+      },
+      "erstesObjekt": {
+        "titel": "Créer le premier objet",
+        "text": "Créez votre premier objet — logement de vacances ou type de chambre.",
+        "aktion": "Créer un objet"
+      },
+      "inhalteHolen": {
+        "titel": "Reprendre l'équipement et les règles",
+        "text": "Les chambres, les lits, les règles d'annulation, l'équipement et les frais sont déjà sur le portail — nous les récupérons pour tous les objets en une seule fois.",
+        "gesperrt": "Récupérez d'abord vos objets du portail.",
+        "aktion": "Reprendre le contenu"
+      },
+      "preise": {
+        "titel": "Définir les prix",
+        "text": "Sans prix, aucun portail ne peut vendre votre objet.",
+        "gesperrt": "Vous avez d'abord besoin d'un objet.",
+        "aktion": "Définir les prix"
+      },
+      "sperrtermine": {
+        "titel": "Saisir les dates de blocage",
+        "text": "Les périodes occupées ne sont PAS importées. Saisissez-les avant de vendre — sinon une nuit sera réservée deux fois.",
+        "gesperrt": "Vous avez d'abord besoin d'un objet.",
+        "aktion": "Vers le calendrier"
+      },
+      "veroeffentlichen": {
+        "titel": "Publier les objets",
+        "text": "Tout est vérifié ? Alors activez vos objets sur les portails et sur la place de marché.",
+        "gesperrt": "Seulement quand l'objet et les prix sont définis — sinon vous vendez quelque chose qui n'est pas encore prêt.",
+        "aktion": "Publier"
+      },
+      "kanaele": {
+        "titel": "Choisir les canaux de vente",
+        "text": "Décidez via quels portails et si via la place de marché la vente sera effectuée.",
+        "gesperrt": "Vous avez d'abord besoin d'un objet.",
+        "aktion": "Vers les canaux"
+      }
     }
   }
 }

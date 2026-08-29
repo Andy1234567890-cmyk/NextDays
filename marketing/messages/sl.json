@@ -424,8 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – platforma za ponudnike nastanitev",
-    "description": "Platforma za hotele, agencije in ponudnike počitniških nastanitev: channel manager, koledar, direktne rezervacije, komunikacija z gosti in obračun na enem mestu. Razvito na Danskem, gostovanje v EU. 30 dni brezplačno.",
-    "descriptionMitPreis": "Platforma za hotele, agencije in ponudnike počitniških nastanitev: channel manager, koledar, direktne rezervacije, komunikacija z gosti in obračun na enem mestu. Razvito na Danskem, gostovanje v EU. Od {preis} na mesec. 30 dni brezplačno."
+    "description": "Platforma za hotele, agencije in ponudnike počitniških nastanitev: channel manager, koledar, direktne rezervacije, komunikacija z gosti in obračun na enem mestu. Razvito na Danskem, gostovanje v EU. 14 dni brezplačno.",
+    "descriptionMitPreis": "Platforma za hotele, agencije in ponudnike počitniških nastanitev: channel manager, koledar, direktne rezervacije, komunikacija z gosti in obračun na enem mestu. Razvito na Danskem, gostovanje v EU. Od {preis} na mesec. 14 dni brezplačno."
   },
   "nav": {
     "funktionen": "Funkcije",
@@ -463,7 +463,7 @@
     "headlineHighlight": "rezervacij",
     "headlinePost": "manj dela.",
     "subline": "Platforma za hotele, agencije in ponudnike počitniških nastanitev: channel manager, koledar, direktne rezervacije, komunikacija z gosti in obračun na enem mestu – razvita s strani ponudnikov, ki poznajo vsakdan.",
-    "ctaTrial": "30 dni brezplačno",
+    "ctaTrial": "14 dni brezplačno",
     "ctaDemo": "Oglejte si demo",
     "kanaeleLabel": "Povezano z vodilnimi rezervacijskimi platformami",
     "eyebrow": "Platforma za ponudnike počitniških nastanitev",
@@ -609,7 +609,7 @@
     },
     "preis": {
       "frage": "Koliko stane myNextDays in kako začnem?",
-      "antwort": "30 dni brezplačno, brez najkrajše dobe, brez stroškov vzpostavitve, odpoved kadar koli. Nato naročnina in nizka provizija za rezervacije, ki jih pripeljemo. Dodatni moduli — razširjeno računovodstvo z izvozom DATEV, upravljanje zaposlenih ali hotelske funkcije — se dodajo le, če jih potrebujete. Ustvarite objekt, povežite kanale, začnite."
+      "antwort": "14 dni brezplačno, brez najkrajše dobe, brez stroškov vzpostavitve, odpoved kadar koli. Nato naročnina in nizka provizija za rezervacije, ki jih pripeljemo. Dodatni moduli — razširjeno računovodstvo z izvozom DATEV, upravljanje zaposlenih ali hotelske funkcije — se dodajo le, če jih potrebujete. Ustvarite objekt, povežite kanale, začnite."
     }
   },
   "benefits": {
@@ -631,13 +631,13 @@
     "preisBanner": {
       "eyebrow": "Cena",
       "heading": "Vse za vašo nastanitev na enem mestu",
-      "text": "30 dni brezplačno. Brez minimalne vezave. Odpoved kadar koli (4 tedne do konca meseca).",
+      "text": "14 dni brezplačno. Brez minimalne vezave. Odpoved kadar koli (4 tedne do konca meseca).",
       "proMonat": "na mesec"
     }
   },
   "trial": {
     "eyebrow": "Brezplačen preizkus",
-    "heading": "Preizkusite myNextDays 30 dni brezplačno.",
+    "heading": "Preizkusite myNextDays 14 dni brezplačno.",
     "sub": "Brez minimalne vezave. Odpoved kadar koli. Izpolnite le ta kratki obrazec:",
     "seitenHeading": "Vse za vašo nastanitev na enem mestu – več nadzora, manj dela.",
     "perks": {
@@ -855,15 +855,16 @@
     "impressum": "Pravno obvestilo",
     "cookies": "Politika piškotkov",
     "avv": "Obdelava podatkov",
-    "kontoLoeschen": "Izbriši račun"
+    "kontoLoeschen": "Izbriši račun",
+    "newsletterKnopf": "Naročite se na novice"
   },
   "legal": {
     "stand": "Zadnja posodobitev: {datum}"
   },
   "abschluss": {
     "heading": "Ste pripravljeni voditi svojo nastanitev z enega mesta?",
-    "sub": "30 dni brezplačno — brez minimalne vezave, brez stroškov vzpostavitve, odpoved kadar koli.",
-    "ctaPrimaer": "30 dni brezplačno",
+    "sub": "14 dni brezplačno — brez minimalne vezave, brez stroškov vzpostavitve, odpoved kadar koli.",
+    "ctaPrimaer": "14 dni brezplačno",
     "ctaSekundaer": "Oglejte si cene"
   },
   "chat": {
@@ -902,14 +903,14 @@
   "preise": {
     "meta": {
       "titel": "Cene — en paket, vse vključeno | myNextDays",
-      "beschreibung": "En paket s celotnim obsegom funkcij, plačan glede na število enot. Brez minimalne vezave, brez stroškov namestitve, 30 dni brezplačno — kanali, neposredne rezervacije, komunikacija z gosti in obračun vključeni."
+      "beschreibung": "En paket s celotnim obsegom funkcij, plačan glede na število enot. Brez minimalne vezave, brez stroškov namestitve, 14 dni brezplačno — kanali, neposredne rezervacije, komunikacija z gosti in obračun vključeni."
     },
     "hero": {
       "eyebrow": "Cene",
       "headlinePre": "En paket.",
       "headlineHighlight": "Vse vključeno.",
       "sub": "Brez ugank s paketi: vsaka funkcija je vključena, najsi upravljate eno počitniško stanovanje ali dvanajst tipov sob. Plačate glede na število enot — in več kot jih imate, ceneje je vsaka.",
-      "testen": "30 dni brezplačno",
+      "testen": "14 dni brezplačno",
       "laufzeit": "Brez minimalne vezave",
       "einrichtung": "Brez stroškov namestitve",
       "eu": "Gostovanje v EU, GDPR"
@@ -925,7 +926,7 @@
       "grundgebuehr": "Osnovna naročnina (vklj. 1. enoto)",
       "weitereObjekte": "{anzahl, plural, =1 {ena dodatna enota} two {# dodatni enoti} few {# dodatne enote} other {# dodatnih enot}} × {jeObjekt}",
       "netto": "Vsi zneski brez DDV. Mesečni obračun, odpoved kadar koli.",
-      "ctaTesten": "Preizkusite 30 dni brezplačno",
+      "ctaTesten": "Preizkusite 14 dni brezplačno",
       "ctaDemo": "Ogled predstavitve",
       "inklusivTitel": "Vključeno v vsak paket",
       "inklusivSub": "Nič, kar bi se začelo šele v dražjem paketu — to je celoten obseg.",
@@ -985,7 +986,7 @@
       "sub": "Kar najemodajalci želijo vedeti pred prehodom — na kratko in brez drobnega tiska.",
       "laufzeit": {
         "frage": "Ali obstaja minimalna vezava?",
-        "antwort": "Ne. Naročnina teče mesečno in jo je mogoče odpovedati s štiritedenskim odpovednim rokom ob koncu meseca. Prvih 30 dni je brezplačnih, brez plačilnih podatkov."
+        "antwort": "Nein. Naročnina je mesečna in jo je mogoče odpovedati štiri tedne pred koncem meseca. Prvih 14 dni je brezplačnih: ob začetku vnesete svoje plačilne podatke, vendar se plačilo izvede šele po izteku preizkusnega obdobja. Če odpoveste prej, ne plačate ničesar."
       },
       "objektzahl": {
         "frage": "Kaj se zgodi, ko dodam enote?",
@@ -1030,7 +1031,7 @@
       "eu": "Gostovanje v EU, skladno z GDPR",
       "start": "Začetek 1. septembra 2026",
       "sprachen": "27 držav, 24 jezikov",
-      "ctaTrial": "Preizkusite 30 dni brezplačno",
+      "ctaTrial": "Preizkusite 14 dni brezplačno",
       "ctaKontakt": "Pišite nam"
     },
     "warum": {
@@ -1178,7 +1179,7 @@
   },
   "funktionen": {
     "rahmen": {
-      "ctaTesten": "30 dni brezplačno",
+      "ctaTesten": "14 dni brezplačno",
       "ctaDemo": "Oglejte si demo",
       "weiter": "Naprej k drugim funkcijam",
       "mehr": "Ogled",

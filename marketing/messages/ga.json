@@ -424,8 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – An t-ardán d'óstaigh cíosanna saoire",
-    "description": "An t-ardán d'óstáin, do ghníomhaireachtaí agus d'óstaigh cíosanna saoire: channel manager, féilire, áirithintí díreacha, teachtaireachtaí aíonna agus cuntasaíocht in aon áit amháin. Tógtha sa Danmhairg, óstáilte san AE. Saor in aisce ar feadh 30 lá.",
-    "descriptionMitPreis": "An t-ardán d'óstáin, do ghníomhaireachtaí agus d'óstaigh cíosanna saoire: channel manager, féilire, áirithintí díreacha, teachtaireachtaí aíonna agus cuntasaíocht in aon áit amháin. Tógtha sa Danmhairg, óstáilte san AE. Ó {preis} sa mhí. Saor in aisce ar feadh 30 lá."
+    "description": "An t-ardán d'óstáin, do ghníomhaireachtaí agus d'óstaigh cíosanna saoire: channel manager, féilire, áirithintí díreacha, teachtaireachtaí aíonna agus cuntasaíocht in aon áit amháin. Tógtha sa Danmhairg, óstáilte san AE. Saor in aisce ar feadh 14 lá.",
+    "descriptionMitPreis": "An t-ardán d'óstáin, do ghníomhaireachtaí agus d'óstaigh cíosanna saoire: channel manager, féilire, áirithintí díreacha, teachtaireachtaí aíonna agus cuntasaíocht in aon áit amháin. Tógtha sa Danmhairg, óstáilte san AE. Ó {preis} sa mhí. Saor in aisce ar feadh 14 lá."
   },
   "nav": {
     "funktionen": "Gnéithe",
@@ -463,7 +463,7 @@
     "headlineHighlight": "áirithintí",
     "headlinePost": "níos lú stró.",
     "subline": "An t-ardán d'óstáin, do ghníomhaireachtaí agus d'óstaigh cíosanna saoire: channel manager, féilire, áirithintí díreacha, teachtaireachtaí aíonna agus cuntasaíocht in aon áit amháin – tógtha ag óstaigh a bhfuil aithne acu ar an obair laethúil.",
-    "ctaTrial": "Bain triail as 30 lá saor in aisce",
+    "ctaTrial": "Bain triail as 14 lá saor in aisce",
     "ctaDemo": "Féach ar an taispeántas",
     "kanaeleLabel": "Ceangailte leis na mórardáin áirithinte",
     "eyebrow": "An t-ardán d'óstaigh cíosanna saoire",
@@ -609,7 +609,7 @@
     },
     "preis": {
       "frage": "Cad a chosnaíonn myNextDays agus conas a thosaím?",
-      "antwort": "30 lá saor in aisce, gan téarma íosta, gan táille socraithe, cealú tráth ar bith. Ina dhiaidh sin síntiús móide coimisiún beag ar na háirithintí a thugaimid isteach. Ní chuirtear modúil bhreise — cuntasaíocht leathnaithe le heaspórtáil DATEV, bainistiú foirne nó feidhmeanna óstáin — leis ach má theastaíonn siad. Cruthaigh áit, nasc na cainéil, tosaigh."
+      "antwort": "14 lá saor in aisce, gan téarma íosta, gan táille socraithe, cealú tráth ar bith. Ina dhiaidh sin síntiús móide coimisiún beag ar na háirithintí a thugaimid isteach. Ní chuirtear modúil bhreise — cuntasaíocht leathnaithe le heaspórtáil DATEV, bainistiú foirne nó feidhmeanna óstáin — leis ach má theastaíonn siad. Cruthaigh áit, nasc na cainéil, tosaigh."
     }
   },
   "benefits": {
@@ -631,13 +631,13 @@
     "preisBanner": {
       "eyebrow": "Praghsáil",
       "heading": "Gach a bhfuil de dhíth ar d'áitreabh, in aon áit amháin",
-      "text": "30 lá saor in aisce. Gan íostréimhse. Cealaigh am ar bith (4 seachtaine roimh dheireadh na míosa).",
+      "text": "14 lá saor in aisce. Gan íostréimhse. Cealaigh am ar bith (4 seachtaine roimh dheireadh na míosa).",
       "proMonat": "sa mhí"
     }
   },
   "trial": {
     "eyebrow": "Triail saor in aisce",
-    "heading": "Bain triail as myNextDays saor in aisce ar feadh 30 lá.",
+    "heading": "Bain triail as myNextDays saor in aisce ar feadh 14 lá.",
     "sub": "Gan íostréimhse. Cealaigh am ar bith. Níl le déanamh ach an fhoirm ghairid seo a líonadh:",
     "seitenHeading": "Gach a bhfuil de dhíth ar d'áitreabh in aon áit amháin – níos mó smachta, níos lú stró.",
     "perks": {
@@ -855,15 +855,16 @@
     "impressum": "Fógra dlíthiúil",
     "cookies": "Beartas fianán",
     "avv": "Próiseáil sonraí",
-    "kontoLoeschen": "Scrios cuntas"
+    "kontoLoeschen": "Scrios cuntas",
+    "newsletterKnopf": "Cláraigh don nuachtlitir"
   },
   "legal": {
     "stand": "Arna nuashonrú: {datum}"
   },
   "abschluss": {
     "heading": "Réidh le d'áitreabh a rith ó aon áit amháin?",
-    "sub": "Bain triail as saor in aisce ar feadh 30 lá — gan íostréimhse, gan táille socraithe, cealaigh am ar bith.",
-    "ctaPrimaer": "Bain triail as 30 lá saor in aisce",
+    "sub": "Bain triail as saor in aisce ar feadh 14 lá — gan íostréimhse, gan táille socraithe, cealaigh am ar bith.",
+    "ctaPrimaer": "Bain triail as 14 lá saor in aisce",
     "ctaSekundaer": "Féach ar na praghsanna"
   },
   "chat": {
@@ -902,14 +903,14 @@
   "preise": {
     "meta": {
       "titel": "Praghsanna — plean amháin, gach rud san áireamh | myNextDays",
-      "beschreibung": "Plean amháin leis an raon iomlán gnéithe, íoctha de réir líon na maoine. Gan téarma íosta, gan táille socraithe, 30 lá saor in aisce — cainéil, áirithintí díreacha, cumarsáid le haíonna agus billeáil san áireamh."
+      "beschreibung": "Plean amháin leis an raon iomlán gnéithe, íoctha de réir líon na maoine. Gan téarma íosta, gan táille socraithe, 14 lá saor in aisce — cainéil, áirithintí díreacha, cumarsáid le haíonna agus billeáil san áireamh."
     },
     "hero": {
       "eyebrow": "Praghsanna",
       "headlinePre": "Plean amháin.",
       "headlineHighlight": "Gach rud ann.",
       "sub": "Gan bhréagáin phacáiste: tá gach gné san áireamh, cé acu a bhíonn teach saoire amháin nó dhá chineál déag seomra á reáchtáil agat. Íocann tú de réir líon na maoine — agus dá mhéad atá agat, is amhlaidh is saoire gach ceann.",
-      "testen": "30 lá saor in aisce",
+      "testen": "14 lá saor in aisce",
       "laufzeit": "Gan téarma íosta",
       "einrichtung": "Gan táille socraithe",
       "eu": "Óstáilte san AE, GDPR"
@@ -925,7 +926,7 @@
       "grundgebuehr": "Táille bhunúsach (an chéad mhaoin san áireamh)",
       "weitereObjekte": "{anzahl, plural, one {maoin bhreise amháin} other {# maoin bhreise}} × {jeObjekt}",
       "netto": "Gach suim gan CBL. Billeáil mhíosúil, is féidir cealú am ar bith.",
-      "ctaTesten": "Bain triail as 30 lá saor in aisce",
+      "ctaTesten": "Bain triail as 14 lá saor in aisce",
       "ctaDemo": "Féach ar an taispeántas",
       "inklusivTitel": "San áireamh i ngach plean",
       "inklusivSub": "Níl aon rud a thosaíonn i bpacáiste níos daoire — seo an raon iomlán.",
@@ -985,7 +986,7 @@
       "sub": "Cad ba mhaith le hóstaigh a fháil amach roimh athrú — go gairid agus gan chló beag.",
       "laufzeit": {
         "frage": "An bhfuil téarma íosta ann?",
-        "antwort": "Níl. Ritheann an síntiús go míosúil agus is féidir é a chealú le fógra ceithre seachtaine go deireadh na míosa. Tá an chéad 30 lá saor in aisce, gan sonraí íocaíochta."
+        "antwort": "Ní hea. Is míosúil an síntiús agus is féidir é a chealú le fógra ceithre seachtaine roimh dheireadh na míosa. Tá an chéad 14 lá saor in aisce: Cuireann tú do shonraí íocaíochta isteach ag an tús, ach ní dhéanfar an t-airgead a tharraingt siar ach amháin tar éis na tréimhse trialach. Má chealóidh tú roimhe sin, ní íocfaidh tú tada."
       },
       "objektzahl": {
         "frage": "Cad a tharlaíonn nuair a chuirim maoin leis?",
@@ -1030,7 +1031,7 @@
       "eu": "Óstáilte san AE, ag cloí le GDPR",
       "start": "Seoladh an 1 Meán Fómhair 2026",
       "sprachen": "27 dtír, 24 teanga",
-      "ctaTrial": "Bain triail as saor in aisce ar feadh 30 lá",
+      "ctaTrial": "Bain triail as saor in aisce ar feadh 14 lá",
       "ctaKontakt": "Scríobh chugainn"
     },
     "warum": {
@@ -1178,7 +1179,7 @@
   },
   "funktionen": {
     "rahmen": {
-      "ctaTesten": "Bain triail as 30 lá saor in aisce",
+      "ctaTesten": "Bain triail as 14 lá saor in aisce",
       "ctaDemo": "Féach ar an taispeántas",
       "weiter": "Ar aghaidh chuig na gnéithe eile",
       "mehr": "Féach",

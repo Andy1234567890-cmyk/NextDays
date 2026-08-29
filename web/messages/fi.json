@@ -26,7 +26,10 @@
       "da": "Tanska",
       "en": "Englanti"
     },
-    "explain": "Selitys: {label}"
+    "explain": "Selitys: {label}",
+    "themeToggle": "Vaihda teemaa",
+    "themeToggleLight": "Vaalea teema",
+    "themeToggleDark": "Tumma teema"
   },
   "legal": {
     "agbLinkLabel": "Sopimusehdot",
@@ -118,7 +121,8 @@
     },
     "type": {
       "title": "Mitä vuokraat?",
-      "text": "Valitse toimintatyyppi — se määrittää hallintapaneelin termit ja moduulit."
+      "text": "Valitse toimintatyyppi — se määrittää hallintapaneelin termit ja moduulit.",
+      "bald": "Käsittelyssä"
     },
     "tax": {
       "title": "Verot & maksut",
@@ -134,7 +138,7 @@
     },
     "switch": {
       "title": "Tuo olemassa olevat kohteet",
-      "intro": "Näin tuot olemassa olevat Booking-/Airbnb-kohteesi myNextDaysiin — ilman kaksoisvarauksia.",
+      "intro": "Näin tuot olemassa olevat ilmoituksesi myNextDays-palveluun – ilman päällekkäisvarauksia.",
       "cutover": {
         "title": "Tärkeää ennen yhdistämistä",
         "a": "Irrota jokainen portaali aiemmasta järjestelmästäsi, ennen kuin yhdistät sen tähän — kanavaa kohti vain YKSI järjestelmä saa lähettää tietoja.",
@@ -147,21 +151,24 @@
         "title": "Luo kohde",
         "text": "Luo yksi kohde jokaista olemassa olevaa ilmoitusta kohti — nimi, laji ja perushinta riittävät liittämiseen.",
         "count": "{count, plural, =0 {Ei vielä kohteita} one {# kohde} other {# kohdetta}}",
-        "airbnbHint": "Tuletko Airbnb:stä? Ohita tämä vaihe — kohteesi tuodaan automaattisesti, kun yhdistät Airbnb:n."
+        "airbnbHint": "Tuletko Airbnb:stä? Ohita tämä vaihe — kohteesi tuodaan automaattisesti, kun yhdistät Airbnb:n.",
+        "zuordnenHint": "Booking.comia ja muita portaaleja varten tarvitset tämän kohteen: Yhdistettäessä portaalin huoneet yhdistetään 1:1 kohteisiisi. Vain Airbnb:ssä tämä vaihe jää pois – siellä ilmoitukset tulevat yhdistettäessä."
       },
       "step2": {
         "title": "Portaalin yhdistäminen ja liittäminen",
         "text": "Yhdistä Booking, Airbnb ym. ja liitä portaalin huoneet 1:1 kohteisiisi. Varaukset ja saatavuus tulevat sen jälkeen automaattisesti.",
         "connect": "Yhdistä portaali",
         "connectMore": "Yhdistä toinen portaali",
-        "alreadyConnected": "Yksi portaali on jo yhdistetty ja kohteesi on lähetetty — täällä ei tarvitse yhdistää uudelleen. Käytä kohtaa „Yhdistä toinen portaali“ vain LISÄportaalille (esim. Booking)."
+        "alreadyConnected": "Yksi portaali on jo yhdistetty ja kohteesi on lähetetty — täällä ei tarvitse yhdistää uudelleen. Käytä kohtaa „Yhdistä toinen portaali“ vain LISÄportaalille (esim. Booking).",
+        "connectNamed": "Yhdistä {portal}",
+        "textNamed": "Yhdistä {portale} ja liitä portaalin huoneet 1:1 kohteisiisi. Varaukset ja saatavuus päivittyvät sen jälkeen automaattisesti."
       },
       "pull": {
-        "button": "Hae kohteet portaalista",
         "result": "{count, plural, =0 {Uusia kohteita ei löytynyt} one {# kohde otettu käyttöön} other {# kohdetta otettu käyttöön}}"
       },
       "finishCta": "Viimeistele tuonti",
       "finishHint": "Vahvista ensin yllä oleva ohje ja luo vähintään yksi kohde.",
+      "finishHintObjekt": "Luo ensin vähintään yksi kohde – ilman kohdetta ei ole mitään hallittavaa. Lodgify-tuonti on vapaaehtoinen eikä pakollinen.",
       "bookings": {
         "title": "Olemassa olevien varausten sisäänluku",
         "text": "Hae yhdistettyjen portaaliesi varaukset kalenteriisi.",
@@ -193,7 +200,32 @@
       },
       "finish": {
         "notRegistered": "Vähintään yksi kohde on lähetettävä varausportaaleihin, ennen kuin päätät käyttöönoton. Yhdistä portaali vaiheessa 2 — kohde lähetetään samalla automaattisesti."
+      },
+      "nav": {
+        "zurueck": "Takaisin",
+        "weiter": "Jatka",
+        "zaehler": "Vaihe {aktuell} / {gesamt}"
+      },
+      "auswahl": {
+        "title": "Millä portaaleilla myyt tänään?",
+        "text": "Määritämme tuonnin sen mukaan. Voit yhdistää lisää portaaleja myöhemmin.",
+        "keine": "En myy vielä millään portaalilla"
       }
+    },
+    "spaeterEinrichten": "Määritä myöhemmin",
+    "schrittVon": "Vaihe {aktuell}/{gesamt}",
+    "claim1": "Kaikki portaalit, yksi kalenteri – ja kohteesi tulevat mukaan.",
+    "claim2": "Hinnat, saatavuus ja viestit yhdessä paikassa.",
+    "claim3": "Enemmän aikaa vieraille, vähemmän hallinnointiin.",
+    "usp": {
+      "portale": "Kaikki suuret portaalit yhdistetty",
+      "kalender": "Yksi kalenteri kaikille portaaleille",
+      "doppelt": "Varaamme varatut yöt heti kaikkialla",
+      "import": "Siirrämme olemassa olevat ilmoitukset puolestasi",
+      "zahlung": "Maksut ja tilitykset sisältyvät",
+      "preise": "Hallitse kausikohtaisia ja yökohtaisia hintoja",
+      "posteingang": "Vieraiden viestit kaikista portaaleista yhdessä postilaatikossa",
+      "app": "Kaikki myös sovelluksessa"
     }
   },
   "nav": {
@@ -6206,6 +6238,7 @@
       "untertitelKanaele": "Valitse, missä tätä kohdetta myydään.",
       "untertitelPruefen": "Tarkista, mikä portaaleissa muuttuu.",
       "nichtVerfuegbar": "Ei tällä hetkellä saatavilla",
+      "portalVerbinden": "Yhdistä {portal} nyt",
       "weiter": "Jatka",
       "abbrechen": "Peruuta",
       "jetztVeroeffentlichen": "Julkaise nyt",
@@ -9933,7 +9966,11 @@
       "statusPastDue": "Maksu myöhässä",
       "statusCanceled": "Irtisanottu",
       "statusUnpaid": "Maksamaton",
-      "statusIncomplete": "Keskeneräinen"
+      "statusIncomplete": "Keskeneräinen",
+      "trialEnds": "Koejakso päättyy",
+      "trialBannerTitel": "Ilmainen kokeilujakso",
+      "trialBannerText": "Koejakso päättyy {datum}. Tämän jälkeen tilauksesi jatkuu automaattisesti.",
+      "trialBannerKnopf": "Näytä tilaus"
     },
     "users": {
       "noAccess": "Ei käyttöoikeutta",
@@ -11531,6 +11568,74 @@
       "subtitle": "Todellisuudessa maksettu raha – laskettu kirjattujen osamaksujen perusteella, ei avoimien saatavien perusteella.",
       "title": "Tase-tilastot",
       "to": "Saakka"
+    }
+  },
+  "startbahn": {
+    "titel": "Aloitus",
+    "fortschritt": "{fertig} / {gesamt} valmis",
+    "gruppeZaehler": "{fertig} / {gesamt} valmis",
+    "dauer": "noin {minuten} minuuttia",
+    "gruppe": {
+      "kanaele": "Portaalien asettaminen",
+      "verkaufsfertig": "Kohteiden valmistelu myyntiin",
+      "grundlagen": "Perusasiat"
+    },
+    "schritt": {
+      "konto": {
+        "titel": "Tili luotu",
+        "text": "Yrityksesi on perustettu."
+      },
+      "firma": {
+        "titel": "Yritystietojen lisääminen",
+        "text": "Osoite, verotunnus ja IBAN – portaalit vaativat ne, ja ilman IBAN-tunnusta et saa rahaa.",
+        "aktion": "Yritystietoihin"
+      },
+      "verbinden": {
+        "titel": "Yhdistä portaali",
+        "text": "Yhdistä Airbnb, Booking tai Expedia, jotta varaukset ja kalenterit synkronoituvat.",
+        "aktion": "Yhdistä portaali"
+      },
+      "objekteHolen": {
+        "titel": "Hae kohteet portaalista",
+        "text": "Luomme ilmoituksistasi kohteita – sinun ei tarvitse kirjoittaa mitään. Huomaa: toiseen ohjelmistoon sidotut ilmoitukset eivät siirry.",
+        "gesperrt": "Yhdistä ensin portaali.",
+        "aktion": "Hae kohteet"
+      },
+      "erstesObjekt": {
+        "titel": "Luo ensimmäinen kohde",
+        "text": "Luo ensimmäinen kohteesi – loma-asunto tai huonetyyppi.",
+        "aktion": "Luo kohde"
+      },
+      "inhalteHolen": {
+        "titel": "Varustelun ja sääntöjen siirto",
+        "text": "Huoneet, sängyt, peruutusehdot, varustelu ja maksut ovat jo portaalissa – siirrämme ne kaikkiin kohteisiin kerralla.",
+        "gesperrt": "Hae ensin kohteesi portaalista.",
+        "aktion": "Sisällön siirto"
+      },
+      "preise": {
+        "titel": "Hintojen määritys",
+        "text": "Ilman hintaa portaali ei voi myydä kohdettasi.",
+        "gesperrt": "Tarvitset ensin kohteen.",
+        "aktion": "Hintojen määritys"
+      },
+      "sperrtermine": {
+        "titel": "Estettyjen päivämäärien syöttäminen",
+        "text": "Varatut ajanjaksot EIVÄT siirry tuonnin mukana. Syötä ne ennen myyntiä – muuten yö varataan kahdesti.",
+        "gesperrt": "Tarvitset ensin kohteen.",
+        "aktion": "Kalenteriin"
+      },
+      "veroeffentlichen": {
+        "titel": "Kohteiden julkaisu",
+        "text": "Kaikki tarkistettu? Julkaise sitten kohteesi portaaleissa ja markkinapaikalla.",
+        "gesperrt": "Vasta kun kohde ja hinnat ovat valmiina – muuten myyt jotain, mikä ei ole vielä valmis.",
+        "aktion": "Julkaise"
+      },
+      "kanaele": {
+        "titel": "Myyntikanavien valinta",
+        "text": "Päätä, minkä portaalien kautta ja myydäänkö markkinapaikan kautta.",
+        "gesperrt": "Tarvitset ensin kohteen.",
+        "aktion": "Kanaviin"
+      }
     }
   }
 }

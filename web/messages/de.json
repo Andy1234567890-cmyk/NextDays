@@ -26,7 +26,10 @@
       "da": "Dänisch",
       "en": "Englisch"
     },
-    "explain": "Erklärung zu {label}"
+    "explain": "Erklärung zu {label}",
+    "themeToggle": "Design wechseln",
+    "themeToggleLight": "Helles Design",
+    "themeToggleDark": "Dunkles Design"
   },
   "legal": {
     "agbLinkLabel": "AGB",
@@ -118,7 +121,8 @@
     },
     "type": {
       "title": "Was vermietest du?",
-      "text": "Wähle die Betriebsart — sie bestimmt Begriffe und Module in deinem Dashboard."
+      "text": "Wähle die Betriebsart — sie bestimmt Begriffe und Module in deinem Dashboard.",
+      "bald": "In Arbeit"
     },
     "tax": {
       "title": "Steuern & Zahlungen",
@@ -134,7 +138,7 @@
     },
     "switch": {
       "title": "Bestehende Objekte importieren",
-      "intro": "So holst du deine bestehenden Booking-/Airbnb-Objekte zu myNextDays — ohne Doppelbuchungen.",
+      "intro": "So holst du deine bestehenden Inserate zu myNextDays — ohne Doppelbuchungen.",
       "cutover": {
         "title": "Wichtig vor dem Verbinden",
         "a": "Trenne jedes Portal von deinem bisherigen System, bevor du es hier verbindest — pro Kanal darf immer nur EIN System pushen.",
@@ -147,21 +151,24 @@
         "title": "Objekt anlegen",
         "text": "Lege für jedes bestehende Listing ein Objekt an — Name, Art und Grundpreis genügen zum Zuordnen.",
         "count": "{count, plural, =0 {Noch keine Objekte} one {# Objekt} other {# Objekte}}",
-        "airbnbHint": "Kommst du von Airbnb? Dann überspringe diesen Schritt — beim Verbinden von Airbnb werden deine Objekte automatisch übernommen."
+        "airbnbHint": "Kommst du von Airbnb? Dann überspringe diesen Schritt — beim Verbinden von Airbnb werden deine Objekte automatisch übernommen.",
+        "zuordnenHint": "Für Booking.com und andere Portale brauchst du dieses Objekt: Beim Verbinden werden die Zimmer des Portals 1:1 deinen Objekten zugeordnet. Nur bei Airbnb entfällt der Schritt — dort kommen die Inserate beim Verbinden mit."
       },
       "step2": {
         "title": "Portal verbinden & zuordnen",
         "text": "Verbinde Booking, Airbnb & Co. und ordne die Portal-Zimmer 1:1 deinen Objekten zu. Buchungen und Verfügbarkeit kommen danach automatisch.",
         "connect": "Portal verbinden",
         "connectMore": "Weiteres Portal verbinden",
-        "alreadyConnected": "Ein Portal ist schon verbunden und deine Objekte sind übertragen — du musst hier nichts erneut verbinden. Nur für ein WEITERES Portal (z. B. Booking) noch einmal auf „Weiteres Portal verbinden“."
+        "alreadyConnected": "Ein Portal ist schon verbunden und deine Objekte sind übertragen — du musst hier nichts erneut verbinden. Nur für ein WEITERES Portal (z. B. Booking) noch einmal auf „Weiteres Portal verbinden“.",
+        "connectNamed": "{portal} verbinden",
+        "textNamed": "Verbinde {portale} und ordne die Portal-Zimmer 1:1 deinen Objekten zu. Buchungen und Verfügbarkeit kommen danach automatisch."
       },
       "pull": {
-        "button": "Objekte aus Portal holen",
         "result": "{count, plural, =0 {Keine neuen Objekte gefunden} one {# Objekt übernommen} other {# Objekte übernommen}}"
       },
       "finishCta": "Import abschließen",
       "finishHint": "Bitte bestätige zuerst den Hinweis oben und lege mindestens ein Objekt an.",
+      "finishHintObjekt": "Lege zuerst mindestens ein Objekt an — ohne Objekt gibt es nichts zu verwalten. Der Lodgify-Import ist freiwillig und kein Muss.",
       "bookings": {
         "title": "Bestehende Buchungen einlesen",
         "text": "Hol dir die Reservierungen deiner verbundenen Portale in deinen Kalender.",
@@ -193,7 +200,32 @@
       },
       "finish": {
         "notRegistered": "Mindestens ein Objekt muss an die Buchungsportale übermittelt sein, bevor du das Onboarding abschließt. Verbinde in Schritt 2 ein Portal — dabei wird das Objekt automatisch übertragen."
+      },
+      "nav": {
+        "zurueck": "Zurück",
+        "weiter": "Weiter",
+        "zaehler": "Schritt {aktuell} von {gesamt}"
+      },
+      "auswahl": {
+        "title": "Auf welchen Portalen verkaufst du heute?",
+        "text": "Wir richten den Import darauf aus. Du kannst später jederzeit weitere Portale verbinden.",
+        "keine": "Ich verkaufe noch auf keinem Portal"
       }
+    },
+    "spaeterEinrichten": "Später einrichten",
+    "schrittVon": "Schritt {aktuell} von {gesamt}",
+    "claim1": "Alle Portale, ein Kalender — und deine Objekte kommen mit.",
+    "claim2": "Preise, Belegung und Nachrichten an einer Stelle.",
+    "claim3": "Mehr Zeit für die Gäste, weniger für die Verwaltung.",
+    "usp": {
+      "portale": "Alle großen Portale angebunden",
+      "kalender": "Ein Kalender für alle Portale",
+      "doppelt": "Gebuchte Nächte sperren wir überall sofort",
+      "import": "Bestehende Inserate holen wir dir rüber",
+      "zahlung": "Zahlungen und Auszahlungen inklusive",
+      "preise": "Preise je Saison und Nacht steuern",
+      "posteingang": "Gästenachrichten aller Portale in einem Postfach",
+      "app": "Alles auch in der App"
     }
   },
   "nav": {
@@ -6227,6 +6259,7 @@
       "untertitelKanaele": "Wählen Sie, wo dieses Objekt verkauft werden soll.",
       "untertitelPruefen": "Prüfen Sie, was sich bei den Portalen ändert.",
       "nichtVerfuegbar": "Zurzeit nicht verfügbar",
+      "portalVerbinden": "{portal} jetzt verbinden",
       "weiter": "Weiter",
       "abbrechen": "Abbrechen",
       "jetztVeroeffentlichen": "Jetzt veröffentlichen",
@@ -9954,7 +9987,11 @@
       "statusPastDue": "Zahlung offen",
       "statusCanceled": "Gekündigt",
       "statusUnpaid": "Unbezahlt",
-      "statusIncomplete": "Unvollständig"
+      "statusIncomplete": "Unvollständig",
+      "trialEnds": "Testphase endet am",
+      "trialBannerTitel": "Kostenlose Testphase",
+      "trialBannerText": "Deine Testphase endet am {datum}. Danach wird dein Abo automatisch fortgesetzt.",
+      "trialBannerKnopf": "Tarif ansehen"
     },
     "users": {
       "noAccess": "Kein Zugriff",
@@ -11551,6 +11588,74 @@
         "stripe_fee": "Zahlungsgebühr",
         "adjustment": "Rückbelastung",
         "transfer": "Übertrag"
+      }
+    }
+  },
+  "startbahn": {
+    "titel": "Erste Schritte",
+    "fortschritt": "{fertig} von {gesamt} erledigt",
+    "gruppeZaehler": "{fertig} / {gesamt} erledigt",
+    "dauer": "etwa {minuten} Minuten",
+    "gruppe": {
+      "kanaele": "Portale einrichten",
+      "verkaufsfertig": "Objekte verkaufsfertig machen",
+      "grundlagen": "Grundlagen"
+    },
+    "schritt": {
+      "konto": {
+        "titel": "Konto angelegt",
+        "text": "Dein Betrieb ist eingerichtet."
+      },
+      "firma": {
+        "titel": "Firmendaten hinterlegen",
+        "text": "Anschrift, Steuernummer und IBAN — die Portale verlangen sie, und ohne IBAN kommt kein Geld bei dir an.",
+        "aktion": "Zu den Firmendaten"
+      },
+      "verbinden": {
+        "titel": "Portal verbinden",
+        "text": "Verbinde Airbnb, Booking oder Expedia, damit Buchungen und Kalender zusammenlaufen.",
+        "aktion": "Portal verbinden"
+      },
+      "objekteHolen": {
+        "titel": "Objekte vom Portal holen",
+        "text": "Wir legen deine Inserate als Objekte an — du musst nichts abtippen. Achtung: Anzeigen, die an eine andere Software gebunden sind, kommen nicht mit.",
+        "gesperrt": "Verbinde zuerst ein Portal.",
+        "aktion": "Objekte holen"
+      },
+      "erstesObjekt": {
+        "titel": "Erstes Objekt anlegen",
+        "text": "Lege dein erstes Objekt an — Ferienunterkunft oder Zimmertyp.",
+        "aktion": "Objekt anlegen"
+      },
+      "inhalteHolen": {
+        "titel": "Ausstattung und Regeln übernehmen",
+        "text": "Räume, Betten, Stornoregeln, Ausstattung und Gebühren stehen beim Portal schon — wir holen sie für alle Objekte auf einmal.",
+        "gesperrt": "Hol dir zuerst deine Objekte vom Portal.",
+        "aktion": "Inhalte übernehmen"
+      },
+      "preise": {
+        "titel": "Preise festlegen",
+        "text": "Ohne Preis kann kein Portal dein Objekt verkaufen.",
+        "gesperrt": "Du brauchst zuerst ein Objekt.",
+        "aktion": "Preise festlegen"
+      },
+      "sperrtermine": {
+        "titel": "Sperrtermine eintragen",
+        "text": "Belegte Zeiträume kommen beim Import NICHT mit. Trag sie ein, bevor du verkaufst — sonst wird eine Nacht zweimal gebucht.",
+        "gesperrt": "Du brauchst zuerst ein Objekt.",
+        "aktion": "Zum Kalender"
+      },
+      "veroeffentlichen": {
+        "titel": "Objekte veröffentlichen",
+        "text": "Alles geprüft? Dann schalte deine Objekte auf den Portalen und im Marktplatz frei.",
+        "gesperrt": "Erst wenn Objekt und Preise stehen — sonst verkaufst du etwas, das noch nicht fertig ist.",
+        "aktion": "Veröffentlichen"
+      },
+      "kanaele": {
+        "titel": "Verkaufswege wählen",
+        "text": "Entscheide, über welche Portale und ob über den Marktplatz verkauft wird.",
+        "gesperrt": "Du brauchst zuerst ein Objekt.",
+        "aktion": "Zu den Kanälen"
       }
     }
   }
