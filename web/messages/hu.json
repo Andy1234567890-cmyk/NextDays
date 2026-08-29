@@ -892,7 +892,8 @@
     "waTemplateSaved": "Sablon beküldve a Metának.",
     "waTemplateDeleted": "Sablon törölve.",
     "waTemplatePendingHint": "Ellenőrzés alatt — a Meta ez idő alatt nem engedi szerkeszteni a sablont.",
-    "waTemplateReviewHint": "Minden módosítás újra Meta ellenőrzés alá kerül; addig az eddigi verzió érvényes. A jóváhagyott sablonok legfeljebb tízszer módosíthatók 30 napon belül."
+    "waTemplateReviewHint": "Minden módosítás újra Meta ellenőrzés alá kerül; addig az eddigi verzió érvényes. A jóváhagyott sablonok legfeljebb tízszer módosíthatók 30 napon belül.",
+    "waTemplateSampleHint": "Meta sablon – nem szerkeszthető és nem törölhető."
   },
   "whatsapp": {
     "notConfigured": "A WhatsApp még nincs csatlakoztatva. Adja meg a hozzáférési adatokat (Meta Cloud API) a kiszolgáló beállításaiban, ezután a küldés aktív.",

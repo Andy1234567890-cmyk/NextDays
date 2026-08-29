@@ -892,7 +892,8 @@
     "waTemplateSaved": "Šablonas pateiktas Meta.",
     "waTemplateDeleted": "Šablonas ištrintas.",
     "waTemplatePendingHint": "Peržiūrima – Meta neleidžia redaguoti šablono peržiūros metu.",
-    "waTemplateReviewHint": "Kiekvienas pakeitimas vėl bus peržiūrimas Meta; iki tol galioja ankstesnė versija. Patvirtintus šablonus galima keisti ne daugiau kaip dešimt kartų per 30 dienų."
+    "waTemplateReviewHint": "Kiekvienas pakeitimas vėl bus peržiūrimas Meta; iki tol galioja ankstesnė versija. Patvirtintus šablonus galima keisti ne daugiau kaip dešimt kartų per 30 dienų.",
+    "waTemplateSampleHint": "Meta šablono pavyzdys – jo negalima redaguoti ar ištrinti."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp dar neprijungtas. Įveskite prisijungimo duomenis (Meta Cloud API) serverio nustatymuose, tada siuntimas bus aktyvus.",

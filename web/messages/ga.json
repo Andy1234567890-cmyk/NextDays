@@ -892,7 +892,8 @@
     "waTemplateSaved": "Teimpléad curtha isteach chuig Meta.",
     "waTemplateDeleted": "Teimpléad scriosta.",
     "waTemplatePendingHint": "Faoi athbhreithniú — ní cheadaíonn Meta teimpléad a chur in eagar le linn an ama seo.",
-    "waTemplateReviewHint": "Cuirtear gach athrú faoi bhráid Meta arís; go dtí sin, tá an leagan roimhe seo bailí. Ní féidir teimpléid cheadaithe a athrú níos mó ná deich n-uaire i 30 lá."
+    "waTemplateReviewHint": "Cuirtear gach athrú faoi bhráid Meta arís; go dtí sin, tá an leagan roimhe seo bailí. Ní féidir teimpléid cheadaithe a athrú níos mó ná deich n-uaire i 30 lá.",
+    "waTemplateSampleHint": "Teimpléad samplach ó Meta — ní féidir é a chur in eagar ná a scriosadh."
   },
   "whatsapp": {
     "notConfigured": "Níl WhatsApp nasctha fós. Cuir na dintiúir (Meta Cloud API) i socruithe an fhreastalaí, ansin beidh an seoladh gníomhach.",

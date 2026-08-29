@@ -892,7 +892,8 @@
     "waTemplateSaved": "Veidne iesniegta Meta.",
     "waTemplateDeleted": "Veidne dzēsta.",
     "waTemplatePendingHint": "Pārskatīšanā — Meta neļauj rediģēt veidni šajā laikā.",
-    "waTemplateReviewHint": "Katras izmaiņas atkal tiks nosūtītas Meta pārskatīšanai; līdz tam ir spēkā iepriekšējā versija. Apstiprinātas veidnes var mainīt ne vairāk kā desmit reizes 30 dienu laikā."
+    "waTemplateReviewHint": "Katras izmaiņas atkal tiks nosūtītas Meta pārskatīšanai; līdz tam ir spēkā iepriekšējā versija. Apstiprinātas veidnes var mainīt ne vairāk kā desmit reizes 30 dienu laikā.",
+    "waTemplateSampleHint": "Meta veidnes piemērs — to nevar rediģēt vai dzēst."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp vēl nav savienots. Ievadiet piekļuves datus (Meta Cloud API) servera iestatījumos, tad sūtīšana būs aktīva.",

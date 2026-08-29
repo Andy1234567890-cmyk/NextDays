@@ -892,7 +892,8 @@
     "waTemplateSaved": "Predloga je bila poslana Meti.",
     "waTemplateDeleted": "Predloga je bila izbrisana.",
     "waTemplatePendingHint": "V pregledu – Meta med pregledom ne dovoljuje urejanja predloge.",
-    "waTemplateReviewHint": "Vsaka sprememba gre ponovno v Metin pregled; do takrat velja prejšnja različica. Odobrene predloge je mogoče spremeniti največ desetkrat v 30 dneh."
+    "waTemplateReviewHint": "Vsaka sprememba gre ponovno v Metin pregled; do takrat velja prejšnja različica. Odobrene predloge je mogoče spremeniti največ desetkrat v 30 dneh.",
+    "waTemplateSampleHint": "Predloga primera iz Meta — ni mogoče spreminjati ali brisati."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp še ni povezan. Vnesite dostopne podatke (Meta Cloud API) v nastavitvah strežnika, nato bo pošiljanje aktivno.",

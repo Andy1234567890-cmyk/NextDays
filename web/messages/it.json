@@ -892,7 +892,8 @@
     "waTemplateSaved": "Modello inviato a Meta.",
     "waTemplateDeleted": "Modello eliminato.",
     "waTemplatePendingHint": "In revisione - Meta non consente la modifica di un modello durante questo periodo.",
-    "waTemplateReviewHint": "Ogni modifica viene nuovamente sottoposta a revisione da Meta; fino ad allora, si applica la versione precedente. I modelli approvati possono essere modificati al massimo dieci volte in 30 giorni."
+    "waTemplateReviewHint": "Ogni modifica viene nuovamente sottoposta a revisione da Meta; fino ad allora, si applica la versione precedente. I modelli approvati possono essere modificati al massimo dieci volte in 30 giorni.",
+    "waTemplateSampleHint": "Modello di esempio di Meta: non può essere modificato o eliminato."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp non è ancora collegato. Inserisci le credenziali (Meta Cloud API) nelle impostazioni del server per attivare l'invio.",

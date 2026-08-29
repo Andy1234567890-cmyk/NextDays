@@ -892,7 +892,8 @@
     "waTemplateSaved": "Mall inskickad till Meta.",
     "waTemplateDeleted": "Mall borttagen.",
     "waTemplatePendingHint": "Under granskning – Meta tillåter inte redigering av en mall under denna tid.",
-    "waTemplateReviewHint": "Varje ändring skickas till Metas granskning igen; fram till dess gäller den tidigare versionen. Godkända mallar kan ändras högst tio gånger på 30 dagar."
+    "waTemplateReviewHint": "Varje ändring skickas till Metas granskning igen; fram till dess gäller den tidigare versionen. Godkända mallar kan ändras högst tio gånger på 30 dagar.",
+    "waTemplateSampleHint": "Exempelmall från Meta – kan varken ändras eller raderas."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp är ännu inte anslutet. Ange inloggningsuppgifterna (Meta Cloud API) i serverinställningarna, då är utskicket aktivt.",

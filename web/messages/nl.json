@@ -892,7 +892,8 @@
     "waTemplateSaved": "Sjabloon ingediend bij Meta.",
     "waTemplateDeleted": "Sjabloon verwijderd.",
     "waTemplatePendingHint": "In beoordeling — Meta staat het bewerken van een sjabloon gedurende deze periode niet toe.",
-    "waTemplateReviewHint": "Elke wijziging wordt opnieuw ter beoordeling voorgelegd aan Meta; tot die tijd geldt de vorige versie. Goedgekeurde sjablonen kunnen maximaal tien keer in 30 dagen worden gewijzigd."
+    "waTemplateReviewHint": "Elke wijziging wordt opnieuw ter beoordeling voorgelegd aan Meta; tot die tijd geldt de vorige versie. Goedgekeurde sjablonen kunnen maximaal tien keer in 30 dagen worden gewijzigd.",
+    "waTemplateSampleHint": "Voorbeeldtemplate van Meta — kan niet worden gewijzigd of verwijderd."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp is nog niet verbonden. Voer de inloggegevens (Meta Cloud API) in de serverinstellingen in, dan is verzending actief.",

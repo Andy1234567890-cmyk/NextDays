@@ -892,7 +892,8 @@
     "waTemplateSaved": "Template submitted to Meta.",
     "waTemplateDeleted": "Template deleted.",
     "waTemplatePendingHint": "Under review — Meta does not allow editing a template during this time.",
-    "waTemplateReviewHint": "Every change goes into Meta's review again; until then, the previous version applies. Approved templates can be changed a maximum of ten times in 30 days."
+    "waTemplateReviewHint": "Every change goes into Meta's review again; until then, the previous version applies. Approved templates can be changed a maximum of ten times in 30 days.",
+    "waTemplateSampleHint": "Example template from Meta — it cannot be changed or deleted."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp is not connected yet. Add the credentials (Meta Cloud API) in the server settings to activate sending.",

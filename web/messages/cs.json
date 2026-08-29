@@ -892,7 +892,8 @@
     "waTemplateSaved": "Šablona odeslána do Meta.",
     "waTemplateDeleted": "Šablona smazána.",
     "waTemplatePendingHint": "Ve fázi kontroly – Meta během ní neumožňuje šablonu upravovat.",
-    "waTemplateReviewHint": "Každá změna podléhá opětovné kontrole Meta; do té doby platí předchozí verze. Schválené šablony lze změnit maximálně desetkrát za 30 dní."
+    "waTemplateReviewHint": "Každá změna podléhá opětovné kontrole Meta; do té doby platí předchozí verze. Schválené šablony lze změnit maximálně desetkrát za 30 dní.",
+    "waTemplateSampleHint": "Ukázková šablona od Meta – nelze ji upravovat ani mazat."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp zatím není propojen. Zadejte přístupové údaje (Meta Cloud API) v nastavení serveru, poté bude odesílání aktivní.",

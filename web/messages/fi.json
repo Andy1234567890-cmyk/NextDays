@@ -892,7 +892,8 @@
     "waTemplateSaved": "Malli lähetetty Metalle.",
     "waTemplateDeleted": "Malli poistettu.",
     "waTemplatePendingHint": "Tarkistuksessa – Meta ei anna muokata mallia tarkistuksen aikana.",
-    "waTemplateReviewHint": "Jokainen muutos menee uudelleen Metan tarkistukseen; siihen asti edellinen versio on voimassa. Hyväksyttyjä malleja voi muuttaa enintään kymmenen kertaa 30 päivän aikana."
+    "waTemplateReviewHint": "Jokainen muutos menee uudelleen Metan tarkistukseen; siihen asti edellinen versio on voimassa. Hyväksyttyjä malleja voi muuttaa enintään kymmenen kertaa 30 päivän aikana.",
+    "waTemplateSampleHint": "Metan esimerkkimalli – sitä ei voi muuttaa tai poistaa."
   },
   "whatsapp": {
     "notConfigured": "WhatsAppia ei ole vielä yhdistetty. Syötä tunnukset (Meta Cloud API) palvelimen asetuksiin, niin lähetys on käytössä.",

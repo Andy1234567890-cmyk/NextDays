@@ -892,7 +892,8 @@
     "waTemplateSaved": "Skabelon indsendt til Meta.",
     "waTemplateDeleted": "Skabelon slettet.",
     "waTemplatePendingHint": "Under gennemgang — Meta tillader ikke redigering af en skabelon i denne periode.",
-    "waTemplateReviewHint": "Hver ændring sendes igen til Metas gennemgang; indtil da gælder den tidligere version. Godkendte skabeloner kan højst ændres ti gange på 30 dage."
+    "waTemplateReviewHint": "Hver ændring sendes igen til Metas gennemgang; indtil da gælder den tidligere version. Godkendte skabeloner kan højst ændres ti gange på 30 dage.",
+    "waTemplateSampleHint": "Eksempel på skabelon fra Meta – kan hverken ændres eller slettes."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp er endnu ikke forbundet. Angiv adgangsoplysningerne (Meta Cloud API) i serverindstillingerne, så er afsendelse aktiv.",

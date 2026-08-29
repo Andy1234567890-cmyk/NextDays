@@ -419,11 +419,21 @@ class WhatsAppService:
         """
         db, tenant_id = self._require(ctx)
         try:
-            return rollout(self._client_fuer(db, tenant_id))
+            ergebnis = rollout(self._client_fuer(db, tenant_id))
         except WhatsAppError as exc:
             raise WhatsAppServiceError(
                 exc.message, status_code=exc.status_code
             ) from exc
+        # Die Feldreihenfolge auch fuer uebersprungene Vorlagen sichern: sie
+        # koennen aus einem Rollout stammen, der aelter ist als die
+        # Zuordnungstabelle (0489). Ohne diesen Nachtrag zeigte der Editor bei
+        # genau diesen Vorlagen weiter Metas {{1}}.
+        felder = ergebnis.pop("felder", {}) or {}
+        for kennung, reihenfolge in felder.items():
+            name, _, sprache = str(kennung).partition("/")
+            if name and sprache:
+                self._felder_speichern(db, tenant_id, name, sprache, reihenfolge)
+        return ergebnis
 
     def _client_fuer(self, db: Client, tenant_id: str) -> WhatsAppClient:
         """Der WhatsApp-Client DIESES Betriebs — Token, Nummer und WABA aus

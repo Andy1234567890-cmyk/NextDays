@@ -892,7 +892,8 @@
     "waTemplateSaved": "Șablon trimis la Meta.",
     "waTemplateDeleted": "Șablon șters.",
     "waTemplatePendingHint": "În curs de revizuire — Meta nu permite editarea unui șablon în acest timp.",
-    "waTemplateReviewHint": "Fiecare modificare este trimisă din nou spre revizuire la Meta; până atunci, versiunea anterioară rămâne valabilă. Șabloanele aprobate pot fi modificate de cel mult zece ori în 30 de zile."
+    "waTemplateReviewHint": "Fiecare modificare este trimisă din nou spre revizuire la Meta; până atunci, versiunea anterioară rămâne valabilă. Șabloanele aprobate pot fi modificate de cel mult zece ori în 30 de zile.",
+    "waTemplateSampleHint": "Șablon exemplu de la Meta — nu poate fi modificat sau șters."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp nu este încă conectat. Introduceți datele de acces (Meta Cloud API) în setările serverului, apoi trimiterea este activă.",

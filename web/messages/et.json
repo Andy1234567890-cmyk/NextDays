@@ -892,7 +892,8 @@
     "waTemplateSaved": "Mall esitati Metale.",
     "waTemplateDeleted": "Mall kustutati.",
     "waTemplatePendingHint": "Ülevaatamisel – Meta ei luba malli selle ajal muuta.",
-    "waTemplateReviewHint": "Iga muudatus läheb uuesti Meta ülevaatamisele; seni kehtib eelmine versioon. Heakskiidetud malle saab muuta maksimaalselt kümme korda 30 päeva jooksul."
+    "waTemplateReviewHint": "Iga muudatus läheb uuesti Meta ülevaatamisele; seni kehtib eelmine versioon. Heakskiidetud malle saab muuta maksimaalselt kümme korda 30 päeva jooksul.",
+    "waTemplateSampleHint": "Meta näidis – seda ei saa muuta ega kustutada."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp pole veel ühendatud. Sisesta juurdepääsuandmed (Meta Cloud API) serveri seadetesse, siis on saatmine aktiivne.",

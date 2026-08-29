@@ -892,7 +892,8 @@
     "waTemplateSaved": "Vorlage bei Meta eingereicht.",
     "waTemplateDeleted": "Vorlage gelöscht.",
     "waTemplatePendingHint": "In Prüfung — Meta lässt eine Vorlage währenddessen nicht bearbeiten.",
-    "waTemplateReviewHint": "Jede Änderung geht erneut in Metas Prüfung; bis dahin gilt die bisherige Fassung. Freigegebene Vorlagen lassen sich höchstens zehnmal in 30 Tagen ändern."
+    "waTemplateReviewHint": "Jede Änderung geht erneut in Metas Prüfung; bis dahin gilt die bisherige Fassung. Freigegebene Vorlagen lassen sich höchstens zehnmal in 30 Tagen ändern.",
+    "waTemplateSampleHint": "Beispielvorlage von Meta — sie lässt sich weder ändern noch löschen."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp ist noch nicht verbunden. Zugangsdaten (Meta Cloud API) in den Server-Einstellungen hinterlegen, dann ist der Versand aktiv.",

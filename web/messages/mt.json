@@ -892,7 +892,8 @@
     "waTemplateSaved": "Mudell sottomess lil Meta.",
     "waTemplateDeleted": "Mudell imħassar.",
     "waTemplatePendingHint": "Qed jiġi rivedut — Meta ma tippermettix li mudell jiġi editjat matul dan iż-żmien.",
-    "waTemplateReviewHint": "Kull bidla terġa' tgħaddi minn reviżjoni ta' Meta; sa dakinhar, il-verżjoni preċedenti tibqa' valida. Mudelli approvati jistgħu jinbidlu massimu ta' għaxar darbiet fi 30 jum."
+    "waTemplateReviewHint": "Kull bidla terġa' tgħaddi minn reviżjoni ta' Meta; sa dakinhar, il-verżjoni preċedenti tibqa' valida. Mudelli approvati jistgħu jinbidlu massimu ta' għaxar darbiet fi 30 jum.",
+    "waTemplateSampleHint": "Mudell eżempju minn Meta — ma jistax jinbidel jew jitħassar."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp għadu mhux imqabbad. Daħħal il-kredenzjali (Meta Cloud API) fis-settings tas-server, imbagħad il-konsenja tkun attiva.",

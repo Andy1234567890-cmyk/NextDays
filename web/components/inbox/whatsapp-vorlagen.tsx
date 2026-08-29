@@ -60,6 +60,21 @@ function statusFarbe(status: string): string {
   }
 }
 
+/** Metas mitgelieferte Beispielvorlagen. Sie lassen sich weder ändern noch
+ *  löschen — Meta antwortet mit „Beispielvorlagen können nicht bearbeitet oder
+ *  gelöscht werden. (Meta-Code 100)".
+ *
+ *  Erkannt am Namen, weil die API kein Merkmal dafür liefert: die Felder
+ *  `library_template_name`, `sub_category` und `parameter_format` sehen bei
+ *  ihnen genauso aus wie bei eigenen Vorlagen (live geprüft). Trifft die Liste
+ *  eine nicht, bleibt Metas Fehlertext die Rückfallebene — schlimmer als ein
+ *  gesperrter Knopf ist einer, der nichts tut. */
+const META_BEISPIELE = /^(hello_world|jaspers_market_)/;
+
+function istMetaBeispiel(name: string): boolean {
+  return META_BEISPIELE.test(name);
+}
+
 /** Nur diese Zustände lässt Meta bearbeiten. PENDING ist bewusst nicht dabei. */
 function darfBearbeitet(status: string): boolean {
   return ["APPROVED", "REJECTED", "PAUSED"].includes(status.toUpperCase());
@@ -214,10 +229,10 @@ export function WhatsAppVorlagen() {
   }
 
   return (
-    <div className="grid min-h-0 flex-1 grid-cols-12 gap-4 overflow-y-auto p-6">
+    <div className="grid min-h-0 flex-1 grid-cols-12 gap-6 overflow-y-auto p-6">
       {/* Liste */}
       <div className="col-span-12 lg:col-span-7">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
           <h2 className="font-display text-lg font-extrabold">
             {t("tabWhatsAppTemplates")}
           </h2>
@@ -232,7 +247,7 @@ export function WhatsAppVorlagen() {
             {t("waTemplatesRollout")}
           </Button>
         </div>
-        <p className="mb-3 max-w-2xl text-sm text-muted-foreground">
+        <p className="mb-5 max-w-2xl text-sm text-muted-foreground">
           {t("waTemplatesIntro")}
         </p>
 
@@ -247,11 +262,11 @@ export function WhatsAppVorlagen() {
             {t("waTemplatesEmpty")}
           </p>
         ) : (
-          <ul className="flex flex-col gap-2">
+          <ul className="flex flex-col gap-3">
             {items.map((tpl) => (
               <li
                 key={tpl.id}
-                className="flex items-start gap-3 rounded-2xl border border-border p-3"
+                className="flex items-start gap-4 rounded-2xl border border-border p-4"
               >
                 <div className="flex min-w-0 flex-1 flex-col">
                   <span className="flex flex-wrap items-center gap-2">
@@ -289,9 +304,15 @@ export function WhatsAppVorlagen() {
                   type="button"
                   variant="outline"
                   size="icon"
-                  disabled={!darfBearbeitet(tpl.status)}
+                  disabled={
+                    !darfBearbeitet(tpl.status) || istMetaBeispiel(tpl.name)
+                  }
                   title={
-                    darfBearbeitet(tpl.status) ? undefined : t("waTemplatePendingHint")
+                    istMetaBeispiel(tpl.name)
+                      ? t("waTemplateSampleHint")
+                      : darfBearbeitet(tpl.status)
+                        ? undefined
+                        : t("waTemplatePendingHint")
                   }
                   onClick={() => bearbeiten(tpl)}
                 >
@@ -301,6 +322,10 @@ export function WhatsAppVorlagen() {
                   type="button"
                   variant="outline"
                   size="icon"
+                  disabled={istMetaBeispiel(tpl.name)}
+                  title={
+                    istMetaBeispiel(tpl.name) ? t("waTemplateSampleHint") : undefined
+                  }
                   onClick={() => void loeschen(tpl)}
                 >
                   <Icon icon="ph:trash" className="size-4" />
@@ -312,7 +337,7 @@ export function WhatsAppVorlagen() {
       </div>
 
       {/* Editor */}
-      <div className="col-span-12 flex flex-col gap-3 rounded-2xl border border-border p-4 lg:col-span-5">
+      <div className="col-span-12 flex flex-col gap-4 rounded-2xl border border-border p-5 lg:col-span-5">
         <h3 className="font-semibold">
           {editing ? t("waTemplateEdit") : t("waTemplateNew")}
         </h3>
@@ -325,11 +350,11 @@ export function WhatsAppVorlagen() {
           // statt stillschweigend ignoriert.
           disabled={Boolean(editing)}
         />
-        <p className="-mt-1 text-xs text-muted-foreground">
+        <p className="-mt-2 text-xs leading-relaxed text-muted-foreground">
           {editing ? t("waTemplateNameLocked") : t("waTemplateNameHint")}
         </p>
 
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <select
             className="h-9 flex-1 rounded-(--radius) border border-input bg-background px-3 text-sm"
             value={form.language}
@@ -373,7 +398,7 @@ export function WhatsAppVorlagen() {
           placeholder={t("waTemplateBody")}
           data-testid="wa-template-body"
         />
-        <p className="-mt-1 text-xs text-muted-foreground">
+        <p className="-mt-2 text-xs leading-relaxed text-muted-foreground">
           {t("waTemplateBodyHint")}
         </p>
 
