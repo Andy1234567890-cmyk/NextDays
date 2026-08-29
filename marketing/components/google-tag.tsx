@@ -23,8 +23,10 @@
 // entscheidend. Wenn Ihr Einwilligungscode in der falschen Reihenfolge
 // aufgerufen wird, funktionieren die Standardeinstellungen für die Einwilligung
 // nicht." Genau deshalb stehen Schritt 1 und 2 in einem ROHEN `<script>` im
-// `<head>` — nicht über `next/script`, das die Position nicht zusagt (siehe die
-// Begründung unten an der Stelle selbst).
+// `<head>` — nicht über `next/script`, das die Position nicht zusagt. Das
+// `<head>` legt das Root-Layout ausdrücklich um diese Komponente; ohne es
+// schiebt der Parser das Skript in den Body (siehe die beiden Begründungen
+// unten an der Stelle selbst).
 //
 // WAS DAS FÜR DEN DATENSCHUTZ BEDEUTET — ehrlich benannt: Das Tag lädt jetzt
 // ohne Zustimmung, und Google sendet in diesem Zustand „cookielose Pings"
@@ -63,11 +65,28 @@ export function GoogleTag() {
           Einwilligungscode in der falschen Reihenfolge aufgerufen wird,
           funktionieren die Standardeinstellungen für die Einwilligung nicht."
 
-          Ein rohes `<script>` im `<head>` steht dort, wo es geschrieben ist —
-          das ist die einzige verlässliche Zusage. `dangerouslySetInnerHTML` ist
-          hier kein Risiko: der Inhalt ist eine Konstante aus dem eigenen Code,
-          kein Fremdeingabewert. Die Mess-ID wird trotzdem escaped, weil sie aus
-          der Umgebung kommen kann.
+          WAS „ROH" ALLEIN NICHT LEISTET (gemessen am 29.08.2026 live auf
+          mynextdays.com): Hier stand bis dahin, ein rohes `<script>` stehe
+          „dort, wo es geschrieben ist". Der Browser hielt das nicht ein. Diese
+          Komponente hing im Root-Layout als direktes Kind von `<html>`, also
+          zwischen `</head>` und `<body>` — und der HTML-Parser verschiebt, was
+          er dort findet, in den Body. In Produktion ergab
+          `document.getElementById('nd-consent-default').parentElement.tagName`
+          folglich `"BODY"` und `Array.from(document.head.children).indexOf(s)`
+          den Wert `-1`; keines der 31 Kopf-Kinder war dieses Skript. Dass die
+          Reihenfolge trotzdem stimmte, war Glück: `gtag/js` läuft erst nach der
+          Hydration. React meldete dieselbe Ursache als Fehler — „In HTML,
+          <script> cannot be a child of <html>. This will cause a hydration
+          error." —, und ein verworfener Baum an der Wurzel hätte die
+          Einwilligungsleiste und die Zählkomponente mitgerissen.
+          Verlässlich ist die Position also erst, seit das Root-Layout ein
+          ausdrückliches `<head>` um diese Komponente legt (app/layout.tsx).
+          Wer sie dort herausnimmt, holt beides zurück: den Hydrations-Fehler
+          und ein Skript im Body.
+
+          `dangerouslySetInnerHTML` ist hier kein Risiko: der Inhalt ist eine
+          Konstante aus dem eigenen Code, kein Fremdeingabewert. Die Mess-ID
+          wird trotzdem escaped, weil sie aus der Umgebung kommen kann.
 
           `dataLayer.push(arguments)` — NICHT ein Array. gtag.js prüft den Typ;
           ein echtes Array landet in seinem Legacy-Zweig und wird in einem

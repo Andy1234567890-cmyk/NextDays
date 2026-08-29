@@ -27,11 +27,12 @@
 // der Schwesterdatei lib/tarif.ts — hier wird nichts hardcodiert (Wurzel 4).
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { GRUPPEN_ILLUSTRATION } from "@/components/preise/preis-illustrationen";
 import { Icon } from "@/components/ui/icon";
+import { ereignisMelden } from "@/lib/analytics";
 import { DEMO_URL, SIGNUP_URL } from "@/lib/app-url";
 import { formatCurrency } from "@/lib/currency";
 import { gruppenStichworte } from "@/lib/gruppen-stichworte";
@@ -71,6 +72,28 @@ export function PreisRechner({ liste }: { liste: Preisliste | null }) {
   const locale = useLocale();
   const [anzahl, setAnzahl] = useState(1);
   const zaehlerId = useId();
+
+  // Die Objektzahl lässt sich auf VIER Wegen ändern (Minus, Plus, Zahlenfeld,
+  // Sprungmarken). Gemeldet wird deshalb der ZUSTAND, nicht jeder einzelne
+  // Knopf — sonst fehlt die Meldung beim fünften Weg, den jemand später
+  // ergänzt. Die Drossel dazu sitzt in lib/analytics.ts (600 ms), hier steht
+  // bewusst keine zweite.
+  //
+  // Der Merker hält den zuletzt GEMELDETEN Wert und nicht bloß „schon
+  // gerendert": das erste Rendern ist keine Handlung, und ein Sprachwechsel
+  // lässt diesen Effekt erneut laufen (`locale` ist eine Abhängigkeit), ohne
+  // dass der Besucher etwas verstellt hätte.
+  const gemeldeteAnzahl = useRef<number | null>(null);
+  useEffect(() => {
+    if (gemeldeteAnzahl.current === anzahl) return;
+    const ersterLauf = gemeldeteAnzahl.current === null;
+    gemeldeteAnzahl.current = anzahl;
+    if (ersterLauf) return;
+    // Als ZAHL, nicht als Zeichenkette: nur aus einem Zahlenparameter kann
+    // GA4 eine Metrik machen (Summe, Mittelwert). Als Text wäre „25" nur eine
+    // weitere Ausprägung neben „5".
+    ereignisMelden("preis_geaendert", { anzahl }, locale);
+  }, [anzahl, locale]);
 
   const posten = useMemo(
     () => (liste ? staffelPosten(liste.grundtarif_tiers, anzahl) : []),
@@ -228,10 +251,14 @@ export function PreisRechner({ liste }: { liste: Preisliste | null }) {
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button asChild variant="accent" size="lg" className="w-full">
-                <Link href={SIGNUP_URL}>{t("ctaTesten")}</Link>
+                <Link href={SIGNUP_URL} data-cta="signup">
+                  {t("ctaTesten")}
+                </Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="w-full">
-                <Link href={DEMO_URL}>{t("ctaDemo")}</Link>
+                <Link href={DEMO_URL} data-cta="demo">
+                  {t("ctaDemo")}
+                </Link>
               </Button>
             </div>
 
@@ -247,7 +274,9 @@ export function PreisRechner({ liste }: { liste: Preisliste | null }) {
             </h2>
             <p className="mt-3 text-muted-foreground">{t("nichtAbrufbarText")}</p>
             <Button asChild variant="accent" size="lg" className="mt-6">
-              <Link href={SIGNUP_URL}>{t("ctaTesten")}</Link>
+              <Link href={SIGNUP_URL} data-cta="signup">
+                {t("ctaTesten")}
+              </Link>
             </Button>
           </div>
         )}

@@ -93,7 +93,9 @@ export function UeberHero() {
 
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
           <Button asChild variant="accent" size="lg">
-            <Link href={SIGNUP_URL}>{t("ctaTrial")}</Link>
+            <Link href={SIGNUP_URL} data-cta="signup">
+              {t("ctaTrial")}
+            </Link>
           </Button>
           {/* Zweiter Weg bewusst der direkte Draht statt einer zweiten
               Verkaufsschaltfläche: wer die Über-uns-Seite liest, will oft

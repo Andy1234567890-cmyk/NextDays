@@ -12,13 +12,14 @@
 // Deshalb: Abruf nur, solange das Fenster offen ist.
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ereignisMelden } from "@/lib/analytics";
 import {
   chatAntworten,
   chatEroeffnen,
@@ -42,6 +43,7 @@ function neueId(): string {
 
 export function SupportChat() {
   const t = useTranslations("chat");
+  const locale = useLocale();
   const [offen, setOffen] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [verlauf, setVerlauf] = useState<SupportMessage[]>([]);
@@ -142,12 +144,22 @@ export function SupportChat() {
     }
   }
 
+  // Nur das ÖFFNEN ist die Handlung, die zählt: derselbe Knopf schließt auch,
+  // und ein Ereignis für beides würde Bedarf und Abbruch in einer Zahl
+  // vermischen. Die Meldung steht deshalb hier und nicht im State-Updater —
+  // React ruft den im Entwicklungsmodus doppelt auf.
+  function umschalten() {
+    const neuOffen = !offen;
+    setOffen(neuOffen);
+    if (neuOffen) ereignisMelden("chat_geoeffnet", undefined, locale);
+  }
+
   return (
     <>
       {/* Blase */}
       <button
         type="button"
-        onClick={() => setOffen((o) => !o)}
+        onClick={umschalten}
         aria-label={offen ? t("schliessen") : t("oeffnen")}
         className="fixed bottom-6 right-6 z-50 flex size-14 items-center justify-center rounded-full bg-accent text-accent-foreground shadow-float-lg transition-transform hover:scale-105"
       >

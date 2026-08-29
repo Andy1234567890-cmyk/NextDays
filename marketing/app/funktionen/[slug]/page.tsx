@@ -141,10 +141,12 @@ export default async function FunktionsSeite({
                   den Test, dunkel mit Play-Symbol für die Demo. */}
               <div className="mt-7 flex flex-wrap items-center gap-4">
                 <Button asChild variant="accent" size="lg" className="min-w-48 text-base">
-                  <Link href={SIGNUP_URL}>{tr("ctaTesten")}</Link>
+                  <Link href={SIGNUP_URL} data-cta="signup">
+                    {tr("ctaTesten")}
+                  </Link>
                 </Button>
                 <Button asChild variant="default" size="lg" className="min-w-40 text-base">
-                  <Link href={DEMO_URL} className="gap-2">
+                  <Link href={DEMO_URL} data-cta="demo" className="gap-2">
                     <Icon icon="ph:play-circle" className="size-5" />
                     {tr("ctaDemo")}
                   </Link>

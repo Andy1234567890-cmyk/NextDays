@@ -21,6 +21,7 @@ import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { voranmeldungTexte } from "@/content/voranmeldung";
+import { ereignisMelden } from "@/lib/analytics";
 import { VORANMELDUNG_ZIEL } from "@/lib/app-url";
 import { voranmelden } from "@/lib/newsletter";
 import { pixelEreignisMelden } from "@/lib/pixel";
@@ -53,6 +54,24 @@ export function VoranmeldungPopup() {
   const [fehler, setFehler] = useState<string | null>(null);
   const [fertig, setFertig] = useState<string | null>(null);
 
+  /**
+   * Der EINZIGE Weg, das Popup zu oeffnen — und damit die einzige Stelle, an
+   * der `popup_geoeffnet` gemeldet wird.
+   *
+   * Bewusst nicht als Effekt auf `offen`: die Quelle wandert im selben Zug mit,
+   * und ein Effekt auf zwei Zustaenden meldet auch dann, wenn sich nur die
+   * Quelle aendert. Wer hier einen dritten Oeffnungsweg ergaenzt, bekommt die
+   * Zaehlung geschenkt, statt sie zu vergessen.
+   */
+  const oeffnen = useCallback(
+    (neueQuelle: string) => {
+      setQuelle(neueQuelle);
+      setOffen(true);
+      ereignisMelden("popup_geoeffnet", { quelle: neueQuelle }, locale);
+    },
+    [locale],
+  );
+
   // Aufruf MIT dem Anker in der URL (#voranmeldung) — der Weg von ausserhalb
   // dieser App. Das Demo-Band im Dashboard verlinkt hierher; ohne diese Pruefung
   // laege der Besucher auf der Startseite, und das Popup blieb zu, weil der
@@ -60,12 +79,13 @@ export function VoranmeldungPopup() {
   useEffect(() => {
     if (!VOR_DEM_START) return;
     if (window.location.hash !== VORANMELDUNG_ZIEL) return;
-    setQuelle("popup_extern");
-    setOffen(true);
+    oeffnen("popup_extern");
     // Anker aus der Adresse entfernen: sonst oeffnet ein Neuladen der Seite das
-    // Popup wieder, obwohl der Besucher es geschlossen hat.
+    // Popup wieder, obwohl der Besucher es geschlossen hat. Das ist zugleich
+    // der Grund, warum ein erneuter Lauf dieses Effekts (Sprachwechsel aendert
+    // `oeffnen`) nichts doppelt meldet: der Anker ist dann weg.
     window.history.replaceState(null, "", window.location.pathname);
-  }, []);
+  }, [oeffnen]);
 
   // Klicks auf App-Links abfangen (Capture-Phase, damit Next.js' Router nicht
   // vorher navigiert).
@@ -80,15 +100,30 @@ export function VoranmeldungPopup() {
       const ziel = (e.target as HTMLElement | null)?.closest("a");
       if (!ziel || !istVoranmeldeKnopf(ziel.getAttribute("href"))) return;
       e.preventDefault();
-      // Woher der Klick kam, wandert als Quelle mit (Auswertung später).
-      setQuelle(
-        ziel.closest("header") ? "popup_navigation" : "popup_seite",
+      // Woher der Klick kam, EINMAL bestimmen und für beides verwenden: die
+      // Quelle des Popups trägt den Präfix `popup_`, der GA4-Parameter
+      // `stelle` denselben Wert ohne ihn. Zwei getrennte `closest("header")`-
+      // Prüfungen wären zwei Stellen, die auseinanderlaufen können.
+      const stelle = ziel.closest("header") ? "navigation" : "seite";
+      // WELCHER Knopf gedrückt wurde, steht am Link (`data-cta`), nicht im
+      // `href`: vor dem Start tragen Login, Registrierung und Demo alle
+      // denselben Marker `#voranmeldung` (lib/app-url.ts). Die Beschriftung
+      // taugt erst recht nicht — sie ist in 24 Sprachen verschieden.
+      // Fehlt das Attribut, geht `ziel` GAR NICHT mit (Wurzel 4).
+      const kennung = ziel.getAttribute("data-cta");
+      ereignisMelden(
+        "cta_klick",
+        { stelle, ...(kennung ? { ziel: kennung } : {}) },
+        locale,
       );
-      setOffen(true);
+      // Zwei Ereignisse mit Absicht: der Klick sagt, WELCHER Knopf gedrückt
+      // wurde, das Öffnen sagt, dass das Overlay kam. Sie fallen nicht immer
+      // zusammen (der Anker-Weg oben öffnet ohne Klick).
+      oeffnen(`popup_${stelle}`);
     };
     document.addEventListener("click", beiKlick, true);
     return () => document.removeEventListener("click", beiKlick, true);
-  }, []);
+  }, [locale, oeffnen]);
 
   const schliessen = useCallback(() => {
     setOffen(false);
@@ -131,6 +166,11 @@ export function VoranmeldungPopup() {
       // einen zu erfinden waere ein Fantasiewert in der Kampagnen-Auswertung
       // (Wurzel 4).
       pixelEreignisMelden("Lead");
+      // Dieselbe Conversion an GA4 — NEBEN dem Pixel, nicht in ihm. Die beiden
+      // haengen an VERSCHIEDENEN Einwilligungen (marketing bzw. analytisch);
+      // wer nur „Analytisch" erlaubt, muss hier trotzdem gezaehlt werden.
+      // Deshalb auch keine Abhaengigkeit vom Rueckgabewert des Pixel-Aufrufs.
+      ereignisMelden("voranmeldung", { quelle }, locale);
       setEmail("");
       setEinwilligung(false);
     } catch (exc) {

@@ -50,7 +50,9 @@ export function MarketingCta() {
                 size="lg"
                 className="bg-accent-foreground text-accent hover:opacity-90"
               >
-                <Link href={SIGNUP_URL}>{t("ctaPrimaer")}</Link>
+                <Link href={SIGNUP_URL} data-cta="signup">
+                  {t("ctaPrimaer")}
+                </Link>
               </Button>
               <Button
                 asChild

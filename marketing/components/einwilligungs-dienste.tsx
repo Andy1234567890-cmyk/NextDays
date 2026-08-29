@@ -41,11 +41,19 @@ export function EinwilligungsDienste() {
   // muss. Die einzelnen Funktionen prüfen ihre eigene Voraussetzung selbst.
   useEffect(() => {
     const abgleichen = () => {
+      // MARKETING ZUERST, dann die Messung — die Reihenfolge ist hier kein
+      // Geschmack. `analyticsStarten` meldet als letzten Schritt den
+      // Seitenaufruf, und dieser erste Treffer trägt den Einwilligungsstand,
+      // der in DIESEM Augenblick gilt (Parameter `gcs`). Stand das Marketing
+      // dahinter, ging der erste Treffer jedes Besuchers mit `gcs=G101` hinaus
+      // — Werbe-Einwilligung verweigert — obwohl er gerade „Alle annehmen"
+      // geklickt hatte; erst der zweite Treffer trug `G111`. Live gemessen am
+      // 29.08.2026 gegen den eigenen Server.
+      if (istErlaubt("marketing")) pixelStarten();
+      else pixelWiderrufen();
       if (istErlaubt("analytisch")) analyticsStarten();
       else analyticsWiderrufen();
       if (!istErlaubt("funktional")) captchaWiderrufen();
-      if (istErlaubt("marketing")) pixelStarten();
-      else pixelWiderrufen();
     };
     abgleichen();
     window.addEventListener(EINWILLIGUNG_EREIGNIS, abgleichen);

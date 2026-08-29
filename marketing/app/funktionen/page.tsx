@@ -60,7 +60,9 @@ export default async function FunktionenSeite() {
             </p>
             <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
               <Button asChild variant="accent" size="lg">
-                <Link href={SIGNUP_URL}>{tr("ctaTesten")}</Link>
+                <Link href={SIGNUP_URL} data-cta="signup">
+                  {tr("ctaTesten")}
+                </Link>
               </Button>
               {/* Auf dunklem Grund braucht der zweite Knopf eine eigene
                   Fassung: `variant="outline"` bringt `bg-background` mit und
@@ -70,7 +72,9 @@ export default async function FunktionenSeite() {
                 size="lg"
                 className="border border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10"
               >
-                <Link href={DEMO_URL}>{tr("ctaDemo")}</Link>
+                <Link href={DEMO_URL} data-cta="demo">
+                  {tr("ctaDemo")}
+                </Link>
               </Button>
             </div>
           </div>

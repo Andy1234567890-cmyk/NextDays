@@ -141,7 +141,9 @@ export function FunktionsReiter({
                   {t(`${r.key}.text`)}
                 </p>
                 <Button asChild variant="accent" size="lg" className="mt-7">
-                  <Link href={SIGNUP_URL}>{tr("ctaTesten")}</Link>
+                  <Link href={SIGNUP_URL} data-cta="signup">
+                    {tr("ctaTesten")}
+                  </Link>
                 </Button>
               </div>
 

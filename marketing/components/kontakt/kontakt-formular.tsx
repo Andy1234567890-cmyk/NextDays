@@ -43,6 +43,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ANBIETER } from "@/content/legal/anbieter";
+import { ereignisMelden } from "@/lib/analytics";
 import { captchaVorbereiten } from "@/lib/captcha";
 import { RECAPTCHA_SITE_KEY } from "@/lib/config";
 import { NICHTS_ERLAUBT } from "@/lib/einwilligung";
@@ -170,6 +171,15 @@ export function KontaktFormular() {
       // Nutzungsbedingungen verbieten das Senden sensibler Informationen.
       // Der Server weiss ohnehin, welches Postfach zustaendig war.
       pixelEreignisMelden("Contact");
+      // An GA4 geht das Thema SEHR WOHL mit: die Auswertung liest der
+      // Betreiber selbst, und ohne die Aufschlüsselung sagt die Zahl nicht,
+      // welches Postfach die Arbeit bekommt. Gesendet wird der technische Wert
+      // des Auswahlfeldes („allgemein", „technik", …), nicht die übersetzte
+      // Beschriftung — sonst wäre dasselbe Thema in 24 Sprachen 24 Werte.
+      //
+      // NEBEN dem Pixel-Aufruf, nicht in ihm: die beiden hängen an
+      // verschiedenen Einwilligungen (marketing bzw. analytisch).
+      ereignisMelden("kontakt_gesendet", { thema }, locale);
       formular.reset();
     } catch (exc) {
       setFehler(fehlertext(exc));

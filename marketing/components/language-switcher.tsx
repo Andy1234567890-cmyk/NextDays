@@ -41,6 +41,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 
 import { setLocale } from "@/i18n/actions";
+import { ereignisMelden } from "@/lib/analytics";
 import {
   LOCALES,
   LOCALE_LABELS,
@@ -115,6 +116,11 @@ export function LanguageSwitcher({
   function waehle(next: Locale) {
     setOffen(false);
     if (next === locale) return;
+    // VOR dem Wechsel melden: nach `router.refresh()` ist die bisherige
+    // Sprache nirgends mehr ablesbar. Der dritte Parameter ist die ZIEL-
+    // sprache — das Ereignis beschreibt die Fassung, in der der Besucher
+    // weiterliest, und `<html lang>` trägt zu diesem Zeitpunkt noch die alte.
+    ereignisMelden("sprache_gewechselt", { von: locale, zu: next }, next);
     startTransition(async () => {
       await setLocale(next);
       router.refresh();

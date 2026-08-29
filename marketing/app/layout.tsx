@@ -106,11 +106,32 @@ export default async function RootLayout({
   return (
     <html lang={locale}>
       {/* Das Google-Tag im Einwilligungsmodus. Es MUSS vor allem anderen
-          stehen: sein erstes Skript (`beforeInteractive`) setzt die Vorgabe
-          „alles verweigert", und Google schreibt dazu, dass die Reihenfolge
-          entscheidend ist — kommt die Vorgabe nach dem Tag, gilt sie nicht.
+          stehen: sein erstes Skript setzt die Vorgabe „alles verweigert", und
+          Google schreibt dazu, dass die Reihenfolge entscheidend ist — kommt
+          die Vorgabe nach dem Tag, gilt sie nicht. Genau diese Zusage kann
+          `next/script` nicht geben, deshalb ist dieses erste Skript ein ROHES
+          `<script>` (Messung vom 27.08.2026 in components/google-tag.tsx).
+
+          WARUM DAS `<head>` HIER STEHT: ein rohes `<script>` als direktes Kind
+          von `<html>` ist ungültige Verschachtelung. React meldete dafür bis
+          zum 29.08.2026 auf JEDER Seite „In HTML, <script> cannot be a child
+          of <html>. This will cause a hydration error." — und ein
+          Hydrations-Fehler an der Wurzel ist hier nicht kosmetisch: React darf
+          den Baum verwerfen und neu aufbauen, und in genau diesem Baum hängen
+          die Einwilligungsleiste und die Zählkomponente.
+
+          Next verbietet nicht das `<head>`-ELEMENT, sondern nur das Schreiben
+          von Kopf-TAGS wie `<title>`/`<meta>` von Hand („You should not
+          manually add <head> tags such as <title> and <meta> to root layouts",
+          nextjs.org/docs/app/api-reference/file-conventions/layout). Die
+          bleiben in `generateMetadata` oben; Next hängt sie zusammen mit seinen
+          eigenen Kopf-Elementen in dieses `<head>`. Die beiden
+          `afterInteractive`-Skripte des Tags fügt Next ohnehin erst nach der
+          Hydration ein — ihre Position im Baum ändert daran nichts.
           Begründung und Datenschutz-Abwägung in components/google-tag.tsx. */}
-      <GoogleTag />
+      <head>
+        <GoogleTag />
+      </head>
       <body className={`${inter.variable} ${fraunces.variable} antialiased`}>
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}

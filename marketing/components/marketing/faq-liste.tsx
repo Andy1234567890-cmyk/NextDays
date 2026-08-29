@@ -24,7 +24,10 @@
 // FAQPage-Schema als JSON-LD aus DENSELBEN Texten; zwei getrennte Textquellen
 // wären hier der klassische Fehler, denn Schema und sichtbarer Text müssen
 // übereinstimmen, sonst gilt es als irreführendes Markup.
+import { useLocale } from "next-intl";
 import { useId, useState } from "react";
+
+import { ereignisMelden } from "@/lib/analytics";
 
 export type FaqPaar = {
   key: string;
@@ -40,6 +43,7 @@ export function FaqListe({ paare }: { paare: readonly FaqPaar[] }) {
   // Genau eine offene Frage: mit allem offen wird die Seite unlesbar lang.
   // Null = alles zu (Startzustand).
   const [offen, setOffen] = useState<string | null>(null);
+  const locale = useLocale();
   // Eigener Präfix je Instanz — sonst tragen zwei Listen auf derselben Seite
   // dieselben `id`s und `aria-controls` zeigt auf den falschen Bereich.
   const praefix = useId();
@@ -67,7 +71,21 @@ export function FaqListe({ paare }: { paare: readonly FaqPaar[] }) {
                   type="button"
                   aria-expanded={istOffen}
                   aria-controls={bereichId}
-                  onClick={() => setOffen(istOffen ? null : paar.key)}
+                  onClick={() => {
+                    setOffen(istOffen ? null : paar.key);
+                    // Nur das AUFklappen ist die Frage, die jemanden umtreibt;
+                    // das Zuklappen gehört nicht in dieselbe Zahl. Gemeldet
+                    // wird `paar.key` — der Übersetzungsschlüssel. Der
+                    // sichtbare Fragetext wäre dieselbe Frage in 24 Sprachen
+                    // und damit 24 Werte in der Auswertung.
+                    if (!istOffen) {
+                      ereignisMelden(
+                        "faq_geoeffnet",
+                        { frage: paar.key },
+                        locale,
+                      );
+                    }
+                  }}
                   className={`flex w-full items-center gap-5 px-6 py-6 text-left transition-colors sm:gap-6 sm:px-9 sm:py-7 ${BALKEN_FORM} ${
                     istOffen
                       ? "bg-accent text-accent-foreground"

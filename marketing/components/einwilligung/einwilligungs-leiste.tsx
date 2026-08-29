@@ -20,9 +20,9 @@
 // GLEICHRANGIGE KNÖPFE: „Alle ablehnen" und „Alle annehmen" tragen dieselbe
 // Variante, dieselbe Größe und stehen in derselben Reihe. Kein „annehmen" in
 // Farbe und „ablehnen" als blasser Text — das ist die verbreitetste Form des
-// dunklen Musters und macht die Einwilligung angreifbar. Die Auswahl der
-// Kategorien liegt einen Klick tiefer, aber der Ablehnen-Knopf liegt NICHT
-// tiefer als der Annehmen-Knopf.
+// dunklen Musters und macht die Einwilligung angreifbar. Die Kategorien stehen
+// ohnehin offen auf derselben Ebene, keine der drei Antworten liegt also tiefer
+// als eine andere.
 //
 // KEIN X ZUM SCHLIESSEN: Ein Schließen ohne Entscheidung sieht wie ein
 // Ablehnen aus, ist aber keines — der nächste Aufruf fragt wieder. Wer nichts
@@ -34,6 +34,7 @@ import { KategorienFeld } from "@/components/einwilligung/kategorien-feld";
 import { useEinwilligung } from "@/components/einwilligung/use-einwilligung";
 import { Button } from "@/components/ui/button";
 import {
+  allesErlaubt,
   type Auswahl,
   EINWILLIGUNG_OEFFNEN,
   NICHTS_ERLAUBT,
@@ -90,8 +91,10 @@ export function EinwilligungsLeiste() {
   useEffect(() => {
     if (!erneutOffen) return;
     vorherFokussiert.current = document.activeElement as HTMLElement | null;
-    // Ersten Knopf fokussieren — das ist „Alle ablehnen", also der
-    // datenschutzfreundliche Weg, nicht das Annehmen.
+    // Das erste fokussierbare Element im Kasten fokussieren — beim erneuten
+    // Öffnen ist das X zum Schließen, sonst der erste Schalter im
+    // Kategorienfeld. KEIN Knopf der Fußzeile: der Fokus soll den Dialog
+    // betreten, nicht eine der drei Antworten vorwegnehmen.
     kasten.current?.querySelector<HTMLElement>("button, [href]")?.focus();
     return () => vorherFokussiert.current?.focus?.();
   }, [erneutOffen]);
@@ -214,15 +217,29 @@ export function EinwilligungsLeiste() {
             Ungleichbehandlung, die beanstandet wird. */}
         <KategorienFeld auswahl={auswahl} setzen={setzen} />
 
-        {/* Fußzeile nach der Vorlage: „Einstellungen bestätigen" gefüllt
-            links, „Alle ablehnen" rechts. Kein „Alle annehmen" — damit gibt es
-            kein Ein-Klick-Annehmen, das Ablehnen ist also der EINFACHERE Weg.
-            Das ist strenger als die Gleichrangigkeits-Vorgabe verlangt und
-            deshalb unproblematisch: beanstandet wird der umgekehrte Fall, ein
-            prominentes Annehmen neben versteckter Ablehnung.
+        {/* Fußzeile: links „Einstellungen bestätigen" (die oben getroffene
+            granulare Wahl), rechts die beiden Pauschalknöpfe.
 
-            Bei 320 px stehen sie untereinander (`flex-col`), ab `sm`
-            nebeneinander mit Abstand dazwischen. */}
+            „Alle annehmen" stand hier bis zum 27.08.2026 und fiel beim Umbau
+            auf die Vier-Kategorien-Vorlage heraus. Der damalige Grund — ohne
+            Annehmen-Knopf sei das Ablehnen der einfachere Weg, also strenger
+            als gefordert — hat live das Gegenteil bewirkt: es gab keinen Weg
+            mehr, in einem Zug einzuwilligen, also willigte faktisch niemand
+            ein. Gemessen am 29.08.2026: ohne Einwilligung verlässt kein
+            einziger `/g/collect`-Treffer die Seite, und GA4 meldete unter
+            Verwaltung → Einwilligungseinstellungen „Cookie-Einwilligungssignale
+            für Analyse inaktiv". Seit dem 29.08.2026 ist er deshalb zurück.
+
+            GLEICHRANGIG: „Alle ablehnen" und „Alle annehmen" tragen dieselbe
+            Variante und dieselbe Größe und stehen nebeneinander auf derselben
+            Ebene (EDSA-Leitlinien 03/2022, § 25 TDDDG). Ein gefülltes Annehmen
+            neben blassem Ablehnen wäre das sanktionierte dunkle Muster; die
+            gefüllte Variante trägt hier ausschließlich das Bestätigen der
+            eigenen Auswahl, das keine Richtung vorgibt.
+
+            Bei 320 px stehen alle drei untereinander (`flex-col`), ab `sm`
+            nebeneinander — die Pauschalknöpfe als eigene Gruppe, damit sie
+            beim Umbruch beieinander bleiben. */}
         <div className="flex min-w-0 flex-col gap-2 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
           <Button
             type="button"
@@ -231,13 +248,22 @@ export function EinwilligungsLeiste() {
           >
             {t("bestaetigen")}
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => entscheiden(NICHTS_ERLAUBT)}
-          >
-            {t("allesAblehnen")}
-          </Button>
+          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => entscheiden(NICHTS_ERLAUBT)}
+            >
+              {t("allesAblehnen")}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => entscheiden(allesErlaubt())}
+            >
+              {t("allesAnnehmen")}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

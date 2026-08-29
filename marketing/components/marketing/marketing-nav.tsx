@@ -205,12 +205,15 @@ export function MarketingNav({
           </div>
           <Link
             href={LOGIN_URL}
+            data-cta="login"
             className="hidden text-sm font-medium transition-colors hover:text-accent md:block"
           >
             {t("anmelden")}
           </Link>
           <Button asChild variant="accent" className="hidden md:inline-flex">
-            <Link href={SIGNUP_URL}>{t("kostenlosStarten")}</Link>
+            <Link href={SIGNUP_URL} data-cta="signup">
+              {t("kostenlosStarten")}
+            </Link>
           </Button>
 
           {/* Sprachwahl mobil: NEBEN dem Menü-Knopf, nicht nur im Panel
@@ -341,7 +344,11 @@ export function MarketingNav({
               </div>
               <div className="mt-5 flex flex-col gap-2 px-6 pb-6">
                 <Button asChild variant="accent" className="w-full">
-                  <Link href={DEMO_URL} onClick={() => setMegaOffen(false)}>
+                  <Link
+                    href={DEMO_URL}
+                    data-cta="demo"
+                    onClick={() => setMegaOffen(false)}
+                  >
                     {t("menuCtaKnopf")}
                   </Link>
                 </Button>
@@ -408,12 +415,20 @@ export function MarketingNav({
 
         <div className="mt-6 flex flex-col gap-3 border-t border-border pt-6">
           <Button asChild variant="accent" size="lg">
-            <Link href={SIGNUP_URL} onClick={() => setMobilOffen(false)}>
+            <Link
+              href={SIGNUP_URL}
+              data-cta="signup"
+              onClick={() => setMobilOffen(false)}
+            >
               {t("kostenlosStarten")}
             </Link>
           </Button>
           <Button asChild variant="outline" size="lg">
-            <Link href={LOGIN_URL} onClick={() => setMobilOffen(false)}>
+            <Link
+              href={LOGIN_URL}
+              data-cta="login"
+              onClick={() => setMobilOffen(false)}
+            >
               {t("anmelden")}
             </Link>
           </Button>

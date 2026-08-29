@@ -20,6 +20,7 @@ import {
   NewsletterStatus,
 } from "@/components/newsletter-status";
 import { voranmeldungTexte } from "@/content/voranmeldung";
+import { ereignisMelden } from "@/lib/analytics";
 import { bestaetigen } from "@/lib/newsletter";
 import { pixelEreignisMelden } from "@/lib/pixel";
 
@@ -52,12 +53,23 @@ function Inhalt() {
         // abgelaufener oder schon benutzter Token kommt als `ok: false` mit
         // HTTP 200 zurueck. Ohne die Pruefung zaehlte jeder zweite Klick auf
         // einen alten Link als neue Anmeldung.
-        if (res.ok) pixelEreignisMelden("CompleteRegistration");
+        if (res.ok) {
+          pixelEreignisMelden("CompleteRegistration");
+          // Dieselbe Bedingung, zwei getrennte Meldungen: Meta prueft die
+          // Einwilligung „marketing", GA4 die Einwilligung „analytisch". Wer
+          // nur eine von beiden erteilt hat, muss trotzdem in der jeweils
+          // anderen Auswertung erscheinen — deshalb nebeneinander und nicht
+          // ineinander.
+          //
+          // Kein Parameter: die Seite kennt nur den Token, und der gehoert in
+          // keine Auswertung.
+          ereignisMelden("newsletter_bestaetigt", undefined, locale);
+        }
       } catch (exc) {
         setMeldung(exc instanceof Error ? exc.message : t.fehlerAllgemein);
       }
     })();
-  }, [token, t.fehlerAllgemein]);
+  }, [token, t.fehlerAllgemein, locale]);
 
   const laeuft = !!token && meldung === null;
 

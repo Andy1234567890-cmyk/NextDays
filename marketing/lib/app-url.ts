@@ -24,6 +24,13 @@
  * JavaScript noch nicht geladen ist oder scheitert. Ein Besucher landet damit
  * im schlimmsten Fall nirgendwo — statt in einem Login, das er nicht benutzen
  * kann.
+ *
+ * FOLGE FÜR DIE MESSUNG: vor dem Start tragen `LOGIN_URL`, `SIGNUP_URL` und
+ * `DEMO_URL` alle DIESEN Wert — am `href` ist also nicht erkennbar, welcher
+ * Knopf gedrückt wurde. Deshalb trägt jeder dieser Links zusätzlich ein
+ * `data-cta="login" | "signup" | "demo"`; der Klick-Abfang in
+ * `components/voranmeldung-popup.tsx` liest es als GA4-Parameter `ziel`. Wer
+ * hier einen vierten Knopf ergänzt, setzt das Attribut mit.
  */
 export const VORANMELDUNG_ZIEL = "#voranmeldung";
 

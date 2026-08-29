@@ -13,10 +13,11 @@
 // FAQPage-Auszeichnungen auf einer Domain für unterschiedliche Fragen sind
 // erlaubt — aber der sichtbare Text UND das Schema müssen übereinstimmen,
 // deshalb entsteht das Schema hier aus denselben Texten.
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { SectionHeading } from "@/components/marketing/section-kit";
+import { ereignisMelden } from "@/lib/analytics";
 
 const FRAGEN = [
   "laufzeit",
@@ -31,6 +32,7 @@ const BALKEN_FORM = "rounded-[3rem_3rem_3rem_0.75rem]";
 
 export function PreisFaq() {
   const t = useTranslations("preise.faq");
+  const locale = useLocale();
   const [offen, setOffen] = useState<string | null>(null);
 
   const paare = FRAGEN.map((key) => ({
@@ -65,7 +67,19 @@ export function PreisFaq() {
                     type="button"
                     aria-expanded={istOffen}
                     aria-controls={bereichId}
-                    onClick={() => setOffen(istOffen ? null : paar.key)}
+                    onClick={() => {
+                      setOffen(istOffen ? null : paar.key);
+                      // Nur das AUFklappen zählt, und gemeldet wird der
+                      // Übersetzungsschlüssel statt des sichtbaren Textes —
+                      // dieselbe Begründung wie in `faq-liste.tsx`.
+                      if (!istOffen) {
+                        ereignisMelden(
+                          "faq_geoeffnet",
+                          { frage: paar.key },
+                          locale,
+                        );
+                      }
+                    }}
                     className={`flex w-full items-center gap-5 px-6 py-6 text-left transition-colors sm:gap-6 sm:px-9 sm:py-7 ${BALKEN_FORM} ${
                       istOffen
                         ? "bg-accent text-accent-foreground"
