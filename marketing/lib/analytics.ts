@@ -243,11 +243,22 @@ export function seitenaufrufMelden(pfad: string, sprache?: string): void {
   // während der Merker darüber schon auf „gezählt" stand. Diese Reihenfolge ist
   // deshalb umgedreht: erst einreihen, DANN merken (Wurzel 5 — nichts still als
   // erledigt markieren, was nie passiert ist).
+  // Der Titel wird NUR mitgesendet, wenn er da ist. Live gemessen am
+  // 29.08.2026 auf mynextdays.com: bei einem Sprachwechsel ist
+  // `document.title` in diesem Augenblick LEER. Der Wechsel setzt das
+  // nd_locale-Cookie und ruft `router.refresh()`; React hat den neuen Baum
+  // sofort, Next setzt den Titel über die Metadata-API aber erst danach —
+  // dieser Effekt läuft dazwischen. Ein leerer Titel im Treffer landet in GA4
+  // als eigene Zeile „(not set)" und zerlegt die Seitenauswertung; den
+  // Parameter wegzulassen ist die ehrliche Variante (Wurzel 4: lieber kein
+  // Wert als ein falscher). Der Pfad steht ohnehin in `page_path`, und der ist
+  // richtig. Bei jedem normalen Seitenwechsel ist der Titel da.
+  const titel = document.title.trim();
   const gtag = gtagVorbereiten();
   gtag("event", "page_view", {
     page_path: pfad,
     page_location: window.location.href,
-    page_title: document.title,
+    ...(titel === "" ? {} : { page_title: titel }),
     // Ohne diesen Parameter sind die 24 Sprachfassungen in der Auswertung
     // NICHT unterscheidbar: `page_path`, `page_location` und `page_title` sind
     // für die deutsche und die griechische Preisseite identisch, weil die URL
