@@ -51,3 +51,26 @@ export const ENTWICKLER_URL = `${MARKETING_BASIS}/entwickler`;
 
 /** Anker der Voranmeldung auf der Marketing-Startseite. */
 export const VORANMELDUNG_URL = `${MARKETING_BASIS}/#voranmeldung`;
+
+/** Startseite der Marketing-App. */
+export const MARKETING_START = MARKETING_BASIS || "/";
+
+/**
+ * Die Rechtsdokumente. Bis auf die AGB liegen sie AUSSCHLIESSLICH in der
+ * Marketing-App — diese App hat nur `content/legal/agb`. Ein relativer Link
+ * auf `/datenschutz` waere hier also ein 404.
+ *
+ * Die AGB stehen bewusst als eigene Route dieser App (`/agb`): Registrierung
+ * und Zahlungs-Freischaltung verlinken sie mitten aus einem Formular heraus,
+ * und ein Sprung auf eine fremde Domain waere dort ein Abbruch des Vorgangs.
+ */
+export const RECHTS_LINKS = [
+  { label: "AGB", href: "/agb" },
+  { label: "Datenschutz", href: `${MARKETING_BASIS}/datenschutz` },
+  { label: "Impressum", href: `${MARKETING_BASIS}/impressum` },
+  { label: "Cookie-Richtlinie", href: `${MARKETING_BASIS}/cookie-richtlinie` },
+  {
+    label: "Auftragsverarbeitung",
+    href: `${MARKETING_BASIS}/auftragsverarbeitung`,
+  },
+] as const;
