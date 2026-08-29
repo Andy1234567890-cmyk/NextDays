@@ -22,9 +22,16 @@ from src.features.guests.identity import (
 from src.features.guests.identity import (
     resolve_or_create_guest,
 )
+from src.features.inbox.felder import (
+    FeldFehlt,
+    benutzte_felder,
+    rendern,
+    unbekannte_felder,
+)
 
 from .client import WhatsAppClient, WhatsAppError
 from .onboarding import OnboardingError, WhatsAppOnboarding
+from .reservierungs_kontext import kontext_aus_reservierung
 from .schemas import (
     OnboardingResult,
     OnboardingStartLink,
@@ -42,6 +49,7 @@ from .vorlagen_felder import (
     VorlagenFeldFehler,
     nach_katalog,
     nach_meta,
+    werte_fuer,
 )
 
 log = get_logger("nextdays.whatsapp")
@@ -747,6 +755,47 @@ class WhatsAppService:
             )
         return self._upsert_conversation(db, tenant_id, phone)
 
+    @staticmethod
+    def _platzhalter_fuellen(
+        db: Client, tenant_id: str, conv: dict, text: str
+    ) -> str:
+        """Platzhalter im Nachrichtentext auflösen — oder klar fehlschlagen.
+
+        Der Vorlagen-Knopf im WhatsApp-Feld fügt Bausteine mit
+        ``{{guest_name}}`` ein. Ginge der Text ungefüllt raus, läse der Gast die
+        Klammern. Deshalb: benutzt der Text Felder, muss eine Reservierung an der
+        Konversation hängen, aus der sie sich speisen. Sonst 422 mit Namen der
+        Felder — nie ein leerer Ersatz (Wurzel 4).
+        """
+        benutzt = benutzte_felder(text)
+        if not benutzt:
+            return text
+        if fremd := unbekannte_felder(text):
+            raise WhatsAppServiceError(
+                "Diese Platzhalter gibt es nicht: "
+                + ", ".join("{{" + f + "}}" for f in fremd),
+                status_code=422,
+            )
+        reservierung = conv.get("reservation_id")
+        if not reservierung:
+            raise WhatsAppServiceError(
+                "Der Text enthält Platzhalter ("
+                + ", ".join("{{" + f + "}}" for f in benutzt)
+                + "), aber an diesem Chat hängt keine Reservierung, aus der sie "
+                "gefüllt werden könnten.",
+                status_code=422,
+            )
+        kontext = kontext_aus_reservierung(db, tenant_id, str(reservierung))
+        if kontext is None:
+            raise WhatsAppServiceError(
+                "Die verknüpfte Reservierung ist nicht auffindbar.",
+                status_code=422,
+            )
+        try:
+            return rendern(text, kontext)
+        except FeldFehlt as exc:
+            raise WhatsAppServiceError(str(exc), status_code=422) from exc
+
     def _persist_outgoing(
         self,
         db: Client,
@@ -800,6 +849,7 @@ class WhatsAppService:
             raise WhatsAppServiceError("Nachricht darf nicht leer sein.", status_code=422)
 
         conv = self._resolve_target(db, tenant_id, conversation_id, to_phone)
+        text = self._platzhalter_fuellen(db, tenant_id, conv, text)
 
         # 24-h-Servicefenster: freier Text nur innerhalb. Außerhalb → Template nötig.
         if not self._sandbox() and not self._within_service_window(
@@ -825,6 +875,42 @@ class WhatsAppService:
             body=text, wa_message_id=wa_message_id, status="sent", last_message=text,
         )
 
+    def _vorlagen_werte(
+        self, db: Client, tenant_id: str, conv: dict, name: str, sprache: str
+    ) -> list[str]:
+        """Die Parameter einer Meta-Vorlage aus der Reservierung füllen.
+
+        Metas Vorlage kennt nur Positionen; welches Feld an Position 1 steht,
+        wissen wir (``whatsapp_template_field``, ersatzweise der Standardsatz).
+        Fehlt der Wert eines Feldes, bricht ``werte_fuer`` mit ``FeldFehlt`` ab
+        — eine Vorlage mit leerer Anrede ist schlimmer als eine, die nicht
+        rausgeht (Wurzel 4).
+        """
+        reihenfolge = {
+            **satz_feldreihenfolgen(),
+            **self._felder_lesen(db, tenant_id),
+        }.get((name, sprache), [])
+        if not reihenfolge:
+            return []
+        reservierung = conv.get("reservation_id")
+        if not reservierung:
+            raise WhatsAppServiceError(
+                "Diese Vorlage braucht Angaben aus einer Reservierung ("
+                + ", ".join("{{" + f + "}}" for f in reihenfolge)
+                + "), an diesem Chat hängt aber keine.",
+                status_code=422,
+            )
+        kontext = kontext_aus_reservierung(db, tenant_id, str(reservierung))
+        if kontext is None:
+            raise WhatsAppServiceError(
+                "Die verknüpfte Reservierung ist nicht auffindbar.",
+                status_code=422,
+            )
+        try:
+            return werte_fuer(reihenfolge, kontext)
+        except FeldFehlt as exc:
+            raise WhatsAppServiceError(str(exc), status_code=422) from exc
+
     def send_template(
         self,
         ctx: AuthContext,
@@ -843,13 +929,22 @@ class WhatsAppService:
 
         conv = self._resolve_target(db, tenant_id, conversation_id, to_phone)
 
+        # Die Werte der Vorlage kommen aus DEM Platzhalter-Katalog, nicht vom
+        # Aufrufer: die Oberfläche wählt eine Vorlage aus, sie soll nicht auch
+        # noch wissen müssen, welches Feld an Position 3 steht. Übergibt jemand
+        # dennoch `variables`, gewinnt das — der Weg bleibt für Aufrufer offen,
+        # die eigene Werte setzen (Tests, künftige Automationen).
+        werte = variables
+        if werte is None:
+            werte = self._vorlagen_werte(db, tenant_id, conv, name, language_code)
+
         # Body-Variablen → Meta-Components (geordnete {{1}}, {{2}}, …).
         components: list[dict] | None = None
-        if variables:
+        if werte:
             components = [
                 {
                     "type": "body",
-                    "parameters": [{"type": "text", "text": v} for v in variables],
+                    "parameters": [{"type": "text", "text": v} for v in werte],
                 }
             ]
 

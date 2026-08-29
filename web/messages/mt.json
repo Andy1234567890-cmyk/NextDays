@@ -907,7 +907,11 @@
     "waTemplateHidden": "Mudell moħbi. Jibqa' fuq Meta.",
     "waTemplateShown": "Mudell muri mill-ġdid.",
     "waHiddenOn": "Uri dawk moħbija",
-    "waHiddenOff": "Aħbi dawk moħbija"
+    "waHiddenOff": "Aħbi dawk moħbija",
+    "waTemplatePickHint": "Il-blokka tiġi miżjuda mal-qasam. WhatsApp jippermetti messaġġi b'xejn biss fi żmien 24 siegħa mill-aħħar messaġġ tal-mistieden.",
+    "waSendTemplateHint": "Mudelli approvati minn Meta jintbagħtu direttament — anke jekk għaddew aktar minn 24 siegħa mill-aħħar messaġġ tal-mistieden. myNextDays jimla d-dettalji mill-prenotazzjoni.",
+    "waSendTemplate": "Ibgħat",
+    "waFormatMono": "Wisa' fissa tal-karattri"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp għadu mhux imqabbad. Daħħal il-kredenzjali (Meta Cloud API) fis-settings tas-server, imbagħad il-konsenja tkun attiva.",

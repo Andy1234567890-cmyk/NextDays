@@ -907,7 +907,11 @@
     "waTemplateHidden": "Predloga je skrita. Ostane v Meti.",
     "waTemplateShown": "Predloga je znova prikazana.",
     "waHiddenOn": "Prikaži skrite",
-    "waHiddenOff": "Skrij skrite"
+    "waHiddenOff": "Skrij skrite",
+    "waTemplatePickHint": "Blok bo vstavljen v polje. WhatsApp omogoča brezplačna sporočila le v 24 urah po zadnjem sporočilu gosta.",
+    "waSendTemplateHint": "Predloge, ki jih je pregledala Meta, so poslane neposredno – tudi če je od zadnjega sporočila gosta minilo več kot 24 ur. Podatke izpolni myNextDays iz rezervacije.",
+    "waSendTemplate": "Pošlji",
+    "waFormatMono": "Fiksna širina znakov"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp še ni povezan. Vnesite dostopne podatke (Meta Cloud API) v nastavitvah strežnika, nato bo pošiljanje aktivno.",

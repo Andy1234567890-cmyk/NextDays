@@ -907,7 +907,11 @@
     "waTemplateHidden": "Veidne paslēpta. Tā paliek Meta.",
     "waTemplateShown": "Veidne atkal redzama.",
     "waHiddenOn": "Rādīt paslēptos",
-    "waHiddenOff": "Slēpt paslēptos"
+    "waHiddenOff": "Slēpt paslēptos",
+    "waTemplatePickHint": "Bloks tiks ievietots laukā. WhatsApp atļauj bezmaksas ziņojumus tikai 24 stundu laikā pēc pēdējās viesa ziņas.",
+    "waSendTemplateHint": "Meta apstiprinātās veidnes tiek nosūtītas tieši — pat ja kopš pēdējās viesa ziņas ir pagājušas vairāk nekā 24 stundas. myNextDays aizpilda informāciju no rezervācijas.",
+    "waSendTemplate": "Sūtīt",
+    "waFormatMono": "Fiksēts rakstzīmju platums"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp vēl nav savienots. Ievadiet piekļuves datus (Meta Cloud API) servera iestatījumos, tad sūtīšana būs aktīva.",

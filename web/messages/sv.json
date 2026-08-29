@@ -907,7 +907,11 @@
     "waTemplateHidden": "Mall dold. Den finns kvar på Meta.",
     "waTemplateShown": "Mallen visas igen.",
     "waHiddenOn": "Visa dolda",
-    "waHiddenOff": "Dölj dolda"
+    "waHiddenOff": "Dölj dolda",
+    "waTemplatePickHint": "Modulen infogas i fältet. WhatsApp tillåter endast fria meddelanden inom 24 timmar efter gästens senaste meddelande.",
+    "waSendTemplateHint": "Mallar som godkänts av Meta skickas direkt – även om mer än 24 timmar har gått sedan gästens senaste meddelande. myNextDays fyller i informationen från bokningen.",
+    "waSendTemplate": "Skicka",
+    "waFormatMono": "Fast teckenbredd"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp är ännu inte anslutet. Ange inloggningsuppgifterna (Meta Cloud API) i serverinställningarna, då är utskicket aktivt.",

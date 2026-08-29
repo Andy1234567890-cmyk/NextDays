@@ -907,7 +907,11 @@
     "waTemplateHidden": "Modèle masqué. Il reste dans Meta.",
     "waTemplateShown": "Modèle réaffiché.",
     "waHiddenOn": "Afficher les masqués",
-    "waHiddenOff": "Masquer les masqués"
+    "waHiddenOff": "Masquer les masqués",
+    "waTemplatePickHint": "Le module sera inséré dans le champ. WhatsApp n'autorise les messages gratuits que dans les 24 heures suivant le dernier message de l'invité.",
+    "waSendTemplateHint": "Les modèles vérifiés par Meta sont envoyés directement, même si plus de 24 heures se sont écoulées depuis le dernier message de l'invité. myNextDays remplit les informations à partir de la réservation.",
+    "waSendTemplate": "Envoyer",
+    "waFormatMono": "Largeur de caractère fixe"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp n'est pas encore connecté. Renseignez les identifiants (Meta Cloud API) dans les paramètres du serveur pour activer l'envoi.",

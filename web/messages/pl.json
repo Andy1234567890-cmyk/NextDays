@@ -907,7 +907,11 @@
     "waTemplateHidden": "Szablon ukryty. Pozostaje w Meta.",
     "waTemplateShown": "Szablon ponownie pokazany.",
     "waHiddenOn": "Pokaż ukryte",
-    "waHiddenOff": "Ukryj ukryte"
+    "waHiddenOff": "Ukryj ukryte",
+    "waTemplatePickHint": "Blok zostanie wstawiony w pole. WhatsApp zezwala na bezpłatne wiadomości tylko w ciągu 24 godzin od ostatniej wiadomości gościa.",
+    "waSendTemplateHint": "Zatwierdzone przez Meta szablony są wysyłane natychmiast — nawet jeśli minęło więcej niż 24 godziny od ostatniej wiadomości gościa. myNextDays uzupełnia dane z rezerwacji.",
+    "waSendTemplate": "Wyślij",
+    "waFormatMono": "Stała szerokość czcionki"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp nie jest jeszcze połączony. Wprowadź dane dostępowe (Meta Cloud API) w ustawieniach serwera, aby aktywować wysyłkę.",

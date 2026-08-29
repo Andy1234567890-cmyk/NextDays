@@ -907,7 +907,11 @@
     "waTemplateHidden": "Mall peidetud. Meta platvormil jääb see alles.",
     "waTemplateShown": "Mall on uuesti nähtav.",
     "waHiddenOn": "Näita peidetuid",
-    "waHiddenOff": "Peida peidetud"
+    "waHiddenOff": "Peida peidetud",
+    "waTemplatePickHint": "Plokk lisatakse väljale. WhatsApp lubab tasuta sõnumeid saata ainult 24 tunni jooksul pärast viimast külalise sõnumit.",
+    "waSendTemplateHint": "Meta poolt heaks kiidetud mallid saadetakse otse välja – isegi kui viimasest külalise sõnumist on möödunud rohkem kui 24 tundi. myNextDays täidab andmed broneeringust.",
+    "waSendTemplate": "Saada",
+    "waFormatMono": "Fikseeritud laiusega font"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp pole veel ühendatud. Sisesta juurdepääsuandmed (Meta Cloud API) serveri seadetesse, siis on saatmine aktiivne.",

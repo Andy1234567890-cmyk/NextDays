@@ -8,11 +8,16 @@ import { Fragment, useCallback, useEffect, useRef, useState, useTransition } fro
 import { useTranslations, useLocale } from "next-intl";
 
 import { Button } from "@nextdays/ui/button";
+import { FeldDialogKnopf } from "@/components/inbox/feld-picker";
+import { WhatsAppComposerLeiste } from "@/components/inbox/whatsapp-composer-leiste";
+import { WhatsAppMetaVorlagenMenue } from "@/components/inbox/whatsapp-meta-vorlagen-menue";
+import { WhatsAppVorlagenMenue } from "@/components/inbox/whatsapp-vorlagen-menue";
 import { tagLabel, tagWechsel, uhrzeit, zeitpunktLang } from "@/lib/chat-format";
 import {
   type WhatsAppMessage,
   listWhatsAppMessages,
   sendWhatsApp,
+  sendWhatsAppTemplate,
 } from "@/lib/whatsapp-api";
 
 export function WhatsAppChat({
@@ -40,6 +45,26 @@ export function WhatsAppChat({
   const [sending, startSend] = useTransition();
   // Sprungziel „ganz unten" am Listenende.
   const ende = useRef<HTMLDivElement>(null);
+  // Das Schreibfeld selbst — die Werkzeugleiste setzt Zeichen an der
+  // Auswahl, dafuer braucht sie Zugriff auf Cursor und Markierung.
+  const feld = useRef<HTMLTextAreaElement>(null);
+
+  /** Text an der Cursorposition einsetzen (Platzhalter, Vorlage). */
+  const einfuegen = useCallback((eingabe: string) => {
+    const el = feld.current;
+    if (!el) {
+      setText((v) => v + eingabe);
+      return;
+    }
+    const start = el.selectionStart ?? el.value.length;
+    const ende_ = el.selectionEnd ?? start;
+    setText(el.value.slice(0, start) + eingabe + el.value.slice(ende_));
+    requestAnimationFrame(() => {
+      el.focus();
+      const pos = start + eingabe.length;
+      el.setSelectionRange(pos, pos);
+    });
+  }, []);
 
   const load = useCallback(async () => {
     if (!conversationId) {
@@ -89,6 +114,29 @@ export function WhatsAppChat({
       if (res.ok) {
         setMessages((m) => [...m, res.data]);
         setText("");
+        onSent();
+      } else {
+        setError(res.error);
+      }
+    });
+  }
+
+  /** Eine von Meta geprüfte Vorlage senden — der Weg, wenn das
+   *  24-Stunden-Fenster zu ist. Sie geht direkt raus, nicht ins Feld. */
+  function sendeVorlage(name: string, sprache: string) {
+    setError(null);
+    startSend(async () => {
+      const res = await sendWhatsAppTemplate(
+        conversationId
+          ? {
+              conversation_id: conversationId,
+              template_name: name,
+              language_code: sprache,
+            }
+          : { to_phone: phone, template_name: name, language_code: sprache },
+      );
+      if (res.ok) {
+        setMessages((m) => [...m, res.data]);
         onSent();
       } else {
         setError(res.error);
@@ -168,7 +216,29 @@ export function WhatsAppChat({
           rechts — bleibt in jeder Spaltenbreite voll breit. */}
       <div className="border-t border-border p-3">
         <div className="flex flex-col rounded-2xl border border-border bg-background focus-within:ring-2 focus-within:ring-accent/40">
+          {/* Auszeichnung in WhatsApps eigener Schreibweise (*fett*, _kursiv_ …),
+              nicht als HTML: Meta uebertraegt Markup sonst woertlich an den Gast. */}
+          <WhatsAppComposerLeiste
+            feld={feld}
+            wert={text}
+            onWert={setText}
+            zusatz={
+              <>
+                <WhatsAppVorlagenMenue onEinfuegen={einfuegen} />
+                {/* Metas geprüfte Vorlagen: sie werden gesendet, nicht
+                    eingefügt — siehe die Erklärung in der Komponente. */}
+                <WhatsAppMetaVorlagenMenue
+                  onSenden={sendeVorlage}
+                  laeuft={sending}
+                />
+                {/* Derselbe Platzhalter-Katalog wie ueberall sonst. Aufgeloest
+                    wird serverseitig beim Senden — hier steht nur der Name. */}
+                <FeldDialogKnopf onInsert={einfuegen} />
+              </>
+            }
+          />
           <textarea
+            ref={feld}
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder={t("placeholder")}

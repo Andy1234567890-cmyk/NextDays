@@ -239,3 +239,15 @@ export async function deleteWhatsAppTemplate(
   if (templateId) q.set("template_id", templateId);
   return call<unknown>(`/templates?${q.toString()}`, { method: "DELETE" });
 }
+
+/** Eine von Meta geprüfte Vorlage senden — der einzige Weg AUSSERHALB des
+ *  24-Stunden-Fensters. Die Werte der Platzhalter setzt der Server aus der
+ *  Reservierung des Chats; die Oberfläche wählt nur die Vorlage. */
+export async function sendWhatsAppTemplate(input: {
+  conversation_id?: string;
+  to_phone?: string;
+  template_name: string;
+  language_code: string;
+}): Promise<Result<WhatsAppMessage>> {
+  return call<WhatsAppMessage>("/send-template", { method: "POST", body: input });
+}

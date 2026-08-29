@@ -907,7 +907,11 @@
     "waTemplateHidden": "Sjabloon verborgen. Blijft bestaan in Meta.",
     "waTemplateShown": "Sjabloon weer zichtbaar gemaakt.",
     "waHiddenOn": "Verborgen tonen",
-    "waHiddenOff": "Verborgen verbergen"
+    "waHiddenOff": "Verborgen verbergen",
+    "waTemplatePickHint": "Het blok wordt in het veld ingevoegd. WhatsApp staat alleen gratis berichten toe binnen 24 uur na het laatste gastbericht.",
+    "waSendTemplateHint": "Door Meta goedgekeurde sjablonen worden direct verzonden — zelfs als er meer dan 24 uur zijn verstreken sinds het laatste gastbericht. myNextDays vult de gegevens uit de reservering in.",
+    "waSendTemplate": "Verzenden",
+    "waFormatMono": "Vaste tekenbreedte"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp is nog niet verbonden. Voer de inloggegevens (Meta Cloud API) in de serverinstellingen in, dan is verzending actief.",

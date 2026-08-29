@@ -51,8 +51,11 @@ class SendWhatsAppTemplateRequest(BaseModel):
     template_name: str             # von Meta freigegebener Template-Name
     language_code: str = "de"      # Sprachcode des Templates (z.B. de, en_US)
     # Geordnete Variablenwerte für den Body des Templates ({{1}}, {{2}}, …).
-    # Leer = Template ohne Variablen.
-    variables: list[str] = []
+    # NICHT gesetzt (None) heisst: der Server füllt sie aus der Reservierung des
+    # Chats — das ist der Normalfall, die Oberfläche wählt nur die Vorlage. Eine
+    # LEERE Liste heisst dagegen ausdrücklich „ohne Variablen"; der Unterschied
+    # ist wichtig, sonst ginge eine Vorlage mit Platzhaltern leer raus.
+    variables: list[str] | None = None
 
 
 class WhatsAppStatus(BaseModel):

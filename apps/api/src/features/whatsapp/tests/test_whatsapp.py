@@ -505,3 +505,36 @@ def test_eingang_setzt_last_at_aus_metas_zeitstempel(monkeypatch) -> None:  # no
     conv = db.store["whatsapp_conversation"][0]
     # Genau Metas Zeitpunkt, nicht der von jetzt: 1756480000 = 29.08.2025.
     assert conv["last_at"].startswith("2025-08-29"), conv["last_at"]
+
+
+def test_platzhalter_ohne_reservierung_wird_abgelehnt() -> None:
+    """Ein Vorlagentext mit Platzhaltern darf nicht roh beim Gast landen.
+
+    Haengt am Chat keine Reservierung, gibt es nichts, woraus sich
+    {{guest_name}} fuellen liesse — dann 422 mit Nennung der Felder, statt die
+    Klammern zu verschicken (Wurzel 4).
+    """
+    db = _DB()
+    db.store["whatsapp_conversation"] = [
+        {
+            "id": "c1",
+            "tenant_id": "t1",
+            "wa_phone": "491701234567",
+            "reservation_id": None,
+        }
+    ]
+    svc = WhatsAppService(service_client=db, client=_FakeClient())
+    with pytest.raises(WhatsAppServiceError) as exc:
+        svc._platzhalter_fuellen(  # noqa: SLF001
+            db, "t1", db.store["whatsapp_conversation"][0], "Hallo {{guest_name}}!"
+        )
+    assert exc.value.status_code == 422
+    assert "guest_name" in exc.value.message
+
+
+def test_text_ohne_platzhalter_bleibt_unveraendert() -> None:
+    """Kein Platzhalter, keine Reservierung noetig — der Normalfall im Chat."""
+    db = _DB()
+    svc = WhatsAppService(service_client=db, client=_FakeClient())
+    text = "Guten Tag, wir melden uns morgen."
+    assert svc._platzhalter_fuellen(db, "t1", {}, text) == text  # noqa: SLF001

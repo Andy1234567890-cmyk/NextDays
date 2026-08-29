@@ -907,7 +907,11 @@
     "waTemplateHidden": "Șablon ascuns. Rămâne în Meta.",
     "waTemplateShown": "Șablon afișat din nou.",
     "waHiddenOn": "Afișează ascunse",
-    "waHiddenOff": "Ascunde ascunse"
+    "waHiddenOff": "Ascunde ascunse",
+    "waTemplatePickHint": "Blocul va fi introdus în câmp. WhatsApp permite mesaje gratuite doar în termen de 24 de ore de la ultimul mesaj al oaspetelui.",
+    "waSendTemplateHint": "Șabloanele verificate de Meta sunt trimise direct – chiar dacă au trecut mai mult de 24 de ore de la ultimul mesaj al oaspetelui. myNextDays completează detaliile din rezervare.",
+    "waSendTemplate": "Trimite",
+    "waFormatMono": "Lățime fixă"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp nu este încă conectat. Introduceți datele de acces (Meta Cloud API) în setările serverului, apoi trimiterea este activă.",

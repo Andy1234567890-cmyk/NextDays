@@ -907,7 +907,11 @@
     "waTemplateHidden": "Sablon elrejtve. A Meta felületen megmarad.",
     "waTemplateShown": "Sablon újra megjelenítve.",
     "waHiddenOn": "Elrejtettek megjelenítése",
-    "waHiddenOff": "Elrejtettek elrejtése"
+    "waHiddenOff": "Elrejtettek elrejtése",
+    "waTemplatePickHint": "Az építőelem a mezőbe kerül. A WhatsApp csak az utolsó vendégüzenet után 24 órán belül engedélyezi az ingyenes üzeneteket.",
+    "waSendTemplateHint": "A Meta által ellenőrzött sablonok közvetlenül kiküldésre kerülnek – még akkor is, ha több mint 24 óra telt el az utolsó vendégüzenet óta. Az adatokat a myNextDays tölti ki a foglalásból.",
+    "waSendTemplate": "Küldés",
+    "waFormatMono": "Rögzített szélességű betűtípus"
   },
   "whatsapp": {
     "notConfigured": "A WhatsApp még nincs csatlakoztatva. Adja meg a hozzáférési adatokat (Meta Cloud API) a kiszolgáló beállításaiban, ezután a küldés aktív.",

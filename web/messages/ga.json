@@ -907,7 +907,11 @@
     "waTemplateHidden": "Teimpléad folaithe. Fanann sé i Meta.",
     "waTemplateShown": "Teimpléad taispeánta arís.",
     "waHiddenOn": "Taispeáin cinn fholaithe",
-    "waHiddenOff": "Folaigh cinn fholaithe"
+    "waHiddenOff": "Folaigh cinn fholaithe",
+    "waTemplatePickHint": "Cuirfear an bloc isteach sa réimse. Ní cheadaíonn WhatsApp teachtaireachtaí saora ach amháin laistigh de 24 uair an chloig tar éis theachtaireacht dheireanach an aoi.",
+    "waSendTemplateHint": "Seoltar teimpléid atá faofa ag Meta láithreach — fiú má tá níos mó ná 24 uair an chloig caite ó theachtaireacht dheireanach an aoi. Líonann myNextDays na sonraí ón áirithint.",
+    "waSendTemplate": "Seol",
+    "waFormatMono": "Leithead seasta"
   },
   "whatsapp": {
     "notConfigured": "Níl WhatsApp nasctha fós. Cuir na dintiúir (Meta Cloud API) i socruithe an fhreastalaí, ansin beidh an seoladh gníomhach.",

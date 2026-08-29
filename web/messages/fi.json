@@ -907,7 +907,11 @@
     "waTemplateHidden": "Malli piilotettu. Se säilyy Metassa.",
     "waTemplateShown": "Malli näytetään uudelleen.",
     "waHiddenOn": "Näytä piilotetut",
-    "waHiddenOff": "Piilota piilotetut"
+    "waHiddenOff": "Piilota piilotetut",
+    "waTemplatePickHint": "Lohko lisätään kenttään. WhatsApp sallii vapaat viestit vain 24 tunnin sisällä viimeisestä vierasviestistä.",
+    "waSendTemplateHint": "Metan hyväksymät mallit lähetetään suoraan – vaikka viimeisestä vierasviestistä olisi kulunut yli 24 tuntia. myNextDays täyttää tiedot varauksesta.",
+    "waSendTemplate": "Lähetä",
+    "waFormatMono": "Kiinteä merkkileveys"
   },
   "whatsapp": {
     "notConfigured": "WhatsAppia ei ole vielä yhdistetty. Syötä tunnukset (Meta Cloud API) palvelimen asetuksiin, niin lähetys on käytössä.",
