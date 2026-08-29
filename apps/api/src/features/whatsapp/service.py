@@ -62,6 +62,19 @@ class WhatsAppServiceError(Exception):
         self.status_code = status_code
 
 
+def _meta_zeit(roh: object) -> str | None:
+    """Metas `timestamp` (Unix-Sekunden als String) → ISO-Zeit.
+
+    Ist er unbrauchbar, kommt None zurueck statt eines geratenen Wertes — der
+    Aufrufer entscheidet dann, ob er die eigene Empfangszeit einsetzt und sie
+    auch so nennt.
+    """
+    try:
+        return datetime.fromtimestamp(int(str(roh)), tz=UTC).isoformat()
+    except (TypeError, ValueError):
+        return None
+
+
 def _normalize_phone(phone: str) -> str:
     """Auf reine Ziffern reduzieren (E.164 ohne '+', wie Meta es nutzt)."""
     return re.sub(r"\D", "", phone or "")
@@ -762,7 +775,11 @@ class WhatsAppService:
         ).data
         m = ins[0] if ins else {}
         db.table("whatsapp_conversation").update(
-            {"last_message": last_message}
+            # Ohne `last_at` sortiert der Posteingang die Konversation ans Ende
+            # der Liste (null zuletzt) — sie war praktisch unsichtbar, obwohl
+            # gerade eben geschrieben wurde. Beim Versand ist unsere Uhr die
+            # richtige Quelle: das Ereignis ist unser eigenes.
+            {"last_message": last_message, "last_at": datetime.now(UTC).isoformat()}
         ).eq("tenant_id", tenant_id).eq("id", conv["id"]).execute()
         return WhatsAppMessage(
             id=m.get("id"), direction="out", body=body,
@@ -1029,7 +1046,16 @@ class WhatsAppService:
             }
         ).execute()
         db.table("whatsapp_conversation").update(
-            {"last_message": body, "is_read": False}
+            {
+                "last_message": body,
+                "is_read": False,
+                # WANN der Gast geschrieben hat, weiss Meta — wir wissen nur,
+                # wann der Webhook bei uns ankam. Deshalb Metas `timestamp`
+                # (Unix-Sekunden) und nur ersatzweise unsere Empfangszeit, klar
+                # als solche benannt (Wurzel 5b).
+                "last_at": _meta_zeit(msg.get("timestamp"))
+                or datetime.now(UTC).isoformat(),
+            }
         ).eq("tenant_id", tenant_id).eq("id", conv["id"]).execute()
         return True
 

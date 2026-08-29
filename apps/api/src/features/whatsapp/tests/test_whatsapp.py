@@ -463,3 +463,45 @@ def test_platzhalter_doppelt_teilt_sich_die_position() -> None:
     assert meta_text == "Hallo {{1}}, bis bald {{1}}!"
     assert reihenfolge == ["guest_first_name"]
     assert len(beispiele) == 1
+
+
+def test_eingang_setzt_last_at_aus_metas_zeitstempel(monkeypatch) -> None:  # noqa: ANN001
+    """Ohne last_at rutscht die Konversation im Posteingang ans Ende.
+
+    Live gesehen am 29.08.2026: gerade geschrieben, trotzdem unsichtbar — die
+    Liste sortiert nach letzter Aktivitaet, und null steht hinten. Der Zeitpunkt
+    kommt aus METAS timestamp, nicht aus unserer Uhr (Wurzel 5b).
+    """
+    from src.core import config
+
+    monkeypatch.setattr(
+        config.get_settings(), "whatsapp_default_tenant_id", "t1", raising=False
+    )
+    db = _DB()
+    db.store["tenants"] = [{"id": "t1"}]
+    svc = WhatsAppService(service_client=db, client=_FakeClient())
+    svc.ingest_webhook(
+        {
+            "entry": [
+                {
+                    "changes": [
+                        {
+                            "value": {
+                                "messages": [
+                                    {
+                                        "from": "491701234567",
+                                        "id": "wamid.zeit",
+                                        "timestamp": "1756480000",
+                                        "text": {"body": "Hallo"},
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    )
+    conv = db.store["whatsapp_conversation"][0]
+    # Genau Metas Zeitpunkt, nicht der von jetzt: 1756480000 = 29.08.2025.
+    assert conv["last_at"].startswith("2025-08-29"), conv["last_at"]
