@@ -17,12 +17,28 @@
 // Widerrufsweg beschreibt, den es nicht gibt, ist gefährlicher als keiner: er
 // lässt beim Prüfen glauben, Art. 7 Abs. 3 sei zweifach erfüllt.
 //
-// GLEICHRANGIGE KNÖPFE: „Alle ablehnen" und „Alle annehmen" tragen dieselbe
-// Variante, dieselbe Größe und stehen in derselben Reihe. Kein „annehmen" in
-// Farbe und „ablehnen" als blasser Text — das ist die verbreitetste Form des
-// dunklen Musters und macht die Einwilligung angreifbar. Die Kategorien stehen
-// ohnehin offen auf derselben Ebene, keine der drei Antworten liegt also tiefer
-// als eine andere.
+// ZWEI KNÖPFE, GLEICHRANGIG: „Alle ablehnen" und rechts der Zustimmungsknopf.
+// Beide tragen dieselbe Variante, dieselbe Größe und stehen in derselben Reihe.
+// Kein „annehmen" in Farbe und „ablehnen" als blasser Text — das ist die
+// verbreitetste Form des dunklen Musters und macht die Einwilligung angreifbar.
+//
+// Der dritte Knopf („Einstellungen bestätigen") ist am 29.08.2026 entfallen.
+// Er war neben den Pauschalknöpfen die dritte Antwort auf dieselbe Frage und
+// hat den Abschluss zerfasert. Stattdessen trägt der RECHTE Knopf beide
+// Bedeutungen und wechselt seine Beschriftung mit der Auswahl: solange alle
+// Zwecke an sind (die Vorbelegung), heißt er „Alle annehmen"; sobald der
+// Besucher einen Schalter umlegt, heißt er „Einstellungen bestätigen" und
+// speichert genau die getroffene Auswahl. So bleibt es bei zwei Knöpfen, ohne
+// dass die Schalter zu einer Attrappe werden — ein Schalter ohne Knopf, der
+// ihn übernimmt, wäre genau das.
+//
+// VORBELEGUNG: Die optionalen Zwecke stehen beim ersten Öffnen auf AN
+// (`allesErlaubt()`), nicht auf aus. Das ist eine bewusste Produktentscheidung
+// vom 29.08.2026 — sie erhöht die Einwilligungsquote und ist zugleich der
+// rechtlich angreifbare Teil dieses Dialogs (EuGH „Planet49" C-673/17, § 25
+// TDDDG: vorangekreuzte Kästchen sind keine wirksame Einwilligung). Wer das
+// zurückdreht, setzt hier `NICHTS_ERLAUBT` ein; gespeichert wird ohnehin erst
+// mit einem Klick, und `entscheidungLesen` bleibt fail-closed.
 //
 // KEIN X ZUM SCHLIESSEN: Ein Schließen ohne Entscheidung sieht wie ein
 // Ablehnen aus, ist aber keines — der nächste Aufruf fragt wieder. Wer nichts
@@ -38,6 +54,7 @@ import {
   type Auswahl,
   EINWILLIGUNG_OEFFNEN,
   NICHTS_ERLAUBT,
+  OPTIONALE_KATEGORIEN,
   type OptionaleKategorie,
   optionaleDiensteVorhanden,
 } from "@/lib/einwilligung";
@@ -45,7 +62,10 @@ import {
 export function EinwilligungsLeiste() {
   const t = useTranslations("einwilligung");
   const { entscheidung, geladen, speichern } = useEinwilligung();
-  const [auswahl, setAuswahl] = useState<Auswahl>(NICHTS_ERLAUBT);
+  // Vorbelegung: alle optionalen Zwecke AN — siehe Kopfkommentar
+  // („VORBELEGUNG"). `allesErlaubt` wird als Funktion übergeben, damit React
+  // sie einmalig beim ersten Rendern auswertet.
+  const [auswahl, setAuswahl] = useState<Auswahl>(allesErlaubt);
   // Erneut geöffnet per Footer-Eintrag. Getrennt von der Frage, ob schon
   // entschieden wurde: sonst müsste der Widerruf die gespeicherte Entscheidung
   // löschen, um die Leiste zu zeigen — und wer dann weggeht, ohne zu klicken,
@@ -94,7 +114,7 @@ export function EinwilligungsLeiste() {
     // Das erste fokussierbare Element im Kasten fokussieren — beim erneuten
     // Öffnen ist das X zum Schließen, sonst der erste Schalter im
     // Kategorienfeld. KEIN Knopf der Fußzeile: der Fokus soll den Dialog
-    // betreten, nicht eine der drei Antworten vorwegnehmen.
+    // betreten, nicht eine der beiden Antworten vorwegnehmen.
     kasten.current?.querySelector<HTMLElement>("button, [href]")?.focus();
     return () => vorherFokussiert.current?.focus?.();
   }, [erneutOffen]);
@@ -142,6 +162,11 @@ export function EinwilligungsLeiste() {
   const setzen = (kategorie: OptionaleKategorie, an: boolean) =>
     setAuswahl((vorher) => ({ ...vorher, [kategorie]: an }));
 
+  // Steht die Auswahl noch auf der Vorbelegung (alles an)? Danach richtet sich
+  // die Beschriftung des rechten Knopfes. Über OPTIONALE_KATEGORIEN gezählt,
+  // nicht über `Object.values` — sonst zählte ein später ergänztes Feld mit,
+  // das kein Zweck ist.
+  const allesAn = OPTIONALE_KATEGORIEN.every((k) => auswahl[k]);
 
   // Speichern MUSS das erneute Öffnen mit zurücknehmen. Ohne das blieb die
   // Leiste nach einem Widerruf offen stehen: die gespeicherte Entscheidung war
@@ -217,53 +242,36 @@ export function EinwilligungsLeiste() {
             Ungleichbehandlung, die beanstandet wird. */}
         <KategorienFeld auswahl={auswahl} setzen={setzen} />
 
-        {/* Fußzeile: links „Einstellungen bestätigen" (die oben getroffene
-            granulare Wahl), rechts die beiden Pauschalknöpfe.
+        {/* Fußzeile: zwei gleichrangige Knöpfe — links ablehnen, rechts
+            zustimmen. Der rechte trägt beide Bedeutungen (siehe Kopfkommentar):
+            „Alle annehmen", solange alles an ist, sonst „Einstellungen
+            bestätigen".
 
-            „Alle annehmen" stand hier bis zum 27.08.2026 und fiel beim Umbau
-            auf die Vier-Kategorien-Vorlage heraus. Der damalige Grund — ohne
-            Annehmen-Knopf sei das Ablehnen der einfachere Weg, also strenger
-            als gefordert — hat live das Gegenteil bewirkt: es gab keinen Weg
+            „Alle annehmen" fehlte hier zwischen dem 27. und dem 29.08.2026 und
+            hat live das Gegenteil des Gewollten bewirkt: es gab keinen Weg
             mehr, in einem Zug einzuwilligen, also willigte faktisch niemand
-            ein. Gemessen am 29.08.2026: ohne Einwilligung verlässt kein
-            einziger `/g/collect`-Treffer die Seite, und GA4 meldete unter
-            Verwaltung → Einwilligungseinstellungen „Cookie-Einwilligungssignale
-            für Analyse inaktiv". Seit dem 29.08.2026 ist er deshalb zurück.
+            ein. Gemessen: ohne Einwilligung verlässt kein einziger
+            `/g/collect`-Treffer die Seite, und GA4 meldete unter Verwaltung →
+            Einwilligungseinstellungen „Cookie-Einwilligungssignale für Analyse
+            inaktiv".
 
-            GLEICHRANGIG: „Alle ablehnen" und „Alle annehmen" tragen dieselbe
-            Variante und dieselbe Größe und stehen nebeneinander auf derselben
-            Ebene (EDSA-Leitlinien 03/2022, § 25 TDDDG). Ein gefülltes Annehmen
-            neben blassem Ablehnen wäre das sanktionierte dunkle Muster; die
-            gefüllte Variante trägt hier ausschließlich das Bestätigen der
-            eigenen Auswahl, das keine Richtung vorgibt.
-
-            Bei 320 px stehen alle drei untereinander (`flex-col`), ab `sm`
-            nebeneinander — die Pauschalknöpfe als eigene Gruppe, damit sie
-            beim Umbruch beieinander bleiben. */}
-        <div className="flex min-w-0 flex-col gap-2 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
+            Bei 320 px stehen beide untereinander (`flex-col`), ab `sm`
+            nebeneinander. */}
+        <div className="flex min-w-0 flex-col gap-2 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-end">
           <Button
             type="button"
-            className="sm:min-w-56"
+            className="sm:min-w-44"
+            onClick={() => entscheiden(NICHTS_ERLAUBT)}
+          >
+            {t("allesAblehnen")}
+          </Button>
+          <Button
+            type="button"
+            className="sm:min-w-44"
             onClick={() => entscheiden(auswahl)}
           >
-            {t("bestaetigen")}
+            {allesAn ? t("allesAnnehmen") : t("bestaetigen")}
           </Button>
-          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => entscheiden(NICHTS_ERLAUBT)}
-            >
-              {t("allesAblehnen")}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => entscheiden(allesErlaubt())}
-            >
-              {t("allesAnnehmen")}
-            </Button>
-          </div>
         </div>
       </div>
     </div>
