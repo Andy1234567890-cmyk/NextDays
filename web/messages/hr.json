@@ -893,7 +893,21 @@
     "waTemplateDeleted": "Predložak izbrisan.",
     "waTemplatePendingHint": "U pregledu — Meta ne dopušta uređivanje predloška tijekom pregleda.",
     "waTemplateReviewHint": "Svaka promjena ponovno ide na Metin pregled; do tada vrijedi prethodna verzija. Odobreni predlošci mogu se mijenjati najviše deset puta u 30 dana.",
-    "waTemplateSampleHint": "Primjer predloška iz Mete — ne može se mijenjati niti brisati."
+    "waTemplateSampleHint": "Primjer predloška iz Mete — ne može se mijenjati niti brisati.",
+    "waLabelName": "Naziv predloška",
+    "waLabelBody": "Tekst poruke",
+    "waLabelFooter": "Podnožje",
+    "waFooterHint": "Prikazuje se malim slovima ispod svake poruke. Bez rezerviranih mjesta, najviše 60 znakova.",
+    "waFooterPlaceholder": "Ova je poruka poslana automatski.",
+    "waCategoryUtility": "Transakcija (Uslužno)",
+    "waCategoryMarketing": "Promocija (Marketing)",
+    "waCategoryAuth": "Prijava (Autentifikacija)",
+    "waTemplateHide": "Sakrij u myNextDays — predložak ostaje na Meti",
+    "waTemplateShow": "Prikaži ponovno",
+    "waTemplateHidden": "Predložak je skriven. Ostaje na Meti.",
+    "waTemplateShown": "Predložak je ponovno prikazan.",
+    "waHiddenOn": "Prikaži skriveno",
+    "waHiddenOff": "Sakrij skriveno"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp još nije povezan. Unesite pristupne podatke (Meta Cloud API) u postavkama poslužitelja, nakon toga je slanje aktivno.",

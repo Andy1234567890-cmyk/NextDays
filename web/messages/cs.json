@@ -893,7 +893,21 @@
     "waTemplateDeleted": "Šablona smazána.",
     "waTemplatePendingHint": "Ve fázi kontroly – Meta během ní neumožňuje šablonu upravovat.",
     "waTemplateReviewHint": "Každá změna podléhá opětovné kontrole Meta; do té doby platí předchozí verze. Schválené šablony lze změnit maximálně desetkrát za 30 dní.",
-    "waTemplateSampleHint": "Ukázková šablona od Meta – nelze ji upravovat ani mazat."
+    "waTemplateSampleHint": "Ukázková šablona od Meta – nelze ji upravovat ani mazat.",
+    "waLabelName": "Název šablony",
+    "waLabelBody": "Text zprávy",
+    "waLabelFooter": "Zápatí",
+    "waFooterHint": "Zobrazuje se malým písmem pod každou zprávou. Bez zástupných symbolů, max. 60 znaků.",
+    "waFooterPlaceholder": "Tato zpráva byla odeslána automaticky.",
+    "waCategoryUtility": "Transakce (Utility)",
+    "waCategoryMarketing": "Reklama (Marketing)",
+    "waCategoryAuth": "Přihlášení (Authentication)",
+    "waTemplateHide": "Skrýt v myNextDays – šablona zůstane v Meta",
+    "waTemplateShow": "Znovu zobrazit",
+    "waTemplateHidden": "Šablona skryta. Zůstane v Meta.",
+    "waTemplateShown": "Šablona znovu zobrazena.",
+    "waHiddenOn": "Zobrazit skryté",
+    "waHiddenOff": "Skrýt skryté"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp zatím není propojen. Zadejte přístupové údaje (Meta Cloud API) v nastavení serveru, poté bude odesílání aktivní.",

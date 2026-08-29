@@ -155,14 +155,31 @@ export type WhatsAppTemplate = {
   category: string;
   components?: WhatsAppTemplateComponent[];
   rejected_reason?: string | null;
+  /** In myNextDays ausgeblendet — bei Meta besteht die Vorlage weiter. */
+  hidden?: boolean;
 };
 
 /** Vorlagen der WABA DIESES Betriebs, mit Metas Prüfstatus. Quelle ist Meta,
  *  nicht unsere DB — ein gespiegelter Status driftet. */
-export async function listWhatsAppTemplates(): Promise<
-  Result<{ items: WhatsAppTemplate[] }>
-> {
-  return call<{ items: WhatsAppTemplate[] }>("/templates");
+export async function listWhatsAppTemplates(
+  mitAusgeblendeten = false,
+): Promise<Result<{ items: WhatsAppTemplate[] }>> {
+  return call<{ items: WhatsAppTemplate[] }>(
+    `/templates${mitAusgeblendeten ? "?mit_ausgeblendeten=true" : ""}`,
+  );
+}
+
+/** Vorlage in myNextDays aus- oder wieder einblenden. Bei Meta bleibt sie
+ *  bestehen — das ist der Unterschied zum Löschen. */
+export async function hideWhatsAppTemplate(
+  name: string,
+  language: string,
+  hidden: boolean,
+): Promise<Result<unknown>> {
+  return call<unknown>(
+    `/templates/${encodeURIComponent(name)}/ausblenden`,
+    { method: "POST", body: { language, hidden } },
+  );
 }
 
 /** Den myNextDays-Vorlagensatz in die WABA des Betriebs ausrollen. Idempotent:

@@ -893,7 +893,21 @@
     "waTemplateDeleted": "Veidne dzēsta.",
     "waTemplatePendingHint": "Pārskatīšanā — Meta neļauj rediģēt veidni šajā laikā.",
     "waTemplateReviewHint": "Katras izmaiņas atkal tiks nosūtītas Meta pārskatīšanai; līdz tam ir spēkā iepriekšējā versija. Apstiprinātas veidnes var mainīt ne vairāk kā desmit reizes 30 dienu laikā.",
-    "waTemplateSampleHint": "Meta veidnes piemērs — to nevar rediģēt vai dzēst."
+    "waTemplateSampleHint": "Meta veidnes piemērs — to nevar rediģēt vai dzēst.",
+    "waLabelName": "Veidnes nosaukums",
+    "waLabelBody": "Ziņojuma teksts",
+    "waLabelFooter": "Kājene",
+    "waFooterHint": "Tiek rādīts mazā drukā zem katra ziņojuma. Bez vietturiem, ne vairāk kā 60 rakstzīmes.",
+    "waFooterPlaceholder": "Šis ziņojums tika nosūtīts automātiski.",
+    "waCategoryUtility": "Darījums (utilīta)",
+    "waCategoryMarketing": "Reklāma (mārketings)",
+    "waCategoryAuth": "Autentifikācija",
+    "waTemplateHide": "Slēpt myNextDays — veidne paliek Meta",
+    "waTemplateShow": "Rādīt atkal",
+    "waTemplateHidden": "Veidne paslēpta. Tā paliek Meta.",
+    "waTemplateShown": "Veidne atkal redzama.",
+    "waHiddenOn": "Rādīt paslēptos",
+    "waHiddenOff": "Slēpt paslēptos"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp vēl nav savienots. Ievadiet piekļuves datus (Meta Cloud API) servera iestatījumos, tad sūtīšana būs aktīva.",

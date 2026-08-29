@@ -893,7 +893,21 @@
     "waTemplateDeleted": "Sablon törölve.",
     "waTemplatePendingHint": "Ellenőrzés alatt — a Meta ez idő alatt nem engedi szerkeszteni a sablont.",
     "waTemplateReviewHint": "Minden módosítás újra Meta ellenőrzés alá kerül; addig az eddigi verzió érvényes. A jóváhagyott sablonok legfeljebb tízszer módosíthatók 30 napon belül.",
-    "waTemplateSampleHint": "Meta sablon – nem szerkeszthető és nem törölhető."
+    "waTemplateSampleHint": "Meta sablon – nem szerkeszthető és nem törölhető.",
+    "waLabelName": "Sablon neve",
+    "waLabelBody": "Üzenet szövege",
+    "waLabelFooter": "Lábléc",
+    "waFooterHint": "Minden üzenet alatt kis betűkkel jelenik meg. Helyőrzők nélkül, legfeljebb 60 karakter.",
+    "waFooterPlaceholder": "Ezt az üzenetet automatikusan küldtük.",
+    "waCategoryUtility": "Tranzakció (Utility)",
+    "waCategoryMarketing": "Promóció (Marketing)",
+    "waCategoryAuth": "Bejelentkezés (Authentication)",
+    "waTemplateHide": "Elrejtés a myNextDays felületen – a Meta felületen a sablon megmarad",
+    "waTemplateShow": "Újra megjelenítés",
+    "waTemplateHidden": "Sablon elrejtve. A Meta felületen megmarad.",
+    "waTemplateShown": "Sablon újra megjelenítve.",
+    "waHiddenOn": "Elrejtettek megjelenítése",
+    "waHiddenOff": "Elrejtettek elrejtése"
   },
   "whatsapp": {
     "notConfigured": "A WhatsApp még nincs csatlakoztatva. Adja meg a hozzáférési adatokat (Meta Cloud API) a kiszolgáló beállításaiban, ezután a küldés aktív.",

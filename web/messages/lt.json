@@ -893,7 +893,21 @@
     "waTemplateDeleted": "Šablonas ištrintas.",
     "waTemplatePendingHint": "Peržiūrima – Meta neleidžia redaguoti šablono peržiūros metu.",
     "waTemplateReviewHint": "Kiekvienas pakeitimas vėl bus peržiūrimas Meta; iki tol galioja ankstesnė versija. Patvirtintus šablonus galima keisti ne daugiau kaip dešimt kartų per 30 dienų.",
-    "waTemplateSampleHint": "Meta šablono pavyzdys – jo negalima redaguoti ar ištrinti."
+    "waTemplateSampleHint": "Meta šablono pavyzdys – jo negalima redaguoti ar ištrinti.",
+    "waLabelName": "Šablono pavadinimas",
+    "waLabelBody": "Pranešimo tekstas",
+    "waLabelFooter": "Poraštė",
+    "waFooterHint": "Rodoma po kiekvienu pranešimu. Be vietos žymių, ne daugiau 60 simbolių.",
+    "waFooterPlaceholder": "Šis pranešimas buvo išsiųstas automatiškai.",
+    "waCategoryUtility": "Operacija (komunalinės paslaugos)",
+    "waCategoryMarketing": "Reklama (rinkodara)",
+    "waCategoryAuth": "Prisijungimas (autentifikavimas)",
+    "waTemplateHide": "Slėpti myNextDays – „Meta“ šablonas lieka",
+    "waTemplateShow": "Rodyti vėl",
+    "waTemplateHidden": "Šablonas paslėptas. „Meta“ šablonas lieka.",
+    "waTemplateShown": "Šablonas vėl rodomas.",
+    "waHiddenOn": "Rodyti paslėptus",
+    "waHiddenOff": "Slėpti paslėptus"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp dar neprijungtas. Įveskite prisijungimo duomenis (Meta Cloud API) serverio nustatymuose, tada siuntimas bus aktyvus.",

@@ -893,7 +893,21 @@
     "waTemplateDeleted": "Mall borttagen.",
     "waTemplatePendingHint": "Under granskning – Meta tillåter inte redigering av en mall under denna tid.",
     "waTemplateReviewHint": "Varje ändring skickas till Metas granskning igen; fram till dess gäller den tidigare versionen. Godkända mallar kan ändras högst tio gånger på 30 dagar.",
-    "waTemplateSampleHint": "Exempelmall från Meta – kan varken ändras eller raderas."
+    "waTemplateSampleHint": "Exempelmall från Meta – kan varken ändras eller raderas.",
+    "waLabelName": "Mallnamn",
+    "waLabelBody": "Meddelandetext",
+    "waLabelFooter": "Sidfot",
+    "waFooterHint": "Visas i litet format under varje meddelande. Inga platshållare, max 60 tecken.",
+    "waFooterPlaceholder": "Detta meddelande skickades automatiskt.",
+    "waCategoryUtility": "Transaktion (Nytta)",
+    "waCategoryMarketing": "Annonsering (Marknadsföring)",
+    "waCategoryAuth": "Registrering (Autentisering)",
+    "waTemplateHide": "Dölj i myNextDays – mallen finns kvar på Meta",
+    "waTemplateShow": "Visa igen",
+    "waTemplateHidden": "Mall dold. Den finns kvar på Meta.",
+    "waTemplateShown": "Mallen visas igen.",
+    "waHiddenOn": "Visa dolda",
+    "waHiddenOff": "Dölj dolda"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp är ännu inte anslutet. Ange inloggningsuppgifterna (Meta Cloud API) i serverinställningarna, då är utskicket aktivt.",

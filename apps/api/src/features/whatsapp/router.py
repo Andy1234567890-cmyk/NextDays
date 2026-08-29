@@ -27,6 +27,7 @@ from .schemas import (
     SendWhatsAppTemplateRequest,
     SliceHealth,
     TemplateCreate,
+    TemplateHide,
     TemplateUpdate,
     WhatsAppConversationList,
     WhatsAppMessage,
@@ -148,10 +149,20 @@ def onboarding_status(service: WhatsAppServiceDep, ctx: _guest) -> OnboardingSta
 
 
 @router.get("/templates")
-def list_templates(service: WhatsAppServiceDep, ctx: _guest) -> dict:
-    """Vorlagen der WABA DIESES Betriebs mit Prüfstatus (PENDING/APPROVED/REJECTED)."""
+def list_templates(
+    service: WhatsAppServiceDep, ctx: _guest, mit_ausgeblendeten: bool = False
+) -> dict:
+    """Vorlagen der WABA DIESES Betriebs mit Prüfstatus (PENDING/APPROVED/REJECTED).
+
+    Metas mitgelieferte Beispielvorlagen sind nie dabei; in myNextDays
+    ausgeblendete nur auf ausdrücklichen Wunsch.
+    """
     try:
-        return {"items": service.list_templates(ctx)}
+        return {
+            "items": service.list_templates(
+                ctx, mit_ausgeblendeten=mit_ausgeblendeten
+            )
+        }
     except WhatsAppServiceError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -190,6 +201,19 @@ def update_template(
             language=payload.language,
             body=payload.body,
             footer=payload.footer,
+        )
+    except WhatsAppServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/templates/{name}/ausblenden")
+def hide_template(
+    name: str, payload: TemplateHide, service: WhatsAppServiceDep, ctx: _guest
+) -> dict:
+    """Vorlage in myNextDays aus- oder wieder einblenden. Bei Meta bleibt sie."""
+    try:
+        return service.hide_template(
+            ctx, name=name, language=payload.language, hidden=payload.hidden
         )
     except WhatsAppServiceError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

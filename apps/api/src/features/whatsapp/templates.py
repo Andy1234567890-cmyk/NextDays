@@ -113,6 +113,22 @@ TEMPLATE_SATZ: dict[str, dict[str, str]] = {
 }
 
 
+def satz_feldreihenfolgen() -> dict[tuple[str, str], list[str]]:
+    """Feldreihenfolge je (Name, Sprache) für den myNextDays-Satz.
+
+    Aus dem Code abgeleitet, nicht aus der Datenbank: für unsere eigenen
+    Vorlagen ist die Reihenfolge hier bekannt, auch wenn sie ausgerollt wurden,
+    bevor es die Zuordnungstabelle gab. Damit zeigt die Oberfläche sofort
+    ``{{guest_name}}`` statt Metas ``{{1}}`` — ohne dass jemand erst etwas
+    anklicken muss.
+    """
+    return {
+        (name, sprache): nach_meta(text)[1]
+        for name, sprachen in TEMPLATE_SATZ.items()
+        for sprache, text in sprachen.items()
+    }
+
+
 def rollout(client: WhatsAppClient) -> dict[str, object]:
     """Den Satz in die WABA des Clients ausrollen. Idempotent.
 

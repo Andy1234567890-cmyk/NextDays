@@ -893,7 +893,21 @@
     "waTemplateDeleted": "Modelo excluído.",
     "waTemplatePendingHint": "Em revisão — o Meta não permite editar um modelo durante este período.",
     "waTemplateReviewHint": "Cada alteração será novamente submetida à revisão do Meta; até lá, a versão anterior permanece válida. Modelos aprovados podem ser alterados no máximo dez vezes em 30 dias.",
-    "waTemplateSampleHint": "Modelo de exemplo da Meta — não pode ser alterado nem excluído."
+    "waTemplateSampleHint": "Modelo de exemplo da Meta — não pode ser alterado nem excluído.",
+    "waLabelName": "Nome do modelo",
+    "waLabelBody": "Texto da mensagem",
+    "waLabelFooter": "Rodapé",
+    "waFooterHint": "Aparece pequeno abaixo de cada mensagem. Sem espaços reservados, máximo 60 caracteres.",
+    "waFooterPlaceholder": "Esta mensagem foi enviada automaticamente.",
+    "waCategoryUtility": "Transação (Utilitário)",
+    "waCategoryMarketing": "Publicidade (Marketing)",
+    "waCategoryAuth": "Inscrição (Autenticação)",
+    "waTemplateHide": "Ocultar no myNextDays — o modelo permanece no Meta",
+    "waTemplateShow": "Reexibir",
+    "waTemplateHidden": "Modelo oculto. Permanece no Meta.",
+    "waTemplateShown": "Modelo reexibido.",
+    "waHiddenOn": "Mostrar ocultos",
+    "waHiddenOff": "Ocultar ocultos"
   },
   "whatsapp": {
     "notConfigured": "O WhatsApp ainda não está ligado. Introduza as credenciais (Meta Cloud API) nas definições do servidor para ativar o envio.",

@@ -893,7 +893,21 @@
     "waTemplateDeleted": "Šablóna bola vymazaná.",
     "waTemplatePendingHint": "V procese kontroly — Meta počas nej neumožňuje úpravu šablóny.",
     "waTemplateReviewHint": "Každá zmena prejde opäť kontrolou Meta; dovtedy platí predchádzajúca verzia. Schválené šablóny je možné zmeniť maximálne desaťkrát za 30 dní.",
-    "waTemplateSampleHint": "Ukážková šablóna od Meta – nedá sa zmeniť ani odstrániť."
+    "waTemplateSampleHint": "Ukážková šablóna od Meta – nedá sa zmeniť ani odstrániť.",
+    "waLabelName": "Názov šablóny",
+    "waLabelBody": "Text správy",
+    "waLabelFooter": "Pätička",
+    "waFooterHint": "Zobrazuje sa pod každou správou. Bez zástupných symbolov, max. 60 znakov.",
+    "waFooterPlaceholder": "Táto správa bola odoslaná automaticky.",
+    "waCategoryUtility": "Transakcia (Utility)",
+    "waCategoryMarketing": "Reklama (Marketing)",
+    "waCategoryAuth": "Prihlásenie (Authentication)",
+    "waTemplateHide": "Skryť v myNextDays – šablóna zostane v Meta",
+    "waTemplateShow": "Znova zobraziť",
+    "waTemplateHidden": "Šablóna skrytá. Zostane v Meta.",
+    "waTemplateShown": "Šablóna je opäť viditeľná.",
+    "waHiddenOn": "Zobraziť skryté",
+    "waHiddenOff": "Skryť skryté"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp zatiaľ nie je prepojený. Zadajte prístupové údaje (Meta Cloud API) v nastaveniach servera, potom bude odosielanie aktívne.",

@@ -37,7 +37,7 @@ from .schemas import (
     WhatsAppMessageList,
     WhatsAppStatus,
 )
-from .templates import rollout
+from .templates import rollout, satz_feldreihenfolgen
 from .vorlagen_felder import (
     VorlagenFeldFehler,
     nach_katalog,
@@ -183,7 +183,18 @@ class WhatsAppService:
         )
 
     # --- Vorlagen (WABA-Ebene, kein Tenant-Bezug bei EINER eigenen Nummer) ---
-    def list_templates(self, ctx: AuthContext) -> list[dict]:
+    # Metas mitgelieferte Beispielvorlagen. Sie gehören keinem Betrieb, lassen
+    # sich weder ändern noch löschen und interessieren niemanden hier — sie
+    # werden deshalb gar nicht erst ausgeliefert. Erkannt am Namen, weil die
+    # API kein Merkmal dafür führt (live geprüft: library_template_name,
+    # sub_category und parameter_format sehen aus wie bei eigenen Vorlagen).
+    _META_BEISPIELE = ("hello_world", "jaspers_market_")
+
+    @classmethod
+    def _ist_meta_beispiel(cls, name: str) -> bool:
+        return name.startswith(cls._META_BEISPIELE)
+
+    def list_templates(self, ctx: AuthContext, *, mit_ausgeblendeten: bool = False) -> list[dict]:
         """Vorlagen der WABA DIESES Betriebs mit Prüfstatus.
 
         Meta ist die Quelle der Wahrheit — wir spiegeln den Status nicht in die
@@ -197,9 +208,37 @@ class WhatsAppService:
             raise WhatsAppServiceError(
                 exc.message, status_code=exc.status_code
             ) from exc
+        vorlagen = [
+            v for v in vorlagen if not self._ist_meta_beispiel(v.get("name", ""))
+        ]
+        # Ausgeblendete raus — es sei denn, der Betrieb will sie sehen, um eine
+        # zurückzuholen (Migration 0490).
+        versteckt = {
+            (z["template_name"], z["language"])
+            for z in (
+                self._db.table("whatsapp_template_hidden")  # type: ignore[union-attr]
+                .select("template_name, language")
+                .eq("tenant_id", tenant_id)
+                .execute()
+            ).data
+            or []
+        }
+        for vorlage in vorlagen:
+            vorlage["hidden"] = (
+                vorlage.get("name", ""),
+                vorlage.get("language", ""),
+            ) in versteckt
+        if not mit_ausgeblendeten:
+            vorlagen = [v for v in vorlagen if not v["hidden"]]
         # Metas {{1}} zurück in {{guest_first_name}}: der Betrieb hat nie eine
         # andere Schreibweise gesehen und soll auch keine zu sehen bekommen.
-        zuordnung = self._felder_lesen(db, tenant_id)
+        #
+        # Fehlt die gespeicherte Zuordnung, springt der Standardsatz ein: seine
+        # Feldreihenfolge steht im Code, also ist sie auch für Vorlagen bekannt,
+        # die vor der Tabelle 0489 ausgerollt wurden. Ohne diesen Rückgriff
+        # müsste der Betrieb erst „Satz einreichen" drücken, damit sein Text
+        # lesbar wird — eine Bringschuld, die er nicht erraten kann.
+        zuordnung = {**satz_feldreihenfolgen(), **self._felder_lesen(db, tenant_id)}
         for vorlage in vorlagen:
             reihenfolge = zuordnung.get(
                 (vorlage.get("name", ""), vorlage.get("language", "")), []
@@ -385,6 +424,36 @@ class WhatsAppService:
             ) from exc
         self._felder_speichern(db, tenant_id, name, language, reihenfolge)
         return ergebnis
+
+    def hide_template(
+        self, ctx: AuthContext, *, name: str, language: str, hidden: bool
+    ) -> dict:
+        """Eine Vorlage in myNextDays aus- oder wieder einblenden.
+
+        Bei Meta ändert das nichts: die Vorlage bleibt bestehen, samt Freigabe.
+        Genau das ist der Unterschied zum Löschen, und deshalb sind es zwei
+        verschiedene Wege und nicht derselbe Knopf.
+        """
+        db, tenant_id = self._require(ctx)
+        gestutzt = (name or "").strip()
+        if not gestutzt or not (language or "").strip():
+            raise WhatsAppServiceError(
+                "Name und Sprache der Vorlage fehlen.", status_code=422
+            )
+        if hidden:
+            db.table("whatsapp_template_hidden").upsert(
+                {
+                    "tenant_id": tenant_id,
+                    "template_name": gestutzt,
+                    "language": language,
+                },
+                on_conflict="tenant_id,template_name,language",
+            ).execute()
+        else:
+            db.table("whatsapp_template_hidden").delete().eq(
+                "tenant_id", tenant_id
+            ).eq("template_name", gestutzt).eq("language", language).execute()
+        return {"name": gestutzt, "language": language, "hidden": hidden}
 
     def delete_template(
         self, ctx: AuthContext, *, name: str, template_id: str | None = None

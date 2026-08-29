@@ -893,7 +893,21 @@
     "waTemplateDeleted": "Mall kustutati.",
     "waTemplatePendingHint": "Ülevaatamisel – Meta ei luba malli selle ajal muuta.",
     "waTemplateReviewHint": "Iga muudatus läheb uuesti Meta ülevaatamisele; seni kehtib eelmine versioon. Heakskiidetud malle saab muuta maksimaalselt kümme korda 30 päeva jooksul.",
-    "waTemplateSampleHint": "Meta näidis – seda ei saa muuta ega kustutada."
+    "waTemplateSampleHint": "Meta näidis – seda ei saa muuta ega kustutada.",
+    "waLabelName": "Malli nimi",
+    "waLabelBody": "Sõnumi tekst",
+    "waLabelFooter": "Jalus",
+    "waFooterHint": "Kuvatakse väikselt iga sõnumi all. Ilma kohatäideteta, kuni 60 märki.",
+    "waFooterPlaceholder": "See sõnum saadeti automaatselt.",
+    "waCategoryUtility": "Tehing (kommunaalteenus)",
+    "waCategoryMarketing": "Reklaam (turundus)",
+    "waCategoryAuth": "Registreerimine (autentimine)",
+    "waTemplateHide": "Peida myNextDaysis – Meta platvormil jääb mall alles",
+    "waTemplateShow": "Näita uuesti",
+    "waTemplateHidden": "Mall peidetud. Meta platvormil jääb see alles.",
+    "waTemplateShown": "Mall on uuesti nähtav.",
+    "waHiddenOn": "Näita peidetuid",
+    "waHiddenOff": "Peida peidetud"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp pole veel ühendatud. Sisesta juurdepääsuandmed (Meta Cloud API) serveri seadetesse, siis on saatmine aktiivne.",

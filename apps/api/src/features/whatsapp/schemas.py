@@ -149,3 +149,10 @@ class TemplateUpdate(BaseModel):
     language: str = Field(min_length=2, max_length=10)
     body: str = Field(min_length=1, max_length=1024)
     footer: str | None = Field(default=None, max_length=60)
+
+
+class TemplateHide(BaseModel):
+    """Vorlage in myNextDays aus- oder einblenden — bei Meta ändert sich nichts."""
+
+    language: str = Field(min_length=2, max_length=10)
+    hidden: bool = True

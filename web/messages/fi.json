@@ -893,7 +893,21 @@
     "waTemplateDeleted": "Malli poistettu.",
     "waTemplatePendingHint": "Tarkistuksessa – Meta ei anna muokata mallia tarkistuksen aikana.",
     "waTemplateReviewHint": "Jokainen muutos menee uudelleen Metan tarkistukseen; siihen asti edellinen versio on voimassa. Hyväksyttyjä malleja voi muuttaa enintään kymmenen kertaa 30 päivän aikana.",
-    "waTemplateSampleHint": "Metan esimerkkimalli – sitä ei voi muuttaa tai poistaa."
+    "waTemplateSampleHint": "Metan esimerkkimalli – sitä ei voi muuttaa tai poistaa.",
+    "waLabelName": "Mallin nimi",
+    "waLabelBody": "Viestin sisältö",
+    "waLabelFooter": "Alatunniste",
+    "waFooterHint": "Näkyy pienenä jokaisen viestin alla. Ei paikkamerkkejä, enintään 60 merkkiä.",
+    "waFooterPlaceholder": "Tämä viesti lähetettiin automaattisesti.",
+    "waCategoryUtility": "Tapahtuma (Utility)",
+    "waCategoryMarketing": "Mainonta (Marketing)",
+    "waCategoryAuth": "Kirjautuminen (Authentication)",
+    "waTemplateHide": "Piilota myNextDays-palvelussa – malli säilyy Metassa",
+    "waTemplateShow": "Näytä uudelleen",
+    "waTemplateHidden": "Malli piilotettu. Se säilyy Metassa.",
+    "waTemplateShown": "Malli näytetään uudelleen.",
+    "waHiddenOn": "Näytä piilotetut",
+    "waHiddenOff": "Piilota piilotetut"
   },
   "whatsapp": {
     "notConfigured": "WhatsAppia ei ole vielä yhdistetty. Syötä tunnukset (Meta Cloud API) palvelimen asetuksiin, niin lähetys on käytössä.",

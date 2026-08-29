@@ -893,7 +893,21 @@
     "waTemplateDeleted": "Skabelon slettet.",
     "waTemplatePendingHint": "Under gennemgang — Meta tillader ikke redigering af en skabelon i denne periode.",
     "waTemplateReviewHint": "Hver ændring sendes igen til Metas gennemgang; indtil da gælder den tidligere version. Godkendte skabeloner kan højst ændres ti gange på 30 dage.",
-    "waTemplateSampleHint": "Eksempel på skabelon fra Meta – kan hverken ændres eller slettes."
+    "waTemplateSampleHint": "Eksempel på skabelon fra Meta – kan hverken ændres eller slettes.",
+    "waLabelName": "Skabelonnavn",
+    "waLabelBody": "Beskedtekst",
+    "waLabelFooter": "Sidefod",
+    "waFooterHint": "Står med småt under hver besked. Ingen pladsholdere, maks. 60 tegn.",
+    "waFooterPlaceholder": "Denne besked blev sendt automatisk.",
+    "waCategoryUtility": "Transaktion (Utility)",
+    "waCategoryMarketing": "Reklame (Marketing)",
+    "waCategoryAuth": "Login (Authentication)",
+    "waTemplateHide": "Skjul i myNextDays – skabelonen forbliver i Meta",
+    "waTemplateShow": "Vis igen",
+    "waTemplateHidden": "Skabelon skjult. Den forbliver i Meta.",
+    "waTemplateShown": "Skabelon vist igen.",
+    "waHiddenOn": "Vis skjulte",
+    "waHiddenOff": "Skjul skjulte"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp er endnu ikke forbundet. Angiv adgangsoplysningerne (Meta Cloud API) i serverindstillingerne, så er afsendelse aktiv.",

@@ -893,7 +893,21 @@
     "waTemplateDeleted": "Vorlage gelöscht.",
     "waTemplatePendingHint": "In Prüfung — Meta lässt eine Vorlage währenddessen nicht bearbeiten.",
     "waTemplateReviewHint": "Jede Änderung geht erneut in Metas Prüfung; bis dahin gilt die bisherige Fassung. Freigegebene Vorlagen lassen sich höchstens zehnmal in 30 Tagen ändern.",
-    "waTemplateSampleHint": "Beispielvorlage von Meta — sie lässt sich weder ändern noch löschen."
+    "waTemplateSampleHint": "Beispielvorlage von Meta — sie lässt sich weder ändern noch löschen.",
+    "waLabelName": "Name der Vorlage",
+    "waLabelBody": "Nachrichtentext",
+    "waLabelFooter": "Fußzeile",
+    "waFooterHint": "Steht klein unter jeder Nachricht. Ohne Platzhalter, höchstens 60 Zeichen.",
+    "waFooterPlaceholder": "Diese Nachricht wurde automatisch gesendet.",
+    "waCategoryUtility": "Transaktion (Utility)",
+    "waCategoryMarketing": "Werbung (Marketing)",
+    "waCategoryAuth": "Anmeldung (Authentication)",
+    "waTemplateHide": "In myNextDays ausblenden — bei Meta bleibt die Vorlage bestehen",
+    "waTemplateShow": "Wieder einblenden",
+    "waTemplateHidden": "Vorlage ausgeblendet. Bei Meta bleibt sie bestehen.",
+    "waTemplateShown": "Vorlage wieder eingeblendet.",
+    "waHiddenOn": "Ausgeblendete anzeigen",
+    "waHiddenOff": "Ausgeblendete verbergen"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp ist noch nicht verbunden. Zugangsdaten (Meta Cloud API) in den Server-Einstellungen hinterlegen, dann ist der Versand aktiv.",

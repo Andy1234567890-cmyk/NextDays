@@ -893,7 +893,21 @@
     "waTemplateDeleted": "Șablon șters.",
     "waTemplatePendingHint": "În curs de revizuire — Meta nu permite editarea unui șablon în acest timp.",
     "waTemplateReviewHint": "Fiecare modificare este trimisă din nou spre revizuire la Meta; până atunci, versiunea anterioară rămâne valabilă. Șabloanele aprobate pot fi modificate de cel mult zece ori în 30 de zile.",
-    "waTemplateSampleHint": "Șablon exemplu de la Meta — nu poate fi modificat sau șters."
+    "waTemplateSampleHint": "Șablon exemplu de la Meta — nu poate fi modificat sau șters.",
+    "waLabelName": "Nume șablon",
+    "waLabelBody": "Text mesaj",
+    "waLabelFooter": "Subsol",
+    "waFooterHint": "Apare mic sub fiecare mesaj. Fără substituenți, max. 60 caractere.",
+    "waFooterPlaceholder": "Acest mesaj a fost trimis automat.",
+    "waCategoryUtility": "Tranzacție (Utilitar)",
+    "waCategoryMarketing": "Publicitate (Marketing)",
+    "waCategoryAuth": "Autentificare (Autentificare)",
+    "waTemplateHide": "Ascunde în myNextDays — șablonul rămâne în Meta",
+    "waTemplateShow": "Afișează din nou",
+    "waTemplateHidden": "Șablon ascuns. Rămâne în Meta.",
+    "waTemplateShown": "Șablon afișat din nou.",
+    "waHiddenOn": "Afișează ascunse",
+    "waHiddenOff": "Ascunde ascunse"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp nu este încă conectat. Introduceți datele de acces (Meta Cloud API) în setările serverului, apoi trimiterea este activă.",

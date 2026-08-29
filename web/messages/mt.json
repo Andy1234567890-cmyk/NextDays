@@ -893,7 +893,21 @@
     "waTemplateDeleted": "Mudell imħassar.",
     "waTemplatePendingHint": "Qed jiġi rivedut — Meta ma tippermettix li mudell jiġi editjat matul dan iż-żmien.",
     "waTemplateReviewHint": "Kull bidla terġa' tgħaddi minn reviżjoni ta' Meta; sa dakinhar, il-verżjoni preċedenti tibqa' valida. Mudelli approvati jistgħu jinbidlu massimu ta' għaxar darbiet fi 30 jum.",
-    "waTemplateSampleHint": "Mudell eżempju minn Meta — ma jistax jinbidel jew jitħassar."
+    "waTemplateSampleHint": "Mudell eżempju minn Meta — ma jistax jinbidel jew jitħassar.",
+    "waLabelName": "Isem tal-mudell",
+    "waLabelBody": "Test tal-messaġġ",
+    "waLabelFooter": "Footer",
+    "waFooterHint": "Jidher żgħir taħt kull messaġġ. L-ebda placeholders, massimu ta' 60 karattru.",
+    "waFooterPlaceholder": "Dan il-messaġġ intbagħat awtomatikament.",
+    "waCategoryUtility": "Transazzjoni (Utilità)",
+    "waCategoryMarketing": "Reklamar (Marketing)",
+    "waCategoryAuth": "Reġistrazzjoni (Awtentikazzjoni)",
+    "waTemplateHide": "Aħbi minn myNextDays — tibqa' fuq Meta",
+    "waTemplateShow": "Uri mill-ġdid",
+    "waTemplateHidden": "Mudell moħbi. Jibqa' fuq Meta.",
+    "waTemplateShown": "Mudell muri mill-ġdid.",
+    "waHiddenOn": "Uri dawk moħbija",
+    "waHiddenOff": "Aħbi dawk moħbija"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp għadu mhux imqabbad. Daħħal il-kredenzjali (Meta Cloud API) fis-settings tas-server, imbagħad il-konsenja tkun attiva.",

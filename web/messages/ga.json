@@ -893,7 +893,21 @@
     "waTemplateDeleted": "Teimpléad scriosta.",
     "waTemplatePendingHint": "Faoi athbhreithniú — ní cheadaíonn Meta teimpléad a chur in eagar le linn an ama seo.",
     "waTemplateReviewHint": "Cuirtear gach athrú faoi bhráid Meta arís; go dtí sin, tá an leagan roimhe seo bailí. Ní féidir teimpléid cheadaithe a athrú níos mó ná deich n-uaire i 30 lá.",
-    "waTemplateSampleHint": "Teimpléad samplach ó Meta — ní féidir é a chur in eagar ná a scriosadh."
+    "waTemplateSampleHint": "Teimpléad samplach ó Meta — ní féidir é a chur in eagar ná a scriosadh.",
+    "waLabelName": "Ainm an teimpléid",
+    "waLabelBody": "Téacs na teachtaireachta",
+    "waLabelFooter": "Buntásc",
+    "waFooterHint": "Taispeántar é seo faoi gach teachtaireacht. Gan áiteanna sealbhaíochta, 60 carachtar ar a mhéad.",
+    "waFooterPlaceholder": "Seoladh an teachtaireacht seo go huathoibríoch.",
+    "waCategoryUtility": "Idirbheart (Fóntas)",
+    "waCategoryMarketing": "Fógraíocht (Margaíocht)",
+    "waCategoryAuth": "Clárú (Fíordheimhniú)",
+    "waTemplateHide": "Folaigh i myNextDays — fanann an teimpléad i Meta",
+    "waTemplateShow": "Taispeáin arís",
+    "waTemplateHidden": "Teimpléad folaithe. Fanann sé i Meta.",
+    "waTemplateShown": "Teimpléad taispeánta arís.",
+    "waHiddenOn": "Taispeáin cinn fholaithe",
+    "waHiddenOff": "Folaigh cinn fholaithe"
   },
   "whatsapp": {
     "notConfigured": "Níl WhatsApp nasctha fós. Cuir na dintiúir (Meta Cloud API) i socruithe an fhreastalaí, ansin beidh an seoladh gníomhach.",

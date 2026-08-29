@@ -27,15 +27,17 @@
 //     Fassung weiter.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@nextdays/ui/button";
-import { Input } from "@nextdays/ui/input";
-import { FeldPicker } from "@/components/inbox/feld-picker";
+import {
+  WhatsAppVorlagenEditor,
+  type VorlagenForm,
+} from "@/components/inbox/whatsapp-vorlagen-editor";
 import {
   createWhatsAppTemplate,
-  deleteWhatsAppTemplate,
+  hideWhatsAppTemplate,
   listWhatsAppTemplates,
   rolloutWhatsAppTemplates,
   updateWhatsAppTemplate,
@@ -58,21 +60,6 @@ function statusFarbe(status: string): string {
     default:
       return "bg-muted text-muted-foreground";
   }
-}
-
-/** Metas mitgelieferte Beispielvorlagen. Sie lassen sich weder ändern noch
- *  löschen — Meta antwortet mit „Beispielvorlagen können nicht bearbeitet oder
- *  gelöscht werden. (Meta-Code 100)".
- *
- *  Erkannt am Namen, weil die API kein Merkmal dafür liefert: die Felder
- *  `library_template_name`, `sub_category` und `parameter_format` sehen bei
- *  ihnen genauso aus wie bei eigenen Vorlagen (live geprüft). Trifft die Liste
- *  eine nicht, bleibt Metas Fehlertext die Rückfallebene — schlimmer als ein
- *  gesperrter Knopf ist einer, der nichts tut. */
-const META_BEISPIELE = /^(hello_world|jaspers_market_)/;
-
-function istMetaBeispiel(name: string): boolean {
-  return META_BEISPIELE.test(name);
 }
 
 /** Nur diese Zustände lässt Meta bearbeiten. PENDING ist bewusst nicht dabei. */
@@ -100,41 +87,15 @@ export function WhatsAppVorlagen() {
   // fehlgeschlagen" sind zwei verschiedene Aussagen.
   const [ladefehler, setLadefehler] = useState<string | null>(null);
   const [laeuft, setLaeuft] = useState(false);
+  // Ausgeblendete sind normalerweise weg. Der Schalter holt sie zurück ins
+  // Bild — ohne ihn wäre das Ausblenden eine Einbahnstraße.
+  const [zeigeAusgeblendete, setZeigeAusgeblendete] = useState(false);
 
   const [editing, setEditing] = useState<WhatsAppTemplate | null>(null);
-  const [form, setForm] = useState<{
-    name: string;
-    language: string;
-    category: "UTILITY" | "MARKETING" | "AUTHENTICATION";
-    body: string;
-    footer: string;
-  }>(LEER);
+  const [form, setForm] = useState<VorlagenForm>(LEER);
   const [fehler, setFehler] = useState<string | null>(null);
-  const textfeld = useRef<HTMLTextAreaElement | null>(null);
-
-  /** Platzhalter an der Cursorposition einsetzen, nicht am Ende: sie stehen
-   *  fast immer mitten im Satz („Hallo {{guest_first_name}},"). */
-  function platzhalterEinfuegen(platzhalter: string) {
-    const feld = textfeld.current;
-    if (!feld) {
-      setForm((f) => ({ ...f, body: f.body + platzhalter }));
-      return;
-    }
-    const start = feld.selectionStart ?? feld.value.length;
-    const ende = feld.selectionEnd ?? start;
-    const neu = feld.value.slice(0, start) + platzhalter + feld.value.slice(ende);
-    setForm((f) => ({ ...f, body: neu }));
-    // Cursor hinter den eingefügten Platzhalter — sonst tippt man beim
-    // Weiterschreiben mitten hinein.
-    requestAnimationFrame(() => {
-      feld.focus();
-      const pos = start + platzhalter.length;
-      feld.setSelectionRange(pos, pos);
-    });
-  }
-
   const laden = useCallback(async () => {
-    const res = await listWhatsAppTemplates();
+    const res = await listWhatsAppTemplates(zeigeAusgeblendete);
     if (res.ok) {
       setItems(res.data.items);
       setLadefehler("");
@@ -142,7 +103,7 @@ export function WhatsAppVorlagen() {
       setItems([]);
       setLadefehler(res.error);
     }
-  }, []);
+  }, [zeigeAusgeblendete]);
 
   useEffect(() => {
     void laden();
@@ -194,12 +155,15 @@ export function WhatsAppVorlagen() {
     setLaeuft(false);
   }
 
-  async function loeschen(tpl: WhatsAppTemplate) {
+  /** Der Papierkorb blendet in myNextDays aus; bei Meta bleibt die Vorlage
+   *  samt Freigabe bestehen. Löschen dort wäre endgültig und ist deshalb kein
+   *  Nebeneffekt dieses Knopfes. */
+  async function ausblenden(tpl: WhatsAppTemplate, hidden: boolean) {
     setLaeuft(true);
-    const res = await deleteWhatsAppTemplate(tpl.name, tpl.id);
+    const res = await hideWhatsAppTemplate(tpl.name, tpl.language, hidden);
     if (res.ok) {
-      toast.success(t("waTemplateDeleted"));
-      if (editing?.id === tpl.id) reset();
+      toast.success(hidden ? t("waTemplateHidden") : t("waTemplateShown"));
+      if (hidden && editing?.id === tpl.id) reset();
       await laden();
     } else {
       toast.error(res.error);
@@ -236,16 +200,30 @@ export function WhatsAppVorlagen() {
           <h2 className="font-display text-lg font-extrabold">
             {t("tabWhatsAppTemplates")}
           </h2>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => void ausrollen()}
-            disabled={laeuft}
-          >
-            <Icon icon="ph:stack" className="size-4" />
-            {t("waTemplatesRollout")}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setZeigeAusgeblendete((v) => !v)}
+            >
+              <Icon
+                icon={zeigeAusgeblendete ? "ph:eye-slash" : "ph:eye"}
+                className="size-4"
+              />
+              {zeigeAusgeblendete ? t("waHiddenOff") : t("waHiddenOn")}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => void ausrollen()}
+              disabled={laeuft}
+            >
+              <Icon icon="ph:stack" className="size-4" />
+              {t("waTemplatesRollout")}
+            </Button>
+          </div>
         </div>
         <p className="mb-5 max-w-2xl text-sm text-muted-foreground">
           {t("waTemplatesIntro")}
@@ -266,7 +244,11 @@ export function WhatsAppVorlagen() {
             {items.map((tpl) => (
               <li
                 key={tpl.id}
-                className="flex items-start gap-4 rounded-2xl border border-border p-4"
+                className={`flex items-start gap-4 rounded-2xl border p-4 ${
+                  tpl.hidden
+                    ? "border-dashed border-border bg-muted/40 opacity-70"
+                    : "border-border"
+                }`}
               >
                 <div className="flex min-w-0 flex-1 flex-col">
                   <span className="flex flex-wrap items-center gap-2">
@@ -304,15 +286,11 @@ export function WhatsAppVorlagen() {
                   type="button"
                   variant="outline"
                   size="icon"
-                  disabled={
-                    !darfBearbeitet(tpl.status) || istMetaBeispiel(tpl.name)
-                  }
+                  disabled={!darfBearbeitet(tpl.status)}
                   title={
-                    istMetaBeispiel(tpl.name)
-                      ? t("waTemplateSampleHint")
-                      : darfBearbeitet(tpl.status)
-                        ? undefined
-                        : t("waTemplatePendingHint")
+                    darfBearbeitet(tpl.status)
+                      ? t("waTemplateEdit")
+                      : t("waTemplatePendingHint")
                   }
                   onClick={() => bearbeiten(tpl)}
                 >
@@ -322,13 +300,13 @@ export function WhatsAppVorlagen() {
                   type="button"
                   variant="outline"
                   size="icon"
-                  disabled={istMetaBeispiel(tpl.name)}
-                  title={
-                    istMetaBeispiel(tpl.name) ? t("waTemplateSampleHint") : undefined
-                  }
-                  onClick={() => void loeschen(tpl)}
+                  title={tpl.hidden ? t("waTemplateShow") : t("waTemplateHide")}
+                  onClick={() => void ausblenden(tpl, !tpl.hidden)}
                 >
-                  <Icon icon="ph:trash" className="size-4" />
+                  <Icon
+                    icon={tpl.hidden ? "ph:eye" : "ph:eye-slash"}
+                    className="size-4"
+                  />
                 </Button>
               </li>
             ))}
@@ -336,97 +314,15 @@ export function WhatsAppVorlagen() {
         )}
       </div>
 
-      {/* Editor */}
-      <div className="col-span-12 flex flex-col gap-4 rounded-2xl border border-border p-5 lg:col-span-5">
-        <h3 className="font-semibold">
-          {editing ? t("waTemplateEdit") : t("waTemplateNew")}
-        </h3>
-
-        <Input
-          value={form.name}
-          onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-          placeholder={t("waTemplateName")}
-          // Name und Sprache sind bei Meta nach dem Anlegen fest. Gesperrt
-          // statt stillschweigend ignoriert.
-          disabled={Boolean(editing)}
-        />
-        <p className="-mt-2 text-xs leading-relaxed text-muted-foreground">
-          {editing ? t("waTemplateNameLocked") : t("waTemplateNameHint")}
-        </p>
-
-        <div className="flex gap-3">
-          <select
-            className="h-9 flex-1 rounded-(--radius) border border-input bg-background px-3 text-sm"
-            value={form.language}
-            onChange={(e) => setForm((f) => ({ ...f, language: e.target.value }))}
-            disabled={Boolean(editing)}
-            aria-label={t("waTemplateLanguage")}
-          >
-            <option value="de">de</option>
-            <option value="en">en</option>
-            <option value="da">da</option>
-            <option value="fr">fr</option>
-            <option value="es">es</option>
-            <option value="it">it</option>
-            <option value="nl">nl</option>
-            <option value="pl">pl</option>
-            <option value="sv">sv</option>
-          </select>
-          <select
-            className="h-9 flex-1 rounded-(--radius) border border-input bg-background px-3 text-sm"
-            value={form.category}
-            onChange={(e) =>
-              setForm((f) => ({
-                ...f,
-                category: e.target.value as typeof LEER.category,
-              }))
-            }
-            disabled={Boolean(editing)}
-            aria-label={t("waTemplateCategory")}
-          >
-            <option value="UTILITY">UTILITY</option>
-            <option value="MARKETING">MARKETING</option>
-            <option value="AUTHENTICATION">AUTHENTICATION</option>
-          </select>
-        </div>
-
-        <textarea
-          className="min-h-40 w-full rounded-(--radius) border border-input bg-background p-3 text-sm"
-          ref={textfeld}
-          value={form.body}
-          onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
-          placeholder={t("waTemplateBody")}
-          data-testid="wa-template-body"
-        />
-        <p className="-mt-2 text-xs leading-relaxed text-muted-foreground">
-          {t("waTemplateBodyHint")}
-        </p>
-
-        {/* Derselbe Platzhalter-Katalog wie in Vorlagen und Automationen —
-            es gibt nur diesen einen. Metas positionelle Form ({{1}}) entsteht
-            erst beim Übertragen und ist hier bewusst nicht sichtbar. */}
-        <FeldPicker onInsert={platzhalterEinfuegen} />
-
-        <Input
-          value={form.footer}
-          onChange={(e) => setForm((f) => ({ ...f, footer: e.target.value }))}
-          placeholder={t("waTemplateFooter")}
-        />
-
-        {fehler && <p className="text-sm text-destructive">{fehler}</p>}
-
-        <div className="flex justify-end gap-2">
-          {editing && (
-            <Button type="button" variant="outline" onClick={reset}>
-              {t("waTemplateCancel")}
-            </Button>
-          )}
-          <Button type="button" onClick={() => void speichern()} disabled={laeuft}>
-            {t("waTemplateSave")}
-          </Button>
-        </div>
-        <p className="text-xs text-muted-foreground">{t("waTemplateReviewHint")}</p>
-      </div>
+      <WhatsAppVorlagenEditor
+        editing={editing}
+        form={form}
+        onForm={setForm}
+        fehler={fehler}
+        laeuft={laeuft}
+        onSpeichern={() => void speichern()}
+        onAbbrechen={reset}
+      />
     </div>
   );
 }

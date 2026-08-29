@@ -893,7 +893,21 @@
     "waTemplateDeleted": "Szablon usunięty.",
     "waTemplatePendingHint": "W trakcie weryfikacji — Meta nie pozwala na edycję szablonu w tym czasie.",
     "waTemplateReviewHint": "Każda zmiana podlega ponownej weryfikacji przez Meta; do tego czasu obowiązuje poprzednia wersja. Zatwierdzone szablony można zmieniać maksymalnie dziesięć razy w ciągu 30 dni.",
-    "waTemplateSampleHint": "Przykładowy szablon Meta — nie można go edytować ani usunąć."
+    "waTemplateSampleHint": "Przykładowy szablon Meta — nie można go edytować ani usunąć.",
+    "waLabelName": "Nazwa szablonu",
+    "waLabelBody": "Treść wiadomości",
+    "waLabelFooter": "Stopka",
+    "waFooterHint": "Wyświetlane pod każdą wiadomością. Bez symboli zastępczych, maks. 60 znaków.",
+    "waFooterPlaceholder": "Ta wiadomość została wysłana automatycznie.",
+    "waCategoryUtility": "Transakcja (narzędzie)",
+    "waCategoryMarketing": "Reklama (marketing)",
+    "waCategoryAuth": "Rejestracja (uwierzytelnianie)",
+    "waTemplateHide": "Ukryj w myNextDays — szablon pozostaje w Meta",
+    "waTemplateShow": "Pokaż ponownie",
+    "waTemplateHidden": "Szablon ukryty. Pozostaje w Meta.",
+    "waTemplateShown": "Szablon ponownie pokazany.",
+    "waHiddenOn": "Pokaż ukryte",
+    "waHiddenOff": "Ukryj ukryte"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp nie jest jeszcze połączony. Wprowadź dane dostępowe (Meta Cloud API) w ustawieniach serwera, aby aktywować wysyłkę.",
