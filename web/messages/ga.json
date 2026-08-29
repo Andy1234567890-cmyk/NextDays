@@ -873,7 +873,7 @@
     "tabWhatsAppTemplates": "Teimpléid WhatsApp",
     "waTemplatesIntro": "Lasmuigh den fhuinneog 24 uair an chloig, ní cheadaíonn WhatsApp ach teimpléid atá ceadaithe ag Meta. Baineann na teimpléid seo le huimhir WhatsApp an ghnó; is é Meta a chinneann an ceadú.",
     "waTemplatesEmpty": "Níl aon teimpléid ann fós. Leis an rogha “Cruthaigh teimpléid”, cuirfear an tacar myNextDays faoi bhráid Meta lena athbhreithniú: deimhniú áirithinte, eolas teachta, meabhrúchán íocaíochta, cealú agus admháil íocaíochta, i nGearmáinis agus i mBéarla.",
-    "waTemplatesRolloutDone": "Cuireadh {new} isteach lena athbhreithniú, bhí {existing} ann cheana.",
+    "waTemplatesRolloutDone": "Cuireadh {neu} isteach lena athbhreithniú, bhí {vorhanden} ann cheana.",
     "waTemplatesLoading": "Á lódáil …",
     "manageWhatsAppTemplatesDesc": "Teimpléid atá ceadaithe ag Meta le haghaidh teachtaireachtaí lasmuigh den fhuinneog 24 uair an chloig.",
     "waTemplatesRollout": "Cuir isteach frása myNextDays",

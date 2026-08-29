@@ -873,7 +873,7 @@
     "tabWhatsAppTemplates": "WhatsApp-sjablonen",
     "waTemplatesIntro": "Buiten het 24-uursvenster staat WhatsApp alleen sjablonen toe die door Meta zijn goedgekeurd. Deze behoren tot het WhatsApp-nummer van het bedrijf; Meta beslist over de goedkeuring.",
     "waTemplatesEmpty": "Nog geen sjablonen. Met „Sjablonen aanmaken“ wordt de myNextDays-set ter goedkeuring ingediend bij Meta: boekingsbevestiging, aankomstinformatie, betalingsherinnering, annulering en betalingsontvangst, elk in het Duits en Engels.",
-    "waTemplatesRolloutDone": "{nieuw} ingediend ter goedkeuring, {bestaand} waren al aanwezig.",
+    "waTemplatesRolloutDone": "{neu} ingediend ter goedkeuring, {vorhanden} waren al aanwezig.",
     "waTemplatesLoading": "Wordt geladen …",
     "manageWhatsAppTemplatesDesc": "Door Meta goedgekeurde sjablonen voor berichten buiten het 24-uursvenster.",
     "waTemplatesRollout": "myNextDays-zin indienen",

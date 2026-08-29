@@ -873,7 +873,7 @@
     "tabWhatsAppTemplates": "WhatsApp šablonai",
     "waTemplatesIntro": "Už 24 valandų lango ribų „WhatsApp“ leidžia naudoti tik „Meta“ patvirtintus šablonus. Šie priklauso įmonės „WhatsApp“ numeriui; „Meta“ sprendžia dėl patvirtinimo.",
     "waTemplatesEmpty": "Dar nėra šablonų. Paspaudus „Kurti šablonus“, „myNextDays“ rinkinys pateikiamas „Meta“ patvirtinimui: užsakymo patvirtinimas, atvykimo informacija, mokėjimo priminimas, atšaukimas ir mokėjimo gavimas, kiekvienas vokiečių ir anglų kalbomis.",
-    "waTemplatesRolloutDone": "Pateikta {nauja} patvirtinimui, {esama} jau buvo.",
+    "waTemplatesRolloutDone": "Pateikta {neu} patvirtinimui, {vorhanden} jau buvo.",
     "waTemplatesLoading": "Įkeliama…",
     "manageWhatsAppTemplatesDesc": "„Meta“ patvirtinti šablonai žinutėms už 24 valandų lango ribų.",
     "waTemplatesRollout": "Pateikti myNextDays sakinį",
