@@ -230,6 +230,10 @@ def test_ingest_webhook_creates_incoming(monkeypatch) -> None:  # noqa: ANN001
         config.get_settings(), "whatsapp_default_tenant_id", "t1", raising=False
     )
     db = _DB()
+    # Den Default-Betrieb muss es geben — der Service prüft das, seit ein
+    # Default auf einen gelöschten Betrieb zeigte und jede Gastnachricht am
+    # Fremdschlüssel scheiterte (siehe test_ingest_webhook_default_tenant_weg).
+    db.store["tenants"] = [{"id": "t1"}]
     svc = WhatsAppService(service_client=db, client=_FakeClient())
     payload = {
         "entry": [
@@ -262,6 +266,45 @@ def test_ingest_webhook_creates_incoming(monkeypatch) -> None:  # noqa: ANN001
         x["channel"] == "whatsapp" and x["external_id"] == "491701234567"
         for x in db.store["guest_external_ids"]
     )
+
+
+def test_ingest_webhook_default_tenant_weg(monkeypatch) -> None:  # noqa: ANN001
+    """Zeigt WHATSAPP_DEFAULT_TENANT_ID ins Leere, wird verworfen statt zu werfen.
+
+    Live am 29.08.2026: die Variable trug die ID eines Betriebs, den es nicht
+    gab. Der Insert brach am Fremdschlüssel, der Webhook antwortete 500, Meta
+    wiederholte vier Mal — und jede eingehende Gastnachricht war verloren, ohne
+    dass irgendwo etwas rot wurde.
+    """
+    from src.core import config
+
+    monkeypatch.setattr(
+        config.get_settings(), "whatsapp_default_tenant_id", "gibt-es-nicht",
+        raising=False,
+    )
+    db = _DB()
+    db.store["tenants"] = [{"id": "t1"}]
+    svc = WhatsAppService(service_client=db, client=_FakeClient())
+    out = svc.ingest_webhook(
+        {
+            "entry": [
+                {
+                    "changes": [
+                        {
+                            "value": {
+                                "messages": [
+                                    {"from": "491701234567", "id": "wamid.x",
+                                     "text": {"body": "Hi"}}
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    )
+    assert out["received"] == 0
+    assert not db.store.get("whatsapp_message")
 
 
 # --- Webhook-Signaturpflicht (Prod-Fehlkonfiguration darf nicht offen sein) ---
@@ -309,3 +352,58 @@ def test_webhook_with_secret_rejects_bad_signature(monkeypatch) -> None:  # noqa
         headers={"X-Hub-Signature-256": "sha256=deadbeef"},
     )
     assert resp.status_code == 403
+
+
+def test_client_fuer_nutzt_die_nummer_des_betriebs() -> None:
+    """Gesendet wird über die EIGENE Nummer des Betriebs, nie über die zentrale.
+
+    Vor dieser Änderung lief jeder Versand über den global konfigurierten
+    Client aus der .env. Beim ersten Kunden mit eigener Nummer wäre der Gast
+    von einer fremden Nummer angeschrieben worden — und die Nachricht auf
+    fremde Rechnung gegangen, ohne dass ein Aufruf fehlschlägt.
+    """
+    db = _DB()
+    db.store["whatsapp_account"] = [
+        {
+            "tenant_id": "t1",
+            "access_token": "token-des-betriebs",
+            "phone_number_id": "nummer-des-betriebs",
+            "waba_id": "waba-des-betriebs",
+            "status": "connected",
+        }
+    ]
+    svc = WhatsAppService(service_client=db, client=_FakeClient())
+    client = svc._client_fuer(db, "t1")  # noqa: SLF001 — genau das ist der Test
+    assert client._phone_number_id == "nummer-des-betriebs"  # noqa: SLF001
+    assert client._waba_id == "waba-des-betriebs"  # noqa: SLF001
+
+
+def test_client_fuer_ohne_konto_ist_ein_fehler(monkeypatch) -> None:  # noqa: ANN001
+    """Kein verbundenes Konto → 409, KEIN stiller Versand über die zentrale Nummer."""
+    from src.core import config
+
+    monkeypatch.setattr(
+        config.get_settings(), "whatsapp_default_tenant_id", "", raising=False
+    )
+    svc = WhatsAppService(service_client=_DB(), client=_FakeClient())
+    with pytest.raises(WhatsAppServiceError) as exc:
+        svc._client_fuer(svc._db, "t-ohne-konto")  # noqa: SLF001
+    assert exc.value.status_code == 409
+
+
+def test_client_fuer_getrenntes_konto_sendet_nicht() -> None:
+    """Getrennte Nummer → 409 statt Versand mit einem toten Token."""
+    db = _DB()
+    db.store["whatsapp_account"] = [
+        {
+            "tenant_id": "t1",
+            "access_token": "alt",
+            "phone_number_id": "n1",
+            "waba_id": "w1",
+            "status": "disconnected",
+        }
+    ]
+    svc = WhatsAppService(service_client=db, client=_FakeClient())
+    with pytest.raises(WhatsAppServiceError) as exc:
+        svc._client_fuer(db, "t1")  # noqa: SLF001
+    assert exc.value.status_code == 409

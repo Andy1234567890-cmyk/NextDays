@@ -140,3 +140,29 @@ export async function sendWhatsApp(input: {
 }): Promise<Result<WhatsAppMessage>> {
   return call<WhatsAppMessage>("/send", { method: "POST", body: input });
 }
+
+export type WhatsAppTemplate = {
+  name: string;
+  language: string;
+  status: string;
+  category: string;
+};
+
+/** Vorlagen der WABA DIESES Betriebs, mit Metas Prüfstatus. Quelle ist Meta,
+ *  nicht unsere DB — ein gespiegelter Status driftet. */
+export async function listWhatsAppTemplates(): Promise<
+  Result<{ items: WhatsAppTemplate[] }>
+> {
+  return call<{ items: WhatsAppTemplate[] }>("/templates");
+}
+
+/** Den myNextDays-Vorlagensatz in die WABA des Betriebs ausrollen. Idempotent:
+ *  vorhandene Vorlagen werden übersprungen, abgelehnte einzeln gemeldet. */
+export async function rolloutWhatsAppTemplates(): Promise<
+  Result<{ angelegt: string[]; uebersprungen: string[]; fehler: string[] }>
+> {
+  return call<{ angelegt: string[]; uebersprungen: string[]; fehler: string[] }>(
+    "/templates/rollout",
+    { method: "POST" },
+  );
+}

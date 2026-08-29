@@ -178,24 +178,79 @@ class WhatsAppService:
         )
 
     # --- Vorlagen (WABA-Ebene, kein Tenant-Bezug bei EINER eigenen Nummer) ---
-    def list_templates(self) -> list[dict]:
-        """Vorlagen der WABA mit Prüfstatus. Meta ist die Quelle der Wahrheit —
-        wir spiegeln sie nicht in die DB, sonst driftet der Status."""
+    def list_templates(self, ctx: AuthContext) -> list[dict]:
+        """Vorlagen der WABA DIESES Betriebs mit Prüfstatus.
+
+        Meta ist die Quelle der Wahrheit — wir spiegeln den Status nicht in die
+        DB, sonst driftet er. Abgefragt wird die WABA des Betriebs, nicht die
+        zentrale: sonst sähe jeder Kunde fremde Vorlagen.
+        """
+        db, tenant_id = self._require(ctx)
         try:
-            return self._client.list_templates()
+            return self._client_fuer(db, tenant_id).list_templates()
         except WhatsAppError as exc:
             raise WhatsAppServiceError(
                 exc.message, status_code=exc.status_code
             ) from exc
 
-    def rollout_templates(self) -> dict:
-        """Den Vorlagensatz in die WABA ausrollen (idempotent, s. templates.py)."""
+    def rollout_templates(self, ctx: AuthContext) -> dict:
+        """Den Vorlagensatz in die WABA des Betriebs ausrollen (idempotent).
+
+        Beim Onboarding läuft das automatisch; hier ist der Weg, ihn später
+        nachzuziehen — etwa wenn der Satz um eine Vorlage wächst oder Meta eine
+        abgelehnt hat (s. templates.py).
+        """
+        db, tenant_id = self._require(ctx)
         try:
-            return rollout(self._client)
+            return rollout(self._client_fuer(db, tenant_id))
         except WhatsAppError as exc:
             raise WhatsAppServiceError(
                 exc.message, status_code=exc.status_code
             ) from exc
+
+    def _client_fuer(self, db: Client, tenant_id: str) -> WhatsAppClient:
+        """Der WhatsApp-Client DIESES Betriebs — Token, Nummer und WABA aus
+        ``whatsapp_account`` (Embedded Signup, Migration 0255).
+
+        Warum nicht der global konfigurierte Client: im Tech-Provider-Modell
+        bringt jeder Betrieb seine EIGENE Nummer mit. Ein Versand über die
+        zentrale Nummer wäre für den Gast der falsche Absender und für uns ein
+        Fremdversand auf fremde Rechnung — beides still, weil ein Aufruf über
+        den globalen Client genauso 200 liefert.
+
+        Der globale Client bleibt NUR für den einen Altbestands-Betrieb, der
+        über ``WHATSAPP_DEFAULT_TENANT_ID`` an der zentralen Nummer hängt; er
+        verschwindet mit der letzten Zeile, die keinen eigenen Account hat.
+        Kein Konto und kein Default → klarer 409 statt eines Versands über eine
+        fremde Nummer (Wurzel 4: kein plausibler Ersatzwert).
+        """
+        zeile = (
+            db.table("whatsapp_account")
+            .select("access_token, phone_number_id, waba_id, status")
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if zeile:
+            konto = zeile[0]
+            if konto.get("status") == "disconnected":
+                raise WhatsAppServiceError(
+                    "Die WhatsApp-Nummer dieses Betriebs ist getrennt. "
+                    "Bitte im Kanalmanager neu verbinden.",
+                    status_code=409,
+                )
+            return WhatsAppClient(
+                access_token=konto.get("access_token") or None,
+                phone_number_id=konto.get("phone_number_id") or None,
+                waba_id=konto.get("waba_id") or None,
+            )
+        if tenant_id == (get_settings().whatsapp_default_tenant_id or None):
+            log.info("whatsapp_client_ueber_default", tenant_id=tenant_id)
+            return self._client
+        raise WhatsAppServiceError(
+            "Für diesen Betrieb ist keine WhatsApp-Nummer verbunden.",
+            status_code=409,
+        )
 
     def _require(self, ctx: AuthContext) -> tuple[Client, str]:
         if not ctx.tenant_id:
@@ -446,7 +501,7 @@ class WhatsAppService:
         wa_message_id = None
         if not self._sandbox():
             try:
-                res = self._client.send_text(conv["wa_phone"], text)
+                res = self._client_fuer(db, tenant_id).send_text(conv["wa_phone"], text)
             except WhatsAppError as exc:
                 raise WhatsAppServiceError(exc.message, status_code=exc.status_code) from exc
             msgs = res.get("messages") or []
@@ -488,7 +543,7 @@ class WhatsAppService:
         wa_message_id = None
         if not self._sandbox():
             try:
-                res = self._client.send_template(
+                res = self._client_fuer(db, tenant_id).send_template(
                     conv["wa_phone"], name, language_code, components
                 )
             except WhatsAppError as exc:
@@ -515,6 +570,7 @@ class WhatsAppService:
             raise WhatsAppServiceError("WhatsApp-DB nicht verfügbar.", status_code=500)
         db = self._db
         received = 0
+        verloren = 0
         for entry in payload.get("entry", []) or []:
             # entry.id ist die WABA-ID des Betriebs. Sie ist der EINDEUTIGE
             # Zuordnungsschlüssel im Tech-Provider-Modell (Meta: Webhooks
@@ -532,12 +588,37 @@ class WhatsAppService:
                     for c in (value.get("contacts") or [])
                 }
                 for msg in value.get("messages") or []:
-                    if self._store_incoming(db, msg, contacts, besitzer):
-                        received += 1
+                    # Ein einzelner Schreibfehler darf weder die übrigen
+                    # Nachrichten des Payloads mitreissen noch nach aussen als
+                    # 500 gehen: Meta wiederholt dann bis zu vier Mal und die
+                    # Nachricht ist am Ende trotzdem verloren — still, weil
+                    # niemand den Webhook beobachtet. Live passiert am
+                    # 29.08.2026: WHATSAPP_DEFAULT_TENANT_ID zeigte auf einen
+                    # Tenant, den es nicht gab; der Fremdschluessel schlug zu,
+                    # und JEDE eingehende Gastnachricht ging verloren
+                    # (whatsapp_message war leer). Deshalb hier LAUT loggen und
+                    # weitermachen (Wurzel 5).
+                    try:
+                        if self._store_incoming(db, msg, contacts, besitzer):
+                            received += 1
+                    except Exception as exc:  # noqa: BLE001 — siehe oben
+                        verloren += 1
+                        log.error(
+                            "whatsapp_eingang_verworfen",
+                            fehler=str(exc),
+                            waba_id=waba_id,
+                            phone_number_id=phone_number_id,
+                            wa_message_id=msg.get("id"),
+                        )
                 # Status-Updates (sent/delivered/read/failed) der Ausgangsnachrichten.
                 for st in value.get("statuses") or []:
-                    self._apply_status(db, st)
-        return {"received": received}
+                    try:
+                        self._apply_status(db, st)
+                    except Exception as exc:  # noqa: BLE001 — wie oben
+                        log.error("whatsapp_status_verworfen", fehler=str(exc))
+        if verloren:
+            log.error("whatsapp_eingang_verluste", anzahl=verloren)
+        return {"received": received, "verloren": verloren}
 
     @staticmethod
     def _tenant_aus_account(
@@ -595,9 +676,24 @@ class WhatsAppService:
             )
             return existing[0]["tenant_id"]
         default = get_settings().whatsapp_default_tenant_id
-        if default:
-            log.info("whatsapp_tenant_ueber_default", wa_phone=mask_phone(wa_phone))
-        return default or None
+        if not default:
+            return None
+        # Der Default ist eine Umgebungsvariable — sie kann auf einen Betrieb
+        # zeigen, den es nicht (mehr) gibt. Ungeprüft übernommen bricht der
+        # Fremdschlüssel beim Insert, und zwar bei JEDER Nachricht. Also einmal
+        # nachsehen und den Mangel benennen, statt ihn als Datenbankfehler
+        # weiterzureichen (Wurzel 4/5).
+        if not (
+            db.table("tenants").select("id").eq("id", default).limit(1).execute()
+        ).data:
+            log.error(
+                "whatsapp_default_tenant_unbekannt",
+                tenant_id=default,
+                hinweis="WHATSAPP_DEFAULT_TENANT_ID zeigt auf keinen Betrieb",
+            )
+            return None
+        log.info("whatsapp_tenant_ueber_default", wa_phone=mask_phone(wa_phone))
+        return default
 
     def _store_incoming(
         self, db: Client, msg: dict, contacts: dict, tenant_id: str | None = None

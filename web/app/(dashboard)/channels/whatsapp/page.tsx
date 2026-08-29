@@ -3,6 +3,7 @@
 // Redirect-URI in der Meta-App hinterlegt. Deshalb ist sie fest: eine Änderung
 // hier muss auch dort nachgezogen werden.
 import { WhatsAppVerbinden } from "@/components/channel-manager/whatsapp-verbinden";
+import { WhatsAppVorlagen } from "@/components/channel-manager/whatsapp-vorlagen";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,7 @@ export default function WhatsAppKanalPage() {
       </header>
 
       <WhatsAppVerbinden />
+      <WhatsAppVorlagen />
     </div>
   );
 }

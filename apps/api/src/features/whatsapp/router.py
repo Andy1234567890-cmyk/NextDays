@@ -147,9 +147,9 @@ def onboarding_status(service: WhatsAppServiceDep, ctx: _guest) -> OnboardingSta
 
 @router.get("/templates")
 def list_templates(service: WhatsAppServiceDep, ctx: _guest) -> dict:
-    """Vorlagen der WABA mit Prüfstatus (PENDING/APPROVED/REJECTED)."""
+    """Vorlagen der WABA DIESES Betriebs mit Prüfstatus (PENDING/APPROVED/REJECTED)."""
     try:
-        return {"items": service.list_templates()}
+        return {"items": service.list_templates(ctx)}
     except WhatsAppServiceError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -164,7 +164,7 @@ def rollout_templates(service: WhatsAppServiceDep, ctx: _guest) -> dict:
     stehen im Ergebnis statt den Lauf abzubrechen.
     """
     try:
-        return service.rollout_templates()
+        return service.rollout_templates(ctx)
     except WhatsAppServiceError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
