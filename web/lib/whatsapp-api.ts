@@ -251,3 +251,15 @@ export async function sendWhatsAppTemplate(input: {
 }): Promise<Result<WhatsAppMessage>> {
   return call<WhatsAppMessage>("/send-template", { method: "POST", body: input });
 }
+
+/** KI-Antwortvorschlag für einen WhatsApp-Verlauf. Wird NUR vorgeschlagen,
+ *  nicht gesendet — schreiben tut ein Mensch. `sources` nennt die Fakten aus
+ *  der Wissensdatenbank, auf die sich der Vorschlag stützen konnte. */
+export async function getWhatsAppAiReply(
+  conversationId: string,
+): Promise<Result<{ reply: string; sources: string[] }>> {
+  return call<{ reply: string; sources: string[] }>(
+    `/conversations/${conversationId}/ai-reply`,
+    { method: "POST", body: {} },
+  );
+}

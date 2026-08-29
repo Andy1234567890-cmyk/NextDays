@@ -16,18 +16,22 @@ from supabase import Client
 from src.core.config import get_settings
 from src.core.logging import get_logger, mask_phone
 from src.core.security import AuthContext
+from src.core.supabase import load_scoped
 from src.features.guests.identity import (
     GuestContact as ResolverContact,
 )
 from src.features.guests.identity import (
     resolve_or_create_guest,
 )
+from src.features.inbox.ai import GroqClient, GroqError
 from src.features.inbox.felder import (
     FeldFehlt,
     benutzte_felder,
     rendern,
     unbekannte_felder,
 )
+from src.features.inbox.schemas import InboxMessage, ReservationDetail
+from src.features.inbox.service import InboxService
 
 from .client import WhatsAppClient, WhatsAppError
 from .onboarding import OnboardingError, WhatsAppOnboarding
@@ -61,6 +65,12 @@ log = get_logger("nextdays.whatsapp")
 # Plattform-Nutzung unabhängig sind. Deshalb steht hier bewusst kein Feature-Gate.
 # Metas gehostete Onboarding-Seite (Business-Suite-Domain, NICHT graph.facebook.com).
 _SIGNUP_HOST = "https://business.facebook.com"
+
+# Wie viel Verlauf und wie viele Fakten in den KI-Prompt gehen. Beides begrenzt:
+# ein Prompt, der mit der Konversation waechst, wird irgendwann teuer und
+# ungenau (Wurzel 8).
+_KI_VERLAUF_MAX = 40
+_KI_WISSEN_MAX = 60
 
 
 class WhatsAppServiceError(Exception):
@@ -966,6 +976,140 @@ class WhatsAppService:
             body=body_label, wa_message_id=wa_message_id, status="sent",
             last_message=body_label,
         )
+
+    # --- KI-Antwortvorschlag -----------------------------------------------
+    def ai_reply(self, ctx: AuthContext, conversation_id: str) -> dict:
+        """Antwortvorschlag für einen WhatsApp-Verlauf.
+
+        Dasselbe Modell, dieselben Einstellungen und dieselbe Wissensdatenbank
+        wie im Posteingang — nur die Quellen sind andere: der Verlauf kommt aus
+        ``whatsapp_message`` statt aus dem Portal-Chat, und die Reservierung
+        hängt an der Konversation, nicht an einer Channex-Buchung.
+
+        Der Weg des Posteingangs (``InboxService.ai_reply``) ist hier nicht
+        benutzbar: er lädt seinen Verlauf und seinen Kontext über eine
+        ``channex_booking``-Zeile, die es zu einer WhatsApp-Konversation nicht
+        gibt. Gemeinsam bleibt, was gemeinsam sein muss: Modell, Ton-
+        Einstellungen und die Fakten, die das Modell benutzen darf.
+        """
+        db, tenant_id = self._require(ctx)
+        conv = load_scoped(
+            db,
+            "whatsapp_conversation",
+            conversation_id,
+            tenant_id,
+            not_found="Konversation nicht gefunden.",
+        )
+        nachrichten = (
+            db.table("whatsapp_message")
+            .select("id, direction, body, created_at")
+            .eq("tenant_id", tenant_id)
+            .eq("conversation_id", conversation_id)
+            .order("created_at")
+            .limit(_KI_VERLAUF_MAX)
+            .execute()
+        ).data or []
+        verlauf = [
+            InboxMessage(
+                id=str(m.get("id")),
+                message=m.get("body") or "",
+                # Der Posteingang kennt "guest" und "property" — dieselben
+                # Rollen, damit der Prompt derselbe bleiben kann.
+                sender="guest" if m.get("direction") == "in" else "property",
+                sent_at=m.get("created_at"),
+            )
+            for m in nachrichten
+            if (m.get("body") or "").strip()
+        ]
+
+        inbox = InboxService(service_client=db)
+        einstellungen = inbox.get_ai_settings(ctx)
+        detail, objekt_id = self._ki_reservierung(db, tenant_id, conv)
+        wissen = self._ki_wissen(db, tenant_id, objekt_id)
+
+        try:
+            vorschlag = GroqClient().suggest_reply(
+                history=verlauf,
+                reservation=detail,
+                settings=einstellungen,
+                knowledge=wissen,
+            )
+        except GroqError as exc:
+            raise WhatsAppServiceError(
+                exc.message, status_code=exc.status_code
+            ) from exc
+        # `sources` weist aus, worauf die Antwort fußen konnte — sonst ist nicht
+        # unterscheidbar, ob ein Detail aus der Wissensdatenbank stammt oder das
+        # Modell es sich zurechtgelegt hat.
+        return {"reply": vorschlag, "sources": wissen}
+
+    @staticmethod
+    def _ki_reservierung(
+        db: Client, tenant_id: str, conv: dict
+    ) -> tuple[ReservationDetail, str | None]:
+        """Buchungskontext für den Prompt — leer, wenn keine Reservierung hängt.
+
+        Ein leerer Kontext ist hier in Ordnung und kein Mangel: das Modell
+        erfährt dann schlicht nichts über eine Buchung und fragt nach, statt
+        sich eine auszudenken.
+        """
+        reservierung = conv.get("reservation_id")
+        if not reservierung:
+            return ReservationDetail(guest_name=conv.get("guest_name")), None
+        kontext = kontext_aus_reservierung(db, tenant_id, str(reservierung))
+        if kontext is None:
+            return ReservationDetail(guest_name=conv.get("guest_name")), None
+        return (
+            ReservationDetail(
+                listing_name=kontext.property_name,
+                address=kontext.property_address,
+                guest_name=kontext.guest_name or conv.get("guest_name"),
+                guest_email=kontext.guest_email,
+                guest_phone=kontext.guest_phone,
+                guest_language=kontext.guest_language,
+                adults=kontext.adults,
+                children=kontext.children,
+                total_amount=(
+                    float(kontext.total_amount)
+                    if kontext.total_amount is not None
+                    else None
+                ),
+                paid_amount=(
+                    float(kontext.paid_amount)
+                    if kontext.paid_amount is not None
+                    else None
+                ),
+                currency=kontext.currency,
+                ota_name=kontext.channel,
+                ota_reservation_code=kontext.reservation_code,
+                check_in=str(kontext.check_in) if kontext.check_in else None,
+                check_out=str(kontext.check_out) if kontext.check_out else None,
+            ),
+            None,
+        )
+
+    @staticmethod
+    def _ki_wissen(db: Client, tenant_id: str, objekt_id: str | None) -> list[str]:
+        """Fakten der Wissensdatenbank: betriebsweite plus die des Objekts.
+
+        Begrenzt, damit der Prompt nicht unbegrenzt wächst (Wurzel 8).
+        """
+        frage = (
+            db.table("inbox_knowledge_fact")
+            .select("fact, property_id")
+            .eq("tenant_id", tenant_id)
+        )
+        frage = (
+            frage.or_(f"property_id.eq.{objekt_id},property_id.is.null")
+            if objekt_id
+            else frage.is_("property_id", "null")
+        )
+        zeilen = frage.limit(_KI_WISSEN_MAX).execute().data or []
+        # Objektbezogene Fakten zuerst: sie schlagen das Allgemeine.
+        zeilen.sort(key=lambda r: 0 if r.get("property_id") else 1)
+        return [
+            str(z["fact"]).strip() for z in zeilen if (z.get("fact") or "").strip()
+        ]
 
     # --- Webhook (eingehend, kein JWT) -------------------------------------
     def ingest_webhook(self, payload: dict) -> dict:

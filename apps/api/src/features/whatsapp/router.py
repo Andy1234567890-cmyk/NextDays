@@ -148,6 +148,21 @@ def onboarding_status(service: WhatsAppServiceDep, ctx: _guest) -> OnboardingSta
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.post("/conversations/{conversation_id}/ai-reply")
+def ai_reply(
+    conversation_id: str, service: WhatsAppServiceDep, ctx: _guest
+) -> dict:
+    """KI-Antwortvorschlag für einen WhatsApp-Verlauf.
+
+    Dasselbe Modell und dieselbe Wissensdatenbank wie im Posteingang; der
+    Vorschlag wird NUR zurückgegeben, nicht gesendet — schreiben tut ein Mensch.
+    """
+    try:
+        return service.ai_reply(ctx, conversation_id)
+    except WhatsAppServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.get("/templates")
 def list_templates(
     service: WhatsAppServiceDep, ctx: _guest, mit_ausgeblendeten: bool = False

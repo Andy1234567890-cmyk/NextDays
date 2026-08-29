@@ -538,3 +538,18 @@ def test_text_ohne_platzhalter_bleibt_unveraendert() -> None:
     svc = WhatsAppService(service_client=db, client=_FakeClient())
     text = "Guten Tag, wir melden uns morgen."
     assert svc._platzhalter_fuellen(db, "t1", {}, text) == text  # noqa: SLF001
+
+
+def test_ki_reservierung_ohne_buchung_bleibt_leer() -> None:
+    """Haengt keine Reservierung am Chat, bekommt das Modell keinen Kontext.
+
+    Das ist richtig so: es fragt dann nach, statt sich eine Buchung
+    auszudenken. Der Gastname aus der Konversation darf aber mit.
+    """
+    db = _DB()
+    detail, objekt = WhatsAppService._ki_reservierung(  # noqa: SLF001
+        db, "t1", {"reservation_id": None, "guest_name": "Anna"}
+    )
+    assert detail.guest_name == "Anna"
+    assert detail.listing_name is None
+    assert objekt is None

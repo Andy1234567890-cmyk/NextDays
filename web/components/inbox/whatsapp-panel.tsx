@@ -15,6 +15,7 @@ import { WhatsAppVorlagenMenue } from "@/components/inbox/whatsapp-vorlagen-menu
 import { tagLabel, tagWechsel, uhrzeit, zeitpunktLang } from "@/lib/chat-format";
 import {
   type WhatsAppMessage,
+  getWhatsAppAiReply,
   listWhatsAppMessages,
   sendWhatsApp,
   sendWhatsAppTemplate,
@@ -43,6 +44,7 @@ export function WhatsAppChat({
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sending, startSend] = useTransition();
+  const [kiLaeuft, startKi] = useTransition();
   // Sprungziel „ganz unten" am Listenende.
   const ende = useRef<HTMLDivElement>(null);
   // Das Schreibfeld selbst — die Werkzeugleiste setzt Zeichen an der
@@ -118,6 +120,18 @@ export function WhatsAppChat({
       } else {
         setError(res.error);
       }
+    });
+  }
+
+  /** KI-Vorschlag ins Feld holen. Er wird NICHT gesendet: der Mitarbeiter
+   *  liest, aendert und entscheidet — genau wie im Posteingang nebenan. */
+  function kiVorschlag() {
+    if (!conversationId) return;
+    setError(null);
+    startKi(async () => {
+      const res = await getWhatsAppAiReply(conversationId);
+      if (res.ok) setText(res.data.reply);
+      else setError(res.error);
     });
   }
 
@@ -225,6 +239,23 @@ export function WhatsAppChat({
             zusatz={
               <>
                 <WhatsAppVorlagenMenue onEinfuegen={einfuegen} />
+                {/* KI-Antwort: nur bei einer bestehenden Konversation — ohne
+                    Verlauf gaebe es nichts, worauf sie antworten koennte. */}
+                {conversationId && (
+                  <button
+                    type="button"
+                    onClick={kiVorschlag}
+                    disabled={kiLaeuft}
+                    title={tInbox("aiSuggest")}
+                    className="flex items-center gap-1 rounded-full px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-50"
+                  >
+                    <Icon
+                      icon={kiLaeuft ? "svg-spinners:180-ring" : "ph:sparkle"}
+                      className="size-4"
+                    />
+                    {tInbox("aiSuggest")}
+                  </button>
+                )}
                 {/* Metas geprüfte Vorlagen: sie werden gesendet, nicht
                     eingefügt — siehe die Erklärung in der Komponente. */}
                 <WhatsAppMetaVorlagenMenue
