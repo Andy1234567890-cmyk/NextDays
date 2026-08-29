@@ -98,23 +98,7 @@ export const SPEICHER_SCHLUESSEL = "nd_consent";
 // Zustimmung zum Spamschutz stillschweigend auch die Reichweitenmessung
 // erlaubt, der nie jemand zugestimmt hat. Mit der neuen Zahl verwirft
 // `entscheidungLesen` die alten Sätze und die Leiste fragt erneut.
-//
-// Fassung 3 (29.08.2026): Der Dialog hat eine Antwortmöglichkeit bekommen, die
-// es vorher nicht gab — „Alle annehmen". Er fiel am 27.08.2026 aus dem Bau
-// heraus, und bis zu seiner Rückkehr war Zustimmen nur über drei
-// Reiterwechsel und drei Schalter erreichbar, Ablehnen über einen Klick. Wer in
-// dieser Zeit entschieden hat, hat NICHT zwischen gleichwertigen Antworten
-// gewählt, sondern zwischen einer bequemen und einer umständlichen — und seine
-// Entscheidung läge sonst 182 Tage fest (`EINWILLIGUNG_GUELTIG_TAGE`), ohne
-// dass er die neue Wahl je zu sehen bekäme.
-//
-// Deshalb wird hier erneut gefragt. Das ist ausdrücklich KEIN Nachfassen nach
-// einer Ablehnung, um mehr Zustimmung einzusammeln — das wäre das von den
-// Aufsichtsbehörden beanstandete Muster. Der sachliche Grund ist, dass sich die
-// Auswahl selbst geändert hat; wer erneut ablehnt, ist danach wieder für 182
-// Tage in Ruhe. Wer die Fassung ohne eine solche Änderung erhöht, benutzt
-// diesen Mechanismus falsch.
-export const EINWILLIGUNG_FASSUNG = 3;
+export const EINWILLIGUNG_FASSUNG = 2;
 
 /**
  * Wie lange eine Einwilligung gilt, bevor erneut gefragt wird — in Tagen.
