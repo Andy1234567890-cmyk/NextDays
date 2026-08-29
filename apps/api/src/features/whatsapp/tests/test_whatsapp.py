@@ -407,3 +407,28 @@ def test_client_fuer_getrenntes_konto_sendet_nicht() -> None:
     with pytest.raises(WhatsAppServiceError) as exc:
         svc._client_fuer(db, "t1")  # noqa: SLF001
     assert exc.value.status_code == 409
+
+
+def test_vorlagentext_metas_regeln() -> None:
+    """Die zwei Regeln, an denen Meta beim ersten Rollout sechs Vorlagen ablehnte.
+
+    Sie stehen in keiner Fehlermeldung der API, sondern erst Tage spaeter in der
+    Ablehnung. Deshalb pruefen wir sie dort, wo der Text entsteht.
+    """
+    pruefe = WhatsAppService._pruefe_vorlagentext  # noqa: SLF001
+
+    # Variable am Anfang und am Ende: beides verboten.
+    assert pruefe("{{1}} guten Tag.", ["Anna"])
+    assert pruefe("Guten Tag {{1}}", ["Anna"])
+    # Nummerierung muss lueckenlos bei 1 beginnen.
+    assert pruefe("Hallo {{2}}, bis bald.", ["Anna"])
+    # Zu jedem Platzhalter ein Beispielwert.
+    assert pruefe("Hallo {{1}}, Ihr Zimmer {{2}} ist bereit.", ["Anna"])
+    # Leerer Text ist kein gueltiger Vorlagentext.
+    assert pruefe("   ", [])
+    # Sauberer Text mit passenden Beispielen: keine Beanstandung.
+    assert not pruefe(
+        "Hallo {{1}}, Ihr Zimmer {{2}} ist ab 15 Uhr bereit.", ["Anna", "12"]
+    )
+    # Ganz ohne Platzhalter braucht es keine Beispiele.
+    assert not pruefe("Ihre Buchung ist bestaetigt.", [])

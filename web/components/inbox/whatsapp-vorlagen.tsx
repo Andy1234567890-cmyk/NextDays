@@ -1,0 +1,428 @@
+"use client";
+
+// Reiter „WhatsApp-Vorlagen" im Posteingang: Liste links, Editor rechts —
+// dasselbe Muster wie der Reiter „Vorlagen" daneben.
+//
+// Der Unterschied zu jenem ist aber kein gestalterischer, sondern ein
+// inhaltlicher, und er muss in der Oberfläche sichtbar sein:
+//
+//   * „Vorlagen"          = eigene Textbausteine. Frei formulierbar, sofort
+//                           nutzbar, nur unsere Regeln.
+//   * „WhatsApp-Vorlagen" = Metas geprüfte Vorlagen. Nur mit ihnen darf
+//                           ausserhalb des 24-Stunden-Fensters überhaupt
+//                           geschrieben werden, und über den Text entscheidet
+//                           Metas Prüfung.
+//
+// Was Meta erlaubt und was nicht (Stand v25.0, Template-Management-Doku):
+//   * Name und Sprache sind NACH dem Anlegen unveränderlich. Wer sie ändern
+//     will, legt eine neue Vorlage an. Deshalb sind beide Felder im Editor
+//     gesperrt, sobald eine bestehende Vorlage bearbeitet wird — ein Feld, das
+//     sich ändern lässt und beim Speichern ignoriert wird, ist eine Lüge.
+//   * Bearbeitbar sind nur APPROVED, REJECTED und PAUSED. Eine Vorlage in
+//     Prüfung (PENDING) lässt Meta nicht anfassen.
+//   * Eine freigegebene Vorlage höchstens zehnmal in 30 Tagen, einmal in
+//     24 Stunden. Diese Zähler kennt nur Meta; sein Fehlertext wird deshalb
+//     unverändert durchgereicht statt geraten.
+//   * Jede Änderung geht erneut in die Prüfung — bis dahin gilt die alte
+//     Fassung weiter.
+import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+
+import { Button } from "@nextdays/ui/button";
+import { Input } from "@nextdays/ui/input";
+import {
+  createWhatsAppTemplate,
+  deleteWhatsAppTemplate,
+  listWhatsAppTemplates,
+  rolloutWhatsAppTemplates,
+  updateWhatsAppTemplate,
+  type WhatsAppTemplate,
+} from "@/lib/whatsapp-api";
+
+/** Metas Status in Farbe. Unbekannte Werte bleiben neutral, statt eine falsche
+ *  Zusicherung zu färben — Meta führt mehr Zustände, als wir hier kennen. */
+function statusFarbe(status: string): string {
+  switch (status.toUpperCase()) {
+    case "APPROVED":
+      return "bg-emerald-500/10 text-emerald-700";
+    case "PENDING":
+    case "PENDING_DELETION":
+      return "bg-amber-500/10 text-amber-700";
+    case "REJECTED":
+    case "DISABLED":
+    case "PAUSED":
+      return "bg-red-500/10 text-red-700";
+    default:
+      return "bg-muted text-muted-foreground";
+  }
+}
+
+/** Nur diese Zustände lässt Meta bearbeiten. PENDING ist bewusst nicht dabei. */
+function darfBearbeitet(status: string): boolean {
+  return ["APPROVED", "REJECTED", "PAUSED"].includes(status.toUpperCase());
+}
+
+function textVon(tpl: WhatsAppTemplate, typ: "BODY" | "FOOTER"): string {
+  return tpl.components?.find((c) => c.type?.toUpperCase() === typ)?.text ?? "";
+}
+
+/** Die Beispielwerte, die Meta zu jedem Platzhalter verlangt. Sie stecken in
+ *  `example.body_text` als EINE Zeile mit je einem Wert pro Platzhalter. */
+function beispieleVon(tpl: WhatsAppTemplate): string[] {
+  const body = tpl.components?.find((c) => c.type?.toUpperCase() === "BODY");
+  return body?.example?.body_text?.[0] ?? [];
+}
+
+function platzhalterZaehlen(text: string): number {
+  return new Set(text.match(/\{\{\s*\d+\s*\}\}/g) ?? []).size;
+}
+
+const LEER = {
+  name: "",
+  language: "de",
+  category: "UTILITY" as const,
+  body: "",
+  footer: "",
+};
+
+export function WhatsAppVorlagen() {
+  const t = useTranslations("inbox");
+  const [items, setItems] = useState<WhatsAppTemplate[] | null>(null);
+  // null = noch nicht geladen, "" = geladen und in Ordnung. Der Fehler wird
+  // angezeigt statt einer leeren Liste: „keine Vorlagen" und „Abruf
+  // fehlgeschlagen" sind zwei verschiedene Aussagen.
+  const [ladefehler, setLadefehler] = useState<string | null>(null);
+  const [laeuft, setLaeuft] = useState(false);
+
+  const [editing, setEditing] = useState<WhatsAppTemplate | null>(null);
+  const [form, setForm] = useState<{
+    name: string;
+    language: string;
+    category: "UTILITY" | "MARKETING" | "AUTHENTICATION";
+    body: string;
+    footer: string;
+  }>(LEER);
+  const [beispiele, setBeispiele] = useState<string[]>([]);
+  const [fehler, setFehler] = useState<string | null>(null);
+
+  const laden = useCallback(async () => {
+    const res = await listWhatsAppTemplates();
+    if (res.ok) {
+      setItems(res.data.items);
+      setLadefehler("");
+    } else {
+      setItems([]);
+      setLadefehler(res.error);
+    }
+  }, []);
+
+  useEffect(() => {
+    void laden();
+  }, [laden]);
+
+  // Die Zahl der Beispielfelder folgt dem Text: schreibt jemand einen
+  // Platzhalter dazu, verlangt Meta sofort auch einen Beispielwert dafür.
+  // Vorhandene Eingaben bleiben erhalten, damit Tippen im Text sie nicht
+  // wegwirft.
+  useEffect(() => {
+    const anzahl = platzhalterZaehlen(form.body);
+    setBeispiele((prev) =>
+      anzahl === prev.length
+        ? prev
+        : Array.from({ length: anzahl }, (_, i) => prev[i] ?? ""),
+    );
+  }, [form.body]);
+
+  function reset() {
+    setEditing(null);
+    setForm(LEER);
+    setBeispiele([]);
+    setFehler(null);
+  }
+
+  function bearbeiten(tpl: WhatsAppTemplate) {
+    setEditing(tpl);
+    setForm({
+      name: tpl.name,
+      language: tpl.language,
+      category: (tpl.category?.toUpperCase() as typeof LEER.category) || "UTILITY",
+      body: textVon(tpl, "BODY"),
+      footer: textVon(tpl, "FOOTER"),
+    });
+    setBeispiele(beispieleVon(tpl));
+    setFehler(null);
+  }
+
+  async function speichern() {
+    setFehler(null);
+    setLaeuft(true);
+    const gemeinsam = {
+      body: form.body,
+      examples: beispiele,
+      footer: form.footer || null,
+    };
+    const res = editing
+      ? await updateWhatsAppTemplate(editing.id, gemeinsam)
+      : await createWhatsAppTemplate({
+          ...gemeinsam,
+          name: form.name.trim().toLowerCase().replace(/\s+/g, "_"),
+          language: form.language,
+          category: form.category,
+        });
+    if (res.ok) {
+      toast.success(t("waTemplateSaved"));
+      reset();
+      await laden();
+    } else {
+      // Metas Ablehnungsgrund steht im Fehlertext und ist genauer als jede
+      // eigene Formulierung — deshalb unverändert anzeigen, nicht ersetzen.
+      setFehler(res.error);
+    }
+    setLaeuft(false);
+  }
+
+  async function loeschen(tpl: WhatsAppTemplate) {
+    setLaeuft(true);
+    const res = await deleteWhatsAppTemplate(tpl.name, tpl.id);
+    if (res.ok) {
+      toast.success(t("waTemplateDeleted"));
+      if (editing?.id === tpl.id) reset();
+      await laden();
+    } else {
+      toast.error(res.error);
+    }
+    setLaeuft(false);
+  }
+
+  async function ausrollen() {
+    setLaeuft(true);
+    const res = await rolloutWhatsAppTemplates();
+    if (res.ok) {
+      const { angelegt, uebersprungen, fehler: abgelehnt } = res.data;
+      toast.success(
+        t("waTemplatesRolloutDone", {
+          neu: angelegt.length,
+          vorhanden: uebersprungen.length,
+        }),
+      );
+      // Ablehnungen einzeln zeigen: sie verschwinden sonst spurlos, und später
+      // fehlt eine Vorlage ohne ersichtlichen Grund.
+      for (const zeile of abgelehnt) toast.error(zeile);
+      await laden();
+    } else {
+      toast.error(res.error);
+    }
+    setLaeuft(false);
+  }
+
+  return (
+    <div className="grid min-h-0 flex-1 grid-cols-12 gap-4 overflow-y-auto p-6">
+      {/* Liste */}
+      <div className="col-span-12 lg:col-span-7">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-display text-lg font-extrabold">
+            {t("tabWhatsAppTemplates")}
+          </h2>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => void ausrollen()}
+            disabled={laeuft}
+          >
+            <Icon icon="ph:stack" className="size-4" />
+            {t("waTemplatesRollout")}
+          </Button>
+        </div>
+        <p className="mb-3 max-w-2xl text-sm text-muted-foreground">
+          {t("waTemplatesIntro")}
+        </p>
+
+        {ladefehler ? (
+          <p className="rounded-2xl bg-amber-500/10 px-4 py-3 text-sm text-amber-700">
+            {ladefehler}
+          </p>
+        ) : items === null ? (
+          <p className="text-sm text-muted-foreground">{t("waTemplatesLoading")}</p>
+        ) : items.length === 0 ? (
+          <p className="max-w-2xl text-sm text-muted-foreground">
+            {t("waTemplatesEmpty")}
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {items.map((tpl) => (
+              <li
+                key={tpl.id}
+                className="flex items-start gap-3 rounded-2xl border border-border p-3"
+              >
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium">{tpl.name}</span>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs font-semibold ${statusFarbe(
+                        tpl.status,
+                      )}`}
+                    >
+                      {tpl.status}
+                    </span>
+                  </span>
+                  <span className="line-clamp-2 text-sm text-muted-foreground">
+                    {textVon(tpl, "BODY")}
+                  </span>
+                  <span className="mt-1.5 flex flex-wrap gap-1">
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                      {tpl.language.toUpperCase()}
+                    </span>
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                      {tpl.category}
+                    </span>
+                  </span>
+                  {/* Der Ablehnungsgrund ist die einzige Auskunft darüber, was
+                      Meta stört. Ihn zu verschweigen hiesse, den Betrieb raten
+                      zu lassen. */}
+                  {tpl.rejected_reason &&
+                    tpl.rejected_reason.toUpperCase() !== "NONE" && (
+                      <span className="mt-1 text-xs text-destructive">
+                        {tpl.rejected_reason}
+                      </span>
+                    )}
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  disabled={!darfBearbeitet(tpl.status)}
+                  title={
+                    darfBearbeitet(tpl.status) ? undefined : t("waTemplatePendingHint")
+                  }
+                  onClick={() => bearbeiten(tpl)}
+                >
+                  <Icon icon="ph:pencil-simple" className="size-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => void loeschen(tpl)}
+                >
+                  <Icon icon="ph:trash" className="size-4" />
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* Editor */}
+      <div className="col-span-12 flex flex-col gap-3 rounded-2xl border border-border p-4 lg:col-span-5">
+        <h3 className="font-semibold">
+          {editing ? t("waTemplateEdit") : t("waTemplateNew")}
+        </h3>
+
+        <Input
+          value={form.name}
+          onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+          placeholder={t("waTemplateName")}
+          // Name und Sprache sind bei Meta nach dem Anlegen fest. Gesperrt
+          // statt stillschweigend ignoriert.
+          disabled={Boolean(editing)}
+        />
+        <p className="-mt-1 text-xs text-muted-foreground">
+          {editing ? t("waTemplateNameLocked") : t("waTemplateNameHint")}
+        </p>
+
+        <div className="flex gap-2">
+          <select
+            className="h-9 flex-1 rounded-(--radius) border border-input bg-background px-3 text-sm"
+            value={form.language}
+            onChange={(e) => setForm((f) => ({ ...f, language: e.target.value }))}
+            disabled={Boolean(editing)}
+            aria-label={t("waTemplateLanguage")}
+          >
+            <option value="de">de</option>
+            <option value="en">en</option>
+            <option value="da">da</option>
+            <option value="fr">fr</option>
+            <option value="es">es</option>
+            <option value="it">it</option>
+            <option value="nl">nl</option>
+            <option value="pl">pl</option>
+            <option value="sv">sv</option>
+          </select>
+          <select
+            className="h-9 flex-1 rounded-(--radius) border border-input bg-background px-3 text-sm"
+            value={form.category}
+            onChange={(e) =>
+              setForm((f) => ({
+                ...f,
+                category: e.target.value as typeof LEER.category,
+              }))
+            }
+            disabled={Boolean(editing)}
+            aria-label={t("waTemplateCategory")}
+          >
+            <option value="UTILITY">UTILITY</option>
+            <option value="MARKETING">MARKETING</option>
+            <option value="AUTHENTICATION">AUTHENTICATION</option>
+          </select>
+        </div>
+
+        <textarea
+          className="min-h-40 w-full rounded-(--radius) border border-input bg-background p-3 text-sm"
+          value={form.body}
+          onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
+          placeholder={t("waTemplateBody")}
+          data-testid="wa-template-body"
+        />
+        <p className="-mt-1 text-xs text-muted-foreground">
+          {t("waTemplateBodyHint")}
+        </p>
+
+        {/* Zu jedem Platzhalter ein Beispielwert — ohne sie lehnt Meta die
+            Vorlage ohne weitere Erklärung ab. */}
+        {beispiele.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <p className="text-xs font-semibold">{t("waTemplateExamples")}</p>
+            {beispiele.map((wert, i) => (
+              <Input
+                // Die Position IST die Identität: {{1}} bleibt {{1}}, auch wenn
+                // der Wert wechselt.
+                // eslint-disable-next-line react/no-array-index-key
+                key={i}
+                value={wert}
+                onChange={(e) =>
+                  setBeispiele((prev) =>
+                    prev.map((x, j) => (j === i ? e.target.value : x)),
+                  )
+                }
+                placeholder={`{{${i + 1}}}`}
+              />
+            ))}
+          </div>
+        )}
+
+        <Input
+          value={form.footer}
+          onChange={(e) => setForm((f) => ({ ...f, footer: e.target.value }))}
+          placeholder={t("waTemplateFooter")}
+        />
+
+        {fehler && <p className="text-sm text-destructive">{fehler}</p>}
+
+        <div className="flex justify-end gap-2">
+          {editing && (
+            <Button type="button" variant="outline" onClick={reset}>
+              {t("waTemplateCancel")}
+            </Button>
+          )}
+          <Button type="button" onClick={() => void speichern()} disabled={laeuft}>
+            {t("waTemplateSave")}
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground">{t("waTemplateReviewHint")}</p>
+      </div>
+    </div>
+  );
+}

@@ -3,7 +3,9 @@
 Bidirektionaler WhatsApp-Kanal über die Meta WhatsApp Cloud API. Eine
 Konversation je Gast-Telefonnummer; Nachrichten in beide Richtungen.
 """
-from pydantic import BaseModel
+from typing import Literal
+
+from pydantic import BaseModel, Field
 
 
 class WhatsAppConversation(BaseModel):
@@ -121,3 +123,25 @@ class OnboardingStatus(BaseModel):
 class SliceHealth(BaseModel):
     slice: str
     status: str = "ok"
+
+
+class TemplateCreate(BaseModel):
+    """Eine neue Meta-Vorlage. Name und Sprache sind später unveränderlich —
+    Meta kennt kein Umbenennen, dafür braucht es eine neue Vorlage."""
+
+    name: str = Field(min_length=1, max_length=512)
+    language: str = Field(min_length=2, max_length=10)
+    category: Literal["UTILITY", "MARKETING", "AUTHENTICATION"] = "UTILITY"
+    body: str = Field(min_length=1, max_length=1024)
+    # Zu jedem {{n}} ein Beispielwert — ohne sie lehnt Meta die Vorlage ab.
+    examples: list[str] = Field(default_factory=list, max_length=20)
+    footer: str | None = Field(default=None, max_length=60)
+
+
+class TemplateUpdate(BaseModel):
+    """Änderung einer Vorlage. Metas Update ERSETZT alle Komponenten, deshalb
+    gehört die Fußzeile mit in die Anfrage, auch wenn sie unverändert bleibt."""
+
+    body: str = Field(min_length=1, max_length=1024)
+    examples: list[str] = Field(default_factory=list, max_length=20)
+    footer: str | None = Field(default=None, max_length=60)

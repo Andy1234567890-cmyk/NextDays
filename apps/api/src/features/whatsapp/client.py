@@ -189,15 +189,59 @@ class WhatsAppClient:
 
     # --- Template-Verwaltung (WABA-Ebene) ---------------------------------
     def list_templates(self) -> list[dict[str, Any]]:
-        """Alle Message-Templates der WABA (Name, Sprache, Status, Kategorie)."""
+        """Alle Message-Templates der WABA.
+
+        ``id`` und ``components`` sind mit dabei, weil die Oberfläche den Text
+        zeigen und bearbeiten können muss: bearbeitet wird über die ID, und
+        Metas Update ERSETZT alle Komponenten — wer nur den Fließtext schickt,
+        verliert stillschweigend Fußzeile und Knöpfe (Wurzel 1).
+        """
         self._require_waba()
         data = self._graph(
             "GET",
             f"{self._waba_id}/message_templates",
-            params={"fields": "name,language,status,category", "limit": "250"},
+            params={
+                "fields": "id,name,language,status,category,components,"
+                "rejected_reason",
+                "limit": "250",
+            },
         )
         items = data.get("data")
         return items if isinstance(items, list) else []
+
+    def update_template(
+        self, template_id: str, components: list[dict[str, Any]]
+    ) -> dict[str, Any]:
+        """Eine vorhandene Vorlage ändern (Meta prüft danach erneut).
+
+        Metas Grenzen, die der Aufrufer kennen muss: Name und Sprache lassen
+        sich NICHT ändern (dafür eine neue Vorlage anlegen), bearbeitbar sind
+        nur Vorlagen im Status APPROVED, REJECTED oder PAUSED, und eine
+        freigegebene höchstens zehnmal in 30 Tagen bzw. einmal in 24 Stunden.
+        Verstößt der Aufruf dagegen, kommt Metas Fehlertext unverändert zurück
+        — er ist genauer als jede eigene Vermutung.
+        """
+        self._require_waba()
+        return self._graph(
+            "POST", template_id, json_body={"components": components}
+        )
+
+    def delete_template(
+        self, name: str, *, template_id: str | None = None
+    ) -> dict[str, Any]:
+        """Eine Vorlage löschen.
+
+        Ohne ``template_id`` löscht Meta ALLE Sprachfassungen dieses Namens —
+        das ist Metas Verhalten, nicht unseres. Mit ``hsm_id`` trifft es genau
+        die eine Fassung; die Oberfläche schickt sie deshalb immer mit.
+        """
+        self._require_waba()
+        params = {"name": name}
+        if template_id:
+            params["hsm_id"] = template_id
+        return self._graph(
+            "DELETE", f"{self._waba_id}/message_templates", params=params
+        )
 
     def create_template(self, payload: dict[str, Any]) -> dict[str, Any]:
         """Ein Template anlegen. Meta prüft es asynchron (Status PENDING)."""

@@ -31,6 +31,7 @@ import { AutomatisierenPanel } from "@/components/inbox/automatisieren-panel";
 import { ManageTab } from "@/components/inbox/manage-tab";
 import { WissenTab } from "@/components/inbox/wissen-tab";
 import { TemplatesTab } from "@/components/inbox/templates-tab";
+import { WhatsAppVorlagen } from "@/components/inbox/whatsapp-vorlagen";
 import {
   ChannelTag,
   GuestAvatar,
@@ -76,6 +77,7 @@ type TabKey =
   | "tabInbox"
   | "tabAiReplies"
   | "tabTemplates"
+  | "tabWhatsAppTemplates"
   | "tabAutomations"
   | "tabKnowledge"
   | "tabManage";
@@ -382,6 +384,7 @@ export function InboxList({
           "tabAiReplies",
           "tabKnowledge",
           "tabTemplates",
+          "tabWhatsAppTemplates",
           "tabAutomations",
           "tabManage",
         ] as TabKey[])
@@ -454,6 +457,8 @@ export function InboxList({
       {/* Andere Tabs: eigene Inhalte */}
       {tab === "tabTemplates" ? (
         <TemplatesTab />
+      ) : tab === "tabWhatsAppTemplates" ? (
+        <WhatsAppVorlagen />
       ) : tab === "tabAiReplies" ? (
         <AiSettingsTab />
       ) : tab === "tabAutomations" ? (

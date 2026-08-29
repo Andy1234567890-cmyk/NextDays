@@ -193,6 +193,137 @@ class WhatsAppService:
                 exc.message, status_code=exc.status_code
             ) from exc
 
+    # --- Vorlagen anlegen/ändern/löschen (Meta prüft jede Änderung neu) -----
+    @staticmethod
+    def _pruefe_vorlagentext(text: str, beispiele: list[str]) -> list[str]:
+        """Metas Textregeln vorab prüfen, statt auf die Ablehnung zu warten.
+
+        Beim ersten Ausrollen unseres eigenen Satzes hat Meta sechs Vorlagen
+        abgelehnt — an genau diesen beiden Regeln. Sie stehen in keiner
+        Fehlermeldung, sondern nur in der Ablehnungs-Mail, Tage später. Deshalb
+        hier, wo der Text entsteht.
+        """
+        fehler: list[str] = []
+        gestutzt = text.strip()
+        if not gestutzt:
+            fehler.append("Der Text darf nicht leer sein.")
+            return fehler
+        platzhalter = re.findall(r"\{\{\s*(\d+)\s*\}\}", gestutzt)
+        if platzhalter:
+            if gestutzt.startswith("{{"):
+                fehler.append(
+                    "Der Text darf nicht mit einem Platzhalter beginnen — "
+                    "Meta lehnt das ab."
+                )
+            if gestutzt.endswith("}}"):
+                fehler.append(
+                    "Nach dem letzten Platzhalter muss noch Text folgen; ein "
+                    "Satzpunkt allein genügt Meta nicht."
+                )
+            nummern = sorted({int(n) for n in platzhalter})
+            if nummern != list(range(1, len(nummern) + 1)):
+                fehler.append(
+                    "Die Platzhalter müssen lückenlos bei {{1}} beginnen und "
+                    "aufsteigend nummeriert sein."
+                )
+            if len(beispiele) != len(nummern):
+                fehler.append(
+                    f"Meta verlangt zu jedem Platzhalter einen Beispielwert: "
+                    f"{len(nummern)} Platzhalter, {len(beispiele)} Beispiele."
+                )
+        return fehler
+
+    def create_template(
+        self,
+        ctx: AuthContext,
+        *,
+        name: str,
+        language: str,
+        category: str,
+        body: str,
+        examples: list[str] | None = None,
+        footer: str | None = None,
+    ) -> dict:
+        """Eine neue Vorlage in der WABA des Betriebs anlegen."""
+        db, tenant_id = self._require(ctx)
+        schluessel = (name or "").strip().lower()
+        if not re.fullmatch(r"[a-z0-9_]{1,512}", schluessel):
+            raise WhatsAppServiceError(
+                "Der Name darf nur Kleinbuchstaben, Ziffern und Unterstriche "
+                "enthalten (Metas Vorgabe).",
+                status_code=422,
+            )
+        beispiele = [b for b in (examples or []) if b.strip()]
+        if fehler := self._pruefe_vorlagentext(body, beispiele):
+            raise WhatsAppServiceError(" ".join(fehler), status_code=422)
+        komponenten: list[dict] = [{"type": "BODY", "text": body.strip()}]
+        if beispiele:
+            komponenten[0]["example"] = {"body_text": [beispiele]}
+        if footer and footer.strip():
+            komponenten.append({"type": "FOOTER", "text": footer.strip()})
+        try:
+            return self._client_fuer(db, tenant_id).create_template(
+                {
+                    "name": schluessel,
+                    "language": language,
+                    "category": category.upper(),
+                    "components": komponenten,
+                }
+            )
+        except WhatsAppError as exc:
+            raise WhatsAppServiceError(
+                exc.message, status_code=exc.status_code
+            ) from exc
+
+    def update_template(
+        self,
+        ctx: AuthContext,
+        *,
+        template_id: str,
+        body: str,
+        examples: list[str] | None = None,
+        footer: str | None = None,
+    ) -> dict:
+        """Text einer vorhandenen Vorlage ändern.
+
+        Metas Update ersetzt ALLE Komponenten. Die Fußzeile wird deshalb
+        mitgeschickt: wer sie wegließe, verlöre sie ohne Fehlermeldung
+        (Wurzel 1 — die Gegenseite der Änderung mitpflegen).
+        """
+        db, tenant_id = self._require(ctx)
+        beispiele = [b for b in (examples or []) if b.strip()]
+        if fehler := self._pruefe_vorlagentext(body, beispiele):
+            raise WhatsAppServiceError(" ".join(fehler), status_code=422)
+        komponenten: list[dict] = [{"type": "BODY", "text": body.strip()}]
+        if beispiele:
+            komponenten[0]["example"] = {"body_text": [beispiele]}
+        if footer and footer.strip():
+            komponenten.append({"type": "FOOTER", "text": footer.strip()})
+        try:
+            return self._client_fuer(db, tenant_id).update_template(
+                template_id, komponenten
+            )
+        except WhatsAppError as exc:
+            raise WhatsAppServiceError(
+                exc.message, status_code=exc.status_code
+            ) from exc
+
+    def delete_template(
+        self, ctx: AuthContext, *, name: str, template_id: str | None = None
+    ) -> dict:
+        """Eine Vorlage löschen (mit ID genau diese Sprachfassung)."""
+        db, tenant_id = self._require(ctx)
+        if not (name or "").strip():
+            raise WhatsAppServiceError("Name der Vorlage fehlt.", status_code=422)
+        try:
+            return self._client_fuer(db, tenant_id).delete_template(
+                name.strip(), template_id=template_id
+            )
+        except WhatsAppError as exc:
+            raise WhatsAppServiceError(
+                exc.message, status_code=exc.status_code
+            ) from exc
+
     def rollout_templates(self, ctx: AuthContext) -> dict:
         """Den Vorlagensatz in die WABA des Betriebs ausrollen (idempotent).
 

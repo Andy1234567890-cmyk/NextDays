@@ -51,7 +51,7 @@ type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
 async function call<T>(
   path: string,
-  opts: { method?: "GET" | "POST"; body?: unknown } = {},
+  opts: { method?: "GET" | "POST" | "DELETE"; body?: unknown } = {},
 ): Promise<Result<T>> {
   const token = await currentToken();
   if (!token) return { ok: false, error: "Nicht angemeldet." };
@@ -141,11 +141,20 @@ export async function sendWhatsApp(input: {
   return call<WhatsAppMessage>("/send", { method: "POST", body: input });
 }
 
+export type WhatsAppTemplateComponent = {
+  type: string;
+  text?: string;
+  example?: { body_text?: string[][] };
+};
+
 export type WhatsAppTemplate = {
+  id: string;
   name: string;
   language: string;
   status: string;
   category: string;
+  components?: WhatsAppTemplateComponent[];
+  rejected_reason?: string | null;
 };
 
 /** Vorlagen der WABA DIESES Betriebs, mit Metas Prüfstatus. Quelle ist Meta,
@@ -165,4 +174,42 @@ export async function rolloutWhatsAppTemplates(): Promise<
     "/templates/rollout",
     { method: "POST" },
   );
+}
+
+
+/** Eine eigene Vorlage anlegen. Meta prüft sie asynchron — sie erscheint
+ *  danach mit Status PENDING in der Liste. */
+export async function createWhatsAppTemplate(input: {
+  name: string;
+  language: string;
+  category: "UTILITY" | "MARKETING" | "AUTHENTICATION";
+  body: string;
+  examples: string[];
+  footer?: string | null;
+}): Promise<Result<unknown>> {
+  return call<unknown>("/templates/neu", { method: "POST", body: input });
+}
+
+/** Text einer Vorlage ändern. Name und Sprache sind bei Meta unveränderlich;
+ *  die Fußzeile muss mitgeschickt werden, weil Metas Update alle Komponenten
+ *  ersetzt. */
+export async function updateWhatsAppTemplate(
+  templateId: string,
+  input: { body: string; examples: string[]; footer?: string | null },
+): Promise<Result<unknown>> {
+  return call<unknown>(`/templates/${encodeURIComponent(templateId)}`, {
+    method: "POST",
+    body: input,
+  });
+}
+
+/** Vorlage löschen. Mit `templateId` nur diese Sprachfassung — ohne sie
+ *  löscht Meta ALLE Fassungen dieses Namens. */
+export async function deleteWhatsAppTemplate(
+  name: string,
+  templateId?: string,
+): Promise<Result<unknown>> {
+  const q = new URLSearchParams({ name });
+  if (templateId) q.set("template_id", templateId);
+  return call<unknown>(`/templates?${q.toString()}`, { method: "DELETE" });
 }

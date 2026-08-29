@@ -26,6 +26,8 @@ from .schemas import (
     SendWhatsAppRequest,
     SendWhatsAppTemplateRequest,
     SliceHealth,
+    TemplateCreate,
+    TemplateUpdate,
     WhatsAppConversationList,
     WhatsAppMessage,
     WhatsAppMessageList,
@@ -150,6 +152,59 @@ def list_templates(service: WhatsAppServiceDep, ctx: _guest) -> dict:
     """Vorlagen der WABA DIESES Betriebs mit Prüfstatus (PENDING/APPROVED/REJECTED)."""
     try:
         return {"items": service.list_templates(ctx)}
+    except WhatsAppServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/templates/neu")
+def create_template(
+    payload: TemplateCreate, service: WhatsAppServiceDep, ctx: _guest
+) -> dict:
+    """Eine eigene Vorlage in der WABA des Betriebs anlegen (Meta prüft sie)."""
+    try:
+        return service.create_template(
+            ctx,
+            name=payload.name,
+            language=payload.language,
+            category=payload.category,
+            body=payload.body,
+            examples=payload.examples,
+            footer=payload.footer,
+        )
+    except WhatsAppServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/templates/{template_id}")
+def update_template(
+    template_id: str,
+    payload: TemplateUpdate,
+    service: WhatsAppServiceDep,
+    ctx: _guest,
+) -> dict:
+    """Text einer Vorlage ändern. Name und Sprache sind bei Meta unveränderlich."""
+    try:
+        return service.update_template(
+            ctx,
+            template_id=template_id,
+            body=payload.body,
+            examples=payload.examples,
+            footer=payload.footer,
+        )
+    except WhatsAppServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.delete("/templates")
+def delete_template(
+    name: str,
+    service: WhatsAppServiceDep,
+    ctx: _guest,
+    template_id: str | None = None,
+) -> dict:
+    """Vorlage löschen. Ohne `template_id` löscht Meta alle Sprachfassungen."""
+    try:
+        return service.delete_template(ctx, name=name, template_id=template_id)
     except WhatsAppServiceError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
