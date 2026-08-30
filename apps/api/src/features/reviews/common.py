@@ -45,9 +45,15 @@ SCORE_FIELDS: dict[str, str] = {
 }
 
 # Spalten für die eigene/Host-Sicht einer Bewertung (inkl. Sub-Scores).
+# KI-Deutung (0501). Beide Slices lesen sie mit: die Marktplatzseite zeigt
+# sie nicht an, aber sie soll sie nicht versehentlich beim Schreiben
+# überbügeln, und der Nachlauf braucht `ki_bewertet_at`.
+AI_COLUMNS = "ki_stimmung, ki_themen, ki_kernaussage, ki_bewertet_at"
+
 REVIEW_COLUMNS = (
     "id, property_id, reservation_id, rating, text, host_reply, host_reply_at, "
     "published_at, created_at, updated_at, " + ", ".join(SCORE_COLUMNS)
+    + ", " + AI_COLUMNS
 )
 
 

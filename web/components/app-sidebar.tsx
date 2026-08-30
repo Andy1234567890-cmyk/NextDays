@@ -98,6 +98,12 @@ const MAIN: readonly NavItem[] = [
   // „distribution" enthielt nur diese zwei Punkte und ist damit entfallen.
   { key: "channelManager", href: "/channels", icon: "ph:arrows-left-right" },
   { key: "reviews", href: "/bewertungen", icon: "ph:star", req: "view_reviews" },
+  // Qualität als EIGENER Punkt, nicht als Unterpunkt der Bewertungen: die
+  // Liste ist Tagesgeschäft („was muss ich beantworten"), die Auswertung ist
+  // Rückblick („wo stehen wir, woran liegt es"). Als fünfter Reiter neben der
+  // Liste wäre sie hinter einer Arbeit versteckt, die nie fertig wird.
+  // Hostaway trennt sie aus demselben Grund (`Hosting Quality`).
+  { key: "quality", href: "/qualitaet", icon: "ph:chart-line-up", req: "view_reviews" },
   // Website-Baukasten: EIN Eintrag, keine aufklappbare Gruppe.
   //
   // Er führt in den Editor, und der Editor hat seine EIGENE Bereichsleiste
@@ -385,6 +391,7 @@ const OWNER_ALLOWED_HREFS: readonly string[] = [
   "/kalender",
   "/objekte",
   "/bewertungen", // Bewertungen SEINER Objekte — lesen, nicht antworten (§4.2)
+  "/qualitaet", // Auswertung ebendieser Bewertungen (derselbe Objekt-Scope)
   "/meine-abrechnungen", // Eigene Auszahlungs-Abrechnungen (self-scoped)
 ];
 

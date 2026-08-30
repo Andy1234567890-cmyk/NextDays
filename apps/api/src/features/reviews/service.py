@@ -21,9 +21,10 @@ from typing import TYPE_CHECKING, Any, TypeVar
 from postgrest.exceptions import APIError
 from supabase import Client
 
+from src.core.ki import KiError
 from src.core.logging import get_logger
 from src.core.security import AuthContext
-from src.core.supabase import get_service_client, load_scoped
+from src.core.supabase import escape_like, get_service_client, load_scoped
 from src.features.auth.owner_scope import is_owner, owner_property_ids
 
 from .common import (
@@ -39,7 +40,15 @@ from .queue import ReviewQueue
 from .schemas import (
     MARKETPLACE_CHANNEL,
     MAX_PAGE_SIZE,
+    AiBilanz,
+    AiInsights,
+    AiSentiment,
+    AiTheme,
+    AiThemeKey,
     AutomationConfig,
+    AutoTemplate,
+    AutoTemplateList,
+    AutoTemplateRequest,
     CategoryScore,
     ChannelSummary,
     GuestReviewByHost,
@@ -53,6 +62,7 @@ from .schemas import (
     QueueStatus,
     QueueUpdateRequest,
     RateGuestRequest,
+    ReviewAi,
     ReviewListResponse,
     ReviewScale,
     ReviewSource,
@@ -60,6 +70,7 @@ from .schemas import (
     SliceHealth,
     UnifiedReview,
 )
+from .vorlagen import VorlagenStore
 
 if TYPE_CHECKING:  # nur für die Typen — zur Laufzeit wird lazy importiert
     from src.features.channel_manager.service import ChannelManagerService
@@ -80,12 +91,26 @@ SYSTEM_USER_ID = "00000000-0000-0000-0000-000000000000"
 _OTA_COLUMNS = (
     "id, tenant_id, property_id, channex_review_id, ota, ota_reservation_id, "
     "guest_name, content, overall_score, scores, is_hidden, is_replied, "
-    "is_expired, reply, reply_at, guest_review_sent_at, received_at, created_at"
+    "is_expired, reply, reply_at, guest_review_sent_at, received_at, created_at, "
+    # KI-Deutung (0501). Mitgelesen statt nachgeladen: sie steht in derselben
+    # Zeile, ein zweiter Aufruf je Bewertung wäre N+1 für vier Felder.
+    "ki_stimmung, ki_themen, ki_kernaussage, ki_bewertet_at"
 )
+
+# Obergrenze des CSV-Exports. Er lädt in EINEM Zug statt seitenweise; ohne
+# Deckel hielte ein Betrieb mit sehr vielen Bewertungen einen Worker fest.
+MAX_EXPORT_ROWS = 5_000
 
 # Höchstspanne des Qualitäts-Dashboards (Wurzel 8: unbegrenzter Zeitraum wäre
 # eine unbegrenzte Antwort — die Zeitreihe hat einen Punkt je Tag).
 _QUALITY_MAX_DAYS = 366
+
+# Wie viele Bewertungen ein Tick je Tabelle deutet. Klein gehalten: der Tick
+# läuft oft, und ein Betrieb mit 2 000 Altbewertungen soll sie über viele
+# Läufe abarbeiten statt einen Lauf minutenlang festzuhalten und sein
+# Tagesbudget in einem Rutsch zu verbrennen. Wer schneller sein will, drückt
+# den Knopf (`POST /reviews/ai/deuten`).
+_KI_TICK_LIMIT = 15
 
 # Spalten der Automatik-Konfiguration (Reihenfolge egal, Vollständigkeit zählt).
 _AUTOMATION_COLUMNS = (
@@ -112,6 +137,50 @@ def _score_5_from_ten(value: object) -> float | None:
         return round(float(value) / 2, 2)
     except (TypeError, ValueError):
         return None
+
+
+def _to_ai(row: dict) -> ReviewAi | None:
+    """Die vier KI-Spalten einer Zeile → ``ReviewAi``, oder None.
+
+    None heißt „noch nicht ausgewertet" und ist ausdrücklich etwas anderes als
+    „ausgewertet, nichts gefunden" (das wäre eine Stimmung mit leeren Themen).
+    Ohne diese Unterscheidung sähe eine Bewertung, die der Nachlauf noch nicht
+    erreicht hat, aus wie eine ohne Aussage — und niemand käme auf die Idee,
+    den Nachlauf zu prüfen.
+
+    Der Anker ist ``ki_bewertet_at``, nicht ``ki_stimmung``: der Zeitpunkt ist
+    das einzige Feld, das jeder erfolgreiche Lauf setzt.
+    """
+    bewertet = as_dt(row.get("ki_bewertet_at"))
+    stimmung = row.get("ki_stimmung")
+    if not bewertet or not stimmung:
+        return None
+    roh = row.get("ki_themen")
+    themen = []
+    if isinstance(roh, list):
+        for eintrag in roh:
+            if not isinstance(eintrag, dict):
+                continue
+            try:
+                themen.append(
+                    AiTheme(
+                        thema=AiThemeKey(str(eintrag.get("thema"))),
+                        richtung=AiSentiment(
+                            str(eintrag.get("richtung") or "neutral")
+                        ),
+                    )
+                )
+            except ValueError:
+                # Ein Thema, das der Katalog nicht kennt. Kann nur aus einer
+                # Zeile stammen, die vor einer Katalog-Änderung geschrieben
+                # wurde — überspringen statt die ganze Bewertung zu verlieren.
+                continue
+    return ReviewAi(
+        stimmung=AiSentiment(str(stimmung)),
+        themen=themen,
+        kernaussage=row.get("ki_kernaussage"),
+        bewertet_at=bewertet,
+    )
 
 
 def _ota_categories(raw: object) -> list[CategoryScore]:
@@ -208,15 +277,27 @@ class ReviewsService:
         property_id: str | None = None,
         channel_code: str | None = None,
         unanswered: bool = False,
+        suche: str | None = None,
+        rating_min: float | None = None,
+        rating_max: float | None = None,
+        sentiment: str | None = None,
         limit: int,
         offset: int,
+        fuer_export: bool = False,
     ) -> ReviewListResponse:
         """Vereinte Liste, neueste zuerst. Beide Quellen werden bis
         ``offset + limit`` geladen, zusammengeführt und dann geschnitten —
         eine SQL-seitige Union über zwei Tabellen mit unterschiedlichem Schema
-        gibt PostgREST nicht her."""
+        gibt PostgREST nicht her.
+
+        ``fuer_export`` hebt den Seiten-Deckel auf den Export-Deckel. Ohne
+        diesen Schalter bekäme der CSV-Export STILL nur 100 Zeilen: sein
+        ``limit=5000`` liefe in ``min(limit, MAX_PAGE_SIZE)``, die Datei wäre
+        gekürzt und sähe vollständig aus — die schlimmste Sorte Fehler, weil
+        niemand eine CSV nachzählt (Wurzel 5)."""
         db, tenant_id = self._require(ctx)
-        limit = max(1, min(limit, MAX_PAGE_SIZE))
+        deckel = MAX_EXPORT_ROWS if fuer_export else MAX_PAGE_SIZE
+        limit = max(1, min(limit, deckel))
         offset = max(0, offset)
         eigene = self._visible_property_ids(db, ctx)
         if eigene is not None and not eigene:
@@ -237,6 +318,10 @@ class ReviewsService:
                 tenant_id,
                 property_ids=eigene,
                 property_id=property_id,
+                suche=suche,
+                rating_min=rating_min,
+                rating_max=rating_max,
+                sentiment=sentiment,
                 unanswered=unanswered,
                 limit=bedarf,
             )
@@ -250,6 +335,10 @@ class ReviewsService:
                 property_ids=eigene,
                 property_id=property_id,
                 channel_code=channel_code,
+                suche=suche,
+                rating_min=rating_min,
+                rating_max=rating_max,
+                sentiment=sentiment,
                 unanswered=unanswered,
                 limit=bedarf,
             )
@@ -277,6 +366,10 @@ class ReviewsService:
         *,
         property_ids: list[str] | None,
         property_id: str | None,
+        suche: str | None = None,
+        rating_min: float | None = None,
+        rating_max: float | None = None,
+        sentiment: str | None = None,
         unanswered: bool,
         limit: int,
     ) -> tuple[list[UnifiedReview], int]:
@@ -295,6 +388,20 @@ class ReviewsService:
             query = query.in_("property_id", property_ids)
         if unanswered:
             query = query.is_("host_reply", "null")
+        if suche:
+            # Nur im Bewertungstext, NICHT im Gastnamen: die Marktplatzseite
+            # maskiert den Autor bewusst (`mask_author`), und eine Suche, die
+            # den vollen Namen als Filter annimmt, würde ihn Zeichen für
+            # Zeichen erraten lassen.
+            query = query.ilike("text", f"%{escape_like(suche)}%")
+        # Die Marktplatz-Skala ist 1..5, die Filtergrenzen kommen in 5er-Skala
+        # herein — hier also direkt, beim Portal geteilt durch 2 (siehe unten).
+        if rating_min is not None:
+            query = query.gte("rating", rating_min)
+        if rating_max is not None:
+            query = query.lte("rating", rating_max)
+        if sentiment:
+            query = query.eq("ki_stimmung", sentiment)
         res = (
             query.order("created_at", desc=True)
             .range(0, max(limit, 1) - 1)
@@ -333,6 +440,10 @@ class ReviewsService:
         property_ids: list[str] | None,
         property_id: str | None,
         channel_code: str | None,
+        suche: str | None = None,
+        rating_min: float | None = None,
+        rating_max: float | None = None,
+        sentiment: str | None = None,
         unanswered: bool,
         limit: int,
     ) -> tuple[list[UnifiedReview], int]:
@@ -350,6 +461,18 @@ class ReviewsService:
             query = query.eq("ota", channel_code)
         if unanswered:
             query = query.eq("is_replied", False)
+        if suche:
+            query = query.ilike("content", f"%{escape_like(suche)}%")
+        # Portal-Noten laufen 0..10, die Filtergrenzen kommen in der 5er-Skala
+        # der Oberfläche. Umrechnen statt zwei Filterfelder zu bauen: sonst
+        # müsste der Nutzer wissen, welcher Kanal welche Skala führt, und der
+        # gemischten Liste ist das nicht anzusehen (Wurzel 4).
+        if rating_min is not None:
+            query = query.gte("overall_score", rating_min * 2)
+        if rating_max is not None:
+            query = query.lte("overall_score", rating_max * 2)
+        if sentiment:
+            query = query.eq("ki_stimmung", sentiment)
         res = (
             query.order("received_at", desc=True)
             .range(0, max(limit, 1) - 1)
@@ -394,6 +517,7 @@ class ReviewsService:
                 guest_rated and str(row.get("reservation_id") or "") in guest_rated
             ),
             received_at=as_dt(row.get("created_at")),
+            ai=_to_ai(row),
         )
 
     @staticmethod
@@ -420,6 +544,7 @@ class ReviewsService:
             ota_reservation_id=row.get("ota_reservation_id"),
             guest_rated=bool(row.get("guest_review_sent_at")),
             received_at=as_dt(row.get("received_at") or row.get("created_at")),
+            ai=_to_ai(row),
         )
 
     # ---------------------------------------------------------------- Kennzahl
@@ -613,7 +738,7 @@ class ReviewsService:
         eigene = self._visible_property_ids(db, ctx)
         if eigene is not None and str(res["property_id"]) not in eigene:
             raise ReviewError("Reservierung nicht gefunden.", status_code=404)
-        return self.insert_guest_rating(
+        ergebnis = self.insert_guest_rating(
             db,
             tenant_id=tenant_id,
             reservation=res,
@@ -621,6 +746,15 @@ class ReviewsService:
             text=req.text,
             scores=req.scores,
         )
+        # Gegenzustand (Wurzel 1): der geplante Eintrag derselben Reservierung
+        # ist damit gegenstandslos. Bliebe er stehen, liefe der nächste Tick in
+        # die UNIQUE-Verletzung und meldete einen Fehler, den niemand verursacht
+        # hat. Der Queue-Versand selbst läuft über insert_guest_rating und kommt
+        # hier gar nicht vorbei — er führt seinen Status selbst.
+        self.queue().erledigt_durch_handarbeit(
+            tenant_id, reservation_id=str(res["id"])
+        )
+        return ergebnis
 
     def insert_guest_rating(  # noqa: PLR0913 — ein Datensatz, benannte Argumente
         self,
@@ -677,8 +811,6 @@ class ReviewsService:
         Gast kein Konto hat — dann bleibt die Bewertung an der E-Mail hängen."""
         if not email:
             return None
-        from src.core.supabase import escape_like
-
         rows = (
             db.table("portal_guests")
             .select("id")
@@ -734,11 +866,22 @@ class ReviewsService:
         return self._to_guest_review(rows[0])
 
     def send_ota_guest_review(
-        self, ctx: AuthContext, review_id: str, req: OtaGuestReviewRequest
+        self,
+        ctx: AuthContext,
+        review_id: str,
+        req: OtaGuestReviewRequest,
+        *,
+        aus_warteschlange: bool = False,
     ) -> UnifiedReview:
         """Gast beim Portal bewerten (nur Airbnb). Einmalig — Channex nimmt pro
         Bewertung genau eine Gast-Bewertung an, ein zweiter Versuch wäre ein
-        Fehler beim Portal (Wurzel 2: hier vorher abfangen)."""
+        Fehler beim Portal (Wurzel 2: hier vorher abfangen).
+
+        ``aus_warteschlange`` unterscheidet die zwei Aufrufer: kommt der Versand
+        aus dem Tick, führt die Warteschlange ihren Status selbst (sie hat den
+        Eintrag vorher auf 'gesendet' beansprucht) und darf ihn hier nicht
+        überschrieben bekommen. Bewertet dagegen ein Mensch von Hand, wird der
+        geplante Eintrag gegenstandslos und MUSS abgeräumt werden (Wurzel 1)."""
         db, tenant_id = self._require_write(ctx)
         row = self._own_ota(db, tenant_id, ctx, review_id)
         if row.get("guest_review_sent_at"):
@@ -769,6 +912,8 @@ class ReviewsService:
                 ctx, str(row["channex_review_id"]), payload
             )
         )
+        if not aus_warteschlange:
+            self.queue().erledigt_durch_handarbeit(tenant_id, review_id=review_id)
         return self._to_ota(self._own_ota(db, tenant_id, ctx, review_id))
 
     # -------------------------------------------------------------- Automatik
@@ -897,6 +1042,7 @@ class ReviewsService:
                 "score_5": float(row["rating"]),
                 "replied": bool(row.get("host_reply")),
                 "property_id": str(row["property_id"]),
+                "kanal": MARKETPLACE_CHANNEL,
                 "categories": [
                     (feld, float(wert))
                     for feld, wert in scores_map(row).items()
@@ -906,7 +1052,10 @@ class ReviewsService:
 
         ota = (
             db.table("channex_review")
-            .select("overall_score, is_replied, received_at, created_at, property_id, scores")
+            .select(
+                "overall_score, is_replied, received_at, created_at, property_id, "
+                "scores, ota"
+            )
             .eq("tenant_id", tenant_id)
             .eq("is_archived", False)
             .gte("received_at", von.isoformat())
@@ -922,6 +1071,7 @@ class ReviewsService:
                 "property_id": (
                     str(row["property_id"]) if row.get("property_id") else None
                 ),
+                "kanal": row.get("ota") or "unbekannt",
                 "categories": [
                     (c.key, c.score / 2) for c in _ota_categories(row.get("scores"))
                 ],
@@ -930,15 +1080,29 @@ class ReviewsService:
 
     @staticmethod
     def _quality_categories(punkte: list[dict]) -> list[CategoryScore]:
+        """Kategorie-Durchschnitte MIT den Kanälen, aus denen sie stammen.
+
+        Die Kanalliste ist nicht Zierde: Kategorien sind je Portal verschieden
+        — „comfort", „facilities" und „staff" gibt es nur bei Booking.com,
+        „accuracy" und „checkin" nur bei Airbnb. Ein Durchschnitt über
+        verschiedene Grundgesamtheiten ohne diesen Hinweis ist irreführend, und
+        genau das haben wir bis hierher gezeigt (Wurzel 4: keine Zahl ohne
+        ihren Bezug).
+        """
         summen: dict[str, list[float]] = {}
+        kanaele: dict[str, set[str]] = {}
         for p in punkte:
             for schluessel, wert in p["categories"]:
                 summen.setdefault(schluessel, []).append(wert)
+                kanaele.setdefault(schluessel, set()).add(
+                    str(p.get("kanal") or "unbekannt")
+                )
         return [
             CategoryScore(
                 key=schluessel,
                 score=round(sum(werte) / len(werte), 2),
                 scale=ReviewScale.five,
+                channels=sorted(kanaele.get(schluessel, set())),
             )
             for schluessel, werte in sorted(summen.items())
         ]
@@ -1103,12 +1267,146 @@ class ReviewsService:
             error=row.get("error"),
         )
 
+    # ------------------------------------------------ Auto-Bewertungs-Vorlagen
+    def _vorlagen(self, db: Client) -> VorlagenStore:
+        return VorlagenStore(db)
+
+    def list_templates(self, ctx: AuthContext) -> AutoTemplateList:
+        db, tenant_id = self._require(ctx)
+        return AutoTemplateList(items=self._vorlagen(db).liste(tenant_id))
+
+    def get_template(self, ctx: AuthContext, vorlagen_id: str) -> AutoTemplate:
+        db, tenant_id = self._require(ctx)
+        return self._vorlagen(db).eine(tenant_id, vorlagen_id)
+
+    def create_template(
+        self, ctx: AuthContext, req: AutoTemplateRequest
+    ) -> AutoTemplate:
+        db, tenant_id = self._require_write(ctx)
+        return self._vorlagen(db).anlegen(
+            tenant_id, req, eigene=self._visible_property_ids(db, ctx)
+        )
+
+    def update_template(
+        self, ctx: AuthContext, vorlagen_id: str, req: AutoTemplateRequest
+    ) -> AutoTemplate:
+        db, tenant_id = self._require_write(ctx)
+        return self._vorlagen(db).aendern(
+            tenant_id, vorlagen_id, req, eigene=self._visible_property_ids(db, ctx)
+        )
+
+    def copy_template(self, ctx: AuthContext, vorlagen_id: str) -> AutoTemplate:
+        db, tenant_id = self._require_write(ctx)
+        return self._vorlagen(db).kopieren(tenant_id, vorlagen_id)
+
+    def delete_template(self, ctx: AuthContext, vorlagen_id: str) -> None:
+        db, tenant_id = self._require_write(ctx)
+        self._vorlagen(db).loeschen(tenant_id, vorlagen_id)
+
+    # --------------------------------------------------------- KI-Auswertung
+    def ai_insights(
+        self, ctx: AuthContext, *, von: date, bis: date
+    ) -> AiInsights:
+        """Stimmung und Themen über einen Zeitraum. Kein Modellaufruf.
+
+        Derselbe Zeitraum-Deckel wie beim Qualitäts-Dashboard: die Zeitreihe
+        hat einen Punkt je Tag, ein unbegrenzter Zeitraum wäre eine
+        unbegrenzte Antwort (Wurzel 8)."""
+        from .ki_auswertung import insights
+
+        db, tenant_id = self._require(ctx)
+        if bis < von:
+            raise ReviewError("Zeitraum ist verdreht.", status_code=422)
+        if (bis - von).days > _QUALITY_MAX_DAYS:
+            raise ReviewError(
+                f"Zeitraum zu groß (höchstens {_QUALITY_MAX_DAYS} Tage).",
+                status_code=422,
+            )
+        eigene = self._visible_property_ids(db, ctx)
+        if eigene is not None and not eigene:
+            return AiInsights(from_date=von, to_date=bis)
+        return insights(db, tenant_id, eigene=eigene, von=von, bis=bis)
+
+    def ai_bilanz(
+        self, ctx: AuthContext, *, property_id: str, von: date, bis: date
+    ) -> AiBilanz:
+        """Verbesserungs-Bilanz eines Objekts. EIN Modellaufruf.
+
+        Das Objekt wird gescopt geladen (Wurzel 3) und gegen die Sicht des
+        Aufrufers geprüft (Wurzel 9) — ein Eigentümer darf keine Bilanz über
+        ein fremdes Objekt ziehen, auch nicht über die KI."""
+        from .ki_auswertung import bilanz
+        from .ki_deutung import KiDeutungFehler
+
+        db, tenant_id = self._require(ctx)
+        if bis < von:
+            raise ReviewError("Zeitraum ist verdreht.", status_code=422)
+        if (bis - von).days > _QUALITY_MAX_DAYS:
+            raise ReviewError(
+                f"Zeitraum zu groß (höchstens {_QUALITY_MAX_DAYS} Tage).",
+                status_code=422,
+            )
+        prop = load_scoped(
+            db,
+            "properties",
+            property_id,
+            tenant_id,
+            columns="id, title",
+            not_found=ReviewError("Objekt nicht gefunden.", status_code=404),
+        )
+        eigene = self._visible_property_ids(db, ctx)
+        if eigene is not None and str(prop["id"]) not in eigene:
+            raise ReviewError("Objekt nicht gefunden.", status_code=404)
+        try:
+            return bilanz(
+                db,
+                tenant_id,
+                property_id=str(prop["id"]),
+                property_title=prop.get("title"),
+                von=von,
+                bis=bis,
+            )
+        except KiDeutungFehler as exc:
+            # 422, nicht 502: die Grundlage reicht nicht oder das Modell hat
+            # Unbrauchbares geliefert — beides ist keine Störung des Dienstes,
+            # und ein Wiederholungsversuch hilft nicht.
+            raise ReviewError(str(exc), status_code=422) from exc
+        except KiError as exc:
+            raise ReviewError(exc.message, status_code=exc.status_code) from exc
+
+    def ai_deuten(self, ctx: AuthContext, *, limit: int = 25) -> tuple[int, int]:
+        """Offene Deutungen dieses Betriebs nachholen. Rückgabe: (gedeutet, Fehler).
+
+        Für den Knopf „jetzt auswerten". Der Regelbetrieb läuft über den Tick;
+        dieser Weg ist für den Betrieb, der gerade eingeschaltet hat und nicht
+        bis morgen warten will."""
+        from .ki_deutung import offene_deuten
+
+        db, tenant_id = self._require_write(ctx)
+        gedeutet = 0
+        fehler = 0
+        # Beide Portal-Quellen, aber NICHT public.reviews: die hat kein
+        # tenant_id (0006) und liesse sich hier nicht auf den Betrieb
+        # einschränken. Sie läuft ausschließlich über den mandantenfreien
+        # Tick-Pfad (Wurzel 3: kein ungescopter Zugriff über einen
+        # Nutzer-Endpunkt).
+        for tabelle in ("channex_review", "guest_reviews_by_host"):
+            try:
+                g, f = offene_deuten(
+                    db, tabelle=tabelle, tenant_id=tenant_id, limit=limit
+                )
+            except KiError as exc:
+                raise ReviewError(exc.message, status_code=exc.status_code) from exc
+            gedeutet += g
+            fehler += f
+        return gedeutet, fehler
+
     def run_maintenance(
         self, automation: ReviewAutomation
-    ) -> tuple[int, int, int, int]:
+    ) -> tuple[int, int, int, int, int, int]:
         """Die zeitgesteuerten Vorgänge in EINER Fassung — für den Worker-Tick
         wie für den Cron-Endpunkt. Rückgabe: (veröffentlicht, gespiegelt,
-        Gäste bewertet, Erinnerungen).
+        eingeplant, Gäste bewertet, verfallen, Erinnerungen).
 
         Jeder Schritt ist unabhängig: ein nicht erreichbares Portal darf die
         Fristablauf-Veröffentlichung nicht verhindern (Wurzel 5 — spezifisch
@@ -1128,4 +1426,33 @@ class ReviewsService:
         warteschlange = self.queue()
         expired = warteschlange.expire_overdue()
         rated = warteschlange.send_due(self)
+        self._ki_nachlauf()
         return published, mirrored, queued, rated, expired, reminded
+
+    def _ki_nachlauf(self) -> None:
+        """Neue Bewertungen deuten. Best effort — kippt den Tick nie.
+
+        Bewusst NICHT im Rückgabewert: die Deutung ist eine Beigabe, keine
+        Pflicht des Ticks. Schlägt sie fehl (Vertex nicht eingerichtet, Deckel
+        erreicht), sollen Veröffentlichung, Spiegelung und Versand trotzdem
+        stattfinden — sie sind das, wofür der Tick da ist (Wurzel 5:
+        best effort darf den Hauptpfad nicht kippen).
+
+        Mandantenfrei, weil der Tick es ist: `offene_deuten` filtert dann nur
+        nach `ki_bewertet_at is null`. Das ist der einzige Pfad, über den
+        `public.reviews` gedeutet wird — sie hat kein tenant_id (0006) und ist
+        deshalb über keinen Nutzer-Endpunkt erreichbar.
+        """
+        from .ki_deutung import offene_deuten
+
+        db = self._db()
+        for tabelle in ("channex_review", "reviews", "guest_reviews_by_host"):
+            try:
+                offene_deuten(db, tabelle=tabelle, limit=_KI_TICK_LIMIT)
+            except Exception as exc:  # noqa: BLE001 — best effort, siehe Docstring
+                log.warning(
+                    "review_tick_ki_fehlgeschlagen",
+                    tabelle=tabelle,
+                    grund=type(exc).__name__,
+                    fehler=str(exc)[:200],
+                )

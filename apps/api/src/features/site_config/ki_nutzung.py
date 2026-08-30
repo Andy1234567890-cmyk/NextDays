@@ -59,6 +59,13 @@ FUNKTIONEN = frozenset(
         # Topf liesse sich später nicht sagen, welcher den Deckel gesprengt hat.
         "wissen_import",
         "wissen_lernen",
+        # Bewertungs-Auswertung (0501). Getrennt aus demselben Grund wie
+        # oben: 'bewertung_deuten' ist ein kleiner Aufruf je neuer Bewertung
+        # und läuft im Tick, 'bewertung_bilanz' ein großer über sechzig Texte
+        # auf Knopfdruck. In einem Topf liesse sich nicht sagen, welcher den
+        # Deckel gesprengt hat.
+        "bewertung_deuten",
+        "bewertung_bilanz",
     }
 )
 

@@ -23,6 +23,27 @@ from .common import log, nur_uuids
 from .ota_extras import _attrs, _related_property_id, _rows
 
 
+def _note(attrs: dict) -> float | None:
+    """Die Gesamtnote — oder None, wenn es noch keine gibt.
+
+    Channex schickt bei einer VERDECKTEN Bewertung `overall_score: 0`. Das ist
+    keine Null-Bewertung, sondern „steht noch nicht fest": Airbnb hält die Note
+    zurück, bis beide Seiten abgegeben haben. Ungeprüft übernommen landete die
+    0 in der Liste als fünf leere Sterne und „0 / 10" — eine Behauptung über
+    einen Gast, der nichts dergleichen gesagt hat, und im Durchschnitt zog sie
+    die Zahl des ganzen Objekts nach unten (Wurzel 4: lieber keine Angabe als
+    ein plausibler Ersatzwert).
+
+    Nur bei `is_hidden` verworfen, nicht generell: eine sichtbare 0 gäbe es bei
+    keinem Portal, aber wenn eines sie je schickte, wäre sie eine echte Aussage
+    und gehörte gezeigt.
+    """
+    wert = _as_float(attrs.get("overall_score"))
+    if wert == 0 and bool(attrs.get("is_hidden")):
+        return None
+    return wert
+
+
 def _as_float(value: object) -> float | None:
     """Zahl aus einem Channex-Feld — None statt Ersatzwert (Wurzel 4)."""
     if isinstance(value, bool) or value is None:
@@ -122,7 +143,7 @@ class ReviewsSyncMixin:
             "channex_booking_id": _booking_ref(row, attrs),
             "guest_name": attrs.get("guest_name"),
             "content": attrs.get("content"),
-            "overall_score": _as_float(attrs.get("overall_score")),
+            "overall_score": _note(attrs),
             "scores": scores if isinstance(scores, list) else [],
             "tags": tags if isinstance(tags, list) else [],
             "is_hidden": bool(attrs.get("is_hidden")),

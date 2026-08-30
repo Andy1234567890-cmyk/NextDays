@@ -3,19 +3,23 @@
 // myBestDays-Bewertungen, `channex_review` die der Portale.
 import { notFound } from "next/navigation";
 
-import { BewertungsCockpit } from "@/components/bewertungen/bewertungs-cockpit";
+import { BewertungsTabelle } from "@/components/bewertungen/bewertungs-tabelle";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { Card } from "@nextdays/ui/card";
 import { getMe } from "@/lib/auth";
+import { listProperties } from "@/lib/properties";
 import { listReviews, reviewSummary } from "@/lib/reviews";
 
 export const dynamic = "force-dynamic";
 
 export default async function BewertungenPage() {
-  const [liste, kennzahlen, me] = await Promise.all([
+  const [liste, kennzahlen, me, objekte] = await Promise.all([
     listReviews({ limit: 25, offset: 0 }),
     reviewSummary(),
     getMe(),
+    // Für den Objektfilter. Ein Dropdown ohne Inhalt wäre eine Attrappe —
+    // schlägt das Laden fehl, entfällt der Filter, statt leer dazustehen.
+    listProperties(),
   ]);
 
   if (!liste.ok) {
@@ -42,11 +46,19 @@ export default async function BewertungenPage() {
           NICHT mehr live sind die Bewertungen der Portale — sie erscheinen beim
           nächsten Seitenaufruf. */}
       <RealtimeRefresh tables={["reviews"]} />
-      <BewertungsCockpit
+      <BewertungsTabelle
         initial={liste.data.items}
         initialTotal={liste.data.total}
         summary={kennzahlen.ok ? kennzahlen.data : null}
         canManage={canManage}
+        objekte={
+          objekte.ok
+            ? objekte.data.items.map((o) => ({
+                id: o.id,
+                title: o.title ?? o.id,
+              }))
+            : []
+        }
       />
     </>
   );

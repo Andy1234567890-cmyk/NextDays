@@ -9,14 +9,23 @@ from datetime import date, timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Header, HTTPException, Query, status
+from fastapi.responses import PlainTextResponse
 
 from src.core.security import require_internal_cron_secret
 
 from .dependencies import AutomationDep, ManageCtx, ReviewsServiceDep, ViewCtx
+from .export import als_csv
 from .schemas import (
     DEFAULT_PAGE_SIZE,
     MAX_PAGE_SIZE,
+    AiBilanz,
+    AiInsights,
+    AiRunResponse,
+    AiSentiment,
     AutomationConfig,
+    AutoTemplate,
+    AutoTemplateList,
+    AutoTemplateRequest,
     GuestReviewByHost,
     OtaGuestReviewRequest,
     QualityDashboard,
@@ -34,9 +43,14 @@ from .schemas import (
     TickResponse,
     UnifiedReview,
 )
-from .service import ReviewError
+from .service import MAX_EXPORT_ROWS, ReviewError
 
 router = APIRouter(prefix="/reviews", tags=["reviews"])
+
+# Der Deckel steht im Service (MAX_EXPORT_ROWS) — hier nur wiederverwendet.
+# Zwei Zahlen an zwei Orten wären zwei Wahrheiten, von denen eine irgendwann
+# nicht mitgezogen wird.
+MAX_EXPORT = MAX_EXPORT_ROWS
 
 
 @router.get("/health", response_model=SliceHealth)
@@ -52,10 +66,22 @@ def list_reviews(  # noqa: PLR0913 — Filter des Cockpits, jeder optional
     property_id: Annotated[str | None, Query()] = None,
     channel_code: Annotated[str | None, Query(max_length=64)] = None,
     unanswered: Annotated[bool, Query()] = False,
+    # Volltextsuche im Bewertungstext. Gedeckelt (Wurzel 8) — eine
+    # 10-000-Zeichen-Suche wäre kein Suchbegriff, sondern eine Last.
+    suche: Annotated[str | None, Query(max_length=120)] = None,
+    # Notenbereich in der 5er-Skala der Oberfläche; der Service rechnet für
+    # Portal-Bewertungen selbst auf 0..10 um.
+    rating_min: Annotated[float | None, Query(ge=0, le=5)] = None,
+    rating_max: Annotated[float | None, Query(ge=0, le=5)] = None,
+    sentiment: Annotated[AiSentiment | None, Query()] = None,
     limit: Annotated[int, Query(ge=1, le=MAX_PAGE_SIZE)] = DEFAULT_PAGE_SIZE,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> ReviewListResponse:
     """Alle Bewertungen des Betriebs, Marktplatz und Portale in EINER Liste."""
+    if rating_min is not None and rating_max is not None and rating_min > rating_max:
+        raise HTTPException(
+            status_code=422, detail="Der Notenbereich ist verdreht."
+        )
     try:
         return service.list_reviews(
             ctx,
@@ -63,6 +89,10 @@ def list_reviews(  # noqa: PLR0913 — Filter des Cockpits, jeder optional
             property_id=property_id,
             channel_code=channel_code,
             unanswered=unanswered,
+            suche=suche.strip() or None if suche else None,
+            rating_min=rating_min,
+            rating_max=rating_max,
+            sentiment=sentiment.value if sentiment else None,
             limit=limit,
             offset=offset,
         )
@@ -168,6 +198,193 @@ def quality(
     start = von or (ende - timedelta(days=30))
     try:
         return service.quality(ctx, von=start, bis=ende)
+    except ReviewError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/export", response_class=PlainTextResponse)
+def export_reviews(  # noqa: PLR0913 — dieselben Filter wie die Liste
+    service: ReviewsServiceDep,
+    ctx: ViewCtx,
+    source: Annotated[ReviewSource | None, Query()] = None,
+    property_id: Annotated[str | None, Query()] = None,
+    channel_code: Annotated[str | None, Query(max_length=64)] = None,
+    unanswered: Annotated[bool, Query()] = False,
+    suche: Annotated[str | None, Query(max_length=120)] = None,
+    rating_min: Annotated[float | None, Query(ge=0, le=5)] = None,
+    rating_max: Annotated[float | None, Query(ge=0, le=5)] = None,
+    sentiment: Annotated[AiSentiment | None, Query()] = None,
+    spalten: Annotated[str | None, Query(max_length=400)] = None,
+) -> PlainTextResponse:
+    """Die gefilterte Liste als CSV.
+
+    Dieselben Filter wie ``GET /reviews`` — was man sieht, bekommt man. Ein
+    Export, der etwas anderes enthält als der Bildschirm, ist schlimmer als
+    keiner, weil niemand es nachprüft.
+
+    ``spalten`` ist die kommagetrennte Auswahl aus der Oberfläche; ohne
+    Angabe gilt der Standardsatz. Die Obergrenze ist hart (Wurzel 8): der
+    Export lädt die Liste einmal, nicht seitenweise, und ein Betrieb mit
+    50 000 Bewertungen soll damit keinen Worker blockieren.
+    """
+    try:
+        liste = service.list_reviews(
+            ctx,
+            source=source,
+            property_id=property_id,
+            channel_code=channel_code,
+            unanswered=unanswered,
+            suche=suche.strip() or None if suche else None,
+            rating_min=rating_min,
+            rating_max=rating_max,
+            sentiment=sentiment.value if sentiment else None,
+            limit=MAX_EXPORT,
+            offset=0,
+            fuer_export=True,
+        )
+    except ReviewError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    gewaehlt = [s.strip() for s in spalten.split(",")] if spalten else None
+    heute = date.today().isoformat()
+    return PlainTextResponse(
+        als_csv(liste.items, gewaehlt),
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="bewertungen-{heute}.csv"'
+            )
+        },
+        media_type="text/csv; charset=utf-8",
+    )
+
+
+# ---- KI-Auswertung: was die Texte sagen, nicht nur was die Noten sagen ----
+@router.get("/ai/insights", response_model=AiInsights)
+def ai_insights(
+    service: ReviewsServiceDep,
+    ctx: ViewCtx,
+    von: Annotated[date | None, Query(alias="from")] = None,
+    bis: Annotated[date | None, Query(alias="to")] = None,
+) -> AiInsights:
+    """Stimmungsverteilung, Themen-Rangliste und Stimmungsverlauf.
+
+    Reines Rechnen über gespeicherte Deutungen — kein Modellaufruf, deshalb
+    VIEW_REVIEWS und der normale Ratelimit-Topf. Ohne Angabe: 30 Tage.
+    """
+    heute = date.today()
+    ende = bis or heute
+    start = von or (ende - timedelta(days=30))
+    try:
+        return service.ai_insights(ctx, von=start, bis=ende)
+    except ReviewError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/ai/bilanz/{property_id}", response_model=AiBilanz)
+def ai_bilanz(
+    property_id: str,
+    service: ReviewsServiceDep,
+    ctx: ViewCtx,
+    von: Annotated[date | None, Query(alias="from")] = None,
+    bis: Annotated[date | None, Query(alias="to")] = None,
+) -> AiBilanz:
+    """Was Gäste an DIESEM Objekt wiederholt loben und bemängeln, plus
+    konkrete Empfehlungen.
+
+    EIN Modellaufruf über bis zu 60 Bewertungstexte. Lesend im Sinne der
+    Daten (es entsteht keine Zeile), aber teuer — deshalb ein eigener,
+    strenger Ratelimit-Topf (Wurzel 8: teure/KI-Endpunkte bekommen nicht den
+    default). 422, wenn zu wenige Bewertungen mit Text vorliegen: aus drei
+    Texten ein Muster abzuleiten wäre eine Behauptung.
+    """
+    heute = date.today()
+    ende = bis or heute
+    start = von or (ende - timedelta(days=365))
+    try:
+        return service.ai_bilanz(ctx, property_id=property_id, von=start, bis=ende)
+    except ReviewError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/ai/deuten", response_model=AiRunResponse)
+def ai_deuten(
+    service: ReviewsServiceDep,
+    ctx: ManageCtx,
+    limit: Annotated[int, Query(ge=1, le=50)] = 25,
+) -> AiRunResponse:
+    """Noch nicht ausgewertete Bewertungen jetzt auswerten.
+
+    Der Regelbetrieb läuft über den Tick; dieser Knopf ist für den Betrieb,
+    der gerade eingeschaltet hat und nicht bis morgen warten will. MANAGE,
+    weil er Kosten auslöst und Daten schreibt.
+    """
+    try:
+        gedeutet, fehler = service.ai_deuten(ctx, limit=limit)
+    except ReviewError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    return AiRunResponse(gedeutet=gedeutet, fehler=fehler)
+
+
+# ---- Auto-Bewertungs-Vorlagen: womit der Betrieb seine Gäste bewertet ----
+@router.get("/templates", response_model=AutoTemplateList)
+def list_templates(service: ReviewsServiceDep, ctx: ViewCtx) -> AutoTemplateList:
+    """Alle Vorlagen des Betriebs, neueste zuerst."""
+    try:
+        return service.list_templates(ctx)
+    except ReviewError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/templates", response_model=AutoTemplate, status_code=201)
+def create_template(
+    req: AutoTemplateRequest, service: ReviewsServiceDep, ctx: ManageCtx
+) -> AutoTemplate:
+    """Eine Vorlage anlegen.
+
+    Mehrere Texte sind der Sinn der Sache: der Versand zieht zufällig einen,
+    weil Airbnb identische Bewertungen abstraft. 409, wenn eines der Objekte
+    schon eine aktive Vorlage hat.
+    """
+    try:
+        return service.create_template(ctx, req)
+    except ReviewError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.put("/templates/{template_id}", response_model=AutoTemplate)
+def update_template(
+    template_id: str,
+    req: AutoTemplateRequest,
+    service: ReviewsServiceDep,
+    ctx: ManageCtx,
+) -> AutoTemplate:
+    """Eine Vorlage ändern. Die Objektzuordnung wird ERSETZT, nicht ergänzt —
+    ein abgewähltes Objekt darf nicht weiter bedient werden (Wurzel 1)."""
+    try:
+        return service.update_template(ctx, template_id, req)
+    except ReviewError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/templates/{template_id}/copy", response_model=AutoTemplate)
+def copy_template(
+    template_id: str, service: ReviewsServiceDep, ctx: ManageCtx
+) -> AutoTemplate:
+    """Vorlage duplizieren — inaktiv und ohne Objekte, damit sie die kopierte
+    nicht sofort verdrängt."""
+    try:
+        return service.copy_template(ctx, template_id)
+    except ReviewError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.delete("/templates/{template_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_template(
+    template_id: str, service: ReviewsServiceDep, ctx: ManageCtx
+) -> None:
+    """Vorlage löschen. Bereits geplante Bewertungen bleiben stehen — sie
+    tragen ihren Text schon in der eigenen Zeile."""
+    try:
+        service.delete_template(ctx, template_id)
     except ReviewError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

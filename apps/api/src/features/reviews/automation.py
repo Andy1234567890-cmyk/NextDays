@@ -85,10 +85,48 @@ class ReviewAutomation:
             .or_("auto_review_active.eq.true,guest_reminder_active.eq.true")
             .execute()
         ).data or []
+        nach_tenant = {str(c["tenant_id"]): c for c in configs}
+
+        # Betriebe, die AUSSCHLIESSLICH über Vorlagen arbeiten (0503) und die
+        # alte Betriebs-Automatik nie eingeschaltet haben.
+        #
+        # Ohne diesen Schritt wäre jede Vorlage eine Attrappe: der Lauf startet
+        # oben nur bei `auto_review_active`, das Flag gehört aber zur ALTEN
+        # Konfiguration. Wer eine Vorlage anlegt und aktiv schaltet, hat damit
+        # gesagt, dass er automatisch bewerten will — ihn dann zusätzlich
+        # einen zweiten Schalter finden zu lassen wäre eine stille Falle
+        # (Wurzel 1: der Gegenzustand zum neuen Weg muss mitgepflegt werden).
+        mit_vorlage = (
+            db.table("review_auto_template")
+            .select("tenant_id")
+            .eq("aktiv", True)
+            .execute()
+        ).data or []
+        for zeile in mit_vorlage:
+            tenant_id = str(zeile["tenant_id"])
+            if tenant_id in nach_tenant:
+                continue
+            # Ersatz-Konfiguration mit den Vorgabewerten aus 0263. Sie liefert
+            # nur die Felder, die `fill` als Rückfall liest — die Vorlage
+            # überschreibt sie ohnehin je Objekt.
+            nach_tenant[tenant_id] = {
+                "tenant_id": tenant_id,
+                "auto_review_active": True,
+                "auto_review_after_days": 3,
+                "auto_review_min_rating": None,
+                "auto_review_rating": 5,
+                # KEIN Text: ein Objekt ohne Vorlage soll bei diesen Betrieben
+                # auch keine Bewertung bekommen. `fill` legt dann nichts an,
+                # statt eine leere Bewertung einzuplanen.
+                "auto_review_public": None,
+                "auto_review_private": None,
+                "guest_reminder_active": False,
+                "guest_reminder_after_days": 2,
+            }
 
         geplant = 0
         erinnert = 0
-        for cfg in configs:
+        for cfg in nach_tenant.values():
             tenant_id = str(cfg["tenant_id"])
             if cfg.get("auto_review_active"):
                 geplant += self._rate_due_guests(db, tenant_id, cfg, heute)

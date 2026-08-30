@@ -15,6 +15,7 @@ Zwei Quellen:
 """
 from __future__ import annotations
 
+import secrets
 from datetime import UTC, date, datetime, time, timedelta
 from typing import TYPE_CHECKING, Any
 
@@ -78,14 +79,23 @@ class ReviewQueue:
         Idempotent über die UNIQUE-Indizes (reservation_id bzw. review_id) —
         ein zweiter Lauf legt nichts nach."""
         vorlauf = int(cfg["auto_review_after_days"])
-        angelegt = self._fill_marketplace(tenant_id, cfg, today, vorlauf)
-        angelegt += self._fill_ota(tenant_id, cfg, today, vorlauf)
+        # Vorlagen EINMAL je Lauf laden, nicht je Reservierung: bei 50
+        # Einträgen wären das 50 identische Abfragen für Daten, die sich
+        # während des Laufs nicht ändern.
+        vorlagen = self._vorlagen(tenant_id)
+        angelegt = self._fill_marketplace(tenant_id, cfg, today, vorlauf, vorlagen)
+        angelegt += self._fill_ota(tenant_id, cfg, today, vorlauf, vorlagen)
         if angelegt:
             log.info("review_queue_gefuellt", tenant_id=tenant_id, angelegt=angelegt)
         return angelegt
 
-    def _fill_marketplace(
-        self, tenant_id: str, cfg: dict, today: date, vorlauf: int
+    def _fill_marketplace(  # noqa: PLR0913 — ein Lauf, alles durchgereicht
+        self,
+        tenant_id: str,
+        cfg: dict,
+        today: date,
+        vorlauf: int,
+        vorlagen: dict[str, dict],
     ) -> int:
         bis = today - timedelta(days=vorlauf)
         von = bis - timedelta(days=_LOOKBACK_DAYS)
@@ -102,9 +112,17 @@ class ReviewQueue:
         ).data or []
         offen = self._ohne_eintrag(rows, "reservation_id", "id")
         offen = self._ohne_bestehende_bewertung(offen)
-        min_rating = cfg.get("auto_review_min_rating")
-        if min_rating is not None:
-            offen = self._nur_ab_gastnote(offen, int(min_rating))
+        # Die Schwelle „nur ab X Sternen" steht je Vorlage, also je OBJEKT —
+        # sie kann nicht mehr vor der Schleife weggefiltert werden. Die Noten
+        # werden trotzdem in EINER Abfrage geholt und dann je Zeile geprüft.
+        gastnoten = self._gastnoten(offen)
+        offen = [
+            r
+            for r in offen
+            if self._schwelle_erfuellt(
+                cfg, vorlagen, r.get("property_id"), gastnoten.get(str(r["id"]))
+            )
+        ]
 
         angelegt = 0
         for res in offen:
@@ -120,8 +138,15 @@ class ReviewQueue:
                 "reservation_id": str(res["id"]),
                 "property_id": res.get("property_id"),
                 "guest_name": None,
+                # Vorlauf aus der Vorlage des Objekts, sonst aus der
+                # Betriebs-Konfiguration. Zwei Objekte dürfen verschieden
+                # schnell bewerten — sonst wäre `nach_tagen` an der Vorlage
+                # eine Attrappe.
                 "send_at": _als_zeitpunkt(
-                    (abreise or today) + timedelta(days=vorlauf)
+                    (abreise or today)
+                    + timedelta(
+                        days=self._vorlauf(vorlauf, vorlagen, res.get("property_id"))
+                    )
                 ),
                 # Eigene Frist: die Zwei-Wege-Sichtbarkeit endet nach 14 Tagen.
                 "expires_at": (
@@ -129,13 +154,20 @@ class ReviewQueue:
                     if abreise
                     else None
                 ),
-                **self._inhalt_aus_konfig(cfg),
+                **self._inhalt(cfg, vorlagen, res.get("property_id")),
             }
             if self._anlegen(eintrag):
                 angelegt += 1
         return angelegt
 
-    def _fill_ota(self, tenant_id: str, cfg: dict, today: date, vorlauf: int) -> int:
+    def _fill_ota(  # noqa: PLR0913 — ein Lauf, alles durchgereicht
+        self,
+        tenant_id: str,
+        cfg: dict,
+        today: date,
+        vorlauf: int,
+        vorlagen: dict[str, dict],
+    ) -> int:
         rows = (
             self._db.table("channex_review")
             .select("id, property_id, guest_name, ota, received_at, created_at")
@@ -162,21 +194,107 @@ class ReviewQueue:
                 "review_id": str(review["id"]),
                 "property_id": review.get("property_id"),
                 "guest_name": review.get("guest_name"),
-                "send_at": _als_zeitpunkt(eingegangen + timedelta(days=vorlauf)),
+                "send_at": _als_zeitpunkt(
+                    eingegangen
+                    + timedelta(
+                        days=self._vorlauf(
+                            vorlauf, vorlagen, review.get("property_id")
+                        )
+                    )
+                ),
                 # Die Portal-Frist kennen wir nicht sicher — `is_expired` aus dem
                 # Spiegel entscheidet beim Absenden. Kein geratenes Datum.
                 "expires_at": None,
-                **self._inhalt_aus_konfig(cfg),
+                **self._inhalt(cfg, vorlagen, review.get("property_id")),
             }
             if self._anlegen(eintrag):
                 angelegt += 1
         return angelegt
 
+    def _vorlagen(self, tenant_id: str) -> dict[str, dict]:
+        """Aktive Auto-Bewertungs-Vorlagen, nach Objekt-ID aufgeschlüsselt.
+
+        Ein Objekt hat höchstens EINE aktive Vorlage — die Datenbank erzwingt
+        das (Trigger aus 0503), hier wird es nur genutzt.
+        """
+        vorlagen = (
+            self._db.table("review_auto_template")
+            .select(
+                "id, name, nach_tagen, note, min_gastnote, texte, privater_text, "
+                "review_auto_template_property(property_id)"
+            )
+            .eq("tenant_id", tenant_id)
+            .eq("aktiv", True)
+            .execute()
+        ).data or []
+        je_objekt: dict[str, dict] = {}
+        for vorlage in vorlagen:
+            for zuordnung in vorlage.get("review_auto_template_property") or []:
+                objekt = zuordnung.get("property_id")
+                if objekt:
+                    je_objekt[str(objekt)] = vorlage
+        return je_objekt
+
+    @staticmethod
+    def _vorlauf(
+        standard: int, vorlagen: dict[str, dict], property_id: object
+    ) -> int:
+        """Tage bis zum Versand — aus der Vorlage, sonst der Betriebswert."""
+        vorlage = vorlagen.get(str(property_id)) if property_id else None
+        return int(vorlage["nach_tagen"]) if vorlage else standard
+
+    @staticmethod
+    def _text_waehlen(texte: object) -> str | None:
+        """EINEN Text aus der Vorlage ziehen — zufällig.
+
+        Das ist der ganze Grund für die Mehrzahl. Hostaway begründet es in
+        seiner eigenen Doku, und es ist ein Betriebsbefund, kein Geschmack:
+
+            „Airbnb may penalize this practice, and it may affect the SEO."
+
+        Wer 500-mal denselben Satz schickt, sieht für das Portal aus wie ein
+        Bot. Deshalb `random.choice` und nicht „der erste".
+        """
+        if not isinstance(texte, list):
+            return None
+        brauchbar = [
+            str(t).strip() for t in texte if isinstance(t, str) and t.strip()
+        ]
+        return secrets.choice(brauchbar) if brauchbar else None
+
+    def _inhalt(
+        self, cfg: dict, vorlagen: dict[str, dict], property_id: object
+    ) -> dict[str, Any]:
+        """Vorbelegung des Eintrags — aus der Vorlage des Objekts, sonst aus
+        der Betriebs-Konfiguration.
+
+        Ab hier gehört der Inhalt der ZEILE: eine spätere Änderung der Vorlage
+        ändert bereits geplante Bewertungen nicht mehr. Das ist Absicht — was
+        der Betrieb in seiner Warteschlange gesehen und stehen gelassen hat,
+        soll nicht hinter seinem Rücken zu einem anderen Text werden.
+
+        Der Rückfall auf ``review_automation`` bleibt, solange es Betriebe
+        gibt, die noch keine Vorlage angelegt haben. Ihn zu streichen würde
+        ihre Automatik still abschalten (Wurzel 1).
+        """
+        vorlage = vorlagen.get(str(property_id)) if property_id else None
+        if vorlage is None:
+            return self._inhalt_aus_konfig(cfg)
+        note = int(vorlage["note"])
+        return {
+            "rating": note,
+            "text": self._text_waehlen(vorlage.get("texte")),
+            "private_text": vorlage.get("privater_text"),
+            "score_cleanliness": note,
+            "score_communication": note,
+            "score_house_rules": note,
+            "recommended": note >= 4,
+        }
+
     @staticmethod
     def _inhalt_aus_konfig(cfg: dict) -> dict[str, Any]:
-        """Vorbelegung aus der Automatik-Konfiguration. Ab hier gehört der
-        Inhalt der ZEILE — eine spätere Änderung der Konfiguration ändert
-        bereits geplante Bewertungen nicht mehr."""
+        """Rückfall: die alte Betriebs-Konfiguration (0263), für Objekte ohne
+        eigene Vorlage."""
         note = int(cfg["auto_review_rating"])
         return {
             "rating": note,
@@ -189,6 +307,17 @@ class ReviewQueue:
         }
 
     def _anlegen(self, eintrag: dict) -> bool:
+        """Einen Entwurf in die Warteschlange legen.
+
+        OHNE TEXT wird nichts angelegt. Das ist seit 0503 der Normalfall und
+        kein Sonderfall: ein Betrieb, der nur mit Vorlagen arbeitet, hat für
+        Objekte ohne Vorlage bewusst keinen Text — dort soll auch nichts
+        rausgehen. Ein leerer Eintrag würde entweder eine leere öffentliche
+        Bewertung erzeugen oder Tage später als Fehler auflaufen, und beides
+        wäre eine Folge davon, dass hier nichts geprüft wurde (Wurzel 5).
+        """
+        if not (eintrag.get("text") or "").strip():
+            return False
         try:
             self._db.table("guest_review_queue").insert(eintrag).execute()
         except APIError as exc:
@@ -233,25 +362,54 @@ class ReviewQueue:
         }
         return [r for r in rows if str(r["id"]) not in vorhanden]
 
-    def _nur_ab_gastnote(self, rows: list[dict], min_rating: int) -> list[dict]:
-        """Regel „nur ab X Sternen": es MUSS eine Gast-Bewertung geben, und die
-        muss die Schwelle erreichen. Ohne Gast-Bewertung greift die Regel nicht
-        (kein Rateschluss auf einen guten Aufenthalt)."""
+    def _gastnoten(self, rows: list[dict]) -> dict[str, int]:
+        """Note des Gastes je Reservierung, in EINER Abfrage.
+
+        Vorher wurde direkt nach der Schwelle gefiltert (`.gte("rating", …)`).
+        Das ging, solange die Schwelle für den ganzen Betrieb galt — mit
+        Vorlagen ist sie je Objekt verschieden, also muss die Note selbst
+        herkommen und der Vergleich je Zeile passieren.
+        """
         if not rows:
-            return []
-        ids = [str(r["id"]) for r in rows]
-        gut = {
-            str(x["reservation_id"])
-            for x in (
-                self._db.table("reviews")
-                .select("reservation_id, rating")
-                .in_("reservation_id", ids)
-                .gte("rating", min_rating)
-                .execute()
-            ).data
-            or []
+            return {}
+        zeilen = (
+            self._db.table("reviews")
+            .select("reservation_id, rating")
+            .in_("reservation_id", [str(r["id"]) for r in rows])
+            .execute()
+        ).data or []
+        return {
+            str(z["reservation_id"]): int(z["rating"])
+            for z in zeilen
+            if z.get("reservation_id") and z.get("rating") is not None
         }
-        return [r for r in rows if str(r["id"]) in gut]
+
+    @staticmethod
+    def _schwelle_erfuellt(
+        cfg: dict,
+        vorlagen: dict[str, dict],
+        property_id: object,
+        gastnote: int | None,
+    ) -> bool:
+        """Regel „nur bewerten, wenn der Gast mindestens X gab".
+
+        Schwelle aus der Vorlage des Objekts, sonst aus der Betriebs-
+        Konfiguration. Ohne Schwelle wird immer bewertet.
+
+        Ohne Gast-Bewertung greift die Regel NICHT — kein Rateschluss auf
+        einen guten Aufenthalt. Das war schon vorher so und bleibt: wer sagt
+        „nur ab 4 Sternen", meint „nur wenn der Gast 4 gab", nicht „auch wenn
+        er gar nichts gesagt hat".
+        """
+        vorlage = vorlagen.get(str(property_id)) if property_id else None
+        schwelle = (
+            vorlage.get("min_gastnote")
+            if vorlage is not None
+            else cfg.get("auto_review_min_rating")
+        )
+        if schwelle is None:
+            return True
+        return gastnote is not None and gastnote >= int(schwelle)
 
     # ----------------------------------------------------------------- lesen
     def list_for_tenant(
@@ -429,6 +587,7 @@ class ReviewQueue:
                     house_rules=entry.get("score_house_rules"),
                 ),
             ),
+            aus_warteschlange=True,
         )
 
     def send_due(self, service: ReviewsService, *, now: datetime | None = None) -> int:
@@ -463,4 +622,51 @@ class ReviewQueue:
             .lt("expires_at", jetzt)
             .execute()
         ).data or []
+        return len(rows)
+
+    def erledigt_durch_handarbeit(
+        self,
+        tenant_id: str,
+        *,
+        reservation_id: str | None = None,
+        review_id: str | None = None,
+    ) -> int:
+        """Gegenzustand (Wurzel 1): Wer von Hand bewertet, macht den geplanten
+        Eintrag derselben Reservierung gegenstandslos — er MUSS mit abgeräumt
+        werden.
+
+        Ohne das findet der Betrieb Tage später einen roten Eintrag in seiner
+        Warteschlange ('Für diese Bewertung wurde der Gast bereits bewertet.'),
+        obwohl er alles richtig gemacht hat: der Tick versucht zu senden, das
+        Portal lehnt zu Recht ab, und der Fehler zeigt auf den Falschen.
+
+        Nur 'geplant' wird angefasst. Ein bereits gesendeter oder bewusst
+        übersprungener Eintrag ist Geschichte und wird nicht umgeschrieben."""
+        if not reservation_id and not review_id:
+            return 0
+        query = (
+            self._db.table("guest_review_queue")
+            .update(
+                {
+                    "status": "uebersprungen",
+                    "error": "Von Hand bewertet — der geplante Versand entfällt.",
+                }
+            )
+            .eq("tenant_id", tenant_id)
+            .eq("status", "geplant")
+        )
+        query = (
+            query.eq("review_id", review_id)
+            if review_id
+            else query.eq("reservation_id", str(reservation_id))
+        )
+        rows = (query.execute()).data or []
+        if rows:
+            log.info(
+                "review_queue_durch_handarbeit_erledigt",
+                tenant_id=tenant_id,
+                count=len(rows),
+                reservation_id=reservation_id,
+                review_id=review_id,
+            )
         return len(rows)

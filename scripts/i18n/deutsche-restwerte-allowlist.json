@@ -4163,6 +4163,110 @@
       "sprachen": "alle"
     },
     {
+      "schluessel": "reviews.aiDayCounts",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "sv"
+      ],
+      "notiz": "alle drei Woerter lauten in da/sv gleich; Wort fuer Wort geprueft am 30.08.2026. en war ein echter Uebersetzungsfehler (endete auf 'neutral' statt 'negative') und wurde behoben, nicht hier eingetragen"
+    },
+    {
+      "schluessel": "reviews.aiNegative",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "ro"
+      ],
+      "notiz": "da/ro schreiben 'Negativ' wortgleich"
+    },
+    {
+      "schluessel": "reviews.aiNeutral",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "es"
+      ],
+      "notiz": "'Neutral' lautet in diesen Sprachen gleich"
+    },
+    {
+      "schluessel": "reviews.aiPositive",
+      "grund": "international",
+      "sprachen": [
+        "da"
+      ],
+      "notiz": "da schreibt 'Positiv' wortgleich"
+    },
+    {
+      "schluessel": "reviews.autoRatingLabel",
+      "grund": "international",
+      "sprachen": [
+        "fr"
+      ],
+      "notiz": "franzoesisch 'Note' = Note, echtes Homograph"
+    },
+    {
+      "schluessel": "reviews.column.replied",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "hr",
+        "mt",
+        "nl",
+        "pl",
+        "ro",
+        "sl",
+        "sv"
+      ],
+      "notiz": "'Status' ist in diesen Sprachen das gebraeuchliche Wort"
+    },
+    {
+      "schluessel": "reviews.column.scale",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "hr",
+        "lv",
+        "mt",
+        "pl",
+        "sv"
+      ],
+      "notiz": "'Skala' lautet in diesen Sprachen gleich"
+    },
+    {
+      "schluessel": "reviews.column.score_5",
+      "grund": "international",
+      "sprachen": [
+        "fr"
+      ],
+      "notiz": "franzoesisch 'Note' = Note, echtes Homograph"
+    },
+    {
+      "schluessel": "reviews.filterRating",
+      "grund": "international",
+      "sprachen": [
+        "fr"
+      ],
+      "notiz": "franzoesisch 'Note' = Note, echtes Homograph"
+    },
+    {
+      "schluessel": "reviews.filters",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "et",
+        "hr",
+        "nl",
+        "sk",
+        "sl",
+        "sv"
+      ],
+      "notiz": "'Filter' ist in diesen Sprachen das gebraeuchliche Wort"
+    },
+    {
       "schluessel": "website.blog.aufStartseite",
       "grund": "vorlagenfeld",
       "sprachen": "alle"

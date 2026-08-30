@@ -4,7 +4,7 @@
 // EINE Liste über alle Kanäle — myBestDays-Marktplatz und die Portale
 // (Booking.com/Airbnb/Expedia) kommen normalisiert aus dem Backend, die
 // Rohnote samt ihrer Skala bleibt erhalten.
-import { ApiError, api } from "@/lib/api";
+import { ApiError, api, apiBasis } from "@/lib/api";
 import { currentToken } from "@/lib/session-token";
 
 /** Herkunft einer Bewertung. Bestimmt den Schreibpfad: der Marktplatz wird
@@ -18,6 +18,11 @@ export type CategoryScore = {
   key: string;
   score: number;
   scale: ReviewScale;
+  /** Aus welchen Kanälen dieser Durchschnitt stammt. Leer an einer einzelnen
+   *  Bewertung, gefüllt im Qualitäts-Dashboard: „comfort" gibt es nur bei
+   *  Booking.com, „accuracy" nur bei Airbnb — ein Durchschnitt über
+   *  verschiedene Grundgesamtheiten ohne diesen Hinweis ist irreführend. */
+  channels: string[];
 };
 
 export type UnifiedReview = {
@@ -46,6 +51,83 @@ export type UnifiedReview = {
   ota_reservation_id: string | null;
   guest_rated: boolean;
   received_at: string | null;
+  /** KI-Deutung. `null` = noch nicht ausgewertet (nicht: nichts gefunden). */
+  ai: ReviewAi | null;
+};
+
+/** Stimmung eines Bewertungstextes. Bewusst NICHT die Note: ein Gast kann
+ *  fünf Sterne geben und im Text meckern — genau dieser Fall taucht in keiner
+ *  Statistik auf. */
+export type AiSentiment = "positiv" | "neutral" | "negativ";
+
+/** Der geschlossene Themen-Katalog. Deckungsgleich mit `ki_deutung.THEMEN`
+ *  (Backend) und der Domain `public.ki_bewertungsthema` (0501). Geschlossen,
+ *  weil freie Themen nicht vergleichbar wären — „Lärm", „Lärmbelästigung" und
+ *  „laute Nachbarn" wären drei Zeilen in jeder Rangliste. */
+export type AiThemeKey =
+  | "sauberkeit"
+  | "lage"
+  | "ausstattung"
+  | "kommunikation"
+  | "anreise"
+  | "laerm"
+  | "preis";
+
+export type AiTheme = {
+  thema: AiThemeKey;
+  /** Die Bewertung DIESES Themas, nicht der Gesamteindruck. */
+  richtung: AiSentiment;
+};
+
+/** Was die KI aus dem Text gelesen hat. `null` an der Bewertung heißt „noch
+ *  nicht ausgewertet" — ausdrücklich nicht „nichts gefunden". */
+export type ReviewAi = {
+  stimmung: AiSentiment;
+  themen: AiTheme[];
+  kernaussage: string | null;
+  bewertet_at: string;
+};
+
+export type AiThemeCount = {
+  thema: AiThemeKey;
+  positiv: number;
+  neutral: number;
+  negativ: number;
+};
+
+export type AiSentimentPoint = {
+  date: string;
+  positiv: number;
+  neutral: number;
+  negativ: number;
+};
+
+export type AiInsights = {
+  from_date: string;
+  to_date: string;
+  /** Alle Bewertungen im Zeitraum — auch die noch nicht ausgewerteten. */
+  gesamt: number;
+  /** Davon ausgewertet. Steht neben `gesamt`, damit sichtbar ist, auf wie
+   *  viel die Aussage beruht: eine Themenrangliste aus 12 von 400
+   *  Bewertungen ist keine Aussage über das Objekt. */
+  ausgewertet: number;
+  positiv: number;
+  neutral: number;
+  negativ: number;
+  themen: AiThemeCount[];
+  series: AiSentimentPoint[];
+};
+
+export type AiBilanz = {
+  property_id: string;
+  property_title: string | null;
+  /** Anzahl der eingegangenen Bewertungen — ohne sie wäre nicht
+   *  unterscheidbar, ob die Empfehlung auf drei oder sechzig Texten beruht. */
+  grundlage: number;
+  staerken: string[];
+  schwaechen: string[];
+  empfehlungen: string[];
+  zusammenfassung: string;
 };
 
 export type ReviewList = {
@@ -163,11 +245,54 @@ export type QualityDashboard = {
   by_property: QualityProperty[];
 };
 
+/** Eine Auto-Bewertungs-Vorlage: womit der Betrieb seine Gäste automatisch
+ *  bewertet. */
+export type AutoTemplate = {
+  id: string;
+  name: string;
+  aktiv: boolean;
+  /** Tage nach Abreise bis zum Versand. */
+  nach_tagen: number;
+  note: number;
+  /** „Nur bewerten, wenn der Gast selbst mindestens so gut bewertet hat."
+   *  null = immer bewerten. */
+  min_gastnote: number | null;
+  /** Mehrere Texte, aus denen der Versand zufällig einen zieht. Der Grund ist
+   *  ein Betriebsbefund: Airbnb straft identische Bewertungen ab. */
+  texte: string[];
+  privater_text: string | null;
+  property_ids: string[];
+  created_at: string | null;
+};
+
+export type AutoTemplateList = { items: AutoTemplate[] };
+
+export type AutoTemplateRequest = {
+  name: string;
+  aktiv: boolean;
+  nach_tagen: number;
+  note: number;
+  min_gastnote: number | null;
+  texte: string[];
+  privater_text: string | null;
+  property_ids: string[];
+};
+
 export type ReviewFilter = {
   source?: ReviewSource;
   propertyId?: string;
   channelCode?: string;
   unanswered?: boolean;
+  /** Volltext im Bewertungstext — NICHT im Gastnamen: der ist auf der
+   *  Marktplatzseite bewusst maskiert, und eine Namenssuche liesse ihn
+   *  Zeichen für Zeichen erraten. */
+  suche?: string;
+  /** Notenbereich in der 5er-Skala. Das Backend rechnet für Portal-
+   *  Bewertungen selbst auf 0..10 um — die gemischte Liste soll dem Nutzer
+   *  nicht abverlangen zu wissen, welcher Kanal welche Skala führt. */
+  ratingMin?: number;
+  ratingMax?: number;
+  sentiment?: AiSentiment;
   limit?: number;
   offset?: number;
 };
@@ -195,12 +320,49 @@ async function call<T>(
   }
 }
 
+/** Wie `call`, aber für Antworten, die KEIN JSON sind (CSV).
+ *
+ *  Eigener Weg statt `api<string>`: das würde `res.json()` versuchen und an
+ *  einer CSV mit „Unexpected token" scheitern — der Nutzer bekäme einen
+ *  Parserfehler zu sehen, wo in Wahrheit alles funktioniert hat.
+ */
+async function callText(path: string): Promise<Result<string>> {
+  const token = await currentToken();
+  if (!token) return { ok: false, error: "Nicht angemeldet." };
+  let res: Response;
+  try {
+    res = await fetch(`${apiBasis()}${path}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+  } catch {
+    return { ok: false, error: "Backend nicht erreichbar.", status: 503 };
+  }
+  if (!res.ok) {
+    // Der Fehlerfall ist sehr wohl JSON (FastAPIs `detail`) — nur der
+    // Erfolgsfall nicht.
+    let meldung = `Fehler ${res.status}`;
+    try {
+      const daten = await res.json();
+      if (typeof daten?.detail === "string") meldung = daten.detail;
+    } catch {
+      // kein JSON-Body — Standardmeldung behalten
+    }
+    return { ok: false, error: meldung, status: res.status };
+  }
+  return { ok: true, data: await res.text() };
+}
+
 export async function listReviews(filter: ReviewFilter = {}): Promise<Result<ReviewList>> {
   const qs = new URLSearchParams();
   if (filter.source) qs.set("source", filter.source);
   if (filter.propertyId) qs.set("property_id", filter.propertyId);
   if (filter.channelCode) qs.set("channel_code", filter.channelCode);
   if (filter.unanswered) qs.set("unanswered", "true");
+  if (filter.suche) qs.set("suche", filter.suche);
+  if (filter.ratingMin != null) qs.set("rating_min", String(filter.ratingMin));
+  if (filter.ratingMax != null) qs.set("rating_max", String(filter.ratingMax));
+  if (filter.sentiment) qs.set("sentiment", filter.sentiment);
   if (filter.limit != null) qs.set("limit", String(filter.limit));
   if (filter.offset != null) qs.set("offset", String(filter.offset));
   const suffix = qs.size ? `?${qs.toString()}` : "";
@@ -305,4 +467,96 @@ export async function reviewQuality(
   if (range.to) qs.set("to", range.to);
   const suffix = qs.size ? `?${qs.toString()}` : "";
   return call(`/reviews/quality${suffix}`);
+}
+
+// --- KI-Auswertung -----------------------------------------------------------
+
+/** Stimmungsverteilung, Themen-Rangliste und Verlauf. Kein Modellaufruf —
+ *  reines Rechnen über gespeicherte Deutungen, deshalb so billig wie jede
+ *  andere Liste. */
+export async function reviewAiInsights(
+  range: { from?: string; to?: string } = {},
+): Promise<Result<AiInsights>> {
+  const qs = new URLSearchParams();
+  if (range.from) qs.set("from", range.from);
+  if (range.to) qs.set("to", range.to);
+  const suffix = qs.size ? `?${qs.toString()}` : "";
+  return call(`/reviews/ai/insights${suffix}`);
+}
+
+/** Was Gäste an DIESEM Objekt wiederholt loben und bemängeln, plus konkrete
+ *  Empfehlungen. EIN Modellaufruf über bis zu 60 Texte — dauert Sekunden und
+ *  kostet, deshalb nie automatisch beim Seitenaufruf. 422, wenn zu wenige
+ *  Bewertungen mit Text vorliegen. */
+export async function reviewAiBilanz(
+  propertyId: string,
+  range: { from?: string; to?: string } = {},
+): Promise<Result<AiBilanz>> {
+  const qs = new URLSearchParams();
+  if (range.from) qs.set("from", range.from);
+  if (range.to) qs.set("to", range.to);
+  const suffix = qs.size ? `?${qs.toString()}` : "";
+  return call(`/reviews/ai/bilanz/${propertyId}${suffix}`);
+}
+
+/** Noch nicht ausgewertete Bewertungen jetzt auswerten. Der Regelbetrieb
+ *  läuft über den Tick; das hier ist für den Betrieb, der gerade
+ *  eingeschaltet hat und nicht bis morgen warten will. */
+export async function reviewAiDeuten(
+  limit = 25,
+): Promise<Result<{ gedeutet: number; fehler: number }>> {
+  return call(`/reviews/ai/deuten?limit=${limit}`, { method: "POST" });
+}
+
+/** Die gefilterte Liste als CSV-Text. Dieselben Filter wie die Liste — was
+ *  man sieht, bekommt man. `spalten` ist die Auswahl aus der Tabelle; ohne
+ *  Angabe gilt der Standardsatz des Backends. */
+export async function exportReviewsCsv(
+  filter: ReviewFilter = {},
+  spalten?: readonly string[],
+): Promise<Result<string>> {
+  const qs = new URLSearchParams();
+  if (filter.source) qs.set("source", filter.source);
+  if (filter.propertyId) qs.set("property_id", filter.propertyId);
+  if (filter.channelCode) qs.set("channel_code", filter.channelCode);
+  if (filter.unanswered) qs.set("unanswered", "true");
+  if (filter.suche) qs.set("suche", filter.suche);
+  if (filter.ratingMin != null) qs.set("rating_min", String(filter.ratingMin));
+  if (filter.ratingMax != null) qs.set("rating_max", String(filter.ratingMax));
+  if (filter.sentiment) qs.set("sentiment", filter.sentiment);
+  if (spalten?.length) qs.set("spalten", spalten.join(","));
+  const suffix = qs.size ? `?${qs.toString()}` : "";
+  return callText(`/reviews/export${suffix}`);
+}
+
+// --- Auto-Bewertungs-Vorlagen ------------------------------------------------
+
+export async function listAutoTemplates(): Promise<Result<AutoTemplateList>> {
+  return call("/reviews/templates");
+}
+
+export async function createAutoTemplate(
+  req: AutoTemplateRequest,
+): Promise<Result<AutoTemplate>> {
+  return call("/reviews/templates", { method: "POST", body: req });
+}
+
+export async function updateAutoTemplate(
+  id: string,
+  req: AutoTemplateRequest,
+): Promise<Result<AutoTemplate>> {
+  return call(`/reviews/templates/${id}`, { method: "PUT", body: req });
+}
+
+/** Duplizieren — die Kopie entsteht INAKTIV und ohne Objekte, damit sie die
+ *  kopierte Vorlage nicht sofort verdrängt (ein Objekt darf nur eine aktive
+ *  haben). */
+export async function copyAutoTemplate(
+  id: string,
+): Promise<Result<AutoTemplate>> {
+  return call(`/reviews/templates/${id}/copy`, { method: "POST" });
+}
+
+export async function deleteAutoTemplate(id: string): Promise<Result<void>> {
+  return call(`/reviews/templates/${id}`, { method: "DELETE" });
 }
