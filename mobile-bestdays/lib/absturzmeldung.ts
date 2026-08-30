@@ -24,10 +24,35 @@
 //     Release nicht einmal das Protokoll eines fremden Geraets die
 //     Komponentenkette traegt.
 //
-// KEIN Absenden an einen Dienst: solange kein Crash-Reporting eingerichtet ist,
-// waere jeder Netzaufruf von hier eine Erfindung. Diese Datei ist die EINE
-// Stelle, an der ein solcher Aufruf spaeter hinzukommt (Crashlytics) — dann an
-// genau einer Stelle statt an dreissig.
+// SEIT 30.08.2026 WIRD GESENDET — und warum das noetig wurde:
+// ===========================================================
+// Das Protokoll geht nach `adb logcat`. Auf dem Geraet eines Beta-Testers ist
+// das dasselbe wie gar nichts: es liest nur, wer ein USB-Kabel und die
+// Android-Werkzeuge hat. Der reale Verlauf (28.–30.08.2026): die App stuerzte
+// beim Oeffnen ab, die Testerin sagte zu Recht „ich bin kein Entwickler und
+// kann Dir diese Dinge nicht liefern" — und die eingebaute Diagnose konnte
+// trotzdem nichts beitragen, weil niemand an sie herankam. Eine Diagnose, die
+// nur mit Kabel lesbar ist, ist im Beta-Betrieb keine.
+//
+// Gesendet wird an `POST /diagnostics/startabsturz` — OHNE Anmeldung. Das ist
+// der Kern: der regulaere Weg `/diagnostics/events` verlangt ein Token, und
+// genau die gesuchten Abstuerze passieren, BEVOR eines existiert („Die geht
+// kurz an und verschwindet augenblicklich sofort wieder"). Ein Meldeweg mit
+// Token-Zwang bekommt diese Klasse Fehler per Konstruktion nie zu sehen.
+//
+// Streng best-effort: kein `await` im Absturzpfad, keine Wiederholung, jeder
+// Fehler beim Senden wird verschluckt. Was hier wirft, waere ein Absturz
+// WAEHREND der Absturzbehandlung.
+
+/**
+ * Zeitpunkt des Modul-Ladens ≈ Prozessstart.
+ *
+ * MUSS vor jeder Verwendung stehen: `const` wird nicht hochgezogen, ein
+ * Zugriff davor waere ein ReferenceError — im Absturzpfad also ein zweiter
+ * Absturz. `index.js` laedt dieses Modul als erstes, der Wert liegt damit
+ * dicht am echten Prozessstart.
+ */
+const PROZESS_START = Date.now();
 
 /** Kurzform fuer das Protokoll: Meldung ohne Stacktrace, auf 200 Zeichen. */
 function kurz(fehler: unknown): string {
@@ -49,14 +74,91 @@ export function protokolliereAbsturz(
   komponentenkette?: string,
 ): void {
   // Immer, auch im Release: das ist die Zeile, die in `adb logcat` und in
-  // `dumpsys dropbox` landet und die einzige Spur bleibt, solange kein
-  // Crash-Reporting laeuft. Fuer den Kunden unsichtbar.
+  // `dumpsys dropbox` landet. Fuer den Kunden unsichtbar.
   console.error("[absturz]", kurz(fehler));
   if (__DEV__) {
     if (fehler instanceof Error && fehler.stack) console.error(fehler.stack);
     if (komponentenkette) console.error(komponentenkette);
   }
+  absturzSenden(fehler, komponentenkette);
 }
+
+/**
+ * Wie oft diese Sitzung schon gesendet hat.
+ *
+ * Ein Absturz kommt selten allein: reisst der Baum, feuern Fehlergrenze und
+ * globaler Handler nacheinander, und eine kaputte Render-Schleife kann
+ * dutzende Male werfen. Ohne Deckel waere das ein Sturm gegen die eigene API —
+ * ausgerechnet aus einer App, die gerade abstuerzt. Fuenf reichen: die ERSTE
+ * Meldung traegt die Ursache, alles danach ist Folgeschaden.
+ */
+let gesendet = 0;
+const MAX_MELDUNGEN = 5;
+
+/**
+ * Den Absturz an die eigene API melden — ohne Anmeldung, ohne `await`.
+ *
+ * BEWUSST OHNE `lib/api.ts`: dieses Modul haengt an Konfiguration, Token und
+ * Schluesselbund. Beim Startabsturz ist womoeglich genau das kaputt, was den
+ * Absturz verursacht hat — der Meldeweg darf nicht dieselben Teile brauchen
+ * wie der Weg, ueber den gestolpert wurde. Deshalb nacktes `fetch`.
+ *
+ * Auch bewusst: KEIN Token, keine Konto-Kennung. Was hier ankommt, ist
+ * anonym; die Zuordnung geschieht ueber Zeitpunkt und Geraet. Ein Token, das
+ * beim Startabsturz vielleicht gar nicht existiert, waere kein Gewinn.
+ */
+function absturzSenden(fehler: unknown, komponentenkette?: string): void {
+  if (gesendet >= MAX_MELDUNGEN) return;
+  gesendet += 1;
+  try {
+    // `require` statt Top-Level-Import: `lib/config` zieht die gitignorierte
+    // `config.secrets` nach. Fehlt sie auf einem Arbeitsplatz, waere ein
+    // Top-Level-Import ein Wurf beim LADEN dieser Datei — also ein Absturz in
+    // genau dem Modul, das Abstuerze melden soll.
+    const { CONFIG } = require("@/lib/config") as {
+      CONFIG: { apiUrl: string };
+    };
+    const { Platform } = require("react-native") as {
+      Platform: { OS: string; Version: string | number };
+    };
+    fetch(`${CONFIG.apiUrl}/api/v1/diagnostics/startabsturz`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        events: [
+          {
+            app: "mobile",
+            kind: "error",
+            message: kurz(fehler),
+            context: {
+              // Der Stacktrace ist der eigentliche Wert der Meldung — ohne ihn
+              // weiss man DASS es kracht, nicht WO. Er geht an unseren eigenen
+              // Server, nicht auf den Bildschirm des Kunden.
+              stack:
+                fehler instanceof Error && fehler.stack
+                  ? fehler.stack.slice(0, 4000)
+                  : null,
+              komponentenkette: komponentenkette?.slice(0, 2000) ?? null,
+              plattform: Platform.OS,
+              android: String(Platform.Version),
+              // Trennt den Startabsturz vom Fehler mitten im Betrieb: die
+              // ersten Sekunden nach dem Prozessstart sind genau das Fenster,
+              // aus dem uns bisher jede Meldung fehlte.
+              ms_seit_start: Date.now() - PROZESS_START,
+            },
+          },
+        ],
+      }),
+    }).catch(() => {
+      // Best-effort. Kein Netz, kein Server, keine Wiederholung — die App
+      // stuerzt gerade ab, ein Fehler HIER waere der zweite Absturz.
+    });
+  } catch {
+    // Ebenso: was beim Zusammenbauen der Meldung wirft, darf den
+    // Absturzpfad nicht zusaetzlich kippen.
+  }
+}
+
 
 /**
  * Die Absturz-Diagnose SELBST pruefen — auf einem echten Geraet.

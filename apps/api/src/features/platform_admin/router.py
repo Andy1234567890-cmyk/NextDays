@@ -718,6 +718,32 @@ def active_debug_sessions(
     return [s.model_dump(mode="json") for s in result]
 
 
+@router.get("/diagnostics/startabstuerze")
+def startabstuerze(
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    request: Request,
+    limit: int = Query(100, ge=1, le=200),
+) -> dict:
+    """Abstürze der mobilen Apps beim Start — ohne Konto, ohne Freigabe.
+
+    Diese Meldungen entstehen, BEVOR jemand angemeldet ist; sie tragen deshalb
+    kein Konto und können keiner Kunden-Freigabe zugeordnet werden. Ohne diese
+    Liste wären sie unsichtbar — genau das war zwei Tage lang der Zustand
+    (28.–30.08.2026): die App stürzte bei den Beta-Testern beim Öffnen ab, und
+    niemand konnte sagen, warum.
+
+    Inhalt ist ausschließlich Technisches: Meldung, Stacktrace, Plattform,
+    Zeit seit Prozessstart. Der Zugriff wird protokolliert wie jeder andere
+    Blick in die Diagnose.
+    """
+    from src.features.diagnostics.service import DiagnosticsService
+
+    result = DiagnosticsService(db=service.db).startabstuerze(limit=limit)
+    service.log_action(ctx, "diagnostics.startabstuerze", request=request)
+    return result.model_dump(mode="json")
+
+
 @router.get("/diagnostics/sessions/{session_id}")
 def session_events(
     session_id: str,

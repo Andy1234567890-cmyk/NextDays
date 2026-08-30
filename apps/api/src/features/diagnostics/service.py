@@ -254,6 +254,35 @@ class DiagnosticsService:
         ).data or []
         return [self._to_session(r) for r in rows]
 
+    def startabstuerze(self, *, limit: int = 100) -> DiagnosticList:
+        """Die anonymen Startabstürze der mobilen Apps (30.08.2026).
+
+        BRAUCHT KEINE FREIGABE — und darf keine brauchen: diese Meldungen
+        tragen kein Konto (`user_id`/`tenant_id` sind `None`), weil sie
+        entstehen, BEVOR jemand angemeldet ist. Eine Freigabe setzt aber ein
+        Konto voraus. Der reguläre Weg `events_for_session` könnte sie deshalb
+        NIE zeigen, so gut die Freigabe auch wäre.
+
+        Das ist keine Lücke in der Einwilligung, sondern ihre Kehrseite: was
+        hier steht, ist ausschließlich Technisches und gehört per Konstruktion
+        niemandem — Meldung, Stacktrace, Plattform, Zeit. Wer es liest, ist
+        weiterhin nur der Backoffice-Zugang, und der Zugriff wird protokolliert.
+        """
+        limit = max(1, min(_MAX_LIMIT, limit))
+        rows = (
+            self._db.table("support_diagnostics")
+            .select("*")
+            .is_("user_id", "null")
+            .eq("app", "mobile")
+            .eq("kind", "error")
+            .order("created_at", desc=True)
+            .limit(limit)
+            .execute()
+        ).data or []
+        return DiagnosticList(
+            items=[DiagnosticRow(**r) for r in rows], total=len(rows)
+        )
+
     def events_for_session(
         self, session_id: str, *, limit: int = 100
     ) -> DiagnosticList:

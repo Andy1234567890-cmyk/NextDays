@@ -46,6 +46,36 @@ def report_events(
     return {"gespeichert": n}
 
 
+@router.post("/startabsturz")
+def report_startabsturz(
+    batch: DiagnosticBatch,
+    service: DiagnosticsServiceDep,
+) -> dict[str, int]:
+    """Absturz beim App-Start melden — OHNE Anmeldung.
+
+    WARUM OHNE ANMELDUNG:
+    `/events` verlangt `CurrentUser`. Genau die Abstürze, die uns fehlen,
+    passieren aber BEVOR die Anmeldung steht: „Die geht kurz an und
+    verschwindet augenblicklich sofort wieder" (Beta-Tester, 30.08.2026). Ein
+    Meldeweg, der ein gültiges Token voraussetzt, ist für diese Klasse Fehler
+    wirkungslos — er bekommt sie per Konstruktion nie zu sehen.
+
+    WAS DAS FÜR DIE SICHERHEIT HEISST:
+    Die Route ist offen, also gilt sie als angreifbar (Wurzel 8). Deshalb:
+    kein Konto, kein Tenant (`user_id`/`tenant_id` bleiben `None` — eine vom
+    Client behauptete Identität wäre wertlos und irreführend), nur die
+    technischen Arten, strenger Rate-Limit-Bucket `public_support` und
+    dieselben Größengrenzen wie bei `/events` (Pydantic: max. 50 Ereignisse,
+    500 Zeichen je Meldung, 16 KB Kontext).
+
+    Die einwilligungspflichtigen Arten (`navigation`/`aktion`/`aufruf`) fallen
+    hier IMMER weg: `record` verwirft sie ohne aktive Freigabe, und ohne
+    Identität kann es keine geben (fail-closed, Wurzel 3).
+    """
+    n = service.record(batch, user_id=None, guest_id=None, tenant_id=None)
+    return {"gespeichert": n}
+
+
 @router.get("/debug", response_model=list[DebugSession])
 def my_debug_sessions(
     ctx: CurrentUser, service: DiagnosticsServiceDep

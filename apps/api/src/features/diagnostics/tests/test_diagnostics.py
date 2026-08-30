@@ -252,3 +252,64 @@ def test_aktivitaet_mit_freigabe_wird_gespeichert() -> None:
         batch, user_id="u1", guest_id=None, tenant_id="t1"
     )
     assert n == 2
+
+
+# --- Startabsturz: der anmeldungsfreie Meldeweg ----------------------------
+def test_startabsturz_ohne_identitaet_wird_gespeichert() -> None:
+    """Ein Absturz VOR der Anmeldung muss ankommen (30.08.2026).
+
+    Der reguläre Weg `/events` verlangt `CurrentUser` — genau die gesuchten
+    Abstürze passieren aber, bevor ein Token existiert („Die geht kurz an und
+    verschwindet augenblicklich sofort wieder"). Ohne diesen Weg bleibt diese
+    Klasse Fehler dauerhaft unsichtbar.
+    """
+    db = _record_db(hat_freigabe=False)
+    batch = DiagnosticBatch(
+        events=[
+            DiagnosticEvent(app="mobile", kind="error", message="Start: Boom")
+        ]
+    )
+    n = DiagnosticsService(db=db).record(
+        batch, user_id=None, guest_id=None, tenant_id=None
+    )
+    assert n == 1
+
+
+def test_startabsturz_nimmt_keine_aktivitaetsdaten() -> None:
+    """Ohne Identität kann es keine Freigabe geben — Aktivitätsdaten fallen
+    hier IMMER weg (fail-closed, Wurzel 3). Sonst wäre die offene Route ein
+    Weg, die Einwilligung schlicht zu umgehen."""
+    db = _record_db(hat_freigabe=False)
+    batch = DiagnosticBatch(
+        events=[
+            DiagnosticEvent(app="mobile", kind="error", message="Start: Boom"),
+            DiagnosticEvent(app="mobile", kind="navigation", message="Seite"),
+            DiagnosticEvent(app="mobile", kind="aufruf", message="GET /x"),
+        ]
+    )
+    n = DiagnosticsService(db=db).record(
+        batch, user_id=None, guest_id=None, tenant_id=None
+    )
+    assert n == 1  # nur der technische Fehler
+
+
+def test_startabsturz_route_verlangt_KEIN_token() -> None:
+    """Die Route muss OHNE Anmeldung erreichbar sein — das ist ihr ganzer Zweck.
+
+    Gegenprobe im selben Test: `/events` MUSS weiterhin ein Token verlangen.
+    Rutschte dort je die Absicherung heraus, faellt dieser Test — der offene
+    Weg ist die Ausnahme fuer Startabstuerze, nicht der neue Normalfall.
+    """
+    from fastapi.testclient import TestClient  # noqa: PLC0415
+
+    from src.main import create_app  # noqa: PLC0415
+
+    client = TestClient(create_app())
+    nutzlast = {
+        "events": [{"app": "mobile", "kind": "error", "message": "Start: Boom"}]
+    }
+    offen = client.post("/api/v1/diagnostics/startabsturz", json=nutzlast)
+    assert offen.status_code != 401, offen.text
+
+    geschuetzt = client.post("/api/v1/diagnostics/events", json=nutzlast)
+    assert geschuetzt.status_code == 401

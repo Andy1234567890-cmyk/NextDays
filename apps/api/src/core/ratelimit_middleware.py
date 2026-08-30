@@ -309,6 +309,15 @@ _KONTO_LOESCHUNG_PATHS = ("/account-deletion/request",
 # öffentlichen Formulare — bei Redis-Ausfall lieber abweisen.
 _KONTAKT_PATHS = ("/contact/message",)
 
+# Absturzmeldung der mobilen Apps VOR der Anmeldung (30.08.2026). Sie muss
+# offen sein, weil genau die gesuchten Abstuerze passieren, bevor ein Token
+# existiert — damit ist sie aber auch von jedem aufrufbar und schreibt in eine
+# Tabelle. Derselbe strenge Bucket wie die uebrigen offenen Endpunkte; die
+# Groessen deckelt Pydantic (50 Ereignisse, 500 Zeichen, 16 KB Kontext).
+# Fail-closed bei Redis-Ausfall: eine verlorene Diagnosezeile ist harmlos, ein
+# offenes Schreibrohr nicht.
+_STARTABSTURZ_PATHS = ("/diagnostics/startabsturz",)
+
 # Formulare auf den Kunden-Websites des Baukastens (0436/0445). Genau dieselbe
 # Gefahr wie beim Kontaktformular, nur mit einem Zusatz: der zweite Aufruf
 # bringt eine DATEI von bis zu 10 MB. Im Default-Bucket (300/60 je IP) waeren
@@ -406,6 +415,7 @@ _BUCKET_REGELN: tuple[tuple[str, tuple[str, ...], str, bool], ...] = (
     ("public_support", _KONTO_LOESCHUNG_PATHS, "public_support", True),
     ("public_support", _KONTAKT_PATHS, "public_support", True),
     ("public_support", _SITE_FORM_PATHS, "public_support", True),
+    ("public_support", _STARTABSTURZ_PATHS, "public_support", True),
     ("ai", _AI_PATHS, "ai", False),
     ("ai", _BLOG_IMPORT_PATHS, "ai", False),
     ("website_ki", _WEBSITE_KI_PATHS, "website_ki", False),

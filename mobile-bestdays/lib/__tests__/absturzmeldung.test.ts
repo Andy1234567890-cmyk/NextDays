@@ -147,3 +147,65 @@ describe("absturzHandlerSetzen", () => {
     expect(() => frischesModul().absturzHandlerSetzen()).not.toThrow();
   });
 });
+
+// --- Senden an die eigene API (30.08.2026) ---------------------------------
+//
+// DER ANLASS: die Protokollzeile geht nach `adb logcat`. Auf dem Geraet eines
+// Beta-Testers ist das dasselbe wie gar nichts — es liest nur, wer ein Kabel
+// und die Android-Werkzeuge hat. Zwei Tage lang stuerzte die App bei den
+// Testern ab, ohne dass irgendjemand an die Ursache herankam.
+describe("absturzSenden", () => {
+  let fetchSpion: jest.Mock;
+  let konsole: jest.SpyInstance;
+
+  beforeEach(() => {
+    fetchSpion = jest.fn(() => Promise.resolve({ ok: true } as Response));
+    (globalThis as unknown as { fetch: unknown }).fetch = fetchSpion;
+    konsole = jest.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    konsole.mockRestore();
+  });
+
+  it("meldet den Absturz an die API — mit Stacktrace", () => {
+    frischesModul().protokolliereAbsturz(new Error("Start kaputt"));
+    expect(fetchSpion).toHaveBeenCalledTimes(1);
+    const [url, opts] = fetchSpion.mock.calls[0] as [string, RequestInit];
+    expect(url).toContain("/api/v1/diagnostics/startabsturz");
+    const leib = JSON.parse(String(opts.body));
+    expect(leib.events[0].message).toContain("Start kaputt");
+    // Der Stacktrace ist der eigentliche Wert: ohne ihn weiss man DASS es
+    // kracht, nicht WO.
+    expect(leib.events[0].context.stack).toContain("Start kaputt");
+    expect(leib.events[0].context.ms_seit_start).toBeGreaterThanOrEqual(0);
+  });
+
+  it("sendet hoechstens fuenf Mal je Sitzung", () => {
+    // Ein Absturz kommt selten allein: Fehlergrenze und globaler Handler
+    // feuern nacheinander, eine kaputte Render-Schleife dutzendfach. Ohne
+    // Deckel waere das ein Sturm gegen die eigene API — aus einer App, die
+    // gerade abstuerzt.
+    const modul = frischesModul();
+    for (let i = 0; i < 12; i += 1) {
+      modul.protokolliereAbsturz(new Error(`Boom ${i}`));
+    }
+    expect(fetchSpion).toHaveBeenCalledTimes(5);
+  });
+
+  it("kippt NICHT, wenn das Senden fehlschlaegt", () => {
+    // Der haeufigste Fall beim Startabsturz: kein Netz. Ein Fehler HIER waere
+    // der zweite Absturz, mitten in der Absturzbehandlung.
+    fetchSpion.mockImplementation(() => Promise.reject(new Error("kein Netz")));
+    expect(() =>
+      frischesModul().protokolliereAbsturz(new Error("Boom")),
+    ).not.toThrow();
+  });
+
+  it("kippt NICHT, wenn fetch selbst fehlt", () => {
+    delete (globalThis as Record<string, unknown>).fetch;
+    expect(() =>
+      frischesModul().protokolliereAbsturz(new Error("Boom")),
+    ).not.toThrow();
+  });
+});
