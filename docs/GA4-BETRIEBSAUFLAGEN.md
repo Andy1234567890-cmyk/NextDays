@@ -30,6 +30,37 @@ zur Laufzeit gesetzter Wert bleibt im Image leer.
 | `NEXT_PUBLIC_GA_MEASUREMENT_ID` | Kein Analytics. Die Kategorie „Statistik“ erscheint dann gar nicht in der Leiste (`optionaleKategorien()`) — bewusst, damit keine Einwilligung für einen Dienst eingesammelt wird, den es nicht gibt. **Der Einleitungstext passt sich mit an** (`textSpamschutz` statt `textBeide`), damit er nicht „zwei Dinge“ sagt, während nur ein Schalter steht. Prüfen lässt sich das nur mit gesetzter Variable: `node scripts/diagnose/einwilligung-granular.mjs`. |
 | `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | Fällt auf den einkompilierten Nachweis der Produktionsdomain zurück (`marketing/lib/site-verification.ts`). Nur setzen, wenn eine ANDERE Domain ihre eigene Search-Console-Property hat. |
 
+## Eigentumsnachweis Search Console (mynextdays.com)
+
+Google akzeptiert denselben Token auf zwei Wegen; beide dürfen gleichzeitig
+stehen. Ausgeliefert wird der Meta-Weg automatisch aus
+`marketing/lib/site-verification.ts` — dort steht auch die Begründung.
+
+| Weg | Was er bestätigt | Wo er gepflegt wird |
+|---|---|---|
+| `<meta name="google-site-verification">` | nur das URL-Präfix `https://mynextdays.com` | im Code, kein Handgriff nötig |
+| DNS-TXT auf `@` | die **Domäne** samt aller Subdomains, überlebt einen Umzug der Auslieferung | **DanDomain**, nicht Cloudflare |
+
+Der TXT-Eintrag lautet vollständig, mit Präfix:
+
+```
+google-site-verification=pDUYBvVflztYVL9ulcb-oKBu9YG9kNxruzpyQuxP5kE
+```
+
+Zwei Stolpersteine, beide still: bei DanDomain wird eine Zonenänderung erst
+nach **„Udgiv ændringer"** wirksam (dieselbe Falle wie bei der
+Meta-Domainverifizierung, 27.08.2026), und das Präfix `google-site-verification=`
+gehört **nur** in den TXT-Wert — im Meta-Tag steht der nackte Token, Next setzt
+den Attributnamen selbst.
+
+Gegenprobe nach dem Veröffentlichen, bevor in der Search Console „Bestätigen"
+gedrückt wird:
+
+```
+dig +short TXT mynextdays.com | grep google-site-verification
+curl -s https://mynextdays.com | grep -o 'google-site-verification[^>]*'
+```
+
 ## Getrennte Schaltbarkeit (Granularität)
 
 Art. 4 Nr. 11 DSGVO verlangt eine Einwilligung „für einen bestimmten Fall“; die

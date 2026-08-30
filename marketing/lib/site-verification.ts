@@ -16,6 +16,28 @@
 // gilt dabei nicht als „bewusst keiner", sondern als „nicht gesetzt" — siehe
 // die Begründung unten am Fallback.
 
+// ZWEI WEGE, EIN TOKEN. Die Search Console nimmt denselben Wert entweder als
+// `<meta name="google-site-verification">` (dieser Weg, seit dem Bau der Seite
+// ausgeliefert) ODER als DNS-TXT-Eintrag auf mynextdays.com. Der TXT-Weg
+// bestätigt die DOMÄNE samt allen Subdomains und überlebt einen Umzug der
+// Auslieferung; das Meta-Tag bestätigt nur das URL-Präfix, hält aber ohne
+// Zugriff auf die Zone. Beide dürfen gleichzeitig stehen — Google prüft, was
+// es findet.
+//
+// Der DNS-Eintrag gehört zu DanDomain, NICHT zu Cloudflare: mynextdays.com
+// liegt dort (mynextdays.dk und mybestdays.dk liegen bei Cloudflare), und eine
+// Änderung wird dort erst nach „Udgiv ændringer" wirksam. Der Eintrag lautet:
+//
+//     Typ   TXT
+//     Name  @   (also mynextdays.com selbst, kein Untername)
+//     Wert  google-site-verification=pDUYBvVflztYVL9ulcb-oKBu9YG9kNxruzpyQuxP5kE
+//
+// Achtung, das ist der Unterschied zwischen den beiden Wegen: im TXT-Wert steht
+// das Präfix `google-site-verification=` MIT davor, im Meta-Tag steht der
+// nackte Token (Next setzt den Attributnamen selbst). Wer den TXT-Wert hier
+// einträgt, liefert `content="google-site-verification=…"` aus, und die
+// Bestätigung schlägt fehl, ohne dass etwas sichtbar kaputt ist.
+
 /** Nachweis für die Produktionsdomain (Search-Console-Property mynextdays.com). */
 const GOOGLE_STANDARD = "pDUYBvVflztYVL9ulcb-oKBu9YG9kNxruzpyQuxP5kE";
 
