@@ -292,7 +292,8 @@
       "hotel": "Lukanda",
       "vacationRentals": "Akkomodazzjonijiet tal-vaganzi",
       "accounting": "Kontabilità",
-      "guests": "Mistednin"
+      "guests": "Mistednin",
+      "analysis": "Analiżi"
     },
     "roles": {
       "admin": "Amministratur",
@@ -320,9 +321,6 @@
     "rooms": "Kmamar",
     "overview": "Ħarsa ġenerali",
     "reservationGroups": "Gruppi",
-    "guestCategories": "Kumpaniji/kategoriji",
-    "guestMonthlyReport": "Rapport ta' kull xahar",
-    "vouchers": "Vawċers",
     "payments": "Ħlasijiet",
     "revenue": "Dħul",
     "bankAccounts": "Kontijiet bankarji",
@@ -1267,7 +1265,10 @@
       "private": "Privat",
       "business": "Xogħol",
       "email": "Email"
-    }
+    },
+    "filterIncomplete": "Mhux kompluta",
+    "unnamed": "Bla isem",
+    "unnamedFromChannel": "Mistieden {channel}"
   },
   "fotos": {
     "title": "Ritratti",
@@ -1615,6 +1616,19 @@
       },
       "basis": "Jiddetermina meta riżervazzjoni taqa' fil-perjodu: bic-check-in skont il-jum tal-wasla, bic-check-out skont il-jum tat-tluq. Riżervazzjoni li taqsam minn xahar għall-ieħor tispiċċa, skont l-għażla, f'xahar jew fl-ieħor.",
       "statuses": "Jiġu kkalkulati biss ir-riżervazzjonijiet b'wieħed mill-istatus magħżula. B'mod awtomatiku dawn huma r-riżervazzjonijiet ikkonfermati u kompluti — dawk ikkanċellati normalment ma jidħlux fi ħlas."
+    },
+    "finalizeConfirm": {
+      "title": "Iffissa l-kont",
+      "what": "Il-kont għal {owner} se jingħata numru ta' fattura fiss u jkun viżibbli għas-sid.",
+      "theOwner": "is-sid",
+      "amountLabel": "Ħlas lis-sid",
+      "typeLabel": "Daħħal l-ammont biex tikkonferma",
+      "typeHint": "Jekk jogħġbok daħħal l-ammont minn fuq — dan jiżgura li jkun ġie vverifikat.",
+      "mismatch": "L-ammont imdaħħal ma jaqbilx mal-kont.",
+      "irreversible": "Dan ma jistax jitneħħa. Fattura ffissata tista' titneħħa biss b'fattura ta' kanċellazzjoni.",
+      "cancel": "Ikkanċella",
+      "confirm": "Iffissa",
+      "working": "Qed jiġi ffissat …"
     }
   },
   "ownerBilling": {
@@ -4207,11 +4221,6 @@
     "unterkuenftePage": {
       "title": "Akkomodazzjonijiet",
       "loadError": "Il-proprjetajiet ma setgħux jiġu mtellgħa. Il-backend huwa aċċessibbli?"
-    },
-    "einstellungenPage": {
-      "title": "Settings tar-riżervazzjonijiet",
-      "description": "Is-settings relatati mal-prenotazzjonijiet (ħinijiet tal-check-in/check-out, regoli tal-kanċellazzjoni, politiki) bħalissa jiġu ġestiti direttament fil-proprjetà rispettiva.",
-      "linkLabel": "Mur għall-proprjetajiet"
     },
     "warnungenPage": {
       "title": "Twissijiet",
@@ -10294,8 +10303,6 @@
       "cardOtherChannels": "Il-prenotazzjonijiet permezz tas-sit web tiegħek stess jibqgħu bla kummissjoni. Il-prenotazzjonijiet permezz tas-suq myBestDays iġorru {satz}, li jinżamm direttament mal-wasla tal-ħlas — dawk mhumiex inklużi hawn.",
       "pending": "Pendenti ({count, plural, one {prenotazzjoni waħda} two {# prenotazzjonijiet} few {# prenotazzjonijiet} many {# prenotazzjonijiet} other {# prenotazzjonijiet}}): ",
       "pendingCapHint": " — jiġi ffatturat il-limitu ta' kull xahar ta' {cap}",
-      "pendingCapped": "Se tiġi ċċarġjata ({count, plural, one {# booking} other {# bookings}}): ",
-      "pendingCappedHint": " — Limitu ta' kull xahar milħuq, l-ispejjeż totali huma {total}",
       "noPending": "Bħalissa m'hemm l-ebda kummissjoni pendenti.",
       "showMonths": "Ara l-istorja ta' kull xahar",
       "backToBilling": "Fatturazzjoni",
@@ -10310,7 +10317,6 @@
       "colCommission": "Kummissjoni",
       "colStatus": "Stat",
       "capHint": "L-ammont muri huwa l-kummissjoni li nqalgħet, qabel ma jiġi applikat il-limitu. Kull xahar jiġi ffatturat mhux aktar mil-limitu ta’ kull xahar inkluż fil-pjan tiegħek.",
-      "colCommissionIncurred": "maħluqa {total}, limitu milħuq",
       "mixedCurrencyHint": "Ix-xhur bi prenotazzjonijiet f'diversi muniti jintwerew mingħajr total — l-ammonti individwali jinsabu fil-fattura rispettiva.",
       "statusPending": "Se jiġi ffatturat",
       "statusInvoiced": "Iffatturat",
@@ -10329,7 +10335,10 @@
       "colChannel": "Portal",
       "colRate": "Rata",
       "entryNoProperty": "Il-proprjetà ma għadhiex teżisti",
-      "entrySum": "Total"
+      "entrySum": "Total",
+      "pendingCapped": "Se tiġi ċċarġjata ({count, plural, one {# booking} other {# bookings}}): ",
+      "pendingCappedHint": " — Limitu ta' kull xahar milħuq, l-ispejjeż totali huma {total}",
+      "colCommissionIncurred": "maħluqa {total}, limitu milħuq"
     },
     "invoices": {
       "fees": "Tariffi"
@@ -12027,5 +12036,113 @@
         "aktion": "Għall-kanali"
       }
     }
+  },
+  "analysis": {
+    "title": "Analiżi",
+    "subtitle": "Metriċi, prenotazzjonijiet, okkupanza u kanali għal perjodu.",
+    "loading": "Qed jiġi kkalkulat…",
+    "empty": "M'hemmx data għal dan il-perjodu.",
+    "ownerStay": "Użu personali",
+    "mixedCurrency": "Muniti multipli fil-perjodu ({list}) — l-ammonti mhumiex miġbura. Jekk jogħġbok illimita għal oġġett jew munita waħda.",
+    "occupancyFootnote": "Okkuppat huwa okkuppat — kemm jekk permezz ta' portal, il-websajt tiegħek stess, maħluq minnek innifsek jew mis-sid. Il-ġranet li fihom il-proprjetà ma kinitx għall-bejgħ ma jgħoddux: ġranet imblukkati u Stop-Sell.",
+    "kpiFootnote": "Il-perċentwal fuq kull maduma jqabbel mal-perjodu ta' żmien preċedenti tal-istess tul. Ikklikkja fuq maduma biex tiftaħ is-serje tal-ħin.",
+    "commissionFootnote": "Oqsma vojta tal-kummissjoni jfissru li l-portal ma jittrasmettix kummissjoni (Booking.com ġeneralment ma jagħmilx hekk) — xejn ma jiġi stmat.",
+    "tab": {
+      "kennzahlen": "Metriċi ewlenin",
+      "analytics": "Ħarsa ġenerali",
+      "buchungen": "Prenotazzjonijiet",
+      "auslastung": "Okkupanza",
+      "kanaele": "Kanali",
+      "gaeste": "Mistednin"
+    },
+    "range": {
+      "monat": "Dan ix-xahar",
+      "vormonat": "Xahar ta' qabel",
+      "quartal": "Kwart",
+      "jahr": "Sena",
+      "frei": "Mhux speċifikat"
+    },
+    "filter": {
+      "range": "Perjodu",
+      "from": "Minn",
+      "to": "Sa",
+      "basis": "Assenjazzjoni",
+      "properties": "Oġġetti",
+      "allProperties": "L-oġġetti kollha",
+      "channels": "Kanali",
+      "allChannels": "Il-kanali kollha"
+    },
+    "basis": {
+      "anreise": "Skont il-wasla",
+      "abreise": "Skont it-tluq",
+      "buchung": "Skont id-data tal-prenotazzjoni",
+      "uebernachtung": "Skont il-lejl"
+    },
+    "basisHint": {
+      "anreise": "Jiġu magħduda prenotazzjonijiet li l-wasla tagħhom taqa' fil-perjodu.",
+      "abreise": "Jiġu magħduda prenotazzjonijiet li t-tluq tagħhom jaqa' fil-perjodu.",
+      "buchung": "Jiġu magħduda prenotazzjonijiet li waslu fil-perjodu. Prenotazzjonijiet mingħajr timbru tal-ħin reali mill-portal huma neqsin hawn — ma jiġu stmati xejn.",
+      "uebernachtung": "Kull prenotazzjoni li tmiss il-perjodu tiġi magħduda."
+    },
+    "kpi": {
+      "revenue": "Dħul",
+      "bookingsCount": "{count, plural, one {# prenotazzjoni} other {# prenotazzjonijiet}}",
+      "occupancy": "Okkupanza",
+      "ofBookable": "minn {count} iljieli li jistgħu jiġu bbukkjati",
+      "nights": "Iljieli",
+      "avgStay": "Medja ta' {n} iljieli għal kull soġġorn",
+      "adr": "Prezz medju għal kull lejl",
+      "adrHint": "Dħul għal kull lejl ibbukkjat",
+      "revpar": "Dħul kull lejl",
+      "revparHint": "Dħul kull lejl prenotabbli",
+      "cancellations": "Rata ta' kanċellazzjoni",
+      "cancelHint": "{count, plural, one {# Kanċellazzjoni} other {# Kanċellazzjonijiet}}"
+    },
+    "chart": {
+      "revenueOverTime": "Xejra tad-dħul",
+      "shareByChannel": "Sehem tad-dħul skont il-kanal",
+      "revenueByProperty": "Dħul għal kull proprjetà",
+      "footnote": "Dħul totali fil-perjodu: {total}"
+    },
+    "table": {
+      "rowCount": "{count, plural, one {# Prenotazzjoni} other {# Prenotazzjonijiet}}",
+      "columns": "Kolonni"
+    },
+    "col": {
+      "property": "Proprjetà",
+      "guest": "Mistieden",
+      "channel": "Kanal",
+      "stay": "Soġġorn",
+      "nights": "Iljieli",
+      "guests": "Mistednin",
+      "status": "Status",
+      "revenue": "Dħul",
+      "commission": "Kummissjoni",
+      "bookedAt": "Ibbukkjat fi",
+      "bookable": "Prenotabbli",
+      "booked": "Ibbukkjat",
+      "blocked": "Imblukkat",
+      "stopSell": "Stop-Sell",
+      "arrivals": "Wasliet",
+      "cancellations": "Kanċellazzjonijiet",
+      "bookingsShort": "Prenotazzjonijiet",
+      "net": "Nett",
+      "share": "Sehem",
+      "country": "Pajjiż"
+    },
+    "guests": {
+      "total": "Mistednin",
+      "returning": "Klijenti li jirritornaw",
+      "returningHint": "{count, plural, one {# Persuna} other {# Persuni}}",
+      "avgStay": "Soġġorn medju",
+      "perBooking": "Mistednin medji għal kull prenotazzjoni",
+      "origin": "Oriġini",
+      "unknownCountry": "Mhux magħruf",
+      "returningOf": "{count} minn {base} persuni li jistgħu jiġu assenjati",
+      "notIdentifiable": "Mhux identifikabbli — il-portali ma jipprovdux ID tal-klijent"
+    },
+    "ownerStayCount": "{count, plural, one {# Użu personali} other {# Użi personali}}",
+    "ownerStayRow": "Użu personali",
+    "ownerStayRowHint": "Sid ta' dar fil-proprjetà tiegħu stess — mhux għall-bejgħ"
   }
 }

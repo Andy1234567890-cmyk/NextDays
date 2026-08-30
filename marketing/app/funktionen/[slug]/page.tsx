@@ -35,6 +35,20 @@ import { MarketingNav } from "@/components/marketing/marketing-nav";
 import { SectionWave } from "@/components/marketing/section-kit";
 import { FunktionsReiter } from "@/components/funktionen/funktions-reiter";
 import { GRUPPEN_ILLUSTRATION } from "@/components/preise/preis-illustrationen";
+import { KiBuehneAntwort, KiBuehneRegeln } from "@/components/marketing/ki-buehnen";
+
+/** Bewegte Bühnen je Funktionsschlüssel: [Hero, Beleg-Block].
+ *
+ *  Getrennt von `GRUPPEN_ILLUSTRATION`, weil jene Zeichnungen an fünf Stellen
+ *  auch als 28-px-Icon laufen (Navigation, Preisrechner, Kachelgitter) —
+ *  Bewegung gehört an die große Fläche, nicht in eine Menüzeile. */
+const BUEHNEN: Record<
+  string,
+  readonly [(p: { className?: string }) => React.ReactElement,
+            (p: { className?: string }) => React.ReactElement]
+> = {
+  ki: [KiBuehneAntwort, KiBuehneRegeln],
+};
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { FUNKTIONEN, funktionNachSlug } from "@/content/funktionen";
@@ -91,6 +105,19 @@ export default async function FunktionsSeite({
   const locale = await getLocale();
   const saetze = await holeProvisionssaetze(locale);
   const Illustration = GRUPPEN_ILLUSTRATION[funktion.key];
+  // Bewegte Bühnen statt eines 96er-Icons auf 40 Pixeln.
+  //
+  // Nur für Seiten OHNE Bildschirmaufnahme, und derzeit nur für die KI-Seite:
+  // sie ist die einzige, deren Funktion man zeigen kann, ohne die Oberfläche
+  // fotografiert zu haben (Frage → Antwort ist ein Ablauf, kein Screenshot).
+  // Bekommt eine Seite später ihre echte Aufnahme, greift wieder der Zweig
+  // darüber — die Bühne ist Ersatz, nicht Ziel.
+  const buehnen = BUEHNEN[funktion.key];
+  // Fällt auf `Illustration` zurück — dann verhält sich jede Seite ohne
+  // `zweiteIllustration` exakt wie bisher.
+  const IllustrationBlock = funktion.zweiteIllustration
+    ? (GRUPPEN_ILLUSTRATION[funktion.zweiteIllustration] ?? Illustration)
+    : Illustration;
 
   const nutzen = ["a", "b", "c"] as const;
   // EIN Zickzack-Block je Seite: die Referenz hat zwei bis drei, aber jeder
@@ -195,6 +222,16 @@ export default async function FunktionsSeite({
                     priority
                     className="w-full"
                   />
+                ) : buehnen ? (
+                  // Bewegte Bühne: trägt die Fläche wirklich (volle Breite,
+                  // 16:10). Das 40er-Icon davor ließ die Kachel auf 64 px
+                  // zusammenfallen und wirkte wie ein Ladefehler.
+                  <span className="block w-full text-accent">
+                    {(() => {
+                      const Hero = buehnen[0];
+                      return <Hero className="w-full" />;
+                    })()}
+                  </span>
                 ) : (
                   <span className="flex aspect-[16/10] items-center justify-center text-accent">
                     {Illustration ? <Illustration className="size-40" /> : null}
@@ -305,9 +342,18 @@ export default async function FunktionsSeite({
                       alt={t("bildAltBlock")}
                       className="w-full"
                     />
+                  ) : buehnen ? (
+                    <span className="block w-full text-accent">
+                      {(() => {
+                        const Block = buehnen[1];
+                        return <Block className="w-full" />;
+                      })()}
+                    </span>
                   ) : (
                     <span className="flex aspect-[16/10] items-center justify-center text-accent">
-                      {Illustration ? <Illustration className="size-40" /> : null}
+                      {IllustrationBlock ? (
+                        <IllustrationBlock className="size-40" />
+                      ) : null}
                     </span>
                   )}
                 </div>

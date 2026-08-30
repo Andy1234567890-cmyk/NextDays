@@ -292,7 +292,8 @@
       "hotel": "Viešbutis",
       "vacationRentals": "Atostogų būstai",
       "accounting": "Apskaita",
-      "guests": "Svečiai"
+      "guests": "Svečiai",
+      "analysis": "Įvertinimas"
     },
     "roles": {
       "admin": "Administratorius",
@@ -320,9 +321,6 @@
     "rooms": "Kambariai",
     "overview": "Apžvalga",
     "reservationGroups": "Grupės",
-    "guestCategories": "Įmonės/kategorijos",
-    "guestMonthlyReport": "Mėnesio ataskaita",
-    "vouchers": "Kuponai",
     "payments": "Mokėjimai",
     "revenue": "Pajamos",
     "bankAccounts": "Banko sąskaitos",
@@ -1267,7 +1265,10 @@
       "private": "Asmeninis",
       "business": "Darbo",
       "email": "El. paštas"
-    }
+    },
+    "filterIncomplete": "Tik nepilnas",
+    "unnamed": "Be pavadinimo",
+    "unnamedFromChannel": "{channel} svečias"
   },
   "fotos": {
     "title": "Nuotraukos",
@@ -1615,6 +1616,19 @@
       },
       "basis": "Nustato, kada rezervacija patenka į laikotarpį: pagal įsiregistravimą — pagal atvykimo dieną, pagal išsiregistravimą — pagal išvykimo dieną. Rezervacija per mėnesių sandūrą, priklausomai nuo pasirinkimo, patenka į vieną arba kitą mėnesį.",
       "statuses": "Apskaitomos tik rezervacijos, turinčios vieną iš pasirinktų būsenų. Pagal numatytuosius nustatymus tai patvirtintos ir baigtos rezervacijos — atšauktos paprastai į išmoką neįtraukiamos."
+    },
+    "finalizeConfirm": {
+      "title": "Patvirtinti atsiskaitymą",
+      "what": "Atsiskaitymas su {owner} gaus fiksuotą sąskaitos numerį ir bus matomas savininkui.",
+      "theOwner": "savininkui",
+      "amountLabel": "Išmoka savininkui",
+      "typeLabel": "Įveskite sumą patvirtinimui",
+      "typeHint": "Prašome įvesti sumą iš viršaus – taip bus užtikrinta, kad ji buvo patikrinta.",
+      "mismatch": "Įvesta suma neatitinka atsiskaitymo.",
+      "irreversible": "Tai negali būti anuliuota. Patvirtinta sąskaita gali būti panaikinta tik kredito nota.",
+      "cancel": "Atšaukti",
+      "confirm": "Patvirtinti",
+      "working": "Patvirtinama..."
     }
   },
   "ownerBilling": {
@@ -4207,11 +4221,6 @@
     "unterkuenftePage": {
       "title": "Apgyvendinimo vietos",
       "loadError": "Nepavyko įkelti objektų. Ar pasiekiama sistemos dalis (backend)?"
-    },
-    "einstellungenPage": {
-      "title": "Rezervacijų nustatymai",
-      "description": "Su rezervacijomis susijusius nustatymus (įsiregistravimo / išsiregistravimo laikus, atšaukimo taisykles, taisykles) šiuo metu tvarkote tiesiogiai konkrečiame objekte.",
-      "linkLabel": "Į objektus"
     },
     "warnungenPage": {
       "title": "Įspėjimai",
@@ -10294,8 +10303,6 @@
       "cardOtherChannels": "Rezervacijoms per Jūsų pačių svetainę komisiniai netaikomi. Rezervacijoms per myBestDays prekyvietę taikoma {satz}, kuri išskaičiuojama iš karto gavus mokėjimą – čia ji neįtraukta.",
       "pending": "Neapmokėta ({count, plural, one {# rezervacija} few {# rezervacijos} many {# rezervacijos} other {# rezervacijų}}): ",
       "pendingCapHint": " — bus išrašyta sąskaita už mėnesio ribą {cap}",
-      "pendingCapped": "Bus atsiskaityta ({count, plural, one {# užsakymas} other {# užsakymai}}): ",
-      "pendingCappedHint": " – pasiektas mėnesio limitas, susidarė {total}",
       "noPending": "Šiuo metu neapmokėtų komisinių nėra.",
       "showMonths": "Peržiūrėti mėnesių istoriją",
       "backToBilling": "Atsiskaitymas",
@@ -10310,7 +10317,6 @@
       "colCommission": "Komisiniai",
       "colStatus": "Būsena",
       "capHint": "Nurodyti susidarę komisiniai, dar netaikant ribos. Per mėnesį apmokestinama ne daugiau nei į jūsų planą įskaičiuota mėnesio riba.",
-      "colCommissionIncurred": "sukurtas {total}, pasiektas limitas",
       "mixedCurrencyHint": "Mėnesiai su rezervacijomis keliomis valiutomis rodomi be bendros sumos – atskiros sumos nurodytos atitinkamoje sąskaitoje.",
       "statusPending": "Bus išrašyta",
       "statusInvoiced": "Išrašyta",
@@ -10329,7 +10335,10 @@
       "colChannel": "Portalas",
       "colRate": "Tarifas",
       "entryNoProperty": "Objekto nebėra",
-      "entrySum": "Iš viso"
+      "entrySum": "Iš viso",
+      "pendingCapped": "Bus atsiskaityta ({count, plural, one {# užsakymas} other {# užsakymai}}): ",
+      "pendingCappedHint": " – pasiektas mėnesio limitas, susidarė {total}",
+      "colCommissionIncurred": "sukurtas {total}, pasiektas limitas"
     },
     "invoices": {
       "fees": "Mokesčiai"
@@ -12027,5 +12036,113 @@
         "aktion": "Į kanalus"
       }
     }
+  },
+  "analysis": {
+    "title": "Vertinimas",
+    "subtitle": "Laikotarpio rodikliai, užsakymai, užimtumas ir kanalai.",
+    "loading": "Skaičiuojama...",
+    "empty": "Šiam laikotarpiui duomenų nėra.",
+    "ownerStay": "Nuosavas naudojimas",
+    "mixedCurrency": "Kelių valiutų laikotarpis ({list}) – sumos nesumuojamos. Apribokite iki vieno objekto arba valiutos.",
+    "occupancyFootnote": "Užimta yra užimta – ar per portalą, ar per nuosavą svetainę, ar sukurta savarankiškai, ar savininko. Į skaičiavimą neįtraukiamos tik dienos, kuriomis objektas nebuvo parduodamas: užblokuotos dienos ir „Stop-Sell“.",
+    "kpiFootnote": "Kiekvienos kortelės procentinė vertė lyginama su ankstesniu to paties ilgio laikotarpiu. Paspaudus kortelę atidaroma laiko eilutė.",
+    "commissionFootnote": "Tušti komisinių laukai reiškia, kad portalas neteikia komisinių (Booking.com dažniausiai to nedaro) – niekas neapskaičiuojama.",
+    "tab": {
+      "kennzahlen": "Pagrindiniai rodikliai",
+      "analytics": "Apžvalga",
+      "buchungen": "Užsakymai",
+      "auslastung": "Užimtumas",
+      "kanaele": "Kanalai",
+      "gaeste": "Svečiai"
+    },
+    "range": {
+      "monat": "Šis mėnuo",
+      "vormonat": "Praėjęs mėnuo",
+      "quartal": "Ketvirtis",
+      "jahr": "Metai",
+      "frei": "Laisvai pasirinktas"
+    },
+    "filter": {
+      "range": "Laikotarpis",
+      "from": "Nuo",
+      "to": "Iki",
+      "basis": "Priskyrimas",
+      "properties": "Objektai",
+      "allProperties": "Visi objektai",
+      "channels": "Kanalai",
+      "allChannels": "Visi kanalai"
+    },
+    "basis": {
+      "anreise": "Pagal atvykimą",
+      "abreise": "Pagal išvykimą",
+      "buchung": "Pagal užsakymo datą",
+      "uebernachtung": "Pagal nakvynę"
+    },
+    "basisHint": {
+      "anreise": "Skaičiuojami užsakymai, kurių atvykimas patenka į laikotarpį.",
+      "abreise": "Skaičiuojami užsakymai, kurių išvykimas patenka į laikotarpį.",
+      "buchung": "Skaičiuojami užsakymai, gauti per laikotarpį. Užsakymai be tikro portalo laiko žymos čia neįtraukiami – jie neapskaičiuojami.",
+      "uebernachtung": "Skaičiuojamas kiekvienas užsakymas, kuris apima laikotarpį."
+    },
+    "kpi": {
+      "revenue": "Pajamos",
+      "bookingsCount": "{count, plural, one {# užsakymas} other {# užsakymai}}",
+      "occupancy": "Užimtumas",
+      "ofBookable": "iš {count} užsakomų naktų",
+      "nights": "Naktys",
+      "avgStay": "Vid. {n} naktų per viešnagę",
+      "adr": "Vid. nakties kaina",
+      "adrHint": "Pajamos už užsakytą naktį",
+      "revpar": "Pelnas už naktį",
+      "revparHint": "Pajamos už užsakomą naktį",
+      "cancellations": "Atšaukimų rodiklis",
+      "cancelHint": "{count, plural, one {# atšaukimas} other {# atšaukimai}}"
+    },
+    "chart": {
+      "revenueOverTime": "Pajamų istorija",
+      "shareByChannel": "Pajamų dalis pagal kanalą",
+      "revenueByProperty": "Pajamos už objektą",
+      "footnote": "Bendra pajamų suma per laikotarpį: {total}"
+    },
+    "table": {
+      "rowCount": "{count, plural, one {# užsakymas} other {# užsakymai}}",
+      "columns": "Stulpeliai"
+    },
+    "col": {
+      "property": "Objektas",
+      "guest": "Svečias",
+      "channel": "Kanalas",
+      "stay": "Viešnagė",
+      "nights": "Naktys",
+      "guests": "Svečiai",
+      "status": "Būsena",
+      "revenue": "Pajamos",
+      "commission": "Komisiniai",
+      "bookedAt": "Užsakyta",
+      "bookable": "Galima užsakyti",
+      "booked": "Užsakyta",
+      "blocked": "Užblokuota",
+      "stopSell": "Stop-Sell",
+      "arrivals": "Atvykimai",
+      "cancellations": "Atšaukimai",
+      "bookingsShort": "Užsakymai",
+      "net": "Neto",
+      "share": "Dalis",
+      "country": "Šalis"
+    },
+    "guests": {
+      "total": "Svečiai",
+      "returning": "Grįžtantys svečiai",
+      "returningHint": "{count, plural, one {# asmuo} other {# asmenys}}",
+      "avgStay": "Vid. viešnagė",
+      "perBooking": "Vid. svečių skaičius užsakyme",
+      "origin": "Kilmė",
+      "unknownCountry": "Nežinoma",
+      "returningOf": "{count} iš {base} priskirtinų asmenų",
+      "notIdentifiable": "Neatpažįstama – portalai nepateikia svečio identifikatoriaus"
+    },
+    "ownerStayCount": "{count, plural, one {# nuosavybė} other {# nuosavybės}}",
+    "ownerStayRow": "Nuosavas naudojimas",
+    "ownerStayRowHint": "Nekilnojamojo turto savininkas savo objekte – neparduodama"
   }
 }

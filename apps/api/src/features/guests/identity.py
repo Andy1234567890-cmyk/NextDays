@@ -446,13 +446,30 @@ def _create_guest(
     needs_review: bool,
     contact: GuestContact | None = None,
 ) -> str | None:
+    # Ein Gast OHNE echten Namen ist immer prüfbedürftig — egal, über welchen
+    # Pfad er entstand.
+    #
+    # WARUM DIESE ZEILE: `create_placeholder_guest` setzt `needs_review=True`,
+    # `resolve_or_create_guest` im Regelfall `False`. Airbnb liefert über
+    # Channex eine stabile Gast-ID, aber KEINEN Namen — damit greift der
+    # Regelpfad, der Name fällt auf '—' zurück, und die Markierung bleibt aus.
+    # Live am 30.08.2026 gemessen: 148 von 293 Gästen des Beta-Betriebs hießen
+    # '—', und ALLE 293 trugen `needs_review = false`. Die Kennzeichnung, an
+    # der die Kartei Unvollständiges erkennen soll, hat nie einen einzigen
+    # Datensatz getroffen.
+    #
+    # Die Ableitung gehört hierher und nicht in die sechs Aufrufer: sie hängt
+    # am Ergebnis (kein Name), nicht an der Absicht des Aufrufers. In den
+    # Aufrufern wäre sie sechs Kopien, von denen die siebte fehlt.
+    abgeleiteter_name = name or email or "—"
+    ohne_echten_namen = abgeleiteter_name == "—"
     payload: dict[str, Any] = {
         "tenant_id": tenant_id,
         # name ist NOT NULL → bei reiner Kanal-ID/E-Mail auf E-Mail/'—' ableiten.
-        "name": name or email or "—",
+        "name": abgeleiteter_name,
         "email": email,
         "phone": phone,
-        "needs_review": needs_review,
+        "needs_review": needs_review or ohne_echten_namen,
     }
     # Gästemappen-Stammdaten (0046) strukturiert mitschreiben, sofern der Kanal
     # sie liefert — sonst zeigt die Gästekartei nur den zusammengesetzten Namen

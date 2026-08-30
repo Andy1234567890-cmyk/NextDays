@@ -57,6 +57,42 @@ class Objekt:  # pylint: disable=too-many-instance-attributes
 
 
 @dataclass(frozen=True)
+class Firma:  # pylint: disable=too-many-instance-attributes
+    """Die Rechts- und Rechnungsdaten eines Betriebs.
+
+    Sie landen in `tenant_billing_profile`. Ohne diese Zeile meldet das
+    Onboarding zwar "Firmendaten gespeichert" (das Flag `company_data_set`
+    steht), aber `DashboardService` prueft die ZEILE und setzt den Schritt
+    zurueck — die Oberflaeche zeigt dann den Einrichtungs-Assistenten statt
+    der Kennzahlen, und Rechnungen haben keinen Absender.
+
+    Erfundene, aber formal gueltige Angaben: die USt-IdNr. folgt dem Muster
+    des jeweiligen Landes, ist aber keiner echten Firma zugeordnet.
+    """
+
+    legal_name: str
+    legal_form: str
+    strasse: str
+    hausnummer: str
+    plz: str
+    stadt: str
+    land: str
+    vat_id: str
+    steuernummer: str
+    handelsregister: str
+    amtsgericht: str
+    geschaeftsfuehrer: tuple[str, str]
+    email: str
+    telefon: str
+    website: str
+    iban: str
+    bic: str
+    bank: str
+    steuersatz: float
+    kurtaxe: float
+
+
+@dataclass(frozen=True)
 class Betrieb:  # pylint: disable=too-many-instance-attributes
     """Ein Demo-Mandant mit seinen buchbaren Einheiten."""
 
@@ -68,6 +104,7 @@ class Betrieb:  # pylint: disable=too-many-instance-attributes
     accommodation_type: str
     login: str
     kontakt_name: str
+    firma: "Firma"
     objekte: list[Objekt] = field(default_factory=list)
 
 
@@ -76,6 +113,68 @@ _HOTEL_BASIS = [
     "wifi", "heating", "air_conditioning", "24_hour_front_desk", "non_smoking_rooms",
     "elevators", "safe", "housekeeping_daily", "breakfast", "key_card_access",
 ]
+
+
+# ── Firmendaten ──────────────────────────────────────────────────────────────
+# Erfundene Betriebe, aber formal gueltige Angaben: die IBANs tragen eine
+# korrekte Pruefziffer (ISO 13616), die USt-IdNr. folgt dem Laendermuster.
+# Ohne echte Werte wuerde die Rechnungsvorschau im Screenshot Fehler zeigen.
+FIRMA_NORDLICHT = Firma(
+    legal_name="Nordlicht Ferienvermietung GmbH",
+    legal_form="GmbH",
+    strasse="Hafenstraße", hausnummer="8", plz="18374", stadt="Zingst", land="DE",
+    vat_id="DE312457890",
+    steuernummer="079/128/54321",
+    handelsregister="HRB 14827",
+    amtsgericht="Amtsgericht Stralsund",
+    geschaeftsfuehrer=("Merle", "Ahrens"),
+    email="info@nordlicht-ferien.de",
+    telefon="+49 38232 15480",
+    website="https://www.nordlicht-ferien.de",
+    iban="DE89370400440532013000",
+    bic="COBADEFFXXX",
+    bank="Commerzbank Stralsund",
+    steuersatz=7.0,       # ermaessigt: Beherbergung (§ 12 Abs. 2 Nr. 11 UStG)
+    kurtaxe=3.20,         # Kurabgabe Zingst je Person und Nacht
+)
+
+FIRMA_SEEBLICK = Firma(
+    legal_name="Hotel Seeblick Warnemünde GmbH & Co. KG",
+    legal_form="GmbH & Co. KG",
+    strasse="Seepromenade", hausnummer="24", plz="18119", stadt="Rostock", land="DE",
+    vat_id="DE289346127",
+    steuernummer="079/145/29876",
+    handelsregister="HRA 4291",
+    amtsgericht="Amtsgericht Rostock",
+    geschaeftsfuehrer=("Jonas", "Reimers"),
+    email="empfang@hotel-seeblick-warnemuende.de",
+    telefon="+49 381 5194200",
+    website="https://www.hotel-seeblick-warnemuende.de",
+    iban="DE44500105175407324931",
+    bic="OSDDDE81ROS",
+    bank="OstseeSparkasse Rostock",
+    steuersatz=7.0,
+    kurtaxe=2.50,         # Kurtaxe Warnemünde
+)
+
+FIRMA_ALPENZEIT = Firma(
+    legal_name="Alpenzeit Chalets GmbH",
+    legal_form="GmbH",
+    strasse="Almweg", hausnummer="7", plz="6363", stadt="Westendorf", land="AT",
+    vat_id="ATU67421908",
+    steuernummer="81 234/5678",
+    handelsregister="FN 412876t",
+    amtsgericht="Landesgericht Innsbruck",
+    geschaeftsfuehrer=("Theresa", "Gruber"),
+    email="willkommen@alpenzeit-chalets.at",
+    telefon="+43 5334 20418",
+    website="https://www.alpenzeit-chalets.at",
+    iban="AT691200000976534597",
+    bic="BKAUATWWXXX",
+    bank="UniCredit Bank Austria",
+    steuersatz=10.0,      # Österreich: 10 % auf Beherbergung
+    kurtaxe=2.80,         # Ortstaxe Tirol
+)
 
 
 NORDLICHT = Betrieb(
@@ -87,6 +186,7 @@ NORDLICHT = Betrieb(
     accommodation_type="vacation_rental",
     login="merle.ahrens@mynextdays.com",
     kontakt_name="Merle Ahrens",
+    firma=FIRMA_NORDLICHT,
     objekte=[
         Objekt(
             schluessel="duenenblick",
@@ -269,6 +369,7 @@ SEEBLICK = Betrieb(
     accommodation_type="hotel",
     login="jonas.reimers@mynextdays.com",
     kontakt_name="Jonas Reimers",
+    firma=FIRMA_SEEBLICK,
     objekte=[
         _zimmer("z201", "Doppelzimmer 201 · Seeseite", "doppelzimmer", "hotel", 2,
                 139.0, 25.0, "Doppelzimmer mit französischem Balkon zur Ostsee, 24 m².",
@@ -312,7 +413,122 @@ SEEBLICK = Betrieb(
     ],
 )
 
-BETRIEBE = [NORDLICHT, SEEBLICK]
+# Zweiter Ferienvermieter neben Nordlicht (30.08.2026). Grund: für die
+# Marketing-Aufnahmen brauchte es ZWEI vollständige FeWo-Betriebe — Seeblick ist
+# ein Hotel und zeigt das Rate-Grid, nicht den FeWo-Belegungsplan. Bewusst
+# Alpenraum statt Küste: zwei Betriebe mit denselben Reetdächern und derselben
+# Ostsee sähen auf zwei Screenshots nebeneinander wie derselbe Bestand aus.
+ALPENZEIT = Betrieb(
+    schluessel="alpenzeit",
+    name="Alpenzeit Chalets",
+    land="AT",
+    waehrung="EUR",
+    business_type="agency",
+    accommodation_type="vacation_rental",
+    login="theresa.gruber@mynextdays.com",
+    kontakt_name="Theresa Gruber",
+    firma=FIRMA_ALPENZEIT,
+    objekte=[
+        Objekt(
+            schluessel="bergkristall",
+            titel="Chalet Bergkristall",
+            property_type="ferienhaus",
+            category_slug="haus", subtype_slug="chalet", listing_type="entire_place",
+            strasse="Almweg", hausnummer="7", plz="6363", stadt="Westendorf", land="AT",
+            lat=47.4392, lng=12.2153,
+            max_gaeste=8, grundpreis=245.0, wochenend_aufschlag=45.0, min_aufenthalt=4,
+            beschreibung=(
+                "Freistehendes Chalet aus Altholz auf 1.100 m, Panoramablick über das "
+                "Brixental. Kachelofen, Sauna und eine Terrasse, auf der die Sonne bis "
+                "zum letzten Licht steht. Skibus hält 200 m entfernt."
+            ),
+            ausstattung=["sauna", "fireplace", "sun_terrace", "parking", "wifi"],
+            foto_suche="alpine chalet wooden interior",
+        ),
+        Objekt(
+            schluessel="laerchenhof",
+            titel="Ferienwohnung Lärchenhof",
+            property_type="appartement",
+            category_slug="wohnung", subtype_slug="ferienwohnung", listing_type="entire_place",
+            strasse="Dorfstraße", hausnummer="24", plz="6363", stadt="Westendorf", land="AT",
+            lat=47.4361, lng=12.2098,
+            max_gaeste=4, grundpreis=145.0, wochenend_aufschlag=25.0, min_aufenthalt=3,
+            beschreibung=(
+                "Helle Wohnung im ersten Stock eines Bauernhauses, 68 m². Balkon nach "
+                "Süden, eigener Eingang, Skikeller im Haus. Bäcker und Lift fußläufig."
+            ),
+            ausstattung=["balcony", "parking", "wifi", "washing_machine"],
+            foto_suche="alpine apartment balcony mountains",
+        ),
+        Objekt(
+            schluessel="seehaus_achensee",
+            titel="Seehaus am Achensee",
+            property_type="ferienhaus",
+            category_slug="haus", subtype_slug="cottage", listing_type="entire_place",
+            strasse="Uferpromenade", hausnummer="3", plz="6212", stadt="Maurach", land="AT",
+            lat=47.4189, lng=11.7231,
+            max_gaeste=6, grundpreis=215.0, wochenend_aufschlag=40.0, min_aufenthalt=3,
+            beschreibung=(
+                "Haus in erster Reihe am Achensee mit eigenem Steg und Bootsplatz. "
+                "Große Fensterfront zum Wasser, Kamin, Küche mit Blick auf das "
+                "Karwendel. Im Sommer Segeln, im Winter zwanzig Minuten zum Lift."
+            ),
+            ausstattung=["fireplace", "sun_terrace", "parking", "wifi", "barbecue"],
+            foto_suche="lake house alps wooden terrace",
+        ),
+        Objekt(
+            schluessel="almhuette_kitz",
+            titel="Almhütte Kitzblick",
+            property_type="ferienhaus",
+            category_slug="haus", subtype_slug="chalet", listing_type="entire_place",
+            strasse="Bichlalm", hausnummer="1", plz="6370", stadt="Kitzbühel", land="AT",
+            lat=47.4467, lng=12.3915,
+            max_gaeste=5, grundpreis=198.0, wochenend_aufschlag=38.0, min_aufenthalt=3,
+            beschreibung=(
+                "Umgebaute Almhütte oberhalb von Kitzbühel, nur über einen Forstweg "
+                "erreichbar — dafür ohne Nachbarn in Sichtweite. Holzofen, Whirlpool "
+                "im Freien, Sternenhimmel ohne Streulicht."
+            ),
+            ausstattung=["hot_tub", "fireplace", "parking", "wifi"],
+            foto_suche="mountain hut wood cabin snow",
+        ),
+        Objekt(
+            schluessel="stadtloft_innsbruck",
+            titel="Stadtloft Innsbruck",
+            property_type="appartement",
+            category_slug="wohnung", subtype_slug="loft", listing_type="entire_place",
+            strasse="Maria-Theresien-Straße", hausnummer="18", plz="6020",
+            stadt="Innsbruck", land="AT",
+            lat=47.2654, lng=11.3927,
+            max_gaeste=3, grundpreis=132.0, wochenend_aufschlag=22.0, min_aufenthalt=2,
+            beschreibung=(
+                "Loft unter dem Dach eines Altstadthauses, Blick auf die Nordkette. "
+                "Offener Wohnraum, Galerie-Schlafplatz, Aufzug bis in die Wohnung. "
+                "Die Bahn auf den Hafelekar startet zehn Gehminuten entfernt."
+            ),
+            ausstattung=["accessible_by_lift", "wifi", "washing_machine"],
+            foto_suche="loft apartment city alps view",
+        ),
+        Objekt(
+            schluessel="gartenhaus_zell",
+            titel="Gartenhaus Zell am See",
+            property_type="ferienhaus",
+            category_slug="haus", subtype_slug="bungalow", listing_type="entire_place",
+            strasse="Seeuferweg", hausnummer="11", plz="5700", stadt="Zell am See", land="AT",
+            lat=47.3230, lng=12.7960,
+            max_gaeste=4, grundpreis=168.0, wochenend_aufschlag=30.0, min_aufenthalt=3,
+            beschreibung=(
+                "Ebenerdiges Gartenhaus mit eigenem Rasen bis zum Seeufer, 300 m vom "
+                "Ortskern. Barrierefrei, Fahrräder im Schuppen, Liegestühle am Wasser."
+            ),
+            ausstattung=["garden", "parking", "wifi", "barbecue", "bikes_available_free"],
+            foto_suche="garden house lake austria",
+        ),
+    ],
+)
+
+
+BETRIEBE = [NORDLICHT, SEEBLICK, ALPENZEIT]
 
 
 # Gästenamen für die Buchungen. Europäischer Mix, damit die Buchungsliste nicht

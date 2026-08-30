@@ -3,6 +3,8 @@
 Flexible In-Memory-Fake-DB (deckt die genutzten Supabase-Query-Ketten ab) +
 Masking-Matrix über echte feingranulare Berechtigungen (load_guest_mask liest `users`).
 """
+import re
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -26,6 +28,26 @@ def test_guests_health() -> None:
 
 
 # --- In-Memory-Fake-DB ------------------------------------------------------
+def _singular(tabelle):  # noqa: ANN001, ANN201
+    """Tabellenname → Fremdschluessel-Stamm: properties → property.
+
+    NICHT `rstrip("s")`: das entfernt ZEICHEN, keine Endung — aus 'properties'
+    wuerde 'propertie' und der Join liefe ins Leere.
+    """
+    if tabelle.endswith("ies"):
+        return tabelle[:-3] + "y"
+    return tabelle[:-1] if tabelle.endswith("s") else tabelle
+
+
+def _sortwert(v):  # noqa: ANN001, ANN201
+    """Vergleichbarer Schluessel: bool/Zahl/Text getrennt, None faellt vorher raus."""
+    if isinstance(v, bool):
+        return (0, int(v), "")
+    if isinstance(v, (int, float)):
+        return (0, v, "")
+    return (1, 0, str(v))
+
+
 class _Res:
     def __init__(self, data, count=None) -> None:  # noqa: ANN001
         self.data = data
@@ -45,11 +67,49 @@ class _Query:
         self._or: str | None = None
         self._payload = None
         self._count = None
+        self._order: list[tuple] = []
+        self._limit: int | None = None
+        self._range: tuple | None = None
+        self._embeds: list[tuple] = []
 
-    def select(self, *_a, count=None, **_k):  # noqa: ANN002, ANN003, ANN201
+    def select(self, *cols, count=None, **_k):  # noqa: ANN002, ANN003, ANN201
         self._op = "select"
         self._count = count
+        # Eingebettete Ressourcen der PostgREST-Grammatik erkennen:
+        # `properties(title)` heisst „nimm die verknuepfte Zeile mit". Ohne das
+        # gaebe die Fake-DB fuer jeden Join stumm `None` zurueck und ein Test
+        # darueber waere wertlos — die Gaesteliste holt den Objekttitel genau so.
+        spec = ", ".join(str(c) for c in cols)
+        for tabelle, felder in re.findall(r"(\w+)\(([^)]*)\)", spec):
+            self._embeds.append(
+                (tabelle, [f.strip() for f in felder.split(",") if f.strip()])
+            )
         return self
+
+    def _mit_embeds(self, rows):  # noqa: ANN001, ANN202
+        """Verknuepfte Zeile anhaengen — ueber `<tabelle_singular>_id`.
+
+        Deckt genau den Fall der Gaesteliste ab (`reservations.property_id` →
+        `properties.title`), nicht die volle PostgREST-Grammatik. Mehr waere
+        Test-Infrastruktur ohne Anlass.
+        """
+        if not self._embeds:
+            return rows
+        out = []
+        for r in rows:
+            kopie = dict(r)
+            for tabelle, felder in self._embeds:
+                fk = f"{_singular(tabelle)}_id"
+                ziel = next(
+                    (z for z in self._store.get(tabelle, [])
+                     if z.get("id") == r.get(fk)),
+                    None,
+                )
+                kopie[tabelle] = (
+                    {f: ziel.get(f) for f in felder} if ziel else None
+                )
+            out.append(kopie)
+        return out
 
     def insert(self, payload):  # noqa: ANN001, ANN201
         self._op = "insert"
@@ -82,14 +142,32 @@ class _Query:
         self._or = expr
         return self
 
-    def order(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+    def order(self, col, *, desc=False, **_k):  # noqa: ANN001, ANN003, ANN201
+        # ECHT sortieren statt durchwinken. Ein No-Op hier hiesse: jeder Test
+        # ueber eine Reihenfolge ist gruen, ohne etwas zu pruefen — genau die
+        # Luecke, durch die die Gaesteliste live 150 namenlose Airbnb-Gaeste vor
+        # die 143 gepflegten sortierte (30.08.2026). Mehrfachaufrufe stapeln
+        # sich wie in PostgREST: zuerst gerufen = aeusseres Kriterium.
+        self._order.append((col, desc))
         return self
 
-    def limit(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+    def limit(self, n, **_k):  # noqa: ANN001, ANN003, ANN201
+        self._limit = n
         return self
 
-    def range(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+    def range(self, start, end):  # noqa: ANN001, ANN201
+        self._range = (start, end)
         return self
+
+    def _sortiert(self, rows):  # noqa: ANN001, ANN202
+        """Sortierschluessel wie PostgREST: None zuletzt, sonst nach Typ."""
+        for col, desc in reversed(self._order):
+            rows = sorted(
+                rows,
+                key=lambda r: (r.get(col) is None, _sortwert(r.get(col))),
+                reverse=desc,
+            )
+        return rows
 
     def _match(self, r):  # noqa: ANN001, ANN202
         for c, v in self._eq.items():
@@ -119,7 +197,17 @@ class _Query:
 
         if self._op == "select":
             rows = [r for r in self._rows if self._match(r)]
-            return _Res(list(rows), count=len(rows) if self._count else None)
+            gesamt = len(rows)
+            rows = self._sortiert(rows)
+            if self._range is not None:
+                start, ende = self._range
+                rows = rows[start : ende + 1]
+            elif self._limit is not None:
+                rows = rows[: self._limit]
+            rows = self._mit_embeds(rows)
+            # `count="exact"` zaehlt die TREFFER, nicht die ausgelieferte Seite —
+            # sonst meldete jede Liste mit Ausschnitt eine zu kleine Gesamtzahl.
+            return _Res(list(rows), count=gesamt if self._count else None)
         if self._op in ("insert", "upsert"):
             payloads = (
                 self._payload if isinstance(self._payload, list) else [self._payload]
@@ -233,6 +321,113 @@ def test_list_filter_blocked() -> None:
     svc = _svc(store)
     out = svc.list(_CTX, blocked=True)
     assert [i.id for i in out.items] == ["g2"]
+
+
+# --- Unvollstaendige Gaeste (Airbnb liefert keinen Namen) -------------------
+#
+# Der Anlass, live gemessen am 30.08.2026 beim Beta-Betrieb: 150 von 293 Gaesten
+# hiessen '—', standen wegen `order("name")` GANZ OBEN und trugen alle
+# `needs_review = false`. Die Kartei sah leer aus, obwohl 143 Gaeste gepflegt
+# waren — sie standen auf Seite vier.
+def test_list_sortiert_unvollstaendige_ans_ende() -> None:
+    """Gepflegte Gaeste zuerst, namenlose danach.
+
+    '—' steht in der Kollation VOR jedem Buchstaben. Ohne die
+    `needs_review`-Sortierung fuellt der Platzhalter also den ersten
+    Bildschirm.
+    """
+    store = {"guests": [
+        _guest_row(id="g1", name="—", needs_review=True),
+        _guest_row(id="g2", name="Zora Zimmer", needs_review=False),
+        _guest_row(id="g3", name="Anna Adam", needs_review=False),
+    ]}
+    out = _svc(store).list(_CTX)
+    assert [i.id for i in out.items] == ["g3", "g2", "g1"]
+
+
+def test_list_filter_needs_review() -> None:
+    """Der Filter „Unvollstaendig" ist der Weg zur gezielten Nachpflege."""
+    store = {"guests": [
+        _guest_row(id="g1", name="—", needs_review=True),
+        _guest_row(id="g2", name="Anna Adam", needs_review=False),
+    ]}
+    out = _svc(store).list(_CTX, needs_review=True)
+    assert [i.id for i in out.items] == ["g1"]
+    assert out.items[0].needs_review is True
+
+
+def test_list_buchungsbezug_nur_fuer_unvollstaendige() -> None:
+    """Objekt/Kanal/Anreise ersetzen den fehlenden Namen — und nur dann.
+
+    Ein namenloser Gast ist nicht identitaetslos: er haengt an einem Objekt und
+    einem Zeitraum. Bei gepflegten Gaesten bliebe der Bezug ueberfluessig und
+    die Antwort nur groesser.
+    """
+    store = {
+        "guests": [
+            _guest_row(id="g1", name="—", needs_review=True),
+            _guest_row(id="g2", name="Anna Adam", needs_review=False),
+        ],
+        "properties": [{"id": "p1", "title": "Feriehus Line"}],
+        "reservations": [
+            {"id": "r1", "tenant_id": "t1", "guest_id": "g1",
+             "property_id": "p1", "channel": "airbnb", "check_in": "2026-08-02"},
+            {"id": "r2", "tenant_id": "t1", "guest_id": "g2",
+             "property_id": "p1", "channel": "website", "check_in": "2026-08-05"},
+        ],
+    }
+    out = _svc(store).list(_CTX)
+    zeilen = {i.id: i for i in out.items}
+    assert zeilen["g1"].letztes_objekt == "Feriehus Line"
+    assert zeilen["g1"].letzter_kanal == "airbnb"
+    assert str(zeilen["g1"].letzte_anreise) == "2026-08-02"
+    # Gepflegter Gast: kein Bezug, obwohl eine Buchung existiert.
+    assert zeilen["g2"].letztes_objekt is None
+    assert zeilen["g2"].letzter_kanal is None
+
+
+def test_list_buchungsbezug_nimmt_die_juengste() -> None:
+    """Bei mehreren Aufenthalten zaehlt der letzte — er ist der wiedererkennbare."""
+    store = {
+        "guests": [_guest_row(id="g1", name="—", needs_review=True)],
+        "properties": [
+            {"id": "p1", "title": "Alt"}, {"id": "p2", "title": "Neu"},
+        ],
+        "reservations": [
+            {"id": "r1", "tenant_id": "t1", "guest_id": "g1",
+             "property_id": "p1", "channel": "airbnb", "check_in": "2025-01-01"},
+            {"id": "r2", "tenant_id": "t1", "guest_id": "g1",
+             "property_id": "p2", "channel": "airbnb", "check_in": "2026-08-02"},
+        ],
+    }
+    out = _svc(store).list(_CTX)
+    assert out.items[0].letztes_objekt == "Neu"
+
+
+def test_list_kanal_faellt_unter_die_quellen_maske() -> None:
+    """Der Kanal ist Vertriebsherkunft (§4.3) — Objekt und Datum bleiben.
+
+    Die Reinigung muss die Buchung zuordnen koennen, ohne zu erfahren, ueber
+    welches Portal sie kam.
+    """
+    store = {
+        "guests": [_guest_row(id="g1", name="—", needs_review=True)],
+        "properties": [{"id": "p1", "title": "Feriehus Line"}],
+        "reservations": [
+            {"id": "r1", "tenant_id": "t1", "guest_id": "g1",
+             "property_id": "p1", "channel": "airbnb", "check_in": "2026-08-02"},
+        ],
+    }
+    out = _svc(store, role="cleaner", perms=_PERMS_LIMITED).list(_CTX)
+    assert out.items[0].letzter_kanal is None
+    assert out.items[0].letztes_objekt == "Feriehus Line"
+
+
+def test_list_ohne_unvollstaendige_kein_buchungsabruf() -> None:
+    """Kein Zusatzabruf, wenn nichts nachzuschlagen ist (N+1-Vermeidung)."""
+    store = {"guests": [_guest_row(id="g1", name="Anna Adam")]}
+    out = _svc(store).list(_CTX)
+    assert out.items[0].letztes_objekt is None
 
 
 # --- Masking-Matrix ---------------------------------------------------------

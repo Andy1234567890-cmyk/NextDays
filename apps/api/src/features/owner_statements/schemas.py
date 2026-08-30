@@ -258,6 +258,28 @@ class StatementUpdate(BaseModel):
     period_to: date_ | None = None
 
 
+class StatementFinalizeRequest(BaseModel):
+    """Doppelbestätigung vor dem Festschreiben.
+
+    Finalisieren ist unumkehrbar (fortlaufende Rechnungsnummer nach §14 UStG,
+    eingefrorene Steuer) UND macht den Beleg für den Eigentümer sichtbar. Ein
+    Fehlklick ist damit eine falsche Rechnung beim Eigentümer.
+
+    Bestätigt wird deshalb nicht „ja, wirklich", sondern die ZAHL: der Client
+    schickt die Auszahlung zurück, die er dem Nutzer gezeigt hat. Weicht sie vom
+    Serverstand ab (Buchung nachgetragen, Verrechnungsposten geändert, Kurs
+    aktualisiert), war die Bestätigung für einen anderen Betrag — der Server
+    lehnt ab (409). Ein reines Boolean könnte das nicht erkennen.
+    """
+
+    # Die dem Nutzer angezeigte Eigentümer-Auszahlung. Fehlt sie, ist die
+    # Bestätigung nicht prüfbar → wir lehnen ab (kein „dann halt ohne Prüfung",
+    # Wurzel 4/5).
+    bestaetigte_auszahlung: float
+    # Währung dazu — 13.988,28 DKK ist nicht 13.988,28 EUR (Wurzel 4).
+    bestaetigte_waehrung: str = Field(min_length=3, max_length=3)
+
+
 class CurrencyAmount(BaseModel):
     """Betrag mit Währung — für je-Währung getrennte Summen (keine Mischsumme)."""
 

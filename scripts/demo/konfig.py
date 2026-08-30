@@ -113,6 +113,21 @@ class Supabase:
         )
         self._pruefen(antwort, f"delete {tabelle}")
 
+    def patch(self, tabelle: str, werte: dict[str, Any], **filter_: str) -> None:
+        """Felder bestehender Zeilen setzen; Filter als PostgREST-Ausdrücke.
+
+        Für Nachträge an schon geschriebenen Zeilen (etwa die Rückverknüpfung
+        Buchung → Posteingang-Thread). Ein `upsert` taugt dafür nicht: es
+        bräuchte die vollständige Zeile und überschriebe die übrigen Felder.
+        """
+        antwort = self._client.patch(
+            f"{self.url}/rest/v1/{tabelle}",
+            params=filter_,
+            headers=self._rest_headers,
+            json=werte,
+        )
+        self._pruefen(antwort, f"patch {tabelle}")
+
     def rpc(self, funktion: str, argumente: dict[str, Any]) -> Any:
         """Datenbankfunktion aufrufen (service_role)."""
         antwort = self._client.post(

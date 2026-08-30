@@ -292,7 +292,8 @@
       "hotel": "Hotel",
       "vacationRentals": "Počitniški objekti",
       "accounting": "Računovodstvo",
-      "guests": "Gostje"
+      "guests": "Gostje",
+      "analysis": "Ocena"
     },
     "roles": {
       "admin": "Skrbnik",
@@ -320,9 +321,6 @@
     "rooms": "Sobe",
     "overview": "Pregled",
     "reservationGroups": "Skupine",
-    "guestCategories": "Podjetja/kategorije",
-    "guestMonthlyReport": "Mesečno poročilo",
-    "vouchers": "Boni",
     "payments": "Plačila",
     "revenue": "Prihodek",
     "bankAccounts": "Bančni računi",
@@ -1267,7 +1265,10 @@
       "private": "Zasebni",
       "business": "Poslovni",
       "email": "E-pošta"
-    }
+    },
+    "filterIncomplete": "Samo nepopolno",
+    "unnamed": "Brez imena",
+    "unnamedFromChannel": "Gost {channel}"
   },
   "fotos": {
     "title": "Fotografije",
@@ -1615,6 +1616,19 @@
       },
       "basis": "Določa, kdaj rezervacija pade v obdobje: pri prihodu po dnevu prihoda, pri odhodu po dnevu odhoda. Rezervacija čez prehod meseca pristane glede na izbiro v enem ali drugem mesecu.",
       "statuses": "Obračunajo se samo rezervacije z enim od izbranih statusov. Privzeto so to potrjene in zaključene rezervacije — stornirane praviloma ne sodijo v izplačilo."
+    },
+    "finalizeConfirm": {
+      "title": "Potrdi obračun",
+      "what": "Obračun za {owner} prejme fiksno številko računa in postane viden lastniku.",
+      "theOwner": "lastnika",
+      "amountLabel": "Izplačilo lastniku",
+      "typeLabel": "Vnesite znesek za potrditev",
+      "typeHint": "Prosimo, vnesite zgornji znesek – tako je zagotovljeno, da je bil preverjen.",
+      "mismatch": "Vneseni znesek se ne ujema z obračunom.",
+      "irreversible": "Tega ni mogoče razveljaviti. Potrjen račun je mogoče preklicati le z dobropisom.",
+      "cancel": "Prekliči",
+      "confirm": "Potrdi",
+      "working": "Potrjuje se …"
     }
   },
   "ownerBilling": {
@@ -4207,11 +4221,6 @@
     "unterkuenftePage": {
       "title": "Nastanitve",
       "loadError": "Objektov ni bilo mogoče naložiti. Ali je zaledje dosegljivo?"
-    },
-    "einstellungenPage": {
-      "title": "Nastavitve rezervacij",
-      "description": "Nastavitve, povezane z rezervacijami (čas prijave/odjave, pravila za stornacijo, politike), trenutno urejate neposredno pri posameznem objektu.",
-      "linkLabel": "Na objekte"
     },
     "warnungenPage": {
       "title": "Opozorila",
@@ -10294,8 +10303,6 @@
       "cardOtherChannels": "Rezervacije prek vaše lastne spletne strani ostajajo brez provizije. Za rezervacije prek tržnice myBestDays velja {satz}, ki se zadrži neposredno ob prejemu plačila — te tukaj niso vključene.",
       "pending": "Odprto ({count, plural, one {# rezervacija} two {# rezervaciji} few {# rezervacije} other {# rezervacij}}): ",
       "pendingCapHint": " — obračuna se mesečna zgornja meja {cap}",
-      "pendingCapped": "Obračunano ({count, plural, one {# rezervacija} other {# rezervaciji}}): ",
-      "pendingCappedHint": " — Dosežena mesečna omejitev, nastalo je {total}",
       "noPending": "Trenutno ni odprtih provizij.",
       "showMonths": "Ogled mesečnega pregleda",
       "backToBilling": "Obračun",
@@ -10310,7 +10317,6 @@
       "colCommission": "Provizija",
       "colStatus": "Stanje",
       "capHint": "Navedena je nastala provizija, še pred uporabo zgornje meje. Na mesec se obračuna največ mesečna zgornja meja, ki jo vključuje vaš paket.",
-      "colCommissionIncurred": "ustvarjeno {total}, dosežena omejitev",
       "mixedCurrencyHint": "Meseci z rezervacijami v več valutah so prikazani brez skupnega zneska — posamezni zneski so navedeni na posameznem računu.",
       "statusPending": "V obračunu",
       "statusInvoiced": "Obračunano",
@@ -10329,7 +10335,10 @@
       "colChannel": "Portal",
       "colRate": "Stopnja",
       "entryNoProperty": "Objekt ne obstaja več",
-      "entrySum": "Skupaj"
+      "entrySum": "Skupaj",
+      "pendingCapped": "Obračunano ({count, plural, one {# rezervacija} other {# rezervaciji}}): ",
+      "pendingCappedHint": " — Dosežena mesečna omejitev, nastalo je {total}",
+      "colCommissionIncurred": "ustvarjeno {total}, dosežena omejitev"
     },
     "invoices": {
       "fees": "Pristojbine"
@@ -12027,5 +12036,113 @@
         "aktion": "Na kanale"
       }
     }
+  },
+  "analysis": {
+    "title": "Analiza",
+    "subtitle": "Ključni podatki, rezervacije, zasedenost in kanali za določeno obdobje.",
+    "loading": "Izračunavam …",
+    "empty": "Za to obdobje ni podatkov.",
+    "ownerStay": "Lastna uporaba",
+    "mixedCurrency": "Več valut v obdobju ({list}) — zneski niso sešteti. Prosimo, omejite na en objekt ali eno valuto.",
+    "occupancyFootnote": "Zasedeno je zasedeno – bodisi prek portala, lastne spletne strani, ustvarjeno samostojno ali s strani lastnika. Iz števca se odštejejo le dnevi, ko objekt ni bil v prodaji: blokirani dnevi in stop-sell.",
+    "kpiFootnote": "Odstotek na vsaki ploščici se primerja z enakim obdobjem prej. Klik na ploščico odpre časovno vrsto.",
+    "commissionFootnote": "Prazna polja za provizijo pomenijo, da portal ne posreduje provizije (Booking.com tega običajno ne stori) — nič se ne ocenjuje.",
+    "tab": {
+      "kennzahlen": "Ključni podatki",
+      "analytics": "Pregled",
+      "buchungen": "Rezervacije",
+      "auslastung": "Zasedenost",
+      "kanaele": "Kanali",
+      "gaeste": "Gostje"
+    },
+    "range": {
+      "monat": "Ta mesec",
+      "vormonat": "Prejšnji mesec",
+      "quartal": "Četrtletje",
+      "jahr": "Leto",
+      "frei": "Poljubno"
+    },
+    "filter": {
+      "range": "Časovno obdobje",
+      "from": "Od",
+      "to": "Do",
+      "basis": "Dodelitev",
+      "properties": "Objekti",
+      "allProperties": "Vsi objekti",
+      "channels": "Kanali",
+      "allChannels": "Vsi kanali"
+    },
+    "basis": {
+      "anreise": "Po prihodu",
+      "abreise": "Po odhodu",
+      "buchung": "Po datumu rezervacije",
+      "uebernachtung": "Po nočitvah"
+    },
+    "basisHint": {
+      "anreise": "Štejejo se rezervacije, katerih prihod pade v izbrano obdobje.",
+      "abreise": "Štejejo se rezervacije, katerih odhod pade v izbrano obdobje.",
+      "buchung": "Štejejo se rezervacije, ki so bile prejete v izbranem obdobju. Rezervacije brez dejanskega časovnega žiga portala tukaj manjkajo — ne ocenjujejo se.",
+      "uebernachtung": "Šteje se vsaka rezervacija, ki se dotika izbranega obdobja."
+    },
+    "kpi": {
+      "revenue": "Prihodki",
+      "bookingsCount": "{count, plural, one {# rezervacija} few {# rezervacije} other {# rezervacij}}",
+      "occupancy": "Zasedenost",
+      "ofBookable": "od {count} razpoložljivih nočitev",
+      "nights": "Nočitve",
+      "avgStay": "Ø {n} nočitev na bivanje",
+      "adr": "Ø cena na noč",
+      "adrHint": "Prihodki na rezervirano noč",
+      "revpar": "Dobiček na noč",
+      "revparHint": "Prihodek na nočitev",
+      "cancellations": "Stopnja odpovedi",
+      "cancelHint": "{count, plural, one {# odpoved} other {# odpovedi}}"
+    },
+    "chart": {
+      "revenueOverTime": "Zgodovina prihodkov",
+      "shareByChannel": "Delež prihodkov po kanalu",
+      "revenueByProperty": "Prihodek na nastanitev",
+      "footnote": "Skupni prihodek v obdobju: {total}"
+    },
+    "table": {
+      "rowCount": "{count, plural, one {# rezervacija} other {# rezervacije}}",
+      "columns": "Stolpci"
+    },
+    "col": {
+      "property": "Nastanitev",
+      "guest": "Gost",
+      "channel": "Kanal",
+      "stay": "Bivanje",
+      "nights": "Nočitve",
+      "guests": "Gostje",
+      "status": "Status",
+      "revenue": "Prihodek",
+      "commission": "Provizija",
+      "bookedAt": "Datum rezervacije",
+      "bookable": "Na voljo",
+      "booked": "Rezervirano",
+      "blocked": "Blokirano",
+      "stopSell": "Stop-Sell",
+      "arrivals": "Prihodi",
+      "cancellations": "Odpovedi",
+      "bookingsShort": "Rezervacije",
+      "net": "Neto",
+      "share": "Delež",
+      "country": "Država"
+    },
+    "guests": {
+      "total": "Gostje",
+      "returning": "Ponavljajoči se gostje",
+      "returningHint": "{count, plural, one {# oseba} other {# oseb}}",
+      "avgStay": "Povpr. dolžina bivanja",
+      "perBooking": "Povpr. število gostov na rezervacijo",
+      "origin": "Izvor",
+      "unknownCountry": "Neznano",
+      "returningOf": "{count} od {base} dodeljenih oseb",
+      "notIdentifiable": "Ni prepoznavno – portali ne zagotavljajo identifikacije gosta"
+    },
+    "ownerStayCount": "{count, plural, one {# lastna uporaba} other {# lastne uporabe}}",
+    "ownerStayRow": "Lastna uporaba",
+    "ownerStayRowHint": "Lastnik nepremičnine v svojem objektu – brez prodaje"
   }
 }

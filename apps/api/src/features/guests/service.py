@@ -14,6 +14,7 @@ Rechnungsbezug besteht (statt hartem Delete).
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Any
 
 from supabase import Client
 
@@ -123,6 +124,7 @@ class GuestsService:
     def list(
         self, ctx: AuthContext, *, q: str | None = None, vip: str | None = None,
         segment: str | None = None, blocked: bool | None = None,
+        needs_review: bool | None = None,
         limit: int = 50, offset: int = 0,
     ) -> GuestListResponse:
         tenant_id = self._require_tenant(ctx)
@@ -132,7 +134,7 @@ class GuestsService:
             .table("guests")
             .select(
                 "id, name, email, phone, company, vip_code, segment, is_blocked, "
-                "stays_count, last_stay_at",
+                "stays_count, last_stay_at, needs_review",
                 count="exact",
             )
             .eq("tenant_id", tenant_id)
@@ -143,6 +145,8 @@ class GuestsService:
             query = query.eq("segment", segment)
         if blocked is not None:
             query = query.eq("is_blocked", blocked)
+        if needs_review is not None:
+            query = query.eq("needs_review", needs_review)
         if q:
             # Suche über Name/E-Mail/Telefon/Firma (case-insensitive). Der Term
             # wird für die or-Grammatik entschärft (I-1, Filter-Injection).
@@ -151,8 +155,31 @@ class GuestsService:
                 f"name.ilike.{term},email.ilike.{term},"
                 f"phone.ilike.{term},company.ilike.{term}"
             )
+        # Gepflegte Gäste zuerst, unvollständige ans Ende.
+        #
+        # WARUM: `order("name")` allein sortierte den Gedankenstrich '—' VOR
+        # jeden Buchstaben (er steht in der Kollation vor 'A'). Beim Beta-
+        # Betrieb füllten damit 150 namenlose Airbnb-Gäste den ersten
+        # Bildschirm — die Kartei sah vollständig leer aus, obwohl 143 echte
+        # Gäste gepflegt waren. Sie standen auf Seite vier.
+        #
+        # Die Sortierung gehört in die DB und nicht ins Frontend: bei `limit`
+        # bekäme die Oberfläche sonst eine Seite voll Platzhalter und könnte
+        # nur diese eine Seite umsortieren.
         res = (
-            query.order("name").range(offset, offset + limit - 1).execute()
+            query.order("needs_review")
+            .order("name")
+            .range(offset, offset + limit - 1)
+            .execute()
+        )
+        rows = res.data or []
+        # Buchungsbezug NUR für die unvollständigen Zeilen dieser Seite: ein
+        # namenloser Gast ist nicht identitätslos — Objekt und Anreise machen
+        # ihn wiedererkennbar. Ein Abruf für die ganze Seite, nicht einer je
+        # Zeile (N+1).
+        bezug = self._letzter_aufenthalt(
+            tenant_id,
+            [str(r["id"]) for r in rows if r.get("needs_review")],
         )
         items = [
             GuestListItem(
@@ -166,11 +193,59 @@ class GuestsService:
                 is_blocked=bool(r.get("is_blocked")),
                 stays_count=r.get("stays_count") or 0,
                 last_stay_at=r.get("last_stay_at"),
+                needs_review=bool(r.get("needs_review")),
+                # Der Kanal ist Teil der Buchungsherkunft und faellt damit
+                # unter dieselbe Maske wie sonst (§4.3: staff/cleaner sehen
+                # keine Vertriebsdaten). Objekt und Datum bleiben sichtbar —
+                # das braucht die Reinigung, um die Buchung zuzuordnen.
+                letzter_kanal=mask.source_value(
+                    bezug.get(str(r["id"]), {}).get("kanal")
+                ),
+                letztes_objekt=bezug.get(str(r["id"]), {}).get("objekt"),
+                letzte_anreise=bezug.get(str(r["id"]), {}).get("anreise"),
             )
-            for r in (res.data or [])
+            for r in rows
         ]
         total = res.count if res.count is not None else len(items)
         return GuestListResponse(items=items, total=total)
+
+    def _letzter_aufenthalt(
+        self, tenant_id: str, guest_ids: list[str]
+    ) -> dict[str, dict[str, Any]]:
+        """Jüngste Buchung je Gast: Kanal, Objekt, Anreise.
+
+        Nur für namenlose Gäste gedacht — für gepflegte wäre es überflüssige
+        Last. Der Aufrufer übergibt deshalb bereits die gefilterte Liste; ist
+        sie leer, entfällt der Abruf ganz.
+
+        EIN Abruf für die ganze Seite statt einer je Zeile: bei 50 Zeilen wären
+        das sonst 50 Rundreisen zur DB, nur um eine Ersatzbeschriftung zu
+        bauen.
+        """
+        if not guest_ids:
+            return {}
+        res = (
+            self._db()
+            .table("reservations")
+            .select("guest_id, channel, check_in, properties(title)")
+            .eq("tenant_id", tenant_id)
+            .in_("guest_id", guest_ids)
+            .order("check_in", desc=True)
+            .execute()
+        )
+        neueste: dict[str, dict[str, Any]] = {}
+        for r in res.data or []:
+            gid = str(r.get("guest_id") or "")
+            # Absteigend sortiert → der erste Treffer je Gast ist der jüngste.
+            if not gid or gid in neueste:
+                continue
+            objekt = r.get("properties") or {}
+            neueste[gid] = {
+                "kanal": r.get("channel"),
+                "objekt": objekt.get("title") if isinstance(objekt, dict) else None,
+                "anreise": r.get("check_in"),
+            }
+        return neueste
 
     # --- Detail / CRUD ------------------------------------------------------
     def get(self, ctx: AuthContext, guest_id: str) -> GuestResponse:

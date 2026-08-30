@@ -292,7 +292,8 @@
       "hotel": "Hotel",
       "vacationRentals": "Ferienobjekte",
       "accounting": "Buchhaltung",
-      "guests": "Gäste"
+      "guests": "Gäste",
+      "analysis": "Auswertung"
     },
     "roles": {
       "admin": "Admin",
@@ -320,9 +321,6 @@
     "rooms": "Zimmer",
     "overview": "Übersicht",
     "reservationGroups": "Gruppen",
-    "guestCategories": "Firmen/Kategorien",
-    "guestMonthlyReport": "Monatsbericht",
-    "vouchers": "Gutscheine",
     "payments": "Zahlungen",
     "revenue": "Umsatz",
     "bankAccounts": "Bankkonten",
@@ -1166,8 +1164,11 @@
     "search": "Suchen",
     "searchPlaceholder": "Name, E-Mail, Telefon oder Firma …",
     "filterBlocked": "Nur gesperrte",
+    "filterIncomplete": "Nur unvollständige",
     "empty": "Keine Gäste gefunden.",
     "colName": "Name",
+    "unnamed": "Ohne Namen",
+    "unnamedFromChannel": "{channel}-Gast",
     "colContact": "Kontakt",
     "colCompany": "Firma",
     "colVip": "VIP",
@@ -1615,6 +1616,19 @@
       },
       "basis": "Legt fest, wann eine Buchung in den Zeitraum fällt: bei Check-in nach dem Anreisetag, bei Check-out nach dem Abreisetag. Eine Buchung über den Monatswechsel landet je nach Wahl im einen oder anderen Monat.",
       "statuses": "Nur Buchungen mit einem der gewählten Status werden abgerechnet. Standard sind bestätigte und abgeschlossene Buchungen — stornierte gehören normalerweise nicht in eine Auszahlung."
+    },
+    "finalizeConfirm": {
+      "title": "Abrechnung festschreiben",
+      "what": "Die Abrechnung für {owner} bekommt eine feste Rechnungsnummer und wird für den Eigentümer sichtbar.",
+      "theOwner": "den Eigentümer",
+      "amountLabel": "Auszahlung an den Eigentümer",
+      "typeLabel": "Betrag zur Bestätigung eintippen",
+      "typeHint": "Bitte den Betrag von oben eintragen — so ist sicher, dass er geprüft wurde.",
+      "mismatch": "Der eingetippte Betrag stimmt nicht mit der Abrechnung überein.",
+      "irreversible": "Das lässt sich nicht rückgängig machen. Eine festgeschriebene Rechnung kann nur noch durch eine Stornorechnung aufgehoben werden.",
+      "cancel": "Abbrechen",
+      "confirm": "Festschreiben",
+      "working": "Wird festgeschrieben …"
     }
   },
   "ownerBilling": {
@@ -4207,11 +4221,6 @@
     "unterkuenftePage": {
       "title": "Unterkünfte",
       "loadError": "Objekte konnten nicht geladen werden. Ist das Backend erreichbar?"
-    },
-    "einstellungenPage": {
-      "title": "Reservierungs-Einstellungen",
-      "description": "Buchungsbezogene Einstellungen (Check-in-/Check-out-Zeiten, Stornoregeln, Richtlinien) pflegen Sie derzeit direkt am jeweiligen Objekt.",
-      "linkLabel": "Zu den Objekten"
     },
     "warnungenPage": {
       "title": "Warnungen",
@@ -12047,6 +12056,114 @@
         "gesperrt": "Du brauchst zuerst ein Objekt.",
         "aktion": "Zu den Kanälen"
       }
+    }
+  },
+  "analysis": {
+    "title": "Auswertung",
+    "subtitle": "Kennzahlen, Buchungen, Auslastung und Kanäle eines Zeitraums.",
+    "loading": "Wird berechnet …",
+    "empty": "Für diesen Zeitraum gibt es keine Daten.",
+    "ownerStay": "Eigennutzung",
+    "ownerStayCount": "{count, plural, one {# Eigennutzung} other {# Eigennutzungen}}",
+    "ownerStayRow": "Eigennutzung",
+    "ownerStayRowHint": "Hauseigentümer im eigenen Objekt — kein Verkauf",
+    "mixedCurrency": "Mehrere Währungen im Zeitraum ({list}) — Beträge werden nicht zusammengezählt. Bitte auf ein Objekt oder eine Währung einschränken.",
+    "occupancyFootnote": "Belegt ist belegt — ob über ein Portal, die eigene Website, selbst angelegt oder durch den Eigentümer. Aus dem Nenner fallen nur Tage, an denen das Objekt nicht im Verkauf war: gesperrte Tage und Stop-Sell.",
+    "kpiFootnote": "Der Prozentwert an jeder Kachel vergleicht mit dem gleich langen Zeitraum davor. Ein Klick auf eine Kachel öffnet die Zeitreihe.",
+    "commissionFootnote": "Leere Provisionsfelder heißen, dass das Portal keine Provision übermittelt (Booking.com tut das meist nicht) — es wird nichts geschätzt.",
+    "tab": {
+      "kennzahlen": "Kennzahlen",
+      "analytics": "Übersicht",
+      "buchungen": "Buchungen",
+      "auslastung": "Auslastung",
+      "kanaele": "Kanäle",
+      "gaeste": "Gäste"
+    },
+    "range": {
+      "monat": "Dieser Monat",
+      "vormonat": "Vormonat",
+      "quartal": "Quartal",
+      "jahr": "Jahr",
+      "frei": "Frei gewählt"
+    },
+    "filter": {
+      "range": "Zeitraum",
+      "from": "Von",
+      "to": "Bis",
+      "basis": "Zuordnung",
+      "properties": "Objekte",
+      "allProperties": "Alle Objekte",
+      "channels": "Kanäle",
+      "allChannels": "Alle Kanäle"
+    },
+    "basis": {
+      "anreise": "Nach Anreise",
+      "abreise": "Nach Abreise",
+      "buchung": "Nach Buchungsdatum",
+      "uebernachtung": "Nach Übernachtung"
+    },
+    "basisHint": {
+      "anreise": "Gezählt werden Buchungen, deren Anreise in den Zeitraum fällt.",
+      "abreise": "Gezählt werden Buchungen, deren Abreise in den Zeitraum fällt.",
+      "buchung": "Gezählt werden Buchungen, die im Zeitraum eingegangen sind. Buchungen ohne echten Zeitstempel des Portals fehlen hier — sie werden nicht geschätzt.",
+      "uebernachtung": "Gezählt wird jede Buchung, die den Zeitraum berührt."
+    },
+    "kpi": {
+      "revenue": "Umsatz",
+      "bookingsCount": "{count, plural, one {# Buchung} other {# Buchungen}}",
+      "occupancy": "Auslastung",
+      "ofBookable": "von {count} buchbaren Nächten",
+      "nights": "Nächte",
+      "avgStay": "Ø {n} Nächte je Aufenthalt",
+      "adr": "Ø Nachtpreis",
+      "adrHint": "Umsatz je gebuchter Nacht",
+      "revpar": "Ertrag je Nacht",
+      "revparHint": "Umsatz je buchbarer Nacht",
+      "cancellations": "Stornoquote",
+      "cancelHint": "{count, plural, one {# Stornierung} other {# Stornierungen}}"
+    },
+    "chart": {
+      "revenueOverTime": "Umsatzverlauf",
+      "shareByChannel": "Umsatzanteil je Kanal",
+      "revenueByProperty": "Umsatz je Objekt",
+      "footnote": "Gesamtumsatz im Zeitraum: {total}"
+    },
+    "table": {
+      "rowCount": "{count, plural, one {# Buchung} other {# Buchungen}}",
+      "columns": "Spalten"
+    },
+    "col": {
+      "property": "Objekt",
+      "guest": "Gast",
+      "channel": "Kanal",
+      "stay": "Aufenthalt",
+      "nights": "Nächte",
+      "guests": "Gäste",
+      "status": "Status",
+      "revenue": "Umsatz",
+      "commission": "Provision",
+      "bookedAt": "Gebucht am",
+      "bookable": "Buchbar",
+      "booked": "Gebucht",
+      "blocked": "Gesperrt",
+      "stopSell": "Stop-Sell",
+      "arrivals": "Anreisen",
+      "cancellations": "Stornos",
+      "bookingsShort": "Buchungen",
+      "net": "Netto",
+      "share": "Anteil",
+      "country": "Land"
+    },
+    "guests": {
+      "total": "Gäste",
+      "returning": "Wiederkehrer",
+      "returningHint": "{count, plural, one {# Person} other {# Personen}}",
+      "returningOf": "{count} von {base} zuordenbaren Personen",
+      "notIdentifiable": "Nicht erkennbar — die Portale liefern keine Gastkennung",
+      "avgStay": "Ø Aufenthalt",
+      "perBooking": "Ø Gäste je Buchung",
+      "origin": "Herkunft",
+      "unknownCountry": "Unbekannt"
     }
   }
 }

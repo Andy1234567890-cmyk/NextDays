@@ -2,7 +2,9 @@
 
 // Geteilte Statistik-Bausteine für BEIDE Kontrollzentrum-Flächen:
 //   • Objekt-Statistiken (property-stats.tsx) — ein Objekt
-//   • globales Kontrollzentrum (control-center.tsx) — alle Objekte zusammengefasst
+//   • Auswertung, Reiter „Kennzahlen" (components/auswertung/
+//     reiter-kennzahlen.tsx) — alle Objekte zusammengefasst; lag bis zum
+//     30.08.2026 als eigene Seite unter /reservierungen/kontrollzentrum
 // Beide rendern dieselben KPI-Kacheln (mit Sparkline + %-Vergleich + Klick-Detail)
 // und Kanal-Donuts — eine Quelle, keine Doppelpflege. Beträge maskiert (null →
 // „No Data Found"), Währung/Position über formatCurrency (kein hartes €).

@@ -76,13 +76,17 @@ def list_guests(
     vip: Annotated[str | None, Query()] = None,
     segment: Annotated[str | None, Query()] = None,
     blocked: Annotated[bool | None, Query()] = None,
+    # Filter „Unvollständig": Gäste, bei denen der Kanal keinen Namen geliefert
+    # hat (Airbnb nie) oder deren Merkmale beim Anlegen mehrdeutig waren.
+    # Ohne diesen Filter gäbe es keinen Weg, die Nachpflege gezielt anzugehen.
+    needs_review: Annotated[bool | None, Query()] = None,
     limit: Annotated[int, Query(ge=1, le=200)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> GuestListResponse:
     try:
         return service.list(
             ctx, q=q, vip=vip, segment=segment, blocked=blocked,
-            limit=limit, offset=offset,
+            needs_review=needs_review, limit=limit, offset=offset,
         )
     except GuestsError as exc:
         raise _h(exc) from exc

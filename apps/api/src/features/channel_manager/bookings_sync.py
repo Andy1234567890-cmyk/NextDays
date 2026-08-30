@@ -24,6 +24,7 @@ from src.features.guests.identity import (
     create_placeholder_guest,
     resolve_or_create_guest,
 )
+from src.features.guests.service import recompute_guest_aggregates
 from src.features.notification_settings.ereignisse import melde_buchungs_ereignis
 from src.features.tasks.engine import sync_nach_id
 from src.jobs.queue import (
@@ -1593,6 +1594,29 @@ class BookingsSyncMixin:
         else:
             inserted = db.table("reservations").insert(row).execute().data
             reservation_id = inserted[0]["id"] if inserted else None
+        # Gegenzustand zur geschriebenen Reservierung (Wurzel 1): die
+        # Loyalty-Aggregate der Gaestekartei (`stays_count`, `total_revenue`,
+        # `last_stay_at`) leben in der `guests`-Zeile und werden NICHT von der
+        # DB gepflegt — sie muessen nach jeder Aenderung an einer Reservierung
+        # neu gerechnet werden.
+        #
+        # WARUM DAS HIER FEHLTE: `recompute_guest_aggregates` hing bisher nur
+        # an `reservations/writes.py` und am `booking_engine` — den beiden
+        # Pfaden fuer manuell angelegte und direkt gebuchte Aufenthalte. Der
+        # Channel-Manager schrieb Reservierungen an ihnen vorbei. Live gemessen
+        # am 30.08.2026: 290 der 293 Gaeste des Beta-Betriebs hatten Buchungen,
+        # aber nur EINER gefuellte Aggregate — die Gaestekartei zeigte ueberall
+        # „0 Aufenthalte" und kein Datum, obwohl 295 Reservierungen an Gaesten
+        # hingen.
+        #
+        # Auch im Update-Zweig: eine Modifikation kann Betrag oder Abreise
+        # verschieben, und ein Storno muss den Aufenthalt wieder abziehen.
+        #
+        # Best-effort: die Funktion faengt intern breit und loggt. Ein Fehler
+        # beim Nachrechnen darf den Buchungsimport nicht kippen (Wurzel 5) —
+        # die Buchung selbst steht bereits.
+        if guest_id:
+            recompute_guest_aggregates(db, tenant_id, guest_id)
             # Zeitleiste (0122): „Buchung erstellt" für die eingehende OTA-Buchung
             # (Booking/Airbnb & Co.). Nur bei NEUanlage — eine Modifikation ist
             # keine Erst-Erstellung. Best-effort: ein Log-Fehler darf den Import

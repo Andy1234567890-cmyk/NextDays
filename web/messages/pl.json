@@ -292,7 +292,8 @@
       "hotel": "Hotel",
       "vacationRentals": "Obiekty wakacyjne",
       "accounting": "Księgowość",
-      "guests": "Goście"
+      "guests": "Goście",
+      "analysis": "Ocena"
     },
     "roles": {
       "admin": "Admin",
@@ -320,9 +321,6 @@
     "rooms": "Pokoje",
     "overview": "Przegląd",
     "reservationGroups": "Grupy",
-    "guestCategories": "Firmy/kategorie",
-    "guestMonthlyReport": "Raport miesięczny",
-    "vouchers": "Bony",
     "payments": "Płatności",
     "revenue": "Przychód",
     "bankAccounts": "Konta bankowe",
@@ -1267,7 +1265,10 @@
       "private": "Prywatny",
       "business": "Służbowy",
       "email": "E-mail"
-    }
+    },
+    "filterIncomplete": "Tylko niekompletne",
+    "unnamed": "Bez nazwiska",
+    "unnamedFromChannel": "Gość {channel}"
   },
   "fotos": {
     "title": "Zdjęcia",
@@ -1615,6 +1616,19 @@
       },
       "basis": "Określa, kiedy rezerwacja wpada w dany okres: przy opcji Zameldowanie decyduje dzień przyjazdu, przy opcji Wymeldowanie — dzień wyjazdu. Rezerwacja na przełomie miesiąca trafia do jednego lub drugiego miesiąca zależnie od wyboru.",
       "statuses": "Rozliczane są tylko rezerwacje o jednym z wybranych statusów. Domyślnie są to rezerwacje potwierdzone i zakończone — anulowane zwykle nie należą do wypłaty."
+    },
+    "finalizeConfirm": {
+      "title": "Zatwierdź rozliczenie",
+      "what": "Rozliczenie dla {owner} otrzyma stały numer faktury i będzie widoczne dla właściciela.",
+      "theOwner": "właściciela",
+      "amountLabel": "Wypłata dla właściciela",
+      "typeLabel": "Wpisz kwotę do potwierdzenia",
+      "typeHint": "Proszę wpisać kwotę z góry — to zapewni, że została sprawdzona.",
+      "mismatch": "Wpisana kwota nie zgadza się z rozliczeniem.",
+      "irreversible": "Tej operacji nie można cofnąć. Zatwierdzoną fakturę można anulować jedynie za pomocą faktury korygującej.",
+      "cancel": "Anuluj",
+      "confirm": "Zatwierdź",
+      "working": "Zatwierdzanie…"
     }
   },
   "ownerBilling": {
@@ -4207,11 +4221,6 @@
     "unterkuenftePage": {
       "title": "Obiekty",
       "loadError": "Nie udało się załadować obiektów. Czy backend jest dostępny?"
-    },
-    "einstellungenPage": {
-      "title": "Ustawienia rezerwacji",
-      "description": "Ustawienia związane z rezerwacjami (godziny zameldowania/wymeldowania, zasady anulowania, regulaminy) są obecnie zarządzane bezpośrednio przy danym obiekcie.",
-      "linkLabel": "Przejdź do obiektów"
     },
     "warnungenPage": {
       "title": "Ostrzeżenia",
@@ -10294,8 +10303,6 @@
       "cardOtherChannels": "Rezerwacje przez Twoją własną stronę pozostają bez prowizji. Rezerwacje przez marketplace myBestDays są objęte prowizją {satz}, potrącaną bezpośrednio przy wpływie płatności — nie są tu uwzględnione.",
       "pending": "Nierozliczone ({count, plural, one {# rezerwacja} few {# rezerwacje} many {# rezerwacji} other {# rezerwacji}}): ",
       "pendingCapHint": " — rozliczony zostanie miesięczny limit {cap}",
-      "pendingCapped": "Zostanie rozliczone ({count, plural, one {# rezerwacja} few {# rezerwacje} many {# rezerwacji} other {# rezerwacji}}): ",
-      "pendingCappedHint": " — Osiągnięto limit miesięczny, powstało {total}",
       "noPending": "Obecnie brak nierozliczonych prowizji.",
       "showMonths": "Zobacz historię miesięczną",
       "backToBilling": "Rozliczenia",
@@ -10310,7 +10317,6 @@
       "colCommission": "Prowizja",
       "colStatus": "Status",
       "capHint": "Podana jest naliczona prowizja, jeszcze bez zastosowania limitu. W każdym miesiącu rozliczany jest najwyżej miesięczny limit zawarty w Twoim pakiecie.",
-      "colCommissionIncurred": "powstało {total}, osiągnięto limit",
       "mixedCurrencyHint": "Miesiące z rezerwacjami w kilku walutach są pokazywane bez sumy łącznej — poszczególne kwoty znajdują się na odpowiedniej fakturze.",
       "statusPending": "Do rozliczenia",
       "statusInvoiced": "Rozliczona",
@@ -10329,7 +10335,10 @@
       "colChannel": "Portal",
       "colRate": "Stawka",
       "entryNoProperty": "Obiekt już nie istnieje",
-      "entrySum": "Suma"
+      "entrySum": "Suma",
+      "pendingCapped": "Zostanie rozliczone ({count, plural, one {# rezerwacja} few {# rezerwacje} many {# rezerwacji} other {# rezerwacji}}): ",
+      "pendingCappedHint": " — Osiągnięto limit miesięczny, powstało {total}",
+      "colCommissionIncurred": "powstało {total}, osiągnięto limit"
     },
     "invoices": {
       "fees": "Opłaty"
@@ -12027,5 +12036,113 @@
         "aktion": "Do kanałów"
       }
     }
+  },
+  "analysis": {
+    "title": "Ocena",
+    "subtitle": "Kluczowe wskaźniki, rezerwacje, obłożenie i kanały dla danego okresu.",
+    "loading": "Obliczanie…",
+    "empty": "Brak danych dla tego okresu.",
+    "ownerStay": "Użytek własny",
+    "mixedCurrency": "Wiele walut w okresie ({list}) — kwoty nie są sumowane. Proszę ograniczyć do jednego obiektu lub waluty.",
+    "occupancyFootnote": "Zajęte to zajęte — czy to przez portal, własną stronę internetową, utworzone samodzielnie, czy przez właściciela. Z mianownika wypadają tylko dni, w których obiekt nie był w sprzedaży: zablokowane dni i stop-sell.",
+    "kpiFootnote": "Wartość procentowa na każdym kafelku porównuje się z poprzednim okresem o tej samej długości. Kliknięcie kafelka otwiera szereg czasowy.",
+    "commissionFootnote": "Puste pola prowizji oznaczają, że portal nie przekazuje prowizji (Booking.com zazwyczaj tego nie robi) — nic nie jest szacowane.",
+    "tab": {
+      "kennzahlen": "Kluczowe wskaźniki",
+      "analytics": "Przegląd",
+      "buchungen": "Rezerwacje",
+      "auslastung": "Obłożenie",
+      "kanaele": "Kanały",
+      "gaeste": "Goście"
+    },
+    "range": {
+      "monat": "Ten miesiąc",
+      "vormonat": "Poprzedni miesiąc",
+      "quartal": "Kwartał",
+      "jahr": "Rok",
+      "frei": "Dowolny wybór"
+    },
+    "filter": {
+      "range": "Okres",
+      "from": "Od",
+      "to": "Do",
+      "basis": "Przyporządkowanie",
+      "properties": "Obiekty",
+      "allProperties": "Wszystkie obiekty",
+      "channels": "Kanały",
+      "allChannels": "Wszystkie kanały"
+    },
+    "basis": {
+      "anreise": "Według daty przyjazdu",
+      "abreise": "Według daty wyjazdu",
+      "buchung": "Według daty rezerwacji",
+      "uebernachtung": "Według daty noclegu"
+    },
+    "basisHint": {
+      "anreise": "Liczone są rezerwacje, których data przyjazdu przypada w danym okresie.",
+      "abreise": "Liczone są rezerwacje, których data wyjazdu przypada w danym okresie.",
+      "buchung": "Liczone są rezerwacje, które wpłynęły w danym okresie. Brakuje tu rezerwacji bez prawdziwego znacznika czasu portalu — nie są one szacowane.",
+      "uebernachtung": "Liczy się każda rezerwacja, która dotyczy danego okresu."
+    },
+    "kpi": {
+      "revenue": "Przychód",
+      "bookingsCount": "{count, plural, one {# rezerwacja} few {# rezerwacje} many {# rezerwacji} other {# rezerwacji}}",
+      "occupancy": "Obłożenie",
+      "ofBookable": "z {count} dostępnych nocy",
+      "nights": "Noce",
+      "avgStay": "Śr. {n} nocy na pobyt",
+      "adr": "Śr. cena za noc",
+      "adrHint": "Przychód za zarezerwowaną noc",
+      "revpar": "Przychód za noc",
+      "revparHint": "Przychód za nocleg",
+      "cancellations": "Współczynnik anulowania",
+      "cancelHint": "{count, plural, one {# anulowanie} other {# anulowania}}"
+    },
+    "chart": {
+      "revenueOverTime": "Historia przychodów",
+      "shareByChannel": "Udział w przychodach według kanału",
+      "revenueByProperty": "Przychód za obiekt",
+      "footnote": "Całkowity przychód w okresie: {total}"
+    },
+    "table": {
+      "rowCount": "{count, plural, one {# rezerwacja} other {# rezerwacje}}",
+      "columns": "Kolumny"
+    },
+    "col": {
+      "property": "Obiekt",
+      "guest": "Gość",
+      "channel": "Kanał",
+      "stay": "Pobyt",
+      "nights": "Noce",
+      "guests": "Goście",
+      "status": "Status",
+      "revenue": "Przychód",
+      "commission": "Prowizja",
+      "bookedAt": "Zarezerwowano dnia",
+      "bookable": "Dostępne",
+      "booked": "Zarezerwowane",
+      "blocked": "Zablokowane",
+      "stopSell": "Stop-Sell",
+      "arrivals": "Przyjazdy",
+      "cancellations": "Anulowane",
+      "bookingsShort": "Rezerwacje",
+      "net": "Netto",
+      "share": "Udział",
+      "country": "Kraj"
+    },
+    "guests": {
+      "total": "Goście",
+      "returning": "Powracający goście",
+      "returningHint": "{count, plural, one {# osoba} other {# osoby}}",
+      "avgStay": "Śr. długość pobytu",
+      "perBooking": "Śr. liczba gości na rezerwację",
+      "origin": "Pochodzenie",
+      "unknownCountry": "Nieznane",
+      "returningOf": "{count} z {base} możliwych do przypisania osób",
+      "notIdentifiable": "Nie do zidentyfikowania — portale nie dostarczają identyfikatora gościa"
+    },
+    "ownerStayCount": "{count, plural, one {# użycie własne} other {# użycia własne}}",
+    "ownerStayRow": "Użytek własny",
+    "ownerStayRowHint": "Właściciel mieszka w obiekcie — brak sprzedaży"
   }
 }

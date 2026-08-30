@@ -170,6 +170,7 @@ export default async function DashboardLayout({
           accommodationType={accommodationType}
           country={me?.country ?? null}
           istDemo={Boolean(me?.is_demo)}
+          istIntern={Boolean(me?.is_internal)}
           einrichtungOffen={einrichtungOffen}
         />
         <SidebarInset>

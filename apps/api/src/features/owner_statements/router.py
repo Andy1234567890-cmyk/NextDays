@@ -24,6 +24,7 @@ from .schemas import (
     ExpenseResponse,
     ExpenseUpdate,
     SliceHealth,
+    StatementFinalizeRequest,
     StatementGenerateRequest,
     StatementListResponse,
     StatementResponse,
@@ -154,9 +155,15 @@ def finalize_statement(
     statement_id: str,
     service: OwnerStatementsServiceDep,
     ctx: Annotated[AuthContext, Depends(_REPORTING)],
+    bestaetigung: StatementFinalizeRequest | None = None,
 ) -> StatementResponse:
+    """Festschreiben — verlangt die Doppelbestätigung des Auszahlungsbetrags.
+
+    Ohne Bestätigung: 428. Weicht der bestätigte Betrag vom aktuellen Stand ab:
+    409. Grund: der Beleg bekommt eine unveränderbare Rechnungsnummer und wird
+    dem Eigentümer sichtbar."""
     try:
-        return service.finalize(ctx, statement_id)
+        return service.finalize(ctx, statement_id, bestaetigung)
     except PayoutUnbekannt as exc:
         raise _payout_fehler(exc) from exc
     except StatementError as exc:

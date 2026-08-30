@@ -336,3 +336,36 @@ def test_create_placeholder_guest_never_none():
     gid2 = create_placeholder_guest(db, "t1", channel="ota", external_ref="RES-X")
     assert gid2 == gid
     assert len(db.store["guests"]) == 1
+
+
+# --- needs_review wird aus dem ERGEBNIS abgeleitet --------------------------
+def test_gast_ohne_namen_ist_immer_pruefbeduerftig() -> None:
+    """Airbnb liefert eine stabile Gast-ID, aber nie einen Namen.
+
+    Damit greift der REGELPFAD (`resolve_or_create_guest`, `needs_review=False`)
+    und nicht `create_placeholder_guest`. Vor dem 30.08.2026 blieb die
+    Markierung deshalb aus: live trugen ALLE 293 Gaeste des Beta-Betriebs
+    `needs_review = false`, 150 davon hiessen '—'. Die Ableitung haengt jetzt am
+    Ergebnis (kein Name), nicht an der Absicht des Aufrufers.
+    """
+    db = _DB()
+    gid = resolve_or_create_guest(
+        db, "t1",
+        GuestContact(channel="ota", stable_external_ref="airbnb-42"),
+    )
+    assert gid is not None
+    zeile = db.store["guests"][0]
+    assert zeile["name"] == "—"
+    assert zeile["needs_review"] is True
+
+
+def test_gast_mit_namen_bleibt_ungemarkt() -> None:
+    """Die Ableitung darf gepflegte Gaeste nicht mitmarkieren."""
+    db = _DB()
+    resolve_or_create_guest(
+        db, "t1",
+        GuestContact(channel="website", name="Anna Adam", email="a@x.de"),
+    )
+    zeile = db.store["guests"][0]
+    assert zeile["name"] == "Anna Adam"
+    assert zeile["needs_review"] is False

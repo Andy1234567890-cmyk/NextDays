@@ -1,15 +1,29 @@
 "use client";
 
-// Gästeliste mit Suche + Filtern (VIP/blockiert). Zeilen verlinken auf die
-// Gästekarte. Felder sind serverseitig maskiert — wir rendern nur, was kommt
-// (null → „—"). Neuanlage öffnet einen schlanken Dialog.
+// Gästeliste mit Suche + Filtern (gesperrt/unvollständig). Zeilen verlinken auf
+// die Gästekarte. Felder sind serverseitig maskiert — wir rendern nur, was
+// kommt (null → „—"). Neuanlage öffnet einen schlanken Dialog.
+//
+// UNVOLLSTÄNDIGE GÄSTE: Airbnb liefert über Channex nie einen Gastnamen. Weil
+// `guests.name` NOT NULL ist, steht dort wörtlich „—". Beim Beta-Betrieb waren
+// das 150 von 293 Zeilen — die Kartei sah dadurch komplett leer aus, obwohl 143
+// Gäste gepflegt waren (30.08.2026).
+//
+// Statt des nackten Strichs zeigt die Zeile jetzt den GRUND und die
+// Buchungsherkunft: „Airbnb-Gast · Feriehus Line · 02.08.2026". Ein namenloser
+// Gast ist nicht identitätslos — an Objekt und Anreise erkennt der Betrieb ihn
+// wieder. Airbnb macht es im eigenen Kalender genauso.
+//
+// Erfunden wird dabei nichts (Wurzel 4): fehlt auch der Buchungsbezug, bleibt
+// es beim Strich mit dem Hinweis „ohne Namen".
 import { Icon } from "@iconify/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 
 import { Button } from "@nextdays/ui/button";
 import type { GuestAccess } from "@/lib/guests-access";
+import { channelLabel, channelLogo } from "@/lib/channel-logos";
 import { type GuestListItem, createGuest, listGuests } from "@/lib/guests";
 
 export function GuestsList({
@@ -28,6 +42,7 @@ export function GuestsList({
   const [rows, setRows] = useState<GuestListItem[]>(guests);
   const [q, setQ] = useState("");
   const [onlyBlocked, setOnlyBlocked] = useState(false);
+  const [onlyIncomplete, setOnlyIncomplete] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [pending, start] = useTransition();
 
@@ -38,11 +53,26 @@ export function GuestsList({
     setRows(guests);
   }, [guests]);
 
-  const reload = (opts: { q?: string; blocked?: boolean }) =>
+  const reload = (opts: {
+    q?: string;
+    blocked?: boolean;
+    needsReview?: boolean;
+  }) =>
     start(async () => {
       const res = await listGuests(opts);
       if (res.ok) setRows(res.data.items);
     });
+
+  // Ein Ort für den aktuellen Filterstand: sonst vergisst jeder neue Auslöser
+  // (Suchknopf, Enter, eine zweite Checkbox) irgendeinen Teil und setzt ihn
+  // still zurück.
+  const filterStand = (
+    aenderung: { blocked?: boolean; needsReview?: boolean } = {},
+  ) => ({
+    q: q || undefined,
+    blocked: (aenderung.blocked ?? onlyBlocked) || undefined,
+    needsReview: (aenderung.needsReview ?? onlyIncomplete) || undefined,
+  });
 
   return (
     <div className="flex flex-col gap-4">
@@ -71,7 +101,7 @@ export function GuestsList({
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && reload({ q, blocked: onlyBlocked || undefined })}
+            onKeyDown={(e) => e.key === "Enter" && reload(filterStand())}
             placeholder={t("searchPlaceholder")}
             className="w-full rounded-full border border-border bg-background py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-accent/40"
           />
@@ -82,16 +112,31 @@ export function GuestsList({
             checked={onlyBlocked}
             onChange={(e) => {
               setOnlyBlocked(e.target.checked);
-              reload({ q: q || undefined, blocked: e.target.checked || undefined });
+              reload(filterStand({ blocked: e.target.checked }));
             }}
             className="size-4 accent-[var(--color-accent)]"
           />
           {t("filterBlocked")}
         </label>
+        {/* Filter „Unvollständig": der Weg zur gezielten Nachpflege. Ohne ihn
+            liegen die namenlosen Gäste zwar hinten, sind aber nur durch
+            Blättern erreichbar. */}
+        <label className="flex items-center gap-2 rounded-full border border-border px-3 py-2 text-sm">
+          <input
+            type="checkbox"
+            checked={onlyIncomplete}
+            onChange={(e) => {
+              setOnlyIncomplete(e.target.checked);
+              reload(filterStand({ needsReview: e.target.checked }));
+            }}
+            className="size-4 accent-[var(--color-accent)]"
+          />
+          {t("filterIncomplete")}
+        </label>
         <Button
           type="button"
           variant="outline"
-          onClick={() => reload({ q: q || undefined, blocked: onlyBlocked || undefined })}
+          onClick={() => reload(filterStand())}
           disabled={pending}
         >
           {t("search")}
@@ -136,7 +181,7 @@ export function GuestsList({
                       {g.is_blocked && (
                         <Icon icon="ph:prohibit" className="size-4 text-destructive" />
                       )}
-                      {g.name ?? "—"}
+                      <GastName g={g} />
                     </span>
                   </td>
                   {access.contact && (
@@ -172,6 +217,63 @@ export function GuestsList({
         />
       )}
     </div>
+  );
+}
+
+/** Name einer Gästezeile — oder, wenn keiner geliefert wurde, der Grund.
+ *
+ *  Der Betrieb soll nicht raten, warum eine Zeile leer ist. Drei Stufen, je
+ *  nachdem, was tatsächlich vorliegt (nichts davon wird erfunden, Wurzel 4):
+ *
+ *  1. echter Name              → er allein
+ *  2. kein Name, aber Buchung  → „Airbnb-Gast" + Objekt + Anreise
+ *  3. gar nichts               → „—" mit dem Hinweis „ohne Namen"
+ */
+function GastName({ g }: { g: GuestListItem }) {
+  const t = useTranslations("guests");
+  const format = useFormatter();
+
+  // Der Server liefert bei unvollständigen Gästen den Strich als Namen, weil
+  // `guests.name` NOT NULL ist. Für die Anzeige zählt das nicht als Name.
+  const echterName = !g.needs_review && g.name && g.name.trim() !== "—";
+  if (echterName) return <>{g.name}</>;
+
+  const logo = g.letzter_kanal ? channelLogo(g.letzter_kanal) : null;
+  const kanal = g.letzter_kanal ? channelLabel(g.letzter_kanal) : null;
+  const anreise = g.letzte_anreise
+    ? format.dateTime(new Date(g.letzte_anreise), {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      })
+    : null;
+  // Nur die Teile, die es wirklich gibt — sonst stünden dort leere Trenner.
+  const bezug = [g.letztes_objekt, anreise].filter(Boolean).join(" · ");
+
+  return (
+    <span className="flex min-w-0 items-center gap-2">
+      {logo ? (
+        // eslint-disable-next-line @next/next/no-img-element -- Kanal-Logos sind
+        // lokale, feste Dateien (lib/channel-logos); next/image brächte hier nur
+        // Layout-Overhead für ein 16px-Symbol.
+        <img src={logo} alt="" className="size-4 shrink-0 rounded-[0.1875rem]" />
+      ) : (
+        <Icon
+          icon="ph:user-circle-dashed"
+          className="size-4 shrink-0 text-muted-foreground"
+        />
+      )}
+      <span className="min-w-0">
+        <span className="block truncate text-muted-foreground italic">
+          {kanal ? t("unnamedFromChannel", { channel: kanal }) : t("unnamed")}
+        </span>
+        {bezug && (
+          <span className="block truncate text-xs text-muted-foreground/70">
+            {bezug}
+          </span>
+        )}
+      </span>
+    </span>
   );
 }
 

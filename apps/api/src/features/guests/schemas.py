@@ -79,6 +79,19 @@ class GuestListItem(BaseModel):
     is_blocked: bool = False
     stays_count: int = 0
     last_stay_at: date | None = None
+    # Unvollständiger Gast: der Kanal hat keinen Namen geliefert (Airbnb nie),
+    # oder E-Mail und Telefon zeigten beim Anlegen auf verschiedene Bestands-
+    # gäste. Die Oberfläche zeigt statt des nackten '—' den Grund.
+    needs_review: bool = False
+    # Ersatz-Kennung für genau diese Fälle: woher die Buchung kam und welche.
+    # Ein namenloser Gast ist nicht identitätslos — er hängt an einem Objekt
+    # und einem Zeitraum, und daran erkennt der Betrieb ihn wieder. Airbnb
+    # macht es im eigenen Kalender genauso ("Airbnb-Gast" + Buchungsbezug).
+    # Alle drei sind None, sobald ein echter Name existiert: dann ist der
+    # Bezug überflüssig und die Antwort bliebe nur unnötig groß.
+    letzter_kanal: str | None = None      # 'airbnb', 'booking_com', …
+    letztes_objekt: str | None = None     # properties.title
+    letzte_anreise: date | None = None
 
 
 class GuestListResponse(BaseModel):

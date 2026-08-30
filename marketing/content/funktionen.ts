@@ -58,6 +58,14 @@ export type Funktion = {
   /** Gruppierung im Menü und auf der Übersicht. */
   bereich: "verkauf" | "gast" | "betrieb";
   /**
+   * Schlüssel einer ZWEITEN Zeichnung (`GRUPPEN_ILLUSTRATION`) für den
+   * Beleg-Block. Nur nötig, solange eine Seite WEDER `aufnahmeBlock` NOCH
+   * `telefonBlock` hat — dann stünde dort sonst dieselbe Zeichnung wie im
+   * Hero, und zwei gleiche Bilder auf einer Seite lesen sich als Fehler.
+   * Sobald die echten Aufnahmen liegen, kann das Feld wieder entfallen.
+   */
+  zweiteIllustration?: string;
+  /**
    * Die Teilaspekte als Reiter (Referenz: hostaway.com/features/…, wo unter
    * jeder Funktion eine Chip-Reihe die Unterfunktionen aufblättert). Der
    * Schlüssel zeigt auf `funktionen.<key>.reiter.<key>`, `grafik` bestimmt die
@@ -117,11 +125,16 @@ export const FUNKTIONEN: readonly Funktion[] = [
     // wie im Kopf dieser Datei für die neun bestehenden Seiten).
     key: "ki",
     slug: "ki-antworten",
-    // Motive der KI-Seite im Posteingang. Bis die Aufnahmen liegen, zeigt die
-    // Vorlage von selbst die gebaute Illustration (wie bei „app").
-    aufnahme: "ki-antworten",
-    aufnahmeBlock: "ki-regeln",
+    // NOCH KEINE Aufnahme: die KI-Seite im Posteingang ist gebaut, aber weder
+    // deployt noch fotografiert. `null` heisst „zeig die Zeichnung" — ein
+    // gesetzter Name ohne Datei ergäbe eine leere getönte Fläche, also ein
+    // sichtbares Loch im Hero (Wurzel 4: kein erfundener Ersatzwert).
+    // Sobald `ki-antworten`/`ki-regeln` in `lib/app-aufnahmen.json` stehen,
+    // werden hier die beiden Namen eingetragen — sonst nichts.
+    aufnahme: null,
+    aufnahmeBlock: null,
     bereich: "gast",
+    zweiteIllustration: "kiRegeln",
     reiter: [
       { key: "kontext", grafik: "nachrichten" },
       { key: "regeln", grafik: "checkliste" },

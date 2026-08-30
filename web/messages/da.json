@@ -292,7 +292,8 @@
       "hotel": "Hotel",
       "vacationRentals": "Ferieboliger",
       "accounting": "Regnskab",
-      "guests": "Gæster"
+      "guests": "Gæster",
+      "analysis": "Evaluering"
     },
     "roles": {
       "admin": "Admin",
@@ -320,9 +321,6 @@
     "rooms": "Værelser",
     "overview": "Oversigt",
     "reservationGroups": "Grupper",
-    "guestCategories": "Virksomheder/kategorier",
-    "guestMonthlyReport": "Månedsrapport",
-    "vouchers": "Gavekort",
     "payments": "Betalinger",
     "revenue": "Omsætning",
     "bankAccounts": "Bankkonti",
@@ -1267,7 +1265,10 @@
       "private": "Privat",
       "business": "Arbejde",
       "email": "E-mail"
-    }
+    },
+    "filterIncomplete": "Kun ufuldstændig",
+    "unnamed": "Uden navn",
+    "unnamedFromChannel": "{channel}-gæst"
   },
   "fotos": {
     "title": "Fotos",
@@ -1615,6 +1616,19 @@
       },
       "basis": "Bestemmer, hvornår en booking falder i perioden: ved Check-in efter ankomstdagen, ved Check-ud efter afrejsedagen. En booking hen over månedsskiftet lander i den ene eller den anden måned alt efter valget.",
       "statuses": "Kun bookinger med en af de valgte statusser bliver afregnet. Standard er bekræftede og afsluttede bookinger — annullerede hører normalt ikke til i en udbetaling."
+    },
+    "finalizeConfirm": {
+      "title": "Lås afregning",
+      "what": "Afregningen for {owner} får et fast fakturanummer og bliver synlig for ejeren.",
+      "theOwner": "ejeren",
+      "amountLabel": "Udbetaling til ejer",
+      "typeLabel": "Indtast beløb til bekræftelse",
+      "typeHint": "Indtast venligst beløbet ovenfor – dette sikrer, at det er blevet kontrolleret.",
+      "mismatch": "Det indtastede beløb stemmer ikke overens med afregningen.",
+      "irreversible": "Dette kan ikke fortrydes. En låst faktura kan kun annulleres med en kreditnota.",
+      "cancel": "Annuller",
+      "confirm": "Lås",
+      "working": "Låser..."
     }
   },
   "ownerBilling": {
@@ -4207,11 +4221,6 @@
     "unterkuenftePage": {
       "title": "Overnatningssteder",
       "loadError": "Objekterne kunne ikke indlæses. Er backenden tilgængelig?"
-    },
-    "einstellungenPage": {
-      "title": "Reservationsindstillinger",
-      "description": "Bookingrelaterede indstillinger (check-in-/check-ud-tider, annulleringsregler, retningslinjer) administrerer du aktuelt direkte på det pågældende objekt.",
-      "linkLabel": "Til objekterne"
     },
     "warnungenPage": {
       "title": "Advarsler",
@@ -10294,8 +10303,6 @@
       "cardOtherChannels": "Bookinger via din egen hjemmeside er fortsat provisionsfrie. For bookinger via myBestDays-markedspladsen gælder {satz}, som tilbageholdes direkte ved betalingen — de indgår ikke her.",
       "pending": "Udestående ({count, plural, one {# booking} other {# bookinger}}): ",
       "pendingCapHint": " — der afregnes månedsloftet på {cap}",
-      "pendingCapped": "Faktureres ({count, plural, one {# booking} other {# bookinger}}): ",
-      "pendingCappedHint": " — Månedligt loft nået, opstået {total}",
       "noPending": "Ingen udestående provisioner i øjeblikket.",
       "showMonths": "Se månedsoversigt",
       "backToBilling": "Afregning",
@@ -10310,7 +10317,6 @@
       "colCommission": "Provision",
       "colStatus": "Status",
       "capHint": "Det viste beløb er den påløbne provision, før loftet anvendes. Pr. måned afregnes højst det månedsloft, der følger med din plan.",
-      "colCommissionIncurred": "oprettet {total}, loft nået",
       "mixedCurrencyHint": "Måneder med bookinger i flere valutaer vises uden samlet sum — de enkelte beløb står på den pågældende faktura.",
       "statusPending": "Afregnes",
       "statusInvoiced": "Afregnet",
@@ -10329,7 +10335,10 @@
       "colChannel": "Portal",
       "colRate": "Sats",
       "entryNoProperty": "Objektet findes ikke længere",
-      "entrySum": "I alt"
+      "entrySum": "I alt",
+      "pendingCapped": "Faktureres ({count, plural, one {# booking} other {# bookinger}}): ",
+      "pendingCappedHint": " — Månedligt loft nået, opstået {total}",
+      "colCommissionIncurred": "oprettet {total}, loft nået"
     },
     "invoices": {
       "fees": "Gebyrer"
@@ -12027,5 +12036,113 @@
         "aktion": "Til kanalerne"
       }
     }
+  },
+  "analysis": {
+    "title": "Evaluering",
+    "subtitle": "Nøgletal, bookinger, belægning og kanaler for en periode.",
+    "loading": "Beregnes ...",
+    "empty": "Der er ingen data for denne periode.",
+    "ownerStay": "Egen brug",
+    "mixedCurrency": "Flere valutaer i perioden ({list}) – beløb lægges ikke sammen. Begræns venligst til ét objekt eller én valuta.",
+    "occupancyFootnote": "Optaget er optaget – uanset om det er via en portal, din egen hjemmeside, manuelt oprettet eller af ejeren. Kun dage, hvor ejendommen ikke var til salg, falder ud af nævneren: blokerede dage og stop-sell.",
+    "kpiFootnote": "Procentdelen på hvert kort sammenlignes med den tilsvarende periode før. Et klik på et kort åbner tidslinjen.",
+    "commissionFootnote": "Tomme provisionsfelter betyder, at portalen ikke overfører provision (Booking.com gør det som regel ikke) – intet estimeres.",
+    "tab": {
+      "kennzahlen": "Nøgletal",
+      "analytics": "Oversigt",
+      "buchungen": "Bookinger",
+      "auslastung": "Belægning",
+      "kanaele": "Kanaler",
+      "gaeste": "Gæster"
+    },
+    "range": {
+      "monat": "Denne måned",
+      "vormonat": "Sidste måned",
+      "quartal": "Kvartal",
+      "jahr": "År",
+      "frei": "Frit valg"
+    },
+    "filter": {
+      "range": "Periode",
+      "from": "Fra",
+      "to": "Til",
+      "basis": "Tildeling",
+      "properties": "Objekter",
+      "allProperties": "Alle objekter",
+      "channels": "Kanaler",
+      "allChannels": "Alle kanaler"
+    },
+    "basis": {
+      "anreise": "Efter ankomst",
+      "abreise": "Efter afrejse",
+      "buchung": "Efter bookingdato",
+      "uebernachtung": "Efter overnatning"
+    },
+    "basisHint": {
+      "anreise": "Der tælles bookinger, hvis ankomst falder inden for perioden.",
+      "abreise": "Der tælles bookinger, hvis afrejse falder inden for perioden.",
+      "buchung": "Der tælles bookinger, der er modtaget inden for perioden. Bookinger uden et reelt tidsstempel fra portalen mangler her – de estimeres ikke.",
+      "uebernachtung": "Hver booking, der berører perioden, tælles."
+    },
+    "kpi": {
+      "revenue": "Omsætning",
+      "bookingsCount": "{count, plural, one {# booking} other {# bookinger}}",
+      "occupancy": "Belægning",
+      "ofBookable": "af {count} bookbare nætter",
+      "nights": "Nætter",
+      "avgStay": "Ø {n} nætter pr. ophold",
+      "adr": "Ø natpris",
+      "adrHint": "Omsætning pr. booket nat",
+      "revpar": "Indtjening pr. nat",
+      "revparHint": "Omsætning pr. bookbar nat",
+      "cancellations": "Annulleringsrate",
+      "cancelHint": "{count, plural, one {# annullering} other {# annulleringer}}"
+    },
+    "chart": {
+      "revenueOverTime": "Omsætningsudvikling",
+      "shareByChannel": "Omsætningsandel pr. kanal",
+      "revenueByProperty": "Omsætning pr. ejendom",
+      "footnote": "Samlet omsætning i perioden: {total}"
+    },
+    "table": {
+      "rowCount": "{count, plural, one {# booking} other {# bookinger}}",
+      "columns": "Kolonner"
+    },
+    "col": {
+      "property": "Ejendom",
+      "guest": "Gæst",
+      "channel": "Kanal",
+      "stay": "Ophold",
+      "nights": "Nætter",
+      "guests": "Gæster",
+      "status": "Status",
+      "revenue": "Omsætning",
+      "commission": "Provision",
+      "bookedAt": "Booket den",
+      "bookable": "Kan bookes",
+      "booked": "Booket",
+      "blocked": "Blokeret",
+      "stopSell": "Stop-Sell",
+      "arrivals": "Ankomster",
+      "cancellations": "Annulleringer",
+      "bookingsShort": "Bookinger",
+      "net": "Netto",
+      "share": "Andel",
+      "country": "Land"
+    },
+    "guests": {
+      "total": "Gæster",
+      "returning": "Gengangere",
+      "returningHint": "{count, plural, one {# person} other {# personer}}",
+      "avgStay": "Ø. ophold",
+      "perBooking": "Ø. gæster pr. booking",
+      "origin": "Oprindelse",
+      "unknownCountry": "Ukendt",
+      "returningOf": "{count} af {base} matchende gæster",
+      "notIdentifiable": "Ikke genkendelig – portalerne leverer ikke gæste-ID"
+    },
+    "ownerStayCount": "{count, plural, one {# Egen brug} other {# Egen brug}}",
+    "ownerStayRow": "Egen brug",
+    "ownerStayRowHint": "Boligejer i egen ejendom — intet salg"
   }
 }

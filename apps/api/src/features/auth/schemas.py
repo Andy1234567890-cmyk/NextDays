@@ -339,6 +339,12 @@ class MeResponse(BaseModel):
     # wirkt die Software defekt, sobald ein Klick nichts tut: der Riegel
     # antwortet mit 405, und das sieht wie ein Fehler aus, nicht wie Schutz.
     is_demo: bool = False
+    # Internes Test-/Vorfuehrkonto des Hauses (0505). NICHT `is_demo`: das ist
+    # die anonyme Schaufenster-Vorfuehrung und sperrt Schreibzugriffe samt
+    # Buchhaltung. Diese Kennzeichnung macht das Gegenteil — sie GIBT unfertige
+    # Module frei (derzeit die Buchhaltung, 13 Platzhalter-Unterseiten), damit
+    # sie erprobt werden koennen, ohne vor einem zahlenden Betrieb zu stehen.
+    is_internal: bool = False
     # Betriebsmodell (0180): 'pms' (Abo, apps/web) oder 'marketplace' (8%-Fee,
     # plattform/). Steuert, welche Oberfläche/welches Billing gilt.
     account_type: str | None = None

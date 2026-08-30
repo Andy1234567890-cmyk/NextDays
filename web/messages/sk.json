@@ -292,7 +292,8 @@
       "hotel": "Hotel",
       "vacationRentals": "Rekreačné objekty",
       "accounting": "Účtovníctvo",
-      "guests": "Hostia"
+      "guests": "Hostia",
+      "analysis": "Vyhodnotenie"
     },
     "roles": {
       "admin": "Admin",
@@ -320,9 +321,6 @@
     "rooms": "Izby",
     "overview": "Prehľad",
     "reservationGroups": "Skupiny",
-    "guestCategories": "Firmy/kategórie",
-    "guestMonthlyReport": "Mesačný výkaz",
-    "vouchers": "Poukazy",
     "payments": "Platby",
     "revenue": "Tržby",
     "bankAccounts": "Bankové účty",
@@ -1267,7 +1265,10 @@
       "private": "Súkromný",
       "business": "Pracovný",
       "email": "E-mail"
-    }
+    },
+    "filterIncomplete": "Len neúplné",
+    "unnamed": "Bez mien",
+    "unnamedFromChannel": "{channel} hosť"
   },
   "fotos": {
     "title": "Fotografie",
@@ -1615,6 +1616,19 @@
       },
       "basis": "Určuje, kedy rezervácia spadá do daného obdobia: pri voľbe Príchod rozhoduje deň príchodu, pri voľbe Odchod deň odchodu. Rezervácia cez prelom mesiaca spadne podľa voľby do jedného alebo druhého mesiaca.",
       "statuses": "Zúčtované sú len rezervácie s niektorým z vybraných stavov. Predvolené sú potvrdené a dokončené rezervácie — stornované do výplaty zvyčajne nepatria."
+    },
+    "finalizeConfirm": {
+      "title": "Potvrdiť vyúčtovanie",
+      "what": "Vyúčtovanie pre {owner} dostane pevné číslo faktúry a bude viditeľné pre majiteľa.",
+      "theOwner": "majiteľa",
+      "amountLabel": "Výplata majiteľovi",
+      "typeLabel": "Zadajte sumu na potvrdenie",
+      "typeHint": "Zadajte sumu zhora – takto sa uistíte, že bola skontrolovaná.",
+      "mismatch": "Zadaná suma sa nezhoduje s vyúčtovaním.",
+      "irreversible": "Toto sa nedá vrátiť späť. Potvrdenú faktúru je možné zrušiť iba storno faktúrou.",
+      "cancel": "Zrušiť",
+      "confirm": "Potvrdiť",
+      "working": "Potvrdzuje sa..."
     }
   },
   "ownerBilling": {
@@ -4207,11 +4221,6 @@
     "unterkuenftePage": {
       "title": "Ubytovania",
       "loadError": "Objekty sa nepodarilo načítať. Je backend dostupný?"
-    },
-    "einstellungenPage": {
-      "title": "Nastavenia rezervácií",
-      "description": "Nastavenia týkajúce sa rezervácií (časy check-in/check-out, storno podmienky, pravidlá) momentálne spravujete priamo pri danom objekte.",
-      "linkLabel": "K objektom"
     },
     "warnungenPage": {
       "title": "Upozornenia",
@@ -10294,8 +10303,6 @@
       "cardOtherChannels": "Rezervácie cez vašu vlastnú webovú stránku zostávajú bez provízie. Pri rezerváciách cez trhovisko myBestDays sa účtuje {satz}, ktoré sa zadržia priamo pri prijatí platby — tu zahrnuté nie sú.",
       "pending": "Neuhradené ({count, plural, one {# rezervácia} few {# rezervácie} many {# rezervácie} other {# rezervácií}}): ",
       "pendingCapHint": " — vyúčtuje sa mesačný strop {cap}",
-      "pendingCapped": "Bude vyúčtované ({count, plural, one {# rezervácia} few {# rezervácie} many {# rezervácií} other {# rezervácií}}): ",
-      "pendingCappedHint": " — Dosiahnutý mesačný limit, vznikli {total}",
       "noPending": "Momentálne žiadne neuhradené provízie.",
       "showMonths": "Zobraziť mesačný prehľad",
       "backToBilling": "Vyúčtovanie",
@@ -10310,7 +10317,6 @@
       "colCommission": "Provízia",
       "colStatus": "Stav",
       "capHint": "Uvedená je vzniknutá provízia, ešte bez uplatnenia stropu. Za každý mesiac sa vyúčtuje najviac mesačný strop obsiahnutý vo vašom tarife.",
-      "colCommissionIncurred": "vzniklo {total}, dosiahnutý limit",
       "mixedCurrencyHint": "Mesiace s rezerváciami vo viacerých menách sa zobrazujú bez celkovej sumy — jednotlivé sumy nájdete v príslušnej faktúre.",
       "statusPending": "Bude vyúčtovaná",
       "statusInvoiced": "Vyúčtovaná",
@@ -10329,7 +10335,10 @@
       "colChannel": "Portál",
       "colRate": "Sadzba",
       "entryNoProperty": "Objekt už neexistuje",
-      "entrySum": "Spolu"
+      "entrySum": "Spolu",
+      "pendingCapped": "Bude vyúčtované ({count, plural, one {# rezervácia} few {# rezervácie} many {# rezervácií} other {# rezervácií}}): ",
+      "pendingCappedHint": " — Dosiahnutý mesačný limit, vznikli {total}",
+      "colCommissionIncurred": "vzniklo {total}, dosiahnutý limit"
     },
     "invoices": {
       "fees": "Poplatky"
@@ -12027,5 +12036,113 @@
         "aktion": "K kanálom"
       }
     }
+  },
+  "analysis": {
+    "title": "Vyhodnotenie",
+    "subtitle": "Kľúčové ukazovatele, rezervácie, obsadenosť a kanály za určité obdobie.",
+    "loading": "Prebieha výpočet...",
+    "empty": "Pre toto obdobie nie sú k dispozícii žiadne údaje.",
+    "ownerStay": "Vlastné použitie",
+    "mixedCurrency": "Viacero mien v období ({list}) – sumy sa nesčítavajú. Obmedzte prosím na jeden objekt alebo jednu menu.",
+    "occupancyFootnote": "Obsadené je obsadené – či už cez portál, vlastnú webovú stránku, vytvorené vami alebo majiteľom. Z menovateľa vypadávajú len dni, kedy objekt nebol v predaji: zablokované dni a Stop-Sell.",
+    "kpiFootnote": "Percentuálna hodnota na každej dlaždici porovnáva s rovnakým predchádzajúcim obdobím. Kliknutím na dlaždicu sa otvorí časová os.",
+    "commissionFootnote": "Prázdne polia provízií znamenajú, že portál neposiela províziu (Booking.com to väčšinou nerobí) – nič sa neodhaduje.",
+    "tab": {
+      "kennzahlen": "Kľúčové ukazovatele",
+      "analytics": "Prehľad",
+      "buchungen": "Rezervácie",
+      "auslastung": "Obsadenosť",
+      "kanaele": "Kanály",
+      "gaeste": "Hostia"
+    },
+    "range": {
+      "monat": "Tento mesiac",
+      "vormonat": "Predchádzajúci mesiac",
+      "quartal": "Štvrťrok",
+      "jahr": "Rok",
+      "frei": "Ľubovoľné"
+    },
+    "filter": {
+      "range": "Obdobie",
+      "from": "Od",
+      "to": "Do",
+      "basis": "Priradenie",
+      "properties": "Objekty",
+      "allProperties": "Všetky objekty",
+      "channels": "Kanály",
+      "allChannels": "Všetky kanály"
+    },
+    "basis": {
+      "anreise": "Podľa príchodu",
+      "abreise": "Podľa odchodu",
+      "buchung": "Podľa dátumu rezervácie",
+      "uebernachtung": "Podľa prenocovania"
+    },
+    "basisHint": {
+      "anreise": "Počítajú sa rezervácie, ktorých príchod spadá do daného obdobia.",
+      "abreise": "Počítajú sa rezervácie, ktorých odchod spadá do daného obdobia.",
+      "buchung": "Počítajú sa rezervácie, ktoré boli prijaté v danom období. Rezervácie bez skutočnej časovej pečiatky portálu tu chýbajú – neodhadujú sa.",
+      "uebernachtung": "Počíta sa každá rezervácia, ktorá sa dotýka daného obdobia."
+    },
+    "kpi": {
+      "revenue": "Tržby",
+      "bookingsCount": "{count, plural, one {# rezervácia} few {# rezervácie} many {# rezervácií} other {# rezervácie}}",
+      "occupancy": "Obsadenosť",
+      "ofBookable": "z {count} rezervovateľných nocí",
+      "nights": "Noci",
+      "avgStay": "Ø {n} nocí na pobyt",
+      "adr": "Ø cena za noc",
+      "adrHint": "Tržby za rezervovanú noc",
+      "revpar": "Výnos za noc",
+      "revparHint": "Výnos za obsadenú noc",
+      "cancellations": "Miera zrušenia",
+      "cancelHint": "{count, plural, one {# zrušenie} other {# zrušenia}}"
+    },
+    "chart": {
+      "revenueOverTime": "Vývoj výnosov",
+      "shareByChannel": "Podiel výnosov podľa kanála",
+      "revenueByProperty": "Výnos za objekt",
+      "footnote": "Celkový výnos za obdobie: {total}"
+    },
+    "table": {
+      "rowCount": "{count, plural, one {# rezervácia} other {# rezervácie}}",
+      "columns": "Stĺpce"
+    },
+    "col": {
+      "property": "Objekt",
+      "guest": "Hosť",
+      "channel": "Kanál",
+      "stay": "Pobyt",
+      "nights": "Noci",
+      "guests": "Hostia",
+      "status": "Stav",
+      "revenue": "Výnos",
+      "commission": "Provízia",
+      "bookedAt": "Dátum rezervácie",
+      "bookable": "Obsaditeľné",
+      "booked": "Obsadené",
+      "blocked": "Blokované",
+      "stopSell": "Stop-Sell",
+      "arrivals": "Príchody",
+      "cancellations": "Zrušenia",
+      "bookingsShort": "Rezervácie",
+      "net": "Netto",
+      "share": "Podiel",
+      "country": "Krajina"
+    },
+    "guests": {
+      "total": "Hostia",
+      "returning": "Opakovaní hostia",
+      "returningHint": "{count, plural, one {# osoba} other {# osôb}}",
+      "avgStay": "Ø pobyt",
+      "perBooking": "Ø hostia na rezerváciu",
+      "origin": "Pôvod",
+      "unknownCountry": "Neznáme",
+      "returningOf": "{count} z {base} priraditeľných osôb",
+      "notIdentifiable": "Nerozpoznateľné – portály neposkytujú ID hosťa"
+    },
+    "ownerStayCount": "{count, plural, one {# Vlastné použitie} other {# Vlastné použitia}}",
+    "ownerStayRow": "Vlastné použitie",
+    "ownerStayRowHint": "Majiteľ býva v objekte – žiadny predaj"
   }
 }

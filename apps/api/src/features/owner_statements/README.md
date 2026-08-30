@@ -59,6 +59,57 @@ Eine finalisierte Rechnung wird nicht gelöscht: `POST /{id}/cancel` erzeugt ein
 Stornorechnung (eigene Nummer, negierte Beträge, Referenz aufs Original); das
 Original bleibt als `cancelled`. Kein automatischer Folgebeleg.
 
+## Was der Eigentümer sieht (30.08.2026)
+
+Für die Rolle `owner` filtern Liste UND Detail auf `status='finalized'` **und**
+`kind='invoice'` — beide über dieselbe Regel `_fuer_owner_sichtbar`, damit ein
+Direktruf auf `/{id}` nicht liefert, was die Liste verbirgt (Wurzel 9).
+Unsichtbar bleiben damit:
+
+| Zustand | Grund |
+|---|---|
+| `draft` | unfertig, Beträge ändern sich noch |
+| `cancelled` | zurückgezogene Rechnung |
+| `kind='cancellation'` | der Storno-Gegenbeleg dazu |
+
+Das Storno-PAAR wird bewusst KOMPLETT versteckt, nicht nur der Gegenbeleg: eine
+Rechnung, die den Eigentümer nie erreicht hat, soll ihm nicht als „storniert"
+erklärt werden müssen.
+
+**Grenze dieser Regel:** sie trägt nur, solange es keinen Versand gibt. Heute
+existiert keiner — es gibt keinen Endpunkt, der eine Abrechnung verschickt, und
+der Eigentümer sieht sie ausschließlich, wenn er sich selbst einloggt. Sobald
+ein Versand (Mail/PDF) gebaut wird, ist ein nachträglich verschwindender Beleg
+eine Falschaussage: dann muss das Storno-Paar für bereits ZUGESTELLTE
+Rechnungen sichtbar werden.
+
+Anlass: Im Live-Bestand lagen für eine Eigentümerin RE-0003 (`cancelled`,
+13.988,28 DKK) und ST-0003 (`cancellation`). Beide wären in ihrem Portal
+gestanden, inklusive einer Rechnung, die es fachlich nicht mehr gab.
+
+## Doppelbestätigung beim Festschreiben
+
+`POST /{id}/finalize` verlangt einen Rumpf
+(`bestaetigte_auszahlung` + `bestaetigte_waehrung`). Der Server prüft ihn gegen
+den FRISCH berechneten Stand:
+
+| Fall | Antwort |
+|---|---|
+| kein Rumpf | 428 |
+| Betrag oder Währung weichen ab | 409, mit beiden Zahlen im Text |
+| Auszahlung nicht berechenbar | 422 |
+| stimmt | festgeschrieben |
+
+Bestätigt wird der BETRAG und kein Boolean: Finalisieren ist unumkehrbar
+(fortlaufende Nummer nach §14 UStG) und macht den Beleg für den Eigentümer
+sichtbar — ein Fehlklick ist eine falsche Rechnung beim Eigentümer. Hat sich die
+Abrechnung zwischen Anzeigen und Klicken geändert (nachgetragene Buchung,
+geänderter Verrechnungsposten, neuer Kurs), galt die Bestätigung einem anderen
+Betrag; ein „Wirklich?"-Haken könnte das nicht erkennen. In der Oberfläche wird
+der Betrag deshalb abgetippt (`statement-finalize-dialog.tsx`), nicht nur
+weggeklickt. Der Status wird VOR der Bestätigung geprüft, damit ein zweiter
+Aufruf idempotent bleibt (Wurzel 2).
+
 ## Realtime (Migration 0071)
 
 Die Eigentümer-Seite aktualisiert sich vollständig per **Supabase-Realtime
@@ -74,6 +125,8 @@ Statement neu laden.
 - `POST /preview` — Live-Auswertung OHNE DB-Insert (Owner-Seite, id='').
 - `GET /{id}` · `PATCH /{id}` (Kopf, Provision, Filter, Zeitraum) · `DELETE /{id}` (nur draft).
 - `POST /{id}/finalize` — Summen einfrieren (danach unveränderlich, 409 bei Update).
+  Verlangt die Doppelbestätigung des Betrags (428 ohne, 409 bei Abweichung) —
+  siehe unten. Ab hier ist der Beleg für den Eigentümer sichtbar.
 - `POST /{id}/cancel` — Stornorechnung erzeugen.
 - `POST /expenses` · `PATCH /expenses/{id}` · `DELETE /expenses/{id}` — Expenses CRUD.
 - `POST /auto-run?period_from&period_to` — interner Cron (Secret-Header), 1/Monat je

@@ -57,6 +57,7 @@ from .schemas import (
     ListingRow,
     RentalRow,
     SliceHealth,
+    StatementFinalizeRequest,
     StatementGenerateRequest,
     StatementHeader,
     StatementListItem,
@@ -336,14 +337,41 @@ class OwnerStatementsService:
                 status_code=403,
             )
 
+    # Dem Eigentümer wird NUR der fertige, gültige Beleg gezeigt: `finalized`
+    # UND `kind='invoice'`. Alles andere ist Werkstatt der Agentur.
+    #   * `draft`        — unfertig, Beträge ändern sich noch.
+    #   * `cancelled`    — zurückgezogene Rechnung.
+    #   * `cancellation` — der Storno-Gegenbeleg dazu.
+    # Das Storno-PAAR (beide Zeilen) bleibt bewusst unsichtbar: eine Rechnung,
+    # die es nie zum Eigentümer geschafft hat, soll auch nicht als „storniert"
+    # erklärt werden müssen. Entscheidung vom 30.08.2026.
+    #
+    # GRENZE dieser Regel: sie trägt nur, solange der Eigentümer die Rechnung
+    # noch NIE gesehen hat. Wird künftig ein Versand (Mail/PDF) gebaut, ist ein
+    # nachträglich verschwindender Beleg eine Falschaussage — dann muss das
+    # Storno-Paar für bereits zugestellte Rechnungen sichtbar WERDEN.
+    _OWNER_SICHTBAR_STATUS = "finalized"
+    _OWNER_SICHTBAR_KIND = "invoice"
+
+    def _fuer_owner_sichtbar(self, row: dict) -> bool:
+        """Ist dieser Beleg einem Eigentümer zumutbar? (Siehe Kommentar oben.)"""
+        return (
+            row.get("status") == self._OWNER_SICHTBAR_STATUS
+            and (row.get("kind") or self._OWNER_SICHTBAR_KIND) == self._OWNER_SICHTBAR_KIND
+        )
+
     def _require_statement_visible(
         self, ctx: AuthContext, tenant_id: str, row: dict
     ) -> None:
         """Eigentümer dürfen nur die EIGENE Abrechnung lesen (sonst 404 wie
         nicht vorhanden — keine Existenz fremder Belege verraten)."""
-        if self._is_owner(ctx) and str(row["owner_id"]) != self._owner_self_id(
-            ctx, tenant_id
-        ):
+        if not self._is_owner(ctx):
+            return
+        if str(row["owner_id"]) != self._owner_self_id(ctx, tenant_id):
+            raise StatementError("Statement nicht gefunden.", status_code=404)
+        # Wurzel 9: derselbe Filter wie in der Liste — sonst holt ein Direktruf
+        # auf /{id}, was die Liste gerade verbirgt.
+        if not self._fuer_owner_sichtbar(row):
             raise StatementError("Statement nicht gefunden.", status_code=404)
 
     # --- Owner + Objekte ----------------------------------------------------
@@ -1813,13 +1841,21 @@ class OwnerStatementsService:
         query = (
             self._db.table("owner_statements")
             .select(
-                "id, owner_id, period_from, period_to, status, owner_payout, "
+                "id, owner_id, period_from, period_to, status, kind, owner_payout, "
                 "pm_payout, currency, invoice_number, owner_name, created_at"
             )
             .eq("tenant_id", tenant_id)
         )
         if owner_id:
             query = query.eq("owner_id", owner_id)
+        # Derselbe Filter wie im Detail (`_fuer_owner_sichtbar`): Entwürfe,
+        # stornierte Rechnungen und Storno-Belege sind Werkstatt der Agentur.
+        # Gefiltert wird in der DB, nicht erst beim Bauen der Items — sonst
+        # stünde `total` für eine andere Menge als `items`.
+        if self._is_owner(ctx):
+            query = query.eq("status", self._OWNER_SICHTBAR_STATUS).eq(
+                "kind", self._OWNER_SICHTBAR_KIND
+            )
         rows = query.order("created_at", desc=True).execute().data or []
         # Dieselbe Maske wie im Detail: der Verwaltungs-Ertrag ist auch in der
         # LISTE nicht die Zahl des Eigentümers. Ohne sie hätte die Liste
@@ -1904,10 +1940,65 @@ class OwnerStatementsService:
             )
         return str(number)
 
-    def finalize(self, ctx: AuthContext, statement_id: str) -> StatementResponse:
+    def _pruefe_bestaetigung(
+        self,
+        bestaetigung: StatementFinalizeRequest | None,
+        summary: StatementSummary,
+        waehrung: str,
+    ) -> None:
+        """Doppelbestätigung: die vom Nutzer gesehene Zahl muss dem Serverstand
+        entsprechen.
+
+        Finalisieren ist unumkehrbar UND stellt den Beleg dem Eigentümer zu.
+        Deshalb genügt kein „wirklich?"-Haken: bestätigt wird der BETRAG. Hat
+        sich die Abrechnung zwischen Anzeigen und Klicken geändert (nachgetragene
+        Buchung, geänderter Verrechnungsposten, neuer Kurs), galt die
+        Bestätigung einem anderen Betrag → 409, der Nutzer sieht den neuen Stand
+        und bestätigt erneut.
+        """
+        if bestaetigung is None:
+            raise StatementError(
+                "Zum Festschreiben fehlt die Bestätigung der Auszahlung. "
+                "Die Rechnung bekommt eine unveränderbare Nummer und wird dem "
+                "Eigentümer sichtbar — bitte den Betrag bestätigen.",
+                status_code=428,
+            )
+        if summary.owner_payout is None:
+            raise StatementError(
+                "Diese Abrechnung hat noch keine Eigentümer-Auszahlung "
+                "(fehlender Provisionssatz). Sie kann nicht bestätigt werden.",
+                status_code=422,
+            )
+        # Cent-genau vergleichen: beide Seiten auf zwei Stellen, damit ein
+        # Float-Rundungsrest keine korrekte Bestätigung abweist.
+        gesehen = _money(_d(bestaetigung.bestaetigte_auszahlung))
+        steht = _money(_d(summary.owner_payout))
+        if gesehen != steht:
+            raise StatementError(
+                f"Die Abrechnung hat sich geändert: bestätigt wurden "
+                f"{gesehen} {bestaetigung.bestaetigte_waehrung}, aktuell sind es "
+                f"{steht} {waehrung}. Bitte den neuen Stand prüfen und erneut "
+                f"bestätigen.",
+                status_code=409,
+            )
+        if bestaetigung.bestaetigte_waehrung.upper() != (waehrung or "").upper():
+            raise StatementError(
+                f"Die Währung hat sich geändert: bestätigt wurde "
+                f"{bestaetigung.bestaetigte_waehrung}, aktuell ist es {waehrung}. "
+                f"Bitte erneut prüfen und bestätigen.",
+                status_code=409,
+            )
+
+    def finalize(
+        self,
+        ctx: AuthContext,
+        statement_id: str,
+        bestaetigung: StatementFinalizeRequest | None = None,
+    ) -> StatementResponse:
         """Beleg festschreiben: fortlaufende Rechnungsnummer vergeben (§14 UStG /
         Art. 226 RL 2006/112), Steuer aus den drei Ländern berechnen, Summen +
-        Steuerwerte einfrieren. Danach unveränderbar."""
+        Steuerwerte einfrieren. Danach unveränderbar UND für den Eigentümer
+        sichtbar — deshalb nur mit Doppelbestätigung des Betrags."""
         tenant_id = self._require_tenant(ctx)
         self._forbid_owner_writes(ctx)
         row = self._statement_row(tenant_id, statement_id)
@@ -1919,6 +2010,15 @@ class OwnerStatementsService:
             )
         # Summen vor dem Einfrieren auf den letzten Stand bringen.
         summary = self._refresh_summary(tenant_id, statement_id)
+
+        # Erst JETZT die Bestätigung prüfen — gegen den frisch berechneten
+        # Stand, nicht gegen den beim Anzeigen gespeicherten. Genau dieser
+        # Unterschied ist der Zweck der Prüfung.
+        self._pruefe_bestaetigung(
+            bestaetigung,
+            summary,
+            row.get("currency") or self._tenant_currency(tenant_id),
+        )
 
         # Ohne darstellbaren PM-Payout gibt es keine Bemessungsgrundlage. Das
         # passiert bei gemischten Quellwährungen (siehe `_compute_summary`).

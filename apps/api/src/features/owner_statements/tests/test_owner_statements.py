@@ -15,6 +15,7 @@ from src.features.owner_statements.schemas import (
     ExpenseCreate,
     ExpenseDirection,
     ExpenseUpdate,
+    StatementFinalizeRequest,
     StatementGenerateRequest,
     StatementUpdate,
 )
@@ -137,6 +138,12 @@ class _Query:
                 row.setdefault("id", f"{self._table}-{self._db.next_id()}")
                 row.setdefault("created_at", "2026-06-25T00:00:00Z")
                 row.setdefault("updated_at", "2026-06-25T00:00:00Z")
+                # DB-Vorgabe nachbilden: `owner_statements.kind` ist
+                # `not null default 'invoice'` (0065). Ohne diese Zeile trüge
+                # die Fake-Zeile `kind=None`, und ein Filter auf `kind` fände
+                # sie nicht — ein Fehler, den es real gar nicht geben kann.
+                if self._table == "owner_statements":
+                    row.setdefault("kind", "invoice")
                 rows.append(row)
                 created.append(row)
             return _Result(created)
@@ -274,6 +281,25 @@ def _gen(svc: OwnerStatementsService, **over: object):
         **over,
     )
     return svc.generate(_ctx(), req)
+
+
+def _finalize(svc: OwnerStatementsService, statement_id: str, ctx=None):
+    """Festschreiben mit gültiger Doppelbestätigung — wie die Oberfläche es tut.
+
+    Die Bestätigung ist der aktuelle Stand, den der Nutzer im Dialog gesehen
+    hätte. Tests, die gerade die ABWEICHUNG prüfen, rufen `svc.finalize`
+    direkt auf."""
+    c = ctx if ctx is not None else _ctx()
+    stand = svc.get(c, statement_id)
+    return svc.finalize(
+        c,
+        statement_id,
+        StatementFinalizeRequest(
+            bestaetigte_auszahlung=stand.summary.owner_payout,
+            bestaetigte_waehrung=stand.summary.owner_currency
+            or stand.summary.currency,
+        ),
+    )
 
 
 # --- Health ------------------------------------------------------------------
@@ -758,7 +784,7 @@ def test_rental_row_nennt_die_herkunft_der_gebuehren() -> None:
 def test_finalize_freezes_summary() -> None:
     svc = _svc()
     st = _gen(svc)
-    fin = svc.finalize(_ctx(), st.id)
+    fin = _finalize(svc, st.id)
     assert fin.status == "finalized"
     # Update nach Finalisierung wird abgelehnt.
     with pytest.raises(StatementError) as exc:
@@ -769,7 +795,7 @@ def test_finalize_freezes_summary() -> None:
 def test_finalize_assigns_invoice_number_and_tax() -> None:
     svc = _svc()
     st = _gen(svc)
-    fin = svc.finalize(_ctx(), st.id)
+    fin = _finalize(svc, st.id)
     # Fortlaufende Nummer vergeben + Datum gesetzt.
     assert fin.header.invoice_number == "RE-0001"
     assert fin.invoice_date is not None
@@ -782,7 +808,7 @@ def test_finalize_assigns_invoice_number_and_tax() -> None:
 def test_cancel_creates_storno_with_negated_amounts() -> None:
     svc = _svc()
     st = _gen(svc)
-    fin = svc.finalize(_ctx(), st.id)
+    fin = _finalize(svc, st.id)
     storno = svc.cancel(_ctx(), fin.id)
     # Eigene neue Nummer, eigener Beleg-Typ.
     assert storno.kind == "cancellation"
@@ -839,7 +865,7 @@ def test_richtungssummen_ueberleben_die_finalisierung() -> None:
     entwurf = svc.get(_ctx(), st.id).summary
     assert (entwurf.expenses_to_owner, entwurf.expenses_from_owner) == (500.0, 200.0)
 
-    fin = svc.finalize(_ctx(), st.id).summary
+    fin = _finalize(svc, st.id).summary
     # DAS ist der Kern: dieselben Zahlen aus dem Snapshot, nicht 0.
     assert fin.expenses_to_owner == 500.0
     assert fin.expenses_from_owner == 200.0
@@ -860,7 +886,7 @@ def test_richtungssummen_im_storno_gespiegelt() -> None:
     """
     svc = _svc()
     st = _mit_beiden_richtungen(svc)
-    fin = svc.finalize(_ctx(), st.id)
+    fin = _finalize(svc, st.id)
     storno = svc.cancel(_ctx(), fin.id).summary
 
     assert storno.expenses_to_owner == -fin.summary.expenses_to_owner == -500.0
@@ -886,7 +912,7 @@ def test_snapshot_summary_setzt_jedes_feld() -> None:
     """
     svc = _svc()
     st = _mit_beiden_richtungen(svc)
-    fin = svc.finalize(_ctx(), st.id).summary
+    fin = _finalize(svc, st.id).summary
 
     # Die Aufschlüsselungen je Währung waren die zweite stille Leerstelle.
     assert [(c.currency, c.amount) for c in fin.totals_by_currency] == [
@@ -910,7 +936,7 @@ def test_cancel_requires_finalized() -> None:
 def test_delete_finalized_blocked() -> None:
     svc = _svc()
     st = _gen(svc)
-    svc.finalize(_ctx(), st.id)
+    _finalize(svc, st.id)
     with pytest.raises(StatementError) as exc:
         svc.delete(_ctx(), st.id)
     assert exc.value.status_code == 409
@@ -1217,7 +1243,9 @@ def _foreign_statement(tables: dict[str, list[dict]]) -> dict:
 def test_owner_list_scoped_to_self() -> None:
     tables = _two_owner_tables()
     svc = OwnerStatementsService(service_client=_DB(tables))
-    _gen(svc)                       # eigenes Statement (o-1, Agentur legt an)
+    # Festgeschrieben, weil der Eigentümer nur fertige Belege sieht (Entwürfe
+    # und Storni bleiben Werkstatt der Agentur).
+    _finalize(svc, _gen(svc).id)    # eigenes Statement (o-1, Agentur legt an)
     _foreign_statement(tables)      # fremdes Statement (o-2)
 
     res = svc.list(_owner_ctx())
@@ -1324,7 +1352,8 @@ def test_owner_sieht_weder_gastpreis_noch_verwaltungsanteil() -> None:
     """
     tables = _two_owner_tables()
     svc = OwnerStatementsService(service_client=_DB(tables))
-    eigen = _gen(svc)  # von der Agentur erzeugt (admin)
+    # Festgeschrieben: nur fertige Belege sind für den Eigentümer sichtbar.
+    eigen = _finalize(svc, _gen(svc).id)  # von der Agentur erzeugt (admin)
 
     sicht = svc.get(_owner_ctx(), eigen.id)
     # Sein Geld sieht er.
@@ -1359,7 +1388,7 @@ def test_owner_liste_ohne_verwaltungsanteil() -> None:
     die Liste nicht ausliefern."""
     tables = _two_owner_tables()
     svc = OwnerStatementsService(service_client=_DB(tables))
-    _gen(svc)
+    _finalize(svc, _gen(svc).id)
     res = svc.list(_owner_ctx())
     assert res.total == 1
     assert res.items[0].owner_payout > 0
@@ -1462,3 +1491,145 @@ def test_unbekannte_gruende_bleiben_verstaendlich() -> None:
     fehler = _payout_fehler(PayoutUnbekannt("waehrung_vertrag", "Währung passt nicht."))
     assert fehler.status_code == 422
     assert fehler.detail == "Währung passt nicht."
+
+
+# ----------------------------------------------------------------------
+# Was der Eigentümer sehen darf: nur der fertige, gültige Beleg
+# ----------------------------------------------------------------------
+# Anlass (30.08.2026): Im Live-Bestand lagen für eine Eigentümerin eine
+# stornierte Rechnung (RE-0003) und der zugehörige Storno-Beleg (ST-0003).
+# Beide hätte sie in ihrem Portal gesehen — samt einer Rechnung über
+# 13.988,28 DKK, die es fachlich nicht mehr gab. Entwürfe standen ebenfalls
+# offen. Entscheidung: der Eigentümer sieht `finalized` + `kind='invoice'`,
+# sonst nichts.
+
+
+def _statement_zeile(tables: dict[str, list[dict]], **over: object) -> dict:
+    """Fertige Statement-Zeile für o-1 direkt einlegen (Status/kind frei)."""
+    row = {
+        "id": f"st-{len(tables['owner_statements']) + 1}",
+        "tenant_id": "t-1", "owner_id": "o-1", "owner_name": "Anna Owner",
+        "period_from": "2026-01-01", "period_to": "2026-01-31",
+        "status": "finalized", "kind": "invoice", "owner_payout": 500,
+        "pm_payout": 100, "currency": "EUR", "invoice_number": "RE-0009",
+        "created_at": "2026-02-01T00:00:00Z", "basis": "check_in",
+        "reservation_statuses": ["confirmed"], "commission_pct": 20,
+    }
+    row.update(over)
+    tables["owner_statements"].append(row)
+    return row
+
+
+def test_owner_sieht_weder_entwurf_noch_storno_paar() -> None:
+    """Liste: Entwurf, stornierte Rechnung und Storno-Beleg bleiben unsichtbar."""
+    tables = _two_owner_tables()
+    svc = OwnerStatementsService(service_client=_DB(tables))
+    gueltig = _statement_zeile(tables, id="st-ok")
+    _statement_zeile(tables, id="st-entwurf", status="draft")
+    _statement_zeile(tables, id="st-storniert", status="cancelled")
+    _statement_zeile(tables, id="st-storno", kind="cancellation")
+
+    res = svc.list(_owner_ctx())
+    assert [i.id for i in res.items] == [gueltig["id"]]
+    # `total` zählt dieselbe Menge wie `items` — sonst stünde in der Oberfläche
+    # eine Zahl, zu der die Zeilen fehlen.
+    assert res.total == 1
+
+    # Die Agentur sieht unverändert alles.
+    assert svc.list(_ctx()).total == 4
+
+
+def test_owner_get_entwurf_und_storno_404() -> None:
+    """Wurzel 9 — der Direktruf auf /{id} darf nicht liefern, was die Liste
+    verbirgt. Sonst wäre der Listenfilter reine Kosmetik."""
+    tables = _two_owner_tables()
+    svc = OwnerStatementsService(service_client=_DB(tables))
+    _statement_zeile(tables, id="st-entwurf", status="draft")
+    _statement_zeile(tables, id="st-storniert", status="cancelled")
+    _statement_zeile(tables, id="st-storno", kind="cancellation")
+
+    for sid in ("st-entwurf", "st-storniert", "st-storno"):
+        with pytest.raises(StatementError) as exc:
+            svc.get(_owner_ctx(), sid)
+        assert exc.value.status_code == 404, sid
+        # Wortlaut wie bei „fremd": die Existenz wird nicht verraten.
+        assert "nicht gefunden" in exc.value.message
+
+    # Die Agentur kommt an alle drei heran.
+    for sid in ("st-entwurf", "st-storniert", "st-storno"):
+        assert svc.get(_ctx(), sid).id == sid
+
+
+# ----------------------------------------------------------------------
+# Doppelbestätigung vor dem Festschreiben
+# ----------------------------------------------------------------------
+
+
+def test_finalize_ohne_bestaetigung_abgelehnt() -> None:
+    """Ohne Bestätigung wird nicht festgeschrieben — 428, und der Beleg bleibt
+    Entwurf (kein halber Zustand)."""
+    svc = _svc()
+    st = _gen(svc)
+    with pytest.raises(StatementError) as exc:
+        svc.finalize(_ctx(), st.id)
+    assert exc.value.status_code == 428
+    assert svc.get(_ctx(), st.id).status == "draft"
+
+
+def test_finalize_mit_falschem_betrag_abgelehnt() -> None:
+    """Der Kern der Prüfung: bestätigt wurde ein ANDERER Betrag als der, der
+    festgeschrieben würde → 409, nichts passiert."""
+    svc = _svc()
+    st = _gen(svc)
+    echt = svc.get(_ctx(), st.id).summary
+    with pytest.raises(StatementError) as exc:
+        svc.finalize(
+            _ctx(), st.id,
+            StatementFinalizeRequest(
+                bestaetigte_auszahlung=echt.owner_payout + 1,
+                bestaetigte_waehrung=echt.owner_currency or echt.currency,
+            ),
+        )
+    assert exc.value.status_code == 409
+    st_danach = svc.get(_ctx(), st.id)
+    assert st_danach.status == "draft"
+    assert st_danach.header.invoice_number in (None, "")
+
+
+def test_finalize_mit_falscher_waehrung_abgelehnt() -> None:
+    """13.988,28 DKK ist nicht 13.988,28 EUR (Wurzel 4) — der richtige Betrag
+    in der falschen Währung ist keine gültige Bestätigung."""
+    svc = _svc()
+    st = _gen(svc)
+    echt = svc.get(_ctx(), st.id).summary
+    falsch = "DKK" if (echt.owner_currency or echt.currency) != "DKK" else "EUR"
+    with pytest.raises(StatementError) as exc:
+        svc.finalize(
+            _ctx(), st.id,
+            StatementFinalizeRequest(
+                bestaetigte_auszahlung=echt.owner_payout,
+                bestaetigte_waehrung=falsch,
+            ),
+        )
+    assert exc.value.status_code == 409
+    assert svc.get(_ctx(), st.id).status == "draft"
+
+
+def test_finalize_mit_richtiger_bestaetigung_geht_durch() -> None:
+    """Die Gegenprobe: die Prüfung darf den normalen Weg nicht blockieren."""
+    svc = _svc()
+    st = _gen(svc)
+    fin = _finalize(svc, st.id)
+    assert fin.status == "finalized"
+    assert fin.header.invoice_number == "RE-0001"
+
+
+def test_finalize_bereits_festgeschrieben_bleibt_idempotent() -> None:
+    """Wurzel 2 — der zweite Aufruf (Doppelklick, Retry) gibt den bestehenden
+    Beleg zurück und vergibt KEINE zweite Rechnungsnummer. Die Bestätigung darf
+    daran nichts ändern: der Status wird vor ihr geprüft."""
+    svc = _svc()
+    st = _gen(svc)
+    erst = _finalize(svc, st.id)
+    nochmal = svc.finalize(_ctx(), st.id)
+    assert nochmal.header.invoice_number == erst.header.invoice_number

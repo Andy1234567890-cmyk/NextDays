@@ -879,6 +879,7 @@ class AuthService:
             permissions=sorted(p.value for p in perms),
             accommodation_type=tenant_meta.get("accommodation_type"),
             is_demo=bool(tenant_meta.get("is_demo")),
+            is_internal=bool(tenant_meta.get("is_internal")),
             account_type=tenant_meta.get("account_type"),
             default_language=tenant_meta.get("default_language"),
             country=tenant_meta.get("country"),
@@ -896,7 +897,7 @@ class AuthService:
             self._service.table("tenants")
             .select(
                 "name, accommodation_type, account_type, default_language, "
-                "country, is_demo"
+                "country, is_demo, is_internal"
             )
             .eq("id", tenant_id)
             .limit(1)

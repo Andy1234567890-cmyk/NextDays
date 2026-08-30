@@ -43,6 +43,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 # zeigen, welche Felder eine Demo-Zeile trägt.
 # pylint: disable=too-many-locals
 from fotos import FOTO_ORDNER, MANIFEST  # noqa: E402
+from gaestemappe import type_attributes  # noqa: E402
+from posteingang import threads_anlegen  # noqa: E402
 from katalog import BETRIEBE, GAESTE, Betrieb, Objekt  # noqa: E402
 from konfig import Supabase, demo_id  # noqa: E402
 # pylint: enable=wrong-import-position
@@ -143,6 +145,76 @@ def betrieb_anlegen(db: Supabase, betrieb: Betrieb, passwort: str) -> str:
     return tenant_id
 
 
+def firma_anlegen(db: Supabase, betrieb: Betrieb, tenant_id: str) -> None:
+    """Rechts- und Rechnungsdaten des Betriebs (`tenant_billing_profile`).
+
+    PFLICHT, nicht Zierde: `DashboardService._real_progress` prueft die ZEILE,
+    nicht das Flag `company_data_set` (Wurzel 4 — ein Flag sagt, was jemand
+    vorhatte, die Zeile sagt, was passiert ist). Fehlt sie, faellt das
+    Onboarding auf "Firmendaten fehlen" zurueck, die Oberflaeche zeigt den
+    Einrichtungs-Assistenten statt der Kennzahlen, und jede Rechnung haette
+    keinen Absender. Live am 30.08.2026: alle drei Demo-Betriebe trugen
+    `company_data_set = true` und hatten KEIN Profil.
+
+    Die Zahlungsanbieter (Stripe/PayPal) bleiben bewusst leer: ein Demo-Betrieb
+    hat kein echtes Connect-Konto, und erfundene IDs wuerden beim ersten
+    Statusabruf auffliegen.
+    """
+    f = betrieb.firma
+    db.upsert("tenant_billing_profile", [{
+        "tenant_id": tenant_id,
+        "legal_name": f.legal_name,
+        "legal_form": f.legal_form,
+        "merchant_name": betrieb.name,
+        "company_street": f.strasse,
+        "company_house_number": f.hausnummer,
+        "company_postal_code": f.plz,
+        "company_city": f.stadt,
+        "company_country": f.land,
+        "vat_id": f.vat_id,
+        "tax_number": f.steuernummer,
+        "company_register": f.handelsregister,
+        "district_court": f.amtsgericht,
+        "managing_director_first_name": f.geschaeftsfuehrer[0],
+        "managing_director_last_name": f.geschaeftsfuehrer[1],
+        "email": f.email,
+        "phone_number": f.telefon,
+        "website": f.website,
+        "account_holder": f.legal_name,
+        "iban": f.iban,
+        "bic": f.bic,
+        "bank_name": f.bank,
+        "default_tax_rate": f.steuersatz,
+        "lodging_tax_rate": f.kurtaxe,
+        "is_kleinunternehmer": False,
+        "default_payment_days": 14,
+        "manual_payments_enabled": True,
+    }], konflikt="tenant_id")
+
+
+def abo_anlegen(db: Supabase, betrieb: Betrieb, tenant_id: str) -> None:
+    """Laufendes Abo (`tenant_subscription`).
+
+    Ohne aktives Abo ist die Oberflaeche eine Sackgasse: `publish()` lehnt mit
+    422 ab und die Navigation blendet Bereiche aus. Ein Demo-Betrieb, der seine
+    Objekte nicht veroeffentlichen kann, taugt weder zum Vorfuehren noch fuer
+    Screenshots.
+
+    Kein Stripe-Abo dahinter (die IDs bleiben leer) — der Status ist gesetzt,
+    weil er den Zustand eines zahlenden Kunden ABBILDET, nicht weil Geld
+    fliesst.
+    """
+    db.upsert("tenant_subscription", [{
+        "tenant_id": tenant_id,
+        "status": "active",
+        # Ein Jahr voraus: ein Enddatum in der Vergangenheit liesse das Abo
+        # abgelaufen aussehen, sobald der Bestand ein paar Wochen alt ist.
+        "current_period_end": _zeitstempel(_heute() + timedelta(days=365)),
+        "reported_property_count": len(betrieb.objekte),
+        "cancel_at_period_end": False,
+    }], konflikt="tenant_id")
+
+
 def objekte_anlegen(db: Supabase, betrieb: Betrieb, tenant_id: str) -> dict[str, str]:
     """Objekte + Rate-Plans schreiben; liefert Schlüssel → property_id."""
     zeilen = []
@@ -176,6 +248,11 @@ def objekte_anlegen(db: Supabase, betrieb: Betrieb, tenant_id: str) -> dict[str,
             "booking_mode": "instant",
             "moderation_status": "approved",
             "search_engine_indexing": True,
+            # Gästemappe + Richtlinien: die EINZIGE Quelle der KI-Antwort
+            # (`inbox/ki_kontext.py` liest bei jeder Frage frisch hier). Ohne
+            # sie antwortet die KI in der Vorführung ausweichend, obwohl das
+            # Objekt vollständig gepflegt aussieht.
+            "type_attributes": type_attributes(betrieb, objekt),
         })
     db.upsert("properties", zeilen)
 
@@ -622,6 +699,8 @@ def main() -> int:
             continue
 
         tenant_id = betrieb_anlegen(db, betrieb, passwort)
+        firma_anlegen(db, betrieb, tenant_id)
+        abo_anlegen(db, betrieb, tenant_id)
         objekt_ids = objekte_anlegen(db, betrieb, tenant_id)
         print(f"  {len(objekt_ids)} Objekte")
         fotos_hochladen(db, betrieb, tenant_id, objekt_ids)
@@ -631,6 +710,10 @@ def main() -> int:
         sperrungen_anlegen(db, betrieb, tenant_id, objekt_ids)
         portale_verbinden(db, betrieb, tenant_id, objekt_ids)
         aufgaben_anlegen(db, tenant_id, buchungen)
+        # Posteingang: ein Thread je PORTAL-Buchung samt Verlauf. Ohne ihn
+        # zeigt die App Buchungen, aber ein leeres Postfach.
+        threads = threads_anlegen(db, tenant_id, buchungen)
+        print(f"  {threads} Posteingang-Threads")
 
     if not argumente.nur_loeschen:
         print("\nLogins:")

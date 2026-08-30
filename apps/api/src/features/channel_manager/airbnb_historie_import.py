@@ -39,6 +39,7 @@ from src.features.guests.identity import (
     create_placeholder_guest,
     resolve_or_create_guest,
 )
+from src.features.guests.service import recompute_guest_aggregates
 
 from .common import log, ota_buchungszeitpunkt, ota_uhrzeit
 
@@ -302,6 +303,17 @@ class AirbnbHistorieImportMixin:
             )
         else:
             db.table("reservations").insert(zeile).execute()
+
+        # Gegenzustand (Wurzel 1): die Loyalty-Aggregate der Gaestekartei
+        # (`stays_count`, `total_revenue`, `last_stay_at`) haengen an der
+        # `guests`-Zeile und werden nicht von der DB gepflegt. Ohne diesen
+        # Aufruf importiert der Historienlauf Buchungen, und die Kartei zeigt
+        # weiter „0 Aufenthalte" — genau der Zustand, in dem der Beta-Betrieb
+        # am 30.08.2026 stand (290 Gaeste mit Buchung, EINER mit Aggregaten).
+        # Best-effort: die Funktion faengt intern breit und loggt.
+        gast = zeile.get("guest_id")
+        if gast:
+            recompute_guest_aggregates(db, tenant_id, str(gast))
 
         if alt:
             ergebnis.aktualisiert += 1

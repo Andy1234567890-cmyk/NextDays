@@ -4570,6 +4570,24 @@
         "sl",
         "sv"
       ]
+    },
+    {
+      "wert": "Netto",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "fi"
+      ]
+    },
+    {
+      "wert": "Status",
+      "grund": "international",
+      "sprachen": [
+        "mt",
+        "pt",
+        "ro",
+        "sl"
+      ]
     }
   ]
 }

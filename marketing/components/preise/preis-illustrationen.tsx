@@ -238,6 +238,38 @@ function Ki({ className }: Props) {
   );
 }
 
+/**
+ * KI-Regeln: drei Themenzeilen, je mit einem Schalter — zwei an, einer aus.
+ *
+ * Eigene Zeichnung, weil der Beleg-Block der KI-Seite sonst DIESELBE Szene
+ * zeigt wie ihr Hero. Auf allen anderen Seiten trennt die echte Aufnahme die
+ * beiden Stellen; hier gibt es noch keine, also trennt sie das Motiv.
+ */
+function KiRegeln({ className }: Props) {
+  return (
+    <svg viewBox="0 0 96 96" className={className} aria-hidden>
+      {[22, 46, 70].map((y, i) => (
+        <g key={y}>
+          <rect x="8" y={y - 9} width="80" height="18" rx="9" {...STROKE} opacity="0.35" />
+          {/* Thema links */}
+          <rect x="17" y={y - 3} width={[22, 16, 26][i]} height="6" rx="3" fill="currentColor" opacity="0.55" />
+          {/* Schalter rechts: die ersten zwei an, der dritte aus */}
+          <rect
+            x="60"
+            y={y - 6}
+            width="22"
+            height="12"
+            rx="6"
+            fill="currentColor"
+            opacity={i < 2 ? 0.85 : 0.18}
+          />
+          <circle cx={i < 2 ? 76 : 66} cy={y} r="4" fill="var(--color-card, #fff)" />
+        </g>
+      ))}
+    </svg>
+  );
+}
+
 export const GRUPPEN_ILLUSTRATION: Record<
   string,
   (props: Props) => React.ReactElement
@@ -248,6 +280,7 @@ export const GRUPPEN_ILLUSTRATION: Record<
   preise: Preise,
   gaeste: Gaeste,
   ki: Ki,
+  kiRegeln: KiRegeln,
   zahlungen: Zahlungen,
   team: Team,
   app: App,

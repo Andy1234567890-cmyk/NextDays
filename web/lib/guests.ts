@@ -51,6 +51,18 @@ export type GuestListItem = {
   is_blocked: boolean;
   stays_count: number;
   last_stay_at: string | null;
+  /** Unvollständiger Gast: der Kanal hat keinen Namen geliefert (Airbnb nie),
+   *  oder E-Mail und Telefon zeigten beim Anlegen auf verschiedene
+   *  Bestandsgäste. Der `name` ist dann wörtlich „—" (die Spalte ist NOT NULL);
+   *  die Tabelle zeigt statt dieses nackten Strichs den Grund. */
+  needs_review: boolean;
+  /** Ersatz-Kennung für namenlose Gäste: die jüngste Buchung. Ein Gast ohne
+   *  Namen ist nicht identitätslos — Objekt und Anreise machen ihn
+   *  wiedererkennbar. Alle drei sind null, sobald ein echter Name existiert.
+   *  `letzter_kanal` fällt zusätzlich unter die Quellen-Maske (§4.3). */
+  letzter_kanal: string | null;
+  letztes_objekt: string | null;
+  letzte_anreise: string | null;
 };
 
 export type GuestAddress = {
@@ -174,13 +186,21 @@ async function call<T>(
 
 // --- Gäste ------------------------------------------------------------------
 export async function listGuests(
-  opts: { q?: string; vip?: string; segment?: string; blocked?: boolean } = {},
+  opts: {
+    q?: string;
+    vip?: string;
+    segment?: string;
+    blocked?: boolean;
+    needsReview?: boolean;
+  } = {},
 ): Promise<Result<ListT<GuestListItem>>> {
   const p = new URLSearchParams();
   if (opts.q) p.set("q", opts.q);
   if (opts.vip) p.set("vip", opts.vip);
   if (opts.segment) p.set("segment", opts.segment);
   if (opts.blocked !== undefined) p.set("blocked", String(opts.blocked));
+  if (opts.needsReview !== undefined)
+    p.set("needs_review", String(opts.needsReview));
   const qs = p.toString() ? `?${p.toString()}` : "";
   return call<ListT<GuestListItem>>(qs);
 }

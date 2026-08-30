@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@nextdays/ui/button";
+import { StatementFinalizeDialog } from "@/components/owner-statements/statement-finalize-dialog";
 import { StatementPreviewModal } from "@/components/owner-statements/statement-preview-modal";
 import { DatePicker } from "@nextdays/ui/date-picker";
 import { InfoHinweis } from "@nextdays/ui/info-hinweis";
@@ -140,6 +141,9 @@ export function StatementEditor({
   const locale = useLocale();
   const [st, setSt] = useState<Statement>(statement);
   const [busy, setBusy] = useState(false);
+  // Doppelbestätigung vor dem Festschreiben (unumkehrbar + für den
+  // Eigentümer sichtbar).
+  const [finalizeOffen, setFinalizeOffen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   // Hat der Nutzer die Provision manuell überschrieben? Nur dann wird sie als
@@ -248,13 +252,26 @@ export function StatementEditor({
     } else toast.error(res.error);
   }
 
-  async function finalize() {
-    const res = await finalizeStatement(st.id);
+  async function finalize(betrag: number, waehrung: string) {
+    setBusy(true);
+    // Der bestätigte Betrag geht mit — der Server lehnt ab (409), falls sich
+    // die Abrechnung seit dem Anzeigen geändert hat. Dann steht in res.error
+    // der neue Stand, und der Nutzer bestätigt bewusst erneut.
+    const res = await finalizeStatement(st.id, {
+      bestaetigte_auszahlung: betrag,
+      bestaetigte_waehrung: waehrung,
+    });
+    setBusy(false);
     if (res.ok) {
+      setFinalizeOffen(false);
       setSt(res.data);
       onChange(res.data);
       toast.success(t("finalized"));
-    } else toast.error(res.error);
+    } else {
+      // Dialog bleibt OFFEN: bei einer Abweichung soll der Nutzer die Meldung
+      // im Zusammenhang sehen, nicht auf einer Seite ohne Kontext.
+      toast.error(res.error);
+    }
   }
 
   async function remove() {
@@ -357,7 +374,7 @@ export function StatementEditor({
           </Button>
           {!finalized && !isNew && (
             <span className="flex items-center gap-1.5">
-              <Button variant="outline" onClick={() => void finalize()}>
+              <Button variant="outline" onClick={() => setFinalizeOffen(true)}>
                 {t("finalize")}
               </Button>
               {/* Finalisieren vergibt die Rechnungsnummer und friert die
@@ -782,6 +799,19 @@ export function StatementEditor({
         open={showPreview}
         onOpenChange={setShowPreview}
       />
+      {/* Ohne Auszahlung gibt es nichts zu bestätigen — der Knopf ist in dem
+          Fall ohnehin gesperrt (siehe `disabled` oben). */}
+      {st.summary.owner_payout != null && (
+        <StatementFinalizeDialog
+          open={finalizeOffen}
+          onOpenChange={setFinalizeOffen}
+          betrag={st.summary.owner_payout}
+          waehrung={ownerCur}
+          ownerName={st.header.owner_name ?? null}
+          busy={busy}
+          onBestaetigt={(betrag, waehrung) => void finalize(betrag, waehrung)}
+        />
+      )}
     </div>
   );
 }

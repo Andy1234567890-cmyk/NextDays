@@ -257,7 +257,10 @@ const VR_GROUP: NavGroup = {
   ],
 };
 
-function buildGroups(accommodationType: AccommodationType): readonly NavGroup[] {
+function buildGroups(
+  accommodationType: AccommodationType,
+  istIntern: boolean,
+): readonly NavGroup[] {
   const hotel = accommodationType === "hotel";
   // Objekt-Stammdaten als erstes Item der Betriebs-Gruppe: Hotel spricht von
   // „Zimmern", Ferienvermietung von „Objekten" (Label betriebsartabhängig, wie
@@ -271,6 +274,17 @@ function buildGroups(accommodationType: AccommodationType): readonly NavGroup[] 
     items: [propertiesItem, ...(hotel ? HOTEL_GROUP : VR_GROUP).items],
   };
   // Buchhaltung als eigener Reiter, betriebsartabhängig bestückt.
+  //
+  // NUR IN INTERNEN KONTEN (Stand 30.08.2026, `tenants.is_internal`, 0505):
+  // das Modul ist in Entwicklung, 13 seiner 17 Unterseiten sind noch
+  // Platzhalter. In einem echten Betrieb wäre das ein Menüpunkt, hinter dem
+  // nichts steht. Zum Freischalten diese Bedingung entfernen — dann auch den
+  // Riegel in `app/(dashboard)/buchhaltung/layout.tsx`, beide gehören zusammen.
+  //
+  // NICHT `is_demo`: das ist die anonyme Schaufenster-Vorführung, und dort ist
+  // `/buchhaltung` gerade GESPERRT (`demo_gate.GESPERRTE_PRAEFIXE`, 0408). Die
+  // Bedingung wäre also genau falsch herum — der Punkt erschiene ausgerechnet
+  // dort, wo die API ihn verweigert.
   const accountingGroup: NavGroup = {
     groupKey: "accounting",
     icon: "ph:calculator",
@@ -281,15 +295,23 @@ function buildGroups(accommodationType: AccommodationType): readonly NavGroup[] 
   // Gäste), dann der Verkauf, zuletzt die kontoweiten Werkzeuge.
   return [
     operationsGroup,
-    accountingGroup,
+    ...(istIntern ? [accountingGroup] : []),
     {
-      // Reservierungen (Casona-Muster): Übersicht · Gruppen · Stop-Sell ·
-      // Einstellungen. Stop-Sell steuert die Buchbarkeit von Zeiträumen —
-      // das ist Reservierungs-/Belegungsarbeit, kein Objektstammdatum.
+      // Reservierungen (Casona-Muster): Übersicht · Gruppen · Stop-Sell.
+      // Stop-Sell steuert die Buchbarkeit von Zeiträumen — das ist
+      // Reservierungs-/Belegungsarbeit, kein Objektstammdatum.
+      //
+      // „Einstellungen" ist am 30.08.2026 entfallen: die Seite war ein reiner
+      // Platzhalter, der nach /objekte weiterleitete. Buchungsbezogene
+      // Einstellungen (Check-in-Zeiten, Richtlinien) liegen am Objekt — ein
+      // Menüpunkt, der nur woandershin zeigt, ist ein Umweg, kein Ziel.
       groupKey: "reservations",
       icon: "ph:bookmark-simple",
       items: [
-        { key: "overview", href: "/reservierungen/kontrollzentrum", icon: "ph:bookmark-simple", req: "view_calendar" },
+        // Zeigte bis 30.08.2026 auf `/reservierungen/kontrollzentrum`. Das
+        // ist als Reiter „Kennzahlen" in die Auswertung gezogen; die
+        // Übersicht dieser Gruppe ist jetzt die Reservierungsliste selbst.
+        { key: "overview", href: "/reservierungen", icon: "ph:bookmark-simple", req: "view_calendar" },
         // „tasks" steht jetzt oben in MAIN (unter Posteingang) — hier NICHT
         // wiederholen, sonst hätte die Sidebar den Punkt zweimal.
         { key: "reservationGroups", href: "/reservierungen/gruppen", icon: "ph:users-three", req: "view_calendar" },
@@ -301,21 +323,43 @@ function buildGroups(accommodationType: AccommodationType): readonly NavGroup[] 
         // calendar/router.py) und das notFound() der Seite: wer nicht
         // entscheiden darf, sieht den Punkt nicht.
         { key: "blockRequests", href: "/kalender/sperrantraege", icon: "ph:calendar-x", req: "approve_block" },
-        { key: "settings", href: "/reservierungen/einstellungen", icon: "ph:gear", req: "manage_calendar" },
       ],
     },
     {
       // Gäste: geteilte Hauptkategorie für Hotel UND Ferienvermietung
-      // (Casona-Muster): Übersicht · Firmen/Kategorien · Monatsbericht ·
-      // Gutscheine, plus die Reisebüro-Partnerkartei.
+      // (Casona-Muster): Übersicht plus die Reisebüro-Partnerkartei.
+      //
+      // ENTFERNT am 30.08.2026: „Kategorien", „Monatsbericht" und
+      // „Gutscheine". Keine dieser drei Routen existierte — und weil
+      // /gaeste/[id] eine dynamische Route ist, gab es dafür KEINEN 404:
+      // /gaeste/monatsbericht rief die Gast-Detailseite mit „monatsbericht"
+      // als vermeintlicher Gast-ID auf. Ein toter Link, der sich als falsche
+      // Seite tarnt, ist schlimmer als einer, der ehrlich scheitert.
+      // Der Monatsbericht lebt jetzt als eigener Hauptpunkt „Auswertung"
+      // (/auswertung, siehe REPORTING unten); Kategorien und Gutscheine sind
+      // ersatzlos gestrichen, bis sie jemand baut.
       groupKey: "guests",
       icon: "ph:users",
       items: [
         { key: "overview", href: "/gaeste", icon: "ph:users", req: "pm_guest_details" },
-        { key: "guestCategories", href: "/gaeste/kategorien", icon: "ph:buildings", req: "pm_guest_details" },
-        { key: "guestMonthlyReport", href: "/gaeste/monatsbericht", icon: "ph:chart-bar", req: "pm_guest_details" },
-        { key: "vouchers", href: "/gaeste/gutscheine", icon: "ph:ticket", req: "pm_guest_details" },
         { key: "travelAgencies", href: "/reisebueros", icon: "ph:handshake", req: "manage_partners" },
+      ],
+    },
+    {
+      // Auswertung: Kennzahlen, Buchungen, Auslastung, Kanäle, Gäste.
+      //
+      // EIGENER Hauptpunkt, kein Unterpunkt unter „Gäste": ein Auslastungs-
+      // oder Kanalbericht ist kein Gästethema. Hostaway führt seinen
+      // Berichtsbereich ebenfalls eigenständig (`Financial Reporting`),
+      // Lodgify als `Reports`.
+      //
+      // Berechtigung `view_finances` — dieselbe Hürde wie Seite und Endpunkt.
+      // Umsatz und Provision gehören nicht in die Hand einer Reinigungskraft
+      // (Wurzel 9, §4.3).
+      groupKey: "analysis",
+      icon: "ph:chart-line",
+      items: [
+        { key: "overview", href: "/auswertung", icon: "ph:chart-line", req: "view_finances" },
       ],
     },
     ...STATIC_GROUPS.filter((g) => !HIDDEN_AT_LAUNCH.has(g.groupKey)),
@@ -415,6 +459,7 @@ export function AppSidebar({
   accommodationType = "vacation_rental",
   country = null,
   istDemo = false,
+  istIntern = false,
   einrichtungOffen = false,
 }: {
   email?: string;
@@ -430,6 +475,10 @@ export function AppSidebar({
   // als nicht öffenbar markiert. Ausblenden würde den Umfang der Software
   // verstecken; der Schutz selbst liegt ohnehin im Backend (`demo_gate`).
   istDemo?: boolean;
+  // Internes Konto des Hauses (`tenants.is_internal`, 0505): schaltet die
+  // Buchhaltung frei, die noch in Entwicklung ist. Getrennt von `istDemo` —
+  // das ist die anonyme Vorführung, dort ist die Buchhaltung gesperrt.
+  istIntern?: boolean;
   // Firmendaten ODER Abo fehlen: die Oberflaeche ist dann eine SACKGASSE —
   // veroeffentlichen geht nicht (422), Geld kann nicht ankommen. Statt den
   // Betrieb das auf jeder Seite einzeln herausfinden zu lassen, bleibt die
@@ -465,7 +514,9 @@ export function AppSidebar({
   const alleHrefs = [
     ...MAIN.map((i) => i.href),
     ...BOTTOM.map((i) => i.href),
-    ...buildGroups(accommodationType).flatMap((g) => g.items.map((i) => i.href)),
+    ...buildGroups(accommodationType, istIntern).flatMap((g) =>
+      g.items.map((i) => i.href),
+    ),
   ];
   const isActive = ({ href: pfad, exact }: NavItem) => {
     if (pfad === "/") return pathname === "/";
@@ -516,7 +567,7 @@ export function AppSidebar({
 
   const mainItems = MAIN.filter(canSee);
   const bottomItems = BOTTOM.filter(canSee);
-  const groups = buildGroups(accommodationType);
+  const groups = buildGroups(accommodationType, istIntern);
 
   // Anzeigename + Initialen aus der E-Mail ableiten (bis echtes Profil da ist).
   const displayName = email ? email.split("@")[0] : t("account.title");

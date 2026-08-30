@@ -16,7 +16,6 @@ const GESPERRT: readonly string[] = [
   "/reservierungen/aufgaben",
   "/aufgaben",
   "/einstellungen",
-  "/reservierungen/einstellungen",
   "/stop-sell",
   "/kalender/sperrantraege",
   "/gaeste/kategorien",

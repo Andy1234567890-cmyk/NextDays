@@ -1,7 +1,11 @@
-// Kontrollzentrum → KPI-Detail (ANSEHEN): große Zeitreihe EINER
-// Kennzahl über ALLE (gefilterten) Objekte + Vergleichsperioden + Breakout +
-// Export. Der property_id-Filter (wiederholbar) wird durchgereicht. Unbekannte
-// Metrik → 404 (kein 500 aus fehlgeleiteten Pfaden).
+// Auswertung → Kennzahl-Detail: große Zeitreihe EINER Kennzahl über ALLE
+// (gefilterten) Objekte + Vergleichsperioden + Breakout + Export. Der
+// property_id-Filter (wiederholbar) wird durchgereicht. Unbekannte Metrik →
+// 404 (kein 500 aus fehlgeleiteten Pfaden).
+//
+// Hierher gezogen am 30.08.2026 aus
+// `/reservierungen/kontrollzentrum/[metric]`: die Kacheln, von denen aus man
+// hier landet, sitzen jetzt im Reiter „Kennzahlen" der Auswertung.
 import { notFound } from "next/navigation";
 
 import { TenantKpiDetail } from "@/components/reservierungen/kpi-detail";

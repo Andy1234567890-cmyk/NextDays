@@ -292,7 +292,8 @@
       "hotel": "Szálloda",
       "vacationRentals": "Nyaralók",
       "accounting": "Könyvelés",
-      "guests": "Vendégek"
+      "guests": "Vendégek",
+      "analysis": "Értékelés"
     },
     "roles": {
       "admin": "Adminisztrátor",
@@ -320,9 +321,6 @@
     "rooms": "Szobák",
     "overview": "Áttekintés",
     "reservationGroups": "Csoportok",
-    "guestCategories": "Cégek/kategóriák",
-    "guestMonthlyReport": "Havi jelentés",
-    "vouchers": "Utalványok",
     "payments": "Fizetések",
     "revenue": "Bevétel",
     "bankAccounts": "Bankszámlák",
@@ -1267,7 +1265,10 @@
       "private": "Magán",
       "business": "Munkahelyi",
       "email": "E-mail"
-    }
+    },
+    "filterIncomplete": "Csak hiányos",
+    "unnamed": "Név nélkül",
+    "unnamedFromChannel": "{channel}-vendég"
   },
   "fotos": {
     "title": "Fotók",
@@ -1615,6 +1616,19 @@
       },
       "basis": "Meghatározza, hogy egy foglalás mikor esik az időszakba: check-in esetén az érkezés napja szerint, check-out esetén a távozás napja szerint. A hónapfordulón átnyúló foglalás a választástól függően az egyik vagy a másik hónapba kerül.",
       "statuses": "Csak a kiválasztott státuszok valamelyikével rendelkező foglalások kerülnek elszámolásra. Alapértelmezés a visszaigazolt és a lezárt foglalás — a lemondottak rendszerint nem tartoznak a kifizetésbe."
+    },
+    "finalizeConfirm": {
+      "title": "Elszámolás rögzítése",
+      "what": "A(z) {owner} részére készült elszámolás rögzített számlaszámot kap, és láthatóvá válik a tulajdonos számára.",
+      "theOwner": "a tulajdonosnak",
+      "amountLabel": "Kifizetés a tulajdonosnak",
+      "typeLabel": "Írja be a megerősítendő összeget",
+      "typeHint": "Kérjük, írja be a fenti összeget – így biztos lehet benne, hogy ellenőrizve lett.",
+      "mismatch": "A beírt összeg nem egyezik az elszámolással.",
+      "irreversible": "Ez nem vonható vissza. A rögzített számla csak sztornó számlával érvényteleníthető.",
+      "cancel": "Mégse",
+      "confirm": "Rögzítés",
+      "working": "Rögzítés folyamatban…"
     }
   },
   "ownerBilling": {
@@ -4207,11 +4221,6 @@
     "unterkuenftePage": {
       "title": "Ingatlanok",
       "loadError": "Az ingatlanokat nem sikerült betölteni. Elérhető a háttérrendszer?"
-    },
-    "einstellungenPage": {
-      "title": "Foglalási beállítások",
-      "description": "A foglalásokkal kapcsolatos beállításokat (check-in/check-out időpontok, lemondási szabályok, irányelvek) jelenleg közvetlenül az adott ingatlannál lehet kezelni.",
-      "linkLabel": "Az ingatlanokhoz"
     },
     "warnungenPage": {
       "title": "Figyelmeztetések",
@@ -10294,8 +10303,6 @@
       "cardOtherChannels": "A saját weboldalán keresztüli foglalások továbbra is jutalékmentesek. A myBestDays piactéren keresztüli foglalásoknál a jutalék {satz}, amelyet közvetlenül a fizetés beérkezésekor vonunk le — ezek itt nem szerepelnek.",
       "pending": "Nyitott ({count, plural, one {# foglalás} other {# foglalás}}): ",
       "pendingCapHint": " — a havi felső korlát, {cap} kerül elszámolásra",
-      "pendingCapped": "Elszámolva ({count, plural, one {# foglalás} other {# foglalás}}): ",
-      "pendingCappedHint": " — Elérte a havi felső határt, a felmerült költségek: {total}",
       "noPending": "Jelenleg nincs nyitott jutalék.",
       "showMonths": "Havi kimutatás megtekintése",
       "backToBilling": "Számlázás",
@@ -10310,7 +10317,6 @@
       "colCommission": "Jutalék",
       "colStatus": "Állapot",
       "capHint": "A feltüntetett összeg a keletkezett jutalék, a felső korlát alkalmazása előtt. Havonta legfeljebb a csomagjában foglalt havi felső korlátot számlázzuk ki.",
-      "colCommissionIncurred": "{total} találat, a maximális számot elérte",
       "mixedCurrencyHint": "A több valutában történt foglalásokat tartalmazó hónapokat összesítés nélkül jelenítjük meg — az egyes összegek az adott számlán szerepelnek.",
       "statusPending": "Elszámolás alatt",
       "statusInvoiced": "Elszámolva",
@@ -10329,7 +10335,10 @@
       "colChannel": "Portál",
       "colRate": "Kulcs",
       "entryNoProperty": "A szálláshely már nem létezik",
-      "entrySum": "Összesen"
+      "entrySum": "Összesen",
+      "pendingCapped": "Elszámolva ({count, plural, one {# foglalás} other {# foglalás}}): ",
+      "pendingCappedHint": " — Elérte a havi felső határt, a felmerült költségek: {total}",
+      "colCommissionIncurred": "{total} találat, a maximális számot elérte"
     },
     "invoices": {
       "fees": "Díjak"
@@ -12027,5 +12036,113 @@
         "aktion": "Csatornákhoz"
       }
     }
+  },
+  "analysis": {
+    "title": "Értékelés",
+    "subtitle": "Mutatók, foglalások, kihasználtság és csatornák egy időszakra vonatkozóan.",
+    "loading": "Számítás folyamatban…",
+    "empty": "Ehhez az időszakhoz nincsenek adatok.",
+    "ownerStay": "Saját használat",
+    "mixedCurrency": "Több valuta az időszakban ({list}) – az összegek nincsenek összesítve. Kérjük, szűkítse egy objektumra vagy valutára.",
+    "occupancyFootnote": "A foglalt az foglalt – akár egy portálon, a saját weboldalon keresztül, saját maga által létrehozva, vagy a tulajdonos által. A nevezőből csak azok a napok esnek ki, amikor az objektum nem volt eladó: zárolt napok és Stop-Sell.",
+    "kpiFootnote": "Az egyes kártyákon lévő százalékos érték az előző azonos időszakhoz viszonyítva van megadva. Egy kártyára kattintva megnyílik az idősor.",
+    "commissionFootnote": "Az üres jutalékmezők azt jelentik, hogy a portál nem továbbít jutalékot (a Booking.com általában nem teszi meg) – semmi sem becsült.",
+    "tab": {
+      "kennzahlen": "Fő mutatók",
+      "analytics": "Áttekintés",
+      "buchungen": "Foglalások",
+      "auslastung": "Kihasználtság",
+      "kanaele": "Csatornák",
+      "gaeste": "Vendégek"
+    },
+    "range": {
+      "monat": "Ez a hónap",
+      "vormonat": "Előző hónap",
+      "quartal": "Negyedév",
+      "jahr": "Év",
+      "frei": "Szabadon választott"
+    },
+    "filter": {
+      "range": "Időszak",
+      "from": "Tól",
+      "to": "Ig",
+      "basis": "Hozzárendelés",
+      "properties": "Objektumok",
+      "allProperties": "Összes objektum",
+      "channels": "Csatornák",
+      "allChannels": "Összes csatorna"
+    },
+    "basis": {
+      "anreise": "Érkezés szerint",
+      "abreise": "Távozás szerint",
+      "buchung": "Foglalás dátuma szerint",
+      "uebernachtung": "Éjszakázás szerint"
+    },
+    "basisHint": {
+      "anreise": "Azok a foglalások számítanak, amelyek érkezése az időszakba esik.",
+      "abreise": "Azok a foglalások számítanak, amelyek távozása az időszakba esik.",
+      "buchung": "Azok a foglalások számítanak, amelyek az időszakban érkeztek. Azok a foglalások, amelyeknek nincs valódi időbélyegzője a portálról, hiányoznak – ezek nincsenek becsülve.",
+      "uebernachtung": "Minden olyan foglalás számít, amely érinti az időszakot."
+    },
+    "kpi": {
+      "revenue": "Bevétel",
+      "bookingsCount": "{count, plural, one {# foglalás} other {# foglalás}}",
+      "occupancy": "Kihasználtság",
+      "ofBookable": "{count} foglalható éjszakából",
+      "nights": "Éjszakák",
+      "avgStay": "Ø {n} éjszaka/tartózkodás",
+      "adr": "Ø éjszakai ár",
+      "adrHint": "Bevétel/foglalt éjszaka",
+      "revpar": "Éjszakánkénti bevétel",
+      "revparHint": "Bevétel foglalható éjszakánként",
+      "cancellations": "Lemondási arány",
+      "cancelHint": "{count, plural, one {# lemondás} other {# lemondás}}"
+    },
+    "chart": {
+      "revenueOverTime": "Bevételi előzmények",
+      "shareByChannel": "Bevételi részesedés csatornánként",
+      "revenueByProperty": "Bevétel ingatlanonként",
+      "footnote": "Összes bevétel az időszakban: {total}"
+    },
+    "table": {
+      "rowCount": "{count, plural, one {# foglalás} other {# foglalás}}",
+      "columns": "Oszlopok"
+    },
+    "col": {
+      "property": "Ingatlan",
+      "guest": "Vendég",
+      "channel": "Csatorna",
+      "stay": "Tartózkodás",
+      "nights": "Éjszakák",
+      "guests": "Vendégek",
+      "status": "Státusz",
+      "revenue": "Bevétel",
+      "commission": "Jutalék",
+      "bookedAt": "Foglalás dátuma",
+      "bookable": "Foglalható",
+      "booked": "Lefoglalt",
+      "blocked": "Blokkolt",
+      "stopSell": "Stop-Sell",
+      "arrivals": "Érkezések",
+      "cancellations": "Lemondások",
+      "bookingsShort": "Foglalások",
+      "net": "Nettó",
+      "share": "Arány",
+      "country": "Ország"
+    },
+    "guests": {
+      "total": "Vendégek",
+      "returning": "Visszatérő vendégek",
+      "returningHint": "{count, plural, one {# személy} other {# személy}}",
+      "avgStay": "Átlagos tartózkodás",
+      "perBooking": "Átlagos vendégszám foglalásonként",
+      "origin": "Eredet",
+      "unknownCountry": "Ismeretlen",
+      "returningOf": "{count} / {base} hozzárendelhető személy",
+      "notIdentifiable": "Nem azonosítható – a portálok nem adnak vendégazonosítót"
+    },
+    "ownerStayCount": "{count, plural, one {# saját használat} other {# saját használat}}",
+    "ownerStayRow": "Saját használat",
+    "ownerStayRowHint": "Tulajdonos a saját ingatlanában – nem eladó"
   }
 }

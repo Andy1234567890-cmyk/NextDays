@@ -289,10 +289,21 @@ export async function updateStatement(
   return call(`/owner-statements/${id}`, { method: "PATCH", body: input });
 }
 
+/** Festschreiben — verlangt die Doppelbestätigung des Betrags.
+ *
+ * Der Server prüft die übergebene Auszahlung gegen den aktuellen Stand: hat
+ * sich die Abrechnung seit dem Anzeigen geändert, antwortet er 409 statt eine
+ * unveränderbare Rechnung über einen anderen Betrag zu schreiben. Deshalb hier
+ * IMMER die Zahl mitgeben, die dem Nutzer im Dialog gezeigt wurde — nicht neu
+ * berechnen. */
 export async function finalizeStatement(
   id: string,
+  bestaetigung: { bestaetigte_auszahlung: number; bestaetigte_waehrung: string },
 ): Promise<Result<Statement>> {
-  return call(`/owner-statements/${id}/finalize`, { method: "POST" });
+  return call(`/owner-statements/${id}/finalize`, {
+    method: "POST",
+    body: bestaetigung,
+  });
 }
 
 /** Finalisierte Rechnung stornieren → erzeugt eine Stornorechnung (eigene

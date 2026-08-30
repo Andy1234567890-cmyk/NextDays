@@ -292,7 +292,8 @@
       "hotel": "Hotell",
       "vacationRentals": "Puhkemajutused",
       "accounting": "Raamatupidamine",
-      "guests": "Külalised"
+      "guests": "Külalised",
+      "analysis": "Hinnang"
     },
     "roles": {
       "admin": "Administraator",
@@ -320,9 +321,6 @@
     "rooms": "Toad",
     "overview": "Ülevaade",
     "reservationGroups": "Rühmad",
-    "guestCategories": "Ettevõtted/kategooriad",
-    "guestMonthlyReport": "Kuuaruanne",
-    "vouchers": "Vautšerid",
     "payments": "Maksed",
     "revenue": "Käive",
     "bankAccounts": "Pangakontod",
@@ -1267,7 +1265,10 @@
       "private": "Isiklik",
       "business": "Töö",
       "email": "E-post"
-    }
+    },
+    "filterIncomplete": "Ainult mittetäielik",
+    "unnamed": "Nimetu",
+    "unnamedFromChannel": "{channel}-külaline"
   },
   "fotos": {
     "title": "Fotod",
@@ -1615,6 +1616,19 @@
       },
       "basis": "Määrab, millal broneering langeb perioodi: sisseregistreerimise puhul saabumispäeva järgi, väljaregistreerimise puhul lahkumispäeva järgi. Kuuvahetust ületav broneering satub valikust olenevalt ühte või teise kuusse.",
       "statuses": "Arvestatakse ainult broneeringuid, millel on üks valitud staatustest. Vaikimisi on need kinnitatud ja lõpetatud broneeringud — tühistatud ei kuulu tavaliselt väljamaksesse."
+    },
+    "finalizeConfirm": {
+      "title": "Arvelduse kinnitamine",
+      "what": "Arveldusele omanikule {owner} määratakse kindel arvenumber ja see muutub omanikule nähtavaks.",
+      "theOwner": "omanikule",
+      "amountLabel": "Väljamakse omanikule",
+      "typeLabel": "Sisestage kinnitamiseks summa",
+      "typeHint": "Palun sisestage ülaltoodud summa – nii on tagatud, et see on kontrollitud.",
+      "mismatch": "Sisestatud summa ei vasta arveldusele.",
+      "irreversible": "Seda ei saa tagasi võtta. Kinnitatud arve saab tühistada ainult kreeditarvega.",
+      "cancel": "Tühista",
+      "confirm": "Kinnita",
+      "working": "Kinnitatakse..."
     }
   },
   "ownerBilling": {
@@ -4207,11 +4221,6 @@
     "unterkuenftePage": {
       "title": "Majutused",
       "loadError": "Objekte ei õnnestunud laadida. Kas taustasüsteem on kättesaadav?"
-    },
-    "einstellungenPage": {
-      "title": "Broneeringute seaded",
-      "description": "Broneeringutega seotud seadeid (sisse-/väljaregistreerimise ajad, tühistamisreeglid, tingimused) haldate praegu otse vastava objekti juures.",
-      "linkLabel": "Objektide juurde"
     },
     "warnungenPage": {
       "title": "Hoiatused",
@@ -10294,8 +10303,6 @@
       "cardOtherChannels": "Teie enda veebilehe kaudu tehtud broneeringud jäävad vahendustasuta. myBestDays turuplatsi kaudu tehtud broneeringutelt võetakse {satz}, mis peetakse kinni kohe makse laekumisel — need ei kajastu siin.",
       "pending": "Avatud ({count, plural, one {# broneering} other {# broneeringut}}): ",
       "pendingCapHint": " — arveldatakse kuulimiit {cap}",
-      "pendingCapped": "Arvestatakse ({count, plural, one {# broneering} other {# broneeringut}}): ",
-      "pendingCappedHint": " — Kuulimiit on saavutatud, tekkinud on {total}",
       "noPending": "Praegu avatud vahendustasusid ei ole.",
       "showMonths": "Vaata kuude kaupa",
       "backToBilling": "Arveldus",
@@ -10310,7 +10317,6 @@
       "colCommission": "Vahendustasu",
       "colStatus": "Olek",
       "capHint": "Näidatud on tekkinud vahendustasu enne ülempiiri rakendamist. Kuus arveldatakse kõige rohkem teie paketti kuuluv kuulimiit.",
-      "colCommissionIncurred": "loodud {total}, kaane saavutatud",
       "mixedCurrencyHint": "Mitmes valuutas broneeringutega kuud kuvatakse ilma kogusummata — üksiksummad on vastaval arvel.",
       "statusPending": "Arveldamisel",
       "statusInvoiced": "Arveldatud",
@@ -10329,7 +10335,10 @@
       "colChannel": "Portaal",
       "colRate": "Määr",
       "entryNoProperty": "Objekti enam ei ole",
-      "entrySum": "Kokku"
+      "entrySum": "Kokku",
+      "pendingCapped": "Arvestatakse ({count, plural, one {# broneering} other {# broneeringut}}): ",
+      "pendingCappedHint": " — Kuulimiit on saavutatud, tekkinud on {total}",
+      "colCommissionIncurred": "loodud {total}, kaane saavutatud"
     },
     "invoices": {
       "fees": "Tasud"
@@ -12027,5 +12036,113 @@
         "aktion": "Kanalitesse"
       }
     }
+  },
+  "analysis": {
+    "title": "Analüüs",
+    "subtitle": "Perioodi mõõdikud, broneeringud, täituvus ja kanalid.",
+    "loading": "Arvutatakse...",
+    "empty": "Selle perioodi kohta andmed puuduvad.",
+    "ownerStay": "Oma tarbeks",
+    "mixedCurrency": "Perioodil on mitu valuutat ({list}) – summasid kokku ei liideta. Palun piirake ühe objekti või valuutaga.",
+    "occupancyFootnote": "Hõivatud on hõivatud – kas portaali, oma veebisaidi kaudu, ise sisestatud või omaniku poolt. Arvestusest langevad välja ainult päevad, mil objekt ei olnud müügis: blokeeritud päevad ja stop-sell.",
+    "kpiFootnote": "Igal kaardil olev protsent võrdleb eelmise sama pika perioodiga. Kaardil klõpsamine avab ajasarja.",
+    "commissionFootnote": "Tühjad vahendustasu väljad tähendavad, et portaal ei edasta vahendustasu (Booking.com seda tavaliselt ei tee) – midagi ei hinnata.",
+    "tab": {
+      "kennzahlen": "Mõõdikud",
+      "analytics": "Ülevaade",
+      "buchungen": "Broneeringud",
+      "auslastung": "Täituvus",
+      "kanaele": "Kanalid",
+      "gaeste": "Külalised"
+    },
+    "range": {
+      "monat": "See kuu",
+      "vormonat": "Eelmine kuu",
+      "quartal": "Kvartal",
+      "jahr": "Aasta",
+      "frei": "Vabalt valitud"
+    },
+    "filter": {
+      "range": "Ajavahemik",
+      "from": "Alates",
+      "to": "Kuni",
+      "basis": "Määramine",
+      "properties": "Objektid",
+      "allProperties": "Kõik objektid",
+      "channels": "Kanalid",
+      "allChannels": "Kõik kanalid"
+    },
+    "basis": {
+      "anreise": "Saabumise järgi",
+      "abreise": "Lahkumise järgi",
+      "buchung": "Broneerimiskuupäeva järgi",
+      "uebernachtung": "Ööbimise järgi"
+    },
+    "basisHint": {
+      "anreise": "Arvestatakse broneeringuid, mille saabumine jääb perioodi.",
+      "abreise": "Arvestatakse broneeringuid, mille lahkumine jääb perioodi.",
+      "buchung": "Arvestatakse broneeringuid, mis on perioodil tehtud. Broneeringud ilma portaali tegeliku ajatemplita puuduvad siit – neid ei hinnata.",
+      "uebernachtung": "Arvestatakse iga broneeringut, mis puudutab perioodi."
+    },
+    "kpi": {
+      "revenue": "Käive",
+      "bookingsCount": "{count, plural, one {# broneering} other {# broneeringut}}",
+      "occupancy": "Täituvus",
+      "ofBookable": "{count} broneeritavast ööst",
+      "nights": "Ööd",
+      "avgStay": "Ø {n} ööd peatumise kohta",
+      "adr": "Ø öö hind",
+      "adrHint": "Käive broneeritud öö kohta",
+      "revpar": "Tulu öö kohta",
+      "revparHint": "Tulu broneeritava öö kohta",
+      "cancellations": "Tühistamismäär",
+      "cancelHint": "{count, plural, one {# tühistamine} other {# tühistamist}}"
+    },
+    "chart": {
+      "revenueOverTime": "Tulu ajalugu",
+      "shareByChannel": "Tulu osakaal kanali kohta",
+      "revenueByProperty": "Tulu objekti kohta",
+      "footnote": "Kogutulu perioodil: {total}"
+    },
+    "table": {
+      "rowCount": "{count, plural, one {# broneering} other {# broneeringut}}",
+      "columns": "Veerud"
+    },
+    "col": {
+      "property": "Objekt",
+      "guest": "Külaline",
+      "channel": "Kanal",
+      "stay": "Peatumine",
+      "nights": "Ööd",
+      "guests": "Külalised",
+      "status": "Staatus",
+      "revenue": "Tulu",
+      "commission": "Vahendustasu",
+      "bookedAt": "Broneeritud",
+      "bookable": "Broneeritav",
+      "booked": "Broneeritud",
+      "blocked": "Blokeeritud",
+      "stopSell": "Stop-Sell",
+      "arrivals": "Saabumised",
+      "cancellations": "Tühistamised",
+      "bookingsShort": "Broneeringud",
+      "net": "Neto",
+      "share": "Osakaal",
+      "country": "Riik"
+    },
+    "guests": {
+      "total": "Külalised",
+      "returning": "Korduvad kliendid",
+      "returningHint": "{count, plural, one {# inimene} other {# inimest}}",
+      "avgStay": "Keskmine peatumine",
+      "perBooking": "Keskmine külaliste arv broneeringu kohta",
+      "origin": "Päritolu",
+      "unknownCountry": "Teadmata",
+      "returningOf": "{count} {base} vastendast isikust",
+      "notIdentifiable": "Tuvastamatu – portaalid ei anna külalise ID-d"
+    },
+    "ownerStayCount": "{count, plural, one {# isiklik kasutus} other {# isiklikku kasutust}}",
+    "ownerStayRow": "Oman kasutus",
+    "ownerStayRowHint": "Majaomanik oma objektil – mitte müügiks"
   }
 }

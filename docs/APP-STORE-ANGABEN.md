@@ -218,14 +218,20 @@ der Bestätigung hingewiesen.
 3. ~~**Öffentliche Lösch-Seite** auf der Marketing-Domain~~ — **gebaut**
    (Commit 7a785ee5, Slice `account_deletion` + `marketing/app/konto-loeschen`,
    Migration 0413 live). Die Adresse für das Formular ist
-   `https://mynextdays.com/konto-loeschen`. **Vor dem Eintragen aufrufen:** sie
-   antwortet erst, wenn Coolify das Marketing-Deployment gezogen hat — vor dem
-   Commit lieferte sie 404, und eine 404-URL im Data-Safety-Formular ist ein
-   Ablehnungsgrund.
+   `https://mynextdays.com/konto-loeschen`. **Live gegengeprüft am 30.08.2026:**
+   200, und die Seite trägt wirklich das Löschformular (Überschrift „Konto
+   löschen" + E-Mail-Feld), ist also kein 200 auf einer Fehlerseite. Ebenfalls
+   200: `/datenschutz`, `/agb`, `/hilfe`.
 4. ~~**Demo-Zugänge**~~ — vorhanden, siehe die Tabelle in Abschnitt 1. Offen ist
    nur das Passwort im Store-Formular.
-5. **Screenshots** je Gerätegröße, je App, ohne Fremdmarken-Logos in
-   irreführender Weise.
+5. ~~**Screenshots** je Gerätegröße, je App~~ — für myNextDays/Telefon
+   **erledigt**: sechs Stück, 1080 × 1920, in `docs/store-assets/screenshots/`,
+   samt Aufnahmeanleitung in `docs/PLAY-STORE-LISTING.md`. Offen bleibt: die
+   Tablet-Größen (Play verlangt für die Aufnahme in Empfehlungsformate auf
+   großen Bildschirmen mindestens 4 Bilder im Verhältnis 16:9/9:16) und der
+   ganze Satz für myBestDays. Die sichtbaren Kanal-Kennzeichen von
+   Booking.com/Airbnb/Vrbo sind eine sachliche Herkunftsanzeige; die
+   Ersatz-Aufnahme ohne sie ist in der Listing-Datei beschrieben.
 6. Für myBestDays zusätzlich: **WCAG-2.1-AA-Durchgang** und
    Barrierefreiheitserklärung (European Accessibility Act, seit 28.06.2025), die
    DSA-/P2B-Texte für Gastgeber sowie die Registrierungsnummer der Unterkunft

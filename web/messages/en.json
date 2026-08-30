@@ -292,7 +292,8 @@
       "hotel": "Hotel",
       "vacationRentals": "Vacation rentals",
       "accounting": "Accounting",
-      "guests": "Guests"
+      "guests": "Guests",
+      "analysis": "Evaluation"
     },
     "roles": {
       "admin": "Admin",
@@ -320,9 +321,6 @@
     "rooms": "Rooms",
     "overview": "Overview",
     "reservationGroups": "Groups",
-    "guestCategories": "Companies/categories",
-    "guestMonthlyReport": "Monthly report",
-    "vouchers": "Vouchers",
     "payments": "Payments",
     "revenue": "Revenue",
     "bankAccounts": "Bank accounts",
@@ -1267,7 +1265,10 @@
       "private": "Private",
       "business": "Business",
       "email": "Email"
-    }
+    },
+    "filterIncomplete": "Only incomplete",
+    "unnamed": "No name",
+    "unnamedFromChannel": "{channel} guest"
   },
   "fotos": {
     "title": "Photos",
@@ -1615,6 +1616,19 @@
       },
       "basis": "Determines when a booking falls within the period: with Check-in by the arrival day, with Check-out by the departure day. A booking spanning the turn of the month lands in one month or the other depending on your choice.",
       "statuses": "Only bookings with one of the selected statuses are settled. The default is confirmed and completed bookings — cancelled ones normally do not belong in a payout."
+    },
+    "finalizeConfirm": {
+      "title": "Finalize billing",
+      "what": "The billing for {owner} receives a fixed invoice number and becomes visible to the owner.",
+      "theOwner": "the owner",
+      "amountLabel": "Payout to the owner",
+      "typeLabel": "Enter amount for confirmation",
+      "typeHint": "Please enter the amount from above — this ensures it has been checked.",
+      "mismatch": "The entered amount does not match the billing.",
+      "irreversible": "This cannot be undone. A finalized invoice can only be cancelled by a credit note.",
+      "cancel": "Cancel",
+      "confirm": "Finalize",
+      "working": "Finalizing..."
     }
   },
   "ownerBilling": {
@@ -4207,11 +4221,6 @@
     "unterkuenftePage": {
       "title": "Accommodations",
       "loadError": "Properties could not be loaded. Is the backend reachable?"
-    },
-    "einstellungenPage": {
-      "title": "Reservation settings",
-      "description": "Booking-related settings (check-in/check-out times, cancellation rules, policies) are currently maintained directly on the respective property.",
-      "linkLabel": "Go to properties"
     },
     "warnungenPage": {
       "title": "Warnings",
@@ -10315,8 +10324,6 @@
       "cardOtherChannels": "Bookings through your own website remain commission-free. Bookings through the myBestDays marketplace carry {satz}, which is withheld directly when the payment comes in — those are not included here.",
       "pending": "Outstanding ({count, plural, one {# booking} other {# bookings}}): ",
       "pendingCapHint": " — the monthly cap of {cap} is what gets billed",
-      "pendingCapped": "Will be charged ({count, plural, one {# booking} other {# bookings}}): ",
-      "pendingCappedHint": " — Monthly cap reached, incurred {total}",
       "noPending": "No outstanding commissions at the moment.",
       "showMonths": "View monthly history",
       "backToBilling": "Billing",
@@ -10331,7 +10338,6 @@
       "colCommission": "Commission",
       "colStatus": "Status",
       "capHint": "The figure shown is the commission incurred, before any cap is applied. Per month, you are billed no more than the monthly cap included in your plan.",
-      "colCommissionIncurred": "created {total}, cap reached",
       "mixedCurrencyHint": "Months with bookings in several currencies are shown without a total — the individual amounts are on the respective invoice.",
       "statusPending": "Being billed",
       "statusInvoiced": "Billed",
@@ -10350,7 +10356,10 @@
       "colChannel": "Channel",
       "colRate": "Rate",
       "entryNoProperty": "Property no longer exists",
-      "entrySum": "Total"
+      "entrySum": "Total",
+      "pendingCapped": "Will be charged ({count, plural, one {# booking} other {# bookings}}): ",
+      "pendingCappedHint": " — Monthly cap reached, incurred {total}",
+      "colCommissionIncurred": "created {total}, cap reached"
     },
     "invoices": {
       "fees": "Fees"
@@ -12048,5 +12057,113 @@
         "aktion": "To channels"
       }
     }
+  },
+  "analysis": {
+    "title": "Evaluation",
+    "subtitle": "Key figures, bookings, occupancy, and channels for a period.",
+    "loading": "Calculating …",
+    "empty": "No data available for this period.",
+    "ownerStay": "Owner usage",
+    "mixedCurrency": "Multiple currencies in the period ({list}) — amounts are not totaled. Please filter by one property or one currency.",
+    "occupancyFootnote": "Occupied is occupied — whether through a portal, your own website, self-created, or by the owner. Only days when the property was not for sale are excluded from the denominator: blocked days and stop-sell.",
+    "kpiFootnote": "The percentage on each tile compares with the same period before. A click on a tile opens the time series.",
+    "commissionFootnote": "Empty commission fields mean that the portal does not transmit commission (Booking.com usually does not) — nothing is estimated.",
+    "tab": {
+      "kennzahlen": "Key figures",
+      "analytics": "Overview",
+      "buchungen": "Bookings",
+      "auslastung": "Occupancy",
+      "kanaele": "Channels",
+      "gaeste": "Guests"
+    },
+    "range": {
+      "monat": "This month",
+      "vormonat": "Previous month",
+      "quartal": "Quarter",
+      "jahr": "Year",
+      "frei": "Freely chosen"
+    },
+    "filter": {
+      "range": "Period",
+      "from": "From",
+      "to": "To",
+      "basis": "Assignment",
+      "properties": "Properties",
+      "allProperties": "All properties",
+      "channels": "Channels",
+      "allChannels": "All channels"
+    },
+    "basis": {
+      "anreise": "By arrival",
+      "abreise": "By departure",
+      "buchung": "By booking date",
+      "uebernachtung": "By overnight stay"
+    },
+    "basisHint": {
+      "anreise": "Counts bookings with an arrival date within the period.",
+      "abreise": "Counts bookings with a departure date within the period.",
+      "buchung": "Counts bookings received within the period. Bookings without a real timestamp from the portal are missing here — they are not estimated.",
+      "uebernachtung": "Counts every booking that touches the period."
+    },
+    "kpi": {
+      "revenue": "Revenue",
+      "bookingsCount": "{count, plural, one {# booking} other {# bookings}}",
+      "occupancy": "Occupancy",
+      "ofBookable": "of {count} bookable nights",
+      "nights": "Nights",
+      "avgStay": "Ø {n} nights per stay",
+      "adr": "Ø nightly rate",
+      "adrHint": "Revenue per booked night",
+      "revpar": "Revenue per night",
+      "revparHint": "Revenue per bookable night",
+      "cancellations": "Cancellation rate",
+      "cancelHint": "{count, plural, one {# Cancellation} other {# Cancellations}}"
+    },
+    "chart": {
+      "revenueOverTime": "Revenue trend",
+      "shareByChannel": "Revenue share per channel",
+      "revenueByProperty": "Revenue per property",
+      "footnote": "Total revenue in period: {total}"
+    },
+    "table": {
+      "rowCount": "{count, plural, one {# Booking} other {# Bookings}}",
+      "columns": "Columns"
+    },
+    "col": {
+      "property": "Property",
+      "guest": "Guest",
+      "channel": "Channel",
+      "stay": "Stay",
+      "nights": "Nights",
+      "guests": "Guests",
+      "status": "Status",
+      "revenue": "Revenue",
+      "commission": "Commission",
+      "bookedAt": "Booked on",
+      "bookable": "Bookable",
+      "booked": "Booked",
+      "blocked": "Blocked",
+      "stopSell": "Stop-Sell",
+      "arrivals": "Arrivals",
+      "cancellations": "Cancellations",
+      "bookingsShort": "Bookings",
+      "net": "Net",
+      "share": "Share",
+      "country": "Country"
+    },
+    "guests": {
+      "total": "Guests",
+      "returning": "Repeaters",
+      "returningHint": "{count, plural, one {# Person} other {# Persons}}",
+      "avgStay": "Avg. stay",
+      "perBooking": "Avg. guests per booking",
+      "origin": "Origin",
+      "unknownCountry": "Unknown",
+      "returningOf": "{count} of {base} assignable persons",
+      "notIdentifiable": "Not recognizable - portals do not provide guest identification"
+    },
+    "ownerStayCount": "{count, plural, one {# own use} other {# own uses}}",
+    "ownerStayRow": "Owner-occupied",
+    "ownerStayRowHint": "Homeowner in own property — no sale"
   }
 }

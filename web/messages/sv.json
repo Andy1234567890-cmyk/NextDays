@@ -292,7 +292,8 @@
       "hotel": "Hotell",
       "vacationRentals": "Semesterbostäder",
       "accounting": "Bokföring",
-      "guests": "Gäster"
+      "guests": "Gäster",
+      "analysis": "Utvärdering"
     },
     "roles": {
       "admin": "Admin",
@@ -320,9 +321,6 @@
     "rooms": "Rum",
     "overview": "Översikt",
     "reservationGroups": "Grupper",
-    "guestCategories": "Företag/kategorier",
-    "guestMonthlyReport": "Månadsrapport",
-    "vouchers": "Presentkort",
     "payments": "Betalningar",
     "revenue": "Omsättning",
     "bankAccounts": "Bankkonton",
@@ -1267,7 +1265,10 @@
       "private": "Privat",
       "business": "Arbete",
       "email": "E-post"
-    }
+    },
+    "filterIncomplete": "Endast ofullständig",
+    "unnamed": "Utan namn",
+    "unnamedFromChannel": "{channel}-gäst"
   },
   "fotos": {
     "title": "Foton",
@@ -1615,6 +1616,19 @@
       },
       "basis": "Avgör när en bokning hamnar inom perioden: vid Incheckning efter ankomstdagen, vid Utcheckning efter avresedagen. En bokning över månadsskiftet hamnar i den ena eller den andra månaden beroende på valet.",
       "statuses": "Endast bokningar med någon av de valda statusarna avräknas. Standard är bekräftade och avslutade bokningar — avbokade hör normalt inte hemma i en utbetalning."
+    },
+    "finalizeConfirm": {
+      "title": "Lås fakturering",
+      "what": "Faktureringen för {owner} får ett fast fakturanummer och blir synlig för ägaren.",
+      "theOwner": "ägaren",
+      "amountLabel": "Utbetalning till ägaren",
+      "typeLabel": "Ange belopp för bekräftelse",
+      "typeHint": "Vänligen ange beloppet ovan – detta säkerställer att det har kontrollerats.",
+      "mismatch": "Det angivna beloppet stämmer inte överens med faktureringen.",
+      "irreversible": "Detta kan inte ångras. En låst faktura kan endast annulleras med en kreditnota.",
+      "cancel": "Avbryt",
+      "confirm": "Lås",
+      "working": "Låser ..."
     }
   },
   "ownerBilling": {
@@ -4207,11 +4221,6 @@
     "unterkuenftePage": {
       "title": "Boenden",
       "loadError": "Objekten kunde inte laddas. Är backend nåbar?"
-    },
-    "einstellungenPage": {
-      "title": "Bokningsinställningar",
-      "description": "Bokningsrelaterade inställningar (in-/utcheckningstider, avbokningsregler, policyer) hanterar du för närvarande direkt på respektive objekt.",
-      "linkLabel": "Till objekten"
     },
     "warnungenPage": {
       "title": "Varningar",
@@ -10294,8 +10303,6 @@
       "cardOtherChannels": "Bokningar via din egen webbplats förblir provisionsfria. För bokningar via myBestDays-marknadsplatsen tillkommer {satz}, som dras direkt när betalningen kommer in — de ingår inte här.",
       "pending": "Utestående ({count, plural, one {# bokning} other {# bokningar}}): ",
       "pendingCapHint": " — det är månadstaket på {cap} som faktureras",
-      "pendingCapped": "Faktureras ({count, plural, one {# bokning} other {# bokningar}}): ",
-      "pendingCappedHint": " — Månadsgräns nådd, totalt {total}",
       "noPending": "Inga utestående provisioner just nu.",
       "showMonths": "Visa månadshistorik",
       "backToBilling": "Fakturering",
@@ -10310,7 +10317,6 @@
       "colCommission": "Provision",
       "colStatus": "Status",
       "capHint": "Angivet är den provision som uppstått, innan taket tillämpas. Per månad faktureras högst det månadstak som ingår i din prisplan.",
-      "colCommissionIncurred": "{total} skapade, taket nått",
       "mixedCurrencyHint": "Månader med bokningar i flera valutor visas utan totalsumma — de enskilda beloppen står på respektive faktura.",
       "statusPending": "Faktureras",
       "statusInvoiced": "Fakturerad",
@@ -10329,7 +10335,10 @@
       "colChannel": "Portal",
       "colRate": "Sats",
       "entryNoProperty": "Objektet finns inte längre",
-      "entrySum": "Summa"
+      "entrySum": "Summa",
+      "pendingCapped": "Faktureras ({count, plural, one {# bokning} other {# bokningar}}): ",
+      "pendingCappedHint": " — Månadsgräns nådd, totalt {total}",
+      "colCommissionIncurred": "{total} skapade, taket nått"
     },
     "invoices": {
       "fees": "Avgifter"
@@ -12027,5 +12036,113 @@
         "aktion": "Till kanalerna"
       }
     }
+  },
+  "analysis": {
+    "title": "Utvärdering",
+    "subtitle": "Nyckeltal, bokningar, beläggning och kanaler för en viss period.",
+    "loading": "Beräknas ...",
+    "empty": "Det finns inga data för denna period.",
+    "ownerStay": "Egen användning",
+    "mixedCurrency": "Flera valutor under perioden ({list}) – beloppen summeras inte. Vänligen begränsa till ett objekt eller en valuta.",
+    "occupancyFootnote": "Utsålt är utsålt – oavsett om det är via en portal, den egna webbplatsen, manuellt inlagt eller av ägaren. Endast dagar då objektet inte var till försäljning räknas inte med: blockerade dagar och stop-sell.",
+    "kpiFootnote": "Procentvärdet på varje ruta jämförs med samma period före. Ett klick på en ruta öppnar tidsserien.",
+    "commissionFootnote": "Tomma provisionsfält betyder att portalen inte överför någon provision (Booking.com gör oftast inte det) – inget uppskattas.",
+    "tab": {
+      "kennzahlen": "Nyckeltal",
+      "analytics": "Översikt",
+      "buchungen": "Bokningar",
+      "auslastung": "Beläggning",
+      "kanaele": "Kanaler",
+      "gaeste": "Gäster"
+    },
+    "range": {
+      "monat": "Denna månad",
+      "vormonat": "Föregående månad",
+      "quartal": "Kvartal",
+      "jahr": "År",
+      "frei": "Fritt val"
+    },
+    "filter": {
+      "range": "Period",
+      "from": "Från",
+      "to": "Till",
+      "basis": "Tilldelning",
+      "properties": "Objekt",
+      "allProperties": "Alla objekt",
+      "channels": "Kanaler",
+      "allChannels": "Alla kanaler"
+    },
+    "basis": {
+      "anreise": "Efter ankomst",
+      "abreise": "Efter avresa",
+      "buchung": "Efter bokningsdatum",
+      "uebernachtung": "Efter övernattning"
+    },
+    "basisHint": {
+      "anreise": "Bokningar vars ankomst infaller under perioden räknas.",
+      "abreise": "Bokningar vars avresa infaller under perioden räknas.",
+      "buchung": "Bokningar som mottagits under perioden räknas. Bokningar utan en faktisk tidsstämpel från portalen saknas här – de uppskattas inte.",
+      "uebernachtung": "Varje bokning som berör perioden räknas."
+    },
+    "kpi": {
+      "revenue": "Intäkter",
+      "bookingsCount": "{count, plural, one {# bokning} other {# bokningar}}",
+      "occupancy": "Beläggning",
+      "ofBookable": "av {count} bokningsbara nätter",
+      "nights": "Nätter",
+      "avgStay": "Ø {n} nätter per vistelse",
+      "adr": "Ø nattpris",
+      "adrHint": "Intäkt per bokad natt",
+      "revpar": "Intäkt per natt",
+      "revparHint": "Intäkt per bokningsbar natt",
+      "cancellations": "Avbokningsfrekvens",
+      "cancelHint": "{count, plural, one {# avbokning} other {# avbokningar}}"
+    },
+    "chart": {
+      "revenueOverTime": "Intäktsutveckling",
+      "shareByChannel": "Intäktsandel per kanal",
+      "revenueByProperty": "Intäkt per objekt",
+      "footnote": "Total intäkt under perioden: {total}"
+    },
+    "table": {
+      "rowCount": "{count, plural, one {# bokning} other {# bokningar}}",
+      "columns": "Kolumner"
+    },
+    "col": {
+      "property": "Objekt",
+      "guest": "Gäst",
+      "channel": "Kanal",
+      "stay": "Vistelse",
+      "nights": "Nätter",
+      "guests": "Gäster",
+      "status": "Status",
+      "revenue": "Intäkt",
+      "commission": "Provision",
+      "bookedAt": "Bokad den",
+      "bookable": "Bokningsbar",
+      "booked": "Bokad",
+      "blocked": "Spärrad",
+      "stopSell": "Stop-Sell",
+      "arrivals": "Ankomster",
+      "cancellations": "Avbokningar",
+      "bookingsShort": "Bokningar",
+      "net": "Netto",
+      "share": "Andel",
+      "country": "Land"
+    },
+    "guests": {
+      "total": "Gäster",
+      "returning": "Återkommande",
+      "returningHint": "{count, plural, one {# person} other {# personer}}",
+      "avgStay": "Ø vistelse",
+      "perBooking": "Ø gäster per bokning",
+      "origin": "Ursprung",
+      "unknownCountry": "Okänt",
+      "returningOf": "{count} av {base} matchande personer",
+      "notIdentifiable": "Ej identifierbar – portalerna tillhandahåller ingen gästidentifiering"
+    },
+    "ownerStayCount": "{count, plural, one {# egen användning} other {# egen användning}}",
+    "ownerStayRow": "Egen användning",
+    "ownerStayRowHint": "Husägare i egen fastighet – ingen försäljning"
   }
 }

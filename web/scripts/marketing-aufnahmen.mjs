@@ -127,6 +127,37 @@ const AUFNAHMEN = [
     warten: async (seite) => seite.waitForTimeout(2_500),
   },
   {
+    // Die KI-Seite liegt NICHT unter einer eigenen Route: sie ist ein Reiter im
+    // Posteingang, und der Reiter steht in lokalem React-Zustand (kein
+    // `?tab=`-Parameter). Deshalb wird er geklickt, nicht angesteuert — wer
+    // hier eine URL erfindet, landet auf dem Posteingang und merkt es nicht,
+    // weil das Bild trotzdem entsteht.
+    name: "ki-antworten",
+    konto: "nordlicht",
+    pfad: "/posteingang",
+    warten: async (seite) => {
+      await seite.getByRole("button", { name: "KI-Antworten" }).click({ timeout: 90_000 });
+      // Auf INHALT des Reiters warten, nicht auf seine Reiter-Leiste: die
+      // Knöpfe stehen sofort da, die Einstellungen kommen nachgeladen. Sonst
+      // zeigt das Bild den Vorgabe-Zustand statt des echten.
+      await seite.getByText("Automatische Antwort").first().waitFor({ timeout: 60_000 });
+      await seite.waitForTimeout(2_500);
+    },
+  },
+  {
+    // Zweites Motiv derselben Seite: der Unterreiter „Regeln". Es MUSS ein
+    // anderes sein als `ki-antworten` — die Vorlage zeigt beide auf einer
+    // Seite (Hero und Beleg-Block).
+    name: "ki-regeln",
+    konto: "nordlicht",
+    pfad: "/posteingang",
+    warten: async (seite) => {
+      await seite.getByRole("button", { name: "KI-Antworten" }).click({ timeout: 90_000 });
+      await seite.getByRole("button", { name: "Regeln" }).click({ timeout: 60_000 });
+      await seite.waitForTimeout(2_500);
+    },
+  },
+  {
     name: "mobil-kalender",
     konto: "nordlicht",
     pfad: "/kalender",

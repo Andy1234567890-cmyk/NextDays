@@ -24,8 +24,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from katalog import BETRIEBE  # noqa: E402  (nach sys.path-Erweiterung)
-from konfig import Supabase  # noqa: E402
+# pylint: disable=wrong-import-position
+# Der sys.path-Eintrag oben muss VOR diesen Importen stehen: die Datei wird als
+# Skript aufgerufen, nicht als Paket importiert (wie in seed_demo.py).
+from katalog import BETRIEBE  # noqa: E402
+from konfig import Supabase, demo_id  # noqa: E402
 
 
 def main() -> int:
@@ -61,7 +64,6 @@ def main() -> int:
 
 def db_tenant_id(betrieb) -> str:
     """Dieselbe deterministische Tenant-UUID, die der Seed vergeben hat."""
-    from konfig import demo_id  # noqa: PLC0415  (lokal: nur hier gebraucht)
     return demo_id(f"tenant:{betrieb.schluessel}")
 
 

@@ -292,7 +292,8 @@
       "hotel": "Hotel",
       "vacationRentals": "Case de vacanță",
       "accounting": "Contabilitate",
-      "guests": "Oaspeți"
+      "guests": "Oaspeți",
+      "analysis": "Evaluare"
     },
     "roles": {
       "admin": "Admin",
@@ -320,9 +321,6 @@
     "rooms": "Camere",
     "overview": "Prezentare generală",
     "reservationGroups": "Grupuri",
-    "guestCategories": "Companii/categorii",
-    "guestMonthlyReport": "Raport lunar",
-    "vouchers": "Vouchere",
     "payments": "Plăți",
     "revenue": "Venituri",
     "bankAccounts": "Conturi bancare",
@@ -1267,7 +1265,10 @@
       "private": "Privat",
       "business": "Serviciu",
       "email": "E-mail"
-    }
+    },
+    "filterIncomplete": "Incomplet",
+    "unnamed": "Fără nume",
+    "unnamedFromChannel": "Oaspete {channel}"
   },
   "fotos": {
     "title": "Fotografii",
@@ -1615,6 +1616,19 @@
       },
       "basis": "Stabilește când o rezervare intră în perioadă: la check-in după ziua sosirii, la check-out după ziua plecării. O rezervare care trece dintr-o lună în alta ajunge, în funcție de alegere, într-una sau în cealaltă lună.",
       "statuses": "Se decontează doar rezervările cu unul dintre statusurile selectate. Implicit sunt rezervările confirmate și finalizate — cele anulate nu intră în mod normal într-o plată."
+    },
+    "finalizeConfirm": {
+      "title": "Finalizați decontul",
+      "what": "Decontul pentru {owner} primește un număr de factură fix și devine vizibil pentru proprietar.",
+      "theOwner": "proprietarului",
+      "amountLabel": "Plată către proprietar",
+      "typeLabel": "Introduceți suma pentru confirmare",
+      "typeHint": "Vă rugăm să introduceți suma de mai sus — astfel vă asigurați că a fost verificată.",
+      "mismatch": "Suma introdusă nu corespunde cu decontul.",
+      "irreversible": "Această acțiune nu poate fi anulată. O factură finalizată poate fi anulată doar printr-o factură de stornare.",
+      "cancel": "Anulați",
+      "confirm": "Finalizați",
+      "working": "Se finalizează..."
     }
   },
   "ownerBilling": {
@@ -4207,11 +4221,6 @@
     "unterkuenftePage": {
       "title": "Proprietăți",
       "loadError": "Proprietățile nu au putut fi încărcate. Este backend-ul accesibil?"
-    },
-    "einstellungenPage": {
-      "title": "Setări rezervări",
-      "description": "Setările legate de rezervare (ore de check-in/check-out, reguli de anulare, politici) se gestionează în prezent direct la nivelul fiecărei proprietăți.",
-      "linkLabel": "Către proprietăți"
     },
     "warnungenPage": {
       "title": "Avertismente",
@@ -10294,8 +10303,6 @@
       "cardOtherChannels": "Rezervările prin propriul dumneavoastră site rămân fără comision. Pentru rezervările prin marketplace-ul myBestDays se aplică {satz}, reținuți direct la încasarea plății — aceștia nu sunt incluși aici.",
       "pending": "În așteptare ({count, plural, one {# rezervare} few {# rezervări} other {# de rezervări}}): ",
       "pendingCapHint": " — se facturează plafonul lunar de {cap}",
-      "pendingCapped": "Va fi facturat ({count, plural, one {# rezervare} other {# rezervări}}): ",
-      "pendingCappedHint": " — Limita lunară atinsă, costuri totale {total}",
       "noPending": "În prezent nu există comisioane în așteptare.",
       "showMonths": "Vezi istoricul lunar",
       "backToBilling": "Facturare",
@@ -10310,7 +10317,6 @@
       "colCommission": "Comision",
       "colStatus": "Stare",
       "capHint": "Este indicat comisionul rezultat, înainte de aplicarea plafonului. În fiecare lună se facturează cel mult plafonul lunar inclus în tariful dumneavoastră.",
-      "colCommissionIncurred": "generate {total}, limit reached",
       "mixedCurrencyHint": "Lunile cu rezervări în mai multe monede sunt afișate fără total — sumele individuale se regăsesc pe factura respectivă.",
       "statusPending": "Se facturează",
       "statusInvoiced": "Facturat",
@@ -10329,7 +10335,10 @@
       "colChannel": "Portal",
       "colRate": "Cotă",
       "entryNoProperty": "Proprietatea nu mai există",
-      "entrySum": "Total"
+      "entrySum": "Total",
+      "pendingCapped": "Va fi facturat ({count, plural, one {# rezervare} other {# rezervări}}): ",
+      "pendingCappedHint": " — Limita lunară atinsă, costuri totale {total}",
+      "colCommissionIncurred": "generate {total}, limit reached"
     },
     "invoices": {
       "fees": "Taxe"
@@ -12027,5 +12036,113 @@
         "aktion": "La canale"
       }
     }
+  },
+  "analysis": {
+    "title": "Evaluare",
+    "subtitle": "Indicatori cheie, rezervări, grad de ocupare și canale pentru o anumită perioadă.",
+    "loading": "Se calculează...",
+    "empty": "Nu există date pentru această perioadă.",
+    "ownerStay": "Utilizare proprie",
+    "mixedCurrency": "Mai multe valute în perioada ({list}) — sumele nu sunt totalizate. Vă rugăm să restrângeți la un singur obiect sau o singură valută.",
+    "occupancyFootnote": "Ocupat înseamnă ocupat — fie printr-un portal, propriul site web, creat de dvs. sau de proprietar. Din numitor sunt excluse doar zilele în care proprietatea nu a fost la vânzare: zile blocate și stop-sell.",
+    "kpiFootnote": "Procentul de pe fiecare casetă se compară cu perioada anterioară de aceeași durată. Un clic pe o casetă deschide seria de timp.",
+    "commissionFootnote": "Câmpurile goale pentru comision înseamnă că portalul nu transmite comision (Booking.com de obicei nu o face) — nu se estimează nimic.",
+    "tab": {
+      "kennzahlen": "Indicatori cheie",
+      "analytics": "Prezentare generală",
+      "buchungen": "Rezervări",
+      "auslastung": "Grad de ocupare",
+      "kanaele": "Canale",
+      "gaeste": "Oaspeți"
+    },
+    "range": {
+      "monat": "Luna aceasta",
+      "vormonat": "Luna precedentă",
+      "quartal": "Trimestru",
+      "jahr": "An",
+      "frei": "Selectare liberă"
+    },
+    "filter": {
+      "range": "Perioadă",
+      "from": "De la",
+      "to": "Până la",
+      "basis": "Alocare",
+      "properties": "Obiecte",
+      "allProperties": "Toate obiectele",
+      "channels": "Canale",
+      "allChannels": "Toate canalele"
+    },
+    "basis": {
+      "anreise": "După data sosirii",
+      "abreise": "După data plecării",
+      "buchung": "După data rezervării",
+      "uebernachtung": "După numărul de nopți"
+    },
+    "basisHint": {
+      "anreise": "Sunt numărate rezervările a căror dată de sosire se încadrează în perioadă.",
+      "abreise": "Sunt numărate rezervările a căror dată de plecare se încadrează în perioadă.",
+      "buchung": "Sunt numărate rezervările înregistrate în perioada respectivă. Rezervările fără un marcaj temporal real de la portal lipsesc aici — nu sunt estimate.",
+      "uebernachtung": "Este numărată fiecare rezervare care se suprapune cu perioada."
+    },
+    "kpi": {
+      "revenue": "Venituri",
+      "bookingsCount": "{count, plural, one {# rezervare} other {# rezervări}}",
+      "occupancy": "Grad de ocupare",
+      "ofBookable": "din {count} nopți rezervabile",
+      "nights": "Nopți",
+      "avgStay": "Ø {n} nopți pe sejur",
+      "adr": "Preț mediu pe noapte",
+      "adrHint": "Venit pe noapte rezervată",
+      "revpar": "Venit pe noapte",
+      "revparHint": "Venit pe noapte rezervabilă",
+      "cancellations": "Rata de anulare",
+      "cancelHint": "{count, plural, one {# anulare} other {# anulări}}"
+    },
+    "chart": {
+      "revenueOverTime": "Istoricul veniturilor",
+      "shareByChannel": "Ponderea veniturilor pe canal",
+      "revenueByProperty": "Venit pe proprietate",
+      "footnote": "Venit total în perioada: {total}"
+    },
+    "table": {
+      "rowCount": "{count, plural, one {# rezervare} other {# rezervări}}",
+      "columns": "Coloane"
+    },
+    "col": {
+      "property": "Proprietate",
+      "guest": "Oaspete",
+      "channel": "Canal",
+      "stay": "Ședere",
+      "nights": "Nopți",
+      "guests": "Oaspeți",
+      "status": "Status",
+      "revenue": "Venit",
+      "commission": "Comision",
+      "bookedAt": "Rezervat la",
+      "bookable": "Rezervabil",
+      "booked": "Rezervat",
+      "blocked": "Blocat",
+      "stopSell": "Stop-Sell",
+      "arrivals": "Sosiri",
+      "cancellations": "Anulări",
+      "bookingsShort": "Rezervări",
+      "net": "Net",
+      "share": "Cotă",
+      "country": "Țară"
+    },
+    "guests": {
+      "total": "Oaspeți",
+      "returning": "Clienți fideli",
+      "returningHint": "{count, plural, one {# persoană} other {# persoane}}",
+      "avgStay": "Ședere medie",
+      "perBooking": "Media oaspeților pe rezervare",
+      "origin": "Origine",
+      "unknownCountry": "Necunoscut",
+      "returningOf": "{count} din {base} persoane atribuibile",
+      "notIdentifiable": "Nu poate fi identificat — portalurile nu furnizează un ID de oaspete"
+    },
+    "ownerStayCount": "{count, plural, one {# utilizare proprie} other {# utilizări proprii}}",
+    "ownerStayRow": "Utilizare proprie",
+    "ownerStayRowHint": "Proprietar în proprietatea proprie — fără vânzare"
   }
 }

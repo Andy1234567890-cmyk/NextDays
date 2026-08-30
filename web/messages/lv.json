@@ -292,7 +292,8 @@
       "hotel": "Viesnīca",
       "vacationRentals": "Brīvdienu mājokļi",
       "accounting": "Grāmatvedība",
-      "guests": "Viesi"
+      "guests": "Viesi",
+      "analysis": "Novērtējums"
     },
     "roles": {
       "admin": "Administrators",
@@ -320,9 +321,6 @@
     "rooms": "Numuri",
     "overview": "Pārskats",
     "reservationGroups": "Grupas",
-    "guestCategories": "Uzņēmumi/kategorijas",
-    "guestMonthlyReport": "Mēneša pārskats",
-    "vouchers": "Kuponi",
     "payments": "Maksājumi",
     "revenue": "Ieņēmumi",
     "bankAccounts": "Bankas konti",
@@ -1267,7 +1265,10 @@
       "private": "Privāts",
       "business": "Darba",
       "email": "E-pasts"
-    }
+    },
+    "filterIncomplete": "Nepilnīgi",
+    "unnamed": "Bez vārda",
+    "unnamedFromChannel": "{channel} viesis"
   },
   "fotos": {
     "title": "Fotoattēli",
@@ -1615,6 +1616,19 @@
       },
       "basis": "Nosaka, kad rezervācija iekrīt periodā: pēc reģistrēšanās — pēc ierašanās dienas, pēc izrakstīšanās — pēc izbraukšanas dienas. Rezervācija, kas pāriet no viena mēneša otrā, atkarībā no izvēles nonāk vienā vai otrā mēnesī.",
       "statuses": "Tiek norēķinātas tikai rezervācijas ar kādu no izvēlētajiem statusiem. Pēc noklusējuma tās ir apstiprinātas un pabeigtas rezervācijas — atceltās parasti neietilpst izmaksā."
+    },
+    "finalizeConfirm": {
+      "title": "Apstiprināt norēķinu",
+      "what": "Norēķinam par {owner} tiks piešķirts fiksēts rēķina numurs, un tas būs redzams īpašniekam.",
+      "theOwner": "īpašniekam",
+      "amountLabel": "Izmaksa īpašniekam",
+      "typeLabel": "Ievadiet summu apstiprināšanai",
+      "typeHint": "Lūdzu, ievadiet iepriekš minēto summu, lai pārliecinātos, ka tā ir pārbaudīta.",
+      "mismatch": "Ievadītā summa neatbilst norēķinam.",
+      "irreversible": "To nevar atsaukt. Apstiprinātu rēķinu var atcelt tikai ar anulēšanas rēķinu.",
+      "cancel": "Atcelt",
+      "confirm": "Apstiprināt",
+      "working": "Tiek apstiprināts..."
     }
   },
   "ownerBilling": {
@@ -4207,11 +4221,6 @@
     "unterkuenftePage": {
       "title": "Naktsmītnes",
       "loadError": "Objektus neizdevās ielādēt. Vai aizmugursistēma ir sasniedzama?"
-    },
-    "einstellungenPage": {
-      "title": "Rezervāciju iestatījumi",
-      "description": "Ar rezervācijām saistītus iestatījumus (reģistrēšanās/izrakstīšanās laiki, atcelšanas noteikumi, politikas) pašlaik pārvaldāt tieši attiecīgajā objektā.",
-      "linkLabel": "Uz objektiem"
     },
     "warnungenPage": {
       "title": "Brīdinājumi",
@@ -10294,8 +10303,6 @@
       "cardOtherChannels": "Rezervācijas caur Jūsu paša tīmekļa vietni paliek bez komisijas. Rezervācijām caur myBestDays tirgus laukumu tiek piemēroti {satz}, kas tiek ieturēti tieši maksājuma saņemšanas brīdī — tie šeit nav iekļauti.",
       "pending": "Neapmaksāts ({count, plural, zero {# rezervāciju} one {# rezervācija} other {# rezervācijas}}): ",
       "pendingCapHint": " — tiek izrakstīts rēķins par mēneša ierobežojumu {cap}",
-      "pendingCapped": "Tiks norēķināts ({count, plural, one {# rezervācija} other {# rezervācijas}}): ",
-      "pendingCappedHint": " — sasniegts mēneša limits, radušies {total}",
       "noPending": "Pašlaik nav neapmaksātu komisiju.",
       "showMonths": "Skatīt mēnešu vēsturi",
       "backToBilling": "Norēķini",
@@ -10310,7 +10317,6 @@
       "colCommission": "Komisija",
       "colStatus": "Statuss",
       "capHint": "Norādīta radusies komisija pirms ierobežojuma piemērošanas. Mēnesī tiek norēķināts ne vairāk kā jūsu tarifā ietvertais mēneša ierobežojums.",
-      "colCommissionIncurred": "izveidots {total}, sasniegts ierobežojums",
       "mixedCurrencyHint": "Mēneši ar rezervācijām vairākās valūtās tiek rādīti bez kopsummas — atsevišķās summas ir norādītas attiecīgajā rēķinā.",
       "statusPending": "Tiks norēķināts",
       "statusInvoiced": "Norēķināts",
@@ -10329,7 +10335,10 @@
       "colChannel": "Portāls",
       "colRate": "Likme",
       "entryNoProperty": "Objekta vairs nav",
-      "entrySum": "Kopā"
+      "entrySum": "Kopā",
+      "pendingCapped": "Tiks norēķināts ({count, plural, one {# rezervācija} other {# rezervācijas}}): ",
+      "pendingCappedHint": " — sasniegts mēneša limits, radušies {total}",
+      "colCommissionIncurred": "izveidots {total}, sasniegts ierobežojums"
     },
     "invoices": {
       "fees": "Maksas"
@@ -12027,5 +12036,113 @@
         "aktion": "Uz kanāliem"
       }
     }
+  },
+  "analysis": {
+    "title": "Novērtējums",
+    "subtitle": "Perioda rādītāji, rezervācijas, noslogojums un kanāli.",
+    "loading": "Tiek aprēķināts …",
+    "empty": "Šim periodam nav datu.",
+    "ownerStay": "Pašpatēriņš",
+    "mixedCurrency": "Vairākas valūtas periodā ({list}) — summas netiek saskaitītas. Lūdzu, ierobežojiet līdz vienam objektam vai valūtai.",
+    "occupancyFootnote": "Aizņemts ir aizņemts — vai nu caur portālu, savu mājaslapu, pašu izveidotu vai īpašnieka. No skaitītāja izkrīt tikai dienas, kurās objekts nebija pārdošanā: bloķētās dienas un Stop-Sell.",
+    "kpiFootnote": "Procentuālā vērtība katrā elementā salīdzina ar iepriekšējo tāda paša garuma periodu. Noklikšķinot uz elementa, tiek atvērta laika rinda.",
+    "commissionFootnote": "Tukši komisijas lauki nozīmē, ka portāls nesūta komisiju (Booking.com to parasti nedara) — nekas netiek lēsts.",
+    "tab": {
+      "kennzahlen": "Rādītāji",
+      "analytics": "Pārskats",
+      "buchungen": "Rezervācijas",
+      "auslastung": "Noslogojums",
+      "kanaele": "Kanāli",
+      "gaeste": "Viesi"
+    },
+    "range": {
+      "monat": "Šis mēnesis",
+      "vormonat": "Iepriekšējais mēnesis",
+      "quartal": "Ceturksnis",
+      "jahr": "Gads",
+      "frei": "Brīvi izvēlēts"
+    },
+    "filter": {
+      "range": "Laika posms",
+      "from": "No",
+      "to": "Līdz",
+      "basis": "Piešķiršana",
+      "properties": "Objekti",
+      "allProperties": "Visi objekti",
+      "channels": "Kanāli",
+      "allChannels": "Visi kanāli"
+    },
+    "basis": {
+      "anreise": "Pēc ierašanās",
+      "abreise": "Pēc izbraukšanas",
+      "buchung": "Pēc rezervācijas datuma",
+      "uebernachtung": "Pēc nakšņošanas"
+    },
+    "basisHint": {
+      "anreise": "Tiek skaitītas rezervācijas, kuru ierašanās iekrīt periodā.",
+      "abreise": "Tiek skaitītas rezervācijas, kuru izbraukšana iekrīt periodā.",
+      "buchung": "Tiek skaitītas rezervācijas, kas saņemtas periodā. Rezervācijas bez īsta portāla laika zīmoga šeit trūkst — tās netiek lēstas.",
+      "uebernachtung": "Tiek skaitīta katra rezervācija, kas skar periodu."
+    },
+    "kpi": {
+      "revenue": "Ieņēmumi",
+      "bookingsCount": "{count, plural, one {# rezervācija} other {# rezervācijas}}",
+      "occupancy": "Noslogojums",
+      "ofBookable": "no {count} rezervējamām naktīm",
+      "nights": "Naktis",
+      "avgStay": "Vidēji {n} naktis par uzturēšanos",
+      "adr": "Vidējā nakts cena",
+      "adrHint": "Ieņēmumi par rezervēto nakti",
+      "revpar": "Ienākumi par nakti",
+      "revparHint": "Ieņēmumi par rezervējamo nakti",
+      "cancellations": "Atcelšanas rādītājs",
+      "cancelHint": "{count, plural, one {# atcelšana} other {# atcelšanas}}"
+    },
+    "chart": {
+      "revenueOverTime": "Ieņēmumu vēsture",
+      "shareByChannel": "Ieņēmumu daļa pa kanāliem",
+      "revenueByProperty": "Ieņēmumi par īpašumu",
+      "footnote": "Kopējie ieņēmumi periodā: {total}"
+    },
+    "table": {
+      "rowCount": "{count, plural, one {# rezervācija} other {# rezervācijas}}",
+      "columns": "Kolonnas"
+    },
+    "col": {
+      "property": "Īpašums",
+      "guest": "Viesis",
+      "channel": "Kanāls",
+      "stay": "Uzturēšanās",
+      "nights": "Naktis",
+      "guests": "Viesi",
+      "status": "Statuss",
+      "revenue": "Ieņēmumi",
+      "commission": "Komisija",
+      "bookedAt": "Rezervēts",
+      "bookable": "Rezervējams",
+      "booked": "Rezervēts",
+      "blocked": "Bloķēts",
+      "stopSell": "Stop-Sell",
+      "arrivals": "Ierašanās",
+      "cancellations": "Atcelšanas",
+      "bookingsShort": "Rezervācijas",
+      "net": "Neto",
+      "share": "Daļa",
+      "country": "Valsts"
+    },
+    "guests": {
+      "total": "Viesi",
+      "returning": "Atkārtoti viesi",
+      "returningHint": "{count, plural, one {# persona} other {# personas}}",
+      "avgStay": "Vid. uzturēšanās",
+      "perBooking": "Vid. viesu skaits rezervācijā",
+      "origin": "Izcelsme",
+      "unknownCountry": "Nezināms",
+      "returningOf": "{count} no {base} piesaistāmajām personām",
+      "notIdentifiable": "Nav atpazīstams — portāli nenodrošina viesa identifikatoru"
+    },
+    "ownerStayCount": "{count, plural, one {# pašu lietošanai} other {# pašu lietošanai}}",
+    "ownerStayRow": "Pašpatēriņš",
+    "ownerStayRowHint": "Mājas īpašnieks savā īpašumā — nav pārdošanā"
   }
 }

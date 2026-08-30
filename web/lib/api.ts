@@ -126,6 +126,11 @@ export type MeResponse = {
   /** Vorfuehr-Mandant (0407): Oberflaeche zeigt das Demo-Band, Schreiben ist
    *  serverseitig abgeschaltet. */
   is_demo?: boolean;
+  /** Internes Test-/Vorfuehrkonto des Hauses (`tenants.is_internal`, 0505):
+   *  schaltet Module frei, die noch in Entwicklung sind (derzeit die
+   *  Buchhaltung). NICHT `is_demo` — das ist die anonyme Schaufenster-
+   *  Vorfuehrung und sperrt Schreibzugriffe samt Buchhaltung. */
+  is_internal?: boolean;
   // Standardsprache des BETRIEBS (Migration 0335): zweite Stufe der
   // Mail-Sprachkette (eigene Wahl → Betrieb → Englisch). Sie gilt für jeden
   // Empfänger ohne eigene Sprachwahl. null = nicht erfasst → Englisch; das ist

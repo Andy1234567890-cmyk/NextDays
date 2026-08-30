@@ -32,6 +32,7 @@ from .features.announcements.router import (
 )
 from .features.announcements.router import router as announcements_router
 from .features.api_clients.router import router as api_clients_router
+from .features.auswertung.router import router as auswertung_router
 from .features.auth.router import router as auth_router
 from .features.booking_conditions.router import router as booking_conditions_router
 from .features.booking_engine.router import router as booking_engine_router
@@ -121,6 +122,7 @@ _SLICE_ROUTERS = [
     owner_billing_router,
     # Reporting für Eigentümer (0365): Bericht → Zahlung → Teilzahlung, Pläne,
     # Bilanzstatistik. Baut auf owner_billing (Vertrag/Portal-Sätze) auf.
+    auswertung_router,
     owner_reporting_router,
     addons_router,
     rates_router,

@@ -292,7 +292,8 @@
       "hotel": "Hotel",
       "vacationRentals": "Vakantiewoningen",
       "accounting": "Boekhouding",
-      "guests": "Gasten"
+      "guests": "Gasten",
+      "analysis": "Beoordeling"
     },
     "roles": {
       "admin": "Admin",
@@ -320,9 +321,6 @@
     "rooms": "Kamers",
     "overview": "Overzicht",
     "reservationGroups": "Groepen",
-    "guestCategories": "Bedrijven/categorieën",
-    "guestMonthlyReport": "Maandrapport",
-    "vouchers": "Vouchers",
     "payments": "Betalingen",
     "revenue": "Omzet",
     "bankAccounts": "Bankrekeningen",
@@ -1267,7 +1265,10 @@
       "private": "Privé",
       "business": "Zakelijk",
       "email": "E-mail"
-    }
+    },
+    "filterIncomplete": "Slechts onvolledig",
+    "unnamed": "Zonder naam",
+    "unnamedFromChannel": "{channel}-gast"
   },
   "fotos": {
     "title": "Foto's",
@@ -1615,6 +1616,19 @@
       },
       "basis": "Bepaalt wanneer een boeking binnen de periode valt: bij Check-in op de aankomstdag, bij Check-out op de vertrekdag. Een boeking over de maandwisseling heen valt afhankelijk van je keuze in de ene of de andere maand.",
       "statuses": "Alleen boekingen met een van de geselecteerde statussen worden afgerekend. Standaard zijn dat bevestigde en afgeronde boekingen — geannuleerde horen normaal gesproken niet in een uitbetaling."
+    },
+    "finalizeConfirm": {
+      "title": "Afwikkeling vastleggen",
+      "what": "De afwikkeling voor {owner} krijgt een vast factuurnummer en wordt zichtbaar voor de eigenaar.",
+      "theOwner": "de eigenaar",
+      "amountLabel": "Uitbetaling aan de eigenaar",
+      "typeLabel": "Bedrag ter bevestiging invoeren",
+      "typeHint": "Voer het bovenstaande bedrag in – zo weet u zeker dat het is gecontroleerd.",
+      "mismatch": "Het ingevoerde bedrag komt niet overeen met de afwikkeling.",
+      "irreversible": "Dit kan niet ongedaan worden gemaakt. Een vastgelegde factuur kan alleen worden geannuleerd met een annuleringsfactuur.",
+      "cancel": "Annuleren",
+      "confirm": "Vastleggen",
+      "working": "Wordt vastgelegd..."
     }
   },
   "ownerBilling": {
@@ -4207,11 +4221,6 @@
     "unterkuenftePage": {
       "title": "Accommodaties",
       "loadError": "Objecten konden niet worden geladen. Is de backend bereikbaar?"
-    },
-    "einstellungenPage": {
-      "title": "Reserveringsinstellingen",
-      "description": "Boekingsgerelateerde instellingen (check-in-/check-outtijden, annuleringsregels, beleid) beheer je momenteel rechtstreeks bij het betreffende object.",
-      "linkLabel": "Naar de accommodaties"
     },
     "warnungenPage": {
       "title": "Waarschuwingen",
@@ -10294,8 +10303,6 @@
       "cardOtherChannels": "Boekingen via je eigen website blijven commissievrij. Voor boekingen via de myBestDays-marktplaats geldt {satz}, die direct bij ontvangst van de betaling wordt ingehouden — die staan hier niet bij.",
       "pending": "Openstaand ({count, plural, one {# boeking} other {# boekingen}}): ",
       "pendingCapHint": " — afgerekend wordt het maandplafond van {cap}",
-      "pendingCapped": "Wordt afgerekend ({count, plural, one {# boeking} other {# boekingen}}): ",
-      "pendingCappedHint": " — Maandlimiet bereikt, ontstaan zijn {total}",
       "noPending": "Momenteel geen openstaande commissies.",
       "showMonths": "Maandoverzicht bekijken",
       "backToBilling": "Facturatie",
@@ -10310,7 +10317,6 @@
       "colCommission": "Commissie",
       "colStatus": "Status",
       "capHint": "Weergegeven is de ontstane commissie, nog zonder aftopping. Per maand wordt niet meer dan het maandplafond uit je tarief afgerekend.",
-      "colCommissionIncurred": "{total} gemaakt, limiet bereikt",
       "mixedCurrencyHint": "Maanden met boekingen in meerdere valuta's worden zonder totaalbedrag getoond — de losse bedragen staan op de betreffende factuur.",
       "statusPending": "Wordt afgerekend",
       "statusInvoiced": "Afgerekend",
@@ -10329,7 +10335,10 @@
       "colChannel": "Portaal",
       "colRate": "Tarief",
       "entryNoProperty": "Accommodatie bestaat niet meer",
-      "entrySum": "Totaal"
+      "entrySum": "Totaal",
+      "pendingCapped": "Wordt afgerekend ({count, plural, one {# boeking} other {# boekingen}}): ",
+      "pendingCappedHint": " — Maandlimiet bereikt, ontstaan zijn {total}",
+      "colCommissionIncurred": "{total} gemaakt, limiet bereikt"
     },
     "invoices": {
       "fees": "Kosten"
@@ -12027,5 +12036,113 @@
         "aktion": "Naar kanalen"
       }
     }
+  },
+  "analysis": {
+    "title": "Evaluatie",
+    "subtitle": "Kerncijfers, boekingen, bezetting en kanalen van een periode.",
+    "loading": "Wordt berekend …",
+    "empty": "Voor deze periode zijn er geen gegevens.",
+    "ownerStay": "Eigen gebruik",
+    "mixedCurrency": "Meerdere valuta's in de periode ({list}) — bedragen worden niet opgeteld. Gelieve te beperken tot één object of één valuta.",
+    "occupancyFootnote": "Bezet is bezet — of het nu via een portaal, de eigen website, zelf aangemaakt of door de eigenaar is. Alleen dagen waarop het object niet te koop was, vallen uit de noemer: geblokkeerde dagen en stop-sell.",
+    "kpiFootnote": "Het percentage op elke tegel vergelijkt met dezelfde periode ervoor. Een klik op een tegel opent de tijdreeks.",
+    "commissionFootnote": "Lege provisievelden betekenen dat het portaal geen provisie doorgeeft (Booking.com doet dit meestal niet) — er wordt niets geschat.",
+    "tab": {
+      "kennzahlen": "Kerncijfers",
+      "analytics": "Overzicht",
+      "buchungen": "Boekingen",
+      "auslastung": "Bezetting",
+      "kanaele": "Kanalen",
+      "gaeste": "Gasten"
+    },
+    "range": {
+      "monat": "Deze maand",
+      "vormonat": "Vorige maand",
+      "quartal": "Kwartaal",
+      "jahr": "Jaar",
+      "frei": "Vrij gekozen"
+    },
+    "filter": {
+      "range": "Periode",
+      "from": "Van",
+      "to": "Tot",
+      "basis": "Toewijzing",
+      "properties": "Objecten",
+      "allProperties": "Alle objecten",
+      "channels": "Kanalen",
+      "allChannels": "Alle kanalen"
+    },
+    "basis": {
+      "anreise": "Op aankomst",
+      "abreise": "Op vertrek",
+      "buchung": "Op boekingsdatum",
+      "uebernachtung": "Op overnachting"
+    },
+    "basisHint": {
+      "anreise": "Er worden boekingen geteld waarvan de aankomst in de periode valt.",
+      "abreise": "Er worden boekingen geteld waarvan het vertrek in de periode valt.",
+      "buchung": "Er worden boekingen geteld die in de periode zijn ontvangen. Boekingen zonder echte tijdstempel van het portaal ontbreken hier — ze worden niet geschat.",
+      "uebernachtung": "Elke boeking die de periode raakt, wordt geteld."
+    },
+    "kpi": {
+      "revenue": "Omzet",
+      "bookingsCount": "{count, plural, one {# boeking} other {# boekingen}}",
+      "occupancy": "Bezetting",
+      "ofBookable": "van {count} boekbare nachten",
+      "nights": "Nachten",
+      "avgStay": "Ø {n} nachten per verblijf",
+      "adr": "Ø nachtprijs",
+      "adrHint": "Omzet per geboekte nacht",
+      "revpar": "Opbrengst per nacht",
+      "revparHint": "Omzet per boekbare nacht",
+      "cancellations": "Annuleringspercentage",
+      "cancelHint": "{count, plural, one {# annulering} other {# annuleringen}}"
+    },
+    "chart": {
+      "revenueOverTime": "Omzetverloop",
+      "shareByChannel": "Omzetaandeel per kanaal",
+      "revenueByProperty": "Omzet per object",
+      "footnote": "Totale omzet in periode: {total}"
+    },
+    "table": {
+      "rowCount": "{count, plural, one {# boeking} other {# boekingen}}",
+      "columns": "Kolommen"
+    },
+    "col": {
+      "property": "Object",
+      "guest": "Gast",
+      "channel": "Kanaal",
+      "stay": "Verblijf",
+      "nights": "Nachten",
+      "guests": "Gasten",
+      "status": "Status",
+      "revenue": "Omzet",
+      "commission": "Provisie",
+      "bookedAt": "Geboekt op",
+      "bookable": "Boekbaar",
+      "booked": "Geboekt",
+      "blocked": "Geblokkeerd",
+      "stopSell": "Stop-Sell",
+      "arrivals": "Aankomsten",
+      "cancellations": "Annuleringen",
+      "bookingsShort": "Boekingen",
+      "net": "Netto",
+      "share": "Aandeel",
+      "country": "Land"
+    },
+    "guests": {
+      "total": "Gasten",
+      "returning": "Terugkerende gasten",
+      "returningHint": "{count, plural, one {# persoon} other {# personen}}",
+      "avgStay": "Ø verblijf",
+      "perBooking": "Ø gasten per boeking",
+      "origin": "Herkomst",
+      "unknownCountry": "Onbekend",
+      "returningOf": "{count} van {base} toewijsbare personen",
+      "notIdentifiable": "Niet herkenbaar — de portals leveren geen gast-ID"
+    },
+    "ownerStayCount": "{count, plural, one {# Eigen gebruik} other {# Eigen gebruik}}",
+    "ownerStayRow": "Eigen gebruik",
+    "ownerStayRowHint": "Huiseigenaar in eigen object — geen verkoop"
   }
 }

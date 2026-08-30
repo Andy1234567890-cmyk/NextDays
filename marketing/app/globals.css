@@ -320,6 +320,21 @@ h1, h2, h3 {
   animation: typing-dot 1.2s ease-in-out infinite;
 }
 
+/* Bewegte SVG-Buehnen (`components/marketing/ki-buehnen.tsx`).
+   SMIL-Animationen (`<animate>`) sind KEINE CSS-Animationen — `animation:
+   none` erreicht sie nicht. Der einzige Weg im Stylesheet ist, die
+   Animationselemente selbst auszublenden: ein nicht gerendertes `<animate>`
+   laeuft nicht, und die Zeichnung bleibt in ihrem Ausgangszustand stehen.
+   Die Aussage geht dabei nicht verloren — die Szene ist so gebaut, dass jedes
+   Element auch unbewegt lesbar ist. */
+@media (prefers-reduced-motion: reduce) {
+  svg animate,
+  svg animateTransform,
+  svg animateMotion {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .bubble-in,
   .bubble-in-slow {

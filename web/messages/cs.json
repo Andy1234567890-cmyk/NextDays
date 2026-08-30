@@ -292,7 +292,8 @@
       "hotel": "Hotel",
       "vacationRentals": "Rekreační objekty",
       "accounting": "Účetnictví",
-      "guests": "Hosté"
+      "guests": "Hosté",
+      "analysis": "Hodnocení"
     },
     "roles": {
       "admin": "Admin",
@@ -320,9 +321,6 @@
     "rooms": "Pokoje",
     "overview": "Přehled",
     "reservationGroups": "Skupiny",
-    "guestCategories": "Firmy/kategorie",
-    "guestMonthlyReport": "Měsíční výkaz",
-    "vouchers": "Poukazy",
     "payments": "Platby",
     "revenue": "Tržby",
     "bankAccounts": "Bankovní účty",
@@ -1267,7 +1265,10 @@
       "private": "Soukromý",
       "business": "Pracovní",
       "email": "E-mail"
-    }
+    },
+    "filterIncomplete": "Pouze neúplné",
+    "unnamed": "Bez jména",
+    "unnamedFromChannel": "Host {channel}"
   },
   "fotos": {
     "title": "Fotky",
@@ -1615,6 +1616,19 @@
       },
       "basis": "Určuje, kdy rezervace spadá do daného období: u volby Check-in rozhoduje den příjezdu, u volby Check-out den odjezdu. Rezervace přes přelom měsíce spadne podle volby do jednoho, nebo do druhého měsíce.",
       "statuses": "Zúčtovány jsou pouze rezervace s některým z vybraných stavů. Výchozí jsou potvrzené a dokončené rezervace — zrušené do výplaty obvykle nepatří."
+    },
+    "finalizeConfirm": {
+      "title": "Uzavřít vyúčtování",
+      "what": "Vyúčtování pro {owner} obdrží pevné číslo faktury a bude viditelné pro majitele.",
+      "theOwner": "majitele",
+      "amountLabel": "Výplata majiteli",
+      "typeLabel": "Zadejte částku k potvrzení",
+      "typeHint": "Zadejte prosím částku shora – tím je zajištěno, že byla zkontrolována.",
+      "mismatch": "Zadaná částka neodpovídá vyúčtování.",
+      "irreversible": "To nelze vrátit zpět. Uzavřenou fakturu lze zrušit pouze storno fakturou.",
+      "cancel": "Zrušit",
+      "confirm": "Uzavřít",
+      "working": "Uzavírá se…"
     }
   },
   "ownerBilling": {
@@ -4207,11 +4221,6 @@
     "unterkuenftePage": {
       "title": "Ubytování",
       "loadError": "Objekty se nepodařilo načíst. Je backend dostupný?"
-    },
-    "einstellungenPage": {
-      "title": "Nastavení rezervací",
-      "description": "Nastavení týkající se rezervací (časy check-in/check-out, storno pravidla, zásady) v současnosti spravujete přímo u příslušného objektu.",
-      "linkLabel": "K objektům"
     },
     "warnungenPage": {
       "title": "Upozornění",
@@ -10294,8 +10303,6 @@
       "cardOtherChannels": "Rezervace přes váš vlastní web zůstávají bez provize. Na rezervace přes tržiště myBestDays se vztahuje {satz}, které se zadrží přímo při přijetí platby — zde nejsou zahrnuty.",
       "pending": "Otevřené ({count, plural, one {# rezervace} few {# rezervace} many {# rezervace} other {# rezervací}}): ",
       "pendingCapHint": " — vyúčtuje se měsíční limit {cap}",
-      "pendingCapped": "Bude účtováno ({count, plural, one {# rezervace} other {# rezervace}}): ",
-      "pendingCappedHint": " — Měsíční limit dosažen, vznikly náklady {total}",
       "noPending": "Momentálně žádné otevřené provize.",
       "showMonths": "Zobrazit měsíční přehled",
       "backToBilling": "Vyúčtování",
@@ -10310,7 +10317,6 @@
       "colCommission": "Provize",
       "colStatus": "Stav",
       "capHint": "Uvedena je vzniklá provize, ještě bez uplatnění limitu. Za každý měsíc se vyúčtuje nejvýše měsíční limit obsažený ve vašem tarifu.",
-      "colCommissionIncurred": "vzniklo {total}, dosaženo limitu",
       "mixedCurrencyHint": "Měsíce s rezervacemi v několika valutách se zobrazují bez celkového součtu — jednotlivé částky jsou na příslušné faktuře.",
       "statusPending": "K vyúčtování",
       "statusInvoiced": "Vyúčtováno",
@@ -10329,7 +10335,10 @@
       "colChannel": "Portál",
       "colRate": "Sazba",
       "entryNoProperty": "Objekt již neexistuje",
-      "entrySum": "Celkem"
+      "entrySum": "Celkem",
+      "pendingCapped": "Bude účtováno ({count, plural, one {# rezervace} other {# rezervace}}): ",
+      "pendingCappedHint": " — Měsíční limit dosažen, vznikly náklady {total}",
+      "colCommissionIncurred": "vzniklo {total}, dosaženo limitu"
     },
     "invoices": {
       "fees": "Poplatky"
@@ -12027,5 +12036,113 @@
         "aktion": "K kanálům"
       }
     }
+  },
+  "analysis": {
+    "title": "Vyhodnocení",
+    "subtitle": "Klíčové ukazatele, rezervace, obsazenost a kanály za určité období.",
+    "loading": "Probíhá výpočet…",
+    "empty": "Pro toto období nejsou k dispozici žádná data.",
+    "ownerStay": "Vlastní užívání",
+    "mixedCurrency": "Více měn v období ({list}) – částky se nesčítají. Omezte prosím na jeden objekt nebo jednu měnu.",
+    "occupancyFootnote": "Obsazeno je obsazeno – ať už přes portál, vlastní webové stránky, vytvořené vámi nebo majitelem. Z jmenovatele vypadnou pouze dny, kdy objekt nebyl v prodeji: zablokované dny a stop-sell.",
+    "kpiFootnote": "Procentuální hodnota na každé dlaždici porovnává se stejným předchozím obdobím. Kliknutím na dlaždici otevřete časovou řadu.",
+    "commissionFootnote": "Prázdná pole provizí znamenají, že portál neposkytuje provizi (Booking.com to většinou nedělá) – nic se neodhaduje.",
+    "tab": {
+      "kennzahlen": "Klíčové ukazatele",
+      "analytics": "Přehled",
+      "buchungen": "Rezervace",
+      "auslastung": "Obsazenost",
+      "kanaele": "Kanály",
+      "gaeste": "Hosté"
+    },
+    "range": {
+      "monat": "Tento měsíc",
+      "vormonat": "Předchozí měsíc",
+      "quartal": "Čtvrtletí",
+      "jahr": "Rok",
+      "frei": "Libovolné"
+    },
+    "filter": {
+      "range": "Období",
+      "from": "Od",
+      "to": "Do",
+      "basis": "Přiřazení",
+      "properties": "Objekty",
+      "allProperties": "Všechny objekty",
+      "channels": "Kanály",
+      "allChannels": "Všechny kanály"
+    },
+    "basis": {
+      "anreise": "Podle příjezdu",
+      "abreise": "Podle odjezdu",
+      "buchung": "Podle data rezervace",
+      "uebernachtung": "Podle přenocování"
+    },
+    "basisHint": {
+      "anreise": "Počítají se rezervace, jejichž příjezd spadá do daného období.",
+      "abreise": "Počítají se rezervace, jejichž odjezd spadá do daného období.",
+      "buchung": "Počítají se rezervace, které byly přijaty v daném období. Rezervace bez skutečného časového razítka portálu zde chybí – nejsou odhadovány.",
+      "uebernachtung": "Počítá se každá rezervace, která se dotýká daného období."
+    },
+    "kpi": {
+      "revenue": "Tržby",
+      "bookingsCount": "{count, plural, one {# rezervace} few {# rezervace} many {# rezervací} other {# rezervací}}",
+      "occupancy": "Obsazenost",
+      "ofBookable": "z {count} rezervovatelných nocí",
+      "nights": "Noci",
+      "avgStay": "Ø {n} nocí na pobyt",
+      "adr": "Ø cena za noc",
+      "adrHint": "Tržby za rezervovanou noc",
+      "revpar": "Výnos za noc",
+      "revparHint": "Tržby za obsazenou noc",
+      "cancellations": "Míra zrušení",
+      "cancelHint": "{count, plural, one {# zrušení} other {# zrušení}}"
+    },
+    "chart": {
+      "revenueOverTime": "Vývoj tržeb",
+      "shareByChannel": "Podíl tržeb podle kanálu",
+      "revenueByProperty": "Tržby za objekt",
+      "footnote": "Celkové tržby v období: {total}"
+    },
+    "table": {
+      "rowCount": "{count, plural, one {# rezervace} other {# rezervace}}",
+      "columns": "Sloupce"
+    },
+    "col": {
+      "property": "Objekt",
+      "guest": "Host",
+      "channel": "Kanál",
+      "stay": "Pobyt",
+      "nights": "Noci",
+      "guests": "Hosté",
+      "status": "Stav",
+      "revenue": "Tržby",
+      "commission": "Provize",
+      "bookedAt": "Datum rezervace",
+      "bookable": "K dispozici",
+      "booked": "Obsazeno",
+      "blocked": "Blokováno",
+      "stopSell": "Stop-Sell",
+      "arrivals": "Příjezdy",
+      "cancellations": "Zrušeno",
+      "bookingsShort": "Rezervace",
+      "net": "Netto",
+      "share": "Podíl",
+      "country": "Země"
+    },
+    "guests": {
+      "total": "Hosté",
+      "returning": "Opakovaní hosté",
+      "returningHint": "{count, plural, one {# osoba} other {# osob}}",
+      "avgStay": "Ø pobyt",
+      "perBooking": "Ø hosté na rezervaci",
+      "origin": "Původ",
+      "unknownCountry": "Neznámý",
+      "returningOf": "{count} z {base} přiřaditelných osob",
+      "notIdentifiable": "Nerozpoznatelné – portály neposkytují identifikaci hosta"
+    },
+    "ownerStayCount": "{count, plural, one {# Vlastní použití} other {# Vlastní použití}}",
+    "ownerStayRow": "Vlastní užívání",
+    "ownerStayRowHint": "Majitelé nemovitostí ve vlastní nemovitosti – žádný prodej"
   }
 }
