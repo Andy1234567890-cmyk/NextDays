@@ -11076,7 +11076,7 @@
     "aiNegative": "Negatywne",
     "aiThemes": "Tematy",
     "aiTrend": "Przebieg nastrojów",
-    "aiDayCounts": "{positiv} pozytywne · {neutral} neutralne · {negatyw} negatywne",
+    "aiDayCounts": "{positiv} pozytywne · {neutral} neutralne · {negativ} negatywne",
     "aiNoReviews": "Brak recenzji dla tego okresu.",
     "aiNotYetAnalysed": "Dostępnych jest {count} recenzji, żadna nie została jeszcze przeanalizowana. Analiza odbywa się automatycznie; jeśli nie chcesz czekać, uruchom ją tutaj.",
     "aiRunNow": "Analizuj teraz",
