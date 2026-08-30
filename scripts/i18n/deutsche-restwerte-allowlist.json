@@ -3809,6 +3809,33 @@
       ]
     },
     {
+      "schluessel": "amenities.bar",
+      "grund": "international",
+      "sprachen": [
+        "pl"
+      ]
+    },
+    {
+      "schluessel": "amenities.fitness",
+      "grund": "international",
+      "sprachen": [
+        "pl"
+      ]
+    },
+    {
+      "schluessel": "common.languages.hr",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ],
+      "notiz": "Sprachname; nl schreibt ihn wortgleich"
+    },
+    {
+      "schluessel": "finance.TechnicalTemplate.professionalServices",
+      "grund": "technisch",
+      "sprachen": "alle"
+    },
+    {
       "wert": "ft²",
       "grund": "kuerzel",
       "sprachen": [
@@ -3865,6 +3892,187 @@
         "da",
         "sv"
       ]
+    },
+    {
+      "schluessel": "inbox.aiTone_neutral",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiBadgeAutomatic",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiBadgeEscalation",
+      "grund": "international",
+      "sprachen": [
+        "da"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiColCategory",
+      "grund": "international",
+      "sprachen": [
+        "cs"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiColFact",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "et",
+        "pl",
+        "sk"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiColProperty",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "et",
+        "hr",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiColRule",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiContextTab",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiDeliveryAutoShort",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiFieldActive",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiFieldName",
+      "grund": "international",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiFieldTitle",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiFilter",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "et",
+        "hr",
+        "nl",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiImportPdfMax",
+      "grund": "kuerzel",
+      "sprachen": [
+        "cs",
+        "en",
+        "hu",
+        "it",
+        "nl",
+        "ro",
+        "sk",
+        "sv"
+      ],
+      "notiz": "PDF und MB sind Kuerzel, max. lautet in diesen Sprachen gleich"
+    },
+    {
+      "schluessel": "inbox.kiLength_standard",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "et",
+        "fr",
+        "hu",
+        "it",
+        "mt",
+        "ro",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiRuleCopyName",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiTestAs",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiTestGuest",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiTestRule",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiUsedTimes",
+      "grund": "maske",
+      "sprachen": "alle",
+      "notiz": "Zahl plus Multiplikationszeichen - in keiner Sprache ein Wort"
     },
     {
       "wert": "jun., sen., MBA",
@@ -3952,81 +4160,6 @@
     {
       "wert": "ref-1, ref-2, …",
       "grund": "maske",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "{size} ft² · ",
-      "grund": "kuerzel",
-      "sprachen": [
-        "cs",
-        "da",
-        "el",
-        "en",
-        "es",
-        "et",
-        "fi",
-        "fr",
-        "ga",
-        "hr",
-        "hu",
-        "it",
-        "lt",
-        "lv",
-        "mt",
-        "nl",
-        "pl",
-        "pt",
-        "ro",
-        "sk",
-        "sl",
-        "sv"
-      ]
-    },
-    {
-      "wert": "{size} m² · ",
-      "grund": "kuerzel",
-      "sprachen": [
-        "cs",
-        "da",
-        "el",
-        "en",
-        "es",
-        "et",
-        "fi",
-        "fr",
-        "ga",
-        "hr",
-        "hu",
-        "it",
-        "lt",
-        "lv",
-        "mt",
-        "nl",
-        "pl",
-        "pt",
-        "ro",
-        "sk",
-        "sl",
-        "sv"
-      ]
-    },
-    {
-      "schluessel": "amenities.bar",
-      "grund": "international",
-      "sprachen": [
-        "pl"
-      ]
-    },
-    {
-      "schluessel": "amenities.fitness",
-      "grund": "international",
-      "sprachen": [
-        "pl"
-      ]
-    },
-    {
-      "schluessel": "finance.TechnicalTemplate.professionalServices",
-      "grund": "technisch",
       "sprachen": "alle"
     },
     {
@@ -4267,6 +4400,62 @@
         "hr",
         "hu",
         "it",
+        "lv",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "{size} ft² · ",
+      "grund": "kuerzel",
+      "sprachen": [
+        "cs",
+        "da",
+        "el",
+        "en",
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "ga",
+        "hr",
+        "hu",
+        "it",
+        "lt",
+        "lv",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "{size} m² · ",
+      "grund": "kuerzel",
+      "sprachen": [
+        "cs",
+        "da",
+        "el",
+        "en",
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "ga",
+        "hr",
+        "hu",
+        "it",
+        "lt",
         "lv",
         "mt",
         "nl",

@@ -20,6 +20,7 @@ import { ComposerEditor } from "@/components/inbox/composer-editor";
 import { AnfrageKarte } from "@/components/inbox/inbox-anfrage";
 import { istAnfrageThread } from "@/lib/inbox-anfrage-typen";
 import { istUebernahme } from "@/components/inbox/inbox-uebernahme-threads";
+import { WissenFaktPanel } from "@/components/inbox/wissen-fakt-panel";
 import {
   sprachName,
   uebersetzbar,
@@ -46,7 +47,10 @@ import {
   assignThread,
   cancelScheduled,
   deleteAttachment,
+  type KiEskalation,
+  eskalationErledigen,
   getAiReply,
+  listKiEskalationen,
   getInboxMessages,
   listAttachments,
   listScheduled,
@@ -96,6 +100,20 @@ export function Conversation({
   const [error, setError] = useState<string | null>(null);
   const [sending, startSend] = useTransition();
   const [ai, setAi] = useState<string | null>(null);
+  // Worauf die Antwort fußen konnte — und was NICHT mitkam. Ohne diese
+  // Liste ist eine falsche Antwort nicht diagnostizierbar: man rät, ob
+  // ein Fakt fehlte, ein Abschnitt wegen des Deckels wegfiel oder das
+  // Modell sich etwas zurechtgelegt hat.
+  const [aiQuellen, setAiQuellen] = useState<string[]>([]);
+  const [aiQuellenOffen, setAiQuellenOffen] = useState(false);
+  // Was der KI fehlt — der Aufhänger für „das beibringen". Getrennt vom
+  // Vorschlagstext, weil der Kasten stehen bleiben soll, auch wenn der
+  // Vorschlag längst gesendet oder verworfen wurde: die Lücke besteht weiter.
+  const [aiLuecke, setAiLuecke] = useState<string | null>(null);
+  const [aiLueckeWeg, setAiLueckeWeg] = useState(false);
+  const [faktOffen, setFaktOffen] = useState(false);
+  // Die offene Eskalation dieses Verlaufs (0498), falls es eine gibt.
+  const [eskalation, setEskalation] = useState<KiEskalation | null>(null);
   const [aiEditing, setAiEditing] = useState(false);
   const [aiLoading, startAi] = useTransition();
   const [templates, setTemplates] = useState<MessageTemplate[]>([]);
@@ -388,6 +406,17 @@ export function Conversation({
     });
   }
 
+  const eskalationLaden = useCallback(async () => {
+    const res = await listKiEskalationen();
+    if (res.ok) {
+      setEskalation(res.data.items.find((e) => e.thread_id === thread.id) ?? null);
+    }
+  }, [thread.id]);
+
+  useEffect(() => {
+    void eskalationLaden();
+  }, [eskalationLaden]);
+
   function suggest() {
     setError(null);
     setAiEditing(false);
@@ -398,6 +427,11 @@ export function Conversation({
         return;
       }
       setAi(res.data.reply);
+      setAiQuellen(res.data.sources ?? []);
+      setAiLuecke(res.data.fehlende_angabe ?? null);
+      // Hat das Modell negativen Tenor erkannt, steht das Merkmal jetzt am
+      // Verlauf — frisch laden, damit der Kasten sofort erscheint.
+      if (res.data.eskaliert) void eskalationLaden();
     });
   }
 
@@ -800,10 +834,43 @@ export function Conversation({
           </div>
         )}
 
+        {/* Eskalationshinweis (0498). Zurücknehmbar: eine Markierung, die nur
+            die KI setzen und niemand aufheben kann, ist keine Aufgabe — nach
+            zwei Wochen wäre jeder zweite Verlauf rot und niemand sähe hin. */}
+        {eskalation && (
+          <div className="flex items-start gap-3 rounded-2xl border border-destructive/40 bg-destructive/5 p-4">
+            <Icon
+              icon="ph:warning-circle"
+              className="mt-0.5 size-5 shrink-0 text-destructive"
+            />
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <span className="text-sm font-medium">{t("kiEscalatedTitle")}</span>
+              <span className="text-sm text-muted-foreground">
+                {eskalation.grund}
+              </span>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                void eskalationErledigen(thread.id).then(() => setEskalation(null))
+              }
+            >
+              {t("kiEscalatedDone")}
+            </Button>
+          </div>
+        )}
+
         {/* KI-Vorschlag INLINE im Chat-Verlauf (wie im Vorbild). 'Bearbeiten'
             macht den Vorschlag direkt im Block editierbar. */}
         {ai !== null && (
-          <div className="rounded-2xl border border-accent/50 bg-accent/5 p-4">
+          // Der Verlauf-Rahmen aus der Vorlage (2 px, Rot → Orange → Gelb).
+          // Er unterscheidet den KI-Vorschlag vom Rest des Verlaufs, ohne ein
+          // Abzeichen zu brauchen — die einzige der drei übernommenen Farben,
+          // die hier auftaucht.
+          <div className="ki-flaechen ki-verlauf-rahmen rounded-2xl p-0.5">
+          <div className="rounded-[calc(1rem-0.125rem)] bg-card p-4">
             <div className="mb-2 flex items-center justify-between">
               <span className="flex items-center gap-1.5 text-sm font-medium text-accent">
                 <Icon icon="ph:sparkle" className="size-4" />
@@ -815,6 +882,8 @@ export function Conversation({
                 onClick={() => {
                   setAi(null);
                   setAiEditing(false);
+                  setAiQuellen([]);
+                  setAiQuellenOffen(false);
                 }}
                 className="text-muted-foreground hover:text-foreground"
               >
@@ -833,6 +902,39 @@ export function Conversation({
               />
             ) : (
               <p data-testid="inbox-ai-draft-preview" className="whitespace-pre-wrap text-sm">{ai}</p>
+            )}
+
+            {aiQuellen.length > 0 && (
+              <div className="mt-3 border-t border-accent/20 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setAiQuellenOffen((v) => !v)}
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  <Icon
+                    icon={aiQuellenOffen ? "ph:caret-down" : "ph:caret-right"}
+                    className="size-3"
+                  />
+                  {t("aiSources", { count: aiQuellen.length })}
+                </button>
+                {aiQuellenOffen && (
+                  <ul className="mt-1.5 flex flex-col gap-0.5 text-xs text-muted-foreground">
+                    {aiQuellen.map((q) => (
+                      <li key={q} className="flex items-start gap-1.5">
+                        {/* Ein Eintrag, der eine Klammer trägt, beschreibt
+                            etwas, das FEHLT (gekürzt, gesperrt, kein Platz) —
+                            er bekommt ein anderes Zeichen, damit man beim
+                            Überfliegen sieht, was die Antwort NICHT wusste. */}
+                        <Icon
+                          icon={q.includes("(") ? "ph:warning" : "ph:check"}
+                          className="mt-0.5 size-3 shrink-0"
+                        />
+                        <span>{q}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             )}
 
             <div className="mt-3 flex justify-end gap-2">
@@ -866,6 +968,43 @@ export function Conversation({
               >
                 <Icon icon="ph:paper-plane-tilt" className="size-4" />
                 {t("send")}
+              </Button>
+            </div>
+          </div>
+          </div>
+        )}
+
+        {/* „Der KI das beibringen": erscheint genau dann, wenn das Modell eine
+            Wissenslücke gemeldet hat. DAS ist der Punkt, an dem sich die
+            Wissensdatenbank von selbst füllt — der Betrieb sieht die Lücke in
+            dem Moment, in dem sie ihn stört. Ohne diesen Weg bleibt sie leer,
+            egal wie gut die Verwaltungsmaske ist. */}
+        {aiLuecke && !aiLueckeWeg && (
+          <div className="flex flex-col gap-2 rounded-2xl border border-border bg-muted/40 p-4">
+            <div className="flex items-start justify-between gap-2">
+              <span className="flex items-center gap-1.5 text-sm font-medium">
+                <Icon icon="ph:info" className="size-4 text-accent" />
+                {t("kiTeachTitle")}
+              </span>
+              <button
+                type="button"
+                onClick={() => setAiLueckeWeg(true)}
+                className="text-muted-foreground hover:text-foreground"
+                aria-label={t("kiTeachDismiss")}
+              >
+                <Icon icon="ph:x" className="size-4" />
+              </button>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {t("kiTeachHint", { was: aiLuecke })}
+            </p>
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => setFaktOffen(true)}
+              >
+                {t("kiTeachButton")}
               </Button>
             </div>
           </div>
@@ -1191,6 +1330,22 @@ export function Conversation({
             />
           </div>
         </div>
+      )}
+
+      {/* „Fakten hinzufügen" aus dem Beibringen-Kasten: dasselbe Panel wie in
+          der Wissensdatenbank, mit gesetztem Objekt. Der Betrieb muss nur den
+          Text schreiben. */}
+      {faktOffen && (
+        <WissenFaktPanel
+          fakt={null}
+          objektId={thread.property_id}
+          onSchliessen={() => setFaktOffen(false)}
+          onGespeichert={() => {
+            setFaktOffen(false);
+            // Die Lücke ist geschlossen — der Kasten hat seinen Zweck erfüllt.
+            setAiLuecke(null);
+          }}
+        />
       )}
     </>
   );

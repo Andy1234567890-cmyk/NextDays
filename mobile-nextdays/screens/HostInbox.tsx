@@ -9,6 +9,7 @@ import type { RouteProp } from "@react-navigation/native";
 import { useRoute } from "@react-navigation/native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -34,7 +35,7 @@ import { VerwaltenSheet } from "@/components/inbox/VerwaltenSheet";
 import { AntwortWerkzeuge } from "@/components/inbox/AntwortWerkzeuge";
 import { VorgangSheet } from "@/components/inbox/VorgangSheet";
 import { Icon } from "@/components/ui/Icon";
-import { Chip, Col, Row, Spinner, Txt } from "@/components/ui/kit";
+import { Btn, Chip, Col, Row, Spinner, Txt } from "@/components/ui/kit";
 import { EmptyState } from "@/components/ui/patterns";
 import { useAuth } from "@/contexts/AuthContext";
 import { channelMeta } from "@/lib/calendar-channels";
@@ -51,9 +52,12 @@ import {
   NUR_ANHANG_TEXT,
   sendInboxMessage,
   type AnfrageDetail,
+  eskalationErledigen,
+  listKiEskalationen,
   translateText,
   type InboxMessage,
   type InboxThread,
+  type KiEskalation,
 } from "@/lib/inbox";
 import type { ReservationChannel } from "@/lib/reservations";
 import type { HostTabParamList } from "@/navigation/types";
@@ -540,6 +544,10 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
   // heißt, jede Änderung zweimal pflegen, und die schwächere fällt still
   // zurück (dieselbe Begründung wie in `screens/ReservationDetail.tsx`).
   const [buchungOffen, setBuchungOffen] = useState(false);
+  // Eskalation dieses Verlaufs (0498): entweder hat das Modell negativen Tenor
+  // erkannt oder eine Regel des Betriebs verlangt es. Sie steht ÜBER dem
+  // Verlauf, nicht darin — sie ist der Grund, warum jemand hier gerade ist.
+  const [eskalation, setEskalation] = useState<KiEskalation | null>(null);
   const verlauf = useRef<ScrollView>(null);
   // Steht der Verlauf am unteren Rand? Startet auf `true`, damit der erste
   // Aufbau eines frisch geöffneten Threads immer unten landet.
@@ -553,6 +561,32 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
   useEffect(() => {
     load();
   }, [load]);
+
+  // Es gibt bewusst keinen Endpunkt für die Eskalation EINES Verlaufs: je
+  // Verlauf ist höchstens eine offen (unique index), und die Liste der offenen
+  // ist kurz. Ein zweiter Endpunkt für dieselbe Frage wäre eine zweite Stelle,
+  // die den Scope prüfen muss (Wurzel 9).
+  const eskalationLaden = useCallback(async () => {
+    const res = await listKiEskalationen();
+    if (res.ok) {
+      setEskalation(res.data.items.find((e) => e.thread_id === thread.id) ?? null);
+    }
+  }, [thread.id]);
+
+  useEffect(() => {
+    eskalationLaden();
+  }, [eskalationLaden]);
+
+  /** Zurücknehmen darf nur ein MENSCH — der Takt nicht, sonst erledigt sich
+   *  der Hinweis von selbst und niemand hat hingesehen. */
+  const eskalationErledigt = async () => {
+    const res = await eskalationErledigen(thread.id);
+    if (!res.ok) {
+      Alert.alert("Nicht erledigt", res.error);
+      return;
+    }
+    setEskalation(null);
+  };
 
   // Anfrage-Detail: NUR für Anfrage-Threads. Für eine gewöhnliche Buchung
   // antwortet der Endpunkt 404 — ihn dort zu rufen, wäre eine Fehlermeldung je
@@ -721,6 +755,51 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
           amEnde.current = rest < 80; // Toleranz: „praktisch unten"
         }}
       >
+        {/* Die Eskalation steht GANZ oben: sie ist der Grund, warum jemand
+            diesen Verlauf gerade öffnet (sie kommt per Push). Weiter unten
+            wäre sie hinter dem Verlauf verborgen — und der springt beim Öffnen
+            ans Ende, also hätte man sie nie gesehen. */}
+        {eskalation && (
+          <Col
+            gap={10}
+            style={{
+              borderWidth: 1,
+              borderColor: t.palette.accent,
+              backgroundColor: t.palette.surface2,
+              borderRadius: 14,
+              padding: 14,
+            }}
+          >
+            <Row style={{ gap: 8, alignItems: "flex-start" }}>
+              <Icon n="bell" s={17} sw={2} c={t.palette.accent} />
+              <Col style={{ flex: 1 }} gap={3}>
+                <Txt v="sm" style={{ fontWeight: "600" }}>
+                  {/* Die zwei Wege sehen gleich aus, heißen aber verschieden:
+                      „Regel" hat der Betrieb selbst formuliert, „Stimmung" hat
+                      das Modell erkannt. Wer das verwechselt, sucht den Fehler
+                      an der falschen Stelle. */}
+                  {eskalation.ausloeser === "regel"
+                    ? "Eine Regel verlangt deine Antwort"
+                    : "Der Gast braucht deine Aufmerksamkeit"}
+                </Txt>
+                <Txt v="sm" soft>
+                  {eskalation.grund}
+                </Txt>
+                {!!eskalation.nachricht_auszug && (
+                  <Txt v="xs" soft style={{ fontStyle: "italic" }}>
+                    „{eskalation.nachricht_auszug}"
+                  </Txt>
+                )}
+              </Col>
+            </Row>
+            {access.canReply && (
+              <Btn variant="outline" block onPress={eskalationErledigt}>
+                Erledigt
+              </Btn>
+            )}
+          </Col>
+        )}
+
         {/* Die Anfrage steht ÜBER dem Verlauf: sie ist die Handlung, um die es
             geht, und ihre Frist läuft ab — der Chat darunter ist Beiwerk. */}
         {anfrage && (
@@ -937,6 +1016,7 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
             setHinweis("Nachricht ist eingeplant.");
           }}
           onGeplantZahl={setGeplantZahl}
+          onEskaliert={eskalationLaden}
         />
       <Row
         style={{

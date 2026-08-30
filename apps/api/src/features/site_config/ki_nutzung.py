@@ -25,9 +25,8 @@ from datetime import UTC, datetime
 from supabase import Client
 
 from src.core.config import get_settings
+from src.core.ki import KiAntwort, KiError
 from src.core.logging import get_logger
-
-from .ki_client import KiAntwort, KiError
 
 log = get_logger("nextdays.site_config.ki_nutzung")
 
@@ -51,6 +50,15 @@ FUNKTIONEN = frozenset(
         # dem Betrieb „0 von 200 verbraucht" gemeldet, während 23 Aufrufe
         # bezahlt wurden.
         "seite_uebersetzen",
+        # Antwortvorschlag an einen Gast (Posteingang + WhatsApp, 0492).
+        # Derselbe Zwang wie eine Zeile darüber: hier UND im DB-Check.
+        "gast_antwort",
+        # Wissensdatenbank (0500). Getrennt, weil sie sich unterschiedlich
+        # verhalten: der Import ist ein seltener, teurer Einzelaufruf (ein
+        # ganzes PDF durch Gemini), das Lernen ein häufiger kleiner. In einem
+        # Topf liesse sich später nicht sagen, welcher den Deckel gesprengt hat.
+        "wissen_import",
+        "wissen_lernen",
     }
 )
 

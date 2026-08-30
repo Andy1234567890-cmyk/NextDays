@@ -71,6 +71,9 @@ _MAIL = (Kanal.EMAIL,)
 # Mail + SMS + Push. Nur fuer Ereignisse, die den Betrieb SOFORT erreichen
 # muessen; jede Kategorie hier braucht eine `*_push`-Spalte in der DB.
 _MAIL_SMS_PUSH = (Kanal.EMAIL, Kanal.SMS, Kanal.PUSH)
+# Mail + Push ohne SMS. Fuer Meldungen, die den Betrieb schnell erreichen
+# sollen, aber keine SMS wert sind.
+_MAIL_PUSH = (Kanal.EMAIL, Kanal.PUSH)
 
 KATALOG: tuple[Kategorie, ...] = (
     # --- Tab „Angebote und Updates" (Marketing) --------------------------
@@ -197,6 +200,19 @@ KATALOG: tuple[Kategorie, ...] = (
     # KEIN SMS: die Nachricht traegt einen Link auf die Abo-Seite, und drei Tage
     # sind reichlich Zeit. SMS ist fuer Fristen von Stunden da.
     Kategorie("testphase_endet", Tab.KONTO, "konto", _MAIL, email_pflicht=True),
+    # Die KI hat einen Verlauf eskaliert (0498/0499) — negative Stimmung oder
+    # eine Eskalationsregel des Betriebs.
+    #
+    # MAIL + PUSH, KEIN SMS: dieselbe Abwaegung wie bei den anderen
+    # Posteingang-Kategorien. Eine Beschwerde ist dringend, aber SMS ist fuer
+    # Fristen von Stunden reserviert (`anfrage_offen`), nicht fuer „ein Gast
+    # ist veraergert".
+    #
+    # E-MAIL NICHT PFLICHT, anders als bei `anfrage_offen`: Nichtstun ist hier
+    # keine Entscheidung mit Geldfolge — die Eskalation bleibt im Posteingang
+    # sichtbar, auch wenn niemand eine Mail bekommt. Ein Betrieb, der den
+    # Posteingang ohnehin offen hat, darf den Mail-Kanal abwaehlen.
+    Kategorie("ki_eskalation", Tab.KONTO, "nachrichten", _MAIL_PUSH),
 )
 
 NACH_SCHLUESSEL: dict[str, Kategorie] = {k.schluessel: k for k in KATALOG}

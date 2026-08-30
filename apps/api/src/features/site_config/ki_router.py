@@ -36,6 +36,7 @@ from pydantic import BaseModel, Field
 from supabase import Client
 
 from src.core.config import get_settings
+from src.core.ki import KiError, VertexClient
 from src.core.languages import sprach_name
 from src.core.logging import get_logger
 from src.core.security import AuthContext
@@ -45,7 +46,6 @@ from src.features.auth.permissions import Capability
 
 from . import ki_bild, ki_herkunft, ki_nutzung, ki_texte, seiten_uebersetzung
 from .fehler import SiteConfigError
-from .ki_client import KiError, VertexClient
 from .ki_profil import KiProfil, profil_lesen, profil_speichern
 
 log = get_logger("nextdays.site_config.ki_router")

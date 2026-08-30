@@ -965,6 +965,66 @@ def melde_zustellproblem(
         )
 
 
+# --- KI-Eskalation (0498/0499) -----------------------------------------------
+SCHLUESSEL_KI_ESKALATION = "ki_eskalation"
+
+
+def melde_ki_eskalation(
+    db: Client,
+    *,
+    tenant_id: str,
+    thread_id: str,
+    grund: str,
+    property_id: str | None = None,
+    gast_vorname: str | None = None,
+) -> None:
+    """„Die KI hat einen Verlauf eskaliert."
+
+    ZWEI AUSLOESER, ein Weg: negative Stimmung (das Modell beurteilt sie im
+    selben Aufruf) oder eine Eskalationsregel des Betriebs. Der Empfaenger ist
+    derselbe, und die Meldung liest sich gleich — nur `grund` unterscheidet sie.
+
+    DER SCHALTER AN DER REGEL entscheidet, OB gemeldet wird; diese Kategorie
+    entscheidet, WIE und an wen. Zwei Ebenen, wie ueberall sonst im Produkt.
+
+    ENTDOPPLUNG ueber den Thread: ein Verlauf, der noch offen eskaliert ist,
+    meldet nicht ein zweites Mal. Sonst bekaeme der Betrieb bei einem
+    hin- und hergehenden Beschwerdegespraech eine Mail je Nachricht — und
+    schaltet danach die Kategorie ab.
+
+    Best effort wie alle Meldungen: sie darf die Antwort nie kippen.
+    """
+    try:
+        empfaenger = _betriebsleitung(db, tenant_id)
+        if not empfaenger:
+            return
+        dispatcher = _dispatcher(db)
+        betreff_key = "benachrichtigung.ki_eskalation"
+        # Der Gastname nur als VORNAME (Datensplit, wie ueberall sonst hier):
+        # eine Push-Meldung auf einem Sperrbildschirm ist keine Gastakte.
+        vorname = _nur_vorname(gast_vorname)
+        text = f"{vorname}: {grund}" if vorname else grund
+        for user_id in sorted(empfaenger):
+            dispatcher.sende(
+                user_id=user_id,
+                schluessel=SCHLUESSEL_KI_ESKALATION,
+                betreff=mail_text(betreff_key, _GLOCKEN_SPRACHE),
+                betreff_key=betreff_key,
+                text=text[:500],
+                tenant_id=tenant_id,
+                property_id=property_id,
+                ziel_pfad=f"/posteingang/{thread_id}",
+                dedup_key=f"ki_eskalation:{thread_id}",
+            )
+    except Exception as exc:  # noqa: BLE001 — Meldung kippt die Antwort nie
+        log.warning(
+            "ki_eskalation_meldung_fehlgeschlagen",
+            tenant_id=tenant_id,
+            thread_id=thread_id,
+            error=str(exc)[:200],
+        )
+
+
 # --- Portal-Rate verwaist (0432) ---------------------------------------------
 SCHLUESSEL_PORTAL_RATE_VERWAIST = "portal_rate_verwaist"
 

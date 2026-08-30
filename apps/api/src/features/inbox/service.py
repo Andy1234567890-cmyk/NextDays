@@ -11,6 +11,8 @@ import json
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Final
 
+from httpx import HTTPError
+from postgrest.exceptions import APIError
 from supabase import Client
 
 from src.core.countries import telefon_anzeigen
@@ -31,12 +33,19 @@ from src.features.guests.identity import (
 # Der Nachrichten-Spiegel (`portal_messages`): lesen, nachtragen, Signal setzen.
 from . import anfragen
 from .anfragen import AnfragenMixin
-from .anhaenge import AnhangWissenMixin
+from .anhaenge import AnhangMixin
 from .automationen import AutomationenMixin
 from .errors import InboxError
 from .feld_kontext import FeldKontextMixin
 from .felder import FeldFehlt, rendern, unbekannte_felder
 from .kennzahlen import KennzahlenMixin
+from .ki_autoantwort import KiAutoantwortMixin
+from .ki_eskalation import KiEskalationMixin
+from .ki_lernen import aus_nachricht_lernen
+from .ki_regeln import KiRegelnMixin
+from .ki_test import KiTestMixin
+from .ki_wissen import KiWissenMixin
+from .ki_wissen_import import KiWissenImportMixin
 from .nebenquellen import NebenquellenMixin
 from .planung import PlanungMixin
 from .schemas import (
@@ -115,8 +124,14 @@ def _chronologisch(m: InboxMessage) -> tuple[int, datetime]:
 class InboxService(
     PlanungMixin,
     VorlagenMixin,
+    KiEskalationMixin,
+    KiRegelnMixin,
+    KiTestMixin,
+    KiAutoantwortMixin,
     SprachenMixin,
-    AnhangWissenMixin,
+    AnhangMixin,
+    KiWissenMixin,
+    KiWissenImportMixin,
     FeldKontextMixin,
     NebenquellenMixin,
     AnfragenMixin,
@@ -443,48 +458,6 @@ class InboxService(
             if pid:
                 out[str(m["id"])] = (str(pid), titles.get(str(pid), ""))
         return out
-
-    def _property_for_thread(
-        self, db: Client, tenant_id: str, row: dict
-    ) -> dict | None:
-        """Objekt-Zeile zu einem Thread über `property_map_id`.
-
-        Der Weg führt über `channex_property_map`; `channex_booking` selbst trägt
-        KEINE channex_property_id (siehe Tabellendefinition). Ein früherer Zugriff
-        auf `row["channex_property_id"]` lief deshalb immer ins Leere und ließ das
-        Reservierungs-Panel dauerhaft ohne Objektnamen.
-        """
-        map_id = row.get("property_map_id")
-        if not map_id:
-            return None
-        pm = (
-            db.table("channex_property_map")
-            .select("property_id")
-            .eq("tenant_id", tenant_id)
-            .eq("id", str(map_id))
-            .limit(1)
-            .execute()
-        ).data or []
-        property_id = pm[0].get("property_id") if pm else None
-        if not property_id:
-            return None
-        props = (
-            db.table("properties")
-            .select(
-                "id, title, address, city, country, photos, timezone, "
-                # Für die Platzhalter aus den übernommenen Lodgify-Vorlagen:
-                # Postleitzahl, Koordinaten (Kartenlink) und Kaution.
-                "postal_code, lat, lng, deposit_amount, "
-                # Die mehrsprachigen Gasttexte (`messaging`) liegen hier —
-                # gepflegt unter /objekte/{id}/nachrichten.
-                "type_attributes"
-            )
-            .eq("tenant_id", tenant_id)
-            .eq("id", str(property_id))
-            .limit(1)
-            .execute()
-        ).data or []
-        return props[0] if props else None
 
     # Feldname in `type_attributes.messaging` → unser Kontext-Feld. Gepflegt
     # wird unter `/objekte/{id}/nachrichten` (`web/lib/messaging-meta.ts`).
@@ -1086,6 +1059,15 @@ class InboxService(
             raise InboxError(
                 "Für diese Konversation ist kein Versand möglich.", status_code=422
             )
+        # Gegenzustand der geplanten KI-Antwort (Wurzel 1): schreibt ein MENSCH
+        # hier hinein, ist die wartende Maschinenantwort überholt — sonst bekäme
+        # der Gast beide. VOR dem Versand, weil der Weg unten einen Zweig ohne
+        # Echo hat, dessen `return` das Abräumen überspränge. `quelle == "ki"`
+        # ist der Versand DIESER Antwort und darf sich nicht selbst wegräumen.
+        if quelle != "ki":
+            self.autoantwort_abbrechen(
+                tenant_id, thread_id, f"Nachricht im Thread ({quelle})"
+            )
         try:
             res = self._portal_senden(cbid, row, text)
         except ChannexError as exc:
@@ -1108,9 +1090,42 @@ class InboxService(
             self._spiegel_schreiben(
                 db, tenant_id, thread_id, cbid, [gesendet], quelle=quelle
             )
+            self._aus_nachricht_lernen(db, tenant_id, thread_id, row, text, quelle)
             return gesendet
         # Channex bestätigt teils ohne Echo — dann die gesendete Nachricht zurück.
+        self._aus_nachricht_lernen(db, tenant_id, thread_id, row, text, quelle)
         return InboxMessage(message=text, sender="property")
+
+    def _aus_nachricht_lernen(
+        self,
+        db: Client,
+        tenant_id: str,
+        thread_id: str,
+        row: dict,
+        text: str,
+        quelle: str,
+    ) -> None:
+        """Fakten aus einer gesendeten Nachricht lernen — still, best effort.
+
+        NACH dem Versand und ohne den Hauptpfad zu kippen: die Nachricht ist
+        beim Gast, das ist das Wichtigere. `ki_lernen` wirft deshalb nicht;
+        dieser `except` fängt nur, was auf dem Weg DORTHIN schiefgehen kann
+        (Objektzuordnung).
+        """
+        try:
+            prop = self._property_for_thread(db, tenant_id, row)
+            aus_nachricht_lernen(
+                db,
+                tenant_id,
+                text=text,
+                property_id=str(prop["id"]) if prop and prop.get("id") else None,
+                thread_id=thread_id,
+                quelle=quelle,
+            )
+        except (APIError, HTTPError) as exc:
+            log.warning(
+                "ki_lernen_kontext_fehlt", thread_id=thread_id, fehler=str(exc)[:200]
+            )
 
     def get_reservation_detail(
         self, ctx: AuthContext, thread_id: str,

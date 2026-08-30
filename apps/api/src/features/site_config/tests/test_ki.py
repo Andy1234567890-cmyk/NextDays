@@ -20,9 +20,9 @@ from __future__ import annotations
 import pytest
 from pydantic import SecretStr
 
+from src.core.ki import KiAntwort, KiError, VertexClient
 from src.features.site_config import ki_herkunft, ki_nutzung, ki_profil, ki_texte
 from src.features.site_config.fehler import SiteConfigError
-from src.features.site_config.ki_client import KiAntwort, KiError, VertexClient
 
 from .test_site_config import _DB  # Fake-DB-Mock des Slice
 
@@ -133,7 +133,7 @@ def test_ohne_schluessel_meldet_der_client_statt_zu_werfen(
     stürzt nicht ab. Genau daran hängt, dass die UI den Knopf gar nicht erst
     zeigt."""
     from src.core.config import get_settings
-    from src.features.site_config import ki_client
+    from src.core.ki import client as ki_client
 
     # Die EINSTELLUNGEN werden ersetzt, nicht die Umgebungsvariablen.
     #
@@ -167,7 +167,7 @@ def test_unlesbarer_schluessel_ist_nicht_konfiguriert(
     eine Fehlkonfiguration und wird als „nicht eingerichtet" behandelt (LAUT
     geloggt, siehe ki_client)."""
     from src.core.config import get_settings
-    from src.features.site_config import ki_client
+    from src.core.ki import client as ki_client
 
     monkeypatch.setenv("VERTEX_SERVICE_ACCOUNT_B64", "das-ist-kein-base64!!!")
     monkeypatch.setenv("VERTEX_PROJECT_ID", "projekt")

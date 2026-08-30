@@ -14,6 +14,7 @@ from urllib.parse import urlencode
 from supabase import Client
 
 from src.core.config import get_settings
+from src.core.ki import KiError
 from src.core.logging import get_logger, mask_phone
 from src.core.security import AuthContext
 from src.core.supabase import load_scoped
@@ -23,15 +24,21 @@ from src.features.guests.identity import (
 from src.features.guests.identity import (
     resolve_or_create_guest,
 )
-from src.features.inbox.ai import GroqClient, GroqError
 from src.features.inbox.felder import (
     FeldFehlt,
     benutzte_felder,
     rendern,
     unbekannte_felder,
 )
+from src.features.inbox.ki_antwort import (
+    FUNKTION as KI_FUNKTION,
+)
+from src.features.inbox.ki_antwort import (
+    vorschlag_erzeugen,
+)
 from src.features.inbox.schemas import InboxMessage, ReservationDetail
 from src.features.inbox.service import InboxService
+from src.features.site_config.ki_nutzung import buchen, deckel_pruefen
 
 from .client import WhatsAppClient, WhatsAppError
 from .onboarding import OnboardingError, WhatsAppOnboarding
@@ -66,11 +73,12 @@ log = get_logger("nextdays.whatsapp")
 # Metas gehostete Onboarding-Seite (Business-Suite-Domain, NICHT graph.facebook.com).
 _SIGNUP_HOST = "https://business.facebook.com"
 
-# Wie viel Verlauf und wie viele Fakten in den KI-Prompt gehen. Beides begrenzt:
-# ein Prompt, der mit der Konversation waechst, wird irgendwann teuer und
-# ungenau (Wurzel 8).
+# Wie viel Verlauf aus der DB geholt wird. Begrenzt, weil ein Prompt, der mit
+# der Konversation waechst, irgendwann teuer und ungenau wird (Wurzel 8).
+# Wie viele davon tatsaechlich in den Prompt gehen, entscheidet
+# `ki_antwort.MAX_VERLAUF`; die Fakten-Obergrenze steht in
+# `ki_kontext.MAX_FAKTEN` — beides jetzt an EINER Stelle statt hier zweitgepflegt.
 _KI_VERLAUF_MAX = 40
-_KI_WISSEN_MAX = 60
 
 
 class WhatsAppServiceError(Exception):
@@ -1091,34 +1099,86 @@ class WhatsAppService:
 
         inbox = InboxService(service_client=db)
         einstellungen = inbox.get_ai_settings(ctx)
-        detail, objekt_id = self._ki_reservierung(db, tenant_id, conv)
-        wissen = self._ki_wissen(db, tenant_id, objekt_id)
+        detail, objekt = self._ki_reservierung(db, tenant_id, conv)
+
+        objekt_id = str(objekt["id"]) if objekt and objekt.get("id") else None
+        regeln = inbox.regeln_fuer_thread(db, tenant_id, objekt_id)
 
         try:
-            vorschlag = GroqClient().suggest_reply(
-                history=verlauf,
-                reservation=detail,
-                settings=einstellungen,
-                knowledge=wissen,
+            # VOR dem Aufruf: der Deckel soll den bezahlten Aufruf verhindern,
+            # nicht ihn nachträglich beklagen.
+            deckel_pruefen(db, tenant_id)
+            vorschlag = vorschlag_erzeugen(
+                db,
+                tenant_id,
+                prop=objekt,
+                verlauf=verlauf,
+                reservierung=detail,
+                einstellungen=einstellungen,
+                regeln=regeln,
             )
-        except GroqError as exc:
+        except KiError as exc:
             raise WhatsAppServiceError(
                 exc.message, status_code=exc.status_code
             ) from exc
+        buchen(
+            db,
+            tenant_id,
+            user_id=ctx.user_id,
+            funktion=KI_FUNKTION,
+            antwort=vorschlag.antwort,
+        )
+        # Wie im Posteingang: dieser Weg SENDET nicht. Die Zustellart wird
+        # trotzdem ermittelt, damit der Betrieb am Entwurf sieht, ob eine
+        # Regel griff und ob eine Sperre zugeschlagen hat.
+        _zustellart, grund, regel = inbox.zustellart_entscheiden(
+            regeln, vorschlag.frage, einstellungen.autoantwort_aktiv
+        )
+        inbox.protokollieren(
+            db,
+            tenant_id,
+            thread_id=conversation_id,
+            quelle="whatsapp",
+            regel_id=str(regel["id"]) if regel else None,
+            frage=vorschlag.frage,
+            antwort=vorschlag.text,
+            zustellart="entwurf",
+            gesendet=False,
+            quellen=vorschlag.quellen,
+            weggelassen=vorschlag.kontext.weggelassen,
+            grund=grund,
+            modell=vorschlag.antwort.modell,
+            region=vorschlag.antwort.region,
+            tokens_ein=vorschlag.antwort.tokens_ein,
+            tokens_aus=vorschlag.antwort.tokens_aus,
+        )
         # `sources` weist aus, worauf die Antwort fußen konnte — sonst ist nicht
-        # unterscheidbar, ob ein Detail aus der Wissensdatenbank stammt oder das
-        # Modell es sich zurechtgelegt hat.
-        return {"reply": vorschlag, "sources": wissen}
+        # unterscheidbar, ob ein Detail aus einer echten Quelle stammt oder das
+        # Modell es sich zurechtgelegt hat. Weggelassenes steht mit dabei: es
+        # erklärt eine unvollständige Antwort, die sonst wie ein Modellfehler
+        # aussieht.
+        hinweise = list(vorschlag.kontext.weggelassen)
+        if grund:
+            hinweise.append(f"Nicht automatisch: {grund}")
+        return {"reply": vorschlag.text, "sources": vorschlag.quellen + hinweise}
 
     @staticmethod
     def _ki_reservierung(
         db: Client, tenant_id: str, conv: dict
-    ) -> tuple[ReservationDetail, str | None]:
-        """Buchungskontext für den Prompt — leer, wenn keine Reservierung hängt.
+    ) -> tuple[ReservationDetail, dict | None]:
+        """Buchungskontext + Objektzeile für den Prompt.
 
         Ein leerer Kontext ist hier in Ordnung und kein Mangel: das Modell
         erfährt dann schlicht nichts über eine Buchung und fragt nach, statt
         sich eine auszudenken.
+
+        Der zweite Rückgabewert war bis 29.08.2026 fest ``None`` — in JEDEM
+        Zweig, auch dem mit gefundener Reservierung. Der Aufrufer reichte ihn an
+        die Wissensauswahl weiter, die daraufhin nur betriebsweite Fakten fand:
+        objektbezogene Fakten haben den WhatsApp-Pfad also nie erreicht, obwohl
+        der Code so aussah, als täte er es. Jetzt kommt die Objektzeile selbst
+        zurück (mit ``type_attributes``), weil der Kontextsammler die Gästemappe
+        daraus liest.
         """
         reservierung = conv.get("reservation_id")
         if not reservierung:
@@ -1126,57 +1186,71 @@ class WhatsAppService:
         kontext = kontext_aus_reservierung(db, tenant_id, str(reservierung))
         if kontext is None:
             return ReservationDetail(guest_name=conv.get("guest_name")), None
-        return (
-            ReservationDetail(
-                listing_name=kontext.property_name,
-                address=kontext.property_address,
-                guest_name=kontext.guest_name or conv.get("guest_name"),
-                guest_email=kontext.guest_email,
-                guest_phone=kontext.guest_phone,
-                guest_language=kontext.guest_language,
-                adults=kontext.adults,
-                children=kontext.children,
-                total_amount=(
-                    float(kontext.total_amount)
-                    if kontext.total_amount is not None
-                    else None
-                ),
-                paid_amount=(
-                    float(kontext.paid_amount)
-                    if kontext.paid_amount is not None
-                    else None
-                ),
-                currency=kontext.currency,
-                ota_name=kontext.channel,
-                ota_reservation_code=kontext.reservation_code,
-                check_in=str(kontext.check_in) if kontext.check_in else None,
-                check_out=str(kontext.check_out) if kontext.check_out else None,
+        detail = ReservationDetail(
+            listing_name=kontext.property_name,
+            address=kontext.property_address,
+            guest_name=kontext.guest_name or conv.get("guest_name"),
+            guest_email=kontext.guest_email,
+            guest_phone=kontext.guest_phone,
+            guest_language=kontext.guest_language,
+            adults=kontext.adults,
+            children=kontext.children,
+            total_amount=(
+                float(kontext.total_amount)
+                if kontext.total_amount is not None
+                else None
             ),
-            None,
+            paid_amount=(
+                float(kontext.paid_amount)
+                if kontext.paid_amount is not None
+                else None
+            ),
+            currency=kontext.currency,
+            ota_name=kontext.channel,
+            ota_reservation_code=kontext.reservation_code,
+            check_in=str(kontext.check_in) if kontext.check_in else None,
+            check_out=str(kontext.check_out) if kontext.check_out else None,
         )
+        objekt, status = WhatsAppService._ki_objekt(db, tenant_id, reservierung)
+        # Der Status entscheidet, ob Türcode und WLAN in den Kontext dürfen —
+        # `Kontext` führt ihn nicht (er ist kein Platzhalter), also kommt er aus
+        # derselben Abfrage wie die Objekt-ID.
+        detail.status = status
+        return detail, objekt
 
     @staticmethod
-    def _ki_wissen(db: Client, tenant_id: str, objekt_id: str | None) -> list[str]:
-        """Fakten der Wissensdatenbank: betriebsweite plus die des Objekts.
+    def _ki_objekt(
+        db: Client, tenant_id: str, reservation_id: object
+    ) -> tuple[dict | None, str | None]:
+        """Objektzeile und Reservierungsstatus — scoped (Wurzel 3).
 
-        Begrenzt, damit der Prompt nicht unbegrenzt wächst (Wurzel 8).
+        Eigene Abfrage statt einer Erweiterung von ``Kontext``: dieser trägt
+        Platzhalter-WERTE für Vorlagen, keine Rohspalten. ``type_attributes``
+        ist ein mehrere Zehntausend Zeichen großes JSON — es dort einzuhängen
+        hieße, es bei jedem Vorlagen-Versand mitzuladen, wo niemand es braucht.
         """
-        frage = (
-            db.table("inbox_knowledge_fact")
-            .select("fact, property_id")
+        res = (
+            db.table("reservations")
+            .select("property_id, status")
             .eq("tenant_id", tenant_id)
-        )
-        frage = (
-            frage.or_(f"property_id.eq.{objekt_id},property_id.is.null")
-            if objekt_id
-            else frage.is_("property_id", "null")
-        )
-        zeilen = frage.limit(_KI_WISSEN_MAX).execute().data or []
-        # Objektbezogene Fakten zuerst: sie schlagen das Allgemeine.
-        zeilen.sort(key=lambda r: 0 if r.get("property_id") else 1)
-        return [
-            str(z["fact"]).strip() for z in zeilen if (z.get("fact") or "").strip()
-        ]
+            .eq("id", str(reservation_id))
+            .limit(1)
+            .execute()
+        ).data or []
+        if not res:
+            return None, None
+        status = res[0].get("status")
+        if not res[0].get("property_id"):
+            return None, status
+        objekt = (
+            db.table("properties")
+            .select("id, title, description, city, country, type_attributes")
+            .eq("tenant_id", tenant_id)
+            .eq("id", str(res[0]["property_id"]))
+            .limit(1)
+            .execute()
+        ).data or []
+        return (objekt[0] if objekt else None), status
 
     # --- Webhook (eingehend, kein JWT) -------------------------------------
     def ingest_webhook(self, payload: dict) -> dict:

@@ -153,7 +153,7 @@ def _konfiguration_pruefen(e: dict[str, str]) -> dict | None:
 def _token_pruefen() -> str | None:
     print("\n== 2. Anmeldung (IAM) ==")
     sys.path.insert(0, str(API))
-    from src.features.site_config.ki_client import (  # noqa: PLC0415
+    from src.core.ki import (  # noqa: PLC0415
         KiError,
         VertexClient,
     )
@@ -190,7 +190,7 @@ def _endpunkt_pruefen(e: dict[str, str]) -> None:
 def _testaufruf() -> None:
     print("\n== 4. Testaufruf ==")
     sys.path.insert(0, str(API))
-    from src.features.site_config.ki_client import (  # noqa: PLC0415
+    from src.core.ki import (  # noqa: PLC0415
         KiError,
         VertexClient,
     )

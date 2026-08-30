@@ -349,13 +349,28 @@ export async function renderForThread(
 }
 
 /**
- * KI-Antwortvorschlag aus Verlauf und Buchungskontext. `sources` nennt die
- * Wissensfakten, auf die er sich stützt — die Oberfläche zeigt sie, damit
- * niemand einen erfundenen Satz für belegt hält.
+ * KI-Antwortvorschlag aus Gästemappe, Kalender, Verlauf und Buchungskontext.
+ *
+ * Anbieter ist seit 29.08.2026 Vertex AI (Gemini) in europe-west4: im Prompt
+ * stehen Türcode, WLAN-Passwort, Anschrift und Gastname — diese Daten
+ * verlassen die EU nicht.
+ *
+ * `sources` nennt die Grundlagen, auf die sich der Vorschlag stützt — die
+ * Oberfläche zeigt sie, damit niemand einen erfundenen Satz für belegt hält.
+ * `fehlende_angabe` ist gesetzt, wenn das Modell eine Wissenslücke gemeldet
+ * hat; `eskaliert`, wenn es negativen Tenor erkannt hat (der Verlauf trägt das
+ * Merkmal dann bereits, hier steht nur, DASS es gesetzt wurde).
  */
+export type AiReplyResponse = {
+  reply: string;
+  sources: string[];
+  fehlende_angabe: string | null;
+  eskaliert: boolean;
+};
+
 export async function getAiReply(
   threadId: string,
-): Promise<Result<{ reply: string; sources: string[] }>> {
+): Promise<Result<AiReplyResponse>> {
   return call(`/inbox/${threadId}/ai-reply`, { method: "POST", body: {} });
 }
 
@@ -594,15 +609,47 @@ export async function deleteTemplate(id: string): Promise<Result<void>> {
   return call(`/inbox/templates/${id}`, { method: "DELETE" });
 }
 
-/** Ein Wissensfakt für die KI-Antworten. `property_id = null` gilt betriebsweit. */
+/** Die Kategorien der Wissensdatenbank (0496) — dieselbe Liste wie im Server
+ *  (`ki_wissen.KATEGORIEN`) und im Dashboard. Sie ist ein Wert, kein Typ:
+ *  die App zeigt daraus eine Auswahl. */
+export const WISSEN_KATEGORIEN = [
+  "objekt",
+  "anreise",
+  "buchung",
+  "umgebung",
+  "stoerung",
+  "ausstattung",
+  "sonstiges",
+] as const;
+
+export type WissenKategorie = (typeof WISSEN_KATEGORIEN)[number];
+
+/** Ein Wissensfakt für die KI-Antworten. `property_id = null` gilt betriebsweit.
+ *
+ *  `titel` ist bei Altbestand aus 0260 leer — dann zeigt die Oberfläche den
+ *  Textanfang, nie einen erfundenen Ersatztitel (Wurzel 4). */
 export type KnowledgeFact = {
   id: string;
   property_id: string | null;
   property_title: string | null;
+  titel: string | null;
   fact: string;
+  kategorie: WissenKategorie;
   source: "manual" | "document" | "message";
   source_ref: string | null;
+  quelle_id: string | null;
+  quelle_datei: string | null;
+  created_at: string | null;
   updated_at: string | null;
+};
+
+/** Was beim Anlegen/Ändern geschickt wird — deckungsgleich mit
+ *  `KnowledgeFactUpsert` im Server. */
+export type KnowledgeFactUpsert = {
+  property_id: string | null;
+  titel?: string | null;
+  fact: string;
+  kategorie?: WissenKategorie;
 };
 
 export async function listKnowledge(
@@ -612,16 +659,15 @@ export async function listKnowledge(
   return call(`/inbox/knowledge${q}`);
 }
 
-export async function createKnowledge(input: {
-  property_id: string | null;
-  fact: string;
-}): Promise<Result<KnowledgeFact>> {
+export async function createKnowledge(
+  input: KnowledgeFactUpsert,
+): Promise<Result<KnowledgeFact>> {
   return call("/inbox/knowledge", { method: "POST", body: input });
 }
 
 export async function updateKnowledge(
   id: string,
-  input: { property_id: string | null; fact: string },
+  input: KnowledgeFactUpsert,
 ): Promise<Result<KnowledgeFact>> {
   return call(`/inbox/knowledge/${id}`, { method: "PUT", body: input });
 }
@@ -638,6 +684,9 @@ export type AiSettings = {
   signature: string | null;
   extra_prompt: string | null;
   auto_suggest: boolean;
+  /** Wie lang die KI antwortet (0497). Die App liest das nur — gestellt wird
+   *  es im Dashboard, wo auch die Vorschau danebensteht. */
+  antwortlaenge: "kurz" | "standard" | "ausfuehrlich";
 };
 
 export async function getAiSettings(): Promise<Result<AiSettings>> {
@@ -674,3 +723,42 @@ export async function listMessageLanguages(): Promise<
   return call("/inbox/languages");
 }
 
+// --- Eskalation (0498) -------------------------------------------------------
+// Ein Verlauf ist eskaliert, wenn das Modell negativen Tenor erkannt hat
+// („stimmung") oder eine Regel des Betriebs es verlangt („regel"). Für die
+// Anzeige derselbe Kasten, für die Diagnose ein Unterschied.
+//
+// Warum das auf dem Telefon steht: die Eskalation ist genau der Fall, in dem
+// jemand SOFORT hinsehen soll — sie erreicht den Betrieb per Push. Ein
+// Hinweis, dessen Ziel nur am Schreibtisch erreichbar ist, kommt zu spät.
+
+export type KiEskalation = {
+  id: string;
+  thread_id: string;
+  quelle: "inbox" | "whatsapp";
+  ausloeser: "stimmung" | "regel";
+  regel_id: string | null;
+  grund: string;
+  nachricht_auszug: string | null;
+  created_at: string | null;
+};
+
+/** Alle OFFENEN Eskalationen, neueste zuerst. Es gibt bewusst keinen Endpunkt
+ *  für eine einzelne: je Verlauf ist höchstens eine offen (unique index), und
+ *  die Liste ist kurz. */
+export async function listKiEskalationen(): Promise<
+  Result<{ items: KiEskalation[]; total: number }>
+> {
+  return call("/inbox/ki-eskalationen");
+}
+
+/** Die Eskalation zurücknehmen. Nur ein MENSCH kann das — der Takt darf es
+ *  nicht, sonst erledigt sich der Hinweis selbst und niemand hat hingesehen. */
+export async function eskalationErledigen(
+  threadId: string,
+): Promise<Result<void>> {
+  return call(`/inbox/ki-eskalationen/${threadId}/erledigt`, {
+    method: "POST",
+    body: {},
+  });
+}

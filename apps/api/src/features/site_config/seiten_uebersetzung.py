@@ -60,10 +60,10 @@ from datetime import UTC, datetime
 from pydantic import BaseModel, Field
 from supabase import Client
 
+from src.core.ki import KiAntwort, KiError, VertexClient
 from src.core.logging import get_logger
 
 from .fehler import SiteConfigError
-from .ki_client import KiAntwort, KiError, VertexClient
 from .ki_profil import KiProfil
 from .ki_texte import (
     ohne_umrandung,

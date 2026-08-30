@@ -6,12 +6,14 @@ es ist eine reine Verschiebung.
 """
 from supabase import Client
 
+from src.core.ki import KiError
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.features.site_config.ki_nutzung import buchen, deckel_pruefen
 
-from .ai import GroqClient, GroqError
 from .errors import InboxError
 from .felder import html_zu_text, unbekannte_felder
+from .ki_antwort import FUNKTION, markierungen_trennen, vorschlag_erzeugen
 from .schemas import (
     AiReplyResponse,
     AiSettings,
@@ -31,11 +33,15 @@ class VorlagenMixin:
 
     # Vom Service gestellt (das Mixin steht nie allein).
     _db: Client | None
-    _groq: GroqClient
 
     def ai_reply(self, ctx: AuthContext, thread_id: str) -> AiReplyResponse:
-        """KI-Antwortvorschlag aus Gast-Nachrichten, Buchungskontext und den
-        Fakten der Wissensdatenbank (Groq)."""
+        """KI-Antwortvorschlag aus Verlauf, Buchung, Gästemappe und Kalender.
+
+        Der Kontext kommt aus `ki_kontext.kontext_bauen` — dieselbe Quelle wie
+        beim WhatsApp-Pfad. Vorher las jeder Pfad seine eigene, auf die Fakten
+        der Wissensdatenbank beschränkte Auswahl; die Gästemappe (live 700.628
+        Zeichen) erreichte das Modell nie.
+        """
         db, tenant_id = self._require(ctx)
         # Verlauf laden (best effort, inkl. Sandbox-Mock) + Reservierungskontext.
         history: list[InboxMessage] = []
@@ -43,24 +49,108 @@ class VorlagenMixin:
             history = self.get_messages(ctx, thread_id).items
         except InboxError as exc:
             log.warning("inbox_ai_history_failed", error=exc.message)
+        # `get_reservation_detail` läuft durch die Gast-Maske: ein Mitarbeiter
+        # ohne VIEW_GUEST_NAME sieht auch hier nur den Vornamen. Der KI-Knopf
+        # ist damit kein Weg um die Berechtigungsprüfung herum (Wurzel 3).
         detail = self.get_reservation_detail(ctx, thread_id)
         settings = self.get_ai_settings(ctx)
         row = self._load_thread(db, tenant_id, thread_id)
-        wissen = self._wissen_fuer_thread(db, tenant_id, row)
+        prop = self._property_for_thread(db, tenant_id, row)
+
+        regeln = self.regeln_fuer_thread(
+            db, tenant_id, str(prop["id"]) if prop and prop.get("id") else None
+        )
 
         try:
-            reply = GroqClient().suggest_reply(
-                history=history,
-                reservation=detail,
-                settings=settings,
-                knowledge=wissen,
+            # VOR dem Aufruf: der Deckel soll den bezahlten Aufruf verhindern,
+            # nicht ihn nachträglich beklagen.
+            deckel_pruefen(db, tenant_id)
+            vorschlag = vorschlag_erzeugen(
+                db,
+                tenant_id,
+                prop=prop,
+                verlauf=history,
+                reservierung=detail,
+                einstellungen=settings,
+                regeln=regeln,
             )
-        except GroqError as exc:
+        except KiError as exc:
             raise InboxError(exc.message, status_code=exc.status_code) from exc
+        buchen(
+            db,
+            tenant_id,
+            user_id=ctx.user_id,
+            funktion=FUNKTION,
+            antwort=vorschlag.antwort,
+        )
+        # Dieser Weg SENDET nicht — er zeigt einen Vorschlag. Die Zustellart
+        # wird trotzdem ermittelt und protokolliert, weil sie beantwortet, was
+        # beim automatischen Lauf passiert WÄRE: der Betrieb sieht am Entwurf,
+        # ob eine Regel griff und ob eine Sperre zugeschlagen hat.
+        # Die Zustellart interessiert hier nur als BEGRÜNDUNG (`grund`): auf
+        # diesem Weg bleibt es immer ein Entwurf, weil ein Mensch den Knopf
+        # gedrückt hat. Wert wird sie erst im automatischen Lauf.
+        _zustellart, grund, regel = self.zustellart_entscheiden(
+            regeln, vorschlag.frage, settings.autoantwort_aktiv
+        )
+        # Die zwei Markierungszeilen entfernen, BEVOR der Text irgendwohin
+        # geht. Der Mitarbeiter darf „[FEHLENDE ANGABE: …]" nicht versehentlich
+        # an einen Gast weiterschicken.
+        text, luecke, stimmung = markierungen_trennen(vorschlag.text)
+
+        # Negativer Tenor: den Verlauf markieren (11b). Der Vorschlag bleibt
+        # bestehen — hier hat ein Mensch den Knopf gedrückt und liest ohnehin
+        # mit; die Markierung ist für die Liste und die Ansicht „Eskaliert".
+        if stimmung:
+            self.eskalation_setzen(
+                db,
+                tenant_id,
+                thread_id=thread_id,
+                quelle="inbox",
+                ausloeser="stimmung",
+                grund=stimmung,
+                nachricht_auszug=vorschlag.frage,
+                property_id=str(prop["id"]) if prop and prop.get("id") else None,
+                # Auf DIESEM Weg keine Meldung: der Mitarbeiter steht davor.
+                # Eine Mail an ihn selbst wäre Lärm.
+                benachrichtigen=False,
+            )
+
+        self.protokollieren(
+            db,
+            tenant_id,
+            thread_id=thread_id,
+            quelle="inbox",
+            regel_id=str(regel["id"]) if regel else None,
+            frage=vorschlag.frage,
+            antwort=text,
+            # Auf diesem Weg ist es IMMER ein Entwurf: ein Mensch hat den Knopf
+            # gedrückt und liest, was herauskommt.
+            zustellart="entwurf",
+            gesendet=False,
+            quellen=vorschlag.quellen,
+            weggelassen=vorschlag.kontext.weggelassen,
+            grund=grund,
+            eskaliert=bool(stimmung),
+            modell=vorschlag.antwort.modell,
+            region=vorschlag.antwort.region,
+            tokens_ein=vorschlag.antwort.tokens_ein,
+            tokens_aus=vorschlag.antwort.tokens_aus,
+        )
         # `sources` weist aus, worauf die Antwort fußen konnte — sonst ist für
-        # den Mitarbeiter nicht unterscheidbar, ob ein Detail aus der
-        # Wissensdatenbank stammt oder das Modell es sich zurechtgelegt hat.
-        return AiReplyResponse(reply=reply, sources=wissen)
+        # den Mitarbeiter nicht unterscheidbar, ob ein Detail aus einer echten
+        # Quelle stammt oder das Modell es sich zurechtgelegt hat. Weggelassene
+        # Abschnitte stehen mit dabei: sie erklären eine unvollständige Antwort,
+        # die sonst wie ein Modellfehler aussieht.
+        hinweise = list(vorschlag.kontext.weggelassen)
+        if grund:
+            hinweise.append(f"Nicht automatisch: {grund}")
+        return AiReplyResponse(
+            reply=text,
+            sources=vorschlag.quellen + hinweise,
+            fehlende_angabe=luecke,
+            eskaliert=bool(stimmung),
+        )
 
     # -- Vorlagen --------------------------------------------------------------
     @staticmethod
@@ -305,7 +395,11 @@ class VorlagenMixin:
         db, tenant_id = self._require(ctx)
         res = (
             db.table("inbox_ai_settings")
-            .select("tone, language, signature, extra_prompt, auto_suggest")
+            .select(
+                "tone, language, signature, extra_prompt, auto_suggest, "
+                "autoantwort_aktiv, autoantwort_verzoegerung_minuten, "
+                "antwortlaenge"
+            )
             .eq("tenant_id", tenant_id)
             .limit(1)
             .execute()

@@ -17,7 +17,6 @@ import { useTranslations } from "next-intl";
 
 type ConfigTab =
   | "tabAiReplies"
-  | "tabKnowledge"
   | "tabTemplates"
   | "tabWhatsAppTemplates"
   | "tabAutomations";
@@ -33,7 +32,6 @@ export function ManageTab({ onOpenTab }: { onOpenTab: (tab: ConfigTab) => void }
     { icon: "ph:note", key: "tabTemplates", desc: "manageTemplatesDesc" },
     { icon: "ph:sparkle", key: "tabAiReplies", desc: "manageAiDesc" },
     { icon: "ph:lightning", key: "tabAutomations", desc: "manageAutoDesc" },
-    { icon: "ph:brain", key: "tabKnowledge", desc: "manageKnowledgeDesc" },
     // Getrennt von "Vorlagen": das hier sind Metas geprüfte Vorlagen, nicht die
     // eigenen Textbausteine. Wer sie zusammenwirft, wundert sich spaeter, warum
     // ein selbst geschriebener Text ausserhalb des 24-Stunden-Fensters nicht

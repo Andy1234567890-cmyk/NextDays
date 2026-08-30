@@ -25,11 +25,10 @@ import {
 import { useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 
-import { AiSettingsTab } from "@/components/inbox/ai-settings-tab";
+import { KiSeite } from "@/components/inbox/ki-seite";
 import { AutomationsTab } from "@/components/inbox/automations-tab";
 import { AutomatisierenPanel } from "@/components/inbox/automatisieren-panel";
 import { ManageTab } from "@/components/inbox/manage-tab";
-import { WissenTab } from "@/components/inbox/wissen-tab";
 import { TemplatesTab } from "@/components/inbox/templates-tab";
 import { WhatsAppVorlagen } from "@/components/inbox/whatsapp-vorlagen";
 import {
@@ -63,6 +62,7 @@ import {
   type InboxStatus,
   type InboxThread,
   listInboxThreads,
+  listKiEskalationen,
   setInboxStatus,
   updateThreadFlags,
 } from "@/lib/inbox";
@@ -73,13 +73,16 @@ import {
   listWhatsAppConversations,
 } from "@/lib/whatsapp-api";
 
+// „KI-Antworten" ist EIN Reiter, nicht drei. Allgemein, Regeln und
+// Wissensdatenbank stehen darunter (`ki-seite.tsx`) — als gleichrangige Reiter
+// hier verbargen sie den Zusammenhang: wer die Wissensdatenbank pflegt, tut es
+// FÜR die KI-Antwort, und den grossen Schalter fand man nur im ersten der drei.
 type TabKey =
   | "tabInbox"
   | "tabAiReplies"
   | "tabTemplates"
   | "tabWhatsAppTemplates"
   | "tabAutomations"
-  | "tabKnowledge"
   | "tabManage";
 
 export function InboxList({
@@ -134,6 +137,12 @@ export function InboxList({
   const [newWaPhone, setNewWaPhone] = useState("");
   // Ansicht: Aktiv | Archiv | Papierkorb.
   const [view, setView] = useState<InboxStatus>("active");
+  // „Eskaliert" ist KEIN InboxStatus, sondern ein Filter über der aktiven
+  // Ansicht: ein eskalierter Verlauf ist weiterhin aktiv, er braucht nur
+  // Aufmerksamkeit. Als vierter Status hätte er die Zeile aus „Aktiv"
+  // verschwinden lassen — und dort sucht sie jeder.
+  const [nurEskaliert, setNurEskaliert] = useState(false);
+  const [eskalierteIds, setEskalierteIds] = useState<Set<string>>(new Set());
   // WhatsApp-Verlauf UNTER dem OTA-Verlauf desselben Gastes (aus der
   // Gästekarte geöffnet). Bewusst kein Thread-Wechsel: Buchung und
   // WhatsApp-Chat gehören zusammen und sollen zusammen sichtbar bleiben.
@@ -223,6 +232,14 @@ export function InboxList({
   ).map(([value, label]) => ({ value, label }));
 
   const lc = (s: string | null) => (s ?? "").toLowerCase();
+  useEffect(() => {
+    // EIN Aufruf für die ganze Liste statt einer je Zeile: bei 50 Zeilen wären
+    // das 50 Abfragen für ein Abzeichen.
+    void listKiEskalationen().then((res) => {
+      if (res.ok) setEskalierteIds(new Set(res.data.items.map((e) => e.thread_id)));
+    });
+  }, []);
+
   const gefiltert = rows.filter((th) => {
     if (onlyUnassigned && th.assigned_user_id) return false;
     if (!lc(th.guest_name).includes(query.trim().toLowerCase())) return false;
@@ -238,6 +255,7 @@ export function InboxList({
     if (fRead === "read" && !th.is_read) return false;
     if (fFrom && (!th.arrival_date || th.arrival_date < fFrom)) return false;
     if (fTo && (!th.arrival_date || th.arrival_date > fTo)) return false;
+    if (nurEskaliert && !eskalierteIds.has(th.id)) return false;
     return true;
   });
   // Sortierung wie bei Hostaway wählbar: nach letzter Aktivität (Standard),
@@ -382,7 +400,6 @@ export function InboxList({
     ...(access.canManageConfig
       ? ([
           "tabAiReplies",
-          "tabKnowledge",
           "tabTemplates",
           "tabWhatsAppTemplates",
           "tabAutomations",
@@ -460,11 +477,9 @@ export function InboxList({
       ) : tab === "tabWhatsAppTemplates" ? (
         <WhatsAppVorlagen />
       ) : tab === "tabAiReplies" ? (
-        <AiSettingsTab />
+        <KiSeite />
       ) : tab === "tabAutomations" ? (
         <AutomationsTab />
-      ) : tab === "tabKnowledge" ? (
-        <WissenTab />
       ) : tab === "tabManage" ? (
         <ManageTab onOpenTab={setTab} />
       ) : (
@@ -491,6 +506,7 @@ export function InboxList({
                     type="button"
                     onClick={() => {
                       setView(v.key);
+                      setNurEskaliert(false);
                       setActive(null);
                     }}
                     className={
@@ -511,6 +527,32 @@ export function InboxList({
                     )}
                   </button>
                 ))}
+                {/* „Eskaliert" steht neben den Ansichten, ist aber ein FILTER:
+                    ein eskalierter Verlauf bleibt aktiv, er braucht nur
+                    Aufmerksamkeit. Erscheint nur, wenn es welche gibt — ein
+                    dauerhaft leerer Knopf ist Lärm. */}
+                {eskalierteIds.size > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNurEskaliert((v) => !v);
+                      setView("active");
+                      setActive(null);
+                    }}
+                    className={
+                      "flex flex-1 items-center justify-center gap-1.5 rounded-full px-2 py-1.5 font-medium transition-colors " +
+                      (nurEskaliert
+                        ? "bg-destructive/10 text-destructive"
+                        : "text-muted-foreground hover:bg-muted/50")
+                    }
+                  >
+                    <Icon icon="ph:warning-circle" className="size-4" />
+                    {t("kiFilterEscalated")}
+                    <span className="rounded-full bg-destructive px-1.5 text-[0.65rem] font-bold text-destructive-foreground">
+                      {eskalierteIds.size}
+                    </span>
+                  </button>
+                )}
               </div>
 
               {/* Filterleiste */}
@@ -778,6 +820,22 @@ export function InboxList({
                               </span>
                               {th.is_starred && (
                                 <Icon icon="ph:star-fill" className="size-3.5 shrink-0 text-amber-500" />
+                              )}
+                              {/* Eskalation (0498): ein Punkt, kein Text —
+                                  in einer 3 rem hohen Zeile ist ein Abzeichen
+                                  mit Wort nicht unterzubringen, ohne den
+                                  Gastnamen zu verdrängen. Der Titel nennt es. */}
+                              {eskalierteIds.has(th.id) && (
+                                <span
+                                  className="shrink-0"
+                                  title={t("kiEscalatedBadge")}
+                                  aria-label={t("kiEscalatedBadge")}
+                                >
+                                  <Icon
+                                    icon="ph:warning-circle-fill"
+                                    className="size-3.5 text-destructive"
+                                  />
+                                </span>
                               )}
                             </span>
                             {/* Rechts steht der Wert, nach dem gerade sortiert

@@ -314,6 +314,13 @@ class AiReplyRequest(BaseModel):
 class AiReplyResponse(BaseModel):
     reply: str
     sources: list[str] = []
+    # Gesetzt, wenn das Modell eine Wissenslücke gemeldet hat. Die Oberfläche
+    # bietet daraufhin „der KI beibringen" an — der Punkt, an dem sich die
+    # Wissensdatenbank von selbst füllt.
+    fehlende_angabe: str | None = None
+    # Das Modell hat negativen Tenor erkannt (11b). Der Verlauf trägt dann ein
+    # Merkmal; hier steht nur, DASS es gesetzt wurde.
+    eskaliert: bool = False
 
 
 # --- Sprachen des Betriebs (0363) -------------------------------------------
@@ -474,7 +481,24 @@ class AiSettings(BaseModel):
     language: str = "auto"
     signature: str | None = None
     extra_prompt: str | None = None
+    # Ob die OBERFLÄCHE einen Vorschlag anbietet — nicht, ob die KI selbst
+    # antwortet. Die beiden zu vermengen hieße, dass ein Betrieb mit
+    # eingeschaltetem Vorschlag ungefragt automatisch antwortet.
     auto_suggest: bool = True
+
+    # Der große Schalter (0493). Vorgabe AUS: Autoantwort wird bewusst
+    # eingeschaltet, nie geerbt.
+    autoantwort_aktiv: bool = False
+    # Wartezeit vor dem automatischen Versand. Ihr Sinn ist nicht Rechenzeit,
+    # sondern der Mensch: in diesem Fenster kann ein Mitarbeiter selbst
+    # antworten, und dann wird die KI-Antwort verworfen.
+    autoantwort_verzoegerung_minuten: int = Field(default=5, ge=0, le=1440)
+
+    # Wie lang die KI antwortet (0497). Wirkt auf ZWEI Dinge: das Token-Budget
+    # des Vertex-Aufrufs UND eine Zeile im System-Prompt. Nur das Budget zu
+    # senken genügt nicht — das Modell schreibt dann denselben langen Text und
+    # bricht mitten im Satz ab.
+    antwortlaenge: Literal["kurz", "standard", "ausfuehrlich"] = "standard"
 
 
 # --- Automatisierungen ------------------------------------------------------
@@ -638,20 +662,171 @@ class KnowledgeFact(BaseModel):
     # None = gilt für den ganzen Betrieb, sonst nur für dieses Objekt.
     property_id: str | None = None
     property_title: str | None = None
+    # None bei Altbestand aus 0260 — die Oberfläche zeigt dort den Textanfang.
+    titel: str | None = None
     fact: str
+    # objekt|anreise|buchung|umgebung|stoerung|ausstattung|sonstiges
+    kategorie: str = "sonstiges"
     source: str                      # manual | document | message
     source_ref: str | None = None    # Dateiname bzw. Thread, aus dem er stammt
+    quelle_id: str | None = None
+    # Dateiname der Herkunft — nur bei Fakten aus einem Dokument gesetzt.
+    quelle_datei: str | None = None
+    created_at: str | None = None
     updated_at: str | None = None
 
 
 class KnowledgeFactList(BaseModel):
     items: list[KnowledgeFact] = []
     total: int = 0
+    seite: int = 1
+    pro_seite: int = 20
 
 
 class KnowledgeFactUpsert(BaseModel):
     property_id: str | None = None
+    titel: str | None = None
     fact: str
+    kategorie: str = "sonstiges"
+
+
+class KiEskalation(BaseModel):
+    """Ein eskalierter Verlauf (0498).
+
+    `ausloeser` trennt die zwei Wege: 'stimmung' hat das Modell erkannt,
+    'regel' hat der Betrieb selbst formuliert. Für die Anzeige derselbe Kasten,
+    für die Diagnose ein Unterschied."""
+
+    id: str
+    thread_id: str
+    quelle: Literal["inbox", "whatsapp"] = "inbox"
+    ausloeser: Literal["stimmung", "regel"] = "stimmung"
+    regel_id: str | None = None
+    grund: str
+    nachricht_auszug: str | None = None
+    created_at: str | None = None
+
+
+class KiEskalationList(BaseModel):
+    items: list[KiEskalation] = []
+    total: int = 0
+
+
+class KiKontextAbschnitt(BaseModel):
+    """Ein Abschnitt des Kontext-Panels — der TEXT, der in den Prompt geht.
+
+    Keine Beschreibung dessen, was drinsteht, sondern der Inhalt selbst. Ohne
+    ihn ist eine falsche Antwort nicht diagnostizierbar: man rät, ob ein Fakt
+    fehlte, ein Abschnitt nicht ausgewählt wurde oder das Modell sich etwas
+    zurechtgelegt hat."""
+
+    titel: str
+    inhalt: str
+    quelle: str
+    zeichen: int = 0
+
+
+class KiKontextAntwort(BaseModel):
+    abschnitte: list[KiKontextAbschnitt] = []
+    quellen: list[str] = []
+    # Was NICHT mitkam und warum — gekürzt, kein Platz mehr, oder gesperrt.
+    # Ein gesperrter Abschnitt erscheint hier ausdrücklich: sonst sucht jemand
+    # den Fehler in der Gästemappe, wo gar keiner ist.
+    weggelassen: list[str] = []
+    zugang_gesperrt: bool = False
+    zeichen: int = 0
+    max_zeichen: int = 0
+
+
+class KiTestFrage(BaseModel):
+    """Eine Testfrage an die KI. Es wird NICHTS gesendet."""
+
+    property_id: str | None = None
+    frage: str = Field(min_length=1, max_length=1500)
+    # Der bisherige Testverlauf, damit mehrere Fragen aufeinander aufbauen —
+    # wie im Ernstfall. Gedeckelt (Wurzel 8).
+    verlauf: list[str] = Field(default_factory=list, max_length=20)
+
+
+class KiTestAntwort(BaseModel):
+    antwort: str
+    kontext: KiKontextAntwort
+    # Was im ERNSTFALL passiert wäre: welche Regel griff, welche Zustellart,
+    # ob eine Sperre zuschlug. Das ist der Sinn des Tests — nicht der Text.
+    zustellart: Literal["entwurf", "automatisch"]
+    # None heisst: es wurde NICHTS verhindert. `zustellart_entscheiden` setzt
+    # den Grund nur, wenn eine automatische Zustellung unterbunden wurde —
+    # „automatisch, kein Grund" ist der Normalfall und kein leerer String.
+    grund: str | None = None
+    regel_name: str | None = None
+    # Gesetzt, wenn die Antwort eine Wissenslücke meldet: dann steht hier, was
+    # fehlt, und die Oberfläche bietet „der KI beibringen" an.
+    fehlende_angabe: str | None = None
+
+
+class WissenImportVorschlag(BaseModel):
+    """Ein Faktenvorschlag aus einem Dokument — noch NICHT gespeichert.
+
+    Der Import ist zweistufig: die Vorschläge gehen an die Oberfläche, ein
+    Mensch wählt aus, erst dann entstehen Fakten. Ein Dokument, das ungeprüft
+    einfliesst, macht die KI zur Sprecherin eines Textes, den niemand gelesen
+    hat — samt veralteter Preise und alter Türcodes."""
+
+    titel: str | None = None
+    fact: str
+    kategorie: str = "sonstiges"
+    # 'betrag' | 'jahr' | None — wo das Dokument einen Preis oder eine
+    # Jahreszahl trägt, wird gewarnt: ein alter Preis in der Wissensdatenbank
+    # ist eine falsche Zusage und sieht aus wie eine richtige.
+    warnung: str | None = None
+
+
+class WissenImportVorschau(BaseModel):
+    """Was das Dokument hergab. Die Vorschläge werden NICHT zwischengespeichert
+    — sie kommen mit dem Übernehmen zurück. Eine Zwischentabelle wäre ein
+    weiterer Zustand mit eigenem Gegenzustand (verwaiste Vorschläge, die
+    niemand aufräumt)."""
+
+    quelle_id: str
+    datei_name: str
+    items: list[WissenImportVorschlag] = []
+
+
+class WissenImportUebernehmen(BaseModel):
+    quelle_id: str
+    property_id: str | None = None
+    items: list[WissenImportVorschlag] = []
+
+
+class KnowledgeBulkDelete(BaseModel):
+    """Sammellöschen aus der Mehrfachauswahl der Faktenliste."""
+
+    ids: list[str] = []
+
+
+class WissenObjekt(BaseModel):
+    """Eine Zeile der Objektliste (Ebene 1 der Wissensdatenbank).
+
+    `fakten` ist die eigentliche Botschaft dieser Ansicht: sie zeigt auf einen
+    Blick, welche Objekte gepflegt sind."""
+
+    property_id: str
+    titel: str
+    ort: str | None = None
+    foto_url: str | None = None
+    fakten: int = 0
+    geaendert_at: str | None = None
+
+
+class WissenObjektListe(BaseModel):
+    items: list[WissenObjekt] = []
+    total: int = 0
+    seite: int = 1
+    pro_seite: int = 20
+    # Die Fakten ohne Objektbezug — in der Oberfläche eine eigene Zeile ganz
+    # oben. Ohne sie wären betriebsweite Fakten unerreichbar.
+    betriebsweit_fakten: int = 0
+    betriebsweit_geaendert_at: str | None = None
 
 
 # --- Massenaktualisierung ----------------------------------------------------
@@ -722,3 +897,76 @@ class NachrichtenKennzahlen(BaseModel):
     # bekommt statt sie nur zu vermuten.
     zeitraum: str
     tage: int
+
+
+# --- KI-Regeln (0493) -------------------------------------------------------
+# Eine Regel sagt der KI, WAS sie zu einem Thema tun soll und WIE das Ergebnis
+# zugestellt wird. „Die KI darf X beantworten" heisst konkret: für X gibt es
+# eine aktive Regel mit `zustellart='automatisch'`.
+#
+# Ton, Sprache und Signatur sind bewusst KEINE Regeln, sondern stehen in
+# `AiSettings`: als Regel formuliert würden sie auf jede Nachricht passen und
+# damit die Zustell-Logik aushebeln (eine „Ton"-Regel mit `automatisch` machte
+# den ganzen Posteingang automatisch).
+class KiRegel(BaseModel):
+    id: str
+    name: str
+    aktiv: bool = True
+    gilt_fuer: Literal["alle", "auswahl"] = "alle"
+    zustellart: Literal["entwurf", "automatisch"] = "entwurf"
+    anweisung: str
+    ist_eskalation: bool = False
+    # Zwei getrennte Schalter statt einem (0497): „im Posteingang melden"
+    # markiert den Thread, „benachrichtigen" schickt zusätzlich E-Mail/Push.
+    # Wer jede Beschwerde als Mail will, ist ein anderer Betrieb als wer sie
+    # beim nächsten Blick sehen will.
+    eskalation_posteingang: bool = True
+    benachrichtigen: bool = False
+    property_ids: list[str] = []
+    verwendet_zaehler: int = 0
+    zuletzt_verwendet_at: str | None = None
+
+
+class KiRegelUpsert(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    aktiv: bool = True
+    gilt_fuer: Literal["alle", "auswahl"] = "alle"
+    # Vorgabe `entwurf`, auch hier: wer eine Regel anlegt, ohne die Zustellart
+    # zu nennen, bekommt die vorsichtige — nicht die, die selbständig sendet.
+    zustellart: Literal["entwurf", "automatisch"] = "entwurf"
+    anweisung: str = Field(min_length=1, max_length=2000)
+    ist_eskalation: bool = False
+    eskalation_posteingang: bool = True
+    benachrichtigen: bool = False
+    # Nur bei `gilt_fuer='auswahl'` von Belang; der Service prüft, dass jedes
+    # Objekt dem Betrieb gehört (Wurzel 3).
+    property_ids: list[str] = []
+
+
+class KiRegelList(BaseModel):
+    items: list[KiRegel]
+    total: int
+
+
+class KiProtokollEintrag(BaseModel):
+    """Was die KI getan hat — die Spur, ohne die nichts diagnostizierbar ist."""
+
+    id: str
+    thread_id: str
+    quelle: Literal["inbox", "whatsapp"]
+    regel_id: str | None = None
+    regel_name: str | None = None
+    frage_auszug: str | None = None
+    antwort: str | None = None
+    zustellart: Literal["entwurf", "automatisch"]
+    gesendet_at: str | None = None
+    quellen: list[str] = []
+    weggelassen: list[str] = []
+    eskaliert: bool = False
+    grund: str | None = None
+    created_at: str | None = None
+
+
+class KiProtokollList(BaseModel):
+    items: list[KiProtokollEintrag]
+    total: int

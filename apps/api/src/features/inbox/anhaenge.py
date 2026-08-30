@@ -1,14 +1,16 @@
-"""Anhänge und KI-Wissensdatenbank des Posteingangs.
+"""Anhänge des Posteingangs.
 
 Aus `service.py` herausgelöst (Grenze `too-many-lines`), gleiches Muster wie
 `planung.py`: ein **Mixin**, damit Methodennamen und Aufrufstellen unverändert
 bleiben.
 
-Beide Bereiche teilen die Eigenschaft, die ihren gemeinsamen Zuschnitt erklärt:
-sie tragen die heiklen Daten des Slices. Am Anhang hängt das PDF mit dem
-Türcode, in der Wissensdatenbank steht das WLAN-Passwort. Beide Tabellen sind
-deshalb für anon/authenticated gesperrt (0259/0260) und ausschließlich über
-diesen Server erreichbar.
+Am Anhang hängt das PDF mit dem Türcode; `inbox_attachment` ist deshalb für
+anon/authenticated gesperrt (0259) und ausschließlich über diesen Server
+erreichbar.
+
+Die Wissensdatenbank lag bis 0496 ebenfalls hier. Sie ist mit der eigenen
+Oberfläche (zwei Ebenen, Suche, Filter, Herkunft) zu groß dafür geworden und
+steht jetzt in `ki_wissen.py`.
 """
 from __future__ import annotations
 
@@ -25,20 +27,9 @@ from src.core.security import AuthContext
 from src.features.channel_manager.channex_client import ChannexError
 
 from .errors import InboxError
-from .schemas import (
-    Attachment,
-    AttachmentList,
-    KnowledgeFact,
-    KnowledgeFactList,
-    KnowledgeFactUpsert,
-)
+from .schemas import Attachment, AttachmentList
 
 log = get_logger("nextdays.inbox")
-
-# Obergrenze für die Fakten im KI-Prompt. Ohne Deckel wächst der Prompt mit der
-# Wissensdatenbank, bis das Modell-Limit reißt oder die Kosten davonlaufen
-# (Wurzel 8 — jeder unbegrenzte Bereich bekommt eine harte Grenze).
-_WISSEN_MAX = 60
 
 # Anhänge: Obergrenze, Bucket, Gültigkeit der signierten URL.
 _ANHANG_MAX_BYTES = 10 * 1024 * 1024
@@ -46,8 +37,8 @@ _ANHANG_BUCKET = "inbox-attachments"
 _ANHANG_URL_TTL = 3600
 
 
-class AnhangWissenMixin:
-    """Anhänge + Wissensdatenbank. Teil von `InboxService`."""
+class AnhangMixin:
+    """Anhänge. Teil von `InboxService`."""
 
     # Vom Service gestellt; hier nur deklariert, damit die Typprüfung die
     # Zugriffe kennt. pylint behandelt `*Mixin` gesondert.
@@ -238,134 +229,3 @@ class AnhangWissenMixin:
         db.table("inbox_attachment").delete().eq("tenant_id", tenant_id).eq(
             "id", attachment_id
         ).execute()
-
-    # -- KI-Wissensdatenbank ---------------------------------------------------
-    _FACT_COLS = "id, property_id, fact, source, source_ref, updated_at"
-
-    def _fact_row(self, r: dict, titel: dict[str, str]) -> KnowledgeFact:
-        pid = str(r["property_id"]) if r.get("property_id") else None
-        return KnowledgeFact(
-            id=str(r["id"]),
-            property_id=pid,
-            property_title=titel.get(pid or ""),
-            fact=r.get("fact") or "",
-            source=r.get("source") or "manual",
-            source_ref=r.get("source_ref"),
-            updated_at=r.get("updated_at"),
-        )
-
-    def _property_titel(self, db: Client, tenant_id: str) -> dict[str, str]:
-        rows = (
-            db.table("properties")
-            .select("id, title")
-            .eq("tenant_id", tenant_id)
-            .execute()
-        ).data or []
-        return {str(r["id"]): r.get("title") or "" for r in rows}
-
-    def list_knowledge(
-        self, ctx: AuthContext, *, property_id: str | None = None
-    ) -> KnowledgeFactList:
-        """Fakten des Betriebs. `property_id` filtert auf ein Objekt UND die
-        betriebsweiten Fakten — beim Beantworten gelten beide zusammen."""
-        db, tenant_id = self._require(ctx)
-        q = (
-            db.table("inbox_knowledge_fact")
-            .select(self._FACT_COLS)
-            .eq("tenant_id", tenant_id)
-        )
-        if property_id:
-            q = q.or_(f"property_id.eq.{property_id},property_id.is.null")
-        rows = q.order("updated_at", desc=True).limit(500).execute().data or []
-        titel = self._property_titel(db, tenant_id)
-        items = [self._fact_row(r, titel) for r in rows]
-        return KnowledgeFactList(items=items, total=len(items))
-
-    def _own_property(self, db: Client, tenant_id: str, property_id: str) -> None:
-        """Objekt-Zugehörigkeit erzwingen (Wurzel 3): ohne diese Prüfung ließe
-        sich ein Fakt an ein fremdes Objekt hängen — der Service-Role-Key umgeht
-        RLS."""
-        rows = (
-            db.table("properties")
-            .select("id")
-            .eq("tenant_id", tenant_id)
-            .eq("id", property_id)
-            .limit(1)
-            .execute()
-        ).data or []
-        if not rows:
-            raise InboxError("Objekt nicht gefunden.", status_code=404)
-
-    def create_knowledge(
-        self, ctx: AuthContext, req: KnowledgeFactUpsert, *, source: str = "manual",
-        source_ref: str | None = None,
-    ) -> KnowledgeFact:
-        db, tenant_id = self._require(ctx)
-        text = (req.fact or "").strip()
-        if not text:
-            raise InboxError("Der Fakt darf nicht leer sein.", status_code=422)
-        if len(text) > 2000:
-            raise InboxError("Der Fakt ist zu lang (max. 2000 Zeichen).", status_code=422)
-        if req.property_id:
-            self._own_property(db, tenant_id, req.property_id)
-        ins = (
-            db.table("inbox_knowledge_fact")
-            .insert(
-                {
-                    "tenant_id": tenant_id,
-                    "property_id": req.property_id,
-                    "fact": text,
-                    "source": source,
-                    "source_ref": source_ref,
-                    "created_by": ctx.user_id if ctx.user_id != "cron" else None,
-                }
-            )
-            .execute()
-        ).data
-        return self._fact_row(ins[0], self._property_titel(db, tenant_id))
-
-    def update_knowledge(
-        self, ctx: AuthContext, fact_id: str, req: KnowledgeFactUpsert
-    ) -> KnowledgeFact:
-        db, tenant_id = self._require(ctx)
-        text = (req.fact or "").strip()
-        if not text:
-            raise InboxError("Der Fakt darf nicht leer sein.", status_code=422)
-        if req.property_id:
-            self._own_property(db, tenant_id, req.property_id)
-        upd = (
-            db.table("inbox_knowledge_fact")
-            .update({"fact": text, "property_id": req.property_id})
-            .eq("tenant_id", tenant_id)
-            .eq("id", fact_id)
-            .execute()
-        ).data
-        if not upd:
-            raise InboxError("Fakt nicht gefunden.", status_code=404)
-        return self._fact_row(upd[0], self._property_titel(db, tenant_id))
-
-    def delete_knowledge(self, ctx: AuthContext, fact_id: str) -> None:
-        db, tenant_id = self._require(ctx)
-        db.table("inbox_knowledge_fact").delete().eq("tenant_id", tenant_id).eq(
-            "id", fact_id
-        ).execute()
-
-    def _wissen_fuer_thread(
-        self, db: Client, tenant_id: str, row: dict
-    ) -> list[str]:
-        """Fakten, die für DIESEN Thread gelten: betriebsweite plus die des
-        Objekts. Begrenzt, damit der Prompt nicht unbegrenzt wächst (Wurzel 8)."""
-        prop = self._property_for_thread(db, tenant_id, row)
-        pid = str(prop["id"]) if prop and prop.get("id") else None
-        q = (
-            db.table("inbox_knowledge_fact")
-            .select("fact, property_id")
-            .eq("tenant_id", tenant_id)
-        )
-        q = q.or_(f"property_id.eq.{pid},property_id.is.null") if pid else q.is_(
-            "property_id", "null"
-        )
-        rows = q.limit(_WISSEN_MAX).execute().data or []
-        # Objektbezogene Fakten zuerst: sie schlagen das Allgemeine.
-        rows.sort(key=lambda r: 0 if r.get("property_id") else 1)
-        return [str(r["fact"]).strip() for r in rows if (r.get("fact") or "").strip()]

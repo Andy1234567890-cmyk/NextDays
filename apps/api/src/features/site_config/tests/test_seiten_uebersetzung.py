@@ -9,9 +9,9 @@ from __future__ import annotations
 
 import pytest
 
+from src.core.ki import KiAntwort, KiError
 from src.features.site_config import seiten_uebersetzung as su
 from src.features.site_config.fehler import SiteConfigError
-from src.features.site_config.ki_client import KiAntwort, KiError
 
 from .test_site_config import _DB
 

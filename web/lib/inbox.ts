@@ -6,6 +6,10 @@
 import { getLocale } from "next-intl/server";
 
 import { ApiError, api } from "@/lib/api";
+// Werte (die sieben Kategorien, die drei Quellen) stehen in
+// `inbox-wissen-typen.ts`: eine "use server"-Datei darf nur async functions
+// exportieren, ein const-Array darin bricht den Build in „Collecting page data".
+import type { WissenKategorie, WissenQuelle } from "@/lib/inbox-wissen-typen";
 import type { Zeitraum } from "@/lib/reservations";
 import { currentToken } from "@/lib/session-token";
 import type {
@@ -384,11 +388,25 @@ export async function updateThreadFlags(
   return call<void>(`/${threadId}/flags`, { method: "PUT", body: input });
 }
 
-/** KI-Antwortvorschlag (Groq) aus Verlauf + Buchungskontext. */
+/** KI-Antwortvorschlag aus Gästemappe, Kalender, Verlauf und Buchungskontext.
+ *
+ *  Anbieter ist seit 29.08.2026 Vertex AI (Gemini) in europe-west4, nicht mehr
+ *  Groq: im Prompt stehen Türcode, WLAN-Passwort, Anschrift und Gastname —
+ *  diese Daten verlassen die EU nicht.
+ *
+ *  `fehlende_angabe` ist gesetzt, wenn das Modell eine Wissenslücke gemeldet
+ *  hat; `eskaliert`, wenn es negativen Tenor erkannt hat. */
+export type AiReplyResponse = {
+  reply: string;
+  sources: string[];
+  fehlende_angabe: string | null;
+  eskaliert: boolean;
+};
+
 export async function getAiReply(
   threadId: string,
-): Promise<Result<{ reply: string; sources: string[] }>> {
-  return call<{ reply: string; sources: string[] }>(`/${threadId}/ai-reply`, {
+): Promise<Result<AiReplyResponse>> {
+  return call<AiReplyResponse>(`/${threadId}/ai-reply`, {
     method: "POST",
     body: {},
   });
@@ -556,8 +574,105 @@ export type AiSettings = {
   language: string;
   signature: string | null;
   extra_prompt: string | null;
+  /** Ob die Oberfläche einen Vorschlag anbietet — NICHT, ob die KI selbst
+   *  antwortet. Das ist `autoantwort_aktiv`. */
   auto_suggest: boolean;
+  /** Der große Schalter (0493). Aus ist die Vorgabe: Autoantwort wird bewusst
+   *  eingeschaltet, nie geerbt. */
+  autoantwort_aktiv: boolean;
+  /** Wartezeit vor dem automatischen Versand. Ihr Sinn ist nicht Rechenzeit,
+   *  sondern der Mensch: in diesem Fenster kann ein Mitarbeiter zuvorkommen. */
+  autoantwort_verzoegerung_minuten: number;
+  /** Wie lang die KI antwortet (0497). Wirkt auf das Token-Budget UND auf eine
+   *  Zeile im System-Prompt — nur das Budget zu senken bricht den Satz ab. */
+  antwortlaenge: "kurz" | "standard" | "ausfuehrlich";
 };
+
+// --- KI-Regeln (0493) -------------------------------------------------------
+/** Was die KI zu einem Thema tun soll und wie das Ergebnis zugestellt wird.
+ *
+ *  „Die KI darf X beantworten" heißt konkret: für X gibt es eine aktive Regel
+ *  mit `zustellart: "automatisch"`. Ton, Sprache und Signatur sind bewusst
+ *  KEINE Regeln, sondern Einstellungen — als Regel formuliert würden sie auf
+ *  jede Nachricht passen und die Zustell-Logik aushebeln. */
+export type KiRegel = {
+  id: string;
+  name: string;
+  aktiv: boolean;
+  gilt_fuer: "alle" | "auswahl";
+  zustellart: "entwurf" | "automatisch";
+  anweisung: string;
+  /** Antwortet NICHT, sondern meldet. */
+  ist_eskalation: boolean;
+  /** Markiert den Thread sichtbar im Posteingang. Getrennt von
+   *  `benachrichtigen` (E-Mail/Push), weil „nur markieren" der häufigere Fall
+   *  ist — wer jede Beschwerde als Mail will, ist ein anderer Betrieb. */
+  eskalation_posteingang: boolean;
+  benachrichtigen: boolean;
+  property_ids: string[];
+  verwendet_zaehler: number;
+  zuletzt_verwendet_at: string | null;
+};
+
+export type KiRegelUpsert = Omit<
+  KiRegel,
+  "id" | "verwendet_zaehler" | "zuletzt_verwendet_at"
+>;
+
+export async function listKiRegeln(): Promise<
+  Result<{ items: KiRegel[]; total: number }>
+> {
+  return call<{ items: KiRegel[]; total: number }>("/ki-regeln");
+}
+
+export async function createKiRegel(
+  input: KiRegelUpsert,
+): Promise<Result<KiRegel>> {
+  return call<KiRegel>("/ki-regeln", { method: "POST", body: input });
+}
+
+export async function updateKiRegel(
+  id: string,
+  input: KiRegelUpsert,
+): Promise<Result<KiRegel>> {
+  return call<KiRegel>(`/ki-regeln/${id}`, { method: "PUT", body: input });
+}
+
+export async function deleteKiRegel(id: string): Promise<Result<void>> {
+  return call<void>(`/ki-regeln/${id}`, { method: "DELETE" });
+}
+
+/** Was die KI getan hat — die Spur zu einer falschen Antwort.
+ *
+ *  Ohne sie bliebe bei einem Fehler nur das Raten zwischen „Fakt fehlte",
+ *  „Regel griff nicht" und „Modell hat sich etwas zurechtgelegt". */
+export type KiProtokollEintrag = {
+  id: string;
+  thread_id: string;
+  quelle: "inbox" | "whatsapp";
+  regel_id: string | null;
+  regel_name: string | null;
+  frage_auszug: string | null;
+  antwort: string | null;
+  zustellart: "entwurf" | "automatisch";
+  gesendet_at: string | null;
+  quellen: string[];
+  weggelassen: string[];
+  eskaliert: boolean;
+  grund: string | null;
+  created_at: string | null;
+};
+
+export async function listKiProtokoll(
+  threadId?: string,
+  limit = 50,
+): Promise<Result<{ items: KiProtokollEintrag[]; total: number }>> {
+  const q = new URLSearchParams({ limit: String(limit) });
+  if (threadId) q.set("thread_id", threadId);
+  return call<{ items: KiProtokollEintrag[]; total: number }>(
+    `/ki-protokoll?${q.toString()}`,
+  );
+}
 
 export async function getAiSettings(): Promise<Result<AiSettings>> {
   return call<AiSettings>("/ai-settings");
@@ -719,35 +834,127 @@ export type KnowledgeFact = {
   /** null = gilt betriebsweit, sonst nur für dieses Objekt. */
   property_id: string | null;
   property_title: string | null;
+  /** null bei Altbestand aus 0260 — dann zeigt die Liste den Textanfang. */
+  titel: string | null;
   fact: string;
-  source: "manual" | "document" | "message";
+  kategorie: WissenKategorie;
+  source: WissenQuelle;
   source_ref: string | null;
+  quelle_id: string | null;
+  /** Dateiname der Herkunft, nur bei Fakten aus einem Dokument. */
+  quelle_datei: string | null;
+  created_at: string | null;
   updated_at: string | null;
 };
 
-export async function listKnowledge(
-  propertyId?: string,
-): Promise<Result<{ items: KnowledgeFact[]; total: number }>> {
-  const q = propertyId ? `?property_id=${encodeURIComponent(propertyId)}` : "";
-  return call<{ items: KnowledgeFact[]; total: number }>(`/knowledge${q}`);
+/** Eine Zeile der Objektliste (Ebene 1). `fakten` ist die Botschaft dieser
+ *  Ansicht: sie zeigt auf einen Blick, welche Objekte gepflegt sind. */
+export type WissenObjekt = {
+  property_id: string;
+  titel: string;
+  ort: string | null;
+  foto_url: string | null;
+  fakten: number;
+  geaendert_at: string | null;
+};
+
+export type WissenObjektListe = {
+  items: WissenObjekt[];
+  total: number;
+  seite: number;
+  pro_seite: number;
+  betriebsweit_fakten: number;
+  betriebsweit_geaendert_at: string | null;
+};
+
+export type WissenFilter = {
+  propertyId?: string;
+  /** true = NUR dieses Objekt. Ohne das Flag kommen die betriebsweiten mit —
+   *  so ruft der KI-Pfad auf, denn beim Beantworten gelten sie zusammen. */
+  nurDiesesObjekt?: boolean;
+  betriebsweit?: boolean;
+  suche?: string;
+  kategorien?: WissenKategorie[];
+  quellen?: WissenQuelle[];
+  sortierung?: "titel" | "kategorie" | "quelle" | "geaendert";
+  absteigend?: boolean;
+  seite?: number;
+  proSeite?: number;
+};
+
+export async function listWissenObjekte(input: {
+  suche?: string;
+  sortierung?: "objekt" | "ort" | "geaendert";
+  absteigend?: boolean;
+  seite?: number;
+  proSeite?: number;
+}): Promise<Result<WissenObjektListe>> {
+  const q = new URLSearchParams();
+  if (input.suche) q.set("suche", input.suche);
+  if (input.sortierung) q.set("sortierung", input.sortierung);
+  if (input.absteigend) q.set("absteigend", "true");
+  if (input.seite) q.set("seite", String(input.seite));
+  if (input.proSeite) q.set("pro_seite", String(input.proSeite));
+  const s = q.toString();
+  return call<WissenObjektListe>(`/knowledge/objekte${s ? `?${s}` : ""}`);
 }
 
-export async function createKnowledge(input: {
+export async function listKnowledge(
+  filter: WissenFilter | string = {},
+): Promise<Result<{ items: KnowledgeFact[]; total: number; seite: number; pro_seite: number }>> {
+  // Ein blosser String bleibt erlaubt: der KI-Pfad ruft weiter mit der
+  // Objekt-ID auf und will dort ausdrücklich die betriebsweiten Fakten mit.
+  const f: WissenFilter = typeof filter === "string" ? { propertyId: filter } : filter;
+  const q = new URLSearchParams();
+  if (f.propertyId) q.set("property_id", f.propertyId);
+  if (f.nurDiesesObjekt) q.set("nur_dieses_objekt", "true");
+  if (f.betriebsweit) q.set("betriebsweit", "true");
+  if (f.suche) q.set("suche", f.suche);
+  for (const k of f.kategorien ?? []) q.append("kategorie", k);
+  for (const s of f.quellen ?? []) q.append("quelle", s);
+  if (f.sortierung) q.set("sortierung", f.sortierung);
+  if (f.absteigend === false) q.set("absteigend", "false");
+  if (f.seite) q.set("seite", String(f.seite));
+  if (f.proSeite) q.set("pro_seite", String(f.proSeite));
+  const s = q.toString();
+  return call<{ items: KnowledgeFact[]; total: number; seite: number; pro_seite: number }>(
+    `/knowledge${s ? `?${s}` : ""}`,
+  );
+}
+
+export type KnowledgeFactInput = {
   property_id: string | null;
+  titel: string | null;
   fact: string;
-}): Promise<Result<KnowledgeFact>> {
+  kategorie: WissenKategorie;
+};
+
+export async function createKnowledge(
+  input: KnowledgeFactInput,
+): Promise<Result<KnowledgeFact>> {
   return call<KnowledgeFact>("/knowledge", { method: "POST", body: input });
 }
 
 export async function updateKnowledge(
   id: string,
-  input: { property_id: string | null; fact: string },
+  input: KnowledgeFactInput,
 ): Promise<Result<KnowledgeFact>> {
   return call<KnowledgeFact>(`/knowledge/${id}`, { method: "PUT", body: input });
 }
 
 export async function deleteKnowledge(id: string): Promise<Result<void>> {
   return call<void>(`/knowledge/${id}`, { method: "DELETE" });
+}
+
+/** Sammellöschen aus der Mehrfachauswahl. POST statt DELETE-mit-Rumpf: solche
+ *  Anfragen behandeln Proxys und fetch-Wrapper unterschiedlich. */
+export async function deleteKnowledgeBulk(
+  ids: string[],
+): Promise<Result<{ updated: number }>> {
+  return call<{ updated: number }>("/knowledge/bulk-delete", {
+    method: "POST",
+    body: { ids },
+  });
 }
 
 /** Datei an eine Konversation hängen (multipart) und an den Kanal übergeben.
@@ -790,4 +997,158 @@ export async function uploadAttachment(
   } catch {
     return { ok: false, error: "Backend nicht erreichbar." };
   }
+}
+
+// --- PDF-Import in die Wissensdatenbank ---------------------------------------
+/** Ein Faktenvorschlag aus einem Dokument — NOCH NICHT gespeichert.
+ *
+ *  Der Import ist zweistufig: erst lesen, dann ein Mensch wählt aus. Ein
+ *  Dokument, das ungeprüft einfliesst, macht die KI zur Sprecherin eines
+ *  Textes, den niemand gelesen hat — samt veralteter Preise und alter
+ *  Türcodes. */
+export type WissenImportVorschlag = {
+  titel: string | null;
+  fact: string;
+  kategorie: WissenKategorie;
+  /** "betrag" | "jahr" | null — wo ein Preis oder eine Jahreszahl steht, wird
+   *  gewarnt: ein alter Preis ist eine falsche Zusage und sieht aus wie eine
+   *  richtige. */
+  warnung: string | null;
+};
+
+export type WissenImportVorschau = {
+  quelle_id: string;
+  datei_name: string;
+  items: WissenImportVorschlag[];
+};
+
+/** Schritt 1: PDF ablegen und Vorschläge holen. Legt KEINE Fakten an. */
+export async function wissenDokumentLesen(
+  file: File,
+  propertyId: string | null,
+): Promise<Result<WissenImportVorschau>> {
+  const token = await currentToken();
+  if (!token) return { ok: false, error: "Nicht angemeldet." };
+
+  const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+  const form = new FormData();
+  form.append("file", file);
+  if (propertyId) form.append("property_id", propertyId);
+  try {
+    const res = await fetch(`${base}/api/v1/inbox/knowledge/import`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: form,
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      let detail = `Fehler ${res.status}`;
+      try {
+        const data = await res.json();
+        if (typeof data?.detail === "string") detail = data.detail;
+      } catch {
+        // kein JSON-Body
+      }
+      return { ok: false, error: detail };
+    }
+    return { ok: true, data: (await res.json()) as WissenImportVorschau };
+  } catch {
+    return { ok: false, error: "Backend nicht erreichbar." };
+  }
+}
+
+/** Schritt 2: die angehakten Vorschläge als Fakten anlegen. */
+export async function wissenImportUebernehmen(input: {
+  quelle_id: string;
+  property_id: string | null;
+  items: WissenImportVorschlag[];
+}): Promise<Result<{ updated: number }>> {
+  return call<{ updated: number }>("/knowledge/import/apply", {
+    method: "POST",
+    body: input,
+  });
+}
+
+// --- Test-KI und Kontext-Panel ------------------------------------------------
+/** Ein Abschnitt des Kontext-Panels — der TEXT, der in den Prompt geht, nicht
+ *  eine Beschreibung davon. Eine Beschreibung wäre eine zweite Wahrheit neben
+ *  dem Prompt und liefe auseinander. */
+export type KiKontextAbschnitt = {
+  titel: string;
+  inhalt: string;
+  quelle: string;
+  zeichen: number;
+};
+
+export type KiKontextAntwort = {
+  abschnitte: KiKontextAbschnitt[];
+  quellen: string[];
+  /** Was NICHT mitkam und warum — gekürzt, kein Platz mehr, oder gesperrt.
+   *  Ein gesperrter Abschnitt steht hier ausdrücklich: sonst sucht jemand den
+   *  Fehler in der Gästemappe, wo gar keiner ist. */
+  weggelassen: string[];
+  zugang_gesperrt: boolean;
+  zeichen: number;
+  max_zeichen: number;
+};
+
+export type KiTestAntwort = {
+  antwort: string;
+  kontext: KiKontextAntwort;
+  /** Was im ERNSTFALL passiert wäre. Das ist der Sinn des Tests, nicht der
+   *  Antworttext: griff eine Regel, schlug eine Sperre zu? */
+  zustellart: "entwurf" | "automatisch";
+  grund: string;
+  regel_name: string | null;
+  /** Gesetzt, wenn die Antwort eine Wissenslücke meldet. */
+  fehlende_angabe: string | null;
+};
+
+export async function getKiKontext(input: {
+  propertyId?: string;
+  frage?: string;
+}): Promise<Result<KiKontextAntwort>> {
+  const q = new URLSearchParams();
+  if (input.propertyId) q.set("property_id", input.propertyId);
+  if (input.frage) q.set("frage", input.frage);
+  const s = q.toString();
+  return call<KiKontextAntwort>(`/ki-kontext${s ? `?${s}` : ""}`);
+}
+
+/** Eine Testfrage stellen. Es geht NICHTS an einen Gast. */
+export async function kiTesten(input: {
+  property_id: string | null;
+  frage: string;
+  verlauf: string[];
+}): Promise<Result<KiTestAntwort>> {
+  return call<KiTestAntwort>("/ki-test", { method: "POST", body: input });
+}
+
+// --- Eskalation (0498) --------------------------------------------------------
+/** Ein eskalierter Verlauf. `ausloeser` trennt die zwei Wege: "stimmung" hat
+ *  das Modell erkannt, "regel" hat der Betrieb formuliert. Für die Anzeige
+ *  derselbe Kasten, für die Diagnose ein Unterschied. */
+export type KiEskalation = {
+  id: string;
+  thread_id: string;
+  quelle: "inbox" | "whatsapp";
+  ausloeser: "stimmung" | "regel";
+  regel_id: string | null;
+  grund: string;
+  nachricht_auszug: string | null;
+  created_at: string | null;
+};
+
+export async function listKiEskalationen(): Promise<
+  Result<{ items: KiEskalation[]; total: number }>
+> {
+  return call<{ items: KiEskalation[]; total: number }>("/ki-eskalationen");
+}
+
+/** Die Eskalation zurücknehmen. Nur ein Mensch kann das — eine Markierung, die
+ *  sich selbst abräumt, ist keine Aufgabe. */
+export async function eskalationErledigen(
+  threadId: string,
+): Promise<Result<void>> {
+  return call<void>(`/ki-eskalationen/${threadId}/erledigt`, { method: "POST" });
 }

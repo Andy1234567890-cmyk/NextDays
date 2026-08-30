@@ -1,7 +1,18 @@
 """Router für inbox. Gemountet unter /api/v1/inbox."""
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    Header,
+    HTTPException,
+    Query,
+    Request,
+    UploadFile,
+    status,
+)
 
 from src.core.languages import alle_sprachen, basis_sprache
 from src.core.security import AuthContext, get_current_user, require_internal_cron_secret
@@ -30,6 +41,15 @@ from .schemas import (
     InboxMessage,
     InboxMessagesResponse,
     InboxStatusUpdate,
+    KiEskalationList,
+    KiKontextAntwort,
+    KiProtokollList,
+    KiRegel,
+    KiRegelList,
+    KiRegelUpsert,
+    KiTestAntwort,
+    KiTestFrage,
+    KnowledgeBulkDelete,
     KnowledgeFact,
     KnowledgeFactList,
     KnowledgeFactUpsert,
@@ -57,6 +77,9 @@ from .schemas import (
     TranslateFassungRequest,
     TranslateFassungResponse,
     UnreadCount,
+    WissenImportUebernehmen,
+    WissenImportVorschau,
+    WissenObjektListe,
 )
 from .service import InboxError, InboxService
 
@@ -213,6 +236,26 @@ def dispatch_automations(
     INTERNAL_CRON_SECRET abgesichert, getriggert durch einen Scheduled-Task."""
     require_internal_cron_secret(x_internal_cron_secret)
     return InboxService(service_client=get_service_client()).dispatch_due_automations()
+
+
+@router.post("/internal/dispatch-ki-autoantworten", include_in_schema=False)
+def dispatch_ki_autoantworten(
+    x_internal_cron_secret: Annotated[str | None, Header()] = None,
+) -> dict:
+    """Interner Cron-Trigger: versendet fällige KI-Autoantworten (0494).
+
+    Eigener Tick und nicht Teil von `/dispatch-automations`: die beiden haben
+    verschiedene Taktungen. Eine Automail ist auf den Tag geplant, eine
+    KI-Antwort auf die Minute — die Verzögerung von standardmäßig fünf Minuten
+    wäre bei einem Viertelstundentakt keine Verzögerung mehr, sondern eine
+    Zufallszahl zwischen fünf und zwanzig Minuten.
+
+    Empfohlener Takt: jede Minute.
+    """
+    require_internal_cron_secret(x_internal_cron_secret)
+    return InboxService(
+        service_client=get_service_client()
+    ).dispatch_ki_autoantworten()
 
 
 @router.post("/internal/replan-automations", include_in_schema=False)
@@ -709,15 +752,61 @@ def delete_attachment(
 # Lesen wie Schreiben nur mit INBOX_MANAGE_CONFIG, nicht für jeden mit
 # Posteingang-Zugriff (Wurzel 9: kein Datenausgang an Rollen, die ihn nicht
 # brauchen). Der KI-Vorschlag selbst nutzt sie serverseitig weiter.
+@router.get("/knowledge/objekte", response_model=WissenObjektListe)
+def wissen_objekte(
+    service: InboxServiceDep,
+    bundle: _ConfigDep,
+    suche: Annotated[str | None, Query(max_length=200)] = None,
+    sortierung: Annotated[str, Query()] = "objekt",
+    absteigend: Annotated[bool, Query()] = False,
+    seite: Annotated[int, Query(ge=1, le=1000)] = 1,
+    pro_seite: Annotated[int, Query(ge=1, le=100)] = 20,
+) -> WissenObjektListe:
+    """Ebene 1: die Objekte mit ihrer Faktenzahl."""
+    ctx, _access = bundle
+    try:
+        return service.wissen_objekte(
+            ctx,
+            suche=suche,
+            sortierung=sortierung,
+            absteigend=absteigend,
+            seite=seite,
+            pro_seite=pro_seite,
+        )
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.get("/knowledge", response_model=KnowledgeFactList)
 def list_knowledge(
     service: InboxServiceDep,
     bundle: _ConfigDep,
     property_id: Annotated[str | None, Query()] = None,
+    nur_dieses_objekt: Annotated[bool, Query()] = False,
+    betriebsweit: Annotated[bool, Query()] = False,
+    suche: Annotated[str | None, Query(max_length=200)] = None,
+    kategorie: Annotated[list[str] | None, Query()] = None,
+    quelle: Annotated[list[str] | None, Query()] = None,
+    sortierung: Annotated[str, Query()] = "geaendert",
+    absteigend: Annotated[bool, Query()] = True,
+    seite: Annotated[int, Query(ge=1, le=1000)] = 1,
+    pro_seite: Annotated[int, Query(ge=1, le=100)] = 20,
 ) -> KnowledgeFactList:
     ctx, _access = bundle
     try:
-        return service.list_knowledge(ctx, property_id=property_id)
+        return service.list_knowledge(
+            ctx,
+            property_id=property_id,
+            nur_dieses_objekt=nur_dieses_objekt,
+            betriebsweit=betriebsweit,
+            suche=suche,
+            kategorien=kategorie,
+            quellen=quelle,
+            sortierung=sortierung,
+            absteigend=absteigend,
+            seite=seite,
+            pro_seite=pro_seite,
+        )
     except InboxError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -752,5 +841,184 @@ def delete_knowledge(
     ctx, _access = bundle
     try:
         service.delete_knowledge(ctx, fact_id)
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Eskalation (0498) --------------------------------------------------------
+@router.get("/ki-eskalationen", response_model=KiEskalationList)
+def eskalationen_offen(
+    service: InboxServiceDep, bundle: _AccessDep
+) -> KiEskalationList:
+    """Die Ansicht „Eskaliert": alle offenen, neueste zuerst."""
+    ctx, _access = bundle
+    try:
+        return service.eskalationen_offen(ctx)
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/ki-eskalationen/{thread_id}/erledigt", status_code=204)
+def eskalation_erledigen(
+    thread_id: str, service: InboxServiceDep, bundle: _AccessDep
+) -> None:
+    """Die Eskalation zurücknehmen. Nur ein Mensch kann das."""
+    ctx, _access = bundle
+    try:
+        service.eskalation_erledigen(ctx, thread_id)
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Test-KI und Kontext-Panel ------------------------------------------------
+# Beide SENDEN NICHTS. Sie zeigen, was die KI weiß und was sie im Ernstfall
+# täte — ohne diese Ansichten ist eine falsche Antwort nicht diagnostizierbar.
+@router.get("/ki-kontext", response_model=KiKontextAntwort)
+def ki_kontext_ansehen(
+    service: InboxServiceDep,
+    bundle: _ConfigDep,
+    property_id: Annotated[str | None, Query()] = None,
+    frage: Annotated[str, Query(max_length=1500)] = "",
+) -> KiKontextAntwort:
+    ctx, _access = bundle
+    try:
+        return service.ki_kontext_ansehen(ctx, property_id=property_id, frage=frage)
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/ki-test", response_model=KiTestAntwort)
+def ki_testen(
+    req: KiTestFrage, service: InboxServiceDep, bundle: _ConfigDep
+) -> KiTestAntwort:
+    """Eine Testfrage an die KI. Es geht NICHTS an einen Gast."""
+    ctx, _access = bundle
+    try:
+        return service.ki_testen(ctx, req)
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- PDF-Import in die Wissensdatenbank ---------------------------------------
+# ZWEISTUFIG: dieser Endpunkt LEGT KEINE FAKTEN AN. Er legt die Datei ab und
+# liefert Vorschläge; erst `/knowledge/import/apply` schreibt, und zwar nur,
+# was ein Mensch angehakt hat. Ein Dokument, das ungeprüft einfliesst, macht
+# die KI zur Sprecherin eines Textes, den niemand gelesen hat.
+@router.post("/knowledge/import", response_model=WissenImportVorschau)
+async def wissen_dokument_lesen(
+    service: InboxServiceDep,
+    bundle: _ConfigDep,
+    file: Annotated[UploadFile, File()],
+    property_id: Annotated[str | None, Form()] = None,
+) -> WissenImportVorschau:
+    ctx, _access = bundle
+    inhalt = await file.read()
+    try:
+        return service.wissen_dokument_lesen(
+            ctx,
+            inhalt=inhalt,
+            dateiname=file.filename or "dokument.pdf",
+            property_id=property_id or None,
+        )
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/knowledge/import/apply", response_model=BulkUpdateResult)
+def wissen_import_uebernehmen(
+    req: WissenImportUebernehmen, service: InboxServiceDep, bundle: _ConfigDep
+) -> BulkUpdateResult:
+    """Die angehakten Vorschläge als Fakten anlegen."""
+    ctx, _access = bundle
+    try:
+        return BulkUpdateResult(
+            updated=service.wissen_import_uebernehmen(
+                ctx,
+                quelle_id=req.quelle_id,
+                items=req.items,
+                property_id=req.property_id,
+            )
+        )
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# Eigener POST statt DELETE mit Rumpf: DELETE-Anfragen mit Body sind zwar
+# erlaubt, werden aber von Proxys und fetch-Wrappern unterschiedlich behandelt.
+@router.post("/knowledge/bulk-delete", response_model=BulkUpdateResult)
+def delete_knowledge_bulk(
+    req: KnowledgeBulkDelete, service: InboxServiceDep, bundle: _ConfigDep
+) -> BulkUpdateResult:
+    """Sammellöschen aus der Mehrfachauswahl der Faktenliste."""
+    ctx, _access = bundle
+    try:
+        return BulkUpdateResult(updated=service.delete_knowledge_bulk(ctx, req.ids))
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- KI-Regeln (0493) -------------------------------------------------------
+# `_ConfigDep` durchgehend, auch beim Lesen: eine Regel sagt aus, was die KI
+# ohne menschliche Prüfung an Gäste schreiben darf. Das ist eine
+# Konfigurationsfrage des Betriebs, keine Auskunft für jeden mit
+# Posteingang-Zugriff (Wurzel 9 — derselbe Scope für Liste und Einzelzugriff).
+@router.get("/ki-regeln", response_model=KiRegelList)
+def list_ki_regeln(service: InboxServiceDep, bundle: _ConfigDep) -> KiRegelList:
+    ctx, _access = bundle
+    try:
+        return service.list_ki_regeln(ctx)
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/ki-regeln", response_model=KiRegel)
+def create_ki_regel(
+    req: KiRegelUpsert, service: InboxServiceDep, bundle: _ConfigDep
+) -> KiRegel:
+    ctx, _access = bundle
+    try:
+        return service.create_ki_regel(ctx, req)
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.put("/ki-regeln/{regel_id}", response_model=KiRegel)
+def update_ki_regel(
+    regel_id: str, req: KiRegelUpsert, service: InboxServiceDep, bundle: _ConfigDep
+) -> KiRegel:
+    ctx, _access = bundle
+    try:
+        return service.update_ki_regel(ctx, regel_id, req)
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.delete("/ki-regeln/{regel_id}", status_code=204)
+def delete_ki_regel(
+    regel_id: str, service: InboxServiceDep, bundle: _ConfigDep
+) -> None:
+    ctx, _access = bundle
+    try:
+        service.delete_ki_regel(ctx, regel_id)
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/ki-protokoll", response_model=KiProtokollList)
+def list_ki_protokoll(
+    service: InboxServiceDep,
+    bundle: _ConfigDep,
+    thread_id: Annotated[str | None, Query()] = None,
+    limit: Annotated[int, Query(ge=1, le=200)] = 50,
+) -> KiProtokollList:
+    """Was die KI getan hat — die Spur zu einer falschen Antwort.
+
+    Ohne diese Liste bliebe bei einer falschen Antwort nur das Raten zwischen
+    „Fakt fehlte", „Regel griff nicht" und „Modell hat sich etwas
+    zurechtgelegt".
+    """
+    ctx, _access = bundle
+    try:
+        return service.list_ki_protokoll(ctx, thread_id=thread_id, limit=limit)
     except InboxError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

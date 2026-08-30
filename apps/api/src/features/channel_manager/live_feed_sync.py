@@ -158,6 +158,14 @@ class LiveFeedSyncMixin:
             svc.schedule_message_received(
                 tenant_id, thread_id, ist_erste_nachricht=vorher == 0
             )
+            # Zwei Gegenzustände in EINEM Schritt (Wurzel 1): eine neue
+            # Gastnachricht macht eine wartende KI-Antwort ungültig — sie
+            # beantwortet dann die vorige Frage, während der Gast schon
+            # nachgeschoben hat. Erst abräumen, dann neu planen.
+            svc.autoantwort_abbrechen(
+                tenant_id, thread_id, "Neue Gastnachricht eingegangen"
+            )
+            svc.autoantwort_planen(tenant_id, thread_id)
         except Exception as exc:  # noqa: BLE001 — Tick nie kippen
             log.warning(
                 "journal_nachricht_verarbeitung_fehlgeschlagen", error=str(exc)[:300]

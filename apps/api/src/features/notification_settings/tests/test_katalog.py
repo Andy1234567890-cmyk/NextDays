@@ -43,6 +43,9 @@ MIGRATIONEN = (
     # Testphase endet (nur E-Mail: drei Tage Vorlauf, SMS waere die falsche
     # Dringlichkeit).
     "0488_testphase_einmalig.sql",
+    # KI-Eskalation (Mail + Push, kein SMS: eine Beschwerde ist dringend, aber
+    # SMS ist fuer Fristen von Stunden reserviert).
+    "0499_ki_eskalation_benachrichtigung.sql",
 )
 
 

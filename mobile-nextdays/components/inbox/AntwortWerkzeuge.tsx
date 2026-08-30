@@ -38,6 +38,7 @@ import { Btn, Col, Divider, Row, Txt } from "@/components/ui/kit";
 import { Sheet } from "@/components/ui/patterns";
 import {
   cancelScheduled,
+  createKnowledge,
   deleteAttachment,
   getAiReply,
   istBuchungsThread,
@@ -47,6 +48,7 @@ import {
   listTemplates,
   renderForThread,
   scheduleMessage,
+  type AiReplyResponse,
   type Attachment,
   type MessageTemplate,
   type ScheduledMessage,
@@ -88,6 +90,10 @@ export function planVorschlaege(jetzt: Date = new Date()): { label: string; at: 
   ];
 }
 
+/** Wie im Server (`KnowledgeFactUpsert`) und im Dashboard. */
+const MAX_TITEL = 200;
+const MAX_FAKT = 2000;
+
 function zeitText(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
@@ -107,6 +113,7 @@ export function AntwortWerkzeuge({
   onEntwurf,
   onGeplant,
   onGeplantZahl,
+  onEskaliert,
 }: {
   threadId: string;
   /** Der aktuelle Text im Antwortfeld — Grundlage fürs Planen. */
@@ -120,9 +127,15 @@ export function AntwortWerkzeuge({
   onGeplant: () => void;
   /** Zahl der geplanten Nachrichten — der Composer setzt daran seinen Punkt. */
   onGeplantZahl: (anzahl: number) => void;
+  /** Das Modell hat negativen Tenor erkannt und den Verlauf eskaliert — der
+   *  Bildschirm lädt den Hinweis daraufhin neu. Optional: nicht jeder Aufrufer
+   *  zeigt den Kasten. */
+  onEskaliert?: () => void;
 }) {
   const t = useTheme();
-  const [sheet, setSheet] = useState<null | "vorlagen" | "planen" | "anhaenge">(null);
+  const [sheet, setSheet] = useState<
+    null | "vorlagen" | "planen" | "anhaenge" | "ki"
+  >(null);
   const [vorlagen, setVorlagen] = useState<MessageTemplate[] | null>(null);
   const [geplant, setGeplant] = useState<ScheduledMessage[]>([]);
   const [anhaenge, setAnhaenge] = useState<Attachment[] | null>(null);
@@ -131,6 +144,19 @@ export function AntwortWerkzeuge({
   // erscheinen (Wurzel 5).
   const [ladefehler, setLadefehler] = useState<string | null>(null);
   const [kiLaeuft, setKiLaeuft] = useState(false);
+  // Das ganze Ergebnis, nicht nur der Text: Quellen und Wissenslücke gehören
+  // zum Vorschlag und werden mit ihm gezeigt. Vorher landete der Text im Feld
+  // und die Quellen in einem Alert — der ist weg, sobald man ihn wegtippt,
+  // also genau dann, wenn man beim Lesen der Antwort nachsehen möchte.
+  const [ki, setKi] = useState<AiReplyResponse | null>(null);
+  // Der Vorschlag ist ÄNDERBAR, bevor er ins Feld geht: das Telefon ist der
+  // Ort, an dem man einen Satz noch schnell umschreibt.
+  const [kiText, setKiText] = useState("");
+  const [kiQuellenOffen, setKiQuellenOffen] = useState(false);
+  // „Der KI beibringen": das Eingabefeld ist zugeklappt, bis jemand es will —
+  // die Lücke zu SEHEN ist der häufigere Fall als sie sofort zu füllen.
+  const [lernOffen, setLernOffen] = useState(false);
+  const [lernText, setLernText] = useState("");
   const [suche, setSuche] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -154,6 +180,17 @@ export function AntwortWerkzeuge({
   useEffect(() => {
     geplantLaden();
   }, [geplantLaden]);
+
+  // Beim Wechsel des Verlaufs alles Vorschlagsbezogene verwerfen. Sonst stünde
+  // der Vorschlag für Gast A im Sheet, während Gast B offen ist — und ein
+  // Druck auf „Übernehmen" schriebe den fremden Text ins Feld.
+  useEffect(() => {
+    setKi(null);
+    setKiText("");
+    setKiQuellenOffen(false);
+    setLernOffen(false);
+    setLernText("");
+  }, [threadId]);
 
   // Titel-Suche, nicht Volltext: gesucht wird die Vorlage, nicht eine Stelle
   // in ihrem Text.
@@ -213,14 +250,57 @@ export function AntwortWerkzeuge({
       Alert.alert("Kein Vorschlag", res.error);
       return;
     }
-    // Der Vorschlag landet im Feld, nicht beim Gast: abgeschickt wird von Hand.
-    onEntwurf(res.data.reply);
-    if (res.data.sources.length) {
-      Alert.alert(
-        "Vorschlag eingefügt",
-        `Stützt sich auf: ${res.data.sources.join(", ")}`,
-      );
+    setKi(res.data);
+    setKiText(res.data.reply);
+    setKiQuellenOffen(false);
+    setSheet("ki");
+    // Hat das Modell negativen Tenor erkannt, trägt der Verlauf jetzt ein
+    // Merkmal — der Bildschirm lädt die Eskalation daraufhin neu.
+    if (res.data.eskaliert) onEskaliert?.();
+  };
+
+  /** Den Vorschlag ins Antwortfeld übernehmen. Er geht NICHT von selbst an den
+   *  Gast: abgeschickt wird von Hand, mit dem regulären Sendeknopf. */
+  const kiUebernehmen = () => {
+    onEntwurf(kiText);
+    setSheet(null);
+  };
+
+  /**
+   * Die gemeldete Wissenslücke als Fakt speichern — der Punkt, an dem sich die
+   * Wissensdatenbank von selbst füllt: der Betrieb sieht die Lücke in dem
+   * Moment, in dem sie ihn stört.
+   *
+   * Die Eingabe steht als Feld IM Sheet, nicht in `Alert.prompt`: das gibt es
+   * nur auf iOS. Auf Android wäre der Knopf wirkungslos gewesen — ohne Fehler,
+   * ohne Hinweis, also nicht als Fehler erkennbar.
+   *
+   * `property_id: null` — betriebsweit. Auf dem Telefon fehlt die Objektwahl
+   * (das Dashboard hat sie), und betriebsweit ist die sichere Richtung: der
+   * Fakt gilt dann überall, statt am falschen Objekt zu hängen.
+   */
+  const kiBeibringen = async () => {
+    const luecke = ki?.fehlende_angabe;
+    const text = lernText.trim();
+    if (!luecke || !text) return;
+    setBusy(true);
+    const res = await createKnowledge({
+      property_id: null,
+      titel: luecke.slice(0, MAX_TITEL),
+      fact: text,
+      kategorie: "sonstiges",
+    });
+    setBusy(false);
+    if (!res.ok) {
+      Alert.alert("Nicht gespeichert", res.error);
+      return;
     }
+    // Die Lücke ist geschlossen — der Kasten verschwindet, statt beim nächsten
+    // Blick erneut nach derselben Angabe zu fragen.
+    setKi((prev) => (prev ? { ...prev, fehlende_angabe: null } : prev));
+    setLernText("");
+    setLernOffen(false);
+    Alert.alert("Gespeichert", "Die KI kennt die Angabe ab jetzt.");
   };
 
   const planen = async (at: Date) => {
@@ -440,6 +520,184 @@ export function AntwortWerkzeuge({
                 Keine Vorlage passt zu „{suche}".
               </Txt>
             )}
+          </Col>
+        )}
+      </Sheet>
+
+      {/* --- KI-Vorschlag -------------------------------------------------- */}
+      {/* Der Vorschlag steht in einem eigenen Sheet, nicht direkt im Feld.
+          Grund: er kommt mit QUELLEN und ggf. einer gemeldeten Wissenslücke —
+          beides gehört zur Antwort. Vorher landete der Text sofort im Feld und
+          die Quellen in einem Alert; wer den wegtippte, konnte nicht mehr
+          nachsehen, worauf sich der Satz stützt. Genau das ist aber die Frage
+          vor dem Absenden: ist das belegt oder erfunden? */}
+      <Sheet
+        open={sheet === "ki"}
+        onClose={() => setSheet(null)}
+        full
+        header={<Txt v="title">KI-Vorschlag</Txt>}
+      >
+        {ki && (
+          <Col gap={14}>
+            {/* Änderbar, bevor er ins Feld geht — nicht erst danach. */}
+            <TextInput
+              value={kiText}
+              onChangeText={setKiText}
+              multiline
+              textAlignVertical="top"
+              style={{
+                minHeight: 140,
+                backgroundColor: t.palette.bg,
+                borderWidth: 1,
+                borderColor: t.palette.line,
+                borderRadius: 12,
+                paddingHorizontal: 14,
+                paddingVertical: 12,
+                fontSize: 15,
+                lineHeight: 21,
+                color: t.palette.ink,
+              }}
+            />
+
+            {/* Quellen: zugeklappt, weil der Text die Hauptsache ist. Ein
+                Eintrag mit Klammer beschreibt etwas, das FEHLT (gekürzt,
+                gesperrt, kein Platz) — er bekommt ein anderes Zeichen, damit
+                beim Überfliegen sichtbar ist, was die Antwort NICHT wusste. */}
+            {ki.sources.length > 0 && (
+              <Col gap={8}>
+                <Divider />
+                <Pressable
+                  onPress={() => setKiQuellenOffen((v) => !v)}
+                  hitSlop={8}
+                  style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+                >
+                  <Row style={{ gap: 6 }}>
+                    <Icon
+                      n={kiQuellenOffen ? "caretdown" : "chevron"}
+                      s={14}
+                      sw={2}
+                      c={t.palette.soft}
+                    />
+                    <Txt v="xs" soft>
+                      Stützt sich auf {ki.sources.length}{" "}
+                      {ki.sources.length === 1 ? "Grundlage" : "Grundlagen"}
+                    </Txt>
+                  </Row>
+                </Pressable>
+                {kiQuellenOffen &&
+                  ki.sources.map((q) => (
+                    <Row key={q} style={{ gap: 8, alignItems: "flex-start" }}>
+                      <Icon
+                        n={q.includes("(") ? "info" : "check"}
+                        s={13}
+                        sw={2}
+                        c={t.palette.soft}
+                      />
+                      <Txt v="xs" soft style={{ flex: 1 }}>
+                        {q}
+                      </Txt>
+                    </Row>
+                  ))}
+              </Col>
+            )}
+
+            {/* Wissenslücke: DER Punkt, an dem sich die Wissensdatenbank von
+                selbst füllt. Ohne diesen Weg bleibt sie leer, egal wie gut die
+                Verwaltungsmaske ist — die Lücke fällt hier auf, nicht dort. */}
+            {ki.fehlende_angabe && (
+              <Col
+                gap={10}
+                style={{
+                  borderWidth: 1,
+                  borderColor: t.palette.line,
+                  backgroundColor: t.palette.surface2,
+                  borderRadius: 14,
+                  padding: 14,
+                }}
+              >
+                <Row style={{ gap: 8, alignItems: "flex-start" }}>
+                  <Icon n="info" s={16} sw={2} c={t.palette.accent} />
+                  <Txt v="sm" style={{ flex: 1 }}>
+                    Dazu fehlt der KI eine Angabe: {ki.fehlende_angabe}
+                  </Txt>
+                </Row>
+                {lernOffen ? (
+                  <Col gap={8}>
+                    <TextInput
+                      value={lernText}
+                      onChangeText={setLernText}
+                      multiline
+                      autoFocus
+                      maxLength={MAX_FAKT}
+                      placeholder="Die richtige Auskunft — sie gilt dann für alle Objekte."
+                      placeholderTextColor={t.palette.faint}
+                      textAlignVertical="top"
+                      style={{
+                        minHeight: 80,
+                        backgroundColor: t.palette.bg,
+                        borderWidth: 1,
+                        borderColor: t.palette.line,
+                        borderRadius: 12,
+                        paddingHorizontal: 12,
+                        paddingVertical: 10,
+                        fontSize: 14,
+                        color: t.palette.ink,
+                      }}
+                    />
+                    <Row style={{ gap: 8, justifyContent: "flex-end" }}>
+                      <Btn
+                        variant="ghost"
+                        onPress={() => {
+                          setLernOffen(false);
+                          setLernText("");
+                        }}
+                      >
+                        Abbrechen
+                      </Btn>
+                      <Btn
+                        onPress={busy || !lernText.trim() ? undefined : kiBeibringen}
+                        disabled={busy || !lernText.trim()}
+                      >
+                        Speichern
+                      </Btn>
+                    </Row>
+                  </Col>
+                ) : (
+                  <Btn variant="outline" block onPress={() => setLernOffen(true)}>
+                    Der KI beibringen
+                  </Btn>
+                )}
+              </Col>
+            )}
+
+            {/* Der Hinweis steht NACH dem Vorschlag: er betrifft den Verlauf,
+                nicht den Text. Das Merkmal ist bereits gesetzt — hier steht
+                nur, DASS es passiert ist, damit es niemanden überrascht. */}
+            {ki.eskaliert && (
+              <Row style={{ gap: 8, alignItems: "flex-start" }}>
+                <Icon n="bell" s={15} sw={2} c={t.palette.accent} />
+                <Txt v="xs" soft style={{ flex: 1 }}>
+                  Der Gast klingt verärgert — der Verlauf ist als eskaliert
+                  markiert.
+                </Txt>
+              </Row>
+            )}
+
+            <Divider />
+            {/* „Übernehmen", nicht „Senden": der Text geht ins Feld, abgeschickt
+                wird mit dem regulären Sendeknopf. Ein Sendeknopf hier hiesse,
+                dass ein KI-Satz das Telefon ungelesen verlassen kann. */}
+            <Btn
+              block
+              icon="check"
+              onPress={kiText.trim() ? kiUebernehmen : undefined}
+              disabled={!kiText.trim()}
+            >
+              In die Antwort übernehmen
+            </Btn>
+            <Txt v="xs" soft style={{ textAlign: "center" }}>
+              Der Text landet im Antwortfeld — gesendet wird von dir.
+            </Txt>
           </Col>
         )}
       </Sheet>

@@ -1,33 +1,37 @@
-"""Anbindung an Google Vertex AI (Gemini) für den KI-Assistenten des Baukastens.
+"""Anbindung an Google Vertex AI (Gemini) — der KI-Anbieter des Systems.
 
-Warum ein zweiter KI-Anbieter neben dem Groq-Client des Posteingangs
-(``features/inbox/ai.py``) und keine gemeinsame Hülle: die beiden beantworten
-verschiedene Fragen. Der Posteingang formuliert eine Nachricht an EINEN Gast —
-sie verlässt das System als E-Mail und niemand fragt später, wo sie erzeugt
-wurde. Der Baukasten schreibt Texte auf eine ÖFFENTLICHE Website. Daran hängen
-zwei Anforderungen, die der Posteingang nicht hat:
+Bis 29.08.2026 stand dieses Modul unter ``features/site_config`` und sein
+Docstring begründete, warum es den Groq-Client des Posteingangs NICHT
+ersetzt: der Baukasten schreibe auf eine öffentliche Website, der
+Posteingang nur an einen Gast. Diese Begründung hat nicht gehalten — sie
+unterschätzte, was in einer Gastnachricht steht.
 
-* **Datenresidenz.** Der Kontext enthält Firmendaten, Anschrift und
-  Objektbeschreibungen eines EU-Betriebs. Groq betreibt seine Inferenz in den
-  USA; für Vertex AI sagt Google beim REGIONALEN Endpunkt zu, dass die
-  Verarbeitung in der Jurisdiktion der Region bleibt.
-* **Herkunftskennzeichnung (EU AI Act Art. 50 Abs. 2).** Wir sind Anbieter des
-  KI-Systems, nicht bloß Nutzer einer API. Was erzeugt wurde, muss maschinen-
-  lesbar als erzeugt erkennbar sein. Das leistet unser eigenes Feld
-  ``content_origin`` (siehe ``ki_herkunft.py``) — NICHT ein Wasserzeichen des
-  Anbieters. SynthID ist für BILDER belegt; ob Vertex AI Text wasserzeichnet,
-  ist widersprüchlich dokumentiert und ein öffentliches Prüfwerkzeug dafür gibt
-  es nicht. Auf etwas, das man nicht nachprüfen kann, lässt sich keine
-  Rechtspflicht stützen.
+Der Prompt einer Gastantwort enthält **Türcode, WLAN-Passwort, Anschrift,
+Name des Gastes und seine Aufenthaltszeiten**. Das ist personenbezogener
+als jeder Objekttext des Baukastens. Groq betreibt seine Inferenz in den
+USA; für Vertex AI sagt Google beim REGIONALEN Endpunkt zu, dass die
+Verarbeitung in der Jurisdiktion der Region bleibt. Damit gehört der
+Posteingang hierher, und das Modul gehört an einen gemeinsamen Ort —
+darum ``core/ki`` und nicht mehr ein Slice.
 
-Der Groq-Client wird von hier NICHT angefasst und nicht ersetzt. Übernommen
-sind nur seine Umgangsformen: harte Timeouts, spezifisch gefangene
-Netzwerkfehler, kein Fallback-Text bei fehlendem Schlüssel.
+Der zweite Grund bleibt unverändert:
+
+* **Herkunftskennzeichnung (EU AI Act Art. 50 Abs. 2).** Wir sind Anbieter
+  des KI-Systems, nicht bloß Nutzer einer API. Was erzeugt wurde, muss
+  maschinenlesbar als erzeugt erkennbar sein. Das leistet unser eigenes
+  Feld ``content_origin`` (siehe ``site_config/ki_herkunft.py``) — NICHT
+  ein Wasserzeichen des Anbieters. SynthID ist für BILDER belegt; ob
+  Vertex AI Text wasserzeichnet, ist widersprüchlich dokumentiert und ein
+  öffentliches Prüfwerkzeug dafür gibt es nicht. Auf etwas, das man nicht
+  nachprüfen kann, lässt sich keine Rechtspflicht stützen.
+
+Groq (``features/inbox/ai.py``) bleibt vorerst für Preiserklärung und
+Dashboard-Chat: beide sehen keine Gastdaten, beide sind interne
+Auskünfte an den Betrieb. Kein Big-Bang.
 
 **Fehlt die Konfiguration, wirft dieses Modul nicht — es meldet
-``is_configured is False``.** Der Router blendet die KI-Funktionen dann gar
-nicht erst ein (``GET /site-config/ki/status``), statt dem Betrieb einen Knopf
-zu zeigen, der 503 antwortet.
+``is_configured is False``.** Der Aufrufer blendet die KI-Funktionen dann
+gar nicht erst ein, statt einen Knopf zu zeigen, der 503 antwortet.
 """
 
 from __future__ import annotations
@@ -47,7 +51,7 @@ from google.oauth2 import service_account
 from src.core.config import get_settings
 from src.core.logging import get_logger
 
-log = get_logger("nextdays.site_config.ki")
+log = get_logger("nextdays.ki")
 
 # Der einzige OAuth-Scope, den ein Vertex-Aufruf braucht. Er ist breit
 # formuliert (Google bietet für aiplatform keinen engeren an) — die eigentliche

@@ -114,7 +114,7 @@ def _client():  # noqa: ANN202 — der Typ kommt aus dem Slice
     """Den Vertex-Client holen. Bricht LAUT ab, wenn er nicht eingerichtet ist."""
     wurzel = Path(__file__).resolve().parents[2] / "apps" / "api"
     sys.path.insert(0, str(wurzel))
-    from src.features.site_config.ki_client import VertexClient  # noqa: PLC0415
+    from src.core.ki import VertexClient  # noqa: PLC0415
 
     c = VertexClient()
     if not c.is_configured:

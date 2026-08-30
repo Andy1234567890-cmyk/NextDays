@@ -60,6 +60,7 @@ from .features.guest_wishlist.router import router as guest_wishlist_router
 from .features.guests.router import router as guests_router
 from .features.host_messages.router import router as host_messages_router
 from .features.host_profiles.router import router as host_profiles_router
+from .features.inbox import ki_takt as inbox_ki_takt
 from .features.inbox import scheduler as inbox_scheduler
 from .features.inbox.router import router as inbox_router
 from .features.login_devices.router import router as login_devices_router
@@ -196,10 +197,13 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Sekundengenauer Scheduler für geplante Posteingang-Nachrichten:
     # beim Start offene pending-Nachrichten (neu) timern, beim Stop abbrechen.
     await inbox_scheduler.start()
+    # Der Takt der KI-Autoantworten. Ohne ihn wird geplant und nie gesendet.
+    await inbox_ki_takt.start()
     try:
         yield
     finally:
         await inbox_scheduler.stop()
+        await inbox_ki_takt.stop()
         limiter_mw = getattr(app.state, "rate_limit_middleware", None)
         if limiter_mw is not None:
             await limiter_mw.aclose()

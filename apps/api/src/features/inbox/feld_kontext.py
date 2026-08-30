@@ -306,3 +306,48 @@ class FeldKontextMixin:
             tax_rate=bank.get("default_tax_rate"),
             company_website=bank.get("website"),
         )
+
+    def _property_for_thread(
+        self, db: Client, tenant_id: str, row: dict
+    ) -> dict | None:
+        """Objekt-Zeile zu einem Thread über `property_map_id`.
+
+        Der Weg führt über `channex_property_map`; `channex_booking` selbst trägt
+        KEINE channex_property_id (siehe Tabellendefinition). Ein früherer Zugriff
+        auf `row["channex_property_id"]` lief deshalb immer ins Leere und ließ das
+        Reservierungs-Panel dauerhaft ohne Objektnamen.
+        """
+        map_id = row.get("property_map_id")
+        if not map_id:
+            return None
+        pm = (
+            db.table("channex_property_map")
+            .select("property_id")
+            .eq("tenant_id", tenant_id)
+            .eq("id", str(map_id))
+            .limit(1)
+            .execute()
+        ).data or []
+        property_id = pm[0].get("property_id") if pm else None
+        if not property_id:
+            return None
+        props = (
+            db.table("properties")
+            .select(
+                "id, title, address, city, country, photos, timezone, "
+                # Für die Platzhalter aus den übernommenen Lodgify-Vorlagen:
+                # Postleitzahl, Koordinaten (Kartenlink) und Kaution.
+                "postal_code, lat, lng, deposit_amount, "
+                # Für den KI-Kontext: ohne sie muss die KI bei „wie viele
+                # Betten?" passen, obwohl die Antwort in derselben Zeile steht.
+                "description, amenities, max_guests, property_type, "
+                # Die mehrsprachigen Gasttexte (`messaging`) liegen hier —
+                # gepflegt unter /objekte/{id}/nachrichten.
+                "type_attributes"
+            )
+            .eq("tenant_id", tenant_id)
+            .eq("id", str(property_id))
+            .limit(1)
+            .execute()
+        ).data or []
+        return props[0] if props else None

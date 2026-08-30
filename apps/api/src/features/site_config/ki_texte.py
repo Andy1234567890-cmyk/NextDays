@@ -34,11 +34,11 @@ from enum import StrEnum
 from pydantic import BaseModel, Field, field_validator, model_validator
 from supabase import Client
 
+from src.core.ki import KiAntwort, KiError, VertexClient
 from src.core.languages import sprach_name
 from src.core.logging import get_logger
 
 from .fehler import SiteConfigError
-from .ki_client import KiAntwort, KiError, VertexClient
 from .ki_herkunft import Herkunft
 from .ki_profil import (
     KiProfil,

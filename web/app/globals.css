@@ -240,6 +240,52 @@
   --ring: #b82028;
 }
 
+/* KI-Antworten (/posteingang → KI): drei Farben aus der Vorlage, die BEDEUTUNG
+   tragen und deshalb 1:1 übernommen werden statt aus unserem Thema zu kommen.
+   Alles andere dort (Akzent, Flächen, Ränder) nutzt unsere Tokens — Hostaways
+   Türkis wäre eine dritte Akzentfarbe im Produkt.
+
+   Warum diese drei die Ausnahme sind:
+   • Grün = „diese Regel sendet SELBST an Gäste". Das ist der Unterschied
+     zwischen einem Vorschlag und einer verschickten Nachricht; er darf nicht
+     dieselbe Farbe tragen wie ein beliebiges anderes Abzeichen.
+   • Gelb = „die KI ist aus". Eine Warnfarbe, die man im Vorbeigehen sieht.
+   • Der Verlauf = „von der KI geschrieben". Er unterscheidet den Vorschlag vom
+     übrigen Verlauf, ohne ein Abzeichen zu brauchen.
+
+   Gescopt statt global (wie .neuerungen-flaeche), damit im übrigen Dashboard
+   keine vierte Farbfamilie auftaucht. */
+.ki-flaechen {
+  --ki-auto-bg: #eafef3;
+  --ki-auto-rand: #b8f1ce;
+  --ki-auto-text: #116b3c;
+  --ki-aus-bg: #ffe7ad;
+  --ki-aus-text: #be6136;
+  --ki-verlauf: linear-gradient(90deg, #ff004c 0%, #ff7200 50%, #ffab19 100%);
+}
+.dark .ki-flaechen {
+  /* Dieselbe Bedeutung, auf dunklem Grund lesbar: die Vorlagenfarben als
+     Fläche wären hier grelle Flecken. Der Farbton bleibt (grün/gelb), die
+     Helligkeit dreht sich um. */
+  --ki-auto-bg: #0d2f1d;
+  --ki-auto-rand: #1f6b41;
+  --ki-auto-text: #7fe3a8;
+  --ki-aus-bg: #3d2c10;
+  --ki-aus-text: #f0b27a;
+}
+.ki-flaechen .ki-abzeichen-auto {
+  background-color: var(--ki-auto-bg);
+  border-color: var(--ki-auto-rand);
+  color: var(--ki-auto-text);
+}
+.ki-flaechen .ki-abzeichen-aus {
+  background-color: var(--ki-aus-bg);
+  color: var(--ki-aus-text);
+}
+.ki-flaechen .ki-verlauf-rahmen {
+  background: var(--ki-verlauf);
+}
+
 /* Neuerungen (/neuerungen) und das Ankündigungs-Popup: Marketing-Optik im
    Dashboard. `marketing/components/marketing/section-kit.tsx` ist NICHT
    importierbar (eigenes Next-Projekt außerhalb der @source-Pfade), deshalb
