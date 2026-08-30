@@ -69,6 +69,7 @@ import {
 import { NUR_ANHANG_TEXT } from "@/lib/chat-format";
 import { type InboxAccess } from "@/lib/inbox-access";
 import { channelLabelLoose } from "@/lib/channel-logos";
+import { useHydriert } from "@/lib/use-hydriert";
 import {
   listWhatsAppConversations,
 } from "@/lib/whatsapp-api";
@@ -113,6 +114,9 @@ export function InboxList({
   // Der Pfad hat Vorrang: er ist der spezifischere Aufruf. Ohne beides bleibt
   // es beim ersten Thread — der Posteingang soll nie leer starten.
   const searchParams = useSearchParams();
+  // Relative Zeitangaben ("vor 5 Min.") erst nach der Hydration: sie haengen
+  // an der aktuellen Uhr, die auf Server und Client verschieden steht (#418).
+  const hydriert = useHydriert();
   const wunschThread = initialThreadId ?? searchParams.get("thread");
   const [active, setActive] = useState<string | null>(
     wunschThread ?? threads[0]?.id ?? null,
@@ -845,8 +849,8 @@ export function InboxList({
                                 die sichtbaren Daten nicht dazu passen. */}
                             <span className="shrink-0 text-[0.7rem] text-muted-foreground">
                               {sortKey === "arrival"
-                                ? kurzeZeit(th.arrival_date, locale)
-                                : kurzeZeit(th.letzte_aktivitaet, locale)}
+                                ? kurzeZeit(th.arrival_date, locale, hydriert)
+                                : kurzeZeit(th.letzte_aktivitaet, locale, hydriert)}
                             </span>
                           </span>
                           {/* Zeile 2: letzte Nachricht, mit Absender davor.
@@ -974,7 +978,7 @@ export function InboxList({
                               )}
                             </span>
                             <span className="shrink-0 text-[0.7rem] text-muted-foreground">
-                              {kurzeZeit(kind.letzte_aktivitaet, locale)}
+                              {kurzeZeit(kind.letzte_aktivitaet, locale, hydriert)}
                             </span>
                           </button>
                         </div>

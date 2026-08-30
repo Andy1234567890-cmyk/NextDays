@@ -204,10 +204,24 @@ export function UngelesenBadge() {
  * 3. September dieses Jahres — live betraf das vier Threads am Listenende, die
  * damit ein Jahr zu frisch aussahen.
  */
-export function kurzeZeit(iso: string | null, locale: string): string {
+export function kurzeZeit(
+  iso: string | null,
+  locale: string,
+  hydriert = true,
+): string {
   if (!iso) return "";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
+
+  // VOR der Hydration ausschliesslich das absolute Datum. Alles Relative
+  // haengt an `new Date()` — und die steht auf dem Server (Anfragezeit) anders
+  // als im Browser (Hydrationszeit). Faellt dazwischen eine Schwelle, weichen
+  // die Textknoten voneinander ab und React bricht mit #418 ab. Live gesehen
+  // am 30.08.2026 im Posteingang. Das absolute Datum traegt in diesem Pfad
+  // immer das Jahr mit, ist also ohne jeden Zeitbezug — und damit auf Server
+  // und Client identisch.
+  if (!hydriert) return absolutesDatum(d, locale);
+
   const jetzt = new Date();
   const min = Math.round((jetzt.getTime() - d.getTime()) / 60_000);
   const rel = new Intl.RelativeTimeFormat(locale, { numeric: "auto", style: "narrow" });
@@ -215,10 +229,28 @@ export function kurzeZeit(iso: string | null, locale: string): string {
   if (min < 60) return rel.format(-min, "minute");
   if (min < 60 * 24) return rel.format(-Math.round(min / 60), "hour");
   if (min < 60 * 24 * 7) return rel.format(-Math.round(min / (60 * 24)), "day");
+  return absolutesDatum(d, locale, jetzt);
+}
+
+/** Tag + Monat, Jahr nur wenn es nicht das laufende ist.
+ *
+ *  Die Zeitzone bleibt BEWUSST die der Umgebung. Eine feste hier einzusetzen
+ *  waere ein erfundener Wert (Wurzel 4): die Zeitzone haengt am Objekt
+ *  (`properties.timezone`), und eine Liste ueber mehrere Objekte hat keine
+ *  einzige richtige — dieselbe Entscheidung wie in `aufgaben-konstanten.ts`.
+ *  Richtig ist die Zone des NUTZERS, und die kennt nur der Browser. Genau
+ *  darum wird dieser Pfad im Server-Render nur mit vollem Datum inkl. Jahr
+ *  benutzt und die tagesgenaue Angabe erst nach der Hydration gebildet.
+ */
+function absolutesDatum(d: Date, locale: string, jetzt?: Date): string {
+  // Ohne `jetzt` (Server-Render) wird das Jahr IMMER mitgeschrieben. Es aus
+  // `new Date()` abzuleiten waere genau der Zeitbezug, den dieser Pfad
+  // vermeiden soll: zum Jahreswechsel raete der Server anders als der Browser.
+  const gleichesJahr = jetzt ? d.getFullYear() === jetzt.getFullYear() : false;
   return d.toLocaleDateString(locale, {
     day: "numeric",
     month: "short",
-    ...(d.getFullYear() === jetzt.getFullYear() ? {} : { year: "numeric" }),
+    ...(gleichesJahr ? {} : { year: "numeric" }),
   });
 }
 
