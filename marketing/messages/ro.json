@@ -696,6 +696,10 @@
         "title": "Experiența oaspetelui",
         "items": "Ghid digital al oaspetelui, concierge AI, check-in online, mesaje automate, 24 de limbi"
       },
+      "ki": {
+        "title": "Răspunsuri AI",
+        "items": "Răspunde din ghidul dvs. pentru oaspeți, reguli per subiect, ciornă sau automat, escaladare la probleme, 24 de limbi"
+      },
       "zahlungen": {
         "title": "Plăți și facturare",
         "items": "Plăți online, avansuri, garanții, facturare de bază, exporturi pregătite pentru contabilitate"
@@ -1495,6 +1499,80 @@
             "a": "Oaspete",
             "b": "Unde este parola Wi-Fi?",
             "c": "În ghidul oaspetelui — ți-am trimis linkul."
+          }
+        }
+      }
+    },
+    "ki": {
+      "metaBeschreibung": "Răspunsuri AI la întrebările oaspeților: bazate pe ghidul dumneavoastră pentru oaspeți, controlate prin reguli pentru fiecare subiect – ca o schiță sau automat, în 24 de limbi.",
+      "headline": "Întrebările la care răspundeți a suta oară.",
+      "sub": "„Când este check-in-ul?”, „Există Wi-Fi?”, „Unde parchez?” – AI-ul răspunde la ele din ghidul dumneavoastră pentru oaspeți. Decideți pentru fiecare subiect dacă trimite singur sau vă pregătește o schiță.",
+      "bildAlt": "Răspunsuri AI în inbox cu reguli și bază de cunoștințe",
+      "nutzen": {
+        "a": {
+          "titel": "Cunoaște proprietățile dumneavoastră",
+          "text": "Ghidul oaspeților, regulile casei, orele de check-in și rezervarea oaspetelui – AI-ul citește ceea ce ați întreținut deja. Nu este nevoie să introduceți din nou."
+        },
+        "b": {
+          "titel": "Dumneavoastră decideți ce are voie să facă",
+          "text": "O regulă pentru fiecare subiect: la Wi-Fi poate răspunde singur, la anulări vă pregătește o schiță. Implicit este întotdeauna schița."
+        },
+        "c": {
+          "titel": "Nu inventează nimic",
+          "text": "Dacă lipsește informația, nu scrie o frază goală, ci vă spune ce fapt lipsește – și îl creează la un clic."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "La bani, automatizarea se oprește.",
+          "text": "La rambursări, reduceri, date de plată și promisiuni de disponibilitate, AI-ul nu răspunde niciodată de la sine – chiar dacă o regulă permite acest lucru. Astfel de răspunsuri valorează bani sau sunt obligatorii din punct de vedere legal, de aceea primiți o schiță și decideți singur.",
+          "punkte": {
+            "a": "Niciodată automat la bani",
+            "b": "Codul ușii doar după confirmare",
+            "c": "Fiecare răspuns este înregistrat"
+          }
+        }
+      },
+      "bildAltBlock": "Reguli AI cu metoda de livrare pentru fiecare subiect",
+      "reiter": {
+        "kontext": {
+          "titel": "Din datele dumneavoastră",
+          "heading": "Răspunde din ghidul oaspeților, nu de pe internet.",
+          "text": "La fiecare întrebare, AI-ul citește din nou: ghidul oaspeților, regulile casei, datele proprietății, rezervarea și istoricul. Dacă schimbați parola Wi-Fi, de la următorul răspuns se aplică cea nouă – nu există o copie care să fie depășită.",
+          "punkte": {
+            "a": "Oaspete",
+            "b": "Cum mă conectez la Wi-Fi?",
+            "c": "Rețea „Duenenblick”, parola este pe cardul de pe router."
+          }
+        },
+        "regeln": {
+          "titel": "Reguli",
+          "heading": "Un subiect, o regulă, o decizie.",
+          "text": "Pentru fiecare subiect, stabiliți dacă AI-ul trimite singur sau pregătește o schiță – și pentru ce proprietăți se aplică regula. Vedeți de câte ori a fost aplicată fiecare regulă și când ultima dată.",
+          "punkte": {
+            "a": "Wi-Fi · automat",
+            "b": "Check-in · automat",
+            "c": "Anulare · Schiță"
+          }
+        },
+        "wissen": {
+          "titel": "Bază de cunoștințe",
+          "heading": "Se completează pe măsură ce lucrați.",
+          "text": "Ceea ce scrieți unui oaspete și este valabil pentru următorul, AI-ul reține ca fapt. Dacă îi lipsește ceva, vă spune – în loc să inventeze un răspuns plauzibil. Vedeți fiecare fapt, îl puteți modifica sau șterge.",
+          "punkte": {
+            "a": "Învățat din mesaje",
+            "b": "Din documente",
+            "c": "Adăugat manual"
+          }
+        },
+        "eskalation": {
+          "titel": "Escaladare",
+          "heading": "Când devine critic, nu răspunde – vă cheamă pe dumneavoastră.",
+          "text": "Dacă un oaspete devine supărat sau menționează unul dintre cuvintele dumneavoastră cheie („fără apă caldă”, „daune cauzate de apă”), AI-ul nu trimite nimic. Raportează conversația, iar aceasta rămâne deschisă până când cineva o rezolvă.",
+          "punkte": {
+            "a": "Stare de spirit negativă",
+            "b": "Cuvinte cheie proprii",
+            "c": "Notificare în loc de răspuns"
           }
         }
       }

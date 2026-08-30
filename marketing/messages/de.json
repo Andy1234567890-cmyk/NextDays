@@ -696,6 +696,10 @@
         "title": "Gästeerlebnis",
         "items": "Digitale Gästemappe, KI-Concierge, Online-Check-in, automatische Nachrichten, 24 Sprachen"
       },
+      "ki": {
+        "title": "KI-Antworten",
+        "items": "Antwortet aus deiner Gästemappe, Regeln je Thema, Entwurf oder automatisch, Eskalation bei Ärger, 24 Sprachen"
+      },
       "zahlungen": {
         "title": "Zahlungen & Abrechnung",
         "items": "Online-Zahlungen, Anzahlungen, Kautionen, Basis-Rechnungen, buchhaltungsfertige Exporte"
@@ -1335,6 +1339,80 @@
             "a": "Gast",
             "b": "Wo ist das WLAN-Passwort?",
             "c": "In der Gästemappe — ich habe dir den Link geschickt."
+          }
+        }
+      }
+    },
+    "ki": {
+      "metaBeschreibung": "KI-Antworten für Gästefragen: gespeist aus deiner Gästemappe, gesteuert über Regeln je Thema — als Entwurf oder automatisch, in 24 Sprachen.",
+      "headline": "Die Fragen, die du zum hundertsten Mal beantwortest.",
+      "sub": "„Wann ist Check-in?“, „Gibt es WLAN?“, „Wo parke ich?“ — die KI beantwortet sie aus deiner Gästemappe. Du entscheidest je Thema, ob sie selbst sendet oder dir einen Entwurf hinlegt.",
+      "bildAlt": "KI-Antworten im Posteingang mit Regeln und Wissensdatenbank",
+      "nutzen": {
+        "a": {
+          "titel": "Kennt deine Objekte",
+          "text": "Gästemappe, Hausregeln, Check-in-Zeiten und die Buchung des Gastes — die KI liest, was du ohnehin gepflegt hast. Kein zweites Mal eintippen."
+        },
+        "b": {
+          "titel": "Du bestimmst, was sie darf",
+          "text": "Je Thema eine Regel: WLAN darf sie selbst beantworten, Stornierungen legt sie dir als Entwurf hin. Vorgabe ist immer der Entwurf."
+        },
+        "c": {
+          "titel": "Erfindet nichts",
+          "text": "Fehlt die Angabe, schreibt sie keine Floskel, sondern sagt dir, welcher Fakt fehlt — und legt ihn auf Klick an."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Beim Geld hört die Automatik auf.",
+          "text": "Zu Erstattungen, Rabatten, Zahlungsdaten und Verfügbarkeitszusagen antwortet die KI nie von selbst — auch dann nicht, wenn eine Regel es erlaubt. Solche Antworten sind Geld wert oder rechtlich bindend, deshalb bekommst du dort einen Entwurf und entscheidest selbst.",
+          "punkte": {
+            "a": "Nie automatisch bei Geld",
+            "b": "Türcode erst nach Bestätigung",
+            "c": "Jede Antwort protokolliert"
+          }
+        }
+      },
+      "bildAltBlock": "Regeln der KI mit Zustellart je Thema",
+      "reiter": {
+        "kontext": {
+          "titel": "Aus deinen Daten",
+          "heading": "Sie antwortet aus der Gästemappe, nicht aus dem Internet.",
+          "text": "Bei jeder Frage liest die KI frisch nach: Gästemappe, Hausregeln, Objektdaten, die Buchung und der bisherige Verlauf. Änderst du das WLAN-Passwort, gilt ab der nächsten Antwort das neue — es gibt keine Kopie, die veraltet.",
+          "punkte": {
+            "a": "Gast",
+            "b": "Wie komme ich ins WLAN?",
+            "c": "Netz „Duenenblick“, Passwort steht auf der Karte am Router."
+          }
+        },
+        "regeln": {
+          "titel": "Regeln",
+          "heading": "Ein Thema, eine Regel, eine Entscheidung.",
+          "text": "Für jedes Thema legst du fest, ob die KI selbst sendet oder einen Entwurf hinlegt — und für welche Objekte die Regel gilt. Du siehst, wie oft jede Regel gegriffen hat und wann zuletzt.",
+          "punkte": {
+            "a": "WLAN · automatisch",
+            "b": "Check-in · automatisch",
+            "c": "Stornierung · Entwurf"
+          }
+        },
+        "wissen": {
+          "titel": "Wissensdatenbank",
+          "heading": "Sie füllt sich, während du arbeitest.",
+          "text": "Was du einem Gast schreibst und für den nächsten gilt, merkt sich die KI als Fakt. Fehlt ihr etwas, sagt sie es — statt eine plausible Antwort zu erfinden. Du siehst jeden Fakt, kannst ihn ändern oder löschen.",
+          "punkte": {
+            "a": "Aus Nachrichten gelernt",
+            "b": "Aus Dokumenten",
+            "c": "Von Hand ergänzt"
+          }
+        },
+        "eskalation": {
+          "titel": "Eskalation",
+          "heading": "Wenn es kritisch wird, antwortet sie nicht — sie holt dich.",
+          "text": "Wird ein Gast verärgert oder nennt er eines deiner Stichwörter („kein warmes Wasser“, „Wasserschaden“), sendet die KI nichts. Sie meldet den Verlauf, und der bleibt offen, bis jemand ihn erledigt.",
+          "punkte": {
+            "a": "Negative Stimmung",
+            "b": "Eigene Stichwörter",
+            "c": "Meldung statt Antwort"
           }
         }
       }

@@ -696,6 +696,10 @@
         "title": "Gästupplevelse",
         "items": "Digital gästpärm, AI-concierge, incheckning online, automatiska meddelanden, 24 språk"
       },
+      "ki": {
+        "title": "AI-svar",
+        "items": "Svarar från din gästmapp, regler per ämne, utkast eller automatiskt, eskalering vid problem, 24 språk"
+      },
       "zahlungen": {
         "title": "Betalningar & fakturering",
         "items": "Onlinebetalningar, handpenning, deposition, grundfakturor, bokföringsklara exporter"
@@ -1335,6 +1339,80 @@
             "a": "Gäst",
             "b": "Var finns wifi-lösenordet?",
             "c": "I gästpärmen — jag har skickat länken till dig."
+          }
+        }
+      }
+    },
+    "ki": {
+      "metaBeschreibung": "AI-svar på gästfrågor: baserat på din gästmapp, styrt av regler per ämne – som utkast eller automatiskt, på 24 språk.",
+      "headline": "Frågorna du besvarar för hundrade gången.",
+      "sub": "\"När är incheckning?\", \"Finns det Wi-Fi?\", \"Var parkerar jag?\" – AI besvarar dem från din gästmapp. Du bestämmer per ämne om den ska skicka själv eller lägga fram ett utkast till dig.",
+      "bildAlt": "AI-svar i inkorgen med regler och kunskapsdatabas",
+      "nutzen": {
+        "a": {
+          "titel": "Känner till dina objekt",
+          "text": "Gästmapp, husregler, incheckningstider och gästens bokning – AI läser det du redan har underhållit. Du behöver inte skriva in det en andra gång."
+        },
+        "b": {
+          "titel": "Du bestämmer vad den får göra",
+          "text": "En regel per ämne: Wi-Fi får den besvara själv, avbokningar lägger den fram som ett utkast till dig. Utkast är alltid standard."
+        },
+        "c": {
+          "titel": "Uppfinner inget",
+          "text": "Om information saknas skriver den ingen fras, utan berättar vilken fakta som saknas – och skapar den med ett klick."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "När det gäller pengar upphör automatiken.",
+          "text": "AI svarar aldrig själv på återbetalningar, rabatter, betalningsuppgifter och tillgänglighetslöften – inte ens om en regel tillåter det. Sådana svar är värdefulla eller juridiskt bindande, därför får du ett utkast och bestämmer själv.",
+          "punkte": {
+            "a": "Aldrig automatiskt vid pengar",
+            "b": "Dörrkod först efter bekräftelse",
+            "c": "Varje svar loggas"
+          }
+        }
+      },
+      "bildAltBlock": "AI-regler med leveranssätt per ämne",
+      "reiter": {
+        "kontext": {
+          "titel": "Från dina data",
+          "heading": "Den svarar från gästmappen, inte från internet.",
+          "text": "Vid varje fråga läser AI in färsk information: gästmapp, husregler, objektdata, bokningen och den tidigare historiken. Om du ändrar Wi-Fi-lösenordet gäller det nya från nästa svar – det finns ingen kopia som blir föråldrad.",
+          "punkte": {
+            "a": "Gäst",
+            "b": "Hur kommer jag åt Wi-Fi?",
+            "c": "Nätverk \"Duenenblick\", lösenordet står på kortet vid routern."
+          }
+        },
+        "regeln": {
+          "titel": "Regler",
+          "heading": "Ett ämne, en regel, ett beslut.",
+          "text": "För varje ämne bestämmer du om AI ska skicka själv eller lägga fram ett utkast – och för vilka objekt regeln gäller. Du ser hur ofta varje regel har tillämpats och när senast.",
+          "punkte": {
+            "a": "Wi-Fi · automatiskt",
+            "b": "Incheckning · automatiskt",
+            "c": "Avbokning · utkast"
+          }
+        },
+        "wissen": {
+          "titel": "Kunskapsdatabas",
+          "heading": "Den fylls på medan du arbetar.",
+          "text": "Vad du skriver till en gäst och som gäller för nästa, kommer AI ihåg som fakta. Om något saknas säger den det – istället för att uppfinna ett trovärdigt svar. Du ser varje fakta, kan ändra eller radera den.",
+          "punkte": {
+            "a": "Inlärd från meddelanden",
+            "b": "Från dokument",
+            "c": "Manuellt tillagd"
+          }
+        },
+        "eskalation": {
+          "titel": "Eskalering",
+          "heading": "När det blir kritiskt svarar den inte – den hämtar dig.",
+          "text": "Om en gäst blir irriterad eller nämner ett av dina nyckelord (\"inget varmvatten\", \"vattenskada\"), skickar AI inget. Den rapporterar händelseförloppet, och det förblir öppet tills någon åtgärdar det.",
+          "punkte": {
+            "a": "Negativ stämning",
+            "b": "Egna nyckelord",
+            "c": "Rapport istället för svar"
           }
         }
       }

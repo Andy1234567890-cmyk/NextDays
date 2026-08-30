@@ -696,6 +696,10 @@
         "title": "Experiência do hóspede",
         "items": "Guia digital do hóspede, concierge com IA, check-in online, mensagens automáticas, 24 idiomas"
       },
+      "ki": {
+        "title": "Respostas de IA",
+        "items": "Responde a partir do seu guia de hóspedes, regras por tópico, rascunho ou automaticamente, escalada em caso de problemas, 24 idiomas"
+      },
       "zahlungen": {
         "title": "Pagamentos e faturação",
         "items": "Pagamentos online, sinais, cauções, faturação base, exportações prontas para a contabilidade"
@@ -1495,6 +1499,80 @@
             "a": "Hóspede",
             "b": "Onde está a senha do Wi-Fi?",
             "c": "No guia do hóspede — enviei-lhe o link."
+          }
+        }
+      }
+    },
+    "ki": {
+      "metaBeschreibung": "Respostas de IA para perguntas de hóspedes: com base no seu guia de hóspedes, controladas por regras por tópico — como rascunho ou automaticamente, em 24 idiomas.",
+      "headline": "As perguntas que você responde pela centésima vez.",
+      "sub": "\"Quando é o check-in?\", \"Tem Wi-Fi?\", \"Onde estaciono?\" — a IA responde com base no seu guia de hóspedes. Você decide por tópico se ela envia automaticamente ou prepara um rascunho.",
+      "bildAlt": "Respostas de IA na caixa de entrada com regras e base de conhecimento",
+      "nutzen": {
+        "a": {
+          "titel": "Conhece suas propriedades",
+          "text": "Guia de hóspedes, regras da casa, horários de check-in e a reserva do hóspede — a IA lê o que você já inseriu. Não é preciso digitar novamente."
+        },
+        "b": {
+          "titel": "Você decide o que ela pode fazer",
+          "text": "Uma regra por tópico: Wi-Fi ela pode responder sozinha, cancelamentos ela prepara como rascunho. O padrão é sempre o rascunho."
+        },
+        "c": {
+          "titel": "Não inventa nada",
+          "text": "Se a informação estiver faltando, ela não escreve uma frase vazia, mas informa qual fato está faltando — e o cria com um clique."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "A automação para quando se trata de dinheiro.",
+          "text": "A IA nunca responde automaticamente sobre reembolsos, descontos, dados de pagamento e promessas de disponibilidade — mesmo que uma regra permita. Tais respostas valem dinheiro ou são legalmente vinculativas, por isso você recebe um rascunho e decide por si mesmo.",
+          "punkte": {
+            "a": "Nunca automático com dinheiro",
+            "b": "Código da porta somente após confirmação",
+            "c": "Cada resposta é registrada"
+          }
+        }
+      },
+      "bildAltBlock": "Regras da IA com método de entrega por tópico",
+      "reiter": {
+        "kontext": {
+          "titel": "Dos seus dados",
+          "heading": "Ela responde com base no guia de hóspedes, não na internet.",
+          "text": "Para cada pergunta, a IA consulta novamente: guia de hóspedes, regras da casa, dados da propriedade, a reserva e o histórico. Se você alterar a senha do Wi-Fi, a nova senha será usada a partir da próxima resposta — não há cópia desatualizada.",
+          "punkte": {
+            "a": "Hóspede",
+            "b": "Como acesso o Wi-Fi?",
+            "c": "Rede \"Duenenblick\", a senha está no cartão ao lado do roteador."
+          }
+        },
+        "regeln": {
+          "titel": "Regras",
+          "heading": "Um tópico, uma regra, uma decisão.",
+          "text": "Para cada tópico, você define se a IA envia automaticamente ou prepara um rascunho — e para quais propriedades a regra se aplica. Você vê quantas vezes cada regra foi aplicada e quando foi a última vez.",
+          "punkte": {
+            "a": "Wi-Fi · automático",
+            "b": "Check-in · automático",
+            "c": "Cancelamento · rascunho"
+          }
+        },
+        "wissen": {
+          "titel": "Base de conhecimento",
+          "heading": "Ela se preenche enquanto você trabalha.",
+          "text": "O que você escreve para um hóspede e que se aplica ao próximo, a IA memoriza como um fato. Se algo estiver faltando, ela avisa — em vez de inventar uma resposta plausível. Você vê cada fato, pode alterá-lo ou excluí-lo.",
+          "punkte": {
+            "a": "Aprendido com mensagens",
+            "b": "De documentos",
+            "c": "Adicionado manualmente"
+          }
+        },
+        "eskalation": {
+          "titel": "Escala",
+          "heading": "Quando a situação fica crítica, ela não responde — ela te chama.",
+          "text": "Se um hóspede ficar irritado ou mencionar uma de suas palavras-chave (\"sem água quente\", \"danos por água\"), a IA não envia nada. Ela relata o histórico, e ele permanece aberto até que alguém o resolva.",
+          "punkte": {
+            "a": "Humor negativo",
+            "b": "Palavras-chave próprias",
+            "c": "Notificação em vez de resposta"
           }
         }
       }

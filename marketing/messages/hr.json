@@ -696,6 +696,10 @@
         "title": "Iskustvo gostiju",
         "items": "Digitalna mapa za goste, AI concierge, online check-in, automatske poruke, 24 jezika"
       },
+      "ki": {
+        "title": "AI odgovori",
+        "items": "Odgovara iz vaše mape za goste, pravila po temi, nacrt ili automatski, eskalacija u slučaju problema, 24 jezika"
+      },
       "zahlungen": {
         "title": "Plaćanja i obračun",
         "items": "Online plaćanja, predujmovi, jamčevine, osnovni računi, izvozi spremni za knjigovodstvo"
@@ -1495,6 +1499,80 @@
             "a": "Gost",
             "b": "Gdje je Wi-Fi lozinka?",
             "c": "U mapi za goste — poslao sam vam link."
+          }
+        }
+      }
+    },
+    "ki": {
+      "metaBeschreibung": "Odgovori umjetne inteligencije na pitanja gostiju: temeljeni na vašem priručniku za goste, vođeni pravilima po temi — kao nacrt ili automatski, na 24 jezika.",
+      "headline": "Pitanja na koja odgovarate stoti put.",
+      "sub": "„Kada je prijava?“, „Ima li Wi-Fi?“, „Gdje parkiram?“ — umjetna inteligencija odgovara na njih iz vašeg priručnika za goste. Vi odlučujete po temi hoće li sama poslati ili vam pripremiti nacrt.",
+      "bildAlt": "Odgovori umjetne inteligencije u pristigloj pošti s pravilima i bazom znanja",
+      "nutzen": {
+        "a": {
+          "titel": "Poznaje vaše objekte",
+          "text": "Priručnik za goste, kućni red, vremena prijave i rezervacija gosta — umjetna inteligencija čita ono što ste ionako unijeli. Nema ponovnog unosa."
+        },
+        "b": {
+          "titel": "Vi određujete što smije",
+          "text": "Jedno pravilo po temi: Wi-Fi smije sama odgovoriti, otkazivanja vam priprema kao nacrt. Zadana postavka je uvijek nacrt."
+        },
+        "c": {
+          "titel": "Ništa ne izmišlja",
+          "text": "Ako podatak nedostaje, ne piše fraze, već vam kaže koji podatak nedostaje — i kreira ga klikom."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Kod novca automatika prestaje.",
+          "text": "Na povrate, popuste, podatke o plaćanju i obećanja o dostupnosti umjetna inteligencija nikada ne odgovara sama — čak i ako pravilo to dopušta. Takvi odgovori vrijede novca ili su pravno obvezujući, stoga tamo dobivate nacrt i sami odlučujete.",
+          "punkte": {
+            "a": "Nikada automatski kod novca",
+            "b": "Kod vrata tek nakon potvrde",
+            "c": "Svaki odgovor se bilježi"
+          }
+        }
+      },
+      "bildAltBlock": "Pravila umjetne inteligencije s načinom dostave po temi",
+      "reiter": {
+        "kontext": {
+          "titel": "Iz vaših podataka",
+          "heading": "Odgovara iz priručnika za goste, ne s interneta.",
+          "text": "Na svako pitanje umjetna inteligencija svježe provjerava: priručnik za goste, kućni red, podatke o objektu, rezervaciju i dosadašnji tijek. Ako promijenite lozinku za Wi-Fi, od sljedećeg odgovora vrijedi nova — nema kopije koja zastarijeva.",
+          "punkte": {
+            "a": "Gost",
+            "b": "Kako se spajam na Wi-Fi?",
+            "c": "Mreža „Duenenblick“, lozinka je na kartici na ruteru."
+          }
+        },
+        "regeln": {
+          "titel": "Pravila",
+          "heading": "Jedna tema, jedno pravilo, jedna odluka.",
+          "text": "Za svaku temu određujete hoće li umjetna inteligencija sama poslati ili pripremiti nacrt — i za koje objekte pravilo vrijedi. Vidite koliko je puta svako pravilo primijenjeno i kada zadnji put.",
+          "punkte": {
+            "a": "Wi-Fi · automatski",
+            "b": "Prijava · automatski",
+            "c": "Otkazivanje · Nacrt"
+          }
+        },
+        "wissen": {
+          "titel": "Baza znanja",
+          "heading": "Popunjava se dok radite.",
+          "text": "Ono što napišete gostu i što vrijedi za sljedećeg, umjetna inteligencija pamti kao činjenicu. Ako joj nešto nedostaje, kaže to — umjesto da izmišlja vjerodostojan odgovor. Vidite svaku činjenicu, možete je promijeniti ili izbrisati.",
+          "punkte": {
+            "a": "Naučeno iz poruka",
+            "b": "Iz dokumenata",
+            "c": "Ručno dopunjeno"
+          }
+        },
+        "eskalation": {
+          "titel": "Eskalacija",
+          "heading": "Kada postane kritično, ne odgovara — poziva vas.",
+          "text": "Ako se gost uznemiri ili spomene neku od vaših ključnih riječi („nema tople vode“, „oštećenje vodom“), umjetna inteligencija ništa ne šalje. Prijavljuje tijek, a on ostaje otvoren dok ga netko ne riješi.",
+          "punkte": {
+            "a": "Negativno raspoloženje",
+            "b": "Vlastite ključne riječi",
+            "c": "Obavijest umjesto odgovora"
           }
         }
       }

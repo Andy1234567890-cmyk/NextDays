@@ -696,6 +696,10 @@
         "title": "Svečių patirtis",
         "items": "Skaitmeninis svečio aplankas, DI konsjeržas, registracija internetu, automatinės žinutės, 24 kalbos"
       },
+      "ki": {
+        "title": "AI atsakymai",
+        "items": "Atsakymai iš jūsų svečių aplanko, taisyklės pagal temas, juodraštis arba automatiškai, eskalavimas kilus problemoms, 24 kalbos"
+      },
       "zahlungen": {
         "title": "Mokėjimai ir apskaita",
         "items": "Mokėjimai internetu, avansai, užstatai, pagrindinės sąskaitos, buhalterijai paruošti eksportai"
@@ -1495,6 +1499,80 @@
             "a": "Svečias",
             "b": "Kur yra Wi-Fi slaptažodis?",
             "c": "Svečio aplanke — nusiunčiau jums nuorodą."
+          }
+        }
+      }
+    },
+    "ki": {
+      "metaBeschreibung": "AI atsakymai į svečių klausimus: paremti jūsų svečių aplanku, valdomi pagal temines taisykles – kaip juodraštis arba automatiškai, 24 kalbomis.",
+      "headline": "Klausimai, į kuriuos atsakote šimtąjį kartą.",
+      "sub": "„Kada registracija?“, „Ar yra Wi-Fi?“, „Kur statyti automobilį?“ – AI atsako į juos iš jūsų svečių aplanko. Jūs sprendžiate, ar ji siunčia pati, ar pateikia jums juodraštį.",
+      "bildAlt": "AI atsakymai gautuosiuose su taisyklėmis ir žinių baze",
+      "nutzen": {
+        "a": {
+          "titel": "Žino jūsų objektus",
+          "text": "Svečių aplankas, namų taisyklės, registracijos laikai ir svečio užsakymas – AI skaito tai, ką jau įvedėte. Nereikia įvesti antrą kartą."
+        },
+        "b": {
+          "titel": "Jūs nustatote, ką ji gali",
+          "text": "Kiekvienai temai taisyklė: Wi-Fi ji gali atsakyti pati, atšaukimus ji pateikia jums kaip juodraštį. Numatytasis nustatymas visada yra juodraštis."
+        },
+        "c": {
+          "titel": "Nieko neišgalvoja",
+          "text": "Jei trūksta informacijos, ji nerašo frazės, o pasako, kokio fakto trūksta – ir sukuria jį paspaudus."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Automatinis režimas sustoja ties pinigais.",
+          "text": "Dėl grąžinimų, nuolaidų, mokėjimo duomenų ir prieinamumo pažadų AI niekada neatsako pati – net jei taisyklė tai leidžia. Tokie atsakymai yra vertingi pinigais arba teisiškai įpareigojantys, todėl gausite juodraštį ir nuspręsite patys.",
+          "punkte": {
+            "a": "Niekada automatiškai su pinigais",
+            "b": "Durų kodas tik po patvirtinimo",
+            "c": "Kiekvienas atsakymas registruojamas"
+          }
+        }
+      },
+      "bildAltBlock": "AI taisyklės su pristatymo būdu pagal temą",
+      "reiter": {
+        "kontext": {
+          "titel": "Iš jūsų duomenų",
+          "heading": "Ji atsako iš svečių aplanko, o ne iš interneto.",
+          "text": "Į kiekvieną klausimą AI iš naujo perskaito: svečių aplanką, namų taisykles, objekto duomenis, užsakymą ir ankstesnę eigą. Jei pakeisite Wi-Fi slaptažodį, nuo kito atsakymo galios naujas – nėra pasenusios kopijos.",
+          "punkte": {
+            "a": "Svečias",
+            "b": "Kaip prisijungti prie Wi-Fi?",
+            "c": "Tinklas „Duenenblick“, slaptažodis yra ant maršrutizatoriaus kortelės."
+          }
+        },
+        "regeln": {
+          "titel": "Taisyklės",
+          "heading": "Viena tema, viena taisyklė, vienas sprendimas.",
+          "text": "Kiekvienai temai nustatote, ar AI siunčia pati, ar pateikia juodraštį – ir kuriems objektams galioja taisyklė. Matote, kiek kartų kiekviena taisyklė buvo pritaikyta ir kada paskutinį kartą.",
+          "punkte": {
+            "a": "Wi-Fi · automatiškai",
+            "b": "Registracija · automatiškai",
+            "c": "Atšaukimas · juodraštis"
+          }
+        },
+        "wissen": {
+          "titel": "Žinių bazė",
+          "heading": "Ji pildosi, kol dirbate.",
+          "text": "Tai, ką rašote svečiui ir kas galioja kitam, AI įsimena kaip faktą. Jei jai ko nors trūksta, ji pasako – užuot išgalvojusi įtikinamą atsakymą. Matote kiekvieną faktą, galite jį pakeisti arba ištrinti.",
+          "punkte": {
+            "a": "Išmokta iš pranešimų",
+            "b": "Iš dokumentų",
+            "c": "Papildyta rankiniu būdu"
+          }
+        },
+        "eskalation": {
+          "titel": "Eskalacija",
+          "heading": "Kai situacija tampa kritiška, ji neatsako – ji jus iškviečia.",
+          "text": "Jei svečias supyksta arba paminėja vieną iš jūsų raktinių žodžių („nėra karšto vandens“, „vandens žala“), AI nieko nesiunčia. Ji praneša apie eigą, ir ji lieka atvira, kol kas nors ją išsprendžia.",
+          "punkte": {
+            "a": "Neigiama nuotaika",
+            "b": "Savo raktiniai žodžiai",
+            "c": "Pranešimas vietoj atsakymo"
           }
         }
       }

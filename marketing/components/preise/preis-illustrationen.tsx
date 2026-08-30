@@ -1,4 +1,4 @@
-// Illustrationen der neun Funktionsgruppen auf der Preisseite.
+// Illustrationen der zehn Funktionsgruppen auf der Preisseite.
 //
 // WARUM ZEICHNUNGEN STATT ICONS:
 // Die erste Fassung setzte eine 16-px-Glyphe je Gruppe — auf einer Seite, die
@@ -208,6 +208,36 @@ function Marktplatz({ className }: Props) {
  * Fehlt ein Schlüssel, wird nichts gezeichnet statt ein falsches Motiv zu
  * zeigen — dasselbe Prinzip wie bei fehlenden Beträgen.
  */
+/**
+ * KI-Antworten: eine eingehende Gastnachricht (links), aus der eine Antwort
+ * entsteht (rechts) — dazwischen der Funke, der die Umwandlung markiert.
+ *
+ * Bewusst KEIN Roboterkopf und kein Gehirn: beide Bilder behaupten Denken.
+ * Was das Produkt tut, ist eine Frage in eine belegte Antwort zu überführen —
+ * also zeigt die Zeichnung genau diese zwei Sprechblasen.
+ */
+function Ki({ className }: Props) {
+  return (
+    <svg viewBox="0 0 96 96" className={className} aria-hidden>
+      {/* Frage des Gastes */}
+      <path
+        d="M10 26a6 6 0 0 1 6-6h22a6 6 0 0 1 6 6v14a6 6 0 0 1-6 6H24l-8 8V46a6 6 0 0 1-6-6z"
+        {...STROKE}
+      />
+      <path d="M20 30h14M20 37h9" {...STROKE} opacity="0.5" />
+      {/* Antwort des Systems — gefüllt, weil sie das Ergebnis ist */}
+      <path
+        d="M52 56a6 6 0 0 1 6-6h22a6 6 0 0 1 6 6v14a6 6 0 0 1-6 6H72l8 8-16-8h-6a6 6 0 0 1-6-6z"
+        fill="currentColor"
+        opacity="0.85"
+      />
+      {/* Funke: die Umwandlung zwischen Frage und Antwort */}
+      <path d="M50 24l3.5 7.5L61 35l-7.5 3.5L50 46l-3.5-7.5L39 35l7.5-3.5z" fill="currentColor" />
+      <path d="M74 22l2 4.5 4.5 2-4.5 2-2 4.5-2-4.5-4.5-2 4.5-2z" fill="currentColor" opacity="0.45" />
+    </svg>
+  );
+}
+
 export const GRUPPEN_ILLUSTRATION: Record<
   string,
   (props: Props) => React.ReactElement
@@ -217,6 +247,7 @@ export const GRUPPEN_ILLUSTRATION: Record<
   direkt: Direkt,
   preise: Preise,
   gaeste: Gaeste,
+  ki: Ki,
   zahlungen: Zahlungen,
   team: Team,
   app: App,

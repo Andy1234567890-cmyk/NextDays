@@ -696,6 +696,10 @@
         "title": "Doświadczenie gościa",
         "items": "Cyfrowy przewodnik dla gości, concierge AI, check-in online, automatyczne wiadomości, 24 języki"
       },
+      "ki": {
+        "title": "Odpowiedzi AI",
+        "items": "Odpowiada z Twojej teczki gościa, zasady według tematu, szkic lub automatycznie, eskalacja w przypadku problemów, 24 języki"
+      },
       "zahlungen": {
         "title": "Płatności i rozliczenia",
         "items": "Płatności online, zaliczki, kaucje, podstawowe faktury, eksporty gotowe dla księgowości"
@@ -1495,6 +1499,80 @@
             "a": "Gość",
             "b": "Gdzie jest hasło do Wi-Fi?",
             "c": "W przewodniku dla gości — wysłałem ci link."
+          }
+        }
+      }
+    },
+    "ki": {
+      "metaBeschreibung": "Odpowiedzi AI na pytania gości: na podstawie Twojego informatora dla gości, sterowane regułami dla każdego tematu — jako szkic lub automatycznie, w 24 językach.",
+      "headline": "Pytania, na które odpowiadasz po raz setny.",
+      "sub": "„Kiedy jest zameldowanie?”, „Czy jest Wi-Fi?”, „Gdzie zaparkować?” — AI odpowiada na nie na podstawie Twojego informatora dla gości. Decydujesz dla każdego tematu, czy wysyła samodzielnie, czy przedstawia Ci szkic.",
+      "bildAlt": "Odpowiedzi AI w skrzynce odbiorczej z regułami i bazą wiedzy",
+      "nutzen": {
+        "a": {
+          "titel": "Zna Twoje obiekty",
+          "text": "Informator dla gości, regulamin domu, godziny zameldowania i rezerwacja gościa — AI czyta to, co już wprowadziłeś. Nie musisz wpisywać drugi raz."
+        },
+        "b": {
+          "titel": "Ty decydujesz, na co jej pozwalasz",
+          "text": "Jedna reguła na temat: Wi-Fi może odpowiadać samodzielnie, anulacje przedstawia Ci jako szkic. Domyślnie zawsze jest szkic."
+        },
+        "c": {
+          "titel": "Nic nie wymyśla",
+          "text": "Jeśli brakuje informacji, nie pisze ogólników, ale informuje Cię, jakiego faktu brakuje — i tworzy go jednym kliknięciem."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Automatyka zatrzymuje się przy pieniądzach.",
+          "text": "W przypadku zwrotów, rabatów, danych płatności i obietnic dostępności AI nigdy nie odpowiada samodzielnie — nawet jeśli reguła na to pozwala. Takie odpowiedzi są cenne lub prawnie wiążące, dlatego otrzymujesz szkic i sam decydujesz.",
+          "punkte": {
+            "a": "Nigdy automatycznie w sprawach finansowych",
+            "b": "Kod do drzwi dopiero po potwierdzeniu",
+            "c": "Każda odpowiedź jest protokołowana"
+          }
+        }
+      },
+      "bildAltBlock": "Reguły AI z metodą dostarczania dla każdego tematu",
+      "reiter": {
+        "kontext": {
+          "titel": "Z Twoich danych",
+          "heading": "Odpowiada na podstawie informatora dla gości, a nie z Internetu.",
+          "text": "Przy każdym pytaniu AI odświeża informacje: informator dla gości, regulamin domu, dane obiektu, rezerwację i dotychczasową historię. Jeśli zmienisz hasło do Wi-Fi, od następnej odpowiedzi obowiązuje nowe — nie ma przestarzałej kopii.",
+          "punkte": {
+            "a": "Gość",
+            "b": "Jak połączyć się z Wi-Fi?",
+            "c": "Sieć „Duenenblick”, hasło jest na karcie przy routerze."
+          }
+        },
+        "regeln": {
+          "titel": "Reguły",
+          "heading": "Jeden temat, jedna reguła, jedna decyzja.",
+          "text": "Dla każdego tematu określasz, czy AI wysyła samodzielnie, czy przedstawia szkic — i dla których obiektów obowiązuje reguła. Widzisz, ile razy każda reguła zadziałała i kiedy ostatnio.",
+          "punkte": {
+            "a": "Wi-Fi · automatycznie",
+            "b": "Zameldowanie · automatycznie",
+            "c": "Anulowanie · szkic"
+          }
+        },
+        "wissen": {
+          "titel": "Baza wiedzy",
+          "heading": "Wypełnia się podczas Twojej pracy.",
+          "text": "To, co piszesz gościowi i co dotyczy następnego, AI zapamiętuje jako fakt. Jeśli czegoś jej brakuje, mówi o tym — zamiast wymyślać wiarygodną odpowiedź. Widzisz każdy fakt, możesz go zmienić lub usunąć.",
+          "punkte": {
+            "a": "Nauczone z wiadomości",
+            "b": "Z dokumentów",
+            "c": "Uzupełnione ręcznie"
+          }
+        },
+        "eskalation": {
+          "titel": "Eskalacja",
+          "heading": "Gdy sytuacja staje się krytyczna, nie odpowiada — wzywa Cię.",
+          "text": "Jeśli gość jest zirytowany lub wymienia jedno z Twoich słów kluczowych („brak ciepłej wody”, „zalanie”), AI nic nie wysyła. Zgłasza przebieg, a ten pozostaje otwarty, dopóki ktoś go nie rozwiąże.",
+          "punkte": {
+            "a": "Negatywny nastrój",
+            "b": "Własne słowa kluczowe",
+            "c": "Zgłoszenie zamiast odpowiedzi"
           }
         }
       }

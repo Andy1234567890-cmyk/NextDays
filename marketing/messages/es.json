@@ -696,6 +696,10 @@
         "title": "Experiencia del huésped",
         "items": "Guía digital del huésped, conserje con IA, check-in online, mensajes automáticos, 24 idiomas"
       },
+      "ki": {
+        "title": "Respuestas de IA",
+        "items": "Responde desde su carpeta de huésped, reglas por tema, borrador o automático, escalada en caso de problemas, 24 idiomas"
+      },
       "zahlungen": {
         "title": "Pagos y facturación",
         "items": "Pagos online, anticipos, fianzas, facturación básica, exportaciones listas para contabilidad"
@@ -1495,6 +1499,80 @@
             "a": "Huésped",
             "b": "¿Dónde está la contraseña del wifi?",
             "c": "En la guía del huésped; te he enviado el enlace."
+          }
+        }
+      }
+    },
+    "ki": {
+      "metaBeschreibung": "Respuestas de IA para preguntas de huéspedes: basadas en su guía para huéspedes, controladas por reglas por tema, como borrador o automáticamente, en 24 idiomas.",
+      "headline": "Las preguntas que responde por centésima vez.",
+      "sub": "¿\"Cuándo es el check-in?\", \"¿Hay wifi?\", \"¿Dónde aparco?\" — la IA las responde desde su guía para huéspedes. Usted decide por tema si las envía automáticamente o le presenta un borrador.",
+      "bildAlt": "Respuestas de IA en la bandeja de entrada con reglas y base de conocimientos",
+      "nutzen": {
+        "a": {
+          "titel": "Conoce sus propiedades",
+          "text": "Guía para huéspedes, reglas de la casa, horarios de check-in y la reserva del huésped — la IA lee lo que usted ya ha mantenido. No hay que volver a introducirlo."
+        },
+        "b": {
+          "titel": "Usted decide lo que puede hacer",
+          "text": "Una regla por tema: puede responder sobre el wifi automáticamente, las cancelaciones las presenta como borrador. La configuración predeterminada es siempre el borrador."
+        },
+        "c": {
+          "titel": "No inventa nada",
+          "text": "Si falta información, no escribe una frase hecha, sino que le dice qué dato falta — y lo crea con un clic."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "La automatización se detiene con el dinero.",
+          "text": "La IA nunca responde por sí misma sobre reembolsos, descuentos, datos de pago y confirmaciones de disponibilidad — incluso si una regla lo permite. Estas respuestas tienen un valor monetario o son legalmente vinculantes, por lo que recibirá un borrador y decidirá usted mismo.",
+          "punkte": {
+            "a": "Nunca automático con dinero",
+            "b": "Código de puerta solo después de la confirmación",
+            "c": "Cada respuesta registrada"
+          }
+        }
+      },
+      "bildAltBlock": "Reglas de la IA con tipo de entrega por tema",
+      "reiter": {
+        "kontext": {
+          "titel": "De sus datos",
+          "heading": "Responde desde la guía para huéspedes, no desde Internet.",
+          "text": "Con cada pregunta, la IA consulta de nuevo: guía para huéspedes, reglas de la casa, datos de la propiedad, la reserva y el historial. Si cambia la contraseña del wifi, la nueva se aplica a partir de la siguiente respuesta — no hay una copia que quede obsoleta.",
+          "punkte": {
+            "a": "Huésped",
+            "b": "¿Cómo me conecto al wifi?",
+            "c": "Red \"Duenenblick\", la contraseña está en la tarjeta junto al router."
+          }
+        },
+        "regeln": {
+          "titel": "Reglas",
+          "heading": "Un tema, una regla, una decisión.",
+          "text": "Para cada tema, usted define si la IA envía automáticamente o presenta un borrador — y para qué propiedades se aplica la regla. Verá cuántas veces se ha aplicado cada regla y cuándo fue la última vez.",
+          "punkte": {
+            "a": "Wifi · automático",
+            "b": "Check-in · automático",
+            "c": "Cancelación · borrador"
+          }
+        },
+        "wissen": {
+          "titel": "Base de conocimientos",
+          "heading": "Se llena mientras trabaja.",
+          "text": "Lo que le escribe a un huésped y es válido para el siguiente, la IA lo memoriza como un hecho. Si le falta algo, lo dice — en lugar de inventar una respuesta plausible. Usted ve cada hecho, puede cambiarlo o eliminarlo.",
+          "punkte": {
+            "a": "Aprendido de mensajes",
+            "b": "De documentos",
+            "c": "Añadido manualmente"
+          }
+        },
+        "eskalation": {
+          "titel": "Escalada",
+          "heading": "Cuando la situación se vuelve crítica, no responde — le avisa a usted.",
+          "text": "Si un huésped se molesta o menciona una de sus palabras clave (\"no hay agua caliente\", \"daños por agua\"), la IA no envía nada. Informa del historial, y este permanece abierto hasta que alguien lo resuelve.",
+          "punkte": {
+            "a": "Estado de ánimo negativo",
+            "b": "Palabras clave propias",
+            "c": "Notificación en lugar de respuesta"
           }
         }
       }

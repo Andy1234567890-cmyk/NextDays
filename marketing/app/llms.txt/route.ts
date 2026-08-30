@@ -43,6 +43,7 @@ const FUNKTION_NOTIZ: Record<FunktionsSchluessel, string> = {
   channel: "Channel manager: rates and availability to Booking.com, Airbnb, Expedia and others",
   direkt: "Direct booking website with own payment flow",
   gaeste: "Guest experience: messaging, check-in, upsells",
+  ki: "AI guest replies: answers drafted from the property's own data, with rules, knowledge base and escalation to a human",
   zahlungen: "Payments, payouts and refunds",
   preise: "Rates, seasons, length-of-stay pricing and discounts",
   team: "Team accounts, roles and permissions",

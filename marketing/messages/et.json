@@ -696,6 +696,10 @@
         "title": "Külaliskogemus",
         "items": "Digitaalne külalisteraamat, tehisintellektiga konsjerž, veebis sisseregistreerimine, automaatsed sõnumid, 24 keelt"
       },
+      "ki": {
+        "title": "AI vastused",
+        "items": "Vastab teie külaliste kaustast, reeglid teemade kaupa, mustand või automaatne, eskaleerimine probleemide korral, 24 keelt"
+      },
       "zahlungen": {
         "title": "Maksed ja arveldus",
         "items": "Veebimaksed, ettemaksud, tagatisrahad, põhiarved, raamatupidamisvalmis eksport"
@@ -1495,6 +1499,80 @@
             "a": "Külaline",
             "b": "Kus on WiFi-parool?",
             "c": "Külalisteraamatus — saatsin sulle lingi."
+          }
+        }
+      }
+    },
+    "ki": {
+      "metaBeschreibung": "AI vastused külaliste küsimustele: teie külaliste kaustast, teemade kaupa reeglitega juhitav – mustandina või automaatselt, 24 keeles.",
+      "headline": "Küsimused, millele vastate sajandat korda.",
+      "sub": "„Millal on sisseregistreerimine?“, „Kas WiFi on olemas?“, „Kuhu parkida?“ – AI vastab neile teie külaliste kaustast. Teie otsustate teemade kaupa, kas see saadab ise või esitab teile mustandi.",
+      "bildAlt": "AI vastused postkastis reeglite ja teadmistebaasiga",
+      "nutzen": {
+        "a": {
+          "titel": "Tunneb teie objekte",
+          "text": "Külaliste kaust, majareeglid, sisseregistreerimise ajad ja külalise broneering – AI loeb seda, mida olete niikuinii hooldanud. Ei pea teist korda sisestama."
+        },
+        "b": {
+          "titel": "Teie otsustate, mida see tohib",
+          "text": "Iga teema kohta reegel: WiFi kohta võib see ise vastata, tühistamiste kohta esitab see teile mustandi. Vaikimisi on alati mustand."
+        },
+        "c": {
+          "titel": "Ei mõtle midagi välja",
+          "text": "Kui teave puudub, ei kirjuta see fraasi, vaid ütleb teile, milline fakt puudub – ja loob selle ühe klõpsuga."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Raha puhul automaatika peatub.",
+          "text": "Tagasimaksete, allahindluste, makseandmete ja saadavuse lubaduste kohta ei vasta AI kunagi ise – isegi siis, kui reegel seda lubab. Sellised vastused on raha väärt või õiguslikult siduvad, seega saate seal mustandi ja otsustate ise.",
+          "punkte": {
+            "a": "Mitte kunagi automaatselt raha puhul",
+            "b": "Uksekood alles pärast kinnitust",
+            "c": "Iga vastus logitakse"
+          }
+        }
+      },
+      "bildAltBlock": "AI reeglid koos edastusviisiga teemade kaupa",
+      "reiter": {
+        "kontext": {
+          "titel": "Teie andmetest",
+          "heading": "See vastab külaliste kaustast, mitte internetist.",
+          "text": "Iga küsimuse puhul loeb AI värskelt üle: külaliste kaust, majareeglid, objekti andmed, broneering ja senine ajalugu. Kui muudate WiFi parooli, kehtib järgmisest vastusest alates uus – vana koopiat ei ole.",
+          "punkte": {
+            "a": "Külaline",
+            "b": "Kuidas ma WiFi-sse saan?",
+            "c": "Võrk „Duenenblick“, parool on ruuteri kaardil."
+          }
+        },
+        "regeln": {
+          "titel": "Reeglid",
+          "heading": "Üks teema, üks reegel, üks otsus.",
+          "text": "Iga teema kohta määrate, kas AI saadab ise või esitab mustandi – ja milliste objektide kohta reegel kehtib. Näete, kui tihti iga reegel on rakendunud ja millal viimati.",
+          "punkte": {
+            "a": "WiFi · automaatselt",
+            "b": "Sisseregistreerimine · automaatselt",
+            "c": "Tühistamine · mustand"
+          }
+        },
+        "wissen": {
+          "titel": "Teadmistebaas",
+          "heading": "See täitub, kui te töötate.",
+          "text": "Mida te külalisele kirjutate ja mis kehtib järgmise kohta, jätab AI faktina meelde. Kui midagi puudub, ütleb see seda – selle asemel, et mõelda välja usutav vastus. Näete iga fakti, saate seda muuta või kustutada.",
+          "punkte": {
+            "a": "Sõnumitest õpitud",
+            "b": "Dokumentidest",
+            "c": "Käsitsi täiendatud"
+          }
+        },
+        "eskalation": {
+          "titel": "Eskalatsioon",
+          "heading": "Kui olukord muutub kriitiliseks, ei vasta see – see kutsub teid.",
+          "text": "Kui külaline on ärritunud või nimetab ühte teie märksõnadest („pole sooja vett“, „veekahjustus“), ei saada AI midagi. See teatab käigust ja see jääb avatuks, kuni keegi selle lahendab.",
+          "punkte": {
+            "a": "Negatiivne meeleolu",
+            "b": "Oma märksõnad",
+            "c": "Teade vastuse asemel"
           }
         }
       }

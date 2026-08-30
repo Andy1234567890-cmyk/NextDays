@@ -24,6 +24,7 @@ const GRUPPEN: { key: string; icon: IconName; bald?: boolean }[] = [
   { key: "direkt", icon: "ph:globe-hemisphere-west" },
   { key: "preise", icon: "ph:trend-up" },
   { key: "gaeste", icon: "ph:users-three" },
+  { key: "ki", icon: "ph:sparkle" },
   { key: "zahlungen", icon: "ph:credit-card" },
   { key: "team", icon: "ph:key" },
   { key: "app", icon: "ph:device-mobile-camera" },
@@ -46,7 +47,7 @@ export function MarketingFeatures({ satzExtern }: { satzExtern: string | null })
 
         <div className="mt-14 rounded-3xl border border-border bg-card p-8 shadow-soft sm:p-12">
           {/* Hervorgehobener Kasten: das Neue steht über der Matrix, nicht
-              versteckt in einer der neun Gruppen. */}
+              versteckt in einer der zehn Gruppen. */}
           <div className="mx-auto max-w-md rounded-2xl bg-gradient-to-br from-surface-accent to-surface-warm p-5 text-center">
             <p className="flex flex-wrap items-center justify-center gap-2 font-display text-lg font-semibold">
               <Icon icon="ph:sparkle" className="size-5 text-accent" />

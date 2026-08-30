@@ -1,4 +1,4 @@
-// Funktions-Übersicht (/funktionen) — der Einstieg zu den neun Unterseiten.
+// Funktions-Übersicht (/funktionen) — der Einstieg zu den zehn Unterseiten.
 //
 // Referenz: hostaway.com/features und lodgify.com/de/funktionen/ (beide am
 // 18.08.2026 angesehen). Beide führen eine eigene Hub-Seite, die nach

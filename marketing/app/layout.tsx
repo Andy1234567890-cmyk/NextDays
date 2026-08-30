@@ -104,7 +104,9 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale}>
+    // suppressHydrationWarning: Tag Assistant & Co. schreiben eigene
+    // data-Attribute ins <html>, bevor React hydratisiert.
+    <html lang={locale} suppressHydrationWarning>
       {/* Das Google-Tag im Einwilligungsmodus. Es MUSS vor allem anderen
           stehen: sein erstes Skript setzt die Vorgabe „alles verweigert", und
           Google schreibt dazu, dass die Reihenfolge entscheidend ist — kommt

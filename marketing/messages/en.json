@@ -696,6 +696,10 @@
         "title": "Guest experience",
         "items": "Digital guest guide, AI concierge, online check-in, automated messages, 24 languages"
       },
+      "ki": {
+        "title": "AI answers",
+        "items": "Answers from your guest directory, rules by topic, draft or automatic, escalation in case of trouble, 24 languages"
+      },
       "zahlungen": {
         "title": "Payments & accounting",
         "items": "Online payments, deposits, security deposits, basic invoicing, accounting-ready exports"
@@ -1335,6 +1339,80 @@
             "a": "Guest",
             "b": "Where is the Wi-Fi password?",
             "c": "In the guest guide — I have sent you the link."
+          }
+        }
+      }
+    },
+    "ki": {
+      "metaBeschreibung": "AI answers for guest questions: fed from your guest directory, controlled by topic-specific rules — as a draft or automatically, in 24 languages.",
+      "headline": "The questions you answer for the hundredth time.",
+      "sub": "\"When is check-in?\", \"Is there Wi-Fi?\", \"Where do I park?\" — the AI answers them from your guest directory. You decide per topic whether it sends automatically or provides a draft.",
+      "bildAlt": "AI answers in the inbox with rules and knowledge base",
+      "nutzen": {
+        "a": {
+          "titel": "Knows your properties",
+          "text": "Guest directory, house rules, check-in times, and the guest's booking — the AI reads what you have already maintained. No need to re-enter."
+        },
+        "b": {
+          "titel": "You decide what it is allowed to do",
+          "text": "One rule per topic: it can answer Wi-Fi questions itself, for cancellations it provides a draft. The default is always a draft."
+        },
+        "c": {
+          "titel": "Invents nothing",
+          "text": "If information is missing, it doesn't write a platitude, but tells you which fact is missing — and creates it with a click."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Automation stops when it comes to money.",
+          "text": "The AI never answers questions about refunds, discounts, payment details, and availability promises automatically — even if a rule would allow it. Such answers are valuable or legally binding, so you receive a draft and decide yourself.",
+          "punkte": {
+            "a": "Never automatic for money matters",
+            "b": "Door code only after confirmation",
+            "c": "Every answer logged"
+          }
+        }
+      },
+      "bildAltBlock": "AI rules with delivery method per topic",
+      "reiter": {
+        "kontext": {
+          "titel": "From your data",
+          "heading": "It answers from the guest directory, not from the internet.",
+          "text": "For every question, the AI checks fresh: guest directory, house rules, property data, the booking, and the previous conversation. If you change the Wi-Fi password, the new one applies from the next answer — there is no outdated copy.",
+          "punkte": {
+            "a": "Guest",
+            "b": "How do I access Wi-Fi?",
+            "c": "Network \"Duenenblick\", password is on the card by the router."
+          }
+        },
+        "regeln": {
+          "titel": "Rules",
+          "heading": "One topic, one rule, one decision.",
+          "text": "For each topic, you define whether the AI sends automatically or provides a draft — and for which properties the rule applies. You see how often each rule has been applied and when last.",
+          "punkte": {
+            "a": "Wi-Fi · automatic",
+            "b": "Check-in · automatic",
+            "c": "Cancellation · draft"
+          }
+        },
+        "wissen": {
+          "titel": "Knowledge base",
+          "heading": "It fills itself as you work.",
+          "text": "What you write to a guest and what applies to the next, the AI remembers as a fact. If something is missing, it tells you — instead of inventing a plausible answer. You see every fact, can change or delete it.",
+          "punkte": {
+            "a": "Learned from messages",
+            "b": "From documents",
+            "c": "Manually added"
+          }
+        },
+        "eskalation": {
+          "titel": "Escalation",
+          "heading": "If it gets critical, it doesn't answer — it calls you.",
+          "text": "If a guest becomes angry or mentions one of your keywords (\"no hot water\", \"water damage\"), the AI sends nothing. It reports the conversation, and it remains open until someone resolves it.",
+          "punkte": {
+            "a": "Negative sentiment",
+            "b": "Custom keywords",
+            "c": "Report instead of answer"
           }
         }
       }

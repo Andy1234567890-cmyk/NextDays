@@ -696,6 +696,10 @@
         "title": "Eispéireas na n-aíonna",
         "items": "Treoirleabhar digiteach aíonna, AI concierge, check-in ar líne, teachtaireachtaí uathoibríocha, 24 teanga"
       },
+      "ki": {
+        "title": "Freagraí AI",
+        "items": "Freagraí ó do leabhar aíochta, rialacha de réir topaicí, dréacht nó go huathoibríoch, ardú céime i gcás fadhbanna, 24 teanga"
+      },
       "zahlungen": {
         "title": "Íocaíochtaí & billeáil",
         "items": "Íocaíochtaí ar líne, éarlaisí, taiscí slándála, bunsonraisc, easpórtálacha réidh don chuntasóir"
@@ -1495,6 +1499,80 @@
             "a": "Aoi",
             "b": "Cá bhfuil focal faire an Wi-Fi?",
             "c": "Sa treoirleabhar aíonna — sheol mé an nasc chugat."
+          }
+        }
+      }
+    },
+    "ki": {
+      "metaBeschreibung": "Freagraí AI ar cheisteanna aoi: bunaithe ar do leabhar aoi, á rialú ag rialacha de réir topaicí — mar dhréacht nó go huathoibríoch, i 24 theanga.",
+      "headline": "Na ceisteanna a fhreagraíonn tú don chéad uair.",
+      "sub": "\"Cathain atá an tseiceáil isteach?\", \"An bhfuil Wi-Fi ann?\", \"Cá háit a pháirceálann mé?\" — freagraíonn an AI iad ó do leabhar aoi. Socraíonn tú de réir topaicí an seolann sé é féin nó an gcuireann sé dréacht chugat.",
+      "bildAlt": "Freagraí AI san ionchur le rialacha agus bunachar eolais",
+      "nutzen": {
+        "a": {
+          "titel": "Tá eolas aige ar do réadmhaoine",
+          "text": "Leabhar aoi, rialacha tí, amanna seiceála isteach agus áirithint an aoi — léann an AI an méid atá curtha isteach agat cheana féin. Ní gá é a chlóscríobh faoi dhó."
+        },
+        "b": {
+          "titel": "Socraíonn tú cad is cead dó a dhéanamh",
+          "text": "Riail amháin in aghaidh an topaic: is féidir leis Wi-Fi a fhreagairt é féin, cuireann sé dréacht chugat le haghaidh cealuithe. Is é an dréacht an réamhshocrú i gcónaí."
+        },
+        "c": {
+          "titel": "Ní chumann sé aon rud",
+          "text": "Má tá faisnéis in easnamh, ní scríobhann sé frása folamh, ach insíonn sé duit cén fhíric atá in easnamh — agus cruthaíonn sé é le cliceáil."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Stopann an t-uathoibriú nuair a bhaineann sé le hairgead.",
+          "text": "Maidir le haisíocaíochtaí, lascainí, sonraí íocaíochta agus gealltanais infhaighteachta, ní fhreagraíonn an AI riamh é féin — fiú má cheadaíonn riail é. Is fiú airgead na freagraí sin nó tá siad ceangailteach ó thaobh dlí, mar sin gheobhaidh tú dréacht agus cinnfidh tú féin.",
+          "punkte": {
+            "a": "Ní go huathoibríoch riamh le hairgead",
+            "b": "Cód dorais ach amháin tar éis deimhniú",
+            "c": "Gach freagra logáilte"
+          }
+        }
+      },
+      "bildAltBlock": "Rialacha AI le modh seachadta de réir topaicí",
+      "reiter": {
+        "kontext": {
+          "titel": "Ó do shonraí",
+          "heading": "Freagraíonn sé ó leabhar an aoi, ní ón idirlíon.",
+          "text": "Le gach ceist, léann an AI arís: leabhar aoi, rialacha tí, sonraí réadmhaoine, an áirithint agus an stair. Má athraíonn tú an focal faire Wi-Fi, beidh an ceann nua bailí ón gcéad fhreagra eile — níl aon chóip ann a théann as dáta.",
+          "punkte": {
+            "a": "Aoi",
+            "b": "Conas a nascaim leis an Wi-Fi?",
+            "c": "Líonra \"Duenenblick\", tá an focal faire ar an gcárta ag an ródaire."
+          }
+        },
+        "regeln": {
+          "titel": "Rialacha",
+          "heading": "Topaic amháin, riail amháin, cinneadh amháin.",
+          "text": "Maidir le gach topaic, socraíonn tú an seolann an AI é féin nó an gcuireann sé dréacht chugat — agus cé na réadmhaoine a mbaineann an riail leo. Feiceann tú cé chomh minic a cuireadh gach riail i bhfeidhm agus cathain is déanaí.",
+          "punkte": {
+            "a": "Wi-Fi · go huathoibríoch",
+            "b": "Seiceáil isteach · go huathoibríoch",
+            "c": "Cealú · Dréacht"
+          }
+        },
+        "wissen": {
+          "titel": "Bunachar Eolais",
+          "heading": "Líonann sé é féin agus tú ag obair.",
+          "text": "An méid a scríobhann tú chuig aoi agus atá bailí don chéad cheann eile, cuimhníonn an AI air mar fhíric. Má tá rud éigin in easnamh air, insíonn sé é — in ionad freagra inchreidte a chumadh. Feiceann tú gach fíric, is féidir leat é a athrú nó a scriosadh.",
+          "punkte": {
+            "a": "Foghlamtha ó theachtaireachtaí",
+            "b": "Ó dhoiciméid",
+            "c": "Curtha leis de láimh"
+          }
+        },
+        "eskalation": {
+          "titel": "Eascailt",
+          "heading": "Nuair a éiríonn sé criticiúil, ní fhreagraíonn sé — tugann sé isteach thú.",
+          "text": "Má éiríonn aoi trína chéile nó má luann sé ceann de do chuid eochairfhocail (\"gan uisce te\", \"damáiste uisce\"), ní sheolann an AI aon rud. Tuairiscíonn sé an stair, agus fanann sé oscailte go dtí go ndéanann duine é a réiteach.",
+          "punkte": {
+            "a": "Meon diúltach",
+            "b": "Eochairfhocail féin",
+            "c": "Tuairisc in ionad freagra"
           }
         }
       }

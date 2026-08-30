@@ -1,4 +1,4 @@
-// Die neun Funktions-Unterseiten — welche es gibt, worauf sie zeigen.
+// Die zehn Funktions-Unterseiten — welche es gibt, worauf sie zeigen.
 //
 // WARUM ES SIE GIBT (Referenz-Recherche 18.08.2026):
 // Lodgify führt zu JEDER Funktion eine eigene Seite (`/ferienwohnung-channel-
@@ -7,7 +7,7 @@
 // `/buchungssystem/`, `/buchungswidget/`, `/ferienwohnung-homepage-baukasten/`
 // …), Hostaway ebenso hinter seinem Feature-Menü. Der Grund ist nicht Optik:
 // Wer „channel manager ferienwohnung" sucht, landet auf einer Seite, die genau
-// diese eine Frage beantwortet — eine Startseite mit neun Kacheln beantwortet
+// diese eine Frage beantwortet — eine Startseite mit zehn Kacheln beantwortet
 // keine davon. Bis eben hatten wir gar keine solche Seite; das Menü zeigte auf
 // den Anker `/#funktionen`.
 //
@@ -25,6 +25,7 @@ export type FunktionsSchluessel =
   | "channel"
   | "direkt"
   | "gaeste"
+  | "ki"
   | "zahlungen"
   | "preise"
   | "team"
@@ -108,6 +109,25 @@ export const FUNKTIONEN: readonly Funktion[] = [
     aufnahmeBlock: "mobil-kalender",
     bereich: "gast",
     reiter: [{ key: "posteingang", grafik: "nachrichten" }, { key: "automatisch", grafik: "checkliste" }, { key: "checkin", grafik: "zeichnung" }, { key: "mappe", grafik: "nachrichten" }],
+  },
+  {
+    // Die KI-Antwort ist eine EIGENE Seite und kein Reiter unter „gaeste":
+    // wer „KI Antworten Ferienwohnung" sucht, sucht genau das — und die
+    // Gästeerlebnis-Seite beantwortet die Frage nicht (dieselbe Begründung
+    // wie im Kopf dieser Datei für die neun bestehenden Seiten).
+    key: "ki",
+    slug: "ki-antworten",
+    // Motive der KI-Seite im Posteingang. Bis die Aufnahmen liegen, zeigt die
+    // Vorlage von selbst die gebaute Illustration (wie bei „app").
+    aufnahme: "ki-antworten",
+    aufnahmeBlock: "ki-regeln",
+    bereich: "gast",
+    reiter: [
+      { key: "kontext", grafik: "nachrichten" },
+      { key: "regeln", grafik: "checkliste" },
+      { key: "wissen", grafik: "zeichnung" },
+      { key: "eskalation", grafik: "belegung" },
+    ],
   },
   {
     key: "zahlungen",

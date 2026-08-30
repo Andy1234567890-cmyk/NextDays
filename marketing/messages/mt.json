@@ -696,6 +696,10 @@
         "title": "Esperjenza tal-mistednin",
         "items": "Gwida diġitali għall-mistednin, AI concierge, check-in online, messaġġi awtomatiċi, 24 lingwa"
       },
+      "ki": {
+        "title": "Tweġibiet bl-AI",
+        "items": "Tweġibiet mill-ktejjeb tal-klijenti tiegħek, regoli skont is-suġġett, abbozz jew awtomatiku, eskalazzjoni f'każ ta' problemi, 24 lingwa"
+      },
       "zahlungen": {
         "title": "Ħlasijiet u fatturar",
         "items": "Ħlasijiet online, depożiti, garanziji, fatturi bażiċi, esportazzjonijiet lesti għall-kontabilità"
@@ -1495,6 +1499,80 @@
             "a": "Mistieden",
             "b": "Fejn hu l-password tal-Wi-Fi?",
             "c": "Fil-gwida tal-mistednin — bgħattlek il-link."
+          }
+        }
+      }
+    },
+    "ki": {
+      "metaBeschreibung": "Tweġibiet AI għall-mistoqsijiet tal-klijenti: ibbażati fuq il-ktejjeb tal-klijenti tiegħek, ikkontrollati minn regoli għal kull suġġett — bħala abbozz jew awtomatikament, f'24 lingwa.",
+      "headline": "Il-mistoqsijiet li twieġeb għall-mitt darba.",
+      "sub": "“Meta hu ċ-check-in?”, “Hemm Wi-Fi?”, “Fejn nipparkja?” — l-AI twieġebhom mill-ktejjeb tal-klijenti tiegħek. Int tiddeċiedi għal kull suġġett jekk tibgħatx hi stess jew tpoġġilekx abbozz.",
+      "bildAlt": "Tweġibiet AI fl-inbox b'regoli u bażi ta' għarfien",
+      "nutzen": {
+        "a": {
+          "titel": "Taf il-proprjetajiet tiegħek",
+          "text": "Ktejjeb tal-klijenti, regoli tad-dar, ħinijiet taċ-check-in u l-booking tal-klijent — l-AI taqra dak li diġà żammejt aġġornat. M'hemmx għalfejn terġa' ddaħħalha."
+        },
+        "b": {
+          "titel": "Int tiddeċiedi x'tista' tagħmel",
+          "text": "Regola waħda għal kull suġġett: tista' twieġeb il-Wi-Fi hi stess, tpoġġilek l-abbozzi tal-kanċellazzjonijiet. L-abbozz huwa dejjem l-għażla default."
+        },
+        "c": {
+          "titel": "Ma toħloqx xejn",
+          "text": "Jekk l-informazzjoni tkun nieqsa, ma tiktebx frażi vojta, iżda tgħidlek liema fatt hu nieqes — u toħloqha bi klikk."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "L-awtomazzjoni tieqaf meta niġu għall-flus.",
+          "text": "L-AI qatt ma twieġeb awtomatikament dwar rifużjonijiet, skontijiet, dettalji tal-ħlas u wegħdiet ta' disponibbiltà — anke jekk regola tippermetti dan. Tweġibiet bħal dawn jiswew flus jew huma legalment vinkolanti, għalhekk tirċievi abbozz u tiddeċiedi int stess.",
+          "punkte": {
+            "a": "Qatt awtomatikament bil-flus",
+            "b": "Kodiċi tal-bieb biss wara konferma",
+            "c": "Kull tweġiba tiġi rreġistrata"
+          }
+        }
+      },
+      "bildAltBlock": "Regoli tal-AI bil-metodu tal-kunsinna għal kull suġġett",
+      "reiter": {
+        "kontext": {
+          "titel": "Mid-dejta tiegħek",
+          "heading": "Twieġeb mill-ktejjeb tal-klijenti, mhux mill-internet.",
+          "text": "Għal kull mistoqsija, l-AI terġa' taqra mill-ġdid: ktejjeb tal-klijenti, regoli tad-dar, dejta tal-proprjetà, il-booking u l-istorja preċedenti. Jekk tibdel il-password tal-Wi-Fi, il-ġdida tapplika mill-tweġiba li jmiss — m'hemmx kopja li tiskadi.",
+          "punkte": {
+            "a": "Klijent",
+            "b": "Kif nidħol fil-Wi-Fi?",
+            "c": "Netwerk “Duenenblick”, il-password tinsab fuq il-karta fuq ir-router."
+          }
+        },
+        "regeln": {
+          "titel": "Regoli",
+          "heading": "Suġġett wieħed, regola waħda, deċiżjoni waħda.",
+          "text": "Għal kull suġġett, int tiddeċiedi jekk l-AI tibgħatx hi stess jew tpoġġilekx abbozz — u għal liema proprjetajiet tapplika r-regola. Tara kemm-il darba kull regola ġiet applikata u meta l-aħħar.",
+          "punkte": {
+            "a": "Wi-Fi · awtomatikament",
+            "b": "Check-in · awtomatikament",
+            "c": "Kanċellazzjoni · Abbozz"
+          }
+        },
+        "wissen": {
+          "titel": "Bażi ta' għarfien",
+          "heading": "Timtela waqt li taħdem.",
+          "text": "Dak li tikteb lil klijent u li japplika għall-ieħor, l-AI tiftakar bħala fatt. Jekk ikun nieqes xi ħaġa, tgħidlek — minflok ma toħloq tweġiba plawsibbli. Tara kull fatt, tista' tibdlu jew tħassru.",
+          "punkte": {
+            "a": "Mgħallma minn messaġġi",
+            "b": "Minn dokumenti",
+            "c": "Miżjuda manwalment"
+          }
+        },
+        "eskalation": {
+          "titel": "Eskalazzjoni",
+          "heading": "Meta l-affarijiet isiru kritiċi, ma twieġebx — iġġibek.",
+          "text": "Jekk klijent jirrabja jew isemmi waħda mill-kliem kjavi tiegħek (“l-ebda ilma sħun”, “ħsara mill-ilma”), l-AI ma tibgħat xejn. Tirrapporta l-istorja, u din tibqa' miftuħa sakemm xi ħadd isolviha.",
+          "punkte": {
+            "a": "Burdata negattiva",
+            "b": "Kliem kjavi tiegħek",
+            "c": "Rapport minflok tweġiba"
           }
         }
       }

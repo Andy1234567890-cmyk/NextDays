@@ -696,6 +696,10 @@
         "title": "Expérience voyageur",
         "items": "Livret d'accueil numérique, conciergerie IA, check-in en ligne, messages automatiques, 24 langues"
       },
+      "ki": {
+        "title": "Réponses IA",
+        "items": "Répondre depuis votre livret d'accueil, règles par sujet, brouillon ou automatique, escalade en cas de problème, 24 langues"
+      },
       "zahlungen": {
         "title": "Paiements et facturation",
         "items": "Paiements en ligne, acomptes, cautions, facturation de base, exports prêts pour la comptabilité"
@@ -1495,6 +1499,80 @@
             "a": "Voyageur",
             "b": "Où est le mot de passe Wi-Fi ?",
             "c": "Dans le livret d'accueil — je vous ai envoyé le lien."
+          }
+        }
+      }
+    },
+    "ki": {
+      "metaBeschreibung": "Réponses IA aux questions des clients : basées sur votre livret d'accueil, gérées par des règles thématiques — sous forme de brouillon ou automatiquement, en 24 langues.",
+      "headline": "Les questions auxquelles vous répondez pour la centième fois.",
+      "sub": "« Quelle est l'heure d'arrivée ? », « Y a-t-il le Wi-Fi ? », « Où puis-je me garer ? » — l'IA y répond à partir de votre livret d'accueil. Vous décidez par thème si elle envoie elle-même ou vous soumet un brouillon.",
+      "bildAlt": "Réponses IA dans la boîte de réception avec règles et base de connaissances",
+      "nutzen": {
+        "a": {
+          "titel": "Connaît vos propriétés",
+          "text": "Livret d'accueil, règlement intérieur, heures d'arrivée et réservation du client — l'IA lit ce que vous avez déjà renseigné. Pas besoin de saisir une deuxième fois."
+        },
+        "b": {
+          "titel": "Vous déterminez ce qu'elle est autorisée à faire",
+          "text": "Une règle par thème : elle peut répondre elle-même pour le Wi-Fi, elle vous soumet un brouillon pour les annulations. Le brouillon est toujours la valeur par défaut."
+        },
+        "c": {
+          "titel": "N'invente rien",
+          "text": "Si l'information manque, elle n'écrit pas de formule toute faite, mais vous indique quel fait manque — et le crée en un clic."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "L'automatisation s'arrête quand il s'agit d'argent.",
+          "text": "L'IA ne répond jamais d'elle-même aux questions concernant les remboursements, les réductions, les données de paiement et les promesses de disponibilité — même si une règle l'autorise. Ces réponses ont une valeur monétaire ou sont juridiquement contraignantes, c'est pourquoi vous recevez un brouillon et décidez vous-même.",
+          "punkte": {
+            "a": "Jamais automatique pour l'argent",
+            "b": "Code de porte uniquement après confirmation",
+            "c": "Chaque réponse est enregistrée"
+          }
+        }
+      },
+      "bildAltBlock": "Règles de l'IA avec mode de livraison par thème",
+      "reiter": {
+        "kontext": {
+          "titel": "À partir de vos données",
+          "heading": "Elle répond à partir du livret d'accueil, pas d'Internet.",
+          "text": "Pour chaque question, l'IA consulte les informations les plus récentes : livret d'accueil, règlement intérieur, données de la propriété, réservation et historique. Si vous modifiez le mot de passe Wi-Fi, le nouveau s'applique à partir de la prochaine réponse — il n'y a pas de copie obsolète.",
+          "punkte": {
+            "a": "Client",
+            "b": "Comment me connecter au Wi-Fi ?",
+            "c": "Réseau « Duenenblick », le mot de passe est sur la carte près du routeur."
+          }
+        },
+        "regeln": {
+          "titel": "Règles",
+          "heading": "Un thème, une règle, une décision.",
+          "text": "Pour chaque thème, vous définissez si l'IA envoie elle-même ou soumet un brouillon — et pour quelles propriétés la règle s'applique. Vous voyez combien de fois chaque règle a été appliquée et la dernière fois.",
+          "punkte": {
+            "a": "Wi-Fi · automatique",
+            "b": "Arrivée · automatique",
+            "c": "Annulation · brouillon"
+          }
+        },
+        "wissen": {
+          "titel": "Base de connaissances",
+          "heading": "Elle se remplit au fur et à mesure que vous travaillez.",
+          "text": "Ce que vous écrivez à un client et qui s'applique au suivant est mémorisé par l'IA comme un fait. S'il lui manque quelque chose, elle le dit — au lieu d'inventer une réponse plausible. Vous voyez chaque fait, vous pouvez le modifier ou le supprimer.",
+          "punkte": {
+            "a": "Appris des messages",
+            "b": "À partir de documents",
+            "c": "Ajouté manuellement"
+          }
+        },
+        "eskalation": {
+          "titel": "Escalade",
+          "heading": "Si la situation devient critique, elle ne répond pas — elle vous alerte.",
+          "text": "Si un client est en colère ou mentionne l'un de vos mots-clés (« pas d'eau chaude », « dégât des eaux »), l'IA n'envoie rien. Elle signale l'historique, et celui-ci reste ouvert jusqu'à ce que quelqu'un le traite.",
+          "punkte": {
+            "a": "Humeur négative",
+            "b": "Mots-clés personnalisés",
+            "c": "Alerte au lieu de réponse"
           }
         }
       }

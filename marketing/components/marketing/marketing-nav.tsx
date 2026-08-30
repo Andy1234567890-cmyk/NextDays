@@ -53,7 +53,7 @@ const NAV_LINKS = [
   { key: "ressourcen", href: "/#ressourcen" },
 ] as const;
 
-// Die neun Funktionsgruppen, in drei Spalten gruppiert — dieselbe Ordnung wie
+// Die zehn Funktionsgruppen, in drei Spalten gruppiert — dieselbe Ordnung wie
 // auf der Funktionsseite: erst das Kerngeschäft, dann Gast und Geld, dann
 // Betrieb und Auswertung.
 const MENU_SPALTEN: readonly {
@@ -61,7 +61,7 @@ const MENU_SPALTEN: readonly {
   gruppen: readonly string[];
 }[] = [
   { titel: "kern", gruppen: ["pms", "channel", "direkt"] },
-  { titel: "gast", gruppen: ["gaeste", "zahlungen", "preise"] },
+  { titel: "gast", gruppen: ["gaeste", "ki", "zahlungen", "preise"] },
   { titel: "betrieb", gruppen: ["team", "app", "auswertungen"] },
 ];
 

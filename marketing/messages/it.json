@@ -696,6 +696,10 @@
         "title": "Esperienza dell'ospite",
         "items": "Guida digitale dell'ospite, concierge IA, check-in online, messaggi automatici, 24 lingue"
       },
+      "ki": {
+        "title": "Risposte AI",
+        "items": "Risponde dal suo manuale per gli ospiti, regole per argomento, bozza o automatico, escalation in caso di problemi, 24 lingue"
+      },
       "zahlungen": {
         "title": "Pagamenti e fatturazione",
         "items": "Pagamenti online, acconti, cauzioni, fatturazione base, esportazioni pronte per la contabilità"
@@ -1495,6 +1499,80 @@
             "a": "Ospite",
             "b": "Dov'è la password del Wi-Fi?",
             "c": "Nella guida dell'ospite: ti ho mandato il link."
+          }
+        }
+      }
+    },
+    "ki": {
+      "metaBeschreibung": "Risposte AI per domande degli ospiti: basate sulla tua cartella ospiti, controllate da regole per argomento — come bozza o automaticamente, in 24 lingue.",
+      "headline": "Le domande a cui rispondi per la centesima volta.",
+      "sub": "«Quando è il check-in?», «C'è il Wi-Fi?», «Dove parcheggio?» — l'AI risponde basandosi sulla tua cartella ospiti. Decidi per ogni argomento se invia autonomamente o ti prepara una bozza.",
+      "bildAlt": "Risposte AI nella casella di posta con regole e database di conoscenza",
+      "nutzen": {
+        "a": {
+          "titel": "Conosce le tue proprietà",
+          "text": "Cartella ospiti, regole della casa, orari di check-in e la prenotazione dell'ospite — l'AI legge ciò che hai già inserito. Non devi digitare due volte."
+        },
+        "b": {
+          "titel": "Decidi cosa può fare",
+          "text": "Una regola per argomento: può rispondere autonomamente al Wi-Fi, per le cancellazioni ti prepara una bozza. L'impostazione predefinita è sempre la bozza."
+        },
+        "c": {
+          "titel": "Non inventa nulla",
+          "text": "Se mancano informazioni, non scrive frasi fatte, ma ti dice quale fatto manca — e lo crea con un clic."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "L'automazione si ferma quando si tratta di denaro.",
+          "text": "Per rimborsi, sconti, dati di pagamento e promesse di disponibilità, l'AI non risponde mai autonomamente — anche se una regola lo consentirebbe. Tali risposte hanno un valore monetario o sono legalmente vincolanti, per questo ricevi una bozza e decidi tu stesso.",
+          "punkte": {
+            "a": "Mai automaticamente per denaro",
+            "b": "Codice porta solo dopo conferma",
+            "c": "Ogni risposta registrata"
+          }
+        }
+      },
+      "bildAltBlock": "Regole dell'AI con modalità di consegna per argomento",
+      "reiter": {
+        "kontext": {
+          "titel": "Dai tuoi dati",
+          "heading": "Risponde dalla cartella ospiti, non da Internet.",
+          "text": "Per ogni domanda, l'AI consulta sempre i dati più recenti: cartella ospiti, regole della casa, dati della proprietà, la prenotazione e la cronologia. Se modifichi la password del Wi-Fi, dalla risposta successiva sarà valida quella nuova — non esiste una copia obsoleta.",
+          "punkte": {
+            "a": "Ospite",
+            "b": "Come mi connetto al Wi-Fi?",
+            "c": "Rete «Duenenblick», la password è sulla scheda del router."
+          }
+        },
+        "regeln": {
+          "titel": "Regole",
+          "heading": "Un argomento, una regola, una decisione.",
+          "text": "Per ogni argomento decidi se l'AI invia autonomamente o prepara una bozza — e per quali proprietà vale la regola. Vedi quante volte ogni regola è stata applicata e l'ultima volta.",
+          "punkte": {
+            "a": "Wi-Fi · automatico",
+            "b": "Check-in · automatico",
+            "c": "Cancellazione · bozza"
+          }
+        },
+        "wissen": {
+          "titel": "Database di conoscenza",
+          "heading": "Si riempie mentre lavori.",
+          "text": "Ciò che scrivi a un ospite e che vale per il prossimo, l'AI lo memorizza come fatto. Se le manca qualcosa, lo dice — invece di inventare una risposta plausibile. Puoi vedere ogni fatto, modificarlo o eliminarlo.",
+          "punkte": {
+            "a": "Appreso dai messaggi",
+            "b": "Dai documenti",
+            "c": "Aggiunto manualmente"
+          }
+        },
+        "eskalation": {
+          "titel": "Escalation",
+          "heading": "Quando la situazione diventa critica, non risponde — ti chiama.",
+          "text": "Se un ospite si arrabbia o menziona una delle tue parole chiave («niente acqua calda», «danno da acqua»), l'AI non invia nulla. Segnala la conversazione, che rimane aperta finché qualcuno non la gestisce.",
+          "punkte": {
+            "a": "Umore negativo",
+            "b": "Parole chiave personalizzate",
+            "c": "Notifica invece di risposta"
           }
         }
       }

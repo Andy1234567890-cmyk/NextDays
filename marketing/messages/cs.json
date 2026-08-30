@@ -696,6 +696,10 @@
         "title": "Zážitek hosta",
         "items": "Digitální průvodce pro hosty, AI concierge, online check-in, automatické zprávy, 24 jazyků"
       },
+      "ki": {
+        "title": "Odpovědi AI",
+        "items": "Odpovídá z vaší složky pro hosty, pravidla podle tématu, návrh nebo automaticky, eskalace při problémech, 24 jazyků"
+      },
       "zahlungen": {
         "title": "Platby a fakturace",
         "items": "Online platby, zálohy, kauce, základní faktury, exporty připravené pro účetnictví"
@@ -1495,6 +1499,80 @@
             "a": "Host",
             "b": "Kde najdu heslo k Wi-Fi?",
             "c": "V průvodci pro hosty — poslal jsem vám odkaz."
+          }
+        }
+      }
+    },
+    "ki": {
+      "metaBeschreibung": "Odpovědi AI na dotazy hostů: čerpáno z vaší hostovské složky, řízeno pravidly pro každé téma – jako návrh nebo automaticky, ve 24 jazycích.",
+      "headline": "Otázky, na které odpovídáte po sté.",
+      "sub": "„Kdy je check-in?“, „Je k dispozici Wi-Fi?“, „Kde mohu parkovat?“ – AI odpoví na tyto otázky z vaší hostovské složky. Pro každé téma se rozhodnete, zda má odeslat sama, nebo vám předložit návrh.",
+      "bildAlt": "Odpovědi AI v doručené poště s pravidly a znalostní databází",
+      "nutzen": {
+        "a": {
+          "titel": "Zná vaše objekty",
+          "text": "Hostovská složka, domovní řád, časy check-inu a rezervace hosta – AI čte to, co jste již zadali. Není třeba zadávat podruhé."
+        },
+        "b": {
+          "titel": "Vy rozhodujete, co smí",
+          "text": "Jedno pravidlo pro každé téma: Wi-Fi může odpovědět sama, stornování vám předloží jako návrh. Výchozí nastavení je vždy návrh."
+        },
+        "c": {
+          "titel": "Nic si nevymýšlí",
+          "text": "Pokud údaj chybí, nenapíše frázi, ale řekne vám, jaký fakt chybí – a vytvoří ho kliknutím."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "U peněz se automatika zastaví.",
+          "text": "Na vrácení peněz, slevy, platební údaje a přísliby dostupnosti AI nikdy neodpovídá sama – ani když to pravidlo dovoluje. Takové odpovědi mají hodnotu peněz nebo jsou právně závazné, proto zde dostanete návrh a rozhodnete se sami.",
+          "punkte": {
+            "a": "Nikdy automaticky u peněz",
+            "b": "Kód dveří až po potvrzení",
+            "c": "Každá odpověď je zaznamenána"
+          }
+        }
+      },
+      "bildAltBlock": "Pravidla AI s typem doručení pro každé téma",
+      "reiter": {
+        "kontext": {
+          "titel": "Z vašich dat",
+          "heading": "Odpovídá z hostovské složky, ne z internetu.",
+          "text": "U každé otázky AI čerstvě zkontroluje: hostovskou složku, domovní řád, údaje o objektu, rezervaci a dosavadní průběh. Pokud změníte heslo Wi-Fi, od další odpovědi platí nové – neexistuje žádná zastaralá kopie.",
+          "punkte": {
+            "a": "Host",
+            "b": "Jak se připojím k Wi-Fi?",
+            "c": "Síť „Duenenblick“, heslo je na kartě u routeru."
+          }
+        },
+        "regeln": {
+          "titel": "Pravidla",
+          "heading": "Jedno téma, jedno pravidlo, jedno rozhodnutí.",
+          "text": "Pro každé téma určíte, zda má AI odeslat sama, nebo předložit návrh – a pro které objekty pravidlo platí. Vidíte, jak často každé pravidlo zasáhlo a kdy naposledy.",
+          "punkte": {
+            "a": "Wi-Fi · automaticky",
+            "b": "Check-in · automaticky",
+            "c": "Stornování · návrh"
+          }
+        },
+        "wissen": {
+          "titel": "Znalostní databáze",
+          "heading": "Plní se, zatímco pracujete.",
+          "text": "Co napíšete hostovi a platí pro dalšího, si AI zapamatuje jako fakt. Pokud jí něco chybí, řekne to – místo aby si vymýšlela věrohodnou odpověď. Vidíte každý fakt, můžete ho změnit nebo smazat.",
+          "punkte": {
+            "a": "Naučeno z zpráv",
+            "b": "Z dokumentů",
+            "c": "Ručně doplněno"
+          }
+        },
+        "eskalation": {
+          "titel": "Eskalace",
+          "heading": "Když se situace stane kritickou, neodpoví – zavolá vás.",
+          "text": "Pokud se host naštve nebo zmíní jedno z vašich klíčových slov („žádná teplá voda“, „poškození vodou“), AI nic nepošle. Nahlásí průběh a ten zůstane otevřený, dokud ho někdo nevyřeší.",
+          "punkte": {
+            "a": "Negativní nálada",
+            "b": "Vlastní klíčová slova",
+            "c": "Hlášení místo odpovědi"
           }
         }
       }

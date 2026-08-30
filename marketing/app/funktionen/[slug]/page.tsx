@@ -1,4 +1,4 @@
-// Eine Funktions-Unterseite (/funktionen/<slug>) — neun Seiten aus EINER Vorlage.
+// Eine Funktions-Unterseite (/funktionen/<slug>) — zehn Seiten aus EINER Vorlage.
 //
 // AUFBAU nach der Referenz (lodgify.com/de/ferienwohnung-channel-manager/ und
 // die übrigen Funktionsseiten, abgelesen 18.08.2026). Dort folgt jede Seite
@@ -16,7 +16,7 @@
 //      `marketing-stimmen.tsx`).
 //   6. Abschluss-CTA.
 //
-// Warum EINE Vorlage und keine neun Dateien: die Seiten unterscheiden sich in
+// Warum EINE Vorlage und keine zehn Dateien: die Seiten unterscheiden sich in
 // Text und Bild, nicht im Aufbau. Neun Kopien würden beim ersten Umbau
 // auseinanderlaufen — und ein Besucher merkt sofort, wenn eine Funktionsseite
 // „anders" aussieht als die anderen.
@@ -44,7 +44,7 @@ import { holeProvisionssaetze } from "@/lib/provisionstexte";
 
 import type { Metadata } from "next";
 
-// Alle neun Seiten werden zur Bauzeit erzeugt — sie ändern sich nur mit dem
+// Alle zehn Seiten werden zur Bauzeit erzeugt — sie ändern sich nur mit dem
 // Code, nicht mit Daten.
 export function generateStaticParams() {
   return FUNKTIONEN.map((f) => ({ slug: f.slug }));

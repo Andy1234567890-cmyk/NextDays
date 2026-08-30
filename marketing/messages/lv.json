@@ -696,6 +696,10 @@
         "title": "Viesu pieredze",
         "items": "Digitālā viesu mape, MI konsjeržs, tiešsaistes reģistrēšanās, automātiskās ziņas, 24 valodas"
       },
+      "ki": {
+        "title": "AI atbildes",
+        "items": "Atbild no jūsu viesu mapes, noteikumi pa tēmām, melnraksts vai automātiski, eskalācija strīdu gadījumā, 24 valodas"
+      },
       "zahlungen": {
         "title": "Maksājumi un norēķini",
         "items": "Tiešsaistes maksājumi, avansi, drošības naudas, pamata rēķini, grāmatvedībai gatavi eksporti"
@@ -1495,6 +1499,80 @@
             "a": "Viesis",
             "b": "Kur ir Wi-Fi parole?",
             "c": "Viesu mapē — nosūtīju tev saiti."
+          }
+        }
+      }
+    },
+    "ki": {
+      "metaBeschreibung": "AI atbildes uz viesu jautājumiem: balstītas uz jūsu viesu mapi, kontrolētas ar noteikumiem katrai tēmai — kā melnraksts vai automātiski, 24 valodās.",
+      "headline": "Jautājumi, uz kuriem atbildat simto reizi.",
+      "sub": "„Kad ir reģistrēšanās?“, „Vai ir Wi-Fi?“, „Kur es varu novietot automašīnu?“ — AI atbild uz tiem no jūsu viesu mapes. Jūs izlemjat par katru tēmu, vai tā sūta pati vai iesniedz jums melnrakstu.",
+      "bildAlt": "AI atbildes iesūtnē ar noteikumiem un zināšanu bāzi",
+      "nutzen": {
+        "a": {
+          "titel": "Pārzina jūsu īpašumus",
+          "text": "Viesu mape, mājas noteikumi, reģistrēšanās laiki un viesa rezervācija — AI lasa to, ko jau esat ievadījis. Nav nepieciešams ievadīt divreiz."
+        },
+        "b": {
+          "titel": "Jūs nosakāt, ko tā drīkst",
+          "text": "Viens noteikums katrai tēmai: Wi-Fi tā drīkst atbildēt pati, atcelšanas gadījumā tā iesniedz jums melnrakstu. Noklusējuma iestatījums vienmēr ir melnraksts."
+        },
+        "c": {
+          "titel": "Neko neizdomā",
+          "text": "Ja informācija trūkst, tā neraksta frāzi, bet gan pasaka, kāds fakts trūkst — un izveido to ar klikšķi."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Pie naudas automātika apstājas.",
+          "text": "Uz atmaksām, atlaidēm, maksājumu datiem un pieejamības solījumiem AI nekad neatbild pati — pat tad, ja noteikums to atļauj. Šādas atbildes ir naudas vērtas vai juridiski saistošas, tāpēc jūs saņemat melnrakstu un izlemjat pats.",
+          "punkte": {
+            "a": "Nekad automātiski pie naudas",
+            "b": "Durvju kods tikai pēc apstiprināšanas",
+            "c": "Katra atbilde tiek protokolēta"
+          }
+        }
+      },
+      "bildAltBlock": "AI noteikumi ar piegādes veidu katrai tēmai",
+      "reiter": {
+        "kontext": {
+          "titel": "No jūsu datiem",
+          "heading": "Tā atbild no viesu mapes, nevis no interneta.",
+          "text": "Uz katru jautājumu AI atsvaidzina informāciju: viesu mape, mājas noteikumi, īpašuma dati, rezervācija un iepriekšējā vēsture. Ja maināt Wi-Fi paroli, jaunā parole ir spēkā no nākamās atbildes — nav novecojušas kopijas.",
+          "punkte": {
+            "a": "Viesis",
+            "b": "Kā es varu pieslēgties Wi-Fi?",
+            "c": "Tīkls „Duenenblick“, parole ir uz kartes pie maršrutētāja."
+          }
+        },
+        "regeln": {
+          "titel": "Noteikumi",
+          "heading": "Viena tēma, viens noteikums, viens lēmums.",
+          "text": "Katrā tēmā jūs nosakāt, vai AI sūta pati vai iesniedz melnrakstu — un uz kuriem objektiem noteikums attiecas. Jūs redzat, cik bieži katrs noteikums ir piemērots un kad pēdējo reizi.",
+          "punkte": {
+            "a": "Wi-Fi · automātiski",
+            "b": "Reģistrēšanās · automātiski",
+            "c": "Atcelšana · melnraksts"
+          }
+        },
+        "wissen": {
+          "titel": "Zināšanu bāze",
+          "heading": "Tā aizpildās, kamēr strādājat.",
+          "text": "Ko jūs rakstāt viesim un kas attiecas uz nākamo, AI atceras kā faktu. Ja tai kaut kas trūkst, tā to pasaka — nevis izdomā ticamu atbildi. Jūs redzat katru faktu, varat to mainīt vai dzēst.",
+          "punkte": {
+            "a": "Mācījies no ziņojumiem",
+            "b": "No dokumentiem",
+            "c": "Papildināts ar roku"
+          }
+        },
+        "eskalation": {
+          "titel": "Eskalācija",
+          "heading": "Kad kļūst kritiski, tā neatbild — tā jūs izsauc.",
+          "text": "Ja viesis kļūst neapmierināts vai nosauc kādu no jūsu atslēgvārdiem („nav silta ūdens“, „ūdens bojājumi“), AI neko nesūta. Tā ziņo par notikumu, un tas paliek atvērts, līdz kāds to atrisina.",
+          "punkte": {
+            "a": "Negatīva noskaņa",
+            "b": "Pašu atslēgvārdi",
+            "c": "Ziņojums, nevis atbilde"
           }
         }
       }

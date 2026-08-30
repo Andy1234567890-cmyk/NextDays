@@ -696,6 +696,10 @@
         "title": "Vieraskokemus",
         "items": "Digitaalinen vieraskansio, tekoälyconcierge, verkkosisäänkirjautuminen, automaattiset viestit, 24 kieltä"
       },
+      "ki": {
+        "title": "Tekoälyvastaukset",
+        "items": "Vastaa vieraskansiosta, säännöt aiheittain, luonnos tai automaattisesti, eskalointi ongelmatilanteissa, 24 kieltä"
+      },
       "zahlungen": {
         "title": "Maksut & laskutus",
         "items": "Verkkomaksut, ennakkomaksut, vakuudet, peruslaskut, kirjanpitovalmiit viennit"
@@ -1495,6 +1499,80 @@
             "a": "Vieras",
             "b": "Missä Wi-Fi-salasana on?",
             "c": "Vieraskansiossa — lähetin sinulle linkin."
+          }
+        }
+      }
+    },
+    "ki": {
+      "metaBeschreibung": "Tekoälyvastaukset vieraskysymyksiin: perustuu vieraskansioosi, ohjataan aihekohtaisilla säännöillä – luonnoksena tai automaattisesti, 24 kielellä.",
+      "headline": "Kysymykset, joihin vastaat sadas kerta.",
+      "sub": "”Milloin sisäänkirjautuminen on?”, ”Onko Wi-Fiä?”, ”Mihin pysäköin?” – tekoäly vastaa niihin vieraskansiostasi. Päätät aihekohtaisesti, lähettääkö se itse vai esittääkö se sinulle luonnoksen.",
+      "bildAlt": "Tekoälyvastaukset postilaatikossa sääntöjen ja tietokannan avulla",
+      "nutzen": {
+        "a": {
+          "titel": "Tuntee kohteesi",
+          "text": "Vieraskansio, talon säännöt, sisäänkirjautumisajat ja vieraan varaus – tekoäly lukee sen, mitä olet jo ylläpitänyt. Ei tarvitse syöttää toista kertaa."
+        },
+        "b": {
+          "titel": "Sinä päätät, mitä se saa tehdä",
+          "text": "Yksi sääntö per aihe: Wi-Fiin se saa vastata itse, peruutukset se esittää sinulle luonnoksena. Oletuksena on aina luonnos."
+        },
+        "c": {
+          "titel": "Ei keksi mitään",
+          "text": "Jos tieto puuttuu, se ei kirjoita fraasia, vaan kertoo sinulle, mikä fakta puuttuu – ja luo sen yhdellä napsautuksella."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Rahan kohdalla automatiikka pysähtyy.",
+          "text": "Tekoäly ei koskaan vastaa itse hyvityksiin, alennuksiin, maksutietoihin ja saatavuuslupauksiin – vaikka sääntö sen sallisi. Tällaiset vastaukset ovat rahan arvoisia tai oikeudellisesti sitovia, joten saat niistä luonnoksen ja päätät itse.",
+          "punkte": {
+            "a": "Ei koskaan automaattisesti rahan kanssa",
+            "b": "Ovikoodi vasta vahvistuksen jälkeen",
+            "c": "Jokainen vastaus kirjataan"
+          }
+        }
+      },
+      "bildAltBlock": "Tekoälyn säännöt toimitustavalla aihekohtaisesti",
+      "reiter": {
+        "kontext": {
+          "titel": "Tiedoistasi",
+          "heading": "Se vastaa vieraskansiosta, ei internetistä.",
+          "text": "Jokaisen kysymyksen kohdalla tekoäly lukee tiedot uudelleen: vieraskansion, talon säännöt, kohteen tiedot, varauksen ja aiemman keskustelun. Jos muutat Wi-Fi-salasanan, uusi salasana on voimassa seuraavasta vastauksesta alkaen – vanhentunutta kopiota ei ole.",
+          "punkte": {
+            "a": "Vieras",
+            "b": "Miten pääsen Wi-Fiin?",
+            "c": "Verkko ”Duenenblick”, salasana on reitittimen kortissa."
+          }
+        },
+        "regeln": {
+          "titel": "Säännöt",
+          "heading": "Yksi aihe, yksi sääntö, yksi päätös.",
+          "text": "Jokaiselle aiheelle määrität, lähettääkö tekoäly itse vai esittääkö se luonnoksen – ja mihin kohteisiin sääntö pätee. Näet, kuinka usein kukin sääntö on aktivoitunut ja milloin viimeksi.",
+          "punkte": {
+            "a": "Wi-Fi · automaattisesti",
+            "b": "Sisäänkirjautuminen · automaattisesti",
+            "c": "Peruutus · luonnos"
+          }
+        },
+        "wissen": {
+          "titel": "Tietokanta",
+          "heading": "Se täyttyy työskennellessäsi.",
+          "text": "Mitä kirjoitat vieraalle ja mikä pätee seuraavaan, tekoäly muistaa faktana. Jos siltä puuttuu jotain, se kertoo sen – sen sijaan, että keksisi uskottavan vastauksen. Näet jokaisen faktan, voit muuttaa tai poistaa sen.",
+          "punkte": {
+            "a": "Oppi viesteistä",
+            "b": "Asiakirjoista",
+            "c": "Käsin täydennetty"
+          }
+        },
+        "eskalation": {
+          "titel": "Eskalaatio",
+          "heading": "Kun tilanne kriisiytyy, se ei vastaa – se hakee sinut.",
+          "text": "Jos vieras ärsyyntyy tai mainitsee jonkin avainsanasi (”ei lämmintä vettä”, ”vesivahinko”), tekoäly ei lähetä mitään. Se ilmoittaa tapahtumasta, ja se pysyy avoimena, kunnes joku hoitaa sen.",
+          "punkte": {
+            "a": "Negatiivinen tunnelma",
+            "b": "Omat avainsanat",
+            "c": "Ilmoitus vastauksen sijaan"
           }
         }
       }

@@ -696,6 +696,10 @@
         "title": "Doživetje gostov",
         "items": "Digitalna mapa za goste, UI concierge, spletni check-in, samodejna sporočila, 24 jezikov"
       },
+      "ki": {
+        "title": "Odgovori z umetno inteligenco",
+        "items": "Odgovori iz vaše mape za goste, pravila po temah, osnutek ali samodejno, stopnjevanje v primeru težav, 24 jezikov"
+      },
       "zahlungen": {
         "title": "Plačila in obračun",
         "items": "Spletna plačila, predplačila, varščine, osnovni računi, izvozi, pripravljeni za računovodstvo"
@@ -1495,6 +1499,80 @@
             "a": "Gost",
             "b": "Kje najdem geslo za Wi-Fi?",
             "c": "V mapi za goste — poslal sem vam povezavo."
+          }
+        }
+      }
+    },
+    "ki": {
+      "metaBeschreibung": "Odgovori z umetno inteligenco na vprašanja gostov: na podlagi vaše mape za goste, vodeni s pravili za vsako temo – kot osnutek ali samodejno, v 24 jezikih.",
+      "headline": "Vprašanja, na katera odgovarjate stotič.",
+      "sub": "»Kdaj je prijava?«, »Ali je na voljo Wi-Fi?«, »Kje lahko parkiram?« – umetna inteligenca odgovori na podlagi vaše mape za goste. Za vsako temo se odločite, ali bo poslala odgovor sama ali vam bo pripravila osnutek.",
+      "bildAlt": "Odgovori z umetno inteligenco v nabiralniku s pravili in bazo znanja",
+      "nutzen": {
+        "a": {
+          "titel": "Pozna vaše objekte",
+          "text": "Mapa za goste, hišni red, časi prijave in rezervacija gosta – umetna inteligenca prebere, kar ste že vnesli. Ni vam treba vnašati drugič."
+        },
+        "b": {
+          "titel": "Vi določate, kaj sme",
+          "text": "Za vsako temo eno pravilo: na vprašanja o Wi-Fi-ju lahko odgovori sama, odpovedi vam predloži kot osnutek. Privzeta nastavitev je vedno osnutek."
+        },
+        "c": {
+          "titel": "Ne izmišljuje si",
+          "text": "Če podatek manjka, ne napiše fraze, ampak vam pove, katero dejstvo manjka – in ga ustvari z enim klikom."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Pri denarju se avtomatika ustavi.",
+          "text": "Na vprašanja o vračilih, popustih, plačilnih podatkih in obljubah o razpoložljivosti umetna inteligenca nikoli ne odgovori sama – tudi če pravilo to dovoljuje. Takšni odgovori so vredni denarja ali pravno zavezujoči, zato boste prejeli osnutek in se boste odločili sami.",
+          "punkte": {
+            "a": "Nikoli samodejno pri denarju",
+            "b": "Koda za vrata šele po potrditvi",
+            "c": "Vsak odgovor je zabeležen"
+          }
+        }
+      },
+      "bildAltBlock": "Pravila umetne inteligence z načinom dostave za vsako temo",
+      "reiter": {
+        "kontext": {
+          "titel": "Iz vaših podatkov",
+          "heading": "Odgovarja iz mape za goste, ne iz interneta.",
+          "text": "Pri vsakem vprašanju umetna inteligenca na novo prebere: mapo za goste, hišni red, podatke o objektu, rezervacijo in prejšnji potek. Če spremenite geslo za Wi-Fi, velja novo od naslednjega odgovora – ni kopije, ki bi zastarala.",
+          "punkte": {
+            "a": "Gost",
+            "b": "Kako se povežem z Wi-Fi-jem?",
+            "c": "Omrežje »Duenenblick«, geslo je na kartici na usmerjevalniku."
+          }
+        },
+        "regeln": {
+          "titel": "Pravila",
+          "heading": "Ena tema, eno pravilo, ena odločitev.",
+          "text": "Za vsako temo določite, ali umetna inteligenca pošlje odgovor sama ali pripravi osnutek – in za katere objekte velja pravilo. Vidite, kolikokrat je bilo posamezno pravilo uporabljeno in kdaj nazadnje.",
+          "punkte": {
+            "a": "Wi-Fi · samodejno",
+            "b": "Prijava · samodejno",
+            "c": "Odpoved · osnutek"
+          }
+        },
+        "wissen": {
+          "titel": "Baza znanja",
+          "heading": "Polni se, medtem ko delate.",
+          "text": "Kar napišete gostu in velja za naslednjega, si umetna inteligenca zapomni kot dejstvo. Če ji kaj manjka, vam to pove – namesto da bi si izmislila verjeten odgovor. Vidite vsako dejstvo, ga lahko spremenite ali izbrišete.",
+          "punkte": {
+            "a": "Naučeno iz sporočil",
+            "b": "Iz dokumentov",
+            "c": "Ročno dopolnjeno"
+          }
+        },
+        "eskalation": {
+          "titel": "Eskalacija",
+          "heading": "Ko postane kritično, ne odgovori – pokliče vas.",
+          "text": "Če gost postane jezen ali omeni eno od vaših ključnih besed (»ni tople vode«, »poškodba zaradi vode«), umetna inteligenca ne pošlje ničesar. Poroča o poteku, in ta ostane odprt, dokler ga nekdo ne reši.",
+          "punkte": {
+            "a": "Negativno razpoloženje",
+            "b": "Lastne ključne besede",
+            "c": "Poročilo namesto odgovora"
           }
         }
       }

@@ -696,6 +696,10 @@
         "title": "Vendégélmény",
         "items": "Digitális vendégkönyv, MI-concierge, online check-in, automatikus üzenetek, 24 nyelv"
       },
+      "ki": {
+        "title": "AI-válaszok",
+        "items": "Válaszol a vendégkönyvéből, témánkénti szabályok, tervezet vagy automatikus, eszkaláció probléma esetén, 24 nyelv"
+      },
       "zahlungen": {
         "title": "Fizetés és számlázás",
         "items": "Online fizetés, előlegek, kauciók, alapszámlák, könyvelésre kész exportok"
@@ -1495,6 +1499,80 @@
             "a": "Vendég",
             "b": "Hol van a Wi-Fi-jelszó?",
             "c": "A vendégkönyvben — elküldtem a linket."
+          }
+        }
+      }
+    },
+    "ki": {
+      "metaBeschreibung": "AI-válaszok vendégkérdésekre: a vendégkönyvből táplálkozva, témánkénti szabályokkal vezérelve – piszkozatként vagy automatikusan, 24 nyelven.",
+      "headline": "Azok a kérdések, amiket századszorra válaszol meg.",
+      "sub": "„Mikor van a bejelentkezés?”, „Van Wi-Fi?”, „Hol parkoljak?” – az AI a vendégkönyvéből válaszol. Ön dönti el témánként, hogy automatikusan küldje-e, vagy piszkozatot készítsen.",
+      "bildAlt": "AI-válaszok a beérkező levelek között szabályokkal és tudásbázissal",
+      "nutzen": {
+        "a": {
+          "titel": "Ismeri az Ön objektumait",
+          "text": "Vendégkönyv, házirend, bejelentkezési idők és a vendég foglalása – az AI elolvassa, amit Ön már amúgy is karbantartott. Nincs szükség kétszeri beírásra."
+        },
+        "b": {
+          "titel": "Ön dönti el, mit tehet",
+          "text": "Témánként egy szabály: a Wi-Fi-t automatikusan megválaszolhatja, a lemondásokat piszkozatként készíti el. Az alapértelmezett mindig a piszkozat."
+        },
+        "c": {
+          "titel": "Nem talál ki semmit",
+          "text": "Ha hiányzik az információ, nem ír üres frázisokat, hanem megmondja, melyik tény hiányzik – és egy kattintással létrehozza."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "A pénznél az automatika leáll.",
+          "text": "Visszatérítések, kedvezmények, fizetési adatok és rendelkezésre állási ígéretek esetén az AI soha nem válaszol magától – még akkor sem, ha egy szabály megengedi. Az ilyen válaszok pénzt érnek vagy jogilag kötelezőek, ezért piszkozatot kap, és Ön dönt.",
+          "punkte": {
+            "a": "Soha nem automatikus pénzügyek esetén",
+            "b": "Ajtókód csak megerősítés után",
+            "c": "Minden válasz naplózva"
+          }
+        }
+      },
+      "bildAltBlock": "AI-szabályok kézbesítési móddal témánként",
+      "reiter": {
+        "kontext": {
+          "titel": "Az Ön adataiból",
+          "heading": "A vendégkönyvből válaszol, nem az internetről.",
+          "text": "Minden kérdésnél az AI frissen olvassa el: vendégkönyv, házirend, objektumadatok, a foglalás és az eddigi előzmények. Ha megváltoztatja a Wi-Fi jelszavát, a következő válasz már az újat használja – nincs elavult másolat.",
+          "punkte": {
+            "a": "Vendég",
+            "b": "Hogyan csatlakozhatok a Wi-Fi-hez?",
+            "c": "Hálózat „Duenenblick”, a jelszó a routeren lévő kártyán található."
+          }
+        },
+        "regeln": {
+          "titel": "Szabályok",
+          "heading": "Egy téma, egy szabály, egy döntés.",
+          "text": "Minden témához Ön határozza meg, hogy az AI automatikusan küldje-e, vagy piszkozatot készítsen – és mely objektumokra vonatkozik a szabály. Láthatja, hányszor érvényesült egy szabály, és mikor utoljára.",
+          "punkte": {
+            "a": "Wi-Fi · automatikusan",
+            "b": "Bejelentkezés · automatikusan",
+            "c": "Lemondás · piszkozat"
+          }
+        },
+        "wissen": {
+          "titel": "Tudásbázis",
+          "heading": "Munkája során feltöltődik.",
+          "text": "Amit egy vendégnek ír, és ami a következőre is érvényes, azt az AI tényként megjegyzi. Ha valami hiányzik neki, azt megmondja – ahelyett, hogy hihető választ találna ki. Minden tényt láthat, módosíthatja vagy törölheti.",
+          "punkte": {
+            "a": "Üzenetekből tanult",
+            "b": "Dokumentumokból",
+            "c": "Kézzel kiegészítve"
+          }
+        },
+        "eskalation": {
+          "titel": "Eszkaláció",
+          "heading": "Ha kritikusra fordul a helyzet, nem válaszol – Önt hívja.",
+          "text": "Ha egy vendég bosszús lesz, vagy az Ön kulcsszavait említi („nincs meleg víz”, „vízkár”), az AI nem küld semmit. Jelenti az eseményt, és az nyitva marad, amíg valaki el nem intézi.",
+          "punkte": {
+            "a": "Negatív hangulat",
+            "b": "Saját kulcsszavak",
+            "c": "Jelentés válasz helyett"
           }
         }
       }

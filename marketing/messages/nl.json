@@ -696,6 +696,10 @@
         "title": "Gastbeleving",
         "items": "Digitale gastenmap, AI-conciërge, online check-in, automatische berichten, 24 talen"
       },
+      "ki": {
+        "title": "AI-antwoorden",
+        "items": "Antwoord uit uw gastenmap, regels per onderwerp, concept of automatisch, escalatie bij problemen, 24 talen"
+      },
       "zahlungen": {
         "title": "Betalingen & facturatie",
         "items": "Online betalingen, aanbetalingen, borgsommen, basisfacturen, boekhoudklare exports"
@@ -1495,6 +1499,80 @@
             "a": "Gast",
             "b": "Waar is het wifiwachtwoord?",
             "c": "In de gastenmap — ik heb je de link gestuurd."
+          }
+        }
+      }
+    },
+    "ki": {
+      "metaBeschreibung": "AI-antwoorden voor gastvragen: gevoed door uw gastenmap, gestuurd door regels per onderwerp — als concept of automatisch, in 24 talen.",
+      "headline": "De vragen die u voor de honderdste keer beantwoordt.",
+      "sub": "„Wanneer is de check-in?“, „Is er wifi?“, „Waar parkeer ik?“ — de AI beantwoordt ze vanuit uw gastenmap. U beslist per onderwerp of deze zelf verstuurt of een concept voor u klaarmaakt.",
+      "bildAlt": "AI-antwoorden in de inbox met regels en kennisbank",
+      "nutzen": {
+        "a": {
+          "titel": "Kent uw objecten",
+          "text": "Gastenmap, huisregels, check-in tijden en de boeking van de gast — de AI leest wat u toch al heeft ingevoerd. Geen tweede keer typen."
+        },
+        "b": {
+          "titel": "U bepaalt wat het mag",
+          "text": "Per onderwerp een regel: wifi mag het zelf beantwoorden, annuleringen legt het als concept voor u klaar. Uitgangspunt is altijd het concept."
+        },
+        "c": {
+          "titel": "Verzint niets",
+          "text": "Als de informatie ontbreekt, schrijft het geen cliché, maar vertelt het u welk feit ontbreekt — en maakt het met een klik aan."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Bij geld stopt de automatiek.",
+          "text": "Op terugbetalingen, kortingen, betalingsgegevens en beschikbaarheidsgaranties antwoordt de AI nooit zelf — zelfs niet als een regel dit toestaat. Dergelijke antwoorden zijn geld waard of juridisch bindend, daarom krijgt u daar een concept en beslist u zelf.",
+          "punkte": {
+            "a": "Nooit automatisch bij geld",
+            "b": "Deurcode pas na bevestiging",
+            "c": "Elk antwoord wordt gelogd"
+          }
+        }
+      },
+      "bildAltBlock": "AI-regels met bezorgmethode per onderwerp",
+      "reiter": {
+        "kontext": {
+          "titel": "Uit uw gegevens",
+          "heading": "Het antwoordt vanuit de gastenmap, niet vanuit het internet.",
+          "text": "Bij elke vraag leest de AI opnieuw: gastenmap, huisregels, objectgegevens, de boeking en het eerdere verloop. Als u het wifi-wachtwoord wijzigt, geldt vanaf het volgende antwoord het nieuwe — er is geen verouderde kopie.",
+          "punkte": {
+            "a": "Gast",
+            "b": "Hoe kom ik op de wifi?",
+            "c": "Netwerk „Duenenblick“, wachtwoord staat op de kaart bij de router."
+          }
+        },
+        "regeln": {
+          "titel": "Regels",
+          "heading": "Eén onderwerp, één regel, één beslissing.",
+          "text": "Voor elk onderwerp bepaalt u of de AI zelf verstuurt of een concept klaarmaakt — en voor welke objecten de regel geldt. U ziet hoe vaak elke regel is toegepast en wanneer voor het laatst.",
+          "punkte": {
+            "a": "Wifi · automatisch",
+            "b": "Check-in · automatisch",
+            "c": "Annulering · concept"
+          }
+        },
+        "wissen": {
+          "titel": "Kennisbank",
+          "heading": "Deze vult zich terwijl u werkt.",
+          "text": "Wat u aan een gast schrijft en voor de volgende geldt, onthoudt de AI als feit. Als er iets ontbreekt, zegt het dat — in plaats van een plausibel antwoord te verzinnen. U ziet elk feit, kunt het wijzigen of verwijderen.",
+          "punkte": {
+            "a": "Geleerd uit berichten",
+            "b": "Uit documenten",
+            "c": "Handmatig aangevuld"
+          }
+        },
+        "eskalation": {
+          "titel": "Escalatie",
+          "heading": "Als het kritiek wordt, antwoordt het niet — het haalt u erbij.",
+          "text": "Als een gast geïrriteerd raakt of een van uw trefwoorden noemt („geen warm water“, „waterschade“), verstuurt de AI niets. Het meldt het verloop, en dat blijft open totdat iemand het afhandelt.",
+          "punkte": {
+            "a": "Negatieve stemming",
+            "b": "Eigen trefwoorden",
+            "c": "Melding in plaats van antwoord"
           }
         }
       }

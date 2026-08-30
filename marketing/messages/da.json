@@ -696,6 +696,10 @@
         "title": "Gæsteoplevelse",
         "items": "Digital gæstemappe, AI-concierge, online check-in, automatiske beskeder, 24 sprog"
       },
+      "ki": {
+        "title": "AI-svar",
+        "items": "Svar fra din gæstemappe, regler pr. emne, udkast eller automatisk, eskalering ved problemer, 24 sprog"
+      },
       "zahlungen": {
         "title": "Betalinger & afregning",
         "items": "Onlinebetalinger, depositum, sikkerhedsstillelse, basisfakturaer, bogføringsklare eksporter"
@@ -1335,6 +1339,80 @@
             "a": "Gæst",
             "b": "Hvor er Wi-Fi-koden?",
             "c": "I gæstemappen — jeg har sendt dig linket."
+          }
+        }
+      }
+    },
+    "ki": {
+      "metaBeschreibung": "AI-svar på gæstespørgsmål: baseret på din gæstemappe, styret af regler pr. emne – som udkast eller automatisk, på 24 sprog.",
+      "headline": "De spørgsmål, du besvarer for hundrede gang.",
+      "sub": "„Hvornår er check-in?“, „Er der Wi-Fi?“, „Hvor parkerer jeg?“ – AI'en besvarer dem ud fra din gæstemappe. Du bestemmer pr. emne, om den selv sender eller lægger et udkast til dig.",
+      "bildAlt": "AI-svar i indbakken med regler og vidensdatabase",
+      "nutzen": {
+        "a": {
+          "titel": "Kender dine ejendomme",
+          "text": "Gæstemappe, husregler, check-in-tider og gæstens booking – AI'en læser, hvad du allerede har vedligeholdt. Ingen grund til at indtaste det en anden gang."
+        },
+        "b": {
+          "titel": "Du bestemmer, hvad den må",
+          "text": "Én regel pr. emne: Wi-Fi må den selv besvare, annulleringer lægger den som udkast til dig. Standard er altid udkastet."
+        },
+        "c": {
+          "titel": "Opfinder intet",
+          "text": "Hvis oplysningen mangler, skriver den ikke en floskel, men fortæller dig, hvilken fakta der mangler – og opretter den med et klik."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Ved penge stopper automatikken.",
+          "text": "Vedrørende refusioner, rabatter, betalingsdata og tilgængelighedsgarantier svarer AI'en aldrig af sig selv – heller ikke selvom en regel tillader det. Sådanne svar er penge værd eller juridisk bindende, derfor får du et udkast og beslutter selv.",
+          "punkte": {
+            "a": "Aldrig automatisk ved penge",
+            "b": "Dørkode først efter bekræftelse",
+            "c": "Hvert svar logges"
+          }
+        }
+      },
+      "bildAltBlock": "AI-regler med leveringsmetode pr. emne",
+      "reiter": {
+        "kontext": {
+          "titel": "Fra dine data",
+          "heading": "Den svarer ud fra gæstemappen, ikke fra internettet.",
+          "text": "Ved hvert spørgsmål læser AI'en friske oplysninger: gæstemappe, husregler, ejendomsdata, bookingen og den hidtidige forløb. Hvis du ændrer Wi-Fi-adgangskoden, gælder den nye fra næste svar – der er ingen kopi, der forældes.",
+          "punkte": {
+            "a": "Gæst",
+            "b": "Hvordan kommer jeg på Wi-Fi?",
+            "c": "Netværk „Duenenblick“, adgangskode står på kortet ved routeren."
+          }
+        },
+        "regeln": {
+          "titel": "Regler",
+          "heading": "Et emne, en regel, en beslutning.",
+          "text": "For hvert emne bestemmer du, om AI'en selv sender eller lægger et udkast – og for hvilke objekter reglen gælder. Du ser, hvor ofte hver regel har grebet ind, og hvornår sidst.",
+          "punkte": {
+            "a": "Wi-Fi · automatisk",
+            "b": "Check-in · automatisk",
+            "c": "Annullering · udkast"
+          }
+        },
+        "wissen": {
+          "titel": "Vidensdatabase",
+          "heading": "Den fyldes, mens du arbejder.",
+          "text": "Hvad du skriver til en gæst, og som gælder for den næste, husker AI'en som fakta. Hvis den mangler noget, siger den det – i stedet for at opfinde et plausibelt svar. Du ser hver fakta, kan ændre eller slette den.",
+          "punkte": {
+            "a": "Lært fra beskeder",
+            "b": "Fra dokumenter",
+            "c": "Manuelt tilføjet"
+          }
+        },
+        "eskalation": {
+          "titel": "Eskalation",
+          "heading": "Når det bliver kritisk, svarer den ikke – den henter dig.",
+          "text": "Hvis en gæst bliver vred, eller nævner et af dine søgeord („intet varmt vand“, „vandskade“), sender AI'en intet. Den rapporterer forløbet, og det forbliver åbent, indtil nogen løser det.",
+          "punkte": {
+            "a": "Negativ stemning",
+            "b": "Egne søgeord",
+            "c": "Rapport i stedet for svar"
           }
         }
       }
