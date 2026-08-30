@@ -4,18 +4,26 @@
 // /auth/refresh). Tokens werden NIE geloggt (CLAUDE.md Mobile).
 import * as Keychain from "react-native-keychain";
 
+import { protokolliereAbsturz } from "@/lib/absturzmeldung";
 import { api, ApiError, type Result } from "@/lib/api";
 import { faktorenDerSitzung, faktorLoesen, smsCodeAnfordern } from "@/lib/mfa-login";
 
 const SERVICE = "mynextdays.auth";
 const ACCESS_ACCOUNT = "nd_access";
 const REFRESH_ACCOUNT = "nd_refresh";
+// Die Ablaufzeit gehoert MIT in den Schluesselbund. Sie lag bis 30.08.2026 nur
+// im Arbeitsspeicher — nach jedem Prozessende war sie 0, und `isExpired()` gab
+// deshalb beim KALTSTART immer `false` zurueck, auch bei einem seit Stunden
+// abgelaufenen Token. Ein gespeicherter Wert, dessen Gegenstueck den Neustart
+// nicht ueberlebt, ist kein Zustand, sondern eine Attrappe.
+const EXPIRES_ACCOUNT = "nd_expires";
 
 // In-Memory-Cache (undefined = noch nicht aus Keychain geladen).
 let cachedAccess: string | null | undefined;
 let cachedRefresh: string | null | undefined;
-// Unix-Sekunden, zu denen das Access-Token abläuft (0 = unbekannt).
-let expiresAt = 0;
+// Unix-Sekunden, zu denen das Access-Token abläuft (0 = unbekannt,
+// undefined = noch nicht aus dem Schlüsselbund geladen).
+let expiresAt: number | undefined;
 
 type SessionResponse = {
   access_token: string;
@@ -124,14 +132,27 @@ async function storeSession(session: SessionResponse | null): Promise<void> {
     expiresAt = Math.floor(Date.now() / 1000) + session.expires_in;
     await writeAccount(ACCESS_ACCOUNT, session.access_token);
     await writeAccount(REFRESH_ACCOUNT, session.refresh_token);
+    await writeAccount(EXPIRES_ACCOUNT, String(expiresAt));
   } else {
     cachedAccess = null;
     cachedRefresh = null;
     expiresAt = 0;
     await writeAccount(ACCESS_ACCOUNT, null);
     await writeAccount(REFRESH_ACCOUNT, null);
+    await writeAccount(EXPIRES_ACCOUNT, null);
   }
-  for (const listener of tokenListeners) listener(cachedAccess);
+  // Jeder Abonnent einzeln gekapselt: ein defekter Listener darf den
+  // Token-Wechsel NICHT zerreissen. Ohne diese Kapselung riss ein Wurf hier
+  // `storeSession` mit — und weil `storeSession(null)` in `refreshSession`
+  // VOR dem `try/finally` steht, blieb `inFlight` danach dauerhaft auf einem
+  // abgelehnten Promise stehen (Wurzel 5: ein Nebenpfad kippt den Hauptpfad).
+  for (const listener of tokenListeners) {
+    try {
+      listener(cachedAccess);
+    } catch (e) {
+      protokolliereAbsturz(e);
+    }
+  }
 }
 
 /** Ergebnis des Passwort-Schritts: fertig, gescheitert — oder 2FA offen. */
@@ -292,12 +313,19 @@ let inFlight: Promise<boolean> | null = null;
 export function refreshSession(): Promise<boolean> {
   if (inFlight) return inFlight;
   inFlight = (async () => {
-    const refresh = await getRefreshToken();
-    if (!refresh) {
-      await storeSession(null);
-      return false;
-    }
+    // Das `try` umschliesst die GANZE Funktion, nicht nur den Netzaufruf.
+    // Lag `getRefreshToken()`/`storeSession(null)` davor, wurde bei einem Wurf
+    // dort das `finally` nie erreicht: `inFlight` blieb auf einem abgelehnten
+    // Promise stehen, und JEDER weitere Refresh dieser Prozesslebensdauer gab
+    // sofort dieselbe Ablehnung zurueck, statt zu erneuern. Beim Kaltstart mit
+    // abgelaufenem Token (morgens) ist das der einzige Pfad, der ueberhaupt
+    // laeuft — genau dort darf er nicht dauerhaft kaputtgehen.
     try {
+      const refresh = await getRefreshToken();
+      if (!refresh) {
+        await storeSession(null);
+        return false;
+      }
       const session = await api<SessionResponse>("/auth/refresh", {
         method: "POST",
         body: { refresh_token: refresh },
@@ -309,7 +337,8 @@ export function refreshSession(): Promise<boolean> {
       // Andere Fehler (Netz) ebenfalls als „nicht erneuert" behandeln, aber
       // ohne die Tokens zu löschen (transienter Ausfall ≠ Logout).
       if (exc instanceof ApiError && exc.status === 401) {
-        await storeSession(null);
+        // Auch dieses Aufräumen darf den Rückweg nicht kippen.
+        await storeSession(null).catch(protokolliereAbsturz);
       }
       return false;
     } finally {
@@ -319,8 +348,21 @@ export function refreshSession(): Promise<boolean> {
   return inFlight;
 }
 
-// Prüft, ob das Access-Token (bald) abgelaufen ist — für proaktiven Refresh.
-export function isExpired(skewSeconds = 30): boolean {
+/**
+ * Prüft, ob das Access-Token (bald) abgelaufen ist — für proaktiven Refresh.
+ *
+ * Liest die Ablaufzeit beim ersten Aufruf aus dem Schlüsselbund nach. Das ist
+ * der Unterschied zwischen „wirkt" und „Attrappe": bis 30.08.2026 stand
+ * `expiresAt` nur im Arbeitsspeicher, war nach einem Kaltstart also 0, und
+ * diese Funktion gab genau dann `false` zurück, wenn sie gebraucht wurde —
+ * morgens, beim ersten Öffnen, mit einem über Nacht abgelaufenen Token.
+ */
+export async function isExpired(skewSeconds = 30): Promise<boolean> {
+  if (expiresAt === undefined) {
+    const roh = await readAccount(EXPIRES_ACCOUNT);
+    const zahl = roh ? Number(roh) : 0;
+    expiresAt = Number.isFinite(zahl) ? zahl : 0;
+  }
   if (!expiresAt) return false; // unbekannt → nicht proaktiv refreshen
   return Math.floor(Date.now() / 1000) >= expiresAt - skewSeconds;
 }

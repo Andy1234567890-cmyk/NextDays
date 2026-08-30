@@ -12,10 +12,13 @@ import {
   type ReactNode,
 } from "react";
 
+import { protokolliereAbsturz } from "@/lib/absturzmeldung";
 import { api } from "@/lib/api";
 import { pushAbmelden, pushEinrichten, pushTapVerdrahten } from "@/lib/push";
 import {
   getToken,
+  isExpired,
+  refreshSession,
   login as apiLogin,
   mfaFaktoren as apiMfaFaktoren,
   mfaLoesen as apiMfaLoesen,
@@ -127,6 +130,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Kaltstart: Token vorhanden → validieren; sonst direkt ausgeloggt.
+  //
+  // Der Ablauf wird VORHER geprüft (`isExpired`), nicht dem 401 überlassen.
+  // Der Unterschied zeigt sich genau einmal am Tag: morgens, beim ersten
+  // Öffnen nach einer Nacht. Dann ist das Token abgelaufen, und der Weg über
+  // den 401 zieht `refreshSession` mitten in den Start hinein — parallel zu
+  // Realtime-Abos und Push-Registrierung. Proaktiv erneuert läuft der Refresh
+  // dagegen VOR dem ersten Aufruf, allein und in Ruhe.
+  //
+  // Das `.catch()` ist Pflicht, nicht Kosmetik: eine async-IIFE ohne Fänger
+  // ist eine unbehandelte Rejection, und die beendet im Release-Build den
+  // Prozess (`ErrorUtils`, `absturzmeldung.ts`) — sichtbar als „App geht kurz
+  // an und verschwindet sofort wieder". Der Zwilling in `realtime.ts` trägt
+  // denselben Fänger seit dem 28.08.2026; diese Stelle wurde damals übersehen.
   useEffect(() => {
     (async () => {
       const token = await getToken();
@@ -134,8 +150,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setStatus("signedOut");
         return;
       }
+      // Abgelaufen → erst erneuern. Schlägt das fehl, ist die Sitzung tot.
+      if (await isExpired()) {
+        if (!(await refreshSession())) {
+          setStatus("signedOut");
+          return;
+        }
+      }
       setStatus((await fetchMe()) ? "signedIn" : "signedOut");
-    })();
+    })().catch((e) => {
+      // Kein stiller Prozesstod: protokollieren und sauber ausloggen, statt
+      // die App im Splash sterben zu lassen (Wurzel 5, fail-closed).
+      protokolliereAbsturz(e);
+      setStatus("signedOut");
+    });
   }, [fetchMe]);
 
   const login = useCallback(

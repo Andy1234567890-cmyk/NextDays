@@ -70,10 +70,19 @@ export function realtimeTokenQuelleSetzen(q: TokenQuelle): void {
   // Bei Token-Refresh/Logout das JWT erneuern — kein Polling.
   abmelden = q.abonnieren((token) => {
     if (rtClient && token) {
-      rtClient.realtime.setAuth(token).catch(() => {
-        // Best-effort: schlägt setAuth fehl, greift beim nächsten Channel-JOIN
-        // erneut der Token-Pfad. Kein Kippen des Hauptpfads.
-      });
+      // `try` UND `.catch()`: das eine fängt einen synchronen Wurf beim
+      // Betreten (Property-Zugriff, Argumentprüfung), das andere die
+      // abgelehnte Zusage. Der Listener läuft in der Token-Schleife von
+      // `auth.ts` — was er hier fallen lässt, fiele sonst dem Token-Wechsel
+      // zur Last, also dem Hauptpfad.
+      try {
+        rtClient.realtime.setAuth(token).catch(() => {
+          // Best-effort: schlägt setAuth fehl, greift beim nächsten
+          // Channel-JOIN erneut der Token-Pfad. Kein Kippen des Hauptpfads.
+        });
+      } catch {
+        // Ebenso best-effort — Realtime ist eine Zugabe, keine Vorbedingung.
+      }
     }
   });
 }

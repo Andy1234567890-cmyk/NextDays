@@ -137,3 +137,77 @@ test("2FA-Konto: mfa_required → fail-closed, KEINE halbe Session", async () =>
   const keychain = require("react-native-keychain");
   expect(keychain.__store.size).toBe(0);
 });
+
+// ---------------------------------------------------------------------------
+// Der Morgen-Fall (30.08.2026)
+// ---------------------------------------------------------------------------
+// Zwei Beta-Tester (beide Galaxy A54) meldeten: „morgens beim ersten Öffnen
+// geht die App kurz an und verschwindet sofort wieder; erst beim zweiten
+// Antippen startet sie". Kein Testlauf fand das, weil eine frisch installierte
+// App gar kein Token im Schlüsselbund hat und direkt im Login landet — der
+// betroffene Pfad wurde nie betreten.
+//
+// Was ihn auszeichnet: ein ABGELAUFENES Token nach stundenlanger Pause. Genau
+// dann lief `refreshSession` mitten in den App-Start hinein, und `isExpired()`
+// konnte es nicht verhindern, weil `expiresAt` nur im Arbeitsspeicher stand
+// und nach dem Prozessende 0 war.
+
+test("Ablaufzeit überlebt den Kaltstart — isExpired erkennt das alte Token", async () => {
+  const ersteSitzung = loadAuth();
+  fetchMock.mockResolvedValueOnce(jsonResponse(200, LOGIN_OK));
+  await ersteSitzung.login("a@b.c", "pw");
+  // Frisch angemeldet: eine Stunde gültig, also nicht abgelaufen.
+  expect(await ersteSitzung.isExpired()).toBe(false);
+
+  // Der Prozess endet (Nacht), die App startet neu: neues Modul, leerer
+  // Speicher — nur der Schlüsselbund bleibt. GENAU hier gab die alte Fassung
+  // `false` zurück, weil sie ihre Ablaufzeit vergessen hatte.
+  const naechsterMorgen = loadAuth();
+  jest.spyOn(Date, "now").mockReturnValue((Date.now() + 7200 * 1000) as number);
+  try {
+    expect(await naechsterMorgen.isExpired()).toBe(true);
+  } finally {
+    (Date.now as jest.Mock).mockRestore();
+  }
+});
+
+test("ein werfender Token-Abonnent zerreisst den Refresh NICHT", async () => {
+  const auth = loadAuth();
+  fetchMock.mockResolvedValueOnce(jsonResponse(200, LOGIN_OK));
+  await auth.login("a@b.c", "pw");
+
+  auth.onTokenChange(() => {
+    throw new Error("defekter Abonnent");
+  });
+
+  fetchMock.mockResolvedValueOnce(
+    jsonResponse(200, { ...SESSION, access_token: "acc-2", refresh_token: "ref-2" }),
+  );
+  // Der Wurf des Abonnenten darf weder den Refresh scheitern lassen …
+  await expect(auth.refreshSession()).resolves.toBe(true);
+  // … noch das neue Token verschlucken.
+  expect(await auth.getToken()).toBe("acc-2");
+});
+
+test("nach einem werfenden Abonnenten bleibt refreshSession benutzbar", async () => {
+  const auth = loadAuth();
+  fetchMock.mockResolvedValueOnce(jsonResponse(200, LOGIN_OK));
+  await auth.login("a@b.c", "pw");
+  auth.onTokenChange(() => {
+    throw new Error("defekter Abonnent");
+  });
+
+  fetchMock.mockResolvedValueOnce(
+    jsonResponse(200, { ...SESSION, access_token: "acc-2", refresh_token: "ref-2" }),
+  );
+  await auth.refreshSession();
+
+  // Der zweite Refresh muss ECHT laufen. Blieb `inFlight` auf einem
+  // abgelehnten Promise stehen, kam hier sofort die alte Ablehnung zurück und
+  // die Sitzung war für den Rest der Prozesslebensdauer nicht mehr erneuerbar.
+  fetchMock.mockResolvedValueOnce(
+    jsonResponse(200, { ...SESSION, access_token: "acc-3", refresh_token: "ref-3" }),
+  );
+  await expect(auth.refreshSession()).resolves.toBe(true);
+  expect(await auth.getToken()).toBe("acc-3");
+});

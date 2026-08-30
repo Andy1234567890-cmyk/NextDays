@@ -15,6 +15,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { Fehlergrenze } from "@/components/Fehlergrenze";
+import { protokolliereAbsturz } from "@/lib/absturzmeldung";
 import { Splash } from "@/components/Splash";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { getToken, onTokenChange } from "@/lib/auth";
@@ -98,7 +99,12 @@ function Root() {
   const target = status === "signedIn" ? experienceFor(me) : null;
   const invalidRole = status === "signedIn" && target === null;
   useEffect(() => {
-    if (invalidRole) void logout();
+    // `void` unterdrückt nur die Lint-Warnung, es fängt nichts. Ohne den
+    // Fänger wäre ein Wurf im Logout (er räumt Push und Token ab) eine
+    // unbehandelte Rejection — und die beendet im Release-Build den Prozess.
+    // Die App bliebe hier zudem auf dem Splash stehen, weil `status` dann nie
+    // umgesetzt wird.
+    if (invalidRole) logout().catch(protokolliereAbsturz);
   }, [invalidRole, logout]);
 
   // Nach einem LOGIN (Übergang signedOut→signedIn) deterministisch ins
