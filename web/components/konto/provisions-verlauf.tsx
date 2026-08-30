@@ -400,7 +400,32 @@ export function ProvisionsVerlauf({ onBack }: { onBack: () => void }) {
                       {formatCurrency(r.gross_total, r.currency)}
                     </td>
                     <td className="px-4 py-3 font-semibold tabular-nums">
-                      {formatCurrency(r.commission_total, r.currency)}
+                      {/* Greift der Deckel, ist `commission_total` NICHT der
+                          Betrag, den der Betrieb zahlt: er liegt darüber, und
+                          der Überhang verfällt (bill_pending_commissions kappt
+                          die Summe und setzt trotzdem alle Zeilen auf
+                          `invoiced` — er wandert nicht in den Folgemonat).
+                          Fett steht deshalb der berechnete Betrag, die
+                          entstandene Provision darunter als Beleg. Bis zum
+                          30.08.2026 stand hier nur die entstandene Summe und
+                          der Deckel in einer Fußnote — welcher Betrag wirklich
+                          fällig wird, ging daraus nicht hervor. */}
+                      {r.billed_total !== null &&
+                      r.billed_total < r.commission_total ? (
+                        <>
+                          {formatCurrency(r.billed_total, r.currency)}
+                          <span className="block text-xs font-normal text-muted-foreground">
+                            {t("commissions.colCommissionIncurred", {
+                              total: formatCurrency(
+                                r.commission_total,
+                                r.currency,
+                              ),
+                            })}
+                          </span>
+                        </>
+                      ) : (
+                        formatCurrency(r.commission_total, r.currency)
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <span className="flex items-center gap-1.5">
@@ -443,16 +468,13 @@ export function ProvisionsVerlauf({ onBack }: { onBack: () => void }) {
         </div>
       )}
 
-      {/* Die Tabelle zeigt die UNGEKAPPTEN Ledger-Beträge — der Deckel greift
-          erst beim Fakturieren (bill_pending_commissions). Ohne diesen Hinweis
-          wirkt die kleinere Belastung später wie ein Fehler. Der konkrete
-          Deckelbetrag liegt hier nicht vor und wird nicht erfunden (Wurzel 4).
-          Der Text verweist bewusst NICHT auf die Abrechnungskarte: dort steht
-          der Betrag nur bei `cap_amount !== null`, und das Backend lässt ihn
-          leer, sobald es keine offenen Zeilen gibt oder kein Kurs beschaffbar
-          war (service.py get_commissions). Im Normalfall „alles fakturiert"
-          hätte der Verweis ins Leere geführt. */}
-      {rows && rows.length > 0 && (
+      {/* Die Spalte „Provision" zeigt jetzt den BERECHNETEN Betrag; wo der
+          Deckel greift, steht die entstandene Summe darunter. Der allgemeine
+          Hinweis ist damit nur noch dort nötig, wo der Deckel NICHT beziffert
+          werden konnte (kein ECB-Kurs, gemischte Währungen) — dann fehlt die
+          Angabe in der Zeile und der Leser braucht die Erklärung. Steht sie
+          überall, wäre der Satz Rauschen. */}
+      {rows && rows.some((r) => r.cap_amount === null) && (
         <p className="text-sm text-muted-foreground">
           {t("commissions.capHint")}
         </p>

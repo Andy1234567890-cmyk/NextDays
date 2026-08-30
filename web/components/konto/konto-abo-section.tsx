@@ -447,29 +447,48 @@ export function KontoAboSection() {
               tatsächlich angefallen ist. */}
           {state.commissions.pending_count > 0 ? (
             <div className="mt-2 text-sm">
-              {t("commissions.pending", {
-                count: state.commissions.pending_count,
-              })}
-              <span className="font-semibold">
-                {formatCurrency(
-                  state.commissions.pending_total,
-                  state.commissions.currency,
-                )}
-              </span>
-              {/* Der Deckel greift erst beim Einzug — bis dahin zeigt die Zeile
-                  die entstandene Provision. Ohne diesen Hinweis wirkte die
-                  Abbuchung später wie ein Fehler. */}
+              {/* Ist der Deckel erreicht, ist die entstandene Provision NICHT
+                  die Zahl, die der Betrieb zahlt — sie liegt darüber und der
+                  Überhang verfällt (`bill_pending_commissions` kappt die Summe
+                  und setzt trotzdem alle Zeilen auf `invoiced`; er wandert also
+                  nicht in den Folgemonat). Fett steht deshalb der Betrag, der
+                  wirklich abgerechnet wird; die entstandene Summe folgt als
+                  Zusatz. Vorher war es umgekehrt — die große Zahl war die
+                  unwirksame, der echte Betrag stand grau im Nebensatz. */}
               {state.commissions.pending_capped &&
-                state.commissions.cap_amount !== null && (
+              state.commissions.cap_amount !== null ? (
+                <>
+                  {t("commissions.pendingCapped", {
+                    count: state.commissions.pending_count,
+                  })}
+                  <span className="font-semibold">
+                    {formatCurrency(
+                      state.commissions.cap_amount,
+                      state.commissions.currency,
+                    )}
+                  </span>
                   <span className="text-muted-foreground">
-                    {t("commissions.pendingCapHint", {
-                      cap: formatCurrency(
-                        state.commissions.cap_amount,
+                    {t("commissions.pendingCappedHint", {
+                      total: formatCurrency(
+                        state.commissions.pending_total,
                         state.commissions.currency,
                       ),
                     })}
                   </span>
-                )}
+                </>
+              ) : (
+                <>
+                  {t("commissions.pending", {
+                    count: state.commissions.pending_count,
+                  })}
+                  <span className="font-semibold">
+                    {formatCurrency(
+                      state.commissions.pending_total,
+                      state.commissions.currency,
+                    )}
+                  </span>
+                </>
+              )}
             </div>
           ) : (
             <div className="mt-2 text-sm text-muted-foreground">

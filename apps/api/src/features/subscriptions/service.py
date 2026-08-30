@@ -1120,6 +1120,25 @@ class SubscriptionsService(
             zeilen = gruppen[periode]
             waehrungen = {z["currency"] for z in zeilen if z.get("currency")}
             zustaende = {z.get("status") for z in zeilen}
+            waehrung = waehrungen.pop() if len(waehrungen) == 1 else None
+            entstanden = round(sum(float(z["commission_amount"]) for z in zeilen), 2)
+            # Deckel je Monat mit dem Kurs-Stichtag DIESER Periode (nicht heute)
+            # — sonst zeigte ein alter Monat rueckwirkend einen anderen Deckel
+            # als den, mit dem er abgerechnet wurde.
+            #
+            # Fehlt die Bezugswaehrung (gemischter Monat) oder ist kein Kurs
+            # beschaffbar, bleiben beide Felder leer: eine Uebersicht darf
+            # daran nicht kippen (dieselbe Linie wie `get_commission_summary`),
+            # und ein geratener Deckel waere schlimmer als keiner (Wurzel 4).
+            deckel: float | None = None
+            if waehrung:
+                try:
+                    deckel = self.cap_for_currency(db, waehrung, periode)
+                except SubscriptionsError as exc:
+                    log.warning(
+                        "commission_month_cap_unavailable",
+                        periode=periode, error=str(exc),
+                    )
             monate.append(
                 CommissionMonth(
                     period=periode,
@@ -1128,14 +1147,16 @@ class SubscriptionsService(
                     gross_total=round(
                         sum(float(z["gross_amount"]) for z in zeilen), 2
                     ),
-                    commission_total=round(
-                        sum(float(z["commission_amount"]) for z in zeilen), 2
-                    ),
-                    currency=waehrungen.pop() if len(waehrungen) == 1 else None,
+                    commission_total=entstanden,
+                    currency=waehrung,
                     status=(
                         zustaende.pop()
                         if len(zustaende) == 1
                         else "mixed"
+                    ),
+                    cap_amount=deckel,
+                    billed_total=(
+                        min(entstanden, deckel) if deckel is not None else None
                     ),
                 )
             )

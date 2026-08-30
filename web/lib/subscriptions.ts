@@ -231,6 +231,17 @@ export type CommissionMonth = {
   // fehlte hier früher — dadurch war ein realer UI-Absturz bei einem voll
   // bezahlten Monat für tsc unsichtbar.
   status: CommissionStatus;
+  /**
+   * Monatsdeckel in `currency` und der davon tatsächlich berechnete Betrag
+   * (`min(commission_total, cap_amount)`).
+   *
+   * `commission_total` ist die ENTSTANDENE Provision — bei erreichtem Deckel
+   * nicht die Zahl, die der Betrieb zahlt. Beide Felder sind `null`, wenn kein
+   * ECB-Kurs beschaffbar war oder der Monat gemischte Währungen trägt: dann
+   * gibt es keinen Deckel, der sich ohne Raten benennen ließe (Wurzel 4).
+   */
+  cap_amount: number | null;
+  billed_total: number | null;
 };
 
 /** Monatsstatus der Provisionen: DB-Enum commission_status + Sammelwert. */

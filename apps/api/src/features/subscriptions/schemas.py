@@ -287,6 +287,18 @@ class CommissionMonth(BaseModel):
     # commission_status. Ein Literal hier würde bei einem künftig ergänzten
     # Enum-Wert einen 500er werfen (ValidationError) statt ihn durchzureichen.
     status: str  # pending | invoiced | paid (Enum) + mixed (uneinheitlicher Monat)
+    # Der Monatsdeckel und der davon tatsaechlich berechnete Betrag.
+    #
+    # `commission_total` ist die ENTSTANDENE Provision — bei erreichtem Deckel
+    # NICHT die Zahl, die der Betrieb zahlt. Die Tabelle zeigte bis zum
+    # 30.08.2026 nur sie, fett, und wies den Deckel in einer Fussnote unter der
+    # Tabelle aus; welcher Betrag wirklich faellig wird, stand nirgends. Beide
+    # Felder sind optional: der Deckel braucht einen ECB-Kurs (Fremdwaehrung),
+    # und ist keiner beschaffbar, bleibt das Feld leer, statt einen Kurs zu
+    # raten (Wurzel 4). Bei gemischten Waehrungen im Monat gibt es keine
+    # Bezugswaehrung — dann ebenfalls leer.
+    cap_amount: float | None = None
+    billed_total: float | None = None
 
 
 class CommissionEntry(BaseModel):
