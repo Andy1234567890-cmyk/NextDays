@@ -177,9 +177,21 @@ def test_direktbuchung_erzeugt_keine_ledger_zeile() -> None:
         SubscriptionsService,
     )
 
+    # Anreise nach Abo-Beginn: sonst greift die Grenze aus 0504 und der Test
+    # prüfte nicht mehr den Kanal, sondern das Datum.
     store: dict = {
-        "reservations": [{"id": RID, "tenant_id": "t1", "property_id": "p1"}],
+        "reservations": [
+            {
+                "id": RID,
+                "tenant_id": "t1",
+                "property_id": "p1",
+                "check_in": "2026-06-15",
+            }
+        ],
         "properties": [{"id": "p1", "tenant_id": "t1", "status": "active"}],
+        "tenant_subscription": [
+            {"tenant_id": "t1", "subscription_started_at": "2026-01-01T00:00:00+00:00"}
+        ],
     }
     db = MagicMock(name="supabase")
     db.table.side_effect = lambda name: _LedgerQuery(store, name)
@@ -400,9 +412,23 @@ def _ledger_store(objekt_status: str = "active", *, offen: bool = False) -> dict
     """Store für den ECHTEN Ledger-Service (Muster von
     `test_direktbuchung_erzeugt_keine_ledger_zeile`). `offen=True` legt eine
     bestehende 'pending'-Zeile ab, damit der Gegenzustand prüfbar ist."""
+    # `check_in` und das Abo gehören dazu: Provision fällt nur für Aufenthalte
+    # AB dem Abo-Beginn an (0504). Die Anreise liegt hier bewusst danach, damit
+    # diese Tests genau das prüfen, wofür sie geschrieben wurden; die Grenze
+    # selbst hat eigene Tests im subscriptions-Slice.
     store: dict = {
-        "reservations": [{"id": RID, "tenant_id": "t1", "property_id": "p1"}],
+        "reservations": [
+            {
+                "id": RID,
+                "tenant_id": "t1",
+                "property_id": "p1",
+                "check_in": "2026-06-15",
+            }
+        ],
         "properties": [{"id": "p1", "tenant_id": "t1", "status": objekt_status}],
+        "tenant_subscription": [
+            {"tenant_id": "t1", "subscription_started_at": "2026-01-01T00:00:00+00:00"}
+        ],
     }
     if offen:
         store["commission_ledger"] = [

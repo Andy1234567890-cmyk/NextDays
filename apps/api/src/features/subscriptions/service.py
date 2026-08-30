@@ -35,6 +35,7 @@ from .errors import SubscriptionsConfigError, SubscriptionsError, field
 from .preisliste import PreislisteMixin
 from .provisionsaufstellung import AufstellungMixin
 from .provisionsdeckel import ProvisionsdeckelMixin
+from .provisionsgrenze import aufenthalt_ab_abo_beginn
 from .schemas import (
     COMMISSION_RATE_STANDARD,
     GRUNDTARIF_LOOKUP_KEY,
@@ -1192,6 +1193,16 @@ class SubscriptionsService(
         # zurückgezogen, muss eine offene Zeile verschwinden (Wurzel 1) —
         # deshalb derselbe cancel-Pfad wie oben, nicht bloß ein `return`.
         if not self._objekt_veroeffentlicht(db, tenant_id, reservation_id):
+            self.cancel_commission(tenant_id, reservation_id=reservation_id)
+            return
+        # Provision NUR für Aufenthalte ab dem Abo-Beginn. Ein Betrieb, der
+        # sein Portal verbindet, zieht seine ganze Buchungshistorie mit —
+        # ohne diese Grenze wird jede davon provisionspflichtig (live am
+        # 30.08.2026: 25 Aufenthalte aus 2025 in der August-Rechnung 2026).
+        # Auch hier der cancel-Pfad statt eines blossen `return`: verschiebt
+        # jemand eine Buchung aus dem Abo-Zeitraum in die Zeit davor, muss die
+        # offene Zeile verschwinden (Gegenzustand, Wurzel 1).
+        if not aufenthalt_ab_abo_beginn(db, tenant_id, reservation_id):
             self.cancel_commission(tenant_id, reservation_id=reservation_id)
             return
         if not currency:

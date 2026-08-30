@@ -84,7 +84,8 @@ class AufstellungMixin:
             for res in fetch_all_rows(
                 db.table("reservations")
                 .select(
-                    "id, check_in, check_out, properties(title), guests(name)"
+                    "id, check_in, check_out, booked_at, "
+                    "properties(title), guests(name)"
                 )
                 .eq("tenant_id", tenant_id)
                 .in_("id", res_ids)
@@ -107,7 +108,15 @@ class AufstellungMixin:
                         float(r.get("commission_amount") or 0), 2
                     ),
                     status=str(r.get("status") or ""),
-                    booked_at=str(r.get("created_at") or ""),
+                    erfasst_am=str(r.get("created_at") or ""),
+                    # Der echte Buchungszeitpunkt kommt aus der RESERVIERUNG
+                    # (`reservations.booked_at`, aus der Portal-Quelle), nie
+                    # aus unserem `created_at` — das ist der Eingang bei uns
+                    # und lag bei den Bestandsimporten ein Jahr daneben
+                    # (Wurzel 5b). Fehlt er, bleibt das Feld leer.
+                    booked_at=(
+                        str(res["booked_at"]) if res.get("booked_at") else None
+                    ),
                     # Fehlende Reservierung bleibt leer — kein Ersatztext, der
                     # eine Buchung vortäuscht (Wurzel 4).
                     property_title=(

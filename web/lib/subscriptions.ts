@@ -265,7 +265,15 @@ export type CommissionEntry = {
   rate: number;
   commission_amount: number;
   status: string;
-  booked_at: string;
+  /** Wann die Provisionszeile bei UNS entstand (Import/Erfassung). */
+  erfasst_am: string;
+  /**
+   * Echter Buchungszeitpunkt beim Portal. `null`, wenn die Quelle ihn nicht
+   * mitliefert (CSV-Import, Lodgify-Migration, manuell erfasst) — dann bleibt
+   * die Spalte leer, statt auf `erfasst_am` auszuweichen: unsere Uhr ist nie
+   * der Zeitpunkt eines fremden Ereignisses (Wurzel 5b).
+   */
+  booked_at: string | null;
   property_title: string | null;
   check_in: string | null;
   check_out: string | null;

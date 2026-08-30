@@ -322,6 +322,14 @@ def _handle_subscription_event(db: Client, obj: Mapping[str, Any]) -> None:
         "cancel_at_period_end": bool(_field(obj, "cancel_at_period_end", False)),
         "current_period_end": _iso_from_epoch(_period_end(obj)),
     }
+    # Der Abo-BEGINN ist die Grenze der Provisionspflicht (0504): nur
+    # Aufenthalte ab diesem Tag tragen Provision. Er kommt aus Stripes
+    # `start_date` — dem Zeitpunkt des fremden Ereignisses, nie von unserer Uhr
+    # (Wurzel 5b). Nur setzen, wenn Stripe ihn liefert: ein leerer Wert darf
+    # einen bereits bekannten Beginn nicht ueberschreiben, sonst faellt der
+    # Riegel bei jedem Folgeereignis (Verlaengerung, Mengenaenderung) weg.
+    if beginn := _iso_from_epoch(_field(obj, "start_date")):
+        update["subscription_started_at"] = beginn
     if _field(obj, "customer"):
         update["stripe_customer_id"] = _field(obj, "customer")
     qty = _grundtarif_quantity(obj)

@@ -359,19 +359,41 @@ def _db_with_properties(active_count: int) -> _DB:
     return db
 
 
+ABO_BEGINN = "2026-01-01T00:00:00+00:00"
+
+
 def _mit_reservierung(
-    db: _DB, reservation_id: str, *, property_status: str = "active"
+    db: _DB,
+    reservation_id: str,
+    *,
+    property_status: str = "active",
+    check_in: str = "2026-06-15",
+    abo_beginn: str | None = ABO_BEGINN,
 ) -> _DB:
-    """Reservierung + zugehöriges Objekt anlegen. Provision hängt am
-    Objektstatus (nur veröffentlichte Objekte), also braucht jeder
-    record_commission-Test diese Kette."""
+    """Reservierung + Objekt + Abo anlegen. Provision hängt an DREI Dingen:
+    Objektstatus (nur veröffentlichte Objekte), Aufenthalt ab Abo-Beginn (0504)
+    und Kanal/Betrag. Jeder record_commission-Test braucht diese Kette —
+    fehlt eine Stufe, greift fail-closed und es entsteht keine Zeile.
+
+    `check_in` liegt per Vorgabe NACH `abo_beginn`, damit die bestehenden
+    Tests genau das prüfen, wofür sie geschrieben wurden. Die Grenze selbst
+    hat eigene Tests."""
     prop_id = f"prop-{reservation_id}"
     db.store.setdefault("properties", []).append(
         {"id": prop_id, "tenant_id": "t1", "status": property_status}
     )
     db.store.setdefault("reservations", []).append(
-        {"id": reservation_id, "tenant_id": "t1", "property_id": prop_id}
+        {
+            "id": reservation_id,
+            "tenant_id": "t1",
+            "property_id": prop_id,
+            "check_in": check_in,
+        }
     )
+    if abo_beginn is not None and not db.store.get("tenant_subscription"):
+        db.store["tenant_subscription"] = [
+            {"tenant_id": "t1", "subscription_started_at": abo_beginn}
+        ]
     return db
 
 
@@ -565,6 +587,72 @@ def test_record_commission_entfernt_zeile_wenn_objekt_zurueckgezogen() -> None:
     assert len(db.store["commission_ledger"]) == 1
     for prop in db.store["properties"]:
         prop["status"] = "draft"  # Objekt zurückgezogen
+    svc.record_commission("t1", reservation_id="r1", channel="booking",
+                          gross_amount=200.0, currency="EUR")
+    assert db.store["commission_ledger"] == []
+
+
+def test_provision_erst_ab_abo_beginn() -> None:
+    """Aufenthalte VOR dem Abo-Beginn tragen keine Provision (0504).
+
+    Der reale Anlass (30.08.2026): beim Verbinden des Portals zog ein Betrieb
+    seine ganze Buchungshistorie mit — 25 Aufenthalte aus 2025 landeten in der
+    August-Rechnung 2026, weil `record_commission` keine Datumsgrenze kannte.
+    """
+    db = _mit_reservierung(_DB(), "alt", check_in="2025-07-23")
+    svc = SubscriptionsService(service_client=db)
+    svc.record_commission("t1", reservation_id="alt", channel="booking",
+                          gross_amount=2229.25, currency="DKK")
+    assert db.store["commission_ledger"] == []
+
+
+def test_provision_ab_dem_starttag_selbst() -> None:
+    """Wer AM Starttag anreist, ist drin. Verglichen wird auf Tagesebene: der
+    Abo-Beginn trägt eine Uhrzeit (Stripe-Zeitstempel), die Anreise ist ein
+    reines Datum — die Uhrzeit des Vertragsabschlusses darf nicht darüber
+    entscheiden, ob ein Aufenthalt zählt."""
+    db = _mit_reservierung(
+        _DB(), "r1", check_in="2026-08-07", abo_beginn="2026-08-07T18:27:39+00:00"
+    )
+    svc = SubscriptionsService(service_client=db)
+    svc.record_commission("t1", reservation_id="r1", channel="booking",
+                          gross_amount=200.0, currency="EUR")
+    assert len(db.store["commission_ledger"]) == 1
+
+
+def test_provision_ohne_abo_beginn_fail_closed() -> None:
+    """Fehlt der Abo-Beginn oder der Aufenthalt, entsteht KEINE Provision
+    (Wurzel 5). Ein fehlender Wert ist keine Erlaubnis — lieber nichts
+    berechnen als etwas in Rechnung stellen, das wir nicht belegen können."""
+    # (a) kein Abo hinterlegt
+    ohne_abo = _mit_reservierung(_DB(), "r1", abo_beginn=None)
+    SubscriptionsService(service_client=ohne_abo).record_commission(
+        "t1", reservation_id="r1", channel="booking",
+        gross_amount=200.0, currency="EUR")
+    assert ohne_abo.store.get("commission_ledger", []) == []
+
+    # (b) Abo da, aber die Reservierung trägt kein check_in (CSV-Import,
+    #     Lodgify-Migration und manuelle Erfassung liefern Lücken).
+    ohne_anreise = _mit_reservierung(_DB(), "r1")
+    for res in ohne_anreise.store["reservations"]:
+        res["check_in"] = None
+    SubscriptionsService(service_client=ohne_anreise).record_commission(
+        "t1", reservation_id="r1", channel="booking",
+        gross_amount=200.0, currency="EUR")
+    assert ohne_anreise.store.get("commission_ledger", []) == []
+
+
+def test_provision_entfernt_zeile_bei_verschiebung_vor_abo_beginn() -> None:
+    """Gegenzustand (Wurzel 1): wird ein Aufenthalt nachträglich in die Zeit
+    VOR dem Abo verschoben, muss die offene Zeile verschwinden — dieselbe
+    Linie wie beim zurückgezogenen Objekt."""
+    db = _mit_reservierung(_DB(), "r1")
+    svc = SubscriptionsService(service_client=db)
+    svc.record_commission("t1", reservation_id="r1", channel="booking",
+                          gross_amount=200.0, currency="EUR")
+    assert len(db.store["commission_ledger"]) == 1
+    for res in db.store["reservations"]:
+        res["check_in"] = "2025-03-03"  # zurück in die Zeit vor dem Abo
     svc.record_commission("t1", reservation_id="r1", channel="booking",
                           gross_amount=200.0, currency="EUR")
     assert db.store["commission_ledger"] == []

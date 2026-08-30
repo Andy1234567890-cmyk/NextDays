@@ -314,7 +314,17 @@ class CommissionEntry(BaseModel):
     rate: float
     commission_amount: float
     status: str
-    booked_at: str  # ISO — wann die Provisionszeile entstand
+    # ZWEI verschiedene Zeitpunkte, bewusst getrennt (Wurzel 5b): `erfasst_am`
+    # ist UNSERE Verarbeitung (wann die Provisionszeile entstand), `booked_at`
+    # der echte Buchungszeitpunkt beim Portal. Beim Bestandsimport liegen sie
+    # ein Jahr auseinander — bis 30.08.2026 trug das Feld `booked_at` den
+    # Import-Zeitstempel und die Oberfläche schrieb „gebucht am" darüber. Das
+    # ist eine Falschaussage, die niemand als Bug erkennt, weil sie plausibel
+    # aussieht. `booked_at` ist optional: drei Einlesewege (CSV, Lodgify,
+    # manuelles Anlegen) bringen ihn nicht mit — dann bleibt er leer statt auf
+    # unsere Uhr zurückzufallen (Wurzel 4).
+    erfasst_am: str  # ISO — wann die Provisionszeile bei uns entstand
+    booked_at: str | None = None  # ISO — echter Buchungszeitpunkt beim Portal
     property_title: str | None = None
     check_in: str | None = None
     check_out: str | None = None
