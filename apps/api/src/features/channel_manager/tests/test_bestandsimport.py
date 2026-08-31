@@ -193,3 +193,84 @@ def test_normalisierung_liefert_leeren_schluessel_nie_als_treffer() -> None:
 
     assert _normalisiert("***") == ""
     assert _normalisiert("   ") == ""
+
+
+# --- Adresse als zweiter Weg zum Objekt ------------------------------------
+#
+# Der Booking.com-Reservierungs-Export traegt KEINE Unterkunfts-ID (gemessen an
+# der echten Datei vom 31.08.2026: zwoelf Spalten, darunter „Lage", aber keine
+# Objektkennung). Der Name allein reicht nicht — er weicht bei vier von 18
+# Objekten ab. Die Adresse traegt weiter.
+
+
+def test_adresse_gleicht_portal_und_eigene_felder_ab() -> None:
+    """Portal-Adresse („Lærkevej 2, Bindslev, Denmark") trifft unsere Felder."""
+    from src.features.channel_manager.csv_import import _adress_schluessel
+
+    for portal, strasse, nummer, ort in [
+        ("Lærkevej 2, Bindslev, Denmark", "Lærkevej", "2", "Bindslev"),
+        ("Oddenvej 3, Mygdal, Denmark", "Oddenvej", "3", "Mygdal"),
+        ("Doravej 5, Bindslev, Denmark", "Doravej", "5", "Bindslev"),
+    ]:
+        assert _adress_schluessel(portal) == _adress_schluessel(
+            f"{strasse} {nummer} {ort}"
+        ), portal
+
+
+def test_adresse_trennt_verschiedene_orte() -> None:
+    """Dieselbe Strasse in zwei Doerfern ist NICHT dasselbe Objekt.
+
+    Live relevant: „Hirtshalsvej 195, Ålbæk" (im Export, bei uns nicht
+    vorhanden) darf niemals auf „Hirtshalsvej 21, Bindslev" verfallen.
+    """
+    from src.features.channel_manager.csv_import import (
+        _adress_schluessel,
+        _ohne_hausnummer,
+    )
+
+    fremd = "Hirtshalsvej 195, Ålbæk, Denmark"
+    eigen = "Hirtshalsvej 21 Bindslev"
+    assert _adress_schluessel(fremd) != _adress_schluessel(eigen)
+    # Auch ohne Hausnummer muss der Ort die Trennung halten.
+    assert _ohne_hausnummer(fremd) != _adress_schluessel("Hirtshalsvej Bindslev")
+
+
+def test_hausnummer_zusatz_des_portals_faellt_weg() -> None:
+    """„Højenevej 2A links" trifft die Strassen-Stufe, nicht die Nummern-Stufe."""
+    from src.features.channel_manager.csv_import import (
+        _adress_schluessel,
+        _ohne_hausnummer,
+    )
+
+    portal = "Højenevej 2A links, Vidstrup, Denmark"
+    # Mit Hausnummer trifft es NICHT (das Portal schreibt sie anders) …
+    assert _adress_schluessel(portal) != _adress_schluessel("Højenevej 2A Vidstrup")
+    # … ohne Hausnummer schon.
+    assert _ohne_hausnummer(portal) == _adress_schluessel("Højenevej Vidstrup")
+
+
+def test_land_wird_entfernt_aber_nur_am_ende() -> None:
+    """Das Land steht nur beim Portal — ein Ortsname bleibt aber erhalten."""
+    from src.features.channel_manager.csv_import import _adress_schluessel
+
+    assert _adress_schluessel("Doravej 5, Bindslev, Denmark") == "doravej 5 bindslev"
+    # „Denmark" mitten im Namen ist kein Land am Ende und bleibt.
+    assert "denmark" in _adress_schluessel("Denmarkvej 3, Skagen")
+
+
+def test_adressspalte_steht_in_der_vorlage() -> None:
+    """Ohne die Spalte in CSV_COLUMNS kaeme die Adresse nie beim Import an."""
+    from src.features.channel_manager.csv_import import CSV_COLUMNS
+
+    assert "property_address" in CSV_COLUMNS
+
+
+def test_export_parser_schreibt_die_adresse() -> None:
+    """Der Browser-Parser muss „Lage" lesen und als Spalte weitergeben."""
+    from pathlib import Path
+
+    quelle = (
+        Path(__file__).resolve().parents[6] / "web" / "lib" / "portal-export.ts"
+    ).read_text(encoding="utf-8")
+    assert '"property_address"' in quelle, "Zielspalte fehlt"
+    assert '"lage"' in quelle, "Booking schreibt die Spalte „Lage“"

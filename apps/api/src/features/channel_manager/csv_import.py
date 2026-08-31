@@ -41,9 +41,53 @@ CSV_COLUMNS: tuple[str, ...] = (
     "currency",          # ISO-4217 (leer → Objektwährung)
     "source",            # OTA-Name/„Direkt" (Freitext)
     "external_id",       # eindeutige Quell-ID (Dedup); leer → aus Zeile abgeleitet
+    "property_address",  # Adresse laut Portal — zweiter Weg zum Objekt
 )
 _REQUIRED = ("property", "guest_first_name", "guest_last_name", "arrival", "departure")
 _MAX_ROWS = 1000  # Obergrenze je Upload (Wurzel 8: unbegrenzte Liste → 422)
+
+
+def _adress_schluessel(text: str) -> str:
+    """Adresse auf „strasse hausnummer ort" reduzieren — fuer den Abgleich.
+
+    Der Portal-Export schreibt „Lærkevej 2, Bindslev, Denmark", wir fuehren
+    Strasse, Hausnummer und Ort in eigenen Spalten. Beide Seiten laufen durch
+    DIESE Funktion, damit sie vergleichbar werden.
+
+    Das Land faellt weg (steht nur beim Portal), Zeichensetzung ebenso.
+    Reihenfolge und Wortlaut bleiben — es wird nichts geraten.
+    """
+    ohne = "".join(z if (z.isalnum() or z.isspace()) else " " for z in text)
+    teile = ohne.lower().split()
+    # Landesnamen am Ende entfernen: sie stehen nur im Portal-Export und
+    # wuerden jeden Vergleich scheitern lassen.
+    while teile and teile[-1] in _LAENDER:
+        teile.pop()
+    return " ".join(teile)
+
+
+# Landesbezeichnungen, die Portale an die Adresse haengen. Bewusst eine kurze,
+# benannte Liste statt einer Bibliothek: es geht um das letzte Wort einer
+# Adresszeile, nicht um Laendererkennung.
+_LAENDER = frozenset({
+    "denmark", "danmark", "dk", "germany", "deutschland", "de",
+    "sweden", "sverige", "norway", "norge", "netherlands", "nederland",
+})
+
+
+def _ohne_hausnummer(adresse: str) -> str:
+    """Portal-Adresse ohne Hausnummer: „Højenevej 2A links, Vidstrup" → „hojenevej vidstrup".
+
+    Entfernt jedes Wort, das mit einer Ziffer beginnt, samt der Zusaetze, die
+    das Portal daran haengt („links", „rechts"). Der Ortsname bleibt — ohne ihn
+    traefe dieselbe Strasse in zwei Doerfern zusammen.
+    """
+    teile = _adress_schluessel(adresse).split()
+    behalten = [
+        t for t in teile
+        if not t[:1].isdigit() and t not in ("links", "rechts", "left", "right")
+    ]
+    return " ".join(behalten)
 
 
 def _normalisiert(titel: str) -> str:
@@ -127,7 +171,7 @@ class CsvImportMixin:
         # Fremdzugriff). Einmal laden, dann je Zeile nachschlagen.
         props = (
             db.table("properties")
-            .select("id, title")
+            .select("id, title, street, house_number, city")
             .eq("tenant_id", tenant_id)
             .execute()
         ).data or []
@@ -167,6 +211,44 @@ class CsvImportMixin:
                 normal.setdefault(schluessel, prop["id"])
         by_normal = {k: v for k, v in normal.items() if v}
 
+        # DRITTER Weg: die Adresse. Sie traegt weiter als der Name, weil der
+        # Portal-Export KEINE Objektkennung enthaelt (gemessen am echten
+        # Booking.com-Export vom 31.08.2026: zwoelf Spalten, darunter „Lage",
+        # aber keine Unterkunfts-ID) und Namen auseinanderlaufen, sobald jemand
+        # ein Inserat umbenennt:
+        #   „Odden-hus-mygdal"  hier „Odden-hygge-mygdal"   — Oddenvej, Mygdal
+        #   „Holiday home Dora" hier „Feriehus Dora"        — Doravej, Bindslev
+        #   „Lærke-huset"       hier „Lærke-huset-Bindslev" — Lærkevej, Bindslev
+        # Alle drei loesen ueber die Adresse eindeutig auf.
+        #
+        # Zwei Stufen, weil beide gebraucht werden: MIT Hausnummer trennt sie
+        # Nachbarhaeuser (Iver Christensens Vej 11 vs. 13 — zwei verschiedene
+        # Objekte). OHNE Hausnummer greift sie, wenn das Portal die Nummer
+        # anders schreibt („2A links" statt „2A"). Mehrdeutige Schluessel
+        # werden VERWORFEN, nicht nach Ladereihenfolge aufgeloest: am
+        # Højenevej 2A liegen zwei Objekte, dort MUSS der Name entscheiden.
+        mit_nr: dict[str, str | None] = {}
+        ohne_nr: dict[str, str | None] = {}
+        for prop in props:
+            ort = prop.get("city") or ""
+            strasse = prop.get("street") or ""
+            nummer = prop.get("house_number") or ""
+            for index, roh in (
+                (mit_nr, f"{strasse} {nummer} {ort}"),
+                (ohne_nr, f"{strasse} {ort}"),
+            ):
+                schluessel = _adress_schluessel(roh)
+                # Ein Objekt ohne Strasse ergaebe den Schluessel des blossen
+                # Ortes — daran haengen sonst alle Objekte desselben Ortes.
+                if not schluessel or not strasse.strip():
+                    continue
+                if index.get(schluessel, prop["id"]) != prop["id"]:
+                    index[schluessel] = None
+                else:
+                    index.setdefault(schluessel, prop["id"])
+        by_adresse = {k: v for k, v in mit_nr.items() if v}
+        by_strasse = {k: v for k, v in ohne_nr.items() if v}
+
         # Zähler/Fehler lokal führen und am Ende einmalig zuweisen — Pylint
         # erkennt das Pydantic-Field .errors sonst statisch als FieldInfo (ohne
         # .append). Gleiches Muster wie in bookings_sync._sync_feed.
@@ -188,7 +270,8 @@ class CsvImportMixin:
             try:
                 outcome = self._import_csv_row(
                     db, tenant_id, raw, by_id, by_title, idx,
-                    by_normal=by_normal,
+                    by_normal=by_normal, by_adresse=by_adresse,
+                    by_strasse=by_strasse,
                 )
             except _RowError as exc:
                 failed += 1
@@ -225,6 +308,8 @@ class CsvImportMixin:
         line: int,
         *,
         by_normal: dict[str, str] | None = None,
+        by_adresse: dict[str, str] | None = None,
+        by_strasse: dict[str, str] | None = None,
     ) -> bool:
         """Eine CSV-Zeile → Reservierung. Wirft _RowError mit Zeilennummer bei
         Validierungsfehlern; gibt True bei angelegt/aktualisiert, False bei skip."""
@@ -232,13 +317,25 @@ class CsvImportMixin:
             return (raw.get(key) or "").strip()
 
         prop_ref = cell("property")
+        # Auflösungskette, absteigend nach Verlaesslichkeit. Jede Stufe schliesst
+        # die Luecke der vorigen; die erste, die trifft, gewinnt. Kein Raten per
+        # Aehnlichkeit — falsch zugeordnet heisst: fremde Naechte gesperrt und
+        # Umsatz beim falschen Eigentuemer (Wurzel 4).
+        adresse = cell("property_address")
         property_id = (
+            # 1. Unsere eigene ID, falls die Datei sie traegt.
             by_id.get(prop_ref)
+            # 2. Titel exakt (Gross/Kleinschreibung egal).
             or by_title.get(prop_ref.lower())
-            # Erst wenn der exakte Titel nicht trifft: derselbe Name ohne
-            # Zierzeichen. Reihenfolge ist wichtig — ein exakter Treffer darf
-            # nie von einer Normalform ueberstimmt werden.
+            # 3. Titel ohne Zierzeichen: „FeWo *Stjerneskud*".
             or (by_normal or {}).get(_normalisiert(prop_ref))
+            # 4. Adresse mit Hausnummer — trennt Nachbarhaeuser.
+            or (by_adresse or {}).get(_adress_schluessel(adresse))
+            # 5. Adresse ohne Hausnummer: das Portal schreibt sie abweichend
+            #    („Højenevej 2A links"). Nur wenn die Strasse im Ort eindeutig
+            #    EIN Objekt trifft — sonst steht hier None und die Zeile fällt
+            #    auf, statt still beim Nachbarn zu landen.
+            or (by_strasse or {}).get(_ohne_hausnummer(adresse))
         )
         if not property_id:
             # Den NAECHSTLIEGENDEN eigenen Titel mitnennen. „nicht gefunden"

@@ -27,6 +27,14 @@ const ZIEL = [
   "currency",
   "source",
   "external_id",
+  // Die ADRESSE der Unterkunft, so wie das Portal sie schreibt. Sie ist die
+  // verlässlichere Kennung als der Name: Booking.coms Reservierungs-Export
+  // trägt KEINE Unterkunfts-ID (gemessen an der echten Datei vom 31.08.2026 —
+  // zwölf Spalten, keine davon eine Objektkennung), und der Name weicht
+  // regelmäßig ab („Odden-hus-mygdal" bei uns „Odden-hygge-mygdal",
+  // „Holiday home Dora" bei uns „Feriehus Dora"). Die Straße ändert sich nicht,
+  // wenn jemand ein Inserat umbenennt.
+  "property_address",
 ] as const;
 
 // Booking benennt die Spalten je Sprache/Ansicht anders. Exakte Treffer stehen
@@ -40,6 +48,9 @@ const SPALTEN: Record<string, string[]> = {
   betrag: ["gesamtbetrag", "total price", "gesamtpreis", "amount", "betrag", "price", "total"],
   waehrung: ["waehrung", "wahrung", "currency", "valuta"],
   nummer: ["buchungsnummer", "book number", "booking number", "reservation number", "res id", "id"],
+  // „Lage" steht im deutschen Booking-Export; sie enthält Straße + Hausnummer,
+  // Zeilenumbruch, Ort und Land ("Lærkevej 2\nBindslev, Denmark").
+  lage: ["lage", "location", "adresse", "address", "beliggenhed"],
   personen: ["personen", "persons", "guests", "people", "gaste", "gaeste"],
 };
 
@@ -365,6 +376,9 @@ export function portalExportNachCsv(
       hole("waehrung").toUpperCase().slice(0, 3),
       "Booking.com",
       nr,
+      // Zeilenumbruch zu Komma: die Lage kommt zweizeilig ("Straße 2\nOrt,
+      // Land") und würde die CSV-Zeile sonst zerreißen.
+      hole("lage").replace(/\s*\n\s*/g, ", ").trim(),
     ]);
   }
 
