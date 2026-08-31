@@ -4348,7 +4348,22 @@
       "inspectionNeeded": "Inspektion krävs",
       "photos": "Bilder",
       "view": "Visa",
-      "delete": "Ta bort"
+      "delete": "Ta bort",
+      "statusLabel": "Status",
+      "timesLabel": "Tidsfönster",
+      "fromField": "Från",
+      "toField": "Till",
+      "saveTimes": "Spara tider",
+      "timesSaved": "Tidsfönster sparat.",
+      "statusSaved": "Status ändrad.",
+      "endBeforeStart": "Slutet får inte vara före starten.",
+      "close": "Stäng",
+      "complete": "Färdig",
+      "completeSuccess": "Uppgift färdigställd.",
+      "pickDateTime": "Datum och tid",
+      "timeLabelShort": "Tid",
+      "clear": "Töm",
+      "done": "Färdig"
     },
     "tasksSubnav": {
       "pmModul": "PM-modul",
@@ -4554,7 +4569,10 @@
       "loading": "Laddar…",
       "empty": "Inga uppgifter i denna vy.",
       "completed": "Uppgift slutförd.",
-      "deleted": "Uppgift raderad."
+      "deleted": "Uppgift raderad.",
+      "statusFilter": "Status",
+      "statusAll": "Alla statusar",
+      "statusCount": "{gezeigt} av {gesamt}"
     },
     "ruleList": {
       "kindTitle": {
@@ -4702,7 +4720,8 @@
       "bookingBarLabel": "{guests} {channel} - bokning",
       "months": "Januari,Februari,Mars,April,Maj,Juni,Juli,Augusti,September,Oktober,November,December",
       "weekdays": "Söndag,Måndag,Tisdag,Onsdag,Torsdag,Fredag,Lördag",
-      "miscRow": "Övrigt"
+      "miscRow": "Övrigt",
+      "today": "Idag"
     },
     "ruleEditor": {
       "loading": "Laddar…",
@@ -5046,7 +5065,8 @@
       "unassigned": "Ej tilldelad",
       "statusOpen": "Ofullständig",
       "statusDone": "Slutförd",
-      "statusCancelled": "Avbruten"
+      "statusCancelled": "Avbruten",
+      "editTimes": "Ändra datum"
     },
     "ruleEditorPage": {
       "loading": "Läser in…",

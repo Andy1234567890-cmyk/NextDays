@@ -4348,7 +4348,22 @@
       "inspectionNeeded": "Nepieciešama pārbaude",
       "photos": "Attēli",
       "view": "Skatīt",
-      "delete": "Dzēst"
+      "delete": "Dzēst",
+      "statusLabel": "Statuss",
+      "timesLabel": "Laika logs",
+      "fromField": "No",
+      "toField": "Līdz",
+      "saveTimes": "Saglabāt laikus",
+      "timesSaved": "Laika logs saglabāts.",
+      "statusSaved": "Statuss mainīts.",
+      "endBeforeStart": "Beigu datums nedrīkst būt pirms sākuma datuma.",
+      "close": "Aizvērt",
+      "complete": "Pabeigts",
+      "completeSuccess": "Uzdevums pabeigts.",
+      "pickDateTime": "Datums un laiks",
+      "timeLabelShort": "Laiks",
+      "clear": "Dzēst",
+      "done": "Gatavs"
     },
     "tasksSubnav": {
       "pmModul": "PM modulis",
@@ -4554,7 +4569,10 @@
       "loading": "Ielādē…",
       "empty": "Šajā skatā nav uzdevumu.",
       "completed": "Uzdevums pabeigts.",
-      "deleted": "Uzdevums dzēsts."
+      "deleted": "Uzdevums dzēsts.",
+      "statusFilter": "Statuss",
+      "statusAll": "Visi statusi",
+      "statusCount": "{gezeigt} no {gesamt}"
     },
     "ruleList": {
       "kindTitle": {
@@ -4702,7 +4720,8 @@
       "bookingBarLabel": "{guests} {channel} - rezervācija",
       "months": "[\"Janvāris\",\"Februāris\",\"Marts\",\"Aprīlis\",\"Maijs\",\"Jūnijs\",\"Jūlijs\",\"Augusts\",\"Septembris\",\"Oktobris\",\"Novembris\",\"Decembris\"]",
       "weekdays": "[\"Svētdiena\",\"Pirmdiena\",\"Otrdiena\",\"Trešdiena\",\"Ceturtdiena\",\"Piektdiena\",\"Sestdiena\"]",
-      "miscRow": "Dažādi"
+      "miscRow": "Dažādi",
+      "today": "Šodien"
     },
     "ruleEditor": {
       "loading": "Ielādē…",
@@ -5046,7 +5065,8 @@
       "unassigned": "Nav piešķirts",
       "statusOpen": "Nepabeigts",
       "statusDone": "Pabeigts",
-      "statusCancelled": "Atcelts"
+      "statusCancelled": "Atcelts",
+      "editTimes": "Mainīt datumus"
     },
     "ruleEditorPage": {
       "loading": "Ielādē…",

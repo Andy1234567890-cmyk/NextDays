@@ -4348,7 +4348,22 @@
       "inspectionNeeded": "Vyžaduje kontrolu",
       "photos": "Fotografie",
       "view": "Zobraziť",
-      "delete": "Vymazať"
+      "delete": "Vymazať",
+      "statusLabel": "Stav",
+      "timesLabel": "Časové okno",
+      "fromField": "Od",
+      "toField": "Do",
+      "saveTimes": "Uložiť časy",
+      "timesSaved": "Časové okno uložené.",
+      "statusSaved": "Stav zmenený.",
+      "endBeforeStart": "Koniec nesmie byť pred začiatkom.",
+      "close": "Zavrieť",
+      "complete": "Hotovo",
+      "completeSuccess": "Úloha dokončená.",
+      "pickDateTime": "Dátum a čas",
+      "timeLabelShort": "Čas",
+      "clear": "Vyprázdniť",
+      "done": "Hotovo"
     },
     "tasksSubnav": {
       "pmModul": "PM modul",
@@ -4554,7 +4569,10 @@
       "loading": "Načítava sa…",
       "empty": "V tomto zobrazení nie sú žiadne úlohy.",
       "completed": "Úloha dokončená.",
-      "deleted": "Úloha zmazaná."
+      "deleted": "Úloha zmazaná.",
+      "statusFilter": "Stav",
+      "statusAll": "Všetky stavy",
+      "statusCount": "{gezeigt} z {gesamt}"
     },
     "ruleList": {
       "kindTitle": {
@@ -4702,7 +4720,8 @@
       "bookingBarLabel": "{guests} {channel} - rezervácia",
       "months": "[\"Január\",\"Február\",\"Marec\",\"Apríl\",\"Máj\",\"Jún\",\"Júl\",\"August\",\"September\",\"Október\",\"November\",\"December\"]",
       "weekdays": "[\"Nedeľa\",\"Pondelok\",\"Utorok\",\"Streda\",\"Štvrtok\",\"Piatok\",\"Sobota\"]",
-      "miscRow": "Rôzne"
+      "miscRow": "Rôzne",
+      "today": "Dnes"
     },
     "ruleEditor": {
       "loading": "Načítava sa…",
@@ -5046,7 +5065,8 @@
       "unassigned": "Nepriradené",
       "statusOpen": "Nedokončené",
       "statusDone": "Dokončené",
-      "statusCancelled": "Zrušené"
+      "statusCancelled": "Zrušené",
+      "editTimes": "Zmeniť časy"
     },
     "ruleEditorPage": {
       "loading": "Načítava sa…",

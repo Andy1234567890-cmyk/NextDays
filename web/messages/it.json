@@ -4348,7 +4348,22 @@
       "inspectionNeeded": "Ispezione necessaria",
       "photos": "Foto",
       "view": "Visualizza",
-      "delete": "Elimina"
+      "delete": "Elimina",
+      "statusLabel": "Stato",
+      "timesLabel": "Fascia oraria",
+      "fromField": "Da",
+      "toField": "A",
+      "saveTimes": "Salva orari",
+      "timesSaved": "Fascia oraria salvata.",
+      "statusSaved": "Stato modificato.",
+      "endBeforeStart": "La fine non può essere precedente all'inizio.",
+      "close": "Chiudi",
+      "complete": "Fatto",
+      "completeSuccess": "Attività completata.",
+      "pickDateTime": "Data e ora",
+      "timeLabelShort": "Ora",
+      "clear": "Cancella",
+      "done": "Fatto"
     },
     "tasksSubnav": {
       "pmModul": "Modulo PM",
@@ -4554,7 +4569,10 @@
       "loading": "Caricamento…",
       "empty": "Nessuna attività in questa vista.",
       "completed": "Attività completata.",
-      "deleted": "Attività eliminata."
+      "deleted": "Attività eliminata.",
+      "statusFilter": "Stato",
+      "statusAll": "Tutti gli stati",
+      "statusCount": "{gezeigt} di {gesamt}"
     },
     "ruleList": {
       "kindTitle": {
@@ -4702,7 +4720,8 @@
       "bookingBarLabel": "{guests} {channel} - prenotazione",
       "months": "Gennaio,Febbraio,Marzo,Aprile,Maggio,Giugno,Luglio,Agosto,Settembre,Ottobre,Novembre,Dicembre",
       "weekdays": "Domenica,Lunedì,Martedì,Mercoledì,Giovedì,Venerdì,Sabato",
-      "miscRow": "Varie"
+      "miscRow": "Varie",
+      "today": "Oggi"
     },
     "ruleEditor": {
       "loading": "Caricamento…",
@@ -5046,7 +5065,8 @@
       "unassigned": "Non assegnato",
       "statusOpen": "Incompleta",
       "statusDone": "Completata",
-      "statusCancelled": "Annullata"
+      "statusCancelled": "Annullata",
+      "editTimes": "Modifica orari"
     },
     "ruleEditorPage": {
       "loading": "Caricamento…",

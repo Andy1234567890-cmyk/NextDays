@@ -4348,7 +4348,22 @@
       "inspectionNeeded": "Inspecție necesară",
       "photos": "Fotografii",
       "view": "Vizualizează",
-      "delete": "Șterge"
+      "delete": "Șterge",
+      "statusLabel": "Stare",
+      "timesLabel": "Interval orar",
+      "fromField": "De la",
+      "toField": "Până la",
+      "saveTimes": "Salvați orele",
+      "timesSaved": "Interval orar salvat.",
+      "statusSaved": "Stare modificată.",
+      "endBeforeStart": "Data de sfârșit nu poate fi înainte de data de început.",
+      "close": "Închide",
+      "complete": "Finalizat",
+      "completeSuccess": "Sarcină finalizată.",
+      "pickDateTime": "Dată și oră",
+      "timeLabelShort": "Oră",
+      "clear": "Golire",
+      "done": "Gata"
     },
     "tasksSubnav": {
       "pmModul": "Modul PM",
@@ -4554,7 +4569,10 @@
       "loading": "Se încarcă…",
       "empty": "Nicio sarcină în această vizualizare.",
       "completed": "Sarcină finalizată.",
-      "deleted": "Sarcină ștearsă."
+      "deleted": "Sarcină ștearsă.",
+      "statusFilter": "Stare",
+      "statusAll": "Toate stările",
+      "statusCount": "{gezeigt} din {gesamt}"
     },
     "ruleList": {
       "kindTitle": {
@@ -4702,7 +4720,8 @@
       "bookingBarLabel": "{guests} {channel} - rezervare",
       "months": "Ianuarie,Februarie,Martie,Aprilie,Mai,Iunie,Iulie,August,Septembrie,Octombrie,Noiembrie,Decembrie",
       "weekdays": "Duminică,Luni,Marți,Miercuri,Joi,Vineri,Sâmbătă",
-      "miscRow": "Diverse"
+      "miscRow": "Diverse",
+      "today": "Astăzi"
     },
     "ruleEditor": {
       "loading": "Se încarcă…",
@@ -5046,7 +5065,8 @@
       "unassigned": "Neatribuit",
       "statusOpen": "Incompletă",
       "statusDone": "Finalizată",
-      "statusCancelled": "Anulată"
+      "statusCancelled": "Anulată",
+      "editTimes": "Modificare ore"
     },
     "ruleEditorPage": {
       "loading": "Se încarcă…",

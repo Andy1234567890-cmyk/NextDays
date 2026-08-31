@@ -4348,7 +4348,22 @@
       "inspectionNeeded": "Potreban je pregled",
       "photos": "Fotografije",
       "view": "Pogledaj",
-      "delete": "Izbriši"
+      "delete": "Izbriši",
+      "statusLabel": "Status",
+      "timesLabel": "Vremenski okvir",
+      "fromField": "Od",
+      "toField": "Do",
+      "saveTimes": "Spremi vremena",
+      "timesSaved": "Vremenski okvir spremljen.",
+      "statusSaved": "Status promijenjen.",
+      "endBeforeStart": "Kraj ne može biti prije početka.",
+      "close": "Zatvori",
+      "complete": "Gotovo",
+      "completeSuccess": "Zadatak dovršen.",
+      "pickDateTime": "Datum i vrijeme",
+      "timeLabelShort": "Vrijeme",
+      "clear": "Očisti",
+      "done": "Gotovo"
     },
     "tasksSubnav": {
       "pmModul": "PM modul",
@@ -4554,7 +4569,10 @@
       "loading": "Učitavanje…",
       "empty": "Nema zadataka u ovom prikazu.",
       "completed": "Zadatak završen.",
-      "deleted": "Zadatak obrisan."
+      "deleted": "Zadatak obrisan.",
+      "statusFilter": "Status",
+      "statusAll": "Svi statusi",
+      "statusCount": "{gezeigt} od {gesamt}"
     },
     "ruleList": {
       "kindTitle": {
@@ -4702,7 +4720,8 @@
       "bookingBarLabel": "{guests} {channel} - rezervacija",
       "months": "[\"Siječanj\",\"Veljača\",\"Ožujak\",\"Travanj\",\"Svibanj\",\"Lipanj\",\"Srpanj\",\"Kolovoz\",\"Rujan\",\"Listopad\",\"Studeni\",\"Prosinac\"]",
       "weekdays": "[\"Nedjelja\",\"Ponedjeljak\",\"Utorak\",\"Srijeda\",\"Četvrtak\",\"Petak\",\"Subota\"]",
-      "miscRow": "Razno"
+      "miscRow": "Razno",
+      "today": "Danas"
     },
     "ruleEditor": {
       "loading": "Učitavanje…",
@@ -5046,7 +5065,8 @@
       "unassigned": "Nedodijeljeno",
       "statusOpen": "Nedovršeno",
       "statusDone": "Završeno",
-      "statusCancelled": "Otkazano"
+      "statusCancelled": "Otkazano",
+      "editTimes": "Promijeni termine"
     },
     "ruleEditorPage": {
       "loading": "Učitavanje…",

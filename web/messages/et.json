@@ -4348,7 +4348,22 @@
       "inspectionNeeded": "Vajab kontrolli",
       "photos": "Pildid",
       "view": "Vaata",
-      "delete": "Kustuta"
+      "delete": "Kustuta",
+      "statusLabel": "Staatus",
+      "timesLabel": "Ajavahemik",
+      "fromField": "Alates",
+      "toField": "Kuni",
+      "saveTimes": "Salvesta ajad",
+      "timesSaved": "Ajavahemik salvestatud.",
+      "statusSaved": "Staatus muudetud.",
+      "endBeforeStart": "Lõpp ei tohi olla enne algust.",
+      "close": "Sulge",
+      "complete": "Valmis",
+      "completeSuccess": "Ülesanne täidetud.",
+      "pickDateTime": "Kuupäev ja kellaaeg",
+      "timeLabelShort": "Kellaaeg",
+      "clear": "Tühjenda",
+      "done": "Valmis"
     },
     "tasksSubnav": {
       "pmModul": "PM-moodul",
@@ -4554,7 +4569,10 @@
       "loading": "Laadib…",
       "empty": "Selles vaates ülesandeid pole.",
       "completed": "Ülesanne lõpetatud.",
-      "deleted": "Ülesanne kustutatud."
+      "deleted": "Ülesanne kustutatud.",
+      "statusFilter": "Staatus",
+      "statusAll": "Kõik staatused",
+      "statusCount": "{gezeigt} kokku {gesamt}"
     },
     "ruleList": {
       "kindTitle": {
@@ -4702,7 +4720,8 @@
       "bookingBarLabel": "{guests} {channel} - broneering",
       "months": "Jaanuar,Veebruar,Märts,Aprill,Mai,Juuni,Juuli,August,September,Oktoober,November,Detsember",
       "weekdays": "Pühapäev,Esmaspäev,Teisipäev,Kolmapäev,Neljapäev,Reede,Laupäev",
-      "miscRow": "Muud"
+      "miscRow": "Muud",
+      "today": "Täna"
     },
     "ruleEditor": {
       "loading": "Laadib…",
@@ -5046,7 +5065,8 @@
       "unassigned": "Määramata",
       "statusOpen": "Lõpetamata",
       "statusDone": "Lõpetatud",
-      "statusCancelled": "Tühistatud"
+      "statusCancelled": "Tühistatud",
+      "editTimes": "Muuda kuupäevi"
     },
     "ruleEditorPage": {
       "loading": "Laadib…",

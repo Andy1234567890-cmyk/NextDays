@@ -4348,7 +4348,22 @@
       "inspectionNeeded": "Inspection needed",
       "photos": "Photos",
       "view": "View",
-      "delete": "Delete"
+      "delete": "Delete",
+      "statusLabel": "Status",
+      "timesLabel": "Time slot",
+      "fromField": "From",
+      "toField": "To",
+      "saveTimes": "Save times",
+      "timesSaved": "Time slot saved.",
+      "statusSaved": "Status changed.",
+      "endBeforeStart": "End cannot be before start.",
+      "close": "Close",
+      "complete": "Done",
+      "completeSuccess": "Task completed.",
+      "pickDateTime": "Date & Time",
+      "timeLabelShort": "Time",
+      "clear": "Clear",
+      "done": "Done"
     },
     "tasksSubnav": {
       "pmModul": "PM module",
@@ -4554,7 +4569,10 @@
       "loading": "Loading…",
       "empty": "No tasks in this view.",
       "completed": "Task completed.",
-      "deleted": "Task deleted."
+      "deleted": "Task deleted.",
+      "statusFilter": "Status",
+      "statusAll": "All statuses",
+      "statusCount": "{gezeigt} of {gesamt}"
     },
     "ruleList": {
       "kindTitle": {
@@ -4723,7 +4741,8 @@
         "Friday",
         "Saturday"
       ],
-      "miscRow": "Miscellaneous"
+      "miscRow": "Miscellaneous",
+      "today": "Today"
     },
     "ruleEditor": {
       "loading": "Loading…",
@@ -5067,7 +5086,8 @@
       "unassigned": "Unassigned",
       "statusOpen": "Incomplete",
       "statusDone": "Completed",
-      "statusCancelled": "Cancelled"
+      "statusCancelled": "Cancelled",
+      "editTimes": "Change times"
     },
     "ruleEditorPage": {
       "loading": "Loading…",

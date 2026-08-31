@@ -4348,7 +4348,22 @@
       "inspectionNeeded": "Inspeção necessária",
       "photos": "Fotos",
       "view": "Ver",
-      "delete": "Eliminar"
+      "delete": "Eliminar",
+      "statusLabel": "Status",
+      "timesLabel": "Janela de tempo",
+      "fromField": "De",
+      "toField": "Até",
+      "saveTimes": "Salvar horários",
+      "timesSaved": "Janela de tempo salva.",
+      "statusSaved": "Status alterado.",
+      "endBeforeStart": "O fim não pode ser anterior ao início.",
+      "close": "Fechar",
+      "complete": "Concluído",
+      "completeSuccess": "Tarefa concluída.",
+      "pickDateTime": "Data e hora",
+      "timeLabelShort": "Hora",
+      "clear": "Limpar",
+      "done": "Concluído"
     },
     "tasksSubnav": {
       "pmModul": "Módulo PM",
@@ -4554,7 +4569,10 @@
       "loading": "A carregar…",
       "empty": "Não há tarefas nesta vista.",
       "completed": "Tarefa concluída.",
-      "deleted": "Tarefa eliminada."
+      "deleted": "Tarefa eliminada.",
+      "statusFilter": "Status",
+      "statusAll": "Todos os estados",
+      "statusCount": "{gezeigt} de {gesamt}"
     },
     "ruleList": {
       "kindTitle": {
@@ -4702,7 +4720,8 @@
       "bookingBarLabel": "{guests} {channel} - reserva",
       "months": "Janeiro,Fevereiro,Março,Abril,Maio,Junho,Julho,Agosto,Setembro,Outubro,Novembro,Dezembro",
       "weekdays": "Domingo,Segunda-feira,Terça-feira,Quarta-feira,Quinta-feira,Sexta-feira,Sábado",
-      "miscRow": "Diversos"
+      "miscRow": "Diversos",
+      "today": "Hoje"
     },
     "ruleEditor": {
       "loading": "A carregar…",
@@ -5046,7 +5065,8 @@
       "unassigned": "Sem atribuição",
       "statusOpen": "Incompleta",
       "statusDone": "Concluída",
-      "statusCancelled": "Cancelada"
+      "statusCancelled": "Cancelada",
+      "editTimes": "Alterar horários"
     },
     "ruleEditorPage": {
       "loading": "A carregar…",

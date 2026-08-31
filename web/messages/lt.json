@@ -4348,7 +4348,22 @@
       "inspectionNeeded": "Reikalinga patikra",
       "photos": "Nuotraukos",
       "view": "Peržiūrėti",
-      "delete": "Ištrinti"
+      "delete": "Ištrinti",
+      "statusLabel": "Būsena",
+      "timesLabel": "Laiko tarpas",
+      "fromField": "Nuo",
+      "toField": "Iki",
+      "saveTimes": "Išsaugoti laikus",
+      "timesSaved": "Laiko tarpas išsaugotas.",
+      "statusSaved": "Būsena pakeista.",
+      "endBeforeStart": "Pabaiga negali būti anksčiau už pradžią.",
+      "close": "Uždaryti",
+      "complete": "Atlikta",
+      "completeSuccess": "Užduotis atlikta.",
+      "pickDateTime": "Data ir laikas",
+      "timeLabelShort": "Laikas",
+      "clear": "Išvalyti",
+      "done": "Atlikta"
     },
     "tasksSubnav": {
       "pmModul": "PV modulis",
@@ -4554,7 +4569,10 @@
       "loading": "Įkeliama…",
       "empty": "Šiame rodinyje užduočių nėra.",
       "completed": "Užduotis užbaigta.",
-      "deleted": "Užduotis ištrinta."
+      "deleted": "Užduotis ištrinta.",
+      "statusFilter": "Būsena",
+      "statusAll": "Visos būsenos",
+      "statusCount": "{gezeigt} iš {gesamt}"
     },
     "ruleList": {
       "kindTitle": {
@@ -4702,7 +4720,8 @@
       "bookingBarLabel": "{guests} {channel} - rezervacija",
       "months": "[\"Sausis\",\"Vasaris\",\"Kovas\",\"Balandis\",\"Gegužė\",\"Birželis\",\"Liepa\",\"Rugpjūtis\",\"Rugsėjis\",\"Spalis\",\"Lapkritis\",\"Gruodis\"]",
       "weekdays": "[\"Sekmadienis\",\"Pirmadienis\",\"Antradienis\",\"Trečiadienis\",\"Ketvirtadienis\",\"Penktadienis\",\"Šeštadienis\"]",
-      "miscRow": "Įvairūs"
+      "miscRow": "Įvairūs",
+      "today": "Šiandien"
     },
     "ruleEditor": {
       "loading": "Įkeliama…",
@@ -5046,7 +5065,8 @@
       "unassigned": "Nepriskirta",
       "statusOpen": "Nebaigta",
       "statusDone": "Užbaigta",
-      "statusCancelled": "Atšaukta"
+      "statusCancelled": "Atšaukta",
+      "editTimes": "Laikas keičiasi"
     },
     "ruleEditorPage": {
       "loading": "Įkeliama…",

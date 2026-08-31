@@ -4348,7 +4348,22 @@
       "inspectionNeeded": "Cigireacht ag teastáil",
       "photos": "Grianghraif",
       "view": "Féach",
-      "delete": "Scrios"
+      "delete": "Scrios",
+      "statusLabel": "Stádas",
+      "timesLabel": "Frá",
+      "fromField": "Ó",
+      "toField": "Go",
+      "saveTimes": "Sábháil Amanna",
+      "timesSaved": "Amanna sábháilte.",
+      "statusSaved": "Stádas athraithe.",
+      "endBeforeStart": "Ní féidir leis an deireadh a bheith roimh an tús.",
+      "close": "Dún",
+      "complete": "Déanta",
+      "completeSuccess": "Tasc críochnaithe.",
+      "pickDateTime": "Dáta & Am",
+      "timeLabelShort": "Am",
+      "clear": "Glan",
+      "done": "Déanta"
     },
     "tasksSubnav": {
       "pmModul": "Modúl PM",
@@ -4554,7 +4569,10 @@
       "loading": "Á lódáil…",
       "empty": "Níl aon tasc san amharc seo.",
       "completed": "Tasc críochnaithe.",
-      "deleted": "Tasc scriosta."
+      "deleted": "Tasc scriosta.",
+      "statusFilter": "Stádas",
+      "statusAll": "Gach stádas",
+      "statusCount": "{gezeigt} as {gesamt}"
     },
     "ruleList": {
       "kindTitle": {
@@ -4702,7 +4720,8 @@
       "bookingBarLabel": "{guests} {channel} - áirithint",
       "months": "Eanáir,Feabhra,Márta,Aibreán,Bealtaine,Meitheamh,Iúil,Lúnasa,Meán Fómhair,Deireadh Fómhair,Samhain,Nollaig",
       "weekdays": "Domhnach,Luan,Máirt,Céadaoin,Déardaoin,Aoine,Satharn",
-      "miscRow": "Ilghnéitheach"
+      "miscRow": "Ilghnéitheach",
+      "today": "Inniu"
     },
     "ruleEditor": {
       "loading": "Á lódáil…",
@@ -5046,7 +5065,8 @@
       "unassigned": "Gan sannadh",
       "statusOpen": "Neamhiomlán",
       "statusDone": "Críochnaithe",
-      "statusCancelled": "Cealaithe"
+      "statusCancelled": "Cealaithe",
+      "editTimes": "Athruithe ama"
     },
     "ruleEditorPage": {
       "loading": "Á lódáil…",

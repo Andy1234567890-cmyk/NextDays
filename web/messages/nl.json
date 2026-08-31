@@ -4348,7 +4348,22 @@
       "inspectionNeeded": "Inspectie nodig",
       "photos": "Foto's",
       "view": "Bekijken",
-      "delete": "Verwijderen"
+      "delete": "Verwijderen",
+      "statusLabel": "Status",
+      "timesLabel": "Tijdslot",
+      "fromField": "Van",
+      "toField": "Tot",
+      "saveTimes": "Tijden opslaan",
+      "timesSaved": "Tijdslot opgeslagen.",
+      "statusSaved": "Status gewijzigd.",
+      "endBeforeStart": "Het einde mag niet voor het begin liggen.",
+      "close": "Sluiten",
+      "complete": "Klaar",
+      "completeSuccess": "Taak voltooid.",
+      "pickDateTime": "Datum & tijd",
+      "timeLabelShort": "Tijd",
+      "clear": "Wissen",
+      "done": "Klaar"
     },
     "tasksSubnav": {
       "pmModul": "PM-module",
@@ -4554,7 +4569,10 @@
       "loading": "Laden…",
       "empty": "Geen taken in deze weergave.",
       "completed": "Taak afgerond.",
-      "deleted": "Taak verwijderd."
+      "deleted": "Taak verwijderd.",
+      "statusFilter": "Status",
+      "statusAll": "Alle statussen",
+      "statusCount": "{gezeigt} van {gesamt}"
     },
     "ruleList": {
       "kindTitle": {
@@ -4702,7 +4720,8 @@
       "bookingBarLabel": "{guests} {channel} - boeking",
       "months": "Januari,Februari,Maart,April,Mei,Juni,Juli,Augustus,September,Oktober,November,December",
       "weekdays": "Zondag,Maandag,Dinsdag,Woensdag,Donderdag,Vrijdag,Zaterdag",
-      "miscRow": "Diversen"
+      "miscRow": "Diversen",
+      "today": "Vandaag"
     },
     "ruleEditor": {
       "loading": "Laden…",
@@ -5046,7 +5065,8 @@
       "unassigned": "Niet toegewezen",
       "statusOpen": "Onvolledig",
       "statusDone": "Afgerond",
-      "statusCancelled": "Geannuleerd"
+      "statusCancelled": "Geannuleerd",
+      "editTimes": "Tijden wijzigen"
     },
     "ruleEditorPage": {
       "loading": "Laden…",

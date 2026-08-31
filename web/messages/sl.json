@@ -4348,7 +4348,22 @@
       "inspectionNeeded": "Potreben je pregled",
       "photos": "Fotografije",
       "view": "Ogled",
-      "delete": "Izbriši"
+      "delete": "Izbriši",
+      "statusLabel": "Status",
+      "timesLabel": "Časovno okno",
+      "fromField": "Od",
+      "toField": "Do",
+      "saveTimes": "Shrani čase",
+      "timesSaved": "Časovno okno shranjeno.",
+      "statusSaved": "Status spremenjen.",
+      "endBeforeStart": "Konec ne sme biti pred začetkom.",
+      "close": "Zapri",
+      "complete": "Opravljeno",
+      "completeSuccess": "Opravilo končano.",
+      "pickDateTime": "Datum in čas",
+      "timeLabelShort": "Čas",
+      "clear": "Počisti",
+      "done": "Končano"
     },
     "tasksSubnav": {
       "pmModul": "PM modul",
@@ -4554,7 +4569,10 @@
       "loading": "Nalaganje …",
       "empty": "V tem prikazu ni nalog.",
       "completed": "Naloga zaključena.",
-      "deleted": "Naloga izbrisana."
+      "deleted": "Naloga izbrisana.",
+      "statusFilter": "Status",
+      "statusAll": "Vsi statusi",
+      "statusCount": "{gezeigt} od {gesamt}"
     },
     "ruleList": {
       "kindTitle": {
@@ -4702,7 +4720,8 @@
       "bookingBarLabel": "{guests} {channel} - rezervacija",
       "months": "Januar,Februar,Marec,April,Maj,Junij,Julij,Avgust,September,Oktober,November,December",
       "weekdays": "Nedelja,Ponedeljek,Torek,Sreda,Četrtek,Petek,Sobota",
-      "miscRow": "Razno"
+      "miscRow": "Razno",
+      "today": "Danes"
     },
     "ruleEditor": {
       "loading": "Nalaganje …",
@@ -5046,7 +5065,8 @@
       "unassigned": "Ni dodeljeno",
       "statusOpen": "Nedokončano",
       "statusDone": "Zaključeno",
-      "statusCancelled": "Preklicano"
+      "statusCancelled": "Preklicano",
+      "editTimes": "Spremenite datume"
     },
     "ruleEditorPage": {
       "loading": "Nalaganje…",

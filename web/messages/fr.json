@@ -4348,7 +4348,22 @@
       "inspectionNeeded": "Inspection requise",
       "photos": "Photos",
       "view": "Voir",
-      "delete": "Supprimer"
+      "delete": "Supprimer",
+      "statusLabel": "Statut",
+      "timesLabel": "Plage horaire",
+      "fromField": "Du",
+      "toField": "Au",
+      "saveTimes": "Enregistrer les heures",
+      "timesSaved": "Plage horaire enregistrée.",
+      "statusSaved": "Statut modifié.",
+      "endBeforeStart": "La fin ne peut pas précéder le début.",
+      "close": "Fermer",
+      "complete": "Terminé",
+      "completeSuccess": "Tâche terminée.",
+      "pickDateTime": "Date et heure",
+      "timeLabelShort": "Heure",
+      "clear": "Vider",
+      "done": "Terminé"
     },
     "tasksSubnav": {
       "pmModul": "Module PM",
@@ -4554,7 +4569,10 @@
       "loading": "Chargement…",
       "empty": "Aucune tâche dans cette vue.",
       "completed": "Tâche terminée.",
-      "deleted": "Tâche supprimée."
+      "deleted": "Tâche supprimée.",
+      "statusFilter": "Statut",
+      "statusAll": "Tous les statuts",
+      "statusCount": "{gezeigt} sur {gesamt}"
     },
     "ruleList": {
       "kindTitle": {
@@ -4702,7 +4720,8 @@
       "bookingBarLabel": "{guests} {channel} - réservation",
       "months": "[\"Janvier\",\"Février\",\"Mars\",\"Avril\",\"Mai\",\"Juin\",\"Juillet\",\"Août\",\"Septembre\",\"Octobre\",\"Novembre\",\"Décembre\"]",
       "weekdays": "[\"Dimanche\",\"Lundi\",\"Mardi\",\"Mercredi\",\"Jeudi\",\"Vendredi\",\"Samedi\"]",
-      "miscRow": "Divers"
+      "miscRow": "Divers",
+      "today": "Aujourd'hui"
     },
     "ruleEditor": {
       "loading": "Chargement…",
@@ -5046,7 +5065,8 @@
       "unassigned": "Non attribué",
       "statusOpen": "Incomplète",
       "statusDone": "Terminée",
-      "statusCancelled": "Annulée"
+      "statusCancelled": "Annulée",
+      "editTimes": "Modifier les horaires"
     },
     "ruleEditorPage": {
       "loading": "Chargement…",

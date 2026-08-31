@@ -4348,7 +4348,22 @@
       "inspectionNeeded": "Ellenőrzés szükséges",
       "photos": "Fotók",
       "view": "Megtekintés",
-      "delete": "Törlés"
+      "delete": "Törlés",
+      "statusLabel": "Állapot",
+      "timesLabel": "Időkeret",
+      "fromField": "Ettől",
+      "toField": "Eddig",
+      "saveTimes": "Idők mentése",
+      "timesSaved": "Időkeret elmentve.",
+      "statusSaved": "Állapot megváltozott.",
+      "endBeforeStart": "A befejezés nem lehet a kezdés előtt.",
+      "close": "Bezárás",
+      "complete": "Kész",
+      "completeSuccess": "Feladat kész.",
+      "pickDateTime": "Dátum és idő",
+      "timeLabelShort": "Idő",
+      "clear": "Törlés",
+      "done": "Kész"
     },
     "tasksSubnav": {
       "pmModul": "PM-modul",
@@ -4554,7 +4569,10 @@
       "loading": "Betöltés…",
       "empty": "Ebben a nézetben nincs feladat.",
       "completed": "Feladat befejezve.",
-      "deleted": "Feladat törölve."
+      "deleted": "Feladat törölve.",
+      "statusFilter": "Állapot",
+      "statusAll": "Összes állapot",
+      "statusCount": "{gezeigt} / {gesamt}"
     },
     "ruleList": {
       "kindTitle": {
@@ -4702,7 +4720,8 @@
       "bookingBarLabel": "{guests} {channel} - foglalás",
       "months": "[\"Január\",\"Február\",\"Március\",\"Április\",\"Május\",\"Június\",\"Július\",\"Augusztus\",\"Szeptember\",\"Október\",\"November\",\"December\"]",
       "weekdays": "[\"Vasárnap\",\"Hétfő\",\"Kedd\",\"Szerda\",\"Csütörtök\",\"Péntek\",\"Szombat\"]",
-      "miscRow": "Egyéb"
+      "miscRow": "Egyéb",
+      "today": "Ma"
     },
     "ruleEditor": {
       "loading": "Betöltés…",
@@ -5046,7 +5065,8 @@
       "unassigned": "Nincs hozzárendelve",
       "statusOpen": "Befejezetlen",
       "statusDone": "Befejezve",
-      "statusCancelled": "Megszakítva"
+      "statusCancelled": "Megszakítva",
+      "editTimes": "Időpontok módosítása"
     },
     "ruleEditorPage": {
       "loading": "Betöltés…",

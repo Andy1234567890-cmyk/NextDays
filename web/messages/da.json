@@ -4348,7 +4348,22 @@
       "inspectionNeeded": "Inspektion nødvendig",
       "photos": "Billeder",
       "view": "Se",
-      "delete": "Slet"
+      "delete": "Slet",
+      "statusLabel": "Status",
+      "timesLabel": "Tidsinterval",
+      "fromField": "Fra",
+      "toField": "Til",
+      "saveTimes": "Gem tider",
+      "timesSaved": "Tidsinterval gemt.",
+      "statusSaved": "Status ændret.",
+      "endBeforeStart": "Slutdatoen må ikke være før startdatoen.",
+      "close": "Luk",
+      "complete": "Udført",
+      "completeSuccess": "Opgave udført.",
+      "pickDateTime": "Dato og tid",
+      "timeLabelShort": "Tid",
+      "clear": "Ryd",
+      "done": "Færdig"
     },
     "tasksSubnav": {
       "pmModul": "PM-modul",
@@ -4554,7 +4569,10 @@
       "loading": "Indlæser…",
       "empty": "Ingen opgaver i denne visning.",
       "completed": "Opgave afsluttet.",
-      "deleted": "Opgave slettet."
+      "deleted": "Opgave slettet.",
+      "statusFilter": "Status",
+      "statusAll": "Alle statusser",
+      "statusCount": "{gezeigt} af {gesamt}"
     },
     "ruleList": {
       "kindTitle": {
@@ -4702,7 +4720,8 @@
       "bookingBarLabel": "{guests} {channel} - booking",
       "months": "[\"Januar\",\"Februar\",\"Marts\",\"April\",\"Maj\",\"Juni\",\"Juli\",\"August\",\"September\",\"Oktober\",\"November\",\"December\"]",
       "weekdays": "[\"Søndag\",\"Mandag\",\"Tirsdag\",\"Onsdag\",\"Torsdag\",\"Fredag\",\"Lørdag\"]",
-      "miscRow": "Diverse"
+      "miscRow": "Diverse",
+      "today": "I dag"
     },
     "ruleEditor": {
       "loading": "Indlæser…",
@@ -5046,7 +5065,8 @@
       "unassigned": "Ikke tildelt",
       "statusOpen": "Ufuldstændig",
       "statusDone": "Afsluttet",
-      "statusCancelled": "Annulleret"
+      "statusCancelled": "Annulleret",
+      "editTimes": "Tider ændrer sig"
     },
     "ruleEditorPage": {
       "loading": "Indlæser…",

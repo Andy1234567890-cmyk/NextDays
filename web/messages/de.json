@@ -4348,7 +4348,22 @@
       "inspectionNeeded": "Inspektion nötig",
       "photos": "Fotos",
       "view": "Ansehen",
-      "delete": "Löschen"
+      "delete": "Löschen",
+      "complete": "Erledigt",
+      "completeSuccess": "Aufgabe erledigt.",
+      "statusLabel": "Status",
+      "timesLabel": "Zeitfenster",
+      "fromField": "Von",
+      "toField": "Bis",
+      "saveTimes": "Zeiten speichern",
+      "timesSaved": "Zeitfenster gespeichert.",
+      "statusSaved": "Status geändert.",
+      "endBeforeStart": "Das Ende darf nicht vor dem Start liegen.",
+      "close": "Schließen",
+      "pickDateTime": "Datum & Uhrzeit",
+      "timeLabelShort": "Uhrzeit",
+      "clear": "Leeren",
+      "done": "Fertig"
     },
     "tasksSubnav": {
       "pmModul": "PM-Modul",
@@ -4554,7 +4569,10 @@
       "loading": "Lädt…",
       "empty": "Keine Aufgaben in dieser Ansicht.",
       "completed": "Aufgabe abgeschlossen.",
-      "deleted": "Aufgabe gelöscht."
+      "deleted": "Aufgabe gelöscht.",
+      "statusFilter": "Status",
+      "statusAll": "Alle Zustände",
+      "statusCount": "{gezeigt} von {gesamt}"
     },
     "ruleList": {
       "kindTitle": {
@@ -4723,7 +4741,8 @@
         "Freitag",
         "Samstag"
       ],
-      "miscRow": "Verschiedene"
+      "miscRow": "Verschiedene",
+      "today": "Heute"
     },
     "ruleEditor": {
       "loading": "Lädt…",
@@ -5067,7 +5086,8 @@
       "unassigned": "Nicht zugewiesen",
       "statusOpen": "Unvollständig",
       "statusDone": "Fertiggestellt",
-      "statusCancelled": "Abgebrochen"
+      "statusCancelled": "Abgebrochen",
+      "editTimes": "Zeiten ändern"
     },
     "ruleEditorPage": {
       "loading": "Lädt…",

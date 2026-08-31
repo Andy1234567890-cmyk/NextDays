@@ -4348,7 +4348,22 @@
       "inspectionNeeded": "Vyžadována kontrola",
       "photos": "Fotky",
       "view": "Zobrazit",
-      "delete": "Smazat"
+      "delete": "Smazat",
+      "statusLabel": "Stav",
+      "timesLabel": "Časové okno",
+      "fromField": "Od",
+      "toField": "Do",
+      "saveTimes": "Uložit časy",
+      "timesSaved": "Časové okno uloženo.",
+      "statusSaved": "Stav změněn.",
+      "endBeforeStart": "Konec nesmí být před začátkem.",
+      "close": "Zavřít",
+      "complete": "Hotovo",
+      "completeSuccess": "Úkol dokončen.",
+      "pickDateTime": "Datum a čas",
+      "timeLabelShort": "Čas",
+      "clear": "Vyprázdnit",
+      "done": "Hotovo"
     },
     "tasksSubnav": {
       "pmModul": "PM modul",
@@ -4554,7 +4569,10 @@
       "loading": "Načítání…",
       "empty": "V tomto zobrazení nejsou žádné úkoly.",
       "completed": "Úkol dokončen.",
-      "deleted": "Úkol smazán."
+      "deleted": "Úkol smazán.",
+      "statusFilter": "Stav",
+      "statusAll": "Všechny stavy",
+      "statusCount": "{gezeigt} z {gesamt}"
     },
     "ruleList": {
       "kindTitle": {
@@ -4702,7 +4720,8 @@
       "bookingBarLabel": "{guests} {channel} - rezervace",
       "months": "[\"Leden\", \"Únor\", \"Březen\", \"Duben\", \"Květen\", \"Červen\", \"Červenec\", \"Srpen\", \"Září\", \"Říjen\", \"Listopad\", \"Prosinec\"]",
       "weekdays": "[\"Neděle\", \"Pondělí\", \"Úterý\", \"Středa\", \"Čtvrtek\", \"Pátek\", \"Sobota\"]",
-      "miscRow": "Různé"
+      "miscRow": "Různé",
+      "today": "Dnes"
     },
     "ruleEditor": {
       "loading": "Načítání…",
@@ -5046,7 +5065,8 @@
       "unassigned": "Nepřiřazeno",
       "statusOpen": "Nedokončeno",
       "statusDone": "Dokončeno",
-      "statusCancelled": "Zrušeno"
+      "statusCancelled": "Zrušeno",
+      "editTimes": "Změnit časy"
     },
     "ruleEditorPage": {
       "loading": "Načítá se…",

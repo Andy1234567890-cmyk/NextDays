@@ -4348,7 +4348,22 @@
       "inspectionNeeded": "Tarkastus tarvitaan",
       "photos": "Kuvat",
       "view": "Näytä",
-      "delete": "Poista"
+      "delete": "Poista",
+      "statusLabel": "Tila",
+      "timesLabel": "Aikaikkuna",
+      "fromField": "Alkaen",
+      "toField": "Asti",
+      "saveTimes": "Tallenna ajat",
+      "timesSaved": "Aikaikkuna tallennettu.",
+      "statusSaved": "Tila muutettu.",
+      "endBeforeStart": "Lopetusaika ei voi olla ennen aloitusaikaa.",
+      "close": "Sulje",
+      "complete": "Valmis",
+      "completeSuccess": "Tehtävä valmis.",
+      "pickDateTime": "Päivämäärä ja aika",
+      "timeLabelShort": "Aika",
+      "clear": "Tyhjennä",
+      "done": "Valmis"
     },
     "tasksSubnav": {
       "pmModul": "PM-moduuli",
@@ -4554,7 +4569,10 @@
       "loading": "Ladataan…",
       "empty": "Ei tehtäviä tässä näkymässä.",
       "completed": "Tehtävä valmis.",
-      "deleted": "Tehtävä poistettu."
+      "deleted": "Tehtävä poistettu.",
+      "statusFilter": "Tila",
+      "statusAll": "Kaikki tilat",
+      "statusCount": "{gezeigt} / {gesamt}"
     },
     "ruleList": {
       "kindTitle": {
@@ -4702,7 +4720,8 @@
       "bookingBarLabel": "{guests} {channel} - varaus",
       "months": "[\"Tammikuu\",\"Helmikuu\",\"Maaliskuu\",\"Huhtikuu\",\"Toukokuu\",\"Kesäkuu\",\"Heinäkuu\",\"Elokuu\",\"Syyskuu\",\"Lokakuu\",\"Marraskuu\",\"Joulukuu\"]",
       "weekdays": "[\"Sunnuntai\",\"Maanantai\",\"Tiistai\",\"Keskiviikko\",\"Torstai\",\"Perjantai\",\"Lauantai\"]",
-      "miscRow": "Muut"
+      "miscRow": "Muut",
+      "today": "Tänään"
     },
     "ruleEditor": {
       "loading": "Ladataan…",
@@ -5046,7 +5065,8 @@
       "unassigned": "Ei osoitettu",
       "statusOpen": "Kesken",
       "statusDone": "Valmis",
-      "statusCancelled": "Peruttu"
+      "statusCancelled": "Peruttu",
+      "editTimes": "Muuta aikoja"
     },
     "ruleEditorPage": {
       "loading": "Ladataan…",

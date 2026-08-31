@@ -4348,7 +4348,22 @@
       "inspectionNeeded": "Wymagana inspekcja",
       "photos": "Zdjęcia",
       "view": "Zobacz",
-      "delete": "Usuń"
+      "delete": "Usuń",
+      "statusLabel": "Status",
+      "timesLabel": "Przedział czasowy",
+      "fromField": "Od",
+      "toField": "Do",
+      "saveTimes": "Zapisz godziny",
+      "timesSaved": "Przedział czasowy zapisany.",
+      "statusSaved": "Status zmieniony.",
+      "endBeforeStart": "Data zakończenia nie może być wcześniejsza niż data rozpoczęcia.",
+      "close": "Zamknij",
+      "complete": "Gotowe",
+      "completeSuccess": "Zadanie wykonane.",
+      "pickDateTime": "Data i czas",
+      "timeLabelShort": "Czas",
+      "clear": "Wyczyść",
+      "done": "Gotowe"
     },
     "tasksSubnav": {
       "pmModul": "Moduł PM",
@@ -4554,7 +4569,10 @@
       "loading": "Ładowanie…",
       "empty": "Brak zadań w tym widoku.",
       "completed": "Zadanie zakończone.",
-      "deleted": "Zadanie usunięte."
+      "deleted": "Zadanie usunięte.",
+      "statusFilter": "Status",
+      "statusAll": "Wszystkie statusy",
+      "statusCount": "{gezeigt} z {gesamt}"
     },
     "ruleList": {
       "kindTitle": {
@@ -4702,7 +4720,8 @@
       "bookingBarLabel": "{guests} {channel} - rezerwacja",
       "months": "[\"Styczeń\",\"Luty\",\"Marzec\",\"Kwiecień\",\"Maj\",\"Czerwiec\",\"Lipiec\",\"Sierpień\",\"Wrzesień\",\"Październik\",\"Listopad\",\"Grudzień\"]",
       "weekdays": "[\"Niedziela\",\"Poniedziałek\",\"Wtorek\",\"Środa\",\"Czwartek\",\"Piątek\",\"Sobota\"]",
-      "miscRow": "Różne"
+      "miscRow": "Różne",
+      "today": "Dziś"
     },
     "ruleEditor": {
       "loading": "Ładowanie…",
@@ -5046,7 +5065,8 @@
       "unassigned": "Nieprzypisane",
       "statusOpen": "Niezakończone",
       "statusDone": "Zakończone",
-      "statusCancelled": "Anulowane"
+      "statusCancelled": "Anulowane",
+      "editTimes": "Zmień terminy"
     },
     "ruleEditorPage": {
       "loading": "Ładowanie…",

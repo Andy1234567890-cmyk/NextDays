@@ -4348,7 +4348,22 @@
       "inspectionNeeded": "Необходима е проверка",
       "photos": "Снимки",
       "view": "Преглед",
-      "delete": "Изтрий"
+      "delete": "Изтрий",
+      "statusLabel": "Състояние",
+      "timesLabel": "Времеви интервал",
+      "fromField": "От",
+      "toField": "До",
+      "saveTimes": "Запазване на часове",
+      "timesSaved": "Времевият интервал е запазен.",
+      "statusSaved": "Състоянието е променено.",
+      "endBeforeStart": "Краят не може да бъде преди началото.",
+      "close": "Затваряне",
+      "complete": "Готово",
+      "completeSuccess": "Задачата е изпълнена.",
+      "pickDateTime": "Дата и час",
+      "timeLabelShort": "Час",
+      "clear": "Изчистване",
+      "done": "Готово"
     },
     "tasksSubnav": {
       "pmModul": "PM модул",
@@ -4554,7 +4569,10 @@
       "loading": "Зареждане…",
       "empty": "Няма задачи в този изглед.",
       "completed": "Задачата е приключена.",
-      "deleted": "Задачата е изтрита."
+      "deleted": "Задачата е изтрита.",
+      "statusFilter": "Състояние",
+      "statusAll": "Всички състояния",
+      "statusCount": "{gezeigt} от {gesamt}"
     },
     "ruleList": {
       "kindTitle": {
@@ -4702,7 +4720,8 @@
       "bookingBarLabel": "{guests} {channel} - резервация",
       "months": "Януари, Февруари, Март, Април, Май, Юни, Юли, Август, Септември, Октомври, Ноември, Декември",
       "weekdays": "Неделя, Понеделник, Вторник, Сряда, Четвъртък, Петък, Събота",
-      "miscRow": "Разни"
+      "miscRow": "Разни",
+      "today": "Днес"
     },
     "ruleEditor": {
       "loading": "Зареждане…",
@@ -5046,7 +5065,8 @@
       "unassigned": "Без изпълнител",
       "statusOpen": "Незавършена",
       "statusDone": "Приключена",
-      "statusCancelled": "Отменена"
+      "statusCancelled": "Отменена",
+      "editTimes": "Промяна на дати"
     },
     "ruleEditorPage": {
       "loading": "Зареждане…",

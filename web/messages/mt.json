@@ -4348,7 +4348,22 @@
       "inspectionNeeded": "Meħtieġa spezzjoni",
       "photos": "Ritratti",
       "view": "Ara",
-      "delete": "Ħassar"
+      "delete": "Ħassar",
+      "statusLabel": "Status",
+      "timesLabel": "Tieqa ta' żmien",
+      "fromField": "Minn",
+      "toField": "Sa",
+      "saveTimes": "Ħlief il-ħinijiet",
+      "timesSaved": "Tieqa ta' żmien issejvjata.",
+      "statusSaved": "Status inbidel.",
+      "endBeforeStart": "It-tmiem ma jistax ikun qabel il-bidu.",
+      "close": "Agħlaq",
+      "complete": "Magħmul",
+      "completeSuccess": "Kompitu lest.",
+      "pickDateTime": "Data u Ħin",
+      "timeLabelShort": "Ħin",
+      "clear": "Żvojta",
+      "done": "Magħmul"
     },
     "tasksSubnav": {
       "pmModul": "Modulu PM",
@@ -4554,7 +4569,10 @@
       "loading": "Qed jitgħabba…",
       "empty": "L-ebda kompitu f'din il-veduta.",
       "completed": "Kompitu lest.",
-      "deleted": "Kompitu mħassar."
+      "deleted": "Kompitu mħassar.",
+      "statusFilter": "Status",
+      "statusAll": "L-Istati Kollha",
+      "statusCount": "{gezeigt} minn {gesamt}"
     },
     "ruleList": {
       "kindTitle": {
@@ -4702,7 +4720,8 @@
       "bookingBarLabel": "{guests} {channel} - prenotazzjoni",
       "months": "[\"Jannar\",\"Frar\",\"Marzu\",\"April\",\"Mejju\",\"Ġunju\",\"Lulju\",\"Awwissu\",\"Settembru\",\"Ottubru\",\"Novembru\",\"Diċembru\"]",
       "weekdays": "[\"Il-Ħadd\",\"It-Tnejn\",\"It-Tlieta\",\"L-Erbgħa\",\"Il-Ħamis\",\"Il-Ġimgħa\",\"Is-Sibt\"]",
-      "miscRow": "Varji"
+      "miscRow": "Varji",
+      "today": "Illum"
     },
     "ruleEditor": {
       "loading": "Qed jitgħabba…",
@@ -5046,7 +5065,8 @@
       "unassigned": "Mhux assenjat",
       "statusOpen": "Mhux komplut",
       "statusDone": "Lest",
-      "statusCancelled": "Ikkanċellat"
+      "statusCancelled": "Ikkanċellat",
+      "editTimes": "Ibdel id-Dati"
     },
     "ruleEditorPage": {
       "loading": "Qed jitgħabba…",
