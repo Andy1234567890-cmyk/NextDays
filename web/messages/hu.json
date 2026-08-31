@@ -7291,14 +7291,15 @@
       "done": "Importálás kész",
       "failed": "Importálás sikertelen",
       "rows": "{fertig} / {gesamt} sor",
-      "created": "létrehozva",
-      "skipped": "létező",
+      "created": "új",
+      "skipped": "hatástalan",
       "failedRows": "hibás",
       "remainMinutes": "még ~{count} perc",
       "remainSeconds": "még ~{count} mp",
       "mayClose": "Az importálás a szerveren folytatódik – bezárhatja ezt az oldalt.",
       "andMore": "… és további {count}",
-      "close": "Bezárás"
+      "close": "Bezárás",
+      "updated": "frissítve"
     }
   },
   "calendarSync": {

@@ -7291,14 +7291,15 @@
       "done": "Imports pabeigts",
       "failed": "Importēšana neizdevās",
       "rows": "{fertig} no {gesamt} rindām",
-      "created": "izveidots",
-      "skipped": "esošs",
+      "created": "jauns",
+      "skipped": "bez efekta",
       "failedRows": "kļūdains",
       "remainMinutes": "vēl ~{count} min.",
       "remainSeconds": "vēl ~{count} sek.",
       "mayClose": "Importēšana turpinās serverī — varat aizvērt šo lapu.",
       "andMore": "… un vēl {count}",
-      "close": "Aizvērt"
+      "close": "Aizvērt",
+      "updated": "atjaunināts"
     }
   },
   "calendarSync": {

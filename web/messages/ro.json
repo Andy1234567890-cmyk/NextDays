@@ -7291,14 +7291,15 @@
       "done": "Import finalizat",
       "failed": "Import eșuat",
       "rows": "{fertig} din {gesamt} rânduri",
-      "created": "creat",
-      "skipped": "existent",
+      "created": "nou",
+      "skipped": "fără efect",
       "failedRows": "eșuat",
       "remainMinutes": "încă ~{count} min.",
       "remainSeconds": "încă ~{count} sec.",
       "mayClose": "Importul continuă pe server – puteți închide această pagină.",
       "andMore": "… și încă {count}",
-      "close": "Închidere"
+      "close": "Închidere",
+      "updated": "actualizat"
     }
   },
   "calendarSync": {

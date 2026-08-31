@@ -1411,6 +1411,7 @@ export type BestandsimportLauf = {
   zeilen_gesamt: number;
   zeilen_fertig: number;
   angelegt: number;
+  aktualisiert: number;
   uebersprungen: number;
   fehlerhaft: number;
   aktuelle_zeile: string | null;

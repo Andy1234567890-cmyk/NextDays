@@ -7291,14 +7291,15 @@
       "done": "Importavimas baigtas",
       "failed": "Importavimas nepavyko",
       "rows": "{fertig} iš {gesamt} eilučių",
-      "created": "sukurta",
-      "skipped": "yra",
+      "created": "naujas",
+      "skipped": "be poveikio",
       "failedRows": "klaidinga",
       "remainMinutes": "liko ~{count} min.",
       "remainSeconds": "liko ~{count} sek.",
       "mayClose": "Importavimas tęsiamas serveryje – galite uždaryti šį puslapį.",
       "andMore": "… ir dar {count}",
-      "close": "Uždaryti"
+      "close": "Uždaryti",
+      "updated": "atnaujinta"
     }
   },
   "calendarSync": {

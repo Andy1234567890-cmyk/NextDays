@@ -7291,14 +7291,15 @@
       "done": "Импортирането завърши",
       "failed": "Импортирането не бе успешно",
       "rows": "{fertig} от {gesamt} реда",
-      "created": "създадени",
-      "skipped": "съществуващи",
+      "created": "ново",
+      "skipped": "без ефект",
       "failedRows": "с грешки",
       "remainMinutes": "още ~{count} мин.",
       "remainSeconds": "още ~{count} сек.",
       "mayClose": "Импортирането продължава на сървъра — можете да затворите тази страница.",
       "andMore": "… и още {count}",
-      "close": "Затваряне"
+      "close": "Затваряне",
+      "updated": "актуализирано"
     }
   },
   "calendarSync": {

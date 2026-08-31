@@ -7291,14 +7291,15 @@
       "done": "Importation terminée",
       "failed": "Échec de l'importation",
       "rows": "{fertig} sur {gesamt} lignes",
-      "created": "créé",
-      "skipped": "existant",
-      "failedRows": "défectueux",
+      "created": "nouveau",
+      "skipped": "sans effet",
+      "failedRows": "en échec",
       "remainMinutes": "encore ~{count} min",
       "remainSeconds": "encore ~{count} s",
       "mayClose": "L'importation continue sur le serveur — vous pouvez fermer cette page.",
       "andMore": "… et {count} autres",
-      "close": "Fermer"
+      "close": "Fermer",
+      "updated": "mis à jour"
     }
   },
   "calendarSync": {

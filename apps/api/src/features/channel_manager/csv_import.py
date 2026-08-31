@@ -249,10 +249,37 @@ class CsvImportMixin:
         by_adresse = {k: v for k, v in mit_nr.items() if v}
         by_strasse = {k: v for k, v in ohne_nr.items() if v}
 
+        # Welche Buchungen aus frueheren Uploads liegen schon da? EINMAL laden,
+        # nicht je Zeile — 252 zusaetzliche Selects waeren bei ~3,5 s/Zeile
+        # spuerbar und wuerden nichts erklaeren, was hier nicht schon steht.
+        #
+        # WARUM DIE UNTERSCHEIDUNG NOETIG IST: `_project_booking_to_reservation`
+        # gibt True zurueck, wenn sie geschrieben hat — egal ob angelegt ODER
+        # aktualisiert. Der Import zaehlte beides als „imported", und nach dem
+        # zweiten Upload derselben Datei stand im Fenster „251 angelegt,
+        # 0 vorhanden". Das ist die Zahl, die belegen SOLL, dass nichts doppelt
+        # entsteht — und sie behauptete das Gegenteil (live am 31.08.2026;
+        # in der DB lagen korrekt 259 Zeilen mit 259 verschiedenen IDs, es war
+        # nur die Anzeige). Wurzel 5: eine Kennzahl, die das Gegenteil ihrer
+        # Lage meldet, ist so schlimm wie ein verschluckter Fehler.
+        bekannt: set[str] = set()
+        vorhanden = (
+            db.table("reservations")
+            .select("source_channex_booking_id")
+            .eq("tenant_id", tenant_id)
+            .like("source_channex_booking_id", "csv:%")
+            .execute()
+        ).data or []
+        bekannt = {
+            str(z["source_channex_booking_id"])
+            for z in vorhanden
+            if z.get("source_channex_booking_id")
+        }
+
         # Zähler/Fehler lokal führen und am Ende einmalig zuweisen — Pylint
         # erkennt das Pydantic-Field .errors sonst statisch als FieldInfo (ohne
         # .append). Gleiches Muster wie in bookings_sync._sync_feed.
-        total = imported = skipped = failed = 0
+        total = imported = aktualisiert = skipped = failed = 0
         errors: list[str] = []
         # Fuer den Balken: die Gesamtzahl MUSS vor der ersten Zeile feststehen,
         # sonst zeigt die Anzeige „7 von 7", waehrend noch 245 kommen. Der
@@ -279,10 +306,19 @@ class CsvImportMixin:
                 if fortschritt:
                     fortschritt(total, gesamt, self._zeilen_bezeichnung(raw))
                 continue
-            if outcome:
-                imported += 1
-            else:
+            geschrieben, booking_id = outcome
+            if not geschrieben:
                 skipped += 1
+            elif booking_id in bekannt:
+                # Schon aus einem frueheren Upload da — die Zeile wurde
+                # aktualisiert, nicht angelegt. Genau diese Unterscheidung
+                # macht das Fortschritts-Fenster aussagekraeftig.
+                aktualisiert += 1
+            else:
+                imported += 1
+                # Innerhalb DIESES Laufs merken: enthaelt die Datei dieselbe
+                # Buchung zweimal, ist die zweite Zeile eine Aktualisierung.
+                bekannt.add(booking_id)
             if fortschritt:
                 # NACH dem Schreiben melden: „Zeile 7 fertig" soll heissen, dass
                 # sie in der DB steht, nicht dass sie gleich versucht wird.
@@ -290,12 +326,12 @@ class CsvImportMixin:
 
         log.info(
             "csv_booking_import_done",
-            tenant_id=tenant_id, total=total,
-            imported=imported, skipped=skipped, failed=failed,
+            tenant_id=tenant_id, total=total, imported=imported,
+            aktualisiert=aktualisiert, skipped=skipped, failed=failed,
         )
         return CsvBookingImportResponse(
-            total_rows=total, imported=imported, skipped=skipped,
-            failed=failed, errors=errors,
+            total_rows=total, imported=imported, updated=aktualisiert,
+            skipped=skipped, failed=failed, errors=errors,
         )
 
     def _import_csv_row(  # noqa: PLR0913 — feste Signatur, alle Argumente nötig
@@ -310,9 +346,14 @@ class CsvImportMixin:
         by_normal: dict[str, str] | None = None,
         by_adresse: dict[str, str] | None = None,
         by_strasse: dict[str, str] | None = None,
-    ) -> bool:
-        """Eine CSV-Zeile → Reservierung. Wirft _RowError mit Zeilennummer bei
-        Validierungsfehlern; gibt True bei angelegt/aktualisiert, False bei skip."""
+    ) -> tuple[bool, str]:
+        """Eine CSV-Zeile → Reservierung.
+
+        Wirft `_RowError` mit Zeilennummer bei Validierungsfehlern. Gibt
+        `(geschrieben, booking_id)` zurueck: `geschrieben` ist True bei
+        angelegt ODER aktualisiert, die `booking_id` ist der Dedup-Schluessel.
+        Der Aufrufer entscheidet daran, ob die Zeile NEU war — die Projektion
+        selbst unterscheidet das nicht (sie liefert nur True/False)."""
         def cell(key: str) -> str:
             return (raw.get(key) or "").strip()
 
@@ -396,12 +437,13 @@ class CsvImportMixin:
             },
             "occupancy": self._parse_int(cell("num_guests")),
         }
-        return self._project_booking_to_reservation(
+        geschrieben = self._project_booking_to_reservation(
             db, tenant_id, attrs, local_property_id=property_id,
             # Bestand nachtragen, kein frisches Ereignis: keine Mail/Glocke an
             # Eigentuemer und Betrieb, keine Aufgaben fuer abgereiste Gaeste.
             bestandsimport=True,
         )
+        return geschrieben, booking_id
 
     @staticmethod
     def _zeilen_bezeichnung(raw: dict[str, Any]) -> str:

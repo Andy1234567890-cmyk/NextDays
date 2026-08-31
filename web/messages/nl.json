@@ -7291,14 +7291,15 @@
       "done": "Import voltooid",
       "failed": "Import mislukt",
       "rows": "{fertig} van {gesamt} regels",
-      "created": "aangemaakt",
-      "skipped": "bestaand",
+      "created": "nieuw",
+      "skipped": "geen effect",
       "failedRows": "foutief",
       "remainMinutes": "nog ~{count} min.",
       "remainSeconds": "nog ~{count} sec.",
       "mayClose": "De import wordt op de server voortgezet — u kunt deze pagina sluiten.",
       "andMore": "… en nog {count}",
-      "close": "Sluiten"
+      "close": "Sluiten",
+      "updated": "bijgewerkt"
     }
   },
   "calendarSync": {

@@ -7291,14 +7291,15 @@
       "done": "Tuonti valmis",
       "failed": "Tuonti epäonnistui",
       "rows": "{fertig}/{gesamt} riviä",
-      "created": "luotu",
-      "skipped": "olemassa",
+      "created": "uusi",
+      "skipped": "ei vaikutusta",
       "failedRows": "virheellinen",
       "remainMinutes": "~{count} min. jäljellä",
       "remainSeconds": "~{count} sek. jäljellä",
       "mayClose": "Tuonti jatkuu palvelimella – voit sulkea tämän sivun.",
       "andMore": "… ja {count} muuta",
-      "close": "Sulje"
+      "close": "Sulje",
+      "updated": "päivitetty"
     }
   },
   "calendarSync": {

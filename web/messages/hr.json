@@ -7291,14 +7291,15 @@
       "done": "Uvoz dovršen",
       "failed": "Uvoz nije uspio",
       "rows": "{fertig} od {gesamt} redaka",
-      "created": "kreirano",
-      "skipped": "postojeće",
+      "created": "novo",
+      "skipped": "bez učinka",
       "failedRows": "neispravno",
       "remainMinutes": "još ~{count} min.",
       "remainSeconds": "još ~{count} sek.",
       "mayClose": "Uvoz se nastavlja na poslužitelju – možete zatvoriti ovu stranicu.",
       "andMore": "… i još {count}",
-      "close": "Zatvori"
+      "close": "Zatvori",
+      "updated": "ažurirano"
     }
   },
   "calendarSync": {

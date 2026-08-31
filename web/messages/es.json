@@ -7291,14 +7291,15 @@
       "done": "Importación completada",
       "failed": "Error de importación",
       "rows": "{fertig} de {gesamt} líneas",
-      "created": "creado",
-      "skipped": "existente",
+      "created": "nuevo",
+      "skipped": "sin efecto",
       "failedRows": "defectuoso",
       "remainMinutes": "quedan ~{count} min.",
       "remainSeconds": "quedan ~{count} seg.",
       "mayClose": "La importación continúa en el servidor; puede cerrar esta página.",
       "andMore": "… y {count} más",
-      "close": "Cerrar"
+      "close": "Cerrar",
+      "updated": "actualizado"
     }
   },
   "calendarSync": {

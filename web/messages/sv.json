@@ -7291,14 +7291,15 @@
       "done": "Importen är klar",
       "failed": "Importen misslyckades",
       "rows": "{fertig} av {gesamt} rader",
-      "created": "skapade",
-      "skipped": "befintliga",
+      "created": "ny",
+      "skipped": "ingen effekt",
       "failedRows": "felaktiga",
       "remainMinutes": "återstår ~{count} min.",
       "remainSeconds": "återstår ~{count} sek.",
       "mayClose": "Importen fortsätter på servern – du kan stänga den här sidan.",
       "andMore": "… och {count} till",
-      "close": "Stäng"
+      "close": "Stäng",
+      "updated": "uppdaterad"
     }
   },
   "calendarSync": {

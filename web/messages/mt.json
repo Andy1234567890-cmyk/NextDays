@@ -7291,14 +7291,15 @@
       "done": "Importazzjoni kompluta",
       "failed": "Importazzjoni falliet",
       "rows": "{fertig} minn {gesamt} ringieli",
-      "created": "maħluqa",
-      "skipped": "eżistenti",
+      "created": "ġdid",
+      "skipped": "bla effett",
       "failedRows": "żbaljata",
       "remainMinutes": "madwar {count} min. oħra",
       "remainSeconds": "madwar {count} sek. oħra",
       "mayClose": "L-importazzjoni qed tkompli fuq is-server — tista' tagħlaq din il-paġna.",
       "andMore": "… u {count} oħrajn",
-      "close": "Agħlaq"
+      "close": "Agħlaq",
+      "updated": "aġġornat"
     }
   },
   "calendarSync": {

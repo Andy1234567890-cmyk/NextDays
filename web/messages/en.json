@@ -7312,14 +7312,15 @@
       "done": "Import complete",
       "failed": "Import failed",
       "rows": "{fertig} of {gesamt} rows",
-      "created": "created",
-      "skipped": "existing",
+      "created": "new",
+      "skipped": "no effect",
       "failedRows": "failed",
       "remainMinutes": "~{count} min. remaining",
       "remainSeconds": "~{count} sec. remaining",
       "mayClose": "The import continues on the server – you can close this page.",
       "andMore": "... and {count} more",
-      "close": "Close"
+      "close": "Close",
+      "updated": "updated"
     }
   },
   "calendarSync": {

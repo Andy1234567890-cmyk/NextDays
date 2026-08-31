@@ -7291,14 +7291,15 @@
       "done": "Iompórtáil críochnaithe",
       "failed": "Theip ar an iompórtáil",
       "rows": "{fertig} de {gesamt} líne",
-      "created": "cruthaithe",
-      "skipped": "ann cheana",
+      "created": "nua",
+      "skipped": "gan éifeacht",
       "failedRows": "lochtach",
       "remainMinutes": "~{count} nóim. fágtha",
       "remainSeconds": "~{count} soic. fágtha",
       "mayClose": "Leanann an iompórtáil ar an bhfreastalaí — is féidir leat an leathanach seo a dhúnadh.",
       "andMore": "… agus {count} eile",
-      "close": "Dún"
+      "close": "Dún",
+      "updated": "nuashonraithe"
     }
   },
   "calendarSync": {

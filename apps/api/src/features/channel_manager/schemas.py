@@ -114,12 +114,19 @@ class BookingSyncResponse(BaseModel):
 
 class CsvBookingImportResponse(BaseModel):
     """Ergebnis eines CSV-Bestandsimports (Alt-/Direkt-/vergangene Buchungen).
-    ``imported`` = neu angelegte + aktualisierte Reservierungen, ``skipped`` =
-    Zeilen ohne Wirkung (Duplikat/Objekt fehlt), ``failed`` = Fehlerzeilen mit
-    Meldung (1-basiert, inkl. Kopfzeile)."""
+
+    ``imported`` = NEU angelegte Reservierungen, ``updated`` = schon vorhandene,
+    die aktualisiert wurden, ``skipped`` = Zeilen ohne Wirkung, ``failed`` =
+    Fehlerzeilen mit Meldung (1-basiert, inkl. Kopfzeile).
+
+    ``imported`` und ``updated`` waren bis zum 31.08.2026 EIN Zaehler. Nach dem
+    zweiten Upload derselben Datei stand deshalb „251 angelegt, 0 vorhanden" —
+    die Zahl, die belegen soll, dass nichts doppelt entsteht, behauptete das
+    Gegenteil (die DB war korrekt: 259 Zeilen, 259 verschiedene IDs)."""
 
     total_rows: int = 0
     imported: int = 0
+    updated: int = 0
     skipped: int = 0
     failed: int = 0
     errors: list[str] = Field(default_factory=list)
@@ -139,6 +146,9 @@ class BestandsimportLauf(BaseModel):
     zeilen_gesamt: int = 0
     zeilen_fertig: int = 0
     angelegt: int = 0
+    # Getrennt von `angelegt`: nur so zeigt ein zweiter Upload „0 neu, 251
+    # aktualisiert" statt faelschlich „251 angelegt".
+    aktualisiert: int = 0
     uebersprungen: int = 0
     fehlerhaft: int = 0
     aktuelle_zeile: str | None = None

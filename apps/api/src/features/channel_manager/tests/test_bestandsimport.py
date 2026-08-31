@@ -274,3 +274,53 @@ def test_export_parser_schreibt_die_adresse() -> None:
     ).read_text(encoding="utf-8")
     assert '"property_address"' in quelle, "Zielspalte fehlt"
     assert '"lage"' in quelle, "Booking schreibt die Spalte „Lage“"
+
+
+# --- Angelegt vs. aktualisiert ---------------------------------------------
+
+
+def test_zaehler_sind_getrennt() -> None:
+    """Die Antwort fuehrt `imported` UND `updated` — nicht einen Sammelwert.
+
+    Beides in einem Zaehler hiess: nach dem zweiten Upload derselben Datei
+    stand „251 angelegt, 0 vorhanden", obwohl nichts angelegt wurde. Genau an
+    dieser Zahl liest ein Betrieb ab, ob ein Wiederholungs-Upload etwas
+    verdoppelt hat (live am 31.08.2026, Wurzel 5).
+    """
+    from src.features.channel_manager.schemas import CsvBookingImportResponse
+
+    felder = CsvBookingImportResponse.model_fields
+    assert "imported" in felder and "updated" in felder
+
+
+def test_lauf_zeile_fuehrt_aktualisiert() -> None:
+    """Ohne die Spalte kaeme der Zaehler nie im Fenster an."""
+    from src.features.channel_manager.schemas import BestandsimportLauf
+
+    assert "aktualisiert" in BestandsimportLauf.model_fields
+    sql = (
+        _SLICE.parents[4] / "supabase" / "migrations"
+        / "0508_bestandsimport_aktualisiert.sql"
+    ).read_text(encoding="utf-8")
+    assert "add column if not exists aktualisiert" in sql
+
+
+def test_popup_zeigt_vier_zaehler() -> None:
+    """Vier Kacheln, und „neu" darf nicht wie „aktualisiert" heissen."""
+    import json
+
+    wurzel = _SLICE.parents[4]
+    tsx = (
+        wurzel / "web" / "components" / "channel-manager" / "import-fortschritt.tsx"
+    ).read_text(encoding="utf-8")
+    assert "importProgress.updated" in tsx
+    assert "grid-cols-4" in tsx, "vier Zaehler brauchen vier Spalten"
+
+    # In JEDER Sprache muessen sich die beiden Kacheln unterscheiden — sonst
+    # steht dort zweimal dasselbe Wort nebeneinander.
+    for datei in sorted((wurzel / "web" / "messages").glob("*.json")):
+        ip = json.loads(datei.read_text(encoding="utf-8"))["channels"][
+            "importProgress"
+        ]
+        assert {"created", "updated", "skipped", "failedRows"} <= set(ip), datei.stem
+        assert ip["created"].lower() != ip["updated"].lower(), datei.stem

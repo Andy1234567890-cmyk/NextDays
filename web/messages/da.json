@@ -7291,14 +7291,15 @@
       "done": "Import gennemført",
       "failed": "Import mislykkedes",
       "rows": "{fertig} af {gesamt} linjer",
-      "created": "oprettet",
-      "skipped": "eksisterende",
-      "failedRows": "fejlbehæftet",
+      "created": "ny",
+      "skipped": "ingen effekt",
+      "failedRows": "fejlet",
       "remainMinutes": "ca. {count} min. tilbage",
       "remainSeconds": "ca. {count} sek. tilbage",
       "mayClose": "Importen fortsætter på serveren – du kan lukke denne side.",
       "andMore": "… og {count} mere",
-      "close": "Luk"
+      "close": "Luk",
+      "updated": "opdateret"
     }
   },
   "calendarSync": {

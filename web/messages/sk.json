@@ -7291,14 +7291,15 @@
       "done": "Import dokončený",
       "failed": "Import zlyhal",
       "rows": "{fertig} z {gesamt} riadkov",
-      "created": "vytvorené",
-      "skipped": "existujúce",
+      "created": "nové",
+      "skipped": "bez efektu",
       "failedRows": "chybné",
       "remainMinutes": "zostáva ~{count} min.",
       "remainSeconds": "zostáva ~{count} sek.",
       "mayClose": "Import pokračuje na serveri – túto stránku môžete zavrieť.",
       "andMore": "… a {count} ďalších",
-      "close": "Zavrieť"
+      "close": "Zavrieť",
+      "updated": "aktualizované"
     }
   },
   "calendarSync": {

@@ -163,12 +163,17 @@ export function ImportFortschritt({
             </div>
           </div>
 
-          {/* Zähler. Getrennt, nicht summiert: „0 neu, 252 vorhanden" ist die
-              Aussage, die belegt, dass ein zweiter Upload nichts doppelt
-              angelegt hat. */}
-          <div className="grid grid-cols-3 gap-2 text-center">
+          {/* Zähler, GETRENNT statt summiert. „0 neu · 251 aktualisiert" ist
+              die Aussage, an der ein Betrieb abliest, dass ein zweiter Upload
+              nichts verdoppelt hat.
+              Bis zum 31.08.2026 lagen „angelegt" und „aktualisiert" in einem
+              Zähler: nach dem zweiten Upload derselben Datei stand hier
+              „251 angelegt, 0 vorhanden" — die Zahl behauptete genau das
+              Gegenteil ihrer Lage (die DB war korrekt). */}
+          <div className="grid grid-cols-4 gap-2 text-center">
             {([
               ["importProgress.created", lauf.angelegt, "text-emerald-600"],
+              ["importProgress.updated", lauf.aktualisiert, "text-sky-600"],
               ["importProgress.skipped", lauf.uebersprungen, "text-muted-foreground"],
               ["importProgress.failedRows", lauf.fehlerhaft, "text-destructive"],
             ] as const).map(([key, wert, farbe]) => (

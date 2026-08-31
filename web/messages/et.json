@@ -7291,14 +7291,15 @@
       "done": "Importimine lõpetatud",
       "failed": "Importimine ebaõnnestus",
       "rows": "{fertig} kokku {gesamt} reast",
-      "created": "loodud",
-      "skipped": "olemasolev",
+      "created": "uus",
+      "skipped": "mõjuta",
       "failedRows": "vigane",
       "remainMinutes": "veel ~{count} min",
       "remainSeconds": "veel ~{count} sek",
       "mayClose": "Importimine jätkub serveris – võite selle lehe sulgeda.",
       "andMore": "… ja veel {count}",
-      "close": "Sulge"
+      "close": "Sulge",
+      "updated": "uuendatud"
     }
   },
   "calendarSync": {
