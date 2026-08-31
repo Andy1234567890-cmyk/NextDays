@@ -20,8 +20,11 @@ export type FilterOption = { value: string; label: string; group?: string };
 /** Ein Filter der Leiste. `selected` leer = „alle" (kein Filter aktiv). */
 export type FilterSpec = {
   key: string;
-  /** Beschriftung über dem Knopf. */
-  caption: string;
+  /** Ehemalige Beschriftung ÜBER dem Knopf. Seit dem 31.08.2026 ungenutzt: sie
+   *  wiederholte nur, was im Knopf steht. Als optionales Feld belassen, damit
+   *  die vier Aufrufer nicht angefasst werden müssen — sie dürfen es weiter
+   *  übergeben, es wird nur nicht mehr gerendert. */
+  caption?: string;
   /** Knopftext, wenn nichts gewählt ist („Alle Unterkünfte"). */
   allLabel: string;
   /** Titel des Auswahldialogs. */
@@ -46,43 +49,63 @@ export function AufgabenFilter({
   const active = filters.find((f) => f.key === openKey) ?? null;
   const anySelected = filters.some((f) => f.selected.length > 0);
 
+  // AUFGERÄUMT AM 31.08.2026. Vorher trug JEDER Filter eine eigene Überschrift
+  // („Ausgewählte Aufgabe", „Ausgewählte Benutzer", „Ausgewählte Unterkünfte")
+  // über einem Knopf, dessen Beschriftung dasselbe schon sagte („Alle
+  // Aufgaben"). Drei Kleintexte über drei Knöpfen, dazu ein viertes
+  // „Alles zurücksetzen" über einem nackten ×: eine zerfledderte Zeile aus
+  // acht Elementen für drei Auswahlen. Gemeldet als „die Filterleiste muss
+  // überarbeitet werden, das sieht ja durcheinander aus, kein UI-Design".
+  //
+  // Jetzt EINE Zeile gleichartiger Knöpfe. Was gewählt ist, steht IM Knopf und
+  // ist am Logo-Rot erkennbar — die Überschrift war ohnehin nur die Wiederholung
+  // dessen, was darunter stand.
   return (
-    <div className="flex flex-wrap items-end justify-end gap-3">
-      {filters.map((filter) => (
-        <div key={filter.key} className="flex flex-col items-start gap-1">
-          <span className="text-xs text-muted-foreground">{filter.caption}</span>
+    <div className="flex flex-wrap items-center gap-2">
+      {filters.map((filter) => {
+        const aktiv = filter.selected.length > 0;
+        return (
           <Button
+            key={filter.key}
             type="button"
             variant="outline"
             size="sm"
             onClick={() => setOpenKey(filter.key)}
+            // Ein gesetzter Filter ist der wichtigste Zustand dieser Leiste:
+            // Wer ihn übersieht, hält eine gefilterte Liste für die ganze.
+            // Deshalb Rahmen und Schrift in Logo-Rot statt einer stillen
+            // Textänderung.
+            className={
+              aktiv ? "border-accent text-accent hover:text-accent" : undefined
+            }
           >
+            <Icon
+              icon={aktiv ? "ph:funnel-fill" : "ph:funnel"}
+              className="size-3.5"
+            />
             {filter.selected.length === 0
               ? filter.allLabel
-              : t("aufgabenFilter.selectedCount", {
-                  count: filter.selected.length,
-                })}
+              : `${filter.allLabel} · ${filter.selected.length}`}
           </Button>
-        </div>
-      ))}
+        );
+      })}
 
-      <div className="flex flex-col items-start gap-1">
-        <span className="text-xs text-muted-foreground">
-          {t("aufgabenFilter.resetCaption")}
-        </span>
-        <button
+      {(anySelected || zusatzReset) && (
+        <Button
           type="button"
+          variant="ghost"
+          size="sm"
           disabled={!anySelected && !zusatzReset}
           onClick={() => {
             filters.forEach((f) => f.onChange([]));
             zusatzReset?.();
           }}
-          className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary disabled:opacity-40"
-          aria-label={t("aufgabenFilter.resetCaption")}
+          className="text-muted-foreground"
         >
-          <Icon icon="ph:x" className="size-4" />
-        </button>
-      </div>
+          <Icon icon="ph:x" className="size-3.5" />
+          {t("aufgabenFilter.resetCaption")}
+        </Button>
+      )}
 
       {active && (
         <AuswahlDialog
@@ -199,7 +222,11 @@ function AuswahlDialog({
           >
             {t("aufgabenFilter.selectAll")}
           </Button>
-          <Button type="button" variant="outline" onClick={() => setEntwurf([])}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setEntwurf([])}
+          >
             {t("aufgabenFilter.selectNone")}
           </Button>
           <Button
@@ -207,9 +234,7 @@ function AuswahlDialog({
             onClick={() =>
               // „Alles gewählt" ist dasselbe wie „kein Filter" — sonst stünde
               // im Knopf „25 gewählt", obwohl nichts eingeschränkt ist.
-              onSave(
-                entwurf.length === spec.options.length ? [] : entwurf,
-              )
+              onSave(entwurf.length === spec.options.length ? [] : entwurf)
             }
           >
             {t("aufgabenFilter.save")}

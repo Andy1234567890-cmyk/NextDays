@@ -114,7 +114,7 @@ export function MyTasksList() {
           selected={selected}
           onSelectedChange={setSelected}
           emptyLabel={t("myTasksList.emptyState")}
-          aktionen={{ onOpen: setOpenId, onComplete: complete }}
+          aktionen={{ onOpen: setOpenId, onComplete: complete, onChanged: stillNachladen }}
         />
       )}
 

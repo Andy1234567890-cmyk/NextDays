@@ -349,6 +349,29 @@ export async function setTaskStatus(
 }
 
 /**
+ * Start- und Endzeitpunkt einer bestehenden Aufgabe setzen.
+ *
+ * Bis zum 31.08.2026 gab es diesen Weg NICHT: Status und Zuständige ließen
+ * sich ändern, die Zeiten nicht. Eine Reinigung auf „28.8. von 10 bis 16 Uhr"
+ * zu legen war deshalb nirgends möglich — automatisch erzeugte Aufgaben
+ * tragen die Tagesgrenze 00:00, weil der Regel-Motor nur mit Tages-Offsets
+ * rechnet.
+ *
+ * Beide Werte sind ISO-Zeitstempel oder `null` (= Zeitpunkt löschen). Ein Ende
+ * vor dem Start lehnt der Server mit 422 ab.
+ */
+export async function setTaskZeitfenster(
+  taskId: string,
+  startAt: string | null,
+  endAt: string | null,
+): Promise<Result<TaskDetail>> {
+  return call(`/tasks/${encodeURIComponent(taskId)}/zeitfenster`, {
+    method: "PATCH",
+    body: { start_at: startAt, end_at: endAt },
+  });
+}
+
+/**
  * Zuständigen einer bestehenden Aufgabe setzen, wechseln oder abziehen.
  *
  * `null` nimmt die Zuweisung zurück — ein gültiger Zielzustand, kein
