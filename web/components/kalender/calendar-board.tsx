@@ -121,11 +121,31 @@ const HALF_DAY = 0.5;
 // in den Tagesdaten).
 const VORLAUF_JAHRE = 1;
 
+// Rechte Kante. Sie ist dieselbe Art Grenze wie die linke, nur wurde sie erst
+// bemerkt, als jemand sie brauchte: bis zum 31.08.2026 stand hier das FOLGEjahr,
+// der Zeitstrahl endete also am 31.12.2026. Gemeldet als „ich muss ein Haus für
+// nächstes Jahr aufmachen und verschiedene Sperrungen einlegen, komme aber
+// nicht über den 31.12.26 hinaus". Auch das war nie eine fachliche Grenze,
+// sondern das Ende des Arrays.
+//
+// Zwei volle Jahre voraus, weil die Saison des ÜBERNÄCHSTEN Jahres real
+// gepflegt wird: Stammgäste buchen die gleiche Woche ein Jahr im Voraus, und
+// wer im Dezember plant, braucht den Dezember zwei Jahre später noch im Blick.
+// Ein Jahr mehr wäre im Dezember schon wieder zu knapp — dieselbe Wand, nur
+// später.
+//
+// Kosten: keine Abrufe. Das Vorlade-Fenster hängt an PREFETCH_AHEAD_DAYS /
+// PREFETCH_BEHIND_DAYS um HEUTE, nicht an der Länge des Zeitstrahls; alles
+// Weitere holt `ensureLoaded` beim Scrollen. Bezahlt wird die Spanne mit
+// Date-Objekten im `dates`-Array (~1 460 statt ~730) — gerendert wird ohnehin
+// nur das virtualisierte Sichtfenster.
+const NACHLAUF_JAHRE = 2;
+
 function rangeStart(now: Date): Date {
   return new Date(now.getFullYear() - VORLAUF_JAHRE, 0, 1);
 }
 function rangeEnd(now: Date): Date {
-  return new Date(now.getFullYear() + 1, 11, 31); // 31. Dezember, Folgejahr
+  return new Date(now.getFullYear() + NACHLAUF_JAHRE, 11, 31);
 }
 function daysBetween(a: Date, b: Date): number {
   return Math.round((b.getTime() - a.getTime()) / 86_400_000);
@@ -585,6 +605,7 @@ export function CalendarBoard({
   properties,
   viewSwitcher,
   accommodationType,
+  einzelobjekt = false,
 }: {
   properties: Prop[];
   // Ansicht-Dropdown (Timeline/Buchungen/…), wird in die Kopfzeile links neben
@@ -593,6 +614,16 @@ export function CalendarBoard({
   // Betriebsart (0090): steuert die Typ-Filter-Liste (Zimmertypen vs.
   // Ferienobjekt-Typen).
   accommodationType?: "vacation_rental" | "hotel" | null;
+  // Objekt-Kalender (`/reservierungen/unterkuenfte/<id>/kalender`): dasselbe
+  // Board, nur mit EINEM Objekt in `properties`. Blendet die Filterleiste aus —
+  // Suche, Typ-, Kanal- und Statusfilter grenzen eine Objektliste ein, und über
+  // einer einzigen Zeile kann jeder von ihnen nur eines: sie ausblenden. Ein
+  // Bedienelement, dessen einzige Wirkung „alles weg" ist, gehört nicht hin
+  // (Wurzel 4: kein Element ohne Wirkung).
+  //
+  // Die Bearbeitung bleibt VOLLSTÄNDIG erhalten: Ziehen, Sperren, Stop-Sell,
+  // Verschieben, Bulk-Edit. Genau das war hier vorher nicht möglich.
+  einzelobjekt?: boolean;
 }) {
   const t = useTranslations("calendar");
   const locale = useLocale();
@@ -1961,54 +1992,59 @@ export function CalendarBoard({
         </div>
       )}
 
-      {/* Filter & Suche (Objekt/Typ/Kanal/Status/Gastname) */}
+      {/* Filter & Suche (Objekt/Typ/Kanal/Status/Gastname) — im Objekt-Kalender
+          entfällt alles bis auf die Legende (siehe `einzelobjekt`). */}
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative">
-          <Icon
-            icon="ph:magnifying-glass"
-            className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-          />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={t("board.searchPlaceholder")}
-            className="h-9 w-56 rounded-full pl-9"
-            aria-label="Suche"
-          />
-        </div>
-        <FilterSelect
-          value={typeFilter}
-          onChange={(v) => setTypeFilter(v as PropertyType | "all")}
-          allLabel={t("board.allTypes")}
-          options={typeOptionsFor(accommodationType)}
-        />
-        <FilterSelect
-          value={channelFilter}
-          onChange={(v) => setChannelFilter(v as AvailabilitySource | "all")}
-          allLabel={t("board.allChannels")}
-          options={CHANNEL_SOURCES.map((s) => ({ value: s, label: channelLabel(s) }))}
-        />
-        <FilterSelect
-          value={statusFilter}
-          onChange={(v) => setStatusFilter(v as DisplayStatus | "all")}
-          allLabel={t("board.allStatus")}
-          options={(["confirmed", "pending", "in_house", "completed", "cancelled"] as const).map(
-            (s) => ({ value: s, label: statusLabel(s) }),
-          )}
-        />
-        {(query || typeFilter !== "all" || channelFilter !== "all" || statusFilter !== "all") && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setQuery("");
-              setTypeFilter("all");
-              setChannelFilter("all");
-              setStatusFilter("all");
-            }}
-          >
-            <Icon icon="ph:x" className="size-3.5" /> Zurücksetzen
-          </Button>
+        {!einzelobjekt && (
+          <>
+            <div className="relative">
+              <Icon
+                icon="ph:magnifying-glass"
+                className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+              />
+              <Input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={t("board.searchPlaceholder")}
+                className="h-9 w-56 rounded-full pl-9"
+                aria-label="Suche"
+              />
+            </div>
+            <FilterSelect
+              value={typeFilter}
+              onChange={(v) => setTypeFilter(v as PropertyType | "all")}
+              allLabel={t("board.allTypes")}
+              options={typeOptionsFor(accommodationType)}
+            />
+            <FilterSelect
+              value={channelFilter}
+              onChange={(v) => setChannelFilter(v as AvailabilitySource | "all")}
+              allLabel={t("board.allChannels")}
+              options={CHANNEL_SOURCES.map((s) => ({ value: s, label: channelLabel(s) }))}
+            />
+            <FilterSelect
+              value={statusFilter}
+              onChange={(v) => setStatusFilter(v as DisplayStatus | "all")}
+              allLabel={t("board.allStatus")}
+              options={(["confirmed", "pending", "in_house", "completed", "cancelled"] as const).map(
+                (s) => ({ value: s, label: statusLabel(s) }),
+              )}
+            />
+            {(query || typeFilter !== "all" || channelFilter !== "all" || statusFilter !== "all") && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setQuery("");
+                  setTypeFilter("all");
+                  setChannelFilter("all");
+                  setStatusFilter("all");
+                }}
+              >
+                <Icon icon="ph:x" className="size-3.5" /> Zurücksetzen
+              </Button>
+            )}
+          </>
         )}
         {/* Legende: Status + Vertriebskanäle (Herkunft je Farbe/Logo). Sie ist
             Nachschlagewerk, kein Dauerinhalt — im Popover neben den Filtern

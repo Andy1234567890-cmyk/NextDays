@@ -54,12 +54,18 @@ const MONTH_KEYS = [
 // Ansicht je nach gewähltem Plan an einem anderen Tag, und der Nutzer sucht
 // den Unterschied im Bestand statt im Raster.
 const VORLAUF_JAHRE = 1;
+// Auch die rechte Kante MUSS die des Belegungsplans treffen (dort
+// `NACHLAUF_JAHRE`, mit der Begründung). Stünde hier weiter das Folgejahr,
+// endete die Auslastung am 31.12.2026, während der Belegungsplan daneben
+// weiterläuft — genau der Unterschied, den der Nutzer dann im Bestand sucht
+// statt im Raster.
+const NACHLAUF_JAHRE = 2;
 
 function rangeStartOf(now: Date): Date {
   return new Date(now.getFullYear() - VORLAUF_JAHRE, 0, 1);
 }
 function rangeEndOf(now: Date): Date {
-  return new Date(now.getFullYear() + 1, 11, 31);
+  return new Date(now.getFullYear() + NACHLAUF_JAHRE, 11, 31);
 }
 function daysBetween(a: Date, b: Date): number {
   return Math.round((b.getTime() - a.getTime()) / 86_400_000);
