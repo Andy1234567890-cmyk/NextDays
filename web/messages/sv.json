@@ -5757,7 +5757,14 @@
       "mediaUploadHint": "Media kan laddas upp efter första sparningen.",
       "cancel": "Avbryt",
       "save": "Spara",
-      "saving": "Sparar…"
+      "saving": "Sparar…",
+      "nameLabel": "Namn",
+      "descriptionLabel": "Beskrivning",
+      "languagesFilled": "{count} av {total} språk ifyllda",
+      "translateAll": "Översätt alla språk",
+      "translateDone": "{count} språk översatta ({rows} poster uppdaterade)",
+      "translatePartial": "{count} översatta, {failed} misslyckade",
+      "translateNothing": "Alla språk är redan underhållna"
     },
     "propertyOverview": {
       "zimmerGemeinschaftlich": "Delat",

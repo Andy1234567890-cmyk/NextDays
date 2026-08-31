@@ -13,6 +13,12 @@ import { toast } from "sonner";
 
 import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@nextdays/ui/dropdown-menu";
 import { Input } from "@nextdays/ui/input";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import { Textarea } from "@nextdays/ui/textarea";
@@ -24,12 +30,14 @@ import {
   listAddonLibrary,
   listAddons,
   updateAddon,
+  uebersetzeAddon,
   uploadAddonMedia,
   type Addon,
   type AddonInput,
   type AddonLibraryEntry,
   type AddonSurface,
 } from "@/lib/addons";
+import { type Locale, LOCALES, LOCALE_LABELS } from "@/i18n/locales";
 import { formatCurrency } from "@/lib/currency";
 import { useRealtime } from "@/lib/use-realtime";
 
@@ -61,8 +69,13 @@ function getAvailability(
 
 function emptyDraft(sortOrder: number): AddonInput {
   return {
-    name: { de: "", en: "" },
-    description: { de: "", en: "" },
+    // LEER statt `{ de: "", en: "" }`: die beiden leeren Schluessel waren die
+    // Vorgabe aus der Zeit der zwei festen Felder und landeten so in der
+    // Datenbank — live tragen drei von vier Zusatzleistungen ein leeres `en`,
+    // das nie jemand gefuellt hat. Ein leerer Wert ist keine Uebersetzung; er
+    // laesst die Zeile nur so aussehen, als waere sie gepflegt.
+    name: {},
+    description: {},
     media: [],
     price: 0,
     basis: "per_stay",
@@ -294,6 +307,12 @@ export function AddonsManager({
 
       {editing !== null && draft && (
         <AddonForm
+          /* Ohne `key` montiert React dieselbe Komponente wieder: der Wechsel
+             von einer Zusatzleistung zur naechsten behielte die zuletzt
+             bearbeitete Sprache, obwohl die neue Zeile ganz andere Sprachen
+             gepflegt haben kann. Der Schluessel erzwingt einen frischen
+             Startwert je Zeile. */
+          key={editing}
           draft={draft}
           editingId={editing === "new" ? null : (editing as string)}
           busy={busy}
@@ -402,48 +421,182 @@ function AddonForm({
   onCancel: () => void;
 }) {
   const t = useTranslations("objects");
+  const anzeigeSprache = useLocale();
+  // Welche Sprache gerade BEARBEITET wird.
+  //
+  // NEUE Leistung: die Sprache der Oberflaeche — wer auf Daenisch arbeitet,
+  // tippt zuerst Daenisch. (Vorher stand hier fest Deutsch, was fuer jeden
+  // nicht-deutschen Betrieb der falsche Anfang war.)
+  //
+  // BESTEHENDE Leistung: die erste GEPFLEGTE Sprache, auch wenn die
+  // Oberflaeche eine andere spricht. Live gesehen (31.08.2026): das Dashboard
+  // stand auf Englisch, die Leistung trug ihren Text auf Deutsch — der
+  // Bearbeiter sah ein leeres englisches Feld vor einer vollstaendig
+  // gepflegten Zeile. Schlimmer als der leere Eindruck waere der naechste
+  // Klick gewesen: „Alle Sprachen uebersetzen" nimmt die ANGEZEIGTE Sprache
+  // als Quelle, haette hier also aus einem leeren Englisch uebersetzt statt
+  // aus dem deutschen Original.
+  const [sprache, setSprache] = useState<Locale>(() => {
+    const bevorzugt = (LOCALES as readonly string[]).includes(anzeigeSprache)
+      ? (anzeigeSprache as Locale)
+      : "de";
+    if ((draft.name?.[bevorzugt] ?? "").trim()) return bevorzugt;
+    // Reihenfolge von LOCALES, nicht die der jsonb-Schluessel: die haengt
+    // davon ab, in welcher Folge jemand die Felder gefuellt hat, und waere
+    // damit von Zeile zu Zeile verschieden.
+    return (
+      LOCALES.find((l) => (draft.name?.[l] ?? "").trim()) ?? bevorzugt
+    );
+  });
+  // Wie viele Sprachen einen NAMEN tragen. Die Beschreibung zaehlt bewusst
+  // nicht mit: sie ist optional, ein Name ohne Beschreibung ist gepflegt, eine
+  // Beschreibung ohne Namen dagegen unbrauchbar.
+  const gepflegteSprachen = LOCALES.filter((l) =>
+    (draft.name?.[l] ?? "").trim(),
+  ).length;
+  const [laeuft, setLaeuft] = useState(false);
+
+  async function uebersetzen() {
+    if (!editingId) return;
+    setLaeuft(true);
+    try {
+      const res = await uebersetzeAddon(editingId, sprache);
+      if (!res.ok) {
+        toast.error(res.error);
+        return;
+      }
+      // Die Karten aus der ANTWORT uebernehmen, nicht lokal zusammenbauen:
+      // der Server hat geschrieben, und nur er weiss, welche Sprachen wirklich
+      // dazukamen (eine gefuellte wird nie ueberschrieben).
+      onPatch("name", res.data.addon.name);
+      onPatch("description", res.data.addon.description);
+
+      const { uebersetzt: neu, fehlgeschlagen, zeilen } = res.data;
+      // Fehler NICHT verschlucken (Wurzel 5): eine Sprache, die nicht
+      // durchkam, muss sichtbar sein — sonst haelt der Bearbeiter sie fuer
+      // uebersetzt und wundert sich Wochen spaeter.
+      const gescheitert = Object.keys(fehlgeschlagen);
+      if (gescheitert.length) {
+        toast.warning(
+          t("addonsManager.translatePartial", {
+            count: neu.length,
+            failed: gescheitert.length,
+          }),
+        );
+      } else if (neu.length === 0) {
+        toast.info(t("addonsManager.translateNothing"));
+      } else {
+        toast.success(
+          // Die Zeilenzahl gehoert in die Meldung: derselbe Text steht auf n
+          // Objekten, und der Bearbeiter soll wissen, dass er sie alle
+          // getroffen hat, statt es fuer einen Fehler zu halten.
+          t("addonsManager.translateDone", { count: neu.length, rows: zeilen }),
+        );
+      }
+    } finally {
+      setLaeuft(false);
+    }
+  }
   const basisOptions = getBasisOptions(t);
   const surfaces = getSurfaces(t);
   const availability = getAvailability(t);
   return (
     <Card className="flex flex-col gap-4 p-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field label={t("addonsManager.nameDe")}>
-          <Input
-            value={draft.name?.de ?? ""}
-            onChange={(e) =>
-              onPatch("name", { ...draft.name, de: e.target.value })
-            }
-          />
-        </Field>
-        <Field label={t("addonsManager.nameEn")}>
-          <Input
-            value={draft.name?.en ?? ""}
-            onChange={(e) =>
-              onPatch("name", { ...draft.name, en: e.target.value })
-            }
-          />
-        </Field>
+      {/* ALLE 24 EU-Amtssprachen statt zwei festen Feldern.
+          `property_addons.name/description` sind seit jeher `jsonb` und das
+          Backend-Schema `dict[str, str]` ohne Einschraenkung — die Grenze stand
+          allein hier im Formular. Ein daenischer Betrieb konnte seine
+          Zusatzleistungen also nicht auf Daenisch benennen, obwohl Datenbank
+          und API es koennen; live standen drei von vier Eintraegen mit leerem
+          `en` da, weil das Feld erzwungen wirkte.
+
+          Dropdown statt 24 Schaltflaechen und bewusst OHNE Flaggen: eine
+          Flagge ist ein Land, keine Sprache. Deutsch wird in drei Laendern
+          gesprochen, und Irisch und Englisch teilten sich dieselbe irische
+          Flagge. Gleiche Form wie im Extra- und Steuer-Editor nebenan, damit
+          nicht zwei Bauarten fuer dieselbe Frage existieren. */}
+      <div className="flex flex-wrap items-center gap-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button type="button" variant="outline" size="sm" className="gap-2">
+              {LOCALE_LABELS[sprache]}
+              <Icon
+                icon="ph:caret-down"
+                className="size-3.5 text-muted-foreground"
+              />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="start"
+            className="max-h-80 overflow-y-auto"
+          >
+            {LOCALES.map((l) => (
+              <DropdownMenuItem key={l} onClick={() => setSprache(l)}>
+                {LOCALE_LABELS[l]}
+                {/* Haekchen = in dieser Sprache gepflegt. Ohne das muesste man
+                    24 Sprachen durchklicken, um zu sehen, was fehlt. */}
+                {draft.name?.[l]?.trim() && (
+                  <Icon
+                    icon="ph:check"
+                    className="ml-auto size-4 text-muted-foreground"
+                  />
+                )}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <span className="text-xs text-muted-foreground">
+          {t("addonsManager.languagesFilled", {
+            count: gepflegteSprachen,
+            total: LOCALES.length,
+          })}
+        </span>
+
+        {/* Uebersetzen ist eine EIGENE Handlung, kein Nebeneffekt des
+            Speicherns: der Lauf kostet je Sprache einen bezahlten Aufruf, und
+            beim Tippen wird mehrfach gespeichert, bevor der Text steht.
+
+            Nur bei einer GESPEICHERTEN Zeile: der Server uebersetzt, was in
+            der Datenbank steht. Auf einem ungespeicherten Entwurf haette der
+            Knopf den alten Text uebersetzt — sichtbar erst hinterher. */}
+        {editingId && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            disabled={busy || laeuft || !(draft.name?.[sprache] ?? "").trim()}
+            onClick={() => void uebersetzen()}
+          >
+            <Icon
+              icon={laeuft ? "ph:circle-notch" : "ph:translate"}
+              className={`size-4 ${laeuft ? "animate-spin" : ""}`}
+            />
+            {t("addonsManager.translateAll")}
+          </Button>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field label={t("addonsManager.descriptionDe")}>
-          <Textarea
-            value={draft.description?.de ?? ""}
-            onChange={(e) =>
-              onPatch("description", { ...draft.description, de: e.target.value })
-            }
-          />
-        </Field>
-        <Field label={t("addonsManager.descriptionEn")}>
-          <Textarea
-            value={draft.description?.en ?? ""}
-            onChange={(e) =>
-              onPatch("description", { ...draft.description, en: e.target.value })
-            }
-          />
-        </Field>
-      </div>
+      <Field label={t("addonsManager.nameLabel")}>
+        <Input
+          value={draft.name?.[sprache] ?? ""}
+          onChange={(e) =>
+            onPatch("name", { ...draft.name, [sprache]: e.target.value })
+          }
+        />
+      </Field>
+
+      <Field label={t("addonsManager.descriptionLabel")}>
+        <Textarea
+          value={draft.description?.[sprache] ?? ""}
+          onChange={(e) =>
+            onPatch("description", {
+              ...draft.description,
+              [sprache]: e.target.value,
+            })
+          }
+        />
+      </Field>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Field

@@ -21,6 +21,8 @@ from .schemas import (
     AddonLibraryResponse,
     AddonListResponse,
     AddonResponse,
+    AddonUebersetzenRequest,
+    AddonUebersetzenResponse,
     AddonUpdate,
     ReservationAddonAdd,
     ReservationAddonCancel,
@@ -122,6 +124,29 @@ def update_addon(
 ) -> AddonResponse:
     try:
         return service.update(ctx, addon_id, req)
+    except AddonError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/{addon_id}/uebersetzen", response_model=AddonUebersetzenResponse)
+def uebersetze_addon(
+    addon_id: str,
+    req: AddonUebersetzenRequest,
+    service: AddonsServiceDep,
+    ctx: Annotated[AuthContext, Depends(_MANAGE)],
+) -> AddonUebersetzenResponse:
+    """Name und Beschreibung in die uebrigen EU-Amtssprachen bringen.
+
+    Eine schon gefuellte Sprache wird NIE ueberschrieben — sie kann von Hand
+    eingetragen sein. Zeilen anderer Objekte mit demselben Quelltext bekommen
+    dieselbe Fassung, ohne einen zweiten bezahlten Aufruf.
+
+    `_MANAGE` und nicht blosses `get_current_user`: der Lauf kostet Geld und
+    schreibt in Zeilen weiterer Objekte derselben Firma (Wurzel 9 —
+    Autorisierung, nicht nur Authentifizierung).
+    """
+    try:
+        return AddonUebersetzenResponse(**service.uebersetzen(ctx, addon_id, req))
     except AddonError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

@@ -5757,7 +5757,14 @@
       "mediaUploadHint": "Pliki multimedialne można przesłać po pierwszym zapisaniu.",
       "cancel": "Anuluj",
       "save": "Zapisz",
-      "saving": "Zapisywanie…"
+      "saving": "Zapisywanie…",
+      "nameLabel": "Nazwa",
+      "descriptionLabel": "Opis",
+      "languagesFilled": "Utrzymywane w {count} z {total} języków",
+      "translateAll": "Przetłumacz wszystkie języki",
+      "translateDone": "Przetłumiczono {count} języków (zaktualizowano {rows} wpisów)",
+      "translatePartial": "Przetłumiczono {count}, niepowodzeń: {failed}",
+      "translateNothing": "Wszystkie języki są już utrzymywane"
     },
     "propertyOverview": {
       "zimmerGemeinschaftlich": "Wspólne",

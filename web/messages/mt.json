@@ -5757,7 +5757,14 @@
       "mediaUploadHint": "Il-medja tista' titla' wara l-ewwel sejvjar.",
       "cancel": "Ikkanċella",
       "save": "Issejvja",
-      "saving": "Qed jissejvja…"
+      "saving": "Qed jissejvja…",
+      "nameLabel": "Isem",
+      "descriptionLabel": "Deskrizzjoni",
+      "languagesFilled": "{count} minn {total} lingwi miżmuma",
+      "translateAll": "Ittraduċi l-lingwi kollha",
+      "translateDone": "{count} lingwi tradotti ({rows} entrati aġġornati)",
+      "translatePartial": "{count} tradotti, {failed} falluti",
+      "translateNothing": "Il-lingwi kollha diġà ġew miżmuma"
     },
     "propertyOverview": {
       "zimmerGemeinschaftlich": "Komuni",

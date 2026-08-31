@@ -5757,7 +5757,14 @@
       "mediaUploadHint": "Media kunnen worden geüpload na de eerste keer opslaan.",
       "cancel": "Annuleren",
       "save": "Opslaan",
-      "saving": "Opslaan…"
+      "saving": "Opslaan…",
+      "nameLabel": "Naam",
+      "descriptionLabel": "Omschrijving",
+      "languagesFilled": "{count} van {total} talen ingevoerd",
+      "translateAll": "Alle talen vertalen",
+      "translateDone": "{count} talen vertaald ({rows} items bijgewerkt)",
+      "translatePartial": "{count} vertaald, {failed} mislukt",
+      "translateNothing": "Alle talen zijn al bijgewerkt"
     },
     "propertyOverview": {
       "zimmerGemeinschaftlich": "Gedeeld",

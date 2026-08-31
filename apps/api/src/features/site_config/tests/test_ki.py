@@ -694,6 +694,46 @@ def test_buchung_haelt_modell_und_region_fest(db: _DB) -> None:
     assert zeile["erfolg"] is True
 
 
+def test_funktionen_deckungsgleich_mit_db_check() -> None:
+    """`FUNKTIONEN` und der DB-check-Constraint muessen dieselbe Menge sein.
+
+    Diese Pruefung existiert, weil derselbe Fehler ZWEIMAL passiert ist: 0478
+    (`seite_uebersetzen`) und 0514 (`addon_uebersetzen`). Beide Male war der
+    Name an einer der zwei Stellen vergessen, und beide Male sah der Lauf
+    erfolgreich aus:
+
+      * Konstante fehlt  -> `_schreiben` steigt aus, der Zaehler bleibt stehen,
+        der Tagesdeckel ist eine Attrappe, die Abrechnung meldet 0 Verbrauch.
+      * Constraint fehlt -> der Insert wirft 23514, und die Buchung ist
+        best-effort, faellt also still aus.
+
+    Gelesen wird die JUENGSTE Migration, die den Constraint neu setzt — genau
+    die, die live gilt. Ein Test gegen eine feste Liste waere die dritte Stelle,
+    die auseinanderlaufen kann.
+    """
+    import re
+    from pathlib import Path
+
+    wurzel = Path(__file__).resolve().parents[6] / "supabase" / "migrations"
+    kandidaten = sorted(
+        p
+        for p in wurzel.glob("*.sql")
+        if "add constraint site_ai_usage_funktion_check" in p.read_text()
+    )
+    assert kandidaten, "Keine Migration setzt site_ai_usage_funktion_check."
+    text = kandidaten[-1].read_text()
+    block = text.split("add constraint site_ai_usage_funktion_check")[-1]
+    block = block.split(")")[0]
+    aus_db = set(re.findall(r"'([a-z_]+)'", block))
+
+    assert aus_db == set(ki_nutzung.FUNKTIONEN), (
+        "FUNKTIONEN und der DB-Check weichen ab. "
+        f"Nur in der DB: {sorted(aus_db - set(ki_nutzung.FUNKTIONEN))}. "
+        f"Nur im Code: {sorted(set(ki_nutzung.FUNKTIONEN) - aus_db)}. "
+        f"Geprueft gegen {kandidaten[-1].name}."
+    )
+
+
 def test_unbekannte_funktion_wird_nicht_gebucht(db: _DB) -> None:
     """Der check-Constraint der Tabelle würde es ohnehin ablehnen — dann stünde
     aber ein 23514 im Log statt der Aussage, dass jemand einen Funktionsnamen

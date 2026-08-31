@@ -5757,7 +5757,14 @@
       "mediaUploadHint": "Медия може да се качва след първото запазване.",
       "cancel": "Отказ",
       "save": "Запази",
-      "saving": "Запазва се…"
+      "saving": "Запазва се…",
+      "nameLabel": "Име",
+      "descriptionLabel": "Описание",
+      "languagesFilled": "Въведени са {count} от {total} езика",
+      "translateAll": "Превод на всички езици",
+      "translateDone": "{count} езика са преведени ({rows} записа са актуализирани)",
+      "translatePartial": "{count} преведени, {failed} неуспешни",
+      "translateNothing": "Всички езици вече са поддържани"
     },
     "propertyOverview": {
       "zimmerGemeinschaftlich": "Общо",

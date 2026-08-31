@@ -5778,7 +5778,14 @@
       "mediaUploadHint": "Media can be uploaded after the first save.",
       "cancel": "Cancel",
       "save": "Save",
-      "saving": "Saving…"
+      "saving": "Saving…",
+      "nameLabel": "Name",
+      "descriptionLabel": "Description",
+      "languagesFilled": "{count} of {total} languages maintained",
+      "translateAll": "Translate all languages",
+      "translateDone": "{count} languages translated ({rows} entries updated)",
+      "translatePartial": "{count} translated, {failed} failed",
+      "translateNothing": "All languages are already maintained"
     },
     "propertyOverview": {
       "zimmerGemeinschaftlich": "Shared",

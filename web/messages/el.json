@@ -5757,7 +5757,14 @@
       "mediaUploadHint": "Τα αρχεία μπορούν να μεταφορτωθούν μετά την πρώτη αποθήκευση.",
       "cancel": "Άκυρο",
       "save": "Αποθήκευση",
-      "saving": "Αποθήκευση…"
+      "saving": "Αποθήκευση…",
+      "nameLabel": "Όνομα",
+      "descriptionLabel": "Περιγραφή",
+      "languagesFilled": "{count} από {total} γλώσσες έχουν συμπληρωθεί",
+      "translateAll": "Όλες οι γλώσσες μεταφράζονται",
+      "translateDone": "{count} γλώσσες μεταφράστηκαν ({rows} καταχωρίσεις ενημερώθηκαν)",
+      "translatePartial": "{count} μεταφράστηκαν, {failed} απέτυχαν",
+      "translateNothing": "Όλες οι γλώσσες έχουν ήδη συντηρηθεί"
     },
     "propertyOverview": {
       "zimmerGemeinschaftlich": "Κοινόχρηστο",

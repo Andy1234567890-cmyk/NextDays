@@ -5757,7 +5757,14 @@
       "mediaUploadHint": "Medier kan uploades efter den første lagring.",
       "cancel": "Annuller",
       "save": "Gem",
-      "saving": "Gemmer…"
+      "saving": "Gemmer…",
+      "nameLabel": "Navn",
+      "descriptionLabel": "Beskrivelse",
+      "languagesFilled": "{count} af {total} sprog vedligeholdt",
+      "translateAll": "Oversæt alle sprog",
+      "translateDone": "{count} sprog oversat ({rows} poster opdateret)",
+      "translatePartial": "{count} oversat, {failed} mislykkedes",
+      "translateNothing": "Alle sprog er allerede vedligeholdt"
     },
     "propertyOverview": {
       "zimmerGemeinschaftlich": "Fælles",

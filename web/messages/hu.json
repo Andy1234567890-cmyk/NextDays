@@ -5757,7 +5757,14 @@
       "mediaUploadHint": "Médiafájlok az első mentés után tölthetők fel.",
       "cancel": "Mégse",
       "save": "Mentés",
-      "saving": "Mentés…"
+      "saving": "Mentés…",
+      "nameLabel": "Név",
+      "descriptionLabel": "Leírás",
+      "languagesFilled": "{count} nyelven karbantartva, összesen {total} nyelvből",
+      "translateAll": "Összes nyelv fordítása",
+      "translateDone": "{count} nyelv lefordítva ({rows} bejegyzés frissítve)",
+      "translatePartial": "{count} lefordítva, {failed} sikertelen",
+      "translateNothing": "Minden nyelv már karbantartott"
     },
     "propertyOverview": {
       "zimmerGemeinschaftlich": "Közös",

@@ -28,6 +28,7 @@ from .schemas import (
     ReservationAddonResponse,
     SliceHealth,
 )
+from .uebersetzung_mixin import UebersetzungMixin
 from .verteilung import VerteilungMixin
 
 log = get_logger("nextdays.addons")
@@ -75,7 +76,7 @@ class AddonError(Exception):
         self.status_code = status_code
 
 
-class AddonsService(VerteilungMixin):
+class AddonsService(UebersetzungMixin, VerteilungMixin):
     """Katalog, Verkauf und Verteilung der Zusatzleistungen.
 
     Die Verteilung auf mehrere Objekte (Bibliothek + „Zu anderen Objekten

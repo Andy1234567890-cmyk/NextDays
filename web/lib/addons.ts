@@ -110,6 +110,41 @@ export async function updateAddon(
   return call(`/addons/${addonId}`, { method: "PATCH", body: input });
 }
 
+/** Ergebnis eines Übersetzungslaufs. Vier getrennte Angaben, keine
+ *  Gesamtzahl: „5 übersetzt" und „5 waren schon da" sind sehr verschiedene
+ *  Ergebnisse, und der Bearbeiter muss sie unterscheiden können. */
+export type AddonUebersetzung = {
+  /** Sprachen, die neu erzeugt wurden. */
+  uebersetzt: string[];
+  /** Sprachen, die schon einen Wert trugen — nie überschrieben. */
+  vorhanden: string[];
+  /** Sprache → Grund. Ein Fehler in einer Sprache stoppt die anderen nicht. */
+  fehlgeschlagen: Record<string, string>;
+  /** Wie viele Zeilen (dieses Objekt + gleichnamige auf anderen) geschrieben
+   *  wurden. Sichtbar, weil derselbe Text auf n Objekten steht. */
+  zeilen: number;
+  addon: Addon;
+};
+
+/** Name und Beschreibung in die übrigen EU-Amtssprachen übersetzen lassen.
+ *
+ *  `quelle` ist die Sprache, aus der übersetzt wird — sie muss gefüllt sein.
+ *  `ziele` leer = alle 24. Eine bereits gefüllte Sprache wird NIE
+ *  überschrieben: sie kann von Hand eingetragen sein.
+ *
+ *  Läuft über denselben Tagesdeckel wie die übrigen KI-Funktionen; ist er
+ *  erreicht, kommt 429 mit Zählerstand zurück. */
+export async function uebersetzeAddon(
+  addonId: string,
+  quelle: string,
+  ziele: string[] = [],
+): Promise<Result<AddonUebersetzung>> {
+  return call(`/addons/${addonId}/uebersetzen`, {
+    method: "POST",
+    body: { quelle, ziele, geschwister: true },
+  });
+}
+
 export async function deleteAddon(addonId: string): Promise<Result<null>> {
   return call(`/addons/${addonId}`, { method: "DELETE" });
 }

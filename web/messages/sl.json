@@ -5757,7 +5757,14 @@
       "mediaUploadHint": "Medije lahko naložiš po prvem shranjevanju.",
       "cancel": "Prekliči",
       "save": "Shrani",
-      "saving": "Shranjujem…"
+      "saving": "Shranjujem…",
+      "nameLabel": "Ime",
+      "descriptionLabel": "Opis",
+      "languagesFilled": "Vneseno v {count} od {total} jezikov",
+      "translateAll": "Prevedi vse jezike",
+      "translateDone": "Prevedenih je bilo {count} jezikov (posodobljenih je bilo {rows} vnosov)",
+      "translatePartial": "Prevedenih: {count}, neuspešnih: {failed}",
+      "translateNothing": "Vsi jeziki so že vzdrževani"
     },
     "propertyOverview": {
       "zimmerGemeinschaftlich": "Skupno",

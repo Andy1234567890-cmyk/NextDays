@@ -5757,7 +5757,14 @@
       "mediaUploadHint": "Meediat saab üles laadida pärast esimest salvestamist.",
       "cancel": "Tühista",
       "save": "Salvesta",
-      "saving": "Salvestamine…"
+      "saving": "Salvestamine…",
+      "nameLabel": "Nimi",
+      "descriptionLabel": "Kirjeldus",
+      "languagesFilled": "Hooldatud {count} keelest {total} keeles",
+      "translateAll": "Tõlgi kõik keeled",
+      "translateDone": "{count} keelt tõlgitud ({rows} kirjet uuendatud)",
+      "translatePartial": "{count} tõlgitud, {failed} ebaõnnestus",
+      "translateNothing": "Kõik keeled on juba hooldatud"
     },
     "propertyOverview": {
       "zimmerGemeinschaftlich": "Jagatud",

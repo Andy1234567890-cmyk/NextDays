@@ -5757,7 +5757,14 @@
       "mediaUploadHint": "Is féidir meáin a uaslódáil tar éis an chéad shábháil.",
       "cancel": "Cealaigh",
       "save": "Sábháil",
-      "saving": "Á shábháil…"
+      "saving": "Á shábháil…",
+      "nameLabel": "Ainm",
+      "descriptionLabel": "Cur síos",
+      "languagesFilled": "{count} as {total} teangacha cothabháilte",
+      "translateAll": "Aistrigh gach teanga",
+      "translateDone": "Aistríodh {count} teanga ({rows} iontráil nuashonraithe)",
+      "translatePartial": "Aistríodh {count}, theip ar {failed}",
+      "translateNothing": "Tá gach teanga cothrom le dáta cheana féin"
     },
     "propertyOverview": {
       "zimmerGemeinschaftlich": "Comhroinnte",

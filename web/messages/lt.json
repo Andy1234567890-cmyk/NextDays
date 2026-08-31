@@ -5757,7 +5757,14 @@
       "mediaUploadHint": "Mediją galima įkelti po pirmo išsaugojimo.",
       "cancel": "Atšaukti",
       "save": "Išsaugoti",
-      "saving": "Išsaugoma…"
+      "saving": "Išsaugoma…",
+      "nameLabel": "Pavadinimas",
+      "descriptionLabel": "Aprašymas",
+      "languagesFilled": "Įvesta {count} iš {total} kalbų",
+      "translateAll": "Versti visas kalbas",
+      "translateDone": "Išversta kalbų: {count} (atnaujinta įrašų: {rows})",
+      "translatePartial": "Išversta: {count}, nepavyko: {failed}",
+      "translateNothing": "Visos kalbos jau prižiūrimos"
     },
     "propertyOverview": {
       "zimmerGemeinschaftlich": "Bendras",

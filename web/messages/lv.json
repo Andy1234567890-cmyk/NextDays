@@ -5757,7 +5757,14 @@
       "mediaUploadHint": "Failus var augšupielādēt pēc pirmās saglabāšanas.",
       "cancel": "Atcelt",
       "save": "Saglabāt",
-      "saving": "Notiek saglabāšana…"
+      "saving": "Notiek saglabāšana…",
+      "nameLabel": "Nosaukums",
+      "descriptionLabel": "Apraksts",
+      "languagesFilled": "Uzturētas {count} no {total} valodām",
+      "translateAll": "Tulkot visas valodas",
+      "translateDone": "Tulkotas {count} valodas (atjaunināti {rows} ieraksti)",
+      "translatePartial": "Tulkotas {count}, neizdevās {failed}",
+      "translateNothing": "Visas valodas jau ir uzturētas"
     },
     "propertyOverview": {
       "zimmerGemeinschaftlich": "Koplietošanas",

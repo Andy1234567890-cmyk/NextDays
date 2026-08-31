@@ -250,6 +250,36 @@ class ZahlungslinkResponse(BaseModel):
     created_at: str | None = None
 
 
+class AddonUebersetzenRequest(BaseModel):
+    """Auftrag: diese Zusatzleistung in weitere Sprachen bringen."""
+
+    #: Aus welcher Sprachfassung uebersetzt wird. Sie MUSS in der Karte stehen
+    #: — geraten wird nicht (siehe `uebersetzung`-Modulkopf). Die Oberflaeche
+    #: schickt die Sprache, in der der Bearbeiter gerade getippt hat.
+    quelle: str
+
+    #: Zielsprachen. Leer = alle 24 EU-Amtssprachen. Eine bereits gefuellte
+    #: Sprache wird in keinem Fall ueberschrieben.
+    ziele: list[str] = Field(default_factory=list)
+
+    #: Ob die Fassungen auch auf Zeilen anderer Objekte mit DEMSELBEN
+    #: Quelltext geschrieben werden. Standard an: live tragen 61 Zeilen nur
+    #: fuenf verschiedene Namen, und dasselbe Babybett soll nicht zwanzig
+    #: verschiedene daenische Namen bekommen.
+    geschwister: bool = True
+
+
+class AddonUebersetzenResponse(BaseModel):
+    """Was der Lauf getan hat — jede Zahl eine eigene Aussage."""
+
+    uebersetzt: list[str] = Field(default_factory=list)
+    vorhanden: list[str] = Field(default_factory=list)
+    fehlgeschlagen: dict[str, str] = Field(default_factory=dict)
+    #: Wie viele Zeilen (dieses Objekt + Geschwister) Fassungen bekamen.
+    zeilen: int = 0
+    addon: AddonResponse
+
+
 class SliceHealth(BaseModel):
     slice: str
     status: str = "ok"

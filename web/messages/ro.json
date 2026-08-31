@@ -5757,7 +5757,14 @@
       "mediaUploadHint": "Fișierele media pot fi încărcate după prima salvare.",
       "cancel": "Anulează",
       "save": "Salvează",
-      "saving": "Se salvează…"
+      "saving": "Se salvează…",
+      "nameLabel": "Nume",
+      "descriptionLabel": "Descriere",
+      "languagesFilled": "{count} din {total} limbi gestionate",
+      "translateAll": "Traduceți toate limbile",
+      "translateDone": "{count} limbi traduse ({rows} înregistrări actualizate)",
+      "translatePartial": "{count} traduse, {failed} eșuate",
+      "translateNothing": "Toate limbile sunt deja întreținute"
     },
     "propertyOverview": {
       "zimmerGemeinschaftlich": "Comun",

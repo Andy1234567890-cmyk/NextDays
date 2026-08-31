@@ -5757,7 +5757,14 @@
       "mediaUploadHint": "I media possono essere caricati dopo il primo salvataggio.",
       "cancel": "Annulla",
       "save": "Salva",
-      "saving": "Salvataggio…"
+      "saving": "Salvataggio…",
+      "nameLabel": "Nome",
+      "descriptionLabel": "Descrizione",
+      "languagesFilled": "{count} di {total} lingue gestite",
+      "translateAll": "Traduci tutte le lingue",
+      "translateDone": "{count} lingue tradotte ({rows} voci aggiornate)",
+      "translatePartial": "{count} tradotte, {failed} non riuscite",
+      "translateNothing": "Tutte le lingue sono già gestite"
     },
     "propertyOverview": {
       "zimmerGemeinschaftlich": "Condiviso",

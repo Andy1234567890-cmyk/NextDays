@@ -5757,7 +5757,14 @@
       "mediaUploadHint": "Median voi ladata ensimmäisen tallennuksen jälkeen.",
       "cancel": "Peruuta",
       "save": "Tallenna",
-      "saving": "Tallennetaan…"
+      "saving": "Tallennetaan…",
+      "nameLabel": "Nimi",
+      "descriptionLabel": "Kuvaus",
+      "languagesFilled": "{count} / {total} kieltä ylläpidetty",
+      "translateAll": "Käännä kaikki kielet",
+      "translateDone": "{count} kieltä käännetty ({rows} merkintää päivitetty)",
+      "translatePartial": "{count} käännetty, {failed} epäonnistui",
+      "translateNothing": "Kaikki kielet on jo ylläpidetty"
     },
     "propertyOverview": {
       "zimmerGemeinschaftlich": "Jaettu",

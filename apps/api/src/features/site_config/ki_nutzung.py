@@ -66,6 +66,20 @@ FUNKTIONEN = frozenset(
         # Deckel gesprengt hat.
         "bewertung_deuten",
         "bewertung_bilanz",
+        # Zusatzleistungen uebersetzen (0514). Derselbe Zwang wie oben: hier
+        # UND im DB-Check.
+        #
+        # Der Name fehlte beim ersten Live-Lauf am 31.08.2026: 22 Sprachen
+        # wurden erzeugt, 19 Zeilen geschrieben, HTTP 200 — und keiner der 22
+        # bezahlten Aufrufe gebucht. Bemerkt wurde es nur, weil `_schreiben`
+        # 22-mal `ki_nutzung_unbekannte_funktion` als `error` loggt. Ohne
+        # diesen lauten Ausstieg waere der Tagesdeckel eine Attrappe geblieben.
+        #
+        # Getrennt von 'seite_uebersetzen', obwohl beide uebersetzen: eine
+        # Website-Seite ist ein langer Text, der einmal laeuft; eine
+        # Zusatzleistung ein kurzer, der auf n Objekten steht. In einem Topf
+        # liesse sich nicht sagen, welcher den Deckel gesprengt hat.
+        "addon_uebersetzen",
     }
 )
 

@@ -5757,7 +5757,14 @@
       "mediaUploadHint": "Média lze nahrát po prvním uložení.",
       "cancel": "Zrušit",
       "save": "Uložit",
-      "saving": "Ukládání…"
+      "saving": "Ukládání…",
+      "nameLabel": "Název",
+      "descriptionLabel": "Popis",
+      "languagesFilled": "Zadáno v {count} z {total} jazyků",
+      "translateAll": "Přeložit všechny jazyky",
+      "translateDone": "{count} jazyků přeloženo ({rows} záznamů aktualizováno)",
+      "translatePartial": "{count} přeloženo, {failed} selhalo",
+      "translateNothing": "Všechny jazyky jsou již udržovány"
     },
     "propertyOverview": {
       "zimmerGemeinschaftlich": "Sdílené",

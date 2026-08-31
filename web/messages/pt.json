@@ -5757,7 +5757,14 @@
       "mediaUploadHint": "Media pode ser carregado depois de guardares pela primeira vez.",
       "cancel": "Cancelar",
       "save": "Guardar",
-      "saving": "A guardar…"
+      "saving": "A guardar…",
+      "nameLabel": "Nome",
+      "descriptionLabel": "Descrição",
+      "languagesFilled": "{count} de {total} idiomas mantidos",
+      "translateAll": "Traduzir todos os idiomas",
+      "translateDone": "{count} idiomas traduzidos ({rows} entradas atualizadas)",
+      "translatePartial": "{count} traduzidos, {failed} falharam",
+      "translateNothing": "Todos os idiomas já foram mantidos"
     },
     "propertyOverview": {
       "zimmerGemeinschaftlich": "Partilhado",

@@ -5757,7 +5757,14 @@
       "mediaUploadHint": "Médias téléversables après le premier enregistrement.",
       "cancel": "Annuler",
       "save": "Enregistrer",
-      "saving": "Enregistrement…"
+      "saving": "Enregistrement…",
+      "nameLabel": "Nom",
+      "descriptionLabel": "Description",
+      "languagesFilled": "{count} sur {total} langues renseignées",
+      "translateAll": "Traduire toutes les langues",
+      "translateDone": "{count} langues traduites ({rows} entrées mises à jour)",
+      "translatePartial": "{count} traduites, {failed} échecs",
+      "translateNothing": "Toutes les langues sont déjà gérées"
     },
     "propertyOverview": {
       "zimmerGemeinschaftlich": "Partagé",

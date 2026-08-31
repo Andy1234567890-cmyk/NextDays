@@ -5778,7 +5778,14 @@
       "mediaUploadHint": "Medien nach dem ersten Speichern hochladbar.",
       "cancel": "Abbrechen",
       "save": "Speichern",
-      "saving": "Speichert…"
+      "saving": "Speichert…",
+      "nameLabel": "Name",
+      "descriptionLabel": "Beschreibung",
+      "languagesFilled": "{count} von {total} Sprachen gepflegt",
+      "translateAll": "Alle Sprachen übersetzen",
+      "translateDone": "{count} Sprachen übersetzt ({rows} Einträge aktualisiert)",
+      "translatePartial": "{count} übersetzt, {failed} fehlgeschlagen",
+      "translateNothing": "Alle Sprachen sind bereits gepflegt"
     },
     "propertyOverview": {
       "zimmerGemeinschaftlich": "Gemeinschaftlich",
