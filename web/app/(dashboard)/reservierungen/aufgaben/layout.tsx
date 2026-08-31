@@ -1,18 +1,20 @@
 import { TasksSubnav } from "@/components/reservierungen/tasks-subnav";
 
-// Layout des Aufgaben-Moduls: eigene linke Sub-Nav-Spalte („AUFGABEN") neben
-// dem Inhalt beim Klick auf „Aufgaben".
+// Layout des Aufgaben-Moduls: Reiterzeile oben, Inhalt darunter.
+//
+// Bis zum 31.08.2026 stand die Navigation als 14-rem-Spalte links. Sie nahm
+// dem Inhalt Breite weg, die gerade der Aufgabenkalender braucht — jede
+// Tagesspalte zählt dort. `min-w-0` bleibt: ohne das sprengt ein breites
+// Raster den Flex-Container, statt in seinem eigenen Kasten zu scrollen.
 export default function AufgabenLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
-      <aside className="w-full shrink-0 lg:w-56">
-        <TasksSubnav />
-      </aside>
-      <div className="min-w-0 flex-1">{children}</div>
+    <div className="flex min-w-0 flex-col gap-6">
+      <TasksSubnav />
+      <div className="min-w-0">{children}</div>
     </div>
   );
 }

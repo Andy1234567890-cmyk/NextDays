@@ -7,7 +7,14 @@
 // useRealtime auf tasks + reservations.
 import { Icon } from "@iconify/react";
 import { useTranslations, useLocale } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { AufgabenFilter } from "@/components/reservierungen/aufgaben-filter";
 import { BookingPopover } from "@/components/reservierungen/booking-popover";
@@ -47,15 +54,42 @@ const LANE_GAP = 0.35; // rem Abstand zwischen Lanes
 // optisch denselben Wechseltag (kein doppelt belegter Volltag).
 const HALF_DAY = 0.5;
 
-function monthBounds(year: number, month: number) {
-  const from = new Date(Date.UTC(year, month, 1));
-  const to = new Date(Date.UTC(year, month + 1, 0));
-  return {
-    from: from.toISOString(),
-    to: new Date(Date.UTC(year, month + 1, 0, 23, 59, 59)).toISOString(),
-    days: to.getUTCDate(),
-    firstDay: from,
-  };
+// Der Zeitstrahl waechst beim Scrollen an beiden Raendern um diesen Block.
+// 30 Tage, weil das dem bisherigen Monatssprung entspricht: eine Pfeiltaste
+// oder ein Scroll bis zum Rand foerdert etwa dieselbe Menge zutage wie frueher
+// ein Monatswechsel.
+const BLOCK_TAGE = 30;
+// Wie nah am Rand nachgeladen wird (in Spalten). Grosszuegig genug, dass beim
+// zuegigen Scrollen nie eine leere Flaeche auftaucht.
+const RAND_SPALTEN = 10;
+// Startfenster: so viele Tage vor und nach heute stehen beim Oeffnen bereit.
+const START_ZURUECK = 15;
+const START_VOR = 45;
+// Obergrenze des geladenen Zeitstrahls. Er waechst beim Scrollen an beiden
+// Raendern, und JEDES Nachladen holt den GESAMTEN Bereich neu (ein Aufruf,
+// kein Stueckwerk) — ohne Deckel zoege ein langes Scrollen also immer
+// groessere Abfragen nach sich, bis der Endpunkt in die Knie geht. Bei
+// Erreichen der Grenze faellt am gegenueberliegenden Rand derselbe Block weg:
+// das Fenster WANDERT dann, statt zu wachsen. 450 Tage sind gut ein Jahr in
+// jede Richtung und decken jede Planung ab, die im Aufgabenkalender vorkommt.
+const MAX_TAGE = 450;
+
+const TAG_MS = 86_400_000;
+
+/** Ein Datum um `n` Tage verschoben (UTC-Mitternacht). */
+function tagPlus(basis: Date, n: number): Date {
+  return new Date(basis.getTime() + n * TAG_MS);
+}
+
+/** Ganze Tage zwischen zwei UTC-Mitternachten. */
+function tageZwischen(a: Date, b: Date): number {
+  return Math.round((b.getTime() - a.getTime()) / TAG_MS);
+}
+
+/** UTC-Mitternacht des heutigen Tages — Ankerpunkt des Zeitstrahls. */
+function heuteUtc(): Date {
+  const n = new Date();
+  return new Date(Date.UTC(n.getFullYear(), n.getMonth(), n.getDate()));
 }
 
 // ..-Farbcodes für Aufgaben (aus dem Lernen-Text):
@@ -147,7 +181,7 @@ function dayIndex(iso: string, firstDay: Date, days: number): number {
   const diff = Math.floor(
     (Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) -
       firstDay.getTime()) /
-    86_400_000,
+      86_400_000,
   );
   return Math.max(0, Math.min(days, diff));
 }
@@ -159,8 +193,21 @@ export function TasksCalendar() {
   const MONTHS = t.raw("tasksCalendar.months") as string[];
   const WEEKDAYS = t.raw("tasksCalendar.weekdays") as string[];
   const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth());
+  // Durchgehender Zeitstrahl statt eines Monatsfensters.
+  //
+  // WARUM DER UMBAU: Der Kalender zeigte GENAU einen Monat; die Pfeile
+  // sprangen zum naechsten. Eine Reinigung am 31. und die Anreise am 1. lagen
+  // damit in zwei Ansichten, zwischen denen man hin- und herklicken musste —
+  // gerade an den Monatsraendern, wo die meisten Wechsel liegen. Gemeldet als
+  // „Es waere gut wenn der Aufgabenkalender endlos vor und zurueck scrollbar
+  // nach links und rechts geht".
+  //
+  // `anker` ist der Tag an Spaltenindex 0. Er WANDERT nach links, wenn vorne
+  // nachgeladen wird — dann waechst `tage` um denselben Betrag, damit rechts
+  // nichts verlorengeht. Die Scrollposition wird beim Vorne-Anbau um die neue
+  // Breite korrigiert, sonst springt der Blick.
+  const [anker, setAnker] = useState(() => tagPlus(heuteUtc(), -START_ZURUECK));
+  const [tage, setTage] = useState(START_ZURUECK + START_VOR);
   const [rows, setRows] = useState<CalendarRow[]>([]);
   const [loading, setLoading] = useState(true);
   // Ladefehler (z. B. 403) sichtbar machen statt still leeren Kalender zeigen
@@ -183,39 +230,66 @@ export function TasksCalendar() {
   const [propFilter, setPropFilter] = useState<string[]>([]);
   const [ruleFilter, setRuleFilter] = useState<string[]>([]);
 
-  const { from, to, days, firstDay } = useMemo(
-    () => monthBounds(year, month),
-    [year, month],
+  const firstDay = anker;
+  const days = tage;
+  const from = useMemo(() => anker.toISOString(), [anker]);
+  const to = useMemo(
+    () =>
+      new Date(tagPlus(anker, tage - 1).getTime() + 86_399_000).toISOString(),
+    [anker, tage],
   );
+
+  // Scroll-Kasten: haelt die Position beim Vorne-Anbau und meldet die Raender.
+  const scrollBox = useRef<HTMLDivElement | null>(null);
+  // Breite, die beim naechsten Rendern vorne dazugekommen ist — der Effekt
+  // unten schiebt den Scroll darum weiter. OHNE das springt der Blick beim
+  // Nachladen nach links, weil derselbe Tag ploetzlich weiter rechts liegt.
+  const vorneDazu = useRef(0);
+  // Waehrend eines Nachladens nicht erneut ausloesen: der Zustand aendert sich
+  // erst im naechsten Rendern, bis dahin meldet der Scroll-Handler weiter
+  // „am Rand" und wuerde in einem Rutsch durchladen.
+  const laedtRand = useRef(false);
 
   // `stillLaden` wie in `team-tasks`: ein Realtime-Ereignis tauscht die
   // Balken aus, ohne die ganze Timeline durch einen Ladezustand zu ersetzen.
   // Sonst baut sich der Monat bei jeder fremden Statusmeldung neu auf.
-  const load = useCallback(async (stillLaden = false) => {
-    if (!stillLaden) setLoading(true);
-    // Mehrfachauswahl wirkt wirklich: vorher wurde der Nutzerfilter nur bei
-    // GENAU einer Auswahl an den Server gegeben, jede weitere blieb folgenlos.
-    const res = await getTaskCalendar(from, to, {
-      assignee_ids: userFilter,
-      rule_ids: ruleFilter,
-    });
-    if (res.ok) {
-      setRows(res.data.rows);
-      setLoadError(null);
-    } else {
-      // Fehler NIE verschlucken: sonst wirkt der Aufgaben-Kalender „kaputt".
-      setLoadError(res.error);
-      setRows([]);
-    }
-    setLoading(false);
-  }, [from, to, userFilter, ruleFilter]);
+  const load = useCallback(
+    async (stillLaden = false) => {
+      if (!stillLaden) setLoading(true);
+      // Mehrfachauswahl wirkt wirklich: vorher wurde der Nutzerfilter nur bei
+      // GENAU einer Auswahl an den Server gegeben, jede weitere blieb folgenlos.
+      const res = await getTaskCalendar(from, to, {
+        assignee_ids: userFilter,
+        rule_ids: ruleFilter,
+      });
+      if (res.ok) {
+        setRows(res.data.rows);
+        setLoadError(null);
+      } else {
+        // Fehler NIE verschlucken: sonst wirkt der Aufgaben-Kalender „kaputt".
+        setLoadError(res.error);
+        setRows([]);
+      }
+      setLoading(false);
+    },
+    [from, to, userFilter, ruleFilter],
+  );
 
   const stillNachladen = useCallback(() => {
     void load(true);
   }, [load]);
 
+  // Erstlast MIT Ladezustand, jedes Nachwachsen des Zeitstrahls OHNE.
+  //
+  // WARUM: `load` haengt an `from`/`to`, und die aendern sich bei jedem
+  // Rand-Nachladen. Mit dem Ladezustand verschwaende die ganze Timeline bei
+  // jedem Scroll-Ende fuer einen Moment und baute sich neu auf — waehrend der
+  // Nutzer gerade scrollt. Die Erstlast braucht ihn, das Nachwachsen nicht:
+  // dort stehen die vorhandenen Zeilen schon da und werden nur ergaenzt.
+  const ersteLast = useRef(true);
   useEffect(() => {
-    void load();
+    void load(!ersteLast.current);
+    ersteLast.current = false;
   }, [load]);
 
   useEffect(() => {
@@ -242,17 +316,124 @@ export function TasksCalendar() {
   useRealtime({ table: "tasks", onChange: stillNachladen });
   useRealtime({ table: "reservations", onChange: stillNachladen });
 
-  const shift = (delta: number) => {
-    const d = new Date(Date.UTC(year, month + delta, 1));
-    setYear(d.getUTCFullYear());
-    setMonth(d.getUTCMonth());
+  // Der linkeste sichtbare Tag. Er speist die Monatsanzeige in der Kopfzeile
+  // (frueher stand dort der fest gewaehlte Monat) und ist der Bezugspunkt der
+  // Pfeiltasten. Aus dem SCROLL abgeleitet, nicht aus dem Anker: der Anker ist
+  // der Anfang des geladenen Bereichs und liegt beim Scrollen weit links
+  // ausserhalb des Bildes.
+  const [linkerIndex, setLinkerIndex] = useState(0);
+  const sichtbarerTag = useMemo(
+    () =>
+      tagPlus(anker, Math.min(Math.max(0, linkerIndex), Math.max(0, tage - 1))),
+    [anker, linkerIndex, tage],
+  );
+
+  // Rem in Pixel — die Spaltenbreite steht in rem, der Scroll rechnet in px.
+  const remPx = useMemo(() => {
+    if (typeof window === "undefined") return 16;
+    return (
+      parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+    );
+  }, []);
+
+  /** Vorne (Vergangenheit) einen Block anbauen. */
+  const vorneWachsen = useCallback(() => {
+    if (laedtRand.current) return;
+    laedtRand.current = true;
+    vorneDazu.current = BLOCK_TAGE * COL * remPx;
+    setAnker((a) => tagPlus(a, -BLOCK_TAGE));
+    // Am Deckel hinten abschneiden statt weiter zu wachsen.
+    setTage((n) => Math.min(n + BLOCK_TAGE, MAX_TAGE));
+  }, [remPx]);
+
+  /** Hinten (Zukunft) einen Block anbauen. Der Anker bleibt, nur die Laenge
+   *  waechst — deshalb ist hier keine Scroll-Korrektur noetig. */
+  const hintenWachsen = useCallback(() => {
+    if (laedtRand.current) return;
+    laedtRand.current = true;
+    if (tage + BLOCK_TAGE <= MAX_TAGE) {
+      setTage(tage + BLOCK_TAGE);
+      return;
+    }
+    // Deckel erreicht: vorne denselben Block abwerfen, damit die Laenge gleich
+    // bleibt (das Fenster WANDERT). Die Scrollposition wird dann nach LINKS
+    // korrigiert — negativ, weil derselbe Tag nun weiter links liegt.
+    //
+    // Beide Zustaende werden HIER gesetzt, nicht ineinander verschachtelt: ein
+    // `setAnker` im Updater von `setTage` laeuft im Rendern und ist damit
+    // weder zuverlaessig noch nachvollziehbar.
+    vorneDazu.current = -BLOCK_TAGE * COL * remPx;
+    setAnker((a) => tagPlus(a, BLOCK_TAGE));
+    // `tage` bleibt unveraendert — aber der Layout-Effekt muss trotzdem
+    // laufen, und der haengt an `anker`, der sich gerade aendert.
+  }, [remPx, tage]);
+
+  // Scrollposition nach einem Vorne-Anbau korrigieren, BEVOR der Browser
+  // zeichnet (`useLayoutEffect`): mit `useEffect` sieht man ein Bild lang den
+  // Sprung. Danach ist der Rand wieder freigegeben.
+  useLayoutEffect(() => {
+    const box = scrollBox.current;
+    if (box && vorneDazu.current !== 0) {
+      box.scrollLeft += vorneDazu.current;
+      vorneDazu.current = 0;
+    }
+    laedtRand.current = false;
+  }, [anker, tage]);
+
+  /** Am Rand nachladen. Die Schwelle ist in SPALTEN gerechnet, nicht in
+   *  Pixeln — sonst haengt das Verhalten an der Bildschirmbreite. */
+  const beimScrollen = useCallback(() => {
+    const box = scrollBox.current;
+    if (!box) return;
+    setLinkerIndex(Math.round(box.scrollLeft / (COL * remPx)));
+    if (laedtRand.current) return;
+    const schwelle = RAND_SPALTEN * COL * remPx;
+    if (box.scrollLeft < schwelle) {
+      vorneWachsen();
+      return;
+    }
+    if (box.scrollLeft + box.clientWidth > box.scrollWidth - schwelle) {
+      hintenWachsen();
+    }
+  }, [remPx, vorneWachsen, hintenWachsen]);
+
+  /** Zu einem Datum springen. Liegt es ausserhalb des geladenen Bereichs,
+   *  wird der Zeitstrahl darum herum neu aufgespannt — sonst zeigte der
+   *  Sprung ins Leere. */
+  const springeZu = useCallback(
+    (ziel: Date) => {
+      const idx = tageZwischen(anker, ziel);
+      if (idx < 0 || idx >= tage) {
+        setAnker(tagPlus(ziel, -START_ZURUECK));
+        setTage(START_ZURUECK + START_VOR);
+        // Nach dem Neuaufbau steht das Ziel an Index START_ZURUECK.
+        requestAnimationFrame(() => {
+          const box = scrollBox.current;
+          if (box) box.scrollLeft = START_ZURUECK * COL * remPx;
+        });
+        return;
+      }
+      const box = scrollBox.current;
+      if (box) {
+        box.scrollTo({ left: idx * COL * remPx, behavior: "smooth" });
+      }
+    },
+    [anker, tage, remPx],
+  );
+
+  /** Pfeiltasten: um einen Block weiter, nicht mehr um einen Monat. */
+  const shift = (blocks: number) => {
+    springeZu(tagPlus(sichtbarerTag, blocks * BLOCK_TAGE));
   };
 
   const propOptions = useMemo(
     () =>
       rows
         .filter((r) => r.property_id)
-        .map((r) => ({ value: r.property_id as string, label: r.property_title })),
+        .map((r) => ({
+          value: r.property_id as string,
+          label: r.property_title,
+        })),
     [rows],
   );
 
@@ -263,17 +444,28 @@ export function TasksCalendar() {
     );
   }, [rows, propFilter]);
 
-  // Heute-Linie nur, wenn der aktuelle Monat angezeigt wird.
-  const todayIdx =
-    now.getFullYear() === year && now.getMonth() === month
-      ? now.getDate() - 1
-      : null;
+  // Heute-Linie: Index im Zeitstrahl, oder null wenn heute ausserhalb des
+  // geladenen Bereichs liegt (weit in die Vergangenheit gescrollt).
+  const todayIdx = useMemo(() => {
+    const i = tageZwischen(firstDay, heuteUtc());
+    return i >= 0 && i < days ? i : null;
+  }, [firstDay, days]);
 
   const gridWidth = `${LABEL + days * COL}rem`;
-  // Monatsränder als ISO-Datum (yyyy-mm-dd) für die Halbtags-Randerkennung.
   const pad = (n: number) => String(n).padStart(2, "0");
-  const firstDayKey = `${year}-${pad(month + 1)}-01`;
-  const lastDayKey = `${year}-${pad(month + 1)}-${pad(days)}`;
+  /** Ein Tag des Zeitstrahls als ISO-Datum (yyyy-mm-dd). */
+  const tagKey = useCallback(
+    (i: number) => {
+      const d = tagPlus(firstDay, i);
+      return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+    },
+    [firstDay],
+  );
+  // Raender des GELADENEN Bereichs für die Halbtags-Erkennung: ein Balken, der
+  // ueber den Rand hinausreicht, wird dort gerade abgeschnitten statt mit einer
+  // halben Spitze zu enden, die es nicht gibt.
+  const firstDayKey = tagKey(0);
+  const lastDayKey = tagKey(days - 1);
   const todayKey = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 
   return (
@@ -282,7 +474,9 @@ export function TasksCalendar() {
       <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
         <span>{t("tasksCalendar.breadcrumbHome")}</span>
         <Icon icon="ph:caret-right" className="size-3.5" />
-        <span className="text-foreground">{t("tasksCalendar.breadcrumbTasks")}</span>
+        <span className="text-foreground">
+          {t("tasksCalendar.breadcrumbTasks")}
+        </span>
       </nav>
 
       {loadError && (
@@ -346,42 +540,15 @@ export function TasksCalendar() {
           </LearnButton>
         </div>
 
-        <div className="flex flex-wrap items-start gap-4">
-          {/* Navigation (Monat) */}
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-xs text-muted-foreground">
-              {t("tasksCalendar.navigationLabel")}
-            </span>
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => shift(-1)}
-                className="flex size-9 items-center justify-center rounded-full bg-secondary hover:bg-muted"
-                aria-label={t("tasksCalendar.previousMonth")}
-              >
-                <Icon icon="ph:arrow-left" className="size-4" />
-              </button>
-              <span className="min-w-28 rounded-full bg-secondary px-4 py-2 text-center text-sm font-semibold">
-                {MONTHS[month]} {year}
-              </span>
-              <button
-                type="button"
-                onClick={() => shift(1)}
-                className="flex size-9 items-center justify-center rounded-full bg-secondary hover:bg-muted"
-                aria-label={t("tasksCalendar.nextMonth")}
-              >
-                <Icon icon="ph:arrow-right" className="size-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Aufgabe · Benutzer · Unterkünfte — dieselben Auswahldialoge wie in
-              den Listen (Suchfeld, Alle/Nichts selektieren, Speichern). */}
+        {/* NUR die Filter stehen neben dem Titel. Die Monatsnavigation ist im
+            selben Zug (31.08.2026) hier heraus und direkt über den Kalender
+            gewandert: sie steuert das Raster, nicht die Datenauswahl. Beides
+            nebeneinander, jedes mit eigener Kleinüberschrift, ergab die Zeile
+            aus acht ungleichen Elementen, die als „durcheinander" gemeldet
+            wurde. */}
+        <div className="flex flex-wrap items-center gap-2">
           <AufgabenFilter
-            zusatzReset={() => {
-              setYear(now.getFullYear());
-              setMonth(now.getMonth());
-            }}
+            zusatzReset={() => springeZu(heuteUtc())}
             filters={[
               {
                 key: "rule",
@@ -415,28 +582,82 @@ export function TasksCalendar() {
               },
             ]}
           />
-
         </div>
       </div>
 
-      {/* Grid */}
-      <div className="overflow-x-auto rounded-(--radius) border">
+      {/* Zeitsteuerung: unmittelbar über dem Raster, das sie bewegt. „Heute"
+          steht als eigener Knopf daneben — er war vorher nur als Nebenwirkung
+          des Filter-Zurücksetzens erreichbar, was niemand vermutet. */}
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => shift(-1)}
+          className="flex size-9 items-center justify-center rounded-full bg-secondary transition-colors hover:bg-muted"
+          aria-label={t("tasksCalendar.previousMonth")}
+        >
+          <Icon icon="ph:arrow-left" className="size-4" />
+        </button>
+        {/* Zeigt den linkesten SICHTBAREN Tag, nicht einen fest gewählten
+            Monat — beim durchgehenden Scrollen wandert die Beschriftung mit. */}
+        <span className="min-w-32 rounded-full bg-secondary px-4 py-2 text-center text-sm font-semibold">
+          {MONTHS[sichtbarerTag.getUTCMonth()]} {sichtbarerTag.getUTCFullYear()}
+        </span>
+        <button
+          type="button"
+          onClick={() => shift(1)}
+          className="flex size-9 items-center justify-center rounded-full bg-secondary transition-colors hover:bg-muted"
+          aria-label={t("tasksCalendar.nextMonth")}
+        >
+          <Icon icon="ph:arrow-right" className="size-4" />
+        </button>
+        <button
+          type="button"
+          onClick={() => springeZu(heuteUtc())}
+          className="ml-1 rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+        >
+          {t("tasksCalendar.today")}
+        </button>
+      </div>
+
+      {/* Grid.
+          EIGENER Scrollkasten mit fester Höhe, waagerecht UND senkrecht.
+          WARUM: Bis zum 31.08.2026 stand hier nur `overflow-x-auto` ohne
+          Höhengrenze. Der Kasten wuchs damit mit der Zahl der Objekte, und die
+          waagerechte Scrollbar klebte an seinem unteren Ende — bei einem
+          Betrieb mit einem Dutzend Objekten also weit unterhalb des
+          Bildschirms. Gemeldet als „im Kalender kann ich nicht den Kalender
+          weiter nach links oder rechts schieben, da der Schieber unten hängt".
+          Man musste erst durch alle Objekte nach unten scrollen, um überhaupt
+          an den Regler zu kommen, und verlor dabei die Zeilen aus dem Blick.
+          Mit fester Höhe bleibt er immer erreichbar. */}
+      <div
+        ref={scrollBox}
+        onScroll={beimScrollen}
+        className="scrollbar-thin overflow-auto rounded-(--radius) border [max-height:70vh]"
+      >
         {loading ? (
           <p className="p-6 text-sm text-muted-foreground">
             {t("tasksCalendar.loading")}
           </p>
         ) : (
           <div style={{ width: gridWidth }} className="relative">
-            {/* Tag-Header */}
-            <div className="flex border-b bg-card">
+            {/* Tag-Header — bleibt beim senkrechten Scrollen oben stehen
+                (`sticky top-0`). Ohne das lief die Datumsleiste mit den
+                Objektzeilen aus dem Bild, und ab der dritten Zeile stand jeder
+                Balken über einer unbeschrifteten Spalte: gemeldet als „die
+                Datumsleiste oben läuft nicht mit". Das z-30 muss ÜBER dem
+                z-20 der Objektspalte liegen, sonst schiebt sich deren
+                sticky-Kante beim Scrollen über die Datumszeile. */}
+            <div className="sticky top-0 z-30 flex border-b bg-card">
               <div
                 style={{ width: `${LABEL}rem` }}
-                className="sticky left-0 z-20 shrink-0 border-r bg-card"
+                // Die Ecke oben links steht in BEIDEN Richtungen fest und
+                // braucht deshalb das höchste z — sonst wandern die
+                // Datumsspalten beim Querscrollen darüber hinweg.
+                className="sticky left-0 z-40 shrink-0 border-r bg-card"
               />
               {Array.from({ length: days }, (_, i) => {
-                const d = new Date(
-                  Date.UTC(year, month, i + 1),
-                );
+                const d = tagPlus(firstDay, i);
                 return (
                   <div
                     key={i}
@@ -444,7 +665,8 @@ export function TasksCalendar() {
                     className="shrink-0 border-r px-1 py-2 text-center uppercase last:border-r-0"
                   >
                     <div className="text-[0.7rem] font-semibold text-muted-foreground">
-                      {i + 1}. {MONTHS[month]} {year}
+                      {d.getUTCDate()}. {MONTHS[d.getUTCMonth()]}{" "}
+                      {d.getUTCFullYear()}
                     </div>
                     <div className="text-[0.65rem] text-muted-foreground/80">
                       {WEEKDAYS[d.getUTCDay()]}
@@ -522,7 +744,7 @@ export function TasksCalendar() {
                   >
                     {/* Hintergrund-Raster + Hover-„+" zum Anlegen je Zelle */}
                     {Array.from({ length: days }, (_, i) => {
-                      const cellDate = `${year}-${pad(month + 1)}-${pad(i + 1)}`;
+                      const cellDate = tagKey(i);
                       return (
                         <div
                           key={i}
@@ -554,8 +776,7 @@ export function TasksCalendar() {
                         const b = seg.data;
                         const meta = channelMeta(b);
                         // Ragt die echte Check-in-/Check-out-Kante ins Fenster?
-                        const startsAtCheckIn =
-                          b.check_in >= firstDayKey; // Anreise sichtbar
+                        const startsAtCheckIn = b.check_in >= firstDayKey; // Anreise sichtbar
                         const endsAtCheckOut = b.check_out <= lastDayKey;
                         const leftPad = startsAtCheckIn ? HALF_DAY : 0;
                         const widthCols =
@@ -584,12 +805,17 @@ export function TasksCalendar() {
                             })}
                           >
                             <span className="flex items-center gap-1 truncate font-medium leading-tight">
-                              <Icon icon="ph:users" className="size-3.5 shrink-0" />
+                              <Icon
+                                icon="ph:users"
+                                className="size-3.5 shrink-0"
+                              />
                               {t("tasksCalendar.bookingBarLabel", {
                                 guests: b.guests,
                                 channel: b.ota_name
-                                ? channelLabelLoose(b.ota_name)
-                                : channelLabel(b.channel as AvailabilitySource),
+                                  ? channelLabelLoose(b.ota_name)
+                                  : channelLabel(
+                                      b.channel as AvailabilitySource,
+                                    ),
                               })}
                             </span>
                             <span className="truncate text-[0.7rem] leading-tight opacity-90">
@@ -619,7 +845,10 @@ export function TasksCalendar() {
                             }}
                             title={`${t.assignee_name ?? ""} · ${t.title}`}
                           >
-                            <Icon icon={st.icon} className="size-3.5 shrink-0" />
+                            <Icon
+                              icon={st.icon}
+                              className="size-3.5 shrink-0"
+                            />
                             <span className="truncate">{t.title}</span>
                           </button>
                         );
