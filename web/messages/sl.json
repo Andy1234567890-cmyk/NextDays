@@ -6618,7 +6618,7 @@
       "views": {
         "timeline": "Časovnica",
         "bookings": "Rezervacije",
-        "month": "Mesečni pogled",
+        "month": "Enotni prikaz",
         "occupancy": "Zasedenost",
         "rates": "Cene"
       }
@@ -6700,7 +6700,15 @@
       "arrivalBlocked": "Prihod blokiran",
       "departureBlocked": "Odhod blokiran",
       "minStayTitle": "{count, plural, one {Minimalno bivanje # noč} two {Minimalno bivanje # noči} few {Minimalno bivanje # noči} other {Minimalno bivanje # noči}}",
-      "loading": "Nalaganje…"
+      "loading": "Nalaganje…",
+      "dragToSelect": "Povlecite za izbiro obdobja",
+      "blockedClickToRelease": "Zaklenjeno – kliknite za odklepanje",
+      "night": "Noč",
+      "nights": "Noči",
+      "releaseBlockTitle": "Odkleniti?",
+      "releaseBlockBody": "Dnevi od {von} do {bis} (brez tega) bodo ponovno na voljo in sporočeni portalom.",
+      "releaseBlockConfirm": "Odkleni",
+      "saving": "Shranjevanje…"
     },
     "occupancyView": {
       "window": "{count} dni",

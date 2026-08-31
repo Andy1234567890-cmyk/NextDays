@@ -6618,7 +6618,7 @@
       "views": {
         "timeline": "Tidslinje",
         "bookings": "Bookinger",
-        "month": "Månedsvisning",
+        "month": "Enkeltvisning",
         "occupancy": "Belægning",
         "rates": "Priser"
       }
@@ -6700,7 +6700,15 @@
       "arrivalBlocked": "Ankomst spærret",
       "departureBlocked": "Afrejse spærret",
       "minStayTitle": "{count, plural, one {Minimumsophold # nat} other {Minimumsophold # nætter}}",
-      "loading": "Indlæser…"
+      "loading": "Indlæser…",
+      "dragToSelect": "Træk for at vælge en periode",
+      "blockedClickToRelease": "Blokeret – klik for at fjerne blokering",
+      "night": "Nat",
+      "nights": "Nætter",
+      "releaseBlockTitle": "Fjern blokering?",
+      "releaseBlockBody": "Dagene fra {von} til {bis} (eksklusive) vil igen være tilgængelige og rapporteres til portalerne.",
+      "releaseBlockConfirm": "Fjern blokering",
+      "saving": "Gemmer…"
     },
     "occupancyView": {
       "window": "{count} dage",

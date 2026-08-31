@@ -6639,7 +6639,7 @@
       "views": {
         "timeline": "Belegungsplan",
         "bookings": "Buchungen",
-        "month": "Monatsgitter",
+        "month": "Einzelansicht",
         "occupancy": "Auslastung",
         "rates": "Preise"
       }
@@ -6721,7 +6721,15 @@
       "arrivalBlocked": "Anreise gesperrt",
       "departureBlocked": "Abreise gesperrt",
       "minStayTitle": "{count, plural, one {Mindestaufenthalt # Nacht} other {Mindestaufenthalt # Nächte}}",
-      "loading": "Lädt…"
+      "loading": "Lädt…",
+      "dragToSelect": "Ziehen, um einen Zeitraum zu wählen",
+      "blockedClickToRelease": "Gesperrt — klicken, um die Sperre aufzuheben",
+      "night": "Nacht",
+      "nights": "Nächte",
+      "releaseBlockTitle": "Sperre aufheben?",
+      "releaseBlockBody": "Die Tage ab {von} bis {bis} (ohne diesen) werden wieder verfügbar und an die Portale gemeldet.",
+      "releaseBlockConfirm": "Sperre aufheben",
+      "saving": "Speichert…"
     },
     "occupancyView": {
       "window": "{count} Tage",

@@ -6618,7 +6618,7 @@
       "views": {
         "timeline": "Planning",
         "bookings": "Boekingen",
-        "month": "Maandraster",
+        "month": "Enkele weergave",
         "occupancy": "Bezetting",
         "rates": "Tarieven"
       }
@@ -6700,7 +6700,15 @@
       "arrivalBlocked": "Aankomst geblokkeerd",
       "departureBlocked": "Vertrek geblokkeerd",
       "minStayTitle": "{count, plural, one {Minimumverblijf # nacht} other {Minimumverblijf # nachten}}",
-      "loading": "Laden…"
+      "loading": "Laden…",
+      "dragToSelect": "Slepen om een periode te selecteren",
+      "blockedClickToRelease": "Geblokkeerd — klik om de blokkering op te heffen",
+      "night": "Nacht",
+      "nights": "Nachten",
+      "releaseBlockTitle": "Blokkering opheffen?",
+      "releaseBlockBody": "De dagen van {von} tot {bis} (exclusief) worden weer beschikbaar en aan de portalen gemeld.",
+      "releaseBlockConfirm": "Blokkering opheffen",
+      "saving": "Opslaan…"
     },
     "occupancyView": {
       "window": "{count} dagen",

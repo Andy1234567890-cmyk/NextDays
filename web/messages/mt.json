@@ -6618,7 +6618,7 @@
       "views": {
         "timeline": "Skeda ta’ żmien",
         "bookings": "Riżervazzjonijiet",
-        "month": "Xahar",
+        "month": "Dehra Unika",
         "occupancy": "Okkupazzjoni",
         "rates": "Prezzijiet"
       }
@@ -6700,7 +6700,15 @@
       "arrivalBlocked": "Wasla mblukkata",
       "departureBlocked": "Tluq imblukkat",
       "minStayTitle": "{count, plural, one {Soġġorn Minimu # lejl} two {Soġġorn Minimu # lejl} few {Soġġorn Minimu # iljieli} many {Soġġorn Minimu # lejl} other {Soġġorn Minimu # lejl}}",
-      "loading": "Qed jgħabbi…"
+      "loading": "Qed jgħabbi…",
+      "dragToSelect": "Iġbed biex tagħżel perjodu",
+      "blockedClickToRelease": "Imblukkat — ikklikkja biex tiftaħ",
+      "night": "Lejl",
+      "nights": "Iljieli",
+      "releaseBlockTitle": "Tiftaħ l-imblukkar?",
+      "releaseBlockBody": "Il-ġranet minn {von} sa {bis} (eskluż dan) jerġgħu jkunu disponibbli u jiġu rrappurtati lill-portali.",
+      "releaseBlockConfirm": "Neħħi l-imblukkar",
+      "saving": "Qed issalva…"
     },
     "occupancyView": {
       "window": "{count} jum",

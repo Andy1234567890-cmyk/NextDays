@@ -6618,7 +6618,7 @@
       "views": {
         "timeline": "Amlíne",
         "bookings": "Áirithintí",
-        "month": "Greille míosúil",
+        "month": "Amharc Aonair",
         "occupancy": "Áitíocht",
         "rates": "Rátaí"
       }
@@ -6700,7 +6700,15 @@
       "arrivalBlocked": "Teacht blocáilte",
       "departureBlocked": "Imeacht blocáilte",
       "minStayTitle": "{count, plural, one {Fanacht Íosta # oíche} two {Fanacht Íosta # oíche} few {Fanacht Íosta # oíche} many {Fanacht Íosta # n-oíche} other {Fanacht Íosta # oíche}}",
-      "loading": "Á lódáil…"
+      "loading": "Á lódáil…",
+      "dragToSelect": "Tarraing chun tréimhse a roghnú",
+      "blockedClickToRelease": "Glasáilte — cliceáil chun díghlasáil",
+      "night": "Oíche",
+      "nights": "Oícheanta",
+      "releaseBlockTitle": "Díghlasáil?",
+      "releaseBlockBody": "Beidh na laethanta ó {von} go {bis} (gan an ceann seo) ar fáil arís agus tuairiscítear iad chuig na tairseacha.",
+      "releaseBlockConfirm": "Díghlasáil",
+      "saving": "Á shábháil…"
     },
     "occupancyView": {
       "window": "{count} lá",

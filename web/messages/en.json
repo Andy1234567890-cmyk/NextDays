@@ -6639,7 +6639,7 @@
       "views": {
         "timeline": "Timeline",
         "bookings": "Bookings",
-        "month": "Month grid",
+        "month": "Single view",
         "occupancy": "Occupancy",
         "rates": "Rates"
       }
@@ -6721,7 +6721,15 @@
       "arrivalBlocked": "Arrival blocked",
       "departureBlocked": "Departure blocked",
       "minStayTitle": "{count, plural, one {Minimum stay # night} other {Minimum stay # nights}}",
-      "loading": "Loading…"
+      "loading": "Loading…",
+      "dragToSelect": "Drag to select a period",
+      "blockedClickToRelease": "Blocked — click to unblock",
+      "night": "Night",
+      "nights": "Nights",
+      "releaseBlockTitle": "Unblock?",
+      "releaseBlockBody": "The days from {von} to {bis} (excluding this one) will be available again and reported to the portals.",
+      "releaseBlockConfirm": "Unblock",
+      "saving": "Saving…"
     },
     "occupancyView": {
       "window": "{count} days",

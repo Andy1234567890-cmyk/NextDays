@@ -6618,7 +6618,7 @@
       "views": {
         "timeline": "Laiko juosta",
         "bookings": "Rezervacijos",
-        "month": "Mėnesio tinklelis",
+        "month": "Vienas objektas",
         "occupancy": "Užimtumas",
         "rates": "Kainos"
       }
@@ -6700,7 +6700,15 @@
       "arrivalBlocked": "Atvykimas užblokuotas",
       "departureBlocked": "Išvykimas užblokuotas",
       "minStayTitle": "{count, plural, one {Minimalus apsistojimas # naktis} few {Minimalus apsistojimas # naktys} many {Minimalus apsistojimas # nakties} other {Minimalus apsistojimas # naktų}}",
-      "loading": "Kraunama…"
+      "loading": "Kraunama…",
+      "dragToSelect": "Vilkite, kad pasirinktumėte laikotarpį",
+      "blockedClickToRelease": "Užrakinta – spustelėkite, kad atrakintumėte",
+      "night": "Naktis",
+      "nights": "Naktys",
+      "releaseBlockTitle": "Atrakinti?",
+      "releaseBlockBody": "Dienos nuo {von} iki {bis} (be šios) vėl bus pasiekiamos ir apie jas bus pranešta portalams.",
+      "releaseBlockConfirm": "Atrakinti",
+      "saving": "Išsaugoma…"
     },
     "occupancyView": {
       "window": "{count} d.",

@@ -6618,7 +6618,7 @@
       "views": {
         "timeline": "Planning",
         "bookings": "Prenotazioni",
-        "month": "Griglia mensile",
+        "month": "Vista singola",
         "occupancy": "Occupazione",
         "rates": "Tariffe"
       }
@@ -6700,7 +6700,15 @@
       "arrivalBlocked": "Arrivo bloccato",
       "departureBlocked": "Partenza bloccata",
       "minStayTitle": "{count, plural, one {Soggiorno minimo # notte} other {Soggiorno minimo # notti}}",
-      "loading": "Caricamento…"
+      "loading": "Caricamento…",
+      "dragToSelect": "Trascina per selezionare un periodo",
+      "blockedClickToRelease": "Bloccato — clicca per sbloccare",
+      "night": "Notte",
+      "nights": "Notti",
+      "releaseBlockTitle": "Sbloccare?",
+      "releaseBlockBody": "I giorni da {von} a {bis} (escluso) torneranno disponibili e saranno comunicati ai portali.",
+      "releaseBlockConfirm": "Sblocca",
+      "saving": "Salvataggio in corso…"
     },
     "occupancyView": {
       "window": "{count} giorni",

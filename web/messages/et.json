@@ -6618,7 +6618,7 @@
       "views": {
         "timeline": "Ajajoon",
         "bookings": "Broneeringud",
-        "month": "Kuuvaade",
+        "month": "Üksikvaade",
         "occupancy": "Täituvus",
         "rates": "Hinnad"
       }
@@ -6700,7 +6700,15 @@
       "arrivalBlocked": "Saabumine suletud",
       "departureBlocked": "Lahkumine suletud",
       "minStayTitle": "{count, plural, one {Minimaalne viibimine # öö} other {Minimaalne viibimine # ööd}}",
-      "loading": "Laadimine…"
+      "loading": "Laadimine…",
+      "dragToSelect": "Valige periood lohistades",
+      "blockedClickToRelease": "Lukustatud – klõpsake avamiseks",
+      "night": "Öö",
+      "nights": "Ööd",
+      "releaseBlockTitle": "Kas tühistada lukustus?",
+      "releaseBlockBody": "Päevad {von} kuni {bis} (välja arvatud viimane) muutuvad uuesti kättesaadavaks ja edastatakse portaalidele.",
+      "releaseBlockConfirm": "Tühista lukustus",
+      "saving": "Salvestamine…"
     },
     "occupancyView": {
       "window": "{count} päeva",

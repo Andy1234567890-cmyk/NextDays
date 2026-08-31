@@ -6618,7 +6618,7 @@
       "views": {
         "timeline": "Tidslinje",
         "bookings": "Bokningar",
-        "month": "Månadsvy",
+        "month": "Enkelvy",
         "occupancy": "Beläggning",
         "rates": "Priser"
       }
@@ -6700,7 +6700,15 @@
       "arrivalBlocked": "Ankomst blockerad",
       "departureBlocked": "Avresa blockerad",
       "minStayTitle": "{count, plural, one {Minsta vistelse # natt} other {Minsta vistelse # nätter}}",
-      "loading": "Laddar…"
+      "loading": "Laddar…",
+      "dragToSelect": "Dra för att välja period",
+      "blockedClickToRelease": "Spärrad – klicka för att häva spärren",
+      "night": "Natt",
+      "nights": "Nätter",
+      "releaseBlockTitle": "Häva spärren?",
+      "releaseBlockBody": "Dagarna från {von} till {bis} (exklusive) blir tillgängliga igen och rapporteras till portalerna.",
+      "releaseBlockConfirm": "Häv spärren",
+      "saving": "Sparar…"
     },
     "occupancyView": {
       "window": "{count} dagar",

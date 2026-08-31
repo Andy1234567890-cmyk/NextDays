@@ -6618,7 +6618,7 @@
       "views": {
         "timeline": "Χρονοδιάγραμμα",
         "bookings": "Κρατήσεις",
-        "month": "Μηνιαίο πλέγμα",
+        "month": "Ενιαία προβολή",
         "occupancy": "Πληρότητα",
         "rates": "Τιμές"
       }
@@ -6700,7 +6700,15 @@
       "arrivalBlocked": "Άφιξη μπλοκαρισμένη",
       "departureBlocked": "Αναχώρηση μπλοκαρισμένη",
       "minStayTitle": "{count, plural, one {Ελάχιστη διαμονή # διανυκτέρευση} other {Ελάχιστη διαμονή # διανυκτερεύσεις}}",
-      "loading": "Φόρτωση…"
+      "loading": "Φόρτωση…",
+      "dragToSelect": "Σύρετε για να επιλέξετε ένα διάστημα",
+      "blockedClickToRelease": "Κλειδωμένο — κάντε κλικ για ξεκλείδωμα",
+      "night": "Νύχτα",
+      "nights": "Νύχτες",
+      "releaseBlockTitle": "Ξεκλείδωμα;",
+      "releaseBlockBody": "Οι ημέρες από {von} έως {bis} (χωρίς αυτήν) θα είναι ξανά διαθέσιμες και θα αναφερθούν στις πύλες.",
+      "releaseBlockConfirm": "Ξεκλείδωμα",
+      "saving": "Αποθήκευση…"
     },
     "occupancyView": {
       "window": "{count} ημέρες",

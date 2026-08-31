@@ -6618,7 +6618,7 @@
       "views": {
         "timeline": "Cronologie",
         "bookings": "Rezervări",
-        "month": "Grilă lunară",
+        "month": "Vizualizare unică",
         "occupancy": "Grad de ocupare",
         "rates": "Tarife"
       }
@@ -6700,7 +6700,15 @@
       "arrivalBlocked": "Sosire blocată",
       "departureBlocked": "Plecare blocată",
       "minStayTitle": "{count, plural, one {Ședere minimă # noapte} few {Ședere minimă # nopți} other {Ședere minimă # de nopți}}",
-      "loading": "Se încarcă…"
+      "loading": "Se încarcă…",
+      "dragToSelect": "Trageți pentru a alege o perioadă",
+      "blockedClickToRelease": "Blocat — faceți clic pentru a debloca",
+      "night": "Noapte",
+      "nights": "Nopți",
+      "releaseBlockTitle": "Deblocați?",
+      "releaseBlockBody": "Zilele de la {von} la {bis} (fără aceasta) vor fi din nou disponibile și raportate portalurilor.",
+      "releaseBlockConfirm": "Deblocați",
+      "saving": "Se salvează..."
     },
     "occupancyView": {
       "window": "{count} zile",

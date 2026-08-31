@@ -6618,7 +6618,7 @@
       "views": {
         "timeline": "Времева линия",
         "bookings": "Резервации",
-        "month": "Месечен изглед",
+        "month": "Единичен изглед",
         "occupancy": "Заетост",
         "rates": "Цени"
       }
@@ -6700,7 +6700,15 @@
       "arrivalBlocked": "Пристигането е блокирано",
       "departureBlocked": "Заминаването е блокирано",
       "minStayTitle": "{count, plural, one {Минимален престой # нощ} other {Минимален престой # нощи}}",
-      "loading": "Зареждане…"
+      "loading": "Зареждане…",
+      "dragToSelect": "Плъзнете, за да изберете период",
+      "blockedClickToRelease": "Блокирано — щракнете, за да деблокирате",
+      "night": "Нощувка",
+      "nights": "Нощувки",
+      "releaseBlockTitle": "Деблокиране?",
+      "releaseBlockBody": "Дните от {von} до {bis} (без последния) ще станат отново налични и ще бъдат докладвани на порталите.",
+      "releaseBlockConfirm": "Деблокиране",
+      "saving": "Запазване..."
     },
     "occupancyView": {
       "window": "{count} дни",

@@ -6618,7 +6618,7 @@
       "views": {
         "timeline": "Línea de tiempo",
         "bookings": "Reservas",
-        "month": "Cuadrícula mensual",
+        "month": "Vista única",
         "occupancy": "Ocupación",
         "rates": "Tarifas"
       }
@@ -6700,7 +6700,15 @@
       "arrivalBlocked": "Entrada bloqueada",
       "departureBlocked": "Salida bloqueada",
       "minStayTitle": "{count, plural, one {Estancia mínima de # noche} other {Estancia mínima de # noches}}",
-      "loading": "Cargando…"
+      "loading": "Cargando…",
+      "dragToSelect": "Arrastrar para seleccionar un período",
+      "blockedClickToRelease": "Bloqueado — haga clic para desbloquear",
+      "night": "Noche",
+      "nights": "Noches",
+      "releaseBlockTitle": "¿Desbloquear?",
+      "releaseBlockBody": "Los días desde el {von} hasta el {bis} (sin incluir este) volverán a estar disponibles y se notificarán a los portales.",
+      "releaseBlockConfirm": "Desbloquear",
+      "saving": "Guardando…"
     },
     "occupancyView": {
       "window": "{count} días",

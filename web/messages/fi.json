@@ -6618,7 +6618,7 @@
       "views": {
         "timeline": "Aikajana",
         "bookings": "Varaukset",
-        "month": "Kuukausinäkymä",
+        "month": "Yksittäisnäkymä",
         "occupancy": "Käyttöaste",
         "rates": "Hinnat"
       }
@@ -6700,7 +6700,15 @@
       "arrivalBlocked": "Saapuminen suljettu",
       "departureBlocked": "Lähtö suljettu",
       "minStayTitle": "{count, plural, one {Vähimmäisoleskelu # yö} other {Vähimmäisoleskelu # yötä}}",
-      "loading": "Ladataan…"
+      "loading": "Ladataan…",
+      "dragToSelect": "Vedä valitaksesi ajanjakson",
+      "blockedClickToRelease": "Estetty – poista esto napsauttamalla",
+      "night": "Yö",
+      "nights": "Yötä",
+      "releaseBlockTitle": "Poistetaanko esto?",
+      "releaseBlockBody": "Päivät {von} - {bis} (pois lukien tämä) tulevat jälleen saataville ja niistä ilmoitetaan portaaleille.",
+      "releaseBlockConfirm": "Poista esto",
+      "saving": "Tallennetaan…"
     },
     "occupancyView": {
       "window": "{count} päivää",

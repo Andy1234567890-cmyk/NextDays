@@ -6618,7 +6618,7 @@
       "views": {
         "timeline": "Časová os",
         "bookings": "Rezervácie",
-        "month": "Mesačná mriežka",
+        "month": "Jednotlivý pohľad",
         "occupancy": "Obsadenosť",
         "rates": "Ceny"
       }
@@ -6700,7 +6700,15 @@
       "arrivalBlocked": "Príchod blokovaný",
       "departureBlocked": "Odchod blokovaný",
       "minStayTitle": "{count, plural, one {Minimálny pobyt # noc} few {Minimálny pobyt # noci} many {Minimálny pobyt # noci} other {Minimálny pobyt # nocí}}",
-      "loading": "Načítava sa…"
+      "loading": "Načítava sa…",
+      "dragToSelect": "Potiahnutím vyberte obdobie",
+      "blockedClickToRelease": "Zablokované – kliknutím odblokujete",
+      "night": "Noc",
+      "nights": "Noci",
+      "releaseBlockTitle": "Odblokovať?",
+      "releaseBlockBody": "Dni od {von} do {bis} (bez tohto) budú opäť k dispozícii a nahlásené portálom.",
+      "releaseBlockConfirm": "Odblokovať",
+      "saving": "Ukladá sa…"
     },
     "occupancyView": {
       "window": "{count} dní",

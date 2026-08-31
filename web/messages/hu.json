@@ -6618,7 +6618,7 @@
       "views": {
         "timeline": "Idővonal",
         "bookings": "Foglalások",
-        "month": "Havi rácsnézet",
+        "month": "Egyedi nézet",
         "occupancy": "Kihasználtság",
         "rates": "Árak"
       }
@@ -6700,7 +6700,15 @@
       "arrivalBlocked": "Érkezés zárolva",
       "departureBlocked": "Távozás zárolva",
       "minStayTitle": "{count, plural, one {Minimum tartózkodás # éjszaka} other {Minimum tartózkodás # éjszaka}}",
-      "loading": "Betöltés…"
+      "loading": "Betöltés…",
+      "dragToSelect": "Húzza az időszak kiválasztásához",
+      "blockedClickToRelease": "Zárolva – kattintson a zárolás feloldásához",
+      "night": "éj",
+      "nights": "éj",
+      "releaseBlockTitle": "Feloldja a zárolást?",
+      "releaseBlockBody": "A {von} és {bis} közötti napok (ezt nem beleértve) ismét elérhetővé válnak, és jelentésre kerülnek a portáloknak.",
+      "releaseBlockConfirm": "Zárolás feloldása",
+      "saving": "Mentés..."
     },
     "occupancyView": {
       "window": "{count} nap",

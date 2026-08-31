@@ -6618,7 +6618,7 @@
       "views": {
         "timeline": "Laika skala",
         "bookings": "Rezervācijas",
-        "month": "Mēneša režģis",
+        "month": "Viena objekta skats",
         "occupancy": "Noslogojums",
         "rates": "Cenas"
       }
@@ -6700,7 +6700,15 @@
       "arrivalBlocked": "Ierašanās bloķēta",
       "departureBlocked": "Izbraukšana bloķēta",
       "minStayTitle": "{count, plural, zero {Minimālā uzturēšanās # nakšu} one {Minimālā uzturēšanās # nakts} other {Minimālā uzturēšanās # naktis}}",
-      "loading": "Notiek ielāde…"
+      "loading": "Notiek ielāde…",
+      "dragToSelect": "Velciet, lai izvēlētos periodu",
+      "blockedClickToRelease": "Bloķēts — noklikšķiniet, lai atbloķētu",
+      "night": "Nakts",
+      "nights": "Naktis",
+      "releaseBlockTitle": "Atbloķēt?",
+      "releaseBlockBody": "Dienas no {von} līdz {bis} (neieskaitot) atkal būs pieejamas un tiks paziņotas portāliem.",
+      "releaseBlockConfirm": "Atbloķēt",
+      "saving": "Saglabā…"
     },
     "occupancyView": {
       "window": "{count} dienas",
