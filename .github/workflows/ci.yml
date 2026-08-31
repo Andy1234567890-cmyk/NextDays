@@ -269,6 +269,34 @@ jobs:
         if: steps.pruefen.outputs.laufen == 'true'
         run: bun run lint:packages
 
+  # ---------------------------------------------------------------------------
+  # Sicherheitsgate: kein Geheimnis im auslieferbaren Frontend.
+  #
+  # BEWUSST OHNE `betroffen`-Filter und ohne `if:` an den Schritten — anders als
+  # jeder andere Job hier. Begruendung: die anderen Jobs pruefen die QUALITAET
+  # einer App, dieses Gate prueft den ZUSTAND DES REPOS. Ein Geheimnis kann
+  # ueber eine Datei hereinkommen, die keiner App zugerechnet wird (eine
+  # .gitignore, die eine Regel verliert, war genau der Fall am 31.08.2026), und
+  # ein uebersprungenes Sicherheitsgate ist kein Gate. Es laeuft in ~2 s, der
+  # Preis ist also der Runner-Start.
+  #
+  # Was es findet, steht im Kopf des Skripts. Kurz: NEXT_PUBLIC_-Variablen mit
+  # Geheimnis-Namen (Next.js inlined die in das Browser-Bundle), literale
+  # Schluessel, JWTs mit role=service_role (die umgehen RLS, Wurzel 6) und
+  # versionierte Geheimnis-Dateien.
+  frontend-geheimnisse:
+    name: Sicherheit (keine Geheimnisse im Frontend)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Kein bun, kein `bun install`: das Skript nutzt ausschliesslich die
+      # Node-Standardbibliothek und `git ls-files`. Eine Sicherheitspruefung mit
+      # Abhaengigkeiten waere selbst eine Angriffsflaeche (Supply-Chain), und
+      # ohne Installation kann sie nicht daran scheitern.
+      - name: Geheimnisse im Frontend?
+        run: node scripts/security/frontend-geheimnisse-pruefen.mjs
+
   # Typprüfung je Frontend — schnelles, präzises Signal VOR den langsamen
   # Image-Builds. Der Produktions-Build läuft für die deployten Apps im
   # images-Job (dort exakt wie Coolify baut), nicht doppelt hier.
@@ -1128,7 +1156,7 @@ jobs:
   # ────────────────────────────────────────────────────────────────────────
   deploy:
     name: Deploy to Coolify
-    needs: [betroffen, api, public-api, packages, frontends, kanal-enums, mobile, mobile-konsistenz, marketing-konsistenz, images]
+    needs: [betroffen, api, public-api, packages, frontends, frontend-geheimnisse, kanal-enums, mobile, mobile-konsistenz, marketing-konsistenz, images]
     # `always()` ist ZWINGEND: ohne es prueft GitHub die `needs` VOR der
     # if-Auswertung und ueberspringt den Job, sobald irgendein needs-Job
     # `skipped` ist — egal wie wahr die Bedingung ist (belegt: Lauf 32505375969,
