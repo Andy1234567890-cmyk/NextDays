@@ -521,6 +521,7 @@ def team_tasks(
         assignee_id,
         rule_id,
         tagesende=_tagesgrenze(tagesende),
+        ctx=ctx,
     )
 
 
@@ -578,7 +579,7 @@ def task_calendar(
     rule_id: Annotated[list[str] | None, Query()] = None,
 ) -> TaskCalendarResponse:
     return service.calendar(
-        _tenant(ctx), month_from, month_to, assignee_id, rule_id
+        _tenant(ctx), month_from, month_to, assignee_id, rule_id, ctx
     )
 
 
@@ -589,7 +590,7 @@ def inspection_list(
     tab: str = "to_review",
     property_id: Annotated[list[str] | None, Query()] = None,
 ) -> list[InspectionItem]:
-    return service.list_inspection(_tenant(ctx), tab, property_id)
+    return service.list_inspection(_tenant(ctx), tab, property_id, ctx)
 
 
 @router.get("/detail/{task_id}", response_model=TaskDetail)

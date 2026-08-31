@@ -408,6 +408,14 @@ class RuleCreate(BaseModel):
     kind: TaskRuleKind
     name: str = Field(min_length=1, max_length=300)
     description: str | None = None
+    # In welcher Sprache `name`/`description` verfasst sind (0511). Der
+    # Uebersetzungslauf braucht die AUSGANGSSPRACHE; sie aus dem Text zu raten
+    # ist bei betriebsinternen Kuerzeln („Reng T", „Velk J") nicht moeglich —
+    # und ein Default waere nachweislich falsch: derselbe Betrieb fuehrt live
+    # deutsche UND daenische Regelnamen nebeneinander (31.08.2026). `None`
+    # heisst ehrlich „unbekannt": die Regel wird nicht uebersetzt, statt eine
+    # plausible Falschuebersetzung zu erzeugen (Wurzel 4).
+    quellsprache: str | None = Field(default=None, min_length=2, max_length=5)
     active: bool = True
     priority: int = Field(default=0, ge=0, le=5)
     assignee_id: str | None = None
@@ -481,6 +489,10 @@ class RegelDeckung(BaseModel):
 
 class RuleDetail(RuleListItem):
     description: str | None = None
+    # In welcher Sprache Name und Beschreibung verfasst sind (0511). None =
+    # unbekannt (Altbestand): die Regel wird nicht uebersetzt, und die
+    # Oberflaeche kann genau das anzeigen statt es zu verschweigen.
+    quellsprache: str | None = None
     remove_on_cancellation: bool = True
     recurrence: dict[str, object] = Field(default_factory=dict)
     items: list[RuleItem] = Field(default_factory=list)

@@ -1767,7 +1767,10 @@
       "terminationHint": "This not only blocks the period but also terminates the marketing contract on the start date. The administration confirms the date.",
       "terminationInterpreted": "The administration has interpreted this request as a cancellation notice — the contract ends on {datum}. Please let us know if that's not what was meant.",
       "terminationPending": "Termination — the administration has not yet confirmed the end of the contract.",
-      "terminationSent": "Notice of termination has been submitted. The administration confirms the termination of the contract."
+      "terminationSent": "Notice of termination has been submitted. The administration confirms the termination of the contract.",
+      "services": "Order services",
+      "servicesHint": "Only what you tick here will be carried out and invoiced for your block. Without a selection, no task is created.",
+      "servicesOrdered": "Ordered"
     },
     "meter": {
       "title": "Add meter reading",
@@ -5195,7 +5198,11 @@
       "weekdayThuShort": "Thu",
       "weekdayFriShort": "Fri",
       "weekdaySatShort": "Sat",
-      "weekdaySunShort": "Sun"
+      "weekdaySunShort": "Sun",
+      "sourceLanguageLabel": "Language of the name",
+      "sourceLanguageEmpty": "Not specified",
+      "sourceLanguageHint": "The name is translated automatically for readers of other languages — internally it stays exactly as you typed it.",
+      "sourceLanguageMissing": "Without this, the name is not translated: owners and staff will see it exactly as it appears here."
     },
     "taskPage": {
       "backToMyTasks": "Back to my tasks",
@@ -7130,7 +7137,9 @@
         "terminationSummary": "Contract ends from {datum} — from this day onwards, the property will no longer be sold anywhere."
       },
       "terminationRequested": "The owner wishes to terminate the contract.",
-      "terminationSet": "Contract ends on {datum}."
+      "terminationSet": "Contract ends on {datum}.",
+      "servicesOrdered": "Services ordered",
+      "servicesNone": "No services ordered — no task will be created."
     }
   },
   "seasons": {

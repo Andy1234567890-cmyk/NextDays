@@ -52,9 +52,15 @@ from src.features.owner_statements.gebuehren_quelle import (
     gebuehren_der_buchung,
     klassifikation_laden,
 )
+from src.features.tasks.regel_uebersetzung import (
+    lesersprache,
+    namen_in_sprache,
+)
 
 from .familie import darf_berichte, freigabe_stufe, melde_freigabe_noetig
 from .schemas import (
+    BestellbareLeistungen,
+    BestellteLeistung,
     BlockRequestCreate,
     BlockRequestItem,
     BlockRequestList,
@@ -1656,6 +1662,12 @@ class PublicPortalService:
         if req.end_date < req.start_date:
             raise PortalError("Enddatum vor Startdatum.", status_code=400)
         unit_id = self._require_own_unit(tenant_id, req.property_id, req.unit_id)
+        # Bestellte Leistungen (0510) VOR dem Insert prüfen: eine Regel-ID aus
+        # einem fremden Mandanten würde sonst am Antrag hängen und bei der
+        # Genehmigung zur Aufgabe (Wurzel 3).
+        bestellbar = self._geprueft_bestellbar(
+            tenant_id, req.property_id, req.bestellte_leistungen
+        )
         # Stufe 1 (0389): Stellt ein FAMILIENMITGLIED den Antrag, wartet er
         # zuerst auf den Eigentümer und ist für die Agentur unsichtbar. Der
         # Eigentümer selbst hat keine Familien-Zeile → 'nicht_noetig', sein
@@ -1692,6 +1704,10 @@ class PublicPortalService:
         )
         if not res.data:
             raise PortalError("Antrag konnte nicht angelegt werden.", status_code=500)
+        # Bestellung NACH dem Antrag, weil sie seine ID braucht. Die Regeln
+        # selbst sind VOR dem Insert geprüft (`_geprueft_bestellbar` oben) —
+        # ein Antrag mit einer Fremd-Regel darf gar nicht erst entstehen.
+        self._bestellung_schreiben(str(res.data[0]["id"]), bestellbar)
         log.info(
             "portal_block_requested",
             tenant_id=tenant_id,
@@ -1707,7 +1723,171 @@ class PublicPortalService:
             )
         else:
             self._melde_antrag(tenant_id, res.data[0])
-        return _block(res.data[0])
+        # Die eben geschriebene Bestellung mitgeben — die Oberfläche zeigt nach
+        # dem Absenden, was bestellt wurde, ohne den Antrag neu zu laden.
+        return _block(
+            res.data[0],
+            bestellungen_laden(
+                self._db,
+                [str(res.data[0]["id"])],
+                lesersprache(self._db, user_id, tenant_id),
+            ).get(str(res.data[0]["id"])),
+        )
+
+    def bestellbare_leistungen(
+        self, ctx: AuthContext, property_id: str
+    ) -> BestellbareLeistungen:
+        """Welche Leistungen der Eigentümer zu diesem Objekt bestellen kann.
+
+        Ohne diesen Weg könnte er nichts ankreuzen — die Auswahl im Portal muss
+        aus den ECHTEN Regeln des Betriebs kommen, nicht aus einer zweiten,
+        hartkodierten Liste, die neben ihr herliefe.
+
+        Wurzel 3/9: derselbe Objekt-Scope wie beim Antrag selbst
+        (`_require_own`). Wer die Regeln eines Objekts nicht sehen darf, für das
+        er keinen Antrag stellen darf, darf sie auch nicht auflisten.
+        """
+        tenant_id, _ = self._require(ctx)
+        self._require_own(ctx, property_id)
+        rules = (
+            self._db.table("task_rules")
+            .select("id, name")
+            .eq("tenant_id", tenant_id)
+            .eq("kind", "auto")
+            .eq("active", True)
+            .order("name")
+            .execute()
+        ).data or []
+        if not rules:
+            return BestellbareLeistungen(items=[])
+
+        # Objekt-Zuordnung: eine Regel OHNE Zeile gilt für alle Objekte —
+        # genauso liest sie die Engine (`engine.sync_for_reservation`). Wer das
+        # hier anders auslegte, böte eine Leistung an, die zu dieser Sperre nie
+        # eine Aufgabe ergäbe.
+        zuordnungen = (
+            self._db.table("task_rule_assignments")
+            .select("rule_id, property_id")
+            .in_("rule_id", [str(r["id"]) for r in rules])
+            .execute()
+        ).data or []
+        je_regel: dict[str, set[str]] = {}
+        for z in zuordnungen:
+            je_regel.setdefault(str(z["rule_id"]), set()).add(str(z["property_id"]))
+
+        passend = [
+            r
+            for r in rules
+            if str(r["id"]) not in je_regel
+            or property_id in je_regel[str(r["id"])]
+        ]
+        # 0511: Der Regelname ist ein Freitext in EINER Sprache. Eine deutsche
+        # Agentur, die daenische Eigentuemer betreut (live: derselbe Betrieb
+        # fuehrt „Anreisecheck" und „Reng T" nebeneinander), zeigte ihm sonst
+        # ein Kuerzel, das er nicht lesen kann — und er soll hier eine Leistung
+        # bestellen, die er bezahlt. Fehlt eine Fassung, bleibt der
+        # Originalname: das ist die ehrliche Auskunft, kein Ersatzwert.
+        sprache = lesersprache(self._db, ctx.user_id, tenant_id)
+        fassungen = namen_in_sprache(
+            self._db, [str(r["id"]) for r in passend], sprache
+        )
+        return BestellbareLeistungen(
+            items=[
+                BestellteLeistung(
+                    rule_id=str(r["id"]),
+                    name=fassungen.get(str(r["id"])) or str(r.get("name") or ""),
+                )
+                for r in passend
+            ]
+        )
+
+    def _geprueft_bestellbar(
+        self, tenant_id: str, property_id: str, rule_ids: list[str]
+    ) -> list[str]:
+        """Die bestellten Regeln gehören DIESEM Mandanten und diesem Objekt.
+
+        Wurzel 3: Der Service läuft mit dem Service-Role-Key und umgeht RLS.
+        Eine ungeprüft übernommene `rule_id` hinge am Antrag und würde bei der
+        Genehmigung zur Aufgabe — über eine geratene UUID ließe sich die Regel
+        eines FREMDEN Betriebs auslösen.
+
+        Drei Bedingungen, alle serverseitig:
+          * die Regel gehört dem Mandanten (`tenant_id`),
+          * sie ist planmäßig und aktiv (`kind='auto'`, `active`) — eine
+            Vorlage oder eine abgeschaltete Regel zu bestellen ergäbe eine
+            Aufgabe, die es im normalen Betrieb nicht gibt,
+          * sie gilt für DIESES Objekt: entweder ohne Objekt-Zuordnung (gilt
+            für alle) oder mit einer Zuordnung, die dieses Objekt nennt.
+
+        Die dritte ist die, die man vergisst: sonst bestellte ein Eigentümer
+        die Reinigungsregel, die für ein ganz anderes Objekt gepflegt ist, und
+        bekäme eine Aufgabe mit fremden Zeiten und fremdem Zuständigen.
+
+        Unbekannte oder unpassende IDs sind ein Fehler, kein stilles Weglassen
+        (Wurzel 4/5): der Eigentümer hat etwas bestellt und bekäme sonst
+        wortlos weniger, als er angekreuzt hat.
+        """
+        gewuenscht = list(dict.fromkeys(str(r) for r in rule_ids if r))
+        if not gewuenscht:
+            return []
+
+        rules = (
+            self._db.table("task_rules")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .eq("kind", "auto")
+            .eq("active", True)
+            .in_("id", gewuenscht)
+            .execute()
+        ).data or []
+        erlaubt = {str(r["id"]) for r in rules}
+
+        # Objekt-Zuordnung: eine Regel OHNE Zeile gilt für alle Objekte (so
+        # liest sie auch die Engine, `engine.sync_for_reservation`). Nur wer
+        # eine Zuordnung hat, muss dieses Objekt darunter haben.
+        zuordnungen: list[dict] = []
+        if erlaubt:
+            zuordnungen = (
+                self._db.table("task_rule_assignments")
+                .select("rule_id, property_id")
+                .in_("rule_id", list(erlaubt))
+                .execute()
+            ).data or []
+        je_regel: dict[str, set[str]] = {}
+        for z in zuordnungen:
+            je_regel.setdefault(str(z["rule_id"]), set()).add(str(z["property_id"]))
+        erlaubt = {
+            rid
+            for rid in erlaubt
+            if rid not in je_regel or property_id in je_regel[rid]
+        }
+
+        unbekannt = [rid for rid in gewuenscht if rid not in erlaubt]
+        if unbekannt:
+            raise PortalError(
+                "Eine bestellte Leistung gibt es für dieses Objekt nicht.",
+                status_code=422,
+            )
+        return gewuenscht
+
+    def _bestellung_schreiben(
+        self, block_request_id: str, rule_ids: list[str]
+    ) -> None:
+        """Die geprüften Bestellungen an den Antrag hängen.
+
+        `on_conflict` über den UNIQUE aus 0510: ein Doppelklick oder ein Retry
+        wiederholt den Insert, und zwei gleiche Zeilen wären zwei Aufgaben
+        (Wurzel 2).
+        """
+        if not rule_ids:
+            return
+        self._db.table("block_request_services").upsert(
+            [
+                {"block_request_id": block_request_id, "rule_id": rid}
+                for rid in rule_ids
+            ],
+            on_conflict="block_request_id,rule_id",
+        ).execute()
 
     def _require_own_unit(
         self, tenant_id: str, property_id: str, unit_id: str | None
@@ -1785,7 +1965,17 @@ class PublicPortalService:
             .order("created_at", desc=True)
             .execute()
         ).data or []
-        return BlockRequestList(items=[_block(r) for r in rows], total=len(rows))
+        # 0510: einmal für die ganze Seite, nicht je Zeile. 0511: in der
+        # Sprache des Lesers.
+        bestellt = bestellungen_laden(
+            self._db,
+            [str(r["id"]) for r in rows],
+            lesersprache(self._db, user_id, tenant_id),
+        )
+        return BlockRequestList(
+            items=[_block(r, bestellt.get(str(r["id"]))) for r in rows],
+            total=len(rows),
+        )
 
     # --- Zählerstände --------------------------------------------------------
 
@@ -1897,7 +2087,64 @@ def _buchung(b: _Belegung, *, zeigt_payout: bool = True) -> PortalNightBooking:
     )
 
 
-def _block(r: dict) -> BlockRequestItem:
+def bestellungen_laden(
+    db: Client, antrags_ids: list[str], sprache: str | None = None
+) -> dict[str, list[BestellteLeistung]]:
+    """Je Antrag die bestellten Leistungen mit dem NAMEN ihrer Regel (0510).
+
+    Gebündelt für die ganze Liste, nicht je Zeile: eine Abfrage je Antrag wären
+    bei 40 Anträgen 80 Roundtrips (Bestellung + Regelname).
+
+    Der Name wird MITGELADEN statt nachgeschlagen, weil die Oberfläche sonst
+    eine UUID anzeigen müsste — oder die Regelliste separat holen, die ein
+    Eigentümer gar nicht sehen darf (§4.3).
+    """
+    if not antrags_ids:
+        return {}
+    zeilen = (
+        db.table("block_request_services")
+        .select("block_request_id, rule_id")
+        .in_("block_request_id", antrags_ids)
+        .execute()
+    ).data or []
+    if not zeilen:
+        return {}
+
+    rule_ids = list({str(z["rule_id"]) for z in zeilen})
+    namen = {
+        str(r["id"]): str(r.get("name") or "")
+        for r in (
+            db.table("task_rules")
+            .select("id, name")
+            .in_("id", rule_ids)
+            .execute()
+        ).data
+        or []
+    }
+    # 0511: dieselbe Fassung wie in der Bestellliste. Stuende hier der
+    # Originalname, haette der Eigentuemer „Slutrengoering" angekreuzt und
+    # danach „Reng J" in seiner Antragsliste — dieselbe Leistung unter zwei
+    # Namen ist schlimmer als ein Kuerzel.
+    if sprache:
+        namen.update(namen_in_sprache(db, rule_ids, sprache))
+    out: dict[str, list[BestellteLeistung]] = {}
+    for z in zeilen:
+        rule_id = str(z["rule_id"])
+        # Eine Regel ohne Namen gibt es nicht (`task_rules.name` ist NOT NULL);
+        # fehlt die Zeile ganz, wurde die Regel zwischen den beiden Abfragen
+        # gelöscht. Dann ist die Bestellung gegenstandslos — sie wegzulassen ist
+        # richtiger, als einen Platzhalter zu erfinden (Wurzel 4).
+        if rule_id not in namen:
+            continue
+        out.setdefault(str(z["block_request_id"]), []).append(
+            BestellteLeistung(rule_id=rule_id, name=namen[rule_id])
+        )
+    return out
+
+
+def _block(
+    r: dict, bestellt: list[BestellteLeistung] | None = None
+) -> BlockRequestItem:
     return BlockRequestItem(
         id=str(r["id"]),
         property_id=str(r["property_id"]),
@@ -1926,6 +2173,7 @@ def _block(r: dict) -> BlockRequestItem:
             if r.get("vertragsende_gesetzt_auf")
             else None
         ),
+        bestellte_leistungen=bestellt or [],
     )
 
 

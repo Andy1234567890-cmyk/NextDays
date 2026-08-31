@@ -23,7 +23,9 @@ from uuid import UUID
 from postgrest.exceptions import APIError
 from supabase import Client
 
+from src.core.ki import KiError, VertexClient
 from src.core.logging import get_logger
+from src.core.mail_sprache import normalisieren
 from src.core.security import AuthContext
 from src.features.auth.owner_scope import is_owner, owner_property_ids
 from src.features.auth.permissions import Capability, has_capability
@@ -57,6 +59,12 @@ from .kosten_rueckmeldung import (
     rueckmeldung_laden,
     rueckmeldung_schreiben,
     waehrung_fuer_aufgabe,
+)
+from .regel_uebersetzung import (
+    TaskRegelUebersetzungError,
+    lesersprache,
+    namen_in_sprache,
+    regel_uebersetzen,
 )
 from .schedule_label import schedule_label
 from .schemas import (
@@ -224,7 +232,9 @@ class TasksService:
         if assignee_id is not None:
             q = q.eq("assignee_id", assignee_id)
         res = q.execute()
-        tasks = [self._to_task(r) for r in (res.data or [])]
+        roh = res.data or []
+        namen = self._regelnamen_fuer(roh, ctx, tenant_id)
+        tasks = [self._to_task(r, namen) for r in roh]
         # Defense-in-depth (§4.3): ein Mitarbeiter sieht objektgebundene Aufgaben
         # nur an seinen freigegebenen Objekten (staff_property_assignments), selbst
         # wenn ihm versehentlich eine Aufgabe an einem nicht freigegebenen Objekt
@@ -261,7 +271,11 @@ class TasksService:
             .order("due_at")
             .execute()
         )
-        return [self._to_task(r) for r in (res.data or [])]
+        roh = res.data or []
+        return [
+            self._to_task(r, self._regelnamen_fuer(roh, ctx, tenant_id))
+            for r in roh
+        ]
 
     def _require_own_reservation(
         self, tenant_id: str, reservation_id: str, ctx: AuthContext | None = None
@@ -337,9 +351,13 @@ class TasksService:
         rows = (
             self._db()
             .table("reservations")
+            # `is_owner_stay, block_request_id` (0510) MÜSSEN mit — sonst
+            # behandelt der Nachzügler-Knopf eine Eigentümersperrung wieder wie
+            # eine Gastbuchung und legt die volle Regelkette an.
             .select(
                 "id, property_id, status, check_in, check_out, "
-                "checkin_time, checkout_time, created_at"
+                "checkin_time, checkout_time, created_at, "
+                "is_owner_stay, block_request_id"
             )
             .eq("id", reservation_id)
             .eq("tenant_id", tenant_id)
@@ -1082,13 +1100,19 @@ class TasksService:
         assignee_ids: list[str] | None = None,
         rule_ids: list[str] | None = None,
         tagesende: datetime | None = None,
+        ctx: AuthContext | None = None,
     ) -> list[TaskListItem]:
-        """Alle Aufgaben des Tenants mit Assignee (MANAGE_TASKS)."""
+        """Alle Aufgaben des Tenants mit Assignee (MANAGE_TASKS).
+
+        `ctx` dient hier NUR der Anzeigesprache der Regelnamen (0511) — die
+        Autorisierung liegt am Router (`_manage()`).
+        """
         rows = self._filtered_tasks(
             tenant_id,
             property_ids=property_ids,
             assignee_ids=assignee_ids,
             rule_ids=rule_ids,
+            ctx=ctx,
         )
         return self._enrich(
             tenant_id, self._filter_bucket(rows, status_bucket, tagesende)
@@ -1107,7 +1131,7 @@ class TasksService:
         angemeldeten Nutzer gescopt (Wurzel 9 — der Filter ist keine Anzeigehilfe,
         er ist die Autorisierung)."""
         rows = self._filtered_tasks(
-            tenant_id, property_ids=property_ids, assignee_ids=[user_id]
+            tenant_id, property_ids=property_ids, assignee_ids=[user_id], ctx=ctx
         )
         if ctx is not None and is_staff(ctx):
             allowed = staff_property_ids(self._db(), ctx)
@@ -1125,6 +1149,7 @@ class TasksService:
         property_ids: list[str] | None = None,
         assignee_ids: list[str] | None = None,
         rule_ids: list[str] | None = None,
+        ctx: AuthContext | None = None,
     ) -> list[Task]:
         """Gemeinsamer Lesepfad der Listen und des Kalenders.
 
@@ -1144,7 +1169,13 @@ class TasksService:
             q = q.in_("assignee_id", named)
         elif wants_unassigned and not named:
             q = q.is_("assignee_id", "null")
-        rows = [self._to_task(r) for r in (q.order("start_at").execute().data or [])]
+        roh = q.order("start_at").execute().data or []
+        # 0511: die Regelnamen in der Sprache des Lesers — einmal fuer die
+        # ganze Liste. `tasks.title` ist eine Kopie des Regelnamens von der
+        # Anlage; ohne diesen Schritt stuende dort weiter das betriebsinterne
+        # Kuerzel (live: 63 Aufgaben heissen „Reng T" oder „Velk J").
+        namen = self._regelnamen_fuer(roh, ctx, tenant_id)
+        rows = [self._to_task(r, namen) for r in roh]
         if named and wants_unassigned:
             # „Zugeordnet an X ODER niemandem" — PostgREST-or wäre möglich, die
             # Nachfilterung ist hier klarer und die Menge ist tenant-begrenzt.
@@ -1218,12 +1249,13 @@ class TasksService:
         month_to: str,
         assignee_ids: list[str] | None = None,
         rule_ids: list[str] | None = None,
+        ctx: AuthContext | None = None,
     ) -> TaskCalendarResponse:
         """Kalender-Timeline: ALLE Objekte als Zeilen (auch leere) plus eine
         erste Zeile für objektlose Aufgaben. Je Zeile die Aufgaben- und
         Buchungs-Balken im Zeitraum."""
         tasks = self._calendar_tasks(
-            tenant_id, month_from, month_to, assignee_ids, rule_ids
+            tenant_id, month_from, month_to, assignee_ids, rule_ids, ctx
         )
         bookings = self._calendar_bookings(tenant_id, month_from, month_to)
         # Alle Objekte des Tenants als Grundgerüst (sortiert nach Titel), damit
@@ -1267,13 +1299,14 @@ class TasksService:
         month_to: str,
         assignee_ids: list[str] | None,
         rule_ids: list[str] | None,
+        ctx: AuthContext | None = None,
     ) -> list[TaskListItem]:
         """Aufgaben, deren Anzeige-Zeitpunkt (start_at ODER Fälligkeit due_at)
         im Monat liegt. PostgREST kann kein coalesce im Filter → breit laden,
         dann in Python auf das effektive Datum filtern (Altdaten haben nur
         due_at, kein start_at — sonst fielen sie aus der Timeline)."""
         rows = self._filtered_tasks(
-            tenant_id, assignee_ids=assignee_ids, rule_ids=rule_ids
+            tenant_id, assignee_ids=assignee_ids, rule_ids=rule_ids, ctx=ctx
         )
         von = _als_zeitpunkt(month_from, "month_from")
         bis = _als_zeitpunkt(month_to, "month_to")
@@ -1343,7 +1376,9 @@ class TasksService:
             prop = row[0].get("property_id")
             if prop is not None and prop not in staff_property_ids(self._db(), ctx):
                 raise TaskError("Aufgabe nicht gefunden.", status_code=404)
-        task = self._to_task(row[0])
+        task = self._to_task(
+            row[0], self._regelnamen_fuer(row, ctx, tenant_id)
+        )
         enriched = self._enrich(tenant_id, [task])[0]
         checklist = self._load_checklist(tenant_id, task_id)
         an, ab = self._reservation_zeitraum(tenant_id, task.reservation_id)
@@ -1968,7 +2003,11 @@ class TasksService:
         return self.get_detail(tenant_id, task_id, ctx)
 
     def list_inspection(
-        self, tenant_id: str, tab: str, property_ids: list[str] | None = None
+        self,
+        tenant_id: str,
+        tab: str,
+        property_ids: list[str] | None = None,
+        ctx: AuthContext | None = None,
     ) -> list[InspectionItem]:
         """Inspektions-Tabs: to_review | reviewed | upcoming (needs_inspection,
         noch nicht abgeschlossen)."""
@@ -1981,7 +2020,9 @@ class TasksService:
             q = q.eq("needs_inspection", True).neq("status", TaskStatus.done.value)
         else:  # to_review
             q = q.eq("inspection_state", "to_review")
-        rows = [self._to_task(r) for r in (q.order("end_at").execute().data or [])]
+        roh = q.order("end_at").execute().data or []
+        namen = self._regelnamen_fuer(roh, ctx, tenant_id)
+        rows = [self._to_task(r, namen) for r in roh]
         enriched = self._enrich(tenant_id, rows)
         # Fotos je Aufgabe als SIGNIERTE URLs. Vorher stand hier der reine
         # Storage-Pfad — die Oberfläche konnte damit kein Bild anzeigen, und eine
@@ -2261,6 +2302,7 @@ class TasksService:
         return RuleDetail(
             **base.model_dump(),
             description=r.get("description"),
+            quellsprache=r.get("quellsprache"),
             remove_on_cancellation=bool(r.get("remove_on_cancellation")),
             recurrence=r.get("recurrence") or {},
             items=self._load_rule_items(tenant_id, rule_id),
@@ -2390,6 +2432,7 @@ class TasksService:
         row = self._insert("task_rules", self._rule_payload(tenant_id, req))
         self._replace_rule_children(tenant_id, row["id"], req)
         self._regel_nachziehen(tenant_id, str(row["id"]))
+        self._regel_uebersetzen(tenant_id, str(row["id"]))
         return self.get_rule(tenant_id, row["id"])
 
     def update_rule(
@@ -2440,6 +2483,7 @@ class TasksService:
             tenant_id, rule_id, alter_zustaendiger, req.assignee_id
         )
         self._regel_nachziehen(tenant_id, rule_id)
+        self._regel_uebersetzen(tenant_id, rule_id)
         return self.get_rule(tenant_id, rule_id)
 
     def _regel_nachziehen(self, tenant_id: str, rule_id: str) -> None:
@@ -2471,6 +2515,85 @@ class TasksService:
                 "regel_aufgaben_nachziehen_fehlgeschlagen",
                 extra={"rule_id": rule_id},
             )
+
+    def _regel_uebersetzen(self, tenant_id: str, rule_id: str) -> None:
+        """Den Regelnamen in die uebrigen gefuehrten Sprachen bringen (0511).
+
+        Der Gegenzustand zum Speichern (Wurzel 1) — dieselbe Bauform wie
+        `_regel_nachziehen` daneben: die Regel IST gespeichert, und ein Fehler
+        hier darf den Aufrufer nicht glauben lassen, das Speichern sei
+        misslungen (er wiederholte es dann).
+
+        WELCHE SPRACHEN: die, in denen dieser Betrieb tatsaechlich Leser hat —
+        die gepflegten `users.preferred_language` plus die Betriebssprache. NICHT
+        alle 24: das waeren 24 bezahlte Modellaufrufe je Regel fuer 22 Sprachen,
+        die niemand liest. Kommt spaeter ein Nutzer mit einer neuen Sprache
+        dazu, holt der naechste Regel-Speichervorgang sie nach; bis dahin sieht
+        er den Originalnamen, was die ehrliche Auskunft ist.
+
+        OHNE `quellsprache` passiert NICHTS — kein Raten (siehe
+        `regel_uebersetzung`). Das ist der Normalfall fuer den Altbestand und
+        kein Fehler; es steht im Log, damit man es beheben kann.
+        """
+        regel = (
+            self._db()
+            .table("task_rules")
+            .select("id, name, description, quellsprache")
+            .eq("id", rule_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not regel or not regel[0].get("quellsprache"):
+            return
+        client = VertexClient()
+        if not client.is_configured:
+            # Ohne Vertex gibt es keine Uebersetzung. Laut, nicht still: eine
+            # fehlende Konfiguration, die schweigt, ist derselbe Fehler wie ein
+            # verschluckter Exception (Wurzel 5).
+            log.warning("regel_uebersetzung_ohne_vertex", extra={"rule_id": rule_id})
+            return
+        ziele = self._lesersprachen(tenant_id)
+        if not ziele:
+            return
+        try:
+            regel_uebersetzen(client, self._db(), regel[0], ziele)
+        except (APIError, KiError, TaskRegelUebersetzungError):
+            # Genau die drei erwartbaren Arten. Ein breites `except` verschluckte
+            # auch echte Programmfehler.
+            log.exception(
+                "regel_uebersetzung_fehlgeschlagen", extra={"rule_id": rule_id}
+            )
+
+    def _lesersprachen(self, tenant_id: str) -> list[str]:
+        """Die Sprachen, in denen dieser Betrieb wirklich Leser hat.
+
+        Quelle sind die gepflegten `users.preferred_language` plus
+        `tenants.default_language`. Eine Sprache, die niemand eingestellt hat,
+        zu uebersetzen kostet einen Modellaufruf und liefert eine Fassung, die
+        kein Mensch aufruft.
+        """
+        nutzer = (
+            self._db()
+            .table("users")
+            .select("preferred_language")
+            .eq("tenant_id", tenant_id)
+            .not_.is_("preferred_language", "null")
+            .execute()
+        ).data or []
+        betrieb = (
+            self._db()
+            .table("tenants")
+            .select("default_language")
+            .eq("id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        roh = [r.get("preferred_language") for r in nutzer]
+        if betrieb:
+            roh.append(betrieb[0].get("default_language"))
+        codes = {normalisieren(w) for w in roh}
+        return sorted(c for c in codes if c)
 
     def _zustaendigen_nachziehen(
         self, tenant_id: str, rule_id: str, alt: str, neu: str | None
@@ -2538,6 +2661,10 @@ class TasksService:
             "kind": req.kind.value,
             "name": req.name,
             "description": req.description,
+            # 0511: normalisiert (de-AT → de) oder None. Ein unbekannter Code
+            # wird zu None statt gespeichert zu werden — sonst stuende an der
+            # Regel eine Sprache, fuer die es keinen Katalog gibt.
+            "quellsprache": normalisieren(req.quellsprache),
             "active": req.active,
             "priority": req.priority,
             "assignee_id": req.assignee_id,
@@ -2705,15 +2832,54 @@ class TasksService:
             raise TaskError(f"{table}: Anlegen fehlgeschlagen.", status_code=500)
         return res.data[0]
 
-    def _to_task(self, row: dict[str, object]) -> Task:
+    def _regelnamen_fuer(
+        self, rows: list[dict], ctx: AuthContext | None, tenant_id: str
+    ) -> dict[str, str]:
+        """Die Regelnamen dieser Aufgaben in der Sprache des Lesers (0511).
+
+        Einmal je LISTE, nicht je Zeile. Ohne `ctx` gibt es keinen Leser und
+        damit keine Sprache — dann bleiben die gespeicherten Titel stehen.
+        """
+        if ctx is None or not ctx.user_id:
+            return {}
+        rule_ids = [str(r["rule_id"]) for r in rows if r.get("rule_id")]
+        if not rule_ids:
+            return {}
+        return namen_in_sprache(
+            self._db(), rule_ids, lesersprache(self._db(), ctx.user_id, tenant_id)
+        )
+
+    def _to_task(
+        self, row: dict[str, object], namen: dict[str, str] | None = None
+    ) -> Task:
+        """Eine tasks-Zeile als API-Objekt.
+
+        `namen` (0511) sind die Regelnamen in der Sprache des Lesers, je
+        `rule_id`. Ist eine Fassung dabei, ERSETZT sie den Titel.
+
+        Warum der Titel ueberhaupt ersetzt werden muss: `tasks.title` ist eine
+        KOPIE des Regelnamens, einmalig bei der Anlage gezogen
+        (`engine._task_payload`). Die Kopie ist Absicht — eine Aufgabe soll ihren
+        Titel behalten, auch wenn die Regel spaeter umbenannt oder geloescht
+        wird. Sie bedeutet aber, dass eine spaetere Uebersetzung der Regel die
+        vorhandenen Aufgaben nicht erreicht: live tragen 63 Aufgaben „Reng T"
+        oder „Velk J". Deshalb wird hier gelesen statt dort geschrieben — ein
+        UPDATE ueber alle Bestandsaufgaben waere der Gegenzustand, der bei jeder
+        Sprache erneut faellig wuerde.
+
+        Ohne Fassung bleibt der gespeicherte Titel stehen: das ist die ehrliche
+        Auskunft, kein Ersatzwert (Wurzel 4).
+        """
         insp = row.get("inspection_state")
+        rule_id = str(row.get("rule_id") or "")
+        titel = (namen or {}).get(rule_id) or row["title"]
         return Task(
             id=row["id"],
             tenant_id=row["tenant_id"],
             property_id=row.get("property_id"),
             reservation_id=row.get("reservation_id"),
             assignee_id=row.get("assignee_id"),
-            title=row["title"],
+            title=titel,
             status=TaskStatus(row["status"]),
             due_at=row.get("due_at"),
             needs_inspection=bool(row.get("needs_inspection")),

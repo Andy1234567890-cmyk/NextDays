@@ -11,7 +11,7 @@
 // — der Guard hier verhindert nur den offensichtlichen Doppelklick.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { PortalRealtime } from "@/components/portal/portal-realtime";
@@ -22,9 +22,11 @@ import { Label } from "@nextdays/ui/label";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import { Textarea } from "@nextdays/ui/textarea";
 import {
+  type BestellteLeistung,
   type BlockRequest,
   type PortalProperty,
   createBlockRequest,
+  getBestellbareLeistungen,
   getBlockRequests,
 } from "@/lib/portal";
 
@@ -76,6 +78,12 @@ export function PortalSperrungen({
   // die Verwaltung musste den Freitext deuten.
   const [kuendigung, setKuendigung] = useState(false);
   const [sendet, setSendet] = useState(false);
+  // Bestellte Leistungen (0510). Ohne Bestellung entsteht zu dieser Sperre
+  // KEINE Aufgabe - vorher lief die volle Regelkette wie bei einem Gast an,
+  // also Reinigung und Waesche, die niemand beauftragt hatte.
+  const [leistungen, setLeistungen] = useState<BestellteLeistung[]>([]);
+  const [bestellt, setBestellt] = useState<string[]>([]);
+  const [leistungenFehler, setLeistungenFehler] = useState<string | null>(null);
 
   const neuLaden = useCallback(async () => {
     const res = await getBlockRequests();
@@ -87,6 +95,37 @@ export function PortalSperrungen({
       setLadeFehler(res.error);
     }
   }, []);
+
+  // Die bestellbaren Leistungen haengen am OBJEKT: eine Regel kann fuer ein
+  // Objekt gepflegt sein und fuer ein anderes nicht. Beim Objektwechsel wird die
+  // Auswahl deshalb geleert statt mitgenommen - sonst stuende eine Bestellung
+  // im Formular, die der Server fuer dieses Objekt mit 422 abweist.
+  useEffect(() => {
+    if (!propertyId) {
+      setLeistungen([]);
+      setBestellt([]);
+      return;
+    }
+    let aktuell = true;
+    void (async () => {
+      const res = await getBestellbareLeistungen(propertyId);
+      if (!aktuell) return;
+      if (res.ok) {
+        setLeistungen(res.data.items);
+        setLeistungenFehler(null);
+      } else {
+        // Ein Ladefehler ist nicht dasselbe wie eine leere Liste (Wurzel 4/5):
+        // sonst haelt der Eigentuemer das Nichts fuer die Wahrheit und
+        // bestellt nichts, obwohl es etwas zu bestellen gaebe.
+        setLeistungen([]);
+        setLeistungenFehler(res.error);
+      }
+      setBestellt([]);
+    })();
+    return () => {
+      aktuell = false;
+    };
+  }, [propertyId]);
 
   const senden = async () => {
     if (sendet) return;
@@ -109,6 +148,7 @@ export function PortalSperrungen({
       end_date: bis,
       reason: grund.trim() || null,
       ist_kuendigung: kuendigung,
+      bestellte_leistungen: bestellt,
     });
     setSendet(false);
     if (!res.ok) {
@@ -120,6 +160,7 @@ export function PortalSperrungen({
     setBis("");
     setGrund("");
     setKuendigung(false);
+    setBestellt([]);
     // Die ANTWORT ist der neue Antrag — sie wird der Liste vorangestellt.
     //
     // Hier stand vorher, das Realtime-Abo auf `block_requests` bringe ihn von
@@ -211,6 +252,44 @@ export function PortalSperrungen({
                 onChange={(e) => setGrund(e.target.value)}
               />
             </div>
+
+            {/* Bestellte Leistungen (0510). Der Abschnitt steht bewusst
+                VOR der Kuendigung und nach dem Grund: er gehoert zum
+                gewoehnlichen Ablauf einer Eigennutzung, die Kuendigung ist der
+                Sonderfall. Fehlt er, entsteht zur Sperre keine Aufgabe - was
+                die Vorgabe ist, aber sichtbar sein muss. */}
+            {leistungenFehler ? (
+              <p className="text-xs text-destructive">{leistungenFehler}</p>
+            ) : leistungen.length > 0 ? (
+              <fieldset className="flex flex-col gap-2">
+                <legend className="text-sm font-medium">
+                  {t("block.services")}
+                </legend>
+                <p className="text-xs text-muted-foreground">
+                  {t("block.servicesHint")}
+                </p>
+                {leistungen.map((l) => (
+                  <label
+                    key={l.rule_id}
+                    className="flex items-center gap-2.5 text-sm"
+                  >
+                    <input
+                      type="checkbox"
+                      className="size-4 shrink-0"
+                      checked={bestellt.includes(l.rule_id)}
+                      onChange={(e) =>
+                        setBestellt((alt2) =>
+                          e.target.checked
+                            ? [...alt2, l.rule_id]
+                            : alt2.filter((x) => x !== l.rule_id),
+                        )
+                      }
+                    />
+                    <span>{l.name}</span>
+                  </label>
+                ))}
+              </fieldset>
+            ) : null}
 
             {/* Vertragskündigung: bewusst ein eigenes Kästchen und keine
                 Auswertung des Begründungstextes. Wer „ich möchte 2027 nicht
@@ -316,6 +395,16 @@ export function PortalSperrungen({
                     {r.ist_kuendigung && !r.vertragsende_gesetzt_auf && (
                       <span className="text-xs text-muted-foreground">
                         {t("block.terminationPending")}
+                      </span>
+                    )}
+                    {/* Was ich zu dieser Sperre bestellt habe (0510). Steht
+                        auch am erledigten Antrag: es ist die Grundlage der
+                        Abrechnung, und ohne sie liesse sich hinterher nicht
+                        nachvollziehen, warum eine Reinigung berechnet wurde. */}
+                    {r.bestellte_leistungen.length > 0 && (
+                      <span className="truncate text-xs text-muted-foreground">
+                        {t("block.servicesOrdered")}:{" "}
+                        {r.bestellte_leistungen.map((b) => b.name).join(", ")}
                       </span>
                     )}
                   </div>

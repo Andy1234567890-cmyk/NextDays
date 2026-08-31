@@ -482,6 +482,17 @@ class BlockRequestDecision(BaseModel):
     vertragsende: date | None = None
 
 
+class BestellteLeistungItem(BaseModel):
+    """Eine vom Eigentümer bestellte Leistung (0510) samt Regelnamen.
+
+    Der Name kommt mit, damit die Warteschlange „Endreinigung" zeigen kann
+    statt einer UUID.
+    """
+
+    rule_id: str
+    name: str
+
+
 class SperrantragItem(BaseModel):
     """Ein Sperrantrag in der Agentur-Warteschlange.
 
@@ -515,6 +526,12 @@ class SperrantragItem(BaseModel):
     ist_kuendigung: bool = False
     als_kuendigung_gewertet: bool = False
     vertragsende_gesetzt_auf: date | None = None
+    # Was der Eigentümer zu dieser Sperre BESTELLT hat (0510). Die Agentur MUSS
+    # es beim Genehmigen sehen: sie entscheidet damit nicht nur über die Sperre,
+    # sondern über die Arbeit, die daraus entsteht. Leer = es entsteht keine
+    # Aufgabe — bis 0510 entstand die volle Regelkette, ohne dass jemand sie
+    # beauftragt hatte.
+    bestellte_leistungen: list[BestellteLeistungItem] = Field(default_factory=list)
 
 
 class SperrantragListe(BaseModel):

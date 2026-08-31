@@ -1767,7 +1767,10 @@
       "terminationHint": "S tem se ne le blokira obdobje, ampak se tudi prekine trženjska pogodba na datum začetka veljavnosti. Administracija potrdi datum.",
       "terminationInterpreted": "Administracija je to zahtevo interpretirala kot obvestilo o preklicu – pogodba se konča {datum}. Prosimo, sporočite nam, če ni bilo mišljeno drugače.",
       "terminationPending": "Prekinitev – uprava še ni potrdila konca pogodbe.",
-      "terminationSent": "Obvestilo o odpovedi je bilo poslano. Uprava potrjuje odpoved pogodbe."
+      "terminationSent": "Obvestilo o odpovedi je bilo poslano. Uprava potrjuje odpoved pogodbe.",
+      "services": "Naročite storitve",
+      "servicesHint": "Izvedeno in zaračunano bo samo tisto, kar tukaj označite. Brez izbire ne nastane nobena naloga.",
+      "servicesOrdered": "Naročeno"
     },
     "meter": {
       "title": "Vnesi stanje števca",
@@ -5174,7 +5177,11 @@
       "weekdayThuShort": "Čet",
       "weekdayFriShort": "Pet",
       "weekdaySatShort": "Sob",
-      "weekdaySunShort": "Ned"
+      "weekdaySunShort": "Ned",
+      "sourceLanguageLabel": "Jezik imena",
+      "sourceLanguageEmpty": "Ni navedeno",
+      "sourceLanguageHint": "Ime se samodejno prevede za bralce v drugih jezikih — interno ostane tako, kot ste ga vnesli.",
+      "sourceLanguageMissing": "Brez navedbe se ime ne prevede: lastniki in zaposleni ga bodo videli točno tako, kot je tukaj."
     },
     "taskPage": {
       "backToMyTasks": "Na moje naloge",
@@ -7109,7 +7116,9 @@
         "terminationSummary": "Pogodba se konča z {datum} – od tega dne naprej nepremičnina ne bo več naprodaj nikjer."
       },
       "terminationRequested": "Lastnik želi prekiniti pogodbo.",
-      "terminationSet": "Pogodba se konča na {datum}."
+      "terminationSet": "Pogodba se konča na {datum}.",
+      "servicesOrdered": "Naročene storitve",
+      "servicesNone": "Nobena storitev ni naročena — nobena naloga ne bo nastala."
     }
   },
   "seasons": {

@@ -47,6 +47,7 @@ class _Query:
         self._lt: tuple[str, str] | None = None
         self._lte: tuple[str, str] | None = None
         self._range: tuple[int, int] | None = None
+        self._payload_liste: list[dict] = []
 
     def select(self, *_a: object, **_k: object) -> "_Query":
         self._op = "select"
@@ -55,6 +56,17 @@ class _Query:
     def insert(self, payload: dict) -> "_Query":
         self._op = "insert"
         self._payload = payload
+        return self
+
+    def upsert(self, payload: list[dict] | dict, **_k: object) -> "_Query":
+        """Wie `insert`, aber mit einer Liste und ohne Doppelte (0510).
+
+        `on_conflict` wird geschluckt: die Entdopplung passiert hier über den
+        Vergleich der ganzen Zeile, was für die Testzwecke dasselbe Ergebnis
+        liefert wie der UNIQUE in der echten Tabelle.
+        """
+        self._op = "upsert"
+        self._payload_liste = payload if isinstance(payload, list) else [payload]
         return self
 
     def eq(self, col: str, val: object) -> "_Query":
@@ -108,6 +120,19 @@ class _Query:
 
     def execute(self) -> _Result:
         rows = self._db.tables.setdefault(self._table, [])
+        if self._op == "upsert":
+            neu_rows = []
+            for eintrag in self._payload_liste:
+                if any(
+                    all(vorhanden.get(k) == v for k, v in eintrag.items())
+                    for vorhanden in rows
+                ):
+                    continue
+                row = dict(eintrag)
+                row.setdefault("id", f"{self._table}-{self._db.next_id()}")
+                rows.append(row)
+                neu_rows.append(row)
+            return _Result(neu_rows)
         if self._op == "insert":
             row = dict(self._payload or {})
             row.setdefault("id", f"{self._table}-{self._db.next_id()}")
@@ -210,6 +235,29 @@ def _tables() -> dict[str, list[dict]]:
             },
         ],
         "block_requests": [],
+        # Bestellbare Leistungen (0510): zwei planmäßige Regeln des Betriebs.
+        # „Endreinigung" gilt für alle Objekte (keine Zuordnungszeile),
+        # „Wäsche" nur für p-2 — also gerade NICHT für das Objekt des
+        # Eigentümers. Genau dieser Unterschied ist der Scope-Test.
+        "task_rules": [
+            {"id": "rule-rein", "tenant_id": "t-1", "name": "Endreinigung",
+             "kind": "auto", "active": True},
+            {"id": "rule-waesche", "tenant_id": "t-1", "name": "Wäsche",
+             "kind": "auto", "active": True},
+            # Abgeschaltet — darf nicht bestellbar sein.
+            {"id": "rule-aus", "tenant_id": "t-1", "name": "Alt",
+             "kind": "auto", "active": False},
+            # Vorlage, keine planmäßige Regel.
+            {"id": "rule-vorlage", "tenant_id": "t-1", "name": "Checkliste",
+             "kind": "template", "active": True},
+            # Fremder Mandant — Zielscheibe des Mandanten-Scope-Tests.
+            {"id": "rule-fremd", "tenant_id": "t-9", "name": "Fremd",
+             "kind": "auto", "active": True},
+        ],
+        "task_rule_assignments": [
+            {"rule_id": "rule-waesche", "property_id": "p-2"},
+        ],
+        "block_request_services": [],
         "meter_readings": [],
         # Ein Typ mit EINER Einheit — der Normalfall (CLAUDE.md). `tenant_id`
         # steht dran, weil der Sperrantrag die Einheit gegen Objekt UND Mandant
@@ -754,3 +802,149 @@ def test_add_meter_reading_foreign_property_404() -> None:
             ),
         )
     assert exc.value.status_code == 404
+
+
+# --- Bestellte Leistungen zur Eigentümersperrung (0510) ----------------------
+#
+# Bis 0510 erzeugte eine genehmigte Sperre dieselbe Regelkette wie eine
+# Gastbuchung — Arbeit, die niemand beauftragt und niemand bezahlt hat. Jetzt
+# entsteht eine Aufgabe nur zu einer bestellten Leistung.
+
+
+def test_bestellbare_leistungen_nur_passende() -> None:
+    """Angeboten wird, was für DIESES Objekt planmäßig und aktiv ist.
+
+    „Wäsche" hängt an p-2 und darf für p-1 nicht angeboten werden — sonst
+    bestellte der Eigentümer eine Leistung, aus der zu seiner Sperre nie eine
+    Aufgabe entstünde. Die Vorlage und die abgeschaltete Regel fehlen ebenso;
+    beides ergäbe eine Aufgabe, die es im normalen Betrieb nicht gibt.
+    """
+    res = _svc().bestellbare_leistungen(_ctx(), "p-1")
+    assert [i.rule_id for i in res.items] == ["rule-rein"]
+    # Der Name kommt mit — die Oberfläche darf keine UUID anzeigen müssen.
+    assert res.items[0].name == "Endreinigung"
+
+
+def test_bestellbare_leistungen_fremdes_objekt_404() -> None:
+    """Derselbe Objekt-Scope wie beim Antrag selbst (Wurzel 3/9)."""
+    with pytest.raises(PortalError) as exc:
+        _svc().bestellbare_leistungen(_ctx(), "p-2")
+    assert exc.value.status_code == 404
+
+
+def test_sperrantrag_mit_bestellung_speichert_sie() -> None:
+    from src.features.public_portal.schemas import BlockRequestCreate
+
+    svc = _svc()
+    item = svc.request_block(
+        _ctx(),
+        BlockRequestCreate(
+            property_id="p-1",
+            start_date=date(2026, 9, 1),
+            end_date=date(2026, 9, 7),
+            bestellte_leistungen=["rule-rein"],
+        ),
+    )
+    assert [b.rule_id for b in item.bestellte_leistungen] == ["rule-rein"]
+    assert item.bestellte_leistungen[0].name == "Endreinigung"
+
+
+def test_sperrantrag_ohne_bestellung_bleibt_leer() -> None:
+    """Der Normalfall und die Vorgabe: nichts bestellt, keine Aufgabe.
+
+    Wichtig als eigener Test, weil das Gegenteil — „leer heißt alle" — genau
+    der Zustand vor 0510 war.
+    """
+    from src.features.public_portal.schemas import BlockRequestCreate
+
+    svc = _svc()
+    item = svc.request_block(
+        _ctx(),
+        BlockRequestCreate(
+            property_id="p-1",
+            start_date=date(2026, 9, 1),
+            end_date=date(2026, 9, 7),
+        ),
+    )
+    assert item.bestellte_leistungen == []
+
+
+def test_bestellung_einer_fremden_regel_wird_abgewiesen() -> None:
+    """Eine Regel-ID aus einem fremden Mandanten: 422, kein stiller Wegfall.
+
+    Wurzel 3: der Service umgeht RLS. Ungeprüft hinge die fremde Regel am
+    Antrag und würde bei der Genehmigung zur Aufgabe.
+    """
+    from src.features.public_portal.schemas import BlockRequestCreate
+
+    with pytest.raises(PortalError) as exc:
+        _svc().request_block(
+            _ctx(),
+            BlockRequestCreate(
+                property_id="p-1",
+                start_date=date(2026, 9, 1),
+                end_date=date(2026, 9, 7),
+                bestellte_leistungen=["rule-fremd"],
+            ),
+        )
+    assert exc.value.status_code == 422
+
+
+def test_bestellung_einer_regel_fuer_ein_anderes_objekt_wird_abgewiesen() -> None:
+    """„Wäsche" gilt nur für p-2 — zu einer Sperre auf p-1 nicht bestellbar.
+
+    Der Fehler, den man übersieht: die Regel gehört dem richtigen Mandanten und
+    ist aktiv und planmäßig. Nur ihre Objekt-Zuordnung passt nicht.
+    """
+    from src.features.public_portal.schemas import BlockRequestCreate
+
+    with pytest.raises(PortalError) as exc:
+        _svc().request_block(
+            _ctx(),
+            BlockRequestCreate(
+                property_id="p-1",
+                start_date=date(2026, 9, 1),
+                end_date=date(2026, 9, 7),
+                bestellte_leistungen=["rule-waesche"],
+            ),
+        )
+    assert exc.value.status_code == 422
+
+
+def test_bestellung_abgeschalteter_regel_wird_abgewiesen() -> None:
+    from src.features.public_portal.schemas import BlockRequestCreate
+
+    with pytest.raises(PortalError) as exc:
+        _svc().request_block(
+            _ctx(),
+            BlockRequestCreate(
+                property_id="p-1",
+                start_date=date(2026, 9, 1),
+                end_date=date(2026, 9, 7),
+                bestellte_leistungen=["rule-aus"],
+            ),
+        )
+    assert exc.value.status_code == 422
+
+
+def test_doppelte_bestellung_erzeugt_eine_zeile() -> None:
+    """Doppelklick/Retry (Wurzel 2): zweimal dieselbe Leistung ist eine.
+
+    Zwei Zeilen wären zwei Aufgaben. In der echten Tabelle fängt das der UNIQUE
+    aus 0510 ab; hier wird geprüft, dass der Service ihn nutzt statt blind
+    zweimal einzufügen.
+    """
+    from src.features.public_portal.schemas import BlockRequestCreate
+
+    tables = _tables()
+    svc = PublicPortalService(service_client=_DB(tables))
+    svc.request_block(
+        _ctx(),
+        BlockRequestCreate(
+            property_id="p-1",
+            start_date=date(2026, 9, 1),
+            end_date=date(2026, 9, 7),
+            bestellte_leistungen=["rule-rein", "rule-rein"],
+        ),
+    )
+    assert len(tables["block_request_services"]) == 1

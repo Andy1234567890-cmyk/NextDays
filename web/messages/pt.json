@@ -1767,7 +1767,10 @@
       "terminationHint": "Isso não apenas bloqueia o período, mas também rescinde o contrato de marketing na data de início. A administração confirma a data.",
       "terminationInterpreted": "A administração interpretou esta solicitação como um aviso de cancelamento — o contrato termina em {datum}. Por favor, nos informe se não era essa a intenção.",
       "terminationPending": "Rescisão — a administração ainda não confirmou o término do contrato.",
-      "terminationSent": "O aviso de rescisão foi apresentado. A administração confirma a rescisão do contrato."
+      "terminationSent": "O aviso de rescisão foi apresentado. A administração confirma a rescisão do contrato.",
+      "services": "Encomendar serviços",
+      "servicesHint": "Apenas o que assinalar aqui será executado e faturado para o seu bloqueio. Sem seleção não é criada nenhuma tarefa.",
+      "servicesOrdered": "Encomendado"
     },
     "meter": {
       "title": "Registar leitura de contador",
@@ -5174,7 +5177,11 @@
       "weekdayThuShort": "Qui",
       "weekdayFriShort": "Sex",
       "weekdaySatShort": "Sáb",
-      "weekdaySunShort": "Dom"
+      "weekdaySunShort": "Dom",
+      "sourceLanguageLabel": "Idioma do nome",
+      "sourceLanguageEmpty": "Não indicado",
+      "sourceLanguageHint": "O nome é traduzido automaticamente para leitores de outros idiomas — internamente mantém-se como o escreveu.",
+      "sourceLanguageMissing": "Sem esta indicação, o nome não é traduzido: proprietários e colaboradores vê-lo-ão exatamente como aparece aqui."
     },
     "taskPage": {
       "backToMyTasks": "Para as minhas tarefas",
@@ -7109,7 +7116,9 @@
         "terminationSummary": "O contrato termina a partir de {datum} — a partir desta data, o imóvel não será mais vendido em nenhum lugar."
       },
       "terminationRequested": "O proprietário deseja rescindir o contrato.",
-      "terminationSet": "O contrato termina em {datum}."
+      "terminationSet": "O contrato termina em {datum}.",
+      "servicesOrdered": "Serviços encomendados",
+      "servicesNone": "Nenhum serviço encomendado — não será criada nenhuma tarefa."
     }
   },
   "seasons": {

@@ -1767,7 +1767,10 @@
       "terminationSent": "Kündigung übermittelt. Die Verwaltung bestätigt das Vertragsende.",
       "terminationPending": "Kündigung — die Verwaltung hat das Vertragsende noch nicht bestätigt.",
       "terminationConfirmed": "Vertrag endet am {datum}.",
-      "terminationInterpreted": "Die Verwaltung hat diesen Antrag als Kündigung gewertet — Vertrag endet am {datum}. Bitte melde dich, wenn das nicht gemeint war."
+      "terminationInterpreted": "Die Verwaltung hat diesen Antrag als Kündigung gewertet — Vertrag endet am {datum}. Bitte melde dich, wenn das nicht gemeint war.",
+      "services": "Leistungen bestellen",
+      "servicesHint": "Nur was Sie hier ankreuzen, wird zu Ihrer Sperrung ausgeführt und abgerechnet. Ohne Auswahl entsteht keine Aufgabe.",
+      "servicesOrdered": "Bestellt"
     },
     "meter": {
       "title": "Zählerstand erfassen",
@@ -5195,7 +5198,11 @@
       "weekdayThuShort": "Do",
       "weekdayFriShort": "Fr",
       "weekdaySatShort": "Sa",
-      "weekdaySunShort": "So"
+      "weekdaySunShort": "So",
+      "sourceLanguageLabel": "Sprache des Namens",
+      "sourceLanguageEmpty": "Nicht angegeben",
+      "sourceLanguageHint": "Der Name wird für Leser anderer Sprachen automatisch übersetzt — intern bleibt er, wie Sie ihn eingetippt haben.",
+      "sourceLanguageMissing": "Ohne Angabe wird der Name nicht übersetzt: Eigentümer und Mitarbeiter sehen ihn genau so, wie er hier steht."
     },
     "taskPage": {
       "backToMyTasks": "Zu meinen Aufgaben",
@@ -7130,7 +7137,9 @@
         "bookingsAfterEndHint": "Sie bleiben gültig und werden bedient — der Vertrag läuft für sie aus. Gesperrt werden nur die freien Tage."
       },
       "terminationRequested": "Der Eigentümer möchte den Vertrag beenden.",
-      "terminationSet": "Vertrag endet am {datum}."
+      "terminationSet": "Vertrag endet am {datum}.",
+      "servicesOrdered": "Bestellte Leistungen",
+      "servicesNone": "Keine Leistungen bestellt — es entsteht keine Aufgabe."
     }
   },
   "seasons": {

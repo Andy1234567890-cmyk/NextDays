@@ -1767,7 +1767,10 @@
       "terminationHint": "Tím se nejen zablokuje dané období, ale také se ukončí marketingová smlouva k datu zahájení. Administrativa datum potvrdí.",
       "terminationInterpreted": "Administrace interpretovala tuto žádost jako oznámení o zrušení – smlouva končí dne {datum}. Dejte nám prosím vědět, pokud to nebylo míněno jinak.",
       "terminationPending": "Ukončení – administrativa dosud nepotvrdila konec smlouvy.",
-      "terminationSent": "Oznámení o ukončení pracovního poměru bylo podáno. Administrativa potvrzuje ukončení smlouvy."
+      "terminationSent": "Oznámení o ukončení pracovního poměru bylo podáno. Administrativa potvrzuje ukončení smlouvy.",
+      "services": "Objednat služby",
+      "servicesHint": "Provedeno a vyúčtováno bude pouze to, co zde zaškrtnete. Bez výběru nevznikne žádný úkol.",
+      "servicesOrdered": "Objednáno"
     },
     "meter": {
       "title": "Zaznamenat stav měřidla",
@@ -5174,7 +5177,11 @@
       "weekdayThuShort": "Čt",
       "weekdayFriShort": "Pá",
       "weekdaySatShort": "So",
-      "weekdaySunShort": "Ne"
+      "weekdaySunShort": "Ne",
+      "sourceLanguageLabel": "Jazyk názvu",
+      "sourceLanguageEmpty": "Neuvedeno",
+      "sourceLanguageHint": "Název se automaticky přeloží pro čtenáře v jiných jazycích — interně zůstává tak, jak jste jej zadali.",
+      "sourceLanguageMissing": "Bez uvedení se název nepřekládá: vlastníci a zaměstnanci jej uvidí přesně tak, jak je zde."
     },
     "taskPage": {
       "backToMyTasks": "Na mé úkoly",
@@ -7109,7 +7116,9 @@
         "terminationSummary": "Smlouva končí dnem {datum} – od tohoto dne se nemovitost již nikde neprodává."
       },
       "terminationRequested": "Majitel si přeje ukončit smlouvu.",
-      "terminationSet": "Smlouva končí dne {datum}."
+      "terminationSet": "Smlouva končí dne {datum}.",
+      "servicesOrdered": "Objednané služby",
+      "servicesNone": "Žádné služby nebyly objednány — nevznikne žádný úkol."
     }
   },
   "seasons": {

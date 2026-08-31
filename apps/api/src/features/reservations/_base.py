@@ -398,9 +398,14 @@ class ReservationsBase:
             rows = (
                 self._db()
                 .table("reservations")
+                # `is_owner_stay, block_request_id` (0510) MÜSSEN mit: genau
+                # über diesen Pfad entsteht die Eigennutzung aus einem
+                # genehmigten Sperrantrag. Fehlten sie, sähe die Engine eine
+                # gewöhnliche Buchung und legte die volle Regelkette an.
                 .select(
                     "id, property_id, status, check_in, check_out, "
-                    "checkin_time, checkout_time, created_at"
+                    "checkin_time, checkout_time, created_at, "
+                    "is_owner_stay, block_request_id"
                 )
                 .eq("id", reservation_id)
                 .eq("tenant_id", tenant_id)

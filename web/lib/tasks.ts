@@ -194,6 +194,10 @@ export type RuleSchedule = {
 export type RuleDetail = RuleListItem &
   RuleSchedule & {
     description: string | null;
+    /** In welcher Sprache Name und Beschreibung verfasst sind (0511). `null` =
+     *  unbekannt: die Regel wird dann NICHT uebersetzt, und ihr interner Name
+     *  steht auch bei Lesern anderer Sprachen. */
+    quellsprache: string | null;
     remove_on_cancellation: boolean;
     recurrence: Record<string, unknown>;
     items: RuleItem[];
@@ -205,6 +209,9 @@ export type RuleInput = RuleSchedule & {
   kind: RuleKind;
   name: string;
   description?: string | null;
+  /** Sprache, in der ich Name und Beschreibung eintippe (0511). Ohne sie kann
+   *  der Regelname nicht uebersetzt werden — geraten wird er nicht. */
+  quellsprache?: string | null;
   active: boolean;
   priority: number;
   assignee_id?: string | null;

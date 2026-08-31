@@ -480,7 +480,28 @@ export type BlockRequest = {
   owner_freigabe: string;
   /** Begründung des Eigentümers bei Ablehnung. */
   owner_decision_note: string | null;
+  /** Was ich zu dieser Sperre BESTELLT habe (0510). Leer = es entsteht keine
+   *  Aufgabe. Vorher erzeugte jede Sperre dieselbe Kette wie eine Gastbuchung
+   *  — Reinigung und Wäsche liefen an, ohne dass jemand sie beauftragt hatte. */
+  bestellte_leistungen: BestellteLeistung[];
 };
+
+/** Eine bestellbare bzw. bestellte Leistung (0510). Der Name kommt vom Server
+ *  mit, damit hier keine UUID steht — die Regelliste selbst darf ein
+ *  Eigentümer nicht sehen (§4.3). */
+export type BestellteLeistung = {
+  rule_id: string;
+  name: string;
+};
+
+/** Was zu einer Sperre DIESES Objekts bestellbar ist. */
+export async function getBestellbareLeistungen(
+  propertyId: string,
+): Promise<Result<{ items: BestellteLeistung[] }>> {
+  return call(
+    `/public-portal/block-requests/leistungen/${encodeURIComponent(propertyId)}`,
+  );
+}
 
 export async function getBlockRequests(): Promise<
   Result<{ items: BlockRequest[]; total: number }>
@@ -497,6 +518,9 @@ export async function createBlockRequest(input: {
    *  eigenes Feld, weil es eine andere Erklärung ist — aus dem Begründungstext
    *  wird nichts abgeleitet. */
   ist_kuendigung?: boolean;
+  /** Regel-IDs der Leistungen, die ich zu dieser Sperre bestelle (0510).
+   *  Leer/weggelassen = keine Aufgabe. */
+  bestellte_leistungen?: string[];
 }): Promise<Result<BlockRequest>> {
   return call("/public-portal/block-requests", { method: "POST", body: input });
 }

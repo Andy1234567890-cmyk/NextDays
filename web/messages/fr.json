@@ -1767,7 +1767,10 @@
       "terminationHint": "Cela bloque non seulement la période, mais résilie également le contrat de commercialisation à sa date de début. L'administration confirme cette date.",
       "terminationInterpreted": "L'administration a interprété cette demande comme un avis de résiliation ; le contrat prend fin le {datum}. Veuillez nous indiquer si ce n'est pas ce que vous vouliez dire.",
       "terminationPending": "Résiliation — l'administration n'a pas encore confirmé la fin du contrat.",
-      "terminationSent": "Un avis de résiliation a été déposé. L'administration confirme la résiliation du contrat."
+      "terminationSent": "Un avis de résiliation a été déposé. L'administration confirme la résiliation du contrat.",
+      "services": "Commander des prestations",
+      "servicesHint": "Seul ce que vous cochez ici sera réalisé et facturé pour votre blocage. Sans sélection, aucune tâche n'est créée.",
+      "servicesOrdered": "Commandé"
     },
     "meter": {
       "title": "Saisir un relevé de compteur",
@@ -5174,7 +5177,11 @@
       "weekdayThuShort": "Jeu",
       "weekdayFriShort": "Ven",
       "weekdaySatShort": "Sam",
-      "weekdaySunShort": "Dim"
+      "weekdaySunShort": "Dim",
+      "sourceLanguageLabel": "Langue du nom",
+      "sourceLanguageEmpty": "Non renseignée",
+      "sourceLanguageHint": "Le nom est traduit automatiquement pour les lecteurs d'autres langues — en interne, il reste tel que vous l'avez saisi.",
+      "sourceLanguageMissing": "Sans cette indication, le nom n'est pas traduit : les propriétaires et le personnel le verront exactement tel qu'il figure ici."
     },
     "taskPage": {
       "backToMyTasks": "Vers mes tâches",
@@ -7109,7 +7116,9 @@
         "terminationSummary": "Le contrat prend fin le {datum} — à compter de ce jour, le bien ne sera plus vendu nulle part."
       },
       "terminationRequested": "Le propriétaire souhaite résilier le contrat.",
-      "terminationSet": "Le contrat prend fin le {datum}."
+      "terminationSet": "Le contrat prend fin le {datum}.",
+      "servicesOrdered": "Prestations commandées",
+      "servicesNone": "Aucune prestation commandée — aucune tâche ne sera créée."
     }
   },
   "seasons": {

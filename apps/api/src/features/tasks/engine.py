@@ -37,6 +37,7 @@ from supabase import Client
 from src.core.logging import get_logger
 from src.features.notification_settings.ereignisse import melde_aufgaben_zuweisung
 
+from .eigennutzung import bestellte_regeln, regel_erlaubt
 from .schemas import TaskSource, TaskStatus
 
 log = get_logger("nextdays.tasks.engine")
@@ -351,6 +352,7 @@ def _task_payload(
     start: datetime | None,
     end: datetime | None,
     source: TaskSource,
+    ordered_by_owner: bool = False,
 ) -> dict[str, object]:
     return {
         "tenant_id": tenant_id,
@@ -368,6 +370,12 @@ def _task_payload(
         "start_at": start.isoformat() if start else None,
         "end_at": end.isoformat() if end else None,
         "due_at": (end or start).isoformat() if (end or start) else None,
+        # Spur: diese Aufgabe entstand aus einer BESTELLUNG des Eigentümers zu
+        # seiner Sperrung (0510), nicht aus dem gewöhnlichen Lauf. Steht an der
+        # Aufgabe selbst, weil die Frage „hat er das bestellt?" auch nach dem
+        # Widerruf der Sperre beantwortbar bleiben muss — ein Rückschluss über
+        # drei Tabellen liefe dann ins Leere.
+        "ordered_by_owner": ordered_by_owner,
     }
 
 
@@ -479,6 +487,7 @@ def _regel_anwenden(
     *,
     verschieben: bool = True,
     nicht_vor: datetime | None = None,
+    bestellt: dict[str, set[str]] | None = None,
 ) -> bool:
     """EINE planmäßige Regel auf EINE Reservierung anwenden.
 
@@ -494,21 +503,38 @@ def _regel_anwenden(
     `nicht_vor` verwirft Aufgaben, deren Termin länger zurückliegt: einen
     Willkommens-Check für eine Anreise von vor drei Wochen nachträglich als
     OFFEN anzulegen wäre eine Falschmeldung, nicht ein Fund.
+
+    `bestellt` sind die vom Eigentümer bestellten Leistungen je Eigennutzung
+    (0510, `eigennutzung.bestellte_regeln`). Bei einer gewöhnlichen Buchung
+    spielt es keine Rolle; bei einer Eigentümersperrung entscheidet es, ob die
+    Regel überhaupt greifen darf.
     """
+    # Eigennutzung ohne Bestellung dieser Leistung: keine Aufgabe (0510). Eine
+    # BEREITS vorhandene wird bewusst NICHT weggeräumt — sie kann von Hand
+    # angelegt worden sein, und das Wegräumen gehört dem Pfad, der die
+    # Abbestellung kennt, nicht diesem Abgleich.
+    if not regel_erlaubt(reservation, str(rule["id"]), bestellt or {}):
+        return False
+
     fenster = _regel_zeitfenster(rule, reservation, anchors)
     if fenster is None:
         return False
     start, end = fenster
+    # Zu alter Termin: eine Anreise von vor drei Wochen nachträglich als OFFEN
+    # anzulegen wäre eine Falschmeldung.
     if nicht_vor is not None and (end or start) < nicht_vor:
         return False
 
     property_id = reservation.get("property_id")
     if known:
-        if not verschieben:
-            return False
-        if known.get("status") in (TaskStatus.done.value, TaskStatus.cancelled.value):
-            # Erledigtes bleibt erledigt: eine Verschiebung der Buchung macht
-            # eine bereits gemachte Reinigung nicht ungeschehen.
+        # Zwei Gründe, eine vorhandene Aufgabe in Ruhe zu lassen: der Lauf darf
+        # nicht verschieben (`verschieben=False`, stündlicher Abgleich), oder
+        # sie ist erledigt bzw. storniert — eine Verschiebung der Buchung macht
+        # eine bereits gemachte Reinigung nicht ungeschehen.
+        if not verschieben or known.get("status") in (
+            TaskStatus.done.value,
+            TaskStatus.cancelled.value,
+        ):
             return False
         db.table("tasks").update(
             {
@@ -532,6 +558,10 @@ def _regel_anwenden(
                 start=start,
                 end=end,
                 source=TaskSource.auto,
+                # Bis hierher kommt eine Eigennutzung nur MIT Bestellung
+                # (`regel_erlaubt` oben) — die Spur ist damit belegt, nicht
+                # geraten.
+                ordered_by_owner=bool(reservation.get("is_owner_stay")),
             ),
             items,
         )
@@ -596,9 +626,13 @@ def nachziehen_planmaessig(
     while gesehen < MAX_NACHZUG_RESERVIERUNGEN:
         reservations = (
             db.table("reservations")
+            # `is_owner_stay, block_request_id` (0510) MÜSSEN mit: ohne sie
+            # sähe `ist_eigennutzung` ein fehlendes Feld und behandelte eine
+            # Eigentümersperrung wieder wie eine Gastbuchung.
             .select(
                 "id, property_id, status, check_in, check_out, "
-                "checkin_time, checkout_time, created_at"
+                "checkin_time, checkout_time, created_at, "
+                "is_owner_stay, block_request_id"
             )
             .eq("tenant_id", tenant_id)
             .gte("check_out", von)
@@ -658,6 +692,10 @@ def _nachzug_seite(
     known = _vorhandene_aufgaben(
         db, tenant_id, [str(r["id"]) for r in reservations]
     )
+    # Einmal je SEITE, nicht je Reservierung: bei 200 Zeilen wären das sonst
+    # 200 Roundtrips. Ohne Eigennutzung in der Seite fragt der Aufruf gar nicht
+    # erst — er kostet dann nichts.
+    bestellt = bestellte_regeln(db, reservations)
     created = 0
     for reservation in reservations:
         anchors = _reservation_anchors(reservation)
@@ -679,6 +717,7 @@ def _nachzug_seite(
                 known.get((reservation_id, str(rule["id"]))),
                 verschieben=False,
                 nicht_vor=fruehester_termin,
+                bestellt=bestellt,
             ):
                 created += 1
     return created
@@ -756,6 +795,11 @@ def sync_for_reservation(
         or []
     }
 
+    # 0510: Bei einer Eigentümersperrung entstehen nur die Aufgaben, die der
+    # Eigentümer zu seiner Sperre BESTELLT hat. Für jede gewöhnliche Buchung
+    # bleibt die Menge leer und ohne Wirkung.
+    bestellt = bestellte_regeln(db, [reservation])
+
     touched = 0
     for rule in matching:
         if _regel_anwenden(
@@ -766,6 +810,7 @@ def sync_for_reservation(
             anchors,
             items.get(_checklist_source(rule), []),
             existing.get(str(rule["id"])),
+            bestellt=bestellt,
         ):
             touched += 1
 
@@ -801,9 +846,13 @@ def sync_nach_id(db: Client, tenant_id: str, reservation_id: str) -> int:
     try:
         rows = (
             db.table("reservations")
+            # `is_owner_stay, block_request_id` (0510) MÜSSEN mit: ohne sie
+            # sähe `ist_eigennutzung` ein fehlendes Feld und behandelte eine
+            # Eigentümersperrung wieder wie eine Gastbuchung.
             .select(
                 "id, property_id, status, check_in, check_out, "
-                "checkin_time, checkout_time, created_at"
+                "checkin_time, checkout_time, created_at, "
+                "is_owner_stay, block_request_id"
             )
             .eq("id", reservation_id)
             .eq("tenant_id", tenant_id)

@@ -1767,7 +1767,10 @@
       "terminationHint": "Tämä ei ainoastaan pysäytä ajanjaksoa, vaan myös irtisanoo markkinointisopimuksen aloituspäivänä. Hallinto vahvistaa päivämäärän.",
       "terminationInterpreted": "Ylläpito on tulkinnut tämän pyynnön peruutusilmoitukseksi – sopimus päättyy {datum}. Kerrothan meille, jos se ei ollut tarkoitus.",
       "terminationPending": "Irtisanominen — hallinto ei ole vielä vahvistanut sopimuksen päättymistä.",
-      "terminationSent": "Irtisanomisilmoitus on jätetty. Hallinto vahvistaa sopimuksen irtisanomisen."
+      "terminationSent": "Irtisanomisilmoitus on jätetty. Hallinto vahvistaa sopimuksen irtisanomisen.",
+      "services": "Tilaa palvelut",
+      "servicesHint": "Vain valitsemasi palvelut toteutetaan ja laskutetaan sulkusi yhteydessä. Ilman valintaa tehtävää ei luoda.",
+      "servicesOrdered": "Tilattu"
     },
     "meter": {
       "title": "Kirjaa mittarilukema",
@@ -5174,7 +5177,11 @@
       "weekdayThuShort": "To",
       "weekdayFriShort": "Pe",
       "weekdaySatShort": "La",
-      "weekdaySunShort": "Su"
+      "weekdaySunShort": "Su",
+      "sourceLanguageLabel": "Nimen kieli",
+      "sourceLanguageEmpty": "Ei määritetty",
+      "sourceLanguageHint": "Nimi käännetään automaattisesti muunkielisille lukijoille — sisäisesti se pysyy sellaisena kuin sen kirjoitit.",
+      "sourceLanguageMissing": "Ilman tietoa nimeä ei käännetä: omistajat ja työntekijät näkevät sen juuri sellaisena kuin se on tässä."
     },
     "taskPage": {
       "backToMyTasks": "Omiin tehtäviin",
@@ -7109,7 +7116,9 @@
         "terminationSummary": "Sopimus päättyy {datum} alkaen — tästä päivästä lähtien kiinteistöä ei enää myydä missään."
       },
       "terminationRequested": "Omistaja haluaa irtisanoa sopimuksen.",
-      "terminationSet": "Sopimus päättyy {datum}."
+      "terminationSet": "Sopimus päättyy {datum}.",
+      "servicesOrdered": "Tilatut palvelut",
+      "servicesNone": "Palveluita ei tilattu — tehtävää ei luoda."
     }
   },
   "seasons": {

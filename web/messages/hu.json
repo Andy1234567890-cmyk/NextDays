@@ -1767,7 +1767,10 @@
       "terminationHint": "Ez nemcsak az időszakot zárolja, hanem a marketingszerződést is megszünteti a kezdőnapon. Az adminisztráció megerősíti a dátumot.",
       "terminationInterpreted": "Az adminisztráció ezt a kérést felmondásként értelmezte – a szerződés {datum} dátummal lejár. Kérjük, jelezze, ha nem erre gondolt.",
       "terminationPending": "Megszüntetés – a vezetőség még nem erősítette meg a szerződés végét.",
-      "terminationSent": "A felmondási értesítést benyújtották. Az adminisztráció megerősíti a szerződés megszüntetését."
+      "terminationSent": "A felmondási értesítést benyújtották. Az adminisztráció megerősíti a szerződés megszüntetését.",
+      "services": "Szolgáltatások megrendelése",
+      "servicesHint": "Csak azt végezzük el és számlázzuk ki a zárásához, amit itt bejelöl. Választás nélkül nem jön létre feladat.",
+      "servicesOrdered": "Megrendelve"
     },
     "meter": {
       "title": "Mérőállás rögzítése",
@@ -5174,7 +5177,11 @@
       "weekdayThuShort": "Cs",
       "weekdayFriShort": "P",
       "weekdaySatShort": "Szo",
-      "weekdaySunShort": "V"
+      "weekdaySunShort": "V",
+      "sourceLanguageLabel": "A név nyelve",
+      "sourceLanguageEmpty": "Nincs megadva",
+      "sourceLanguageHint": "A nevet automatikusan lefordítjuk a más nyelvű olvasók számára — belsőleg úgy marad, ahogyan beírta.",
+      "sourceLanguageMissing": "Megadás nélkül a nevet nem fordítjuk le: a tulajdonosok és a munkatársak pontosan úgy látják, ahogy itt szerepel."
     },
     "taskPage": {
       "backToMyTasks": "A feladataimhoz",
@@ -7109,7 +7116,9 @@
         "terminationSummary": "A szerződés {datum} dátummal lejár — ettől a naptól kezdve az ingatlant sehol sem lehet értékesíteni."
       },
       "terminationRequested": "A tulajdonos fel kívánja bontani a szerződést.",
-      "terminationSet": "A szerződés {datum} dátummal lejár."
+      "terminationSet": "A szerződés {datum} dátummal lejár.",
+      "servicesOrdered": "Megrendelt szolgáltatások",
+      "servicesNone": "Nem rendeltek szolgáltatást — nem jön létre feladat."
     }
   },
   "seasons": {

@@ -1767,7 +1767,10 @@
       "terminationHint": "Dette blokerer ikke blot perioden, men ophæver også marketingkontrakten på startdatoen. Administrationen bekræfter datoen.",
       "terminationInterpreted": "Administrationen har fortolket denne anmodning som en opsigelsesmeddelelse — kontrakten udløber den {datum}. Giv os venligst besked, hvis det ikke var meningen.",
       "terminationPending": "Opsigelse — administrationen har endnu ikke bekræftet kontraktens ophør.",
-      "terminationSent": "Opsigelse er indsendt. Administrationen bekræfter kontraktens opsigelse."
+      "terminationSent": "Opsigelse er indsendt. Administrationen bekræfter kontraktens opsigelse.",
+      "services": "Bestil ydelser",
+      "servicesHint": "Kun det, du markerer her, bliver udført og faktureret til din blokering. Uden et valg oprettes der ingen opgave.",
+      "servicesOrdered": "Bestilt"
     },
     "meter": {
       "title": "Registrer måleraflæsning",
@@ -5174,7 +5177,11 @@
       "weekdayThuShort": "Tor",
       "weekdayFriShort": "Fre",
       "weekdaySatShort": "Lør",
-      "weekdaySunShort": "Søn"
+      "weekdaySunShort": "Søn",
+      "sourceLanguageLabel": "Navnets sprog",
+      "sourceLanguageEmpty": "Ikke angivet",
+      "sourceLanguageHint": "Navnet oversættes automatisk for læsere med andre sprog — internt bliver det, som du har skrevet det.",
+      "sourceLanguageMissing": "Uden angivelse oversættes navnet ikke: ejere og medarbejdere ser det præcis, som det står her."
     },
     "taskPage": {
       "backToMyTasks": "Til mine opgaver",
@@ -7109,7 +7116,9 @@
         "terminationSummary": "Kontrakten udløber fra {datum} — fra denne dag og fremefter vil ejendommen ikke længere blive solgt nogen steder."
       },
       "terminationRequested": "Ejeren ønsker at ophæve kontrakten.",
-      "terminationSet": "Kontrakten udløber den {datum}."
+      "terminationSet": "Kontrakten udløber den {datum}.",
+      "servicesOrdered": "Bestilte ydelser",
+      "servicesNone": "Ingen ydelser bestilt — der oprettes ingen opgave."
     }
   },
   "seasons": {

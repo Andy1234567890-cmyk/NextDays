@@ -1767,7 +1767,10 @@
       "terminationHint": "Tai ne tik blokuoja laikotarpį, bet ir nutraukia rinkodaros sutartį pradžios dieną. Administracija patvirtina datą.",
       "terminationInterpreted": "Administracija šį prašymą interpretavo kaip pranešimą apie sutarties nutraukimą – sutartis baigiasi {datum}. Jei tai nebuvo jūsų tikslas, praneškite mums.",
       "terminationPending": "Nutraukimas – administracija dar nepatvirtino sutarties pabaigos.",
-      "terminationSent": "Pranešimas apie sutarties nutraukimą pateiktas. Administracija patvirtina sutarties nutraukimą."
+      "terminationSent": "Pranešimas apie sutarties nutraukimą pateiktas. Administracija patvirtina sutarties nutraukimą.",
+      "services": "Užsakyti paslaugas",
+      "servicesHint": "Bus atlikta ir apmokestinta tik tai, ką čia pažymėsite. Nepasirinkus nesukuriama jokia užduotis.",
+      "servicesOrdered": "Užsakyta"
     },
     "meter": {
       "title": "Įvesti skaitiklio rodmenį",
@@ -5174,7 +5177,11 @@
       "weekdayThuShort": "Kt",
       "weekdayFriShort": "Pn",
       "weekdaySatShort": "Št",
-      "weekdaySunShort": "Sk"
+      "weekdaySunShort": "Sk",
+      "sourceLanguageLabel": "Pavadinimo kalba",
+      "sourceLanguageEmpty": "Nenurodyta",
+      "sourceLanguageHint": "Pavadinimas automatiškai išverčiamas kitomis kalbomis skaitantiems — viduje jis lieka toks, kokį įvedėte.",
+      "sourceLanguageMissing": "Nenurodžius pavadinimas neverčiamas: savininkai ir darbuotojai matys jį būtent taip, kaip čia."
     },
     "taskPage": {
       "backToMyTasks": "Į mano užduotis",
@@ -7109,7 +7116,9 @@
         "terminationSummary": "Sutartis baigiasi nuo {datum} – nuo šios dienos turtas niekur nebeparduodamas."
       },
       "terminationRequested": "Savininkas nori nutraukti sutartį.",
-      "terminationSet": "Sutartis baigiasi {datum}."
+      "terminationSet": "Sutartis baigiasi {datum}.",
+      "servicesOrdered": "Užsakytos paslaugos",
+      "servicesNone": "Paslaugų neužsakyta — užduotis nebus sukurta."
     }
   },
   "seasons": {

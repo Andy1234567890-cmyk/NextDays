@@ -23,6 +23,7 @@ from .dependencies import (
 from .dienstleistungen import DienstleistungError
 from .familie import FamilieError
 from .schemas import (
+    BestellbareLeistungen,
     BlockRequestCreate,
     BlockRequestItem,
     BlockRequestList,
@@ -133,6 +134,27 @@ def request_block(
 ) -> BlockRequestItem:
     try:
         return service.request_block(ctx, req)
+    except PortalError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get(
+    "/block-requests/leistungen/{property_id}",
+    response_model=BestellbareLeistungen,
+)
+def bestellbare_leistungen(
+    property_id: str,
+    service: PublicPortalServiceDep,
+    ctx: Annotated[AuthContext, Depends(_BLOCK)],
+) -> BestellbareLeistungen:
+    """Welche Leistungen der Eigentümer zu einer Sperre bestellen kann (0510).
+
+    Der Pfad liegt UNTER `/block-requests`, weil die Liste nur im Zusammenhang
+    mit einem Sperrantrag existiert — es ist kein allgemeiner Blick in die
+    Aufgabenverwaltung des Betriebs.
+    """
+    try:
+        return service.bestellbare_leistungen(ctx, property_id)
     except PortalError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

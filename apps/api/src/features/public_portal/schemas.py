@@ -174,6 +174,18 @@ class BlockRequestCreate(BaseModel):
     # Der Freitext bleibt der Freitext: aus ihm wird NICHTS abgeleitet
     # (Wortsuche in 24 Sprachen als Grundlage einer Kündigung, Wurzel 4).
     ist_kuendigung: bool = False
+    # BESTELLTE LEISTUNGEN (0510). IDs planmäßiger Regeln (`task_rules`,
+    # kind='auto'), aus denen zu DIESER Sperre Aufgaben entstehen sollen —
+    # typisch die Endreinigung nach der Eigennutzung.
+    #
+    # Leer = keine Aufgabe. Das ist die Vorgabe und der Sinn der Sache: ohne
+    # Bestellung erzeugte eine Eigentümersperrung bis 0510 dieselbe Kette wie
+    # eine Gastbuchung — Arbeit, die niemand beauftragt und niemand bezahlt hat.
+    #
+    # Die Obergrenze ist kein Komfortwert: ohne sie ließe sich mit einer langen
+    # Liste je Antrag beliebig viel Arbeit erzeugen (Wurzel 8). Ein Betrieb hat
+    # eine Handvoll planmäßiger Regeln; live sind es vier.
+    bestellte_leistungen: list[str] = Field(default_factory=list, max_length=50)
 
     @model_validator(mode="after")
     def _check_order(self) -> "BlockRequestCreate":
@@ -184,6 +196,17 @@ class BlockRequestCreate(BaseModel):
             msg = "end_date darf nicht vor start_date liegen"
             raise ValueError(msg)
         return self
+
+
+class BestellteLeistung(BaseModel):
+    """Eine vom Eigentümer bestellte Leistung samt Namen ihrer Regel.
+
+    Der Name kommt mit, damit die Oberfläche „Endreinigung" zeigen kann statt
+    einer UUID — ohne dass sie dafür die Regelliste nachladen muss.
+    """
+
+    rule_id: str
+    name: str
 
 
 class BlockRequestItem(BaseModel):
@@ -219,6 +242,22 @@ class BlockRequestItem(BaseModel):
     # Begründung des Eigentümers bei Ablehnung. Der Antragsteller hat ein Recht
     # darauf zu erfahren, warum — sonst wirkt die Ablehnung wie Willkür.
     owner_decision_note: str | None = None
+    # Was der Eigentümer zu dieser Sperre BESTELLT hat (0510). Leer = keine
+    # Aufgabe entsteht. Steht auch am gelesenen Antrag, damit er nachsehen
+    # kann, was er beauftragt hat — und die Agentur beim Genehmigen sieht,
+    # welche Arbeit auf sie zukommt.
+    bestellte_leistungen: list[BestellteLeistung] = Field(default_factory=list)
+
+
+class BestellbareLeistungen(BaseModel):
+    """Was der Eigentümer zu einer Sperre dieses Objekts bestellen KANN (0510).
+
+    Bewusst nur `rule_id` und `name`: Zuständige, Zeiten, Prioritäten und
+    Checklisten der Regel gehen den Eigentümer nichts an (§4.3) — er bestellt
+    eine Leistung, er verwaltet nicht die Arbeitsorganisation des Betriebs.
+    """
+
+    items: list[BestellteLeistung]
 
 
 class BlockRequestList(BaseModel):

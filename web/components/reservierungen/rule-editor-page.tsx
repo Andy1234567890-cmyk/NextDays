@@ -12,7 +12,7 @@
 // Objekte · Zeitpunkt (Trigger bzw. Zeitplan) · Aufgabenvorlage mit Vorschau ·
 // Empfänger · Inspektion. Speichern/Löschen als schwebende Knöpfe unten rechts.
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -21,6 +21,8 @@ import { LearnButton } from "@/components/reservierungen/learn-dialog";
 import { Input } from "@nextdays/ui/input";
 import { MultiSelect } from "@nextdays/ui/multi-select";
 import { NativeSelect } from "@nextdays/ui/native-select";
+
+import { LOCALES } from "@/i18n/locales";
 import { Switch } from "@nextdays/ui/switch";
 import { mitarbeiterOptionen } from "@/lib/mitarbeiter-optionen";
 import {
@@ -54,10 +56,28 @@ const LIST: Record<Kind, string> = {
   recurring: "/reservierungen/aufgaben/regelmaessig",
 };
 
+/** Der Name einer Sprache in der Sprache des Lesers („Dansk" heisst im
+ *  deutschen Dashboard „Dänisch"). `Intl.DisplayNames` kann das; faellt es aus
+ *  (alter Browser), bleibt der Code stehen statt eines leeren Eintrags. */
+function sprachName(code: string, anzeigeIn: string): string {
+  try {
+    return (
+      new Intl.DisplayNames([anzeigeIn], { type: "language" }).of(code) ?? code
+    );
+  } catch {
+    return code;
+  }
+}
+
 const LEER: RuleInput = {
   kind: "auto",
   name: "",
   description: "",
+  // Wird beim Anlegen auf die Sprache DIESER Oberflaeche gesetzt (0511) — wer
+  // hier tippt, tippt in seiner Sprache. Bei einer bestehenden Regel kommt der
+  // gespeicherte Wert; ist er leer, muss der Nutzer ihn angeben, weil der Name
+  // sonst nicht uebersetzt werden kann (geraten wird er nicht).
+  quellsprache: null,
   active: true,
   priority: 3,
   assignee_id: null,
@@ -86,7 +106,14 @@ export function RuleEditorPage({
 }) {
   const t = useTranslations("reservations");
   const router = useRouter();
-  const [form, setForm] = useState<RuleInput>({ ...LEER, kind });
+  const locale = useLocale();
+  const [form, setForm] = useState<RuleInput>({
+    ...LEER,
+    kind,
+    // Neue Regel: die Sprache dieser Oberflaeche. Das ist keine Vermutung,
+    // sondern eine Messung — der Nutzer tippt gerade hier.
+    quellsprache: locale,
+  });
   const [properties, setProperties] = useState<Opt[]>([]);
   const [users, setUsers] = useState<Opt[]>([]);
   const [templates, setTemplates] = useState<Opt[]>([]);
@@ -123,6 +150,11 @@ export function RuleEditorPage({
           kind: r.kind as Kind,
           name: r.name,
           description: r.description ?? "",
+          // Bestehende Regel: der GESPEICHERTE Wert, nicht die Sprache der
+          // Oberflaeche. Ein Deutscher, der eine daenisch benannte Regel
+          // oeffnet, wuerde sie sonst still auf „deutsch" umetikettieren, und
+          // die naechste Uebersetzung liefe aus der falschen Ausgangssprache.
+          quellsprache: r.quellsprache,
           active: r.active,
           priority: r.priority || 3,
           assignee_id: r.assignee_id,
@@ -236,6 +268,35 @@ export function RuleEditorPage({
             {t("ruleEditorPage.titleLabel")}
           </span>
           <Input value={form.name} onChange={(e) => set("name", e.target.value)} />
+        </label>
+
+        {/* Sprache des Namens (0511). Sie entscheidet, ob und WORAUS uebersetzt
+            wird — ohne sie bleibt der interne Name bei jedem Leser stehen.
+            Warum nicht geraten: derselbe Betrieb fuehrt live deutsche UND
+            daenische Regelnamen nebeneinander („Endreinigung" neben
+            „Vinduer 8-uger"), ein Default haette also die Haelfte falsch
+            etikettiert — und eine Uebersetzung aus der falschen Ausgangssprache
+            wirft keinen Fehler, sie liefert plausiblen Unsinn. */}
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-semibold">
+            {t("ruleEditorPage.sourceLanguageLabel")}
+          </span>
+          <NativeSelect
+            value={form.quellsprache ?? ""}
+            onChange={(e) => set("quellsprache", e.target.value || null)}
+          >
+            <option value="">{t("ruleEditorPage.sourceLanguageEmpty")}</option>
+            {LOCALES.map((code) => (
+              <option key={code} value={code}>
+                {sprachName(code, locale)}
+              </option>
+            ))}
+          </NativeSelect>
+          <span className="text-xs text-muted-foreground">
+            {form.quellsprache
+              ? t("ruleEditorPage.sourceLanguageHint")
+              : t("ruleEditorPage.sourceLanguageMissing")}
+          </span>
         </label>
 
         <label className="flex flex-col gap-1.5">

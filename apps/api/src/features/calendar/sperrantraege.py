@@ -34,8 +34,13 @@ from src.core.mail_texte import text as mail_text
 from src.core.security import AuthContext
 from src.features.auth.permissions import Capability, has_capability
 from src.features.auth.schemas import UserRole
+from src.features.tasks.regel_uebersetzung import (
+    lesersprache,
+    namen_in_sprache,
+)
 
 from .schemas import (
+    BestellteLeistungItem,
     BlockRequestDecision,
     DateRange,
     SperrantragItem,
@@ -189,7 +194,13 @@ class SperrantragService:
             tenant_id,
             {str(r["unit_id"]) for r in rows if r.get("unit_id")}
         )
-        items = [_item(r, titel, namen, einheiten) for r in rows]
+        # 0510: einmal für die ganze Liste. Die Agentur entscheidet mit der
+        # Sperre auch über die Arbeit, die daraus entsteht — sie muss sie sehen.
+        bestellt = self._bestellungen(rows, self._sprache(ctx))
+        items = [
+            _item(r, titel, namen, einheiten, bestellt.get(str(r["id"])))
+            for r in rows
+        ]
         return SperrantragListe(items=items, total=len(items))
 
     def _titel(self, tenant_id: str, property_ids: set[str]) -> dict[str, str]:
@@ -227,7 +238,9 @@ class SperrantragService:
         ).data or []
         return {str(r["id"]): r.get("name") or "" for r in rows}
 
-    def _einzel_item(self, antrag: dict) -> SperrantragItem:
+    def _einzel_item(
+        self, antrag: dict, ctx: AuthContext | None = None
+    ) -> SperrantragItem:
         """Antwort auf eine EINZEL-Entscheidung (approve/reject/revoke).
 
         Zieht Objekttitel und Einheitenname genauso nach wie der Listenpfad —
@@ -245,7 +258,73 @@ class SperrantragService:
                 tenant_id,
                 {str(antrag["unit_id"])} if antrag.get("unit_id") else set(),
             ),
+            self._bestellungen([antrag], self._sprache(ctx)).get(
+                str(antrag["id"])
+            ),
         )
+
+    def _sprache(self, ctx: AuthContext | None) -> str | None:
+        """Die Anzeigesprache der Entscheiderin (0511).
+
+        `None`, wenn kein Kontext vorliegt — dann bleiben die Regelnamen so, wie
+        der Betrieb sie eingetippt hat. Das ist die ehrliche Auskunft: eine
+        Sprache zu raten, um „irgendwas uebersetzt" zu zeigen, waere ein
+        erfundener Wert (Wurzel 4).
+        """
+        if ctx is None or not ctx.user_id:
+            return None
+        return lesersprache(self._db, ctx.user_id, ctx.tenant_id)
+
+    def _bestellungen(
+        self, rows: list[dict], sprache: str | None = None
+    ) -> dict[str, list[BestellteLeistungItem]]:
+        """Je Antrag die bestellten Leistungen mit Regelnamen (0510).
+
+        Gebündelt über die ganze Liste — zwei Abfragen für 40 Anträge statt 80.
+        Ein Antrag ohne Eintrag hat nichts bestellt; dann entsteht aus seiner
+        Genehmigung auch keine Aufgabe.
+        """
+        antrags_ids = [str(r["id"]) for r in rows]
+        if not antrags_ids:
+            return {}
+        zeilen = (
+            self._db.table("block_request_services")
+            .select("block_request_id, rule_id")
+            .in_("block_request_id", antrags_ids)
+            .execute()
+        ).data or []
+        if not zeilen:
+            return {}
+        rule_ids = list({str(z["rule_id"]) for z in zeilen})
+        namen = {
+            str(r["id"]): str(r.get("name") or "")
+            for r in (
+                self._db.table("task_rules")
+                .select("id, name")
+                .in_("id", rule_ids)
+                .execute()
+            ).data
+            or []
+        }
+        # 0511: in der Sprache der Entscheiderin. Sie sieht damit dasselbe wie
+        # der Eigentuemer im Portal — nur in IHRER Sprache. Ohne das stuende in
+        # der Warteschlange, was der Betrieb intern eingetippt hat, und bei
+        # gemischt benannten Regeln (live: „Anreisecheck" neben „Reng T") waere
+        # die Haelfte davon fuer sie unlesbar.
+        if sprache:
+            namen.update(namen_in_sprache(self._db, rule_ids, sprache))
+        out: dict[str, list[BestellteLeistungItem]] = {}
+        for z in zeilen:
+            rule_id = str(z["rule_id"])
+            # Regel zwischen den beiden Abfragen gelöscht: die Bestellung ist
+            # gegenstandslos. Sie wegzulassen ist richtiger, als einen
+            # Platzhalternamen zu erfinden (Wurzel 4).
+            if rule_id not in namen:
+                continue
+            out.setdefault(str(z["block_request_id"]), []).append(
+                BestellteLeistungItem(rule_id=rule_id, name=namen[rule_id])
+            )
+        return out
 
     def _namen(self, tenant_id: str, user_ids: set[str]) -> dict[str, str]:
         """Namen der Antragsteller. Bewusst OHNE E-Mail/Telefon (Wurzel 9):
@@ -489,7 +568,7 @@ class SperrantragService:
         )
         neu = self._laden(ctx, antrag_id)
         self._melde_entscheidung(ctx, neu, GENEHMIGT)
-        return self._einzel_item(neu)
+        return self._einzel_item(neu, ctx)
 
     # --- Vertragskündigung (0377) -------------------------------------------
 
@@ -619,7 +698,7 @@ class SperrantragService:
         )
         neu = self._laden(ctx, str(antrag["id"]))
         self._melde_entscheidung(ctx, neu, GENEHMIGT)
-        return self._einzel_item(neu)
+        return self._einzel_item(neu, ctx)
 
     def _vertragsende_lesen(
         self, ctx: AuthContext, property_id: str
@@ -841,7 +920,7 @@ class SperrantragService:
         )
         neu = self._laden(ctx, antrag_id)
         self._melde_entscheidung(ctx, neu, ABGELEHNT)
-        return self._einzel_item(neu)
+        return self._einzel_item(neu, ctx)
 
     def zuruecknehmen(
         self, ctx: AuthContext, antrag_id: str, req: BlockRequestDecision
@@ -947,7 +1026,7 @@ class SperrantragService:
         )
         neu = self._laden(ctx, antrag_id)
         self._melde_entscheidung(ctx, neu, ZURUECKGENOMMEN)
-        return self._einzel_item(neu)
+        return self._einzel_item(neu, ctx)
 
     def _vertragsende_widerrufen(
         self, ctx: AuthContext, antrag: dict
@@ -1336,6 +1415,7 @@ def _item(
     titel: dict[str, str],
     namen: dict[str, str],
     einheiten: dict[str, str] | None = None,
+    bestellt: list[BestellteLeistungItem] | None = None,
 ) -> SperrantragItem:
     pid = str(r["property_id"])
     uid = str(r["unit_id"]) if r.get("unit_id") else None
@@ -1363,4 +1443,5 @@ def _item(
             if r.get("vertragsende_gesetzt_auf")
             else None
         ),
+        bestellte_leistungen=bestellt or [],
     )

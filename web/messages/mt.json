@@ -1767,7 +1767,10 @@
       "terminationHint": "Dan mhux biss jimblokka l-perjodu iżda jtemm ukoll il-kuntratt ta' kummerċjalizzazzjoni fid-data tal-bidu. L-amministrazzjoni tikkonferma d-data.",
       "terminationInterpreted": "L-amministrazzjoni interpretat din it-talba bħala avviż ta' kanċellazzjoni — il-kuntratt jintemm fl-{datum}. Jekk jogħġbok għarrafna jekk dan ma kienx ir-riżultat.",
       "terminationPending": "Terminazzjoni — l-amministrazzjoni għadha ma kkonfermatx it-tmiem tal-kuntratt.",
-      "terminationSent": "Ġie sottomess avviż ta' terminazzjoni. L-amministrazzjoni tikkonferma t-terminazzjoni tal-kuntratt."
+      "terminationSent": "Ġie sottomess avviż ta' terminazzjoni. L-amministrazzjoni tikkonferma t-terminazzjoni tal-kuntratt.",
+      "services": "Ordna servizzi",
+      "servicesHint": "Jitwettaq u jiġi ffatturat biss dak li timmarka hawn għall-imblokk tiegħek. Mingħajr għażla ma tinħoloq ebda kompitu.",
+      "servicesOrdered": "Ordnat"
     },
     "meter": {
       "title": "Irreġistra qari tal-arloġġ",
@@ -5174,7 +5177,11 @@
       "weekdayThuShort": "Ħam",
       "weekdayFriShort": "Ġim",
       "weekdaySatShort": "Sib",
-      "weekdaySunShort": "Ħad"
+      "weekdaySunShort": "Ħad",
+      "sourceLanguageLabel": "Lingwa tal-isem",
+      "sourceLanguageEmpty": "Mhux speċifikat",
+      "sourceLanguageHint": "L-isem jiġi tradott awtomatikament għal qarrejja ta' lingwi oħra — internament jibqa' kif ktibtu.",
+      "sourceLanguageMissing": "Mingħajr din l-indikazzjoni l-isem ma jiġix tradott: is-sidien u l-persunal jarawh eżattament kif jidher hawn."
     },
     "taskPage": {
       "backToMyTasks": "Lura għall-kompiti tiegħi",
@@ -7109,7 +7116,9 @@
         "terminationSummary": "Il-kuntratt jintemm minn {datum} — minn din il-ġurnata 'l quddiem, il-proprjetà ma tibqax tinbiegħ imkien."
       },
       "terminationRequested": "Is-sid jixtieq itemm il-kuntratt.",
-      "terminationSet": "Il-kuntratt jintemm fl-{datum}."
+      "terminationSet": "Il-kuntratt jintemm fl-{datum}.",
+      "servicesOrdered": "Servizzi ordnati",
+      "servicesNone": "Ma ġie ordnat ebda servizz — ma jinħoloqx kompitu."
     }
   },
   "seasons": {

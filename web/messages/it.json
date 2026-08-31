@@ -1767,7 +1767,10 @@
       "terminationHint": "Ciò non solo blocca il periodo, ma rescinde anche il contratto di marketing alla data di inizio. L'amministrazione conferma la data.",
       "terminationInterpreted": "L'amministrazione ha interpretato questa richiesta come una comunicazione di disdetta: il contratto scade il giorno {datum}. Vi preghiamo di farci sapere se non era questo il significato inteso.",
       "terminationPending": "Risoluzione: l'amministrazione non ha ancora confermato la fine del contratto.",
-      "terminationSent": "È stata presentata la comunicazione di recesso. L'amministrazione conferma la risoluzione del contratto."
+      "terminationSent": "È stata presentata la comunicazione di recesso. L'amministrazione conferma la risoluzione del contratto.",
+      "services": "Ordina servizi",
+      "servicesHint": "Solo ciò che seleziona qui verrà eseguito e fatturato per il suo blocco. Senza selezione non viene creata alcuna attività.",
+      "servicesOrdered": "Ordinato"
     },
     "meter": {
       "title": "Registra lettura contatore",
@@ -5174,7 +5177,11 @@
       "weekdayThuShort": "Gio",
       "weekdayFriShort": "Ven",
       "weekdaySatShort": "Sab",
-      "weekdaySunShort": "Dom"
+      "weekdaySunShort": "Dom",
+      "sourceLanguageLabel": "Lingua del nome",
+      "sourceLanguageEmpty": "Non indicata",
+      "sourceLanguageHint": "Il nome viene tradotto automaticamente per i lettori di altre lingue; internamente resta come lo ha digitato.",
+      "sourceLanguageMissing": "Senza questa indicazione il nome non viene tradotto: proprietari e personale lo vedranno esattamente come appare qui."
     },
     "taskPage": {
       "backToMyTasks": "Alle mie attività",
@@ -7109,7 +7116,9 @@
         "terminationSummary": "Il contratto scade a partire da {datum}: da oggi in poi, l'immobile non sarà più venduto da nessuna parte."
       },
       "terminationRequested": "Il proprietario desidera rescindere il contratto.",
-      "terminationSet": "Il contratto termina il giorno {datum}."
+      "terminationSet": "Il contratto termina il giorno {datum}.",
+      "servicesOrdered": "Servizi ordinati",
+      "servicesNone": "Nessun servizio ordinato: non verrà creata alcuna attività."
     }
   },
   "seasons": {

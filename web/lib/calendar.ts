@@ -486,6 +486,17 @@ export type Sperrantrag = {
   als_kuendigung_gewertet: boolean;
   /** Das Vertragsende, das diese Genehmigung gesetzt hat. */
   vertragsende_gesetzt_auf: string | null;
+  /** Was der Eigentuemer zu dieser Sperre BESTELLT hat (0510). Leer = es
+   *  entsteht keine Aufgabe. Bis 0510 entstand die volle Regelkette wie bei
+   *  einer Gastbuchung, ohne dass jemand sie beauftragt hatte - die Genehmigung
+   *  entscheidet also nicht nur ueber die Sperre, sondern ueber Arbeit. */
+  bestellte_leistungen: SperrantragLeistung[];
+};
+
+/** Eine bestellte Leistung samt Namen ihrer Regel (0510). */
+export type SperrantragLeistung = {
+  rule_id: string;
+  name: string;
 };
 
 /** Anträge des Mandanten. Ohne `status` alle, `pending` ist die Warteschlange. */

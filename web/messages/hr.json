@@ -1767,7 +1767,10 @@
       "terminationHint": "Time se ne samo blokira razdoblje, već se i prekida marketinški ugovor na datum početka. Administracija potvrđuje datum.",
       "terminationInterpreted": "Administracija je ovaj zahtjev protumačila kao obavijest o raskidu - ugovor završava {datum}. Molimo vas da nas obavijestite ako to nije ono što ste mislili.",
       "terminationPending": "Raskid — uprava još nije potvrdila kraj ugovora.",
-      "terminationSent": "Obavijest o raskidu je podnesena. Uprava potvrđuje raskid ugovora."
+      "terminationSent": "Obavijest o raskidu je podnesena. Uprava potvrđuje raskid ugovora.",
+      "services": "Naruči usluge",
+      "servicesHint": "Izvršit će se i naplatiti samo ono što ovdje označite. Bez odabira ne nastaje nijedan zadatak.",
+      "servicesOrdered": "Naručeno"
     },
     "meter": {
       "title": "Unesi stanje brojila",
@@ -5174,7 +5177,11 @@
       "weekdayThuShort": "Čet",
       "weekdayFriShort": "Pet",
       "weekdaySatShort": "Sub",
-      "weekdaySunShort": "Ned"
+      "weekdaySunShort": "Ned",
+      "sourceLanguageLabel": "Jezik naziva",
+      "sourceLanguageEmpty": "Nije navedeno",
+      "sourceLanguageHint": "Naziv se automatski prevodi za čitatelje drugih jezika — interno ostaje kako ste ga upisali.",
+      "sourceLanguageMissing": "Bez navoda naziv se ne prevodi: vlasnici i zaposlenici vidjet će ga točno onako kako je ovdje."
     },
     "taskPage": {
       "backToMyTasks": "Na moje zadatke",
@@ -7109,7 +7116,9 @@
         "terminationSummary": "Ugovor završava {datum} — od tog dana nadalje, nekretnina se više neće nigdje prodavati."
       },
       "terminationRequested": "Vlasnik želi raskinuti ugovor.",
-      "terminationSet": "Ugovor završava {datum}."
+      "terminationSet": "Ugovor završava {datum}.",
+      "servicesOrdered": "Naručene usluge",
+      "servicesNone": "Nisu naručene usluge — neće nastati nijedan zadatak."
     }
   },
   "seasons": {

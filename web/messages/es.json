@@ -1767,7 +1767,10 @@
       "terminationHint": "Esto no solo bloquea el período, sino que también rescinde el contrato de marketing en la fecha de inicio. La administración confirma la fecha.",
       "terminationInterpreted": "La administración ha interpretado esta solicitud como una notificación de cancelación; el contrato finaliza el {datum}. Por favor, infórmenos si no era eso lo que se pretendía.",
       "terminationPending": "Rescisión: la administración aún no ha confirmado la finalización del contrato.",
-      "terminationSent": "Se ha presentado la notificación de rescisión. La administración confirma la rescisión del contrato."
+      "terminationSent": "Se ha presentado la notificación de rescisión. La administración confirma la rescisión del contrato.",
+      "services": "Solicitar servicios",
+      "servicesHint": "Solo lo que marque aquí se realizará y facturará para su bloqueo. Sin selección no se crea ninguna tarea.",
+      "servicesOrdered": "Solicitado"
     },
     "meter": {
       "title": "Registrar lectura de contador",
@@ -5174,7 +5177,11 @@
       "weekdayThuShort": "Jue",
       "weekdayFriShort": "Vie",
       "weekdaySatShort": "Sáb",
-      "weekdaySunShort": "Dom"
+      "weekdaySunShort": "Dom",
+      "sourceLanguageLabel": "Idioma del nombre",
+      "sourceLanguageEmpty": "Sin especificar",
+      "sourceLanguageHint": "El nombre se traduce automáticamente para lectores de otros idiomas; internamente se mantiene tal como lo escribió.",
+      "sourceLanguageMissing": "Sin esta indicación, el nombre no se traduce: propietarios y personal lo verán exactamente como aparece aquí."
     },
     "taskPage": {
       "backToMyTasks": "A mis tareas",
@@ -7109,7 +7116,9 @@
         "terminationSummary": "El contrato finaliza el día {datum}; a partir de ese día, la propiedad ya no se venderá en ningún lugar."
       },
       "terminationRequested": "El propietario desea rescindir el contrato.",
-      "terminationSet": "El contrato finaliza el {datum}."
+      "terminationSet": "El contrato finaliza el {datum}.",
+      "servicesOrdered": "Servicios solicitados",
+      "servicesNone": "No se han solicitado servicios: no se creará ninguna tarea."
     }
   },
   "seasons": {

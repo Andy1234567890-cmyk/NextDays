@@ -284,3 +284,141 @@ def test_nachzug_legt_keine_laengst_faellige_aufgabe_mehr_an() -> None:
         )
         is False
     )
+
+
+# --- Eigentümersperrung (0510) -------------------------------------------
+#
+# Eine Eigennutzung lief bis 0510 durch dieselbe Regelkette wie eine
+# Gastbuchung: Anreise-Vorbereitung, Endreinigung, Wäsche entstanden, obwohl
+# niemand sie beauftragt hatte. Die Tests hier sind bewusst mit `_KeineDb`
+# gebaut — sie beweisen nicht nur „keine Aufgabe", sondern dass die Engine dafür
+# gar nicht erst zur Datenbank greift.
+
+_EIGENNUTZUNG = {
+    **_RESERVATION,
+    "is_owner_stay": True,
+    "block_request_id": "antrag1",
+}
+
+_REINIGUNG = {
+    "id": "rule-reinigung",
+    "name": "Endreinigung",
+    "start_trigger": "check_out",
+    "start_offset_minutes": 0,
+    "end_trigger": "days_after_check_out",
+    "end_offset_minutes": 1440,
+}
+
+
+def test_eigennutzung_ohne_bestellung_erzeugt_keine_aufgabe() -> None:
+    """Der Kern: keine Bestellung, keine Aufgabe.
+
+    `bestellt` kennt die Reservierung gar nicht — sie hat also nichts bestellt.
+    Fail-closed (Wurzel 5): nicht „im Zweifel putzen", denn genau das ist der
+    Zustand, der abgestellt wird.
+    """
+    assert not _regel_anwenden(
+        _KeineDb(),
+        "t1",
+        _REINIGUNG,
+        _EIGENNUTZUNG,
+        _anchors(),
+        [],
+        None,
+        bestellt={},
+    )
+
+
+def test_eigennutzung_mit_anderer_bestellung_erzeugt_keine_aufgabe() -> None:
+    """Bestellt wurde eine ANDERE Leistung — diese Regel bleibt still.
+
+    Der Unterschied zum Test darüber: die Reservierung IST in `bestellt`, sie
+    hat nur diese eine Regel nicht angekreuzt. Ein Filter, der nur auf
+    „überhaupt etwas bestellt" prüfte, ginge hier durch.
+    """
+    assert not _regel_anwenden(
+        _KeineDb(),
+        "t1",
+        _REINIGUNG,
+        _EIGENNUTZUNG,
+        _anchors(),
+        [],
+        None,
+        bestellt={"r1": {"rule-waesche"}},
+    )
+
+
+def test_gastbuchung_bleibt_von_der_sperre_unberuehrt() -> None:
+    """Ohne `is_owner_stay` gilt die Bestellsperre nicht.
+
+    Der teure Fehler wäre, die Regel versehentlich auf ALLE Buchungen zu legen
+    — dann entstünde im ganzen Betrieb keine Reinigung mehr. `_KeineDb` wirft
+    beim ersten Tabellenzugriff, der Insert-Versuch beweist also, dass die
+    Regel greift.
+    """
+    with pytest.raises(AssertionError, match="unerwarteter DB-Zugriff auf tasks"):
+        _regel_anwenden(
+            _KeineDb(),
+            "t1",
+            _REINIGUNG,
+            _RESERVATION,
+            _anchors(),
+            [],
+            None,
+            bestellt={},
+        )
+
+
+def test_eigennutzung_ohne_sperrantrag_faellt_zu() -> None:
+    """Von Hand erfasste Eigennutzung ohne Antrag: keine Aufgabe.
+
+    Sie trägt keine `block_request_id`, also gibt es keine Bestellung, die man
+    nachschlagen könnte. Die Alternative wäre, sie wie eine Gastbuchung zu
+    behandeln — dann bliebe die alte Lücke für genau den Fall offen, den ein
+    Mitarbeiter von Hand anlegt.
+    """
+    ohne_antrag = {**_RESERVATION, "is_owner_stay": True}
+    assert not _regel_anwenden(
+        _KeineDb(),
+        "t1",
+        _REINIGUNG,
+        ohne_antrag,
+        _anchors(),
+        [],
+        None,
+        bestellt={},
+    )
+
+
+def test_jeder_engine_pfad_liest_is_owner_stay() -> None:
+    """Jede Stelle, die Reservierungen für die Engine lädt, MUSS die zwei
+    Felder mitselektieren.
+
+    Ohne sie sähe `ist_eigennutzung` ein fehlendes Feld und antwortete
+    „gewöhnliche Buchung" — die Sperre wäre lautlos wirkungslos, und zwar genau
+    an dem Pfad, den jemand später hinzufügt, ohne diesen Zusammenhang zu
+    kennen. Der Test liest den Quelltext, weil sich das anders nicht prüfen
+    lässt, ohne jeden Pfad gegen eine echte DB zu fahren.
+    """
+    from pathlib import Path
+
+    wurzel = Path(__file__).resolve().parents[3]
+    pfade = [
+        wurzel / "features/tasks/engine.py",
+        wurzel / "features/tasks/service.py",
+        wurzel / "features/reservations/_base.py",
+    ]
+    for pfad in pfade:
+        text = pfad.read_text(encoding="utf-8")
+        # Jeder Select, der `checkin_time` für die Engine holt, gehört dazu.
+        for stueck in text.split('"checkin_time, checkout_time, created_at')[1:]:
+            kopf = stueck[:120]
+            assert "is_owner_stay" in kopf, (
+                f"{pfad.name}: Reservierungs-Select ohne is_owner_stay — "
+                "eine Eigentümersperrung würde hier wie eine Gastbuchung "
+                "behandelt (0510)."
+            )
+            assert "block_request_id" in kopf, (
+                f"{pfad.name}: Reservierungs-Select ohne block_request_id — "
+                "die Bestellung wäre nicht auffindbar (0510)."
+            )

@@ -1767,7 +1767,10 @@
       "terminationHint": "Tas ne tikai bloķē periodu, bet arī izbeidz mārketinga līgumu sākuma datumā. Administrācija apstiprina datumu.",
       "terminationInterpreted": "Administrācija šo pieprasījumu ir interpretējusi kā paziņojumu par līguma atcelšanu — līgums beidzas {datum}. Lūdzu, informējiet mūs, ja tas nebija domāts.",
       "terminationPending": "Līguma izbeigšana — administrācija vēl nav apstiprinājusi līguma izbeigšanu.",
-      "terminationSent": "Paziņojums par līguma izbeigšanu ir iesniegts. Administrācija apstiprina līguma izbeigšanu."
+      "terminationSent": "Paziņojums par līguma izbeigšanu ir iesniegts. Administrācija apstiprina līguma izbeigšanu.",
+      "services": "Pasūtīt pakalpojumus",
+      "servicesHint": "Tiks veikts un iekļauts rēķinā tikai tas, ko šeit atzīmēsiet. Bez izvēles neveidojas neviens uzdevums.",
+      "servicesOrdered": "Pasūtīts"
     },
     "meter": {
       "title": "Ievadīt skaitītāja rādījumu",
@@ -5174,7 +5177,11 @@
       "weekdayThuShort": "C",
       "weekdayFriShort": "Pk",
       "weekdaySatShort": "S",
-      "weekdaySunShort": "Sv"
+      "weekdaySunShort": "Sv",
+      "sourceLanguageLabel": "Nosaukuma valoda",
+      "sourceLanguageEmpty": "Nav norādīta",
+      "sourceLanguageHint": "Nosaukums tiek automātiski tulkots citu valodu lasītājiem — iekšēji tas paliek tāds, kādu to ievadījāt.",
+      "sourceLanguageMissing": "Bez norādes nosaukums netiek tulkots: īpašnieki un darbinieki to redzēs tieši tādu, kāds tas ir šeit."
     },
     "taskPage": {
       "backToMyTasks": "Uz maniem uzdevumiem",
@@ -7109,7 +7116,9 @@
         "terminationSummary": "Līgums beidzas no {datum} — no šīs dienas īpašums vairs netiks nekur pārdots."
       },
       "terminationRequested": "Īpašnieks vēlas lauzt līgumu.",
-      "terminationSet": "Līgums beidzas {datum}."
+      "terminationSet": "Līgums beidzas {datum}.",
+      "servicesOrdered": "Pasūtītie pakalpojumi",
+      "servicesNone": "Pakalpojumi nav pasūtīti — uzdevums netiks izveidots."
     }
   },
   "seasons": {

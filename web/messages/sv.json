@@ -1767,7 +1767,10 @@
       "terminationHint": "Detta blockerar inte bara perioden utan avslutar även marknadsföringsavtalet på startdatumet. Administrationen bekräftar datumet.",
       "terminationInterpreted": "Administrationen har tolkat denna begäran som ett uppsägningsmeddelande – kontraktet upphör den {datum}. Vänligen meddela oss om det inte var så det var avsett.",
       "terminationPending": "Uppsägning — administrationen har ännu inte bekräftat att kontraktet löper ut.",
-      "terminationSent": "Uppsägning har lämnats in. Administrationen bekräftar uppsägningen av avtalet."
+      "terminationSent": "Uppsägning har lämnats in. Administrationen bekräftar uppsägningen av avtalet.",
+      "services": "Beställ tjänster",
+      "servicesHint": "Endast det du markerar här utförs och faktureras för din blockering. Utan val skapas ingen uppgift.",
+      "servicesOrdered": "Beställt"
     },
     "meter": {
       "title": "Registrera mätarställning",
@@ -5174,7 +5177,11 @@
       "weekdayThuShort": "Tor",
       "weekdayFriShort": "Fre",
       "weekdaySatShort": "Lör",
-      "weekdaySunShort": "Sön"
+      "weekdaySunShort": "Sön",
+      "sourceLanguageLabel": "Namnets språk",
+      "sourceLanguageEmpty": "Ej angivet",
+      "sourceLanguageHint": "Namnet översätts automatiskt för läsare med andra språk — internt förblir det som du skrev det.",
+      "sourceLanguageMissing": "Utan uppgift översätts namnet inte: ägare och personal ser det exakt som det står här."
     },
     "taskPage": {
       "backToMyTasks": "Till mina uppgifter",
@@ -7109,7 +7116,9 @@
         "terminationSummary": "Kontraktet slutar från och med {datum} — från och med denna dag kommer fastigheten inte längre att säljas någonstans."
       },
       "terminationRequested": "Ägaren vill säga upp avtalet.",
-      "terminationSet": "Kontraktet slutar den {datum}."
+      "terminationSet": "Kontraktet slutar den {datum}.",
+      "servicesOrdered": "Beställda tjänster",
+      "servicesNone": "Inga tjänster beställda — ingen uppgift skapas."
     }
   },
   "seasons": {

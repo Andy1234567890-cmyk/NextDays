@@ -1767,7 +1767,10 @@
       "terminationHint": "Aceasta nu numai că blochează perioada, dar și rezilează contractul de marketing la data începerii. Administrația confirmă data.",
       "terminationInterpreted": "Administrația a interpretat această solicitare ca o notificare de anulare — contractul expiră pe {datum}. Vă rugăm să ne anunțați dacă nu acesta a fost scopul.",
       "terminationPending": "Reziliere — administrația nu a confirmat încă încetarea contractului.",
-      "terminationSent": "Notificarea de reziliere a fost depusă. Administrația confirmă rezilierea contractului."
+      "terminationSent": "Notificarea de reziliere a fost depusă. Administrația confirmă rezilierea contractului.",
+      "services": "Comandă servicii",
+      "servicesHint": "Numai ceea ce bifați aici va fi executat și facturat pentru blocarea dumneavoastră. Fără selecție nu se creează nicio sarcină.",
+      "servicesOrdered": "Comandat"
     },
     "meter": {
       "title": "Înregistrează index contor",
@@ -5174,7 +5177,11 @@
       "weekdayThuShort": "Jo",
       "weekdayFriShort": "Vi",
       "weekdaySatShort": "Sâ",
-      "weekdaySunShort": "Du"
+      "weekdaySunShort": "Du",
+      "sourceLanguageLabel": "Limba denumirii",
+      "sourceLanguageEmpty": "Nespecificată",
+      "sourceLanguageHint": "Denumirea este tradusă automat pentru cititorii din alte limbi — intern rămâne așa cum ați introdus-o.",
+      "sourceLanguageMissing": "Fără această indicație, denumirea nu este tradusă: proprietarii și personalul o vor vedea exact așa cum apare aici."
     },
     "taskPage": {
       "backToMyTasks": "La sarcinile mele",
@@ -7109,7 +7116,9 @@
         "terminationSummary": "Contractul expiră la {datum} — începând cu această zi, proprietatea nu va mai fi vândută nicăieri."
       },
       "terminationRequested": "Proprietarul dorește să rezilieze contractul.",
-      "terminationSet": "Contractul expiră pe {datum}."
+      "terminationSet": "Contractul expiră pe {datum}.",
+      "servicesOrdered": "Servicii comandate",
+      "servicesNone": "Nu au fost comandate servicii — nu se va crea nicio sarcină."
     }
   },
   "seasons": {

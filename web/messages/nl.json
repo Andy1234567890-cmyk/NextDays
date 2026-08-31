@@ -1767,7 +1767,10 @@
       "terminationHint": "Dit blokkeert niet alleen de periode, maar beëindigt ook het marketingcontract op de ingangsdatum. De administratie bevestigt de datum.",
       "terminationInterpreted": "De directie heeft dit verzoek geïnterpreteerd als een opzegging — het contract eindigt op {datum}. Laat het ons weten als dat niet de bedoeling was.",
       "terminationPending": "Beëindiging — de directie heeft de beëindiging van het contract nog niet bevestigd.",
-      "terminationSent": "De opzegging is ingediend. De directie bevestigt de beëindiging van het contract."
+      "terminationSent": "De opzegging is ingediend. De directie bevestigt de beëindiging van het contract.",
+      "services": "Diensten bestellen",
+      "servicesHint": "Alleen wat u hier aanvinkt, wordt voor uw blokkering uitgevoerd en gefactureerd. Zonder selectie wordt er geen taak aangemaakt.",
+      "servicesOrdered": "Besteld"
     },
     "meter": {
       "title": "Meterstand registreren",
@@ -5174,7 +5177,11 @@
       "weekdayThuShort": "Do",
       "weekdayFriShort": "Vr",
       "weekdaySatShort": "Za",
-      "weekdaySunShort": "Zo"
+      "weekdaySunShort": "Zo",
+      "sourceLanguageLabel": "Taal van de naam",
+      "sourceLanguageEmpty": "Niet opgegeven",
+      "sourceLanguageHint": "De naam wordt automatisch vertaald voor lezers van andere talen — intern blijft hij zoals u hem hebt ingetypt.",
+      "sourceLanguageMissing": "Zonder opgave wordt de naam niet vertaald: eigenaren en medewerkers zien hem precies zoals hij hier staat."
     },
     "taskPage": {
       "backToMyTasks": "Naar mijn taken",
@@ -7109,7 +7116,9 @@
         "terminationSummary": "Het contract eindigt op {datum} — vanaf deze dag zal het pand nergens meer te koop worden aangeboden."
       },
       "terminationRequested": "De eigenaar wenst het contract te beëindigen.",
-      "terminationSet": "Het contract eindigt op {datum}."
+      "terminationSet": "Het contract eindigt op {datum}.",
+      "servicesOrdered": "Bestelde diensten",
+      "servicesNone": "Geen diensten besteld — er wordt geen taak aangemaakt."
     }
   },
   "seasons": {

@@ -1767,7 +1767,10 @@
       "terminationHint": "To nie tylko blokuje okres, ale także rozwiązuje umowę marketingową w dniu rozpoczęcia. Administracja potwierdza datę.",
       "terminationInterpreted": "Administracja zinterpretowała tę prośbę jako powiadomienie o wypowiedzeniu umowy – umowa kończy się dnia {datum}. Prosimy o informację, jeśli nie o to chodziło.",
       "terminationPending": "Rozwiązanie umowy — administracja nie potwierdziła jeszcze rozwiązania umowy.",
-      "terminationSent": "Złożono wypowiedzenie umowy. Administracja potwierdza wypowiedzenie umowy."
+      "terminationSent": "Złożono wypowiedzenie umowy. Administracja potwierdza wypowiedzenie umowy.",
+      "services": "Zamów usługi",
+      "servicesHint": "Tylko to, co tutaj zaznaczysz, zostanie wykonane i zafakturowane w ramach Twojej blokady. Bez wyboru nie powstaje żadne zadanie.",
+      "servicesOrdered": "Zamówione"
     },
     "meter": {
       "title": "Zapisz stan licznika",
@@ -5174,7 +5177,11 @@
       "weekdayThuShort": "Czw",
       "weekdayFriShort": "Pią",
       "weekdaySatShort": "Sob",
-      "weekdaySunShort": "Nie"
+      "weekdaySunShort": "Nie",
+      "sourceLanguageLabel": "Język nazwy",
+      "sourceLanguageEmpty": "Nie podano",
+      "sourceLanguageHint": "Nazwa jest automatycznie tłumaczona dla osób czytających w innych językach — wewnętrznie pozostaje taka, jak ją wpisano.",
+      "sourceLanguageMissing": "Bez tej informacji nazwa nie jest tłumaczona: właściciele i pracownicy zobaczą ją dokładnie tak, jak tutaj."
     },
     "taskPage": {
       "backToMyTasks": "Do moich zadań",
@@ -7109,7 +7116,9 @@
         "terminationSummary": "Umowa kończy się z dniem {datum} — od tego dnia nieruchomość nie będzie już nigdzie sprzedawana."
       },
       "terminationRequested": "Właściciel chce rozwiązać umowę.",
-      "terminationSet": "Kontrakt kończy się {datum}."
+      "terminationSet": "Kontrakt kończy się {datum}.",
+      "servicesOrdered": "Zamówione usługi",
+      "servicesNone": "Nie zamówiono usług — nie powstanie żadne zadanie."
     }
   },
   "seasons": {

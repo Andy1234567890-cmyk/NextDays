@@ -1767,7 +1767,10 @@
       "terminationHint": "Ní hamháin go gcuireann sé seo bac ar an tréimhse ach cuireann sé deireadh leis an gconradh margaíochta ar an dáta tosaithe freisin. Deimhníonn an riarachán an dáta.",
       "terminationInterpreted": "Tá an riarachán tar éis an iarratas seo a léirmhíniú mar fhógra cealaithe — críochnaíonn an conradh ar {datum}. Cuir in iúl dúinn, le do thoil, murab é sin a bhí i gceist.",
       "terminationPending": "Foirceannadh — níl deireadh an chonartha deimhnithe ag an riarachán go fóill.",
-      "terminationSent": "Tá fógra foirceanta curtha isteach. Deimhníonn an riarachán foirceannadh an chonartha."
+      "terminationSent": "Tá fógra foirceanta curtha isteach. Deimhníonn an riarachán foirceannadh an chonartha.",
+      "services": "Ordaigh seirbhísí",
+      "servicesHint": "Ní dhéanfar ná ní ghearrfar táille ach ar an rud a thiceálann tú anseo le do bhac. Gan roghnú, ní chruthaítear aon tasc.",
+      "servicesOrdered": "Ordaithe"
     },
     "meter": {
       "title": "Cláraigh léamh méadair",
@@ -5174,7 +5177,11 @@
       "weekdayThuShort": "Déar",
       "weekdayFriShort": "Aoine",
       "weekdaySatShort": "Sath",
-      "weekdaySunShort": "Domh"
+      "weekdaySunShort": "Domh",
+      "sourceLanguageLabel": "Teanga an ainm",
+      "sourceLanguageEmpty": "Gan sonrú",
+      "sourceLanguageHint": "Aistrítear an t-ainm go huathoibríoch do léitheoirí teangacha eile — go hinmheánach fanann sé mar a chlóscríobh tú é.",
+      "sourceLanguageMissing": "Gan sonrú, ní aistrítear an t-ainm: feicfidh úinéirí agus foireann é go beacht mar atá sé anseo."
     },
     "taskPage": {
       "backToMyTasks": "Ar ais chuig mo thascanna",
@@ -7109,7 +7116,9 @@
         "terminationSummary": "Críochnaíonn an conradh ó {datum} — ón lá seo ar aghaidh, ní dhíolfar an mhaoin in áit ar bith a thuilleadh."
       },
       "terminationRequested": "Tá an t-úinéir ag iarraidh an conradh a fhoirceannadh.",
-      "terminationSet": "Críochnaíonn an conradh ar {datum}."
+      "terminationSet": "Críochnaíonn an conradh ar {datum}.",
+      "servicesOrdered": "Seirbhísí ordaithe",
+      "servicesNone": "Níor ordaíodh aon seirbhís — ní chruthófar aon tasc."
     }
   },
   "seasons": {

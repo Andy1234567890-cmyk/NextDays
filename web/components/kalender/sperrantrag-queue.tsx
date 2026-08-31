@@ -268,6 +268,24 @@ export function SperrantragQueue({
                             {t("blockRequests.decisionNote")}: {a.decision_note}
                           </span>
                         )}
+                        {/* Bestellte Leistungen (0510). Wer genehmigt,
+                            entscheidet damit auch ueber die Arbeit, die
+                            entsteht - das gehoert vor die Entscheidung, nicht
+                            in eine Detailansicht dahinter. Steht nichts da,
+                            entsteht auch keine Aufgabe; bis 0510 lief die
+                            volle Regelkette ungefragt an. */}
+                        {a.bestellte_leistungen.length > 0 ? (
+                          <span className="text-sm">
+                            {t("blockRequests.servicesOrdered")}:{" "}
+                            {a.bestellte_leistungen
+                              .map((b) => b.name)
+                              .join(", ")}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">
+                            {t("blockRequests.servicesNone")}
+                          </span>
+                        )}
                         {/* Eine Kündigung ist etwas anderes als eine Sperre und
                             muss in der Warteschlange auf den ersten Blick als
                             solche erkennbar sein — sonst wird sie wie ein

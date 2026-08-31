@@ -1767,7 +1767,10 @@
       "terminationHint": "See mitte ainult ei blokeeri perioodi, vaid lõpetab ka turunduslepingu alguskuupäeval. Administratsioon kinnitab kuupäeva.",
       "terminationInterpreted": "Administratsioon on seda palvet tõlgendanud ülesütlemisteatisena – leping lõpeb {datum}. Palun andke meile teada, kui see polnud mõeldud.",
       "terminationPending": "Lõpetamine — administratsioon ei ole lepingu lõppu veel kinnitanud.",
-      "terminationSent": "Lõpetamisteade on esitatud. Administratsioon kinnitab lepingu lõpetamist."
+      "terminationSent": "Lõpetamisteade on esitatud. Administratsioon kinnitab lepingu lõpetamist.",
+      "services": "Telli teenused",
+      "servicesHint": "Teostatakse ja arveldatakse ainult see, mille siin märgite. Ilma valikuta ülesannet ei looda.",
+      "servicesOrdered": "Tellitud"
     },
     "meter": {
       "title": "Sisesta näidu lugem",
@@ -5174,7 +5177,11 @@
       "weekdayThuShort": "N",
       "weekdayFriShort": "R",
       "weekdaySatShort": "L",
-      "weekdaySunShort": "P"
+      "weekdaySunShort": "P",
+      "sourceLanguageLabel": "Nime keel",
+      "sourceLanguageEmpty": "Määramata",
+      "sourceLanguageHint": "Nimi tõlgitakse automaatselt teiste keelte lugejatele — sisemiselt jääb see selliseks, nagu te selle sisestasite.",
+      "sourceLanguageMissing": "Ilma määramist nime ei tõlgita: omanikud ja töötajad näevad seda täpselt nii, nagu see siin on."
     },
     "taskPage": {
       "backToMyTasks": "Minu ülesannete juurde",
@@ -7109,7 +7116,9 @@
         "terminationSummary": "Leping lõpeb alates {datum} – alates sellest päevast ei müüda seda kinnisvara enam kusagil."
       },
       "terminationRequested": "Omanik soovib lepingu lõpetada.",
-      "terminationSet": "Leping lõpeb {datum}-il."
+      "terminationSet": "Leping lõpeb {datum}-il.",
+      "servicesOrdered": "Tellitud teenused",
+      "servicesNone": "Teenuseid ei tellitud — ülesannet ei looda."
     }
   },
   "seasons": {
