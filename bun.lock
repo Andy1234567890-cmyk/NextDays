@@ -5,7 +5,7 @@
     "": {
       "name": "nextdays-monorepo",
       "devDependencies": {
-        "@iconify/json": "^2.2.517",
+        "@iconify/json": "2.2.517",
         "@nextdays/eslint-config": "workspace:*",
         "eslint": "10.8.0",
       },
@@ -156,7 +156,7 @@
       "name": "@nextdays/icons",
       "version": "0.1.0",
       "devDependencies": {
-        "@iconify/json": "^2.2.0",
+        "@iconify/json": "2.2.517",
         "@iconify/react": "6.0.2",
       },
       "peerDependencies": {

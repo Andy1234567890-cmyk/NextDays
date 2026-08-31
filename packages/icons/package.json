@@ -12,7 +12,7 @@
     "sammeln": "node scripts/sammeln.mjs"
   },
   "devDependencies": {
-    "@iconify/json": "^2.2.0",
+    "@iconify/json": "2.2.517",
     "@iconify/react": "6.0.2"
   },
   "peerDependencies": {
