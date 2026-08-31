@@ -149,3 +149,47 @@ def test_lauf_tabelle_ist_gegen_direktzugriff_gesperrt() -> None:
     assert "add table public.bestandsimport_lauf" in sql
     # Nur EIN offener Lauf je Betrieb (Wurzel 2).
     assert "bestandsimport_lauf_offen_uq" in sql
+
+
+# --- Objekt-Auflösung: Schreibweise ja, Wortlaut nein ----------------------
+#
+# Live am 31.08.2026 fielen 111 von 252 Zeilen eines Booking.com-Exports durch,
+# weil der Abgleich exakte Titelgleichheit verlangte. Die Faelle stammen alle
+# aus diesem einen Export.
+
+
+def test_zierzeichen_werden_zusammengefuehrt() -> None:
+    """Derselbe Name ohne Anfuehrungszeichen/Sternchen trifft sein Objekt."""
+    from src.features.channel_manager.csv_import import _normalisiert
+
+    assert _normalisiert('Feriehus "Perlen" Tversted') == _normalisiert(
+        "Feriehus Perlen Tversted"
+    )
+    assert _normalisiert("FeWo *Stjerneskud*") == _normalisiert("FeWo Stjerneskud")
+    # Bindestrich vs. Leerzeichen setzen die Portale uneinheitlich.
+    assert _normalisiert("Lærke-huset") == _normalisiert("Lærke huset")
+
+
+def test_verschiedene_namen_bleiben_verschieden() -> None:
+    """Ein anderer WORTLAUT darf nie zusammenfallen.
+
+    Das ist die wichtigere Haelfte: eine Buchung dem falschen Objekt
+    zuzuordnen sperrt dort echte Naechte und verschiebt Umsatz auf den
+    falschen Eigentuemer — ein Fehler, den niemand sieht (Wurzel 4).
+    """
+    from src.features.channel_manager.csv_import import _normalisiert
+
+    assert _normalisiert("Odden-hus-mygdal") != _normalisiert("Odden-hygge-mygdal")
+    assert _normalisiert("Holiday home Dora") != _normalisiert("Feriehus Dora")
+    assert _normalisiert("Lærke-huset") != _normalisiert("Lærke-huset-Bindslev")
+    # Umlaute NICHT auf ae/oe abbilden — sonst faellt „Lægehus" mit einem
+    # hypothetischen „Laegehus" zusammen, und das ist eine Namensaenderung.
+    assert _normalisiert("Lægehus") != _normalisiert("Laegehus")
+
+
+def test_normalisierung_liefert_leeren_schluessel_nie_als_treffer() -> None:
+    """Ein Titel aus reiner Zeichensetzung darf kein Sammelbecken werden."""
+    from src.features.channel_manager.csv_import import _normalisiert
+
+    assert _normalisiert("***") == ""
+    assert _normalisiert("   ") == ""

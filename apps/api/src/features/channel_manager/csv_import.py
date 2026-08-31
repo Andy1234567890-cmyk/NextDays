@@ -13,6 +13,7 @@ Alt/Neu-Diff + Idempotenz-Pfad wie beim OTA-Import (kein zweiter Schreibweg).
 from __future__ import annotations
 
 import csv
+import difflib
 import io
 from collections.abc import Callable
 from datetime import date
@@ -43,6 +44,24 @@ CSV_COLUMNS: tuple[str, ...] = (
 )
 _REQUIRED = ("property", "guest_first_name", "guest_last_name", "arrival", "departure")
 _MAX_ROWS = 1000  # Obergrenze je Upload (Wurzel 8: unbegrenzte Liste → 422)
+
+
+def _normalisiert(titel: str) -> str:
+    """Objekttitel auf seinen Wortlaut reduzieren — fuer den Abgleich.
+
+    Entfernt AUSSCHLIESSLICH Zierzeichen und doppelten Leerraum und schreibt
+    klein. Buchstaben bleiben unangetastet: „ae" wird NICHT zu „ä", „hus" nicht
+    zu „hygge". Der Abgleich soll Schreibweisen desselben Namens
+    zusammenfuehren, nicht verschiedene Namen.
+
+    Danach gleich:  'FeWo *Stjerneskud*'         → 'fewo stjerneskud'
+                    'Feriehus "Perlen" Tversted' → 'feriehus perlen tversted'
+    Weiterhin verschieden: 'Odden-hygge-mygdal' ≠ 'Odden-hus-mygdal'
+    """
+    ohne = "".join(z for z in titel if z.isalnum() or z.isspace() or z == "-")
+    # Bindestrich zu Leerzeichen: die Portale setzen ihn uneinheitlich
+    # („Laerke-huset" vs. „Laerke huset"). Das aendert keinen Wortlaut.
+    return " ".join(ohne.replace("-", " ").lower().split())
 
 
 class CsvImportMixin:
@@ -118,6 +137,35 @@ class CsvImportMixin:
             for p in props
             if p.get("title")
         }
+        # ZWEITER Weg: normalisierter Titel. Die Portale geben denselben Namen
+        # ohne Zierzeichen aus — live am 31.08.2026 fielen 111 von 252 Zeilen
+        # eines Booking.com-Exports allein daran durch:
+        #   Export „Feriehus Perlen Tversted" ≠ Titel „Feriehus \"Perlen\" Tversted"
+        #   Export „FeWo Stjerneskud"         ≠ Titel „FeWo *Stjerneskud*"
+        # Das ist DASSELBE Objekt, nur ohne die Anfuehrungszeichen bzw.
+        # Sternchen, die der Betrieb in seinen Titel geschrieben hat.
+        #
+        # Normalisiert wird NUR Zeichensetzung und Leerraum — NICHT der
+        # Wortlaut. „Odden-hus-mygdal" bleibt damit verschieden von
+        # „Odden-hygge-mygdal", und „Holiday home Dora" trifft nicht auf
+        # „Feriehus Dora". Solche Zeilen MUESSEN scheitern: eine Buchung dem
+        # falschen Objekt zuzuordnen sperrt dort echte Naechte und verschiebt
+        # Umsatz auf den falschen Eigentuemer — ein Fehler, den niemand sieht.
+        # Kein Raten per Aehnlichkeit (Wurzel 4).
+        #
+        # Mehrdeutige Normalformen werden VERWORFEN statt zufaellig aufgeloest:
+        # tragen zwei Objekte nach dem Entfernen der Zierzeichen denselben
+        # Namen, entscheidet sonst die Ladereihenfolge, welches gewinnt.
+        normal: dict[str, str | None] = {}
+        for prop in props:
+            schluessel = _normalisiert(prop.get("title") or "")
+            if not schluessel:
+                continue
+            if schluessel in normal and normal[schluessel] != prop["id"]:
+                normal[schluessel] = None  # mehrdeutig → nicht verwenden
+            else:
+                normal.setdefault(schluessel, prop["id"])
+        by_normal = {k: v for k, v in normal.items() if v}
 
         # Zähler/Fehler lokal führen und am Ende einmalig zuweisen — Pylint
         # erkennt das Pydantic-Field .errors sonst statisch als FieldInfo (ohne
@@ -139,7 +187,8 @@ class CsvImportMixin:
             total += 1
             try:
                 outcome = self._import_csv_row(
-                    db, tenant_id, raw, by_id, by_title, idx
+                    db, tenant_id, raw, by_id, by_title, idx,
+                    by_normal=by_normal,
                 )
             except _RowError as exc:
                 failed += 1
@@ -174,6 +223,8 @@ class CsvImportMixin:
         by_id: dict[str, str],
         by_title: dict[str, str],
         line: int,
+        *,
+        by_normal: dict[str, str] | None = None,
     ) -> bool:
         """Eine CSV-Zeile → Reservierung. Wirft _RowError mit Zeilennummer bei
         Validierungsfehlern; gibt True bei angelegt/aktualisiert, False bei skip."""
@@ -181,9 +232,28 @@ class CsvImportMixin:
             return (raw.get(key) or "").strip()
 
         prop_ref = cell("property")
-        property_id = by_id.get(prop_ref) or by_title.get(prop_ref.lower())
+        property_id = (
+            by_id.get(prop_ref)
+            or by_title.get(prop_ref.lower())
+            # Erst wenn der exakte Titel nicht trifft: derselbe Name ohne
+            # Zierzeichen. Reihenfolge ist wichtig — ein exakter Treffer darf
+            # nie von einer Normalform ueberstimmt werden.
+            or (by_normal or {}).get(_normalisiert(prop_ref))
+        )
         if not property_id:
-            raise _RowError(f"Zeile {line}: Objekt „{prop_ref}“ nicht gefunden.")
+            # Den NAECHSTLIEGENDEN eigenen Titel mitnennen. „nicht gefunden"
+            # allein laesst den Betrieb raten, WIE das Objekt bei ihm heisst —
+            # bei 111 Fehlerzeilen ueber vier Objekte ist das der Unterschied
+            # zwischen „unbrauchbar" und „drei Titel angleichen, fertig".
+            # Bewusst nur ein HINWEIS, keine automatische Zuordnung: geraten
+            # wird nicht (siehe `_normalisiert`).
+            nahe = difflib.get_close_matches(
+                prop_ref.lower(), list(by_title), n=1, cutoff=0.6
+            )
+            hinweis = f" Meintest du „{nahe[0]}“?" if nahe else ""
+            raise _RowError(
+                f"Zeile {line}: Objekt „{prop_ref}“ nicht gefunden.{hinweis}"
+            )
 
         arrival = self._parse_iso_date(cell("arrival"))
         departure = self._parse_iso_date(cell("departure"))
