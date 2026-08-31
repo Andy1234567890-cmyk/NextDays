@@ -698,8 +698,12 @@ export async function saveAiSettings(
 export type AutomationTrigger =
   | "booking_new"
   | "before_checkin"
+  /** Am Anreisetag selbst, zur festen Uhrzeit — kein Abstand (0515). */
+  | "on_checkin"
   | "after_checkin"
   | "before_checkout"
+  /** Am Abreisetag selbst (0515). */
+  | "on_checkout"
   | "after_checkout"
   | "message_received";
 

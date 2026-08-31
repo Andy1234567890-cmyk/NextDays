@@ -1147,7 +1147,9 @@
     "kiUploadFacts": "Încărcați date",
     "kiUsedTimes": "{count}×",
     "kiTestNoProperty": "Fără proprietate (doar informații generale)",
-    "kiTestNoPropertyHint": "Fără o proprietate selectată, AI-ul nu cunoaște nici ghidul pentru oaspeți, nici calendarul — selectați o proprietate pentru a vedea ce știe în caz de urgență."
+    "kiTestNoPropertyHint": "Fără o proprietate selectată, AI-ul nu cunoaște nici ghidul pentru oaspeți, nici calendarul — selectați o proprietate pentru a vedea ce știe în caz de urgență.",
+    "autoTrigger_on_checkin": "La data sosirii",
+    "autoTrigger_on_checkout": "La data plecării"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp nu este încă conectat. Introduceți datele de acces (Meta Cloud API) în setările serverului, apoi trimiterea este activă.",

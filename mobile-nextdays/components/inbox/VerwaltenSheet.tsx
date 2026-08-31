@@ -44,11 +44,20 @@ type Bereich = "start" | "vorlagen" | "wissen" | "automationen" | "ki";
 const TRIGGER_TEXT: Record<string, string> = {
   booking_new: "Neue Buchung",
   before_checkin: "Vor der Anreise",
+  // Am Tag selbst, kein Abstand (0515). Ohne diese zwei Zeilen zeigte die App
+  // den rohen Enum-Wert („on_checkin") — der Fallback in der Liste ist
+  // `a.trigger`, also faellt es nicht als Fehler auf, sondern sieht nach
+  // Technik aus.
+  on_checkin: "Am Anreisetag",
   after_checkin: "Nach der Anreise",
   before_checkout: "Vor der Abreise",
+  on_checkout: "Am Abreisetag",
   after_checkout: "Nach der Abreise",
   message_received: "Nachricht des Gastes",
 };
+
+/** Auslöser, die AM Ankertag feuern — sie tragen keinen Abstand (0515). */
+const TAGES_TRIGGER = ["on_checkin", "on_checkout"];
 
 /**
  * Versatz einer Automation in Worten. Der Wert ist VORZEICHENBEHAFTET — „vor
@@ -63,6 +72,10 @@ export function versatzText(a: Automation): string {
       : a.offset_unit === "hours"
         ? "Std."
         : "Tage";
+  // Bei den Tages-Auslösern sagt der Auslöser den Zeitpunkt schon vollstaendig
+  // („Am Anreisetag"). Ein zusaetzliches „am Stichtag" daneben waere dieselbe
+  // Aussage zweimal — die Zeile lautete „Am Anreisetag · am Stichtag".
+  if (TAGES_TRIGGER.includes(a.trigger)) return "";
   if (!wert) return "am Stichtag";
   return `${Math.abs(wert)} ${einheit} ${wert < 0 ? "davor" : "danach"}`;
 }
@@ -465,8 +478,16 @@ export function VerwaltenSheet({
                       {a.name}
                     </Txt>
                     <Txt v="xs" soft>
-                      {TRIGGER_TEXT[a.trigger] ?? a.trigger} · {versatzText(a)}
-                      {a.send_time ? ` · ${a.send_time}` : ""}
+                      {/* Aus Teilen zusammensetzen statt fest mit „·": bei
+                          den Tages-Auslösern ist `versatzText` leer, und ein
+                          fester Trenner hinterliesse „Am Anreisetag · ". */}
+                      {[
+                        TRIGGER_TEXT[a.trigger] ?? a.trigger,
+                        versatzText(a),
+                        a.send_time ?? "",
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </Txt>
                   </Col>
                   {/* Der Zustand ist die Angabe, die unterwegs zählt. */}

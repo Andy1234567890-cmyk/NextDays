@@ -1147,7 +1147,9 @@
     "kiUploadFacts": "Uaslódáil fíricí",
     "kiUsedTimes": "{count}×",
     "kiTestNoProperty": "Gan réad (fíricí ar fud an ghnó amháin)",
-    "kiTestNoPropertyHint": "Gan réad roghnaithe, níl a fhios ag an AI an fillteán aoi ná an féilire — roghnaigh réad chun a fheiceáil cad atá ar eolas aici i gcás éigeandála."
+    "kiTestNoPropertyHint": "Gan réad roghnaithe, níl a fhios ag an AI an fillteán aoi ná an féilire — roghnaigh réad chun a fheiceáil cad atá ar eolas aici i gcás éigeandála.",
+    "autoTrigger_on_checkin": "Ar lá teachta",
+    "autoTrigger_on_checkout": "Ar lá imeachta"
   },
   "whatsapp": {
     "notConfigured": "Níl WhatsApp nasctha fós. Cuir na dintiúir (Meta Cloud API) i socruithe an fhreastalaí, ansin beidh an seoladh gníomhach.",

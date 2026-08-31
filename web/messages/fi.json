@@ -1147,7 +1147,9 @@
     "kiUploadFacts": "Lataa faktat",
     "kiUsedTimes": "{count}×",
     "kiTestNoProperty": "Ilman kohdetta (vain yrityskohtaiset tiedot)",
-    "kiTestNoPropertyHint": "Ilman valittua kohdetta tekoäly ei tunne vieraskansiota tai kalenteria – valitse kohde nähdäksesi, mitä se tietää tosipaikan tullen."
+    "kiTestNoPropertyHint": "Ilman valittua kohdetta tekoäly ei tunne vieraskansiota tai kalenteria – valitse kohde nähdäksesi, mitä se tietää tosipaikan tullen.",
+    "autoTrigger_on_checkin": "Saapumispäivänä",
+    "autoTrigger_on_checkout": "Lähtöpäivänä"
   },
   "whatsapp": {
     "notConfigured": "WhatsAppia ei ole vielä yhdistetty. Syötä tunnukset (Meta Cloud API) palvelimen asetuksiin, niin lähetys on käytössä.",

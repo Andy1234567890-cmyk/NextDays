@@ -23,21 +23,36 @@ export type PhasenSchluessel = "before" | "during" | "after";
  */
 export const AUSLOESER: Record<
   Exclude<AutomationTrigger, "message_received">,
-  { anker: string; richtung: 1 | -1 }
+  { anker: string; richtung: 1 | 0 | -1 }
 > = {
   booking_new: { anker: "booking", richtung: 1 },
   before_checkin: { anker: "arrival", richtung: -1 },
+  on_checkin: { anker: "arrival", richtung: 0 },
   after_checkin: { anker: "arrival", richtung: 1 },
   before_checkout: { anker: "departure", richtung: -1 },
+  on_checkout: { anker: "departure", richtung: 0 },
   after_checkout: { anker: "departure", richtung: 1 },
 };
+
+/** Auslöser, die AM Ankertag feuern statt in einem Abstand dazu (0515).
+ *
+ *  Sie haben KEIN Abstandsfeld: „am Anreisetag, aber 3 Tage später" ist kein
+ *  gültiger Gedanke. Die Maske blendet die Zahl deshalb aus, und der Server
+ *  zwingt jeden mitgeschickten Betrag auf null (`versatz_normieren`). */
+export const TAGES_TRIGGER: AutomationTrigger[] = ["on_checkin", "on_checkout"];
+
+export function istTagesTrigger(t: AutomationTrigger): boolean {
+  return (TAGES_TRIGGER as string[]).includes(t);
+}
 
 /** Die Auslöser in der Reihenfolge des Aufenthalts (Buchung → Anreise → Abreise). */
 export const AUSLOESER_REIHENFOLGE: AutomationTrigger[] = [
   "booking_new",
   "before_checkin",
+  "on_checkin",
   "after_checkin",
   "before_checkout",
+  "on_checkout",
   "after_checkout",
   "message_received",
 ];
@@ -47,8 +62,12 @@ export function ankerVon(trigger: AutomationTrigger): string {
   return AUSLOESER[trigger as keyof typeof AUSLOESER]?.anker ?? "arrival";
 }
 
-/** +1 = nach dem Anker, −1 = davor. */
-export function richtungVon(trigger: AutomationTrigger): 1 | -1 {
+/** +1 = nach dem Anker, −1 = davor, 0 = am Anker selbst (0515).
+ *
+ *  Wer daraus „vor/nach" ableitet, muss die 0 ZUERST abfangen: `richtung < 0`
+ *  als „vor" und sonst „nach" zu lesen ergäbe „0 Tage nach Anreise" statt
+ *  „Am Anreisetag". Dafür gibt es `istTagesTrigger`. */
+export function richtungVon(trigger: AutomationTrigger): 1 | 0 | -1 {
   return AUSLOESER[trigger as keyof typeof AUSLOESER]?.richtung ?? 1;
 }
 

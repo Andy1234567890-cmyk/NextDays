@@ -1147,7 +1147,9 @@
     "kiUploadFacts": "Tények feltöltése",
     "kiUsedTimes": "{count}×",
     "kiTestNoProperty": "Objekt nélkül (csak az egész vállalatra vonatkozó tények)",
-    "kiTestNoPropertyHint": "Kiválasztott objektum nélkül az AI nem ismeri sem a vendégkönyvet, sem a naptárat – válasszon egy objektumot, hogy lássa, mit tudna valós esetben."
+    "kiTestNoPropertyHint": "Kiválasztott objektum nélkül az AI nem ismeri sem a vendégkönyvet, sem a naptárat – válasszon egy objektumot, hogy lássa, mit tudna valós esetben.",
+    "autoTrigger_on_checkin": "Érkezés napján",
+    "autoTrigger_on_checkout": "Távozás napján"
   },
   "whatsapp": {
     "notConfigured": "A WhatsApp még nincs csatlakoztatva. Adja meg a hozzáférési adatokat (Meta Cloud API) a kiszolgáló beállításaiban, ezután a küldés aktív.",

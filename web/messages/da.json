@@ -1147,7 +1147,9 @@
     "kiUploadFacts": "Upload fakta",
     "kiUsedTimes": "{count}×",
     "kiTestNoProperty": "Uden ejendom (kun fakta for hele virksomheden)",
-    "kiTestNoPropertyHint": "Uden en valgt ejendom kender AI'en hverken gæstemappen eller kalenderen – vælg en ejendom for at se, hvad den ved i en nødsituation."
+    "kiTestNoPropertyHint": "Uden en valgt ejendom kender AI'en hverken gæstemappen eller kalenderen – vælg en ejendom for at se, hvad den ved i en nødsituation.",
+    "autoTrigger_on_checkin": "På ankomstdagen",
+    "autoTrigger_on_checkout": "På afrejsedagen"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp er endnu ikke forbundet. Angiv adgangsoplysningerne (Meta Cloud API) i serverindstillingerne, så er afsendelse aktiv.",

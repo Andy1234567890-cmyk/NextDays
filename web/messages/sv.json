@@ -1147,7 +1147,9 @@
     "kiUploadFacts": "Ladda upp fakta",
     "kiUsedTimes": "{count}×",
     "kiTestNoProperty": "Utan objekt (endast företagsövergripande fakta)",
-    "kiTestNoPropertyHint": "Utan valt objekt känner AI:n varken till gästmappen eller kalendern – välj ett objekt för att se vad den vet i ett nödfall."
+    "kiTestNoPropertyHint": "Utan valt objekt känner AI:n varken till gästmappen eller kalendern – välj ett objekt för att se vad den vet i ett nödfall.",
+    "autoTrigger_on_checkin": "På ankomstdagen",
+    "autoTrigger_on_checkout": "På avresedagen"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp är ännu inte anslutet. Ange inloggningsuppgifterna (Meta Cloud API) i serverinställningarna, då är utskicket aktivt.",

@@ -1147,7 +1147,9 @@
     "kiUploadFacts": "Télécharger les faits",
     "kiUsedTimes": "{count}×",
     "kiTestNoProperty": "Sans objet (faits concernant l'ensemble de l'entreprise uniquement)",
-    "kiTestNoPropertyHint": "Sans objet sélectionné, l'IA ne connaît ni le dossier des invités ni le calendrier. Veuillez sélectionner un objet pour voir ce qu'elle sait réellement."
+    "kiTestNoPropertyHint": "Sans objet sélectionné, l'IA ne connaît ni le dossier des invités ni le calendrier. Veuillez sélectionner un objet pour voir ce qu'elle sait réellement.",
+    "autoTrigger_on_checkin": "Jour d'arrivée",
+    "autoTrigger_on_checkout": "Jour de départ"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp n'est pas encore connecté. Renseignez les identifiants (Meta Cloud API) dans les paramètres du serveur pour activer l'envoi.",

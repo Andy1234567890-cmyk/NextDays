@@ -1177,17 +1177,85 @@ def test_lastminute_anker_vor_der_buchung_geht_nicht_raus() -> None:
 
 # --- Auslöser: Anker + Richtung kommen aus dem Auslöser (0307) ---------------
 def test_ausloeser_katalog_ist_vollstaendig() -> None:
-    """Alle sechs Auslöser — „Nach Anreise" und „Vor Abreise" fehlten bis 0307."""
+    """Alle acht Auslöser.
+
+    „Nach Anreise" und „Vor Abreise" fehlten bis 0307, „Am Anreisetag" und
+    „Am Abreisetag" bis 0515 — letztere wurden als Abstand NULL abgelegt
+    (`before_checkin` mit offset 0), also als etwas, was sie nicht sind.
+    """
     from src.features.inbox.ausloeser import ALLE_TRIGGER
 
     assert set(ALLE_TRIGGER) == {
         "booking_new",
         "before_checkin",
+        "on_checkin",
         "after_checkin",
         "before_checkout",
+        "on_checkout",
         "after_checkout",
         "message_received",
     }
+
+
+def test_tages_ausloeser_zwingt_versatz_auf_null() -> None:
+    """„Am Anreisetag, aber 3 Tage später" ist kein gültiger Gedanke.
+
+    Die Maske zeigt bei diesen Auslösern kein Zahlenfeld — aber die Maske ist
+    nicht der einzige Client. Ein mitgeschickter Betrag darf den Versand nicht
+    still verschieben (Wurzel 3: der Anfrage nicht vertrauen).
+    """
+    from src.features.inbox.ausloeser import versatz_normieren
+
+    for trigger in ("on_checkin", "on_checkout"):
+        assert versatz_normieren(trigger, 3) == 0
+        assert versatz_normieren(trigger, -3) == 0
+        assert versatz_normieren(trigger, 0) == 0
+
+
+def test_tages_ausloeser_haengen_am_richtigen_datum() -> None:
+    """`on_checkin` an der Anreise, `on_checkout` an der Abreise.
+
+    Der Vorfall vom 07.08.2026 war genau diese Verwechslung: eine Regel hing
+    am falschen Anker und feuerte vor der ABREISE statt vor der Anreise.
+    """
+    from src.features.inbox.ausloeser import anker_von
+
+    assert anker_von("on_checkin") == "arrival"
+    assert anker_von("on_checkout") == "departure"
+
+
+def test_tages_ausloeser_werden_eingeplant() -> None:
+    """Sie müssen in DATUMS_TRIGGER stehen, sonst plant sie niemand ein.
+
+    Die Planung holt ihre Regeln über `.in_("trigger", DATUMS_TRIGGER)`. Ein
+    Auslöser, der dort fehlt, laesst sich anlegen, sieht in der Liste aktiv aus
+    und feuert NIE — ein stiller Ausfall ohne Fehlermeldung.
+    """
+    from src.features.inbox.ausloeser import DATUMS_TRIGGER
+
+    assert "on_checkin" in DATUMS_TRIGGER
+    assert "on_checkout" in DATUMS_TRIGGER
+
+
+def test_tages_ausloeser_payload_ist_sauber() -> None:
+    """Anker und Versatz kommen aus dem Auslöser, nicht aus der Anfrage."""
+    from src.features.inbox.automation_mapping import automation_payload
+    from src.features.inbox.schemas import AutomationUpsert
+
+    p = automation_payload(
+        AutomationUpsert(
+            name="Anreisetag",
+            trigger="on_checkin",
+            # Beides falsch mitgeschickt — beides wird verworfen.
+            anchor="departure",
+            offset_unit="days",
+            offset_value=5,
+            message="Text",
+        )
+    )
+    assert p["anchor"] == "arrival"
+    assert p["offset_value"] == 0
+    assert p["offset_days"] == 0
 
 
 def test_payload_leitet_anker_und_vorzeichen_aus_dem_ausloeser_ab() -> None:

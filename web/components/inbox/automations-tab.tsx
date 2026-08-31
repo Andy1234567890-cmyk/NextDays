@@ -36,6 +36,7 @@ import {
 } from "@/components/inbox/sprach-fassungen";
 import {
   AUSLOESER_REIHENFOLGE,
+  istTagesTrigger,
   AUTOMATION_KANAELE,
   ankerVon,
   richtungVon,
@@ -58,6 +59,10 @@ import {
 import { listProperties } from "@/lib/properties";
 
 const TRIGGERS: AutomationTrigger[] = AUSLOESER_REIHENFOLGE;
+// Vorbelegte Uhrzeit fuer „Am Anreisetag"/„Am Abreisetag" (0515). Ueberschreibbar
+// — nicht jede Nachricht gehoert in die Fruehe: die Bewertungsbitte des Betriebs
+// laeuft um 13:00. Ohne Uhrzeit ginge die Nachricht um Mitternacht hinaus.
+const STANDARD_TAGESZEIT = "06:00";
 // 0 = Montag … 6 = Sonntag (gleiche Zählung wie im Backend, `window_days`).
 const WOCHENTAGE = [0, 1, 2, 3, 4, 5, 6];
 // Einheit des Versatzes (0303). Reihenfolge klein → groß, wie man sie liest.
@@ -121,6 +126,11 @@ export function AutomationsTab() {
   const formularRef = useRef<HTMLDivElement | null>(null);
 
   const beiNachricht = trigger === "message_received";
+  // „Am Anreisetag" / „Am Abreisetag" (0515): der Auslöser IST das Datum, es
+  // gibt keinen Abstand dazu. Das Zahlenfeld waere hier nicht nur ueberfluessig,
+  // sondern irrefuehrend — eine 3 darin sieht aus, als verschoebe sie etwas,
+  // waehrend der Server sie auf null zwingt.
+  const amTag = istTagesTrigger(trigger);
 
   /** LADEFEHLER WERDEN ANGEZEIGT, NICHT VERSCHLUCKT (Wurzel 5) — dieselbe
    *  Lehre wie im Vorlagen-Reiter. Fünf Aufrufe, von denen bis 24.08.2026
@@ -505,7 +515,28 @@ export function AutomationsTab() {
         <label className="text-sm font-medium">{t("autoTriggerLabel")}</label>
         <NativeSelect
           value={trigger}
-          onChange={(e) => setTrigger(e.target.value as AutomationTrigger)}
+          onChange={(e) => {
+            const neu = e.target.value as AutomationTrigger;
+            setTrigger(neu);
+            if (istTagesTrigger(neu)) {
+              // Ohne Uhrzeit ginge „am Abreisetag" um Mitternacht hinaus —
+              // technisch der richtige Tag, praktisch die falsche Nachricht zur
+              // falschen Stunde. Deshalb hier erzwungen und mit 06:00
+              // vorbelegt; ueberschreibbar, weil nicht jede Nachricht in der
+              // Frueh gehoert (die Bewertungsbitte laeuft um 13:00).
+              setMitUhrzeit(true);
+              setDays(0);
+              // NUR bei einer NEUEN Regel vorbelegen. Beim Bearbeiten stünde
+              // sonst 06:00 in einer Regel, die seit je um 13:00 läuft
+              // („Bewertung in Ruhe") — ein stilles Verstellen des Versands
+              // durch bloßes Öffnen des Formulars.
+              //
+              // Ein `if (!sendTime)` reichte NICHT: das Feld ist mit "09:00"
+              // vorbelegt, ist also nie leer. Gemessen im Browser (31.08.2026):
+              // die Wahl „Am Anreisetag" ließ 09:00 stehen.
+              if (!bearbeitetId) setSendTime(STANDARD_TAGESZEIT);
+            }
+          }}
         >
           {TRIGGERS.map((x) => (
             <option key={x} value={x}>
@@ -573,6 +604,8 @@ export function AutomationsTab() {
                 Auslöser darüber — hier ein zweites Mal wählbar, konnten sie ihm
                 widersprechen. Der Satz darunter liest die Regel vor, damit die
                 Zahl allein nicht rätselhaft bleibt. */}
+            {!amTag && (
+              <>
             <label className="text-sm font-medium">{t("autoSchedule")}</label>
             <div className="grid grid-cols-2 gap-2">
               <Input
@@ -601,6 +634,8 @@ export function AutomationsTab() {
                     richtungVon(trigger) < 0 ? t("autoBefore") : t("autoAfter")
                   } ${t(`autoAnchor_${ankerVon(trigger)}` as never)}`}
             </p>
+              </>
+            )}
             {/* Uhrzeit abschaltbar. Bei Stunden/Minuten ist sie nur der Bezug,
                 von dem aus gerechnet wird — An-/Abreise tragen beim Portal
                 keine Uhrzeit, deshalb steht das als Hinweis dabei. */}
@@ -608,8 +643,12 @@ export function AutomationsTab() {
               <input
                 type="checkbox"
                 checked={mitUhrzeit}
+                /* Bei „Am Anreisetag"/„Am Abreisetag" nicht abwaehlbar: ohne
+                   Uhrzeit waere der Versand Mitternacht, und der Auslöser
+                   verspricht einen TAG, keine Nacht. */
+                disabled={amTag}
                 onChange={(e) => setMitUhrzeit(e.target.checked)}
-                className="size-4 accent-[var(--accent)]"
+                className="size-4 accent-[var(--accent)] disabled:opacity-50"
               />
               {t("autoWithTime")}
             </label>

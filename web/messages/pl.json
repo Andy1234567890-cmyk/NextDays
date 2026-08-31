@@ -1147,7 +1147,9 @@
     "kiUploadFacts": "Prześlij fakty",
     "kiUsedTimes": "{count}×",
     "kiTestNoProperty": "Bez obiektu (tylko fakty dotyczące całej działalności)",
-    "kiTestNoPropertyHint": "Bez wybranego obiektu sztuczna inteligencja nie zna ani informatora dla gości, ani kalendarza — proszę wybrać obiekt, aby zobaczyć, co wie w nagłych wypadkach."
+    "kiTestNoPropertyHint": "Bez wybranego obiektu sztuczna inteligencja nie zna ani informatora dla gości, ani kalendarza — proszę wybrać obiekt, aby zobaczyć, co wie w nagłych wypadkach.",
+    "autoTrigger_on_checkin": "W dniu przyjazdu",
+    "autoTrigger_on_checkout": "W dniu wyjazdu"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp nie jest jeszcze połączony. Wprowadź dane dostępowe (Meta Cloud API) w ustawieniach serwera, aby aktywować wysyłkę.",

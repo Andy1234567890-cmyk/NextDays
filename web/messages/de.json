@@ -1147,7 +1147,9 @@
     "whatsappNoReservation": "WhatsApp-Chat – keine OTA-Reservierung verknüpft.",
     "whatsappOpenChat": "WhatsApp-Chat öffnen",
     "whatsappWithGuest": "WhatsApp mit {name}",
-    "yesterday": "Gestern"
+    "yesterday": "Gestern",
+    "autoTrigger_on_checkin": "Am Anreisetag",
+    "autoTrigger_on_checkout": "Am Abreisetag"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp ist noch nicht verbunden. Zugangsdaten (Meta Cloud API) in den Server-Einstellungen hinterlegen, dann ist der Versand aktiv.",

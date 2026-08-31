@@ -1147,7 +1147,9 @@
     "kiUploadFacts": "Tella' fatti",
     "kiUsedTimes": "{count}×",
     "kiTestNoProperty": "Mingħajr proprjetà (fatti dwar l-operat biss)",
-    "kiTestNoPropertyHint": "Mingħajr proprjetà magħżula, l-AI ma tafx il-ktejjeb tal-mistiedna jew il-kalendarju — agħżel proprjetà biex tara x'taf fil-każ."
+    "kiTestNoPropertyHint": "Mingħajr proprjetà magħżula, l-AI ma tafx il-ktejjeb tal-mistiedna jew il-kalendarju — agħżel proprjetà biex tara x'taf fil-każ.",
+    "autoTrigger_on_checkin": "Fil-jum tal-wasla",
+    "autoTrigger_on_checkout": "Fil-jum tat-tluq"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp għadu mhux imqabbad. Daħħal il-kredenzjali (Meta Cloud API) fis-settings tas-server, imbagħad il-konsenja tkun attiva.",

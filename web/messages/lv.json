@@ -1147,7 +1147,9 @@
     "kiUploadFacts": "Augšupielādēt faktus",
     "kiUsedTimes": "{count}×",
     "kiTestNoProperty": "Bez objekta (tikai fakti par uzņēmumu)",
-    "kiTestNoPropertyHint": "Bez izvēlēta objekta AI nepārzina ne viesu mapi, ne kalendāru — izvēlieties objektu, lai redzētu, ko tā zina reālā situācijā."
+    "kiTestNoPropertyHint": "Bez izvēlēta objekta AI nepārzina ne viesu mapi, ne kalendāru — izvēlieties objektu, lai redzētu, ko tā zina reālā situācijā.",
+    "autoTrigger_on_checkin": "Ierašanās dienā",
+    "autoTrigger_on_checkout": "Izbraukšanas dienā"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp vēl nav savienots. Ievadiet piekļuves datus (Meta Cloud API) servera iestatījumos, tad sūtīšana būs aktīva.",

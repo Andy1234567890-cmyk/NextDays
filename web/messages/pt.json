@@ -1147,7 +1147,9 @@
     "kiUploadFacts": "Carregar fatos",
     "kiUsedTimes": "{count}×",
     "kiTestNoProperty": "Sem propriedade (apenas fatos de toda a empresa)",
-    "kiTestNoPropertyHint": "Sem uma propriedade selecionada, a IA não conhece o guia do hóspede nem o calendário — selecione uma propriedade para ver o que ela realmente sabe."
+    "kiTestNoPropertyHint": "Sem uma propriedade selecionada, a IA não conhece o guia do hóspede nem o calendário — selecione uma propriedade para ver o que ela realmente sabe.",
+    "autoTrigger_on_checkin": "No dia da chegada",
+    "autoTrigger_on_checkout": "No dia da partida"
   },
   "whatsapp": {
     "notConfigured": "O WhatsApp ainda não está ligado. Introduza as credenciais (Meta Cloud API) nas definições do servidor para ativar o envio.",

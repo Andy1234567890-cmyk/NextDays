@@ -1147,7 +1147,9 @@
     "kiUploadFacts": "Učitaj činjenice",
     "kiUsedTimes": "{count}×",
     "kiTestNoProperty": "Bez objekta (samo činjenice o cijelom poslovanju)",
-    "kiTestNoPropertyHint": "Bez odabranog objekta, AI ne poznaje ni mapu za goste ni kalendar – odaberite objekt da biste vidjeli što zna u hitnim slučajevima."
+    "kiTestNoPropertyHint": "Bez odabranog objekta, AI ne poznaje ni mapu za goste ni kalendar – odaberite objekt da biste vidjeli što zna u hitnim slučajevima.",
+    "autoTrigger_on_checkin": "Na dan dolaska",
+    "autoTrigger_on_checkout": "Na dan odlaska"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp još nije povezan. Unesite pristupne podatke (Meta Cloud API) u postavkama poslužitelja, nakon toga je slanje aktivno.",

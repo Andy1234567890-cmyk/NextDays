@@ -1147,7 +1147,9 @@
     "kiUploadFacts": "Upload facts",
     "kiUsedTimes": "{count}×",
     "kiTestNoProperty": "No property selected (only company-wide facts)",
-    "kiTestNoPropertyHint": "Without a selected property, the AI knows neither the guest directory nor the calendar — select a property to see what it knows in an emergency."
+    "kiTestNoPropertyHint": "Without a selected property, the AI knows neither the guest directory nor the calendar — select a property to see what it knows in an emergency.",
+    "autoTrigger_on_checkin": "On arrival day",
+    "autoTrigger_on_checkout": "On departure day"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp is not connected yet. Add the credentials (Meta Cloud API) in the server settings to activate sending.",

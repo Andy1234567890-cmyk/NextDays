@@ -1147,7 +1147,9 @@
     "kiUploadFacts": "Įkelti faktus",
     "kiUsedTimes": "{count}×",
     "kiTestNoProperty": "Be objekto (tik faktai apie visą įmonę)",
-    "kiTestNoPropertyHint": "Nepasirinkus objekto, dirbtinis intelektas nežino nei svečių aplanko, nei kalendoriaus – pasirinkite objektą, kad pamatytumėte, ką jis žino iš tikrųjų."
+    "kiTestNoPropertyHint": "Nepasirinkus objekto, dirbtinis intelektas nežino nei svečių aplanko, nei kalendoriaus – pasirinkite objektą, kad pamatytumėte, ką jis žino iš tikrųjų.",
+    "autoTrigger_on_checkin": "Atvykimo dieną",
+    "autoTrigger_on_checkout": "Išvykimo dieną"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp dar neprijungtas. Įveskite prisijungimo duomenis (Meta Cloud API) serverio nustatymuose, tada siuntimas bus aktyvus.",

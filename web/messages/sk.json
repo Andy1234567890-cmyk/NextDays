@@ -1147,7 +1147,9 @@
     "kiUploadFacts": "Nahrať fakty",
     "kiUsedTimes": "{count}×",
     "kiTestNoProperty": "Bez objektu (len fakty pre celú prevádzku)",
-    "kiTestNoPropertyHint": "Bez vybraného objektu AI nepozná ani informačnú zložku pre hostí, ani kalendár – vyberte objekt, aby ste videli, čo vie v prípade núdze."
+    "kiTestNoPropertyHint": "Bez vybraného objektu AI nepozná ani informačnú zložku pre hostí, ani kalendár – vyberte objekt, aby ste videli, čo vie v prípade núdze.",
+    "autoTrigger_on_checkin": "V deň príchodu",
+    "autoTrigger_on_checkout": "V deň odchodu"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp zatiaľ nie je prepojený. Zadajte prístupové údaje (Meta Cloud API) v nastaveniach servera, potom bude odosielanie aktívne.",
