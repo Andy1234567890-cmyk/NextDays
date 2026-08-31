@@ -58,6 +58,20 @@ der Fingerabdruck der stillen Middleware-Erneuerung: wechselt die Kennung,
 ohne dass sich jemand angemeldet hat, hat die Middleware im Hintergrund
 erneuert.
 
+Gemessen wird **einmal beim Seitenaufruf** und danach nur auf den Knopf
+„Jetzt neu messen". Ursprünglich lief ein 10-Sekunden-Takt, damit der
+Wechsel-Zähler eine Erneuerung von selbst bemerkt — das wurde am **31.08.2026**
+entfernt: jeder Aufruf kostet serverseitig rund **2 Sekunden** (die Route fragt
+Cookie, Backend und `/properties` nacheinander ab), also lief bei offener
+Oberfläche dauerhaft eine Backend-Abfrage für eine Anzeige, die niemand ansieht,
+solange nichts kaputt ist. Ein Diagnosewerkzeug, das den Rechner des Nutzers
+auslastet, wird abgeschaltet und hilft dann nie wieder.
+
+Der Preis ist benannt, nicht wegdefiniert: der Zähler sieht eine stille
+Erneuerung nicht mehr von allein, sondern erst beim nächsten Messen. Für den
+Fall „ich stehe auf dem falschen Betrieb" genügt das, weil man dann ohnehin
+hinsieht — für ein unbeobachtetes Mitschreiben über Stunden nicht.
+
 In Produktion fällt die Komponente aus dem Bundle (sie nennt Tenant-IDs im
 Klartext). Auf Staging per `NEXT_PUBLIC_SITZUNG_DEBUG=1` zuschaltbar.
 

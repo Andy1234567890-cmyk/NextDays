@@ -55,6 +55,7 @@ import { useRealtime } from "@/lib/realtime";
 import {
   addTaskCost,
   completeTask,
+  deleteTask,
   deleteTaskCost,
   getTaskDetail,
   listTaskAssignees,
@@ -200,6 +201,54 @@ export default function TaskDetail() {
 
   const kosteLoeschen = async (costId: string) => {
     await schreiben(() => deleteTaskCost(costId), "Auslage nicht entfernt");
+  };
+
+  /**
+   * Aufgabe endgültig löschen. Eigener Weg statt `schreiben()`, weil der Server
+   * hier 204 ohne Inhalt schickt: es gibt kein Detail zum Übernehmen, und der
+   * Screen selbst muss weg — die Aufgabe, die er zeigt, existiert danach nicht
+   * mehr. Bliebe er stehen, zeigte er eine gelöschte Zeile und jeder weitere
+   * Tap ergäbe 404.
+   *
+   * Zwei Stufen, weil Löschen NICHT umkehrbar ist (kein `deleted_at` in der
+   * Tabelle): erst die Rückfrage, dann der Aufruf. Der Hinweis auf „Abbrechen"
+   * steht bewusst darin, damit der schonendere Weg sichtbar ist, statt dass
+   * jemand löscht, weil er den anderen Knopf nicht kennt.
+   */
+  const loeschenAusfuehren = async (): Promise<void> => {
+    if (saving) return; // Doppel-Tap-Sperre (Wurzel 2)
+    setSaving(true);
+    const res = await deleteTask(id);
+    setSaving(false);
+    if (!res.ok) {
+      Alert.alert("Aufgabe nicht gelöscht", res.error);
+      return;
+    }
+    // Zurück zur Liste: sie lädt beim Erscheinen neu, die gelöschte Zeile ist
+    // damit auch dort weg.
+    navigation.goBack();
+  };
+
+  const aufgabeLoeschen = () => {
+    Alert.alert(
+      "Aufgabe löschen?",
+      "Die Aufgabe wird endgültig entfernt — mit Checkliste, Auslagen und "
+        + "Foto-Nachweisen. Das lässt sich nicht zurücknehmen. Soll die "
+        + "Aufgabe nur vom Tisch, brich hier ab und setze sie stattdessen auf "
+        + "„Abgebrochen“ — dann bleibt die Spur erhalten.",
+      [
+        { text: "Abbrechen", style: "cancel" },
+        {
+          text: "Endgültig löschen",
+          style: "destructive",
+          onPress: () => {
+            loeschenAusfuehren().catch((e: unknown) =>
+              protokolliereAbsturz(e, "aufgabe-loeschen"),
+            );
+          },
+        },
+      ],
+    );
   };
 
   /**
@@ -686,6 +735,28 @@ export default function TaskDetail() {
             </Txt>
             <Btn variant="outline" block onPress={() => setVertretungOffen(true)}>
               Vertretung anfragen
+            </Btn>
+          </Abschnitt>
+        )}
+
+        {/* --- Löschen: ganz unten und nur mit `manage_tasks`.
+             Die Reinigungskraft sieht den Knopf nicht — sie meldet Zustände,
+             sie räumt kein Inventar ab. Der Server lehnt es ohnehin ab (403),
+             aber ein Knopf, der nur zum Fehler führt, ist selbst der Fehler. --- */}
+        {darfZuweisen && (
+          <Abschnitt titel="Aufgabe löschen">
+            <Txt v="sm" soft>
+              Entfernt die Aufgabe endgültig — samt Checkliste, Auslagen und
+              Foto-Nachweisen. Soll die Aufgabe nur vom Tisch, setze sie
+              stattdessen auf „Abgebrochen“: dann bleibt nachvollziehbar, dass
+              es sie gab.
+            </Txt>
+            <Btn
+              variant="outline"
+              block
+              onPress={saving ? undefined : aufgabeLoeschen}
+            >
+              {saving ? "Bitte warten …" : "Aufgabe löschen"}
             </Btn>
           </Abschnitt>
         )}

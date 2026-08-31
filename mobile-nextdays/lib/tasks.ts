@@ -187,6 +187,24 @@ export async function deleteTaskCost(costId: string): Promise<Result<TaskDetail>
 }
 
 /**
+ * Aufgabe löschen — nur mit `manage_tasks` (der Server setzt das durch, 403).
+ *
+ * Die Route gab es im Backend längst (`DELETE /tasks/{task_id}`) und das Web
+ * ruft sie an zwei Stellen auf; in der App war sie nie verdrahtet, weshalb eine
+ * von Hand angelegte Aufgabe dort nicht mehr wegzubekommen war (gemeldet
+ * 31.08.2026: „Aufgaben kann ich nicht löschen").
+ *
+ * Serverseitig prüft `delete_task` denselben Objekt-Scope wie der Listen-Pfad
+ * (Wurzel 9) — eine Aufgabe an einem fremden Objekt ergibt 404, nicht 204.
+ * Löschen ist ENDGÜLTIG (kein `deleted_at`), deshalb fragt die Oberfläche
+ * vorher nach; wer eine Aufgabe nur vom Tisch haben will, setzt sie auf
+ * `cancelled` und behält damit die Spur.
+ */
+export async function deleteTask(taskId: string): Promise<Result<void>> {
+  return call(`/tasks/${encodeURIComponent(taskId)}`, { method: "DELETE" });
+}
+
+/**
  * Abschluss-Rückmeldung setzen (genau eine je Aufgabe).
  *
  * Den TEXT darf jede zuständige Person schreiben, die BEWERTUNG nur die

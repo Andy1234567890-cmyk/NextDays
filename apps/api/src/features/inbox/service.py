@@ -59,7 +59,7 @@ from .schemas import (
     TeamMember,
     TeamMemberList,
 )
-from .spiegel import LEERER_STAND, SpiegelMixin, ThreadStand, sichere_anhaenge
+from .spiegel import LEERER_STAND, SpiegelMixin, sichere_anhaenge
 from .sprachen import (
     SprachenMixin,
 )
@@ -301,16 +301,15 @@ class InboxService(
                     assigned_user_name=names.get(uid) if uid else None,
                 )
             )
-        # Quellen neben `channex_booking` (Übernahme 0382, myBestDays-Marktplatz
-        # 0181/0196): gleichwertige Threads, die nur woanders liegen. Welche
-        # Quelle in welcher Ansicht und bei welchem Scope erscheint, entscheidet
-        # `nebenquellen.py` — ein neuer Kanal ist dort ein Eintrag statt eines
-        # weiteren `if`-Blocks mitten in diesem Lesepfad.
-        items.extend(
-            self._nebenquellen_threads(
-                db, tenant_id, status=status, scope=access.scope
-            )
+        # Quellen neben `channex_booking` (Übernahme 0382, Marktplatz
+        # 0181/0196): gleichwertige Threads, die nur woanders liegen — welche
+        # wann erscheint, entscheidet `nebenquellen.py`. Danach der gespeicherte
+        # Lesestand (`spiegel.py`), den diese Quellen selbst nicht kennen.
+        neben = self._nebenquellen_threads(
+            db, tenant_id, status=status, scope=access.scope
         )
+        self._nebenquellen_lesestand_anwenden(tenant_id, neben)
+        items.extend(neben)
 
         # „Letzte Aktivität" heißt: was zuletzt passiert ist — eine Nachricht
         # von gestern schlägt eine Buchung von letztem Monat. Threads ganz ohne
@@ -343,53 +342,6 @@ class InboxService(
         if not kandidaten:
             return None
         return max(kandidaten, key=_als_zeitpunkt)
-
-    @staticmethod
-    def _ist_gelesen(row: dict, spiegel: ThreadStand) -> bool:
-        """Ist dieser Thread gelesen?
-
-        `is_read` allein reicht NICHT: es ist ein Handflag, das beim Öffnen
-        eines Threads auf `true` gesetzt wird und dort für immer stehen bleibt.
-        Schreibt der Gast danach erneut, bliebe der Thread „gelesen" — und der
-        Betrieb sieht die neue Nachricht nur, wenn er zufällig hineinschaut.
-        Live war das der Zustand: alle 22 Threads `is_read = true`, während in
-        der Liste bei jedem „Neu" stand (das war der BUCHUNGS-Status, s.
-        `StatusBadge`) — beides zusammen ergab eine Anzeige, die nichts
-        unterschied.
-
-        Regel: gelesen = seit der jüngsten Gastnachricht ist etwas passiert,
-        das nur passiert, wenn jemand sie gesehen hat —
-        * der Thread wurde markiert (`read_at`), ODER
-        * WIR haben danach geantwortet.
-
-        Die eigene Antwort gehört ausdrücklich dazu: niemand antwortet auf eine
-        Nachricht, die er nicht gelesen hat. Ohne sie trugen live vier von neun
-        „ungelesenen" Threads eine EIGENE Nachricht als letzte — der Betrieb
-        hatte längst geantwortet und wurde weiter zur Arbeit aufgefordert. Das
-        greift auch für Wege, die `read_at` nie berühren: die
-        Abwesenheitsantwort des Schedulers und eine Antwort, die direkt in der
-        Portal-App geschrieben wurde.
-
-        Verglichen werden ZEITPUNKTE, nicht Zeichenketten: dieselbe Sekunde
-        kommt in zwei Schreibweisen an („…+00:00" aus PostgREST, „…Z" aus
-        `ota_zeitstempel_utc`), und im Zeichenvergleich ist „Z" > „+" — genau
-        der Fehler, den `_letzte_aktivitaet` daneben schon beschreibt.
-
-        Gibt es keine Gastnachricht, gilt das Flag unverändert — kein
-        erfundener Zustand (Wurzel 4).
-        """
-        gast = spiegel.letzte_gast
-        if not gast:
-            return bool(row.get("is_read", True))
-        wann_gast = _als_zeitpunkt(gast)
-        if spiegel.letzte_eigene and _als_zeitpunkt(spiegel.letzte_eigene) >= wann_gast:
-            return True
-        seit = row.get("read_at")
-        if not seit:
-            # Kein Lesezeitpunkt bekannt (Altbestand vor 0302): dann bleibt nur
-            # das Flag.
-            return bool(row.get("is_read", True))
-        return wann_gast <= _als_zeitpunkt(str(seit))
 
     @staticmethod
     def _gast_bilder(
@@ -1232,6 +1184,9 @@ class InboxService(
     ) -> None:
         """Konversations-Flags setzen: Favorit, Notiz, Lese-/Archiv-Status,
         Erinnerung. Nur gesetzte Felder werden geschrieben."""
+        if thread_id.startswith(_NEBENQUELLEN_PRAEFIXE):
+            self._nebenquelle_lesestand_setzen(ctx, thread_id, is_read=is_read)
+            return
         db, tenant_id, _row, _access = self._load_thread_scoped(ctx, thread_id)
         patch: dict = {}
         if is_starred is not None:

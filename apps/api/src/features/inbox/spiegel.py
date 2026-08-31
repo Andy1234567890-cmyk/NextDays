@@ -13,6 +13,7 @@ anfällt.
 """
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any, Final, NamedTuple
 from urllib.parse import urlparse, urlunparse
 
@@ -137,6 +138,149 @@ class SpiegelMixin:
     # Vom Service gestellt; hier nur deklariert, damit die Typprüfung den
     # Zugriff kennt (dasselbe Muster wie in `PlanungMixin`).
     list_threads: Any
+
+    @staticmethod
+    def _ist_gelesen(row: dict, spiegel: ThreadStand) -> bool:
+        """Ist dieser Thread gelesen?
+
+        `is_read` allein reicht NICHT: es ist ein Handflag, das beim Öffnen
+        eines Threads auf `true` gesetzt wird und dort für immer stehen bleibt.
+        Schreibt der Gast danach erneut, bliebe der Thread „gelesen" — und der
+        Betrieb sieht die neue Nachricht nur, wenn er zufällig hineinschaut.
+        Live war das der Zustand: alle 22 Threads `is_read = true`, während in
+        der Liste bei jedem „Neu" stand (das war der BUCHUNGS-Status, s.
+        `StatusBadge`) — beides zusammen ergab eine Anzeige, die nichts
+        unterschied.
+
+        Regel: gelesen = seit der jüngsten Gastnachricht ist etwas passiert,
+        das nur passiert, wenn jemand sie gesehen hat —
+        * der Thread wurde markiert (`read_at`), ODER
+        * WIR haben danach geantwortet.
+
+        Die eigene Antwort gehört ausdrücklich dazu: niemand antwortet auf eine
+        Nachricht, die er nicht gelesen hat. Ohne sie trugen live vier von neun
+        „ungelesenen" Threads eine EIGENE Nachricht als letzte — der Betrieb
+        hatte längst geantwortet und wurde weiter zur Arbeit aufgefordert. Das
+        greift auch für Wege, die `read_at` nie berühren: die
+        Abwesenheitsantwort des Schedulers und eine Antwort, die direkt in der
+        Portal-App geschrieben wurde.
+
+        Verglichen werden ZEITPUNKTE, nicht Zeichenketten: dieselbe Sekunde
+        kommt in zwei Schreibweisen an („…+00:00" aus PostgREST, „…Z" aus
+        `ota_zeitstempel_utc`), und im Zeichenvergleich ist „Z" > „+" — genau
+        der Fehler, den `_letzte_aktivitaet` daneben schon beschreibt.
+
+        Gibt es keine Gastnachricht, gilt das Flag unverändert — kein
+        erfundener Zustand (Wurzel 4).
+        """
+        # Lokaler Import wie in `_nebenquellen_lesestand_anwenden`: `spiegel.py`
+        # ist ein Mixin DERSELBEN Klasse wie `service.py`, ein Modul-Import
+        # waere ein Zirkelbezug.
+        from .service import _als_zeitpunkt  # noqa: PLC0415
+
+        gast = spiegel.letzte_gast
+        if not gast:
+            return bool(row.get("is_read", True))
+        wann_gast = _als_zeitpunkt(gast)
+        if spiegel.letzte_eigene and _als_zeitpunkt(spiegel.letzte_eigene) >= wann_gast:
+            return True
+        seit = row.get("read_at")
+        if not seit:
+            # Kein Lesezeitpunkt bekannt (Altbestand vor 0302): dann bleibt nur
+            # das Flag.
+            return bool(row.get("is_read", True))
+        return wann_gast <= _als_zeitpunkt(str(seit))
+
+    def _nebenquelle_lesestand_setzen(
+        self, ctx: AuthContext, thread_id: str, *, is_read: bool | None
+    ) -> None:
+        """Lesestand eines Verlaufs ohne `channex_booking`-Zeile schreiben.
+
+        Nur `is_read` wird unterstuetzt. Favorit, Notiz, Archiv und Erinnerung
+        haengen an Spalten von `channex_booking`, die es hier nicht gibt — sie
+        still zu schlucken waere schlimmer als sie zu ignorieren, deshalb
+        bleiben sie schlicht wirkungslos und der Aufrufer bekommt kein falsches
+        „gespeichert" (die Oberflaeche bietet sie fuer diese Verlaeufe nicht an).
+
+        `is_read=False` LOESCHT die Zeile, statt einen alten Zeitpunkt stehen zu
+        lassen: „wieder auf ungelesen" heisst, dass der letzte Lesevorgang nicht
+        mehr gilt (Wurzel 1 — der Gegenzustand gehoert gepflegt).
+        """
+        if is_read is None:
+            return
+        db, tenant_id = self._require(ctx)
+        if is_read:
+            db.table("inbox_nebenquelle_lesestand").upsert(
+                {
+                    "tenant_id": tenant_id,
+                    "thread_id": thread_id,
+                    "read_at": datetime.now(UTC).isoformat(),
+                    "updated_at": datetime.now(UTC).isoformat(),
+                },
+                on_conflict="tenant_id,thread_id",
+            ).execute()
+        else:
+            db.table("inbox_nebenquelle_lesestand").delete().eq(
+                "tenant_id", tenant_id
+            ).eq("thread_id", thread_id).execute()
+
+    def nebenquellen_lesestaende(
+        self, tenant_id: str, thread_ids: list[str]
+    ) -> dict[str, str]:
+        """thread_id → `read_at` fuer die uebergebenen Verlaeufe.
+
+        EIN Abruf fuer die ganze Liste, nicht einer je Zeile: der Posteingang
+        zeigt bis zu 128 Verlaeufe, und der Lesestand ist eine Nebensache, die
+        keine 128 Abfragen wert ist.
+        """
+        if not thread_ids or self._db is None:
+            return {}
+        zeilen = (
+            self._db
+            .table("inbox_nebenquelle_lesestand")
+            .select("thread_id, read_at")
+            .eq("tenant_id", tenant_id)
+            .in_("thread_id", thread_ids)
+            .execute()
+        ).data or []
+        return {
+            str(z["thread_id"]): str(z["read_at"])
+            for z in zeilen
+            if z.get("thread_id") and z.get("read_at")
+        }
+
+    def _nebenquellen_lesestand_anwenden(
+        self, tenant_id: str, threads: list
+    ) -> None:
+        """Gespeicherten Lesestand ueber die abgeleiteten `is_read` legen.
+
+        Die Nebenquellen LEITEN ihr `is_read` aus dem Verlauf ab (bei Anfragen:
+        „hat zuletzt der Betrieb geschrieben?") — eine Ableitung, die kein
+        Oeffnen kennt. Solange der Gast der Letzte war, stand der Verlauf
+        dauerhaft auf ungelesen, egal wie oft ihn jemand las (live gemeldet am
+        31.08.2026: zwei Anfragen, Zaehler blieb bei 2).
+
+        Der gespeicherte Zeitpunkt schlaegt die Ableitung nur in EINE Richtung:
+        er kann „ungelesen" zu „gelesen" machen, nie umgekehrt. Dieselbe Regel
+        wie bei `channex_booking` (`_ist_gelesen`): gelesen gilt, bis der Gast
+        wieder schreibt — danach ist der Verlauf zu Recht erneut ungelesen,
+        ohne dass jemand etwas zuruecksetzen muss.
+        """
+        # Lokaler Import: `spiegel.py` ist ein Mixin DERSELBEN Klasse wie
+        # `service.py`. Ein Import auf Modulebene waere ein Zirkelbezug.
+        from .service import _als_zeitpunkt  # noqa: PLC0415
+
+        if not threads:
+            return
+        stand = self.nebenquellen_lesestaende(tenant_id, [t.id for t in threads])
+        if not stand:
+            return
+        for t in threads:
+            gelesen_am = stand.get(t.id)
+            if not t.is_read and gelesen_am:
+                t.is_read = _als_zeitpunkt(t.letzte_aktivitaet) <= _als_zeitpunkt(
+                    gelesen_am
+                )
 
     def unread_count(
         self, ctx: AuthContext, *, access: InboxAccess | None = None

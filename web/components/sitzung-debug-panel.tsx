@@ -113,12 +113,10 @@ export function SitzungDebugPanel() {
   // weil das Ergebnis danach wieder „normal" aussieht.
   const [wechsel, setWechsel] = useState(0);
 
-  // Abgemeldet? Dann gibt es nichts mehr zu holen — der Takt haelt an.
-  // Vorher lief er stur weiter und schrieb im 10-Sekunden-Rhythmus 401er ins
-  // Serverlog, in dem man danach die echten Zeilen suchen musste. Ein
-  // Diagnosewerkzeug, das das Log zumuellt, macht die Diagnose schwerer
-  // (beobachtet 29.08.2026).
-  const [abgemeldet, setAbgemeldet] = useState(false);
+  // Nur der Setter wird gebraucht: bei 401 fällt die Anzeige auf „abgemeldet"
+  // zurück. Gelesen wurde der Wert früher, um den Takt anzuhalten — den Takt
+  // gibt es nicht mehr, also braucht ihn niemand.
+  const [, setAbgemeldet] = useState(false);
 
   const laden = useCallback(async () => {
     try {
@@ -142,17 +140,22 @@ export function SitzungDebugPanel() {
     }
   }, []);
 
+  // EINMAL beim Seitenaufruf, danach nur auf Klick — KEIN Takt.
+  // Vorher lief hier ein setInterval(10_000). Das war gemessen zu teuer: jeder
+  // Aufruf kostet serverseitig ~2 s (er fragt Cookie, Backend UND /properties
+  // nacheinander ab), also lief bei offener Oberfläche dauerhaft eine
+  // Backend-Abfrage — für eine Anzeige, die niemand ansieht, solange nichts
+  // kaputt ist. Ein Diagnosewerkzeug, das den Rechner des Nutzers auslastet,
+  // wird abgeschaltet und hilft dann nie wieder; eines, das auf Knopfdruck
+  // misst, bleibt liegen.
+  //
+  // Was das kostet: der Token-Wechsel-Zähler unten sieht eine stille
+  // Middleware-Erneuerung nicht mehr von selbst. Er zählt weiter, aber erst
+  // beim nächsten „neu messen" bzw. Seitenaufruf — für den Fall „ich stehe auf
+  // dem falschen Betrieb" reicht das, weil man dann ohnehin hinsieht.
   useEffect(() => {
     void laden();
-    // Ohne Sitzung kein Takt: eine Anmeldung laedt die Seite ohnehin neu, und
-    // dann laeuft der Effekt wieder an.
-    if (abgemeldet) return;
-    // Alle 10 s: kurz genug, um einen Token-Wechsel zu erwischen (Access-Token
-    // hält typischerweise eine Stunde, die Erneuerung passiert bei Navigation),
-    // lang genug, um im Netzwerk-Tab nicht zu stören.
-    const t = setInterval(() => void laden(), 10_000);
-    return () => clearInterval(t);
-  }, [laden, abgemeldet]);
+  }, [laden]);
 
   const t = ton(lage);
   const cookieTenant = lage?.cookie?.access.tenantId ?? null;
