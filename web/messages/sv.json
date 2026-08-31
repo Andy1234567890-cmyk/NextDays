@@ -7285,7 +7285,21 @@
     "csvCancel": "Avbryt",
     "csvResult": "{imported} av {total} bokningar importerade.",
     "csvSkipped": "{count, plural, one {# rad hoppades över (finns redan eller objektet är okänt)} other {# rader hoppades över (finns redan eller objektet är okänt)}}",
-    "csvFailed": "{count, plural, one {# rad med fel} other {# rader med fel}}:"
+    "csvFailed": "{count, plural, one {# rad med fel} other {# rader med fel}}:",
+    "importProgress": {
+      "running": "Bokningar importeras",
+      "done": "Importen är klar",
+      "failed": "Importen misslyckades",
+      "rows": "{fertig} av {gesamt} rader",
+      "created": "skapade",
+      "skipped": "befintliga",
+      "failedRows": "felaktiga",
+      "remainMinutes": "återstår ~{count} min.",
+      "remainSeconds": "återstår ~{count} sek.",
+      "mayClose": "Importen fortsätter på servern – du kan stänga den här sidan.",
+      "andMore": "… och {count} till",
+      "close": "Stäng"
+    }
   },
   "calendarSync": {
     "title": "Importera/exportera kalender",

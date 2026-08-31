@@ -7285,7 +7285,21 @@
     "csvCancel": "Отказ",
     "csvResult": "Импортирани {imported} от {total} резервации.",
     "csvSkipped": "{count, plural, one {# пропуснат ред (вече съществува или непознат обект)} other {# пропуснати реда (вече съществуват или непознат обект)}}",
-    "csvFailed": "{count, plural, one {# ред с грешка} other {# реда с грешка}}:"
+    "csvFailed": "{count, plural, one {# ред с грешка} other {# реда с грешка}}:",
+    "importProgress": {
+      "running": "Резервациите се импортират",
+      "done": "Импортирането завърши",
+      "failed": "Импортирането не бе успешно",
+      "rows": "{fertig} от {gesamt} реда",
+      "created": "създадени",
+      "skipped": "съществуващи",
+      "failedRows": "с грешки",
+      "remainMinutes": "още ~{count} мин.",
+      "remainSeconds": "още ~{count} сек.",
+      "mayClose": "Импортирането продължава на сървъра — можете да затворите тази страница.",
+      "andMore": "… и още {count}",
+      "close": "Затваряне"
+    }
   },
   "calendarSync": {
     "title": "Импорт/експорт на календар",

@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 
 import { ChannelConnectButton } from "@/components/channel-manager/channel-connect-button";
+import { ImportFortschritt } from "@/components/channel-manager/import-fortschritt";
 import { PortalKontenButton } from "@/components/channel-manager/portal-konten";
 import { Button } from "@nextdays/ui/button";
 import { Input } from "@nextdays/ui/input";
@@ -23,13 +24,14 @@ import type {
   PropertyMap,
 } from "@/lib/channex";
 import {
-  type CsvImportResult,
   activateChannel,
   airbnbHistorieLaufStand,
   airbnbHistorieLaufStarten,
   disconnectChannel,
   getCsvTemplate,
-  importBookingsCsv,
+  type BestandsimportLauf,
+  bestandsimportStand,
+  bestandsimportStarten,
   runChannelAction,
   disconnectPortalConnection,
   setConnectionActive,
@@ -762,10 +764,9 @@ function BookingsSection({
   // und danach per Realtime — die Seite darf jederzeit verlassen und wieder
   // geöffnet werden, der Balken steht dann am aktuellen Stand.
   const [lauf, setLauf] = useState<HistorieLauf | null>(null);
-  // Ergebnis des Datei-Imports. Getrennt von `message`, weil es mehrzeilig ist
-  // (importiert/übersprungen/Fehlerliste) — eine Zeile könnte 50 Fehlerzeilen
-  // nicht zeigen, und genau die braucht man zum Nachbessern der Datei.
-  const [csvResult, setCsvResult] = useState<CsvImportResult | null>(null);
+  // Der serverseitige Datei-Import. Wie `lauf` oben: der Klick reiht nur ein,
+  // den Stand zeigt `ImportFortschritt` (Realtime + Nachfassen).
+  const [laufImport, setLaufImport] = useState<BestandsimportLauf | null>(null);
   const [csvError, setCsvError] = useState<string | null>(null);
   // Vorschau der eingelesenen Datei. Der Import läuft ERST auf Bestätigung:
   // die Objektnamen des Portals müssen exakt auf unsere Objekttitel passen,
@@ -779,6 +780,17 @@ function BookingsSection({
       if (r.ok) setLauf(r.data.lauf);
     });
   }, [istAirbnb]);
+
+  // Laeuft gerade ein Datei-Import? Ohne diesen Abruf boete eine frisch
+  // geladene Seite den Knopf an, als sei nichts los — und ein zweiter Klick
+  // liefe in den „schon ein Lauf offen"-Fall statt in den Balken.
+  // Nur einen OFFENEN Lauf zeigen: ein vor Tagen abgeschlossener Import soll
+  // nicht bei jedem Seitenaufruf sein Fenster wieder aufmachen.
+  useEffect(() => {
+    void bestandsimportStand().then((r) => {
+      if (r.ok && r.data?.status === "laeuft") setLaufImport(r.data);
+    });
+  }, []);
 
   // KEIN Realtime-Abo mehr auf `airbnb_historie_lauf`: die Tabelle ist seit
   // Migration 0337 für `authenticated` gesperrt (Wurzel 6 — sie ist eine
@@ -945,7 +957,6 @@ function BookingsSection({
     e.target.value = "";
     if (!file) return;
     setCsvError(null);
-    setCsvResult(null);
     setVorschau(null);
     setMessage(null);
     startTransition(async () => {
@@ -970,19 +981,23 @@ function BookingsSection({
   }
 
   // Erst jetzt schreiben — nach Sicht auf die Objektnamen.
+  //
+  // Der Klick REIHT nur ein und wartet nicht auf das Ergebnis: bei 252 Zeilen
+  // lief der frühere synchrone Weg rund 15 Minuten (live gemessen am
+  // 31.08.2026, 3,6 s je Zeile), der Browser brach ab und zeigte „Backend nicht
+  // erreichbar.", während der Server weiterschrieb. Den Fortschritt zeigt jetzt
+  // `ImportFortschritt`; die Seite darf dabei geschlossen werden.
   function importBestaetigen() {
     if (!vorschau) return;
     setCsvError(null);
     startTransition(async () => {
-      const res = await importBookingsCsv(vorschau.csv);
+      const res = await bestandsimportStarten(vorschau.csv, portalLabel);
       if (!res.ok) {
         setCsvError(res.error);
         return;
       }
-      setCsvResult(res.data);
+      setLaufImport(res.data);
       setVorschau(null);
-      // Angelegte Buchungen sollen sofort in der Liste unten stehen.
-      if (res.data.imported > 0) router.refresh();
     });
   }
 
@@ -1158,38 +1173,22 @@ function BookingsSection({
           </p>
         )}
 
-        {/* Teil-Import ist der Normalfall: alle drei Zahlen stehen da, damit
-            „importiert" nicht wie „alles drin" aussieht (Wurzel 4). */}
-        {csvResult && (
-          <div className="flex flex-col gap-2 rounded-(--radius) border border-border p-3 text-sm">
-            <span className="font-medium">
-              {t("csvResult", {
-                imported: csvResult.imported,
-                total: csvResult.total_rows,
-              })}
-            </span>
-            {csvResult.skipped > 0 && (
-              <span className="text-muted-foreground">
-                {t("csvSkipped", { count: csvResult.skipped })}
-              </span>
-            )}
-            {csvResult.failed > 0 && (
-              <div className="flex flex-col gap-1">
-                <span className="text-destructive">
-                  {t("csvFailed", { count: csvResult.failed })}
-                </span>
-                {/* Zeilennummer + Grund je Fehlerzeile — ohne sie weiss der
-                    Betrieb nicht, WAS er in der Datei nachbessern soll. */}
-                <ul className="max-h-40 list-disc overflow-y-auto pl-5 text-xs text-muted-foreground">
-                  {csvResult.errors.slice(0, 50).map((err) => (
-                    <li key={err}>{err}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
+        {/* Das ERGEBNIS steht im Fortschritts-Fenster (`ImportFortschritt`),
+            nicht mehr hier: es zeigt dieselben drei Zahlen plus die
+            Fehlerzeilen, aber schon WAEHREND des Laufs. Ein Ergebnisblock an
+            dieser Stelle koennte erst nach ~7 Minuten erscheinen — und der
+            Betrieb hat die Seite laengst verlassen. */}
       </div>
+
+      {/* Fortschritt des Datei-Imports. Eigenes Fenster statt eines Blocks in
+          der Seite: der Lauf dauert Minuten, und der Betrieb soll sehen, dass
+          etwas passiert, ohne die Stelle suchen zu muessen. */}
+      <ImportFortschritt
+        lauf={laufImport}
+        setLauf={setLaufImport}
+        // Angelegte Buchungen sollen ohne Neuladen unten in der Liste stehen.
+        onFertig={() => router.refresh()}
+      />
 
       {/* Fortschritt des Historien-Imports: Prozent, Objektzähler und wie viele
           Buchungen bisher eingelesen sind. Ohne diese Zahlen wäre ein Lauf über

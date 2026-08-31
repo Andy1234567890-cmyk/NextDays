@@ -1120,6 +1120,7 @@ class BookingsSyncMixin:
         guest_id: str | None = None,
         *,
         local_property_id: str | None = None,
+        bestandsimport: bool = False,
     ) -> bool:
         """OTA-Buchung → zentrale reservations + Kalender-Block. Idempotent über
         source_channex_booking_id. Gibt True bei Erfolg, False bei skip zurück.
@@ -1129,7 +1130,23 @@ class BookingsSyncMixin:
 
         `local_property_id`: beim CSV-Bestandsimport mappt der Nutzer die Zeile
         direkt auf ein lokales Objekt — dann wird die Channex-Auflösung über
-        property_id übersprungen (die CSV trägt keine channex_property_id)."""
+        property_id übersprungen (die CSV trägt keine channex_property_id).
+
+        `bestandsimport`: die Zeile trägt eine ALTE Buchung nach, die der Betrieb
+        längst kennt (Portal-Export aus der Zeit vor dem Verbinden). Dann
+        entfallen die Nachläufe, die nur für ein FRISCHES Ereignis sinnvoll
+        sind — Meldung an Eigentümer/Betrieb und das Anlegen von Aufgaben.
+
+        WARUM DAS SEIN MUSS: ohne den Schalter löst jede nachgetragene Zeile den
+        vollen Nachlauf einer neuen Buchung aus. Live gemessen am 31.08.2026 an
+        einem Booking.com-Export mit 252 Zeilen: 3,6 s je Zeile, also rund 15
+        Minuten in EINER HTTP-Anfrage — der Browser bricht lange vorher ab
+        („Backend nicht erreichbar."), während der Server weiterläuft. Fachlich
+        ist es zusätzlich falsch: der Betrieb bekam Post über Aufenthalte, die
+        teils Jahre zurückliegen, und für abgereiste Gäste wurden Reinigungs-
+        aufgaben angelegt (im selben Lauf beobachtet: „Neue Aufgabe: Reng J").
+        Der Kalender-Block, die Gast-Aggregate und die Zeitleiste bleiben
+        selbstverständlich erhalten — nur das Benachrichtigen entfällt."""
         booking_id = attrs.get("booking_id") or attrs.get("id")
         channex_property_id = attrs.get("property_id")
         arrival = attrs.get("arrival_date")
@@ -1643,27 +1660,32 @@ class BookingsSyncMixin:
                 # der Meldung die reservation_id, sodass auch ein Re-Import
                 # nach Löschen der Staging-Zeile keine zweite Glocke auslöst
                 # (Wurzel 2). Best-effort: die Funktion fängt intern breit.
-                melde_buchungs_ereignis(
-                    db,
-                    tenant_id=tenant_id,
-                    reservation_id=str(reservation_id),
-                    kind="created",
-                    property_id=property_id,
-                    gast_vorname=self._gast_name(db, tenant_id, guest_id),
-                    # Markenname und Enum getrennt — der Markenname geht
-                    # wörtlich hinaus, der Enum wird übersetzt.
-                    quelle=ota_name,
-                    kanal=channel,
-                    # Die Eckdaten, aus derselben Payload, aus der die Zeile
-                    # entstanden ist. `infants` bleibt draußen: Säuglinge
-                    # zählen bei keinem Portal in die Belegung, und in der
-                    # Meldung wären sie eine Zahl, die der Empfänger im
-                    # Dashboard nicht wiederfindet.
-                    check_in=arrival,
-                    check_out=departure,
-                    erwachsene=adults,
-                    kinder=children,
-                )
+                #
+                # Beim Bestandsimport entfaellt sie: eine nachgetragene Buchung
+                # von 2024 ist fuer den Betrieb kein Ereignis, sondern Bestand,
+                # den er laengst kennt (siehe Docstring).
+                if not bestandsimport:
+                    melde_buchungs_ereignis(
+                        db,
+                        tenant_id=tenant_id,
+                        reservation_id=str(reservation_id),
+                        kind="created",
+                        property_id=property_id,
+                        gast_vorname=self._gast_name(db, tenant_id, guest_id),
+                        # Markenname und Enum getrennt — der Markenname geht
+                        # wörtlich hinaus, der Enum wird übersetzt.
+                        quelle=ota_name,
+                        kanal=channel,
+                        # Die Eckdaten, aus derselben Payload, aus der die Zeile
+                        # entstanden ist. `infants` bleibt draußen: Säuglinge
+                        # zählen bei keinem Portal in die Belegung, und in der
+                        # Meldung wären sie eine Zahl, die der Empfänger im
+                        # Dashboard nicht wiederfindet.
+                        check_in=arrival,
+                        check_out=departure,
+                        erwachsene=adults,
+                        kinder=children,
+                    )
 
         if already_checked_out:
             # Auch Kalender/Channex nicht mehr anfassen: die OTA-Revision kann
@@ -1778,7 +1800,23 @@ class BookingsSyncMixin:
         # Zweige ab (Neuanlage wie Modifikation): `sync_for_reservation` ist
         # idempotent und verschiebend — eine Umbuchung verschiebt die vorhandene
         # Aufgabe, statt eine zweite anzulegen (Wurzel 1/2).
-        if reservation_id:
+        #
+        # Beim Bestandsimport nur fuer Aufenthalte, die noch bevorstehen. Fuer
+        # einen abgereisten Gast eine Reinigung anzulegen ist keine Planung,
+        # sondern Muell in der Aufgabenliste — live beobachtet am 31.08.2026
+        # („Neue Aufgabe: Reng J" fuer Aufenthalte aus 2024). Die Grenze ist die
+        # ABREISE, nicht die Anreise: ein laufender Aufenthalt braucht seine
+        # Endreinigung noch.
+        # `departure` ist ein ISO-STRING aus der Payload, kein date — ein
+        # direkter Vergleich mit date.today() wuerfe TypeError. Vergleich
+        # deshalb textuell (ISO-8601 sortiert lexikografisch korrekt); ein
+        # unlesbarer Wert gilt als „nicht vergangen", damit im Zweifel die
+        # Aufgabe entsteht statt stillschweigend zu fehlen (fail-open ist hier
+        # richtig: eine Aufgabe zu viel faellt auf, eine fehlende nicht).
+        nachtrag_vergangen = bestandsimport and bool(
+            departure and str(departure)[:10] < date.today().isoformat()
+        )
+        if reservation_id and not nachtrag_vergangen:
             sync_nach_id(db, tenant_id, str(reservation_id))
         return True
 

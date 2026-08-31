@@ -7285,7 +7285,21 @@
     "csvPreviewNoRef": "{count, plural, zero {# rezervāciju bez rezervācijas numura} one {# rezervācija bez rezervācijas numura} other {# rezervācijas bez rezervācijas numura}} — tās tiek atpazītas pēc objekta, laika perioda un vārda.",
     "csvConfirm": "Importēt {count} rezervācijas",
     "csvCancel": "Atcelt",
-    "csvFailed": "{count, plural, zero {# rindās kļūdas} one {# rindā kļūda} other {# rindās kļūdas}}:"
+    "csvFailed": "{count, plural, zero {# rindās kļūdas} one {# rindā kļūda} other {# rindās kļūdas}}:",
+    "importProgress": {
+      "running": "Rezervācijas tiek importētas",
+      "done": "Imports pabeigts",
+      "failed": "Importēšana neizdevās",
+      "rows": "{fertig} no {gesamt} rindām",
+      "created": "izveidots",
+      "skipped": "esošs",
+      "failedRows": "kļūdains",
+      "remainMinutes": "vēl ~{count} min.",
+      "remainSeconds": "vēl ~{count} sek.",
+      "mayClose": "Importēšana turpinās serverī — varat aizvērt šo lapu.",
+      "andMore": "… un vēl {count}",
+      "close": "Aizvērt"
+    }
   },
   "calendarSync": {
     "title": "Kalendāra imports/eksports",

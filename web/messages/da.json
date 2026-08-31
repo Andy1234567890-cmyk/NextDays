@@ -7285,7 +7285,21 @@
     "csvCancel": "Annuller",
     "csvResult": "{imported} af {total} bookinger importeret.",
     "csvSkipped": "{count, plural, one {# linje sprunget over (findes allerede, eller objektet er ukendt)} other {# linjer sprunget over (findes allerede, eller objektet er ukendt)}}",
-    "csvFailed": "{count, plural, one {# linje med fejl} other {# linjer med fejl}}:"
+    "csvFailed": "{count, plural, one {# linje med fejl} other {# linjer med fejl}}:",
+    "importProgress": {
+      "running": "Bookinger importeres",
+      "done": "Import gennemført",
+      "failed": "Import mislykkedes",
+      "rows": "{fertig} af {gesamt} linjer",
+      "created": "oprettet",
+      "skipped": "eksisterende",
+      "failedRows": "fejlbehæftet",
+      "remainMinutes": "ca. {count} min. tilbage",
+      "remainSeconds": "ca. {count} sek. tilbage",
+      "mayClose": "Importen fortsætter på serveren – du kan lukke denne side.",
+      "andMore": "… og {count} mere",
+      "close": "Luk"
+    }
   },
   "calendarSync": {
     "title": "Importér/eksportér kalender",

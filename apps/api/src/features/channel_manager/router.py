@@ -47,6 +47,7 @@ from .schemas import (
     AriPushRequest,
     AriPushResponse,
     AvailabilityRuleRequest,
+    BestandsimportLauf,
     BookingListResponse,
     BookingSyncResponse,
     ChannelConnectionListResponse,
@@ -256,6 +257,44 @@ def import_bookings_csv(
         return service.import_bookings_csv(ctx, content=content)
     except ChannelManagerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/bookings/import-lauf", response_model=BestandsimportLauf)
+def bestandsimport_starten(
+    service: ChannelManagerServiceDep,
+    ctx: _write,
+    content: Annotated[str, Body(embed=True)],
+    quelle: Annotated[str | None, Body(embed=True)] = None,
+) -> BestandsimportLauf:
+    """Datei-Bestandsimport EINREIHEN und den Lauf zurueckgeben.
+
+    Ersetzt den synchronen `csv-import` fuer den Weg ueber die Oberflaeche: der
+    Klick wartet nicht mehr auf 252 Zeilen (live ~15 Minuten, der Browser brach
+    ab), sondern bekommt sofort die Lauf-Zeile und verfolgt sie per Realtime.
+    Laeuft schon einer, kommt DIESER zurueck — kein zweiter Lauf (Wurzel 2).
+    """
+    try:
+        return BestandsimportLauf(
+            **service.bestandsimport_starten(ctx, content=content, quelle=quelle)
+        )
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/bookings/import-lauf", response_model=BestandsimportLauf | None)
+def bestandsimport_stand(
+    service: ChannelManagerServiceDep, ctx: _read
+) -> BestandsimportLauf | None:
+    """Der juengste Import-Lauf dieses Betriebs — Erstabruf beim Seitenaufruf.
+
+    Ohne ihn wuesste eine frisch geladene Seite nichts von einem laufenden
+    Import und boete den Knopf an, als sei nichts los.
+    """
+    try:
+        stand = service.bestandsimport_aktuell(ctx)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    return BestandsimportLauf(**stand) if stand else None
 
 
 @router.post("/bookings/lodgify/preview", response_model=LodgifyPreviewResponse)

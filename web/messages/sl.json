@@ -7285,7 +7285,21 @@
     "csvCancel": "Prekliči",
     "csvResult": "Uvoženih {imported} od {total} rezervacij.",
     "csvSkipped": "{count, plural, one {# vrstica preskočena (že obstaja ali neznan objekt)} two {# vrstici preskočeni (že obstajata ali neznan objekt)} few {# vrstice preskočene (že obstajajo ali neznan objekt)} other {# vrstic preskočenih (že obstajajo ali neznan objekt)}}",
-    "csvFailed": "{count, plural, one {# vrstica z napako} two {# vrstici z napako} few {# vrstice z napako} other {# vrstic z napako}}:"
+    "csvFailed": "{count, plural, one {# vrstica z napako} two {# vrstici z napako} few {# vrstice z napako} other {# vrstic z napako}}:",
+    "importProgress": {
+      "running": "Uvažanje rezervacij",
+      "done": "Uvoz zaključen",
+      "failed": "Uvoz ni uspel",
+      "rows": "{fertig} od {gesamt} vrstic",
+      "created": "ustvarjeno",
+      "skipped": "obstoječe",
+      "failedRows": "z napako",
+      "remainMinutes": "še ~{count} min.",
+      "remainSeconds": "še ~{count} sek.",
+      "mayClose": "Uvoz se nadaljuje na strežniku – to stran lahko zaprete.",
+      "andMore": "… in še {count}",
+      "close": "Zapri"
+    }
   },
   "calendarSync": {
     "title": "Uvoz/izvoz koledarja",

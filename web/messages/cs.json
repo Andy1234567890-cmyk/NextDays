@@ -7285,7 +7285,21 @@
     "csvCancel": "Zrušit",
     "csvResult": "Importováno {imported} z {total} rezervací.",
     "csvSkipped": "{count, plural, one {# řádek přeskočen (již existuje nebo neznámý objekt)} few {# řádky přeskočeny (již existují nebo neznámý objekt)} many {# řádku přeskočeno (již existuje nebo neznámý objekt)} other {# řádků přeskočeno (již existují nebo neznámý objekt)}}",
-    "csvFailed": "{count, plural, one {# řádek s chybou} few {# řádky s chybou} many {# řádku s chybou} other {# řádků s chybou}}:"
+    "csvFailed": "{count, plural, one {# řádek s chybou} few {# řádky s chybou} many {# řádku s chybou} other {# řádků s chybou}}:",
+    "importProgress": {
+      "running": "Import rezervací",
+      "done": "Import dokončen",
+      "failed": "Import se nezdařil",
+      "rows": "{fertig} z {gesamt} řádků",
+      "created": "vytvořeno",
+      "skipped": "existující",
+      "failedRows": "chybné",
+      "remainMinutes": "zbývá ~{count} min.",
+      "remainSeconds": "zbývá ~{count} s",
+      "mayClose": "Import pokračuje na serveru – tuto stránku můžete zavřít.",
+      "andMore": "… a dalších {count}",
+      "close": "Zavřít"
+    }
   },
   "calendarSync": {
     "title": "Import/export kalendáře",

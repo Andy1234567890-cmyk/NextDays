@@ -7285,7 +7285,21 @@
     "csvCancel": "Anuluj",
     "csvResult": "Zaimportowano {imported} z {total} rezerwacji.",
     "csvSkipped": "{count, plural, one {# wiersz pominięty (już istnieje lub nieznany obiekt)} few {# wiersze pominięte (już istnieją lub nieznany obiekt)} many {# wierszy pominiętych (już istnieją lub nieznany obiekt)} other {# wiersza pominięte (już istnieją lub nieznany obiekt)}}",
-    "csvFailed": "{count, plural, one {# wiersz z błędem} few {# wiersze z błędem} many {# wierszy z błędem} other {# wiersza z błędem}}:"
+    "csvFailed": "{count, plural, one {# wiersz z błędem} few {# wiersze z błędem} many {# wierszy z błędem} other {# wiersza z błędem}}:",
+    "importProgress": {
+      "running": "Importowanie rezerwacji",
+      "done": "Import zakończony",
+      "failed": "Import nieudany",
+      "rows": "{fertig} z {gesamt} wierszy",
+      "created": "utworzone",
+      "skipped": "istniejące",
+      "failedRows": "błędne",
+      "remainMinutes": "pozostało ~{count} min",
+      "remainSeconds": "pozostało ~{count} sek",
+      "mayClose": "Import jest kontynuowany na serwerze — możesz zamknąć tę stronę.",
+      "andMore": "… i {count} więcej",
+      "close": "Zamknij"
+    }
   },
   "calendarSync": {
     "title": "Importuj/eksportuj kalendarz",

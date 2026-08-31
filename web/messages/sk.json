@@ -7285,7 +7285,21 @@
     "csvCancel": "Zrušiť",
     "csvResult": "Importovaných {imported} z {total} rezervácií.",
     "csvSkipped": "{count, plural, one {# riadok preskočený (už existuje alebo neznámy objekt)} few {# riadky preskočené (už existujú alebo neznámy objekt)} many {# riadku preskočeného (už existuje alebo neznámy objekt)} other {# riadkov preskočených (už existujú alebo neznámy objekt)}}",
-    "csvFailed": "{count, plural, one {# riadok s chybou} few {# riadky s chybou} many {# riadku s chybou} other {# riadkov s chybou}}:"
+    "csvFailed": "{count, plural, one {# riadok s chybou} few {# riadky s chybou} many {# riadku s chybou} other {# riadkov s chybou}}:",
+    "importProgress": {
+      "running": "Importujú sa rezervácie",
+      "done": "Import dokončený",
+      "failed": "Import zlyhal",
+      "rows": "{fertig} z {gesamt} riadkov",
+      "created": "vytvorené",
+      "skipped": "existujúce",
+      "failedRows": "chybné",
+      "remainMinutes": "zostáva ~{count} min.",
+      "remainSeconds": "zostáva ~{count} sek.",
+      "mayClose": "Import pokračuje na serveri – túto stránku môžete zavrieť.",
+      "andMore": "… a {count} ďalších",
+      "close": "Zavrieť"
+    }
   },
   "calendarSync": {
     "title": "Import/export kalendára",

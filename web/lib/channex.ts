@@ -1401,6 +1401,51 @@ export async function importBookingsCsv(
   return res;
 }
 
+// Stand eines serverseitigen Bestandsimports. Die Oberfläche zeichnet daraus
+// den Fortschrittsbalken; laufend aktualisiert wird sie per Realtime auf
+// `bestandsimport_lauf`, dieser Typ ist der Erstabruf und die Start-Antwort.
+export type BestandsimportLauf = {
+  id: string;
+  status: "laeuft" | "fertig" | "unvollstaendig" | "fehler";
+  quelle: string | null;
+  zeilen_gesamt: number;
+  zeilen_fertig: number;
+  angelegt: number;
+  uebersprungen: number;
+  fehlerhaft: number;
+  aktuelle_zeile: string | null;
+  gescheitert: { grund?: string }[];
+  fehler: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  beendet_at: string | null;
+};
+
+// Den Import EINREIHEN statt auf ihn zu warten.
+//
+// Der frühere Weg (`importBookingsCsv`) hielt die HTTP-Anfrage offen, bis alle
+// Zeilen geschrieben waren: bei 252 Zeilen rund 15 Minuten (live gemessen am
+// 31.08.2026, 3,6 s je Zeile). Der Browser brach lange vorher ab und zeigte
+// „Backend nicht erreichbar.", während der Server unbeirrt weiterschrieb — der
+// Betrieb sah einen Fehler UND hatte einen halb angelegten Bestand.
+export async function bestandsimportStarten(
+  content: string,
+  quelle?: string,
+): Promise<Result<BestandsimportLauf>> {
+  return call<BestandsimportLauf>("/bookings/import-lauf", {
+    method: "POST",
+    body: { content, quelle },
+  });
+}
+
+// Der jüngste Lauf — für die Anzeige beim Seitenaufruf. Ohne ihn wüsste eine
+// frisch geladene Seite nichts von einem laufenden Import.
+export async function bestandsimportStand(): Promise<
+  Result<BestandsimportLauf | null>
+> {
+  return call<BestandsimportLauf | null>("/bookings/import-lauf");
+}
+
 // Leere CSV-Vorlage (nur Kopfzeile) als Text laden. Eigener fetch statt `api`
 // (der Endpunkt liefert text/csv, nicht JSON). Der Client baut daraus den
 // Datei-Download.

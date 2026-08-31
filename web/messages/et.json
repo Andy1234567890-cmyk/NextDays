@@ -7285,7 +7285,21 @@
     "csvPreviewNoRef": "{count, plural, one {# broneering broneerimisnumbrita} other {# broneeringut broneerimisnumbrita}} — nende tuvastamine toimub objekti, ajavahemiku ja nime järgi.",
     "csvConfirm": "Impordi {count} broneeringut",
     "csvCancel": "Loobu",
-    "csvFailed": "{count, plural, one {# real viga} other {# real vigu}}:"
+    "csvFailed": "{count, plural, one {# real viga} other {# real vigu}}:",
+    "importProgress": {
+      "running": "Broneeringute importimine",
+      "done": "Importimine lõpetatud",
+      "failed": "Importimine ebaõnnestus",
+      "rows": "{fertig} kokku {gesamt} reast",
+      "created": "loodud",
+      "skipped": "olemasolev",
+      "failedRows": "vigane",
+      "remainMinutes": "veel ~{count} min",
+      "remainSeconds": "veel ~{count} sek",
+      "mayClose": "Importimine jätkub serveris – võite selle lehe sulgeda.",
+      "andMore": "… ja veel {count}",
+      "close": "Sulge"
+    }
   },
   "calendarSync": {
     "title": "Kalendri import/eksport",

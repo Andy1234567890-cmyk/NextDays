@@ -7285,7 +7285,21 @@
     "csvCancel": "Cancelar",
     "csvResult": "{imported} de {total} reservas importadas.",
     "csvSkipped": "{count, plural, one {# fila omitida (ya existe o el alojamiento es desconocido)} other {# filas omitidas (ya existen o el alojamiento es desconocido)}}",
-    "csvFailed": "{count, plural, one {# fila con error} other {# filas con errores}}:"
+    "csvFailed": "{count, plural, one {# fila con error} other {# filas con errores}}:",
+    "importProgress": {
+      "running": "Importando reservas",
+      "done": "Importación completada",
+      "failed": "Error de importación",
+      "rows": "{fertig} de {gesamt} líneas",
+      "created": "creado",
+      "skipped": "existente",
+      "failedRows": "defectuoso",
+      "remainMinutes": "quedan ~{count} min.",
+      "remainSeconds": "quedan ~{count} seg.",
+      "mayClose": "La importación continúa en el servidor; puede cerrar esta página.",
+      "andMore": "… y {count} más",
+      "close": "Cerrar"
+    }
   },
   "calendarSync": {
     "title": "Importar/exportar calendario",

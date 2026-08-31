@@ -7285,7 +7285,21 @@
     "csvPreviewNoRef": "{count, plural, one {# riżervazzjoni mingħajr numru ta' riżervazzjoni} two {# riżervazzjonijiet mingħajr numru ta' riżervazzjoni} few {# riżervazzjonijiet mingħajr numru ta' riżervazzjoni} many {# riżervazzjoni mingħajr numru ta' riżervazzjoni} other {# riżervazzjoni mingħajr numru ta' riżervazzjoni}} — dawn jiġu rikonoxxuti permezz tal-propjetà, il-perjodu u l-isem.",
     "csvConfirm": "Importa {count} riżervazzjoni",
     "csvCancel": "Ikkanċella",
-    "csvFailed": "{count, plural, one {# ringiela b'żball} two {# ringieli b'żball} few {# ringieli b'żball} many {# ringiela b'żball} other {# ringiela b'żball}}:"
+    "csvFailed": "{count, plural, one {# ringiela b'żball} two {# ringieli b'żball} few {# ringieli b'żball} many {# ringiela b'żball} other {# ringiela b'żball}}:",
+    "importProgress": {
+      "running": "Qed jiġu importati l-bookings",
+      "done": "Importazzjoni kompluta",
+      "failed": "Importazzjoni falliet",
+      "rows": "{fertig} minn {gesamt} ringieli",
+      "created": "maħluqa",
+      "skipped": "eżistenti",
+      "failedRows": "żbaljata",
+      "remainMinutes": "madwar {count} min. oħra",
+      "remainSeconds": "madwar {count} sek. oħra",
+      "mayClose": "L-importazzjoni qed tkompli fuq is-server — tista' tagħlaq din il-paġna.",
+      "andMore": "… u {count} oħrajn",
+      "close": "Agħlaq"
+    }
   },
   "calendarSync": {
     "title": "Importazzjoni/esportazzjoni tal-kalendarju",

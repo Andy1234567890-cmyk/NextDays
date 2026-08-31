@@ -7306,7 +7306,21 @@
     "csvPreviewProperties": "Objekte in der Datei — diese Namen müssen deinen Objekttiteln entsprechen, sonst werden die Zeilen ausgelassen:",
     "csvPreviewNoRef": "{count, plural, one {# Buchung ohne Buchungsnummer} other {# Buchungen ohne Buchungsnummer}} — bei ihnen erfolgt die Erkennung über Objekt, Zeitraum und Name.",
     "csvConfirm": "{count} Buchungen importieren",
-    "csvCancel": "Abbrechen"
+    "csvCancel": "Abbrechen",
+    "importProgress": {
+      "running": "Buchungen werden importiert",
+      "done": "Import abgeschlossen",
+      "failed": "Import fehlgeschlagen",
+      "rows": "{fertig} von {gesamt} Zeilen",
+      "created": "angelegt",
+      "skipped": "vorhanden",
+      "failedRows": "fehlerhaft",
+      "remainMinutes": "noch ~{count} Min.",
+      "remainSeconds": "noch ~{count} Sek.",
+      "mayClose": "Der Import läuft auf dem Server weiter — du kannst diese Seite schließen.",
+      "andMore": "… und {count} weitere",
+      "close": "Schließen"
+    }
   },
   "calendarSync": {
     "title": "Kalender importieren/exportieren",

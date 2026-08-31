@@ -277,7 +277,9 @@ class LodgifyImportMixin:
             attrs["property_id"] = property_id
             try:
                 if self._project_booking_to_reservation(
-                    db, tenant_id, attrs, local_property_id=property_id
+                    db, tenant_id, attrs, local_property_id=property_id,
+                    # Uebernahme aus dem alten PMS = Bestand, kein Ereignis.
+                    bestandsimport=True,
                 ):
                     imported += 1
                 else:

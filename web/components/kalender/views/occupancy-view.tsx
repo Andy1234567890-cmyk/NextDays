@@ -48,10 +48,15 @@ const MONTH_KEYS = [
   "juli", "august", "september", "oktober", "november", "dezember",
 ] as const;
 
-// Durchgehender Zeitstrahl wie im Belegungsplan: 1. Januar des laufenden Jahres
-// bis 31. Dezember des Folgejahres.
+// Durchgehender Zeitstrahl wie im Belegungsplan: 1. Januar des VORJAHRES bis
+// 31. Dezember des Folgejahres. Die Spanne MUSS die des Belegungsplans
+// (`calendar-board.tsx`, `VORLAUF_JAHRE`) treffen — sonst endet dieselbe
+// Ansicht je nach gewähltem Plan an einem anderen Tag, und der Nutzer sucht
+// den Unterschied im Bestand statt im Raster.
+const VORLAUF_JAHRE = 1;
+
 function rangeStartOf(now: Date): Date {
-  return new Date(now.getFullYear(), 0, 1);
+  return new Date(now.getFullYear() - VORLAUF_JAHRE, 0, 1);
 }
 function rangeEndOf(now: Date): Date {
   return new Date(now.getFullYear() + 1, 11, 31);

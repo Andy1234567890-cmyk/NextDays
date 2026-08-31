@@ -35,6 +35,7 @@ from .airbnb_uebernahme import AirbnbUebernahmeMixin
 from .airbnb_verfuegbarkeit_push import AirbnbVerfuegbarkeitPushMixin
 from .airbnb_zimmer_push import AirbnbZimmerPushMixin
 from .ari_push import AriPushMixin
+from .bestandsimport_dienst import BestandsimportDienstMixin
 from .bookings_sync import BookingsSyncMixin
 from .channels import ChannelsMixin
 from .channex_client import ChannexCallTrace, ChannexClient, ChannexError
@@ -197,6 +198,9 @@ class ChannelManagerService(
     ReviewsSyncMixin,
     FullSyncMixin,
     CsvImportMixin,
+    # Lauf-Steuerung des Datei-Imports; NACH CsvImportMixin, weil sie dessen
+    # `import_bookings_csv` aufruft.
+    BestandsimportDienstMixin,
     LodgifyImportMixin,
 ):  # pylint: disable=too-many-ancestors  # bewusste Fassade über Domänen-Mixins
     slice_name = "channel_manager"

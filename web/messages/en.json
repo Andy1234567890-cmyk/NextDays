@@ -7306,7 +7306,21 @@
     "csvCancel": "Cancel",
     "csvResult": "{imported} of {total} bookings imported.",
     "csvSkipped": "{count, plural, one {# row skipped (already exists or property unknown)} other {# rows skipped (already exist or property unknown)}}",
-    "csvFailed": "{count, plural, one {# row with an error} other {# rows with errors}}:"
+    "csvFailed": "{count, plural, one {# row with an error} other {# rows with errors}}:",
+    "importProgress": {
+      "running": "Bookings are being imported",
+      "done": "Import complete",
+      "failed": "Import failed",
+      "rows": "{fertig} of {gesamt} rows",
+      "created": "created",
+      "skipped": "existing",
+      "failedRows": "failed",
+      "remainMinutes": "~{count} min. remaining",
+      "remainSeconds": "~{count} sec. remaining",
+      "mayClose": "The import continues on the server – you can close this page.",
+      "andMore": "... and {count} more",
+      "close": "Close"
+    }
   },
   "calendarSync": {
     "title": "Import/export calendar",

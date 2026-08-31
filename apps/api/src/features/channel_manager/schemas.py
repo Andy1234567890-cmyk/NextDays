@@ -125,6 +125,32 @@ class CsvBookingImportResponse(BaseModel):
     errors: list[str] = Field(default_factory=list)
 
 
+class BestandsimportLauf(BaseModel):
+    """Stand eines serverseitigen Datei-Bestandsimports (`bestandsimport_lauf`).
+
+    Die Oberflaeche zeichnet daraus den Fortschrittsbalken. Sie liest die Zeile
+    zusaetzlich per Realtime — dieses Schema ist der Erstabruf beim Seitenaufruf
+    und die Antwort auf den Start.
+    """
+
+    id: str
+    status: str
+    quelle: str | None = None
+    zeilen_gesamt: int = 0
+    zeilen_fertig: int = 0
+    angelegt: int = 0
+    uebersprungen: int = 0
+    fehlerhaft: int = 0
+    aktuelle_zeile: str | None = None
+    # Zeilen, die nicht durchliefen — mit Grund, damit der Betrieb weiss, WAS er
+    # in der Datei nachbessern soll (Wurzel 5: kein stilles Ueberspringen).
+    gescheitert: list[dict[str, Any]] = Field(default_factory=list)
+    fehler: str | None = None
+    created_at: str | None = None
+    updated_at: str | None = None
+    beendet_at: str | None = None
+
+
 class LodgifyBookingPreview(BaseModel):
     """Eine Buchung aus der Lodgify-Vorschau (nur Anzeige, nichts geschrieben)."""
 

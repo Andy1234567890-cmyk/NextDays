@@ -7285,7 +7285,21 @@
     "csvCancel": "Annuleren",
     "csvResult": "{imported} van {total} boekingen geïmporteerd.",
     "csvSkipped": "{count, plural, one {# rij overgeslagen (bestaat al of object onbekend)} other {# rijen overgeslagen (bestaan al of object onbekend)}}",
-    "csvFailed": "{count, plural, one {# rij met een fout} other {# rijen met fouten}}:"
+    "csvFailed": "{count, plural, one {# rij met een fout} other {# rijen met fouten}}:",
+    "importProgress": {
+      "running": "Boekingen worden geïmporteerd",
+      "done": "Import voltooid",
+      "failed": "Import mislukt",
+      "rows": "{fertig} van {gesamt} regels",
+      "created": "aangemaakt",
+      "skipped": "bestaand",
+      "failedRows": "foutief",
+      "remainMinutes": "nog ~{count} min.",
+      "remainSeconds": "nog ~{count} sec.",
+      "mayClose": "De import wordt op de server voortgezet — u kunt deze pagina sluiten.",
+      "andMore": "… en nog {count}",
+      "close": "Sluiten"
+    }
   },
   "calendarSync": {
     "title": "Agenda importeren/exporteren",

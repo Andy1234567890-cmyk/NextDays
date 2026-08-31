@@ -7285,7 +7285,21 @@
     "csvPreviewNoRef": "{count, plural, one {# varaus ilman varausnumeroa} other {# varausta ilman varausnumeroa}} — niiden tunnistus tapahtuu kohteen, ajanjakson ja nimen perusteella.",
     "csvConfirm": "Tuo {count} varausta",
     "csvCancel": "Peruuta",
-    "csvFailed": "{count, plural, one {# rivillä virhe} other {# rivillä virheitä}}:"
+    "csvFailed": "{count, plural, one {# rivillä virhe} other {# rivillä virheitä}}:",
+    "importProgress": {
+      "running": "Varaukset tuodaan",
+      "done": "Tuonti valmis",
+      "failed": "Tuonti epäonnistui",
+      "rows": "{fertig}/{gesamt} riviä",
+      "created": "luotu",
+      "skipped": "olemassa",
+      "failedRows": "virheellinen",
+      "remainMinutes": "~{count} min. jäljellä",
+      "remainSeconds": "~{count} sek. jäljellä",
+      "mayClose": "Tuonti jatkuu palvelimella – voit sulkea tämän sivun.",
+      "andMore": "… ja {count} muuta",
+      "close": "Sulje"
+    }
   },
   "calendarSync": {
     "title": "Tuo/vie kalenteri",

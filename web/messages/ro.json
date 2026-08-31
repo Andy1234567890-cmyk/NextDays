@@ -7285,7 +7285,21 @@
     "csvCancel": "Anulează",
     "csvResult": "Importate {imported} din {total} rezervări.",
     "csvSkipped": "{count, plural, one {# rând omis (deja existent sau proprietate necunoscută)} few {# rânduri omise (deja existente sau proprietate necunoscută)} other {# de rânduri omise (deja existente sau proprietate necunoscută)}}",
-    "csvFailed": "{count, plural, one {# rând cu eroare} few {# rânduri cu eroare} other {# de rânduri cu eroare}}:"
+    "csvFailed": "{count, plural, one {# rând cu eroare} few {# rânduri cu eroare} other {# de rânduri cu eroare}}:",
+    "importProgress": {
+      "running": "Se importă rezervări",
+      "done": "Import finalizat",
+      "failed": "Import eșuat",
+      "rows": "{fertig} din {gesamt} rânduri",
+      "created": "creat",
+      "skipped": "existent",
+      "failedRows": "eșuat",
+      "remainMinutes": "încă ~{count} min.",
+      "remainSeconds": "încă ~{count} sec.",
+      "mayClose": "Importul continuă pe server – puteți închide această pagină.",
+      "andMore": "… și încă {count}",
+      "close": "Închidere"
+    }
   },
   "calendarSync": {
     "title": "Import/export calendar",

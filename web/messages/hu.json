@@ -7285,7 +7285,21 @@
     "csvCancel": "Mégse",
     "csvResult": "{imported} / {total} foglalás importálva.",
     "csvSkipped": "{count, plural, one {# sor kihagyva (már létezik, vagy ismeretlen objektum)} other {# sor kihagyva (már léteznek, vagy ismeretlen objektum)}}",
-    "csvFailed": "{count, plural, one {# sor hibás} other {# sor hibás}}:"
+    "csvFailed": "{count, plural, one {# sor hibás} other {# sor hibás}}:",
+    "importProgress": {
+      "running": "Foglalások importálása",
+      "done": "Importálás kész",
+      "failed": "Importálás sikertelen",
+      "rows": "{fertig} / {gesamt} sor",
+      "created": "létrehozva",
+      "skipped": "létező",
+      "failedRows": "hibás",
+      "remainMinutes": "még ~{count} perc",
+      "remainSeconds": "még ~{count} mp",
+      "mayClose": "Az importálás a szerveren folytatódik – bezárhatja ezt az oldalt.",
+      "andMore": "… és további {count}",
+      "close": "Bezárás"
+    }
   },
   "calendarSync": {
     "title": "Naptár importálása/exportálása",

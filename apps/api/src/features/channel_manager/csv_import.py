@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import csv
 import io
+from collections.abc import Callable
 from datetime import date
 from typing import Any
 
@@ -54,12 +55,32 @@ class CsvImportMixin:
         return buf.getvalue()
 
     def import_bookings_csv(
-        self, ctx: AuthContext, *, content: str
+        self,
+        # `None` ist erlaubt, WENN `tenant_id` gesetzt ist — der Worker hat
+        # keine Sitzung. Beides zugleich fehlen zu lassen faellt in
+        # `_require_tenant` auf, nicht still.
+        ctx: AuthContext | None,
+        *,
+        content: str,
+        fortschritt: Callable[[int, int, str], None] | None = None,
+        tenant_id: str | None = None,
     ) -> CsvBookingImportResponse:
         """CSV-Text parsen und als Reservierungen anlegen. Tenant-scoped; jede
         Zeile isoliert (eine Fehlerzeile kippt den Import nicht). Idempotent über
-        die externe ID (erneuter Upload derselben Datei legt nichts doppelt an)."""
-        tenant_id = self._require_tenant(ctx)
+        die externe ID (erneuter Upload derselben Datei legt nichts doppelt an).
+
+        `fortschritt(fertig, gesamt, bezeichnung)`: optionaler Rückruf nach jeder
+        Zeile. Ihn hier hineinzureichen ist der Grund, warum der Worker die
+        Schleife NICHT kopieren muss — zwei Schleifen über dieselbe Datei wären
+        zwei Auslegungen davon, und die Anzeige zählte anderes als der Import
+        schreibt.
+
+        `tenant_id`: nur für den Worker-Weg, der keine Sitzung hat. Ist er
+        gesetzt, gilt er; sonst kommt der Tenant wie immer aus dem Kontext. Er
+        wird beim Einreihen aus dem `AuthContext` gesetzt, nie aus einer Anfrage
+        (Wurzel 3).
+        """
+        tenant_id = tenant_id or self._require_tenant(ctx)
         db = self._require_db()
 
         # BOM strippen (Excel schreibt ﻿ an den Anfang → sonst kollidiert es
@@ -103,7 +124,13 @@ class CsvImportMixin:
         # .append). Gleiches Muster wie in bookings_sync._sync_feed.
         total = imported = skipped = failed = 0
         errors: list[str] = []
-        for idx, raw in enumerate(reader, start=2):  # Zeile 1 = Kopf
+        # Fuer den Balken: die Gesamtzahl MUSS vor der ersten Zeile feststehen,
+        # sonst zeigt die Anzeige „7 von 7", waehrend noch 245 kommen. Der
+        # DictReader ist ein Iterator ueber denselben Text — einmal
+        # materialisieren, dann daraus zaehlen und arbeiten.
+        alle_zeilen = list(reader)
+        gesamt = len(alle_zeilen)
+        for idx, raw in enumerate(alle_zeilen, start=2):  # Zeile 1 = Kopf
             if total >= _MAX_ROWS:
                 raise ChannelManagerError(
                     f"Zu viele Zeilen (max. {_MAX_ROWS} je Upload).",
@@ -117,11 +144,17 @@ class CsvImportMixin:
             except _RowError as exc:
                 failed += 1
                 errors.append(str(exc))
+                if fortschritt:
+                    fortschritt(total, gesamt, self._zeilen_bezeichnung(raw))
                 continue
             if outcome:
                 imported += 1
             else:
                 skipped += 1
+            if fortschritt:
+                # NACH dem Schreiben melden: „Zeile 7 fertig" soll heissen, dass
+                # sie in der DB steht, nicht dass sie gleich versucht wird.
+                fortschritt(total, gesamt, self._zeilen_bezeichnung(raw))
 
         log.info(
             "csv_booking_import_done",
@@ -197,8 +230,29 @@ class CsvImportMixin:
             "occupancy": self._parse_int(cell("num_guests")),
         }
         return self._project_booking_to_reservation(
-            db, tenant_id, attrs, local_property_id=property_id
+            db, tenant_id, attrs, local_property_id=property_id,
+            # Bestand nachtragen, kein frisches Ereignis: keine Mail/Glocke an
+            # Eigentuemer und Betrieb, keine Aufgaben fuer abgereiste Gaeste.
+            bestandsimport=True,
         )
+
+    @staticmethod
+    def _zeilen_bezeichnung(raw: dict[str, Any]) -> str:
+        """Was unter dem Fortschrittsbalken steht: Objekt und Gast dieser Zeile.
+
+        Bewusst kurz und ohne Kontaktdaten — die Anzeige laeuft im Browser des
+        Betriebs, und eine Mailadresse gehoert nicht in eine Laufzeile, die
+        nebenbei durchrauscht. Fehlt beides, bleibt es leer statt einen
+        Platzhalter zu erfinden (Wurzel 4).
+        """
+        def zelle(key: str) -> str:
+            return (raw.get(key) or "").strip()
+
+        objekt = zelle("property")
+        gast = " ".join(
+            t for t in (zelle("guest_first_name"), zelle("guest_last_name")) if t
+        )
+        return " · ".join(t for t in (objekt, gast) if t)
 
     @staticmethod
     def _parse_iso_date(value: str) -> date | None:

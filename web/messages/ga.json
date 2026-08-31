@@ -7285,7 +7285,21 @@
     "csvPreviewNoRef": "{count, plural, one {# áirithint gan uimhir áirithinte} two {# áirithint gan uimhir áirithinte} few {# áirithint gan uimhir áirithinte} many {# áirithint gan uimhir áirithinte} other {# áirithint gan uimhir áirithinte}} — aithnítear iad seo trí mhaoin, tréimhse agus ainm.",
     "csvConfirm": "Iompórtaigh {count} áirithint",
     "csvCancel": "Cealaigh",
-    "csvFailed": "{count, plural, one {# líne le earráid} two {# líne le earráid} few {# línte le earráidí} many {# líne le earráidí} other {# líne le earráidí}}:"
+    "csvFailed": "{count, plural, one {# líne le earráid} two {# líne le earráid} few {# línte le earráidí} many {# líne le earráidí} other {# líne le earráidí}}:",
+    "importProgress": {
+      "running": "Áirithintí á n-iompórtáil",
+      "done": "Iompórtáil críochnaithe",
+      "failed": "Theip ar an iompórtáil",
+      "rows": "{fertig} de {gesamt} líne",
+      "created": "cruthaithe",
+      "skipped": "ann cheana",
+      "failedRows": "lochtach",
+      "remainMinutes": "~{count} nóim. fágtha",
+      "remainSeconds": "~{count} soic. fágtha",
+      "mayClose": "Leanann an iompórtáil ar an bhfreastalaí — is féidir leat an leathanach seo a dhúnadh.",
+      "andMore": "… agus {count} eile",
+      "close": "Dún"
+    }
   },
   "calendarSync": {
     "title": "Iompórtáil/easpórtáil féilire",

@@ -106,8 +106,23 @@ const HALF_DAY = 0.5;
 // Gerendert wird nur ein virtualisiertes Sub-Fenster; die Index-Geometrie
 // (Drag/Balken) bleibt ABSOLUT in `dates`, damit sie unverändert weiterrechnet.
 // Grenzen hängen vom heutigen Datum ab → zur Laufzeit berechnet (siehe Component).
+// Linke Kante des Zeitstrahls. Sie ist die HARTE Grenze der Navigation: alle
+// Wege (Pfeil, Datum-Sprung, Scrollen) klemmen auf Index 0, es gibt also kein
+// „weiter zurück" dahinter.
+//
+// Bis zum 31.08.2026 stand hier der 1. Januar des laufenden Jahres. Damit war
+// im Januar selbst der Pfeil „zurück" wirkungslos und der Vorjahres-Bestand
+// unerreichbar — gemeldet als „man kann nicht weiter zurück als Januar 2026".
+// Das war nie eine fachliche Grenze, sondern der Anfang des Arrays.
+//
+// Jetzt: ein volles Jahr vor dem 1. Januar des laufenden Jahres. Damit liegt
+// abgereister Bestand im Blick, ohne den Zeitstrahl unbegrenzt wachsen zu
+// lassen (jeder Tag ist eine Spalte im virtualisierten Raster und ein Schlüssel
+// in den Tagesdaten).
+const VORLAUF_JAHRE = 1;
+
 function rangeStart(now: Date): Date {
-  return new Date(now.getFullYear(), 0, 1); // 1. Januar, laufendes Jahr
+  return new Date(now.getFullYear() - VORLAUF_JAHRE, 0, 1);
 }
 function rangeEnd(now: Date): Date {
   return new Date(now.getFullYear() + 1, 11, 31); // 31. Dezember, Folgejahr
@@ -1089,14 +1104,14 @@ export function CalendarBoard({
   useEffect(() => {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
-    // Durchgehende Timeline: Raster beginnt am 1. Januar des laufenden Jahres
-    // (Anker des Index-0-Tages). Navigiert wird durch Scrollen, nicht durch
-    // Verschieben von `start`.
+    // Durchgehende Timeline: Raster beginnt am 1. Januar des VORJAHRES
+    // (Anker des Index-0-Tages, siehe `rangeStart`). Navigiert wird durch
+    // Scrollen, nicht durch Verschieben von `start`.
     setStart(rangeStart(now));
     setTodayKey(key(now));
   }, []);
 
-  // Gesamtzahl der Tage im Bereich (1. Jan laufendes Jahr .. 31. Dez Folgejahr).
+  // Gesamtzahl der Tage im Bereich (1. Jan Vorjahr .. 31. Dez Folgejahr).
   // Hängt vom heutigen Datum ab → aus `start` abgeleitet (nach Mount gesetzt).
   const totalDays = useMemo(
     () => (start ? daysBetween(start, rangeEnd(start)) + 1 : 0),
@@ -1108,7 +1123,7 @@ export function CalendarBoard({
     () => (start ? Array.from({ length: totalDays }, (_, i) => addDays(start, i)) : []),
     [start, totalDays],
   );
-  // Index des heutigen Tages im dates-Array (Tage vom 1. Jan bis heute).
+  // Index des heutigen Tages im dates-Array (Tage ab der linken Kante).
   const todayIndex = useMemo(() => {
     if (!start || !todayKey) return 0;
     return daysBetween(start, new Date(`${todayKey}T00:00:00`));
@@ -1574,11 +1589,15 @@ export function CalendarBoard({
     if (cur) await loadDays(cur.from, cur.to, true);
   }, [loadReservations, loadDays]);
 
-  // Erst-Last + Hintergrund-Vorladen des GANZEN Jahres: Zuerst der Block um heute
-  // (schneller Start), dann werden die restlichen ~395 Tage Block für Block im
-  // Hintergrund nachgezogen — sequenziell (nicht alle auf einmal, sonst
-  // überlastet es Browser/Backend). Beim Scrollen ist dann alles schon da, kein
-  // „lädt…". Vorrang nach vorn (Zukunft), dann nach hinten (Vergangenheit).
+  // Erst-Last + Hintergrund-Vorladen eines FENSTERS um heute: zuerst der Block
+  // um heute (schneller Start), dann der Rest von [loFrom, hiTo) Block für Block
+  // sequenziell (nicht alle auf einmal, sonst überlastet es Browser/Backend).
+  // Vorrang nach vorn (Zukunft), dann nach hinten (Vergangenheit).
+  //
+  // Das Fenster hängt an PREFETCH_AHEAD/BEHIND_DAYS, NICHT an der Länge des
+  // Zeitstrahls: eine längere Spanne (siehe `VORLAUF_JAHRE`) kostet deshalb
+  // Date-Objekte, aber keinen einzigen zusätzlichen Abruf. Alles außerhalb holt
+  // der Scroll-Handler (ensureLoaded) bei Bedarf.
   const prefetchToken = useRef(0);
   useEffect(() => {
     if (!start || properties.length === 0) return;

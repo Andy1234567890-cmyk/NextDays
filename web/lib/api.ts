@@ -32,8 +32,11 @@ export class ApiError extends Error {
     message: string,
     status: number,
     details?: Record<string, unknown>,
+    // `cause` durchreichen, damit die urspruengliche Ausnahme (undici-Fehler
+    // mit ihrem `code`) am Fehler haengen bleibt statt verloren zu gehen.
+    opts?: { cause?: unknown },
   ) {
-    super(message);
+    super(message, opts);
     this.status = status;
     this.details = details;
   }
@@ -62,8 +65,45 @@ export async function api<T>(path: string, opts: ApiOptions = {}): Promise<T> {
       body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
       cache: opts.cache ?? "no-store",
     });
-  } catch {
-    throw new ApiError("Backend nicht erreichbar.", 503);
+  } catch (exc) {
+    // Der EINZIGE Ort, an dem ein Netzwerkfehler des Backends entsteht — und
+    // bis zum 31.08.2026 verschluckte er seine Ursache ersatzlos (`catch {}`).
+    // Nach aussen stand dann „Backend nicht erreichbar." und sonst nichts:
+    // gemeldet als „Upload Booking Buchungsliste funktioniert nicht", ohne
+    // dass in irgendeinem Log stand, WARUM. undici verpackt den Grund in
+    // `cause` (ECONNREFUSED, UND_ERR_HEADERS_TIMEOUT, ENOTFOUND, …) — genau
+    // die Angabe, die den Unterschied zwischen „Dienst aus", „zu langsam" und
+    // „falsche Adresse" ausmacht (Wurzel 5).
+    const grund = exc instanceof Error ? exc : new Error(String(exc));
+    // undici legt den Systemcode an `cause.code` ab — AUSSER wenn mehrere
+    // Adressen versucht wurden (Host mit IPv4+IPv6): dann steht dort ein
+    // AggregateError und die Codes haengen in `cause.errors[]`. Beide Wege
+    // lesen, sonst bleibt genau im Mehrfach-Adressfall — dem Regelfall in
+    // Docker — die Meldung wieder nichtssagend.
+    const ursache = grund.cause as
+      | { code?: unknown; errors?: { code?: unknown }[] }
+      | undefined;
+    const roh =
+      ursache?.code ??
+      ursache?.errors?.find((e) => typeof e?.code === "string")?.code;
+    const code = typeof roh === "string" ? roh : undefined;
+    console.error("[api] fetch fehlgeschlagen", {
+      ziel: `${BASE}${PREFIX}${path}`,
+      methode: opts.method ?? "GET",
+      rumpfBytes:
+        opts.body !== undefined ? JSON.stringify(opts.body).length : 0,
+      fehler: grund.message,
+      code,
+    });
+    // Der Code gehoert in die Meldung: „Backend nicht erreichbar." allein hat
+    // den Betrieb ratlos gelassen. `cause` bleibt zusaetzlich erhalten, damit
+    // ein Aufrufer die Urspruengliche Ausnahme noch auswerten kann.
+    throw new ApiError(
+      code ? `Backend nicht erreichbar (${code}).` : "Backend nicht erreichbar.",
+      503,
+      undefined,
+      { cause: grund },
+    );
   }
 
   if (!res.ok) {

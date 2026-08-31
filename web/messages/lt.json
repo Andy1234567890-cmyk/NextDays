@@ -7285,7 +7285,21 @@
     "csvPreviewNoRef": "{count, plural, one {# rezervacija be rezervacijos numerio} few {# rezervacijos be rezervacijos numerio} many {# rezervacijos be rezervacijos numerio} other {# rezervacijų be rezervacijos numerio}} — jos atpažįstamos pagal objektą, laikotarpį ir vardą.",
     "csvConfirm": "Importuoti {count} rezervacijų",
     "csvCancel": "Atšaukti",
-    "csvFailed": "{count, plural, one {# eilutė su klaida} few {# eilutės su klaidomis} many {# eilutės su klaida} other {# eilučių su klaidomis}}:"
+    "csvFailed": "{count, plural, one {# eilutė su klaida} few {# eilutės su klaidomis} many {# eilutės su klaida} other {# eilučių su klaidomis}}:",
+    "importProgress": {
+      "running": "Užsakymai importuojami",
+      "done": "Importavimas baigtas",
+      "failed": "Importavimas nepavyko",
+      "rows": "{fertig} iš {gesamt} eilučių",
+      "created": "sukurta",
+      "skipped": "yra",
+      "failedRows": "klaidinga",
+      "remainMinutes": "liko ~{count} min.",
+      "remainSeconds": "liko ~{count} sek.",
+      "mayClose": "Importavimas tęsiamas serveryje – galite uždaryti šį puslapį.",
+      "andMore": "… ir dar {count}",
+      "close": "Uždaryti"
+    }
   },
   "calendarSync": {
     "title": "Kalendoriaus importas / eksportas",
