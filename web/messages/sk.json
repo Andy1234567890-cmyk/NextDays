@@ -1770,7 +1770,13 @@
       "terminationSent": "Oznámenie o ukončení bolo podané. Administratíva potvrdzuje ukončenie zmluvy.",
       "services": "Objednať služby",
       "servicesHint": "Vykoná a vyúčtuje sa iba to, čo tu označíte. Bez výberu nevznikne žiadna úloha.",
-      "servicesOrdered": "Objednané"
+      "servicesOrdered": "Objednané",
+      "withdraw": "Žiadosť stiahnuť",
+      "withdrawn": "Žiadosť stiahnutá.",
+      "requestLift": "Požiadať o zrušenie",
+      "liftRequested": "Požiadané o zrušenie — rozhodne správa.",
+      "liftPending": "Požiadané o zrušenie. Zablokovanie platí, kým správa nerozhodne.",
+      "liftRejected": "Zrušenie zamietnuté — zablokovanie zostáva"
     },
     "meter": {
       "title": "Zaznamenať stav merača",
@@ -7068,12 +7074,14 @@
       "action": {
         "approve": "Schváliť",
         "reject": "Zamietnuť",
-        "revoke": "Odvolať"
+        "revoke": "Odvolať",
+        "rejectLift": "Zamietnuť zrušenie"
       },
       "confirm": {
         "approve": "Zablokovať {objekt} od {von} do {bis}? Noci budú zablokované na všetkých portáloch.",
         "reject": "Zamietnuť žiadosť pre {objekt} ({von} – {bis})?",
-        "revoke": "Odvolať schválenie pre {objekt} ({von} – {bis})? Noci budú znovu uvoľnené."
+        "revoke": "Odvolať schválenie pre {objekt} ({von} – {bis})? Noci budú znovu uvoľnené.",
+        "rejectLift": "Zamietnuť zrušenie pre {objekt} ({von} – {bis})? Zablokovanie zostane v platnosti."
       },
       "done": {
         "approve": "Žiadosť schválená, noci zablokované.",
@@ -7118,7 +7126,8 @@
       "terminationRequested": "Majiteľ chce zmluvu ukončiť.",
       "terminationSet": "Zmluva končí {datum}.",
       "servicesOrdered": "Objednané služby",
-      "servicesNone": "Žiadne služby neboli objednané — nevznikne žiadna úloha."
+      "servicesNone": "Žiadne služby neboli objednané — nevznikne žiadna úloha.",
+      "liftRequested": "Chcem zrušiť blokovanie"
     }
   },
   "seasons": {

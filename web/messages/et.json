@@ -1770,7 +1770,13 @@
       "terminationSent": "Lõpetamisteade on esitatud. Administratsioon kinnitab lepingu lõpetamist.",
       "services": "Telli teenused",
       "servicesHint": "Teostatakse ja arveldatakse ainult see, mille siin märgite. Ilma valikuta ülesannet ei looda.",
-      "servicesOrdered": "Tellitud"
+      "servicesOrdered": "Tellitud",
+      "withdraw": "Taotlus tagasi võtta",
+      "withdrawn": "Taotlus tagasi võetud.",
+      "requestLift": "Tühistamist taotleda",
+      "liftRequested": "Tühistamine taotletud — haldus otsustab.",
+      "liftPending": "Tühistamine taotletud. Blokeering kehtib, kuni haldus on otsustanud.",
+      "liftRejected": "Tühistamine tagasi lükatud — blokeering jääb kehtima"
     },
     "meter": {
       "title": "Sisesta näidu lugem",
@@ -7068,12 +7074,14 @@
       "action": {
         "approve": "Kiida heaks",
         "reject": "Lükka tagasi",
-        "revoke": "Tühista"
+        "revoke": "Tühista",
+        "rejectLift": "Tühistamine tagasi lükata"
       },
       "confirm": {
         "approve": "Kas blokeerida {objekt} {von}–{bis}? Ööd blokeeritakse kõigis portaalides.",
         "reject": "Kas lükata tagasi taotlus objektile {objekt} ({von} – {bis})?",
-        "revoke": "Kas tühistada heakskiit objektile {objekt} ({von} – {bis})? Ööd vabastatakse uuesti."
+        "revoke": "Kas tühistada heakskiit objektile {objekt} ({von} – {bis})? Ööd vabastatakse uuesti.",
+        "rejectLift": "Kas lükata tagasi {objekt} ({von} – {bis}) tühistamine? Blokeering jääb kehtima."
       },
       "done": {
         "approve": "Taotlus heaks kiidetud, ööd blokeeritud.",
@@ -7118,7 +7126,8 @@
       "terminationRequested": "Omanik soovib lepingu lõpetada.",
       "terminationSet": "Leping lõpeb {datum}-il.",
       "servicesOrdered": "Tellitud teenused",
-      "servicesNone": "Teenuseid ei tellitud — ülesannet ei looda."
+      "servicesNone": "Teenuseid ei tellitud — ülesannet ei looda.",
+      "liftRequested": "Soovin blokeeringu tühistada"
     }
   },
   "seasons": {

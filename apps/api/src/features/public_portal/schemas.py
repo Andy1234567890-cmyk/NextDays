@@ -247,6 +247,14 @@ class BlockRequestItem(BaseModel):
     # kann, was er beauftragt hat — und die Agentur beim Genehmigen sieht,
     # welche Arbeit auf sie zukommt.
     bestellte_leistungen: list[BestellteLeistung] = Field(default_factory=list)
+    # Aufhebung der Sperrung (0513): 'keine' | 'beantragt' | 'aufgehoben' |
+    # 'abgelehnt'. Der Eigentuemer MUSS sehen, dass sein Wunsch angekommen ist —
+    # sonst klickt er erneut, weil sich sichtbar nichts aendert. Und dass die
+    # Sperrung bis zur Entscheidung BESTEHEN BLEIBT: „beantragt" ist nicht
+    # „erledigt".
+    aufhebung: str = "keine"
+    aufhebung_grund: str | None = None
+    aufhebung_entscheidungsnotiz: str | None = None
 
 
 class BestellbareLeistungen(BaseModel):
@@ -258,6 +266,14 @@ class BestellbareLeistungen(BaseModel):
     """
 
     items: list[BestellteLeistung]
+
+
+class AufhebungAntrag(BaseModel):
+    """Der Eigentuemer bittet um Aufhebung einer genehmigten Sperrung (0513)."""
+
+    # Optional, aber die Agentur entscheidet ohne sie schlechter — genau wie
+    # beim `reason` des Sperrantrags.
+    grund: str | None = Field(default=None, max_length=2000)
 
 
 class BlockRequestList(BaseModel):

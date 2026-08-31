@@ -1770,7 +1770,13 @@
       "terminationSent": "A felmondási értesítést benyújtották. Az adminisztráció megerősíti a szerződés megszüntetését.",
       "services": "Szolgáltatások megrendelése",
       "servicesHint": "Csak azt végezzük el és számlázzuk ki a zárásához, amit itt bejelöl. Választás nélkül nem jön létre feladat.",
-      "servicesOrdered": "Megrendelve"
+      "servicesOrdered": "Megrendelve",
+      "withdraw": "Kérelem visszavonása",
+      "withdrawn": "Kérelem visszavonva.",
+      "requestLift": "Feloldás kérése",
+      "liftRequested": "Feloldás kérve — az adminisztráció dönt.",
+      "liftPending": "Feloldás kérve. A zárolás addig érvényes, amíg az adminisztráció döntést nem hoz.",
+      "liftRejected": "Feloldás elutasítva — a zárolás érvényben marad"
     },
     "meter": {
       "title": "Mérőállás rögzítése",
@@ -7068,12 +7074,14 @@
       "action": {
         "approve": "Jóváhagyás",
         "reject": "Elutasítás",
-        "revoke": "Visszavonás"
+        "revoke": "Visszavonás",
+        "rejectLift": "Feloldás elutasítása"
       },
       "confirm": {
         "approve": "Zárolod a(z) {objekt} objektumot {von} és {bis} között? Az éjszakák minden portálon zárolva lesznek.",
         "reject": "Elutasítod a kérelmet a(z) {objekt} objektumra ({von} – {bis})?",
-        "revoke": "Visszavonod a jóváhagyást a(z) {objekt} objektumra ({von} – {bis})? Az éjszakák ismét felszabadulnak."
+        "revoke": "Visszavonod a jóváhagyást a(z) {objekt} objektumra ({von} – {bis})? Az éjszakák ismét felszabadulnak.",
+        "rejectLift": "Elutasítja a(z) {objekt} ({von} – {bis}) feloldását? A zárolás érvényben marad."
       },
       "done": {
         "approve": "Kérelem jóváhagyva, éjszakák zárolva.",
@@ -7118,7 +7126,8 @@
       "terminationRequested": "A tulajdonos fel kívánja bontani a szerződést.",
       "terminationSet": "A szerződés {datum} dátummal lejár.",
       "servicesOrdered": "Megrendelt szolgáltatások",
-      "servicesNone": "Nem rendeltek szolgáltatást — nem jön létre feladat."
+      "servicesNone": "Nem rendeltek szolgáltatást — nem jön létre feladat.",
+      "liftRequested": "Szeretné feloldani a zárolást"
     }
   },
   "seasons": {

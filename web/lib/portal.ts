@@ -18,7 +18,7 @@ export type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
 async function call<T>(
   path: string,
-  opts: { method?: "GET" | "POST"; body?: unknown } = {},
+  opts: { method?: "GET" | "POST" | "DELETE"; body?: unknown } = {},
 ): Promise<Result<T>> {
   const token = await currentToken();
   if (!token) return { ok: false, error: "Nicht angemeldet." };
@@ -484,7 +484,43 @@ export type BlockRequest = {
    *  Aufgabe. Vorher erzeugte jede Sperre dieselbe Kette wie eine Gastbuchung
    *  — Reinigung und Wäsche liefen an, ohne dass jemand sie beauftragt hatte. */
   bestellte_leistungen: BestellteLeistung[];
+  /** Aufhebung dieser Sperrung (0513): „keine" | „beantragt" | „aufgehoben" |
+   *  „abgelehnt". WICHTIG: „beantragt" heisst NICHT, dass die Naechte frei
+   *  sind — die Sperrung besteht, bis die Verwaltung entschieden hat. */
+  aufhebung: string;
+  /** Warum ich die Sperrung nicht mehr brauche. */
+  aufhebung_grund: string | null;
+  /** Begruendung der Verwaltung, wenn sie die Aufhebung abgelehnt hat. Ohne
+   *  sie wirkte die Ablehnung wie Willkuer. */
+  aufhebung_entscheidungsnotiz: string | null;
 };
+
+/** Einen NOCH OFFENEN Sperrantrag zurueckziehen (0513).
+ *
+ *  Nur solange nichts genehmigt ist: dann ist auch nichts gesperrt, und der
+ *  Antrag verschwindet ganz. Eine genehmigte Sperrung geht ueber
+ *  `requestBlockLift` — die entscheidet die Verwaltung. */
+export async function withdrawBlockRequest(
+  requestId: string,
+): Promise<Result<null>> {
+  return call(`/public-portal/block-requests/${encodeURIComponent(requestId)}`, {
+    method: "DELETE",
+  });
+}
+
+/** Die Aufhebung einer GENEHMIGTEN Sperrung beantragen (0513).
+ *
+ *  Ein Antrag, keine Aufhebung: die Naechte bleiben gesperrt, bis die
+ *  Verwaltung zustimmt. */
+export async function requestBlockLift(
+  requestId: string,
+  grund?: string | null,
+): Promise<Result<BlockRequest>> {
+  return call(
+    `/public-portal/block-requests/${encodeURIComponent(requestId)}/aufhebung`,
+    { method: "POST", body: { grund: grund ?? null } },
+  );
+}
 
 /** Eine bestellbare bzw. bestellte Leistung (0510). Der Name kommt vom Server
  *  mit, damit hier keine UUID steht — die Regelliste selbst darf ein

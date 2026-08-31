@@ -1770,7 +1770,13 @@
       "terminationSent": "Notificarea de reziliere a fost depusă. Administrația confirmă rezilierea contractului.",
       "services": "Comandă servicii",
       "servicesHint": "Numai ceea ce bifați aici va fi executat și facturat pentru blocarea dumneavoastră. Fără selecție nu se creează nicio sarcină.",
-      "servicesOrdered": "Comandat"
+      "servicesOrdered": "Comandat",
+      "withdraw": "Retragere cerere",
+      "withdrawn": "Cerere retrasă.",
+      "requestLift": "Solicitare anulare",
+      "liftRequested": "Anulare solicitată — administrația decide.",
+      "liftPending": "Anulare solicitată. Blocarea rămâne valabilă până la decizia administrației.",
+      "liftRejected": "Anulare refuzată — blocarea rămâne"
     },
     "meter": {
       "title": "Înregistrează index contor",
@@ -7068,12 +7074,14 @@
       "action": {
         "approve": "Aprobă",
         "reject": "Respinge",
-        "revoke": "Revocă"
+        "revoke": "Revocă",
+        "rejectLift": "Refuză anularea"
       },
       "confirm": {
         "approve": "Blochezi {objekt} de la {von} până la {bis}? Nopțile vor fi blocate pe toate portalurile.",
         "reject": "Respingi cererea pentru {objekt} ({von} – {bis})?",
-        "revoke": "Revoci aprobarea pentru {objekt} ({von} – {bis})? Nopțile vor fi eliberate din nou."
+        "revoke": "Revoci aprobarea pentru {objekt} ({von} – {bis})? Nopțile vor fi eliberate din nou.",
+        "rejectLift": "Refuzați anularea pentru {objekt} ({von} – {bis})? Blocarea rămâne valabilă."
       },
       "done": {
         "approve": "Cerere aprobată, nopți blocate.",
@@ -7118,7 +7126,8 @@
       "terminationRequested": "Proprietarul dorește să rezilieze contractul.",
       "terminationSet": "Contractul expiră pe {datum}.",
       "servicesOrdered": "Servicii comandate",
-      "servicesNone": "Nu au fost comandate servicii — nu se va crea nicio sarcină."
+      "servicesNone": "Nu au fost comandate servicii — nu se va crea nicio sarcină.",
+      "liftRequested": "Doresc anularea blocării"
     }
   },
   "seasons": {

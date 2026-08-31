@@ -659,6 +659,27 @@ def reject_block_request(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.post(
+    "/block-requests/{request_id}/aufhebung-ablehnen",
+    response_model=SperrantragItem,
+)
+def reject_block_lift(
+    request_id: str,
+    req: BlockRequestDecision,
+    service: SperrantragServiceDep,
+    ctx: Annotated[CurrentUser, Depends(_APPROVE)],
+) -> SperrantragItem:
+    """Den Aufhebungswunsch des Eigentuemers ablehnen (0513) — die Sperrung
+    bleibt bestehen, es wird nichts freigegeben.
+
+    Das Gegenstueck ist `revoke`: dort wird aufgehoben, und ein offener Wunsch
+    gilt damit als erfuellt."""
+    try:
+        return service.aufhebung_ablehnen(ctx, request_id, req)
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.post("/block-requests/{request_id}/revoke", response_model=SperrantragItem)
 def revoke_block_request(
     request_id: str,

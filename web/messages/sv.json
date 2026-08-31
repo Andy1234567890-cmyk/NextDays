@@ -1770,7 +1770,13 @@
       "terminationSent": "Uppsägning har lämnats in. Administrationen bekräftar uppsägningen av avtalet.",
       "services": "Beställ tjänster",
       "servicesHint": "Endast det du markerar här utförs och faktureras för din blockering. Utan val skapas ingen uppgift.",
-      "servicesOrdered": "Beställt"
+      "servicesOrdered": "Beställt",
+      "withdraw": "Återkalla ansökan",
+      "withdrawn": "Ansökan återkallad.",
+      "requestLift": "Begär upphävande",
+      "liftRequested": "Upphävande begärt — förvaltningen beslutar.",
+      "liftPending": "Upphävande begärt. Spärren gäller tills förvaltningen har beslutat.",
+      "liftRejected": "Upphävande nekat — spärren kvarstår"
     },
     "meter": {
       "title": "Registrera mätarställning",
@@ -7068,12 +7074,14 @@
       "action": {
         "approve": "Godkänn",
         "reject": "Avvisa",
-        "revoke": "Återkalla"
+        "revoke": "Återkalla",
+        "rejectLift": "Neka upphävande"
       },
       "confirm": {
         "approve": "Blockera {objekt} från {von} till {bis}? Nätterna blockeras på alla portaler.",
         "reject": "Avvisa förfrågan för {objekt} ({von} – {bis})?",
-        "revoke": "Återkalla godkännandet för {objekt} ({von} – {bis})? Nätterna frigörs igen."
+        "revoke": "Återkalla godkännandet för {objekt} ({von} – {bis})? Nätterna frigörs igen.",
+        "rejectLift": "Neka upphävande för {objekt} ({von} – {bis})? Spärren kvarstår."
       },
       "done": {
         "approve": "Förfrågan godkänd, nätter blockerade.",
@@ -7118,7 +7126,8 @@
       "terminationRequested": "Ägaren vill säga upp avtalet.",
       "terminationSet": "Kontraktet slutar den {datum}.",
       "servicesOrdered": "Beställda tjänster",
-      "servicesNone": "Inga tjänster beställda — ingen uppgift skapas."
+      "servicesNone": "Inga tjänster beställda — ingen uppgift skapas.",
+      "liftRequested": "Vill häva spärren"
     }
   },
   "seasons": {

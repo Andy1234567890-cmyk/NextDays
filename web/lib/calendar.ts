@@ -491,6 +491,16 @@ export type Sperrantrag = {
    *  einer Gastbuchung, ohne dass jemand sie beauftragt hatte - die Genehmigung
    *  entscheidet also nicht nur ueber die Sperre, sondern ueber Arbeit. */
   bestellte_leistungen: SperrantragLeistung[];
+  /** Aufhebungswunsch des Eigentuemers (0513): „keine" | „beantragt" |
+   *  „aufgehoben" | „abgelehnt". Solange „beantragt" steht, ist die Sperrung
+   *  WEITER aktiv — der Wunsch allein gibt nichts frei. */
+  aufhebung: string;
+  /** Warum der Eigentuemer die Sperrung nicht mehr braucht. */
+  aufhebung_grund: string | null;
+  /** Wann er sie beantragt hat — die Sortiergroesse der Warteschlange. */
+  aufhebung_beantragt_am: string | null;
+  /** Begruendung der Agentur, wenn sie die Aufhebung abgelehnt hat. */
+  aufhebung_entscheidungsnotiz: string | null;
 };
 
 /** Eine bestellte Leistung samt Namen ihrer Regel (0510). */
@@ -642,6 +652,22 @@ export async function revokeBlockRequest(
   note: string | null,
 ): Promise<Result<Sperrantrag>> {
   return call(`/calendar/block-requests/${id}/revoke`, {
+    method: "POST",
+    body: { note },
+  });
+}
+
+/** Den Aufhebungswunsch des Eigentuemers ablehnen (0513) — die Sperrung BLEIBT.
+ *
+ *  Das Gegenstueck ist `revokeBlockRequest`: dort wird aufgehoben, und ein
+ *  offener Wunsch gilt damit als erfuellt. Hier passiert im Kalender nichts;
+ *  abgelehnt wird nur der Wunsch. Die Notiz geht an den Eigentuemer — ohne sie
+ *  wirkt die Ablehnung wie Willkuer. */
+export async function rejectBlockLift(
+  id: string,
+  note: string | null,
+): Promise<Result<Sperrantrag>> {
+  return call(`/calendar/block-requests/${id}/aufhebung-ablehnen`, {
     method: "POST",
     body: { note },
   });

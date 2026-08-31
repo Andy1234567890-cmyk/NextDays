@@ -1770,7 +1770,13 @@
       "terminationSent": "De opzegging is ingediend. De directie bevestigt de beëindiging van het contract.",
       "services": "Diensten bestellen",
       "servicesHint": "Alleen wat u hier aanvinkt, wordt voor uw blokkering uitgevoerd en gefactureerd. Zonder selectie wordt er geen taak aangemaakt.",
-      "servicesOrdered": "Besteld"
+      "servicesOrdered": "Besteld",
+      "withdraw": "Aanvraag intrekken",
+      "withdrawn": "Aanvraag ingetrokken.",
+      "requestLift": "Opheffing aanvragen",
+      "liftRequested": "Opheffing aangevraagd — de beheerder beslist.",
+      "liftPending": "Opheffing aangevraagd. De blokkering blijft van kracht totdat de beheerder heeft beslist.",
+      "liftRejected": "Opheffing afgewezen — de blokkering blijft"
     },
     "meter": {
       "title": "Meterstand registreren",
@@ -7068,12 +7074,14 @@
       "action": {
         "approve": "Goedkeuren",
         "reject": "Afwijzen",
-        "revoke": "Intrekken"
+        "revoke": "Intrekken",
+        "rejectLift": "Opheffing afwijzen"
       },
       "confirm": {
         "approve": "{objekt} van {von} tot {bis} blokkeren? De nachten worden op alle portalen geblokkeerd.",
         "reject": "Verzoek voor {objekt} ({von} – {bis}) afwijzen?",
-        "revoke": "Goedkeuring voor {objekt} ({von} – {bis}) intrekken? De nachten worden weer vrijgegeven."
+        "revoke": "Goedkeuring voor {objekt} ({von} – {bis}) intrekken? De nachten worden weer vrijgegeven.",
+        "rejectLift": "Opheffing voor {objekt} ({von} – {bis}) afwijzen? De blokkering blijft bestaan."
       },
       "done": {
         "approve": "Verzoek goedgekeurd, nachten geblokkeerd.",
@@ -7118,7 +7126,8 @@
       "terminationRequested": "De eigenaar wenst het contract te beëindigen.",
       "terminationSet": "Het contract eindigt op {datum}.",
       "servicesOrdered": "Bestelde diensten",
-      "servicesNone": "Geen diensten besteld — er wordt geen taak aangemaakt."
+      "servicesNone": "Geen diensten besteld — er wordt geen taak aangemaakt.",
+      "liftRequested": "Wil de blokkering opheffen"
     }
   },
   "seasons": {

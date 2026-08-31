@@ -28,6 +28,8 @@ import {
   createBlockRequest,
   getBestellbareLeistungen,
   getBlockRequests,
+  requestBlockLift,
+  withdrawBlockRequest,
 } from "@/lib/portal";
 
 const DATUM_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -174,6 +176,40 @@ export function PortalSperrungen({
     // Kein Refetch: das ist die eigene Antwort des Servers, nicht ein fremdes
     // Ereignis. Sie enthaelt bereits alles, was die Zeile braucht.
     setListe((alt) => [res.data, ...alt]);
+  };
+
+  // Ein Antrag, der gerade zurueckgezogen oder aufgehoben wird. Sperrt genau
+  // SEINEN Knopf, nicht alle — sonst sieht die ganze Liste blockiert aus, waehrend
+  // nur eine Zeile arbeitet.
+  const [laeuft, setLaeuft] = useState<string | null>(null);
+
+  const zurueckziehen = async (id: string) => {
+    if (laeuft) return;
+    setLaeuft(id);
+    const res = await withdrawBlockRequest(id);
+    setLaeuft(null);
+    if (!res.ok) {
+      toast.error(res.error);
+      return;
+    }
+    toast.success(t("block.withdrawn"));
+    // Die Zeile ist wirklich weg (DELETE), nicht nur anders — also aus der
+    // Liste nehmen statt zu ersetzen.
+    setListe((alt2) => alt2.filter((r) => r.id !== id));
+  };
+
+  const aufhebungBeantragen = async (id: string) => {
+    if (laeuft) return;
+    setLaeuft(id);
+    const res = await requestBlockLift(id, null);
+    setLaeuft(null);
+    if (!res.ok) {
+      toast.error(res.error);
+      return;
+    }
+    toast.success(t("block.liftRequested"));
+    // Die Antwort ist der aktualisierte Antrag — ersetzen statt neu laden.
+    setListe((alt2) => alt2.map((r) => (r.id === id ? res.data : r)));
   };
 
   return (
@@ -407,12 +443,60 @@ export function PortalSperrungen({
                         {r.bestellte_leistungen.map((b) => b.name).join(", ")}
                       </span>
                     )}
+                    {/* Wo mein Aufhebungswunsch steht (0513). „beantragt" ist
+                        die wichtigste Zeile davon: sie sagt, dass die Sperrung
+                        NOCH GILT. Ohne sie hielte ich sie fuer erledigt. */}
+                    {r.aufhebung === "beantragt" && (
+                      <span className="text-xs font-medium">
+                        {t("block.liftPending")}
+                      </span>
+                    )}
+                    {r.aufhebung === "abgelehnt" && (
+                      <span className="text-xs text-muted-foreground">
+                        {t("block.liftRejected")}
+                        {r.aufhebung_entscheidungsnotiz
+                          ? `: ${r.aufhebung_entscheidungsnotiz}`
+                          : ""}
+                      </span>
+                    )}
                   </div>
                   {/* Unbekannter Status kommt vom Backend als Rohwert durch,
                       statt ihn zu erfinden oder zu verschlucken (Wurzel 4). */}
                   <span className="shrink-0 rounded-full bg-secondary px-3 py-1 text-xs text-secondary-foreground">
                     {statusKey ? t(statusKey) : r.status}
                   </span>
+
+                  {/* Rueckweg (0513) — zwei verschiedene Lagen, zwei Knoepfe:
+                      Ein OFFENER Antrag hat nichts gesperrt, er verschwindet
+                      auf Klick. Eine GENEHMIGTE Sperrung haengt an einer
+                      Belegung im Kalender; sie kann nur BEANTRAGT werden, und
+                      der Hinweis sagt ausdruecklich, dass sie bis zur
+                      Entscheidung bestehen bleibt — sonst haelt der Eigentuemer
+                      seine Naechte fuer frei und plant anders. */}
+                  {r.status === "pending" && r.owner_freigabe !== "abgelehnt" && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="shrink-0"
+                      disabled={laeuft === r.id}
+                      onClick={() => void zurueckziehen(r.id)}
+                    >
+                      {t("block.withdraw")}
+                    </Button>
+                  )}
+                  {r.status === "approved" && r.aufhebung === "keine" && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="shrink-0"
+                      disabled={laeuft === r.id}
+                      onClick={() => void aufhebungBeantragen(r.id)}
+                    >
+                      {t("block.requestLift")}
+                    </Button>
+                  )}
                 </li>
               );
             })}

@@ -1770,7 +1770,13 @@
       "terminationSent": "Notice of termination has been submitted. The administration confirms the termination of the contract.",
       "services": "Order services",
       "servicesHint": "Only what you tick here will be carried out and invoiced for your block. Without a selection, no task is created.",
-      "servicesOrdered": "Ordered"
+      "servicesOrdered": "Ordered",
+      "withdraw": "Withdraw request",
+      "withdrawn": "Request withdrawn.",
+      "requestLift": "Request cancellation",
+      "liftRequested": "Cancellation requested — administration will decide.",
+      "liftPending": "Cancellation requested. The block remains until the administration has decided.",
+      "liftRejected": "Cancellation denied — the block remains"
     },
     "meter": {
       "title": "Add meter reading",
@@ -7089,12 +7095,14 @@
       "action": {
         "approve": "Approve",
         "reject": "Reject",
-        "revoke": "Revoke"
+        "revoke": "Revoke",
+        "rejectLift": "Deny cancellation"
       },
       "confirm": {
         "approve": "Block {objekt} from {von} to {bis}? The nights will be blocked on all channels.",
         "reject": "Reject the request for {objekt} ({von} – {bis})?",
-        "revoke": "Revoke the approval for {objekt} ({von} – {bis})? The nights will be released again."
+        "revoke": "Revoke the approval for {objekt} ({von} – {bis})? The nights will be released again.",
+        "rejectLift": "Deny cancellation for {objekt} ({von} – {bis})? The block will remain."
       },
       "done": {
         "approve": "Request approved, nights blocked.",
@@ -7139,7 +7147,8 @@
       "terminationRequested": "The owner wishes to terminate the contract.",
       "terminationSet": "Contract ends on {datum}.",
       "servicesOrdered": "Services ordered",
-      "servicesNone": "No services ordered — no task will be created."
+      "servicesNone": "No services ordered — no task will be created.",
+      "liftRequested": "Wants to cancel the block"
     }
   },
   "seasons": {

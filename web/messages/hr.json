@@ -1770,7 +1770,13 @@
       "terminationSent": "Obavijest o raskidu je podnesena. Uprava potvrđuje raskid ugovora.",
       "services": "Naruči usluge",
       "servicesHint": "Izvršit će se i naplatiti samo ono što ovdje označite. Bez odabira ne nastaje nijedan zadatak.",
-      "servicesOrdered": "Naručeno"
+      "servicesOrdered": "Naručeno",
+      "withdraw": "Povući zahtjev",
+      "withdrawn": "Zahtjev je povučen.",
+      "requestLift": "Zatražiti ukidanje",
+      "liftRequested": "Ukidanje zatraženo — uprava odlučuje.",
+      "liftPending": "Ukidanje zatraženo. Zabrana vrijedi dok uprava ne donese odluku.",
+      "liftRejected": "Ukidanje odbijeno — zabrana ostaje"
     },
     "meter": {
       "title": "Unesi stanje brojila",
@@ -7068,12 +7074,14 @@
       "action": {
         "approve": "Odobri",
         "reject": "Odbij",
-        "revoke": "Opozovi"
+        "revoke": "Opozovi",
+        "rejectLift": "Odbiti ukidanje"
       },
       "confirm": {
         "approve": "Blokirati {objekt} od {von} do {bis}? Noćenja će biti blokirana na svim portalima.",
         "reject": "Odbiti zahtjev za {objekt} ({von} – {bis})?",
-        "revoke": "Opozvati odobrenje za {objekt} ({von} – {bis})? Noćenja će ponovno biti oslobođena."
+        "revoke": "Opozvati odobrenje za {objekt} ({von} – {bis})? Noćenja će ponovno biti oslobođena.",
+        "rejectLift": "Odbiti ukidanje za {objekt} ({von} – {bis})? Zabrana ostaje na snazi."
       },
       "done": {
         "approve": "Zahtjev odobren, noćenja blokirana.",
@@ -7118,7 +7126,8 @@
       "terminationRequested": "Vlasnik želi raskinuti ugovor.",
       "terminationSet": "Ugovor završava {datum}.",
       "servicesOrdered": "Naručene usluge",
-      "servicesNone": "Nisu naručene usluge — neće nastati nijedan zadatak."
+      "servicesNone": "Nisu naručene usluge — neće nastati nijedan zadatak.",
+      "liftRequested": "Želi ukinuti zabranu"
     }
   },
   "seasons": {

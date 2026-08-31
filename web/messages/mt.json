@@ -1770,7 +1770,13 @@
       "terminationSent": "Ġie sottomess avviż ta' terminazzjoni. L-amministrazzjoni tikkonferma t-terminazzjoni tal-kuntratt.",
       "services": "Ordna servizzi",
       "servicesHint": "Jitwettaq u jiġi ffatturat biss dak li timmarka hawn għall-imblokk tiegħek. Mingħajr għażla ma tinħoloq ebda kompitu.",
-      "servicesOrdered": "Ordnat"
+      "servicesOrdered": "Ordnat",
+      "withdraw": "Irtiraħ it-talba",
+      "withdrawn": "Talba rtirata.",
+      "requestLift": "Itlob tneħħija",
+      "liftRequested": "Tneħħija mitluba — l-amministrazzjoni tiddeċiedi.",
+      "liftPending": "Tneħħija mitluba. L-imblokk jibqa' validu sakemm tiddeċiedi l-amministrazzjoni.",
+      "liftRejected": "Tneħħija miċħuda — l-imblokk jibqa'"
     },
     "meter": {
       "title": "Irreġistra qari tal-arloġġ",
@@ -7068,12 +7074,14 @@
       "action": {
         "approve": "Approva",
         "reject": "Iċħad",
-        "revoke": "Irrevoka"
+        "revoke": "Irrevoka",
+        "rejectLift": "Tiċħad it-tneħħija"
       },
       "confirm": {
         "approve": "Timblokka {objekt} mill-{von} sal-{bis}? L-iljieli jiġu mblukkati fil-portali kollha.",
         "reject": "Tiċħad it-talba għal {objekt} ({von} – {bis})?",
-        "revoke": "Tirrevoka l-approvazzjoni għal {objekt} ({von} – {bis})? L-iljieli jerġgħu jiġu rilaxxati."
+        "revoke": "Tirrevoka l-approvazzjoni għal {objekt} ({von} – {bis})? L-iljieli jerġgħu jiġu rilaxxati.",
+        "rejectLift": "Tiċħad it-tneħħija għal {objekt} ({von} – {bis})? L-imblokk jibqa' fis-seħħ."
       },
       "done": {
         "approve": "Talba approvata, iljieli mblukkati.",
@@ -7118,7 +7126,8 @@
       "terminationRequested": "Is-sid jixtieq itemm il-kuntratt.",
       "terminationSet": "Il-kuntratt jintemm fl-{datum}.",
       "servicesOrdered": "Servizzi ordnati",
-      "servicesNone": "Ma ġie ordnat ebda servizz — ma jinħoloqx kompitu."
+      "servicesNone": "Ma ġie ordnat ebda servizz — ma jinħoloqx kompitu.",
+      "liftRequested": "Nixtieq inneħħi l-imblokk"
     }
   },
   "seasons": {

@@ -36,11 +36,12 @@ import {
   approveBlockRequest,
   listBlockRequests,
   rejectBlockRequest,
+  rejectBlockLift,
   revokeBlockRequest,
 } from "@/lib/calendar";
 import { SperrantragPruefungDialog } from "./sperrantrag-pruefung-dialog";
 
-type Aktion = "approve" | "reject" | "revoke";
+type Aktion = "approve" | "reject" | "revoke" | "rejectLift";
 
 const STATUS_KEYS: Record<string, string> = {
   pending: "blockRequests.status.pending",
@@ -51,9 +52,16 @@ const STATUS_KEYS: Record<string, string> = {
 /** Nur diese Aktionen sind aus dem jeweiligen Zustand möglich — dieselbe
  *  Regel wie im Zustandsautomaten des Backends (sperrantraege.py). Ein Knopf,
  *  den der Server ohnehin mit 409 abweist, wird gar nicht erst gezeigt. */
-function aktionenFuer(status: string): Aktion[] {
+function aktionenFuer(status: string, aufhebung: string): Aktion[] {
   if (status === "pending") return ["approve", "reject"];
-  if (status === "approved") return ["revoke"];
+  if (status === "approved") {
+    // Liegt ein Aufhebungswunsch vor (0513), sind es ZWEI Entscheidungen:
+    // „revoke" hebt auf und erfuellt damit den Wunsch, „rejectLift" lehnt ihn
+    // ab und laesst die Sperrung stehen. Ohne den zweiten Knopf haette die
+    // Agentur nur die Wahl zwischen Aufheben und Nichtstun — und der
+    // Eigentuemer saehe ewig „wird geprueft".
+    return aufhebung === "beantragt" ? ["revoke", "rejectLift"] : ["revoke"];
+  }
   return [];
 }
 
@@ -123,7 +131,9 @@ export function SperrantragQueue({
         ? await approveBlockRequest(antrag.id, notiz, kuendigung)
         : aktion === "reject"
           ? await rejectBlockRequest(antrag.id, notiz)
-          : await revokeBlockRequest(antrag.id, notiz);
+          : aktion === "rejectLift"
+            ? await rejectBlockLift(antrag.id, notiz)
+            : await revokeBlockRequest(antrag.id, notiz);
     setLaeuft(null);
 
     if (!res.ok) {
@@ -234,7 +244,7 @@ export function SperrantragQueue({
       ) : (
         <ul className="flex flex-col gap-3">
           {liste.map((a) => {
-            const aktionen = aktionenFuer(a.status);
+            const aktionen = aktionenFuer(a.status, a.aufhebung);
             const statusKey = STATUS_KEYS[a.status];
             return (
               <li key={a.id}>
@@ -274,6 +284,17 @@ export function SperrantragQueue({
                             in eine Detailansicht dahinter. Steht nichts da,
                             entsteht auch keine Aufgabe; bis 0510 lief die
                             volle Regelkette ungefragt an. */}
+                        {/* Der Aufhebungswunsch (0513) — die wichtigste
+                            Zeile fuer die Entscheidung, deshalb hervorgehoben.
+                            Solange er offen ist, bleiben Naechte gesperrt, die
+                            niemand mehr braucht: jeder Tag ohne Entscheidung
+                            ist ein Tag ohne Verkaufsmoeglichkeit. */}
+                        {a.aufhebung === "beantragt" && (
+                          <span className="text-sm font-semibold text-accent">
+                            {t("blockRequests.liftRequested")}
+                            {a.aufhebung_grund ? `: ${a.aufhebung_grund}` : ""}
+                          </span>
+                        )}
                         {a.bestellte_leistungen.length > 0 ? (
                           <span className="text-sm">
                             {t("blockRequests.servicesOrdered")}:{" "}

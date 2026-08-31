@@ -1770,7 +1770,13 @@
       "terminationSent": "Un avis de résiliation a été déposé. L'administration confirme la résiliation du contrat.",
       "services": "Commander des prestations",
       "servicesHint": "Seul ce que vous cochez ici sera réalisé et facturé pour votre blocage. Sans sélection, aucune tâche n'est créée.",
-      "servicesOrdered": "Commandé"
+      "servicesOrdered": "Commandé",
+      "withdraw": "Retirer la demande",
+      "withdrawn": "Demande retirée.",
+      "requestLift": "Demander la levée",
+      "liftRequested": "Levée demandée — l'administration décide.",
+      "liftPending": "Levée demandée. Le blocage reste en vigueur jusqu'à la décision de l'administration.",
+      "liftRejected": "Levée refusée — le blocage est maintenu"
     },
     "meter": {
       "title": "Saisir un relevé de compteur",
@@ -7068,12 +7074,14 @@
       "action": {
         "approve": "Approuver",
         "reject": "Refuser",
-        "revoke": "Révoquer"
+        "revoke": "Révoquer",
+        "rejectLift": "Refuser la levée"
       },
       "confirm": {
         "approve": "Bloquer {objekt} du {von} au {bis} ? Les nuits seront bloquées sur tous les portails.",
         "reject": "Refuser la demande pour {objekt} ({von} – {bis}) ?",
-        "revoke": "Révoquer l'approbation pour {objekt} ({von} – {bis}) ? Les nuits seront à nouveau libérées."
+        "revoke": "Révoquer l'approbation pour {objekt} ({von} – {bis}) ? Les nuits seront à nouveau libérées.",
+        "rejectLift": "Refuser la levée pour {objekt} ({von} – {bis}) ? Le blocage est maintenu."
       },
       "done": {
         "approve": "Demande approuvée, nuits bloquées.",
@@ -7118,7 +7126,8 @@
       "terminationRequested": "Le propriétaire souhaite résilier le contrat.",
       "terminationSet": "Le contrat prend fin le {datum}.",
       "servicesOrdered": "Prestations commandées",
-      "servicesNone": "Aucune prestation commandée — aucune tâche ne sera créée."
+      "servicesNone": "Aucune prestation commandée — aucune tâche ne sera créée.",
+      "liftRequested": "Souhaite lever le blocage"
     }
   },
   "seasons": {

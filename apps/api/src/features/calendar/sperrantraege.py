@@ -24,7 +24,7 @@ zweites Mal denselben Seiteneffekt.
 """
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 from supabase import Client
 
@@ -32,8 +32,6 @@ from src.core.logging import get_logger
 from src.core.mail_sprache import FALLBACK
 from src.core.mail_texte import text as mail_text
 from src.core.security import AuthContext
-from src.features.auth.permissions import Capability, has_capability
-from src.features.auth.schemas import UserRole
 from src.features.tasks.regel_uebersetzung import (
     lesersprache,
     namen_in_sprache,
@@ -67,7 +65,12 @@ _SPALTEN = (
     # diese Stufe passiert haben — der Wert wird trotzdem mitgelesen, damit in
     # der Oberfläche steht, ob die Familie zugestimmt hat oder ob es der
     # Antrag des Eigentümers selbst war.
-    "owner_freigabe, owner_decided_by, owner_decided_at, owner_decision_note"
+    "owner_freigabe, owner_decided_by, owner_decided_at, owner_decision_note, "
+    # Aufhebungswunsch des Eigentümers (0513). Die Agentur MUSS ihn in der
+    # Warteschlange sehen: jeder Tag ohne Entscheidung ist ein Tag, an dem
+    # Nächte gesperrt bleiben, die niemand mehr braucht.
+    "aufhebung, aufhebung_grund, aufhebung_beantragt_am, "
+    "aufhebung_entscheidungsnotiz"
 )
 
 # Ein Antrag darf nicht beliebig weit in die Zukunft sperren — ein Tippfehler
@@ -1024,9 +1027,65 @@ class SperrantragService:
             antrag_id=antrag_id,
             property_id=str(antrag["property_id"]),
         )
+        # Wurzel 1: Lag ein Aufhebungswunsch vor (0513), ist er mit diesem
+        # Widerruf ERLEDIGT. Bliebe er auf 'beantragt' stehen, zeigte das Portal
+        # dem Eigentuemer weiter „wird geprueft", obwohl seine Naechte laengst
+        # frei sind — und die Warteschlange der Agentur einen Vorgang, den es
+        # nicht mehr gibt. Der Filter auf 'beantragt' laesst einen Widerruf
+        # OHNE vorherigen Wunsch unberuehrt (No-op), statt ihm nachtraeglich
+        # eine Aufhebung anzudichten, die niemand beantragt hat.
+        self._aufhebung_abschliessen(ctx, antrag_id, "aufgehoben", req.note)
         neu = self._laden(ctx, antrag_id)
         self._melde_entscheidung(ctx, neu, ZURUECKGENOMMEN)
         return self._einzel_item(neu, ctx)
+
+    def _aufhebung_abschliessen(
+        self, ctx: AuthContext, antrag_id: str, ergebnis: str, note: str | None
+    ) -> None:
+        """Einen OFFENEN Aufhebungswunsch als entschieden markieren (0513).
+
+        Bedingter UPDATE auf `aufhebung='beantragt'`: gab es keinen Wunsch,
+        passiert nichts. Das ist Absicht — ein Widerruf, den die Agentur von
+        sich aus ausloest, ist keine Antwort auf einen Wunsch des Eigentuemers.
+        """
+        self._db.table("block_requests").update(
+            {
+                "aufhebung": ergebnis,
+                "aufhebung_entschieden_von": ctx.user_id,
+                # Fachlicher Entscheidungszeitpunkt, nicht updated_at (5b).
+                "aufhebung_entschieden_am": datetime.now(UTC).isoformat(),
+                "aufhebung_entscheidungsnotiz": (note or "").strip() or None,
+            }
+        ).eq("id", antrag_id).eq("tenant_id", ctx.tenant_id).eq(
+            "aufhebung", "beantragt"
+        ).execute()
+
+    def aufhebung_ablehnen(
+        self, ctx: AuthContext, antrag_id: str, req: BlockRequestDecision
+    ) -> SperrantragItem:
+        """Den Aufhebungswunsch ablehnen — die Sperrung BLEIBT (0513).
+
+        Kein Kalender-Seiteneffekt: es wird nichts freigegeben, der Status des
+        Antrags bleibt 'approved'. Abgelehnt wird nur der Wunsch, sie
+        aufzuheben.
+
+        Der Eigentuemer braucht eine Begruendung, sonst wirkt die Ablehnung wie
+        Willkuer — sie steht in `aufhebung_entscheidungsnotiz` und ist im Portal
+        sichtbar.
+        """
+        antrag = self._laden(ctx, antrag_id)
+        if str(antrag.get("aufhebung") or "keine") != "beantragt":
+            raise CalendarError(
+                "Zu dieser Sperrung liegt kein offener Aufhebungswunsch vor.",
+                status_code=409,
+            )
+        self._aufhebung_abschliessen(ctx, antrag_id, "abgelehnt", req.note)
+        log.info(
+            "sperrantrag_aufhebung_abgelehnt",
+            tenant_id=ctx.tenant_id,
+            antrag_id=antrag_id,
+        )
+        return self._einzel_item(self._laden(ctx, antrag_id), ctx)
 
     def _vertragsende_widerrufen(
         self, ctx: AuthContext, antrag: dict
@@ -1309,92 +1368,10 @@ class SperrantragService:
             )
 
 
-def melde_neuen_antrag(
-    db: Client, tenant_id: str, antrag: dict, titel: str
-) -> None:
-    """Die Entscheider des Mandanten über einen NEUEN Antrag informieren.
-
-    Liegt hier statt im public_portal, weil der Empfängerkreis eine Frage der
-    Capability-Matrix ist (wer darf entscheiden?) und nicht der Portal-Sicht.
-
-    Empfänger sind die Nutzer des Mandanten, deren ROLLE die Capability
-    APPROVE_BLOCK trägt — dieselbe Bedingung wie der Guard am Endpunkt. Die
-    Rolle kommt aus der DB, nicht aus einem JWT (Wurzel 7): der Antragsteller
-    hat mit den Rollen der anderen nichts zu tun.
-
-    Best-effort (Wurzel 5): der Antrag ist gespeichert; er darf nicht verloren
-    gehen, weil der Versand klemmt.
-    """
-    try:
-        rows = (
-            db.table("users")
-            .select("id, role")
-            .eq("tenant_id", tenant_id)
-            .execute()
-        ).data or []
-        empfaenger = [
-            str(r["id"]) for r in rows if _darf_entscheiden(r.get("role"))
-        ]
-        if not empfaenger:
-            log.info("sperrantrag_ohne_entscheider", tenant_id=tenant_id)
-            return
-        from src.features.notification_settings.dispatcher import (  # noqa: PLC0415
-            NotificationDispatcher,
-        )
-
-        dispatcher = NotificationDispatcher(db)
-        zeitraum = f"{antrag['start_date']} – {antrag['end_date']}"
-        grund = (antrag.get("reason") or "").strip()
-        werte: dict[str, object] = {"titel": titel, "zeitraum": zeitraum}
-        # Die Begründung ist OPTIONAL und darum ein zweiter Absatz, kein
-        # Satzende im Rumpf: fehlt sie, darf kein leeres „Begründung:"
-        # dastehen (gleiche Regel wie bei der Anmerkung der Entscheidung).
-        rumpf_keys = ["sperrantrag.rumpf_neu"]
-        if grund:
-            rumpf_keys.append("sperrantrag.begruendung")
-            werte["grund"] = grund
-        for nutzer in empfaenger:
-            dispatcher.sende(
-                user_id=nutzer,
-                schluessel="block_request",
-                # Glocke: fertiger Satz in der Ausweichsprache — die Oberfläche
-                # bekommt keinen Schlüssel, sondern den gerenderten Text.
-                betreff=mail_text("sperrantrag.neu", FALLBACK, **werte),
-                text="\n\n".join(
-                    mail_text(k, FALLBACK, **werte) for k in rumpf_keys
-                ),
-                # Mail/SMS: Schlüssel — der Dispatcher übersetzt sie in die
-                # Sprache des Empfängers. Vorher stand hier ein hart deutscher
-                # f-String, der jeden Entscheider unabhängig von seiner
-                # Sprachwahl auf Deutsch anschrieb.
-                betreff_key="sperrantrag.neu",
-                betreff_werte=werte,
-                text_key=rumpf_keys,
-                text_werte=werte,
-                tenant_id=tenant_id,
-                property_id=str(antrag["property_id"]),
-                ziel_pfad="/kalender/sperrantraege",
-                dedup_key=f"block_request:{antrag['id']}",
-            )
-    except Exception as exc:  # noqa: BLE001 — Nebenpfad, siehe Docstring
-        log.warning(
-            "sperrantrag_meldung_fehlgeschlagen",
-            tenant_id=tenant_id,
-            error=str(exc)[:200],
-        )
-
-
-def _darf_entscheiden(role: str | None) -> bool:
-    """Trägt diese Rolle die Capability APPROVE_BLOCK? Fail-closed (Wurzel 6):
-    eine unbekannte oder fehlende Rolle bekommt nichts."""
-    if not role:
-        return False
-    try:
-        rolle = UserRole(role)
-    except ValueError:
-        return False
-    return has_capability(rolle, Capability.APPROVE_BLOCK)
-
+# Die Benachrichtigungen (melde_neuen_antrag, melde_aufhebungswunsch) liegen
+# in `sperrantrag_meldung.py` — sie beantworten eine andere Frage als dieser
+# Zustandsautomat und liessen das Modul ueber 1500 Zeilen wachsen. Der
+# Re-Export haelt die bestehenden Importwege gueltig.
 
 def _status_text(status: str | None) -> str:
     return {
@@ -1444,4 +1421,12 @@ def _item(
             else None
         ),
         bestellte_leistungen=bestellt or [],
+        aufhebung=str(r.get("aufhebung") or "keine"),
+        aufhebung_grund=r.get("aufhebung_grund"),
+        aufhebung_beantragt_am=(
+            str(r["aufhebung_beantragt_am"])
+            if r.get("aufhebung_beantragt_am")
+            else None
+        ),
+        aufhebung_entscheidungsnotiz=r.get("aufhebung_entscheidungsnotiz"),
     )

@@ -23,6 +23,7 @@ from .dependencies import (
 from .dienstleistungen import DienstleistungError
 from .familie import FamilieError
 from .schemas import (
+    AufhebungAntrag,
     BestellbareLeistungen,
     BlockRequestCreate,
     BlockRequestItem,
@@ -155,6 +156,47 @@ def bestellbare_leistungen(
     """
     try:
         return service.bestellbare_leistungen(ctx, property_id)
+    except PortalError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.delete("/block-requests/{request_id}", status_code=status.HTTP_204_NO_CONTENT)
+def withdraw_block_request(
+    request_id: str,
+    service: PublicPortalServiceDep,
+    ctx: Annotated[AuthContext, Depends(_BLOCK)],
+) -> None:
+    """Einen NOCH OFFENEN Sperrantrag zurueckziehen (0513).
+
+    DELETE und nicht POST, weil der Antrag wirklich verschwindet: es ist nichts
+    gesperrt, solange nichts genehmigt ist, also bleibt auch nichts zurueck.
+    Ein genehmigter Antrag laesst sich hierueber NICHT loeschen — dafuer gibt es
+    den Aufhebungswunsch unten, den die Agentur entscheidet.
+    """
+    try:
+        service.zurueckziehen(ctx, request_id)
+    except PortalError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/block-requests/{request_id}/aufhebung",
+    response_model=BlockRequestItem,
+)
+def request_block_lift(
+    request_id: str,
+    req: AufhebungAntrag,
+    service: PublicPortalServiceDep,
+    ctx: Annotated[AuthContext, Depends(_BLOCK)],
+) -> BlockRequestItem:
+    """Die Aufhebung einer GENEHMIGTEN Sperrung beantragen (0513).
+
+    Nur ein Antrag: die Sperrung besteht weiter, bis die Agentur entscheidet.
+    Der Eigentuemer kann sie nicht selbst aufloesen (§4.2) — daran haengen eine
+    Reservierung, die Kalenderbelegung und der Push an die Portale.
+    """
+    try:
+        return service.aufhebung_beantragen(ctx, request_id, req.grund)
     except PortalError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

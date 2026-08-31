@@ -1770,7 +1770,13 @@
       "terminationSent": "Opsigelse er indsendt. Administrationen bekræfter kontraktens opsigelse.",
       "services": "Bestil ydelser",
       "servicesHint": "Kun det, du markerer her, bliver udført og faktureret til din blokering. Uden et valg oprettes der ingen opgave.",
-      "servicesOrdered": "Bestilt"
+      "servicesOrdered": "Bestilt",
+      "withdraw": "Træk anmodning tilbage",
+      "withdrawn": "Anmodning trukket tilbage.",
+      "requestLift": "Anmod om ophævelse",
+      "liftRequested": "Ophævelse anmodet — administrationen træffer afgørelse.",
+      "liftPending": "Ophævelse anmodet. Spærringen gælder, indtil administrationen har truffet afgørelse.",
+      "liftRejected": "Ophævelse afvist — spærringen forbliver"
     },
     "meter": {
       "title": "Registrer måleraflæsning",
@@ -7068,12 +7074,14 @@
       "action": {
         "approve": "Godkend",
         "reject": "Afvis",
-        "revoke": "Tilbagekald"
+        "revoke": "Tilbagekald",
+        "rejectLift": "Afvis ophævelse"
       },
       "confirm": {
         "approve": "Spær {objekt} fra {von} til {bis}? Nætterne spærres på alle portaler.",
         "reject": "Afvis anmodningen for {objekt} ({von} – {bis})?",
-        "revoke": "Tilbagekald godkendelsen for {objekt} ({von} – {bis})? Nætterne frigives igen."
+        "revoke": "Tilbagekald godkendelsen for {objekt} ({von} – {bis})? Nætterne frigives igen.",
+        "rejectLift": "Afvise ophævelse for {objekt} ({von} – {bis})? Spærringen forbliver."
       },
       "done": {
         "approve": "Anmodning godkendt, nætter spærret.",
@@ -7118,7 +7126,8 @@
       "terminationRequested": "Ejeren ønsker at ophæve kontrakten.",
       "terminationSet": "Kontrakten udløber den {datum}.",
       "servicesOrdered": "Bestilte ydelser",
-      "servicesNone": "Ingen ydelser bestilt — der oprettes ingen opgave."
+      "servicesNone": "Ingen ydelser bestilt — der oprettes ingen opgave.",
+      "liftRequested": "Ønsker at ophæve spærringen"
     }
   },
   "seasons": {

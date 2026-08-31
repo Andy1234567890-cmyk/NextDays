@@ -1770,7 +1770,13 @@
       "terminationSent": "Se ha presentado la notificación de rescisión. La administración confirma la rescisión del contrato.",
       "services": "Solicitar servicios",
       "servicesHint": "Solo lo que marque aquí se realizará y facturará para su bloqueo. Sin selección no se crea ninguna tarea.",
-      "servicesOrdered": "Solicitado"
+      "servicesOrdered": "Solicitado",
+      "withdraw": "Retirar solicitud",
+      "withdrawn": "Solicitud retirada.",
+      "requestLift": "Solicitar levantamiento",
+      "liftRequested": "Levantamiento solicitado — la administración decide.",
+      "liftPending": "Levantamiento solicitado. El bloqueo se mantiene hasta que la administración decida.",
+      "liftRejected": "Levantamiento denegado — el bloqueo permanece"
     },
     "meter": {
       "title": "Registrar lectura de contador",
@@ -7068,12 +7074,14 @@
       "action": {
         "approve": "Aprobar",
         "reject": "Rechazar",
-        "revoke": "Revocar"
+        "revoke": "Revocar",
+        "rejectLift": "Denegar levantamiento"
       },
       "confirm": {
         "approve": "¿Bloquear {objekt} del {von} al {bis}? Las noches se bloquearán en todos los portales.",
         "reject": "¿Rechazar la solicitud para {objekt} ({von} – {bis})?",
-        "revoke": "¿Revocar la aprobación para {objekt} ({von} – {bis})? Las noches se liberarán de nuevo."
+        "revoke": "¿Revocar la aprobación para {objekt} ({von} – {bis})? Las noches se liberarán de nuevo.",
+        "rejectLift": "¿Denegar el levantamiento para {objekt} ({von} – {bis})? El bloqueo se mantiene."
       },
       "done": {
         "approve": "Solicitud aprobada, noches bloqueadas.",
@@ -7118,7 +7126,8 @@
       "terminationRequested": "El propietario desea rescindir el contrato.",
       "terminationSet": "El contrato finaliza el {datum}.",
       "servicesOrdered": "Servicios solicitados",
-      "servicesNone": "No se han solicitado servicios: no se creará ninguna tarea."
+      "servicesNone": "No se han solicitado servicios: no se creará ninguna tarea.",
+      "liftRequested": "Desea levantar el bloqueo"
     }
   },
   "seasons": {

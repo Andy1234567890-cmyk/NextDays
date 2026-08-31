@@ -1770,7 +1770,13 @@
       "terminationSent": "Oznámení o ukončení pracovního poměru bylo podáno. Administrativa potvrzuje ukončení smlouvy.",
       "services": "Objednat služby",
       "servicesHint": "Provedeno a vyúčtováno bude pouze to, co zde zaškrtnete. Bez výběru nevznikne žádný úkol.",
-      "servicesOrdered": "Objednáno"
+      "servicesOrdered": "Objednáno",
+      "withdraw": "Žádost stáhnout",
+      "withdrawn": "Žádost stažena.",
+      "requestLift": "Požádat o zrušení",
+      "liftRequested": "Zrušení vyžádáno — rozhodne správa.",
+      "liftPending": "Zrušení vyžádáno. Zablokování platí, dokud správa nerozhodne.",
+      "liftRejected": "Zrušení zamítnuto — zablokování zůstává"
     },
     "meter": {
       "title": "Zaznamenat stav měřidla",
@@ -7068,12 +7074,14 @@
       "action": {
         "approve": "Schválit",
         "reject": "Zamítnout",
-        "revoke": "Odvolat"
+        "revoke": "Odvolat",
+        "rejectLift": "Zamítnout zrušení"
       },
       "confirm": {
         "approve": "Zablokovat {objekt} od {von} do {bis}? Noci budou zablokovány na všech portálech.",
         "reject": "Zamítnout žádost pro {objekt} ({von} – {bis})?",
-        "revoke": "Odvolat schválení pro {objekt} ({von} – {bis})? Noci budou znovu uvolněny."
+        "revoke": "Odvolat schválení pro {objekt} ({von} – {bis})? Noci budou znovu uvolněny.",
+        "rejectLift": "Zamítnout zrušení pro {objekt} ({von} – {bis})? Zablokování zůstane v platnosti."
       },
       "done": {
         "approve": "Žádost schválena, noci zablokovány.",
@@ -7118,7 +7126,8 @@
       "terminationRequested": "Majitel si přeje ukončit smlouvu.",
       "terminationSet": "Smlouva končí dne {datum}.",
       "servicesOrdered": "Objednané služby",
-      "servicesNone": "Žádné služby nebyly objednány — nevznikne žádný úkol."
+      "servicesNone": "Žádné služby nebyly objednány — nevznikne žádný úkol.",
+      "liftRequested": "Chci zrušit blokaci"
     }
   },
   "seasons": {

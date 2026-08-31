@@ -1770,7 +1770,13 @@
       "terminationInterpreted": "Die Verwaltung hat diesen Antrag als Kündigung gewertet — Vertrag endet am {datum}. Bitte melde dich, wenn das nicht gemeint war.",
       "services": "Leistungen bestellen",
       "servicesHint": "Nur was Sie hier ankreuzen, wird zu Ihrer Sperrung ausgeführt und abgerechnet. Ohne Auswahl entsteht keine Aufgabe.",
-      "servicesOrdered": "Bestellt"
+      "servicesOrdered": "Bestellt",
+      "withdraw": "Antrag zurückziehen",
+      "withdrawn": "Antrag zurückgezogen.",
+      "requestLift": "Aufhebung beantragen",
+      "liftRequested": "Aufhebung beantragt — die Verwaltung entscheidet.",
+      "liftPending": "Aufhebung beantragt. Die Sperrung gilt, bis die Verwaltung entschieden hat.",
+      "liftRejected": "Aufhebung abgelehnt — die Sperrung bleibt"
     },
     "meter": {
       "title": "Zählerstand erfassen",
@@ -7089,12 +7095,14 @@
       "action": {
         "approve": "Genehmigen",
         "reject": "Ablehnen",
-        "revoke": "Zurücknehmen"
+        "revoke": "Zurücknehmen",
+        "rejectLift": "Aufhebung ablehnen"
       },
       "confirm": {
         "reject": "Antrag für {objekt} ({von} – {bis}) ablehnen?",
         "revoke": "Genehmigung für {objekt} ({von} – {bis}) zurücknehmen? Die Nächte werden wieder freigegeben.",
-        "approve": "{objekt} von {von} bis {bis} sperren? Die Nächte werden auf allen Portalen gesperrt."
+        "approve": "{objekt} von {von} bis {bis} sperren? Die Nächte werden auf allen Portalen gesperrt.",
+        "rejectLift": "Aufhebung für {objekt} ({von} – {bis}) ablehnen? Die Sperrung bleibt bestehen."
       },
       "done": {
         "approve": "Antrag genehmigt, Nächte gesperrt.",
@@ -7139,7 +7147,8 @@
       "terminationRequested": "Der Eigentümer möchte den Vertrag beenden.",
       "terminationSet": "Vertrag endet am {datum}.",
       "servicesOrdered": "Bestellte Leistungen",
-      "servicesNone": "Keine Leistungen bestellt — es entsteht keine Aufgabe."
+      "servicesNone": "Keine Leistungen bestellt — es entsteht keine Aufgabe.",
+      "liftRequested": "Möchte die Sperrung aufheben"
     }
   },
   "seasons": {

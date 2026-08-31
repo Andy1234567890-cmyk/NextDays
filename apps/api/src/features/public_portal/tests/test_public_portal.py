@@ -58,6 +58,15 @@ class _Query:
         self._payload = payload
         return self
 
+    def update(self, payload: dict) -> "_Query":
+        self._op = "update"
+        self._payload = payload
+        return self
+
+    def delete(self) -> "_Query":
+        self._op = "delete"
+        return self
+
     def upsert(self, payload: list[dict] | dict, **_k: object) -> "_Query":
         """Wie `insert`, aber mit einer Liste und ohne Doppelte (0510).
 
@@ -120,6 +129,16 @@ class _Query:
 
     def execute(self) -> _Result:
         rows = self._db.tables.setdefault(self._table, [])
+        if self._op == "update":
+            treffer = [r for r in rows if self._match(r)]
+            for r in treffer:
+                r.update(self._payload or {})
+            return _Result(treffer)
+        if self._op == "delete":
+            treffer = [r for r in rows if self._match(r)]
+            for r in treffer:
+                rows.remove(r)
+            return _Result(treffer)
         if self._op == "upsert":
             neu_rows = []
             for eintrag in self._payload_liste:
@@ -948,3 +967,134 @@ def test_doppelte_bestellung_erzeugt_eine_zeile() -> None:
         ),
     )
     assert len(tables["block_request_services"]) == 1
+
+
+# --- Sperrung zurueckziehen / Aufhebung beantragen (0513) --------------------
+#
+# Der Sperrantrag kannte bis 0513 nur eine Richtung: anlegen. „Wir kommen doch
+# nicht" ging nur per Anruf, und bis jemand ihn umsetzte, blieben Naechte aus
+# dem Verkauf — genau die, die jemand freiwillig zurueckgeben wollte.
+
+
+def _mit_antrag(status: str = "pending", **extra: object) -> dict[str, list[dict]]:
+    """Tabellen mit EINEM eigenen Antrag im gewuenschten Zustand."""
+    tables = _tables()
+    tables["block_requests"] = [
+        {
+            "id": "br-1",
+            "tenant_id": "t-1",
+            "property_id": "p-1",
+            "requested_by": "owner-1",
+            "start_date": "2026-09-01",
+            "end_date": "2026-09-07",
+            "status": status,
+            "reason": None,
+            "owner_freigabe": "nicht_noetig",
+            "aufhebung": "keine",
+            "created_at": "2026-08-01T00:00:00Z",
+            **extra,
+        }
+    ]
+    return tables
+
+
+def test_offener_antrag_wird_zurueckgezogen() -> None:
+    """Nichts genehmigt heisst nichts gesperrt — also kein Gegenzustand.
+
+    Der Antrag verschwindet wirklich, statt auf 'rejected' zu gehen: 'rejected'
+    hiesse „die Agentur hat abgelehnt" und waere eine Falschaussage ueber sie.
+    """
+    tables = _mit_antrag("pending")
+    PublicPortalService(service_client=_DB(tables)).zurueckziehen(_ctx(), "br-1")
+    assert tables["block_requests"] == []
+
+
+def test_genehmigter_antrag_laesst_sich_nicht_zurueckziehen() -> None:
+    """Hier haengt eine Reservierung dran — das entscheidet die Agentur.
+
+    Ohne diesen Riegel loeschte der Eigentuemer den Antrag, und die Belegung
+    bliebe ohne Anker im Kalender stehen: gesperrt fuer immer, ohne dass noch
+    etwas darauf hinweist (Wurzel 1).
+    """
+    tables = _mit_antrag("approved")
+    with pytest.raises(PortalError) as exc:
+        PublicPortalService(service_client=_DB(tables)).zurueckziehen(_ctx(), "br-1")
+    assert exc.value.status_code == 409
+    assert tables["block_requests"]  # steht noch
+
+
+def test_fremder_antrag_ist_nicht_zurueckziehbar() -> None:
+    """Wurzel 3/9: nur EIGENE Antraege, nicht die anderer Eigentuemer.
+
+    `requested_by` ist Teil der Ladeabfrage, nicht eine Pruefung danach.
+    """
+    tables = _mit_antrag("pending", requested_by="owner-fremd")
+    with pytest.raises(PortalError) as exc:
+        PublicPortalService(service_client=_DB(tables)).zurueckziehen(_ctx(), "br-1")
+    assert exc.value.status_code == 404
+    assert tables["block_requests"]
+
+
+def test_aufhebung_beantragen_laesst_die_sperrung_bestehen() -> None:
+    """DER KERN: ein Wunsch gibt nichts frei.
+
+    `status` bleibt 'approved' — die Naechte sind bis zur Entscheidung der
+    Agentur weiter gesperrt. Stuende hier ein anderer Status, riefe der
+    EXCLUDE-Constraint aus 0377 oder der Kalender ein anderes Ergebnis hervor.
+    """
+    tables = _mit_antrag("approved")
+    item = PublicPortalService(service_client=_DB(tables)).aufhebung_beantragen(
+        _ctx(), "br-1", "Wir kommen doch nicht"
+    )
+    assert item.aufhebung == "beantragt"
+    zeile = tables["block_requests"][0]
+    assert zeile["status"] == "approved"
+    assert zeile["aufhebung_grund"] == "Wir kommen doch nicht"
+    assert zeile["aufhebung_beantragt_am"]
+
+
+def test_aufhebung_nur_bei_genehmigter_sperrung() -> None:
+    """Ein offener Antrag wird zurueckgezogen, nicht aufgehoben."""
+    tables = _mit_antrag("pending")
+    with pytest.raises(PortalError) as exc:
+        PublicPortalService(service_client=_DB(tables)).aufhebung_beantragen(
+            _ctx(), "br-1", None
+        )
+    assert exc.value.status_code == 409
+
+
+def test_zweiter_aufhebungswunsch_wird_abgewiesen() -> None:
+    """Wurzel 2: ein Doppelklick darf den Beantragungszeitpunkt nicht
+    ueberschreiben — sonst rutscht der Vorgang in der Warteschlange der Agentur
+    immer wieder nach hinten."""
+    tables = _mit_antrag(
+        "approved", aufhebung="beantragt",
+        aufhebung_beantragt_am="2026-08-20T10:00:00Z",
+    )
+    with pytest.raises(PortalError) as exc:
+        PublicPortalService(service_client=_DB(tables)).aufhebung_beantragen(
+            _ctx(), "br-1", None
+        )
+    assert exc.value.status_code == 409
+    assert tables["block_requests"][0]["aufhebung_beantragt_am"] == (
+        "2026-08-20T10:00:00Z"
+    )
+
+
+def test_aufhebung_fremder_sperrung_ist_nicht_moeglich() -> None:
+    tables = _mit_antrag("approved", requested_by="owner-fremd")
+    with pytest.raises(PortalError) as exc:
+        PublicPortalService(service_client=_DB(tables)).aufhebung_beantragen(
+            _ctx(), "br-1", None
+        )
+    assert exc.value.status_code == 404
+
+
+def test_leerer_grund_wird_nicht_als_text_gespeichert() -> None:
+    """Ein Leerzeichen ist keine Begruendung (Wurzel 4): sonst zeigte die
+    Agentur-Warteschlange „Begruendung: " mit nichts dahinter."""
+    tables = _mit_antrag("approved")
+    PublicPortalService(service_client=_DB(tables)).aufhebung_beantragen(
+        _ctx(), "br-1", "   "
+    )
+    assert tables["block_requests"][0]["aufhebung_grund"] is None

@@ -23,10 +23,8 @@ import pytest
 from src.core.security import AuthContext
 from src.features.calendar.schemas import BlockRequestDecision
 from src.features.calendar.service import CalendarError
-from src.features.calendar.sperrantraege import (
-    SperrantragService,
-    melde_neuen_antrag,
-)
+from src.features.calendar.sperrantraege import SperrantragService
+from src.features.calendar.sperrantrag_meldung import melde_neuen_antrag
 
 # Feste UUIDs: `reservations`-Pfade prüfen die ID-Form (`_require_uuid`), ein
 # „b-1" käme dort nie an.
@@ -1403,7 +1401,9 @@ def test_kuendigung_laeuft_trotz_belegtem_zeitraum() -> None:
 
 def test_nur_entscheider_bekommen_die_meldung() -> None:
     """Die Reinigungskraft (kein APPROVE_BLOCK) darf nichts erfahren."""
-    from src.features.calendar.sperrantraege import _darf_entscheiden  # noqa: PLC0415
+    from src.features.calendar.sperrantrag_meldung import (  # noqa: PLC0415
+        _darf_entscheiden,
+    )
 
     assert _darf_entscheiden("admin") is True
     assert _darf_entscheiden("co_admin") is True

@@ -1770,7 +1770,13 @@
       "terminationSent": "Obvestilo o odpovedi je bilo poslano. Uprava potrjuje odpoved pogodbe.",
       "services": "Naročite storitve",
       "servicesHint": "Izvedeno in zaračunano bo samo tisto, kar tukaj označite. Brez izbire ne nastane nobena naloga.",
-      "servicesOrdered": "Naročeno"
+      "servicesOrdered": "Naročeno",
+      "withdraw": "Prekliči zahtevo",
+      "withdrawn": "Zahteva preklicana.",
+      "requestLift": "Zahtevaj preklic",
+      "liftRequested": "Preklic zahtevan — odloča uprava.",
+      "liftPending": "Preklic zahtevan. Zapora velja, dokler uprava ne odloči.",
+      "liftRejected": "Preklic zavrnjen — zapora ostaja"
     },
     "meter": {
       "title": "Vnesi stanje števca",
@@ -7068,12 +7074,14 @@
       "action": {
         "approve": "Odobri",
         "reject": "Zavrni",
-        "revoke": "Prekliči"
+        "revoke": "Prekliči",
+        "rejectLift": "Zavrni preklic"
       },
       "confirm": {
         "approve": "Blokiram {objekt} od {von} do {bis}? Nočitve bodo blokirane na vseh portalih.",
         "reject": "Zavrnem zahtevo za {objekt} ({von} – {bis})?",
-        "revoke": "Prekličem odobritev za {objekt} ({von} – {bis})? Nočitve bodo znova sproščene."
+        "revoke": "Prekličem odobritev za {objekt} ({von} – {bis})? Nočitve bodo znova sproščene.",
+        "rejectLift": "Zavrniti preklic za {objekt} ({von} – {bis})? Zapora ostaja v veljavi."
       },
       "done": {
         "approve": "Zahteva odobrena, nočitve blokirane.",
@@ -7118,7 +7126,8 @@
       "terminationRequested": "Lastnik želi prekiniti pogodbo.",
       "terminationSet": "Pogodba se konča na {datum}.",
       "servicesOrdered": "Naročene storitve",
-      "servicesNone": "Nobena storitev ni naročena — nobena naloga ne bo nastala."
+      "servicesNone": "Nobena storitev ni naročena — nobena naloga ne bo nastala.",
+      "liftRequested": "Želim preklicati zaporo"
     }
   },
   "seasons": {

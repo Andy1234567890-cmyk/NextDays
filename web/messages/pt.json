@@ -1770,7 +1770,13 @@
       "terminationSent": "O aviso de rescisão foi apresentado. A administração confirma a rescisão do contrato.",
       "services": "Encomendar serviços",
       "servicesHint": "Apenas o que assinalar aqui será executado e faturado para o seu bloqueio. Sem seleção não é criada nenhuma tarefa.",
-      "servicesOrdered": "Encomendado"
+      "servicesOrdered": "Encomendado",
+      "withdraw": "Retirar pedido",
+      "withdrawn": "Pedido retirado.",
+      "requestLift": "Solicitar levantamento",
+      "liftRequested": "Levantamento solicitado — a administração decide.",
+      "liftPending": "Levantamento solicitado. O bloqueio permanece até que a administração decida.",
+      "liftRejected": "Levantamento recusado — o bloqueio permanece"
     },
     "meter": {
       "title": "Registar leitura de contador",
@@ -7068,12 +7074,14 @@
       "action": {
         "approve": "Aprovar",
         "reject": "Recusar",
-        "revoke": "Revogar"
+        "revoke": "Revogar",
+        "rejectLift": "Recusar levantamento"
       },
       "confirm": {
         "approve": "Bloquear {objekt} de {von} a {bis}? As noites serão bloqueadas em todos os portais.",
         "reject": "Recusar o pedido para {objekt} ({von} – {bis})?",
-        "revoke": "Revogar a aprovação para {objekt} ({von} – {bis})? As noites serão novamente libertadas."
+        "revoke": "Revogar a aprovação para {objekt} ({von} – {bis})? As noites serão novamente libertadas.",
+        "rejectLift": "Recusar levantamento para {objekt} ({von} – {bis})? O bloqueio permanecerá."
       },
       "done": {
         "approve": "Pedido aprovado, noites bloqueadas.",
@@ -7118,7 +7126,8 @@
       "terminationRequested": "O proprietário deseja rescindir o contrato.",
       "terminationSet": "O contrato termina em {datum}.",
       "servicesOrdered": "Serviços encomendados",
-      "servicesNone": "Nenhum serviço encomendado — não será criada nenhuma tarefa."
+      "servicesNone": "Nenhum serviço encomendado — não será criada nenhuma tarefa.",
+      "liftRequested": "Deseja levantar o bloqueio"
     }
   },
   "seasons": {

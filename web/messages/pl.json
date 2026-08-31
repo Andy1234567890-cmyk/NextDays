@@ -1770,7 +1770,13 @@
       "terminationSent": "Złożono wypowiedzenie umowy. Administracja potwierdza wypowiedzenie umowy.",
       "services": "Zamów usługi",
       "servicesHint": "Tylko to, co tutaj zaznaczysz, zostanie wykonane i zafakturowane w ramach Twojej blokady. Bez wyboru nie powstaje żadne zadanie.",
-      "servicesOrdered": "Zamówione"
+      "servicesOrdered": "Zamówione",
+      "withdraw": "Wycofaj wniosek",
+      "withdrawn": "Wniosek wycofany.",
+      "requestLift": "Zażądaj anulowania",
+      "liftRequested": "Zażądano anulowania — decyzja należy do zarządu.",
+      "liftPending": "Zażądano anulowania. Blokada obowiązuje do czasu podjęcia decyzji przez zarząd.",
+      "liftRejected": "Anulowanie odrzucone — blokada pozostaje"
     },
     "meter": {
       "title": "Zapisz stan licznika",
@@ -7068,12 +7074,14 @@
       "action": {
         "approve": "Zatwierdź",
         "reject": "Odrzuć",
-        "revoke": "Cofnij"
+        "revoke": "Cofnij",
+        "rejectLift": "Odrzuć anulowanie"
       },
       "confirm": {
         "approve": "Zablokować {objekt} od {von} do {bis}? Noce zostaną zablokowane na wszystkich portalach.",
         "reject": "Odrzucić wniosek dla {objekt} ({von} – {bis})?",
-        "revoke": "Cofnąć zatwierdzenie dla {objekt} ({von} – {bis})? Noce zostaną ponownie zwolnione."
+        "revoke": "Cofnąć zatwierdzenie dla {objekt} ({von} – {bis})? Noce zostaną ponownie zwolnione.",
+        "rejectLift": "Odrzucić anulowanie dla {objekt} ({von} – {bis})? Blokada pozostanie."
       },
       "done": {
         "approve": "Wniosek zatwierdzony, noce zablokowane.",
@@ -7118,7 +7126,8 @@
       "terminationRequested": "Właściciel chce rozwiązać umowę.",
       "terminationSet": "Kontrakt kończy się {datum}.",
       "servicesOrdered": "Zamówione usługi",
-      "servicesNone": "Nie zamówiono usług — nie powstanie żadne zadanie."
+      "servicesNone": "Nie zamówiono usług — nie powstanie żadne zadanie.",
+      "liftRequested": "Chcę anulować blokadę"
     }
   },
   "seasons": {

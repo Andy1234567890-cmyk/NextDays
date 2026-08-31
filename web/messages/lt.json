@@ -1770,7 +1770,13 @@
       "terminationSent": "Pranešimas apie sutarties nutraukimą pateiktas. Administracija patvirtina sutarties nutraukimą.",
       "services": "Užsakyti paslaugas",
       "servicesHint": "Bus atlikta ir apmokestinta tik tai, ką čia pažymėsite. Nepasirinkus nesukuriama jokia užduotis.",
-      "servicesOrdered": "Užsakyta"
+      "servicesOrdered": "Užsakyta",
+      "withdraw": "Atsišaukti prašymą",
+      "withdrawn": "Prašymas atsišauktas.",
+      "requestLift": "Prašyti panaikinimo",
+      "liftRequested": "Panaikinimas užklaustas — sprendžia administracija.",
+      "liftPending": "Panaikinimas užklaustas. Blokavimas galioja, kol administracija priims sprendimą.",
+      "liftRejected": "Panaikinimas atmestas — blokavimas lieka"
     },
     "meter": {
       "title": "Įvesti skaitiklio rodmenį",
@@ -7068,12 +7074,14 @@
       "action": {
         "approve": "Patvirtinti",
         "reject": "Atmesti",
-        "revoke": "Atšaukti"
+        "revoke": "Atšaukti",
+        "rejectLift": "Atmesti panaikinimą"
       },
       "confirm": {
         "approve": "Užblokuoti {objekt} nuo {von} iki {bis}? Naktys bus užblokuotos visuose portaluose.",
         "reject": "Atmesti prašymą objektui {objekt} ({von} – {bis})?",
-        "revoke": "Atšaukti patvirtinimą objektui {objekt} ({von} – {bis})? Naktys vėl bus atlaisvintos."
+        "revoke": "Atšaukti patvirtinimą objektui {objekt} ({von} – {bis})? Naktys vėl bus atlaisvintos.",
+        "rejectLift": "Atmesti {objekt} ({von} – {bis}) panaikinimą? Blokavimas liks galioti."
       },
       "done": {
         "approve": "Prašymas patvirtintas, naktys užblokuotos.",
@@ -7118,7 +7126,8 @@
       "terminationRequested": "Savininkas nori nutraukti sutartį.",
       "terminationSet": "Sutartis baigiasi {datum}.",
       "servicesOrdered": "Užsakytos paslaugos",
-      "servicesNone": "Paslaugų neužsakyta — užduotis nebus sukurta."
+      "servicesNone": "Paslaugų neužsakyta — užduotis nebus sukurta.",
+      "liftRequested": "Nori panaikinti blokavimą"
     }
   },
   "seasons": {

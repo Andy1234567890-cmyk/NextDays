@@ -532,6 +532,13 @@ class SperrantragItem(BaseModel):
     # Aufgabe — bis 0510 entstand die volle Regelkette, ohne dass jemand sie
     # beauftragt hatte.
     bestellte_leistungen: list[BestellteLeistungItem] = Field(default_factory=list)
+    # Aufhebungswunsch des Eigentuemers (0513): 'keine' | 'beantragt' |
+    # 'aufgehoben' | 'abgelehnt'. Solange 'beantragt' steht, ist die Sperrung
+    # WEITER aktiv — der Wunsch allein gibt nichts frei.
+    aufhebung: str = "keine"
+    aufhebung_grund: str | None = None
+    aufhebung_beantragt_am: str | None = None
+    aufhebung_entscheidungsnotiz: str | None = None
 
 
 class SperrantragListe(BaseModel):

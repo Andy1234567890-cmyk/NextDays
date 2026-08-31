@@ -1770,7 +1770,13 @@
       "terminationSent": "È stata presentata la comunicazione di recesso. L'amministrazione conferma la risoluzione del contratto.",
       "services": "Ordina servizi",
       "servicesHint": "Solo ciò che seleziona qui verrà eseguito e fatturato per il suo blocco. Senza selezione non viene creata alcuna attività.",
-      "servicesOrdered": "Ordinato"
+      "servicesOrdered": "Ordinato",
+      "withdraw": "Ritira richiesta",
+      "withdrawn": "Richiesta ritirata.",
+      "requestLift": "Richiedi annullamento",
+      "liftRequested": "Annullamento richiesto — la direzione decide.",
+      "liftPending": "Annullamento richiesto. Il blocco rimane valido fino alla decisione della direzione.",
+      "liftRejected": "Annullamento rifiutato — il blocco rimane"
     },
     "meter": {
       "title": "Registra lettura contatore",
@@ -7068,12 +7074,14 @@
       "action": {
         "approve": "Approva",
         "reject": "Respingi",
-        "revoke": "Revoca"
+        "revoke": "Revoca",
+        "rejectLift": "Rifiuta annullamento"
       },
       "confirm": {
         "approve": "Bloccare {objekt} dal {von} al {bis}? Le notti verranno bloccate su tutti i portali.",
         "reject": "Respingere la richiesta per {objekt} ({von} – {bis})?",
-        "revoke": "Revocare l'approvazione per {objekt} ({von} – {bis})? Le notti verranno nuovamente liberate."
+        "revoke": "Revocare l'approvazione per {objekt} ({von} – {bis})? Le notti verranno nuovamente liberate.",
+        "rejectLift": "Rifiutare l'annullamento per {objekt} ({von} – {bis})? Il blocco rimane."
       },
       "done": {
         "approve": "Richiesta approvata, notti bloccate.",
@@ -7118,7 +7126,8 @@
       "terminationRequested": "Il proprietario desidera rescindere il contratto.",
       "terminationSet": "Il contratto termina il giorno {datum}.",
       "servicesOrdered": "Servizi ordinati",
-      "servicesNone": "Nessun servizio ordinato: non verrà creata alcuna attività."
+      "servicesNone": "Nessun servizio ordinato: non verrà creata alcuna attività.",
+      "liftRequested": "Desidera annullare il blocco"
     }
   },
   "seasons": {

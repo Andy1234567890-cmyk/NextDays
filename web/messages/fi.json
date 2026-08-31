@@ -1770,7 +1770,13 @@
       "terminationSent": "Irtisanomisilmoitus on jätetty. Hallinto vahvistaa sopimuksen irtisanomisen.",
       "services": "Tilaa palvelut",
       "servicesHint": "Vain valitsemasi palvelut toteutetaan ja laskutetaan sulkusi yhteydessä. Ilman valintaa tehtävää ei luoda.",
-      "servicesOrdered": "Tilattu"
+      "servicesOrdered": "Tilattu",
+      "withdraw": "Peruuta hakemus",
+      "withdrawn": "Hakemus peruutettu.",
+      "requestLift": "Pyydä kumoamista",
+      "liftRequested": "Kumoamista pyydetty — hallinto päättää.",
+      "liftPending": "Kumoamista pyydetty. Esto on voimassa, kunnes hallinto on päättänyt.",
+      "liftRejected": "Kumoaminen hylätty — esto pysyy voimassa"
     },
     "meter": {
       "title": "Kirjaa mittarilukema",
@@ -7068,12 +7074,14 @@
       "action": {
         "approve": "Hyväksy",
         "reject": "Hylkää",
-        "revoke": "Peruuta"
+        "revoke": "Peruuta",
+        "rejectLift": "Hylkää kumoaminen"
       },
       "confirm": {
         "approve": "Suljetaanko {objekt} {von}–{bis}? Yöt suljetaan kaikilla portaaleilla.",
         "reject": "Hylätäänkö pyyntö kohteelle {objekt} ({von} – {bis})?",
-        "revoke": "Peruutetaanko hyväksyntä kohteelle {objekt} ({von} – {bis})? Yöt vapautetaan uudelleen."
+        "revoke": "Peruutetaanko hyväksyntä kohteelle {objekt} ({von} – {bis})? Yöt vapautetaan uudelleen.",
+        "rejectLift": "Hylätäänkö kohteen {objekt} eston kumoaminen ({von} – {bis})? Esto pysyy voimassa."
       },
       "done": {
         "approve": "Pyyntö hyväksytty, yöt suljettu.",
@@ -7118,7 +7126,8 @@
       "terminationRequested": "Omistaja haluaa irtisanoa sopimuksen.",
       "terminationSet": "Sopimus päättyy {datum}.",
       "servicesOrdered": "Tilatut palvelut",
-      "servicesNone": "Palveluita ei tilattu — tehtävää ei luoda."
+      "servicesNone": "Palveluita ei tilattu — tehtävää ei luoda.",
+      "liftRequested": "Haluan kumota eston"
     }
   },
   "seasons": {

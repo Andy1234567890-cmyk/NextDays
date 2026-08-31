@@ -1770,7 +1770,13 @@
       "terminationSent": "Paziņojums par līguma izbeigšanu ir iesniegts. Administrācija apstiprina līguma izbeigšanu.",
       "services": "Pasūtīt pakalpojumus",
       "servicesHint": "Tiks veikts un iekļauts rēķinā tikai tas, ko šeit atzīmēsiet. Bez izvēles neveidojas neviens uzdevums.",
-      "servicesOrdered": "Pasūtīts"
+      "servicesOrdered": "Pasūtīts",
+      "withdraw": "Atsaukt pieprasījumu",
+      "withdrawn": "Pieprasījums atsaukts.",
+      "requestLift": "Pieprasīt atcelšanu",
+      "liftRequested": "Atcelšana pieprasīta — lēmumu pieņems administrācija.",
+      "liftPending": "Atcelšana pieprasīta. Bloķēšana paliek spēkā, līdz administrācija pieņems lēmumu.",
+      "liftRejected": "Atcelšana noraidīta — bloķēšana paliek spēkā"
     },
     "meter": {
       "title": "Ievadīt skaitītāja rādījumu",
@@ -7068,12 +7074,14 @@
       "action": {
         "approve": "Apstiprināt",
         "reject": "Noraidīt",
-        "revoke": "Atsaukt"
+        "revoke": "Atsaukt",
+        "rejectLift": "Noraidīt atcelšanu"
       },
       "confirm": {
         "approve": "Bloķēt {objekt} no {von} līdz {bis}? Naktis tiks bloķētas visos portālos.",
         "reject": "Noraidīt pieprasījumu objektam {objekt} ({von} – {bis})?",
-        "revoke": "Atsaukt apstiprinājumu objektam {objekt} ({von} – {bis})? Naktis tiks atkal atbrīvotas."
+        "revoke": "Atsaukt apstiprinājumu objektam {objekt} ({von} – {bis})? Naktis tiks atkal atbrīvotas.",
+        "rejectLift": "Noraidīt bloķēšanas atcelšanu objektam {objekt} ({von} – {bis})? Bloķēšana paliks spēkā."
       },
       "done": {
         "approve": "Pieprasījums apstiprināts, naktis bloķētas.",
@@ -7118,7 +7126,8 @@
       "terminationRequested": "Īpašnieks vēlas lauzt līgumu.",
       "terminationSet": "Līgums beidzas {datum}.",
       "servicesOrdered": "Pasūtītie pakalpojumi",
-      "servicesNone": "Pakalpojumi nav pasūtīti — uzdevums netiks izveidots."
+      "servicesNone": "Pakalpojumi nav pasūtīti — uzdevums netiks izveidots.",
+      "liftRequested": "Vēlos atcelt bloķēšanu"
     }
   },
   "seasons": {

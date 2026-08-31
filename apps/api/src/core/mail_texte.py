@@ -2150,6 +2150,32 @@ TEXTE: dict[str, dict[str, str]] = {
         "sv": "Din spärrbegäran för {titel} ({zeitraum}) har återkallats. "
               "Nätterna är lediga igen.",
     },
+    "sperrantrag.aufhebung": {
+        "bg": "Заявка за отмяна на блокиране: {titel}",
+        "cs": "Žádost o zrušení blokace: {titel}",
+        "da": "Ønske om ophævelse af spærring: {titel}",
+        "de": "Aufhebung einer Sperrung gewünscht: {titel}",
+        "el": "Αίτημα άρσης δέσμευσης: {titel}",
+        "en": "Request to lift a block: {titel}",
+        "es": "Solicitud de levantar un bloqueo: {titel}",
+        "et": "Sulgemise tühistamise taotlus: {titel}",
+        "fi": "Pyyntö sulun purkamisesta: {titel}",
+        "fr": "Demande de levée d'un blocage : {titel}",
+        "ga": "Iarratas ar bhac a bhaint: {titel}",
+        "hr": "Zahtjev za ukidanje blokade: {titel}",
+        "hu": "Zárolás feloldásának kérése: {titel}",
+        "it": "Richiesta di revoca di un blocco: {titel}",
+        "lt": "Prašymas panaikinti blokavimą: {titel}",
+        "lv": "Lūgums atcelt bloķēšanu: {titel}",
+        "mt": "Talba biex jitneħħa mblokk: {titel}",
+        "nl": "Verzoek om een blokkering op te heffen: {titel}",
+        "pl": "Prośba o zniesienie blokady: {titel}",
+        "pt": "Pedido de levantamento de bloqueio: {titel}",
+        "ro": "Cerere de ridicare a unei blocări: {titel}",
+        "sk": "Žiadosť o zrušenie blokácie: {titel}",
+        "sl": "Prošnja za odpravo blokade: {titel}",
+        "sv": "Begäran om att häva en spärr: {titel}",
+    },
     "sperrantrag.neu": {
         "bg": "Нова заявка за блокиране: {titel}",
         "cs": "Nová žádost o blokaci: {titel}",
@@ -2641,6 +2667,105 @@ TEXTE: dict[str, dict[str, str]] = {
         "sk": "Vaša žiadosť o blokáciu {titel} ({zeitraum}) bola zamietnutá.",
         "sl": "Vaša zahteva za blokado {titel} ({zeitraum}) je bila zavrnjena.",
         "sv": "Din spärrbegäran för {titel} ({zeitraum}) har avvisats.",
+    },
+    "sperrantrag.rumpf_aufhebung": {
+        "bg": (
+            "Собственик вече не се нуждае от блокирането на {titel} ({zeitraum}) и моли "
+            "за неговата отмяна. Блокирането остава активно, докато не решите."
+        ),
+        "cs": (
+            "Vlastník již nepotřebuje blokaci {titel} ({zeitraum}) a žádá o její zrušení. "
+            "Blokace platí dál, dokud nerozhodnete."
+        ),
+        "da": (
+            "En ejer har ikke længere brug for spærringen af {titel} ({zeitraum}) og "
+            "beder om at få den ophævet. Spærringen gælder, indtil du har taget stilling."
+        ),
+        "de": (
+            "Ein Eigentümer braucht die Sperrung von {titel} ({zeitraum}) nicht mehr und "
+            "bittet um ihre Aufhebung. Die Sperrung bleibt bestehen, bis Sie entschieden "
+            "haben."
+        ),
+        "el": (
+            "Ένας ιδιοκτήτης δεν χρειάζεται πλέον τη δέσμευση του {titel} ({zeitraum}) "
+            "και ζητά την άρση της. Η δέσμευση παραμένει έως ότου αποφασίσετε."
+        ),
+        "en": (
+            "An owner no longer needs the block on {titel} ({zeitraum}) and asks for it "
+            "to be lifted. The block stays in place until you decide."
+        ),
+        "es": (
+            "Un propietario ya no necesita el bloqueo de {titel} ({zeitraum}) y solicita "
+            "su levantamiento. El bloqueo se mantiene hasta que usted decida."
+        ),
+        "et": (
+            "Omanik ei vaja enam objekti {titel} sulgemist ({zeitraum}) ja palub selle "
+            "tühistada. Sulgemine kehtib, kuni te otsustate."
+        ),
+        "fi": (
+            "Omistaja ei enää tarvitse kohteen {titel} sulkua ({zeitraum}) ja pyytää sen "
+            "purkamista. Sulku on voimassa, kunnes teet päätöksen."
+        ),
+        "fr": (
+            "Un propriétaire n'a plus besoin du blocage de {titel} ({zeitraum}) et "
+            "demande sa levée. Le blocage reste en vigueur jusqu'à votre décision."
+        ),
+        "ga": (
+            "Níl bac {titel} ({zeitraum}) ag teastáil ó úinéir a thuilleadh agus iarrann "
+            "sé é a bhaint. Fanann an bac i bhfeidhm go dtí go gcinnfidh tú."
+        ),
+        "hr": (
+            "Vlasniku više nije potrebna blokada za {titel} ({zeitraum}) i traži njezino "
+            "ukidanje. Blokada ostaje na snazi dok ne odlučite."
+        ),
+        "hu": (
+            "Egy tulajdonosnak már nincs szüksége a(z) {titel} zárolására ({zeitraum}), "
+            "és annak feloldását kéri. A zárolás a döntéséig érvényben marad."
+        ),
+        "it": (
+            "Un proprietario non ha più bisogno del blocco di {titel} ({zeitraum}) e ne "
+            "chiede la revoca. Il blocco resta in vigore fino alla sua decisione."
+        ),
+        "lt": (
+            "Savininkui nebereikia {titel} blokavimo ({zeitraum}) ir jis prašo jį "
+            "panaikinti. Blokavimas galioja, kol nuspręsite."
+        ),
+        "lv": (
+            "Īpašniekam vairs nav nepieciešama {titel} bloķēšana ({zeitraum}), un viņš "
+            "lūdz to atcelt. Bloķēšana paliek spēkā, līdz jūs pieņemsiet lēmumu."
+        ),
+        "mt": (
+            "Sid m'għadux jeħtieġ l-imblokk ta' {titel} ({zeitraum}) u qed jitlob li "
+            "jitneħħa. L-imblokk jibqa' fis-seħħ sakemm tiddeċiedi."
+        ),
+        "nl": (
+            "Een eigenaar heeft de blokkering van {titel} ({zeitraum}) niet meer nodig en "
+            "vraagt om opheffing. De blokkering blijft bestaan tot u beslist."
+        ),
+        "pl": (
+            "Właściciel nie potrzebuje już blokady {titel} ({zeitraum}) i prosi o jej "
+            "zniesienie. Blokada obowiązuje do czasu Twojej decyzji."
+        ),
+        "pt": (
+            "Um proprietário já não necessita do bloqueio de {titel} ({zeitraum}) e pede "
+            "o seu levantamento. O bloqueio mantém-se até que decida."
+        ),
+        "ro": (
+            "Un proprietar nu mai are nevoie de blocarea {titel} ({zeitraum}) și solicită "
+            "ridicarea acesteia. Blocarea rămâne activă până la decizia dumneavoastră."
+        ),
+        "sk": (
+            "Vlastník už nepotrebuje blokáciu {titel} ({zeitraum}) a žiada o jej "
+            "zrušenie. Blokácia platí, kým nerozhodnete."
+        ),
+        "sl": (
+            "Lastnik ne potrebuje več blokade za {titel} ({zeitraum}) in prosi za njeno "
+            "odpravo. Blokada velja, dokler se ne odločite."
+        ),
+        "sv": (
+            "En ägare behöver inte längre spärren för {titel} ({zeitraum}) och ber om att "
+            "den hävs. Spärren gäller tills du har beslutat."
+        ),
     },
     "sperrantrag.rumpf_neu": {
         "bg": "Собственик иска да блокира {titel} ({zeitraum}).",

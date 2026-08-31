@@ -23,7 +23,7 @@ hochgesetzten Grenze in `pyproject.toml` (die würde für ALLE Module gelten).
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 
@@ -1801,6 +1801,129 @@ class PublicPortalService:
             ]
         )
 
+    def _eigener_antrag(self, ctx: AuthContext, antrag_id: str) -> dict:
+        """Den Antrag laden — und zwar NUR einen eigenen (Wurzel 3/9).
+
+        Load und Scope in DERSELBEN Abfrage: `requested_by` ist der Filter, nicht
+        eine Pruefung danach. Der Item-Pfad darf nicht mehr hergeben als der
+        List-Pfad (`list_block_requests` filtert genauso) — sonst liesse sich
+        ueber eine geratene ID der Antrag eines anderen Eigentuemers desselben
+        Mandanten lesen und zurueckziehen.
+        """
+        tenant_id, user_id = self._require(ctx)
+        rows = (
+            self._db.table("block_requests")
+            .select(
+                "id, tenant_id, property_id, status, requested_by, "
+                "aufhebung, aufhebung_beantragt_am"
+            )
+            .eq("id", antrag_id)
+            .eq("tenant_id", tenant_id)
+            .eq("requested_by", user_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            raise PortalError("Antrag nicht gefunden.", status_code=404)
+        return rows[0]
+
+    def zurueckziehen(self, ctx: AuthContext, antrag_id: str) -> None:
+        """Einen NOCH OFFENEN Antrag zuruecknehmen (0513).
+
+        Es ist nichts gesperrt, solange nichts genehmigt ist — es gibt also
+        keinen Gegenzustand zu pflegen (Wurzel 1 greift hier nicht). Der
+        Eigentuemer nimmt seine eigene Erklaerung zurueck, die Agentur muss
+        dafuer nichts tun.
+
+        GELOESCHT, nicht auf 'rejected' gesetzt: 'rejected' heisst „die Agentur
+        hat abgelehnt" und stuende in ihrer Historie als ihre Entscheidung. Ein
+        zurueckgezogener Antrag ist keine Ablehnung — ihn so zu fuehren waere
+        eine Falschaussage ueber die Agentur.
+
+        Der Statusfilter im DELETE ist der Idempotenz-Riegel (Wurzel 2): kommt
+        der Klick doppelt oder wurde in der Zwischenzeit genehmigt, trifft das
+        DELETE nichts, und der Aufrufer bekommt 409 statt einer stillen
+        Loeschung eines inzwischen wirksamen Antrags.
+        """
+        antrag = self._eigener_antrag(ctx, antrag_id)
+        if str(antrag.get("status")) != "pending":
+            raise PortalError(
+                "Dieser Antrag ist bereits entschieden. Eine genehmigte "
+                "Sperrung koennen Sie zur Aufhebung vorschlagen.",
+                status_code=409,
+            )
+        res = (
+            self._db.table("block_requests")
+            .delete()
+            .eq("id", antrag_id)
+            .eq("tenant_id", str(antrag["tenant_id"]))
+            .eq("status", "pending")
+            .execute()
+        )
+        if not res.data:
+            raise PortalError(
+                "Der Antrag wurde inzwischen entschieden.", status_code=409
+            )
+        log.info(
+            "portal_block_zurueckgezogen",
+            tenant_id=str(antrag["tenant_id"]),
+            antrag_id=antrag_id,
+        )
+
+    def aufhebung_beantragen(
+        self, ctx: AuthContext, antrag_id: str, grund: str | None
+    ) -> BlockRequestItem:
+        """Die Aufhebung einer GENEHMIGTEN Sperrung beantragen (0513).
+
+        Hier haengt eine Reservierung samt Kalenderbelegung und Portal-Push
+        daran — der Eigentuemer kann sie nicht selbst aufloesen (§4.2: er
+        beantragt, er entscheidet nicht). Die Sperre besteht deshalb WEITER,
+        bis die Agentur zustimmt; `status` bleibt unangetastet auf 'approved'.
+
+        Der bedingte UPDATE ist Compare-and-Set (Wurzel 2): ein zweiter Klick
+        trifft die Zeile nicht mehr auf `aufhebung='keine'` und bekommt 409,
+        statt den Beantragungszeitpunkt zu ueberschreiben.
+        """
+        antrag = self._eigener_antrag(ctx, antrag_id)
+        if str(antrag.get("status")) != "approved":
+            raise PortalError(
+                "Nur eine genehmigte Sperrung kann aufgehoben werden.",
+                status_code=409,
+            )
+        if str(antrag.get("aufhebung") or "keine") != "keine":
+            raise PortalError(
+                "Zu dieser Sperrung liegt bereits ein Aufhebungswunsch vor.",
+                status_code=409,
+            )
+        res = (
+            self._db.table("block_requests")
+            .update(
+                {
+                    "aufhebung": "beantragt",
+                    "aufhebung_grund": (grund or "").strip() or None,
+                    # Unsere Uhr ist hier richtig: die Handlung passiert in
+                    # diesem System (Wurzel 5b greift nicht).
+                    "aufhebung_beantragt_am": datetime.now(UTC).isoformat(),
+                }
+            )
+            .eq("id", antrag_id)
+            .eq("tenant_id", str(antrag["tenant_id"]))
+            .eq("aufhebung", "keine")
+            .execute()
+        ).data
+        if not res:
+            raise PortalError(
+                "Zu dieser Sperrung liegt bereits ein Aufhebungswunsch vor.",
+                status_code=409,
+            )
+        log.info(
+            "portal_aufhebung_beantragt",
+            tenant_id=str(antrag["tenant_id"]),
+            antrag_id=antrag_id,
+        )
+        self._melde_aufhebung(str(antrag["tenant_id"]), res[0])
+        return _block(res[0])
+
     def _geprueft_bestellbar(
         self, tenant_id: str, property_id: str, rule_ids: list[str]
     ) -> list[str]:
@@ -1938,11 +2061,33 @@ class PublicPortalService:
             .execute()
         ).data or []
         titel = (rows[0].get("title") if rows else None) or property_id[:8]
-        from src.features.calendar.sperrantraege import (  # noqa: PLC0415
+        from src.features.calendar.sperrantrag_meldung import (  # noqa: PLC0415
             melde_neuen_antrag,
         )
 
         melde_neuen_antrag(self._db, tenant_id, antrag, titel)
+
+    def _melde_aufhebung(self, tenant_id: str, antrag: dict) -> None:
+        """Die Entscheider ueber den Aufhebungswunsch informieren (0513).
+
+        Dieselbe Bauform wie `_melde_antrag`: EIN Dispatcher, best-effort. Der
+        Wunsch ist gespeichert und darf nicht verloren gehen, weil der Versand
+        klemmt (Wurzel 5).
+        """
+        property_id = str(antrag["property_id"])
+        rows = (
+            self._db.table("properties")
+            .select("title")
+            .eq("id", property_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        titel = (rows[0].get("title") if rows else None) or property_id[:8]
+        from src.features.calendar.sperrantrag_meldung import (  # noqa: PLC0415
+            melde_aufhebungswunsch,
+        )
+
+        melde_aufhebungswunsch(self._db, tenant_id, antrag, titel)
 
     def my_block_requests(self, ctx: AuthContext) -> BlockRequestList:
         tenant_id, user_id = self._require(ctx)
@@ -1956,7 +2101,11 @@ class PublicPortalService:
                 "ist_kuendigung, als_kuendigung_gewertet, "
                 "vertragsende_gesetzt_auf, "
                 # Stufe 1 (0389) — wo der Antrag gerade liegt.
-                "owner_freigabe, owner_decision_note"
+                "owner_freigabe, owner_decision_note, "
+                # Aufhebung (0513) — der Eigentuemer muss sehen, dass sein
+                # Wunsch angekommen ist und was daraus wurde. Ohne diese Felder
+                # klickt er ein zweites Mal, weil sich nichts sichtbar aendert.
+                "aufhebung, aufhebung_grund, aufhebung_entscheidungsnotiz"
             )
             .eq("tenant_id", tenant_id)
             # Wurzel 3/9: der Eigentümer sieht NUR seine eigenen Anträge, nicht
@@ -2174,6 +2323,9 @@ def _block(
             else None
         ),
         bestellte_leistungen=bestellt or [],
+        aufhebung=str(r.get("aufhebung") or "keine"),
+        aufhebung_grund=r.get("aufhebung_grund"),
+        aufhebung_entscheidungsnotiz=r.get("aufhebung_entscheidungsnotiz"),
     )
 
 

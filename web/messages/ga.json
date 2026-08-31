@@ -1770,7 +1770,13 @@
       "terminationSent": "Tá fógra foirceanta curtha isteach. Deimhníonn an riarachán foirceannadh an chonartha.",
       "services": "Ordaigh seirbhísí",
       "servicesHint": "Ní dhéanfar ná ní ghearrfar táille ach ar an rud a thiceálann tú anseo le do bhac. Gan roghnú, ní chruthaítear aon tasc.",
-      "servicesOrdered": "Ordaithe"
+      "servicesOrdered": "Ordaithe",
+      "withdraw": "Iarratas a tharraingt siar",
+      "withdrawn": "Iarratas tarraingthe siar.",
+      "requestLift": "Cealú a iarraidh",
+      "liftRequested": "Cealú iarrtha — déanfaidh an bhainistíocht cinneadh.",
+      "liftPending": "Cealú iarrtha. Fanann an blocáil i bhfeidhm go dtí go ndéanfaidh an bhainistíocht cinneadh.",
+      "liftRejected": "Cealú diúltaithe — fanann an blocáil"
     },
     "meter": {
       "title": "Cláraigh léamh méadair",
@@ -7068,12 +7074,14 @@
       "action": {
         "approve": "Ceadaigh",
         "reject": "Diúltaigh",
-        "revoke": "Cúlghair"
+        "revoke": "Cúlghair",
+        "rejectLift": "Cealú a dhiúltú"
       },
       "confirm": {
         "approve": "Bac {objekt} ó {von} go {bis}? Cuirfear bac ar na hoícheanta ar gach tairseach.",
         "reject": "Diúltaigh don iarratas ar {objekt} ({von} – {bis})?",
-        "revoke": "Cúlghair an ceadú ar {objekt} ({von} – {bis})? Scaoilfear na hoícheanta arís."
+        "revoke": "Cúlghair an ceadú ar {objekt} ({von} – {bis})? Scaoilfear na hoícheanta arís.",
+        "rejectLift": "Cealú do {objekt} ({von} – {bis}) a dhiúltú? Fanfaidh an blocáil i bhfeidhm."
       },
       "done": {
         "approve": "Iarratas ceadaithe, oícheanta bactha.",
@@ -7118,7 +7126,8 @@
       "terminationRequested": "Tá an t-úinéir ag iarraidh an conradh a fhoirceannadh.",
       "terminationSet": "Críochnaíonn an conradh ar {datum}.",
       "servicesOrdered": "Seirbhísí ordaithe",
-      "servicesNone": "Níor ordaíodh aon seirbhís — ní chruthófar aon tasc."
+      "servicesNone": "Níor ordaíodh aon seirbhís — ní chruthófar aon tasc.",
+      "liftRequested": "Ba mhaith liom an blocáil a chealú"
     }
   },
   "seasons": {
