@@ -89,6 +89,57 @@ else
   printf '%s\n' "${gruen}  keine${aus}"
 fi
 
+abschnitt "3b) Aufgabe steht nicht am Tag ihrer Buchung"
+# Der Fund vom 31.08.2026: 161 von 234 „Velk"-Aufgaben (Empfang bei Anreise)
+# standen am falschen Tag, 151 davon genau EINEN Tag zu frueh — der Empfang lag
+# vor dem Gast. Ursache war eine Regel mit `days_before_check_in`, deren Offset
+# die Distanz tragen sollte und auf 0 stand; niemand pruefte, ob das Ergebnis
+# zur Buchung passt.
+#
+# Geprueft wird die ANKUNFTSBEZOGENE Aufgabe: ihr Start gehoert auf den
+# Anreisetag. Abreisebezogene (Reinigung) haben ihren eigenen Anker und sind
+# hier bewusst nicht dabei — ihr Start ist der Check-out.
+#
+# Ein Treffer heisst nicht zwingend „kaputt": eine Regel darf bewusst einen Tag
+# vorher greifen (Vorbereitung). Er heisst „hier weicht die Aufgabe vom Anker
+# ihrer Regel ab, sieh nach". Deshalb steht die Regel mit in der Ausgabe.
+ausgabe=$(psql_exec "select r.name, count(*), min(t.start_at::date - res.check_in),
+                            max(t.start_at::date - res.check_in)
+                     from public.tasks t
+                     join public.reservations res on res.id = t.reservation_id
+                     join public.task_rules r on r.id = t.rule_id
+                     where t.start_at is not null
+                       and r.start_trigger in ('check_in','days_before_check_in')
+                       and t.start_at::date <> res.check_in
+                     group by r.name order by 2 desc limit 20")
+if [ -n "$ausgabe" ]; then
+  printf '%s\n' "${rot}  BEFUND — Regel | Anzahl | min/max Tage Abweichung:${aus}"
+  printf '%s\n' "$ausgabe" | sed 's/^/    /'
+  befunde=$((befunde + 1))
+else
+  printf '%s\n' "${gruen}  keine${aus}"
+fi
+
+abschnitt "3c) Regel, deren Ende vor ihrem Start liegt"
+# Die WURZEL, nicht die Folge: eine so konfigurierte Regel erzeugt bei JEDER
+# Buchung eine verdrehte Aufgabe. Seit dem 31.08.2026 weist der Server sie beim
+# Speichern zurueck (`TasksService._pruefe_zeitfenster`) — dieser Abschnitt
+# findet, was VOR der Pruefung angelegt wurde.
+ausgabe=$(psql_exec "select name, start_trigger, start_offset_minutes,
+                            end_trigger, end_offset_minutes
+                     from public.task_rules
+                     where kind = 'auto'
+                       and start_trigger in ('check_in','days_before_check_in')
+                       and end_trigger in ('check_in','days_before_check_in')
+                       and coalesce(end_offset_minutes,0) < coalesce(start_offset_minutes,0)")
+if [ -n "$ausgabe" ]; then
+  printf '%s\n' "${rot}  BEFUND — diese Regeln legen das Ende vor den Start:${aus}"
+  printf '%s\n' "$ausgabe" | sed 's/^/    /'
+  befunde=$((befunde + 1))
+else
+  printf '%s\n' "${gruen}  keine${aus}"
+fi
+
 abschnitt "4) Offen und niemandem zugewiesen (roter Streifen)"
 psql_exec "select coalesce(count(*),0) from public.tasks
            where assignee_id is null and status not in ('done','cancelled')" |

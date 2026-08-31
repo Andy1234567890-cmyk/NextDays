@@ -442,6 +442,29 @@ def _regel_zeitfenster(
         return None
     if end is None and rule.get("duration_minutes"):
         end = start + timedelta(minutes=int(rule["duration_minutes"]))
+    if end is not None and end < start:
+        # LETZTE BASTION gegen ein Ende vor dem Start (Wurzel 5).
+        #
+        # Start und Ende kommen aus ZWEI unabhaengigen Triggern, die niemand
+        # gegeneinander geprueft hat. Zeigte der eine auf die Abreise und der
+        # andere auf die Anreise, schrieb der Motor das kommentarlos in die
+        # Datenbank: live standen so neun Aufgaben mit einem Ende bis zu 64 Tage
+        # VOR ihrem Start (31.08.2026) — im Kalender ein rueckwaerts laufender
+        # Balken, in der Liste ein unlesbares Datumspaar.
+        #
+        # Die Aufgabe wird trotzdem angelegt, nur OHNE das unmoegliche Ende:
+        # sie auszulassen hiesse, eine Reinigung verschwindet still, weil ihre
+        # Regel schief steht. Ein fehlendes Ende ist sichtbar und harmlos, ein
+        # fehlender Termin ist es nicht. Die Regel selbst weist
+        # `RulesService` beim Speichern zurueck — hier steht der Schutz fuer
+        # Regeln, die VOR dieser Pruefung angelegt wurden.
+        log.warning(
+            "task_regel_ende_vor_start",
+            rule_id=rule["id"],
+            start=start.isoformat(),
+            end=end.isoformat(),
+        )
+        end = None
     return start, end
 
 

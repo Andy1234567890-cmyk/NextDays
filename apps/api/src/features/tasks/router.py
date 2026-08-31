@@ -49,6 +49,7 @@ from .schemas import (
     TaskResolutionUpsert,
     TaskRuleKind,
     TaskStatusUpdate,
+    TaskZeitfensterUpdate,
 )
 from .service import TaskError, TasksService
 
@@ -181,6 +182,31 @@ def update_task_status(
     """
     try:
         return service.set_status(_tenant(ctx), task_id, req.status, ctx)
+    except TaskError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.patch("/{task_id}/zeitfenster", response_model=TaskDetail)
+def update_task_zeitfenster(
+    task_id: str,
+    req: TaskZeitfensterUpdate,
+    service: TasksServiceDep,
+    ctx: Annotated[AuthContext, Depends(require_permission(Capability.MANAGE_TASKS))],
+) -> TaskDetail:
+    """Start- und Endzeitpunkt einer Aufgabe von Hand setzen.
+
+    `MANAGE_TASKS` und nicht `VIEW_OWN_TASKS`: den eigenen Arbeitszustand
+    meldet die ausführende Person selbst (deshalb ist `/status` offener), aber
+    WANN etwas stattfindet, ist Einsatzplanung. Eine Reinigungskraft, die ihre
+    Aufgabe auf morgen schöbe, verschöbe damit die Planung des Betriebs.
+
+    Der Objekt-Scope kommt aus dem Service (`ctx`), fremde Aufgaben sind ein
+    404 (Wurzel 9).
+    """
+    try:
+        return service.set_zeitfenster(
+            _tenant(ctx), task_id, req.start_at, req.end_at, ctx
+        )
     except TaskError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

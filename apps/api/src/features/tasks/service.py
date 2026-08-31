@@ -1466,6 +1466,65 @@ class TasksService:
         )
         return self.get_detail(tenant_id, task_id, ctx)
 
+    # --- Zeitfenster setzen -------------------------------------------------
+
+    def set_zeitfenster(
+        self,
+        tenant_id: str,
+        task_id: str,
+        start_at: datetime | None,
+        end_at: datetime | None,
+        ctx: AuthContext | None = None,
+    ) -> TaskDetail:
+        """Start- und Endzeitpunkt EINER Aufgabe von Hand setzen.
+
+        WARUM ES DAS BRAUCHT: Die Zeiten einer bestehenden Aufgabe waren bis
+        zum 31.08.2026 unveränderlich. Es gab `PATCH /status` und
+        `PATCH /assignee`, aber keinen Weg zu `start_at`/`end_at` — wer eine
+        Reinigung auf „28.08. von 10 bis 16 Uhr" legen wollte, konnte das
+        nirgends eintragen. Gemeldet als „Start und Endtermine müssen für
+        denselben Tag zu setzen sein, z. B. 28.8. von 10-16 Uhr".
+
+        Automatisch erzeugte Aufgaben tragen die Tagesgrenze 00:00, weil der
+        Regel-Motor nur mit Tages-Offsets rechnet. Diese Korrektur von Hand ist
+        der Weg, eine EINZELNE Aufgabe davon abweichen zu lassen; die Regel
+        selbst bleibt unberührt.
+
+        GEPRÜFT WIRD DIE REIHENFOLGE (Wurzel 5): ein Ende vor dem Start wird
+        abgelehnt statt geschrieben. Genau das fehlte dem Regel-Motor, und
+        live standen deshalb neun Aufgaben mit einem Ende bis zu 64 Tage VOR
+        ihrem Start — im Kalender als rückwärts laufender Balken, in der Liste
+        als unlesbares Datumspaar.
+
+        `due_at` läuft mit: es ist die Fälligkeit und im Motor immer
+        `end or start`. Ohne Nachziehen zeigte jede Liste, die nach Fälligkeit
+        sortiert, weiter den alten Termin (Wurzel 1).
+        """
+        detail = self.get_detail(tenant_id, task_id, ctx)
+        if start_at is not None and end_at is not None and end_at < start_at:
+            raise TaskError(
+                "Das Ende darf nicht vor dem Start liegen.", status_code=422
+            )
+        patch: dict[str, object] = {
+            "start_at": start_at.isoformat() if start_at else None,
+            "end_at": end_at.isoformat() if end_at else None,
+            "due_at": (end_at or start_at).isoformat()
+            if (end_at or start_at)
+            else None,
+        }
+        self._db().table("tasks").update(patch).eq("id", task_id).eq(
+            "tenant_id", tenant_id
+        ).execute()
+        log.info(
+            "task_zeitfenster_gesetzt",
+            tenant_id=tenant_id,
+            task_id=task_id,
+            start_at=patch["start_at"],
+            end_at=patch["end_at"],
+            vorher_start=detail.start_at.isoformat() if detail.start_at else None,
+        )
+        return self.get_detail(tenant_id, task_id, ctx)
+
     # --- Zuständigen setzen -----------------------------------------------
 
     def moegliche_zustaendige(
@@ -2255,7 +2314,71 @@ class TasksService:
             for r in rows
         ]
 
+    # Wie viele Minuten VOR dem Ereignis der jeweilige Trigger ansetzt. Der
+    # Motor (`engine._trigger_time`) rechnet `basis + offset_minutes`; um zwei
+    # Zeitpunkte VERGLEICHEN zu koennen, braucht es zusaetzlich die Reihenfolge
+    # der Basen zueinander. `check_in` ist der Bezugspunkt (0), `check_out`
+    # liegt danach — wie weit, haengt an der Buchung, deshalb steht hier nur
+    # „spaeter" als sehr grosse Zahl.
+    _SPAETER = 10**9
+
+    @staticmethod
+    def _trigger_rang(trigger: str | None) -> int | None:
+        """Grobe zeitliche Ordnung der Trigger-Basen zueinander.
+
+        `None`, wenn sich die Basis nicht ohne konkrete Buchung einordnen laesst
+        (`booking_confirmed` liegt irgendwann vor der Anreise, aber wie weit,
+        weiss nur die Buchung).
+        """
+        if trigger in ("check_in", "days_before_check_in"):
+            return 0
+        if trigger == "after_check_in_24h":
+            return 1440
+        if trigger in ("check_out", "days_after_check_out"):
+            return TasksService._SPAETER
+        return None
+
+    @classmethod
+    def _pruefe_zeitfenster(cls, req: RuleCreate) -> None:
+        """Eine Regel, deren Ende VOR ihrem Start liegt, wird abgewiesen.
+
+        WARUM DIESE PRUEFUNG EXISTIERT: Start und Ende einer planmaessigen
+        Regel sind zwei unabhaengige Trigger mit eigenem Offset. Niemand hat
+        sie je gegeneinander geprueft — weder die Oberflaeche noch der Server
+        noch der Motor. Eine Regel „Start = Abreise, Ende = Anreise" liess sich
+        speichern, und der Motor schrieb das Ergebnis kommentarlos in jede
+        betroffene Aufgabe.
+
+        Live gemessen am 31.08.2026: 161 von 234 „Velk"-Aufgaben standen am
+        falschen Tag, 151 davon genau einen Tag zu frueh — der Empfang lag vor
+        dem Gast. Neun trugen sogar ein Ende bis zu 64 Tage VOR ihrem Start.
+        Aufgefallen ist es nicht dem System, sondern dem Auge: „hier haben wir
+        einen Fehler … und Aufgaben in 2 unterschiedlichen Tagen".
+
+        Geprueft wird, was sich OHNE konkrete Buchung entscheiden laesst:
+        gleiche Basis → die Offsets vergleichen; verschiedene Basen mit
+        bekannter Ordnung → die Basen vergleichen. Wo die Ordnung von der
+        Buchung abhaengt (`booking_confirmed`, oder Anreise-Basis gegen
+        Abreise-Basis mit grossen Offsets), bleibt die Regel erlaubt — dort
+        faengt der Motor den Einzelfall ab (`engine._regel_zeitfenster`).
+        Lieber eine Regel durchlassen, die nur in seltenen Buchungen schief
+        steht, als eine gueltige abzulehnen.
+        """
+        s_rang = cls._trigger_rang(req.start_trigger.value if req.start_trigger else None)
+        e_rang = cls._trigger_rang(req.end_trigger.value if req.end_trigger else None)
+        if s_rang is None or e_rang is None:
+            return
+        s = s_rang + (req.start_offset_minutes or 0)
+        e = e_rang + (req.end_offset_minutes or 0)
+        if e < s:
+            raise TaskError(
+                "Das Ende der Aufgabe liegt vor ihrem Start. Prüfe Auslöser "
+                "und Versatz für Beginn und Ende.",
+                status_code=422,
+            )
+
     def create_rule(self, tenant_id: str, req: RuleCreate) -> RuleDetail:
+        self._pruefe_zeitfenster(req)
         self._require_own_properties(tenant_id, req.property_ids)
         # Mit Objektbezug prüfen (wie in `update_rule`): ohne ihn bleibt es eine
         # nackte Existenzabfrage, und die Regel erzeugt später Aufgaben an einem
@@ -2272,6 +2395,9 @@ class TasksService:
     def update_rule(
         self, tenant_id: str, rule_id: str, req: RuleUpdate
     ) -> RuleDetail:
+        # Dieselbe Pruefung wie beim Anlegen: die 161 falschen Aufgaben sind
+        # durch eine GEAENDERTE Regel entstanden, nicht durch eine neue.
+        self._pruefe_zeitfenster(req)
         self._require_own_properties(tenant_id, req.property_ids)
         # Objektbezug MITGEBEN: ohne ihn ist die Prüfung eine nackte
         # Existenzabfrage (siehe `_require_own_assignee`), und ein Zuständiger

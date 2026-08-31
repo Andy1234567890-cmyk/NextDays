@@ -8,9 +8,12 @@ from fastapi.testclient import TestClient
 from src.core.security import AuthContext
 from src.features.tasks.schemas import (
     InventoryItemCreate,
+    RuleCreate,
     SubstitutionRequest,
     TaskCreate,
+    TaskRuleKind,
     TaskStatus,
+    TaskTrigger,
 )
 from src.features.tasks.service import (
     TaskError,
@@ -890,6 +893,157 @@ def test_upload_nimmt_echtes_jpeg_an() -> None:
     assert len(db.tables["checklist_photos"]) == 1
     # Der Pfad trägt die Endung des ECHTEN Typs, nicht die des Headers.
     assert db.tables["checklist_photos"][0]["storage_path"].endswith(".jpg")
+
+
+# --- Regel-Zeitfenster: Ende darf nicht vor dem Start liegen (31.08.2026) ----
+
+
+def _regel(**kw: object) -> RuleCreate:
+    """Eine planmaessige Regel mit Vorgaben, die den Test nicht interessieren."""
+    basis: dict[str, object] = {
+        "kind": TaskRuleKind.auto,
+        "name": "Velk T",
+        "start_trigger": TaskTrigger.check_in,
+        "end_trigger": TaskTrigger.check_in,
+        "start_offset_minutes": 0,
+        "end_offset_minutes": 1440,
+    }
+    basis.update(kw)
+    return RuleCreate(**basis)  # type: ignore[arg-type]
+
+
+def test_regel_ende_vor_start_wird_abgelehnt() -> None:
+    """Die Wurzel der 161 falsch stehenden Live-Aufgaben: Start = Abreise,
+    Ende = Anreise liess sich speichern (Wurzel 5)."""
+    with pytest.raises(TaskError) as exc:
+        TasksService._pruefe_zeitfenster(
+            _regel(
+                start_trigger=TaskTrigger.check_out,
+                end_trigger=TaskTrigger.check_in,
+            )
+        )
+    assert exc.value.status_code == 422
+
+
+def test_regel_gleicher_anker_negativer_endversatz_abgelehnt() -> None:
+    """Gleiche Basis, aber das Ende liegt frueher — derselbe Fehler eine Ebene
+    feiner."""
+    with pytest.raises(TaskError) as exc:
+        TasksService._pruefe_zeitfenster(
+            _regel(start_offset_minutes=0, end_offset_minutes=-1440)
+        )
+    assert exc.value.status_code == 422
+
+
+# Die „erlaubt"-Faelle pruefen die PRUEFUNG, nicht den ganzen `create_rule`:
+# der ruft am Ende `_regel_nachziehen`, das an der Fake-DB scheitert (kein
+# `.not_`). Ein Testumbau dafuer waere Aufwand ohne Erkenntnis — geprueft
+# gehoert, ob die Regel durchgelassen wird, und genau das tut dieser Aufruf.
+def test_regel_ende_gleich_start_ist_erlaubt() -> None:
+    """Ein Termin ohne Dauer ist kein Fehler."""
+    TasksService._pruefe_zeitfenster(_regel(end_offset_minutes=0))
+
+
+def test_regel_anreise_bis_abreise_bleibt_erlaubt() -> None:
+    """Der Regelfall einer Aufenthaltsaufgabe: Anreise bis Abreise."""
+    TasksService._pruefe_zeitfenster(
+        _regel(
+            start_trigger=TaskTrigger.check_in,
+            end_trigger=TaskTrigger.check_out,
+            end_offset_minutes=0,
+        )
+    )
+
+
+def test_regel_unbestimmbare_ordnung_wird_durchgelassen() -> None:
+    """`booking_confirmed` liegt irgendwann vor der Anreise — wie weit, weiss
+    nur die Buchung. Eine solche Regel abzulehnen hiesse, gueltige Faelle zu
+    verbieten; den Einzelfall faengt der Motor ab."""
+    TasksService._pruefe_zeitfenster(
+        _regel(
+            start_trigger=TaskTrigger.booking_confirmed,
+            end_trigger=TaskTrigger.check_in,
+            end_offset_minutes=0,
+        )
+    )
+
+
+# --- Zeitfenster von Hand setzen (31.08.2026) --------------------------------
+
+
+def test_zeitfenster_setzt_start_ende_und_faelligkeit() -> None:
+    """Der Regelfall: eine Aufgabe auf denselben Tag von 10 bis 16 Uhr legen."""
+    db = _FakeDB(_tables())
+    svc = TasksService(client=db)
+    start = datetime(2026, 8, 28, 10, 0, tzinfo=UTC)
+    ende = datetime(2026, 8, 28, 16, 0, tzinfo=UTC)
+    d = svc.set_zeitfenster("T", "t1", start, ende, _admin())
+    assert d.start_at == start
+    assert d.end_at == ende
+    # `due_at` laeuft mit (Wurzel 1): sonst sortiert jede Liste nach dem alten
+    # Termin weiter.
+    assert d.due_at == ende
+
+
+def test_zeitfenster_lehnt_ende_vor_start_ab() -> None:
+    """Genau die Luecke, durch die neun Live-Aufgaben mit einem Ende bis zu
+    64 Tage VOR ihrem Start entstanden sind (Wurzel 5)."""
+    db = _FakeDB(_tables())
+    svc = TasksService(client=db)
+    with pytest.raises(TaskError) as exc:
+        svc.set_zeitfenster(
+            "T",
+            "t1",
+            datetime(2026, 8, 28, tzinfo=UTC),
+            datetime(2026, 8, 21, tzinfo=UTC),
+            _admin(),
+        )
+    assert exc.value.status_code == 422
+    # Nichts geschrieben: die Aufgabe behaelt ihren alten Stand.
+    assert db.tables["tasks"][0].get("start_at") is None
+
+
+def test_zeitfenster_gleicher_zeitpunkt_ist_erlaubt() -> None:
+    """Start == Ende ist ein Termin ohne Dauer, kein Fehler."""
+    db = _FakeDB(_tables())
+    svc = TasksService(client=db)
+    t = datetime(2026, 8, 28, 9, 30, tzinfo=UTC)
+    d = svc.set_zeitfenster("T", "t1", t, t, _admin())
+    assert d.start_at == t and d.end_at == t
+
+
+def test_zeitfenster_leeren_setzt_auch_faelligkeit_zurueck() -> None:
+    db = _FakeDB(_tables())
+    svc = TasksService(client=db)
+    svc.set_zeitfenster(
+        "T", "t1",
+        datetime(2026, 8, 28, 10, 0, tzinfo=UTC),
+        datetime(2026, 8, 28, 16, 0, tzinfo=UTC),
+        _admin(),
+    )
+    d = svc.set_zeitfenster("T", "t1", None, None, _admin())
+    assert d.start_at is None and d.end_at is None and d.due_at is None
+
+
+def test_zeitfenster_nur_start_faellt_auf_start_zurueck() -> None:
+    """Ohne Ende ist der Start die Faelligkeit — dieselbe Regel wie im
+    Regel-Motor (`end or start`), damit beide Wege dasselbe schreiben."""
+    db = _FakeDB(_tables())
+    svc = TasksService(client=db)
+    start = datetime(2026, 9, 1, 8, 0, tzinfo=UTC)
+    d = svc.set_zeitfenster("T", "t1", start, None, _admin())
+    assert d.due_at == start
+
+
+def test_zeitfenster_fremde_aufgabe_ist_ein_404() -> None:
+    """Wurzel 9: derselbe Scope wie beim Lesen."""
+    db = _FakeDB(_tables())
+    svc = TasksService(client=db)
+    with pytest.raises(TaskError) as exc:
+        svc.set_zeitfenster(
+            "ANDERER", "t1", datetime(2026, 8, 28, tzinfo=UTC), None, _admin()
+        )
+    assert exc.value.status_code == 404
 
 
 def test_status_annehmen_und_anfangen() -> None:

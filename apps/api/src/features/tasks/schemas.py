@@ -88,6 +88,21 @@ class TaskStatusUpdate(BaseModel):
     status: TaskStatus
 
 
+class TaskZeitfensterUpdate(BaseModel):
+    """Start- und Endzeitpunkt einer BESTEHENDEN Aufgabe.
+
+    Beide Felder sind Pflicht-Angaben im Sinne von „ausdrücklich gesetzt oder
+    ausdrücklich leer": `null` löscht den jeweiligen Zeitpunkt. Ein
+    weggelassenes Feld als „unverändert" zu deuten wäre hier die schlechtere
+    Wahl — der Aufrufer bearbeitet immer beide Enden zugleich, und ein
+    stillschweigend behaltener alter Wert erzeugt genau die Paare, die dieser
+    Endpunkt verhindern soll (Ende vor Start).
+    """
+
+    start_at: datetime | None = None
+    end_at: datetime | None = None
+
+
 class TaskAssigneeUpdate(BaseModel):
     """Zuständigen einer BESTEHENDEN Aufgabe setzen oder abziehen.
 
