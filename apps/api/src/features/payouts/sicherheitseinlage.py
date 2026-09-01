@@ -225,7 +225,11 @@ def _noch_erstattbar(res: dict, frist: date) -> bool:
 
 
 def auszahlbar(
-    db: Client, tenant_id: str, *, verfuegbar: dict[str, int]
+    db: Client,
+    tenant_id: str,
+    *,
+    verfuegbar: dict[str, int],
+    heute: date | None = None,
 ) -> dict[str, int]:
     """Was von ``verfuegbar`` (je Währung, Cent) tatsächlich ausgezahlt werden darf.
 
@@ -234,8 +238,20 @@ def auszahlbar(
     nicht ein negativer Betrag. Die Unterdeckung ist damit nicht behoben, aber
     sie wächst nicht weiter; sichtbar wird sie über
     `scripts/diagnose/einlage-pruefen.sh`.
+
+    ``heute`` wird an :func:`berechne` durchgereicht und ist der Stichtag der
+    Karenz. Im Betrieb bleibt er leer (= heute); gesetzt wird er von Tests.
+
+    WARUM ER FEHLTE, ist eine eigene Lehre: ``berechne`` nahm ihn längst,
+    ``auszahlbar`` reichte ihn nicht weiter. Die zwei Tests dazu setzten also
+    einen Stichtag, der nie ankam — sie liefen gegen das ECHTE Datum. Grün
+    waren sie nur, solange dieses Datum vor dem Ende der Karenz lag: Abreise
+    28.08.2026 plus 3 Tage, also bis zum 30.08.2026. Am 31.08. wurden sie rot,
+    ohne dass jemand etwas geändert hatte, und die CI meldete einen Fehler in
+    der Auszahlungslogik, die in Wahrheit korrekt war (CLAUDE.md: Tests nie
+    zeitzonen-/datumsabhängig).
     """
-    einlage = berechne(db, tenant_id)
+    einlage = berechne(db, tenant_id, heute=heute)
     return {
         currency: max(0, cents - einlage.get(currency.lower(), 0))
         for currency, cents in verfuegbar.items()

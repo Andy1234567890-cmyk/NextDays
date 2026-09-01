@@ -183,14 +183,47 @@ def test_abgeschaltet_haelt_nichts_zurueck() -> None:
 # --- Auszahlbar --------------------------------------------------------------
 
 def test_auszahlbar_ist_saldo_minus_einlage() -> None:
+    """`heute=HEUTE` ist hier PFLICHT, nicht Kosmetik.
+
+    Bis zum 01.09.2026 stand hier kein Stichtag — und `auszahlbar` nahm auch
+    keinen an, obwohl `berechne` ihn längst kennt. Der Test lief damit gegen
+    das ECHTE Datum und war grün, solange dieses vor dem Ende der Karenz lag
+    (Abreise 28.08. + 3 Tage, also bis zum 30.08.2026). Am 31.08. wurde er
+    rot, ohne dass jemand etwas geändert hatte — die CI meldete einen Fehler
+    in der Auszahlungslogik, die in Wahrheit korrekt war.
+    """
     db = _db(addon_payment_links=[_link()], reservations=[_res()])
-    assert se.auszahlbar(db, "t1", verfuegbar={"dkk": 50000}) == {"dkk": 35000}
+    assert se.auszahlbar(
+        db, "t1", verfuegbar={"dkk": 50000}, heute=HEUTE
+    ) == {"dkk": 35000}
 
 
 def test_auszahlbar_wird_nie_negativ() -> None:
     """Unterdeckung (Auszahlung lief vor Einführung der Einlage) → 0, nicht < 0."""
     db = _db(addon_payment_links=[_link()], reservations=[_res()])
-    assert se.auszahlbar(db, "t1", verfuegbar={"dkk": 5000}) == {"dkk": 0}
+    assert se.auszahlbar(
+        db, "t1", verfuegbar={"dkk": 5000}, heute=HEUTE
+    ) == {"dkk": 0}
+
+
+def test_auszahlbar_reicht_den_stichtag_wirklich_durch() -> None:
+    """Der Wächter gegen die Rückkehr.
+
+    Ohne Durchreichen liefert `auszahlbar` mit JEDEM Stichtag dasselbe — der
+    Parameter wäre eine Attrappe, und die Zeitbombe käme mit dem nächsten
+    Datum zurück. Zwei Stichtage, zwei Ergebnisse: vor Ablauf der Karenz wird
+    zurückgehalten, danach nicht mehr.
+    """
+    db = _db(addon_payment_links=[_link()], reservations=[_res()])
+    # 25.08.: Abreise (28.08.) noch nicht einmal erreicht → volle Einlage.
+    vorher = se.auszahlbar(db, "t1", verfuegbar={"dkk": 50000}, heute=HEUTE)
+    # 05.09.: Abreise + 3 Tage Karenz längst vorbei → nichts zurückgehalten.
+    nachher = se.auszahlbar(
+        db, "t1", verfuegbar={"dkk": 50000}, heute=date(2026, 9, 5)
+    )
+    assert vorher == {"dkk": 35000}
+    assert nachher == {"dkk": 50000}
+    assert vorher != nachher
 
 
 # --- Freigabedatum -----------------------------------------------------------
