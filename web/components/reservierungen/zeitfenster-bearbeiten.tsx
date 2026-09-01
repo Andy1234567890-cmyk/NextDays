@@ -15,6 +15,7 @@ import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
+import { fehlerMelden } from "@/lib/fehler-melden";
 
 import { Button } from "@nextdays/ui/button";
 import { DateTimePicker } from "@nextdays/ui/date-time-picker";
@@ -77,7 +78,7 @@ export function ZeitfensterBearbeiten({
     const res = await setTaskZeitfenster(taskId, startIso, endeIso);
     setBusy(false);
     if (!res.ok) {
-      toast.error(res.error);
+      fehlerMelden(res);
       return;
     }
     toast.success(t("taskPopover.timesSaved"));

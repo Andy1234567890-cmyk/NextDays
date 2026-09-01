@@ -6,6 +6,7 @@
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { fehlerMelden } from "@/lib/fehler-melden";
 
 import { AufgabenFilter } from "@/components/reservierungen/aufgaben-filter";
 import { AufgabenReiter } from "@/components/reservierungen/aufgaben-reiter";
@@ -70,7 +71,7 @@ export function TeamTasks() {
         tagesende: tagesendeIso(),
       });
       if (res.ok) setRows(res.data);
-      else toast.error(res.error);
+      else fehlerMelden(res);
       setLoading(false);
     },
     [tab, propFilter, userFilter, ruleFilter],
@@ -123,7 +124,7 @@ export function TeamTasks() {
 
   const complete = async (taskId: string) => {
     const res = await completeTask(taskId);
-    if (!res.ok) toast.error(res.error);
+    if (!res.ok) fehlerMelden(res);
     else {
       toast.success(t("teamTasks.completed"));
       stillNachladen();
@@ -132,7 +133,7 @@ export function TeamTasks() {
 
   const remove = async (taskId: string) => {
     const res = await deleteTask(taskId);
-    if (!res.ok) toast.error(res.error);
+    if (!res.ok) fehlerMelden(res);
     else {
       toast.success(t("teamTasks.deleted"));
       stillNachladen();

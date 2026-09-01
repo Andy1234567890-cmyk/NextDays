@@ -16,6 +16,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { fehlerMelden } from "@/lib/fehler-melden";
 
 import { LearnButton } from "@/components/reservierungen/learn-dialog";
 import { Input } from "@nextdays/ui/input";
@@ -174,7 +175,7 @@ export function RuleEditorPage({
           duration_minutes: r.duration_minutes,
         });
       } else {
-        toast.error(res.error);
+        fehlerMelden(res);
       }
     }
     setLoading(false);
@@ -218,7 +219,7 @@ export function RuleEditorPage({
       : await createRule(form);
     setSaving(false);
     if (!res.ok) {
-      toast.error(res.error);
+      fehlerMelden(res);
       return;
     }
     toast.success(t("ruleEditorPage.saved"));
@@ -229,7 +230,7 @@ export function RuleEditorPage({
     if (!ruleId) return;
     const res = await deleteRule(ruleId);
     if (!res.ok) {
-      toast.error(res.error);
+      fehlerMelden(res);
       return;
     }
     toast.success(t("ruleEditorPage.deleted"));

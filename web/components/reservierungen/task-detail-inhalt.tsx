@@ -25,6 +25,7 @@ import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { fehlerMelden } from "@/lib/fehler-melden";
 
 import { Button } from "@nextdays/ui/button";
 import { Input } from "@nextdays/ui/input";
@@ -84,7 +85,7 @@ export function TaskDetailInhalt({
     const res = await getTaskDetail(taskId);
     if (res.ok) setDetail(res.data);
     else if (res.status === 404 && onNichtGefunden) onNichtGefunden();
-    else toast.error(res.error);
+    else fehlerMelden(res);
     setLoading(false);
     // `onNichtGefunden` ist beim Seiten-Rahmen stabil (useCallback dort);
     // bewusst NICHT in den Deps, damit ein neu erzeugter Callback kein
@@ -121,7 +122,7 @@ export function TaskDetailInhalt({
     erfolg?: string,
   ) => {
     if (!res.ok) {
-      toast.error(res.error);
+      fehlerMelden(res);
       return false;
     }
     setDetail(res.data);
@@ -198,7 +199,7 @@ export function TaskDetailInhalt({
     const res = await completeTask(taskId);
     setSaving(false);
     if (!res.ok) {
-      toast.error(res.error);
+      fehlerMelden(res);
       return;
     }
     toast.success(t("taskDetailModal.taskCompleted"));
@@ -216,7 +217,7 @@ export function TaskDetailInhalt({
     const res = await uploadChecklistPhoto(itemId, file);
     setUploadingItem(null);
     if (!res.ok) {
-      toast.error(res.error);
+      fehlerMelden(res);
       return;
     }
     toast.success(t("taskDetailModal.photoUploaded"));
@@ -231,7 +232,7 @@ export function TaskDetailInhalt({
     const res = await uploadTaskPhoto(taskId, file);
     setUploadingItem(null);
     if (!res.ok) {
-      toast.error(res.error);
+      fehlerMelden(res);
       return;
     }
     toast.success(t("taskDetailModal.photoUploaded"));

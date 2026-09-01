@@ -11,6 +11,7 @@ import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { fehlerMelden } from "@/lib/fehler-melden";
 
 import { AufgabenFilter } from "@/components/reservierungen/aufgaben-filter";
 import { Button } from "@nextdays/ui/button";
@@ -45,7 +46,7 @@ export function TasksInspection() {
     if (!stillLaden) setLoading(true);
     const res = await listInspection(tab, propFilter);
     if (res.ok) setRows(res.data);
-    else toast.error(res.error);
+    else fehlerMelden(res);
     setLoading(false);
   }, [tab, propFilter]);
 
@@ -72,7 +73,7 @@ export function TasksInspection() {
 
   const decide = async (id: string, approved: boolean) => {
     const res = await inspectTask(id, approved);
-    if (!res.ok) toast.error(res.error);
+    if (!res.ok) fehlerMelden(res);
     else {
       toast.success(
         approved

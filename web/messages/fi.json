@@ -12214,5 +12214,12 @@
     "ownerStayCount": "{count, plural, one {# oma käyttö} other {# omat käytöt}}",
     "ownerStayRow": "Oma käyttö",
     "ownerStayRowHint": "Asunnonomistaja omassa kohteessa – ei myyntiä"
+  },
+  "tasks": {
+    "fehler": {
+      "requestId": "Tunnus: {id}",
+      "kopieren": "Kopioi tiedot",
+      "kopiert": "Kopioitu"
+    }
   }
 }

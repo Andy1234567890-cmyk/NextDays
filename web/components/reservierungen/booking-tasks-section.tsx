@@ -14,6 +14,7 @@ import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { fehlerMelden } from "@/lib/fehler-melden";
 
 import { Button } from "@nextdays/ui/button";
 import {
@@ -66,7 +67,7 @@ export function BookingTasksSection({
   const toggle = async (task: Task) => {
     const next: TaskStatus = task.status === "done" ? "open" : "done";
     const res = await setTaskStatus(task.id, next);
-    if (!res.ok) toast.error(res.error);
+    if (!res.ok) fehlerMelden(res);
     else load();
   };
 
@@ -75,7 +76,7 @@ export function BookingTasksSection({
     const res = await syncReservationTasks(reservationId);
     setBusy(false);
     if (!res.ok) {
-      toast.error(res.error);
+      fehlerMelden(res);
       return;
     }
     // Ehrlich melden, was passiert ist: 0 heißt „keine Regel trifft auf diese

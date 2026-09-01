@@ -228,7 +228,10 @@ export type RuleInput = RuleSchedule & {
 // statt einer roten Meldung über einer leeren Fläche.
 type Result<T> =
   | { ok: true; data: T }
-  | { ok: false; error: string; status?: number };
+  /** `requestId` ist bei einem 500 die einzige Spur zum Fehler: der Server
+   *  sendet nur „internal_error", hinterlegt Typ und Codezeile aber unter
+   *  dieser ID (`GET /diagnostics/ursache/<id>`). */
+  | { ok: false; error: string; status?: number; requestId?: string };
 
 async function call<T>(
   path: string,
@@ -242,7 +245,8 @@ async function call<T>(
   } catch (exc) {
     const error = exc instanceof ApiError ? exc.message : "Aktion fehlgeschlagen.";
     const status = exc instanceof ApiError ? exc.status : undefined;
-    return { ok: false, error, status };
+    const requestId = exc instanceof ApiError ? exc.requestId : undefined;
+    return { ok: false, error, status, requestId };
   }
 }
 
@@ -548,6 +552,25 @@ export async function bulkDeleteTasks(
   ids: string[],
 ): Promise<Result<{ deleted: number; skipped: number }>> {
   return call("/tasks/bulk/delete", { method: "POST", body: { ids } });
+}
+
+/** Woher ein Serverfehler kam — Exception-Typ und Codezeile zur Request-ID.
+ *
+ *  Der Server sendet bei einem 500 bewusst nur „internal_error" (kein
+ *  Stacktrace im Browser), hinterlegt die Ursache aber unter der Request-ID.
+ *  Diese Abfrage holt sie fuer die Anzeige in der Oberflaeche.
+ *
+ *  Die Felder koennen leer sein (anderer Worker, Neustart, zu alt) — dann
+ *  bleibt die Request-ID, mit der sich das Server-Log durchsuchen laesst. */
+export async function getFehlerUrsache(requestId: string): Promise<
+  Result<{
+    request_id: string;
+    typ: string | null;
+    datei: string | null;
+    zeile: number | null;
+  }>
+> {
+  return call(`/diagnostics/ursache/${encodeURIComponent(requestId)}`);
 }
 
 /** Kalender-Timeline: Aufgaben im Zeitraum, nach Objekt gruppiert. */

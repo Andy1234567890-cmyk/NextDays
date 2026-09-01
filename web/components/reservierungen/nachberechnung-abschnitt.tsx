@@ -18,6 +18,7 @@ import { Icon } from "@iconify/react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { fehlerMelden } from "@/lib/fehler-melden";
 
 import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
@@ -144,7 +145,7 @@ export function NachberechnungAbschnitt({
     const res = await createNachberechnung(reservationId, wert, grund.trim());
     setBusy(false);
     if (!res.ok) {
-      toast.error(res.error);
+      fehlerMelden(res);
       return;
     }
     await laden();
@@ -156,7 +157,7 @@ export function NachberechnungAbschnitt({
     const res = await sendNachberechnung(reservationId);
     setBusy(false);
     if (!res.ok) {
-      toast.error(res.error);
+      fehlerMelden(res);
       return;
     }
     toast.success(t("mailVersandt"));
@@ -167,7 +168,7 @@ export function NachberechnungAbschnitt({
     const res = await deleteNachberechnung(reservationId);
     setBusy(false);
     if (!res.ok) {
-      toast.error(res.error);
+      fehlerMelden(res);
       return;
     }
     setBetrag("");
@@ -182,7 +183,7 @@ export function NachberechnungAbschnitt({
     const res = await markNachberechnungBezahlt(reservationId);
     setBusy(false);
     if (!res.ok) {
-      toast.error(res.error);
+      fehlerMelden(res);
       return;
     }
     await laden();
@@ -208,7 +209,7 @@ export function NachberechnungAbschnitt({
     );
     setBusy(false);
     if (!res.ok) {
-      toast.error(res.error);
+      fehlerMelden(res);
       return;
     }
     setBetrag("");
@@ -232,7 +233,7 @@ export function NachberechnungAbschnitt({
     );
     setBusy(false);
     if (!res.ok) {
-      toast.error(res.error);
+      fehlerMelden(res);
       return;
     }
     setRuecknahmeId(null);
@@ -258,7 +259,7 @@ export function NachberechnungAbschnitt({
     if (!res.ok) {
       // Feld offen lassen: Der eingetippte Grund darf bei einem 409 nicht
       // verloren gehen.
-      toast.error(res.error);
+      fehlerMelden(res);
       return;
     }
     setErstattungId(null);

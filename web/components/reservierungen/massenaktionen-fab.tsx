@@ -12,6 +12,7 @@ import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
+import { fehlerMelden } from "@/lib/fehler-melden";
 
 import { bulkAssignTasks, bulkCompleteTasks, bulkDeleteTasks } from "@/lib/tasks";
 import { ZustaendigAuswahl } from "./zustaendig-auswahl";
@@ -41,7 +42,7 @@ export function MassenaktionenFab({
     const res = await bulkCompleteTasks(ids);
     setBusy(false);
     if (!res.ok) {
-      toast.error(res.error);
+      fehlerMelden(res);
       return;
     }
     toast.success(
@@ -60,7 +61,7 @@ export function MassenaktionenFab({
     const res = await bulkAssignTasks(ids, neu);
     setBusy(false);
     if (!res.ok) {
-      toast.error(res.error);
+      fehlerMelden(res);
       return;
     }
     // Wie beim Abschließen: übersprungene Zeilen werden GENANNT. Der Server
@@ -82,7 +83,7 @@ export function MassenaktionenFab({
     const res = await bulkDeleteTasks(ids);
     setBusy(false);
     if (!res.ok) {
-      toast.error(res.error);
+      fehlerMelden(res);
       return;
     }
     toast.success(

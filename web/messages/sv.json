@@ -12214,5 +12214,12 @@
     "ownerStayCount": "{count, plural, one {# egen användning} other {# egen användning}}",
     "ownerStayRow": "Egen användning",
     "ownerStayRowHint": "Husägare i egen fastighet – ingen försäljning"
+  },
+  "tasks": {
+    "fehler": {
+      "requestId": "ID: {id}",
+      "kopieren": "Kopiera detaljer",
+      "kopiert": "Kopierad"
+    }
   }
 }

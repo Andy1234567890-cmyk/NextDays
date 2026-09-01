@@ -18,6 +18,7 @@ import { Icon } from "@iconify/react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { fehlerMelden } from "@/lib/fehler-melden";
 
 import { Button } from "@nextdays/ui/button";
 import {
@@ -43,7 +44,7 @@ export function VertretungenListe() {
     if (res.ok) setRows(res.data);
     // Fehler NIE verschlucken: eine leere Liste sähe aus wie „keine Anfragen",
     // und genau darauf verlässt sich jemand, der einspringen würde (Wurzel 5).
-    else toast.error(res.error);
+    else fehlerMelden(res);
     setLoading(false);
   }, []);
 
@@ -66,7 +67,7 @@ export function VertretungenListe() {
     setBusy(null);
     if (!res.ok) {
       // 409 heißt „schon entschieden" — ein Kollege war schneller.
-      toast.error(res.error);
+      fehlerMelden(res);
       stillNachladen();
       return;
     }

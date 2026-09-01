@@ -12235,5 +12235,12 @@
     "ownerStayCount": "{count, plural, one {# own use} other {# own uses}}",
     "ownerStayRow": "Owner-occupied",
     "ownerStayRowHint": "Homeowner in own property — no sale"
+  },
+  "tasks": {
+    "fehler": {
+      "requestId": "ID: {id}",
+      "kopieren": "Copy details",
+      "kopiert": "Copied"
+    }
   }
 }

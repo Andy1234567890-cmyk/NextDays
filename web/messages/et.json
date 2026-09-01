@@ -12214,5 +12214,12 @@
     "ownerStayCount": "{count, plural, one {# isiklik kasutus} other {# isiklikku kasutust}}",
     "ownerStayRow": "Oman kasutus",
     "ownerStayRowHint": "Majaomanik oma objektil – mitte müügiks"
+  },
+  "tasks": {
+    "fehler": {
+      "requestId": "ID: {id}",
+      "kopieren": "Kopeeri andmed",
+      "kopiert": "Kopeeritud"
+    }
   }
 }

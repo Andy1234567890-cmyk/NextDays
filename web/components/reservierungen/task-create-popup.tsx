@@ -8,6 +8,7 @@ import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { fehlerMelden } from "@/lib/fehler-melden";
 
 import { Button } from "@nextdays/ui/button";
 import { NativeSelect } from "@nextdays/ui/native-select";
@@ -76,7 +77,7 @@ export function TaskCreatePopup({
     });
     setSaving(false);
     if (!res.ok) {
-      toast.error(res.error);
+      fehlerMelden(res);
       return;
     }
     toast.success(t("taskCreatePopup.taskCreated"));

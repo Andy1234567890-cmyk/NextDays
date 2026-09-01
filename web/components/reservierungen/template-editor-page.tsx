@@ -9,6 +9,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { fehlerMelden } from "@/lib/fehler-melden";
 
 import { LearnButton } from "@/components/reservierungen/learn-dialog";
 import { Button } from "@nextdays/ui/button";
@@ -41,7 +42,7 @@ export function TemplateEditorPage({ ruleId }: { ruleId: string | null }) {
       setDescription(res.data.description ?? "");
       setItems(res.data.items);
     } else {
-      toast.error(res.error);
+      fehlerMelden(res);
     }
     setLoading(false);
   }, [ruleId]);
@@ -86,7 +87,7 @@ export function TemplateEditorPage({ ruleId }: { ruleId: string | null }) {
       : await createRule(payload);
     setSaving(false);
     if (!res.ok) {
-      toast.error(res.error);
+      fehlerMelden(res);
       return;
     }
     toast.success(t("templateEditorPage.saved"));

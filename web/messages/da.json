@@ -12214,5 +12214,12 @@
     "ownerStayCount": "{count, plural, one {# Egen brug} other {# Egen brug}}",
     "ownerStayRow": "Egen brug",
     "ownerStayRowHint": "Boligejer i egen ejendom — intet salg"
+  },
+  "tasks": {
+    "fehler": {
+      "requestId": "ID: {id}",
+      "kopieren": "Kopier detaljer",
+      "kopiert": "Kopieret"
+    }
   }
 }

@@ -12214,5 +12214,12 @@
     "ownerStayCount": "{count, plural, one {# saját használat} other {# saját használat}}",
     "ownerStayRow": "Saját használat",
     "ownerStayRowHint": "Tulajdonos a saját ingatlanában – nem eladó"
+  },
+  "tasks": {
+    "fehler": {
+      "requestId": "Azonosító: {id}",
+      "kopieren": "Részletek másolása",
+      "kopiert": "Másolva"
+    }
   }
 }

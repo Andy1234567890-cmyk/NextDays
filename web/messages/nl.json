@@ -12214,5 +12214,12 @@
     "ownerStayCount": "{count, plural, one {# Eigen gebruik} other {# Eigen gebruik}}",
     "ownerStayRow": "Eigen gebruik",
     "ownerStayRowHint": "Huiseigenaar in eigen object — geen verkoop"
+  },
+  "tasks": {
+    "fehler": {
+      "requestId": "ID: {id}",
+      "kopieren": "Details kopiëren",
+      "kopiert": "Gekopieerd"
+    }
   }
 }

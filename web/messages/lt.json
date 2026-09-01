@@ -12214,5 +12214,12 @@
     "ownerStayCount": "{count, plural, one {# nuosavybė} other {# nuosavybės}}",
     "ownerStayRow": "Nuosavas naudojimas",
     "ownerStayRowHint": "Nekilnojamojo turto savininkas savo objekte – neparduodama"
+  },
+  "tasks": {
+    "fehler": {
+      "requestId": "ID: {id}",
+      "kopieren": "Kopijuoti detales",
+      "kopiert": "Nukopijuota"
+    }
   }
 }

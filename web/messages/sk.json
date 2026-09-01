@@ -12214,5 +12214,12 @@
     "ownerStayCount": "{count, plural, one {# Vlastné použitie} other {# Vlastné použitia}}",
     "ownerStayRow": "Vlastné použitie",
     "ownerStayRowHint": "Majiteľ býva v objekte – žiadny predaj"
+  },
+  "tasks": {
+    "fehler": {
+      "requestId": "ID: {id}",
+      "kopieren": "Kopírovať detaily",
+      "kopiert": "Skopírované"
+    }
   }
 }

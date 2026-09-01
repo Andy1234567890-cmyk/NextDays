@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Query
 
+from src.core.request_context import hole_ursache
 from src.core.security import (
     CurrentPlatformAdmin,
     CurrentUser,
@@ -20,7 +21,12 @@ from src.core.security import (
 )
 
 from .dependencies import DiagnosticsServiceDep
-from .schemas import DebugSession, DebugSessionStart, DiagnosticBatch
+from .schemas import (
+    DebugSession,
+    DebugSessionStart,
+    DiagnosticBatch,
+    FehlerUrsache,
+)
 
 router = APIRouter(prefix="/diagnostics", tags=["diagnostics"])
 
@@ -74,6 +80,43 @@ def report_startabsturz(
     """
     n = service.record(batch, user_id=None, guest_id=None, tenant_id=None)
     return {"gespeichert": n}
+
+
+@router.get("/ursache/{request_id}", response_model=FehlerUrsache)
+def fehler_ursache(request_id: str, ctx: CurrentUser) -> FehlerUrsache:
+    """Woher ein 500 kam — abrufbar mit der Request-ID aus der Fehlerantwort.
+
+    WOFUER: Der Client bekommt bei einem Serverfehler nur
+    `{"detail": "internal_error", "request_id": "..."}`. Das ist Absicht
+    (Wurzel 5: kein Stacktrace-Leak) — aber fuer den Betrieb war der Fehler
+    damit eine Blackbox. Er sah „internal_error" und konnte niemandem sagen,
+    was los ist; die Ursache lag zwar bereits im Prozess (`merke_ursache`),
+    wurde aber nur im Backoffice gelesen.
+
+    WAS HERAUSKOMMT: Exception-Typ und die letzte EIGENE Codezeile, etwa
+    `APIError` in `features/tasks/service.py:1076`. NIE die Nachricht: die
+    traegt regelmaessig Kundendaten oder Secrets.
+
+    `CurrentUser` und nicht oeffentlich: ein Dateiname aus dem Projektbaum ist
+    zwar harmlos, aber er gehoert niemandem in die Hand, der nicht angemeldet
+    ist (Wurzel 9). Eine Request-ID ist zudem erratbar kurz — ohne Anmeldung
+    liesse sich damit reihum abfragen, wo es im System gerade kracht.
+
+    Fehlt der Eintrag (anderer Worker, Neustart, aelter als der Ringpuffer),
+    kommen die Felder leer zurueck statt eines 404: die Request-ID selbst ist
+    dann die Auskunft, mit der sich das Server-Log durchsuchen laesst.
+    """
+    # `ctx` wird nur zur Autorisierung gebraucht — die Ursache haengt an der
+    # Request-ID, nicht am Mandanten. Ein Mandantenfilter waere hier keine
+    # Sicherheit, sondern eine Attrappe: der Puffer kennt den Mandanten nicht.
+    _ = ctx
+    daten = hole_ursache(request_id) or {}
+    return FehlerUrsache(
+        request_id=request_id,
+        typ=daten.get("typ"),  # type: ignore[arg-type]
+        datei=daten.get("datei"),  # type: ignore[arg-type]
+        zeile=daten.get("zeile"),  # type: ignore[arg-type]
+    )
 
 
 @router.get("/debug", response_model=list[DebugSession])

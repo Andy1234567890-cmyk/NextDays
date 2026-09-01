@@ -18,6 +18,7 @@ import {
 
 import { AufgabenFilter } from "@/components/reservierungen/aufgaben-filter";
 import { BookingPopover } from "@/components/reservierungen/booking-popover";
+import { FehlerHinweis } from "@/components/reservierungen/fehler-hinweis";
 import { LearnButton } from "@/components/reservierungen/learn-dialog";
 import { TaskCreatePopup } from "@/components/reservierungen/task-create-popup";
 import { TaskDetailModal } from "@/components/reservierungen/task-detail-modal";
@@ -213,6 +214,10 @@ export function TasksCalendar() {
   // Ladefehler (z. B. 403) sichtbar machen statt still leeren Kalender zeigen
   // (Wurzel 5).
   const [loadError, setLoadError] = useState<string | null>(null);
+  // Die Request-ID der fehlgeschlagenen Antwort. Ohne sie zeigt die
+  // Oberflaeche nur „internal_error" — mit ihr holt `FehlerHinweis` die
+  // hinterlegte Ursache (Exception-Typ + Codezeile) beim Server ab.
+  const [loadRequestId, setLoadRequestId] = useState<string | undefined>();
   // Popovers: geklickte Aufgabe / Buchung (null = zu).
   const [taskPop, setTaskPop] = useState<TaskListItem | null>(null);
   const [bookingPop, setBookingPop] = useState<CalendarBooking | null>(null);
@@ -265,9 +270,11 @@ export function TasksCalendar() {
       if (res.ok) {
         setRows(res.data.rows);
         setLoadError(null);
+        setLoadRequestId(undefined);
       } else {
         // Fehler NIE verschlucken: sonst wirkt der Aufgaben-Kalender „kaputt".
         setLoadError(res.error);
+        setLoadRequestId(res.requestId);
         setRows([]);
       }
       setLoading(false);
@@ -480,9 +487,7 @@ export function TasksCalendar() {
       </nav>
 
       {loadError && (
-        <div className="rounded-(--radius) border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-          {loadError}
-        </div>
+        <FehlerHinweis fehler={loadError} requestId={loadRequestId} />
       )}
 
       {/* Titel + Lernen + Filterleiste */}

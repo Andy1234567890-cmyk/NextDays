@@ -12214,5 +12214,12 @@
     "ownerStayCount": "{count, plural, one {# utilizare proprie} other {# utilizări proprii}}",
     "ownerStayRow": "Utilizare proprie",
     "ownerStayRowHint": "Proprietar în proprietatea proprie — fără vânzare"
+  },
+  "tasks": {
+    "fehler": {
+      "requestId": "ID: {id}",
+      "kopieren": "Copiați detaliile",
+      "kopiert": "Copiat"
+    }
   }
 }

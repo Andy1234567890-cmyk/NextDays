@@ -12214,5 +12214,12 @@
     "ownerStayCount": "{count, plural, one {# Úsáid phearsanta} other {# Úsáidí pearsanta}}",
     "ownerStayRow": "Úsáid phearsanta",
     "ownerStayRowHint": "Úinéir tí ina réadmhaoin féin — gan díol"
+  },
+  "tasks": {
+    "fehler": {
+      "requestId": "Aitheantas: {id}",
+      "kopieren": "Cóipeáil sonraí",
+      "kopiert": "Cóipeáilte"
+    }
   }
 }

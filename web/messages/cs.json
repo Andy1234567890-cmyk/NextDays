@@ -12214,5 +12214,12 @@
     "ownerStayCount": "{count, plural, one {# Vlastní použití} other {# Vlastní použití}}",
     "ownerStayRow": "Vlastní užívání",
     "ownerStayRowHint": "Majitelé nemovitostí ve vlastní nemovitosti – žádný prodej"
+  },
+  "tasks": {
+    "fehler": {
+      "requestId": "ID: {id}",
+      "kopieren": "Kopírovat detaily",
+      "kopiert": "Zkopírováno"
+    }
   }
 }

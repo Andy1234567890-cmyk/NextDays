@@ -12214,5 +12214,12 @@
     "ownerStayCount": "{count, plural, one {# Użu personali} other {# Użi personali}}",
     "ownerStayRow": "Użu personali",
     "ownerStayRowHint": "Sid ta' dar fil-proprjetà tiegħu stess — mhux għall-bejgħ"
+  },
+  "tasks": {
+    "fehler": {
+      "requestId": "ID: {id}",
+      "kopieren": "Ikkopja d-dettalji",
+      "kopiert": "Kopjat"
+    }
   }
 }

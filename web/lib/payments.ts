@@ -12,7 +12,11 @@ import { currentToken } from "@/lib/session-token";
 
 export type Result<T> =
   | { ok: true; data: T }
-  | { ok: false; error: string; status?: number };
+  /** Kennung der Fehlerantwort. Bei einem 500 sendet der Server nur
+   *  „internal_error"; unter dieser ID liegen Exception-Typ und Codezeile
+   *  (`GET /diagnostics/ursache/<id>`). Ohne sie waere der Fehler in der
+   *  Oberflaeche nicht auffindbar. */
+  | { ok: false; error: string; status?: number; requestId?: string };
 
 async function call<T>(
   path: string,
@@ -26,7 +30,8 @@ async function call<T>(
   } catch (exc) {
     const error = exc instanceof ApiError ? exc.message : "Aktion fehlgeschlagen.";
     const status = exc instanceof ApiError ? exc.status : undefined;
-    return { ok: false, error, status };
+    const requestId = exc instanceof ApiError ? exc.requestId : undefined;
+    return { ok: false, error, status, requestId };
   }
 }
 

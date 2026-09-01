@@ -12214,5 +12214,12 @@
     "ownerStayCount": "{count, plural, one {# собствена употреба} other {# собствени употреби}}",
     "ownerStayRow": "Собствено ползване",
     "ownerStayRowHint": "Собственик в имота — без продажба"
+  },
+  "tasks": {
+    "fehler": {
+      "requestId": "Идентификатор: {id}",
+      "kopieren": "Копиране на детайли",
+      "kopiert": "Копирано"
+    }
   }
 }

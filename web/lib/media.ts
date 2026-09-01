@@ -22,7 +22,13 @@ export type MediaItem = {
   check_out: string | null;
 };
 
-type Result<T> = { ok: true; data: T } | { ok: false; error: string };
+type Result<T> =
+  | { ok: true; data: T }
+  /** Kennung der Fehlerantwort. Bei einem 500 sendet der Server nur
+   *  „internal_error"; unter dieser ID liegen Exception-Typ und Codezeile
+   *  (`GET /diagnostics/ursache/<id>`). Ohne sie waere der Fehler in der
+   *  Oberflaeche nicht auffindbar. */
+  | { ok: false; error: string; requestId?: string };
 
 async function call<T>(
   path: string,
@@ -35,7 +41,8 @@ async function call<T>(
     return { ok: true, data };
   } catch (exc) {
     const error = exc instanceof ApiError ? exc.message : "Aktion fehlgeschlagen.";
-    return { ok: false, error };
+    const requestId = exc instanceof ApiError ? exc.requestId : undefined;
+    return { ok: false, error, requestId };
   }
 }
 

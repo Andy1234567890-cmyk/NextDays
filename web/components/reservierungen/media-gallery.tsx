@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { fehlerMelden } from "@/lib/fehler-melden";
 
 import { LearnButton } from "@/components/reservierungen/learn-dialog";
 import { Switch } from "@nextdays/ui/switch";
@@ -43,7 +44,7 @@ export function MediaGallery() {
 
   const remove = async (m: MediaItem) => {
     const res = await deleteMedia(m.kind, m.id);
-    if (!res.ok) toast.error(res.error);
+    if (!res.ok) fehlerMelden(res);
     else {
       toast.success(t("mediaGallery.deleteSuccess"));
       load();

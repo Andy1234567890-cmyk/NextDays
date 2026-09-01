@@ -12214,5 +12214,12 @@
     "ownerStayCount": "{count, plural, one {# usage personnel} other {# usages personnels}}",
     "ownerStayRow": "Usage personnel",
     "ownerStayRowHint": "Propriétaire occupant — pas de vente"
+  },
+  "tasks": {
+    "fehler": {
+      "requestId": "ID: {id}",
+      "kopieren": "Copier les détails",
+      "kopiert": "Copié"
+    }
   }
 }

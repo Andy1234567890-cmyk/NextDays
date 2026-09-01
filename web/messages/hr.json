@@ -12214,5 +12214,12 @@
     "ownerStayCount": "{count, plural, one {# vlastito korištenje} other {# vlastita korištenja}}",
     "ownerStayRow": "Vlastito korištenje",
     "ownerStayRowHint": "Vlasnik nekretnine u vlastitom objektu — bez prodaje"
+  },
+  "tasks": {
+    "fehler": {
+      "requestId": "ID: {id}",
+      "kopieren": "Kopiraj detalje",
+      "kopiert": "Kopirano"
+    }
   }
 }

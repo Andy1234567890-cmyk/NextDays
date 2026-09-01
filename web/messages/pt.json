@@ -12214,5 +12214,12 @@
     "ownerStayCount": "{count, plural, one {# uso próprio} other {# usos próprios}}",
     "ownerStayRow": "Uso próprio",
     "ownerStayRowHint": "Proprietário no próprio imóvel — sem venda"
+  },
+  "tasks": {
+    "fehler": {
+      "requestId": "ID: {id}",
+      "kopieren": "Copiar detalhes",
+      "kopiert": "Copiado"
+    }
   }
 }

@@ -12214,5 +12214,12 @@
     "ownerStayCount": "{count, plural, one {# ιδιοχρησία} other {# ιδιοχρησίες}}",
     "ownerStayRow": "Ιδιοχρησία",
     "ownerStayRowHint": "Ιδιοκτήτης στην ιδιοκτησία του — όχι προς πώληση"
+  },
+  "tasks": {
+    "fehler": {
+      "requestId": "Αναγνωριστικό: {id}",
+      "kopieren": "Αντιγραφή λεπτομερειών",
+      "kopiert": "Αντιγράφηκε"
+    }
   }
 }

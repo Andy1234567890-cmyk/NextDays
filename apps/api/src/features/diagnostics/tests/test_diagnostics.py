@@ -313,3 +313,74 @@ def test_startabsturz_route_verlangt_KEIN_token() -> None:
 
     geschuetzt = client.post("/api/v1/diagnostics/events", json=nutzlast)
     assert geschuetzt.status_code == 401
+
+
+# --- Fehlerursache in der Oberflaeche (01.09.2026) --------------------------
+
+def test_ursache_kommt_mit_typ_und_stelle_zurueck() -> None:
+    """Der Betrieb soll sehen, WOHER ein 500 kam, nicht nur „internal_error".
+
+    DER ANLASS: der Aufgabenkalender zeigte das nackte Wort `internal_error`.
+    Die Ursache lag die ganze Zeit im Prozess bereit (`merke_ursache`), wurde
+    aber nur im Backoffice gelesen — in der Oberflaeche des Betriebs nie.
+    """
+    from src.core.request_context import hole_ursache, merke_ursache
+    from src.features.tasks.service import _in_bloecken
+
+    try:
+        _in_bloecken(None)  # type: ignore[arg-type]
+    except TypeError as exc:
+        merke_ursache("rid-typ-test", exc)
+
+    ursache = hole_ursache("rid-typ-test")
+    assert ursache is not None
+    assert ursache["typ"] == "TypeError"
+    # Die letzte EIGENE Zeile, nicht die innerste Bibliotheksfunktion.
+    assert ursache["datei"] == "features/tasks/service.py"
+    assert isinstance(ursache["zeile"], int)
+
+
+def test_ursache_traegt_niemals_die_exception_nachricht() -> None:
+    """Nachrichten tragen Kundendaten und Secrets — nur Typ und Stelle.
+
+    `KeyError: 'stripe_secret'` ist das reale Muster: der Schluesselname steht
+    in der Nachricht. Constraint-Verletzungen tragen Klartextwerte. Beides
+    darf nicht in den Browser (Wurzel 5).
+    """
+    from src.core.request_context import hole_ursache, merke_ursache
+
+    try:
+        raise KeyError("stripe_secret_live_xyz")
+    except KeyError as exc:
+        merke_ursache("rid-secret-test", exc)
+
+    ursache = hole_ursache("rid-secret-test")
+    assert ursache is not None
+    assert "stripe_secret" not in str(ursache)
+    assert ursache["typ"] == "KeyError"
+
+
+def test_unbekannte_id_gibt_leere_felder_statt_404() -> None:
+    """Fehlt der Eintrag, bleibt die Request-ID die Auskunft.
+
+    Ein 404 waere hier falsch: die ID ist gueltig, nur der Puffer kennt sie
+    nicht mehr (anderer Worker, Neustart, zu alt). Mit ihr laesst sich das
+    Server-Log weiterhin durchsuchen — ein Fehler waere ein Ersatzwert fuer
+    eine Auskunft, die es gibt (Wurzel 4).
+    """
+    from src.core.request_context import hole_ursache
+
+    assert hole_ursache("gibtesnicht9999") is None
+
+
+def test_ursachen_puffer_laeuft_nicht_ueber() -> None:
+    """Ein Fehlersturm darf den Prozess nicht vollschreiben (Wurzel 8)."""
+    from src.core.request_context import _MAX_URSACHEN, _ursachen, merke_ursache
+
+    for i in range(_MAX_URSACHEN + 50):
+        try:
+            raise ValueError("x")
+        except ValueError as exc:
+            merke_ursache(f"flut-{i}", exc)
+
+    assert len(_ursachen) <= _MAX_URSACHEN

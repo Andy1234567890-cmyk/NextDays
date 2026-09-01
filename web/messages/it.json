@@ -12214,5 +12214,12 @@
     "ownerStayCount": "{count, plural, one {# uso personale} other {# usi personali}}",
     "ownerStayRow": "Uso personale",
     "ownerStayRowHint": "Proprietario che vive nell'immobile – nessuna vendita"
+  },
+  "tasks": {
+    "fehler": {
+      "requestId": "ID: {id}",
+      "kopieren": "Copia dettagli",
+      "kopiert": "Copiato"
+    }
   }
 }

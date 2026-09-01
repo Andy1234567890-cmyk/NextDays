@@ -12214,5 +12214,12 @@
     "ownerStayCount": "{count, plural, one {# pašu lietošanai} other {# pašu lietošanai}}",
     "ownerStayRow": "Pašpatēriņš",
     "ownerStayRowHint": "Mājas īpašnieks savā īpašumā — nav pārdošanā"
+  },
+  "tasks": {
+    "fehler": {
+      "requestId": "ID: {id}",
+      "kopieren": "Kopēt detaļas",
+      "kopiert": "Nokopēts"
+    }
   }
 }

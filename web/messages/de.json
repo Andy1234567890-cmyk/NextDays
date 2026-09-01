@@ -12235,5 +12235,12 @@
       "origin": "Herkunft",
       "unknownCountry": "Unbekannt"
     }
+  },
+  "tasks": {
+    "fehler": {
+      "requestId": "Kennung: {id}",
+      "kopieren": "Details kopieren",
+      "kopiert": "Kopiert"
+    }
   }
 }

@@ -12214,5 +12214,12 @@
     "ownerStayCount": "{count, plural, one {# użycie własne} other {# użycia własne}}",
     "ownerStayRow": "Użytek własny",
     "ownerStayRowHint": "Właściciel mieszka w obiekcie — brak sprzedaży"
+  },
+  "tasks": {
+    "fehler": {
+      "requestId": "Identyfikator: {id}",
+      "kopieren": "Kopiuj szczegóły",
+      "kopiert": "Skopiowano"
+    }
   }
 }

@@ -28,17 +28,29 @@ export class ApiError extends Error {
    * Zahl nicht daraus rekonstruierbar.
    */
   details?: Record<string, unknown>;
+  /**
+   * Die Request-ID der Fehlerantwort (`X-Request-Id` bzw. `request_id` im
+   * Body). Bei einem 500 ist sie das EINZIGE, was den Fehler auffindbar
+   * macht: der Server sendet bewusst nur „internal_error" (kein
+   * Stacktrace-Leak), hinterlegt die Ursache aber unter dieser ID.
+   *
+   * Sie wurde bis zum 01.09.2026 weggeworfen — die Oberflaeche zeigte
+   * „internal_error" und niemand konnte sagen, woher er kam, obwohl Typ und
+   * Codezeile im Server bereitlagen.
+   */
+  requestId?: string;
   constructor(
     message: string,
     status: number,
     details?: Record<string, unknown>,
     // `cause` durchreichen, damit die urspruengliche Ausnahme (undici-Fehler
     // mit ihrem `code`) am Fehler haengen bleibt statt verloren zu gehen.
-    opts?: { cause?: unknown },
+    opts?: { cause?: unknown; requestId?: string },
   ) {
     super(message, opts);
     this.status = status;
     this.details = details;
+    this.requestId = opts?.requestId;
   }
 }
 
@@ -109,8 +121,12 @@ export async function api<T>(path: string, opts: ApiOptions = {}): Promise<T> {
   if (!res.ok) {
     let detail = `Fehler ${res.status}`;
     let details: Record<string, unknown> | undefined;
+    // Aus dem HEADER lesen, nicht nur aus dem Body: bei einer Antwort ohne
+    // JSON (Gateway-Fehler, leerer Body) gibt es sonst gar keine Spur.
+    let requestId = res.headers.get("X-Request-Id") || undefined;
     try {
       const data = await res.json();
+      if (typeof data?.request_id === "string") requestId = data.request_id;
       if (typeof data?.detail === "string") {
         detail = data.detail;
       } else if (
@@ -136,7 +152,7 @@ export async function api<T>(path: string, opts: ApiOptions = {}): Promise<T> {
     } catch {
       // kein JSON-Body — Standardmeldung behalten
     }
-    throw new ApiError(detail, res.status, details);
+    throw new ApiError(detail, res.status, details, { requestId });
   }
 
   if (res.status === 204) return undefined as T;

@@ -107,6 +107,25 @@ class DebugSessionStart(BaseModel):
     note: str | None = Field(default=None, max_length=300)
 
 
+class FehlerUrsache(BaseModel):
+    """Woher ein 500 kam — für die Anzeige direkt in der Oberfläche.
+
+    Bewusst NUR Exception-Typ und Stelle, nie die Nachricht: die trägt
+    regelmäßig Kundendaten oder Secrets (`KeyError: 'stripe_secret'`,
+    Constraint-Verletzungen mit Klartextwerten). Typ plus Datei und Zeile
+    genügen, um den Fehler zu finden, und sind unbedenklich (Wurzel 5).
+    """
+
+    request_id: str
+    #: `None`, wenn der Eintrag nicht (mehr) vorliegt — anderer Worker,
+    #: Neustart, oder älter als der Ringpuffer. Dann bleibt die Request-ID,
+    #: mit der sich das Server-Log durchsuchen lässt. Kein geratener
+    #: Ersatzwert (Wurzel 4).
+    typ: str | None = None
+    datei: str | None = None
+    zeile: int | None = None
+
+
 class DiagnosticRow(BaseModel):
     """Ein Ereignis in der Support-Ansicht."""
 

@@ -52,7 +52,11 @@ type Result<T> =
   // damit „darfst du nicht" (403 → notFound) von „ging schief" (Fehlerkasten).
   // Ohne ihn saehe ein Nutzer ohne APPROVE_BLOCK einen roten Kasten statt
   // einer Seite, die es fuer ihn schlicht nicht gibt.
-  | { ok: false; error: string; status?: number };
+  /** Kennung der Fehlerantwort. Bei einem 500 sendet der Server nur
+   *  „internal_error"; unter dieser ID liegen Exception-Typ und Codezeile
+   *  (`GET /diagnostics/ursache/<id>`). Ohne sie waere der Fehler in der
+   *  Oberflaeche nicht auffindbar. */
+  | { ok: false; error: string; status?: number; requestId?: string };
 
 async function call<T>(
   path: string,
@@ -70,6 +74,7 @@ async function call<T>(
       ok: false,
       error,
       status: exc instanceof ApiError ? exc.status : undefined,
+      requestId: exc instanceof ApiError ? exc.requestId : undefined,
     };
   }
 }
