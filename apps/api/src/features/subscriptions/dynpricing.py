@@ -25,12 +25,14 @@ from supabase import Client
 from src.core.logging import get_logger
 from src.core.supabase import fetch_all_rows
 
+from . import abrechnungswaehrung
 from .entitlements import modul_aktiv
 from .errors import SubscriptionsConfigError, SubscriptionsError
 from .errors import field as _f
 from .schemas import DYNPRICING_MODULE_KEY, DYNPRICING_RATE
 
 log = get_logger("nextdays.subscriptions.dynpricing")
+
 
 
 class DynPricingBillingMixin:
@@ -211,30 +213,43 @@ class DynPricingBillingMixin:
             total = round(sum(float(z["fee_amount"]) for z in zeilen), 2)
             if total <= 0:
                 continue
+            # Gleiche Wurzel wie bei der Provision: ein Item in einer anderen
+            # Währung als der des Stripe-Kunden landet auf KEINER Rechnung und
+            # bleibt stumm liegen. Vor dem Erzeugen fakturierbar machen.
+            fakt_total, fakt_currency, kurs = abrechnungswaehrung.fakturierbar(
+                db, self._stripe, self._stripe_err,
+                customer_id=customer_id, betrag=total,
+                quell_waehrung=currency, period=period,
+            )
+            idem = abrechnungswaehrung.idempotenz_schluessel(
+                "dyn", tenant_id, f"{period}:{fakt_currency}", fakt_total
+            )
             try:
                 item = self._stripe.v1.invoice_items.create(
                     params={
                         "customer": customer_id,
-                        "amount": int(round(total * 100)),
-                        "currency": currency.lower(),
+                        "amount": int(round(fakt_total * 100)),
+                        "currency": fakt_currency.lower(),
                         "description": f"Dynamische Preise {period}",
-                        "metadata": {
-                            "tenant_id": tenant_id,
-                            "period": period,
-                            "currency": currency,
-                        },
+                        "metadata": abrechnungswaehrung.herkunft_metadaten(
+                            tenant_id, period, total, currency, kurs
+                        ),
                     },
-                    options={
-                        "idempotency_key": f"dyn:{tenant_id}:{period}:{currency}"
-                    },
+                    options={"idempotency_key": idem},
                 )
             except _StripeError as exc:
                 raise self._stripe_err(exc) from exc
             item_id = _f(item, "id")
+            anteile = abrechnungswaehrung.verteile_betrag(
+                zeilen, fakt_total, "fee_amount"
+            )
             for z in zeilen:
                 db.table("dynpricing_ledger").update(
                     {"status": "invoiced", "period": period,
-                     "stripe_invoice_item_id": item_id}
+                     "stripe_invoice_item_id": item_id,
+                     "billed_amount": anteile[z["id"]],
+                     "billed_currency": fakt_currency,
+                     "fx_rate": float(kurs)}
                 ).eq("id", z["id"]).execute()
             abgerechnet += len(zeilen)
             log.info(

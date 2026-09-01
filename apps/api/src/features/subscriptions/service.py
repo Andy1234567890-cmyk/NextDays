@@ -30,6 +30,7 @@ from src.core.supabase import fetch_all_rows
 # Reverse-Charge in den Eigentümer-Abrechnungen (Wurzel 4: eine Quelle).
 from src.features.owner_statements.tax import EU_COUNTRIES as _EU_LAENDER
 
+from . import abrechnungswaehrung
 from .dynpricing import DynPricingBillingMixin
 from .errors import SubscriptionsConfigError, SubscriptionsError, field
 from .preisliste import PreislisteMixin
@@ -1449,21 +1450,27 @@ class SubscriptionsService(
                 "Kein Stripe-Kunde/Abo — Provision nicht abrechenbar.",
                 status_code=409,
             )
-        # Idempotenz (Wurzel 2): Worker und manueller Endpoint können parallel
-        # laufen; beide lesen dieselben pending-Zeilen. Ein deterministischer
-        # idempotency_key aus tenant+period sorgt dafür, dass Stripe bei einem
-        # zweiten Lauf DASSELBE Invoice-Item zurückgibt statt ein zweites zu
-        # erzeugen (keine Doppel-Belastung). Der anschließende Ledger-Update ist
-        # ohnehin idempotent (Status pending→invoiced einmalig wirksam).
-        idem_key = f"comm:{tenant_id}:{period}"
+        customer_id = sub_row["stripe_customer_id"]
+        # In die Währung bringen, in der der Stripe-Kunde fakturierbar ist —
+        # sonst landet das Item auf keiner Rechnung (s. abrechnungswaehrung).
+        fakt_total, fakt_currency, kurs = abrechnungswaehrung.fakturierbar(
+            db, self._stripe, self._stripe_err,
+            customer_id=customer_id, betrag=total,
+            quell_waehrung=currency, period=period,
+        )
+        idem_key = abrechnungswaehrung.idempotenz_schluessel(
+            "comm", tenant_id, period, fakt_total
+        )
         try:
             item = self._stripe.v1.invoice_items.create(
                 params={
-                    "customer": sub_row["stripe_customer_id"],
-                    "amount": int(round(total * 100)),
-                    "currency": currency.lower(),
+                    "customer": customer_id,
+                    "amount": int(round(fakt_total * 100)),
+                    "currency": fakt_currency.lower(),
                     "description": f"OTA-Provision {period}",
-                    "metadata": {"tenant_id": tenant_id, "period": period},
+                    "metadata": abrechnungswaehrung.herkunft_metadaten(
+                        tenant_id, period, total, currency, kurs
+                    ),
                 },
                 options={"idempotency_key": idem_key},
             )
@@ -1471,13 +1478,23 @@ class SubscriptionsService(
             raise self._stripe_err(exc) from exc
         item_id = _f(item, "id")
         ids = [row["id"] for row in pending]
+        # Anteilig verteilen (0516) — sonst behauptet jede Zeile ihren
+        # ungekappten Wert und der Ledger weicht von der Rechnung ab.
+        anteile = abrechnungswaehrung.verteile_betrag(
+            pending, fakt_total, "commission_amount"
+        )
         for row_id in ids:
             db.table("commission_ledger").update(
                 {"status": "invoiced", "period": period,
-                 "stripe_invoice_item_id": item_id}
+                 "stripe_invoice_item_id": item_id,
+                 "billed_amount": anteile[row_id],
+                 "billed_currency": fakt_currency,
+                 "fx_rate": float(kurs)}
             ).eq("id", row_id).execute()
         log.info(
             "commissions_billed", tenant_id=tenant_id, period=period,
             count=len(ids), total=total, currency=currency,
+            fakturiert=fakt_total, fakt_currency=fakt_currency,
+            invoice_item=item_id,
         )
         return len(ids)
