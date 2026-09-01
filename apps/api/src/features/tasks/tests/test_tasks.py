@@ -1679,3 +1679,60 @@ def test_regel_ohne_zuordnung_deckt_jedes_objekt() -> None:
     assert deckung.ohne_anreise == 0
     assert deckung.ohne_abreise == 0
     assert deckung.betroffen == []
+
+
+# --- URL-Länge: `in_`-Listen müssen geblockt sein (01.09.2026) ---------------
+
+def test_in_bloecken_haelt_die_url_grenze() -> None:
+    """PostgREST bekommt `in_`-Listen über die URL — ab ~8 KB kommt HTTP 414.
+
+    DER VORFALL: der Aufgabenkalender warf beim Scrollen `internal_error`.
+    Gemessen kippte er zwischen 207 und 212 Aufgaben; nachgestellt gegen die
+    Live-DB gehen 200 IDs, 210 werfen 414 „URI too long". `_enrich` reichte
+    ALLE Task-IDs des Fensters in einem Rutsch an `checklist_items`.
+
+    Das Tückische: es hängt an der DATENMENGE, nicht am Code. Bei einem
+    kleinen Betrieb läuft dieselbe Zeile jahrelang.
+    """
+    from src.features.tasks.service import _ID_BLOCK, _in_bloecken
+
+    ids = [f"id-{i}" for i in range(250)]
+    bloecke = _in_bloecken(ids)
+
+    assert all(len(b) <= _ID_BLOCK for b in bloecke)
+    # Nichts verloren, nichts doppelt — ein Block-Helfer, der Einträge
+    # verschluckt, wäre schlimmer als die 414: die Aufgabe fehlte einfach.
+    assert [x for b in bloecke for x in b] == ids
+    assert _in_bloecken([]) == []
+
+
+def test_id_block_bleibt_unter_der_gemessenen_grenze() -> None:
+    """Gemessen kippt es zwischen 200 und 210 IDs.
+
+    Der Wert steht deutlich darunter, weil Filter, Spaltenliste und Sortierung
+    in derselben URL stehen — und weil die Grenze eine Eigenschaft der
+    Serverkonfiguration ist, nicht unseres Codes.
+    """
+    from src.features.tasks.service import _ID_BLOCK
+
+    assert _ID_BLOCK <= 150
+
+
+def test_keine_ungeblockte_in_liste_im_slice() -> None:
+    """Kein `.in_(..., list(...))` mehr im Service.
+
+    Der Wächter gegen die Rückkehr: die vorige Fassung hatte die Blockbildung
+    an KEINER der acht Sammelabfragen, obwohl das Nachbarmodul
+    `regel_uebersetzung` sie längst hatte. Wer eine neue schreibt, soll hier
+    stolpern statt beim Kunden.
+    """
+    import re
+    from pathlib import Path
+
+    quelle = (
+        Path(__file__).resolve().parents[1] / "service.py"
+    ).read_text(encoding="utf-8")
+    treffer = re.findall(r"\.in_\([^)]*\blist\(", quelle)
+    assert not treffer, (
+        f"{len(treffer)} ungeblockte in_()-Liste(n) — `_in_bloecken` benutzen."
+    )

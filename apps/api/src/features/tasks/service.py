@@ -135,6 +135,40 @@ def _als_zeitpunkt(wert: str, feld: str) -> datetime:
         ) from exc
     return _utc(gelesen)
 
+#: Wie viele IDs höchstens in EINE `in_()`-Liste gehen.
+#:
+#: PostgREST bekommt `in_`-Listen über die URL. Eine UUID braucht dort rund 38
+#: Zeichen, und ab etwa 8 KB antwortet der Server mit HTTP 414 „URI too long" —
+#: die supabase-py-Schicht macht daraus einen `APIError`, den niemand fängt,
+#: also einen 500.
+#:
+#: LIVE PASSIERT (01.09.2026): der Aufgabenkalender warf beim Scrollen
+#: `internal_error`. Gemessen kippte er zwischen 207 und 212 Aufgaben —
+#: `_enrich` reicht ALLE Task-IDs des Fensters in einem Rutsch an
+#: `checklist_items` weiter. Nachgestellt: 200 IDs gehen, 210 werfen 414.
+#:
+#: Das Tückische ist, dass es von der DATENMENGE abhängt, nicht vom Code: bei
+#: einem kleinen Betrieb läuft dieselbe Zeile jahrelang, und der Fehler
+#: erscheint erst, wenn genug Aufgaben da sind. Kein Test hätte ihn gefunden,
+#: solange die Fake-DB jede Listenlänge annimmt.
+#:
+#: 100 mit Absicht deutlich unter der gemessenen Grenze: Filter, Spaltenliste
+#: und Sortierung stehen in derselben URL, und die Grenze ist keine
+#: Eigenschaft unseres Codes, sondern der Serverkonfiguration.
+_ID_BLOCK = 100
+
+
+def _in_bloecken(ids: list[str], groesse: int = _ID_BLOCK) -> list[list[str]]:
+    """Eine ID-Liste in URL-taugliche Blöcke schneiden.
+
+    EIN Helfer statt sieben Mal dieselbe Schleife: die vorige Fassung hatte
+    die Blockbildung an KEINER Stelle, obwohl das Nachbarmodul
+    `regel_uebersetzung` sie längst hatte. Wer eine neue Sammelabfrage
+    schreibt, greift hierher.
+    """
+    return [ids[i : i + groesse] for i in range(0, len(ids), groesse)]
+
+
 # Foto-Upload (Checklisten-Nachweise → privater Bucket task-photos).
 _TASK_PHOTO_BUCKET = "task-photos"
 _PHOTO_MAX_BYTES = 20 * 1024 * 1024
@@ -995,30 +1029,36 @@ class TasksService:
         clean = {i for i in ids if i}
         if not clean:
             return {}
-        res = (
-            self._db()
-            .table("properties")
-            .select("id, title")
-            .eq("tenant_id", tenant_id)
-            .in_("id", list(clean))
-            .execute()
-        )
-        return {r["id"]: r.get("title") or "" for r in (res.data or [])}
+        out: dict[str, str] = {}
+        for block in _in_bloecken(list(clean)):
+            for r in (
+                self._db()
+                .table("properties")
+                .select("id, title")
+                .eq("tenant_id", tenant_id)
+                .in_("id", block)
+                .execute()
+            ).data or []:
+                out[r["id"]] = r.get("title") or ""
+        return out
 
     def _user_names(self, tenant_id: str, ids: set[str]) -> dict[str, str]:
         """Anzeigenamen der Assignees im Batch. Nur Name — keine PII/Kontakt."""
         clean = {i for i in ids if i}
         if not clean:
             return {}
-        res = (
-            self._db()
-            .table("users")
-            .select("id, full_name")
-            .eq("tenant_id", tenant_id)
-            .in_("id", list(clean))
-            .execute()
-        )
-        return {r["id"]: r.get("full_name") or "" for r in (res.data or [])}
+        out: dict[str, str] = {}
+        for block in _in_bloecken(list(clean)):
+            for r in (
+                self._db()
+                .table("users")
+                .select("id, full_name")
+                .eq("tenant_id", tenant_id)
+                .in_("id", block)
+                .execute()
+            ).data or []:
+                out[r["id"]] = r.get("full_name") or ""
+        return out
 
     def _checklist_counts(self, task_ids: set[str]) -> dict[str, tuple[int, int]]:
         """(total, done) je Task. checklist_items trägt keine tenant_id — die
@@ -1026,18 +1066,18 @@ class TasksService:
         clean = {i for i in task_ids if i}
         if not clean:
             return {}
-        res = (
-            self._db()
-            .table("checklist_items")
-            .select("task_id, done")
-            .in_("task_id", list(clean))
-            .execute()
-        )
         counts: dict[str, tuple[int, int]] = {}
-        for r in res.data or []:
-            tid = r["task_id"]
-            total, done = counts.get(tid, (0, 0))
-            counts[tid] = (total + 1, done + (1 if r.get("done") else 0))
+        for block in _in_bloecken(list(clean)):
+            for r in (
+                self._db()
+                .table("checklist_items")
+                .select("task_id, done")
+                .in_("task_id", block)
+                .execute()
+            ).data or []:
+                tid = r["task_id"]
+                total, done = counts.get(tid, (0, 0))
+                counts[tid] = (total + 1, done + (1 if r.get("done") else 0))
         return counts
 
     def _reservation_refs(
@@ -1052,17 +1092,18 @@ class TasksService:
         clean = {i for i in reservation_ids if i}
         if not clean:
             return {}
-        rows = (
-            self._db()
-            .table("reservations")
-            .select("id, external_ref")
-            .eq("tenant_id", tenant_id)
-            .in_("id", list(clean))
-            .execute()
-        ).data or []
-        return {
-            r["id"]: (r.get("external_ref") or str(r["id"])[:8]) for r in rows
-        }
+        out: dict[str, str] = {}
+        for block in _in_bloecken(list(clean)):
+            for r in (
+                self._db()
+                .table("reservations")
+                .select("id, external_ref")
+                .eq("tenant_id", tenant_id)
+                .in_("id", block)
+                .execute()
+            ).data or []:
+                out[r["id"]] = r.get("external_ref") or str(r["id"])[:8]
+        return out
 
     def _enrich(
         self, tenant_id: str, tasks: list[Task]
@@ -1918,16 +1959,16 @@ class TasksService:
         clean = {i for i in item_ids if i}
         if not clean:
             return {}
-        res = (
-            self._db()
-            .table("checklist_photos")
-            .select("item_id, storage_path")
-            .in_("item_id", list(clean))
-            .execute()
-        )
         out: dict[str, list[str]] = {}
-        for r in res.data or []:
-            out.setdefault(r["item_id"], []).append(r["storage_path"])
+        for block in _in_bloecken(list(clean)):
+            for r in (
+                self._db()
+                .table("checklist_photos")
+                .select("item_id, storage_path")
+                .in_("item_id", block)
+                .execute()
+            ).data or []:
+                out.setdefault(r["item_id"], []).append(r["storage_path"])
         return out
 
     # --- Abschluss mit Foto-Pflicht + Inspektion ---
@@ -2249,17 +2290,17 @@ class TasksService:
     ) -> dict[str, int]:
         if not rule_ids:
             return {}
-        res = (
-            self._db()
-            .table("task_rule_items")
-            .select("rule_id")
-            .eq("tenant_id", tenant_id)
-            .in_("rule_id", list(rule_ids))
-            .execute()
-        )
         out: dict[str, int] = {}
-        for r in res.data or []:
-            out[r["rule_id"]] = out.get(r["rule_id"], 0) + 1
+        for block in _in_bloecken(list(rule_ids)):
+            for r in (
+                self._db()
+                .table("task_rule_items")
+                .select("rule_id")
+                .eq("tenant_id", tenant_id)
+                .in_("rule_id", block)
+                .execute()
+            ).data or []:
+                out[r["rule_id"]] = out.get(r["rule_id"], 0) + 1
         return out
 
     def _rule_property_ids(self, rule_ids: set[str]) -> dict[str, list[str]]:
@@ -2267,16 +2308,16 @@ class TasksService:
         der Join-Tabelle — rule_ids sind bereits tenant-gefiltert (Wurzel 3)."""
         if not rule_ids:
             return {}
-        res = (
-            self._db()
-            .table("task_rule_assignments")
-            .select("rule_id, property_id")
-            .in_("rule_id", list(rule_ids))
-            .execute()
-        )
         out: dict[str, list[str]] = {}
-        for r in res.data or []:
-            out.setdefault(r["rule_id"], []).append(r["property_id"])
+        for block in _in_bloecken(list(rule_ids)):
+            for r in (
+                self._db()
+                .table("task_rule_assignments")
+                .select("rule_id, property_id")
+                .in_("rule_id", block)
+                .execute()
+            ).data or []:
+                out.setdefault(r["rule_id"], []).append(r["property_id"])
         return out
 
     def get_rule(self, tenant_id: str, rule_id: str) -> RuleDetail:
@@ -2735,14 +2776,19 @@ class TasksService:
         clean = {i for i in ids if i}
         if not clean:
             return
-        owned = (
-            self._db()
-            .table("properties")
-            .select("id")
-            .eq("tenant_id", tenant_id)
-            .in_("id", list(clean))
-            .execute()
-        ).data or []
+        owned: list[dict] = []
+        for block in _in_bloecken(list(clean)):
+            owned.extend(
+                (
+                    self._db()
+                    .table("properties")
+                    .select("id")
+                    .eq("tenant_id", tenant_id)
+                    .in_("id", block)
+                    .execute()
+                ).data
+                or []
+            )
         if len(owned) != len(clean):
             raise TaskError("Unbekanntes Objekt referenziert.", status_code=422)
 

@@ -578,9 +578,17 @@ def task_calendar(
     assignee_id: Annotated[list[str] | None, Query()] = None,
     rule_id: Annotated[list[str] | None, Query()] = None,
 ) -> TaskCalendarResponse:
-    return service.calendar(
-        _tenant(ctx), month_from, month_to, assignee_id, rule_id, ctx
-    )
+    # `TaskError` fangen wie in den 31 anderen Routen. Fehlte hier (und bei
+    # `inspection`) als einzige: `_als_zeitpunkt` wirft bei unlesbarem
+    # `month_from` einen fachlichen 422 — ohne diesen Fang wurde daraus ein
+    # roher 500 `internal_error`, der dem Aufrufer nicht sagt, dass SEIN
+    # Parameter das Problem ist.
+    try:
+        return service.calendar(
+            _tenant(ctx), month_from, month_to, assignee_id, rule_id, ctx
+        )
+    except TaskError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
 @router.get("/inspection", response_model=list[InspectionItem])
@@ -590,7 +598,10 @@ def inspection_list(
     tab: str = "to_review",
     property_id: Annotated[list[str] | None, Query()] = None,
 ) -> list[InspectionItem]:
-    return service.list_inspection(_tenant(ctx), tab, property_id, ctx)
+    try:
+        return service.list_inspection(_tenant(ctx), tab, property_id, ctx)
+    except TaskError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
 @router.get("/detail/{task_id}", response_model=TaskDetail)
