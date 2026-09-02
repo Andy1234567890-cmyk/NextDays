@@ -17,6 +17,7 @@ sobald sie das Haus verlässt, ist jedes Feld angreiferkontrollierter Input
 """
 from __future__ import annotations
 
+from datetime import date
 from typing import Any
 
 import nh3
@@ -385,6 +386,50 @@ def _clean_percent(raw: object) -> float:
     return value
 
 
+def _clean_date(raw: object, *, feld: str) -> str | None:
+    """ISO-Datum einer Gebühren-Grenze, oder ``None`` wenn keine gesetzt ist.
+
+    Ein unlesbares Datum ist ein Fehler, kein „keine Grenze": sonst gälte die
+    Gebühr plötzlich unbegrenzt, obwohl der Betrieb eine Grenze eingetragen hat
+    (Wurzel 5 — fail-closed).
+    """
+    if raw is None or not str(raw).strip():
+        return None
+    try:
+        return date.fromisoformat(str(raw).strip()).isoformat()
+    except ValueError as exc:
+        raise PropertyError(
+            f"Gebühren-Datum „{feld}“ ist kein Datum: {raw}", status_code=422
+        ) from exc
+
+
+def hat_zeitraum(fee: dict[str, Any]) -> bool:
+    """Trägt die Gebühr eine Gültigkeitsgrenze (``validFrom``/``validUntil``)?"""
+    return bool(fee.get("validFrom") or fee.get("validUntil"))
+
+
+def gebuehr_gilt_am(fee: dict[str, Any], tag: date | None) -> bool:
+    """Gilt die Gebühr für eine Buchung mit Anreise ``tag``?
+
+    Beide Grenzen inklusiv, fehlende Grenze = offen. Die Achse ist die ANREISE,
+    nicht das Buchungsdatum: eine Gebühr „ab 01.08." meint Aufenthalte ab dann.
+
+    ``tag=None`` bei gesetzter Grenze heißt „nicht beurteilbar" und ergibt
+    ``False`` — eine Gebühr, deren Bedingung niemand prüfen kann, wird nicht
+    angesetzt (Wurzel 4: kein Geld aus einer ungeprüften Annahme). Ohne Grenze
+    gilt sie immer, auch ohne Datum.
+    """
+    if not hat_zeitraum(fee):
+        return True
+    if tag is None:
+        return False
+    von = fee.get("validFrom")
+    bis = fee.get("validUntil")
+    if von and tag < date.fromisoformat(str(von)):
+        return False
+    return not (bis and tag > date.fromisoformat(str(bis)))
+
+
 def _clean_tax_rate(raw: object) -> float | None:
     """Eigener USt-Satz der Gebühr. None = Übernachtungssatz des Objekts."""
     if raw is None or raw == "":
@@ -627,6 +672,30 @@ def normalize_fees(
         if bool(eintrag.get("shortStayOnly")):
             sauber["shortStayOnly"] = True
 
+        # Gültigkeit nach ANREISE („gilt ab" / „gilt bis", inklusiv, je optional).
+        # Anlass (02.09.2026): die Resort-Gebühr des Beta-Betriebs gibt es erst
+        # seit dem 01.08.2026 — ohne Zeitraum trug die Abrechnung sie in 98
+        # Buchungen davor aus den Stammdaten nach. Kein Portal kennt eine
+        # Datumsbedingung; eine Gebühr mit Zeitraum geht deshalb an kein Portal
+        # (ota_abgaben), genau wie `shortStayOnly`.
+        gilt_ab = _clean_date(eintrag.get("validFrom"), feld="validFrom")
+        gilt_bis = _clean_date(eintrag.get("validUntil"), feld="validUntil")
+        if gilt_ab and gilt_bis and gilt_bis < gilt_ab:
+            raise PropertyError(
+                "Gebühr: „gilt bis“ liegt vor „gilt ab“.", status_code=422
+            )
+        if gilt_ab:
+            sauber["validFrom"] = gilt_ab
+        if gilt_bis:
+            sauber["validUntil"] = gilt_bis
+
+        # „Nur in der Eigentümer-Abrechnung": dem Gast nirgends berechnet (kein
+        # Angebot, kein Portal), aber in Abrechnung/Auswertung/Eigentümer-Portal
+        # aus den Stammdaten angesetzt. Eine interne Abrechnungsgröße, kein
+        # Gastpreis.
+        if bool(eintrag.get("ownerStatementOnly")):
+            sauber["ownerStatementOnly"] = True
+
         # Interne Beschreibung. Sie stand im Editor und im Frontend-Typ, wurde
         # hier aber nie in `sauber` übernommen — jedes Speichern hat sie also
         # stillschweigend verworfen (der Betrieb tippt einen Text, der beim
@@ -678,6 +747,11 @@ def fee_signatur(fee: dict[str, Any]) -> str:
             str(fee.get("mode") or "amount"),
             str(fee.get("basis") or "per_stay"),
             f"{float(fee.get('amount') or 0):.2f}",
+            # Zeitraum und Abrechnungs-Schalter sind Teil der Identität: „Resort
+            # ab 01.08." und „Resort" sind für den Betrieb zwei Gebühren.
+            str(fee.get("validFrom") or ""),
+            str(fee.get("validUntil") or ""),
+            "abrechnung" if fee.get("ownerStatementOnly") else "",
         )
     )
 

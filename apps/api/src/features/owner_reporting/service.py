@@ -32,6 +32,7 @@ from supabase import Client
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.core.supabase import fetch_all_rows, load_scoped
+from src.features.owner_statements import wiederkehrend
 from src.features.properties.gebuehren import FEE_TYPE_LABEL
 
 from . import perioden
@@ -789,12 +790,18 @@ class OwnerReportingService:  # pylint: disable=too-many-public-methods
     ) -> list[tuple[dict[str, Any], Decimal]]:
         """Wiederkehrende Posten in konkrete Beträge übersetzen.
 
-        ``je_buchung``/``je_nacht`` zählen nur die Buchungen der Objekte, für
-        die der Posten gilt; ``je_zeitraum`` fällt einmal an. Die Währung wird
-        NICHT umgerechnet, sondern muss zur Berichtswährung passen — 50 DKK
-        sind 50 DKK, und ein stiller Kurs 1,0 wäre plausibel aussehender Unsinn
-        (dieselbe Regel wie bei der Pauschale im Vertrag).
+        Die RECHNUNG steht seit 02.09.2026 nicht mehr hier, sondern in
+        ``owner_statements.wiederkehrend`` — dieselbe Regel muss auch die
+        Abrechnung anwenden, und zweimal geschrieben ergäbe sie für denselben
+        Posten zwei Zahlen (dieselbe Begründung wie bei ``common.py`` für die
+        Provisionsformel). Hier bleibt, was DB-Zugriff braucht: die Zeilen
+        laden und den Fehler in die Sprache dieses Slices übersetzen.
+
+        ``period_from``/``period_to`` gehen bewusst nicht in die Rechnung ein:
+        die Buchungen des Zeitraums stecken bereits in ``erg``, und
+        ``je_zeitraum`` fällt einmal an, unabhängig von der Länge.
         """
+        del period_from, period_to
         rows = fetch_all_rows(
             self._db.table("owner_recurring_items")
             .select(
@@ -805,35 +812,14 @@ class OwnerReportingService:  # pylint: disable=too-many-public-methods
             .eq("aktiv", True)
             .order("id")
         )
-        out: list[tuple[dict[str, Any], Decimal]] = []
-        for zeile in rows:
-            if str(zeile["currency"]).upper() != currency.upper():
-                raise ReportingError(
-                    f"Der wiederkehrende Posten „{zeile['label']}“ lautet auf "
-                    f"{zeile['currency']}, der Bericht auf {currency}. Beträge "
-                    "verschiedener Währungen werden nicht verrechnet.",
-                    status_code=422,
-                )
-            betrag = d(zeile["betrag"])
-            pid = iso(zeile.get("property_id"))
-            betroffen = [
-                b
-                for b in erg.buchungen
-                if pid is None or str(b.row["property_id"]) == pid
-            ]
-            modus = str(zeile["modus"])
-            if modus == "je_buchung":
-                wert = betrag * len(betroffen)
-            elif modus == "je_nacht":
-                wert = betrag * sum(b.naechte for b in betroffen)
-            else:
-                # `je_zeitraum` fällt einmal an — auch bei leerem Zeitraum, denn
-                # eine Dauervereinbarung hängt nicht an einer Buchung.
-                del period_from, period_to
-                wert = betrag
-            if wert != 0:
-                out.append((zeile, wert))
-        return out
+        mengen = wiederkehrend.bezugsmenge(
+            [(str(b.row["property_id"]), b.naechte) for b in erg.buchungen]
+        )
+        try:
+            berechnet = wiederkehrend.posten_betraege(rows, mengen, currency)
+        except wiederkehrend.WiederkehrendFehler as exc:
+            raise ReportingError(exc.message, status_code=422) from exc
+        return [(zeile, wert) for zeile, _anzahl, wert in berechnet]
 
     def get_payment(self, ctx: AuthContext, payment_id: str) -> PaymentDetail:
         tenant_id = self._tenant(ctx)

@@ -15,6 +15,8 @@
 // verbindet ihn über `aria-expanded`/`aria-controls` mit dem Inhalt. Der Text
 // steht als echter Inhalt im Dokument, nicht in einem `title`-Attribut, das
 // weder Screenreader zuverlässig vorlesen noch Finger öffnen können.
+import type * as React from "react";
+
 import { Icon } from "@iconify/react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
@@ -23,13 +25,17 @@ import { cn } from "./utils";
 export function InfoHinweis({
   titel,
   text,
+  children,
   ariaLabel,
   className,
 }: {
   /** Überschrift im Popover — worum es geht (optional). */
   titel?: string;
   /** Die Erklärung. Mehrere Absätze als Array, sonst ein String. */
-  text: string | string[];
+  text?: string | string[];
+  /** Erklärung als Knoten, wenn sie mehr als Text ist (Liste, Betrag, Link).
+   *  Ersetzt `text` — nicht beides setzen. */
+  children?: React.ReactNode;
   /**
    * Was der Knopf vorliest. MUSS sagen, WOZU die Erklärung gehört („Erklärung
    * zu Eigentümer-Auszahlung"), denn eine Seite mit zwölf gleich benannten
@@ -38,7 +44,9 @@ export function InfoHinweis({
   ariaLabel: string;
   className?: string;
 }) {
-  const absaetze = Array.isArray(text) ? text : [text];
+  const absaetze = (Array.isArray(text) ? text : [text]).filter(
+    (x): x is string => Boolean(x),
+  );
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -60,6 +68,7 @@ export function InfoHinweis({
             {absatz}
           </p>
         ))}
+        {children && <div className="text-muted-foreground">{children}</div>}
       </PopoverContent>
     </Popover>
   );

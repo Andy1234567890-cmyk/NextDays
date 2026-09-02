@@ -52,6 +52,13 @@ export type StatementSummary = {
    *  Kompensation und Material gegeneinander stehen. */
   expenses_to_owner: number;
   expenses_from_owner: number;
+  /** Wiederkehrende Posten (Dauervereinbarung), beide Richtungen einzeln. */
+  recurring_to_owner: number;
+  recurring_from_owner: number;
+  /** Σ der Vertrags-Pauschalen aller Zeilen — NUR AUSWEIS, sie steckt bereits
+   *  in `owner_payout`. `null` = nicht als eine Zahl aussagbar (Zeile ohne
+   *  Auszahlung oder gemischte Währungen). */
+  pauschalen_gesamt: number | null;
   /** `null` = nicht berechenbar, weil für mindestens ein Objekt KEIN
    *  Provisionssatz hinterlegt ist (`payout_unbekannt` nennt den Grund).
    *  Als „—" rendern, NIE als 0 — eine 0 läse sich als „dem Eigentümer steht
@@ -73,6 +80,42 @@ export type StatementSummary = {
   payout_unbekannt: string | null;
 };
 
+/** EINE Gebühr oder Zusatzleistung einer Buchung — als eigener Posten.
+ *
+ *  Anlass (Betrieb, 02.09.2026): „Jede Gebühr muss als einzelner Posten
+ *  aufgeschlüsselt werden auf der Abrechnung." `betrag` ist `null`, wenn die
+ *  Rolle ihn nicht sehen darf (§4.2): Gebühren des Betriebs und Zusatzleistungen
+ *  sind Teil seines Verkaufspreises; der Eigentümer sieht dann Label und
+ *  Zuordnung, aber keine Zahl — nie eine 0. `menge`/`einzelpreis`/`basis` nur
+ *  bei Zusatzleistungen (`quelle === "addon"`). */
+export type GebuehrZeile = {
+  art: string;
+  label: string;
+  betrag: number | null;
+  gehoert_zu: "betrieb" | "eigentuemer" | "durchlauf";
+  provisionspflichtig: boolean;
+  quelle: "ota" | "stammdaten" | "addon" | string;
+  menge: number | null;
+  einzelpreis: number | null;
+  basis: string | null;
+};
+
+/** Ein wiederkehrender Posten (Dauervereinbarung, `owner_recurring_items`),
+ *  ausgerechnet für den Zeitraum. `betrag` ist SIGNIERT (negativ bei
+ *  `abschnitt === "ausgaben"`), `einzelbetrag` bleibt positiv; `anzahl` ist die
+ *  Bezugsmenge („3 × 50,00" ist prüfbar, „150,00" nicht). */
+export type WiederkehrenderPosten = {
+  item_id: string;
+  label: string;
+  abschnitt: "unterkunftspreis" | "gebuehren" | "ausgaben" | "andere";
+  modus: "je_buchung" | "je_nacht" | "je_zeitraum";
+  einzelbetrag: number;
+  anzahl: number;
+  betrag: number;
+  currency: string;
+  property_id: string | null;
+};
+
 export type RentalRow = {
   reservation_id: string;
   guest: string | null;
@@ -80,7 +123,8 @@ export type RentalRow = {
   listing_id: string;
   listing: string | null;
   channel: string;
-  /** Gast-Bruttopreis der Buchung. `null` = maskiert (§4.2). */
+  /** Gastpreis laut PORTAL (Übernachtung + Gebühren, OHNE Zusatzleistungen —
+   *  die stehen in `addon_total`). `null` = maskiert (§4.2). */
   total_price: number | null;
   total_payout: number;
   // Quellwährung der Buchung + Owner-Auszahlung (Buchungssatz) in Quell- und
@@ -105,7 +149,9 @@ export type RentalRow = {
   /** Feste Pauschale aus dem Vertrag (je Buchung oder je Nacht). */
   pauschale: number | null;
   gebuehren_an_eigentuemer: number | null;
-  /** Grund für eine fehlende Auszahlung dieser Zeile — heute `"provision"`. */
+  /** Grund für eine fehlende Auszahlung dieser Zeile: `"provision"` (kein
+   *  Vertrag, kein Altsatz), `"provision_zeitraum"` (Vertrag beginnt erst nach
+   *  der Abreise, Datum in `vertrag_beginnt_am`), `"portal_abzug"`, … */
   payout_unbekannt: string | null;
   /** WOHER die Gebühren dieser Zeile kommen:
    *  - `"ota"` — das Portal hat sie gemeldet. Tatsache.
@@ -115,16 +161,63 @@ export type RentalRow = {
    *    erwarteten, und die Zeile muss das sagen — sonst sieht es wie ein
    *    Rechenfehler aus.
    *  - `"stammdaten"` — keine Portal-Buchung (eigene Website, Telefon); die
-   *    gepflegten Objekt-Gebühren gelten, und das ist hier richtig. */
-  gebuehren_quelle: "ota" | "ota_ohne_aufstellung" | "stammdaten" | null;
+   *    gepflegten Objekt-Gebühren gelten, und das ist hier richtig.
+   *  - `"stammdaten_portal"` — Portal-Buchung ohne Aufstellung (CSV-Import,
+   *    Channex-Import); die Gebühren kommen aus den Objekt-Stammdaten.
+   *    `gebuehren_grund` sagt, wie: `"belegt"` (Portal-Gesamt − Nächte des
+   *    Channex-Zwillings erklärt genau diese Gebühren), `"im_betrag"` (im
+   *    Portalbetrag enthalten angenommen), `"obendrauf"` (Betrag ist die
+   *    Nächtesumme, Gebühren kommen dazu). */
+  gebuehren_quelle:
+    | "ota"
+    | "ota_ohne_aufstellung"
+    | "stammdaten"
+    | "stammdaten_portal"
+    | null;
   /** Bei `"ota_ohne_aufstellung"`: warum nichts kam. `"channex_import"` ist
    *  NICHT behebbar (Channex liefert bei nachgeholten Buchungen keine Extras),
-   *  `"portal_meldet_keine"` hängt an der Extranet-Konfiguration. */
+   *  `"portal_meldet_keine"` hängt an der Extranet-Konfiguration,
+   *  `"csv_import"` ist der Bestandsimport per CSV — der Betrag ist der
+   *  Portal-Gastpreis inkl. Gebühren, eine Aufstellung gibt es nicht. */
   gebuehren_grund:
     | "channex_import"
     | "portal_meldet_keine"
     | "kein_payload"
+    | "csv_import"
+    | "belegt"
+    | "im_betrag"
+    | "obendrauf"
     | null;
+  // --- Seit 02.09.2026: jede Gebühr ein eigener Posten -----------------------
+  /** An-/Abreise (ISO-Datum, Kalendertage des Gastes). */
+  check_in: string | null;
+  check_out: string | null;
+  /** Echter Portalname („Booking.com"); `channel` bleibt der Schlüssel. */
+  ota_name: string | null;
+  /** Gebühren und Zusatzleistungen EINZELN. Die Anzeige rechnet daraus nichts
+   *  zusammen — die Kontrollsummen kommen vom Server. */
+  gebuehren: GebuehrZeile[];
+  /** Kontrollsummen: Σ Betriebs- bzw. Durchlauf-Gebühren, Σ Zusatzleistungen
+   *  (alle drei maskiert wie `total_price`); `gebuehren_an_eigentuemer` oben
+   *  ist die vierte. */
+  gebuehren_betrieb: number | null;
+  gebuehren_durchlauf: number | null;
+  addon_total: number | null;
+  /** Zahlungsgebühr des Portals (Booking 1,5 %). Maskiert wie `portal_provision`. */
+  portal_zahlungsgebuehr: number | null;
+  /** Gastpreis − Portal-Abzug: was vom Portal beim Betrieb ankommt. NICHT
+   *  maskiert — der Eigentümer sieht diese Zahl als Gesamtbetrag seiner Buchung
+   *  (Entscheidung 02.09.2026); `null` nur, wenn die Kette nicht berechenbar war. */
+  auszahlungsbasis: number | null;
+  /** Satz, mit dem DIESE Zeile gerechnet wurde, und seine Herkunft. */
+  provisions_pct: number | null;
+  provision_quelle: "vertrag" | "override" | "altspalten" | null;
+  vertrag_gueltig_ab: string | null;
+  /** Nur bei `payout_unbekannt === "provision_zeitraum"`: am Abreisetag galt
+   *  kein Vertrag, der nächste beginnt erst an diesem Tag (ISO-Datum). */
+  vertrag_beginnt_am: string | null;
+  /** Mindestprovision hat gegriffen — die Provision ist dann NICHT Satz × Bemessung. */
+  min_provision_angewandt: boolean;
 };
 
 export type ListingRow = {
@@ -201,6 +294,8 @@ export type Statement = {
   rental_rows: RentalRow[];
   listing_rows: ListingRow[];
   expenses: Expense[];
+  /** Wiederkehrende Posten, ausgerechnet; im Storno negiert wie `expenses`. */
+  recurring: WiederkehrenderPosten[];
   created_at: string | null;
   updated_at: string | null;
 };

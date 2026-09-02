@@ -49,6 +49,7 @@ from typing import Any
 from src.features.properties.gebuehren import (
     TAXABLE_BASE_CATEGORIES,
     fee_category,
+    hat_zeitraum,
 )
 
 from .common import log
@@ -596,12 +597,19 @@ def abgaben_je_portal(  # pylint: disable=too-many-locals
     # Portal-Gast zu berechnen — ein falscher Gastpreis. Fail-closed draußen
     # lassen und protokollieren (der Chip „Manuelle Synchronisierung" zeigt es
     # in der Oberfläche, siehe abgaben_status.py).
+    #
+    # Und für zwei weitere Achsen derselben Art: eine Gebühr mit Gültigkeits-
+    # zeitraum (`validFrom`/`validUntil`, Anreise) — Channex kennt keine
+    # Datumsbedingung, gesendet gälte sie für jede Anreise; und „nur in der
+    # Eigentümer-Abrechnung" (`ownerStatementOnly`) — der Gast zahlt sie nie.
     eigene_fees = [
         f
         for f in fees
         if isinstance(f, dict)
         and not f.get("optional")
         and not f.get("shortStayOnly")
+        and not f.get("ownerStatementOnly")
+        and not hat_zeitraum(f)
         and fee_category(f) not in NICHT_EXPORTIERBAR
         and _gilt_fuer(f, portal)
     ]
@@ -610,6 +618,18 @@ def abgaben_je_portal(  # pylint: disable=too-many-locals
     ]
     if nur_kurz:
         diagnose["gebuehr_nur_kurzaufenthalt"] = len(nur_kurz)
+    nur_abrechnung = [
+        f for f in fees if isinstance(f, dict) and f.get("ownerStatementOnly")
+    ]
+    if nur_abrechnung:
+        diagnose["gebuehr_nur_abrechnung"] = len(nur_abrechnung)
+    mit_zeitraum = [
+        f
+        for f in fees
+        if isinstance(f, dict) and not f.get("ownerStatementOnly") and hat_zeitraum(f)
+    ]
+    if mit_zeitraum:
+        diagnose["gebuehr_mit_zeitraum"] = len(mit_zeitraum)
 
     steuer_inklusiv = (
         regel.im_zimmerpreis if regel.im_zimmerpreis is not None else None

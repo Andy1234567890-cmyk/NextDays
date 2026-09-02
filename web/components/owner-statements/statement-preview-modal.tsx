@@ -18,15 +18,19 @@ export function StatementPreviewModal({
   statement,
   open,
   onOpenChange,
+  kanalLabels,
 }: {
   statement: Statement;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Übersetzte Kanalnamen für Zeilen ohne `ota_name` — dieselbe Karte wie
+   *  beim Download, damit Vorschau und PDF denselben Text zeigen. */
+  kanalLabels?: Record<string, string>;
 }) {
   const t = useTranslations("ownerStatements");
   const locale = useLocale();
   const [busy, setBusy] = useState(false);
-  const html = buildStatementHtml(statement, locale);
+  const html = buildStatementHtml(statement, locale, { kanalLabels });
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
@@ -44,7 +48,7 @@ export function StatementPreviewModal({
                 disabled={busy}
                 onClick={() => {
                   setBusy(true);
-                  void downloadStatementPdf(statement, locale)
+                  void downloadStatementPdf(statement, locale, { kanalLabels })
                     .catch(() => toast.error(t("downloadFailed")))
                     .finally(() => setBusy(false));
                 }}

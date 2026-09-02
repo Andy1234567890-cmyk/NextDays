@@ -75,12 +75,14 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
+from datetime import date
 from decimal import Decimal
 from typing import Any
 
 from supabase import Client
 
 from src.core.logging import get_logger
+from src.features.properties.gebuehren import gebuehr_gilt_am
 
 from .common import Gebuehr, PayoutUnbekannt, zu_decimal
 
@@ -312,11 +314,20 @@ def objekt_gebuehren(
     ``anlass`` ist die Reservierungszeile. Ohne sie werden anlassgebundene
     Gebühren (siehe ``_ANLASS_GEBUEHREN``) NICHT angesetzt — nicht „vermutlich
     schon", denn das erfände Geld, das der Gast nie gezahlt hat (Wurzel 4).
+
+    Gebühren mit Gültigkeitszeitraum (``validFrom``/``validUntil``) gelten nur,
+    wenn die ANREISE der Buchung darin liegt — die Resort-Gebühr des
+    Beta-Betriebs gibt es erst seit dem 01.08.2026, davor darf die Abrechnung
+    sie nicht nachtragen. Ohne ``check_in`` im Anlass gilt eine solche Gebühr
+    nicht (nicht beurteilbar → nicht angesetzt).
     """
     pricing = ((type_attributes or {}).get("pricing") or {})
+    anreise = _anreise(anlass)
     out: list[tuple[str, Decimal]] = []
     for fee in pricing.get("fees") or []:
         if not isinstance(fee, dict):
+            continue
+        if not gebuehr_gilt_am(fee, anreise):
             continue
         art = str(fee.get("feeType") or "").strip()
         if not art:
@@ -332,6 +343,17 @@ def objekt_gebuehren(
             continue
         out.append((art, _fee_betrag(fee, naechte)))
     return out
+
+
+def _anreise(anlass: dict[str, Any] | None) -> date | None:
+    """Anreisetag der Reservierungszeile, oder ``None`` ohne lesbares Datum."""
+    roh = (anlass or {}).get("check_in")
+    if not roh:
+        return None
+    try:
+        return date.fromisoformat(str(roh)[:10])
+    except ValueError:
+        return None
 
 
 def _airbnb_reservierung(raw: object) -> dict[str, Any] | None:
@@ -1003,8 +1025,13 @@ def gebuehren_der_buchung(
     klassifikation: dict[tuple[str, str | None], tuple[str, bool]],
     property_id: str,
     reservierung: dict[str, Any] | None = None,
+    csv_muster: str | None = None,
 ) -> GebuehrenBefund:
     """Die Gebühren EINER Buchung — Portal-Meldung vor Objekt-Stammdaten.
+
+    ``csv_muster`` („im_betrag" | „obendrauf" | None) ist das je Objekt
+    gelernte Verhalten des Portals für CSV-Buchungen ohne Channex-Zwilling
+    (`payloads.csv_muster_je_objekt`). None = Vorgabe des Betriebs: „im_betrag".
 
     Der eine Eingang für alle drei Verbraucher. Reihenfolge der Quellen ist
     nicht beliebig: was das Portal gemeldet hat, wurde dem Gast wirklich
@@ -1051,6 +1078,24 @@ def gebuehren_der_buchung(
             im_gesamtpreis=True,
             quelle="ota",
             bezeichnungen=bezeichnungen,
+        )
+    ist_csv = _ist_csv_portalbuchung(reservierung)
+    ist_import = _ist_portalbuchung(raw) and _stammdaten_grund(raw) == "channex_import"
+    if ist_csv or ist_import:
+        # Portal-Buchung OHNE Aufstellung (CSV-Bestandsimport, Channex-Import):
+        # die Gebühren kommen aus den Objekt-Stammdaten — Ansage des Betriebs
+        # vom 02.09.2026: „so wie sie in jedem Objekt hinterlegt sind". Ob sie
+        # im Betrag stecken oder obendrauf kommen, sagen die Fakten (Zwilling)
+        # oder das Muster des Hauses. Siehe `_portal_gebuehren_aus_stammdaten`.
+        return _portal_gebuehren_aus_stammdaten(
+            raw=raw,
+            type_attributes=type_attributes,
+            naechte=naechte,
+            klassifikation=klassifikation,
+            property_id=property_id,
+            reservierung=reservierung,
+            csv_muster=csv_muster,
+            grund_ohne_gebuehren="csv_import" if ist_csv else "channex_import",
         )
     if _ist_portalbuchung(raw):
         # KEIN Stammdaten-Ersatz für eine Portal-Buchung. Was das Portal nicht
@@ -1101,6 +1146,175 @@ def _ist_portalbuchung(raw: object) -> bool:
     return bool(raw.get("ota_name")) and bool(
         raw.get("rooms") or raw.get("raw_message")
     )
+
+
+# Kanäle, deren Buchungen NIE über ein Portal liefen. Alles andere im
+# CSV-Bestandsimport ist eine Portal-Buchung, deren Betrag der GASTPREIS des
+# Portals ist — inklusive der Gebühren, die das Portal ausweist.
+_DIREKTKANAELE = frozenset({"direct", "website", "portal"})
+
+
+def _ist_csv_portalbuchung(reservierung: dict[str, Any] | None) -> bool:
+    """Portal-Buchung aus dem CSV-Bestandsimport — ohne Payload, aber ein Portal.
+
+    Der Bestandsimport (`channel_manager.csv_import`) legt Buchungen mit
+    ``source_channex_booking_id = "csv:<external_id>"`` an; einen Channex-Payload
+    gibt es dafür nie. `_ist_portalbuchung` sieht darum ``raw=None`` und hielt
+    solche Buchungen für Direktbuchungen — und die Stammdaten sprangen ein.
+
+    Live am 02.09.2026 (Betrieb a25577cf, 259 Booking-Buchungen aus dem CSV):
+    Booking.com wies für Timmann 4.475,63 Nächte + 795 Reinigung = 5.270,63
+    DKK aus; genau diese 5.270,63 stehen als ``total_amount`` in der Zeile.
+    Die Abrechnung addierte 795 Reinigung UND 6 × 25 Resort aus den Stammdaten
+    obendrauf: 6.215,63 DKK „Gastpreis", 15 % Portal-Provision auf 945 DKK, die
+    der Gast nie gezahlt hat, und eine Resort-Gebühr, die Booking gar nicht
+    kennt. Der Betrieb sah es nur, weil er die Booking-Seite danebenlegte.
+
+    Der CSV-Betrag ist der Portal-Gastpreis inklusive Gebühren, die
+    Aufstellung fehlt (die Vorlage hat nur ``total_amount``). Also gilt dieselbe
+    Regel wie beim Channex-Import: keine Stammdaten-Gebühren erfinden, den
+    Grund an der Zeile benennen (``csv_import``).
+
+    Der Kanal entscheidet nur die NEGATIVE Richtung: eine CSV-Zeile mit
+    ``source=Direkt`` (Kanal ``direct``/``website``) ist keine Portal-Buchung,
+    dort bleiben die Stammdaten richtig.
+    """
+    if not isinstance(reservierung, dict):
+        return False
+    quelle = str(reservierung.get("source_channex_booking_id") or "")
+    if not quelle.startswith("csv:"):
+        return False
+    kanal = str(reservierung.get("channel") or "").strip().lower()
+    return kanal not in _DIREKTKANAELE
+
+
+def _portal_gebuehren_aus_stammdaten(  # noqa: PLR0913 — dieselben Eingänge wie der Aufrufer
+    *,
+    raw: object,
+    type_attributes: dict[str, Any] | None,
+    naechte: int,
+    klassifikation: dict[tuple[str, str | None], tuple[str, bool]],
+    property_id: str,
+    reservierung: dict[str, Any] | None,
+    csv_muster: str | None,
+    grund_ohne_gebuehren: str,
+) -> GebuehrenBefund:
+    """Gebühren einer Portal-Buchung ohne Aufstellung — aus den Stammdaten.
+
+    Entscheidung des Betriebs (02.09.2026): in alle Booking-Buchungen ohne
+    Portal-Aufstellung werden die Gebühren nachgetragen, „so wie sie in jedem
+    Objekt hinterlegt sind" (Reinigung je Aufenthalt, Resort je Nacht,
+    Haustier nur mit Tier — `objekt_gebuehren`). Offen bleibt nur, ob sie im
+    ``total_amount`` STECKEN oder OBENDRAUF kommen. Das entscheiden Fakten vor
+    Annahmen:
+
+    1. Channex-Zwilling mit Tagespreisen: Differenz = total − Nächtesumme.
+       * Differenz > 0 → die Gebühren stecken drin. Erklärt EINE Teilmenge der
+         Stammdaten die Differenz exakt (Timmann: 795 = Reinigung), ist sie
+         belegt (``grund='belegt'``) und nur sie gilt. Sonst gelten alle
+         Stammdaten-Gebühren als im Betrag enthalten (``'im_betrag'``) —
+         Rævlingehuset: Booking nimmt 960, hinterlegt sind 955; die 5 bleiben
+         in der Übernachtung.
+       * Differenz = 0 → der Betrag ist die reine Nächtesumme (Line, Britt:
+         Booking führt die Reinigung nicht im Preis). Gebühren OBENDRAUF
+         (``'obendrauf'``), Übernachtung = Nächtesumme.
+    2. Channex-Import ohne Zwilling: der Betrag ist per Definition die
+       Nächtesumme (Channex' Hilfe: Importe tragen keine Extras) → obendrauf.
+    3. CSV ohne Zwilling (Bestand vor dem Channex-Anschluss): das gelernte
+       Muster des Hauses (``csv_muster``); fehlt es, „im_betrag" als Vorgabe.
+
+    Ohne hinterlegte Gebühren gibt es nichts nachzutragen: dann bleibt die
+    Buchung „Portal-Aufstellung fehlt" mit ihrem Grund — keine erfundene Zeile.
+    """
+    kandidaten = objekt_gebuehren(type_attributes, naechte, anlass=reservierung)
+    if not kandidaten:
+        return GebuehrenBefund(
+            gebuehren=[],
+            im_gesamtpreis=False,
+            quelle="ota_ohne_aufstellung",
+            grund=grund_ohne_gebuehren,
+        )
+    posten, im_betrag, grund, uebernachtung = _stammdaten_lage(
+        kandidaten,
+        naechte_summe=booking_naechte_summe(raw),
+        total=zu_decimal((reservierung or {}).get("total_amount")),
+        csv_muster=csv_muster,
+        ist_channex_import=grund_ohne_gebuehren == "channex_import",
+        property_id=property_id,
+    )
+    return GebuehrenBefund(
+        gebuehren=gebuehren_zuordnen(posten, klassifikation, property_id),
+        im_gesamtpreis=im_betrag,
+        quelle="stammdaten_portal",
+        uebernachtung=uebernachtung,
+        grund=grund,
+    )
+
+
+def _stammdaten_lage(  # noqa: PLR0913 — jede Größe ist ein eigener Fakt
+    kandidaten: list[tuple[str, Decimal]],
+    *,
+    naechte_summe: Decimal | None,
+    total: Decimal | None,
+    csv_muster: str | None,
+    ist_channex_import: bool,
+    property_id: str,
+) -> tuple[list[tuple[str, Decimal]], bool, str, Decimal | None]:
+    """Wo die Stammdaten-Gebühren zum Portalbetrag stehen.
+
+    Rückgabe ``(posten, im_betrag, grund, uebernachtung)`` — die Fallreihe aus
+    ``_portal_gebuehren_aus_stammdaten``: Zwilling vor Import-Regel vor
+    Haus-Muster vor Vorgabe.
+    """
+    if naechte_summe is not None and total is not None:
+        differenz = (total - naechte_summe).quantize(Decimal("0.01"))
+        if differenz == 0:
+            return kandidaten, False, "obendrauf", naechte_summe
+        if differenz > 0:
+            treffer = _teilmengen_mit_summe(kandidaten, differenz)
+            if len(treffer) == 1:
+                return treffer[0], True, "belegt", None
+            log.info(
+                "portal_gebuehren_differenz_nicht_exakt",
+                property_id=property_id,
+                differenz=str(differenz),
+                kandidaten=[(a, str(b)) for a, b in kandidaten],
+            )
+        else:
+            # Betrag UNTER den Tagespreisen (Storno auf 0,00,
+            # Teilrückerstattung): kein Gebührenfall — laut sagen.
+            log.warning(
+                "portal_gebuehren_betrag_unter_naechten",
+                property_id=property_id,
+                total=str(total),
+                naechte_summe=str(naechte_summe),
+            )
+        return kandidaten, True, "im_betrag", None
+    if ist_channex_import or csv_muster == "obendrauf":
+        return kandidaten, False, "obendrauf", None
+    return kandidaten, True, "im_betrag", None
+
+
+def _teilmengen_mit_summe(
+    kandidaten: list[tuple[str, Decimal]], ziel: Decimal
+) -> list[list[tuple[str, Decimal]]]:
+    """Alle Teilmengen der Kandidaten, deren Beträge exakt ``ziel`` ergeben.
+
+    Die leere Teilmenge zählt nur für ``ziel == 0`` (keine Gebühr im Betrag).
+    Kandidatenlisten sind kurz (ein Objekt hat eine Handvoll Gebühren), die
+    Enumeration ist also billig; ab 12 Einträgen wird abgebrochen — dann ist
+    die Ableitung ohnehin nicht mehr glaubwürdig.
+    """
+    if len(kandidaten) > 12:
+        return []
+    ziel = ziel.quantize(Decimal("0.01"))
+    treffer: list[list[tuple[str, Decimal]]] = []
+    for maske in range(1 << len(kandidaten)):
+        teil = [k for i, k in enumerate(kandidaten) if maske & (1 << i)]
+        summe = sum((b for _, b in teil), Decimal("0")).quantize(Decimal("0.01"))
+        if summe == ziel:
+            treffer.append(teil)
+    return treffer
 
 
 def _stammdaten_grund(raw: object) -> str:

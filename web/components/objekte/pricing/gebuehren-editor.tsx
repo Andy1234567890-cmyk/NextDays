@@ -28,6 +28,8 @@ import {
   Field,
   Footer,
   Hint,
+  SectionTitle,
+  SwitchRow,
   useSaver,
 } from "@/components/objekte/editor-primitives";
 import { Button } from "@nextdays/ui/button";
@@ -47,7 +49,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@nextdays/ui/select";
-import { Switch } from "@nextdays/ui/switch";
 import {
   type Currency,
   type Fee,
@@ -123,6 +124,12 @@ export function GebuehrEditor({
     arten.find((a) => a.value === v.feeType)?.category ?? "",
   );
   const waehrung: Currency | "" = pr.currency;
+  // „Gilt bis" vor „gilt ab": der Server weist es mit 422 ab — hier wird der
+  // Speichern-Knopf gesperrt und der Grund genannt, statt eine Fehlermeldung
+  // nach dem Klick zu zeigen.
+  const zeitraumVerkehrt = Boolean(
+    v.validFrom && v.validUntil && v.validUntil < v.validFrom,
+  );
 
   /** Gastseitiger Name in der offenen Sprache. Der INTERNE `name` folgt der
    *  deutschen Eingabe, damit Listen und Bestands-Rechnungen einen Namen haben,
@@ -141,6 +148,11 @@ export function GebuehrEditor({
     const eintrag: Fee = {
       ...v,
       id: v.id || crypto.randomUUID(),
+      // Leere Grenzen nicht als "" mitschicken — der Server ließe sie weg, der
+      // Zustand hier soll aber dasselbe sagen wie das Gespeicherte.
+      validFrom: v.validFrom || undefined,
+      validUntil: v.validUntil || undefined,
+      ownerStatementOnly: v.ownerStatementOnly || undefined,
       // Der Schalter ist die Wahrheit: aus heißt „kein eigener Satz", nicht
       // „Satz 0" — sonst stünde 0 % USt auf der Rechnung.
       taxRate: ustAn ? (v.taxRate ?? 0) : null,
@@ -174,7 +186,7 @@ export function GebuehrEditor({
           error={error}
           onCancel={onClose}
           onSave={() => void commit()}
-          disabled={!v.name.trim() || !v.feeType}
+          disabled={!v.name.trim() || !v.feeType || zeitraumVerkehrt}
         />
       }
     >
@@ -211,9 +223,12 @@ export function GebuehrEditor({
       </Field>
 
       <section className="flex flex-col gap-3">
-        <h3 className="font-display text-lg font-extrabold">
+        {/* Der Prozent-Hinweis („immer einmalig auf den Zimmerpreis") gehört zu
+            DIESEM Abschnitt und steht deshalb an seiner Überschrift — nur im
+            Prozent-Modus, weil er im Betrags-Modus nichts erklärt. */}
+        <SectionTitle hint={prozent ? t("pricingForm.feePercentHint") : undefined}>
           {t("pricingForm.amountSectionTitle")}
-        </h3>
+        </SectionTitle>
         <Segmented
           value={v.mode ?? "amount"}
           onChange={(m) => setV({ ...v, mode: m as FeeMode })}
@@ -248,11 +263,6 @@ export function GebuehrEditor({
                 </span>
               </div>
             </Field>
-            {/* Im Prozent-Modus gibt es KEINE Berechnungsfelder: die Gebühr ist
-                einmalig auf den Zimmerpreis. Genau so führt es der Standard. */}
-            <p className="text-sm text-muted-foreground">
-              {t("pricingForm.feePercentHint")}
-            </p>
           </>
         ) : (
           <>
@@ -272,6 +282,16 @@ export function GebuehrEditor({
                 </span>
               </div>
             </Field>
+            {/* Eine Haustiergebühr setzt ein Tier voraus — in JEDER
+                Berechnungsart, auch als Pauschale. Der Hinweis hängt an der
+                Berechnung, weil genau dort die falsche Annahme entsteht („die
+                Pauschale bekommt jeder Gast"). */}
+            <Field
+              label={t("pricingForm.feeCalculationLabel")}
+              hint={
+                tierBasisMoeglich ? t("pricingForm.feePetsOnlyNote") : undefined
+              }
+            >
             <div className="grid grid-cols-2 gap-3">
               <Select
                 value={achsen.charge}
@@ -320,6 +340,7 @@ export function GebuehrEditor({
                 </SelectContent>
               </Select>
             </div>
+            </Field>
           </>
         )}
         {/* Eine Haustiergebühr setzt ein Tier voraus — in JEDER Berechnungsart,
@@ -328,22 +349,18 @@ export function GebuehrEditor({
             und niemandem fiel es auf: 150 kr sehen auf einer Rechnung
             unauffällig aus). Kein Schalter, sondern eine Aussage: die Umkehrung
             „auch ohne Tier erheben" hat keinen fachlichen Fall. */}
-        {tierBasisMoeglich && <Hint>{t("pricingForm.feePetsOnlyNote")}</Hint>}
       </section>
 
       <section className="flex flex-col gap-3">
-        <label className="flex cursor-pointer items-center justify-between gap-3">
-          <span className="font-display text-lg font-extrabold">
-            {t("pricingForm.vatLabel")}
-          </span>
-          <Switch
-            checked={ustAn}
-            onCheckedChange={(c) => {
-              setUstAn(c);
-              if (!c) setV({ ...v, taxRate: null });
-            }}
-          />
-        </label>
+        <SwitchRow
+          label={t("pricingForm.vatLabel")}
+          hint={t("pricingForm.feeVatHint")}
+          checked={ustAn}
+          onCheckedChange={(c) => {
+            setUstAn(c);
+            if (!c) setV({ ...v, taxRate: null });
+          }}
+        />
         {ustAn && (
           <>
             <div className="relative">
@@ -365,42 +382,45 @@ export function GebuehrEditor({
                 %
               </span>
             </div>
-            {/* Steckt der Satz schon im Betrag oder kommt er obendrauf? Der
-                Standard fragt es genau hier. Ohne die Angabe wäre der Betrag
-                zweideutig — und der Betrieb müsste raten, was auf der Rechnung
-                herauskommt. Standard ist „inklusive" (bisheriges Verhalten). */}
-            <Select
-              value={(v.taxIncluded ?? true) ? "included" : "excluded"}
-              onValueChange={(val) => setV({ ...v, taxIncluded: val === "included" })}
+            {/* Steckt der Satz schon im Betrag oder kommt er obendrauf? Ohne
+                die Angabe wäre der Betrag zweideutig. Standard ist „inklusive"
+                (bisheriges Verhalten). */}
+            <Field
+              label={t("pricingForm.feeVatIncludedLabel")}
+              hint={t("pricingForm.feeVatIncludedHint")}
             >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="included">{t("pricingForm.vatIncluded")}</SelectItem>
-                <SelectItem value="excluded">{t("pricingForm.vatExcluded")}</SelectItem>
-              </SelectContent>
-            </Select>
+              <Select
+                value={(v.taxIncluded ?? true) ? "included" : "excluded"}
+                onValueChange={(val) => setV({ ...v, taxIncluded: val === "included" })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="included">
+                    {t("pricingForm.vatIncluded")}
+                  </SelectItem>
+                  <SelectItem value="excluded">
+                    {t("pricingForm.vatExcluded")}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
           </>
         )}
       </section>
 
       <section className="flex flex-col gap-2">
-        <label className="flex cursor-pointer items-center justify-between gap-3">
-          <span className="font-display text-lg font-extrabold">
-            {t("pricingForm.feeShortStayOnlyLabel")}
-          </span>
-          <Switch
-            checked={v.shortStayOnly ?? false}
-            onCheckedChange={(c) => setV({ ...v, shortStayOnly: c })}
-          />
-        </label>
-        <p className="text-sm text-muted-foreground">
-          {t("pricingForm.feeShortStayOnlyHint")}
-        </p>
-        {/* „Kurz" ist keine zweite Zahl an der Gebühr, sondern die EINE Grenze
-            des Objekts. Ist sie nicht gepflegt, greift die Gebühr nie — das
-            muss hier stehen, sonst sieht der Schalter aktiv aus und wirkt nicht. */}
+        <SwitchRow
+          label={t("pricingForm.feeShortStayOnlyLabel")}
+          hint={t("pricingForm.feeShortStayOnlyHint")}
+          checked={v.shortStayOnly ?? false}
+          onCheckedChange={(c) => setV({ ...v, shortStayOnly: c })}
+        />
+        {/* Diese zwei bleiben SICHTBAR und wandern nicht hinter das „i": sie
+            gelten nur bei eingeschaltetem Schalter und sagen, ob er überhaupt
+            wirkt. Hinter einem Symbol versteckt sähe ein Schalter aktiv aus,
+            der ohne gepflegte Kurzaufenthalts-Grenze nichts tut. */}
         {v.shortStayOnly &&
           (pr.shortStayMaxNights > 0 ? (
             <Hint>
@@ -414,12 +434,43 @@ export function GebuehrEditor({
       </section>
 
       <section className="flex flex-col gap-3">
-        <h3 className="font-display text-lg font-extrabold">
+        <SectionTitle hint={t("pricingForm.feeValidityHint")}>
+          {t("pricingForm.feeValidityTitle")}
+        </SectionTitle>
+        {/* Maß ist die ANREISE der Buchung, nicht das Buchungsdatum — der Server
+            rechnet genauso (gebuehr_gilt_am). Leer = ohne Grenze. */}
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label={t("pricingForm.feeValidFromLabel")}>
+            <Input
+              type="date"
+              value={v.validFrom ?? ""}
+              onChange={(e) => setV({ ...v, validFrom: e.target.value || null })}
+            />
+          </Field>
+          <Field label={t("pricingForm.feeValidUntilLabel")}>
+            <Input
+              type="date"
+              value={v.validUntil ?? ""}
+              onChange={(e) => setV({ ...v, validUntil: e.target.value || null })}
+            />
+          </Field>
+        </div>
+        {zeitraumVerkehrt && <Hint>{t("pricingForm.feeValidityOrderError")}</Hint>}
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <SwitchRow
+          label={t("pricingForm.feeOwnerStatementOnlyLabel")}
+          hint={t("pricingForm.feeOwnerStatementOnlyHint")}
+          checked={v.ownerStatementOnly ?? false}
+          onCheckedChange={(c) => setV({ ...v, ownerStatementOnly: c })}
+        />
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <SectionTitle hint={t("pricingForm.guestFacingNameHint")}>
           {t("pricingForm.guestFacingNameTitle")}
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          {t("pricingForm.guestFacingNameHint")}
-        </p>
+        </SectionTitle>
         {/* 24 EU-Amtssprachen als Dropdown, genau wie im Steuer-Editor. Die
             Gebühr steht in der Preisaufschlüsselung des Gastes — ohne
             Übersetzung liest ein dänischer Gast „Reinigungsgebühr". */}
@@ -463,14 +514,13 @@ export function GebuehrEditor({
         />
       </section>
 
-      <label className="flex cursor-pointer items-center justify-between gap-3 text-sm">
-        <span className="font-medium">{t("pricingForm.feeOptionalLabel")}</span>
-        <Switch
-          checked={v.optional}
-          onCheckedChange={(c) => setV({ ...v, optional: c })}
-        />
-      </label>
-      {v.optional && <Hint>{t("pricingForm.feeOptionalHint")}</Hint>}
+      <SwitchRow
+        size="sm"
+        label={t("pricingForm.feeOptionalLabel")}
+        hint={t("pricingForm.feeOptionalHint")}
+        checked={v.optional}
+        onCheckedChange={(c) => setV({ ...v, optional: c })}
+      />
 
       <ZuAnderenObjekten
         propertyId={propertyId}

@@ -3,6 +3,7 @@
 Die Auszahlungsformel ist der Korrektheits-Kern und wird mit festen Beträgen
 gegen erwartete Werte geprüft (Decimal/kaufmännisch). In-Memory-Fake-DB.
 """
+import fnmatch
 from datetime import date
 from decimal import Decimal
 
@@ -47,6 +48,7 @@ class _Query:
         self._in: tuple[str, list] | None = None
         self._gte: tuple[str, str] | None = None
         self._lte: tuple[str, str] | None = None
+        self._gt: tuple[str, str] | None = None
         self._isnull: str | None = None
         self._order: str | None = None
         self._range: tuple[int, int] | None = None
@@ -90,6 +92,10 @@ class _Query:
         self._lte = (col, val)
         return self
 
+    def gt(self, col: str, val: str) -> "_Query":
+        self._gt = (col, val)
+        return self
+
     def is_(self, col: str, _val: str) -> "_Query":
         self._isnull = col
         return self
@@ -106,7 +112,19 @@ class _Query:
     def limit(self, _n: int) -> "_Query":
         return self
 
+    def like(self, col: str, pattern: str) -> "_Query":
+        # PostgREST `like` mit `%`-Platzhalter — hier als Muster-Filter.
+        self._like = (col, pattern)
+        return self
+
     def _match(self, row: dict) -> bool:
+        muster = getattr(self, "_like", None)
+        if muster is not None:
+            like_col, like_pat = muster
+            if not fnmatch.fnmatchcase(
+                str(row.get(like_col) or ""), like_pat.replace("%", "*")
+            ):
+                return False
         ok = all(str(row.get(c)) == str(v) for c, v in self._filters)
         if ok and self._in:
             col, vals = self._in
@@ -117,6 +135,9 @@ class _Query:
         if ok and self._lte:
             col, val = self._lte
             ok = str(row.get(col)) <= val
+        if ok and self._gt:
+            col, val = self._gt
+            ok = str(row.get(col)) > val
         if ok and self._isnull:
             ok = row.get(self._isnull) is None
         return ok
@@ -228,6 +249,9 @@ def _base_tables() -> dict[str, list[dict]]:
             }
         ],
         "owner_properties": [{"id": "op-1", "owner_id": "o-1", "property_id": "p-1"}],
+        # Wiederkehrende Posten (0365): leer, einzelne Tests befüllen sie.
+        "owner_recurring_items": [],
+        "reservation_addons": [],
         "properties": [{"id": "p-1", "tenant_id": "t-1", "title": "Villa"}],
         "reservations": [
             {
@@ -1633,3 +1657,660 @@ def test_finalize_bereits_festgeschrieben_bleibt_idempotent() -> None:
     erst = _finalize(svc, st.id)
     nochmal = svc.finalize(_ctx(), st.id)
     assert nochmal.header.invoice_number == erst.header.invoice_number
+
+
+# ----------------------------------------------------------------------
+# Wiederkehrende Posten in der Abrechnung (0365/0524)
+# ----------------------------------------------------------------------
+# Bis 02.09.2026 las nur der Bericht `owner_recurring_items`; die Abrechnung
+# nicht. Der Betrieb legte die 50 DKK je Buchung deshalb von Hand als
+# Verrechnungsposten an — zusätzlich zur Vertragspauschale, also doppelt.
+
+
+def _tables_mit_wiederkehrenden_posten() -> dict[str, list[dict]]:
+    tables = _base_tables()
+    tables["owner_recurring_items"] = [
+        {
+            "id": "rec-abzug",
+            "tenant_id": "t-1",
+            "owner_id": "o-1",
+            "label": "Kaffee & Co",
+            "abschnitt": "ausgaben",
+            "modus": "je_buchung",
+            "betrag": 50,
+            "currency": "EUR",
+            "property_id": None,
+            "aktiv": True,
+        },
+        {
+            "id": "rec-gutschrift",
+            "tenant_id": "t-1",
+            "owner_id": "o-1",
+            "label": "NK-Pauschale",
+            "abschnitt": "andere",
+            "modus": "je_buchung",
+            "betrag": 200,
+            "currency": "EUR",
+            "property_id": None,
+            "aktiv": True,
+        },
+        # Inaktiv → zählt nicht. Eine gekündigte Dauervereinbarung darf nicht
+        # stumm weiterlaufen.
+        {
+            "id": "rec-aus",
+            "tenant_id": "t-1",
+            "owner_id": "o-1",
+            "label": "Alt",
+            "abschnitt": "ausgaben",
+            "modus": "je_zeitraum",
+            "betrag": 999,
+            "currency": "EUR",
+            "property_id": None,
+            "aktiv": False,
+        },
+    ]
+    return tables
+
+
+def test_wiederkehrende_posten_fliessen_in_die_auszahlung() -> None:
+    """2 Buchungen × (200 − 50) = +300 auf die Auszahlung, beide Richtungen
+    einzeln ausgewiesen, jeder Posten mit Bezugsmenge."""
+    ohne = _gen(_svc())
+    mit = _gen(_svc(_tables_mit_wiederkehrenden_posten()))
+    assert ohne.summary.owner_payout is not None
+    assert mit.summary.owner_payout == ohne.summary.owner_payout + 300.0
+    assert mit.summary.recurring_to_owner == 400.0
+    assert mit.summary.recurring_from_owner == 100.0
+    # Verwaltungs-Auszahlung = Gesamt − Eigentümer: sie sinkt um dieselben 300.
+    assert mit.summary.pm_payout == ohne.summary.pm_payout - 300.0
+    # Ohne Posten sind die Summen 0 — gesetzt, nicht per Default gefallen.
+    assert ohne.summary.recurring_to_owner == 0.0
+    assert ohne.summary.recurring_from_owner == 0.0
+    posten = {p.item_id: p for p in mit.recurring}
+    assert set(posten) == {"rec-abzug", "rec-gutschrift"}
+    assert posten["rec-abzug"].anzahl == 2
+    assert posten["rec-abzug"].einzelbetrag == 50.0
+    assert posten["rec-abzug"].betrag == -100.0
+    assert posten["rec-gutschrift"].betrag == 400.0
+    assert posten["rec-gutschrift"].modus == "je_buchung"
+
+
+def test_wiederkehrende_posten_stehen_auch_in_der_vorschau() -> None:
+    svc = _svc(_tables_mit_wiederkehrenden_posten())
+    sicht = svc.preview(
+        _ctx(),
+        StatementGenerateRequest(
+            owner_id="o-1",
+            period_from=date(2026, 1, 1),
+            period_to=date(2026, 1, 31),
+            reservation_statuses=["confirmed", "completed"],
+        ),
+    )
+    assert len(sicht.recurring) == 2
+    assert sicht.summary.recurring_from_owner == 100.0
+
+
+def test_finalize_mit_altem_betrag_ohne_posten_wird_abgelehnt() -> None:
+    """Der abgetippte Betrag muss die Posten enthalten — sonst 409.
+
+    Genau der Fall, den die Doppelbestätigung fangen soll: die Oberfläche
+    zeigte einen Betrag OHNE die Dauervereinbarung, der Server rechnet MIT.
+    """
+    svc = _svc(_tables_mit_wiederkehrenden_posten())
+    st = _gen(svc)
+    falsch = st.summary.owner_payout - 300.0
+    with pytest.raises(StatementError) as exc:
+        svc.finalize(
+            _ctx(),
+            st.id,
+            StatementFinalizeRequest(
+                bestaetigte_auszahlung=falsch, bestaetigte_waehrung="EUR"
+            ),
+        )
+    assert exc.value.status_code == 409
+
+
+def test_storno_negiert_die_wiederkehrenden_posten() -> None:
+    """Die Gegenbuchung dreht beide Snapshot-Spalten UND die Posten selbst."""
+    svc = _svc(_tables_mit_wiederkehrenden_posten())
+    st = _gen(svc)
+    fin = _finalize(svc, st.id)
+    assert fin.summary.recurring_to_owner == 400.0
+    storno = svc.cancel(_ctx(), st.id)
+    assert storno.kind == "cancellation"
+    assert storno.summary.recurring_to_owner == -400.0
+    assert storno.summary.recurring_from_owner == -100.0
+    betraege = sorted(p.betrag for p in storno.recurring)
+    assert betraege == [-400.0, 100.0]
+
+
+def test_wiederkehrender_posten_in_fremder_waehrung_ist_422() -> None:
+    """DKK-Posten in einer EUR-Auszahlung: kein Kurs 1,0, sondern klar
+    fehlschlagen — mit dem Namen des Postens."""
+    tables = _tables_mit_wiederkehrenden_posten()
+    tables["owner_recurring_items"][0]["currency"] = "DKK"
+    svc = _svc(tables)
+    with pytest.raises(StatementError) as exc:
+        svc.preview(
+            _ctx(),
+            StatementGenerateRequest(
+                owner_id="o-1",
+                period_from=date(2026, 1, 1),
+                period_to=date(2026, 1, 31),
+            ),
+        )
+    assert exc.value.status_code == 422
+    assert "Kaffee & Co" in str(exc.value)
+
+
+def test_snapshot_summen_ueberleben_ohne_posten_als_null_zahl() -> None:
+    """Finalisiert ohne Posten: die Spalten stehen auf 0 und werden als 0
+    gelesen — nicht als fehlend, nicht als Fantasiewert."""
+    svc = _svc()
+    st = _gen(svc)
+    fin = _finalize(svc, st.id)
+    assert fin.summary.recurring_to_owner == 0.0
+    assert fin.summary.recurring_from_owner == 0.0
+    assert fin.recurring == []
+
+
+# ----------------------------------------------------------------------
+# Jede Gebühr ein eigener Posten (02.09.2026)
+# ----------------------------------------------------------------------
+# Ansage des Betriebs, wörtlich: „Jede Gebühr muss als einzelner Posten
+# aufgeschlüsselt werden auf der Abrechnung." Geprüft wird die ZEILE, die die
+# API liefert — nicht nur die Kette darunter.
+
+
+def _tables_volle_kette() -> dict[str, list[dict]]:
+    """Vertrag + Portal-Sätze + Gebühren-Zuordnung + Objekt-Gebühren + Extras.
+
+    r-1 (booking, 3 Nächte, 1.000): Portal-Buchung ohne Payload → keine
+    Gebühren („ota_ohne_aufstellung"), aber Portal-Abzug 15 % + 1,5 %.
+    r-2 (direct, 2 Nächte, 500): Stammdaten-Gebühren (Reinigung 795 je
+    Aufenthalt, Resort 25 je Nacht) + zwei Zusatzleistungen (2 × 95, 1 × 40)
+    und eine stornierte (60), die NICHT zählt.
+    """
+    tables = _base_tables()
+    tables["owner_billing_terms"] = [
+        {
+            "id": "obt-1",
+            "tenant_id": "t-1",
+            "owner_id": "o-1",
+            "property_id": None,
+            "gueltig_ab": "2024-01-01",
+            "gueltig_bis": None,
+            "provisions_pct": 20,
+        }
+    ]
+    tables["portal_abzugssaetze"] = [
+        {
+            "id": "pa-booking",
+            "tenant_id": "t-1",
+            "kanal": "booking",
+            "property_id": None,
+            "gueltig_ab": "2024-01-01",
+            "gueltig_bis": None,
+            "provision_pct": 15,
+            "zahlungsgebuehr_pct": 1.5,
+        },
+        {
+            "id": "pa-direct",
+            "tenant_id": "t-1",
+            "kanal": "direct",
+            "property_id": None,
+            "gueltig_ab": "2024-01-01",
+            "gueltig_bis": None,
+            "provision_pct": 0,
+            "zahlungsgebuehr_pct": None,
+        },
+    ]
+    tables["fee_classification"] = [
+        {
+            "tenant_id": "t-1",
+            "fee_type": "cleaning_fee",
+            "property_id": None,
+            "gehoert_zu": "betrieb",
+            "provisionspflichtig": False,
+        },
+        {
+            "tenant_id": "t-1",
+            "fee_type": "resort",
+            "property_id": None,
+            "gehoert_zu": "eigentuemer",
+            "provisionspflichtig": False,
+        },
+    ]
+    tables["properties"][0]["type_attributes"] = {
+        "pricing": {
+            "fees": [
+                {"feeType": "cleaning_fee", "mode": "amount", "amount": 795, "basis": "per_stay"},
+                {"feeType": "resort", "mode": "amount", "amount": 25, "basis": "per_night"},
+            ]
+        }
+    }
+    tables["reservations"][0]["ota_name"] = "Booking.com"
+    tables["reservation_addons"] = [
+        {
+            "id": "ra-1",
+            "tenant_id": "t-1",
+            "reservation_id": "r-2",
+            "name": {"de": "Bettwäsche-Set", "en": "Linen set"},
+            "qty": 2,
+            "price": 95,
+            "basis": "per_unit",
+            "total": 190,
+            "status": "pending",
+        },
+        {
+            "id": "ra-2",
+            "tenant_id": "t-1",
+            "reservation_id": "r-2",
+            # Kein deutscher Name → erster vorhandener Wert, kein erfundener.
+            "name": {"da": "Håndklæder"},
+            "qty": 1,
+            "price": 40,
+            "basis": "per_stay",
+            "total": 40,
+            "status": "paid",
+        },
+        {
+            "id": "ra-storno",
+            "tenant_id": "t-1",
+            "reservation_id": "r-2",
+            "name": {"de": "Nie gebucht"},
+            "qty": 1,
+            "price": 60,
+            "basis": "per_stay",
+            "total": 60,
+            "status": "cancelled",
+        },
+    ]
+    return tables
+
+
+def _zeile(st, reservation_id: str):
+    return next(r for r in st.rental_rows if r.reservation_id == reservation_id)
+
+
+def test_jede_gebuehr_ist_ein_eigener_posten() -> None:
+    """Vier Posten mit Namen statt „Gebühren +50,00"."""
+    st = _gen(_svc(_tables_volle_kette()))
+    z = _zeile(st, "r-2")
+    posten = {(g.art, g.label): g for g in z.gebuehren}
+    assert set(posten) == {
+        ("cleaning_fee", "Reinigungsgebühr"),
+        ("resort", "Resort"),
+        ("addon", "Bettwäsche-Set"),
+        ("addon", "Håndklæder"),
+    }
+    reinigung = posten[("cleaning_fee", "Reinigungsgebühr")]
+    assert reinigung.betrag == 795.0
+    assert reinigung.gehoert_zu == "betrieb"
+    assert reinigung.provisionspflichtig is False
+    assert reinigung.quelle == "stammdaten"
+    assert reinigung.menge is None
+    resort = posten[("resort", "Resort")]
+    assert resort.betrag == 50.0  # 25 je Nacht × 2 Nächte
+    assert resort.gehoert_zu == "eigentuemer"
+    waesche = posten[("addon", "Bettwäsche-Set")]
+    assert waesche.gehoert_zu == "betrieb"
+    assert waesche.quelle == "addon"
+    assert waesche.menge == 2
+    assert waesche.einzelpreis == 95.0
+    assert waesche.basis == "per_unit"
+    assert waesche.betrag == 190.0
+    # Die stornierte Zusatzleistung fehlt.
+    assert all(g.label != "Nie gebucht" for g in z.gebuehren)
+
+
+def test_kontrollsummen_stimmen_mit_den_posten_ueberein() -> None:
+    """Die Anzeige rechnet nie selbst — Σ Liste == Kontrollsumme, je Zugehörigkeit."""
+    st = _gen(_svc(_tables_volle_kette()))
+    z = _zeile(st, "r-2")
+    betrieb = sum(
+        g.betrag for g in z.gebuehren if g.gehoert_zu == "betrieb" and g.quelle != "addon"
+    )
+    eigentuemer = sum(g.betrag for g in z.gebuehren if g.gehoert_zu == "eigentuemer")
+    addons = sum(g.betrag for g in z.gebuehren if g.quelle == "addon")
+    assert z.gebuehren_betrieb == betrieb == 795.0
+    assert z.gebuehren_an_eigentuemer == eigentuemer == 50.0
+    assert z.addon_total == addons == 230.0
+    assert z.gebuehren_durchlauf == 0.0
+    # Die Kette: 500 + 795 + 50 = 1.345 Gastpreis (die Extras 230 sind kein
+    # Teil davon); Bemessung 500; 20 % = 100; Eigentümer bekommt 400 + 50
+    # Resort = 450. Die Extras (230) bleiben beim Betrieb.
+    assert z.total_price == 1345.0
+    assert z.auszahlungsbasis == 1345.0  # Direktbuchung: kein Portal-Abzug
+    assert z.bemessungsgrundlage == 500.0
+    assert z.verwaltungsprovision == 100.0
+    assert z.owner_payout == 450.0
+
+
+def test_zeile_traegt_anreise_abreise_portalname_und_vertragssatz() -> None:
+    st = _gen(_svc(_tables_volle_kette()))
+    z1 = _zeile(st, "r-1")
+    z2 = _zeile(st, "r-2")
+    assert z1.check_in == date(2026, 1, 5)
+    assert z1.check_out == date(2026, 1, 8)
+    assert z1.ota_name == "Booking.com"
+    assert z2.ota_name is None
+    # Portal-Abzug ZWEITEILIG: 15 % Provision + 1,5 % Zahlungsgebühr auf den
+    # Gastpreis inkl. Gebühren (1.000 + 795 Reinigung + 3 × 25 Resort = 1.870).
+    # Ohne Channex-Payload gilt die Buchung als nicht vom Portal gemeldet —
+    # dann greifen die Stammdaten, wie bei einer Direktbuchung.
+    assert z1.gebuehren_quelle == "stammdaten"
+    assert z1.total_price == 1870.0
+    assert z1.portal_provision == 280.5
+    assert z1.portal_zahlungsgebuehr == 28.05
+    assert z2.portal_provision == 0.0
+    assert z2.portal_zahlungsgebuehr == 0.0
+    # Der Satz JE ZEILE samt Herkunft und Stichtag.
+    for z in (z1, z2):
+        assert z.provisions_pct == 20.0
+        assert z.provision_quelle == "vertrag"
+        assert z.vertrag_gueltig_ab == date(2024, 1, 1)
+        assert z.min_provision_angewandt is False
+    # Beide Stammdaten-Gebühren als eigene Posten, Resort mit 3 Nächten.
+    assert {(g.art, g.betrag) for g in z1.gebuehren} == {
+        ("cleaning_fee", 795.0),
+        ("resort", 75.0),
+    }
+
+
+def _ohne_altsatz(tables: dict[str, list[dict]]) -> dict[str, list[dict]]:
+    """Weder Owner-Default noch Objekt-Override — nur der Vertrag zählt."""
+    tables["owners"][0]["default_commission_pct"] = None
+    for link in tables["owner_properties"]:
+        link["commission_override_pct"] = None
+    return tables
+
+
+def test_vertrag_beginnt_nach_abreise_nennt_das_datum() -> None:
+    """Live 02.09.2026: Vertrag ab 12.08., Abreise 09.08. — Meldung war falsch.
+
+    Die Abrechnung sagte „kein Provisionssatz hinterlegt" und schickte den
+    Betrieb in die Stammdaten, wo nichts fehlte. Der Vertrag existierte mit
+    20 %, galt nur noch nicht. Erwartet: die Zeile trägt den EIGENEN Grund
+    `provision_zeitraum` samt Datum des nächsten Vertragsbeginns, und die
+    Zusammenfassung übernimmt ihn.
+    """
+    tables = _ohne_altsatz(_tables_volle_kette())
+    # r-1 reist am 08.01. ab, r-2 am 22.01. — der Vertrag beginnt dazwischen.
+    tables["owner_billing_terms"][0]["gueltig_ab"] = "2026-01-10"
+    st = _gen(_svc(tables))
+    z1, z2 = _zeile(st, "r-1"), _zeile(st, "r-2")
+
+    assert z1.owner_payout is None
+    assert z1.payout_unbekannt == "provision_zeitraum"
+    assert z1.vertrag_beginnt_am == date(2026, 1, 10)
+    assert z1.provision_quelle is None
+    assert z1.provisions_pct is None
+    # r-2 liegt im Vertrag und rechnet normal — mit Herkunft.
+    assert z2.owner_payout is not None
+    assert z2.payout_unbekannt is None
+    assert z2.provision_quelle == "vertrag"
+    assert z2.vertrag_beginnt_am is None
+    assert st.summary.owner_payout is None
+    assert st.summary.payout_unbekannt == "provision_zeitraum"
+
+
+def test_ohne_vertrag_stehen_gebuehren_und_portalabzug_trotzdem() -> None:
+    """Zweiter Befund vom 02.09.2026: die Zeile ohne Vertrag zeigte den nackten
+    Übernachtungsbetrag als Gastpreis und „Keine Gebühren an dieser Buchung",
+    obwohl Reinigung und Resort in den Stammdaten standen wie bei jeder
+    anderen Buchung des Objekts. Gebühren, Gastpreis und Portal-Abzug hängen
+    nicht am Vertrag — nur der Eigentümer-Anteil.
+    """
+    tables = _ohne_altsatz(_tables_volle_kette())
+    tables["owner_billing_terms"][0]["gueltig_ab"] = "2026-01-10"
+    z1 = _zeile(_gen(_svc(tables)), "r-1")
+
+    # Wie in `test_jede_gebuehr_ist_ein_eigener_posten`: 1.000 + 795 + 3 × 25.
+    assert z1.total_price == 1870.0
+    assert z1.portal_provision == 280.5
+    assert z1.portal_zahlungsgebuehr == 28.05
+    assert z1.auszahlungsbasis == 1561.45
+    assert {(g.art, g.betrag) for g in z1.gebuehren} == {
+        ("cleaning_fee", 795.0),
+        ("resort", 75.0),
+    }
+    assert z1.gebuehren_betrieb == 795.0
+    # Was den Vertrag braucht, bleibt offen — nie 0.
+    assert z1.bemessungsgrundlage is None
+    assert z1.verwaltungsprovision is None
+    assert z1.owner_payout is None
+
+
+def test_gar_kein_vertrag_bleibt_grund_provision() -> None:
+    """Kein Vertrag, auch kein späterer: der Grund heißt weiter `provision`,
+    ohne erfundenes Datum — der Handgriff ist dann „Vertrag anlegen"."""
+    tables = _ohne_altsatz(_tables_volle_kette())
+    tables["owner_billing_terms"] = []
+    st = _gen(_svc(tables))
+    for z in st.rental_rows:
+        assert z.owner_payout is None
+        assert z.payout_unbekannt == "provision"
+        assert z.vertrag_beginnt_am is None
+    assert st.summary.payout_unbekannt == "provision"
+
+
+def test_fehlender_vertrag_schlaegt_fehlenden_portalsatz() -> None:
+    """Fehlen Vertrag UND Portal-Satz, nennt die Zeile den Vertrag: er ist der
+    erste Handgriff. „Portal-Satz fehlt" schickte den Betrieb erst in die
+    Abrechnungsregeln und danach doch noch zum Vertrag."""
+    tables = _ohne_altsatz(_tables_volle_kette())
+    tables["owner_billing_terms"][0]["gueltig_ab"] = "2026-01-10"
+    tables["portal_abzugssaetze"] = []
+    z1 = _zeile(_gen(_svc(tables)), "r-1")
+    assert z1.payout_unbekannt == "provision_zeitraum"
+    assert z1.vertrag_beginnt_am == date(2026, 1, 10)
+    # Die Zerlegung scheiterte am Portal-Satz — also auch kein Gastpreis
+    # inkl. Gebühren behaupten.
+    assert z1.portal_provision is None
+
+
+def test_csv_buchung_findet_channex_zwilling_ueber_external_ref() -> None:
+    """Live 02.09.2026 (Timmann): die Abrechnung lud Payloads nur über
+    `channex_booking_id` — der CSV-Zwilling stand unter Channex' eigener ID
+    und blieb unsichtbar. Über `external_ref = ota_reservation_code` wird er
+    gefunden, und aus CSV-Gesamt − Nächte entsteht die Reinigung als Posten."""
+    tables = _tables_volle_kette()
+    r1 = next(r for r in tables["reservations"] if r["id"] == "r-1")
+    r1.update(
+        {
+            "source_channex_booking_id": "csv:5008485743",
+            "external_ref": "5008485743",
+            "total_amount": 1795,  # 1.000 Nächte + 795 Reinigung, Booking-Gesamt
+        }
+    )
+    tables["channex_booking"] = [
+        {
+            "id": "cb-1",
+            "tenant_id": "t-1",
+            "channex_booking_id": "chx-abc",
+            "ota_reservation_code": "5008485743",
+            "raw": {
+                "ota_name": "BookingCom",
+                "meta": {"is_imported": True},
+                "rooms": [
+                    {
+                        "days": {
+                            "2026-01-05": "400",
+                            "2026-01-06": "300",
+                            "2026-01-07": "300",
+                        },
+                        "taxes": [],
+                    }
+                ],
+            },
+        }
+    ]
+    z1 = _zeile(_gen(_svc(tables)), "r-1")
+    assert z1.gebuehren_quelle == "stammdaten_portal"
+    assert z1.gebuehren_grund == "belegt"
+    assert {(g.art, g.betrag) for g in z1.gebuehren} == {("cleaning_fee", 795.0)}
+    # Gastpreis = CSV-Gesamt, keine erfundene Resort-Gebühr obendrauf.
+    assert z1.total_price == 1795.0
+    assert z1.portal_provision == round(1795 * 0.15, 2)
+
+
+def test_airbnb_historie_payload_wird_wie_der_feed_gelesen() -> None:
+    """0528: der Historie-Import legt Airbnbs Reservierung in
+    `portal_buchungs_payloads` ab. Die Kette liest sie wie einen Feed-Payload:
+    Übernachtung = base_price + extra_guest_fee (3.091,92), Reinigung aus
+    `standard_fees_details` (1.075), Provision gemeldet (`ota_commission`).
+    Live-Fall Dora 03.–05.07.2026: vorher 4.116,92, Airbnb 4.166,92."""
+    tables = _tables_volle_kette()
+    r1 = next(r for r in tables["reservations"] if r["id"] == "r-1")
+    r1.update(
+        {
+            "channel": "airbnb",
+            "ota_name": "Airbnb",
+            "source_channex_booking_id": "HMYM9RH2CN",
+            "external_ref": "HMYM9RH2CN",
+            "total_amount": 3041.92,
+            "ota_commission": 645.87,
+            "check_in": "2026-01-05",
+            "check_out": "2026-01-07",
+        }
+    )
+    tables["portal_buchungs_payloads"] = [
+        {
+            "id": "pbp-1",
+            "tenant_id": "t-1",
+            "reservation_id": "r-1",
+            "quelle": "airbnb_historie",
+            "ota_reservation_code": "HMYM9RH2CN",
+            "raw": {
+                "ota_name": "Airbnb",
+                "raw_message": {
+                    "reservation": {
+                        "base_price": "3041.92",
+                        "extra_guest_fee": "50.00",
+                        "host_fee_base": "645.87",
+                        "payout_amount": "3521.05",
+                        "standard_fees_details": [
+                            {"fee_type": "PASS_THROUGH_CLEANING_FEE", "amount": "1075.00"}
+                        ],
+                    }
+                },
+            },
+        }
+    ]
+    tables["portal_abzugssaetze"].append(
+        {
+            "id": "pa-airbnb",
+            "tenant_id": "t-1",
+            "kanal": "airbnb",
+            "property_id": None,
+            "gueltig_ab": "2024-01-01",
+            "gueltig_bis": None,
+            "provision_pct": 15.5,
+            "zahlungsgebuehr_pct": None,
+        }
+    )
+    z1 = _zeile(_gen(_svc(tables)), "r-1")
+    assert z1.gebuehren_quelle == "ota"
+    assert z1.total_price == 4166.92
+    assert z1.portal_provision == 645.87
+    assert {(g.art, g.betrag) for g in z1.gebuehren} == {("cleaning_fee", 1075.0)}
+
+
+def test_portal_abzug_laeuft_nicht_auf_zusatzleistungen() -> None:
+    """Live 02.09.2026 (Pschorr): Booking 5.662,50, Wäschepaket 600 über uns.
+    Die Zahlungsgebühr 1,5 % lief auf 6.262,50 — 9,00 DKK zu viel Abzug. Das
+    Portal kennt die Zusatzleistung nicht; Provision und Zahlungsgebühr
+    rechnen auf den Portal-Gastpreis, der Gastpreis der Zeile trägt sie
+    weiterhin."""
+    tables = _tables_volle_kette()
+    tables["reservation_addons"].append(
+        {
+            "id": "ra-r1",
+            "tenant_id": "t-1",
+            "reservation_id": "r-1",
+            "name": {"de": "Wäschepaket"},
+            "qty": 4,
+            "price": 150,
+            "basis": "per_guest",
+            "total": 600,
+            "status": "paid",
+        }
+    )
+    z1 = _zeile(_gen(_svc(tables)), "r-1")
+    # Portal-Gastpreis 1.870 (1.000 + 795 + 3 × 25) — OHNE das Wäschepaket,
+    # das steht als eigener Posten daneben (`addon_total`).
+    assert z1.total_price == 1870.0
+    assert z1.addon_total == 600.0
+    assert z1.portal_provision == 280.5  # 15 % von 1.870, nicht von 2.470
+    assert z1.portal_zahlungsgebuehr == 28.05  # 1,5 % von 1.870
+    assert z1.auszahlungsbasis == 1870.0 - 280.5 - 28.05
+    assert {g.quelle for g in z1.gebuehren} == {"stammdaten", "addon"}
+
+
+def test_provision_quelle_altspalten_ohne_vertrag() -> None:
+    """Ohne Vertrag rechnet die Altspalte — und die Zeile nennt sie als Quelle."""
+    st = _gen(_svc())
+    z = _zeile(st, "r-1")
+    assert z.provisions_pct == 20.0
+    assert z.provision_quelle == "altspalten"
+    assert z.vertrag_gueltig_ab is None
+    assert z.gebuehren == []
+
+
+def test_pauschalen_gesamt_ist_ausweis_nicht_zweiter_abzug() -> None:
+    """Σ Pauschalen steht in der Summary; owner_payout ändert sich dadurch nicht."""
+    tables = _tables_volle_kette()
+    tables["owner_billing_terms"][0].update(
+        {
+            "pauschale_betrag": 50,
+            "pauschale_currency": "EUR",
+            "pauschale_basis": "je_buchung",
+            "pauschale_zeitpunkt": "nach_provision",
+        }
+    )
+    st = _gen(_svc(tables))
+    assert st.summary.pauschalen_gesamt == 100.0  # 2 Buchungen × 50
+    assert all(r.pauschale == 50.0 for r in st.rental_rows)
+    # In den Zeilen bereits abgezogen: Summe der Zeilen == owner_payout.
+    assert st.summary.owner_payout == sum(r.owner_payout for r in st.rental_rows)
+
+
+def test_eigentuemer_sieht_betriebsgebuehren_und_extras_ohne_betrag() -> None:
+    """§4.2: Reinigung und Zusatzleistungen sind Verkaufspreis des Betriebs.
+
+    Der Eigentümer sieht die Zeile (DASS eine Reinigung berechnet wurde), aber
+    keinen Betrag — und keine 0. Seine eigene Gebühr (Resort) sieht er voll.
+    """
+    tables = _tables_volle_kette()
+    tables["users"].append({"id": "u-owner-1", "role": "owner", "permissions": []})
+    tables["owners"][0]["user_id"] = "u-owner-1"
+    svc = _svc(tables)
+    sicht = svc.preview(
+        AuthContext(user_id="u-owner-1", tenant_id="t-1", role="owner"),
+        StatementGenerateRequest(
+            owner_id="o-1",
+            period_from=date(2026, 1, 1),
+            period_to=date(2026, 1, 31),
+            reservation_statuses=["confirmed", "completed"],
+        ),
+    )
+    z = _zeile(sicht, "r-2")
+    nach_art = {g.label: g for g in z.gebuehren}
+    assert nach_art["Reinigungsgebühr"].betrag is None
+    assert nach_art["Bettwäsche-Set"].betrag is None
+    assert nach_art["Bettwäsche-Set"].einzelpreis is None
+    assert nach_art["Bettwäsche-Set"].menge == 2  # die Menge ist kein Preis
+    assert nach_art["Resort"].betrag == 50.0
+    assert z.gebuehren_betrieb is None
+    assert z.addon_total is None
+    assert z.gebuehren_an_eigentuemer == 50.0
+    assert z.total_price is None
+    assert z.portal_zahlungsgebuehr is None
+    # Der Gesamtbetrag NACH Portal-Abzug ist bewusst sichtbar: er ist der erste
+    # Summand seiner Kette (Entscheidung 02.09.2026), nicht der Gastpreis.
+    assert z.auszahlungsbasis == 1345.0
+    # Seine eigene Kette bleibt sichtbar.
+    assert z.verwaltungsprovision == 100.0
+    assert z.owner_payout == 450.0
+    assert z.check_in == date(2026, 1, 20)

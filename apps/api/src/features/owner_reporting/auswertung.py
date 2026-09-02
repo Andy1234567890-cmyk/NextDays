@@ -43,6 +43,10 @@ from src.features.owner_statements.gebuehren_quelle import (
     gebuehren_der_buchung,
     klassifikation_laden,
 )
+from src.features.owner_statements.payloads import (
+    csv_muster_je_objekt,
+    payloads_laden,
+)
 from src.features.properties.gebuehren import FEE_TYPE_LABEL
 
 from .schemas import GebuehrZeile, KanalZeile, MietZeile, ZahlungsartZeile
@@ -161,6 +165,8 @@ class Auswerter:
         self._db = service_client
         self._billing = OwnerBillingService(service_client=service_client)
         self._fx = FxService(service_client=service_client)
+        # Je Auswertung gelernt (`kontext`), je Buchung gelesen (`auswerten`).
+        self._csv_muster: dict[str, str] = {}
 
     # ==================================================================
     # B) Auswertung — die eine Stelle, die aus Buchungen Zahlen macht
@@ -229,25 +235,8 @@ class Auswerter:
             ):
                 stammdaten[str(row["id"])] = row.get("type_attributes") or {}
                 namen[str(row["id"])] = str(row.get("title") or "")
-        codes = sorted(
-            {
-                str(r["source_channex_booking_id"])
-                for r in reservations
-                if r.get("source_channex_booking_id")
-            }
-        )
-        payloads: dict[str, Any] = {}
-        if codes:
-            for row in fetch_all_rows(
-                self._db.table("channex_booking")
-                .select("channex_booking_id, raw")
-                .eq("tenant_id", tenant_id)
-                .in_("channex_booking_id", codes)
-                .order("channex_booking_id")
-            ):
-                code = str(row.get("channex_booking_id") or "")
-                if code:
-                    payloads[code] = row.get("raw")
+        payloads = payloads_laden(self._db, tenant_id, reservations)
+        self._csv_muster = csv_muster_je_objekt(self._db, tenant_id, property_ids)
         return stammdaten, payloads, namen
 
     def addon_sums(self, reservation_ids: list[str]) -> dict[str, Decimal]:
@@ -373,6 +362,7 @@ class Auswerter:
                     klassifikation=klassifikation,
                     property_id=pid,
                     reservierung=r,
+                    csv_muster=self._csv_muster.get(pid),
                 )
                 gebuehren = befund.gebuehren
                 addon_total = addons.get(rid, NULL)
@@ -412,7 +402,12 @@ class Auswerter:
                 abzug: common.PortalAbzug | None = None
                 try:
                     abzug = common.portal_abzug(
-                        brutto=brutto,
+                        # OHNE Zusatzleistungen (`portal_brutto`).
+                        brutto=common.portal_brutto(
+                            uebernachtung=basis,
+                            gebuehren=gebuehren,
+                            gebuehren_im_betrag=befund.im_gesamtpreis,
+                        ),
                         gemeldete_provision=r.get("ota_commission"),
                         provision_pct=satz.get("provision_pct"),
                         zahlungsgebuehr_pct=satz.get("zahlungsgebuehr_pct"),

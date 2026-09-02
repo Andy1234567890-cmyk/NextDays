@@ -26,12 +26,13 @@ from typing import Any
 from supabase import Client
 
 from src.core.security import AuthContext
-from src.core.supabase import load_scoped
+from src.core.supabase import fetch_all_rows, load_scoped
 from src.jobs.queue import enqueue
 
 from . import airbnb_bestand_cache
 from .airbnb_bestand_zeitraum import bestandszeitraum
 from .airbnb_historie import EtappenErgebnis, HistorieErgebnis, etappen_planen
+from .airbnb_historie_import import payload_ablegen
 from .airbnb_konten import kontoweise
 from .common import ChannelManagerError, log, ota_buchungszeitpunkt, ota_uhrzeit
 
@@ -297,6 +298,95 @@ class AirbnbHistorieDienstMixin:
             # — sonst zählt der Dialog munter weiter, obwohl Buchungen fehlen.
             "fehler": etappe.fehler if etappe else None,
         }
+
+    def preisdaten_heilen(self, tenant_id: str) -> dict[str, int]:
+        """Airbnb-Historie-Buchungen OHNE Payload nachträglich mit Preisdaten
+        versorgen (0528) — einmal je Betrieb, nach Einführung der Ablage.
+
+        Betroffen sind Buchungen, die der Historie-Import vor dem 02.09.2026
+        angelegt hat: `channel='airbnb'`, kein Channex-Payload (Feed-Zeilen
+        tragen die Channex-UUID in `source_channex_booking_id`), kein Eintrag
+        in `portal_buchungs_payloads`. Der Bestand wird EINMAL je Konto
+        gelesen (`nachpflege_bestand`, gecacht) und über den Bestätigungscode
+        zugeordnet. Nur LESEN bei Airbnb.
+        """
+        db = self._require_db()  # type: ignore[attr-defined]
+        kandidaten = fetch_all_rows(
+            db.table("reservations")
+            .select("id, property_id, source_channex_booking_id, external_ref")
+            .eq("tenant_id", tenant_id)
+            .eq("channel", "airbnb")
+            .order("id")
+        )
+        vorhanden = {
+            str(z["reservation_id"])
+            for z in fetch_all_rows(
+                db.table("portal_buchungs_payloads")
+                .select("reservation_id")
+                .eq("tenant_id", tenant_id)
+                .order("reservation_id")
+            )
+        }
+        feed_ids = {
+            str(z["channex_booking_id"])
+            for z in fetch_all_rows(
+                db.table("channex_booking")
+                .select("channex_booking_id")
+                .eq("tenant_id", tenant_id)
+                .order("channex_booking_id")
+            )
+        }
+        offen = [
+            r
+            for r in kandidaten
+            if str(r["id"]) not in vorhanden
+            and str(r.get("source_channex_booking_id") or "") not in feed_ids
+        ]
+        if not offen:
+            return {"geprueft": 0, "gesetzt": 0}
+        gesetzt = kontoweise(
+            db, tenant_id, offen, self._preisdaten_eines_kontos, hat_property=True
+        )
+        log.info(
+            "airbnb_preisdaten_geheilt",
+            tenant_id=tenant_id, geprueft=len(offen), gesetzt=gesetzt,
+        )
+        return {"geprueft": len(offen), "gesetzt": gesetzt}
+
+    def _preisdaten_eines_kontos(
+        self, db: Client, tenant_id: str, zeilen: list[dict[str, Any]],
+        channel_id: str,
+    ) -> int:
+        """Payload + gemeldete Provision für die Buchungen EINES Kontos."""
+        zugang = self._airbnb_token_am_kanal(channel_id)  # type: ignore[attr-defined]
+        if not zugang:
+            return 0
+        gelesen = self.nachpflege_bestand(db, zugang[0])
+        if gelesen is None:
+            return 0
+        je_code = {
+            str(b.get("confirmation_code") or ""): b for b in gelesen.buchungen
+        }
+        gesetzt = 0
+        for zeile in zeilen:
+            code = str(
+                zeile.get("external_ref") or zeile.get("source_channex_booking_id") or ""
+            )
+            res = je_code.get(code)
+            if not res:
+                continue
+            payload_ablegen(db, tenant_id, str(zeile["id"]), code=code, res=res)
+            provision = res.get("host_fee_base")
+            if provision is not None:
+                (
+                    db.table("reservations")
+                    .update({"ota_commission": provision})
+                    .eq("tenant_id", tenant_id)
+                    .eq("id", zeile["id"])
+                    .execute()
+                )
+            gesetzt += 1
+        return gesetzt
 
     def buchungszeitpunkte_heilen(self, grenze: int = 200) -> dict[str, int]:
         """Fehlende `booked_at` bei ALLEN Tenants nachtragen (Worker-Tick).

@@ -8,6 +8,7 @@
 // nicht auf einer eigenen Seite: der Provisionssatz gehört zu den
 // Auszahlungs-Einstellungen, die direkt darüber gepflegt werden. Getrennt
 // bliebe für die Agentur unklar, welche der beiden Angaben gilt.
+import { PortalAbzugssaetze } from "@/components/buchhaltung/portal-abzugssaetze";
 import { Abrechnungsvertrag } from "@/components/eigentuemer/abrechnungsvertrag";
 import { OwnerDetail } from "@/components/eigentuemer/owner-detail";
 import {
@@ -75,6 +76,15 @@ export function OwnerMasterSheet({
           properties={eigeneObjekte}
           onGeltendeVertraege={merken}
         />
+        {/* Die Portal-Abzugssätze stehen beim Vertrag, weil hier entschieden
+            wird, was beim Eigentümer ankommt: Gastpreis − Portal-Provision −
+            Zahlungsgebühr (Booking 15 % + 1,5 %, Airbnb 15,5 % ohne Gebühr) ist
+            der Gesamtbetrag seiner Abrechnung. Die Sätze gelten BETRIEBSWEIT je
+            Portal (dieselbe Karte wie unter Buchhaltung → Abrechnungsregeln),
+            weil sie am Portalkonto der Agentur hängen, nicht am Eigentümer —
+            ein Betrieb mit mehreren Portalen pflegt jedes einzeln
+            (Entscheidung 02.09.2026, Lesart a). */}
+        <PortalAbzugssaetze />
       </SheetContent>
     </Sheet>
   );

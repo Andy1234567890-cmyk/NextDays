@@ -203,6 +203,15 @@ export type Fee = {
   feeType?: FeeType;
   /** Interne Beschreibung; serverseitig beim Speichern sanitisiert. */
   descriptionHtml?: string | null;
+  /** Gültigkeit nach ANREISE (ISO-Datum, beide inklusiv, je optional). Anlass:
+   *  eine Gebühr, die es erst seit einem Datum gibt, darf die Abrechnung für
+   *  frühere Aufenthalte nicht nachtragen. An die Portale geht eine Gebühr mit
+   *  Zeitraum nicht (keine Datumsbedingung bei Channex). */
+  validFrom?: string | null;
+  validUntil?: string | null;
+  /** Nur in der Eigentümer-Abrechnung: dem Gast nirgends berechnet, an kein
+   *  Portal gesendet — eine interne Abrechnungsgröße. */
+  ownerStatementOnly?: boolean;
   // Kanal-Einschränkung: leer/fehlend = alle Kanäle. Sonst NUR diese Kanäle —
   // Portal-Codes (rate_plans.portal_scope) UND die eigenen Buchungsstrecken
   // ("direct" = Website, "portal" = myBestDays).

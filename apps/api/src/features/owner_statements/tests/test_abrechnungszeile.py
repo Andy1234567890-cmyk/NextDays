@@ -185,6 +185,38 @@ def test_haustiergebuehr_nur_mit_tier(
     assert {art for art, _ in posten} == erwartete_arten
 
 
+@pytest.mark.parametrize(
+    ("check_in", "erwartete_arten"),
+    [
+        ("2026-07-31", {"cleaning_fee"}),
+        ("2026-08-01", {"cleaning_fee", "resort"}),
+        (None, {"cleaning_fee"}),
+    ],
+)
+def test_stammdaten_gebuehr_gilt_erst_ab_anreise(
+    check_in: str | None, erwartete_arten: set[str]
+) -> None:
+    """Die Resort-Gebühr des Beta-Betriebs gibt es erst seit dem 01.08.2026.
+    Ohne Zeitraum trug die Abrechnung sie in 98 Buchungen davor nach (gemessen
+    02.09.2026). Maß ist die ANREISE; ohne Anreise ist eine begrenzte Gebühr
+    nicht beurteilbar und wird nicht angesetzt."""
+    from src.features.owner_statements.gebuehren_quelle import objekt_gebuehren
+
+    attrs = {
+        "pricing": {
+            "fees": [
+                {"feeType": "cleaning_fee", "mode": "amount", "amount": 795,
+                 "basis": "per_stay"},
+                {"feeType": "resort", "mode": "amount", "amount": 25,
+                 "basis": "per_night", "validFrom": "2026-08-01",
+                 "ownerStatementOnly": True},
+            ]
+        }
+    }
+    posten = objekt_gebuehren(attrs, NAECHTE, anlass={"check_in": check_in})
+    assert {art for art, _ in posten} == erwartete_arten
+
+
 # --- Die Vertragspauschale muss in der Zeile ANKOMMEN ------------------------
 # Gemeldet am 20.08.2026 von der Betreiberin, wörtlich: „Ich verstehe zum
 # Beispiel nicht, warum ich für jede Buchung die 50kr mühsam nochmal anlegen
@@ -292,3 +324,161 @@ def test_kette_der_zeile_geht_lueckenlos_auf() -> None:
         NACH_PORTAL - VERWALTUNG - D("50.00") - REINIGUNG + a.gebuehren_an_eigentuemer
     )
     assert a.netto.quantize(D("0.01")) == erwartet.quantize(D("0.01"))
+
+
+# --- Jede Gebühr ein eigener Posten (02.09.2026) -----------------------------
+# Ansage des Betriebs, wörtlich: „Jede Gebühr muss als einzelner Posten
+# aufgeschlüsselt werden auf der Abrechnung." Die Kette gibt seit diesem Tag
+# die Liste heraus, mit der sie gerechnet hat — nicht nur die Summen.
+
+
+def test_kette_gibt_die_gebuehren_einzeln_heraus() -> None:
+    """`a.gebuehren` ist GENAU die übergebene Liste — keine zweite Quelle."""
+    gebuehren = _reinigung() + [
+        Gebuehr(
+            art="resort",
+            betrag=D("225.00"),
+            gehoert_zu="eigentuemer",
+            provisionspflichtig=False,
+        )
+    ]
+    a = auszahlung_berechnen(
+        uebernachtung=UEBERNACHTUNG,
+        gebuehren=gebuehren,
+        gebuehren_im_betrag=False,
+        abzug=_abzug(),
+        regeln=Vertragsregeln(provisions_pct=D("20.00")),
+        naechte=NAECHTE,
+        currency="DKK",
+    )
+    assert list(a.gebuehren) == gebuehren
+    assert [g.art for g in a.gebuehren] == ["cleaning_fee", "resort"]
+    # Kontrollsummen stimmen mit der Liste überein — die Anzeige rechnet nie
+    # selbst, ein Test hält beides zusammen.
+    assert a.gebuehren_an_eigentuemer == D("225.00")
+    assert sum(g.betrag for g in a.gebuehren if g.gehoert_zu == "betrieb") == REINIGUNG
+
+
+def test_zusatzleistungen_gehoeren_dem_betrieb() -> None:
+    """Extras: raus aus der Bemessung, NICHT zurück an den Eigentümer.
+
+    Entscheidung des Betriebs (02.09.2026): der Betrieb erbringt die Leistung
+    (Wäsche-Set, Frühstück) und behält den Erlös — wie bei der Reinigung. Bis
+    dahin flossen die Extras ungekürzt an den Eigentümer; das verwechselte den
+    Erbringer der Leistung mit dem Eigentümer der Immobilie.
+    """
+    ohne = auszahlung_berechnen(
+        uebernachtung=UEBERNACHTUNG,
+        gebuehren=_reinigung(),
+        gebuehren_im_betrag=False,
+        abzug=_abzug(),
+        regeln=Vertragsregeln(provisions_pct=D("20.00")),
+        naechte=NAECHTE,
+        currency="DKK",
+    )
+    mit = auszahlung_berechnen(
+        uebernachtung=UEBERNACHTUNG,
+        gebuehren=_reinigung(),
+        gebuehren_im_betrag=False,
+        addon_total=D("190.00"),
+        abzug=_abzug(),
+        regeln=Vertragsregeln(provisions_pct=D("20.00")),
+        naechte=NAECHTE,
+        currency="DKK",
+    )
+    assert mit.extras == D("190.00")
+    # NICHT im Gastpreis: der ist der Betrag des Portals (02.09.2026, zweite
+    # Korrektur — vorher stand „6.262,50" neben Bookings „5.662,50").
+    assert mit.brutto == ohne.brutto
+    assert mit.auszahlungsbasis == ohne.auszahlungsbasis
+    # Nicht in der Bemessung (keine Provision darauf) …
+    assert mit.bemessungsgrundlage == ohne.bemessungsgrundlage
+    assert mit.gebuehren_aus_bemessung == ohne.gebuehren_aus_bemessung
+    assert mit.verwaltungsprovision == ohne.verwaltungsprovision
+    # … und NICHT beim Eigentümer: sein Netto ist unverändert.
+    assert mit.netto == ohne.netto
+    assert mit.gebuehren_an_eigentuemer == ohne.gebuehren_an_eigentuemer
+
+
+def test_mindestprovision_wird_als_angewandt_gekennzeichnet() -> None:
+    """Greift die Mindestprovision, sagt die Kette es — sonst sähe die Zeile
+    „Verwaltungsprovision 20 %" mit einer Zahl, die nicht 20 % ist."""
+    regeln = Vertragsregeln(
+        provisions_pct=D("20.00"),
+        min_provision_betrag=D("900.00"),
+        min_provision_currency="DKK",
+    )
+    a = auszahlung_berechnen(
+        uebernachtung=UEBERNACHTUNG,
+        gebuehren=_reinigung(),
+        gebuehren_im_betrag=False,
+        abzug=_abzug(),
+        regeln=regeln,
+        naechte=NAECHTE,
+        currency="DKK",
+    )
+    assert a.min_provision_angewandt is True
+    assert a.verwaltungsprovision == D("900.00")
+    # Gegenprobe: liegt der Mindestbetrag UNTER der Provision, greift er nicht.
+    b = auszahlung_berechnen(
+        uebernachtung=UEBERNACHTUNG,
+        gebuehren=_reinigung(),
+        gebuehren_im_betrag=False,
+        abzug=_abzug(),
+        regeln=Vertragsregeln(
+            provisions_pct=D("20.00"),
+            min_provision_betrag=D("10.00"),
+            min_provision_currency="DKK",
+        ),
+        naechte=NAECHTE,
+        currency="DKK",
+    )
+    assert b.min_provision_angewandt is False
+    assert b.verwaltungsprovision.quantize(D("0.01")) == VERWALTUNG
+
+
+def test_die_ganze_zeile_des_betriebs_geht_auf_mit_wiederkehrenden_posten() -> None:
+    """Die 3.135,10 des Betriebs OHNE Handkorrektur.
+
+    Löst den Docstring von `test_die_ganze_zeile_des_betriebs_geht_auf` ein:
+    „Kaffee&Co −50" und „NK-Pauschale +200" sind wiederkehrende Posten
+    (`owner_recurring_items`, je Buchung) und kommen jetzt aus demselben Modul,
+    das auch der Bericht nutzt — nicht mehr aus einer von Hand ergänzten Zahl.
+    """
+    from src.features.owner_statements import wiederkehrend
+
+    a = auszahlung_berechnen(
+        uebernachtung=UEBERNACHTUNG,
+        gebuehren=_reinigung(),
+        gebuehren_im_betrag=False,
+        abzug=_abzug(),
+        regeln=Vertragsregeln(provisions_pct=D("20.00")),
+        naechte=NAECHTE,
+        currency="DKK",
+    )
+    posten = [
+        {
+            "id": "r-1",
+            "label": "Kaffee & Co",
+            "abschnitt": "ausgaben",
+            "modus": "je_buchung",
+            "betrag": 50,
+            "currency": "DKK",
+            "property_id": None,
+        },
+        {
+            "id": "r-2",
+            "label": "NK-Pauschale",
+            "abschnitt": "andere",
+            "modus": "je_buchung",
+            "betrag": 200,
+            "currency": "DKK",
+            "property_id": None,
+        },
+    ]
+    mengen = wiederkehrend.bezugsmenge([("021", NAECHTE)])
+    summe = D("0")
+    for zeile, anzahl, wert in wiederkehrend.posten_betraege(posten, mengen, "DKK"):
+        assert anzahl == 1
+        summe += -wert if wiederkehrend.ist_abzug(str(zeile["abschnitt"])) else wert
+    assert (a.netto + summe).quantize(D("0.01")) == D("3135.10")

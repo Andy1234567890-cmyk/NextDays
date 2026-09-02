@@ -1146,6 +1146,27 @@ def test_kurzaufenthalts_gebuehr_geht_an_kein_portal() -> None:
     assert diagnose["gebuehr_nur_kurzaufenthalt"] == 1
 
 
+def test_gebuehr_mit_zeitraum_oder_nur_abrechnung_geht_an_kein_portal() -> None:
+    """Channex kennt keine Datumsbedingung: eine Gebühr „ab 01.08." gälte dort
+    für jede Anreise. Und „nur in der Eigentümer-Abrechnung" zahlt der Gast
+    nie. Beide bleiben draußen und werden protokolliert."""
+    posten, diagnose = _abgaben(
+        None,
+        fees=[
+            {"id": "r", "name": "Resort", "amount": 25, "basis": "per_night",
+             "validFrom": "2026-08-01"},
+            {"id": "i", "name": "Intern", "amount": 40, "basis": "per_stay",
+             "ownerStatementOnly": True},
+            {"id": "n", "name": "Normal", "amount": 50, "basis": "per_stay"},
+        ],
+    )
+    assert "Resort" not in posten
+    assert "Intern" not in posten
+    assert "Normal" in posten
+    assert diagnose["gebuehr_mit_zeitraum"] == 1
+    assert diagnose["gebuehr_nur_abrechnung"] == 1
+
+
 # --- Sync-Stand der Abgaben (Chip „Manuelle Synchronisierung") ---------------
 
 
@@ -1195,6 +1216,8 @@ def test_abgaben_status_interne_gebuehren_ohne_chip() -> None:
         {"id": "f1", "optional": True, "feeType": "cleaning_fee"},
         {"id": "f1", "shortStayOnly": True, "feeType": "cleaning_fee"},
         {"id": "f1", "feeType": "security_deposit"},
+        {"id": "f1", "feeType": "resort", "validFrom": "2026-08-01"},
+        {"id": "f1", "feeType": "resort", "ownerStatementOnly": True},
     ):
         st = _status(eintrag, "fee", portale=portale,
                      nicht_gesendet={"AirBNB": {"f1"}})

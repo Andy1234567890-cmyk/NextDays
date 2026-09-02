@@ -14,6 +14,7 @@ NICHT auffiele, weil die Oberfläche trotzdem plausibel aussähe:
      niemand als Fehler liest, weil sie nur „hoch" wirkt.
   4. Kein Antwortfeld trägt Geld.
 """
+import fnmatch
 from datetime import date, timedelta
 
 import pytest
@@ -102,7 +103,19 @@ class _Query:
         self._range = (start, end)
         return self
 
+    def like(self, col: str, pattern: str) -> "_Query":
+        # PostgREST `like` mit `%`-Platzhalter — hier als Muster-Filter.
+        self._like = (col, pattern)
+        return self
+
     def _match(self, row: dict) -> bool:
+        muster = getattr(self, "_like", None)
+        if muster is not None:
+            like_col, like_pat = muster
+            if not fnmatch.fnmatchcase(
+                str(row.get(like_col) or ""), like_pat.replace("%", "*")
+            ):
+                return False
         for col, val in self._filters:
             if str(row.get(col)) != str(val):
                 return False

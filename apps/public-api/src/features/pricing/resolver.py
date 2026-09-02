@@ -1032,6 +1032,16 @@ class PricingResolver:
         for fee in config.fees:
             if not _gilt_fuer_kanal(fee, req.channel):
                 continue
+            # „Nur in der Eigentümer-Abrechnung": eine interne Abrechnungsgröße,
+            # die der Gast nie zahlt — auf keinem Kanal.
+            if bool(fee.get("ownerStatementOnly")):
+                continue
+            # Gültigkeit nach Anreise („gilt ab"/„gilt bis" an der Gebühr) —
+            # dieselbe Regel wie `properties.gebuehren.gebuehr_gilt_am`, hier
+            # über den lokalen Helfer, weil diese Datei als SCHWESTERDATEI in der
+            # öffentlichen API liegt, die den properties-Slice nicht hat.
+            if not _in_zeitraum(req.check_in, fee.get("validFrom"), fee.get("validUntil")):
+                continue
             # „Nur für Kurzaufenthalte": dieselbe Grenze wie der
             # Kurzaufenthalts-Aufschlag des Objekts (`shortStayMaxNights`) — es
             # gibt genau EINE Definition von „kurz" je Objekt. Ist keine

@@ -120,6 +120,41 @@ class ExpenseReceiptUrlResponse(BaseModel):
 # --- Rental activity ---------------------------------------------------------
 
 
+class GebuehrZeile(BaseModel):
+    """EINE Gebühr oder Zusatzleistung einer Buchung — als eigener Posten.
+
+    Anlass (Betrieb, 02.09.2026): *„Jede Gebühr muss als einzelner Posten
+    aufgeschlüsselt werden auf der Abrechnung."* Vorher stand in der Zeile
+    nur die Summe `gebuehren_an_eigentuemer`; „Gebühren +725,00" ließ
+    niemanden erkennen, ob Resort 225 und Nebenkosten 500 darin stecken.
+
+    `art` ist der interne Schlüssel (`cleaning_fee`, `resort`, `pet_fee`,
+    `addon` …), `label` der Text für den Beleg — bei Portal-Gebühren der
+    Originaltext des Portals (`GebuehrenBefund.bezeichnungen`), damit der
+    Betrieb den Posten im Extranet wiederfindet, sonst der Katalogname
+    (`FEE_TYPE_LABEL`), bei Zusatzleistungen der Name der Leistung.
+
+    `betrag` ist `None`, wenn die Rolle ihn nicht sehen darf (§4.2): die
+    Gebühren des BETRIEBS (Reinigung) sind Teil seines Verkaufspreises und
+    laufen durch dieselbe Maske wie `total_price`. Der Eigentümer sieht die
+    Zeile dann mit Label und Zuordnung, aber ohne Zahl — nie eine 0.
+
+    `menge`/`einzelpreis`/`basis` sind nur bei Zusatzleistungen gesetzt
+    (`reservation_addons.qty/price/basis`); Portal- und Stammdaten-Gebühren
+    kommen als Gesamtbetrag ohne Stückzahl.
+    """
+
+    art: str
+    label: str
+    betrag: float | None
+    gehoert_zu: str  # betrieb | eigentuemer | durchlauf
+    provisionspflichtig: bool
+    quelle: str  # ota | stammdaten | addon
+    menge: int | None = None
+    einzelpreis: float | None = None
+    basis: str | None = None
+
+
 class RentalRow(BaseModel):
     """Eine Zeile der Rental activity (Per reservation).
 
@@ -177,9 +212,11 @@ class RentalRow(BaseModel):
     verwaltungsprovision: float | None = None
     pauschale: float | None = None
     gebuehren_an_eigentuemer: float | None = None
-    # Maschinenlesbar, WARUM die Auszahlung dieser Zeile fehlt. Heute nur
-    # "provision"; der Name folgt `PayoutUnbekannt.grund`, damit neue Gründe
-    # ohne zweite Namenswelt dazukommen können.
+    # Maschinenlesbar, WARUM die Auszahlung dieser Zeile fehlt: "provision"
+    # (kein Vertrag, kein Altsatz), "provision_zeitraum" (Vertrag beginnt erst
+    # nach der Abreise, siehe `vertrag_beginnt_am`), "portal_abzug", … Der Name
+    # folgt `PayoutUnbekannt.grund`, damit neue Gründe ohne zweite Namenswelt
+    # dazukommen können.
     payout_unbekannt: str | None = None
     # WOHER die Gebühren dieser Zeile kommen: "ota" (das Portal hat sie
     # gemeldet — Tatsache), "ota_ohne_aufstellung" (Portal-Buchung, deren
@@ -193,10 +230,55 @@ class RentalRow(BaseModel):
     # Eingangsweg der Buchung. Die Zeile sagt es künftig selbst.
     gebuehren_quelle: str | None = None
     # Bei "ota_ohne_aufstellung": der Grund (`channex_import` |
-    # `portal_meldet_keine` | `kein_payload`). Siehe
-    # `gebuehren_quelle._stammdaten_grund` — nur `portal_meldet_keine` ist
-    # überhaupt behebbar, die Channex-Importe sind es nicht.
+    # `portal_meldet_keine` | `kein_payload` | `csv_import`). Siehe
+    # `gebuehren_quelle._stammdaten_grund` bzw. `_ist_csv_portalbuchung` —
+    # nur `portal_meldet_keine` ist überhaupt behebbar, die Importe sind es
+    # nicht.
     gebuehren_grund: str | None = None
+    # --- Seit 02.09.2026: jede Gebühr ein eigener Posten -------------------
+    # An- und Abreise der Buchung (Kalendertage, `date`-Spalten der
+    # Reservierung — Termin des Gastes, nicht unsere Uhr, Wurzel 5b).
+    check_in: date_ | None = None
+    check_out: date_ | None = None
+    # Echter Portalname (`reservations.ota_name`, 0031), z. B. "Booking.com";
+    # `channel` bleibt der Schlüssel für Farbe/Filter.
+    ota_name: str | None = None
+    # Die Gebühren und Zusatzleistungen EINZELN — siehe `GebuehrZeile`.
+    gebuehren: list[GebuehrZeile] = Field(default_factory=list)
+    # Kontrollsummen zur Liste: Σ der Betriebs- bzw. Durchlauf-Gebühren.
+    # `gebuehren_an_eigentuemer` (oben) ist die dritte. Die Anzeige rechnet
+    # NIE selbst aus der Liste; ein Test erzwingt Σ Liste == Kontrollsumme.
+    # Betriebsgebühren maskiert wie `total_price` (§4.2).
+    gebuehren_betrieb: float | None = None
+    gebuehren_durchlauf: float | None = None
+    # Zusatzleistungen der Buchung (Kontrollsumme der `addon`-Zeilen). Sie
+    # gehören dem BETRIEB (Entscheidung 02.09.2026) und sind deshalb wie
+    # `gebuehren_betrieb` maskiert.
+    addon_total: float | None = None
+    # Was das Portal zusätzlich zur Provision einbehält (Booking: 1,5 %
+    # Zahlungsgebühr). Betriebszahl, maskiert wie `portal_provision`.
+    portal_zahlungsgebuehr: float | None = None
+    # Gastpreis − Portal-Abzug = was vom Portal beim Betrieb ankommt. Der
+    # Beleg zeigt diese Zwischensumme als eigene Zeile; sie kommt vom Server,
+    # damit die Anzeige nicht selbst subtrahiert. Maskiert wie `total_price`.
+    auszahlungsbasis: float | None = None
+    # Der Satz, mit dem DIESE Zeile gerechnet wurde, und woher er stammt.
+    # `commission_pct` am Kopf ist bei gemischten Objektverträgen nur der
+    # gewichtete Wert und taugt nicht als Beleg für eine einzelne Buchung.
+    provisions_pct: float | None = None
+    provision_quelle: str | None = None  # vertrag | override | altspalten
+    vertrag_gueltig_ab: date_ | None = None
+    # NUR bei `payout_unbekannt == "provision_zeitraum"`: am Abreisetag galt
+    # kein Abrechnungsvertrag, der nächste beginnt erst an diesem Tag. Live
+    # 02.09.2026: Vertrag ab 12.08., Abreise 09.08. — die Meldung lautete
+    # „kein Provisionssatz hinterlegt", und der Betrieb suchte in den
+    # Stammdaten, wo nichts fehlte. Mit dem Datum zeigt die Zeile auf den
+    # Handgriff: Vertragsbeginn zurückdatieren.
+    vertrag_beginnt_am: date_ | None = None
+    # Hat die Mindestprovision des Vertrags gegriffen? Dann ist
+    # `verwaltungsprovision` NICHT `bemessungsgrundlage × Satz`, und der
+    # Beleg muss das sagen, sonst sieht der Posten wie ein Rechenfehler aus.
+    min_provision_angewandt: bool = False
 
 
 class ListingRow(BaseModel):
@@ -211,6 +293,33 @@ class ListingRow(BaseModel):
     # die die Zeilen-Maske gerade verbirgt.
     total_price: float | None = None
     total_payout: float
+
+
+# --- Wiederkehrende Posten (Dauervereinbarung, 0365) -------------------------
+
+
+class WiederkehrenderPosten(BaseModel):
+    """Ein wiederkehrender Posten dieser Abrechnung, ausgerechnet.
+
+    `owner_recurring_items` ist eine Dauervereinbarung („50 DKK je Buchung");
+    bis 02.09.2026 wertete nur der Bericht (`owner_reporting`) sie aus, die
+    Abrechnung nicht — der Betrieb legte denselben Betrag deshalb als
+    Verrechnungsposten NOCH EINMAL an (20.08.2026, doppelt abgezogen).
+
+    `anzahl` gehört zum Ergebnis: „3 × 50,00" ist prüfbar, „150,00" nicht.
+    `betrag` ist SIGNIERT (negativ bei `abschnitt='ausgaben'`), `einzelbetrag`
+    bleibt positiv wie in der DB.
+    """
+
+    item_id: str
+    label: str
+    abschnitt: str  # unterkunftspreis | gebuehren | ausgaben | andere
+    modus: str  # je_buchung | je_nacht | je_zeitraum
+    einzelbetrag: float
+    anzahl: int
+    betrag: float
+    currency: str
+    property_id: str | None = None
 
 
 # --- Statement-Kopf (Snapshot PM + Owner) ------------------------------------
@@ -307,6 +416,17 @@ class StatementSummary(BaseModel):
     # der sie vergisst, sofort und laut fehl statt still falsch zu liefern.
     expenses_to_owner: float
     expenses_from_owner: float
+    # Wiederkehrende Posten (0365), beide Richtungen einzeln — PFLICHT ohne
+    # Default aus demselben Grund wie die zwei Zeilen darüber: ein Default
+    # machte aus „nicht gesetzt" ein plausibles 0,00 (0524).
+    recurring_to_owner: float
+    recurring_from_owner: float
+    # Summe der Vertrags-Pauschalen über alle Zeilen. NUR AUSWEIS: sie steckt
+    # bereits in `owner_payout` (je Zeile abgezogen) und darf nicht erneut
+    # abgezogen werden. Steht auf dem Beleg, damit die Summe aller Abzüge
+    # sichtbar ist — genau das fehlte, als die Betreiberin die Pauschale als
+    # Ausgabe ein zweites Mal anlegte. None = nicht berechenbar.
+    pauschalen_gesamt: float | None
     # None = für mindestens ein betroffenes Objekt steht kein Provisionssatz
     # fest, die Auszahlung ist damit nicht berechenbar (`payout_unbekannt`
     # nennt den Grund). Bis 09.08.2026 stand hier zwingend eine Zahl, und ein
@@ -364,6 +484,9 @@ class StatementResponse(BaseModel):
     rental_rows: list[RentalRow] = Field(default_factory=list)
     listing_rows: list[ListingRow] = Field(default_factory=list)
     expenses: list[ExpenseResponse] = Field(default_factory=list)
+    # Wiederkehrende Posten des Eigentümers, ausgerechnet für diesen Zeitraum.
+    # Im Storno-Beleg mit negierten Beträgen — dieselbe Regel wie `expenses`.
+    recurring: list[WiederkehrenderPosten] = Field(default_factory=list)
     created_at: str | None = None
     updated_at: str | None = None
 

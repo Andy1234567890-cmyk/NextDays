@@ -135,10 +135,16 @@ export function OwnerStatementsForOwner({
       // Leerzustand, noch nichts gerechnet — kein Grund für eine fehlende
       // Auszahlung, also auch kein Hinweis (der käme erst mit echten Daten).
       payout_unbekannt: null,
+      // Wiederkehrende Posten und Pauschalen gibt es erst mit Buchungen im
+      // Zeitraum; `null` bei den Pauschalen heißt „nicht gerechnet", nicht 0.
+      recurring_to_owner: 0,
+      recurring_from_owner: 0,
+      pauschalen_gesamt: null,
     },
     rental_rows: [],
     listing_rows: [],
     expenses: [],
+    recurring: [],
     created_at: null,
     updated_at: null,
   };

@@ -1010,6 +1010,51 @@ class OwnerBillingService:
                 objekt_treffer = row
         return objekt_treffer or owner_treffer
 
+    def naechster_vertragsbeginn(
+        self,
+        tenant_id: str,
+        owner_id: str,
+        property_id: str | None,
+        stichtag: date,
+    ) -> date | None:
+        """Wann beginnt der ERSTE Vertrag NACH dem Stichtag — oder ``None``.
+
+        Die Diagnose-Schwester von ``vertrag_aufloesen``: sie rechnet nichts,
+        sie erklärt. Live am 02.09.2026: der Vertrag des Eigentümers stand
+        mit 20 % in der DB, galt aber erst ab dem 12.08.; eine Buchung mit
+        Abreise 09.08. fand am Stichtag keinen Vertrag, und die Abrechnung
+        meldete „kein Provisionssatz hinterlegt". Der Betrieb suchte den
+        Satz in den Stammdaten — wo er nie fehlte. Mit dem Datum des nächsten
+        Vertragsbeginns lautet die Meldung stattdessen „Vertrag gilt erst ab
+        12.08.2026, Abreise 09.08.2026 liegt davor" — und zeigt auf den
+        Handgriff (Vertragsbeginn zurückdatieren), nicht auf eine Maske, in
+        der nichts zu tun ist.
+
+        Objekt- und Eigentümerverträge zählen gleich, weil beide die Lücke
+        schließen würden. ``None`` heißt: nach dem Stichtag beginnt kein
+        Vertrag — dann fehlt er wirklich.
+        """
+        rows = (
+            self._db.table("owner_billing_terms")
+            .select("property_id, gueltig_ab")
+            .eq("tenant_id", tenant_id)
+            .eq("owner_id", owner_id)
+            .gt("gueltig_ab", stichtag.isoformat())
+            .execute()
+        ).data or []
+        kandidaten: list[date] = []
+        for row in rows:
+            zeilen_property = (
+                str(row["property_id"]) if row.get("property_id") else None
+            )
+            if zeilen_property is not None and zeilen_property != property_id:
+                continue
+            try:
+                kandidaten.append(date.fromisoformat(str(row["gueltig_ab"])[:10]))
+            except (KeyError, ValueError, TypeError):
+                continue
+        return min(kandidaten) if kandidaten else None
+
     # ==================================================================
     # C) Portal-Abzugssätze (0364)
     # ==================================================================

@@ -50,7 +50,7 @@ from supabase import Client
 
 from src.core.security import AuthContext
 from src.core.supabase import load_scoped
-from src.features.properties.gebuehren import fee_category
+from src.features.properties.gebuehren import fee_category, hat_zeitraum
 
 from .airbnb_aktionen import DISCOUNT_TYPE_LOS, regel_fuer_airbnb
 from .common import ChannelManagerError, log
@@ -453,9 +453,13 @@ class AbgabenStatusMixin:
         # keine Channex-`logic`, unbedingt gesendet würde sie JEDEM Portal-Gast
         # berechnet (ota_abgaben). Die Kaution ist der dritte Fall: Channex kennt
         # kein Kautions-Objekt.
+        # Dazu „nur in der Eigentümer-Abrechnung" (der Gast zahlt sie nie) und
+        # ein Gültigkeitszeitraum (Channex kennt keine Datumsbedingung).
         internal_only = kind == "fee" and (
             bool(eintrag.get("optional"))
             or bool(eintrag.get("shortStayOnly"))
+            or bool(eintrag.get("ownerStatementOnly"))
+            or hat_zeitraum(eintrag)
             or fee_category(eintrag) in NICHT_EXPORTIERBAR
         )
         restricted = sorted(p for p in portale if scope and p not in scope)

@@ -6,7 +6,8 @@
 // extras / Attachments / Grand total). Daten echt aus dem Backend.
 import { Icon } from "@iconify/react";
 import { useTranslations, useLocale } from "next-intl";
-import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Fragment, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@nextdays/ui/button";
@@ -34,6 +35,7 @@ import { formatCurrency } from "@/lib/currency";
  *  ohne jede Erklärung. */
 const GRUND_KEYS: Record<string, string> = {
   provision: "summary.commissionMissing",
+  provision_zeitraum: "summary.contractStartsLater",
   provision_ungueltig: "summary.commissionInvalid",
   portal_abzug: "summary.portalRateMissing",
   portal_abzug_ungueltig: "summary.portalRateInvalid",
@@ -49,6 +51,15 @@ const GEBUEHREN_GRUND_KEYS: Record<string, string> = {
   channex_import: "rental.feeSource.channexImport",
   portal_meldet_keine: "rental.feeSource.portalReportsNone",
   kein_payload: "rental.feeSource.noPayload",
+  csv_import: "rental.feeSource.csvImport",
+};
+
+/** `gebuehren_grund` bei Quelle `stammdaten_portal` → WIE die Stammdaten-Gebühr
+ *  zum Portalbetrag steht. */
+const STAMMDATEN_PORTAL_KEYS: Record<string, string> = {
+  belegt: "rental.feeSource.portalBelegt",
+  im_betrag: "rental.feeSource.portalImBetrag",
+  obendrauf: "rental.feeSource.portalObendrauf",
 };
 
 /** Betrag ODER „—", wenn er maskiert ist.
@@ -79,7 +90,9 @@ import {
   uploadExpenseReceipt,
   type Expense,
   type ExpenseDirection,
+  type GebuehrZeile,
   type RentalRow,
+  type WiederkehrenderPosten,
   type Statement,
   type StatementHeader,
   type StatementListItem,
@@ -138,6 +151,7 @@ export function StatementEditor({
   }) => void;
 }) {
   const t = useTranslations("ownerStatements");
+  const tKalender = useTranslations("calendar");
   const locale = useLocale();
   const [st, setSt] = useState<Statement>(statement);
   const [busy, setBusy] = useState(false);
@@ -339,6 +353,17 @@ export function StatementEditor({
   }
 
   const expensesTotal = st.summary.expenses_total;
+  // Übersetzte Kanalnamen für Tabelle und Beleg (`direct` → „Direkt"). Der
+  // echte Portalname (`ota_name`) geht immer vor; die Karte gilt nur für
+  // Kanäle ohne ihn. `has` statt blindem `t(...)`: ein unbekannter Kanalwert
+  // soll den Schlüssel zeigen, nicht MISSING_MESSAGE werfen.
+  const kanalLabels = Object.fromEntries(
+    [...new Set(st.rental_rows.map((r) => r.channel))].map((ch) => [
+      ch,
+      tKalender.has(`channel.${ch}`) ? tKalender(`channel.${ch}`) : ch,
+    ]),
+  ) as Record<string, string>;
+  const recurringNetto = st.summary.recurring_to_owner - st.summary.recurring_from_owner;
   // Ohne sichtbaren Gastpreis gibt es keine Gesamtsumme — sie waere sonst
   // „0 + Ausgaben" und damit erfunden.
   const grandTotal =
@@ -364,7 +389,7 @@ export function StatementEditor({
             disabled={busy}
             onClick={() => {
               setBusy(true);
-              void downloadStatementPdf(st, locale)
+              void downloadStatementPdf(st, locale, { kanalLabels })
                 .catch(() => toast.error(t("downloadFailed")))
                 .finally(() => setBusy(false));
             }}
@@ -648,6 +673,23 @@ export function StatementEditor({
             infoAria={t("info.aria", { feld: t("summary.pmPayout") })}
           />
         </div>
+        {(st.summary.recurring_to_owner !== 0 ||
+          st.summary.recurring_from_owner !== 0 ||
+          (st.summary.pauschalen_gesamt ?? 0) !== 0) && (
+          <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+            {st.summary.recurring_to_owner !== 0 && (
+              <span>{t("summary.recurringToOwner")}: +{formatCurrency(st.summary.recurring_to_owner, ownerCur)}</span>
+            )}
+            {st.summary.recurring_from_owner !== 0 && (
+              <span>{t("summary.recurringFromOwner")}: −{formatCurrency(st.summary.recurring_from_owner, ownerCur)}</span>
+            )}
+            {(st.summary.pauschalen_gesamt ?? 0) !== 0 && (
+              <span>
+                {t("summary.flatFees")}: −{formatCurrency(st.summary.pauschalen_gesamt ?? 0, ownerCur)} ({t("summary.flatFeesIncluded")})
+              </span>
+            )}
+          </p>
+        )}
         {/* Steht irgendwo ein „—", MUSS erklärt sein, dass das „nicht erfasst"
             heißt und nicht „null". Der Unterschied entscheidet, ob der
             Betreiber einen Datenfehler sucht oder eine 0 für bare Münze
@@ -667,7 +709,7 @@ export function StatementEditor({
       </Section>
 
       {/* Rental activity */}
-      <RentalActivity statement={st} t={t} currency={cur} />
+      <RentalActivity statement={st} t={t} currency={cur} kanalLabels={kanalLabels} locale={locale} />
 
       {/* Expenses & extras */}
       {/* Verrechnungsposten hängen an einer gespeicherten Abrechnung
@@ -689,6 +731,8 @@ export function StatementEditor({
         onRefresh={refresh}
         t={t}
       />
+
+      <AbzuegeSection statement={st} t={t} />
 
       {/* Attachments — bewusst KEINE Ablagefläche.
           Hier stand eine gestrichelte „Dateien zum Hochladen ablegen oder
@@ -728,6 +772,17 @@ export function StatementEditor({
               {formatCurrency(expensesTotal, cur)}
             </span>
           </div>
+          {/* Wiederkehrende Posten stehen in Owner-Währung und sind bereits Teil
+              von `owner_payout`; die Gesamtsumme darunter ist die Betriebszahl
+              (Gastpreis + Verrechnungsposten) und bleibt unverändert. */}
+          {recurringNetto !== 0 && (
+            <div className="flex items-center gap-4">
+              <span className="min-w-44 text-sm text-muted-foreground">{t("grand.recurring")}</span>
+              <span className={`text-sm ${recurringNetto < 0 ? "text-destructive" : ""}`}>
+                {formatCurrency(recurringNetto, ownerCur)}
+              </span>
+            </div>
+          )}
           <div className="h-px bg-border" />
           <div className="flex items-center justify-between">
             <span className="font-bold">{t("grand.total")}</span>
@@ -798,6 +853,7 @@ export function StatementEditor({
         statement={st}
         open={showPreview}
         onOpenChange={setShowPreview}
+        kanalLabels={kanalLabels}
       />
       {/* Ohne Auszahlung gibt es nichts zu bestätigen — der Knopf ist in dem
           Fall ohnehin gesperrt (siehe `disabled` oben). */}
@@ -822,37 +878,79 @@ function RentalActivity({
   statement,
   t,
   currency,
+  kanalLabels,
+  locale,
 }: {
   statement: Statement;
   t: ReturnType<typeof useTranslations>;
   currency: string;
+  kanalLabels: Record<string, string>;
+  locale: string;
 }) {
   const [view, setView] = useState<"reservation" | "listing">("reservation");
+  // Aufgeklappte Posten-Blöcke je Buchung. Standard ZU: die Tabelle bleibt
+  // überschaubar, die Aufstellung ist einen Klick entfernt — oder für alle
+  // Zeilen auf einmal über den Knopf im Kopf.
+  const [offen, setOffen] = useState<Set<string>>(new Set());
+  const rows = statement.rental_rows;
+  const alleOffen = rows.length > 0 && rows.every((r) => offen.has(r.reservation_id));
+  const toggle = (id: string) =>
+    setOffen((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
   const totalNights =
     view === "reservation"
-      ? statement.rental_rows.reduce((a, r) => a + r.nights, 0)
+      ? rows.reduce((a, r) => a + r.nights, 0)
       : statement.listing_rows.reduce((a, r) => a + r.nights, 0);
+  // Betriebsspalten (Gastpreis, Portal-Abzug) nur zeigen, wenn der Betrachter
+  // sie sehen darf — für den Eigentümer sind sie serverseitig `null` (§4.2),
+  // und eine Spalte voller „—" wäre nur Rauschen.
+  const zeigtBetrieb = rows.some((r) => r.total_price !== null);
+  const zeigtPauschale = rows.some((r) => (r.pauschale ?? 0) !== 0);
+  const kanal = (r: RentalRow) => r.ota_name ?? kanalLabels[r.channel] ?? r.channel;
+  const th = (label: string, right = false, extra = "") => (
+    <th className={`py-2 pr-4 font-medium ${right ? "text-right" : ""} ${extra}`}>{label}</th>
+  );
+  const spalten =
+    6 + (zeigtBetrieb ? 2 : 0) + 1 + (zeigtPauschale ? 1 : 0) + 1;
 
   return (
     <Section
       title={t("sections.rentalActivity")}
       defaultOpen
       right={
-        <div className="flex rounded-md bg-secondary p-0.5 text-sm">
-          <button
-            type="button"
-            onClick={() => setView("reservation")}
-            className={`rounded px-3 py-1 font-medium transition-colors ${view === "reservation" ? "bg-foreground text-background" : "text-muted-foreground"}`}
-          >
-            {t("rental.perReservation")}
-          </button>
-          <button
-            type="button"
-            onClick={() => setView("listing")}
-            className={`rounded px-3 py-1 font-medium transition-colors ${view === "listing" ? "bg-foreground text-background" : "text-muted-foreground"}`}
-          >
-            {t("rental.perListing")}
-          </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {view === "reservation" && rows.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() =>
+                setOffen(alleOffen ? new Set() : new Set(rows.map((r) => r.reservation_id)))
+              }
+            >
+              <Icon icon={alleOffen ? "ph:arrows-in-line-vertical" : "ph:arrows-out-line-vertical"} className="size-4" />
+              {alleOffen ? t("rental.collapseAll") : t("rental.expandAll")}
+            </Button>
+          )}
+          <div className="flex rounded-md bg-secondary p-0.5 text-sm">
+            <button
+              type="button"
+              onClick={() => setView("reservation")}
+              className={`rounded px-3 py-1 font-medium transition-colors ${view === "reservation" ? "bg-foreground text-background" : "text-muted-foreground"}`}
+            >
+              {t("rental.perReservation")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setView("listing")}
+              className={`rounded px-3 py-1 font-medium transition-colors ${view === "listing" ? "bg-foreground text-background" : "text-muted-foreground"}`}
+            >
+              {t("rental.perListing")}
+            </button>
+          </div>
         </div>
       }
     >
@@ -862,65 +960,118 @@ function RentalActivity({
             <tr className="border-b border-border text-left text-xs uppercase text-muted-foreground">
               {view === "reservation" ? (
                 <>
-                  <th className="py-2 pr-4 font-medium">{t("rental.guest")}</th>
-                  <th className="py-2 pr-4 font-medium">{t("rental.nights")}</th>
-                  <th className="py-2 pr-4 font-medium">{t("rental.listing")}</th>
-                  <th className="py-2 pr-4 font-medium">{t("rental.channel")}</th>
-                  <th className="py-2 pr-4 text-right font-medium">
-                    <span className="flex items-center justify-end gap-1.5">
-                      {t("rental.totalPrice")}
-                      <InfoHinweis
-                        text={t("info.totalPrice")}
-                        ariaLabel={t("info.aria", { feld: t("rental.totalPrice") })}
-                      />
-                    </span>
-                  </th>
-                  <th className="py-2 text-right font-medium">
-                    <span className="flex items-center justify-end gap-1.5">
-                      {t("rental.totalPayout")}
-                      <InfoHinweis
-                        text={t("info.totalPayout")}
-                        ariaLabel={t("info.aria", { feld: t("rental.totalPayout") })}
-                      />
-                    </span>
-                  </th>
+                  {th(t("rental.guest"))}
+                  {th(t("rental.listing"))}
+                  {th(t("rental.arrival"))}
+                  {th(t("rental.departure"))}
+                  {th(t("rental.nights"), true)}
+                  {th(t("rental.channel"))}
+                  {zeigtBetrieb && (
+                    <th className="py-2 pr-4 text-right font-medium">
+                      <span className="flex items-center justify-end gap-1.5">
+                        {t("rental.totalPrice")}
+                        <InfoHinweis
+                          text={t("info.totalPrice")}
+                          ariaLabel={t("info.aria", { feld: t("rental.totalPrice") })}
+                        />
+                      </span>
+                    </th>
+                  )}
+                  {zeigtBetrieb && th(t("rental.portalDeduction"), true)}
+                  {th(t("rental.commission"), true)}
+                  {zeigtPauschale && th(t("rental.flatFee"), true)}
+                  {th(t("rental.ownerShare"), true, "pr-0")}
+                  <th className="py-2 pl-2" />
                 </>
               ) : (
                 <>
-                  <th className="py-2 pr-4 font-medium">{t("rental.listing")}</th>
-                  <th className="py-2 pr-4 font-medium">{t("rental.reservations")}</th>
-                  <th className="py-2 pr-4 font-medium">{t("rental.nights")}</th>
-                  <th className="py-2 pr-4 text-right font-medium">{t("rental.totalPrice")}</th>
-                  <th className="py-2 text-right font-medium">{t("rental.totalPayout")}</th>
+                  {th(t("rental.listing"))}
+                  {th(t("rental.reservations"))}
+                  {th(t("rental.nights"))}
+                  {th(t("rental.totalPrice"), true)}
+                  {th(t("rental.totalPayout"), true, "pr-0")}
                 </>
               )}
             </tr>
           </thead>
           <tbody>
             {view === "reservation"
-              ? statement.rental_rows.map((r) => (
-                  <tr key={r.reservation_id} className="border-b border-border">
-                    <td className="py-2 pr-4 text-accent">{r.guest ?? "—"}</td>
-                    <td className="py-2 pr-4">{r.nights}</td>
-                    <td className="py-2 pr-4 text-accent">{r.listing ?? "—"}</td>
-                    <td className="py-2 pr-4">
-                      <span className="flex items-center gap-1.5 capitalize">
-                        <span className={`size-2 rounded-full ${CHANNEL_DOT[r.channel] ?? "bg-muted-foreground"}`} />
-                        {r.channel}
-                      </span>
-                    </td>
-                    <td className="py-2 pr-4 text-right">
-                      <span className="inline-flex items-center justify-end gap-1.5">
-                        {betragOderStrich(r.total_price, currency)}
-                        <GebuehrenHerkunft zeile={r} />
-                      </span>
-                    </td>
-                    <td className="py-2 text-right">
-                      {formatCurrency(r.total_payout, currency)}
-                      <AuszahlungsKette zeile={r} waehrung={currency} />
-                    </td>
-                  </tr>
-                ))
+              ? rows.map((r) => {
+                  const rc = r.currency;
+                  const istOffen = offen.has(r.reservation_id);
+                  const portalAbzug =
+                    r.portal_provision === null && r.portal_zahlungsgebuehr === null
+                      ? null
+                      : (r.portal_provision ?? 0) + (r.portal_zahlungsgebuehr ?? 0);
+                  return (
+                    <Fragment key={r.reservation_id}>
+                      <tr className="border-b border-border">
+                        <td className="py-2 pr-4 text-accent">{r.guest ?? "—"}</td>
+                        <td className="py-2 pr-4 text-accent">{r.listing ?? "—"}</td>
+                        <td className="py-2 pr-4 whitespace-nowrap">{datumKurz(r.check_in, locale)}</td>
+                        <td className="py-2 pr-4 whitespace-nowrap">{datumKurz(r.check_out, locale)}</td>
+                        <td className="py-2 pr-4 text-right">{r.nights}</td>
+                        <td className="py-2 pr-4">
+                          <span className="flex items-center gap-1.5">
+                            <span className={`size-2 rounded-full ${CHANNEL_DOT[r.channel] ?? "bg-muted-foreground"}`} />
+                            {kanal(r)}
+                          </span>
+                        </td>
+                        {zeigtBetrieb && (
+                          <td className="py-2 pr-4 text-right">
+                            <span className="inline-flex items-center justify-end gap-1.5">
+                              {betragOderStrich(r.total_price, rc)}
+                              <GebuehrenHerkunft zeile={r} />
+                            </span>
+                          </td>
+                        )}
+                        {zeigtBetrieb && (
+                          <td className="py-2 pr-4 text-right">
+                            {portalAbzug === null || portalAbzug === 0 ? "—" : `−${formatCurrency(portalAbzug, rc)}`}
+                          </td>
+                        )}
+                        <td className="py-2 pr-4 text-right">
+                          {r.verwaltungsprovision === null ? "—" : `−${formatCurrency(r.verwaltungsprovision, rc)}`}
+                          {r.provisions_pct !== null && (
+                            <span className="ml-1 text-xs text-muted-foreground">{prozent(r.provisions_pct)}</span>
+                          )}
+                        </td>
+                        {zeigtPauschale && (
+                          <td className="py-2 pr-4 text-right">
+                            {(r.pauschale ?? 0) === 0 ? "—" : `−${formatCurrency(r.pauschale ?? 0, rc)}`}
+                          </td>
+                        )}
+                        <td className="py-2 text-right font-semibold">
+                          {betragOderStrich(r.owner_payout, rc)}
+                          {r.owner_payout_converted !== null &&
+                            rc !== (statement.summary.owner_currency || currency) && (
+                              <span className="block text-xs font-normal text-muted-foreground">
+                                {formatCurrency(r.owner_payout_converted, statement.summary.owner_currency || currency)}
+                              </span>
+                            )}
+                        </td>
+                        <td className="py-2 pl-2 text-right">
+                          <button
+                            type="button"
+                            onClick={() => toggle(r.reservation_id)}
+                            aria-expanded={istOffen}
+                            aria-label={istOffen ? t("rental.collapse") : t("rental.expand")}
+                            className="rounded p-1 text-muted-foreground hover:bg-secondary"
+                          >
+                            <Icon icon={istOffen ? "ph:caret-up" : "ph:caret-down"} className="size-4" />
+                          </button>
+                        </td>
+                      </tr>
+                      {istOffen && (
+                        <tr className="border-b border-border bg-secondary/30">
+                          <td colSpan={spalten} className="px-3 py-3">
+                            <PostenBlock zeile={r} kanal={kanal(r)} />
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                })
               : statement.listing_rows.map((r) => (
                   <tr key={r.listing_id} className="border-b border-border">
                     <td className="py-2 pr-4 text-accent">{r.listing ?? "—"}</td>
@@ -930,20 +1081,346 @@ function RentalActivity({
                     <td className="py-2 text-right">{formatCurrency(r.total_payout, currency)}</td>
                   </tr>
                 ))}
-            <tr className="font-bold">
-              <td className="py-2 pr-4">{t("rental.totals")}</td>
-              <td className="py-2 pr-4">{totalNights}</td>
-              <td className="py-2 pr-4" />
-              {view === "reservation" && <td className="py-2 pr-4" />}
-              <td className="py-2 pr-4 text-right">{betragOderStrich(statement.summary.total_price, currency)}</td>
-              <td className="py-2 text-right">{formatCurrency(statement.summary.total_payout, currency)}</td>
-            </tr>
+            {view === "reservation" ? (
+              <tr className="font-bold">
+                <td className="py-2 pr-4">{t("rental.totals")}</td>
+                <td className="py-2 pr-4" />
+                <td className="py-2 pr-4" />
+                <td className="py-2 pr-4" />
+                <td className="py-2 pr-4 text-right">{totalNights}</td>
+                <td className="py-2 pr-4" />
+                {zeigtBetrieb && (
+                  <td className="py-2 pr-4 text-right">{betragOderStrich(statement.summary.total_price, currency)}</td>
+                )}
+                {zeigtBetrieb && <td className="py-2 pr-4" />}
+                <td className="py-2 pr-4" />
+                {zeigtPauschale && (
+                  <td className="py-2 pr-4 text-right">
+                    {statement.summary.pauschalen_gesamt === null
+                      ? "—"
+                      : `−${formatCurrency(statement.summary.pauschalen_gesamt, statement.summary.owner_currency || currency)}`}
+                  </td>
+                )}
+                <td className="py-2 text-right">
+                  {betragOderStrich(statement.summary.owner_payout, statement.summary.owner_currency || currency)}
+                </td>
+                <td />
+              </tr>
+            ) : (
+              <tr className="font-bold">
+                <td className="py-2 pr-4">{t("rental.totals")}</td>
+                <td className="py-2 pr-4" />
+                <td className="py-2 pr-4">{totalNights}</td>
+                <td className="py-2 pr-4 text-right">{betragOderStrich(statement.summary.total_price, currency)}</td>
+                <td className="py-2 text-right">{formatCurrency(statement.summary.total_payout, currency)}</td>
+              </tr>
+            )}
           </tbody>
         </table>
-        {statement.rental_rows.length === 0 && (
+        {rows.length === 0 && (
           <p className="py-4 text-sm text-muted-foreground">{t("rental.empty")}</p>
         )}
       </div>
+    </Section>
+  );
+}
+
+/** ISO-Kalendertag → kurzes Datum. Kein Zeitzonen-Anteil: An-/Abreise sind
+ *  `date`-Spalten, der Termin des Gastes (Wurzel 5b). */
+function datumKurz(iso: string | null | undefined, loc: string): string {
+  if (!iso) return "—";
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  if (!m) return iso;
+  return new Intl.DateTimeFormat(loc, { dateStyle: "medium" }).format(
+    new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])),
+  );
+}
+
+function prozent(pct: number): string {
+  return `${new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(pct)} %`;
+}
+
+/** Die Aufstellung EINER Buchung — Betriebssicht, jede Zeile der Serverkette.
+ *
+ *  Ansage des Betriebs (02.09.2026): „Jede Gebühr muss als einzelner Posten
+ *  aufgeschlüsselt werden auf der Abrechnung." Hier steht deshalb alles, was
+ *  der Server gerechnet hat: Gastpreis, Portal-Abzug zweiteilig, jede Gebühr
+ *  und Zusatzleistung mit Zuordnung, Bemessungsgrundlage, Provision samt
+ *  Herkunft des Satzes, Pauschale, Gebühren des Eigentümers, Anteil.
+ *
+ *  Maskierte Beträge (§4.2, Eigentümer): die Zeile bleibt mit Label stehen,
+ *  der Betrag heißt „Betrag beim Betrieb" — nie 0. Die Betriebszahlen
+ *  (Gastpreis, Portal, Bemessung) fehlen dann ganz, wie im PDF. Die Komponente
+ *  RECHNET nichts; die Kontrollsummen kommen vom Server. */
+function PostenBlock({ zeile: r, kanal }: { zeile: RentalRow; kanal: string }) {
+  const tAlle = useTranslations("ownerStatements");
+  // Alle Texte dieses Blocks liegen unter `rental.posten.*`; nur `noFeeItems`
+  // eine Ebene darüber — deshalb EIN Hook auf dem Elternraum.
+  const t = (k: string, werte?: Record<string, string | number>) =>
+    tAlle(`rental.posten.${k}`, werte);
+  const loc = useLocale();
+  const rc = r.currency;
+  const geld = (wert: number | null, vorzeichen: "" | "−" | "+" = "") =>
+    wert === null ? (
+      <span className="text-muted-foreground">{t("amountHidden")}</span>
+    ) : (
+      `${vorzeichen}${formatCurrency(Math.abs(wert), rc)}`
+    );
+  const zugehoerigkeit = (g: GebuehrZeile) =>
+    g.gehoert_zu === "betrieb"
+      ? t("belongsBetrieb")
+      : g.gehoert_zu === "durchlauf"
+        ? t("belongsDurchlauf")
+        : t("belongsEigentuemer");
+  const gebuehrLabel = (g: GebuehrZeile) => {
+    const menge = g.menge != null && g.menge > 1 ? ` ${g.menge} ×` : "";
+    const art = g.quelle === "addon" ? `${t("addon")} ` : "";
+    return `${art}${g.label || g.art}${menge}`;
+  };
+  // Zusatzleistungen sind KEIN Teil des Portal-Gastpreises (02.09.2026): sie
+  // werden am Portal vorbei über uns verkauft. Sie stehen darum in einem
+  // eigenen Block und nicht unter „Gebühren im Gastpreis".
+  const zusatz = r.gebuehren.filter((g) => g.quelle === "addon");
+  const raus = r.gebuehren.filter((g) => !g.provisionspflichtig && g.quelle !== "addon");
+  const drin = r.gebuehren.filter((g) => g.provisionspflichtig && g.quelle !== "addon");
+  const eigene = r.gebuehren.filter((g) => g.gehoert_zu === "eigentuemer");
+
+  let herkunft = "";
+  if (r.provision_quelle === "vertrag" && r.vertrag_gueltig_ab) {
+    herkunft = ` · ${t("contractFrom", { datum: datumKurz(r.vertrag_gueltig_ab, loc) })}`;
+  } else if (r.provision_quelle === "override") {
+    herkunft = ` · ${t("rateManual")}`;
+  } else if (r.provision_quelle === "altspalten") {
+    herkunft = ` · ${t("rateLegacy")}`;
+  }
+  const satz = r.provisions_pct !== null ? prozent(r.provisions_pct) : "";
+
+  const Z = ({
+    label,
+    wert,
+    klasse = "",
+  }: {
+    label: React.ReactNode;
+    wert: React.ReactNode;
+    klasse?: string;
+  }) => (
+    <div className={`flex items-baseline justify-between gap-4 py-0.5 ${klasse}`}>
+      <span>{label}</span>
+      <span className="whitespace-nowrap text-right">{wert}</span>
+    </div>
+  );
+  const Kopf = ({ children }: { children: React.ReactNode }) => (
+    <div className="mt-2 text-xs font-semibold uppercase text-muted-foreground">{children}</div>
+  );
+
+  return (
+    <div className="max-w-2xl text-sm">
+      {r.total_price !== null && <Z label={t("guestPrice")} wert={geld(r.total_price)} klasse="font-medium" />}
+      {r.portal_provision !== null && r.portal_provision !== 0 && (
+        <Z label={t("portalCommission", { kanal })} wert={geld(r.portal_provision, "−")} />
+      )}
+      {r.portal_zahlungsgebuehr !== null && r.portal_zahlungsgebuehr !== 0 && (
+        <Z label={t("portalFee")} wert={geld(r.portal_zahlungsgebuehr, "−")} />
+      )}
+      {r.auszahlungsbasis !== null && (
+        <Z
+          label={
+            <>
+              {t("afterPortal")}
+              <span className="block text-xs text-muted-foreground">{t("afterPortalHint")}</span>
+            </>
+          }
+          wert={geld(r.auszahlungsbasis)}
+          klasse="border-t border-border font-medium"
+        />
+      )}
+      {raus.length > 0 && (
+        <>
+          <Kopf>{t("feesOut")}</Kopf>
+          {raus.map((g, i) => (
+            <Z
+              key={`${g.art}-${i}`}
+              label={
+                <>
+                  {gebuehrLabel(g)}
+                  <span className="ml-1 text-xs text-muted-foreground">· {zugehoerigkeit(g)} · {t("commissionFree")}</span>
+                </>
+              }
+              wert={geld(g.betrag, "−")}
+            />
+          ))}
+        </>
+      )}
+      {drin.length > 0 && (
+        <>
+          <Kopf>{t("feesInBase")}</Kopf>
+          {drin.map((g, i) => (
+            <Z
+              key={`${g.art}-${i}`}
+              label={
+                <>
+                  {gebuehrLabel(g)}
+                  <span className="ml-1 text-xs text-muted-foreground">· {zugehoerigkeit(g)} · {t("commissionable")}</span>
+                </>
+              }
+              wert={geld(g.betrag)}
+            />
+          ))}
+        </>
+      )}
+      {zusatz.length > 0 && (
+        <>
+          <Kopf>{t("addonsOutside")}</Kopf>
+          {zusatz.map((g, i) => (
+            <Z
+              key={`${g.art}-${i}`}
+              label={
+                <>
+                  {gebuehrLabel(g)}
+                  <span className="ml-1 text-xs text-muted-foreground">· {t("belongsBetrieb")}</span>
+                </>
+              }
+              wert={geld(g.betrag)}
+            />
+          ))}
+        </>
+      )}
+      {r.gebuehren.length === 0 && (
+        <p className="mt-1 text-xs text-muted-foreground">{tAlle("rental.noFeeItems")}</p>
+      )}
+      {r.bemessungsgrundlage !== null && (
+        <Z label={t("base")} wert={geld(r.bemessungsgrundlage)} klasse="border-t border-border font-medium" />
+      )}
+      {r.verwaltungsprovision !== null && (
+        <Z
+          label={
+            r.min_provision_angewandt
+              ? `${t("minCommission", { pct: satz })}${herkunft}`
+              : `${t("commission", { pct: satz })}${herkunft}`
+          }
+          wert={geld(r.verwaltungsprovision, "−")}
+        />
+      )}
+      {r.pauschale !== null && r.pauschale !== 0 && (
+        <Z label={t("flatFee")} wert={geld(r.pauschale, "−")} />
+      )}
+      {eigene.length > 0 && (
+        <>
+          <Kopf>{t("feesBack")}</Kopf>
+          {eigene.map((g, i) => (
+            <Z key={`${g.art}-${i}`} label={gebuehrLabel(g)} wert={geld(g.betrag, "+")} />
+          ))}
+        </>
+      )}
+      <Z
+        label={t("ownerShare")}
+        wert={r.owner_payout === null ? "—" : formatCurrency(r.owner_payout, rc)}
+        klasse="mt-1 border-t border-foreground/40 pt-1 font-bold"
+      />
+      {/* WARUM der Anteil fehlt — an der Zeile, nicht nur im Kopf. Live am
+          02.09.2026: der Vertrag begann am 12.08., die Buchung reiste am 09.08.
+          ab; der Kopf sagte „kein Provisionssatz hinterlegt", und der Betrieb
+          suchte in den Stammdaten, wo nichts fehlte. Mit Abreise UND
+          Vertragsbeginn nebeneinander ist der Handgriff eindeutig. */}
+      {r.owner_payout === null && r.payout_unbekannt === "provision_zeitraum" && (
+        <p className="mt-2 text-xs text-destructive">
+          {t("contractStartsLater", {
+            abreise: datumKurz(r.check_out, loc),
+            beginn: datumKurz(r.vertrag_beginnt_am, loc),
+          })}
+        </p>
+      )}
+      {r.owner_payout === null && r.payout_unbekannt === "provision" && (
+        <p className="mt-2 text-xs text-destructive">{t("noContract")}</p>
+      )}
+      {r.gebuehren_quelle === "ota_ohne_aufstellung" && (
+        <p className="mt-2 text-xs text-warning">{t("noFeesReported")}</p>
+      )}
+    </div>
+  );
+}
+
+/** Abzüge & Gutschriften außerhalb der Buchungen: wiederkehrende Posten
+ *  (Dauervereinbarung, `owner_recurring_items`) und der Ausweis der
+ *  Vertragspauschalen. Die einmaligen Verrechnungsposten haben ihren eigenen
+ *  Bereich darüber (Anlegen, Beleg, Ausblenden).
+ *
+ *  WARUM DIESER BEREICH: Bis 02.09.2026 rechnete nur der Eigentümer-BERICHT die
+ *  Dauervereinbarung, die Abrechnung nicht — die Betreiberin legte „50 DKK je
+ *  Buchung" deshalb als Verrechnungsposten NOCH EINMAL an. Jetzt rechnet die
+ *  Abrechnung sie selbst; hier steht, was sie angesetzt hat, mit Menge und
+ *  Einzelbetrag („3 × 50,00" ist prüfbar, „150,00" nicht). */
+function AbzuegeSection({
+  statement,
+  t,
+}: {
+  statement: Statement;
+  t: ReturnType<typeof useTranslations>;
+}) {
+  const ownerCur = statement.summary.owner_currency || statement.summary.currency;
+  const recurring = statement.recurring ?? [];
+  const abzuege = recurring.filter((p) => p.betrag < 0);
+  const gutschriften = recurring.filter((p) => p.betrag >= 0);
+  const pauschalen = statement.summary.pauschalen_gesamt;
+  const pauschalenZeilen = statement.rental_rows.filter((r) => (r.pauschale ?? 0) !== 0).length;
+  const modus = (m: WiederkehrenderPosten["modus"]) =>
+    m === "je_nacht" ? t("deductions.perNight") : m === "je_zeitraum" ? t("deductions.perPeriod") : t("deductions.perBooking");
+  const leer = recurring.length === 0 && (pauschalen === null || pauschalen === 0);
+
+  const Liste = ({ titel, posten }: { titel: string; posten: WiederkehrenderPosten[] }) =>
+    posten.length === 0 ? null : (
+      <div className="flex flex-col gap-1">
+        <div className="text-xs font-semibold uppercase text-muted-foreground">{titel}</div>
+        {posten.map((p) => (
+          <div key={p.item_id} className="flex items-baseline justify-between gap-4 text-sm">
+            <span>
+              {p.label}
+              <span className="ml-1 text-xs text-muted-foreground">
+                · {t("deductions.srcRecurring")} · {t("deductions.quantity", { n: p.anzahl, betrag: formatCurrency(p.einzelbetrag, p.currency) })} {modus(p.modus)}
+              </span>
+            </span>
+            <span className={`whitespace-nowrap ${p.betrag < 0 ? "text-destructive" : ""}`}>
+              {p.betrag < 0 ? "−" : "+"}{formatCurrency(Math.abs(p.betrag), p.currency)}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+
+  return (
+    <Section
+      title={t("deductions.title")}
+      defaultOpen
+      right={
+        <Link
+          href={`/eigentuemer/reporting/empfaenger/${statement.owner_id}`}
+          className="flex items-center gap-1 text-sm text-accent hover:underline"
+        >
+          <Icon icon="ph:arrow-square-out" className="size-4" />
+          {t("deductions.manageRecurring")}
+        </Link>
+      }
+    >
+      <p className="mb-3 text-sm text-muted-foreground">{t("deductions.intro")}</p>
+      {leer ? (
+        <p className="text-sm text-muted-foreground">{t("deductions.empty")}</p>
+      ) : (
+        <div className="flex flex-col gap-4">
+          <Liste titel={t("deductions.deductions")} posten={abzuege} />
+          <Liste titel={t("deductions.credits")} posten={gutschriften} />
+          {pauschalen !== null && pauschalen !== 0 && (
+            <div className="flex items-baseline justify-between gap-4 text-sm">
+              <span>
+                {t("deductions.srcFlatFee")}
+                <span className="ml-1 text-xs text-muted-foreground">
+                  · {t("deductions.bookingsCount", { n: pauschalenZeilen })} · {t("deductions.flatFeesNote")}
+                </span>
+              </span>
+              <span className="whitespace-nowrap text-muted-foreground">−{formatCurrency(pauschalen, ownerCur)}</span>
+            </div>
+          )}
+        </div>
+      )}
     </Section>
   );
 }
@@ -1618,6 +2095,23 @@ function SummaryCell({
  *  Zeile wäre Rauschen, das den echten Fall verdeckt. */
 function GebuehrenHerkunft({ zeile }: { zeile: RentalRow }) {
   const t = useTranslations("ownerStatements");
+  if (zeile.gebuehren_quelle === "stammdaten_portal") {
+    // Aus den Stammdaten nachgetragen, nicht vom Portal gemeldet: der Beleg
+    // sagt, WIE (belegt · im Betrag · obendrauf), damit es nachrechenbar bleibt.
+    const wieKey =
+      zeile.gebuehren_grund && STAMMDATEN_PORTAL_KEYS[zeile.gebuehren_grund];
+    return (
+      <InfoHinweis
+        titel={t("rental.feeSource.stammdatenPortalTitle")}
+        text={[
+          t("rental.feeSource.stammdatenPortal"),
+          t(wieKey ?? "rental.feeSource.unknownReason"),
+        ]}
+        ariaLabel={t("info.aria", { feld: t("rental.feeSource.stammdatenPortalTitle") })}
+        className="text-muted-foreground"
+      />
+    );
+  }
   if (zeile.gebuehren_quelle !== "ota_ohne_aufstellung") return null;
   const grundKey = zeile.gebuehren_grund
     ? GEBUEHREN_GRUND_KEYS[zeile.gebuehren_grund]
@@ -1632,46 +2126,6 @@ function GebuehrenHerkunft({ zeile }: { zeile: RentalRow }) {
       ariaLabel={t("info.aria", { feld: t("rental.feeSource.title") })}
       className="text-warning"
     />
-  );
-}
-
-/** Die Kette unter dem Auszahlungsbetrag: WIE er entsteht.
- *
- *  WARUM DAS AN DIE ZEILE GEHÖRT: Ohne sie ist der Betrag eine Zahl ohne
- *  Herkunft. Gemeldet am 20.08.2026 von der Betreiberin — sie fand die im
- *  Eigentümervertrag hinterlegte Pauschale von 50 kr in der Abrechnung nicht
- *  und legte sie deshalb je Buchung als Ausgabe NOCH EINMAL an. Die Pauschale
- *  war längst abgezogen; der Eigentümerin wurde sie damit zweimal berechnet
- *  (zwei Posten „Indflytning-gebyr", Juli 2026, live gefunden). Der Rechenweg
- *  war korrekt — nur unsichtbar.
- *
- *  Nur was FESTSTEHT: `null` und 0 werden weggelassen, nie als „0,00" gezeigt
- *  (Wurzel 4). Bei maskierten Zeilen (§4.2) fehlt die Portal-Provision
- *  ohnehin — dann beginnt die Kette bei der Verwaltungsprovision. */
-function AuszahlungsKette({
-  zeile,
-  waehrung,
-}: {
-  zeile: RentalRow;
-  waehrung: string;
-}) {
-  const t = useTranslations("ownerStatements");
-  const glieder: string[] = [];
-  const glied = (label: string, wert: number | null, minus = true) => {
-    if (wert === null || wert === 0) return;
-    glieder.push(
-      `${label} ${minus ? "−" : "+"}${formatCurrency(Math.abs(wert), waehrung)}`,
-    );
-  };
-  glied(t("rental.chain.portal"), zeile.portal_provision);
-  glied(t("rental.chain.management"), zeile.verwaltungsprovision);
-  glied(t("rental.chain.flatFee"), zeile.pauschale);
-  glied(t("rental.chain.fees"), zeile.gebuehren_an_eigentuemer, false);
-  if (glieder.length === 0) return null;
-  return (
-    <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
-      {glieder.join(" · ")}
-    </span>
   );
 }
 

@@ -28,7 +28,7 @@ Platzhalter mit `needs_review` — kein erfundener „Gast von Airbnb".
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any, Final
 
 from supabase import Client
@@ -138,6 +138,44 @@ def gast_aus_thread(thread: dict[str, Any], host_id: str) -> GuestContact | None
             language=(nutzer.get("preferred_locale") or "").strip() or None,
         )
     return None
+
+
+def payload_ablegen(
+    db: Client,
+    tenant_id: str,
+    reservation_id: str,
+    *,
+    code: str,
+    res: dict[str, Any],
+) -> None:
+    """Die Airbnb-Reservierung als Portal-Payload zur Buchung ablegen (0528).
+
+    Im Format von `channex_booking.raw` (`ota_name` + `raw_message.reservation`),
+    damit die Abrechnungskette (`owner_statements.gebuehren_quelle`) dieselbe
+    Airbnb-Auswertung nimmt wie beim Feed: Übernachtung aus `base_price` +
+    `extra_guest_fee`, Gebühren aus `standard_fees_details`, Provision aus
+    `host_fee_base`. Ohne diesen Payload hielt die Kette `total_amount`
+    (= base_price) für den ganzen Übernachtungspreis und legte die
+    Stammdaten-Reinigung obendrauf — bei 149 Historie-Buchungen des
+    Beta-Betriebs (02.09.2026) wich der Gastpreis so von Airbnb ab.
+
+    Upsert über `reservation_id` (UNIQUE): ein zweiter Lauf ersetzt (Wurzel 2).
+    """
+    db.table("portal_buchungs_payloads").upsert(
+        {
+            "tenant_id": tenant_id,
+            "reservation_id": reservation_id,
+            "quelle": "airbnb_historie",
+            "ota_reservation_code": code,
+            "raw": {
+                "ota_name": "Airbnb",
+                "raw_message": {"reservation": res},
+                "meta": {"quelle": "airbnb_historie"},
+            },
+            "updated_at": datetime.now(UTC).isoformat(),
+        },
+        on_conflict="reservation_id",
+    ).execute()
 
 
 class AirbnbHistorieImportMixin:
@@ -250,8 +288,13 @@ class AirbnbHistorieImportMixin:
             "children": int(details.get("number_of_children") or 0),
             "infants": int(details.get("number_of_infants") or 0),
             "pets": int(details.get("number_of_pets") or 0),
-            # Bewusst NICHT gesetzt: ota_commission/channel_fee. Historie wird
-            # nicht rückwirkend abgerechnet (siehe Modul-Docstring).
+            # Die gemeldete Airbnb-Provision (`host_fee_base`). Bis 02.09.2026
+            # stand hier „bewusst NICHT gesetzt — Historie wird nicht
+            # rückwirkend abgerechnet". Der Betrieb rechnet sie aber ab, und
+            # ohne den gemeldeten Wert schätzte die Kette die Provision über
+            # den Satz auf einem falschen Brutto. Fehlt das Feld, bleibt die
+            # Spalte leer — kein erfundener Wert (Wurzel 4).
+            "ota_commission": _zahl(res.get("host_fee_base")),
         }
         # Mindestens ein Gast: die Spalte ist NOT NULL mit Default 1, und eine
         # Buchung über null Personen gibt es nicht. Liefert Airbnb keine Zahl,
@@ -301,8 +344,13 @@ class AirbnbHistorieImportMixin:
                 .eq("id", alt["id"])
                 .execute()
             )
+            reservation_id = str(alt["id"])
         else:
-            db.table("reservations").insert(zeile).execute()
+            angelegt = db.table("reservations").insert(zeile).execute().data or []
+            reservation_id = str((angelegt[0] if angelegt else {}).get("id") or "")
+        # Die Preisdaten des Portals zur Buchung (0528) — siehe `payload_ablegen`.
+        if reservation_id:
+            payload_ablegen(db, tenant_id, reservation_id, code=code, res=res)
 
         # Gegenzustand (Wurzel 1): die Loyalty-Aggregate der Gaestekartei
         # (`stays_count`, `total_revenue`, `last_stay_at`) haengen an der

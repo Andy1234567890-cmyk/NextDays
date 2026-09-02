@@ -360,6 +360,219 @@ def test_airbnb_ohne_korrektur_zoege_provision_doppelt_ab() -> None:
     ) != Decimal("15.50")
 
 
+_STAMMDATEN_REINIGUNG = {
+    "pricing": {
+        "fees": [
+            {
+                "feeType": "cleaning_fee",
+                "name": "Reinigungsgebühr",
+                "amount": "795.00",
+                "basis": "per_stay",
+                "mode": "amount",
+            },
+            {
+                "feeType": "resort",
+                "name": "Resort",
+                "amount": "25.00",
+                "basis": "per_night",
+                "mode": "amount",
+            },
+        ]
+    }
+}
+
+
+def test_csv_portalbuchung_ohne_zwilling_stammdaten_im_betrag() -> None:
+    """Live 02.09.2026: Booking wies 4.475,63 + 795 Reinigung = 5.270,63 aus,
+    `total_amount` trug genau das — und die Abrechnung addierte 795 Reinigung
+    plus 6 × 25 Resort aus den Stammdaten OBENDRAUF (6.215,63 „Gastpreis").
+
+    Eine CSV-Buchung eines Portals hat keinen Payload, ist aber eine
+    Portal-Buchung: ihr Betrag ist der Portal-Gastpreis inklusive Gebühren.
+    Entscheidung des Betriebs: die Stammdaten-Gebühren werden nachgetragen,
+    ohne Zwilling und ohne Haus-Muster als IM BETRAG enthalten.
+    """
+    befund = gebuehren_der_buchung(
+        raw=None,
+        type_attributes=_STAMMDATEN_REINIGUNG,
+        naechte=6,
+        klassifikation=_KLASSIFIKATION,
+        property_id="p-1",
+        reservierung={
+            "source_channex_booking_id": "csv:5008485743",
+            "channel": "booking",
+            "total_amount": "5270.63",
+        },
+    )
+    assert befund.quelle == "stammdaten_portal"
+    assert befund.grund == "im_betrag"
+    assert befund.im_gesamtpreis is True
+    assert {(g.art, g.betrag) for g in befund.gebuehren} == {
+        ("cleaning_fee", Decimal("795.00")),
+        ("resort", Decimal("150.00")),
+    }
+
+
+def test_csv_ohne_zwilling_folgt_dem_muster_des_hauses() -> None:
+    """Line/Britt: der Booking-Betrag ist die reine Nächtesumme — das gelernte
+    Muster „obendrauf" legt die Stammdaten-Gebühren dazu statt herauszurechnen."""
+    befund = gebuehren_der_buchung(
+        raw=None,
+        type_attributes=_STAMMDATEN_REINIGUNG,
+        naechte=6,
+        klassifikation=_KLASSIFIKATION,
+        property_id="p-1",
+        reservierung={
+            "source_channex_booking_id": "csv:5008485743",
+            "channel": "booking",
+            "total_amount": "4475.63",
+        },
+        csv_muster="obendrauf",
+    )
+    assert befund.quelle == "stammdaten_portal"
+    assert befund.grund == "obendrauf"
+    assert befund.im_gesamtpreis is False
+    assert befund.uebernachtung is None  # total_amount IST die Übernachtung
+
+
+def test_csv_ohne_hinterlegte_gebuehren_bleibt_aufstellung_fehlt() -> None:
+    """Nichts hinterlegt → nichts nachzutragen; kein erfundener Posten."""
+    befund = gebuehren_der_buchung(
+        raw=None,
+        type_attributes={"pricing": {"fees": []}},
+        naechte=6,
+        klassifikation=_KLASSIFIKATION,
+        property_id="p-1",
+        reservierung={
+            "source_channex_booking_id": "csv:5008485743",
+            "channel": "booking",
+            "total_amount": "5270.63",
+        },
+    )
+    assert befund.quelle == "ota_ohne_aufstellung"
+    assert befund.grund == "csv_import"
+    assert befund.gebuehren == []
+
+
+_CHANNEX_ZWILLING_TIMMANN = {
+    # Channex-Import (BDC-5008485743): Tagespreise ohne Gebühren, `meta.is_imported`.
+    "ota_name": "BookingCom",
+    "meta": {"is_imported": True},
+    "rooms": [
+        {
+            "amount": "4475.63",
+            "days": {
+                "2026-08-03": "750.75",
+                "2026-08-04": "750.75",
+                "2026-08-05": "750.75",
+                "2026-08-06": "750.75",
+                "2026-08-07": "750.75",
+                "2026-08-08": "721.88",
+            },
+            "taxes": [],
+        }
+    ],
+}
+
+
+def test_csv_gebuehren_aus_channex_naechte_abgeleitet() -> None:
+    """Timmann live: CSV 5.270,63 (Booking-Gesamt), Channex-Zwilling 4.475,63
+    Nächte. Differenz 795,00 = genau die Reinigung der Stammdaten; Reinigung +
+    6 × 25 Resort (945) passt nicht. Booking wies genau „Reinigung 795" aus."""
+    befund = gebuehren_der_buchung(
+        raw=_CHANNEX_ZWILLING_TIMMANN,
+        type_attributes=_STAMMDATEN_REINIGUNG,
+        naechte=6,
+        klassifikation=_KLASSIFIKATION,
+        property_id="p-1",
+        reservierung={
+            "source_channex_booking_id": "csv:5008485743",
+            "channel": "booking",
+            "total_amount": "5270.63",
+        },
+    )
+    assert befund.quelle == "stammdaten_portal"
+    assert befund.grund == "belegt"
+    # Die Gebühr STECKT im Betrag: Basis bleibt total_amount, sie wird
+    # herausgerechnet (kein eigener Übernachtungswert, sonst zählte die Kette
+    # sie beim Gastpreis nicht mit).
+    assert befund.uebernachtung is None
+    assert befund.im_gesamtpreis is True
+    assert [(g.art, g.betrag) for g in befund.gebuehren] == [
+        ("cleaning_fee", Decimal("795.00"))
+    ]
+    # Nächtesumme + Gebühren = CSV-Gesamtpreis, auf den Cent.
+    assert Decimal("4475.63") + befund.gebuehren[0].betrag == Decimal("5270.63")
+
+
+def test_csv_gebuehren_ohne_eindeutige_teilmenge_gelten_als_im_betrag() -> None:
+    """Differenz 400 passt zu keiner Teilmenge (795, 150, 945): dann gelten
+    ALLE Stammdaten-Gebühren als im Betrag enthalten (Rævlingehuset: Booking
+    nimmt 960, hinterlegt 955 — der Rest bleibt in der Übernachtung)."""
+    befund = gebuehren_der_buchung(
+        raw=_CHANNEX_ZWILLING_TIMMANN,
+        type_attributes=_STAMMDATEN_REINIGUNG,
+        naechte=6,
+        klassifikation=_KLASSIFIKATION,
+        property_id="p-1",
+        reservierung={
+            "source_channex_booking_id": "csv:5008485743",
+            "channel": "booking",
+            "total_amount": "4875.63",
+        },
+    )
+    assert befund.quelle == "stammdaten_portal"
+    assert befund.grund == "im_betrag"
+    assert befund.im_gesamtpreis is True
+    assert {g.art for g in befund.gebuehren} == {"cleaning_fee", "resort"}
+
+
+def test_csv_gebuehren_differenz_null_heisst_obendrauf() -> None:
+    """CSV-Betrag == Nächtesumme (Line, Britt): die Reinigung ist NICHT im
+    Preis — sie kommt aus den Stammdaten obendrauf, Übernachtung = Nächte."""
+    befund = gebuehren_der_buchung(
+        raw=_CHANNEX_ZWILLING_TIMMANN,
+        type_attributes=_STAMMDATEN_REINIGUNG,
+        naechte=6,
+        klassifikation=_KLASSIFIKATION,
+        property_id="p-1",
+        reservierung={
+            "source_channex_booking_id": "csv:5008485743",
+            "channel": "booking",
+            "total_amount": "4475.63",
+        },
+    )
+    assert befund.quelle == "stammdaten_portal"
+    assert befund.grund == "obendrauf"
+    assert befund.im_gesamtpreis is False
+    assert befund.uebernachtung == Decimal("4475.63")
+    assert {(g.art, g.betrag) for g in befund.gebuehren} == {
+        ("cleaning_fee", Decimal("795.00")),
+        ("resort", Decimal("150.00")),
+    }
+
+
+def test_csv_direktbuchung_behaelt_die_stammdaten() -> None:
+    """Dieselbe CSV-Vorlage mit `source=Direkt`: kein Portal, die Stammdaten
+    sind das, was der Betrieb selbst berechnet hat — sie bleiben."""
+    befund = gebuehren_der_buchung(
+        raw=None,
+        type_attributes=_STAMMDATEN_REINIGUNG,
+        naechte=6,
+        klassifikation=_KLASSIFIKATION,
+        property_id="p-1",
+        reservierung={
+            "source_channex_booking_id": "csv:p-1:2026-08-03:2026-08-09:x",
+            "channel": "direct",
+        },
+    )
+    assert befund.quelle == "stammdaten"
+    assert {(g.art, g.betrag) for g in befund.gebuehren} == {
+        ("cleaning_fee", Decimal("795.00")),
+        ("resort", Decimal("150.00")),
+    }
+
+
 def test_direktbuchung_nutzt_die_objekt_stammdaten() -> None:
     """OHNE PORTAL gelten die Objekt-Stammdaten — und nur dort.
 
@@ -721,11 +934,16 @@ def test_portalbuchung_ohne_aufstellung_erfindet_nichts() -> None:
         klassifikation=_KLASSIFIKATION,
         property_id="p-1",
     )
-    assert befund.quelle == "ota_ohne_aufstellung"
-    assert befund.gebuehren == []
-    # Der Grund steht an der Buchung — sonst sieht die leere Liste wie ein
-    # Rechenfehler aus und die nächste Fehlersuche beginnt beim Mapping.
-    assert befund.grund == "channex_import"
+    # Seit 02.09.2026 (Ansage des Betriebs: Gebühren „so wie sie im Objekt
+    # hinterlegt sind" nachtragen): der Channex-Import trägt nur die
+    # Nächtesumme, die Stammdaten-Gebühren kommen OBENDRAUF — benannt, nicht
+    # geraten: Quelle und Grund stehen an der Buchung.
+    assert befund.quelle == "stammdaten_portal"
+    assert befund.grund == "obendrauf"
+    assert befund.im_gesamtpreis is False
+    assert [(g.art, g.betrag) for g in befund.gebuehren] == [
+        ("resort", Decimal("200.00"))
+    ]
 
 
 # ----------------------------------------------------------------------

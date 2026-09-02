@@ -40,17 +40,21 @@ from src.features.owner_statements.common import (
     auszahlung_berechnen,
     buchungs_payout,
     effektive_provision_pct,
-    gastpreis,
     naechte_payout_map,
     owner_payout,
     payout_je_nacht,
     portal_abzug,
+    portal_brutto,
     portal_zieht_ein,
     vertragsregeln_aus_zeile,
 )
 from src.features.owner_statements.gebuehren_quelle import (
     gebuehren_der_buchung,
     klassifikation_laden,
+)
+from src.features.owner_statements.payloads import (
+    csv_muster_je_objekt,
+    payloads_laden,
 )
 from src.features.tasks.regel_uebersetzung import (
     lesersprache,
@@ -147,6 +151,9 @@ class _GebuehrenKontext:
     klassifikation: dict[tuple[str, str | None], tuple[str, bool]]
     type_attributes: dict[str, Any] | None
     payloads: dict[str, Any]
+    # Gelerntes Portal-Verhalten dieses Objekts für CSV-Buchungen ohne
+    # Zwilling (`payloads.csv_muster_je_objekt`), None = Vorgabe „im_betrag".
+    csv_muster: str | None = None
 
 
 @dataclass(slots=True)
@@ -805,7 +812,7 @@ class PublicPortalService:
                 # WIRKLICH abgerechneten Gebühren kommen. `ota_commission` ist
                 # der gemeldete Portal-Abzug, `payment_collect` entscheidet, ob
                 # zusätzlich eine Zahlungsgebühr anfällt (0364).
-                "currency, source_channex_booking_id, ota_commission, "
+                "currency, source_channex_booking_id, external_ref, ota_commission, "
                 # `pets` entscheidet, ob die Haustiergebühr des Objekts anfiel.
                 "payment_collect, pets, "
                 # Eigennutzung des Eigentümers (0241): belegt die Nacht, bringt
@@ -961,29 +968,13 @@ class PublicPortalService:
         # Buchungs-ID (`channex_booking.channex_booking_id`), nicht unsere
         # Zeilen-ID — live geprüft: über `channex_booking_id` treffen alle 76
         # Feed-Buchungen, über `id` keine einzige.
-        codes = sorted(
-            {
-                str(r["source_channex_booking_id"])
-                for r in reservations
-                if r.get("source_channex_booking_id")
-            }
-        )
-        payloads: dict[str, Any] = {}
-        if codes:
-            for row in fetch_all_rows(
-                self._db.table("channex_booking")
-                .select("channex_booking_id, raw")
-                .eq("tenant_id", tenant_id)
-                .in_("channex_booking_id", codes)
-                .order("channex_booking_id")
-            ):
-                code = str(row.get("channex_booking_id") or "")
-                if code:
-                    payloads[code] = row.get("raw")
         return _GebuehrenKontext(
             klassifikation=klassifikation_laden(self._db, tenant_id),
             type_attributes=(objekt[0].get("type_attributes") if objekt else None),
-            payloads=payloads,
+            payloads=payloads_laden(self._db, tenant_id, reservations),
+            csv_muster=csv_muster_je_objekt(self._db, tenant_id, [property_id]).get(
+                property_id
+            ),
         )
 
     def _portal_saetze_je_buchung(
@@ -1043,17 +1034,17 @@ class PublicPortalService:
             klassifikation=kontext.klassifikation,
             property_id=str(r["property_id"]),
             reservierung=r,
+            csv_muster=kontext.csv_muster,
         )
         basis = befund.basisbetrag(r.get("total_amount"))
-        gast_brutto = gastpreis(
-            uebernachtung=basis,
-            gebuehren=befund.gebuehren,
-            gebuehren_im_betrag=befund.im_gesamtpreis,
-            addon_total=addon_total,
-        )
         satz = portal_saetze.get(str(r["id"])) or {}
         abzug = portal_abzug(
-            brutto=gast_brutto,
+            # OHNE Zusatzleistungen: die kennt das Portal nicht (`portal_brutto`).
+            brutto=portal_brutto(
+                uebernachtung=basis,
+                gebuehren=befund.gebuehren,
+                gebuehren_im_betrag=befund.im_gesamtpreis,
+            ),
             gemeldete_provision=r.get("ota_commission"),
             provision_pct=satz.get("provision_pct"),
             zahlungsgebuehr_pct=satz.get("zahlungsgebuehr_pct"),
@@ -1425,7 +1416,7 @@ class PublicPortalService:
             .select(
                 "id, property_id, check_in, check_out, total_amount, "
                 "channel_fee, currency, channel, source_channex_booking_id, "
-                "ota_commission, payment_collect"
+                "external_ref, ota_commission, payment_collect"
             )
             .eq("tenant_id", tenant_id)
             .in_("property_id", ids)

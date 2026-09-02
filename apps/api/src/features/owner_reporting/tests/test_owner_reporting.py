@@ -17,6 +17,7 @@ Die In-Memory-Attrappe bildet nur die Operatoren nach, die der Service wirklich
 benutzt. Alles, was als CHECK/EXCLUDE/UNIQUE in der Migration steht, wird hier
 NICHT nachgebaut — ein Test dagegen wäre ein Test der Attrappe.
 """
+import fnmatch
 from datetime import date
 
 import pytest
@@ -117,7 +118,19 @@ class _Query:  # pylint: disable=too-many-instance-attributes
     def range(self, _a: int, _b: int) -> "_Query":
         return self
 
+    def like(self, col: str, pattern: str) -> "_Query":
+        # PostgREST `like` mit `%`-Platzhalter — hier als Muster-Filter.
+        self._like = (col, pattern)
+        return self
+
     def _match(self, row: dict) -> bool:
+        muster = getattr(self, "_like", None)
+        if muster is not None:
+            like_col, like_pat = muster
+            if not fnmatch.fnmatchcase(
+                str(row.get(like_col) or ""), like_pat.replace("%", "*")
+            ):
+                return False
         if not all(str(row.get(c)) == str(v) for c, v in self._eq):
             return False
         if not all(str(row.get(c)) in vals for c, vals in self._in):

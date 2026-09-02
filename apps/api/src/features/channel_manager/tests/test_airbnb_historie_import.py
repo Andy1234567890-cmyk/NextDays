@@ -213,6 +213,39 @@ def test_passende_waehrung_wird_uebernommen() -> None:
     assert zeile["source_channex_booking_id"] == "HMYMXFEKQR"
 
 
+def test_preisdaten_werden_als_payload_abgelegt() -> None:
+    """0528: Bis 02.09.2026 behielt der Import von Airbnbs Preisblock nur
+    base_price und payout_amount; Reinigung, Zusatzgast und Provision gingen
+    verloren, und die Abrechnung wich bei 149 Buchungen von Airbnb ab. Jetzt
+    landet die volle Reservierung in `portal_buchungs_payloads` (Format wie
+    channex_booking.raw) und die gemeldete Provision in `ota_commission`.
+    Geprüft über den UPDATE-Pfad (Buchung bekannt), weil die Attrappe beim
+    Insert keine ID zurückgibt."""
+    res = _res(
+        extra_guest_fee="50.00",
+        host_fee_base="645.87",
+        standard_fees_details=[
+            {"fee_type": "PASS_THROUGH_CLEANING_FEE", "amount": "1075.00"}
+        ],
+    )
+    db = _DB(bestand={"HMYMXFEKQR": {
+        "id": "res-1", "status": "confirmed", "check_in": "2026-07-02",
+        "check_out": "2026-07-07", "unit_id": "u-1", "guest_id": "gast-1",
+    }})
+    erg = _Dienst().airbnb_buchungen_uebernehmen(
+        db, "t-1", "p-1", [res], waehrung="DKK", heute=HEUTE
+    )
+    assert erg.aktualisiert == 1
+    zeile = next(patch for name, patch, _f in db.updates if name == "reservations")
+    assert zeile["ota_commission"] == 645.87
+    payload = next(r for name, r in db.upserts if name == "portal_buchungs_payloads")
+    assert payload["reservation_id"] == "res-1"
+    assert payload["quelle"] == "airbnb_historie"
+    assert payload["ota_reservation_code"] == "HMYMXFEKQR"
+    assert payload["raw"]["raw_message"]["reservation"] is res
+    assert payload["raw"]["ota_name"] == "Airbnb"
+
+
 def test_personenzahlen_sind_nie_null() -> None:
     """Live gescheitert (23502): `children`/`infants`/`pets`/`adults` sind in
     der DB NOT NULL. Ein `or None` bei „0 Kinder" kippte den ganzen Import —
@@ -326,15 +359,18 @@ def test_stornierte_buchung_belegt_nichts() -> None:
     assert _reservierung(db)["status"] == "cancelled"
 
 
-def test_historie_bucht_keine_provision_nach() -> None:
-    """Bewusste Festlegung: kein rückwirkender Eingriff in die Buchhaltung."""
+def test_historie_uebernimmt_gemeldete_provision_erfindet_aber_keine() -> None:
+    """Bis 02.09.2026 „bewusst keine Provision" — der Betrieb rechnet die
+    Historie aber ab (0528). Die GEMELDETE `host_fee_base` wird übernommen;
+    fehlt sie, bleibt die Spalte leer statt geraten (Wurzel 4). `channel_fee`
+    bleibt unberührt."""
     db = _DB()
     _Dienst().airbnb_buchungen_uebernehmen(
         db, "t-1", "p-1", [_res(start_date="2023-05-01", end_date="2023-05-08")],
         waehrung="DKK", heute=HEUTE,
     )
     zeile = _reservierung(db)
-    assert "ota_commission" not in zeile
+    assert zeile["ota_commission"] is None
     assert "channel_fee" not in zeile
     assert zeile["status"] == "completed"
 

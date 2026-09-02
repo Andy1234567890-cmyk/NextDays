@@ -1238,10 +1238,25 @@ function feeSummary(
     teile.push(t("pricingForm.taxRateSuffix", { rate: f.taxRate }));
   }
   if (f.optional) teile.push(t("pricingForm.optionalSuffix"));
+  // Gültigkeit und „nur Abrechnung" gehören in die Zeile: eine Gebühr „ab
+  // 01.08." sieht sonst aus wie eine, die immer galt.
+  if (f.validFrom) {
+    teile.push(t("pricingForm.feeValidFromSuffix", { date: fmtDatum(f.validFrom, locale) }));
+  }
+  if (f.validUntil) {
+    teile.push(t("pricingForm.feeValidUntilSuffix", { date: fmtDatum(f.validUntil, locale) }));
+  }
+  if (f.ownerStatementOnly) teile.push(t("pricingForm.feeOwnerStatementOnlySuffix"));
   if ((f.portalScope ?? []).length > 0) {
     teile.push(t("pricingForm.restrictedSuffix"));
   }
   return teile.join(" · ");
+}
+
+/** ISO-Datum in der Sprache der Oberfläche; unlesbar → wie gespeichert. */
+function fmtDatum(iso: string, locale: string): string {
+  const d = new Date(`${iso}T00:00:00`);
+  return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString(locale);
 }
 
 // Zusammenfassung einer Steuer für die Listenzeile: Wert plus die Angaben, die

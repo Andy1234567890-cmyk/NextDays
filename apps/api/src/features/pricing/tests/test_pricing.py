@@ -4,7 +4,7 @@ Verifiziert die Prioritätsreihenfolge (override > weekday > base), dass ohne
 Preis None bleibt (kein Fallback), und die Quote-Aufschlüsselung (Längenpreis,
 Kurzaufenthalt, Extra-Gast, Markup, Gebühren, Aktion, Steuern).
 """
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
@@ -1135,6 +1135,41 @@ def test_quote_fee_short_stay_only() -> None:
         )
     )
     assert "Kurz" not in {line.label for line in q.lines}
+
+
+def test_quote_fee_gueltigkeit_nach_anreise_und_nur_abrechnung() -> None:
+    """„Gilt ab" greift nach der ANREISE; „nur in der Eigentümer-Abrechnung"
+    wird dem Gast nie berechnet."""
+    r = _resolver(
+        base=100.0,
+        config={
+            "fees": [
+                {"id": "r", "name": "Resort", "amount": 25, "basis": "per_night",
+                 "validFrom": "2026-08-01"},
+                {"id": "i", "name": "Intern", "amount": 40, "basis": "per_stay",
+                 "ownerStatementOnly": True},
+                {"id": "c", "name": "Reinigung", "amount": 300, "basis": "per_stay"},
+            ],
+        },
+    )
+
+    def labels(check_in: date) -> set[str]:
+        q = r.quote(
+            QuoteRequest(
+                property_id="p",
+                check_in=check_in,
+                check_out=check_in + timedelta(days=2),
+                guests=2,
+            )
+        )
+        return {line.label for line in q.lines}
+
+    vorher = labels(date(2026, 7, 30))
+    assert "Resort" not in vorher
+    assert "Reinigung" in vorher
+    nachher = labels(date(2026, 8, 1))
+    assert "Resort" in nachher
+    assert "Intern" not in vorher and "Intern" not in nachher
 
 
 # --- Aktionen: Bedingungen werden WIRKLICH geprüft (0276) --------------------

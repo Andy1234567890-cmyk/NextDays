@@ -56,6 +56,7 @@ class _Query:
         self._filters: list[tuple[str, object]] = []
         self._is_null: list[str] = []
         self._lte: list[tuple[str, str]] = []
+        self._gt: list[tuple[str, str]] = []
         self._in: list[tuple[str, list[str]]] = []
         self._order: str | None = None
         self._desc = False
@@ -93,6 +94,10 @@ class _Query:
         self._lte.append((col, val))
         return self
 
+    def gt(self, col: str, val: str) -> "_Query":
+        self._gt.append((col, val))
+        return self
+
     def in_(self, col: str, werte: list[str]) -> "_Query":
         # Wirklich filternd, nicht nur geschluckt: die Vertragsende-Kopplung
         # scopet ihre Objektliste mit `in_("id", …)` auf den Mandanten. Ein
@@ -115,6 +120,8 @@ class _Query:
         if not all(row.get(c) is None for c in self._is_null):
             return False
         if not all(str(row.get(c)) in werte for c, werte in self._in):
+            return False
+        if not all(str(row.get(c) or "") > v for c, v in self._gt):
             return False
         return all(str(row.get(c) or "") <= v for c, v in self._lte)
 
@@ -587,6 +594,62 @@ def test_fremde_zuordnung_ist_nicht_loeschbar() -> None:
 # ----------------------------------------------------------------------
 # Abrechnungsvertrag — Schema-Zusammenhänge
 # ----------------------------------------------------------------------
+
+
+def test_naechster_vertragsbeginn_nach_stichtag() -> None:
+    """Die Diagnose-Schwester von `vertrag_aufloesen` (02.09.2026).
+
+    Am Stichtag gilt kein Vertrag; gesucht ist der ERSTE Beginn danach.
+    Objektverträge FREMDER Objekte zählen nicht, der eigene und der
+    Eigentümer-weite schon — der frühere gewinnt.
+    """
+    svc = _svc(
+        {
+            "owner_billing_terms": [
+                {
+                    "id": "obt-owner",
+                    "tenant_id": "t-1",
+                    "owner_id": "o-1",
+                    "property_id": None,
+                    "gueltig_ab": "2026-08-12",
+                    "gueltig_bis": None,
+                    "provisions_pct": 20,
+                },
+                {
+                    "id": "obt-p2",
+                    "tenant_id": "t-1",
+                    "owner_id": "o-1",
+                    "property_id": "p-2",
+                    "gueltig_ab": "2026-08-10",
+                    "gueltig_bis": None,
+                    "provisions_pct": 25,
+                },
+                {
+                    "id": "obt-fremd",
+                    "tenant_id": "t-2",
+                    "owner_id": "o-1",
+                    "property_id": None,
+                    "gueltig_ab": "2026-08-09",
+                    "gueltig_bis": None,
+                    "provisions_pct": 10,
+                },
+            ]
+        }
+    )
+    stichtag = date(2026, 8, 9)
+    assert svc.vertrag_aufloesen("t-1", "o-1", "p-1", stichtag) is None
+    # p-1: nur der Eigentümer-Vertrag (der p-2-Vertrag ist ein fremdes Objekt).
+    assert svc.naechster_vertragsbeginn("t-1", "o-1", "p-1", stichtag) == date(
+        2026, 8, 12
+    )
+    # p-2: der Objektvertrag beginnt früher als der Eigentümer-Vertrag.
+    assert svc.naechster_vertragsbeginn("t-1", "o-1", "p-2", stichtag) == date(
+        2026, 8, 10
+    )
+    # Am Beginn selbst gilt der Vertrag bereits — danach beginnt keiner mehr.
+    assert svc.naechster_vertragsbeginn(
+        "t-1", "o-1", "p-1", date(2026, 8, 12)
+    ) is None
 
 
 def test_provisions_pct_hat_keinen_default() -> None:

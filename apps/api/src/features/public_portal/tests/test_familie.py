@@ -15,6 +15,8 @@ Eigene Fake-DB statt der aus test_public_portal.py: diese hier braucht
 `update`, `upsert`, `delete` und `count`, die dort fehlen.
 """
 
+import fnmatch
+
 import pytest
 
 from src.core.security import AuthContext
@@ -110,7 +112,19 @@ class _Query:
     def limit(self, _n: int) -> "_Query":
         return self
 
+    def like(self, col: str, pattern: str) -> "_Query":
+        # PostgREST `like` mit `%`-Platzhalter — hier als Muster-Filter.
+        self._like = (col, pattern)
+        return self
+
     def _match(self, row: dict) -> bool:
+        muster = getattr(self, "_like", None)
+        if muster is not None:
+            like_col, like_pat = muster
+            if not fnmatch.fnmatchcase(
+                str(row.get(like_col) or ""), like_pat.replace("%", "*")
+            ):
+                return False
         ok = all(str(row.get(c)).lower() == str(v).lower() for c, v in self._filters)
         if ok and self._in:
             col, vals = self._in

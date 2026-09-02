@@ -37,6 +37,7 @@ Zahl ergeben.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 
 _CENT = Decimal("0.01")
@@ -185,6 +186,34 @@ def gebuehren_aufteilen(
     return brutto, aus_bemessung, an_eigentuemer
 
 
+def portal_brutto(
+    *,
+    uebernachtung: object,
+    gebuehren: list[Gebuehr],
+    gebuehren_im_betrag: bool,
+) -> Decimal:
+    """Der Betrag, den das PORTAL dem Gast berechnet hat — OHNE Zusatzleistungen.
+
+    Die Bezugsgröße des Portal-Abzugs. Zusatzleistungen (``reservation_addons``)
+    werden am Portal vorbei verkauft und über uns bezahlt (Stripe); das Portal
+    kennt sie nicht, nimmt darauf weder Provision noch Zahlungsgebühr. Live am
+    02.09.2026 (Pschorr, Booking 5.662,50 + Wäschepaket 600 über uns): die
+    Zahlungsgebühr 1,5 % lief auf 6.262,50 statt 5.662,50 — 9,00 DKK, die dem
+    Eigentümer fehlten, und bei Buchungen ohne gemeldete Provision wäre auch
+    die Provision auf die 600 gelaufen. Der Betrieb sah es nur, weil er die
+    Booking-Seite danebenlegte.
+
+    Rechnerisch ``gastpreis(...)`` ohne ``addon_total`` — als eigener Name,
+    damit an keiner der vier Rechenstellen wieder der volle Gastpreis in den
+    Abzug rutscht.
+    """
+    return gastpreis(
+        uebernachtung=uebernachtung,
+        gebuehren=gebuehren,
+        gebuehren_im_betrag=gebuehren_im_betrag,
+    )
+
+
 def gastpreis(
     *,
     uebernachtung: object,
@@ -240,6 +269,11 @@ class Vertragsregeln:
     pauschale_currency: str | None = None
     pauschale_basis: str | None = None
     pauschale_zeitpunkt: str | None = None
+    # HERKUNFT, keine Rechenwirkung: ab wann dieser Vertrag gilt. Die
+    # Abrechnung weist ihn neben dem Satz aus, weil ein Prozentsatz ohne
+    # Stichtag nicht prüfbar ist — bei mehreren Verträgen desselben
+    # Eigentümers sieht sonst niemand, WELCHER gerechnet hat.
+    gueltig_ab: date | None = None
 
 
 def vertragsregeln_aus_zeile(zeile: dict) -> Vertragsregeln:
@@ -259,6 +293,19 @@ def vertragsregeln_aus_zeile(zeile: dict) -> Vertragsregeln:
             "provision_ungueltig",
             f"Provisionssatz {pct} im Vertrag liegt außerhalb von 0–100 %.",
         )
+    gueltig_ab_roh = zeile.get("gueltig_ab")
+    gueltig_ab: date | None
+    if isinstance(gueltig_ab_roh, date):
+        gueltig_ab = gueltig_ab_roh
+    elif gueltig_ab_roh:
+        try:
+            gueltig_ab = date.fromisoformat(str(gueltig_ab_roh)[:10])
+        except ValueError:
+            # Herkunftsangabe, keine Rechengrundlage: ein unlesbares Datum
+            # darf die Auszahlung nicht kippen — es fehlt dann im Ausweis.
+            gueltig_ab = None
+    else:
+        gueltig_ab = None
     return Vertragsregeln(
         provisions_pct=pct,
         min_provision_betrag=zu_decimal(zeile.get("min_provision_betrag")),
@@ -267,6 +314,7 @@ def vertragsregeln_aus_zeile(zeile: dict) -> Vertragsregeln:
         pauschale_currency=(zeile.get("pauschale_currency") or None),
         pauschale_basis=(zeile.get("pauschale_basis") or None),
         pauschale_zeitpunkt=(zeile.get("pauschale_zeitpunkt") or None),
+        gueltig_ab=gueltig_ab,
     )
 
 
@@ -341,8 +389,9 @@ def portal_abzug(
 ) -> PortalAbzug:
     """Den Portal-Abzug einer Buchung bestimmen.
 
-    ``brutto`` ist der GASTPREIS inklusive Gebühren — die Bezugsgröße, auf die
-    die Portale nachweislich rechnen. Auf den Übernachtungspreis allein bezogen
+    ``brutto`` ist der PORTAL-Gastpreis inklusive Gebühren, aber OHNE unsere
+    Zusatzleistungen (``portal_brutto``) — die Bezugsgröße, auf die die Portale
+    nachweislich rechnen. Auf den Übernachtungspreis allein bezogen
     ergäbe derselbe Abzug je Buchung einen anderen Prozentsatz (live gemessen
     16,59 %–18,60 % bei konstant vereinbarten 15,5 %), also eine Zahl, die
     niemand nachvollziehen kann.
@@ -499,6 +548,16 @@ class Auszahlung:
     Abrechnung dem Eigentümer zeigen muss. Ohne sie wäre die Zahl am Ende eine
     Behauptung, die niemand nachrechnen kann — genau der Punkt, an dem die
     Kette mit dem Kunden geklärt werden musste.
+
+    ``gebuehren`` ist seit 02.09.2026 Teil des Ergebnisses und nicht mehr nur
+    Eingang. Anlass ist eine Ansage des Betriebs: *„Jede Gebühr muss als
+    einzelner Posten aufgeschlüsselt werden auf der Abrechnung."* Vorher gab
+    die Kette nur die SUMMEN heraus (``gebuehren_aus_bemessung``,
+    ``gebuehren_an_eigentuemer``); die Abrechnung zeigte „Gebühren +725,00"
+    und niemand konnte sehen, ob darin Resort 225 und Nebenkosten 500 stecken
+    oder etwas anderes. Die Liste hier ist genau die, mit der gerechnet wurde
+    — nicht eine zweite, die der Aufrufer daneben lädt und die auseinander
+    laufen könnte.
     """
 
     brutto: Decimal
@@ -512,6 +571,20 @@ class Auszahlung:
     gebuehren_an_eigentuemer: Decimal
     netto: Decimal
     currency: str
+    # Die Gebühren dieser Buchung, EINZELN, in der Reihenfolge der Quelle.
+    # Tuple statt list: das Ergebnis ist eingefroren (`frozen=True`), eine
+    # veränderbare Liste darin wäre ein Loch in dieser Zusage.
+    gebuehren: tuple[Gebuehr, ...] = ()
+    # Zusatzleistungen der Buchung als eigener Betrag. Sie laufen wie eine
+    # provisionsfreie Eigentümer-Gebühr durch die Kette (raus aus der
+    # Bemessung, ungekürzt zurück) und steckten bisher unbenannt in
+    # ``gebuehren_aus_bemessung``/``gebuehren_an_eigentuemer``.
+    extras: Decimal = Decimal("0")
+    # Hat die Mindestprovision des Vertrags gegriffen? Dann ist
+    # ``verwaltungsprovision`` NICHT ``bemessungsgrundlage × Satz``, und die
+    # Abrechnung muss das sagen — sonst sieht der Posten aus wie ein
+    # Rechenfehler.
+    min_provision_angewandt: bool = False
 
 
 def auszahlung_berechnen(  # noqa: PLR0913 — die Kette hat viele Eingänge
@@ -529,7 +602,9 @@ def auszahlung_berechnen(  # noqa: PLR0913 — die Kette hat viele Eingänge
 
     Reihenfolge (mit dem Betrieb abgestimmt und an Echtdaten geprüft):
 
-    1. Gastpreis = Übernachtung + alle Gebühren + Zusatzleistungen.
+    1. Gastpreis = Übernachtung + alle Gebühren — der Betrag des PORTALS.
+       Zusatzleistungen (``addon_total``) gehören NICHT dazu: sie laufen am
+       Portal vorbei über uns und stehen nur als ``extras`` im Ergebnis.
     2. − Portal-Abzug (Provision + ggf. Zahlungsgebühr) → Auszahlungsbasis.
     3. − alle PROVISIONSFREIEN Gebühren → Bemessungsgrundlage. Ohne diesen
        Schritt zahlte der Eigentümer Verwaltungsprovision auf Reinigung und
@@ -542,7 +617,11 @@ def auszahlung_berechnen(  # noqa: PLR0913 — die Kette hat viele Eingänge
 
     Schritt 3 und 7 gehören zusammen: erst raus aus der Bemessung, dann
     ungekürzt zurück. Die Gebühren des BETRIEBS bleiben in Schritt 3 stehen und
-    kommen in Schritt 7 nicht zurück — sie sind sein Ertrag.
+    kommen in Schritt 7 nicht zurück — sie sind sein Ertrag. **Zusatzleistungen
+    (``addon_total``) gehören dem Betrieb** (Entscheidung des Betriebs,
+    02.09.2026) und sind kein Teil des Portal-Gastpreises: sie tauchen in
+    keinem Schritt auf, nur als ``extras`` zur Auskunft. Bis dahin flossen sie
+    zeitweise an den Eigentümer, danach standen sie im Gastpreis.
 
     ``gebuehren_im_betrag`` entscheidet Schritt 1 und ist KEIN Detail:
 
@@ -562,6 +641,12 @@ def auszahlung_berechnen(  # noqa: PLR0913 — die Kette hat viele Eingänge
     Das Ergebnis kann negativ sein (hohe Pauschale auf eine kleine Buchung) und
     wird NICHT auf 0 geklemmt: eine stille Null verschwiege eine Forderung, die
     der Vertrag so vorsieht.
+
+    Das Ergebnis trägt neben den Summen auch die EINZELNEN Gebühren
+    (``gebuehren``), die Zusatzleistungen (``extras``) und das Kennzeichen, ob
+    die Mindestprovision gegriffen hat (``min_provision_angewandt``). Die
+    Abrechnung weist damit jeden Posten getrennt aus, statt eine Summe zu
+    zeigen, die niemand aufschlüsseln kann.
     """
     if not (currency or "").strip():
         raise PayoutUnbekannt(
@@ -570,45 +655,70 @@ def auszahlung_berechnen(  # noqa: PLR0913 — die Kette hat viele Eingänge
     extras = zu_decimal(addon_total) or Decimal("0")
     _, geb_aus_bemessung, geb_an_owner = gebuehren_aufteilen(gebuehren)
 
-    brutto = gastpreis(
+    # ZUSATZLEISTUNGEN SIND NICHT TEIL DES PORTAL-GASTPREISES (02.09.2026,
+    # zweite Korrektur desselben Tages). Sie werden am Portal vorbei verkauft
+    # und über uns bezahlt; das Portal kennt sie nicht, rechnet weder Provision
+    # noch Zahlungsgebühr darauf, und der Eigentümer sieht sie in seiner
+    # Booking-Aufstellung nicht. Bis 02.09.2026 mittags standen sie im
+    # ``brutto`` („Gastpreis inkl. Zusatzleistungen") und wurden unten wieder
+    # aus der Bemessung genommen — rechnerisch neutral für die Bemessung,
+    # aber der Gastpreis der Zeile (6.262,50) stimmte mit Booking (5.662,50)
+    # nicht überein, und der Betrieb hielt das zu Recht für einen Fehler.
+    #
+    # Sie GEHÖREN DEM BETRIEB (Entscheidung des Betriebs, 02.09.2026): der
+    # hat die Leistung erbracht (Endreinigung, Frühstück, Wäsche-Set). Sie
+    # stehen deshalb NUR als ``extras`` im Ergebnis — nicht im Gastpreis,
+    # nicht in der Bemessung, nicht beim Eigentümer. Bis dahin flossen sie
+    # zeitweise ungekürzt an den Eigentümer (`netto += geb_an_owner + extras`);
+    # das verwechselte den Erbringer der Leistung mit dem Eigentümer.
+    brutto = portal_brutto(
         uebernachtung=uebernachtung,
         gebuehren=gebuehren,
         gebuehren_im_betrag=gebuehren_im_betrag,
-        addon_total=addon_total,
     )
     basis = brutto - abzug.gesamt
-    # Extras sind provisionsfrei verkauft und gehören dem Eigentümer — sie
-    # laufen wie eine Eigentümer-Gebühr durch (raus, dann ungekürzt zurück).
-    bemessung_roh = basis - geb_aus_bemessung - extras
+    bemessung_roh = basis - geb_aus_bemessung
 
     pauschale = pauschale_betrag_je_buchung(regeln, naechte, currency)
     vorab = pauschale if regeln.pauschale_zeitpunkt == "vor_provision" else Decimal("0")
     bemessung = bemessung_roh - vorab
 
     provision = bemessung * (regeln.provisions_pct / _HUNDERT)
+    min_angewandt = False
     if regeln.min_provision_betrag is not None:
         _pruefe_waehrung(
             currency, regeln.min_provision_currency, "Die Mindestprovision"
         )
+        if regeln.min_provision_betrag > provision:
+            min_angewandt = True
         provision = max(provision, regeln.min_provision_betrag)
 
     netto = bemessung - provision
     if regeln.pauschale_zeitpunkt == "nach_provision":
         netto -= pauschale
-    netto += geb_an_owner + extras
+    # Nur die Gebühren des EIGENTÜMERS kommen zurück — die Zusatzleistungen
+    # bleiben beim Betrieb (siehe Kommentar an `bemessung_roh`).
+    netto += geb_an_owner
 
     return Auszahlung(
         brutto=brutto,
         portal_provision=abzug.provision,
         portal_zahlungsgebuehr=abzug.zahlungsgebuehr,
         auszahlungsbasis=basis,
-        gebuehren_aus_bemessung=geb_aus_bemessung + extras,
+        gebuehren_aus_bemessung=geb_aus_bemessung,
         bemessungsgrundlage=bemessung,
         verwaltungsprovision=provision,
         pauschale=pauschale,
-        gebuehren_an_eigentuemer=geb_an_owner + extras,
+        gebuehren_an_eigentuemer=geb_an_owner,
         netto=netto,
         currency=currency,
+        # Die Liste, mit der GERECHNET wurde — nicht die des Aufrufers.
+        # Beides ist hier dasselbe, und genau deshalb steht sie im Ergebnis:
+        # der Aufrufer muss sie nicht erneut beschaffen und kann sie damit
+        # auch nicht anders beschaffen (Wurzel 1).
+        gebuehren=tuple(gebuehren),
+        extras=extras,
+        min_provision_angewandt=min_angewandt,
     )
 
 

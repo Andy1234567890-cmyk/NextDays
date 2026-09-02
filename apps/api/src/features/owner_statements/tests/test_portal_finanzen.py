@@ -344,13 +344,18 @@ def test_altimport_erfindet_keine_gebuehren_aus_stammdaten() -> None:
         naechte=2,
         satz=_BOOKING_SATZ,
     )
-    assert f.quelle == "ota_ohne_aufstellung"
-    assert f.gebuehren == []
+    # Seit 02.09.2026 gilt die Ansage des Betriebs: Gebühren „so wie sie im
+    # Objekt hinterlegt sind" nachtragen. Der Channex-Import trägt nur die
+    # Nächtesumme (1.039,50) — die Stammdaten-Gebühren kommen OBENDRAUF und
+    # sind als solche benannt (Quelle `stammdaten_portal`, Grund `obendrauf`),
+    # nicht stillschweigend wie beim Vorfall vom 11.08.2026.
+    assert f.quelle == "stammdaten_portal"
     assert f.provision_gemeldet is False
-    # Ohne Gebühren ist der Gastpreis die Übernachtung — nicht 2.164,50, wie es
-    # mit erfundenen Stammdaten-Gebühren herauskam.
     assert f.uebernachtung == Decimal("1039.50")
-    assert f.brutto == Decimal("1039.50")
+    assert f.brutto == Decimal("1039.50") + sum(
+        (g.betrag for g in f.gebuehren), Decimal("0")
+    )
+    assert f.gebuehren, "Stammdaten-Gebühren müssen nachgetragen sein"
     _pruefe_invarianten(f)
 
 

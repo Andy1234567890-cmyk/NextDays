@@ -54,7 +54,12 @@ type FormState = {
 function leeresFormular(): FormState {
   return {
     property_id: "",
-    gueltig_ab: new Date().toISOString().slice(0, 10),
+    // KEIN „heute" als Vorgabe: wer am 12.08. seinen seit Jahren geltenden
+    // Vertrag einträgt, bekam damit einen Vertrag ab dem 12.08. — und jede
+    // Buchung mit früherer Abreise fiel aus der Abrechnung (live 02.09.2026).
+    // Ein Datum, das niemand bewusst gewählt hat, ist ein erfundener Wert
+    // (Wurzel 4). Das Feld ist Pflicht und startet leer.
+    gueltig_ab: "",
     gueltig_bis: "",
     // KEIN Vorschlagswert für den Satz: eine vorbelegte Zahl sähe in der
     // Maske aus wie eine Vereinbarung, die niemand getroffen hat (Wurzel 4).
@@ -145,6 +150,10 @@ export function Abrechnungsvertrag({
     const pct = Number(form.provisions_pct);
     if (!form.provisions_pct.trim() || Number.isNaN(pct)) {
       setFehler(t("errorPctRequired"));
+      return;
+    }
+    if (!form.gueltig_ab.trim()) {
+      setFehler(t("errorValidFromRequired"));
       return;
     }
     setBusy(true);
@@ -426,9 +435,10 @@ export function Abrechnungsvertrag({
                 onChange={(e) => set("provisions_pct", e.target.value)}
               />
             </Feld>
-            <Feld label={t("validFrom")}>
+            <Feld label={t("validFrom")} hint={t("validFromHint")} ariaLabel={t("infoAria", { feld: t("validFrom") })}>
               <Input
                 type="date"
+                required
                 value={form.gueltig_ab}
                 onChange={(e) => set("gueltig_ab", e.target.value)}
               />
