@@ -127,6 +127,12 @@ class CsvBookingImportResponse(BaseModel):
     total_rows: int = 0
     imported: int = 0
     updated: int = 0
+    # Zeilen, deren Buchung der PORTAL-FEED schon angelegt hat: bewusst
+    # belassen, weil die Datei aermer ist als der Feed (kein Gebuehren-
+    # Aufriss, kein Buchungszeitpunkt). Eigener Zaehler statt „skipped",
+    # damit der Betrieb sieht, dass diese Zeilen NICHT fehlen, sondern
+    # vollstaendiger dastehen als in der Datei (31.08.2026: 54 Zeilen).
+    portal: int = 0
     skipped: int = 0
     failed: int = 0
     errors: list[str] = Field(default_factory=list)
@@ -150,6 +156,8 @@ class BestandsimportLauf(BaseModel):
     # aktualisiert" statt faelschlich „251 angelegt".
     aktualisiert: int = 0
     uebersprungen: int = 0
+    # Bereits ueber den Portal-Feed vorhanden und deshalb belassen (0530).
+    portal: int = 0
     fehlerhaft: int = 0
     aktuelle_zeile: str | None = None
     # Zeilen, die nicht durchliefen — mit Grund, damit der Betrieb weiss, WAS er

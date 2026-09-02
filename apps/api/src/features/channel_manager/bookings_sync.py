@@ -1112,7 +1112,10 @@ class BookingsSyncMixin:
                 tenant_id=tenant_id, booking_id=booking_id, error=str(exc)[:200],
             )
 
-    def _project_booking_to_reservation(
+    def _project_booking_to_reservation(  # pylint: disable=too-many-return-statements
+        # Der siebte Ausstieg ist der Riegel „aermere Quelle laesst reichere in
+        # Ruhe" (31.08.2026). Ihn in einen Helfer zu verlagern aendert die Zahl
+        # der Ausstiege nicht — jeder Skip-Grund verlaesst die Projektion frueh.
         self,
         db: Client,
         tenant_id: str,
@@ -1183,7 +1186,10 @@ class BookingsSyncMixin:
             " payment_collect, unit_id, guest_id,"
             # Die Gaestezahl der STORNIERTEN Buchung. Sie steht nur hier: die
             # eingehende Storno-Payload traegt keine Belegung mehr.
-            " adults, children"
+            " adults, children,"
+            # WOHER die vorhandene Zeile stammt und OB sie ein Channex-Import
+            # ist — entscheidet unten, was eine CSV-Zeile daran aendern darf.
+            " source_channex_booking_id, is_imported, total_amount"
         )
         existing = (
             db.table("reservations")
@@ -1222,6 +1228,71 @@ class BookingsSyncMixin:
                 .limit(1)
                 .execute()
             ).data
+        # Der zweite Weg kennt eine RICHTUNG. Gebaut wurde er dafuer, dass die
+        # reichere Quelle (Channex-Feed mit Payload, Gebuehren, Buchungszeit)
+        # eine aermere (Airbnb-Historie, CSV) nachtraeglich vervollstaendigt.
+        # Er lief aber auch RUECKWAERTS: ein CSV-Bestandsimport fand ueber den
+        # Bestaetigungscode die Zeile, die der Feed laengst angelegt hatte,
+        # und schrieb sie mit seinen zwoelf Spalten komplett um — Quelle
+        # `csv:<code>`, `booked_at` leer, `ota_details` (Preis-Aufstellung
+        # mit Reinigungs-/Resortgebuehr) weg, Gaestezahl aus der Datei. Live
+        # am 31.08.2026 08:50, EIN Upload: 54 Feed-Buchungen des Beta-Betriebs
+        # verloren so ihre Portaldaten; die Abrechnung sagte danach „Portal hat
+        # keine Gebuehren gemeldet", obwohl der Payload in `channex_booking.raw`
+        # die ganze Zeit vorlag (Rævlingehuset 09.–13.09., 4.415 DKK =
+        # 3.360 + 100 Resort + 955 Reinigung). Der Betrieb sah es nur, weil er
+        # Channex danebenlegte.
+        #
+        # Regel: „reicher" gilt je FELD, nicht je Quelle. Zwei Faelle:
+        #
+        # (a) Live-Feed-Buchung (Channex ohne `meta.is_imported`): der Payload
+        #     traegt alles, auch die Preis-Aufstellung. Die CSV aendert NICHTS;
+        #     der Aufrufer zaehlt sie als „schon vom Portal da".
+        # (b) Channex-IMPORT (`meta.is_imported`, beim Verbinden des Kanals
+        #     nachgeholt): Channex dokumentiert, dass diese Buchungen „will not
+        #     include extras and cleaning fees" — `amount` ist der reine
+        #     Zimmerpreis. Der Portal-Export des Betriebs (die CSV) traegt den
+        #     GESAMTpreis inkl. Gebuehren (LUDO 01.–05.09.: Channex 3.528, CSV
+        #     4.583 = 3.528 + 100 Resort + 955 Reinigung). Hier ist die CSV
+        #     fuer den BETRAG die bessere Quelle, fuer alles andere (Identitaet,
+        #     Buchungszeit, Gast, Payload) bleibt es der Feed. Also: nur
+        #     `total_amount` (und der portal-kassierte `paid_amount`)
+        #     uebernehmen, sonst nichts.
+        #
+        # Umgekehrt (Feed trifft eine CSV-Zeile) gilt dieselbe Feld-Regel: ein
+        # Channex-IMPORT darf den CSV-Gesamtpreis nicht durch seinen
+        # Zimmerpreis ersetzen (siehe unten vor dem Update).
+        if existing and str(booking_id).startswith("csv:"):
+            vorhandene_quelle = str(
+                existing[0].get("source_channex_booking_id") or ""
+            )
+            if vorhandene_quelle and not vorhandene_quelle.startswith("csv:"):
+                csv_betrag = self._to_float(attrs.get("amount"))
+                if existing[0].get("is_imported") and csv_betrag is not None:
+                    felder: dict[str, Any] = {"total_amount": csv_betrag}
+                    if existing[0].get("payment_collect") == "ota":
+                        felder["paid_amount"] = csv_betrag
+                    db.table("reservations").update(felder).eq(
+                        "id", existing[0]["id"]
+                    ).execute()
+                    log.info(
+                        "bestandsimport_betrag_an_channex_import",
+                        tenant_id=tenant_id,
+                        reservation_id=existing[0].get("id"),
+                        ota_reservation_code=ota_code,
+                        channex_betrag=existing[0].get("total_amount"),
+                        csv_betrag=csv_betrag,
+                    )
+                    return True
+                log.warning(
+                    "bestandsimport_portalbuchung_belassen",
+                    tenant_id=tenant_id,
+                    reservation_id=existing[0].get("id"),
+                    ota_reservation_code=ota_code,
+                    vorhandene_quelle=vorhandene_quelle,
+                    csv_quelle=booking_id,
+                )
+                return False
         # Nach echtem Check-out (0091) ist der Aufenthalt abgeschlossen — ein
         # OTA-Resync darf status='completed' nicht mehr überschreiben (weder
         # auf confirmed zurückdrehen noch nachträglich stornieren + freigeben).
@@ -1588,6 +1659,16 @@ class BookingsSyncMixin:
                 row["paid_amount"] = total_amount
                 row["payment_status"] = "paid"
         if existing:
+            # Gegenrichtung der Feld-Regel oben: ein Channex-IMPORT (Zimmerpreis
+            # ohne Gebuehren) trifft eine CSV-Zeile mit dem Gesamtpreis des
+            # Portal-Exports. Identitaet, Buchungszeit und Payload uebernimmt
+            # er; den Betrag laesst er stehen — sonst verschwinden Reinigung
+            # und Resortgebuehr aus der Buchung (02.09.2026: 46 Buchungen).
+            if ist_bestandsimport(attrs) and str(
+                existing[0].get("source_channex_booking_id") or ""
+            ).startswith("csv:"):
+                for betragsfeld in ("total_amount", "paid_amount", "quote_items"):
+                    row.pop(betragsfeld, None)
             if already_checked_out:
                 # Abgeschlossener (fakturierter) Aufenthalt: Status, Zeitraum
                 # und Beträge sind eingefroren — die finale Rechnung ist

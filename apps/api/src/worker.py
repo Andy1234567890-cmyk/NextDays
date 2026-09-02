@@ -13,6 +13,7 @@ ein Neustart/Crash verliert nichts; laufende Jobs recovert der Reaper.
 Muster wie inbox/scheduler.py: async-Loop, synchrone DB-/Channex-Arbeit via
 asyncio.to_thread, Fehler dürfen den Worker nie killen.
 """
+# pylint: disable=too-many-lines  # Registry + Ticks bewusst EINE Datei; Fachlaeufe in src/jobs/*
 from __future__ import annotations
 
 import asyncio
@@ -37,8 +38,10 @@ from src.features.properties.vertragsende import vertragsenden_nachziehen
 from src.jobs import (
     airbnb_historie_tick,
     bestandsimport_tick,
+    feed_abgleich_tick,
     feed_nachpflege,
     geld_laeufe,
+    partner_laeufe,
     portal_raten_tick,
     public_api_storno,
     worker_verlauf,
@@ -156,6 +159,7 @@ PAYOUT_TICK_SECONDS = 60 * 60
 # KEINE zweite Belastung.
 COMMISSION_TICK_SECONDS = 60 * 60
 COMMISSION_BILLING_DAY = 1  # Monatserster
+PARTNER_TICK_SECONDS = 60 * 60  # Partnerprogramm (0517), Fachlauf in jobs.partner_laeufe
 # Bewertungen: Fristablauf veröffentlichen (double-blind), Portal-Bewertungen
 # spiegeln (Backstop für verlorene review-Webhooks) und die Automatik ausführen.
 # Stündlich reicht — alle drei Fälligkeiten sind tagesgenau; der PRIMÄRE Weg für
@@ -643,6 +647,7 @@ HANDLERS: dict[
     "sync_airbnb_stammdaten": _handle_sync_airbnb_stammdaten,
     "sync_airbnb_zimmer": _handle_sync_airbnb_zimmer,
     "reconcile_tenant": _handle_reconcile_tenant,
+    "abgleich_feed_buchungen": feed_abgleich_tick.handle,
     "reconcile_rate_plan_prices": _handle_reconcile_rate_plan_prices,
     "recompute_property": _handle_recompute_property,
     "push_ari": _handle_push_ari,
@@ -722,6 +727,7 @@ class Worker:
         self._last_balance_tick = 0.0
         self._last_payout_tick = 0.0
         self._last_commission_tick = 0.0
+        self._last_partner_tick = 0.0
         self._last_reviews_tick = 0.0
         self._last_tasks_tick = 0.0
         self._last_automails_tick = 0.0
@@ -1240,6 +1246,14 @@ class Worker:
         except Exception as exc:  # noqa: BLE001 — Tick darf den Worker nie killen
             log.warning("commission_tick_failed", error=str(exc)[:200])
 
+    async def _partner_tick(self, loop_time: float) -> None:
+        """Partnerprogramm (0517): reifen; am Monatsersten Ränge/Auszahlungen/Klicks."""
+        if loop_time - self._last_partner_tick < PARTNER_TICK_SECONDS:
+            return
+        self._last_partner_tick = loop_time
+        monatserster = datetime.now(UTC).day == COMMISSION_BILLING_DAY
+        await asyncio.to_thread(partner_laeufe.tick, self._db, monatserster=monatserster)
+
     async def _bookings_tick(self, loop_time: float) -> None:
         """Alle 5 min einen kontoweiten Booking-Feed-Pull einreihen (Backstop —
         der primäre Trigger ist der booking_*-Webhook). Coalescing über den
@@ -1371,6 +1385,9 @@ class Worker:
         # `src/jobs/portal_raten_tick` — der Abgleich ist nicht zeitkritisch und
         # kostet 2 lesende Channex-Calls je Objekt.
         portal_raten_tick.einreihen(self._db, bucket)
+        # Ebenfalls taeglich: Feed-Staging ↔ Reservierungen (Selbstheilung, nur
+        # DB, kein Channex-Call) — `src/jobs/feed_abgleich_tick`.
+        feed_abgleich_tick.einreihen(self._db, bucket)
 
     def _enqueue_outbox_all(self) -> None:
         """Offene AUSGEHENDE Pushes nachziehen (Availability + Restriktionen).
@@ -1441,6 +1458,7 @@ class Worker:
             await self._balance_tick(loop_time)
             await self._payout_tick(loop_time)
             await self._commission_tick(loop_time)
+            await self._partner_tick(loop_time)
             await self._reviews_tick(loop_time)
             await self._tasks_tick(loop_time)
             await self._automails_tick(loop_time)

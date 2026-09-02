@@ -170,10 +170,16 @@ export function ImportFortschritt({
               Zähler: nach dem zweiten Upload derselben Datei stand hier
               „251 angelegt, 0 vorhanden" — die Zahl behauptete genau das
               Gegenteil ihrer Lage (die DB war korrekt). */}
-          <div className="grid grid-cols-4 gap-2 text-center">
+          <div className="grid grid-cols-5 gap-2 text-center">
             {([
               ["importProgress.created", lauf.angelegt, "text-emerald-600"],
               ["importProgress.updated", lauf.aktualisiert, "text-sky-600"],
+              // Bereits über den Portal-Feed da und bewusst belassen: die Datei
+              // ist ärmer als der Feed (keine Gebühren-Aufstellung, kein
+              // Buchungszeitpunkt). Eigene Kachel, damit die Zeilen nicht als
+              // „ohne Wirkung" wirken — sie stehen vollständiger da als in der
+              // Datei (31.08.2026: 54 überschriebene Feed-Buchungen).
+              ["importProgress.portal", lauf.portal ?? 0, "text-violet-600"],
               ["importProgress.skipped", lauf.uebersprungen, "text-muted-foreground"],
               ["importProgress.failedRows", lauf.fehlerhaft, "text-destructive"],
             ] as const).map(([key, wert, farbe]) => (

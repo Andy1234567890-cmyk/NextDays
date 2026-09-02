@@ -10,6 +10,7 @@ Geprueft wird die WIRKUNG (was der Import ausloest), nicht die Verdrahtung.
 """
 from __future__ import annotations
 
+import contextlib
 import inspect
 from pathlib import Path
 
@@ -305,8 +306,8 @@ def test_lauf_zeile_fuehrt_aktualisiert() -> None:
     assert "add column if not exists aktualisiert" in sql
 
 
-def test_popup_zeigt_vier_zaehler() -> None:
-    """Vier Kacheln, und „neu" darf nicht wie „aktualisiert" heissen."""
+def test_popup_zeigt_fuenf_zaehler() -> None:
+    """Fuenf Kacheln, und „neu" darf nicht wie „aktualisiert" heissen."""
     import json
 
     wurzel = _SLICE.parents[4]
@@ -314,7 +315,11 @@ def test_popup_zeigt_vier_zaehler() -> None:
         wurzel / "web" / "components" / "channel-manager" / "import-fortschritt.tsx"
     ).read_text(encoding="utf-8")
     assert "importProgress.updated" in tsx
-    assert "grid-cols-4" in tsx, "vier Zaehler brauchen vier Spalten"
+    assert "importProgress.portal" in tsx, (
+        "Die Kachel „schon vom Portal da“ fehlt — 54 belassene Zeilen "
+        "wuerden sonst als „ohne Wirkung“ erscheinen (31.08.2026)."
+    )
+    assert "grid-cols-5" in tsx, "fuenf Zaehler brauchen fuenf Spalten"
 
     # In JEDER Sprache muessen sich die beiden Kacheln unterscheiden — sonst
     # steht dort zweimal dasselbe Wort nebeneinander.
@@ -322,5 +327,240 @@ def test_popup_zeigt_vier_zaehler() -> None:
         ip = json.loads(datei.read_text(encoding="utf-8"))["channels"][
             "importProgress"
         ]
-        assert {"created", "updated", "skipped", "failedRows"} <= set(ip), datei.stem
+        assert {"created", "updated", "portal", "skipped", "failedRows"} <= set(ip), (
+            datei.stem
+        )
         assert ip["created"].lower() != ip["updated"].lower(), datei.stem
+
+
+# --- Aermere Quelle ueberschreibt keine reichere (31.08.2026) -----------------
+
+
+class _Query:
+    """PostgREST-Stub: feste Zeilen je Tabelle, merkt Updates/Inserts."""
+
+    def __init__(self, tabelle: str, store: dict) -> None:
+        self._tabelle = tabelle
+        self._store = store
+
+    def select(self, *_a, **_k):
+        return self
+
+    def update(self, payload):
+        self._store["updates"].append((self._tabelle, payload))
+        return self
+
+    def insert(self, payload):
+        self._store["inserts"].append((self._tabelle, payload))
+        return self
+
+    def eq(self, *_a, **_k):
+        return self
+
+    def limit(self, *_a, **_k):
+        return self
+
+    def __getattr__(self, name: str):
+        # order/in_/is_/neq/gte/... — alle weiteren PostgREST-Filter sind fuer
+        # diesen Stub Durchreicher; nur select/update/insert/execute zaehlen.
+        if name.startswith("_"):
+            raise AttributeError(name)
+        return lambda *_a, **_k: self
+
+    def execute(self):
+        return type("R", (), {"data": self._store["rows"].get(self._tabelle, [])})()
+
+
+class _Db:
+    def __init__(self, rows: dict) -> None:
+        self.store = {"rows": rows, "updates": [], "inserts": []}
+
+    def table(self, name: str) -> _Query:
+        return _Query(name, self.store)
+
+
+_FEED_ZEILE = {
+    "id": "res-1",
+    "checked_out_at": None,
+    "check_in": "2026-09-09",
+    "check_out": "2026-09-13",
+    "property_id": "prop-1",
+    "payment_collect": "ota",
+    "unit_id": None,
+    "guest_id": "g-1",
+    "adults": 2,
+    "children": 0,
+    # Der Feed hat die Zeile angelegt: Quelle ist die Channex-ID.
+    "source_channex_booking_id": "46461f73-89eb-4724-918e-ce67172470fb",
+}
+
+
+def test_csv_zeile_laesst_feed_buchung_unangetastet(monkeypatch) -> None:
+    """Der zweite Suchweg (Bestaetigungscode) darf nicht rueckwaerts laufen.
+
+    Live am 31.08.2026: ein CSV-Upload fand ueber `external_ref` 54 Buchungen,
+    die der Portal-Feed laengst angelegt hatte, und schrieb sie um — Quelle
+    `csv:`, `booked_at` leer, die Gebuehren-Aufstellung weg. Die Abrechnung
+    sagte danach „Portal hat keine Gebuehren gemeldet".
+    """
+    from src.features.channel_manager.bookings_sync import BookingsSyncMixin
+
+    class _Sync(BookingsSyncMixin):
+        pass
+
+    db = _Db({"reservations": [dict(_FEED_ZEILE)]})
+    sync = _Sync()
+    monkeypatch.setattr(_Sync, "_projection_precheck", lambda *_a, **_k: True, raising=False)
+
+    geschrieben = sync._project_booking_to_reservation(  # noqa: SLF001
+        db,
+        "tenant-1",
+        {
+            "booking_id": "csv:5344520509",
+            "property_id": "prop-1",
+            "arrival_date": "2026-09-09",
+            "departure_date": "2026-09-13",
+            "status": "new",
+            "ota_name": "Booking.com",
+            "ota_reservation_code": "5344520509",
+            "amount": 4415.0,
+            "currency": "DKK",
+            "customer": {"name": "Eugénie", "surname": "Kluczka"},
+            "occupancy": 1,
+        },
+        local_property_id="prop-1",
+        bestandsimport=True,
+    )
+
+    assert geschrieben is False
+    assert db.store["updates"] == [], "die Feed-Zeile wurde umgeschrieben"
+    assert db.store["inserts"] == []
+
+
+def test_import_kennt_die_portal_zeilen_vorab() -> None:
+    """Der Import fragt die Feed-Buchungen EINMAL ab und zaehlt sie getrennt.
+
+    Der Riegel in der Projektion allein liesse die Zeile unter „ohne Wirkung"
+    verschwinden — und kostete trotzdem die ~3,5 s Aufloesung je Zeile.
+    """
+    from src.features.channel_manager.schemas import (
+        BestandsimportLauf,
+        CsvBookingImportResponse,
+    )
+
+    quelle = _quelle("csv_import.py")
+    assert "portal_codes" in quelle
+    assert "csv_zeile_portalbuchung_belassen" in quelle
+    assert "portal" in CsvBookingImportResponse.model_fields
+    assert "portal" in BestandsimportLauf.model_fields
+    sql = (
+        _SLICE.parents[4] / "supabase" / "migrations" / "0530_bestandsimport_portal.sql"
+    ).read_text(encoding="utf-8")
+    assert "add column if not exists portal" in sql
+
+
+def test_csv_betrag_ergaenzt_channex_import(monkeypatch) -> None:
+    """Channex-IMPORT (`is_imported`) trifft CSV: NUR der Betrag wandert.
+
+    Channex dokumentiert fuer nachgeholte Buchungen „will not include extras
+    and cleaning fees" — `amount` ist der Zimmerpreis. Der Portal-Export des
+    Betriebs traegt den Gesamtpreis (LUDO 01.–05.09.: 3.528 vs. 4.583 DKK).
+    Identitaet, Buchungszeit und Payload bleiben vom Feed.
+    """
+    from src.features.channel_manager.bookings_sync import BookingsSyncMixin
+
+    class _Sync(BookingsSyncMixin):
+        pass
+
+    zeile = dict(_FEED_ZEILE, is_imported=True, total_amount=3528.0)
+    db = _Db({"reservations": [zeile]})
+    sync = _Sync()
+    monkeypatch.setattr(_Sync, "_projection_precheck", lambda *_a, **_k: True, raising=False)
+
+    geschrieben = sync._project_booking_to_reservation(  # noqa: SLF001
+        db,
+        "tenant-1",
+        {
+            "booking_id": "csv:6575553495",
+            "property_id": "prop-1",
+            "arrival_date": "2026-09-01",
+            "departure_date": "2026-09-05",
+            "status": "new",
+            "ota_name": "Booking.com",
+            "ota_reservation_code": "6575553495",
+            "amount": 4583.0,
+            "currency": "DKK",
+            "customer": {"name": "Ludo", "surname": "Van Imschoot"},
+        },
+        local_property_id="prop-1",
+        bestandsimport=True,
+    )
+
+    assert geschrieben is True
+    assert db.store["updates"] == [
+        ("reservations", {"total_amount": 4583.0, "paid_amount": 4583.0})
+    ], "es darf NUR der Betrag geschrieben werden — keine Quelle, kein booked_at"
+
+
+def test_channex_import_laesst_csv_gesamtpreis_stehen(monkeypatch) -> None:
+    """Gegenrichtung: der Channex-IMPORT trifft eine CSV-Zeile.
+
+    Er bringt Identitaet, Buchungszeit und Payload — aber nur den Zimmerpreis.
+    Der Gesamtpreis aus dem Portal-Export bleibt stehen.
+    """
+    from src.features.channel_manager.service import ChannelManagerService as _Sync
+
+    csv_zeile = dict(
+        _FEED_ZEILE, source_channex_booking_id="csv:6575553495", total_amount=4583.0
+    )
+    db = _Db({"reservations": [csv_zeile], "guests": [], "reservation_events": []})
+    sync = _Sync.__new__(_Sync)
+    monkeypatch.setattr(_Sync, "_projection_precheck", lambda *_a, **_k: True, raising=False)
+    monkeypatch.setattr(
+        _Sync, "_rate_plan_der_buchung", lambda *_a, **_k: (None, None), raising=False
+    )
+    monkeypatch.setattr(_Sync, "_booking_quote_items", lambda *_a, **_k: [], raising=False)
+    monkeypatch.setattr(_Sync, "_reservierte_einheit", lambda *_a, **_k: None, raising=False)
+    monkeypatch.setattr(_Sync, "_property_currency", lambda *_a, **_k: "DKK", raising=False)
+    monkeypatch.setattr(_Sync, "_free_ota_nights", lambda *_a, **_k: None, raising=False)
+    monkeypatch.setattr(_Sync, "_reserve_ota_nights", lambda *_a, **_k: None, raising=False)
+    monkeypatch.setattr(_Sync, "_push_einheiten_stand", lambda *_a, **_k: None, raising=False)
+    monkeypatch.setattr(
+        "src.features.channel_manager.bookings_sync.sync_nach_id", lambda *_a, **_k: None
+    )
+    monkeypatch.setattr(
+        "src.features.channel_manager.bookings_sync.recompute_guest_aggregates",
+        lambda *_a, **_k: None,
+    )
+
+    # Der Nachlauf (Channex-Push, Aufgaben) ist hier nicht aufgebaut und darf
+    # scheitern; geprueft wird allein das Update davor.
+    with contextlib.suppress(Exception):
+        sync._project_booking_to_reservation(  # noqa: SLF001
+            db,
+            "tenant-1",
+            {
+                "booking_id": "59bcdbd2-6df5-4ae5-bbee-ef2d1d71fbce",
+                "property_id": "chx-prop",
+                "arrival_date": "2026-09-01",
+                "departure_date": "2026-09-05",
+                "status": "new",
+                "ota_name": "BookingCom",
+                "ota_reservation_code": "6575553495",
+                "amount": 3528.0,
+                "currency": "DKK",
+                "meta": {"is_imported": True},
+                "customer": {"name": "Ludo", "surname": "Van Imschoot"},
+                "rooms": [],
+            },
+            "g-1",
+            local_property_id="prop-1",
+        )
+
+    updates = [p for t, p in db.store["updates"] if t == "reservations"]
+    assert updates, "die CSV-Zeile muss ueber den Bestaetigungscode getroffen werden"
+    zeile = updates[0]
+    assert zeile["source_channex_booking_id"] == "59bcdbd2-6df5-4ae5-bbee-ef2d1d71fbce"
+    assert "total_amount" not in zeile and "paid_amount" not in zeile, (
+        "der Zimmerpreis des Imports darf den Gesamtpreis der CSV nicht ersetzen"
+    )

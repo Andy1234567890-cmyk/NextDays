@@ -295,6 +295,7 @@ class BestandsimportDienstMixin:
             angelegt=ergebnis.imported,
             aktualisiert=ergebnis.updated,
             uebersprungen=ergebnis.skipped,
+            portal=ergebnis.portal,
             fehlerhaft=ergebnis.failed,
             gescheitert=gescheitert,
         )
@@ -303,7 +304,8 @@ class BestandsimportDienstMixin:
             tenant_id=tenant_id, lauf_id=lauf_id, status=status,
             zeilen=ergebnis.total_rows, angelegt=ergebnis.imported,
             aktualisiert=ergebnis.updated,
-            uebersprungen=ergebnis.skipped, fehlerhaft=ergebnis.failed,
+            uebersprungen=ergebnis.skipped, portal=ergebnis.portal,
+            fehlerhaft=ergebnis.failed,
         )
         return {
             "status": status,
@@ -311,6 +313,7 @@ class BestandsimportDienstMixin:
             "angelegt": ergebnis.imported,
             "aktualisiert": ergebnis.updated,
             "uebersprungen": ergebnis.skipped,
+            "portal": ergebnis.portal,
             "fehlerhaft": ergebnis.failed,
             "gescheitert": gescheitert,
         }

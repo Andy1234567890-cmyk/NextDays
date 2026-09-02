@@ -1413,6 +1413,8 @@ export type BestandsimportLauf = {
   angelegt: number;
   aktualisiert: number;
   uebersprungen: number;
+  // Bereits über den Portal-Feed vorhanden und belassen (0530).
+  portal: number;
   fehlerhaft: number;
   aktuelle_zeile: string | null;
   gescheitert: { grund?: string }[];

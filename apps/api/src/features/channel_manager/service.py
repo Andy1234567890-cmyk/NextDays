@@ -37,6 +37,7 @@ from .airbnb_zimmer_push import AirbnbZimmerPushMixin
 from .ari_push import AriPushMixin
 from .bestandsimport_dienst import BestandsimportDienstMixin
 from .bookings_sync import BookingsSyncMixin
+from .buchungs_abgleich import BuchungsAbgleichMixin
 from .channels import ChannelsMixin
 from .channex_client import ChannexCallTrace, ChannexClient, ChannexError
 from .common import (
@@ -78,6 +79,9 @@ __all__ = [
 
 
 class ChannelManagerService(
+    # Selbstheilung Feed-Staging ↔ Reservierungen (taeglicher Tick); braucht
+    # nur `_project_booking_to_reservation` aus BookingsSyncMixin.
+    BuchungsAbgleichMixin,
     ContentSyncMixin,
     TaxSyncMixin,
     AbgabenStatusMixin,

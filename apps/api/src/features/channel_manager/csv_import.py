@@ -275,11 +275,45 @@ class CsvImportMixin:
             for z in vorhanden
             if z.get("source_channex_booking_id")
         }
+        # Buchungen, die der PORTAL-FEED bereits angelegt hat (Quelle ist die
+        # Channex-ID, nicht `csv:`), am Bestaetigungscode erkannt. Solche Zeilen
+        # werden NICHT projiziert: die Datei traegt zwoelf Spalten, der Feed
+        # den ganzen Payload — Gebuehren-Aufstellung, Buchungszeitpunkt,
+        # Gaestezahl. Live am 31.08.2026 ueberschrieb ein Upload 54 solcher
+        # Zeilen, danach meldete die Abrechnung „Portal hat keine Gebuehren
+        # gemeldet" (Details in bookings_sync, zweiter Suchweg). Die Projektion
+        # hat denselben Riegel als Backstop; hier spart der Vorab-Blick die
+        # ~3,5 s je Zeile UND macht die Zahl im Fenster sichtbar („bereits
+        # ueber das Portal da"), statt sie unter „ohne Wirkung" zu verstecken.
+        # Zwei Mengen, weil der Feed zwei Sorten kennt: LIVE-Buchungen tragen
+        # den vollen Payload (Preis-Aufstellung) — die CSV aendert nichts an
+        # ihnen. Channex-IMPORTE (`is_imported`, beim Verbinden nachgeholt)
+        # tragen laut Channex „no extras and cleaning fees" — dort ist der
+        # CSV-Gesamtpreis der bessere Betrag; die Projektion uebernimmt genau
+        # ihn und sonst nichts, gezaehlt als „aktualisiert".
+        portal_zeilen = (
+            db.table("reservations")
+            .select("external_ref, source_channex_booking_id, is_imported")
+            .eq("tenant_id", tenant_id)
+            .execute()
+        ).data or []
+        feed_zeilen = [
+            z for z in portal_zeilen
+            if z.get("external_ref")
+            and z.get("source_channex_booking_id")
+            and not str(z["source_channex_booking_id"]).startswith("csv:")
+        ]
+        portal_codes = {
+            str(z["external_ref"]) for z in feed_zeilen if not z.get("is_imported")
+        }
+        feed_import_codes = {
+            str(z["external_ref"]) for z in feed_zeilen if z.get("is_imported")
+        }
 
         # Zähler/Fehler lokal führen und am Ende einmalig zuweisen — Pylint
         # erkennt das Pydantic-Field .errors sonst statisch als FieldInfo (ohne
         # .append). Gleiches Muster wie in bookings_sync._sync_feed.
-        total = imported = aktualisiert = skipped = failed = 0
+        total = imported = aktualisiert = skipped = portal = failed = 0
         errors: list[str] = []
         # Fuer den Balken: die Gesamtzahl MUSS vor der ersten Zeile feststehen,
         # sonst zeigt die Anzeige „7 von 7", waehrend noch 245 kommen. Der
@@ -298,7 +332,7 @@ class CsvImportMixin:
                 outcome = self._import_csv_row(
                     db, tenant_id, raw, by_id, by_title, idx,
                     by_normal=by_normal, by_adresse=by_adresse,
-                    by_strasse=by_strasse,
+                    by_strasse=by_strasse, portal_codes=portal_codes,
                 )
             except _RowError as exc:
                 failed += 1
@@ -307,9 +341,15 @@ class CsvImportMixin:
                     fortschritt(total, gesamt, self._zeilen_bezeichnung(raw))
                 continue
             geschrieben, booking_id = outcome
+            code = booking_id.removeprefix("csv:")
             if not geschrieben:
-                skipped += 1
-            elif booking_id in bekannt:
+                # Steht der Code beim Feed, war die Zeile bereits ueber das
+                # Portal da und wurde bewusst belassen.
+                if code in portal_codes:
+                    portal += 1
+                else:
+                    skipped += 1
+            elif booking_id in bekannt or code in feed_import_codes:
                 # Schon aus einem frueheren Upload da — die Zeile wurde
                 # aktualisiert, nicht angelegt. Genau diese Unterscheidung
                 # macht das Fortschritts-Fenster aussagekraeftig.
@@ -327,11 +367,12 @@ class CsvImportMixin:
         log.info(
             "csv_booking_import_done",
             tenant_id=tenant_id, total=total, imported=imported,
-            aktualisiert=aktualisiert, skipped=skipped, failed=failed,
+            aktualisiert=aktualisiert, skipped=skipped, portal=portal,
+            failed=failed,
         )
         return CsvBookingImportResponse(
             total_rows=total, imported=imported, updated=aktualisiert,
-            skipped=skipped, failed=failed, errors=errors,
+            skipped=skipped, portal=portal, failed=failed, errors=errors,
         )
 
     def _import_csv_row(  # noqa: PLR0913 — feste Signatur, alle Argumente nötig
@@ -346,6 +387,7 @@ class CsvImportMixin:
         by_normal: dict[str, str] | None = None,
         by_adresse: dict[str, str] | None = None,
         by_strasse: dict[str, str] | None = None,
+        portal_codes: set[str] | None = None,
     ) -> tuple[bool, str]:
         """Eine CSV-Zeile → Reservierung.
 
@@ -415,6 +457,16 @@ class CsvImportMixin:
             f"{property_id}:{arrival}:{departure}:{(first + last).lower()}"
         )
         booking_id = f"csv:{ext}"
+        if cell("external_id") and cell("external_id") in (portal_codes or set()):
+            # Bereits ueber den Portal-Feed da — die reichere Quelle bleibt
+            # unangetastet (siehe import_bookings_csv). Der Aufrufer zaehlt
+            # die Zeile als „portal", nicht als „ohne Wirkung".
+            log.info(
+                "csv_zeile_portalbuchung_belassen",
+                tenant_id=tenant_id, zeile=line,
+                ota_reservation_code=cell("external_id"),
+            )
+            return False, booking_id
 
         # attrs im OTA-Buchungs-Format bauen → dieselbe Projektion nutzen.
         attrs: dict[str, Any] = {
