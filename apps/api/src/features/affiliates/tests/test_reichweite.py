@@ -64,13 +64,25 @@ fakedb._UNIQUE.setdefault("affiliate_post_metrics", [(("post_id", "metric_date")
 
 
 def _settings(**extra: Any) -> Settings:
+    # Meta und TikTok stehen hier LEER, und zwar ausdruecklich: `Settings` liest
+    # `.env`, also waere ein Test, der nur die Google-Werte setzt, davon
+    # abhaengig, welche Anbieter auf DIESEM Rechner gerade eingetragen sind.
+    # Genau so ist er gekippt, als Etappe 6 die TIKTOK_*-Variablen bekam — der
+    # Test prueft "nicht konfiguriert" und bekam ein konfiguriertes TikTok.
+    # `extra` gewinnt, damit ein einzelner Test einen Anbieter zuschalten kann.
+    vorgaben: dict[str, Any] = {
+        "meta_app_id": "",
+        "meta_app_secret": SecretStr(""),
+        "tiktok_client_key": "",
+        "tiktok_client_secret": SecretStr(""),
+    }
     return Settings(
         marketing_base_url="https://mynextdays.com",
         partner_base_url="https://partner.mynextdays.com",
         affiliate_token_key=SecretStr(base64.b64encode(os.urandom(32)).decode()),
         google_oauth_client_id="cid",
         google_oauth_secret=SecretStr("csec"),
-        **extra,
+        **{**vorgaben, **extra},
     )
 
 

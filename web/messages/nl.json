@@ -1557,7 +1557,7 @@
       "noFeeItems": "Geen kosten of extra services bij deze boeking.",
       "posten": {
         "guestPrice": "Gastprijs volgens portaal (incl. kosten, excl. extra diensten)",
-        "portalCommission": "Portaalcommissie {kanaal}",
+        "portalCommission": "Portaalcommissie {kanal}",
         "portalFee": "Portaalbetalingskosten",
         "portalPayout": "Uitbetaling portaal",
         "feesOut": "Kosten in gastprijs — uit de berekening gehaald",
