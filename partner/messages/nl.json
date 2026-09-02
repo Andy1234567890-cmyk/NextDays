@@ -1,0 +1,521 @@
+{
+  "meta": {
+    "titel": "myNextDays Partner",
+    "beschreibung": "Partnerdashboard van het myNextDays-partnerprogramma: links, klanten, commissies, uitbetalingen."
+  },
+  "nav": {
+    "partner": "Partner",
+    "uebersicht": "Overzicht",
+    "kunden": "Klanten",
+    "provisionen": "Commissies",
+    "auszahlungen": "Uitbetalingen",
+    "links": "Links & materiaal",
+    "profil": "Profiel",
+    "sprache": "Taal",
+    "abmelden": "Afmelden",
+    "nachrichten": "Berichten",
+    "menue": "Menu",
+    "team": "Team",
+    "beitraege": "Berichten"
+  },
+  "status": {
+    "pending_review": {
+      "titel": "Uw aanvraag wordt beoordeeld",
+      "text": "Wij beoordelen elke aanvraag persoonlijk en nemen per e-mail contact met u op. Tot de goedkeuring zijn links en codes nog niet actief – u kunt uw profiel- en uitbetalingsgegevens nu al invullen."
+    },
+    "rejected": {
+      "titel": "Uw aanvraag is niet geaccepteerd",
+      "text": "Wij konden uw aanvraag op dit moment niet accepteren. Neem bij vragen gerust contact met ons op."
+    },
+    "suspended": {
+      "titel": "Uw partneraccount is geblokkeerd",
+      "text": "Openstaande commissies worden niet uitbetaald zolang de blokkering van kracht is. Neem bij vragen contact met ons op."
+    },
+    "approved": {
+      "titel": "Goedgekeurd",
+      "text": "Uw account is actief."
+    },
+    "grund": "Reden"
+  },
+  "uebersicht": {
+    "titelBewerber": "Welkom bij het partnerprogramma",
+    "textBewerber": "Zodra uw aanvraag is goedgekeurd, ziet u hier uw links, klanten en commissies. Vul in de tussentijd uw belasting- en uitbetalingsgegevens in – dan kan de eerste uitbetaling zonder vragen verlopen.",
+    "zumProfil": "Naar profiel",
+    "titel": "Hallo {name}",
+    "rang": "Rang {rang} · {satz} van de abonnementsomzet",
+    "naechsterRang": "nog {fehlend} betalende klanten tot {rang} ({satz})",
+    "linksTeilen": "Links delen",
+    "keineBetraege": "—",
+    "kachel": {
+      "klicks": "Kliks (30 dagen)",
+      "registrierungen": "Geregistreerde bedrijven",
+      "zahlend": "Betalende klanten",
+      "offen": "Open (terugbetalingsperiode)",
+      "auszahlbar": "Uitbetaalbaar",
+      "ausgezahlt": "Uitbetaald",
+      "team": "Teamprovisie",
+      "teamHinweis": "{n} teamgenoten",
+      "struktur": "Klanten in uw structuur",
+      "strukturHinweis": "eigen + teamklanten — dit aantal bepaalt uw rang",
+      "super": "Superprovisie",
+      "superHinweis": "{satz} op de abonnementsomzet van uw structuur, zonder termijnbeperking",
+      "turbo": "Boekingsaandeel myBestDays",
+      "turboHinweis": "0,5 % per boeking via myBestDays bij uw klanten en teamklanten",
+      "bonus": "Promotiebonussen",
+      "bonusHinweis": "eenmalig per bereikte rang"
+    },
+    "deineLinks": "Uw links"
+  },
+  "links": {
+    "titel": "Links & materiaal",
+    "hinweis": "Uw link leidt naar mynextdays.com en telt de klik. De code staat zichtbaar in het formulier bij de registratie – zonder cookie. Een bedrijf wordt aan precies één partner toegewezen.",
+    "klicks30": "{n} kliks in 30 dagen",
+    "kopiert": "Gekopieerd.",
+    "kopierenFehlgeschlagen": "Kopiëren niet mogelijk – selecteer en kopieer alstublieft.",
+    "codeKopieren": "Code kopiëren",
+    "linkFehlt": "Link nog niet beschikbaar.",
+    "neuerCode": "Nieuwe code aanmaken",
+    "label": "Omschrijving (optioneel)",
+    "wunschcode": "Gewenste code (optioneel)",
+    "anlegen": "Aanmaken",
+    "abbrechen": "Annuleren",
+    "codeAngelegt": "Code aangemaakt.",
+    "codeVergeben": "Deze code is al in gebruik.",
+    "fehler": "Dat is niet gelukt.",
+    "kennzeichnung": {
+      "titel": "Verplicht: reclame kenmerken",
+      "text": "Elke aanbeveling met uw link of code is reclame en moet als zodanig herkenbaar zijn – aan het begin van de post, in de taal van de post. Een simpele \"#ad\" is niet voldoende. Overtredingen kunnen leiden tot een blokkering.",
+      "imBeitrag": "In de post",
+      "amLink": "Bij de link",
+      "land": {
+        "DE": "Duitsland",
+        "DK": "Denemarken"
+      },
+      "andere": "Andere landen: Het commerciële oogmerk moet duidelijk herkenbaar zijn (EU-richtlijn oneerlijke handelspraktijken). Controleer de voorschriften van uw land; we vullen bewezen formuleringen geleidelijk aan."
+    },
+    "material": {
+      "titel": "Reclamemateriaal",
+      "leer": "Materiaal wordt voorbereid – het verschijnt hier zodra het is goedgekeurd.",
+      "art": {
+        "video": "Video",
+        "image": "Afbeelding",
+        "text": "Tekstblok",
+        "link": "Link"
+      },
+      "oeffnen": "Openen"
+    }
+  },
+  "kunden": {
+    "titel": "Klanten",
+    "hinweis": "Uw geworven bedrijven – pseudoniem. U ziet land, status en bedragen, nooit naam of e-mail. Betalend betekent: eerste abonnementsfactuur betaald en abonnement loopt.",
+    "leer": "Nog geen bedrijf heeft zich via uw link geregistreerd.",
+    "kunde": "Klant {n}",
+    "spalte": {
+      "kunde": "Klant",
+      "land": "Land",
+      "status": "Status",
+      "registriert": "Geregistreerd",
+      "provisionBis": "Provisie tot",
+      "verdient": "Verdiend"
+    },
+    "status": {
+      "registriert": "Geregistreerd",
+      "zahlend": "Betalend",
+      "beendet": "Beëindigd",
+      "in_pruefung": "In onderzoek",
+      "abgelehnt": "Afgewezen"
+    }
+  },
+  "provisionen": {
+    "titel": "Provisies",
+    "hinweis": "Elke regel is een betaalde abonnementsfactuur, een boeking via myBestDays of een promotiebonus. De basis is de netto-abonnementsomzet of de boekingswaarde; het tarief is uw rang op het moment van betaling. Openstaande regels worden na 30 dagen uitbetaalbaar.",
+    "leer": "Nog geen provisie.",
+    "reifAm": "uitbetaalbaar vanaf {datum}",
+    "spalte": {
+      "datum": "Datum",
+      "art": "Type",
+      "kunde": "Klant",
+      "basis": "Basis",
+      "satz": "Tarief",
+      "betrag": "Bedrag",
+      "status": "Status"
+    },
+    "art": {
+      "earn": "Opbrengst",
+      "reversal": "Terugbetaling",
+      "adjustment": "Correctie",
+      "override": "Teamprovisie",
+      "bonus": "Promotiebonus",
+      "lifetime": "Superprovisie",
+      "booking_share": "Boekingsaandeel"
+    },
+    "status": {
+      "pending": "Open",
+      "approved": "Uitbetaalbaar",
+      "held": "Vastgehouden",
+      "paid": "Uitbetaald",
+      "reversed": "Teruggenomen",
+      "cancelled": "Geannuleerd"
+    },
+    "team": "Team"
+  },
+  "auszahlungen": {
+    "titel": "Uitbetalingen",
+    "hinweis": "Maandelijks, per valuta, vanaf het minimumbedrag. Bij elke uitbetaling hoort een creditnota (self-billing) — dit is uw bewijs.",
+    "kein_weg": "Er is nog geen uitbetalingsmethode ingesteld. Vul deze alstublieft aan onder Profiel — anders kan er niet worden uitbetaald.",
+    "leer": "Nog geen uitbetaling.",
+    "spalte": {
+      "nummer": "Creditnota nr.",
+      "zeitraum": "Periode",
+      "betrag": "Bedrag",
+      "status": "Status",
+      "gutschrift": "Creditnota"
+    },
+    "status": {
+      "pending": "Voorbereid",
+      "processing": "In overboeking",
+      "paid": "Betaald",
+      "failed": "Mislukt"
+    },
+    "gutschriftLaden": "Downloaden",
+    "gutschriftFehler": "Creditnota kon niet worden geladen."
+  },
+  "profil": {
+    "titel": "Profiel",
+    "seit": "Partner sinds {datum}",
+    "stammdaten": "Stamgegevens",
+    "name": "Naam",
+    "firma": "Bedrijf (optioneel)",
+    "sprache": "Taal voor e-mails",
+    "kanal": "Uw socialmedia-accounts en kanalen",
+    "speichern": "Opslaan",
+    "gespeichert": "Opgeslagen.",
+    "gespeichertViesOffen": "Opgeslagen. Het btw-nummer kon nog niet worden bevestigd — we controleren het opnieuw vóór de uitbetaling.",
+    "steuerUndAuszahlung": "Belasting- en uitbetalingsgegevens",
+    "aktuellerWeg": "Huidig: {weg} {details}",
+    "keinWeg": "Nog geen uitbetalingsmethode ingesteld.",
+    "viesBestaetigt": "Btw-nummer bevestigd (VIES)",
+    "viesOffen": "Btw-nummer nog niet bevestigd",
+    "rechtsform": "Rechtsvorm",
+    "privat": "Particulier",
+    "unternehmen": "Bedrijf",
+    "land": "Land",
+    "ustId": "Btw-nummer",
+    "ustIdHinweis": "Wordt gecontroleerd tegen het EU VIES-systeem. Zonder bevestigd nummer geen uitbetaling aan bedrijven. Het tegoed is voorzien van de reverse-charge-vermelding.",
+    "privatHinweis": "Als particulier ontvangt u het tegoed zonder btw. De commissie dient u zelf te belasten.",
+    "auszahlungsweg": "Uitbetalingsmethode",
+    "kontoinhaber": "Rekeninghouder",
+    "empfaengerEmail": "{weg}-e-mailadres",
+    "passwortBestaetigen": "Ter bevestiging: uw wachtwoord",
+    "passwortFalsch": "Het wachtwoord komt niet overeen.",
+    "steuerdaten": "Belastinggegevens"
+  },
+  "anmelden": {
+    "partner": "Partner",
+    "titel": "Inloggen",
+    "text": "Het dashboard van het myNextDays-partnerprogramma.",
+    "email": "E-mail",
+    "passwort": "Wachtwoord",
+    "anmelden": "Inloggen",
+    "passwortVergessen": "Wachtwoord vergeten?",
+    "resetGesendet": "Als er een account bestaat, hebben we een e-mail gestuurd.",
+    "stoerung": "De inlogservice is momenteel niet bereikbaar. Dit ligt niet aan uw inloggegevens — probeer het later opnieuw.",
+    "keinPartnerKonto": "Met deze inloggegevens bestaat er geen partneraccount.",
+    "fehlgeschlagen": "Inloggen mislukt.",
+    "nochKeinKonto": "Nog geen partner?",
+    "bewerben": "Nu aanmelden"
+  },
+  "bewerben": {
+    "partner": "Partner",
+    "titel": "Aanmelden als partner",
+    "text": "Twee minuten. We beoordelen elke aanmelding persoonlijk en nemen contact op via e-mail.",
+    "name": "Uw naam",
+    "firma": "Bedrijf (optioneel)",
+    "email": "E-mail",
+    "passwort": "Wachtwoord (minimaal 8 tekens)",
+    "rechtsform": "Rechtsvorm",
+    "privat": "Particulier",
+    "unternehmen": "Bedrijf",
+    "land": "Land",
+    "ustId": "Btw-nummer",
+    "ustIdHinweis": "Verplicht voor bedrijven; wordt gecontroleerd via VIES.",
+    "kanal": "Uw socialmedia-accounts",
+    "kanalHinweis": "Verplicht: minimaal één socialmedia-account (Instagram, TikTok, YouTube, Facebook, LinkedIn …) met adres, handle en bereik. Website, blog of nieuwsbrief zijn optioneel. Wij controleren de accounts voor goedkeuring.",
+    "pitch": "Hoe bereikt u verhuurders van vakantieaccommodaties of hotels? (optioneel)",
+    "pitchHinweis": "Een paar zinnen zijn voldoende.",
+    "zustimmung": "Ik ga akkoord met de partner-voorwaarden, in het bijzonder de plicht om aanbevelingen als reclame te markeren.",
+    "bedingungen": "Naar het programma",
+    "captchaHinweis": "Deze site wordt beschermd door reCAPTCHA; het privacybeleid en de servicevoorwaarden van Google zijn van toepassing.",
+    "stoerung": "De service is momenteel niet beschikbaar — probeer het later opnieuw.",
+    "emailVergeben": "Er is al een aanmelding voor dit e-mailadres. Log alstublieft in.",
+    "captchaFehler": "De beveiligingscontrole is mislukt. Laad de pagina opnieuw en probeer het nogmaals.",
+    "laeuft": "Wordt verzonden …",
+    "absenden": "Aanmelding verzenden",
+    "schonPartner": "Al partner?",
+    "anmelden": "Inloggen",
+    "sponsor": "Geadverteerd door partner (code, optioneel)",
+    "sponsorHinweis": "Bent u hier via de teamlink van een partner? Zijn code staat dan hier. Hij ontvangt een teamprovisie op de abonnementsomzet van uw klanten — uw eigen provisie blijft ongewijzigd."
+  },
+  "nachrichten": {
+    "titel": "Berichten",
+    "hinweis": "Uw directe lijn naar het partnerteam — vragen over commissie, uitbetaling, materiaal of een klant. Antwoorden verschijnen hier live.",
+    "neu": "Nieuw bericht aan het partnerteam",
+    "platzhalter": "Waar gaat het over?",
+    "senden": "Verzenden",
+    "abbrechen": "Annuleren",
+    "leer": "Nog geen gesprek.",
+    "stoerung": "De dienst is momenteel niet beschikbaar — probeer het later opnieuw.",
+    "fehler": "Dat is niet gelukt.",
+    "team": "Partnerteam",
+    "du": "U",
+    "antwortPlatzhalter": "Uw antwoord …",
+    "antworten": "Antwoorden",
+    "status": {
+      "in_bearbeitung": "In behandeling",
+      "wartet_auf_dich": "Antwoord ontvangen",
+      "geloest": "Opgelost"
+    }
+  },
+  "kanaele": {
+    "plattformLabel": "Platform",
+    "handle": "Handle (optioneel)",
+    "reichweite": "Bereik (volgers)",
+    "hinzufuegen": "Kanaal toevoegen",
+    "entfernen": "Kanaal verwijderen",
+    "plattform": {
+      "website": "Website",
+      "blog": "Blog",
+      "newsletter": "Nieuwsbrief",
+      "podcast": "Podcast",
+      "other": "Overig"
+    },
+    "socialPflicht": "Minimaal één socialmedia-account is verplicht — een website alleen is niet voldoende."
+  },
+  "team": {
+    "titel": "Team",
+    "hinweis": "Partners die zich met uw code hebben aangemeld, vormen uw team. Op de netto-abonnementsomzet van hun klanten ontvangt u het verschil tussen uw tarief (momenteel {satz}) en het tarief van de teampartner — beide op het moment van betaling. Teamklanten tellen 1:1 mee voor uw rang.",
+    "meinSponsor": "U bent teampartner van {name}.",
+    "link": {
+      "titel": "Uw teamlink",
+      "text": "Wie zich via deze link aanmeldt, krijgt uw code zichtbaar in de aanmelding — zonder cookie.",
+      "kopieren": "Link kopiëren",
+      "keinLink": "Geen actieve code — maak er een aan onder Links & Materiaal."
+    },
+    "regeln": {
+      "titel": "De regels",
+      "rang": "Teamprovisie = uw tarief minus het tarief van de teampartner, op het moment van betaling. Gelijke rang = 0.",
+      "ebene": "Precies één niveau: uw teampartners bouwen geen eigen team op.",
+      "keinGeld": "Geen geld voor werving — alleen uit betaalde abonnementsomzet.",
+      "dauer": "12 maanden per teamklant, 30 dagen restitutieperiode. Vanaf Elite bovendien 2,5 % superprovisie zonder termijnbeperking."
+    },
+    "kachel": {
+      "mitglieder": "Teampartners (actief / totaal)",
+      "teamKunden": "Betalende teamklanten",
+      "umsatz30": "Teamomzet (30 dagen)",
+      "offen": "Teamprovisie open",
+      "auszahlbar": "Teamprovisie uitbetaalbaar",
+      "ausgezahlt": "Teamprovisie uitbetaald"
+    },
+    "verlauf": {
+      "titel": "Geschiedenis · 12 maanden",
+      "leer": "Nog geen teamomzet.",
+      "provision": "Teamprovisie",
+      "umsatz": "Teamomzet"
+    },
+    "mitglieder": {
+      "titel": "Uw team",
+      "leer": "Nog geen teampartners. Deel uw teamlink.",
+      "kunden": "{n} betalende klanten",
+      "umsatz30": "Omzet 30 d.",
+      "offen": "Open",
+      "seit": "Sinds {datum}"
+    },
+    "spalte": {
+      "partner": "Partner",
+      "status": "Status",
+      "rang": "Rang",
+      "kunden": "Betalende klanten",
+      "umsatz30": "Omzet 30 d.",
+      "umsatzGesamt": "Totale omzet",
+      "offen": "Open",
+      "auszahlbar": "Uitbetaalbaar",
+      "ausgezahlt": "Uitbetaald"
+    },
+    "status": {
+      "pending_review": "In controle",
+      "approved": "Goedgekeurd",
+      "rejected": "Afgewezen",
+      "suspended": "Geblokkeerd"
+    },
+    "chat": {
+      "titel": "Entertainment",
+      "schreiben": "Schrijven",
+      "rolle": {
+        "sponsor": "Uw sponsor",
+        "member": "Teamgenoot"
+      },
+      "zurueck": "Team",
+      "leer": "Nog geen berichten.",
+      "platzhalter": "Uw bericht …",
+      "senden": "Verzenden",
+      "titelListe": "Berichten in team"
+    },
+    "nochNichtErlaubt": "U leidt een team vanaf de rang 'Promovendus' (5 betalende klanten in uw structuur). Tot dan is er geen teamlink."
+  },
+  "bedingungen": {
+    "neueVersion": "De partnerovereenkomst is bijgewerkt (uw akkoord: versie {alt}, huidige: {neu}). Lees en ga opnieuw akkoord.",
+    "nochNicht": "Ga akkoord met de partnerovereenkomst (versie {neu}).",
+    "lesen": "Voorwaarden lezen",
+    "annehmen": "Akkoord",
+    "angenommen": "Bedankt — akkoord opgeslagen."
+  },
+  "beitraege": {
+    "titel": "Berichten",
+    "hinweis": "Genereer een unieke link voor elke reel, video of post. Zo ziet u welke bijdrage leidt tot klikken, registraties en betalende klanten.",
+    "kontoHinweis": "Koppel uw account, dan verschijnen hier ook weergaven en interacties direct van het platform.",
+    "kontoVerbinden": "Account koppelen",
+    "neu": "Nieuwe bijdrage",
+    "keinCode": "U heeft eerst een actieve verwijzingscode nodig.",
+    "feld": {
+      "titel": "Titel",
+      "titelBeispiel": "bijv. Reel Kopenhagen Herfst",
+      "plattform": "Platform",
+      "code": "Code",
+      "datum": "Gepubliceerd op",
+      "url": "Adres van de bijdrage (optioneel)",
+      "urlHinweis": "Kan na publicatie worden toegevoegd. Met een adres koppelen we weergaven en interacties aan de bijdrage."
+    },
+    "linkErzeugen": "Link genereren",
+    "angelegt": "Bijdrage aangemaakt — de link is klaar.",
+    "doppelt": "Deze bijdrage bestaat al voor deze code.",
+    "fehler": "Dat is niet gelukt. Probeer het opnieuw.",
+    "liste": "{n, plural, =0 {Geen bijdragen} =1 {1 bijdrage} other {# bijdragen}}",
+    "leer": "Nog geen bijdrage. Genereer hierboven de eerste link.",
+    "veroeffentlicht": "gepubliceerd {datum}",
+    "loeschen": "Bijdrage verwijderen",
+    "geloescht": "Bijdrage verwijderd.",
+    "loeschenGesperrt": "De bijdrage heeft al registraties en blijft behouden.",
+    "kopiert": "Link gekopieerd.",
+    "kopierenFehlgeschlagen": "Kopiëren niet mogelijk — handmatig markeren alstublieft.",
+    "linkFehlt": "De link is momenteel niet beschikbaar.",
+    "qrZeigen": "QR-code tonen",
+    "qrSchliessen": "QR-code verbergen",
+    "qrAlt": "QR-code voor de bijdragelink",
+    "qrHinweis": "Voor Stories, video's en print — leidt naar dezelfde link.",
+    "beitragOeffnen": "Bijdrage openen",
+    "urlAendern": "Adres wijzigen",
+    "urlNachtragen": "Adres toevoegen",
+    "speichern": "Opslaan",
+    "gespeichert": "Opgeslagen.",
+    "kennzahl": {
+      "klicks": "Klikken 90 dagen",
+      "klicks30": "{n} in 30 dagen",
+      "registrierungen": "Registraties",
+      "kunden": "Betalende klanten",
+      "views": "Weergaven",
+      "gemessen": "Status {zeit}",
+      "nichtVerbunden": "Account niet gekoppeld",
+      "interaktion": "Likes {likes} · Reacties {kommentare} · Delen {shares} · Opgeslagen {saves}",
+      "pro1000": "{n} klikken per 1.000 weergaven"
+    },
+    "freigabe": {
+      "videoNoetig": "Upload voor goedkeuring",
+      "erklaerung": "Upload uw voltooide video, afbeelding of PDF voordat u deze publiceert. Zodra wij deze hebben goedgekeurd, verschijnt hier uw persoonlijke link – deze plaatst u dan onder het bericht. Gebruik alleen ons promotiemateriaal, geen eigen screenshots, en geen beloftes over succes of garanties.",
+      "hochladen": "Bestand kiezen (video, JPG, PNG, PDF)",
+      "neuHochladen": "Nieuw bestand uploaden",
+      "laeuft": "Bezig met uploaden …",
+      "eingereicht": "Video ingediend. We nemen contact met u op zodra deze is beoordeeld.",
+      "inPruefung": "In beoordeling",
+      "inPruefungHinweis": "Uw video is bij ons. Zodra deze is goedgekeurd, verschijnt hier uw link.",
+      "eingereichtAm": "Ingediend op {zeit} — zodra deze is goedgekeurd, verschijnt hier uw link.",
+      "abgelehnt": "Niet goedgekeurd",
+      "grund": "Reden",
+      "freigegeben": "Video goedgekeurd",
+      "zuGross": "De video is groter dan {mb} MB.",
+      "fehler": "Het uploaden is mislukt.",
+      "grundKategorie": {
+        "material": "Materiaal: alleen officieel promotiemateriaal, geen eigen screenshots",
+        "promise": "Beloften: geen garantie- of succesbeloften",
+        "disclosure": "Markering: het bericht moet als reclame worden gemarkeerd",
+        "brand": "Merk: logo of naam verkeerd gebruikt",
+        "other": "Overig"
+      }
+    }
+  },
+  "kanalVerbindung": {
+    "titel": "Gekoppelde accounts",
+    "hinweis": "Koppel uw sociale media-accounts, zodat volgers en weergaven rechtstreeks van het platform komen. Dit is vrijwillig en op elk moment herroepbaar; we lezen alleen, we schrijven niets.",
+    "verbinden": "{anbieter} koppelen",
+    "baldVerfuegbar": "binnenkort beschikbaar",
+    "nichtKonfiguriert": "Deze koppeling is nog niet geactiveerd.",
+    "fehler": "Dat is niet gelukt. Probeer het opnieuw.",
+    "verifiziert": "geverifieerd",
+    "follower": "{n} volgers",
+    "views28": "{n} weergaven in 28 dagen",
+    "engagement": "Betrokkenheid {n} %",
+    "gemessen": "Status {zeit}",
+    "nochKeinSnapshot": "eerste meting volgt",
+    "letzterFehler": "Laatste ophaalpoging mislukt",
+    "trennen": "Verbinding verbreken",
+    "getrennt": "Verbinding verbroken. Eerdere meetwaarden blijven als geschiedenis behouden.",
+    "getrennteKonten": "{n, plural, =1 {1 verbroken account} other {# verbroken accounts}}",
+    "getranntAm": "verbroken {zeit}",
+    "durchPlattform": "Toegang van het platform beëindigd",
+    "datenschutz": "Bij het verbreken verwijderen we de toegangsgegevens onmiddellijk. Gemeten waarden blijven als geschiedenis opgeslagen. Details in de privacyverklaring.",
+    "rueckkehr": {
+      "verbunden": "Account gekoppeld — de eerste meting loopt.",
+      "abgelehnt": "Verbinding afgebroken — u heeft geen toegang verleend.",
+      "fehler": "Verbinding mislukt."
+    }
+  },
+  "passwort": {
+    "anzeigen": "Wachtwoord tonen",
+    "verbergen": "Wachtwoord verbergen"
+  },
+  "verbundkonto": {
+    "titel": "Gekoppelde rekening voor uitbetaling",
+    "hinweis": "Uw commissie wordt overgemaakt naar een gekoppelde rekening. Hiervoor vereist onze betalingsdienstaanbieder een identiteitscontrole – zolang deze openstaat, kan er niet worden uitbetaald.",
+    "bereit": "Uw gekoppelde rekening is geactiveerd. Uitbetalingen worden automatisch daarheen overgemaakt.",
+    "offeneFelder": "Deze gegevens ontbreken nog",
+    "gesperrt": "De rekening is momenteel geblokkeerd: {grund}",
+    "schrittKonto": "Gekoppelde rekening openen",
+    "schrittDaten": "Persoonlijke gegevens",
+    "schrittDatenFirma": "Bedrijfs- en persoonsgegevens",
+    "schrittBank": "Bankgegevens",
+    "schrittBedingungen": "Voorwaarden van de betalingsdienstaanbieder",
+    "kontoAnlegen": "Gekoppelde rekening openen",
+    "kontoAngelegt": "Gekoppelde rekening geopend.",
+    "datenBearbeiten": "Gegevens bewerken",
+    "zuklappen": "Inklappen",
+    "datenGesendet": "Gegevens opgeslagen.",
+    "vorname": "Voornaam",
+    "nachname": "Achternaam",
+    "geburtsdatum": "Geboortedatum",
+    "tag": "DD",
+    "monat": "MM",
+    "jahr": "JJJJ",
+    "strasse": "Straat en huisnummer",
+    "plz": "Postcode",
+    "ort": "Plaats",
+    "nationalitaet": "Nationaliteit (landcode)",
+    "telefon": "Telefoon",
+    "webseite": "Website of profiel",
+    "webseiteHinweis": "Het adres waarop u adverteert – nodig voor de controle.",
+    "firmenname": "Bedrijfsnaam",
+    "steuernummer": "Btw-nummer",
+    "firmenStrasse": "Bedrijfsadres",
+    "firmaHinweis": "Als vertegenwoordigingsbevoegde persoon worden uw bovengenoemde gegevens gebruikt.",
+    "speichern": "Gegevens opslaan",
+    "kontoinhaber": "Rekeninghouder",
+    "waehrung": "Valuta",
+    "waehrungHinweis": "De valuta van de bankrekening, niet die van uw land.",
+    "bankSpeichern": "Bankgegevens opslaan",
+    "bankGesetzt": "Bankgegevens opgeslagen.",
+    "bedingungenAnnehmen": "Voorwaarden accepteren",
+    "bedingungenAngenommen": "Voorwaarden geaccepteerd.",
+    "fehler": "Dat is mislukt.",
+    "schrittIdentitaet": "Identiteitscontrole",
+    "identitaetHinweis": "Tot slot controleert onze betalingsdienstaanbieder uw identiteitsbewijs. Dit gebeurt op hun beveiligde pagina, omdat er een foto wordt gemaakt; daarna keert u hier terug.",
+    "identitaetStarten": "Identiteit controleren"
+  }
+}

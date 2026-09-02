@@ -1500,7 +1500,12 @@
       "portalRateInvalid": "Tallennettu portaalin vähennysprosentti on välin 0–100 % ulkopuolella. Korjaa se kohdassa Kirjanpito → Laskutussäännöt.",
       "feeUnassigned": "Vähintään yhtä maksutyyppiä ei ole vielä kohdennettu. Ilman kohdennusta ei voida määrittää, kenelle summa kuuluu ja peritäänkö siitä provisio — määritä se kohdassa Kirjanpito → Laskutussäännöt.",
       "feeNotComputable": "Maksua ei voi tilittää summana (se on tallennettu prosentteina tai ilman summaa). Tarkista maksu kohteen tiedoista.",
-      "contractCurrency": "Kiinteä maksu tai vähimmäisprovisio on eri valuutassa kuin varaus. Eri valuutoissa olevia summia ei muunneta — tarkista tilityssopimus."
+      "contractCurrency": "Kiinteä maksu tai vähimmäisprovisio on eri valuutassa kuin varaus. Eri valuutoissa olevia summia ei muunneta — tarkista tilityssopimus.",
+      "recurringToOwner": "Toistuva hyväksi",
+      "recurringFromOwner": "Toistuva rasitteeksi",
+      "flatFees": "Sopimuksen mukaiset kiinteät maksut",
+      "flatFeesIncluded": "jo huomioitu maksussa",
+      "contractStartsLater": "Ainakin yhdessä varauksessa ei ole vielä laskutussopimusta lähtöpäivänä – omistajan sopimus alkaa vasta myöhemmin. Provisioprosentti on siis tallennettu, mutta \"Voimassa alkaen\" -päivämäärä on lähdön jälkeen. Syötä todellinen sopimuksen alkamispäivä laskutussopimukseen."
     },
     "rental": {
       "perReservation": "Varausta kohden",
@@ -1520,13 +1525,66 @@
         "channexImport": "Varaus haettiin jälkikäteen kanavan liittämisen yhteydessä. Portaalien välittäjän mukaan tällaiset varaukset eivät sisällä lisäpalveluja eikä siivousmaksuja — sitä ei voi hakea jälkikäteen. Jos maksu halutaan veloittaa, lisää se varaukselle omana rivinä.",
         "portalReportsNone": "Portaali ei merkitse maksua tässä varauksessa omaksi riviksi. Booking.comissa tämä riippuu kohteen määrityksistä (Majoituskohde → Käytännöt → Lisämaksut) ja siitä, mistä lähtien maksu on siellä voimassa: myöhemmin otettu maksu puuttuu perustellusti vanhemmista varauksista.",
         "noPayload": "Tälle varaukselle ei ole portaalin sanomaa (olemassa olevien tietojen tuonti). Ilman sitä ei voida todeta, mitkä maksut vieras on maksanut.",
-        "unknownReason": "Syytä ei voida määrittää."
+        "unknownReason": "Syytä ei voida määrittää.",
+        "csvImport": "Varaus on peräisin CSV-tuonnista. Tuotu summa on portaalin vierashinta sisältäen kaikki maksut; yksittäisten maksujen erittelyä ei ole saatavilla, eikä sitä voitu johtaa portaalin tiedoista. Laskutus ei siksi sisällä maksuja kohteen perustiedoista – ne sisältyvät jo summaan, mutta niiden määrää ei ole vahvistettu.",
+        "csvResolvedTitle": "Portaalin summasta johdetut maksut",
+        "csvResolved": "Varaus on peräisin CSV-tuonnista; portaali ei toimittanut erittelyä. Maksut johdettiin tuodun kokonaishinnan ja portaalin ilmoittamien yöhintojen erotuksesta ja nimettiin kohteen perustietojen perusteella. Yöpyminen ja maksut vastaavat täsmälleen kokonaishintaa.",
+        "stammdatenPortalTitle": "Maksut lisätty kohteen perustiedoista",
+        "stammdatenPortal": "Portaali ei toimittanut tähän varaukseen eriteltyä hinnastoa: Portaaliaggregaattorin kanavan liittämisen jälkeen tekemät varaukset eivät sisällä lisämaksuja tai siivousmaksuja; tiedostosta tuotu varasto sisältää vain kokonaishinnan. Maksut on siksi asetettu kohteen mukaisesti: siivous per oleskelu, lomakeskus per yö, lemmikkieläin vain, jos lemmikkieläin on varattu.",
+        "portalBelegt": "Varattu: Portaalin kokonaishinnan ja portaalin ilmoittamien yökohtaisten hintojen välinen ero vastaa täsmälleen näitä maksuja.",
+        "portalImBetrag": "Sisältyy portaalin summaan: Portaalin kokonaishinta sisältää jo maksut; ne on vähennetty, asiakkaan hinta pysyy portaalin summana.",
+        "portalObendrauf": "Portaalin summan lisäksi: Ilmoitettu summa on pelkkä yösumma; maksut lisätään ja ne muodostavat asiakkaan hinnan."
       },
       "chain": {
         "portal": "Portaali",
         "management": "Hallinnointi",
         "flatFee": "Kiinteä maksu",
         "fees": "Maksut"
+      },
+      "arrival": "Saapuminen",
+      "departure": "Lähtö",
+      "commission": "Välityspalkkio",
+      "flatFee": "Kiinteä maksu",
+      "ownerShare": "Omistajan osuus",
+      "portalDeduction": "Portaalin vähennys",
+      "fees": "Maksut",
+      "feesCount": "{n} kohdetta",
+      "expand": "Näytä erittely",
+      "collapse": "Piilota erittely",
+      "expandAll": "Näytä kaikki erittelyt",
+      "collapseAll": "Piilota kaikki erittelyt",
+      "breakdown": "Erittely per varaus",
+      "noFeeItems": "Ei maksuja tai lisäpalveluita tässä varauksessa.",
+      "posten": {
+        "guestPrice": "Vieraan hinta portaalin mukaan (sis. maksut, ilman lisäpalveluita)",
+        "portalCommission": "Portaalin provisio {kanal}",
+        "portalFee": "Portaalin maksu",
+        "portalPayout": "Portaalin maksuosuus",
+        "feesOut": "Maksut asiakkaan hinnassa – poistettu laskennasta",
+        "feesInBase": "Maksut asiakkaan hinnassa – provisiollinen, pysyy laskennassa",
+        "base": "Laskentaperuste",
+        "commission": "Hallinnointiprovisio {pct}",
+        "minCommission": "Minimiprovisio (sopimus) {pct} sijaan",
+        "contractFrom": "Sopimus alkaen {datum}",
+        "rateManual": "manuaalisesti tässä tilityksessä",
+        "rateLegacy": "Oletushinta perustiedoista",
+        "flatFee": "Kiinteä maksu (sopimus)",
+        "feesBack": "Omistajan maksut – palautetaan kokonaisuudessaan",
+        "ownerShare": "Omistajan osuus",
+        "belongsBetrieb": "jää yritykselle",
+        "belongsEigentuemer": "Omistaja",
+        "belongsDurchlauf": "Läpikulkuerät (kolmannet osapuolet)",
+        "commissionFree": "provisiosta vapaa",
+        "commissionable": "provisiollinen",
+        "amountHidden": "Summa yrityksellä",
+        "addon": "Lisäpalvelu",
+        "noFeesReported": "Portaali ei ilmoittanut maksuja tälle varaukselle; siksi niitä ei ole lisätty.",
+        "afterPortal": "Kokonaissumma portaalin vähennysten jälkeen",
+        "afterPortalHint": "Asiakkaan hinta vähennettynä portaalin provisiolla ja portaalin maksulla",
+        "feesBusiness": "Yrityksen tarjoama – ei osa maksuosuutta",
+        "contractStartsLater": "Ei laskutussopimusta lähtöpäivänä {abreise}: sopimus alkaa vasta {beginn}. Päivitä sopimuksen alkamispäivä omistajan tietoihin, jotta tämä varaus voidaan laskuttaa.",
+        "noContract": "Tällä kohteella ei ole laskutussopimusta eikä provisioprosenttia perustiedoissa – luo sopimus omistajalle.",
+        "addonsOutside": "Lisäpalvelut – myNextDaysin kautta myyty, ei sisälly portaalin vierashintaan"
       }
     },
     "expenses": {
@@ -1566,7 +1624,11 @@
       "rentalRevenue": "Vuokratulot",
       "expenses": "Kulut ja lisät",
       "total": "Yhteensä",
-      "deductPercentage": "Provisio (%)"
+      "deductPercentage": "Provisio (%)",
+      "shares": "Omistajan osuus varauksista",
+      "deductions": "Vähennykset",
+      "credits": "Hyvitykset",
+      "recurring": "Toistuvat kohteet"
     },
     "manage": {
       "owner": "Omistaja",
@@ -1631,6 +1693,25 @@
       "cancel": "Peruuta",
       "confirm": "Vahvista",
       "working": "Vahvistetaan…"
+    },
+    "deductions": {
+      "title": "Vähennykset ja hyvitykset",
+      "intro": "Kaikki, mikä muuttaa maksua varausten lisäksi – kolmesta lähteestä: sopimuksen mukainen kiinteä maksu per varaus, kertaluonteiset hyvitykset ja toistuvat erät (jatkuva sopimus).",
+      "deductions": "Vähennykset (omistajan kustannuksella)",
+      "credits": "Hyvitykset (omistajan hyväksi)",
+      "empty": "Ei vähennyksiä tai hyvityksiä tällä ajanjaksolla.",
+      "srcExpense": "Hyvityserät",
+      "srcRecurring": "Toistuva erä",
+      "srcFlatFee": "Sopimuksen mukainen kiinteä maksu",
+      "perBooking": "per varaus",
+      "perNight": "per yö",
+      "perPeriod": "per ajanjakso",
+      "quantity": "{n} × {betrag}",
+      "flatFeesNote": "Sopimuksen mukaiset kiinteät maksut on jo vähennetty omistajan osuudesta per varaus – tässä vain yleiskatsauksen vuoksi, ei lisävähennystä.",
+      "manageRecurring": "Hallinnoi toistuvia eriä",
+      "manageContract": "Hallinnoi laskutussopimusta",
+      "receipt": "Kuitti",
+      "bookingsCount": "{n} varausta"
     }
   },
   "ownerBilling": {
@@ -1709,7 +1790,9 @@
     "effectBlocked": "{property}: Markkinointi päättyy {date} – {nights} yöt estetään ja poistetaan portaaleista.",
     "effectReleased": "{property}: Markkinointi jatkuu - sopimuksen päättyminen on purettu ja yöt ovat jälleen myynnissä.",
     "effectNoUnit": "{property}: Sopimuksen loppu on kirjattu, mutta kalenteri ei ole lukittu - kohteesta puuttuu yksikkö. Laita se päälle ja lukko astuu voimaan.",
-    "effectCalendarFailed": "{property}: Sopimuksen loppu on kirjattu, kalenterilukkoa ei ole kirjoitettu. Se lisätään tänä iltana."
+    "effectCalendarFailed": "{property}: Sopimuksen loppu on kirjattu, kalenterilukkoa ei ole kirjoitettu. Se lisätään tänä iltana.",
+    "validFromHint": "Päivämäärä, josta alkaen sopimus on voimassa – olemassa olevan sopimuksen todellinen sopimuspäivämäärä, ei kuluva päivä. Jokainen varaus laskutetaan sopimuksen mukaisesti, joka on voimassa sen lähtöpäivänä; varaukset, joiden lähtöpäivä on aikaisempi, jäävät ilman maksua.",
+    "errorValidFromRequired": "Ilmoita, mistä alkaen sopimus on voimassa."
   },
   "portal": {
     "title": "Oma portaali",
@@ -5465,7 +5548,8 @@
       "connectPortal": "Yhdistä portaali",
       "noPortals": "Tähän kohteeseen ei ole vielä yhdistetty portaalia (Booking, Airbnb ym.).",
       "marketplaceReview": "Tarkistuksessa",
-      "marketplaceReviewHint": "myBestDays tarkistaa vielä tätä ilmoitusta. Se näkyy markkinapaikalla heti kun se on hyväksytty. Portaalit ja oma verkkosivusto eivät muutu."
+      "marketplaceReviewHint": "myBestDays tarkistaa vielä tämän ilmoituksen. Kun se on hyväksytty, se ilmestyy markkinapaikalle. myBestDays on pakollinen kanava: Kohdetta ei voi poistaa sieltä yksittäin – ”Keskeytä myynti” poistaa sen myynnistä kaikkialta.",
+      "marketplaceMandatory": "Pakollinen kanava – jokainen kohde on listattu myBestDays-sivustolla"
     },
     "IdLayout": {
       "loadError": "Kohdetta ei voitu ladata: {error}"
@@ -5563,11 +5647,11 @@
       "stepOf": "Vaihe {schritt}/{gesamt}",
       "next": "Continue",
       "back": "Back",
-      "channelsHint": "Missä tätä kohdetta pitäisi myydä? Voit muuttaa tämän milloin tahansa.",
+      "channelsHint": "Missä tämä kohde myydään lisäksi? Portaaleja ja verkkosivustoa voi muuttaa milloin tahansa.",
       "channelPortals": "Varausportaalit",
       "channelPortalsHint": "Airbnb, Booking.com ja muut. Portaalit vaativat täydelliset tiedot — katso alta.",
       "channelPlatform": "myBestDays",
-      "channelPlatformHint": "Oma markkinapaikkamme matalalla provisiolla.",
+      "channelPlatformHint": "Oma markkinapaikkamme 8 %:n all-in-hinnalla. Jokainen kohde on listattu siellä; se tulee näkyviin julkaisun ja hyväksyntämme jälkeen.",
       "channelWebsite": "Oma verkkosivusto",
       "channelWebsiteHint": "Varaussivusi ja varaustyökalu.",
       "readinessTitle": "Portaaleja varten puuttuu vielä:",
@@ -6261,7 +6345,21 @@
       "planPortalOffHint": "Tämä hinta koskee vain suoria varauksia. Napsauta lähettääksesi sen varausportaaleihin.",
       "planPortalOn": "Hinta menee nyt varausportaaleihin.",
       "planPortalOnHint": "Tämä hinta menee varausportaaleihin. Napsauta käyttääksesi sitä vain suoriin varauksiin.",
-      "planPortalYes": "Portaaleihin"
+      "planPortalYes": "Portaaleihin",
+      "feeValidityTitle": "Voimassaolo",
+      "feeValidityHint": "Maksu koskee varauksia, joiden saapumispäivä on ajanjaksolla. Tyhjä = ei rajoitusta. Portaalit eivät saa maksua ajanjaksolla: niissä ei voi näyttää päivämääräehtoa.",
+      "feeValidFromLabel": "Voimassa alkaen",
+      "feeValidUntilLabel": "Voimassa asti",
+      "feeValidityOrderError": "”Voimassa asti” on ennen ”Voimassa alkaen” -päivämäärää.",
+      "feeOwnerStatementOnlyLabel": "Vain omistajan laskutuksessa",
+      "feeOwnerStatementOnlyHint": "Maksua ei veloiteta vieraalta eikä lähetetä millekään portaalille. Se vaikuttaa vain omistajan laskutukseen, raportointiin ja omistajaportaaliin.",
+      "feeValidFromSuffix": "alkaen {date}",
+      "feeValidUntilSuffix": "asti {date}",
+      "feeOwnerStatementOnlySuffix": "vain laskutus",
+      "feeCalculationLabel": "Laskelma",
+      "feeVatHint": "Tämän maksun oma verokanta, joka poikkeaa majoituskohteen majoitusverokannasta. Pois päältä tarkoittaa: maksu noudattaa majoitusverokantaa.",
+      "feeVatIncludedLabel": "Vero sisältyy summaan",
+      "feeVatIncludedHint": "Sisältyykö verokanta jo syötettyyn summaan vai lisätäänkö se siihen? Ilman tätä tietoa summa olisi epäselvä."
     },
     "policiesForm": {
       "title": "Käytännöt",
@@ -7303,23 +7401,23 @@
     "marketplacePending": "{count} tarkistuksessa",
     "marketplaceWaiting": "Tarkistuksessa",
     "marketplace": {
-      "intro": "myBestDays on oma markkinapaikkamme — varauskanava kuten Booking tai Airbnb, mutta ilman portaaliyhteyttä. Kohde näkyy, kun se on aktiivinen, listattu tässä ja hyväksytty.",
+      "intro": "myBestDays on oma markkinapaikkamme – varauskanava kuten Booking tai Airbnb, mutta ilman portaaliyhteyttä ja pakollinen jokaiselle kohteelle. Kohde tulee näkyviin, kun se on aktiivinen ja meidän hyväksymämme.",
       "openMarketplace": "Avaa markkinapaikka",
       "propertiesHeading": "Kohteet markkinapaikalla",
       "noProperties": "Kohteita ei ole vielä luotu.",
       "columnProperty": "Kohde",
-      "columnVisibility": "Näkyvyys",
+      "columnVisibility": "Tila",
       "columnApproval": "Hyväksyntä",
       "columnBookings": "Varaukset",
       "stateActive": "Näkyvissä",
       "statePending": "Tarkistuksessa",
-      "stateNotListed": "Ei listattu",
+      "stateNotListed": "Myynti keskeytetty",
       "stateInactiveProperty": "Kohde ei ole aktiivinen",
       "viewListing": "Näytä ilmoitus",
       "reviewHint": "Tarkistuksessa olevat kohteet eivät vielä näy myBestDaysissa. Tarkistamme jokaisen ilmoituksen, koska myBestDays toimii siellä tarjoajana — portaalit ja oma verkkosivusto eivät muutu.",
       "summaryVisible": "{count} näkyvissä",
       "summaryWaiting": "{count} tarkistuksessa",
-      "summaryOff": "{count} ei listattu",
+      "summaryOff": "{count} keskeytetty tai epäaktiivinen",
       "moderation": {
         "draft": "Luonnos",
         "pending": "Tarkistuksessa",
@@ -7354,7 +7452,8 @@
       "mayClose": "Tuonti jatkuu palvelimella – voit sulkea tämän sivun.",
       "andMore": "… ja {count} muuta",
       "close": "Sulje",
-      "updated": "päivitetty"
+      "updated": "päivitetty",
+      "portal": "jo portaalista"
     }
   },
   "calendarSync": {
@@ -10511,7 +10610,11 @@
     "haveAccount": "Onko sinulla jo tili?",
     "loginLink": "Kirjaudu tästä",
     "loadingHeadline": "Oma varaussivustosi. Pidä 100 % jokaisesta varauksesta.",
-    "loadingText": "Määritämme tiliäsi …"
+    "loadingText": "Määritämme tiliäsi …",
+    "referralLabel": "Suosittelija (valinnainen)",
+    "referralPlaceholder": "Suosittelukoodi, esim. ANNA-K7P2",
+    "referralHint": "Tutustuitko myNextDaysiin kumppanin kautta? Hänen koodinsa on tässä – hän näkee vain, että yritys tuli hänen kauttaan, ei koskaan nimeäsi. Koodilla saat ensimmäisen kokonaisen kuukauden ilmaiseksi 14 testipäivän jälkeen.",
+    "referralContactOptIn": "Suosittelijani saa ottaa minuun yhteyttä myNextDaysin kautta."
   },
   "marketingSite": {
     "stars": "4,5 tähteä",

@@ -364,6 +364,113 @@ def get_current_guest(
 CurrentGuest = Annotated[GuestContext, Depends(get_current_guest)]
 
 
+class AffiliateContext(BaseModel):
+    """Kontext eines eingeloggten PARTNERS (Affiliate-Programm, 0517).
+
+    Die dritte Nutzerwelt neben Betriebs-Nutzer (AuthContext) und Gast
+    (GuestContext): kein tenant_id, keine Rolle. Der Partner ist über seine
+    auth.uid() (== affiliates.id) identifiziert; `status` kommt FRISCH aus der
+    DB (Wurzel 7), damit eine Sperre sofort wirkt und nicht erst mit dem
+    Token-Ablauf.
+    """
+
+    affiliate_id: str
+    email: str
+    status: str
+
+    @property
+    def is_approved(self) -> bool:
+        """True nur für freigegebene Partner — Bewerber sehen nur ihren Status."""
+        return self.status == "approved"
+
+
+def get_current_affiliate(
+    settings: Annotated[Settings, Depends(get_settings)],
+    authorization: Annotated[str | None, Header()] = None,
+) -> AffiliateContext:
+    """Verifiziert ein Partner-Token und prüft den Partner-Status in der DB.
+
+    Zweistufig und fail-closed:
+      1. Reguläres GoTrue-JWT (dieselbe Verifikation wie für alle anderen).
+         Es MUSS `app_metadata.affiliate = true` tragen — daran ist die Welt
+         erkennbar. Ein Tenant-Token (trägt tenant_id) oder ein Gast-Token
+         (leeres app_metadata) kommt hier nicht durch.
+      2. Nachschlagen in public.affiliates. Keine Zeile → 403. Status
+         'rejected'/'suspended' → 403 mit klarer Meldung. 'pending_review'
+         und 'approved' liefern einen Kontext; was ein Bewerber darf,
+         entscheidet der Endpunkt über `require_approved_affiliate`.
+    """
+    if not authorization or not authorization.lower().startswith("bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authorization-Header fehlt.",
+        )
+    token = authorization.split(" ", 1)[1]
+    claims = _decode_token(token, settings)
+    sub = claims.get("sub")
+    email = claims.get("email")
+    app_meta = claims.get("app_metadata")
+    ist_partner = isinstance(app_meta, dict) and app_meta.get("affiliate") is True
+    if not isinstance(sub, str) or not ist_partner:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Kein Partner-Konto.",
+        )
+    if not isinstance(email, str) or not email:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token ohne E-Mail-Claim.",
+        )
+
+    # Import lokal, um einen Zyklus core.security <-> core.supabase zu vermeiden.
+    from .supabase import get_service_client  # noqa: PLC0415
+
+    rows = (
+        get_service_client()
+        .table("affiliates")
+        .select("status")
+        .eq("id", sub)
+        .limit(1)
+        .execute()
+    ).data or []
+    if not rows:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Kein Partner-Konto.",
+        )
+    partner_status = str(rows[0].get("status") or "")
+    if partner_status not in ("pending_review", "approved", "rejected", "suspended"):
+        # Unbekannter Zustand = kein Zugang (fail-closed, Wurzel 6).
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Dieses Partner-Konto ist nicht aktiv.",
+        )
+    # Abgelehnte und gesperrte Partner bekommen einen Kontext — aber NUR für
+    # den eigenen Status und das Profil (`/affiliates/me`). Alles, was Geld,
+    # Kunden oder Links betrifft, verlangt `require_approved_affiliate`. Ohne
+    # diesen Kontext liefe das Dashboard in eine Schleife (Login klappt,
+    # /me antwortet 403, zurück zum Login) und der Partner sähe nie, WARUM.
+    return AffiliateContext(
+        affiliate_id=sub, email=email.lower(), status=partner_status
+    )
+
+
+CurrentAffiliate = Annotated[AffiliateContext, Depends(get_current_affiliate)]
+
+
+def require_approved_affiliate(ctx: AffiliateContext) -> None:
+    """Guard für alles, was über „eigenen Status ansehen" hinausgeht.
+
+    Ein Bewerber (pending_review) darf sein Profil sehen und ergänzen — aber
+    keine Links erzeugen, keine Kunden sehen, nichts auszahlen lassen.
+    """
+    if not ctx.is_approved:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Das Partner-Konto ist nicht freigegeben.",
+        )
+
+
 class PlatformContext(BaseModel):
     """Kontext eines eingeloggten PLATTFORM-Betreibers (Backoffice/Admin).
 

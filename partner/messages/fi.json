@@ -1,0 +1,521 @@
+{
+  "meta": {
+    "titel": "myNextDays-kumppani",
+    "beschreibung": "myNextDays-kumppanuusohjelman kumppanin hallintapaneeli: linkit, asiakkaat, palkkiot, maksut."
+  },
+  "nav": {
+    "partner": "Kumppani",
+    "uebersicht": "Yleiskatsaus",
+    "kunden": "Asiakkaat",
+    "provisionen": "Palkkiot",
+    "auszahlungen": "Maksut",
+    "links": "Linkit ja materiaalit",
+    "profil": "Profiili",
+    "sprache": "Kieli",
+    "abmelden": "Kirjaudu ulos",
+    "nachrichten": "Viestit",
+    "menue": "Valikko",
+    "team": "Tiimi",
+    "beitraege": "Julkaisut"
+  },
+  "status": {
+    "pending_review": {
+      "titel": "Hakemustasi käsitellään",
+      "text": "Käsittelemme jokaisen hakemuksen henkilökohtaisesti ja otamme yhteyttä sähköpostitse. Ennen hyväksyntää linkit ja koodit eivät ole vielä aktiivisia – voit jo täydentää profiili- ja maksutietosi."
+    },
+    "rejected": {
+      "titel": "Hakemustasi ei hyväksytty",
+      "text": "Emme voineet hyväksyä hakemustasi tällä hetkellä. Jos sinulla on kysyttävää, ota meihin yhteyttä."
+    },
+    "suspended": {
+      "titel": "Kumppanitilisi on jäädytetty",
+      "text": "Avoinna olevia palkkioita ei makseta niin kauan kuin jäädytys on voimassa. Jos sinulla on kysyttävää, ota meihin yhteyttä."
+    },
+    "approved": {
+      "titel": "Hyväksytty",
+      "text": "Tilisi on aktiivinen."
+    },
+    "grund": "Syy"
+  },
+  "uebersicht": {
+    "titelBewerber": "Tervetuloa kumppanuusohjelmaan",
+    "textBewerber": "Kun hakemuksesi on hyväksytty, näet täällä linkkisi, asiakkaasi ja palkkiosi. Syötä sillä välin vero- ja maksutietosi – silloin ensimmäinen maksu voi tapahtua ilman lisäkysymyksiä.",
+    "zumProfil": "Profiiliin",
+    "titel": "Hei {name}",
+    "rang": "Taso {rang} · {satz} tilaustuloista",
+    "naechsterRang": "vielä {fehlend} maksavaa asiakasta tasolle {rang} ({satz})",
+    "linksTeilen": "Jaa linkkejä",
+    "keineBetraege": "—",
+    "kachel": {
+      "klicks": "Klikkaukset (30 päivää)",
+      "registrierungen": "Rekisteröityneet yritykset",
+      "zahlend": "Maksavat asiakkaat",
+      "offen": "Avoinna (palautusikkuna)",
+      "auszahlbar": "Maksettavissa",
+      "ausgezahlt": "Maksettu",
+      "team": "Tiimiprovisio",
+      "teamHinweis": "{n} tiimikumppania",
+      "struktur": "Asiakkaat rakenteessasi",
+      "strukturHinweis": "omat + tiimiasiakkaat – tämä luku määrittää sijoituksesi",
+      "super": "Superprovisio",
+      "superHinweis": "{satz} rakenteesi tilaustuloista, ilman aikarajaa",
+      "turbo": "myBestDays-varausten osuus",
+      "turboHinweis": "0,5 % jokaisesta myBestDays-varauksesta asiakkaillesi ja tiimiasiakkaillesi",
+      "bonus": "Ylennysbonukset",
+      "bonusHinweis": "kertaluonteinen jokaisesta saavutetusta sijoituksesta"
+    },
+    "deineLinks": "Linkkisi"
+  },
+  "links": {
+    "titel": "Linkit ja materiaalit",
+    "hinweis": "Linkkisi johtaa osoitteeseen mynextdays.com ja laskee klikkauksen. Koodi näkyy rekisteröitymislomakkeessa – ilman evästettä. Yritys liitetään täsmälleen yhteen kumppaniin.",
+    "klicks30": "{n} klikkausta 30 päivässä",
+    "kopiert": "Kopioitu.",
+    "kopierenFehlgeschlagen": "Kopiointi ei onnistu – ole hyvä ja korosta ja kopioi.",
+    "codeKopieren": "Kopioi koodi",
+    "linkFehlt": "Linkki ei vielä saatavilla.",
+    "neuerCode": "Luo uusi koodi",
+    "label": "Kuvaus (valinnainen)",
+    "wunschcode": "Haluttu koodi (valinnainen)",
+    "anlegen": "Luo",
+    "abbrechen": "Peruuta",
+    "codeAngelegt": "Koodi luotu.",
+    "codeVergeben": "Tämä koodi on jo käytössä.",
+    "fehler": "Toiminto epäonnistui.",
+    "kennzeichnung": {
+      "titel": "Pakollinen: merkitse mainonta",
+      "text": "Jokainen suositus linkilläsi tai koodillasi on mainontaa ja se on tunnistettava sellaiseksi – julkaisun alussa, julkaisun kielellä. Pelkkä ”#ad” ei riitä. Rikkomukset voivat johtaa estoon.",
+      "imBeitrag": "Julkaisussa",
+      "amLink": "Linkissä",
+      "land": {
+        "DE": "Saksa",
+        "DK": "Tanska"
+      },
+      "andere": "Muut maat: Kaupallisen tarkoituksen on oltava selvästi tunnistettavissa (EU:n direktiivi sopimattomista kaupallisista menettelyistä). Tarkista maasi vaatimukset; lisäämme todistettuja sanamuotoja vähitellen."
+    },
+    "material": {
+      "titel": "Mainosmateriaali",
+      "leer": "Materiaali on valmistelussa – se ilmestyy tähän heti, kun se on hyväksytty.",
+      "art": {
+        "video": "Video",
+        "image": "Kuva",
+        "text": "Tekstipätkä",
+        "link": "Linkki"
+      },
+      "oeffnen": "Avaa"
+    }
+  },
+  "kunden": {
+    "titel": "Asiakkaat",
+    "hinweis": "Mainostamasi yritykset – pseudonyymisti. Näet maan, tilan ja summat, et koskaan nimeä tai sähköpostia. Maksava tarkoittaa: ensimmäinen tilauslasku maksettu ja tilaus on voimassa.",
+    "leer": "Yksikään yritys ei ole vielä rekisteröitynyt linkkisi kautta.",
+    "kunde": "Asiakas {n}",
+    "spalte": {
+      "kunde": "Asiakas",
+      "land": "Maa",
+      "status": "Tila",
+      "registriert": "Rekisteröitynyt",
+      "provisionBis": "Provisio asti",
+      "verdient": "Ansaittu"
+    },
+    "status": {
+      "registriert": "Rekisteröitynyt",
+      "zahlend": "Maksava",
+      "beendet": "Päättynyt",
+      "in_pruefung": "Tarkastuksessa",
+      "abgelehnt": "Hylätty"
+    }
+  },
+  "provisionen": {
+    "titel": "Provisiot",
+    "hinweis": "Jokainen rivi on maksettu tilauslasku, myBestDays-varaus tai ylennysbonus. Perusteena on nettotilaustulo tai varauksen arvo; prosentti on sijoituksesi maksuhetkellä. Avoimet rivit ovat maksettavissa 30 päivän kuluttua.",
+    "leer": "Ei vielä provisiota.",
+    "reifAm": "maksettavissa alkaen {datum}",
+    "spalte": {
+      "datum": "Päivämäärä",
+      "art": "Tyyppi",
+      "kunde": "Asiakas",
+      "basis": "Peruste",
+      "satz": "Korko",
+      "betrag": "Summa",
+      "status": "Tila"
+    },
+    "art": {
+      "earn": "Tuotto",
+      "reversal": "Palautus",
+      "adjustment": "Korjaus",
+      "override": "Tiimiprovisio",
+      "bonus": "Ylennysbonus",
+      "lifetime": "Superprovisio",
+      "booking_share": "Varausosuus"
+    },
+    "status": {
+      "pending": "Avoin",
+      "approved": "Maksettavissa",
+      "held": "Pidätetty",
+      "paid": "Maksettu",
+      "reversed": "Peruutettu",
+      "cancelled": "Peruutettu"
+    },
+    "team": "Tiimi"
+  },
+  "auszahlungen": {
+    "titel": "Maksut",
+    "hinweis": "Kuukausittain, valuutoittain, vähimmäissummasta alkaen. Jokaisesta maksusta on hyvityslasku (Self-Billing) – se on tositteesi.",
+    "kein_weg": "Maksutapaa ei ole vielä määritetty. Lisää se profiiliisi – muuten maksua ei voida suorittaa.",
+    "leer": "Ei vielä maksuja.",
+    "spalte": {
+      "nummer": "Hyvityslaskun nro",
+      "zeitraum": "Ajanjakso",
+      "betrag": "Summa",
+      "status": "Tila",
+      "gutschrift": "Hyvityslasku"
+    },
+    "status": {
+      "pending": "Valmisteltu",
+      "processing": "Siirrossa",
+      "paid": "Maksettu",
+      "failed": "Epäonnistui"
+    },
+    "gutschriftLaden": "Lataa",
+    "gutschriftFehler": "Hyvityslaskua ei voitu ladata."
+  },
+  "profil": {
+    "titel": "Profiili",
+    "seit": "Kumppani alkaen {datum}",
+    "stammdaten": "Perustiedot",
+    "name": "Nimi",
+    "firma": "Yritys (valinnainen)",
+    "sprache": "Sähköpostien kieli",
+    "kanal": "Sosiaalisen median tilisi ja kanavasi",
+    "speichern": "Tallenna",
+    "gespeichert": "Tallennettu.",
+    "gespeichertViesOffen": "Tallennettu. ALV-tunnusta ei voitu vielä vahvistaa – tarkistamme sen uudelleen ennen maksua.",
+    "steuerUndAuszahlung": "Vero- ja maksutiedot",
+    "aktuellerWeg": "Nykyinen: {weg} {details}",
+    "keinWeg": "Maksutapaa ei ole vielä määritetty.",
+    "viesBestaetigt": "ALV-tunnus vahvistettu (VIES)",
+    "viesOffen": "ALV-tunnusta ei ole vielä vahvistettu",
+    "rechtsform": "Yritysmuoto",
+    "privat": "Yksityishenkilö",
+    "unternehmen": "Yritys",
+    "land": "Maa",
+    "ustId": "ALV-tunnus",
+    "ustIdHinweis": "Tarkistetaan EU:n VIES-järjestelmää vasten. Ilman vahvistettua numeroa ei maksuja yrityksille. Hyvityksessä on käännetyn verovelvollisuuden merkintä.",
+    "privatHinweis": "Yksityishenkilönä saat hyvityksen ilman arvonlisäveroa. Sinun on itse verotettava provisio.",
+    "auszahlungsweg": "Maksutapa",
+    "kontoinhaber": "Tilinhaltija",
+    "empfaengerEmail": "{weg}-sähköpostiosoite",
+    "passwortBestaetigen": "Vahvistusta varten: Salasanasi",
+    "passwortFalsch": "Salasana ei täsmää.",
+    "steuerdaten": "Verotiedot"
+  },
+  "anmelden": {
+    "partner": "Kumppani",
+    "titel": "Kirjaudu sisään",
+    "text": "myNextDays-kumppanuusohjelman hallintapaneeli.",
+    "email": "Sähköposti",
+    "passwort": "Salasana",
+    "anmelden": "Kirjaudu sisään",
+    "passwortVergessen": "Unohtuiko salasana?",
+    "resetGesendet": "Jos tili on olemassa, lähetimme sähköpostin.",
+    "stoerung": "Kirjautumispalvelu ei ole tällä hetkellä käytettävissä. Tämä ei johdu tunnuksistasi – yritä myöhemmin uudelleen.",
+    "keinPartnerKonto": "Näillä tunnuksilla ei ole kumppanitiliä.",
+    "fehlgeschlagen": "Kirjautuminen epäonnistui.",
+    "nochKeinKonto": "Etkö ole vielä kumppani?",
+    "bewerben": "Hae nyt"
+  },
+  "bewerben": {
+    "partner": "Kumppani",
+    "titel": "Hae kumppaniksi",
+    "text": "Kaksi minuuttia. Tarkistamme jokaisen hakemuksen henkilökohtaisesti ja otamme yhteyttä sähköpostitse.",
+    "name": "Nimesi",
+    "firma": "Yritys (valinnainen)",
+    "email": "Sähköposti",
+    "passwort": "Salasana (vähintään 8 merkkiä)",
+    "rechtsform": "Yritysmuoto",
+    "privat": "Yksityishenkilö",
+    "unternehmen": "Yritys",
+    "land": "Maa",
+    "ustId": "ALV-tunnus",
+    "ustIdHinweis": "Pakollinen yrityksille; tarkistetaan VIES-järjestelmästä.",
+    "kanal": "Sosiaalisen median tilisi",
+    "kanalHinweis": "Pakollinen: vähintään yksi sosiaalisen median tili (Instagram, TikTok, YouTube, Facebook, LinkedIn jne.) osoitteella, käyttäjätunnuksella ja tavoittavuudella. Verkkosivusto, blogi tai uutiskirje ovat tervetulleita lisäyksiä. Tarkistamme tilit ennen hyväksyntää.",
+    "pitch": "Miten tavoitat loma-asuntojen vuokraajia tai hotelleja? (valinnainen)",
+    "pitchHinweis": "Muutama lause riittää.",
+    "zustimmung": "Hyväksyn kumppaniehdot, erityisesti velvollisuuden merkitä suositukset mainoksiksi.",
+    "bedingungen": "Ohjelmaan",
+    "captchaHinweis": "Tämä sivu on reCAPTCHA-suojattu; Googlen tietosuojakäytäntö ja käyttöehdot ovat voimassa.",
+    "stoerung": "Palvelu ei ole tällä hetkellä käytettävissä – yritä myöhemmin uudelleen.",
+    "emailVergeben": "Tällä sähköpostiosoitteella on jo hakemus. Kirjaudu sisään.",
+    "captchaFehler": "Turvatarkistus epäonnistui. Lataa sivu uudelleen ja yritä uudelleen.",
+    "laeuft": "Lähetetään...",
+    "absenden": "Lähetä hakemus",
+    "schonPartner": "Oletko jo kumppani?",
+    "anmelden": "Kirjaudu sisään",
+    "sponsor": "Kumppanin kutsuma (koodi, valinnainen)",
+    "sponsorHinweis": "Oletko täällä kumppanin tiimilinkin kautta? Hänen koodinsa on tässä. Hän saa tiimiprovision asiakkaidesi tilaustuloista – oma provisiosi pysyy ennallaan."
+  },
+  "nachrichten": {
+    "titel": "Viestit",
+    "hinweis": "Suora yhteys kumppanitiimiin – kysymyksiä provisiosta, maksuista, materiaalista tai asiakkaasta. Vastaukset näkyvät tässä reaaliaikaisesti.",
+    "neu": "Uusi viesti kumppanitiimille",
+    "platzhalter": "Mistä on kyse?",
+    "senden": "Lähetä",
+    "abbrechen": "Peruuta",
+    "leer": "Ei keskusteluja vielä.",
+    "stoerung": "Palvelu ei ole tällä hetkellä käytettävissä – yritä myöhemmin uudelleen.",
+    "fehler": "Tämä ei toiminut.",
+    "team": "Kumppanitiimi",
+    "du": "Sinä",
+    "antwortPlatzhalter": "Vastauksesi...",
+    "antworten": "Vastaa",
+    "status": {
+      "in_bearbeitung": "Käsittelyssä",
+      "wartet_auf_dich": "Vastaus vastaanotettu",
+      "geloest": "Ratkaistu"
+    }
+  },
+  "kanaele": {
+    "plattformLabel": "Alusta",
+    "handle": "Käyttäjätunnus (valinnainen)",
+    "reichweite": "Tavoittavuus (seuraajat)",
+    "hinzufuegen": "Lisää kanava",
+    "entfernen": "Poista kanava",
+    "plattform": {
+      "website": "Verkkosivusto",
+      "blog": "Blogi",
+      "newsletter": "Uutiskirje",
+      "podcast": "Podcast",
+      "other": "Muu"
+    },
+    "socialPflicht": "Vähintään yksi sosiaalisen median tili on pakollinen – pelkkä verkkosivusto ei riitä."
+  },
+  "team": {
+    "titel": "Tiimi",
+    "hinweis": "Kumppanit, jotka ovat hakeneet koodillasi, muodostavat tiimisi. Heidän asiakkaidensa nettotilaustuloista saat erotuksen oman prosenttisi (tällä hetkellä {satz}) ja tiimikumppanin prosentin välillä – molemmat maksuhetkellä. Tiimiasiakkaat lasketaan 1:1 sijoitukseesi.",
+    "meinSponsor": "Olette {name}-tiimin kumppani.",
+    "link": {
+      "titel": "Tiimilinkkisi",
+      "text": "Ne, jotka hakevat tämän linkin kautta, saavat koodisi näkyviin hakemukseen – ilman evästettä.",
+      "kopieren": "Kopioi linkki",
+      "keinLink": "Ei aktiivista koodia – luo sellainen kohdassa Linkit & Materiaalit."
+    },
+    "regeln": {
+      "titel": "Säännöt",
+      "rang": "Tiimiprovisio = oma prosenttisi miinus tiimikumppanin prosentti, maksuhetkellä. Sama sijoitus = 0.",
+      "ebene": "Vain yksi taso: tiimikumppanisi eivät perusta omaa tiimiä.",
+      "keinGeld": "Ei rahaa värväyksestä – vain maksetuista tilaustuloista.",
+      "dauer": "12 kuukautta per tiimiasiakas, 30 päivän palautusikkuna. Eliitistä alkaen lisäksi 2,5 % superprovisio ilman aikarajaa."
+    },
+    "kachel": {
+      "mitglieder": "Tiimikumppanit (aktiiviset / yhteensä)",
+      "teamKunden": "Maksavat tiimiasiakkaat",
+      "umsatz30": "Tiimin liikevaihto (30 päivää)",
+      "offen": "Tiimiprovisio avoinna",
+      "auszahlbar": "Tiimiprovisio maksettavissa",
+      "ausgezahlt": "Tiimiprovisio maksettu"
+    },
+    "verlauf": {
+      "titel": "Historia · 12 kuukautta",
+      "leer": "Ei vielä tiimin liikevaihtoa.",
+      "provision": "Tiimiprovisio",
+      "umsatz": "Tiimin liikevaihto"
+    },
+    "mitglieder": {
+      "titel": "Tiimisi",
+      "leer": "Ei vielä tiimikumppaneita. Jaa tiimilinkkisi.",
+      "kunden": "{n} maksavaa asiakasta",
+      "umsatz30": "Liikevaihto 30 pv",
+      "offen": "Avoinna",
+      "seit": "alkaen {datum}"
+    },
+    "spalte": {
+      "partner": "Kumppani",
+      "status": "Tila",
+      "rang": "Sijoitus",
+      "kunden": "Maksavat asiakkaat",
+      "umsatz30": "Liikevaihto 30 pv",
+      "umsatzGesamt": "Liikevaihto yhteensä",
+      "offen": "Avoinna",
+      "auszahlbar": "Maksettavissa",
+      "ausgezahlt": "Maksettu"
+    },
+    "status": {
+      "pending_review": "Tarkastuksessa",
+      "approved": "Hyväksytty",
+      "rejected": "Hylätty",
+      "suspended": "Estetty"
+    },
+    "chat": {
+      "titel": "Viihde",
+      "schreiben": "Kirjoita",
+      "rolle": {
+        "sponsor": "Sponsorisi",
+        "member": "Tiimikumppani"
+      },
+      "zurueck": "Tiimi",
+      "leer": "Ei viestejä vielä.",
+      "platzhalter": "Viestisi...",
+      "senden": "Lähetä",
+      "titelListe": "Tiimiviestit"
+    },
+    "nochNichtErlaubt": "Johdat tiimiä alkaen nousijan sijoituksesta (5 maksavaa asiakasta rakenteessasi). Siihen asti tiimilinkkiä ei ole."
+  },
+  "bedingungen": {
+    "neueVersion": "Kumppaniehdoista on uusi versio (suostumuksesi: versio {alt}, nykyinen: {neu}). Lue ja hyväksy uudelleen.",
+    "nochNicht": "Hyväksy kumppaniehdot (versio {neu}).",
+    "lesen": "Lue ehdot",
+    "annehmen": "Hyväksy",
+    "angenommen": "Kiitos – suostumus tallennettu."
+  },
+  "beitraege": {
+    "titel": "Julkaisut",
+    "hinweis": "Luo jokaiselle kelalle, videolle tai julkaisulle oma linkki. Näin näet, mikä julkaisu tuottaa klikkauksia, rekisteröintejä ja maksavia asiakkaita.",
+    "kontoHinweis": "Yhdistä tilisi, niin näet tässä myös katselukerrat ja vuorovaikutukset suoraan alustalta.",
+    "kontoVerbinden": "Yhdistä tili",
+    "neu": "Uusi julkaisu",
+    "keinCode": "Tarvitset ensin aktiivisen suosituskoodin.",
+    "feld": {
+      "titel": "Otsikko",
+      "titelBeispiel": "esim. Kela Kööpenhamina syksy",
+      "plattform": "Alusta",
+      "code": "Koodi",
+      "datum": "Julkaistu",
+      "url": "Julkaisun osoite (valinnainen)",
+      "urlHinweis": "Voidaan lisätä julkaisun jälkeen. Osoitteen avulla yhdistämme katselukerrat ja vuorovaikutukset julkaisuun."
+    },
+    "linkErzeugen": "Luo linkki",
+    "angelegt": "Julkaisu luotu – linkki on valmis.",
+    "doppelt": "Tämä julkaisu on jo olemassa tälle koodille.",
+    "fehler": "Tämä ei onnistunut. Yritä uudelleen.",
+    "liste": "{n, plural, =0 {Ei julkaisuja} =1 {1 julkaisu} other {# julkaisua}}",
+    "leer": "Ei vielä julkaisuja. Luo ensimmäinen linkki yllä.",
+    "veroeffentlicht": "julkaistu {datum}",
+    "loeschen": "Poista julkaisu",
+    "geloescht": "Julkaisu poistettu.",
+    "loeschenGesperrt": "Julkaisulla on jo rekisteröintejä, ja se säilyy.",
+    "kopiert": "Linkki kopioitu.",
+    "kopierenFehlgeschlagen": "Kopiointi ei onnistu – valitse manuaalisesti.",
+    "linkFehlt": "Linkki ei ole tällä hetkellä saatavilla.",
+    "qrZeigen": "Näytä QR-koodi",
+    "qrSchliessen": "Piilota QR-koodi",
+    "qrAlt": "QR-koodi julkaisulinkkiin",
+    "qrHinweis": "Tarinoihin, videoihin ja printtiin – johtaa samaan linkkiin.",
+    "beitragOeffnen": "Avaa julkaisu",
+    "urlAendern": "Muuta osoitetta",
+    "urlNachtragen": "Lisää osoite",
+    "speichern": "Tallenna",
+    "gespeichert": "Tallennettu.",
+    "kennzahl": {
+      "klicks": "Klikkaukset 90 päivää",
+      "klicks30": "{n} 30 päivässä",
+      "registrierungen": "Rekisteröinnit",
+      "kunden": "Maksavat asiakkaat",
+      "views": "Näkymät",
+      "gemessen": "Tila {zeit}",
+      "nichtVerbunden": "Tiliä ei ole yhdistetty",
+      "interaktion": "Tykkäykset {likes} · Kommentit {kommentare} · Jaot {shares} · Tallennukset {saves}",
+      "pro1000": "{n} klikkausta per 1000 näyttökertaa"
+    },
+    "freigabe": {
+      "videoNoetig": "Lataa julkaistava materiaali",
+      "erklaerung": "Lataa valmis video, kuva tai PDF ennen julkaisua. Kun olemme hyväksyneet sen, henkilökohtainen linkkisi ilmestyy tähän – voit sitten lisätä sen julkaisuun. Käytä vain mainosmateriaalejamme, ei omia näyttökuviasi, eikä menestys- tai takuulupauksia.",
+      "hochladen": "Valitse tiedosto (video, JPG, PNG, PDF)",
+      "neuHochladen": "Lataa uusi tiedosto",
+      "laeuft": "Ladataan…",
+      "eingereicht": "Video lähetetty. Ilmoitamme sinulle, kun se on tarkistettu.",
+      "inPruefung": "Tarkistettavana",
+      "inPruefungHinweis": "Videosi on meillä. Kun se on hyväksytty, linkkisi ilmestyy tähän.",
+      "eingereichtAm": "Lähetetty {zeit} – kun se on hyväksytty, linkkisi ilmestyy tähän.",
+      "abgelehnt": "Ei hyväksytty",
+      "grund": "Syy",
+      "freigegeben": "Video hyväksytty",
+      "zuGross": "Video on suurempi kuin {mb} Mt.",
+      "fehler": "Lataus epäonnistui.",
+      "grundKategorie": {
+        "material": "Materiaali: vain virallista mainosmateriaalia, ei omia näyttökuvia",
+        "promise": "Lupaukset: ei takuu- tai menestyslupauksia",
+        "disclosure": "Merkintä: julkaisu on merkittävä mainokseksi",
+        "brand": "Brändi: logoa tai nimeä käytetty väärin",
+        "other": "Muuta"
+      }
+    }
+  },
+  "kanalVerbindung": {
+    "titel": "Yhdistetyt tilit",
+    "hinweis": "Yhdistä sosiaalisen median tilisi, jotta seuraajat ja näkymät tulevat suoraan alustalta. Tämä on vapaaehtoista ja peruutettavissa milloin tahansa; luemme vain, emme kirjoita mitään.",
+    "verbinden": "Yhdistä {anbieter}",
+    "baldVerfuegbar": "tulossa pian",
+    "nichtKonfiguriert": "Tämä yhteys ei ole vielä aktivoitu.",
+    "fehler": "Tämä ei toiminut. Yritä uudelleen.",
+    "verifiziert": "vahvistettu",
+    "follower": "{n} seuraajaa",
+    "views28": "{n} näyttökertaa 28 päivässä",
+    "engagement": "Sitoutuminen {n} %",
+    "gemessen": "Tila {zeit}",
+    "nochKeinSnapshot": "ensimmäinen mittaus tulossa",
+    "letzterFehler": "Viimeisin haku epäonnistui",
+    "trennen": "Katkaise yhteys",
+    "getrennt": "Yhteys katkaistu. Aiemmat mittaustulokset säilyvät historiatietoina.",
+    "getrennteKonten": "{n, plural, =1 {1 katkaistu tili} other {# katkaistua tiliä}}",
+    "getranntAm": "katkaistu {zeit}",
+    "durchPlattform": "Alustan pääsy päättyi",
+    "datenschutz": "Kun yhteys katkaistaan, poistamme kirjautumistiedot välittömästi. Mitatut arvot tallennetaan historiatietoina. Lisätietoja tietosuojakäytännössä.",
+    "rueckkehr": {
+      "verbunden": "Tili yhdistetty – ensimmäinen mittaus on käynnissä.",
+      "abgelehnt": "Yhteys keskeytetty – et antanut pääsyä.",
+      "fehler": "Yhteys epäonnistui."
+    }
+  },
+  "passwort": {
+    "anzeigen": "Näytä salasana",
+    "verbergen": "Piilota salasana"
+  },
+  "verbundkonto": {
+    "titel": "Yhdistetty tili maksuja varten",
+    "hinweis": "Palkkiosi maksetaan yhdistetylle tilille. Maksupalveluntarjoajamme vaatii henkilöllisyyden vahvistamisen – niin kauan kuin se on kesken, maksuja ei voida suorittaa.",
+    "bereit": "Yhdistetty tilisi on aktivoitu. Maksut siirtyvät sinne automaattisesti.",
+    "offeneFelder": "Nämä tiedot puuttuvat vielä",
+    "gesperrt": "Tili on tällä hetkellä estetty: {grund}",
+    "schrittKonto": "Avaa yhdistetty tili",
+    "schrittDaten": "Henkilökohtaiset tiedot",
+    "schrittDatenFirma": "Yritys- ja henkilötiedot",
+    "schrittBank": "Pankkitiedot",
+    "schrittBedingungen": "Maksupalveluntarjoajan ehdot",
+    "kontoAnlegen": "Avaa yhdistetty tili",
+    "kontoAngelegt": "Yhdistetty tili avattu.",
+    "datenBearbeiten": "Muokkaa tietoja",
+    "zuklappen": "Sulje",
+    "datenGesendet": "Tiedot tallennettu.",
+    "vorname": "Etunimi",
+    "nachname": "Sukunimi",
+    "geburtsdatum": "Syntymäaika",
+    "tag": "PP",
+    "monat": "KK",
+    "jahr": "VVVV",
+    "strasse": "Katu ja talonumero",
+    "plz": "Postinumero",
+    "ort": "Paikkakunta",
+    "nationalitaet": "Kansallisuus (maakoodi)",
+    "telefon": "Puhelin",
+    "webseite": "Verkkosivusto tai profiili",
+    "webseiteHinweis": "Osoite, jossa mainostat – tarvitaan tarkistusta varten.",
+    "firmenname": "Yrityksen nimi",
+    "steuernummer": "Verotunnus",
+    "firmenStrasse": "Yrityksen osoite",
+    "firmaHinweis": "Edustajana käytetään yllä mainittuja tietojasi.",
+    "speichern": "Tallenna tiedot",
+    "kontoinhaber": "Tilinhaltija",
+    "waehrung": "Valuutta",
+    "waehrungHinweis": "Pankkitilin valuutta, ei maasi valuutta.",
+    "bankSpeichern": "Tallenna pankkitiedot",
+    "bankGesetzt": "Pankkitiedot tallennettu.",
+    "bedingungenAnnehmen": "Hyväksy ehdot",
+    "bedingungenAngenommen": "Ehdot hyväksytty.",
+    "fehler": "Tämä ei toiminut.",
+    "schrittIdentitaet": "Henkilöllisyyden vahvistaminen",
+    "identitaetHinweis": "Lopuksi maksupalveluntarjoajamme tarkistaa henkilöllisyytesi. Tämä tapahtuu heidän suojatulla sivustollaan, koska siinä otetaan kuva; palaat tänne sen jälkeen.",
+    "identitaetStarten": "Vahvista henkilöllisyys"
+  }
+}

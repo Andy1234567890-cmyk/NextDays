@@ -87,12 +87,12 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "note",
               variant: "tip",
-              text: "Noklikšķinot uz Publicēt, myNextDays parasti vienlaikus aktivizē tirgu, portālus un vietni — pēc tam tirgus slēdzi jebkurā laikā varat atkal izslēgt atsevišķi.",
+              text: "Noklikšķiniet uz Publicēt, un myNextDays vienlaikus atbloķēs portālus un vietni. myBestDays ir obligāts kanāls: katrs objekts ir iekļauts sarakstā un parādās, tiklīdz esam apstiprinājuši sludinājumu.",
             },
             { type: "h2", text: "Redzamības noņemšana" },
             {
               type: "p",
-              text: "Deaktivizējot slēdzi Platformas tirgus, objekts pazūd no tirgus meklēšanas. Jau apstiprinātas rezervācijas tas neietekmē, tās turpinās kā parasti, skatiet [Tirgus komisija](/hilfe/plattform-marktplatz/marktplatz-provision).",
+              text: "myBestDays nevar atcelt atsevišķi. Ja objekts vairs netiek pārdots, izmantojiet “Apturēt pārdošanu” — tas vienlaikus izņem to no pārdošanas visos portālos, vietnē un tirgū. Jau apstiprinātās rezervācijas paliek neskartas un turpinās kā parasti, skatiet [Tirgus komisija](/hilfe/plattform-marktplatz/marktplatz-provision).",
             },
           ],
         },

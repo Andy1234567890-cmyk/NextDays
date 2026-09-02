@@ -292,6 +292,10 @@ export interface SupportTicket {
   id: string;
   reporter_user_id: string | null;
   reporter_guest_id: string | null;
+  /** Partner des Affiliate-Programms (0518). */
+  reporter_affiliate_id?: string | null;
+  affiliate_name?: string | null;
+  affiliate_email?: string | null;
   /** Anonymer Melder von der Marketing-Seite (source='web'): kein Konto, die
    *  Kontaktdaten hängen am Ticket. */
   reporter_name: string | null;
@@ -310,7 +314,7 @@ export interface SupportTicket {
   last_message_at: string | null;
   /** 'chat' = Live-Chat aus dem Dashboard des Betriebs, 'form' = Formular,
    *  'web' = anonyme Anfrage aus dem Widget der Marketing-Seite. */
-  source: "form" | "chat" | "web";
+  source: "form" | "chat" | "web" | "partner";
   last_message_preview: string | null;
   last_message_kind: "reporter" | "agent" | null;
   agent_last_read_at: string | null;
@@ -332,7 +336,7 @@ export interface SupportTicketList {
 /** Support-Tickets, zuletzt aktive zuerst. */
 export async function getTickets(params?: {
   status?: TicketStatus;
-  source?: "form" | "chat" | "web";
+  source?: "form" | "chat" | "web" | "partner";
   /** Nur mir zugewiesene Konversationen. */
   mine?: boolean;
   limit?: number;

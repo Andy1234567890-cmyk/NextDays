@@ -1500,7 +1500,12 @@
       "portalRateInvalid": "En gemt fradragssats for en portal ligger uden for 0–100 %. Ret den under Bogføring → Afregningsregler.",
       "feeUnassigned": "Mindst én gebyrtype er endnu ikke tilknyttet. Uden tilknytning kan det ikke afgøres, hvem beløbet tilhører, og om der beregnes provision af det — angiv det under Bogføring → Afregningsregler.",
       "feeNotComputable": "Et gebyr kan ikke afregnes som et beløb (gemt som procent eller uden beløb). Kontrollér gebyret på boligen.",
-      "contractCurrency": "Et fast honorar eller en minimumsprovision er angivet i en anden valuta end bookingen. Beløb i forskellige valutaer bliver ikke omregnet — kontrollér afregningsaftalen."
+      "contractCurrency": "Et fast honorar eller en minimumsprovision er angivet i en anden valuta end bookingen. Beløb i forskellige valutaer bliver ikke omregnet — kontrollér afregningsaftalen.",
+      "recurringToOwner": "Tilbagevendende til fordel",
+      "recurringFromOwner": "Tilbagevendende til ulempe",
+      "flatFees": "Faste priser fra kontrakt",
+      "flatFeesIncluded": "allerede medregnet i udbetalingen",
+      "contractStartsLater": "Mindst én booking har ingen afregningsaftale på afrejsedagen — ejerens aftale starter først senere. Provisionssatsen er altså gemt, men datoen „Gyldig fra“ ligger efter afrejsen. Indtast den faktiske aftalestart i afregningsaftalen."
     },
     "rental": {
       "perReservation": "Pr. reservation",
@@ -1520,13 +1525,66 @@
         "channexImport": "Bookingen blev hentet efterfølgende, da kanalen blev tilsluttet. Ifølge portalformidleren indeholder sådanne bookinger ingen ekstraydelser og rengøringsgebyrer — det kan ikke hentes bagefter. Skal gebyret afregnes, tilføjer du det som en post på bookingen.",
         "portalReportsNone": "Portalen fører ikke gebyret som en selvstændig post ved denne booking. Hos Booking.com afhænger det af indstillingerne for overnatningsstedet (Overnatningssted → Politikker → Yderligere gebyrer) og af, fra hvornår gebyret gælder der: et gebyr, der er indført senere, mangler med rette ved ældre bookinger.",
         "noPayload": "Der findes ingen portalmeddelelse til denne booking (import af eksisterende data). Uden den kan det ikke fastslås, hvilke gebyrer gæsten har betalt.",
-        "unknownReason": "Årsagen kan ikke fastslås."
+        "unknownReason": "Årsagen kan ikke fastslås.",
+        "csvImport": "Bookingen stammer fra CSV-lagerimporten. Det importerede beløb er gæsteprisen for portalen inklusive alle gebyrer; en oversigt over individuelle gebyrer er ikke tilgængelig og kunne heller ikke udledes fra portaldatene. Afregningen anvender derfor ingen gebyrer fra ejendommens stamdata – de er allerede inkluderet i beløbet, men deres størrelse er ikke dokumenteret.",
+        "csvResolvedTitle": "Gebyrer afledt af portalbeløbet",
+        "csvResolved": "Bookingen stammer fra CSV-lagerimporten; portalen har ikke leveret en oversigt. Gebyrerne blev udledt fra forskellen mellem den importerede totalpris og de af portalen meddelte natpriser og navngivet via ejendommens stamdata. Overnatning plus gebyrer udgør præcis totalprisen.",
+        "stammdatenPortalTitle": "Gebyrer fra stamdata for ejendommen er tilføjet",
+        "stammdatenPortal": "Portalen har ikke leveret en gebyroversigt for denne booking: Bookinger, som portal-aggregatoren har hentet efter tilslutning af kanalen, kommer uden ekstraydelser og rengøringsgebyrer; en bestandsimport fra en fil indeholder kun den samlede pris. Gebyrerne er derfor blevet fastsat som de er angivet for ejendommen: Rengøring pr. ophold, resort pr. nat, kæledyr kun hvis kæledyr er booket.",
+        "portalBelegt": "Optaget: Forskellen mellem portalens samlede pris og de af portalen angivne natpriser svarer nøjagtigt til disse gebyrer.",
+        "portalImBetrag": "Inkluderet i portalbeløbet: Portalens samlede pris inkluderer allerede gebyrerne; de er blevet fratrukket, gæsteprisen forbliver portalbeløbet.",
+        "portalObendrauf": "Ud over portalbeløbet: Det overførte beløb er den rene nattesum; gebyrerne tilføjes og udgør gæsteprisen."
       },
       "chain": {
         "portal": "Portal",
         "management": "Administration",
         "flatFee": "Fast gebyr",
         "fees": "Gebyrer"
+      },
+      "arrival": "Ankomst",
+      "departure": "Afrejse",
+      "commission": "Provision",
+      "flatFee": "Fast pris",
+      "ownerShare": "Ejers andel",
+      "portalDeduction": "Portalfradrag",
+      "fees": "Gebyrer",
+      "feesCount": "{n} poster",
+      "expand": "Vis oversigt",
+      "collapse": "Skjul oversigt",
+      "expandAll": "Vis alle oversigter",
+      "collapseAll": "Skjul alle oversigter",
+      "breakdown": "Oversigt pr. booking",
+      "noFeeItems": "Ingen gebyrer eller tillægsydelser på denne booking.",
+      "posten": {
+        "guestPrice": "Gæstepris ifølge portal (inkl. gebyrer, ekskl. tillægsydelser)",
+        "portalCommission": "Portalprovision {kanal}",
+        "portalFee": "Portalbetalingsgebyr",
+        "portalPayout": "Udbetaling fra portalen",
+        "feesOut": "Gebyrer i gæsteprisen – fjernet fra beregningsgrundlaget",
+        "feesInBase": "Gebyrer i gæsteprisen – provisionspligtige, forbliver i beregningsgrundlaget",
+        "base": "Beregningsgrundlag",
+        "commission": "Administrationsprovision {pct}",
+        "minCommission": "Minimumsprovision (kontrakt) i stedet for {pct}",
+        "contractFrom": "Kontrakt fra {datum}",
+        "rateManual": "Manuelt i denne afregning",
+        "rateLegacy": "Standard sats fra stamdata",
+        "flatFee": "Fast pris (kontrakt)",
+        "feesBack": "Ejers gebyrer – ubeskåret retur",
+        "ownerShare": "Ejerandel",
+        "belongsBetrieb": "Forbliver hos virksomheden",
+        "belongsEigentuemer": "Ejer",
+        "belongsDurchlauf": "Gennemgående poster (tredjeparter)",
+        "commissionFree": "Provisionsfri",
+        "commissionable": "Provisionspligtig",
+        "amountHidden": "Beløb hos virksomheden",
+        "addon": "Tillægsydelse",
+        "noFeesReported": "Portalen har ikke rapporteret gebyrer for denne booking; derfor er der ikke anvendt nogen.",
+        "afterPortal": "Totalbeløb efter portalfradrag",
+        "afterPortalHint": "Gæstepris fratrukket portalprovision og portalbetalingsgebyr",
+        "feesBusiness": "Leveret af virksomheden – ikke en del af udbetalingen",
+        "contractStartsLater": "Ingen afregningsaftale på afrejsedatoen {abreise}: aftalen starter først den {beginn}. Tilbagedater aftalestart hos ejeren, så medregnes denne booking.",
+        "noContract": "Der er ingen afregningsaftale og ingen provisionssats for denne ejendom i stamdataene – opret en aftale hos ejeren.",
+        "addonsOutside": "Tillægsydelser — solgt via myNextDays, ikke inkluderet i portalens gæstepris"
       }
     },
     "expenses": {
@@ -1566,7 +1624,11 @@
       "rentalRevenue": "Lejeindtægter",
       "expenses": "Udgifter & ekstra",
       "total": "I alt",
-      "deductPercentage": "Provision (%)"
+      "deductPercentage": "Provision (%)",
+      "shares": "Ejers andel af bookinger",
+      "deductions": "Fradrag",
+      "credits": "Krediteringer",
+      "recurring": "Tilbagevendende poster"
     },
     "manage": {
       "owner": "Ejer",
@@ -1631,6 +1693,25 @@
       "cancel": "Annuller",
       "confirm": "Lås",
       "working": "Låser..."
+    },
+    "deductions": {
+      "title": "Fradrag og kreditter",
+      "intro": "Alt, der ændrer udbetalingen ud over bookingerne – fra tre kilder: fast gebyr fra kontrakten pr. booking, engangsafregningsposter og tilbagevendende poster (permanent aftale).",
+      "deductions": "Fradrag (ejerens omkostning)",
+      "credits": "Kreditter (ejerens fordel)",
+      "empty": "Ingen fradrag eller kreditter i denne periode.",
+      "srcExpense": "Afregningspost",
+      "srcRecurring": "Tilbagevendende post",
+      "srcFlatFee": "Fast gebyr fra kontrakt",
+      "perBooking": "pr. booking",
+      "perNight": "pr. nat",
+      "perPeriod": "pr. periode",
+      "quantity": "{n} × {betrag}",
+      "flatFeesNote": "De faste gebyrer fra kontrakten er allerede fratrukket i ejerens andele pr. booking – her kun til overblik, intet yderligere fradrag.",
+      "manageRecurring": "Vedligehold tilbagevendende poster",
+      "manageContract": "Vedligehold afregningskontrakt",
+      "receipt": "Kvittering",
+      "bookingsCount": "{n} bookinger"
     }
   },
   "ownerBilling": {
@@ -1709,7 +1790,9 @@
     "effectBlocked": "{property}: Marketing slutter på {date} — {nights}-nætter blokeret og fjernet fra portalerne.",
     "effectReleased": "{property}: Markedsføringen fortsætter - slutningen af ​​kontrakten er ophævet, og nætterne er til salg igen.",
     "effectNoUnit": "{property}: Slutningen af ​​kontrakten er indtastet, men kalenderen er ikke låst - objektet mangler en enhed. Sæt den på, og låsen træder i kraft.",
-    "effectCalendarFailed": "{property}: Slutningen af ​​kontrakten er indtastet, kalenderlåsen er ikke skrevet. Det bliver tilføjet i aften."
+    "effectCalendarFailed": "{property}: Slutningen af ​​kontrakten er indtastet, kalenderlåsen er ikke skrevet. Det bliver tilføjet i aften.",
+    "validFromHint": "Den dato, hvor aftalen træder i kraft – for en eksisterende aftale er det den faktiske aftaledato, ikke i dag. Hver booking afregnes med den aftale, der er gældende på afrejsedagen; bookinger med tidligere afrejse forbliver uden udbetaling.",
+    "errorValidFromRequired": "Angiv venligst, fra hvornår aftalen er gældende."
   },
   "portal": {
     "title": "Min portal",
@@ -5465,7 +5548,8 @@
       "connectPortal": "Forbind portal",
       "noPortals": "Der er endnu ikke forbundet nogen portal (Booking, Airbnb m.fl.) til denne bolig.",
       "marketplaceReview": "Under gennemgang",
-      "marketplaceReviewHint": "myBestDays gennemgår stadig denne annonce. Den vises på markedspladsen, når den er godkendt. Portaler og din egen hjemmeside påvirkes ikke."
+      "marketplaceReviewHint": "myBestDays gennemgår stadig denne fortegnelse. Når den er godkendt, vises den på markedspladsen. myBestDays er en obligatorisk kanal: En ejendom kan ikke fravælges individuelt der — \"Sæt salg på pause\" fjerner den fra salg overalt.",
+      "marketplaceMandatory": "Obligatorisk kanal — alle ejendomme er listet på myBestDays"
     },
     "IdLayout": {
       "loadError": "Objektet kunne ikke indlæses: {error}"
@@ -5563,11 +5647,11 @@
       "stepOf": "Trin {schritt} af {gesamt}",
       "next": "Continue",
       "back": "Back",
-      "channelsHint": "Hvor skal denne bolig sælges? Det kan altid ændres.",
+      "channelsHint": "Hvor skal denne ejendom sælges yderligere? Portaler og hjemmesider kan ændres til enhver tid.",
       "channelPortals": "Bookingportaler",
       "channelPortalsHint": "Airbnb, Booking.com og flere. Portalerne kræver komplette oplysninger — se nedenfor.",
       "channelPlatform": "myBestDays",
-      "channelPlatformHint": "Vores eget marked med lav kommission.",
+      "channelPlatformHint": "Vores egen markedsplads med 8 % all-in. Hvert objekt er opført der; det bliver synligt efter offentliggørelse og vores godkendelse.",
       "channelWebsite": "Eget websted",
       "channelWebsiteHint": "Din bookingside og bookingwidgetten.",
       "readinessTitle": "Til portalerne mangler der stadig:",
@@ -6261,7 +6345,21 @@
       "planPortalOffHint": "Denne pris gælder kun for direkte bookinger. Klik for at sende den til bookingportalerne.",
       "planPortalOn": "Prisen sendes nu til bookingportalerne.",
       "planPortalOnHint": "Denne pris sendes til bookingportalerne. Klik for kun at bruge den til direkte bookinger.",
-      "planPortalYes": "Til portaler"
+      "planPortalYes": "Til portaler",
+      "feeValidityTitle": "Gyldighed",
+      "feeValidityHint": "Gebyret gælder for bookinger, hvis ankomst falder inden for perioden. Tom = uden grænse. Til portalerne sendes et gebyr uden tidsrum: der kan ingen datobetingelse afbildes.",
+      "feeValidFromLabel": "Gælder fra",
+      "feeValidUntilLabel": "Gælder til",
+      "feeValidityOrderError": "„Gælder til“ er før „Gælder fra“.",
+      "feeOwnerStatementOnlyLabel": "Kun i ejerregnskabet",
+      "feeOwnerStatementOnlyHint": "Gebyret opkræves ikke hos gæsten og sendes ikke til nogen portal. Det påvirker kun ejerregnskabet, evalueringen og ejerportalen.",
+      "feeValidFromSuffix": "fra {date}",
+      "feeValidUntilSuffix": "til {date}",
+      "feeOwnerStatementOnlySuffix": "kun regnskab",
+      "feeCalculationLabel": "Beregning",
+      "feeVatHint": "En separat skattesats for dette gebyr, afvigende fra ejendommens overnatningssats. Fra betyder: gebyret følger overnatningssatsen.",
+      "feeVatIncludedLabel": "Skat i beløbet",
+      "feeVatIncludedHint": "Er skattesatsen allerede inkluderet i det indtastede beløb, eller kommer den oveni? Uden denne information ville beløbet være tvetydigt."
     },
     "policiesForm": {
       "title": "Retningslinjer",
@@ -7303,23 +7401,23 @@
     "marketplacePending": "{count} under gennemgang",
     "marketplaceWaiting": "Under gennemgang",
     "marketplace": {
-      "intro": "myBestDays er vores egen markedsplads — en bookingkanal som Booking eller Airbnb, blot uden portalforbindelse. Et objekt bliver synligt, når det er aktivt, listet her og godkendt.",
+      "intro": "myBestDays er vores egen markedsplads – en bookingkanal som Booking eller Airbnb, blot uden portalforbindelse, og obligatorisk for alle objekter. Et objekt bliver synligt, når det er aktivt og er blevet godkendt af os.",
       "openMarketplace": "Åbn markedsplads",
       "propertiesHeading": "Objekter på markedspladsen",
       "noProperties": "Ingen objekter oprettet endnu.",
       "columnProperty": "Objekt",
-      "columnVisibility": "Synlighed",
+      "columnVisibility": "Status",
       "columnApproval": "Godkendelse",
       "columnBookings": "Bookinger",
       "stateActive": "Synlig",
       "statePending": "Under gennemgang",
-      "stateNotListed": "Ikke listet",
+      "stateNotListed": "Salg pauset",
       "stateInactiveProperty": "Objekt ikke aktivt",
       "viewListing": "Se annonce",
       "reviewHint": "Objekter under gennemgang vises endnu ikke på myBestDays. Vi gennemgår hver annonce, fordi myBestDays optræder som udbyder der — portaler og din egen hjemmeside påvirkes ikke.",
       "summaryVisible": "{count} synlige",
       "summaryWaiting": "{count} under gennemgang",
-      "summaryOff": "{count} ikke listet",
+      "summaryOff": "{count} pauset eller inaktiv",
       "moderation": {
         "draft": "Kladde",
         "pending": "Under gennemgang",
@@ -7354,7 +7452,8 @@
       "mayClose": "Importen fortsætter på serveren – du kan lukke denne side.",
       "andMore": "… og {count} mere",
       "close": "Luk",
-      "updated": "opdateret"
+      "updated": "opdateret",
+      "portal": "allerede fra portalen"
     }
   },
   "calendarSync": {
@@ -10511,7 +10610,11 @@
     "haveAccount": "Har du allerede en konto?",
     "loginLink": "Log ind her",
     "loadingHeadline": "Din egen bookingside. Behold 100 % af hver booking.",
-    "loadingText": "Vi opretter din konto …"
+    "loadingText": "Vi opretter din konto …",
+    "referralLabel": "Anbefalet af (valgfrit)",
+    "referralPlaceholder": "Henvisningskode, f.eks. ANNA-K7P2",
+    "referralHint": "Har du lært myNextDays at kende via en partner? Deres kode står her – de kan kun se, at en virksomhed kom via dem, aldrig dit navn. Med koden får du den første hele måned gratis efter de 14 testdage.",
+    "referralContactOptIn": "Min anbefaler må kontakte mig via myNextDays."
   },
   "marketingSite": {
     "stars": "4,5 stjerner",

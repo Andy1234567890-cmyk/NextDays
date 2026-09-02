@@ -851,7 +851,8 @@
     },
     "unternehmen": {
       "ueberUns": "Over ons",
-      "kontakt": "Contact"
+      "kontakt": "Contact",
+      "partner": "Partnerprogramma"
     },
     "copyright": "© 2026 myNextDays. Alle rechten voorbehouden.",
     "agb": "Voorwaarden",
@@ -860,7 +861,8 @@
     "cookies": "Cookiebeleid",
     "avv": "Verwerkersovereenkomst",
     "kontoLoeschen": "Account verwijderen",
-    "newsletterKnopf": "Aanmelden voor nieuwsbrief"
+    "newsletterKnopf": "Aanmelden voor nieuwsbrief",
+    "partnerAgb": "Partner-algemene voorwaarden"
   },
   "legal": {
     "stand": "Laatst bijgewerkt: {datum}"
@@ -990,7 +992,7 @@
       "sub": "Wat verhuurders willen weten vóór een overstap — kort en zonder kleine lettertjes.",
       "laufzeit": {
         "frage": "Is er een minimale looptijd?",
-        "antwort": "Nee. Het abonnement is maandelijks opzegbaar met een opzegtermijn van vier weken aan het einde van de maand. De eerste 14 dagen zijn gratis: u voert uw betalingsgegevens in bij de start, maar de afschrijving vindt pas plaats na afloop van de proefperiode. Als u eerder opzegt, betaalt u niets."
+        "antwort": "Nee. Het abonnement is maandelijks opzegbaar met een opzegtermijn van vier weken. De eerste 14 dagen zijn gratis: u voert bij de start uw betaalgegevens in, maar de afschrijving vindt pas plaats na afloop van de testfase. Als u via de link of code van een partner komt, krijgt u bovendien de eerste volle maand cadeau. Als u eerder opzegt, betaalt u niets."
       },
       "objektzahl": {
         "frage": "Wat gebeurt er als ik objecten toevoeg?",
@@ -2185,5 +2187,259 @@
     "verwalten": "Cookie-instellingen beheren",
     "schliessen": "Sluiten",
     "bestaetigen": "Instellingen bevestigen"
+  },
+  "partnerHinweis": {
+    "text": "U komt via een aanbeveling (code {code}). De code wordt bij de registratie overgenomen — en geeft u na de 14 testdagen de eerste volle maand cadeau.",
+    "cta": "Nu gratis starten",
+    "schliessen": "Melding sluiten"
+  },
+  "partner": {
+    "meta": {
+      "titel": "Partnerprogramma — myNextDays",
+      "beschreibung": "Beveel myNextDays aan bij vakantieverhuurders en hotels en ontvang twaalf maanden lang tot {max}% van de abonnementsomzet van elk geworven bedrijf."
+    },
+    "hero": {
+      "eyebrow": "Partnerprogramma",
+      "headlinePre": "Beveel myNextDays aan —",
+      "headlineHighlight": "en verdien mee",
+      "sub": "Voor influencers, consultants, bureaus en verhuurders met een netwerk: Elk bedrijf dat zich via uw link registreert en een abonnement betaalt, levert u twaalf maanden lang tot {max} % van de abonnementsomzet op — plus 0,5 % van elke boeking via myBestDays, promotiebonussen en vanaf Elite een superprovisie zonder looptijdbeperking.",
+      "cta": "Nu aanmelden",
+      "ctaLogin": "Partner login",
+      "chipDauer": "12 maanden commissie per klant",
+      "chipAuszahlung": "Maandelijkse uitbetaling",
+      "chipKosten": "Gratis deelname",
+      "chipGratismonat": "Uw klanten: 14 dagen testen + 1 maand gratis"
+    },
+    "schritte": {
+      "eyebrow": "Hoe het werkt",
+      "heading": "Drie stappen naar de eerste commissie",
+      "bewerben": {
+        "titel": "Aanmelden",
+        "text": "U noemt ons uw kanaal — website, social profiel of netwerk. Wij controleren elke aanmelding persoonlijk en geven meestal binnen enkele werkdagen goedkeuring."
+      },
+      "teilen": {
+        "titel": "Link of code delen",
+        "text": "U ontvangt een persoonlijke link en een aanbevelingscode. De code is bij de registratie zichtbaar in het formulier — zonder tracking-cookie."
+      },
+      "verdienen": {
+        "titel": "Verdienen",
+        "text": "Betaalt een geworven bedrijf zijn eerste abonnementsfactuur, dan loopt uw commissie twaalf maanden. U ziet elke klant pseudoniem in het partnerdashboard en wordt maandelijks uitbetaald."
+      }
+    },
+    "staffel": {
+      "eyebrow": "Uw staffel",
+      "heading": "Hoe groter uw structuur, hoe hoger uw percentage",
+      "sub": "De staffel geldt voor alle nieuwe provisies vanaf het bereiken van de rang. Tot de structuur behoren uw eigen betalende klanten en de klanten van uw teampartners.",
+      "kunden": "{von}-{bis} betalende klanten",
+      "kundenOffen": "vanaf {von} betalende klanten",
+      "satz": "van de abonnementsomzet",
+      "nichtAbrufbar": "De staffel is momenteel niet beschikbaar. Probeer het later opnieuw."
+    },
+    "bedingungen": {
+      "eyebrow": "De regels",
+      "heading": "Eerlijk voor u, eerlijk voor de bedrijven",
+      "basis": {
+        "titel": "Wat telt",
+        "text": "De commissiebasis is de netto abonnementsomzet (basistarief en modules) van het geworven bedrijf — zonder belastingen, portaalcommissies en aanvullende diensten."
+      },
+      "dauer": {
+        "titel": "Twaalf maanden",
+        "text": "De commissie loopt twaalf maanden vanaf de eerste betaalde abonnementsfactuur van het bedrijf; de gratis maand van uw klanten telt niet mee. Als het bedrijf opzegt, eindigt de commissie met de laatste betaling. Het boekingsaandeel en de supercommissie lopen zonder deze limiet."
+      },
+      "auszahlung": {
+        "titel": "Uitbetaling",
+        "text": "Maandelijks, 30 dagen na de betaling van het bedrijf, vanaf een minimumbedrag per valuta. U ontvangt een creditnota; bedrijven hebben een geldig btw-nummer nodig."
+      },
+      "kennzeichnung": {
+        "titel": "Aanduiding",
+        "text": "Elke aanbeveling is reclame en moet als zodanig worden aangeduid. De voorgeschreven formuleringen per taal stellen wij in het dashboard ter beschikking."
+      },
+      "verboten": {
+        "titel": "Niet toegestaan",
+        "text": "Zelfpromotie, adverteren op onze merknamen in zoekadvertenties, kortingsbeloften in onze naam en ongevraagde berichten. Terugbetalingen worden afgetrokken van de commissie."
+      },
+      "daten": {
+        "titel": "Gegevensbescherming",
+        "text": "U ziet uw klanten alleen pseudoniem — met land, status en bedragen, nooit met naam of e-mail. Een bedrijf kan u bij registratie toestaan contact met hen op te nemen."
+      }
+    },
+    "faq": {
+      "eyebrow": "Veelgestelde vragen",
+      "heading": "Wat partners ons vragen",
+      "wer": {
+        "frage": "Wie kan partner worden?",
+        "antwort": "Elke persoon of elk bedrijf in de EU met een echt kanaal naar verhuurders of hotels: influencers, consultants, bureaus, belastingadvieskantoren, verenigingen — en myNextDays-klanten zelf. Een aanvraag is gratis; een abonnement is geen vereiste."
+      },
+      "wann": {
+        "frage": "Wanneer telt een bedrijf als mijn klant?",
+        "antwort": "Als het zich met uw code heeft geregistreerd en de eerste abonnementsfactuur heeft betaald. Registraties zonder betaling tellen niet mee voor de rang."
+      },
+      "doppelt": {
+        "frage": "Wat als een bedrijf twee partners noemt?",
+        "antwort": "Een bedrijf wordt aan precies één partner toegewezen — degene wiens code bij de registratie in het formulier stond. Latere codes veranderen dit niet."
+      },
+      "steuern": {
+        "frage": "Hoe werkt de facturering?",
+        "antwort": "Wij stellen een creditnota (self-billing) op. Bedrijven met een EU-btw-nummer ontvangen deze met een reverse-charge-vermelding, particulieren zonder btw — u betaalt zelf de belasting over de commissie."
+      },
+      "material": {
+        "frage": "Is er promotiemateriaal?",
+        "antwort": "Ja: korte video's voor sociale media, een uitlegvideo, banners en tekstblokken — in het partnerdashboard, in uw taal."
+      },
+      "wieviel": {
+        "frage": "Hoeveel commissie kan ik verdienen?",
+        "antwort": "Dit is afhankelijk van de abonnementsomzet van uw klanten en uw rang. De bovenstaande tabel toont het tarief per rang; twaalf maanden lang per klant. Daarnaast is er 0,5% van elke boeking die uw klanten via myBestDays ontvangen, een eenmalige promotiebonus voor elke bereikte rang, het verschil in commissie met een team - en vanaf Elite Partner 2,5% supercommissie op de gehele structuur zonder tijdslimiet."
+      },
+      "team": {
+        "frage": "Hoe werkt de teamprovisie?",
+        "antwort": "Vanaf de rang 'Opstapper': Als een partner via uw teamlink solliciteert en uw code zichtbaar in de sollicitatie vermeldt, behoort hij na goedkeuring tot uw team. Zijn klanten tellen 1:1 mee voor uw rang. Op de netto abonnementsomzet van zijn klanten ontvangt u het verschil tussen uw percentage en het zijne — precies één niveau diep, zonder deelnamekosten, zonder geld voor werving."
+      },
+      "auszahlung": {
+        "frage": "Hoe en wanneer worden provisies uitbetaald?",
+        "antwort": "Maandelijks per valuta, zodra het totaalbedrag het minimumbedrag van uw valuta bereikt. Elke provisieregel is 30 dagen 'open' (terugbetalingsperiode) en daarna uitbetaalbaar. U ontvangt een creditnota (self-billing) — u stuurt geen factuur. Uitbetaling via SEPA, Wise of PayPal."
+      },
+      "verfolgen": {
+        "frage": "Hoe kan ik mijn provisies en prestaties volgen?",
+        "antwort": "In het partnerdashboard ziet u onder 'Provisies' elke betaalde abonnementsfactuur met basis, tarief, bedrag en status, onder 'Klanten' uw bedrijven pseudoniem, onder 'Team' de evaluatie van uw teampartners en onder 'Links & Materiaal' klikken per code."
+      },
+      "werbung": {
+        "frage": "Mag ik betaalde advertenties plaatsen?",
+        "antwort": "Niet op ons merk: advertenties op 'myNextDays' en schrijfwijzen (brand-bidding), cookie-dropping, gekochte bereik of prikkels voor registraties zijn verboden en leiden tot blokkering. Eigen inhoud, bijdragen en aanbevelingen zijn uitdrukkelijk gewenst — met aanduiding als reclame."
+      }
+    },
+    "abschluss": {
+      "heading": "Klaar om myNextDays aan te bevelen?",
+      "sub": "Meld u binnen twee minuten aan. Wij nemen contact met u op na de controle.",
+      "cta": "Nu aanmelden",
+      "kontakt": "Vragen? Schrijf ons."
+    },
+    "vergleich": {
+      "eyebrow": "Uw niveau",
+      "heading": "Hoe meer betalende klanten, hoe hoger uw tarief",
+      "sub": "De staffel geldt voor alle nieuwe provisies vanaf het bereiken van de rang. Uw structuur telt mee: uw eigen betalende klanten plus de klanten van uw teampartners.",
+      "nichtAbrufbar": "Het niveau is momenteel niet beschikbaar. Probeer het later opnieuw.",
+      "plan": "Rang",
+      "provision": "Commissie op eigen klanten",
+      "teamProvision": "Teamprovisie op klanten van uw teampartners",
+      "dauer": "Looptijd per klant",
+      "dauerWert": "12 maanden",
+      "kunden": "{van}–{tot} betalende klanten",
+      "kundenOffen": "vanaf {van} betalende klanten",
+      "vorteile": "Diensten",
+      "ja": "inbegrepen",
+      "nein": "niet inbegrepen",
+      "leistung": {
+        "konto": "Gratis partneraccount",
+        "dashboard": "Partnerdashboard met klanten, commissies en analyse",
+        "material": "Promotiemateriaal en sjablonen voor identificatie",
+        "team": "Team opbouwen met eigen teamlink",
+        "gutschrift": "Maandelijkse uitbetaling met creditnota (self-billing)",
+        "chat": "Direct contact met het partnerteam",
+        "support": "Persoonlijk contactpersoon",
+        "coMarketing": "Co-marketing (gezamenlijke acties)"
+      },
+      "fussnoteTeam": "Teamprovisie is het verschil tussen uw percentage en het percentage van de teampartner op de netto abonnementsomzet van zijn klanten, beide op het moment van betaling — precies één niveau diep, geen deelnamekosten, geen geld voor werving. Samen nooit meer dan 30 %.",
+      "fussnoteCoMarketing": "Na overleg met het partnerteam; afhankelijk van het profiel van de partner en de lopende acties.",
+      "fussnoteRang": "De rang vloeit voort uit uw structuur: eigen betalende klanten plus de klanten van uw teampartners, elke klant telt één keer. Bij het bereiken van een nieuwe rang vanaf 'Opstapper' ontvangt u een eenmalige promotiebonus.",
+      "teamDifferenz": "{satz} % minus het percentage van de teampartner",
+      "teamNicht": "nog geen team",
+      "bonus": "Promotiebonus (eenmalig)",
+      "superProvision": "Superprovisie over de hele structuur",
+      "marktTurbo": "Boekingsaandeel myBestDays",
+      "marktTurboWert": "0,5 % per boeking, onbeperkt",
+      "fussnoteSuper": "Vanaf Elite Partner 2,5 % op de netto abonnementsomzet van alle klanten in uw structuur — bovenop de provisie, zonder de 12-maandenlimiet, zolang u de rang behoudt en de klant betaalt."
+    },
+    "team": {
+      "eyebrow": "Team opbouwen",
+      "heading": "Tot {max} % verschilprovisie op de omzet van uw team",
+      "sub": "Kent u andere consultants, creators of bureaus met contacten met verhuurders? Vanaf de rang 'Opstapper' solliciteren zij via uw teamlink, behoren zij tot uw team — en hun klanten tellen 1:1 mee voor uw rang. U verdient het verschil tussen uw percentage en het percentage van uw teampartner; uw teampartners behouden hun volledige eigen staffel.",
+      "rang": {
+        "titel": "Het verschil",
+        "text": "U ontvangt uw percentage minus het percentage van de teampartner — beide op het moment van betaling. Als uw teampartner dezelfde rang heeft, ontstaat er geen teamprovisie."
+      },
+      "ebene": {
+        "titel": "Precies één niveau",
+        "text": "Uw teampartners bouwen geen eigen team onder u op. Geen netwerk, geen piramide."
+      },
+      "keinGeld": {
+        "titel": "Alleen uit echte omzet",
+        "text": "Geen deelnamekosten, geen geld voor werving. Teamcommissie ontstaat uitsluitend uit betaalde abonnementsomzet."
+      },
+      "dauer": {
+        "titel": "Dezelfde regels",
+        "text": "12 maanden per teamklant, 30 dagen restitutieperiode, terugname bij restitutie of chargeback — net als bij uw eigen provisie. Vanaf Elite komt de superprovisie over de hele structuur erbij, zonder looptijdbeperking."
+      }
+    },
+    "kundeCta": {
+      "heading": "Bent u al myNextDays-klant?",
+      "text": "Dan kent u het product het beste. Beveel het aan — uw commissie wordt als tegoed op uw rekening gestort, ongeacht uw abonnement.",
+      "cta": "Aanbevelen & verdienen"
+    }
+  },
+  "partnerBewerbung": {
+    "meta": {
+      "titel": "Aanmelden als partner — myNextDays",
+      "beschreibung": "Aanmelden voor het myNextDays-partnerprogramma: socialmedia-accounts, bereik, voorwaarden. Wij beoordelen elke aanvraag persoonlijk."
+    },
+    "eyebrow": "Partnerprogramma",
+    "titel": "Aanmelden als partner",
+    "text": "Geef ons uw socialmedia-accounts met bereik — wij beoordelen elke aanvraag persoonlijk en nemen doorgaans binnen enkele werkdagen contact met u op. Na goedkeuring krijgt u toegang tot het partnerdashboard met links, codes en evaluatie.",
+    "email": "E-mail",
+    "passwort": "Wachtwoord voor uw partnerdashboard",
+    "passwortHinweis": "Minimaal 8 tekens.",
+    "name": "Naam",
+    "firma": "Bedrijf (optioneel)",
+    "rechtsform": "Rechtsvorm",
+    "privat": "Particulier",
+    "unternehmen": "Bedrijf",
+    "land": "Land",
+    "ustId": "Btw-nummer",
+    "ustIdHinweis": "Wordt gecontroleerd via het EU VIES-systeem. Zonder bevestigd nummer geen uitbetaling aan bedrijven.",
+    "kanaele": {
+      "titel": "Uw socialmedia-accounts",
+      "hinweis": "Verplicht: minimaal één socialmedia-account (Instagram, TikTok, YouTube, Facebook, LinkedIn …) met adres, handle en bereik (volgers). Website, blog of nieuwsbrief zijn optioneel.",
+      "plattform": "Platform",
+      "handle": "Handle (optioneel)",
+      "reichweite": "Bereik (volgers)",
+      "hinzufuegen": "Kanaal toevoegen",
+      "entfernen": "Kanaal verwijderen",
+      "socialPflicht": "Minimaal één socialmedia-account met bereik is verplicht — een website alleen is niet voldoende.",
+      "plattformen": {
+        "website": "Website",
+        "blog": "Blog",
+        "newsletter": "Nieuwsbrief",
+        "podcast": "Podcast",
+        "other": "Overig"
+      }
+    },
+    "plattform": {
+      "website": "Website",
+      "blog": "Blog",
+      "newsletter": "Nieuwsbrief",
+      "podcast": "Podcast",
+      "other": "Overig"
+    },
+    "sponsor": "Aangemeld door partner (code, optioneel)",
+    "sponsorHinweis": "Komt u via de teamlink van een partner? Zijn code staat dan hier. Hij ontvangt een teamprovisie op de abonnementsomzet van uw klanten — uw eigen provisie blijft ongewijzigd.",
+    "pitch": "Waarom past u bij myNextDays? (optioneel)",
+    "pitchPlatzhalter": "Wie bereikt u, waarover praat u, hoe wilt u aanbevelen?",
+    "zustimmung": "Ik accepteer de",
+    "bedingungen": "Partnervoorwaarden",
+    "version": "Versie {version}",
+    "absenden": "Aanvraag verzenden",
+    "sendet": "Wordt verzonden …",
+    "pruefungHinweis": "Dit formulier wordt beschermd door reCAPTCHA. Na verzending controleert ons partnerteam uw accounts en bereik; u ontvangt een e-mail met de beslissing.",
+    "fehler": {
+      "social": "Geef ten minste één socialmedia-account op met adres en bereik.",
+      "doppelt": "Er is al een aanvraag voor dit e-mailadres. Meld u aan bij het partnerdashboard.",
+      "eingabe": "Controleer uw invoer.",
+      "captcha": "De spamcontrole is mislukt. Laad de pagina opnieuw en probeer het nogmaals.",
+      "allgemein": "De aanvraag kon nu niet worden verzonden. Probeer het later opnieuw."
+    },
+    "fertig": {
+      "titel": "Aanvraag ontvangen",
+      "text": "Bedankt! We controleren uw accounts en bereik persoonlijk en nemen contact met u op via e-mail. Uw partnerdashboard is toegankelijk met uw e-mailadres en wachtwoord — links en codes worden actief na goedkeuring.",
+      "login": "Naar partnerlogin"
+    }
   }
 }

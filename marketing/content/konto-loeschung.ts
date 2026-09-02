@@ -44,6 +44,9 @@ export type KontoLoeschungTexte = {
   zurueckZurSeite: string;
   appHinweisTitel: string;
   appHinweisText: string;
+  // Partnerprogramm (0521): Meta verlangt eine Datenlöschungs-URL; sie zeigt hierher.
+  partnerHinweisTitel: string;
+  partnerHinweisText: string;
 };
 
 const TEXTE: Record<string, KontoLoeschungTexte> = {
@@ -74,6 +77,8 @@ const TEXTE: Record<string, KontoLoeschungTexte> = {
     zurueckZurSeite: "Back to the homepage",
     appHinweisTitel: "Using the app?",
     appHinweisText: "In the app you find deletion under Profile → Account. This page is the route for anyone who no longer has the app installed.",
+    partnerHinweisTitel: "Partner programme and connected social media accounts",
+    partnerHinweisText: "If you are a partner in the myNextDays partner programme, you can disconnect your YouTube, Instagram, Facebook or TikTok accounts yourself at any time: in the partner dashboard under Profile → Connected accounts → \"Disconnect\". We delete the access credentials immediately. To delete your entire partner account including stored measurements, use the form above with the email address of your partner account.",
   },
   cs: {
     titel: "Delete account",
@@ -102,6 +107,8 @@ const TEXTE: Record<string, KontoLoeschungTexte> = {
     zurueckZurSeite: "Back to the homepage",
     appHinweisTitel: "Using the app?",
     appHinweisText: "In the app you find deletion under Profile → Account. This page is the route for anyone who no longer has the app installed.",
+    partnerHinweisTitel: "Partner programme and connected social media accounts",
+    partnerHinweisText: "If you are a partner in the myNextDays partner programme, you can disconnect your YouTube, Instagram, Facebook or TikTok accounts yourself at any time: in the partner dashboard under Profile → Connected accounts → \"Disconnect\". We delete the access credentials immediately. To delete your entire partner account including stored measurements, use the form above with the email address of your partner account.",
   },
   da: {
     titel: "Slet konto",
@@ -130,6 +137,8 @@ const TEXTE: Record<string, KontoLoeschungTexte> = {
     zurueckZurSeite: "Tilbage til forsiden",
     appHinweisTitel: "Bruger du appen?",
     appHinweisText: "I appen finder du sletning under Profil → Konto. Denne side er vejen for alle, der ikke længere har appen installeret.",
+    partnerHinweisTitel: "Partnerprogram og forbundne sociale medier",
+    partnerHinweisText: "Er du partner i myNextDays' partnerprogram, kan du til enhver tid selv afbryde forbindelsen til dine YouTube-, Instagram-, Facebook- eller TikTok-konti: i partner-dashboardet under Profil → Forbundne konti → „Afbryd forbindelse“. Adgangsoplysningerne slettes straks. For at slette hele din partnerkonto inklusive gemte måleværdier bruger du formularen ovenfor med e-mailadressen på din partnerkonto.",
   },
   de: {
     titel: "Konto löschen",
@@ -158,6 +167,8 @@ const TEXTE: Record<string, KontoLoeschungTexte> = {
     zurueckZurSeite: "Zurück zur Startseite",
     appHinweisTitel: "Du nutzt die App?",
     appHinweisText: "In der App findest du die Löschung unter Profil → Konto. Diese Seite ist der Weg für alle, die die App nicht mehr installiert haben.",
+    partnerHinweisTitel: "Partnerprogramm und verbundene Social-Media-Konten",
+    partnerHinweisText: "Sind Sie Partner im myNextDays-Partnerprogramm, können Sie die Verbindung zu Ihren YouTube-, Instagram-, Facebook- oder TikTok-Konten jederzeit selbst trennen: im Partner-Dashboard unter Profil → Verbundene Konten → „Verbindung trennen“. Die Zugangsdaten löschen wir dabei sofort. Um Ihr gesamtes Partnerkonto samt gespeicherter Messwerte zu löschen, nutzen Sie das Formular oben mit der E-Mail-Adresse Ihres Partnerkontos.",
   },
   el: {
     titel: "Delete account",
@@ -186,6 +197,8 @@ const TEXTE: Record<string, KontoLoeschungTexte> = {
     zurueckZurSeite: "Back to the homepage",
     appHinweisTitel: "Using the app?",
     appHinweisText: "In the app you find deletion under Profile → Account. This page is the route for anyone who no longer has the app installed.",
+    partnerHinweisTitel: "Partner programme and connected social media accounts",
+    partnerHinweisText: "If you are a partner in the myNextDays partner programme, you can disconnect your YouTube, Instagram, Facebook or TikTok accounts yourself at any time: in the partner dashboard under Profile → Connected accounts → \"Disconnect\". We delete the access credentials immediately. To delete your entire partner account including stored measurements, use the form above with the email address of your partner account.",
   },
   en: {
     titel: "Delete account",
@@ -214,6 +227,8 @@ const TEXTE: Record<string, KontoLoeschungTexte> = {
     zurueckZurSeite: "Back to the homepage",
     appHinweisTitel: "Using the app?",
     appHinweisText: "In the app you find deletion under Profile → Account. This page is the route for anyone who no longer has the app installed.",
+    partnerHinweisTitel: "Partner programme and connected social media accounts",
+    partnerHinweisText: "If you are a partner in the myNextDays partner programme, you can disconnect your YouTube, Instagram, Facebook or TikTok accounts yourself at any time: in the partner dashboard under Profile → Connected accounts → \"Disconnect\". We delete the access credentials immediately. To delete your entire partner account including stored measurements, use the form above with the email address of your partner account.",
   },
   es: {
     titel: "Delete account",
@@ -242,6 +257,8 @@ const TEXTE: Record<string, KontoLoeschungTexte> = {
     zurueckZurSeite: "Back to the homepage",
     appHinweisTitel: "Using the app?",
     appHinweisText: "In the app you find deletion under Profile → Account. This page is the route for anyone who no longer has the app installed.",
+    partnerHinweisTitel: "Partner programme and connected social media accounts",
+    partnerHinweisText: "If you are a partner in the myNextDays partner programme, you can disconnect your YouTube, Instagram, Facebook or TikTok accounts yourself at any time: in the partner dashboard under Profile → Connected accounts → \"Disconnect\". We delete the access credentials immediately. To delete your entire partner account including stored measurements, use the form above with the email address of your partner account.",
   },
   et: {
     titel: "Delete account",
@@ -270,6 +287,8 @@ const TEXTE: Record<string, KontoLoeschungTexte> = {
     zurueckZurSeite: "Back to the homepage",
     appHinweisTitel: "Using the app?",
     appHinweisText: "In the app you find deletion under Profile → Account. This page is the route for anyone who no longer has the app installed.",
+    partnerHinweisTitel: "Partner programme and connected social media accounts",
+    partnerHinweisText: "If you are a partner in the myNextDays partner programme, you can disconnect your YouTube, Instagram, Facebook or TikTok accounts yourself at any time: in the partner dashboard under Profile → Connected accounts → \"Disconnect\". We delete the access credentials immediately. To delete your entire partner account including stored measurements, use the form above with the email address of your partner account.",
   },
   fi: {
     titel: "Delete account",
@@ -298,6 +317,8 @@ const TEXTE: Record<string, KontoLoeschungTexte> = {
     zurueckZurSeite: "Back to the homepage",
     appHinweisTitel: "Using the app?",
     appHinweisText: "In the app you find deletion under Profile → Account. This page is the route for anyone who no longer has the app installed.",
+    partnerHinweisTitel: "Partner programme and connected social media accounts",
+    partnerHinweisText: "If you are a partner in the myNextDays partner programme, you can disconnect your YouTube, Instagram, Facebook or TikTok accounts yourself at any time: in the partner dashboard under Profile → Connected accounts → \"Disconnect\". We delete the access credentials immediately. To delete your entire partner account including stored measurements, use the form above with the email address of your partner account.",
   },
   fr: {
     titel: "Delete account",
@@ -326,6 +347,8 @@ const TEXTE: Record<string, KontoLoeschungTexte> = {
     zurueckZurSeite: "Back to the homepage",
     appHinweisTitel: "Using the app?",
     appHinweisText: "In the app you find deletion under Profile → Account. This page is the route for anyone who no longer has the app installed.",
+    partnerHinweisTitel: "Partner programme and connected social media accounts",
+    partnerHinweisText: "If you are a partner in the myNextDays partner programme, you can disconnect your YouTube, Instagram, Facebook or TikTok accounts yourself at any time: in the partner dashboard under Profile → Connected accounts → \"Disconnect\". We delete the access credentials immediately. To delete your entire partner account including stored measurements, use the form above with the email address of your partner account.",
   },
   ga: {
     titel: "Delete account",
@@ -354,6 +377,8 @@ const TEXTE: Record<string, KontoLoeschungTexte> = {
     zurueckZurSeite: "Back to the homepage",
     appHinweisTitel: "Using the app?",
     appHinweisText: "In the app you find deletion under Profile → Account. This page is the route for anyone who no longer has the app installed.",
+    partnerHinweisTitel: "Partner programme and connected social media accounts",
+    partnerHinweisText: "If you are a partner in the myNextDays partner programme, you can disconnect your YouTube, Instagram, Facebook or TikTok accounts yourself at any time: in the partner dashboard under Profile → Connected accounts → \"Disconnect\". We delete the access credentials immediately. To delete your entire partner account including stored measurements, use the form above with the email address of your partner account.",
   },
   hr: {
     titel: "Delete account",
@@ -382,6 +407,8 @@ const TEXTE: Record<string, KontoLoeschungTexte> = {
     zurueckZurSeite: "Back to the homepage",
     appHinweisTitel: "Using the app?",
     appHinweisText: "In the app you find deletion under Profile → Account. This page is the route for anyone who no longer has the app installed.",
+    partnerHinweisTitel: "Partner programme and connected social media accounts",
+    partnerHinweisText: "If you are a partner in the myNextDays partner programme, you can disconnect your YouTube, Instagram, Facebook or TikTok accounts yourself at any time: in the partner dashboard under Profile → Connected accounts → \"Disconnect\". We delete the access credentials immediately. To delete your entire partner account including stored measurements, use the form above with the email address of your partner account.",
   },
   hu: {
     titel: "Delete account",
@@ -410,6 +437,8 @@ const TEXTE: Record<string, KontoLoeschungTexte> = {
     zurueckZurSeite: "Back to the homepage",
     appHinweisTitel: "Using the app?",
     appHinweisText: "In the app you find deletion under Profile → Account. This page is the route for anyone who no longer has the app installed.",
+    partnerHinweisTitel: "Partner programme and connected social media accounts",
+    partnerHinweisText: "If you are a partner in the myNextDays partner programme, you can disconnect your YouTube, Instagram, Facebook or TikTok accounts yourself at any time: in the partner dashboard under Profile → Connected accounts → \"Disconnect\". We delete the access credentials immediately. To delete your entire partner account including stored measurements, use the form above with the email address of your partner account.",
   },
   it: {
     titel: "Delete account",
@@ -438,6 +467,8 @@ const TEXTE: Record<string, KontoLoeschungTexte> = {
     zurueckZurSeite: "Back to the homepage",
     appHinweisTitel: "Using the app?",
     appHinweisText: "In the app you find deletion under Profile → Account. This page is the route for anyone who no longer has the app installed.",
+    partnerHinweisTitel: "Partner programme and connected social media accounts",
+    partnerHinweisText: "If you are a partner in the myNextDays partner programme, you can disconnect your YouTube, Instagram, Facebook or TikTok accounts yourself at any time: in the partner dashboard under Profile → Connected accounts → \"Disconnect\". We delete the access credentials immediately. To delete your entire partner account including stored measurements, use the form above with the email address of your partner account.",
   },
   lt: {
     titel: "Delete account",
@@ -466,6 +497,8 @@ const TEXTE: Record<string, KontoLoeschungTexte> = {
     zurueckZurSeite: "Back to the homepage",
     appHinweisTitel: "Using the app?",
     appHinweisText: "In the app you find deletion under Profile → Account. This page is the route for anyone who no longer has the app installed.",
+    partnerHinweisTitel: "Partner programme and connected social media accounts",
+    partnerHinweisText: "If you are a partner in the myNextDays partner programme, you can disconnect your YouTube, Instagram, Facebook or TikTok accounts yourself at any time: in the partner dashboard under Profile → Connected accounts → \"Disconnect\". We delete the access credentials immediately. To delete your entire partner account including stored measurements, use the form above with the email address of your partner account.",
   },
   lv: {
     titel: "Delete account",
@@ -494,6 +527,8 @@ const TEXTE: Record<string, KontoLoeschungTexte> = {
     zurueckZurSeite: "Back to the homepage",
     appHinweisTitel: "Using the app?",
     appHinweisText: "In the app you find deletion under Profile → Account. This page is the route for anyone who no longer has the app installed.",
+    partnerHinweisTitel: "Partner programme and connected social media accounts",
+    partnerHinweisText: "If you are a partner in the myNextDays partner programme, you can disconnect your YouTube, Instagram, Facebook or TikTok accounts yourself at any time: in the partner dashboard under Profile → Connected accounts → \"Disconnect\". We delete the access credentials immediately. To delete your entire partner account including stored measurements, use the form above with the email address of your partner account.",
   },
   mt: {
     titel: "Delete account",
@@ -522,6 +557,8 @@ const TEXTE: Record<string, KontoLoeschungTexte> = {
     zurueckZurSeite: "Back to the homepage",
     appHinweisTitel: "Using the app?",
     appHinweisText: "In the app you find deletion under Profile → Account. This page is the route for anyone who no longer has the app installed.",
+    partnerHinweisTitel: "Partner programme and connected social media accounts",
+    partnerHinweisText: "If you are a partner in the myNextDays partner programme, you can disconnect your YouTube, Instagram, Facebook or TikTok accounts yourself at any time: in the partner dashboard under Profile → Connected accounts → \"Disconnect\". We delete the access credentials immediately. To delete your entire partner account including stored measurements, use the form above with the email address of your partner account.",
   },
   nl: {
     titel: "Delete account",
@@ -550,6 +587,8 @@ const TEXTE: Record<string, KontoLoeschungTexte> = {
     zurueckZurSeite: "Back to the homepage",
     appHinweisTitel: "Using the app?",
     appHinweisText: "In the app you find deletion under Profile → Account. This page is the route for anyone who no longer has the app installed.",
+    partnerHinweisTitel: "Partner programme and connected social media accounts",
+    partnerHinweisText: "If you are a partner in the myNextDays partner programme, you can disconnect your YouTube, Instagram, Facebook or TikTok accounts yourself at any time: in the partner dashboard under Profile → Connected accounts → \"Disconnect\". We delete the access credentials immediately. To delete your entire partner account including stored measurements, use the form above with the email address of your partner account.",
   },
   pl: {
     titel: "Delete account",
@@ -578,6 +617,8 @@ const TEXTE: Record<string, KontoLoeschungTexte> = {
     zurueckZurSeite: "Back to the homepage",
     appHinweisTitel: "Using the app?",
     appHinweisText: "In the app you find deletion under Profile → Account. This page is the route for anyone who no longer has the app installed.",
+    partnerHinweisTitel: "Partner programme and connected social media accounts",
+    partnerHinweisText: "If you are a partner in the myNextDays partner programme, you can disconnect your YouTube, Instagram, Facebook or TikTok accounts yourself at any time: in the partner dashboard under Profile → Connected accounts → \"Disconnect\". We delete the access credentials immediately. To delete your entire partner account including stored measurements, use the form above with the email address of your partner account.",
   },
   pt: {
     titel: "Delete account",
@@ -606,6 +647,8 @@ const TEXTE: Record<string, KontoLoeschungTexte> = {
     zurueckZurSeite: "Back to the homepage",
     appHinweisTitel: "Using the app?",
     appHinweisText: "In the app you find deletion under Profile → Account. This page is the route for anyone who no longer has the app installed.",
+    partnerHinweisTitel: "Partner programme and connected social media accounts",
+    partnerHinweisText: "If you are a partner in the myNextDays partner programme, you can disconnect your YouTube, Instagram, Facebook or TikTok accounts yourself at any time: in the partner dashboard under Profile → Connected accounts → \"Disconnect\". We delete the access credentials immediately. To delete your entire partner account including stored measurements, use the form above with the email address of your partner account.",
   },
   ro: {
     titel: "Delete account",
@@ -634,6 +677,8 @@ const TEXTE: Record<string, KontoLoeschungTexte> = {
     zurueckZurSeite: "Back to the homepage",
     appHinweisTitel: "Using the app?",
     appHinweisText: "In the app you find deletion under Profile → Account. This page is the route for anyone who no longer has the app installed.",
+    partnerHinweisTitel: "Partner programme and connected social media accounts",
+    partnerHinweisText: "If you are a partner in the myNextDays partner programme, you can disconnect your YouTube, Instagram, Facebook or TikTok accounts yourself at any time: in the partner dashboard under Profile → Connected accounts → \"Disconnect\". We delete the access credentials immediately. To delete your entire partner account including stored measurements, use the form above with the email address of your partner account.",
   },
   sk: {
     titel: "Delete account",
@@ -662,6 +707,8 @@ const TEXTE: Record<string, KontoLoeschungTexte> = {
     zurueckZurSeite: "Back to the homepage",
     appHinweisTitel: "Using the app?",
     appHinweisText: "In the app you find deletion under Profile → Account. This page is the route for anyone who no longer has the app installed.",
+    partnerHinweisTitel: "Partner programme and connected social media accounts",
+    partnerHinweisText: "If you are a partner in the myNextDays partner programme, you can disconnect your YouTube, Instagram, Facebook or TikTok accounts yourself at any time: in the partner dashboard under Profile → Connected accounts → \"Disconnect\". We delete the access credentials immediately. To delete your entire partner account including stored measurements, use the form above with the email address of your partner account.",
   },
   sl: {
     titel: "Delete account",
@@ -690,6 +737,8 @@ const TEXTE: Record<string, KontoLoeschungTexte> = {
     zurueckZurSeite: "Back to the homepage",
     appHinweisTitel: "Using the app?",
     appHinweisText: "In the app you find deletion under Profile → Account. This page is the route for anyone who no longer has the app installed.",
+    partnerHinweisTitel: "Partner programme and connected social media accounts",
+    partnerHinweisText: "If you are a partner in the myNextDays partner programme, you can disconnect your YouTube, Instagram, Facebook or TikTok accounts yourself at any time: in the partner dashboard under Profile → Connected accounts → \"Disconnect\". We delete the access credentials immediately. To delete your entire partner account including stored measurements, use the form above with the email address of your partner account.",
   },
   sv: {
     titel: "Radera konto",
@@ -718,6 +767,8 @@ const TEXTE: Record<string, KontoLoeschungTexte> = {
     zurueckZurSeite: "Tillbaka till startsidan",
     appHinweisTitel: "Använder du appen?",
     appHinweisText: "I appen hittar du radering under Profil → Konto. Den här sidan är vägen för alla som inte längre har appen installerad.",
+    partnerHinweisTitel: "Partnerprogram och anslutna sociala medier",
+    partnerHinweisText: "Är du partner i myNextDays partnerprogram kan du när som helst själv koppla bort dina YouTube-, Instagram-, Facebook- eller TikTok-konton: i partnerpanelen under Profil → Anslutna konton → ”Koppla bort”. Åtkomstuppgifterna raderas omedelbart. För att radera hela ditt partnerkonto inklusive sparade mätvärden använder du formuläret ovan med e-postadressen till ditt partnerkonto.",
   },
 };
 

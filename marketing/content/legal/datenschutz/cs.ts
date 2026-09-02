@@ -245,6 +245,40 @@ export const datenschutz: LegalDoc = {
       ],
     },
     {
+      heading: "Partnerský program",
+      paragraphs: [
+        "Provozujeme partnerský program, jehož prostřednictvím partneři (influenceři, konzultanti, agentury, zákazníci) doporučují podniky myNextDays a za to dostávají provizi. Přitom zpracováváme údaje partnerů a – v omezeném rozsahu – doporučených podniků.",
+      ],
+      unterpunkte: [
+        {
+          titel: "Údaje partnerů",
+          paragraphs: [
+            "Při registraci zpracováváme jméno, firmu, právní formu, zemi, e-mailovou adresu, jazyk, účty na sociálních médiích (platforma, adresa, handle, samostatně uvedený dosah), identifikační číslo pro DPH (ověření prostřednictvím systému EU VIES), platební údaje (IBAN, adresa Wise nebo PayPal) a souhlas s podmínkami účasti s verzí a časem. Právním základem je plnění partnerské smlouvy (čl. 6 odst. 1 písm. b GDPR); pro dobropisy a uchovávání platí daňové a obchodní právní povinnosti (čl. 6 odst. 1 písm. c GDPR).",
+            "Pokud partner vede tým, vidí jméno nebo firmu, hodnost, počet platících zákazníků a z toho vyplývající týmovou provizi svých týmových partnerů. Zprávy mezi sponzorem a týmovým partnerem jsou uloženy na platformě, aby oba viděli historii.",
+          ],
+        },
+        {
+          titel: "Kliknutí na partnerské odkazy",
+          paragraphs: [
+            "Pokud návštěvník otevře partnerský odkaz (mynextdays.com/p/CODE), uložíme kód, čas, navštívenou stránku, odkazující stránku a případné parametry kampaně, stejně jako IP adresu a identifikátor prohlížeče výhradně jako zkrácené kontrolní součty (hash) – pro detekci zneužití (četnost), nikoli pro opětovné rozpoznání. Sledovací cookie není nastaveno. Data o kliknutích mažeme po 90 dnech. Právním základem je náš oprávněný zájem na bezpečné fakturaci programu proti podvodům (čl. 6 odst. 1 písm. f GDPR).",
+          ],
+        },
+        {
+          titel: "Propojené účty a příspěvky na sociálních médiích",
+          paragraphs: [
+            "Partneři mohou dobrovolně propojit své účty na YouTube (Google), Instagramu a Facebooku (Meta) a TikToku s partnerským panelem. Přitom udělují příslušné platformě oprávnění ke čtení (OAuth); do těchto účtů nic nepíšeme. Ukládáme identifikátor a název účtu, šifrovaný přístupový token, čas propojení a denně jednu měřenou hodnotu pro každý účet: počet sledujících nebo odběratelů, zhlédnutí za posledních 28 dní, míru interakce a počet příspěvků, vždy s časem odpovědi platformy. K příspěvkům, které partner vytvoří v panelu (název, platforma, adresa, datum zveřejnění), ukládáme navíc zhlédnutí, lajky, komentáře, sdílení a uložení z platformy.",
+            "Účelem je ověření dosahu uvedeného partnerem a přiřazení kliknutí a zákazníků k jednotlivým příspěvkům; neověřené údaje mají při schvalování nižší váhu. Náznaky nesrovnalostí (například skok v počtu sledujících bez odpovídajících zhlédnutí) slouží výhradně k naší manuální kontrole a nevedou k žádnému automatizovanému rozhodnutí. Právním základem je souhlas partnera (čl. 6 odst. 1 písm. a GDPR), který uděluje propojením a může jej kdykoli odvolat v panelu pod „Odpojit“; při odpojení okamžitě smažeme přístupový token, uložené metriky zůstanou zachovány jako historie a budou smazány s partnerským účtem. Používáme výhradně oficiální rozhraní platforem; pro zpracování společností Google, Meta a TikTok platí jejich vlastní zásady ochrany osobních údajů.",
+          ],
+        },
+        {
+          titel: "Doporučené podniky",
+          paragraphs: [
+            "Pokud se podnik zaregistruje pomocí partnerského kódu, uložíme přiřazení podniku k partnerovi, stejně jako čas, způsob (odkaz nebo kód) a stav. Partner vidí podnik výhradně pseudonymně (pořadové číslo, země, stav, částky) – nikdy jméno, e-mailovou adresu nebo údaje o rezervaci. Pouze pokud podnik při registraci výslovně souhlasí, může jej partner kontaktovat prostřednictvím platformy. Pro vyúčtování provizí zpracováváme čisté částky předplatného zaplacených faktur podniku; právním základem je plnění partnerské a uživatelské smlouvy (čl. 6 odst. 1 písm. b GDPR).",
+          ],
+        },
+      ],
+    },
+    {
       heading: "Hosting a ukládání",
       paragraphs: [
         "Platforma, databáze, média a mailový server běží na serverech společnosti Hetzner Online GmbH, Německo, v datovém centru Helsinki (Finsko) — tedy v Evropské unii. Se společností Hetzner je uzavřena smlouva o zpracování osobních údajů.",

@@ -248,6 +248,40 @@ export const datenschutz: LegalDoc = {
       ],
     },
     {
+      heading: "Program partnerski",
+      paragraphs: [
+        "Prowadzimy program partnerski, za pośrednictwem którego partnerzy (influencerzy, konsultanci, agencje, klienci) polecają firmy myNextDays i otrzymują za to prowizję. W ramach tego procesu przetwarzamy dane partnerów oraz – w niewielkim zakresie – dane poleconych firm.",
+      ],
+      unterpunkte: [
+        {
+          titel: "Dane partnerów",
+          paragraphs: [
+            "Podczas zgłoszenia przetwarzamy imię i nazwisko, nazwę firmy, formę prawną, kraj, adres e-mail, język, konta w mediach społecznościowych (platforma, adres, nazwa użytkownika, samodzielnie podany zasięg), numer identyfikacji podatkowej VAT (sprawdzany za pośrednictwem systemu VIES UE), dane do wypłat (IBAN, adres Wise lub PayPal) oraz zgodę na warunki uczestnictwa wraz z wersją i datą. Podstawą prawną jest wykonanie umowy partnerskiej (art. 6 ust. 1 lit. b RODO); w przypadku rozliczeń i przechowywania danych obowiązują obowiązki wynikające z prawa podatkowego i handlowego (art. 6 ust. 1 lit. c RODO).",
+            "Jeśli partner prowadzi zespół, widzi imię i nazwisko lub nazwę firmy swoich partnerów zespołowych, rangę, liczbę płacących klientów oraz wynikającą z tego prowizję zespołową. Wiadomości między sponsorem a partnerem zespołowym są przechowywane na platformie, aby obaj mogli śledzić historię.",
+          ],
+        },
+        {
+          titel: "Kliknięcia w linki partnerskie",
+          paragraphs: [
+            "Gdy odwiedzający otwiera link partnerski (mynextdays.com/p/CODE), zapisujemy kod, czas, odwiedzoną stronę, stronę odsyłającą oraz ewentualne parametry kampanii, a także adres IP i identyfikator przeglądarki wyłącznie jako skrócone sumy kontrolne (hash) – w celu wykrywania nadużyć (nagromadzeń), a nie w celu ponownej identyfikacji. Nie jest ustawiany plik cookie śledzący. Dane dotyczące kliknięć usuwamy po 90 dniach. Podstawą prawną jest nasz uzasadniony interes w bezpiecznym rozliczaniu programu (art. 6 ust. 1 lit. f RODO).",
+          ],
+        },
+        {
+          titel: "Połączone konta i posty w mediach społecznościowych",
+          paragraphs: [
+            "Partnerzy mogą dobrowolnie połączyć swoje konta na YouTube (Google), Instagramie i Facebooku (Meta) oraz TikTok z panelem partnerskim. W tym celu udzielają odpowiedniej platformie zgody na odczyt (OAuth); nie piszemy nic na tych kontach. Zapisujemy identyfikator i nazwę konta, zaszyfrowany token dostępu, czas połączenia oraz codziennie jedną wartość pomiarową dla każdego konta: liczbę obserwujących/subskrybentów, wyświetlenia z ostatnich 28 dni, wskaźnik interakcji i liczbę postów, każdorazowo z czasem odpowiedzi platformy. W przypadku postów, które partner tworzy w panelu (tytuł, platforma, adres, data publikacji), dodatkowo zapisujemy wyświetlenia, polubienia, komentarze, udostępnienia i zapisy z platformy.",
+            "Celem jest weryfikacja zasięgu podanego przez partnera oraz przypisanie kliknięć i klientów do poszczególnych postów; niezweryfikowane dane mają mniejszą wagę przy zatwierdzaniu. Wskazówki dotyczące niezgodności (np. nagły wzrost liczby obserwujących bez odpowiednich wyświetleń) służą wyłącznie do ręcznej weryfikacji przez nas i nie prowadzą do zautomatyzowanych decyzji. Podstawą prawną jest zgoda partnera (art. 6 ust. 1 lit. a RODO), którą wyraża poprzez połączenie i którą może w każdej chwili odwołać w panelu sterowania pod przyciskiem „Rozłącz”; po rozłączeniu natychmiast usuwamy token dostępu, zapisane wartości pomiarowe pozostają jako historia i są usuwane wraz z kontem partnera. Korzystamy wyłącznie z oficjalnych interfejsów platform; w przypadku przetwarzania danych przez Google, Meta i TikTok obowiązują ich własne polityki prywatności.",
+          ],
+        },
+        {
+          titel: "Polecane firmy",
+          paragraphs: [
+            "Jeśli firma zarejestruje się za pomocą kodu partnerskiego, zapisujemy przypisanie firmy do partnera, a także czas, sposób (link lub kod) i status. Partner widzi firmę wyłącznie pseudonimowo (numer kolejny, kraj, status, kwoty) — nigdy nazwy, adresu e-mail ani danych rezerwacji. Tylko jeśli firma wyraźnie wyrazi zgodę podczas rejestracji, partner może skontaktować się z nią za pośrednictwem platformy. Do rozliczania prowizji przetwarzamy kwoty netto subskrypcji z opłaconych faktur firmy; podstawą prawną jest wykonanie umowy partnerskiej i umowy o świadczenie usług (art. 6 ust. 1 lit. b RODO).",
+          ],
+        },
+      ],
+    },
+    {
       heading: "Hosting i przechowywanie",
       paragraphs: [
         "Platforma, baza danych, media i serwer pocztowy działają na serwerach Hetzner Online GmbH, Niemcy, w centrum danych w Helsinkach (Finlandia) — a więc w Unii Europejskiej. Z Hetzner zawarta jest umowa o powierzeniu przetwarzania danych.",

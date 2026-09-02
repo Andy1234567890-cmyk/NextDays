@@ -1500,7 +1500,12 @@
       "portalRateInvalid": "Ein hinterlegter Portal-Abzugssatz liegt außerhalb von 0–100 %. Bitte unter Buchhaltung → Abrechnungsregeln korrigieren.",
       "feeUnassigned": "Mindestens eine Gebührenart ist noch nicht zugeordnet. Ohne Zuordnung ist nicht bestimmbar, wem der Betrag gehört und ob Provision darauf anfällt — bitte unter Buchhaltung → Abrechnungsregeln festlegen.",
       "feeNotComputable": "Eine Gebühr lässt sich nicht als Betrag verrechnen (prozentual hinterlegt oder ohne Betrag). Bitte die Gebühr am Objekt prüfen.",
-      "contractCurrency": "Eine Pauschale oder Mindestprovision lautet auf eine andere Währung als die Buchung. Beträge verschiedener Währungen werden nicht verrechnet — bitte den Abrechnungsvertrag prüfen."
+      "contractCurrency": "Eine Pauschale oder Mindestprovision lautet auf eine andere Währung als die Buchung. Beträge verschiedener Währungen werden nicht verrechnet — bitte den Abrechnungsvertrag prüfen.",
+      "recurringToOwner": "Wiederkehrend zugunsten",
+      "recurringFromOwner": "Wiederkehrend zulasten",
+      "flatFees": "Pauschalen aus Vertrag",
+      "flatFeesIncluded": "bereits in der Auszahlung berücksichtigt",
+      "contractStartsLater": "Für mindestens eine Buchung gilt am Abreisetag noch kein Abrechnungsvertrag — der Vertrag des Eigentümers beginnt erst später. Der Provisionssatz ist also hinterlegt, nur das Datum „Gültig ab“ liegt nach der Abreise. Trage im Abrechnungsvertrag den tatsächlichen Vertragsbeginn ein."
     },
     "rental": {
       "perReservation": "Pro Reservierung",
@@ -1520,13 +1525,66 @@
         "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
         "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
         "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
-        "unknownReason": "Der Grund ist nicht bestimmbar."
+        "unknownReason": "Der Grund ist nicht bestimmbar.",
+        "csvImport": "Die Buchung stammt aus dem CSV-Bestandsimport. Der importierte Betrag ist der Gastpreis des Portals inklusive aller Gebühren; eine Aufstellung einzelner Gebühren liegt nicht vor und ließ sich auch nicht aus den Portaldaten ableiten. Die Abrechnung setzt deshalb keine Gebühren aus den Objekt-Stammdaten an — sie stecken bereits im Betrag, nur ihre Höhe ist nicht belegt.",
+        "csvResolvedTitle": "Gebühren aus dem Portalbetrag abgeleitet",
+        "csvResolved": "Die Buchung stammt aus dem CSV-Bestandsimport; das Portal hat keine Aufstellung geliefert. Die Gebühren wurden aus der Differenz zwischen dem importierten Gesamtpreis und den vom Portal übermittelten Nächtepreisen abgeleitet und über die Objekt-Stammdaten benannt. Übernachtung plus Gebühren ergeben genau den Gesamtpreis.",
+        "stammdatenPortalTitle": "Gebühren aus den Objekt-Stammdaten nachgetragen",
+        "stammdatenPortal": "Das Portal hat zu dieser Buchung keine Gebührenaufstellung geliefert: Buchungen, die der Portal-Aggregator beim Anschluss des Kanals nachgeholt hat, kommen ohne Extras und Reinigungsgebühren; ein Bestandsimport aus einer Datei enthält nur den Gesamtpreis. Die Gebühren wurden deshalb so angesetzt, wie sie am Objekt hinterlegt sind: Reinigung je Aufenthalt, Resort je Nacht, Haustier nur bei gebuchtem Tier.",
+        "portalBelegt": "Belegt: Die Differenz zwischen dem Portal-Gesamtpreis und den vom Portal übermittelten Nächtepreisen entspricht genau diesen Gebühren.",
+        "portalImBetrag": "Im Portalbetrag enthalten: Der Gesamtpreis des Portals umfasst die Gebühren bereits; sie wurden herausgerechnet, der Gastpreis bleibt der Portalbetrag.",
+        "portalObendrauf": "Zusätzlich zum Portalbetrag: Der übermittelte Betrag ist die reine Nächtesumme; die Gebühren kommen dazu und ergeben den Gastpreis."
       },
       "chain": {
         "portal": "Portal",
         "management": "Verwaltung",
         "flatFee": "Pauschale",
         "fees": "Gebühren"
+      },
+      "arrival": "Anreise",
+      "departure": "Abreise",
+      "commission": "Provision",
+      "flatFee": "Pauschale",
+      "ownerShare": "Eigentümer-Anteil",
+      "portalDeduction": "Portal-Abzug",
+      "fees": "Gebühren",
+      "feesCount": "{n} Posten",
+      "expand": "Aufstellung anzeigen",
+      "collapse": "Aufstellung ausblenden",
+      "expandAll": "Alle Aufstellungen anzeigen",
+      "collapseAll": "Alle Aufstellungen ausblenden",
+      "breakdown": "Aufstellung je Buchung",
+      "noFeeItems": "Keine Gebühren oder Zusatzleistungen an dieser Buchung.",
+      "posten": {
+        "guestPrice": "Gastpreis laut Portal (inkl. Gebühren, ohne Zusatzleistungen)",
+        "portalCommission": "Portal-Provision {kanal}",
+        "portalFee": "Portal-Zahlungsgebühr",
+        "portalPayout": "Auszahlung des Portals",
+        "feesOut": "Gebühren im Gastpreis — aus der Bemessung genommen",
+        "feesInBase": "Gebühren im Gastpreis — provisionspflichtig, bleiben in der Bemessung",
+        "base": "Bemessungsgrundlage",
+        "commission": "Verwaltungsprovision {pct}",
+        "minCommission": "Mindestprovision (Vertrag) statt {pct}",
+        "contractFrom": "Vertrag ab {datum}",
+        "rateManual": "manuell in dieser Abrechnung",
+        "rateLegacy": "Standardsatz aus den Stammdaten",
+        "flatFee": "Pauschale (Vertrag)",
+        "feesBack": "Gebühren des Eigentümers — ungekürzt zurück",
+        "ownerShare": "Eigentümer-Anteil",
+        "belongsBetrieb": "verbleibt beim Betrieb",
+        "belongsEigentuemer": "Eigentümer",
+        "belongsDurchlauf": "Durchlaufposten (Dritte)",
+        "commissionFree": "provisionsfrei",
+        "commissionable": "provisionspflichtig",
+        "amountHidden": "Betrag beim Betrieb",
+        "addon": "Zusatzleistung",
+        "noFeesReported": "Das Portal hat zu dieser Buchung keine Gebühren gemeldet; es wurden deshalb keine angesetzt.",
+        "afterPortal": "Gesamtbetrag nach Portal-Abzug",
+        "afterPortalHint": "Gastpreis abzüglich Portal-Provision und Portal-Zahlungsgebühr",
+        "feesBusiness": "Vom Betrieb erbracht — nicht Teil der Auszahlung",
+        "contractStartsLater": "Kein Abrechnungsvertrag am Abreisetag {abreise}: der Vertrag beginnt erst am {beginn}. Vertragsbeginn beim Eigentümer zurückdatieren, dann rechnet diese Buchung mit.",
+        "noContract": "Für dieses Objekt gibt es keinen Abrechnungsvertrag und keinen Provisionssatz in den Stammdaten — beim Eigentümer einen Vertrag anlegen.",
+        "addonsOutside": "Zusatzleistungen — über myNextDays verkauft, nicht im Portal-Gastpreis"
       }
     },
     "expenses": {
@@ -1566,7 +1624,11 @@
       "rentalRevenue": "Mieteinnahmen",
       "expenses": "Ausgaben & Extras",
       "total": "Gesamt",
-      "deductPercentage": "Provision (%)"
+      "deductPercentage": "Provision (%)",
+      "shares": "Eigentümer-Anteile aus Buchungen",
+      "deductions": "Abzüge",
+      "credits": "Gutschriften",
+      "recurring": "Wiederkehrende Posten"
     },
     "manage": {
       "owner": "Eigentümer",
@@ -1631,6 +1693,25 @@
       "cancel": "Abbrechen",
       "confirm": "Festschreiben",
       "working": "Wird festgeschrieben …"
+    },
+    "deductions": {
+      "title": "Abzüge & Gutschriften",
+      "intro": "Alles, was neben den Buchungen die Auszahlung verändert — aus drei Quellen: Pauschale aus dem Vertrag je Buchung, einmalige Verrechnungsposten und wiederkehrende Posten (Dauervereinbarung).",
+      "deductions": "Abzüge (zulasten des Eigentümers)",
+      "credits": "Gutschriften (zugunsten des Eigentümers)",
+      "empty": "Keine Abzüge oder Gutschriften in diesem Zeitraum.",
+      "srcExpense": "Verrechnungsposten",
+      "srcRecurring": "Wiederkehrender Posten",
+      "srcFlatFee": "Pauschale aus Vertrag",
+      "perBooking": "je Buchung",
+      "perNight": "je Nacht",
+      "perPeriod": "je Zeitraum",
+      "quantity": "{n} × {betrag}",
+      "flatFeesNote": "Die Pauschalen aus dem Vertrag sind in den Eigentümer-Anteilen je Buchung bereits abgezogen — hier nur zur Übersicht, kein weiterer Abzug.",
+      "manageRecurring": "Wiederkehrende Posten pflegen",
+      "manageContract": "Abrechnungsvertrag pflegen",
+      "receipt": "Beleg",
+      "bookingsCount": "{n} Buchungen"
     }
   },
   "ownerBilling": {
@@ -1709,7 +1790,9 @@
     "effectBlocked": "{property}: Vermarktung endet am {date} — {nights} Nächte gesperrt und von den Portalen genommen.",
     "effectReleased": "{property}: Vermarktung läuft weiter — das Vertragsende wurde aufgehoben und die Nächte sind wieder verkäuflich.",
     "effectNoUnit": "{property}: Das Vertragsende ist eingetragen, der Kalender aber nicht gesperrt — dem Objekt fehlt eine Einheit. Lege sie an, dann greift die Sperre.",
-    "effectCalendarFailed": "{property}: Das Vertragsende ist eingetragen, die Kalendersperre nicht geschrieben. Sie wird heute Nacht nachgezogen."
+    "effectCalendarFailed": "{property}: Das Vertragsende ist eingetragen, die Kalendersperre nicht geschrieben. Sie wird heute Nacht nachgezogen.",
+    "validFromHint": "Der Tag, ab dem die Vereinbarung gilt — bei einem bestehenden Vertrag das echte Vertragsdatum, nicht heute. Jede Buchung wird mit dem Vertrag abgerechnet, der an ihrem Abreisetag gilt; Buchungen mit früherer Abreise bleiben ohne Auszahlung.",
+    "errorValidFromRequired": "Bitte angeben, ab wann der Vertrag gilt."
   },
   "portal": {
     "title": "Mein Portal",
@@ -5486,7 +5569,8 @@
       "connectPortal": "Portal verbinden",
       "noPortals": "Noch kein Portal (Booking, Airbnb & Co.) für dieses Objekt verbunden.",
       "marketplaceReview": "In Prüfung",
-      "marketplaceReviewHint": "myBestDays prüft dieses Inserat noch. Sobald es freigegeben ist, erscheint es auf dem Marktplatz. Portale und eigene Website sind davon nicht betroffen."
+      "marketplaceReviewHint": "myBestDays prüft dieses Inserat noch. Sobald es freigegeben ist, erscheint es auf dem Marktplatz. myBestDays ist Pflichtkanal: Ein Objekt lässt sich dort nicht einzeln abwählen — „Verkauf pausieren“ nimmt es überall aus dem Verkauf.",
+      "marketplaceMandatory": "Pflichtkanal — jedes Objekt ist auf myBestDays gelistet"
     },
     "IdLayout": {
       "loadError": "Objekt konnte nicht geladen werden: {error}"
@@ -5584,11 +5668,11 @@
       "stepOf": "Schritt {schritt} von {gesamt}",
       "next": "Weiter",
       "back": "Zurück",
-      "channelsHint": "Wo soll dieses Objekt verkauft werden? Das lässt sich jederzeit ändern.",
+      "channelsHint": "Wo soll dieses Objekt zusätzlich verkauft werden? Portale und Website lassen sich jederzeit ändern.",
       "channelPortals": "Buchungsportale",
       "channelPortalsHint": "Airbnb, Booking.com und weitere. Portale verlangen vollständige Angaben — siehe unten.",
       "channelPlatform": "myBestDays",
-      "channelPlatformHint": "Unser eigener Marktplatz mit niedriger Provision.",
+      "channelPlatformHint": "Unser eigener Marktplatz mit 8 % all-in. Jedes Objekt ist dort gelistet; sichtbar wird es nach dem Veröffentlichen und unserer Freigabe.",
       "channelWebsite": "Eigene Website",
       "channelWebsiteHint": "Deine Buchungsseite und das Buchungs-Widget.",
       "readinessTitle": "Für die Portale fehlt danach noch:",
@@ -6282,7 +6366,21 @@
         "online": "Beim Portal hinterlegt",
         "abweichend": "Weicht ab",
         "fehlt": "Beim Portal nicht hinterlegt"
-      }
+      },
+      "feeValidityTitle": "Gültigkeit",
+      "feeValidityHint": "Die Gebühr gilt für Buchungen, deren Anreise im Zeitraum liegt. Leer = ohne Grenze. An die Portale geht eine Gebühr mit Zeitraum nicht: dort ist keine Datumsbedingung abbildbar.",
+      "feeValidFromLabel": "Gilt ab",
+      "feeValidUntilLabel": "Gilt bis",
+      "feeValidityOrderError": "„Gilt bis“ liegt vor „Gilt ab“.",
+      "feeOwnerStatementOnlyLabel": "Nur in der Eigentümer-Abrechnung",
+      "feeOwnerStatementOnlyHint": "Die Gebühr wird dem Gast nicht berechnet und an kein Portal gesendet. Sie wirkt nur in der Eigentümer-Abrechnung, der Auswertung und im Eigentümer-Portal.",
+      "feeValidFromSuffix": "ab {date}",
+      "feeValidUntilSuffix": "bis {date}",
+      "feeOwnerStatementOnlySuffix": "nur Abrechnung",
+      "feeCalculationLabel": "Berechnung",
+      "feeVatHint": "Ein eigener Steuersatz für diese Gebühr, abweichend vom Übernachtungssatz des Objekts. Aus heißt: die Gebühr folgt dem Übernachtungssatz.",
+      "feeVatIncludedLabel": "Steuer im Betrag",
+      "feeVatIncludedHint": "Steckt der Steuersatz schon im eingegebenen Betrag oder kommt er obendrauf? Ohne diese Angabe wäre der Betrag zweideutig."
     },
     "policiesForm": {
       "title": "Buchungskonditionen",
@@ -7324,23 +7422,23 @@
     "marketplacePending": "{count} in Prüfung",
     "marketplaceWaiting": "In Prüfung",
     "marketplace": {
-      "intro": "myBestDays ist unser eigener Marktplatz — ein Buchungskanal wie Booking oder Airbnb, nur ohne Portal-Verbindung. Sichtbar wird ein Objekt, wenn es aktiv ist, hier gelistet ist und freigegeben wurde.",
+      "intro": "myBestDays ist unser eigener Marktplatz — ein Buchungskanal wie Booking oder Airbnb, nur ohne Portal-Verbindung, und für jedes Objekt Pflicht. Sichtbar wird ein Objekt, wenn es aktiv ist und von uns freigegeben wurde.",
       "openMarketplace": "Marktplatz öffnen",
       "propertiesHeading": "Objekte auf dem Marktplatz",
       "noProperties": "Noch keine Objekte angelegt.",
       "columnProperty": "Objekt",
-      "columnVisibility": "Sichtbarkeit",
+      "columnVisibility": "Zustand",
       "columnApproval": "Freigabe",
       "columnBookings": "Buchungen",
       "stateActive": "Sichtbar",
       "statePending": "In Prüfung",
-      "stateNotListed": "Nicht gelistet",
+      "stateNotListed": "Verkauf pausiert",
       "stateInactiveProperty": "Objekt nicht aktiv",
       "viewListing": "Inserat ansehen",
       "reviewHint": "Objekte in Prüfung erscheinen noch nicht auf myBestDays. Wir prüfen jedes Inserat, weil myBestDays dort als Anbieter auftritt — Portale und die eigene Website sind davon nicht betroffen.",
       "summaryVisible": "{count} sichtbar",
       "summaryWaiting": "{count} in Prüfung",
-      "summaryOff": "{count} nicht gelistet",
+      "summaryOff": "{count} pausiert oder inaktiv",
       "moderation": {
         "draft": "Entwurf",
         "pending": "In Prüfung",
@@ -7369,6 +7467,7 @@
       "rows": "{fertig} von {gesamt} Zeilen",
       "created": "neu",
       "updated": "aktualisiert",
+      "portal": "schon vom Portal da",
       "skipped": "ohne Wirkung",
       "failedRows": "fehlerhaft",
       "remainMinutes": "noch ~{count} Min.",
@@ -10532,7 +10631,11 @@
     "haveAccount": "Schon ein Konto?",
     "loginLink": "Hier anmelden",
     "loadingHeadline": "Deine eigene Buchungswebsite. Behalte 100 % jeder Buchung.",
-    "loadingText": "Wir richten dein Konto ein …"
+    "loadingText": "Wir richten dein Konto ein …",
+    "referralLabel": "Empfohlen von (optional)",
+    "referralPlaceholder": "Empfehlungscode, z. B. ANNA-K7P2",
+    "referralHint": "Hast du myNextDays über einen Partner kennengelernt? Sein Code steht hier — er sieht nur, dass ein Betrieb über ihn kam, nie deinen Namen. Mit Code bekommst du nach den 14 Testtagen den ersten vollen Monat geschenkt.",
+    "referralContactOptIn": "Mein Empfehler darf mich über myNextDays kontaktieren."
   },
   "marketingSite": {
     "stars": "4,5 Sterne",

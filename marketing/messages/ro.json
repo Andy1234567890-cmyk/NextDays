@@ -851,7 +851,8 @@
     },
     "unternehmen": {
       "ueberUns": "Despre noi",
-      "kontakt": "Contact"
+      "kontakt": "Contact",
+      "partner": "Program de parteneriat"
     },
     "copyright": "© 2026 myNextDays. Toate drepturile rezervate.",
     "agb": "Termeni și condiții",
@@ -860,7 +861,8 @@
     "cookies": "Politica de cookie-uri",
     "avv": "Prelucrarea datelor",
     "kontoLoeschen": "Ștergeți contul",
-    "newsletterKnopf": "Abonare newsletter"
+    "newsletterKnopf": "Abonare newsletter",
+    "partnerAgb": "Termeni și condiții parteneri"
   },
   "legal": {
     "stand": "Ultima actualizare: {datum}"
@@ -990,7 +992,7 @@
       "sub": "Ce vor să știe gazdele înainte de schimbare — pe scurt și fără litere mici.",
       "laufzeit": {
         "frage": "Există o durată minimă?",
-        "antwort": "Nu. Abonamentul este lunar și poate fi anulat cu un preaviz de patru săptămâni la sfârșitul lunii. Primele 14 zile sunt gratuite: introduceți detaliile de plată la început, dar plata va fi procesată numai după încheierea perioadei de încercare. Dacă anulați înainte, nu veți plăti nimic."
+        "antwort": "Nu. Abonamentul este lunar și poate fi anulat cu patru săptămâni înainte de sfârșitul lunii. Primele 14 zile sunt gratuite: introduceți datele de plată la început, dar plata va fi efectuată numai după încheierea perioadei de testare. Dacă veniți prin linkul sau codul unui partener, prima lună completă este, de asemenea, gratuită. Dacă anulați înainte, nu plătiți nimic."
       },
       "objektzahl": {
         "frage": "Ce se întâmplă când adaug proprietăți?",
@@ -2185,5 +2187,259 @@
     "verwalten": "Gestionați setările cookie",
     "schliessen": "Închideți",
     "bestaetigen": "Confirmați setările"
+  },
+  "partnerHinweis": {
+    "text": "Ați ajuns aici printr-o recomandare (cod {code}). Codul va fi preluat la înregistrare și vă va oferi prima lună completă după cele 14 zile de testare.",
+    "cta": "Începeți acum gratuit",
+    "schliessen": "Închideți notificarea"
+  },
+  "partner": {
+    "meta": {
+      "titel": "Program de parteneriat — myNextDays",
+      "beschreibung": "Recomandați myNextDays proprietarilor de închirieri de vacanță și hotelurilor și primiți până la {max}% din veniturile abonamentului fiecărei proprietăți recomandate, timp de doisprezece luni."
+    },
+    "hero": {
+      "eyebrow": "Program de parteneriat",
+      "headlinePre": "Recomandați myNextDays —",
+      "headlineHighlight": "și câștigați",
+      "sub": "Pentru influenceri, consultanți, agenții și proprietari cu rețea: Fiecare afacere care se înregistrează prin linkul dumneavoastră și plătește un abonament vă aduce până la {max} % din venitul din abonament timp de douăsprezece luni - plus 0,5 % din fiecare rezervare prin myBestDays, bonusuri de promovare și, de la Elite, un supercomision fără limită de durată.",
+      "cta": "Aplicați acum",
+      "ctaLogin": "Autentificare partener",
+      "chipDauer": "12 luni comision per client",
+      "chipAuszahlung": "Plată lunară",
+      "chipKosten": "Participare gratuită",
+      "chipGratismonat": "Clienții dumneavoastră: 14 zile de testare + 1 lună gratuită"
+    },
+    "schritte": {
+      "eyebrow": "Cum funcționează",
+      "heading": "Trei pași până la primul comision",
+      "bewerben": {
+        "titel": "Aplicați",
+        "text": "Ne comunicați canalul dumneavoastră — site web, profil social sau rețea. Verificăm personal fiecare cerere și, de obicei, o aprobăm în câteva zile lucrătoare."
+      },
+      "teilen": {
+        "titel": "Partajați linkul sau codul",
+        "text": "Veți primi un link personal și un cod de recomandare. Codul este vizibil în formular la înregistrare — fără cookie de urmărire."
+      },
+      "verdienen": {
+        "titel": "Câștigați",
+        "text": "Dacă o proprietate recomandată își plătește prima factură de abonament, comisionul dumneavoastră este activ timp de doisprezece luni. Vedeți fiecare client pseudonim în tabloul de bord al partenerului și sunteți plătit lunar."
+      }
+    },
+    "staffel": {
+      "eyebrow": "Nivelul dumneavoastră",
+      "heading": "Cu cât este mai mare structura dumneavoastră, cu atât este mai mare rata dumneavoastră",
+      "sub": "Rata se aplică tuturor noilor comisioane de la atingerea rangului. Structura include proprii clienți plătitori și clienții partenerilor dumneavoastră de echipă.",
+      "kunden": "{von}–{bis} clienți plătitori",
+      "kundenOffen": "de la {von} clienți plătitori",
+      "satz": "din veniturile abonamentului",
+      "nichtAbrufbar": "Nivelul nu este disponibil momentan. Vă rugăm să încercați din nou mai târziu."
+    },
+    "bedingungen": {
+      "eyebrow": "Regulile",
+      "heading": "Echitate pentru dumneavoastră, echitate pentru proprietăți",
+      "basis": {
+        "titel": "Ce contează",
+        "text": "Baza comisionului este venitul net din abonament (tariful de bază și modulele) al proprietății recomandate — fără taxe, comisioane de portal și servicii suplimentare."
+      },
+      "dauer": {
+        "titel": "Douăsprezece luni",
+        "text": "Comisionul se aplică timp de douăsprezece luni de la prima factură de abonament plătită a companiei; luna gratuită a clienților dvs. nu este inclusă. Dacă compania anulează, comisionul se încheie cu ultima plată. Cota de rezervare și super-comisionul se aplică fără această limită."
+      },
+      "auszahlung": {
+        "titel": "Plată",
+        "text": "Lunar, la 30 de zile după plata proprietății, de la o sumă minimă per monedă. Veți primi o notă de credit; companiile au nevoie de un cod TVA valid."
+      },
+      "kennzeichnung": {
+        "titel": "Etichetare",
+        "text": "Fiecare recomandare este o reclamă și trebuie etichetată ca atare. Vom furniza formulările prescrise pentru fiecare limbă în tabloul de bord."
+      },
+      "verboten": {
+        "titel": "Nepermis",
+        "text": "Auto-promovare, publicitate pentru numele nostru de marcă în anunțurile de căutare, promisiuni de reducere în numele nostru și mesaje nesolicitate. Rambursările sunt deduse din comision."
+      },
+      "daten": {
+        "titel": "Confidențialitate",
+        "text": "Vedeți clienții doar pseudonim – cu țară, statut și sume, niciodată cu nume sau e-mail. O afacere vă poate permite să o contactați la înregistrare."
+      }
+    },
+    "faq": {
+      "eyebrow": "Întrebări frecvente",
+      "heading": "Ce ne întreabă partenerii",
+      "wer": {
+        "frage": "Cine poate deveni partener?",
+        "antwort": "Orice persoană sau firmă din UE cu un canal real către proprietari sau hoteluri: influenceri, consultanți, agenții, firme de contabilitate, asociații – și clienții myNextDays înșiși. O aplicație este gratuită; un abonament nu este o condiție prealabilă."
+      },
+      "wann": {
+        "frage": "Când este o afacere considerată clientul meu?",
+        "antwort": "Dacă s-a înregistrat cu codul dvs. și a plătit prima factură de abonament. Înregistrările fără plată nu contează pentru clasament."
+      },
+      "doppelt": {
+        "frage": "Ce se întâmplă dacă o afacere numește doi parteneri?",
+        "antwort": "O afacere este atribuită unui singur partener – cel al cărui cod a fost în formular la înregistrare. Codurile ulterioare nu modifică acest lucru."
+      },
+      "steuern": {
+        "frage": "Cum funcționează facturarea?",
+        "antwort": "Emitem o notă de credit (self-billing). Companiile cu cod TVA UE o primesc cu mențiunea de taxare inversă, persoanele fizice fără TVA – comisionul îl impozitați singur."
+      },
+      "material": {
+        "frage": "Există materiale promoționale?",
+        "antwort": "Da: videoclipuri scurte pentru rețelele sociale, un videoclip explicativ, bannere și blocuri de text – în tabloul de bord al partenerului, în limba dvs."
+      },
+      "wieviel": {
+        "frage": "Cât comision pot câștiga?",
+        "antwort": "Acest lucru depinde de veniturile din abonamente ale clienților dvs. și de rangul dvs. Nivelurile de mai sus arată rata pentru fiecare rang; timp de doisprezece luni pentru fiecare client. În plus, există 0,5% din fiecare rezervare pe care clienții dvs. o primesc prin myBestDays, un bonus unic de promovare pentru fiecare rang atins, comisionul diferențial cu o echipă - și de la partenerul Elite, 2,5% super-comision pe întreaga structură fără limită de durată."
+      },
+      "team": {
+        "frage": "Cum funcționează comisionul de echipă?",
+        "antwort": "De la rangul de „Ascendent”: Dacă un partener aplică prin linkul dumneavoastră de echipă și introduce codul dumneavoastră vizibil în aplicație, acesta va face parte din echipa dumneavoastră după aprobare. Clienții săi contează 1:1 pentru rangul dumneavoastră. Din venitul net din abonamente al clienților săi, primiți diferența dintre rata dumneavoastră și a sa - exact un nivel în jos, fără taxă de participare, fără bani pentru recrutare."
+      },
+      "auszahlung": {
+        "frage": "Cum și când sunt plătite comisioanele?",
+        "antwort": "Lunar pe monedă, de îndată ce suma atinge suma minimă a monedei dumneavoastră. Fiecare linie de comision este „deschisă” timp de 30 de zile (fereastră de rambursare) și apoi plătibilă. Veți primi o notă de credit (auto-facturare) — nu emiteți o factură. Plata prin SEPA, Wise sau PayPal."
+      },
+      "verfolgen": {
+        "frage": "Cum pot urmări comisioanele și performanța mea?",
+        "antwort": "În tabloul de bord al partenerului, sub „Comisioane” veți vedea fiecare factură de abonament plătită cu bază, rată, sumă și status, sub „Clienți” afacerile dumneavoastră pseudonim, sub „Echipă” evaluarea partenerilor dumneavoastră de echipă și sub „Linkuri și materiale” clicurile pe cod."
+      },
+      "werbung": {
+        "frage": "Am voie să plasez publicitate plătită?",
+        "antwort": "Nu pe marca noastră: anunțurile pe „myNextDays” și variantele de scriere (Brand-Bidding), cookie-dropping, reach-ul cumpărat sau stimulentele pentru înregistrări sunt interzise și duc la blocare. Conținutul propriu, contribuțiile și recomandările sunt în mod expres dorite — cu etichetare ca publicitate."
+      }
+    },
+    "abschluss": {
+      "heading": "Gata să recomandați myNextDays?",
+      "sub": "Aplicați în două minute. Vă vom contacta după verificare.",
+      "cta": "Aplicați acum",
+      "kontakt": "Întrebări? Scrieți-ne."
+    },
+    "vergleich": {
+      "eyebrow": "Nivelul dumneavoastră",
+      "heading": "Cu cât mai mulți clienți plătitori, cu atât mai mare este rata dumneavoastră",
+      "sub": "Rata se aplică tuturor noilor comisioane de la atingerea rangului. Structura dumneavoastră este numărată: proprii clienți plătitori plus clienții partenerilor dumneavoastră de echipă.",
+      "nichtAbrufbar": "Nivelul nu este disponibil momentan. Vă rugăm să încercați din nou mai târziu.",
+      "plan": "Rang",
+      "provision": "Comision pentru clienții proprii",
+      "teamProvision": "Comision de echipă pentru clienții partenerilor dumneavoastră de echipă",
+      "dauer": "Durata per client",
+      "dauerWert": "12 luni",
+      "kunden": "Clienți plătitori {von}–{bis}",
+      "kundenOffen": "de la {von} clienți plătitori",
+      "vorteile": "Servicii",
+      "ja": "incluse",
+      "nein": "neincluse",
+      "leistung": {
+        "konto": "Cont de partener gratuit",
+        "dashboard": "Tablou de bord partener cu clienți, comisioane și analize",
+        "material": "Materiale promoționale și șabloane de identificare",
+        "team": "Construiți o echipă cu propriul link de echipă",
+        "gutschrift": "Plată lunară cu credit (self-billing)",
+        "chat": "Contact direct cu echipa de parteneri",
+        "support": "Persoană de contact personală",
+        "coMarketing": "Co-marketing (acțiuni comune)"
+      },
+      "fussnoteTeam": "Comisionul de echipă este diferența dintre rata dumneavoastră și rata partenerului de echipă din venitul net din abonamente al clienților săi, ambele la momentul plății - exact un nivel, fără taxă de participare, fără bani pentru recrutare. În total, niciodată mai mult de 30 %.",
+      "fussnoteCoMarketing": "De comun acord cu echipa de parteneri; depinde de profilul partenerului și de acțiunile în curs.",
+      "fussnoteRang": "Rangul este determinat de structura dumneavoastră: proprii clienți plătitori plus clienții partenerilor dumneavoastră de echipă, fiecare numărând o singură dată. La atingerea unui nou rang de la „Ascendent”, se acordă un bonus de promovare o singură dată.",
+      "teamDifferenz": "{satz} % minus rata partenerului de echipă",
+      "teamNicht": "încă nu există o echipă",
+      "bonus": "Bonus de promovare (o singură dată)",
+      "superProvision": "Supercomision pentru întreaga structură",
+      "marktTurbo": "Cota de rezervare myBestDays",
+      "marktTurboWert": "0,5 % per rezervare, nelimitat",
+      "fussnoteSuper": "De la partenerul Elite, 2,5 % din venitul net din abonamente al tuturor clienților din structura dumneavoastră - în plus față de comision, fără limita de 12 luni, atâta timp cât mențineți rangul și clientul plătește."
+    },
+    "team": {
+      "eyebrow": "Construiți o echipă",
+      "heading": "Până la {max} % comision diferențial din cifra de afaceri a echipei dumneavoastră",
+      "sub": "Cunoașteți alți consultanți, creatori sau agenții cu legături cu gazde? De la rangul de „Ascendent”, aceștia aplică prin linkul dumneavoastră de echipă, fac parte din echipa dumneavoastră - iar clienții lor contează 1:1 pentru rangul dumneavoastră. Câștigați diferența dintre rata dumneavoastră și rata partenerului dumneavoastră de echipă; partenerii dumneavoastră de echipă își păstrează propria lor scară completă.",
+      "rang": {
+        "titel": "Diferența",
+        "text": "Primiți rata dumneavoastră minus rata partenerului de echipă - ambele la momentul plății. Dacă partenerul dumneavoastră de echipă se află în același rang, nu se generează comision de echipă."
+      },
+      "ebene": {
+        "titel": "Exact un nivel",
+        "text": "Partenerii dumneavoastră de echipă nu își construiesc propria echipă sub dumneavoastră. Fără rețea, fără piramidă."
+      },
+      "keinGeld": {
+        "titel": "Doar din venituri reale",
+        "text": "Fără taxă de participare, fără bani pentru recrutare. Comisionul de echipă provine exclusiv din veniturile plătite din abonamente."
+      },
+      "dauer": {
+        "titel": "Aceleași reguli",
+        "text": "12 luni per client de echipă, fereastră de rambursare de 30 de zile, retragere în caz de rambursare sau chargeback - la fel ca în cazul propriului comision. De la Elite, se adaugă supercomisionul pentru întreaga structură, fără limită de durată."
+      }
+    },
+    "kundeCta": {
+      "heading": "Sunteți deja client myNextDays?",
+      "text": "Atunci cunoașteți cel mai bine produsul. Recomandați-l — comisionul dumneavoastră va fi creditat în contul dumneavoastră, indiferent de abonamentul dumneavoastră.",
+      "cta": "Recomandați și câștigați"
+    }
+  },
+  "partnerBewerbung": {
+    "meta": {
+      "titel": "Deveniți partener — myNextDays",
+      "beschreibung": "Aplicați pentru programul de parteneriat myNextDays: conturi de social media, acoperire, condiții. Verificăm personal fiecare aplicație."
+    },
+    "eyebrow": "Program de parteneriat",
+    "titel": "Aplicați ca partener",
+    "text": "Spuneți-ne conturile dumneavoastră de social media și acoperirea acestora — verificăm personal fiecare aplicație și, de obicei, răspundem în câteva zile lucrătoare. După aprobare, veți primi acces la tabloul de bord al partenerului cu linkuri, coduri și analize.",
+    "email": "E-mail",
+    "passwort": "Parola pentru tabloul de bord al partenerului",
+    "passwortHinweis": "Minim 8 caractere.",
+    "name": "Nume",
+    "firma": "Companie (opțional)",
+    "rechtsform": "Forma juridică",
+    "privat": "Persoană fizică",
+    "unternehmen": "Companie",
+    "land": "Țară",
+    "ustId": "Cod TVA",
+    "ustIdHinweis": "Va fi verificat în sistemul UE VIES. Fără un număr confirmat, nu se efectuează plăți către companii.",
+    "kanaele": {
+      "titel": "Conturile dumneavoastră de social media",
+      "hinweis": "Obligatoriu: cel puțin un cont de social media (Instagram, TikTok, YouTube, Facebook, LinkedIn…) cu adresă, nume de utilizator și acoperire (urmăritori). Site web, blog sau newsletter sunt binevenite ca supliment. Verificăm conturile înainte de aprobare.",
+      "plattform": "Platformă",
+      "handle": "Nume de utilizator (opțional)",
+      "reichweite": "Acoperire (urmăritori)",
+      "hinzufuegen": "Adăugați canal",
+      "entfernen": "Eliminați canal",
+      "socialPflicht": "Este obligatoriu cel puțin un cont de social media cu acoperire — un site web singur nu este suficient.",
+      "plattformen": {
+        "website": "Site web",
+        "blog": "Blog",
+        "newsletter": "Newsletter",
+        "podcast": "Podcast",
+        "other": "Altele"
+      }
+    },
+    "plattform": {
+      "website": "Site web",
+      "blog": "Blog",
+      "newsletter": "Newsletter",
+      "podcast": "Podcast",
+      "other": "Altele"
+    },
+    "sponsor": "Recomandat de partener (cod, opțional)",
+    "sponsorHinweis": "Veniți prin linkul de echipă al unui partener? Codul său va fi aici. El va primi un comision de echipă din veniturile din abonamente ale clienților dumneavoastră — propriul dumneavoastră comision rămâne neschimbat.",
+    "pitch": "De ce vă potriviți cu myNextDays? (opțional)",
+    "pitchPlatzhalter": "Pe cine ajungeți, despre ce vorbiți, cum doriți să recomandați?",
+    "zustimmung": "Accept",
+    "bedingungen": "Termenii parteneriatului",
+    "version": "Versiunea {version}",
+    "absenden": "Trimiteți cererea",
+    "sendet": "Se trimite...",
+    "pruefungHinweis": "Acest formular este protejat de reCAPTCHA. După trimitere, echipa noastră de parteneri vă va verifica conturile și acoperirea; veți primi un e-mail cu decizia.",
+    "fehler": {
+      "social": "Vă rugăm să introduceți cel puțin un cont de social media cu adresă și acoperire.",
+      "doppelt": "Există deja o cerere pentru acest e-mail. Vă rugăm să vă conectați la tabloul de bord al partenerului.",
+      "eingabe": "Vă rugăm să verificați datele introduse.",
+      "captcha": "Verificarea anti-spam a eșuat. Vă rugăm să reîncărcați pagina și să încercați din nou.",
+      "allgemein": "Cererea nu a putut fi trimisă momentan. Vă rugăm să încercați din nou mai târziu."
+    },
+    "fertig": {
+      "titel": "Cerere primită",
+      "text": "Vă mulțumim! Vă vom verifica personal conturile și acoperirea și vă vom contacta prin e-mail. Tabloul de bord al partenerului este accesibil cu e-mailul și parola dumneavoastră — linkurile și codurile vor deveni active la aprobare.",
+      "login": "La autentificarea partenerului"
+    }
   }
 }

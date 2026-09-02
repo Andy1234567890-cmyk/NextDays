@@ -27,6 +27,12 @@ from .features.account_deletion.router import (
     router as account_deletion_router,
 )
 from .features.addons.router import router as addons_router
+from .features.affiliates.router import router as affiliates_router
+from .features.affiliates.router_backoffice import router as affiliates_backoffice_router
+from .features.affiliates.router_reichweite import router as affiliates_reichweite_router
+from .features.affiliates.router_reichweite import (
+    router_backoffice as affiliates_reichweite_backoffice_router,
+)
 from .features.announcements.router import (
     platform_router as announcements_platform_router,
 )
@@ -191,6 +197,13 @@ _SLICE_ROUTERS = [
     dashboard_layout_router,
     content_router,
     whatsapp_router,
+    # Partnerprogramm (0517): Partner-Welt (/affiliates) und Backoffice
+    # (/platform/affiliates).
+    affiliates_router,
+    affiliates_backoffice_router,
+    # Reichweite (0521): Beiträge, Kanalanbindung, Auswertung.
+    affiliates_reichweite_router,
+    affiliates_reichweite_backoffice_router,
 ]
 
 

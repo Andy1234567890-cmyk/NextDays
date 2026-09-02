@@ -851,7 +851,8 @@
     },
     "unternehmen": {
       "ueberUns": "Par mums",
-      "kontakt": "Kontakti"
+      "kontakt": "Kontakti",
+      "partner": "Partneru programma"
     },
     "copyright": "© 2026 myNextDays. Visas tiesības aizsargātas.",
     "agb": "Noteikumi",
@@ -860,7 +861,8 @@
     "cookies": "Sīkdatņu politika",
     "avv": "Datu apstrāde",
     "kontoLoeschen": "Dzēst kontu",
-    "newsletterKnopf": "Pieteikties jaunumiem"
+    "newsletterKnopf": "Pieteikties jaunumiem",
+    "partnerAgb": "Partneru noteikumi un nosacījumi"
   },
   "legal": {
     "stand": "Redakcija: {datum}"
@@ -990,7 +992,7 @@
       "sub": "Ko izīrētāji vēlas zināt pirms maiņas — īsi un bez sīkā druka.",
       "laufzeit": {
         "frage": "Vai ir minimālais termiņš?",
-        "antwort": "Nē. Abonements ir ikmēneša un to var atcelt katra mēneša beigās ar četru nedēļu iepriekšēju paziņojumu. Pirmās 14 dienas ir bezmaksas: sākotnēji jūs ievadāt savus maksājuma datus, taču maksājums tiks veikts tikai pēc testa perioda beigām. Ja atcelsiet pirms tam, jums nekas nebūs jāmaksā."
+        "antwort": "Nē. Abonements ir ikmēneša un to var atcelt četras nedēļas pirms mēneša beigām. Pirmās 14 dienas ir bezmaksas: jūs ievadāt savus maksājuma datus sākumā, bet maksājums tiks veikts tikai pēc testa perioda beigām. Ja jūs nākat caur partnera saiti vai kodu, pirmais pilnais mēnesis ir papildus dāvana. Ja atceļat iepriekš, jūs neko nemaksājat."
       },
       "objektzahl": {
         "frage": "Kas notiek, kad pievienoju objektus?",
@@ -2185,5 +2187,259 @@
     "verwalten": "Pārvaldīt sīkfailu iestatījumus",
     "schliessen": "Aizvērt",
     "bestaetigen": "Apstiprināt iestatījumus"
+  },
+  "partnerHinweis": {
+    "text": "Jūs ieradāties, izmantojot ieteikumu (kods {code}). Kods tiks piemērots reģistrācijas laikā un dāvās jums pirmo pilno mēnesi pēc 14 testa dienām.",
+    "cta": "Sākt tagad bez maksas",
+    "schliessen": "Aizvērt piezīmi"
+  },
+  "partner": {
+    "meta": {
+      "titel": "Partneru programma — myNextDays",
+      "beschreibung": "Iesakiet myNextDays brīvdienu īres namu īpašniekiem un viesnīcām un saņemiet līdz pat {max}% no katra piesaistītā uzņēmuma abonēšanas ieņēmumiem divpadsmit mēnešus."
+    },
+    "hero": {
+      "eyebrow": "Partneru programma",
+      "headlinePre": "Iesakiet myNextDays —",
+      "headlineHighlight": "un nopelniet",
+      "sub": "Influenceriem, konsultantiem, aģentūrām un izīrētājiem ar tīklu: Katrs uzņēmums, kas reģistrējas, izmantojot jūsu saiti, un apmaksā abonementu, dod jums divpadsmit mēnešus līdz {max} % no abonementa ieņēmumiem — plus 0,5 % no katras rezervācijas, izmantojot myBestDays, paaugstināšanas bonusus un no Elites superkomisiju bez termiņa ierobežojuma.",
+      "cta": "Pieteikties tagad",
+      "ctaLogin": "Partnera pieteikšanās",
+      "chipDauer": "12 mēnešu komisija par katru klientu",
+      "chipAuszahlung": "Ikmēneša izmaksa",
+      "chipKosten": "Bezmaksas dalība",
+      "chipGratismonat": "Jūsu klienti: 14 dienas izmēģinājuma periods + 1 mēnesis bez maksas"
+    },
+    "schritte": {
+      "eyebrow": "Kā tas darbojas",
+      "heading": "Trīs soļi līdz pirmajai komisijai",
+      "bewerben": {
+        "titel": "Pieteikties",
+        "text": "Jūs norādāt mums savu kanālu — vietni, sociālo profilu vai tīklu. Mēs personīgi pārbaudām katru pieteikumu un parasti apstiprinām to dažu darba dienu laikā."
+      },
+      "teilen": {
+        "titel": "Kopīgot saiti vai kodu",
+        "text": "Jūs saņemsiet personīgu saiti un ieteikuma kodu. Kods reģistrācijas laikā ir redzams veidlapā — bez izsekošanas sīkdatnes."
+      },
+      "verdienen": {
+        "titel": "Nopelnīt",
+        "text": "Ja piesaistītais uzņēmums apmaksā savu pirmo abonēšanas rēķinu, jūsu komisija darbojas divpadsmit mēnešus. Jūs redzat katru klientu pseidonīmi partnera informācijas panelī un saņemat ikmēneša izmaksu."
+      }
+    },
+    "staffel": {
+      "eyebrow": "Jūsu līmenis",
+      "heading": "Jo lielāka jūsu struktūra, jo augstāka jūsu likme",
+      "sub": "Likme attiecas uz visām jaunajām komisijām no brīža, kad tiek sasniegta pakāpe. Struktūrā ietilpst jūsu pašu maksājošie klienti un jūsu komandas partneru klienti.",
+      "kunden": "{von}–{bis} maksājoši klienti",
+      "kundenOffen": "no {von} maksājošiem klientiem",
+      "satz": "no abonēšanas ieņēmumiem",
+      "nichtAbrufbar": "Līmenis pašlaik nav pieejams. Lūdzu, mēģiniet vēlāk."
+    },
+    "bedingungen": {
+      "eyebrow": "Noteikumi",
+      "heading": "Godīgi jums, godīgi uzņēmumiem",
+      "basis": {
+        "titel": "Kas tiek ņemts vērā",
+        "text": "Komisijas pamats ir piesaistītā uzņēmuma neto abonēšanas ieņēmumi (pamatlikme un moduļi) — bez nodokļiem, portāla komisijām un papildu pakalpojumiem."
+      },
+      "dauer": {
+        "titel": "Divpadsmit mēneši",
+        "text": "Komisija tiek maksāta divpadsmit mēnešus no uzņēmuma pirmā apmaksātā abonementa rēķina; jūsu klientu bezmaksas mēnesis netiek ieskaitīts. Ja uzņēmums pārtrauc darbību, tā beidzas ar pēdējo maksājumu. Rezervācijas daļa un superkomisija tiek maksātas bez šī ierobežojuma."
+      },
+      "auszahlung": {
+        "titel": "Izmaksa",
+        "text": "Ikmēneša, 30 dienas pēc uzņēmuma maksājuma, sākot no minimālās summas katrā valūtā. Jūs saņemat kredītu; uzņēmumiem ir nepieciešams derīgs PVN reģistrācijas numurs."
+      },
+      "kennzeichnung": {
+        "titel": "Apzīmējums",
+        "text": "Katrs ieteikums ir reklāma un ir jāapzīmē kā tāds. Mēs nodrošinām nepieciešamos formulējumus katrā valodā informācijas panelī."
+      },
+      "verboten": {
+        "titel": "Nav atļauts",
+        "text": "Pašreklāma, mūsu zīmola nosaukuma reklamēšana meklēšanas reklāmās, atlaižu solījumi mūsu vārdā un nevēlami ziņojumi. Atmaksas tiek atskaitītas no komisijas maksas."
+      },
+      "daten": {
+        "titel": "Datu aizsardzība",
+        "text": "Jūs redzat savus klientus tikai pseidonīmiem – ar valsti, statusu un summām, nekad ar vārdu vai e-pastu. Uzņēmums var atļaut jums sazināties ar to reģistrācijas laikā."
+      }
+    },
+    "faq": {
+      "eyebrow": "Bieži uzdotie jautājumi",
+      "heading": "Ko partneri mums jautā",
+      "wer": {
+        "frage": "Kas var kļūt par partneri?",
+        "antwort": "Jebkura persona vai uzņēmums ES ar reālu kanālu uz izīrētājiem vai viesnīcām: ietekmētāji, konsultanti, aģentūras, nodokļu biroji, asociācijas – un paši myNextDays klienti. Pieteikums ir bezmaksas; abonements nav priekšnoteikums."
+      },
+      "wann": {
+        "frage": "Kad uzņēmums tiek uzskatīts par manu klientu?",
+        "antwort": "Ja tas ir reģistrējies ar jūsu kodu un apmaksājis savu pirmo abonementa rēķinu. Reģistrācijas bez maksājuma netiek ieskaitītas rangā."
+      },
+      "doppelt": {
+        "frage": "Kas notiek, ja uzņēmums nosauc divus partnerus?",
+        "antwort": "Uzņēmums tiek piešķirts tieši vienam partnerim – tam, kura kods bija reģistrācijas veidlapā. Vēlākie kodi to nemaina."
+      },
+      "steuern": {
+        "frage": "Kā notiek norēķini?",
+        "antwort": "Mēs izsniedzam kredīta notu (pašnorēķins). Uzņēmumi ar ES PVN reģistrācijas numuru to saņem ar reversās maksas atzīmi, privātpersonas bez PVN – komisijas maksu jūs deklarējat paši."
+      },
+      "material": {
+        "frage": "Vai ir pieejami reklāmas materiāli?",
+        "antwort": "Jā: īsi video sociālajiem medijiem, skaidrojošs video, baneri un teksta bloki – partneru panelī, jūsu valodā."
+      },
+      "wieviel": {
+        "frage": "Cik lielu komisiju es varu nopelnīt?",
+        "antwort": "Tas ir atkarīgs no jūsu klientu abonementu ieņēmumiem un jūsu ranga. Iepriekš redzamā tabula parāda likmi par katru rangu; divpadsmit mēnešus par katru klientu. Papildus tam nāk 0,5% no katras rezervācijas, ko jūsu klienti saņem caur myBestDays, vienreizējs paaugstināšanas bonuss par katru sasniegto rangu, ar komandu starpības komisija — un no Elite partnera 2,5% superkomisija par visu struktūru bez termiņa ierobežojuma."
+      },
+      "team": {
+        "frage": "Kā darbojas komandas komisija?",
+        "antwort": "No pakāpes Iesācējs: Ja partneris piesakās, izmantojot jūsu komandas saiti, un pieteikumā skaidri norāda jūsu kodu, viņš pēc apstiprināšanas pieder jūsu komandai. Viņa klienti tiek skaitīti 1:1 jūsu pakāpei. Par viņa klientu neto abonēšanas ieņēmumiem jūs saņemat starpību starp jūsu likmi un viņa likmi — tieši vienu līmeni dziļi, bez dalības maksas, bez naudas par piesaisti."
+      },
+      "auszahlung": {
+        "frage": "Kā un kad tiek izmaksātas komisijas maksas?",
+        "antwort": "Katru mēnesi katrā valūtā, tiklīdz summa sasniedz jūsu valūtas minimālo summu. Katra komisijas rinda ir 30 dienas „atvērta” (atmaksas periods) un pēc tam izmaksājama. Jūs saņemat kredītu (pašrēķinu) — jūs neizrakstāt rēķinu. Izmaksa, izmantojot SEPA, Wise vai PayPal."
+      },
+      "verfolgen": {
+        "frage": "Kā es varu sekot līdzi savām komisijas maksām un veiktspējai?",
+        "antwort": "Partneru informācijas panelī sadaļā „Komisijas maksas” redzēsiet katru apmaksāto abonēšanas rēķinu ar pamatu, likmi, summu un statusu, sadaļā „Klienti” jūsu uzņēmumus pseidonīmi, sadaļā „Komanda” jūsu komandas partneru novērtējumu un sadaļā „Saites un materiāli” klikšķus par katru kodu."
+      },
+      "werbung": {
+        "frage": "Vai drīkstu rādīt maksas reklāmas?",
+        "antwort": "Ne par mūsu zīmolu: reklāmas par „myNextDays” un rakstības variantiem (zīmola solīšana), sīkdatņu nomešana, pirkta sasniedzamība vai reģistrācijas veicināšana ir aizliegta un noved pie bloķēšanas. Pašu saturs, ziņas un ieteikumi ir skaidri atļauti — ar norādi kā reklāma."
+      }
+    },
+    "abschluss": {
+      "heading": "Gatavs ieteikt myNextDays?",
+      "sub": "Piesakieties divu minūšu laikā. Mēs sazināsimies pēc pārbaudes.",
+      "cta": "Pieteikties tagad",
+      "kontakt": "Jautājumi? Rakstiet mums."
+    },
+    "vergleich": {
+      "eyebrow": "Jūsu līmenis",
+      "heading": "Jo vairāk maksājošu klientu, jo augstāka ir jūsu likme",
+      "sub": "Šī likme attiecas uz visām jaunajām komisijām no brīža, kad tiek sasniegta pakāpe. Tiek skaitīta jūsu struktūra: jūsu pašu maksājošie klienti plus jūsu komandas partneru klienti.",
+      "nichtAbrufbar": "Līmenis pašlaik nav pieejams. Lūdzu, mēģiniet vēlreiz vēlāk.",
+      "plan": "Līmenis",
+      "provision": "Komisija par saviem klientiem",
+      "teamProvision": "Komandas komisija par jūsu komandas partneru klientiem",
+      "dauer": "Darbības laiks katram klientam",
+      "dauerWert": "12 mēneši",
+      "kunden": "{von}–{bis} maksājoši klienti",
+      "kundenOffen": "no {von} maksājošiem klientiem",
+      "vorteile": "Pakalpojumi",
+      "ja": "iekļauts",
+      "nein": "nav iekļauts",
+      "leistung": {
+        "konto": "Bezmaksas partnera konts",
+        "dashboard": "Partnera informācijas panelis ar klientiem, komisijām un analīzi",
+        "material": "Reklāmas materiāli un marķēšanas veidnes",
+        "team": "Veidojiet komandu ar savu komandas saiti",
+        "gutschrift": "Ikmēneša izmaksa ar kredītu (pašrēķins)",
+        "chat": "Tiešs kontakts ar partneru komandu",
+        "support": "Personīgais kontaktpersona",
+        "coMarketing": "Kopīga mārketings (kopīgas akcijas)"
+      },
+      "fussnoteTeam": "Komandas komisija ir starpība starp jūsu likmi un komandas partnera likmi par viņa klientu neto abonēšanas ieņēmumiem, abas maksājuma brīdī — tieši viens līmenis, bez dalības maksas, bez naudas par piesaisti. Kopā nekad vairāk par 30 %.",
+      "fussnoteCoMarketing": "Pēc vienošanās ar partneru komandu; atkarīgs no partnera profila un pašreizējām akcijām.",
+      "fussnoteRang": "Pakāpe veidojas no jūsu struktūras: pašu maksājošie klienti plus jūsu komandas partneru klienti, katrs tiek skaitīts vienu reizi. Sasniedzot jaunu pakāpi no Iesācēja, tiek piešķirts vienreizējs paaugstināšanas bonuss.",
+      "teamDifferenz": "{satz} % mīnus komandas partnera likme",
+      "teamNicht": "vēl nav komandas",
+      "bonus": "Paaugstināšanas bonuss (vienreizējs)",
+      "superProvision": "Superkomisija par visu struktūru",
+      "marktTurbo": "myBestDays rezervācijas daļa",
+      "marktTurboWert": "0,5 % par katru rezervāciju, neierobežoti",
+      "fussnoteSuper": "No Elites partnera 2,5 % no visu jūsu struktūras klientu neto abonēšanas ieņēmumiem — papildus komisijai, bez 12 mēnešu ierobežojuma, kamēr saglabājat pakāpi un klients maksā."
+    },
+    "team": {
+      "eyebrow": "Veidojiet komandu",
+      "heading": "Līdz {max} % starpības komisija par jūsu komandas apgrozījumu",
+      "sub": "Vai pazīstat citus konsultantus, veidotājus vai aģentūras, kas sadarbojas ar saimniekiem? No pakāpes Iesācējs viņi piesakās, izmantojot jūsu komandas saiti, pieder jūsu komandai — un viņu klienti tiek skaitīti 1:1 jūsu pakāpei. Jūs nopelnāt starpību starp jūsu likmi un jūsu komandas partnera likmi; jūsu komandas partneri saglabā savu pilno pašu likmi.",
+      "rang": {
+        "titel": "Starpība",
+        "text": "Jūs saņemat savu likmi mīnus komandas partnera likmi — abas maksājuma brīdī. Ja jūsu komandas partneris ir vienā pakāpē, komandas komisija netiek veidota."
+      },
+      "ebene": {
+        "titel": "Tieši viens līmenis",
+        "text": "Jūsu komandas partneri neveido savu komandu zem jums. Nav tīkla, nav piramīdas."
+      },
+      "keinGeld": {
+        "titel": "Tikai no reāliem ieņēmumiem",
+        "text": "Nav dalības maksas, nav naudas par piesaisti. Komandas komisija rodas tikai no apmaksātiem abonēšanas ieņēmumiem."
+      },
+      "dauer": {
+        "titel": "Tie paši noteikumi",
+        "text": "12 mēneši par katru komandas klientu, 30 dienu atmaksas periods, atgriešana atmaksas vai atgriešanas gadījumā — tāpat kā jūsu pašu komisijas gadījumā. No Elites tiek pievienota superkomisija par visu struktūru, bez termiņa ierobežojuma."
+      }
+    },
+    "kundeCta": {
+      "heading": "Vai esat jau myNextDays klients?",
+      "text": "Tad jūs vislabāk zināt produktu. Iesakiet to citiem — jūsu komisija tiks ieskaitīta jūsu kontā kā kredīts, neatkarīgi no jūsu abonementa.",
+      "cta": "Iesakiet un nopelniet"
+    }
+  },
+  "partnerBewerbung": {
+    "meta": {
+      "titel": "Kļūt par partneri — myNextDays",
+      "beschreibung": "Pieteikums myNextDays partnerprogrammai: sociālo mediju konti, sasniedzamība, nosacījumi. Katru pieteikumu izskatām individuāli."
+    },
+    "eyebrow": "Partnerprogramma",
+    "titel": "Kļūt par partneri",
+    "text": "Norādiet savus sociālo mediju kontus ar sasniedzamību — mēs izskatām katru pieteikumu individuāli un parasti atbildam dažu darba dienu laikā. Pēc apstiprināšanas jūs iegūsiet piekļuvi partnera informācijas panelim ar saitēm, kodiem un analīzi.",
+    "email": "E-pasts",
+    "passwort": "Parole jūsu partnera informācijas panelim",
+    "passwortHinweis": "Vismaz 8 rakstzīmes.",
+    "name": "Vārds",
+    "firma": "Uzņēmums (pēc izvēles)",
+    "rechtsform": "Juridiskā forma",
+    "privat": "Privātpersona",
+    "unternehmen": "Uzņēmums",
+    "land": "Valsts",
+    "ustId": "PVN reģ. Nr.",
+    "ustIdHinweis": "Tiks pārbaudīts pret ES VIES sistēmu. Bez apstiprināta numura uzņēmumiem netiek veikti maksājumi.",
+    "kanaele": {
+      "titel": "Jūsu sociālo mediju konti",
+      "hinweis": "Obligāti: vismaz viens sociālo mediju konts (Instagram, TikTok, YouTube, Facebook, LinkedIn …) ar adresi, lietotājvārdu un sasniedzamību (sekotāji). Papildus var norādīt vietni, emuāru vai jaunumu vēstuli. Mēs pārbaudām kontus pirms apstiprināšanas.",
+      "plattform": "Platforma",
+      "handle": "Lietotājvārds (pēc izvēles)",
+      "reichweite": "Sasniedzamība (sekotāji)",
+      "hinzufuegen": "Pievienot kanālu",
+      "entfernen": "Noņemt kanālu",
+      "socialPflicht": "Obligāti ir vismaz viens sociālo mediju konts ar sasniedzamību — tikai vietne nav pietiekama.",
+      "plattformen": {
+        "website": "Vietne",
+        "blog": "Emuārs",
+        "newsletter": "Jaunumu vēstule",
+        "podcast": "Podkāsts",
+        "other": "Cits"
+      }
+    },
+    "plattform": {
+      "website": "Vietne",
+      "blog": "Emuārs",
+      "newsletter": "Jaunumu vēstule",
+      "podcast": "Podkāsts",
+      "other": "Cits"
+    },
+    "sponsor": "Uzaicinājis partneris (kods, pēc izvēles)",
+    "sponsorHinweis": "Vai esat nācis caur partnera komandas saiti? Viņa kods būs šeit. Viņš saņems komandas komisiju no jūsu klientu abonementu ieņēmumiem — jūsu pašu komisija paliks nemainīga.",
+    "pitch": "Kāpēc jūs esat piemērots myNextDays? (pēc izvēles)",
+    "pitchPlatzhalter": "Ko jūs sasniedzat, par ko runājat, kā plānojat ieteikt?",
+    "zustimmung": "Es piekrītu",
+    "bedingungen": "Partnera noteikumiem",
+    "version": "Versija {version}",
+    "absenden": "Nosūtīt pieteikumu",
+    "sendet": "Tiek sūtīts…",
+    "pruefungHinweis": "Šī veidlapa ir aizsargāta ar reCAPTCHA. Pēc nosūtīšanas mūsu partneru komanda pārbaudīs jūsu kontus un sasniedzamību; jūs saņemsiet e-pastu ar lēmumu.",
+    "fehler": {
+      "social": "Lūdzu, norādiet vismaz vienu sociālo mediju kontu ar adresi un sasniedzamību.",
+      "doppelt": "Šai e-pasta adresei jau ir pieteikums. Lūdzu, piesakieties partneru informācijas panelī.",
+      "eingabe": "Lūdzu, pārbaudiet ievadītos datus.",
+      "captcha": "Spama aizsardzības pārbaude neizdevās. Lūdzu, atsvaidziniet lapu un mēģiniet vēlreiz.",
+      "allgemein": "Pieteikumu pašlaik nevarēja nosūtīt. Lūdzu, mēģiniet vēlreiz vēlāk."
+    },
+    "fertig": {
+      "titel": "Pieteikums saņemts",
+      "text": "Paldies! Mēs personīgi pārbaudīsim jūsu kontus un sasniedzamību un sazināsimies ar jums pa e-pastu. Jūsu partneru informācijas panelis ir pieejams ar jūsu e-pastu un paroli — saites un kodi kļūs aktīvi pēc apstiprināšanas.",
+      "login": "Uz partneru pieteikšanos"
+    }
   }
 }

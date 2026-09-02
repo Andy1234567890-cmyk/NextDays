@@ -12,6 +12,7 @@ import { EinwilligungsDienste } from "@/components/einwilligungs-dienste";
 import { GoogleTag } from "@/components/google-tag";
 import { EinwilligungsKnopf } from "@/components/einwilligung/einwilligungs-knopf";
 import { EinwilligungsLeiste } from "@/components/einwilligung/einwilligungs-leiste";
+import { PartnerHinweis } from "@/components/partner-hinweis";
 import { SupportChat } from "@/components/support-chat";
 import { VoranmeldungPopup } from "@/components/voranmeldung-popup";
 import { anzeigewaehrung } from "@/lib/anzeigewaehrung";
@@ -136,6 +137,13 @@ export default async function RootLayout({
       </head>
       <body className={`${inter.variable} ${fraunces.variable} antialiased`}>
         <NextIntlClientProvider locale={locale} messages={messages}>
+          {/* Partnerprogramm (0517): nach einem Klick auf /p/CODE steht der
+              Code in der Adresse — die Leiste macht ihn sichtbar und führt in
+              die Registrierung. `useSearchParams` verlangt eine Suspense-
+              Grenze, sonst fällt die ganze Seite auf Client-Rendering zurück. */}
+          <Suspense fallback={null}>
+            <PartnerHinweis />
+          </Suspense>
           {children}
           {/* Auf JEDER Seite erreichbar, auch in den Rechtsdokumenten. */}
           <SupportChat />

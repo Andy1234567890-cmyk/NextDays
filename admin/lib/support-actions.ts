@@ -38,7 +38,7 @@ async function call<T>(
 /** Konversationen für die Konsole (Filter wie in der Liste). */
 export async function konversationen(filter: {
   status?: TicketStatus;
-  source?: "form" | "chat" | "web";
+  source?: "form" | "chat" | "web" | "partner";
   mine?: boolean;
 }): Promise<Ergebnis<SupportTicketList>> {
   const q = new URLSearchParams({ limit: "100" });

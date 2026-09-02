@@ -8,7 +8,7 @@ Webhook-Sync (Abo + Modul-Entitlements, Gegenzustand), Idempotenz.
 """
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 import pytest
@@ -18,6 +18,7 @@ from stripe import StripeError as _StripeError
 from src.core.config import get_settings
 from src.core.security import AuthContext
 from src.features.payments.webhook import handle_stripe_event
+from src.features.subscriptions.gratismonat import gratismonat_ende
 from src.features.subscriptions.schemas import TESTPHASE_TAGE
 from src.features.subscriptions.service import (
     SubscriptionsError,
@@ -1393,6 +1394,43 @@ def test_tenant_id_bleibt_auch_mit_testphase_erhalten() -> None:
     _start(svc, 1)
     sub = (stripe.params or {})["subscription_data"]
     assert sub["metadata"]["tenant_id"] == "t1"
+
+
+def test_geworbener_betrieb_bekommt_gratismonat_als_trial_end() -> None:
+    """Master-Strategie 02.09.2026: Partner-Zuordnung → 14 Tage + 1 Monat als
+    verlaengerte Testphase (`trial_end`), KEIN `trial_period_days`, kein Coupon."""
+    svc, stripe = _checkout_svc_mit_abo({
+        "tenant_id": "t1", "stripe_customer_id": "cus_ok",
+    })
+    svc._db.store["affiliate_referrals"] = [  # noqa: SLF001
+        {"tenant_id": "t1", "status": "pending", "affiliate_id": "a1"}
+    ]
+    vorher = datetime.now(UTC)
+    _start(svc, 1)
+    sub = (stripe.params or {})["subscription_data"]
+    assert "trial_period_days" not in sub
+    ende = datetime.fromtimestamp(sub["trial_end"], tz=UTC)
+    # Mindestens 14 Tage + 28 Tage, hoechstens 14 Tage + 31 Tage.
+    assert timedelta(days=42) <= ende - vorher <= timedelta(days=45, minutes=1)
+    assert sub["trial_settings"]["end_behavior"]["missing_payment_method"] == "cancel"
+
+
+def test_abgelehnte_zuordnung_gibt_keinen_gratismonat() -> None:
+    svc, stripe = _checkout_svc_mit_abo({
+        "tenant_id": "t1", "stripe_customer_id": "cus_ok",
+    })
+    svc._db.store["affiliate_referrals"] = [  # noqa: SLF001
+        {"tenant_id": "t1", "status": "rejected", "affiliate_id": "a1"}
+    ]
+    _start(svc, 1)
+    sub = (stripe.params or {})["subscription_data"]
+    assert sub["trial_period_days"] == TESTPHASE_TAGE and "trial_end" not in sub
+
+
+def test_gratismonat_ende_kappt_monatsende() -> None:
+    # 17.01. + 14 T. = 31.01.; + 1 Monat → 28.02. (kein 31.02.)
+    ende = gratismonat_ende(datetime(2026, 1, 17, 12, 0, tzinfo=UTC))
+    assert (ende.month, ende.day) == (2, 28)
 
 
 def test_testphase_offen_ohne_zeile() -> None:

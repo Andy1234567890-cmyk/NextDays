@@ -23,11 +23,12 @@ export const agb: LegalDoc = {
       heading: "§ 2 Suġġett tal-kuntratt u servizzi",
       paragraphs: [
         "myNextDays tipprovdi lill-Utent software ibbażat fil-cloud għall-ġestjoni ta' akkomodazzjonijiet għall-btala u ta' negozji tal-ospitalità. L-ambitu tal-funzjonijiet jirriżulta mid-deskrizzjoni tas-servizz attwali u jinkludi b'mod partikolari:",
+      "Kull oġġett maħluq mill-utent fil-pjattaforma jiġi elenkat ukoll fis-suq tal-pjattaforma stess myBestDays (kanal obbligatorju). L-utent ma jistax ineħħi dan il-kanal individwalment; madankollu, jista' jneħħi oġġett mill-bejgħ fil-kanali kollha fl-istess ħin jew iħassarha permezz tal-funzjoni \"Issospendi l-bejgħ\". Oġġett isir viżibbli fuq myBestDays biss meta l-utent ikun ippubblikah u myNextDays tkun approvat ir-reklamar; myNextDays tista' tirrifjuta jew tirrevoka l-approvazzjoni għal raġuni oġġettiva. Għal prenotazzjonijiet permezz ta' myBestDays, tapplika l-miżata skont § 7.",
       ],
       list: [
         "il-ġestjoni ta' proprjetajiet, kalendarji tad-disponibbiltà u riżervazzjonijiet (sistema ta' ġestjoni tal-proprjetà),",
         "il-konnessjoni ma' kanali ta' prenotazzjoni ta' partijiet terzi (eż. Booking.com, Airbnb) permezz ta' channel manager,",
-        "il-pubblikazzjoni ta' offerti permezz tal-kanal ta' prenotazzjoni proprju tal-Pjattaforma, myNextDays,",
+        "Pubblikazzjoni ta' offerti permezz tas-suq tal-pjattaforma stess myBestDays (kanal obbligatorju, ara paragrafu 2),",
         "il-ħolqien ta' siti web proprji tal-Utent permezz tal-page builder integrat,",
         "funzjonijiet ta' kontabbiltà, rendikont u rappurtar, inklużi r-rendikonti tas-sidien,",
         "il-komunikazzjoni mal-mistednin u l-aċċettazzjoni ta' ħlasijiet permezz tal-ipproċessar tal-ħlasijiet integrat (§ 5).",

@@ -370,6 +370,10 @@ class SupportTicket(BaseModel):
     id: str
     reporter_user_id: str | None = None
     reporter_guest_id: str | None = None
+    # Partner des Affiliate-Programms (0518) — Name und E-Mail aus `affiliates`.
+    reporter_affiliate_id: str | None = None
+    affiliate_name: str | None = None
+    affiliate_email: str | None = None
     # Anonymer Melder von der Marketing-Seite (source='web'): es gibt kein
     # Konto, an dem Name und Rückkanal hängen — beides steht am Ticket.
     reporter_name: str | None = None

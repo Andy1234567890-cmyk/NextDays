@@ -1500,7 +1500,12 @@
       "portalRateInvalid": "Shranjena stopnja odbitka portala je zunaj območja 0–100 %. Popravite jo v razdelku Knjigovodstvo → Pravila obračuna.",
       "feeUnassigned": "Vsaj ena vrsta pristojbine še ni dodeljena. Brez dodelitve ni mogoče ugotoviti, komu znesek pripada in ali se od njega obračuna provizija — določite to v razdelku Knjigovodstvo → Pravila obračuna.",
       "feeNotComputable": "Pristojbine ni mogoče obračunati kot znesek (shranjena je odstotkovno ali brez zneska). Preverite pristojbino pri objektu.",
-      "contractCurrency": "Pavšal ali minimalna provizija je izražena v drugi valuti kot rezervacija. Zneski v različnih valutah se med seboj ne obračunavajo — preverite pogodbo o obračunu."
+      "contractCurrency": "Pavšal ali minimalna provizija je izražena v drugi valuti kot rezervacija. Zneski v različnih valutah se med seboj ne obračunavajo — preverite pogodbo o obračunu.",
+      "recurringToOwner": "Ponavljajoče v dobro",
+      "recurringFromOwner": "Ponavljajoče v breme",
+      "flatFees": "Pavšali iz pogodbe",
+      "flatFeesIncluded": "že upoštevano pri izplačilu",
+      "contractStartsLater": "Za vsaj eno rezervacijo na dan odhoda še ne velja pogodba o poravnavi – pogodba lastnika se začne šele pozneje. Stopnja provizije je torej shranjena, vendar je datum »Velja od« po odhodu. V pogodbo o poravnavi vnesite dejanski začetek pogodbe."
     },
     "rental": {
       "perReservation": "Na rezervacijo",
@@ -1520,13 +1525,66 @@
         "channexImport": "Rezervacija je bila naknadno pridobljena pri priklopu kanala. Po podatkih posrednika rezervacij take rezervacije ne vsebujejo dodatnih storitev in stroškov čiščenja — tega ni mogoče nadomestiti pozneje. Če je treba strošek obračunati, ga vnesite kot postavko pri rezervaciji.",
         "portalReportsNone": "Portal pri tej rezervaciji stroška ne navaja kot samostojne postavke. Pri Booking.com je to odvisno od nastavitev nastanitve (Nastanitev → Pravilniki → Dodatni stroški) in od tega, od kdaj tam velja strošek: strošek, uveden pozneje, pri starejših rezervacijah upravičeno manjka.",
         "noPayload": "Za to rezervacijo ni sporočila s portala (uvoz obstoječih podatkov). Brez njega ni mogoče ugotoviti, katere stroške je gost plačal.",
-        "unknownReason": "Vzroka ni mogoče določiti."
+        "unknownReason": "Vzroka ni mogoče določiti.",
+        "csvImport": "Rezervacija je iz uvoza zaloge CSV. Uvoženi znesek je cena za goste portala, vključno z vsemi pristojbinami; razčlenitev posameznih pristojbin ni na voljo in je ni bilo mogoče izpeljati iz podatkov portala. Zato obračun ne določa pristojbin iz glavnih podatkov nepremičnine – te so že vključene v znesek, vendar njihova višina ni dokazana.",
+        "csvResolvedTitle": "Pristojbine, izpeljane iz zneska portala",
+        "csvResolved": "Rezervacija je iz uvoza zaloge CSV; portal ni posredoval razčlenitve. Pristojbine so bile izpeljane iz razlike med uvoženo skupno ceno in cenami nočitev, ki jih je posredoval portal, in poimenovane prek glavnih podatkov nepremičnine. Nočitev plus pristojbine natančno ustrezajo skupni ceni.",
+        "stammdatenPortalTitle": "Pristojbine so bile dodane iz glavnih podatkov o nepremičnini",
+        "stammdatenPortal": "Portal ni posredoval razčlenitve stroškov za to rezervacijo: rezervacije, ki jih je agregator portala naknadno dodal ob priključitvi kanala, so brez dodatkov in stroškov čiščenja; uvoz inventarja iz datoteke vključuje samo skupno ceno. Zato so bili stroški določeni tako, kot so shranjeni pri objektu: čiščenje na bivanje, letovišče na noč, hišni ljubljenček samo ob rezervaciji hišnega ljubljenčka.",
+        "portalBelegt": "Zasedeno: Razlika med skupno ceno portala in cenami nočitev, ki jih je posredoval portal, natančno ustreza tem pristojbinam.",
+        "portalImBetrag": "Vključeno v znesek portala: Skupna cena portala že vključuje pristojbine; te so bile odštete, cena za gosta ostaja znesek portala.",
+        "portalObendrauf": "Poleg zneska portala: Posredovani znesek je čista vsota nočitev; pristojbine so dodane in skupaj tvorijo ceno za gosta."
       },
       "chain": {
         "portal": "Portal",
         "management": "Upravljanje",
         "flatFee": "Pavšal",
         "fees": "Stroški"
+      },
+      "arrival": "Prihod",
+      "departure": "Odhod",
+      "commission": "Provizija",
+      "flatFee": "Pavšal",
+      "ownerShare": "Delež lastnika",
+      "portalDeduction": "Odbitek portala",
+      "fees": "Pristojbine",
+      "feesCount": "{n} postavk",
+      "expand": "Prikaži podrobnosti",
+      "collapse": "Skrij podrobnosti",
+      "expandAll": "Prikaži vse podrobnosti",
+      "collapseAll": "Skrij vse podrobnosti",
+      "breakdown": "Podrobnosti na rezervacijo",
+      "noFeeItems": "Ta rezervacija nima pristojbin ali dodatnih storitev.",
+      "posten": {
+        "guestPrice": "Cena za gosta po portalu (vključno s provizijami, brez dodatnih storitev)",
+        "portalCommission": "Provizija portala {kanal}",
+        "portalFee": "Pristojbina za plačilo portala",
+        "portalPayout": "Izplačilo portala",
+        "feesOut": "Pristojbine v ceni za gosta – izvzete iz osnove",
+        "feesInBase": "Pristojbine v ceni za gosta – provizija se obračuna, ostanejo v osnovi",
+        "base": "Osnova za izračun",
+        "commission": "Administrativna provizija {pct}",
+        "minCommission": "Minimalna provizija (pogodba) namesto {pct}",
+        "contractFrom": "Pogodba od {datum}",
+        "rateManual": "ročno v tem obračunu",
+        "rateLegacy": "Standardna stopnja iz matičnih podatkov",
+        "flatFee": "Pavšal (pogodba)",
+        "feesBack": "Pristojbine lastnika – vrnjene v celoti",
+        "ownerShare": "Delež lastnika",
+        "belongsBetrieb": "ostane pri podjetju",
+        "belongsEigentuemer": "Lastnik",
+        "belongsDurchlauf": "Prehodni stroški (tretje osebe)",
+        "commissionFree": "brez provizije",
+        "commissionable": "s provizijo",
+        "amountHidden": "Znesek pri podjetju",
+        "addon": "Dodatna storitev",
+        "noFeesReported": "Portal za to rezervacijo ni sporočil nobenih pristojbin, zato niso bile upoštevane.",
+        "afterPortal": "Skupni znesek po odbitku portala",
+        "afterPortalHint": "Cena za gosta minus provizija portala in pristojbina za plačilo portala",
+        "feesBusiness": "Zagotavlja podjetje – ni del izplačila",
+        "contractStartsLater": "Na dan odjave {abreise} ni pogodbe o obračunu: pogodba se začne šele {beginn}. Datum začetka pogodbe pri lastniku prestavite nazaj, nato se bo ta rezervacija obračunala.",
+        "noContract": "Za ta objekt v matičnih podatkih ni pogodbe o obračunu in ni provizije – pri lastniku ustvarite pogodbo.",
+        "addonsOutside": "Dodatne storitve – prodaja prek myNextDays, niso vključene v ceno za gosta po portalu"
       }
     },
     "expenses": {
@@ -1566,7 +1624,11 @@
       "rentalRevenue": "Prihodki od oddajanja",
       "expenses": "Stroški in dodatki",
       "total": "Skupaj",
-      "deductPercentage": "Provizija (%)"
+      "deductPercentage": "Provizija (%)",
+      "shares": "Delež lastnika od rezervacij",
+      "deductions": "Odbitki",
+      "credits": "Dobropisi",
+      "recurring": "Ponavljajoči se elementi"
     },
     "manage": {
       "owner": "Lastnik",
@@ -1631,6 +1693,25 @@
       "cancel": "Prekliči",
       "confirm": "Potrdi",
       "working": "Potrjuje se …"
+    },
+    "deductions": {
+      "title": "Odbitki in dobropisi",
+      "intro": "Vse, kar poleg rezervacij spreminja izplačilo — iz treh virov: pavšal iz pogodbe na rezervacijo, enkratni obračunski postavki in ponavljajoči se postavki (trajni dogovor).",
+      "deductions": "Odbitki (v breme lastnika)",
+      "credits": "Dobropisi (v korist lastnika)",
+      "empty": "V tem obdobju ni odbitkov ali dobropisov.",
+      "srcExpense": "Obračunski postavki",
+      "srcRecurring": "Ponavljajoči se postavek",
+      "srcFlatFee": "Pavšal iz pogodbe",
+      "perBooking": "na rezervacijo",
+      "perNight": "na noč",
+      "perPeriod": "na obdobje",
+      "quantity": "{n} × {betrag}",
+      "flatFeesNote": "Pavšali iz pogodbe so že odšteti od deležev lastnika na rezervacijo — tukaj samo za pregled, brez nadaljnjega odbitka.",
+      "manageRecurring": "Urejanje ponavljajočih se postavk",
+      "manageContract": "Urejanje pogodbe o obračunu",
+      "receipt": "Potrdilo",
+      "bookingsCount": "{n} rezervacij"
     }
   },
   "ownerBilling": {
@@ -1709,7 +1790,9 @@
     "effectReleased": "{property}: prodaja se nadaljuje — konec pogodbe je bil preklican in noči so znova na voljo za prodajo.",
     "effectBlocked": "{property}: prodaja se konča dne {date} — {nights} noči blokiranih in umaknjenih s portalov.",
     "effectCalendarFailed": "{property}: Konec pogodbe je vpisan, blokada koledarja ni zapisana. To bo storjeno nocoj.",
-    "effectNoUnit": "{property}: Konec pogodbe je vpisan, vendar koledar ni blokiran – objektu manjka enota. Ustvarite jo, nato bo blokada uveljavljena."
+    "effectNoUnit": "{property}: Konec pogodbe je vpisan, vendar koledar ni blokiran – objektu manjka enota. Ustvarite jo, nato bo blokada uveljavljena.",
+    "validFromHint": "Dan, od katerega velja pogodba – pri obstoječi pogodbi je to dejanski datum pogodbe, ne današnji. Vsaka rezervacija se obračuna po pogodbi, ki velja na dan odhoda; rezervacije z zgodnejšim odhodom ostanejo brez izplačila.",
+    "errorValidFromRequired": "Prosimo, navedite, od kdaj velja pogodba."
   },
   "portal": {
     "title": "Moj portal",
@@ -5465,7 +5548,8 @@
       "connectPortal": "Poveži portal",
       "noPortals": "Za ta objekt še ni povezan noben portal (Booking, Airbnb in drugi).",
       "marketplaceReview": "V pregledu",
-      "marketplaceReviewHint": "myBestDays ta oglas še pregleduje. Na tržnici se prikaže po odobritvi. Portali in lastna spletna stran s tem niso prizadeti."
+      "marketplaceReviewHint": "myBestDays še preverja ta oglas. Takoj ko bo odobren, se bo pojavil na tržnici. myBestDays je obvezni kanal: Objekta tam ni mogoče posamično odjaviti — „Zaustavi prodajo“ ga umakne iz prodaje povsod.",
+      "marketplaceMandatory": "Obvezni kanal — vsak objekt je naveden na myBestDays"
     },
     "IdLayout": {
       "loadError": "Objekta ni bilo mogoče naložiti: {error}"
@@ -5563,11 +5647,11 @@
       "stepOf": "Korak {schritt} od {gesamt}",
       "next": "Continue",
       "back": "Back",
-      "channelsHint": "Kje naj se ta objekt prodaja? To lahko kadar koli spremenite.",
+      "channelsHint": "Kje naj se ta objekt dodatno prodaja? Portale in spletno stran lahko kadar koli spremenite.",
       "channelPortals": "Rezervacijski portali",
       "channelPortalsHint": "Airbnb, Booking.com in drugi. Portali zahtevajo popolne podatke — glejte spodaj.",
       "channelPlatform": "myBestDays",
-      "channelPlatformHint": "Naša lastna tržnica z nizko provizijo.",
+      "channelPlatformHint": "Naša lastna tržnica z 8 % all-inclusive. Vsak objekt je tam naveden; viden bo po objavi in naši odobritvi.",
       "channelWebsite": "Lastno spletno mesto",
       "channelWebsiteHint": "Vaša rezervacijska stran in rezervacijski pripomoček.",
       "readinessTitle": "Za portale še manjka:",
@@ -6261,7 +6345,21 @@
       "planPortalOffHint": "Ta cena velja samo za neposredne rezervacije. Kliknite za pošiljanje na rezervacijske portale.",
       "planPortalOn": "Cena gre zdaj na rezervacijske portale.",
       "planPortalOnHint": "Ta cena gre na rezervacijske portale. Kliknite za uporabo samo za neposredne rezervacije.",
-      "planPortalYes": "Na portale"
+      "planPortalYes": "Na portale",
+      "feeValidityTitle": "Veljavnost",
+      "feeValidityHint": "Pristojbina velja za rezervacije, katerih prihod je v določenem obdobju. Prazno = brez omejitve. Pristojbina z obdobjem se ne pošilja na portale: tam ni mogoče prikazati datumske omejitve.",
+      "feeValidFromLabel": "Velja od",
+      "feeValidUntilLabel": "Velja do",
+      "feeValidityOrderError": "»Velja do« je pred »Velja od«.",
+      "feeOwnerStatementOnlyLabel": "Samo v obračunu lastnika",
+      "feeOwnerStatementOnlyHint": "Pristojbina se gostu ne zaračuna in se ne pošilja na noben portal. Učinkuje samo v obračunu lastnika, v analizi in na portalu lastnika.",
+      "feeValidFromSuffix": "od {date}",
+      "feeValidUntilSuffix": "do {date}",
+      "feeOwnerStatementOnlySuffix": "samo obračun",
+      "feeCalculationLabel": "Izračun",
+      "feeVatHint": "Lastna davčna stopnja za to pristojbino, ki se razlikuje od stopnje prenočitve nastanitve. Izključeno pomeni: pristojbina sledi stopnji prenočitve.",
+      "feeVatIncludedLabel": "Davek v znesku",
+      "feeVatIncludedHint": "Ali je davčna stopnja že vključena v vneseni znesek ali se prišteje? Brez te informacije bi bil znesek dvoumno določen."
     },
     "policiesForm": {
       "title": "Pravilniki",
@@ -7303,23 +7401,23 @@
     "marketplacePending": "{count} v pregledu",
     "marketplaceWaiting": "V pregledu",
     "marketplace": {
-      "intro": "myBestDays je naša lastna tržnica — rezervacijski kanal kot Booking ali Airbnb, le brez povezave s portalom. Objekt postane viden, ko je aktiven, tu uvrščen in odobren.",
+      "intro": "myBestDays je naša lastna tržnica – kanal za rezervacije, kot sta Booking ali Airbnb, le brez povezave s portalom in obvezen za vsak objekt. Objekt je viden, če je aktiven in smo ga odobrili.",
       "openMarketplace": "Odpri tržnico",
       "propertiesHeading": "Objekti na tržnici",
       "noProperties": "Objektov še ni.",
       "columnProperty": "Nastanitev",
-      "columnVisibility": "Vidnost",
+      "columnVisibility": "Stanje",
       "columnApproval": "Odobritev",
       "columnBookings": "Rezervacije",
       "stateActive": "Viden",
       "statePending": "V pregledu",
-      "stateNotListed": "Ni uvrščen",
+      "stateNotListed": "Prodaja začasno ustavljena",
       "stateInactiveProperty": "Objekt ni aktiven",
       "viewListing": "Ogled oglasa",
       "reviewHint": "Objekti v pregledu se na myBestDays še ne prikažejo. Vsak oglas pregledamo, ker myBestDays tam nastopa kot ponudnik — portali in lastna spletna stran s tem niso prizadeti.",
       "summaryVisible": "{count} vidnih",
       "summaryWaiting": "{count} v pregledu",
-      "summaryOff": "{count} ni uvrščenih",
+      "summaryOff": "{count} začasno ustavljenih ali neaktivnih",
       "moderation": {
         "draft": "Osnutek",
         "pending": "V pregledu",
@@ -7354,7 +7452,8 @@
       "mayClose": "Uvoz se nadaljuje na strežniku – to stran lahko zaprete.",
       "andMore": "… in še {count}",
       "close": "Zapri",
-      "updated": "posodobljeno"
+      "updated": "posodobljeno",
+      "portal": "že na portalu"
     }
   },
   "calendarSync": {
@@ -10511,7 +10610,11 @@
     "haveAccount": "Že imate račun?",
     "loginLink": "Prijavite se tukaj",
     "loadingHeadline": "Vaša lastna stran za rezervacije. Obdržite 100 % vsake rezervacije.",
-    "loadingText": "Pripravljamo vaš račun …"
+    "loadingText": "Pripravljamo vaš račun …",
+    "referralLabel": "Priporočil (neobvezno)",
+    "referralPlaceholder": "Koda priporočila, npr. ANNA-K7P2",
+    "referralHint": "Ste se z myNextDays seznanili prek partnerja? Njegova koda je tukaj – vidi le, da je podjetje prišlo prek njega, nikoli vašega imena. S kodo prejmete po 14 testnih dneh prvi polni mesec brezplačno.",
+    "referralContactOptIn": "Moj priporočitelj me lahko kontaktira prek myNextDays."
   },
   "marketingSite": {
     "stars": "4,5 zvezdice",

@@ -45,7 +45,7 @@ const FOOTER_COLUMNS = [
   },
   {
     key: "unternehmen",
-    links: ["ueberUns", "kontakt"],
+    links: ["ueberUns", "partner", "kontakt"],
   },
 ] as const;
 
@@ -64,6 +64,8 @@ const PRODUKT_ZIELE: Record<string, string> = {
 // (app/kontakt). Karriere, Partner und Presse noch nicht.
 const UNTERNEHMEN_ZIELE: Record<string, string> = {
   ueberUns: "/ueber-uns",
+  // Partnerprogramm (0517): Programmseite mit Staffel und Bewerbung.
+  partner: "/partner",
   kontakt: "/kontakt",
 };
 
@@ -128,6 +130,8 @@ export function MarketingFooter() {
   // entfällt, solange das Dashboard nicht öffentlich ist.
   const rechtlich = [
     { label: t("agb"), href: AGB_URL },
+    // Partner-AGB (0517/0520): eigene Route app/partner/agb, Loader-Slug "partner-agb".
+    { label: t("partnerAgb"), href: "/partner/agb" },
     ...RECHTSDOKUMENTE.map((eintrag) => ({
       label: t(RECHTS_KEYS[eintrag.slug]),
       href: `/${eintrag.slug}`,

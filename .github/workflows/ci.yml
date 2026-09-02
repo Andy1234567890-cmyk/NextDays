@@ -308,7 +308,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [web, marketing, plattform, gastgeber, admin, builder, storybook]
+        app: [web, marketing, plattform, gastgeber, admin, partner, builder, storybook]
     steps:
       # Kein Job-`if:` — SO gewollt: dieser Job steht in `deploy.needs`, und ein
       # per Job-`if` uebersprungener needs-Job gilt GitHub als NICHT erfolgreich;
@@ -921,6 +921,7 @@ jobs:
       plattform: ${{ steps.bereiche.outputs.plattform }}
       gastgeber: ${{ steps.bereiche.outputs.gastgeber }}
       admin: ${{ steps.bereiche.outputs.admin }}
+      partner: ${{ steps.bereiche.outputs.partner }}
       builder: ${{ steps.bereiche.outputs.builder }}
       marketing: ${{ steps.bereiche.outputs.marketing }}
       storybook: ${{ steps.bereiche.outputs.storybook }}

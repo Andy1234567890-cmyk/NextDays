@@ -87,12 +87,12 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "note",
               variant: "tip",
-              text: "Jekk tikklikkja Ippubblika, myNextDays normalment tattiva flimkien is-suq, il-portali u l-websajt — tista' terġa' tiddiżattiva s-swiċċ tas-suq individwalment fi kwalunkwe ħin wara.",
+              text: "Meta myNextDays jippubblika, il-portali u l-websajt jinfetħu flimkien. myBestDays huwa kanal obbligatorju: Kull proprjetà hija elenkata hemmhekk u tidher hekk kif aħna napprovaw il-lista.",
             },
             { type: "h2", text: "Neħħi l-viżibbiltà mill-ġdid" },
             {
               type: "p",
-              text: "Jekk tiddiżattiva s-swiċċ Suq tal-Pjattaforma, il-proprjetà tisparixxi mit-tfittxija tas-suq. Il-prenotazzjonijiet diġà kkonfermati ma jiġux affettwati u jkomplu bħas-soltu, ara [Kummissjoni tas-Suq](/hilfe/plattform-marktplatz/marktplatz-provision).",
+              text: "myBestDays ma jistax jiġi diżattivat individwalment. Jekk proprjetà m'għadhiex għall-bejgħ, uża \"Issospendi l-bejgħ\" - dan ineħħiha mill-bejgħ fuq il-portali kollha, fuq il-websajt u fuq is-suq fl-istess ħin. Il-prenotazzjonijiet diġà kkonfermati jibqgħu mhux affettwati u jkomplu bħas-soltu, ara [Kummissjoni tas-Suq](/help/platform-marketplace/marketplace-commission).",
             },
           ],
         },

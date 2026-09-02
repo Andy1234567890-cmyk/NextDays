@@ -851,7 +851,8 @@
     },
     "unternehmen": {
       "ueberUns": "Fúinn",
-      "kontakt": "Teagmháil"
+      "kontakt": "Teagmháil",
+      "partner": "Clár Comhpháirtíochta"
     },
     "copyright": "© 2026 myNextDays. Gach ceart ar cosaint.",
     "agb": "Téarmaí",
@@ -860,7 +861,8 @@
     "cookies": "Beartas fianán",
     "avv": "Próiseáil sonraí",
     "kontoLoeschen": "Scrios cuntas",
-    "newsletterKnopf": "Cláraigh don nuachtlitir"
+    "newsletterKnopf": "Cláraigh don nuachtlitir",
+    "partnerAgb": "Téarmaí agus Coinníollacha Comhpháirtí"
   },
   "legal": {
     "stand": "Arna nuashonrú: {datum}"
@@ -990,7 +992,7 @@
       "sub": "Cad ba mhaith le hóstaigh a fháil amach roimh athrú — go gairid agus gan chló beag.",
       "laufzeit": {
         "frage": "An bhfuil téarma íosta ann?",
-        "antwort": "Ní hea. Is míosúil an síntiús agus is féidir é a chealú le fógra ceithre seachtaine roimh dheireadh na míosa. Tá an chéad 14 lá saor in aisce: Cuireann tú do shonraí íocaíochta isteach ag an tús, ach ní dhéanfar an t-airgead a tharraingt siar ach amháin tar éis na tréimhse trialach. Má chealóidh tú roimhe sin, ní íocfaidh tú tada."
+        "antwort": "Ní hea. Tá an síntiús míosúil agus is féidir é a chealú le fógra ceithre seachtaine roimh dheireadh na míosa. Tá an chéad 14 lá saor in aisce: Cuireann tú do shonraí íocaíochta isteach ag an tús, ach ní dhéanfar aon íocaíocht go dtí tar éis na tréimhse trialach. Má thagann tú trí nasc nó cód comhpháirtí, gheobhaidh tú an chéad mhí iomlán saor in aisce freisin. Mura gcealóidh tú roimhe sin, ní íocfaidh tú tada."
       },
       "objektzahl": {
         "frage": "Cad a tharlaíonn nuair a chuirim maoin leis?",
@@ -2185,5 +2187,259 @@
     "verwalten": "Bainistigh Socruithe Fianán",
     "schliessen": "Dún",
     "bestaetigen": "Deimhnigh Socruithe"
+  },
+  "partnerHinweis": {
+    "text": "Tagann tú trí atreorú (cód {code}). Glacfar leis an gcód le linn an chláraithe — agus tabharfaidh sé an chéad mhí iomlán duit tar éis na 14 lá trialach.",
+    "cta": "Tosaigh saor in aisce anois",
+    "schliessen": "Dún an fógra"
+  },
+  "partner": {
+    "meta": {
+      "titel": "Clár Comhpháirtíochta — myNextDays",
+      "beschreibung": "Mol myNextDays d'úinéirí réadmhaoine saoire agus d'óstáin agus faigh suas le {max}% d'ioncam síntiúis gach gnó atreoraithe ar feadh dhá mhí dhéag."
+    },
+    "hero": {
+      "eyebrow": "Clár Comhpháirtíochta",
+      "headlinePre": "Mol myNextDays —",
+      "headlineHighlight": "agus tuilleamh",
+      "sub": "Do lucht tionchair, comhairleoirí, gníomhaireachtaí agus tiarnaí talún le líonra: Tugann gach gnó a chláraíonn trí do nasc agus a íocann síntiús suas le {max} % d'ioncam an tsíntiúis duit ar feadh dhá mhí dhéag — móide 0.5 % de gach áirithint trí myBestDays, bónais ardú céime agus, ó Elite, sárchoimisiún gan teorainn ama.",
+      "cta": "Cuir isteach anois",
+      "ctaLogin": "Logáil Isteach Comhpháirtí",
+      "chipDauer": "Coimisiún 12 mhí in aghaidh an chustaiméara",
+      "chipAuszahlung": "Íocaíocht mhíosúil",
+      "chipKosten": "Rannpháirtíocht saor in aisce",
+      "chipGratismonat": "Do chustaiméirí: triail 14 lá + 1 mhí saor in aisce"
+    },
+    "schritte": {
+      "eyebrow": "Conas a oibríonn sé",
+      "heading": "Trí chéim go dtí an chéad choimisiún",
+      "bewerben": {
+        "titel": "Cuir isteach",
+        "text": "Inis dúinn do chainéal — suíomh Gréasáin, próifíl shóisialta nó líonra. Déanaimid athbhreithniú pearsanta ar gach iarratas agus de ghnáth ceadaímid é laistigh de chúpla lá oibre."
+      },
+      "teilen": {
+        "titel": "Roinn nasc nó cód",
+        "text": "Gheobhaidh tú nasc pearsanta agus cód atreoraithe. Beidh an cód le feiceáil san fhoirm chlárúcháin — gan fianán rianaithe."
+      },
+      "verdienen": {
+        "titel": "Tuilleamh",
+        "text": "Má íocann gnó atreoraithe a chéad bhille síntiúis, ritheann do choimisiún ar feadh dhá mhí dhéag. Feiceann tú gach custaiméir gan ainm sa phainéal comhpháirtíochta agus íoctar go míosúil thú."
+      }
+    },
+    "staffel": {
+      "eyebrow": "Do leibhéal",
+      "heading": "Dá mhéad do struchtúr, is airde do ráta",
+      "sub": "Baineann an ráta le gach coimisiún nua ón uair a shroichtear an chéim. Áirítear i do struchtúr do chustaiméirí féin a íocann agus custaiméirí do chomhpháirtithe foirne.",
+      "kunden": "Custaiméirí íocacha {von}–{bis}",
+      "kundenOffen": "ó {von} custaiméirí íocacha",
+      "satz": "d'ioncam an tsíntiúis",
+      "nichtAbrufbar": "Níl an leibhéal ar fáil faoi láthair. Bain triail eile as níos déanaí le do thoil."
+    },
+    "bedingungen": {
+      "eyebrow": "Na rialacha",
+      "heading": "Cothrom duitse, cothrom do na gnólachtaí",
+      "basis": {
+        "titel": "Cad a chomhaireamh",
+        "text": "Is é bunús an choimisiúin ioncam glan an tsíntiúis (bunráta agus modúil) ón ngnó atreoraithe — gan cánacha, coimisiúin tairsí agus seirbhísí breise."
+      },
+      "dauer": {
+        "titel": "Dhá mhí dhéag",
+        "text": "Ritheann an coimisiún ar feadh dhá mhí dhéag ón gcéad sonrasc síntiúis íoctha den ghnó; ní áirítear mí saor in aisce do chustaiméirí. Má chuireann an gnó ar ceal, críochnaíonn sé lena íocaíocht dheireanach. Ritheann an sciar áirithinte agus an sárchoimisiún gan an teorainn seo."
+      },
+      "auszahlung": {
+        "titel": "Íocaíocht",
+        "text": "Go míosúil, 30 lá tar éis íocaíocht an ghnó, ó íosmhéid in aghaidh an airgeadra. Gheobhaidh tú nóta creidmheasa; teastaíonn uimhir CBL bailí ó chuideachtaí."
+      },
+      "kennzeichnung": {
+        "titel": "Aitheantas",
+        "text": "Is fógraíocht é gach atreorú agus ní mór é a aithint mar sin. Cuirimid na foclaíocht fhorordaithe in aghaidh an teanga ar fáil sa phainéal."
+      },
+      "verboten": {
+        "titel": "Níl cead",
+        "text": "Féin-chur chun cinn, fógraíocht ar ár n-ainmneacha branda i bhfógraí cuardaigh, geallúintí lascaine inár n-ainm agus teachtaireachtaí gan iarraidh. Baintear aisíocaíochtaí den choimisiún."
+      },
+      "daten": {
+        "titel": "Príobháideacht",
+        "text": "Ní fheiceann tú do chustaiméirí ach go bréagach – le tír, stádas agus méideanna, ní le hainm nó ríomhphost. Féadfaidh gnó cead a thabhairt duit teagmháil a dhéanamh leo nuair a chláraíonn tú."
+      }
+    },
+    "faq": {
+      "eyebrow": "Ceisteanna Coitianta",
+      "heading": "Cad a iarrann comhpháirtithe orainn",
+      "wer": {
+        "frage": "Cé atá in ann a bheith ina chomhpháirtí?",
+        "antwort": "Aon duine nó cuideachta san AE a bhfuil cainéal fíor acu le húinéirí nó óstáin: tionchair, comhairleoirí, gníomhaireachtaí, gnólachtaí cánach, cumainn – agus custaiméirí myNextDays féin. Tá iarratas saor in aisce; níl síntiús riachtanach."
+      },
+      "wann": {
+        "frage": "Cathain a áirítear gnó mar mo chustaiméir?",
+        "antwort": "Má chláraigh sé le do chód agus má d'íoc sé a chéad bhille síntiúis. Ní áirítear clárúcháin gan íocaíocht don chéim."
+      },
+      "doppelt": {
+        "frage": "Cad a tharlaíonn má ainmníonn gnó dhá chomhpháirtí?",
+        "antwort": "Ní shanntar gnó ach d'aon chomhpháirtí amháin – an ceann a raibh a chód san fhoirm le linn an chláraithe. Ní athraíonn cóid níos déanaí é sin."
+      },
+      "steuern": {
+        "frage": "Conas a dhéantar an billeáil?",
+        "antwort": "Eisímid nóta creidmheasa (féinbhilleáil). Faigheann cuideachtaí le huimhir CBL AE é le nóta droimchúitimh, daoine aonair gan CBL – caithfidh tú an coimisiún a chánachas tú féin."
+      },
+      "material": {
+        "frage": "An bhfuil ábhar fógraíochta ar fáil?",
+        "antwort": "Tá: físeáin ghearra do na meáin shóisialta, físeán míniúcháin, meirgí agus bloic téacs – sa phainéal comhpháirtí, i do theanga féin."
+      },
+      "wieviel": {
+        "frage": "Cé mhéad coimisiún is féidir liom a thuilleamh?",
+        "antwort": "Braitheann sé ar ioncam síntiúis do chustaiméirí agus ar do chéim. Taispeánann an tábla thuas an ráta in aghaidh na céime; ar feadh dhá mhí dhéag in aghaidh an chustaiméara. Ina theannta sin, tá 0.5% de gach áirithint a fhaigheann do chustaiméirí trí myBestDays, bónas ardú céime aonuaire do gach céim a baineadh amach, an coimisiún difreálach le foireann — agus ó Chomhpháirtí Elite, 2.5% sárchoimisiún ar an struchtúr iomlán gan teorainn ama."
+      },
+      "team": {
+        "frage": "Conas a oibríonn coimisiún foirne?",
+        "antwort": "Ón gcéim Ardaitheoir: Má dhéanann comhpháirtí iarratas trí do nasc foirne agus má chuireann sé do chód isteach go soiléir san iarratas, baineann sé le do fhoireann tar éis an cheadaithe. Comhairtear a chuid custaiméirí 1:1 do do chéim. Ar ghlanioncam síntiúis a chustaiméirí, faigheann tú an difríocht idir do ráta agus a ráta — leibhéal amháin go díreach, gan táille rannpháirtíochta, gan airgead le haghaidh earcaíochta."
+      },
+      "auszahlung": {
+        "frage": "Conas agus cathain a íoctar coimisiúin?",
+        "antwort": "Go míosúil in aghaidh an airgeadra, a luaithe a shroicheann an tsuim an t-íosmhéid de d'airgeadra. Tá gach líne coimisiúin “oscailte” ar feadh 30 lá (fuinneog aisíocaíochta) agus iníoctha ina dhiaidh sin. Gheobhaidh tú creidmheas (féinbhilleáil) — ní eiseoidh tú sonrasc. Íocaíocht trí SEPA, Wise nó PayPal."
+      },
+      "verfolgen": {
+        "frage": "Conas is féidir liom mo choimisiúin agus mo fheidhmíocht a rianú?",
+        "antwort": "Sa deais comhpháirtí, faoi “Coimisiúin” feicfidh tú gach sonrasc síntiúis íoctha le bunús, ráta, méid agus stádas, faoi “Custaiméirí” do ghnólachtaí go bréagach, faoi “Foireann” meastóireacht do chomhpháirtithe foirne agus faoi “Naisc & Ábhar” cliceanna in aghaidh an chóid."
+      },
+      "werbung": {
+        "frage": "An bhfuil cead agam fógraíocht íoctha a reáchtáil?",
+        "antwort": "Ní ar ár mbranda: tá fógraí ar “myNextDays” agus ar leaganacha litrithe (tairiscint branda), titim fianán, raon ceannaithe nó dreasachtaí le haghaidh clárúcháin toirmiscthe agus beidh bac mar thoradh orthu. Tá fáilte roimh ábhar, ranníocaíochtaí agus moltaí féin — le marcáil mar fhógraíocht."
+      }
+    },
+    "abschluss": {
+      "heading": "Réidh le myNextDays a mholadh?",
+      "sub": "Cuir isteach iarratas i dhá nóiméad. Déanfaimid teagmháil leat tar éis an athbhreithnithe.",
+      "cta": "Cuir isteach iarratas anois",
+      "kontakt": "Ceisteanna? Scríobh chugainn."
+    },
+    "vergleich": {
+      "eyebrow": "Do Shraith",
+      "heading": "Dá mhéad custaiméirí íocacha, is airde do ráta",
+      "sub": "Baineann an ráta le gach coimisiún nua ón uair a shroichtear an chéim. Déantar do struchtúr a chomhaireamh: do chustaiméirí féin a íocann móide custaiméirí do chomhpháirtithe foirne.",
+      "nichtAbrufbar": "Níl an tsraith ar fáil faoi láthair. Bain triail eile as níos déanaí.",
+      "plan": "Céim",
+      "provision": "Coimisiún ar do chustaiméirí féin",
+      "teamProvision": "Coimisiún foirne ar chustaiméirí do chomhpháirtithe foirne",
+      "dauer": "Tréimhse in aghaidh an chustaiméara",
+      "dauerWert": "12 mhí",
+      "kunden": "{ó}-{go} custaiméirí íocacha",
+      "kundenOffen": "ó {ó} custaiméirí íocacha",
+      "vorteile": "Seirbhísí",
+      "ja": "san áireamh",
+      "nein": "gan áireamh",
+      "leistung": {
+        "konto": "Cuntas comhpháirtí saor in aisce",
+        "dashboard": "Painéal comhpháirtí le custaiméirí, coimisiúin agus anailís",
+        "material": "Ábhar fógraíochta agus teimpléid aitheantais",
+        "team": "Foireann a thógáil le do nasc foirne féin",
+        "gutschrift": "Íocaíocht mhíosúil le creidmheas (féinbhilleáil)",
+        "chat": "Teagmháil dhíreach leis an bhfoireann comhpháirtí",
+        "support": "Duine teagmhála pearsanta",
+        "coMarketing": "Comh-mhargaíocht (feachtais chomhpháirteacha)"
+      },
+      "fussnoteTeam": "Is éard is coimisiún foirne ann an difríocht idir do ráta agus ráta an chomhpháirtí foirne ar ghlanioncam síntiúis a chustaiméirí, an dá cheann tráth na híocaíochta — leibhéal amháin go díreach, gan táille rannpháirtíochta, gan airgead le haghaidh earcaíochta. Ní mó ná 30 % riamh le chéile.",
+      "fussnoteCoMarketing": "Tar éis comhaontú leis an bhfoireann comhpháirtí; braitheann sé ar phróifíl an chomhpháirtí agus ar na feachtais reatha.",
+      "fussnoteRang": "Cruthaítear an chéim ó do struchtúr: do chustaiméirí féin a íocann móide custaiméirí do chomhpháirtithe foirne, comhairtear gach ceann uair amháin. Nuair a shroichtear céim nua ón ardaitheoir, tá bónas ardú céime uair amháin.",
+      "teamDifferenz": "{satz} % lúide ráta an chomhpháirtí foirne",
+      "teamNicht": "gan foireann fós",
+      "bonus": "Bónas ardú céime (uair amháin)",
+      "superProvision": "Sárchoimisiún ar an struchtúr iomlán",
+      "marktTurbo": "Scair áirithinte myBestDays",
+      "marktTurboWert": "0.5 % in aghaidh na háirithinte, gan teorainn",
+      "fussnoteSuper": "Ó Chomhpháirtí Elite, 2.5 % ar ghlanioncam síntiúis gach custaiméara i do struchtúr — sa bhreis ar an gcoimisiún, gan an teorainn 12 mhí, fad is a choinníonn tú an chéim agus a íocann an custaiméir."
+    },
+    "team": {
+      "eyebrow": "Foireann a thógáil",
+      "heading": "Suas le {max} % coimisiún difríochta ar láimhdeachas do fhoirne",
+      "sub": "An bhfuil comhairleoirí, cruthaitheoirí nó gníomhaireachtaí eile ar eolas agat a bhfuil baint acu le hóstach? Ón gcéim Ardaitheoir, déanann siad iarratas trí do nasc foirne, baineann siad le do fhoireann — agus comhairtear a gcuid custaiméirí 1:1 do do chéim. Tuilleann tú an difríocht idir do ráta agus ráta do chomhpháirtí foirne; coinníonn do chomhpháirtithe foirne a n-eagar iomlán féin.",
+      "rang": {
+        "titel": "An difríocht",
+        "text": "Faigheann tú do ráta lúide ráta an chomhpháirtí foirne — an dá cheann tráth na híocaíochta. Má tá do chomhpháirtí foirne sa chéim chéanna, ní thagann aon choimisiún foirne chun cinn."
+      },
+      "ebene": {
+        "titel": "Leibhéal amháin go díreach",
+        "text": "Ní thógann do chomhpháirtithe foirne a bhfoireann féin fút. Gan líonra, gan pirimid."
+      },
+      "keinGeld": {
+        "titel": "Ó fhíorioncam amháin",
+        "text": "Gan táille rannpháirtíochta, gan airgead as earcaíocht. Cruthaítear coimisiún foirne go heisiach ó ioncam síntiúis íoctha."
+      },
+      "dauer": {
+        "titel": "Na rialacha céanna",
+        "text": "12 mhí in aghaidh an chustaiméara foirne, fuinneog aisíocaíochta 30 lá, aisghabháil i gcás aisíocaíochta nó aisíocaíochta — mar atá le do choimisiún féin. Ó Elite, cuirtear an sárchoimisiún ar an struchtúr iomlán leis, gan teorainn ama."
+      }
+    },
+    "kundeCta": {
+      "heading": "An bhfuil tú i do chustaiméir myNextDays cheana féin?",
+      "text": "Ansin is fearr aithne agat ar an táirge. Mol é — tiocfaidh do choimisiún mar chreidmheas ar do chuntas, beag beann ar do shíntiús.",
+      "cta": "Mol & tuill"
+    }
+  },
+  "partnerBewerbung": {
+    "meta": {
+      "titel": "Déan iarratas mar chomhpháirtí — myNextDays",
+      "beschreibung": "Iarratas ar chlár comhpháirtíochta myNextDays: Cuntais meán sóisialta, teacht, téarmaí. Déanaimid gach iarratas a athbhreithniú go pearsanta."
+    },
+    "eyebrow": "Clár Comhpháirtíochta",
+    "titel": "Déan iarratas mar chomhpháirtí",
+    "text": "Inis dúinn do chuntais meán sóisialta le teacht — déanaimid gach iarratas a athbhreithniú go pearsanta agus de ghnáth déanaimid teagmháil laistigh de chúpla lá gnó. Nuair a cheadaítear é, gheobhaidh tú rochtain ar an deais comhpháirtíochta le naisc, cóid agus anailísí.",
+    "email": "Ríomhphost",
+    "passwort": "Pasfhocal do dheais comhpháirtíochta",
+    "passwortHinweis": "8 gcarachtar ar a laghad.",
+    "name": "Ainm",
+    "firma": "Cuideachta (roghnach)",
+    "rechtsform": "Foirm Dlí",
+    "privat": "Duine Aonair",
+    "unternehmen": "Cuideachta",
+    "land": "Tír",
+    "ustId": "Uimhir CBL",
+    "ustIdHinweis": "Déanfar é a sheiceáil i gcoinne chóras VIES an AE. Gan uimhir dheimhnithe, ní dhéanfar aon íocaíocht le cuideachtaí.",
+    "kanaele": {
+      "titel": "Do Chuntais Meán Sóisialta",
+      "hinweis": "Éigeantach: cuntas meán sóisialta amháin ar a laghad (Instagram, TikTok, YouTube, Facebook, LinkedIn …) le seoladh, láimhseáil agus teacht (leanúnaí). Suíomh Gréasáin, Blag nó Nuachtlitir breise más mian leat. Déanaimid na cuntais a sheiceáil sula gceadaítear iad.",
+      "plattform": "Ardán",
+      "handle": "Láimhseáil (roghnach)",
+      "reichweite": "Teacht (Leanúnaí)",
+      "hinzufuegen": "Cuir Cainéal Leis",
+      "entfernen": "Bain Cainéal",
+      "socialPflicht": "Tá cuntas meán sóisialta amháin ar a laghad le teacht éigeantach — ní leor suíomh Gréasáin amháin.",
+      "plattformen": {
+        "website": "Suíomh Gréasáin",
+        "blog": "Blag",
+        "newsletter": "Nuachtlitir",
+        "podcast": "Podchraoladh",
+        "other": "Eile"
+      }
+    },
+    "plattform": {
+      "website": "Suíomh Gréasáin",
+      "blog": "Blag",
+      "newsletter": "Nuachtlitir",
+      "podcast": "Podchraoladh",
+      "other": "Eile"
+    },
+    "sponsor": "Arna chur chun cinn ag Comhpháirtí (Cód, roghnach)",
+    "sponsorHinweis": "An bhfuil tú ag teacht trí nasc foirne comhpháirtí? Beidh a gcód anseo ansin. Gheobhaidh siad coimisiún foirne ar ioncam síntiúis do chustaiméirí — fanfaidh do choimisiún féin gan athrú.",
+    "pitch": "Cén fáth a bhfuil tú oiriúnach do myNextDays? (roghnach)",
+    "pitchPlatzhalter": "Cé a shroicheann tú, cad a phléann tú, conas is mian leat a mholadh?",
+    "zustimmung": "Glacaim leis na",
+    "bedingungen": "Téarmaí Comhpháirtíochta",
+    "version": "Leagan {version}",
+    "absenden": "Cuir iarratas isteach",
+    "sendet": "Á sheoladh …",
+    "pruefungHinweis": "Tá an fhoirm seo cosanta ag reCAPTCHA. Tar éis duit é a chur isteach, déanfaidh ár bhfoireann comhpháirtíochta d’iarratas a athbhreithniú. Gheobhaidh tú ríomhphost faoin gcinneadh.",
+    "fehler": {
+      "social": "Cuir cuntas meán sóisialta amháin ar a laghad leis an seoladh agus an teacht.",
+      "doppelt": "Tá iarratas ann cheana don ríomhphost seo. Logáil isteach chuig an deais comhpháirtíochta.",
+      "eingabe": "Seiceáil do chuid ionchur.",
+      "captcha": "Theip ar an seiceáil frith-turscair. Athlódáil an leathanach agus bain triail eile as.",
+      "allgemein": "Níorbh fhéidir an t-iarratas a sheoladh faoi láthair. Bain triail eile as níos déanaí."
+    },
+    "fertig": {
+      "titel": "Iarratas faighte",
+      "text": "Go raibh maith agat! Déanfaimid athbhreithniú pearsanta ar do chuntais agus ar do theacht, agus rachaimid i dteagmháil leat trí ríomhphost. Is féidir rochtain a fháil ar do dheais comhpháirtíochta le do ríomhphost agus do phasfhocal — beidh na naisc agus na cóid gníomhach nuair a cheadófar iad.",
+      "login": "Chun logáil isteach mar chomhpháirtí"
+    }
   }
 }

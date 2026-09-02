@@ -1569,6 +1569,68 @@ def test_fee_short_stay_only_wird_uebernommen() -> None:
     assert "shortStayOnly" not in aus[0]
 
 
+def test_fee_gueltigkeit_und_abrechnungsschalter_werden_uebernommen() -> None:
+    """„Gilt ab"/„gilt bis" (Anreise) und „nur in der Eigentümer-Abrechnung":
+    Anlass ist die Resort-Gebühr des Beta-Betriebs, die es erst seit dem
+    01.08.2026 gibt — ohne Zeitraum trug die Abrechnung sie in 98 Buchungen
+    davor nach."""
+    ok = normalize_fees(
+        [{"id": "f1", "name": "Resort", "amount": 25, "basis": "per_night",
+          "feeType": "resort", "validFrom": "2026-08-01",
+          "validUntil": "2026-12-31", "ownerStatementOnly": True}],
+        portale=_PORTALE,
+    )
+    assert ok[0]["validFrom"] == "2026-08-01"
+    assert ok[0]["validUntil"] == "2026-12-31"
+    assert ok[0]["ownerStatementOnly"] is True
+    # Ohne Angabe: keine Felder (kein erfundener Zeitraum, kein Schalter).
+    aus = normalize_fees(
+        [{"id": "f1", "name": "Resort", "amount": 25, "basis": "per_night",
+          "feeType": "resort", "validFrom": "", "ownerStatementOnly": False}],
+        portale=_PORTALE,
+    )
+    assert "validFrom" not in aus[0]
+    assert "validUntil" not in aus[0]
+    assert "ownerStatementOnly" not in aus[0]
+
+
+def test_fee_gueltigkeit_unsinn_ist_422() -> None:
+    """Unlesbares Datum oder „bis" vor „ab": Fehler, nicht stilles Verwerfen —
+    sonst gälte die Gebühr unbegrenzt, obwohl eine Grenze eingetragen wurde."""
+    with pytest.raises(PropertyError) as exc:
+        normalize_fees(
+            [{"id": "f1", "name": "Resort", "amount": 25, "basis": "per_night",
+              "feeType": "resort", "validFrom": "01.08.2026"}],
+            portale=_PORTALE,
+        )
+    assert exc.value.status_code == 422
+    with pytest.raises(PropertyError) as exc:
+        normalize_fees(
+            [{"id": "f1", "name": "Resort", "amount": 25, "basis": "per_night",
+              "feeType": "resort", "validFrom": "2026-08-01",
+              "validUntil": "2026-07-31"}],
+            portale=_PORTALE,
+        )
+    assert exc.value.status_code == 422
+
+
+def test_gebuehr_gilt_am_anreise() -> None:
+    """Beide Grenzen inklusiv; ohne Datum ist eine begrenzte Gebühr nicht
+    beurteilbar und gilt NICHT; ohne Grenze gilt sie immer."""
+    from datetime import date
+
+    from src.features.properties.gebuehren import gebuehr_gilt_am
+
+    fee = {"validFrom": "2026-08-01", "validUntil": "2026-08-31"}
+    assert gebuehr_gilt_am(fee, date(2026, 8, 1)) is True
+    assert gebuehr_gilt_am(fee, date(2026, 8, 31)) is True
+    assert gebuehr_gilt_am(fee, date(2026, 7, 31)) is False
+    assert gebuehr_gilt_am(fee, date(2026, 9, 1)) is False
+    assert gebuehr_gilt_am(fee, None) is False
+    assert gebuehr_gilt_am({}, None) is True
+    assert gebuehr_gilt_am({"validFrom": "2026-08-01"}, date(2027, 1, 1)) is True
+
+
 def test_fee_signatur_buendelt_dieselbe_gebuehr() -> None:
     """Dieselbe Gebühr liegt auf jedem Objekt als eigener Eintrag mit eigener
     Kennung. Die Auswahlliste soll sie EINMAL zeigen — also bündelt sie über die

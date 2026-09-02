@@ -172,10 +172,11 @@ class PropertyBase(BaseModel):
     # (booking-property-types.ts). None = nicht gesetzt (kein erfundener Default).
     booking_property_type: int | None = None
     status: PropertyStatus = PropertyStatus.draft
-    # Sichtbarkeit auf dem eigenen myBestDays-Marktplatz (/plattform) als eigener
-    # Buchungskanal — getrennt von status (Lebenszyklus) und OTA-Distribution
-    # (channex_property_map.sync_enabled). Marktplatz-Listung = status='active'
-    # UND listed_on_marketplace (Migration 0159). Default an (Publish listet).
+    # myBestDays-Pflichtlistung (0527, Master-Strategie 02.09.2026): JEDES Objekt
+    # steht auf dem Marktplatz, der Betrieb kann den Kanal nicht abwählen.
+    # Sichtbar ist es dort, wenn status='active' UND die Freigabe des Betreibers
+    # (moderation_status, 0203) vorliegt. Das Feld wird beim Anlegen angenommen,
+    # aber serverseitig IMMER auf true gesetzt (alte Clients schicken es noch).
     listed_on_marketplace: bool = True
     # Sichtbarkeit auf der eigenen Kunden-Website (Page-Builder) als eigener
     # Vertriebskanal (Migration 0162) — pro-Kanal-Achse, getrennt von status,
@@ -266,9 +267,21 @@ class PropertyUpdate(BaseModel):
     # Booking.com-Unterkunftsart (PCT-Code) — eigene Achse neben property_type.
     booking_property_type: int | None = None
     status: PropertyStatus | None = None
-    # Marktplatz-Kanal an/aus (0159) — pro-Kanal-Sichtbarkeit, unabhängig von
-    # status und OTA. Toggle für „auf dem eigenen Marktplatz zeigen/verstecken".
+    # myBestDays-Pflichtlistung (0527): der Kanal ist NICHT abwählbar. `false`
+    # wird mit 422 abgelehnt (Validator unten), `true` ist wirkungslos, weil der
+    # Wert ohnehin immer true ist. Ein alter Client, der den Schalter noch
+    # sendet, bekommt so eine klare Antwort statt eines stillen Ignorierens.
     listed_on_marketplace: bool | None = None
+
+    @field_validator("listed_on_marketplace")
+    @classmethod
+    def _marktplatz_pflicht(cls, v: bool | None) -> bool | None:
+        if v is False:
+            raise ValueError(
+                "myBestDays ist Pflichtkanal: jedes Objekt ist dort gelistet und kann "
+                "nicht abgewählt werden. Verkauf pausieren nimmt es überall aus dem Verkauf."
+            )
+        return v
     # Website-Kanal an/aus (0162) — pro-Kanal-Sichtbarkeit, unabhängig von
     # status, Marktplatz und OTA. Toggle für „auf der eigenen Website zeigen".
     listed_on_website: bool | None = None

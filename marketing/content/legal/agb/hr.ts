@@ -33,11 +33,12 @@ export const agb: LegalDoc = {
       heading: "§ 2 Predmet ugovora i usluge",
       paragraphs: [
         "myNextDays stavlja Korisniku na raspolaganje softver u oblaku za upravljanje smještajem za odmor i objektima za pružanje usluga smještaja. Opseg funkcija proizlazi iz važećeg opisa usluga i obuhvaća osobito:",
+      "Svaki objekt koji korisnik kreira na platformi istovremeno će biti uvršten na vlastito tržište platforme myBestDays (obvezni kanal). Korisnik ne može pojedinačno odabrati da ne koristi ovaj kanal; međutim, može u bilo kojem trenutku povući objekt iz prodaje na svim kanalima istovremeno putem funkcije „Pauziraj prodaju“ ili ga izbrisati. Objekt postaje vidljiv na myBestDays tek kada ga korisnik objavi i kada myNextDays odobri oglas; myNextDays može odbiti ili povući odobrenje iz objektivnog razloga. Za rezervacije putem myBestDays primjenjuje se naknada prema § 7.",
       ],
       list: [
         "upravljanje objektima, kalendarima zauzetosti i rezervacijama (sustav za upravljanje nekretninama),",
         "povezivanje s kanalima rezervacija trećih strana (npr. Booking.com, Airbnb) putem channel managera,",
-        "objavu ponuda putem vlastitog kanala rezervacija Platforme myNextDays,",
+        "Objava ponuda putem vlastitog tržišta platforme myBestDays (obvezni kanal, vidi stavak 2),",
         "izradu vlastitih web-stranica putem integriranog alata za izradu stranica (page builder),",
         "funkcije računovodstva, obračuna i izvještavanja, uključujući obračune za vlasnike,",
         "komunikaciju s gostima te primanje uplata putem integrirane obrade plaćanja (§ 5).",

@@ -851,7 +851,8 @@
     },
     "unternehmen": {
       "ueberUns": "À propos",
-      "kontakt": "Contact"
+      "kontakt": "Contact",
+      "partner": "Programme de partenariat"
     },
     "copyright": "© 2026 myNextDays. Tous droits réservés.",
     "agb": "CGV",
@@ -860,7 +861,8 @@
     "cookies": "Politique de cookies",
     "avv": "Traitement des données",
     "kontoLoeschen": "Supprimer le compte",
-    "newsletterKnopf": "S'inscrire à la newsletter"
+    "newsletterKnopf": "S'inscrire à la newsletter",
+    "partnerAgb": "CGV Partenaires"
   },
   "legal": {
     "stand": "Dernière mise à jour : {datum}"
@@ -990,7 +992,7 @@
       "sub": "Ce que les loueurs veulent savoir avant de changer — court et sans petites lignes.",
       "laufzeit": {
         "frage": "Y a-t-il une durée minimale ?",
-        "antwort": "Non. L'abonnement est mensuel et peut être résilié avec un préavis de quatre semaines à la fin du mois. Les 14 premiers jours sont gratuits : vous enregistrez vos données de paiement au début, mais le prélèvement n'est effectué qu'après la période d'essai. Si vous annulez avant, vous ne payez rien."
+        "antwort": "Non. L'abonnement est mensuel et peut être résilié avec un préavis de quatre semaines à la fin du mois. Les 14 premiers jours sont gratuits : vous enregistrez vos données de paiement au début, mais le prélèvement n'aura lieu qu'après la période d'essai. Si vous venez via le lien ou le code d'un partenaire, le premier mois complet est également offert. Si vous annulez avant, vous ne payez rien."
       },
       "objektzahl": {
         "frage": "Que se passe-t-il si j'ajoute des logements ?",
@@ -2185,5 +2187,259 @@
     "verwalten": "Gérer les préférences de cookies",
     "schliessen": "Fermer",
     "bestaetigen": "Confirmer les préférences"
+  },
+  "partnerHinweis": {
+    "text": "Vous venez par recommandation (code {code}). Le code sera appliqué lors de l'inscription et vous offrira le premier mois complet après les 14 jours d'essai.",
+    "cta": "Commencer gratuitement maintenant",
+    "schliessen": "Fermer la note"
+  },
+  "partner": {
+    "meta": {
+      "titel": "Programme de partenariat — myNextDays",
+      "beschreibung": "Recommandez myNextDays aux loueurs de vacances et aux hôtels et recevez jusqu'à {max} % du chiffre d'affaires de l'abonnement de chaque établissement parrainé pendant douze mois."
+    },
+    "hero": {
+      "eyebrow": "Programme de partenariat",
+      "headlinePre": "Recommandez myNextDays —",
+      "headlineHighlight": "et gagnez de l'argent",
+      "sub": "Pour les influenceurs, consultants, agences et propriétaires avec un réseau : Chaque entreprise qui s'inscrit via votre lien et paie un abonnement vous rapporte jusqu'à {max} % du chiffre d'affaires de l'abonnement pendant douze mois — plus 0,5 % de chaque réservation via myBestDays, des bonus de promotion et, à partir d'Élite, une super commission sans limite de durée.",
+      "cta": "Postuler maintenant",
+      "ctaLogin": "Connexion partenaire",
+      "chipDauer": "12 mois de commission par client",
+      "chipAuszahlung": "Paiement mensuel",
+      "chipKosten": "Participation gratuite",
+      "chipGratismonat": "Vos clients : 14 jours d'essai + 1 mois gratuit"
+    },
+    "schritte": {
+      "eyebrow": "Comment ça marche",
+      "heading": "Trois étapes avant la première commission",
+      "bewerben": {
+        "titel": "Postuler",
+        "text": "Vous nous indiquez votre canal — site web, profil social ou réseau. Nous examinons chaque candidature personnellement et l'approuvons généralement dans les quelques jours ouvrables."
+      },
+      "teilen": {
+        "titel": "Partager le lien ou le code",
+        "text": "Vous recevez un lien personnel et un code de parrainage. Le code est visible dans le formulaire lors de l'inscription — sans cookie de suivi."
+      },
+      "verdienen": {
+        "titel": "Gagner",
+        "text": "Si un établissement parrainé paie sa première facture d'abonnement, votre commission court pendant douze mois. Vous voyez chaque client de manière anonyme dans le tableau de bord partenaire et êtes payé mensuellement."
+      }
+    },
+    "staffel": {
+      "eyebrow": "Votre niveau",
+      "heading": "Plus votre structure est grande, plus votre taux est élevé",
+      "sub": "Le taux s'applique à toutes les nouvelles commissions à partir de l'atteinte du rang. Votre structure comprend vos propres clients payants et les clients de vos partenaires d'équipe.",
+      "kunden": "{von}–{bis} clients payants",
+      "kundenOffen": "à partir de {von} clients payants",
+      "satz": "du chiffre d'affaires de l'abonnement",
+      "nichtAbrufbar": "Le niveau n'est pas disponible actuellement. Veuillez réessayer plus tard."
+    },
+    "bedingungen": {
+      "eyebrow": "Les règles",
+      "heading": "Équitable pour vous, équitable pour les établissements",
+      "basis": {
+        "titel": "Ce qui compte",
+        "text": "La base de la commission est le chiffre d'affaires net de l'abonnement (tarif de base et modules) de l'établissement parrainé — hors taxes, commissions de portail et services supplémentaires."
+      },
+      "dauer": {
+        "titel": "Douze mois",
+        "text": "La commission est valable douze mois à compter de la première facture d'abonnement payée de l'entreprise ; le mois gratuit de vos clients n'est pas pris en compte. Si l'entreprise résilie, elle prend fin avec son dernier paiement. La part de réservation et la super commission sont valables sans cette limite."
+      },
+      "auszahlung": {
+        "titel": "Paiement",
+        "text": "Mensuel, 30 jours après le paiement de l'établissement, à partir d'un montant minimum par devise. Vous recevez un avoir ; les entreprises ont besoin d'un numéro de TVA intracommunautaire valide."
+      },
+      "kennzeichnung": {
+        "titel": "Identification",
+        "text": "Toute recommandation est une publicité et doit être identifiée comme telle. Nous fournissons les formulations prescrites par langue dans le tableau de bord."
+      },
+      "verboten": {
+        "titel": "Non autorisé",
+        "text": "Auto-promotion, publicité sur nos marques dans les annonces de recherche, promesses de réduction en notre nom et messages non sollicités. Les remboursements seront déduits de la commission."
+      },
+      "daten": {
+        "titel": "Confidentialité",
+        "text": "Vous ne voyez vos clients que de manière pseudonyme – avec le pays, le statut et les montants, jamais avec le nom ou l'e-mail. Une entreprise peut vous autoriser à la contacter lors de l'inscription."
+      }
+    },
+    "faq": {
+      "eyebrow": "Questions fréquentes",
+      "heading": "Ce que les partenaires nous demandent",
+      "wer": {
+        "frage": "Qui peut devenir partenaire ?",
+        "antwort": "Toute personne ou entreprise dans l'UE disposant d'un véritable canal vers les propriétaires ou les hôtels : influenceurs, consultants, agences, cabinets fiscaux, associations – et les clients de myNextDays eux-mêmes. Une candidature est gratuite ; un abonnement n'est pas une condition préalable."
+      },
+      "wann": {
+        "frage": "Quand une entreprise est-elle considérée comme mon client ?",
+        "antwort": "Lorsqu'elle s'est inscrite avec votre code et a payé sa première facture d'abonnement. Les inscriptions sans paiement ne comptent pas pour le classement."
+      },
+      "doppelt": {
+        "frage": "Que se passe-t-il si une entreprise nomme deux partenaires ?",
+        "antwort": "Une entreprise est attribuée à un seul partenaire – celui dont le code figurait dans le formulaire lors de l'inscription. Les codes ultérieurs ne changent rien."
+      },
+      "steuern": {
+        "frage": "Comment fonctionne la facturation ?",
+        "antwort": "Nous émettons une note de crédit (auto-facturation). Les entreprises avec un numéro de TVA intracommunautaire la reçoivent avec la mention d'autoliquidation, les particuliers sans TVA – vous déclarez vous-même la commission."
+      },
+      "material": {
+        "frage": "Y a-t-il du matériel promotionnel ?",
+        "antwort": "Oui : de courtes vidéos pour les médias sociaux, une vidéo explicative, des bannières et des blocs de texte – dans le tableau de bord des partenaires, dans votre langue."
+      },
+      "wieviel": {
+        "frage": "Combien de commissions puis-je gagner ?",
+        "antwort": "Cela dépend du chiffre d'affaires d'abonnement de vos clients et de votre rang. Le tableau ci-dessus indique le taux par rang ; pendant douze mois par client. À cela s'ajoutent 0,5 % de chaque réservation que vos clients reçoivent via myBestDays, un bonus de promotion unique pour chaque rang atteint, la commission différentielle avec une équipe — et à partir du statut de Partenaire Élite, 2,5 % de super commission sur l'ensemble de la structure sans limite de durée."
+      },
+      "team": {
+        "frage": "Comment fonctionne la commission d'équipe ?",
+        "antwort": "À partir du rang Ascendant : Si un partenaire postule via votre lien d'équipe et indique clairement votre code dans sa candidature, il fera partie de votre équipe après approbation. Ses clients comptent 1:1 pour votre rang. Sur le chiffre d'affaires net des abonnements de ses clients, vous recevez la différence entre votre taux et le sien — exactement un niveau de profondeur, sans frais de participation, sans argent pour le recrutement."
+      },
+      "auszahlung": {
+        "frage": "Comment et quand les commissions sont-elles versées ?",
+        "antwort": "Mensuellement par devise, dès que le total atteint le montant minimum de votre devise. Chaque ligne de commission est « ouverte » pendant 30 jours (fenêtre de remboursement) et payable ensuite. Vous recevez un avoir (auto-facturation) — vous n'émettez pas de facture. Paiement par SEPA, Wise ou PayPal."
+      },
+      "verfolgen": {
+        "frage": "Comment puis-je suivre mes commissions et mes performances ?",
+        "antwort": "Dans le tableau de bord partenaire, vous verrez sous « Commissions » chaque facture d'abonnement payée avec la base, le taux, le montant et le statut, sous « Clients » vos entreprises de manière pseudonyme, sous « Équipe » l'évaluation de vos partenaires d'équipe et sous « Liens & Matériel » les clics par code."
+      },
+      "werbung": {
+        "frage": "Puis-je diffuser des publicités payantes ?",
+        "antwort": "Pas sur notre marque : les annonces sur « myNextDays » et ses variantes (Brand Bidding), le dépôt de cookies, l'achat de portée ou les incitations à l'inscription sont interdits et entraînent un blocage. Vos propres contenus, contributions et recommandations sont expressément souhaités — avec une identification comme publicité."
+      }
+    },
+    "abschluss": {
+      "heading": "Prêt à recommander myNextDays ?",
+      "sub": "Postulez en deux minutes. Nous vous contacterons après examen.",
+      "cta": "Postuler maintenant",
+      "kontakt": "Des questions ? Écrivez-nous."
+    },
+    "vergleich": {
+      "eyebrow": "Votre niveau",
+      "heading": "Plus le nombre de clients payants est élevé, plus votre taux est élevé",
+      "sub": "Le taux s'applique à toutes les nouvelles commissions à partir de l'atteinte du rang. Votre structure est comptabilisée : vos propres clients payants plus les clients de vos partenaires d'équipe.",
+      "nichtAbrufbar": "Le niveau n'est pas disponible actuellement. Veuillez réessayer plus tard.",
+      "plan": "Rang",
+      "provision": "Commission sur vos propres clients",
+      "teamProvision": "Commission d'équipe sur les clients de vos partenaires d'équipe",
+      "dauer": "Durée par client",
+      "dauerWert": "12 mois",
+      "kunden": "{de}–{à} clients payants",
+      "kundenOffen": "à partir de {de} clients payants",
+      "vorteile": "Services",
+      "ja": "inclus",
+      "nein": "non inclus",
+      "leistung": {
+        "konto": "Compte partenaire gratuit",
+        "dashboard": "Tableau de bord partenaire avec clients, commissions et analyses",
+        "material": "Matériel promotionnel et modèles d'identification",
+        "team": "Constituer une équipe avec votre propre lien d'équipe",
+        "gutschrift": "Paiement mensuel avec avoir (auto-facturation)",
+        "chat": "Contact direct avec l'équipe partenaire",
+        "support": "Interlocuteur personnel",
+        "coMarketing": "Co-marketing (actions conjointes)"
+      },
+      "fussnoteTeam": "La commission d'équipe est la différence entre votre taux et le taux du partenaire d'équipe sur le chiffre d'affaires net des abonnements de ses clients, les deux au moment du paiement — exactement un niveau, pas de frais de participation, pas d'argent pour le recrutement. Jamais plus de 30 % au total.",
+      "fussnoteCoMarketing": "Après accord avec l'équipe partenaire ; dépend du profil du partenaire et des actions en cours.",
+      "fussnoteRang": "Le rang est déterminé par votre structure : vos propres clients payants plus les clients de vos partenaires d'équipe, chacun comptant une fois. Lors de l'atteinte d'un nouveau rang à partir de l'Ascendant, un bonus de promotion unique est accordé.",
+      "teamDifferenz": "{satz} % moins le taux du partenaire d'équipe",
+      "teamNicht": "pas encore d'équipe",
+      "bonus": "Bonus de promotion (unique)",
+      "superProvision": "Super commission sur toute la structure",
+      "marktTurbo": "Part de réservation myBestDays",
+      "marktTurboWert": "0,5 % par réservation, illimité",
+      "fussnoteSuper": "À partir du partenaire Élite, 2,5 % sur le chiffre d'affaires net des abonnements de tous les clients de votre structure — en plus de la commission, sans la limite de 12 mois, tant que vous maintenez le rang et que le client paie."
+    },
+    "team": {
+      "eyebrow": "Constituer une équipe",
+      "heading": "Jusqu'à {max} % de commission différentielle sur le chiffre d'affaires de votre équipe",
+      "sub": "Connaissez-vous d'autres consultants, créateurs ou agences ayant des contacts avec des hôtes ? À partir du rang Ascendant, ils postulent via votre lien d'équipe, font partie de votre équipe — et leurs clients comptent 1:1 pour votre rang. Vous gagnez la différence entre votre taux et celui de votre partenaire d'équipe ; vos partenaires d'équipe conservent leur propre barème complet.",
+      "rang": {
+        "titel": "La différence",
+        "text": "Vous recevez votre taux moins le taux du partenaire d'équipe — les deux au moment du paiement. Si votre partenaire d'équipe a le même rang, aucune commission d'équipe n'est générée."
+      },
+      "ebene": {
+        "titel": "Un seul niveau",
+        "text": "Vos partenaires d'équipe ne construisent pas leur propre équipe sous vous. Pas de réseau, pas de pyramide."
+      },
+      "keinGeld": {
+        "titel": "Uniquement sur le chiffre d'affaires réel",
+        "text": "Pas de frais de participation, pas d'argent pour le recrutement. La commission d'équipe provient exclusivement du chiffre d'affaires des abonnements payés."
+      },
+      "dauer": {
+        "titel": "Les mêmes règles",
+        "text": "12 mois par client d'équipe, fenêtre de remboursement de 30 jours, reprise en cas de remboursement ou de rétrofacturation — comme pour votre propre commission. À partir d'Élite, la super commission sur toute la structure s'ajoute, sans limite de durée."
+      }
+    },
+    "kundeCta": {
+      "heading": "Vous êtes déjà client myNextDays ?",
+      "text": "Alors vous connaissez le produit le mieux. Recommandez-le — votre commission sera créditée sur votre compte, indépendamment de votre abonnement.",
+      "cta": "Recommander & gagner"
+    }
+  },
+  "partnerBewerbung": {
+    "meta": {
+      "titel": "Devenir partenaire — myNextDays",
+      "beschreibung": "Candidature au programme de partenariat myNextDays : comptes de médias sociaux, portée, conditions. Nous examinons chaque candidature personnellement."
+    },
+    "eyebrow": "Programme de partenariat",
+    "titel": "Devenir partenaire",
+    "text": "Indiquez-nous vos comptes de médias sociaux et leur portée — nous examinons chaque candidature personnellement et vous répondons généralement dans quelques jours ouvrables. Après approbation, vous aurez accès au tableau de bord partenaire avec des liens, des codes et des analyses.",
+    "email": "E-mail",
+    "passwort": "Mot de passe de votre tableau de bord partenaire",
+    "passwortHinweis": "Au moins 8 caractères.",
+    "name": "Nom",
+    "firma": "Entreprise (facultatif)",
+    "rechtsform": "Forme juridique",
+    "privat": "Particulier",
+    "unternehmen": "Entreprise",
+    "land": "Pays",
+    "ustId": "Numéro de TVA",
+    "ustIdHinweis": "Vérifié par le système européen VIES. Aucun paiement aux entreprises sans numéro confirmé.",
+    "kanaele": {
+      "titel": "Vos comptes de médias sociaux",
+      "hinweis": "Obligatoire : au moins un compte de média social (Instagram, TikTok, YouTube, Facebook, LinkedIn…) avec adresse, identifiant et portée (abonnés). Site web, blog ou newsletter sont les bienvenus en complément. Nous vérifions les comptes avant approbation.",
+      "plattform": "Plateforme",
+      "handle": "Identifiant (facultatif)",
+      "reichweite": "Portée (abonnés)",
+      "hinzufuegen": "Ajouter un canal",
+      "entfernen": "Supprimer le canal",
+      "socialPflicht": "Au moins un compte de média social avec portée est obligatoire — un site web seul ne suffit pas.",
+      "plattformen": {
+        "website": "Site web",
+        "blog": "Blog",
+        "newsletter": "Newsletter",
+        "podcast": "Podcast",
+        "other": "Autre"
+      }
+    },
+    "plattform": {
+      "website": "Site web",
+      "blog": "Blog",
+      "newsletter": "Newsletter",
+      "podcast": "Podcast",
+      "other": "Autre"
+    },
+    "sponsor": "Parrainé par un partenaire (code, facultatif)",
+    "sponsorHinweis": "Venez-vous via le lien d'équipe d'un partenaire ? Son code sera ici. Il recevra une commission d'équipe sur le chiffre d'affaires d'abonnement de vos clients — votre propre commission reste inchangée.",
+    "pitch": "Pourquoi êtes-vous un bon candidat pour myNextDays ? (facultatif)",
+    "pitchPlatzhalter": "Qui atteignez-vous, de quoi parlez-vous, comment souhaitez-vous recommander ?",
+    "zustimmung": "J'accepte les",
+    "bedingungen": "Conditions de partenariat",
+    "version": "Version {version}",
+    "absenden": "Envoyer la candidature",
+    "sendet": "Envoi en cours…",
+    "pruefungHinweis": "Ce formulaire est protégé par reCAPTCHA. Après l'envoi, notre équipe de partenaires vérifiera vos comptes et votre portée ; vous recevrez un e-mail concernant la décision.",
+    "fehler": {
+      "social": "Veuillez indiquer au moins un compte de réseau social avec adresse et portée.",
+      "doppelt": "Il existe déjà une candidature pour cet e-mail. Connectez-vous au tableau de bord des partenaires.",
+      "eingabe": "Veuillez vérifier vos saisies.",
+      "captcha": "La vérification anti-spam a échoué. Veuillez recharger la page et réessayer.",
+      "allgemein": "La candidature n'a pas pu être envoyée pour le moment. Veuillez réessayer plus tard."
+    },
+    "fertig": {
+      "titel": "Candidature reçue",
+      "text": "Merci ! Nous vérifions personnellement vos comptes et votre portée et vous contacterons par e-mail. Votre tableau de bord partenaire est accessible avec votre e-mail et votre mot de passe — les liens et les codes seront actifs après approbation.",
+      "login": "Vers la connexion partenaire"
+    }
   }
 }

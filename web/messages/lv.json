@@ -1500,7 +1500,12 @@
       "portalRateInvalid": "Saglabātā portāla ieturējuma likme ir ārpus diapazona 0–100 %. Lūdzu, izlabojiet to sadaļā Grāmatvedība → Norēķinu noteikumi.",
       "feeUnassigned": "Vismaz viens maksas veids vēl nav piesaistīts. Bez piesaistes nav iespējams noteikt, kam pieder summa un vai par to tiek aprēķināta komisijas maksa — lūdzu, nosakiet to sadaļā Grāmatvedība → Norēķinu noteikumi.",
       "feeNotComputable": "Maksu nevar norēķināt kā summu (tā ir saglabāta procentos vai bez summas). Lūdzu, pārbaudiet maksu pie objekta.",
-      "contractCurrency": "Fiksētā maksa vai minimālā komisijas maksa ir noteikta citā valūtā, nevis rezervācijas valūtā. Summas dažādās valūtās netiek savstarpēji ieskaitītas — lūdzu, pārbaudiet norēķinu līgumu."
+      "contractCurrency": "Fiksētā maksa vai minimālā komisijas maksa ir noteikta citā valūtā, nevis rezervācijas valūtā. Summas dažādās valūtās netiek savstarpēji ieskaitītas — lūdzu, pārbaudiet norēķinu līgumu.",
+      "recurringToOwner": "Atkārtoti par labu",
+      "recurringFromOwner": "Atkārtoti uz rēķina",
+      "flatFees": "Fiksētās likmes no līguma",
+      "flatFeesIncluded": "jau ņemts vērā maksājumā",
+      "contractStartsLater": "Vismaz vienai rezervācijai izrakstīšanas dienā vēl nav norēķinu līguma — īpašnieka līgums sākas vēlāk. Tāpēc komisijas likme ir saglabāta, tikai datums „Spēkā no“ ir pēc izrakstīšanās. Lūdzu, norēķinu līgumā ievadiet faktisko līguma sākuma datumu."
     },
     "rental": {
       "perReservation": "Par katru rezervāciju",
@@ -1520,13 +1525,66 @@
         "channexImport": "Rezervācija tika iegūta vēlāk, pieslēdzot kanālu. Pēc rezervāciju starpnieka datiem šādās rezervācijās nav ne papildpakalpojumu, ne uzkopšanas maksu — to vēlāk nav iespējams papildināt. Ja maksa jāiekļauj norēķinā, ievadiet to kā pozīciju pie rezervācijas.",
         "portalReportsNone": "Šajā rezervācijā portāls maksu neuzrāda kā atsevišķu pozīciju. Booking.com gadījumā tas atkarīgs no naktsmītnes konfigurācijas (Naktsmītne → Noteikumi → Papildu maksas) un no tā, no kura datuma maksa tur ir spēkā: vēlāk ieviesta maksa vecākās rezervācijās pamatoti nav norādīta.",
         "noPayload": "Šai rezervācijai nav portāla ziņojuma (esošo datu imports). Bez tā nav iespējams noteikt, kādas maksas viesis ir samaksājis.",
-        "unknownReason": "Iemeslu nav iespējams noteikt."
+        "unknownReason": "Iemeslu nav iespējams noteikt.",
+        "csvImport": "Rezervācija ir no CSV krājumu importa. Importētā summa ir portāla viesa cena, ieskaitot visas maksas; atsevišķu maksu sadalījums nav pieejams un to nevarēja iegūt no portāla datiem. Tāpēc rēķinā netiek iekļautas maksas no īpašuma pamatdatiem — tās jau ir iekļautas summā, tikai to apjoms nav dokumentēts.",
+        "csvResolvedTitle": "Maksas, kas iegūtas no portāla summas",
+        "csvResolved": "Rezervācija ir no CSV krājumu importa; portāls nav sniedzis sadalījumu. Maksas tika iegūtas no starpības starp importēto kopējo cenu un portāla sniegtajām nakšu cenām un nosauktas, izmantojot īpašuma pamatdatus. Nakšņošana plus maksas precīzi atbilst kopējai cenai.",
+        "stammdatenPortalTitle": "Maksas pievienotas no objekta pamatdatiem",
+        "stammdatenPortal": "Portāls nav iesniedzis maksas sadalījumu šai rezervācijai: rezervācijas, ko portāla apkopotājs veicis pēc kanāla pievienošanas, tiek veiktas bez papildu maksām un tīrīšanas maksām; krājumu imports no faila satur tikai kopējo cenu. Tāpēc maksas tika noteiktas, kā tās ir norādītas objektā: tīrīšana par uzturēšanos, kūrorts par nakti, mājdzīvnieks tikai tad, ja mājdzīvnieks ir rezervēts.",
+        "portalBelegt": "Aizņemts: Starpība starp portāla kopējo cenu un portāla norādītajām nakšu cenām precīzi atbilst šīm maksām.",
+        "portalImBetrag": "Iekļauts portāla summā: Portāla kopējā cena jau ietver maksas; tās tika izņemtas, viesu cena paliek portāla summa.",
+        "portalObendrauf": "Papildus portāla summai: Pārraidītā summa ir tikai nakšu summa; maksas tiek pievienotas, un tās veido viesu cenu."
       },
       "chain": {
         "portal": "Portāls",
         "management": "Pārvaldība",
         "flatFee": "Fiksēta maksa",
         "fees": "Maksas"
+      },
+      "arrival": "Ierašanās",
+      "departure": "Izbraukšana",
+      "commission": "Komisija",
+      "flatFee": "Fiksēta maksa",
+      "ownerShare": "Īpašnieka daļa",
+      "portalDeduction": "Portāla atskaitījums",
+      "fees": "Maksas",
+      "feesCount": "{n} vienumi",
+      "expand": "Rādīt pārskatu",
+      "collapse": "Paslēpt pārskatu",
+      "expandAll": "Rādīt visus pārskatus",
+      "collapseAll": "Paslēpt visus pārskatus",
+      "breakdown": "Pārskats par rezervāciju",
+      "noFeeItems": "Šai rezervācijai nav jāmaksā nekādas maksas vai papildu pakalpojumi.",
+      "posten": {
+        "guestPrice": "Viesa cena saskaņā ar portālu (ieskaitot maksas, bez papildu pakalpojumiem)",
+        "portalCommission": "Portāla komisija {kanal}",
+        "portalFee": "Portāla maksājuma nodeva",
+        "portalPayout": "Portāla izmaksa",
+        "feesOut": "Nodevas viesa cenā — izņemtas no aprēķina",
+        "feesInBase": "Nodevas viesa cenā — apliekamas ar komisiju, paliek aprēķinā",
+        "base": "Aprēķina pamats",
+        "commission": "Administrēšanas komisija {pct}",
+        "minCommission": "Minimālā komisija (līgums) {pct} vietā",
+        "contractFrom": "Līgums no {datum}",
+        "rateManual": "manuāli šajā norēķinā",
+        "rateLegacy": "Standarta likme no pamatdatiem",
+        "flatFee": "Fiksēta likme (līgums)",
+        "feesBack": "Īpašnieka nodevas — atgrieztas pilnā apmērā",
+        "ownerShare": "Īpašnieka daļa",
+        "belongsBetrieb": "paliek uzņēmumam",
+        "belongsEigentuemer": "Īpašnieks",
+        "belongsDurchlauf": "Tranzīta pozīcijas (trešās puses)",
+        "commissionFree": "bez komisijas",
+        "commissionable": "ar komisiju",
+        "amountHidden": "Summa uzņēmumā",
+        "addon": "Papildu pakalpojums",
+        "noFeesReported": "Portāls nav ziņojis par nodevām šai rezervācijai; tāpēc tās nav piemērotas.",
+        "afterPortal": "Kopējā summa pēc portāla atskaitījuma",
+        "afterPortalHint": "Viesa cena mīnus portāla komisija un portāla maksājuma nodeva",
+        "feesBusiness": "Nodrošina uzņēmums — nav daļa no izmaksas",
+        "contractStartsLater": "Nav norēķinu līguma izrakstīšanās dienā {abreise}: līgums sākas tikai {beginn}. Pārbaudiet līguma sākuma datumu pie īpašnieka, tad šī rezervācija tiks iekļauta norēķinos.",
+        "noContract": "Šim īpašumam nav norēķinu līguma un komisijas likmes pamatdatos — lūdzu, izveidojiet līgumu ar īpašnieku.",
+        "addonsOutside": "Papildu pakalpojumi — pārdoti, izmantojot myNextDays, nav iekļauti portāla viesa cenā"
       }
     },
     "expenses": {
@@ -1566,7 +1624,11 @@
       "rentalRevenue": "Īres ieņēmumi",
       "expenses": "Izdevumi un papildpozīcijas",
       "total": "Kopā",
-      "deductPercentage": "Komisija (%)"
+      "deductPercentage": "Komisija (%)",
+      "shares": "Īpašnieka daļa no rezervācijām",
+      "deductions": "Atskaitījumi",
+      "credits": "Kredīti",
+      "recurring": "Periodiskie maksājumi"
     },
     "manage": {
       "owner": "Īpašnieks",
@@ -1631,6 +1693,25 @@
       "cancel": "Atcelt",
       "confirm": "Apstiprināt",
       "working": "Tiek apstiprināts..."
+    },
+    "deductions": {
+      "title": "Atskaitījumi un kredīti",
+      "intro": "Viss, kas maina izmaksu papildus rezervācijām — no trim avotiem: fiksēta maksa no līguma par katru rezervāciju, vienreizēji norēķinu posteņi un periodiski posteņi (pastāvīga vienošanās).",
+      "deductions": "Atskaitījumi (uz īpašnieka rēķina)",
+      "credits": "Kredīti (par labu īpašniekam)",
+      "empty": "Šajā periodā nav atskaitījumu vai kredītu.",
+      "srcExpense": "Norēķinu postenis",
+      "srcRecurring": "Periodisks postenis",
+      "srcFlatFee": "Fiksēta maksa no līguma",
+      "perBooking": "par rezervāciju",
+      "perNight": "par nakti",
+      "perPeriod": "par periodu",
+      "quantity": "{n} × {betrag}",
+      "flatFeesNote": "Fiksētās maksas no līguma jau ir atskaitītas no īpašnieka daļas par katru rezervāciju — šeit tikai pārskatam, bez papildu atskaitījumiem.",
+      "manageRecurring": "Pārvaldīt periodiskos posteņus",
+      "manageContract": "Pārvaldīt norēķinu līgumu",
+      "receipt": "Kvīts",
+      "bookingsCount": "{n} rezervācijas"
     }
   },
   "ownerBilling": {
@@ -1709,7 +1790,9 @@
     "effectReleased": "{property}: pārdošana turpinās — līguma beigas ir atceltas un naktis atkal ir pārdodamas.",
     "effectBlocked": "{property}: pārdošana beidzas {date} — bloķētas naktis: {nights}, tās noņemtas no portāliem.",
     "effectCalendarFailed": "{property}: Līguma beigas ir reģistrētas, kalendāra bloķēšana nav ierakstīta. Tā tiks pievienota šonakt.",
-    "effectNoUnit": "{property}: Līguma beigas ir reģistrētas, bet kalendārs nav bloķēts — objektam trūkst vienības. Izveidojiet to, tad bloķēšana stāsies spēkā."
+    "effectNoUnit": "{property}: Līguma beigas ir reģistrētas, bet kalendārs nav bloķēts — objektam trūkst vienības. Izveidojiet to, tad bloķēšana stāsies spēkā.",
+    "validFromHint": "Datums, no kura līgums ir spēkā — esoša līguma gadījumā tas ir faktiskais līguma datums, nevis šodienas datums. Katra rezervācija tiek norēķināta saskaņā ar līgumu, kas ir spēkā tās izbraukšanas dienā; rezervācijas ar agrāku izbraukšanu paliek bez izmaksas.",
+    "errorValidFromRequired": "Lūdzu, norādiet, no kura datuma līgums ir spēkā."
   },
   "portal": {
     "title": "Mans portāls",
@@ -5465,7 +5548,8 @@
       "connectPortal": "Savienot portālu",
       "noPortals": "Šim objektam vēl nav savienots neviens portāls (Booking, Airbnb u. c.).",
       "marketplaceReview": "Pārbaudē",
-      "marketplaceReviewHint": "myBestDays vēl pārbauda šo sludinājumu. Tas parādīsies tirdzniecības vietā pēc apstiprināšanas. Portālus un savu vietni tas neietekmē."
+      "marketplaceReviewHint": "myBestDays vēl pārbauda šo sludinājumu. Tiklīdz tas būs apstiprināts, tas parādīsies tirgū. myBestDays ir obligātais kanāls: objektu nevar atsevišķi noņemt — “Pārtraukt pārdošanu” to noņem no pārdošanas visur.",
+      "marketplaceMandatory": "Obligātais kanāls — katrs objekts ir iekļauts myBestDays"
     },
     "IdLayout": {
       "loadError": "Objektu neizdevās ielādēt: {error}"
@@ -5563,11 +5647,11 @@
       "stepOf": "Solis {schritt} no {gesamt}",
       "next": "Continue",
       "back": "Back",
-      "channelsHint": "Kur šis objekts ir jāpārdod? To var mainīt jebkurā laikā.",
+      "channelsHint": "Kur šis īpašums tiks pārdots papildus? Portālus un vietni var mainīt jebkurā laikā.",
       "channelPortals": "Rezervāciju portāli",
       "channelPortalsHint": "Airbnb, Booking.com un citi. Portāli pieprasa pilnīgus datus — skatiet zemāk.",
       "channelPlatform": "myBestDays",
-      "channelPlatformHint": "Mūsu pašu tirgus laukums ar zemu komisijas maksu.",
+      "channelPlatformHint": "Mūsu pašu tirgus ar 8% all-in. Katrs īpašums ir tur iekļauts; tas kļūst redzams pēc publicēšanas un mūsu apstiprinājuma.",
       "channelWebsite": "Sava tīmekļa vietne",
       "channelWebsiteHint": "Jūsu rezervāciju lapa un rezervāciju logrīks.",
       "readinessTitle": "Portāliem vēl trūkst:",
@@ -6261,7 +6345,21 @@
       "planPortalOffHint": "Šī cena ir spēkā tikai tiešajām rezervācijām. Noklikšķiniet, lai to nosūtītu uz rezervācijas portāliem.",
       "planPortalOn": "Cena tagad tiek nosūtīta uz rezervācijas portāliem.",
       "planPortalOnHint": "Šī cena tiek nosūtīta uz rezervācijas portāliem. Noklikšķiniet, lai to izmantotu tikai tiešajām rezervācijām.",
-      "planPortalYes": "Uz portāliem"
+      "planPortalYes": "Uz portāliem",
+      "feeValidityTitle": "Derīgums",
+      "feeValidityHint": "Maksa attiecas uz rezervācijām, kuru ierašanās datums ir šajā periodā. Tukšs = bez ierobežojuma. Portāliem netiek nosūtīta maksa ar laika periodu: tur nav iespējams attēlot datuma nosacījumu.",
+      "feeValidFromLabel": "Derīgs no",
+      "feeValidUntilLabel": "Derīgs līdz",
+      "feeValidityOrderError": "„Derīgs līdz“ ir pirms „Derīgs no“.",
+      "feeOwnerStatementOnlyLabel": "Tikai īpašnieka norēķinos",
+      "feeOwnerStatementOnlyHint": "Maksa netiek iekasēta no viesa un netiek nosūtīta uz portālu. Tā ietekmē tikai īpašnieka norēķinus, analīzi un īpašnieka portālu.",
+      "feeValidFromSuffix": "no {date}",
+      "feeValidUntilSuffix": "līdz {date}",
+      "feeOwnerStatementOnlySuffix": "tikai norēķini",
+      "feeCalculationLabel": "Aprēķins",
+      "feeVatHint": "Šai maksai ir savs nodoklis, kas atšķiras no nakšņošanas nodokļa. Izslēgts nozīmē: maksa atbilst nakšņošanas nodoklim.",
+      "feeVatIncludedLabel": "Nodoklis summā",
+      "feeVatIncludedHint": "Vai nodoklis jau ir iekļauts ievadītajā summā, vai arī tas tiek pievienots? Bez šīs informācijas summa būtu neskaidra."
     },
     "policiesForm": {
       "title": "Noteikumi",
@@ -7303,23 +7401,23 @@
     "marketplacePending": "{count} pārbaudē",
     "marketplaceWaiting": "Pārbaudē",
     "marketplace": {
-      "intro": "myBestDays ir mūsu pašu tirdzniecības vieta — rezervāciju kanāls kā Booking vai Airbnb, tikai bez portāla savienojuma. Objekts kļūst redzams, kad tas ir aktīvs, šeit iekļauts un apstiprināts.",
+      "intro": "myBestDays ir mūsu pašu tirgus – rezervēšanas kanāls, piemēram, Booking vai Airbnb, tikai bez portāla savienojuma un obligāts katram objektam. Objekts kļūst redzams, ja tas ir aktīvs un mūsu apstiprināts.",
       "openMarketplace": "Atvērt tirdzniecības vietu",
       "propertiesHeading": "Objekti tirdzniecības vietā",
       "noProperties": "Vēl nav izveidots neviens objekts.",
       "columnProperty": "Objekts",
-      "columnVisibility": "Redzamība",
+      "columnVisibility": "Statuss",
       "columnApproval": "Apstiprinājums",
       "columnBookings": "Rezervācijas",
       "stateActive": "Redzams",
       "statePending": "Pārbaudē",
-      "stateNotListed": "Nav iekļauts",
+      "stateNotListed": "Pārdošana apturēta",
       "stateInactiveProperty": "Objekts nav aktīvs",
       "viewListing": "Skatīt sludinājumu",
       "reviewHint": "Pārbaudē esošie objekti myBestDays vēl neparādās. Mēs pārbaudām katru sludinājumu, jo tur myBestDays ir pakalpojuma sniedzējs — portālus un savu vietni tas neietekmē.",
       "summaryVisible": "{count} redzami",
       "summaryWaiting": "{count} pārbaudē",
-      "summaryOff": "{count} nav iekļauti",
+      "summaryOff": "{count} apturēti vai neaktīvi",
       "moderation": {
         "draft": "Melnraksts",
         "pending": "Pārbaudē",
@@ -7354,7 +7452,8 @@
       "mayClose": "Importēšana turpinās serverī — varat aizvērt šo lapu.",
       "andMore": "… un vēl {count}",
       "close": "Aizvērt",
-      "updated": "atjaunināts"
+      "updated": "atjaunināts",
+      "portal": "jau no portāla"
     }
   },
   "calendarSync": {
@@ -10511,7 +10610,11 @@
     "haveAccount": "Jums jau ir konts?",
     "loginLink": "Piesakieties šeit",
     "loadingHeadline": "Jūsu pašu rezervāciju vietne. Paturiet 100 % no katras rezervācijas.",
-    "loadingText": "Iestatām jūsu kontu …"
+    "loadingText": "Iestatām jūsu kontu …",
+    "referralLabel": "Ieteicis (pēc izvēles)",
+    "referralPlaceholder": "Ieteikuma kods, piem. ANNA-K7P2",
+    "referralHint": "Vai iepazināties ar myNextDays, izmantojot partneri? Viņa kods ir šeit — viņš redz tikai to, ka uzņēmums ir nācis caur viņu, nekad jūsu vārdu. Ar kodu jūs saņemsiet pirmo pilno mēnesi bez maksas pēc 14 testa dienām.",
+    "referralContactOptIn": "Mans ieteicējs drīkst ar mani sazināties, izmantojot myNextDays."
   },
   "marketingSite": {
     "stars": "4,5 zvaigznes",

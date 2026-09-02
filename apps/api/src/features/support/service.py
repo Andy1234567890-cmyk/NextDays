@@ -166,19 +166,23 @@ class SupportService:
         user_id: str | None = None,
         guest_id: str | None = None,
         tenant_id: str | None = None,
+        affiliate_id: str | None = None,
     ) -> TicketDetail:
         """Ein Ticket über das Formular eröffnen (Betreff + Text)."""
         return self._eroeffnen(
             subject=req.subject,
             body=req.body,
             category=req.category,
-            source="form",
+            # Partner-Anfragen tragen ihre eigene Herkunft (0518): kein Betrieb,
+            # Fragen zu Provision und Auszahlung — das Backoffice filtert danach.
+            source="partner" if affiliate_id else "form",
             reservation_id=req.reservation_id,
             property_id=req.property_id,
             client_msg_id=None,
             user_id=user_id,
             guest_id=guest_id,
             tenant_id=tenant_id,
+            affiliate_id=affiliate_id,
         )
 
     def start_chat(
@@ -188,6 +192,7 @@ class SupportService:
         user_id: str | None = None,
         guest_id: str | None = None,
         tenant_id: str | None = None,
+        affiliate_id: str | None = None,
     ) -> TicketDetail:
         """Eine Chat-Konversation eröffnen (nur Text, Betreff abgeleitet).
 
@@ -197,7 +202,10 @@ class SupportService:
         """
         if req.client_msg_id:
             vorhanden = self._chat_zu_client_id(
-                req.client_msg_id, user_id=user_id, guest_id=guest_id
+                req.client_msg_id,
+                user_id=user_id,
+                guest_id=guest_id,
+                affiliate_id=affiliate_id,
             )
             if vorhanden is not None:
                 return vorhanden
@@ -205,13 +213,14 @@ class SupportService:
             subject=_betreff_aus_nachricht(req.body),
             body=req.body,
             category=req.category,
-            source="chat",
+            source="partner" if affiliate_id else "chat",
             reservation_id=None,
             property_id=None,
             client_msg_id=req.client_msg_id,
             user_id=user_id,
             guest_id=guest_id,
             tenant_id=tenant_id,
+            affiliate_id=affiliate_id,
         )
 
     def _eroeffnen(  # noqa: PLR0913 — ein Ticket hat nun einmal viele Felder
@@ -227,13 +236,15 @@ class SupportService:
         user_id: str | None,
         guest_id: str | None,
         tenant_id: str | None,
+        affiliate_id: str | None = None,
     ) -> TicketDetail:
         """Gemeinsamer Eröffnungspfad für Formular und Chat.
 
         Der DB-Check support_tickets_genau_ein_melder erzwingt dieselbe Regel —
-        hier wird sie zusätzlich früh und mit klarer Meldung abgefangen.
+        hier wird sie zusätzlich früh und mit klarer Meldung abgefangen. Drei
+        Konto-Welten (Betrieb, Gast, Partner — 0518), genau eine ist gesetzt.
         """
-        if bool(user_id) == bool(guest_id):
+        if sum(1 for w in (user_id, guest_id, affiliate_id) if w) != 1:
             raise SupportError(
                 "Ticket braucht genau eine Melder-Identität.", status_code=400
             )
@@ -245,6 +256,7 @@ class SupportService:
                 {
                     "reporter_user_id": user_id,
                     "reporter_guest_id": guest_id,
+                    "reporter_affiliate_id": affiliate_id,
                     "tenant_id": tenant_id,
                     "subject": subject,
                     "category": category,
@@ -285,9 +297,10 @@ class SupportService:
             tenant_id=tenant_id,
             quelle=source,
             von_gast=bool(guest_id),
+            von_partner=bool(affiliate_id),
         )
         return self.detail(
-            ticket["id"], user_id=user_id, guest_id=guest_id
+            ticket["id"], user_id=user_id, guest_id=guest_id, affiliate_id=affiliate_id
         )  # type: ignore[return-value]
 
     def list(
@@ -295,6 +308,7 @@ class SupportService:
         *,
         user_id: str | None = None,
         guest_id: str | None = None,
+        affiliate_id: str | None = None,
         limit: int = 50,
         offset: int = 0,
     ) -> TicketList:
@@ -307,7 +321,9 @@ class SupportService:
             .select(_TICKET_COLUMNS, count="exact")
             .order("last_message_at", desc=True)
         )
-        query = self._scope(query, user_id=user_id, guest_id=guest_id)
+        query = self._scope(
+            query, user_id=user_id, guest_id=guest_id, affiliate_id=affiliate_id
+        )
         res = query.range(offset, offset + limit - 1).execute()
         rows = res.data or []
         ungelesen = self._ungelesen_je_ticket(rows)
@@ -322,6 +338,7 @@ class SupportService:
         *,
         user_id: str | None = None,
         guest_id: str | None = None,
+        affiliate_id: str | None = None,
     ) -> TicketDetail | None:
         """Ein eigenes Ticket mit sichtbarem Verlauf. None = fremd/unbekannt.
 
@@ -329,7 +346,9 @@ class SupportService:
         in der Liste) — ein fremdes Ticket ist von einem nicht existierenden
         nicht unterscheidbar.
         """
-        rows = self._eigene_zeile(ticket_id, user_id=user_id, guest_id=guest_id)
+        rows = self._eigene_zeile(
+            ticket_id, user_id=user_id, guest_id=guest_id, affiliate_id=affiliate_id
+        )
         if rows is None:
             return None
 
@@ -358,6 +377,7 @@ class SupportService:
         user_id: str | None = None,
         guest_id: str | None = None,
         client_msg_id: str | None = None,
+        affiliate_id: str | None = None,
     ) -> TicketMessage | None:
         """Auf das EIGENE Ticket antworten. None = fremd/unbekannt.
 
@@ -369,7 +389,9 @@ class SupportService:
         23505-Verletzung eines Retrys ist der ERFOLGSPFAD, nicht ein Fehler —
         es wird die bereits gespeicherte Zeile zurückgegeben.
         """
-        zeile = self._eigene_zeile(ticket_id, user_id=user_id, guest_id=guest_id)
+        zeile = self._eigene_zeile(
+            ticket_id, user_id=user_id, guest_id=guest_id, affiliate_id=affiliate_id
+        )
         if zeile is None:
             return None
 
@@ -419,9 +441,13 @@ class SupportService:
         *,
         user_id: str | None = None,
         guest_id: str | None = None,
+        affiliate_id: str | None = None,
     ) -> bool:
         """Lese-Cursor des Melders auf jetzt setzen. False = fremd/unbekannt."""
-        if self._eigene_zeile(ticket_id, user_id=user_id, guest_id=guest_id) is None:
+        zeile = self._eigene_zeile(
+            ticket_id, user_id=user_id, guest_id=guest_id, affiliate_id=affiliate_id
+        )
+        if zeile is None:
             return False
         self._db.table("support_tickets").update(
             {"reporter_last_read_at": datetime.now(UTC).isoformat()}
@@ -460,7 +486,11 @@ class SupportService:
         return True
 
     def unread(
-        self, *, user_id: str | None = None, guest_id: str | None = None
+        self,
+        *,
+        user_id: str | None = None,
+        guest_id: str | None = None,
+        affiliate_id: str | None = None,
     ) -> UnreadSummary:
         """Ungelesene Team-Antworten über alle eigenen Konversationen.
 
@@ -473,7 +503,9 @@ class SupportService:
             .select("id, reporter_last_read_at, last_message_kind")
             .order("last_message_at", desc=True)
         )
-        query = self._scope(query, user_id=user_id, guest_id=guest_id)
+        query = self._scope(
+            query, user_id=user_id, guest_id=guest_id, affiliate_id=affiliate_id
+        )
         rows = query.limit(_MAX_LIMIT).execute().data or []
         ungelesen = self._ungelesen_je_ticket(rows)
         return UnreadSummary(
@@ -699,7 +731,12 @@ class SupportService:
         return Ticket(**daten, unread=ungelesen.get(row["id"], 0))
 
     def _eigene_zeile(
-        self, ticket_id: str, *, user_id: str | None, guest_id: str | None
+        self,
+        ticket_id: str,
+        *,
+        user_id: str | None,
+        guest_id: str | None,
+        affiliate_id: str | None = None,
     ) -> dict | None:
         """Ticket-Zeile im Melder-Scope laden (inkl. internem Status)."""
         query = (
@@ -707,7 +744,9 @@ class SupportService:
             .select(_TICKET_COLUMNS)
             .eq("id", ticket_id)
         )
-        query = self._scope(query, user_id=user_id, guest_id=guest_id)
+        query = self._scope(
+            query, user_id=user_id, guest_id=guest_id, affiliate_id=affiliate_id
+        )
         rows = query.limit(1).execute().data or []
         return rows[0] if rows else None
 
@@ -755,7 +794,12 @@ class SupportService:
         return TicketMessage(**rows[0]) if rows else None
 
     def _chat_zu_client_id(
-        self, client_msg_id: str, *, user_id: str | None, guest_id: str | None
+        self,
+        client_msg_id: str,
+        *,
+        user_id: str | None,
+        guest_id: str | None,
+        affiliate_id: str | None = None,
     ) -> TicketDetail | None:
         """Konversation, die bereits mit dieser client_msg_id eröffnet wurde.
 
@@ -772,10 +816,21 @@ class SupportService:
         ).data or []
         if not rows:
             return None
-        return self.detail(rows[0]["ticket_id"], user_id=user_id, guest_id=guest_id)
+        return self.detail(
+            rows[0]["ticket_id"],
+            user_id=user_id,
+            guest_id=guest_id,
+            affiliate_id=affiliate_id,
+        )
 
     @staticmethod
-    def _scope(query, *, user_id: str | None, guest_id: str | None):  # noqa: ANN001, ANN205
+    def _scope(  # noqa: ANN205
+        query,  # noqa: ANN001
+        *,
+        user_id: str | None,
+        guest_id: str | None,
+        affiliate_id: str | None = None,
+    ):
         """Auf die Melder-Identität einschränken (fail-closed).
 
         Ohne Identität würde die Abfrage sonst ALLE Tickets liefern — daher
@@ -785,4 +840,6 @@ class SupportService:
             return query.eq("reporter_user_id", user_id)
         if guest_id:
             return query.eq("reporter_guest_id", guest_id)
+        if affiliate_id:
+            return query.eq("reporter_affiliate_id", affiliate_id)
         raise SupportError("Keine Melder-Identität.", status_code=401)

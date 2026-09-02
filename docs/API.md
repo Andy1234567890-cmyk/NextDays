@@ -538,7 +538,7 @@ Objekt-Verwaltung (.. „Rentals"). Alle Endpunkte erfordern eine Session
 | `GET /api/v1/properties`         | Objekte des Tenants auflisten |
 | `POST /api/v1/properties`        | Objekt anlegen → `201`        |
 | `GET /api/v1/properties/{id}`    | Einzelnes Objekt              |
-| `PATCH /api/v1/properties/{id}`  | Felder ändern (partiell)      |
+| `PATCH /api/v1/properties/{id}`  | Felder ändern (partiell); `listed_on_marketplace=false` → 422 (myBestDays ist Pflichtkanal, 0527/ADR-0021) |
 | `DELETE /api/v1/properties/{id}` | Objekt löschen → `204`        |
 
 Felder: `title`, `description`, `property_type`
@@ -629,6 +629,18 @@ Grenze des Objekts (`shortStayMaxNights`), keine zweite Zahl an der Gebühr — 
 sie nicht gepflegt, greift die Gebühr nicht (keine geratene Nächtezahl). An die
 Portale geht sie NICHT: weder Channex-`logic` noch ein Portal kennt eine
 Längenbedingung, unbedingt gesendet würde sie jedem Portal-Gast berechnet.
+
+`validFrom`/`validUntil` (ISO-Datum, beide inklusiv, je optional) begrenzen die
+Gebühr nach der ANREISE der Buchung — nicht nach dem Buchungsdatum. Anlass
+(02.09.2026): die Resort-Gebühr des Beta-Betriebs gibt es erst seit dem
+01.08.2026; ohne Zeitraum trug die Eigentümer-Abrechnung sie in 98 Buchungen
+davor aus den Stammdaten nach. Gilt für Quote (`POST /pricing/quote`),
+Eigentümer-Abrechnung/-Auswertung/-Portal (`gebuehren_quelle.objekt_gebuehren`).
+Unlesbares Datum oder „bis" vor „ab" → 422. An die Portale geht eine Gebühr mit
+Zeitraum NICHT (Channex kennt keine Datumsbedingung; Chip „intern").
+`ownerStatementOnly` macht die Gebühr zur reinen Abrechnungsgröße: dem Gast auf
+keinem Kanal berechnet, an kein Portal gesendet, aber in Eigentümer-Abrechnung,
+-Auswertung und -Portal aus den Stammdaten angesetzt.
 
 | Methode | Pfad | Zweck |
 |---|---|---|
@@ -1224,6 +1236,80 @@ Abrechnungsbasis: `per_stay` · `per_night` · `per_guest` · `per_unit`. Verkau
 provisionsfrei am OTA vorbei; **Zahlstatus** `pending`/`paid`/`cancelled`. Beim
 Kauf: Auto-Aufgabe (Task-Trigger `addon_purchased`) + Extra-Umsatz im
 Owner-Statement. Preise werden **immer serverseitig** aus dem Katalog berechnet.
+
+---
+
+## affiliates (Partnerprogramm — implementiert, Migrationen `0517`–`0527`)
+
+Dritte Auth-Welt (ADR-0020): ein Partner ist ein GoTrue-User mit
+`app_metadata.affiliate = true` plus `affiliates`-Zeile (`id == auth.uid()`),
+kein Tenant. `CurrentAffiliate` prüft Token UND `affiliates.status` frisch aus
+der DB; alles über „eigenen Status ansehen" hinaus verlangt `approved`. Alle
+Partner-Tabellen sind für anon/authenticated gesperrt (Wurzel 6). Plan und
+Entscheidungen: `docs/AFFILIATE-PROGRAMM-PLAN.md`.
+
+| Methode | Pfad | Beschreibung |
+| ------- | ---- | ------------ |
+| `GET`  | `/api/v1/affiliates/tiers` | Staffel (public) — Quelle für Marketing-Seite und Dashboard. Je Rang: `min/max_customers` (STRUKTUR-Kunden, 0525), `rate`, `lifetime_rate` (Superprovision, 2,5 % ab Elite), `team_allowed` (Untervermittler ab Aufsteiger), `bonus[]` (Aufstiegsbonus je Währung); `override_rate` außer Dienst = "0" |
+| `POST` | `/api/v1/affiliates/apply` | Bewerbung: Login + Partnerzeile (`pending_review`), reCAPTCHA, Honigtopf → Session |
+| `POST` | `/api/v1/affiliates/auth/login` · `/refresh` · `/password-reset` | Partner-Session (strenger `auth`-Bucket) |
+| `POST` | `/api/v1/affiliates/clicks` | Klick auf `/p/CODE` festhalten (von marketing server-zu-server); IP/UA nur gehasht |
+| `GET`/`PATCH` | `/api/v1/affiliates/me` | eigenes Profil; `PUT /me/tax` = Rechtsform/USt-IdNr. (VIES)/Auszahlungsweg mit Passwort-Rückfrage |
+| `GET`  | `/api/v1/affiliates/dashboard` · `/customers` · `/commissions` · `/payouts` · `/codes` · `/assets` | Kennzahlen, Kunden (pseudonym), Ledger, Auszahlungen, Codes, Material (approved) |
+| `POST` | `/api/v1/affiliates/codes` | weiteren Code anlegen (max. 10) |
+| `GET`  | `/api/v1/affiliates/payouts/{id}/statement` | eigene Gutschrift (Load+Scope in einem Schritt) |
+| `GET`  | `/api/v1/affiliates/team` | Team-Auswertung des Sponsors (0520): Team-Link, Mitglieder mit Rang/zahlenden Kunden/Umsatz/Override, Summen je Währung, 12-Monats-Verlauf; ohne Kundendetails der Team-Partner |
+| `GET`/`POST` | `/api/v1/affiliates/team/threads` · `GET`/`POST /{id}/messages` | Team-Chat Sponsor ↔ Mitglied (eigene Tabellen, RLS nur Beteiligte, Realtime) |
+| `GET`  | `/api/v1/affiliates/posts` · `POST /codes/{code_id}/beitraege` · `PATCH`/`DELETE /posts/{id}` · `GET /posts/{id}/qr` | Beiträge (0521, Stufe A): je Reel/Video/Post ein Link `…/p/CODE?utm_source=<plattform>&utm_medium=social&utm_content=<slug>`; Klicks 30/90 T., Registrierungen (über `affiliate_referrals.post_id`), zahlende Kunden, Plattform-Kennzahlen; QR als SVG. Löschen nur ohne Registrierung (409) |
+| `GET`  | `/api/v1/affiliates/channels` · `GET /channels/{provider}/authorize` · `POST /channels/{provider}/connect` · `DELETE /channels/{connection_id}` | Kanalanbindung (0521, Stufe B; Anbieter `youtube`/`meta`/`tiktok`): Anbieter-Status (`configured` = Env-Variablen vorhanden), Autorisierungs-URL mit signiertem `state`, Code-Tausch serverseitig (Token AES-GCM, verlassen den Server nie), Trennen (Token gelöscht, Snapshots bleiben). Eigener Bucket `partner_kanal` 10/60 |
+| `GET`  | `/api/v1/affiliates/reach` | eigene Reichweite: je Kanal verifiziert (Snapshot) neben Selbstauskunft, Follower-Verlauf 90 T., Views 28 T., Engagement, Klicks je 1.000 Views; Beiträge |
+
+Kanäle (`0519`): Bewerbung und Profil tragen `channels: [{platform, url, handle, followers}]`
+(1–12 Einträge, Plattformliste in `features/affiliates/kanaele.py`, gespiegelt in
+`partner/lib/kanaele.ts` = `admin/lib/kanaele.ts`; `scripts/i18n/kanal-plattformen-pruefen.mjs`
+hält die drei deckungsgleich). `channel_url` bleibt als Altwert = Adresse des ersten Kanals.
+Nur http(s)-Adressen (Wurzel 8); Reichweite ist Selbstauskunft.
+
+Team-Provision (`0520`, Differenzmodell seit `0525`): `PartnerBewerbung.sponsor_code`;
+Provisionsart `override` = rate(Sponsor) − rate(Team-Partner) zum Rechnungszeitpunkt
+(`parent_id` → Ertragszeile des Team-Partners, `reason=team:<id>`; gleicher Rang → keine Zeile).
+Sponsor nur mit `affiliate_tiers.team_allowed` (ab Aufsteiger), sonst bleibt die Bewerbung
+ohne Team-Zuordnung. **Master-Strategie (`0525`):** Rang nach STRUKTUR (eigene + Team-Kunden);
+`bonus` = Aufstiegsbonus je erreichtem Rang (`affiliate_tier_bonuses`, UNIQUE affiliate+tier,
+ohne Betrieb); `lifetime` = Superprovision `affiliate_tiers.lifetime_rate` auf eigene UND
+Team-Kunden ohne 12-Monats-Grenze (parent = earn, ohne parent nach Laufzeitende);
+`booking_share` = Markt-Turbo `affiliate_program_rates.booking_share` je bezahlter
+myBestDays-Buchung (`payment_intent.succeeded`, Basis Gastbetrag in Buchungswährung) für
+Partner UND Sponsor, UNIQUE (charge, partner); Gegenbuchungen folgen den Eltern.
+`scripts/i18n/provisionsart-pruefen.mjs` hält DB-CHECK, Pydantic, Frontend-Unions,
+Sprachdateien und Gutschrift-Bezeichnungen deckungsgleich. Geworbene Betriebe bekommen im
+Checkout 14 Tage + 1 Kalendermonat als `trial_end` (`subscriptions/gratismonat.py`). Betrugsflags:
+`affiliate_referrals.flags` (self_referral, same_email_domain, disposable_email,
+click_cluster, registration_burst, no_property_30d) und `affiliates.sponsor_flags`
+(same_email_domain, same_iban).
+| `*`    | `/api/v1/support/partner/*` | Chat mit dem Partnerteam (vierte Melder-Welt, 0518) |
+| `GET`  | `/api/v1/platform/affiliates/{id}/team` · `POST /{id}/sponsor` | Team im Backoffice: Sponsor, Mitglieder, Overrides; Sponsor setzen/umhängen/lösen mit Pflichtgrund, Audit `affiliate.sponsor.set` |
+| `GET`  | `/api/v1/platform/affiliates/tracking/summary` | Programm-Kennzahlen: Partner, Klicks 30 T., Registrierungen, zahlende Kunden, Reichweite (Kopf der Liste) |
+| `GET`  | `/api/v1/platform/affiliates/{id}/tracking` | Aufrufe und Reichweite eines Partners: Klicks 7/30/90 T., je Tag (30 T.), je Code, Herkunft (Referrer, utm_source), Registrierungen, Conversion, Follower je Kanal |
+| `GET`  | `/api/v1/platform/affiliates/{id}/reach` · `GET /{id}/posts` | Reichweite eines Partners (0521, Stufe C): verifiziert vs. Selbstauskunft je Kanal, Follower-Verlauf, Views, Engagement, Klicks je 1.000 Views, Verdachtsflags (Messwert + Schwelle), Beiträge |
+| `GET`  | `/api/v1/platform/affiliates/reach/summary` · `GET /posts/top` | programmweit: Reichweite verifiziert/Selbstauskunft getrennt, verbundene Konten, Flags, Top-Kanäle nach Kunden je 1.000 Follower, Top-Beiträge |
+| `GET`/`PUT` | `/api/v1/platform/affiliates/reach/thresholds[/{key}]` | Schwellen der Verdachtsprüfung als Daten (`affiliate_reach_thresholds`); `value: null` = Regel aus; PUT verlangt Schreibrecht, Audit `affiliate.reach.threshold.set` |
+| `GET`/`POST`/`PATCH`/`DELETE` | `/api/v1/platform/affiliates/assets[/{id}]` | Werbematerial pflegen (Video/Bild/Text/Link, Sprache, Sortierung, aktiv) — VOR `/{affiliate_id}` gemountet |
+| `GET`/`POST`/`PATCH`/`DELETE` | `/api/v1/platform/affiliates/leads[/{id}]` · `POST /leads/import` | Multiplikatoren-Liste (`affiliate_leads`, 0526): Kategorie A–D, Kanäle, Reichweite, Status, nächster Schritt, Verknüpfung `affiliate_id`; CSV-Import meldet fehlerhafte Zeilen; Audit `affiliate.lead.*` — VOR `/{affiliate_id}` gemountet |
+| `POST` | `/api/v1/platform/affiliates/videos/{post_id}/decision` | Beitragsfreigabe (Video/JPG/PNG/PDF, 0523/0526): `frei`, bei Ablehnung `reason_code` (material/promise/disclosure/brand/other) UND `note` Pflicht → 422 sonst |
+| `*`    | `/api/v1/platform/affiliates/*` | Backoffice: Liste, Detail, Freigabe/Ablehnung, Sperre, Zuordnungen, Korrekturen, Rang, Auszahlungslauf, CSV-Export, Gutschrift, bezahlt/fehlgeschlagen (`CurrentPlatformAdmin`, Audit) |
+
+**Attribution:** `POST /auth/register` nimmt `referral_code`, `referral_click`,
+`referral_contact_opt_in`; die Zuordnung (`affiliate_referrals`, UNIQUE
+`tenant_id`) entsteht im Registrierungspfad mit Betrugsflags (Selbstwerbung →
+`rejected`, gleiche Firmendomain/Wegwerfadresse → `held`).
+
+**Provision:** `invoice.paid` → eine Ertragszeile je Rechnung
+(`affiliate_commissions`, Basis = Netto der Abo-Positionen, Satz/Rang zum
+Zeitpunkt, `pending` → nach 30 Tagen `approved`); `charge.refunded`,
+`credit_note.created`, `charge.dispute.*` → negative Gegenzeile. Monatslauf
+(Worker, `jobs/partner_laeufe`): Ränge bewerten, Auszahlungen je Währung
+bündeln, Klicks > 90 Tage löschen.
 
 ---
 

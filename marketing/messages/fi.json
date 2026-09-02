@@ -851,7 +851,8 @@
     },
     "unternehmen": {
       "ueberUns": "Tietoa meistä",
-      "kontakt": "Yhteystiedot"
+      "kontakt": "Yhteystiedot",
+      "partner": "Kumppanuusohjelma"
     },
     "copyright": "© 2026 myNextDays. Kaikki oikeudet pidätetään.",
     "agb": "Käyttöehdot",
@@ -860,7 +861,8 @@
     "cookies": "Evästekäytäntö",
     "avv": "Tietojenkäsittely",
     "kontoLoeschen": "Poista tili",
-    "newsletterKnopf": "Tilaa uutiskirje"
+    "newsletterKnopf": "Tilaa uutiskirje",
+    "partnerAgb": "Kumppanin ehdot"
   },
   "legal": {
     "stand": "Viimeksi päivitetty: {datum}"
@@ -990,7 +992,7 @@
       "sub": "Mitä vuokranantajat haluavat tietää ennen vaihtoa — lyhyesti ja ilman pientä präntti.",
       "laufzeit": {
         "frage": "Onko määräaikaa?",
-        "antwort": "Ei. Tilaus on kuukausittainen ja sen voi irtisanoa kuukauden loppuun mennessä neljän viikon irtisanomisajalla. Ensimmäiset 14 päivää ovat ilmaisia: annat maksutietosi aloittaessasi, mutta veloitus tapahtuu vasta kokeilujakson päätyttyä. Jos peruutat sitä ennen, et maksa mitään."
+        "antwort": "Ei. Tilaus on kuukausittainen ja sen voi irtisanoa neljän viikon irtisanomisajalla kuukauden loppuun mennessä. Ensimmäiset 14 päivää ovat ilmaisia: annat maksutietosi alussa, mutta veloitus tapahtuu vasta testijakson päätyttyä. Jos tulet kumppanin linkin tai koodin kautta, saat lisäksi ensimmäisen täyden kuukauden ilmaiseksi. Jos peruutat aiemmin, et maksa mitään."
       },
       "objektzahl": {
         "frage": "Mitä tapahtuu, kun lisään kohteita?",
@@ -2185,5 +2187,259 @@
     "verwalten": "Evästeasetusten hallinta",
     "schliessen": "Sulje",
     "bestaetigen": "Vahvista asetukset"
+  },
+  "partnerHinweis": {
+    "text": "Saavuit suosituksen kautta (koodi {code}). Koodi otetaan käyttöön rekisteröinnin yhteydessä – ja antaa sinulle ensimmäisen täyden kuukauden 14 testipäivän jälkeen.",
+    "cta": "Aloita nyt ilmaiseksi",
+    "schliessen": "Sulje ilmoitus"
+  },
+  "partner": {
+    "meta": {
+      "titel": "Kumppanuusohjelma — myNextDays",
+      "beschreibung": "Suosittele myNextDays-palvelua loma-asuntojen vuokraajille ja hotelleille ja saat jopa {max} % jokaisen hankitun yrityksen tilausmyynnistä kahdentoista kuukauden ajan."
+    },
+    "hero": {
+      "eyebrow": "Kumppanuusohjelma",
+      "headlinePre": "Suosittele myNextDays-palvelua —",
+      "headlineHighlight": "ja ansaitse",
+      "sub": "Vaikuttajille, konsulteille, toimistoille ja vuokranantajille, joilla on verkosto: Jokainen yritys, joka rekisteröityy linkkisi kautta ja maksaa tilauksen, tuo sinulle kahdentoista kuukauden ajan jopa {max} % tilaustuloista – plus 0,5 % jokaisesta myBestDays-varauksesta, ylennysbonukset ja Elite-tasolta alkaen superprovisio ilman aikarajaa.",
+      "cta": "Hae nyt",
+      "ctaLogin": "Kumppanin kirjautuminen",
+      "chipDauer": "12 kuukauden provisio per asiakas",
+      "chipAuszahlung": "Kuukausittainen maksu",
+      "chipKosten": "Ilmainen osallistuminen",
+      "chipGratismonat": "Asiakkaasi: 14 päivän kokeilu + 1 kuukausi ilmaiseksi"
+    },
+    "schritte": {
+      "eyebrow": "Näin se toimii",
+      "heading": "Kolme askelta ensimmäiseen provisioon",
+      "bewerben": {
+        "titel": "Hae",
+        "text": "Kerrot meille kanavasi – verkkosivusto, sosiaalinen profiili tai verkosto. Tarkistamme jokaisen hakemuksen henkilökohtaisesti ja hyväksymme yleensä muutaman työpäivän kuluessa."
+      },
+      "teilen": {
+        "titel": "Jaa linkki tai koodi",
+        "text": "Saat henkilökohtaisen linkin ja suosituskoodin. Koodi näkyy rekisteröintilomakkeessa – ilman seurantakeksin käyttöä."
+      },
+      "verdienen": {
+        "titel": "Ansaitse",
+        "text": "Kun hankittu yritys maksaa ensimmäisen tilauslaskunsa, provisiosi on voimassa kaksitoista kuukautta. Näet jokaisen asiakkaan anonyymisti kumppanin hallintapaneelissa ja saat maksun kuukausittain."
+      }
+    },
+    "staffel": {
+      "eyebrow": "Tasosi",
+      "heading": "Mitä suurempi rakenteesi, sitä korkeampi palkkiosi",
+      "sub": "Palkkio koskee kaikkia uusia provisioita tason saavuttamisen jälkeen. Rakenteeseen kuuluvat omat maksavat asiakkaasi ja tiimikumppaneidesi asiakkaat.",
+      "kunden": "{von}–{bis} maksavaa asiakasta",
+      "kundenOffen": "alkaen {von} maksavaa asiakasta",
+      "satz": "tilausmyynnistä",
+      "nichtAbrufbar": "Tasoa ei voi tällä hetkellä hakea. Yritä myöhemmin uudelleen."
+    },
+    "bedingungen": {
+      "eyebrow": "Säännöt",
+      "heading": "Reilua sinulle, reilua yrityksille",
+      "basis": {
+        "titel": "Mitä lasketaan",
+        "text": "Provisiopohja on hankitun yrityksen netto tilausmyynti (perushinta ja moduulit) – ilman veroja, portaaliprovisioita ja lisäpalveluita."
+      },
+      "dauer": {
+        "titel": "Kaksitoista kuukautta",
+        "text": "Provisio maksetaan kaksitoista kuukautta yrityksen ensimmäisestä maksetusta tilauslaskusta alkaen; asiakkaidesi ilmainen kuukausi ei sisälly tähän. Jos yritys irtisanoo sopimuksen, provisio päättyy viimeiseen maksuun. Varausosuus ja superprovisio jatkuvat ilman tätä rajoitusta."
+      },
+      "auszahlung": {
+        "titel": "Maksu",
+        "text": "Kuukausittain, 30 päivää yrityksen maksun jälkeen, alkaen vähimmäismäärästä per valuutta. Saat hyvityksen; yritykset tarvitsevat voimassa olevan ALV-tunnuksen."
+      },
+      "kennzeichnung": {
+        "titel": "Merkintä",
+        "text": "Jokainen suositus on mainos ja se on merkittävä sellaiseksi. Tarvittavat sanamuodot kullekin kielelle toimitetaan hallintapaneelissa."
+      },
+      "verboten": {
+        "titel": "Ei sallittu",
+        "text": "Itsemainonta, mainostaminen tuotenimillämme hakumainoksissa, alennuslupaukset nimissämme ja ei-toivotut viestit. Palautukset vähennetään provisiosta."
+      },
+      "daten": {
+        "titel": "Tietosuoja",
+        "text": "Näette asiakkaanne vain pseudonyymisti – maan, tilan ja summien kanssa, ei koskaan nimellä tai sähköpostilla. Yritys voi rekisteröityessään antaa teille luvan ottaa heihin yhteyttä."
+      }
+    },
+    "faq": {
+      "eyebrow": "Usein kysytyt kysymykset",
+      "heading": "Mitä kumppanit meiltä kysyvät",
+      "wer": {
+        "frage": "Kuka voi tulla kumppaniksi?",
+        "antwort": "Jokainen henkilö tai yritys EU:ssa, jolla on todellinen kanava vuokranantajiin tai hotelleihin: vaikuttajat, konsultit, virastot, verotoimistot, yhdistykset – ja myNextDays-asiakkaat itse. Hakemus on ilmainen; tilaus ei ole edellytys."
+      },
+      "wann": {
+        "frage": "Milloin yritys lasketaan asiakkaakseni?",
+        "antwort": "Kun se rekisteröityy koodillanne ja on maksanut ensimmäisen tilauslaskunsa. Rekisteröinnit ilman maksua eivät vaikuta sijoitukseen."
+      },
+      "doppelt": {
+        "frage": "Mitä jos yritys mainitsee kaksi kumppania?",
+        "antwort": "Yritys liitetään täsmälleen yhteen kumppaniin – siihen, jonka koodi oli lomakkeessa rekisteröinnin yhteydessä. Myöhemmät koodit eivät muuta tätä."
+      },
+      "steuern": {
+        "frage": "Miten laskutus toimii?",
+        "antwort": "Laadimme hyvityslaskun (Self-Billing). Yritykset, joilla on EU-alv-tunnus, saavat sen käännetyn verovelvollisuuden merkinnällä, yksityishenkilöt ilman arvonlisäveroa – verotatte provision itse."
+      },
+      "material": {
+        "frage": "Onko markkinointimateriaalia?",
+        "antwort": "Kyllä: lyhyitä videoita sosiaaliseen mediaan, selitysvideo, bannereita ja tekstilohkoja – kumppanin hallintapaneelissa, omalla kielellänne."
+      },
+      "wieviel": {
+        "frage": "Kuinka paljon provisiota voin ansaita?",
+        "antwort": "Tämä riippuu asiakkaidesi tilausmyynnistä ja sijoituksestasi. Yllä oleva taulukko näyttää kunkin tason hinnan asiakasta kohden kahdentoista kuukauden ajan. Lisäksi saat 0,5 % jokaisesta varauksesta, jonka asiakkaasi saavat myBestDaysin kautta, kertaluonteisen ylennysbonuksen jokaisesta saavutetusta tasosta, tiimin kanssa erokomission – ja Elite-kumppanista alkaen 2,5 % superkomission koko rakenteesta ilman aikarajaa."
+      },
+      "team": {
+        "frage": "Miten tiimiprovisio toimii?",
+        "antwort": "Nousija-tasolta alkaen: Jos kumppani hakee tiimisi linkin kautta ja syöttää koodisi näkyvästi hakemukseen, hän kuuluu tiimiisi hyväksynnän jälkeen. Hänen asiakkaansa lasketaan 1:1 tasoosi. Hänen asiakkaidensa netto-tilaustuloista saat erotuksen oman palkkiosi ja hänen palkkionsa välillä – täsmälleen yhden tason syvyydeltä, ilman osallistumismaksua, ilman rahaa värväyksestä."
+      },
+      "auszahlung": {
+        "frage": "Miten ja milloin provisiot maksetaan?",
+        "antwort": "Kuukausittain valuutasta riippuen, kun summa saavuttaa valuuttasi vähimmäismäärän. Jokainen provisiorivi on 30 päivää \"avoinna\" (palautusikkuna) ja sen jälkeen maksettavissa. Saat hyvityksen (itse laskutus) – et lähetä laskua. Maksu SEPA:lla, Wise:lla tai PayPalilla."
+      },
+      "verfolgen": {
+        "frage": "Miten voin seurata provisioitani ja suorituskykyäni?",
+        "antwort": "Kumppanin hallintapaneelissa näet \"Provisiot\"-kohdassa jokaisen maksetun tilauslaskun perusteen, hinnan, summan ja tilan, \"Asiakkaat\"-kohdassa yrityksesi pseudonyymisti, \"Tiimi\"-kohdassa tiimikumppaneidesi arvioinnin ja \"Linkit & materiaali\"-kohdassa klikkaukset koodia kohti."
+      },
+      "werbung": {
+        "frage": "Saanko tehdä maksettua mainontaa?",
+        "antwort": "Ei brändillämme: mainokset \"myNextDays\"-sivustolla ja kirjoitusmuunnelmat (bränditarjouskilpailu), evästeiden pudottaminen, ostettu kattavuus tai rekisteröitymiseen kannustaminen ovat kiellettyjä ja johtavat estoon. Oma sisältö, julkaisut ja suositukset ovat ehdottomasti toivottavia – merkittynä mainoksena."
+      }
+    },
+    "abschluss": {
+      "heading": "Valmis suosittelemaan myNextDaysia?",
+      "sub": "Hakemus kahdessa minuutissa. Otamme yhteyttä tarkistuksen jälkeen.",
+      "cta": "Hae nyt",
+      "kontakt": "Kysyttävää? Kirjoittakaa meille."
+    },
+    "vergleich": {
+      "eyebrow": "Tasosi",
+      "heading": "Mitä enemmän maksavia asiakkaita, sitä korkeampi tasosi",
+      "sub": "Tämä koskee kaikkia uusia palkkioita, kun saavutat tason. Rakenteesi lasketaan: omat maksavat asiakkaasi ja tiimikumppaneidesi asiakkaat.",
+      "nichtAbrufbar": "Taso ei ole tällä hetkellä saatavilla. Yritä myöhemmin uudelleen.",
+      "plan": "Taso",
+      "provision": "Provisio omista asiakkaista",
+      "teamProvision": "Tiimipalkkio tiimikumppaneidesi asiakkaista",
+      "dauer": "Kesto per asiakas",
+      "dauerWert": "12 kuukautta",
+      "kunden": "{von}–{bis} maksavaa asiakasta",
+      "kundenOffen": "alkaen {von} maksavaa asiakasta",
+      "vorteile": "Palvelut",
+      "ja": "sisältyy",
+      "nein": "ei sisälly",
+      "leistung": {
+        "konto": "Ilmainen kumppanitili",
+        "dashboard": "Kumppanin hallintapaneeli asiakkailla, provisioilla ja analyyseillä",
+        "material": "Mainosmateriaalit ja tunnistemallit",
+        "team": "Rakenna tiimi omalla tiimilinkilläsi",
+        "gutschrift": "Kuukausittainen maksu hyvityksellä (itsepalvelulaskutus)",
+        "chat": "Suora yhteys kumppanitiimiin",
+        "support": "Henkilökohtainen yhteyshenkilö",
+        "coMarketing": "Yhteismarkkinointi (yhteiset kampanjat)"
+      },
+      "fussnoteTeam": "Tiimipalkkio on erotus oman palkkiosi ja tiimikumppanin palkkion välillä hänen asiakkaidensa netto-tilaustuloista, molemmat maksuhetkellä – täsmälleen yksi taso, ei osallistumismaksua, ei rahaa värväyksestä. Yhteensä enintään 30 %.",
+      "fussnoteCoMarketing": "Kumppanitiimin kanssa sovitun mukaisesti; riippuu kumppanin profiilista ja käynnissä olevista kampanjoista.",
+      "fussnoteRang": "Taso muodostuu rakenteestasi: omat maksavat asiakkaat plus tiimikumppaneidesi asiakkaat, jokainen lasketaan kerran. Uuden tason saavuttaessa, alkaen nousijasta, maksetaan kertaluonteinen ylennysbonus.",
+      "teamDifferenz": "{satz} % miinus tiimikumppanin palkkio",
+      "teamNicht": "ei vielä tiimiä",
+      "bonus": "Ylennysbonus (kertaluonteinen)",
+      "superProvision": "Superprovisio koko rakenteesta",
+      "marktTurbo": "myBestDays-varausten osuus",
+      "marktTurboWert": "0,5 % per varaus, rajoittamaton",
+      "fussnoteSuper": "Elite-kumppanista alkaen 2,5 % kaikkien rakenteesi asiakkaiden netto-tilaustuloista – palkkion lisäksi, ilman 12 kuukauden rajoitusta, niin kauan kuin säilytät tason ja asiakas maksaa."
+    },
+    "team": {
+      "eyebrow": "Rakenna tiimi",
+      "heading": "Jopa {max} % erotusprovisio tiimisi liikevaihdosta",
+      "sub": "Tunnetko muita konsultteja, sisällöntuottajia tai toimistoja, joilla on yhteyksiä majoittajiin? Nousija-tasolta alkaen he hakevat tiimisi linkin kautta, kuuluvat tiimiisi – ja heidän asiakkaansa lasketaan 1:1 tasoosi. Ansaitset erotuksen oman palkkiosi ja tiimikumppanisi palkkion välillä; tiimikumppanisi säilyttävät täyden oman palkkioportaikkonsa.",
+      "rang": {
+        "titel": "Erotus",
+        "text": "Saat oman palkkiosi miinus tiimikumppanin palkkio – molemmat maksuhetkellä. Jos tiimikumppanisi on samalla tasolla, tiimipalkkiota ei synny."
+      },
+      "ebene": {
+        "titel": "Täsmälleen yksi taso",
+        "text": "Tiimikumppanisi eivät rakenna omaa tiimiäsi alapuolellesi. Ei verkostoa, ei pyramidia."
+      },
+      "keinGeld": {
+        "titel": "Vain todellisesta myynnistä",
+        "text": "Ei osallistumismaksua, ei rahaa värväyksestä. Tiimiprovisio syntyy yksinomaan maksetusta tilausmyynnistä."
+      },
+      "dauer": {
+        "titel": "Sammat säännöt",
+        "text": "12 kuukautta per tiimiasiakas, 30 päivän palautusikkuna, palautus tai takaisinperintä – kuten omassa provisiossasi. Elite-tasolta alkaen superprovisio koko rakenteesta lisätään, ilman aikarajaa."
+      }
+    },
+    "kundeCta": {
+      "heading": "Oletko jo myNextDays-asiakas?",
+      "text": "Silloin tunnet tuotteen parhaiten. Suosittele sitä eteenpäin – provisiosi hyvitetään tilillesi tilauksestasi riippumatta.",
+      "cta": "Suosittele ja ansaitse"
+    }
+  },
+  "partnerBewerbung": {
+    "meta": {
+      "titel": "Hae kumppaniksi – myNextDays",
+      "beschreibung": "Hakemus myNextDays-kumppanuusohjelmaan: sosiaalisen median tilit, kattavuus, ehdot. Käsittelemme jokaisen hakemuksen henkilökohtaisesti."
+    },
+    "eyebrow": "Kumppanuusohjelma",
+    "titel": "Hae kumppaniksi",
+    "text": "Kerro meille sosiaalisen median tilisi ja niiden kattavuus – käsittelemme jokaisen hakemuksen henkilökohtaisesti ja vastaamme yleensä muutaman arkipäivän kuluessa. Hyväksynnän jälkeen saat pääsyn kumppanin hallintapaneeliin, jossa on linkit, koodit ja analyysit.",
+    "email": "Sähköposti",
+    "passwort": "Salasana kumppanin hallintapaneeliin",
+    "passwortHinweis": "Vähintään 8 merkkiä.",
+    "name": "Nimi",
+    "firma": "Yritys (valinnainen)",
+    "rechtsform": "Oikeudellinen muoto",
+    "privat": "Yksityishenkilö",
+    "unternehmen": "Yritys",
+    "land": "Maa",
+    "ustId": "ALV-tunnus",
+    "ustIdHinweis": "Tarkistetaan EU:n VIES-järjestelmästä. Ilman vahvistettua numeroa yrityksille ei makseta.",
+    "kanaele": {
+      "titel": "Sosiaalisen median tilisi",
+      "hinweis": "Pakollinen: vähintään yksi sosiaalisen median tili (Instagram, TikTok, YouTube, Facebook, LinkedIn …) osoitteella, käyttäjätunnuksella ja kattavuudella (seuraajat). Verkkosivusto, blogi tai uutiskirje ovat mielellään lisäksi. Tarkistamme tilit ennen hyväksyntää.",
+      "plattform": "Alusta",
+      "handle": "Käyttäjätunnus (valinnainen)",
+      "reichweite": "Kattavuus (seuraajat)",
+      "hinzufuegen": "Lisää kanava",
+      "entfernen": "Poista kanava",
+      "socialPflicht": "Vähintään yksi sosiaalisen median tili kattavuudella on pakollinen – pelkkä verkkosivusto ei riitä.",
+      "plattformen": {
+        "website": "Verkkosivusto",
+        "blog": "Blogi",
+        "newsletter": "Uutiskirje",
+        "podcast": "Podcast",
+        "other": "Muuta"
+      }
+    },
+    "plattform": {
+      "website": "Verkkosivusto",
+      "blog": "Blogi",
+      "newsletter": "Uutiskirje",
+      "podcast": "Podcast",
+      "other": "Muuta"
+    },
+    "sponsor": "Kumppanin kutsuma (koodi, valinnainen)",
+    "sponsorHinweis": "Tuletko kumppanin tiimilinkin kautta? Hänen koodinsa on sitten tässä. Hän saa tiimiprovision asiakkaidesi tilaustuloista – oma provisiosi pysyy ennallaan.",
+    "pitch": "Miksi sopisit myNextDaysiin? (valinnainen)",
+    "pitchPlatzhalter": "Kenet tavoitat, mistä puhut, miten aiot suositella?",
+    "zustimmung": "Hyväksyn",
+    "bedingungen": "Kumppaniehdot",
+    "version": "Versio {version}",
+    "absenden": "Lähetä hakemus",
+    "sendet": "Lähetetään…",
+    "pruefungHinweis": "Tämä lomake on reCAPTCHA-suojattu. Lähetyksen jälkeen kumppanitiimimme tarkistaa tilisi ja kattavuutesi; saat sähköpostin päätöksestä.",
+    "fehler": {
+      "social": "Anna vähintään yksi sosiaalisen median tili osoitteella ja kattavuudella.",
+      "doppelt": "Tälle sähköpostille on jo hakemus. Kirjaudu sisään kumppanin hallintapaneeliin.",
+      "eingabe": "Tarkista syöttämäsi tiedot.",
+      "captcha": "Roskapostisuojaus epäonnistui. Lataa sivu uudelleen ja yritä uudelleen.",
+      "allgemein": "Hakemusta ei voitu lähettää juuri nyt. Yritä myöhemmin uudelleen."
+    },
+    "fertig": {
+      "titel": "Hakemus vastaanotettu",
+      "text": "Kiitos! Tarkistamme tilisi ja kattavuutesi henkilökohtaisesti ja otamme sinuun yhteyttä sähköpostitse. Kumppanin hallintapaneeliisi pääsee sähköpostiosoitteellasi ja salasanallasi – linkit ja koodit aktivoituvat hyväksynnän myötä.",
+      "login": "Kumppanin kirjautumiseen"
+    }
   }
 }

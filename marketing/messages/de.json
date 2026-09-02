@@ -851,7 +851,8 @@
     },
     "unternehmen": {
       "ueberUns": "Über uns",
-      "kontakt": "Kontakt"
+      "kontakt": "Kontakt",
+      "partner": "Partnerprogramm"
     },
     "copyright": "© 2026 myNextDays. Alle Rechte vorbehalten.",
     "agb": "AGB",
@@ -860,7 +861,8 @@
     "cookies": "Cookie-Richtlinie",
     "avv": "Auftragsverarbeitung",
     "kontoLoeschen": "Konto löschen",
-    "newsletterKnopf": "Newsletter anmelden"
+    "newsletterKnopf": "Newsletter anmelden",
+    "partnerAgb": "Partner-AGB"
   },
   "legal": {
     "stand": "Stand: {datum}"
@@ -990,7 +992,7 @@
       "sub": "Was Vermieter vor dem Wechsel wissen wollen — kurz und ohne Kleingedrucktes.",
       "laufzeit": {
         "frage": "Gibt es eine Mindestlaufzeit?",
-        "antwort": "Nein. Das Abo läuft monatlich und ist mit vier Wochen zum Monatsende kündbar. Die ersten 14 Tage sind kostenlos: Du hinterlegst beim Start deine Zahlungsdaten, abgebucht wird aber erst nach Ablauf der Testphase. Kündigst du vorher, zahlst du nichts."
+        "antwort": "Nein. Das Abo läuft monatlich und ist mit vier Wochen zum Monatsende kündbar. Die ersten 14 Tage sind kostenlos: Du hinterlegst beim Start deine Zahlungsdaten, abgebucht wird aber erst nach Ablauf der Testphase. Kommst du über den Link oder Code eines Partners, ist zusätzlich der erste volle Monat geschenkt. Kündigst du vorher, zahlst du nichts."
       },
       "objektzahl": {
         "frage": "Was passiert, wenn ich Objekte dazunehme?",
@@ -2185,5 +2187,259 @@
     "verwalten": "Cookie-Einstellungen verwalten",
     "schliessen": "Schließen",
     "bestaetigen": "Einstellungen bestätigen"
+  },
+  "partnerHinweis": {
+    "text": "Sie kommen über eine Empfehlung (Code {code}). Der Code wird bei der Registrierung übernommen — und schenkt Ihnen nach den 14 Testtagen den ersten vollen Monat.",
+    "cta": "Jetzt kostenlos starten",
+    "schliessen": "Hinweis schließen"
+  },
+  "partner": {
+    "meta": {
+      "titel": "Partnerprogramm — myNextDays",
+      "beschreibung": "Empfehlen Sie myNextDays an Ferienvermieter und Hotels und erhalten Sie zwölf Monate lang bis zu {max} % des Abo-Umsatzes jedes geworbenen Betriebs."
+    },
+    "hero": {
+      "eyebrow": "Partnerprogramm",
+      "headlinePre": "Empfehlen Sie myNextDays —",
+      "headlineHighlight": "und verdienen Sie mit",
+      "sub": "Für Influencer, Berater, Agenturen und Vermieter mit Netzwerk: Jeder Betrieb, der sich über Ihren Link registriert und ein Abo bezahlt, bringt Ihnen zwölf Monate lang bis zu {max} % des Abo-Umsatzes — plus 0,5 % jeder Buchung über myBestDays, Aufstiegsboni und ab Elite eine Superprovision ohne Laufzeitgrenze.",
+      "cta": "Jetzt bewerben",
+      "ctaLogin": "Partner-Login",
+      "chipDauer": "12 Monate Provision je Kunde",
+      "chipAuszahlung": "Monatliche Auszahlung",
+      "chipKosten": "Kostenlose Teilnahme",
+      "chipGratismonat": "Ihre Kunden: 14 Tage testen + 1 Monat gratis"
+    },
+    "schritte": {
+      "eyebrow": "So funktioniert es",
+      "heading": "Drei Schritte bis zur ersten Provision",
+      "bewerben": {
+        "titel": "Bewerben",
+        "text": "Sie nennen uns Ihren Kanal — Website, Social-Profil oder Netzwerk. Wir prüfen jede Bewerbung persönlich und geben in der Regel innerhalb weniger Werktage frei."
+      },
+      "teilen": {
+        "titel": "Link oder Code teilen",
+        "text": "Sie erhalten einen persönlichen Link und einen Empfehlungscode. Der Code steht bei der Registrierung sichtbar im Formular — ohne Tracking-Cookie."
+      },
+      "verdienen": {
+        "titel": "Verdienen",
+        "text": "Zahlt ein geworbener Betrieb seine erste Abo-Rechnung, läuft Ihre Provision zwölf Monate. Sie sehen jeden Kunden pseudonym im Partner-Dashboard und werden monatlich ausgezahlt."
+      }
+    },
+    "staffel": {
+      "eyebrow": "Ihre Staffel",
+      "heading": "Je größer Ihre Struktur, desto höher Ihr Satz",
+      "sub": "Der Satz gilt für alle neuen Provisionen ab Erreichen des Rangs. Zur Struktur zählen Ihre eigenen zahlenden Kunden und die Kunden Ihrer Team-Partner.",
+      "kunden": "{von}–{bis} zahlende Kunden",
+      "kundenOffen": "ab {von} zahlende Kunden",
+      "satz": "des Abo-Umsatzes",
+      "nichtAbrufbar": "Die Staffel ist gerade nicht abrufbar. Bitte später erneut versuchen."
+    },
+    "bedingungen": {
+      "eyebrow": "Die Regeln",
+      "heading": "Fair für Sie, fair für die Betriebe",
+      "basis": {
+        "titel": "Was zählt",
+        "text": "Provisionsbasis ist der Netto-Abo-Umsatz (Grundtarif und Module) des geworbenen Betriebs — ohne Steuern, Portalprovisionen und Zusatzleistungen."
+      },
+      "dauer": {
+        "titel": "Zwölf Monate",
+        "text": "Die Provision läuft zwölf Monate ab der ersten bezahlten Abo-Rechnung des Betriebs; der Gratismonat Ihrer Kunden zählt nicht mit. Kündigt der Betrieb, endet sie mit seiner letzten Zahlung. Buchungsanteil und Superprovision laufen ohne diese Grenze."
+      },
+      "auszahlung": {
+        "titel": "Auszahlung",
+        "text": "Monatlich, 30 Tage nach der Zahlung des Betriebs, ab einem Mindestbetrag je Währung. Sie erhalten eine Gutschrift; Unternehmen brauchen eine gültige USt-IdNr."
+      },
+      "kennzeichnung": {
+        "titel": "Kennzeichnung",
+        "text": "Jede Empfehlung ist Werbung und muss als solche gekennzeichnet sein. Die vorgeschriebenen Wortlaute je Sprache stellen wir im Dashboard bereit."
+      },
+      "verboten": {
+        "titel": "Nicht erlaubt",
+        "text": "Selbstwerbung, Werbung auf unseren Markennamen in Suchanzeigen, Rabattversprechen in unserem Namen und unerbetene Nachrichten. Erstattungen werden von der Provision abgezogen."
+      },
+      "daten": {
+        "titel": "Datenschutz",
+        "text": "Sie sehen Ihre Kunden nur pseudonym — mit Land, Status und Beträgen, nie mit Namen oder E-Mail. Ein Betrieb kann Ihnen bei der Registrierung erlauben, dass Sie ihn kontaktieren."
+      }
+    },
+    "faq": {
+      "eyebrow": "Häufige Fragen",
+      "heading": "Was Partner uns fragen",
+      "wer": {
+        "frage": "Wer kann Partner werden?",
+        "antwort": "Jede Person oder Firma in der EU mit einem echten Kanal zu Vermietern oder Hotels: Influencer, Berater, Agenturen, Steuerkanzleien, Verbände — und myNextDays-Kunden selbst. Eine Bewerbung ist kostenlos; ein Abo ist keine Voraussetzung."
+      },
+      "wann": {
+        "frage": "Wann zählt ein Betrieb als mein Kunde?",
+        "antwort": "Wenn er sich mit Ihrem Code registriert und seine erste Abo-Rechnung bezahlt hat. Registrierungen ohne Zahlung zählen nicht für den Rang."
+      },
+      "doppelt": {
+        "frage": "Was, wenn ein Betrieb zwei Partner nennt?",
+        "antwort": "Ein Betrieb wird genau einem Partner zugeordnet — dem, dessen Code bei der Registrierung im Formular stand. Spätere Codes ändern das nicht."
+      },
+      "steuern": {
+        "frage": "Wie läuft die Abrechnung?",
+        "antwort": "Wir stellen eine Gutschrift (Self-Billing). Unternehmen mit EU-USt-IdNr. erhalten sie mit Reverse-Charge-Vermerk, Privatpersonen ohne Umsatzsteuer — die Provision versteuern Sie selbst."
+      },
+      "material": {
+        "frage": "Gibt es Werbematerial?",
+        "antwort": "Ja: kurze Videos für Social Media, ein Erklärvideo, Banner und Textbausteine — im Partner-Dashboard, in Ihrer Sprache."
+      },
+      "wieviel": {
+        "frage": "Wie viel Provision kann ich verdienen?",
+        "antwort": "Das hängt vom Abo-Umsatz Ihrer Kunden und Ihrem Rang ab. Die Staffel oben zeigt den Satz je Rang; zwölf Monate lang je Kunde. Dazu kommen 0,5 % jeder Buchung, die Ihre Kunden über myBestDays erhalten, ein einmaliger Aufstiegsbonus je erreichtem Rang, mit einem Team die Differenzprovision — und ab Elite-Partner 2,5 % Superprovision auf die ganze Struktur ohne Laufzeitgrenze."
+      },
+      "team": {
+        "frage": "Wie funktioniert die Team-Provision?",
+        "antwort": "Ab dem Rang Aufsteiger: Bewirbt sich ein Partner über Ihren Team-Link und trägt Ihren Code sichtbar in der Bewerbung ein, gehört er nach der Freigabe zu Ihrem Team. Seine Kunden zählen 1:1 für Ihren Rang. Auf den Netto-Abo-Umsatz seiner Kunden erhalten Sie die Differenz zwischen Ihrem Satz und seinem — genau eine Ebene tief, ohne Teilnahmebeitrag, ohne Geld fürs Anwerben."
+      },
+      "auszahlung": {
+        "frage": "Wie und wann werden Provisionen ausgezahlt?",
+        "antwort": "Monatlich je Währung, sobald die Summe den Mindestbetrag Ihrer Währung erreicht. Jede Provisionszeile ist 30 Tage „offen“ (Erstattungsfenster) und danach auszahlbar. Sie erhalten eine Gutschrift (Self-Billing) — Sie stellen keine Rechnung. Auszahlung per SEPA, Wise oder PayPal."
+      },
+      "verfolgen": {
+        "frage": "Wie kann ich meine Provisionen und Leistung verfolgen?",
+        "antwort": "Im Partner-Dashboard sehen Sie unter „Provisionen“ jede bezahlte Abo-Rechnung mit Basis, Satz, Betrag und Status, unter „Kunden“ Ihre Betriebe pseudonym, unter „Team“ die Auswertung Ihrer Team-Partner und unter „Links & Material“ Klicks je Code."
+      },
+      "werbung": {
+        "frage": "Darf ich bezahlte Werbung schalten?",
+        "antwort": "Nicht auf unsere Marke: Anzeigen auf „myNextDays“ und Schreibvarianten (Brand-Bidding), Cookie-Dropping, gekaufte Reichweite oder Anreize für Registrierungen sind untersagt und führen zur Sperre. Eigene Inhalte, Beiträge und Empfehlungen sind ausdrücklich erwünscht — mit Kennzeichnung als Werbung."
+      }
+    },
+    "abschluss": {
+      "heading": "Bereit, myNextDays zu empfehlen?",
+      "sub": "Bewerben Sie sich in zwei Minuten. Wir melden uns nach der Prüfung.",
+      "cta": "Jetzt bewerben",
+      "kontakt": "Fragen? Schreiben Sie uns."
+    },
+    "vergleich": {
+      "eyebrow": "Ihre Staffel",
+      "heading": "Je mehr zahlende Kunden, desto höher Ihr Satz",
+      "sub": "Der Satz gilt für alle neuen Provisionen ab Erreichen des Rangs. Gezählt wird Ihre Struktur: Ihre eigenen zahlenden Kunden plus die Kunden Ihrer Team-Partner.",
+      "nichtAbrufbar": "Die Staffel ist gerade nicht abrufbar. Bitte später erneut versuchen.",
+      "plan": "Rang",
+      "provision": "Provision auf eigene Kunden",
+      "teamProvision": "Team-Provision auf Kunden Ihrer Team-Partner",
+      "dauer": "Laufzeit je Kunde",
+      "dauerWert": "12 Monate",
+      "kunden": "{von}–{bis} zahlende Kunden",
+      "kundenOffen": "ab {von} zahlende Kunden",
+      "vorteile": "Leistungen",
+      "ja": "enthalten",
+      "nein": "nicht enthalten",
+      "leistung": {
+        "konto": "Kostenloses Partnerkonto",
+        "dashboard": "Partner-Dashboard mit Kunden, Provisionen und Auswertung",
+        "material": "Werbematerial und Kennzeichnungs-Vorlagen",
+        "team": "Team aufbauen mit eigenem Team-Link",
+        "gutschrift": "Monatliche Auszahlung mit Gutschrift (Self-Billing)",
+        "chat": "Direkter Draht zum Partnerteam",
+        "support": "Persönlicher Ansprechpartner",
+        "coMarketing": "Co-Marketing (gemeinsame Aktionen)"
+      },
+      "fussnoteTeam": "Team-Provision ist die Differenz zwischen Ihrem Satz und dem Satz des Team-Partners auf den Netto-Abo-Umsatz seiner Kunden, beide zum Zeitpunkt der Zahlung — genau eine Ebene, kein Teilnahmebeitrag, kein Geld fürs Anwerben. Zusammen nie mehr als 30 %.",
+      "fussnoteCoMarketing": "Nach Absprache mit dem Partnerteam; hängt vom Profil des Partners und den laufenden Aktionen ab.",
+      "fussnoteRang": "Der Rang entsteht aus Ihrer Struktur: eigene zahlende Kunden plus die Kunden Ihrer Team-Partner, jeder zählt einmal. Beim Erreichen eines neuen Rangs ab Aufsteiger gibt es einmalig den Aufstiegsbonus.",
+      "teamDifferenz": "{satz} % minus Satz des Team-Partners",
+      "teamNicht": "noch kein Team",
+      "bonus": "Aufstiegsbonus (einmalig)",
+      "superProvision": "Superprovision auf die ganze Struktur",
+      "marktTurbo": "Buchungsanteil myBestDays",
+      "marktTurboWert": "0,5 % je Buchung, unbegrenzt",
+      "fussnoteSuper": "Ab Elite-Partner 2,5 % auf den Netto-Abo-Umsatz aller Kunden Ihrer Struktur — zusätzlich zur Provision, ohne die 12-Monats-Grenze, solange Sie den Rang halten und der Kunde zahlt."
+    },
+    "team": {
+      "eyebrow": "Team aufbauen",
+      "heading": "Bis zu {max} % Differenzprovision auf den Umsatz Ihres Teams",
+      "sub": "Kennen Sie weitere Berater, Creator oder Agenturen mit Draht zu Gastgebern? Ab dem Rang Aufsteiger bewerben sie sich über Ihren Team-Link, gehören zu Ihrem Team — und ihre Kunden zählen 1:1 für Ihren Rang. Sie verdienen die Differenz zwischen Ihrem Satz und dem Satz Ihres Team-Partners; Ihre Team-Partner behalten ihre volle eigene Staffel.",
+      "rang": {
+        "titel": "Die Differenz",
+        "text": "Sie erhalten Ihren Satz minus den Satz des Team-Partners — beide zum Zeitpunkt der Zahlung. Steht Ihr Team-Partner im gleichen Rang, entsteht keine Team-Provision."
+      },
+      "ebene": {
+        "titel": "Genau eine Ebene",
+        "text": "Ihre Team-Partner bauen kein eigenes Team unter Ihnen auf. Kein Netzwerk, keine Pyramide."
+      },
+      "keinGeld": {
+        "titel": "Nur aus echtem Umsatz",
+        "text": "Kein Teilnahmebeitrag, kein Geld fürs Anwerben. Team-Provision entsteht ausschließlich aus bezahltem Abo-Umsatz."
+      },
+      "dauer": {
+        "titel": "Dieselben Regeln",
+        "text": "12 Monate je Team-Kunde, 30 Tage Erstattungsfenster, Rücknahme bei Erstattung oder Chargeback — wie bei Ihrer eigenen Provision. Ab Elite kommt die Superprovision auf die ganze Struktur dazu, ohne Laufzeitgrenze."
+      }
+    },
+    "kundeCta": {
+      "heading": "Sie sind schon myNextDays-Kunde?",
+      "text": "Dann kennen Sie das Produkt am besten. Empfehlen Sie es weiter — Ihre Provision landet als Gutschrift auf Ihrem Konto, unabhängig von Ihrem Abo.",
+      "cta": "Empfehlen & verdienen"
+    }
+  },
+  "partnerBewerbung": {
+    "meta": {
+      "titel": "Als Partner bewerben — myNextDays",
+      "beschreibung": "Bewerbung für das myNextDays-Partnerprogramm: Social-Media-Konten, Reichweite, Bedingungen. Wir prüfen jede Bewerbung persönlich."
+    },
+    "eyebrow": "Partnerprogramm",
+    "titel": "Als Partner bewerben",
+    "text": "Nennen Sie uns Ihre Social-Media-Konten mit Reichweite — wir prüfen jede Bewerbung persönlich und melden uns in der Regel innerhalb weniger Werktage. Mit der Freigabe erhalten Sie Zugang zum Partner-Dashboard mit Links, Codes und Auswertung.",
+    "email": "E-Mail",
+    "passwort": "Passwort für Ihr Partner-Dashboard",
+    "passwortHinweis": "Mindestens 8 Zeichen.",
+    "name": "Name",
+    "firma": "Firma (optional)",
+    "rechtsform": "Rechtsform",
+    "privat": "Privatperson",
+    "unternehmen": "Unternehmen",
+    "land": "Land",
+    "ustId": "USt-IdNr.",
+    "ustIdHinweis": "Wird gegen das EU-System VIES geprüft. Ohne bestätigte Nummer keine Auszahlung an Unternehmen.",
+    "kanaele": {
+      "titel": "Ihre Social-Media-Konten",
+      "hinweis": "Pflicht: mindestens ein Social-Media-Konto (Instagram, TikTok, YouTube, Facebook, LinkedIn …) mit Adresse, Handle und Reichweite (Follower). Website, Blog oder Newsletter gern zusätzlich. Wir prüfen die Konten vor der Freigabe.",
+      "plattform": "Plattform",
+      "handle": "Handle (optional)",
+      "reichweite": "Reichweite (Follower)",
+      "hinzufuegen": "Kanal hinzufügen",
+      "entfernen": "Kanal entfernen",
+      "socialPflicht": "Mindestens ein Social-Media-Konto mit Reichweite ist Pflicht — eine Website allein reicht nicht.",
+      "plattformen": {
+        "website": "Website",
+        "blog": "Blog",
+        "newsletter": "Newsletter",
+        "podcast": "Podcast",
+        "other": "Sonstiges"
+      }
+    },
+    "plattform": {
+      "website": "Website",
+      "blog": "Blog",
+      "newsletter": "Newsletter",
+      "podcast": "Podcast",
+      "other": "Sonstiges"
+    },
+    "sponsor": "Geworben von Partner (Code, optional)",
+    "sponsorHinweis": "Kommen Sie über den Team-Link eines Partners? Sein Code steht dann hier. Er erhält eine Team-Provision auf den Abo-Umsatz Ihrer Kunden — Ihre eigene Provision bleibt unverändert.",
+    "pitch": "Warum passen Sie zu myNextDays? (optional)",
+    "pitchPlatzhalter": "Wen erreichen Sie, worüber sprechen Sie, wie wollen Sie empfehlen?",
+    "zustimmung": "Ich akzeptiere die",
+    "bedingungen": "Partner-Bedingungen",
+    "version": "Version {version}",
+    "absenden": "Bewerbung absenden",
+    "sendet": "Wird gesendet …",
+    "pruefungHinweis": "Dieses Formular ist durch reCAPTCHA geschützt. Nach dem Absenden prüft unser Partnerteam Ihre Konten und Reichweite; Sie erhalten eine E-Mail zur Entscheidung.",
+    "fehler": {
+      "social": "Bitte mindestens ein Social-Media-Konto mit Adresse und Reichweite angeben.",
+      "doppelt": "Für diese E-Mail gibt es bereits eine Bewerbung. Melden Sie sich im Partner-Dashboard an.",
+      "eingabe": "Bitte prüfen Sie Ihre Eingaben.",
+      "captcha": "Die Spamschutz-Prüfung ist fehlgeschlagen. Bitte Seite neu laden und erneut versuchen.",
+      "allgemein": "Die Bewerbung konnte gerade nicht gesendet werden. Bitte später erneut versuchen."
+    },
+    "fertig": {
+      "titel": "Bewerbung eingegangen",
+      "text": "Danke! Wir prüfen Ihre Konten und Reichweite persönlich und melden uns per E-Mail. Ihr Partner-Dashboard ist mit Ihrer E-Mail und Ihrem Passwort erreichbar — Links und Codes werden mit der Freigabe aktiv.",
+      "login": "Zum Partner-Login"
+    }
   }
 }

@@ -281,6 +281,40 @@ export const datenschutz: LegalDoc = {
       ],
     },
     {
+      heading: "Partnerprogramm",
+      paragraphs: [
+        "Wir betreiben ein Partnerprogramm, über das Partner (Influencer, Berater, Agenturen, Kunden) Betriebe an myNextDays empfehlen und dafür eine Provision erhalten. Dabei verarbeiten wir Daten von Partnern und — in geringem Umfang — von empfohlenen Betrieben.",
+      ],
+      unterpunkte: [
+        {
+          titel: "Daten der Partner",
+          paragraphs: [
+            "Bei der Bewerbung verarbeiten wir Name, Firma, Rechtsform, Land, E-Mail-Adresse, Sprache, Social-Media-Konten (Plattform, Adresse, Handle, selbst angegebene Reichweite), Umsatzsteuer-Identifikationsnummer (Prüfung über das EU-System VIES), Auszahlungsdaten (IBAN, Wise- oder PayPal-Adresse) sowie die Zustimmung zu den Teilnahmebedingungen mit Version und Zeitpunkt. Rechtsgrundlage ist die Durchführung des Partnervertrags (Art. 6 Abs. 1 lit. b DSGVO); für Gutschriften und Aufbewahrung gelten die steuer- und handelsrechtlichen Pflichten (Art. 6 Abs. 1 lit. c DSGVO).",
+            "Führt ein Partner ein Team, sieht er von seinen Team-Partnern Name bzw. Firma, Rang, Anzahl zahlender Kunden und die daraus entstehende Team-Provision. Nachrichten zwischen Sponsor und Team-Partner werden in der Plattform gespeichert, damit beide den Verlauf sehen.",
+          ],
+        },
+        {
+          titel: "Klicks auf Partner-Links",
+          paragraphs: [
+            "Ruft ein Besucher einen Partner-Link (mynextdays.com/p/CODE) auf, speichern wir den Code, den Zeitpunkt, die aufgerufene Seite, die verweisende Seite und etwaige Kampagnenparameter sowie IP-Adresse und Browserkennung ausschließlich als gekürzte Prüfsummen (Hash) — zur Missbrauchserkennung (Häufungen), nicht zur Wiedererkennung. Ein Tracking-Cookie wird nicht gesetzt. Klickdaten löschen wir nach 90 Tagen. Rechtsgrundlage ist unser berechtigtes Interesse an einer betrugssicheren Abrechnung des Programms (Art. 6 Abs. 1 lit. f DSGVO).",
+          ],
+        },
+        {
+          titel: "Verbundene Social-Media-Konten und Beiträge",
+          paragraphs: [
+            "Partner können ihre Konten bei YouTube (Google), Instagram und Facebook (Meta) sowie TikTok freiwillig mit dem Partner-Dashboard verbinden. Dabei erteilen sie der jeweiligen Plattform eine Lesefreigabe (OAuth); wir schreiben nichts in diese Konten. Wir speichern die Kennung und den Namen des Kontos, das Zugangstoken verschlüsselt, den Zeitpunkt der Verbindung sowie täglich einen Messwert je Konto: Follower- bzw. Abonnentenzahl, Aufrufe der letzten 28 Tage, Interaktionsrate und Anzahl der Beiträge, jeweils mit dem Zeitpunkt der Plattformantwort. Zu Beiträgen, die der Partner im Dashboard anlegt (Titel, Plattform, Adresse, Veröffentlichungsdatum), speichern wir zusätzlich Aufrufe, Likes, Kommentare, Teilungen und Speicherungen aus der Plattform.",
+            "Zweck ist die Prüfung der vom Partner angegebenen Reichweite und die Zuordnung von Klicks und Kunden zu einzelnen Beiträgen; unverifizierte Angaben werden bei der Freigabe geringer gewichtet. Hinweise auf Unstimmigkeiten (etwa ein Follower-Sprung ohne passende Aufrufe) dienen ausschließlich der manuellen Prüfung durch uns und führen zu keiner automatisierten Entscheidung. Rechtsgrundlage ist die Einwilligung des Partners (Art. 6 Abs. 1 lit. a DSGVO), die er durch das Verbinden erteilt und im Dashboard unter „Verbindung trennen“ jederzeit widerrufen kann; beim Trennen löschen wir das Zugangstoken sofort, gespeicherte Messwerte bleiben als Verlauf erhalten und werden mit dem Partnerkonto gelöscht. Wir nutzen ausschließlich die offiziellen Schnittstellen der Plattformen; für die Verarbeitung durch Google, Meta und TikTok gelten deren eigene Datenschutzhinweise.",
+          ],
+        },
+        {
+          titel: "Empfohlene Betriebe",
+          paragraphs: [
+            "Registriert sich ein Betrieb mit einem Partner-Code, speichern wir die Zuordnung des Betriebs zum Partner sowie Zeitpunkt, Weg (Link oder Code) und Status. Der Partner sieht den Betrieb ausschließlich pseudonym (laufende Nummer, Land, Status, Beträge) — nie Name, E-Mail-Adresse oder Buchungsdaten. Nur wenn der Betrieb bei der Registrierung ausdrücklich zustimmt, darf ihn der Partner über die Plattform kontaktieren. Für die Provisionsabrechnung verarbeiten wir die Netto-Abo-Beträge der bezahlten Rechnungen des Betriebs; Rechtsgrundlage ist die Durchführung des Partner- und des Nutzungsvertrags (Art. 6 Abs. 1 lit. b DSGVO).",
+          ],
+        },
+      ],
+    },
+    {
       heading: "Hosting und Speicherung",
       paragraphs: [
         "Die Plattform, die Datenbank, die Medien und der Mailserver laufen auf Servern der Hetzner Online GmbH, Deutschland, im Rechenzentrum Helsinki (Finnland) — also innerhalb der Europäischen Union. Mit Hetzner besteht ein Auftragsverarbeitungsvertrag.",

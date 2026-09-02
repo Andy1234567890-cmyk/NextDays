@@ -1,0 +1,521 @@
+{
+  "meta": {
+    "titel": "myNextDays partneris",
+    "beschreibung": "myNextDays partnerių programos partnerių prietaisų skydelis: nuorodos, klientai, komisiniai, išmokos."
+  },
+  "nav": {
+    "partner": "Partneris",
+    "uebersicht": "Apžvalga",
+    "kunden": "Klientai",
+    "provisionen": "Komisiniai",
+    "auszahlungen": "Išmokos",
+    "links": "Nuorodos ir medžiaga",
+    "profil": "Profilis",
+    "sprache": "Kalba",
+    "abmelden": "Atsijungti",
+    "nachrichten": "Žinutės",
+    "menue": "Meniu",
+    "team": "Komanda",
+    "beitraege": "Įrašai"
+  },
+  "status": {
+    "pending_review": {
+      "titel": "Jūsų paraiška peržiūrima",
+      "text": "Kiekvieną paraišką peržiūrime asmeniškai ir susisieksime el. paštu. Kol bus patvirtinta, nuorodos ir kodai dar nebus aktyvūs – jau dabar galite užpildyti savo profilio ir išmokų duomenis."
+    },
+    "rejected": {
+      "titel": "Jūsų paraiška nebuvo priimta",
+      "text": "Šiuo metu negalėjome priimti jūsų paraiškos. Jei turite klausimų, susisiekite su mumis."
+    },
+    "suspended": {
+      "titel": "Jūsų partnerio paskyra užblokuota",
+      "text": "Atviri komisiniai nebus išmokėti, kol galios blokavimas. Jei turite klausimų, susisiekite su mumis."
+    },
+    "approved": {
+      "titel": "Patvirtinta",
+      "text": "Jūsų paskyra aktyvi."
+    },
+    "grund": "Priežastis"
+  },
+  "uebersicht": {
+    "titelBewerber": "Sveiki atvykę į partnerių programą",
+    "textBewerber": "Kai jūsų paraiška bus patvirtinta, čia matysite savo nuorodas, klientus ir komisinius. Tuo tarpu įveskite savo mokesčių ir išmokų duomenis – tada pirmasis išmokėjimas gali būti atliktas be papildomų klausimų.",
+    "zumProfil": "Į profilį",
+    "titel": "Sveiki, {name}",
+    "rang": "Reitingas {rang} · {satz} prenumeratos pajamų",
+    "naechsterRang": "dar {fehlend} mokančių klientų iki {rang} ({satz})",
+    "linksTeilen": "Dalintis nuorodomis",
+    "keineBetraege": "—",
+    "kachel": {
+      "klicks": "Paspaudimai (30 dienų)",
+      "registrierungen": "Registruotos įmonės",
+      "zahlend": "Mokantys klientai",
+      "offen": "Atidaryta (grąžinimo langas)",
+      "auszahlbar": "Išmokėtina",
+      "ausgezahlt": "Išmokėta",
+      "team": "Komandos komisiniai",
+      "teamHinweis": "{n} komandos partnerių",
+      "struktur": "Klientai jūsų struktūroje",
+      "strukturHinweis": "savo + komandos klientai – šis skaičius lemia jūsų reitingą",
+      "super": "Super komisiniai",
+      "superHinweis": "{satz} nuo jūsų struktūros prenumeratos apyvartos, be termino apribojimo",
+      "turbo": "myBestDays užsakymo dalis",
+      "turboHinweis": "0,5 % už kiekvieną užsakymą per myBestDays iš jūsų klientų ir komandos klientų",
+      "bonus": "Paaukštinimo premijos",
+      "bonusHinweis": "vienkartinis už kiekvieną pasiektą rangą"
+    },
+    "deineLinks": "Jūsų nuorodos"
+  },
+  "links": {
+    "titel": "Nuorodos ir medžiaga",
+    "hinweis": "Jūsų nuoroda veda į mynextdays.com ir skaičiuoja paspaudimą. Kodas matomas registracijos formoje – be slapuko. Įmonė priskiriama tik vienam partneriui.",
+    "klicks30": "{n} paspaudimų per 30 dienų",
+    "kopiert": "Nukopijuota.",
+    "kopierenFehlgeschlagen": "Kopijuoti negalima – prašome pažymėti ir nukopijuoti.",
+    "codeKopieren": "Kopijuoti kodą",
+    "linkFehlt": "Nuoroda dar nepasiekiama.",
+    "neuerCode": "Sukurti kitą kodą",
+    "label": "Pavadinimas (nebūtina)",
+    "wunschcode": "Norimas kodas (nebūtina)",
+    "anlegen": "Sukurti",
+    "abbrechen": "Atšaukti",
+    "codeAngelegt": "Kodas sukurtas.",
+    "codeVergeben": "Šis kodas jau naudojamas.",
+    "fehler": "Nepavyko.",
+    "kennzeichnung": {
+      "titel": "Privaloma: žymėti reklamą",
+      "text": "Kiekviena rekomendacija su jūsų nuoroda ar kodu yra reklama ir turi būti atpažįstama kaip tokia – įrašo pradžioje, įrašo kalba. Paprastas „#ad“ nepakanka. Pažeidimai gali lemti blokavimą.",
+      "imBeitrag": "Įraše",
+      "amLink": "Prie nuorodos",
+      "land": {
+        "DE": "Vokietija",
+        "DK": "Danija"
+      },
+      "andere": "Kitos šalys: komercinis tikslas turi būti aiškiai atpažįstamas (ES nesąžiningos komercinės praktikos direktyva). Prašome patikrinti savo šalies reikalavimus; patvirtintus formuluotes pildysime palaipsniui."
+    },
+    "material": {
+      "titel": "Reklaminė medžiaga",
+      "leer": "Medžiaga ruošiama – ji atsiras čia, kai tik bus patvirtinta.",
+      "art": {
+        "video": "Vaizdo įrašas",
+        "image": "Paveikslėlis",
+        "text": "Teksto fragmentas",
+        "link": "Nuoroda"
+      },
+      "oeffnen": "Atidaryti"
+    }
+  },
+  "kunden": {
+    "titel": "Klientai",
+    "hinweis": "Jūsų reklamuojami verslai – pseudonimiškai. Matote šalį, būseną ir sumas, niekada vardo ar el. pašto. „Mokantis“ reiškia: pirmoji prenumeratos sąskaita apmokėta ir prenumerata aktyvi.",
+    "leer": "Dar nė vienas verslas neužsiregistravo per jūsų nuorodą.",
+    "kunde": "Klientas {n}",
+    "spalte": {
+      "kunde": "Klientas",
+      "land": "Šalis",
+      "status": "Būsena",
+      "registriert": "Užregistruota",
+      "provisionBis": "Komisinis mokestis iki",
+      "verdient": "Uždirbta"
+    },
+    "status": {
+      "registriert": "Užregistruota",
+      "zahlend": "Mokantis",
+      "beendet": "Baigta",
+      "in_pruefung": "Peržiūrima",
+      "abgelehnt": "Atmesta"
+    }
+  },
+  "provisionen": {
+    "titel": "Komisiniai mokesčiai",
+    "hinweis": "Kiekviena eilutė yra apmokėta prenumeratos sąskaita, užsakymas per myBestDays arba paaukštinimo premija. Pagrindas yra grynasis prenumeratos apyvarta arba užsakymo vertė; tarifas yra jūsų rangas mokėjimo metu. Atviros eilutės tampa išmokamos po 30 dienų.",
+    "leer": "Kol kas nėra komisinių.",
+    "reifAm": "mokėtina nuo {datum}",
+    "spalte": {
+      "datum": "Data",
+      "art": "Tipas",
+      "kunde": "Klientas",
+      "basis": "Pagrindas",
+      "satz": "Norma",
+      "betrag": "Suma",
+      "status": "Būsena"
+    },
+    "art": {
+      "earn": "Pelnas",
+      "reversal": "Grąžinimas",
+      "adjustment": "Koregavimas",
+      "override": "Komandos komisiniai",
+      "bonus": "Paaukštinimo premija",
+      "lifetime": "Super komisiniai",
+      "booking_share": "Užsakymo dalis"
+    },
+    "status": {
+      "pending": "Atidaryta",
+      "approved": "Mokėtina",
+      "held": "Sustabdyta",
+      "paid": "Išmokėta",
+      "reversed": "Atšaukta",
+      "cancelled": "Atšaukta"
+    },
+    "team": "Komanda"
+  },
+  "auszahlungen": {
+    "titel": "Išmokos",
+    "hinweis": "Mėnesinės, pagal valiutą, nuo minimalios sumos. Kiekvienai išmokai pridedamas kreditas (savisąskaita) – tai jūsų kvitas.",
+    "kein_weg": "Dar nėra nustatyto išmokėjimo būdo. Prašome pridėti jį profilyje – kitaip išmokos negalės būti atliktos.",
+    "leer": "Kol kas nėra išmokų.",
+    "spalte": {
+      "nummer": "Kredito Nr.",
+      "zeitraum": "Laikotarpis",
+      "betrag": "Suma",
+      "status": "Būsena",
+      "gutschrift": "Kreditas"
+    },
+    "status": {
+      "pending": "Paruošta",
+      "processing": "Pervedama",
+      "paid": "Apmokėta",
+      "failed": "Nepavyko"
+    },
+    "gutschriftLaden": "Atsisiųsti",
+    "gutschriftFehler": "Nepavyko įkelti kredito."
+  },
+  "profil": {
+    "titel": "Profilis",
+    "seit": "Partneris nuo {datum}",
+    "stammdaten": "Pagrindiniai duomenys",
+    "name": "Vardas",
+    "firma": "Įmonė (neprivaloma)",
+    "sprache": "El. laiškų kalba",
+    "kanal": "Jūsų socialinės medijos paskyros ir kanalai",
+    "speichern": "Išsaugoti",
+    "gespeichert": "Išsaugota.",
+    "gespeichertViesOffen": "Išsaugota. PVM mokėtojo kodas dar nepatvirtintas – dar kartą patikrinsime jį prieš išmokėjimą.",
+    "steuerUndAuszahlung": "Mokesčių ir išmokėjimo duomenys",
+    "aktuellerWeg": "Dabartinis: {weg} {details}",
+    "keinWeg": "Dar nenurodytas išmokėjimo būdas.",
+    "viesBestaetigt": "PVM mokėtojo kodas patvirtintas (VIES)",
+    "viesOffen": "PVM mokėtojo kodas dar nepatvirtintas",
+    "rechtsform": "Teisinė forma",
+    "privat": "Privatus asmuo",
+    "unternehmen": "Įmonė",
+    "land": "Šalis",
+    "ustId": "PVM mokėtojo kodas",
+    "ustIdHinweis": "Bus patikrinta pagal ES VIES sistemą. Be patvirtinto numerio įmonėms išmokos nebus atliekamos. Kredito pažymoje bus nurodytas atvirkštinio apmokestinimo įrašas.",
+    "privatHinweis": "Kaip privatus asmuo, gausite kreditą be PVM. Jūs pats turite apmokestinti komisinį mokestį.",
+    "auszahlungsweg": "Išmokėjimo būdas",
+    "kontoinhaber": "Sąskaitos savininkas",
+    "empfaengerEmail": "{weg} el. pašto adresas",
+    "passwortBestaetigen": "Patvirtinimui: Jūsų slaptažodis",
+    "passwortFalsch": "Slaptažodis neteisingas.",
+    "steuerdaten": "Mokesčių duomenys"
+  },
+  "anmelden": {
+    "partner": "Partneris",
+    "titel": "Prisijungti",
+    "text": "myNextDays partnerių programos prietaisų skydelis.",
+    "email": "El. paštas",
+    "passwort": "Slaptažodis",
+    "anmelden": "Prisijungti",
+    "passwortVergessen": "Pamiršote slaptažodį?",
+    "resetGesendet": "Jei paskyra egzistuoja, išsiuntėme el. laišką.",
+    "stoerung": "Prisijungimo paslauga šiuo metu nepasiekiama. Tai nėra susiję su jūsų prisijungimo duomenimis – bandykite dar kartą vėliau.",
+    "keinPartnerKonto": "Su šiais prisijungimo duomenimis nėra partnerio paskyros.",
+    "fehlgeschlagen": "Prisijungti nepavyko.",
+    "nochKeinKonto": "Dar nesate partneris?",
+    "bewerben": "Pateikti paraišką dabar"
+  },
+  "bewerben": {
+    "partner": "Partneris",
+    "titel": "Tapti partneriu",
+    "text": "Dvi minutės. Kiekvieną paraišką peržiūrime asmeniškai ir susisiekiame el. paštu.",
+    "name": "Jūsų vardas",
+    "firma": "Įmonė (neprivaloma)",
+    "email": "El. paštas",
+    "passwort": "Slaptažodis (bent 8 simboliai)",
+    "rechtsform": "Juridinis statusas",
+    "privat": "Privatus asmuo",
+    "unternehmen": "Įmonė",
+    "land": "Šalis",
+    "ustId": "PVM mokėtojo kodas",
+    "ustIdHinweis": "Privaloma įmonėms; bus patikrinta VIES sistemoje.",
+    "kanal": "Jūsų socialinės medijos paskyros",
+    "kanalHinweis": "Privaloma: bent viena socialinės medijos paskyra (Instagram, TikTok, YouTube, Facebook, LinkedIn...) su adresu, naudotojo vardu ir pasiekiamumu. Svetainė, tinklaraštis ar naujienlaiškis yra papildomas privalumas. Paskyras patikrinsime prieš patvirtinimą.",
+    "pitch": "Kaip pasiekiate atostogų nuomos ar viešbučių savininkus? (neprivaloma)",
+    "pitchHinweis": "Užtenka kelių sakinių.",
+    "zustimmung": "Sutinku su partnerystės sąlygomis, ypač su pareiga rekomendacijas žymėti kaip reklamą.",
+    "bedingungen": "Į programą",
+    "captchaHinweis": "Šis puslapis yra apsaugotas reCAPTCHA; taikomos Google privatumo politika ir paslaugų teikimo sąlygos.",
+    "stoerung": "Paslauga šiuo metu nepasiekiama – bandykite dar kartą vėliau.",
+    "emailVergeben": "Šiuo el. pašto adresu jau yra pateikta paraiška. Prašome prisijungti.",
+    "captchaFehler": "Saugumo patikra nepavyko. Prašome iš naujo įkelti puslapį ir bandyti dar kartą.",
+    "laeuft": "Siunčiama...",
+    "absenden": "Pateikti paraišką",
+    "schonPartner": "Jau esate partneris?",
+    "anmelden": "Prisijungti",
+    "sponsor": "Rėmėjas (kodas, neprivaloma)",
+    "sponsorHinweis": "Ar esate čia per partnerio komandos nuorodą? Jo kodas bus čia. Jis gaus komandos komisinius už jūsų klientų prenumeratos pajamas – jūsų pačių komisiniai liks nepakitę."
+  },
+  "nachrichten": {
+    "titel": "Pranešimai",
+    "hinweis": "Jūsų tiesioginis ryšys su partnerių komanda – klausimai apie komisinius, išmokas, medžiagą ar klientą. Atsakymai čia pateikiami tiesiogiai.",
+    "neu": "Nauja žinutė partnerių komandai",
+    "platzhalter": "Kokia tema?",
+    "senden": "Siųsti",
+    "abbrechen": "Atšaukti",
+    "leer": "Dar nėra pokalbių.",
+    "stoerung": "Paslauga šiuo metu nepasiekiama – bandykite dar kartą vėliau.",
+    "fehler": "Tai nepavyko.",
+    "team": "Partnerių komanda",
+    "du": "Jūs",
+    "antwortPlatzhalter": "Jūsų atsakymas…",
+    "antworten": "Atsakyti",
+    "status": {
+      "in_bearbeitung": "Vykdoma",
+      "wartet_auf_dich": "Atsakymas gautas",
+      "geloest": "Išspręsta"
+    }
+  },
+  "kanaele": {
+    "plattformLabel": "Platforma",
+    "handle": "Pseudonimas (nebūtina)",
+    "reichweite": "Pasiekiamumas (sekėjai)",
+    "hinzufuegen": "Pridėti kanalą",
+    "entfernen": "Pašalinti kanalą",
+    "plattform": {
+      "website": "Svetainė",
+      "blog": "Tinklaraštis",
+      "newsletter": "Naujienlaiškis",
+      "podcast": "Tinklalaidė",
+      "other": "Kita"
+    },
+    "socialPflicht": "Privaloma bent viena socialinės medijos paskyra – vien svetainės nepakanka."
+  },
+  "team": {
+    "titel": "Komanda",
+    "hinweis": "Partneriai, kurie kreipėsi naudodami jūsų kodą, sudaro jūsų komandą. Už jų klientų grynąją prenumeratos apyvartą gausite skirtumą tarp jūsų tarifo (šiuo metu {satz}) ir komandos partnerio tarifo – abu mokėjimo metu. Komandos klientai skaičiuojami 1:1 jūsų rangui.",
+    "meinSponsor": "Jūs esate {name} komandos partneris.",
+    "link": {
+      "titel": "Jūsų komandos nuoroda",
+      "text": "Kas pateikia paraišką per šią nuorodą, matomai įrašo jūsų kodą į paraišką – be slapuko.",
+      "kopieren": "Kopijuoti nuorodą",
+      "keinLink": "Nėra aktyvaus kodo – sukurkite jį skiltyje Nuorodos ir medžiaga."
+    },
+    "regeln": {
+      "titel": "Taisyklės",
+      "rang": "Komandos komisiniai = jūsų tarifas minus komandos partnerio tarifas, mokėjimo metu. Tas pats rangas = 0.",
+      "ebene": "Tik vienas lygis: jūsų komandos partneriai nekurs savo komandos.",
+      "keinGeld": "Jokių pinigų už verbavimą – tik iš apmokėtų prenumeratos pajamų.",
+      "dauer": "12 mėnesių už kiekvieną komandos klientą, 30 dienų grąžinimo langas. Nuo Elito papildomai 2,5 % super komisinių be termino apribojimo."
+    },
+    "kachel": {
+      "mitglieder": "Komandos partneriai (aktyvūs / iš viso)",
+      "teamKunden": "Mokantys komandos klientai",
+      "umsatz30": "Komandos apyvarta (30 dienų)",
+      "offen": "Komandos komisiniai atviri",
+      "auszahlbar": "Komandos komisiniai išmokami",
+      "ausgezahlt": "Komandos komisiniai išmokėti"
+    },
+    "verlauf": {
+      "titel": "Istorija · 12 mėnesių",
+      "leer": "Dar nėra komandos pajamų.",
+      "provision": "Komandos komisiniai",
+      "umsatz": "Komandos apyvarta"
+    },
+    "mitglieder": {
+      "titel": "Jūsų komanda",
+      "leer": "Dar nėra komandos partnerių. Pasidalykite savo komandos nuoroda.",
+      "kunden": "{n} mokančių klientų",
+      "umsatz30": "Apyvarta 30 d.",
+      "offen": "atvira",
+      "seit": "nuo {datum}"
+    },
+    "spalte": {
+      "partner": "Partneris",
+      "status": "Būsena",
+      "rang": "Rangas",
+      "kunden": "Mokantys klientai",
+      "umsatz30": "Apyvarta 30 d.",
+      "umsatzGesamt": "Bendra apyvarta",
+      "offen": "Atvira",
+      "auszahlbar": "Išmokama",
+      "ausgezahlt": "Išmokėta"
+    },
+    "status": {
+      "pending_review": "Peržiūrima",
+      "approved": "Patvirtinta",
+      "rejected": "Atmesta",
+      "suspended": "Užblokuota"
+    },
+    "chat": {
+      "titel": "Pramogos",
+      "schreiben": "Rašyti",
+      "rolle": {
+        "sponsor": "Jūsų rėmėjas",
+        "member": "Komandos partneris"
+      },
+      "zurueck": "Komanda",
+      "leer": "Kol kas nėra pranešimų.",
+      "platzhalter": "Jūsų pranešimas…",
+      "senden": "Siųsti",
+      "titelListe": "Komandos pranešimai"
+    },
+    "nochNichtErlaubt": "Komandai vadovaujate nuo „Kylantis“ rango (5 mokantys klientai jūsų struktūroje). Iki tol komandos nuorodos nėra."
+  },
+  "bedingungen": {
+    "neueVersion": "Partnerystės sąlygos yra naujos redakcijos (jūsų sutikimas: versija {alt}, dabartinė: {neu}). Prašome perskaityti ir vėl sutikti.",
+    "nochNicht": "Prašome sutikti su partnerystės sąlygomis (versija {neu}).",
+    "lesen": "Skaityti sąlygas",
+    "annehmen": "Sutikti",
+    "angenommen": "Ačiū – sutikimas išsaugotas."
+  },
+  "beitraege": {
+    "titel": "Įrašai",
+    "hinweis": "Sukurkite atskirą nuorodą kiekvienam „Reel“, vaizdo įrašui ar įrašui. Taip matysite, kuris įrašas pritraukia paspaudimų, registracijų ir mokančių klientų.",
+    "kontoHinweis": "Prijunkite savo paskyrą, tada čia taip pat bus rodomi peržiūros ir sąveikos tiesiogiai iš platformos.",
+    "kontoVerbinden": "Prijungti paskyrą",
+    "neu": "Naujas įrašas",
+    "keinCode": "Pirmiausia jums reikia aktyvaus rekomendacijos kodo.",
+    "feld": {
+      "titel": "Pavadinimas",
+      "titelBeispiel": "pvz., „Reel“ Kopenhaga ruduo",
+      "plattform": "Platforma",
+      "code": "Kodas",
+      "datum": "Paskelbta",
+      "url": "Įrašo adresas (neprivaloma)",
+      "urlHinweis": "Gali būti pridėtas po paskelbimo. Su adresu priskiriame peržiūras ir sąveikas įrašui."
+    },
+    "linkErzeugen": "Generuoti nuorodą",
+    "angelegt": "Įrašas sukurtas – nuoroda paruošta.",
+    "doppelt": "Šis įrašas jau egzistuoja šiam kodui.",
+    "fehler": "Nepavyko. Bandykite dar kartą.",
+    "liste": "{n, plural, =0 {Nėra įrašų} =1 {1 įrašas} other {# įrašai}}",
+    "leer": "Dar nėra įrašų. Sukurkite pirmąją nuorodą aukščiau.",
+    "veroeffentlicht": "paskelbta {datum}",
+    "loeschen": "Ištrinti įrašą",
+    "geloescht": "Įrašas ištrintas.",
+    "loeschenGesperrt": "Įrašas jau turi registracijų ir bus išsaugotas.",
+    "kopiert": "Nuoroda nukopijuota.",
+    "kopierenFehlgeschlagen": "Kopijuoti nepavyko – pažymėkite rankiniu būdu.",
+    "linkFehlt": "Nuoroda šiuo metu nepasiekiama.",
+    "qrZeigen": "Rodyti QR kodą",
+    "qrSchliessen": "Slėpti QR kodą",
+    "qrAlt": "QR kodas įrašo nuorodai",
+    "qrHinweis": "Skirta istorijoms, vaizdo įrašams ir spaudai – veda į tą pačią nuorodą.",
+    "beitragOeffnen": "Atidaryti įrašą",
+    "urlAendern": "Keisti adresą",
+    "urlNachtragen": "Pridėti adresą",
+    "speichern": "Išsaugoti",
+    "gespeichert": "Išsaugota.",
+    "kennzahl": {
+      "klicks": "Paspaudimai per 90 dienų",
+      "klicks30": "{n} per 30 dienų",
+      "registrierungen": "Registracijos",
+      "kunden": "Mokantys klientai",
+      "views": "Peržiūros",
+      "gemessen": "Būsena {zeit}",
+      "nichtVerbunden": "Paskyra neprijungta",
+      "interaktion": "Patinka {likes} · Komentarai {kommentare} · Bendrinimai {shares} · Išsaugota {saves}",
+      "pro1000": "{n} paspaudimų 1 000 peržiūrų"
+    },
+    "freigabe": {
+      "videoNoetig": "Įkelti patvirtinimui",
+      "erklaerung": "Įkelkite paruoštą vaizdo įrašą, paveikslėlį ar PDF prieš paskelbdami. Kai patvirtinsime, čia pasirodys jūsų asmeninė nuoroda – ją įdėsite po įrašu. Naudokite tik mūsų reklaminę medžiagą, jokių savo ekrano nuotraukų ir jokių sėkmės ar garantijos pažadų.",
+      "hochladen": "Pasirinkti failą (vaizdo įrašas, JPG, PNG, PDF)",
+      "neuHochladen": "Įkelti naują failą",
+      "laeuft": "Įkeliama…",
+      "eingereicht": "Vaizdo įrašas pateiktas. Susisieksime, kai tik jis bus peržiūrėtas.",
+      "inPruefung": "Peržiūrima",
+      "inPruefungHinweis": "Jūsų vaizdo įrašas yra pas mus. Kai tik jis bus patvirtintas, čia atsiras jūsų nuoroda.",
+      "eingereichtAm": "Pateikta {zeit} – kai tik bus patvirtinta, čia atsiras jūsų nuoroda.",
+      "abgelehnt": "Nepatvirtinta",
+      "grund": "Priežastis",
+      "freigegeben": "Vaizdo įrašas patvirtintas",
+      "zuGross": "Vaizdo įrašas yra didesnis nei {mb} MB.",
+      "fehler": "Įkelti nepavyko.",
+      "grundKategorie": {
+        "material": "Medžiaga: tik oficiali reklaminė medžiaga, jokių savo ekrano nuotraukų",
+        "promise": "Pažadai: jokių garantijų ar sėkmės pažadų",
+        "disclosure": "Žymėjimas: įrašas turi būti pažymėtas kaip reklama",
+        "brand": "Prekės ženklas: logotipas ar pavadinimas naudojami neteisingai",
+        "other": "Kita"
+      }
+    }
+  },
+  "kanalVerbindung": {
+    "titel": "Prijungtos paskyros",
+    "hinweis": "Prijunkite savo socialinės žiniasklaidos paskyras, kad sekėjai ir peržiūros ateitų tiesiai iš platformos. Tai savanoriška ir gali būti bet kada atšaukta; mes tik skaitome, nieko nerašome.",
+    "verbinden": "Prijungti {anbieter}",
+    "baldVerfuegbar": "Netrukus",
+    "nichtKonfiguriert": "Šis ryšys dar neaktyvus.",
+    "fehler": "Tai nepavyko. Bandykite dar kartą.",
+    "verifiziert": "Patvirtinta",
+    "follower": "{n} sekėjų",
+    "views28": "{n} peržiūrų per 28 dienas",
+    "engagement": "Įsitraukimas {n} %",
+    "gemessen": "Būsena {zeit}",
+    "nochKeinSnapshot": "Pirmasis matavimas netrukus",
+    "letzterFehler": "Paskutinis bandymas nepavyko",
+    "trennen": "Atjungti",
+    "getrennt": "Ryšys atjungtas. Ankstesni matavimai išlieka kaip istorija.",
+    "getrennteKonten": "{n, plural, =1 {1 atjungta paskyra} other {# atjungtos paskyros}}",
+    "getranntAm": "Atjungta {zeit}",
+    "durchPlattform": "Prieiga iš platformos nutraukta",
+    "datenschutz": "Atjungdami, mes nedelsiant ištriname prieigos duomenis. Išmatuotos vertės išlieka išsaugotos kaip istorija. Išsamesnė informacija privatumo politikoje.",
+    "rueckkehr": {
+      "verbunden": "Paskyra prijungta – vyksta pirmasis matavimas.",
+      "abgelehnt": "Ryšys nutrauktas – jūs nesuteikėte prieigos.",
+      "fehler": "Ryšys nepavyko."
+    }
+  },
+  "passwort": {
+    "anzeigen": "Rodyti slaptažodį",
+    "verbergen": "Slėpti slaptažodį"
+  },
+  "verbundkonto": {
+    "titel": "Susietoji paskyra išmokėjimui",
+    "hinweis": "Jūsų komisiniai bus pervesti į susietąją paskyrą. Mūsų mokėjimo paslaugų teikėjas reikalauja tapatybės patvirtinimo – kol jis nebus atliktas, išmokėjimas negalimas.",
+    "bereit": "Jūsų susietoji paskyra aktyvuota. Išmokėjimai į ją atliekami automatiškai.",
+    "offeneFelder": "Šie duomenys dar trūksta",
+    "gesperrt": "Paskyra šiuo metu užblokuota: {grund}",
+    "schrittKonto": "Atidaryti susietąją paskyrą",
+    "schrittDaten": "Asmens duomenys",
+    "schrittDatenFirma": "Įmonės ir asmens duomenys",
+    "schrittBank": "Banko duomenys",
+    "schrittBedingungen": "Mokėjimo paslaugų teikėjo sąlygos",
+    "kontoAnlegen": "Atidaryti susietąją paskyrą",
+    "kontoAngelegt": "Susietoji paskyra atidaryta.",
+    "datenBearbeiten": "Redaguoti duomenis",
+    "zuklappen": "Užverti",
+    "datenGesendet": "Duomenys išsaugoti.",
+    "vorname": "Vardas",
+    "nachname": "Pavardė",
+    "geburtsdatum": "Gimimo data",
+    "tag": "DD",
+    "monat": "MM",
+    "jahr": "MMMM",
+    "strasse": "Gatvė ir namo numeris",
+    "plz": "Pašto kodas",
+    "ort": "Miestas",
+    "nationalitaet": "Pilietybė (šalies kodas)",
+    "telefon": "Telefonas",
+    "webseite": "Svetainė arba profilis",
+    "webseiteHinweis": "Adresas, kuriuo reklamuojate – reikalingas patikrinimui.",
+    "firmenname": "Įmonės pavadinimas",
+    "steuernummer": "Mokesčių mokėtojo kodas",
+    "firmenStrasse": "Įmonės adresas",
+    "firmaHinweis": "Jūsų aukščiau nurodyti duomenys bus naudojami kaip atstovaujančio asmens duomenys.",
+    "speichern": "Išsaugoti duomenis",
+    "kontoinhaber": "Sąskaitos savininkas",
+    "waehrung": "Valiuta",
+    "waehrungHinweis": "Banko sąskaitos valiuta, o ne jūsų šalies valiuta.",
+    "bankSpeichern": "Išsaugoti banko duomenis",
+    "bankGesetzt": "Banko duomenys išsaugoti.",
+    "bedingungenAnnehmen": "Sutikti su sąlygomis",
+    "bedingungenAngenommen": "Sąlygos priimtos.",
+    "fehler": "Nepavyko.",
+    "schrittIdentitaet": "Tapatybės patvirtinimas",
+    "identitaetHinweis": "Galiausiai mūsų mokėjimo paslaugų teikėjas patikrins jūsų asmens tapatybę. Tai atliekama jo saugioje svetainėje, nes bus nufotografuota; po to grįšite čia.",
+    "identitaetStarten": "Patvirtinti tapatybę"
+  }
+}

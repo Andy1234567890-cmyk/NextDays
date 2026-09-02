@@ -76,7 +76,8 @@ eine weitere zu erfinden. Verfügbarkeit an die Portale ist deshalb eine ZAHL
 ## Zwei Marken (UNVERHANDELBAR) — myNextDays ≠ myBestDays
 - **myNextDays** = das PMS, der Channel-Manager und die Marketing-Seite
   (`web`, `apps/api`, `marketing`, `admin`, `builder`, `storybook`,
-  `mobile-nextdays`). Der Betrieb ist hier Kunde, zahlt Abo + Provision.
+  `mobile-nextdays`, `partner` = Partner-Dashboard des Affiliate-Programms,
+  ADR-0020). Der Betrieb ist hier Kunde, zahlt Abo + Provision.
 - **myBestDays** = der Marktplatz und alles, was Gast und Gastgeber dort sehen:
   `plattform` (Gäste-Marktplatz), `gastgeber` (Gastgeber-Dashboard),
   `mobile-bestdays` (Marktplatz-App) und die Marktplatz-Bausteine im PMS (Kanal
@@ -91,26 +92,35 @@ Beschreibt es Verwaltung/Kanalmanager/Abrechnung des Betriebs → **myNextDays**
 Logo-Dateien: `mybestdays-logo.png` (+ `-light` für dunkle Flächen).
 
 ## Vertriebskanäle & Frontends (UNVERHANDELBAR) — drei Wege, drei Oberflächen
-Jedes Objekt wird über MEHRERE Kanäle verkauft; Kanal-Sichtbarkeit ist PRO KANAL
-schaltbar, NICHT ein globales „veröffentlicht"-Flag (Industrie-Standard, belegt:
-Channex/SiteMinder/Cloudbeds/Shopify). Die drei Vertriebskanäle:
+Jedes Objekt wird über MEHRERE Kanäle verkauft. Website und Portale sind PRO
+KANAL schaltbar (Industrie-Standard, belegt: Channex/SiteMinder/Cloudbeds/
+Shopify); der eigene Marktplatz ist seit dem 02.09.2026 PFLICHT (ADR-0021).
+Die drei Vertriebskanäle:
 - **Channex → OTAs**: Booking.com, Airbnb, Expedia & Co. (Channel-Aggregator
   Channex, `apps/api/.../channel_manager`; Distribution = `channex_property_map`
   `sync_enabled` + verbundener Kanal). Im Kundentext nie „Channex" — „Portale".
 - **Plattform**: unser EIGENER globaler Marktplatz **myBestDays** (`/plattform`),
-  ein gleichrangiger Buchungskanal wie Booking/Airbnb, NICHT „Direkt".
-  Sichtbarkeit = eigene Achse `properties.listed_on_marketplace` (0159),
-  getrennt von OTA. Buchungen tragen `channel='portal'` +
-  `ota_name='myBestDays'` (Altbestand per 0239 nachgezogen).
+  ein gleichrangiger Buchungskanal wie Booking/Airbnb, NICHT „Direkt" — und
+  **Pflichtkanal**: JEDES Objekt ist dort gelistet, der Betrieb kann ihn nicht
+  abwählen (Master-Strategie 02.09.2026, ADR-0021, Migration 0527).
+  `properties.listed_on_marketplace` (0159) steht deshalb immer auf `true`;
+  der Trigger `properties_marktplatz_pflicht` erzwingt das auch gegen den
+  DB-Direktpfad (Wurzel 6). Die EINZIGE Ausnahme ist eine offene „Verkauf
+  pausieren"-Pause (`property_sales_pause`, 0375), die das Objekt bei ALLEN
+  Kanälen aus dem Verkauf nimmt. Sichtbar auf dem Marktplatz = `status='active'`
+  UND Freigabe des Betreibers (`moderation_status='approved'`, 0203).
+  `PropertyUpdate.listed_on_marketplace=false` → 422. Kein Schalter in
+  irgendeiner Oberfläche; angezeigt wird nur der Zustand. Buchungen tragen
+  `channel='portal'` + `ota_name='myBestDays'` (Altbestand per 0239 nachgezogen).
 - **App**: die mobile myBestDays-App (`mobile-bestdays`, React Native) —
   gleichwertiges Frontend derselben FastAPI für den GAST. Die Verwaltung
   (Agentur · Owner · Mitarbeiter) ist die zweite App `mobile-nextdays`; siehe
   „Mobile"-Abschnitt unten.
 Regel: auf einem Kanal sichtbar = Objekt-Status erlaubt Verkauf (`status='active'`)
-UND Kanal-Sichtbarkeit dieses Kanals an UND Verfügbarkeit vorhanden. `publish()`
-schaltet im Normalfall alle an (1 Klick = OTA + Marktplatz), aber jeder Kanal ist
-einzeln steuerbar. availability/stop_sell wirken kanalübergreifend (Stop-Sell
-sperrt überall), die reine Kanal-Sichtbarkeit ist pro Kanal.
+UND Kanal-Sichtbarkeit dieses Kanals an (Marktplatz: immer, plus Freigabe) UND
+Verfügbarkeit vorhanden. `publish()` schaltet Website und OTA an (1 Klick = alle
+Kanäle), Website und Portale sind danach einzeln steuerbar. availability/stop_sell
+wirken kanalübergreifend (Stop-Sell sperrt überall).
 
 ## Wurzel 5b — Unsere Uhr ist nie der Zeitpunkt eines fremden Ereignisses
 `created_at`/`updated_at`/Feed-Eingang beschreiben UNSERE Verarbeitung. Sie als

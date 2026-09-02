@@ -246,6 +246,40 @@ export const datenschutz: LegalDoc = {
       ],
     },
     {
+      heading: "Clár Comhpháirtíochta",
+      paragraphs: [
+        "Oibrímid clár comhpháirtíochta trína molann comhpháirtithe (tionchair, comhairleoirí, gníomhaireachtaí, custaiméirí) gnólachtaí do myNextDays agus faigheann siad coimisiún as sin. Sa phróiseas seo, déanaimid sonraí na gcomhpháirtithe a phróiseáil agus – go pointe beag – sonraí na ngnólachtaí molta.",
+      ],
+      unterpunkte: [
+        {
+          titel: "Sonraí na gComhpháirtithe",
+          paragraphs: [
+            "Nuair a dhéantar iarratas, déanaimid ainm, ainm na cuideachta, foirm dhlíthiúil, tír, seoladh ríomhphoist, teanga, cuntais meán sóisialta (ardán, seoladh, láimhseáil, raon feidhme féin-dhearbhaithe), uimhir aitheantais CBL (seiceáil tríd an gcóras VIES an AE), sonraí íocaíochta (IBAN, seoladh Wise nó PayPal) a phróiseáil, chomh maith leis an toiliú leis na téarmaí agus coinníollacha rannpháirtíochta le leagan agus am. Is é an bunús dlí ná comhlíonadh an chonartha comhpháirtíochta (Airteagal 6(1)(b) de RGCS); maidir le creidmheasanna agus coinneáil, tá feidhm ag na hoibleagáidí dlí cánach agus tráchtála (Airteagal 6(1)(c) de RGCS).",
+            "Má bhainistíonn comhpháirtí foireann, feiceann sé ainm nó ainm na cuideachta, céim, líon na gcustaiméirí íocacha agus an coimisiún foirne a eascraíonn as sin óna chomhpháirtithe foirne. Stóráiltear teachtaireachtaí idir urraitheoir agus comhpháirtí foirne san ardán ionas go bhfeiceann an dá cheann an stair.",
+          ],
+        },
+        {
+          titel: "Cliceanna ar Naisc Chomhpháirtíochta",
+          paragraphs: [
+            "Má osclaíonn cuairteoir nasc comhpháirtíochta (mynextdays.com/p/CODE), stóráilimid an cód, an t-am, an leathanach a osclaíodh, an leathanach tagartha agus aon pharaiméadair feachtais chomh maith le seoladh IP agus aitheantóir brabhsálaí go heisiach mar suimeanna seiceála giorraithe (hash) – chun mí-úsáid a bhrath (carnadh), ní chun ath-aitheantas a dhéanamh. Ní chuirtear fianán rianaithe ar bun. Scriosaimid sonraí cliceála tar éis 90 lá. Is é an bunús dlí ná ár leas dlisteanach i mbilleáil atá saor ó chalaois don chlár (Airteagal 6(1)(f) de RGCS).",
+          ],
+        },
+        {
+          titel: "Cuntais agus Postálacha Meán Sóisialta Nasctha",
+          paragraphs: [
+            "Is féidir le comhpháirtithe a gcuntais ar YouTube (Google), Instagram agus Facebook (Meta) chomh maith le TikTok a nascadh go deonach leis an deais comhpháirtíochta. Sa phróiseas seo, tugann siad cead léitheoireachta don ardán faoi seach (OAuth); ní scríobhaimid aon rud sna cuntais seo. Stóráilimid aitheantóir agus ainm an chuntais, an comhartha rochtana criptithe, an t-am nasctha chomh maith le tomhas laethúil in aghaidh an chuntais: líon na leantóirí nó na síntiúsóirí, radhairc le 28 lá anuas, ráta idirghníomhaíochta agus líon na bpostálacha, gach ceann acu le ham freagartha an ardáin. Maidir le postálacha a chruthaíonn an comhpháirtí sa deais (teideal, ardán, seoladh, dáta foilsithe), stóráilimid radhairc, rudaí is maith leat, tuairimí, comhroinnt agus sábhálacha ón ardán freisin.",
+            "Is é an cuspóir ná raon feidhme an chomhpháirtí a fhíorú agus cliceanna agus custaiméirí a shannadh d'iontrálacha aonair; déantar sonraí neamhfhíoraithe a mheá níos lú nuair a scaoiltear iad. Ní úsáidtear fianaise ar neamhréireachtaí (m.sh. léim leantóirí gan radhairc chomhfhreagracha) ach amháin le haghaidh athbhreithniú láimhe uainn agus ní bhíonn aon chinneadh uathoibrithe mar thoradh air. Is é an bunús dlí ná toiliú an chomhpháirtí (Airteagal 6(1)(a) de Rialachán Ginearálta maidir le Cosaint Sonraí), a thugann sé trí nascadh agus is féidir leis é a tharraingt siar am ar bith sa phainéal faoi “Dínascadh”; nuair a dhínascann sé, scriosaimid an comhartha rochtana láithreach, fanann luachanna tomhaiste stóráilte mar stair agus scriostar iad le cuntas an chomhpháirtí. Ní úsáidimid ach comhéadain oifigiúla na n-ardán; maidir le próiseáil ag Google, Meta agus TikTok, tá feidhm ag a bhfógraí príobháideachais féin.",
+          ],
+        },
+        {
+          titel: "Gnólachtaí Molta",
+          paragraphs: [
+            "Má chláraíonn gnó le cód comhpháirtí, stóráilimid sannadh an ghnó don chomhpháirtí chomh maith leis an am, an modh (nasc nó cód) agus an stádas. Ní fheiceann an comhpháirtí an gnó ach go bréag-ainm (uimhir seicheamhach, tír, stádas, méideanna) — ní ainm, seoladh ríomhphoist nó sonraí áirithinte. Ní féidir leis an gcomhpháirtí teagmháil a dhéanamh leis an ngnó tríd an ardán ach amháin má thoilíonn an gnó go sainráite leis sin le linn an chláraithe. Chun críocha socraíochta coimisiúin, déanaimid próiseáil ar ghlanmhéideanna síntiúis na sonrasc íoctha ón ngnó; is é an bunús dlí ná comhlíonadh an chomhaontaithe comhpháirtíochta agus an chomhaontaithe úsáide (Airteagal 6(1)(b) de Rialachán Ginearálta maidir le Cosaint Sonraí).",
+          ],
+        },
+      ],
+    },
+    {
       heading: "Óstáil agus stóráil",
       paragraphs: [
         "Ritheann an Ardán, an bunachar sonraí, na meáin agus an freastalaí ríomhphoist ar fhreastalaithe Hetzner Online GmbH, an Ghearmáin, in ionad sonraí Heilsincí (an Fhionlainn) — is é sin, laistigh den Aontas Eorpach. Tá comhaontú próiseála sonraí i bhfeidhm le Hetzner.",

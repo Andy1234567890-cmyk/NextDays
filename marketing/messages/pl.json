@@ -851,7 +851,8 @@
     },
     "unternehmen": {
       "ueberUns": "O nas",
-      "kontakt": "Kontakt"
+      "kontakt": "Kontakt",
+      "partner": "Program partnerski"
     },
     "copyright": "© 2026 myNextDays. Wszelkie prawa zastrzeżone.",
     "agb": "Regulamin",
@@ -860,7 +861,8 @@
     "cookies": "Polityka cookies",
     "avv": "Powierzenie przetwarzania",
     "kontoLoeschen": "Usuń konto",
-    "newsletterKnopf": "Zapisz się do newslettera"
+    "newsletterKnopf": "Zapisz się do newslettera",
+    "partnerAgb": "Warunki i zasady dla partnerów"
   },
   "legal": {
     "stand": "Stan na: {datum}"
@@ -990,7 +992,7 @@
       "sub": "Co wynajmujący chcą wiedzieć przed zmianą — krótko i bez drobnego druku.",
       "laufzeit": {
         "frage": "Czy jest okres minimalny?",
-        "antwort": "Nie. Abonament jest miesięczny i można go anulować z czterotygodniowym wyprzedzeniem na koniec miesiąca. Pierwsze 14 dni jest bezpłatne: dane do płatności podajesz na początku, ale opłata zostanie pobrana dopiero po zakończeniu okresu próbnego. Jeśli anulujesz wcześniej, nic nie płacisz."
+        "antwort": "Nie. Abonament jest miesięczny i można go anulować z czterotygodniowym wyprzedzeniem na koniec miesiąca. Pierwsze 14 dni jest bezpłatne: dane do płatności podaje się na początku, ale opłata zostanie pobrana dopiero po zakończeniu okresu próbnego. Jeśli korzystają Państwo z linku lub kodu partnera, pierwszy pełny miesiąc jest dodatkowo bezpłatny. Jeśli anulują Państwo wcześniej, nic Państwo nie płacą."
       },
       "objektzahl": {
         "frage": "Co się dzieje, gdy dodam obiekty?",
@@ -2185,5 +2187,259 @@
     "verwalten": "Zarządzaj ustawieniami plików cookie",
     "schliessen": "Zamknij",
     "bestaetigen": "Potwierdź ustawienia"
+  },
+  "partnerHinweis": {
+    "text": "Pochodzą Państwo z polecenia (kod {code}). Kod zostanie zastosowany podczas rejestracji i zapewni Państwu pierwszy pełny miesiąc po 14 dniach testowych.",
+    "cta": "Rozpocznij teraz za darmo",
+    "schliessen": "Zamknij notatkę"
+  },
+  "partner": {
+    "meta": {
+      "titel": "Program partnerski — myNextDays",
+      "beschreibung": "Poleć myNextDays właścicielom obiektów wakacyjnych i hotelom, a przez dwanaście miesięcy otrzymasz do {max}% przychodów z subskrypcji każdego pozyskanego obiektu."
+    },
+    "hero": {
+      "eyebrow": "Program partnerski",
+      "headlinePre": "Poleć myNextDays —",
+      "headlineHighlight": "i zarabiaj",
+      "sub": "Dla influencerów, konsultantów, agencji i właścicieli obiektów z siecią: Każda firma, która zarejestruje się za pośrednictwem Twojego linku i opłaci subskrypcję, przyniesie Ci do {max} % obrotu z subskrypcji przez dwanaście miesięcy — plus 0,5 % każdej rezerwacji przez myBestDays, bonusy za awans, a od poziomu Elite superprowizję bez ograniczeń czasowych.",
+      "cta": "Aplikuj teraz",
+      "ctaLogin": "Logowanie partnera",
+      "chipDauer": "12 miesięcy prowizji od klienta",
+      "chipAuszahlung": "Miesięczna wypłata",
+      "chipKosten": "Bezpłatny udział",
+      "chipGratismonat": "Twoi klienci: 14 dni testu + 1 miesiąc gratis"
+    },
+    "schritte": {
+      "eyebrow": "Jak to działa",
+      "heading": "Trzy kroki do pierwszej prowizji",
+      "bewerben": {
+        "titel": "Aplikuj",
+        "text": "Podaj nam swój kanał — stronę internetową, profil społecznościowy lub sieć. Każdą aplikację sprawdzamy osobiście i zazwyczaj zatwierdzamy w ciągu kilku dni roboczych."
+      },
+      "teilen": {
+        "titel": "Udostępnij link lub kod",
+        "text": "Otrzymasz osobisty link i kod polecający. Kod jest widoczny w formularzu rejestracyjnym — bez plików cookie śledzących."
+      },
+      "verdienen": {
+        "titel": "Zarabiaj",
+        "text": "Jeśli pozyskany obiekt opłaci swoją pierwszą fakturę za subskrypcję, Twoja prowizja będzie naliczana przez dwanaście miesięcy. Każdego klienta widzisz anonimowo w panelu partnera, a wypłaty otrzymujesz co miesiąc."
+      }
+    },
+    "staffel": {
+      "eyebrow": "Twój poziom",
+      "heading": "Im większa Twoja struktura, tym wyższa stawka",
+      "sub": "Stawka obowiązuje dla wszystkich nowych prowizji od momentu osiągnięcia rangi. Do struktury zaliczają się Twoi własni płacący klienci oraz klienci Twoich partnerów zespołowych.",
+      "kunden": "{von}–{bis} płacących klientów",
+      "kundenOffen": "od {von} płacących klientów",
+      "satz": "przychodów z subskrypcji",
+      "nichtAbrufbar": "Poziom jest obecnie niedostępny. Prosimy spróbować ponownie później."
+    },
+    "bedingungen": {
+      "eyebrow": "Zasady",
+      "heading": "Uczciwe dla Ciebie, uczciwe dla obiektów",
+      "basis": {
+        "titel": "Co się liczy",
+        "text": "Podstawą prowizji jest netto przychód z subskrypcji (taryfa podstawowa i moduły) pozyskanego obiektu — bez podatków, prowizji portalowych i dodatkowych usług."
+      },
+      "dauer": {
+        "titel": "Dwanaście miesięcy",
+        "text": "Prowizja naliczana jest przez dwanaście miesięcy od pierwszej opłaconej faktury abonamentowej firmy; bezpłatny miesiąc Twoich klientów nie jest wliczany. Jeśli firma zrezygnuje, prowizja kończy się wraz z jej ostatnią płatnością. Udział w rezerwacji i superprowizja są naliczane bez tego ograniczenia."
+      },
+      "auszahlung": {
+        "titel": "Wypłata",
+        "text": "Miesięcznie, 30 dni po płatności obiektu, od minimalnej kwoty w danej walucie. Otrzymasz notę kredytową; firmy potrzebują ważnego numeru VAT."
+      },
+      "kennzeichnung": {
+        "titel": "Oznaczenie",
+        "text": "Każde polecenie jest reklamą i musi być jako takie oznaczone. W panelu udostępniamy wymagane sformułowania dla każdego języka."
+      },
+      "verboten": {
+        "titel": "Niedozwolone",
+        "text": "Samopromocja, reklama z użyciem naszych nazw marek w reklamach wyszukiwania, obietnice rabatów w naszym imieniu i niechciane wiadomości. Zwroty są odejmowane od prowizji."
+      },
+      "daten": {
+        "titel": "Prywatność",
+        "text": "Widzi Pan swoich klientów tylko anonimowo — z krajem, statusem i kwotami, nigdy z nazwiskiem ani adresem e-mail. Firma może zezwolić Panu na kontakt z nią podczas rejestracji."
+      }
+    },
+    "faq": {
+      "eyebrow": "Częste pytania",
+      "heading": "O co pytają nas partnerzy",
+      "wer": {
+        "frage": "Kto może zostać partnerem?",
+        "antwort": "Każda osoba lub firma w UE posiadająca rzeczywisty kanał dotarcia do właścicieli obiektów lub hoteli: influencerzy, konsultanci, agencje, kancelarie podatkowe, stowarzyszenia — oraz sami klienci myNextDays. Aplikacja jest bezpłatna; subskrypcja nie jest warunkiem."
+      },
+      "wann": {
+        "frage": "Kiedy firma jest uznawana za mojego klienta?",
+        "antwort": "Gdy zarejestruje się za pomocą Pana kodu i opłaci swoją pierwszą fakturę abonamentową. Rejestracje bez płatności nie liczą się do rankingu."
+      },
+      "doppelt": {
+        "frage": "Co, jeśli firma poda dwóch partnerów?",
+        "antwort": "Firma jest przypisywana dokładnie jednemu partnerowi — temu, którego kod znajdował się w formularzu podczas rejestracji. Późniejsze kody tego nie zmieniają."
+      },
+      "steuern": {
+        "frage": "Jak przebiega rozliczenie?",
+        "antwort": "Wystawiamy notę kredytową (self-billing). Firmy z numerem VAT UE otrzymują ją z adnotacją o odwrotnym obciążeniu, osoby prywatne bez VAT — prowizję opodatkowuje Pan samodzielnie."
+      },
+      "material": {
+        "frage": "Czy są dostępne materiały promocyjne?",
+        "antwort": "Tak: krótkie filmy do mediów społecznościowych, film wyjaśniający, banery i bloki tekstowe — w panelu partnera, w Pana języku."
+      },
+      "wieviel": {
+        "frage": "Ile prowizji mogę zarobić?",
+        "antwort": "Zależy to od przychodów z subskrypcji klientów i Twojej rangi. Powyższa tabela przedstawia stawkę za każdą rangę; przez dwanaście miesięcy za każdego klienta. Do tego dochodzi 0,5% każdej rezerwacji, którą Twoi klienci otrzymają za pośrednictwem myBestDays, jednorazowy bonus za awans za każdą osiągniętą rangę, z zespołem prowizja różnicowa — a od partnera Elite 2,5% superprowizji od całej struktury bez ograniczeń czasowych."
+      },
+      "team": {
+        "frage": "Jak działa prowizja zespołowa?",
+        "antwort": "Od rangi „Awansujący”: Jeśli partner aplikuje za pośrednictwem Twojego linku zespołowego i wyraźnie wpisze Twój kod w aplikacji, po zatwierdzeniu należy do Twojego zespołu. Jego klienci liczą się 1:1 do Twojej rangi. Od obrotu netto z subskrypcji jego klientów otrzymujesz różnicę między Twoją stawką a jego — dokładnie jeden poziom w głąb, bez opłaty za uczestnictwo, bez pieniędzy za pozyskiwanie."
+      },
+      "auszahlung": {
+        "frage": "Jak i kiedy wypłacane są prowizje?",
+        "antwort": "Miesięcznie w każdej walucie, gdy tylko suma osiągnie minimalną kwotę dla danej waluty. Każda pozycja prowizji jest „otwarta” przez 30 dni (okno zwrotu), a następnie podlega wypłacie. Otrzymujesz notę kredytową (self-billing) — nie wystawiasz faktury. Wypłata za pośrednictwem SEPA, Wise lub PayPal."
+      },
+      "verfolgen": {
+        "frage": "Jak mogę śledzić moje prowizje i wyniki?",
+        "antwort": "W panelu partnera, w sekcji „Prowizje” widoczne są wszystkie opłacone faktury abonamentowe z podstawą, stawką, kwotą i statusem, w sekcji „Klienci” – Twoje firmy pseudonimowo, w sekcji „Zespół” – ocena Twoich partnerów zespołowych, a w sekcji „Linki i materiały” – kliknięcia dla każdego kodu."
+      },
+      "werbung": {
+        "frage": "Czy mogę prowadzić płatne kampanie reklamowe?",
+        "antwort": "Nie na naszą markę: reklamy na „myNextDays” i warianty pisowni (brand-bidding), cookie-dropping, kupiony zasięg lub zachęty do rejestracji są zabronione i prowadzą do zablokowania. Własne treści, posty i rekomendacje są wyraźnie mile widziane — z oznaczeniem jako reklama."
+      }
+    },
+    "abschluss": {
+      "heading": "Gotowy polecić myNextDays?",
+      "sub": "Złóż wniosek w dwie minuty. Skontaktujemy się po weryfikacji.",
+      "cta": "Aplikuj teraz",
+      "kontakt": "Pytania? Prosimy o kontakt."
+    },
+    "vergleich": {
+      "eyebrow": "Twój poziom",
+      "heading": "Im więcej płacących klientów, tym wyższa stawka",
+      "sub": "Stawka obowiązuje dla wszystkich nowych prowizji od momentu osiągnięcia rangi. Liczy się Twoja struktura: Twoi własni płacący klienci plus klienci Twoich partnerów zespołowych.",
+      "nichtAbrufbar": "Poziom jest obecnie niedostępny. Spróbuj ponownie później.",
+      "plan": "Ranga",
+      "provision": "Prowizja od własnych klientów",
+      "teamProvision": "Prowizja zespołowa od klientów Twoich partnerów zespołowych",
+      "dauer": "Okres trwania na klienta",
+      "dauerWert": "12 miesięcy",
+      "kunden": "{von}–{bis} płacących klientów",
+      "kundenOffen": "od {von} płacących klientów",
+      "vorteile": "Usługi",
+      "ja": "zawarte",
+      "nein": "niezawarte",
+      "leistung": {
+        "konto": "Darmowe konto partnerskie",
+        "dashboard": "Panel partnerski z klientami, prowizjami i analizami",
+        "material": "Materiały promocyjne i szablony identyfikacji",
+        "team": "Budowanie zespołu z własnym linkiem zespołowym",
+        "gutschrift": "Miesięczne wypłaty z uznaniem (self-billing)",
+        "chat": "Bezpośredni kontakt z zespołem partnerskim",
+        "support": "Osobisty opiekun",
+        "coMarketing": "Co-marketing (wspólne działania)"
+      },
+      "fussnoteTeam": "Prowizja zespołowa to różnica między Twoją stawką a stawką partnera zespołowego od obrotu netto z subskrypcji jego klientów, obie w momencie płatności — dokładnie jeden poziom, bez opłaty za uczestnictwo, bez pieniędzy za pozyskiwanie. Łącznie nigdy więcej niż 30 %.",
+      "fussnoteCoMarketing": "Po uzgodnieniu z zespołem partnerskim; zależy od profilu partnera i bieżących działań.",
+      "fussnoteRang": "Ranga wynika z Twojej struktury: własnych płacących klientów plus klientów Twoich partnerów zespołowych, każdy liczony raz. Po osiągnięciu nowej rangi od poziomu początkującego przysługuje jednorazowy bonus za awans.",
+      "teamDifferenz": "{satz} % minus stawka partnera zespołowego",
+      "teamNicht": "jeszcze brak zespołu",
+      "bonus": "Bonus za awans (jednorazowo)",
+      "superProvision": "Superprowizja od całej struktury",
+      "marktTurbo": "Udział w rezerwacji myBestDays",
+      "marktTurboWert": "0,5 % za rezerwację, bez ograniczeń",
+      "fussnoteSuper": "Od partnera Elite 2,5 % od obrotu netto z subskrypcji wszystkich klientów Twojej struktury — dodatkowo do prowizji, bez limitu 12 miesięcy, dopóki utrzymujesz rangę i klient płaci."
+    },
+    "team": {
+      "eyebrow": "Buduj zespół",
+      "heading": "Do {max} % prowizji różnicowej od obrotu Twojego zespołu",
+      "sub": "Znasz innych konsultantów, twórców lub agencje z kontaktami do gospodarzy? Od rangi „Awansujący” aplikują oni za pośrednictwem Twojego linku zespołowego, należą do Twojego zespołu — a ich klienci liczą się 1:1 do Twojej rangi. Zarabiasz różnicę między Twoją stawką a stawką Twojego partnera zespołowego; Twoi partnerzy zespołowi zachowują swoją pełną własną stawkę.",
+      "rang": {
+        "titel": "Różnica",
+        "text": "Otrzymujesz swoją stawkę minus stawkę partnera zespołowego — obie w momencie płatności. Jeśli Twój partner zespołowy ma tę samą rangę, nie powstaje prowizja zespołowa."
+      },
+      "ebene": {
+        "titel": "Dokładnie jeden poziom",
+        "text": "Twoi partnerzy zespołowi nie budują własnego zespołu pod Tobą. Bez sieci, bez piramidy."
+      },
+      "keinGeld": {
+        "titel": "Tylko z rzeczywistego obrotu",
+        "text": "Bez opłaty za uczestnictwo, bez pieniędzy za rekrutację. Prowizja zespołowa powstaje wyłącznie z opłaconego obrotu z subskrypcji."
+      },
+      "dauer": {
+        "titel": "Te same zasady",
+        "text": "12 miesięcy na klienta zespołowego, 30 dni na zwrot, zwrot w przypadku zwrotu lub obciążenia zwrotnego — tak jak w przypadku Twojej własnej prowizji. Od poziomu Elite dochodzi superprowizja od całej struktury, bez ograniczeń czasowych."
+      }
+    },
+    "kundeCta": {
+      "heading": "Jesteś już klientem myNextDays?",
+      "text": "Wtedy najlepiej znasz produkt. Poleć go dalej — Twoja prowizja zostanie zaksięgowana na Twoim koncie, niezależnie od Twojej subskrypcji.",
+      "cta": "Polecaj i zarabiaj"
+    }
+  },
+  "partnerBewerbung": {
+    "meta": {
+      "titel": "Zostań partnerem — myNextDays",
+      "beschreibung": "Aplikacja do programu partnerskiego myNextDays: konta w mediach społecznościowych, zasięg, warunki. Każdą aplikację sprawdzamy osobiście."
+    },
+    "eyebrow": "Program partnerski",
+    "titel": "Zostań partnerem",
+    "text": "Podaj nam swoje konta w mediach społecznościowych z zasięgiem — każdą aplikację sprawdzamy osobiście i zazwyczaj odpowiadamy w ciągu kilku dni roboczych. Po zatwierdzeniu otrzymasz dostęp do panelu partnera z linkami, kodami i analizami.",
+    "email": "E-mail",
+    "passwort": "Hasło do panelu partnera",
+    "passwortHinweis": "Co najmniej 8 znaków.",
+    "name": "Nazwa",
+    "firma": "Firma (opcjonalnie)",
+    "rechtsform": "Forma prawna",
+    "privat": "Osoba prywatna",
+    "unternehmen": "Firma",
+    "land": "Kraj",
+    "ustId": "NIP UE",
+    "ustIdHinweis": "Sprawdzane w systemie VIES UE. Bez potwierdzonego numeru brak wypłat dla firm.",
+    "kanaele": {
+      "titel": "Twoje konta w mediach społecznościowych",
+      "hinweis": "Wymagane: co najmniej jedno konto w mediach społecznościowych (Instagram, TikTok, YouTube, Facebook, LinkedIn…) z adresem, nazwą użytkownika i zasięgiem (obserwujący). Strona internetowa, blog lub newsletter są mile widziane jako dodatkowe. Sprawdzamy konta przed zatwierdzeniem.",
+      "plattform": "Platforma",
+      "handle": "Nazwa użytkownika (opcjonalnie)",
+      "reichweite": "Zasięg (obserwujący)",
+      "hinzufuegen": "Dodaj kanał",
+      "entfernen": "Usuń kanał",
+      "socialPflicht": "Wymagane jest co najmniej jedno konto w mediach społecznościowych z zasięgiem — sama strona internetowa nie wystarczy.",
+      "plattformen": {
+        "website": "Strona internetowa",
+        "blog": "Blog",
+        "newsletter": "Newsletter",
+        "podcast": "Podcast",
+        "other": "Inne"
+      }
+    },
+    "plattform": {
+      "website": "Strona internetowa",
+      "blog": "Blog",
+      "newsletter": "Newsletter",
+      "podcast": "Podcast",
+      "other": "Inne"
+    },
+    "sponsor": "Polecony przez partnera (kod, opcjonalnie)",
+    "sponsorHinweis": "Czy korzystasz z linku zespołowego partnera? Jego kod znajdzie się tutaj. Otrzyma on prowizję zespołową od przychodów z subskrypcji Twoich klientów — Twoja własna prowizja pozostaje bez zmian.",
+    "pitch": "Dlaczego pasujesz do myNextDays? (opcjonalnie)",
+    "pitchPlatzhalter": "Do kogo docierasz, o czym mówisz, jak chcesz polecać?",
+    "zustimmung": "Akceptuję",
+    "bedingungen": "Warunki partnerskie",
+    "version": "Wersja {version}",
+    "absenden": "Wyślij zgłoszenie",
+    "sendet": "Wysyłanie…",
+    "pruefungHinweis": "Ten formularz jest chroniony przez reCAPTCHA. Po przesłaniu nasz zespół partnerski sprawdzi Twoje konta i zasięg; otrzymasz e-mail z decyzją.",
+    "fehler": {
+      "social": "Proszę podać co najmniej jedno konto w mediach społecznościowych z adresem i zasięgiem.",
+      "doppelt": "Dla tego adresu e-mail istnieje już zgłoszenie. Zaloguj się do panelu partnera.",
+      "eingabe": "Proszę sprawdzić wprowadzone dane.",
+      "captcha": "Sprawdzanie ochrony przed spamem nie powiodło się. Proszę odświeżyć stronę i spróbować ponownie.",
+      "allgemein": "Nie udało się wysłać zgłoszenia. Proszę spróbować ponownie później."
+    },
+    "fertig": {
+      "titel": "Zgłoszenie przyjęte",
+      "text": "Dziękujemy! Osobiście sprawdzimy Twoje konta i zasięg, a następnie skontaktujemy się z Tobą drogą mailową. Twój panel partnera jest dostępny za pomocą Twojego adresu e-mail i hasła — linki i kody staną się aktywne po zatwierdzeniu.",
+      "login": "Do logowania partnera"
+    }
   }
 }

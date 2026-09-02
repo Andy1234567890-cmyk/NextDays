@@ -29,7 +29,8 @@ export type RechtsdokumentSlug =
   | "impressum"
   | "cookie-richtlinie"
   | "auftragsverarbeitung"
-  | "agb";
+  | "agb"
+  | "partner-agb";
 
 type Loader = () => Promise<{ default: LegalDoc }>;
 
@@ -172,7 +173,40 @@ const AGB: Record<Locale, () => Promise<{ agb: LegalDoc }>> = {
   sv: () => import("./agb/sv"),
 };
 
-const LOADER: Record<Exclude<RechtsdokumentSlug, "agb">, Record<Locale, Loader>> =
+// Partner-AGB (0517/0520): ENTWURF, de + en von Hand; die übrigen 22 Sprachen
+// fallen bewusst auf Englisch zurück, bis der anwaltlich geprüfte Text vorliegt
+// und übersetzt ist — Rechtstexte werden nicht maschinell übersetzt.
+// Partner-AGB in allen 24 Sprachen (de/en von Hand, 22 maschinell mit juristischem
+// Prompt, 02.09.2026 — alle als ENTWURF gekennzeichnet). Kein Rückfall auf Englisch mehr.
+type PartnerAgbLoader = () => Promise<{ partnerAgb: LegalDoc }>;
+const PARTNER_AGB: Record<Locale, PartnerAgbLoader> = {
+  bg: () => import("./partner-agb/bg"),
+  cs: () => import("./partner-agb/cs"),
+  da: () => import("./partner-agb/da"),
+  de: () => import("./partner-agb/de"),
+  el: () => import("./partner-agb/el"),
+  en: () => import("./partner-agb/en"),
+  es: () => import("./partner-agb/es"),
+  et: () => import("./partner-agb/et"),
+  fi: () => import("./partner-agb/fi"),
+  fr: () => import("./partner-agb/fr"),
+  ga: () => import("./partner-agb/ga"),
+  hr: () => import("./partner-agb/hr"),
+  hu: () => import("./partner-agb/hu"),
+  it: () => import("./partner-agb/it"),
+  lt: () => import("./partner-agb/lt"),
+  lv: () => import("./partner-agb/lv"),
+  mt: () => import("./partner-agb/mt"),
+  nl: () => import("./partner-agb/nl"),
+  pl: () => import("./partner-agb/pl"),
+  pt: () => import("./partner-agb/pt"),
+  ro: () => import("./partner-agb/ro"),
+  sk: () => import("./partner-agb/sk"),
+  sl: () => import("./partner-agb/sl"),
+  sv: () => import("./partner-agb/sv"),
+};
+
+const LOADER: Record<Exclude<RechtsdokumentSlug, "agb" | "partner-agb">, Record<Locale, Loader>> =
   {
     datenschutz: DATENSCHUTZ,
     impressum: IMPRESSUM,
@@ -192,5 +226,8 @@ export async function ladeRechtsdokument(
   locale: Locale,
 ): Promise<LegalDoc> {
   if (slug === "agb") return (await AGB[locale]()).agb;
+  if (slug === "partner-agb") {
+    return (await PARTNER_AGB[locale]()).partnerAgb;
+  }
   return (await LOADER[slug][locale]()).default;
 }

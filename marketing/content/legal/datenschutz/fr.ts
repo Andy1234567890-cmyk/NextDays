@@ -244,6 +244,40 @@ export const datenschutz: LegalDoc = {
       ],
     },
     {
+      heading: "Programme de partenariat",
+      paragraphs: [
+        "Nous exploitons un programme de partenariat par lequel des partenaires (influenceurs, consultants, agences, clients) recommandent des entreprises à myNextDays et reçoivent une commission en retour. Dans ce cadre, nous traitons les données des partenaires et — dans une faible mesure — des entreprises recommandées.",
+      ],
+      unterpunkte: [
+        {
+          titel: "Données des partenaires",
+          paragraphs: [
+            "Lors de la candidature, nous traitons le nom, la raison sociale, la forme juridique, le pays, l'adresse e-mail, la langue, les comptes de médias sociaux (plateforme, adresse, identifiant, portée auto-déclarée), le numéro d'identification TVA (vérification via le système européen VIES), les données de paiement (IBAN, adresse Wise ou PayPal) ainsi que le consentement aux conditions de participation avec la version et la date. La base juridique est l'exécution du contrat de partenariat (Art. 6, paragraphe 1, lettre b du RGPD) ; pour les crédits et la conservation, les obligations fiscales et commerciales s'appliquent (Art. 6, paragraphe 1, lettre c du RGPD).",
+            "Si un partenaire gère une équipe, il voit le nom ou la raison sociale, le rang, le nombre de clients payants et la commission d'équipe qui en résulte pour ses partenaires d'équipe. Les messages entre le sponsor et le partenaire d'équipe sont stockés sur la plateforme afin que les deux puissent voir l'historique.",
+          ],
+        },
+        {
+          titel: "Clics sur les liens de partenariat",
+          paragraphs: [
+            "Lorsqu'un visiteur accède à un lien de partenariat (mynextdays.com/p/CODE), nous enregistrons le code, l'heure, la page consultée, la page de référence et les éventuels paramètres de campagne, ainsi que l'adresse IP et l'identifiant du navigateur, exclusivement sous forme de sommes de contrôle hachées (hash) — pour la détection des abus (fréquence), et non pour la réidentification. Aucun cookie de suivi n'est défini. Nous supprimons les données de clic après 90 jours. La base juridique est notre intérêt légitime à une facturation du programme à l'abri de la fraude (Art. 6, paragraphe 1, lettre f du RGPD).",
+          ],
+        },
+        {
+          titel: "Comptes et publications de médias sociaux connectés",
+          paragraphs: [
+            "Les partenaires peuvent volontairement connecter leurs comptes YouTube (Google), Instagram et Facebook (Meta) ainsi que TikTok au tableau de bord des partenaires. Ce faisant, ils accordent à la plateforme respective une autorisation de lecture (OAuth) ; nous n'écrivons rien sur ces comptes. Nous stockons l'identifiant et le nom du compte, le jeton d'accès chiffré, la date de connexion ainsi qu'une mesure quotidienne par compte : nombre d'abonnés ou de followers, vues des 28 derniers jours, taux d'interaction et nombre de publications, chacun avec la date de la réponse de la plateforme. Pour les publications que le partenaire crée dans le tableau de bord (titre, plateforme, adresse, date de publication), nous stockons en outre les vues, les likes, les commentaires, les partages et les sauvegardes de la plateforme.",
+            "Le but est de vérifier la portée indiquée par le partenaire et d'attribuer les clics et les clients à des publications individuelles ; les informations non vérifiées sont moins pondérées lors de la publication. Les indications d'incohérences (par exemple, un pic de followers sans vues correspondantes) servent exclusivement à notre vérification manuelle et ne mènent à aucune décision automatisée. La base juridique est le consentement du partenaire (article 6, paragraphe 1, point a du RGPD), qu'il donne en se connectant et qu'il peut révoquer à tout moment dans le tableau de bord sous « Déconnecter » ; lors de la déconnexion, nous supprimons immédiatement le jeton d'accès, les valeurs de mesure enregistrées restent comme historique et sont supprimées avec le compte partenaire. Nous utilisons exclusivement les interfaces officielles des plateformes ; le traitement par Google, Meta et TikTok est soumis à leurs propres politiques de confidentialité.",
+          ],
+        },
+        {
+          titel: "Établissements recommandés",
+          paragraphs: [
+            "Si un établissement s'enregistre avec un code partenaire, nous enregistrons l'attribution de l'établissement au partenaire ainsi que l'heure, le mode (lien ou code) et le statut. Le partenaire voit l'établissement uniquement de manière pseudonyme (numéro séquentiel, pays, statut, montants) — jamais le nom, l'adresse e-mail ou les données de réservation. Ce n'est que si l'établissement donne son consentement explicite lors de l'enregistrement que le partenaire peut le contacter via la plateforme. Pour le calcul des commissions, nous traitons les montants nets des abonnements des factures payées de l'établissement ; la base juridique est l'exécution du contrat de partenariat et du contrat d'utilisation (article 6, paragraphe 1, point b du RGPD).",
+          ],
+        },
+      ],
+    },
+    {
       heading: "Hébergement et stockage",
       paragraphs: [
         "La plateforme, la base de données, les médias et le serveur de messagerie fonctionnent sur des serveurs de Hetzner Online GmbH, Allemagne, dans le centre de données d’Helsinki (Finlande) — donc au sein de l’Union européenne. Un contrat de sous-traitance a été conclu avec Hetzner.",

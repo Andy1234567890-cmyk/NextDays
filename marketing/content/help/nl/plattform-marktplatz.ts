@@ -87,12 +87,12 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "note",
               variant: "tip",
-              text: "Klikt u op Publiceren, dan schakelt myNextDays normaliter marktplaats, portalen en website gezamenlijk vrij — u kunt de marktplaatsschakelaar daarna altijd afzonderlijk weer uitschakelen.",
+              text: "Klik op Publiceren, dan schakelt myNextDays portalen en website samen vrij. myBestDays is een verplicht kanaal: elk object staat daar vermeld en verschijnt zodra wij de advertentie hebben vrijgegeven.",
             },
             { type: "h2", text: "Zichtbaarheid weer verwijderen" },
             {
               type: "p",
-              text: "Schakelt u de schakelaar Platform-marktplaats uit, dan verdwijnt het object uit de marktplaatszoekresultaten. Reeds bevestigde boekingen blijven hierdoor onaangetast en lopen gewoon door, zie [Marktplaatscommissie](/hilfe/plattform-marktplatz/marktplatz-provision).",
+              text: "myBestDays kan niet afzonderlijk worden uitgeschakeld. Als een object niet meer verkocht moet worden, gebruik dan „Verkoop pauzeren“ — dit verwijdert het tegelijkertijd van alle portalen, de website en de marktplaats. Reeds bevestigde boekingen blijven onaangetast en worden zoals gewoonlijk voortgezet, zie [Marktplaats-commissie](/hilfe/plattform-marktplatz/marktplatz-provision).",
             },
           ],
         },

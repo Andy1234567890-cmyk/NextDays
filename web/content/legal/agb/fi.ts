@@ -23,11 +23,12 @@ export const agb: LegalDoc = {
       heading: "§ 2 Sopimuksen kohde ja palvelut",
       paragraphs: [
         "myNextDays tarjoaa käyttäjälle pilvipohjaisen ohjelmiston loma-asuntojen ja majoitusliikkeiden hallintaan. Toimintojen laajuus määräytyy kulloinkin voimassa olevan palvelukuvauksen mukaan ja käsittää erityisesti:",
+      "Jokainen käyttäjän alustalle luoma kohde listataan samanaikaisesti alustan omalla myBestDays-markkinapaikalla (pakollinen kanava). Käyttäjä ei voi poistaa tätä kanavaa erikseen; hän voi kuitenkin milloin tahansa poistaa kohteen myynnistä kaikilta kanavilta samanaikaisesti toiminnolla ”Keskeytä myynti” tai poistaa sen. Kohde tulee näkyviin myBestDays-palvelussa vasta, kun käyttäjä on julkaissut sen ja myNextDays on hyväksynyt ilmoituksen; myNextDays voi kieltäytyä hyväksymästä tai peruuttaa hyväksynnän asiallisesta syystä. myBestDays-palvelun kautta tehdyistä varauksista peritään 7 §:n mukainen maksu.",
       ],
       list: [
         "kohteiden, varauskalenterien ja varausten hallinnan (Property-Management-järjestelmä),",
         "liitännän kolmansien osapuolten varauskanaviin (esim. Booking.com, Airbnb) kanavanhallintajärjestelmän (Channel Manager) kautta,",
-        "ilmoitusten julkaisemisen alustan oman myNextDays-varauskanavan kautta,",
+        "Tarjousten julkaiseminen alustan omalla myBestDays-markkinapaikalla (pakollinen kanava, katso 2 kohta),",
         "omien verkkosivustojen luomisen integroidulla sivueditorilla (Page Builder),",
         "kirjanpito-, tilitys- ja raportointitoiminnot, mukaan lukien omistajatilitykset,",
         "viestinnän vieraiden kanssa sekä maksujen vastaanottamisen integroidun maksunvälityksen kautta (§ 5).",

@@ -58,7 +58,6 @@ export function NewPropertyButton({
   // beim Anlegen aus, weil ein Objekt ohne Preis, Fotos und Richtlinien dort
   // nichts verloren hat — der zweite Schritt sagt, was noch fehlt.
   const [portale, setPortale] = useState(false);
-  const [plattform, setPlattform] = useState(true);
   const [website, setWebsite] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +75,8 @@ export function NewPropertyButton({
       title,
       property_type: type,
       max_guests: guests,
-      listed_on_marketplace: plattform,
+      // Pflichtkanal (0527): der Server setzt es ohnehin auf true.
+      listed_on_marketplace: true,
       listed_on_website: website,
     });
     setBusy(false);
@@ -187,13 +187,19 @@ export function NewPropertyButton({
                   beschreibung={t("newPropertyButton.channelPortalsHint")}
                   icon="ph:globe-hemisphere-west"
                 />
-                <KanalSchalter
-                  an={plattform}
-                  setzen={setPlattform}
-                  titel={t("newPropertyButton.channelPlatform")}
-                  beschreibung={t("newPropertyButton.channelPlatformHint")}
-                  icon="ph:buildings"
-                />
+                {/* myBestDays ist Pflichtkanal (0527) — kein Schalter, nur die Zusage. */}
+                <div className="flex items-start gap-3 rounded-(--radius) border bg-muted/30 p-3">
+                  <Icon icon="ph:check-circle" className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                  <span className="flex flex-col gap-0.5">
+                    <span className="flex items-center gap-2 font-medium">
+                      <Icon icon="ph:buildings" className="size-4 text-muted-foreground" />
+                      {t("newPropertyButton.channelPlatform")}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {t("newPropertyButton.channelPlatformHint")}
+                    </span>
+                  </span>
+                </div>
                 <KanalSchalter
                   an={website}
                   setzen={setWebsite}

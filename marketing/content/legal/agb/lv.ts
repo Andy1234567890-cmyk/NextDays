@@ -33,11 +33,12 @@ export const agb: LegalDoc = {
       heading: "§ 2 Līguma priekšmets un pakalpojumi",
       paragraphs: [
         "myNextDays nodrošina Lietotājam mākoņdatošanas programmatūru brīvdienu mājokļu un izmitināšanas uzņēmumu pārvaldībai. Funkciju apjoms izriet no attiecīgā brīža spēkā esošā pakalpojumu apraksta un jo īpaši ietver:",
+      "Katrs Lietotāja platformā izveidotais objekts vienlaikus tiek iekļauts platformas tirgus vietnē myBestDays (obligātais kanāls). Lietotājs nevar atsevišķi atteikties no šī kanāla; tomēr viņš var jebkurā laikā izņemt objektu no pārdošanas visos kanālos vienlaikus, izmantojot funkciju “Apturēt pārdošanu”, vai to dzēst. Objekts kļūst redzams myBestDays tikai tad, kad Lietotājs to ir publicējis un myNextDays ir apstiprinājis sludinājumu; myNextDays var atteikt vai atsaukt apstiprinājumu pamatotu iemeslu dēļ. Par rezervācijām, kas veiktas, izmantojot myBestDays, tiek piemērota maksa saskaņā ar § 7.",
       ],
       list: [
         "objektu, noslodzes kalendāru un rezervāciju pārvaldību (īpašumu pārvaldības sistēma),",
         "pieslēgumu trešo personu rezervāciju kanāliem (piemēram, Booking.com, Airbnb), izmantojot kanālu pārvaldnieku,",
-        "piedāvājumu publicēšanu Platformas pašas rezervāciju kanālā myNextDays,",
+        "Piedāvājumu publicēšana, izmantojot platformas tirgus vietni myBestDays (obligātais kanāls, skatīt 2. punktu),",
         "savu tīmekļa vietņu izveidi ar integrēto lapu veidotāju,",
         "grāmatvedības, norēķinu un pārskatu funkcijas, tostarp īpašnieku norēķinus,",
         "saziņu ar viesiem un maksājumu pieņemšanu, izmantojot integrēto maksājumu apstrādi (§ 5).",

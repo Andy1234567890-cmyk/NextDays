@@ -23,11 +23,12 @@ export const agb: LegalDoc = {
       heading: "§ 2 Subject matter and services",
       paragraphs: [
         "myNextDays provides the User with cloud-based software for managing holiday rentals and accommodation businesses. The scope of functions results from the current service description and includes in particular:",
+      "Each property created by the user on the platform is simultaneously listed on the platform's own marketplace myBestDays (mandatory channel). The user cannot deselect this channel individually; however, the user can remove a property from sale on all channels simultaneously at any time using the “Pause sales” function or delete it. A property only becomes visible on myBestDays once the user has published it and myNextDays has approved the listing; myNextDays may refuse or revoke approval for a valid reason. For bookings via myBestDays, the fee according to § 7 applies.",
       ],
       list: [
         "management of properties, availability calendars and reservations (property management system),",
         "connection to third-party booking channels (e.g. Booking.com, Airbnb) via a channel manager,",
-        "publication of listings via the Platform’s own booking channel myNextDays,",
+        "Publication of offers via the platform's own marketplace myBestDays (mandatory channel, see paragraph 2),",
         "creation of the User’s own websites via the integrated page builder,",
         "accounting, settlement and reporting functions including owner statements,",
         "guest communication and acceptance of payments via the integrated payment processing (§ 5).",

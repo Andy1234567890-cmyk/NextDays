@@ -87,12 +87,12 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "note",
               variant: "tip",
-              text: "Kliknięcie Opublikuj zwykle włącza jednocześnie platformę, portale i stronę internetową — przełącznik platformy możesz potem w każdej chwili osobno ponownie wyłączyć.",
+              text: "Kliknięcie „Opublikuj” aktywuje portale i stronę internetową myNextDays. myBestDays to kanał obowiązkowy: każdy obiekt jest tam wymieniony i pojawia się, gdy tylko zatwierdzimy ofertę.",
             },
             { type: "h2", text: "Ponowne usunięcie widoczności" },
             {
               type: "p",
-              text: "Jeśli wyłączysz przełącznik Platforma myNextDays, obiekt zniknie z wyszukiwania na platformie. Już potwierdzone rezerwacje pozostają tym nienaruszone i przebiegają dalej jak zwykle, zobacz [Prowizja platformy](/hilfe/plattform-marktplatz/marktplatz-provision).",
+              text: "myBestDays nie można odznaczyć indywidualnie. Jeśli obiekt nie ma być już sprzedawany, należy użyć opcji „Wstrzymaj sprzedaż” — spowoduje to usunięcie go ze sprzedaży na wszystkich portalach, na stronie internetowej i na platformie jednocześnie. Potwierdzone rezerwacje pozostają nienaruszone i są realizowane w zwykły sposób, patrz [Prowizja od platformy](/hilfe/plattform-marktplatz/marktplatz-provision).",
             },
           ],
         },

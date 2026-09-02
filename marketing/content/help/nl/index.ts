@@ -22,6 +22,7 @@ import { ucReservierungen } from "./anwendungsfaelle-reservierungen";
 import { ucZahlungen } from "./anwendungsfaelle-zahlungen";
 import { ucKanalmanager } from "./anwendungsfaelle-kanalmanager";
 import { ucEigentuemer } from "./anwendungsfaelle-eigentuemererklaerungen";
+import { partnerprogramm } from "./partnerprogramm";
 import type { HelpCategory } from "../types";
 
 export const categories: HelpCategory[] = [
@@ -40,6 +41,7 @@ export const categories: HelpCategory[] = [
   teamRollen,
   kontoAbo,
   mobileApp,
+  partnerprogramm,
   ucMietpreise,
   ucWebsite,
   ucReservierungen,

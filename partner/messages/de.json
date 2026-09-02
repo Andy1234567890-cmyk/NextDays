@@ -1,0 +1,521 @@
+{
+  "meta": {
+    "titel": "myNextDays Partner",
+    "beschreibung": "Partner-Dashboard des myNextDays-Partnerprogramms: Links, Kunden, Provisionen, Auszahlungen."
+  },
+  "nav": {
+    "partner": "Partner",
+    "uebersicht": "Übersicht",
+    "kunden": "Kunden",
+    "provisionen": "Provisionen",
+    "auszahlungen": "Auszahlungen",
+    "links": "Links & Material",
+    "profil": "Profil",
+    "sprache": "Sprache",
+    "abmelden": "Abmelden",
+    "nachrichten": "Nachrichten",
+    "menue": "Menü",
+    "team": "Team",
+    "beitraege": "Beiträge"
+  },
+  "status": {
+    "pending_review": {
+      "titel": "Ihre Bewerbung wird geprüft",
+      "text": "Wir prüfen jede Bewerbung persönlich und melden uns per E-Mail. Bis zur Freigabe sind Links und Codes noch nicht aktiv — Ihre Profil- und Auszahlungsdaten können Sie schon jetzt vervollständigen."
+    },
+    "rejected": {
+      "titel": "Ihre Bewerbung wurde nicht angenommen",
+      "text": "Wir konnten Ihre Bewerbung derzeit nicht annehmen. Bei Fragen schreiben Sie uns gern."
+    },
+    "suspended": {
+      "titel": "Ihr Partnerkonto ist gesperrt",
+      "text": "Offene Provisionen werden nicht ausgezahlt, solange die Sperre besteht. Bei Fragen schreiben Sie uns."
+    },
+    "approved": {
+      "titel": "Freigegeben",
+      "text": "Ihr Konto ist aktiv."
+    },
+    "grund": "Grund"
+  },
+  "uebersicht": {
+    "titelBewerber": "Willkommen im Partnerprogramm",
+    "textBewerber": "Sobald Ihre Bewerbung freigegeben ist, sehen Sie hier Ihre Links, Kunden und Provisionen. Tragen Sie in der Zwischenzeit Ihre Steuer- und Auszahlungsdaten ein — dann kann die erste Auszahlung ohne Rückfrage laufen.",
+    "zumProfil": "Zum Profil",
+    "titel": "Hallo {name}",
+    "rang": "Rang {rang} · {satz} des Abo-Umsatzes",
+    "naechsterRang": "noch {fehlend} zahlende Kunden bis {rang} ({satz})",
+    "linksTeilen": "Links teilen",
+    "keineBetraege": "—",
+    "kachel": {
+      "klicks": "Klicks (30 Tage)",
+      "registrierungen": "Registrierte Betriebe",
+      "zahlend": "Zahlende Kunden",
+      "offen": "Offen (Erstattungsfenster)",
+      "auszahlbar": "Auszahlbar",
+      "ausgezahlt": "Ausgezahlt",
+      "team": "Team-Provision",
+      "teamHinweis": "{n} Team-Partner",
+      "struktur": "Kunden in Ihrer Struktur",
+      "strukturHinweis": "eigene + Team-Kunden — diese Zahl bestimmt Ihren Rang",
+      "super": "Superprovision",
+      "superHinweis": "{satz} auf den Abo-Umsatz Ihrer Struktur, ohne Laufzeitgrenze",
+      "turbo": "Buchungsanteil myBestDays",
+      "turboHinweis": "0,5 % je Buchung über myBestDays bei Ihren Kunden und Team-Kunden",
+      "bonus": "Aufstiegsboni",
+      "bonusHinweis": "einmalig je erreichtem Rang"
+    },
+    "deineLinks": "Ihre Links"
+  },
+  "links": {
+    "titel": "Links & Material",
+    "hinweis": "Ihr Link führt auf mynextdays.com und zählt den Klick. Der Code steht bei der Registrierung sichtbar im Formular — ohne Cookie. Ein Betrieb wird genau einem Partner zugeordnet.",
+    "klicks30": "{n} Klicks in 30 Tagen",
+    "kopiert": "Kopiert.",
+    "kopierenFehlgeschlagen": "Kopieren nicht möglich — bitte markieren und kopieren.",
+    "codeKopieren": "Code kopieren",
+    "linkFehlt": "Link noch nicht verfügbar.",
+    "neuerCode": "Weiteren Code anlegen",
+    "label": "Bezeichnung (optional)",
+    "wunschcode": "Wunschcode (optional)",
+    "anlegen": "Anlegen",
+    "abbrechen": "Abbrechen",
+    "codeAngelegt": "Code angelegt.",
+    "codeVergeben": "Dieser Code ist bereits vergeben.",
+    "fehler": "Das hat nicht geklappt.",
+    "kennzeichnung": {
+      "titel": "Pflicht: Werbung kennzeichnen",
+      "text": "Jede Empfehlung mit Ihrem Link oder Code ist Werbung und muss als solche erkennbar sein — am Anfang des Beitrags, in der Sprache des Beitrags. Ein bloßes „#ad“ reicht nicht. Verstöße können zur Sperre führen.",
+      "imBeitrag": "Im Beitrag",
+      "amLink": "Am Link",
+      "land": {
+        "DE": "Deutschland",
+        "DK": "Dänemark"
+      },
+      "andere": "Andere Länder: Die kommerzielle Absicht muss klar erkennbar sein (EU-Richtlinie über unlautere Geschäftspraktiken). Bitte prüfen Sie die Vorgaben Ihres Landes; wir ergänzen belegte Wortlaute nach und nach."
+    },
+    "material": {
+      "titel": "Werbematerial",
+      "leer": "Material wird gerade vorbereitet — es erscheint hier, sobald es freigegeben ist.",
+      "art": {
+        "video": "Video",
+        "image": "Bild",
+        "text": "Textbaustein",
+        "link": "Link"
+      },
+      "oeffnen": "Öffnen"
+    }
+  },
+  "kunden": {
+    "titel": "Kunden",
+    "hinweis": "Ihre geworbenen Betriebe — pseudonym. Sie sehen Land, Status und Beträge, nie Name oder E-Mail. Zahlend heißt: erste Abo-Rechnung bezahlt und Abo läuft.",
+    "leer": "Noch kein Betrieb hat sich über Ihren Link registriert.",
+    "kunde": "Kunde {n}",
+    "spalte": {
+      "kunde": "Kunde",
+      "land": "Land",
+      "status": "Status",
+      "registriert": "Registriert",
+      "provisionBis": "Provision bis",
+      "verdient": "Verdient"
+    },
+    "status": {
+      "registriert": "Registriert",
+      "zahlend": "Zahlend",
+      "beendet": "Beendet",
+      "in_pruefung": "In Prüfung",
+      "abgelehnt": "Abgelehnt"
+    }
+  },
+  "provisionen": {
+    "titel": "Provisionen",
+    "hinweis": "Jede Zeile ist eine bezahlte Abo-Rechnung, eine Buchung über myBestDays oder ein Aufstiegsbonus. Basis ist der Netto-Abo-Umsatz bzw. der Buchungswert; der Satz ist Ihr Rang zum Zeitpunkt der Zahlung. Offene Zeilen werden nach 30 Tagen auszahlbar.",
+    "leer": "Noch keine Provision.",
+    "reifAm": "auszahlbar ab {datum}",
+    "spalte": {
+      "datum": "Datum",
+      "art": "Art",
+      "kunde": "Kunde",
+      "basis": "Basis",
+      "satz": "Satz",
+      "betrag": "Betrag",
+      "status": "Status"
+    },
+    "art": {
+      "earn": "Ertrag",
+      "reversal": "Erstattung",
+      "adjustment": "Korrektur",
+      "override": "Team-Provision",
+      "bonus": "Aufstiegsbonus",
+      "lifetime": "Superprovision",
+      "booking_share": "Buchungsanteil"
+    },
+    "status": {
+      "pending": "Offen",
+      "approved": "Auszahlbar",
+      "held": "Angehalten",
+      "paid": "Ausgezahlt",
+      "reversed": "Zurückgenommen",
+      "cancelled": "Storniert"
+    },
+    "team": "Team"
+  },
+  "auszahlungen": {
+    "titel": "Auszahlungen",
+    "hinweis": "Monatlich, je Währung, ab dem Mindestbetrag. Zu jeder Auszahlung gibt es eine Gutschrift (Self-Billing) — sie ist Ihr Beleg.",
+    "kein_weg": "Es ist noch kein Auszahlungsweg hinterlegt. Bitte unter Profil ergänzen — sonst kann nicht ausgezahlt werden.",
+    "leer": "Noch keine Auszahlung.",
+    "spalte": {
+      "nummer": "Gutschrift-Nr.",
+      "zeitraum": "Zeitraum",
+      "betrag": "Betrag",
+      "status": "Status",
+      "gutschrift": "Gutschrift"
+    },
+    "status": {
+      "pending": "Vorbereitet",
+      "processing": "In Überweisung",
+      "paid": "Bezahlt",
+      "failed": "Fehlgeschlagen"
+    },
+    "gutschriftLaden": "Herunterladen",
+    "gutschriftFehler": "Gutschrift konnte nicht geladen werden."
+  },
+  "profil": {
+    "titel": "Profil",
+    "seit": "Partner seit {datum}",
+    "stammdaten": "Stammdaten",
+    "name": "Name",
+    "firma": "Firma (optional)",
+    "sprache": "Sprache für E-Mails",
+    "kanal": "Ihre Social-Media-Konten und Kanäle",
+    "speichern": "Speichern",
+    "gespeichert": "Gespeichert.",
+    "gespeichertViesOffen": "Gespeichert. Die USt-IdNr. konnte noch nicht bestätigt werden — wir prüfen sie erneut vor der Auszahlung.",
+    "steuerUndAuszahlung": "Steuer- und Auszahlungsdaten",
+    "aktuellerWeg": "Aktuell: {weg} {details}",
+    "keinWeg": "Noch kein Auszahlungsweg hinterlegt.",
+    "viesBestaetigt": "USt-IdNr. bestätigt (VIES)",
+    "viesOffen": "USt-IdNr. noch nicht bestätigt",
+    "rechtsform": "Rechtsform",
+    "privat": "Privatperson",
+    "unternehmen": "Unternehmen",
+    "land": "Land",
+    "ustId": "USt-IdNr.",
+    "ustIdHinweis": "Wird gegen das EU-System VIES geprüft. Ohne bestätigte Nummer keine Auszahlung an Unternehmen. Die Gutschrift trägt den Reverse-Charge-Vermerk.",
+    "privatHinweis": "Als Privatperson erhalten Sie die Gutschrift ohne Umsatzsteuer. Die Provision ist von Ihnen selbst zu versteuern.",
+    "auszahlungsweg": "Auszahlungsweg",
+    "kontoinhaber": "Kontoinhaber",
+    "empfaengerEmail": "{weg}-E-Mail-Adresse",
+    "passwortBestaetigen": "Zur Bestätigung: Ihr Passwort",
+    "passwortFalsch": "Das Passwort stimmt nicht.",
+    "steuerdaten": "Steuerdaten"
+  },
+  "anmelden": {
+    "partner": "Partner",
+    "titel": "Anmelden",
+    "text": "Das Dashboard des myNextDays-Partnerprogramms.",
+    "email": "E-Mail",
+    "passwort": "Passwort",
+    "anmelden": "Anmelden",
+    "passwortVergessen": "Passwort vergessen?",
+    "resetGesendet": "Falls ein Konto existiert, haben wir eine E-Mail geschickt.",
+    "stoerung": "Der Anmeldedienst ist gerade nicht erreichbar. Das liegt nicht an Ihren Zugangsdaten — bitte später erneut versuchen.",
+    "keinPartnerKonto": "Mit diesen Zugangsdaten gibt es kein Partnerkonto.",
+    "fehlgeschlagen": "Anmeldung fehlgeschlagen.",
+    "nochKeinKonto": "Noch kein Partner?",
+    "bewerben": "Jetzt bewerben"
+  },
+  "bewerben": {
+    "partner": "Partner",
+    "titel": "Als Partner bewerben",
+    "text": "Zwei Minuten. Wir prüfen jede Bewerbung persönlich und melden uns per E-Mail.",
+    "name": "Ihr Name",
+    "firma": "Firma (optional)",
+    "email": "E-Mail",
+    "passwort": "Passwort (mindestens 8 Zeichen)",
+    "rechtsform": "Rechtsform",
+    "privat": "Privatperson",
+    "unternehmen": "Unternehmen",
+    "land": "Land",
+    "ustId": "USt-IdNr.",
+    "ustIdHinweis": "Pflicht für Unternehmen; wird gegen VIES geprüft.",
+    "kanal": "Ihre Social-Media-Konten",
+    "kanalHinweis": "Pflicht: mindestens ein Social-Media-Konto (Instagram, TikTok, YouTube, Facebook, LinkedIn …) mit Adresse, Handle und Reichweite. Website, Blog oder Newsletter gern zusätzlich. Wir prüfen die Konten vor der Freigabe.",
+    "pitch": "Wie erreichen Sie Ferienvermieter oder Hotels? (optional)",
+    "pitchHinweis": "Ein paar Sätze reichen.",
+    "zustimmung": "Ich akzeptiere die Partner-Bedingungen, insbesondere die Pflicht, Empfehlungen als Werbung zu kennzeichnen.",
+    "bedingungen": "Zum Programm",
+    "captchaHinweis": "Diese Seite ist durch reCAPTCHA geschützt; es gelten die Datenschutzerklärung und Nutzungsbedingungen von Google.",
+    "stoerung": "Der Dienst ist gerade nicht erreichbar — bitte später erneut versuchen.",
+    "emailVergeben": "Für diese E-Mail-Adresse gibt es bereits eine Bewerbung. Bitte anmelden.",
+    "captchaFehler": "Die Sicherheitsprüfung ist fehlgeschlagen. Bitte Seite neu laden und erneut versuchen.",
+    "laeuft": "Wird gesendet …",
+    "absenden": "Bewerbung absenden",
+    "schonPartner": "Schon Partner?",
+    "anmelden": "Anmelden",
+    "sponsor": "Geworben von Partner (Code, optional)",
+    "sponsorHinweis": "Sind Sie über den Team-Link eines Partners hier? Sein Code steht dann hier. Er erhält auf den Abo-Umsatz Ihrer Kunden eine Team-Provision — Ihre eigene Provision bleibt unverändert."
+  },
+  "nachrichten": {
+    "titel": "Nachrichten",
+    "hinweis": "Ihr direkter Draht zum Partnerteam — Fragen zu Provision, Auszahlung, Material oder einem Kunden. Antworten erscheinen hier live.",
+    "neu": "Neue Nachricht an das Partnerteam",
+    "platzhalter": "Worum geht es?",
+    "senden": "Senden",
+    "abbrechen": "Abbrechen",
+    "leer": "Noch keine Konversation.",
+    "stoerung": "Der Dienst ist gerade nicht erreichbar — bitte später erneut versuchen.",
+    "fehler": "Das hat nicht geklappt.",
+    "team": "Partnerteam",
+    "du": "Sie",
+    "antwortPlatzhalter": "Ihre Antwort …",
+    "antworten": "Antworten",
+    "status": {
+      "in_bearbeitung": "In Bearbeitung",
+      "wartet_auf_dich": "Antwort erhalten",
+      "geloest": "Gelöst"
+    }
+  },
+  "kanaele": {
+    "plattformLabel": "Plattform",
+    "handle": "Handle (optional)",
+    "reichweite": "Reichweite (Follower)",
+    "hinzufuegen": "Kanal hinzufügen",
+    "entfernen": "Kanal entfernen",
+    "plattform": {
+      "website": "Website",
+      "blog": "Blog",
+      "newsletter": "Newsletter",
+      "podcast": "Podcast",
+      "other": "Sonstiges"
+    },
+    "socialPflicht": "Mindestens ein Social-Media-Konto ist Pflicht — eine Website allein reicht nicht."
+  },
+  "team": {
+    "titel": "Team",
+    "hinweis": "Partner, die sich mit Ihrem Code beworben haben, bilden Ihr Team. Auf den Netto-Abo-Umsatz ihrer Kunden erhalten Sie die Differenz zwischen Ihrem Satz (derzeit {satz}) und dem Satz des Team-Partners — beide zum Zeitpunkt der Zahlung. Team-Kunden zählen 1:1 für Ihren Rang.",
+    "meinSponsor": "Sie sind Team-Partner von {name}.",
+    "link": {
+      "titel": "Ihr Team-Link",
+      "text": "Wer sich über diesen Link bewirbt, trägt Ihren Code sichtbar in der Bewerbung — ohne Cookie.",
+      "kopieren": "Link kopieren",
+      "keinLink": "Kein aktiver Code — legen Sie unter Links & Material einen an."
+    },
+    "regeln": {
+      "titel": "Die Regeln",
+      "rang": "Team-Provision = Ihr Satz minus der Satz des Team-Partners, zum Zeitpunkt der Zahlung. Gleicher Rang = 0.",
+      "ebene": "Genau eine Ebene: Ihre Team-Partner bauen kein eigenes Team.",
+      "keinGeld": "Kein Geld fürs Anwerben — nur aus bezahltem Abo-Umsatz.",
+      "dauer": "12 Monate je Team-Kunde, 30 Tage Erstattungsfenster. Ab Elite zusätzlich 2,5 % Superprovision ohne Laufzeitgrenze."
+    },
+    "kachel": {
+      "mitglieder": "Team-Partner (aktiv / gesamt)",
+      "teamKunden": "Zahlende Team-Kunden",
+      "umsatz30": "Team-Umsatz (30 Tage)",
+      "offen": "Team-Provision offen",
+      "auszahlbar": "Team-Provision auszahlbar",
+      "ausgezahlt": "Team-Provision ausgezahlt"
+    },
+    "verlauf": {
+      "titel": "Verlauf · 12 Monate",
+      "leer": "Noch keine Team-Umsätze.",
+      "provision": "Team-Provision",
+      "umsatz": "Team-Umsatz"
+    },
+    "mitglieder": {
+      "titel": "Ihr Team",
+      "leer": "Noch keine Team-Partner. Teilen Sie Ihren Team-Link.",
+      "kunden": "{n} zahlende Kunden",
+      "umsatz30": "Umsatz 30 T.",
+      "offen": "offen",
+      "seit": "seit {datum}"
+    },
+    "spalte": {
+      "partner": "Partner",
+      "status": "Status",
+      "rang": "Rang",
+      "kunden": "Zahlende Kunden",
+      "umsatz30": "Umsatz 30 T.",
+      "umsatzGesamt": "Umsatz gesamt",
+      "offen": "Offen",
+      "auszahlbar": "Auszahlbar",
+      "ausgezahlt": "Ausgezahlt"
+    },
+    "status": {
+      "pending_review": "In Prüfung",
+      "approved": "Freigegeben",
+      "rejected": "Abgelehnt",
+      "suspended": "Gesperrt"
+    },
+    "chat": {
+      "titel": "Unterhaltung",
+      "schreiben": "Schreiben",
+      "rolle": {
+        "sponsor": "Ihr Sponsor",
+        "member": "Team-Partner"
+      },
+      "zurueck": "Team",
+      "leer": "Noch keine Nachrichten.",
+      "platzhalter": "Ihre Nachricht …",
+      "senden": "Senden",
+      "titelListe": "Nachrichten im Team"
+    },
+    "nochNichtErlaubt": "Ein Team führen Sie ab dem Rang Aufsteiger (5 zahlende Kunden in Ihrer Struktur). Bis dahin gibt es keinen Team-Link."
+  },
+  "bedingungen": {
+    "neueVersion": "Die Partner-Bedingungen liegen in einer neuen Fassung vor (Ihre Zustimmung: Version {alt}, aktuell: {neu}). Bitte lesen und erneut zustimmen.",
+    "nochNicht": "Bitte stimmen Sie den Partner-Bedingungen (Version {neu}) zu.",
+    "lesen": "Bedingungen lesen",
+    "annehmen": "Zustimmen",
+    "angenommen": "Danke — Zustimmung gespeichert."
+  },
+  "beitraege": {
+    "titel": "Beiträge",
+    "hinweis": "Erzeugen Sie für jedes Reel, Video oder jeden Post einen eigenen Link. So sehen Sie, welcher Beitrag Klicks, Registrierungen und zahlende Kunden bringt.",
+    "kontoHinweis": "Verbinden Sie Ihr Konto, dann erscheinen hier auch Views und Interaktionen direkt von der Plattform.",
+    "kontoVerbinden": "Konto verbinden",
+    "neu": "Neuer Beitrag",
+    "keinCode": "Sie brauchen zuerst einen aktiven Empfehlungscode.",
+    "feld": {
+      "titel": "Titel",
+      "titelBeispiel": "z. B. Reel Kopenhagen Herbst",
+      "plattform": "Plattform",
+      "code": "Code",
+      "datum": "Veröffentlicht am",
+      "url": "Adresse des Beitrags (optional)",
+      "urlHinweis": "Kann nach der Veröffentlichung nachgetragen werden. Mit Adresse ordnen wir Views und Interaktionen dem Beitrag zu."
+    },
+    "linkErzeugen": "Link erzeugen",
+    "angelegt": "Beitrag angelegt — der Link ist bereit.",
+    "doppelt": "Diesen Beitrag gibt es für den Code schon.",
+    "fehler": "Das hat nicht geklappt. Bitte erneut versuchen.",
+    "liste": "{n, plural, =0 {Keine Beiträge} =1 {1 Beitrag} other {# Beiträge}}",
+    "leer": "Noch kein Beitrag. Erzeugen Sie oben den ersten Link.",
+    "veroeffentlicht": "veröffentlicht {datum}",
+    "loeschen": "Beitrag löschen",
+    "geloescht": "Beitrag gelöscht.",
+    "loeschenGesperrt": "Der Beitrag hat bereits Registrierungen und bleibt erhalten.",
+    "kopiert": "Link kopiert.",
+    "kopierenFehlgeschlagen": "Kopieren nicht möglich — bitte manuell markieren.",
+    "linkFehlt": "Der Link ist gerade nicht verfügbar.",
+    "qrZeigen": "QR-Code anzeigen",
+    "qrSchliessen": "QR-Code ausblenden",
+    "qrAlt": "QR-Code zum Beitragslink",
+    "qrHinweis": "Für Stories, Videos und Print — führt auf denselben Link.",
+    "beitragOeffnen": "Beitrag öffnen",
+    "urlAendern": "Adresse ändern",
+    "urlNachtragen": "Adresse nachtragen",
+    "speichern": "Speichern",
+    "gespeichert": "Gespeichert.",
+    "kennzahl": {
+      "klicks": "Klicks 90 Tage",
+      "klicks30": "{n} in 30 Tagen",
+      "registrierungen": "Registrierungen",
+      "kunden": "Zahlende Kunden",
+      "views": "Views",
+      "gemessen": "Stand {zeit}",
+      "nichtVerbunden": "Konto nicht verbunden",
+      "interaktion": "Likes {likes} · Kommentare {kommentare} · Shares {shares} · Gespeichert {saves}",
+      "pro1000": "{n} Klicks je 1.000 Views"
+    },
+    "freigabe": {
+      "videoNoetig": "Beitrag zur Freigabe hochladen",
+      "erklaerung": "Laden Sie Ihr fertiges Video, Bild oder PDF hoch, bevor Sie es veröffentlichen. Sobald wir es freigegeben haben, erscheint hier Ihr persönlicher Link — den setzen Sie dann unter den Beitrag. Verwenden Sie nur unser Werbematerial, keine eigenen Bildschirmaufnahmen, und keine Erfolgs- oder Garantieversprechen.",
+      "hochladen": "Datei auswählen (Video, JPG, PNG, PDF)",
+      "neuHochladen": "Neue Datei hochladen",
+      "laeuft": "Wird hochgeladen …",
+      "eingereicht": "Video eingereicht. Wir melden uns, sobald es geprüft ist.",
+      "inPruefung": "In Prüfung",
+      "inPruefungHinweis": "Ihr Video liegt bei uns. Sobald es freigegeben ist, erscheint hier Ihr Link.",
+      "eingereichtAm": "Eingereicht am {zeit} — sobald es freigegeben ist, erscheint hier Ihr Link.",
+      "abgelehnt": "Nicht freigegeben",
+      "grund": "Grund",
+      "freigegeben": "Video freigegeben",
+      "zuGross": "Das Video ist größer als {mb} MB.",
+      "fehler": "Das Hochladen hat nicht geklappt.",
+      "grundKategorie": {
+        "material": "Material: nur offizielles Werbematerial, keine eigenen Bildschirmaufnahmen",
+        "promise": "Versprechen: keine Garantie- oder Erfolgszusagen",
+        "disclosure": "Kennzeichnung: der Beitrag muss als Werbung gekennzeichnet sein",
+        "brand": "Marke: Logo oder Name falsch verwendet",
+        "other": "Sonstiges"
+      }
+    }
+  },
+  "kanalVerbindung": {
+    "titel": "Verbundene Konten",
+    "hinweis": "Verbinden Sie Ihre Social-Media-Konten, damit Follower und Views direkt von der Plattform kommen. Das ist freiwillig und jederzeit widerrufbar; wir lesen nur, wir schreiben nichts.",
+    "verbinden": "{anbieter} verbinden",
+    "baldVerfuegbar": "bald verfügbar",
+    "nichtKonfiguriert": "Diese Anbindung ist noch nicht freigeschaltet.",
+    "fehler": "Das hat nicht geklappt. Bitte erneut versuchen.",
+    "verifiziert": "verifiziert",
+    "follower": "{n} Follower",
+    "views28": "{n} Views in 28 Tagen",
+    "engagement": "Engagement {n} %",
+    "gemessen": "Stand {zeit}",
+    "nochKeinSnapshot": "erste Messung folgt",
+    "letzterFehler": "Letzter Abruf fehlgeschlagen",
+    "trennen": "Verbindung trennen",
+    "getrennt": "Verbindung getrennt. Bisherige Messwerte bleiben als Verlauf erhalten.",
+    "getrennteKonten": "{n, plural, =1 {1 getrenntes Konto} other {# getrennte Konten}}",
+    "getranntAm": "getrennt {zeit}",
+    "durchPlattform": "Zugriff von der Plattform beendet",
+    "datenschutz": "Beim Trennen löschen wir die Zugangsdaten sofort. Gemessene Werte bleiben als Verlauf gespeichert. Details in der Datenschutzerklärung.",
+    "rueckkehr": {
+      "verbunden": "Konto verbunden — die erste Messung läuft.",
+      "abgelehnt": "Verbindung abgebrochen — Sie haben den Zugriff nicht erteilt.",
+      "fehler": "Verbindung fehlgeschlagen."
+    }
+  },
+  "passwort": {
+    "anzeigen": "Passwort anzeigen",
+    "verbergen": "Passwort verbergen"
+  },
+  "verbundkonto": {
+    "titel": "Verbundkonto für die Auszahlung",
+    "hinweis": "Ihre Provision wird auf ein Verbundkonto überwiesen. Dafür verlangt unser Zahlungsdienstleister eine Identitätsprüfung — solange sie offen ist, kann nicht ausgezahlt werden.",
+    "bereit": "Ihr Verbundkonto ist freigeschaltet. Auszahlungen gehen automatisch dorthin.",
+    "offeneFelder": "Diese Angaben fehlen noch",
+    "gesperrt": "Das Konto ist derzeit gesperrt: {grund}",
+    "schrittKonto": "Verbundkonto eröffnen",
+    "schrittDaten": "Persönliche Angaben",
+    "schrittDatenFirma": "Firmen- und Personenangaben",
+    "schrittBank": "Bankverbindung",
+    "schrittBedingungen": "Bedingungen des Zahlungsdienstleisters",
+    "kontoAnlegen": "Verbundkonto eröffnen",
+    "kontoAngelegt": "Verbundkonto eröffnet.",
+    "datenBearbeiten": "Angaben bearbeiten",
+    "zuklappen": "Zuklappen",
+    "datenGesendet": "Angaben gespeichert.",
+    "vorname": "Vorname",
+    "nachname": "Nachname",
+    "geburtsdatum": "Geburtsdatum",
+    "tag": "TT",
+    "monat": "MM",
+    "jahr": "JJJJ",
+    "strasse": "Straße und Hausnummer",
+    "plz": "Postleitzahl",
+    "ort": "Ort",
+    "nationalitaet": "Staatsangehörigkeit (Länderkürzel)",
+    "telefon": "Telefon",
+    "webseite": "Webseite oder Profil",
+    "webseiteHinweis": "Die Adresse, unter der Sie werben — wird für die Prüfung benötigt.",
+    "firmenname": "Firmenname",
+    "steuernummer": "Steuernummer",
+    "firmenStrasse": "Firmenanschrift",
+    "firmaHinweis": "Als vertretungsberechtigte Person werden Ihre oben genannten Angaben verwendet.",
+    "speichern": "Angaben speichern",
+    "kontoinhaber": "Kontoinhaber",
+    "waehrung": "Währung",
+    "waehrungHinweis": "Die Währung des Bankkontos, nicht die Ihres Landes.",
+    "bankSpeichern": "Bankverbindung speichern",
+    "bankGesetzt": "Bankverbindung gespeichert.",
+    "bedingungenAnnehmen": "Bedingungen annehmen",
+    "bedingungenAngenommen": "Bedingungen angenommen.",
+    "fehler": "Das hat nicht geklappt.",
+    "schrittIdentitaet": "Identitätsprüfung",
+    "identitaetHinweis": "Zum Schluss prüft unser Zahlungsdienstleister Ihren Ausweis. Das geschieht auf dessen gesicherter Seite, weil dabei ein Lichtbild aufgenommen wird; danach kehren Sie hierher zurück.",
+    "identitaetStarten": "Identität prüfen"
+  }
+}

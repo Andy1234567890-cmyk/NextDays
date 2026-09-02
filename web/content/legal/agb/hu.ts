@@ -23,11 +23,12 @@ export const agb: LegalDoc = {
       heading: "§ 2 A szerződés tárgya és a szolgáltatások",
       paragraphs: [
         "A myNextDays felhőalapú szoftvert bocsát a Felhasználó rendelkezésére üdülőszállások és szálláshely-szolgáltató vállalkozások kezeléséhez. A funkciók köre a mindenkor aktuális szolgáltatásleírásból következik, és különösen az alábbiakat foglalja magában:",
+      "A felhasználó által a platformon létrehozott minden objektum egyidejűleg felkerül a platform saját piacterére, a myBestDays-re (kötelező csatorna). A felhasználó ezt a csatornát külön nem választhatja le; azonban bármikor eltávolíthatja az objektumot az összes csatornáról az „Értékesítés szüneteltetése” funkcióval, vagy törölheti azt. Az objektum a myBestDays-en csak akkor válik láthatóvá, ha a felhasználó közzétette, és a myNextDays jóváhagyta a hirdetést; a myNextDays alapos okból megtagadhatja vagy visszavonhatja a jóváhagyást. A myBestDays-en keresztül történő foglalásokra a 7. § szerinti díj vonatkozik.",
       ],
       list: [
         "ingatlanok, foglaltsági naptárak és foglalások kezelése (property management rendszer),",
         "kapcsolódás harmadik felek foglalási csatornáihoz (pl. Booking.com, Airbnb) channel manageren keresztül,",
-        "ajánlatok közzététele a Platform saját myNextDays foglalási csatornáján,",
+        "Ajánlatok közzététele a platform saját piacterén, a myBestDays-en keresztül (kötelező csatorna, lásd a 2. bekezdést),",
         "saját weboldalak készítése az integrált oldalszerkesztővel (page builder),",
         "könyvelési, elszámolási és kimutatási funkciók, ideértve a tulajdonosi elszámolásokat is,",
         "kommunikáció a vendégekkel, valamint fizetések elfogadása az integrált fizetésfeldolgozáson keresztül (§ 5).",

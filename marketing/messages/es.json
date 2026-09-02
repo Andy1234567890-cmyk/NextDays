@@ -851,7 +851,8 @@
     },
     "unternehmen": {
       "ueberUns": "Sobre nosotros",
-      "kontakt": "Contacto"
+      "kontakt": "Contacto",
+      "partner": "Programa de socios"
     },
     "copyright": "© 2026 myNextDays. Todos los derechos reservados.",
     "agb": "Condiciones",
@@ -860,7 +861,8 @@
     "cookies": "Política de cookies",
     "avv": "Tratamiento de datos",
     "kontoLoeschen": "Eliminar cuenta",
-    "newsletterKnopf": "Suscribirse al boletín"
+    "newsletterKnopf": "Suscribirse al boletín",
+    "partnerAgb": "Condiciones generales de los socios"
   },
   "legal": {
     "stand": "Última actualización: {datum}"
@@ -990,7 +992,7 @@
       "sub": "Lo que los anfitriones quieren saber antes de cambiar: breve y sin letra pequeña.",
       "laufzeit": {
         "frage": "¿Hay permanencia mínima?",
-        "antwort": "No. La suscripción es mensual y se puede cancelar con cuatro semanas de antelación a finales de mes. Los primeros 14 días son gratuitos: al inicio, usted introduce sus datos de pago, pero el cargo no se realiza hasta después del período de prueba. Si cancela antes, no paga nada."
+        "antwort": "No. La suscripción es mensual y puede cancelarse con cuatro semanas de antelación al final del mes. Los primeros 14 días son gratuitos: usted introduce sus datos de pago al inicio, pero el cargo se realizará solo después de que finalice el período de prueba. Si accede a través del enlace o código de un socio, el primer mes completo es adicionalmente gratuito. Si cancela antes, no paga nada."
       },
       "objektzahl": {
         "frage": "¿Qué pasa si añado alojamientos?",
@@ -2185,5 +2187,259 @@
     "verwalten": "Gestionar preferencias de cookies",
     "schliessen": "Cerrar",
     "bestaetigen": "Confirmar preferencias"
+  },
+  "partnerHinweis": {
+    "text": "Usted llega a través de una recomendación (código {code}). El código se aplicará en el registro y le obsequiará el primer mes completo después de los 14 días de prueba.",
+    "cta": "Empezar ahora gratis",
+    "schliessen": "Cerrar aviso"
+  },
+  "partner": {
+    "meta": {
+      "titel": "Programa de socios — myNextDays",
+      "beschreibung": "Recomiende myNextDays a propietarios de alquileres vacacionales y hoteles y reciba hasta el {max}% de los ingresos por suscripción de cada negocio referido durante doce meses."
+    },
+    "hero": {
+      "eyebrow": "Programa de socios",
+      "headlinePre": "Recomiende myNextDays —",
+      "headlineHighlight": "y gane dinero",
+      "sub": "Para influencers, consultores, agencias y propietarios con red: Cada negocio que se registre a través de su enlace y pague una suscripción le reportará hasta un {max} % de los ingresos de la suscripción durante doce meses — más un 0,5 % de cada reserva a través de myBestDays, bonos por ascenso y, a partir de Élite, una supercomisión sin límite de duración.",
+      "cta": "Solicitar ahora",
+      "ctaLogin": "Acceso para socios",
+      "chipDauer": "12 meses de comisión por cliente",
+      "chipAuszahlung": "Pago mensual",
+      "chipKosten": "Participación gratuita",
+      "chipGratismonat": "Sus clientes: 14 días de prueba + 1 mes gratis"
+    },
+    "schritte": {
+      "eyebrow": "Cómo funciona",
+      "heading": "Tres pasos hasta la primera comisión",
+      "bewerben": {
+        "titel": "Solicitar",
+        "text": "Usted nos indica su canal — sitio web, perfil social o red. Revisamos cada solicitud personalmente y, por lo general, la aprobamos en pocos días hábiles."
+      },
+      "teilen": {
+        "titel": "Compartir enlace o código",
+        "text": "Recibirá un enlace personal y un código de referencia. El código aparecerá visible en el formulario de registro — sin cookies de seguimiento."
+      },
+      "verdienen": {
+        "titel": "Ganar",
+        "text": "Si un negocio referido paga su primera factura de suscripción, su comisión se extiende por doce meses. Podrá ver a cada cliente de forma anónima en el panel de socios y se le pagará mensualmente."
+      }
+    },
+    "staffel": {
+      "eyebrow": "Su nivel",
+      "heading": "Cuanto mayor sea su estructura, mayor será su tarifa",
+      "sub": "La tarifa se aplica a todas las nuevas comisiones a partir del rango alcanzado. La estructura incluye sus propios clientes de pago y los clientes de sus socios de equipo.",
+      "kunden": "{von}–{bis} clientes de pago",
+      "kundenOffen": "a partir de {von} clientes de pago",
+      "satz": "de los ingresos por suscripción",
+      "nichtAbrufbar": "El nivel no está disponible en este momento. Por favor, inténtelo de nuevo más tarde."
+    },
+    "bedingungen": {
+      "eyebrow": "Las reglas",
+      "heading": "Justo para usted, justo para los negocios",
+      "basis": {
+        "titel": "Qué cuenta",
+        "text": "La base de la comisión son los ingresos netos por suscripción (tarifa básica y módulos) del negocio referido — sin impuestos, comisiones de portal ni servicios adicionales."
+      },
+      "dauer": {
+        "titel": "Doce meses",
+        "text": "La comisión se aplica durante doce meses a partir de la primera factura de suscripción pagada por la empresa; el mes gratuito de sus clientes no cuenta. Si la empresa cancela, la comisión finaliza con su último pago. La parte de la reserva y la supercomisión se aplican sin este límite."
+      },
+      "auszahlung": {
+        "titel": "Pago",
+        "text": "Mensual, 30 días después del pago del negocio, a partir de un importe mínimo por divisa. Recibirá un crédito; las empresas necesitan un número de identificación fiscal válido."
+      },
+      "kennzeichnung": {
+        "titel": "Identificación",
+        "text": "Cada recomendación es publicidad y debe ser identificada como tal. Las frases obligatorias por idioma se proporcionan en el panel de control."
+      },
+      "verboten": {
+        "titel": "No permitido",
+        "text": "Autopromoción, publicidad de nuestras marcas en anuncios de búsqueda, promesas de descuento en nuestro nombre y mensajes no solicitados. Los reembolsos se deducirán de la comisión."
+      },
+      "daten": {
+        "titel": "Protección de datos",
+        "text": "Solo verá a sus clientes de forma seudónima, con el país, el estado y los importes, nunca con el nombre o el correo electrónico. Una empresa puede permitirle que la contacte al registrarse."
+      }
+    },
+    "faq": {
+      "eyebrow": "Preguntas frecuentes",
+      "heading": "Lo que nos preguntan los socios",
+      "wer": {
+        "frage": "¿Quién puede ser socio?",
+        "antwort": "Cualquier persona o empresa de la UE con un canal real hacia propietarios o hoteles: influencers, consultores, agencias, despachos de abogados, asociaciones y los propios clientes de myNextDays. La solicitud es gratuita; una suscripción no es un requisito."
+      },
+      "wann": {
+        "frage": "¿Cuándo se considera una empresa mi cliente?",
+        "antwort": "Cuando se haya registrado con su código y haya pagado su primera factura de suscripción. Los registros sin pago no cuentan para el rango."
+      },
+      "doppelt": {
+        "frage": "¿Qué pasa si una empresa nombra a dos socios?",
+        "antwort": "Una empresa se asigna a un solo socio: aquel cuyo código se introdujo en el formulario de registro. Los códigos posteriores no lo modifican."
+      },
+      "steuern": {
+        "frage": "¿Cómo funciona la facturación?",
+        "antwort": "Emitimos un crédito (autofacturación). Las empresas con número de IVA de la UE lo reciben con la mención de inversión del sujeto pasivo, las personas físicas sin IVA; usted mismo declara la comisión."
+      },
+      "material": {
+        "frage": "¿Hay material publicitario?",
+        "antwort": "Sí: vídeos cortos para redes sociales, un vídeo explicativo, banners y bloques de texto, en el panel de control del socio, en su idioma."
+      },
+      "wieviel": {
+        "frage": "¿Cuánta comisión puedo ganar?",
+        "antwort": "Esto depende de los ingresos por suscripciones de sus clientes y de su rango. La tabla anterior muestra la tarifa por rango; durante doce meses por cliente. Además, se añade el 0,5 % de cada reserva que sus clientes reciban a través de myBestDays, una bonificación única por ascenso por cada rango alcanzado, la comisión diferencial con un equipo, y a partir de Socio Élite, el 2,5 % de supercomisión sobre toda la estructura sin límite de duración."
+      },
+      "team": {
+        "frage": "¿Cómo funciona la comisión de equipo?",
+        "antwort": "A partir del rango Ascendente: Si un socio se postula a través de su enlace de equipo e introduce su código visiblemente en la solicitud, una vez aprobado, pertenecerá a su equipo. Sus clientes contarán 1:1 para su rango. Sobre los ingresos netos de la suscripción de sus clientes, usted recibirá la diferencia entre su tarifa y la suya — exactamente un nivel de profundidad, sin cuota de participación, sin dinero por captación."
+      },
+      "auszahlung": {
+        "frage": "¿Cómo y cuándo se pagan las comisiones?",
+        "antwort": "Mensualmente por divisa, tan pronto como la suma alcance el importe mínimo de su divisa. Cada línea de comisión está \"abierta\" durante 30 días (ventana de reembolso) y es pagadera a partir de entonces. Recibirá una nota de crédito (autofacturación); usted no emitirá ninguna factura. Pago mediante SEPA, Wise o PayPal."
+      },
+      "verfolgen": {
+        "frage": "¿Cómo puedo seguir mis comisiones y rendimiento?",
+        "antwort": "En el panel de control de socios, en \"Comisiones\", verá cada factura de suscripción pagada con la base, la tarifa, el importe y el estado; en \"Clientes\", sus negocios de forma seudónima; en \"Equipo\", la evaluación de sus socios de equipo; y en \"Enlaces y material\", los clics por código."
+      },
+      "werbung": {
+        "frage": "¿Puedo publicar anuncios de pago?",
+        "antwort": "No en nuestra marca: los anuncios en \"myNextDays\" y sus variantes ortográficas (Brand Bidding), el abandono de cookies, el alcance comprado o los incentivos para los registros están prohibidos y darán lugar a la suspensión. El contenido propio, las contribuciones y las recomendaciones son expresamente bienvenidos, siempre que se identifiquen como publicidad."
+      }
+    },
+    "abschluss": {
+      "heading": "¿Listo para recomendar myNextDays?",
+      "sub": "Solicite en dos minutos. Nos pondremos en contacto con usted después de la revisión.",
+      "cta": "Solicitar ahora",
+      "kontakt": "¿Preguntas? Escríbanos."
+    },
+    "vergleich": {
+      "eyebrow": "Su nivel",
+      "heading": "Cuantos más clientes de pago, mayor será su tarifa",
+      "sub": "La tarifa se aplica a todas las nuevas comisiones a partir del rango alcanzado. Se cuenta su estructura: sus propios clientes de pago más los clientes de sus socios de equipo.",
+      "nichtAbrufbar": "El nivel no está disponible actualmente. Por favor, inténtelo de nuevo más tarde.",
+      "plan": "Rango",
+      "provision": "Comisión sobre clientes propios",
+      "teamProvision": "Comisión de equipo sobre los clientes de sus socios de equipo",
+      "dauer": "Duración por cliente",
+      "dauerWert": "12 meses",
+      "kunden": "{de}–{a} clientes de pago",
+      "kundenOffen": "a partir de {de} clientes de pago",
+      "vorteile": "Servicios",
+      "ja": "incluido",
+      "nein": "no incluido",
+      "leistung": {
+        "konto": "Cuenta de socio gratuita",
+        "dashboard": "Panel de socio con clientes, comisiones y análisis",
+        "material": "Material publicitario y plantillas de identificación",
+        "team": "Crear equipo con su propio enlace de equipo",
+        "gutschrift": "Pago mensual con abono (autofacturación)",
+        "chat": "Contacto directo con el equipo de socios",
+        "support": "Contacto personal",
+        "coMarketing": "Co-marketing (acciones conjuntas)"
+      },
+      "fussnoteTeam": "La comisión de equipo es la diferencia entre su tarifa y la tarifa del socio de equipo sobre los ingresos netos de la suscripción de sus clientes, ambos en el momento del pago — exactamente un nivel, sin cuota de participación, sin dinero por captación. En total, nunca más del 30 %.",
+      "fussnoteCoMarketing": "Previa consulta con el equipo de socios; depende del perfil del socio y de las acciones en curso.",
+      "fussnoteRang": "El rango se forma a partir de su estructura: clientes de pago propios más los clientes de sus socios de equipo, cada uno cuenta una vez. Al alcanzar un nuevo rango a partir de Ascendente, se otorga un bono por ascenso una única vez.",
+      "teamDifferenz": "{satz} % menos la tarifa del socio de equipo",
+      "teamNicht": "aún no hay equipo",
+      "bonus": "Bono por ascenso (una vez)",
+      "superProvision": "Supercomisión sobre toda la estructura",
+      "marktTurbo": "Parte de la reserva myBestDays",
+      "marktTurboWert": "0,5 % por reserva, ilimitado",
+      "fussnoteSuper": "A partir de Socio Élite, 2,5 % sobre los ingresos netos de la suscripción de todos los clientes de su estructura — adicionalmente a la comisión, sin el límite de 12 meses, mientras mantenga el rango y el cliente pague."
+    },
+    "team": {
+      "eyebrow": "Crear equipo",
+      "heading": "Hasta {max} % de comisión diferencial sobre las ventas de su equipo",
+      "sub": "¿Conoce a otros consultores, creadores o agencias con contactos con anfitriones? A partir del rango Ascendente, se postulan a través de su enlace de equipo, pertenecen a su equipo — y sus clientes cuentan 1:1 para su rango. Usted gana la diferencia entre su tarifa y la tarifa de su socio de equipo; sus socios de equipo conservan su propia escala completa.",
+      "rang": {
+        "titel": "La diferencia",
+        "text": "Usted recibe su tarifa menos la tarifa del socio de equipo — ambas en el momento del pago. Si su socio de equipo está en el mismo rango, no se genera comisión de equipo."
+      },
+      "ebene": {
+        "titel": "Exactamente un nivel",
+        "text": "Sus socios de equipo no construyen su propio equipo bajo usted. Sin red, sin pirámide."
+      },
+      "keinGeld": {
+        "titel": "Solo de ingresos reales",
+        "text": "Sin cuota de participación, sin dinero por captación. La comisión de equipo se genera exclusivamente a partir de los ingresos por suscripción pagados."
+      },
+      "dauer": {
+        "titel": "Las mismas reglas",
+        "text": "12 meses por cliente de equipo, 30 días de ventana de reembolso, reversión en caso de reembolso o contracargo — como con su propia comisión. A partir de Élite, se añade la supercomisión sobre toda la estructura, sin límite de duración."
+      }
+    },
+    "kundeCta": {
+      "heading": "¿Ya es cliente de myNextDays?",
+      "text": "Entonces conoce el producto mejor. Recomiéndelo, su comisión se abonará en su cuenta, independientemente de su suscripción.",
+      "cta": "Recomendar y ganar"
+    }
+  },
+  "partnerBewerbung": {
+    "meta": {
+      "titel": "Solicitar ser socio — myNextDays",
+      "beschreibung": "Solicitud para el programa de socios de myNextDays: cuentas de redes sociales, alcance, condiciones. Revisamos cada solicitud personalmente."
+    },
+    "eyebrow": "Programa de socios",
+    "titel": "Solicitar ser socio",
+    "text": "Indíquenos sus cuentas de redes sociales con su alcance — revisamos cada solicitud personalmente y generalmente respondemos en pocos días hábiles. Tras la aprobación, recibirá acceso al panel de socios con enlaces, códigos y análisis.",
+    "email": "Correo electrónico",
+    "passwort": "Contraseña para su panel de socio",
+    "passwortHinweis": "Mínimo 8 caracteres.",
+    "name": "Nombre",
+    "firma": "Empresa (opcional)",
+    "rechtsform": "Forma jurídica",
+    "privat": "Persona física",
+    "unternehmen": "Empresa",
+    "land": "País",
+    "ustId": "Número de IVA",
+    "ustIdHinweis": "Se verificará con el sistema VIES de la UE. Sin un número confirmado, no se realizarán pagos a empresas.",
+    "kanaele": {
+      "titel": "Sus cuentas de redes sociales",
+      "hinweis": "Obligatorio: al menos una cuenta de red social (Instagram, TikTok, YouTube, Facebook, LinkedIn…) con dirección, nombre de usuario y alcance (seguidores). Sitio web, blog o boletín informativo son bienvenidos como adicionales. Revisamos las cuentas antes de la aprobación.",
+      "plattform": "Plataforma",
+      "handle": "Nombre de usuario (opcional)",
+      "reichweite": "Alcance (seguidores)",
+      "hinzufuegen": "Añadir canal",
+      "entfernen": "Eliminar canal",
+      "socialPflicht": "Es obligatorio tener al menos una cuenta de red social con alcance — un sitio web por sí solo no es suficiente.",
+      "plattformen": {
+        "website": "Sitio web",
+        "blog": "Blog",
+        "newsletter": "Boletín informativo",
+        "podcast": "Podcast",
+        "other": "Otros"
+      }
+    },
+    "plattform": {
+      "website": "Sitio web",
+      "blog": "Blog",
+      "newsletter": "Boletín informativo",
+      "podcast": "Podcast",
+      "other": "Otros"
+    },
+    "sponsor": "Recomendado por socio (código, opcional)",
+    "sponsorHinweis": "¿Viene a través del enlace de equipo de un socio? Su código aparecerá aquí. Recibirá una comisión de equipo sobre los ingresos por suscripción de sus clientes — su propia comisión no cambiará.",
+    "pitch": "¿Por qué encaja con myNextDays? (opcional)",
+    "pitchPlatzhalter": "¿A quién llega, de qué habla, cómo quiere recomendar?",
+    "zustimmung": "Acepto las",
+    "bedingungen": "Condiciones para socios",
+    "version": "Versión {version}",
+    "absenden": "Enviar solicitud",
+    "sendet": "Enviando…",
+    "pruefungHinweis": "Este formulario está protegido por reCAPTCHA. Después de enviarlo, nuestro equipo de socios revisará sus cuentas y alcance; recibirá un correo electrónico con la decisión.",
+    "fehler": {
+      "social": "Por favor, proporcione al menos una cuenta de redes sociales con dirección y alcance.",
+      "doppelt": "Ya existe una solicitud para este correo electrónico. Inicie sesión en el panel de socios.",
+      "eingabe": "Por favor, revise sus entradas.",
+      "captcha": "La verificación antispam falló. Por favor, recargue la página e inténtelo de nuevo.",
+      "allgemein": "La solicitud no pudo ser enviada en este momento. Por favor, inténtelo de nuevo más tarde."
+    },
+    "fertig": {
+      "titel": "Solicitud recibida",
+      "text": "¡Gracias! Revisaremos sus cuentas y alcance personalmente y nos pondremos en contacto por correo electrónico. Su panel de socios es accesible con su correo electrónico y contraseña; los enlaces y códigos se activarán con la aprobación.",
+      "login": "Ir al inicio de sesión de socios"
+    }
   }
 }

@@ -246,6 +246,40 @@ export const datenschutz: LegalDoc = {
       ],
     },
     {
+      heading: "Programm tas-Sħubija",
+      paragraphs: [
+        "Aħna noperaw programm ta' sħubija li permezz tiegħu sħab (influencers, konsulenti, aġenziji, klijenti) jirrakkomandaw negozji lil myNextDays u jirċievu kummissjoni għal dan. F'dan il-proċess, aħna nipproċessaw data mis-sħab u – sa ċertu punt – minn negozji rakkomandati.",
+      ],
+      unterpunkte: [
+        {
+          titel: "Data tas-Sħab",
+          paragraphs: [
+            "Meta tapplika, aħna nipproċessaw l-isem, l-isem tal-kumpanija, il-forma legali, il-pajjiż, l-indirizz elettroniku, il-lingwa, il-kontijiet tal-midja soċjali (pjattaforma, indirizz, handle, firxa ddikjarata minnek innifsek), in-numru tal-identifikazzjoni tal-VAT (verifika permezz tas-sistema tal-UE VIES), id-data tal-ħlas (IBAN, indirizz Wise jew PayPal) kif ukoll il-kunsens għat-termini u l-kundizzjonijiet tal-parteċipazzjoni bil-verżjoni u l-ħin. Il-bażi legali hija l-eżekuzzjoni tal-kuntratt ta' sħubija (l-Art. 6(1)(b) tal-GDPR); għall-krediti u ż-żamma tar-rekords, japplikaw l-obbligi fiskali u kummerċjali (l-Art. 6(1)(c) tal-GDPR).",
+            "Jekk sieħeb imexxi tim, huwa jara l-isem jew l-isem tal-kumpanija, il-grad, in-numru ta' klijenti li jħallsu u l-kummissjoni tat-tim li tirriżulta minn sħab tat-tim tiegħu. Il-messaġġi bejn l-isponsor u s-sieħeb tat-tim jinħażnu fil-pjattaforma sabiex it-tnejn ikunu jistgħu jaraw l-istorja.",
+          ],
+        },
+        {
+          titel: "Klikks fuq Links tas-Sħab",
+          paragraphs: [
+            "Jekk viżitatur jaċċessa link ta' sieħeb (mynextdays.com/p/CODE), aħna naħżnu l-kodiċi, il-ħin, il-paġna aċċessata, il-paġna ta' referenza u kwalunkwe parametru tal-kampanja kif ukoll l-indirizz IP u l-identifikatur tal-browser esklussivament bħala checksums imqassra (hash) – għall-iskoperta ta' abbuż (frekwenzi), mhux għar-rikonoxximent. Ma jiġi ssettjat l-ebda cookie ta' traċċar. Aħna nħassru d-data tal-klikks wara 90 jum. Il-bażi legali hija l-interess leġittimu tagħna f'kontabilità tal-programm reżistenti għall-frodi (l-Art. 6(1)(f) tal-GDPR).",
+          ],
+        },
+        {
+          titel: "Kontijiet u Postijiet Konnessi tal-Midja Soċjali",
+          paragraphs: [
+            "Is-sħab jistgħu jgħaqqdu volontarjament il-kontijiet tagħhom fuq YouTube (Google), Instagram u Facebook (Meta) kif ukoll TikTok mad-dashboard tas-sħab. F'dan il-proċess, huma jagħtu permess ta' qari (OAuth) lill-pjattaforma rispettiva; aħna ma niktbu xejn f'dawn il-kontijiet. Aħna naħżnu l-identifikatur u l-isem tal-kont, it-token tal-aċċess kriptat, il-ħin tal-konnessjoni kif ukoll kuljum kejl wieħed għal kull kont: in-numru ta' segwaċi jew abbonati, il-veduti tal-aħħar 28 jum, ir-rata ta' interazzjoni u n-numru ta' postijiet, kull wieħed bil-ħin tar-rispons tal-pjattaforma. Għall-postijiet li s-sieħeb joħloq fid-dashboard (titlu, pjattaforma, indirizz, data tal-pubblikazzjoni), aħna naħżnu wkoll veduti, likes, kummenti, qsim u salvati mill-pjattaforma.",
+            "L-iskop huwa li tiġi vverifikata l-firxa ddikjarata mill-partner u li jiġu attribwiti klikks u klijenti lil postijiet individwali; informazzjoni mhux ivverifikata tingħata inqas piż waqt l-approvazzjoni. Indikazzjonijiet ta' diskrepanzi (bħal żieda fil-followers mingħajr fehmiet korrispondenti) jintużaw esklussivament għal verifika manwali minna u ma jwasslux għal deċiżjoni awtomatizzata. Il-bażi legali hija l-kunsens tal-partner (l-Art. 6(1)(a) tar-RGPD), li jagħti billi jgħaqqad u jista' jirtira fi kwalunkwe ħin fid-dashboard taħt “Skonnettja”; meta skonnettja, aħna nħassru t-token ta' aċċess immedjatament, il-valuri mkejla maħżuna jibqgħu bħala storja u jitħassru mal-kont tal-partner. Aħna nużaw esklussivament l-interfaces uffiċjali tal-pjattaformi; għall-ipproċessar minn Google, Meta u TikTok, japplikaw l-avviżi ta' privatezza tagħhom stess.",
+          ],
+        },
+        {
+          titel: "Negozji Rakkomandati",
+          paragraphs: [
+            "Jekk negozju jirreġistra b'kodiċi ta' partner, aħna naħżnu l-assoċjazzjoni tan-negozju mal-partner kif ukoll il-ħin, il-mod (link jew kodiċi) u l-istatus. Il-partner jara n-negozju esklussivament b'mod psewdonimu (numru sekwenzjali, pajjiż, status, ammonti) — qatt isem, indirizz elettroniku jew dejta ta' prenotazzjoni. Il-partner jista' jikkuntattja n-negozju permezz tal-pjattaforma biss jekk in-negozju jagħti l-kunsens espressament waqt ir-reġistrazzjoni. Għall-kalkolu tal-kummissjoni, aħna nipproċessaw l-ammonti netti tal-abbonament tal-kontijiet imħallsa tan-negozju; il-bażi legali hija l-eżekuzzjoni tal-kuntratt ta' partner u tal-kuntratt ta' użu (l-Art. 6(1)(b) tar-RGPD).",
+          ],
+        },
+      ],
+    },
+    {
       heading: "Hosting u ħażna",
       paragraphs: [
         "Il-pjattaforma, id-database, il-midja u s-server tal-posta jaħdmu fuq servers ta’ Hetzner Online GmbH, il-Ġermanja, fiċ-ċentru tad-data ta’ Helsinki (il-Finlandja) — jiġifieri fl-Unjoni Ewropea. Ma’ Hetzner jeżisti ftehim dwar l-ipproċessar tad-data.",

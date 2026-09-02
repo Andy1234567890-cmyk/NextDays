@@ -1,0 +1,521 @@
+{
+  "meta": {
+    "titel": "myNextDays Partener",
+    "beschreibung": "Tabloul de bord al programului de parteneriat myNextDays: linkuri, clienți, comisioane, plăți."
+  },
+  "nav": {
+    "partner": "Partener",
+    "uebersicht": "Prezentare generală",
+    "kunden": "Clienți",
+    "provisionen": "Comisioane",
+    "auszahlungen": "Plăți",
+    "links": "Linkuri și materiale",
+    "profil": "Profil",
+    "sprache": "Limba",
+    "abmelden": "Deconectare",
+    "nachrichten": "Mesaje",
+    "menue": "Meniu",
+    "team": "Echipă",
+    "beitraege": "Postări"
+  },
+  "status": {
+    "pending_review": {
+      "titel": "Aplicația dumneavoastră este în curs de examinare",
+      "text": "Examinăm personal fiecare aplicație și vă vom contacta prin e-mail. Până la aprobare, linkurile și codurile nu sunt încă active - puteți completa deja datele dumneavoastră de profil și de plată."
+    },
+    "rejected": {
+      "titel": "Aplicația dumneavoastră nu a fost acceptată",
+      "text": "Nu am putut accepta aplicația dumneavoastră în acest moment. Dacă aveți întrebări, vă rugăm să ne scrieți."
+    },
+    "suspended": {
+      "titel": "Contul dumneavoastră de partener este blocat",
+      "text": "Comisioanele deschise nu vor fi plătite atâta timp cât blocarea este activă. Dacă aveți întrebări, vă rugăm să ne scrieți."
+    },
+    "approved": {
+      "titel": "Aprobat",
+      "text": "Contul dumneavoastră este activ."
+    },
+    "grund": "Motiv"
+  },
+  "uebersicht": {
+    "titelBewerber": "Bun venit în programul de parteneriat",
+    "textBewerber": "Odată ce aplicația dumneavoastră este aprobată, veți vedea aici linkurile, clienții și comisioanele dumneavoastră. Între timp, introduceți datele fiscale și de plată - astfel încât prima plată să poată fi efectuată fără întrebări suplimentare.",
+    "zumProfil": "La profil",
+    "titel": "Bună ziua, {name}",
+    "rang": "Rang {rang} · {satz} din venitul abonamentului",
+    "naechsterRang": "încă {fehlend} clienți plătitori până la {rang} ({satz})",
+    "linksTeilen": "Partajați linkuri",
+    "keineBetraege": "—",
+    "kachel": {
+      "klicks": "Clicuri (30 de zile)",
+      "registrierungen": "Afaceri înregistrate",
+      "zahlend": "Clienți plătitori",
+      "offen": "Deschis (fereastră de rambursare)",
+      "auszahlbar": "Plătibil",
+      "ausgezahlt": "Plătit",
+      "team": "Comision de echipă",
+      "teamHinweis": "{n} parteneri de echipă",
+      "struktur": "Clienți în structura dumneavoastră",
+      "strukturHinweis": "Clienți proprii + de echipă — acest număr determină rangul dumneavoastră",
+      "super": "Supercomision",
+      "superHinweis": "{satz} din veniturile din abonamente ale structurii dumneavoastră, fără limită de durată",
+      "turbo": "Cotă de rezervare myBestDays",
+      "turboHinweis": "0,5 % per rezervare prin myBestDays pentru clienții dumneavoastră și clienții echipei",
+      "bonus": "Bonusuri de promovare",
+      "bonusHinweis": "o singură dată pentru fiecare rang atins"
+    },
+    "deineLinks": "Linkurile dumneavoastră"
+  },
+  "links": {
+    "titel": "Linkuri și materiale",
+    "hinweis": "Linkul dumneavoastră duce la mynextdays.com și contorizează clicul. Codul este vizibil în formular la înregistrare - fără cookie. O afacere este atribuită unui singur partener.",
+    "klicks30": "{n} clicuri în 30 de zile",
+    "kopiert": "Copiat.",
+    "kopierenFehlgeschlagen": "Copierea nu este posibilă - vă rugăm să selectați și să copiați.",
+    "codeKopieren": "Copiați codul",
+    "linkFehlt": "Linkul nu este încă disponibil.",
+    "neuerCode": "Creați un alt cod",
+    "label": "Denumire (opțional)",
+    "wunschcode": "Cod dorit (opțional)",
+    "anlegen": "Creați",
+    "abbrechen": "Anulați",
+    "codeAngelegt": "Codul a fost creat.",
+    "codeVergeben": "Acest cod este deja utilizat.",
+    "fehler": "Acțiunea a eșuat.",
+    "kennzeichnung": {
+      "titel": "Obligatoriu: Etichetați publicitatea",
+      "text": "Fiecare recomandare cu linkul sau codul dumneavoastră este publicitate și trebuie să fie recunoscută ca atare – la începutul postării, în limba postării. Un simplu „#ad” nu este suficient. Încălcările pot duce la blocare.",
+      "imBeitrag": "În postare",
+      "amLink": "La link",
+      "land": {
+        "DE": "Germania",
+        "DK": "Danemarca"
+      },
+      "andere": "Alte țări: Intenția comercială trebuie să fie clar vizibilă (Directiva UE privind practicile comerciale neloiale). Vă rugăm să verificați cerințele țării dumneavoastră; vom adăuga formulări dovedite treptat."
+    },
+    "material": {
+      "titel": "Material publicitar",
+      "leer": "Materialul este în curs de pregătire – va apărea aici de îndată ce va fi aprobat.",
+      "art": {
+        "video": "Video",
+        "image": "Imagine",
+        "text": "Fragment de text",
+        "link": "Link"
+      },
+      "oeffnen": "Deschideți"
+    }
+  },
+  "kunden": {
+    "titel": "Clienți",
+    "hinweis": "Unitățile de cazare promovate de dumneavoastră – pseudonim. Vedeți țara, statusul și sumele, niciodată numele sau e-mailul. „Plătitor” înseamnă: prima factură de abonament plătită și abonamentul este activ.",
+    "leer": "Nicio unitate de cazare nu s-a înregistrat încă prin linkul dumneavoastră.",
+    "kunde": "Client {n}",
+    "spalte": {
+      "kunde": "Client",
+      "land": "Țară",
+      "status": "Status",
+      "registriert": "Înregistrat",
+      "provisionBis": "Comision până la",
+      "verdient": "Câștigat"
+    },
+    "status": {
+      "registriert": "Înregistrat",
+      "zahlend": "Plătitor",
+      "beendet": "Terminat",
+      "in_pruefung": "În curs de verificare",
+      "abgelehnt": "Refuzat"
+    }
+  },
+  "provisionen": {
+    "titel": "Comisioane",
+    "hinweis": "Fiecare rând este o factură de abonament plătită, o rezervare prin myBestDays sau un bonus de promovare. Baza este venitul net din abonamente sau valoarea rezervării; rata este rangul dumneavoastră la momentul plății. Rândurile deschise devin plătibile după 30 de zile.",
+    "leer": "Încă nu există comision.",
+    "reifAm": "plătibil de la {datum}",
+    "spalte": {
+      "datum": "Dată",
+      "art": "Tip",
+      "kunde": "Client",
+      "basis": "Bază",
+      "satz": "Rat",
+      "betrag": "Sumă",
+      "status": "Status"
+    },
+    "art": {
+      "earn": "Venit",
+      "reversal": "Rambursare",
+      "adjustment": "Corecție",
+      "override": "Comision de echipă",
+      "bonus": "Bonus de promovare",
+      "lifetime": "Supercomision",
+      "booking_share": "Cotă de rezervare"
+    },
+    "status": {
+      "pending": "Deschis",
+      "approved": "Plătibil",
+      "held": "Reținut",
+      "paid": "Plătit",
+      "reversed": "Retras",
+      "cancelled": "Anulat"
+    },
+    "team": "Echipă"
+  },
+  "auszahlungen": {
+    "titel": "Plăți",
+    "hinweis": "Lunar, per monedă, începând de la suma minimă. Fiecare plată este însoțită de o notă de credit (self-billing) – aceasta este dovada dumneavoastră.",
+    "kein_weg": "Nu a fost înregistrată nicio metodă de plată. Vă rugăm să o adăugați în profil – altfel plata nu poate fi efectuată.",
+    "leer": "Încă nu există nicio plată.",
+    "spalte": {
+      "nummer": "Nr. notă de credit",
+      "zeitraum": "Perioadă",
+      "betrag": "Sumă",
+      "status": "Status",
+      "gutschrift": "Notă de credit"
+    },
+    "status": {
+      "pending": "Pregătit",
+      "processing": "În transfer",
+      "paid": "Plătit",
+      "failed": "Eșuat"
+    },
+    "gutschriftLaden": "Descărcare",
+    "gutschriftFehler": "Nota de credit nu a putut fi încărcată."
+  },
+  "profil": {
+    "titel": "Profil",
+    "seit": "Partener din {datum}",
+    "stammdaten": "Date de bază",
+    "name": "Nume",
+    "firma": "Companie (opțional)",
+    "sprache": "Limba pentru e-mailuri",
+    "kanal": "Conturile și canalele dumneavoastră de social media",
+    "speichern": "Salvați",
+    "gespeichert": "Salvat.",
+    "gespeichertViesOffen": "Salvat. Codul de TVA nu a putut fi confirmat încă — îl vom verifica din nou înainte de plată.",
+    "steuerUndAuszahlung": "Date fiscale și de plată",
+    "aktuellerWeg": "Curent: {weg} {details}",
+    "keinWeg": "Nicio metodă de plată nu a fost încă înregistrată.",
+    "viesBestaetigt": "Cod TVA confirmat (VIES)",
+    "viesOffen": "Cod TVA neconfirmat încă",
+    "rechtsform": "Forma juridică",
+    "privat": "Persoană fizică",
+    "unternehmen": "Companie",
+    "land": "Țară",
+    "ustId": "Cod TVA",
+    "ustIdHinweis": "Va fi verificat în sistemul UE VIES. Fără un număr confirmat, nu se efectuează plăți către companii. Creditul va include mențiunea de taxare inversă.",
+    "privatHinweis": "În calitate de persoană fizică, veți primi creditul fără TVA. Comisionul trebuie să fie impozitat de dumneavoastră.",
+    "auszahlungsweg": "Metoda de plată",
+    "kontoinhaber": "Titular cont",
+    "empfaengerEmail": "Adresă de e-mail {weg}",
+    "passwortBestaetigen": "Pentru confirmare: parola dumneavoastră",
+    "passwortFalsch": "Parola nu este corectă.",
+    "steuerdaten": "Date fiscale"
+  },
+  "anmelden": {
+    "partner": "Partener",
+    "titel": "Autentificare",
+    "text": "Tabloul de bord al programului de parteneriat myNextDays.",
+    "email": "E-mail",
+    "passwort": "Parolă",
+    "anmelden": "Autentificare",
+    "passwortVergessen": "Ați uitat parola?",
+    "resetGesendet": "Dacă există un cont, v-am trimis un e-mail.",
+    "stoerung": "Serviciul de autentificare nu este disponibil momentan. Acest lucru nu se datorează datelor dumneavoastră de acces — vă rugăm să încercați din nou mai târziu.",
+    "keinPartnerKonto": "Nu există un cont de partener cu aceste date de acces.",
+    "fehlgeschlagen": "Autentificare eșuată.",
+    "nochKeinKonto": "Nu sunteți încă partener?",
+    "bewerben": "Aplicați acum"
+  },
+  "bewerben": {
+    "partner": "Partener",
+    "titel": "Aplicați ca partener",
+    "text": "Două minute. Verificăm personal fiecare cerere și vă contactăm prin e-mail.",
+    "name": "Numele dumneavoastră",
+    "firma": "Companie (opțional)",
+    "email": "E-mail",
+    "passwort": "Parolă (minimum 8 caractere)",
+    "rechtsform": "Forma juridică",
+    "privat": "Persoană fizică",
+    "unternehmen": "Companie",
+    "land": "Țară",
+    "ustId": "Cod TVA",
+    "ustIdHinweis": "Obligatoriu pentru companii; va fi verificat prin VIES.",
+    "kanal": "Conturile dumneavoastră de social media",
+    "kanalHinweis": "Obligatoriu: cel puțin un cont de social media (Instagram, TikTok, YouTube, Facebook, LinkedIn...) cu adresă, nume de utilizator și acoperire. Site-ul web, blogul sau newsletter-ul sunt binevenite ca supliment. Verificăm conturile înainte de aprobare.",
+    "pitch": "Cum contactați proprietarii de închirieri de vacanță sau hoteluri? (opțional)",
+    "pitchHinweis": "Câteva propoziții sunt suficiente.",
+    "zustimmung": "Accept Termenii și condițiile pentru parteneri, în special obligația de a marca recomandările ca publicitate.",
+    "bedingungen": "Către program",
+    "captchaHinweis": "Această pagină este protejată de reCAPTCHA; se aplică Politica de confidențialitate și Termenii și condițiile Google.",
+    "stoerung": "Serviciul nu este disponibil momentan – vă rugăm să încercați din nou mai târziu.",
+    "emailVergeben": "Există deja o aplicație pentru această adresă de e-mail. Vă rugăm să vă autentificați.",
+    "captchaFehler": "Verificarea de securitate a eșuat. Vă rugăm să reîncărcați pagina și să încercați din nou.",
+    "laeuft": "Se trimite...",
+    "absenden": "Trimiteți aplicația",
+    "schonPartner": "Sunteți deja partener?",
+    "anmelden": "Autentificare",
+    "sponsor": "Recomandat de partener (cod, opțional)",
+    "sponsorHinweis": "Sunteți aici prin linkul de echipă al unui partener? Codul său va fi aici. El va primi un comision de echipă din veniturile abonamentelor clienților dumneavoastră — propriul dumneavoastră comision rămâne neschimbat."
+  },
+  "nachrichten": {
+    "titel": "Mesaje",
+    "hinweis": "Linia dumneavoastră directă cu echipa de parteneri — întrebări despre comision, plată, materiale sau un client. Răspunsurile apar aici în timp real.",
+    "neu": "Mesaj nou către echipa de parteneri",
+    "platzhalter": "Despre ce este vorba?",
+    "senden": "Trimite",
+    "abbrechen": "Anulează",
+    "leer": "Încă nu există nicio conversație.",
+    "stoerung": "Serviciul nu este disponibil momentan — vă rugăm să încercați din nou mai târziu.",
+    "fehler": "Acest lucru nu a funcționat.",
+    "team": "Echipa de parteneri",
+    "du": "Dumneavoastră",
+    "antwortPlatzhalter": "Răspunsul dumneavoastră...",
+    "antworten": "Răspunde",
+    "status": {
+      "in_bearbeitung": "În curs de procesare",
+      "wartet_auf_dich": "Răspuns primit",
+      "geloest": "Rezolvat"
+    }
+  },
+  "kanaele": {
+    "plattformLabel": "Platformă",
+    "handle": "Nume de utilizator (opțional)",
+    "reichweite": "Audiență (urmăritori)",
+    "hinzufuegen": "Adăugați canal",
+    "entfernen": "Eliminați canal",
+    "plattform": {
+      "website": "Site web",
+      "blog": "Blog",
+      "newsletter": "Newsletter",
+      "podcast": "Podcast",
+      "other": "Altele"
+    },
+    "socialPflicht": "Este obligatoriu cel puțin un cont de social media – un site web nu este suficient."
+  },
+  "team": {
+    "titel": "Echipă",
+    "hinweis": "Partenerii care au aplicat cu codul dumneavoastră formează echipa dumneavoastră. Pentru veniturile nete din abonamente ale clienților lor, primiți diferența dintre rata dumneavoastră (în prezent {satz}) și rata partenerului de echipă — ambele la momentul plății. Clienții echipei contează 1:1 pentru rangul dumneavoastră.",
+    "meinSponsor": "Sunteți partener de echipă al {name}.",
+    "link": {
+      "titel": "Link-ul echipei dumneavoastră",
+      "text": "Cine aplică prin acest link, va avea codul dumneavoastră vizibil în aplicație — fără cookie.",
+      "kopieren": "Copiați link-ul",
+      "keinLink": "Niciun cod activ — creați unul la Link-uri și Materiale."
+    },
+    "regeln": {
+      "titel": "Regulile",
+      "rang": "Comision de echipă = rata dumneavoastră minus rata partenerului de echipă, la momentul plății. Același rang = 0.",
+      "ebene": "Exact un nivel: partenerii dumneavoastră de echipă nu își construiesc propria echipă.",
+      "keinGeld": "Fără bani pentru recrutare — doar din veniturile din abonamente plătite.",
+      "dauer": "12 luni per client de echipă, fereastră de rambursare de 30 de zile. De la Elite, suplimentar 2,5 % supercomision fără limită de durată."
+    },
+    "kachel": {
+      "mitglieder": "Parteneri de echipă (activi / total)",
+      "teamKunden": "Clienți de echipă plătitori",
+      "umsatz30": "Venituri echipă (30 de zile)",
+      "offen": "Comision echipă deschis",
+      "auszahlbar": "Comision echipă plătibil",
+      "ausgezahlt": "Comision echipă plătit"
+    },
+    "verlauf": {
+      "titel": "Istoric · 12 luni",
+      "leer": "Încă nu există venituri de echipă.",
+      "provision": "Comision echipă",
+      "umsatz": "Venituri echipă"
+    },
+    "mitglieder": {
+      "titel": "Echipa dumneavoastră",
+      "leer": "Încă nu există parteneri de echipă. Distribuiți link-ul echipei dumneavoastră.",
+      "kunden": "{n} clienți plătitori",
+      "umsatz30": "Venituri 30 zile",
+      "offen": "deschis",
+      "seit": "din {datum}"
+    },
+    "spalte": {
+      "partner": "Partener",
+      "status": "Status",
+      "rang": "Rang",
+      "kunden": "Clienți plătitori",
+      "umsatz30": "Venituri 30 zile",
+      "umsatzGesamt": "Venituri totale",
+      "offen": "Deschis",
+      "auszahlbar": "Plătibil",
+      "ausgezahlt": "Plătit"
+    },
+    "status": {
+      "pending_review": "În verificare",
+      "approved": "Aprobat",
+      "rejected": "Refuzat",
+      "suspended": "Blocat"
+    },
+    "chat": {
+      "titel": "Divertisment",
+      "schreiben": "Scrie",
+      "rolle": {
+        "sponsor": "Sponsorul dumneavoastră",
+        "member": "Partener de echipă"
+      },
+      "zurueck": "Echipă",
+      "leer": "Încă nu sunt mesaje.",
+      "platzhalter": "Mesajul dumneavoastră...",
+      "senden": "Trimite",
+      "titelListe": "Mesaje în echipă"
+    },
+    "nochNichtErlaubt": "Conduceți o echipă începând cu rangul de Ascendent (5 clienți plătitori în structura dumneavoastră). Până atunci nu există un link de echipă."
+  },
+  "bedingungen": {
+    "neueVersion": "Termenii și condițiile parteneriatului au fost actualizate (acordul dumneavoastră: versiunea {alt}, actuală: {neu}). Vă rugăm să le citiți și să le acceptați din nou.",
+    "nochNicht": "Vă rugăm să acceptați termenii și condițiile parteneriatului (versiunea {neu}).",
+    "lesen": "Citiți termenii",
+    "annehmen": "Acceptați",
+    "angenommen": "Vă mulțumim — acord salvat."
+  },
+  "beitraege": {
+    "titel": "Postări",
+    "hinweis": "Generați un link separat pentru fiecare reel, videoclip sau postare. Astfel, veți vedea ce postare generează clicuri, înregistrări și clienți plătitori.",
+    "kontoHinweis": "Conectați-vă contul, iar vizualizările și interacțiunile de pe platformă vor apărea aici.",
+    "kontoVerbinden": "Conectați contul",
+    "neu": "Postare nouă",
+    "keinCode": "Aveți nevoie mai întâi de un cod de recomandare activ.",
+    "feld": {
+      "titel": "Titlu",
+      "titelBeispiel": "ex. Reel Copenhaga Toamnă",
+      "plattform": "Platformă",
+      "code": "Cod",
+      "datum": "Publicat la",
+      "url": "Adresa postării (opțional)",
+      "urlHinweis": "Poate fi adăugată după publicare. Cu adresă, atribuim vizualizările și interacțiunile postării."
+    },
+    "linkErzeugen": "Generați link",
+    "angelegt": "Postare creată — linkul este gata.",
+    "doppelt": "Această postare există deja pentru acest cod.",
+    "fehler": "Nu a funcționat. Vă rugăm să încercați din nou.",
+    "liste": "{n, plural, =0 {Nicio postare} =1 {1 postare} other {# postări}}",
+    "leer": "Nicio postare încă. Generați primul link de mai sus.",
+    "veroeffentlicht": "publicat la {datum}",
+    "loeschen": "Șterge postarea",
+    "geloescht": "Postare ștearsă.",
+    "loeschenGesperrt": "Postarea are deja înregistrări și va fi păstrată.",
+    "kopiert": "Link copiat.",
+    "kopierenFehlgeschlagen": "Copiere imposibilă — vă rugăm să selectați manual.",
+    "linkFehlt": "Linkul nu este disponibil momentan.",
+    "qrZeigen": "Afișați codul QR",
+    "qrSchliessen": "Ascundeți codul QR",
+    "qrAlt": "Cod QR pentru linkul postării",
+    "qrHinweis": "Pentru Stories, videoclipuri și print — duce la același link.",
+    "beitragOeffnen": "Deschide postarea",
+    "urlAendern": "Modificați adresa",
+    "urlNachtragen": "Adăugați adresa",
+    "speichern": "Salvați",
+    "gespeichert": "Salvat.",
+    "kennzahl": {
+      "klicks": "Clicuri 90 zile",
+      "klicks30": "{n} în 30 de zile",
+      "registrierungen": "Înregistrări",
+      "kunden": "Clienți plătitori",
+      "views": "Vizualizări",
+      "gemessen": "Stare {zeit}",
+      "nichtVerbunden": "Cont neconectat",
+      "interaktion": "Aprecieri {likes} · Comentarii {kommentare} · Distribuiri {shares} · Salvări {saves}",
+      "pro1000": "{n} clicuri la 1.000 de vizualizări"
+    },
+    "freigabe": {
+      "videoNoetig": "Încărcați contribuția pentru aprobare",
+      "erklaerung": "Încărcați videoclipul, imaginea sau PDF-ul finalizat înainte de a-l publica. Odată ce l-am aprobat, linkul dvs. personal va apărea aici - apoi îl veți plasa sub postare. Utilizați numai materialele noastre promoționale, nu capturi de ecran proprii și nu promisiuni de succes sau garanții.",
+      "hochladen": "Selectați fișierul (video, JPG, PNG, PDF)",
+      "neuHochladen": "Încărcați un fișier nou",
+      "laeuft": "Se încarcă…",
+      "eingereicht": "Videoclip trimis. Vă vom contacta după ce este verificat.",
+      "inPruefung": "În curs de verificare",
+      "inPruefungHinweis": "Videoclipul dvs. este la noi. Odată ce este aprobat, linkul dvs. va apărea aici.",
+      "eingereichtAm": "Trimis la {zeit} — odată ce este aprobat, linkul dvs. va apărea aici.",
+      "abgelehnt": "Neaprobat",
+      "grund": "Motiv",
+      "freigegeben": "Videoclip aprobat",
+      "zuGross": "Videoclipul este mai mare de {mb} MB.",
+      "fehler": "Încărcarea a eșuat.",
+      "grundKategorie": {
+        "material": "Material: numai materiale promoționale oficiale, fără capturi de ecran proprii",
+        "promise": "Promisiuni: fără garanții sau promisiuni de succes",
+        "disclosure": "Etichetare: postarea trebuie etichetată ca publicitate",
+        "brand": "Brand: logo sau nume utilizat incorect",
+        "other": "Altele"
+      }
+    }
+  },
+  "kanalVerbindung": {
+    "titel": "Conturi conectate",
+    "hinweis": "Conectați-vă conturile de social media pentru ca urmăritorii și vizualizările să provină direct de pe platformă. Acest lucru este voluntar și poate fi revocat oricând; noi doar citim, nu scriem nimic.",
+    "verbinden": "Conectați {anbieter}",
+    "baldVerfuegbar": "în curând disponibil",
+    "nichtKonfiguriert": "Această conexiune nu este încă activată.",
+    "fehler": "Nu a funcționat. Vă rugăm să încercați din nou.",
+    "verifiziert": "verificat",
+    "follower": "{n} urmăritori",
+    "views28": "{n} vizualizări în 28 de zile",
+    "engagement": "Angajament {n} %",
+    "gemessen": "Stare {zeit}",
+    "nochKeinSnapshot": "prima măsurătoare urmează",
+    "letzterFehler": "Ultima preluare a eșuat",
+    "trennen": "Deconectați",
+    "getrennt": "Conexiune deconectată. Măsurătorile anterioare rămân ca istoric.",
+    "getrennteKonten": "{n, plural, =1 {1 cont deconectat} other {# conturi deconectate}}",
+    "getranntAm": "deconectat {zeit}",
+    "durchPlattform": "Accesul de pe platformă a fost încheiat",
+    "datenschutz": "La deconectare, ștergem imediat datele de acces. Valorile măsurate rămân salvate ca istoric. Detalii în politica de confidențialitate.",
+    "rueckkehr": {
+      "verbunden": "Cont conectat — prima măsurătoare este în curs.",
+      "abgelehnt": "Conexiune anulată — nu ați acordat accesul.",
+      "fehler": "Conexiune eșuată."
+    }
+  },
+  "passwort": {
+    "anzeigen": "Afișați parola",
+    "verbergen": "Ascundeți parola"
+  },
+  "verbundkonto": {
+    "titel": "Cont conectat pentru plată",
+    "hinweis": "Comisionul dumneavoastră va fi transferat într-un cont conectat. Pentru aceasta, furnizorul nostru de servicii de plată solicită o verificare a identității – atâta timp cât aceasta este în așteptare, plata nu poate fi efectuată.",
+    "bereit": "Contul dumneavoastră conectat este activat. Plățile vor fi transferate automat acolo.",
+    "offeneFelder": "Aceste informații lipsesc încă",
+    "gesperrt": "Contul este momentan blocat: {grund}",
+    "schrittKonto": "Deschideți contul conectat",
+    "schrittDaten": "Informații personale",
+    "schrittDatenFirma": "Informații despre companie și persoană",
+    "schrittBank": "Detalii bancare",
+    "schrittBedingungen": "Termenii și condițiile furnizorului de servicii de plată",
+    "kontoAnlegen": "Deschideți contul conectat",
+    "kontoAngelegt": "Cont conectat deschis.",
+    "datenBearbeiten": "Editați informațiile",
+    "zuklappen": "Închideți",
+    "datenGesendet": "Informații salvate.",
+    "vorname": "Prenume",
+    "nachname": "Nume de familie",
+    "geburtsdatum": "Data nașterii",
+    "tag": "ZZ",
+    "monat": "LL",
+    "jahr": "AAAA",
+    "strasse": "Strada și numărul casei",
+    "plz": "Cod poștal",
+    "ort": "Localitate",
+    "nationalitaet": "Naționalitate (cod țară)",
+    "telefon": "Telefon",
+    "webseite": "Site web sau profil",
+    "webseiteHinweis": "Adresa la care faceți publicitate – este necesară pentru verificare.",
+    "firmenname": "Numele companiei",
+    "steuernummer": "Număr de identificare fiscală",
+    "firmenStrasse": "Adresa companiei",
+    "firmaHinweis": "Ca persoană autorizată să reprezinte, vor fi utilizate informațiile dumneavoastră menționate mai sus.",
+    "speichern": "Salvați informațiile",
+    "kontoinhaber": "Titularul contului",
+    "waehrung": "Moneda",
+    "waehrungHinweis": "Moneda contului bancar, nu cea a țării dumneavoastră.",
+    "bankSpeichern": "Salvați detaliile bancare",
+    "bankGesetzt": "Detalii bancare salvate.",
+    "bedingungenAnnehmen": "Acceptați termenii",
+    "bedingungenAngenommen": "Termenii au fost acceptați.",
+    "fehler": "Această acțiune nu a reușit.",
+    "schrittIdentitaet": "Verificare identitate",
+    "identitaetHinweis": "În cele din urmă, furnizorul nostru de servicii de plată vă va verifica actul de identitate. Acest lucru se va întâmpla pe pagina securizată a acestuia, deoarece va fi făcută o fotografie; după aceea, veți reveni aici.",
+    "identitaetStarten": "Verificați identitatea"
+  }
+}

@@ -87,12 +87,12 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "note",
               variant: "tip",
-              text: "Kun napsautat Julkaise, myNextDays avaa normaalisti markkinapaikan, portaalit ja verkkosivuston yhdessä — voit myöhemmin kytkeä markkinapaikan pois erikseen milloin tahansa.",
+              text: "Napsauttamalla Julkaise myNextDays avaa portaalit ja verkkosivuston samanaikaisesti. myBestDays on pakollinen kanava: Jokainen kohde on listattu siellä ja näkyy heti, kun olemme hyväksyneet ilmoituksen.",
             },
             { type: "h2", text: "Näkyvyyden poistaminen" },
             {
               type: "p",
-              text: "Jos poistat kytkimen Alustan markkinapaikka käytöstä, kohde katoaa markkinapaikan hausta. Jo vahvistetut varaukset eivät vaikuta tähän ja jatkuvat tavalliseen tapaan, katso [Markkinapaikan provisio](/hilfe/plattform-marktplatz/marktplatz-provision).",
+              text: "myBestDays-palvelua ei voi poistaa erikseen. Jos kohdetta ei enää myydä, käytä ”Keskeytä myynti” -toimintoa – tämä poistaa sen myynnistä kaikista portaaleista, verkkosivustolta ja markkinapaikalta samanaikaisesti. Jo vahvistetut varaukset eivät vaikuta tähän ja jatkuvat normaalisti, katso [Markkinapaikan provisio](/hilfe/plattform-marktplatz/marktplatz-provision).",
             },
           ],
         },

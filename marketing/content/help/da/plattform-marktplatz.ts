@@ -87,12 +87,12 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "note",
               variant: "tip",
-              text: "Klikker du på Udgiv, aktiverer myNextDays som udgangspunkt markedsplads, portaler og hjemmeside samlet — du kan altid slå markedsplads-kontakten fra igen separat bagefter.",
+              text: "Klik på Udgiv, så aktiverer myNextDays portaler og hjemmeside samtidigt. myBestDays er en obligatorisk kanal: Hvert objekt er opført der og vises, så snart vi har godkendt annoncen.",
             },
             { type: "h2", text: "Fjern synlighed igen" },
             {
               type: "p",
-              text: "Deaktiverer du kontakten Platform-markedsplads, forsvinder boligen fra markedsplads-søgningen. Allerede bekræftede reservationer berøres ikke og fortsætter som normalt, se [Markedsplads-provision](/hilfe/plattform-marktplatz/marktplatz-provision).",
+              text: "myBestDays kan ikke fravælges individuelt. Hvis et objekt ikke længere skal sælges, skal du bruge „Sæt salg på pause“ – dette fjerner det fra salg på alle portaler, på hjemmesiden og på markedspladsen samtidigt. Allerede bekræftede bookinger forbliver upåvirkede og fortsætter som normalt, se [Markedsplads-provision](/hilfe/plattform-marktplatz/markedsplads-provision).",
             },
           ],
         },

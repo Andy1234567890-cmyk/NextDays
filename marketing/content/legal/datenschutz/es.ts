@@ -246,6 +246,40 @@ export const datenschutz: LegalDoc = {
       ],
     },
     {
+      heading: "Programa de afiliados",
+      paragraphs: [
+        "Operamos un programa de afiliados a través del cual los socios (influencers, consultores, agencias, clientes) pueden recomendar negocios a myNextDays y recibir una comisión por ello. En este proceso, tratamos datos de los socios y, en menor medida, de los negocios recomendados.",
+      ],
+      unterpunkte: [
+        {
+          titel: "Datos de los socios",
+          paragraphs: [
+            "Durante la solicitud, tratamos el nombre, la empresa, la forma jurídica, el país, la dirección de correo electrónico, el idioma, las cuentas de redes sociales (plataforma, dirección, identificador, alcance autodeclarado), el número de identificación fiscal (verificación a través del sistema VIES de la UE), los datos de pago (IBAN, dirección de Wise o PayPal), así como la aceptación de los términos y condiciones con la versión y la fecha. La base jurídica es la ejecución del contrato de afiliación (Art. 6, apdo. 1, letra b del RGPD); para los créditos y la conservación, se aplican las obligaciones fiscales y mercantiles (Art. 6, apdo. 1, letra c del RGPD).",
+            "Si un socio dirige un equipo, puede ver el nombre o la empresa de sus socios de equipo, el rango, el número de clientes de pago y la comisión de equipo resultante. Los mensajes entre el patrocinador y el socio de equipo se almacenan en la plataforma para que ambos puedan ver el historial.",
+          ],
+        },
+        {
+          titel: "Clics en enlaces de afiliados",
+          paragraphs: [
+            "Cuando un visitante accede a un enlace de afiliado (mynextdays.com/p/CODE), almacenamos el código, la hora, la página visitada, la página de referencia y cualquier parámetro de campaña, así como la dirección IP y el identificador del navegador, exclusivamente como sumas de comprobación abreviadas (hash), para la detección de abusos (acumulaciones), no para la reidentificación. No se establece ninguna cookie de seguimiento. Eliminamos los datos de clics después de 90 días. La base jurídica es nuestro interés legítimo en una facturación del programa a prueba de fraudes (Art. 6, apdo. 1, letra f del RGPD).",
+          ],
+        },
+        {
+          titel: "Cuentas y publicaciones de redes sociales conectadas",
+          paragraphs: [
+            "Los socios pueden conectar voluntariamente sus cuentas de YouTube (Google), Instagram y Facebook (Meta), así como TikTok, con el panel de control de socios. Al hacerlo, otorgan a la plataforma correspondiente un permiso de lectura (OAuth); nosotros no escribimos nada en estas cuentas. Almacenamos el identificador y el nombre de la cuenta, el token de acceso cifrado, la hora de la conexión y, diariamente, una métrica por cuenta: número de seguidores o suscriptores, visualizaciones de los últimos 28 días, tasa de interacción y número de publicaciones, cada uno con la hora de la respuesta de la plataforma. Para las publicaciones que el socio crea en el panel de control (título, plataforma, dirección, fecha de publicación), almacenamos adicionalmente las visualizaciones, los me gusta, los comentarios, las comparticiones y los guardados de la plataforma.",
+            "La finalidad es verificar el alcance indicado por el socio y asignar clics y clientes a publicaciones individuales; la información no verificada se pondera menos en la aprobación. Las indicaciones de inconsistencias (por ejemplo, un salto de seguidores sin las vistas correspondientes) se utilizan exclusivamente para nuestra revisión manual y no dan lugar a ninguna decisión automatizada. La base jurídica es el consentimiento del socio (art. 6, apdo. 1, letra a del RGPD), que otorga al conectar y puede revocar en cualquier momento en el panel de control en «Desconectar»; al desconectar, eliminamos el token de acceso inmediatamente, los valores medidos guardados permanecen como historial y se eliminan con la cuenta del socio. Utilizamos exclusivamente las interfaces oficiales de las plataformas; para el tratamiento por parte de Google, Meta y TikTok, se aplican sus propias políticas de privacidad.",
+          ],
+        },
+        {
+          titel: "Empresas recomendadas",
+          paragraphs: [
+            "Si una empresa se registra con un código de socio, almacenamos la asignación de la empresa al socio, así como la hora, el método (enlace o código) y el estado. El socio ve la empresa exclusivamente de forma seudónima (número de serie, país, estado, importes), nunca el nombre, la dirección de correo electrónico o los datos de reserva. Solo si la empresa da su consentimiento expreso al registrarse, el socio podrá ponerse en contacto con ella a través de la plataforma. Para la liquidación de comisiones, procesamos los importes netos de las suscripciones de las facturas pagadas de la empresa; la base jurídica es la ejecución del contrato de socio y del contrato de uso (art. 6, apdo. 1, letra b del RGPD).",
+          ],
+        },
+      ],
+    },
+    {
       heading: "Alojamiento y almacenamiento",
       paragraphs: [
         "La plataforma, la base de datos, los medios y el servidor de correo funcionan en servidores de Hetzner Online GmbH, Alemania, en el centro de datos de Helsinki (Finlandia), es decir, dentro de la Unión Europea. Con Hetzner existe un contrato de encargo del tratamiento.",

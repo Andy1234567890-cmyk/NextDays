@@ -77,3 +77,4 @@ mobile-konsistenz|mobile-bestdays/ mobile-nextdays/ web/messages/ scripts/mobile
 #   packages/tarif/src/index.ts    ↔ marketing/lib/tarif.ts
 #   packages/currency/src/index.ts ↔ marketing/lib/currency.ts
 marketing-konsistenz|marketing/lib/ packages/tarif/ packages/currency/ scripts/marketing/
+partner|partner/ packages/

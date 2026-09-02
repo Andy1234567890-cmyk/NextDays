@@ -681,7 +681,10 @@ SCHREIB_KATALOG: list[dict[str, Any]] = [
                 "bathrooms": {"type": "integer"},
                 "listed_on_marketplace": {
                     "type": "boolean",
-                    "description": "Sichtbarkeit auf dem myBestDays-Marktplatz.",
+                    "description": (
+                        "myBestDays ist Pflichtkanal (0527): immer true, false wird mit "
+                        "422 abgelehnt. Verkauf pausieren nimmt das Objekt überall raus."
+                    ),
                 },
                 "listed_on_website": {"type": "boolean"},
                 "contract_end_date": {

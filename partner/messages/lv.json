@@ -1,0 +1,521 @@
+{
+  "meta": {
+    "titel": "myNextDays partneris",
+    "beschreibung": "myNextDays partnerprogrammas partnera informācijas panelis: saites, klienti, komisijas, izmaksas."
+  },
+  "nav": {
+    "partner": "Partneris",
+    "uebersicht": "Pārskats",
+    "kunden": "Klienti",
+    "provisionen": "Komisijas",
+    "auszahlungen": "Izmaksas",
+    "links": "Saites un materiāli",
+    "profil": "Profils",
+    "sprache": "Valoda",
+    "abmelden": "Iziet",
+    "nachrichten": "Ziņojumi",
+    "menue": "Izvēlne",
+    "team": "Komanda",
+    "beitraege": "Ziņas"
+  },
+  "status": {
+    "pending_review": {
+      "titel": "Jūsu pieteikums tiek izskatīts",
+      "text": "Mēs personīgi izskatām katru pieteikumu un sazināsimies ar jums pa e-pastu. Līdz apstiprināšanai saites un kodi vēl nav aktīvi — jūs jau tagad varat aizpildīt savu profilu un maksājumu datus."
+    },
+    "rejected": {
+      "titel": "Jūsu pieteikums netika apstiprināts",
+      "text": "Mēs pašlaik nevarējām apstiprināt jūsu pieteikumu. Ja jums ir jautājumi, lūdzu, sazinieties ar mums."
+    },
+    "suspended": {
+      "titel": "Jūsu partnera konts ir bloķēts",
+      "text": "Atvērtās komisijas netiks izmaksātas, kamēr bloķēšana ir spēkā. Ja jums ir jautājumi, lūdzu, sazinieties ar mums."
+    },
+    "approved": {
+      "titel": "Apstiprināts",
+      "text": "Jūsu konts ir aktīvs."
+    },
+    "grund": "Iemesls"
+  },
+  "uebersicht": {
+    "titelBewerber": "Laipni lūdzam partnerprogrammā",
+    "textBewerber": "Tiklīdz jūsu pieteikums tiks apstiprināts, jūs šeit redzēsiet savas saites, klientus un komisijas. Tikmēr ievadiet savus nodokļu un maksājumu datus — tad pirmo maksājumu varēs veikt bez papildu jautājumiem.",
+    "zumProfil": "Uz profilu",
+    "titel": "Sveiki, {name}",
+    "rang": "Rangs {rang} · {satz} no abonementa ieņēmumiem",
+    "naechsterRang": "vēl {fehlend} maksājoši klienti līdz {rang} ({satz})",
+    "linksTeilen": "Kopīgot saites",
+    "keineBetraege": "—",
+    "kachel": {
+      "klicks": "Klikšķi (30 dienas)",
+      "registrierungen": "Reģistrētie uzņēmumi",
+      "zahlend": "Maksājoši klienti",
+      "offen": "Atvērts (atmaksas periods)",
+      "auszahlbar": "Izmaksājams",
+      "ausgezahlt": "Izmaksāts",
+      "team": "Komandas komisija",
+      "teamHinweis": "{n} komandas partneri",
+      "struktur": "Klienti jūsu struktūrā",
+      "strukturHinweis": "pašu + komandas klienti — šis skaits nosaka jūsu rangu",
+      "super": "Superkomisija",
+      "superHinweis": "{satz} no jūsu struktūras abonēšanas ieņēmumiem, bez termiņa ierobežojuma",
+      "turbo": "myBestDays rezervācijas daļa",
+      "turboHinweis": "0,5 % par katru rezervāciju, izmantojot myBestDays, jūsu klientiem un komandas klientiem",
+      "bonus": "Paaugstināšanas bonusi",
+      "bonusHinweis": "vienreizēji par katru sasniegto rangu"
+    },
+    "deineLinks": "Jūsu saites"
+  },
+  "links": {
+    "titel": "Saites un materiāli",
+    "hinweis": "Jūsu saite ved uz mynextdays.com un skaita klikšķi. Kods ir redzams reģistrācijas veidlapā — bez sīkdatnes. Uzņēmums tiek piesaistīts tieši vienam partnerim.",
+    "klicks30": "{n} klikšķi 30 dienās",
+    "kopiert": "Kopēts.",
+    "kopierenFehlgeschlagen": "Kopēšana nav iespējama — lūdzu, iezīmējiet un kopējiet.",
+    "codeKopieren": "Kopēt kodu",
+    "linkFehlt": "Saite vēl nav pieejama.",
+    "neuerCode": "Izveidot citu kodu",
+    "label": "Apraksts (pēc izvēles)",
+    "wunschcode": "Vēlamais kods (pēc izvēles)",
+    "anlegen": "Izveidot",
+    "abbrechen": "Atcelt",
+    "codeAngelegt": "Kods izveidots.",
+    "codeVergeben": "Šis kods jau ir izmantots.",
+    "fehler": "Tas neizdevās.",
+    "kennzeichnung": {
+      "titel": "Obligāti: marķēt reklāmu",
+      "text": "Katrs ieteikums ar jūsu saiti vai kodu ir reklāma un ir jāidentificē kā tāds – ieraksta sākumā, ieraksta valodā. Ar vienkāršu “#ad” nepietiek. Pārkāpumi var novest pie bloķēšanas.",
+      "imBeitrag": "Ierakstā",
+      "amLink": "Pie saites",
+      "land": {
+        "DE": "Vācija",
+        "DK": "Dānija"
+      },
+      "andere": "Citas valstis: komerciālajam nolūkam jābūt skaidri atpazīstamam (ES Direktīva par negodīgu komercpraksi). Lūdzu, pārbaudiet savas valsts prasības; mēs pakāpeniski pievienosim apstiprinātus formulējumus."
+    },
+    "material": {
+      "titel": "Reklāmas materiāli",
+      "leer": "Materiāls tiek sagatavots – tas parādīsies šeit, tiklīdz tas būs apstiprināts.",
+      "art": {
+        "video": "Video",
+        "image": "Attēls",
+        "text": "Teksta fragments",
+        "link": "Saite"
+      },
+      "oeffnen": "Atvērt"
+    }
+  },
+  "kunden": {
+    "titel": "Klienti",
+    "hinweis": "Jūsu piesaistītie uzņēmumi — pseidonīmi. Jūs redzat valsti, statusu un summas, nekad vārdu vai e-pastu. „Maksājošs” nozīmē: pirmais abonementa rēķins ir apmaksāts un abonements ir aktīvs.",
+    "leer": "Neviens uzņēmums vēl nav reģistrējies, izmantojot jūsu saiti.",
+    "kunde": "Klients {n}",
+    "spalte": {
+      "kunde": "Klients",
+      "land": "Valsts",
+      "status": "Statuss",
+      "registriert": "Reģistrēts",
+      "provisionBis": "Komisija līdz",
+      "verdient": "Nopelnīts"
+    },
+    "status": {
+      "registriert": "Reģistrēts",
+      "zahlend": "Maksājošs",
+      "beendet": "Beidzies",
+      "in_pruefung": "Izskatīšanā",
+      "abgelehnt": "Noraidīts"
+    }
+  },
+  "provisionen": {
+    "titel": "Komisijas",
+    "hinweis": "Katrs ieraksts ir apmaksāts abonēšanas rēķins, rezervācija, izmantojot myBestDays, vai paaugstināšanas bonuss. Pamats ir neto abonēšanas ieņēmumi vai rezervācijas vērtība; likme ir jūsu rangs maksājuma brīdī. Atvērtie ieraksti kļūst izmaksājami pēc 30 dienām.",
+    "leer": "Vēl nav komisijas.",
+    "reifAm": "izmaksājams no {datum}",
+    "spalte": {
+      "datum": "Datums",
+      "art": "Veids",
+      "kunde": "Klients",
+      "basis": "Pamats",
+      "satz": "Likme",
+      "betrag": "Summa",
+      "status": "Statuss"
+    },
+    "art": {
+      "earn": "Ienākumi",
+      "reversal": "Atmaksāšana",
+      "adjustment": "Korekcija",
+      "override": "Komandas komisija",
+      "bonus": "Paaugstināšanas bonuss",
+      "lifetime": "Superkomisija",
+      "booking_share": "Rezervācijas daļa"
+    },
+    "status": {
+      "pending": "Atvērts",
+      "approved": "Izmaksājams",
+      "held": "Apturēts",
+      "paid": "Izmaksāts",
+      "reversed": "Atsaukts",
+      "cancelled": "Atcelts"
+    },
+    "team": "Komanda"
+  },
+  "auszahlungen": {
+    "titel": "Izmaksas",
+    "hinweis": "Katru mēnesi, katrā valūtā, sākot no minimālās summas. Katrai izmaksai ir kredītrēķins (pašrēķins) — tas ir jūsu apliecinājums.",
+    "kein_weg": "Vēl nav norādīts izmaksas veids. Lūdzu, pievienojiet to profilā — pretējā gadījumā izmaksa nav iespējama.",
+    "leer": "Vēl nav izmaksu.",
+    "spalte": {
+      "nummer": "Kredītrēķina Nr.",
+      "zeitraum": "Periods",
+      "betrag": "Summa",
+      "status": "Statuss",
+      "gutschrift": "Kredītrēķins"
+    },
+    "status": {
+      "pending": "Sagatavots",
+      "processing": "Pārskaitījumā",
+      "paid": "Apmaksāts",
+      "failed": "Neizdevās"
+    },
+    "gutschriftLaden": "Lejupielādēt",
+    "gutschriftFehler": "Kredītrēķinu nevarēja ielādēt."
+  },
+  "profil": {
+    "titel": "Profils",
+    "seit": "Partneris kopš {datum}",
+    "stammdaten": "Pamatdati",
+    "name": "Nosaukums",
+    "firma": "Uzņēmums (pēc izvēles)",
+    "sprache": "E-pasta valoda",
+    "kanal": "Jūsu sociālo mediju konti un kanāli",
+    "speichern": "Saglabāt",
+    "gespeichert": "Saglabāts.",
+    "gespeichertViesOffen": "Saglabāts. PVN maksātāja reģistrācijas numurs vēl nav apstiprināts — mēs to pārbaudīsim vēlreiz pirms izmaksas.",
+    "steuerUndAuszahlung": "Nodokļu un izmaksu dati",
+    "aktuellerWeg": "Pašreizējais: {weg} {details}",
+    "keinWeg": "Vēl nav norādīts izmaksas veids.",
+    "viesBestaetigt": "PVN maksātāja reģistrācijas numurs apstiprināts (VIES)",
+    "viesOffen": "PVN maksātāja reģistrācijas numurs vēl nav apstiprināts",
+    "rechtsform": "Juridiskā forma",
+    "privat": "Privātpersona",
+    "unternehmen": "Uzņēmums",
+    "land": "Valsts",
+    "ustId": "PVN maksātāja reģistrācijas numurs",
+    "ustIdHinweis": "Tiek pārbaudīts pret ES VIES sistēmu. Bez apstiprināta numura uzņēmumiem izmaksa netiek veikta. Kredītrēķinā ir norāde par apgriezto nodokļa maksāšanas kārtību.",
+    "privatHinweis": "Kā privātpersona jūs saņemsiet kredītrēķinu bez PVN. Jums pašam ir jāapliek komisijas maksa ar nodokli.",
+    "auszahlungsweg": "Izmaksas veids",
+    "kontoinhaber": "Konta īpašnieks",
+    "empfaengerEmail": "{weg} e-pasta adrese",
+    "passwortBestaetigen": "Apstiprināšanai: Jūsu parole",
+    "passwortFalsch": "Parole nesakrīt.",
+    "steuerdaten": "Nodokļu informācija"
+  },
+  "anmelden": {
+    "partner": "Partneris",
+    "titel": "Pieteikties",
+    "text": "myNextDays partnerprogrammas informācijas panelis.",
+    "email": "E-pasts",
+    "passwort": "Parole",
+    "anmelden": "Pieteikties",
+    "passwortVergessen": "Aizmirsāt paroli?",
+    "resetGesendet": "Ja konts pastāv, mēs esam nosūtījuši e-pastu.",
+    "stoerung": "Pieteikšanās pakalpojums pašlaik nav pieejams. Tas nav saistīts ar jūsu piekļuves datiem — lūdzu, mēģiniet vēlreiz vēlāk.",
+    "keinPartnerKonto": "Ar šiem piekļuves datiem nav partnera konta.",
+    "fehlgeschlagen": "Pieteikšanās neizdevās.",
+    "nochKeinKonto": "Vēl neesat partneris?",
+    "bewerben": "Pieteikties tagad"
+  },
+  "bewerben": {
+    "partner": "Partneris",
+    "titel": "Pieteikties kā partneris",
+    "text": "Divas minūtes. Mēs personīgi pārbaudām katru pieteikumu un sazināmies ar jums pa e-pastu.",
+    "name": "Jūsu vārds",
+    "firma": "Uzņēmums (pēc izvēles)",
+    "email": "E-pasts",
+    "passwort": "Parole (vismaz 8 rakstzīmes)",
+    "rechtsform": "Juridiskā forma",
+    "privat": "Privātpersona",
+    "unternehmen": "Uzņēmums",
+    "land": "Valsts",
+    "ustId": "PVN maksātāja reģistrācijas numurs",
+    "ustIdHinweis": "Uzņēmumiem obligāti; tiks pārbaudīts VIES sistēmā.",
+    "kanal": "Jūsu sociālo mediju konti",
+    "kanalHinweis": "Obligāti: vismaz viens sociālo mediju konts (Instagram, TikTok, YouTube, Facebook, LinkedIn u.c.) ar adresi, lietotājvārdu un sasniedzamību. Papildus varat norādīt vietni, emuāru vai jaunumu vēstuli. Mēs pārbaudīsim kontus pirms apstiprināšanas.",
+    "pitch": "Kā jūs sasniedzat brīvdienu īres vai viesnīcu īpašniekus? (nav obligāti)",
+    "pitchHinweis": "Pietiks ar dažiem teikumiem.",
+    "zustimmung": "Es piekrītu partneru noteikumiem, jo īpaši pienākumam atsauksmes marķēt kā reklāmu.",
+    "bedingungen": "Uz programmu",
+    "captchaHinweis": "Šī lapa ir aizsargāta ar reCAPTCHA; tiek piemēroti Google konfidencialitātes noteikumi un pakalpojumu sniegšanas noteikumi.",
+    "stoerung": "Pakalpojums pašlaik nav pieejams — lūdzu, mēģiniet vēlāk.",
+    "emailVergeben": "Uz šo e-pasta adresi jau ir pieteikums. Lūdzu, piesakieties.",
+    "captchaFehler": "Drošības pārbaude neizdevās. Lūdzu, atsvaidziniet lapu un mēģiniet vēlreiz.",
+    "laeuft": "Tiek sūtīts...",
+    "absenden": "Nosūtīt pieteikumu",
+    "schonPartner": "Jau esat partneris?",
+    "anmelden": "Pieteikties",
+    "sponsor": "Sponsorē partneris (kods, neobligāti)",
+    "sponsorHinweis": "Vai esat šeit, izmantojot partnera komandas saiti? Viņa kods ir šeit. Viņš saņem komandas komisiju no jūsu klientu abonēšanas ieņēmumiem — jūsu pašu komisija paliek nemainīga."
+  },
+  "nachrichten": {
+    "titel": "Ziņojumi",
+    "hinweis": "Jūsu tiešā saziņa ar partneru komandu — jautājumi par komisijas maksu, izmaksu, materiāliem vai klientu. Atbildes šeit parādās tiešraidē.",
+    "neu": "Jauns ziņojums partneru komandai",
+    "platzhalter": "Par ko ir runa?",
+    "senden": "Sūtīt",
+    "abbrechen": "Atcelt",
+    "leer": "Vēl nav sarunu.",
+    "stoerung": "Pakalpojums pašlaik nav pieejams — lūdzu, mēģiniet vēlāk.",
+    "fehler": "Tas neizdevās.",
+    "team": "Partneru komanda",
+    "du": "Jūs",
+    "antwortPlatzhalter": "Jūsu atbilde…",
+    "antworten": "Atbildēt",
+    "status": {
+      "in_bearbeitung": "Apstrādē",
+      "wartet_auf_dich": "Atbilde saņemta",
+      "geloest": "Atrisināts"
+    }
+  },
+  "kanaele": {
+    "plattformLabel": "Platforma",
+    "handle": "Rokturis (pēc izvēles)",
+    "reichweite": "Sasniedzamība (sekotāji)",
+    "hinzufuegen": "Pievienot kanālu",
+    "entfernen": "Noņemt kanālu",
+    "plattform": {
+      "website": "Tīmekļa vietne",
+      "blog": "Emuārs",
+      "newsletter": "Biļetens",
+      "podcast": "Aplāde",
+      "other": "Cits"
+    },
+    "socialPflicht": "Vismaz viens sociālo mediju konts ir obligāts — tikai vietne nav pietiekama."
+  },
+  "team": {
+    "titel": "Komanda",
+    "hinweis": "Partneri, kas pieteikušies ar jūsu kodu, veido jūsu komandu. Par viņu klientu neto abonēšanas ieņēmumiem jūs saņemat starpību starp jūsu likmi (pašlaik {satz}) un komandas partnera likmi — abas maksājuma brīdī. Komandas klienti tiek ieskaitīti 1:1 jūsu rangā.",
+    "meinSponsor": "Jūs esat {name} komandas partneris.",
+    "link": {
+      "titel": "Jūsu komandas saite",
+      "text": "Ikviens, kurš piesakās, izmantojot šo saiti, savā pieteikumā redzēs jūsu kodu — bez sīkdatnes.",
+      "kopieren": "Kopēt saiti",
+      "keinLink": "Nav aktīva koda — izveidojiet to sadaļā Saites un materiāli."
+    },
+    "regeln": {
+      "titel": "Noteikumi",
+      "rang": "Komandas komisija = jūsu likme mīnus komandas partnera likme, maksājuma brīdī. Vienāds rangs = 0.",
+      "ebene": "Tikai viens līmenis: jūsu komandas partneri neveido savu komandu.",
+      "keinGeld": "Nav naudas par piesaisti — tikai no apmaksātiem abonēšanas ieņēmumiem.",
+      "dauer": "12 mēneši par katru komandas klientu, 30 dienu atmaksas periods. No Elite ranga papildus 2,5 % superkomisija bez termiņa ierobežojuma."
+    },
+    "kachel": {
+      "mitglieder": "Komandas partneri (aktīvi / kopā)",
+      "teamKunden": "Maksājošie komandas klienti",
+      "umsatz30": "Komandas ieņēmumi (30 dienas)",
+      "offen": "Komandas komisijas maksa atvērta",
+      "auszahlbar": "Komandas komisijas maksa izmaksājama",
+      "ausgezahlt": "Komandas komisijas maksa izmaksāta"
+    },
+    "verlauf": {
+      "titel": "Vēsture · 12 mēneši",
+      "leer": "Vēl nav komandas ieņēmumu.",
+      "provision": "Komandas komisijas maksa",
+      "umsatz": "Komandas ieņēmumi"
+    },
+    "mitglieder": {
+      "titel": "Jūsu komanda",
+      "leer": "Vēl nav komandas partneru. Kopīgojiet savu komandas saiti.",
+      "kunden": "{n} maksājoši klienti",
+      "umsatz30": "Ieņēmumi 30 d.",
+      "offen": "atvērts",
+      "seit": "kopš {datum}"
+    },
+    "spalte": {
+      "partner": "Partneris",
+      "status": "Statuss",
+      "rang": "Rangs",
+      "kunden": "Maksājošie klienti",
+      "umsatz30": "Ieņēmumi 30 d.",
+      "umsatzGesamt": "Kopējie ieņēmumi",
+      "offen": "Atvērts",
+      "auszahlbar": "Izmaksājams",
+      "ausgezahlt": "Izmaksāts"
+    },
+    "status": {
+      "pending_review": "Pārskatīšanā",
+      "approved": "Apstiprināts",
+      "rejected": "Noraidīts",
+      "suspended": "Bloķēts"
+    },
+    "chat": {
+      "titel": "Tērzēšana",
+      "schreiben": "Rakstīt",
+      "rolle": {
+        "sponsor": "Jūsu sponsors",
+        "member": "Komandas partneris"
+      },
+      "zurueck": "Komanda",
+      "leer": "Vēl nav ziņu.",
+      "platzhalter": "Jūsu ziņojums…",
+      "senden": "Sūtīt",
+      "titelListe": "Ziņojumi komandā"
+    },
+    "nochNichtErlaubt": "Jūs vadāt komandu no ranga „Izaugsme” (5 maksājoši klienti jūsu struktūrā). Līdz tam nav komandas saites."
+  },
+  "bedingungen": {
+    "neueVersion": "Partneru noteikumi ir pieejami jaunā versijā (jūsu piekrišana: versija {alt}, pašreizējā: {neu}). Lūdzu, izlasiet un piekrītiet vēlreiz.",
+    "nochNicht": "Lūdzu, piekrītiet partneru noteikumiem (versija {neu}).",
+    "lesen": "Lasīt noteikumus",
+    "annehmen": "Piekrist",
+    "angenommen": "Paldies — piekrišana saglabāta."
+  },
+  "beitraege": {
+    "titel": "Ziņas",
+    "hinweis": "Izveidojiet atsevišķu saiti katram rullītim, videoklipam vai ziņai. Tādējādi jūs redzēsiet, kura ziņa piesaista klikšķus, reģistrācijas un maksājošus klientus.",
+    "kontoHinweis": "Savienojiet savu kontu, un šeit parādīsies arī skatījumi un mijiedarbība tieši no platformas.",
+    "kontoVerbinden": "Savienot kontu",
+    "neu": "Jauna ziņa",
+    "keinCode": "Vispirms jums ir nepieciešams aktīvs ieteikuma kods.",
+    "feld": {
+      "titel": "Nosaukums",
+      "titelBeispiel": "piem., rullītis Kopenhāgena rudens",
+      "plattform": "Platforma",
+      "code": "Kods",
+      "datum": "Publicēts",
+      "url": "Ziņas adrese (pēc izvēles)",
+      "urlHinweis": "Var pievienot pēc publicēšanas. Ar adresi mēs piesaistām skatījumus un mijiedarbību ziņai."
+    },
+    "linkErzeugen": "Izveidot saiti",
+    "angelegt": "Ziņa izveidota — saite ir gatava.",
+    "doppelt": "Šī ziņa jau pastāv šim kodam.",
+    "fehler": "Tas neizdevās. Lūdzu, mēģiniet vēlreiz.",
+    "liste": "{n, plural, =0 {Nav ziņu} =1 {1 ziņa} other {# ziņas}}",
+    "leer": "Vēl nav ziņu. Izveidojiet pirmo saiti augstāk.",
+    "veroeffentlicht": "publicēts {datum}",
+    "loeschen": "Dzēst ziņu",
+    "geloescht": "Ziņa dzēsta.",
+    "loeschenGesperrt": "Ziņai jau ir reģistrācijas un tā tiks saglabāta.",
+    "kopiert": "Saite nokopēta.",
+    "kopierenFehlgeschlagen": "Kopēšana nav iespējama — lūdzu, iezīmējiet manuāli.",
+    "linkFehlt": "Saite pašlaik nav pieejama.",
+    "qrZeigen": "Rādīt QR kodu",
+    "qrSchliessen": "Paslēpt QR kodu",
+    "qrAlt": "QR kods ziņas saitei",
+    "qrHinweis": "Stāstiem, videoklipiem un drukāšanai — ved uz to pašu saiti.",
+    "beitragOeffnen": "Atvērt ziņu",
+    "urlAendern": "Mainīt adresi",
+    "urlNachtragen": "Pievienot adresi",
+    "speichern": "Saglabāt",
+    "gespeichert": "Saglabāts.",
+    "kennzahl": {
+      "klicks": "Klikšķi 90 dienas",
+      "klicks30": "{n} 30 dienās",
+      "registrierungen": "Reģistrācijas",
+      "kunden": "Maksājoši klienti",
+      "views": "Skatījumi",
+      "gemessen": "Stāvoklis {zeit}",
+      "nichtVerbunden": "Konts nav savienots",
+      "interaktion": "Patīk {likes} · Komentāri {kommentare} · Kopīgošanas reizes {shares} · Saglabāts {saves}",
+      "pro1000": "{n} klikšķi uz 1000 skatījumiem"
+    },
+    "freigabe": {
+      "videoNoetig": "Augšupielādēt apstiprināšanai",
+      "erklaerung": "Pirms publicēšanas augšupielādējiet gatavo video, attēlu vai PDF. Kad būsim to apstiprinājuši, šeit parādīsies jūsu personīgā saite — to ievietosiet zem ieraksta. Izmantojiet tikai mūsu reklāmas materiālus, nevis savus ekrānuzņēmumus, un nesoliet panākumus vai garantijas.",
+      "hochladen": "Izvēlēties failu (video, JPG, PNG, PDF)",
+      "neuHochladen": "Augšupielādēt jaunu failu",
+      "laeuft": "Notiek augšupielāde…",
+      "eingereicht": "Video iesniegts. Mēs sazināsimies, tiklīdz tas būs pārbaudīts.",
+      "inPruefung": "Pārbaudes procesā",
+      "inPruefungHinweis": "Jūsu video ir pie mums. Tiklīdz tas tiks apstiprināts, šeit parādīsies jūsu saite.",
+      "eingereichtAm": "Iesniegts {zeit} — tiklīdz tas tiks apstiprināts, šeit parādīsies jūsu saite.",
+      "abgelehnt": "Nav apstiprināts",
+      "grund": "Iemesls",
+      "freigegeben": "Video apstiprināts",
+      "zuGross": "Video ir lielāks par {mb} MB.",
+      "fehler": "Augšupielāde neizdevās.",
+      "grundKategorie": {
+        "material": "Materiāls: tikai oficiālie reklāmas materiāli, nevis jūsu pašu ekrānuzņēmumi",
+        "promise": "Solījumi: nekādas garantijas vai panākumu solījumi",
+        "disclosure": "Marķējums: ierakstam jābūt marķētam kā reklāmai",
+        "brand": "Zīmols: logotips vai nosaukums izmantots nepareizi",
+        "other": "Cits"
+      }
+    }
+  },
+  "kanalVerbindung": {
+    "titel": "Savienotie konti",
+    "hinweis": "Savienojiet savus sociālo mediju kontus, lai sekotāji un skatījumi nāktu tieši no platformas. Tas ir brīvprātīgi un jebkurā laikā atsaucams; mēs tikai lasām, mēs neko nerakstām.",
+    "verbinden": "Savienot {anbieter}",
+    "baldVerfuegbar": "drīzumā",
+    "nichtKonfiguriert": "Šis savienojums vēl nav aktivizēts.",
+    "fehler": "Tas neizdevās. Lūdzu, mēģiniet vēlreiz.",
+    "verifiziert": "verificēts",
+    "follower": "{n} sekotāji",
+    "views28": "{n} skatījumi 28 dienās",
+    "engagement": "Iesaiste {n} %",
+    "gemessen": "Stāvoklis {zeit}",
+    "nochKeinSnapshot": "pirmais mērījums sekos",
+    "letzterFehler": "Pēdējā izgūšana neizdevās",
+    "trennen": "Atvienot",
+    "getrennt": "Savienojums atvienots. Iepriekšējie mērījumi saglabājas kā vēsture.",
+    "getrennteKonten": "{n, plural, =1 {1 atvienots konts} other {# atvienoti konti}}",
+    "getranntAm": "atvienots {zeit}",
+    "durchPlattform": "Piekļuve no platformas pārtraukta",
+    "datenschutz": "Atvienojot, mēs nekavējoties dzēšam piekļuves datus. Izmērītās vērtības tiek saglabātas kā vēsture. Sīkāka informācija privātuma politikā.",
+    "rueckkehr": {
+      "verbunden": "Konts savienots — notiek pirmais mērījums.",
+      "abgelehnt": "Savienojums pārtraukts — Jūs neesat piešķīris piekļuvi.",
+      "fehler": "Savienojums neizdevās."
+    }
+  },
+  "passwort": {
+    "anzeigen": "Rādīt paroli",
+    "verbergen": "Slēpt paroli"
+  },
+  "verbundkonto": {
+    "titel": "Saistītais konts izmaksām",
+    "hinweis": "Jūsu komisijas maksa tiks pārskaitīta uz saistīto kontu. Mūsu maksājumu pakalpojumu sniedzējs pieprasa identitātes pārbaudi — kamēr tā nav pabeigta, izmaksa nav iespējama.",
+    "bereit": "Jūsu saistītais konts ir aktivizēts. Izmaksas uz to tiks veiktas automātiski.",
+    "offeneFelder": "Šī informācija vēl trūkst",
+    "gesperrt": "Konts pašlaik ir bloķēts: {grund}",
+    "schrittKonto": "Atvērt saistīto kontu",
+    "schrittDaten": "Personas dati",
+    "schrittDatenFirma": "Uzņēmuma un personas dati",
+    "schrittBank": "Bankas rekvizīti",
+    "schrittBedingungen": "Maksājumu pakalpojumu sniedzēja noteikumi",
+    "kontoAnlegen": "Atvērt saistīto kontu",
+    "kontoAngelegt": "Saistītais konts atvērts.",
+    "datenBearbeiten": "Rediģēt datus",
+    "zuklappen": "Aizvērt",
+    "datenGesendet": "Dati saglabāti.",
+    "vorname": "Vārds",
+    "nachname": "Uzvārds",
+    "geburtsdatum": "Dzimšanas datums",
+    "tag": "DD",
+    "monat": "MM",
+    "jahr": "GGGG",
+    "strasse": "Iela un mājas numurs",
+    "plz": "Pasta indekss",
+    "ort": "Pilsēta",
+    "nationalitaet": "Valstspiederība (valsts kods)",
+    "telefon": "Tālrunis",
+    "webseite": "Tīmekļa vietne vai profils",
+    "webseiteHinweis": "Adrese, kurā reklamējat — nepieciešama pārbaudei.",
+    "firmenname": "Uzņēmuma nosaukums",
+    "steuernummer": "Nodokļu maksātāja numurs",
+    "firmenStrasse": "Uzņēmuma adrese",
+    "firmaHinweis": "Kā pilnvarotai personai tiks izmantoti jūsu iepriekš minētie dati.",
+    "speichern": "Saglabāt datus",
+    "kontoinhaber": "Konta īpašnieks",
+    "waehrung": "Valūta",
+    "waehrungHinweis": "Bankas konta valūta, nevis jūsu valsts valūta.",
+    "bankSpeichern": "Saglabāt bankas rekvizītus",
+    "bankGesetzt": "Bankas rekvizīti saglabāti.",
+    "bedingungenAnnehmen": "Pieņemt noteikumus",
+    "bedingungenAngenommen": "Noteikumi pieņemti.",
+    "fehler": "Tas neizdevās.",
+    "schrittIdentitaet": "Identitātes pārbaude",
+    "identitaetHinweis": "Visbeidzot mūsu maksājumu pakalpojumu sniedzējs pārbaudīs jūsu identitāti. Tas notiks viņu drošajā vietnē, jo tiks uzņemts fotoattēls; pēc tam jūs atgriezīsities šeit.",
+    "identitaetStarten": "Pārbaudīt identitāti"
+  }
+}

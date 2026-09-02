@@ -87,12 +87,12 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "note",
               variant: "tip",
-              text: "Kui klõpsate Avalda, lülitab myNextDays tavaliselt turuplatsi, portaalid ja veebilehe koos sisse — Te saate turuplatsi lüliti pärast seda igal ajal eraldi uuesti välja lülitada.",
+              text: "Vajutage avaldamisele, myNextDays avab portaalid ja veebilehe ühiselt. myBestDays on kohustuslik kanal: iga objekt on seal loetletud ja ilmub kohe, kui oleme kuulutuse heaks kiitnud.",
             },
             { type: "h2", text: "Nähtavuse uuesti eemaldamine" },
             {
               type: "p",
-              text: "Kui deaktiveerite lüliti Platvormi turuplats, kaob objekt turuplatsi otsingust. Juba kinnitatud broneeringuid see ei mõjuta ja need jätkuvad tavapäraselt, vt [Turuplatsi vahendustasu](/hilfe/plattform-marktplatz/marktplatz-provision).",
+              text: "myBestDays'i ei saa eraldi välja lülitada. Kui objekti ei soovita enam müüa, kasutage „Müügi peatamine“ – see eemaldab selle kõigist portaalidest, veebilehelt ja turuplatsilt korraga. Juba kinnitatud broneeringud jäävad puutumata ja jätkuvad tavapäraselt, vt [Turuplatsi vahendustasu](/hilfe/plattform-marktplatz/marktplatz-provision).",
             },
           ],
         },

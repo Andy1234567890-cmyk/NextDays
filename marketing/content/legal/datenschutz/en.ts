@@ -247,6 +247,40 @@ export const datenschutz: LegalDoc = {
       ],
     },
     {
+      heading: "Partner programme",
+      paragraphs: [
+        "We run a partner programme through which partners (influencers, consultants, agencies, customers) recommend businesses to myNextDays and receive a commission. In doing so we process data of partners and — to a limited extent — of referred businesses.",
+      ],
+      unterpunkte: [
+        {
+          titel: "Partner data",
+          paragraphs: [
+            "When applying we process name, company, legal form, country, email address, language, social media accounts (platform, address, handle, self-declared reach), VAT identification number (verified via the EU VIES system), payout details (IBAN, Wise or PayPal address) and the acceptance of the programme terms with version and time. The legal basis is the performance of the partner contract (Art. 6(1)(b) GDPR); for credit notes and retention the tax and commercial law obligations apply (Art. 6(1)(c) GDPR).",
+            "If a partner leads a team, they see of their team partners name or company, tier, number of paying customers and the resulting team commission. Messages between sponsor and team partner are stored in the platform so both can see the history.",
+          ],
+        },
+        {
+          titel: "Clicks on partner links",
+          paragraphs: [
+            "When a visitor opens a partner link (mynextdays.com/p/CODE) we store the code, the time, the landing page, the referring page and any campaign parameters, plus the IP address and browser identifier solely as truncated checksums (hash) — for abuse detection (clusters), not for recognition. No tracking cookie is set. Click data is deleted after 90 days. The legal basis is our legitimate interest in fraud-proof settlement of the programme (Art. 6(1)(f) GDPR).",
+          ],
+        },
+        {
+          titel: "Connected social media accounts and posts",
+          paragraphs: [
+            "Partners may voluntarily connect their accounts on YouTube (Google), Instagram and Facebook (Meta) and TikTok to the partner dashboard. In doing so they grant the respective platform a read-only authorisation (OAuth); we never write to these accounts. We store the account identifier and name, the access token in encrypted form, the time of connection and one measurement per account per day: follower or subscriber count, views in the last 28 days, engagement rate and number of posts, each with the timestamp of the platform's response. For posts the partner registers in the dashboard (title, platform, address, publication date) we additionally store views, likes, comments, shares and saves from the platform.",
+            "The purpose is to verify the reach stated by the partner and to attribute clicks and customers to individual posts; unverified figures carry less weight at approval. Indications of inconsistencies (for example a jump in followers without matching views) serve solely for manual review by us and do not lead to any automated decision. The legal basis is the partner's consent (Art. 6(1)(a) GDPR), given by connecting the account and revocable at any time in the dashboard under \"Disconnect\"; upon disconnection we delete the access token immediately, stored measurements are retained as history and deleted together with the partner account. We use only the platforms' official interfaces; processing by Google, Meta and TikTok is governed by their own privacy notices.",
+          ],
+        },
+        {
+          titel: "Referred businesses",
+          paragraphs: [
+            "When a business registers with a partner code we store the attribution of the business to the partner, together with time, method (link or code) and status. The partner sees the business only pseudonymously (sequential number, country, status, amounts) — never name, email address or booking data. Only if the business explicitly consents at registration may the partner contact it through the platform. For commission settlement we process the net subscription amounts of the business's paid invoices; the legal basis is the performance of the partner and the user contract (Art. 6(1)(b) GDPR).",
+          ],
+        },
+      ],
+    },
+    {
       heading: "Hosting and storage",
       paragraphs: [
         "The Platform, the database, the media and the mail server run on servers of Hetzner Online GmbH, Germany, in the Helsinki data centre (Finland) — that is, within the European Union. A data processing agreement is in place with Hetzner.",

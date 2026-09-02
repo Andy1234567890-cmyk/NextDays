@@ -23,11 +23,12 @@ export const agb: LegalDoc = {
       heading: "§ 2 Predmet zmluvy a služby",
       paragraphs: [
         "myNextDays poskytuje používateľovi cloudový softvér na správu rekreačných ubytovaní a ubytovacích zariadení. Rozsah funkcií vyplýva z aktuálneho opisu služieb a zahŕňa najmä:",
+      "Každý objekt vytvorený používateľom na platforme je zároveň uvedený na vlastnom trhovisku platformy myBestDays (povinný kanál). Používateľ nemôže tento kanál jednotlivo zrušiť; môže však kedykoľvek odstrániť objekt zo všetkých kanálov súčasne pomocou funkcie „Pozastaviť predaj“ alebo ho vymazať. Objekt sa stane viditeľným na myBestDays až vtedy, keď ho používateľ zverejní a myNextDays inzerát schváli; myNextDays môže odmietnuť alebo odvolať schválenie z vecného dôvodu. Pre rezervácie cez myBestDays platí poplatok podľa § 7.",
       ],
       list: [
         "správu objektov, kalendárov obsadenosti a rezervácií (property management systém),",
         "napojenie na rezervačné kanály tretích strán (napr. Booking.com, Airbnb) prostredníctvom channel managera,",
-        "zverejňovanie ponúk prostredníctvom vlastného rezervačného kanála platformy myNextDays,",
+        "Zverejňovanie ponúk prostredníctvom vlastného trhoviska platformy myBestDays (povinný kanál, pozri odsek 2),",
         "tvorbu vlastných webových stránok pomocou integrovaného page buildera,",
         "účtovné, zúčtovacie a analytické funkcie vrátane vyúčtovaní pre vlastníkov,",
         "komunikáciu s hosťami a prijímanie platieb prostredníctvom integrovaného spracovania platieb (§ 5).",

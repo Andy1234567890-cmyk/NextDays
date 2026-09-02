@@ -1,0 +1,521 @@
+{
+  "meta": {
+    "titel": "myNextDays Partner",
+    "beschreibung": "Partner dashboard of the myNextDays partner program: links, customers, commissions, payouts."
+  },
+  "nav": {
+    "partner": "Partner",
+    "uebersicht": "Overview",
+    "kunden": "Customers",
+    "provisionen": "Commissions",
+    "auszahlungen": "Payouts",
+    "links": "Links & Material",
+    "profil": "Profile",
+    "sprache": "Language",
+    "abmelden": "Log out",
+    "nachrichten": "Messages",
+    "menue": "Menu",
+    "team": "Team",
+    "beitraege": "Posts"
+  },
+  "status": {
+    "pending_review": {
+      "titel": "Your application is being reviewed",
+      "text": "We review each application personally and will contact you by email. Until approval, links and codes are not yet active - you can already complete your profile and payout data."
+    },
+    "rejected": {
+      "titel": "Your application was not accepted",
+      "text": "We could not accept your application at this time. If you have any questions, please feel free to contact us."
+    },
+    "suspended": {
+      "titel": "Your partner account is suspended",
+      "text": "Open commissions will not be paid out as long as the suspension is in effect. If you have any questions, please contact us."
+    },
+    "approved": {
+      "titel": "Approved",
+      "text": "Your account is active."
+    },
+    "grund": "Reason"
+  },
+  "uebersicht": {
+    "titelBewerber": "Welcome to the partner program",
+    "textBewerber": "Once your application is approved, you will see your links, customers and commissions here. In the meantime, enter your tax and payout data - then the first payout can run without further queries.",
+    "zumProfil": "To the profile",
+    "titel": "Hello {name}",
+    "rang": "Rank {rang} · {satz} of subscription revenue",
+    "naechsterRang": "still {fehlend} paying customers until {rang} ({satz})",
+    "linksTeilen": "Share links",
+    "keineBetraege": "—",
+    "kachel": {
+      "klicks": "Clicks (30 days)",
+      "registrierungen": "Registered businesses",
+      "zahlend": "Paying customers",
+      "offen": "Open (refund window)",
+      "auszahlbar": "Payable",
+      "ausgezahlt": "Paid out",
+      "team": "Team Commission",
+      "teamHinweis": "{n} Team Partners",
+      "struktur": "Customers in your structure",
+      "strukturHinweis": "own + team customers — this number determines your rank",
+      "super": "Super commission",
+      "superHinweis": "{satz} on the subscription revenue of your structure, without time limit",
+      "turbo": "myBestDays booking share",
+      "turboHinweis": "0.5% per booking via myBestDays for your customers and team customers",
+      "bonus": "Promotion bonuses",
+      "bonusHinweis": "once per achieved rank"
+    },
+    "deineLinks": "Your links"
+  },
+  "links": {
+    "titel": "Links & Material",
+    "hinweis": "Your link leads to mynextdays.com and counts the click. The code is visible in the form during registration - without a cookie. A business is assigned to exactly one partner.",
+    "klicks30": "{n} clicks in 30 days",
+    "kopiert": "Copied.",
+    "kopierenFehlgeschlagen": "Copy not possible - please highlight and copy.",
+    "codeKopieren": "Copy code",
+    "linkFehlt": "Link not yet available.",
+    "neuerCode": "Create another code",
+    "label": "Description (optional)",
+    "wunschcode": "Desired code (optional)",
+    "anlegen": "Create",
+    "abbrechen": "Cancel",
+    "codeAngelegt": "Code created.",
+    "codeVergeben": "This code is already taken.",
+    "fehler": "That didn't work.",
+    "kennzeichnung": {
+      "titel": "Mandatory: Label advertising",
+      "text": "Every recommendation with your link or code is advertising and must be identifiable as such — at the beginning of the post, in the language of the post. A mere \"#ad\" is not enough. Violations can lead to suspension.",
+      "imBeitrag": "In the post",
+      "amLink": "On the link",
+      "land": {
+        "DE": "Germany",
+        "DK": "Denmark"
+      },
+      "andere": "Other countries: The commercial intent must be clearly identifiable (EU Directive on unfair commercial practices). Please check the requirements of your country; we will add documented wordings gradually."
+    },
+    "material": {
+      "titel": "Promotional material",
+      "leer": "Material is being prepared — it will appear here once approved.",
+      "art": {
+        "video": "Video",
+        "image": "Image",
+        "text": "Text module",
+        "link": "Link"
+      },
+      "oeffnen": "Open"
+    }
+  },
+  "kunden": {
+    "titel": "Customers",
+    "hinweis": "Your referred businesses — pseudonymized. You see country, status, and amounts, never name or email. Paying means: first subscription invoice paid and subscription is active.",
+    "leer": "No business has registered via your link yet.",
+    "kunde": "Customer {n}",
+    "spalte": {
+      "kunde": "Customer",
+      "land": "Country",
+      "status": "Status",
+      "registriert": "Registered",
+      "provisionBis": "Commission up to",
+      "verdient": "Earned"
+    },
+    "status": {
+      "registriert": "Registered",
+      "zahlend": "Paying",
+      "beendet": "Terminated",
+      "in_pruefung": "Under review",
+      "abgelehnt": "Rejected"
+    }
+  },
+  "provisionen": {
+    "titel": "Commissions",
+    "hinweis": "Each line is a paid subscription invoice, a booking via myBestDays, or a promotion bonus. The basis is the net subscription revenue or the booking value; the rate is your rank at the time of payment. Open lines become payable after 30 days.",
+    "leer": "No commission yet.",
+    "reifAm": "payable from {datum}",
+    "spalte": {
+      "datum": "Date",
+      "art": "Type",
+      "kunde": "Customer",
+      "basis": "Basis",
+      "satz": "Rate",
+      "betrag": "Amount",
+      "status": "Status"
+    },
+    "art": {
+      "earn": "Revenue",
+      "reversal": "Refund",
+      "adjustment": "Correction",
+      "override": "Team Commission",
+      "bonus": "Promotion bonus",
+      "lifetime": "Super commission",
+      "booking_share": "Booking share"
+    },
+    "status": {
+      "pending": "Open",
+      "approved": "Payable",
+      "held": "Held",
+      "paid": "Paid",
+      "reversed": "Withdrawn",
+      "cancelled": "Cancelled"
+    },
+    "team": "Team"
+  },
+  "auszahlungen": {
+    "titel": "Payouts",
+    "hinweis": "Monthly, per currency, from the minimum amount. Each payout is accompanied by a credit note (self-billing) — this is your receipt.",
+    "kein_weg": "No payout method has been set up yet. Please add it under Profile — otherwise, payouts cannot be made.",
+    "leer": "No payout yet.",
+    "spalte": {
+      "nummer": "Credit Note No.",
+      "zeitraum": "Period",
+      "betrag": "Amount",
+      "status": "Status",
+      "gutschrift": "Credit Note"
+    },
+    "status": {
+      "pending": "Prepared",
+      "processing": "In Transfer",
+      "paid": "Paid",
+      "failed": "Failed"
+    },
+    "gutschriftLaden": "Download",
+    "gutschriftFehler": "Credit note could not be loaded."
+  },
+  "profil": {
+    "titel": "Profile",
+    "seit": "Partner since {datum}",
+    "stammdaten": "Master Data",
+    "name": "Name",
+    "firma": "Company (optional)",
+    "sprache": "Language for emails",
+    "kanal": "Your social media accounts and channels",
+    "speichern": "Save",
+    "gespeichert": "Saved.",
+    "gespeichertViesOffen": "Saved. The VAT ID could not yet be confirmed — we will check it again before payout.",
+    "steuerUndAuszahlung": "Tax and Payout Details",
+    "aktuellerWeg": "Current: {weg} {details}",
+    "keinWeg": "No payout method set yet.",
+    "viesBestaetigt": "VAT ID confirmed (VIES)",
+    "viesOffen": "VAT ID not yet confirmed",
+    "rechtsform": "Legal Form",
+    "privat": "Private Person",
+    "unternehmen": "Company",
+    "land": "Country",
+    "ustId": "VAT ID",
+    "ustIdHinweis": "Will be checked against the EU VIES system. Without a confirmed number, no payout to companies. The credit note will include the reverse-charge note.",
+    "privatHinweis": "As a private person, you will receive the credit note without VAT. You are responsible for taxing the commission yourself.",
+    "auszahlungsweg": "Payout Method",
+    "kontoinhaber": "Account Holder",
+    "empfaengerEmail": "{weg} Email Address",
+    "passwortBestaetigen": "To confirm: Your Password",
+    "passwortFalsch": "Password does not match.",
+    "steuerdaten": "Tax data"
+  },
+  "anmelden": {
+    "partner": "Partner",
+    "titel": "Log In",
+    "text": "The myNextDays Partner Program Dashboard.",
+    "email": "Email",
+    "passwort": "Password",
+    "anmelden": "Log In",
+    "passwortVergessen": "Forgot password?",
+    "resetGesendet": "If an account exists, we have sent an email.",
+    "stoerung": "The login service is currently unavailable. This is not due to your credentials — please try again later.",
+    "keinPartnerKonto": "No partner account exists with these credentials.",
+    "fehlgeschlagen": "Login failed.",
+    "nochKeinKonto": "Not a partner yet?",
+    "bewerben": "Apply now"
+  },
+  "bewerben": {
+    "partner": "Partner",
+    "titel": "Apply as a Partner",
+    "text": "Two minutes. We review each application personally and will contact you by email.",
+    "name": "Your Name",
+    "firma": "Company (optional)",
+    "email": "Email",
+    "passwort": "Password (at least 8 characters)",
+    "rechtsform": "Legal form",
+    "privat": "Private person",
+    "unternehmen": "Company",
+    "land": "Country",
+    "ustId": "VAT ID",
+    "ustIdHinweis": "Required for companies; checked against VIES.",
+    "kanal": "Your social media accounts",
+    "kanalHinweis": "Required: at least one social media account (Instagram, TikTok, YouTube, Facebook, LinkedIn, etc.) with address, handle, and reach. Website, blog, or newsletter are welcome additions. We will review the accounts before approval.",
+    "pitch": "How do you reach vacation rental owners or hotels? (optional)",
+    "pitchHinweis": "A few sentences are sufficient.",
+    "zustimmung": "I accept the partner terms and conditions, in particular the obligation to label recommendations as advertising.",
+    "bedingungen": "To the program",
+    "captchaHinweis": "This page is protected by reCAPTCHA; Google's Privacy Policy and Terms of Service apply.",
+    "stoerung": "The service is currently unavailable - please try again later.",
+    "emailVergeben": "There is already an application for this email address. Please log in.",
+    "captchaFehler": "The security check failed. Please reload the page and try again.",
+    "laeuft": "Sending …",
+    "absenden": "Submit application",
+    "schonPartner": "Already a partner?",
+    "anmelden": "Log in",
+    "sponsor": "Referred by Partner (Code, optional)",
+    "sponsorHinweis": "Are you here via a partner's team link? Their code will be here. They receive a team commission on your customers' subscription revenue — your own commission remains unchanged."
+  },
+  "nachrichten": {
+    "titel": "Messages",
+    "hinweis": "Your direct line to the partner team — questions about commission, payout, materials, or a customer. Answers appear live here.",
+    "neu": "New message to the partner team",
+    "platzhalter": "What is this about?",
+    "senden": "Send",
+    "abbrechen": "Cancel",
+    "leer": "No conversation yet.",
+    "stoerung": "The service is currently unavailable — please try again later.",
+    "fehler": "That did not work.",
+    "team": "Partner team",
+    "du": "You",
+    "antwortPlatzhalter": "Your reply …",
+    "antworten": "Reply",
+    "status": {
+      "in_bearbeitung": "In progress",
+      "wartet_auf_dich": "Reply received",
+      "geloest": "Resolved"
+    }
+  },
+  "kanaele": {
+    "plattformLabel": "Platform",
+    "handle": "Handle (optional)",
+    "reichweite": "Reach (Followers)",
+    "hinzufuegen": "Add channel",
+    "entfernen": "Remove channel",
+    "plattform": {
+      "website": "Website",
+      "blog": "Blog",
+      "newsletter": "Newsletter",
+      "podcast": "Podcast",
+      "other": "Other"
+    },
+    "socialPflicht": "At least one social media account is required — a website alone is not sufficient."
+  },
+  "team": {
+    "titel": "Team",
+    "hinweis": "Partners who applied with your code form your team. You receive the difference between your rate (currently {satz}) and the team partner's rate — both at the time of payment — on the net subscription revenue of their customers. Team customers count 1:1 for your rank.",
+    "meinSponsor": "You are a team partner of {name}.",
+    "link": {
+      "titel": "Your team link",
+      "text": "Anyone who applies via this link will have your code visibly included in their application — without a cookie.",
+      "kopieren": "Copy link",
+      "keinLink": "No active code — create one under Links & Material."
+    },
+    "regeln": {
+      "titel": "The rules",
+      "rang": "Team commission = your rate minus the team partner's rate, at the time of payment. Same rank = 0.",
+      "ebene": "Exactly one level: Your team partners do not build their own team.",
+      "keinGeld": "No money for recruitment — only from paid subscription revenue.",
+      "dauer": "12 months per team customer, 30-day refund window. From Elite onwards, an additional 2.5% super commission without time limit."
+    },
+    "kachel": {
+      "mitglieder": "Team partners (active / total)",
+      "teamKunden": "Paying team customers",
+      "umsatz30": "Team revenue (30 days)",
+      "offen": "Team commission open",
+      "auszahlbar": "Team commission payable",
+      "ausgezahlt": "Team commission paid out"
+    },
+    "verlauf": {
+      "titel": "History · 12 months",
+      "leer": "No team revenue yet.",
+      "provision": "Team commission",
+      "umsatz": "Team revenue"
+    },
+    "mitglieder": {
+      "titel": "Your team",
+      "leer": "No team partners yet. Share your team link.",
+      "kunden": "{n} paying customers",
+      "umsatz30": "Revenue 30 days",
+      "offen": "Open",
+      "seit": "since {datum}"
+    },
+    "spalte": {
+      "partner": "Partner",
+      "status": "Status",
+      "rang": "Rank",
+      "kunden": "Paying customers",
+      "umsatz30": "Revenue 30 days",
+      "umsatzGesamt": "Total revenue",
+      "offen": "Open",
+      "auszahlbar": "Payable",
+      "ausgezahlt": "Paid out"
+    },
+    "status": {
+      "pending_review": "Under review",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "suspended": "Blocked"
+    },
+    "chat": {
+      "titel": "Entertainment",
+      "schreiben": "Writing",
+      "rolle": {
+        "sponsor": "Your Sponsor",
+        "member": "Team Partner"
+      },
+      "zurueck": "Team",
+      "leer": "No messages yet.",
+      "platzhalter": "Your message ...",
+      "senden": "Send",
+      "titelListe": "Team Messages"
+    },
+    "nochNichtErlaubt": "You lead a team from the rank of Climber (5 paying customers in your structure). Until then, there is no team link."
+  },
+  "bedingungen": {
+    "neueVersion": "The partner terms and conditions have been updated (your consent: version {alt}, current: {neu}). Please read and agree again.",
+    "nochNicht": "Please agree to the partner terms and conditions (version {neu}).",
+    "lesen": "Read terms",
+    "annehmen": "Agree",
+    "angenommen": "Thank you — consent saved."
+  },
+  "beitraege": {
+    "titel": "Posts",
+    "hinweis": "Create a unique link for each reel, video, or post. This way, you can see which post generates clicks, registrations, and paying customers.",
+    "kontoHinweis": "Connect your account, and views and interactions from the platform will also appear here.",
+    "kontoVerbinden": "Connect account",
+    "neu": "New post",
+    "keinCode": "You need an active referral code first.",
+    "feld": {
+      "titel": "Title",
+      "titelBeispiel": "e.g., Reel Copenhagen Autumn",
+      "plattform": "Platform",
+      "code": "Code",
+      "datum": "Published on",
+      "url": "Post address (optional)",
+      "urlHinweis": "Can be added after publishing. With an address, we assign views and interactions to the post."
+    },
+    "linkErzeugen": "Generate link",
+    "angelegt": "Post created — the link is ready.",
+    "doppelt": "This post already exists for the code.",
+    "fehler": "That didn't work. Please try again.",
+    "liste": "{n, plural, =0 {No posts} =1 {1 post} other {# posts}}",
+    "leer": "No posts yet. Create the first link above.",
+    "veroeffentlicht": "published {datum}",
+    "loeschen": "Delete post",
+    "geloescht": "Post deleted.",
+    "loeschenGesperrt": "The post already has registrations and will be retained.",
+    "kopiert": "Link copied.",
+    "kopierenFehlgeschlagen": "Copy not possible — please select manually.",
+    "linkFehlt": "The link is currently unavailable.",
+    "qrZeigen": "Show QR code",
+    "qrSchliessen": "Hide QR code",
+    "qrAlt": "QR code for post link",
+    "qrHinweis": "For stories, videos, and print — leads to the same link.",
+    "beitragOeffnen": "Open post",
+    "urlAendern": "Change address",
+    "urlNachtragen": "Add address",
+    "speichern": "Save",
+    "gespeichert": "Saved.",
+    "kennzahl": {
+      "klicks": "Clicks 90 days",
+      "klicks30": "{n} in 30 days",
+      "registrierungen": "Registrations",
+      "kunden": "Paying customers",
+      "views": "Views",
+      "gemessen": "As of {zeit}",
+      "nichtVerbunden": "Account not connected",
+      "interaktion": "Likes {likes} · Comments {kommentare} · Shares {shares} · Saved {saves}",
+      "pro1000": "{n} clicks per 1,000 views"
+    },
+    "freigabe": {
+      "videoNoetig": "Upload contribution for approval",
+      "erklaerung": "Upload your finished video, image, or PDF before publishing it. Once approved, your personal link will appear here — then you can add it to your post. Only use our promotional material, no self-made screenshots, and no promises of success or guarantees.",
+      "hochladen": "Select file (Video, JPG, PNG, PDF)",
+      "neuHochladen": "Upload new file",
+      "laeuft": "Uploading...",
+      "eingereicht": "Video submitted. We will contact you once it has been reviewed.",
+      "inPruefung": "Under review",
+      "inPruefungHinweis": "We have received your video. Your link will appear here once it has been approved.",
+      "eingereichtAm": "Submitted on {zeit} — your link will appear here once it has been approved.",
+      "abgelehnt": "Not approved",
+      "grund": "Reason",
+      "freigegeben": "Video approved",
+      "zuGross": "The video is larger than {mb} MB.",
+      "fehler": "Upload failed.",
+      "grundKategorie": {
+        "material": "Material: only official promotional material, no self-made screenshots",
+        "promise": "Promises: no guarantees or promises of success",
+        "disclosure": "Labeling: the post must be marked as advertisement",
+        "brand": "Brand: logo or name used incorrectly",
+        "other": "Other"
+      }
+    }
+  },
+  "kanalVerbindung": {
+    "titel": "Connected accounts",
+    "hinweis": "Connect your social media accounts so followers and views come directly from the platform. This is voluntary and can be revoked at any time; we only read, we do not write.",
+    "verbinden": "Connect {anbieter}",
+    "baldVerfuegbar": "Coming soon",
+    "nichtKonfiguriert": "This connection is not yet activated.",
+    "fehler": "That didn't work. Please try again.",
+    "verifiziert": "Verified",
+    "follower": "{n} Followers",
+    "views28": "{n} Views in 28 days",
+    "engagement": "Engagement {n} %",
+    "gemessen": "As of {zeit}",
+    "nochKeinSnapshot": "First measurement to follow",
+    "letzterFehler": "Last retrieval failed",
+    "trennen": "Disconnect",
+    "getrennt": "Connection disconnected. Previous measurements remain as history.",
+    "getrennteKonten": "{n, plural, =1 {1 disconnected account} other {# disconnected accounts}}",
+    "getranntAm": "Disconnected {zeit}",
+    "durchPlattform": "Access from the platform terminated",
+    "datenschutz": "When disconnecting, we immediately delete the access data. Measured values remain stored as history. Details in the privacy policy.",
+    "rueckkehr": {
+      "verbunden": "Account connected - the first measurement is running.",
+      "abgelehnt": "Connection aborted - you did not grant access.",
+      "fehler": "Connection failed."
+    }
+  },
+  "passwort": {
+    "anzeigen": "Show password",
+    "verbergen": "Hide password"
+  },
+  "verbundkonto": {
+    "titel": "Connected account for payout",
+    "hinweis": "Your commission will be transferred to a connected account. Our payment service provider requires an identity verification for this purpose — as long as it is open, no payout can be made.",
+    "bereit": "Your connected account is activated. Payouts will automatically go there.",
+    "offeneFelder": "This information is still missing",
+    "gesperrt": "The account is currently locked: {grund}",
+    "schrittKonto": "Open connected account",
+    "schrittDaten": "Personal information",
+    "schrittDatenFirma": "Company and personal information",
+    "schrittBank": "Bank details",
+    "schrittBedingungen": "Payment service provider terms",
+    "kontoAnlegen": "Open connected account",
+    "kontoAngelegt": "Connected account opened.",
+    "datenBearbeiten": "Edit information",
+    "zuklappen": "Collapse",
+    "datenGesendet": "Information saved.",
+    "vorname": "First name",
+    "nachname": "Last name",
+    "geburtsdatum": "Date of birth",
+    "tag": "DD",
+    "monat": "MM",
+    "jahr": "YYYY",
+    "strasse": "Street and house number",
+    "plz": "Postal code",
+    "ort": "City",
+    "nationalitaet": "Nationality (country code)",
+    "telefon": "Phone",
+    "webseite": "Website or profile",
+    "webseiteHinweis": "The address where you advertise — required for verification.",
+    "firmenname": "Company name",
+    "steuernummer": "Tax number",
+    "firmenStrasse": "Company address",
+    "firmaHinweis": "As an authorized representative, your above-mentioned information will be used.",
+    "speichern": "Save information",
+    "kontoinhaber": "Account holder",
+    "waehrung": "Currency",
+    "waehrungHinweis": "The currency of the bank account, not that of your country.",
+    "bankSpeichern": "Save bank details",
+    "bankGesetzt": "Bank details saved.",
+    "bedingungenAnnehmen": "Accept terms",
+    "bedingungenAngenommen": "Terms accepted.",
+    "fehler": "That didn't work.",
+    "schrittIdentitaet": "Identity verification",
+    "identitaetHinweis": "Finally, our payment service provider verifies your identity. This takes place on their secure page, as a photo will be taken; afterwards, you will return here.",
+    "identitaetStarten": "Verify identity"
+  }
+}

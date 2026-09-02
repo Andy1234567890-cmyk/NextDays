@@ -1500,7 +1500,12 @@
       "portalRateInvalid": "Zapisana stawka potrącenia portalu wykracza poza zakres 0–100%. Popraw ją w Księgowość → Zasady rozliczeń.",
       "feeUnassigned": "Co najmniej jeden rodzaj opłaty nie został jeszcze przypisany. Bez przypisania nie da się ustalić, komu należy się dana kwota ani czy jest od niej pobierana prowizja — określ to w Księgowość → Zasady rozliczeń.",
       "feeNotComputable": "Opłaty nie można rozliczyć jako kwoty (zapisana procentowo lub bez kwoty). Sprawdź opłatę w obiekcie.",
-      "contractCurrency": "Opłata stała lub prowizja minimalna jest wyrażona w innej walucie niż rezerwacja. Kwoty w różnych walutach nie są przeliczane — sprawdź umowę rozliczeniową."
+      "contractCurrency": "Opłata stała lub prowizja minimalna jest wyrażona w innej walucie niż rezerwacja. Kwoty w różnych walutach nie są przeliczane — sprawdź umowę rozliczeniową.",
+      "recurringToOwner": "Powtarzające się na korzyść",
+      "recurringFromOwner": "Powtarzające się na niekorzyść",
+      "flatFees": "Ryczałty z umowy",
+      "flatFeesIncluded": "już uwzględnione w płatności",
+      "contractStartsLater": "Dla co najmniej jednej rezerwacji w dniu wyjazdu nie ma jeszcze umowy rozliczeniowej — umowa właściciela zaczyna się dopiero później. Stawka prowizji jest więc zapisana, tylko data „Obowiązuje od” jest późniejsza niż data wyjazdu. Wpisz w umowie rozliczeniowej faktyczny początek umowy."
     },
     "rental": {
       "perReservation": "Za rezerwację",
@@ -1520,13 +1525,66 @@
         "channexImport": "Rezerwacja została pobrana dodatkowo przy podłączaniu kanału. Według pośrednika rezerwacji takie rezerwacje nie zawierają usług dodatkowych ani opłat za sprzątanie — nie da się tego uzupełnić później. Jeśli opłata ma zostać rozliczona, wprowadź ją jako pozycję przy rezerwacji.",
         "portalReportsNone": "Portal nie wykazuje tej opłaty przy tej rezerwacji jako osobnej pozycji. W Booking.com zależy to od konfiguracji obiektu (Obiekt → Zasady → Opłaty dodatkowe) oraz od tego, od kiedy opłata tam obowiązuje: opłata wprowadzona później słusznie nie występuje w starszych rezerwacjach.",
         "noPayload": "Do tej rezerwacji nie ma komunikatu z portalu (import istniejących danych). Bez niego nie można ustalić, jakie opłaty gość zapłacił.",
-        "unknownReason": "Przyczyny nie da się ustalić."
+        "unknownReason": "Przyczyny nie da się ustalić.",
+        "csvImport": "Rezerwacja pochodzi z importu CSV. Zaimportowana kwota to cena gościa portalu, w tym wszystkie opłaty; zestawienie poszczególnych opłat nie jest dostępne i nie mogło być również wywnioskowane z danych portalu. Rozliczenie nie uwzględnia zatem żadnych opłat z danych podstawowych obiektu — są one już zawarte w kwocie, tylko ich wysokość nie jest udokumentowana.",
+        "csvResolvedTitle": "Opłaty wyliczone z kwoty portalu",
+        "csvResolved": "Rezerwacja pochodzi z importu CSV; portal nie dostarczył zestawienia. Opłaty zostały wyliczone z różnicy między zaimportowaną ceną całkowitą a cenami za nocleg przekazanymi przez portal i nazwane za pomocą danych podstawowych obiektu. Nocleg plus opłaty dają dokładnie cenę całkowitą.",
+        "stammdatenPortalTitle": "Opłaty dodane z danych podstawowych obiektu",
+        "stammdatenPortal": "Portal nie dostarczył zestawienia opłat dla tej rezerwacji: rezerwacje, które agregator portalu pobrał po podłączeniu kanału, nie zawierają dodatków i opłat za sprzątanie; import danych z pliku zawiera tylko cenę całkowitą. Opłaty zostały zatem ustalone zgodnie z tym, co jest zapisane w obiekcie: sprzątanie za pobyt, opłata klimatyczna za noc, zwierzę domowe tylko w przypadku rezerwacji zwierzęcia.",
+        "portalBelegt": "Zajęte: Różnica między całkowitą ceną portalu a cenami za noc podanymi przez portal dokładnie odpowiada tym opłatom.",
+        "portalImBetrag": "Wliczone w kwotę portalu: Całkowita cena portalu już zawiera opłaty; zostały one odliczone, cena dla gościa pozostaje kwotą portalu.",
+        "portalObendrauf": "Dodatkowo do kwoty portalu: Podana kwota to czysta suma za noce; opłaty są dodawane i tworzą cenę dla gościa."
       },
       "chain": {
         "portal": "Portal",
         "management": "Zarządzanie",
         "flatFee": "Opłata stała",
         "fees": "Opłaty"
+      },
+      "arrival": "Przyjazd",
+      "departure": "Wyjazd",
+      "commission": "Prowizja",
+      "flatFee": "Ryczałt",
+      "ownerShare": "Udział właściciela",
+      "portalDeduction": "Potrącenie portalu",
+      "fees": "Opłaty",
+      "feesCount": "{n} pozycji",
+      "expand": "Pokaż zestawienie",
+      "collapse": "Ukryj zestawienie",
+      "expandAll": "Pokaż wszystkie zestawienia",
+      "collapseAll": "Ukryj wszystkie zestawienia",
+      "breakdown": "Zestawienie dla każdej rezerwacji",
+      "noFeeItems": "Brak opłat lub dodatkowych usług w tej rezerwacji.",
+      "posten": {
+        "guestPrice": "Cena dla gościa wg portalu (z opłatami, bez usług dodatkowych)",
+        "portalCommission": "Prowizja portalu {kanal}",
+        "portalFee": "Opłata za płatność portalu",
+        "portalPayout": "Wypłata z portalu",
+        "feesOut": "Opłaty w cenie dla gościa — wyłączone z podstawy wymiaru",
+        "feesInBase": "Opłaty w cenie dla gościa — podlegające prowizji, pozostają w podstawie wymiaru",
+        "base": "Podstawa wymiaru",
+        "commission": "Prowizja za zarządzanie {pct}",
+        "minCommission": "Prowizja minimalna (umowa) zamiast {pct}",
+        "contractFrom": "Umowa od {datum}",
+        "rateManual": "ręcznie w tym rozliczeniu",
+        "rateLegacy": "Stawka standardowa z danych podstawowych",
+        "flatFee": "Ryczałt (umowa)",
+        "feesBack": "Opłaty właściciela — zwracane w całości",
+        "ownerShare": "Udział właściciela",
+        "belongsBetrieb": "pozostaje w firmie",
+        "belongsEigentuemer": "Właściciel",
+        "belongsDurchlauf": "Pozycje przejściowe (strony trzecie)",
+        "commissionFree": "bez prowizji",
+        "commissionable": "podlegające prowizji",
+        "amountHidden": "Kwota w firmie",
+        "addon": "Usługa dodatkowa",
+        "noFeesReported": "Portal nie zgłosił żadnych opłat za tę rezerwację; dlatego nie zostały one uwzględnione.",
+        "afterPortal": "Całkowita kwota po odliczeniu portalu",
+        "afterPortalHint": "Cena dla gościa minus prowizja portalu i opłata za płatność portalu",
+        "feesBusiness": "Świadczone przez firmę — nie jest częścią wypłaty",
+        "contractStartsLater": "Brak umowy rozliczeniowej w dniu wyjazdu {abreise}: umowa rozpoczyna się dopiero {beginn}. Zmień datę rozpoczęcia umowy u właściciela, wtedy ta rezerwacja zostanie rozliczona.",
+        "noContract": "Brak umowy rozliczeniowej i stawki prowizji dla tego obiektu w danych podstawowych — utwórz umowę u właściciela.",
+        "addonsOutside": "Usługi dodatkowe — sprzedawane przez myNextDays, nieujęte w cenie dla gościa wg portalu"
       }
     },
     "expenses": {
@@ -1566,7 +1624,11 @@
       "rentalRevenue": "Przychód z wynajmu",
       "expenses": "Wydatki i dodatki",
       "total": "Razem",
-      "deductPercentage": "Prowizja (%)"
+      "deductPercentage": "Prowizja (%)",
+      "shares": "Udziały właściciela z rezerwacji",
+      "deductions": "Potrącenia",
+      "credits": "Kredyty",
+      "recurring": "Pozycje cykliczne"
     },
     "manage": {
       "owner": "Właściciel",
@@ -1631,6 +1693,25 @@
       "cancel": "Anuluj",
       "confirm": "Zatwierdź",
       "working": "Zatwierdzanie…"
+    },
+    "deductions": {
+      "title": "Potrącenia i uznania",
+      "intro": "Wszystko, co zmienia wypłatę oprócz rezerwacji — z trzech źródeł: ryczałt z umowy za rezerwację, jednorazowe pozycje rozliczeniowe i pozycje cykliczne (umowa stała).",
+      "deductions": "Potrącenia (na koszt właściciela)",
+      "credits": "Uznania (na korzyść właściciela)",
+      "empty": "Brak potrąceń lub uznań w tym okresie.",
+      "srcExpense": "Pozycje rozliczeniowe",
+      "srcRecurring": "Pozycja cykliczna",
+      "srcFlatFee": "Ryczałt z umowy",
+      "perBooking": "za rezerwację",
+      "perNight": "za noc",
+      "perPeriod": "za okres",
+      "quantity": "{n} × {betrag}",
+      "flatFeesNote": "Ryczałty z umowy zostały już odjęte od udziałów właściciela za rezerwację — tutaj tylko w celach poglądowych, bez dalszych potrąceń.",
+      "manageRecurring": "Zarządzaj pozycjami cyklicznymi",
+      "manageContract": "Zarządzaj umową rozliczeniową",
+      "receipt": "Dowód",
+      "bookingsCount": "{n} rezerwacji"
     }
   },
   "ownerBilling": {
@@ -1709,7 +1790,9 @@
     "effectReleased": "{property}: sprzedaż jest kontynuowana — zakończenie umowy zostało anulowane, a noce znów są dostępne w sprzedaży.",
     "effectBlocked": "{property}: sprzedaż kończy się w dniu {date} — zablokowano {nights} nocy i wycofano je z portali.",
     "effectCalendarFailed": "{property}: Koniec umowy został wprowadzony, blokada kalendarza nie została zapisana. Zostanie ona dodana dzisiaj w nocy.",
-    "effectNoUnit": "{property}: Koniec umowy został wprowadzony, ale kalendarz nie jest zablokowany — obiektowi brakuje jednostki. Utwórz ją, a blokada zostanie zastosowana."
+    "effectNoUnit": "{property}: Koniec umowy został wprowadzony, ale kalendarz nie jest zablokowany — obiektowi brakuje jednostki. Utwórz ją, a blokada zostanie zastosowana.",
+    "validFromHint": "Data rozpoczęcia obowiązywania umowy — w przypadku istniejącej umowy jest to faktyczna data umowy, a nie dzień dzisiejszy. Każda rezerwacja jest rozliczana zgodnie z umową obowiązującą w dniu wymeldowania; rezerwacje z wcześniejszym wymeldowaniem pozostają bez wypłaty.",
+    "errorValidFromRequired": "Proszę podać, od kiedy obowiązuje umowa."
   },
   "portal": {
     "title": "Mój portal",
@@ -5465,7 +5548,8 @@
       "connectPortal": "Połącz portal",
       "noPortals": "Do tego obiektu nie podłączono jeszcze żadnego portalu (Booking, Airbnb i inne).",
       "marketplaceReview": "W weryfikacji",
-      "marketplaceReviewHint": "myBestDays wciąż weryfikuje tę ofertę. Pojawi się na rynku po zatwierdzeniu. Portale i własna strona internetowa nie są tym objęte."
+      "marketplaceReviewHint": "myBestDays weryfikuje jeszcze tę ofertę. Gdy tylko zostanie zatwierdzona, pojawi się na platformie handlowej. myBestDays to kanał obowiązkowy: Obiektu nie można tam wyłączyć pojedynczo — „Wstrzymaj sprzedaż” usuwa go ze sprzedaży wszędzie.",
+      "marketplaceMandatory": "Kanał obowiązkowy — każdy obiekt jest wystawiony na myBestDays"
     },
     "IdLayout": {
       "loadError": "Nie udało się załadować obiektu: {error}"
@@ -5563,11 +5647,11 @@
       "stepOf": "Krok {schritt} z {gesamt}",
       "next": "Continue",
       "back": "Back",
-      "channelsHint": "Gdzie ma być sprzedawany ten obiekt? Możesz to zmienić w każdej chwili.",
+      "channelsHint": "Gdzie ta nieruchomość ma być dodatkowo sprzedawana? Portale i strona internetowa mogą być zmieniane w dowolnym momencie.",
       "channelPortals": "Portale rezerwacyjne",
       "channelPortalsHint": "Airbnb, Booking.com i inne. Portale wymagają kompletnych danych — patrz niżej.",
       "channelPlatform": "myBestDays",
-      "channelPlatformHint": "Nasz własny marketplace z niską prowizją.",
+      "channelPlatformHint": "Nasz własny rynek z 8% all-in. Każda nieruchomość jest tam wymieniona; będzie widoczna po opublikowaniu i naszej zgodzie.",
       "channelWebsite": "Własna strona",
       "channelWebsiteHint": "Twoja strona rezerwacji i widżet rezerwacyjny.",
       "readinessTitle": "Do portali brakuje jeszcze:",
@@ -6261,7 +6345,21 @@
       "planPortalOffHint": "Ta cena dotyczy tylko rezerwacji bezpośrednich. Kliknij, aby wysłać ją do portali rezerwacyjnych.",
       "planPortalOn": "Cena trafia teraz do portali rezerwacyjnych.",
       "planPortalOnHint": "Ta cena trafia do portali rezerwacyjnych. Kliknij, aby użyć jej tylko do rezerwacji bezpośrednich.",
-      "planPortalYes": "Do portali"
+      "planPortalYes": "Do portali",
+      "feeValidityTitle": "Ważność",
+      "feeValidityHint": "Opłata dotyczy rezerwacji, których data przyjazdu przypada w danym okresie. Puste = bez ograniczeń. Opłata z okresem nie jest przekazywana do portali: nie można tam odwzorować warunku daty.",
+      "feeValidFromLabel": "Obowiązuje od",
+      "feeValidUntilLabel": "Obowiązuje do",
+      "feeValidityOrderError": "„Obowiązuje do” jest przed „Obowiązuje od”.",
+      "feeOwnerStatementOnlyLabel": "Tylko w rozliczeniu właściciela",
+      "feeOwnerStatementOnlyHint": "Opłata nie jest naliczana gościowi i nie jest wysyłana do żadnego portalu. Działa tylko w rozliczeniu właściciela, w ocenie i w portalu właściciela.",
+      "feeValidFromSuffix": "od {date}",
+      "feeValidUntilSuffix": "do {date}",
+      "feeOwnerStatementOnlySuffix": "tylko rozliczenie",
+      "feeCalculationLabel": "Obliczanie",
+      "feeVatHint": "Własna stawka podatku dla tej opłaty, inna niż stawka podatku od noclegów obiektu. Wyłączone oznacza: opłata jest zgodna ze stawką podatku od noclegów.",
+      "feeVatIncludedLabel": "Podatek w kwocie",
+      "feeVatIncludedHint": "Czy stawka podatku jest już zawarta w podanej kwocie, czy też jest doliczana? Bez tej informacji kwota byłaby niejednoznaczna."
     },
     "policiesForm": {
       "title": "Zasady",
@@ -7303,23 +7401,23 @@
     "marketplacePending": "{count} w weryfikacji",
     "marketplaceWaiting": "W weryfikacji",
     "marketplace": {
-      "intro": "myBestDays to nasz własny rynek — kanał rezerwacji jak Booking czy Airbnb, tylko bez połączenia z portalem. Obiekt staje się widoczny, gdy jest aktywny, wystawiony tutaj i zatwierdzony.",
+      "intro": "myBestDays to nasz własny rynek — kanał rezerwacji, taki jak Booking czy Airbnb, tylko bez połączenia z portalem i obowiązkowy dla każdego obiektu. Obiekt jest widoczny, jeśli jest aktywny i został przez nas zatwierdzony.",
       "openMarketplace": "Otwórz rynek",
       "propertiesHeading": "Obiekty na rynku",
       "noProperties": "Nie utworzono jeszcze żadnych obiektów.",
       "columnProperty": "Obiekt",
-      "columnVisibility": "Widoczność",
+      "columnVisibility": "Status",
       "columnApproval": "Zatwierdzenie",
       "columnBookings": "Rezerwacje",
       "stateActive": "Widoczny",
       "statePending": "W weryfikacji",
-      "stateNotListed": "Nie wystawiony",
+      "stateNotListed": "Sprzedaż wstrzymana",
       "stateInactiveProperty": "Obiekt nieaktywny",
       "viewListing": "Zobacz ofertę",
       "reviewHint": "Obiekty w weryfikacji nie pojawiają się jeszcze na myBestDays. Weryfikujemy każdą ofertę, ponieważ myBestDays występuje tam jako dostawca — portale i własna strona internetowa nie są tym objęte.",
       "summaryVisible": "{count} widocznych",
       "summaryWaiting": "{count} w weryfikacji",
-      "summaryOff": "{count} nie wystawionych",
+      "summaryOff": "{count} wstrzymanych lub nieaktywnych",
       "moderation": {
         "draft": "Szkic",
         "pending": "W weryfikacji",
@@ -7354,7 +7452,8 @@
       "mayClose": "Import jest kontynuowany na serwerze — możesz zamknąć tę stronę.",
       "andMore": "… i {count} więcej",
       "close": "Zamknij",
-      "updated": "zaktualizowany"
+      "updated": "zaktualizowany",
+      "portal": "już z portalu"
     }
   },
   "calendarSync": {
@@ -10511,7 +10610,11 @@
     "haveAccount": "Masz już konto?",
     "loginLink": "Zaloguj się tutaj",
     "loadingHeadline": "Własna strona rezerwacji. Zatrzymaj 100 % każdej rezerwacji.",
-    "loadingText": "Konfigurujemy Twoje konto …"
+    "loadingText": "Konfigurujemy Twoje konto …",
+    "referralLabel": "Polecane przez (opcjonalnie)",
+    "referralPlaceholder": "Kod polecający, np. ANNA-K7P2",
+    "referralHint": "Czy poznałeś myNextDays przez partnera? Jego kod jest tutaj — widzi tylko, że firma przyszła przez niego, nigdy Twoje imienia. Z kodem otrzymasz pierwszy pełny miesiąc za darmo po 14 dniach testowych.",
+    "referralContactOptIn": "Mój polecający może skontaktować się ze mną za pośrednictwem myNextDays."
   },
   "marketingSite": {
     "stars": "4,5 gwiazdki",

@@ -1,0 +1,521 @@
+{
+  "meta": {
+    "titel": "myNextDays Socio",
+    "beschreibung": "Panel de control del programa de socios de myNextDays: enlaces, clientes, comisiones, pagos."
+  },
+  "nav": {
+    "partner": "Socio",
+    "uebersicht": "Resumen",
+    "kunden": "Clientes",
+    "provisionen": "Comisiones",
+    "auszahlungen": "Pagos",
+    "links": "Enlaces y material",
+    "profil": "Perfil",
+    "sprache": "Idioma",
+    "abmelden": "Cerrar sesión",
+    "nachrichten": "Mensajes",
+    "menue": "Menú",
+    "team": "Equipo",
+    "beitraege": "Publicaciones"
+  },
+  "status": {
+    "pending_review": {
+      "titel": "Su solicitud está siendo revisada",
+      "text": "Revisamos cada solicitud personalmente y le contactaremos por correo electrónico. Hasta la aprobación, los enlaces y códigos no están activos. Ya puede completar sus datos de perfil y pago."
+    },
+    "rejected": {
+      "titel": "Su solicitud no fue aceptada",
+      "text": "No pudimos aceptar su solicitud en este momento. Si tiene alguna pregunta, no dude en contactarnos."
+    },
+    "suspended": {
+      "titel": "Su cuenta de socio está bloqueada",
+      "text": "Las comisiones pendientes no se pagarán mientras dure el bloqueo. Si tiene alguna pregunta, contáctenos."
+    },
+    "approved": {
+      "titel": "Aprobado",
+      "text": "Su cuenta está activa."
+    },
+    "grund": "Motivo"
+  },
+  "uebersicht": {
+    "titelBewerber": "Bienvenido al programa de socios",
+    "textBewerber": "Una vez que su solicitud sea aprobada, verá aquí sus enlaces, clientes y comisiones. Mientras tanto, introduzca sus datos fiscales y de pago para que el primer pago pueda realizarse sin problemas.",
+    "zumProfil": "Ir al perfil",
+    "titel": "Hola {name}",
+    "rang": "Rango {rang} · {satz} de los ingresos por suscripción",
+    "naechsterRang": "Faltan {fehlend} clientes de pago para el rango {rang} ({satz})",
+    "linksTeilen": "Compartir enlaces",
+    "keineBetraege": "—",
+    "kachel": {
+      "klicks": "Clics (30 días)",
+      "registrierungen": "Negocios registrados",
+      "zahlend": "Clientes de pago",
+      "offen": "Pendiente (ventana de reembolso)",
+      "auszahlbar": "Pagadero",
+      "ausgezahlt": "Pagado",
+      "team": "Comisión de equipo",
+      "teamHinweis": "{n} socios de equipo",
+      "struktur": "Clientes en su estructura",
+      "strukturHinweis": "clientes propios + de equipo — este número determina su rango",
+      "super": "Supercomisión",
+      "superHinweis": "{satz} sobre los ingresos por suscripciones de su estructura, sin límite de duración",
+      "turbo": "Participación en reservas myBestDays",
+      "turboHinweis": "0,5 % por reserva a través de myBestDays de sus clientes y clientes de equipo",
+      "bonus": "Bonificaciones por ascenso",
+      "bonusHinweis": "una vez por cada rango alcanzado"
+    },
+    "deineLinks": "Sus enlaces"
+  },
+  "links": {
+    "titel": "Enlaces y material",
+    "hinweis": "Su enlace dirige a mynextdays.com y cuenta el clic. El código es visible en el formulario de registro, sin cookies. Un negocio se asigna exactamente a un socio.",
+    "klicks30": "{n} clics en 30 días",
+    "kopiert": "Copiado.",
+    "kopierenFehlgeschlagen": "No se puede copiar — por favor, seleccione y copie.",
+    "codeKopieren": "Copiar código",
+    "linkFehlt": "Enlace aún no disponible.",
+    "neuerCode": "Crear otro código",
+    "label": "Descripción (opcional)",
+    "wunschcode": "Código deseado (opcional)",
+    "anlegen": "Crear",
+    "abbrechen": "Cancelar",
+    "codeAngelegt": "Código creado.",
+    "codeVergeben": "Este código ya está en uso.",
+    "fehler": "Algo salió mal.",
+    "kennzeichnung": {
+      "titel": "Obligatorio: identificar publicidad",
+      "text": "Cada recomendación con su enlace o código es publicidad y debe ser identificada como tal — al principio de la publicación, en el idioma de la publicación. Un simple «#ad» no es suficiente. Las infracciones pueden llevar al bloqueo.",
+      "imBeitrag": "En la publicación",
+      "amLink": "En el enlace",
+      "land": {
+        "DE": "Alemania",
+        "DK": "Dinamarca"
+      },
+      "andere": "Otros países: La intención comercial debe ser claramente reconocible (Directiva de la UE sobre prácticas comerciales desleales). Por favor, verifique las regulaciones de su país; iremos añadiendo formulaciones comprobadas progresivamente."
+    },
+    "material": {
+      "titel": "Material publicitario",
+      "leer": "El material está siendo preparado — aparecerá aquí tan pronto como sea aprobado.",
+      "art": {
+        "video": "Video",
+        "image": "Imagen",
+        "text": "Fragmento de texto",
+        "link": "Enlace"
+      },
+      "oeffnen": "Abrir"
+    }
+  },
+  "kunden": {
+    "titel": "Clientes",
+    "hinweis": "Sus negocios referidos — pseudónimo. Verá el país, el estado y los importes, nunca el nombre o el correo electrónico. «Pagando» significa: la primera factura de suscripción ha sido pagada y la suscripción está activa.",
+    "leer": "Ningún negocio se ha registrado todavía a través de su enlace.",
+    "kunde": "Cliente {n}",
+    "spalte": {
+      "kunde": "Cliente",
+      "land": "País",
+      "status": "Estado",
+      "registriert": "Registrado",
+      "provisionBis": "Comisión hasta",
+      "verdient": "Ganado"
+    },
+    "status": {
+      "registriert": "Registrado",
+      "zahlend": "Pagando",
+      "beendet": "Finalizado",
+      "in_pruefung": "En revisión",
+      "abgelehnt": "Rechazado"
+    }
+  },
+  "provisionen": {
+    "titel": "Comisiones",
+    "hinweis": "Cada línea es una factura de suscripción pagada, una reserva a través de myBestDays o una bonificación por ascenso. La base es el ingreso neto por suscripciones o el valor de la reserva; la tarifa es su rango en el momento del pago. Las líneas abiertas se pueden pagar después de 30 días.",
+    "leer": "Aún no hay comisión.",
+    "reifAm": "pagadero a partir de {datum}",
+    "spalte": {
+      "datum": "Fecha",
+      "art": "Tipo",
+      "kunde": "Cliente",
+      "basis": "Base",
+      "satz": "Tarifa",
+      "betrag": "Importe",
+      "status": "Estado"
+    },
+    "art": {
+      "earn": "Ganancia",
+      "reversal": "Reembolso",
+      "adjustment": "Corrección",
+      "override": "Comisión de equipo",
+      "bonus": "Bonificación por ascenso",
+      "lifetime": "Supercomisión",
+      "booking_share": "Participación en reservas"
+    },
+    "status": {
+      "pending": "Abierto",
+      "approved": "Pagadero",
+      "held": "Retenido",
+      "paid": "Pagado",
+      "reversed": "Retirado",
+      "cancelled": "Cancelado"
+    },
+    "team": "Equipo"
+  },
+  "auszahlungen": {
+    "titel": "Pagos",
+    "hinweis": "Mensual, por moneda, a partir del importe mínimo. Cada pago incluye una nota de crédito (autofacturación) — es su comprobante.",
+    "kein_weg": "Aún no se ha registrado un método de pago. Por favor, añádalo en su perfil — de lo contrario, no se podrá realizar el pago.",
+    "leer": "Aún no hay pagos.",
+    "spalte": {
+      "nummer": "Nº de nota de crédito",
+      "zeitraum": "Período",
+      "betrag": "Importe",
+      "status": "Estado",
+      "gutschrift": "Nota de crédito"
+    },
+    "status": {
+      "pending": "Preparado",
+      "processing": "En transferencia",
+      "paid": "Pagado",
+      "failed": "Fallido"
+    },
+    "gutschriftLaden": "Descargar",
+    "gutschriftFehler": "No se pudo cargar la nota de crédito."
+  },
+  "profil": {
+    "titel": "Perfil",
+    "seit": "Socio desde {datum}",
+    "stammdaten": "Datos maestros",
+    "name": "Nombre",
+    "firma": "Empresa (opcional)",
+    "sprache": "Idioma para correos electrónicos",
+    "kanal": "Sus cuentas y canales de redes sociales",
+    "speichern": "Guardar",
+    "gespeichert": "Guardado.",
+    "gespeichertViesOffen": "Guardado. El número de identificación fiscal aún no ha sido confirmado; lo revisaremos nuevamente antes del pago.",
+    "steuerUndAuszahlung": "Datos fiscales y de pago",
+    "aktuellerWeg": "Actual: {weg} {details}",
+    "keinWeg": "Aún no se ha registrado ninguna forma de pago.",
+    "viesBestaetigt": "Número de identificación fiscal confirmado (VIES)",
+    "viesOffen": "Número de identificación fiscal aún no confirmado",
+    "rechtsform": "Forma jurídica",
+    "privat": "Persona física",
+    "unternehmen": "Empresa",
+    "land": "País",
+    "ustId": "Número de identificación fiscal",
+    "ustIdHinweis": "Se verificará con el sistema VIES de la UE. Sin un número confirmado, no se realizarán pagos a empresas. El crédito incluirá la mención de inversión del sujeto pasivo.",
+    "privatHinweis": "Como persona física, recibirá el crédito sin IVA. Usted mismo deberá declarar el impuesto sobre la comisión.",
+    "auszahlungsweg": "Método de pago",
+    "kontoinhaber": "Titular de la cuenta",
+    "empfaengerEmail": "Correo electrónico de {weg}",
+    "passwortBestaetigen": "Para confirmar: Su contraseña",
+    "passwortFalsch": "La contraseña no coincide.",
+    "steuerdaten": "Datos fiscales"
+  },
+  "anmelden": {
+    "partner": "Socio",
+    "titel": "Iniciar sesión",
+    "text": "El panel de control del programa de socios de myNextDays.",
+    "email": "Correo electrónico",
+    "passwort": "Contraseña",
+    "anmelden": "Iniciar sesión",
+    "passwortVergessen": "¿Ha olvidado su contraseña?",
+    "resetGesendet": "Si existe una cuenta, le hemos enviado un correo electrónico.",
+    "stoerung": "El servicio de inicio de sesión no está disponible en este momento. Esto no se debe a sus credenciales; inténtelo de nuevo más tarde.",
+    "keinPartnerKonto": "No existe una cuenta de socio con estas credenciales.",
+    "fehlgeschlagen": "Error de inicio de sesión.",
+    "nochKeinKonto": "¿Aún no es socio?",
+    "bewerben": "Solicitar ahora"
+  },
+  "bewerben": {
+    "partner": "Socio",
+    "titel": "Solicitar como socio",
+    "text": "Dos minutos. Revisamos cada solicitud personalmente y nos pondremos en contacto por correo electrónico.",
+    "name": "Su nombre",
+    "firma": "Empresa (opcional)",
+    "email": "Correo electrónico",
+    "passwort": "Contraseña (mín. 8 caracteres)",
+    "rechtsform": "Forma jurídica",
+    "privat": "Persona física",
+    "unternehmen": "Empresa",
+    "land": "País",
+    "ustId": "NIF/IVA",
+    "ustIdHinweis": "Obligatorio para empresas; se verifica con VIES.",
+    "kanal": "Sus cuentas de redes sociales",
+    "kanalHinweis": "Obligatorio: al menos una cuenta de redes sociales (Instagram, TikTok, YouTube, Facebook, LinkedIn…) con dirección, nombre de usuario y alcance. Un sitio web, blog o boletín de noticias es bienvenido como complemento. Revisaremos las cuentas antes de la aprobación.",
+    "pitch": "¿Cómo llega a los gestores de alquileres vacacionales u hoteles? (opcional)",
+    "pitchHinweis": "Unas pocas frases son suficientes.",
+    "zustimmung": "Acepto las condiciones para socios, en particular la obligación de identificar las recomendaciones como publicidad.",
+    "bedingungen": "Al programa",
+    "captchaHinweis": "Esta página está protegida por reCAPTCHA; se aplican la Política de privacidad y los Términos de servicio de Google.",
+    "stoerung": "El servicio no está disponible en este momento; inténtelo de nuevo más tarde.",
+    "emailVergeben": "Ya existe una solicitud para esta dirección de correo electrónico. Inicie sesión.",
+    "captchaFehler": "La comprobación de seguridad ha fallado. Vuelva a cargar la página e inténtelo de nuevo.",
+    "laeuft": "Enviando…",
+    "absenden": "Enviar solicitud",
+    "schonPartner": "¿Ya es socio?",
+    "anmelden": "Iniciar sesión",
+    "sponsor": "Referido por socio (código, opcional)",
+    "sponsorHinweis": "¿Ha llegado aquí a través del enlace de equipo de un socio? Su código aparecerá aquí. Recibirá una comisión de equipo por los ingresos de suscripción de sus clientes; su propia comisión no se modificará."
+  },
+  "nachrichten": {
+    "titel": "Mensajes",
+    "hinweis": "Su línea directa con el equipo de socios: preguntas sobre comisiones, pagos, materiales o un cliente. Las respuestas aparecerán aquí en vivo.",
+    "neu": "Nuevo mensaje para el equipo de socios",
+    "platzhalter": "¿De qué se trata?",
+    "senden": "Enviar",
+    "abbrechen": "Cancelar",
+    "leer": "Aún no hay conversación.",
+    "stoerung": "El servicio no está disponible en este momento; inténtelo de nuevo más tarde.",
+    "fehler": "Eso no funcionó.",
+    "team": "Equipo de socios",
+    "du": "Usted",
+    "antwortPlatzhalter": "Su respuesta...",
+    "antworten": "Responder",
+    "status": {
+      "in_bearbeitung": "En proceso",
+      "wartet_auf_dich": "Respuesta recibida",
+      "geloest": "Resuelto"
+    }
+  },
+  "kanaele": {
+    "plattformLabel": "Plataforma",
+    "handle": "Identificador (opcional)",
+    "reichweite": "Alcance (seguidores)",
+    "hinzufuegen": "Añadir canal",
+    "entfernen": "Eliminar canal",
+    "plattform": {
+      "website": "Sitio web",
+      "blog": "Blog",
+      "newsletter": "Boletín",
+      "podcast": "Pódcast",
+      "other": "Otro"
+    },
+    "socialPflicht": "Al menos una cuenta de redes sociales es obligatoria; un sitio web por sí solo no es suficiente."
+  },
+  "team": {
+    "titel": "Equipo",
+    "hinweis": "Los socios que se han postulado con su código forman su equipo. Sobre los ingresos netos por suscripciones de sus clientes, usted recibe la diferencia entre su tarifa (actualmente {satz}) y la tarifa del socio del equipo, ambas en el momento del pago. Los clientes del equipo cuentan 1:1 para su rango.",
+    "meinSponsor": "Usted es socio de equipo de {name}.",
+    "link": {
+      "titel": "Su enlace de equipo",
+      "text": "Quien se postule a través de este enlace, tendrá su código visible en la solicitud, sin cookies.",
+      "kopieren": "Copiar enlace",
+      "keinLink": "No hay código activo. Cree uno en Enlaces y Materiales."
+    },
+    "regeln": {
+      "titel": "Las reglas",
+      "rang": "Comisión de equipo = su tarifa menos la tarifa del socio del equipo, en el momento del pago. Mismo rango = 0.",
+      "ebene": "Exactamente un nivel: sus socios de equipo no forman su propio equipo.",
+      "keinGeld": "No hay dinero por reclutamiento, solo por ingresos de suscripciones pagadas.",
+      "dauer": "12 meses por cliente de equipo, ventana de reembolso de 30 días. A partir de Élite, un 2,5 % adicional de supercomisión sin límite de duración."
+    },
+    "kachel": {
+      "mitglieder": "Socios de equipo (activos / total)",
+      "teamKunden": "Clientes de equipo que pagan",
+      "umsatz30": "Ingresos del equipo (30 días)",
+      "offen": "Comisión de equipo pendiente",
+      "auszahlbar": "Comisión de equipo pagadera",
+      "ausgezahlt": "Comisión de equipo pagada"
+    },
+    "verlauf": {
+      "titel": "Historial · 12 meses",
+      "leer": "Aún no hay ingresos del equipo.",
+      "provision": "Comisión de equipo",
+      "umsatz": "Ingresos del equipo"
+    },
+    "mitglieder": {
+      "titel": "Su equipo",
+      "leer": "Aún no hay socios de equipo. Comparta su enlace de equipo.",
+      "kunden": "{n} clientes de pago",
+      "umsatz30": "Ingresos 30 días",
+      "offen": "Pendiente",
+      "seit": "desde el {datum}"
+    },
+    "spalte": {
+      "partner": "Socio",
+      "status": "Estado",
+      "rang": "Rango",
+      "kunden": "Clientes de pago",
+      "umsatz30": "Ingresos 30 días",
+      "umsatzGesamt": "Ingresos totales",
+      "offen": "Pendiente",
+      "auszahlbar": "Pagadero",
+      "ausgezahlt": "Pagado"
+    },
+    "status": {
+      "pending_review": "En revisión",
+      "approved": "Aprobado",
+      "rejected": "Rechazado",
+      "suspended": "Bloqueado"
+    },
+    "chat": {
+      "titel": "Entretenimiento",
+      "schreiben": "Escribir",
+      "rolle": {
+        "sponsor": "Su patrocinador",
+        "member": "Socio de equipo"
+      },
+      "zurueck": "Equipo",
+      "leer": "Aún no hay mensajes.",
+      "platzhalter": "Su mensaje…",
+      "senden": "Enviar",
+      "titelListe": "Mensajes del equipo"
+    },
+    "nochNichtErlaubt": "Usted lidera un equipo a partir del rango Ascendente (5 clientes de pago en su estructura). Hasta entonces, no hay enlace de equipo."
+  },
+  "bedingungen": {
+    "neueVersion": "Las condiciones de socio están disponibles en una nueva versión (su consentimiento: versión {alt}, actual: {neu}). Por favor, léalas y acepte de nuevo.",
+    "nochNicht": "Por favor, acepte las condiciones de socio (versión {neu}).",
+    "lesen": "Leer condiciones",
+    "annehmen": "Aceptar",
+    "angenommen": "Gracias — consentimiento guardado."
+  },
+  "beitraege": {
+    "titel": "Publicaciones",
+    "hinweis": "Genere un enlace único para cada reel, video o publicación. Así podrá ver qué publicación genera clics, registros y clientes de pago.",
+    "kontoHinweis": "Conecte su cuenta y las vistas e interacciones de la plataforma aparecerán aquí directamente.",
+    "kontoVerbinden": "Conectar cuenta",
+    "neu": "Nueva publicación",
+    "keinCode": "Primero necesita un código de referencia activo.",
+    "feld": {
+      "titel": "Título",
+      "titelBeispiel": "p. ej. Reel Copenhague Otoño",
+      "plattform": "Plataforma",
+      "code": "Código",
+      "datum": "Publicado el",
+      "url": "Dirección de la publicación (opcional)",
+      "urlHinweis": "Puede añadirse después de la publicación. Con la dirección, asignamos las vistas e interacciones a la publicación."
+    },
+    "linkErzeugen": "Generar enlace",
+    "angelegt": "Publicación creada — el enlace está listo.",
+    "doppelt": "Esta publicación ya existe para este código.",
+    "fehler": "Esto no funcionó. Por favor, inténtelo de nuevo.",
+    "liste": "{n, plural, =0 {Ninguna publicación} =1 {1 publicación} other {# publicaciones}}",
+    "leer": "Aún no hay publicaciones. Genere el primer enlace arriba.",
+    "veroeffentlicht": "publicado el {datum}",
+    "loeschen": "Eliminar publicación",
+    "geloescht": "Publicación eliminada.",
+    "loeschenGesperrt": "La publicación ya tiene registros y se mantendrá.",
+    "kopiert": "Enlace copiado.",
+    "kopierenFehlgeschlagen": "No se pudo copiar — por favor, seleccione manualmente.",
+    "linkFehlt": "El enlace no está disponible en este momento.",
+    "qrZeigen": "Mostrar código QR",
+    "qrSchliessen": "Ocultar código QR",
+    "qrAlt": "Código QR para el enlace de la publicación",
+    "qrHinweis": "Para historias, videos e impresiones — lleva al mismo enlace.",
+    "beitragOeffnen": "Abrir publicación",
+    "urlAendern": "Cambiar dirección",
+    "urlNachtragen": "Añadir dirección",
+    "speichern": "Guardar",
+    "gespeichert": "Guardado.",
+    "kennzahl": {
+      "klicks": "Clics 90 días",
+      "klicks30": "{n} en 30 días",
+      "registrierungen": "Registros",
+      "kunden": "Clientes de pago",
+      "views": "Vistas",
+      "gemessen": "Estado {zeit}",
+      "nichtVerbunden": "Cuenta no conectada",
+      "interaktion": "Me gusta {likes} · Comentarios {kommentare} · Compartidos {shares} · Guardados {saves}",
+      "pro1000": "{n} clics por cada 1.000 vistas"
+    },
+    "freigabe": {
+      "videoNoetig": "Subir material para aprobación",
+      "erklaerung": "Suba su vídeo, imagen o PDF terminado antes de publicarlo. Una vez que lo hayamos aprobado, su enlace personal aparecerá aquí, y podrá colocarlo debajo de la publicación. Utilice únicamente nuestro material promocional, no capturas de pantalla propias, y no haga promesas de éxito o garantías.",
+      "hochladen": "Seleccionar archivo (vídeo, JPG, PNG, PDF)",
+      "neuHochladen": "Subir nuevo archivo",
+      "laeuft": "Subiendo...",
+      "eingereicht": "Vídeo enviado. Nos pondremos en contacto con usted una vez que haya sido revisado.",
+      "inPruefung": "En revisión",
+      "inPruefungHinweis": "Tenemos su vídeo. Una vez que sea aprobado, su enlace aparecerá aquí.",
+      "eingereichtAm": "Enviado el {zeit} — una vez que sea aprobado, su enlace aparecerá aquí.",
+      "abgelehnt": "No aprobado",
+      "grund": "Motivo",
+      "freigegeben": "Vídeo aprobado",
+      "zuGross": "El vídeo es más grande que {mb} MB.",
+      "fehler": "La subida falló.",
+      "grundKategorie": {
+        "material": "Material: solo material promocional oficial, no capturas de pantalla propias",
+        "promise": "Promesas: sin promesas de garantía o éxito",
+        "disclosure": "Etiquetado: la publicación debe estar marcada como publicidad",
+        "brand": "Marca: logotipo o nombre utilizado incorrectamente",
+        "other": "Otros"
+      }
+    }
+  },
+  "kanalVerbindung": {
+    "titel": "Cuentas conectadas",
+    "hinweis": "Conecte sus cuentas de redes sociales para que los seguidores y las vistas provengan directamente de la plataforma. Esto es voluntario y revocable en cualquier momento; solo leemos, no escribimos.",
+    "verbinden": "Conectar {anbieter}",
+    "baldVerfuegbar": "pronto disponible",
+    "nichtKonfiguriert": "Esta conexión aún no está activada.",
+    "fehler": "Esto no funcionó. Por favor, inténtelo de nuevo.",
+    "verifiziert": "verificado",
+    "follower": "{n} seguidores",
+    "views28": "{n} vistas en 28 días",
+    "engagement": "Interacción {n} %",
+    "gemessen": "Estado {zeit}",
+    "nochKeinSnapshot": "primera medición pendiente",
+    "letzterFehler": "Última recuperación fallida",
+    "trennen": "Desconectar",
+    "getrennt": "Conexión desconectada. Los valores medidos anteriores se conservan como historial.",
+    "getrennteKonten": "{n, plural, =1 {1 cuenta desconectada} other {# cuentas desconectadas}}",
+    "getranntAm": "desconectado {zeit}",
+    "durchPlattform": "Acceso desde la plataforma finalizado",
+    "datenschutz": "Al desconectar, eliminamos los datos de acceso inmediatamente. Los valores medidos se guardan como historial. Detalles en la política de privacidad.",
+    "rueckkehr": {
+      "verbunden": "Cuenta conectada — la primera medición está en curso.",
+      "abgelehnt": "Conexión cancelada — no ha concedido el acceso.",
+      "fehler": "Conexión fallida."
+    }
+  },
+  "passwort": {
+    "anzeigen": "Mostrar contraseña",
+    "verbergen": "Ocultar contraseña"
+  },
+  "verbundkonto": {
+    "titel": "Cuenta conectada para el pago",
+    "hinweis": "Su comisión se transferirá a una cuenta conectada. Nuestro proveedor de servicios de pago requiere una verificación de identidad para esto; mientras esté pendiente, no se podrán realizar pagos.",
+    "bereit": "Su cuenta conectada está activada. Los pagos se enviarán automáticamente allí.",
+    "offeneFelder": "Faltan estos datos",
+    "gesperrt": "La cuenta está actualmente bloqueada: {grund}",
+    "schrittKonto": "Abrir cuenta conectada",
+    "schrittDaten": "Datos personales",
+    "schrittDatenFirma": "Datos de la empresa y personales",
+    "schrittBank": "Datos bancarios",
+    "schrittBedingungen": "Condiciones del proveedor de servicios de pago",
+    "kontoAnlegen": "Abrir cuenta conectada",
+    "kontoAngelegt": "Cuenta conectada abierta.",
+    "datenBearbeiten": "Editar datos",
+    "zuklappen": "Cerrar",
+    "datenGesendet": "Datos guardados.",
+    "vorname": "Nombre",
+    "nachname": "Apellido",
+    "geburtsdatum": "Fecha de nacimiento",
+    "tag": "DD",
+    "monat": "MM",
+    "jahr": "AAAA",
+    "strasse": "Calle y número",
+    "plz": "Código postal",
+    "ort": "Ciudad",
+    "nationalitaet": "Nacionalidad (código de país)",
+    "telefon": "Teléfono",
+    "webseite": "Sitio web o perfil",
+    "webseiteHinweis": "La dirección donde usted anuncia — necesaria para la verificación.",
+    "firmenname": "Nombre de la empresa",
+    "steuernummer": "Número de identificación fiscal",
+    "firmenStrasse": "Dirección de la empresa",
+    "firmaHinweis": "Como persona autorizada, se utilizarán sus datos mencionados anteriormente.",
+    "speichern": "Guardar datos",
+    "kontoinhaber": "Titular de la cuenta",
+    "waehrung": "Moneda",
+    "waehrungHinweis": "La moneda de la cuenta bancaria, no la de su país.",
+    "bankSpeichern": "Guardar datos bancarios",
+    "bankGesetzt": "Datos bancarios guardados.",
+    "bedingungenAnnehmen": "Aceptar términos",
+    "bedingungenAngenommen": "Términos aceptados.",
+    "fehler": "Esto no funcionó.",
+    "schrittIdentitaet": "Verificación de identidad",
+    "identitaetHinweis": "Finalmente, nuestro proveedor de pagos verificará su identificación. Esto se realizará en su página segura, ya que se tomará una foto; luego regresará aquí.",
+    "identitaetStarten": "Verificar identidad"
+  }
+}

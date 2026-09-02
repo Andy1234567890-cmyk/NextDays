@@ -245,6 +245,40 @@ export const datenschutz: LegalDoc = {
       ],
     },
     {
+      heading: "Partnerprogram",
+      paragraphs: [
+        "Partnerprogramot működtetünk, amelyen keresztül partnerek (influencerek, tanácsadók, ügynökségek, ügyfelek) vállalkozásokat ajánlhatnak a myNextDays-nek, és ezért jutalékot kapnak. Ennek során feldolgozzuk a partnerek adatait és – kis mértékben – az ajánlott vállalkozások adatait.",
+      ],
+      unterpunkte: [
+        {
+          titel: "A partnerek adatai",
+          paragraphs: [
+            "A jelentkezés során feldolgozzuk a nevet, céget, jogi formát, országot, e-mail címet, nyelvet, közösségi média fiókokat (platform, cím, felhasználónév, önbevallott elérés), adószámot (ellenőrzés az EU VIES rendszerén keresztül), kifizetési adatokat (IBAN, Wise vagy PayPal cím), valamint a részvételi feltételek elfogadását verzióval és időponttal. Az adatkezelés jogalapja a partneri szerződés teljesítése (az Általános Adatvédelmi Rendelet 6. cikk (1) bekezdés b) pontja); a jóváírások és a megőrzés tekintetében az adó- és kereskedelmi jogi kötelezettségek érvényesek (az Általános Adatvédelmi Rendelet 6. cikk (1) bekezdés c) pontja).",
+            "Ha egy partner csapatot vezet, látja csapattagjai nevét vagy cégét, rangját, fizető ügyfeleinek számát és az ebből eredő csapatjutalékot. A szponzor és a csapattag közötti üzenetek a platformon tárolódnak, hogy mindketten láthassák az előzményeket.",
+          ],
+        },
+        {
+          titel: "Kattintások partnerlinkekre",
+          paragraphs: [
+            "Ha egy látogató partnerlinkre (mynextdays.com/p/CODE) kattint, rögzítjük a kódot, az időpontot, a felkeresett oldalt, a hivatkozó oldalt és az esetleges kampányparamétereket, valamint az IP-címet és a böngészőazonosítót kizárólag rövidített ellenőrző összegekként (hash) – a visszaélések felismerése (halmozódások) céljából, nem az újrafelismerés érdekében. Nyomkövető süti nem kerül elhelyezésre. A kattintási adatokat 90 nap után töröljük. Az adatkezelés jogalapja a program csalásbiztos elszámolásához fűződő jogos érdekünk (az Általános Adatvédelmi Rendelet 6. cikk (1) bekezdés f) pontja).",
+          ],
+        },
+        {
+          titel: "Kapcsolt közösségi média fiókok és bejegyzések",
+          paragraphs: [
+            "A partnerek önkéntesen összekapcsolhatják YouTube (Google), Instagram és Facebook (Meta), valamint TikTok fiókjaikat a partneri irányítópulttal. Ehhez olvasási engedélyt (OAuth) adnak az adott platformnak; mi nem írunk semmit ezekbe a fiókokba. Tároljuk a fiók azonosítóját és nevét, a hozzáférési tokent titkosítva, az összekapcsolás időpontját, valamint naponta egy mérőszámot fiókonként: követők vagy feliratkozók száma, az elmúlt 28 nap megtekintései, interakciós arány és a bejegyzések száma, mindegyik a platform válaszának időpontjával. A partner által az irányítópulton létrehozott bejegyzésekhez (cím, platform, cím, közzététel dátuma) további megtekintéseket, kedveléseket, kommenteket, megosztásokat és mentéseket tárolunk a platformról.",
+            "Cél a partner által megadott elérés ellenőrzése, valamint a kattintások és ügyfelek egyes bejegyzésekhez való hozzárendelése; az ellenőrizetlen adatok súlya kisebb a közzétételkor. Az eltérésekre utaló jelek (például követőugrás megfelelő megtekintések nélkül) kizárólag a mi manuális ellenőrzésünket szolgálják, és nem vezetnek automatizált döntéshez. Az adatkezelés jogalapja a partner hozzájárulása (az Általános Adatvédelmi Rendelet 6. cikk (1) bekezdés a) pontja), amelyet a csatlakozással ad meg, és a „Kapcsolat bontása” menüpont alatt bármikor visszavonhat; a kapcsolat bontásakor azonnal töröljük a hozzáférési tokent, a tárolt mérési adatok előzményként megmaradnak, és a partnerfiókkal együtt törlődnek. Kizárólag a platformok hivatalos felületeit használjuk; a Google, a Meta és a TikTok általi adatkezelésre a saját adatvédelmi irányelveik vonatkoznak.",
+          ],
+        },
+        {
+          titel: "Ajánlott vállalkozások",
+          paragraphs: [
+            "Ha egy vállalkozás partnerkóddal regisztrál, tároljuk a vállalkozás partnerhez való hozzárendelését, valamint az időpontot, az utat (link vagy kód) és az állapotot. A partner a vállalkozást kizárólag pszeudonim módon látja (folyamatos szám, ország, állapot, összegek) – soha nem látja a nevet, az e-mail címet vagy a foglalási adatokat. Csak akkor léphet kapcsolatba a partner a vállalkozással a platformon keresztül, ha a vállalkozás a regisztráció során kifejezetten hozzájárul ehhez. A jutalékelszámoláshoz a vállalkozás kifizetett számláinak nettó előfizetési összegeit dolgozzuk fel; az adatkezelés jogalapja a partneri és a felhasználói szerződés teljesítése (az Általános Adatvédelmi Rendelet 6. cikk (1) bekezdés b) pontja).",
+          ],
+        },
+      ],
+    },
+    {
       heading: "Hosting és tárolás",
       paragraphs: [
         "A Platform, az adatbázis, a médiafájlok és a levelezőszerver a Hetzner Online GmbH (Németország) szerverein, a helsinki (Finnország) adatközpontban futnak — tehát az Európai Unión belül. A Hetznerrel adatfeldolgozási megállapodás áll fenn.",

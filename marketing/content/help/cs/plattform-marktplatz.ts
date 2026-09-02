@@ -87,12 +87,12 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "note",
               variant: "tip",
-              text: "Kliknutím na Zveřejnit myNextDays obvykle společně zpřístupní marketplace, portály i web — přepínač marketplace poté můžete kdykoli jednotlivě znovu vypnout.",
+              text: "Kliknutím na Publikovat myNextDays společně odemkne portály a webové stránky. myBestDays je povinný kanál: Každá nemovitost je tam uvedena a objeví se, jakmile inzerát schválíme.",
             },
             { type: "h2", text: "Opětovné odebrání viditelnosti" },
             {
               type: "p",
-              text: "Vypnete-li přepínač Marketplace platformy, objekt zmizí z vyhledávání na marketplace. Již potvrzené rezervace tím nejsou dotčeny a pokračují obvyklým způsobem, viz [Provize marketplace](/hilfe/plattform-marktplatz/marktplatz-provision).",
+              text: "myBestDays nelze individuálně zrušit. Pokud se nemovitost již nemá prodávat, použijte „Pozastavit prodej“ – tím se odstraní ze všech portálů, webových stránek a tržiště současně. Již potvrzené rezervace zůstávají nedotčeny a pokračují jako obvykle, viz [Provize z tržiště](/hilfe/plattform-marktplatz/marktplatz-provision).",
             },
           ],
         },

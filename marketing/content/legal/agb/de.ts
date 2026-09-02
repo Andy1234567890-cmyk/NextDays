@@ -35,11 +35,12 @@ export const agb: LegalDoc = {
       heading: "§ 2 Vertragsgegenstand und Leistungen",
       paragraphs: [
         "myNextDays stellt dem Nutzer eine cloudbasierte Software zur Verwaltung von Ferienunterkünften und Beherbergungsbetrieben bereit. Der Funktionsumfang ergibt sich aus der jeweils aktuellen Leistungsbeschreibung und umfasst insbesondere:",
+        "Jedes vom Nutzer in der Plattform angelegte Objekt wird zugleich auf dem plattformeigenen Marktplatz myBestDays gelistet (Pflichtkanal). Der Nutzer kann diesen Kanal nicht einzeln abwählen; er kann ein Objekt jedoch jederzeit über die Funktion „Verkauf pausieren“ bei allen Kanälen gleichzeitig aus dem Verkauf nehmen oder es löschen. Sichtbar wird ein Objekt auf myBestDays erst, wenn der Nutzer es veröffentlicht hat und myNextDays das Inserat freigegeben hat; myNextDays kann die Freigabe aus sachlichem Grund verweigern oder widerrufen. Für Buchungen über myBestDays gilt das Entgelt nach § 7.",
       ],
       list: [
         "Verwaltung von Objekten, Belegungskalendern und Reservierungen (Property-Management-System),",
         "Anbindung an Buchungskanäle Dritter (z. B. Booking.com, Airbnb) über einen Channel-Manager,",
-        "Veröffentlichung von Angeboten über den plattformeigenen Buchungskanal myNextDays,",
+        "Veröffentlichung von Angeboten über den plattformeigenen Marktplatz myBestDays (Pflichtkanal, siehe Absatz 2),",
         "Erstellung eigener Websites über den integrierten Page-Builder,",
         "Buchhaltungs-, Abrechnungs- und Auswertungsfunktionen einschließlich Eigentümerabrechnungen,",
         "Kommunikation mit Gästen sowie Annahme von Zahlungen über die integrierte Zahlungsabwicklung (§ 5).",

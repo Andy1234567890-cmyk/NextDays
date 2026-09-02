@@ -1500,7 +1500,12 @@
       "portalRateInvalid": "Un procent de reținere al portalului înregistrat se află în afara intervalului 0–100 %. Vă rugăm să îl corectați la Contabilitate → Reguli de decontare.",
       "feeUnassigned": "Cel puțin un tip de taxă nu este încă alocat. Fără alocare nu se poate stabili cui aparține suma și dacă se aplică comision — vă rugăm să stabiliți acest lucru la Contabilitate → Reguli de decontare.",
       "feeNotComputable": "O taxă nu poate fi decontată ca sumă (este înregistrată procentual sau fără sumă). Vă rugăm să verificați taxa la unitate.",
-      "contractCurrency": "O sumă forfetară sau un comision minim este exprimat într-o altă monedă decât rezervarea. Sumele în monede diferite nu se compensează — vă rugăm să verificați contractul de decontare."
+      "contractCurrency": "O sumă forfetară sau un comision minim este exprimat într-o altă monedă decât rezervarea. Sumele în monede diferite nu se compensează — vă rugăm să verificați contractul de decontare.",
+      "recurringToOwner": "Recurent în favoarea",
+      "recurringFromOwner": "Recurent în defavoarea",
+      "flatFees": "Tarife fixe din contract",
+      "flatFeesIncluded": "deja inclus în plată",
+      "contractStartsLater": "Pentru cel puțin o rezervare, nu există încă un contract de decontare valabil la data plecării — contractul proprietarului începe mai târziu. Prin urmare, rata comisionului este înregistrată, dar data „Valabil de la” este după plecare. Vă rugăm să introduceți data reală de începere a contractului în contractul de decontare."
     },
     "rental": {
       "perReservation": "Pe rezervare",
@@ -1520,13 +1525,66 @@
         "channexImport": "Rezervarea a fost preluată ulterior, la conectarea canalului. Potrivit intermediarului de rezervări, astfel de rezervări nu conțin extraopțiuni și taxe de curățenie — acest lucru nu mai poate fi completat ulterior. Dacă taxa trebuie decontată, introduceți-o ca poziție la rezervare.",
         "portalReportsNone": "Portalul nu prezintă taxa acestei rezervări ca poziție separată. La Booking.com aceasta depinde de configurația unității de cazare (Unitate de cazare → Politici → Taxe suplimentare) și de data de la care taxa este valabilă acolo: o taxă introdusă ulterior lipsește pe bună dreptate din rezervările mai vechi.",
         "noPayload": "Pentru această rezervare nu există niciun mesaj de la portal (import de date existente). Fără acesta nu se poate stabili ce taxe a plătit oaspetele.",
-        "unknownReason": "Motivul nu poate fi stabilit."
+        "unknownReason": "Motivul nu poate fi stabilit.",
+        "csvImport": "Rezervarea provine din importul de inventar CSV. Suma importată este prețul pentru oaspeți al portalului, incluzând toate taxele; o defalcare a taxelor individuale nu este disponibilă și nu a putut fi derivată din datele portalului. Prin urmare, facturarea nu include taxe din datele de bază ale proprietății - acestea sunt deja incluse în sumă, dar valoarea lor nu este documentată.",
+        "csvResolvedTitle": "Taxe derivate din suma portalului",
+        "csvResolved": "Rezervarea provine din importul de inventar CSV; portalul nu a furnizat o defalcare. Taxele au fost derivate din diferența dintre prețul total importat și prețurile pe noapte transmise de portal și au fost denumite prin datele de bază ale proprietății. Cazarea plus taxele rezultă exact în prețul total.",
+        "stammdatenPortalTitle": "Taxe adăugate din datele de bază ale proprietății",
+        "stammdatenPortal": "Portalul nu a furnizat o defalcare a taxelor pentru această rezervare: rezervările pe care agregatorul de portaluri le-a recuperat la conectarea canalului vin fără taxe suplimentare și de curățenie; o importare a inventarului dintr-un fișier conține doar prețul total. Prin urmare, taxele au fost stabilite conform celor înregistrate la proprietate: curățenie per sejur, stațiune per noapte, animal de companie numai dacă este rezervat.",
+        "portalBelegt": "Ocupat: Diferența dintre prețul total al portalului și prețurile pe noapte transmise de portal corespunde exact acestor taxe.",
+        "portalImBetrag": "Inclus în suma portalului: Prețul total al portalului include deja taxele; acestea au fost deduse, prețul pentru oaspeți rămâne suma portalului.",
+        "portalObendrauf": "Suplimentar față de suma portalului: Suma transmisă este suma pură pe noapte; taxele sunt adăugate și rezultă prețul pentru oaspeți."
       },
       "chain": {
         "portal": "Portal",
         "management": "Administrare",
         "flatFee": "Taxă fixă",
         "fees": "Taxe"
+      },
+      "arrival": "Sosire",
+      "departure": "Plecare",
+      "commission": "Comision",
+      "flatFee": "Forfetar",
+      "ownerShare": "Cotă proprietar",
+      "portalDeduction": "Deducere portal",
+      "fees": "Taxe",
+      "feesCount": "{n} articole",
+      "expand": "Afișați detaliile",
+      "collapse": "Ascundeți detaliile",
+      "expandAll": "Afișați toate detaliile",
+      "collapseAll": "Ascundeți toate detaliile",
+      "breakdown": "Detalii per rezervare",
+      "noFeeItems": "Fără taxe sau servicii suplimentare pentru această rezervare.",
+      "posten": {
+        "guestPrice": "Prețul pentru oaspete conform portalului (inclusiv taxe, fără servicii suplimentare)",
+        "portalCommission": "Comision portal {kanal}",
+        "portalFee": "Taxă de plată portal",
+        "portalPayout": "Plată portal",
+        "feesOut": "Taxe în prețul pentru oaspete — excluse din calcul",
+        "feesInBase": "Taxe în prețul pentru oaspete — comisionabile, rămân în calcul",
+        "base": "Bază de calcul",
+        "commission": "Comision de administrare {pct}",
+        "minCommission": "Comision minim (contract) în loc de {pct}",
+        "contractFrom": "Contract de la {datum}",
+        "rateManual": "manual în această decontare",
+        "rateLegacy": "Tarif standard din datele de bază",
+        "flatFee": "Forfetar (contract)",
+        "feesBack": "Taxe proprietar — returnate integral",
+        "ownerShare": "Cota proprietarului",
+        "belongsBetrieb": "rămâne la firmă",
+        "belongsEigentuemer": "Proprietar",
+        "belongsDurchlauf": "Elemente tranzitorii (terți)",
+        "commissionFree": "fără comision",
+        "commissionable": "comisionabil",
+        "amountHidden": "Sumă la firmă",
+        "addon": "Serviciu suplimentar",
+        "noFeesReported": "Portalul nu a raportat taxe pentru această rezervare; prin urmare, nu au fost aplicate taxe.",
+        "afterPortal": "Suma totală după deducerea portalului",
+        "afterPortalHint": "Prețul pentru oaspete minus comisionul portalului și taxa de plată a portalului",
+        "feesBusiness": "Furnizat de firmă — nu face parte din plată",
+        "contractStartsLater": "Nu există un contract de facturare în ziua plecării {abreise}: contractul începe abia la {beginn}. Data de începere a contractului la proprietar trebuie modificată retroactiv, apoi această rezervare va fi facturată.",
+        "noContract": "Pentru această proprietate nu există un contract de facturare și nicio rată de comision în datele de bază — creați un contract la proprietar.",
+        "addonsOutside": "Servicii suplimentare — vândute prin myNextDays, neincluse în prețul pentru oaspete al portalului"
       }
     },
     "expenses": {
@@ -1566,7 +1624,11 @@
       "rentalRevenue": "Venituri din închiriere",
       "expenses": "Cheltuieli & extra",
       "total": "Total",
-      "deductPercentage": "Comision (%)"
+      "deductPercentage": "Comision (%)",
+      "shares": "Cota proprietarului din rezervări",
+      "deductions": "Deduceri",
+      "credits": "Credite",
+      "recurring": "Articole recurente"
     },
     "manage": {
       "owner": "Proprietar",
@@ -1631,6 +1693,25 @@
       "cancel": "Anulați",
       "confirm": "Finalizați",
       "working": "Se finalizează..."
+    },
+    "deductions": {
+      "title": "Deduceri și Credite",
+      "intro": "Tot ce modifică plata în afară de rezervări — din trei surse: sumă forfetară din contract per rezervare, elemente de decontare unice și elemente recurente (acord permanent).",
+      "deductions": "Deduceri (în detrimentul proprietarului)",
+      "credits": "Credite (în beneficiul proprietarului)",
+      "empty": "Nicio deducere sau credit în această perioadă.",
+      "srcExpense": "Elemente de decontare",
+      "srcRecurring": "Element recurent",
+      "srcFlatFee": "Sumă forfetară din contract",
+      "perBooking": "per rezervare",
+      "perNight": "per noapte",
+      "perPeriod": "per perioadă",
+      "quantity": "{n} × {betrag}",
+      "flatFeesNote": "Sumele forfetare din contract sunt deja deduse din cotele proprietarului per rezervare — aici doar pentru prezentare generală, fără deduceri suplimentare.",
+      "manageRecurring": "Gestionați elementele recurente",
+      "manageContract": "Gestionați contractul de decontare",
+      "receipt": "Chitanță",
+      "bookingsCount": "{n} rezervări"
     }
   },
   "ownerBilling": {
@@ -1709,7 +1790,9 @@
     "effectReleased": "{property}: comercializarea continuă — încheierea contractului a fost anulată și nopțile sunt din nou disponibile la vânzare.",
     "effectBlocked": "{property}: comercializarea se încheie pe {date} — {nights} nopți blocate și retrase de pe portaluri.",
     "effectCalendarFailed": "{property}: Data încheierii contractului este înregistrată, dar blocarea calendarului nu este scrisă. Aceasta va fi adăugată în această seară.",
-    "effectNoUnit": "{property}: Data încheierii contractului este înregistrată, dar calendarul nu este blocat — proprietății îi lipsește o unitate. Creați-o, apoi blocarea va fi aplicată."
+    "effectNoUnit": "{property}: Data încheierii contractului este înregistrată, dar calendarul nu este blocat — proprietății îi lipsește o unitate. Creați-o, apoi blocarea va fi aplicată.",
+    "validFromHint": "Data de la care este valabil acordul — în cazul unui contract existent, data reală a contractului, nu astăzi. Fiecare rezervare este decontată cu contractul valabil la data plecării; rezervările cu plecare anterioară rămân fără plată.",
+    "errorValidFromRequired": "Vă rugăm să indicați de când este valabil contractul."
   },
   "portal": {
     "title": "Portalul meu",
@@ -5465,7 +5548,8 @@
       "connectPortal": "Conectează portal",
       "noPortals": "Pentru această proprietate nu este conectat încă niciun portal (Booking, Airbnb etc.).",
       "marketplaceReview": "În verificare",
-      "marketplaceReviewHint": "myBestDays verifică încă acest anunț. Va apărea în marketplace după aprobare. Portalurile și site-ul propriu nu sunt afectate."
+      "marketplaceReviewHint": "myBestDays verifică încă această listă. Odată aprobată, va apărea pe piață. myBestDays este un canal obligatoriu: o proprietate nu poate fi deselectată individual de acolo — „Pauză vânzare” o elimină de la vânzare peste tot.",
+      "marketplaceMandatory": "Canal obligatoriu — fiecare proprietate este listată pe myBestDays"
     },
     "IdLayout": {
       "loadError": "Obiectul nu a putut fi încărcat: {error}"
@@ -5563,11 +5647,11 @@
       "stepOf": "Pasul {schritt} din {gesamt}",
       "next": "Continue",
       "back": "Back",
-      "channelsHint": "Unde ar trebui vândută această proprietate? Puteți schimba oricând.",
+      "channelsHint": "Unde ar trebui să fie vândută această proprietate suplimentar? Portalurile și site-ul web pot fi modificate oricând.",
       "channelPortals": "Portaluri de rezervări",
       "channelPortalsHint": "Airbnb, Booking.com și altele. Portalurile cer date complete — vedeți mai jos.",
       "channelPlatform": "myBestDays",
-      "channelPlatformHint": "Piața noastră proprie, cu comision redus.",
+      "channelPlatformHint": "Piața noastră proprie cu 8% all-in. Fiecare proprietate este listată acolo; devine vizibilă după publicare și aprobarea noastră.",
       "channelWebsite": "Site propriu",
       "channelWebsiteHint": "Pagina dvs. de rezervări și widgetul de rezervare.",
       "readinessTitle": "Pentru portaluri mai lipsește:",
@@ -6261,7 +6345,21 @@
       "planPortalOffHint": "Acest preț este valabil doar pentru rezervările directe. Faceți clic pentru a-l trimite către portalurile de rezervare.",
       "planPortalOn": "Prețul este acum trimis către portalurile de rezervare.",
       "planPortalOnHint": "Acest preț este trimis către portalurile de rezervare. Faceți clic pentru a-l utiliza doar pentru rezervările directe.",
-      "planPortalYes": "Către portaluri"
+      "planPortalYes": "Către portaluri",
+      "feeValidityTitle": "Valabilitate",
+      "feeValidityHint": "Taxa se aplică rezervărilor cu data de sosire în perioada specificată. Gol = fără limită. Taxele cu perioadă nu sunt trimise către portaluri: acolo nu poate fi mapată o condiție de dată.",
+      "feeValidFromLabel": "Valabil de la",
+      "feeValidUntilLabel": "Valabil până la",
+      "feeValidityOrderError": "„Valabil până la” este înainte de „Valabil de la”.",
+      "feeOwnerStatementOnlyLabel": "Doar în decontul proprietarului",
+      "feeOwnerStatementOnlyHint": "Taxa nu este percepută oaspetelui și nu este trimisă către niciun portal. Aceasta este aplicată doar în decontul proprietarului, în evaluare și în portalul proprietarului.",
+      "feeValidFromSuffix": "de la {date}",
+      "feeValidUntilSuffix": "până la {date}",
+      "feeOwnerStatementOnlySuffix": "doar decont",
+      "feeCalculationLabel": "Calcul",
+      "feeVatHint": "O cotă de impozitare separată pentru această taxă, diferită de cota de cazare a proprietății. Dezactivat înseamnă: taxa urmează cota de cazare.",
+      "feeVatIncludedLabel": "Impozit în sumă",
+      "feeVatIncludedHint": "Cota de impozitare este deja inclusă în suma introdusă sau se adaugă la aceasta? Fără această informație, suma ar fi ambiguă."
     },
     "policiesForm": {
       "title": "Politici",
@@ -7303,23 +7401,23 @@
     "marketplacePending": "{count} în verificare",
     "marketplaceWaiting": "În verificare",
     "marketplace": {
-      "intro": "myBestDays este propriul nostru marketplace — un canal de rezervări ca Booking sau Airbnb, doar fără conexiune la portal. Un obiect devine vizibil când este activ, listat aici și aprobat.",
+      "intro": "myBestDays este propria noastră piață – un canal de rezervare precum Booking sau Airbnb, doar fără conexiune la portal și obligatoriu pentru fiecare proprietate. O proprietate devine vizibilă dacă este activă și a fost aprobată de noi.",
       "openMarketplace": "Deschide marketplace",
       "propertiesHeading": "Obiecte în marketplace",
       "noProperties": "Încă nu există obiecte.",
       "columnProperty": "Obiect",
-      "columnVisibility": "Vizibilitate",
+      "columnVisibility": "Stare",
       "columnApproval": "Aprobare",
       "columnBookings": "Rezervări",
       "stateActive": "Vizibil",
       "statePending": "În verificare",
-      "stateNotListed": "Nelistat",
+      "stateNotListed": "Vânzare întreruptă",
       "stateInactiveProperty": "Obiectul nu este activ",
       "viewListing": "Vezi anunțul",
       "reviewHint": "Obiectele în verificare nu apar încă în myBestDays. Verificăm fiecare anunț deoarece myBestDays acționează acolo ca furnizor — portalurile și site-ul propriu nu sunt afectate.",
       "summaryVisible": "{count} vizibile",
       "summaryWaiting": "{count} în verificare",
-      "summaryOff": "{count} nelistate",
+      "summaryOff": "{count} întrerupte sau inactive",
       "moderation": {
         "draft": "Ciornă",
         "pending": "În verificare",
@@ -7354,7 +7452,8 @@
       "mayClose": "Importul continuă pe server – puteți închide această pagină.",
       "andMore": "… și încă {count}",
       "close": "Închidere",
-      "updated": "actualizat"
+      "updated": "actualizat",
+      "portal": "deja de pe portal"
     }
   },
   "calendarSync": {
@@ -10511,7 +10610,11 @@
     "haveAccount": "Ai deja un cont?",
     "loginLink": "Autentifică-te aici",
     "loadingHeadline": "Propriul tău site de rezervări. Păstrează 100 % din fiecare rezervare.",
-    "loadingText": "Îți configurăm contul …"
+    "loadingText": "Îți configurăm contul …",
+    "referralLabel": "Recomandat de (opțional)",
+    "referralPlaceholder": "Cod de recomandare, de ex. ANNA-K7P2",
+    "referralHint": "Ați aflat despre myNextDays printr-un partener? Codul său este aici — el vede doar că o afacere a venit prin el, niciodată numele dumneavoastră. Cu un cod, primiți prima lună completă gratuit după cele 14 zile de testare.",
+    "referralContactOptIn": "Recomandantul meu mă poate contacta prin myNextDays."
   },
   "marketingSite": {
     "stars": "4,5 stele",

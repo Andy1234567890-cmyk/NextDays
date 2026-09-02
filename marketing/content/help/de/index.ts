@@ -16,6 +16,7 @@ import { eigentuemer } from "./eigentuemer";
 import { teamRollen } from "./team-rollen";
 import { kontoAbo } from "./konto-abo";
 import { mobileApp } from "./mobile-app";
+import { partnerprogramm } from "./partnerprogramm";
 import { ucMietpreise } from "./anwendungsfaelle-mietpreise";
 import { ucWebsite } from "./anwendungsfaelle-website";
 import { ucReservierungen } from "./anwendungsfaelle-reservierungen";
@@ -40,6 +41,7 @@ export const categories: HelpCategory[] = [
   teamRollen,
   kontoAbo,
   mobileApp,
+  partnerprogramm,
   ucMietpreise,
   ucWebsite,
   ucReservierungen,

@@ -33,11 +33,12 @@ export const agb: LegalDoc = {
       heading: "§ 2 Ábhar an chonartha agus seirbhísí",
       paragraphs: [
         "Soláthraíonn myNextDays bogearraí néalbhunaithe don Úsáideoir chun cóiríocht saoire agus gnóthais lóistín a bhainistiú. Eascraíonn raon na bhfeidhmeanna as an gcur síos reatha ar na seirbhísí agus áirítear ann go háirithe:",
+      "Déanfar gach réad a chruthaíonn an t-úsáideoir ar an ardán a liostú ag an am céanna ar mhargadh an ardáin féin, myBestDays (cainéal éigeantach). Ní féidir leis an úsáideoir an cainéal seo a dhíroghnú ina aonar; áfach, is féidir leis réad a bhaint den díolachán ag an am céanna ar gach cainéal nó é a scriosadh ag am ar bith tríd an bhfeidhm “Cuir díolachán ar sos”. Ní bheidh réad le feiceáil ar myBestDays ach amháin nuair a bheidh sé foilsithe ag an úsáideoir agus nuair a bheidh an liostú ceadaithe ag myNextDays; féadfaidh myNextDays an ceadú a dhiúltú nó a tharraingt siar ar chúis oibiachtúil. Maidir le háirithintí trí myBestDays, beidh feidhm ag an táille de réir § 7.",
       ],
       list: [
         "bainistiú réadmhaoine, féilirí infhaighteachta agus áirithintí (córas bainistíochta réadmhaoine),",
         "nascadh le bealaí áirithinte tríú páirtí (m.sh. Booking.com, Airbnb) trí bhainisteoir bealaí,",
-        "foilsiú fógraí trí bhealach áirithinte an Ardáin féin, myNextDays,",
+        "Foilsiú tairiscintí tríd an margadh ardáin féin, myBestDays (cainéal éigeantach, féach mír 2),",
         "cruthú suíomhanna gréasáin de chuid an Úsáideora féin tríd an tógálaí leathanach comhtháite,",
         "feidhmeanna cuntasaíochta, socraíochta agus tuairiscithe, lena n-áirítear ráitis úinéirí,",
         "cumarsáid le haíonna agus glacadh íocaíochtaí tríd an bpróiseáil íocaíochtaí chomhtháite (§ 5).",

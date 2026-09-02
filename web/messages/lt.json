@@ -1500,7 +1500,12 @@
       "portalRateInvalid": "Įrašytas portalo išskaitymo tarifas yra už intervalo 0–100 % ribų. Pataisykite jį skyriuje Apskaita → Atsiskaitymo taisyklės.",
       "feeUnassigned": "Bent vienas mokesčio tipas dar nepriskirtas. Be priskyrimo neįmanoma nustatyti, kam suma priklauso ir ar nuo jos skaičiuojami komisiniai — nustatykite tai skyriuje Apskaita → Atsiskaitymo taisyklės.",
       "feeNotComputable": "Mokesčio negalima apskaityti kaip sumos (jis įrašytas procentais arba be sumos). Patikrinkite mokestį prie objekto.",
-      "contractCurrency": "Fiksuotas mokestis arba minimalūs komisiniai nurodyti kita valiuta nei rezervacija. Skirtingų valiutų sumos nėra tarpusavyje užskaitomos — patikrinkite atsiskaitymo sutartį."
+      "contractCurrency": "Fiksuotas mokestis arba minimalūs komisiniai nurodyti kita valiuta nei rezervacija. Skirtingų valiutų sumos nėra tarpusavyje užskaitomos — patikrinkite atsiskaitymo sutartį.",
+      "recurringToOwner": "Pasikartojantis kreditas",
+      "recurringFromOwner": "Pasikartojantis debetas",
+      "flatFees": "Fiksuoti mokesčiai pagal sutartį",
+      "flatFeesIncluded": "jau įskaičiuota į išmoką",
+      "contractStartsLater": "Bent vienam užsakymui išvykimo dieną dar negalioja atsiskaitymo sutartis – savininko sutartis prasideda vėliau. Todėl komisinių tarifas yra nustatytas, tačiau data „Galioja nuo“ yra po išvykimo. Įveskite faktinę sutarties pradžios datą į atsiskaitymo sutartį."
     },
     "rental": {
       "perReservation": "Pagal rezervaciją",
@@ -1520,13 +1525,66 @@
         "channexImport": "Rezervacija buvo papildomai atsiųsta prijungiant kanalą. Rezervacijų tarpininko duomenimis tokiose rezervacijose nėra nei papildomų paslaugų, nei valymo mokesčių — vėliau to papildyti nebeįmanoma. Jei mokestį reikia įtraukti į atsiskaitymą, įrašykite jį kaip rezervacijos poziciją.",
         "portalReportsNone": "Šioje rezervacijoje portalas mokesčio nenurodo kaip atskiros pozicijos. „Booking.com“ atveju tai priklauso nuo apgyvendinimo vietos konfigūracijos (Apgyvendinimo vieta → Nuostatos → Papildomi mokesčiai) ir nuo to, nuo kada mokestis ten taikomas: vėliau įvestas mokestis senesnėse rezervacijose pagrįstai neatsiranda.",
         "noPayload": "Šiai rezervacijai nėra portalo žinutės (esamų duomenų importas). Be jos neįmanoma nustatyti, kokius mokesčius svečias sumokėjo.",
-        "unknownReason": "Priežasties nustatyti neįmanoma."
+        "unknownReason": "Priežasties nustatyti neįmanoma.",
+        "csvImport": "Užsakymas gautas iš CSV atsargų importo. Importuota suma yra portalo svečio kaina, įskaitant visus mokesčius; atskirų mokesčių sąrašo nėra ir jo negalima gauti iš portalo duomenų. Todėl atsiskaitymas nenaudoja mokesčių iš objekto pagrindinių duomenų – jie jau yra įtraukti į sumą, tik jų dydis nėra patvirtintas.",
+        "csvResolvedTitle": "Mokesčiai, gauti iš portalo sumos",
+        "csvResolved": "Užsakymas gautas iš CSV atsargų importo; portalas nepateikė sąrašo. Mokesčiai buvo apskaičiuoti iš skirtumo tarp importuotos bendros kainos ir portalo pateiktų nakvynės kainų ir pavadinti pagal objekto pagrindinius duomenis. Nakvynė plius mokesčiai sudaro tikslią bendrą kainą.",
+        "stammdatenPortalTitle": "Mokesčiai iš objekto pagrindinių duomenų buvo perkelti",
+        "stammdatenPortal": "Portalas nepateikė šio užsakymo mokesčių išklotinės: užsakymai, kuriuos portalo agregatorius gavo prijungus kanalą, pateikiami be priedų ir valymo mokesčių; atsargų importas iš failo apima tik bendrą kainą. Todėl mokesčiai buvo nustatyti taip, kaip nurodyta objekte: valymas už viešnagę, kurortas už naktį, augintinis tik užsakius gyvūną.",
+        "portalBelegt": "Užimta: Skirtumas tarp bendros portalo kainos ir portalo pateiktų nakvynės kainų tiksliai atitinka šiuos mokesčius.",
+        "portalImBetrag": "Įskaičiuota į portalo sumą: Bendra portalo kaina jau apima mokesčius; jie buvo atimti, svečio kaina lieka portalo suma.",
+        "portalObendrauf": "Papildomai prie portalo sumos: Pateikta suma yra tik nakvynės suma; mokesčiai pridedami ir sudaro svečio kainą."
       },
       "chain": {
         "portal": "Portalas",
         "management": "Valdymas",
         "flatFee": "Fiksuotas mokestis",
         "fees": "Mokesčiai"
+      },
+      "arrival": "Atvykimas",
+      "departure": "Išvykimas",
+      "commission": "Komisinis",
+      "flatFee": "Fiksuotas mokestis",
+      "ownerShare": "Savininko dalis",
+      "portalDeduction": "Portalo atskaitymas",
+      "fees": "Mokesčiai",
+      "feesCount": "{n} prekės",
+      "expand": "Rodyti išklotinę",
+      "collapse": "Slėpti išklotinę",
+      "expandAll": "Rodyti visas išklotines",
+      "collapseAll": "Slėpti visas išklotines",
+      "breakdown": "Išklotinė pagal užsakymą",
+      "noFeeItems": "Šiam užsakymui nėra jokių mokesčių ar papildomų paslaugų.",
+      "posten": {
+        "guestPrice": "Svečio kaina pagal portalą (įsk. mokesčius, be papildomų paslaugų)",
+        "portalCommission": "Portalo komisiniai {kanal}",
+        "portalFee": "Portalo mokėjimo mokestis",
+        "portalPayout": "Portalo išmokėjimas",
+        "feesOut": "Mokesčiai svečio kainoje – neįskaičiuoti į vertinimą",
+        "feesInBase": "Mokesčiai svečio kainoje – apmokestinami komisiniais, lieka vertinime",
+        "base": "Vertinimo pagrindas",
+        "commission": "Administravimo komisiniai {pct}",
+        "minCommission": "Minimalūs komisiniai (sutartis) vietoj {pct}",
+        "contractFrom": "Sutartis nuo {datum}",
+        "rateManual": "rankiniu būdu šiame atsiskaityme",
+        "rateLegacy": "Standartinis tarifas iš pagrindinių duomenų",
+        "flatFee": "Fiksuotas tarifas (sutartis)",
+        "feesBack": "Savininko mokesčiai – grąžinami neapkarpyti",
+        "ownerShare": "Savininko dalis",
+        "belongsBetrieb": "lieka įmonei",
+        "belongsEigentuemer": "Savininkas",
+        "belongsDurchlauf": "Tranzitinės prekės (trečiosios šalys)",
+        "commissionFree": "be komisinių",
+        "commissionable": "apmokestinama komisiniais",
+        "amountHidden": "Suma įmonei",
+        "addon": "Papildoma paslauga",
+        "noFeesReported": "Portalas nepranešė jokių mokesčių už šį užsakymą, todėl jie nebuvo priskirti.",
+        "afterPortal": "Bendra suma po portalo atskaitymo",
+        "afterPortalHint": "Svečio kaina atėmus portalo komisinius ir portalo mokėjimo mokestį",
+        "feesBusiness": "Pateikė įmonė – ne išmokėjimo dalis",
+        "contractStartsLater": "Atsiskaitymo sutarties išvykimo dieną {abreise} nėra: sutartis prasideda tik {beginn}. Atnaujinkite sutarties pradžios datą pas savininką, tada šis užsakymas bus įskaičiuotas.",
+        "noContract": "Šiam objektui nėra atsiskaitymo sutarties ir komisinio mokesčio pagrindiniuose duomenyse – sukurkite sutartį su savininku.",
+        "addonsOutside": "Papildomos paslaugos – parduodamos per „myNextDays“, neįskaičiuotos į portalo svečio kainą"
       }
     },
     "expenses": {
@@ -1566,7 +1624,11 @@
       "rentalRevenue": "Nuomos pajamos",
       "expenses": "Išlaidos ir papildomos paslaugos",
       "total": "Iš viso",
-      "deductPercentage": "Komisinis (%)"
+      "deductPercentage": "Komisinis (%)",
+      "shares": "Savininko dalis nuo užsakymų",
+      "deductions": "Atskaitos",
+      "credits": "Kreditai",
+      "recurring": "Pasikartojantys elementai"
     },
     "manage": {
       "owner": "Savininkas",
@@ -1631,6 +1693,25 @@
       "cancel": "Atšaukti",
       "confirm": "Patvirtinti",
       "working": "Patvirtinama..."
+    },
+    "deductions": {
+      "title": "Atskaitos ir kreditai",
+      "intro": "Viskas, kas keičia išmoką, išskyrus užsakymus – iš trijų šaltinių: fiksuotas mokestis už užsakymą pagal sutartį, vienkartiniai atsiskaitymo elementai ir pasikartojantys elementai (nuolatinis susitarimas).",
+      "deductions": "Atskaitos (savininko sąskaita)",
+      "credits": "Kreditai (savininko naudai)",
+      "empty": "Šiuo laikotarpiu nėra atskaitymų ar kreditų.",
+      "srcExpense": "Atsiskaitymo elementai",
+      "srcRecurring": "Pasikartojantis elementas",
+      "srcFlatFee": "Fiksuotas mokestis pagal sutartį",
+      "perBooking": "už užsakymą",
+      "perNight": "už naktį",
+      "perPeriod": "už laikotarpį",
+      "quantity": "{n} × {betrag}",
+      "flatFeesNote": "Fiksuoti mokesčiai pagal sutartį jau yra atskaityti iš savininko dalies už kiekvieną užsakymą – čia tik apžvalgai, jokių papildomų atskaitymų.",
+      "manageRecurring": "Tvarkyti pasikartojančius elementus",
+      "manageContract": "Tvarkyti atsiskaitymo sutartį",
+      "receipt": "Kvitas",
+      "bookingsCount": "{n} užsakymai"
     }
   },
   "ownerBilling": {
@@ -1709,7 +1790,9 @@
     "effectReleased": "{property}: pardavimas tęsiasi — sutarties pabaiga atšaukta ir naktys vėl parduodamos.",
     "effectBlocked": "{property}: pardavimas baigiasi {date} — užblokuota naktų: {nights}, jos pašalintos iš portalų.",
     "effectCalendarFailed": "{property}: Sutarties pabaiga įvesta, kalendoriaus blokavimas neįrašytas. Jis bus atnaujintas šiąnakt.",
-    "effectNoUnit": "{property}: Sutarties pabaiga įvesta, tačiau kalendorius neužblokuotas – objektui trūksta vieneto. Sukurkite jį, tada blokavimas įsigalios."
+    "effectNoUnit": "{property}: Sutarties pabaiga įvesta, tačiau kalendorius neužblokuotas – objektui trūksta vieneto. Sukurkite jį, tada blokavimas įsigalios.",
+    "validFromHint": "Diena, nuo kurios sutartis galioja – esamos sutarties atveju tai yra tikroji sutarties data, o ne šiandien. Kiekvienas užsakymas apmokestinamas pagal sutartį, galiojančią jo išvykimo dieną; užsakymai su ankstesniu išvykimu lieka be išmokos.",
+    "errorValidFromRequired": "Nurodykite, nuo kada sutartis galioja."
   },
   "portal": {
     "title": "Mano portalas",
@@ -5465,7 +5548,8 @@
       "connectPortal": "Prijungti portalą",
       "noPortals": "Prie šio objekto dar neprijungtas joks portalas (Booking, Airbnb ir kt.).",
       "marketplaceReview": "Tikrinama",
-      "marketplaceReviewHint": "myBestDays dar tikrina šį skelbimą. Patvirtinus jis atsiras prekyvietėje. Portalams ir savo svetainei tai neturi įtakos."
+      "marketplaceReviewHint": "myBestDays dar tikrina šį skelbimą. Kai jis bus patvirtintas, jis pasirodys prekyvietėje. myBestDays yra privalomas kanalas: objekto negalima atskirai pašalinti – „Pristabdyti pardavimą“ pašalina jį iš visų pardavimų.",
+      "marketplaceMandatory": "Privalomas kanalas – kiekvienas objektas yra įtrauktas į myBestDays"
     },
     "IdLayout": {
       "loadError": "Objekto nepavyko įkelti: {error}"
@@ -5563,11 +5647,11 @@
       "stepOf": "{schritt} žingsnis iš {gesamt}",
       "next": "Continue",
       "back": "Back",
-      "channelsHint": "Kur turėtų būti parduodamas šis objektas? Tai galite pakeisti bet kada.",
+      "channelsHint": "Kur dar turėtų būti parduodamas šis objektas? Portalus ir svetainę galima bet kada pakeisti.",
       "channelPortals": "Rezervacijų portalai",
       "channelPortalsHint": "Airbnb, Booking.com ir kiti. Portalai reikalauja išsamių duomenų — žr. toliau.",
       "channelPlatform": "myBestDays",
-      "channelPlatformHint": "Mūsų pačių prekyvietė su maža komisija.",
+      "channelPlatformHint": "Mūsų pačių prekyvietė su 8 % „viskas įskaičiuota“. Kiekvienas objektas yra ten įtrauktas; jis tampa matomas po paskelbimo ir mūsų patvirtinimo.",
       "channelWebsite": "Sava svetainė",
       "channelWebsiteHint": "Jūsų rezervacijų puslapis ir rezervacijų valdiklis.",
       "readinessTitle": "Portalams dar trūksta:",
@@ -6261,7 +6345,21 @@
       "planPortalOffHint": "Ši kaina galioja tik tiesioginiams užsakymams. Spustelėkite, kad nusiųstumėte ją į užsakymų portalus.",
       "planPortalOn": "Kaina dabar siunčiama į užsakymų portalus.",
       "planPortalOnHint": "Ši kaina siunčiama į užsakymų portalus. Spustelėkite, kad ją naudotumėte tik tiesioginiams užsakymams.",
-      "planPortalYes": "Į portalus"
+      "planPortalYes": "Į portalus",
+      "feeValidityTitle": "Galiojimas",
+      "feeValidityHint": "Mokestis taikomas užsakymams, kurių atvykimo data patenka į nurodytą laikotarpį. Tuščia = be apribojimų. Portalams mokestis su laikotarpiu nesiunčiamas: ten negalima nurodyti datos sąlygos.",
+      "feeValidFromLabel": "Galioja nuo",
+      "feeValidUntilLabel": "Galioja iki",
+      "feeValidityOrderError": "„Galioja iki“ yra anksčiau nei „Galioja nuo“.",
+      "feeOwnerStatementOnlyLabel": "Tik savininko atsiskaityme",
+      "feeOwnerStatementOnlyHint": "Mokestis svečiui neskaičiuojamas ir nesiunčiamas jokiam portalui. Jis veikia tik savininko atsiskaityme, ataskaitose ir savininko portale.",
+      "feeValidFromSuffix": "nuo {date}",
+      "feeValidUntilSuffix": "iki {date}",
+      "feeOwnerStatementOnlySuffix": "tik atsiskaitymas",
+      "feeCalculationLabel": "Skaičiavimas",
+      "feeVatHint": "Šiam mokesčiui taikomas atskiras mokesčio tarifas, kuris skiriasi nuo apgyvendinimo įstaigos nakvynės mokesčio tarifo. „Išjungta“ reiškia, kad mokesčiui taikomas nakvynės mokesčio tarifas.",
+      "feeVatIncludedLabel": "Mokestis sumoje",
+      "feeVatIncludedHint": "Ar mokesčio tarifas jau įtrauktas į įvestą sumą, ar jis pridedamas papildomai? Be šios informacijos suma būtų dviprasmiška."
     },
     "policiesForm": {
       "title": "Taisyklės",
@@ -7303,23 +7401,23 @@
     "marketplacePending": "{count} tikrinama",
     "marketplaceWaiting": "Tikrinama",
     "marketplace": {
-      "intro": "myBestDays yra mūsų sava prekyvietė — rezervavimo kanalas kaip Booking ar Airbnb, tik be portalo ryšio. Objektas tampa matomas, kai jis aktyvus, čia įtrauktas ir patvirtintas.",
+      "intro": "myBestDays yra mūsų pačių prekyvietė – užsakymų kanalas, kaip Booking ar Airbnb, tik be portalo ryšio ir privalomas kiekvienam objektui. Objektas tampa matomas, kai jis yra aktyvus ir mūsų patvirtintas.",
       "openMarketplace": "Atidaryti prekyvietę",
       "propertiesHeading": "Objektai prekyvietėje",
       "noProperties": "Objektų dar nesukurta.",
       "columnProperty": "Objektas",
-      "columnVisibility": "Matomumas",
+      "columnVisibility": "Būsena",
       "columnApproval": "Patvirtinimas",
       "columnBookings": "Rezervacijos",
       "stateActive": "Matomas",
       "statePending": "Tikrinama",
-      "stateNotListed": "Neįtrauktas",
+      "stateNotListed": "Pardavimas sustabdytas",
       "stateInactiveProperty": "Objektas neaktyvus",
       "viewListing": "Peržiūrėti skelbimą",
       "reviewHint": "Tikrinami objektai myBestDays dar nerodomi. Tikriname kiekvieną skelbimą, nes ten myBestDays veikia kaip teikėjas — portalams ir savo svetainei tai neturi įtakos.",
       "summaryVisible": "{count} matomi",
       "summaryWaiting": "{count} tikrinama",
-      "summaryOff": "{count} neįtraukti",
+      "summaryOff": "{count} sustabdytas arba neaktyvus",
       "moderation": {
         "draft": "Juodraštis",
         "pending": "Tikrinama",
@@ -7354,7 +7452,8 @@
       "mayClose": "Importavimas tęsiamas serveryje – galite uždaryti šį puslapį.",
       "andMore": "… ir dar {count}",
       "close": "Uždaryti",
-      "updated": "atnaujinta"
+      "updated": "atnaujinta",
+      "portal": "jau iš portalo"
     }
   },
   "calendarSync": {
@@ -10511,7 +10610,11 @@
     "haveAccount": "Jau turite paskyrą?",
     "loginLink": "Prisijunkite čia",
     "loadingHeadline": "Jūsų pačių užsakymų svetainė. Pasilikite 100 % kiekvieno užsakymo.",
-    "loadingText": "Ruošiame jūsų paskyrą …"
+    "loadingText": "Ruošiame jūsų paskyrą …",
+    "referralLabel": "Rekomendavo (neprivaloma)",
+    "referralPlaceholder": "Rekomendacijos kodas, pvz., ANNA-K7P2",
+    "referralHint": "Ar myNextDays sužinojote per partnerį? Jo kodas yra čia – jis mato tik tai, kad įmonė atėjo per jį, bet niekada nemato jūsų vardo. Su kodu po 14 bandomųjų dienų gausite pirmąjį visą mėnesį nemokamai.",
+    "referralContactOptIn": "Mano rekomendacijos teikėjas gali susisiekti su manimi per myNextDays."
   },
   "marketingSite": {
     "stars": "4,5 žvaigždutės",

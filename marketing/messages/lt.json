@@ -851,7 +851,8 @@
     },
     "unternehmen": {
       "ueberUns": "Apie mus",
-      "kontakt": "Kontaktai"
+      "kontakt": "Kontaktai",
+      "partner": "Partnerystės programa"
     },
     "copyright": "© 2026 myNextDays. Visos teisės saugomos.",
     "agb": "Sąlygos",
@@ -860,7 +861,8 @@
     "cookies": "Slapukų politika",
     "avv": "Duomenų tvarkymas",
     "kontoLoeschen": "Ištrinti paskyrą",
-    "newsletterKnopf": "Prenumeruoti naujienlaiškį"
+    "newsletterKnopf": "Prenumeruoti naujienlaiškį",
+    "partnerAgb": "Partnerių sąlygos"
   },
   "legal": {
     "stand": "Redakcija: {datum}"
@@ -990,7 +992,7 @@
       "sub": "Ką nuomotojai nori žinoti prieš keisdami — trumpai ir be smulkaus šrifto.",
       "laufzeit": {
         "frage": "Ar yra minimalus terminas?",
-        "antwort": "Ne. Prenumerata yra mėnesinė ir gali būti atšaukta likus keturioms savaitėms iki mėnesio pabaigos. Pirmos 14 dienų yra nemokamos: pradėdami įveskite savo mokėjimo duomenis, tačiau mokėjimas bus nuskaičiuotas tik pasibaigus bandomajam laikotarpiui. Jei atšauksite anksčiau, nieko nemokėsite."
+        "antwort": "Ne. Prenumerata yra mėnesinė ir gali būti atšaukta prieš keturias savaites iki mėnesio pabaigos. Pirmosios 14 dienų yra nemokamos: pradėdami įvesite savo mokėjimo duomenis, tačiau mokėjimas bus nuskaičiuotas tik pasibaigus bandomajam laikotarpiui. Jei atvykstate per partnerio nuorodą ar kodą, pirmasis pilnas mėnuo taip pat yra nemokamas. Jei atšauksite anksčiau, nieko nemokėsite."
       },
       "objektzahl": {
         "frage": "Kas nutinka, kai pridedu objektų?",
@@ -2185,5 +2187,259 @@
     "verwalten": "Tvarkyti slapukų nuostatas",
     "schliessen": "Uždaryti",
     "bestaetigen": "Patvirtinti nuostatas"
+  },
+  "partnerHinweis": {
+    "text": "Jūs atvykstate per rekomendaciją (kodas {code}). Kodas bus pritaikytas registracijos metu ir suteiks jums pirmąjį pilną mėnesį po 14 bandomųjų dienų.",
+    "cta": "Pradėti dabar nemokamai",
+    "schliessen": "Uždaryti pranešimą"
+  },
+  "partner": {
+    "meta": {
+      "titel": "Partnerystės programa – myNextDays",
+      "beschreibung": "Rekomenduokite myNextDays atostogų nuomotojams ir viešbučiams ir gaukite iki {max} % kiekvienos reklamuojamos įmonės prenumeratos pajamų dvylika mėnesių."
+    },
+    "hero": {
+      "eyebrow": "Partnerystės programa",
+      "headlinePre": "Rekomenduokite myNextDays –",
+      "headlineHighlight": "ir uždirbkite",
+      "sub": "Influenceriams, konsultantams, agentūroms ir nuomotojams su tinklu: Kiekviena įmonė, kuri užsiregistruoja per Jūsų nuorodą ir apmoka prenumeratą, atneša Jums iki {max} % prenumeratos pajamų dvylika mėnesių – plius 0,5 % kiekvieno užsakymo per myBestDays, paaukštinimo premijos ir nuo Elito superkomisinis be termino apribojimo.",
+      "cta": "Kreiptis dabar",
+      "ctaLogin": "Partnerio prisijungimas",
+      "chipDauer": "12 mėnesių komisiniai už klientą",
+      "chipAuszahlung": "Mėnesinis išmokėjimas",
+      "chipKosten": "Nemokamas dalyvavimas",
+      "chipGratismonat": "Jūsų klientai: 14 dienų bandomasis laikotarpis + 1 mėnuo nemokamai"
+    },
+    "schritte": {
+      "eyebrow": "Kaip tai veikia",
+      "heading": "Trys žingsniai iki pirmojo komisinio",
+      "bewerben": {
+        "titel": "Kreiptis",
+        "text": "Jūs nurodote mums savo kanalą – svetainę, socialinį profilį ar tinklą. Mes asmeniškai peržiūrime kiekvieną paraišką ir paprastai patvirtiname per kelias darbo dienas."
+      },
+      "teilen": {
+        "titel": "Dalintis nuoroda arba kodu",
+        "text": "Jūs gausite asmeninę nuorodą ir rekomendacijos kodą. Kodas bus matomas registracijos formoje – be sekimo slapuko."
+      },
+      "verdienen": {
+        "titel": "Uždirbti",
+        "text": "Jei reklamuojama įmonė apmoka savo pirmąją prenumeratos sąskaitą, jūsų komisiniai galioja dvylika mėnesių. Kiekvieną klientą matysite pseudonimu partnerio prietaisų skydelyje ir jums bus mokama kas mėnesį."
+      }
+    },
+    "staffel": {
+      "eyebrow": "Jūsų lygis",
+      "heading": "Kuo didesnė Jūsų struktūra, tuo didesnis Jūsų tarifas",
+      "sub": "Šis tarifas taikomas visiems naujiems komisiniams nuo rango pasiekimo. Į struktūrą įeina Jūsų paties mokantys klientai ir Jūsų komandos partnerių klientai.",
+      "kunden": "{nuo}–{iki} mokančių klientų",
+      "kundenOffen": "nuo {nuo} mokančių klientų",
+      "satz": "prenumeratos pajamų",
+      "nichtAbrufbar": "Lygis šiuo metu nepasiekiamas. Prašome bandyti dar kartą vėliau."
+    },
+    "bedingungen": {
+      "eyebrow": "Taisyklės",
+      "heading": "Sąžininga jums, sąžininga įmonėms",
+      "basis": {
+        "titel": "Kas svarbu",
+        "text": "Komisinių pagrindas yra reklamuojamos įmonės grynasis prenumeratos pajamų (pagrindinis tarifas ir moduliai) – be mokesčių, portalo komisinių ir papildomų paslaugų."
+      },
+      "dauer": {
+        "titel": "Dvylika mėnesių",
+        "text": "Komisinis mokestis skaičiuojamas dvylika mėnesių nuo pirmojo apmokėto įmonės prenumeratos sąskaitos; jūsų klientų nemokamas mėnuo neįskaičiuojamas. Jei įmonė nutraukia sutartį, jis baigiasi su paskutiniu mokėjimu. Užsakymo dalis ir superkomisinis mokestis galioja be šio apribojimo."
+      },
+      "auszahlung": {
+        "titel": "Išmokėjimas",
+        "text": "Kas mėnesį, 30 dienų po įmonės mokėjimo, nuo minimalios sumos kiekviena valiuta. Jūs gausite kreditą; įmonėms reikalingas galiojantis PVM mokėtojo kodas."
+      },
+      "kennzeichnung": {
+        "titel": "Žymėjimas",
+        "text": "Kiekviena rekomendacija yra reklama ir turi būti atitinkamai pažymėta. Reikalingus žodžius kiekviena kalba pateikiame prietaisų skydelyje."
+      },
+      "verboten": {
+        "titel": "Neleidžiama",
+        "text": "Savarankiškas reklamavimas, mūsų prekės ženklo reklamavimas paieškos skelbimuose, nuolaidų pažadai mūsų vardu ir nepageidaujami pranešimai. Grąžinamos lėšos bus išskaičiuotos iš komisinių."
+      },
+      "daten": {
+        "titel": "Duomenų apsauga",
+        "text": "Savo klientus matote tik pseudonimiškai – su šalimi, statusu ir sumomis, niekada su vardu ar el. paštu. Įmonė gali leisti jums su ja susisiekti registracijos metu."
+      }
+    },
+    "faq": {
+      "eyebrow": "Dažnai užduodami klausimai",
+      "heading": "Ko partneriai klausia mūsų",
+      "wer": {
+        "frage": "Kas gali tapti partneriu?",
+        "antwort": "Bet kuris asmuo ar įmonė ES, turinti realų kanalą į nuomotojus ar viešbučius: nuomonės formuotojai, konsultantai, agentūros, mokesčių biurai, asociacijos – ir patys myNextDays klientai. Paraiška yra nemokama; prenumerata nėra būtina sąlyga."
+      },
+      "wann": {
+        "frage": "Kada įmonė laikoma mano klientu?",
+        "antwort": "Kai ji užsiregistravo su jūsų kodu ir apmokėjo pirmąją prenumeratos sąskaitą. Registracijos be apmokėjimo neįskaitomos į reitingą."
+      },
+      "doppelt": {
+        "frage": "Kas, jei įmonė nurodo du partnerius?",
+        "antwort": "Įmonė priskiriama tik vienam partneriui – tam, kurio kodas buvo nurodytas registracijos formoje. Vėlesni kodai to nepakeičia."
+      },
+      "steuern": {
+        "frage": "Kaip vyksta atsiskaitymas?",
+        "antwort": "Mes išrašome kreditinę sąskaitą (savarankiškas atsiskaitymas). Įmonės, turinčios ES PVM mokėtojo kodą, ją gauna su atvirkštinio apmokestinimo žyma, privatūs asmenys be PVM – komisinius apmokestinate patys."
+      },
+      "material": {
+        "frage": "Ar yra reklaminės medžiagos?",
+        "antwort": "Taip: trumpi vaizdo įrašai socialinei žiniasklaidai, aiškinamasis vaizdo įrašas, baneriai ir tekstiniai blokai – partnerių prietaisų skydelyje, jūsų kalba."
+      },
+      "wieviel": {
+        "frage": "Kiek komisinių galiu uždirbti?",
+        "antwort": "Tai priklauso nuo jūsų klientų prenumeratos pajamų ir jūsų rango. Aukščiau esančioje lentelėje nurodytas tarifas pagal rangą; dvylika mėnesių vienam klientui. Be to, 0,5 % nuo kiekvieno užsakymo, kurį jūsų klientai gauna per „myBestDays“, vienkartinė paaukštinimo premija už kiekvieną pasiektą rangą, skirtumo komisinis su komanda – ir nuo Elito partnerio 2,5 % superkomisinis už visą struktūrą be laiko apribojimo."
+      },
+      "team": {
+        "frage": "Kaip veikia komandos komisinis mokestis?",
+        "antwort": "Nuo Pradedančiojo rango: Jei partneris registruojasi per Jūsų komandos nuorodą ir aiškiai nurodo Jūsų kodą paraiškoje, jis po patvirtinimo priklauso Jūsų komandai. Jo klientai skaičiuojami 1:1 Jūsų rangui. Už jo klientų grynąsias prenumeratos pajamas Jūs gaunate skirtumą tarp Jūsų tarifo ir jo – tik vienas lygis giliai, be dalyvavimo mokesčio, be pinigų už verbavimą."
+      },
+      "auszahlung": {
+        "frage": "Kaip ir kada išmokami komisiniai?",
+        "antwort": "Kas mėnesį kiekviena valiuta, kai suma pasiekia minimalią jūsų valiutos sumą. Kiekviena komisinio eilutė yra „atvira“ 30 dienų (grąžinimo langas) ir po to gali būti išmokėta. Jūs gaunate kreditą (savarankiškas atsiskaitymas) – jūs neišrašote sąskaitos. Išmokėjimas per SEPA, Wise arba PayPal."
+      },
+      "verfolgen": {
+        "frage": "Kaip galiu stebėti savo komisinius ir našumą?",
+        "antwort": "Partnerio prietaisų skydelyje, skiltyje „Komisiniai“, matysite kiekvieną apmokėtą prenumeratos sąskaitą su pagrindu, tarifu, suma ir statusu, skiltyje „Klientai“ – jūsų įmones pseudonimu, skiltyje „Komanda“ – jūsų komandos partnerių vertinimą, o skiltyje „Nuorodos ir medžiaga“ – paspaudimus pagal kodą."
+      },
+      "werbung": {
+        "frage": "Ar galiu vykdyti mokamą reklamą?",
+        "antwort": "Ne mūsų prekės ženklui: skelbimai „myNextDays“ ir rašybos variantai (prekės ženklo siūlymas), slapukų numetimas, pirktas pasiekiamumas ar paskatos registracijai yra draudžiami ir lemia blokavimą. Nuosavas turinys, įrašai ir rekomendacijos yra aiškiai pageidaujami – su nuoroda kaip reklama."
+      }
+    },
+    "abschluss": {
+      "heading": "Pasiruošę rekomenduoti myNextDays?",
+      "sub": "Pateikite paraišką per dvi minutes. Mes susisieksime su jumis po patikrinimo.",
+      "cta": "Pateikti paraišką dabar",
+      "kontakt": "Klausimų? Parašykite mums."
+    },
+    "vergleich": {
+      "eyebrow": "Jūsų lygis",
+      "heading": "Kuo daugiau mokančių klientų, tuo didesnis jūsų tarifas",
+      "sub": "Šis tarifas taikomas visiems naujiems komisiniams nuo rango pasiekimo. Jūsų struktūra skaičiuojama: Jūsų paties mokantys klientai plius Jūsų komandos partnerių klientai.",
+      "nichtAbrufbar": "Lygis šiuo metu nepasiekiamas. Bandykite dar kartą vėliau.",
+      "plan": "Lygis",
+      "provision": "Komisiniai už nuosavus klientus",
+      "teamProvision": "Komandos komisinis už Jūsų komandos partnerių klientus",
+      "dauer": "Trukmė vienam klientui",
+      "dauerWert": "12 mėnesių",
+      "kunden": "{nuo}–{iki} mokančių klientų",
+      "kundenOffen": "nuo {nuo} mokančių klientų",
+      "vorteile": "Paslaugos",
+      "ja": "įskaičiuota",
+      "nein": "neįskaičiuota",
+      "leistung": {
+        "konto": "Nemokama partnerio paskyra",
+        "dashboard": "Partnerio prietaisų skydelis su klientais, komisiniais ir analize",
+        "material": "Reklaminė medžiaga ir ženklinimo šablonai",
+        "team": "Komandos kūrimas su nuosava komandos nuoroda",
+        "gutschrift": "Mėnesinis išmokėjimas su kreditu (savarankiškas atsiskaitymas)",
+        "chat": "Tiesioginis ryšys su partnerių komanda",
+        "support": "Asmeninis kontaktinis asmuo",
+        "coMarketing": "Bendras marketingas (bendros akcijos)"
+      },
+      "fussnoteTeam": "Komandos komisinis yra skirtumas tarp Jūsų tarifo ir komandos partnerio tarifo už jo klientų grynąsias prenumeratos pajamas, abu mokėjimo metu – tik vienas lygis, be dalyvavimo mokesčio, be pinigų už verbavimą. Iš viso niekada daugiau nei 30 %.",
+      "fussnoteCoMarketing": "Suderinus su partnerių komanda; priklauso nuo partnerio profilio ir vykstančių akcijų.",
+      "fussnoteRang": "Rangas atsiranda iš Jūsų struktūros: Jūsų paties mokantys klientai plius Jūsų komandos partnerių klientai, kiekvienas skaičiuojamas vieną kartą. Pasiekus naują rangą nuo Pradedančiojo, vieną kartą gaunama paaukštinimo premija.",
+      "teamDifferenz": "{satz} % minus komandos partnerio tarifas",
+      "teamNicht": "dar nėra komandos",
+      "bonus": "Paaukštinimo premija (vienkartinė)",
+      "superProvision": "Superkomisinis už visą struktūrą",
+      "marktTurbo": "myBestDays užsakymo dalis",
+      "marktTurboWert": "0,5 % už kiekvieną užsakymą, neribotai",
+      "fussnoteSuper": "Nuo Elito partnerio 2,5 % nuo visų Jūsų struktūros klientų grynųjų prenumeratos pajamų – papildomai prie komisinio, be 12 mėnesių limito, kol išlaikote rangą ir klientas moka."
+    },
+    "team": {
+      "eyebrow": "Kurti komandą",
+      "heading": "Iki {max} % skirtumo komisinis nuo Jūsų komandos apyvartos",
+      "sub": "Ar pažįstate kitų konsultantų, kūrėjų ar agentūrų, turinčių ryšių su šeimininkais? Nuo Pradedančiojo rango jie registruojasi per Jūsų komandos nuorodą, priklauso Jūsų komandai – ir jų klientai skaičiuojami 1:1 Jūsų rangui. Jūs uždirbate skirtumą tarp Jūsų tarifo ir Jūsų komandos partnerio tarifo; Jūsų komandos partneriai išlaiko savo pilną nuosavą skalę.",
+      "rang": {
+        "titel": "Skirtumas",
+        "text": "Jūs gaunate savo tarifą minus komandos partnerio tarifą – abu mokėjimo metu. Jei Jūsų komandos partneris yra tame pačiame range, komandos komisinis nesusidaro."
+      },
+      "ebene": {
+        "titel": "Tik vienas lygis",
+        "text": "Jūsų komandos partneriai nekuria savo komandos po jumis. Jokio tinklo, jokios piramidės."
+      },
+      "keinGeld": {
+        "titel": "Tik iš realių pajamų",
+        "text": "Jokio dalyvio mokesčio, jokių pinigų už pritraukimą. Komisiniai už komandą gaunami tik iš apmokėtų prenumeratos pajamų."
+      },
+      "dauer": {
+        "titel": "Tos pačios taisyklės",
+        "text": "12 mėnesių už kiekvieną komandos klientą, 30 dienų grąžinimo langas, atšaukimas grąžinant arba atšaukiant mokėjimą – kaip ir Jūsų nuosavam komisiniui. Nuo Elito prisideda superkomisinis už visą struktūrą, be termino apribojimo."
+      }
+    },
+    "kundeCta": {
+      "heading": "Jau esate myNextDays klientas?",
+      "text": "Tada geriausiai žinote produktą. Rekomenduokite jį kitiems – jūsų komisiniai bus įskaityti į jūsų sąskaitą, nepriklausomai nuo jūsų prenumeratos.",
+      "cta": "Rekomenduoti ir uždirbti"
+    }
+  },
+  "partnerBewerbung": {
+    "meta": {
+      "titel": "Tapti partneriu – myNextDays",
+      "beschreibung": "Paraiška myNextDays partnerystės programai: socialinės žiniasklaidos paskyros, pasiekiamumas, sąlygos. Kiekvieną paraišką peržiūrime asmeniškai."
+    },
+    "eyebrow": "Partnerystės programa",
+    "titel": "Tapti partneriu",
+    "text": "Nurodykite savo socialinės žiniasklaidos paskyras ir jų pasiekiamumą – kiekvieną paraišką peržiūrime asmeniškai ir paprastai susisiekiame per kelias darbo dienas. Patvirtinus, gausite prieigą prie partnerio prietaisų skydelio su nuorodomis, kodais ir analize.",
+    "email": "El. paštas",
+    "passwort": "Jūsų partnerio prietaisų skydelio slaptažodis",
+    "passwortHinweis": "Mažiausiai 8 simboliai.",
+    "name": "Vardas",
+    "firma": "Įmonė (neprivaloma)",
+    "rechtsform": "Teisinė forma",
+    "privat": "Privatus asmuo",
+    "unternehmen": "Įmonė",
+    "land": "Šalis",
+    "ustId": "PVM mokėtojo kodas",
+    "ustIdHinweis": "Bus patikrinta ES VIES sistemoje. Be patvirtinto numerio įmonėms išmokos nebus mokamos.",
+    "kanaele": {
+      "titel": "Jūsų socialinės žiniasklaidos paskyros",
+      "hinweis": "Privaloma: bent viena socialinės žiniasklaidos paskyra (Instagram, TikTok, YouTube, Facebook, LinkedIn…) su adresu, vartotojo vardu ir pasiekiamumu (sekėjais). Svetainė, tinklaraštis ar naujienlaiškis yra papildomai laukiami. Paskyras patikriname prieš patvirtinimą.",
+      "plattform": "Platforma",
+      "handle": "Vartotojo vardas (neprivaloma)",
+      "reichweite": "Pasiekiamumas (sekėjai)",
+      "hinzufuegen": "Pridėti kanalą",
+      "entfernen": "Pašalinti kanalą",
+      "socialPflicht": "Privaloma bent viena socialinės žiniasklaidos paskyra su pasiekiamumu – vien tik svetainės nepakanka.",
+      "plattformen": {
+        "website": "Svetainė",
+        "blog": "Tinklaraštis",
+        "newsletter": "Naujienlaiškis",
+        "podcast": "Podcast'as",
+        "other": "Kita"
+      }
+    },
+    "plattform": {
+      "website": "Svetainė",
+      "blog": "Tinklaraštis",
+      "newsletter": "Naujienlaiškis",
+      "podcast": "Podcast'as",
+      "other": "Kita"
+    },
+    "sponsor": "Pakvietė partneris (kodas, neprivaloma)",
+    "sponsorHinweis": "Ar prisijungiate per partnerio komandos nuorodą? Jo kodas bus čia. Jis gaus komandos komisinį mokestį už jūsų klientų prenumeratos pajamas – jūsų paties komisinis mokestis išliks nepakitęs.",
+    "pitch": "Kodėl tinka myNextDays? (neprivaloma)",
+    "pitchPlatzhalter": "Ką pasiekiate, apie ką kalbate, kaip norite rekomenduoti?",
+    "zustimmung": "Aš sutinku su",
+    "bedingungen": "Partnerystės sąlygos",
+    "version": "Versija {version}",
+    "absenden": "Pateikti paraišką",
+    "sendet": "Siunčiama...",
+    "pruefungHinweis": "Ši forma yra apsaugota reCAPTCHA. Pateikus paraišką, mūsų partnerių komanda patikrins jūsų paskyras ir pasiekiamumą; sprendimą gausite el. paštu.",
+    "fehler": {
+      "social": "Nurodykite bent vieną socialinės žiniasklaidos paskyrą su adresu ir pasiekiamumu.",
+      "doppelt": "Šiam el. paštui jau yra pateikta paraiška. Prisijunkite prie partnerių valdymo pulto.",
+      "eingabe": "Patikrinkite savo įvestus duomenis.",
+      "captcha": "Nepavyko atlikti apsaugos nuo šlamšto patikrinimo. Įkelkite puslapį iš naujo ir bandykite dar kartą.",
+      "allgemein": "Šiuo metu nepavyko išsiųsti paraiškos. Bandykite dar kartą vėliau."
+    },
+    "fertig": {
+      "titel": "Paraiška gauta",
+      "text": "Ačiū! Mes asmeniškai patikrinsime jūsų paskyras ir pasiekiamumą ir susisieksime el. paštu. Jūsų partnerių valdymo pultas pasiekiamas naudojant jūsų el. paštą ir slaptažodį – nuorodos ir kodai taps aktyvūs patvirtinus.",
+      "login": "Į partnerių prisijungimą"
+    }
   }
 }

@@ -87,12 +87,12 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "note",
               variant: "tip",
-              text: "Cliceáil ar Foilsigh, agus de ghnáth gníomhachtaíonn myNextDays an margadh, na tairseacha agus an suíomh gréasáin le chéile — is féidir leat lasc an mhargaidh a dhíghníomhachtú go haonair ina dhiaidh sin ag am ar bith.",
+              text: "Má chliceálann tú Foilsigh, díghlasálann myNextDays tairseacha agus suíomh Gréasáin le chéile. Is cainéal éigeantach é myBestDays: Tá gach réadmhaoin liostaithe ann agus taispeántar é a luaithe a bheidh an liostú ceadaithe againn.",
             },
             { type: "h2", text: "Infheictheacht a bhaint arís" },
             {
               type: "p",
-              text: "Má dhíghníomhachtaíonn tú lasc an Ardáin Margaidh, imíonn an mhaoin ó chuardach an mhargaidh. Ní bhíonn tionchar ag seo ar áirithintí atá deimhnithe cheana, agus leanann siad ar aghaidh mar is gnách, féach [Coimisiún an Mhargaidh](/hilfe/plattform-marktplatz/marktplatz-provision).",
+              text: "Ní féidir myBestDays a dhíroghnú ina aonar. Mura bhfuil réadmhaoin le díol a thuilleadh, bain úsáid as “Cuir an díol ar sos” — baintear é sin as an díol ag gach tairseach, ar an suíomh Gréasáin agus ar an margadh ag an am céanna. Fanann áirithintí atá deimhnithe cheana féin gan athrú agus leanann siad ar aghaidh mar is gnách, féach [Coimisiún an Mhargaidh](/hilfe/plattform-marktplatz/marktplatz-provision).",
             },
           ],
         },

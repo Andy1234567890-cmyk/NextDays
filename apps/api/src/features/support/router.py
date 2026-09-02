@@ -11,7 +11,12 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Query, status
 
-from src.core.security import CurrentGuest, CurrentUser
+from src.core.security import (
+    CurrentAffiliate,
+    CurrentGuest,
+    CurrentUser,
+    require_approved_affiliate,
+)
 
 from .dependencies import SupportServiceDep
 from .schemas import (
@@ -274,3 +279,92 @@ def reply_public_chat(
             status_code=status.HTTP_404_NOT_FOUND, detail="Konversation nicht gefunden."
         )
     return res
+
+
+# --- Partner (Affiliate-Programm, 0518) --------------------------------------
+#
+# Vierte Melder-Welt: der Partner hat ein eigenes Konto (affiliates.id), keinen
+# Betrieb. Nur FREIGEGEBENE Partner dürfen Konversationen eröffnen — ein
+# Bewerber hat sein Anliegen in der Bewerbung genannt (require_approved_affiliate).
+# Jeder Zugriff ist über die eigene affiliate_id gescopet (Wurzel 3/9).
+
+
+@router.post(
+    "/partner/chat", response_model=TicketDetail, status_code=status.HTTP_201_CREATED
+)
+def start_partner_chat(
+    req: ChatStart, ctx: CurrentAffiliate, service: SupportServiceDep
+) -> TicketDetail:
+    """Konversation mit dem Partnerteam eröffnen (source='partner')."""
+    require_approved_affiliate(ctx)
+    try:
+        return service.start_chat(req, affiliate_id=ctx.affiliate_id)
+    except SupportError as exc:
+        raise _map(exc) from exc
+
+
+@router.get("/partner/list", response_model=TicketList)
+def list_partner_tickets(
+    ctx: CurrentAffiliate,
+    service: SupportServiceDep,
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+) -> TicketList:
+    require_approved_affiliate(ctx)
+    try:
+        return service.list(affiliate_id=ctx.affiliate_id, limit=limit, offset=offset)
+    except SupportError as exc:
+        raise _map(exc) from exc
+
+
+@router.get("/partner/unread", response_model=UnreadSummary)
+def partner_unread(ctx: CurrentAffiliate, service: SupportServiceDep) -> UnreadSummary:
+    try:
+        return service.unread(affiliate_id=ctx.affiliate_id)
+    except SupportError as exc:
+        raise _map(exc) from exc
+
+
+@router.get("/partner/{ticket_id}", response_model=TicketDetail)
+def get_partner_ticket(
+    ticket_id: str, ctx: CurrentAffiliate, service: SupportServiceDep
+) -> TicketDetail:
+    require_approved_affiliate(ctx)
+    res = service.detail(ticket_id, affiliate_id=ctx.affiliate_id)
+    if res is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Konversation nicht gefunden."
+        )
+    return res
+
+
+@router.post("/partner/{ticket_id}/reply", response_model=TicketMessage)
+def reply_partner_ticket(
+    ticket_id: str,
+    antwort: TicketReply,
+    ctx: CurrentAffiliate,
+    service: SupportServiceDep,
+) -> TicketMessage:
+    require_approved_affiliate(ctx)
+    res = service.reply(
+        ticket_id,
+        antwort.body,
+        affiliate_id=ctx.affiliate_id,
+        client_msg_id=antwort.client_msg_id,
+    )
+    if res is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Konversation nicht gefunden."
+        )
+    return res
+
+
+@router.post("/partner/{ticket_id}/read", response_model=SupportOk)
+def mark_partner_read(
+    ticket_id: str, ctx: CurrentAffiliate, service: SupportServiceDep
+) -> SupportOk:
+    if not service.mark_read(ticket_id, affiliate_id=ctx.affiliate_id):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Konversation nicht gefunden."
+        )
+    return SupportOk()

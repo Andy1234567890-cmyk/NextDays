@@ -87,12 +87,12 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "note",
               variant: "tip",
-              text: "A Közzététel gombra kattintva a myNextDays normál esetben a piacteret, a portálokat és a weboldalt együtt engedélyezi — a piactér-kapcsolót ezután bármikor egyénileg ismét kikapcsolhatja.",
+              text: "A Közzététel gombra kattintva a myNextDays portálok és a weboldal egyidejűleg válnak elérhetővé. A myBestDays kötelező csatorna: minden ingatlan szerepel rajta, és megjelenik, amint jóváhagytuk a hirdetést.",
             },
             { type: "h2", text: "Láthatóság ismételt eltávolítása" },
             {
               type: "p",
-              text: "Ha kikapcsolja a Platform-piactér kapcsolót, az objektum eltűnik a piactéri keresésből. A már megerősített foglalásokat ez nem érinti, azok a megszokott módon zajlanak tovább, lásd [Piactéri jutalék](/hilfe/plattform-marktplatz/marktplatz-provision).",
+              text: "A myBestDays nem választható le külön. Ha egy ingatlant már nem szeretne értékesíteni, használja az „Értékesítés szüneteltetése” funkciót – ezáltal az ingatlan az összes portálról, a weboldalról és a piactérről egyidejűleg kikerül az értékesítésből. A már visszaigazolt foglalásokat ez nem érinti, azok a szokásos módon folytatódnak, lásd: [Piactéri jutalék](/hilfe/plattform-marktplatz/marktplatz-provision).",
             },
           ],
         },

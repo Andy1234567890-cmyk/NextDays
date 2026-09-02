@@ -851,7 +851,8 @@
     },
     "unternehmen": {
       "ueberUns": "Rólunk",
-      "kontakt": "Kapcsolat"
+      "kontakt": "Kapcsolat",
+      "partner": "Partnerprogram"
     },
     "copyright": "© 2026 myNextDays. Minden jog fenntartva.",
     "agb": "ÁSZF",
@@ -860,7 +861,8 @@
     "cookies": "Cookie-szabályzat",
     "avv": "Adatfeldolgozás",
     "kontoLoeschen": "Fiók törlése",
-    "newsletterKnopf": "Feliratkozás hírlevélre"
+    "newsletterKnopf": "Feliratkozás hírlevélre",
+    "partnerAgb": "Partner ÁSZF"
   },
   "legal": {
     "stand": "Utolsó frissítés: {datum}"
@@ -990,7 +992,7 @@
       "sub": "Amit a szállásadók tudni akarnak váltás előtt — röviden, apróbetűs rész nélkül.",
       "laufzeit": {
         "frage": "Van minimális futamidő?",
-        "antwort": "Nem. Az előfizetés havonta megújítható, és a hónap végére négy hét felmondási idővel lemondható. Az első 14 nap ingyenes: a fizetési adatokat a kezdetkor meg kell adni, de a terhelés csak a próbaidőszak lejárta után történik. Ha előtte lemondja, nem kell fizetnie semmit."
+        "antwort": "Nem. Az előfizetés havonta megújítható, és négy héttel a hónap vége előtt felmondható. Az első 14 nap ingyenes: a fizetési adatokat a kezdetkor megadja, de a terhelés csak a tesztidőszak lejárta után történik. Ha partneri linken vagy kódon keresztül érkezik, az első teljes hónap is ajándék. Ha előbb lemondja, nem fizet semmit."
       },
       "objektzahl": {
         "frage": "Mi történik, ha ingatlant veszek fel?",
@@ -2185,5 +2187,259 @@
     "verwalten": "Cookie-beállítások kezelése",
     "schliessen": "Bezárás",
     "bestaetigen": "Beállítások megerősítése"
+  },
+  "partnerHinweis": {
+    "text": "Ajánlás útján érkezett (kód: {code}). A kód regisztrációkor érvényesül – és az első teljes hónapot ajándékba kapja a 14 tesztnap után.",
+    "cta": "Indítsa el ingyen most",
+    "schliessen": "Értesítés bezárása"
+  },
+  "partner": {
+    "meta": {
+      "titel": "Partnerprogram – myNextDays",
+      "beschreibung": "Ajánlja a myNextDays-t szállásadóknak és szállodáknak, és kapjon tizenkét hónapon keresztül akár {max}%-ot az előfizetési bevételből minden ajánlott vállalkozás után."
+    },
+    "hero": {
+      "eyebrow": "Partnerprogram",
+      "headlinePre": "Ajánlja a myNextDays-t –",
+      "headlineHighlight": "és keressen pénzt",
+      "sub": "Influencereknek, tanácsadóknak, ügynökségeknek és hálózattal rendelkező szállásadóknak: Minden vállalkozás, amely az Ön linkjén keresztül regisztrál és előfizetést fizet, tizenkét hónapon keresztül az előfizetési bevétel akár {max} %-át hozza Önnek – plusz 0,5% minden myBestDays-en keresztül történő foglalás után, előléptetési bónuszok és az elit szinttől kezdve egy szuperjutalék időkorlát nélkül.",
+      "cta": "Jelentkezzen most",
+      "ctaLogin": "Partner bejelentkezés",
+      "chipDauer": "12 hónap jutalék ügyfelenként",
+      "chipAuszahlung": "Havi kifizetés",
+      "chipKosten": "Ingyenes részvétel",
+      "chipGratismonat": "Ügyfelei: 14 nap próba + 1 hónap ingyen"
+    },
+    "schritte": {
+      "eyebrow": "Így működik",
+      "heading": "Három lépés az első jutalékig",
+      "bewerben": {
+        "titel": "Jelentkezés",
+        "text": "Megadja nekünk a csatornáját – weboldal, közösségi profil vagy hálózat. Minden jelentkezést személyesen ellenőrzünk, és általában néhány munkanapon belül jóváhagyjuk."
+      },
+      "teilen": {
+        "titel": "Link vagy kód megosztása",
+        "text": "Kap egy személyes linket és egy ajánlókódot. A kód regisztrációkor láthatóan megjelenik az űrlapon – nyomkövető süti nélkül."
+      },
+      "verdienen": {
+        "titel": "Keressen pénzt",
+        "text": "Ha egy ajánlott vállalkozás kifizeti az első előfizetési számláját, a jutaléka tizenkét hónapig fut. Minden ügyfelet anonim módon lát a partner irányítópultján, és havonta kap kifizetést."
+      }
+    },
+    "staffel": {
+      "eyebrow": "Az Ön szintje",
+      "heading": "Minél nagyobb a struktúrája, annál magasabb a díja",
+      "sub": "A díj a rang elérésétől kezdve minden új jutalékra vonatkozik. A struktúrába beletartoznak az Ön saját fizető ügyfelei és a csapattagok ügyfelei.",
+      "kunden": "{von}–{bis} fizető ügyfél",
+      "kundenOffen": "ettől: {von} fizető ügyfél",
+      "satz": "az előfizetési bevételből",
+      "nichtAbrufbar": "A szint jelenleg nem érhető el. Kérjük, próbálja meg később."
+    },
+    "bedingungen": {
+      "eyebrow": "A szabályok",
+      "heading": "Tisztességes Önnek, tisztességes a vállalkozásoknak",
+      "basis": {
+        "titel": "Mi számít",
+        "text": "A jutalék alapja az ajánlott vállalkozás nettó előfizetési bevétele (alapdíj és modulok) – adók, portáljutalékok és kiegészítő szolgáltatások nélkül."
+      },
+      "dauer": {
+        "titel": "Tizenkét hónap",
+        "text": "A jutalék a vállalkozás első kifizetett előfizetési számlájától számított tizenkét hónapig jár; az ügyfelei ingyenes hónapja nem számít bele. Ha a vállalkozás felmondja, az utolsó befizetésével ér véget. A foglalási részesedés és a szuperjutalék e korlát nélkül jár."
+      },
+      "auszahlung": {
+        "titel": "Kifizetés",
+        "text": "Havonta, 30 nappal a vállalkozás befizetése után, minimális összegtől kezdve pénznemenként. Ön jóváírást kap; a vállalkozásoknak érvényes adószámra van szükségük."
+      },
+      "kennzeichnung": {
+        "titel": "Megjelölés",
+        "text": "Minden ajánlás reklám, és azt jelölni kell. A szükséges megfogalmazásokat nyelvenként az irányítópulton biztosítjuk."
+      },
+      "verboten": {
+        "titel": "Nem engedélyezett",
+        "text": "Önreklám, márkanevünk hirdetése keresési hirdetésekben, nevünkben tett kedvezményígéretek és kéretlen üzenetek. A visszatérítéseket levonjuk a jutalékból."
+      },
+      "daten": {
+        "titel": "Adatvédelem",
+        "text": "Ügyfeleit csak álnéven látja – országgal, státusszal és összegekkel, soha nem névvel vagy e-mail címmel. Egy vállalkozás a regisztráció során engedélyezheti, hogy Ön kapcsolatba lépjen vele."
+      }
+    },
+    "faq": {
+      "eyebrow": "Gyakori kérdések",
+      "heading": "Amit partnereink kérdeznek",
+      "wer": {
+        "frage": "Ki lehet partner?",
+        "antwort": "Bármely személy vagy cég az EU-ban, amely valódi csatornával rendelkezik szállásadókhoz vagy szállodákhoz: influencerek, tanácsadók, ügynökségek, adótanácsadó irodák, egyesületek – és maguk a myNextDays ügyfelei. A jelentkezés ingyenes; előfizetés nem feltétel."
+      },
+      "wann": {
+        "frage": "Mikor számít egy vállalkozás az ügyfelemnek?",
+        "antwort": "Ha az Ön kódjával regisztrált és kifizette az első előfizetési számláját. A fizetés nélküli regisztrációk nem számítanak a rangsorba."
+      },
+      "doppelt": {
+        "frage": "Mi van, ha egy vállalkozás két partnert nevez meg?",
+        "antwort": "Egy vállalkozás pontosan egy partnerhez lesz rendelve – ahhoz, akinek a kódja a regisztrációkor szerepelt az űrlapon. A későbbi kódok ezen nem változtatnak."
+      },
+      "steuern": {
+        "frage": "Hogyan történik az elszámolás?",
+        "antwort": "Jóváírást állítunk ki (önelszámolás). Az EU-s adószámmal rendelkező cégek fordított adózással kapják meg, magánszemélyek áfa nélkül – a jutalékot Ön adózza le."
+      },
+      "material": {
+        "frage": "Van promóciós anyag?",
+        "antwort": "Igen: rövid videók a közösségi médiához, egy magyarázó videó, bannerek és szövegblokkok – a partner irányítópulton, az Ön nyelvén."
+      },
+      "wieviel": {
+        "frage": "Mennyi jutalékot kereshetek?",
+        "antwort": "Ez az ügyfelei előfizetési bevételétől és az Ön rangjától függ. A fenti táblázat a rangonkénti díjat mutatja; tizenkét hónapig ügyfelenként. Ezen felül az ügyfelei által a myBestDays-en keresztül kapott minden foglalás 0,5%-a, egyszeri feljutási bónusz minden elért rang után, a csapat által elért különbségi jutalék – és az elit partnertől kezdve 2,5% szuperjutalék a teljes struktúrára időbeli korlát nélkül."
+      },
+      "team": {
+        "frage": "Hogyan működik a csapatjutalék?",
+        "antwort": "A feltörekvő rangtól kezdve: Ha egy partner az Ön csapatlinkjén keresztül jelentkezik, és láthatóan beírja az Ön kódját a jelentkezésbe, a jóváhagyás után az Ön csapatához tartozik. Ügyfelei 1:1 arányban számítanak az Ön rangjához. Ügyfelei nettó előfizetési bevételéből Ön megkapja a különbséget az Ön díja és az övé között – pontosan egy szinten, részvételi díj nélkül, toborzási díj nélkül."
+      },
+      "auszahlung": {
+        "frage": "Hogyan és mikor kerülnek kifizetésre a jutalékok?",
+        "antwort": "Havonta, pénznemenként, amint az összeg eléri az adott pénznem minimális összegét. Minden jutaléksor 30 napig „nyitott” (visszatérítési időszak), majd kifizethető. Ön jóváírást kap (önelszámolás) – Ön nem állít ki számlát. Kifizetés SEPA, Wise vagy PayPal útján."
+      },
+      "verfolgen": {
+        "frage": "Hogyan követhetem nyomon a jutalékaimat és a teljesítményemet?",
+        "antwort": "A Partner Irányítópulton a „Jutalékok” alatt minden kifizetett előfizetési számlát láthat az alappal, az aránnyal, az összeggel és az állapottal, az „Ügyfelek” alatt a vállalkozásait pszeudonim módon, a „Csapat” alatt a csapattagok értékelését, a „Linkek és anyagok” alatt pedig a kódok szerinti kattintásokat."
+      },
+      "werbung": {
+        "frage": "Futtathatok fizetett hirdetéseket?",
+        "antwort": "Nem a márkánkra: a „myNextDays” és írásváltozataira (Brand-Bidding), cookie-droppingra, vásárolt elérésre vagy regisztrációra ösztönző hirdetések tilosak, és kizárást vonnak maguk után. Saját tartalmak, bejegyzések és ajánlások kifejezetten kívánatosak – hirdetésként megjelölve."
+      }
+    },
+    "abschluss": {
+      "heading": "Készen áll a myNextDays ajánlására?",
+      "sub": "Jelentkezzen két perc alatt. A felülvizsgálat után felvesszük Önnel a kapcsolatot.",
+      "cta": "Jelentkezzen most",
+      "kontakt": "Kérdése van? Írjon nekünk!"
+    },
+    "vergleich": {
+      "eyebrow": "Az Ön szintje",
+      "heading": "Minél több fizető ügyfél, annál magasabb az Ön díja",
+      "sub": "A rang elérésétől kezdve minden új jutalékra vonatkozik. A struktúra a következőkből áll: saját fizető ügyfelei, valamint csapattagjai ügyfelei.",
+      "nichtAbrufbar": "A szint jelenleg nem érhető el. Kérjük, próbálja meg később.",
+      "plan": "Szint",
+      "provision": "Jutalék saját ügyfelek után",
+      "teamProvision": "Csapatjutalék a csapattagok ügyfelei után",
+      "dauer": "Futamidő ügyfelenként",
+      "dauerWert": "12 hónap",
+      "kunden": "{von}–{bis} fizető ügyfél",
+      "kundenOffen": "legalább {von} fizető ügyfél",
+      "vorteile": "Szolgáltatások",
+      "ja": "tartalmazza",
+      "nein": "nem tartalmazza",
+      "leistung": {
+        "konto": "Ingyenes partnerfiók",
+        "dashboard": "Partner irányítópult ügyfelekkel, jutalékokkal és elemzésekkel",
+        "material": "Promóciós anyagok és azonosító sablonok",
+        "team": "Csapatépítés saját csapatlinkkel",
+        "gutschrift": "Havi kifizetés jóváírással (önelszámolás)",
+        "chat": "Közvetlen kapcsolat a partnercsapattal",
+        "support": "Személyes kapcsolattartó",
+        "coMarketing": "Co-marketing (közös akciók)"
+      },
+      "fussnoteTeam": "A csapatjutalék az Ön díja és a csapattag díja közötti különbség a nettó előfizetési bevételből, mindkettő a fizetés időpontjában – pontosan egy szinten, részvételi díj nélkül, toborzási díj nélkül. Összesen soha nem több mint 30%.",
+      "fussnoteCoMarketing": "A partnercsapattal való egyeztetés után; a partner profiljától és az aktuális akcióktól függ.",
+      "fussnoteRang": "A rang a struktúrájából adódik: saját fizető ügyfelek, plusz a csapattagok ügyfelei, mindenki egyszer számít. Új rang elérésekor, a feltörekvő szinttől kezdve, egyszeri előléptetési bónusz jár.",
+      "teamDifferenz": "{satz} % mínusz a csapattag díja",
+      "teamNicht": "még nincs csapat",
+      "bonus": "Előléptetési bónusz (egyszeri)",
+      "superProvision": "Szuperjutalék a teljes struktúrára",
+      "marktTurbo": "myBestDays foglalási részesedés",
+      "marktTurboWert": "0,5% foglalásonként, korlátlan",
+      "fussnoteSuper": "Elit partneri szinttől 2,5% a struktúrájában lévő összes ügyfél nettó előfizetési bevételéből – a jutalékon felül, a 12 hónapos korlát nélkül, amíg megtartja a rangot és az ügyfél fizet."
+    },
+    "team": {
+      "eyebrow": "Csapatépítés",
+      "heading": "Akár {max} % különbözeti jutalék a csapata forgalmából",
+      "sub": "Ismer más tanácsadókat, alkotókat vagy ügynökségeket, akik kapcsolatban állnak szállásadókkal? A feltörekvő rangtól kezdve az Ön csapatlinkjén keresztül jelentkeznek, az Ön csapatához tartoznak – és ügyfeleik 1:1 arányban számítanak az Ön rangjához. Ön megkeresi a különbséget az Ön díja és a csapattag díja között; a csapattagok megtartják teljes saját díjszabásukat.",
+      "rang": {
+        "titel": "A különbség",
+        "text": "Ön megkapja a díját mínusz a csapattag díját – mindkettő a fizetés időpontjában. Ha a csapattagja azonos rangban van, nem keletkezik csapatjutalék."
+      },
+      "ebene": {
+        "titel": "Pontosan egy szint",
+        "text": "Csapattagjai nem építenek saját csapatot Ön alatt. Nincs hálózat, nincs piramis."
+      },
+      "keinGeld": {
+        "titel": "Csak valós bevételből",
+        "text": "Nincs részvételi díj, nincs pénz a toborzásért. A csapatjutalék kizárólag a befizetett előfizetési bevételből származik."
+      },
+      "dauer": {
+        "titel": "Ugyanazok a szabályok",
+        "text": "12 hónap csapatügyfelenként, 30 napos visszatérítési időszak, visszavétel visszatérítés vagy visszaterhelés esetén – mint a saját jutalékánál. Az elit szinttől kezdve a szuperjutalék is jár a teljes struktúrára, időkorlát nélkül."
+      }
+    },
+    "kundeCta": {
+      "heading": "Már myNextDays ügyfél?",
+      "text": "Akkor Ön ismeri a terméket a legjobban. Ajánlja tovább – a jutaléka jóváírásként megjelenik a számláján, függetlenül az előfizetésétől.",
+      "cta": "Ajánlja és keressen"
+    }
+  },
+  "partnerBewerbung": {
+    "meta": {
+      "titel": "Jelentkezés partnernek — myNextDays",
+      "beschreibung": "Jelentkezés a myNextDays partnerprogramba: közösségi média fiókok, elérés, feltételek. Minden jelentkezést személyesen ellenőrzünk."
+    },
+    "eyebrow": "Partnerprogram",
+    "titel": "Jelentkezés partnernek",
+    "text": "Adja meg közösségi média fiókjait az eléréssel — minden jelentkezést személyesen ellenőrzünk, és általában néhány munkanapon belül válaszolunk. A jóváhagyással hozzáférést kap a partner irányítópultjához linkekkel, kódokkal és elemzésekkel.",
+    "email": "E-mail",
+    "passwort": "Jelszó a partner irányítópultjához",
+    "passwortHinweis": "Legalább 8 karakter.",
+    "name": "Név",
+    "firma": "Cég (opcionális)",
+    "rechtsform": "Jogi forma",
+    "privat": "Magánszemély",
+    "unternehmen": "Vállalat",
+    "land": "Ország",
+    "ustId": "Adószám",
+    "ustIdHinweis": "Az EU VIES rendszerében ellenőrizzük. Jóváhagyott szám nélkül nincs kifizetés a vállalatoknak.",
+    "kanaele": {
+      "titel": "Közösségi média fiókjai",
+      "hinweis": "Kötelező: legalább egy közösségi média fiók (Instagram, TikTok, YouTube, Facebook, LinkedIn…) címmel, felhasználónévvel és eléréssel (követők). Weboldal, blog vagy hírlevél is szívesen látott. A fiókokat a jóváhagyás előtt ellenőrizzük.",
+      "plattform": "Platform",
+      "handle": "Felhasználónév (opcionális)",
+      "reichweite": "Elérés (követők)",
+      "hinzufuegen": "Csatorna hozzáadása",
+      "entfernen": "Csatorna eltávolítása",
+      "socialPflicht": "Legalább egy közösségi média fiók eléréssel kötelező — egy weboldal önmagában nem elegendő.",
+      "plattformen": {
+        "website": "Weboldal",
+        "blog": "Blog",
+        "newsletter": "Hírlevél",
+        "podcast": "Podcast",
+        "other": "Egyéb"
+      }
+    },
+    "plattform": {
+      "website": "Weboldal",
+      "blog": "Blog",
+      "newsletter": "Hírlevél",
+      "podcast": "Podcast",
+      "other": "Egyéb"
+    },
+    "sponsor": "Partner által ajánlva (kód, opcionális)",
+    "sponsorHinweis": "Egy partner csapatlinkjén keresztül érkezett? Akkor az ő kódja itt szerepel. Ő csapatjutalékot kap az ügyfelei előfizetési bevételéből — az Ön saját jutaléka változatlan marad.",
+    "pitch": "Miért illik Ön a myNextDays-hez? (opcionális)",
+    "pitchPlatzhalter": "Kit ér el, miről beszél, hogyan szeretne ajánlani?",
+    "zustimmung": "Elfogadom a",
+    "bedingungen": "Partneri feltételeket",
+    "version": "Verzió: {version}",
+    "absenden": "Jelentkezés elküldése",
+    "sendet": "Küldés folyamatban…",
+    "pruefungHinweis": "Ez az űrlap reCAPTCHA védelemmel van ellátva. Az elküldés után partnercsapatunk ellenőrzi fiókjait és elérését; e-mailben értesítést kap a döntésről.",
+    "fehler": {
+      "social": "Kérjük, adjon meg legalább egy közösségi média fiókot címmel és eléréssel.",
+      "doppelt": "Ehhez az e-mail címhez már tartozik egy jelentkezés. Kérjük, jelentkezzen be a partneri irányítópultba.",
+      "eingabe": "Kérjük, ellenőrizze adatait.",
+      "captcha": "A spamvédelem ellenőrzése sikertelen. Kérjük, töltse újra az oldalt, és próbálja meg újra.",
+      "allgemein": "A jelentkezést jelenleg nem sikerült elküldeni. Kérjük, próbálja meg később újra."
+    },
+    "fertig": {
+      "titel": "Jelentkezés beérkezett",
+      "text": "Köszönjük! Személyesen ellenőrizzük fiókjait és elérését, és e-mailben felvesszük Önnel a kapcsolatot. Partneri irányítópultja e-mail címével és jelszavával érhető el – a linkek és kódok az engedélyezéssel válnak aktívvá.",
+      "login": "Partner bejelentkezéshez"
+    }
   }
 }

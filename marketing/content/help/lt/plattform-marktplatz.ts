@@ -87,12 +87,12 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "note",
               variant: "tip",
-              text: "Spustelėjus Publikuoti, myNextDays paprastai kartu aktyvuoja prekyvietę, portalus ir svetainę — prekyvietės jungiklį po to bet kada galite atskirai vėl išjungti.",
+              text: "Spustelėkite „Publikuoti“, myNextDays atrakina portalus ir svetainę kartu. myBestDays yra privalomas kanalas: kiekvienas objektas yra ten įtrauktas ir pasirodo, kai tik patvirtiname skelbimą.",
             },
             { type: "h2", text: "Matomumo pašalinimas" },
             {
               type: "p",
-              text: "Išjungus jungiklį Platformos prekyvietė, objektas dingsta iš prekyvietės paieškos. Jau patvirtintoms rezervacijoms tai įtakos neturi ir jos vyksta kaip įprasta, žr. [Prekyvietės komisinis mokestis](/hilfe/plattform-marktplatz/marktplatz-provision).",
+              text: "myBestDays negalima atskirai atšaukti. Jei objektas nebeparduodamas, naudokite „Pristabdyti pardavimą“ – tai pašalina jį iš visų portalų, svetainės ir prekyvietės vienu metu. Jau patvirtinti užsakymai lieka nepaveikti ir tęsiami kaip įprasta, žr. [Prekyvietės komisiniai](/hilfe/plattform-marktplatz/marktplatz-provision).",
             },
           ],
         },

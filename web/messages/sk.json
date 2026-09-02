@@ -1500,7 +1500,12 @@
       "portalRateInvalid": "Uložená sadzba zrážky portálu je mimo rozsahu 0–100 %. Opravte ju v Účtovníctvo → Pravidlá vyúčtovania.",
       "feeUnassigned": "Aspoň jeden druh poplatku ešte nie je priradený. Bez priradenia nie je možné určiť, komu suma patrí a či sa z nej počíta provízia — nastavte to v Účtovníctvo → Pravidlá vyúčtovania.",
       "feeNotComputable": "Poplatok nie je možné vyúčtovať ako sumu (uložený percentuálne alebo bez sumy). Skontrolujte poplatok pri objekte.",
-      "contractCurrency": "Paušál alebo minimálna provízia je uvedená v inej valute než rezervácia. Sumy v rôznych valutách sa neprepočítavajú — skontrolujte zmluvu o vyúčtovaní."
+      "contractCurrency": "Paušál alebo minimálna provízia je uvedená v inej valute než rezervácia. Sumy v rôznych valutách sa neprepočítavajú — skontrolujte zmluvu o vyúčtovaní.",
+      "recurringToOwner": "Opakujúce sa v prospech",
+      "recurringFromOwner": "Opakujúce sa na ťarchu",
+      "flatFees": "Paušály zo zmluvy",
+      "flatFeesIncluded": "už zohľadnené vo výplate",
+      "contractStartsLater": "Pre aspoň jednu rezerváciu neplatí v deň odchodu žiadna zmluva o vyúčtovaní – zmluva majiteľa začína až neskôr. Sadzba provízie je teda uložená, len dátum „Platné od“ je po odchode. Zadajte skutočný začiatok zmluvy do zmluvy o vyúčtovaní."
     },
     "rental": {
       "perReservation": "Za rezerváciu",
@@ -1520,13 +1525,66 @@
         "channexImport": "Rezervácia bola dodatočne stiahnutá pri pripojení kanála. Podľa sprostredkovateľa rezervácií takéto rezervácie neobsahujú príplatky ani poplatky za úklid — dodatočne to už nie je možné doplniť. Ak sa má poplatok vyúčtovať, zadajte ho ako položku k rezervácii.",
         "portalReportsNone": "Portál pri tejto rezervácii neuvádza poplatok ako samostatnú položku. Pri Booking.com to závisí od konfigurácie ubytovania (Ubytovanie → Pravidlá → Ďalšie poplatky) a od toho, odkedy tam poplatok platí: poplatok zavedený neskôr právom chýba pri starších rezerváciách.",
         "noPayload": "K tejto rezervácii neexistuje žiadna správa z portálu (import existujúcich údajov). Bez nej nie je možné zistiť, aké poplatky hosť zaplatil.",
-        "unknownReason": "Dôvod nie je možné určiť."
+        "unknownReason": "Dôvod nie je možné určiť.",
+        "csvImport": "Rezervácia pochádza z importu zásob CSV. Importovaná suma je cena hosťa portálu vrátane všetkých poplatkov; rozpis jednotlivých poplatkov nie je k dispozícii a nedal sa odvodiť z údajov portálu. Preto sa v účtovníctve neúčtujú žiadne poplatky z kmeňových údajov nehnuteľnosti – už sú zahrnuté v sume, len ich výška nie je doložená.",
+        "csvResolvedTitle": "Poplatky odvodené z čiastky portálu",
+        "csvResolved": "Rezervácia pochádza z importu zásob CSV; portál neposkytol rozpis. Poplatky boli odvodené z rozdielu medzi importovanou celkovou cenou a cenami za noc, ktoré poskytol portál, a boli pomenované prostredníctvom kmeňových údajov nehnuteľnosti. Ubytovanie plus poplatky sa rovnajú presne celkovej cene.",
+        "stammdatenPortalTitle": "Poplatky boli pridané z kmeňových dát objektu",
+        "stammdatenPortal": "Portál neposkytol rozpis poplatkov pre túto rezerváciu: Rezervácie, ktoré agregátor portálu získal po pripojení kanála, neobsahujú doplnky a poplatky za upratovanie; import zásob zo súboru obsahuje iba celkovú cenu. Poplatky boli preto stanovené tak, ako sú uložené v objekte: Upratovanie za pobyt, rezort za noc, domáce zviera len pri rezervácii zvieraťa.",
+        "portalBelegt": "Obsadené: Rozdiel medzi celkovou cenou portálu a cenami za noc, ktoré portál oznámil, presne zodpovedá týmto poplatkom.",
+        "portalImBetrag": "Zahrnuté v sume portálu: Celková cena portálu už zahŕňa poplatky; boli odpočítané, cena pre hostí zostáva sumou portálu.",
+        "portalObendrauf": "Navyše k sume portálu: Oznámená suma je čistá suma za noc; poplatky sa k nej pripočítajú a tvoria cenu pre hostí."
       },
       "chain": {
         "portal": "Portál",
         "management": "Správa",
         "flatFee": "Fixný poplatok",
         "fees": "Poplatky"
+      },
+      "arrival": "Príchod",
+      "departure": "Odchod",
+      "commission": "Provízia",
+      "flatFee": "Paušál",
+      "ownerShare": "Podiel vlastníka",
+      "portalDeduction": "Zrážka portálu",
+      "fees": "Poplatky",
+      "feesCount": "{n} položiek",
+      "expand": "Zobraziť rozpis",
+      "collapse": "Skryť rozpis",
+      "expandAll": "Zobraziť všetky rozpisy",
+      "collapseAll": "Skryť všetky rozpisy",
+      "breakdown": "Rozpis podľa rezervácie",
+      "noFeeItems": "Žiadne poplatky ani doplnkové služby pre túto rezerváciu.",
+      "posten": {
+        "guestPrice": "Cena pre hostí podľa portálu (vrátane poplatkov, bez doplnkových služieb)",
+        "portalCommission": "Provízia portálu {kanal}",
+        "portalFee": "Poplatok za platbu portálu",
+        "portalPayout": "Výplata z portálu",
+        "feesOut": "Poplatky v cene pre hostí – vyňaté z posudzovania",
+        "feesInBase": "Poplatky v cene pre hostí – podliehajúce provízii, zostávajú v posudzovaní",
+        "base": "Základ dane",
+        "commission": "Administratívna provízia {pct}",
+        "minCommission": "Minimálna provízia (zmluva) namiesto {pct}",
+        "contractFrom": "Zmluva od {datum}",
+        "rateManual": "manuálne v tomto vyúčtovaní",
+        "rateLegacy": "Štandardná sadzba z kmeňových dát",
+        "flatFee": "Paušál (zmluva)",
+        "feesBack": "Poplatky majiteľa – vrátené v plnej výške",
+        "ownerShare": "Podiel majiteľa",
+        "belongsBetrieb": "zostáva u prevádzkovateľa",
+        "belongsEigentuemer": "Majiteľ",
+        "belongsDurchlauf": "Priebežné položky (tretie strany)",
+        "commissionFree": "bez provízie",
+        "commissionable": "podliehajúce provízii",
+        "amountHidden": "Suma u prevádzkovateľa",
+        "addon": "Doplnková služba",
+        "noFeesReported": "Portál neoznámil žiadne poplatky k tejto rezervácii; preto neboli žiadne účtované.",
+        "afterPortal": "Celková suma po odpočítaní portálu",
+        "afterPortalHint": "Cena pre hostí mínus provízia portálu a poplatok za platbu portálu",
+        "feesBusiness": "Poskytnuté prevádzkovateľom – nie je súčasťou výplaty",
+        "contractStartsLater": "Žiadna zmluva o vyúčtovaní v deň odhlásenia {abreise}: zmluva začína až {beginn}. Dátum začiatku zmluvy u majiteľa posuňte dozadu, potom sa táto rezervácia započíta.",
+        "noContract": "Pre tento objekt neexistuje žiadna zmluva o vyúčtovaní a žiadna provízna sadzba v kmeňových dátach – vytvorte zmluvu u majiteľa.",
+        "addonsOutside": "Doplnkové služby – predávané cez myNextDays, nie sú zahrnuté v cene pre hostí na portáli"
       }
     },
     "expenses": {
@@ -1566,7 +1624,11 @@
       "rentalRevenue": "Príjmy z prenájmu",
       "expenses": "Výdavky a extra položky",
       "total": "Spolu",
-      "deductPercentage": "Provízia (%)"
+      "deductPercentage": "Provízia (%)",
+      "shares": "Podiel vlastníka z rezervácií",
+      "deductions": "Odpočty",
+      "credits": "Kredity",
+      "recurring": "Opakujúce sa položky"
     },
     "manage": {
       "owner": "Vlastník",
@@ -1631,6 +1693,25 @@
       "cancel": "Zrušiť",
       "confirm": "Potvrdiť",
       "working": "Potvrdzuje sa..."
+    },
+    "deductions": {
+      "title": "Zrážky a dobropisy",
+      "intro": "Všetko, čo mení výplatu okrem rezervácií – z troch zdrojov: paušálna sadzba zo zmluvy za rezerváciu, jednorazové zúčtovacie položky a opakujúce sa položky (trvalá dohoda).",
+      "deductions": "Zrážky (na ťarchu majiteľa)",
+      "credits": "Dobropisy (v prospech majiteľa)",
+      "empty": "V tomto období žiadne zrážky ani dobropisy.",
+      "srcExpense": "Zúčtovacie položky",
+      "srcRecurring": "Opakujúca sa položka",
+      "srcFlatFee": "Paušálna sadzba zo zmluvy",
+      "perBooking": "za rezerváciu",
+      "perNight": "za noc",
+      "perPeriod": "za obdobie",
+      "quantity": "{n} × {betrag}",
+      "flatFeesNote": "Paušálne sadzby zo zmluvy sú už odpočítané z podielov majiteľa za rezerváciu – tu len pre prehľad, žiadne ďalšie odpočty.",
+      "manageRecurring": "Spravovať opakujúce sa položky",
+      "manageContract": "Spravovať zmluvu o vyúčtovaní",
+      "receipt": "Doklad",
+      "bookingsCount": "{n} rezervácií"
     }
   },
   "ownerBilling": {
@@ -1709,7 +1790,9 @@
     "effectReleased": "{property}: predaj pokračuje — koniec zmluvy bol zrušený a noci sú opäť predajné.",
     "effectBlocked": "{property}: predaj sa končí dňa {date} — {nights} nocí zablokovaných a stiahnutých z portálov.",
     "effectCalendarFailed": "{property}: Koniec zmluvy je zadaný, blokovanie kalendára nie je zapísané. Bude doplnené dnes v noci.",
-    "effectNoUnit": "{property}: Koniec zmluvy je zadaný, ale kalendár nie je zablokovaný – objektu chýba jednotka. Vytvorte ju, potom sa blokovanie uplatní."
+    "effectNoUnit": "{property}: Koniec zmluvy je zadaný, ale kalendár nie je zablokovaný – objektu chýba jednotka. Vytvorte ju, potom sa blokovanie uplatní.",
+    "validFromHint": "Dátum, od ktorého je zmluva platná – v prípade existujúcej zmluvy skutočný dátum zmluvy, nie dnešný dátum. Každá rezervácia sa vyúčtuje so zmluvou platnou v deň odchodu; rezervácie s predchádzajúcim odchodom zostanú bez výplaty.",
+    "errorValidFromRequired": "Uveďte, odkedy je zmluva platná."
   },
   "portal": {
     "title": "Môj portál",
@@ -5465,7 +5548,8 @@
       "connectPortal": "Pripojiť portál",
       "noPortals": "K tomuto objektu zatiaľ nie je pripojený žiadny portál (Booking, Airbnb a ďalšie).",
       "marketplaceReview": "Na kontrole",
-      "marketplaceReviewHint": "myBestDays túto ponuku ešte kontroluje. Na marketplace sa zobrazí po schválení. Portály a vlastnú webovú stránku to neovplyvní."
+      "marketplaceReviewHint": "myBestDays stále kontroluje tento inzerát. Hneď ako bude schválený, objaví sa na trhovisku. myBestDays je povinný kanál: Nehnuteľnosť tam nie je možné individuálne odhlásiť — „Pozastaviť predaj“ ju stiahne z predaja všade.",
+      "marketplaceMandatory": "Povinný kanál — každá nehnuteľnosť je uvedená na myBestDays"
     },
     "IdLayout": {
       "loadError": "Objekt sa nepodarilo načítať: {error}"
@@ -5563,11 +5647,11 @@
       "stepOf": "Krok {schritt} z {gesamt}",
       "next": "Continue",
       "back": "Back",
-      "channelsHint": "Kde sa má tento objekt predávať? Kedykoľvek to možno zmeniť.",
+      "channelsHint": "Kde sa má táto nehnuteľnosť dodatočne predávať? Portály a webové stránky je možné kedykoľvek zmeniť.",
       "channelPortals": "Rezervačné portály",
       "channelPortalsHint": "Airbnb, Booking.com a ďalšie. Portály vyžadujú kompletné údaje — pozri nižšie.",
       "channelPlatform": "myBestDays",
-      "channelPlatformHint": "Naše vlastné trhovisko s nízkou províziou.",
+      "channelPlatformHint": "Náš vlastný trh s 8 % all-inclusive. Každá nehnuteľnosť je tam uvedená; viditeľná bude po zverejnení a našom schválení.",
       "channelWebsite": "Vlastný web",
       "channelWebsiteHint": "Vaša rezervačná stránka a rezervačný widget.",
       "readinessTitle": "Pre portály ešte chýba:",
@@ -6261,7 +6345,21 @@
       "planPortalOffHint": "Táto cena platí len pre priame rezervácie. Kliknite pre odoslanie na rezervačné portály.",
       "planPortalOn": "Cena ide teraz na rezervačné portály.",
       "planPortalOnHint": "Táto cena ide na rezervačné portály. Kliknite pre použitie len pre priame rezervácie.",
-      "planPortalYes": "Na portály"
+      "planPortalYes": "Na portály",
+      "feeValidityTitle": "Platnosť",
+      "feeValidityHint": "Poplatok platí pre rezervácie, ktorých príchod spadá do daného obdobia. Prázdne = bez obmedzenia. Poplatok s obdobím sa neposiela na portály: tam nie je možné zobraziť podmienku dátumu.",
+      "feeValidFromLabel": "Platí od",
+      "feeValidUntilLabel": "Platí do",
+      "feeValidityOrderError": "„Platí do“ je pred „Platí od“.",
+      "feeOwnerStatementOnlyLabel": "Len vo vyúčtovaní majiteľa",
+      "feeOwnerStatementOnlyHint": "Poplatok sa hosťovi neúčtuje a neposiela sa na žiadny portál. Prejaví sa len vo vyúčtovaní majiteľa, vo vyhodnotení a na portáli majiteľa.",
+      "feeValidFromSuffix": "od {date}",
+      "feeValidUntilSuffix": "do {date}",
+      "feeOwnerStatementOnlySuffix": "len vyúčtovanie",
+      "feeCalculationLabel": "Výpočet",
+      "feeVatHint": "Vlastná sadzba dane pre tento poplatok, odlišná od sadzby dane za prenocovanie objektu. Vypnuté znamená: poplatok sa riadi sadzbou dane za prenocovanie.",
+      "feeVatIncludedLabel": "Daň v sume",
+      "feeVatIncludedHint": "Je sadzba dane už zahrnutá v zadanej sume alebo sa pripočíta? Bez tohto údaja by bola suma nejednoznačná."
     },
     "policiesForm": {
       "title": "Zásady",
@@ -7303,23 +7401,23 @@
     "marketplacePending": "{count} na kontrole",
     "marketplaceWaiting": "Na kontrole",
     "marketplace": {
-      "intro": "myBestDays je náš vlastný marketplace — rezervačný kanál ako Booking alebo Airbnb, len bez pripojenia k portálu. Objekt sa zobrazí, keď je aktívny, tu ponúkaný a schválený.",
+      "intro": "myBestDays je náš vlastný trh – rezervačný kanál ako Booking alebo Airbnb, len bez pripojenia na portál a povinný pre každú nehnuteľnosť. Nehnuteľnosť je viditeľná, ak je aktívna a nami schválená.",
       "openMarketplace": "Otvoriť marketplace",
       "propertiesHeading": "Objekty na marketplace",
       "noProperties": "Zatiaľ nie sú vytvorené žiadne objekty.",
       "columnProperty": "Objekt",
-      "columnVisibility": "Viditeľnosť",
+      "columnVisibility": "Stav",
       "columnApproval": "Schválenie",
       "columnBookings": "Rezervácie",
       "stateActive": "Viditeľný",
       "statePending": "Na kontrole",
-      "stateNotListed": "Nie je ponúkaný",
+      "stateNotListed": "Predaj pozastavený",
       "stateInactiveProperty": "Objekt nie je aktívny",
       "viewListing": "Zobraziť ponuku",
       "reviewHint": "Objekty na kontrole sa na myBestDays ešte nezobrazia. Každú ponuku kontrolujeme, pretože myBestDays tam vystupuje ako poskytovateľ — portály a vlastnú webovú stránku to neovplyvní.",
       "summaryVisible": "{count} viditeľných",
       "summaryWaiting": "{count} na kontrole",
-      "summaryOff": "{count} neponúkaných",
+      "summaryOff": "{count} pozastavených alebo neaktívnych",
       "moderation": {
         "draft": "Návrh",
         "pending": "Na kontrole",
@@ -7354,7 +7452,8 @@
       "mayClose": "Import pokračuje na serveri – túto stránku môžete zavrieť.",
       "andMore": "… a {count} ďalších",
       "close": "Zavrieť",
-      "updated": "aktualizované"
+      "updated": "aktualizované",
+      "portal": "už z portálu"
     }
   },
   "calendarSync": {
@@ -10511,7 +10610,11 @@
     "haveAccount": "Už máte účet?",
     "loginLink": "Prihláste sa tu",
     "loadingHeadline": "Vlastná rezervačná stránka. Nechajte si 100 % z každej rezervácie.",
-    "loadingText": "Pripravujeme váš účet …"
+    "loadingText": "Pripravujeme váš účet …",
+    "referralLabel": "Odporúčané (voliteľné)",
+    "referralPlaceholder": "Kód odporúčania, napr. ANNA-K7P2",
+    "referralHint": "Spoznali ste myNextDays prostredníctvom partnera? Jeho kód je tu – vidí len, že prevádzka prišla cez neho, nikdy nie vaše meno. S kódom získate po 14 testovacích dňoch prvý celý mesiac zadarmo.",
+    "referralContactOptIn": "Môj odporúčateľ ma môže kontaktovať cez myNextDays."
   },
   "marketingSite": {
     "stars": "4,5 hviezdičky",

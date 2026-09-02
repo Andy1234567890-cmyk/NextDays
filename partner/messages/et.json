@@ -1,0 +1,521 @@
+{
+  "meta": {
+    "titel": "myNextDays Partner",
+    "beschreibung": "myNextDays partnerprogrammi partneri juhtpaneel: lingid, kliendid, vahendustasud, väljamaksed."
+  },
+  "nav": {
+    "partner": "Partner",
+    "uebersicht": "Ülevaade",
+    "kunden": "Kliendid",
+    "provisionen": "Vahendustasud",
+    "auszahlungen": "Väljamaksed",
+    "links": "Lingid ja materjalid",
+    "profil": "Profiil",
+    "sprache": "Keel",
+    "abmelden": "Logi välja",
+    "nachrichten": "Sõnumid",
+    "menue": "Menüü",
+    "team": "Meeskond",
+    "beitraege": "Postitused"
+  },
+  "status": {
+    "pending_review": {
+      "titel": "Teie taotlust vaadatakse läbi",
+      "text": "Vaatame iga taotluse isiklikult läbi ja võtame teiega e-posti teel ühendust. Kuni heakskiiduni ei ole lingid ja koodid veel aktiivsed – oma profiili- ja väljamakseandmeid saate juba praegu täiendada."
+    },
+    "rejected": {
+      "titel": "Teie taotlust ei rahuldatud",
+      "text": "Me ei saanud teie taotlust praegu rahuldada. Küsimuste korral kirjutage meile."
+    },
+    "suspended": {
+      "titel": "Teie partnerkonto on blokeeritud",
+      "text": "Avatud vahendustasusid ei maksta välja seni, kuni blokeering kehtib. Küsimuste korral kirjutage meile."
+    },
+    "approved": {
+      "titel": "Heaks kiidetud",
+      "text": "Teie konto on aktiivne."
+    },
+    "grund": "Põhjus"
+  },
+  "uebersicht": {
+    "titelBewerber": "Tere tulemast partnerprogrammi",
+    "textBewerber": "Kui teie taotlus on heaks kiidetud, näete siin oma linke, kliente ja vahendustasusid. Sisestage vahepeal oma maksu- ja väljamakseandmed – siis saab esimene väljamakse toimuda ilma lisaküsimusteta.",
+    "zumProfil": "Profiili juurde",
+    "titel": "Tere, {name}",
+    "rang": "Tase {rang} · {satz} tellimuse käibest",
+    "naechsterRang": "veel {fehlend} maksvat klienti kuni {rang} ({satz})",
+    "linksTeilen": "Jaga linke",
+    "keineBetraege": "—",
+    "kachel": {
+      "klicks": "Klikid (30 päeva)",
+      "registrierungen": "Registreeritud ettevõtted",
+      "zahlend": "Maksvad kliendid",
+      "offen": "Avatud (tagastusaken)",
+      "auszahlbar": "Väljamakstav",
+      "ausgezahlt": "Välja makstud",
+      "team": "Meeskonna vahendustasu",
+      "teamHinweis": "{n} meeskonnapartnerit",
+      "struktur": "Kliendid teie struktuuris",
+      "strukturHinweis": "enda + meeskonna kliendid – see arv määrab teie asetuse",
+      "super": "Superkomisjon",
+      "superHinweis": "{satz} teie struktuuri tellimuste käibelt, ilma ajapiiranguta",
+      "turbo": "myBestDays broneeringu osa",
+      "turboHinweis": "0,5 % iga myBestDays broneeringu kohta teie klientide ja meeskonnaklientide puhul",
+      "bonus": "Edutamisboonused",
+      "bonusHinweis": "ühekordselt iga saavutatud asetuse eest"
+    },
+    "deineLinks": "Teie lingid"
+  },
+  "links": {
+    "titel": "Lingid ja materjalid",
+    "hinweis": "Teie link viib mynextdays.com lehele ja loendab kliki. Kood on registreerimisel vormis nähtav – ilma küpsiseta. Ettevõte määratakse täpselt ühele partnerile.",
+    "klicks30": "{n} klikki 30 päeva jooksul",
+    "kopiert": "Kopeeritud.",
+    "kopierenFehlgeschlagen": "Kopeerimine ei ole võimalik – palun märkige ja kopeerige.",
+    "codeKopieren": "Kopeeri kood",
+    "linkFehlt": "Link pole veel saadaval.",
+    "neuerCode": "Loo uus kood",
+    "label": "Kirjeldus (valikuline)",
+    "wunschcode": "Soovitud kood (valikuline)",
+    "anlegen": "Loo",
+    "abbrechen": "Tühista",
+    "codeAngelegt": "Kood loodud.",
+    "codeVergeben": "See kood on juba kasutusel.",
+    "fehler": "See ei õnnestunud.",
+    "kennzeichnung": {
+      "titel": "Kohustuslik: märgista reklaam",
+      "text": "Iga soovitus teie lingi või koodiga on reklaam ja peab olema sellisena äratuntav – postituse alguses, postituse keeles. Lihtsalt „#ad“ ei piisa. Rikkumised võivad kaasa tuua blokeerimise.",
+      "imBeitrag": "Postituses",
+      "amLink": "Lingil",
+      "land": {
+        "DE": "Saksamaa",
+        "DK": "Taani"
+      },
+      "andere": "Muud riigid: Kaubanduslik eesmärk peab olema selgelt äratuntav (EL-i ebaausa kaubandustava direktiiv). Palun kontrollige oma riigi nõudeid; lisame tõestatud sõnastusi järk-järgult."
+    },
+    "material": {
+      "titel": "Reklaammaterjal",
+      "leer": "Materjal on ettevalmistamisel – see ilmub siia kohe, kui see on heaks kiidetud.",
+      "art": {
+        "video": "Video",
+        "image": "Pilt",
+        "text": "Tekstilõik",
+        "link": "Link"
+      },
+      "oeffnen": "Ava"
+    }
+  },
+  "kunden": {
+    "titel": "Kliendid",
+    "hinweis": "Teie värvatud ettevõtted – pseudonüümselt. Näete riiki, olekut ja summasid, mitte kunagi nime ega e-posti. Maksev tähendab: esimene tellimuse arve on tasutud ja tellimus on aktiivne.",
+    "leer": "Ükski ettevõte pole veel teie lingi kaudu registreerunud.",
+    "kunde": "Klient {n}",
+    "spalte": {
+      "kunde": "Klient",
+      "land": "Riik",
+      "status": "Olek",
+      "registriert": "Registreeritud",
+      "provisionBis": "Vahendustasu kuni",
+      "verdient": "Teenitud"
+    },
+    "status": {
+      "registriert": "Registreeritud",
+      "zahlend": "Maksev",
+      "beendet": "Lõpetatud",
+      "in_pruefung": "Kontrollimisel",
+      "abgelehnt": "Tagasi lükatud"
+    }
+  },
+  "provisionen": {
+    "titel": "Vahendustasud",
+    "hinweis": "Iga rida on tasutud tellimuse arve, myBestDaysi kaudu tehtud broneering või edutamisboonus. Aluseks on tellimuse netokäive või broneeringu väärtus; määr on teie asetus makse tegemise ajal. Avatud read muutuvad väljamakstavaks 30 päeva pärast.",
+    "leer": "Veel pole vahendustasu.",
+    "reifAm": "makstav alates {datum}",
+    "spalte": {
+      "datum": "Kuupäev",
+      "art": "Tüüp",
+      "kunde": "Klient",
+      "basis": "Alus",
+      "satz": "Määr",
+      "betrag": "Summa",
+      "status": "Staatus"
+    },
+    "art": {
+      "earn": "Tulu",
+      "reversal": "Tagasimakse",
+      "adjustment": "Parandus",
+      "override": "Meeskonna vahendustasu",
+      "bonus": "Edutamisboonus",
+      "lifetime": "Superkomisjon",
+      "booking_share": "Broneeringu osa"
+    },
+    "status": {
+      "pending": "Avatud",
+      "approved": "Makstav",
+      "held": "Peatatud",
+      "paid": "Välja makstud",
+      "reversed": "Tagasi võetud",
+      "cancelled": "Tühistatud"
+    },
+    "team": "Meeskond"
+  },
+  "auszahlungen": {
+    "titel": "Väljamaksed",
+    "hinweis": "Igakuine, valuuta kohta, alates miinimumsummast. Iga väljamaksega kaasneb kreeditarve (self-billing) – see on teie tõend.",
+    "kein_weg": "Väljamakseviis pole veel sisestatud. Palun lisage see profiili alla – vastasel juhul ei saa väljamakset teha.",
+    "leer": "Väljamakseid veel pole.",
+    "spalte": {
+      "nummer": "Kreeditarve nr.",
+      "zeitraum": "Periood",
+      "betrag": "Summa",
+      "status": "Staatus",
+      "gutschrift": "Kreeditarve"
+    },
+    "status": {
+      "pending": "Ette valmistatud",
+      "processing": "Ülekandel",
+      "paid": "Makstud",
+      "failed": "Ebaõnnestus"
+    },
+    "gutschriftLaden": "Laadi alla",
+    "gutschriftFehler": "Kreeditarvet ei saanud laadida."
+  },
+  "profil": {
+    "titel": "Profiil",
+    "seit": "Partner alates {datum}",
+    "stammdaten": "Põhiandmed",
+    "name": "Nimi",
+    "firma": "Ettevõte (valikuline)",
+    "sprache": "E-kirjade keel",
+    "kanal": "Teie sotsiaalmeedia kontod ja kanalid",
+    "speichern": "Salvesta",
+    "gespeichert": "Salvestatud.",
+    "gespeichertViesOffen": "Salvestatud. Käibemaksu ID-d ei saanud veel kinnitada – kontrollime seda uuesti enne väljamakset.",
+    "steuerUndAuszahlung": "Maksu- ja väljamakseandmed",
+    "aktuellerWeg": "Praegune: {weg} {details}",
+    "keinWeg": "Väljamakseviisi pole veel lisatud.",
+    "viesBestaetigt": "Käibemaksu ID kinnitatud (VIES)",
+    "viesOffen": "Käibemaksu ID pole veel kinnitatud",
+    "rechtsform": "Juriidiline vorm",
+    "privat": "Eraisik",
+    "unternehmen": "Ettevõte",
+    "land": "Riik",
+    "ustId": "Käibemaksu ID",
+    "ustIdHinweis": "Kontrollitakse EL-i VIES-süsteemi vastu. Ilma kinnitatud numbriga ettevõtetele väljamakseid ei tehta. Krediidil on pöördmaksustamise märge.",
+    "privatHinweis": "Eraisikuna saate krediidi ilma käibemaksuta. Komisjonitasu peate ise maksustama.",
+    "auszahlungsweg": "Väljamakseviis",
+    "kontoinhaber": "Konto omanik",
+    "empfaengerEmail": "{weg}-e-posti aadress",
+    "passwortBestaetigen": "Kinnitamiseks: Teie parool",
+    "passwortFalsch": "Parool ei klapi.",
+    "steuerdaten": "Maksuandmed"
+  },
+  "anmelden": {
+    "partner": "Partner",
+    "titel": "Logi sisse",
+    "text": "myNextDays partnerprogrammi armatuurlaud.",
+    "email": "E-post",
+    "passwort": "Parool",
+    "anmelden": "Logi sisse",
+    "passwortVergessen": "Unustasid parooli?",
+    "resetGesendet": "Kui konto eksisteerib, oleme saatnud e-kirja.",
+    "stoerung": "Sisselogimisteenus pole praegu saadaval. See ei ole seotud teie sisselogimisandmetega – proovige hiljem uuesti.",
+    "keinPartnerKonto": "Nende sisselogimisandmetega partnerkontot ei ole.",
+    "fehlgeschlagen": "Sisselogimine ebaõnnestus.",
+    "nochKeinKonto": "Pole veel partner?",
+    "bewerben": "Kandideeri kohe"
+  },
+  "bewerben": {
+    "partner": "Partner",
+    "titel": "Kandideeri partneriks",
+    "text": "Kaks minutit. Kontrollime iga avaldust isiklikult ja võtame teiega e-posti teel ühendust.",
+    "name": "Teie nimi",
+    "firma": "Ettevõte (valikuline)",
+    "email": "E-post",
+    "passwort": "Parool (vähemalt 8 tähemärki)",
+    "rechtsform": "Juriidiline vorm",
+    "privat": "Eraisik",
+    "unternehmen": "Ettevõte",
+    "land": "Riik",
+    "ustId": "KMKR-number",
+    "ustIdHinweis": "Ettevõtetele kohustuslik; kontrollitakse VIES-i kaudu.",
+    "kanal": "Teie sotsiaalmeedia kontod",
+    "kanalHinweis": "Nõutav: vähemalt üks sotsiaalmeedia konto (Instagram, TikTok, YouTube, Facebook, LinkedIn jne) koos aadressi, kasutajanime ja levialaga. Veebisait, blogi või uudiskiri on teretulnud lisana. Kontod kontrollitakse enne kinnitamist.",
+    "pitch": "Kuidas jõuate puhkemajade üürileandjate või hotellideni? (valikuline)",
+    "pitchHinweis": "Paar lauset on piisav.",
+    "zustimmung": "Nõustun partneritingimustega, eriti kohustusega märkida soovitused reklaamiks.",
+    "bedingungen": "Programmi juurde",
+    "captchaHinweis": "See leht on kaitstud reCAPTCHA-ga; kehtivad Google'i privaatsuspoliitika ja teenusetingimused.",
+    "stoerung": "Teenus pole praegu saadaval – palun proovige hiljem uuesti.",
+    "emailVergeben": "Sellele e-posti aadressile on juba avaldus esitatud. Palun logige sisse.",
+    "captchaFehler": "Turvakontroll ebaõnnestus. Palun laadige leht uuesti ja proovige uuesti.",
+    "laeuft": "Saadan …",
+    "absenden": "Esita avaldus",
+    "schonPartner": "Olete juba partner?",
+    "anmelden": "Logi sisse",
+    "sponsor": "Partneri poolt värvatud (kood, valikuline)",
+    "sponsorHinweis": "Kas olete siin partneri meeskonnalingi kaudu? Tema kood on siis siin. Ta saab teie klientide tellimuste müügist meeskonnavahendustasu – teie enda vahendustasu jääb samaks."
+  },
+  "nachrichten": {
+    "titel": "Sõnumid",
+    "hinweis": "Teie otseühendus partnerimeeskonnaga – küsimused vahendustasu, väljamaksete, materjalide või kliendi kohta. Vastused kuvatakse siin reaalajas.",
+    "neu": "Uus sõnum partnerimeeskonnale",
+    "platzhalter": "Millega on tegemist?",
+    "senden": "Saada",
+    "abbrechen": "Tühista",
+    "leer": "Vestlusi veel ei ole.",
+    "stoerung": "Teenus pole praegu saadaval – proovige hiljem uuesti.",
+    "fehler": "See ebaõnnestus.",
+    "team": "Partnerimeeskond",
+    "du": "Teie",
+    "antwortPlatzhalter": "Teie vastus …",
+    "antworten": "Vasta",
+    "status": {
+      "in_bearbeitung": "Menetluses",
+      "wartet_auf_dich": "Vastus saadud",
+      "geloest": "Lahendatud"
+    }
+  },
+  "kanaele": {
+    "plattformLabel": "Platvorm",
+    "handle": "Käepide (valikuline)",
+    "reichweite": "Ulatus (jälgijad)",
+    "hinzufuegen": "Lisa kanal",
+    "entfernen": "Eemalda kanal",
+    "plattform": {
+      "website": "Veebisait",
+      "blog": "Blogi",
+      "newsletter": "Uudiskiri",
+      "podcast": "Podcast",
+      "other": "Muu"
+    },
+    "socialPflicht": "Vähemalt üks sotsiaalmeedia konto on kohustuslik – ainult veebisaidist ei piisa."
+  },
+  "team": {
+    "titel": "Meeskond",
+    "hinweis": "Partnerid, kes on kandideerinud teie koodiga, moodustavad teie meeskonna. Nende klientide tellimuste netokäibelt saate teie määra (praegu {satz}) ja meeskonnapartneri määra vahe – mõlemad makse tegemise ajal. Meeskonnakliendid loetakse teie asetuse jaoks 1:1.",
+    "meinSponsor": "Olete {name} meeskonnapartner.",
+    "link": {
+      "titel": "Teie meeskonnalink",
+      "text": "Kes kandideerib selle lingi kaudu, kannab teie koodi nähtavalt avalduses – ilma küpsiseta.",
+      "kopieren": "Kopeeri link",
+      "keinLink": "Aktiivset koodi pole – looge see jaotises Lingid ja materjalid."
+    },
+    "regeln": {
+      "titel": "Reeglid",
+      "rang": "Meeskonna komisjonitasu = teie määr miinus meeskonnapartneri määr, makse tegemise ajal. Sama asetus = 0.",
+      "ebene": "Täpselt üks tase: teie meeskonnapartnerid ei loo oma meeskonda.",
+      "keinGeld": "Raha ei saa värbamise eest – ainult tasutud tellimuste müügitulust.",
+      "dauer": "12 kuud iga meeskonnakliendi kohta, 30-päevane tagastusaken. Lisaks Elite tasemelt 2,5 % superkomisjonitasu ilma ajapiiranguta."
+    },
+    "kachel": {
+      "mitglieder": "Meeskonnapartnerid (aktiivsed / kokku)",
+      "teamKunden": "Maksvad meeskonnakliendid",
+      "umsatz30": "Meeskonna käive (30 päeva)",
+      "offen": "Meeskonnaprovisjon ootel",
+      "auszahlbar": "Väljamakstav meeskonnaprovisjon",
+      "ausgezahlt": "Väljamakstud meeskonnaprovisjon"
+    },
+    "verlauf": {
+      "titel": "Ajalugu · 12 kuud",
+      "leer": "Meeskonna käivet veel pole.",
+      "provision": "Meeskonnaprovisjon",
+      "umsatz": "Meeskonna käive"
+    },
+    "mitglieder": {
+      "titel": "Teie meeskond",
+      "leer": "Meeskonnapartnereid veel pole. Jagage oma meeskonnalinki.",
+      "kunden": "{n} maksvat klienti",
+      "umsatz30": "Käive 30 p.",
+      "offen": "Ootel",
+      "seit": "Alates {datum}"
+    },
+    "spalte": {
+      "partner": "Partner",
+      "status": "Staatus",
+      "rang": "Auaste",
+      "kunden": "Maksvad kliendid",
+      "umsatz30": "Käive 30 p.",
+      "umsatzGesamt": "Käive kokku",
+      "offen": "Ootel",
+      "auszahlbar": "Väljamakstav",
+      "ausgezahlt": "Väljamakstud"
+    },
+    "status": {
+      "pending_review": "Kontrollimisel",
+      "approved": "Heaks kiidetud",
+      "rejected": "Tagasi lükatud",
+      "suspended": "Blokeeritud"
+    },
+    "chat": {
+      "titel": "Meelelahutus",
+      "schreiben": "Kirjutamine",
+      "rolle": {
+        "sponsor": "Teie sponsor",
+        "member": "Meeskonnapartner"
+      },
+      "zurueck": "Meeskond",
+      "leer": "Sõnumeid veel pole.",
+      "platzhalter": "Teie sõnum ...",
+      "senden": "Saada",
+      "titelListe": "Meeskonna sõnumid"
+    },
+    "nochNichtErlaubt": "Meeskonda juhite alates asetuse „Edasijõudnu“ (5 maksvat klienti teie struktuuris) saavutamisest. Enne seda meeskonnalinki ei ole."
+  },
+  "bedingungen": {
+    "neueVersion": "Partneritingimused on uues versioonis (teie nõusolek: versioon {alt}, praegune: {neu}). Palun lugege ja nõustuge uuesti.",
+    "nochNicht": "Palun nõustuge partneritingimustega (versioon {neu}).",
+    "lesen": "Loe tingimusi",
+    "annehmen": "Nõustun",
+    "angenommen": "Aitäh – nõusolek salvestatud."
+  },
+  "beitraege": {
+    "titel": "Postitused",
+    "hinweis": "Looge iga Reeli, video või postituse jaoks eraldi link. Nii näete, milline postitus toob klikke, registreerimisi ja maksvaid kliente.",
+    "kontoHinweis": "Ühendage oma konto, siis kuvatakse siin ka vaatamised ja interaktsioonid otse platvormilt.",
+    "kontoVerbinden": "Ühenda konto",
+    "neu": "Uus postitus",
+    "keinCode": "Teil on esmalt vaja aktiivset soovituskoodi.",
+    "feld": {
+      "titel": "Pealkiri",
+      "titelBeispiel": "nt Reel Kopenhaagen sügis",
+      "plattform": "Platvorm",
+      "code": "Kood",
+      "datum": "Avaldatud",
+      "url": "Postituse aadress (valikuline)",
+      "urlHinweis": "Saab lisada pärast avaldamist. Aadressiga seostame vaatamised ja interaktsioonid postitusega."
+    },
+    "linkErzeugen": "Loo link",
+    "angelegt": "Postitus loodud – link on valmis.",
+    "doppelt": "See postitus on selle koodi jaoks juba olemas.",
+    "fehler": "See ei õnnestunud. Palun proovige uuesti.",
+    "liste": "{n, plural, =0 {Postitusi pole} =1 {1 postitus} other {# postitust}}",
+    "leer": "Postitusi veel pole. Looge esimene link ülevalt.",
+    "veroeffentlicht": "avaldatud {datum}",
+    "loeschen": "Kustuta postitus",
+    "geloescht": "Postitus kustutatud.",
+    "loeschenGesperrt": "Postitusel on juba registreerimisi ja see jääb alles.",
+    "kopiert": "Link kopeeritud.",
+    "kopierenFehlgeschlagen": "Kopeerimine ei õnnestu – palun märkige käsitsi.",
+    "linkFehlt": "Link pole praegu saadaval.",
+    "qrZeigen": "Näita QR-koodi",
+    "qrSchliessen": "Peida QR-kood",
+    "qrAlt": "QR-kood postituse lingile",
+    "qrHinweis": "Lühilugude, videote ja printimiseks – viib samale lingile.",
+    "beitragOeffnen": "Ava postitus",
+    "urlAendern": "Muuda aadressi",
+    "urlNachtragen": "Lisa aadress",
+    "speichern": "Salvesta",
+    "gespeichert": "Salvestatud.",
+    "kennzahl": {
+      "klicks": "Klikid 90 päeva",
+      "klicks30": "{n} 30 päeva jooksul",
+      "registrierungen": "Registreerimised",
+      "kunden": "Maksvad kliendid",
+      "views": "Vaatamisi",
+      "gemessen": "Seisuga {zeit}",
+      "nichtVerbunden": "Konto pole ühendatud",
+      "interaktion": "Meeldimisi {likes} · Kommentaare {kommentare} · Jagamisi {shares} · Salvestatud {saves}",
+      "pro1000": "{n} klikki 1000 vaatamise kohta"
+    },
+    "freigabe": {
+      "videoNoetig": "Laadi üles jagamiseks mõeldud postitus",
+      "erklaerung": "Laadige üles oma valmis video, pilt või PDF enne avaldamist. Kui oleme selle heaks kiitnud, ilmub siia teie isiklik link – seejärel lisate selle postituse alla. Kasutage ainult meie reklaammaterjale, mitte oma ekraanipilte ega edulubadusi või garantiisid.",
+      "hochladen": "Vali fail (video, JPG, PNG, PDF)",
+      "neuHochladen": "Laadi üles uus fail",
+      "laeuft": "Üleslaadimine...",
+      "eingereicht": "Video esitatud. Anname teile teada, kui see on üle vaadatud.",
+      "inPruefung": "Ülevaatamisel",
+      "inPruefungHinweis": "Teie video on meil. Kui see on heaks kiidetud, ilmub siia teie link.",
+      "eingereichtAm": "Esitatud {zeit} – kui see on heaks kiidetud, ilmub siia teie link.",
+      "abgelehnt": "Pole heaks kiidetud",
+      "grund": "Põhjus",
+      "freigegeben": "Video heaks kiidetud",
+      "zuGross": "Video on suurem kui {mb} MB.",
+      "fehler": "Üleslaadimine ebaõnnestus.",
+      "grundKategorie": {
+        "material": "Materjal: ainult ametlik reklaammaterjal, mitte oma ekraanipildid",
+        "promise": "Lubadused: ei mingeid garantii- ega edulubadusi",
+        "disclosure": "Märgistus: postitus peab olema märgistatud reklaamina",
+        "brand": "Bränd: logo või nimi on valesti kasutatud",
+        "other": "Muu"
+      }
+    }
+  },
+  "kanalVerbindung": {
+    "titel": "Ühendatud kontod",
+    "hinweis": "Ühendage oma sotsiaalmeedia kontod, et jälgijad ja vaatamised tuleksid otse platvormilt. See on vabatahtlik ja igal ajal tühistatav; me ainult loeme, me ei kirjuta midagi.",
+    "verbinden": "Ühenda {anbieter}",
+    "baldVerfuegbar": "peagi saadaval",
+    "nichtKonfiguriert": "See ühendus pole veel aktiveeritud.",
+    "fehler": "See ebaõnnestus. Palun proovige uuesti.",
+    "verifiziert": "kontrollitud",
+    "follower": "{n} jälgijat",
+    "views28": "{n} vaatamist 28 päeva jooksul",
+    "engagement": "Kaasatus {n} %",
+    "gemessen": "Seisuga {zeit}",
+    "nochKeinSnapshot": "esimene mõõtmine järgneb",
+    "letzterFehler": "Viimane allalaadimine ebaõnnestus",
+    "trennen": "Katkesta ühendus",
+    "getrennt": "Ühendus katkestatud. Varasemad mõõtmised jäävad ajalooks.",
+    "getrennteKonten": "{n, plural, =1 {1 katkestatud konto} other {# katkestatud kontot}}",
+    "getranntAm": "katkestatud {zeit}",
+    "durchPlattform": "Juurdepääs platvormilt lõpetatud",
+    "datenschutz": "Ühenduse katkestamisel kustutame koheselt ligipääsuandmed. Mõõdetud väärtused jäävad ajalooks. Täpsemalt andmekaitsepoliitikas.",
+    "rueckkehr": {
+      "verbunden": "Konto ühendatud – esimene mõõtmine on käimas.",
+      "abgelehnt": "Ühendus katkestatud – te ei andnud juurdepääsu.",
+      "fehler": "Ühendus ebaõnnestus."
+    }
+  },
+  "passwort": {
+    "anzeigen": "Näita parooli",
+    "verbergen": "Peida parool"
+  },
+  "verbundkonto": {
+    "titel": "Seotud konto väljamakseks",
+    "hinweis": "Teie vahendustasu kantakse seotud kontole. Meie makseteenuse pakkuja nõuab selleks isikutuvastust – kuni see on pooleli, ei saa väljamakseid teha.",
+    "bereit": "Teie seotud konto on aktiveeritud. Väljamaksed tehakse sinna automaatselt.",
+    "offeneFelder": "Need andmed on veel puudu",
+    "gesperrt": "Konto on praegu blokeeritud: {grund}",
+    "schrittKonto": "Ava seotud konto",
+    "schrittDaten": "Isikuandmed",
+    "schrittDatenFirma": "Ettevõtte ja isiku andmed",
+    "schrittBank": "Pangaandmed",
+    "schrittBedingungen": "Makseteenuse pakkuja tingimused",
+    "kontoAnlegen": "Ava seotud konto",
+    "kontoAngelegt": "Seotud konto avatud.",
+    "datenBearbeiten": "Muuda andmeid",
+    "zuklappen": "Sulge",
+    "datenGesendet": "Andmed salvestatud.",
+    "vorname": "Eesnimi",
+    "nachname": "Perekonnanimi",
+    "geburtsdatum": "Sünnikuupäev",
+    "tag": "PP",
+    "monat": "KK",
+    "jahr": "AAAA",
+    "strasse": "Tänav ja maja number",
+    "plz": "Postiindeks",
+    "ort": "Linn",
+    "nationalitaet": "Kodakondsus (riigi lühend)",
+    "telefon": "Telefon",
+    "webseite": "Veebisait või profiil",
+    "webseiteHinweis": "Aadress, mille all te reklaamite – seda on vaja kontrollimiseks.",
+    "firmenname": "Ettevõtte nimi",
+    "steuernummer": "Maksu number",
+    "firmenStrasse": "Ettevõtte aadress",
+    "firmaHinweis": "Teie ülaltoodud andmeid kasutatakse esindusõigusliku isikuna.",
+    "speichern": "Salvesta andmed",
+    "kontoinhaber": "Konto omanik",
+    "waehrung": "Valuuta",
+    "waehrungHinweis": "Pangakonto valuuta, mitte teie riigi valuuta.",
+    "bankSpeichern": "Salvesta pangaandmed",
+    "bankGesetzt": "Pangaandmed salvestatud.",
+    "bedingungenAnnehmen": "Nõustu tingimustega",
+    "bedingungenAngenommen": "Tingimustega nõustutud.",
+    "fehler": "See ei õnnestunud.",
+    "schrittIdentitaet": "Isikutuvastus",
+    "identitaetHinweis": "Lõpetuseks kontrollib meie makseteenuse pakkuja teie isikut tõendavat dokumenti. See toimub nende turvalisel lehel, sest seal tehakse foto; pärast seda naasete siia.",
+    "identitaetStarten": "Kontrolli isikut"
+  }
+}

@@ -248,6 +248,40 @@ export const datenschutz: LegalDoc = {
       ],
     },
     {
+      heading: "Programa de Parceiros",
+      paragraphs: [
+        "Operamos um programa de parceiros através do qual parceiros (influenciadores, consultores, agências, clientes) podem recomendar empresas à myNextDays e receber uma comissão por isso. Neste processo, tratamos dados de parceiros e — em pequena escala — de empresas recomendadas.",
+      ],
+      unterpunkte: [
+        {
+          titel: "Dados dos Parceiros",
+          paragraphs: [
+            "No momento da candidatura, tratamos o nome, a empresa, a forma jurídica, o país, o endereço de e-mail, o idioma, as contas de redes sociais (plataforma, endereço, identificador, alcance autodeclarado), o número de identificação fiscal (verificação através do sistema VIES da UE), os dados de pagamento (IBAN, endereço Wise ou PayPal), bem como a aceitação dos termos e condições de participação com a versão e a data. A base jurídica é a execução do contrato de parceria (Art. 6.º, n.º 1, alínea b) do RGPD); para créditos e conservação, aplicam-se as obrigações fiscais e comerciais (Art. 6.º, n.º 1, alínea c) do RGPD).",
+            "Se um parceiro lidera uma equipa, ele vê o nome ou a empresa dos seus parceiros de equipa, a classificação, o número de clientes pagantes e a comissão da equipa resultante. As mensagens entre o patrocinador e o parceiro de equipa são armazenadas na plataforma para que ambos possam ver o histórico.",
+          ],
+        },
+        {
+          titel: "Cliques em Links de Parceiros",
+          paragraphs: [
+            "Quando um visitante acede a um link de parceiro (mynextdays.com/p/CODE), armazenamos o código, a hora, a página acedida, a página de referência e quaisquer parâmetros de campanha, bem como o endereço IP e o identificador do navegador, exclusivamente como somas de verificação truncadas (hash) — para deteção de abuso (acumulações), não para reconhecimento. Não é definido um cookie de rastreamento. Eliminamos os dados de cliques após 90 dias. A base jurídica é o nosso interesse legítimo numa faturação do programa à prova de fraude (Art. 6.º, n.º 1, alínea f) do RGPD).",
+          ],
+        },
+        {
+          titel: "Contas e Publicações de Redes Sociais Conectadas",
+          paragraphs: [
+            "Os parceiros podem voluntariamente conectar as suas contas do YouTube (Google), Instagram e Facebook (Meta), bem como TikTok, ao painel de controlo de parceiros. Ao fazê-lo, concedem à respetiva plataforma uma autorização de leitura (OAuth); não escrevemos nada nessas contas. Armazenamos o identificador e o nome da conta, o token de acesso criptografado, a data da conexão, bem como uma métrica diária por conta: número de seguidores ou subscritores, visualizações dos últimos 28 dias, taxa de interação e número de publicações, cada um com a data da resposta da plataforma. Para as publicações que o parceiro cria no painel de controlo (título, plataforma, endereço, data de publicação), armazenamos adicionalmente visualizações, gostos, comentários, partilhas e guardados da plataforma.",
+            "O objetivo é verificar o alcance indicado pelo parceiro e atribuir cliques e clientes a publicações individuais; informações não verificadas são menos ponderadas na aprovação. Indicações de inconsistências (como um salto de seguidores sem visualizações correspondentes) servem exclusivamente para nossa verificação manual e não levam a nenhuma decisão automatizada. A base legal é o consentimento do parceiro (Art. 6.º, n.º 1, alínea a) do RGPD), que ele concede ao conectar e pode revogar a qualquer momento no painel de controle em “Desconectar”; ao desconectar, excluímos o token de acesso imediatamente, os valores medidos armazenados permanecem como histórico e são excluídos com a conta do parceiro. Utilizamos exclusivamente as interfaces oficiais das plataformas; para o processamento por Google, Meta e TikTok, aplicam-se as suas próprias políticas de privacidade.",
+          ],
+        },
+        {
+          titel: "Empresas recomendadas",
+          paragraphs: [
+            "Se uma empresa se registrar com um código de parceiro, armazenamos a atribuição da empresa ao parceiro, bem como o horário, o método (link ou código) e o status. O parceiro vê a empresa apenas de forma pseudônima (número sequencial, país, status, valores) — nunca o nome, endereço de e-mail ou dados de reserva. Somente se a empresa concordar expressamente no momento do registro, o parceiro poderá contatá-la através da plataforma. Para o cálculo da comissão, processamos os valores líquidos da assinatura das faturas pagas da empresa; a base legal é a execução do contrato de parceria e do contrato de uso (Art. 6.º, n.º 1, alínea b) do RGPD).",
+          ],
+        },
+      ],
+    },
+    {
       heading: "Alojamento e armazenamento",
       paragraphs: [
         "A plataforma, a base de dados, os ficheiros de multimédia e o servidor de correio funcionam em servidores da Hetzner Online GmbH, Alemanha, no centro de dados de Helsínquia (Finlândia) — portanto, dentro da União Europeia. Com a Hetzner existe um contrato de subcontratação.",

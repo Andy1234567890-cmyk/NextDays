@@ -87,12 +87,12 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "note",
               variant: "tip",
-              text: "Ao clicar em Publicar, o myNextDays normalmente ativa em conjunto o mercado, os portais e o site — pode voltar a desativar o interruptor do mercado individualmente a qualquer momento depois disso.",
+              text: "Clicar em Publicar ativa os portais e o website do myNextDays em conjunto. myBestDays é um canal obrigatório: cada propriedade está listada lá e aparece assim que aprovamos o anúncio.",
             },
             { type: "h2", text: "Remover a visibilidade" },
             {
               type: "p",
-              text: "Se desativar o interruptor Mercado da plataforma, o imóvel desaparece da pesquisa do mercado. As reservas já confirmadas não são afetadas e continuam a decorrer normalmente, ver [Comissão do mercado](/hilfe/plattform-marktplatz/marktplatz-provision).",
+              text: "myBestDays não pode ser desativado individualmente. Se uma propriedade não for mais vendida, use “Pausar venda” — isso a remove da venda em todos os portais, no website e no marketplace simultaneamente. As reservas já confirmadas não são afetadas e continuam como de costume, consulte [Comissão do marketplace](/hilfe/plattform-marktplatz/marktplatz-provision).",
             },
           ],
         },

@@ -1,0 +1,521 @@
+{
+  "meta": {
+    "titel": "Imsieħeb myNextDays",
+    "beschreibung": "Dashboard tas-sħubija myNextDays: Links, Klijenti, Kummissjonijiet, Pagamenti."
+  },
+  "nav": {
+    "partner": "Imsieħeb",
+    "uebersicht": "Ħarsa ġenerali",
+    "kunden": "Klijenti",
+    "provisionen": "Kummissjonijiet",
+    "auszahlungen": "Pagamenti",
+    "links": "Links u Materjal",
+    "profil": "Profil",
+    "sprache": "Lingwa",
+    "abmelden": "Oħroġ",
+    "nachrichten": "Messaġġi",
+    "menue": "Menu",
+    "team": "Tim",
+    "beitraege": "Postijiet"
+  },
+  "status": {
+    "pending_review": {
+      "titel": "L-applikazzjoni tiegħek qed tiġi riveduta",
+      "text": "Aħna nirrevedu kull applikazzjoni personalment u nikkuntattjawk permezz tal-email. Sa meta tiġi approvata, il-links u l-kodiċijiet mhumiex attivi – tista' diġà timla d-dejta tal-profil u tal-pagamenti tiegħek."
+    },
+    "rejected": {
+      "titel": "L-applikazzjoni tiegħek ma ġietx aċċettata",
+      "text": "Bħalissa ma stajniex naċċettaw l-applikazzjoni tiegħek. Jekk għandek mistoqsijiet, jekk jogħġbok iktbilna."
+    },
+    "suspended": {
+      "titel": "Il-kont tas-sħubija tiegħek huwa sospiż",
+      "text": "Il-kummissjonijiet pendenti ma jitħallsux sakemm is-sospensjoni tkun fis-seħħ. Jekk għandek mistoqsijiet, iktbilna."
+    },
+    "approved": {
+      "titel": "Approvat",
+      "text": "Il-kont tiegħek huwa attiv."
+    },
+    "grund": "Raġuni"
+  },
+  "uebersicht": {
+    "titelBewerber": "Merħba fil-programm tas-sħubija",
+    "textBewerber": "Ladarba l-applikazzjoni tiegħek tiġi approvata, hawnhekk se tara l-links, il-klijenti u l-kummissjonijiet tiegħek. Sadanittant, daħħal id-dejta tat-taxxa u tal-pagamenti tiegħek – allura l-ewwel pagament jista' jsir mingħajr mistoqsijiet.",
+    "zumProfil": "Għall-profil",
+    "titel": "Hello {name}",
+    "rang": "Grad {rang} · {satz} tad-dħul mill-abbonamenti",
+    "naechsterRang": "għad fadal {fehlend} klijenti li jħallsu sa {rang} ({satz})",
+    "linksTeilen": "Aqsam links",
+    "keineBetraege": "—",
+    "kachel": {
+      "klicks": "Klikks (30 jum)",
+      "registrierungen": "Negozji reġistrati",
+      "zahlend": "Klijenti li jħallsu",
+      "offen": "Miftuħ (tieqa ta' rifużjoni)",
+      "auszahlbar": "Pagabbli",
+      "ausgezahlt": "Imħallas",
+      "team": "Kummissjoni tat-tim",
+      "teamHinweis": "{n} Sieħeb tat-tim",
+      "struktur": "Klijenti fl-istruttura tiegħek",
+      "strukturHinweis": "klijenti tiegħek + tat-tim — dan in-numru jiddetermina l-grad tiegħek",
+      "super": "Superkummissjoni",
+      "superHinweis": "{satz} fuq id-dħul mill-abbonamenti tal-istruttura tiegħek, mingħajr limitu ta' żmien",
+      "turbo": "Sehem tal-prenotazzjonijiet myBestDays",
+      "turboHinweis": "0.5% għal kull prenotazzjoni permezz ta' myBestDays mal-klijenti tiegħek u l-klijenti tat-tim",
+      "bonus": "Bonuses ta' promozzjoni",
+      "bonusHinweis": "darba għal kull grad miksub"
+    },
+    "deineLinks": "Il-links tiegħek"
+  },
+  "links": {
+    "titel": "Links u Materjal",
+    "hinweis": "Il-link tiegħek twassal għal mynextdays.com u tgħodd il-klikks. Il-kodiċi jidher fil-formola waqt ir-reġistrazzjoni – mingħajr cookie. Negozju jiġi assenjat lil sieħeb wieħed biss.",
+    "klicks30": "{n} klikks fi 30 jum",
+    "kopiert": "Ikkupjat.",
+    "kopierenFehlgeschlagen": "Ma jistax jiġi kkupjat – jekk jogħġbok agħżel u kkupja.",
+    "codeKopieren": "Ikkopja l-kodiċi",
+    "linkFehlt": "Link mhux disponibbli.",
+    "neuerCode": "Oħloq kodiċi ieħor",
+    "label": "Deskrizzjoni (mhux obbligatorja)",
+    "wunschcode": "Kodiċi mixtieq (mhux obbligatorju)",
+    "anlegen": "Oħloq",
+    "abbrechen": "Ikkanċella",
+    "codeAngelegt": "Kodiċi maħluq.",
+    "codeVergeben": "Dan il-kodiċi diġà qed jintuża.",
+    "fehler": "Dan ma ħadimx.",
+    "kennzeichnung": {
+      "titel": "Obbligatorju: Immarka r-reklamar",
+      "text": "Kull rakkomandazzjoni bil-link jew kodiċi tiegħek hija reklamar u trid tkun rikonoxxibbli bħala tali — fil-bidu tal-post, bil-lingwa tal-post. Sempliċi “#ad” mhux biżżejjed. Il-ksur jista’ jwassal għal sospensjoni.",
+      "imBeitrag": "Fil-post",
+      "amLink": "Fil-link",
+      "land": {
+        "DE": "Il-Ġermanja",
+        "DK": "Id-Danimarka"
+      },
+      "andere": "Pajjiżi oħra: L-intenzjoni kummerċjali trid tkun ċarament rikonoxxibbli (Direttiva tal-UE dwar prattiki kummerċjali inġusti). Jekk jogħġbok iċċekkja r-rekwiżiti ta' pajjiżek; aħna se nżidu formulazzjonijiet ippruvati gradwalment."
+    },
+    "material": {
+      "titel": "Materjal promozzjonali",
+      "leer": "Il-materjal qed jitħejja bħalissa — se jidher hawn hekk kif jiġi approvat.",
+      "art": {
+        "video": "Vidjo",
+        "image": "Immaġni",
+        "text": "Blokk ta' test",
+        "link": "Link"
+      },
+      "oeffnen": "Iftaħ"
+    }
+  },
+  "kunden": {
+    "titel": "Klijenti",
+    "hinweis": "Il-proprjetajiet referuti tiegħek — psewdonimu. Tara l-pajjiż, l-istatus u l-ammonti, qatt l-isem jew l-email. Tħallas tfisser: l-ewwel fattura tal-abbonament imħallsa u l-abbonament attiv.",
+    "leer": "L-ebda proprjetà għadha ma rreġistrat permezz tal-link tiegħek.",
+    "kunde": "Klijent {n}",
+    "spalte": {
+      "kunde": "Klijent",
+      "land": "Pajjiż",
+      "status": "Status",
+      "registriert": "Reġistrat",
+      "provisionBis": "Kummissjoni sa",
+      "verdient": "Qligħ"
+    },
+    "status": {
+      "registriert": "Reġistrat",
+      "zahlend": "Tħallas",
+      "beendet": "Terminat",
+      "in_pruefung": "Taħt reviżjoni",
+      "abgelehnt": "Miċħud"
+    }
+  },
+  "provisionen": {
+    "titel": "Kummissjonijiet",
+    "hinweis": "Kull linja hija fattura ta' abbonament imħallsa, prenotazzjoni permezz ta' myBestDays jew bonus ta' promozzjoni. Il-bażi hija d-dħul nett mill-abbonamenti jew il-valur tal-prenotazzjoni; ir-rata hija l-grad tiegħek fil-ħin tal-ħlas. Linji miftuħa jsiru pagabbli wara 30 jum.",
+    "leer": "L-ebda kummissjoni s'issa.",
+    "reifAm": "Pagabbli minn {datum}",
+    "spalte": {
+      "datum": "Data",
+      "art": "Tip",
+      "kunde": "Klijent",
+      "basis": "Bażi",
+      "satz": "Rata",
+      "betrag": "Ammont",
+      "status": "Status"
+    },
+    "art": {
+      "earn": "Qligħ",
+      "reversal": "Rifużjoni",
+      "adjustment": "Korrezzjoni",
+      "override": "Kummissjoni tat-tim",
+      "bonus": "Bonus ta' promozzjoni",
+      "lifetime": "Superkummissjoni",
+      "booking_share": "Sehem tal-prenotazzjonijiet"
+    },
+    "status": {
+      "pending": "Miftuħ",
+      "approved": "Pagabbli",
+      "held": "Sospiż",
+      "paid": "Imħallas",
+      "reversed": "Irtirat",
+      "cancelled": "Ikkanċellat"
+    },
+    "team": "Tim"
+  },
+  "auszahlungen": {
+    "titel": "Ħlasijiet",
+    "hinweis": "Kull xahar, għal kull munita, mill-ammont minimu. Kull ħlas huwa akkumpanjat minn nota ta' kreditu (self-billing) — din hija l-irċevuta tiegħek.",
+    "kein_weg": "L-ebda metodu ta' ħlas ma ġie ssettjat. Jekk jogħġbok żidha fil-profil tiegħek — inkella ma nistgħux inħallsu.",
+    "leer": "L-ebda ħlas s'issa.",
+    "spalte": {
+      "nummer": "Nru. tal-Kreditu",
+      "zeitraum": "Perjodu",
+      "betrag": "Ammont",
+      "status": "Status",
+      "gutschrift": "Kreditu"
+    },
+    "status": {
+      "pending": "Ippreparat",
+      "processing": "Fi trasferiment",
+      "paid": "Imħallas",
+      "failed": "Fallut"
+    },
+    "gutschriftLaden": "Niżżel",
+    "gutschriftFehler": "Il-kreditu ma setax jitgħabba."
+  },
+  "profil": {
+    "titel": "Profil",
+    "seit": "Sieħeb minn {datum}",
+    "stammdaten": "Dettalji Bażiċi",
+    "name": "Isem",
+    "firma": "Kumpanija (mhux obbligatorju)",
+    "sprache": "Lingwa għall-emails",
+    "kanal": "Il-kontijiet u l-kanali tal-midja soċjali tiegħek",
+    "speichern": "Ħlief",
+    "gespeichert": "Issejvjat.",
+    "gespeichertViesOffen": "Issejvjat. In-numru tal-VAT għadu ma ġiex ikkonfermat — aħna nivverifikawh mill-ġdid qabel il-ħlas.",
+    "steuerUndAuszahlung": "Dettalji tat-taxxa u tal-ħlas",
+    "aktuellerWeg": "Kurrenti: {weg} {details}",
+    "keinWeg": "L-ebda metodu ta' ħlas ma ġie ssettjat.",
+    "viesBestaetigt": "Numru tal-VAT ikkonfermat (VIES)",
+    "viesOffen": "Numru tal-VAT għadu ma ġiex ikkonfermat",
+    "rechtsform": "Forma legali",
+    "privat": "Persuna privata",
+    "unternehmen": "Kumpanija",
+    "land": "Pajjiż",
+    "ustId": "Numru tal-VAT",
+    "ustIdHinweis": "Se jiġi vverifikat kontra s-sistema tal-UE VIES. Mingħajr numru kkonfermat, l-ebda ħlas lill-kumpaniji. Il-kreditu jinkludi n-nota ta' reverse charge.",
+    "privatHinweis": "Bħala persuna privata, tirċievi l-kreditu mingħajr VAT. Int trid tiddikjara l-kummissjoni int stess.",
+    "auszahlungsweg": "Metodu ta' ħlas",
+    "kontoinhaber": "Detentur tal-kont",
+    "empfaengerEmail": "Indirizz elettroniku ta' {weg}",
+    "passwortBestaetigen": "Biex tikkonferma: il-password tiegħek",
+    "passwortFalsch": "Il-password mhix korretta.",
+    "steuerdaten": "Dettalji tat-Taxxa"
+  },
+  "anmelden": {
+    "partner": "Sieħeb",
+    "titel": "Idħol",
+    "text": "Id-dashboard tal-programm ta' sħubija myNextDays.",
+    "email": "Email",
+    "passwort": "Password",
+    "anmelden": "Idħol",
+    "passwortVergessen": "Insejt il-password?",
+    "resetGesendet": "Jekk jeżisti kont, bgħatna email.",
+    "stoerung": "Is-servizz ta' login bħalissa mhux disponibbli. Dan mhuwiex minħabba d-dettalji tal-login tiegħek — jekk jogħġbok erġa' pprova aktar tard.",
+    "keinPartnerKonto": "M'hemm l-ebda kont ta' sieħeb b'dawn id-dettalji tal-login.",
+    "fehlgeschlagen": "Login falla.",
+    "nochKeinKonto": "Għadek m'intix sieħeb?",
+    "bewerben": "Applika issa"
+  },
+  "bewerben": {
+    "partner": "Sieħeb",
+    "titel": "Applika bħala sieħeb",
+    "text": "Żewġ minuti. Aħna nirrevedu kull applikazzjoni personalment u nikkuntattjawk permezz ta' email.",
+    "name": "Ismek",
+    "firma": "Kumpanija (mhux obbligatorju)",
+    "email": "Email",
+    "passwort": "Password (mill-inqas 8 karattri)",
+    "rechtsform": "Tip ta' entità legali",
+    "privat": "Individwu",
+    "unternehmen": "Kumpanija",
+    "land": "Pajjiż",
+    "ustId": "Numru tal-VAT",
+    "ustIdHinweis": "Meħtieġ għall-kumpaniji; ivverifikat kontra VIES.",
+    "kanal": "Il-kontijiet tal-midja soċjali tiegħek",
+    "kanalHinweis": "Rekwiżit: mill-inqas kont wieħed tal-midja soċjali (Instagram, TikTok, YouTube, Facebook, LinkedIn...) bl-indirizz, il-handle u l-firxa. Websajt, blog jew newsletter huma milqugħa bħala żieda. Aħna nivverifikaw il-kontijiet qabel l-approvazzjoni.",
+    "pitch": "Kif tilħaq lill-kiri tal-vaganzi jew lill-lukandi? (mhux obbligatorju)",
+    "pitchHinweis": "Ftit sentenzi huma biżżejjed.",
+    "zustimmung": "Naċċetta t-termini u l-kundizzjonijiet tas-sħubija, b'mod partikolari l-obbligu li nirreklama r-rakkomandazzjonijiet.",
+    "bedingungen": "Mur fil-programm",
+    "captchaHinweis": "Din il-paġna hija protetta minn reCAPTCHA u japplikaw il-Politika ta' Privatezza u t-Termini ta' Servizz ta' Google.",
+    "stoerung": "Is-servizz bħalissa mhux disponibbli — jekk jogħġbok erġa' pprova aktar tard.",
+    "emailVergeben": "Diġà hemm applikazzjoni għal dan l-indirizz elettroniku. Jekk jogħġbok idħol.",
+    "captchaFehler": "Il-verifika tas-sigurtà falliet. Jekk jogħġbok erġa' kkarga l-paġna u erġa' pprova.",
+    "laeuft": "Qed jintbagħat...",
+    "absenden": "Ibgħat l-applikazzjoni",
+    "schonPartner": "Diġà sieħeb?",
+    "anmelden": "Idħol",
+    "sponsor": "Irreferut minn sieħeb (kodiċi, fakultattiv)",
+    "sponsorHinweis": "Qiegħed hawn permezz tal-link tat-tim ta' sieħeb? Il-kodiċi tiegħu jidher hawn. Huwa jirċievi kummissjoni tat-tim fuq id-dħul mill-abbonament tal-klijenti tiegħek — il-kummissjoni tiegħek stess tibqa' l-istess."
+  },
+  "nachrichten": {
+    "titel": "Messaġġi",
+    "hinweis": "Il-linja diretta tiegħek mat-tim tas-sħab — mistoqsijiet dwar il-kummissjoni, il-ħlas, il-materjal jew klijent. It-tweġibiet jidhru hawn direttament.",
+    "neu": "Messaġġ ġdid lit-tim tas-sħab",
+    "platzhalter": "X'inhi l-kwistjoni?",
+    "senden": "Ibgħat",
+    "abbrechen": "Ikkanċella",
+    "leer": "Għad m'hemm l-ebda konverżazzjoni.",
+    "stoerung": "Is-servizz bħalissa mhux disponibbli — jekk jogħġbok erġa' pprova aktar tard.",
+    "fehler": "Dan ma ħadimx.",
+    "team": "Tim tas-sħab",
+    "du": "Int",
+    "antwortPlatzhalter": "It-tweġiba tiegħek...",
+    "antworten": "Wieġeb",
+    "status": {
+      "in_bearbeitung": "Fil-proċess",
+      "wartet_auf_dich": "Tweġiba rċevuta",
+      "geloest": "Riżolt"
+    }
+  },
+  "kanaele": {
+    "plattformLabel": "Pjattaforma",
+    "handle": "Handle (mhux obbligatorju)",
+    "reichweite": "Reach (Segwaċi)",
+    "hinzufuegen": "Żid kanal",
+    "entfernen": "Neħħi kanal",
+    "plattform": {
+      "website": "Websajt",
+      "blog": "Blog",
+      "newsletter": "Newsletter",
+      "podcast": "Podcast",
+      "other": "Oħrajn"
+    },
+    "socialPflicht": "Mill-inqas kont wieħed tal-midja soċjali huwa obbligatorju — websajt waħda biss mhix biżżejjed."
+  },
+  "team": {
+    "titel": "Tim",
+    "hinweis": "Imsieħba li applikaw bil-kodiċi tiegħek jiffurmaw it-tim tiegħek. Fuq id-dħul nett mill-abbonamenti tal-klijenti tagħhom, tirċievi d-differenza bejn ir-rata tiegħek (bħalissa {satz}) u r-rata tal-imsieħeb tat-tim — it-tnejn fil-ħin tal-ħlas. Il-klijenti tat-tim jgħoddu 1:1 għall-grad tiegħek.",
+    "meinSponsor": "Int sieħeb tat-tim ta' {name}.",
+    "link": {
+      "titel": "Il-link tat-tim tiegħek",
+      "text": "Kull min japplika permezz ta' din il-link se jkollu l-kodiċi tiegħek viżibbli fl-applikazzjoni — mingħajr cookie.",
+      "kopieren": "Ikkopja l-link",
+      "keinLink": "L-ebda kodiċi attiv — oħloq wieħed taħt Links & Materjal."
+    },
+    "regeln": {
+      "titel": "Ir-regoli",
+      "rang": "Kummissjoni tat-tim = ir-rata tiegħek nieqes ir-rata tal-imsieħeb tat-tim, fil-ħin tal-ħlas. L-istess grad = 0.",
+      "ebene": "Eżattament livell wieħed: l-imsieħba tat-tim tiegħek ma jibnux it-tim tagħhom stess.",
+      "keinGeld": "L-ebda flus għar-reklutaġġ — biss minn dħul minn abbonamenti mħallsa.",
+      "dauer": "12-il xahar għal kull klijent tat-tim, tieqa ta' rifużjoni ta' 30 jum. Minn Elite 'l fuq, 2.5% superkummissjoni addizzjonali mingħajr limitu ta' żmien."
+    },
+    "kachel": {
+      "mitglieder": "Imsieħba tat-tim (attivi / totali)",
+      "teamKunden": "Klijenti tat-tim li jħallsu",
+      "umsatz30": "Dħul tat-tim (30 jum)",
+      "offen": "Kummissjoni tat-tim pendenti",
+      "auszahlbar": "Kummissjoni tat-tim pagabbli",
+      "ausgezahlt": "Kummissjoni tat-tim imħallsa"
+    },
+    "verlauf": {
+      "titel": "Storja · 12-il xahar",
+      "leer": "Għad m'hemmx dħul mit-tim.",
+      "provision": "Kummissjoni tat-tim",
+      "umsatz": "Dħul tat-tim"
+    },
+    "mitglieder": {
+      "titel": "It-tim tiegħek",
+      "leer": "Għad m'hemmx imsieħba tat-tim. Aqsam il-link tat-tim tiegħek.",
+      "kunden": "{n} klijenti li jħallsu",
+      "umsatz30": "Dħul 30 jum",
+      "offen": "pendenti",
+      "seit": "minn {datum}"
+    },
+    "spalte": {
+      "partner": "Sieħeb",
+      "status": "Status",
+      "rang": "Grad",
+      "kunden": "Klijenti li jħallsu",
+      "umsatz30": "Dħul 30 jum",
+      "umsatzGesamt": "Dħul totali",
+      "offen": "Miftuħ",
+      "auszahlbar": "Pagabbli",
+      "ausgezahlt": "Imħallas"
+    },
+    "status": {
+      "pending_review": "Taħt reviżjoni",
+      "approved": "Approvat",
+      "rejected": "Miċħud",
+      "suspended": "Imblukkat"
+    },
+    "chat": {
+      "titel": "Divertiment",
+      "schreiben": "Ikteb",
+      "rolle": {
+        "sponsor": "L-isponsor tiegħek",
+        "member": "Sieħeb tat-tim"
+      },
+      "zurueck": "Tim",
+      "leer": "Għad m'hemm l-ebda messaġġ.",
+      "platzhalter": "Il-messaġġ tiegħek...",
+      "senden": "Ibgħat",
+      "titelListe": "Messaġġi tat-tim"
+    },
+    "nochNichtErlaubt": "Int tmexxi tim mill-grad ta' Promozzjoni (5 klijenti li jħallsu fl-istruttura tiegħek). Sa dak iż-żmien, m'hemm l-ebda link tat-tim."
+  },
+  "bedingungen": {
+    "neueVersion": "It-termini tas-sħubija huma disponibbli f'verżjoni ġdida (il-kunsens tiegħek: verżjoni {alt}, attwali: {neu}). Jekk jogħġbok aqra u erġa' agħti l-kunsens tiegħek.",
+    "nochNicht": "Jekk jogħġbok aċċetta t-termini tas-sħubija (verżjoni {neu}).",
+    "lesen": "Aqra t-termini",
+    "annehmen": "Aċċetta",
+    "angenommen": "Grazzi — il-kunsens ġie ssejvjat."
+  },
+  "beitraege": {
+    "titel": "Postijiet",
+    "hinweis": "Oħloq link uniku għal kull reel, vidjo jew post. B'hekk tara liema post iġib klikks, reġistrazzjonijiet u klijenti li jħallsu.",
+    "kontoHinweis": "Qabbad il-kont tiegħek, u l-fehmiet u l-interazzjonijiet mill-pjattaforma jidhru hawn ukoll.",
+    "kontoVerbinden": "Qabbad il-kont",
+    "neu": "Post ġdid",
+    "keinCode": "L-ewwel għandek bżonn kodiċi ta' riferiment attiv.",
+    "feld": {
+      "titel": "Titlu",
+      "titelBeispiel": "eż. Reel Kopenħagen Ħarifa",
+      "plattform": "Pjattaforma",
+      "code": "Kodiċi",
+      "datum": "Ippubblikat fi",
+      "url": "Indirizz tal-post (mhux obbligatorju)",
+      "urlHinweis": "Jista' jiġi miżjud wara l-pubblikazzjoni. Bl-indirizz, aħna nassenjaw fehmiet u interazzjonijiet lill-post."
+    },
+    "linkErzeugen": "Oħloq link",
+    "angelegt": "Post maħluq — il-link huwa lest.",
+    "doppelt": "Dan il-post diġà jeżisti għal dan il-kodiċi.",
+    "fehler": "Dan ma ħadimx. Jekk jogħġbok erġa' pprova.",
+    "liste": "{n, plural, =0 {L-ebda post} =1 {1 post} other {# postijiet}}",
+    "leer": "Għad m'hemmx post. Oħloq l-ewwel link hawn fuq.",
+    "veroeffentlicht": "ippubblikat {datum}",
+    "loeschen": "Ħassar il-post",
+    "geloescht": "Post imħassar.",
+    "loeschenGesperrt": "Il-post diġà għandu reġistrazzjonijiet u jibqa' jeżisti.",
+    "kopiert": "Link ikkupjat.",
+    "kopierenFehlgeschlagen": "Ma tistax tikkopja — jekk jogħġbok agħżel manwalment.",
+    "linkFehlt": "Il-link bħalissa mhux disponibbli.",
+    "qrZeigen": "Uri l-kodiċi QR",
+    "qrSchliessen": "Aħbi l-kodiċi QR",
+    "qrAlt": "Kodiċi QR għal-link tal-post",
+    "qrHinweis": "Għal stejjer, vidjows u stampi — iwassal għall-istess link.",
+    "beitragOeffnen": "Iftaħ il-post",
+    "urlAendern": "Ibdel l-indirizz",
+    "urlNachtragen": "Żid l-indirizz",
+    "speichern": "Ħlief",
+    "gespeichert": "Issejvjat.",
+    "kennzahl": {
+      "klicks": "Klikks 90 jum",
+      "klicks30": "{n} fi 30 jum",
+      "registrierungen": "Reġistrazzjonijiet",
+      "kunden": "Klijenti li jħallsu",
+      "views": "Fehmiet",
+      "gemessen": "Minn {zeit}",
+      "nichtVerbunden": "Kont mhux konness",
+      "interaktion": "Likes {likes} · Kummenti {kommentare} · Shares {shares} · Issejvjat {saves}",
+      "pro1000": "{n} klikks għal kull 1,000 fehma"
+    },
+    "freigabe": {
+      "videoNoetig": "Itella kontribut għall-approvazzjoni",
+      "erklaerung": "Itella l-vidjo, l-immaġni jew il-PDF lest tiegħek qabel ma tippubblikah. Ladarba napprovawh, il-link personali tiegħek tidher hawn — imbagħad tista' tużaha fil-post. Uża biss il-materjal promozzjonali tagħna, l-ebda screenshots tiegħek, u l-ebda wegħdiet ta' suċċess jew garanzija.",
+      "hochladen": "Agħżel fajl (Vidjo, JPG, PNG, PDF)",
+      "neuHochladen": "Tella' fajl ġdid",
+      "laeuft": "Qed jittella'...",
+      "eingereicht": "Video sottomess. Nikkuntattjawk ladarba jkun ġie rivedut.",
+      "inPruefung": "Qed jiġi rivedut",
+      "inPruefungHinweis": "Il-video tiegħek jinsab għandna. Ladarba jiġi approvat, il-link tiegħek tidher hawn.",
+      "eingereichtAm": "Sottomess fil-{zeit} — ladarba jiġi approvat, il-link tiegħek tidher hawn.",
+      "abgelehnt": "Mhux approvat",
+      "grund": "Raġuni",
+      "freigegeben": "Video approvat",
+      "zuGross": "Il-video huwa akbar minn {mb} MB.",
+      "fehler": "It-tlugħ ma rnexxiex.",
+      "grundKategorie": {
+        "material": "Materjal: materjal promozzjonali uffiċjali biss, l-ebda screenshots tiegħek",
+        "promise": "Wegħdiet: l-ebda garanzija jew wegħdiet ta' suċċess",
+        "disclosure": "Tikkettar: il-post irid ikun ittikkettat bħala reklamar",
+        "brand": "Marka: logo jew isem użat ħażin",
+        "other": "Oħrajn"
+      }
+    }
+  },
+  "kanalVerbindung": {
+    "titel": "Kontijiet konnessi",
+    "hinweis": "Qabbad il-kontijiet tal-midja soċjali tiegħek biex tikseb segwaċi u fehmiet direttament mill-pjattaforma. Dan huwa volontarju u jista' jiġi revokat fi kwalunkwe ħin; aħna naqraw biss, ma niktbu xejn.",
+    "verbinden": "Qabbad {anbieter}",
+    "baldVerfuegbar": "Dalwaqt",
+    "nichtKonfiguriert": "Din il-konnessjoni għadha mhix attivata.",
+    "fehler": "Dan ma ħadimx. Jekk jogħġbok erġa' pprova.",
+    "verifiziert": "Verifikat",
+    "follower": "{n} Segwaċi",
+    "views28": "{n} Fehmiet f'28 jum",
+    "engagement": "Involviment {n} %",
+    "gemessen": "Minn {zeit}",
+    "nochKeinSnapshot": "L-ewwel kejl dalwaqt",
+    "letzterFehler": "L-aħħar irkupru falla",
+    "trennen": "Skonnettja",
+    "getrennt": "Konnessjoni skonnettjata. Il-kejl preċedenti jibqa' bħala storja.",
+    "getrennteKonten": "{n, plural, =1 {1 kont skonnettjat} other {# kontijiet skonnettjati}}",
+    "getranntAm": "Skonnettjat {zeit}",
+    "durchPlattform": "Aċċess mill-pjattaforma tterminat",
+    "datenschutz": "Meta tiskonnettja, aħna nħassru d-dejta tal-aċċess immedjatament. Il-valuri mkejla jibqgħu maħżuna bħala storja. Dettalji fil-politika tal-privatezza.",
+    "rueckkehr": {
+      "verbunden": "Kont konness — l-ewwel kejl għaddej.",
+      "abgelehnt": "Konnessjoni annullata — ma tajtx l-aċċess.",
+      "fehler": "Konnessjoni falliet."
+    }
+  },
+  "passwort": {
+    "anzeigen": "Uri l-password",
+    "verbergen": "Aħbi l-password"
+  },
+  "verbundkonto": {
+    "titel": "Kont konness għall-ħlas",
+    "hinweis": "Il-kummissjoni tiegħek se tiġi trasferita f'kont konness. Għal dan, il-fornitur tas-servizzi tal-ħlas tagħna jeħtieġ verifika tal-identità — sakemm din tkun pendenti, ma jistax isir ħlas.",
+    "bereit": "Il-kont konness tiegħek huwa attivat. Il-ħlasijiet jintbagħtu awtomatikament hemmhekk.",
+    "offeneFelder": "Din l-informazzjoni għadha nieqsa",
+    "gesperrt": "Il-kont bħalissa huwa mblukkat: {grund}",
+    "schrittKonto": "Oħloq kont konness",
+    "schrittDaten": "Dettalji personali",
+    "schrittDatenFirma": "Dettalji tal-kumpanija u personali",
+    "schrittBank": "Dettalji bankarji",
+    "schrittBedingungen": "Termini tal-fornitur tas-servizzi tal-ħlas",
+    "kontoAnlegen": "Oħloq kont konness",
+    "kontoAngelegt": "Kont konness maħluq.",
+    "datenBearbeiten": "Editja d-dettalji",
+    "zuklappen": "Agħlaq",
+    "datenGesendet": "Dettalji ssejvjati.",
+    "vorname": "Isem",
+    "nachname": "Kunjom",
+    "geburtsdatum": "Data tat-twelid",
+    "tag": "JJ",
+    "monat": "XX",
+    "jahr": "SSSS",
+    "strasse": "Triq u numru tad-dar",
+    "plz": "Kodiċi postali",
+    "ort": "Belt",
+    "nationalitaet": "Nazzjonalità (kodiċi tal-pajjiż)",
+    "telefon": "Telefon",
+    "webseite": "Websajt jew profil",
+    "webseiteHinweis": "L-indirizz li fih tirreklama — meħtieġ għall-verifika.",
+    "firmenname": "Isem tal-kumpanija",
+    "steuernummer": "Numru tat-taxxa",
+    "firmenStrasse": "Indirizz tal-kumpanija",
+    "firmaHinweis": "Bħala persuna awtorizzata, id-dettalji tiegħek imsemmija hawn fuq se jintużaw.",
+    "speichern": "Issejvja d-dettalji",
+    "kontoinhaber": "Sid il-kont",
+    "waehrung": "Munita",
+    "waehrungHinweis": "Il-munita tal-kont bankarju, mhux dik ta' pajjiżek.",
+    "bankSpeichern": "Issejvja d-dettalji bankarji",
+    "bankGesetzt": "Dettalji bankarji ssejvjati.",
+    "bedingungenAnnehmen": "Aċċetta t-termini",
+    "bedingungenAngenommen": "Termini aċċettati.",
+    "fehler": "Dan ma ħadimx.",
+    "schrittIdentitaet": "Verifika tal-Identità",
+    "identitaetHinweis": "Fl-aħħar, il-fornitur tas-servizzi tal-ħlas tagħna jivverifika d-dokument tal-identità tiegħek. Dan isir fuq il-paġna sigura tagħhom, peress li tinġibed ritratt; wara dan, terġa' lura hawn.",
+    "identitaetStarten": "Ivverifika l-Identità"
+  }
+}

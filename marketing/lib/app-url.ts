@@ -174,3 +174,20 @@ export const STATUS_BASIS = (
   process.env.NEXT_PUBLIC_STATUS_URL ??
   ""
 ).replace(/\/$/, "");
+
+/**
+ * Partner-Dashboard des Affiliate-Programms (partner/, 0517).
+ *
+ * Eigene Anwendung auf eigener Subdomain (dritte Auth-Welt, ADR-0020). Ohne
+ * gesetzte `NEXT_PUBLIC_PARTNER_URL` führen die Knöpfe der Programmseite auf
+ * das Kontaktformular mit vorgewähltem Thema „Partnerschaft" — kein erfundener
+ * Vorgabewert (Wurzel 4), aber auch kein toter Knopf.
+ */
+export const PARTNER_URL = (process.env.NEXT_PUBLIC_PARTNER_URL ?? "").replace(/\/$/, "");
+// Die Bewerbung liegt IN dieser App (app/partner/bewerben) und geht direkt an
+// die API (/affiliates/apply) — unabhängig davon, ob die Partner-App schon
+// eine Adresse hat. Vorher zeigte der Knopf ohne PARTNER_URL auf das
+// Kontaktformular, wo weder Social-Konten noch Reichweite erfasst wurden und
+// nichts im Backoffice zur Freigabe ankam (02.09.2026).
+export const PARTNER_BEWERBEN_URL = "/partner/bewerben";
+export const PARTNER_LOGIN_URL = PARTNER_URL ? `${PARTNER_URL}/anmelden` : "/kontakt?thema=partner";

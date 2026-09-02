@@ -1500,7 +1500,12 @@
       "portalRateInvalid": "En sparad avdragssats för en portal ligger utanför 0–100 %. Korrigera den under Bokföring → Avräkningsregler.",
       "feeUnassigned": "Minst en avgiftstyp är ännu inte tilldelad. Utan tilldelning går det inte att avgöra vem beloppet tillhör eller om provision tas ut på det — ange det under Bokföring → Avräkningsregler.",
       "feeNotComputable": "En avgift kan inte avräknas som ett belopp (sparad som procent eller utan belopp). Kontrollera avgiften på objektet.",
-      "contractCurrency": "Ett fast arvode eller en minimiprovision anges i en annan valuta än bokningen. Belopp i olika valutor räknas inte om — kontrollera avräkningsavtalet."
+      "contractCurrency": "Ett fast arvode eller en minimiprovision anges i en annan valuta än bokningen. Belopp i olika valutor räknas inte om — kontrollera avräkningsavtalet.",
+      "recurringToOwner": "Återkommande till förmån",
+      "recurringFromOwner": "Återkommande till nackdel",
+      "flatFees": "Fast pris enligt avtal",
+      "flatFeesIncluded": "redan beaktat vid utbetalning",
+      "contractStartsLater": "Minst en bokning har inget avtalsdatum för utcheckning – ägarens avtal börjar senare. Provisionssatsen är därför sparad, men datumet ”Giltigt från” är efter utcheckningen. Ange det faktiska avtalsdatumet i avtalet."
     },
     "rental": {
       "perReservation": "Per bokning",
@@ -1520,13 +1525,66 @@
         "channexImport": "Bokningen hämtades i efterhand när kanalen anslöts. Enligt bokningsförmedlaren innehåller sådana bokningar inga tillägg och inga städavgifter — det går inte att komplettera i efterhand. Om avgiften ska räknas av lägger du in den som en post på bokningen.",
         "portalReportsNone": "Portalen redovisar inte avgiften som en egen post för den här bokningen. Hos Booking.com beror det på boendets konfiguration (Boende → Policyer → Ytterligare avgifter) och på från vilket datum avgiften gäller där: en avgift som införts senare saknas med rätta i äldre bokningar.",
         "noPayload": "För den här bokningen finns inget portalmeddelande (import av befintliga data). Utan det går det inte att fastställa vilka avgifter gästen har betalat.",
-        "unknownReason": "Orsaken går inte att fastställa."
+        "unknownReason": "Orsaken går inte att fastställa.",
+        "csvImport": "Bokningen kommer från CSV-importen. Det importerade beloppet är gästpriset från portalen inklusive alla avgifter; en specifikation av enskilda avgifter finns inte och kunde inte heller härledas från portaldata. Faktureringen inkluderar därför inga avgifter från fastighetsdata – de ingår redan i beloppet, men deras storlek är inte bekräftad.",
+        "csvResolvedTitle": "Avgifter härledda från portalbeloppet",
+        "csvResolved": "Bokningen kommer från CSV-importen; portalen har inte levererat någon specifikation. Avgifterna har härletts från skillnaden mellan det importerade totalpriset och nattpriserna som överförts av portalen och namngivits via fastighetsdata. Övernattning plus avgifter utgör exakt totalpriset.",
+        "stammdatenPortalTitle": "Avgifter från fastighetsdata har lagts till",
+        "stammdatenPortal": "Portalen har inte tillhandahållit en avgiftsöversikt för denna bokning: Bokningar som portalens aggregator har hämtat efter anslutning av kanalen kommer utan extra avgifter och städavgifter; en lagerimport från en fil innehåller endast totalpriset. Avgifterna har därför fastställts enligt vad som är angivet för objektet: Städning per vistelse, resort per natt, husdjur endast om husdjur bokats.",
+        "portalBelegt": "Upptagen: Skillnaden mellan portalens totalpris och de nattpriser som portalen har meddelat motsvarar exakt dessa avgifter.",
+        "portalImBetrag": "Inkluderat i portalbeloppet: Portalens totalpris inkluderar redan avgifterna; de har räknats bort, gästpriset förblir portalbeloppet.",
+        "portalObendrauf": "Utöver portalbeloppet: Det överförda beloppet är den rena nattsumman; avgifterna läggs till och utgör gästpriset."
       },
       "chain": {
         "portal": "Portal",
         "management": "Förvaltning",
         "flatFee": "Fast avgift",
         "fees": "Avgifter"
+      },
+      "arrival": "Ankomst",
+      "departure": "Avresa",
+      "commission": "Provision",
+      "flatFee": "Fast avgift",
+      "ownerShare": "Ägarandel",
+      "portalDeduction": "Portalavgift",
+      "fees": "Avgifter",
+      "feesCount": "{n} poster",
+      "expand": "Visa specifikation",
+      "collapse": "Dölj specifikation",
+      "expandAll": "Visa alla specifikationer",
+      "collapseAll": "Dölj alla specifikationer",
+      "breakdown": "Specifikation per bokning",
+      "noFeeItems": "Inga avgifter eller tilläggstjänster för denna bokning.",
+      "posten": {
+        "guestPrice": "Gästpris enligt portal (inkl. avgifter, exkl. tilläggstjänster)",
+        "portalCommission": "Portalkommission {kanal}",
+        "portalFee": "Portalens betalningsavgift",
+        "portalPayout": "Portalutbetalning",
+        "feesOut": "Avgifter i gästpriset – exkluderade från beräkningen",
+        "feesInBase": "Avgifter i gästpriset – provisionsgrundande, kvarstår i beräkningen",
+        "base": "Beräkningsgrund",
+        "commission": "Administrationsprovision {pct}",
+        "minCommission": "Minimiprovision (avtal) istället för {pct}",
+        "contractFrom": "Avtal från {datum}",
+        "rateManual": "manuellt i denna avräkning",
+        "rateLegacy": "Standardtaxa från grunddata",
+        "flatFee": "Fast avgift (avtal)",
+        "feesBack": "Ägarens avgifter – oförkortat tillbaka",
+        "ownerShare": "Ägarandel",
+        "belongsBetrieb": "kvarstår hos företaget",
+        "belongsEigentuemer": "Ägare",
+        "belongsDurchlauf": "Genomgångsposter (tredje part)",
+        "commissionFree": "provisionsfri",
+        "commissionable": "provisionsgrundande",
+        "amountHidden": "Belopp hos företaget",
+        "addon": "Tilläggstjänst",
+        "noFeesReported": "Portalen har inte rapporterat några avgifter för denna bokning; därför har inga tillämpats.",
+        "afterPortal": "Totalbelopp efter portalavdrag",
+        "afterPortalHint": "Gästpris minus portalkommission och portalens betalningsavgift",
+        "feesBusiness": "Tillhandahålls av företaget – ingår ej i utbetalningen",
+        "contractStartsLater": "Inget faktureringsavtal på avresedagen {abreise}: avtalet börjar först den {beginn}. Backdatera avtalsstarten hos ägaren, så räknas denna bokning med.",
+        "noContract": "Det finns inget faktureringsavtal och ingen provisionssats för detta objekt i masterdata – skapa ett avtal hos ägaren.",
+        "addonsOutside": "Tilläggstjänster – säljs via myNextDays, ingår ej i portalens gästpris"
       }
     },
     "expenses": {
@@ -1566,7 +1624,11 @@
       "rentalRevenue": "Hyresintäkter",
       "expenses": "Utgifter & extra",
       "total": "Totalt",
-      "deductPercentage": "Provision (%)"
+      "deductPercentage": "Provision (%)",
+      "shares": "Ägarandelar från bokningar",
+      "deductions": "Avdrag",
+      "credits": "Krediteringar",
+      "recurring": "Återkommande poster"
     },
     "manage": {
       "owner": "Ägare",
@@ -1631,6 +1693,25 @@
       "cancel": "Avbryt",
       "confirm": "Lås",
       "working": "Låser ..."
+    },
+    "deductions": {
+      "title": "Avdrag & Krediteringar",
+      "intro": "Allt som ändrar utbetalningen utöver bokningarna – från tre källor: schablonbelopp från avtalet per bokning, engångsposter och återkommande poster (löpande avtal).",
+      "deductions": "Avdrag (till ägarens nackdel)",
+      "credits": "Krediteringar (till ägarens fördel)",
+      "empty": "Inga avdrag eller krediteringar under denna period.",
+      "srcExpense": "Engångsposter",
+      "srcRecurring": "Återkommande post",
+      "srcFlatFee": "Schablonbelopp från avtal",
+      "perBooking": "per bokning",
+      "perNight": "per natt",
+      "perPeriod": "per period",
+      "quantity": "{n} × {betrag}",
+      "flatFeesNote": "Schablonbeloppen från avtalet har redan dragits av från ägarens andel per bokning – detta är endast för översikt, inget ytterligare avdrag.",
+      "manageRecurring": "Hantera återkommande poster",
+      "manageContract": "Hantera faktureringsavtal",
+      "receipt": "Kvitto",
+      "bookingsCount": "{n} bokningar"
     }
   },
   "ownerBilling": {
@@ -1709,7 +1790,9 @@
     "effectReleased": "{property}: försäljningen fortsätter — avtalsslutet har upphävts och nätterna är säljbara igen.",
     "effectBlocked": "{property}: försäljningen upphör den {date} — {nights} nätter blockerade och borttagna från portalerna.",
     "effectCalendarFailed": "{property}: Kontraktsslutet är registrerat, kalenderspärren är inte skriven. Den kommer att läggas till i natt.",
-    "effectNoUnit": "{property}: Kontraktsslutet är registrerat, men kalendern är inte spärrad – objektet saknar en enhet. Skapa den, så aktiveras spärren."
+    "effectNoUnit": "{property}: Kontraktsslutet är registrerat, men kalendern är inte spärrad – objektet saknar en enhet. Skapa den, så aktiveras spärren.",
+    "validFromHint": "Det datum då avtalet träder i kraft – för ett befintligt avtal är det det faktiska avtalsdatumet, inte dagens datum. Varje bokning faktureras enligt det avtal som gäller på utcheckningsdagen; bokningar med tidigare utcheckning förblir obetalda.",
+    "errorValidFromRequired": "Ange från när avtalet gäller."
   },
   "portal": {
     "title": "Min portal",
@@ -5465,7 +5548,8 @@
       "connectPortal": "Anslut portal",
       "noPortals": "Ingen portal (Booking, Airbnb m.fl.) är ännu ansluten till det här objektet.",
       "marketplaceReview": "Under granskning",
-      "marketplaceReviewHint": "myBestDays granskar fortfarande denna annons. Den visas på marknadsplatsen så snart den godkänts. Portaler och din egen webbplats påverkas inte."
+      "marketplaceReviewHint": "myBestDays granskar fortfarande den här annonsen. När den har godkänts visas den på marknadsplatsen. myNextDays är en obligatorisk kanal: Ett objekt kan inte avmarkeras individuellt där – \"Pausa försäljning\" tar bort det från försäljningen överallt.",
+      "marketplaceMandatory": "Obligatorisk kanal – varje objekt listas på myBestDays"
     },
     "IdLayout": {
       "loadError": "Objektet kunde inte läsas in: {error}"
@@ -5563,11 +5647,11 @@
       "stepOf": "Steg {schritt} av {gesamt}",
       "next": "Continue",
       "back": "Back",
-      "channelsHint": "Var ska det här objektet säljas? Det går att ändra när som helst.",
+      "channelsHint": "Var ska detta objekt säljas ytterligare? Portaler och webbplatser kan ändras när som helst.",
       "channelPortals": "Bokningsportaler",
       "channelPortalsHint": "Airbnb, Booking.com med flera. Portalerna kräver fullständiga uppgifter — se nedan.",
       "channelPlatform": "myBestDays",
-      "channelPlatformHint": "Vår egen marknadsplats med låg provision.",
+      "channelPlatformHint": "Vår egen marknadsplats med 8 % all-in. Varje objekt listas där; det blir synligt efter publicering och vårt godkännande.",
       "channelWebsite": "Egen webbplats",
       "channelWebsiteHint": "Din bokningssida och bokningswidgeten.",
       "readinessTitle": "För portalerna saknas fortfarande:",
@@ -6261,7 +6345,21 @@
       "planPortalOffHint": "Detta pris gäller endast för direktbokningar. Klicka för att skicka det till bokningsportalerna.",
       "planPortalOn": "Priset går nu till bokningsportalerna.",
       "planPortalOnHint": "Detta pris går till bokningsportalerna. Klicka för att endast använda det för direktbokningar.",
-      "planPortalYes": "Till portaler"
+      "planPortalYes": "Till portaler",
+      "feeValidityTitle": "Giltighet",
+      "feeValidityHint": "Avgiften gäller för bokningar med ankomst inom perioden. Tom = ingen gräns. Avgifter med tidsperiod skickas inte till portalerna: där kan inget datumvillkor anges.",
+      "feeValidFromLabel": "Gäller från",
+      "feeValidUntilLabel": "Gäller till",
+      "feeValidityOrderError": "”Gäller till” är före ”Gäller från”.",
+      "feeOwnerStatementOnlyLabel": "Endast i ägarredovisningen",
+      "feeOwnerStatementOnlyHint": "Avgiften debiteras inte gästen och skickas inte till någon portal. Den påverkar endast ägarredovisningen, utvärderingen och ägarportalen.",
+      "feeValidFromSuffix": "från {date}",
+      "feeValidUntilSuffix": "till {date}",
+      "feeOwnerStatementOnlySuffix": "endast redovisning",
+      "feeCalculationLabel": "Beräkning",
+      "feeVatHint": "En egen skattesats för denna avgift, avvikande från boendets övernattningspris. Av betyder: avgiften följer övernattningspriset.",
+      "feeVatIncludedLabel": "Moms i beloppet",
+      "feeVatIncludedHint": "Ingår skattesatsen redan i det angivna beloppet eller läggs den till utöver? Utan denna information skulle beloppet vara tvetydigt."
     },
     "policiesForm": {
       "title": "Villkor",
@@ -7303,23 +7401,23 @@
     "marketplacePending": "{count} under granskning",
     "marketplaceWaiting": "Under granskning",
     "marketplace": {
-      "intro": "myBestDays är vår egen marknadsplats — en bokningskanal som Booking eller Airbnb, bara utan portalanslutning. Ett objekt blir synligt när det är aktivt, listat här och godkänt.",
+      "intro": "myBestDays är vår egen marknadsplats – en bokningskanal som Booking eller Airbnb, men utan portalanslutning, och obligatorisk för varje objekt. Ett objekt blir synligt när det är aktivt och har godkänts av oss.",
       "openMarketplace": "Öppna marknadsplatsen",
       "propertiesHeading": "Objekt på marknadsplatsen",
       "noProperties": "Inga objekt skapade ännu.",
       "columnProperty": "Objekt",
-      "columnVisibility": "Synlighet",
+      "columnVisibility": "Status",
       "columnApproval": "Godkännande",
       "columnBookings": "Bokningar",
       "stateActive": "Synligt",
       "statePending": "Under granskning",
-      "stateNotListed": "Inte listat",
+      "stateNotListed": "Försäljning pausad",
       "stateInactiveProperty": "Objektet är inte aktivt",
       "viewListing": "Visa annons",
       "reviewHint": "Objekt under granskning visas ännu inte på myBestDays. Vi granskar varje annons eftersom myBestDays uppträder som leverantör där — portaler och din egen webbplats påverkas inte.",
       "summaryVisible": "{count} synliga",
       "summaryWaiting": "{count} under granskning",
-      "summaryOff": "{count} inte listade",
+      "summaryOff": "{count} pausade eller inaktiva",
       "moderation": {
         "draft": "Utkast",
         "pending": "Under granskning",
@@ -7354,7 +7452,8 @@
       "mayClose": "Importen fortsätter på servern – du kan stänga den här sidan.",
       "andMore": "… och {count} till",
       "close": "Stäng",
-      "updated": "uppdaterad"
+      "updated": "uppdaterad",
+      "portal": "redan från portalen"
     }
   },
   "calendarSync": {
@@ -10511,7 +10610,11 @@
     "haveAccount": "Har du redan ett konto?",
     "loginLink": "Logga in här",
     "loadingHeadline": "Din egen bokningswebbplats. Behåll 100 % av varje bokning.",
-    "loadingText": "Vi ställer in ditt konto …"
+    "loadingText": "Vi ställer in ditt konto …",
+    "referralLabel": "Rekommenderas av (valfritt)",
+    "referralPlaceholder": "Rekommendationskod, t.ex. ANNA-K7P2",
+    "referralHint": "Har du lärt känna myNextDays via en partner? Deras kod står här – de ser bara att ett företag kom via dem, aldrig ditt namn. Med koden får du den första hela månaden gratis efter de 14 testdagarna.",
+    "referralContactOptIn": "Min rekommendator får kontakta mig via myNextDays."
   },
   "marketingSite": {
     "stars": "4,5 stjärnor",

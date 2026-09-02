@@ -851,7 +851,8 @@
     },
     "unternehmen": {
       "ueberUns": "O nás",
-      "kontakt": "Kontakt"
+      "kontakt": "Kontakt",
+      "partner": "Partnerský program"
     },
     "copyright": "© 2026 myNextDays. Všetky práva vyhradené.",
     "agb": "Obchodné podmienky",
@@ -860,7 +861,8 @@
     "cookies": "Zásady cookies",
     "avv": "Spracúvanie údajov",
     "kontoLoeschen": "Vymazať účet",
-    "newsletterKnopf": "Prihlásiť sa na odber noviniek"
+    "newsletterKnopf": "Prihlásiť sa na odber noviniek",
+    "partnerAgb": "Partnerské VOP"
   },
   "legal": {
     "stand": "Stav ku dňu: {datum}"
@@ -990,7 +992,7 @@
       "sub": "Čo chcú prenajímatelia vedieť pred prechodom — stručne a bez drobného písma.",
       "laufzeit": {
         "frage": "Je tu minimálna doba?",
-        "antwort": "Nie. Predplatné je mesačné a je možné ho zrušiť štyri týždne pred koncom mesiaca. Prvých 14 dní je zadarmo: Platobné údaje zadáte pri spustení, ale platba sa uskutoční až po skončení skúšobnej fázy. Ak zrušíte predplatné skôr, neplatíte nič."
+        "antwort": "Nie. Predplatné je mesačné a je možné ho zrušiť štyri týždne pred koncom mesiaca. Prvých 14 dní je zadarmo: pri spustení zadáte svoje platobné údaje, ale platba sa uskutoční až po skončení testovacieho obdobia. Ak prídete cez odkaz alebo kód partnera, prvý celý mesiac je navyše zadarmo. Ak zrušíte predplatné skôr, neplatíte nič."
       },
       "objektzahl": {
         "frage": "Čo sa stane, keď pridám objekty?",
@@ -2185,5 +2187,259 @@
     "verwalten": "Spravovať nastavenia súborov cookie",
     "schliessen": "Zatvoriť",
     "bestaetigen": "Potvrdiť nastavenia"
+  },
+  "partnerHinweis": {
+    "text": "Prichádzate cez odporúčanie (kód {code}). Kód bude použitý pri registrácii – a po 14 testovacích dňoch vám daruje prvý celý mesiac.",
+    "cta": "Začnite teraz zadarmo",
+    "schliessen": "Zavrieť poznámku"
+  },
+  "partner": {
+    "meta": {
+      "titel": "Partnerský program — myNextDays",
+      "beschreibung": "Odporučte myNextDays prenajímateľom dovolenkových ubytovaní a hotelom a získajte až {max} % z obratu z predplatného každého získaného podniku po dobu dvanástich mesiacov."
+    },
+    "hero": {
+      "eyebrow": "Partnerský program",
+      "headlinePre": "Odporučte myNextDays —",
+      "headlineHighlight": "a zarábajte",
+      "sub": "Pre influencerov, konzultantov, agentúry a prenajímateľov so sieťou: Každá prevádzka, ktorá sa zaregistruje prostredníctvom vášho odkazu a zaplatí predplatné, vám prinesie dvanásť mesiacov až {max} % z obratu z predplatného – plus 0,5 % z každej rezervácie cez myBestDays, bonusy za povýšenie a od úrovne Elite superprovíziu bez časového obmedzenia.",
+      "cta": "Prihláste sa teraz",
+      "ctaLogin": "Prihlásenie partnera",
+      "chipDauer": "12 mesiacov provízie za zákazníka",
+      "chipAuszahlung": "Mesačná výplata",
+      "chipKosten": "Bezplatná účasť",
+      "chipGratismonat": "Vaši zákazníci: 14 dní testovania + 1 mesiac zadarmo"
+    },
+    "schritte": {
+      "eyebrow": "Ako to funguje",
+      "heading": "Tri kroky k prvej provízii",
+      "bewerben": {
+        "titel": "Prihláste sa",
+        "text": "Povedzte nám o svojom kanáli — webovej stránke, sociálnom profile alebo sieti. Každú žiadosť posudzujeme osobne a zvyčajne ju schválime do niekoľkých pracovných dní."
+      },
+      "teilen": {
+        "titel": "Zdieľajte odkaz alebo kód",
+        "text": "Dostanete osobný odkaz a odporúčací kód. Kód je viditeľne uvedený vo formulári pri registrácii — bez sledovacieho súboru cookie."
+      },
+      "verdienen": {
+        "titel": "Zarábajte",
+        "text": "Ak získaný podnik zaplatí svoju prvú faktúru za predplatné, vaša provízia trvá dvanásť mesiacov. Každého zákazníka vidíte pseudonymne na partnerskom paneli a výplata sa uskutočňuje mesačne."
+      }
+    },
+    "staffel": {
+      "eyebrow": "Vaša úroveň",
+      "heading": "Čím väčšia je vaša štruktúra, tým vyššia je vaša sadzba",
+      "sub": "Sadzba platí pre všetky nové provízie od dosiahnutia hodnosti. Do štruktúry sa započítavajú vaši vlastní platiaci zákazníci a zákazníci vašich tímových partnerov.",
+      "kunden": "{od}–{do} platiacich zákazníkov",
+      "kundenOffen": "od {od} platiacich zákazníkov",
+      "satz": "z obratu z predplatného",
+      "nichtAbrufbar": "Úroveň momentálne nie je k dispozícii. Skúste to prosím neskôr."
+    },
+    "bedingungen": {
+      "eyebrow": "Pravidlá",
+      "heading": "Férové pre vás, férové pre podniky",
+      "basis": {
+        "titel": "Čo sa počíta",
+        "text": "Základom provízie je čistý obrat z predplatného (základná tarifa a moduly) získaného podniku — bez daní, provízií portálu a doplnkových služieb."
+      },
+      "dauer": {
+        "titel": "Dvanásť mesiacov",
+        "text": "Provízia plynie dvanásť mesiacov od prvej zaplatenej faktúry za predplatné prevádzky; bezplatný mesiac vašich zákazníkov sa nezapočítava. Ak prevádzka zruší predplatné, provízia končí jej poslednou platbou. Podiel z rezervácií a superprovízia plynú bez tohto obmedzenia."
+      },
+      "auszahlung": {
+        "titel": "Výplata",
+        "text": "Mesačne, 30 dní po platbe podniku, od minimálnej sumy v každej mene. Dostanete dobropis; spoločnosti potrebujú platné IČ DPH."
+      },
+      "kennzeichnung": {
+        "titel": "Označenie",
+        "text": "Každé odporúčanie je reklama a musí byť ako také označené. Predpísané formulácie pre každý jazyk poskytujeme na paneli."
+      },
+      "verboten": {
+        "titel": "Nepovolené",
+        "text": "Vlastná propagácia, reklama na naše značky vo vyhľadávacích reklamách, prísľuby zliav v našom mene a nevyžiadané správy. Vrátené platby sa odpočítajú z provízie."
+      },
+      "daten": {
+        "titel": "Ochrana údajov",
+        "text": "Svojich zákazníkov vidíte iba pseudonymne – s krajinou, stavom a sumami, nikdy nie s menom alebo e-mailom. Prevádzka vám môže pri registrácii povoliť, aby ste ju kontaktovali."
+      }
+    },
+    "faq": {
+      "eyebrow": "Časté otázky",
+      "heading": "Čo sa partneri pýtajú",
+      "wer": {
+        "frage": "Kto sa môže stať partnerom?",
+        "antwort": "Každá osoba alebo firma v EÚ so skutočným kanálom k prenajímateľom alebo hotelom: influenceri, konzultanti, agentúry, daňové kancelárie, združenia – a samotní zákazníci myNextDays. Žiadosť je bezplatná; predplatné nie je podmienkou."
+      },
+      "wann": {
+        "frage": "Kedy sa prevádzka počíta ako môj zákazník?",
+        "antwort": "Ak sa zaregistroval/a s vaším kódom a zaplatil/a svoju prvú faktúru za predplatné. Registrácie bez platby sa nepočítajú do hodnotenia."
+      },
+      "doppelt": {
+        "frage": "Čo ak prevádzka uvedie dvoch partnerov?",
+        "antwort": "Prevádzka bude priradená presne jednému partnerovi – tomu, ktorého kód bol pri registrácii vo formulári. Neskôr zadané kódy to nezmenia."
+      },
+      "steuern": {
+        "frage": "Ako prebieha fakturácia?",
+        "antwort": "Vystavíme dobropis (self-billing). Firmy s IČ DPH v EÚ ho dostanú s poznámkou o prenesení daňovej povinnosti, súkromné osoby bez DPH – províziu si zdaňujete sami."
+      },
+      "material": {
+        "frage": "Existujú propagačné materiály?",
+        "antwort": "Áno: krátke videá pre sociálne siete, vysvetľujúce video, bannery a textové moduly – na partnerskom paneli, vo vašom jazyku."
+      },
+      "wieviel": {
+        "frage": "Koľko provízie môžem zarobiť?",
+        "antwort": "Závisí to od príjmov z predplatného vašich zákazníkov a od vášho postavenia. Vyššie uvedená tabuľka zobrazuje sadzbu za každé postavenie; dvanásť mesiacov za každého zákazníka. Okrem toho získate 0,5 % z každej rezervácie, ktorú vaši zákazníci získajú cez myBestDays, jednorazový bonus za postup za každé dosiahnuté postavenie, rozdielovú províziu s tímom – a od Elite Partnera 2,5 % superprovíziu z celej štruktúry bez časového obmedzenia."
+      },
+      "team": {
+        "frage": "Ako funguje tímová provízia?",
+        "antwort": "Od hodnosti „Začiatočník“: Ak sa partner prihlási prostredníctvom vášho tímového odkazu a viditeľne uvedie váš kód v žiadosti, po schválení patrí do vášho tímu. Jeho zákazníci sa počítajú 1:1 pre vašu hodnosť. Z čistého obratu z predplatného jeho zákazníkov získate rozdiel medzi vašou sadzbou a jeho – presne jedna úroveň hlboko, bez účastníckeho poplatku, bez peňazí za nábor."
+      },
+      "auszahlung": {
+        "frage": "Ako a kedy sa vyplácajú provízie?",
+        "antwort": "Mesačne za každú menu, akonáhle suma dosiahne minimálnu sumu vašej meny. Každá provízna položka je 30 dní „otvorená“ (okno pre vrátenie peňazí) a potom je splatná. Dostanete dobropis (self-billing) – nevystavujete faktúru. Platba prostredníctvom SEPA, Wise alebo PayPal."
+      },
+      "verfolgen": {
+        "frage": "Ako môžem sledovať svoje provízie a výkon?",
+        "antwort": "Na partnerskom paneli v časti „Provízie“ uvidíte každú zaplatenú faktúru za predplatné s podkladom, sadzbou, sumou a stavom, v časti „Zákazníci“ vaše podniky pseudonymne, v časti „Tím“ vyhodnotenie vašich tímových partnerov a v časti „Odkazy a materiály“ kliknutia za kód."
+      },
+      "werbung": {
+        "frage": "Môžem spúšťať platenú reklamu?",
+        "antwort": "Nie na našu značku: reklamy na „myNextDays“ a varianty písania (Brand-Bidding), cookie-dropping, kúpený dosah alebo stimuly pre registrácie sú zakázané a vedú k zablokovaniu. Vlastný obsah, príspevky a odporúčania sú výslovne vítané – s označením ako reklama."
+      }
+    },
+    "abschluss": {
+      "heading": "Pripravení odporučiť myNextDays?",
+      "sub": "Prihláste sa za dve minúty. Po kontrole sa vám ozveme.",
+      "cta": "Prihlásiť sa teraz",
+      "kontakt": "Otázky? Napíšte nám."
+    },
+    "vergleich": {
+      "eyebrow": "Vaša úroveň",
+      "heading": "Čím viac platiacich zákazníkov, tým vyššia sadzba",
+      "sub": "Sadzba platí pre všetky nové provízie od dosiahnutia hodnosti. Počíta sa vaša štruktúra: vaši vlastní platiaci zákazníci plus zákazníci vašich tímových partnerov.",
+      "nichtAbrufbar": "Úroveň momentálne nie je k dispozícii. Skúste to prosím neskôr.",
+      "plan": "Úroveň",
+      "provision": "Provízia za vlastných zákazníkov",
+      "teamProvision": "Tímová provízia za zákazníkov vašich tímových partnerov",
+      "dauer": "Doba trvania na zákazníka",
+      "dauerWert": "12 mesiacov",
+      "kunden": "{od}–{do} platiacich zákazníkov",
+      "kundenOffen": "od {od} platiacich zákazníkov",
+      "vorteile": "Služby",
+      "ja": "zahrnuté",
+      "nein": "nezahrnuté",
+      "leistung": {
+        "konto": "Bezplatný partnerský účet",
+        "dashboard": "Partnerský panel so zákazníkmi, províziami a analýzami",
+        "material": "Reklamné materiály a šablóny označenia",
+        "team": "Vybudujte tím s vlastným tímovým odkazom",
+        "gutschrift": "Mesačná výplata s dobropisom (samofakturácia)",
+        "chat": "Priamy kontakt s partnerským tímom",
+        "support": "Osobný kontaktný partner",
+        "coMarketing": "Co-marketing (spoločné akcie)"
+      },
+      "fussnoteTeam": "Tímová provízia je rozdiel medzi vašou sadzbou a sadzbou tímového partnera z čistého obratu z predplatného jeho zákazníkov, obe v čase platby – presne jedna úroveň, žiadny účastnícky poplatok, žiadne peniaze za nábor. Spolu nikdy nie viac ako 30 %.",
+      "fussnoteCoMarketing": "Po dohode s partnerským tímom; závisí od profilu partnera a prebiehajúcich akcií.",
+      "fussnoteRang": "Hodnosť vyplýva z vašej štruktúry: vlastní platiaci zákazníci plus zákazníci vašich tímových partnerov, každý sa počíta raz. Pri dosiahnutí novej hodnosti od úrovne „Začiatočník“ získate jednorazový bonus za povýšenie.",
+      "teamDifferenz": "{satz} % mínus sadzba tímového partnera",
+      "teamNicht": "zatiaľ žiadny tím",
+      "bonus": "Bonus za povýšenie (jednorazový)",
+      "superProvision": "Superprovízia za celú štruktúru",
+      "marktTurbo": "Podiel myBestDays z rezervácie",
+      "marktTurboWert": "0,5 % za rezerváciu, neobmedzene",
+      "fussnoteSuper": "Od Elite partnera 2,5 % z čistého obratu z predplatného všetkých zákazníkov vašej štruktúry – dodatočne k provízii, bez 12-mesačného limitu, pokiaľ si udržíte hodnosť a zákazník platí."
+    },
+    "team": {
+      "eyebrow": "Vybudovať tím",
+      "heading": "Až {max} % rozdielová provízia z obratu vášho tímu",
+      "sub": "Poznáte ďalších konzultantov, tvorcov alebo agentúry s kontaktmi na hostiteľov? Od hodnosti „Začiatočník“ sa prihlásia prostredníctvom vášho tímového odkazu, patria do vášho tímu – a ich zákazníci sa počítajú 1:1 pre vašu hodnosť. Získate rozdiel medzi vašou sadzbou a sadzbou vášho tímového partnera; vaši tímoví partneri si ponechajú svoju plnú vlastnú províziu.",
+      "rang": {
+        "titel": "Rozdiel",
+        "text": "Dostanete svoju sadzbu mínus sadzbu tímového partnera – obe v čase platby. Ak je váš tímový partner v rovnakej hodnosti, nevzniká žiadna tímová provízia."
+      },
+      "ebene": {
+        "titel": "Presne jedna úroveň",
+        "text": "Vaši tímoví partneri si pod vami nevytvárajú vlastný tím. Žiadna sieť, žiadna pyramída."
+      },
+      "keinGeld": {
+        "titel": "Len zo skutočného obratu",
+        "text": "Žiadny účastnícky poplatok, žiadne peniaze za nábor. Tímová provízia vzniká výlučne z plateného obratu z predplatného."
+      },
+      "dauer": {
+        "titel": "Rovnaké pravidlá",
+        "text": "12 mesiacov za každého tímového zákazníka, 30-dňové okno na vrátenie peňazí, storno pri vrátení peňazí alebo chargeback – rovnako ako pri vašej vlastnej provízii. Od úrovne Elite sa pridáva superprovízia za celú štruktúru, bez časového obmedzenia."
+      }
+    },
+    "kundeCta": {
+      "heading": "Ste už zákazníkom myNextDays?",
+      "text": "Potom produkt poznáte najlepšie. Odporučte ho ďalej — vaša provízia sa pripíše na váš účet ako dobropis, bez ohľadu na vaše predplatné.",
+      "cta": "Odporučiť a zarobiť"
+    }
+  },
+  "partnerBewerbung": {
+    "meta": {
+      "titel": "Staňte sa partnerom — myNextDays",
+      "beschreibung": "Žiadosť o partnerský program myNextDays: účty sociálnych médií, dosah, podmienky. Každú žiadosť posudzujeme osobne."
+    },
+    "eyebrow": "Partnerský program",
+    "titel": "Staňte sa partnerom",
+    "text": "Povedzte nám o svojich účtoch sociálnych médií a ich dosahu – každú žiadosť posudzujeme osobne a zvyčajne sa ozveme do niekoľkých pracovných dní. Po schválení získate prístup k partnerskému panelu s odkazmi, kódmi a vyhodnotením.",
+    "email": "E-mail",
+    "passwort": "Heslo pre váš partnerský panel",
+    "passwortHinweis": "Minimálne 8 znakov.",
+    "name": "Meno",
+    "firma": "Firma (voliteľné)",
+    "rechtsform": "Právna forma",
+    "privat": "Súkromná osoba",
+    "unternehmen": "Spoločnosť",
+    "land": "Krajina",
+    "ustId": "IČ DPH",
+    "ustIdHinweis": "Bude skontrolované v systéme VIES EÚ. Bez potvrdeného čísla sa spoločnostiam nevyplácajú žiadne platby.",
+    "kanaele": {
+      "titel": "Vaše účty sociálnych médií",
+      "hinweis": "Povinné: aspoň jeden účet sociálnych médií (Instagram, TikTok, YouTube, Facebook, LinkedIn...) s adresou, menom používateľa a dosahom (sledovatelia). Webová stránka, blog alebo newsletter sú vítané ako doplnok. Účty skontrolujeme pred schválením.",
+      "plattform": "Platforma",
+      "handle": "Meno používateľa (voliteľné)",
+      "reichweite": "Dosah (sledovatelia)",
+      "hinzufuegen": "Pridať kanál",
+      "entfernen": "Odstrániť kanál",
+      "socialPflicht": "Povinný je aspoň jeden účet sociálnych médií s dosahom – samotná webová stránka nestačí.",
+      "plattformen": {
+        "website": "Webová stránka",
+        "blog": "Blog",
+        "newsletter": "Newsletter",
+        "podcast": "Podcast",
+        "other": "Iné"
+      }
+    },
+    "plattform": {
+      "website": "Webová stránka",
+      "blog": "Blog",
+      "newsletter": "Newsletter",
+      "podcast": "Podcast",
+      "other": "Iné"
+    },
+    "sponsor": "Odporúčané partnerom (kód, voliteľné)",
+    "sponsorHinweis": "Prichádzate cez tímový odkaz partnera? Jeho kód je potom tu. Získa tímovú províziu z príjmov z predplatného vašich zákazníkov – vaša vlastná provízia zostáva nezmenená.",
+    "pitch": "Prečo sa hodíte k myNextDays? (voliteľné)",
+    "pitchPlatzhalter": "Koho oslovujete, o čom hovoríte, ako chcete odporúčať?",
+    "zustimmung": "Súhlasím s",
+    "bedingungen": "Partnerskými podmienkami",
+    "version": "Verzia {version}",
+    "absenden": "Odoslať žiadosť",
+    "sendet": "Odosiela sa...",
+    "pruefungHinweis": "Tento formulár je chránený službou reCAPTCHA. Po odoslaní náš partnerský tím skontroluje vaše účty a dosah; dostanete e-mail s rozhodnutím.",
+    "fehler": {
+      "social": "Uveďte aspoň jeden účet sociálnych médií s adresou a dosahom.",
+      "doppelt": "Pre tento e-mail už existuje žiadosť. Prihláste sa do partnerského panela.",
+      "eingabe": "Skontrolujte svoje údaje.",
+      "captcha": "Kontrola ochrany proti spamu zlyhala. Obnovte stránku a skúste to znova.",
+      "allgemein": "Žiadosť sa momentálne nepodarilo odoslať. Skúste to znova neskôr."
+    },
+    "fertig": {
+      "titel": "Žiadosť prijatá",
+      "text": "Ďakujeme! Vaše účty a dosah skontrolujeme osobne a ozveme sa vám e-mailom. Váš partnerský panel je prístupný pomocou vášho e-mailu a hesla – odkazy a kódy budú aktívne po schválení.",
+      "login": "Prejsť na partnerské prihlásenie"
+    }
   }
 }

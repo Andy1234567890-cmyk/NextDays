@@ -851,7 +851,8 @@
     },
     "unternehmen": {
       "ueberUns": "About us",
-      "kontakt": "Contact"
+      "kontakt": "Contact",
+      "partner": "Partner Program"
     },
     "copyright": "© 2026 myNextDays. All rights reserved.",
     "agb": "Terms",
@@ -860,7 +861,8 @@
     "cookies": "Cookie policy",
     "avv": "Data processing",
     "kontoLoeschen": "Delete account",
-    "newsletterKnopf": "Subscribe to newsletter"
+    "newsletterKnopf": "Subscribe to newsletter",
+    "partnerAgb": "Partner Terms and Conditions"
   },
   "legal": {
     "stand": "Last updated: {datum}"
@@ -990,7 +992,7 @@
       "sub": "What hosts want to know before switching — short and without small print.",
       "laufzeit": {
         "frage": "Is there a minimum term?",
-        "antwort": "No. The subscription is monthly and can be cancelled with four weeks' notice to the end of the month. The first 14 days are free: you enter your payment details at the start, but payment will only be debited after the trial period. If you cancel beforehand, you pay nothing."
+        "antwort": "No. The subscription is monthly and can be cancelled with four weeks' notice to the end of the month. The first 14 days are free: you enter your payment details at the start, but payment will only be charged after the trial period. If you sign up via a partner's link or code, the first full month is also free. If you cancel beforehand, you pay nothing."
       },
       "objektzahl": {
         "frage": "What happens when I add properties?",
@@ -2185,5 +2187,259 @@
     "verwalten": "Manage cookie settings",
     "schliessen": "Close",
     "bestaetigen": "Confirm settings"
+  },
+  "partnerHinweis": {
+    "text": "You are using a referral code ({code}). The code will be applied upon registration and grants you the first full month after the 14-day trial period.",
+    "cta": "Start now for free",
+    "schliessen": "Close notice"
+  },
+  "partner": {
+    "meta": {
+      "titel": "Partner Program — myNextDays",
+      "beschreibung": "Refer myNextDays to vacation rental owners and hotels and receive up to {max}% of the subscription revenue of each referred business for twelve months."
+    },
+    "hero": {
+      "eyebrow": "Partner Program",
+      "headlinePre": "Refer myNextDays —",
+      "headlineHighlight": "and earn money",
+      "sub": "For influencers, consultants, agencies and landlords with a network: Every business that registers via your link and pays for a subscription earns you up to {max} % of the subscription revenue for twelve months — plus 0.5 % of each booking via myBestDays, promotion bonuses and, from Elite, a super commission without a time limit.",
+      "cta": "Apply now",
+      "ctaLogin": "Partner Login",
+      "chipDauer": "12 months commission per customer",
+      "chipAuszahlung": "Monthly payout",
+      "chipKosten": "Free participation",
+      "chipGratismonat": "Your customers: 14 days trial + 1 month free"
+    },
+    "schritte": {
+      "eyebrow": "How it works",
+      "heading": "Three steps to your first commission",
+      "bewerben": {
+        "titel": "Apply",
+        "text": "You tell us your channel — website, social profile, or network. We review each application personally and usually approve it within a few business days."
+      },
+      "teilen": {
+        "titel": "Share link or code",
+        "text": "You receive a personal link and a referral code. The code is visibly displayed in the registration form — without a tracking cookie."
+      },
+      "verdienen": {
+        "titel": "Earn",
+        "text": "If a referred business pays its first subscription invoice, your commission runs for twelve months. You see each customer pseudonymously in the partner dashboard and are paid monthly."
+      }
+    },
+    "staffel": {
+      "eyebrow": "Your tier",
+      "heading": "The larger your structure, the higher your rate",
+      "sub": "The rate applies to all new commissions from the moment the rank is achieved. Your structure includes your own paying customers and the customers of your team partners.",
+      "kunden": "{von}–{bis} paying customers",
+      "kundenOffen": "from {von} paying customers",
+      "satz": "of subscription revenue",
+      "nichtAbrufbar": "The tier is currently unavailable. Please try again later."
+    },
+    "bedingungen": {
+      "eyebrow": "The rules",
+      "heading": "Fair for you, fair for the businesses",
+      "basis": {
+        "titel": "What counts",
+        "text": "Commission basis is the net subscription revenue (basic tariff and modules) of the referred business — excluding taxes, portal commissions, and additional services."
+      },
+      "dauer": {
+        "titel": "Twelve months",
+        "text": "The commission runs for twelve months from the business's first paid subscription invoice; your customers' free month does not count. If the business cancels, it ends with its last payment. Booking share and super commission run without this limit."
+      },
+      "auszahlung": {
+        "titel": "Payout",
+        "text": "Monthly, 30 days after the business's payment, from a minimum amount per currency. You receive a credit note; companies need a valid VAT ID."
+      },
+      "kennzeichnung": {
+        "titel": "Labeling",
+        "text": "Every recommendation is advertising and must be labeled as such. We provide the required wording for each language in the dashboard."
+      },
+      "verboten": {
+        "titel": "Not allowed",
+        "text": "Self-promotion, advertising on our brand names in search ads, promises of discounts in our name, and unsolicited messages. Refunds will be deducted from the commission."
+      },
+      "daten": {
+        "titel": "Privacy",
+        "text": "You only see your customers pseudonymously — with country, status, and amounts, never with names or email. A business may allow you to contact them upon registration."
+      }
+    },
+    "faq": {
+      "eyebrow": "Frequently Asked Questions",
+      "heading": "What partners ask us",
+      "wer": {
+        "frage": "Who can become a partner?",
+        "antwort": "Any person or company in the EU with a genuine channel to landlords or hotels: influencers, consultants, agencies, tax firms, associations — and myNextDays customers themselves. An application is free; a subscription is not a prerequisite."
+      },
+      "wann": {
+        "frage": "When does a business count as my customer?",
+        "antwort": "When they register with your code and have paid their first subscription invoice. Registrations without payment do not count for ranking."
+      },
+      "doppelt": {
+        "frage": "What if a business names two partners?",
+        "antwort": "A business is assigned to exactly one partner — the one whose code was in the form during registration. Subsequent codes do not change this."
+      },
+      "steuern": {
+        "frage": "How does billing work?",
+        "antwort": "We issue a credit note (self-billing). Companies with an EU VAT ID receive it with a reverse-charge note, private individuals without VAT — you are responsible for taxing the commission yourself."
+      },
+      "material": {
+        "frage": "Is there promotional material?",
+        "antwort": "Yes: short videos for social media, an explainer video, banners, and text modules — in the partner dashboard, in your language."
+      },
+      "wieviel": {
+        "frage": "How much commission can I earn?",
+        "antwort": "This depends on your customers' subscription revenue and your rank. The tier above shows the rate per rank; for twelve months per customer. In addition, there is 0.5% of each booking your customers receive via myBestDays, a one-time promotion bonus for each rank achieved, the difference commission with a team - and from Elite Partner onwards, 2.5% super commission on the entire structure without a time limit."
+      },
+      "team": {
+        "frage": "How does the team commission work?",
+        "antwort": "From the Climber rank: If a partner applies via your team link and visibly enters your code in the application, they become part of your team after approval. Their customers count 1:1 for your rank. On the net subscription revenue of their customers, you receive the difference between your rate and theirs — exactly one level deep, without a participation fee, without money for recruitment."
+      },
+      "auszahlung": {
+        "frage": "How and when are commissions paid out?",
+        "antwort": "Monthly per currency, as soon as the sum reaches the minimum amount for your currency. Each commission line is \"open\" for 30 days (refund window) and then payable. You receive a credit (self-billing) — you do not issue an invoice. Payment via SEPA, Wise or PayPal."
+      },
+      "verfolgen": {
+        "frage": "How can I track my commissions and performance?",
+        "antwort": "In the partner dashboard, under \"Commissions\" you see every paid subscription invoice with basis, rate, amount and status, under \"Customers\" your businesses pseudonymously, under \"Team\" the evaluation of your team partners and under \"Links & Material\" clicks per code."
+      },
+      "werbung": {
+        "frage": "May I run paid advertising?",
+        "antwort": "Not on our brand: Ads on \"myNextDays\" and spelling variations (brand bidding), cookie dropping, purchased reach or incentives for registrations are prohibited and will lead to a ban. Your own content, contributions and recommendations are expressly welcome — with labeling as advertising."
+      }
+    },
+    "abschluss": {
+      "heading": "Ready to recommend myNextDays?",
+      "sub": "Apply in two minutes. We will get back to you after review.",
+      "cta": "Apply now",
+      "kontakt": "Questions? Write to us."
+    },
+    "vergleich": {
+      "eyebrow": "Your Tier",
+      "heading": "The more paying customers, the higher your rate",
+      "sub": "This rate applies to all new commissions from the moment the rank is achieved. Your structure is counted: your own paying customers plus the customers of your team partners.",
+      "nichtAbrufbar": "The tier is currently unavailable. Please try again later.",
+      "plan": "Rank",
+      "provision": "Commission on own customers",
+      "teamProvision": "Team commission on customers of your team partners",
+      "dauer": "Term per customer",
+      "dauerWert": "12 months",
+      "kunden": "{von}–{bis} paying customers",
+      "kundenOffen": "from {von} paying customers",
+      "vorteile": "Services",
+      "ja": "included",
+      "nein": "not included",
+      "leistung": {
+        "konto": "Free partner account",
+        "dashboard": "Partner dashboard with customers, commissions, and analysis",
+        "material": "Promotional material and branding templates",
+        "team": "Build a team with your own team link",
+        "gutschrift": "Monthly payout with credit (self-billing)",
+        "chat": "Direct line to the partner team",
+        "support": "Personal contact person",
+        "coMarketing": "Co-marketing (joint campaigns)"
+      },
+      "fussnoteTeam": "Team commission is the difference between your rate and the team partner's rate on the net subscription revenue of their customers, both at the time of payment — exactly one level, no participation fee, no money for recruitment. Never more than 30 % in total.",
+      "fussnoteCoMarketing": "By arrangement with the partner team; depends on the partner's profile and ongoing campaigns.",
+      "fussnoteRang": "The rank is based on your structure: your own paying customers plus the customers of your team partners, each counted once. Upon reaching a new rank from Climber upwards, a one-time promotion bonus is awarded.",
+      "teamDifferenz": "{satz} % minus team partner's rate",
+      "teamNicht": "no team yet",
+      "bonus": "Promotion bonus (one-time)",
+      "superProvision": "Super commission on the entire structure",
+      "marktTurbo": "myBestDays booking share",
+      "marktTurboWert": "0.5 % per booking, unlimited",
+      "fussnoteSuper": "From Elite Partner: 2.5 % of the net subscription revenue of all customers in your structure — in addition to the commission, without the 12-month limit, as long as you maintain the rank and the customer pays."
+    },
+    "team": {
+      "eyebrow": "Build a team",
+      "heading": "Up to {max} % differential commission on your team's revenue",
+      "sub": "Do you know other consultants, creators or agencies with connections to hosts? From the Climber rank, they apply via your team link, become part of your team — and their customers count 1:1 for your rank. You earn the difference between your rate and your team partner's rate; your team partners retain their full own tier.",
+      "rang": {
+        "titel": "The difference",
+        "text": "You receive your rate minus the team partner's rate — both at the time of payment. If your team partner is in the same rank, no team commission is generated."
+      },
+      "ebene": {
+        "titel": "Exactly one level",
+        "text": "Your team partners do not build their own team under you. No network, no pyramid."
+      },
+      "keinGeld": {
+        "titel": "Only from real revenue",
+        "text": "No participation fee, no money for recruitment. Team commission is generated exclusively from paid subscription revenue."
+      },
+      "dauer": {
+        "titel": "The same rules",
+        "text": "12 months per team customer, 30-day refund window, return upon refund or chargeback — as with your own commission. From Elite, the super commission on the entire structure is added, without a time limit."
+      }
+    },
+    "kundeCta": {
+      "heading": "Are you already a myNextDays customer?",
+      "text": "Then you know the product best. Recommend it — your commission will be credited to your account, regardless of your subscription.",
+      "cta": "Refer & earn"
+    }
+  },
+  "partnerBewerbung": {
+    "meta": {
+      "titel": "Become a Partner — myNextDays",
+      "beschreibung": "Application for the myNextDays Partner Program: Social media accounts, reach, terms. We review each application personally."
+    },
+    "eyebrow": "Partner Program",
+    "titel": "Become a Partner",
+    "text": "Please provide your social media accounts with their reach — we review each application personally and usually respond within a few business days. Upon approval, you will gain access to the Partner Dashboard with links, codes, and analytics.",
+    "email": "Email",
+    "passwort": "Password for your Partner Dashboard",
+    "passwortHinweis": "At least 8 characters.",
+    "name": "Name",
+    "firma": "Company (optional)",
+    "rechtsform": "Legal Form",
+    "privat": "Individual",
+    "unternehmen": "Company",
+    "land": "Country",
+    "ustId": "VAT ID",
+    "ustIdHinweis": "Will be checked against the EU VIES system. No payout to companies without a confirmed number.",
+    "kanaele": {
+      "titel": "Your Social Media Accounts",
+      "hinweis": "Required: at least one social media account (Instagram, TikTok, YouTube, Facebook, LinkedIn …) with address, handle, and reach (followers). Website, blog, or newsletter are welcome additions. We review accounts before approval.",
+      "plattform": "Platform",
+      "handle": "Handle (optional)",
+      "reichweite": "Reach (Followers)",
+      "hinzufuegen": "Add Channel",
+      "entfernen": "Remove Channel",
+      "socialPflicht": "At least one social media account with reach is required — a website alone is not sufficient.",
+      "plattformen": {
+        "website": "Website",
+        "blog": "Blog",
+        "newsletter": "Newsletter",
+        "podcast": "Podcast",
+        "other": "Other"
+      }
+    },
+    "plattform": {
+      "website": "Website",
+      "blog": "Blog",
+      "newsletter": "Newsletter",
+      "podcast": "Podcast",
+      "other": "Other"
+    },
+    "sponsor": "Referred by Partner (Code, optional)",
+    "sponsorHinweis": "Are you joining via a partner's team link? Their code will appear here. They will receive a team commission on your customers' subscription revenue — your own commission remains unchanged.",
+    "pitch": "Why are you a good fit for myNextDays? (optional)",
+    "pitchPlatzhalter": "Who is your audience, what do you talk about, how do you plan to recommend?",
+    "zustimmung": "I accept the",
+    "bedingungen": "Partner Terms",
+    "version": "Version {version}",
+    "absenden": "Submit application",
+    "sendet": "Sending …",
+    "pruefungHinweis": "This form is protected by reCAPTCHA. After submission, our partner team will review your accounts and reach; you will receive an email with the decision.",
+    "fehler": {
+      "social": "Please provide at least one social media account with address and reach.",
+      "doppelt": "An application for this email already exists. Please log in to the partner dashboard.",
+      "eingabe": "Please check your entries.",
+      "captcha": "The spam protection check failed. Please reload the page and try again.",
+      "allgemein": "The application could not be sent at this time. Please try again later."
+    },
+    "fertig": {
+      "titel": "Application received",
+      "text": "Thank you! We will personally review your accounts and reach and contact you by email. Your partner dashboard can be accessed with your email and password — links and codes will become active upon approval.",
+      "login": "To partner login"
+    }
   }
 }

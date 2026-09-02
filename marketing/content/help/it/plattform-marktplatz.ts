@@ -87,12 +87,12 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "note",
               variant: "tip",
-              text: "Se fate clic su Pubblica, myNextDays normalmente attiva insieme marketplace, portali e sito web — potete comunque disattivare in qualsiasi momento il solo interruttore del marketplace.",
+              text: "Cliccando su Pubblica, myNextDays abilita contemporaneamente i portali e il sito web. myBestDays è un canale obbligatorio: ogni proprietà è elencata lì e appare non appena abbiamo approvato l'annuncio.",
             },
             { type: "h2", text: "Rimuovere nuovamente la visibilità" },
             {
               type: "p",
-              text: "Disattivando l'interruttore Marketplace della piattaforma, la struttura scompare dalla ricerca sul marketplace. Le prenotazioni già confermate non ne risentono e proseguono come di consueto, vedere [Commissione del marketplace](/hilfe/plattform-marktplatz/marktplatz-provision).",
+              text: "myBestDays non può essere deselezionato singolarmente. Se una proprietà non deve più essere venduta, utilizzi \"Sospendi vendita\" — questo la rimuove dalla vendita su tutti i portali, sul sito web e sul marketplace contemporaneamente. Le prenotazioni già confermate rimangono inalterate e continuano come di consueto, veda [Commissione marketplace](/aiuto/piattaforma-marketplace/commissione-marketplace).",
             },
           ],
         },

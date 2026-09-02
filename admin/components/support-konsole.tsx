@@ -74,7 +74,7 @@ const BAUSTEINE: { kurz: string; text: string }[] = [
 
 type Filter = {
   status: TicketStatus | "alle";
-  source: "form" | "chat" | "web" | "alle";
+  source: "form" | "chat" | "web" | "partner" | "alle";
   mine: boolean;
 };
 
@@ -202,17 +202,20 @@ function melderName(ticket: {
   tenant_name: string | null;
   reporter_guest_id: string | null;
   reporter_name: string | null;
+  affiliate_name?: string | null;
 }): string {
   if (ticket.tenant_name) return ticket.tenant_name;
+  if (ticket.affiliate_name) return `${ticket.affiliate_name} (Partner)`;
   if (ticket.reporter_name) return ticket.reporter_name;
   if (ticket.reporter_guest_id) return "Plattform-Gast";
   return "—";
 }
 
-const KANAL_TEXT: Record<"form" | "chat" | "web", string> = {
+const KANAL_TEXT: Record<"form" | "chat" | "web" | "partner", string> = {
   form: " · Formular",
   chat: " · Live-Chat",
   web: " · Website-Anfrage",
+  partner: " · Partnerprogramm",
 };
 
 const KANAL_LABEL: Record<Filter["source"], string> = {
@@ -221,6 +224,7 @@ const KANAL_LABEL: Record<Filter["source"], string> = {
   form: "Formular",
   // Anfrage aus dem Widget der Marketing-Seite: ein Interessent OHNE Konto.
   web: "Website",
+  partner: "Partnerprogramm",
 };
 
 /** Aktuelle Filter in einer Zeile — die Liste soll ohne Klick erklärbar sein. */
@@ -664,6 +668,21 @@ function Kontext({
                 className="underline-offset-4 hover:underline"
               >
                 {ticket.reporter_phone}
+              </a>
+            ),
+          },
+        ]
+      : []),
+    ...(ticket.affiliate_email
+      ? [
+          {
+            label: "Partner",
+            wert: (
+              <a
+                href={`mailto:${ticket.affiliate_email}`}
+                className="underline-offset-4 hover:underline"
+              >
+                {ticket.affiliate_email}
               </a>
             ),
           },

@@ -132,6 +132,8 @@ class AuthService:
         # Channel-Manager: für den neuen Tenant eine Provider-Group anlegen
         # (non-blocking — Registrierung darf daran nie scheitern).
         self._ensure_channel_manager_group(tenant_id)
+        # Partnerprogramm (0517): den Betrieb seinem Empfehler zuordnen.
+        self._partner_zuordnen(req, tenant_id)
         # Frisch registriert → 2FA ist noch nie aktiv, login() liefert also immer
         # eine Session (nie mfa_required). Die Session direkt zurückgeben, damit
         # /register weiter SessionResponse ist (der Client meldet sofort an).
@@ -139,6 +141,37 @@ class AuthService:
         if result.session is None:
             raise AuthError("Login nach Registrierung fehlgeschlagen.", status_code=500)
         return result.session
+
+    def _partner_zuordnen(self, req: RegisterRequest, tenant_id: str) -> None:
+        """Empfehlungscode aus dem Formular → `affiliate_referrals` (0517).
+
+        Nebenpfad der Registrierung: ein Fehler hier darf den Betrieb nicht
+        ohne Konto stehen lassen. Er wird aber LAUT geloggt (ERROR, nicht
+        warning) — eine verlorene Zuordnung ist Geld des Partners, und der
+        UNIQUE-Backstop macht einen späteren manuellen Nachtrag im Backoffice
+        möglich (`method='manual'`)."""
+        if not req.referral_code:
+            return
+        try:
+            from src.features.affiliates import attribution  # noqa: PLC0415
+            from src.features.affiliates.mails import PartnerMails  # noqa: PLC0415
+
+            attribution.zuordnen(
+                self._service,
+                tenant_id=tenant_id,
+                tenant_email=req.email,
+                code=req.referral_code,
+                click_token=req.referral_click,
+                contact_opt_in=req.referral_contact_opt_in,
+                mails=PartnerMails(),
+            )
+        except Exception as exc:  # noqa: BLE001 — Nebenpfad, darf die Registrierung nie kippen
+            log.error(
+                "partner_zuordnung_fehlgeschlagen",
+                tenant_id=tenant_id,
+                code=req.referral_code,
+                error=str(exc)[:300],
+            )
 
     def _ensure_channel_manager_group(self, tenant_id: str) -> None:
         """Legt die Channel-Manager-Group des Tenants an. Der Group-Name ist der

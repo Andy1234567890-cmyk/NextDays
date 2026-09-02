@@ -247,6 +247,40 @@ export const datenschutz: LegalDoc = {
       ],
     },
     {
+      heading: "Partnerski program",
+      paragraphs: [
+        "Upravljamo partnerski program, prek katerega partnerji (vplivneži, svetovalci, agencije, stranke) priporočajo podjetja myNextDays in za to prejmejo provizijo. Pri tem obdelujemo podatke partnerjev in – v manjšem obsegu – priporočenih podjetij.",
+      ],
+      unterpunkte: [
+        {
+          titel: "Podatki partnerjev",
+          paragraphs: [
+            "Pri prijavi obdelujemo ime, podjetje, pravno obliko, državo, e-poštni naslov, jezik, račune družbenih medijev (platforma, naslov, uporabniško ime, samoprijavljeni doseg), identifikacijsko številko za DDV (preverjanje prek sistema EU VIES), podatke za izplačilo (IBAN, naslov Wise ali PayPal) ter soglasje k pogojem sodelovanja z različico in časom. Pravna podlaga je izvajanje partnerske pogodbe (člen 6(1)(b) Splošne uredbe o varstvu podatkov); za dobropise in hrambo veljajo davčne in trgovinske obveznosti (člen 6(1)(c) Splošne uredbe o varstvu podatkov).",
+            "Če partner vodi ekipo, vidi ime ali podjetje, rang, število plačljivih strank in iz tega izhajajočo provizijo ekipe svojih ekipnih partnerjev. Sporočila med sponzorjem in ekipnim partnerjem se shranijo na platformi, da lahko oba vidita zgodovino.",
+          ],
+        },
+        {
+          titel: "Kliki na partnerske povezave",
+          paragraphs: [
+            "Če obiskovalec odpre partnersko povezavo (mynextdays.com/p/CODE), shranimo kodo, čas, obiskano stran, referenčno stran in morebitne parametre kampanje ter IP-naslov in identifikator brskalnika izključno kot skrajšane kontrolne vsote (hash) – za zaznavanje zlorab (kopičenje), ne za ponovno prepoznavanje. Sledenje s piškotki se ne nastavi. Podatke o klikih izbrišemo po 90 dneh. Pravna podlaga je naš zakoniti interes za obračunavanje programa, ki je varno pred goljufijami (člen 6(1)(f) Splošne uredbe o varstvu podatkov).",
+          ],
+        },
+        {
+          titel: "Povezani računi in objave v družbenih medijih",
+          paragraphs: [
+            "Partnerji lahko prostovoljno povežejo svoje račune na YouTube (Google), Instagram in Facebook (Meta) ter TikTok s partnersko nadzorno ploščo. Pri tem dajo ustrezni platformi dovoljenje za branje (OAuth); v te račune ne pišemo ničesar. Shranimo identifikator in ime računa, šifriran dostopni žeton, čas povezave ter dnevno eno meritev na račun: število sledilcev ali naročnikov, oglede v zadnjih 28 dneh, stopnjo interakcije in število objav, vsako s časom odziva platforme. Za objave, ki jih partner ustvari na nadzorni plošči (naslov, platforma, naslov, datum objave), dodatno shranimo oglede, všečke, komentarje, delitve in shranjevanja s platforme.",
+            "Namen je preverjanje dosega, ki ga je navedel partner, in dodeljevanje klikov in strank posameznim objavam; nepreverjeni podatki imajo manjšo težo pri objavi. Namigi o neskladjih (na primer skok števila sledilcev brez ustreznih ogledov) so namenjeni izključno ročnemu pregledu z naše strani in ne vodijo do avtomatizirane odločitve. Pravna podlaga je soglasje partnerja (člen 6(1)(a) Splošne uredbe o varstvu podatkov), ki ga poda s povezavo in ga lahko kadar koli prekliče na nadzorni plošči pod »Prekini povezavo«; ob prekinitvi takoj izbrišemo žeton za dostop, shranjene meritve pa ostanejo kot zgodovina in se izbrišejo skupaj s partnerskim računom. Uporabljamo izključno uradne vmesnike platform; za obdelavo s strani Googla, Mete in TikToka veljajo njihove lastne izjave o varstvu podatkov.",
+          ],
+        },
+        {
+          titel: "Priporočena podjetja",
+          paragraphs: [
+            "Če se podjetje registrira s partnersko kodo, shranimo dodelitev podjetja partnerju ter čas, način (povezava ali koda) in status. Partner vidi podjetje izključno psevdonimno (zaporedna številka, država, status, zneski) – nikoli imena, e-poštnega naslova ali podatkov o rezervacijah. Samo če podjetje izrecno privoli ob registraciji, ga lahko partner kontaktira prek platforme. Za obračun provizij obdelujemo neto zneske naročnin plačanih računov podjetja; pravna podlaga je izvajanje partnerske pogodbe in pogodbe o uporabi (člen 6(1)(b) Splošne uredbe o varstvu podatkov).",
+          ],
+        },
+      ],
+    },
+    {
       heading: "Gostovanje in shranjevanje",
       paragraphs: [
         "Platforma, podatkovna zbirka, mediji in poštni strežnik tečejo na strežnikih družbe Hetzner Online GmbH, Nemčija, v podatkovnem središču Helsinki (Finska) — torej v Evropski uniji. Z družbo Hetzner je sklenjena pogodba o obdelavi podatkov.",

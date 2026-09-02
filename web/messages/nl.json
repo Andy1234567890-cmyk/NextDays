@@ -1500,7 +1500,12 @@
       "portalRateInvalid": "Een vastgelegd inhoudingspercentage van een portaal ligt buiten 0–100 %. Corrigeer dit onder Boekhouding → Afrekenregels.",
       "feeUnassigned": "Minstens één kostensoort is nog niet toegewezen. Zonder toewijzing is niet vast te stellen aan wie het bedrag toekomt en of er commissie over wordt berekend — stel dit in onder Boekhouding → Afrekenregels.",
       "feeNotComputable": "Een kostenpost kan niet als bedrag worden verrekend (vastgelegd als percentage of zonder bedrag). Controleer de kostenpost bij het object.",
-      "contractCurrency": "Een vast bedrag of minimumcommissie staat in een andere valuta dan de boeking. Bedragen in verschillende valuta's worden niet omgerekend — controleer het afrekencontract."
+      "contractCurrency": "Een vast bedrag of minimumcommissie staat in een andere valuta dan de boeking. Bedragen in verschillende valuta's worden niet omgerekend — controleer het afrekencontract.",
+      "recurringToOwner": "Terugkerend ten gunste",
+      "recurringFromOwner": "Terugkerend ten laste",
+      "flatFees": "Forfaitaire bedragen uit contract",
+      "flatFeesIncluded": "reeds in de uitbetaling inbegrepen",
+      "contractStartsLater": "Voor ten minste één boeking is er op de vertrekdatum nog geen facturatieovereenkomst van kracht – de overeenkomst van de eigenaar begint pas later. Het commissietarief is dus opgeslagen, alleen de datum 'Geldig vanaf' ligt na de vertrekdatum. Voer de daadwerkelijke start van de overeenkomst in de facturatieovereenkomst in."
     },
     "rental": {
       "perReservation": "Per reservering",
@@ -1520,13 +1525,66 @@
         "channexImport": "De boeking is bij het aansluiten van het kanaal achteraf opgehaald. Volgens de boekingsbemiddelaar bevatten zulke boekingen geen extra's en schoonmaakkosten — dat kan niet meer worden aangevuld. Wilt u de kosten toch afrekenen, voer ze dan als regel bij de boeking op.",
         "portalReportsNone": "Het portaal voert de kosten bij deze boeking niet als aparte regel. Bij Booking.com hangt dat af van de configuratie van de accommodatie (Accommodatie → Beleid → Bijkomende kosten) en van de datum waarop de kosten daar gelden: kosten die later zijn ingevoerd, ontbreken bij oudere boekingen terecht.",
         "noPayload": "Voor deze boeking is geen portaalbericht aanwezig (import van bestaande gegevens). Zonder dat bericht is niet vast te stellen welke kosten de gast heeft betaald.",
-        "unknownReason": "De reden is niet te bepalen."
+        "unknownReason": "De reden is niet te bepalen.",
+        "csvImport": "De boeking komt uit de CSV-voorraadimport. Het geïmporteerde bedrag is de gastprijs van het portaal inclusief alle kosten; een specificatie van individuele kosten is niet beschikbaar en kon ook niet worden afgeleid uit de portaalgegevens. De afrekening omvat daarom geen kosten uit de objectstamgegevens - deze zijn al in het bedrag inbegrepen, alleen de hoogte ervan is niet gedocumenteerd.",
+        "csvResolvedTitle": "Kosten afgeleid van het portaalbedrag",
+        "csvResolved": "De boeking komt uit de CSV-voorraadimport; het portaal heeft geen specificatie geleverd. De kosten zijn afgeleid uit het verschil tussen de geïmporteerde totaalprijs en de door het portaal doorgegeven nachtprijzen en benoemd via de objectstamgegevens. Overnachting plus kosten vormen precies de totaalprijs.",
+        "stammdatenPortalTitle": "Kosten uit de objectstamgegevens toegevoegd",
+        "stammdatenPortal": "Het portaal heeft geen kostenoverzicht voor deze boeking geleverd: Boekingen die de portaal-aggregator heeft opgehaald na het aansluiten van het kanaal, komen zonder extra's en schoonmaakkosten; een voorraadimport uit een bestand bevat alleen de totaalprijs. De kosten zijn daarom vastgesteld zoals ze bij de accommodatie zijn opgeslagen: Schoonmaak per verblijf, resort per nacht, huisdier alleen bij geboekt dier.",
+        "portalBelegt": "Bezet: Het verschil tussen de totale prijs van het portaal en de door het portaal doorgegeven nachtprijzen komt precies overeen met deze kosten.",
+        "portalImBetrag": "Inbegrepen in het portaalbedrag: De totale prijs van het portaal omvat de kosten al; deze zijn eruit gehaald, de gastprijs blijft het portaalbedrag.",
+        "portalObendrauf": "Bovenop het portaalbedrag: Het doorgegeven bedrag is de pure som van de nachten; de kosten komen erbij en vormen de gastprijs."
       },
       "chain": {
         "portal": "Portaal",
         "management": "Beheer",
         "flatFee": "Vast bedrag",
         "fees": "Kosten"
+      },
+      "arrival": "Aankomst",
+      "departure": "Vertrek",
+      "commission": "Provisie",
+      "flatFee": "Forfait",
+      "ownerShare": "Aandeel eigenaar",
+      "portalDeduction": "Portaalaftrek",
+      "fees": "Kosten",
+      "feesCount": "{n} posten",
+      "expand": "Overzicht weergeven",
+      "collapse": "Overzicht verbergen",
+      "expandAll": "Alle overzichten weergeven",
+      "collapseAll": "Alle overzichten verbergen",
+      "breakdown": "Overzicht per boeking",
+      "noFeeItems": "Geen kosten of extra services bij deze boeking.",
+      "posten": {
+        "guestPrice": "Gastprijs volgens portaal (incl. kosten, excl. extra diensten)",
+        "portalCommission": "Portaalcommissie {kanaal}",
+        "portalFee": "Portaalbetalingskosten",
+        "portalPayout": "Uitbetaling portaal",
+        "feesOut": "Kosten in gastprijs — uit de berekening gehaald",
+        "feesInBase": "Kosten in gastprijs — commissieplichtig, blijven in de berekening",
+        "base": "Grondslag",
+        "commission": "Beheercommissie {pct}",
+        "minCommission": "Minimumcommissie (contract) in plaats van {pct}",
+        "contractFrom": "Contract vanaf {datum}",
+        "rateManual": "handmatig in deze afrekening",
+        "rateLegacy": "Standaardtarief uit de stamgegevens",
+        "flatFee": "Vast bedrag (contract)",
+        "feesBack": "Kosten van de eigenaar — onverkort terug",
+        "ownerShare": "Aandeel eigenaar",
+        "belongsBetrieb": "blijft bij het bedrijf",
+        "belongsEigentuemer": "Eigenaar",
+        "belongsDurchlauf": "Doorschuifposten (derden)",
+        "commissionFree": "commissievrij",
+        "commissionable": "commissieplichtig",
+        "amountHidden": "Bedrag bij het bedrijf",
+        "addon": "Extra dienst",
+        "noFeesReported": "Het portaal heeft voor deze boeking geen kosten gemeld; er zijn daarom geen kosten in rekening gebracht.",
+        "afterPortal": "Totaalbedrag na portaal-aftrek",
+        "afterPortalHint": "Gastprijs minus portaalcommissie en portaalbetalingskosten",
+        "feesBusiness": "Door het bedrijf geleverd — geen onderdeel van de uitbetaling",
+        "contractStartsLater": "Geen afrekenovereenkomst op vertrekdatum {abreise}: de overeenkomst begint pas op {beginn}. Datum van begin overeenkomst bij eigenaar terugzetten, dan wordt deze boeking meegerekend.",
+        "noContract": "Voor dit object is er geen afrekenovereenkomst en geen provisiepercentage in de stamgegevens – leg een overeenkomst aan bij de eigenaar.",
+        "addonsOutside": "Extra diensten — verkocht via myNextDays, niet inbegrepen in de gastprijs van het portaal"
       }
     },
     "expenses": {
@@ -1566,7 +1624,11 @@
       "rentalRevenue": "Huurinkomsten",
       "expenses": "Uitgaven & extra's",
       "total": "Totaal",
-      "deductPercentage": "Commissie (%)"
+      "deductPercentage": "Commissie (%)",
+      "shares": "Eigenaarsdeel van boekingen",
+      "deductions": "Aftrekkingen",
+      "credits": "Tegoeden",
+      "recurring": "Terugkerende posten"
     },
     "manage": {
       "owner": "Eigenaar",
@@ -1631,6 +1693,25 @@
       "cancel": "Annuleren",
       "confirm": "Vastleggen",
       "working": "Wordt vastgelegd..."
+    },
+    "deductions": {
+      "title": "Afschrijvingen & tegoeden",
+      "intro": "Alles wat de uitbetaling naast de boekingen verandert — uit drie bronnen: forfaitair bedrag uit het contract per boeking, eenmalige verrekeningsposten en terugkerende posten (permanente overeenkomst).",
+      "deductions": "Afschrijvingen (ten laste van de eigenaar)",
+      "credits": "Tegoeden (ten gunste van de eigenaar)",
+      "empty": "Geen afschrijvingen of tegoeden in deze periode.",
+      "srcExpense": "Verrekeningsposten",
+      "srcRecurring": "Terugkerende post",
+      "srcFlatFee": "Forfaitair bedrag uit contract",
+      "perBooking": "per boeking",
+      "perNight": "per nacht",
+      "perPeriod": "per periode",
+      "quantity": "{n} × {betrag}",
+      "flatFeesNote": "De forfaitaire bedragen uit het contract zijn reeds afgetrokken van de eigenaarsaandelen per boeking — hier alleen ter overzicht, geen verdere aftrek.",
+      "manageRecurring": "Terugkerende posten bewerken",
+      "manageContract": "Facturatiecontract bewerken",
+      "receipt": "Bon",
+      "bookingsCount": "{n} boekingen"
     }
   },
   "ownerBilling": {
@@ -1709,7 +1790,9 @@
     "effectReleased": "{property}: de verkoop loopt door — het contracteinde is opgeheven en de nachten zijn weer verkoopbaar.",
     "effectBlocked": "{property}: de verkoop eindigt op {date} — {nights} nachten geblokkeerd en bij de portalen teruggetrokken.",
     "effectCalendarFailed": "{property}: Het einde van het contract is ingevoerd, de kalenderblokkering is niet geschreven. Deze wordt vannacht toegevoegd.",
-    "effectNoUnit": "{property}: Het einde van het contract is ingevoerd, maar de kalender is niet geblokkeerd — het object mist een eenheid. Maak deze aan, dan wordt de blokkering van kracht."
+    "effectNoUnit": "{property}: Het einde van het contract is ingevoerd, maar de kalender is niet geblokkeerd — het object mist een eenheid. Maak deze aan, dan wordt de blokkering van kracht.",
+    "validFromHint": "De dag waarop de overeenkomst ingaat — bij een bestaand contract de echte contractdatum, niet vandaag. Elke boeking wordt afgerekend met het contract dat op de dag van vertrek van toepassing is; boekingen met eerder vertrek blijven zonder uitbetaling.",
+    "errorValidFromRequired": "Geef aan vanaf wanneer het contract geldig is."
   },
   "portal": {
     "title": "Mijn portaal",
@@ -5465,7 +5548,8 @@
       "connectPortal": "Portaal verbinden",
       "noPortals": "Nog geen portaal (Booking, Airbnb & Co.) voor deze accommodatie verbonden.",
       "marketplaceReview": "In beoordeling",
-      "marketplaceReviewHint": "myBestDays beoordeelt deze advertentie nog. Zodra deze is goedgekeurd, verschijnt hij op de marktplaats. Portalen en je eigen website worden niet beïnvloed."
+      "marketplaceReviewHint": "myBestDays controleert deze advertentie nog. Zodra deze is goedgekeurd, verschijnt deze op de marktplaats. myBestDays is een verplicht kanaal: een object kan daar niet afzonderlijk worden uitgeschreven — 'Verkoop pauzeren' haalt het overal uit de verkoop.",
+      "marketplaceMandatory": "Verplicht kanaal — elk object staat op myBestDays"
     },
     "IdLayout": {
       "loadError": "Object kon niet worden geladen: {error}"
@@ -5563,11 +5647,11 @@
       "stepOf": "Stap {schritt} van {gesamt}",
       "next": "Continue",
       "back": "Back",
-      "channelsHint": "Waar moet deze accommodatie worden verkocht? Dat kun je altijd wijzigen.",
+      "channelsHint": "Waar moet dit object extra worden verkocht? Portalen en website kunnen op elk moment worden gewijzigd.",
       "channelPortals": "Boekingsportalen",
       "channelPortalsHint": "Airbnb, Booking.com en meer. Portalen vereisen volledige gegevens — zie hieronder.",
       "channelPlatform": "myBestDays",
-      "channelPlatformHint": "Onze eigen marktplaats met een lage commissie.",
+      "channelPlatformHint": "Onze eigen marktplaats met 8% all-in. Elk object wordt daar vermeld; zichtbaar na publicatie en onze goedkeuring.",
       "channelWebsite": "Eigen website",
       "channelWebsiteHint": "Je boekingspagina en de boekingswidget.",
       "readinessTitle": "Voor de portalen ontbreekt daarna nog:",
@@ -6261,7 +6345,21 @@
       "planPortalOffHint": "Deze prijs geldt alleen voor directe boekingen. Klik om deze naar de boekingsportalen te sturen.",
       "planPortalOn": "Prijs gaat nu naar de boekingsportalen.",
       "planPortalOnHint": "Deze prijs gaat naar de boekingsportalen. Klik om deze alleen voor directe boekingen te gebruiken.",
-      "planPortalYes": "Naar portals"
+      "planPortalYes": "Naar portals",
+      "feeValidityTitle": "Geldigheid",
+      "feeValidityHint": "De toeslag geldt voor boekingen waarvan de aankomst binnen de periode valt. Leeg = zonder grens. Een toeslag met periode wordt niet naar de portals gestuurd: daar kan geen datumvoorwaarde worden weergegeven.",
+      "feeValidFromLabel": "Geldig vanaf",
+      "feeValidUntilLabel": "Geldig tot",
+      "feeValidityOrderError": "'Geldig tot' ligt voor 'Geldig vanaf'.",
+      "feeOwnerStatementOnlyLabel": "Alleen in de eigenaarsafrekening",
+      "feeOwnerStatementOnlyHint": "De toeslag wordt niet aan de gast berekend en niet naar een portal gestuurd. Deze is alleen van toepassing in de eigenaarsafrekening, de evaluatie en in het eigenaarsportaal.",
+      "feeValidFromSuffix": "vanaf {date}",
+      "feeValidUntilSuffix": "tot {date}",
+      "feeOwnerStatementOnlySuffix": "alleen afrekening",
+      "feeCalculationLabel": "Berekening",
+      "feeVatHint": "Een eigen belastingtarief voor deze toeslag, afwijkend van het overnachtingstarief van de accommodatie. Uit betekent: de toeslag volgt het overnachtingstarief.",
+      "feeVatIncludedLabel": "Belasting in bedrag",
+      "feeVatIncludedHint": "Zit het belastingtarief al in het ingevoerde bedrag of komt het er nog bovenop? Zonder deze informatie zou het bedrag dubbelzinnig zijn."
     },
     "policiesForm": {
       "title": "Beleid",
@@ -7303,23 +7401,23 @@
     "marketplacePending": "{count} in beoordeling",
     "marketplaceWaiting": "In beoordeling",
     "marketplace": {
-      "intro": "myBestDays is onze eigen marktplaats — een boekingskanaal zoals Booking of Airbnb, alleen zonder portaalkoppeling. Een object wordt zichtbaar als het actief is, hier vermeld staat en is goedgekeurd.",
+      "intro": "myBestDays is onze eigen marktplaats — een boekingskanaal zoals Booking of Airbnb, maar dan zonder portaalverbinding, en verplicht voor elk object. Een object wordt zichtbaar als het actief is en door ons is goedgekeurd.",
       "openMarketplace": "Marktplaats openen",
       "propertiesHeading": "Objecten op de marktplaats",
       "noProperties": "Nog geen objecten aangemaakt.",
       "columnProperty": "Object",
-      "columnVisibility": "Zichtbaarheid",
+      "columnVisibility": "Status",
       "columnApproval": "Goedkeuring",
       "columnBookings": "Boekingen",
       "stateActive": "Zichtbaar",
       "statePending": "In beoordeling",
-      "stateNotListed": "Niet vermeld",
+      "stateNotListed": "Verkoop gepauzeerd",
       "stateInactiveProperty": "Object niet actief",
       "viewListing": "Advertentie bekijken",
       "reviewHint": "Objecten in beoordeling staan nog niet op myBestDays. We beoordelen elke advertentie omdat myBestDays daar als aanbieder optreedt — portalen en je eigen website worden niet beïnvloed.",
       "summaryVisible": "{count} zichtbaar",
       "summaryWaiting": "{count} in beoordeling",
-      "summaryOff": "{count} niet vermeld",
+      "summaryOff": "{count} gepauzeerd of inactief",
       "moderation": {
         "draft": "Concept",
         "pending": "In beoordeling",
@@ -7354,7 +7452,8 @@
       "mayClose": "De import wordt op de server voortgezet — u kunt deze pagina sluiten.",
       "andMore": "… en nog {count}",
       "close": "Sluiten",
-      "updated": "bijgewerkt"
+      "updated": "bijgewerkt",
+      "portal": "al op het portaal"
     }
   },
   "calendarSync": {
@@ -10511,7 +10610,11 @@
     "haveAccount": "Heb je al een account?",
     "loginLink": "Log hier in",
     "loadingHeadline": "Je eigen boekingswebsite. Houd 100 % van elke boeking.",
-    "loadingText": "We richten je account in …"
+    "loadingText": "We richten je account in …",
+    "referralLabel": "Aanbevolen door (optioneel)",
+    "referralPlaceholder": "Aanbevelingscode, bijv. ANNA-K7P2",
+    "referralHint": "Heeft u myNextDays via een partner leren kennen? De code staat hier – de partner ziet alleen dat een bedrijf via hem is gekomen, nooit uw naam. Met de code krijgt u na de 14 testdagen de eerste volledige maand gratis.",
+    "referralContactOptIn": "Mijn aanbeveler mag contact met mij opnemen via myNextDays."
   },
   "marketingSite": {
     "stars": "4,5 sterren",

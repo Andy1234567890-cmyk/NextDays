@@ -33,11 +33,12 @@ export const agb: LegalDoc = {
       heading: "§ 2 Lepingu ese ja teenused",
       paragraphs: [
         "myNextDays annab kasutaja käsutusse pilvepõhise tarkvara puhkusemajutuste ja majutusettevõtete haldamiseks. Funktsioonide ulatus tuleneb kehtivast teenusekirjeldusest ja hõlmab eelkõige järgmist:",
+      "Iga kasutaja poolt platvormile lisatud objekt loetletakse ühtlasi platvormi enda turuplatsil myBestDays (kohustuslik kanal). Kasutaja ei saa seda kanalit eraldi välja lülitada; ta saab objekti aga igal ajal funktsiooni „Müügi peatamine“ kaudu kõigist kanalitest korraga müügist eemaldada või selle kustutada. Objekt muutub myBestDays-is nähtavaks alles siis, kui kasutaja on selle avaldanud ja myNextDays on kuulutuse heaks kiitnud; myNextDays võib heakskiidu mõjuval põhjusel keelduda või selle tühistada. myBestDays-i kaudu tehtud broneeringute puhul kehtib tasu vastavalt § 7.",
       ],
       list: [
         "objektide, hõivatuskalendrite ja broneeringute haldamine (majutuse haldussüsteem),",
         "ühendamine kolmandate isikute broneerimiskanalitega (nt Booking.com, Airbnb) kanalihalduri kaudu,",
-        "pakkumiste avaldamine platvormi enda broneerimiskanali myNextDays kaudu,",
+        "Pakkumiste avaldamine platvormi enda turuplatsi myBestDays kaudu (kohustuslik kanal, vt lõige 2),",
         "oma veebilehtede loomine integreeritud lehekoostaja abil,",
         "raamatupidamis-, arveldus- ja aruandlusfunktsioonid, sealhulgas omanikuaruanded,",
         "suhtlus külalistega ning maksete vastuvõtmine integreeritud maksetöötluse kaudu (§ 5).",

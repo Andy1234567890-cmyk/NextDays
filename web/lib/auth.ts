@@ -233,6 +233,12 @@ export async function register(input: {
   country: string;
   currency: string;
   businessType?: "agency" | "self_managed";
+  /** Partnerprogramm (0517): Empfehlungscode, wie er sichtbar im Formular
+   *  stand, plus die Klick-Kennung aus dem Partner-Link. Optional; ein
+   *  unbekannter Code bricht die Registrierung nicht. */
+  referralCode?: string;
+  referralClick?: string;
+  referralContactOptIn?: boolean;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
     const session = await api<SessionResponse>("/auth/register", {
@@ -245,6 +251,9 @@ export async function register(input: {
         country: input.country,
         currency: input.currency,
         business_type: input.businessType ?? "agency",
+        referral_code: input.referralCode || null,
+        referral_click: input.referralClick || null,
+        referral_contact_opt_in: input.referralContactOptIn ?? false,
       },
     });
     await persistSession(session, COOKIES);

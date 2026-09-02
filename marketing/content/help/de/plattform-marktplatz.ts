@@ -87,12 +87,12 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "note",
               variant: "tip",
-              text: "Klicken Sie auf Veröffentlichen, schaltet myNextDays im Normalfall Marktplatz, Portale und Website gemeinsam frei — Sie können den Marktplatz-Schalter danach jederzeit einzeln wieder ausschalten.",
+              text: "Klicken Sie auf Veröffentlichen, schaltet myNextDays Portale und Website gemeinsam frei. myBestDays ist Pflichtkanal: Jedes Objekt ist dort gelistet und erscheint, sobald wir das Inserat freigegeben haben.",
             },
             { type: "h2", text: "Sichtbarkeit wieder entfernen" },
             {
               type: "p",
-              text: "Deaktivieren Sie den Schalter Plattform-Marktplatz, verschwindet das Objekt aus der Marktplatz-Suche. Bereits bestätigte Buchungen bleiben davon unberührt und laufen wie gewohnt weiter, siehe [Marktplatz-Provision](/hilfe/plattform-marktplatz/marktplatz-provision).",
+              text: "myBestDays lässt sich nicht einzeln abwählen. Soll ein Objekt nicht mehr verkauft werden, nutzen Sie „Verkauf pausieren“ — das nimmt es bei allen Portalen, auf der Website und auf dem Marktplatz gleichzeitig aus dem Verkauf. Bereits bestätigte Buchungen bleiben davon unberührt und laufen wie gewohnt weiter, siehe [Marktplatz-Provision](/hilfe/plattform-marktplatz/marktplatz-provision).",
             },
           ],
         },

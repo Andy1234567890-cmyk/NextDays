@@ -245,6 +245,40 @@ export const datenschutz: LegalDoc = {
       ],
     },
     {
+      heading: "Kumppanuusohjelma",
+      paragraphs: [
+        "Ylläpidämme kumppanuusohjelmaa, jonka kautta kumppanit (vaikuttajat, konsultit, toimistot, asiakkaat) voivat suositella yrityksiä myNextDaysille ja saada siitä palkkion. Käsittelemme kumppaneiden tietoja ja – vähäisessä määrin – suositeltujen yritysten tietoja.",
+      ],
+      unterpunkte: [
+        {
+          titel: "Kumppaneiden tiedot",
+          paragraphs: [
+            "Hakemuksen yhteydessä käsittelemme nimen, yrityksen, oikeudellisen muodon, maan, sähköpostiosoitteen, kielen, sosiaalisen median tilit (alusta, osoite, käyttäjätunnus, itse ilmoitettu tavoittavuus), arvonlisäverotunnisteen (tarkistus EU:n VIES-järjestelmän kautta), maksutiedot (IBAN, Wise- tai PayPal-osoite) sekä suostumuksen osallistumisehtoihin version ja ajankohdan kanssa. Oikeusperusteena on kumppanuussopimuksen täytäntöönpano (GDPR 6 artiklan 1 kohdan b alakohta); hyvitysten ja säilytyksen osalta sovelletaan vero- ja kauppaoikeudellisia velvoitteita (GDPR 6 artiklan 1 kohdan c alakohta).",
+            "Jos kumppanilla on tiimi, hän näkee tiimikumppaneidensa nimen tai yrityksen, arvon, maksavien asiakkaiden määrän ja siitä johtuvan tiimipalkkion. Sponsorin ja tiimikumppanin väliset viestit tallennetaan alustalle, jotta molemmat näkevät historian.",
+          ],
+        },
+        {
+          titel: "Kumppanilinkkien klikkaukset",
+          paragraphs: [
+            "Kun kävijä avaa kumppanilinkin (mynextdays.com/p/CODE), tallennamme koodin, ajankohdan, avatun sivun, viittaavan sivun ja mahdolliset kampanjaparametrit sekä IP-osoitteen ja selaimen tunnisteen ainoastaan lyhennettyinä tarkistussummina (hash) – väärinkäytösten havaitsemiseksi (kasautumat), ei tunnistamista varten. Seurantacookieta ei aseteta. Poistamme klikkaustiedot 90 päivän kuluttua. Oikeusperusteena on oikeutettu etumme ohjelman petoksenvastaisessa laskutuksessa (GDPR 6 artiklan 1 kohdan f alakohta).",
+          ],
+        },
+        {
+          titel: "Yhdistetyt sosiaalisen median tilit ja julkaisut",
+          paragraphs: [
+            "Kumppanit voivat vapaaehtoisesti yhdistää YouTube (Google), Instagram ja Facebook (Meta) sekä TikTok -tilinsä kumppanin hallintapaneeliin. Tällöin he antavat kyseiselle alustalle lukuoikeuden (OAuth); emme kirjoita mitään näille tileille. Tallennamme tilin tunnisteen ja nimen, salatun pääsytunnuksen, yhdistämisajankohdan sekä päivittäin yhden mittausarvon tiliä kohden: seuraajien tai tilaajien määrän, viimeisten 28 päivän katselukerrat, vuorovaikutusasteen ja julkaisujen määrän, kunkin alustan vastauksen ajankohdan kanssa. Julkaisujen osalta, jotka kumppani luo hallintapaneelissa (otsikko, alusta, osoite, julkaisupäivämäärä), tallennamme lisäksi katselukerrat, tykkäykset, kommentit, jaot ja tallennukset alustalta.",
+            "Tarkoituksena on tarkistaa kumppanin ilmoittama kattavuus ja kohdistaa klikkaukset ja asiakkaat yksittäisiin julkaisuihin; vahvistamattomille tiedoille annetaan pienempi painoarvo julkaisun yhteydessä. Viitteet epäjohdonmukaisuuksiin (esim. seuraajien määrän kasvu ilman vastaavia näyttökertoja) on tarkoitettu ainoastaan manuaaliseen tarkistukseen meidän toimestamme, eivätkä ne johda automaattiseen päätökseen. Oikeusperusteena on kumppanin suostumus (GDPR 6 artiklan 1 kohdan a alakohta), jonka hän antaa yhdistämällä ja voi peruuttaa milloin tahansa hallintapaneelissa kohdasta ”Katkaise yhteys”; yhteyden katkaisun yhteydessä poistamme pääsytunnuksen välittömästi, tallennetut mittausarvot säilyvät historiana ja poistetaan kumppanitilin mukana. Käytämme ainoastaan alustojen virallisia rajapintoja; Googlen, Metan ja TikTokin suorittamaan käsittelyyn sovelletaan niiden omia tietosuojailmoituksia.",
+          ],
+        },
+        {
+          titel: "Suositellut yritykset",
+          paragraphs: [
+            "Jos yritys rekisteröityy kumppanikoodilla, tallennamme yrityksen ja kumppanin välisen yhteyden sekä ajankohdan, tavan (linkki tai koodi) ja tilan. Kumppani näkee yrityksen ainoastaan pseudonyymisti (juokseva numero, maa, tila, summat) – ei koskaan nimeä, sähköpostiosoitetta tai varaustietoja. Vain jos yritys nimenomaisesti suostuu rekisteröityessään, kumppani saa ottaa siihen yhteyttä alustan kautta. Provisiolaskentaa varten käsittelemme yrityksen maksettujen laskujen netto-tilaussummat; oikeusperusteena on kumppanuus- ja käyttöehtosopimuksen täytäntöönpano (GDPR 6 artiklan 1 kohdan b alakohta).",
+          ],
+        },
+      ],
+    },
+    {
       heading: "Isännöinti ja tallennus",
       paragraphs: [
         "Alusta, tietokanta, media ja postipalvelin toimivat Hetzner Online GmbH:n (Saksa) palvelimilla Helsingin (Suomi) konesalissa — siis Euroopan unionin alueella. Hetznerin kanssa on tehty sopimus henkilötietojen käsittelystä.",

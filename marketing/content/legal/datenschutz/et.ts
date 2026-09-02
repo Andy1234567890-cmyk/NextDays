@@ -246,6 +246,40 @@ export const datenschutz: LegalDoc = {
       ],
     },
     {
+      heading: "Partnerprogramm",
+      paragraphs: [
+        "Meil on partnerprogramm, mille kaudu partnerid (mõjutajad, konsultandid, agentuurid, kliendid) soovitavad ettevõtteid myNextDaysile ja saavad selle eest vahendustasu. Töötleme partnerite andmeid ja – vähesel määral – soovitatud ettevõtete andmeid.",
+      ],
+      unterpunkte: [
+        {
+          titel: "Partnerite andmed",
+          paragraphs: [
+            "Kandideerimisel töötleme nime, ettevõtte nime, õiguslikku vormi, riiki, e-posti aadressi, keelt, sotsiaalmeedia kontosid (platvorm, aadress, kasutajanimi, ise deklareeritud ulatus), käibemaksu identifitseerimisnumbrit (kontroll EL-i süsteemi VIES kaudu), väljamakse andmeid (IBAN, Wise- või PayPal-aadress) ning nõusolekut osalemistingimustega koos versiooni ja ajaga. Õiguslik alus on partnerlepingu täitmine (isikuandmete kaitse üldmääruse artikli 6 lõike 1 punkt b); kreeditite ja säilitamise puhul kehtivad maksu- ja kaubandusõiguslikud kohustused (isikuandmete kaitse üldmääruse artikli 6 lõike 1 punkt c).",
+            "Kui partner juhib meeskonda, näeb ta oma meeskonnapartnerite nime või ettevõtte nime, auastet, maksvate klientide arvu ja sellest tulenevat meeskonnatasu. Sponsoreerija ja meeskonnapartneri vahelised sõnumid salvestatakse platvormile, et mõlemad saaksid ajalugu näha.",
+          ],
+        },
+        {
+          titel: "Partnerlinkidele klõpsamised",
+          paragraphs: [
+            "Kui külastaja avab partnerlingi (mynextdays.com/p/CODE), salvestame koodi, aja, avatud lehe, viitava lehe ja võimalikud kampaania parameetrid, samuti IP-aadressi ja brauseri identifikaatori ainult lühendatud kontrollsummadena (räsi) – väärkasutuse tuvastamiseks (kuhjumised), mitte uuesti tuvastamiseks. Jälgimisküpsist ei seata. Kustutame klikiandmed 90 päeva pärast. Õiguslik alus on meie õigustatud huvi programmi pettusekindla arvelduse vastu (isikuandmete kaitse üldmääruse artikli 6 lõike 1 punkt f).",
+          ],
+        },
+        {
+          titel: "Seotud sotsiaalmeedia kontod ja postitused",
+          paragraphs: [
+            "Partnerid saavad vabatahtlikult ühendada oma YouTube'i (Google), Instagrami ja Facebooki (Meta) ning TikToki kontod partneri juhtpaneeliga. Selleks annavad nad vastavale platvormile lugemisõiguse (OAuth); me ei kirjuta neile kontodele midagi. Salvestame konto identifikaatori ja nime, krüpteeritud juurdepääsutokeni, ühenduse loomise aja ning iga konto kohta iga päev ühe mõõdiku: jälgijate või tellijate arvu, viimase 28 päeva vaatamiste arvu, interaktsiooni määra ja postituste arvu, igaüks koos platvormi vastuse ajaga. Postituste kohta, mille partner juhtpaneelil loob (pealkiri, platvorm, aadress, avaldamiskuupäev), salvestame lisaks vaatamised, meeldimised, kommentaarid, jagamised ja salvestamised platvormilt.",
+            "Eesmärk on kontrollida partneri näidatud ulatust ning seostada klikke ja kliente üksikute postitustega; kinnitamata andmetele antakse avaldamisel väiksem kaal. Märgid lahknevustest (näiteks jälgijate hüpe ilma vastavate vaatamisteta) on mõeldud ainult meiepoolseks käsitsi kontrollimiseks ja ei vii automatiseeritud otsuseni. Õiguslik alus on partneri nõusolek (isikuandmete kaitse üldmääruse artikli 6 lõike 1 punkt a), mille ta annab ühenduse loomisega ja saab igal ajal tagasi võtta armatuurlaual nupu „Katkesta ühendus“ kaudu; ühenduse katkestamisel kustutame juurdepääsutokeni koheselt, salvestatud mõõtmisandmed jäävad ajalooks ja kustutatakse koos partnerikontoga. Kasutame ainult platvormide ametlikke liideseid; Google'i, Meta ja TikToki töötlemise kohta kehtivad nende endi privaatsusteatised.",
+          ],
+        },
+        {
+          titel: "Soovitatud ettevõtted",
+          paragraphs: [
+            "Kui ettevõte registreerib end partnerikoodiga, salvestame ettevõtte seose partneriga ning aja, viisi (link või kood) ja staatuse. Partner näeb ettevõtet ainult pseudonüümselt (järjekorranumber, riik, staatus, summad) – mitte kunagi nime, e-posti aadressi ega broneeringuandmeid. Ainult juhul, kui ettevõte registreerimisel selgesõnaliselt nõustub, tohib partner temaga platvormi kaudu ühendust võtta. Komisjonitasude arveldamiseks töötleme ettevõtte tasutud arvete netotellimuse summasid; õiguslik alus on partneri- ja kasutajalepingu täitmine (isikuandmete kaitse üldmääruse artikli 6 lõike 1 punkt b).",
+          ],
+        },
+      ],
+    },
+    {
       heading: "Majutamine ja salvestamine",
       paragraphs: [
         "Platvorm, andmebaas, meediafailid ja meiliserver töötavad ettevõtja Hetzner Online GmbH (Saksamaa) serverites Helsingi andmekeskuses (Soome) — seega Euroopa Liidu piires. Hetzneriga on sõlmitud volitatud töötlemise leping.",

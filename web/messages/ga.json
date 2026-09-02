@@ -1500,7 +1500,12 @@
       "portalRateInvalid": "Tá ráta asbhainte tairsí atá stóráilte lasmuigh de 0–100 %. Ceartaigh é faoi Cuntasaíocht → Rialacha socraíochta.",
       "feeUnassigned": "Níl cineál táille amháin ar a laghad sannta go fóill. Gan sannadh ní féidir a chinneadh cé leis an tsuim agus cé acu a ghearrtar coimisiún air — socraigh é faoi Cuntasaíocht → Rialacha socraíochta.",
       "feeNotComputable": "Ní féidir táille a shocrú mar shuim (tá sí stóráilte mar chéatadán nó gan suim). Seiceáil an táille ag an maoin.",
-      "contractCurrency": "Tá táille chomhréidh nó coimisiún íosta ainmnithe in airgeadra eile seachas airgeadra na háirithinte. Ní chomhfhritháirítear suimeanna in airgeadraí éagsúla — seiceáil an conradh socraíochta."
+      "contractCurrency": "Tá táille chomhréidh nó coimisiún íosta ainmnithe in airgeadra eile seachas airgeadra na háirithinte. Ní chomhfhritháirítear suimeanna in airgeadraí éagsúla — seiceáil an conradh socraíochta.",
+      "recurringToOwner": "Athfhillteach i bhfabhar",
+      "recurringFromOwner": "Athfhillteach i gcoinne",
+      "flatFees": "Táillí comhréidhe ón gconradh",
+      "flatFeesIncluded": "san íocaíocht cheana féin",
+      "contractStartsLater": "I gcás áirithinte amháin ar a laghad, níl aon chomhaontú socraíochta ann fós ar an dáta imeachta — ní thosaíonn conradh an úinéara ach níos déanaí. Mar sin, tá an ráta coimisiúin stóráilte, ach tá an dáta “Bailí ó” tar éis an imeachta. Cuir túsphointe iarbhír an chonartha isteach sa chomhaontú socraíochta."
     },
     "rental": {
       "perReservation": "In aghaidh na háirithinte",
@@ -1520,13 +1525,66 @@
         "channexImport": "Fuarthas an áirithint go haisghníomhach nuair a ceanglaíodh an cainéal. De réir an idirghabhálaí tairseacha, níl breiseáin ná táillí glantacháin i n-áirithintí den chineál sin — ní féidir sin a fháil ina dhiaidh sin. Más gá an táille a bhilleáil, cuir isteach í mar mhír ar an áirithint.",
         "portalReportsNone": "Ní liostaíonn an tairseach an táille mar mhír ar leith ar an áirithint seo. I gcás Booking.com, tá sin ag brath ar chumraíocht na maoine (Maoin → Beartais → Táillí breise) agus ar an dáta óna bhfuil an táille i bhfeidhm ansin: táille a tugadh isteach níos déanaí, is le ceart atá sí in easnamh ar áirithintí níos sine.",
         "noPayload": "Níl aon teachtaireacht tairsí ann don áirithint seo (iompórtáil sonraí atá ann cheana). Gan í, ní féidir a dhearbhú cé na táillí a d'íoc an cuairteoir.",
-        "unknownReason": "Ní féidir an chúis a chinneadh."
+        "unknownReason": "Ní féidir an chúis a chinneadh.",
+        "csvImport": "Tháinig an áirithint ón allmhairiú fardail CSV. Is é an méid allmhairithe praghas an aoi ar an tairseach, lena n-áirítear gach táille; níl miondealú ar tháillí aonair ar fáil agus níorbh fhéidir é a dhíorthú ó shonraí na tairsí. Dá bhrí sin, ní ghearrann an billeáil aon táillí ó shonraí máistir an réadmhaoine - tá siad san áireamh cheana féin sa mhéid, ach níl a n-airde doiciméadaithe.",
+        "csvResolvedTitle": "Táillí díorthaithe ón méid tairsí",
+        "csvResolved": "Tháinig an áirithint ón allmhairiú fardail CSV; níor sholáthair an tairseach miondealú. Díorthaíodh na táillí ón difríocht idir an praghas iomlán allmhairithe agus na praghsanna oíche a chuir an tairseach ar fáil agus ainmníodh iad trí shonraí máistir an réadmhaoine. Is ionann an oíche agus na táillí agus an praghas iomlán go díreach.",
+        "stammdatenPortalTitle": "Táille curtha leis ó shonraí máistir an réadmhaoine",
+        "stammdatenPortal": "Níor chuir an tairseach miondealú táillí ar fáil don áirithint seo: Níl aon bhreiseanna ná táillí glantacháin ag áirithintí a rinne an comhbhailitheoir tairsí tar éis an cainéal a nascadh; níl ach an praghas iomlán i dtabhairt isteach fardail ó chomhad. Dá bhrí sin, socraíodh na táillí mar a leagtar amach ag an réadmhaoin iad: glanadh in aghaidh an fhanachta, ionad saoire in aghaidh na hoíche, peata ach amháin má tá peata curtha in áirithe.",
+        "portalBelegt": "Áitithe: Tá an difríocht idir praghas iomlán an tairseach agus na praghsanna oíche a chuir an tairseach ar fáil comhionann leis na táillí seo.",
+        "portalImBetrag": "San áireamh sa mhéid tairsí: Tá na táillí san áireamh cheana féin i bpraghas iomlán an tairseach; baineadh amach iad, fanann praghas an aoi mar an méid tairsí.",
+        "portalObendrauf": "Sa bhreis ar an méid tairsí: Is é an méid a cuireadh ar fáil ná suim na n-oícheanta amháin; cuirtear na táillí leis chun praghas an aoi a fháil."
       },
       "chain": {
         "portal": "Tairseach",
         "management": "Bainistíocht",
         "flatFee": "Táille sheasta",
         "fees": "Táillí"
+      },
+      "arrival": "Dáta Isteach",
+      "departure": "Dáta Amach",
+      "commission": "Coimisiún",
+      "flatFee": "Ráta comhréidh",
+      "ownerShare": "Scair an úinéara",
+      "portalDeduction": "Asbhaint tairsí",
+      "fees": "Táillí",
+      "feesCount": "{n} Mír",
+      "expand": "Taispeáin miondealú",
+      "collapse": "Folaigh miondealú",
+      "expandAll": "Taispeáin gach miondealú",
+      "collapseAll": "Folaigh gach miondealú",
+      "breakdown": "Miondealú de réir áirithinte",
+      "noFeeItems": "Gan aon táillí nó seirbhísí breise ar an áirithint seo.",
+      "posten": {
+        "guestPrice": "Praghas an aoi de réir an tairseach (táillí san áireamh, gan seirbhísí breise)",
+        "portalCommission": "Coimisiún tairsí {kanal}",
+        "portalFee": "Táille íocaíochta tairsí",
+        "portalPayout": "Íocaíocht tairsí",
+        "feesOut": "Táillí i bpraghas an aoi — bainte den mheasúnú",
+        "feesInBase": "Táillí i bpraghas an aoi — faoi réir coimisiúin, fanann siad sa mheasúnú",
+        "base": "Bunús measúnaithe",
+        "commission": "Coimisiún riaracháin {pct}",
+        "minCommission": "Íoschoimisiún (conradh) in ionad {pct}",
+        "contractFrom": "Conradh ó {datum}",
+        "rateManual": "de láimh sa ráiteas seo",
+        "rateLegacy": "Ráta caighdeánach ó na príomhshonraí",
+        "flatFee": "Ráta comhréidh (conradh)",
+        "feesBack": "Táillí an úinéara — ar ais gan laghdú",
+        "ownerShare": "Scair an úinéara",
+        "belongsBetrieb": "fanann sé leis an oibríocht",
+        "belongsEigentuemer": "Úinéir",
+        "belongsDurchlauf": "Mír idirthurais (tríú páirtithe)",
+        "commissionFree": "saor ó choimisiún",
+        "commissionable": "faoi réir coimisiúin",
+        "amountHidden": "Méid ag an oibríocht",
+        "addon": "Seirbhís bhreise",
+        "noFeesReported": "Níor thuairiscigh an tairseach aon táillí don áirithint seo; mar sin níor cuireadh aon cheann i bhfeidhm.",
+        "afterPortal": "An méid iomlán tar éis asbhaint tairsí",
+        "afterPortalHint": "Praghas an aoi lúide coimisiún tairsí agus táille íocaíochta tairsí",
+        "feesBusiness": "Arna sholáthar ag an oibríocht — ní cuid den íocaíocht",
+        "contractStartsLater": "Níl aon chonradh billeála ar an lá imeachta {abreise}: ní thosaíonn an conradh ach ar {beginn}. Déan dáta an chonartha a athrú siar leis an úinéir, ansin cuirfear an áirithint seo san áireamh.",
+        "noContract": "Níl aon chonradh billeála ná ráta coimisiúin do na sonraí seo — cruthaigh conradh leis an úinéir.",
+        "addonsOutside": "Seirbhísí breise — díolta trí myNextDays, nach bhfuil san áireamh i bpraghas an aoi ar an tairseach"
       }
     },
     "expenses": {
@@ -1566,7 +1624,11 @@
       "rentalRevenue": "Ioncam cíosa",
       "expenses": "Costais & breisithe",
       "total": "Iomlán",
-      "deductPercentage": "Coimisiún (%)"
+      "deductPercentage": "Coimisiún (%)",
+      "shares": "Scairanna an úinéara ó áirithintí",
+      "deductions": "Asbhaintí",
+      "credits": "Creidmheasanna",
+      "recurring": "Míreanna athfhillteacha"
     },
     "manage": {
       "owner": "Úinéir",
@@ -1631,6 +1693,25 @@
       "cancel": "Cealaigh",
       "confirm": "Socraigh",
       "working": "Á shocrú …"
+    },
+    "deductions": {
+      "title": "Asbhaintí & Creidmheasanna",
+      "intro": "Gach rud a athraíonn an íocaíocht seachas na háirithintí — ó thrí fhoinse: ráta comhréidh ón gconradh in aghaidh na háirithinte, míreanna cuntais aonuaire agus míreanna athfhillteacha (comhaontú buan).",
+      "deductions": "Asbhaintí (i gcoinne an úinéara)",
+      "credits": "Creidmheasanna (i bhfabhar an úinéara)",
+      "empty": "Gan asbhaintí ná creidmheasanna sa tréimhse seo.",
+      "srcExpense": "Míreanna cuntais",
+      "srcRecurring": "Mír athfhillteach",
+      "srcFlatFee": "Ráta comhréidh ón gconradh",
+      "perBooking": "in aghaidh na háirithinte",
+      "perNight": "in aghaidh na hoíche",
+      "perPeriod": "in aghaidh na tréimhse",
+      "quantity": "{n} × {betrag}",
+      "flatFeesNote": "Tá na rátaí comhréidhe ón gconradh asbhainte cheana féin ó scaireanna an úinéara in aghaidh na háirithinte — anseo le haghaidh forbhreathnú amháin, gan aon asbhaint bhreise.",
+      "manageRecurring": "Míreanna athfhillteacha a bhainistiú",
+      "manageContract": "Conradh socraíochta a bhainistiú",
+      "receipt": "Admháil",
+      "bookingsCount": "{n} áirithint"
     }
   },
   "ownerBilling": {
@@ -1709,7 +1790,9 @@
     "effectBlocked": "{property}: Críochnaíonn an mhargaíocht ar {date} - oícheanta {nights} bactha agus bainte de na tairseacha.",
     "effectReleased": "{property}: Leanann an mhargaíocht ar aghaidh - tá deireadh leis an gconradh agus tá na hoícheanta ar díol arís.",
     "effectNoUnit": "{property}: Cuirtear deireadh an chonartha isteach, ach níl an féilire faoi ghlas - tá aonad in easnamh ar an réad. Cuir air agus beidh an glas i bhfeidhm.",
-    "effectCalendarFailed": "{property}: Tá deireadh an chonartha curtha isteach, níl an glas féilire scríofa. Cuirfear leis anocht."
+    "effectCalendarFailed": "{property}: Tá deireadh an chonartha curtha isteach, níl an glas féilire scríofa. Cuirfear leis anocht.",
+    "validFromHint": "An dáta a dtagann an comhaontú i bhfeidhm – i gcás conartha atá ann cheana féin, an dáta conartha iarbhír, ní an lá atá inniu ann. Déantar gach áirithint a shocrú leis an gconradh atá i bhfeidhm ar a dáta imeachta; fanann áirithintí le himeacht níos luaithe gan íocaíocht.",
+    "errorValidFromRequired": "Sonraigh le do thoil cathain a thagann an conradh i bhfeidhm."
   },
   "portal": {
     "title": "Mo thairseach",
@@ -5465,7 +5548,8 @@
       "connectPortal": "Nasc tairseach",
       "noPortals": "Níl aon tairseach (Booking, Airbnb srl.) nasctha leis an áit seo fós.",
       "marketplaceReview": "Á athbhreithniú",
-      "marketplaceReviewHint": "Tá myBestDays fós ag athbhreithniú an liostáil seo. Taispeánfar í ar an margad chomh luath agus a cheadaítear í. Ní chuirtear isteach ar na tairseacha ná ar do shuíomh gréasáin féin."
+      "marketplaceReviewHint": "Tá myBestDays fós ag athbhreithniú an liostaithe seo. Chomh luath agus a cheadaítear é, beidh sé le feiceáil ar an margadh. Is cainéal éigeantach é myBestDays: Ní féidir réadmhaoin a dhíroghnú ansin ina haonar — cuireann “Cuir an díolachán ar sos” é as an díolachán i ngach áit.",
+      "marketplaceMandatory": "Cainéal éigeantach — tá gach réadmhaoin liostaithe ar myBestDays"
     },
     "IdLayout": {
       "loadError": "Níorbh fhéidir an réadmhaoin a lódáil: {error}"
@@ -5563,11 +5647,11 @@
       "stepOf": "Céim {schritt} as {gesamt}",
       "next": "Continue",
       "back": "Back",
-      "channelsHint": "Cá háit ar cheart an áit seo a dhíol? Is féidir é seo a athrú am ar bith.",
+      "channelsHint": "Cá háit eile ar cheart an réadmhaoin seo a dhíol? Is féidir tairseacha agus suíomhanna gréasáin a athrú am ar bith.",
       "channelPortals": "Tairseacha áirithinte",
       "channelPortalsHint": "Airbnb, Booking.com agus eile. Éilíonn tairseacha sonraí iomlána — féach thíos.",
       "channelPlatform": "myBestDays",
-      "channelPlatformHint": "Ár margadh féin le coimisiún íseal.",
+      "channelPlatformHint": "Ár margadh féin le 8% san áireamh. Tá gach réadmhaoin liostaithe ann; beidh sé le feiceáil tar éis é a fhoilsiú agus ár gceadú.",
       "channelWebsite": "Suíomh gréasáin féin",
       "channelWebsiteHint": "Do leathanach áirithinte agus an ghiuirléid áirithinte.",
       "readinessTitle": "Do na tairseacha tá easnamh fós ar:",
@@ -6261,7 +6345,21 @@
       "planPortalOffHint": "Níl an praghas seo bailí ach amháin le haghaidh áirithintí díreacha. Cliceáil chun é a sheoladh chuig na tairseacha áirithinte.",
       "planPortalOn": "Tá an praghas ag dul chuig na tairseacha áirithinte anois.",
       "planPortalOnHint": "Tá an praghas seo ag dul chuig na tairseacha áirithinte. Cliceáil chun é a úsáid le haghaidh áirithintí díreacha amháin.",
-      "planPortalYes": "Chuig Tairseacha"
+      "planPortalYes": "Chuig Tairseacha",
+      "feeValidityTitle": "Bailíocht",
+      "feeValidityHint": "Baineann an táille le háirithintí a bhfuil a dáta teachta laistigh den tréimhse. Folamh = gan teorainn. Ní sheoltar táille le tréimhse chuig na tairseacha: ní féidir coinníoll dáta a léiriú ansin.",
+      "feeValidFromLabel": "Bailí ó",
+      "feeValidUntilLabel": "Bailí go",
+      "feeValidityOrderError": "Tá “Bailí go” roimh “Bailí ó”.",
+      "feeOwnerStatementOnlyLabel": "I ráiteas an úinéara amháin",
+      "feeOwnerStatementOnlyHint": "Ní ghearrtar an táille ar an aoi agus ní sheoltar chuig aon tairseach í. Ní bhíonn éifeacht aici ach i ráiteas an úinéara, san anailís agus i dtairseach an úinéara.",
+      "feeValidFromSuffix": "ó {date}",
+      "feeValidUntilSuffix": "go {date}",
+      "feeOwnerStatementOnlySuffix": "ráiteas amháin",
+      "feeCalculationLabel": "Ríomh",
+      "feeVatHint": "Ráta cánach ar leith don táille seo, atá difriúil ó ráta oíche an réadmhaoine. Ciallaíonn 'As' go leanann an táille an ráta oíche.",
+      "feeVatIncludedLabel": "Cáin san áireamh",
+      "feeVatIncludedHint": "An bhfuil an ráta cánach san áireamh cheana féin sa mhéid a iontráladh nó an gcuirtear leis é? Gan an t-eolas seo, bheadh an méid débhríoch."
     },
     "policiesForm": {
       "title": "Polasaithe",
@@ -7303,23 +7401,23 @@
     "marketplacePending": "{count} á athbhreithniú",
     "marketplaceWaiting": "Á athbhreithniú",
     "marketplace": {
-      "intro": "Is é myBestDays ár margad féin — cainéal áirithinte cosúil le Booking nó Airbnb, gan nasc tairsí. Bíonn áitíocht le feiceáil nuair a bhíonn sí gníomhach, liostaithe anseo agus ceadaithe.",
+      "intro": "Is é myBestDays ár margadh féin — cainéal áirithinte cosúil le Booking nó Airbnb, ach gan nasc tairsí, agus éigeantach do gach réadmhaoin. Bíonn réadmhaoin le feiceáil nuair a bhíonn sé gníomhach agus ceadaithe againn.",
       "openMarketplace": "Oscail an margad",
       "propertiesHeading": "Áitíochtaí ar an margad",
       "noProperties": "Níl aon áitíocht cruthaithe go fóill.",
       "columnProperty": "Áitíocht",
-      "columnVisibility": "Infheictheacht",
+      "columnVisibility": "Staid",
       "columnApproval": "Ceadú",
       "columnBookings": "Áirithintí",
       "stateActive": "Le feiceáil",
       "statePending": "Á athbhreithniú",
-      "stateNotListed": "Nach bhfuil liostaithe",
+      "stateNotListed": "Díolachán curtha ar sos",
       "stateInactiveProperty": "Níl an áitíocht gníomhach",
       "viewListing": "Féach ar an liostáil",
       "reviewHint": "Ní thaispeántar áitíochtaí atá á n-athbhreithniú ar myBestDays go fóill. Déanaimid athbhreithniú ar gach liostáil mar gurb é myBestDays an soláthraí ansin — ní chuirtear isteach ar na tairseacha ná ar do shuíomh gréasáin féin.",
       "summaryVisible": "{count} le feiceáil",
       "summaryWaiting": "{count} á athbhreithniú",
-      "summaryOff": "{count} nach bhfuil liostaithe",
+      "summaryOff": "{count} curtha ar sos nó neamhghníomhach",
       "moderation": {
         "draft": "Dréacht",
         "pending": "Á athbhreithniú",
@@ -7354,7 +7452,8 @@
       "mayClose": "Leanann an iompórtáil ar an bhfreastalaí — is féidir leat an leathanach seo a dhúnadh.",
       "andMore": "… agus {count} eile",
       "close": "Dún",
-      "updated": "nuashonraithe"
+      "updated": "nuashonraithe",
+      "portal": "cheana ón tairseach"
     }
   },
   "calendarSync": {
@@ -10511,7 +10610,11 @@
     "haveAccount": "An bhfuil cuntas agat cheana?",
     "loginLink": "Sínigh isteach anseo",
     "loadingHeadline": "Do shuíomh áirithinte féin. Coinnigh 100 % de gach áirithint.",
-    "loadingText": "Táimid ag socrú do chuntais …"
+    "loadingText": "Táimid ag socrú do chuntais …",
+    "referralLabel": "Moltaithe ag (roghnach)",
+    "referralPlaceholder": "Cód atreoraithe, m.sh. ANNA-K7P2",
+    "referralHint": "Ar bhuail tú le myNextDays trí chomhpháirtí? Tá a gcód anseo — ní fheiceann siad ach gur tháinig gnó tríd, ní d'ainm. Leis an gcód, gheobhaidh tú an chéad mhí iomlán saor in aisce tar éis na 14 lá trialach.",
+    "referralContactOptIn": "Tá cead ag mo atreoraí teagmháil a dhéanamh liom trí myNextDays."
   },
   "marketingSite": {
     "stars": "4,5 réalta",

@@ -851,7 +851,8 @@
     },
     "unternehmen": {
       "ueberUns": "Om oss",
-      "kontakt": "Kontakt"
+      "kontakt": "Kontakt",
+      "partner": "Partnerprogram"
     },
     "copyright": "© 2026 myNextDays. Med ensamrätt.",
     "agb": "Villkor",
@@ -860,7 +861,8 @@
     "cookies": "Cookiepolicy",
     "avv": "Personuppgiftsbiträde",
     "kontoLoeschen": "Radera konto",
-    "newsletterKnopf": "Prenumerera på nyhetsbrev"
+    "newsletterKnopf": "Prenumerera på nyhetsbrev",
+    "partnerAgb": "Partner-villkor"
   },
   "legal": {
     "stand": "Senast uppdaterad: {datum}"
@@ -990,7 +992,7 @@
       "sub": "Vad värdar vill veta före ett byte — kort och utan finstilt.",
       "laufzeit": {
         "frage": "Finns det någon bindningstid?",
-        "antwort": "Nej. Abonnemanget är månatligt och kan sägas upp med fyra veckors varsel till månadens slut. De första 14 dagarna är gratis: Du anger dina betalningsuppgifter vid start, men debitering sker först efter provperioden. Om du säger upp tidigare betalar du inget."
+        "antwort": "Nej. Abonnemanget är månatligt och kan sägas upp med fyra veckors varsel till månadens slut. De första 14 dagarna är gratis: Du anger dina betalningsuppgifter vid start, men debitering sker först efter testperioden. Om du kommer via en partners länk eller kod, får du dessutom den första hela månaden gratis. Om du säger upp tidigare betalar du inget."
       },
       "objektzahl": {
         "frage": "Vad händer när jag lägger till objekt?",
@@ -2185,5 +2187,259 @@
     "verwalten": "Hantera cookie-inställningar",
     "schliessen": "Stäng",
     "bestaetigen": "Bekräfta inställningar"
+  },
+  "partnerHinweis": {
+    "text": "Du kommer via en rekommendation (kod {code}). Koden tillämpas vid registreringen – och ger dig den första hela månaden efter de 14 testdagarna.",
+    "cta": "Starta nu gratis",
+    "schliessen": "Stäng meddelande"
+  },
+  "partner": {
+    "meta": {
+      "titel": "Partnerprogram – myNextDays",
+      "beschreibung": "Rekommendera myNextDays till semesterbostadsuthyrare och hotell och få upp till {max}% av prenumerationsintäkterna från varje värvad verksamhet under tolv månader."
+    },
+    "hero": {
+      "eyebrow": "Partnerprogram",
+      "headlinePre": "Rekommendera myNextDays –",
+      "headlineHighlight": "och tjäna pengar",
+      "sub": "För influencers, konsulter, byråer och uthyrare med nätverk: Varje företag som registrerar sig via din länk och betalar en prenumeration ger dig upp till {max} % av prenumerationsomsättningen i tolv månader – plus 0,5 % av varje bokning via myBestDays, uppflyttningsbonusar och från Elite en superprovision utan tidsgräns.",
+      "cta": "Ansök nu",
+      "ctaLogin": "Partnerinloggning",
+      "chipDauer": "12 månaders provision per kund",
+      "chipAuszahlung": "Månatlig utbetalning",
+      "chipKosten": "Gratis deltagande",
+      "chipGratismonat": "Dina kunder: testa 14 dagar + 1 månad gratis"
+    },
+    "schritte": {
+      "eyebrow": "Så fungerar det",
+      "heading": "Tre steg till första provisionen",
+      "bewerben": {
+        "titel": "Ansök",
+        "text": "Du anger din kanal – webbplats, social profil eller nätverk. Vi granskar varje ansökan personligen och godkänner vanligtvis inom några arbetsdagar."
+      },
+      "teilen": {
+        "titel": "Dela länk eller kod",
+        "text": "Du får en personlig länk och en rekommendationskod. Koden visas tydligt i formuläret vid registreringen – utan spårningscookie."
+      },
+      "verdienen": {
+        "titel": "Tjäna pengar",
+        "text": "När en värvad verksamhet betalar sin första prenumerationsfaktura löper din provision i tolv månader. Du ser varje kund pseudonymt i partner-instrumentpanelen och får utbetalning månadsvis."
+      }
+    },
+    "staffel": {
+      "eyebrow": "Din nivå",
+      "heading": "Ju större din struktur, desto högre din sats",
+      "sub": "Satsen gäller för alla nya provisioner från det att rangen uppnåtts. Till strukturen räknas dina egna betalande kunder och dina teampartners kunder.",
+      "kunden": "{von}–{bis} betalande kunder",
+      "kundenOffen": "från {von} betalande kunder",
+      "satz": "av prenumerationsintäkterna",
+      "nichtAbrufbar": "Nivån är för närvarande inte tillgänglig. Försök igen senare."
+    },
+    "bedingungen": {
+      "eyebrow": "Reglerna",
+      "heading": "Rättvist för dig, rättvist för verksamheterna",
+      "basis": {
+        "titel": "Vad som räknas",
+        "text": "Provisionsgrunden är den netto-prenumerationsintäkten (grundpris och moduler) från den värvade verksamheten – exklusive skatter, portalprovisioner och tilläggstjänster."
+      },
+      "dauer": {
+        "titel": "Tolv månader",
+        "text": "Provisionen löper i tolv månader från företagets första betalda abonnemangsfaktura; dina kunders gratismånad räknas inte. Om företaget säger upp avtalet upphör provisionen med den sista betalningen. Bokningsandel och superprovision löper utan denna gräns."
+      },
+      "auszahlung": {
+        "titel": "Utbetalning",
+        "text": "Månatligen, 30 dagar efter verksamhetens betalning, från ett minimibelopp per valuta. Du får en kreditnota; företag behöver ett giltigt momsregistreringsnummer."
+      },
+      "kennzeichnung": {
+        "titel": "Märkning",
+        "text": "Varje rekommendation är reklam och måste märkas som sådan. De föreskrivna formuleringarna per språk tillhandahålls i instrumentpanelen."
+      },
+      "verboten": {
+        "titel": "Ej tillåtet",
+        "text": "Självreklam, annonsering av våra varumärken i sökannonser, löften om rabatter i vårt namn och oönskade meddelanden. Återbetalningar dras av från provisionen."
+      },
+      "daten": {
+        "titel": "Dataskydd",
+        "text": "Du ser dina kunder endast pseudonymt – med land, status och belopp, aldrig med namn eller e-post. Ett företag kan tillåta dig att kontakta dem vid registrering."
+      }
+    },
+    "faq": {
+      "eyebrow": "Vanliga frågor",
+      "heading": "Vad partners frågar oss",
+      "wer": {
+        "frage": "Vem kan bli partner?",
+        "antwort": "Varje person eller företag inom EU med en verklig kanal till hyresvärdar eller hotell: influencers, konsulter, byråer, skattebyråer, föreningar – och myNextDays-kunder själva. En ansökan är gratis; ett abonnemang är inget krav."
+      },
+      "wann": {
+        "frage": "När räknas ett företag som min kund?",
+        "antwort": "När det har registrerat sig med din kod och betalat sin första abonnemangsfaktura. Registreringar utan betalning räknas inte för rankningen."
+      },
+      "doppelt": {
+        "frage": "Vad händer om ett företag nämner två partners?",
+        "antwort": "Ett företag tilldelas exakt en partner – den vars kod angavs i formuläret vid registreringen. Senare koder ändrar inte detta."
+      },
+      "steuern": {
+        "frage": "Hur fungerar faktureringen?",
+        "antwort": "Vi utfärdar en kreditnota (självfakturering). Företag med EU-momsnummer får den med omvänd skattskyldighet, privatpersoner utan moms – du beskattar provisionen själv."
+      },
+      "material": {
+        "frage": "Finns det reklammaterial?",
+        "antwort": "Ja: korta videor för sociala medier, en förklarande video, banners och textmoduler – i partnerpanelen, på ditt språk."
+      },
+      "wieviel": {
+        "frage": "Hur mycket provision kan jag tjäna?",
+        "antwort": "Det beror på dina kunders abonnemangsintäkter och din rang. Tabellen ovan visar priset per rang; tolv månader per kund. Dessutom tillkommer 0,5 % av varje bokning som dina kunder får via myBestDays, en engångsbonus per uppnådd rang, med ett team får du differensprovision – och från elitpartner får du 2,5 % superprovision på hela strukturen utan tidsbegränsning."
+      },
+      "team": {
+        "frage": "Hur fungerar teampremien?",
+        "antwort": "Från rangen ”uppstigare”: Om en partner ansöker via din teamlänk och tydligt anger din kod i ansökan, tillhör denne ditt team efter godkännande. Deras kunder räknas 1:1 för din rang. På nettoabonnemangsomsättningen för deras kunder får du skillnaden mellan din sats och deras – exakt en nivå djupt, utan deltagaravgift, utan pengar för rekrytering."
+      },
+      "auszahlung": {
+        "frage": "Hur och när betalas provisioner ut?",
+        "antwort": "Månatligen per valuta, så snart summan når minimibeloppet för din valuta. Varje provisionsrad är 30 dagar \"öppen\" (återbetalningsfönster) och därefter utbetalningsbar. Du får en kreditnota (självfakturering) – du skickar ingen faktura. Utbetalning via SEPA, Wise eller PayPal."
+      },
+      "verfolgen": {
+        "frage": "Hur kan jag spåra mina provisioner och prestationer?",
+        "antwort": "I partnerpanelen, under \"Provisioner\", ser du varje betald abonnemangsfaktura med bas, pris, belopp och status, under \"Kunder\" dina företag pseudonymt, under \"Team\" utvärderingen av dina teampartners och under \"Länkar & Material\" klick per kod."
+      },
+      "werbung": {
+        "frage": "Får jag köra betald reklam?",
+        "antwort": "Inte på vårt varumärke: annonser på \"myNextDays\" och stavningsvarianter (brand-bidding), cookie-dropping, köpt räckvidd eller incitament för registreringar är förbjudna och leder till avstängning. Eget innehåll, bidrag och rekommendationer är uttryckligen önskvärda – med märkning som reklam."
+      }
+    },
+    "abschluss": {
+      "heading": "Redo att rekommendera myNextDays?",
+      "sub": "Ansök på två minuter. Vi återkommer efter granskningen.",
+      "cta": "Ansök nu",
+      "kontakt": "Frågor? Skriv till oss."
+    },
+    "vergleich": {
+      "eyebrow": "Din nivå",
+      "heading": "Ju fler betalande kunder, desto högre nivå",
+      "sub": "Satsen gäller för alla nya provisioner från det att rangen uppnåtts. Din struktur räknas: dina egna betalande kunder plus dina teampartners kunder.",
+      "nichtAbrufbar": "Nivån kan inte hämtas just nu. Vänligen försök igen senare.",
+      "plan": "Rang",
+      "provision": "Provision på egna kunder",
+      "teamProvision": "Teamprovision på dina teampartners kunder",
+      "dauer": "Löptid per kund",
+      "dauerWert": "12 månader",
+      "kunden": "{från}–{till} betalande kunder",
+      "kundenOffen": "från {från} betalande kunder",
+      "vorteile": "Tjänster",
+      "ja": "ingår",
+      "nein": "ingår ej",
+      "leistung": {
+        "konto": "Gratis partnerkonto",
+        "dashboard": "Partner-instrumentpanel med kunder, provisioner och analys",
+        "material": "Reklammaterial och mallar för märkning",
+        "team": "Bygg team med egen teamlänk",
+        "gutschrift": "Månatlig utbetalning med kredit (självfakturering)",
+        "chat": "Direktkontakt med partnerteamet",
+        "support": "Personlig kontaktperson",
+        "coMarketing": "Co-marketing (gemensamma kampanjer)"
+      },
+      "fussnoteTeam": "Teamprovision är skillnaden mellan din sats och teampartnerns sats på nettoabonnemangsomsättningen för dennes kunder, båda vid betalningstillfället – exakt en nivå, ingen deltagaravgift, inga pengar för rekrytering. Aldrig mer än 30 % totalt.",
+      "fussnoteCoMarketing": "Efter överenskommelse med partnerteamet; beror på partnerns profil och pågående kampanjer.",
+      "fussnoteRang": "Rangen baseras på din struktur: egna betalande kunder plus dina teampartners kunder, varje kund räknas en gång. När en ny rang uppnås från och med ”uppstigare” utgår en engångsbonus.",
+      "teamDifferenz": "{satz} % minus teampartnerns sats",
+      "teamNicht": "inget team ännu",
+      "bonus": "Uppflyttningsbonus (engångs)",
+      "superProvision": "Superprovision på hela strukturen",
+      "marktTurbo": "myBestDays bokningsandel",
+      "marktTurboWert": "0,5 % per bokning, obegränsat",
+      "fussnoteSuper": "Från elitpartner 2,5 % av nettoabonnemangsomsättningen för alla kunder i din struktur – utöver provisionen, utan 12-månadersgränsen, så länge du behåller rangen och kunden betalar."
+    },
+    "team": {
+      "eyebrow": "Bygg team",
+      "heading": "Upp till {max} % differensprovision på ditt teams omsättning",
+      "sub": "Känner du till fler konsulter, kreatörer eller byråer med kontakter till värdar? Från rangen ”uppstigare” ansöker de via din teamlänk, tillhör ditt team – och deras kunder räknas 1:1 för din rang. Du tjänar skillnaden mellan din sats och din teampartners sats; dina teampartners behåller sin fulla egen nivå.",
+      "rang": {
+        "titel": "Skillnaden",
+        "text": "Du får din sats minus teampartnerns sats – båda vid betalningstillfället. Om din teampartner har samma rang uppstår ingen teamprovision."
+      },
+      "ebene": {
+        "titel": "Exakt en nivå",
+        "text": "Dina teampartners bygger inte ett eget team under dig. Inget nätverk, ingen pyramid."
+      },
+      "keinGeld": {
+        "titel": "Endast från verklig omsättning",
+        "text": "Ingen deltagaravgift, inga pengar för rekrytering. Teamprovision uppstår uteslutande från betalda abonnemangsintäkter."
+      },
+      "dauer": {
+        "titel": "Samma regler",
+        "text": "12 månader per teamkund, 30 dagars återbetalningsfönster, återtagande vid återbetalning eller chargeback – som med din egen provision. Från Elite tillkommer superprovisionen på hela strukturen, utan tidsgräns."
+      }
+    },
+    "kundeCta": {
+      "heading": "Är du redan myNextDays-kund?",
+      "text": "Då känner du produkten bäst. Rekommendera den vidare – din provision hamnar som en kredit på ditt konto, oberoende av ditt abonnemang.",
+      "cta": "Rekommendera & tjäna"
+    }
+  },
+  "partnerBewerbung": {
+    "meta": {
+      "titel": "Ansök om att bli partner — myNextDays",
+      "beschreibung": "Ansökan till myNextDays partnerprogram: Sociala medier-konton, räckvidd, villkor. Vi granskar varje ansökan personligen."
+    },
+    "eyebrow": "Partnerprogram",
+    "titel": "Ansök om att bli partner",
+    "text": "Berätta för oss om dina sociala medier-konton med räckvidd — vi granskar varje ansökan personligen och återkommer vanligtvis inom några arbetsdagar. Vid godkännande får du tillgång till partnerpanelen med länkar, koder och utvärdering.",
+    "email": "E-post",
+    "passwort": "Lösenord för din partnerpanel",
+    "passwortHinweis": "Minst 8 tecken.",
+    "name": "Namn",
+    "firma": "Företag (valfritt)",
+    "rechtsform": "Juridisk form",
+    "privat": "Privatperson",
+    "unternehmen": "Företag",
+    "land": "Land",
+    "ustId": "Momsregistreringsnummer",
+    "ustIdHinweis": "Kontrolleras mot EU:s VIES-system. Utan bekräftat nummer ingen utbetalning till företag.",
+    "kanaele": {
+      "titel": "Dina sociala medier-konton",
+      "hinweis": "Obligatoriskt: minst ett sociala medier-konto (Instagram, TikTok, YouTube, Facebook, LinkedIn …) med adress, användarnamn och räckvidd (följare). Webbplats, blogg eller nyhetsbrev är gärna extra. Vi granskar kontona före godkännande.",
+      "plattform": "Plattform",
+      "handle": "Användarnamn (valfritt)",
+      "reichweite": "Räckvidd (följare)",
+      "hinzufuegen": "Lägg till kanal",
+      "entfernen": "Ta bort kanal",
+      "socialPflicht": "Minst ett sociala medier-konto med räckvidd är obligatoriskt — enbart en webbplats räcker inte.",
+      "plattformen": {
+        "website": "Webbplats",
+        "blog": "Blogg",
+        "newsletter": "Nyhetsbrev",
+        "podcast": "Podcast",
+        "other": "Övrigt"
+      }
+    },
+    "plattform": {
+      "website": "Webbplats",
+      "blog": "Blogg",
+      "newsletter": "Nyhetsbrev",
+      "podcast": "Podcast",
+      "other": "Övrigt"
+    },
+    "sponsor": "Värvad av partner (kod, valfritt)",
+    "sponsorHinweis": "Kommer du via en partners teamlänk? Deras kod står då här. De får en teambonus på prenumerationsintäkterna från dina kunder — din egen provision förblir oförändrad.",
+    "pitch": "Varför passar du myNextDays? (valfritt)",
+    "pitchPlatzhalter": "Vem når du, vad pratar du om, hur vill du rekommendera?",
+    "zustimmung": "Jag accepterar",
+    "bedingungen": "Partnervillkor",
+    "version": "Version {version}",
+    "absenden": "Skicka ansökan",
+    "sendet": "Skickar ...",
+    "pruefungHinweis": "Detta formulär skyddas av reCAPTCHA. Efter inskick granskar vårt partnerteam dina konton och räckvidd; du får ett e-postmeddelande med beslutet.",
+    "fehler": {
+      "social": "Ange minst ett sociala medier-konto med adress och räckvidd.",
+      "doppelt": "Det finns redan en ansökan för denna e-postadress. Logga in på partnerpanelen.",
+      "eingabe": "Kontrollera dina uppgifter.",
+      "captcha": "Spamskyddskontrollen misslyckades. Ladda om sidan och försök igen.",
+      "allgemein": "Ansökan kunde inte skickas just nu. Försök igen senare."
+    },
+    "fertig": {
+      "titel": "Ansökan mottagen",
+      "text": "Tack! Vi granskar dina konton och räckvidd personligen och återkommer via e-post. Din partnerpanel är tillgänglig med din e-postadress och ditt lösenord – länkar och koder blir aktiva vid godkännande.",
+      "login": "Till partnerinloggning"
+    }
   }
 }

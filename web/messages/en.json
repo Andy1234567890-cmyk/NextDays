@@ -1500,7 +1500,12 @@
       "portalRateInvalid": "A stored portal deduction rate is outside 0–100 %. Please correct it under Accounting → Billing rules.",
       "feeUnassigned": "At least one fee type is not assigned yet. Without an assignment it cannot be determined who the amount belongs to or whether commission applies — please set it under Accounting → Billing rules.",
       "feeNotComputable": "A fee cannot be settled as an amount (stored as a percentage or without an amount). Please check the fee on the property.",
-      "contractCurrency": "A flat fee or minimum commission is denominated in a different currency than the booking. Amounts in different currencies are not converted — please check the billing contract."
+      "contractCurrency": "A flat fee or minimum commission is denominated in a different currency than the booking. Amounts in different currencies are not converted — please check the billing contract.",
+      "recurringToOwner": "Recurring in favor",
+      "recurringFromOwner": "Recurring at the expense of",
+      "flatFees": "Flat rates from contract",
+      "flatFeesIncluded": "already considered in the payout",
+      "contractStartsLater": "For at least one booking, there is no billing agreement on the departure date yet – the owner's agreement only starts later. The commission rate is therefore stored, but the \"Valid from\" date is after the departure. Please enter the actual contract start date in the billing agreement."
     },
     "rental": {
       "perReservation": "Per reservation",
@@ -1520,13 +1525,66 @@
         "channexImport": "The booking was fetched retroactively when the channel was connected. According to the portal intermediary, such bookings contain no extras and no cleaning fees — this cannot be retrieved later. If the fee is to be billed, add it as a line item on the booking.",
         "portalReportsNone": "The portal does not list the fee as a separate line item on this booking. With Booking.com this depends on the property configuration (Property → Policies → Additional fees) and on the date from which the fee applies there: a fee introduced later is rightly missing on older bookings.",
         "noPayload": "There is no portal message for this booking (import of existing data). Without it, there is no way to determine which fees the guest paid.",
-        "unknownReason": "The reason cannot be determined."
+        "unknownReason": "The reason cannot be determined.",
+        "csvImport": "The booking originates from the CSV inventory import. The imported amount is the guest price of the portal including all fees; a breakdown of individual fees is not available and could not be derived from the portal data. Therefore, the billing does not apply any fees from the property master data — they are already included in the amount, but their exact value is not documented.",
+        "csvResolvedTitle": "Fees derived from the portal amount",
+        "csvResolved": "The booking originates from the CSV inventory import; the portal did not provide a breakdown. The fees were derived from the difference between the imported total price and the nightly rates transmitted by the portal and named via the property master data. Accommodation plus fees exactly equal the total price.",
+        "stammdatenPortalTitle": "Fees added from property master data",
+        "stammdatenPortal": "The portal did not provide a fee breakdown for this booking: Bookings that the portal aggregator retrieved after connecting the channel do not include extras and cleaning fees; an inventory import from a file only contains the total price. The fees were therefore set as stored for the property: cleaning per stay, resort per night, pet only if a pet is booked.",
+        "portalBelegt": "Occupied: The difference between the total portal price and the nightly rates transmitted by the portal exactly matches these fees.",
+        "portalImBetrag": "Included in portal amount: The total portal price already includes the fees; they have been deducted, the guest price remains the portal amount.",
+        "portalObendrauf": "In addition to portal amount: The transmitted amount is the pure nightly sum; fees are added to this to make up the guest price."
       },
       "chain": {
         "portal": "Portal",
         "management": "Management",
         "flatFee": "Flat fee",
         "fees": "Fees"
+      },
+      "arrival": "Arrival",
+      "departure": "Departure",
+      "commission": "Commission",
+      "flatFee": "Flat rate",
+      "ownerShare": "Owner's share",
+      "portalDeduction": "Portal deduction",
+      "fees": "Fees",
+      "feesCount": "{n} items",
+      "expand": "Show breakdown",
+      "collapse": "Hide breakdown",
+      "expandAll": "Show all breakdowns",
+      "collapseAll": "Hide all breakdowns",
+      "breakdown": "Breakdown per booking",
+      "noFeeItems": "No fees or additional services on this booking.",
+      "posten": {
+        "guestPrice": "Guest price according to portal (incl. fees, excl. additional services)",
+        "portalCommission": "Channel commission {kanal}",
+        "portalFee": "Channel payment fee",
+        "portalPayout": "Channel payout",
+        "feesOut": "Fees in guest price — excluded from calculation",
+        "feesInBase": "Fees in guest price — commissionable, remain in calculation",
+        "base": "Basis for calculation",
+        "commission": "Management commission {pct}",
+        "minCommission": "Minimum commission (contract) instead of {pct}",
+        "contractFrom": "Contract from {datum}",
+        "rateManual": "manually in this statement",
+        "rateLegacy": "Standard rate from master data",
+        "flatFee": "Flat rate (contract)",
+        "feesBack": "Owner's fees — returned in full",
+        "ownerShare": "Owner's share",
+        "belongsBetrieb": "retained by the business",
+        "belongsEigentuemer": "Owner",
+        "belongsDurchlauf": "Pass-through items (third parties)",
+        "commissionFree": "commission-free",
+        "commissionable": "commissionable",
+        "amountHidden": "Amount at the business",
+        "addon": "Extra service",
+        "noFeesReported": "The channel has not reported any fees for this booking; therefore, none were applied.",
+        "afterPortal": "Total amount after channel deduction",
+        "afterPortalHint": "Guest price minus channel commission and channel payment fee",
+        "feesBusiness": "Provided by the business — not part of the payout",
+        "contractStartsLater": "No billing agreement on departure day {abreise}: the agreement only starts on {beginn}. Backdate the agreement start date with the owner, then this booking will be billed.",
+        "noContract": "There is no billing agreement or commission rate in the master data for this property — please create an agreement with the owner.",
+        "addonsOutside": "Additional services — sold via myNextDays, not included in the portal guest price"
       }
     },
     "expenses": {
@@ -1566,7 +1624,11 @@
       "rentalRevenue": "Rental Revenue",
       "expenses": "Expenses and Extras",
       "total": "Total",
-      "deductPercentage": "Commission (%)"
+      "deductPercentage": "Commission (%)",
+      "shares": "Owner's share from bookings",
+      "deductions": "Deductions",
+      "credits": "Credits",
+      "recurring": "Recurring items"
     },
     "manage": {
       "owner": "Owner",
@@ -1631,6 +1693,25 @@
       "cancel": "Cancel",
       "confirm": "Finalize",
       "working": "Finalizing..."
+    },
+    "deductions": {
+      "title": "Deductions & Credits",
+      "intro": "Everything that changes the payout in addition to bookings — from three sources: flat rate from the contract per booking, one-time offsetting items, and recurring items (standing agreement).",
+      "deductions": "Deductions (at the owner's expense)",
+      "credits": "Credits (in favor of the owner)",
+      "empty": "No deductions or credits in this period.",
+      "srcExpense": "Offsetting items",
+      "srcRecurring": "Recurring item",
+      "srcFlatFee": "Flat rate from contract",
+      "perBooking": "per booking",
+      "perNight": "per night",
+      "perPeriod": "per period",
+      "quantity": "{n} × {betrag}",
+      "flatFeesNote": "The flat rates from the contract have already been deducted from the owner's share per booking — this is for overview purposes only, no further deduction.",
+      "manageRecurring": "Manage recurring items",
+      "manageContract": "Manage billing agreement",
+      "receipt": "Receipt",
+      "bookingsCount": "{n} bookings"
     }
   },
   "ownerBilling": {
@@ -1709,7 +1790,9 @@
     "effectBlocked": "{property}: distribution ends on {date} — {nights} nights blocked and withdrawn from the portals.",
     "effectReleased": "{property}: distribution continues — the contract end was lifted and the nights are sellable again.",
     "effectNoUnit": "{property}: the contract end is stored, but the calendar is not blocked — the property has no unit. Add one and the block takes effect.",
-    "effectCalendarFailed": "{property}: the contract end is stored, the calendar block was not written. It will be caught up tonight."
+    "effectCalendarFailed": "{property}: the contract end is stored, the calendar block was not written. It will be caught up tonight.",
+    "validFromHint": "The date from which the agreement is valid — for an existing contract, this is the actual contract date, not today. Each booking is settled with the contract valid on its departure date; bookings with an earlier departure will not be paid out.",
+    "errorValidFromRequired": "Please state from when the contract is valid."
   },
   "portal": {
     "title": "My portal",
@@ -5486,7 +5569,8 @@
       "connectPortal": "Connect a portal",
       "noPortals": "No portal (Booking, Airbnb & Co.) connected for this property yet.",
       "marketplaceReview": "In review",
-      "marketplaceReviewHint": "myBestDays is still reviewing this listing. It appears on the marketplace once approved. Portals and your own website are not affected."
+      "marketplaceReviewHint": "myBestDays is still reviewing this listing. Once approved, it will appear on the marketplace. myBestDays is a mandatory channel: A property cannot be deselected individually there — \"Pause sales\" removes it from sale everywhere.",
+      "marketplaceMandatory": "Mandatory channel — every property is listed on myBestDays"
     },
     "IdLayout": {
       "loadError": "Property could not be loaded: {error}"
@@ -5584,11 +5668,11 @@
       "stepOf": "Step {schritt} of {gesamt}",
       "next": "Continue",
       "back": "Back",
-      "channelsHint": "Where should this property be sold? You can change this at any time.",
+      "channelsHint": "Where else should this property be sold? Portals and website can be changed at any time.",
       "channelPortals": "Booking portals",
       "channelPortalsHint": "Airbnb, Booking.com and others. Portals require complete details — see below.",
       "channelPlatform": "myBestDays",
-      "channelPlatformHint": "Our own marketplace with a low commission.",
+      "channelPlatformHint": "Our own marketplace with 8% all-in. Every property is listed there; it becomes visible after publishing and our approval.",
       "channelWebsite": "Your own website",
       "channelWebsiteHint": "Your booking site and the booking widget.",
       "readinessTitle": "Still missing for the portals:",
@@ -6282,7 +6366,21 @@
       "planPortalOffHint": "This price applies to direct bookings only. Click to send it to booking portals.",
       "planPortalOn": "Price now goes to booking portals.",
       "planPortalOnHint": "This price goes to booking portals. Click to use it for direct bookings only.",
-      "planPortalYes": "To portals"
+      "planPortalYes": "To portals",
+      "feeValidityTitle": "Validity",
+      "feeValidityHint": "The fee applies to bookings with an arrival date within the specified period. Empty = no limit. A fee with a period is not sent to the portals: no date condition can be mapped there.",
+      "feeValidFromLabel": "Valid from",
+      "feeValidUntilLabel": "Valid until",
+      "feeValidityOrderError": "\"Valid until\" is before \"Valid from\".",
+      "feeOwnerStatementOnlyLabel": "Only in owner statement",
+      "feeOwnerStatementOnlyHint": "The fee is not charged to the guest and not sent to any portal. It only affects the owner statement, the evaluation, and the owner portal.",
+      "feeValidFromSuffix": "from {date}",
+      "feeValidUntilSuffix": "until {date}",
+      "feeOwnerStatementOnlySuffix": "only statement",
+      "feeCalculationLabel": "Calculation",
+      "feeVatHint": "A separate tax rate for this fee, deviating from the property's overnight rate. Off means: the fee follows the overnight rate.",
+      "feeVatIncludedLabel": "Tax in amount",
+      "feeVatIncludedHint": "Is the tax rate already included in the entered amount or is it added on top? Without this information, the amount would be ambiguous."
     },
     "policiesForm": {
       "title": "Policies",
@@ -7324,23 +7422,23 @@
     "marketplacePending": "{count} in review",
     "marketplaceWaiting": "In review",
     "marketplace": {
-      "intro": "myBestDays is our own marketplace — a booking channel like Booking or Airbnb, just without a portal connection. A property becomes visible when it is active, listed here and approved.",
+      "intro": "myBestDays is our own marketplace — a booking channel like Booking or Airbnb, but without portal connection, and mandatory for every property. A property becomes visible when it is active and has been approved by us.",
       "openMarketplace": "Open marketplace",
       "propertiesHeading": "Properties on the marketplace",
       "noProperties": "No properties yet.",
       "columnProperty": "Property",
-      "columnVisibility": "Visibility",
+      "columnVisibility": "Status",
       "columnApproval": "Approval",
       "columnBookings": "Bookings",
       "stateActive": "Visible",
       "statePending": "In review",
-      "stateNotListed": "Not listed",
+      "stateNotListed": "Sales paused",
       "stateInactiveProperty": "Property not active",
       "viewListing": "View listing",
       "reviewHint": "Properties in review do not appear on myBestDays yet. We review every listing because myBestDays acts as the provider there — portals and your own website are not affected.",
       "summaryVisible": "{count} visible",
       "summaryWaiting": "{count} in review",
-      "summaryOff": "{count} not listed",
+      "summaryOff": "{count} paused or inactive",
       "moderation": {
         "draft": "Draft",
         "pending": "In review",
@@ -7375,7 +7473,8 @@
       "mayClose": "The import continues on the server – you can close this page.",
       "andMore": "... and {count} more",
       "close": "Close",
-      "updated": "updated"
+      "updated": "updated",
+      "portal": "already from the portal"
     }
   },
   "calendarSync": {
@@ -10532,7 +10631,11 @@
     "haveAccount": "Already have an account?",
     "loginLink": "Sign in here",
     "loadingHeadline": "Your own booking website. Keep 100 % of every booking.",
-    "loadingText": "Setting up your account …"
+    "loadingText": "Setting up your account …",
+    "referralLabel": "Recommended by (optional)",
+    "referralPlaceholder": "Recommendation code, e.g. ANNA-K7P2",
+    "referralHint": "Did you get to know myNextDays through a partner? Their code is here - they only see that a business came through them, never your name. With the code, you get the first full month free after the 14 test days.",
+    "referralContactOptIn": "My referrer may contact me via myNextDays."
   },
   "marketingSite": {
     "stars": "4.5 stars",

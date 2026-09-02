@@ -1,0 +1,521 @@
+{
+  "meta": {
+    "titel": "myNextDays Partner",
+    "beschreibung": "A myNextDays partnerprogram partneri irányítópultja: linkek, ügyfelek, jutalékok, kifizetések."
+  },
+  "nav": {
+    "partner": "Partner",
+    "uebersicht": "Áttekintés",
+    "kunden": "Ügyfelek",
+    "provisionen": "Jutalékok",
+    "auszahlungen": "Kifizetések",
+    "links": "Linkek és anyagok",
+    "profil": "Profil",
+    "sprache": "Nyelv",
+    "abmelden": "Kijelentkezés",
+    "nachrichten": "Üzenetek",
+    "menue": "Menü",
+    "team": "Csapat",
+    "beitraege": "Bejegyzések"
+  },
+  "status": {
+    "pending_review": {
+      "titel": "Jelentkezését felülvizsgáljuk",
+      "text": "Minden jelentkezést személyesen ellenőrzünk, és e-mailben értesítjük. A jóváhagyásig a linkek és kódok még nem aktívak – profil- és kifizetési adatait már most kitöltheti."
+    },
+    "rejected": {
+      "titel": "Jelentkezését nem fogadtuk el",
+      "text": "Jelenleg nem tudtuk elfogadni jelentkezését. Kérdés esetén forduljon hozzánk bizalommal."
+    },
+    "suspended": {
+      "titel": "Partnerfiókja zárolva van",
+      "text": "A nyitott jutalékok nem kerülnek kifizetésre, amíg a zárolás fennáll. Kérdés esetén forduljon hozzánk."
+    },
+    "approved": {
+      "titel": "Jóváhagyva",
+      "text": "Fiókja aktív."
+    },
+    "grund": "Ok"
+  },
+  "uebersicht": {
+    "titelBewerber": "Üdvözöljük a partnerprogramban",
+    "textBewerber": "Amint jelentkezését jóváhagytuk, itt láthatja linkjeit, ügyfeleit és jutalékait. Időközben adja meg adó- és kifizetési adatait – így az első kifizetés kérdés nélkül megtörténhet.",
+    "zumProfil": "Profilhoz",
+    "titel": "Üdvözlöm, {name}",
+    "rang": "{rang} rang · az előfizetési bevétel {satz} része",
+    "naechsterRang": "még {fehlend} fizető ügyfél a {rang} rangig ({satz})",
+    "linksTeilen": "Linkek megosztása",
+    "keineBetraege": "—",
+    "kachel": {
+      "klicks": "Kattintások (30 nap)",
+      "registrierungen": "Regisztrált vállalkozások",
+      "zahlend": "Fizető ügyfelek",
+      "offen": "Nyitott (visszatérítési időszak)",
+      "auszahlbar": "Kifizethető",
+      "ausgezahlt": "Kifizetve",
+      "team": "Csapatjutalék",
+      "teamHinweis": "{n} csapatpartner",
+      "struktur": "Ügyfelek a struktúrájában",
+      "strukturHinweis": "saját + csapat ügyfelei – ez a szám határozza meg a rangját",
+      "super": "Szuperjutalék",
+      "superHinweis": "{satz} a struktúrája előfizetési bevételéből, időkorlát nélkül",
+      "turbo": "myBestDays foglalási részesedés",
+      "turboHinweis": "0,5% minden myBestDays foglalás után az Ön és csapata ügyfeleinél",
+      "bonus": "Előléptetési bónuszok",
+      "bonusHinweis": "egyszeri, minden elért rang után"
+    },
+    "deineLinks": "Az Ön linkjei"
+  },
+  "links": {
+    "titel": "Linkek és anyagok",
+    "hinweis": "Az Ön linkje a mynextdays.com oldalra vezet, és számolja a kattintást. A kód a regisztrációkor láthatóan megjelenik az űrlapon – cookie nélkül. Egy vállalkozás pontosan egy partnerhez van rendelve.",
+    "klicks30": "{n} kattintás 30 nap alatt",
+    "kopiert": "Másolva.",
+    "kopierenFehlgeschlagen": "Másolás nem lehetséges – kérjük, jelölje ki és másolja.",
+    "codeKopieren": "Kód másolása",
+    "linkFehlt": "A link még nem érhető el.",
+    "neuerCode": "További kód létrehozása",
+    "label": "Megnevezés (opcionális)",
+    "wunschcode": "Kívánt kód (opcionális)",
+    "anlegen": "Létrehozás",
+    "abbrechen": "Mégse",
+    "codeAngelegt": "Kód létrehozva.",
+    "codeVergeben": "Ez a kód már foglalt.",
+    "fehler": "Ez nem sikerült.",
+    "kennzeichnung": {
+      "titel": "Kötelező: a reklámot jelölni kell",
+      "text": "Minden ajánlás az Ön linkjével vagy kódjával reklámnak minősül, és annak is kell lennie – a bejegyzés elején, a bejegyzés nyelvén. Egy egyszerű „#reklám” nem elegendő. A szabálysértések kizáráshoz vezethetnek.",
+      "imBeitrag": "A bejegyzésben",
+      "amLink": "A linken",
+      "land": {
+        "DE": "Németország",
+        "DK": "Dánia"
+      },
+      "andere": "Egyéb országok: A kereskedelmi szándéknak egyértelműen felismerhetőnek kell lennie (EU irányelv a tisztességtelen kereskedelmi gyakorlatokról). Kérjük, ellenőrizze országa előírásait; a bizonyított megfogalmazásokat fokozatosan kiegészítjük."
+    },
+    "material": {
+      "titel": "Reklámanyagok",
+      "leer": "Az anyag előkészítés alatt áll – itt jelenik meg, amint jóváhagyásra került.",
+      "art": {
+        "video": "Videó",
+        "image": "Kép",
+        "text": "Szövegmodul",
+        "link": "Link"
+      },
+      "oeffnen": "Megnyitás"
+    }
+  },
+  "kunden": {
+    "titel": "Ügyfelek",
+    "hinweis": "Az Ön által toborzott vállalkozások – pszeudonim. Látja az országot, a státuszt és az összegeket, soha nem a nevet vagy az e-mail címet. A fizető azt jelenti: az első előfizetési számla kifizetve és az előfizetés aktív.",
+    "leer": "Még egyetlen vállalkozás sem regisztrált az Ön linkjén keresztül.",
+    "kunde": "{n}. ügyfél",
+    "spalte": {
+      "kunde": "Ügyfél",
+      "land": "Ország",
+      "status": "Státusz",
+      "registriert": "Regisztrált",
+      "provisionBis": "Jutalék eddig",
+      "verdient": "Megkeresett"
+    },
+    "status": {
+      "registriert": "Regisztrált",
+      "zahlend": "Fizető",
+      "beendet": "Befejezett",
+      "in_pruefung": "Ellenőrzés alatt",
+      "abgelehnt": "Elutasítva"
+    }
+  },
+  "provisionen": {
+    "titel": "Jutalékok",
+    "hinweis": "Minden sor egy kifizetett előfizetési számla, egy myBestDays foglalás vagy egy előléptetési bónusz. Az alap a nettó előfizetési bevétel vagy a foglalási érték; az arány az Ön rangja a fizetés időpontjában. A nyitott sorok 30 nap után kifizethetővé válnak.",
+    "leer": "Még nincs jutalék.",
+    "reifAm": "kifizethető ettől: {datum}",
+    "spalte": {
+      "datum": "Dátum",
+      "art": "Típus",
+      "kunde": "Ügyfél",
+      "basis": "Alap",
+      "satz": "Arány",
+      "betrag": "Összeg",
+      "status": "Állapot"
+    },
+    "art": {
+      "earn": "Bevétel",
+      "reversal": "Visszatérítés",
+      "adjustment": "Korrekció",
+      "override": "Csapatjutalék",
+      "bonus": "Előléptetési bónusz",
+      "lifetime": "Szuperjutalék",
+      "booking_share": "Foglalási részesedés"
+    },
+    "status": {
+      "pending": "Nyitott",
+      "approved": "Kifizethető",
+      "held": "Felfüggesztve",
+      "paid": "Kifizetve",
+      "reversed": "Visszavonva",
+      "cancelled": "Törölve"
+    },
+    "team": "Csapat"
+  },
+  "auszahlungen": {
+    "titel": "Kifizetések",
+    "hinweis": "Havonta, pénznemenként, a minimális összegtől kezdve. Minden kifizetéshez tartozik egy jóváírás (önelszámolás) – ez az Ön bizonylata.",
+    "kein_weg": "Még nincs kifizetési mód megadva. Kérjük, adja hozzá a profiljához – különben nem lehet kifizetést teljesíteni.",
+    "leer": "Még nincs kifizetés.",
+    "spalte": {
+      "nummer": "Jóváírási szám",
+      "zeitraum": "Időszak",
+      "betrag": "Összeg",
+      "status": "Állapot",
+      "gutschrift": "Jóváírás"
+    },
+    "status": {
+      "pending": "Előkészítve",
+      "processing": "Átutalás alatt",
+      "paid": "Kifizetve",
+      "failed": "Sikertelen"
+    },
+    "gutschriftLaden": "Letöltés",
+    "gutschriftFehler": "A jóváírás nem tölthető be."
+  },
+  "profil": {
+    "titel": "Profil",
+    "seit": "Partner ettől: {datum}",
+    "stammdaten": "Törzsadatok",
+    "name": "Név",
+    "firma": "Cég (opcionális)",
+    "sprache": "Nyelv az e-mailekhez",
+    "kanal": "Közösségi média fiókjai és csatornái",
+    "speichern": "Mentés",
+    "gespeichert": "Mentve.",
+    "gespeichertViesOffen": "Mentve. Az adószámot még nem sikerült megerősíteni – a kifizetés előtt újra ellenőrizzük.",
+    "steuerUndAuszahlung": "Adó- és kifizetési adatok",
+    "aktuellerWeg": "Jelenlegi: {weg} {details}",
+    "keinWeg": "Még nincs megadva kifizetési mód.",
+    "viesBestaetigt": "Adószám megerősítve (VIES)",
+    "viesOffen": "Adószám még nincs megerősítve",
+    "rechtsform": "Jogi forma",
+    "privat": "Magánszemély",
+    "unternehmen": "Vállalkozás",
+    "land": "Ország",
+    "ustId": "Adószám",
+    "ustIdHinweis": "Az EU VIES rendszerével ellenőrizzük. Megerősített szám nélkül nincs kifizetés vállalkozásoknak. A jóváírás tartalmazza a fordított adózás megjegyzést.",
+    "privatHinweis": "Magánszemélyként az adómentes jóváírást kapja. A jutalékot Önnek kell adóznia.",
+    "auszahlungsweg": "Kifizetési mód",
+    "kontoinhaber": "Számlatulajdonos",
+    "empfaengerEmail": "{weg}-E-mail cím",
+    "passwortBestaetigen": "Megerősítéshez: Az Ön jelszava",
+    "passwortFalsch": "A jelszó nem egyezik.",
+    "steuerdaten": "Adóadatok"
+  },
+  "anmelden": {
+    "partner": "Partner",
+    "titel": "Bejelentkezés",
+    "text": "A myNextDays partnerprogram irányítópultja.",
+    "email": "E-mail",
+    "passwort": "Jelszó",
+    "anmelden": "Bejelentkezés",
+    "passwortVergessen": "Elfelejtette jelszavát?",
+    "resetGesendet": "Ha létezik fiók, küldtünk egy e-mailt.",
+    "stoerung": "A bejelentkezési szolgáltatás jelenleg nem elérhető. Ez nem az Ön belépési adataival kapcsolatos – kérjük, próbálja meg később újra.",
+    "keinPartnerKonto": "Ezekkel a belépési adatokkal nem létezik partnerfiók.",
+    "fehlgeschlagen": "Sikertelen bejelentkezés.",
+    "nochKeinKonto": "Még nem partner?",
+    "bewerben": "Jelentkezzen most"
+  },
+  "bewerben": {
+    "partner": "Partner",
+    "titel": "Jelentkezzen partnernek",
+    "text": "Két perc. Minden jelentkezést személyesen ellenőrzünk, és e-mailben értesítjük.",
+    "name": "Az Ön neve",
+    "firma": "Cég (opcionális)",
+    "email": "E-mail",
+    "passwort": "Jelszó (legalább 8 karakter)",
+    "rechtsform": "Jogi forma",
+    "privat": "Magánszemély",
+    "unternehmen": "Vállalat",
+    "land": "Ország",
+    "ustId": "Adószám",
+    "ustIdHinweis": "Kötelező vállalatok számára; ellenőrzés a VIES rendszerben.",
+    "kanal": "Közösségi média fiókjai",
+    "kanalHinweis": "Kötelező: legalább egy közösségi média fiók (Instagram, TikTok, YouTube, Facebook, LinkedIn stb.) címmel, felhasználónévvel és eléréssel. Weboldal, blog vagy hírlevél is hozzáadható. A fiókokat jóváhagyás előtt ellenőrizzük.",
+    "pitch": "Hogyan éri el a nyaralóhelyek vagy szállodák tulajdonosait? (opcionális)",
+    "pitchHinweis": "Elég néhány mondat.",
+    "zustimmung": "Elfogadom a partneri feltételeket, különösen azt a kötelezettséget, hogy az ajánlásokat reklámként jelöljem meg.",
+    "bedingungen": "A programhoz",
+    "captchaHinweis": "Ez az oldal reCAPTCHA által védett; a Google Adatvédelmi irányelvei és Általános Szerződési Feltételei érvényesek.",
+    "stoerung": "A szolgáltatás jelenleg nem elérhető – kérjük, próbálja meg később.",
+    "emailVergeben": "Ehhez az e-mail címhez már tartozik jelentkezés. Kérjük, jelentkezzen be.",
+    "captchaFehler": "A biztonsági ellenőrzés sikertelen. Kérjük, töltse újra az oldalt, és próbálja meg újra.",
+    "laeuft": "Küldés…",
+    "absenden": "Jelentkezés elküldése",
+    "schonPartner": "Már partner?",
+    "anmelden": "Bejelentkezés",
+    "sponsor": "Partner által toborzott (kód, opcionális)",
+    "sponsorHinweis": "Egy partner csapatlinkjén keresztül jutott ide? Akkor az ő kódja itt található. Az ügyfelei előfizetési forgalmából csapatjutalékot kap – az Ön saját jutaléka változatlan marad."
+  },
+  "nachrichten": {
+    "titel": "Üzenetek",
+    "hinweis": "Közvetlen kapcsolat a partnercsapattal – kérdések jutalék, kifizetés, anyagok vagy ügyfél kapcsán. A válaszok itt jelennek meg élőben.",
+    "neu": "Új üzenet a partnercsapatnak",
+    "platzhalter": "Miről van szó?",
+    "senden": "Küldés",
+    "abbrechen": "Mégse",
+    "leer": "Még nincs beszélgetés.",
+    "stoerung": "A szolgáltatás jelenleg nem elérhető – próbálja meg később.",
+    "fehler": "Ez nem sikerült.",
+    "team": "Partnercsapat",
+    "du": "Ön",
+    "antwortPlatzhalter": "Az Ön válasza…",
+    "antworten": "Válaszok",
+    "status": {
+      "in_bearbeitung": "Feldolgozás alatt",
+      "wartet_auf_dich": "Válasz érkezett",
+      "geloest": "Megoldva"
+    }
+  },
+  "kanaele": {
+    "plattformLabel": "Platform",
+    "handle": "Felhasználónév (opcionális)",
+    "reichweite": "Elérés (követők)",
+    "hinzufuegen": "Csatorna hozzáadása",
+    "entfernen": "Csatorna eltávolítása",
+    "plattform": {
+      "website": "Weboldal",
+      "blog": "Blog",
+      "newsletter": "Hírlevél",
+      "podcast": "Podcast",
+      "other": "Egyéb"
+    },
+    "socialPflicht": "Legalább egy közösségi média fiók kötelező – önmagában egy weboldal nem elegendő."
+  },
+  "team": {
+    "titel": "Csapat",
+    "hinweis": "Azok a partnerek, akik az Ön kódjával jelentkeztek, alkotják a csapatát. Ügyfeleik nettó előfizetési bevételéből megkapja az Ön aránya (jelenleg {satz}) és a csapattag aránya közötti különbséget – mindkettő a fizetés időpontjában. A csapat ügyfelei 1:1 arányban számítanak a rangjához.",
+    "meinSponsor": "Ön a következő csapatpartnere: {name}.",
+    "link": {
+      "titel": "Az Ön csapatlinkje",
+      "text": "Aki ezen a linken keresztül jelentkezik, annak jelentkezésében láthatóan szerepel az Ön kódja – cookie nélkül.",
+      "kopieren": "Link másolása",
+      "keinLink": "Nincs aktív kód – hozzon létre egyet a Linkek és anyagok menüpont alatt."
+    },
+    "regeln": {
+      "titel": "A szabályok",
+      "rang": "Csapatjutalék = az Ön aránya mínusz a csapattag aránya, a fizetés időpontjában. Azonos rang = 0.",
+      "ebene": "Pontosan egy szint: a csapatpartnerei nem építenek saját csapatot.",
+      "keinGeld": "Nincs pénz a toborzásért – csak a kifizetett előfizetési bevételből.",
+      "dauer": "12 hónap minden csapat ügyfél után, 30 napos visszatérítési időszak. Az Elite rangtól további 2,5% szuperjutalék időkorlát nélkül."
+    },
+    "kachel": {
+      "mitglieder": "Csapatpartner (aktív / összesen)",
+      "teamKunden": "Fizető csapatügyfelek",
+      "umsatz30": "Csapatbevétel (30 nap)",
+      "offen": "Nyitott csapatjutalék",
+      "auszahlbar": "Kifizethető csapatjutalék",
+      "ausgezahlt": "Kifizetett csapatjutalék"
+    },
+    "verlauf": {
+      "titel": "Előzmények · 12 hónap",
+      "leer": "Még nincs csapatbevétel.",
+      "provision": "Csapatjutalék",
+      "umsatz": "Csapatbevétel"
+    },
+    "mitglieder": {
+      "titel": "Az Ön csapata",
+      "leer": "Még nincsenek csapatpartnerek. Ossza meg csapatlinkjét.",
+      "kunden": "{n} fizető ügyfél",
+      "umsatz30": "Bevétel 30 nap",
+      "offen": "Nyitott",
+      "seit": "óta {datum}"
+    },
+    "spalte": {
+      "partner": "Partner",
+      "status": "Státusz",
+      "rang": "Rang",
+      "kunden": "Fizető ügyfelek",
+      "umsatz30": "Bevétel 30 nap",
+      "umsatzGesamt": "Összes bevétel",
+      "offen": "Nyitott",
+      "auszahlbar": "Kifizethető",
+      "ausgezahlt": "Kifizetett"
+    },
+    "status": {
+      "pending_review": "Ellenőrzés alatt",
+      "approved": "Jóváhagyva",
+      "rejected": "Elutasítva",
+      "suspended": "Blokkolva"
+    },
+    "chat": {
+      "titel": "Beszélgetés",
+      "schreiben": "Írás",
+      "rolle": {
+        "sponsor": "Az Ön szponzora",
+        "member": "Csapatpartner"
+      },
+      "zurueck": "Csapat",
+      "leer": "Még nincsenek üzenetek.",
+      "platzhalter": "Az Ön üzenete…",
+      "senden": "Küldés",
+      "titelListe": "Üzenetek a csapatban"
+    },
+    "nochNichtErlaubt": "Csapatot az „Előléptetett” rangtól vezethet (5 fizető ügyfél a struktúrájában). Addig nincs csapatlink."
+  },
+  "bedingungen": {
+    "neueVersion": "A partneri feltételek új verziója érhető el (az Ön hozzájárulása: {alt} verzió, aktuális: {neu}). Kérjük, olvassa el és fogadja el újra.",
+    "nochNicht": "Kérjük, fogadja el a partneri feltételeket ({neu} verzió).",
+    "lesen": "Feltételek elolvasása",
+    "annehmen": "Elfogadom",
+    "angenommen": "Köszönjük – hozzájárulás elmentve."
+  },
+  "beitraege": {
+    "titel": "Bejegyzések",
+    "hinweis": "Hozzon létre egyedi linket minden egyes Reelhez, videóhoz vagy bejegyzéshez. Így láthatja, melyik bejegyzés hoz kattintásokat, regisztrációkat és fizető ügyfeleket.",
+    "kontoHinweis": "Kapcsolja össze fiókját, ekkor a megtekintések és interakciók közvetlenül a platformról is megjelennek itt.",
+    "kontoVerbinden": "Fiók összekapcsolása",
+    "neu": "Új bejegyzés",
+    "keinCode": "Először aktív ajánlókódra van szüksége.",
+    "feld": {
+      "titel": "Cím",
+      "titelBeispiel": "pl. Reel Koppenhága ősz",
+      "plattform": "Platform",
+      "code": "Kód",
+      "datum": "Közzétéve",
+      "url": "A bejegyzés címe (opcionális)",
+      "urlHinweis": "A közzététel után is hozzáadható. Címmel a megtekintéseket és interakciókat a bejegyzéshez rendeljük."
+    },
+    "linkErzeugen": "Link létrehozása",
+    "angelegt": "Bejegyzés létrehozva – a link készen áll.",
+    "doppelt": "Ez a bejegyzés már létezik ehhez a kódhoz.",
+    "fehler": "Ez nem sikerült. Kérjük, próbálja újra.",
+    "liste": "{n, plural, =0 {Nincs bejegyzés} =1 {1 bejegyzés} other {# bejegyzés}}",
+    "leer": "Még nincs bejegyzés. Hozza létre az első linket fent.",
+    "veroeffentlicht": "közzétéve: {datum}",
+    "loeschen": "Bejegyzés törlése",
+    "geloescht": "Bejegyzés törölve.",
+    "loeschenGesperrt": "A bejegyzéshez már tartoznak regisztrációk, ezért megmarad.",
+    "kopiert": "Link másolva.",
+    "kopierenFehlgeschlagen": "Másolás nem lehetséges – kérjük, jelölje ki manuálisan.",
+    "linkFehlt": "A link jelenleg nem elérhető.",
+    "qrZeigen": "QR-kód megjelenítése",
+    "qrSchliessen": "QR-kód elrejtése",
+    "qrAlt": "QR-kód a bejegyzés linkjéhez",
+    "qrHinweis": "Történetekhez, videókhoz és nyomtatáshoz – ugyanarra a linkre vezet.",
+    "beitragOeffnen": "Bejegyzés megnyitása",
+    "urlAendern": "Cím módosítása",
+    "urlNachtragen": "Cím hozzáadása",
+    "speichern": "Mentés",
+    "gespeichert": "Mentve.",
+    "kennzahl": {
+      "klicks": "Kattintások 90 nap",
+      "klicks30": "{n} 30 nap alatt",
+      "registrierungen": "Regisztrációk",
+      "kunden": "Fizető ügyfelek",
+      "views": "Megtekintések",
+      "gemessen": "Állapot: {zeit}",
+      "nichtVerbunden": "Fiók nincs csatlakoztatva",
+      "interaktion": "Kedvelések: {likes} · Hozzászólások: {kommentare} · Megosztások: {shares} · Mentve: {saves}",
+      "pro1000": "{n} kattintás ezer megtekintésenként"
+    },
+    "freigabe": {
+      "videoNoetig": "Feltöltés megosztásra",
+      "erklaerung": "Töltse fel elkészült videóját, képét vagy PDF-jét, mielőtt közzétenné. Amint jóváhagytuk, itt megjelenik az Ön személyes linkje – ezt illessze be a bejegyzés alá. Kizárólag a mi promóciós anyagainkat használja, ne saját képernyőfelvételeket, és ne tegyen siker- vagy garanciaígéreteket.",
+      "hochladen": "Fájl kiválasztása (videó, JPG, PNG, PDF)",
+      "neuHochladen": "Új fájl feltöltése",
+      "laeuft": "Feltöltés folyamatban…",
+      "eingereicht": "Videó elküldve. Értesítjük, amint ellenőriztük.",
+      "inPruefung": "Ellenőrzés alatt",
+      "inPruefungHinweis": "Videója nálunk van. Amint jóváhagytuk, itt megjelenik a linkje.",
+      "eingereichtAm": "Beküldve ekkor: {zeit} – amint jóváhagytuk, itt megjelenik a linkje.",
+      "abgelehnt": "Nincs jóváhagyva",
+      "grund": "Ok",
+      "freigegeben": "Videó jóváhagyva",
+      "zuGross": "A videó nagyobb, mint {mb} MB.",
+      "fehler": "A feltöltés sikertelen.",
+      "grundKategorie": {
+        "material": "Anyag: csak hivatalos promóciós anyag, saját képernyőfelvétel nem",
+        "promise": "Ígéretek: nincs garancia vagy sikerígéret",
+        "disclosure": "Megjelölés: a bejegyzést reklámként kell megjelölni",
+        "brand": "Márka: logó vagy név helytelenül használva",
+        "other": "Egyéb"
+      }
+    }
+  },
+  "kanalVerbindung": {
+    "titel": "Csatlakoztatott fiókok",
+    "hinweis": "Csatlakoztassa közösségi média fiókjait, hogy a követők és a megtekintések közvetlenül a platformról érkezzenek. Ez önkéntes és bármikor visszavonható; csak olvasunk, nem írunk.",
+    "verbinden": "{anbieter} csatlakoztatása",
+    "baldVerfuegbar": "hamarosan elérhető",
+    "nichtKonfiguriert": "Ez a kapcsolat még nincs aktiválva.",
+    "fehler": "Ez nem sikerült. Kérjük, próbálja újra.",
+    "verifiziert": "ellenőrzött",
+    "follower": "{n} követő",
+    "views28": "{n} megtekintés 28 nap alatt",
+    "engagement": "Elkötelezettség: {n} %",
+    "gemessen": "Állapot: {zeit}",
+    "nochKeinSnapshot": "első mérés hamarosan",
+    "letzterFehler": "Utolsó lekérés sikertelen",
+    "trennen": "Kapcsolat bontása",
+    "getrennt": "Kapcsolat bontva. A korábbi mérési adatok megmaradnak az előzményekben.",
+    "getrennteKonten": "{n, plural, =1 {1 leválasztott fiók} other {# leválasztott fiók}}",
+    "getranntAm": "leválasztva {zeit}",
+    "durchPlattform": "Hozzáférés a platformról megszüntetve",
+    "datenschutz": "A leválasztáskor azonnal töröljük a hozzáférési adatokat. A mért értékek előzményként mentve maradnak. Részletek az adatvédelmi nyilatkozatban.",
+    "rueckkehr": {
+      "verbunden": "Fiók csatlakoztatva – az első mérés folyamatban van.",
+      "abgelehnt": "Kapcsolat megszakítva – nem adott hozzáférést.",
+      "fehler": "Kapcsolat sikertelen."
+    }
+  },
+  "passwort": {
+    "anzeigen": "Jelszó megjelenítése",
+    "verbergen": "Jelszó elrejtése"
+  },
+  "verbundkonto": {
+    "titel": "Kapcsolt fiók kifizetéshez",
+    "hinweis": "A jutalékát egy kapcsolt fiókra utaljuk. Ehhez fizetési szolgáltatónk személyazonosság-ellenőrzést kér – amíg ez nyitva van, a kifizetés nem lehetséges.",
+    "bereit": "Kapcsolt fiókja aktiválva van. A kifizetések automatikusan oda kerülnek.",
+    "offeneFelder": "Ezek az adatok még hiányoznak",
+    "gesperrt": "A fiók jelenleg zárolva van: {grund}",
+    "schrittKonto": "Kapcsolt fiók nyitása",
+    "schrittDaten": "Személyes adatok",
+    "schrittDatenFirma": "Cég- és személyes adatok",
+    "schrittBank": "Banki adatok",
+    "schrittBedingungen": "A fizetési szolgáltató feltételei",
+    "kontoAnlegen": "Kapcsolt fiók nyitása",
+    "kontoAngelegt": "Kapcsolt fiók megnyitva.",
+    "datenBearbeiten": "Adatok szerkesztése",
+    "zuklappen": "Összecsukás",
+    "datenGesendet": "Adatok elmentve.",
+    "vorname": "Keresztnév",
+    "nachname": "Vezetéknév",
+    "geburtsdatum": "Születési dátum",
+    "tag": "NN",
+    "monat": "HH",
+    "jahr": "ÉÉÉÉ",
+    "strasse": "Utca és házszám",
+    "plz": "Irányítószám",
+    "ort": "Helység",
+    "nationalitaet": "Állampolgárság (országkód)",
+    "telefon": "Telefon",
+    "webseite": "Weboldal vagy profil",
+    "webseiteHinweis": "Az a cím, amelyen hirdet – az ellenőrzéshez szükséges.",
+    "firmenname": "Cégnév",
+    "steuernummer": "Adószám",
+    "firmenStrasse": "Cím",
+    "firmaHinweis": "Képviseletre jogosult személyként a fent megadott adatai kerülnek felhasználásra.",
+    "speichern": "Adatok mentése",
+    "kontoinhaber": "Számlatulajdonos",
+    "waehrung": "Pénznem",
+    "waehrungHinweis": "A bankszámla pénzneme, nem az Ön országának pénzneme.",
+    "bankSpeichern": "Banki adatok mentése",
+    "bankGesetzt": "Banki adatok elmentve.",
+    "bedingungenAnnehmen": "Feltételek elfogadása",
+    "bedingungenAngenommen": "Feltételek elfogadva.",
+    "fehler": "Ez nem működött.",
+    "schrittIdentitaet": "Személyazonosság ellenőrzése",
+    "identitaetHinweis": "Végül fizetési szolgáltatónk ellenőrzi az Ön személyazonosító okmányát. Ez a szolgáltató biztonságos oldalán történik, mivel fényképfelvétel készül; ezután visszatér ide.",
+    "identitaetStarten": "Személyazonosság ellenőrzése"
+  }
+}

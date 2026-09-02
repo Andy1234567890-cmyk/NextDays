@@ -112,9 +112,10 @@ def _objekt_aus_zeile(zeile: dict, einheiten: int) -> Objekt:
         amenities=list(zeile.get("amenities") or []),
         photos=list(zeile.get("photos") or []),
         building_id=str(zeile["building_id"]) if zeile.get("building_id") else None,
-        # Kanal-Sichtbarkeit ist PRO KANAL schaltbar — es gibt kein globales
-        # „veröffentlicht". Wer auf einem Kanal sichtbar sein will, braucht
-        # zusätzlich `status = active` und freie Nächte.
+        # `website` ist pro Kanal schaltbar. `marketplace` (myBestDays) ist seit
+        # 0527 Pflichtkanal und steht bei jedem Objekt auf true (false nur während
+        # einer „Verkauf pausieren"-Pause); sichtbar wird es dort erst mit
+        # `status = active`, Freigabe des Betreibers und freien Nächten.
         channels={
             "marketplace": bool(zeile.get("listed_on_marketplace")),
             "website": bool(zeile.get("listed_on_website")),

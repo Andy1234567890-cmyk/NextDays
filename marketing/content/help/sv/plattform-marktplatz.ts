@@ -87,12 +87,12 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "note",
               variant: "tip",
-              text: "Klickar du på Publicera aktiverar myNextDays normalt marknadsplats, portaler och webbplats tillsammans — du kan därefter alltid stänga av marknadsplatsreglaget individuellt igen.",
+              text: "Klicka på Publicera för att aktivera portaler och webbplats via myNextDays. myBestDays är en obligatorisk kanal: Varje objekt listas där och visas så snart vi har godkänt annonsen.",
             },
             { type: "h2", text: "Ta bort synlighet igen" },
             {
               type: "p",
-              text: "Inaktiverar du reglaget Plattformens marknadsplats försvinner objektet från marknadsplatssökningen. Redan bekräftade bokningar påverkas inte och fortlöper som vanligt, se [Marknadsplatsprovision](/hilfe/plattform-marktplatz/marktplatz-provision).",
+              text: "myBestDays kan inte avmarkeras individuellt. Om ett objekt inte längre ska säljas, använd ”Pausa försäljning” – detta tar bort det från försäljning på alla portaler, på webbplatsen och på marknadsplatsen samtidigt. Redan bekräftade bokningar påverkas inte och fortsätter som vanligt, se [Marknadsplats-provision](/hilfe/plattform-marktplatz/marktplatz-provision).",
             },
           ],
         },

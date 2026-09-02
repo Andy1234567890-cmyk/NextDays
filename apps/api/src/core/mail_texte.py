@@ -39,6 +39,8 @@ vorkommen — auch das prüft der Test, denn ein in der Übersetzung vergessenes
 from __future__ import annotations
 
 from src.core.mail_sprache import FALLBACK, SUPPORTED
+from src.core.mail_texte_partner import TEXTE_PARTNER
+from src.core.mail_texte_partner_reichweite import TEXTE_PARTNER_REICHWEITE
 
 
 class MailTextFehlt(Exception):
@@ -3518,5 +3520,11 @@ def text(schluessel: str, sprache: str, **werte: object) -> str:
     roh = eintrag.get(sprache) or eintrag[FALLBACK]
     return roh.format(**werte) if werte else roh
 
+
+# Fachgebiets-Teile des Katalogs (Regel aus dem Modul-Docstring: nach FACHGEBIET
+# teilen, nie nach Zeilen). Sie werden hier eingehängt, damit `text()` und der
+# Vollständigkeitstest sie wie jeden anderen Schlüssel sehen.
+TEXTE.update(TEXTE_PARTNER)
+TEXTE.update(TEXTE_PARTNER_REICHWEITE)
 
 __all__ = ["SUPPORTED", "TEXTE", "MailTextFehlt", "text"]

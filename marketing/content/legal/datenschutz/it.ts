@@ -245,6 +245,40 @@ export const datenschutz: LegalDoc = {
       ],
     },
     {
+      heading: "Programma di affiliazione",
+      paragraphs: [
+        "Gestiamo un programma di affiliazione tramite il quale i partner (influencer, consulenti, agenzie, clienti) raccomandano aziende a myNextDays e ricevono una commissione. In questo contesto, trattiamo i dati dei partner e – in misura limitata – delle aziende raccomandate.",
+      ],
+      unterpunkte: [
+        {
+          titel: "Dati dei partner",
+          paragraphs: [
+            "Al momento della candidatura, trattiamo nome, azienda, forma giuridica, paese, indirizzo e-mail, lingua, account di social media (piattaforma, indirizzo, handle, portata auto-dichiarata), numero di identificazione IVA (verifica tramite il sistema VIES dell'UE), dati di pagamento (IBAN, indirizzo Wise o PayPal) e il consenso ai termini e condizioni di partecipazione con versione e data. La base giuridica è l'esecuzione del contratto di affiliazione (Art. 6 par. 1 lett. b GDPR); per le note di credito e la conservazione si applicano gli obblighi fiscali e commerciali (Art. 6 par. 1 lett. c GDPR).",
+            "Se un partner gestisce un team, visualizza il nome o la ragione sociale dei suoi partner di team, il rango, il numero di clienti paganti e la commissione di team risultante. I messaggi tra sponsor e partner di team vengono memorizzati sulla piattaforma in modo che entrambi possano visualizzare la cronologia.",
+          ],
+        },
+        {
+          titel: "Clic sui link di affiliazione",
+          paragraphs: [
+            "Quando un visitatore accede a un link di affiliazione (mynextdays.com/p/CODE), memorizziamo il codice, l'ora, la pagina visitata, la pagina di riferimento e gli eventuali parametri della campagna, nonché l'indirizzo IP e l'identificatore del browser esclusivamente come checksum abbreviati (hash) – per il rilevamento di abusi (frequenze), non per il riconoscimento. Non viene impostato alcun cookie di tracciamento. I dati dei clic vengono eliminati dopo 90 giorni. La base giuridica è il nostro legittimo interesse a una fatturazione del programma a prova di frode (Art. 6 par. 1 lett. f GDPR).",
+          ],
+        },
+        {
+          titel: "Account e post di social media collegati",
+          paragraphs: [
+            "I partner possono collegare volontariamente i loro account YouTube (Google), Instagram e Facebook (Meta) e TikTok alla dashboard del partner. In tal modo, concedono alla rispettiva piattaforma un'autorizzazione di lettura (OAuth); non scriviamo nulla in questi account. Memorizziamo l'identificatore e il nome dell'account, il token di accesso crittografato, l'ora del collegamento e quotidianamente una metrica per account: numero di follower o abbonati, visualizzazioni degli ultimi 28 giorni, tasso di interazione e numero di post, ciascuno con l'ora della risposta della piattaforma. Per i post che il partner crea nella dashboard (titolo, piattaforma, indirizzo, data di pubblicazione), memorizziamo inoltre visualizzazioni, Mi piace, commenti, condivisioni e salvataggi dalla piattaforma.",
+            "Lo scopo è la verifica della portata indicata dal partner e l'assegnazione di clic e clienti ai singoli contributi; le informazioni non verificate vengono ponderate meno al momento del rilascio. Le indicazioni di incongruenze (ad esempio un salto di follower senza visualizzazioni corrispondenti) servono esclusivamente alla nostra verifica manuale e non portano ad alcuna decisione automatizzata. La base giuridica è il consenso del partner (Art. 6 par. 1 lett. a GDPR), che egli fornisce collegandosi e può revocare in qualsiasi momento nella dashboard sotto \"Disconnetti\"; al momento della disconnessione, eliminiamo immediatamente il token di accesso, i valori misurati memorizzati rimangono come cronologia e vengono eliminati con l'account del partner. Utilizziamo esclusivamente le interfacce ufficiali delle piattaforme; per il trattamento da parte di Google, Meta e TikTok si applicano le loro proprie informative sulla protezione dei dati.",
+          ],
+        },
+        {
+          titel: "Aziende consigliate",
+          paragraphs: [
+            "Se un'azienda si registra con un codice partner, memorizziamo l'associazione dell'azienda al partner, nonché l'ora, il percorso (link o codice) e lo stato. Il partner vede l'azienda esclusivamente in forma pseudonima (numero progressivo, paese, stato, importi) — mai nome, indirizzo e-mail o dati di prenotazione. Solo se l'azienda acconsente esplicitamente al momento della registrazione, il partner può contattarla tramite la piattaforma. Per la fatturazione delle provvigioni, elaboriamo gli importi netti degli abbonamenti delle fatture pagate dall'azienda; la base giuridica è l'esecuzione del contratto di partnership e del contratto di utilizzo (Art. 6 par. 1 lett. b GDPR).",
+          ],
+        },
+      ],
+    },
+    {
       heading: "Hosting e conservazione",
       paragraphs: [
         "La piattaforma, la banca dati, i contenuti multimediali e il server di posta funzionano su server di Hetzner Online GmbH, Germania, nel centro dati di Helsinki (Finlandia) — dunque all’interno dell’Unione europea. Con Hetzner è in essere un accordo sul trattamento dei dati.",

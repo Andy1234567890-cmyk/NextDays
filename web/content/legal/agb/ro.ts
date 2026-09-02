@@ -24,11 +24,12 @@ export const agb: LegalDoc = {
       heading: "§ 2 Obiectul contractului și serviciile",
       paragraphs: [
         "myNextDays pune la dispoziția Utilizatorului un software în cloud pentru administrarea locuințelor de vacanță și a unităților de cazare. Gama de funcții rezultă din descrierea actuală a serviciilor și cuprinde în special:",
+      "Fiecare proprietate creată de utilizator pe platformă este listată simultan pe piața proprie a platformei, myBestDays (canal obligatoriu). Utilizatorul nu poate deselecta individual acest canal; cu toate acestea, poate oricând să retragă o proprietate de la vânzare pe toate canalele simultan sau să o șteargă, utilizând funcția „Pauză vânzare”. O proprietate devine vizibilă pe myBestDays numai după ce utilizatorul a publicat-o și myNextDays a aprobat listarea; myNextDays poate refuza sau revoca aprobarea pentru un motiv obiectiv. Pentru rezervările efectuate prin myBestDays, se aplică taxa conform § 7.",
       ],
       list: [
         "administrarea proprietăților, a calendarelor de ocupare și a rezervărilor (sistem de management al proprietăților),",
         "conectarea la canale de rezervare ale terților (de ex. Booking.com, Airbnb) prin intermediul unui channel manager,",
-        "publicarea ofertelor prin canalul de rezervare propriu al platformei, myNextDays,",
+        "Publicarea ofertelor prin intermediul pieței proprii a platformei myBestDays (canal obligatoriu, a se vedea alineatul 2),",
         "crearea de site-uri web proprii prin intermediul page builder-ului integrat,",
         "funcții de contabilitate, decontare și raportare, inclusiv decontări pentru proprietari,",
         "comunicarea cu oaspeții și acceptarea plăților prin procesarea integrată a plăților (§ 5).",

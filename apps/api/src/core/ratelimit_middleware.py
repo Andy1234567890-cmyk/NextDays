@@ -66,6 +66,7 @@ class _Buckets:
         self.public_support = parse_limit(settings.rate_limit_public_support)
         self.einladung_resend = parse_limit(settings.rate_limit_einladung_resend)
         self.nachberechnung = parse_limit(settings.rate_limit_nachberechnung)
+        self.partner_kanal = parse_limit(settings.rate_limit_partner_kanal)
 
 
 def _is_exempt(path: str) -> bool:
@@ -106,6 +107,12 @@ _AUTH_PATHS = (
     # Login; die Sperrfrist je Konto sitzt zusätzlich im Service.
     "/platform/team/passwort-vergessen",
     "/platform/team/passwort-neu",
+    # Partnerprogramm (0517): Bewerbung legt ein Konto an, Login prüft ein
+    # Passwort, Reset verschickt Mails an fremde Adressen — derselbe strenge
+    # Bucket wie jeder andere Login-Weg.
+    "/affiliates/apply",
+    "/affiliates/auth/login",
+    "/affiliates/auth/password-reset",
 )
 
 # ÖFFENTLICHE Token-Vorgänge der Tenant-Nutzer (0334): Einladung annehmen,
@@ -203,7 +210,7 @@ _NACHBERECHNUNG_PATHS = ("/nachberechnung",)
 # Nicht sensibel → bei Redis-Ausfall fail-OPEN: ein 503 auf diesem Pfad meldet
 # sonst alle gerade aktiven Nutzer ab (Wurzel 5 — ein Ausfall des Zählers darf
 # den Hauptpfad nicht kippen).
-_REFRESH_PATHS = ("/auth/refresh", "/guest-auth/refresh")
+_REFRESH_PATHS = ("/auth/refresh", "/guest-auth/refresh", "/affiliates/auth/refresh")
 
 # Endpunkte, die eine KOSTENPFLICHTIGE Fremd-API anstoßen (Groq bzw. Google
 # Translate). Im Default-Bucket könnte ein einzelner eingeloggter Nutzer
@@ -308,6 +315,17 @@ _KONTO_LOESCHUNG_PATHS = ("/account-deletion/request",
 # dem der Spamschutz aller Formulare hängt. Fail-closed wie die übrigen
 # öffentlichen Formulare — bei Redis-Ausfall lieber abweisen.
 _KONTAKT_PATHS = ("/contact/message",)
+
+# Klick auf einen Partner-Link (0517): öffentlich, schreibt eine Zeile. Die
+# Marketing-Seite meldet ihn server-zu-server; ein einzelner Bot soll die
+# Klick-Tabelle nicht fluten. Öffentlicher Formular-Bucket, fail-closed.
+_PARTNER_KLICK_PATHS = ("/affiliates/clicks",)
+
+# Kanalanbindung des Partnerprogramms (0521): OAuth-Start, Code-Tausch,
+# Trennen. Jeder Aufruf löst Fremd-API-Aufrufe aus (Token-Tausch + erster
+# Snapshot); ein Angreifer mit Partner-Token könnte den Callback in Serie
+# drücken. Eigener strenger Eimer (Wurzel 8), sensibel (IP-Zähler).
+_PARTNER_KANAL_PATHS = ("/affiliates/channels/",)
 
 # Absturzmeldung der mobilen Apps VOR der Anmeldung (30.08.2026). Sie muss
 # offen sein, weil genau die gesuchten Abstuerze passieren, bevor ein Token
@@ -416,6 +434,8 @@ _BUCKET_REGELN: tuple[tuple[str, tuple[str, ...], str, bool], ...] = (
     ("public_support", _KONTAKT_PATHS, "public_support", True),
     ("public_support", _SITE_FORM_PATHS, "public_support", True),
     ("public_support", _STARTABSTURZ_PATHS, "public_support", True),
+    ("public_support", _PARTNER_KLICK_PATHS, "public_support", True),
+    ("partner_kanal", _PARTNER_KANAL_PATHS, "partner_kanal", True),
     ("ai", _AI_PATHS, "ai", False),
     ("ai", _BLOG_IMPORT_PATHS, "ai", False),
     ("website_ki", _WEBSITE_KI_PATHS, "website_ki", False),

@@ -1,0 +1,521 @@
+{
+  "meta": {
+    "titel": "myNextDays Partner",
+    "beschreibung": "Partner-dashboard for myNextDays partnerprogram: Links, kunder, provisioner, udbetalinger."
+  },
+  "nav": {
+    "partner": "Partner",
+    "uebersicht": "Oversigt",
+    "kunden": "Kunder",
+    "provisionen": "Provisioner",
+    "auszahlungen": "Udbetalinger",
+    "links": "Links & materiale",
+    "profil": "Profil",
+    "sprache": "Sprog",
+    "abmelden": "Log ud",
+    "nachrichten": "Beskeder",
+    "menue": "Menu",
+    "team": "Team",
+    "beitraege": "Indlæg"
+  },
+  "status": {
+    "pending_review": {
+      "titel": "Din ansøgning behandles",
+      "text": "Vi gennemgår hver ansøgning personligt og kontakter dig via e-mail. Indtil godkendelse er links og koder endnu ikke aktive – du kan allerede nu udfylde dine profil- og udbetalingsdata."
+    },
+    "rejected": {
+      "titel": "Din ansøgning blev ikke godkendt",
+      "text": "Vi kunne desværre ikke godkende din ansøgning på nuværende tidspunkt. Hvis du har spørgsmål, er du velkommen til at kontakte os."
+    },
+    "suspended": {
+      "titel": "Din partnerkonto er spærret",
+      "text": "Åbne provisioner udbetales ikke, så længe spærringen er aktiv. Hvis du har spørgsmål, er du velkommen til at kontakte os."
+    },
+    "approved": {
+      "titel": "Godkendt",
+      "text": "Din konto er aktiv."
+    },
+    "grund": "Årsag"
+  },
+  "uebersicht": {
+    "titelBewerber": "Velkommen til partnerprogrammet",
+    "textBewerber": "Så snart din ansøgning er godkendt, kan du se dine links, kunder og provisioner her. Indtast i mellemtiden dine skatte- og udbetalingsdata – så kan den første udbetaling ske uden yderligere spørgsmål.",
+    "zumProfil": "Til profil",
+    "titel": "Hej {name}",
+    "rang": "Rang {rang} · {satz} af abonnementsomsætningen",
+    "naechsterRang": "endnu {fehlend} betalende kunder til {rang} ({satz})",
+    "linksTeilen": "Del links",
+    "keineBetraege": "—",
+    "kachel": {
+      "klicks": "Klik (30 dage)",
+      "registrierungen": "Registrerede virksomheder",
+      "zahlend": "Betalende kunder",
+      "offen": "Åben (refusionsperiode)",
+      "auszahlbar": "Udbetalbar",
+      "ausgezahlt": "Udbetalt",
+      "team": "Teamprovision",
+      "teamHinweis": "{n} teampartnere",
+      "struktur": "Kunder i din struktur",
+      "strukturHinweis": "egne + teamkunder – dette tal bestemmer din rang",
+      "super": "Superprovision",
+      "superHinweis": "{satz} af din strukturs abonnementsomsætning, uden tidsbegrænsning",
+      "turbo": "myBestDays bookingandel",
+      "turboHinweis": "0,5 % pr. booking via myBestDays for dine kunder og teamkunder",
+      "bonus": "Oprykningsbonusser",
+      "bonusHinweis": "engangsbeløb pr. opnået rang"
+    },
+    "deineLinks": "Dine links"
+  },
+  "links": {
+    "titel": "Links & materiale",
+    "hinweis": "Dit link fører til mynextdays.com og tæller klikket. Koden er synlig i formularen ved registrering – uden cookie. En virksomhed tildeles præcis én partner.",
+    "klicks30": "{n} klik på 30 dage",
+    "kopiert": "Kopieret.",
+    "kopierenFehlgeschlagen": "Kopiering ikke mulig – venligst marker og kopier.",
+    "codeKopieren": "Kopier kode",
+    "linkFehlt": "Link er ikke tilgængeligt endnu.",
+    "neuerCode": "Opret yderligere kode",
+    "label": "Betegnelse (valgfrit)",
+    "wunschcode": "Ønskekode (valgfrit)",
+    "anlegen": "Opret",
+    "abbrechen": "Annuller",
+    "codeAngelegt": "Kode oprettet.",
+    "codeVergeben": "Denne kode er allerede tildelt.",
+    "fehler": "Det lykkedes ikke.",
+    "kennzeichnung": {
+      "titel": "Obligatorisk: Markér reklame",
+      "text": "Hver anbefaling med dit link eller din kode er reklame og skal være genkendelig som sådan – i begyndelsen af indlægget, på indlæggets sprog. Et simpelt „#ad“ er ikke tilstrækkeligt. Overtrædelser kan føre til udelukkelse.",
+      "imBeitrag": "I indlægget",
+      "amLink": "Ved linket",
+      "land": {
+        "DE": "Tyskland",
+        "DK": "Danmark"
+      },
+      "andere": "Andre lande: Den kommercielle hensigt skal være tydeligt genkendelig (EU-direktiv om urimelig handelspraksis). Kontroller venligst dit lands specifikationer; vi tilføjer dokumenterede formuleringer efterhånden."
+    },
+    "material": {
+      "titel": "Reklamemateriale",
+      "leer": "Materiale er under udarbejdelse – det vises her, så snart det er godkendt.",
+      "art": {
+        "video": "Video",
+        "image": "Billede",
+        "text": "Tekstmodul",
+        "link": "Link"
+      },
+      "oeffnen": "Åbn"
+    }
+  },
+  "kunden": {
+    "titel": "Kunder",
+    "hinweis": "Dine henviste virksomheder – pseudonymt. Du ser land, status og beløb, aldrig navn eller e-mail. Betalende betyder: første abonnementsfaktura betalt og abonnement kører.",
+    "leer": "Ingen virksomhed har endnu registreret sig via dit link.",
+    "kunde": "Kunde {n}",
+    "spalte": {
+      "kunde": "Kunde",
+      "land": "Land",
+      "status": "Status",
+      "registriert": "Registreret",
+      "provisionBis": "Provision indtil",
+      "verdient": "Optjent"
+    },
+    "status": {
+      "registriert": "Registreret",
+      "zahlend": "Betalende",
+      "beendet": "Afsluttet",
+      "in_pruefung": "Under gennemgang",
+      "abgelehnt": "Afvist"
+    }
+  },
+  "provisionen": {
+    "titel": "Provisioner",
+    "hinweis": "Hver linje er en betalt abonnementsfaktura, en booking via myBestDays eller en oprykningsbonus. Grundlaget er nettoabonnementsomsætningen eller bookingværdien; satsen er din rang på betalingstidspunktet. Åbne linjer kan udbetales efter 30 dage.",
+    "leer": "Ingen provision endnu.",
+    "reifAm": "kan udbetales fra {datum}",
+    "spalte": {
+      "datum": "Dato",
+      "art": "Type",
+      "kunde": "Kunde",
+      "basis": "Grundlag",
+      "satz": "Sats",
+      "betrag": "Beløb",
+      "status": "Status"
+    },
+    "art": {
+      "earn": "Indtjening",
+      "reversal": "Refusion",
+      "adjustment": "Korrektion",
+      "override": "Teamprovision",
+      "bonus": "Oprykningsbonus",
+      "lifetime": "Superprovision",
+      "booking_share": "Bookingandel"
+    },
+    "status": {
+      "pending": "Åben",
+      "approved": "Kan udbetales",
+      "held": "Afventer",
+      "paid": "Udbetalt",
+      "reversed": "Tilbagekaldt",
+      "cancelled": "Annulleret"
+    },
+    "team": "Team"
+  },
+  "auszahlungen": {
+    "titel": "Udbetalinger",
+    "hinweis": "Månedligt, pr. valuta, fra minimumsbeløbet. Hver udbetaling ledsages af en kreditnota (selvfakturering) – det er dit bevis.",
+    "kein_weg": "Der er endnu ingen udbetalingsmetode angivet. Tilføj venligst under profil – ellers kan der ikke udbetales.",
+    "leer": "Ingen udbetaling endnu.",
+    "spalte": {
+      "nummer": "Kreditnota-nr.",
+      "zeitraum": "Periode",
+      "betrag": "Beløb",
+      "status": "Status",
+      "gutschrift": "Kreditnota"
+    },
+    "status": {
+      "pending": "Forberedt",
+      "processing": "Under overførsel",
+      "paid": "Betalt",
+      "failed": "Mislykkedes"
+    },
+    "gutschriftLaden": "Download",
+    "gutschriftFehler": "Kreditnota kunne ikke indlæses."
+  },
+  "profil": {
+    "titel": "Profil",
+    "seit": "Partner siden {datum}",
+    "stammdaten": "Stamdata",
+    "name": "Navn",
+    "firma": "Firma (valgfrit)",
+    "sprache": "Sprog for e-mails",
+    "kanal": "Dine sociale mediekonti og kanaler",
+    "speichern": "Gem",
+    "gespeichert": "Gemt.",
+    "gespeichertViesOffen": "Gemt. Momsnummeret er endnu ikke bekræftet – vi kontrollerer det igen før udbetaling.",
+    "steuerUndAuszahlung": "Skatte- og udbetalingsdata",
+    "aktuellerWeg": "Aktuelt: {weg} {details}",
+    "keinWeg": "Ingen udbetalingsmetode angivet endnu.",
+    "viesBestaetigt": "Momsnummer bekræftet (VIES)",
+    "viesOffen": "Momsnummer endnu ikke bekræftet",
+    "rechtsform": "Virksomhedsform",
+    "privat": "Privatperson",
+    "unternehmen": "Virksomhed",
+    "land": "Land",
+    "ustId": "Momsnummer",
+    "ustIdHinweis": "Kontrolleres mod EU's VIES-system. Uden bekræftet nummer ingen udbetaling til virksomheder. Kreditnotaen bærer Reverse-Charge-bemærkningen.",
+    "privatHinweis": "Som privatperson modtager du kreditnotaen uden moms. Provisionen skal du selv beskattes af.",
+    "auszahlungsweg": "Udbetalingsmetode",
+    "kontoinhaber": "Kontohaver",
+    "empfaengerEmail": "{weg}-E-mailadresse",
+    "passwortBestaetigen": "Til bekræftelse: Dit password",
+    "passwortFalsch": "Passwordet er forkert.",
+    "steuerdaten": "Skatteoplysninger"
+  },
+  "anmelden": {
+    "partner": "Partner",
+    "titel": "Log ind",
+    "text": "Dashboardet for myNextDays-partnerprogrammet.",
+    "email": "E-mail",
+    "passwort": "Password",
+    "anmelden": "Log ind",
+    "passwortVergessen": "Glemt password?",
+    "resetGesendet": "Hvis der findes en konto, har vi sendt en e-mail.",
+    "stoerung": "Login-tjenesten er midlertidigt utilgængelig. Dette skyldes ikke dine login-oplysninger – prøv venligst igen senere.",
+    "keinPartnerKonto": "Der findes ingen partnerkonto med disse login-oplysninger.",
+    "fehlgeschlagen": "Login mislykkedes.",
+    "nochKeinKonto": "Ikke partner endnu?",
+    "bewerben": "Ansøg nu"
+  },
+  "bewerben": {
+    "partner": "Partner",
+    "titel": "Ansøg som partner",
+    "text": "To minutter. Vi gennemgår hver ansøgning personligt og kontakter dig via e-mail.",
+    "name": "Dit navn",
+    "firma": "Firma (valgfrit)",
+    "email": "E-mail",
+    "passwort": "Adgangskode (mindst 8 tegn)",
+    "rechtsform": "Juridisk form",
+    "privat": "Privatperson",
+    "unternehmen": "Virksomhed",
+    "land": "Land",
+    "ustId": "Momsnummer",
+    "ustIdHinweis": "Påkrævet for virksomheder; kontrolleres mod VIES.",
+    "kanal": "Dine sociale mediekonti",
+    "kanalHinweis": "Obligatorisk: mindst én social mediekonto (Instagram, TikTok, YouTube, Facebook, LinkedIn …) med adresse, handle og rækkevidde. Hjemmeside, blog eller nyhedsbrev er også velkomne. Vi gennemgår konti før godkendelse.",
+    "pitch": "Hvordan når du ud til ferieudlejere eller hoteller? (valgfrit)",
+    "pitchHinweis": "Et par sætninger er nok.",
+    "zustimmung": "Jeg accepterer partnerbetingelserne, især forpligtelsen til at markere anbefalinger som reklame.",
+    "bedingungen": "Til programmet",
+    "captchaHinweis": "Denne side er beskyttet af reCAPTCHA; Googles privatlivspolitik og servicevilkår gælder.",
+    "stoerung": "Tjenesten er i øjeblikket utilgængelig – prøv venligst igen senere.",
+    "emailVergeben": "Der er allerede en ansøgning for denne e-mailadresse. Log venligst ind.",
+    "captchaFehler": "Sikkerhedskontrollen mislykkedes. Genindlæs venligst siden og prøv igen.",
+    "laeuft": "Sender ...",
+    "absenden": "Send ansøgning",
+    "schonPartner": "Allerede partner?",
+    "anmelden": "Log ind",
+    "sponsor": "Henvist af partner (kode, valgfrit)",
+    "sponsorHinweis": "Er du her via et partners teamlink? Deres kode vil så stå her. De modtager en teamprovision på abonnementsomsætningen fra dine kunder – din egen provision forbliver uændret."
+  },
+  "nachrichten": {
+    "titel": "Beskeder",
+    "hinweis": "Din direkte linje til partnertemaet – spørgsmål om provision, udbetaling, materiale eller en kunde. Svar vises her live.",
+    "neu": "Ny besked til partnertemaet",
+    "platzhalter": "Hvad drejer det sig om?",
+    "senden": "Send",
+    "abbrechen": "Annuller",
+    "leer": "Ingen samtale endnu.",
+    "stoerung": "Tjenesten er i øjeblikket ikke tilgængelig – prøv venligst igen senere.",
+    "fehler": "Det virkede ikke.",
+    "team": "Partnertema",
+    "du": "Dig",
+    "antwortPlatzhalter": "Dit svar ...",
+    "antworten": "Svar",
+    "status": {
+      "in_bearbeitung": "Igangværende",
+      "wartet_auf_dich": "Svar modtaget",
+      "geloest": "Løst"
+    }
+  },
+  "kanaele": {
+    "plattformLabel": "Platform",
+    "handle": "Håndtag (valgfrit)",
+    "reichweite": "Rækkevidde (følgere)",
+    "hinzufuegen": "Tilføj kanal",
+    "entfernen": "Fjern kanal",
+    "plattform": {
+      "website": "Hjemmeside",
+      "blog": "Blog",
+      "newsletter": "Nyhedsbrev",
+      "podcast": "Podcast",
+      "other": "Andet"
+    },
+    "socialPflicht": "Mindst én social mediekonto er obligatorisk – en hjemmeside alene er ikke nok."
+  },
+  "team": {
+    "titel": "Team",
+    "hinweis": "Partnere, der har ansøgt med din kode, udgør dit team. Du modtager forskellen mellem din sats (aktuelt {satz}) og teampartnerens sats – begge på betalingstidspunktet – på nettoabonnementsomsætningen fra deres kunder. Teamkunder tæller 1:1 for din rang.",
+    "meinSponsor": "De er teampartner for {name}.",
+    "link": {
+      "titel": "Dit teamlink",
+      "text": "Enhver, der ansøger via dette link, får din kode synlig i ansøgningen – uden cookie.",
+      "kopieren": "Kopier link",
+      "keinLink": "Ingen aktiv kode – opret en under Links & Materiale."
+    },
+    "regeln": {
+      "titel": "Reglerne",
+      "rang": "Teamprovision = din sats minus teampartnerens sats på betalingstidspunktet. Samme rang = 0.",
+      "ebene": "Præcis ét niveau: Dine teampartnere opbygger ikke deres eget team.",
+      "keinGeld": "Ingen penge for rekruttering – kun fra betalt abonnementsomsætning.",
+      "dauer": "12 måneder pr. teamkunde, 30 dages refusionsvindue. Fra Elite desuden 2,5 % superprovision uden tidsbegrænsning."
+    },
+    "kachel": {
+      "mitglieder": "Teampartnere (aktive / totalt)",
+      "teamKunden": "Betalende teamkunder",
+      "umsatz30": "Teamomsætning (30 dage)",
+      "offen": "Afventende teampromission",
+      "auszahlbar": "Udbetalbar teampromission",
+      "ausgezahlt": "Udbetalt teampromission"
+    },
+    "verlauf": {
+      "titel": "Historik · 12 måneder",
+      "leer": "Ingen teamomsætning endnu.",
+      "provision": "Teampromission",
+      "umsatz": "Teamomsætning"
+    },
+    "mitglieder": {
+      "titel": "Dit team",
+      "leer": "Ingen teampartnere endnu. Del dit teamlink.",
+      "kunden": "{n} betalende kunder",
+      "umsatz30": "Omsætning 30 D.",
+      "offen": "Afventende",
+      "seit": "siden {datum}"
+    },
+    "spalte": {
+      "partner": "Partner",
+      "status": "Status",
+      "rang": "Rang",
+      "kunden": "Betalende kunder",
+      "umsatz30": "Omsætning 30 D.",
+      "umsatzGesamt": "Samlet omsætning",
+      "offen": "Afventende",
+      "auszahlbar": "Udbetalbar",
+      "ausgezahlt": "Udbetalt"
+    },
+    "status": {
+      "pending_review": "Under gennemgang",
+      "approved": "Godkendt",
+      "rejected": "Afvist",
+      "suspended": "Blokeret"
+    },
+    "chat": {
+      "titel": "Underholdning",
+      "schreiben": "Skriv",
+      "rolle": {
+        "sponsor": "Din sponsor",
+        "member": "Teampartner"
+      },
+      "zurueck": "Team",
+      "leer": "Ingen beskeder endnu.",
+      "platzhalter": "Din besked ...",
+      "senden": "Send",
+      "titelListe": "Beskeder i teamet"
+    },
+    "nochNichtErlaubt": "Du leder et team fra rangen 'Oprykker' (5 betalende kunder i din struktur). Indtil da er der intet teamlink."
+  },
+  "bedingungen": {
+    "neueVersion": "Partnerbetingelserne foreligger i en ny version (din godkendelse: version {alt}, aktuel: {neu}). Læs venligst og godkend igen.",
+    "nochNicht": "Godkend venligst partnerbetingelserne (version {neu}).",
+    "lesen": "Læs betingelser",
+    "annehmen": "Godkend",
+    "angenommen": "Tak — godkendelse gemt."
+  },
+  "beitraege": {
+    "titel": "Indlæg",
+    "hinweis": "Opret et separat link for hver reel, video eller opslag. Så kan du se, hvilket indlæg der genererer klik, registreringer og betalende kunder.",
+    "kontoHinweis": "Forbind din konto, så vises visninger og interaktioner direkte fra platformen her.",
+    "kontoVerbinden": "Forbind konto",
+    "neu": "Nyt indlæg",
+    "keinCode": "Du skal først have en aktiv henvisningskode.",
+    "feld": {
+      "titel": "Titel",
+      "titelBeispiel": "f.eks. Reel København Efterår",
+      "plattform": "Platform",
+      "code": "Kode",
+      "datum": "Udgivet den",
+      "url": "Indlægsadresse (valgfrit)",
+      "urlHinweis": "Kan tilføjes efter udgivelse. Med adresse tildeler vi visninger og interaktioner til indlægget."
+    },
+    "linkErzeugen": "Generer link",
+    "angelegt": "Indlæg oprettet – linket er klar.",
+    "doppelt": "Dette indlæg findes allerede for koden.",
+    "fehler": "Det virkede ikke. Prøv venligst igen.",
+    "liste": "{n, plural, =0 {Ingen indlæg} =1 {1 indlæg} other {# indlæg}}",
+    "leer": "Endnu ingen indlæg. Opret det første link ovenfor.",
+    "veroeffentlicht": "udgivet {datum}",
+    "loeschen": "Slet indlæg",
+    "geloescht": "Indlæg slettet.",
+    "loeschenGesperrt": "Indlægget har allerede registreringer og bevares.",
+    "kopiert": "Link kopieret.",
+    "kopierenFehlgeschlagen": "Kopiering ikke mulig – marker venligst manuelt.",
+    "linkFehlt": "Linket er ikke tilgængeligt lige nu.",
+    "qrZeigen": "Vis QR-kode",
+    "qrSchliessen": "Skjul QR-kode",
+    "qrAlt": "QR-kode til indlægslink",
+    "qrHinweis": "Til stories, videoer og print – fører til det samme link.",
+    "beitragOeffnen": "Åbn indlæg",
+    "urlAendern": "Skift adresse",
+    "urlNachtragen": "Tilføj adresse",
+    "speichern": "Gem",
+    "gespeichert": "Gemt.",
+    "kennzahl": {
+      "klicks": "Klik 90 dage",
+      "klicks30": "{n} på 30 dage",
+      "registrierungen": "Registreringer",
+      "kunden": "Betalende kunder",
+      "views": "Visninger",
+      "gemessen": "Status {zeit}",
+      "nichtVerbunden": "Konto ikke forbundet",
+      "interaktion": "Synes godt om {likes} · Kommentarer {kommentare} · Delinger {shares} · Gemt {saves}",
+      "pro1000": "{n} klik pr. 1.000 visninger"
+    },
+    "freigabe": {
+      "videoNoetig": "Upload bidrag til godkendelse",
+      "erklaerung": "Upload din færdige video, billede eller PDF, før du udgiver den. Når vi har godkendt den, vises dit personlige link her – det indsætter du derefter under indlægget. Brug kun vores reklamemateriale, ingen egne skærmbilleder, og ingen løfter om succes eller garantier.",
+      "hochladen": "Vælg fil (video, JPG, PNG, PDF)",
+      "neuHochladen": "Upload ny fil",
+      "laeuft": "Uploader ...",
+      "eingereicht": "Video indsendt. Vi vender tilbage, når den er gennemgået.",
+      "inPruefung": "Under gennemgang",
+      "inPruefungHinweis": "Din video er hos os. Når den er godkendt, vises dit link her.",
+      "eingereichtAm": "Indsendt den {zeit} – når den er godkendt, vises dit link her.",
+      "abgelehnt": "Ikke godkendt",
+      "grund": "Årsag",
+      "freigegeben": "Video godkendt",
+      "zuGross": "Videoen er større end {mb} MB.",
+      "fehler": "Upload mislykkedes.",
+      "grundKategorie": {
+        "material": "Materiale: kun officielt reklamemateriale, ingen egne skærmbilleder",
+        "promise": "Løfter: ingen garanti- eller succesløfter",
+        "disclosure": "Mærkning: indlægget skal mærkes som reklame",
+        "brand": "Mærke: logo eller navn brugt forkert",
+        "other": "Andet"
+      }
+    }
+  },
+  "kanalVerbindung": {
+    "titel": "Forbundne konti",
+    "hinweis": "Forbind dine sociale mediekonti, så følgere og visninger kommer direkte fra platformen. Dette er frivilligt og kan til enhver tid tilbagekaldes; vi læser kun, vi skriver intet.",
+    "verbinden": "Forbind {anbieter}",
+    "baldVerfuegbar": "snart tilgængelig",
+    "nichtKonfiguriert": "Denne forbindelse er endnu ikke aktiveret.",
+    "fehler": "Det virkede ikke. Prøv venligst igen.",
+    "verifiziert": "verificeret",
+    "follower": "{n} følgere",
+    "views28": "{n} visninger på 28 dage",
+    "engagement": "Engagement {n} %",
+    "gemessen": "Status {zeit}",
+    "nochKeinSnapshot": "første måling følger",
+    "letzterFehler": "Seneste hentning mislykkedes",
+    "trennen": "Afbryd forbindelse",
+    "getrennt": "Forbindelse afbrudt. Tidligere målinger forbliver som historik.",
+    "getrennteKonten": "{n, plural, =1 {1 afbrudt konto} other {# afbrudte konti}}",
+    "getranntAm": "afbrudt {zeit}",
+    "durchPlattform": "Adgang fra platformen afsluttet",
+    "datenschutz": "Ved afbrydelse sletter vi straks adgangsdataene. Målte værdier forbliver gemt som historik. Detaljer i databeskyttelseserklæringen.",
+    "rueckkehr": {
+      "verbunden": "Konto forbundet – den første måling er i gang.",
+      "abgelehnt": "Forbindelse afbrudt – De har ikke givet adgang.",
+      "fehler": "Forbindelse mislykkedes."
+    }
+  },
+  "passwort": {
+    "anzeigen": "Vis adgangskode",
+    "verbergen": "Skjul adgangskode"
+  },
+  "verbundkonto": {
+    "titel": "Tilknyttet konto for udbetaling",
+    "hinweis": "Din provision overføres til en tilknyttet konto. Vores betalingstjenesteudbyder kræver en identitetskontrol for dette – så længe den er åben, kan der ikke udbetales.",
+    "bereit": "Din tilknyttede konto er aktiveret. Udbetalinger går automatisk dertil.",
+    "offeneFelder": "Disse oplysninger mangler stadig",
+    "gesperrt": "Kontoen er i øjeblikket spærret: {grund}",
+    "schrittKonto": "Opret tilknyttet konto",
+    "schrittDaten": "Personlige oplysninger",
+    "schrittDatenFirma": "Firma- og personoplysninger",
+    "schrittBank": "Bankoplysninger",
+    "schrittBedingungen": "Betingelser for betalingstjenesteudbyder",
+    "kontoAnlegen": "Opret tilknyttet konto",
+    "kontoAngelegt": "Tilknyttet konto oprettet.",
+    "datenBearbeiten": "Rediger oplysninger",
+    "zuklappen": "Luk",
+    "datenGesendet": "Oplysninger gemt.",
+    "vorname": "Fornavn",
+    "nachname": "Efternavn",
+    "geburtsdatum": "Fødselsdato",
+    "tag": "DD",
+    "monat": "MM",
+    "jahr": "ÅÅÅÅ",
+    "strasse": "Vej og husnummer",
+    "plz": "Postnummer",
+    "ort": "By",
+    "nationalitaet": "Nationalitet (landekode)",
+    "telefon": "Telefon",
+    "webseite": "Hjemmeside eller profil",
+    "webseiteHinweis": "Adressen, hvor du annoncerer – kræves til kontrol.",
+    "firmenname": "Firmanavn",
+    "steuernummer": "CVR-nummer",
+    "firmenStrasse": "Firmaadresse",
+    "firmaHinweis": "Som tegningsberettiget person anvendes dine ovennævnte oplysninger.",
+    "speichern": "Gem oplysninger",
+    "kontoinhaber": "Kontohaver",
+    "waehrung": "Valuta",
+    "waehrungHinweis": "Bankkontoens valuta, ikke dit lands.",
+    "bankSpeichern": "Gem bankoplysninger",
+    "bankGesetzt": "Bankoplysninger gemt.",
+    "bedingungenAnnehmen": "Accepter vilkår",
+    "bedingungenAngenommen": "Vilkår accepteret.",
+    "fehler": "Det virkede ikke.",
+    "schrittIdentitaet": "Identitetskontrol",
+    "identitaetHinweis": "Til sidst kontrollerer vores betalingstjenesteudbyder dit ID. Dette sker på deres sikre side, da der tages et billede; derefter vender du tilbage hertil.",
+    "identitaetStarten": "Kontroller identitet"
+  }
+}

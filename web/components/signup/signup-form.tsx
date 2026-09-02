@@ -6,7 +6,7 @@
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 import { Button } from "@nextdays/ui/button";
 import { Input } from "@nextdays/ui/input";
@@ -28,6 +28,20 @@ export function SignupForm({ onBack }: { onBack: () => void }) {
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [country, setCountry] = useState<string>("DE");
+  // Partnerprogramm (0517): der Empfehlungscode steht SICHTBAR im Formular
+  // und wird durch das Absenden bestätigt — kein Cookie, kein Tracking im
+  // Hintergrund (EDPB 2/2023). Vorbelegt aus dem Partner-Link (?ref=…&klick=…),
+  // frei änderbar; leer = keine Empfehlung.
+  const [referralCode, setReferralCode] = useState("");
+  const [referralClick, setReferralClick] = useState("");
+  const [referralContactOptIn, setReferralContactOptIn] = useState(false);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get("ref");
+    const klick = params.get("klick");
+    if (ref) setReferralCode(ref.toUpperCase().slice(0, 40));
+    if (klick) setReferralClick(klick.slice(0, 64));
+  }, []);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -52,6 +66,9 @@ export function SignupForm({ onBack }: { onBack: () => void }) {
         tenantName: hotelName.trim(),
         country,
         currency,
+        referralCode: referralCode.trim() || undefined,
+        referralClick: referralCode.trim() ? referralClick || undefined : undefined,
+        referralContactOptIn: referralCode.trim() ? referralContactOptIn : false,
       });
       if (res.ok) {
         // Frisch registriert → in den Setup-Assistenten.
@@ -184,6 +201,32 @@ export function SignupForm({ onBack }: { onBack: () => void }) {
             </option>
           ))}
         </NativeSelect>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="referralCode" className="text-sm font-medium">
+          {t("referralLabel")}
+        </label>
+        <Input
+          id="referralCode"
+          value={referralCode}
+          onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+          placeholder={t("referralPlaceholder")}
+          maxLength={40}
+          autoComplete="off"
+        />
+        <p className="text-xs text-muted-foreground">{t("referralHint")}</p>
+        {referralCode.trim() && (
+          <label className="mt-1 flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={referralContactOptIn}
+              onChange={(e) => setReferralContactOptIn(e.target.checked)}
+              className="mt-0.5 size-4"
+            />
+            <span>{t("referralContactOptIn")}</span>
+          </label>
+        )}
       </div>
 
       {error && (

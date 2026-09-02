@@ -35,12 +35,16 @@ const STATISCH: { pfad: string; priority: number }[] = [
   { pfad: "/hilfe", priority: 0.8 },
   { pfad: "/ueber-uns", priority: 0.7 },
   { pfad: "/kontakt", priority: 0.7 },
+  // Partnerprogramm (0517): eigene Landeseite für Influencer, Berater, Agenturen.
+  { pfad: "/partner", priority: 0.6 },
   // Entwickler-Dokumentation der öffentlichen API. Gehört in den Index: wer
   // nach „myNextDays API" sucht, ist ein potenzieller Integrationspartner. Die
   // interaktive Referenz selbst (open-api.mynextdays.com/docs) steht NICHT hier — sie
   // liegt auf einer anderen Domain und hat ihre eigene robots-Regel.
   { pfad: "/entwickler", priority: 0.6 },
   { pfad: "/agb", priority: 0.3 },
+  // Partner-AGB (0520) — Rechtstext des Partnerprogramms.
+  { pfad: "/partner/agb", priority: 0.3 },
   { pfad: "/konto-loeschen", priority: 0.3 },
 ];
 

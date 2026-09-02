@@ -32,6 +32,10 @@ dependencies = [
     # von denen nur der messaging-Teil genutzt wird — bewusst in Kauf
     # genommen, ein FCM-only-Extra bietet das SDK nicht an.
     "firebase-admin>=6.5",
+    # AES-GCM fuer die OAuth-Token verbundener Partner-Konten (0521) und die
+    # Signatur des OAuth-state. Bisher nur transitiv (firebase-admin/pyjwt) —
+    # explizit, damit ein Wegfall dort die Kanalanbindung nicht still killt.
+    "cryptography>=43",
 ]
 
 [project.optional-dependencies]
@@ -58,6 +62,9 @@ select = ["E", "F", "I", "B", "UP", "ANN", "S"]
 "**/tests/*" = ["S101", "S105", "S106", "ANN"]
 # Template-Datenmodul: lange lokalisierte Marketing-Texte/HTML nicht umbrechen.
 "**/site_config/templates.py" = ["E501"]
+# Mailkatalog des Partnerprogramms: 24 Sprachfassungen je Satz, maschinell
+# erzeugt — Umbrüche in Übersetzungen wären Wartungsrauschen, keine Lesbarkeit.
+"**/mail_texte_partner.py" = ["E501"]
 
 [tool.pylint.main]
 # Ruff (oben) ist der primäre Linter (Stil, Imports, Bugbear, Security,

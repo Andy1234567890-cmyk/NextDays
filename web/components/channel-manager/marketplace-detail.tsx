@@ -5,23 +5,21 @@
 // Channex: über die Sichtbarkeit auf myBestDays entscheiden DREI Achsen und
 // keine Zuordnung —
 //   1. Objekt-Lebenszyklus  `properties.status = 'active'`
-//   2. Kanal-Schalter       `properties.listed_on_marketplace` (0159)
+//   2. Pflichtkanal         `properties.listed_on_marketplace` — seit 0527 immer
+//                           true (false nur während „Verkauf pausieren"), kein
+//                           Schalter des Betriebs mehr (Master-Strategie 02.09.2026)
 //   3. Freigabe des Betreibers `moderation_status = 'approved'` (0203)
 // Genau diese drei fragt der öffentliche Marktplatz ab
-// (`booking_engine.list_listings`); die Tabelle zeigt sie deshalb einzeln, statt
+// (`booking_engine.list_listings`); die Tabelle zeigt Zustand und Freigabe, statt
 // sie zu einem grünen Punkt zusammenzufassen.
 import { Icon } from "@iconify/react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { toast } from "sonner";
 
 import { Button } from "@nextdays/ui/button";
 import { Input } from "@nextdays/ui/input";
-import { Switch } from "@nextdays/ui/switch";
 import type { MarketplaceDetail, MarketplacePropertyRow } from "@/lib/channex";
-import { updateProperty } from "@/lib/properties";
 
 // Zwei Dateien wie auf der Kanal-Karte: das dunkle Logo auf hellem Grund, die
 // helle Variante im Dark-Mode (sonst verschwindet die Wortmarke).
@@ -40,29 +38,9 @@ function ZustandsPunkt({ state }: { state: MarketplacePropertyRow["state"] }) {
   return <span className={`size-2 rounded-full ${STATE_DOT[state]}`} aria-hidden />;
 }
 
-function Zeile({
-  row,
-  onGeaendert,
-}: {
-  row: MarketplacePropertyRow;
-  onGeaendert: () => void;
-}) {
+function Zeile({ row }: { row: MarketplacePropertyRow }) {
   const t = useTranslations("channels");
-  const [busy, setBusy] = useState(false);
   const aktiv = row.status === "active";
-
-  async function schalten(next: boolean) {
-    setBusy(true);
-    const res = await updateProperty(row.property_id, {
-      listed_on_marketplace: next,
-    });
-    setBusy(false);
-    if (!res.ok) {
-      toast.error(res.error);
-      return;
-    }
-    onGeaendert();
-  }
 
   // Der Zustand wird BENANNT: „nicht sichtbar" hat drei verschiedene Gründe,
   // und nur einer davon liegt beim Betrieb.
@@ -110,12 +88,6 @@ function Zeile({
       </td>
       <td className="p-3">
         <div className="flex items-center gap-2">
-          <Switch
-            checked={row.listed}
-            disabled={busy}
-            onCheckedChange={(c) => void schalten(c)}
-            aria-label={t("marketplace.columnVisibility")}
-          />
           <ZustandsPunkt state={row.state} />
           <span
             className={
@@ -155,7 +127,6 @@ function Zeile({
 
 export function MarketplaceDetailView({ detail }: { detail: MarketplaceDetail }) {
   const t = useTranslations("channels");
-  const router = useRouter();
   const [suche, setSuche] = useState("");
 
   const aus = detail.items.filter((i) => i.state === "paused").length;
@@ -260,11 +231,7 @@ export function MarketplaceDetailView({ detail }: { detail: MarketplaceDetail })
                 </thead>
                 <tbody>
                   {sichtbar.map((row) => (
-                    <Zeile
-                      key={row.property_id}
-                      row={row}
-                      onGeaendert={() => router.refresh()}
-                    />
+                    <Zeile key={row.property_id} row={row} />
                   ))}
                 </tbody>
               </table>

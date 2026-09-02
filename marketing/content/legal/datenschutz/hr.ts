@@ -246,6 +246,40 @@ export const datenschutz: LegalDoc = {
       ],
     },
     {
+      heading: "Partnerski program",
+      paragraphs: [
+        "Provodimo partnerski program putem kojeg partneri (influenceri, savjetnici, agencije, klijenti) preporučuju tvrtke myNextDays-u i za to dobivaju proviziju. Pritom obrađujemo podatke partnera i – u manjoj mjeri – preporučenih tvrtki.",
+      ],
+      unterpunkte: [
+        {
+          titel: "Podaci partnera",
+          paragraphs: [
+            "Prilikom prijave obrađujemo ime, tvrtku, pravni oblik, državu, e-mail adresu, jezik, račune na društvenim mrežama (platforma, adresa, korisničko ime, samoprijavljeni doseg), identifikacijski broj PDV-a (provjera putem EU sustava VIES), podatke za isplatu (IBAN, Wise ili PayPal adresa) te pristanak na uvjete sudjelovanja s verzijom i vremenom. Pravna osnova je provedba partnerskog ugovora (čl. 6. st. 1. t. b. Opće uredbe o zaštiti podataka); za kredite i pohranu primjenjuju se porezne i trgovačke obveze (čl. 6. st. 1. t. c. Opće uredbe o zaštiti podataka).",
+            "Ako partner vodi tim, vidi ime ili tvrtku, rang, broj klijenata koji plaćaju i proviziju tima koja iz toga proizlazi od svojih timskih partnera. Poruke između sponzora i timskog partnera pohranjuju se na platformi kako bi oboje mogli vidjeti povijest.",
+          ],
+        },
+        {
+          titel: "Klikovi na partnerske poveznice",
+          paragraphs: [
+            "Kada posjetitelj pristupi partnerskoj poveznici (mynextdays.com/p/CODE), pohranjujemo kod, vrijeme, posjećenu stranicu, referentnu stranicu i eventualne parametre kampanje, kao i IP adresu i identifikator preglednika isključivo kao skraćene kontrolne zbrojeve (hash) – za otkrivanje zlouporaba (učestalosti), a ne za ponovno prepoznavanje. Kolačić za praćenje se ne postavlja. Podatke o klikovima brišemo nakon 90 dana. Pravna osnova je naš legitimni interes za sigurno obračunavanje programa bez prijevara (čl. 6. st. 1. t. f. Opće uredbe o zaštiti podataka).",
+          ],
+        },
+        {
+          titel: "Povezani računi i objave na društvenim mrežama",
+          paragraphs: [
+            "Partneri mogu dobrovoljno povezati svoje račune na YouTubeu (Google), Instagramu i Facebooku (Meta) te TikToku s partnerskom nadzornom pločom. Pritom daju odgovarajućoj platformi dozvolu za čitanje (OAuth); mi ne pišemo ništa na te račune. Pohranjujemo identifikator i naziv računa, šifrirani pristupni token, vrijeme povezivanja te dnevnu mjernu vrijednost po računu: broj pratitelja/pretplatnika, preglede u posljednjih 28 dana, stopu interakcije i broj objava, svaki s vremenom odgovora platforme. Za objave koje partner kreira na nadzornoj ploči (naslov, platforma, adresa, datum objave), dodatno pohranjujemo preglede, lajkove, komentare, dijeljenja i spremanja s platforme.",
+            "Svrha je provjera dosega koji je naveo partner i dodjeljivanje klikova i kupaca pojedinačnim objavama; neprovjereni podaci manje se ponderiraju prilikom odobravanja. Naznake nedosljednosti (npr. skok broja pratitelja bez odgovarajućih pregleda) služe isključivo za ručnu provjeru od strane nas i ne dovode do automatizirane odluke. Pravna osnova je privola partnera (članak 6. stavak 1. točka (a) Opće uredbe o zaštiti podataka), koju daje povezivanjem i može je opozvati u bilo kojem trenutku na nadzornoj ploči pod „Prekini vezu”; prilikom prekida veze odmah brišemo pristupni token, pohranjene mjerne vrijednosti ostaju kao povijest i brišu se s partnerskim računom. Koristimo isključivo službena sučelja platformi; za obradu od strane Googlea, Mete i TikToka primjenjuju se njihove vlastite obavijesti o zaštiti podataka.",
+          ],
+        },
+        {
+          titel: "Preporučene tvrtke",
+          paragraphs: [
+            "Ako se tvrtka registrira s partnerskim kodom, pohranjujemo dodjelu tvrtke partneru, kao i vrijeme, način (poveznica ili kod) i status. Partner vidi tvrtku isključivo pseudonimno (redni broj, država, status, iznosi) — nikada ime, e-adresu ili podatke o rezervaciji. Samo ako tvrtka izričito pristane prilikom registracije, partner je smije kontaktirati putem platforme. Za obračun provizije obrađujemo neto iznose pretplate plaćenih računa tvrtke; pravna osnova je izvršenje partnerskog ugovora i ugovora o korištenju (članak 6. stavak 1. točka (b) Opće uredbe o zaštiti podataka).",
+          ],
+        },
+      ],
+    },
+    {
       heading: "Hosting i pohrana",
       paragraphs: [
         "Platforma, baza podataka, mediji i poslužitelj e-pošte rade na poslužiteljima društva Hetzner Online GmbH, Njemačka, u podatkovnom centru u Helsinkiju (Finska) — dakle unutar Europske unije. S društvom Hetzner sklopljen je ugovor o obradi podataka.",

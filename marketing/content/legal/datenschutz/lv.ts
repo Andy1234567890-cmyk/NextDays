@@ -243,6 +243,40 @@ export const datenschutz: LegalDoc = {
       ],
     },
     {
+      heading: "Partneru programma",
+      paragraphs: [
+        "Mēs uzturam partneru programmu, ar kuras palīdzību partneri (influenceri, konsultanti, aģentūras, klienti) iesaka uzņēmumus myNextDays un par to saņem komisijas maksu. Šajā procesā mēs apstrādājam partneru datus un – nelielā apjomā – ieteikto uzņēmumu datus.",
+      ],
+      unterpunkte: [
+        {
+          titel: "Partneru dati",
+          paragraphs: [
+            "Pieteikšanās procesā mēs apstrādājam vārdu, uzņēmuma nosaukumu, juridisko formu, valsti, e-pasta adresi, valodu, sociālo mediju kontus (platforma, adrese, lietotājvārds, pašu norādītais sasniedzamības rādītājs), PVN identifikācijas numuru (pārbaude, izmantojot ES sistēmu VIES), izmaksas datus (IBAN, Wise vai PayPal adrese), kā arī piekrišanu dalības noteikumiem ar versiju un laiku. Tiesiskais pamats ir partneru līguma izpilde (Vispārīgās datu aizsardzības regulas 6. panta 1. punkta b) apakšpunkts); kredītu un uzglabāšanas gadījumā piemēro nodokļu un komerctiesību pienākumus (Vispārīgās datu aizsardzības regulas 6. panta 1. punkta c) apakšpunkts).",
+            "Ja partneris vada komandu, viņš redz savu komandas partneru vārdu vai uzņēmuma nosaukumu, rangu, maksājošo klientu skaitu un no tā izrietošo komandas komisijas maksu. Ziņojumi starp sponsoru un komandas partneri tiek saglabāti platformā, lai abi varētu redzēt vēsturi.",
+          ],
+        },
+        {
+          titel: "Klikšķi uz partneru saitēm",
+          paragraphs: [
+            "Ja apmeklētājs atver partnera saiti (mynextdays.com/p/CODE), mēs saglabājam kodu, laiku, atvērto lapu, novirzošo lapu un iespējamos kampaņas parametrus, kā arī IP adresi un pārlūkprogrammas identifikatoru tikai kā saīsinātas pārbaudes summas (hash) – krāpšanas atklāšanai (biežuma noteikšanai), nevis atkārtotai atpazīšanai. Izsekošanas sīkdatne netiek iestatīta. Klikšķu datus mēs dzēšam pēc 90 dienām. Tiesiskais pamats ir mūsu leģitīmās intereses nodrošināt programmas norēķinu drošību pret krāpšanu (Vispārīgās datu aizsardzības regulas 6. panta 1. punkta f) apakšpunkts).",
+          ],
+        },
+        {
+          titel: "Saistītie sociālo mediju konti un ziņas",
+          paragraphs: [
+            "Partneri var brīvprātīgi savienot savus YouTube (Google), Instagram un Facebook (Meta), kā arī TikTok kontus ar partneru informācijas paneli. Šajā procesā viņi piešķir attiecīgajai platformai lasīšanas atļauju (OAuth); mēs neko nerakstām šajos kontos. Mēs saglabājam konta identifikatoru un nosaukumu, šifrētu piekļuves marķieri, savienojuma laiku, kā arī katru dienu vienu mērījumu katram kontam: sekotāju vai abonentu skaitu, pēdējo 28 dienu skatījumus, mijiedarbības rādītāju un ziņu skaitu, katru ar platformas atbildes laiku. Par ziņām, ko partneris izveido informācijas panelī (nosaukums, platforma, adrese, publicēšanas datums), mēs papildus saglabājam skatījumus, atzīmes “Patīk”, komentārus, kopīgojumus un saglabājumus no platformas.",
+            "Mērķis ir pārbaudīt partnera norādīto sasniedzamību un piesaistīt klikšķus un klientus atsevišķiem ierakstiem; nepārbaudīti dati tiek mazāk ņemti vērā izlaišanas brīdī. Norādes uz neatbilstībām (piemēram, sekotāju skaita pieaugums bez atbilstošiem skatījumiem) tiek izmantotas tikai manuālai pārbaudei no mūsu puses un neizraisa automatizētu lēmumu. Tiesiskais pamats ir partnera piekrišana (Vispārīgās datu aizsardzības regulas 6. panta 1. punkta a) apakšpunkts), ko viņš sniedz, izveidojot savienojumu un ko viņš jebkurā laikā var atsaukt informācijas panelī, noklikšķinot uz “Atvienot”. Atvienojot mēs nekavējoties dzēšam piekļuves pilnvaru, saglabātie mērījumu dati paliek kā vēsture un tiek dzēsti kopā ar partnera kontu. Mēs izmantojam tikai oficiālās platformu saskarnes; Google, Meta un TikTok apstrādei ir spēkā to pašu datu aizsardzības paziņojumi.",
+          ],
+        },
+        {
+          titel: "Ieteiktie uzņēmumi",
+          paragraphs: [
+            "Ja uzņēmums reģistrējas ar partnera kodu, mēs saglabājam uzņēmuma piesaisti partnerim, kā arī laiku, veidu (saite vai kods) un statusu. Partneris redz uzņēmumu tikai pseidonīmā (kārtas numurs, valsts, statuss, summas) — nekad vārdu, e-pasta adresi vai rezervācijas datus. Tikai tad, ja uzņēmums reģistrācijas laikā skaidri piekrīt, partneris drīkst ar to sazināties, izmantojot platformu. Komisijas aprēķināšanai mēs apstrādājam uzņēmuma apmaksāto rēķinu neto abonēšanas summas; tiesiskais pamats ir partnerības un lietošanas līguma izpilde (Vispārīgās datu aizsardzības regulas 6. panta 1. punkta b) apakšpunkts).",
+          ],
+        },
+      ],
+    },
+    {
       heading: "Mitināšana un datu glabāšana",
       paragraphs: [
         "Platforma, datubāze, mediji un pasta serveris darbojas Hetzner Online GmbH, Vācija, serveros Helsinku datu centrā (Somijā) — tātad Eiropas Savienībā. Ar Hetzner ir noslēgts datu apstrādes līgums.",

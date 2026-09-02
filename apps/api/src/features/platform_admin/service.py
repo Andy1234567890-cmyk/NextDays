@@ -616,18 +616,46 @@ class PlatformAdminService:
         res = query.range(offset, offset + limit - 1).execute()
         rows = res.data or []
         namen = self._tenant_names([r.get("tenant_id") for r in rows])
+        partner = self._affiliate_names([r.get("reporter_affiliate_id") for r in rows])
         ungelesen = self._ungelesen_je_ticket(rows)
         return SupportTicketList(
             items=[
                 SupportTicket(
                     **r,
                     tenant_name=namen.get(r.get("tenant_id") or ""),
+                    affiliate_name=partner.get(r.get("reporter_affiliate_id") or "", {}).get(
+                        "name"
+                    ),
+                    affiliate_email=partner.get(r.get("reporter_affiliate_id") or "", {}).get(
+                        "email"
+                    ),
                     unread=ungelesen.get(r["id"], 0),
                 )
                 for r in rows
             ],
             total=res.count or 0,
         )
+
+    def _affiliate_names(self, ids: list[str | None]) -> dict[str, dict[str, str]]:
+        """Name + E-Mail der Partner-Melder (0518) — eine Abfrage für alle."""
+        gesucht = sorted({i for i in ids if i})
+        if not gesucht:
+            return {}
+        rows = (
+            self._db.table("affiliates")
+            .select("id, full_name, company, email")
+            .in_("id", gesucht)
+            .execute()
+        ).data or []
+        return {
+            r["id"]: {
+                "name": (
+                    f"{r['company']} · {r['full_name']}" if r.get("company") else r["full_name"]
+                ),
+                "email": r["email"],
+            }
+            for r in rows
+        }
 
     def _ungelesen_je_ticket(self, rows: list[dict]) -> dict[str, int]:
         """Ungelesene Melder-Nachrichten je Konversation (eine Abfrage)."""
@@ -685,9 +713,14 @@ class PlatformAdminService:
             .execute()
         ).data or []
         namen = self._tenant_names([row.get("tenant_id")])
+        partner = self._affiliate_names([row.get("reporter_affiliate_id")]).get(
+            row.get("reporter_affiliate_id") or "", {}
+        )
         return SupportTicketDetail(
             **row,
             tenant_name=namen.get(row.get("tenant_id") or ""),
+            affiliate_name=partner.get("name"),
+            affiliate_email=partner.get("email"),
             unread=self._ungelesen_je_ticket([row]).get(row["id"], 0),
             messages=[SupportMessage(**m) for m in msgs],
         )

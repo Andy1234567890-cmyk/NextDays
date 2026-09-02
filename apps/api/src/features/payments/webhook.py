@@ -36,6 +36,7 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.features.addons.zahlung import verbuche_checkout_session
+from src.features.affiliates import provision as partner_provision
 from src.features.donations.service import DonationsService
 from src.features.notification_settings.ereignisse import melde_testphase_endet
 from src.features.payments import stripe_client as sc
@@ -104,7 +105,12 @@ def handle_stripe_event(
     account = _field(event, "account")
     try:
         result = _dispatch_stripe_event(
-            db, event_type, obj, now_iso, account=str(account) if account else None
+            db,
+            event_type,
+            obj,
+            now_iso,
+            account=str(account) if account else None,
+            event_id=event_id,
         )
     except Exception:
         # Verarbeitung fehlgeschlagen → Claim wieder freigeben, damit der
@@ -123,6 +129,7 @@ def _dispatch_stripe_event(
     now_iso: str,
     *,
     account: str | None = None,
+    event_id: str | None = None,
 ) -> dict[str, str] | None:
     match event_type:
         case "checkout.session.completed":
@@ -142,6 +149,17 @@ def _dispatch_stripe_event(
                 log.info("stripe_webhook_checkout_fremd", event_type=event_type)
         case "account.updated":
             _handle_account_updated(db, obj, now_iso)
+        case "transfer.failed" | "transfer.reversed":
+            # Partner-Auszahlung kam nicht an (0522). Gegenzustand: Auszahlung
+            # auf `failed`, Provisionszeilen wieder frei — sonst gilt Geld als
+            # ausgezahlt, das nie ankam (Wurzel 1).
+            from src.features.affiliates import (  # noqa: PLC0415
+                connect as affiliate_connect,
+            )
+
+            affiliate_connect.webhook_verarbeiten(
+                db, {"type": event_type, "data": {"object": dict(obj)}}
+            )
         case "payment_intent.succeeded":
             # KEINE BUCHUNG OHNE ZAHLUNG (0409): Trägt der Intent eine
             # Buchungsabsicht, entsteht die Reservierung ERST JETZT — dieser
@@ -153,13 +171,17 @@ def _dispatch_stripe_event(
             # Steht keine Absicht dran, ist es eine Zahlung zu einer bereits
             # bestehenden Buchung (OTA-Restzahlung, Anzahlung, Anfrage nach
             # Zusage) — dann gilt unverändert der bisherige Weg.
-            if _buchungsabsicht_einloesen(db, obj):
+            if _buchungsabsicht_einloesen(db, obj, event_id=event_id):
                 return None
             res_id = _set_payment_status(
                 db, obj["id"], "succeeded", reservation="paid"
             )
             ptyp = _zahlungs_typ(db, obj["id"])
             if res_id:
+                # Markt-Turbo des Partnerprogramms (0525): 0,5 % je bezahlter
+                # myBestDays-Buchung eines geworbenen Betriebs — nur Umsatz,
+                # keine Kaution. UNIQUE (charge, partner) fängt die Redelivery.
+                _partner_buchungsanteil(db, res_id, obj, event_id=event_id, payment_type=ptyp)
                 # Fee-Ledger (0182): pending → charged. Status-Guard macht die
                 # Redelivery idempotent (Wurzel 2). Läuft im try des Dispatchers →
                 # ein Fehler rollt den Event-Claim zurück (Stripe liefert erneut).
@@ -194,7 +216,11 @@ def _dispatch_stripe_event(
             # Plattform den Betrieb aus Geld, das ihr gerade entzogen wird
             # (Stripe belastet den Plattform-Saldo sofort).
             _halte_auszahlung_zurueck(db, _field(obj, "payment_intent"))
+            # Dasselbe für eine Partnerprovision, die an dieser Charge hängt
+            # (Abo-Rechnung eines geworbenen Betriebs, 0517).
+            partner_provision.chargeback_eroeffnet(db, obj)
         case "charge.dispute.closed":
+            partner_provision.chargeback_entschieden(db, obj, event_id=event_id)
             # Zugunsten des Betriebs entschieden → Hold läuft reguläre ab
             # (gib_holds_frei). Gegen ihn → der Refund-Pfad hat bereits einen
             # Verrechnungsposten angelegt. Hier ist nichts weiter zu tun; der
@@ -205,6 +231,11 @@ def _dispatch_stripe_event(
                 status=_field(obj, "status"),
             )
         case "charge.refunded":
+            # Partnerprovision anteilig zurücknehmen, falls die Charge eine
+            # Abo-Rechnung eines geworbenen Betriebs bezahlt hat (0517). Läuft
+            # VOR dem Buchungspfad und unabhängig davon — die Charge hat bei
+            # Abo-Rechnungen keine `payments`-Zeile.
+            partner_provision.storniere_fuer_charge(db, obj, event_id=event_id)
             pi_id = _field(obj, "payment_intent")
             if pi_id:
                 # Stripe feuert charge.refunded auch bei TEILerstattung. Nur bei
@@ -248,9 +279,24 @@ def _dispatch_stripe_event(
             _handle_trial_will_end(db, obj)
         case "invoice.paid" | "invoice.payment_failed":
             _handle_invoice_event(db, event_type, obj)
+            if event_type == "invoice.paid":
+                # Partnerprovision (0517): Ertragszeile je bezahlter Abo-
+                # Rechnung eines geworbenen Betriebs. Idempotent über die
+                # Rechnungs-ID; ein Fehler rollt den Event-Claim zurück.
+                partner_provision.verbuche_rechnung(
+                    db, obj, event_id=event_id, mails=_partner_mails()
+                )
+        case "credit_note.created":
+            partner_provision.storniere_fuer_gutschrift(db, obj, event_id=event_id)
         case _:
             log.info("stripe_webhook_ignored", event_type=event_type)
     return {"status": "ok"}
+
+
+def _partner_mails() -> Any:  # noqa: ANN401 — lazy, damit Tests ohne Mail-Setup laufen
+    from src.features.affiliates.mails import PartnerMails  # noqa: PLC0415
+
+    return PartnerMails()
 
 
 def _resolve_sub_tenant(db: Client, obj: Mapping[str, Any]) -> str | None:
@@ -481,8 +527,19 @@ def _handle_account_updated(
     )
     if result.data:
         log.info("stripe_account_updated", stripe_account_id=stripe_account_id)
-    else:
-        log.warning("stripe_account_not_found_in_db", stripe_account_id=stripe_account_id)
+        return
+    # Kein Betriebs-Account — seit 0522 kann es das Verbundkonto eines PARTNERS
+    # sein (Affiliate-Programm). Das ist der Weg, auf dem der gespiegelte
+    # Freischaltstand aktuell bleibt; ohne ihn stünde im Auszahlungslauf ein
+    # veraltetes Flag (Wurzel 1: der Gegenzustand zu „Stripe hat entschieden").
+    from src.features.affiliates import connect as affiliate_connect  # noqa: PLC0415
+
+    if affiliate_connect.webhook_verarbeiten(
+        db, {"type": "account.updated", "data": {"object": dict(account)}}
+    ):
+        log.info("affiliate_account_updated", stripe_account_id=stripe_account_id)
+        return
+    log.warning("stripe_account_not_found_in_db", stripe_account_id=stripe_account_id)
 
 
 def _meta_get(meta: Any, key: str) -> str | None:  # noqa: ANN401
@@ -548,7 +605,9 @@ def _handle_identity_event(
         log.warning("identity_user_not_found", user_id=user_id, tenant_id=tenant_id)
 
 
-def _buchungsabsicht_einloesen(db: Client, obj: Mapping[str, Any]) -> bool:
+def _buchungsabsicht_einloesen(
+    db: Client, obj: Mapping[str, Any], *, event_id: str | None = None
+) -> bool:
     """Aus einer bezahlten Buchungsabsicht die Reservierung erzeugen (0409).
 
     Gibt `True` zurück, wenn dieser Intent zu einer Absicht gehört und hier
@@ -581,6 +640,8 @@ def _buchungsabsicht_einloesen(db: Client, obj: Mapping[str, Any]) -> bool:
             "buchungsabsicht_eingeloest",
             absicht_id=absicht_id, reservation_id=reservation_id,
         )
+        # Marktplatz-Buchung, die erst mit der Zahlung entsteht → Markt-Turbo (0525).
+        _partner_buchungsanteil(db, str(reservation_id), obj, event_id=event_id, payment_type=None)
         return True
 
     # Keine Buchung entstanden → das Geld gehört dem Gast. Voll erstatten.
@@ -614,6 +675,60 @@ def _buchungsabsicht_einloesen(db: Client, obj: Mapping[str, Any]) -> bool:
             error=str(exc),
         )
     return True
+
+
+def _partner_buchungsanteil(
+    db: Client,
+    reservation_id: str,
+    obj: Mapping[str, Any],
+    *,
+    event_id: str | None,
+    payment_type: str | None,
+) -> None:
+    """Markt-Turbo (Partnerprogramm 0525): je bezahlter myBestDays-Buchung eines
+    geworbenen Betriebs 0,5 % für Partner und Sponsor. Nur Portal-Buchungen
+    (`channel='portal'`, fail-closed), nur Umsatz (keine Kaution). Basis ist
+    der GEZAHLTE Betrag dieses Intents in seiner Währung — bei Anzahlung +
+    Restzahlung entstehen zwei Zeilen, die sich zum Buchungswert summieren.
+    Zeitpunkt = Stripes `created` (Wurzel 5b). Best effort: ein Fehler hier
+    darf die Zahlungsbuchung nicht kippen, wird aber laut geloggt."""
+    if payment_type in ("deposit", "security_deposit", "kaution"):
+        return
+    rows = (
+        db.table("reservations")
+        .select("tenant_id, channel")
+        .eq("id", reservation_id)
+        .limit(1)
+        .execute()
+    ).data or []
+    if not rows or not _ist_portal_buchung(rows[0]):
+        return
+    betrag = int(_field(obj, "amount_received") or _field(obj, "amount") or 0)
+    currency = str(_field(obj, "currency") or "").upper()
+    created = _field(obj, "created")
+    if not currency or not created:
+        log.error("partner_booking_share_unvollstaendig", payment_intent=obj.get("id"))
+        return
+    try:
+        ergebnis = partner_provision.buchungsanteil_buchen(
+            db,
+            tenant_id=str(rows[0]["tenant_id"]),
+            charge_id=(str(_field(obj, "latest_charge")) if _field(obj, "latest_charge") else None),
+            payment_intent=str(obj.get("id") or "") or None,
+            amount_cents=betrag,
+            currency=currency,
+            paid_at=datetime.fromtimestamp(int(created), tz=UTC),
+            event_id=event_id,
+        )
+    except Exception as exc:  # noqa: BLE001 — Nebenpfad der Zahlung, laut statt kippend
+        log.error(
+            "partner_booking_share_fehlgeschlagen",
+            reservation_id=reservation_id,
+            error=str(exc)[:200],
+        )
+        return
+    if ergebnis != "kein_partner":
+        log.info("partner_booking_share", reservation_id=reservation_id, ergebnis=ergebnis)
 
 
 def _set_payment_status(

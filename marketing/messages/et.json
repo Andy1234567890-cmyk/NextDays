@@ -851,7 +851,8 @@
     },
     "unternehmen": {
       "ueberUns": "Meist",
-      "kontakt": "Kontakt"
+      "kontakt": "Kontakt",
+      "partner": "Partnerprogramm"
     },
     "copyright": "© 2026 myNextDays. Kõik õigused kaitstud.",
     "agb": "Tingimused",
@@ -860,7 +861,8 @@
     "cookies": "Küpsiste poliitika",
     "avv": "Andmete töötlemine",
     "kontoLoeschen": "Kustuta konto",
-    "newsletterKnopf": "Liitu uudiskirjaga"
+    "newsletterKnopf": "Liitu uudiskirjaga",
+    "partnerAgb": "Partneri tingimused"
   },
   "legal": {
     "stand": "Viimati uuendatud: {datum}"
@@ -990,7 +992,7 @@
       "sub": "Mida majutajad tahavad enne vahetust teada — lühidalt ja ilma peenikese kirjata.",
       "laufzeit": {
         "frage": "Kas on minimaalne tähtaeg?",
-        "antwort": "Ei. Tellimus on igakuine ja seda saab tühistada nelja nädala etteteatamisega kuu lõpuks. Esimesed 14 päeva on tasuta: makseandmed sisestatakse alguses, kuid arve esitatakse alles pärast prooviperioodi lõppu. Kui tühistate enne seda, ei maksa te midagi."
+        "antwort": "Ei. Tellimus on igakuine ja seda saab lõpetada neljanädalase etteteatamisega kuu lõpuks. Esimesed 14 päeva on tasuta: makseandmed sisestatakse alguses, kuid arveldamine toimub alles pärast prooviperioodi lõppu. Kui tulete partneri lingi või koodi kaudu, on lisaks esimene täiskuu tasuta. Kui tühistate varem, ei maksa te midagi."
       },
       "objektzahl": {
         "frage": "Mis juhtub, kui lisan objekte?",
@@ -2185,5 +2187,259 @@
     "verwalten": "Küpsiste seadete haldamine",
     "schliessen": "Sulge",
     "bestaetigen": "Kinnita seaded"
+  },
+  "partnerHinweis": {
+    "text": "Saabusite soovituse kaudu (kood {code}). Kood rakendub registreerimisel ja annab teile pärast 14-päevast prooviperioodi esimese täiskuu tasuta.",
+    "cta": "Alustage kohe tasuta",
+    "schliessen": "Sulge teade"
+  },
+  "partner": {
+    "meta": {
+      "titel": "Partnerprogramm – myNextDays",
+      "beschreibung": "Soovitage myNextDaysi puhkemajade omanikele ja hotellidele ning saate kaksteist kuud kuni {max} % iga värvatud ettevõtte tellimuse käibest."
+    },
+    "hero": {
+      "eyebrow": "Partnerprogramm",
+      "headlinePre": "Soovitage myNextDaysi –",
+      "headlineHighlight": "ja teenige raha",
+      "sub": "Mõjutajatele, konsultantidele, agentuuridele ja võrgustikuga üürileandjatele: iga ettevõte, mis registreerib end teie lingi kaudu ja maksab tellimuse, toob teile kaksteist kuud kuni {max} % tellimuse käibest – pluss 0,5 % iga myBestDaysi kaudu tehtud broneeringu eest, edutamisboonused ja alates Eliidist supervahendustasu ilma tähtajapiiranguta.",
+      "cta": "Kandideeri kohe",
+      "ctaLogin": "Partneri sisselogimine",
+      "chipDauer": "12 kuud vahendustasu kliendi kohta",
+      "chipAuszahlung": "Igakuine väljamakse",
+      "chipKosten": "Tasuta osalemine",
+      "chipGratismonat": "Teie kliendid: 14 päeva proovimist + 1 kuu tasuta"
+    },
+    "schritte": {
+      "eyebrow": "Kuidas see töötab",
+      "heading": "Kolm sammu esimese vahendustasuni",
+      "bewerben": {
+        "titel": "Kandideeri",
+        "text": "Te ütlete meile oma kanali – veebisaidi, sotsiaalprofiili või võrgustiku. Me vaatame iga taotluse isiklikult läbi ja anname tavaliselt mõne tööpäeva jooksul loa."
+      },
+      "teilen": {
+        "titel": "Jaga linki või koodi",
+        "text": "Te saate isikliku lingi ja soovituskoodi. Kood on registreerimisel vormis nähtav – ilma jälgimisküpsiseta."
+      },
+      "verdienen": {
+        "titel": "Teeni",
+        "text": "Kui värvatud ettevõte maksab oma esimese tellimuse arve, kestab teie vahendustasu kaksteist kuud. Te näete iga klienti pseudonüümselt partneri armatuurlaual ja teile makstakse igakuiselt."
+      }
+    },
+    "staffel": {
+      "eyebrow": "Teie tase",
+      "heading": "Mida suurem on teie struktuur, seda kõrgem on teie määr",
+      "sub": "Määr kehtib kõikidele uutele vahendustasudele alates auastme saavutamisest. Struktuur hõlmab teie enda maksvad kliendid ja teie meeskonnapartnerite kliendid.",
+      "kunden": "{von}–{bis} maksvad kliendid",
+      "kundenOffen": "alates {von} maksvad kliendid",
+      "satz": "tellimuse käibest",
+      "nichtAbrufbar": "Tase ei ole praegu saadaval. Palun proovige hiljem uuesti."
+    },
+    "bedingungen": {
+      "eyebrow": "Reeglid",
+      "heading": "Õiglane teile, õiglane ettevõtetele",
+      "basis": {
+        "titel": "Mis loeb",
+        "text": "Vahendustasu aluseks on värvatud ettevõtte tellimuse netokäive (põhitariif ja moodulid) – ilma maksude, portaalitasude ja lisateenusteta."
+      },
+      "dauer": {
+        "titel": "Kaksteist kuud",
+        "text": "Komisjon kehtib kaksteist kuud alates ettevõtte esimesest tasulisest tellimuse arvest; teie klientide tasuta kuu ei arvestata. Kui ettevõte lepingu lõpetab, lõpeb see viimase maksega. Broneeringu osa ja superkomisjon kehtivad ilma selle piiranguta."
+      },
+      "auszahlung": {
+        "titel": "Väljamakse",
+        "text": "Igakuine, 30 päeva pärast ettevõtte makset, alates minimaalsest summast valuuta kohta. Te saate kreeditarve; ettevõtetel on vaja kehtivat käibemaksukohustuslase numbrit."
+      },
+      "kennzeichnung": {
+        "titel": "Märgistus",
+        "text": "Iga soovitus on reklaam ja peab olema sellisena märgistatud. Nõutavad sõnastused keelte kaupa pakume armatuurlaual."
+      },
+      "verboten": {
+        "titel": "Pole lubatud",
+        "text": "Enesereklaam, meie kaubamärgi reklaam otsingureklaamides, allahindluslubadused meie nimel ja soovimatud sõnumid. Tagasimaksed arvatakse maha vahendustasust."
+      },
+      "daten": {
+        "titel": "Andmekaitse",
+        "text": "Näete oma kliente ainult pseudonüümselt – riigi, staatuse ja summadega, mitte kunagi nime või e-posti aadressiga. Ettevõte võib registreerimisel lubada teil temaga ühendust võtta."
+      }
+    },
+    "faq": {
+      "eyebrow": "Korduma kippuvad küsimused",
+      "heading": "Mida partnerid meilt küsivad",
+      "wer": {
+        "frage": "Kes saab partneriks?",
+        "antwort": "Iga isik või ettevõte EL-is, kellel on tõeline kanal üürileandjate või hotellideni: mõjutajad, konsultandid, agentuurid, maksufirmad, ühendused – ja myNextDaysi kliendid ise. Kandideerimine on tasuta; tellimus ei ole eeltingimus."
+      },
+      "wann": {
+        "frage": "Millal loetakse ettevõte minu kliendiks?",
+        "antwort": "Kui ta registreerib end teie koodiga ja on tasunud oma esimese tellimuse arve. Registreerimised ilma makseta ei arvestata edetabelisse."
+      },
+      "doppelt": {
+        "frage": "Mis siis, kui ettevõte nimetab kaks partnerit?",
+        "antwort": "Ettevõte määratakse täpselt ühele partnerile – sellele, kelle kood oli registreerimisel vormis. Hilisemad koodid seda ei muuda."
+      },
+      "steuern": {
+        "frage": "Kuidas toimub arveldamine?",
+        "antwort": "Me väljastame kreeditarve (self-billing). EL-i käibemaksukohustuslase numbri omanikud saavad selle pöördmaksustamise märkega, eraisikud ilma käibemaksuta – vahendustasu maksustate ise."
+      },
+      "material": {
+        "frage": "Kas on olemas reklaammaterjale?",
+        "antwort": "Jah: lühikesed videod sotsiaalmeedia jaoks, selgitav video, bännerid ja tekstiplokid – partneri armatuurlaual, teie keeles."
+      },
+      "wieviel": {
+        "frage": "Kui palju vahendustasu ma teenida saan?",
+        "antwort": "See sõltub teie klientide tellimuse käibest ja teie auastmest. Ülaltoodud tabel näitab määra auastme kohta; kaksteist kuud iga kliendi kohta. Lisaks 0,5% igast broneeringust, mille teie kliendid saavad myBestDaysi kaudu, ühekordne edutamisboonus iga saavutatud auastme eest, meeskonnaga erinevuskomisjon – ja alates eliitpartnerist 2,5% superkomisjon kogu struktuurilt ilma tähtajapiiranguta."
+      },
+      "team": {
+        "frage": "Kuidas meeskonnapreemia toimib?",
+        "antwort": "Alates Edasijõudnu auastmest: kui partner kandideerib teie meeskonnalingi kaudu ja sisestab teie koodi nähtavalt avaldusse, kuulub ta pärast heakskiitu teie meeskonda. Tema kliendid loevad teie auastme jaoks 1:1. Tema klientide netotellimuse käibelt saate te oma ja tema määra vahe – täpselt üks tase sügavuti, ilma osalustasuta, ilma värbamistasuta."
+      },
+      "auszahlung": {
+        "frage": "Kuidas ja millal preemiad välja makstakse?",
+        "antwort": "Igakuiselt valuuta kohta, kui summa saavutab teie valuuta miinimumsumma. Iga preemia rida on 30 päeva „avatud“ (tagastusaken) ja seejärel väljamakstav. Te saate kreeditarve (ise-arveldamine) – te ei esita arvet. Väljamakse SEPA, Wise või PayPal kaudu."
+      },
+      "verfolgen": {
+        "frage": "Kuidas saan oma preemiaid ja tulemusi jälgida?",
+        "antwort": "Partneri armatuurlaual näete jaotises „Preemiad“ iga tasutud tellimuse arvet koos aluse, määra, summa ja olekuga, jaotises „Kliendid“ oma ettevõtteid pseudonüümselt, jaotises „Meeskond“ oma meeskonnapartnerite analüüsi ja jaotises „Lingid ja materjalid“ klikke koodi kohta."
+      },
+      "werbung": {
+        "frage": "Kas tohin tasulist reklaami teha?",
+        "antwort": "Mitte meie kaubamärgile: reklaamid „myNextDays“ ja kirjavariantidele (brändipakkumine), küpsiste paigaldamine, ostetud ulatus või registreerimise stiimulid on keelatud ja toovad kaasa blokeerimise. Oma sisu, postitused ja soovitused on selgelt teretulnud – märgistatuna reklaamina."
+      }
+    },
+    "abschluss": {
+      "heading": "Kas olete valmis myNextDaysi soovitama?",
+      "sub": "Kandideerige kahe minutiga. Võtame teiega pärast kontrollimist ühendust.",
+      "cta": "Kandideeri kohe",
+      "kontakt": "Küsimusi? Kirjutage meile."
+    },
+    "vergleich": {
+      "eyebrow": "Teie tase",
+      "heading": "Mida rohkem maksvaid kliente, seda kõrgem on teie määr",
+      "sub": "Määr kehtib kõikidele uutele vahendustasudele alates auastme saavutamisest. Arvesse läheb teie struktuur: teie enda maksvad kliendid pluss teie meeskonnapartnerite kliendid.",
+      "nichtAbrufbar": "Tase ei ole praegu saadaval. Palun proovige hiljem uuesti.",
+      "plan": "Tase",
+      "provision": "Vahendustasu oma klientidelt",
+      "teamProvision": "Meeskonnavahendustasu teie meeskonnapartnerite klientidelt",
+      "dauer": "Kliendi kohta kehtivusaeg",
+      "dauerWert": "12 kuud",
+      "kunden": "{von}–{bis} maksvat klienti",
+      "kundenOffen": "alates {von} maksvast kliendist",
+      "vorteile": "Teenused",
+      "ja": "sisaldub",
+      "nein": "ei sisaldu",
+      "leistung": {
+        "konto": "Tasuta partnerkonto",
+        "dashboard": "Partneri juhtpaneel klientide, vahendustasude ja analüüsiga",
+        "material": "Reklaammaterjalid ja märgistusmallid",
+        "team": "Meeskonna loomine oma meeskonnalingiga",
+        "gutschrift": "Igakuine väljamakse kreeditiga (self-billing)",
+        "chat": "Otsene kontakt partnerimeeskonnaga",
+        "support": "Isiklik kontaktisik",
+        "coMarketing": "Koos turundamine (ühised kampaaniad)"
+      },
+      "fussnoteTeam": "Meeskonnavahendustasu on teie ja teie meeskonnapartneri määra vahe tema klientide netotellimuse käibelt, mõlemad makse tegemise ajal – täpselt üks tase, ilma osalustasuta, ilma värbamistasuta. Kokku mitte kunagi rohkem kui 30 %.",
+      "fussnoteCoMarketing": "Pärast kokkulepet partnerimeeskonnaga; sõltub partneri profiilist ja käimasolevatest kampaaniatest.",
+      "fussnoteRang": "Auaste tuleneb teie struktuurist: teie enda maksvad kliendid pluss teie meeskonnapartnerite kliendid, igaüks loeb üks kord. Uue auastme saavutamisel alates Edasijõudnust on ühekordne edutamisboonus.",
+      "teamDifferenz": "{satz} % miinus meeskonnapartneri määr",
+      "teamNicht": "veel meeskonda pole",
+      "bonus": "Edutamisboonus (ühekordne)",
+      "superProvision": "Supervahendustasu kogu struktuurilt",
+      "marktTurbo": "myBestDays broneeringu osa",
+      "marktTurboWert": "0,5 % broneeringu kohta, piiramatu",
+      "fussnoteSuper": "Alates Eliitpartnerist 2,5 % kõigi teie struktuuri klientide netotellimuse käibelt – lisaks vahendustasule, ilma 12-kuulise piiranguta, nii kaua kui hoiate auastet ja klient maksab."
+    },
+    "team": {
+      "eyebrow": "Meeskonna loomine",
+      "heading": "Kuni {max} % erinevusvahendustasu teie meeskonna käibelt",
+      "sub": "Kas tunnete teisi konsultante, loojaid või agentuure, kellel on sidemeid majutajatega? Alates Edasijõudnu auastmest kandideerivad nad teie meeskonnalingi kaudu, kuuluvad teie meeskonda – ja nende kliendid loevad teie auastme jaoks 1:1. Te teenite vahe oma ja oma meeskonnapartneri määra vahel; teie meeskonnapartnerid säilitavad oma täieliku isikliku astme.",
+      "rang": {
+        "titel": "Erinevus",
+        "text": "Te saate oma määra miinus meeskonnapartneri määr – mõlemad makse tegemise ajal. Kui teie meeskonnapartner on samas auastmes, siis meeskonnavahendustasu ei teki."
+      },
+      "ebene": {
+        "titel": "Täpselt üks tase",
+        "text": "Teie meeskonnapartnerid ei loo teie all oma meeskonda. Puudub võrgustik, puudub püramiid."
+      },
+      "keinGeld": {
+        "titel": "Ainult tegelikust käibest",
+        "text": "Osalustasu puudub, värbamistasu puudub. Meeskonnavahendustasu tuleneb ainult tasutud tellimuse käibest."
+      },
+      "dauer": {
+        "titel": "Samad reeglid",
+        "text": "12 kuud iga meeskonnakliendi kohta, 30-päevane tagastusaken, tagasivõtmine tagastuse või tagasivõtmise korral – nagu teie enda vahendustasu puhul. Alates Eliidist lisandub supervahendustasu kogu struktuurile, ilma tähtajapiiranguta."
+      }
+    },
+    "kundeCta": {
+      "heading": "Olete juba myNextDays klient?",
+      "text": "Siis tunnete toodet kõige paremini. Soovitage seda edasi – teie vahendustasu laekub teie kontole kreeditina, sõltumata teie tellimusest.",
+      "cta": "Soovita ja teeni"
+    }
+  },
+  "partnerBewerbung": {
+    "meta": {
+      "titel": "Kandideeri partneriks — myNextDays",
+      "beschreibung": "Kandideerimine myNextDaysi partnerprogrammi: sotsiaalmeedia kontod, ulatus, tingimused. Vaatame iga avalduse isiklikult läbi."
+    },
+    "eyebrow": "Partnerprogramm",
+    "titel": "Kandideeri partneriks",
+    "text": "Öelge meile oma sotsiaalmeedia kontod ja nende ulatus – vaatame iga avalduse isiklikult läbi ja vastame tavaliselt mõne tööpäeva jooksul. Pärast heakskiitu saate juurdepääsu partneri juhtpaneelile koos linkide, koodide ja analüüsiga.",
+    "email": "E-post",
+    "passwort": "Teie partneri juhtpaneeli parool",
+    "passwortHinweis": "Vähemalt 8 märki.",
+    "name": "Nimi",
+    "firma": "Ettevõte (valikuline)",
+    "rechtsform": "Õiguslik vorm",
+    "privat": "Eraklient",
+    "unternehmen": "Ettevõte",
+    "land": "Riik",
+    "ustId": "KMKR-number",
+    "ustIdHinweis": "Kontrollitakse EL-i VIES-süsteemi kaudu. Ilma kinnitatud numbriga ei maksta ettevõtetele välja.",
+    "kanaele": {
+      "titel": "Teie sotsiaalmeedia kontod",
+      "hinweis": "Kohustuslik: vähemalt üks sotsiaalmeedia konto (Instagram, TikTok, YouTube, Facebook, LinkedIn …) koos aadressi, kasutajanime ja ulatusega (jälgijad). Veebisait, blogi või uudiskiri on teretulnud lisana. Kontrollime kontosid enne heakskiitu.",
+      "plattform": "Platvorm",
+      "handle": "Kasutajanimi (valikuline)",
+      "reichweite": "Ulatus (jälgijad)",
+      "hinzufuegen": "Lisa kanal",
+      "entfernen": "Eemalda kanal",
+      "socialPflicht": "Vähemalt üks sotsiaalmeedia konto koos ulatusega on kohustuslik – ainult veebisait ei ole piisav.",
+      "plattformen": {
+        "website": "Veebisait",
+        "blog": "Blogi",
+        "newsletter": "Uudiskiri",
+        "podcast": "Podcast",
+        "other": "Muu"
+      }
+    },
+    "plattform": {
+      "website": "Veebisait",
+      "blog": "Blogi",
+      "newsletter": "Uudiskiri",
+      "podcast": "Podcast",
+      "other": "Muu"
+    },
+    "sponsor": "Partneri poolt kutsutud (kood, valikuline)",
+    "sponsorHinweis": "Kas olete siin partneri meeskonnalingi kaudu? Tema kood on siin. Ta saab teie klientide tellimuste käibelt meeskonnaprovisjoni – teie enda provisjon jääb samaks.",
+    "pitch": "Miks te myNextDaysiga sobitute? (valikuline)",
+    "pitchPlatzhalter": "Keda te jõuate, millest te räägite, kuidas te soovitate?",
+    "zustimmung": "Nõustun",
+    "bedingungen": "Partneri tingimustega",
+    "version": "Versioon {version}",
+    "absenden": "Saada avaldus",
+    "sendet": "Saadan ...",
+    "pruefungHinweis": "See vorm on kaitstud reCAPTCHA-ga. Pärast esitamist kontrollib meie partnerimeeskond teie kontosid ja leviala; teile saadetakse otsuse kohta e-kiri.",
+    "fehler": {
+      "social": "Palun sisestage vähemalt üks sotsiaalmeedia konto koos aadressi ja levialaga.",
+      "doppelt": "Selle e-posti aadressiga on juba avaldus olemas. Logige sisse partneri juhtpaneelile.",
+      "eingabe": "Palun kontrollige oma sisestusi.",
+      "captcha": "Rämpsposti kaitse kontroll ebaõnnestus. Palun laadige leht uuesti ja proovige uuesti.",
+      "allgemein": "Avaldust ei saanud praegu saata. Palun proovige hiljem uuesti."
+    },
+    "fertig": {
+      "titel": "Avaldus vastu võetud",
+      "text": "Aitäh! Kontrollime teie kontosid ja leviala isiklikult ning võtame teiega e-posti teel ühendust. Teie partneri juhtpaneelile pääseb ligi teie e-posti ja parooliga – lingid ja koodid aktiveeruvad pärast heakskiitu.",
+      "login": "Partneri sisselogimisele"
+    }
   }
 }

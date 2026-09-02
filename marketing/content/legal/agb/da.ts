@@ -34,11 +34,12 @@ export const agb: LegalDoc = {
       heading: "§ 2 Aftalens genstand og ydelser",
       paragraphs: [
         "myNextDays stiller en cloudbaseret software til administration af ferieboliger og overnatningsvirksomheder til rådighed for brugeren. Funktionsomfanget fremgår af den til enhver tid gældende ydelsesbeskrivelse og omfatter navnlig:",
+      "Ethvert objekt, som brugeren opretter på platformen, bliver samtidig opført på platformens egen markedsplads myBestDays (obligatorisk kanal). Brugeren kan ikke fravælge denne kanal individuelt; brugeren kan dog til enhver tid fjerne et objekt fra salg på alle kanaler samtidigt via funktionen „Sæt salg på pause“ eller slette det. Et objekt bliver først synligt på myBestDays, når brugeren har offentliggjort det, og myNextDays har godkendt annoncen; myNextDays kan nægte eller tilbagekalde godkendelsen af saglige grunde. For bookinger via myBestDays gælder vederlaget i henhold til § 7.",
       ],
       list: [
         "administration af overnatningssteder, belægningskalendere og reservationer (property management-system),",
         "tilslutning til tredjeparters bookingkanaler (f.eks. Booking.com, Airbnb) via en channel manager,",
-        "offentliggørelse af tilbud via platformens egen bookingkanal myNextDays,",
+        "Offentliggørelse af tilbud via platformens egen markedsplads myBestDays (obligatorisk kanal, se stk. 2),",
         "oprettelse af egne websteder via den integrerede page builder,",
         "bogførings-, afregnings- og rapporteringsfunktioner, herunder ejerafregninger,",
         "kommunikation med gæster samt modtagelse af betalinger via den integrerede betalingsbehandling (§ 5).",

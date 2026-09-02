@@ -248,6 +248,40 @@ export const datenschutz: LegalDoc = {
       ],
     },
     {
+      heading: "Partnerprogramma",
+      paragraphs: [
+        "Wij exploiteren een partnerprogramma waarmee partners (influencers, consultants, bureaus, klanten) bedrijven kunnen aanbevelen aan myNextDays en daarvoor een commissie ontvangen. Daarbij verwerken wij gegevens van partners en – in beperkte mate – van aanbevolen bedrijven.",
+      ],
+      unterpunkte: [
+        {
+          titel: "Gegevens van de partners",
+          paragraphs: [
+            "Bij de aanmelding verwerken wij naam, bedrijf, rechtsvorm, land, e-mailadres, taal, socialemedia-accounts (platform, adres, handle, zelf opgegeven bereik), btw-identificatienummer (controle via het EU-systeem VIES), uitbetalingsgegevens (IBAN, Wise- of PayPal-adres) en de instemming met de deelnamevoorwaarden met versie en tijdstip. De rechtsgrondslag is de uitvoering van de partnerovereenkomst (artikel 6 lid 1 sub b AVG); voor tegoeden en bewaring gelden de fiscale en handelsrechtelijke verplichtingen (artikel 6 lid 1 sub c AVG).",
+            "Als een partner een team leidt, ziet hij van zijn team-partners naam of bedrijf, rang, aantal betalende klanten en de daaruit voortvloeiende teamcommissie. Berichten tussen sponsor en team-partner worden op het platform opgeslagen, zodat beiden het verloop kunnen zien.",
+          ],
+        },
+        {
+          titel: "Kliks op partnerlinks",
+          paragraphs: [
+            "Als een bezoeker een partnerlink (mynextdays.com/p/CODE) oproept, slaan wij de code, het tijdstip, de opgeroepen pagina, de verwijzende pagina en eventuele campagneparameters, evenals het IP-adres en de browseridentificatie uitsluitend op als verkorte controlesommen (hash) – voor misbruikdetectie (opeenhopingen), niet voor herkenning. Er wordt geen trackingcookie geplaatst. Klikgegevens verwijderen wij na 90 dagen. De rechtsgrondslag is ons gerechtvaardigd belang bij een fraudebestendige afrekening van het programma (artikel 6 lid 1 sub f AVG).",
+          ],
+        },
+        {
+          titel: "Gekoppelde socialemedia-accounts en berichten",
+          paragraphs: [
+            "Partners kunnen hun accounts bij YouTube (Google), Instagram en Facebook (Meta) en TikTok vrijwillig koppelen aan het partnerdashboard. Daarbij geven zij het betreffende platform een leesvrijgave (OAuth); wij schrijven niets naar deze accounts. Wij slaan de identificatie en de naam van het account, het versleutelde toegangstoken, het tijdstip van de koppeling en dagelijks een meetwaarde per account op: aantal volgers of abonnees, weergaven van de laatste 28 dagen, interactiepercentage en aantal berichten, telkens met het tijdstip van de platformreactie. Voor berichten die de partner in het dashboard aanmaakt (titel, platform, adres, publicatiedatum), slaan wij bovendien weergaven, likes, reacties, deelacties en opslagacties van het platform op.",
+            "Het doel is het controleren van het door de partner opgegeven bereik en het toewijzen van klikken en klanten aan individuele bijdragen; niet-geverifieerde gegevens worden minder zwaar gewogen bij de vrijgave. Aanwijzingen voor inconsistenties (zoals een plotselinge toename van volgers zonder passende weergaven) dienen uitsluitend voor handmatige controle door ons en leiden niet tot een geautomatiseerde beslissing. De rechtsgrondslag is de toestemming van de partner (artikel 6, lid 1, onder a, AVG), die hij geeft door de verbinding tot stand te brengen en op elk moment kan intrekken in het dashboard onder „Verbinding verbreken”; bij het verbreken verwijderen wij het toegangstoken onmiddellijk, opgeslagen meetwaarden blijven als geschiedenis behouden en worden verwijderd met het partneraccount. Wij gebruiken uitsluitend de officiële interfaces van de platforms; voor de verwerking door Google, Meta en TikTok gelden hun eigen privacyverklaringen.",
+          ],
+        },
+        {
+          titel: "Aanbevolen bedrijven",
+          paragraphs: [
+            "Als een bedrijf zich registreert met een partnercode, slaan we de toewijzing van het bedrijf aan de partner op, evenals het tijdstip, de manier (link of code) en de status. De partner ziet het bedrijf uitsluitend pseudoniem (volgnummer, land, status, bedragen) — nooit naam, e-mailadres of boekingsgegevens. Alleen als het bedrijf bij de registratie uitdrukkelijk toestemt, mag de partner contact met hem opnemen via het platform. Voor de provisieafrekening verwerken we de netto-abonnementsbedragen van de betaalde facturen van het bedrijf; de rechtsgrondslag is de uitvoering van de partner- en de gebruiksovereenkomst (artikel 6, lid 1, onder b, AVG).",
+          ],
+        },
+      ],
+    },
+    {
       heading: "Hosting en opslag",
       paragraphs: [
         "Het platform, de database, de media en de mailserver draaien op servers van Hetzner Online GmbH, Duitsland, in het datacentrum Helsinki (Finland) — dus binnen de Europese Unie. Met Hetzner bestaat een verwerkersovereenkomst.",

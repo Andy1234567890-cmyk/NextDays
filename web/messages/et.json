@@ -1500,7 +1500,12 @@
       "portalRateInvalid": "Salvestatud portaali mahaarvamise määr jääb vahemikust 0–100 % välja. Palun parandage see jaotises Raamatupidamine → Arveldusreeglid.",
       "feeUnassigned": "Vähemalt üht tasuliiki ei ole veel määratud. Ilma määramiseta ei saa kindlaks teha, kellele summa kuulub ja kas sellelt arvestatakse komisjonitasu — palun määrake see jaotises Raamatupidamine → Arveldusreeglid.",
       "feeNotComputable": "Tasu ei saa summana arvestada (see on salvestatud protsendina või ilma summata). Palun kontrollige tasu objekti juures.",
-      "contractCurrency": "Püsitasu või minimaalne komisjonitasu on määratud broneeringust erinevas valuutas. Erinevates valuutades olevaid summasid ei arvestata kokku — palun kontrollige arvelduslepingut."
+      "contractCurrency": "Püsitasu või minimaalne komisjonitasu on määratud broneeringust erinevas valuutas. Erinevates valuutades olevaid summasid ei arvestata kokku — palun kontrollige arvelduslepingut.",
+      "recurringToOwner": "Korduv kasuks",
+      "recurringFromOwner": "Korduv kahjuks",
+      "flatFees": "Lepingulised fikseeritud tasud",
+      "flatFeesIncluded": "juba väljamakses arvestatud",
+      "contractStartsLater": "Vähemalt ühe broneeringu puhul ei kehti väljaregistreerimise kuupäeval veel arveldusleping – omaniku leping algab alles hiljem. Seega on vahendustasu määr salvestatud, kuid kuupäev „Kehtib alates“ on pärast väljaregistreerimist. Sisestage arvelduslepingusse tegelik lepingu alguskuupäev."
     },
     "rental": {
       "perReservation": "Broneeringu kohta",
@@ -1520,13 +1525,66 @@
         "channexImport": "Broneering laaditi tagantjärele kanali ühendamisel. Portaalide vahendaja andmetel ei sisalda sellised broneeringud lisateenuseid ega koristustasusid — seda ei saa tagantjärele täiendada. Kui tasu tuleb arvestada, lisage see broneeringule kirjena.",
         "portalReportsNone": "Portaal ei kajasta seda tasu selle broneeringu juures eraldi kirjena. Booking.comi puhul oleneb see majutuse seadistusest (Majutusasutus → Reeglid → Lisatasud) ja sellest, millest alates tasu seal kehtib: hiljem kehtestatud tasu puudub vanemate broneeringute juures põhjendatult.",
         "noPayload": "Selle broneeringu kohta puudub portaali teade (olemasolevate andmete import). Ilma selleta ei ole võimalik tuvastada, milliseid tasusid külaline maksis.",
-        "unknownReason": "Põhjust ei ole võimalik tuvastada."
+        "unknownReason": "Põhjust ei ole võimalik tuvastada.",
+        "csvImport": "Broneering pärineb CSV-varude impordist. Imporditud summa on portaali külalise hind koos kõigi tasudega; üksikute tasude loetelu puudub ja seda ei saanud ka portaali andmetest tuletada. Seetõttu ei arvesta arveldus objekti põhiandmetest tulenevaid tasusid – need on juba summas, kuid nende suurus ei ole tõendatud.",
+        "csvResolvedTitle": "Portaali summast tuletatud tasud",
+        "csvResolved": "Broneering pärineb CSV-varude impordist; portaal ei ole esitanud spetsifikatsiooni. Tasud tuletati imporditud koguhinna ja portaali edastatud ööhindade vahest ning nimetati objekti põhiandmete kaudu. Ööbimine pluss tasud annavad täpselt koguhinna.",
+        "stammdatenPortalTitle": "Tasud on lisatud objekti põhiandmetest",
+        "stammdatenPortal": "Portaal ei ole selle broneeringu kohta tasude jaotust esitanud: broneeringud, mille portaaliagregaator kanali ühendamisel järele tõi, on ilma lisade ja koristustasudeta; failist imporditud varude import sisaldab ainult koguhinda. Seetõttu määrati tasud vastavalt objekti andmetele: koristus tasu iga viibimise kohta, kuurort iga öö kohta, lemmikloom ainult broneeritud lemmiklooma korral.",
+        "portalBelegt": "Hõivatud: Portaali koguhinna ja portaali edastatud ööhindade vahe vastab täpselt nendele tasudele.",
+        "portalImBetrag": "Portaali summas sisalduv: Portaali koguhind sisaldab juba tasusid; need on välja arvestatud, külalise hind jääb portaali summaks.",
+        "portalObendrauf": "Lisaks portaali summale: Edastatud summa on puhas ööde summa; tasud lisanduvad ja moodustavad külalise hinna."
       },
       "chain": {
         "portal": "Portaal",
         "management": "Haldus",
         "flatFee": "Püsitasu",
         "fees": "Tasud"
+      },
+      "arrival": "Saabumine",
+      "departure": "Lahkumine",
+      "commission": "Vahendustasu",
+      "flatFee": "Fikseeritud tasu",
+      "ownerShare": "Omaniku osa",
+      "portalDeduction": "Portaali mahaarvamine",
+      "fees": "Tasud",
+      "feesCount": "{n} üksust",
+      "expand": "Kuva jaotus",
+      "collapse": "Peida jaotus",
+      "expandAll": "Kuva kõik jaotused",
+      "collapseAll": "Peida kõik jaotused",
+      "breakdown": "Jaotus broneeringu kohta",
+      "noFeeItems": "Sellel broneeringul ei ole tasusid ega lisateenuseid.",
+      "posten": {
+        "guestPrice": "Külalise hind portaalis (sh tasud, v.a lisateenused)",
+        "portalCommission": "Portaali vahendustasu {kanal}",
+        "portalFee": "Portaali maksetasu",
+        "portalPayout": "Portaali väljamakse",
+        "feesOut": "Tasud külalise hinnas – arvestusest välja jäetud",
+        "feesInBase": "Tasud külalise hinnas – vahendustasuga maksustatavad, jäävad arvestusse",
+        "base": "Arvestuse alus",
+        "commission": "Haldustasu {pct}",
+        "minCommission": "Minimaalne vahendustasu (leping) {pct} asemel",
+        "contractFrom": "Leping alates {datum}",
+        "rateManual": "käsitsi selles arvelduses",
+        "rateLegacy": "Standardmäär põhiandmetest",
+        "flatFee": "Fikseeritud tasu (leping)",
+        "feesBack": "Omaniku tasud – tagastatakse täies ulatuses",
+        "ownerShare": "Omaniku osa",
+        "belongsBetrieb": "jääb ettevõttele",
+        "belongsEigentuemer": "Omanik",
+        "belongsDurchlauf": "Läbivad kirjed (kolmandad osapooled)",
+        "commissionFree": "vahendustasuta",
+        "commissionable": "vahendustasuga maksustatav",
+        "amountHidden": "Summa ettevõttes",
+        "addon": "Lisateenus",
+        "noFeesReported": "Portaal ei ole selle broneeringu kohta tasusid teatanud; seetõttu ei ole neid arvestatud.",
+        "afterPortal": "Kogusumma pärast portaali mahaarvamist",
+        "afterPortalHint": "Külalise hind miinus portaali vahendustasu ja portaali maksetasu",
+        "feesBusiness": "Ettevõtte poolt osutatud – ei kuulu väljamakse hulka",
+        "contractStartsLater": "Väljumispäeval {abreise} puudub arveldusleping: leping algab alles {beginn}. Kuupäevastage lepingu algus omaniku juures tagasi, siis arvestatakse see broneering sisse.",
+        "noContract": "Selle objekti jaoks puudub arveldusleping ja põhiandmetes puudub vahendustasu määr – looge omanikule leping.",
+        "addonsOutside": "Lisateenused – müüdud myNextDays kaudu, ei sisaldu portaali külalise hinnas"
       }
     },
     "expenses": {
@@ -1566,7 +1624,11 @@
       "rentalRevenue": "Üürikäive",
       "expenses": "Kulud ja lisad",
       "total": "Kokku",
-      "deductPercentage": "Komisjonitasu (%)"
+      "deductPercentage": "Komisjonitasu (%)",
+      "shares": "Omaniku osa broneeringutest",
+      "deductions": "Mahaarvamised",
+      "credits": "Krediidid",
+      "recurring": "Korduvad kirjed"
     },
     "manage": {
       "owner": "Omanik",
@@ -1631,6 +1693,25 @@
       "cancel": "Tühista",
       "confirm": "Kinnita",
       "working": "Kinnitatakse..."
+    },
+    "deductions": {
+      "title": "Mahaarvamised ja kreeditid",
+      "intro": "Kõik, mis muudab väljamakseid lisaks broneeringutele – kolmest allikast: lepinguline kindlasummaline tasu broneeringu kohta, ühekordsed tasaarvelduskirjed ja korduvad kirjed (püsileping).",
+      "deductions": "Mahaarvamised (omaniku kulul)",
+      "credits": "Kreeditid (omaniku kasuks)",
+      "empty": "Sel perioodil mahaarvamisi ega kreediteid ei ole.",
+      "srcExpense": "Tasaarvelduskirjed",
+      "srcRecurring": "Korduv kirje",
+      "srcFlatFee": "Lepinguline kindlasummaline tasu",
+      "perBooking": "broneeringu kohta",
+      "perNight": "öö kohta",
+      "perPeriod": "perioodi kohta",
+      "quantity": "{n} × {betrag}",
+      "flatFeesNote": "Lepingulised kindlasummalised tasud on juba broneeringu kohta omaniku osast maha arvatud – siin ainult ülevaate saamiseks, täiendavat mahaarvamist ei toimu.",
+      "manageRecurring": "Korduvate kirjete haldamine",
+      "manageContract": "Arvelduslepingu haldamine",
+      "receipt": "Kviitung",
+      "bookingsCount": "{n} broneeringut"
     }
   },
   "ownerBilling": {
@@ -1709,7 +1790,9 @@
     "effectBlocked": "{property}: Turundus lõpeb {date} — {nights} ööd blokeeritakse ja eemaldatakse portaalidest.",
     "effectReleased": "{property}: Turundus jätkub – lepingu lõpp on tühistatud ja ööd on taas müügis.",
     "effectNoUnit": "{property}: Lepingu lõpp on sisestatud, kuid kalender pole lukus - objektil puudub üksus. Pange see peale ja lukk hakkab kehtima.",
-    "effectCalendarFailed": "{property}: Lepingu lõpp on sisestatud, kalendrilukku pole kirjutatud. See lisatakse täna õhtul."
+    "effectCalendarFailed": "{property}: Lepingu lõpp on sisestatud, kalendrilukku pole kirjutatud. See lisatakse täna õhtul.",
+    "validFromHint": "Kuupäev, millest alates leping kehtib – olemasoleva lepingu puhul tegelik lepingu kuupäev, mitte tänane. Iga broneering arveldatakse lepingu alusel, mis kehtib selle väljaregistreerimise kuupäeval; varasema väljaregistreerimisega broneeringud jäävad ilma väljamakseta.",
+    "errorValidFromRequired": "Palun märkige, millisest kuupäevast leping kehtib."
   },
   "portal": {
     "title": "Minu portaal",
@@ -5465,7 +5548,8 @@
       "connectPortal": "Ühenda portaal",
       "noPortals": "Selle objektiga pole veel ühtegi portaali (Booking, Airbnb jt) ühendatud.",
       "marketplaceReview": "Ülevaatamisel",
-      "marketplaceReviewHint": "myBestDays kontrollib seda kuulutust veel. See ilmub turuplatsile pärast kinnitamist. Portaale ja oma veebisaiti see ei mõjuta."
+      "marketplaceReviewHint": "myBestDays kontrollib seda kuulutust veel. Niipea kui see on heaks kiidetud, ilmub see turuplatsile. myBestDays on kohustuslik kanal: objekti ei saa sealt eraldi välja valida – „Müügi peatamine“ eemaldab selle kõikjalt müügist.",
+      "marketplaceMandatory": "Kohustuslik kanal – iga objekt on myBestDaysis loetletud"
     },
     "IdLayout": {
       "loadError": "Objekti ei õnnestunud laadida: {error}"
@@ -5563,11 +5647,11 @@
       "stepOf": "Samm {schritt}/{gesamt}",
       "next": "Continue",
       "back": "Back",
-      "channelsHint": "Kus seda objekti tuleks müüa? Seda saab igal ajal muuta.",
+      "channelsHint": "Kus seda objekti veel müüa? Portaale ja veebisaiti saab igal ajal muuta.",
       "channelPortals": "Broneerimisportaalid",
       "channelPortalsHint": "Airbnb, Booking.com jt. Portaalid nõuavad täielikke andmeid — vaata allpool.",
       "channelPlatform": "myBestDays",
-      "channelPlatformHint": "Meie oma turuplats madala komisjonitasuga.",
+      "channelPlatformHint": "Meie oma turg 8% kõigega. Iga objekt on seal loetletud; see muutub nähtavaks pärast avaldamist ja meie heakskiitu.",
       "channelWebsite": "Oma veebisait",
       "channelWebsiteHint": "Sinu broneerimisleht ja broneerimisvidin.",
       "readinessTitle": "Portaalide jaoks on veel puudu:",
@@ -6261,7 +6345,21 @@
       "planPortalOffHint": "See hind kehtib ainult otsebroneeringutele. Klõpsake, et saata see broneerimisportaalidesse.",
       "planPortalOn": "Hind läheb nüüd broneerimisportaalidesse.",
       "planPortalOnHint": "See hind läheb broneerimisportaalidesse. Klõpsake, et kasutada seda ainult otsebroneeringute jaoks.",
-      "planPortalYes": "Portaalidesse"
+      "planPortalYes": "Portaalidesse",
+      "feeValidityTitle": "Kehtivus",
+      "feeValidityHint": "Tasud kehtivad broneeringutele, mille saabumiskuupäev jääb antud ajavahemikku. Tühi = piiranguteta. Portaalidele ei edastata ajapiiranguga tasusid: seal ei ole kuupäevatingimusi võimalik kuvada.",
+      "feeValidFromLabel": "Kehtib alates",
+      "feeValidUntilLabel": "Kehtib kuni",
+      "feeValidityOrderError": "„Kehtib kuni“ on enne „Kehtib alates“.",
+      "feeOwnerStatementOnlyLabel": "Ainult omaniku arvelduses",
+      "feeOwnerStatementOnlyHint": "Külalisele tasu ei arvestata ja portaalidele ei saadeta. See kehtib ainult omaniku arvelduses, aruandluses ja omanikuportaalis.",
+      "feeValidFromSuffix": "alates {date}",
+      "feeValidUntilSuffix": "kuni {date}",
+      "feeOwnerStatementOnlySuffix": "ainult arveldamine",
+      "feeCalculationLabel": "Arvutus",
+      "feeVatHint": "Selle tasu jaoks eraldi maksumäär, mis erineb majutuse ööbimismäärast. Väljas tähendab: tasu järgib ööbimismäära.",
+      "feeVatIncludedLabel": "Maks summas",
+      "feeVatIncludedHint": "Kas maksumäär sisaldub juba sisestatud summas või lisandub sellele? Ilma selle teabeta oleks summa kahemõtteline."
     },
     "policiesForm": {
       "title": "Reeglid",
@@ -7303,23 +7401,23 @@
     "marketplacePending": "{count} ülevaatamisel",
     "marketplaceWaiting": "Ülevaatamisel",
     "marketplace": {
-      "intro": "myBestDays on meie oma turuplats — broneerimiskanal nagu Booking või Airbnb, ainult ilma portaaliühenduseta. Objekt muutub nähtavaks, kui see on aktiivne, siin loetletud ja kinnitatud.",
+      "intro": "myBestDays on meie oma turg – broneerimiskeskkond nagu Booking või Airbnb, ainult ilma portaaliühenduseta ja kohustuslik iga objekti jaoks. Objekt on nähtav, kui see on aktiivne ja meie poolt heaks kiidetud.",
       "openMarketplace": "Ava turuplats",
       "propertiesHeading": "Objektid turuplatsil",
       "noProperties": "Objekte pole veel loodud.",
       "columnProperty": "Objekt",
-      "columnVisibility": "Nähtavus",
+      "columnVisibility": "Olek",
       "columnApproval": "Kinnitus",
       "columnBookings": "Broneeringud",
       "stateActive": "Nähtav",
       "statePending": "Ülevaatamisel",
-      "stateNotListed": "Pole loetletud",
+      "stateNotListed": "Müük peatatud",
       "stateInactiveProperty": "Objekt pole aktiivne",
       "viewListing": "Vaata kuulutust",
       "reviewHint": "Ülevaatamisel olevad objektid ei ilmu veel myBestDaysis. Kontrollime iga kuulutust, sest myBestDays esineb seal pakkujana — portaale ja oma veebisaiti see ei mõjuta.",
       "summaryVisible": "{count} nähtavat",
       "summaryWaiting": "{count} ülevaatamisel",
-      "summaryOff": "{count} pole loetletud",
+      "summaryOff": "{count} peatatud või mitteaktiivne",
       "moderation": {
         "draft": "Mustand",
         "pending": "Ülevaatamisel",
@@ -7354,7 +7452,8 @@
       "mayClose": "Importimine jätkub serveris – võite selle lehe sulgeda.",
       "andMore": "… ja veel {count}",
       "close": "Sulge",
-      "updated": "uuendatud"
+      "updated": "uuendatud",
+      "portal": "juba portaalist"
     }
   },
   "calendarSync": {
@@ -10511,7 +10610,11 @@
     "haveAccount": "Kas sul on juba konto?",
     "loginLink": "Logi siit sisse",
     "loadingHeadline": "Sinu oma broneerimisleht. Jäta endale 100 % igast broneeringust.",
-    "loadingText": "Seadistame sinu kontot …"
+    "loadingText": "Seadistame sinu kontot …",
+    "referralLabel": "Soovitaja (valikuline)",
+    "referralPlaceholder": "Soovituskood, nt ANNA-K7P2",
+    "referralHint": "Kas olete myNextDaysiga tutvunud partneri kaudu? Tema kood on siin – ta näeb ainult, et ettevõte tuli tema kaudu, mitte kunagi teie nime. Koodiga saate pärast 14-päevast prooviperioodi esimese täiskuu tasuta.",
+    "referralContactOptIn": "Minu soovitaja tohib minuga myNextDaysi kaudu ühendust võtta."
   },
   "marketingSite": {
     "stars": "4,5 tärni",

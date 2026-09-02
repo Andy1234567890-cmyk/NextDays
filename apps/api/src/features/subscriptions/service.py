@@ -33,6 +33,7 @@ from src.features.owner_statements.tax import EU_COUNTRIES as _EU_LAENDER
 from . import abrechnungswaehrung
 from .dynpricing import DynPricingBillingMixin
 from .errors import SubscriptionsConfigError, SubscriptionsError, field
+from .gratismonat import gratismonat_ende, partner_gratismonat_offen
 from .preisliste import PreislisteMixin
 from .provisionsaufstellung import AufstellungMixin
 from .provisionsdeckel import ProvisionsdeckelMixin
@@ -348,7 +349,14 @@ class SubscriptionsService(
             # `missing_payment_method: cancel` ist die fail-closed-Variante
             # (Wurzel 5): faellt die Karte bis zum Ablauf weg, endet das Abo,
             # statt in einen unbezahlten Dauerzustand zu kippen.
-            subscription_data["trial_period_days"] = TESTPHASE_TAGE
+            if partner_gratismonat_offen(db, tenant_id):
+                # Geworben → 14 Tage + 1 Gratismonat als `trial_end` (siehe
+                # gratismonat.py); schliesst `trial_period_days` bei Stripe aus.
+                subscription_data["trial_end"] = int(
+                    gratismonat_ende(datetime.now(UTC)).timestamp()
+                )
+            else:
+                subscription_data["trial_period_days"] = TESTPHASE_TAGE
             subscription_data["trial_settings"] = {
                 "end_behavior": {"missing_payment_method": "cancel"}
             }

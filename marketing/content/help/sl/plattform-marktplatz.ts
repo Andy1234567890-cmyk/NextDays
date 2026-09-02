@@ -87,12 +87,12 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "note",
               variant: "tip",
-              text: "S klikom na Objavi myNextDays običajno hkrati odpre tržnico, portale in spletno stran — stikalo tržnice lahko nato kadar koli posamično znova izklopite.",
+              text: "S klikom na »Objavi« myNextDays hkrati sprosti portale in spletno stran. myBestDays je obvezen kanal: Vsak objekt je tam naveden in se prikaže, ko objavo sprostimo.",
             },
             { type: "h2", text: "Ponovna odstranitev vidnosti" },
             {
               type: "p",
-              text: "Če deaktivirate stikalo Tržnica platforme, objekt izgine iz iskanja na tržnici. Že potrjene rezervacije s tem niso prizadete in potekajo naprej kot običajno, glejte [Provizija tržnice](/hilfe/plattform-marktplatz/marktplatz-provision).",
+              text: "myBestDays ni mogoče posamično odjaviti. Če objekta ne želite več prodajati, uporabite »Zaustavi prodajo« – s tem se objekt umakne iz prodaje na vseh portalih, na spletni strani in na tržnici hkrati. Že potrjene rezervacije ostanejo nespremenjene in se nadaljujejo kot običajno, glejte [Provizija tržnice](/hilfe/plattform-marktplatz/marktplatz-provision).",
             },
           ],
         },

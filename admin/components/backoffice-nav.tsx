@@ -26,6 +26,8 @@ const PUNKTE: Punkt[] = [
   { href: "/finanzen", label: "Stripe & Finanzen", icon: "ph:currency-eur" },
   { href: "/steuern", label: "Steuern", icon: "ph:scales" },
   { href: "/support", label: "Support", icon: "ph:lifebuoy" },
+  // Partnerprogramm (0517): Bewerbungen, Zuordnungen, Provisionen, Auszahlungen.
+  { href: "/partner", label: "Partner", icon: "ph:handshake" },
   // nurAdmin: eine Ankündigung geht an ALLE Betriebe und kann als Popup jedes
   // Kunden-Dashboard unterbrechen. platform_support darf so etwas nicht
   // auslösen — der Server erzwingt es zusätzlich (require_platform_write).

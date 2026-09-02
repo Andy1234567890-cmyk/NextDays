@@ -42,6 +42,7 @@ const APPS = [
   "plattform",
   "admin",
   "gastgeber",
+  "partner",
   "packages/ui",
 ];
 

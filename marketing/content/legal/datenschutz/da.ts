@@ -246,6 +246,40 @@ export const datenschutz: LegalDoc = {
       ],
     },
     {
+      heading: "Partnerprogram",
+      paragraphs: [
+        "Vi driver et partnerprogram, hvor partnere (influencere, konsulenter, bureauer, kunder) anbefaler virksomheder til myNextDays og modtager en provision herfor. I den forbindelse behandler vi data om partnere og – i begrænset omfang – om anbefalede virksomheder.",
+      ],
+      unterpunkte: [
+        {
+          titel: "Partnerdata",
+          paragraphs: [
+            "Ved ansøgning behandler vi navn, firmanavn, retsform, land, e-mailadresse, sprog, sociale mediekonti (platform, adresse, handle, selvangivet rækkevidde), momsregistreringsnummer (kontrol via EU-systemet VIES), udbetalingsdata (IBAN, Wise- eller PayPal-adresse) samt samtykke til deltagelsesbetingelserne med version og tidspunkt. Retsgrundlaget er opfyldelse af partneraftalen (artikel 6, stk. 1, litra b, GDPR); for kreditnotaer og opbevaring gælder skatte- og handelsretlige forpligtelser (artikel 6, stk. 1, litra c, GDPR).",
+            "Hvis en partner leder et team, ser vedkommende navn eller firmanavn, rang, antal betalende kunder og den deraf følgende teamprovision for sine team-partnere. Meddelelser mellem sponsor og team-partner gemmes på platformen, så begge kan se forløbet.",
+          ],
+        },
+        {
+          titel: "Klik på partnerlinks",
+          paragraphs: [
+            "Hvis en besøgende åbner et partnerlink (mynextdays.com/p/CODE), gemmer vi koden, tidspunktet, den besøgte side, den henvisende side og eventuelle kampagneparametre samt IP-adresse og browseridentifikation udelukkende som forkortede kontrolsummer (hash) – til misbrugsdetektion (ophobninger), ikke til genkendelse. Der sættes ingen tracking-cookie. Klikdata slettes efter 90 dage. Retsgrundlaget er vores berettigede interesse i en svindelsikker afregning af programmet (artikel 6, stk. 1, litra f, GDPR).",
+          ],
+        },
+        {
+          titel: "Forbundne sociale mediekonti og indlæg",
+          paragraphs: [
+            "Partnere kan frivilligt forbinde deres konti på YouTube (Google), Instagram og Facebook (Meta) samt TikTok med partner-dashboardet. Derved giver de den pågældende platform læseadgang (OAuth); vi skriver intet på disse konti. Vi gemmer kontoens identifikation og navn, adgangstoken krypteret, tidspunktet for forbindelsen samt dagligt en måleværdi pr. konto: antal følgere eller abonnenter, visninger de seneste 28 dage, interaktionsrate og antal indlæg, hver med tidspunktet for platformens svar. For indlæg, som partneren opretter i dashboardet (titel, platform, adresse, udgivelsesdato), gemmer vi desuden visninger, likes, kommentarer, delinger og gemte elementer fra platformen.",
+            "Formålet er at kontrollere den rækkevidde, som partneren har angivet, og at tildele klik og kunder til individuelle indlæg; ubekræftede oplysninger vægtes lavere ved frigivelse. Henvisninger til uoverensstemmelser (f.eks. et følgerspring uden passende visninger) tjener udelukkende til manuel kontrol af os og fører ikke til en automatiseret beslutning. Retsgrundlaget er partnerens samtykke (artikel 6, stk. 1, litra a, i GDPR), som gives ved tilslutning og til enhver tid kan trækkes tilbage i dashboardet under \"Afbryd forbindelse\"; ved afbrydelse sletter vi adgangstokenet med det samme, gemte målinger forbliver som historik og slettes sammen med partnerkontoen. Vi bruger udelukkende platformenes officielle grænseflader; for behandling af Google, Meta og TikTok gælder deres egne databeskyttelsesmeddelelser.",
+          ],
+        },
+        {
+          titel: "Anbefalede virksomheder",
+          paragraphs: [
+            "Hvis en virksomhed registrerer sig med en partnerkode, gemmer vi virksomhedens tilknytning til partneren samt tidspunkt, metode (link eller kode) og status. Partneren ser udelukkende virksomheden pseudonymt (løbenummer, land, status, beløb) – aldrig navn, e-mailadresse eller bookingdata. Kun hvis virksomheden udtrykkeligt giver samtykke ved registreringen, må partneren kontakte den via platformen. Til provisionsafregning behandler vi nettobeløbene for de betalte fakturaer fra virksomheden; retsgrundlaget er opfyldelsen af partner- og brugsaftalen (artikel 6, stk. 1, litra b, i GDPR).",
+          ],
+        },
+      ],
+    },
+    {
       heading: "Hosting og lagring",
       paragraphs: [
         "Platformen, databasen, medierne og mailserveren kører på servere hos Hetzner Online GmbH, Tyskland, i datacentret i Helsinki (Finland) — altså inden for Den Europæiske Union. Med Hetzner er der indgået en databehandleraftale.",

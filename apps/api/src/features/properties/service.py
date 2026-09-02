@@ -377,7 +377,7 @@ class PropertiesService(
         # Gast tatsächlich buchen/zahlen kann, muss eine Auszahlung möglich sein.
         self._require_type_matches_accommodation(tenant_id, req.property_type)
         payload = req.model_dump(mode="json")
-        payload["tenant_id"] = tenant_id
+        payload.update(tenant_id=tenant_id, listed_on_marketplace=True)  # 0527 Pflichtkanal
         # Ein neu angelegtes Objekt ist IMMER ein Entwurf. "Aktiv" (= verkaufbar)
         # wird man ausschließlich über publish(), den einzigen Pfad, der die
         # Portal-Registrierung (channex_property_map) blockierend erzwingt. Ein
@@ -1303,7 +1303,7 @@ class PropertiesService(
         payload["tenant_id"] = tenant_id
         payload["status"] = PropertyStatus.draft.value
         payload["listed_on_website"] = False
-        payload["listed_on_marketplace"] = False
+        payload["listed_on_marketplace"] = True  # Pflichtkanal (0527)
         title = (row.get("title") or "Unbenannt").strip()
         payload["title"] = f"{title} (Kopie)"
 

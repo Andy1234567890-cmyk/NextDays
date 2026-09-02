@@ -87,12 +87,12 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "note",
               variant: "tip",
-              text: "Apăsând pe Publicare, myNextDays activează în mod normal simultan piața, portalurile și site-ul web — puteți oricând dezactiva ulterior, individual, comutatorul pieței.",
+              text: "Dacă faceți clic pe Publicare, myNextDays va activa portalurile și site-ul web în același timp. myBestDays este un canal obligatoriu: fiecare proprietate este listată acolo și apare de îndată ce am aprobat anunțul.",
             },
             { type: "h2", text: "Eliminarea vizibilității" },
             {
               type: "p",
-              text: "Dacă dezactivați comutatorul Piață, obiectul dispare din căutarea de pe piață. Rezervările deja confirmate rămân neafectate și continuă ca de obicei, vezi [Comisionul pieței](/hilfe/plattform-marktplatz/marktplatz-provision).",
+              text: "myBestDays nu poate fi dezactivat individual. Dacă o proprietate nu mai trebuie vândută, utilizați „Pauză vânzare” – aceasta o va elimina de la vânzare de pe toate portalurile, de pe site-ul web și de pe piață în același timp. Rezervările deja confirmate rămân neafectate și continuă ca de obicei, vezi [Comision piață](/hilfe/plattform-marktplatz/marktplatz-provision).",
             },
           ],
         },

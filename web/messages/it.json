@@ -1500,7 +1500,12 @@
       "portalRateInvalid": "Una percentuale di trattenuta del portale registrata è fuori dall'intervallo 0–100 %. Correggerla in Contabilità → Regole di rendiconto.",
       "feeUnassigned": "Almeno un tipo di supplemento non è ancora assegnato. Senza assegnazione non è possibile stabilire a chi spetta l'importo né se su di esso maturi commissione — definirlo in Contabilità → Regole di rendiconto.",
       "feeNotComputable": "Un supplemento non può essere conteggiato come importo (registrato in percentuale o senza importo). Verificare il supplemento sulla struttura.",
-      "contractCurrency": "Un forfait o una commissione minima è espresso in una valuta diversa da quella della prenotazione. Gli importi in valute diverse non vengono convertiti — verificare il contratto di rendiconto."
+      "contractCurrency": "Un forfait o una commissione minima è espresso in una valuta diversa da quella della prenotazione. Gli importi in valute diverse non vengono convertiti — verificare il contratto di rendiconto.",
+      "recurringToOwner": "Ricorrente a favore",
+      "recurringFromOwner": "Ricorrente a carico",
+      "flatFees": "Tariffe forfettarie da contratto",
+      "flatFeesIncluded": "già incluse nel pagamento",
+      "contractStartsLater": "Per almeno una prenotazione, non esiste ancora un contratto di fatturazione valido per la data di partenza — il contratto del proprietario inizia solo più tardi. La percentuale di commissione è quindi memorizzata, ma la data \"Valido da\" è successiva alla partenza. Inserire la data di inizio effettiva del contratto nel contratto di fatturazione."
     },
     "rental": {
       "perReservation": "Per prenotazione",
@@ -1520,13 +1525,66 @@
         "channexImport": "La prenotazione è stata recuperata a posteriori al momento del collegamento del canale. Secondo l'intermediario di prenotazione queste prenotazioni non contengono extra né costi di pulizia — non è possibile recuperarli in seguito. Se il costo deve essere addebitato, lo inserisca come voce nella prenotazione.",
         "portalReportsNone": "Per questa prenotazione il portale non riporta il costo come voce separata. Su Booking.com ciò dipende dalla configurazione della struttura (Struttura → Regole → Costi aggiuntivi) e dalla data a partire dalla quale il costo è in vigore: un costo introdotto successivamente manca giustamente nelle prenotazioni più vecchie.",
         "noPayload": "Per questa prenotazione non è disponibile alcun messaggio del portale (importazione dei dati esistenti). Senza di esso non è possibile stabilire quali costi l'ospite abbia pagato.",
-        "unknownReason": "Il motivo non è determinabile."
+        "unknownReason": "Il motivo non è determinabile.",
+        "csvImport": "La prenotazione proviene dall'importazione CSV dell'inventario. L'importo importato è il prezzo ospite del portale, incluse tutte le commissioni; non è disponibile un elenco delle singole commissioni e non è stato possibile ricavarlo dai dati del portale. La fatturazione non applica quindi commissioni dai dati anagrafici dell'oggetto: sono già incluse nell'importo, ma la loro entità non è documentata.",
+        "csvResolvedTitle": "Commissioni derivate dall'importo del portale",
+        "csvResolved": "La prenotazione proviene dall'importazione CSV dell'inventario; il portale non ha fornito un elenco. Le commissioni sono state derivate dalla differenza tra il prezzo totale importato e i prezzi per notte comunicati dal portale e denominate tramite i dati anagrafici dell'oggetto. Pernottamento più commissioni equivalgono esattamente al prezzo totale.",
+        "stammdatenPortalTitle": "Costi aggiunti dai dati anagrafici dell'immobile",
+        "stammdatenPortal": "Il portale non ha fornito un riepilogo delle tariffe per questa prenotazione: le prenotazioni recuperate dall'aggregatore del portale al momento della connessione del canale non includono extra e costi di pulizia; un'importazione di inventario da un file contiene solo il prezzo totale. Le tariffe sono state quindi impostate come memorizzate nella proprietà: pulizia per soggiorno, resort per notte, animale domestico solo se prenotato.",
+        "portalBelegt": "Occupato: La differenza tra il prezzo totale del portale e i prezzi per notte comunicati dal portale corrisponde esattamente a queste tariffe.",
+        "portalImBetrag": "Incluso nell'importo del portale: Il prezzo totale del portale include già le tariffe; queste sono state detratte, il prezzo per l'ospite rimane l'importo del portale.",
+        "portalObendrauf": "In aggiunta all'importo del portale: L'importo comunicato è la somma delle sole notti; le tariffe vengono aggiunte e costituiscono il prezzo per l'ospite."
       },
       "chain": {
         "portal": "Portale",
         "management": "Gestione",
         "flatFee": "Forfait",
         "fees": "Spese"
+      },
+      "arrival": "Arrivo",
+      "departure": "Partenza",
+      "commission": "Commissione",
+      "flatFee": "Forfait",
+      "ownerShare": "Quota proprietario",
+      "portalDeduction": "Detrazione portale",
+      "fees": "Spese",
+      "feesCount": "{n} articoli",
+      "expand": "Mostra riepilogo",
+      "collapse": "Nascondi riepilogo",
+      "expandAll": "Mostra tutti i riepiloghi",
+      "collapseAll": "Nascondi tutti i riepiloghi",
+      "breakdown": "Riepilogo per prenotazione",
+      "noFeeItems": "Nessun costo o servizio aggiuntivo per questa prenotazione.",
+      "posten": {
+        "guestPrice": "Prezzo ospite secondo il portale (incl. commissioni, senza servizi aggiuntivi)",
+        "portalCommission": "Commissione portale {kanal}",
+        "portalFee": "Commissione di pagamento portale",
+        "portalPayout": "Pagamento del portale",
+        "feesOut": "Commissioni nel prezzo ospite — escluse dalla base imponibile",
+        "feesInBase": "Commissioni nel prezzo ospite — soggette a commissione, rimangono nella base imponibile",
+        "base": "Base imponibile",
+        "commission": "Commissione di gestione {pct}",
+        "minCommission": "Commissione minima (contratto) invece di {pct}",
+        "contractFrom": "Contratto dal {datum}",
+        "rateManual": "Manuale in questo conteggio",
+        "rateLegacy": "Tariffa standard dai dati anagrafici",
+        "flatFee": "Forfait (contratto)",
+        "feesBack": "Commissioni del proprietario — restituite integralmente",
+        "ownerShare": "Quota proprietario",
+        "belongsBetrieb": "Resta all'azienda",
+        "belongsEigentuemer": "Proprietario",
+        "belongsDurchlauf": "Voci transitorie (terzi)",
+        "commissionFree": "Senza commissioni",
+        "commissionable": "Soggetto a commissione",
+        "amountHidden": "Importo presso l'azienda",
+        "addon": "Servizio aggiuntivo",
+        "noFeesReported": "Il portale non ha segnalato commissioni per questa prenotazione; pertanto non ne sono state applicate.",
+        "afterPortal": "Importo totale dopo la detrazione del portale",
+        "afterPortalHint": "Prezzo ospite meno commissione portale e commissione di pagamento portale",
+        "feesBusiness": "Fornito dall'azienda — non parte del pagamento",
+        "contractStartsLater": "Nessun contratto di fatturazione il giorno di partenza {abreise}: il contratto inizia solo il {beginn}. Retrodatare l'inizio del contratto con il proprietario, quindi questa prenotazione verrà fatturata.",
+        "noContract": "Per questa proprietà non esiste un contratto di fatturazione e nessuna percentuale di commissione nei dati anagrafici — creare un contratto con il proprietario.",
+        "addonsOutside": "Servizi aggiuntivi — venduti tramite myNextDays, non inclusi nel prezzo ospite del portale"
       }
     },
     "expenses": {
@@ -1566,7 +1624,11 @@
       "rentalRevenue": "Ricavi da locazione",
       "expenses": "Spese ed extra",
       "total": "Totale",
-      "deductPercentage": "Commissione (%)"
+      "deductPercentage": "Commissione (%)",
+      "shares": "Quota proprietario dalle prenotazioni",
+      "deductions": "Detrazioni",
+      "credits": "Crediti",
+      "recurring": "Voci ricorrenti"
     },
     "manage": {
       "owner": "Proprietario",
@@ -1631,6 +1693,25 @@
       "cancel": "Annulla",
       "confirm": "Rendi definitiva",
       "working": "Definizione in corso..."
+    },
+    "deductions": {
+      "title": "Detrazioni e crediti",
+      "intro": "Tutto ciò che modifica il pagamento oltre alle prenotazioni — da tre fonti: importo forfettario dal contratto per prenotazione, voci di compensazione una tantum e voci ricorrenti (accordo permanente).",
+      "deductions": "Detrazioni (a carico del proprietario)",
+      "credits": "Crediti (a favore del proprietario)",
+      "empty": "Nessuna detrazione o credito in questo periodo.",
+      "srcExpense": "Voci di compensazione",
+      "srcRecurring": "Voce ricorrente",
+      "srcFlatFee": "Importo forfettario da contratto",
+      "perBooking": "per prenotazione",
+      "perNight": "per notte",
+      "perPeriod": "per periodo",
+      "quantity": "{n} × {betrag}",
+      "flatFeesNote": "Gli importi forfettari dal contratto sono già stati detratti dalle quote del proprietario per prenotazione — qui solo per panoramica, nessuna ulteriore detrazione.",
+      "manageRecurring": "Gestisci voci ricorrenti",
+      "manageContract": "Gestisci contratto di fatturazione",
+      "receipt": "Ricevuta",
+      "bookingsCount": "{n} prenotazioni"
     }
   },
   "ownerBilling": {
@@ -1709,7 +1790,9 @@
     "effectReleased": "{property}: la commercializzazione continua — la fine del contratto è stata annullata e le notti sono di nuovo vendibili.",
     "effectBlocked": "{property}: la commercializzazione termina il {date} — {nights} notti bloccate e ritirate dai portali.",
     "effectCalendarFailed": "{property}: La fine del contratto è registrata, ma il blocco del calendario non è stato scritto. Verrà aggiunto stanotte.",
-    "effectNoUnit": "{property}: La fine del contratto è registrata, ma il calendario non è bloccato — all'alloggio manca un'unità. Creala, poi il blocco sarà attivo."
+    "effectNoUnit": "{property}: La fine del contratto è registrata, ma il calendario non è bloccato — all'alloggio manca un'unità. Creala, poi il blocco sarà attivo.",
+    "validFromHint": "Il giorno da cui l'accordo è valido — per un contratto esistente, la data effettiva del contratto, non oggi. Ogni prenotazione viene fatturata con il contratto valido alla data di partenza; le prenotazioni con partenza anticipata rimangono senza pagamento.",
+    "errorValidFromRequired": "Specificare da quando è valido il contratto."
   },
   "portal": {
     "title": "Il mio portale",
@@ -5465,7 +5548,8 @@
       "connectPortal": "Collega un portale",
       "noPortals": "Ancora nessun portale (Booking, Airbnb & Co.) collegato a questa struttura.",
       "marketplaceReview": "In verifica",
-      "marketplaceReviewHint": "myBestDays sta ancora verificando questo annuncio. Comparirà nel marketplace una volta approvato. Portali e sito web proprio non sono interessati."
+      "marketplaceReviewHint": "myBestDays sta ancora esaminando questo annuncio. Una volta approvato, apparirà sul marketplace. myBestDays è un canale obbligatorio: una struttura non può essere deselezionata singolarmente — \"Sospendi vendita\" la rimuove dalla vendita ovunque.",
+      "marketplaceMandatory": "Canale obbligatorio — ogni struttura è elencata su myBestDays"
     },
     "IdLayout": {
       "loadError": "Impossibile caricare l'alloggio: {error}"
@@ -5563,11 +5647,11 @@
       "stepOf": "Passo {schritt} di {gesamt}",
       "next": "Continue",
       "back": "Back",
-      "channelsHint": "Dove deve essere venduta questa struttura? Puoi cambiarlo in qualsiasi momento.",
+      "channelsHint": "Dove si desidera vendere questa struttura aggiuntivamente? I portali e il sito web possono essere modificati in qualsiasi momento.",
       "channelPortals": "Portali di prenotazione",
       "channelPortalsHint": "Airbnb, Booking.com e altri. I portali richiedono dati completi — vedi sotto.",
       "channelPlatform": "myBestDays",
-      "channelPlatformHint": "Il nostro marketplace con una commissione bassa.",
+      "channelPlatformHint": "Il nostro marketplace con l'8% tutto incluso. Ogni struttura è elencata lì; sarà visibile dopo la pubblicazione e la nostra approvazione.",
       "channelWebsite": "Sito web proprio",
       "channelWebsiteHint": "La tua pagina di prenotazione e il widget di prenotazione.",
       "readinessTitle": "Per i portali manca ancora:",
@@ -6261,7 +6345,21 @@
       "planPortalOffHint": "Questo prezzo è valido solo per le prenotazioni dirette. Clicca per inviarlo ai portali di prenotazione.",
       "planPortalOn": "Il prezzo è ora inviato ai portali di prenotazione.",
       "planPortalOnHint": "Questo prezzo è inviato ai portali di prenotazione. Clicca per usarlo solo per le prenotazioni dirette.",
-      "planPortalYes": "Ai portali"
+      "planPortalYes": "Ai portali",
+      "feeValidityTitle": "Validità",
+      "feeValidityHint": "La tariffa si applica alle prenotazioni il cui arrivo rientra nel periodo. Vuoto = senza limiti. Una tariffa con periodo non viene inviata ai portali: lì non è possibile rappresentare una condizione di data.",
+      "feeValidFromLabel": "Valido da",
+      "feeValidUntilLabel": "Valido fino a",
+      "feeValidityOrderError": "\"Valido fino a\" è precedente a \"Valido da\".",
+      "feeOwnerStatementOnlyLabel": "Solo nel rendiconto del proprietario",
+      "feeOwnerStatementOnlyHint": "La tariffa non viene addebitata all'ospite e non viene inviata a nessun portale. Ha effetto solo nel rendiconto del proprietario, nella valutazione e nel portale del proprietario.",
+      "feeValidFromSuffix": "dal {date}",
+      "feeValidUntilSuffix": "fino al {date}",
+      "feeOwnerStatementOnlySuffix": "solo rendiconto",
+      "feeCalculationLabel": "Calcolo",
+      "feeVatHint": "Un'aliquota fiscale separata per questa tassa, diversa dall'aliquota di pernottamento della proprietà. Disattivato significa: la tassa segue l'aliquota di pernottamento.",
+      "feeVatIncludedLabel": "Imposta nell'importo",
+      "feeVatIncludedHint": "L'aliquota fiscale è già inclusa nell'importo inserito o viene aggiunta? Senza questa informazione, l'importo sarebbe ambiguo."
     },
     "policiesForm": {
       "title": "Policy",
@@ -7303,23 +7401,23 @@
     "marketplacePending": "{count} in verifica",
     "marketplaceWaiting": "In verifica",
     "marketplace": {
-      "intro": "myBestDays è il nostro marketplace — un canale di prenotazione come Booking o Airbnb, solo senza collegamento al portale. Un alloggio diventa visibile se è attivo, elencato qui e approvato.",
+      "intro": "myBestDays è il nostro marketplace — un canale di prenotazione come Booking o Airbnb, ma senza collegamento al portale, e obbligatorio per ogni struttura. Una struttura diventa visibile quando è attiva e da noi approvata.",
       "openMarketplace": "Apri marketplace",
       "propertiesHeading": "Alloggi nel marketplace",
       "noProperties": "Nessun alloggio ancora creato.",
       "columnProperty": "Alloggio",
-      "columnVisibility": "Visibilità",
+      "columnVisibility": "Stato",
       "columnApproval": "Approvazione",
       "columnBookings": "Prenotazioni",
       "stateActive": "Visibile",
       "statePending": "In verifica",
-      "stateNotListed": "Non elencato",
+      "stateNotListed": "Vendita in pausa",
       "stateInactiveProperty": "Alloggio non attivo",
       "viewListing": "Vedi annuncio",
       "reviewHint": "Gli alloggi in verifica non compaiono ancora su myBestDays. Verifichiamo ogni annuncio perché lì myBestDays agisce come fornitore — portali e sito web proprio non sono interessati.",
       "summaryVisible": "{count} visibili",
       "summaryWaiting": "{count} in verifica",
-      "summaryOff": "{count} non elencati",
+      "summaryOff": "{count} in pausa o inattivi",
       "moderation": {
         "draft": "Bozza",
         "pending": "In verifica",
@@ -7354,7 +7452,8 @@
       "mayClose": "L'importazione continua sul server — può chiudere questa pagina.",
       "andMore": "… e altri {count}",
       "close": "Chiudere",
-      "updated": "aggiornato"
+      "updated": "aggiornato",
+      "portal": "già dal portale"
     }
   },
   "calendarSync": {
@@ -10511,7 +10610,11 @@
     "haveAccount": "Hai già un account?",
     "loginLink": "Accedi qui",
     "loadingHeadline": "Il tuo sito di prenotazione. Tieni il 100 % di ogni prenotazione.",
-    "loadingText": "Stiamo configurando il tuo account …"
+    "loadingText": "Stiamo configurando il tuo account …",
+    "referralLabel": "Empfohlen von (opzionale)",
+    "referralPlaceholder": "Codice di raccomandazione, es. ANNA-K7P2",
+    "referralHint": "Ha conosciuto myNextDays tramite un partner? Inserisca qui il suo codice: vedrà solo che un'azienda è arrivata tramite lui, mai il suo nome. Con il codice, dopo i 14 giorni di prova, riceverà il primo mese intero in omaggio.",
+    "referralContactOptIn": "Il mio referente può contattarmi tramite myNextDays."
   },
   "marketingSite": {
     "stars": "4,5 stelle",

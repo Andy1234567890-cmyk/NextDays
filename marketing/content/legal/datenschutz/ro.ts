@@ -250,6 +250,40 @@ export const datenschutz: LegalDoc = {
       ],
     },
     {
+      heading: "Program de parteneriat",
+      paragraphs: [
+        "Operăm un program de parteneriat prin care partenerii (influenceri, consultanți, agenții, clienți) recomandă afaceri către myNextDays și primesc un comision. În acest proces, prelucrăm date de la parteneri și – într-o măsură limitată – de la afacerile recomandate.",
+      ],
+      unterpunkte: [
+        {
+          titel: "Datele partenerilor",
+          paragraphs: [
+            "La înregistrare, prelucrăm numele, denumirea companiei, forma juridică, țara, adresa de e-mail, limba, conturile de social media (platforma, adresa, handle-ul, acoperirea declarată), numărul de identificare fiscală (verificare prin sistemul UE VIES), datele de plată (IBAN, adresa Wise sau PayPal), precum și acordul cu termenii și condițiile de participare, cu versiunea și data. Temeiul juridic este executarea contractului de parteneriat (Art. 6 alin. 1 lit. b GDPR); pentru credite și păstrare se aplică obligațiile fiscale și comerciale (Art. 6 alin. 1 lit. c GDPR).",
+            "Dacă un partener conduce o echipă, el vede numele sau denumirea companiei, rangul, numărul de clienți plătitori și comisionul de echipă rezultat de la partenerii săi de echipă. Mesajele dintre sponsor și partenerul de echipă sunt stocate în platformă, astfel încât ambii să poată vedea istoricul.",
+          ],
+        },
+        {
+          titel: "Clicuri pe link-uri de parteneriat",
+          paragraphs: [
+            "Dacă un vizitator accesează un link de parteneriat (mynextdays.com/p/CODE), stocăm codul, ora, pagina accesată, pagina de referință și eventualii parametri de campanie, precum și adresa IP și identificatorul browserului exclusiv ca sume de control scurtate (hash) – pentru detectarea abuzurilor (frecvențe), nu pentru recunoaștere. Nu este setat un cookie de urmărire. Ștergem datele de clic după 90 de zile. Temeiul juridic este interesul nostru legitim de a asigura o decontare a programului fără fraude (Art. 6 alin. 1 lit. f GDPR).",
+          ],
+        },
+        {
+          titel: "Conturi și postări conectate de social media",
+          paragraphs: [
+            "Partenerii își pot conecta voluntar conturile de YouTube (Google), Instagram și Facebook (Meta), precum și TikTok la tabloul de bord al partenerului. În acest proces, ei acordă platformei respective o permisiune de citire (OAuth); nu scriem nimic în aceste conturi. Stocăm identificatorul și numele contului, token-ul de acces criptat, momentul conectării, precum și zilnic o valoare de măsurare pentru fiecare cont: numărul de urmăritori sau abonați, vizualizările din ultimele 28 de zile, rata de interacțiune și numărul de postări, fiecare cu momentul răspunsului platformei. Pentru postările pe care partenerul le creează în tabloul de bord (titlu, platformă, adresă, data publicării), stocăm suplimentar vizualizările, aprecierile, comentariile, distribuirile și salvările din platformă.",
+            "Scopul este verificarea acoperirii indicate de partener și atribuirea clicurilor și clienților către postări individuale; informațiile neverificate sunt ponderate mai puțin la aprobare. Indicațiile de neconcordanțe (cum ar fi o creștere bruscă a numărului de urmăritori fără vizualizări corespunzătoare) servesc exclusiv verificării manuale de către noi și nu duc la nicio decizie automatizată. Temeiul juridic este consimțământul partenerului (art. 6 alin. (1) lit. a GDPR), pe care îl acordă prin conectare și pe care îl poate revoca oricând în tabloul de bord sub „Deconectare”; la deconectare, ștergem imediat tokenul de acces, valorile măsurate stocate rămân ca istoric și sunt șterse odată cu contul partenerului. Utilizăm exclusiv interfețele oficiale ale platformelor; pentru prelucrarea de către Google, Meta și TikTok se aplică propriile lor politici de confidențialitate.",
+          ],
+        },
+        {
+          titel: "Afaceri recomandate",
+          paragraphs: [
+            "Dacă o afacere se înregistrează cu un cod de partener, stocăm asocierea afacerii cu partenerul, precum și data, modalitatea (link sau cod) și statutul. Partenerul vede afacerea exclusiv pseudonimizat (număr curent, țară, statut, sume) — niciodată numele, adresa de e-mail sau datele de rezervare. Doar dacă afacerea își dă acordul explicit la înregistrare, partenerul o poate contacta prin intermediul platformei. Pentru decontarea comisioanelor, prelucrăm sumele nete ale abonamentelor din facturile plătite ale afacerii; temeiul juridic este executarea contractului de parteneriat și a contractului de utilizare (art. 6 alin. (1) lit. b GDPR).",
+          ],
+        },
+      ],
+    },
+    {
       heading: "Găzduire și stocare",
       paragraphs: [
         "Platforma, baza de date, fișierele media și serverul de e-mail rulează pe servere ale Hetzner Online GmbH, Germania, în centrul de date din Helsinki (Finlanda) — deci în interiorul Uniunii Europene. Cu Hetzner există un acord de prelucrare a datelor.",

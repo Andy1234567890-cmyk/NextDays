@@ -1500,7 +1500,12 @@
       "portalRateInvalid": "Rata ta’ tnaqqis tal-portal irreġistrata hija barra mill-medda 0–100 %. Jekk jogħġbok irranġaha taħt Kontabilità → Regoli tal-ikklerjar.",
       "feeUnassigned": "Mill-inqas tip ta’ tariffa waħda għadha ma ġietx assenjata. Mingħajr assenjazzjoni ma jistax jiġi determinat ta’ min hu l-ammont u jekk tapplika kummissjoni fuqu — jekk jogħġbok iddefinixxi dan taħt Kontabilità → Regoli tal-ikklerjar.",
       "feeNotComputable": "Tariffa ma tistax tiġi kklerjata bħala ammont (hija rreġistrata b’persentaġġ jew mingħajr ammont). Jekk jogħġbok iċċekkja t-tariffa fil-propjetà.",
-      "contractCurrency": "Tariffa fissa jew kummissjoni minima hija f’munita differenti minn dik tal-prenotazzjoni. Ammonti fi muniti differenti ma jiġux ikkumpensati bejniethom — jekk jogħġbok iċċekkja l-kuntratt tal-ikklerjar."
+      "contractCurrency": "Tariffa fissa jew kummissjoni minima hija f’munita differenti minn dik tal-prenotazzjoni. Ammonti fi muniti differenti ma jiġux ikkumpensati bejniethom — jekk jogħġbok iċċekkja l-kuntratt tal-ikklerjar.",
+      "recurringToOwner": "Rikorrenti favur",
+      "recurringFromOwner": "Rikorrenti kontra",
+      "flatFees": "Rati fissi mill-kuntratt",
+      "flatFeesIncluded": "diġà inkluż fil-ħlas",
+      "contractStartsLater": "Għal mill-inqas booking wieħed, ma hemm l-ebda ftehim ta' kontijiet validu fid-data tat-tluq – il-ftehim tas-sid jibda aktar tard. Ir-rata tal-kummissjoni hija maħżuna, iżda d-data 'Valida minn' hija wara t-tluq. Jekk jogħġbok daħħal id-data attwali tal-bidu tal-kuntratt fil-ftehim tal-kontijiet."
     },
     "rental": {
       "perReservation": "Għal kull riżervazzjoni",
@@ -1520,13 +1525,66 @@
         "channexImport": "Il-prenotazzjoni nġabret wara, meta ġie mqabbad il-kanal. Skont l-intermedjarju tal-prenotazzjonijiet, dawn il-prenotazzjonijiet ma jinkludux extras u lanqas ħlasijiet ta' tindif — dan ma jistax jiġi miżjud wara. Jekk il-ħlas għandu jiddaħħal fil-kont, daħħlu bħala partita fil-prenotazzjoni.",
         "portalReportsNone": "Għal din il-prenotazzjoni l-portal ma jniżżelx il-ħlas bħala partita separata. Fil-każ ta' Booking.com dan jiddependi mill-konfigurazzjoni tal-akkomodazzjoni (Akkomodazzjoni → Politiki → Ħlasijiet addizzjonali) u mid-data minn meta japplika l-ħlas hemmhekk: ħlas introdott aktar tard ġustament ma jidhirx fi prenotazzjonijiet eqdem.",
         "noPayload": "Għal din il-prenotazzjoni ma hemmx messaġġ mill-portal (importazzjoni ta' data eżistenti). Mingħajru ma jistax jiġi stabbilit liema ħlasijiet ħallas il-mistieden.",
-        "unknownReason": "Ir-raġuni ma tistax tiġi determinata."
+        "unknownReason": "Ir-raġuni ma tistax tiġi determinata.",
+        "csvImport": "Il-booking ġej mill-importazzjoni tal-inventarju CSV. L-ammont importat huwa l-prezz tal-mistieden tal-portal inklużi l-miżati kollha; ma hemm l-ebda speċifikazzjoni ta' miżati individwali u ma setgħetx tiġi derivata mid-dejta tal-portal. Għalhekk, il-kontijiet ma japplikawx miżati mid-dejta ewlenija tal-proprjetà - diġà huma inklużi fl-ammont, iżda l-ammont tagħhom mhuwiex dokumentat.",
+        "csvResolvedTitle": "Miżati derivati mill-ammont tal-portal",
+        "csvResolved": "Il-booking ġej mill-importazzjoni tal-inventarju CSV; il-portal ma pprovda l-ebda speċifikazzjoni. Il-miżati ġew derivati mid-differenza bejn il-prezz totali importat u l-prezzijiet ta' kull lejl trażmessi mill-portal u msemmija permezz tad-dejta ewlenija tal-proprjetà. Il-lejl flimkien mal-miżati jammontaw eżattament għall-prezz totali.",
+        "stammdatenPortalTitle": "Ħlasijiet miżjuda mid-dejta ewlenija tal-proprjetà",
+        "stammdatenPortal": "Il-portal ma pprovdax dettalji tal-ħlasijiet għal din il-booking: bookings li l-aggregatur tal-portal ġabar wara li l-kanal ġie konness ma jiġux b'ekstras u ħlasijiet ta' tindif; importazzjoni ta' inventarju minn fajl tinkludi biss il-prezz totali. Għalhekk, il-ħlasijiet ġew stabbiliti skont kif huma rreġistrati fil-proprjetà: tindif għal kull soġġorn, resort għal kull lejl, annimali domestiċi biss jekk ikunu bbukkjati.",
+        "portalBelegt": "Okkuppat: Id-differenza bejn il-prezz totali tal-portal u l-prezzijiet ta' kull lejl trażmessi mill-portal tikkorrispondi eżattament għal dawn il-ħlasijiet.",
+        "portalImBetrag": "Inkluż fl-ammont tal-portal: Il-prezz totali tal-portal diġà jinkludi l-ħlasijiet; dawn tneħħew, il-prezz tal-mistieden jibqa' l-ammont tal-portal.",
+        "portalObendrauf": "Minbarra l-ammont tal-portal: L-ammont trażmess huwa s-somma tal-iljieli biss; il-ħlasijiet huma miżjuda ma' dan biex jiffurmaw il-prezz tal-mistieden."
       },
       "chain": {
         "portal": "Portal",
         "management": "Amministrazzjoni",
         "flatFee": "Ħlas fiss",
         "fees": "Ħlasijiet"
+      },
+      "arrival": "Wasla",
+      "departure": "Tluq",
+      "commission": "Kummissjoni",
+      "flatFee": "Rata fissa",
+      "ownerShare": "Sehem tas-sid",
+      "portalDeduction": "Tnaqqis mill-portal",
+      "fees": "Ħlasijiet",
+      "feesCount": "{n} oġġetti",
+      "expand": "Uri d-dettalji",
+      "collapse": "Aħbi d-dettalji",
+      "expandAll": "Uri d-dettalji kollha",
+      "collapseAll": "Aħbi d-dettalji kollha",
+      "breakdown": "Dettalji għal kull prenotazzjoni",
+      "noFeeItems": "Ebda ħlas jew servizzi addizzjonali għal din il-prenotazzjoni.",
+      "posten": {
+        "guestPrice": "Prezz tal-klijent skont il-portal (inklużi l-miżati, esklużi servizzi addizzjonali)",
+        "portalCommission": "Kummissjoni tal-portal {kanal}",
+        "portalFee": "Tariffa tal-ħlas tal-portal",
+        "portalPayout": "Ħlas tal-portal",
+        "feesOut": "Tariffi fil-prezz tal-klijent — esklużi mill-kalkolu",
+        "feesInBase": "Tariffi fil-prezz tal-klijent — soġġetti għal kummissjoni, jibqgħu fil-kalkolu",
+        "base": "Bażi tal-kalkolu",
+        "commission": "Kummissjoni ta' ġestjoni {pct}",
+        "minCommission": "Kummissjoni minima (kuntratt) minflok {pct}",
+        "contractFrom": "Kuntratt minn {datum}",
+        "rateManual": "manwalment f'dan il-kont",
+        "rateLegacy": "Rata standard mid-dejta ewlenija",
+        "flatFee": "Rata fissa (kuntratt)",
+        "feesBack": "Tariffi tas-sid — lura mingħajr tnaqqis",
+        "ownerShare": "Sehem tas-sid",
+        "belongsBetrieb": "jibqa' mal-operazzjoni",
+        "belongsEigentuemer": "Sid",
+        "belongsDurchlauf": "Oġġetti ta' pass-through (partijiet terzi)",
+        "commissionFree": "mingħajr kummissjoni",
+        "commissionable": "soġġett għal kummissjoni",
+        "amountHidden": "Ammont mal-operazzjoni",
+        "addon": "Servizz addizzjonali",
+        "noFeesReported": "Il-portal ma rrapporta l-ebda tariffa għal din il-prenotazzjoni; għalhekk ma ġiet applikata l-ebda tariffa.",
+        "afterPortal": "Ammont totali wara t-tnaqqis tal-portal",
+        "afterPortalHint": "Prezz tal-klijent nieqes il-kummissjoni tal-portal u t-tariffa tal-ħlas tal-portal",
+        "feesBusiness": "Ipprovdut mill-operazzjoni — mhux parti mill-ħlas",
+        "contractStartsLater": "L-ebda ftehim ta' kontijiet fid-data tat-tluq {abreise}: il-ftehim jibda biss fi {beginn}. Iddata l-bidu tal-ftehim lura mas-sid, imbagħad din il-prenotazzjoni tiġi kkunsidrata.",
+        "noContract": "Għal din il-proprjetà, m'hemm l-ebda ftehim ta' kontijiet u l-ebda rata ta' kummissjoni fid-dejta ewlenija — oħloq ftehim mas-sid.",
+        "addonsOutside": "Servizzi addizzjonali — mibjugħa permezz ta' myNextDays, mhux inklużi fil-prezz tal-klijent tal-portal"
       }
     },
     "expenses": {
@@ -1566,7 +1624,11 @@
       "rentalRevenue": "Dħul mill-kiri",
       "expenses": "Spejjeż u extras",
       "total": "Total",
-      "deductPercentage": "Kummissjoni (%)"
+      "deductPercentage": "Kummissjoni (%)",
+      "shares": "Is-sehem tas-sid mill-bookings",
+      "deductions": "Tnaqqis",
+      "credits": "Krediti",
+      "recurring": "Oġġetti rikorrenti"
     },
     "manage": {
       "owner": "Sid",
@@ -1631,6 +1693,25 @@
       "cancel": "Ikkanċella",
       "confirm": "Iffissa",
       "working": "Qed jiġi ffissat …"
+    },
+    "deductions": {
+      "title": "Tnaqqis u Krediti",
+      "intro": "Dak kollu li jibdel il-ħlas minbarra l-prenotazzjonijiet — minn tliet sorsi: rata fissa mill-kuntratt għal kull prenotazzjoni, oġġetti ta' kontijiet ta' darba u oġġetti rikorrenti (ftehim permanenti).",
+      "deductions": "Tnaqqis (għad-detriment tas-sid)",
+      "credits": "Krediti (għall-benefiċċju tas-sid)",
+      "empty": "L-ebda tnaqqis jew krediti f'dan il-perjodu.",
+      "srcExpense": "Oġġetti ta' kontijiet",
+      "srcRecurring": "Oġġett rikorrenti",
+      "srcFlatFee": "Rata fissa mill-kuntratt",
+      "perBooking": "għal kull prenotazzjoni",
+      "perNight": "għal kull lejl",
+      "perPeriod": "għal kull perjodu",
+      "quantity": "{n} × {betrag}",
+      "flatFeesNote": "Ir-rati fissi mill-kuntratt diġà tnaqqsu mis-sehem tas-sid għal kull prenotazzjoni — hawnhekk biss għal ħarsa ġenerali, l-ebda tnaqqis ieħor.",
+      "manageRecurring": "Żomm oġġetti rikorrenti",
+      "manageContract": "Żomm il-kuntratt tal-kontijiet",
+      "receipt": "Irċevuta",
+      "bookingsCount": "{n} prenotazzjonijiet"
     }
   },
   "ownerBilling": {
@@ -1709,7 +1790,9 @@
     "effectReleased": "{property}: id-distribuzzjoni tkompli — it-tmiem tal-kuntratt tneħħa u l-iljieli jistgħu jinbiegħu mill-ġdid.",
     "effectBlocked": "{property}: id-distribuzzjoni tintemm fi {date} — {nights} iljieli mblukkati u rtirati mill-portali.",
     "effectCalendarFailed": "{property}: It-tmiem tal-kuntratt huwa rreġistrat, iżda l-imblukkar tal-kalendarju ma ġiex miktub. Dan se jiġi applikat illejla.",
-    "effectNoUnit": "{property}: It-tmiem tal-kuntratt huwa rreġistrat, iżda l-kalendarju mhuwiex imblukkat — il-proprjetà m'għandhiex unità. Oħloqha, u l-imblukkar japplika."
+    "effectNoUnit": "{property}: It-tmiem tal-kuntratt huwa rreġistrat, iżda l-kalendarju mhuwiex imblukkat — il-proprjetà m'għandhiex unità. Oħloqha, u l-imblukkar japplika.",
+    "validFromHint": "Id-data li fiha l-ftehim jidħol fis-seħħ – jekk huwa kuntratt eżistenti, id-data vera tal-kuntratt, mhux illum. Kull prenotazzjoni tiġi saldata mal-kuntratt li jkun fis-seħħ fid-data tat-tluq tagħha; prenotazzjonijiet bi tluq preċedenti jibqgħu mingħajr ħlas.",
+    "errorValidFromRequired": "Jekk jogħġbok indika meta l-kuntratt jidħol fis-seħħ."
   },
   "portal": {
     "title": "Il-portal tiegħi",
@@ -5465,7 +5548,8 @@
       "connectPortal": "Qabbad portal",
       "noPortals": "Għadu m'hemmx portal (Booking, Airbnb eċċ.) imqabbad ma' din il-proprjetà.",
       "marketplaceReview": "Taħt reviżjoni",
-      "marketplaceReviewHint": "myBestDays għadu qed jirrevedi din il-lista. Tidher fis-suq malli tiġi approvata. Il-portali u s-sit web tiegħek stess mhumiex affettwati."
+      "marketplaceReviewHint": "myBestDays għadha qed tirrevedi din il-lista. Ladarba tiġi approvata, tidher fis-suq. myBestDays huwa kanal obbligatorju: Proprjetà ma tistax tiġi diżattivata individwalment hemmhekk — “Issospendi l-bejgħ” tneħħiha mill-bejgħ kullimkien.",
+      "marketplaceMandatory": "Kanal obbligatorju — kull proprjetà hija elenkata fuq myBestDays"
     },
     "IdLayout": {
       "loadError": "Il-proprjetà ma setgħetx tiġi mtella': {error}"
@@ -5563,11 +5647,11 @@
       "stepOf": "Pass {schritt} minn {gesamt}",
       "next": "Continue",
       "back": "Back",
-      "channelsHint": "Fejn għandha tinbiegħ din il-proprjetà? Tista' tibdel dan f'kull ħin.",
+      "channelsHint": "Fejn għandha tinbiegħ din il-proprjetà addizzjonalment? Il-portali u l-websajt jistgħu jinbidlu fi kwalunkwe ħin.",
       "channelPortals": "Portali tal-prenotazzjonijiet",
       "channelPortalsHint": "Airbnb, Booking.com u oħrajn. Il-portali jeħtieġu dettalji sħaħ — ara hawn taħt.",
       "channelPlatform": "myBestDays",
-      "channelPlatformHint": "Is-suq tagħna stess b'kummissjoni baxxa.",
+      "channelPlatformHint": "Is-suq tagħna stess bi 8% kollox inkluż. Kull proprjetà hija elenkata hemmhekk; issir viżibbli wara l-pubblikazzjoni u l-approvazzjoni tagħna.",
       "channelWebsite": "Sit web tiegħek",
       "channelWebsiteHint": "Il-paġna tal-prenotazzjonijiet tiegħek u l-widget tal-prenotazzjonijiet.",
       "readinessTitle": "Għall-portali għad jonqos:",
@@ -6261,7 +6345,21 @@
       "planPortalOffHint": "Dan il-prezz huwa biss għal prenotazzjonijiet diretti. Ikklikkja biex tibgħatu lill-portali tal-prenotazzjoni.",
       "planPortalOn": "Il-prezz issa jmur għall-portali tal-prenotazzjoni.",
       "planPortalOnHint": "Dan il-prezz imur għall-portali tal-prenotazzjoni. Ikklikkja biex tużah biss għal prenotazzjonijiet diretti.",
-      "planPortalYes": "Lill-Portali"
+      "planPortalYes": "Lill-Portali",
+      "feeValidityTitle": "Validità",
+      "feeValidityHint": "Il-miżata tapplika għal prenotazzjonijiet li d-data tal-wasla tagħhom taqa' fil-perjodu. Vojt = bla limitu. Miżata b'perjodu ma tintbagħatx lill-portali: hemmhekk ma tistax tiġi rappreżentata kundizzjoni tad-data.",
+      "feeValidFromLabel": "Validu minn",
+      "feeValidUntilLabel": "Validu sa",
+      "feeValidityOrderError": "“Validu sa” huwa qabel “Validu minn”.",
+      "feeOwnerStatementOnlyLabel": "Għall-kontabilità tas-sid biss",
+      "feeOwnerStatementOnlyHint": "Il-miżata ma tiġix imposta fuq il-mistieden u ma tintbagħat lill-ebda portal. Tapplika biss għall-kontabilità tas-sid, l-analiżi u l-portal tas-sid.",
+      "feeValidFromSuffix": "minn {date}",
+      "feeValidUntilSuffix": "sa {date}",
+      "feeOwnerStatementOnlySuffix": "kontabilità biss",
+      "feeCalculationLabel": "Kalkolu",
+      "feeVatHint": "Rata tat-taxxa separata għal din il-miżata, differenti mir-rata ta' akkomodazzjoni tal-proprjetà. Mitfi tfisser: il-miżata ssegwi r-rata ta' akkomodazzjoni.",
+      "feeVatIncludedLabel": "Taxxa fl-ammont",
+      "feeVatIncludedHint": "Ir-rata tat-taxxa hija diġà inkluża fl-ammont imdaħħal jew tiżdied fuqha? Mingħajr din l-informazzjoni, l-ammont ikun ambigwu."
     },
     "policiesForm": {
       "title": "Politiki",
@@ -7303,23 +7401,23 @@
     "marketplacePending": "{count} taħt reviżjoni",
     "marketplaceWaiting": "Taħt reviżjoni",
     "marketplace": {
-      "intro": "myBestDays huwa s-suq tagħna stess — kanal ta’ prenotazzjoni bħal Booking jew Airbnb, biss mingħajr konnessjoni ma’ portal. Proprjetà tidher meta tkun attiva, elenkata hawn u approvata.",
+      "intro": "myBestDays huwa l-post tas-suq tagħna stess — kanal ta' prenotazzjoni bħal Booking jew Airbnb, iżda mingħajr konnessjoni mal-portal, u obbligatorju għal kull proprjetà. Proprjetà ssir viżibbli meta tkun attiva u tkun ġiet approvata minna.",
       "openMarketplace": "Iftaħ is-suq",
       "propertiesHeading": "Proprjetajiet fis-suq",
       "noProperties": "Għadhom ma nħolqux proprjetajiet.",
       "columnProperty": "Proprjetà",
-      "columnVisibility": "Viżibbiltà",
+      "columnVisibility": "Status",
       "columnApproval": "Approvazzjoni",
       "columnBookings": "Prenotazzjonijiet",
       "stateActive": "Viżibbli",
       "statePending": "Taħt reviżjoni",
-      "stateNotListed": "Mhux elenkata",
+      "stateNotListed": "Bejgħ imwaqqaf",
       "stateInactiveProperty": "Il-proprjetà mhijiex attiva",
       "viewListing": "Ara l-lista",
       "reviewHint": "Il-proprjetajiet taħt reviżjoni għadhom ma jidhrux fuq myBestDays. Nirrevedu kull lista għax myBestDays jaġixxi bħala l-fornitur hemmhekk — il-portali u s-sit web tiegħek stess mhumiex affettwati.",
       "summaryVisible": "{count} viżibbli",
       "summaryWaiting": "{count} taħt reviżjoni",
-      "summaryOff": "{count} mhux elenkati",
+      "summaryOff": "{count} imwaqqfa jew inattivi",
       "moderation": {
         "draft": "Abbozz",
         "pending": "Taħt reviżjoni",
@@ -7354,7 +7452,8 @@
       "mayClose": "L-importazzjoni qed tkompli fuq is-server — tista' tagħlaq din il-paġna.",
       "andMore": "… u {count} oħrajn",
       "close": "Agħlaq",
-      "updated": "aġġornat"
+      "updated": "aġġornat",
+      "portal": "diġà mill-portal"
     }
   },
   "calendarSync": {
@@ -10511,7 +10610,11 @@
     "haveAccount": "Diġà għandek kont?",
     "loginLink": "Idħol minn hawn",
     "loadingHeadline": "Is-sit tal-prenotazzjonijiet tiegħek. Żomm 100 % ta' kull prenotazzjoni.",
-    "loadingText": "Qed nissettjaw il-kont tiegħek …"
+    "loadingText": "Qed nissettjaw il-kont tiegħek …",
+    "referralLabel": "Rakkomandat minn (mhux obbligatorju)",
+    "referralPlaceholder": "Kodiċi ta' rakkomandazzjoni, eż. ANNA-K7P2",
+    "referralHint": "Sirt taf b'myNextDays permezz ta' sieħeb? Il-kodiċi tiegħu jinsab hawn — hu jara biss li negozju ġie permezz tiegħu, qatt ismek. B'kodiċi, wara l-14-il jum ta' prova, tirċievi l-ewwel xahar sħiħ b'xejn.",
+    "referralContactOptIn": "Min irrakkomandani jista' jikkuntattjani permezz ta' myNextDays."
   },
   "marketingSite": {
     "stars": "4,5 stilel",

@@ -120,17 +120,17 @@ export function PropertyChannels({
   // Seitenaufruf.
 
   const isActive = p.status === "active";
-  // Eigener Marktplatz: der Schalter allein macht ein Objekt dort NICHT sichtbar
-  // — myBestDays tritt als Anbieter auf und gibt jedes Inserat erst frei (0203).
-  // Ohne Freigabe stand hier ein grüner Punkt, während das Objekt auf dem
-  // Marktplatz fehlte (live 11.08.2026, 17 Objekte).
+  // Eigener Marktplatz: PFLICHTKANAL (0527, Master-Strategie 02.09.2026) — kein
+  // Schalter mehr. Sichtbar wird ein Objekt dort, wenn es aktiv ist UND
+  // myBestDays es als Anbieter freigegeben hat (0203). Ohne Freigabe stand hier
+  // früher ein grüner Punkt, während das Objekt auf dem Marktplatz fehlte
+  // (live 11.08.2026, 17 Objekte). `listed_on_marketplace` ist nur während
+  // einer Verkaufs-Pause false — dann ist auch `status` nicht active.
   const marktFreigegeben = p.moderation_status === "approved";
   const marktWartet = isActive && p.listed_on_marketplace && !marktFreigegeben;
 
-  async function toggleFlag(
-    field: "listed_on_website" | "listed_on_marketplace",
-    next: boolean,
-  ) {
+  // Nur die Website ist noch pro Kanal schaltbar — myBestDays ist Pflichtkanal (0527).
+  async function toggleFlag(field: "listed_on_website", next: boolean) {
     setBusy(field);
     const res = await updateProperty(p.id, { [field]: next });
     setBusy(null);
@@ -234,11 +234,7 @@ export function PropertyChannels({
                   : "active"
             }
           />
-          <Switch
-            checked={p.listed_on_marketplace}
-            disabled={busy !== null}
-            onCheckedChange={(c) => toggleFlag("listed_on_marketplace", c)}
-          />
+          <span className="text-xs text-muted-foreground">{t("channelsTab.marketplaceMandatory")}</span>
         </ChannelRow>
         {marktWartet && (
           <Card className="flex items-center gap-2 bg-muted/40 p-3 text-sm text-muted-foreground">

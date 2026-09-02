@@ -93,6 +93,11 @@ class Settings(BaseSettings):
     # ist je Betrag+Grund idempotent und der Mailversand hat sein eigenes,
     # strengeres Limit (rate_limit_einladung_resend).
     rate_limit_nachberechnung: str = "120/60"
+    # Partner-Kanalanbindung (OAuth-Start, Code-Tausch, Trennen; 0521). Jeder
+    # Aufruf löst Fremd-API-Aufrufe aus (Token-Tausch + erster Snapshot) und
+    # ein Angreifer könnte den Callback in Serie drücken — eigener strenger
+    # Eimer, nicht der default (Wurzel 8).
+    rate_limit_partner_kanal: str = "10/60"
     # Öffentliche (nicht-eingeloggte) Such-/Listings-/Kalender-Endpunkte:
     # Scraper-Schutz PRO IP. 240/60 statt 60/60 — 60 war zu knapp und traf bei
     # Büro-NAT (mehrere Mitarbeiter, eine IP) mehrere Nutzer gemeinsam.
@@ -527,6 +532,29 @@ class Settings(BaseSettings):
     # und Abmelde-Links aus den Newsletter-Mails. Fehlt sie, wird keine
     # Voranmeldung angenommen — ein Link auf eine geratene Domain wäre wertlos.
     marketing_base_url: str = ""
+
+    # Öffentliche Adresse des Partner-Dashboards (partner/, Affiliate-Programm
+    # 0517). Ziel der Links in allen Partner-Mails (Freigabe, neuer Kunde,
+    # Auszahlung). Fehlt sie, gehen die Mails OHNE Button hinaus und der
+    # Mangel steht als ERROR im Log — nie eine geratene Domain (Wurzel 4).
+    partner_base_url: str = ""
+
+    # --- Partnerprogramm: Plattform-Anbindung (0521, Etappe 6) ---
+    # OAuth-Zugangsdaten der Entwickler-Apps. Fehlt ein Paar, ist die
+    # Plattform im Partner-Dashboard NICHT verbindbar und der Mangel steht
+    # als WARNING im Log — nie ein stiller Ausfall (Wurzel 5). Redirect-URI ist
+    # immer `{partner_base_url}/api/auth/{provider}/callback`.
+    google_oauth_client_id: str = ""                   # YouTube Data API v3 (Webanwendung)
+    google_oauth_secret: SecretStr = SecretStr("")
+    meta_app_id: str = ""                              # Instagram Graph API + Facebook Login
+    meta_app_secret: SecretStr = SecretStr("")
+    tiktok_client_key: str = ""                        # Login Kit + Display API
+    tiktok_client_secret: SecretStr = SecretStr("")
+    meta_graph_version: str = "v21.0"
+    # Schlüssel für die AES-GCM-Verschlüsselung der Partner-Token (32 Byte,
+    # base64) UND für die Signatur des OAuth-`state`. Fehlt er, kann kein
+    # Konto verbunden werden (fail-closed).
+    affiliate_token_key: SecretStr = SecretStr("")
 
     # Öffentliche Adresse des myBestDays-Marktplatzes (plattform/). Ziel des
     # Links in der Bewertungs-Erinnerung an den Gast. Fehlt sie, wird KEINE

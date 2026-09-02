@@ -119,6 +119,17 @@ Stellen nachziehen.
 | `GOTRUE_EXTERNAL_GOOGLE_ENABLED` | Google-Login an/aus | nein | Coolify-Env |
 | `GOOGLE_OAUTH_CLIENT_ID` | OAuth-Client-ID | nein | Coolify-Env |
 | `GOOGLE_OAUTH_SECRET` | OAuth-Client-Secret | **ja** | → Passwort-Manager |
+
+Derselbe Google-OAuth-Client dient seit 0521 der YouTube-Anbindung des Partnerprogramms (Redirect-URI `{PARTNER_BASE_URL}/api/auth/youtube/callback`, YouTube Data API v3 aktiviert) — `api` UND `worker` brauchen beide Variablen.
+
+### Partnerprogramm — Plattform-Anbindung (0521), api UND worker
+| Variable | Zweck | Secret? | Quelle |
+|---|---|---|---|
+| `AFFILIATE_TOKEN_KEY` | 32 Byte base64 (`openssl rand -base64 32`): AES-GCM für die OAuth-Token verbundener Partner-Konten + Signatur des OAuth-state. Fehlt er, ist keine Anbindung möglich (503, Log `affiliate_token_key_fehlt`). In api und worker IDENTISCH | **ja** | → Passwort-Manager |
+| `META_APP_ID` / `META_APP_SECRET` | Meta-App „myNextDays Partner" (Instagram Graph API + Facebook Login for Business) | ID nein / Secret **ja** | Meta for Developers |
+| `TIKTOK_CLIENT_KEY` / `TIKTOK_CLIENT_SECRET` | TikTok-App „myNextDays Partner" (Login Kit + Display API) | Key nein / Secret **ja** | TikTok for Developers |
+| `META_GRAPH_VERSION` | Graph-API-Version (Default `v21.0`) | nein | Code-Default |
+| `RATE_LIMIT_PARTNER_KANAL` | Eimer für `/affiliates/channels/*` (Default `10/60`) | nein | Code-Default |
 | `GOOGLE_MAPS_API_KEY` | Maps-API | **ja** | → Passwort-Manager |
 | `GOOGLE_TRANSLATE_API_KEY` | Translate-API | **ja** | → Passwort-Manager |
 

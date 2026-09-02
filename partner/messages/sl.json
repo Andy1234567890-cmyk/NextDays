@@ -1,0 +1,521 @@
+{
+  "meta": {
+    "titel": "myNextDays Partner",
+    "beschreibung": "Partnerska nadzorna plošča partnerskega programa myNextDays: povezave, stranke, provizije, izplačila."
+  },
+  "nav": {
+    "partner": "Partner",
+    "uebersicht": "Pregled",
+    "kunden": "Stranke",
+    "provisionen": "Provizije",
+    "auszahlungen": "Izplačila",
+    "links": "Povezave in gradivo",
+    "profil": "Profil",
+    "sprache": "Jezik",
+    "abmelden": "Odjava",
+    "nachrichten": "Sporočila",
+    "menue": "Meni",
+    "team": "Ekipa",
+    "beitraege": "Objave"
+  },
+  "status": {
+    "pending_review": {
+      "titel": "Vaša prijava je v pregledu",
+      "text": "Vsako prijavo pregledamo osebno in vas obvestimo po e-pošti. Do odobritve povezave in kode še niso aktivne – podatke o profilu in izplačilih lahko dopolnite že zdaj."
+    },
+    "rejected": {
+      "titel": "Vaša prijava ni bila sprejeta",
+      "text": "Vaše prijave trenutno nismo mogli sprejeti. Če imate vprašanja, nam pišite."
+    },
+    "suspended": {
+      "titel": "Vaš partnerski račun je blokiran",
+      "text": "Odprte provizije ne bodo izplačane, dokler blokada traja. Če imate vprašanja, nam pišite."
+    },
+    "approved": {
+      "titel": "Odobreno",
+      "text": "Vaš račun je aktiven."
+    },
+    "grund": "Razlog"
+  },
+  "uebersicht": {
+    "titelBewerber": "Dobrodošli v partnerskem programu",
+    "textBewerber": "Takoj ko bo vaša prijava odobrena, boste tukaj videli svoje povezave, stranke in provizije. Medtem vnesite svoje davčne in izplačilne podatke – tako bo prvo izplačilo potekalo brez vprašanj.",
+    "zumProfil": "Na profil",
+    "titel": "Pozdravljeni, {name}",
+    "rang": "Uvrstitev {rang} · {satz} prihodkov od naročnin",
+    "naechsterRang": "še {fehlend} plačljivih strank do {rang} ({satz})",
+    "linksTeilen": "Deli povezave",
+    "keineBetraege": "—",
+    "kachel": {
+      "klicks": "Kliki (30 dni)",
+      "registrierungen": "Registrirana podjetja",
+      "zahlend": "Plačljive stranke",
+      "offen": "Odprto (obdobje vračila)",
+      "auszahlbar": "Za izplačilo",
+      "ausgezahlt": "Izplačano",
+      "team": "Provizija ekipe",
+      "teamHinweis": "{n} ekipnih partnerjev",
+      "struktur": "Stranke v vaši strukturi",
+      "strukturHinweis": "lastne stranke + stranke ekipe — to število določa vaš rang",
+      "super": "Superprovizija",
+      "superHinweis": "{satz} od prihodkov od naročnin vaše strukture, brez časovne omejitve",
+      "turbo": "Delež rezervacij myBestDays",
+      "turboHinweis": "0,5 % na rezervacijo preko myBestDays pri vaših strankah in strankah ekipe",
+      "bonus": "Bonusi za napredovanje",
+      "bonusHinweis": "enkratno za vsak dosežen rang"
+    },
+    "deineLinks": "Vaše povezave"
+  },
+  "links": {
+    "titel": "Povezave in gradivo",
+    "hinweis": "Vaša povezava vodi na mynextdays.com in šteje klik. Koda je ob registraciji vidna v obrazcu – brez piškotka. Podjetje je dodeljeno točno enemu partnerju.",
+    "klicks30": "{n} klikov v 30 dneh",
+    "kopiert": "Kopirano.",
+    "kopierenFehlgeschlagen": "Kopiranje ni mogoče – prosimo, označite in kopirajte.",
+    "codeKopieren": "Kopiraj kodo",
+    "linkFehlt": "Povezava še ni na voljo.",
+    "neuerCode": "Ustvari novo kodo",
+    "label": "Opis (neobvezno)",
+    "wunschcode": "Želena koda (neobvezno)",
+    "anlegen": "Ustvari",
+    "abbrechen": "Prekliči",
+    "codeAngelegt": "Koda je ustvarjena.",
+    "codeVergeben": "Ta koda je že zasedena.",
+    "fehler": "To ni delovalo.",
+    "kennzeichnung": {
+      "titel": "Obvezno: Označite oglaševanje",
+      "text": "Vsako priporočilo z vašo povezavo ali kodo je oglaševanje in mora biti kot tako prepoznavno – na začetku objave, v jeziku objave. Samo »#ad« ni dovolj. Kršitve lahko vodijo do blokade.",
+      "imBeitrag": "V objavi",
+      "amLink": "Na povezavi",
+      "land": {
+        "DE": "Nemčija",
+        "DK": "Danska"
+      },
+      "andere": "Druge države: Komercialni namen mora biti jasno prepoznaven (Direktiva EU o nepoštenih poslovnih praksah). Preverite zahteve svoje države; dokazane formulacije bomo dodajali postopoma."
+    },
+    "material": {
+      "titel": "Oglaševalski material",
+      "leer": "Material je v pripravi – tukaj bo objavljen, ko bo odobren.",
+      "art": {
+        "video": "Video",
+        "image": "Slika",
+        "text": "Besedilni blok",
+        "link": "Povezava"
+      },
+      "oeffnen": "Odpri"
+    }
+  },
+  "kunden": {
+    "titel": "Stranke",
+    "hinweis": "Vaša priporočena podjetja – psevdonimno. Vidite državo, status in zneske, nikoli imena ali e-pošte. »Plačuje« pomeni: prvi račun za naročnino je plačan in naročnina je aktivna.",
+    "leer": "Nobeno podjetje se še ni registriralo prek vaše povezave.",
+    "kunde": "Stranka {n}",
+    "spalte": {
+      "kunde": "Stranka",
+      "land": "Država",
+      "status": "Status",
+      "registriert": "Registrirano",
+      "provisionBis": "Provizija do",
+      "verdient": "Zasluženo"
+    },
+    "status": {
+      "registriert": "Registrirano",
+      "zahlend": "Plačuje",
+      "beendet": "Zaključeno",
+      "in_pruefung": "V pregledu",
+      "abgelehnt": "Zavrnjeno"
+    }
+  },
+  "provisionen": {
+    "titel": "Provizije",
+    "hinweis": "Vsaka vrstica je plačan račun za naročnino, rezervacija preko myBestDays ali bonus za napredovanje. Osnova so neto prihodki od naročnin oziroma vrednost rezervacije; stopnja je vaš rang v trenutku plačila. Odprte vrstice postanejo izplačljive po 30 dneh.",
+    "leer": "Še ni provizije.",
+    "reifAm": "izplačljivo od {datum}",
+    "spalte": {
+      "datum": "Datum",
+      "art": "Vrsta",
+      "kunde": "Stranka",
+      "basis": "Osnova",
+      "satz": "Stopnja",
+      "betrag": "Znesek",
+      "status": "Status"
+    },
+    "art": {
+      "earn": "Dobiček",
+      "reversal": "Vračilo",
+      "adjustment": "Popravek",
+      "override": "Provizija ekipe",
+      "bonus": "Bonus za napredovanje",
+      "lifetime": "Superprovizija",
+      "booking_share": "Delež rezervacij"
+    },
+    "status": {
+      "pending": "Odprto",
+      "approved": "Izplačljivo",
+      "held": "Zadržano",
+      "paid": "Izplačano",
+      "reversed": "Preklicano",
+      "cancelled": "Stornirano"
+    },
+    "team": "Ekipa"
+  },
+  "auszahlungen": {
+    "titel": "Izplačila",
+    "hinweis": "Mesečno, po valuti, od minimalnega zneska. Za vsako izplačilo obstaja dobropis (samoizdani račun) – to je vaše potrdilo.",
+    "kein_weg": "Način izplačila še ni določen. Prosimo, dodajte ga v profil – sicer izplačilo ni možno.",
+    "leer": "Še ni izplačil.",
+    "spalte": {
+      "nummer": "Št. dobropisa",
+      "zeitraum": "Obdobje",
+      "betrag": "Znesek",
+      "status": "Status",
+      "gutschrift": "Dobropis"
+    },
+    "status": {
+      "pending": "Pripravljeno",
+      "processing": "V prenosu",
+      "paid": "Plačano",
+      "failed": "Neuspešno"
+    },
+    "gutschriftLaden": "Prenesi",
+    "gutschriftFehler": "Dobropisa ni bilo mogoče naložiti."
+  },
+  "profil": {
+    "titel": "Profil",
+    "seit": "Partner od {datum}",
+    "stammdaten": "Osnovni podatki",
+    "name": "Ime",
+    "firma": "Podjetje (neobvezno)",
+    "sprache": "Jezik za e-pošto",
+    "kanal": "Vaši računi in kanali družbenih medijev",
+    "speichern": "Shrani",
+    "gespeichert": "Shranjeno.",
+    "gespeichertViesOffen": "Shranjeno. Davčna številka še ni potrjena – ponovno jo bomo preverili pred izplačilom.",
+    "steuerUndAuszahlung": "Davčni podatki in podatki za izplačilo",
+    "aktuellerWeg": "Trenutno: {weg} {details}",
+    "keinWeg": "Način izplačila še ni določen.",
+    "viesBestaetigt": "Davčna številka potrjena (VIES)",
+    "viesOffen": "Davčna številka še ni potrjena",
+    "rechtsform": "Pravna oblika",
+    "privat": "Zasebna oseba",
+    "unternehmen": "Podjetje",
+    "land": "Država",
+    "ustId": "Davčna številka",
+    "ustIdHinweis": "Preverjeno bo v sistemu EU VIES. Brez potrjene številke ni izplačila podjetjem. Dobroimetje vsebuje opombo o obrnjeni davčni obveznosti.",
+    "privatHinweis": "Kot zasebna oseba boste prejeli dobropis brez DDV. Provizijo morate obdavčiti sami.",
+    "auszahlungsweg": "Način izplačila",
+    "kontoinhaber": "Imetnik računa",
+    "empfaengerEmail": "E-poštni naslov {weg}",
+    "passwortBestaetigen": "Za potrditev: Vaše geslo",
+    "passwortFalsch": "Geslo se ne ujema.",
+    "steuerdaten": "Davčni podatki"
+  },
+  "anmelden": {
+    "partner": "Partner",
+    "titel": "Prijava",
+    "text": "Nadzorna plošča partnerskega programa myNextDays.",
+    "email": "E-pošta",
+    "passwort": "Geslo",
+    "anmelden": "Prijava",
+    "passwortVergessen": "Ste pozabili geslo?",
+    "resetGesendet": "Če račun obstaja, smo vam poslali e-pošto.",
+    "stoerung": "Storitev prijave trenutno ni na voljo. To ni povezano z vašimi podatki za prijavo – poskusite znova pozneje.",
+    "keinPartnerKonto": "S temi podatki za prijavo ne obstaja partnerski račun.",
+    "fehlgeschlagen": "Prijava ni uspela.",
+    "nochKeinKonto": "Še niste partner?",
+    "bewerben": "Prijavite se zdaj"
+  },
+  "bewerben": {
+    "partner": "Partner",
+    "titel": "Prijavite se kot partner",
+    "text": "Dve minuti. Vsako prijavo osebno pregledamo in vas kontaktiramo po e-pošti.",
+    "name": "Vaše ime",
+    "firma": "Podjetje (neobvezno)",
+    "email": "E-pošta",
+    "passwort": "Geslo (vsaj 8 znakov)",
+    "rechtsform": "Pravna oblika",
+    "privat": "Fizična oseba",
+    "unternehmen": "Podjetje",
+    "land": "Država",
+    "ustId": "ID za DDV",
+    "ustIdHinweis": "Obvezno za podjetja; preverjeno zoper VIES.",
+    "kanal": "Vaši računi družbenih medijev",
+    "kanalHinweis": "Obvezno: vsaj en račun družbenih medijev (Instagram, TikTok, YouTube, Facebook, LinkedIn …) z naslovom, uporabniškim imenom in dosegom. Spletna stran, blog ali glasilo so dobrodošli kot dodatek. Račune preverimo pred objavo.",
+    "pitch": "Kako dosegate ponudnike počitniških nastanitev ali hotele? (neobvezno)",
+    "pitchHinweis": "Dovolj je nekaj stavkov.",
+    "zustimmung": "Sprejemam pogoje partnerstva, zlasti obveznost označevanja priporočil kot oglaševanje.",
+    "bedingungen": "Na program",
+    "captchaHinweis": "To stran varuje reCAPTCHA; veljajo Googlov pravilnik o zasebnosti in pogoji storitve.",
+    "stoerung": "Storitev trenutno ni na voljo – poskusite znova pozneje.",
+    "emailVergeben": "Za ta e-poštni naslov že obstaja prijava. Prijavite se.",
+    "captchaFehler": "Varnostno preverjanje ni uspelo. Znova naložite stran in poskusite znova.",
+    "laeuft": "Pošiljanje …",
+    "absenden": "Pošlji prijavo",
+    "schonPartner": "Že partner?",
+    "anmelden": "Prijava",
+    "sponsor": "Sponzoriral partner (koda, neobvezno)",
+    "sponsorHinweis": "Ste tukaj prek povezave ekipe partnerja? Njegova koda je potem tukaj. Prejel bo provizijo ekipe od prihodkov od naročnin vaših strank – vaša lastna provizija ostane nespremenjena."
+  },
+  "nachrichten": {
+    "titel": "Sporočila",
+    "hinweis": "Vaša neposredna povezava s partnersko ekipo – vprašanja o proviziji, izplačilu, gradivu ali stranki. Odgovori se prikažejo tukaj v živo.",
+    "neu": "Novo sporočilo partnerski ekipi",
+    "platzhalter": "Za kaj gre?",
+    "senden": "Pošlji",
+    "abbrechen": "Prekliči",
+    "leer": "Še ni pogovorov.",
+    "stoerung": "Storitev trenutno ni na voljo – poskusite znova pozneje.",
+    "fehler": "To ni delovalo.",
+    "team": "Partnerska ekipa",
+    "du": "Vi",
+    "antwortPlatzhalter": "Vaš odgovor …",
+    "antworten": "Odgovori",
+    "status": {
+      "in_bearbeitung": "V obdelavi",
+      "wartet_auf_dich": "Odgovor prejet",
+      "geloest": "Rešeno"
+    }
+  },
+  "kanaele": {
+    "plattformLabel": "Platforma",
+    "handle": "Ročaj (neobvezno)",
+    "reichweite": "Doseg (sledilci)",
+    "hinzufuegen": "Dodaj kanal",
+    "entfernen": "Odstrani kanal",
+    "plattform": {
+      "website": "Spletna stran",
+      "blog": "Blog",
+      "newsletter": "Glasilo",
+      "podcast": "Podcast",
+      "other": "Drugo"
+    },
+    "socialPflicht": "Vsaj en račun družbenih medijev je obvezen – samo spletna stran ni dovolj."
+  },
+  "team": {
+    "titel": "Ekipa",
+    "hinweis": "Partnerji, ki so se prijavili z vašo kodo, tvorijo vašo ekipo. Od neto prihodkov od naročnin njihovih strank prejmete razliko med vašo stopnjo (trenutno {satz}) in stopnjo partnerja v ekipi — obe veljata v trenutku plačila. Stranke ekipe štejejo 1:1 za vaš rang.",
+    "meinSponsor": "Ste ekipni partner podjetja {name}.",
+    "link": {
+      "titel": "Vaša ekipna povezava",
+      "text": "Kdor se prijavi prek te povezave, bo imel vašo kodo vidno v prijavi – brez piškotka.",
+      "kopieren": "Kopiraj povezavo",
+      "keinLink": "Ni aktivne kode – ustvarite jo pod Povezave in gradivo."
+    },
+    "regeln": {
+      "titel": "Pravila",
+      "rang": "Provizija za ekipo = vaša stopnja minus stopnja partnerja v ekipi, v trenutku plačila. Enak rang = 0.",
+      "ebene": "Natančno ena raven: vaši ekipni partnerji ne gradijo lastne ekipe.",
+      "keinGeld": "Brez denarja za novačenje – samo od plačanih prihodkov od naročnin.",
+      "dauer": "12 mesecev na stranko ekipe, 30-dnevno okno za vračilo. Od Elite dodatno 2,5 % superprovizije brez časovne omejitve."
+    },
+    "kachel": {
+      "mitglieder": "Ekipni partnerji (aktivni / skupno)",
+      "teamKunden": "Plačljive stranke ekipe",
+      "umsatz30": "Ekipni promet (30 dni)",
+      "offen": "Neizplačana ekipna provizija",
+      "auszahlbar": "Izplačljiva ekipna provizija",
+      "ausgezahlt": "Izplačana ekipna provizija"
+    },
+    "verlauf": {
+      "titel": "Zgodovina · 12 mesecev",
+      "leer": "Še ni ekipnih prihodkov.",
+      "provision": "Ekipna provizija",
+      "umsatz": "Ekipni promet"
+    },
+    "mitglieder": {
+      "titel": "Vaša ekipa",
+      "leer": "Še ni ekipnih partnerjev. Delite svojo ekipno povezavo.",
+      "kunden": "{n} plačljivih strank",
+      "umsatz30": "Promet 30 dni",
+      "offen": "odprto",
+      "seit": "od {datum}"
+    },
+    "spalte": {
+      "partner": "Partner",
+      "status": "Status",
+      "rang": "Rang",
+      "kunden": "Plačljive stranke",
+      "umsatz30": "Promet 30 dni",
+      "umsatzGesamt": "Skupni promet",
+      "offen": "Odprto",
+      "auszahlbar": "Izplačljivo",
+      "ausgezahlt": "Izplačano"
+    },
+    "status": {
+      "pending_review": "V pregledu",
+      "approved": "Odobreno",
+      "rejected": "Zavrnjeno",
+      "suspended": "Blokirano"
+    },
+    "chat": {
+      "titel": "Klepet",
+      "schreiben": "Napišite",
+      "rolle": {
+        "sponsor": "Vaš sponzor",
+        "member": "Ekipni partner"
+      },
+      "zurueck": "Ekipa",
+      "leer": "Še ni sporočil.",
+      "platzhalter": "Vaše sporočilo …",
+      "senden": "Pošlji",
+      "titelListe": "Sporočila v ekipi"
+    },
+    "nochNichtErlaubt": "Ekipo vodite od ranga Napredovalec (5 plačljivih strank v vaši strukturi). Do takrat ni povezave do ekipe."
+  },
+  "bedingungen": {
+    "neueVersion": "Partnerski pogoji so na voljo v novi različici (vaše soglasje: različica {alt}, trenutna: {neu}). Preberite in ponovno potrdite.",
+    "nochNicht": "Prosimo, strinjajte se s partnerskimi pogoji (različica {neu}).",
+    "lesen": "Preberi pogoje",
+    "annehmen": "Strinjam se",
+    "angenommen": "Hvala – soglasje shranjeno."
+  },
+  "beitraege": {
+    "titel": "Objave",
+    "hinweis": "Ustvarite edinstveno povezavo za vsak kolut, videoposnetek ali objavo. Tako boste videli, katera objava prinaša klike, registracije in plačljive stranke.",
+    "kontoHinweis": "Povežite svoj račun in tukaj se bodo prikazali tudi ogledi in interakcije neposredno s platforme.",
+    "kontoVerbinden": "Poveži račun",
+    "neu": "Nova objava",
+    "keinCode": "Najprej potrebujete aktivno referenčno kodo.",
+    "feld": {
+      "titel": "Naslov",
+      "titelBeispiel": "npr. kolut Kopenhagen jesen",
+      "plattform": "Platforma",
+      "code": "Koda",
+      "datum": "Objavljeno dne",
+      "url": "Naslov objave (neobvezno)",
+      "urlHinweis": "Lahko se doda po objavi. Z naslovom oglede in interakcije pripišemo objavi."
+    },
+    "linkErzeugen": "Ustvari povezavo",
+    "angelegt": "Objava ustvarjena – povezava je pripravljena.",
+    "doppelt": "Ta objava za to kodo že obstaja.",
+    "fehler": "To ni uspelo. Poskusite znova.",
+    "liste": "{n, plural, =0 {Ni objav} =1 {1 objava} other {# objave}}",
+    "leer": "Še ni objav. Ustvarite prvo povezavo zgoraj.",
+    "veroeffentlicht": "objavljeno {datum}",
+    "loeschen": "Izbriši objavo",
+    "geloescht": "Objava izbrisana.",
+    "loeschenGesperrt": "Objava že ima registracije in bo ostala.",
+    "kopiert": "Povezava kopirana.",
+    "kopierenFehlgeschlagen": "Kopiranje ni mogoče – označite ročno.",
+    "linkFehlt": "Povezava trenutno ni na voljo.",
+    "qrZeigen": "Prikaži QR-kodo",
+    "qrSchliessen": "Skrij QR-kodo",
+    "qrAlt": "QR-koda za povezavo objave",
+    "qrHinweis": "Za zgodbe, videoposnetke in tisk – vodi na isto povezavo.",
+    "beitragOeffnen": "Odpri objavo",
+    "urlAendern": "Spremeni naslov",
+    "urlNachtragen": "Dodaj naslov",
+    "speichern": "Shrani",
+    "gespeichert": "Shranjeno.",
+    "kennzahl": {
+      "klicks": "Kliki 90 dni",
+      "klicks30": "{n} v 30 dneh",
+      "registrierungen": "Registracije",
+      "kunden": "Plačljive stranke",
+      "views": "Ogledi",
+      "gemessen": "Stanje {zeit}",
+      "nichtVerbunden": "Račun ni povezan",
+      "interaktion": "Všečki {likes} · Komentarji {kommentare} · Delitve {shares} · Shranjeno {saves}",
+      "pro1000": "{n} klikov na 1.000 ogledov"
+    },
+    "freigabe": {
+      "videoNoetig": "Naložite prispevek v pregled",
+      "erklaerung": "Naložite svoj dokončani videoposnetek, sliko ali PDF, preden ga objavite. Ko ga odobrimo, se bo tukaj prikazala vaša osebna povezava – to nato dodajte pod objavo. Uporabljajte samo naše promocijsko gradivo, ne lastnih posnetkov zaslona in ne obljub o uspehu ali garancij.",
+      "hochladen": "Izberite datoteko (video, JPG, PNG, PDF)",
+      "neuHochladen": "Naložite novo datoteko",
+      "laeuft": "Nalaganje …",
+      "eingereicht": "Video je bil poslan. Sporočili vam bomo, ko bo pregledan.",
+      "inPruefung": "V pregledu",
+      "inPruefungHinweis": "Vaš video je pri nas. Ko bo odobren, se bo tukaj prikazala vaša povezava.",
+      "eingereichtAm": "Poslano ob {zeit} – ko bo odobreno, se bo tukaj prikazala vaša povezava.",
+      "abgelehnt": "Ni odobreno",
+      "grund": "Razlog",
+      "freigegeben": "Video je odobren",
+      "zuGross": "Video je večji od {mb} MB.",
+      "fehler": "Nalaganje ni uspelo.",
+      "grundKategorie": {
+        "material": "Gradivo: samo uradno promocijsko gradivo, brez lastnih posnetkov zaslona",
+        "promise": "Obljube: brez garancij ali obljub o uspehu",
+        "disclosure": "Označevanje: objava mora biti označena kot oglas",
+        "brand": "Blagovna znamka: logotip ali ime sta napačno uporabljena",
+        "other": "Drugo"
+      }
+    }
+  },
+  "kanalVerbindung": {
+    "titel": "Povezani računi",
+    "hinweis": "Povežite svoje račune družabnih medijev, da bodo sledilci in ogledi prihajali neposredno s platforme. To je prostovoljno in ga je mogoče kadar koli preklicati; beremo samo, ne pišemo ničesar.",
+    "verbinden": "Poveži {anbieter}",
+    "baldVerfuegbar": "kmalu na voljo",
+    "nichtKonfiguriert": "Ta povezava še ni aktivirana.",
+    "fehler": "To ni delovalo. Poskusite znova.",
+    "verifiziert": "preverjeno",
+    "follower": "{n} sledilcev",
+    "views28": "{n} ogledov v 28 dneh",
+    "engagement": "Angažiranost {n} %",
+    "gemessen": "Stanje {zeit}",
+    "nochKeinSnapshot": "prva meritev sledi",
+    "letzterFehler": "Zadnji poskus pridobivanja podatkov ni uspel",
+    "trennen": "Prekini povezavo",
+    "getrennt": "Povezava prekinjena. Prejšnje meritve ostanejo kot zgodovina.",
+    "getrennteKonten": "{n, plural, =1 {1 prekinjen račun} other {# prekinjeni računi}}",
+    "getranntAm": "prekinjeno {zeit}",
+    "durchPlattform": "Dostop s platforme je bil končan",
+    "datenschutz": "Ob prekinitvi povezave takoj izbrišemo podatke za dostop. Izmerjene vrednosti ostanejo shranjene kot zgodovina. Podrobnosti v izjavi o varovanju podatkov.",
+    "rueckkehr": {
+      "verbunden": "Račun povezan — prva meritev je v teku.",
+      "abgelehnt": "Povezava prekinjena — niste odobrili dostopa.",
+      "fehler": "Povezava ni uspela."
+    }
+  },
+  "passwort": {
+    "anzeigen": "Pokaži geslo",
+    "verbergen": "Skrij geslo"
+  },
+  "verbundkonto": {
+    "titel": "Povezani račun za izplačilo",
+    "hinweis": "Vaša provizija bo nakazana na povezani račun. Naš ponudnik plačilnih storitev zahteva preverjanje identitete – dokler je to odprto, izplačilo ni možno.",
+    "bereit": "Vaš povezani račun je aktiviran. Izplačila se samodejno nakažejo nanj.",
+    "offeneFelder": "Ti podatki še manjkajo",
+    "gesperrt": "Račun je trenutno blokiran: {grund}",
+    "schrittKonto": "Odpri povezani račun",
+    "schrittDaten": "Osebni podatki",
+    "schrittDatenFirma": "Podatki o podjetju in osebi",
+    "schrittBank": "Bančni podatki",
+    "schrittBedingungen": "Pogoji ponudnika plačilnih storitev",
+    "kontoAnlegen": "Odpri povezani račun",
+    "kontoAngelegt": "Povezani račun odprt.",
+    "datenBearbeiten": "Uredi podatke",
+    "zuklappen": "Zapri",
+    "datenGesendet": "Podatki shranjeni.",
+    "vorname": "Ime",
+    "nachname": "Priimek",
+    "geburtsdatum": "Datum rojstva",
+    "tag": "DD",
+    "monat": "MM",
+    "jahr": "LLLL",
+    "strasse": "Ulica in hišna številka",
+    "plz": "Poštna številka",
+    "ort": "Kraj",
+    "nationalitaet": "Državljanstvo (kratica države)",
+    "telefon": "Telefon",
+    "webseite": "Spletna stran ali profil",
+    "webseiteHinweis": "Naslov, pod katerim oglašujete – potreben za preverjanje.",
+    "firmenname": "Ime podjetja",
+    "steuernummer": "Davčna številka",
+    "firmenStrasse": "Naslov podjetja",
+    "firmaHinweis": "Kot pooblaščena oseba se uporabijo vaši zgoraj navedeni podatki.",
+    "speichern": "Shrani podatke",
+    "kontoinhaber": "Imetnik računa",
+    "waehrung": "Valuta",
+    "waehrungHinweis": "Valuta bančnega računa, ne vaša državna valuta.",
+    "bankSpeichern": "Shrani bančne podatke",
+    "bankGesetzt": "Bančni podatki shranjeni.",
+    "bedingungenAnnehmen": "Sprejmi pogoje",
+    "bedingungenAngenommen": "Pogoji sprejeti.",
+    "fehler": "To ni delovalo.",
+    "schrittIdentitaet": "Preverjanje identitete",
+    "identitaetHinweis": "Na koncu bo naš ponudnik plačil preveril vašo osebno izkaznico. To se bo zgodilo na njegovi varni strani, saj bo posneta fotografija; nato se boste vrnili sem.",
+    "identitaetStarten": "Preverite identiteto"
+  }
+}

@@ -1,0 +1,521 @@
+{
+  "meta": {
+    "titel": "myNextDays Partner",
+    "beschreibung": "Partnerský panel partnerského programu myNextDays: odkazy, zákazníci, provízie, výplaty."
+  },
+  "nav": {
+    "partner": "Partner",
+    "uebersicht": "Prehľad",
+    "kunden": "Zákazníci",
+    "provisionen": "Provízie",
+    "auszahlungen": "Výplaty",
+    "links": "Odkazy a materiály",
+    "profil": "Profil",
+    "sprache": "Jazyk",
+    "abmelden": "Odhlásiť sa",
+    "nachrichten": "Správy",
+    "menue": "Menu",
+    "team": "Tím",
+    "beitraege": "Príspevky"
+  },
+  "status": {
+    "pending_review": {
+      "titel": "Vaša žiadosť sa posudzuje",
+      "text": "Každú žiadosť posudzujeme osobne a ozveme sa e-mailom. Kým nebude schválená, odkazy a kódy ešte nie sú aktívne – svoje profilové a výplatné údaje môžete doplniť už teraz."
+    },
+    "rejected": {
+      "titel": "Vaša žiadosť nebola prijatá",
+      "text": "Vašu žiadosť sme momentálne nemohli prijať. Ak máte otázky, napíšte nám."
+    },
+    "suspended": {
+      "titel": "Váš partnerský účet je zablokovaný",
+      "text": "Otvorené provízie sa nevyplácajú, kým trvá blokovanie. Ak máte otázky, napíšte nám."
+    },
+    "approved": {
+      "titel": "Schválené",
+      "text": "Váš účet je aktívny."
+    },
+    "grund": "Dôvod"
+  },
+  "uebersicht": {
+    "titelBewerber": "Vitajte v partnerskom programe",
+    "textBewerber": "Hneď ako bude vaša žiadosť schválená, uvidíte tu svoje odkazy, zákazníkov a provízie. Medzitým zadajte svoje daňové a výplatné údaje – potom môže prvá výplata prebehnúť bez ďalších otázok.",
+    "zumProfil": "Na profil",
+    "titel": "Ahoj {name}",
+    "rang": "Hodnosť {rang} · {satz} z obratu predplatného",
+    "naechsterRang": "ešte {fehlend} platiacich zákazníkov do {rang} ({satz})",
+    "linksTeilen": "Zdieľať odkazy",
+    "keineBetraege": "—",
+    "kachel": {
+      "klicks": "Kliknutia (30 dní)",
+      "registrierungen": "Registrované prevádzky",
+      "zahlend": "Platiaci zákazníci",
+      "offen": "Otvorené (okno na vrátenie peňazí)",
+      "auszahlbar": "Vyplatiteľné",
+      "ausgezahlt": "Vyplatené",
+      "team": "Tímová provízia",
+      "teamHinweis": "{n} tímových partnerov",
+      "struktur": "Zákazníci vo vašej štruktúre",
+      "strukturHinweis": "vlastní + tímoví zákazníci – toto číslo určuje vašu pozíciu",
+      "super": "Superprovízia",
+      "superHinweis": "{satz} z obratu predplatného vašej štruktúry, bez časového obmedzenia",
+      "turbo": "Podiel z rezervácií myBestDays",
+      "turboHinweis": "0,5 % za každú rezerváciu cez myBestDays od vašich zákazníkov a tímových zákazníkov",
+      "bonus": "Bonusy za postup",
+      "bonusHinweis": "jednorazovo za každú dosiahnutú pozíciu"
+    },
+    "deineLinks": "Vaše odkazy"
+  },
+  "links": {
+    "titel": "Odkazy a materiály",
+    "hinweis": "Váš odkaz vedie na mynextdays.com a počíta kliknutie. Kód je viditeľný vo formulári pri registrácii – bez súboru cookie. Prevádzka je priradená presne jednému partnerovi.",
+    "klicks30": "{n} kliknutí za 30 dní",
+    "kopiert": "Skopírované.",
+    "kopierenFehlgeschlagen": "Kopírovanie nie je možné – prosím, označte a skopírujte.",
+    "codeKopieren": "Kopírovať kód",
+    "linkFehlt": "Odkaz zatiaľ nie je k dispozícii.",
+    "neuerCode": "Vytvoriť ďalší kód",
+    "label": "Popis (voliteľné)",
+    "wunschcode": "Požadovaný kód (voliteľné)",
+    "anlegen": "Vytvoriť",
+    "abbrechen": "Zrušiť",
+    "codeAngelegt": "Kód bol vytvorený.",
+    "codeVergeben": "Tento kód je už obsadený.",
+    "fehler": "Nepodarilo sa.",
+    "kennzeichnung": {
+      "titel": "Povinné: Označte reklamu",
+      "text": "Každé odporúčanie s vaším odkazom alebo kódom je reklama a musí byť ako taká rozpoznateľná – na začiatku príspevku, v jazyku príspevku. Samotné „#ad“ nestačí. Porušenia môžu viesť k zablokovaniu.",
+      "imBeitrag": "V príspevku",
+      "amLink": "Pri odkaze",
+      "land": {
+        "DE": "Nemecko",
+        "DK": "Dánsko"
+      },
+      "andere": "Ostatné krajiny: Komerčný zámer musí byť jasne rozpoznateľný (smernica EÚ o nekalých obchodných praktikách). Skontrolujte prosím požiadavky vašej krajiny; doložené formulácie budeme postupne dopĺňať."
+    },
+    "material": {
+      "titel": "Reklamný materiál",
+      "leer": "Materiál sa práve pripravuje – objaví sa tu, akonáhle bude schválený.",
+      "art": {
+        "video": "Video",
+        "image": "Obrázok",
+        "text": "Textový blok",
+        "link": "Odkaz"
+      },
+      "oeffnen": "Otvoriť"
+    }
+  },
+  "kunden": {
+    "titel": "Zákazníci",
+    "hinweis": "Vaše získané prevádzky – pseudonym. Vidíte krajinu, stav a sumy, nikdy nie meno alebo e-mail. Platiaci znamená: prvá faktúra za predplatné zaplatená a predplatné beží.",
+    "leer": "Zatiaľ sa žiadna prevádzka nezaregistrovala prostredníctvom vášho odkazu.",
+    "kunde": "Zákazník {n}",
+    "spalte": {
+      "kunde": "Zákazník",
+      "land": "Krajina",
+      "status": "Stav",
+      "registriert": "Registrovaný",
+      "provisionBis": "Provízia do",
+      "verdient": "Zarobené"
+    },
+    "status": {
+      "registriert": "Registrovaný",
+      "zahlend": "Platiaci",
+      "beendet": "Ukončené",
+      "in_pruefung": "V preverovaní",
+      "abgelehnt": "Zamietnuté"
+    }
+  },
+  "provisionen": {
+    "titel": "Provízie",
+    "hinweis": "Každý riadok predstavuje zaplatenú faktúru za predplatné, rezerváciu cez myBestDays alebo bonus za postup. Základom je čistý obrat predplatného alebo hodnota rezervácie; sadzba je vaša pozícia v čase platby. Otvorené riadky sú splatné po 30 dňoch.",
+    "leer": "Zatiaľ žiadna provízia.",
+    "reifAm": "splatné od {datum}",
+    "spalte": {
+      "datum": "Dátum",
+      "art": "Typ",
+      "kunde": "Zákazník",
+      "basis": "Základ",
+      "satz": "Sadzba",
+      "betrag": "Suma",
+      "status": "Stav"
+    },
+    "art": {
+      "earn": "Výnos",
+      "reversal": "Vrátenie peňazí",
+      "adjustment": "Oprava",
+      "override": "Tímová provízia",
+      "bonus": "Bonus za postup",
+      "lifetime": "Superprovízia",
+      "booking_share": "Podiel z rezervácií"
+    },
+    "status": {
+      "pending": "Otvorené",
+      "approved": "Splatné",
+      "held": "Pozastavené",
+      "paid": "Vyplatené",
+      "reversed": "Stiahnuté",
+      "cancelled": "Zrušené"
+    },
+    "team": "Tím"
+  },
+  "auszahlungen": {
+    "titel": "Výplaty",
+    "hinweis": "Mesačne, podľa meny, od minimálnej sumy. Ku každej výplate je dobropis (self-billing) – je to váš doklad.",
+    "kein_weg": "Zatiaľ nie je zadaná žiadna platobná metóda. Prosím, doplňte ju v profile – inak nie je možné vykonať výplatu.",
+    "leer": "Zatiaľ žiadna výplata.",
+    "spalte": {
+      "nummer": "Číslo dobropisu",
+      "zeitraum": "Obdobie",
+      "betrag": "Suma",
+      "status": "Stav",
+      "gutschrift": "Dobropis"
+    },
+    "status": {
+      "pending": "Pripravené",
+      "processing": "Prebieha prevod",
+      "paid": "Zaplatené",
+      "failed": "Zlyhalo"
+    },
+    "gutschriftLaden": "Stiahnuť",
+    "gutschriftFehler": "Dobropis sa nepodarilo načítať."
+  },
+  "profil": {
+    "titel": "Profil",
+    "seit": "Partner od {datum}",
+    "stammdaten": "Základné údaje",
+    "name": "Meno",
+    "firma": "Firma (voliteľné)",
+    "sprache": "Jazyk pre e-maily",
+    "kanal": "Vaše účty a kanály sociálnych médií",
+    "speichern": "Uložiť",
+    "gespeichert": "Uložené.",
+    "gespeichertViesOffen": "Uložené. IČ DPH zatiaľ nebolo možné potvrdiť – pred vyplatením ho znova skontrolujeme.",
+    "steuerUndAuszahlung": "Daňové a výplatné údaje",
+    "aktuellerWeg": "Aktuálne: {weg} {details}",
+    "keinWeg": "Zatiaľ nebola zadaná žiadna metóda výplaty.",
+    "viesBestaetigt": "IČ DPH potvrdené (VIES)",
+    "viesOffen": "IČ DPH zatiaľ nepotvrdené",
+    "rechtsform": "Právna forma",
+    "privat": "Súkromná osoba",
+    "unternehmen": "Spoločnosť",
+    "land": "Krajina",
+    "ustId": "IČ DPH",
+    "ustIdHinweis": "Bude skontrolované v systéme EÚ VIES. Bez potvrdeného čísla nie je možné vyplatiť spoločnosti. Dobropis bude obsahovať poznámku o prenesení daňovej povinnosti.",
+    "privatHinweis": "Ako súkromná osoba dostanete dobropis bez DPH. Províziu musíte zdaniť sami.",
+    "auszahlungsweg": "Spôsob výplaty",
+    "kontoinhaber": "Majiteľ účtu",
+    "empfaengerEmail": "E-mailová adresa {weg}",
+    "passwortBestaetigen": "Na potvrdenie: Vaše heslo",
+    "passwortFalsch": "Heslo nesúhlasí.",
+    "steuerdaten": "Daňové údaje"
+  },
+  "anmelden": {
+    "partner": "Partner",
+    "titel": "Prihlásiť sa",
+    "text": "Dashboard partnerského programu myNextDays.",
+    "email": "E-mail",
+    "passwort": "Heslo",
+    "anmelden": "Prihlásiť sa",
+    "passwortVergessen": "Zabudli ste heslo?",
+    "resetGesendet": "Ak účet existuje, poslali sme e-mail.",
+    "stoerung": "Prihlasovacia služba je momentálne nedostupná. Nie je to spôsobené vašimi prihlasovacími údajmi – skúste to prosím neskôr znova.",
+    "keinPartnerKonto": "S týmito prihlasovacími údajmi neexistuje partnerský účet.",
+    "fehlgeschlagen": "Prihlásenie zlyhalo.",
+    "nochKeinKonto": "Ešte nie ste partnerom?",
+    "bewerben": "Prihláste sa teraz"
+  },
+  "bewerben": {
+    "partner": "Partner",
+    "titel": "Prihláste sa ako partner",
+    "text": "Dve minúty. Každú žiadosť posudzujeme osobne a ozveme sa e-mailom.",
+    "name": "Vaše meno",
+    "firma": "Firma (voliteľné)",
+    "email": "E-mail",
+    "passwort": "Heslo (min. 8 znakov)",
+    "rechtsform": "Právna forma",
+    "privat": "Súkromná osoba",
+    "unternehmen": "Firma",
+    "land": "Krajina",
+    "ustId": "IČ DPH",
+    "ustIdHinweis": "Povinné pre firmy; overené cez VIES.",
+    "kanal": "Vaše účty sociálnych médií",
+    "kanalHinweis": "Povinné: aspoň jeden účet sociálnych médií (Instagram, TikTok, YouTube, Facebook, LinkedIn...) s adresou, handle a dosahom. Webová stránka, blog alebo newsletter sú vítané ako doplnok. Účty skontrolujeme pred schválením.",
+    "pitch": "Ako oslovujete prenajímateľov dovolenkového ubytovania alebo hotely? (voliteľné)",
+    "pitchHinweis": "Stačí pár viet.",
+    "zustimmung": "Súhlasím s partnerskými podmienkami, najmä s povinnosťou označiť odporúčania ako reklamu.",
+    "bedingungen": "Prejsť na program",
+    "captchaHinweis": "Táto stránka je chránená službou reCAPTCHA a platia Zásady ochrany osobných údajov a Zmluvné podmienky spoločnosti Google.",
+    "stoerung": "Služba je momentálne nedostupná – skúste to prosím neskôr.",
+    "emailVergeben": "Pre túto e-mailovú adresu už existuje žiadosť. Prihláste sa prosím.",
+    "captchaFehler": "Bezpečnostná kontrola zlyhala. Obnovte stránku a skúste to znova.",
+    "laeuft": "Odosiela sa...",
+    "absenden": "Odoslať žiadosť",
+    "schonPartner": "Už ste partnerom?",
+    "anmelden": "Prihlásiť sa",
+    "sponsor": "Sponzorované partnerom (kód, voliteľné)",
+    "sponsorHinweis": "Ste tu prostredníctvom tímového odkazu partnera? Jeho kód je potom tu. Získa tímovú províziu z obratu predplatného vašich zákazníkov – vaša vlastná provízia zostáva nezmenená."
+  },
+  "nachrichten": {
+    "titel": "Správy",
+    "hinweis": "Váš priamy kontakt s tímom partnerov – otázky týkajúce sa provízií, platieb, materiálov alebo zákazníkov. Odpovede sa zobrazia tu naživo.",
+    "neu": "Nová správa pre tím partnerov",
+    "platzhalter": "O čo ide?",
+    "senden": "Odoslať",
+    "abbrechen": "Zrušiť",
+    "leer": "Zatiaľ žiadna konverzácia.",
+    "stoerung": "Služba je momentálne nedostupná – skúste to prosím neskôr.",
+    "fehler": "Toto nefungovalo.",
+    "team": "Tím partnerov",
+    "du": "Vy",
+    "antwortPlatzhalter": "Vaša odpoveď...",
+    "antworten": "Odpovede",
+    "status": {
+      "in_bearbeitung": "Spracováva sa",
+      "wartet_auf_dich": "Odpoveď prijatá",
+      "geloest": "Vyriešené"
+    }
+  },
+  "kanaele": {
+    "plattformLabel": "Platforma",
+    "handle": "Meno používateľa (voliteľné)",
+    "reichweite": "Dosah (sledovatelia)",
+    "hinzufuegen": "Pridať kanál",
+    "entfernen": "Odstrániť kanál",
+    "plattform": {
+      "website": "Webstránka",
+      "blog": "Blog",
+      "newsletter": "Newsletter",
+      "podcast": "Podcast",
+      "other": "Iné"
+    },
+    "socialPflicht": "Aspoň jeden účet sociálnych médií je povinný – samotná webová stránka nestačí."
+  },
+  "team": {
+    "titel": "Tím",
+    "hinweis": "Partneri, ktorí sa prihlásili s vaším kódom, tvoria váš tím. Z čistého obratu predplatného ich zákazníkov získate rozdiel medzi vašou sadzbou (aktuálne {satz}) a sadzbou tímového partnera – obe v čase platby. Tímoví zákazníci sa počítajú 1:1 pre vašu pozíciu.",
+    "meinSponsor": "Ste tímovým partnerom {name}.",
+    "link": {
+      "titel": "Váš tímový odkaz",
+      "text": "Kto sa prihlási cez tento odkaz, má váš kód viditeľný v prihláške – bez súboru cookie.",
+      "kopieren": "Kopírovať odkaz",
+      "keinLink": "Žiadny aktívny kód – vytvorte si ho v časti Odkazy a materiály."
+    },
+    "regeln": {
+      "titel": "Pravidlá",
+      "rang": "Tímová provízia = vaša sadzba mínus sadzba tímového partnera, v čase platby. Rovnaká pozícia = 0.",
+      "ebene": "Presne jedna úroveň: Vaši tímoví partneri si nevytvárajú vlastný tím.",
+      "keinGeld": "Žiadne peniaze za nábor – len z plateného obratu z predplatného.",
+      "dauer": "12 mesiacov na tímového zákazníka, 30-dňové okno na vrátenie peňazí. Od pozície „Elita“ navyše 2,5 % superprovízia bez časového obmedzenia."
+    },
+    "kachel": {
+      "mitglieder": "Tímoví partneri (aktívni / celkovo)",
+      "teamKunden": "Platiaci tímoví zákazníci",
+      "umsatz30": "Tímový obrat (30 dní)",
+      "offen": "Tímová provízia otvorená",
+      "auszahlbar": "Tímová provízia splatná",
+      "ausgezahlt": "Tímová provízia vyplatená"
+    },
+    "verlauf": {
+      "titel": "História · 12 mesiacov",
+      "leer": "Zatiaľ žiadne tímové obraty.",
+      "provision": "Tímová provízia",
+      "umsatz": "Tímový obrat"
+    },
+    "mitglieder": {
+      "titel": "Váš tím",
+      "leer": "Zatiaľ žiadni tímoví partneri. Zdieľajte svoj tímový odkaz.",
+      "kunden": "{n} platiacich zákazníkov",
+      "umsatz30": "Obrat 30 dní",
+      "offen": "otvorené",
+      "seit": "od {datum}"
+    },
+    "spalte": {
+      "partner": "Partner",
+      "status": "Stav",
+      "rang": "Hodnosť",
+      "kunden": "Platiaci zákazníci",
+      "umsatz30": "Obrat 30 dní",
+      "umsatzGesamt": "Celkový obrat",
+      "offen": "Otvorené",
+      "auszahlbar": "Splatné",
+      "ausgezahlt": "Vyplatené"
+    },
+    "status": {
+      "pending_review": "V preverovaní",
+      "approved": "Schválené",
+      "rejected": "Zamietnuté",
+      "suspended": "Blokované"
+    },
+    "chat": {
+      "titel": "Zábava",
+      "schreiben": "Písať",
+      "rolle": {
+        "sponsor": "Váš sponzor",
+        "member": "Tímový partner"
+      },
+      "zurueck": "Tím",
+      "leer": "Zatiaľ žiadne správy.",
+      "platzhalter": "Vaša správa...",
+      "senden": "Odoslať",
+      "titelListe": "Správy v tíme"
+    },
+    "nochNichtErlaubt": "Tím vediete od pozície „Začiatočník“ (5 platiacich zákazníkov vo vašej štruktúre). Dovtedy neexistuje žiadny tímový odkaz."
+  },
+  "bedingungen": {
+    "neueVersion": "Partnerské podmienky sú k dispozícii v novej verzii (Váš súhlas: verzia {alt}, aktuálna: {neu}). Prečítajte si ich a znova súhlaste.",
+    "nochNicht": "Súhlaste s partnerskými podmienkami (verzia {neu}).",
+    "lesen": "Prečítať podmienky",
+    "annehmen": "Súhlasím",
+    "angenommen": "Ďakujeme – súhlas uložený."
+  },
+  "beitraege": {
+    "titel": "Príspevky",
+    "hinweis": "Pre každý reel, video alebo príspevok vytvorte samostatný odkaz. Takto uvidíte, ktorý príspevok prináša kliknutia, registrácie a platiacich zákazníkov.",
+    "kontoHinweis": "Prepojte svoj účet a zobrazenia a interakcie priamo z platformy sa zobrazia aj tu.",
+    "kontoVerbinden": "Prepojiť účet",
+    "neu": "Nový príspevok",
+    "keinCode": "Najprv potrebujete aktívny odporúčací kód.",
+    "feld": {
+      "titel": "Názov",
+      "titelBeispiel": "napr. Reel Kodaň Jeseň",
+      "plattform": "Platforma",
+      "code": "Kód",
+      "datum": "Zverejnené dňa",
+      "url": "Adresa príspevku (voliteľné)",
+      "urlHinweis": "Môže byť pridaná po zverejnení. S adresou priradíme zobrazenia a interakcie k príspevku."
+    },
+    "linkErzeugen": "Vytvoriť odkaz",
+    "angelegt": "Príspevok vytvorený – odkaz je pripravený.",
+    "doppelt": "Tento príspevok už pre tento kód existuje.",
+    "fehler": "To nefungovalo. Skúste to znova.",
+    "liste": "{n, plural, =0 {Žiadne príspevky} =1 {1 príspevok} other {# príspevkov}}",
+    "leer": "Zatiaľ žiadny príspevok. Vytvorte prvý odkaz vyššie.",
+    "veroeffentlicht": "zverejnené {datum}",
+    "loeschen": "Odstrániť príspevok",
+    "geloescht": "Príspevok odstránený.",
+    "loeschenGesperrt": "Príspevok už má registrácie a zostane zachovaný.",
+    "kopiert": "Odkaz skopírovaný.",
+    "kopierenFehlgeschlagen": "Kopírovanie nie je možné – označte prosím manuálne.",
+    "linkFehlt": "Odkaz momentálne nie je dostupný.",
+    "qrZeigen": "Zobraziť QR kód",
+    "qrSchliessen": "Skryť QR kód",
+    "qrAlt": "QR kód k odkazu príspevku",
+    "qrHinweis": "Pre príbehy, videá a tlač – vedie na rovnaký odkaz.",
+    "beitragOeffnen": "Otvoriť príspevok",
+    "urlAendern": "Zmeniť adresu",
+    "urlNachtragen": "Doplniť adresu",
+    "speichern": "Uložiť",
+    "gespeichert": "Uložené.",
+    "kennzahl": {
+      "klicks": "Kliknutia 90 dní",
+      "klicks30": "{n} za 30 dní",
+      "registrierungen": "Registrácie",
+      "kunden": "Platiaci zákazníci",
+      "views": "Zobrazenia",
+      "gemessen": "Stav {zeit}",
+      "nichtVerbunden": "Účet nie je pripojený",
+      "interaktion": "Páči sa mi to {likes} · Komentáre {kommentare} · Zdieľania {shares} · Uložené {saves}",
+      "pro1000": "{n} kliknutí na 1 000 zobrazení"
+    },
+    "freigabe": {
+      "videoNoetig": "Nahrať príspevok na schválenie",
+      "erklaerung": "Nahrajte hotové video, obrázok alebo PDF, kým ho zverejníte. Hneď ako ho schválime, zobrazí sa tu váš osobný odkaz – ten potom umiestnite pod príspevok. Používajte iba naše reklamné materiály, žiadne vlastné snímky obrazovky a žiadne prísľuby úspechu alebo záruky.",
+      "hochladen": "Vybrať súbor (video, JPG, PNG, PDF)",
+      "neuHochladen": "Nahrať nový súbor",
+      "laeuft": "Nahráva sa...",
+      "eingereicht": "Video odoslané. Ozveme sa vám hneď, ako ho skontrolujeme.",
+      "inPruefung": "Kontroluje sa",
+      "inPruefungHinweis": "Vaše video je u nás. Hneď ako ho schválime, zobrazí sa tu váš odkaz.",
+      "eingereichtAm": "Odoslané dňa {zeit} – hneď ako ho schválime, zobrazí sa tu váš odkaz.",
+      "abgelehnt": "Neschválené",
+      "grund": "Dôvod",
+      "freigegeben": "Video schválené",
+      "zuGross": "Video je väčšie ako {mb} MB.",
+      "fehler": "Nahrávanie zlyhalo.",
+      "grundKategorie": {
+        "material": "Materiál: iba oficiálny reklamný materiál, žiadne vlastné snímky obrazovky",
+        "promise": "Prísľuby: žiadne záruky ani prísľuby úspechu",
+        "disclosure": "Označenie: príspevok musí byť označený ako reklama",
+        "brand": "Značka: logo alebo názov boli použité nesprávne",
+        "other": "Iné"
+      }
+    }
+  },
+  "kanalVerbindung": {
+    "titel": "Pripojené účty",
+    "hinweis": "Pripojte svoje účty sociálnych médií, aby sledovatelia a zobrazenia prichádzali priamo z platformy. Je to dobrovoľné a môžete to kedykoľvek odvolať; iba čítame, nič nepíšeme.",
+    "verbinden": "Pripojiť {anbieter}",
+    "baldVerfuegbar": "čoskoro k dispozícii",
+    "nichtKonfiguriert": "Toto pripojenie ešte nie je aktivované.",
+    "fehler": "To nefungovalo. Skúste to znova.",
+    "verifiziert": "overené",
+    "follower": "{n} sledovateľov",
+    "views28": "{n} zobrazení za 28 dní",
+    "engagement": "Angažovanosť {n} %",
+    "gemessen": "Stav {zeit}",
+    "nochKeinSnapshot": "prvé meranie nasleduje",
+    "letzterFehler": "Posledné načítanie zlyhalo",
+    "trennen": "Odpojiť",
+    "getrennt": "Pripojenie odpojené. Predchádzajúce namerané hodnoty zostávajú ako história.",
+    "getrennteKonten": "{n, plural, =1 {1 odpojený účet} other {# odpojené účty}}",
+    "getranntAm": "odpojené {zeit}",
+    "durchPlattform": "Prístup z platformy ukončený",
+    "datenschutz": "Pri odpojení okamžite vymažeme prístupové údaje. Namerané hodnoty zostávajú uložené ako história. Podrobnosti nájdete v zásadách ochrany osobných údajov.",
+    "rueckkehr": {
+      "verbunden": "Účet pripojený – prebieha prvé meranie.",
+      "abgelehnt": "Pripojenie zrušené – neudelili ste prístup.",
+      "fehler": "Pripojenie zlyhalo."
+    }
+  },
+  "passwort": {
+    "anzeigen": "Zobraziť heslo",
+    "verbergen": "Skryť heslo"
+  },
+  "verbundkonto": {
+    "titel": "Prepojený účet pre výplatu",
+    "hinweis": "Vaša provízia bude prevedená na prepojený účet. Náš poskytovateľ platobných služieb vyžaduje overenie totožnosti – kým nie je dokončené, výplaty nie sú možné.",
+    "bereit": "Váš prepojený účet je aktivovaný. Platby sa tam automaticky posielajú.",
+    "offeneFelder": "Tieto údaje ešte chýbajú",
+    "gesperrt": "Účet je momentálne zablokovaný: {grund}",
+    "schrittKonto": "Otvoriť prepojený účet",
+    "schrittDaten": "Osobné údaje",
+    "schrittDatenFirma": "Údaje o firme a osobe",
+    "schrittBank": "Bankové spojenie",
+    "schrittBedingungen": "Podmienky poskytovateľa platobných služieb",
+    "kontoAnlegen": "Otvoriť prepojený účet",
+    "kontoAngelegt": "Prepojený účet otvorený.",
+    "datenBearbeiten": "Upraviť údaje",
+    "zuklappen": "Zavrieť",
+    "datenGesendet": "Údaje uložené.",
+    "vorname": "Meno",
+    "nachname": "Priezvisko",
+    "geburtsdatum": "Dátum narodenia",
+    "tag": "DD",
+    "monat": "MM",
+    "jahr": "RRRR",
+    "strasse": "Ulica a číslo domu",
+    "plz": "PSČ",
+    "ort": "Mesto",
+    "nationalitaet": "Štátna príslušnosť (kód krajiny)",
+    "telefon": "Telefón",
+    "webseite": "Webová stránka alebo profil",
+    "webseiteHinweis": "Adresa, pod ktorou inzerujete – potrebná pre overenie.",
+    "firmenname": "Názov firmy",
+    "steuernummer": "Daňové číslo",
+    "firmenStrasse": "Adresa firmy",
+    "firmaHinweis": "Ako oprávnená osoba sa použijú vaše vyššie uvedené údaje.",
+    "speichern": "Uložiť údaje",
+    "kontoinhaber": "Majiteľ účtu",
+    "waehrung": "Mena",
+    "waehrungHinweis": "Mena bankového účtu, nie vaša národná mena.",
+    "bankSpeichern": "Uložiť bankové spojenie",
+    "bankGesetzt": "Bankové spojenie uložené.",
+    "bedingungenAnnehmen": "Prijať podmienky",
+    "bedingungenAngenommen": "Podmienky prijaté.",
+    "fehler": "Toto nefungovalo.",
+    "schrittIdentitaet": "Overenie totožnosti",
+    "identitaetHinweis": "Náš poskytovateľ platobných služieb nakoniec skontroluje váš preukaz totožnosti. Deje sa tak na jeho zabezpečenej stránke, pretože sa tam vyhotovuje fotografia; potom sa vrátite sem.",
+    "identitaetStarten": "Overiť totožnosť"
+  }
+}

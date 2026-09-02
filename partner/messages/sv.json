@@ -1,0 +1,521 @@
+{
+  "meta": {
+    "titel": "myNextDays Partner",
+    "beschreibung": "Partner-instrumentpanel för myNextDays partnerprogram: Länkar, kunder, provisioner, utbetalningar."
+  },
+  "nav": {
+    "partner": "Partner",
+    "uebersicht": "Översikt",
+    "kunden": "Kunder",
+    "provisionen": "Provisioner",
+    "auszahlungen": "Utbetalningar",
+    "links": "Länkar & material",
+    "profil": "Profil",
+    "sprache": "Språk",
+    "abmelden": "Logga ut",
+    "nachrichten": "Meddelanden",
+    "menue": "Meny",
+    "team": "Team",
+    "beitraege": "Inlägg"
+  },
+  "status": {
+    "pending_review": {
+      "titel": "Din ansökan granskas",
+      "text": "Vi granskar varje ansökan personligen och återkommer via e-post. Fram till godkännandet är länkar och koder inte aktiva – du kan redan nu fylla i din profil och utbetalningsinformation."
+    },
+    "rejected": {
+      "titel": "Din ansökan godkändes inte",
+      "text": "Vi kunde inte godkänna din ansökan just nu. Kontakta oss gärna om du har frågor."
+    },
+    "suspended": {
+      "titel": "Ditt partnerkonto är spärrat",
+      "text": "Öppna provisioner betalas inte ut så länge spärren kvarstår. Kontakta oss om du har frågor."
+    },
+    "approved": {
+      "titel": "Godkänd",
+      "text": "Ditt konto är aktivt."
+    },
+    "grund": "Anledning"
+  },
+  "uebersicht": {
+    "titelBewerber": "Välkommen till partnerprogrammet",
+    "textBewerber": "Så snart din ansökan har godkänts ser du dina länkar, kunder och provisioner här. Under tiden kan du fylla i dina skatte- och utbetalningsuppgifter – så att den första utbetalningen kan ske utan fördröjning.",
+    "zumProfil": "Till profilen",
+    "titel": "Hej {name}",
+    "rang": "Rang {rang} · {satz} av prenumerationsintäkterna",
+    "naechsterRang": "ytterligare {fehlend} betalande kunder till {rang} ({satz})",
+    "linksTeilen": "Dela länkar",
+    "keineBetraege": "—",
+    "kachel": {
+      "klicks": "Klick (30 dagar)",
+      "registrierungen": "Registrerade företag",
+      "zahlend": "Betalande kunder",
+      "offen": "Öppen (återbetalningsperiod)",
+      "auszahlbar": "Utbetalningsbar",
+      "ausgezahlt": "Utbetald",
+      "team": "Teamprovision",
+      "teamHinweis": "{n} team-partners",
+      "struktur": "Kunder i din struktur",
+      "strukturHinweis": "egna + teamkunder – detta antal avgör din rang",
+      "super": "Superprovision",
+      "superHinweis": "{satz} på din strukturs prenumerationsintäkter, utan tidsbegränsning",
+      "turbo": "myBestDays bokningsandel",
+      "turboHinweis": "0,5 % per bokning via myBestDays från dina kunder och teamkunder",
+      "bonus": "Uppflyttningsbonusar",
+      "bonusHinweis": "engångsbelopp per uppnådd rang"
+    },
+    "deineLinks": "Dina länkar"
+  },
+  "links": {
+    "titel": "Länkar & material",
+    "hinweis": "Din länk leder till mynextdays.com och räknar klicket. Koden visas i formuläret vid registrering – utan cookie. Ett företag tilldelas exakt en partner.",
+    "klicks30": "{n} klick på 30 dagar",
+    "kopiert": "Kopierat.",
+    "kopierenFehlgeschlagen": "Kopiering ej möjlig – vänligen markera och kopiera.",
+    "codeKopieren": "Kopiera kod",
+    "linkFehlt": "Länk inte tillgänglig än.",
+    "neuerCode": "Skapa ytterligare kod",
+    "label": "Benämning (valfritt)",
+    "wunschcode": "Önskad kod (valfritt)",
+    "anlegen": "Skapa",
+    "abbrechen": "Avbryt",
+    "codeAngelegt": "Kod skapad.",
+    "codeVergeben": "Denna kod är redan upptagen.",
+    "fehler": "Detta fungerade inte.",
+    "kennzeichnung": {
+      "titel": "Obligatoriskt: Märk reklam",
+      "text": "Varje rekommendation med din länk eller kod är reklam och måste vara tydligt identifierbar som sådan – i början av inlägget, på inläggets språk. Ett enkelt ”#ad” räcker inte. Överträdelser kan leda till avstängning.",
+      "imBeitrag": "I inlägget",
+      "amLink": "Vid länken",
+      "land": {
+        "DE": "Tyskland",
+        "DK": "Danmark"
+      },
+      "andere": "Andra länder: Den kommersiella avsikten måste vara tydligt igenkännbar (EU-direktiv om otillbörliga affärsmetoder). Vänligen kontrollera ditt lands bestämmelser; vi kommer successivt att lägga till beprövade formuleringar."
+    },
+    "material": {
+      "titel": "Reklammaterial",
+      "leer": "Material förbereds just nu – det visas här så snart det är godkänt.",
+      "art": {
+        "video": "Video",
+        "image": "Bild",
+        "text": "Textmodul",
+        "link": "Länk"
+      },
+      "oeffnen": "Öppna"
+    }
+  },
+  "kunden": {
+    "titel": "Kunder",
+    "hinweis": "Dina värvade företag – pseudonymt. Du ser land, status och belopp, aldrig namn eller e-post. Betalande betyder: första abonnemangsfakturan betald och abonnemanget är aktivt.",
+    "leer": "Inget företag har ännu registrerat sig via din länk.",
+    "kunde": "Kund {n}",
+    "spalte": {
+      "kunde": "Kund",
+      "land": "Land",
+      "status": "Status",
+      "registriert": "Registrerad",
+      "provisionBis": "Provision till",
+      "verdient": "Intjänat"
+    },
+    "status": {
+      "registriert": "Registrerad",
+      "zahlend": "Betalande",
+      "beendet": "Avslutad",
+      "in_pruefung": "Under granskning",
+      "abgelehnt": "Avvisad"
+    }
+  },
+  "provisionen": {
+    "titel": "Provisioner",
+    "hinweis": "Varje rad är en betald prenumerationsfaktura, en bokning via myBestDays eller en uppflyttningsbonus. Basen är nettoabonnemangsintäkterna eller bokningsvärdet; procentsatsen är din rang vid betalningstillfället. Öppna rader blir utbetalningsbara efter 30 dagar.",
+    "leer": "Ingen provision än.",
+    "reifAm": "utbetalningsbar från {datum}",
+    "spalte": {
+      "datum": "Datum",
+      "art": "Typ",
+      "kunde": "Kund",
+      "basis": "Bas",
+      "satz": "Pris",
+      "betrag": "Belopp",
+      "status": "Status"
+    },
+    "art": {
+      "earn": "Intäkt",
+      "reversal": "Återbetalning",
+      "adjustment": "Justering",
+      "override": "Teamprovision",
+      "bonus": "Uppflyttningsbonus",
+      "lifetime": "Superprovision",
+      "booking_share": "Bokningsandel"
+    },
+    "status": {
+      "pending": "Öppen",
+      "approved": "Utbetalningsbar",
+      "held": "Pausad",
+      "paid": "Utbetald",
+      "reversed": "Återkallad",
+      "cancelled": "Avbruten"
+    },
+    "team": "Team"
+  },
+  "auszahlungen": {
+    "titel": "Utbetalningar",
+    "hinweis": "Månatligen, per valuta, från minimibeloppet. Varje utbetalning åtföljs av en kreditnota (självfakturering) – det är ditt kvitto.",
+    "kein_weg": "Ingen utbetalningsmetod har angetts än. Vänligen lägg till den under Profil – annars kan ingen utbetalning göras.",
+    "leer": "Ingen utbetalning än.",
+    "spalte": {
+      "nummer": "Kreditnota-nr.",
+      "zeitraum": "Period",
+      "betrag": "Belopp",
+      "status": "Status",
+      "gutschrift": "Kreditnota"
+    },
+    "status": {
+      "pending": "Förberedd",
+      "processing": "Under överföring",
+      "paid": "Betald",
+      "failed": "Misslyckades"
+    },
+    "gutschriftLaden": "Ladda ner",
+    "gutschriftFehler": "Kreditnota kunde inte laddas."
+  },
+  "profil": {
+    "titel": "Profil",
+    "seit": "Partner sedan {datum}",
+    "stammdaten": "Grunddata",
+    "name": "Namn",
+    "firma": "Företag (valfritt)",
+    "sprache": "Språk för e-postmeddelanden",
+    "kanal": "Dina sociala mediekonton och kanaler",
+    "speichern": "Spara",
+    "gespeichert": "Sparat.",
+    "gespeichertViesOffen": "Sparat. Momsregistreringsnumret har ännu inte kunnat bekräftas – vi kontrollerar det igen före utbetalningen.",
+    "steuerUndAuszahlung": "Skatt- och utbetalningsuppgifter",
+    "aktuellerWeg": "Aktuellt: {weg} {details}",
+    "keinWeg": "Ingen utbetalningsmetod har angetts ännu.",
+    "viesBestaetigt": "Momsregistreringsnummer bekräftat (VIES)",
+    "viesOffen": "Momsregistreringsnummer ej bekräftat",
+    "rechtsform": "Juridisk form",
+    "privat": "Privatperson",
+    "unternehmen": "Företag",
+    "land": "Land",
+    "ustId": "Momsregistreringsnummer",
+    "ustIdHinweis": "Kontrolleras mot EU:s VIES-system. Utan bekräftat nummer sker ingen utbetalning till företag. Kreditfakturan kommer att märkas med omvänd skattskyldighet.",
+    "privatHinweis": "Som privatperson får du kreditfakturan utan moms. Du ansvarar själv för att beskatta provisionen.",
+    "auszahlungsweg": "Utbetalningsmetod",
+    "kontoinhaber": "Kontoinnehavare",
+    "empfaengerEmail": "{weg}-E-postadress",
+    "passwortBestaetigen": "För att bekräfta: Ditt lösenord",
+    "passwortFalsch": "Lösenordet stämmer inte.",
+    "steuerdaten": "Skatteuppgifter"
+  },
+  "anmelden": {
+    "partner": "Partner",
+    "titel": "Logga in",
+    "text": "Instrumentpanelen för myNextDays partnerprogram.",
+    "email": "E-post",
+    "passwort": "Lösenord",
+    "anmelden": "Logga in",
+    "passwortVergessen": "Glömt lösenord?",
+    "resetGesendet": "Om ett konto existerar har vi skickat ett e-postmeddelande.",
+    "stoerung": "Inloggningstjänsten är för närvarande inte tillgänglig. Detta beror inte på dina inloggningsuppgifter – försök igen senare.",
+    "keinPartnerKonto": "Det finns inget partnerkonto med dessa inloggningsuppgifter.",
+    "fehlgeschlagen": "Inloggning misslyckades.",
+    "nochKeinKonto": "Inte partner än?",
+    "bewerben": "Ansök nu"
+  },
+  "bewerben": {
+    "partner": "Partner",
+    "titel": "Ansök som partner",
+    "text": "Två minuter. Vi granskar varje ansökan personligen och kontaktar dig via e-post.",
+    "name": "Ditt namn",
+    "firma": "Företag (valfritt)",
+    "email": "E-post",
+    "passwort": "Lösenord (minst 8 tecken)",
+    "rechtsform": "Juridisk form",
+    "privat": "Privatperson",
+    "unternehmen": "Företag",
+    "land": "Land",
+    "ustId": "Momsregistreringsnummer",
+    "ustIdHinweis": "Obligatoriskt för företag; kontrolleras mot VIES.",
+    "kanal": "Dina sociala mediekonton",
+    "kanalHinweis": "Obligatoriskt: minst ett sociala mediekonto (Instagram, TikTok, YouTube, Facebook, LinkedIn ...) med adress, användarnamn och räckvidd. Webbplats, blogg eller nyhetsbrev är också välkommet. Vi granskar kontona före godkännande.",
+    "pitch": "Hur når du semesterbostadsuthyrare eller hotell? (valfritt)",
+    "pitchHinweis": "Några meningar räcker.",
+    "zustimmung": "Jag accepterar partneravtalet, särskilt skyldigheten att markera rekommendationer som reklam.",
+    "bedingungen": "Till programmet",
+    "captchaHinweis": "Denna sida skyddas av reCAPTCHA; Googles integritetspolicy och användarvillkor gäller.",
+    "stoerung": "Tjänsten är för närvarande inte tillgänglig – försök igen senare.",
+    "emailVergeben": "Det finns redan en ansökan för denna e-postadress. Vänligen logga in.",
+    "captchaFehler": "Säkerhetskontrollen misslyckades. Vänligen ladda om sidan och försök igen.",
+    "laeuft": "Skickar …",
+    "absenden": "Skicka ansökan",
+    "schonPartner": "Redan partner?",
+    "anmelden": "Logga in",
+    "sponsor": "Värvad av partner (kod, valfritt)",
+    "sponsorHinweis": "Är du här via en partners teamlänk? Deras kod står då här. De får en teamprovision på dina kunders prenumerationsintäkter – din egen provision förblir oförändrad."
+  },
+  "nachrichten": {
+    "titel": "Meddelanden",
+    "hinweis": "Din direkta länk till partnerteamet – frågor om provision, utbetalning, material eller en kund. Svaren visas här live.",
+    "neu": "Nytt meddelande till partnerteamet",
+    "platzhalter": "Vad handlar det om?",
+    "senden": "Skicka",
+    "abbrechen": "Avbryt",
+    "leer": "Ingen konversation än.",
+    "stoerung": "Tjänsten är för närvarande inte tillgänglig – försök igen senare.",
+    "fehler": "Det gick inte.",
+    "team": "Partnerteam",
+    "du": "Du",
+    "antwortPlatzhalter": "Ditt svar ...",
+    "antworten": "Svara",
+    "status": {
+      "in_bearbeitung": "Behandlas",
+      "wartet_auf_dich": "Svar mottaget",
+      "geloest": "Löst"
+    }
+  },
+  "kanaele": {
+    "plattformLabel": "Plattform",
+    "handle": "Användarnamn (valfritt)",
+    "reichweite": "Räckvidd (följare)",
+    "hinzufuegen": "Lägg till kanal",
+    "entfernen": "Ta bort kanal",
+    "plattform": {
+      "website": "Webbplats",
+      "blog": "Blogg",
+      "newsletter": "Nyhetsbrev",
+      "podcast": "Podcast",
+      "other": "Övrigt"
+    },
+    "socialPflicht": "Minst ett sociala mediekonto är obligatoriskt – enbart en webbplats räcker inte."
+  },
+  "team": {
+    "titel": "Team",
+    "hinweis": "Partners som har ansökt med din kod bildar ditt team. Du får skillnaden mellan din procentsats (för närvarande {satz}) och teampartnerns procentsats – båda vid betalningstillfället – på nettoabonnemangsintäkterna från deras kunder. Teamkunder räknas 1:1 för din rang.",
+    "meinSponsor": "Du är teampartner till {name}.",
+    "link": {
+      "titel": "Din teamlänk",
+      "text": "Den som ansöker via denna länk får din kod synlig i ansökan – utan cookie.",
+      "kopieren": "Kopiera länk",
+      "keinLink": "Ingen aktiv kod – skapa en under Länkar & material."
+    },
+    "regeln": {
+      "titel": "Reglerna",
+      "rang": "Teamprovision = Din procentsats minus teampartnerns procentsats, vid betalningstillfället. Samma rang = 0.",
+      "ebene": "Exakt en nivå: Dina teampartners bygger inte ett eget team.",
+      "keinGeld": "Inga pengar för rekrytering – endast från betalda abonnemangsintäkter.",
+      "dauer": "12 månader per teamkund, 30 dagars återbetalningsfönster. Från Elite tillkommer 2,5 % superprovision utan tidsbegränsning."
+    },
+    "kachel": {
+      "mitglieder": "Teampartner (aktiva / totalt)",
+      "teamKunden": "Betalande teamkunder",
+      "umsatz30": "Teamintäkter (30 dagar)",
+      "offen": "Teamprovision öppen",
+      "auszahlbar": "Teamprovision utbetalningsbar",
+      "ausgezahlt": "Teamprovision utbetald"
+    },
+    "verlauf": {
+      "titel": "Historik · 12 månader",
+      "leer": "Inga teamintäkter ännu.",
+      "provision": "Teamprovision",
+      "umsatz": "Teamintäkter"
+    },
+    "mitglieder": {
+      "titel": "Ditt team",
+      "leer": "Inga teampartners ännu. Dela din teamlänk.",
+      "kunden": "{n} betalande kunder",
+      "umsatz30": "Intäkter 30 d.",
+      "offen": "Öppen",
+      "seit": "sedan {datum}"
+    },
+    "spalte": {
+      "partner": "Partner",
+      "status": "Status",
+      "rang": "Rang",
+      "kunden": "Betalande kunder",
+      "umsatz30": "Intäkter 30 d.",
+      "umsatzGesamt": "Total intäkt",
+      "offen": "Öppen",
+      "auszahlbar": "Utbetalningsbar",
+      "ausgezahlt": "Utbetald"
+    },
+    "status": {
+      "pending_review": "Under granskning",
+      "approved": "Godkänd",
+      "rejected": "Nekad",
+      "suspended": "Spärrad"
+    },
+    "chat": {
+      "titel": "Underhållning",
+      "schreiben": "Skriv",
+      "rolle": {
+        "sponsor": "Din sponsor",
+        "member": "Team-partner"
+      },
+      "zurueck": "Team",
+      "leer": "Inga meddelanden än.",
+      "platzhalter": "Ditt meddelande ...",
+      "senden": "Skicka",
+      "titelListe": "Teammeddelanden"
+    },
+    "nochNichtErlaubt": "Du leder ett team från rangen ”Uppstickare” (5 betalande kunder i din struktur). Fram till dess finns ingen teamlänk."
+  },
+  "bedingungen": {
+    "neueVersion": "Partneravtalet finns i en ny version (ditt godkännande: version {alt}, aktuell: {neu}). Vänligen läs och godkänn igen.",
+    "nochNicht": "Vänligen godkänn partneravtalet (version {neu}).",
+    "lesen": "Läs villkor",
+    "annehmen": "Godkänn",
+    "angenommen": "Tack – godkännande sparat."
+  },
+  "beitraege": {
+    "titel": "Inlägg",
+    "hinweis": "Skapa en unik länk för varje reel, video eller inlägg. På så sätt kan du se vilket inlägg som genererar klick, registreringar och betalande kunder.",
+    "kontoHinweis": "Anslut ditt konto, så visas visningar och interaktioner direkt från plattformen här.",
+    "kontoVerbinden": "Anslut konto",
+    "neu": "Nytt inlägg",
+    "keinCode": "Du behöver först en aktiv hänvisningskod.",
+    "feld": {
+      "titel": "Titel",
+      "titelBeispiel": "t.ex. Reel Köpenhamn Höst",
+      "plattform": "Plattform",
+      "code": "Kod",
+      "datum": "Publicerad den",
+      "url": "Inläggets adress (valfritt)",
+      "urlHinweis": "Kan läggas till efter publicering. Med adressen tilldelar vi visningar och interaktioner till inlägget."
+    },
+    "linkErzeugen": "Skapa länk",
+    "angelegt": "Inlägg skapat – länken är redo.",
+    "doppelt": "Detta inlägg finns redan för koden.",
+    "fehler": "Detta fungerade inte. Försök igen.",
+    "liste": "{n, plural, =0 {Inga inlägg} =1 {1 inlägg} other {# inlägg}}",
+    "leer": "Inget inlägg än. Skapa den första länken ovan.",
+    "veroeffentlicht": "publicerad {datum}",
+    "loeschen": "Radera inlägg",
+    "geloescht": "Inlägg raderat.",
+    "loeschenGesperrt": "Inlägget har redan registreringar och behålls.",
+    "kopiert": "Länk kopierad.",
+    "kopierenFehlgeschlagen": "Kopiering misslyckades – markera manuellt.",
+    "linkFehlt": "Länken är för närvarande inte tillgänglig.",
+    "qrZeigen": "Visa QR-kod",
+    "qrSchliessen": "Dölj QR-kod",
+    "qrAlt": "QR-kod för inläggslänken",
+    "qrHinweis": "För stories, videor och tryck – leder till samma länk.",
+    "beitragOeffnen": "Öppna inlägg",
+    "urlAendern": "Ändra adress",
+    "urlNachtragen": "Lägg till adress",
+    "speichern": "Spara",
+    "gespeichert": "Sparat.",
+    "kennzahl": {
+      "klicks": "Klick 90 dagar",
+      "klicks30": "{n} på 30 dagar",
+      "registrierungen": "Registreringar",
+      "kunden": "Betalande kunder",
+      "views": "Visningar",
+      "gemessen": "Status {zeit}",
+      "nichtVerbunden": "Konto ej anslutet",
+      "interaktion": "Gilla {likes} · Kommentarer {kommentare} · Delningar {shares} · Sparade {saves}",
+      "pro1000": "{n} klick per 1 000 visningar"
+    },
+    "freigabe": {
+      "videoNoetig": "Ladda upp bidrag för godkännande",
+      "erklaerung": "Ladda upp din färdiga video, bild eller PDF innan du publicerar den. När vi har godkänt den visas din personliga länk här – den lägger du sedan under inlägget. Använd endast vårt reklammaterial, inga egna skärmdumpar och inga löften om framgång eller garantier.",
+      "hochladen": "Välj fil (video, JPG, PNG, PDF)",
+      "neuHochladen": "Ladda upp ny fil",
+      "laeuft": "Laddar upp ...",
+      "eingereicht": "Video inskickad. Vi återkommer när den har granskats.",
+      "inPruefung": "Under granskning",
+      "inPruefungHinweis": "Vi har mottagit din video. När den har godkänts visas din länk här.",
+      "eingereichtAm": "Inskickad den {zeit} – när den har godkänts visas din länk här.",
+      "abgelehnt": "Ej godkänd",
+      "grund": "Anledning",
+      "freigegeben": "Video godkänd",
+      "zuGross": "Videon är större än {mb} MB.",
+      "fehler": "Uppladdningen misslyckades.",
+      "grundKategorie": {
+        "material": "Material: endast officiellt reklammaterial, inga egna skärmdumpar",
+        "promise": "Löften: inga garanti- eller framgångslöften",
+        "disclosure": "Märkning: inlägget måste märkas som reklam",
+        "brand": "Varumärke: logotyp eller namn har använts felaktigt",
+        "other": "Övrigt"
+      }
+    }
+  },
+  "kanalVerbindung": {
+    "titel": "Anslutna konton",
+    "hinweis": "Anslut dina sociala medier-konton så att följare och visningar kommer direkt från plattformen. Detta är frivilligt och kan återkallas när som helst; vi läser bara, vi skriver inget.",
+    "verbinden": "Anslut {anbieter}",
+    "baldVerfuegbar": "kommer snart",
+    "nichtKonfiguriert": "Denna anslutning är ännu inte aktiverad.",
+    "fehler": "Det fungerade inte. Försök igen.",
+    "verifiziert": "verifierad",
+    "follower": "{n} följare",
+    "views28": "{n} visningar på 28 dagar",
+    "engagement": "Engagemang {n} %",
+    "gemessen": "Status {zeit}",
+    "nochKeinSnapshot": "första mätningen kommer",
+    "letzterFehler": "Senaste hämtningen misslyckades",
+    "trennen": "Koppla ifrån",
+    "getrennt": "Anslutning frånkopplad. Tidigare mätvärden sparas som historik.",
+    "getrennteKonten": "{n, plural, =1 {1 frånkopplat konto} other {# frånkopplade konton}}",
+    "getranntAm": "frånkopplad {zeit}",
+    "durchPlattform": "Åtkomst från plattformen avslutad",
+    "datenschutz": "Vid frånkoppling raderar vi omedelbart åtkomstdata. Mätvärden sparas som historik. Detaljer i integritetspolicyn.",
+    "rueckkehr": {
+      "verbunden": "Konto anslutet – den första mätningen pågår.",
+      "abgelehnt": "Anslutning avbruten – du har inte beviljat åtkomst.",
+      "fehler": "Anslutning misslyckades."
+    }
+  },
+  "passwort": {
+    "anzeigen": "Visa lösenord",
+    "verbergen": "Dölj lösenord"
+  },
+  "verbundkonto": {
+    "titel": "Anslutet konto för utbetalning",
+    "hinweis": "Din provision överförs till ett anslutet konto. Vår betaltjänstleverantör kräver en identitetskontroll för detta – så länge den är öppen kan ingen utbetalning göras.",
+    "bereit": "Ditt anslutna konto är aktiverat. Utbetalningar går automatiskt dit.",
+    "offeneFelder": "Denna information saknas fortfarande",
+    "gesperrt": "Kontot är för närvarande spärrat: {grund}",
+    "schrittKonto": "Öppna anslutet konto",
+    "schrittDaten": "Personuppgifter",
+    "schrittDatenFirma": "Företags- och personuppgifter",
+    "schrittBank": "Bankuppgifter",
+    "schrittBedingungen": "Betaltjänstleverantörens villkor",
+    "kontoAnlegen": "Öppna anslutet konto",
+    "kontoAngelegt": "Anslutet konto öppnat.",
+    "datenBearbeiten": "Redigera uppgifter",
+    "zuklappen": "Fäll ihop",
+    "datenGesendet": "Uppgifter sparade.",
+    "vorname": "Förnamn",
+    "nachname": "Efternamn",
+    "geburtsdatum": "Födelsedatum",
+    "tag": "DD",
+    "monat": "MM",
+    "jahr": "ÅÅÅÅ",
+    "strasse": "Gatuadress och husnummer",
+    "plz": "Postnummer",
+    "ort": "Ort",
+    "nationalitaet": "Nationalitet (landskod)",
+    "telefon": "Telefon",
+    "webseite": "Webbplats eller profil",
+    "webseiteHinweis": "Adressen där du annonserar – krävs för granskning.",
+    "firmenname": "Företagsnamn",
+    "steuernummer": "Organisationsnummer",
+    "firmenStrasse": "Företagsadress",
+    "firmaHinweis": "Dina ovan nämnda uppgifter används som behörig person.",
+    "speichern": "Spara uppgifter",
+    "kontoinhaber": "Kontoinnehavare",
+    "waehrung": "Valuta",
+    "waehrungHinweis": "Bankkontots valuta, inte ditt lands.",
+    "bankSpeichern": "Spara bankuppgifter",
+    "bankGesetzt": "Bankuppgifter sparade.",
+    "bedingungenAnnehmen": "Acceptera villkor",
+    "bedingungenAngenommen": "Villkor accepterade.",
+    "fehler": "Det gick inte.",
+    "schrittIdentitaet": "Identitetskontroll",
+    "identitaetHinweis": "Slutligen kontrollerar vår betaltjänstleverantör din identitet. Detta sker på deras säkra sida, eftersom ett foto tas; därefter återvänder du hit.",
+    "identitaetStarten": "Kontrollera identitet"
+  }
+}

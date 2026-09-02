@@ -243,6 +243,40 @@ export const datenschutz: LegalDoc = {
       ],
     },
     {
+      heading: "Partnerystės programa",
+      paragraphs: [
+        "Mes vykdome partnerystės programą, per kurią partneriai (įtakos darytojai, konsultantai, agentūros, klientai) rekomenduoja įmones „myNextDays“ ir už tai gauna komisinį atlyginimą. Šiuo tikslu mes tvarkome partnerių ir – nedideliu mastu – rekomenduojamų įmonių duomenis.",
+      ],
+      unterpunkte: [
+        {
+          titel: "Partnerių duomenys",
+          paragraphs: [
+            "Pateikiant paraišką, mes tvarkome vardą, pavardę, įmonės pavadinimą, teisinę formą, šalį, el. pašto adresą, kalbą, socialinės žiniasklaidos paskyras (platformą, adresą, vartotojo vardą, paties nurodytą pasiekiamumą), PVM mokėtojo identifikacinį numerį (patikrinimas per ES VIES sistemą), išmokėjimo duomenis (IBAN, „Wise“ arba „PayPal“ adresą) bei sutikimą su dalyvavimo sąlygomis, nurodant versiją ir laiką. Teisinis pagrindas yra partnerystės sutarties vykdymas (BDAR 6 str. 1 d. b punktas); kreditams ir saugojimui taikomos mokesčių ir komercinės teisės prievolės (BDAR 6 str. 1 d. c punktas).",
+            "Jei partneris vadovauja komandai, jis mato savo komandos partnerių vardą arba įmonės pavadinimą, rangą, mokančių klientų skaičių ir iš to gaunamą komandos komisinį atlyginimą. Žinutės tarp rėmėjo ir komandos partnerio saugomos platformoje, kad abu galėtų matyti istoriją.",
+          ],
+        },
+        {
+          titel: "Paspaudimai ant partnerių nuorodų",
+          paragraphs: [
+            "Kai lankytojas paspaudžia partnerio nuorodą (mynextdays.com/p/CODE), mes išsaugome kodą, laiką, aplankytą puslapį, nukreipiantį puslapį ir galimus kampanijos parametrus, taip pat IP adresą ir naršyklės identifikatorių išimtinai kaip sutrumpintas kontrolines sumas (maišas) – siekiant aptikti piktnaudžiavimą (dažnumą), o ne atpažinti. Stebėjimo slapukas nėra nustatomas. Paspaudimų duomenis ištriname po 90 dienų. Teisinis pagrindas yra mūsų teisėtas interesas užtikrinti programos atsiskaitymo saugumą nuo sukčiavimo (BDAR 6 str. 1 d. f punktas).",
+          ],
+        },
+        {
+          titel: "Susietos socialinės žiniasklaidos paskyros ir įrašai",
+          paragraphs: [
+            "Partneriai gali savanoriškai susieti savo „YouTube“ („Google“), „Instagram“ ir „Facebook“ („Meta“) bei „TikTok“ paskyras su partnerio prietaisų skydeliu. Jie suteikia atitinkamai platformai skaitymo prieigą („OAuth“); mes nieko nerašome į šias paskyras. Mes saugome paskyros identifikatorių ir pavadinimą, užšifruotą prieigos raktą, susiejimo laiką ir kasdien po vieną matavimo reikšmę kiekvienai paskyrai: sekėjų arba prenumeratorių skaičių, peržiūras per pastarąsias 28 dienas, sąveikos rodiklį ir įrašų skaičių, kiekvieną kartą nurodant platformos atsakymo laiką. Apie įrašus, kuriuos partneris sukuria prietaisų skydelyje (pavadinimas, platforma, adresas, paskelbimo data), papildomai saugome peržiūras, patinka paspaudimus, komentarus, pasidalinimus ir išsaugojimus iš platformos.",
+            "Tikslas yra patikrinti partnerio nurodytą pasiekiamumą ir priskirti paspaudimus bei klientus atskiriems įrašams; nepatvirtinti duomenys bus mažiau svarbūs patvirtinant. Nuorodos į neatitikimus (pvz., staigus sekėjų skaičiaus padidėjimas be atitinkamų peržiūrų) naudojamos tik mūsų rankiniam patikrinimui ir nesukelia jokio automatizuoto sprendimo. Teisinis pagrindas yra partnerio sutikimas (BDAR 6 str. 1 d. a punktas), kurį jis duoda prisijungdamas ir gali bet kada atšaukti prietaisų skydelyje spustelėdamas „Atjungti“. Atjungus, mes nedelsiant ištriname prieigos raktą, išsaugoti matavimai lieka kaip istorija ir yra ištrinami kartu su partnerio paskyra. Mes naudojame tik oficialias platformų sąsajas; „Google“, „Meta“ ir „TikTok“ duomenų tvarkymui taikomos jų pačių privatumo nuostatos.",
+          ],
+        },
+        {
+          titel: "Rekomenduojamos įmonės",
+          paragraphs: [
+            "Jei įmonė registruojasi su partnerio kodu, mes išsaugome įmonės priskyrimą partneriui, taip pat laiką, būdą (nuoroda ar kodas) ir būseną. Partneris mato įmonę tik pseudonimiškai (eilės numeris, šalis, būsena, sumos) – niekada vardo, el. pašto adreso ar užsakymo duomenų. Tik tuo atveju, jei įmonė aiškiai sutinka registruodamasi, partneris gali su ja susisiekti per platformą. Komisinių apskaičiavimui mes tvarkome grynųjų įmonės apmokėtų sąskaitų prenumeratos sumas; teisinis pagrindas yra partnerystės ir naudojimo sutarties vykdymas (BDAR 6 str. 1 d. b punktas).",
+          ],
+        },
+      ],
+    },
+    {
       heading: "Prieglobos paslaugos ir duomenų saugojimas",
       paragraphs: [
         "Platforma, duomenų bazė, medijos failai ir pašto serveris veikia Hetzner Online GmbH, Vokietija, serveriuose Helsinkio duomenų centre (Suomijoje) — taigi Europos Sąjungos teritorijoje. Su Hetzner sudaryta duomenų tvarkymo sutartis.",

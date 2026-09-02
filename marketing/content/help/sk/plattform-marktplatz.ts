@@ -87,12 +87,12 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "note",
               variant: "tip",
-              text: "Kliknutím na Zverejniť myNextDays zvyčajne spoločne aktivuje trhovisko, portály a webovú stránku — prepínač trhoviska môžete potom kedykoľvek jednotlivo znova vypnúť.",
+              text: "Kliknutím na „Zverejniť“ sa spoločne odomknú portály a webová stránka myNextDays. myBestDays je povinný kanál: Každá nehnuteľnosť je tam uvedená a zobrazí sa, akonáhle inzerát schválime.",
             },
             { type: "h2", text: "Opätovné odstránenie viditeľnosti" },
             {
               type: "p",
-              text: "Ak deaktivujete prepínač Trhovisko platformy, objekt zmizne z vyhľadávania na trhovisku. Už potvrdené rezervácie tým zostávajú nedotknuté a pokračujú ako obvykle, pozri [Provízia z trhoviska](/hilfe/plattform-marktplatz/marktplatz-provision).",
+              text: "myBestDays nie je možné individuálne odhlásiť. Ak sa nehnuteľnosť už nemá predávať, použite „Pozastaviť predaj“ – tým sa stiahne zo všetkých portálov, webovej stránky a trhoviska súčasne. Už potvrdené rezervácie zostávajú nedotknuté a pokračujú ako obvykle, pozri [Provízia z trhoviska](/hilfe/plattform-marktplatz/marktplatz-provision).",
             },
           ],
         },

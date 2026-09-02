@@ -851,7 +851,8 @@
     },
     "unternehmen": {
       "ueberUns": "O nas",
-      "kontakt": "Kontakt"
+      "kontakt": "Kontakt",
+      "partner": "Partnerski program"
     },
     "copyright": "© 2026 myNextDays. Vse pravice pridržane.",
     "agb": "Pogoji",
@@ -860,7 +861,8 @@
     "cookies": "Politika piškotkov",
     "avv": "Obdelava podatkov",
     "kontoLoeschen": "Izbriši račun",
-    "newsletterKnopf": "Naročite se na novice"
+    "newsletterKnopf": "Naročite se na novice",
+    "partnerAgb": "Splošni pogoji za partnerje"
   },
   "legal": {
     "stand": "Zadnja posodobitev: {datum}"
@@ -990,7 +992,7 @@
       "sub": "Kar najemodajalci želijo vedeti pred prehodom — na kratko in brez drobnega tiska.",
       "laufzeit": {
         "frage": "Ali obstaja minimalna vezava?",
-        "antwort": "Nein. Naročnina je mesečna in jo je mogoče odpovedati štiri tedne pred koncem meseca. Prvih 14 dni je brezplačnih: ob začetku vnesete svoje plačilne podatke, vendar se plačilo izvede šele po izteku preizkusnega obdobja. Če odpoveste prej, ne plačate ničesar."
+        "antwort": "Ne. Naročnina je mesečna in jo je mogoče odpovedati s štiritedenskim odpovednim rokom do konca meseca. Prvih 14 dni je brezplačnih: ob začetku vnesete svoje plačilne podatke, vendar se plačilo izvede šele po izteku preskusnega obdobja. Če pridete prek povezave ali kode partnerja, je prvi celoten mesec brezplačen. Če odpoveste prej, ne plačate ničesar."
       },
       "objektzahl": {
         "frage": "Kaj se zgodi, ko dodam enote?",
@@ -2185,5 +2187,259 @@
     "verwalten": "Upravljanje nastavitev piškotkov",
     "schliessen": "Zapri",
     "bestaetigen": "Potrdi nastavitve"
+  },
+  "partnerHinweis": {
+    "text": "Prihajate prek priporočila (koda {code}). Koda bo uporabljena ob registraciji – in vam po 14 preskusnih dneh podarja prvi cel mesec.",
+    "cta": "Začnite zdaj brezplačno",
+    "schliessen": "Zapri obvestilo"
+  },
+  "partner": {
+    "meta": {
+      "titel": "Partnerski program — myNextDays",
+      "beschreibung": "Priporočite myNextDays ponudnikom počitniških nastanitev in hotelom ter prejmite do {max} % prihodkov od naročnine vsakega pridobljenega podjetja dvanajst mesecev."
+    },
+    "hero": {
+      "eyebrow": "Partnerski program",
+      "headlinePre": "Priporočite myNextDays —",
+      "headlineHighlight": "in zaslužite z nami",
+      "sub": "Za vplivneže, svetovalce, agencije in najemodajalce z mrežo: Vsako podjetje, ki se registrira preko vaše povezave in plača naročnino, vam prinaša dvanajst mesecev do {max} % prihodkov od naročnine — plus 0,5 % vsake rezervacije preko myBestDays, bonuse za napredovanje in od Elite super provizijo brez časovne omejitve.",
+      "cta": "Prijavite se zdaj",
+      "ctaLogin": "Prijava partnerja",
+      "chipDauer": "12 mesecev provizije na stranko",
+      "chipAuszahlung": "Mesečno izplačilo",
+      "chipKosten": "Brezplačno sodelovanje",
+      "chipGratismonat": "Vaše stranke: 14 dni preizkusa + 1 mesec brezplačno"
+    },
+    "schritte": {
+      "eyebrow": "Kako deluje",
+      "heading": "Trije koraki do prve provizije",
+      "bewerben": {
+        "titel": "Prijavite se",
+        "text": "Navedite nam svoj kanal — spletno stran, družabni profil ali mrežo. Vsako prijavo osebno pregledamo in jo običajno odobrimo v nekaj delovnih dneh."
+      },
+      "teilen": {
+        "titel": "Delite povezavo ali kodo",
+        "text": "Prejeli boste osebno povezavo in priporočilno kodo. Koda bo ob registraciji vidna v obrazcu — brez sledilnega piškotka."
+      },
+      "verdienen": {
+        "titel": "Zaslužite",
+        "text": "Če pridobljeno podjetje plača svoj prvi račun za naročnino, vaša provizija teče dvanajst mesecev. Vsako stranko boste videli psevdonimno na partnerski nadzorni plošči in boste izplačani mesečno."
+      }
+    },
+    "staffel": {
+      "eyebrow": "Vaša stopnja",
+      "heading": "Večja kot je vaša struktura, višja je vaša stopnja",
+      "sub": "Stopnja velja za vse nove provizije od dosega ranga. V strukturo se štejejo vaše lastne plačljive stranke in stranke vaših timskih partnerjev.",
+      "kunden": "{od}–{do} plačljivih strank",
+      "kundenOffen": "od {od} plačljivih strank",
+      "satz": "prihodkov od naročnine",
+      "nichtAbrufbar": "Stopnja trenutno ni na voljo. Poskusite znova pozneje."
+    },
+    "bedingungen": {
+      "eyebrow": "Pravila",
+      "heading": "Pošteno za vas, pošteno za podjetja",
+      "basis": {
+        "titel": "Kaj šteje",
+        "text": "Osnova za provizijo je neto prihodek od naročnine (osnovna tarifa in moduli) pridobljenega podjetja — brez davkov, provizij portala in dodatnih storitev."
+      },
+      "dauer": {
+        "titel": "Dvanajst mesecev",
+        "text": "Provizija teče dvanajst mesecev od prvega plačanega računa za naročnino podjetja; brezplačni mesec vaših strank se ne šteje. Če podjetje odpove, se provizija konča z zadnjim plačilom. Delež rezervacij in superprovizija tečeta brez te omejitve."
+      },
+      "auszahlung": {
+        "titel": "Izplačilo",
+        "text": "Mesečno, 30 dni po plačilu podjetja, od minimalnega zneska na valuto. Prejeli boste dobropis; podjetja potrebujejo veljavno ID številko za DDV."
+      },
+      "kennzeichnung": {
+        "titel": "Označevanje",
+        "text": "Vsako priporočilo je oglaševanje in mora biti kot tako označeno. Predpisane besedne zveze za vsak jezik so na voljo na nadzorni plošči."
+      },
+      "verboten": {
+        "titel": "Ni dovoljeno",
+        "text": "Samopromocija, oglaševanje naših blagovnih znamk v iskalnih oglasih, obljube o popustih v našem imenu in nezaželena sporočila. Vračila se odštejejo od provizije."
+      },
+      "daten": {
+        "titel": "Zasebnost",
+        "text": "Stranke vidite le psevdonimno – z državo, statusom in zneski, nikoli z imenom ali e-pošto. Podjetje vam lahko ob registraciji dovoli, da ga kontaktirate."
+      }
+    },
+    "faq": {
+      "eyebrow": "Pogosta vprašanja",
+      "heading": "Kaj partnerji sprašujejo nas",
+      "wer": {
+        "frage": "Kdo lahko postane partner?",
+        "antwort": "Vsaka oseba ali podjetje v EU z resničnim kanalom do najemodajalcev ali hotelov: vplivneži, svetovalci, agencije, davčne pisarne, združenja – in sami uporabniki myNextDays. Prijava je brezplačna; naročnina ni pogoj."
+      },
+      "wann": {
+        "frage": "Kdaj se podjetje šteje za mojo stranko?",
+        "antwort": "Ko se registrira z vašo kodo in plača svoj prvi račun za naročnino. Registracije brez plačila se ne štejejo za rang."
+      },
+      "doppelt": {
+        "frage": "Kaj, če podjetje navede dva partnerja?",
+        "antwort": "Podjetje je dodeljeno natanko enemu partnerju – tistemu, čigar koda je bila ob registraciji v obrazcu. Kasnejše kode tega ne spremenijo."
+      },
+      "steuern": {
+        "frage": "Kako poteka obračun?",
+        "antwort": "Izdamo dobropis (samofakturiranje). Podjetja z EU ID za DDV ga prejmejo z oznako obrnjene davčne obveznosti, fizične osebe brez DDV – provizijo obdavčite sami."
+      },
+      "material": {
+        "frage": "Ali obstaja promocijski material?",
+        "antwort": "Da: kratki videoposnetki za družabna omrežja, razlagalni video, pasice in besedilni moduli – na partnerski nadzorni plošči, v vašem jeziku."
+      },
+      "wieviel": {
+        "frage": "Koliko provizije lahko zaslužim?",
+        "antwort": "To je odvisno od prihodkov od naročnin vaših strank in vašega ranga. Zgornja lestvica prikazuje stopnjo za vsak rang; dvanajst mesecev na stranko. Poleg tega prejmete 0,5 % vsake rezervacije, ki jo vaše stranke prejmejo prek myBestDays, enkraten bonus za napredovanje za vsak dosežen rang, razliko v proviziji z ekipo – in od Elite Partnerja naprej 2,5 % superprovizije na celotno strukturo brez časovne omejitve."
+      },
+      "team": {
+        "frage": "Kako deluje provizija ekipe?",
+        "antwort": "Od ranga napredovalca: Če se partner prijavi preko vaše timske povezave in v prijavi vidno vnese vašo kodo, po odobritvi postane del vaše ekipe. Njegove stranke štejejo 1:1 za vaš rang. Od neto prihodkov od naročnin njegovih strank prejmete razliko med vašo stopnjo in njegovo — natanko eno raven globoko, brez prispevka za sodelovanje, brez denarja za novačenje."
+      },
+      "auszahlung": {
+        "frage": "Kako in kdaj se izplačajo provizije?",
+        "antwort": "Mesečno po valuti, takoj ko vsota doseže minimalni znesek vaše valute. Vsaka vrstica provizije je 30 dni »odprta« (okno za vračilo) in nato izplačljiva. Prejeli boste dobropis (samofakturiranje) – ne boste izdali računa. Izplačilo prek SEPA, Wise ali PayPal."
+      },
+      "verfolgen": {
+        "frage": "Kako lahko spremljam svoje provizije in uspešnost?",
+        "antwort": "Na partnerski nadzorni plošči boste pod »Provizije« videli vsak plačan račun za naročnino z osnovo, stopnjo, zneskom in statusom, pod »Stranke« boste videli svoja podjetja psevdonimno, pod »Ekipa« boste videli analizo vaših ekipnih partnerjev in pod »Povezave in gradivo« klike na kodo."
+      },
+      "werbung": {
+        "frage": "Ali lahko objavljam plačljive oglase?",
+        "antwort": "Ne za našo blagovno znamko: oglasi za »myNextDays« in različice pisanja (Brand-Bidding), odlaganje piškotkov, kupljen doseg ali spodbude za registracije so prepovedani in vodijo do blokade. Lastne vsebine, prispevki in priporočila so izrecno zaželeni – z oznako kot oglas."
+      }
+    },
+    "abschluss": {
+      "heading": "Ste pripravljeni priporočiti myNextDays?",
+      "sub": "Prijavite se v dveh minutah. Po pregledu se vam bomo oglasili.",
+      "cta": "Prijavite se zdaj",
+      "kontakt": "Vprašanja? Pišite nam."
+    },
+    "vergleich": {
+      "eyebrow": "Vaša stopnja",
+      "heading": "Več plačljivih strank, višja je vaša stopnja",
+      "sub": "Stopnja velja za vse nove provizije od dosega ranga. Šteje se vaša struktura: vaše lastne plačljive stranke in stranke vaših timskih partnerjev.",
+      "nichtAbrufbar": "Stopnja trenutno ni na voljo. Poskusite znova pozneje.",
+      "plan": "Rang",
+      "provision": "Provizija za lastne stranke",
+      "teamProvision": "Timsko nadomestilo za stranke vaših timskih partnerjev",
+      "dauer": "Trajanje na stranko",
+      "dauerWert": "12 mesecev",
+      "kunden": "{od}–{do} plačljivih strank",
+      "kundenOffen": "od {od} plačljivih strank",
+      "vorteile": "Storitve",
+      "ja": "vključeno",
+      "nein": "ni vključeno",
+      "leistung": {
+        "konto": "Brezplačen partnerski račun",
+        "dashboard": "Partnerska nadzorna plošča s strankami, provizijami in analizo",
+        "material": "Oglaševalski material in predloge za označevanje",
+        "team": "Zgradite ekipo z lastno ekipno povezavo",
+        "gutschrift": "Mesečno izplačilo z dobropisom (samofakturiranje)",
+        "chat": "Neposreden stik s partnersko ekipo",
+        "support": "Osebni kontakt",
+        "coMarketing": "So-marketing (skupne akcije)"
+      },
+      "fussnoteTeam": "Timsko nadomestilo je razlika med vašo stopnjo in stopnjo timskega partnerja pri neto prihodkih od naročnin njegovih strank, oboje v času plačila — natanko ena raven, brez prispevka za sodelovanje, brez denarja za novačenje. Skupaj nikoli več kot 30 %.",
+      "fussnoteCoMarketing": "Po dogovoru s partnersko ekipo; odvisno od profila partnerja in tekočih akcij.",
+      "fussnoteRang": "Rang izhaja iz vaše strukture: lastne plačljive stranke in stranke vaših timskih partnerjev, vsak šteje enkrat. Ob dosegu novega ranga od napredovalca dalje prejmete enkratni bonus za napredovanje.",
+      "teamDifferenz": "{satz} % minus stopnja timskega partnerja",
+      "teamNicht": "še ni ekipe",
+      "bonus": "Bonus za napredovanje (enkratno)",
+      "superProvision": "Super provizija za celotno strukturo",
+      "marktTurbo": "Delež rezervacij myBestDays",
+      "marktTurboWert": "0,5 % na rezervacijo, neomejeno",
+      "fussnoteSuper": "Od Elite partnerja 2,5 % od neto prihodkov od naročnin vseh strank vaše strukture — poleg provizije, brez 12-mesečne omejitve, dokler ohranjate rang in stranka plačuje."
+    },
+    "team": {
+      "eyebrow": "Zgradite ekipo",
+      "heading": "Do {max} % razlike v proviziji od prometa vaše ekipe",
+      "sub": "Poznate druge svetovalce, ustvarjalce ali agencije s stikom do gostiteljev? Od ranga napredovalca se prijavijo preko vaše timske povezave, postanejo del vaše ekipe — in njihove stranke štejejo 1:1 za vaš rang. Zaslužite razliko med vašo stopnjo in stopnjo vašega timskega partnerja; vaši timski partnerji obdržijo svojo polno lastno lestvico.",
+      "rang": {
+        "titel": "Razlika",
+        "text": "Prejmete svojo stopnjo minus stopnjo timskega partnerja — oboje v času plačila. Če je vaš timski partner v istem rangu, ne nastane timska provizija."
+      },
+      "ebene": {
+        "titel": "Samo ena raven",
+        "text": "Vaši ekipni partnerji ne gradijo lastne ekipe pod vami. Brez mreže, brez piramide."
+      },
+      "keinGeld": {
+        "titel": "Samo iz resničnega prometa",
+        "text": "Brez prispevka za sodelovanje, brez denarja za novačenje. Ekipna provizija nastane izključno iz plačanega prihodka od naročnin."
+      },
+      "dauer": {
+        "titel": "Ista pravila",
+        "text": "12 mesecev na timsko stranko, 30-dnevno okno za vračilo, vračilo ob povračilu ali stornaciji — kot pri vaši lastni proviziji. Od Elite se doda super provizija za celotno strukturo, brez časovne omejitve."
+      }
+    },
+    "kundeCta": {
+      "heading": "Ste že stranka myNextDays?",
+      "text": "Potem izdelek najbolje poznate. Priporočite ga naprej – vaša provizija bo kot dobropis nakazana na vaš račun, ne glede na vašo naročnino.",
+      "cta": "Priporočite in zaslužite"
+    }
+  },
+  "partnerBewerbung": {
+    "meta": {
+      "titel": "Prijavite se kot partner – myNextDays",
+      "beschreibung": "Prijava za partnerski program myNextDays: računi družbenih medijev, doseg, pogoji. Vsako prijavo pregledamo osebno."
+    },
+    "eyebrow": "Partnerski program",
+    "titel": "Prijavite se kot partner",
+    "text": "Navedite nam svoje račune družbenih medijev z dosegom – vsako prijavo pregledamo osebno in se običajno oglasimo v nekaj delovnih dneh. Z odobritvijo dobite dostop do partnerske nadzorne plošče s povezavami, kodami in analizo.",
+    "email": "E-pošta",
+    "passwort": "Geslo za vašo partnersko nadzorno ploščo",
+    "passwortHinweis": "Vsaj 8 znakov.",
+    "name": "Ime",
+    "firma": "Podjetje (neobvezno)",
+    "rechtsform": "Pravna oblika",
+    "privat": "Zasebna oseba",
+    "unternehmen": "Podjetje",
+    "land": "Država",
+    "ustId": "ID za DDV",
+    "ustIdHinweis": "Preverjeno v sistemu EU VIES. Brez potrjene številke ni izplačila podjetjem.",
+    "kanaele": {
+      "titel": "Vaši računi družbenih medijev",
+      "hinweis": "Obvezno: vsaj en račun družbenih medijev (Instagram, TikTok, YouTube, Facebook, LinkedIn …) z naslovom, uporabniškim imenom in dosegom (sledilci). Spletna stran, blog ali glasilo so dobrodošli kot dodatek. Račune preverimo pred odobritvijo.",
+      "plattform": "Platforma",
+      "handle": "Uporabniško ime (neobvezno)",
+      "reichweite": "Doseg (sledilci)",
+      "hinzufuegen": "Dodaj kanal",
+      "entfernen": "Odstrani kanal",
+      "socialPflicht": "Vsaj en račun družbenih medijev z dosegom je obvezen – samo spletna stran ni dovolj.",
+      "plattformen": {
+        "website": "Spletna stran",
+        "blog": "Blog",
+        "newsletter": "Glasilo",
+        "podcast": "Podcast",
+        "other": "Drugo"
+      }
+    },
+    "plattform": {
+      "website": "Spletna stran",
+      "blog": "Blog",
+      "newsletter": "Glasilo",
+      "podcast": "Podcast",
+      "other": "Drugo"
+    },
+    "sponsor": "Promoviral partner (koda, neobvezno)",
+    "sponsorHinweis": "Ali prihajate prek skupinske povezave partnerja? Njegova koda je potem tukaj. Prejel bo skupinsko provizijo od prihodkov od naročnin vaših strank – vaša lastna provizija ostane nespremenjena.",
+    "pitch": "Zakaj ste primerni za myNextDays? (neobvezno)",
+    "pitchPlatzhalter": "Koga dosežete, o čem govorite, kako nameravate priporočati?",
+    "zustimmung": "Sprejemam",
+    "bedingungen": "Partnerski pogoji",
+    "version": "Različica {version}",
+    "absenden": "Pošlji prijavo",
+    "sendet": "Pošiljanje …",
+    "pruefungHinweis": "Ta obrazec je zaščiten z reCAPTCHA. Po oddaji bo naša partnerska ekipa pregledala vaše račune in doseg; po e-pošti boste prejeli odločitev.",
+    "fehler": {
+      "social": "Navedite vsaj en račun družabnih medijev z naslovom in dosegom.",
+      "doppelt": "Za ta e-poštni naslov že obstaja prijava. Prijavite se v partnersko nadzorno ploščo.",
+      "eingabe": "Preverite svoje vnose.",
+      "captcha": "Preverjanje zaščite pred vsiljeno pošto ni uspelo. Osvežite stran in poskusite znova.",
+      "allgemein": "Prijave trenutno ni bilo mogoče poslati. Poskusite znova pozneje."
+    },
+    "fertig": {
+      "titel": "Prijava prejeta",
+      "text": "Hvala! Osebno bomo pregledali vaše račune in doseg ter vas kontaktirali po e-pošti. Do partnerske nadzorne plošče lahko dostopate s svojim e-poštnim naslovom in geslom – povezave in kode bodo aktivne po odobritvi.",
+      "login": "Na partnersko prijavo"
+    }
   }
 }

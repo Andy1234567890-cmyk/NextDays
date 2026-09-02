@@ -1,0 +1,521 @@
+{
+  "meta": {
+    "titel": "Comhpháirtí myNextDays",
+    "beschreibung": "Painéal Comhpháirtí de chlár comhpháirtíochta myNextDays: Naisc, Custaiméirí, Coimisiúin, Íocaíochtaí."
+  },
+  "nav": {
+    "partner": "Comhpháirtí",
+    "uebersicht": "Forbhreathnú",
+    "kunden": "Custaiméirí",
+    "provisionen": "Coimisiúin",
+    "auszahlungen": "Íocaíochtaí",
+    "links": "Naisc & Ábhar",
+    "profil": "Próifíl",
+    "sprache": "Teanga",
+    "abmelden": "Logáil Amach",
+    "nachrichten": "Teachtaireachtaí",
+    "menue": "Roghchlár",
+    "team": "Foireann",
+    "beitraege": "Postálacha"
+  },
+  "status": {
+    "pending_review": {
+      "titel": "Tá d'iarratas á athbhreithniú",
+      "text": "Déanaimid athbhreithniú pearsanta ar gach iarratas agus déanfaimid teagmháil leat trí ríomhphost. Go dtí go gceadaítear é, níl na naisc agus na cóid gníomhach fós — is féidir leat do shonraí próifíle agus íocaíochta a chomhlánú anois."
+    },
+    "rejected": {
+      "titel": "Níor glacadh le d'iarratas",
+      "text": "Níorbh fhéidir linn glacadh le d'iarratas faoi láthair. Má tá ceisteanna agat, déan teagmháil linn."
+    },
+    "suspended": {
+      "titel": "Tá do chuntas comhpháirtí blocáilte",
+      "text": "Ní íocfar coimisiúin oscailte chomh fada agus a bheidh an blocáil i bhfeidhm. Má tá ceisteanna agat, déan teagmháil linn."
+    },
+    "approved": {
+      "titel": "Ceadaithe",
+      "text": "Tá do chuntas gníomhach."
+    },
+    "grund": "Cúis"
+  },
+  "uebersicht": {
+    "titelBewerber": "Fáilte chuig an gclár comhpháirtíochta",
+    "textBewerber": "Nuair a bheidh d'iarratas ceadaithe, feicfidh tú do naisc, custaiméirí agus coimisiúin anseo. Idir an dá linn, cuir isteach do shonraí cánach agus íocaíochta — ansin is féidir an chéad íocaíocht a dhéanamh gan cheist.",
+    "zumProfil": "Chuig an bPróifíl",
+    "titel": "Dia duit {name}",
+    "rang": "Rang {rang} · {satz} d'ioncam síntiúis",
+    "naechsterRang": "níos {fehlend} custaiméirí íocacha go dtí {rang} ({satz})",
+    "linksTeilen": "Comhroinn naisc",
+    "keineBetraege": "—",
+    "kachel": {
+      "klicks": "Cliceanna (30 lá)",
+      "registrierungen": "Gnólachtaí Cláraithe",
+      "zahlend": "Custaiméirí Íocacha",
+      "offen": "Oscailte (Fuinneog Aisíocaíochta)",
+      "auszahlbar": "Iníoctha",
+      "ausgezahlt": "Íoctha",
+      "team": "Coimisiún Foirne",
+      "teamHinweis": "{n} Comhpháirtí Foirne",
+      "struktur": "Custaiméirí i do struchtúr",
+      "strukturHinweis": "do chustaiméirí féin + custaiméirí foirne — cinneann an uimhir seo do chéim",
+      "super": "Sárchoimisiún",
+      "superHinweis": "{satz} ar ioncam síntiúis do struchtúir, gan teorainn ama",
+      "turbo": "Scair áirithinte myBestDays",
+      "turboHinweis": "0.5% in aghaidh na háirithinte trí myBestDays le do chustaiméirí agus custaiméirí foirne",
+      "bonus": "Bónais ardú céime",
+      "bonusHinweis": "uair amháin in aghaidh gach céime a baineadh amach"
+    },
+    "deineLinks": "Do Naisc"
+  },
+  "links": {
+    "titel": "Naisc & Ábhar",
+    "hinweis": "Téann do nasc chuig mynextdays.com agus comhaireamh sé an cliceáil. Tá an cód le feiceáil san fhoirm le linn an chláraithe — gan fianán. Sannfar gnó amháin do chomhpháirtí amháin.",
+    "klicks30": "{n} cliceanna i 30 lá",
+    "kopiert": "Cóipeáilte.",
+    "kopierenFehlgeschlagen": "Ní féidir cóipeáil — déan é a aibhsiú agus a chóipeáil le do thoil.",
+    "codeKopieren": "Cóipigh an cód",
+    "linkFehlt": "Níl an nasc ar fáil go fóill.",
+    "neuerCode": "Cruthaigh cód eile",
+    "label": "Cur síos (roghnach)",
+    "wunschcode": "Cód saincheaptha (roghnach)",
+    "anlegen": "Cruthaigh",
+    "abbrechen": "Cealaigh",
+    "codeAngelegt": "Cód cruthaithe.",
+    "codeVergeben": "Tá an cód seo in úsáid cheana féin.",
+    "fehler": "Theip air sin.",
+    "kennzeichnung": {
+      "titel": "Éigeantach: Fógraíocht a mharcáil",
+      "text": "Is fógraíocht é gach moladh le do nasc nó cód agus ní mór é a aithint mar sin — ag tús an phoist, i dteanga an phoist. Ní leor “#ad” amháin. D’fhéadfadh sárú a bheith mar thoradh ar bhlocáil.",
+      "imBeitrag": "Sa phost",
+      "amLink": "Ag an nasc",
+      "land": {
+        "DE": "An Ghearmáin",
+        "DK": "An Danmhairg"
+      },
+      "andere": "Tíortha eile: Ní mór an rún tráchtála a bheith soiléir (Treoir an AE maidir le Cleachtais Ghnó Éagóracha). Seiceáil riachtanais do thíre le do thoil; cuirfimid foclaíocht dheimhnithe leis de réir a chéile."
+    },
+    "material": {
+      "titel": "Ábhar fógraíochta",
+      "leer": "Tá ábhar á ullmhú faoi láthair — beidh sé le feiceáil anseo a luaithe a bheidh sé ceadaithe.",
+      "art": {
+        "video": "Físeán",
+        "image": "Íomhá",
+        "text": "Bloc téacs",
+        "link": "Nasc"
+      },
+      "oeffnen": "Oscail"
+    }
+  },
+  "kunden": {
+    "titel": "Custaiméirí",
+    "hinweis": "Do ghnólachtaí atreoraithe — gan ainm. Feiceann tú tír, stádas agus méideanna, ach ní ainm ná ríomhphost riamh. Ciallaíonn “Íocach”: an chéad bhille síntiúis íoctha agus an síntiús gníomhach.",
+    "leer": "Níl aon ghnólacht cláraithe trí do nasc go fóill.",
+    "kunde": "Custaiméir {n}",
+    "spalte": {
+      "kunde": "Custaiméir",
+      "land": "Tír",
+      "status": "Stádas",
+      "registriert": "Cláraithe",
+      "provisionBis": "Coimisiún suas go",
+      "verdient": "Tuillte"
+    },
+    "status": {
+      "registriert": "Cláraithe",
+      "zahlend": "Íocach",
+      "beendet": "Críochnaithe",
+      "in_pruefung": "Faoi athbhreithniú",
+      "abgelehnt": "Diúltaithe"
+    }
+  },
+  "provisionen": {
+    "titel": "Coimisiúin",
+    "hinweis": "Is é gach líne sonrasc síntiúis íoctha, áirithint trí myBestDays nó bónas ardú céime. Is é an bonn an glanioncam síntiúis nó luach na háirithinte; is é an ráta do chéim ag am na híocaíochta. Beidh línte oscailte iníoctha tar éis 30 lá.",
+    "leer": "Gan aon choimisiún fós.",
+    "reifAm": "iníoctha ó {datum}",
+    "spalte": {
+      "datum": "Dáta",
+      "art": "Cineál",
+      "kunde": "Custaiméir",
+      "basis": "Bonn",
+      "satz": "Ráta",
+      "betrag": "Méid",
+      "status": "Stádas"
+    },
+    "art": {
+      "earn": "Tuilleamh",
+      "reversal": "Aisíoc",
+      "adjustment": "Ceartú",
+      "override": "Coimisiún Foirne",
+      "bonus": "Bónas ardú céime",
+      "lifetime": "Sárchoimisiún",
+      "booking_share": "Scair áirithinte"
+    },
+    "status": {
+      "pending": "Oscailte",
+      "approved": "Iníoctha",
+      "held": "Coinnithe",
+      "paid": "Íoctha",
+      "reversed": "Cúlghairthe",
+      "cancelled": "Cealaithe"
+    },
+    "team": "Foireann"
+  },
+  "auszahlungen": {
+    "titel": "Íocaíochtaí",
+    "hinweis": "Míosúil, in aghaidh an airgeadra, ón íosmhéid. Tá creidmheas (féinbhilleáil) ag gabháil le gach íocaíocht - is é sin do admháil.",
+    "kein_weg": "Níl aon mhodh íocaíochta curtha isteach fós. Cuir leis faoi Phróifíl le do thoil - ar shlí eile ní féidir íocaíocht a dhéanamh.",
+    "leer": "Gan aon íocaíocht fós.",
+    "spalte": {
+      "nummer": "Uimh. Creidmheasa",
+      "zeitraum": "Tréimhse",
+      "betrag": "Méid",
+      "status": "Stádas",
+      "gutschrift": "Creidmheas"
+    },
+    "status": {
+      "pending": "Ullmhaithe",
+      "processing": "Á Aistriú",
+      "paid": "Íoctha",
+      "failed": "Theip"
+    },
+    "gutschriftLaden": "Íoslódáil",
+    "gutschriftFehler": "Níorbh fhéidir an creidmheas a luchtú."
+  },
+  "profil": {
+    "titel": "Próifíl",
+    "seit": "Comhpháirtí ó {datum}",
+    "stammdaten": "Sonraí Máistir",
+    "name": "Ainm",
+    "firma": "Cuideachta (roghnach)",
+    "sprache": "Teanga le haghaidh Ríomhphoist",
+    "kanal": "Do chuntais agus cainéil meán sóisialta",
+    "speichern": "Sábháil",
+    "gespeichert": "Sábháilte.",
+    "gespeichertViesOffen": "Sábháilte. Níor deimhníodh an uimhir CBL fós — déanfaimid athbhreithniú uirthi roimh an íocaíocht.",
+    "steuerUndAuszahlung": "Sonraí cánach agus íocaíochta",
+    "aktuellerWeg": "Reatha: {weg} {details}",
+    "keinWeg": "Níl aon mhodh íocaíochta curtha isteach fós.",
+    "viesBestaetigt": "Uimhir CBL deimhnithe (VIES)",
+    "viesOffen": "Níl an uimhir CBL deimhnithe fós",
+    "rechtsform": "Foirm dhlíthiúil",
+    "privat": "Duine aonair",
+    "unternehmen": "Cuideachta",
+    "land": "Tír",
+    "ustId": "Uimhir CBL",
+    "ustIdHinweis": "Déanfar é a sheiceáil i gcoinne chóras VIES an AE. Gan uimhir dheimhnithe, ní dhéanfar aon íocaíocht le cuideachtaí. Beidh an nóta 'cúlsheirbhís' ar an gcreidmheas.",
+    "privatHinweis": "Mar dhuine aonair, gheobhaidh tú an creidmheas gan CBL. Tá tú freagrach as an gcoimisiún a chánadh tú féin.",
+    "auszahlungsweg": "Modh íocaíochta",
+    "kontoinhaber": "Sealbhóir cuntais",
+    "empfaengerEmail": "Seoladh ríomhphoist {weg}",
+    "passwortBestaetigen": "Chun a dheimhniú: Do phasfhocal",
+    "passwortFalsch": "Níl an pasfhocal ceart.",
+    "steuerdaten": "Sonraí Cánach"
+  },
+  "anmelden": {
+    "partner": "Comhpháirtí",
+    "titel": "Logáil isteach",
+    "text": "Painéal clár comhpháirtíochta myNextDays.",
+    "email": "Ríomhphost",
+    "passwort": "Pasfhocal",
+    "anmelden": "Logáil isteach",
+    "passwortVergessen": "Pasfhocal dearmadta?",
+    "resetGesendet": "Má tá cuntas ann, chuireamar ríomhphost chugat.",
+    "stoerung": "Níl an tseirbhís logála isteach ar fáil faoi láthair. Ní hé seo mar gheall ar do dhintiúir — déan iarracht arís níos déanaí le do thoil.",
+    "keinPartnerKonto": "Níl aon chuntas comhpháirtí ann leis na dintiúir seo.",
+    "fehlgeschlagen": "Theip ar an logáil isteach.",
+    "nochKeinKonto": "Níl tú i do chomhpháirtí fós?",
+    "bewerben": "Cuir isteach iarratas anois"
+  },
+  "bewerben": {
+    "partner": "Comhpháirtí",
+    "titel": "Déan iarratas chun bheith i do chomhpháirtí",
+    "text": "Dhá nóiméad. Déanaimid athbhreithniú pearsanta ar gach iarratas agus déanfaimid teagmháil leat trí ríomhphost.",
+    "name": "D'ainm",
+    "firma": "Cuideachta (roghnach)",
+    "email": "Ríomhphost",
+    "passwort": "Pasfhocal (8 gcarachtar ar a laghad)",
+    "rechtsform": "Foirm Dlíthiúil",
+    "privat": "Duine Aonair",
+    "unternehmen": "Cuideachta",
+    "land": "Tír",
+    "ustId": "Uimhir CBL",
+    "ustIdHinweis": "Éigeantach do chuideachtaí; déanfar é a fhíorú i gcoinne VIES.",
+    "kanal": "Do chuntais meán sóisialta",
+    "kanalHinweis": "Riachtanach: cuntas meán sóisialta amháin ar a laghad (Instagram, TikTok, YouTube, Facebook, LinkedIn …) le seoladh, láimhseáil agus teacht. Suíomh Gréasáin, blag nó nuachtlitir breise más mian leat. Déanfaimid na cuntais a sheiceáil sula gceadaítear iad.",
+    "pitch": "Conas a shroicheann tú cíosanna saoire nó óstáin? (roghnach)",
+    "pitchHinweis": "Is leor cúpla abairt.",
+    "zustimmung": "Glacaim le téarmaí an chomhpháirtí, go háirithe an oibleagáid atreoruithe a mharcáil mar fhógraíocht.",
+    "bedingungen": "Chun an Clár",
+    "captchaHinweis": "Tá an leathanach seo cosanta ag reCAPTCHA; tá Polasaí Príobháideachta agus Téarmaí Seirbhíse Google i bhfeidhm.",
+    "stoerung": "Níl an tseirbhís ar fáil faoi láthair — bain triail eile as níos déanaí.",
+    "emailVergeben": "Tá iarratas ann cheana don seoladh ríomhphoist seo. Logáil isteach le do thoil.",
+    "captchaFehler": "Theip ar an seiceáil slándála. Athlódáil an leathanach agus bain triail eile as.",
+    "laeuft": "Á sheoladh …",
+    "absenden": "Cuir Iarratas Isteach",
+    "schonPartner": "Comhpháirtí cheana féin?",
+    "anmelden": "Logáil Isteach",
+    "sponsor": "Arna atreorú ag comhpháirtí (cód, roghnach)",
+    "sponsorHinweis": "An bhfuil tú anseo trí nasc foirne comhpháirtí? Má tá, beidh a gcód anseo. Gheobhaidh siad coimisiún foirne ar ioncam síntiúis do chustaiméirí — fanfaidh do choimisiún féin gan athrú."
+  },
+  "nachrichten": {
+    "titel": "Teachtaireachtaí",
+    "hinweis": "Do nasc díreach leis an bhfoireann comhpháirtíochta — ceisteanna faoi choimisiún, íocaíocht, ábhar nó custaiméir. Beidh freagraí le feiceáil anseo beo.",
+    "neu": "Teachtaireacht nua chuig an bhfoireann comhpháirtíochta",
+    "platzhalter": "Cad é an cheist?",
+    "senden": "Seol",
+    "abbrechen": "Cealaigh",
+    "leer": "Níl comhrá ar bith ann go fóill.",
+    "stoerung": "Níl an tseirbhís ar fáil faoi láthair — bain triail eile as níos déanaí.",
+    "fehler": "Theip air sin.",
+    "team": "Foireann comhpháirtíochta",
+    "du": "Tú",
+    "antwortPlatzhalter": "Do fhreagra …",
+    "antworten": "Freagair",
+    "status": {
+      "in_bearbeitung": "Ar siúl",
+      "wartet_auf_dich": "Freagra faighte",
+      "geloest": "Réitithe"
+    }
+  },
+  "kanaele": {
+    "plattformLabel": "Ardán",
+    "handle": "Ainm úsáideora (roghnach)",
+    "reichweite": "Sroicheadh (Leanúnaí)",
+    "hinzufuegen": "Cuir Cainéal Leis",
+    "entfernen": "Bain Cainéal",
+    "plattform": {
+      "website": "Suíomh Gréasáin",
+      "blog": "Blag",
+      "newsletter": "Nuachtlitir",
+      "podcast": "Podchraoladh",
+      "other": "Eile"
+    },
+    "socialPflicht": "Tá cuntas meán sóisialta amháin ar a laghad éigeantach — ní leor suíomh Gréasáin amháin."
+  },
+  "team": {
+    "titel": "Foireann",
+    "hinweis": "Is iad comhpháirtithe a rinne iarratas le do chód do fhoireann. Ar ghlanioncam síntiúis a gcustaiméirí, gheobhaidh tú an difríocht idir do ráta (faoi láthair {satz}) agus ráta an chomhpháirtí foirne — an dá cheann ag am na híocaíochta. Áirítear custaiméirí foirne 1:1 do do chéim.",
+    "meinSponsor": "Is comhpháirtí foirne de chuid {name} thú.",
+    "link": {
+      "titel": "Do nasc foirne",
+      "text": "Beidh do chód le feiceáil san iarratas ag aon duine a dhéanann iarratas tríd an nasc seo — gan fianán.",
+      "kopieren": "Cóipeáil an nasc",
+      "keinLink": "Níl aon chód gníomhach ann — cruthaigh ceann faoi Naisc & Ábhar."
+    },
+    "regeln": {
+      "titel": "Na rialacha",
+      "rang": "Coimisiún Foirne = Do ráta lúide ráta an chomhpháirtí foirne, ag am na híocaíochta. An chéim chéanna = 0.",
+      "ebene": "Leibhéal amháin go díreach: Ní thógann do chomhpháirtithe foirne a bhfoireann féin.",
+      "keinGeld": "Gan airgead as earcaíocht — ach amháin ó ioncam síntiúis íoctha.",
+      "dauer": "12 mhí in aghaidh an chustaiméara foirne, fuinneog aisíocaíochta 30 lá. Ó Elite, 2.5% sárchoimisiún breise gan teorainn ama."
+    },
+    "kachel": {
+      "mitglieder": "Comhpháirtithe foirne (gníomhach / iomlán)",
+      "teamKunden": "Custaiméirí foirne a íocann",
+      "umsatz30": "Ioncam foirne (30 lá)",
+      "offen": "Coimisiún foirne ar feitheamh",
+      "auszahlbar": "Coimisiún foirne iníoctha",
+      "ausgezahlt": "Coimisiún foirne íoctha"
+    },
+    "verlauf": {
+      "titel": "Stair · 12 mhí",
+      "leer": "Níl aon ioncam foirne fós.",
+      "provision": "Coimisiún foirne",
+      "umsatz": "Ioncam foirne"
+    },
+    "mitglieder": {
+      "titel": "D'fhoireann",
+      "leer": "Níl aon chomhpháirtithe foirne fós. Roinn do nasc foirne.",
+      "kunden": "{n} custaiméirí a íocann",
+      "umsatz30": "Ioncam 30 lá",
+      "offen": "ar feitheamh",
+      "seit": "ó {datum}"
+    },
+    "spalte": {
+      "partner": "Comhpháirtí",
+      "status": "Stádas",
+      "rang": "Céim",
+      "kunden": "Custaiméirí a íocann",
+      "umsatz30": "Ioncam 30 lá",
+      "umsatzGesamt": "Ioncam iomlán",
+      "offen": "Ar feitheamh",
+      "auszahlbar": "Iníoctha",
+      "ausgezahlt": "Íoctha"
+    },
+    "status": {
+      "pending_review": "Faoi athbhreithniú",
+      "approved": "Ceadaithe",
+      "rejected": "Diúltaithe",
+      "suspended": "Blocáilte"
+    },
+    "chat": {
+      "titel": "Siamsaíocht",
+      "schreiben": "Scríobh",
+      "rolle": {
+        "sponsor": "Do Urraitheoir",
+        "member": "Comhpháirtí Foirne"
+      },
+      "zurueck": "Foireann",
+      "leer": "Gan teachtaireachtaí fós.",
+      "platzhalter": "Do theachtaireacht…",
+      "senden": "Seol",
+      "titelListe": "Teachtaireachtaí Foirne"
+    },
+    "nochNichtErlaubt": "Beidh foireann agat ón gcéim Ardaitheoir (5 chustaiméir íocacha i do struchtúr). Go dtí sin, níl aon nasc foirne ann."
+  },
+  "bedingungen": {
+    "neueVersion": "Tá leagan nua de na téarmaí comhpháirtíochta ar fáil (Do thoiliú: leagan {alt}, reatha: {neu}). Léigh agus aontaigh arís.",
+    "nochNicht": "Aontaigh le do thoil leis na téarmaí comhpháirtíochta (leagan {neu}).",
+    "lesen": "Léigh na téarmaí",
+    "annehmen": "Aontaigh",
+    "angenommen": "Go raibh maith agat — toiliú sábháilte."
+  },
+  "beitraege": {
+    "titel": "Postálacha",
+    "hinweis": "Cruthaigh nasc ar leith do gach ríl, físeán nó post. Ar an mbealach seo, is féidir leat a fheiceáil cén post a ghineann cad a tharlaíonn, clárúcháin agus custaiméirí íocóirí.",
+    "kontoHinweis": "Ceangail do chuntas, ansin beidh radhairc agus idirghníomhaíochtaí ón ardán le feiceáil anseo freisin.",
+    "kontoVerbinden": "Ceangail cuntas",
+    "neu": "Post nua",
+    "keinCode": "Teastaíonn cód atreoraithe gníomhach uait ar dtús.",
+    "feld": {
+      "titel": "Teideal",
+      "titelBeispiel": "m.sh. Ríl Cóbanhávan Fómhar",
+      "plattform": "Ardán",
+      "code": "Cód",
+      "datum": "Foilsithe ar",
+      "url": "Seoladh an phoist (roghnach)",
+      "urlHinweis": "Is féidir é a chur leis tar éis a fhoilsithe. Le seoladh, sannaimid radhairc agus idirghníomhaíochtaí don phost."
+    },
+    "linkErzeugen": "Cruthaigh nasc",
+    "angelegt": "Post cruthaithe — tá an nasc réidh.",
+    "doppelt": "Tá an post seo ann cheana don chód.",
+    "fehler": "Theip air sin. Bain triail eile as.",
+    "liste": "{n, plural, =0 {Gan postálacha} =1 {1 phostáil} other {# phostáil}}",
+    "leer": "Gan postáil fós. Cruthaigh an chéad nasc thuas.",
+    "veroeffentlicht": "foilsithe {datum}",
+    "loeschen": "Scrios postáil",
+    "geloescht": "Postáil scriosta.",
+    "loeschenGesperrt": "Tá clárúcháin ag an bpostáil cheana féin agus fanfaidh sé.",
+    "kopiert": "Nasc cóipeáilte.",
+    "kopierenFehlgeschlagen": "Ní féidir cóipeáil — roghnaigh de láimh le do thoil.",
+    "linkFehlt": "Níl an nasc ar fáil faoi láthair.",
+    "qrZeigen": "Taispeáin cód QR",
+    "qrSchliessen": "Folaigh cód QR",
+    "qrAlt": "Cód QR don nasc poist",
+    "qrHinweis": "Le haghaidh scéalta, físeáin agus prionta — téann sé chuig an nasc céanna.",
+    "beitragOeffnen": "Oscail postáil",
+    "urlAendern": "Athraigh seoladh",
+    "urlNachtragen": "Cuir seoladh leis",
+    "speichern": "Sábháil",
+    "gespeichert": "Sábháilte.",
+    "kennzahl": {
+      "klicks": "Cad a tharlaíonn 90 lá",
+      "klicks30": "{n} i 30 lá",
+      "registrierungen": "Clárúcháin",
+      "kunden": "Custaiméirí íocóirí",
+      "views": "Amharcanna",
+      "gemessen": "Stádas {zeit}",
+      "nichtVerbunden": "Cuntas gan nascadh",
+      "interaktion": "Is maith {likes} · Tráchtaireachtaí {kommentare} · Comhroinnte {shares} · Sábháilte {saves}",
+      "pro1000": "{n} cliceáil in aghaidh 1,000 amharc"
+    },
+    "freigabe": {
+      "videoNoetig": "Uaslódáil le haghaidh ceadaithe",
+      "erklaerung": "Uaslódáil do fhíseán, íomhá nó PDF críochnaithe sula bhfoilsíonn tú é. Nuair a bheidh sé ceadaithe againn, beidh do nasc pearsanta le feiceáil anseo – ansin cuirfidh tú é faoin bpostáil. Ná húsáid ach ár n-ábhar fógraíochta, gan aon ghabhálacha scáileáin féin, agus gan aon ghealltanais rathúlachta nó ráthaíochta.",
+      "hochladen": "Roghnaigh comhad (Físeán, JPG, PNG, PDF)",
+      "neuHochladen": "Uaslódáil comhad nua",
+      "laeuft": "Á uaslódáil …",
+      "eingereicht": "Físeán curtha isteach. Rachaimid i dteagmháil leat a luaithe a bheidh sé athbhreithnithe.",
+      "inPruefung": "Faoi athbhreithniú",
+      "inPruefungHinweis": "Tá do fhíseán againn. Chomh luath agus a bheidh sé ceadaithe, beidh do nasc le feiceáil anseo.",
+      "eingereichtAm": "Curtha isteach ar {zeit} — a luaithe a bheidh sé ceadaithe, beidh do nasc le feiceáil anseo.",
+      "abgelehnt": "Gan ceadú",
+      "grund": "Cúis",
+      "freigegeben": "Físeán ceadaithe",
+      "zuGross": "Tá an físeán níos mó ná {mb} MB.",
+      "fehler": "Theip ar an uaslódáil.",
+      "grundKategorie": {
+        "material": "Ábhar: ábhar fógraíochta oifigiúil amháin, gan aon ghabhálacha scáileáin féin",
+        "promise": "Gealltanais: gan aon ráthaíochtaí nó gealltanais rathúlachta",
+        "disclosure": "Lipéadú: ní mór an postáil a lipéadú mar fhógraíocht",
+        "brand": "Branda: lógó nó ainm mí-úsáidte",
+        "other": "Eile"
+      }
+    }
+  },
+  "kanalVerbindung": {
+    "titel": "Cuntais nasctha",
+    "hinweis": "Nasc do chuntais meán sóisialta ionas go dtiocfaidh leanúnaí agus amharcanna díreach ón ardán. Tá sé seo deonach agus is féidir é a chúlghairm am ar bith; ní léimid ach, ní scríobhaimid aon rud.",
+    "verbinden": "Nasc {anbieter}",
+    "baldVerfuegbar": "ar fáil go luath",
+    "nichtKonfiguriert": "Níl an nasc seo gníomhachtaithe fós.",
+    "fehler": "Theip air sin. Bain triail eile as.",
+    "verifiziert": "fíoraithe",
+    "follower": "{n} leanúnaí",
+    "views28": "{n} amharc i 28 lá",
+    "engagement": "Rannpháirtíocht {n} %",
+    "gemessen": "Stádas {zeit}",
+    "nochKeinSnapshot": "an chéad tomhas le teacht",
+    "letzterFehler": "Theip ar an aisghabháil dheireanach",
+    "trennen": "Dínasc",
+    "getrennt": "Dínascadh. Fanann na tomhais roimhe seo mar stair.",
+    "getrennteKonten": "{n, plural, =1 {1 chuntas dínasctha} other {# cuntas dínasctha}}",
+    "getranntAm": "dínasctha {zeit}",
+    "durchPlattform": "Rochtain ón ardán curtha ar ceal",
+    "datenschutz": "Nuair a dhínascann tú, scriosaimid na sonraí rochtana láithreach. Fanann na luachanna tomhaiste mar stair. Sonraí sa pholasaí príobháideachta.",
+    "rueckkehr": {
+      "verbunden": "Cuntas nasctha — tá an chéad tomhas ar siúl.",
+      "abgelehnt": "Nasc curtha ar ceal — níor thug tú rochtain.",
+      "fehler": "Theip ar an nasc."
+    }
+  },
+  "passwort": {
+    "anzeigen": "Taispeáin pasfhocal",
+    "verbergen": "Folaigh pasfhocal"
+  },
+  "verbundkonto": {
+    "titel": "Cuntas nasctha le haghaidh íocaíochta",
+    "hinweis": "Déanfar d'íocaíocht a aistriú chuig cuntas nasctha. Éilíonn ár soláthraí seirbhíse íocaíochta fíorú aitheantais chuige seo - fad is atá sé ar feitheamh, ní féidir íocaíocht a dhéanamh.",
+    "bereit": "Tá do chuntas nasctha gníomhach. Déanfar íocaíochtaí a aistriú go huathoibríoch chuige.",
+    "offeneFelder": "Tá an fhaisnéis seo fós in easnamh",
+    "gesperrt": "Tá an cuntas faoi ghlas faoi láthair: {grund}",
+    "schrittKonto": "Oscail cuntas nasctha",
+    "schrittDaten": "Sonraí pearsanta",
+    "schrittDatenFirma": "Sonraí cuideachta agus pearsanta",
+    "schrittBank": "Sonraí bainc",
+    "schrittBedingungen": "Téarmaí an tsoláthraí seirbhíse íocaíochta",
+    "kontoAnlegen": "Oscail cuntas nasctha",
+    "kontoAngelegt": "Cuntas nasctha oscailte.",
+    "datenBearbeiten": "Cuir sonraí in eagar",
+    "zuklappen": "Dún",
+    "datenGesendet": "Sonraí sábháilte.",
+    "vorname": "Ainm",
+    "nachname": "Sloinne",
+    "geburtsdatum": "Dáta breithe",
+    "tag": "DD",
+    "monat": "MM",
+    "jahr": "YYYY",
+    "strasse": "Sráid agus uimhir tí",
+    "plz": "Cód poist",
+    "ort": "Cathair",
+    "nationalitaet": "Náisiúntacht (cód tíre)",
+    "telefon": "Fón",
+    "webseite": "Suíomh Gréasáin nó próifíl",
+    "webseiteHinweis": "An seoladh a úsáideann tú le haghaidh fógraíochta - teastaíonn sé le haghaidh fíoraithe.",
+    "firmenname": "Ainm na cuideachta",
+    "steuernummer": "Uimhir chánach",
+    "firmenStrasse": "Seoladh na cuideachta",
+    "firmaHinweis": "Mar dhuine údaraithe, úsáidfear do shonraí thuasluaite.",
+    "speichern": "Sábháil sonraí",
+    "kontoinhaber": "Sealbhóir cuntais",
+    "waehrung": "Airgeadra",
+    "waehrungHinweis": "Airgeadra an chuntais bhainc, ní airgeadra do thíre.",
+    "bankSpeichern": "Sábháil sonraí bainc",
+    "bankGesetzt": "Sonraí bainc sábháilte.",
+    "bedingungenAnnehmen": "Glacaimid leis na téarmaí",
+    "bedingungenAngenommen": "Glacadh leis na téarmaí.",
+    "fehler": "Níor éirigh leis seo.",
+    "schrittIdentitaet": "Fíorú Aitheantais",
+    "identitaetHinweis": "Ar deireadh, fíoróidh ár soláthraí seirbhíse íocaíochta do dhoiciméad aitheantais. Déanfar é seo ar a leathanach slán, mar go dtógfar grianghraf; ina dhiaidh sin, fillfidh tú anseo.",
+    "identitaetStarten": "Fíoraigh Aitheantas"
+  }
+}

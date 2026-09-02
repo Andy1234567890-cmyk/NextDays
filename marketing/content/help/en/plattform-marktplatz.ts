@@ -87,12 +87,12 @@ export const plattformMarktplatz: HelpCategory = {
             {
               type: "note",
               variant: "tip",
-              text: "Clicking Publish normally enables the marketplace, portals, and website together — you can turn the marketplace switch back off individually at any time afterward.",
+              text: "Clicking 'Publish' simultaneously activates myNextDays portals and website. myBestDays is a mandatory channel: every property is listed there and appears once we have approved the listing.",
             },
             { type: "h2", text: "Removing Visibility Again" },
             {
               type: "p",
-              text: "If you disable the Platform Marketplace switch, the property disappears from the marketplace search. Already confirmed bookings remain unaffected and continue as usual, see [Marketplace Commission](/hilfe/plattform-marktplatz/marktplatz-provision).",
+              text: "myBestDays cannot be deselected individually. If a property is no longer to be sold, use 'Pause sales' — this removes it from sale on all portals, the website, and the marketplace simultaneously. Already confirmed bookings remain unaffected and continue as usual, see [Marketplace Commission](/hilfe/plattform-marktplatz/marktplatz-provision).",
             },
           ],
         },

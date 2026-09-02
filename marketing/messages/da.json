@@ -851,7 +851,8 @@
     },
     "unternehmen": {
       "ueberUns": "Om os",
-      "kontakt": "Kontakt"
+      "kontakt": "Kontakt",
+      "partner": "Partnerprogram"
     },
     "copyright": "© 2026 myNextDays. Alle rettigheder forbeholdes.",
     "agb": "Betingelser",
@@ -860,7 +861,8 @@
     "cookies": "Cookiepolitik",
     "avv": "Databehandling",
     "kontoLoeschen": "Slet konto",
-    "newsletterKnopf": "Tilmeld nyhedsbrev"
+    "newsletterKnopf": "Tilmeld nyhedsbrev",
+    "partnerAgb": "Partnerbetingelser"
   },
   "legal": {
     "stand": "Senest opdateret: {datum}"
@@ -990,7 +992,7 @@
       "sub": "Det udlejere vil vide før et skifte — kort og uden småt med småt.",
       "laufzeit": {
         "frage": "Er der en bindingsperiode?",
-        "antwort": "Nej. Abonnementet er månedligt og kan opsiges med fire ugers varsel til udgangen af en måned. De første 14 dage er gratis: Du indtaster dine betalingsoplysninger ved start, men betalingen trækkes først efter prøveperioden. Hvis du opsiger før, betaler du intet."
+        "antwort": "Nej. Abonnementet er månedligt og kan opsiges med fire ugers varsel til udgangen af måneden. De første 14 dage er gratis: Du indtaster dine betalingsoplysninger ved start, men der trækkes først penge efter prøveperioden. Hvis du kommer via et link eller en kode fra en partner, får du desuden den første hele måned gratis. Hvis du opsiger før, betaler du intet."
       },
       "objektzahl": {
         "frage": "Hvad sker der, når jeg tilføjer enheder?",
@@ -2185,5 +2187,259 @@
     "verwalten": "Administrer cookieindstillinger",
     "schliessen": "Luk",
     "bestaetigen": "Bekræft indstillinger"
+  },
+  "partnerHinweis": {
+    "text": "De er blevet henvist (kode {code}). Koden anvendes ved registrering – og giver dig den første hele måned efter de 14 prøvedage.",
+    "cta": "Start gratis nu",
+    "schliessen": "Luk meddelelse"
+  },
+  "partner": {
+    "meta": {
+      "titel": "Partnerprogram — myNextDays",
+      "beschreibung": "Anbefal myNextDays til ferieudlejere og hoteller, og modtag i tolv måneder op til {max} % af abonnementsomsætningen fra hver henvist virksomhed."
+    },
+    "hero": {
+      "eyebrow": "Partnerprogram",
+      "headlinePre": "Anbefal myNextDays —",
+      "headlineHighlight": "og tjen penge",
+      "sub": "For influencere, konsulenter, bureauer og udlejere med netværk: Hver virksomhed, der registrerer sig via dit link og betaler et abonnement, giver dig i tolv måneder op til {max} % af abonnementsomsætningen – plus 0,5 % af hver booking via myBestDays, oprykningsbonusser og fra Elite en superprovision uden tidsbegrænsning.",
+      "cta": "Ansøg nu",
+      "ctaLogin": "Partner-login",
+      "chipDauer": "12 måneders provision pr. kunde",
+      "chipAuszahlung": "Månedlig udbetaling",
+      "chipKosten": "Gratis deltagelse",
+      "chipGratismonat": "Dine kunder: 14 dages prøveperiode + 1 måned gratis"
+    },
+    "schritte": {
+      "eyebrow": "Sådan fungerer det",
+      "heading": "Tre trin til den første provision",
+      "bewerben": {
+        "titel": "Ansøg",
+        "text": "De fortæller os om Deres kanal — hjemmeside, social profil eller netværk. Vi gennemgår hver ansøgning personligt og godkender normalt inden for få arbejdsdage."
+      },
+      "teilen": {
+        "titel": "Del link eller kode",
+        "text": "De modtager et personligt link og en henvisningskode. Koden vises tydeligt i formularen ved registrering — uden tracking-cookie."
+      },
+      "verdienen": {
+        "titel": "Tjen",
+        "text": "Hvis en henvist virksomhed betaler sin første abonnementsregning, løber Deres provision i tolv måneder. De ser hver kunde pseudonymt i partner-dashboardet og får udbetalt månedligt."
+      }
+    },
+    "staffel": {
+      "eyebrow": "Deres niveau",
+      "heading": "Jo større din struktur, desto højere din sats",
+      "sub": "Satsen gælder for alle nye provisioner fra opnåelse af rangen. Strukturen omfatter dine egne betalende kunder og dine teampartneres kunder.",
+      "kunden": "{von}–{bis} betalende kunder",
+      "kundenOffen": "fra {von} betalende kunder",
+      "satz": "af abonnementsomsætningen",
+      "nichtAbrufbar": "Niveauet er i øjeblikket ikke tilgængeligt. Prøv venligst igen senere."
+    },
+    "bedingungen": {
+      "eyebrow": "Reglerne",
+      "heading": "Fair for Dem, fair for virksomhederne",
+      "basis": {
+        "titel": "Hvad tæller",
+        "text": "Provisionsgrundlaget er den netto-abonnementsomsætning (grundtakst og moduler) fra den henviste virksomhed — uden skatter, portalprovisioner og tillægstjenester."
+      },
+      "dauer": {
+        "titel": "Tolv måneder",
+        "text": "Provisionen løber i tolv måneder fra virksomhedens første betalte abonnementsfaktura; dine kunders gratis måned tæller ikke med. Hvis virksomheden opsiger, ophører den med den sidste betaling. Bookingandel og superprovision løber uden denne grænse."
+      },
+      "auszahlung": {
+        "titel": "Udbetaling",
+        "text": "Månedligt, 30 dage efter virksomhedens betaling, fra et minimumsbeløb pr. valuta. De modtager en kreditnota; virksomheder skal have et gyldigt momsnummer."
+      },
+      "kennzeichnung": {
+        "titel": "Mærkning",
+        "text": "Hver anbefaling er reklame og skal mærkes som sådan. De foreskrevne formuleringer pr. sprog stilles til rådighed i dashboardet."
+      },
+      "verboten": {
+        "titel": "Ikke tilladt",
+        "text": "Selvreklame, reklame for vores brandnavn i søgeannoncer, løfter om rabatter i vores navn og uopfordrede meddelelser. Refusioner trækkes fra provisionen."
+      },
+      "daten": {
+        "titel": "Databeskyttelse",
+        "text": "De ser kun Deres kunder pseudonymt – med land, status og beløb, aldrig med navn eller e-mail. En virksomhed kan ved registrering give Dem tilladelse til at kontakte den."
+      }
+    },
+    "faq": {
+      "eyebrow": "Ofte stillede spørgsmål",
+      "heading": "Hvad partnere spørger os om",
+      "wer": {
+        "frage": "Hvem kan blive partner?",
+        "antwort": "Enhver person eller virksomhed i EU med en reel kanal til udlejere eller hoteller: Influencere, konsulenter, bureauer, skattekontorer, foreninger – og myNextDays-kunder selv. En ansøgning er gratis; et abonnement er ikke en forudsætning."
+      },
+      "wann": {
+        "frage": "Hvornår tæller en virksomhed som min kunde?",
+        "antwort": "Når den har registreret sig med Deres kode og har betalt sin første abonnementsregning. Registreringer uden betaling tæller ikke for rangeringen."
+      },
+      "doppelt": {
+        "frage": "Hvad hvis en virksomhed nævner to partnere?",
+        "antwort": "En virksomhed tildeles præcis én partner – den, hvis kode stod i formularen ved registreringen. Senere koder ændrer ikke dette."
+      },
+      "steuern": {
+        "frage": "Hvordan foregår afregningen?",
+        "antwort": "Vi udsteder en kreditnota (self-billing). Virksomheder med EU-momsnummer modtager den med omvendt betalingspligt, privatpersoner uden moms – provisionen beskatter De selv."
+      },
+      "material": {
+        "frage": "Er der reklamemateriale?",
+        "antwort": "Ja: korte videoer til sociale medier, en forklaringsvideo, bannere og tekstmoduler – i partner-dashboardet, på Deres sprog."
+      },
+      "wieviel": {
+        "frage": "Hvor meget provision kan jeg tjene?",
+        "antwort": "Dette afhænger af dine kunders abonnementsomsætning og din rang. Ovenstående tabel viser satsen pr. rang; tolv måneder pr. kunde. Derudover kommer 0,5 % af hver booking, dine kunder modtager via myBestDays, en engangsoprykningsbonus for hver opnået rang, en differencemargen med et team – og fra Elite-partner 2,5 % superprovision på hele strukturen uden tidsbegrænsning."
+      },
+      "team": {
+        "frage": "Hvordan fungerer teamprovisionen?",
+        "antwort": "Fra rangen Oprykker: Hvis en partner ansøger via dit teamlink og tydeligt angiver din kode i ansøgningen, tilhører de dit team efter godkendelse. Deres kunder tæller 1:1 for din rang. På nettoabonnementsomsætningen fra deres kunder modtager du forskellen mellem din sats og deres – præcis ét niveau dybt, uden deltagergebyr, uden penge for rekruttering."
+      },
+      "auszahlung": {
+        "frage": "Hvordan og hvornår udbetales provisioner?",
+        "antwort": "Månedligt pr. valuta, så snart summen når minimumsbeløbet for din valuta. Hver provisionslinje er \"åben\" i 30 dage (refusionsvindue) og kan derefter udbetales. Du modtager en kreditnota (self-billing) – du udsteder ingen faktura. Udbetaling via SEPA, Wise eller PayPal."
+      },
+      "verfolgen": {
+        "frage": "Hvordan kan jeg spore mine provisioner og resultater?",
+        "antwort": "På partner-dashboardet under \"Provisioner\" ser du hver betalte abonnementsfaktura med grundlag, sats, beløb og status, under \"Kunder\" dine virksomheder pseudonymt, under \"Team\" evalueringen af dine team-partnere og under \"Links & Materiale\" klik pr. kode."
+      },
+      "werbung": {
+        "frage": "Må jeg køre betalt annoncering?",
+        "antwort": "Ikke på vores brand: Annoncer på \"myNextDays\" og stavevarianter (brand-bidding), cookie-dropping, købt rækkevidde eller incitamenter til registreringer er forbudt og fører til udelukkelse. Eget indhold, indlæg og anbefalinger er udtrykkeligt ønsket – med markering som reklame."
+      }
+    },
+    "abschluss": {
+      "heading": "Klar til at anbefale myNextDays?",
+      "sub": "Ansøg på to minutter. Vi kontakter Dem efter gennemgangen.",
+      "cta": "Ansøg nu",
+      "kontakt": "Spørgsmål? Skriv til os."
+    },
+    "vergleich": {
+      "eyebrow": "Din sats",
+      "heading": "Jo flere betalende kunder, jo højere sats",
+      "sub": "Satsen gælder for alle nye provisioner fra opnåelse af rangen. Din struktur tælles: dine egne betalende kunder plus dine teampartneres kunder.",
+      "nichtAbrufbar": "Satsen er ikke tilgængelig lige nu. Prøv venligst igen senere.",
+      "plan": "Rang",
+      "provision": "Provision på egne kunder",
+      "teamProvision": "Teamprovision på dine teampartneres kunder",
+      "dauer": "Løbetid pr. kunde",
+      "dauerWert": "12 måneder",
+      "kunden": "{fra}–{til} betalende kunder",
+      "kundenOffen": "fra {fra} betalende kunder",
+      "vorteile": "Ydelser",
+      "ja": "inkluderet",
+      "nein": "ikke inkluderet",
+      "leistung": {
+        "konto": "Gratis partnerkonto",
+        "dashboard": "Partner-dashboard med kunder, provisioner og analyse",
+        "material": "Promoveringsmateriale og branding-skabeloner",
+        "team": "Opbyg team med dit eget teamlink",
+        "gutschrift": "Månedlig udbetaling med kreditnota (selvfakturering)",
+        "chat": "Direkte kontakt til partnerteamet",
+        "support": "Personlig kontaktperson",
+        "coMarketing": "Co-marketing (fælles kampagner)"
+      },
+      "fussnoteTeam": "Teamprovision er forskellen mellem din sats og teampartnerens sats på nettoabonnementsomsætningen fra deres kunder, begge på betalingstidspunktet – præcis ét niveau, intet deltagergebyr, ingen penge for rekruttering. Samlet aldrig mere end 30 %.",
+      "fussnoteCoMarketing": "Efter aftale med partnerteamet; afhænger af partnerens profil og aktuelle kampagner.",
+      "fussnoteRang": "Rangen opstår fra din struktur: egne betalende kunder plus dine teampartneres kunder, hver tæller én gang. Ved opnåelse af en ny rang fra og med oprykker gives en engangs oprykningsbonus.",
+      "teamDifferenz": "{satz} % minus teampartnerens sats",
+      "teamNicht": "intet team endnu",
+      "bonus": "Oprykningsbonus (engangs)",
+      "superProvision": "Superprovision på hele strukturen",
+      "marktTurbo": "myBestDays bookingandel",
+      "marktTurboWert": "0,5 % pr. booking, ubegrænset",
+      "fussnoteSuper": "Fra Elitepartner 2,5 % af nettoabonnementsomsætningen fra alle kunder i din struktur – ud over provisionen, uden 12-måneders grænsen, så længe du opretholder rangen, og kunden betaler."
+    },
+    "team": {
+      "eyebrow": "Opbyg team",
+      "heading": "Op til {max} % differentieret provision på dit teams omsætning",
+      "sub": "Kender du andre konsulenter, skabere eller bureauer med forbindelse til værter? Fra rangen Oprykker ansøger de via dit teamlink, tilhører dit team – og deres kunder tæller 1:1 for din rang. Du tjener forskellen mellem din sats og din teampartners sats; dine teampartnere beholder deres fulde egen skala.",
+      "rang": {
+        "titel": "Forskellen",
+        "text": "Du modtager din sats minus teampartnerens sats – begge på betalingstidspunktet. Hvis din teampartner er i samme rang, opstår der ingen teamprovision."
+      },
+      "ebene": {
+        "titel": "Kun ét niveau",
+        "text": "Dine teampartnere opbygger ikke deres eget team under dig. Intet netværk, ingen pyramide."
+      },
+      "keinGeld": {
+        "titel": "Kun fra reel omsætning",
+        "text": "Intet deltagergebyr, ingen penge for rekruttering. Teamprovision opstår udelukkende fra betalt abonnementsomsætning."
+      },
+      "dauer": {
+        "titel": "De samme regler",
+        "text": "12 måneder pr. teamkunde, 30 dages refusionsvindue, tilbagekaldelse ved refusion eller chargeback – som med din egen provision. Fra Elite tilføjes superprovisionen på hele strukturen, uden tidsbegrænsning."
+      }
+    },
+    "kundeCta": {
+      "heading": "Er du allerede myNextDays-kunde?",
+      "text": "Så kender du produktet bedst. Anbefal det videre – din provision krediteres din konto, uafhængigt af dit abonnement.",
+      "cta": "Anbefal & tjen"
+    }
+  },
+  "partnerBewerbung": {
+    "meta": {
+      "titel": "Bliv partner – myNextDays",
+      "beschreibung": "Ansøgning til myNextDays-partnerprogrammet: Sociale mediekonti, rækkevidde, betingelser. Vi gennemgår hver ansøgning personligt."
+    },
+    "eyebrow": "Partnerprogram",
+    "titel": "Bliv partner",
+    "text": "Fortæl os om dine sociale mediekonti og rækkevidde – vi gennemgår hver ansøgning personligt og vender normalt tilbage inden for få arbejdsdage. Efter godkendelse får du adgang til partner-dashboardet med links, koder og evaluering.",
+    "email": "E-mail",
+    "passwort": "Adgangskode til dit partner-dashboard",
+    "passwortHinweis": "Mindst 8 tegn.",
+    "name": "Navn",
+    "firma": "Firma (valgfrit)",
+    "rechtsform": "Juridisk form",
+    "privat": "Privatperson",
+    "unternehmen": "Virksomhed",
+    "land": "Land",
+    "ustId": "Momsnummer",
+    "ustIdHinweis": "Kontrolleres mod EU-systemet VIES. Uden bekræftet nummer udbetales der ikke til virksomheder.",
+    "kanaele": {
+      "titel": "Dine sociale mediekonti",
+      "hinweis": "Obligatorisk: mindst én social mediekonto (Instagram, TikTok, YouTube, Facebook, LinkedIn …) med adresse, handle og rækkevidde (følgere). Hjemmeside, blog eller nyhedsbrev er også velkomment. Vi kontrollerer konti før godkendelse.",
+      "plattform": "Platform",
+      "handle": "Handle (valgfrit)",
+      "reichweite": "Rækkevidde (følgere)",
+      "hinzufuegen": "Tilføj kanal",
+      "entfernen": "Fjern kanal",
+      "socialPflicht": "Mindst én social mediekonto med rækkevidde er obligatorisk – en hjemmeside alene er ikke nok.",
+      "plattformen": {
+        "website": "Hjemmeside",
+        "blog": "Blog",
+        "newsletter": "Nyhedsbrev",
+        "podcast": "Podcast",
+        "other": "Andet"
+      }
+    },
+    "plattform": {
+      "website": "Hjemmeside",
+      "blog": "Blog",
+      "newsletter": "Nyhedsbrev",
+      "podcast": "Podcast",
+      "other": "Andet"
+    },
+    "sponsor": "Henvist af partner (kode, valgfrit)",
+    "sponsorHinweis": "Kommer du via en partners teamlink? Deres kode står her. De modtager en teamprovision på abonnementsomsætningen fra dine kunder – din egen provision forbliver uændret.",
+    "pitch": "Hvorfor passer du til myNextDays? (valgfrit)",
+    "pitchPlatzhalter": "Hvem når du ud til, hvad taler du om, hvordan vil du anbefale?",
+    "zustimmung": "Jeg accepterer",
+    "bedingungen": "Partnerbetingelser",
+    "version": "Version {version}",
+    "absenden": "Send ansøgning",
+    "sendet": "Sender …",
+    "pruefungHinweis": "Denne formular er beskyttet af reCAPTCHA. Efter indsendelse gennemgår vores partnerteam dine konti og rækkevidde; du modtager en e-mail med beslutningen.",
+    "fehler": {
+      "social": "Angiv venligst mindst én social mediekonto med adresse og rækkevidde.",
+      "doppelt": "Der er allerede en ansøgning for denne e-mail. Log ind på partner-dashboardet.",
+      "eingabe": "Kontroller venligst dine indtastninger.",
+      "captcha": "Spambeskyttelseskontrollen mislykkedes. Genindlæs venligst siden og prøv igen.",
+      "allgemein": "Ansøgningen kunne ikke sendes lige nu. Prøv venligst igen senere."
+    },
+    "fertig": {
+      "titel": "Ansøgning modtaget",
+      "text": "Tak! Vi gennemgår dine konti og rækkevidde personligt og kontakter dig via e-mail. Dit partner-dashboard er tilgængeligt med din e-mail og dit password — links og koder bliver aktive ved godkendelse.",
+      "login": "Til partner-login"
+    }
   }
 }

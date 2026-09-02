@@ -1500,7 +1500,12 @@
       "portalRateInvalid": "Egy rögzített portál-levonási kulcs a 0–100% tartományon kívül esik. Javítsa a Könyvelés → Elszámolási szabályok menüpontban.",
       "feeUnassigned": "Legalább egy díjtípus még nincs hozzárendelve. Hozzárendelés nélkül nem állapítható meg, hogy kit illet az összeg, és hogy jutalék terheli-e — állítsa be a Könyvelés → Elszámolási szabályok menüpontban.",
       "feeNotComputable": "Egy díj nem számolható el összegként (százalékosan vagy összeg nélkül van rögzítve). Ellenőrizze a díjat az ingatlannál.",
-      "contractCurrency": "Egy fix díj vagy minimumjutalék a foglalástól eltérő valutában szerepel. A különböző valutákban megadott összegeket a rendszer nem váltja át — ellenőrizze az elszámolási szerződést."
+      "contractCurrency": "Egy fix díj vagy minimumjutalék a foglalástól eltérő valutában szerepel. A különböző valutákban megadott összegeket a rendszer nem váltja át — ellenőrizze az elszámolási szerződést.",
+      "recurringToOwner": "Ismétlődő bevételek",
+      "recurringFromOwner": "Ismétlődő kiadások",
+      "flatFees": "Átalánydíjak a szerződésből",
+      "flatFeesIncluded": "már figyelembe véve a kifizetésnél",
+      "contractStartsLater": "Legalább egy foglalás esetén a kijelentkezés napján még nincs érvényes elszámolási szerződés – a tulajdonos szerződése csak később kezdődik. A jutalék mértéke tehát rögzítve van, de az „Érvényes ettől” dátum a kijelentkezés utánra esik. Kérjük, adja meg a tényleges szerződéskezdetet az elszámolási szerződésben."
     },
     "rental": {
       "perReservation": "Foglalásonként",
@@ -1520,13 +1525,66 @@
         "channexImport": "A foglalást a csatorna csatlakoztatásakor utólag töltöttük le. A foglalásközvetítő szerint az ilyen foglalások nem tartalmaznak extrákat és takarítási díjakat — ez utólag nem pótolható. Ha a díjat el kell számolni, vegye fel tételként a foglaláshoz.",
         "portalReportsNone": "A portál ennél a foglalásnál nem szerepelteti a díjat önálló tételként. A Booking.com esetében ez a szállás beállításain (Szállás → Szabályzatok → További díjak) és azon múlik, hogy ott mikortól érvényes a díj: egy később bevezetett díj joggal hiányzik a korábbi foglalásokból.",
         "noPayload": "Ehhez a foglaláshoz nem áll rendelkezésre portálüzenet (meglévő adatok importja). Enélkül nem állapítható meg, milyen díjakat fizetett a vendég.",
-        "unknownReason": "Az ok nem meghatározható."
+        "unknownReason": "Az ok nem meghatározható.",
+        "csvImport": "A foglalás a CSV-készletimportból származik. Az importált összeg a portál vendégára, minden díjjal együtt; az egyes díjak listája nem áll rendelkezésre, és a portál adataiból sem volt levezethető. Ezért az elszámolás nem számol fel díjakat az ingatlan törzsadatiból – azok már benne vannak az összegben, csak a magasságuk nincs igazolva.",
+        "csvResolvedTitle": "A portál összegéből levezetett díjak",
+        "csvResolved": "A foglalás a CSV-készletimportból származik; a portál nem szolgáltatott kimutatást. A díjakat az importált teljes ár és a portál által közölt éjszakai árak közötti különbségből vezették le, és az ingatlan törzsadatain keresztül nevezték meg. A szállás plusz díjak pontosan megegyeznek a teljes árral.",
+        "stammdatenPortalTitle": "Díjak az objektum törzsadatából hozzáadva",
+        "stammdatenPortal": "A portál nem adott díjkalkulációt ehhez a foglaláshoz: a portál-aggregátor által a csatorna csatlakoztatása után végrehajtott foglalások extrák és takarítási díjak nélkül érkeznek; egy fájlból származó készletimport csak a teljes árat tartalmazza. Ezért a díjakat az objektumban tárolt módon határozták meg: takarítás tartózkodásonként, üdülőhely éjszakánként, háziállat csak foglalt állat esetén.",
+        "portalBelegt": "Foglalt: A portál teljes ára és a portál által közölt éjszakai árak közötti különbség pontosan megegyezik ezekkel a díjakkal.",
+        "portalImBetrag": "A portál összegében szerepel: A portál teljes ára már tartalmazza a díjakat; ezeket kivonták, a vendég ára a portál összege marad.",
+        "portalObendrauf": "A portál összegén felül: A közölt összeg a tiszta éjszakai összeg; a díjak hozzáadódnak, és így alakul ki a vendég ára."
       },
       "chain": {
         "portal": "Portál",
         "management": "Kezelés",
         "flatFee": "Fix díj",
         "fees": "Díjak"
+      },
+      "arrival": "Érkezés",
+      "departure": "Távozás",
+      "commission": "Jutalék",
+      "flatFee": "Átalánydíj",
+      "ownerShare": "Tulajdonosi részesedés",
+      "portalDeduction": "Portállevonás",
+      "fees": "Díjak",
+      "feesCount": "{n} tétel",
+      "expand": "Részletezés megjelenítése",
+      "collapse": "Részletezés elrejtése",
+      "expandAll": "Összes részletezés megjelenítése",
+      "collapseAll": "Összes részletezés elrejtése",
+      "breakdown": "Részletezés foglalásonként",
+      "noFeeItems": "Nincsenek díjak vagy kiegészítő szolgáltatások ehhez a foglaláshoz.",
+      "posten": {
+        "guestPrice": "Vendégár a portál szerint (díjakat tartalmazza, kiegészítő szolgáltatások nélkül)",
+        "portalCommission": "Portál jutalék {kanal}",
+        "portalFee": "Portál fizetési díj",
+        "portalPayout": "Portál kifizetés",
+        "feesOut": "Díjak a vendégárban – kivonva az adóalapból",
+        "feesInBase": "Díjak a vendégárban – jutalékra kötelezett, az adóalapban marad",
+        "base": "Adóalap",
+        "commission": "Adminisztrációs jutalék {pct}",
+        "minCommission": "Minimális jutalék (szerződés) {pct} helyett",
+        "contractFrom": "Szerződés dátuma: {datum}",
+        "rateManual": "manuálisan ebben az elszámolásban",
+        "rateLegacy": "Alapértelmezett díj a törzsadatokból",
+        "flatFee": "Átalánydíj (szerződés)",
+        "feesBack": "Tulajdonosi díjak – levonás nélkül visszafizetve",
+        "ownerShare": "Tulajdonos részesedése",
+        "belongsBetrieb": "a vállalkozásnál marad",
+        "belongsEigentuemer": "Tulajdonos",
+        "belongsDurchlauf": "Átmenő tétel (harmadik felek)",
+        "commissionFree": "jutalékmentes",
+        "commissionable": "jutalékra kötelezett",
+        "amountHidden": "Összeg a vállalkozásnál",
+        "addon": "Kiegészítő szolgáltatás",
+        "noFeesReported": "A portál nem jelentett díjakat ehhez a foglaláshoz; ezért nem kerültek felszámolásra.",
+        "afterPortal": "Teljes összeg a portál levonása után",
+        "afterPortalHint": "Vendégár mínusz portál jutalék és portál fizetési díj",
+        "feesBusiness": "A vállalkozás által nyújtott – nem része a kifizetésnek",
+        "contractStartsLater": "Nincs elszámolási szerződés a(z) {abreise} kijelentkezési napon: a szerződés csak ekkor kezdődik: {beginn}. Dátumozza vissza a szerződés kezdetét a tulajdonosnál, majd számolja el ezt a foglalást.",
+        "noContract": "Ehhez az ingatlanhoz nincs elszámolási szerződés és jutalékráta a törzsadatokban – hozzon létre egy szerződést a tulajdonosnál.",
+        "addonsOutside": "Kiegészítő szolgáltatások – a myNextDays-en keresztül értékesítve, nem szerepel a portál vendégárában"
       }
     },
     "expenses": {
@@ -1566,7 +1624,11 @@
       "rentalRevenue": "Bérbeadási bevétel",
       "expenses": "Kiadások és extrák",
       "total": "Összesen",
-      "deductPercentage": "Jutalék (%)"
+      "deductPercentage": "Jutalék (%)",
+      "shares": "Tulajdonosi részesedés foglalásokból",
+      "deductions": "Levonások",
+      "credits": "Jóváírások",
+      "recurring": "Ismétlődő tételek"
     },
     "manage": {
       "owner": "Tulajdonos",
@@ -1631,6 +1693,25 @@
       "cancel": "Mégse",
       "confirm": "Rögzítés",
       "working": "Rögzítés folyamatban…"
+    },
+    "deductions": {
+      "title": "Levonások és jóváírások",
+      "intro": "Minden, ami a foglalásokon kívül befolyásolja a kifizetést – három forrásból: átalány a szerződésből foglalásonként, egyszeri elszámolási tételek és ismétlődő tételek (állandó megállapodás).",
+      "deductions": "Levonások (a tulajdonos terhére)",
+      "credits": "Jóváírások (a tulajdonos javára)",
+      "empty": "Ebben az időszakban nincsenek levonások vagy jóváírások.",
+      "srcExpense": "Elszámolási tételek",
+      "srcRecurring": "Ismétlődő tétel",
+      "srcFlatFee": "Átalány a szerződésből",
+      "perBooking": "foglalásonként",
+      "perNight": "éjszakánként",
+      "perPeriod": "időszakonként",
+      "quantity": "{n} × {betrag}",
+      "flatFeesNote": "A szerződés szerinti átalányok már levonásra kerültek a tulajdonosi részesedésekből foglalásonként – itt csak áttekintés céljából, további levonás nélkül.",
+      "manageRecurring": "Ismétlődő tételek kezelése",
+      "manageContract": "Elszámolási szerződés kezelése",
+      "receipt": "Bizonylat",
+      "bookingsCount": "{n} foglalás"
     }
   },
   "ownerBilling": {
@@ -1709,7 +1790,9 @@
     "effectBlocked": "{property}: A marketing a következő napon ér véget: {date} – {nights} éjszakák blokkolva és eltávolítva a portálokról.",
     "effectReleased": "{property}: A marketing folytatódik – a szerződés lejártát feloldották, és az éjszakák újra eladók.",
     "effectNoUnit": "{property}: A szerződés vége be van írva, de a naptár nincs zárolva - az objektumból hiányzik egy egység. Tedd fel és a zár érvénybe lép.",
-    "effectCalendarFailed": "{property}: A szerződés végét beírták, a naptárzárat nem írták ki. Ma este lesz hozzá."
+    "effectCalendarFailed": "{property}: A szerződés végét beírták, a naptárzárat nem írták ki. Ma este lesz hozzá.",
+    "validFromHint": "A szerződés hatálybalépésének dátuma – meglévő szerződés esetén a tényleges szerződéskötés dátuma, nem a mai nap. Minden foglalás az indulás napján érvényes szerződés alapján kerül elszámolásra; a korábbi indulású foglalások kifizetés nélkül maradnak.",
+    "errorValidFromRequired": "Kérjük, adja meg, mikortól érvényes a szerződés."
   },
   "portal": {
     "title": "Portálom",
@@ -5465,7 +5548,8 @@
       "connectPortal": "Portál csatlakoztatása",
       "noPortals": "Ehhez a szálláshelyhez még nincs portál (Booking, Airbnb stb.) csatlakoztatva.",
       "marketplaceReview": "Ellenőrzés alatt",
-      "marketplaceReviewHint": "A myBestDays még ellenőrzi ezt a hirdetést. A jóváhagyás után megjelenik a piactéren. A portálokat és a saját weboldalt ez nem érinti."
+      "marketplaceReviewHint": "A myBestDays még ellenőrzi ezt a hirdetést. Amint jóváhagyásra kerül, megjelenik a piactéren. A myBestDays kötelező csatorna: egy ingatlan nem választható le egyedileg – a „Értékesítés szüneteltetése” mindenhol eltávolítja az értékesítésből.",
+      "marketplaceMandatory": "Kötelező csatorna – minden ingatlan szerepel a myBestDays oldalon"
     },
     "IdLayout": {
       "loadError": "Az objektumot nem sikerült betölteni: {error}"
@@ -5563,11 +5647,11 @@
       "stepOf": "{schritt}. lépés a(z) {gesamt}-ból",
       "next": "Continue",
       "back": "Back",
-      "channelsHint": "Hol értékesítsük ezt a szálláshelyet? Ez bármikor módosítható.",
+      "channelsHint": "Hol szeretné még értékesíteni ezt az ingatlant? A portálok és a weboldal bármikor módosíthatók.",
       "channelPortals": "Foglalási portálok",
       "channelPortalsHint": "Airbnb, Booking.com és továbbiak. A portálok teljes adatokat várnak el — lásd lent.",
       "channelPlatform": "myBestDays",
-      "channelPlatformHint": "Saját piacterünk alacsony jutalékkal.",
+      "channelPlatformHint": "Saját piacterünk 8% all-in jutalékkal. Minden ingatlan fel van tüntetve; a közzététel és jóváhagyás után válik láthatóvá.",
       "channelWebsite": "Saját weboldal",
       "channelWebsiteHint": "Az Ön foglalási oldala és a foglalási modul.",
       "readinessTitle": "A portálokhoz még hiányzik:",
@@ -6261,7 +6345,21 @@
       "planPortalOffHint": "Ez az ár csak közvetlen foglalásokra érvényes. Kattintson, hogy elküldje a foglalási portáloknak.",
       "planPortalOn": "Az ár most a foglalási portálokra kerül.",
       "planPortalOnHint": "Ez az ár a foglalási portálokra kerül. Kattintson, hogy csak közvetlen foglalásokra használja.",
-      "planPortalYes": "Portálokra"
+      "planPortalYes": "Portálokra",
+      "feeValidityTitle": "Érvényesség",
+      "feeValidityHint": "A díj azokra a foglalásokra vonatkozik, amelyek érkezési dátuma az adott időszakba esik. Üres = korlátlan. Az időszakos díj nem kerül továbbításra a portálok felé: ott nem lehet dátumfeltételt megjeleníteni.",
+      "feeValidFromLabel": "Érvényes ettől",
+      "feeValidUntilLabel": "Érvényes eddig",
+      "feeValidityOrderError": "Az „Érvényes eddig” dátum korábbi, mint az „Érvényes ettől” dátum.",
+      "feeOwnerStatementOnlyLabel": "Csak a tulajdonosi elszámolásban",
+      "feeOwnerStatementOnlyHint": "A díj nem kerül felszámításra a vendégnek, és nem kerül elküldésre egyetlen portálra sem. Csak a tulajdonosi elszámolásban, az értékelésben és a tulajdonosi portálon jelenik meg.",
+      "feeValidFromSuffix": "{date} óta",
+      "feeValidUntilSuffix": "{date} -ig",
+      "feeOwnerStatementOnlySuffix": "csak elszámolás",
+      "feeCalculationLabel": "Számítás",
+      "feeVatHint": "Saját adókulcs ehhez a díjhoz, eltérően a szálláshely éjszakai díjától. A „Ki” azt jelenti, hogy a díj az éjszakai díjat követi.",
+      "feeVatIncludedLabel": "Adó az összegben",
+      "feeVatIncludedHint": "Az adókulcs már benne van a megadott összegben, vagy azon felül kerül felszámolásra? Ezen információ nélkül az összeg kétértelmű lenne."
     },
     "policiesForm": {
       "title": "Irányelvek",
@@ -7303,23 +7401,23 @@
     "marketplacePending": "{count} ellenőrzés alatt",
     "marketplaceWaiting": "Ellenőrzés alatt",
     "marketplace": {
-      "intro": "A myBestDays a saját piacterünk — foglalási csatorna, mint a Booking vagy az Airbnb, csak portálkapcsolat nélkül. Egy objektum akkor válik láthatóvá, ha aktív, itt szerepel és jóváhagyták.",
+      "intro": "A myBestDays a saját piacterünk – egy foglalási csatorna, mint a Booking vagy az Airbnb, csak portálkapcsolat nélkül, és minden objektum számára kötelező. Egy objektum akkor válik láthatóvá, ha aktív és általunk jóváhagyott.",
       "openMarketplace": "Piactér megnyitása",
       "propertiesHeading": "Objektumok a piactéren",
       "noProperties": "Még nincs létrehozott objektum.",
       "columnProperty": "Objektum",
-      "columnVisibility": "Láthatóság",
+      "columnVisibility": "Állapot",
       "columnApproval": "Jóváhagyás",
       "columnBookings": "Foglalások",
       "stateActive": "Látható",
       "statePending": "Ellenőrzés alatt",
-      "stateNotListed": "Nincs meghirdetve",
+      "stateNotListed": "Értékesítés szünetel",
       "stateInactiveProperty": "Az objektum nem aktív",
       "viewListing": "Hirdetés megtekintése",
       "reviewHint": "Az ellenőrzés alatt álló objektumok még nem jelennek meg a myBestDays-en. Minden hirdetést ellenőrzünk, mert ott a myBestDays a szolgáltató — a portálokat és a saját weboldalt ez nem érinti.",
       "summaryVisible": "{count} látható",
       "summaryWaiting": "{count} ellenőrzés alatt",
-      "summaryOff": "{count} nincs meghirdetve",
+      "summaryOff": "{count} szünetel vagy inaktív",
       "moderation": {
         "draft": "Vázlat",
         "pending": "Ellenőrzés alatt",
@@ -7354,7 +7452,8 @@
       "mayClose": "Az importálás a szerveren folytatódik – bezárhatja ezt az oldalt.",
       "andMore": "… és további {count}",
       "close": "Bezárás",
-      "updated": "frissítve"
+      "updated": "frissítve",
+      "portal": "már a portálról"
     }
   },
   "calendarSync": {
@@ -10511,7 +10610,11 @@
     "haveAccount": "Már van fiókja?",
     "loginLink": "Jelentkezzen be itt",
     "loadingHeadline": "Saját foglalási weboldal. Tartsa meg minden foglalás 100 %-át.",
-    "loadingText": "Beállítjuk a fiókját …"
+    "loadingText": "Beállítjuk a fiókját …",
+    "referralLabel": "Ajánló (opcionális)",
+    "referralPlaceholder": "Ajánlókód, pl. ANNA-K7P2",
+    "referralHint": "A myNextDays-ről egy partneren keresztül értesült? Az ő kódja ide kerül – ő csak azt látja, hogy egy vállalkozás rajta keresztül érkezett, soha nem az Ön nevét. A kóddal az első teljes hónapot ajándékba kapja a 14 tesztnap után.",
+    "referralContactOptIn": "Az ajánlóm felveheti velem a kapcsolatot a myNextDays-en keresztül."
   },
   "marketingSite": {
     "stars": "4,5 csillag",

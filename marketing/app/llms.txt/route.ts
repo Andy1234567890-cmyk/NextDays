@@ -106,9 +106,15 @@ export async function GET(): Promise<Response> {
   );
   zeilen.push("");
 
+  zeilen.push("## Partner programme");
+  zeilen.push("");
+  zeilen.push(`- [Partner programme](${siteUrl("/partner")}): tiered commission on subscription revenue of referred businesses, team commission (one level), terms at /partner/agb.`);
+  zeilen.push("");
+
   zeilen.push("## Legal");
   zeilen.push("");
   zeilen.push(`- [Terms](${siteUrl("/agb")})`);
+  zeilen.push(`- [Partner programme terms](${siteUrl("/partner/agb")})`);
   for (const eintrag of RECHTSDOKUMENTE) {
     zeilen.push(`- [${eintrag.slug}](${siteUrl(`/${eintrag.slug}`)})`);
   }

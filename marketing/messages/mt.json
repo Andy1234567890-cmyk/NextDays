@@ -851,7 +851,8 @@
     },
     "unternehmen": {
       "ueberUns": "Dwarna",
-      "kontakt": "Kuntatt"
+      "kontakt": "Kuntatt",
+      "partner": "Programm tas-Sħubija"
     },
     "copyright": "© 2026 myNextDays. Id-drittijiet kollha riżervati.",
     "agb": "Termini",
@@ -860,7 +861,8 @@
     "cookies": "Politika tal-cookies",
     "avv": "Ipproċessar tad-dejta",
     "kontoLoeschen": "Ħassar il-kont",
-    "newsletterKnopf": "Abbona man-Newsletter"
+    "newsletterKnopf": "Abbona man-Newsletter",
+    "partnerAgb": "Termini u Kundizzjonijiet tal-Imsieħba"
   },
   "legal": {
     "stand": "L-aħħar aġġornament: {datum}"
@@ -990,7 +992,7 @@
       "sub": "X'iridu jkunu jafu s-sidien qabel jibdlu — fil-qosor u mingħajr stampar żgħir.",
       "laufzeit": {
         "frage": "Hemm terminu minimu?",
-        "antwort": "Le. L-abbonament huwa ta' kull xahar u jista' jiġi kkanċellat b'erba' ġimgħat qabel tmiem ix-xahar. L-ewwel 14-il jum huma b'xejn: Inti ddaħħal id-dettalji tal-ħlas tiegħek fil-bidu, iżda l-ħlas isir biss wara li jiskadi l-perjodu ta' prova. Jekk tikkanċella qabel, ma tħallas xejn."
+        "antwort": "Le. L-abbonament huwa ta' kull xahar u jista' jiġi kkanċellat b'avviż ta' erba' ġimgħat sa tmiem ix-xahar. L-ewwel 14-il jum huma b'xejn: Int iddaħħal id-dettalji tal-ħlas tiegħek fil-bidu, iżda l-ħlas isir biss wara l-perjodu ta' prova. Jekk tiġi permezz ta' link jew kodiċi ta' sieħeb, l-ewwel xahar sħiħ huwa wkoll b'xejn. Jekk tikkanċella qabel, ma tħallas xejn."
       },
       "objektzahl": {
         "frage": "X'jiġri meta nżid proprjetajiet?",
@@ -2185,5 +2187,259 @@
     "verwalten": "Immaniġġja l-preferenzi tal-cookies",
     "schliessen": "Agħlaq",
     "bestaetigen": "Ikkonferma l-għażliet"
+  },
+  "partnerHinweis": {
+    "text": "Int qiegħed hawn permezz ta' rakkomandazzjoni (kodiċi {code}). Il-kodiċi jiġi applikat mar-reġistrazzjoni — u jagħtik l-ewwel xahar sħiħ b'xejn wara l-14-il jum ta' prova.",
+    "cta": "Ibda issa b'xejn",
+    "schliessen": "Agħlaq in-nota"
+  },
+  "partner": {
+    "meta": {
+      "titel": "Programm tas-Sħubija — myNextDays",
+      "beschreibung": "Irreferi myNextDays lil sidien ta' kiri għall-vaganzi u lukandi u rċievi sa {max}% tad-dħul mill-abbonament ta' kull negozju riferut għal tnax-il xahar."
+    },
+    "hero": {
+      "eyebrow": "Programm tas-Sħubija",
+      "headlinePre": "Irreferi myNextDays —",
+      "headlineHighlight": "u aqla' flus",
+      "sub": "Għal Influencers, Konsulenti, Aġenziji u Sidien b'netwerk: Kull negozju li jirreġistra permezz tal-link tiegħek u jħallas abbonament iġiblek sa {max} % tad-dħul mill-abbonament għal tnax-il xahar — flimkien ma' 0.5 % ta' kull prenotazzjoni permezz ta' myBestDays, bonusijiet ta' promozzjoni u, minn Elite 'il fuq, super kummissjoni mingħajr limitu ta' żmien.",
+      "cta": "Applika issa",
+      "ctaLogin": "Login tas-Sħubija",
+      "chipDauer": "12-il xahar kummissjoni għal kull klijent",
+      "chipAuszahlung": "Ħlas ta' kull xahar",
+      "chipKosten": "Parteċipazzjoni b'xejn",
+      "chipGratismonat": "Il-klijenti tiegħek: ipprova għal 14-il jum + xahar b'xejn"
+    },
+    "schritte": {
+      "eyebrow": "Kif jaħdem",
+      "heading": "Tliet passi sal-ewwel kummissjoni",
+      "bewerben": {
+        "titel": "Applika",
+        "text": "Inti tgħidilna l-kanal tiegħek — websajt, profil soċjali jew netwerk. Aħna nirrevedu kull applikazzjoni personalment u ġeneralment napprovawha fi ftit jiem tax-xogħol."
+      },
+      "teilen": {
+        "titel": "Aqsam il-link jew il-kodiċi",
+        "text": "Inti tirċievi link personali u kodiċi ta' riferiment. Il-kodiċi jidher fil-formola tar-reġistrazzjoni — mingħajr cookie ta' traċċar."
+      },
+      "verdienen": {
+        "titel": "Aqla'",
+        "text": "Jekk negozju riferut iħallas l-ewwel kont tal-abbonament tiegħu, il-kummissjoni tiegħek tibqa' għal tnax-il xahar. Inti tara kull klijent b'mod anonimu fid-dashboard tas-sħubija u titħallas kull xahar."
+      }
+    },
+    "staffel": {
+      "eyebrow": "Il-livell tiegħek",
+      "heading": "Aktar ma tkun kbira l-istruttura tiegħek, aktar tkun għolja r-rata tiegħek",
+      "sub": "Ir-rata tapplika għall-kummissjonijiet ġodda kollha mill-mument li jintlaħaq il-grad. L-istruttura tinkludi l-klijenti li jħallsu tiegħek stess u l-klijenti tas-sħab tat-tim tiegħek.",
+      "kunden": "{min}-{max} klijenti li jħallsu",
+      "kundenOffen": "minn {min} klijenti li jħallsu",
+      "satz": "tad-dħul mill-abbonament",
+      "nichtAbrufbar": "Il-livell bħalissa mhux disponibbli. Jekk jogħġbok erġa' pprova aktar tard."
+    },
+    "bedingungen": {
+      "eyebrow": "Ir-regoli",
+      "heading": "Ġust għalik, ġust għan-negozji",
+      "basis": {
+        "titel": "X'jgħodd",
+        "text": "Il-bażi tal-kummissjoni hija d-dħul nett mill-abbonament (rata bażika u moduli) tan-negozju riferut — mingħajr taxxi, kummissjonijiet tal-portal u servizzi addizzjonali."
+      },
+      "dauer": {
+        "titel": "Tnax-il xahar",
+        "text": "Il-kummissjoni tibda tnax-il xahar mill-ewwel kont ta' abbonament imħallas tal-operazzjoni; ix-xahar b'xejn tal-klijenti tiegħek ma jingħaddx. Jekk l-operazzjoni tikkanċella, tispiċċa bl-aħħar ħlas tagħha. Il-proporzjon tal-prenotazzjoni u s-super kummissjoni jkomplu mingħajr dan il-limitu."
+      },
+      "auszahlung": {
+        "titel": "Ħlas",
+        "text": "Kull xahar, 30 jum wara l-ħlas tan-negozju, minn ammont minimu għal kull munita. Inti tirċievi nota ta' kreditu; il-kumpaniji jeħtieġu numru tal-VAT validu."
+      },
+      "kennzeichnung": {
+        "titel": "Immarkar",
+        "text": "Kull riferiment huwa reklamar u għandu jkun immarkat bħala tali. Il-kliem preskritt għal kull lingwa huwa pprovdut fid-dashboard."
+      },
+      "verboten": {
+        "titel": "Mhux permess",
+        "text": "Awto-promozzjoni, reklamar fuq l-ismijiet tad-ditta tagħna f'reklami ta' tfittxija, wegħdiet ta' skont f'isimna u messaġġi mhux mitluba. Ir-rifużjonijiet jitnaqqsu mill-kummissjoni."
+      },
+      "daten": {
+        "titel": "Privatezza",
+        "text": "Int tara lill-klijenti tiegħek biss b'mod psewdonimu — bil-pajjiż, l-istatus u l-ammonti, qatt bl-ismijiet jew l-email. Negozju jista' jippermettilek tikkuntattjah meta jirreġistra."
+      }
+    },
+    "faq": {
+      "eyebrow": "Mistoqsijiet Frekwenti",
+      "heading": "X'jistaqsu l-imsieħba lilna",
+      "wer": {
+        "frage": "Min jista' jsir sieħeb?",
+        "antwort": "Kull persuna jew kumpanija fl-UE b'kanal reali għal sidien jew lukandi: Influencers, konsulenti, aġenziji, ditti tat-taxxa, assoċjazzjonijiet — u l-klijenti ta' myNextDays stess. Applikazzjoni hija bla ħlas; abbonament mhuwiex rekwiżit."
+      },
+      "wann": {
+        "frage": "Meta negozju jitqies bħala l-klijent tiegħi?",
+        "antwort": "Meta jirreġistra bil-kodiċi tiegħek u jkun ħallas l-ewwel kont tal-abbonament tiegħu. Reġistrazzjonijiet mingħajr ħlas ma jgħoddux għall-grad."
+      },
+      "doppelt": {
+        "frage": "X'jiġri jekk negozju jsemmi żewġ imsieħba?",
+        "antwort": "Negozju jiġi assenjat lil sieħeb wieħed biss — dak li l-kodiċi tiegħu kien fil-formola waqt ir-reġistrazzjoni. Kodiċijiet sussegwenti ma jbiddlux dan."
+      },
+      "steuern": {
+        "frage": "Kif isir il-kontijiet?",
+        "antwort": "Aħna noħorġu nota ta' kreditu (Self-Billing). Kumpaniji b'numru tal-VAT tal-UE jirċevuha b'nota ta' Reverse-Charge, persuni privati mingħajr VAT — int tiddikjara l-kummissjoni int stess."
+      },
+      "material": {
+        "frage": "Hemm materjal promozzjonali?",
+        "antwort": "Iva: vidjows qosra għall-midja soċjali, vidjo spjegattiv, banners u blokki ta' test — fid-dashboard tal-imsieħba, bil-lingwa tiegħek."
+      },
+      "wieviel": {
+        "frage": "Kemm nista' naqla' kummissjoni?",
+        "antwort": "Dan jiddependi mid-dħul mill-abbonament tal-klijenti tiegħek u l-grad tiegħek. Il-livell ta' hawn fuq juri r-rata għal kull grad; għal tnax-il xahar għal kull klijent. Barra minn hekk, hemm 0.5% ta' kull prenotazzjoni li l-klijenti tiegħek jirċievu permezz ta' myBestDays, bonus ta' promozzjoni ta' darba għal kull grad miksub, mal-kummissjoni differenzjali ta' tim — u minn sieħeb Elite, 2.5% super kummissjoni fuq l-istruttura kollha mingħajr limitu ta' żmien."
+      },
+      "team": {
+        "frage": "Kif taħdem il-kummissjoni tat-tim?",
+        "antwort": "Minn grad ta' Promotur 'il fuq: Jekk sieħeb japplika permezz tal-link tat-tim tiegħek u jdaħħal il-kodiċi tiegħek b'mod viżibbli fl-applikazzjoni, wara l-approvazzjoni jsir parti mit-tim tiegħek. Il-klijenti tiegħu jgħoddu 1:1 għall-grad tiegħek. Fuq id-dħul nett mill-abbonamenti tal-klijenti tiegħu, inti tirċievi d-differenza bejn ir-rata tiegħek u tiegħu — livell wieħed biss fil-fond, mingħajr miżata ta' parteċipazzjoni, mingħajr flus għar-reklutaġġ."
+      },
+      "auszahlung": {
+        "frage": "Kif u meta jitħallsu l-kummissjonijiet?",
+        "antwort": "Kull xahar għal kull munita, ladarba s-somma tilħaq l-ammont minimu tal-munita tiegħek. Kull linja ta' kummissjoni hija \"miftuħa\" għal 30 jum (tieqa ta' rifużjoni) u wara tista' titħallas. Inti tirċievi nota ta' kreditu (self-billing) — ma toħroġx fattura. Ħlas permezz ta' SEPA, Wise jew PayPal."
+      },
+      "verfolgen": {
+        "frage": "Kif nista' nsegwi l-kummissjonijiet u l-prestazzjoni tiegħi?",
+        "antwort": "Fid-dashboard tal-imsieħba, taħt \"Kummissjonijiet\" tara kull fattura ta' abbonament imħallsa bil-bażi, ir-rata, l-ammont u l-istatus, taħt \"Klijenti\" l-kumpaniji tiegħek b'mod psewdonimu, taħt \"Tim\" l-evalwazzjoni tal-imsieħba tat-tim tiegħek u taħt \"Links & Materjal\" klikks għal kull kodiċi."
+      },
+      "werbung": {
+        "frage": "Nista' nagħmel reklamar imħallas?",
+        "antwort": "Mhux fuq il-marka tagħna: reklami fuq \"myNextDays\" u varjanti ta' kitba (brand-bidding), cookie-dropping, reach mixtri jew inċentivi għar-reġistrazzjonijiet huma pprojbiti u jwasslu għal sospensjoni. Kontenut, kontribuzzjonijiet u rakkomandazzjonijiet proprji huma espressament milqugħa — b'indikazzjoni bħala reklamar."
+      }
+    },
+    "abschluss": {
+      "heading": "Lest biex tirrakkomanda myNextDays?",
+      "sub": "Applika f'żewġ minuti. Aħna nikkuntattjawk wara r-reviżjoni.",
+      "cta": "Applika issa",
+      "kontakt": "Mistoqsijiet? Ikteb lilna."
+    },
+    "vergleich": {
+      "eyebrow": "Il-Livell Tiegħek",
+      "heading": "Iktar ma jkun hemm klijenti li jħallsu, iktar ikun għoli l-livell tiegħek",
+      "sub": "Ir-rata tapplika għall-kummissjonijiet ġodda kollha mill-mument li jintlaħaq il-grad. L-istruttura tiegħek tiġi kkalkulata: il-klijenti li jħallsu tiegħek stess flimkien mal-klijenti tas-sħab tat-tim tiegħek.",
+      "nichtAbrufbar": "Il-livell bħalissa mhux disponibbli. Jekk jogħġbok erġa' pprova aktar tard.",
+      "plan": "Livell",
+      "provision": "Kummissjoni fuq il-klijenti tiegħek",
+      "teamProvision": "Kummissjoni tat-tim fuq il-klijenti tas-sħab tat-tim tiegħek",
+      "dauer": "Tul ta' żmien għal kull klijent",
+      "dauerWert": "12-il xahar",
+      "kunden": "{von}–{bis} klijenti li jħallsu",
+      "kundenOffen": "minn {von} klijenti li jħallsu",
+      "vorteile": "Servizzi",
+      "ja": "inklużi",
+      "nein": "mhux inklużi",
+      "leistung": {
+        "konto": "Kont ta' sieħeb b'xejn",
+        "dashboard": "Dashboard tas-sieħeb bil-klijenti, kummissjonijiet u analiżi",
+        "material": "Materjal promozzjonali u mudelli ta' identifikazzjoni",
+        "team": "Ibni tim b'link tat-tim tiegħek stess",
+        "gutschrift": "Ħlas ta' kull xahar b'kreditu (Self-Billing)",
+        "chat": "Kuntatt dirett mat-tim tas-sħab",
+        "support": "Kuntatt personali",
+        "coMarketing": "Co-Marketing (azzjonijiet konġunti)"
+      },
+      "fussnoteTeam": "Il-kummissjoni tat-tim hija d-differenza bejn ir-rata tiegħek u r-rata tas-sieħeb tat-tim fuq id-dħul nett mill-abbonamenti tal-klijenti tiegħu, it-tnejn fil-ħin tal-ħlas — livell wieħed biss, l-ebda miżata ta' parteċipazzjoni, l-ebda flus għar-reklutaġġ. Qatt ma jaqbeż it-30 % b'kollox.",
+      "fussnoteCoMarketing": "Wara konsultazzjoni mat-tim tas-sħab; tiddependi fuq il-profil tas-sieħeb u l-azzjonijiet kurrenti.",
+      "fussnoteRang": "Il-grad jinħoloq mill-istruttura tiegħek: klijenti li jħallsu tiegħek stess flimkien mal-klijenti tas-sħab tat-tim tiegħek, kull wieħed jgħodd darba. Meta jintlaħaq grad ġdid minn Promotur 'il fuq, jingħata bonus ta' promozzjoni darba.",
+      "teamDifferenz": "{satz} % nieqes ir-rata tas-sieħeb tat-tim",
+      "teamNicht": "għad m'hemmx tim",
+      "bonus": "Bonus ta' promozzjoni (darba)",
+      "superProvision": "Super kummissjoni fuq l-istruttura kollha",
+      "marktTurbo": "Sehem ta' prenotazzjoni myBestDays",
+      "marktTurboWert": "0.5 % għal kull prenotazzjoni, bla limitu",
+      "fussnoteSuper": "Minn Imsieħeb Elite, 2.5 % fuq id-dħul nett mill-abbonamenti tal-klijenti kollha tal-istruttura tiegħek — minbarra l-kummissjoni, mingħajr il-limitu ta' 12-il xahar, sakemm iżżomm il-grad u l-klijent iħallas."
+    },
+    "team": {
+      "eyebrow": "Ibni tim",
+      "heading": "Sa {max} % kummissjoni differenzjali fuq id-dħul tat-tim tiegħek",
+      "sub": "Taf b'konsulenti, kreaturi jew aġenziji oħra b'kuntatti mal-ospiti? Minn grad ta' Promotur 'il fuq, japplikaw permezz tal-link tat-tim tiegħek, isiru parti mit-tim tiegħek — u l-klijenti tagħhom jgħoddu 1:1 għall-grad tiegħek. Inti taqla' d-differenza bejn ir-rata tiegħek u r-rata tas-sieħeb tat-tim tiegħek; is-sħab tat-tim tiegħek iżommu l-iskala sħiħa tagħhom stess.",
+      "rang": {
+        "titel": "Id-differenza",
+        "text": "Inti tirċievi r-rata tiegħek nieqes ir-rata tas-sieħeb tat-tim — it-tnejn fil-ħin tal-ħlas. Jekk is-sieħeb tat-tim tiegħek jinsab fl-istess grad, ma tinħoloq l-ebda kummissjoni tat-tim."
+      },
+      "ebene": {
+        "titel": "Livell wieħed biss",
+        "text": "Is-sħab tat-tim tiegħek ma jibnux tim tagħhom stess taħtek. L-ebda netwerk, l-ebda piramida."
+      },
+      "keinGeld": {
+        "titel": "Minn dħul reali biss",
+        "text": "L-ebda miżata ta' parteċipazzjoni, l-ebda flus għar-reklutaġġ. Il-kummissjoni tat-tim tinħoloq esklussivament minn dħul minn abbonament imħallas."
+      },
+      "dauer": {
+        "titel": "L-istess regoli",
+        "text": "12-il xahar għal kull klijent tat-tim, tieqa ta' rifużjoni ta' 30 jum, ritorn f'każ ta' rifużjoni jew chargeback — bħal fil-każ tal-kummissjoni tiegħek stess. Minn Elite 'il fuq, tiżdied is-super kummissjoni fuq l-istruttura kollha, mingħajr limitu ta' żmien."
+      }
+    },
+    "kundeCta": {
+      "heading": "Diġà int klijent ta' myNextDays?",
+      "text": "Imbagħad int taf il-prodott l-aħjar. Irrakkomandah — il-kummissjoni tiegħek tidher bħala kreditu fil-kont tiegħek, irrispettivament mill-abbonament tiegħek.",
+      "cta": "Irrakkomanda u aqla'"
+    }
+  },
+  "partnerBewerbung": {
+    "meta": {
+      "titel": "Applika bħala sieħeb — myNextDays",
+      "beschreibung": "Applikazzjoni għall-programm ta' sħubija myNextDays: Kontijiet tal-midja soċjali, firxa, termini. Aħna nirrevedu kull applikazzjoni personalment."
+    },
+    "eyebrow": "Programm ta' sħubija",
+    "titel": "Applika bħala sieħeb",
+    "text": "Għidilna l-kontijiet tal-midja soċjali tiegħek bil-firxa — aħna nirrevedu kull applikazzjoni personalment u ġeneralment nirrispondu fi ftit jiem tax-xogħol. Bl-approvazzjoni, ikollok aċċess għad-dashboard tas-sieħeb b'links, kodiċijiet u analiżi.",
+    "email": "Email",
+    "passwort": "Password għad-dashboard tas-sieħeb tiegħek",
+    "passwortHinweis": "Mill-inqas 8 karattri.",
+    "name": "Isem",
+    "firma": "Kumpanija (mhux obbligatorju)",
+    "rechtsform": "Forma legali",
+    "privat": "Persuna privata",
+    "unternehmen": "Kumpanija",
+    "land": "Pajjiż",
+    "ustId": "Numru tal-VAT",
+    "ustIdHinweis": "Iċċekkjat kontra s-sistema tal-UE VIES. Mingħajr numru kkonfermat, l-ebda ħlas lill-kumpaniji.",
+    "kanaele": {
+      "titel": "Il-kontijiet tal-midja soċjali tiegħek",
+      "hinweis": "Obbligatorju: mill-inqas kont wieħed tal-midja soċjali (Instagram, TikTok, YouTube, Facebook, LinkedIn ...) bl-indirizz, il-handle u l-firxa (segwaċi). Website, blog jew newsletter huma milqugħa bħala addizzjonali. Aħna nirrevedu l-kontijiet qabel l-approvazzjoni.",
+      "plattform": "Pjattaforma",
+      "handle": "Handle (mhux obbligatorju)",
+      "reichweite": "Firxa (segwaċi)",
+      "hinzufuegen": "Żid kanal",
+      "entfernen": "Neħħi kanal",
+      "socialPflicht": "Mill-inqas kont wieħed tal-midja soċjali bil-firxa huwa obbligatorju — website waħedha mhix biżżejjed.",
+      "plattformen": {
+        "website": "Website",
+        "blog": "Blog",
+        "newsletter": "Newsletter",
+        "podcast": "Podcast",
+        "other": "Oħrajn"
+      }
+    },
+    "plattform": {
+      "website": "Website",
+      "blog": "Blog",
+      "newsletter": "Newsletter",
+      "podcast": "Podcast",
+      "other": "Oħrajn"
+    },
+    "sponsor": "Referut minn sieħeb (Kodiċi, mhux obbligatorju)",
+    "sponsorHinweis": "Qed tiġi permezz tal-link tat-tim ta' sieħeb? Il-kodiċi tiegħu jkun hawn. Huwa jirċievi kummissjoni tat-tim fuq id-dħul mill-abbonament tal-klijenti tiegħek — il-kummissjoni tiegħek stess tibqa' l-istess.",
+    "pitch": "Għaliex int adattat għal myNextDays? (mhux obbligatorju)",
+    "pitchPlatzhalter": "Lil min tilħaq, dwar xiex titkellem, kif tixtieq tirrakkomanda?",
+    "zustimmung": "Naċċetta t-termini",
+    "bedingungen": "Termini tas-sieħeb",
+    "version": "Verżjoni {version}",
+    "absenden": "Ibgħat l-applikazzjoni",
+    "sendet": "Qed tintbagħat...",
+    "pruefungHinweis": "Din il-formola hija protetta minn reCAPTCHA. Wara li tintbagħat, it-tim tas-sħab tagħna jivverifika l-kontijiet u l-firxa tiegħek; tirċievi email bid-deċiżjoni.",
+    "fehler": {
+      "social": "Jekk jogħġbok speċifika mill-inqas kont wieħed tal-midja soċjali bl-indirizz u l-firxa.",
+      "doppelt": "Diġà hemm applikazzjoni għal din l-email. Idħol fid-dashboard tas-sħab.",
+      "eingabe": "Jekk jogħġbok iċċekkja l-inputs tiegħek.",
+      "captcha": "Il-verifika tal-protezzjoni kontra l-ispam falliet. Jekk jogħġbok erġa' kkarga l-paġna u erġa' pprova.",
+      "allgemein": "L-applikazzjoni ma setgħetx tintbagħat bħalissa. Jekk jogħġbok erġa' pprova aktar tard."
+    },
+    "fertig": {
+      "titel": "Applikazzjoni rċevuta",
+      "text": "Grazzi! Aħna nivverifikaw il-kontijiet u l-firxa tiegħek personalment u nikkuntattjawk permezz ta' email. Id-dashboard tas-sħab tiegħek huwa aċċessibbli bl-email u l-password tiegħek — il-links u l-kodiċijiet isiru attivi mal-approvazzjoni.",
+      "login": "Għall-login tas-sħab"
+    }
   }
 }

@@ -82,6 +82,14 @@ class RegisterRequest(BaseModel):
     # bisheriges Verhalten); 'marketplace' = Plattform-Gastgeber ohne Abo, zahlt
     # eine Provision je Buchung (plattform/-Registrierung setzt dies).
     account_type: str = Field(default="pms", pattern="^(pms|marketplace)$")
+    # Partnerprogramm (0517): Empfehlungscode, wie er sichtbar im Formular
+    # stand („Empfohlen von"), plus die Klick-Kennung aus dem Partner-Link.
+    # Beides optional; ein unbekannter Code bricht die Registrierung NICHT —
+    # er wird geloggt und ignoriert (features/affiliates/attribution.py).
+    referral_code: str | None = Field(default=None, max_length=40)
+    referral_click: str | None = Field(default=None, max_length=64)
+    # Der Betrieb erlaubt seinem Empfehler, ihn über myNextDays zu kontaktieren.
+    referral_contact_opt_in: bool = False
 
     @field_validator("country")
     @classmethod
