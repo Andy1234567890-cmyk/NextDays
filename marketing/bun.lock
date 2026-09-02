@@ -5,6 +5,7 @@
     "": {
       "name": "nextdays-marketing",
       "dependencies": {
+        "@iconify/react": "6.0.2",
         "@radix-ui/react-label": "^2.1.10",
         "@radix-ui/react-slot": "^1.2.3",
         "class-variance-authority": "^0.7.1",
@@ -44,6 +45,8 @@
     "@iconify-json/logos": ["@iconify-json/logos@1.2.13", "", { "dependencies": { "@iconify/types": "*" } }, "sha512-Up54ZnIuiuBgGAsuzhR1nvKqwq8VE6YM3XLwVB6IgY+7NAasz6WKu9Ay5hGfAkfuOKowodfwDC8ozReEBYrWRg=="],
 
     "@iconify-json/ph": ["@iconify-json/ph@1.2.2", "", { "dependencies": { "@iconify/types": "*" } }, "sha512-PgkEZNtqa8hBGjHXQa4pMwZa93hmfu8FUSjs/nv4oUU6yLsgv+gh9nu28Kqi8Fz9CCVu4hj1MZs9/60J57IzFw=="],
+
+    "@iconify/react": ["@iconify/react@6.0.2", "", { "dependencies": { "@iconify/types": "^2.0.0" }, "peerDependencies": { "react": ">=16" } }, "sha512-SMmC2sactfpJD427WJEDN6PMyznTFMhByK9yLW0gOTtnjzzbsi/Ke/XqsumsavFPwNiXs8jSiYeZTmLCLwO+Fg=="],
 
     "@iconify/types": ["@iconify/types@2.0.0", "", {}, "sha512-+wluvCrRhXrhyOmRDJ3q8mux9JkKy5SJ/v8ol2tu4FVjyYvtEzkc/3pK15ET6RKg4b4w4BmTk1+gsCUhf21Ykg=="],
 
