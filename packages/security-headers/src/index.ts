@@ -72,6 +72,21 @@ export interface CspOptions {
    *  Der Grund stuende nur in der Browser-Konsole — genau die Art Attrappe, die
    *  Wurzel 4 verbietet. */
   recaptcha?: boolean;
+  /** WebAssembly freigeben (`'wasm-unsafe-eval'`, CSP Level 3).
+   *
+   *  Nur für Apps, die im Browser ein WASM-Modul instanziieren — aktuell der
+   *  HEIC-Decoder `heic2any` (libheif, Emscripten) im Gastgeber-Dashboard und
+   *  das Layout-Modul yoga von `@react-pdf/renderer` im PMS (Kartei-PDF). Ohne
+   *  diesen Eintrag verweigert der Browser `WebAssembly.instantiate` mit
+   *  „'unsafe-eval' is not an allowed source" — und zwar NUR in Produktion:
+   *  im Dev steht `'unsafe-eval'` ohnehin in der Liste, dort läuft es. Live
+   *  passiert am 03.09.2026 beim Klick auf „Als PDF exportieren" in der Kartei:
+   *  `Aborted(CompileError: WebAssembly.instantiate() … violates … script-src)`.
+   *
+   *  `'wasm-unsafe-eval'` erlaubt AUSSCHLIESSLICH WebAssembly, kein `eval()`
+   *  und keine `Function()`-Konstruktion — deshalb dieser Schlüssel und nicht
+   *  `'unsafe-eval'`. */
+  wasm?: boolean;
 }
 
 // Genau die Hosts, die die Google-Maps-JS-API braucht — nicht mehr.
@@ -113,13 +128,15 @@ export function buildCsp(opts: CspOptions = {}): string {
     googleFonts = false,
     googleTag = false,
     recaptcha = false,
+    wasm = false,
   } = opts;
   const scriptHosts = [
     ...(googleMaps ? MAPS_SCRIPT : []),
     ...(googleTag ? TAG_SCRIPT : []),
     ...(recaptcha ? RECAPTCHA_SCRIPT : []),
   ];
-  const scriptExtra = scriptHosts.length > 0 ? " " + scriptHosts.join(" ") : "";
+  const scriptExtra =
+    (wasm ? " 'wasm-unsafe-eval'" : "") + (scriptHosts.length > 0 ? " " + scriptHosts.join(" ") : "");
   // `wss:` MUSS mit: ein WebSocket-Ziel wird gegen sein EIGENES Schema geprüft,
   // `https:` deckt es NICHT ab. Ohne diesen Eintrag blockt die CSP jede
   // Realtime-Verbindung (supabase `wss://…/realtime/v1/websocket`) — die UI sieht

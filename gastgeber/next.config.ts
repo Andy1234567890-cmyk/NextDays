@@ -32,9 +32,14 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         // googleMaps: der Objekt-Editor rendert die Preisvergleichs-Karte
         // (Google-Maps-JS-API) → deren Hosts in die CSP freigeben.
+        // wasm: der HEIC-Decoder (lib/foto-konvertierung.ts, heic2any/libheif)
+        // ist ein WebAssembly-Modul. Ohne `'wasm-unsafe-eval'` bricht der
+        // Upload eines iPhone-Fotos in Produktion mit einem CSP-Fehler ab —
+        // im Dev nicht, weil dort `'unsafe-eval'` alles abdeckt.
         headers: securityHeaders({
           dev: process.env.NODE_ENV !== "production",
           googleMaps: true,
+          wasm: true,
         }),
       },
     ];

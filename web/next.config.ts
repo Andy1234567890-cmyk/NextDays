@@ -50,9 +50,15 @@ const nextConfig: NextConfig = {
       {
         source: "/:path*",
         // googleMaps: web rendert die Standort-Karte (Google-Maps-JS-API).
+        // wasm: der PDF-Export der Objektkartei (lib/dossier-pdf.tsx,
+        // @react-pdf/renderer) bringt das Layout-Modul yoga als WebAssembly
+        // mit. Ohne `'wasm-unsafe-eval'` bricht der Klick auf „Als PDF
+        // exportieren" in Produktion mit einem CSP-Fehler ab — im Dev nicht,
+        // weil dort `'unsafe-eval'` alles abdeckt (live 03.09.2026).
         headers: securityHeaders({
           dev: process.env.NODE_ENV !== "production",
           googleMaps: true,
+          wasm: true,
           // Der Website-Baukasten bettet die Live-Vorschau der Kunden-Site per
           // iframe ein — den ECHTEN Renderer, nicht eine zweite Nachbildung der
           // Abschnitte. Ohne diesen Eintrag greift `default-src 'self'` und der
