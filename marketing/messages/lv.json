@@ -2202,7 +2202,7 @@
       "eyebrow": "Partneru programma",
       "headlinePre": "Iesakiet myNextDays —",
       "headlineHighlight": "un nopelniet",
-      "sub": "Influenceriem, konsultantiem, aģentūrām un izīrētājiem ar tīklu: Katrs uzņēmums, kas reģistrējas, izmantojot jūsu saiti, un apmaksā abonementu, dod jums divpadsmit mēnešus līdz {max} % no abonementa ieņēmumiem — plus 0,5 % no katras rezervācijas, izmantojot myBestDays, paaugstināšanas bonusus un no Elites superkomisiju bez termiņa ierobežojuma.",
+      "sub": "Influenceriem, konsultantiem, aģentūrām un izīrētājiem ar tīklu: Katrs uzņēmums, kas reģistrējas, izmantojot jūsu saiti, un apmaksā abonementu, dod jums divpadsmit mēnešus līdz {max} % no abonementa ieņēmumiem — plus paaugstināšanas bonusus un no Elites superkomisiju bez termiņa ierobežojuma un 0,5 % no katras rezervācijas, izmantojot myBestDays.",
       "cta": "Pieteikties tagad",
       "ctaLogin": "Partnera pieteikšanās",
       "chipDauer": "12 mēnešu komisija par katru klientu",
@@ -2244,7 +2244,7 @@
       },
       "dauer": {
         "titel": "Divpadsmit mēneši",
-        "text": "Komisija tiek maksāta divpadsmit mēnešus no uzņēmuma pirmā apmaksātā abonementa rēķina; jūsu klientu bezmaksas mēnesis netiek ieskaitīts. Ja uzņēmums pārtrauc darbību, tā beidzas ar pēdējo maksājumu. Rezervācijas daļa un superkomisija tiek maksātas bez šī ierobežojuma."
+        "text": "Komisija tiek maksāta divpadsmit mēnešus no uzņēmuma pirmā apmaksātā abonementa rēķina; jūsu klientu bezmaksas mēnesis netiek ieskaitīts. Ja uzņēmums pārtrauc darbību, tā beidzas ar pēdējo maksājumu. Superkomisija un rezervācijas daļa tiek maksātas bez šī ierobežojuma, taču tām nepieciešams Elite partnera rangs."
       },
       "auszahlung": {
         "titel": "Izmaksa",
@@ -2288,7 +2288,7 @@
       },
       "wieviel": {
         "frage": "Cik lielu komisiju es varu nopelnīt?",
-        "antwort": "Tas ir atkarīgs no jūsu klientu abonementu ieņēmumiem un jūsu ranga. Iepriekš redzamā tabula parāda likmi par katru rangu; divpadsmit mēnešus par katru klientu. Papildus tam nāk 0,5% no katras rezervācijas, ko jūsu klienti saņem caur myBestDays, vienreizējs paaugstināšanas bonuss par katru sasniegto rangu, ar komandu starpības komisija — un no Elite partnera 2,5% superkomisija par visu struktūru bez termiņa ierobežojuma."
+        "antwort": "Tas ir atkarīgs no jūsu klientu abonementu ieņēmumiem un jūsu ranga. Iepriekš redzamā tabula parāda likmi par katru rangu; divpadsmit mēnešus par katru klientu. Papildus tam nāk vienreizējs paaugstināšanas bonuss par katru sasniegto rangu un ar komandu starpības komisija. No Elite partnera nāk klāt 2,5 % superkomisija par visu jūsu struktūru un 0,5% no katras rezervācijas, ko jūsu klienti saņem caur myBestDays — abas bez termiņa ierobežojuma."
       },
       "team": {
         "frage": "Kā darbojas komandas komisija?",
@@ -2341,7 +2341,7 @@
       "fussnoteTeam": "Komandas komisija ir starpība starp jūsu likmi un komandas partnera likmi par viņa klientu neto abonēšanas ieņēmumiem, abas maksājuma brīdī — tieši viens līmenis, bez dalības maksas, bez naudas par piesaisti. Kopā nekad vairāk par 30 %.",
       "fussnoteCoMarketing": "Pēc vienošanās ar partneru komandu; atkarīgs no partnera profila un pašreizējām akcijām.",
       "fussnoteRang": "Pakāpe veidojas no jūsu struktūras: pašu maksājošie klienti plus jūsu komandas partneru klienti, katrs tiek skaitīts vienu reizi. Sasniedzot jaunu pakāpi no Iesācēja, tiek piešķirts vienreizējs paaugstināšanas bonuss.",
-      "teamDifferenz": "{satz} % mīnus komandas partnera likme",
+      "teamUeber": "virs partnera {rang}",
       "teamNicht": "vēl nav komandas",
       "bonus": "Paaugstināšanas bonuss (vienreizējs)",
       "superProvision": "Superkomisija par visu struktūru",

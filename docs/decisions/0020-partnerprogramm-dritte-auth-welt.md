@@ -37,7 +37,7 @@ SEINEM Rang (`affiliate_tiers.override_rate`: 1 / 2 / 3,5 / 5 %), Migration
 - **Kein Teilnahmebeitrag, kein Geld fürs Anwerben.** Der Override entsteht
   ausschließlich aus bezahlten Abo-Rechnungen echter Kunden (`invoice.paid`,
   `provision.override_buchen`), nie aus der Aufnahme eines Partners.
-- **Genau eine Ebene.** Ein Team-Partner baut kein eigenes Team; ein Partner
+- **Genau eine Ebene.** *(Aufgehoben am 03.09.2026 — siehe Ergänzung am Ende.)* Ein Team-Partner baut kein eigenes Team; ein Partner
   mit Team wird kein Mitglied. DB-Trigger `affiliate_sponsor_eine_ebene` plus
   Fachprüfung in `attribution.sponsor_zuordnen`/`bo_sponsor_setzen`.
 - **Der Rang entsteht nur aus eigenen Kunden** (`stufen.py` unverändert,
@@ -222,3 +222,32 @@ Ebene, Vergütung nur aus bezahltem Umsatz) gelten unverändert. Struktur-Zählu
 Aufstiegsbonus und lebenslange Struktur-Provision sind das Muster eines
 mehrstufigen Vertriebs; die anwaltliche Prüfung der Partner-AGB (ENTWURF) ist
 damit Voraussetzung für den Launch, nicht mehr nur Empfehlung.
+
+## Ergänzung 03.09.2026 — Strukturvertrieb statt einer Ebene (0533)
+
+Entscheidung des Betreibers: das Partnerprogramm ist **Strukturvertrieb**
+(„MLM"). Die oben festgehaltene Regel „genau eine Ebene" ist aufgehoben.
+
+- **Team-Provision über alle Ebenen, als Roll-up.** Jeder Sponsor in der
+  Kette über dem werbenden Partner erhält die Differenz zwischen seinem Satz
+  und dem **höchsten auf diesen Umsatz bereits vergüteten Satz** — nicht zum
+  Satz des direkten Kindes. Kette 15 → 30 → 20 → 30 zahlt 15/0/0; die Summe
+  ist immer der höchste Satz der Kette, der Deckel von 30 % hält ohne eigene
+  Prüfung. Differenz zum direkten Kind hätte hier 55 % ausgezahlt.
+- **Rang zählt die ganze Struktur**: eigene zahlende Kunden plus die aller
+  Partner darunter, über alle Ebenen, 1:1 (`stufen.struktur_kunden_je_partner`,
+  jetzt rekursiv).
+- **Superprovision (2,5 %) und Buchungsanteil (0,5 %) sind je Umsatz EIN
+  Topf**, den sich alle Elite-Partner der Kette (Werber eingeschlossen) zu
+  gleichen Teilen teilen; Rest-Cents an den untersten. Der Buchungsanteil ist
+  seit demselben Tag Elite-only (vorher jeder Rang).
+- **DB (0533):** Ebenen-Trigger ersetzt durch Zyklen-Trigger (Tiefe ≤ 25 =
+  `provision.UPLINE_MAX`); Override-Index auf (parent_id, affiliate_id).
+- **Rechtlicher Kern bleibt** in AGB und Texten: kein Teilnahmebeitrag, keine
+  Vergütung fürs Anwerben, kein Warenkauf als Voraussetzung, Vergütung nur aus
+  bezahltem Abo-Umsatz. Die Marketing-Aussage „Kein Netzwerk, keine Pyramide"
+  ist gestrichen — sie wäre jetzt falsch.
+- **Dashboard:** die Team-Auswertung zeigt weiterhin die direkten Mitglieder,
+  aber je Mitglied Umsatz, Overrides und Kunden seiner ganzen Struktur
+  (`team_service._struktur_ids`).
+

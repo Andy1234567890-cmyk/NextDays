@@ -1,6 +1,6 @@
-"""Team-Provision (0520, Differenzmodell 0525): Override = Satz des Sponsors minus
-Satz des Team-Partners, folgt der Ertragszeile, kennt nur eine Ebene; Team-Kunden
-zählen für den Rang des Sponsors (Struktur)."""
+"""Team-Provision (0520, Differenzmodell 0525, Strukturvertrieb 0533): Override =
+Roll-up-Differenz über die ganze Sponsor-Kette, folgt der Ertragszeile; die
+zahlenden Kunden der ganzen Struktur zählen für den Rang."""
 
 from __future__ import annotations
 
@@ -40,6 +40,16 @@ TIERS = [
         "min_customers": 5,
         "max_customers": 9,
         "rate": "0.20",
+        "lifetime_rate": "0",
+        "team_allowed": True,
+    },
+    {
+        "id": "experte",
+        "name": "Experte",
+        "sort": 3,
+        "min_customers": 10,
+        "max_customers": 19,
+        "rate": "0.25",
         "lifetime_rate": "0",
         "team_allowed": True,
     },
@@ -193,8 +203,163 @@ def test_override_ist_idempotent_je_ertragszeile() -> None:
     prov.verbuche_rechnung(db, _invoice(), event_id="evt_1", lines_loader=None)
     earn = _zeilen(db, "earn")[0]
     partner = db.zeilen("affiliates")[1]
-    assert prov.override_buchen(db, earn, partner=partner) is None
+    assert prov.override_buchen(db, earn, partner=partner) == []
     assert len(_zeilen(db, "override")) == 1
+
+
+ELITE2 = "a0000000-0000-4000-8000-00000000000c"
+OBEN = "a0000000-0000-4000-8000-00000000000d"
+
+
+def _db_kette(*raenge: str) -> FakeDb:
+    """MEMBER (Einsteiger, wirbt den Kunden) unter einer Kette von Sponsoren;
+    `raenge` von unten nach oben. IDs: SPONSOR, ELITE2, OBEN."""
+    db = _db()
+    ids = [SPONSOR, ELITE2, OBEN][: len(raenge)]
+    db.zeilen("affiliates")[0]["current_tier_id"] = raenge[0]
+    for i, (aid, rang) in enumerate(zip(ids[1:], raenge[1:], strict=True)):
+        db.zeilen("affiliates").append(
+            {
+                "id": aid,
+                "email": f"{i}@oben.example",
+                "full_name": f"Oben {i}",
+                "language": "de",
+                "status": "approved",
+                "current_tier_id": rang,
+                "sponsor_affiliate_id": None,
+                "sponsor_flags": [],
+            }
+        )
+        # der Knoten darunter haengt an diesem
+        unten = next(a for a in db.zeilen("affiliates") if a["id"] == ids[i])
+        unten["sponsor_affiliate_id"] = aid
+    return db
+
+
+def test_override_laeuft_die_kette_hoch() -> None:
+    """Strukturvertrieb: Einsteiger 15 → Aufsteiger 20 → Elite 30 auf 100 €:
+    der Aufsteiger bekommt 5 (20−15), der Elite 10 (30−20). Summe 15 = 30−15."""
+    db = _db_kette("aufsteiger", "elite")
+    assert prov.verbuche_rechnung(db, _invoice(), event_id="evt_1", lines_loader=None) == "gebucht"
+    ov = {z["affiliate_id"]: Decimal(z["amount"]) for z in _zeilen(db, "override")}
+    assert ov == {SPONSOR: Decimal("5.00"), ELITE2: Decimal("10.00")}
+    earn = _zeilen(db, "earn")[0]
+    assert all(z["parent_id"] == earn["id"] for z in _zeilen(db, "override"))
+    assert all(z["reason"] == f"team:{MEMBER}" for z in _zeilen(db, "override"))
+
+
+def test_override_rollup_zum_hoechsten_verguetetem_satz() -> None:
+    """Nicht aufsteigende Kette: Einsteiger 15 → Elite 30 → Aufsteiger 20 →
+    Elite 30. Der erste Elite bekommt 15, der Aufsteiger NICHTS (20 < 30), der
+    zweite Elite NICHTS (30 = 30). Differenz zum direkten Kind statt zum
+    Hoechsten haette 15 + 0 + 10 = 25 zusaetzlich ausgezahlt — Deckel gerissen."""
+    db = _db_kette("elite", "aufsteiger", "elite")
+    prov.verbuche_rechnung(db, _invoice(), event_id="evt_1", lines_loader=None)
+    ov = {z["affiliate_id"]: Decimal(z["amount"]) for z in _zeilen(db, "override")}
+    assert ov == {SPONSOR: Decimal("15.00")}
+    gesamt = Decimal(_zeilen(db, "earn")[0]["amount"]) + sum(ov.values())
+    assert gesamt == Decimal("30.00")  # 100 € × hoechster Satz der Kette
+
+
+def test_override_experte_ueber_einsteiger_und_aufsteiger() -> None:
+    """Der Fall aus der Vergleichstabelle: ein Experte (25) verdient ueber einem
+    Einsteiger 10, ueber einem Aufsteiger 5 — und steht der Aufsteiger zwischen
+    beiden, bekommt der Aufsteiger 5 (20−15) und der Experte 5 (25−20)."""
+    # Experte direkt ueber dem werbenden Einsteiger
+    db = _db_kette("experte")
+    prov.verbuche_rechnung(db, _invoice(), event_id="evt_1", lines_loader=None)
+    assert _override_je_partner(db) == {SPONSOR: Decimal("10.00")}
+
+    # Experte direkt ueber einem werbenden Aufsteiger
+    db = _db_kette("experte")
+    db.zeilen("affiliates")[1]["current_tier_id"] = "aufsteiger"  # MEMBER wirbt
+    prov.verbuche_rechnung(db, _invoice(), event_id="evt_1", lines_loader=None)
+    assert Decimal(_zeilen(db, "earn")[0]["amount"]) == Decimal("20.00")
+    assert _override_je_partner(db) == {SPONSOR: Decimal("5.00")}
+
+    # Einsteiger wirbt, darueber Aufsteiger, darueber Experte
+    db = _db_kette("aufsteiger", "experte")
+    prov.verbuche_rechnung(db, _invoice(), event_id="evt_1", lines_loader=None)
+    assert _override_je_partner(db) == {SPONSOR: Decimal("5.00"), ELITE2: Decimal("5.00")}
+
+
+def _override_je_partner(db: FakeDb) -> dict[str, Decimal]:
+    return {z["affiliate_id"]: Decimal(z["amount"]) for z in _zeilen(db, "override")}
+
+
+def test_override_held_vererbt_sich_nach_oben() -> None:
+    """Betrugs-Flag an der untersten Zuordnung haelt JEDE Stufe darueber an."""
+    db = _db_kette("aufsteiger", "elite")
+    next(a for a in db.zeilen("affiliates") if a["id"] == MEMBER)["sponsor_flags"] = ["same_iban"]
+    prov.verbuche_rechnung(db, _invoice(), event_id="evt_1", lines_loader=None)
+    assert {z["status"] for z in _zeilen(db, "override")} == {"held"}
+
+
+def test_upline_zyklus_bricht_laut_ab() -> None:
+    """A → B → A darf die DB nicht enthalten (Trigger 0533) — der Code darf sich
+    darauf trotzdem nicht verlassen: kein Endlos-Lauf, jeder Knoten einmal."""
+    db = _db()
+    db.zeilen("affiliates")[0]["sponsor_affiliate_id"] = MEMBER  # Sponsor haengt am Member
+    kette = prov._upline(db, db.zeilen("affiliates")[1])  # noqa: SLF001
+    assert [k["id"] for k in kette] == [SPONSOR]
+
+
+def test_superprovision_teilen_sich_alle_elite_der_kette() -> None:
+    """Einsteiger → Elite → Elite: EIN Topf 2,50 (100 € × 2,5 %), je 1,25."""
+    db = _db_kette("elite", "elite")
+    prov.verbuche_rechnung(db, _invoice(), event_id="evt_1", lines_loader=None)
+    lt = {z["affiliate_id"]: Decimal(z["amount"]) for z in _zeilen(db, "lifetime")}
+    assert lt == {SPONSOR: Decimal("1.25"), ELITE2: Decimal("1.25")}
+
+
+def test_superprovision_einziger_elite_bekommt_alles() -> None:
+    db = _db_kette("elite", "aufsteiger")
+    prov.verbuche_rechnung(db, _invoice(), event_id="evt_1", lines_loader=None)
+    lt = _zeilen(db, "lifetime")
+    assert [(z["affiliate_id"], Decimal(z["amount"])) for z in lt] == [(SPONSOR, Decimal("2.50"))]
+
+
+def test_superprovision_werber_selbst_elite_teilt_mit_sponsor() -> None:
+    """Ist der Werber selbst Elite, teilt er mit dem Elite darueber — eigener
+    Anteil als `lifetime:own`, der des Sponsors als `team:<werber>`."""
+    db = _db_kette("elite")
+    db.zeilen("affiliates")[1]["current_tier_id"] = "elite"
+    prov.verbuche_rechnung(db, _invoice(), event_id="evt_1", lines_loader=None)
+    lt = {(z["affiliate_id"], z["reason"]): Decimal(z["amount"]) for z in _zeilen(db, "lifetime")}
+    assert lt == {
+        (MEMBER, "lifetime:own"): Decimal("1.25"),
+        (SPONSOR, f"team:{MEMBER}"): Decimal("1.25"),
+    }
+
+
+def test_superprovision_rest_cent_geht_nach_unten() -> None:
+    """Drei Elite auf 2,50: 0,84 / 0,83 / 0,83 — die Summe ist exakt der Topf,
+    der Rest-Cent liegt beim untersten (werber-naechsten) Elite."""
+    db = _db_kette("elite", "elite", "elite")
+    prov.verbuche_rechnung(db, _invoice(), event_id="evt_1", lines_loader=None)
+    lt = {z["affiliate_id"]: Decimal(z["amount"]) for z in _zeilen(db, "lifetime")}
+    assert lt == {SPONSOR: Decimal("0.84"), ELITE2: Decimal("0.83"), OBEN: Decimal("0.83")}
+    assert sum(lt.values()) == Decimal("2.50")
+
+
+def test_anteile_summe_ist_immer_der_topf() -> None:
+    for n in range(1, 8):
+        teile = prov._anteile(Decimal("2.50"), n)  # noqa: SLF001
+        assert len(teile) == n and sum(teile) == Decimal("2.50")
+        assert max(teile) - min(teile) <= Decimal("0.01")
+    assert prov._anteile(Decimal("0.00"), 3) == []  # noqa: SLF001
+
+
+def test_struktur_zaehlt_alle_ebenen_fuer_den_rang() -> None:
+    """Rang: eigene zahlende Kunden plus die der GANZEN Struktur darunter."""
+    db = _db_kette("aufsteiger", "elite")
+    ref = db.zeilen("affiliate_referrals")[0]
+    ref["first_paid_at"] = "2026-08-30T12:00:00+00:00"
+    db.zeilen("affiliate_referrals").append({**ref, "id": "ref-2", "tenant_id": "t-2"})
+    db.zeilen("tenant_subscription").append({"tenant_id": "t-2", "status": "active"})
+    struktur = stufen.struktur_kunden_je_partner(db)
+    # MEMBER hat 2 Kunden; SPONSOR (eine Ebene drueber) und ELITE2 (zwei) zaehlen sie mit.
+    assert struktur[MEMBER] == 2 and struktur[SPONSOR] == 2 and struktur[ELITE2] == 2
 
 
 def test_erstattung_nimmt_override_anteilig_zurueck() -> None:
@@ -263,18 +428,18 @@ def test_sponsor_zuordnen_gleiche_domain_flaggt() -> None:
     assert db.zeilen("affiliates")[1]["sponsor_flags"] == ["same_email_domain"]
 
 
-def test_sponsor_zuordnen_keine_zweite_ebene() -> None:
+def test_sponsor_zuordnen_auch_unter_einem_team_mitglied() -> None:
+    """Strukturvertrieb (0533): ein Sponsor, der selbst an jemandem haengt, darf
+    Team fuehren — die Kette waechst in die Tiefe. Bis dahin lehnte genau das
+    die zweite Ebene ab."""
     db = _db()
-    # Der Sponsor hängt selbst an jemandem → sein Code trägt kein Team.
     db.zeilen("affiliates")[0]["sponsor_affiliate_id"] = "a0000000-0000-4000-8000-00000000000f"
     db.zeilen("affiliates")[1]["sponsor_affiliate_id"] = None
-    assert (
-        attribution.sponsor_zuordnen(
-            db, affiliate_id=MEMBER, bewerber_email="m@member.example", sponsor_code="SVEN-1"
-        )
-        is None
+    sponsor = attribution.sponsor_zuordnen(
+        db, affiliate_id=MEMBER, bewerber_email="m@member.example", sponsor_code="SVEN-1"
     )
-    assert db.zeilen("affiliates")[1]["sponsor_affiliate_id"] is None
+    assert sponsor is not None and sponsor["id"] == SPONSOR
+    assert db.zeilen("affiliates")[1]["sponsor_affiliate_id"] == SPONSOR
 
 
 def test_sponsor_zuordnen_nur_freigegebener_sponsor() -> None:

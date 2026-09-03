@@ -60,7 +60,7 @@
       "super": "Super commission",
       "superHinweis": "{satz} on the subscription revenue of your structure, without time limit",
       "turbo": "myBestDays booking share",
-      "turboHinweis": "0.5% per booking via myBestDays for your customers and team customers",
+      "turboHinweis": "From Elite-Partner onwards: 0.5% per booking via myBestDays for your customers and team customers",
       "bonus": "Promotion bonuses",
       "bonusHinweis": "once per achieved rank"
     },
@@ -303,10 +303,10 @@
     },
     "regeln": {
       "titel": "The rules",
-      "rang": "Team commission = your rate minus the team partner's rate, at the time of payment. Same rank = 0.",
-      "ebene": "Exactly one level: Your team partners do not build their own team.",
+      "rang": "Team commission = your rate minus the highest rate already paid on the same revenue below you, at the time of payment. Same or higher rank below you = 0.",
+      "ebene": "Across all levels: Your team partners build their own teams, every level counts towards rank and team commission.",
       "keinGeld": "No money for recruitment — only from paid subscription revenue.",
-      "dauer": "12 months per team customer, 30-day refund window. From Elite onwards, an additional 2.5% super commission without time limit."
+      "dauer": "12 months per team customer, 30-day refund window. From Elite onwards, an additional 2.5% super commission without time limit — several Elite in one chain share it in equal parts."
     },
     "kachel": {
       "mitglieder": "Team partners (active / total)",
@@ -498,11 +498,16 @@
     "plz": "Postal code",
     "ort": "City",
     "nationalitaet": "Nationality (country code)",
+    "idNummer": "Personal ID number",
+    "idNummerHinweis": "Your national personal ID, e.g. CPR (DK), personnummer (SE/FI), NIF (ES), PESEL (PL), codice fiscale (IT).",
+    "bundesland": "State / region",
     "telefon": "Phone",
     "webseite": "Website or profile",
     "webseiteHinweis": "The address where you advertise — required for verification.",
     "firmenname": "Company name",
     "steuernummer": "Tax number",
+    "registernummer": "Company registration number",
+    "ustId": "VAT ID",
     "firmenStrasse": "Company address",
     "firmaHinweis": "As an authorized representative, your above-mentioned information will be used.",
     "speichern": "Save information",

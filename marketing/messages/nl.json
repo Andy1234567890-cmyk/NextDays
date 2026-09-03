@@ -2202,7 +2202,7 @@
       "eyebrow": "Partnerprogramma",
       "headlinePre": "Beveel myNextDays aan —",
       "headlineHighlight": "en verdien mee",
-      "sub": "Voor influencers, consultants, bureaus en verhuurders met een netwerk: Elk bedrijf dat zich via uw link registreert en een abonnement betaalt, levert u twaalf maanden lang tot {max} % van de abonnementsomzet op — plus 0,5 % van elke boeking via myBestDays, promotiebonussen en vanaf Elite een superprovisie zonder looptijdbeperking.",
+      "sub": "Voor influencers, consultants, bureaus en verhuurders met een netwerk: Elk bedrijf dat zich via uw link registreert en een abonnement betaalt, levert u twaalf maanden lang tot {max} % van de abonnementsomzet op — plus promotiebonussen en vanaf Elite een superprovisie zonder looptijdbeperking en 0,5 % van elke boeking via myBestDays.",
       "cta": "Nu aanmelden",
       "ctaLogin": "Partner login",
       "chipDauer": "12 maanden commissie per klant",
@@ -2244,7 +2244,7 @@
       },
       "dauer": {
         "titel": "Twaalf maanden",
-        "text": "De commissie loopt twaalf maanden vanaf de eerste betaalde abonnementsfactuur van het bedrijf; de gratis maand van uw klanten telt niet mee. Als het bedrijf opzegt, eindigt de commissie met de laatste betaling. Het boekingsaandeel en de supercommissie lopen zonder deze limiet."
+        "text": "De commissie loopt twaalf maanden vanaf de eerste betaalde abonnementsfactuur van het bedrijf; de gratis maand van uw klanten telt niet mee. Als het bedrijf opzegt, eindigt de commissie met de laatste betaling. De supercommissie en het boekingsaandeel lopen zonder deze limiet, maar vereisen de rang Elite Partner."
       },
       "auszahlung": {
         "titel": "Uitbetaling",
@@ -2288,7 +2288,7 @@
       },
       "wieviel": {
         "frage": "Hoeveel commissie kan ik verdienen?",
-        "antwort": "Dit is afhankelijk van de abonnementsomzet van uw klanten en uw rang. De bovenstaande tabel toont het tarief per rang; twaalf maanden lang per klant. Daarnaast is er 0,5% van elke boeking die uw klanten via myBestDays ontvangen, een eenmalige promotiebonus voor elke bereikte rang, het verschil in commissie met een team - en vanaf Elite Partner 2,5% supercommissie op de gehele structuur zonder tijdslimiet."
+        "antwort": "Dit is afhankelijk van de abonnementsomzet van uw klanten en uw rang. De bovenstaande tabel toont het tarief per rang; twaalf maanden lang per klant. Daarnaast komen er een eenmalige promotiebonus voor elke bereikte rang en, met een team, het verschil in commissie bij. Vanaf Elite Partner komen er een supercommissie van 2,5 % op uw gehele structuur en 0,5% van elke boeking die uw klanten via myBestDays ontvangen bij — beide zonder tijdslimiet."
       },
       "team": {
         "frage": "Hoe werkt de teamprovisie?",
@@ -2323,8 +2323,8 @@
       "teamProvision": "Teamprovisie op klanten van uw teampartners",
       "dauer": "Looptijd per klant",
       "dauerWert": "12 maanden",
-      "kunden": "{van}–{tot} betalende klanten",
-      "kundenOffen": "vanaf {van} betalende klanten",
+      "kunden": "{von}–{bis} betalende klanten",
+      "kundenOffen": "vanaf {von} betalende klanten",
       "vorteile": "Diensten",
       "ja": "inbegrepen",
       "nein": "niet inbegrepen",
@@ -2341,7 +2341,7 @@
       "fussnoteTeam": "Teamprovisie is het verschil tussen uw percentage en het percentage van de teampartner op de netto abonnementsomzet van zijn klanten, beide op het moment van betaling — precies één niveau diep, geen deelnamekosten, geen geld voor werving. Samen nooit meer dan 30 %.",
       "fussnoteCoMarketing": "Na overleg met het partnerteam; afhankelijk van het profiel van de partner en de lopende acties.",
       "fussnoteRang": "De rang vloeit voort uit uw structuur: eigen betalende klanten plus de klanten van uw teampartners, elke klant telt één keer. Bij het bereiken van een nieuwe rang vanaf 'Opstapper' ontvangt u een eenmalige promotiebonus.",
-      "teamDifferenz": "{satz} % minus het percentage van de teampartner",
+      "teamUeber": "boven een {rang}",
       "teamNicht": "nog geen team",
       "bonus": "Promotiebonus (eenmalig)",
       "superProvision": "Superprovisie over de hele structuur",

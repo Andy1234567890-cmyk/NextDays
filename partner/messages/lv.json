@@ -60,7 +60,7 @@
       "super": "Superkomisija",
       "superHinweis": "{satz} no jūsu struktūras abonēšanas ieņēmumiem, bez termiņa ierobežojuma",
       "turbo": "myBestDays rezervācijas daļa",
-      "turboHinweis": "0,5 % par katru rezervāciju, izmantojot myBestDays, jūsu klientiem un komandas klientiem",
+      "turboHinweis": "No Elite-Partner ranga: 0,5 % par katru rezervāciju, izmantojot myBestDays, jūsu klientiem un komandas klientiem",
       "bonus": "Paaugstināšanas bonusi",
       "bonusHinweis": "vienreizēji par katru sasniegto rangu"
     },
@@ -303,10 +303,10 @@
     },
     "regeln": {
       "titel": "Noteikumi",
-      "rang": "Komandas komisija = jūsu likme mīnus komandas partnera likme, maksājuma brīdī. Vienāds rangs = 0.",
-      "ebene": "Tikai viens līmenis: jūsu komandas partneri neveido savu komandu.",
+      "rang": "Komandas komisija = jūsu likme mīnus augstākā likme, kas par to pašu apgrozījumu zem jums jau ir izmaksāta — maksājuma brīdī. Vienāds vai augstāks rangs zem jums = 0.",
+      "ebene": "Pāri visiem līmeņiem: jūsu komandas partneri veido savas komandas, katrs līmenis tiek ieskaitīts rangā un komandas komisijā.",
       "keinGeld": "Nav naudas par piesaisti — tikai no apmaksātiem abonēšanas ieņēmumiem.",
-      "dauer": "12 mēneši par katru komandas klientu, 30 dienu atmaksas periods. No Elite ranga papildus 2,5 % superkomisija bez termiņa ierobežojuma."
+      "dauer": "12 mēneši par katru komandas klientu, 30 dienu atmaksas periods. No Elite ranga papildus 2,5 % superkomisija bez termiņa ierobežojuma — vairāki Elite vienā ķēdē to dala vienādās daļās."
     },
     "kachel": {
       "mitglieder": "Komandas partneri (aktīvi / kopā)",
@@ -498,11 +498,16 @@
     "plz": "Pasta indekss",
     "ort": "Pilsēta",
     "nationalitaet": "Valstspiederība (valsts kods)",
+    "idNummer": "Personas kods",
+    "idNummerHinweis": "Jūsu valsts personas kods, piem., CPR (DK), personnummer (SE/FI), NIF (ES), PESEL (PL), codice fiscale (IT).",
+    "bundesland": "Novads / reģions",
     "telefon": "Tālrunis",
     "webseite": "Tīmekļa vietne vai profils",
     "webseiteHinweis": "Adrese, kurā reklamējat — nepieciešama pārbaudei.",
     "firmenname": "Uzņēmuma nosaukums",
     "steuernummer": "Nodokļu maksātāja numurs",
+    "registernummer": "Uzņēmuma reģistrācijas numurs",
+    "ustId": "PVN numurs",
     "firmenStrasse": "Uzņēmuma adrese",
     "firmaHinweis": "Kā pilnvarotai personai tiks izmantoti jūsu iepriekš minētie dati.",
     "speichern": "Saglabāt datus",

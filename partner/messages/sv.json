@@ -60,7 +60,7 @@
       "super": "Superprovision",
       "superHinweis": "{satz} på din strukturs prenumerationsintäkter, utan tidsbegränsning",
       "turbo": "myBestDays bokningsandel",
-      "turboHinweis": "0,5 % per bokning via myBestDays från dina kunder och teamkunder",
+      "turboHinweis": "Från Elite-Partner: 0,5 % per bokning via myBestDays från dina kunder och teamkunder",
       "bonus": "Uppflyttningsbonusar",
       "bonusHinweis": "engångsbelopp per uppnådd rang"
     },
@@ -303,10 +303,10 @@
     },
     "regeln": {
       "titel": "Reglerna",
-      "rang": "Teamprovision = Din procentsats minus teampartnerns procentsats, vid betalningstillfället. Samma rang = 0.",
-      "ebene": "Exakt en nivå: Dina teampartners bygger inte ett eget team.",
+      "rang": "Teamprovision = Din procentsats minus den högsta procentsats som redan har betalats ut för samma omsättning under dig — vid betalningstillfället. Samma eller högre rang under dig = 0.",
+      "ebene": "Över alla nivåer: Dina teampartners bygger egna team, varje nivå räknas för rang och teamprovision.",
       "keinGeld": "Inga pengar för rekrytering – endast från betalda abonnemangsintäkter.",
-      "dauer": "12 månader per teamkund, 30 dagars återbetalningsfönster. Från Elite tillkommer 2,5 % superprovision utan tidsbegränsning."
+      "dauer": "12 månader per teamkund, 30 dagars återbetalningsfönster. Från Elite tillkommer 2,5 % superprovision utan tidsbegränsning — flera Elite i samma kedja delar den lika."
     },
     "kachel": {
       "mitglieder": "Teampartner (aktiva / totalt)",
@@ -498,11 +498,16 @@
     "plz": "Postnummer",
     "ort": "Ort",
     "nationalitaet": "Nationalitet (landskod)",
+    "idNummer": "Personnummer",
+    "idNummerHinweis": "Ditt nationella personnummer, t.ex. CPR (DK), personnummer (SE/FI), NIF (ES), PESEL (PL), codice fiscale (IT).",
+    "bundesland": "Region",
     "telefon": "Telefon",
     "webseite": "Webbplats eller profil",
     "webseiteHinweis": "Adressen där du annonserar – krävs för granskning.",
     "firmenname": "Företagsnamn",
     "steuernummer": "Organisationsnummer",
+    "registernummer": "Organisationsnummer",
+    "ustId": "Momsregistreringsnummer",
     "firmenStrasse": "Företagsadress",
     "firmaHinweis": "Dina ovan nämnda uppgifter används som behörig person.",
     "speichern": "Spara uppgifter",

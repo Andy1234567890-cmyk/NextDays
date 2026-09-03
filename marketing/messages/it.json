@@ -2202,7 +2202,7 @@
       "eyebrow": "Programma partner",
       "headlinePre": "Consigli myNextDays —",
       "headlineHighlight": "e guadagni",
-      "sub": "Per influencer, consulenti, agenzie e proprietari con rete: Ogni azienda che si registra tramite il suo link e paga un abbonamento le porta per dodici mesi fino al {max} % del fatturato dell'abbonamento — più lo 0,5 % di ogni prenotazione tramite myBestDays, bonus di avanzamento e, a partire da Elite, una super commissione senza limiti di durata.",
+      "sub": "Per influencer, consulenti, agenzie e proprietari con rete: Ogni azienda che si registra tramite il suo link e paga un abbonamento le porta per dodici mesi fino al {max} % del fatturato dell'abbonamento — più bonus di avanzamento e, a partire da Elite, una super commissione senza limiti di durata e lo 0,5 % di ogni prenotazione tramite myBestDays.",
       "cta": "Candidati ora",
       "ctaLogin": "Accesso partner",
       "chipDauer": "12 mesi di commissioni per cliente",
@@ -2244,7 +2244,7 @@
       },
       "dauer": {
         "titel": "Dodici mesi",
-        "text": "La commissione decorre per dodici mesi dalla prima fattura di abbonamento pagata dall'azienda; il mese gratuito dei suoi clienti non viene conteggiato. Se l'azienda recede, la commissione termina con l'ultimo pagamento. La quota di prenotazione e la super commissione non sono soggette a questo limite."
+        "text": "La commissione decorre per dodici mesi dalla prima fattura di abbonamento pagata dall'azienda; il mese gratuito dei suoi clienti non viene conteggiato. Se l'azienda recede, la commissione termina con l'ultimo pagamento. La super commissione e la quota di prenotazione non sono soggette a questo limite, ma richiedono il rango di partner Elite."
       },
       "auszahlung": {
         "titel": "Pagamento",
@@ -2288,7 +2288,7 @@
       },
       "wieviel": {
         "frage": "Quanta commissione posso guadagnare?",
-        "antwort": "Dipende dal fatturato degli abbonamenti dei suoi clienti e dal suo rango. La tabella qui sopra mostra la tariffa per rango; per dodici mesi per cliente. A ciò si aggiunge lo 0,5% di ogni prenotazione che i suoi clienti ricevono tramite myBestDays, un bonus di avanzamento una tantum per ogni rango raggiunto, la commissione differenziale con un team – e a partire dal partner Elite, il 2,5% di super commissione sull'intera struttura senza limiti di tempo."
+        "antwort": "Dipende dal fatturato degli abbonamenti dei suoi clienti e dal suo rango. La tabella qui sopra mostra la tariffa per rango; per dodici mesi per cliente. A ciò si aggiungono un bonus di avanzamento una tantum per ogni rango raggiunto e, con un team, la commissione differenziale. A partire dal partner Elite si aggiungono una super commissione del 2,5 % sull'intera sua struttura e lo 0,5% di ogni prenotazione che i suoi clienti ricevono tramite myBestDays — entrambe senza limiti di durata."
       },
       "team": {
         "frage": "Come funziona la commissione del team?",
@@ -2341,7 +2341,7 @@
       "fussnoteTeam": "La commissione di team è la differenza tra la sua percentuale e quella del partner di team sul fatturato netto degli abbonamenti dei suoi clienti, entrambe al momento del pagamento — esattamente un livello, nessun costo di partecipazione, nessun denaro per il reclutamento. In totale mai più del 30 %.",
       "fussnoteCoMarketing": "Previo accordo con il team partner; dipende dal profilo del partner e dalle promozioni in corso.",
       "fussnoteRang": "Il rango deriva dalla sua struttura: i suoi clienti paganti più i clienti dei suoi partner di team, ognuno conta una volta. Al raggiungimento di un nuovo rango a partire da Scalatore, riceve un bonus di avanzamento una tantum.",
-      "teamDifferenz": "{satz} % meno la percentuale del partner di team",
+      "teamUeber": "sopra un {rang}",
       "teamNicht": "ancora nessun team",
       "bonus": "Bonus di avanzamento (una tantum)",
       "superProvision": "Super commissione sull'intera struttura",

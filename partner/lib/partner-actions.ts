@@ -98,10 +98,13 @@ export async function connectDatenSenden(daten: {
     dob: { day: number; month: number; year: number };
     address: { line1: string; line2?: string; postal_code: string; city: string; state?: string };
     nationality?: string;
+    id_number?: string;
     title?: string;
   };
   company_name?: string;
   company_tax_id?: string;
+  company_registration_number?: string;
+  company_vat_id?: string;
   company_address?: { line1: string; line2?: string; postal_code: string; city: string; state?: string };
   company_phone?: string;
 }): Promise<Ergebnis<ConnectStand>> {

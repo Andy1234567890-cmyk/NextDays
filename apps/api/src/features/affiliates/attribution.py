@@ -270,8 +270,10 @@ def _sponsor_pruefen(
         grund = "partner_sponsor_selbst"
     elif sponsor.get("status") != "approved":
         grund = "partner_sponsor_nicht_freigegeben"
-    elif sponsor.get("sponsor_affiliate_id"):
-        grund = "partner_sponsor_zweite_ebene_abgelehnt"
+    # Kein Ebenen-Limit mehr (Strukturvertrieb, 03.09.2026): ein Sponsor darf
+    # selbst Team-Mitglied sein. Ein Zyklus ist hier unmöglich — der Bewerber
+    # ist neu und hat noch niemanden unter sich; die DB sichert es trotzdem
+    # (Trigger `affiliates_sponsor_kein_zyklus`, 0533).
     elif not rang_darf_team_fuehren(db, sponsor.get("current_tier_id")):
         # Untervermittler erst ab Aufsteiger (affiliate_tiers.team_allowed, 0525).
         # Die Bewerbung bleibt gültig, nur ohne Team-Zuordnung.
@@ -303,9 +305,10 @@ def sponsor_zuordnen(
     bewerber_name: str = "",
 ) -> dict[str, Any] | None:
     """Bewerber an seinen Sponsor hängen — einmalig, aus dem sichtbar
-    bestätigten Code der Bewerbung. Bedingungen: Sponsor freigegeben, Sponsor
-    hat selbst keinen Sponsor (eine Ebene; der DB-Trigger sichert das
-    zusätzlich), Sponsor ≠ Bewerber. Unbekannter Code → keine Zuordnung, die
+    bestätigten Code der Bewerbung. Bedingungen: Sponsor freigegeben, Rang
+    darf ein Team führen, Sponsor ≠ Bewerber. Die Tiefe der Kette ist seit dem
+    03.09.2026 nicht begrenzt (Strukturvertrieb); Zyklen verhindert der
+    DB-Trigger. Unbekannter Code → keine Zuordnung, die
     Bewerbung bleibt gültig. Gibt die Sponsor-Zeile zurück oder None."""
     sponsor = _sponsor_pruefen(db, affiliate_id=affiliate_id, sponsor_code=sponsor_code)
     if sponsor is None:
@@ -320,7 +323,7 @@ def sponsor_zuordnen(
             }
         ).eq("id", affiliate_id).is_("sponsor_affiliate_id", "null").execute()
     except APIError as exc:
-        # Trigger „eine Ebene“ (check_violation) → keine Zuordnung, Bewerbung bleibt.
+        # Trigger (Zyklus/Tiefe, check_violation) → keine Zuordnung, Bewerbung bleibt.
         log.warning("partner_sponsor_zuordnung_abgelehnt", error=str(exc)[:200])
         return None
     log.info(

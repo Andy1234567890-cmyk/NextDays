@@ -60,7 +60,7 @@
       "super": "Superkomisjon",
       "superHinweis": "{satz} teie struktuuri tellimuste käibelt, ilma ajapiiranguta",
       "turbo": "myBestDays broneeringu osa",
-      "turboHinweis": "0,5 % iga myBestDays broneeringu kohta teie klientide ja meeskonnaklientide puhul",
+      "turboHinweis": "Alates tasemest Elite-Partner: 0,5 % iga myBestDays broneeringu kohta teie klientide ja meeskonnaklientide puhul",
       "bonus": "Edutamisboonused",
       "bonusHinweis": "ühekordselt iga saavutatud asetuse eest"
     },
@@ -303,10 +303,10 @@
     },
     "regeln": {
       "titel": "Reeglid",
-      "rang": "Meeskonna komisjonitasu = teie määr miinus meeskonnapartneri määr, makse tegemise ajal. Sama asetus = 0.",
-      "ebene": "Täpselt üks tase: teie meeskonnapartnerid ei loo oma meeskonda.",
+      "rang": "Meeskonna komisjonitasu = teie määr miinus kõrgeim määr, mis on sama käibe eest teie all juba välja makstud — makse tegemise ajal. Sama või kõrgem asetus teie all = 0.",
+      "ebene": "Üle kõigi tasemete: teie meeskonnapartnerid loovad oma meeskonnad, iga tase läheb arvesse asetuse ja meeskonna komisjonitasu puhul.",
       "keinGeld": "Raha ei saa värbamise eest – ainult tasutud tellimuste müügitulust.",
-      "dauer": "12 kuud iga meeskonnakliendi kohta, 30-päevane tagastusaken. Lisaks Elite tasemelt 2,5 % superkomisjonitasu ilma ajapiiranguta."
+      "dauer": "12 kuud iga meeskonnakliendi kohta, 30-päevane tagastusaken. Lisaks Elite tasemelt 2,5 % superkomisjonitasu ilma ajapiiranguta — mitu Elite'i ühes ahelas jagavad selle võrdselt."
     },
     "kachel": {
       "mitglieder": "Meeskonnapartnerid (aktiivsed / kokku)",
@@ -498,11 +498,16 @@
     "plz": "Postiindeks",
     "ort": "Linn",
     "nationalitaet": "Kodakondsus (riigi lühend)",
+    "idNummer": "Isikukood",
+    "idNummerHinweis": "Teie riiklik isikukood, nt CPR (DK), personnummer (SE/FI), NIF (ES), PESEL (PL), codice fiscale (IT).",
+    "bundesland": "Maakond / piirkond",
     "telefon": "Telefon",
     "webseite": "Veebisait või profiil",
     "webseiteHinweis": "Aadress, mille all te reklaamite – seda on vaja kontrollimiseks.",
     "firmenname": "Ettevõtte nimi",
     "steuernummer": "Maksu number",
+    "registernummer": "Äriregistri kood",
+    "ustId": "KMKR number",
     "firmenStrasse": "Ettevõtte aadress",
     "firmaHinweis": "Teie ülaltoodud andmeid kasutatakse esindusõigusliku isikuna.",
     "speichern": "Salvesta andmed",

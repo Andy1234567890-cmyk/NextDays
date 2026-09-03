@@ -2202,7 +2202,7 @@
       "eyebrow": "Program partnerski",
       "headlinePre": "Poleć myNextDays —",
       "headlineHighlight": "i zarabiaj",
-      "sub": "Dla influencerów, konsultantów, agencji i właścicieli obiektów z siecią: Każda firma, która zarejestruje się za pośrednictwem Twojego linku i opłaci subskrypcję, przyniesie Ci do {max} % obrotu z subskrypcji przez dwanaście miesięcy — plus 0,5 % każdej rezerwacji przez myBestDays, bonusy za awans, a od poziomu Elite superprowizję bez ograniczeń czasowych.",
+      "sub": "Dla influencerów, konsultantów, agencji i właścicieli obiektów z siecią: Każda firma, która zarejestruje się za pośrednictwem Twojego linku i opłaci subskrypcję, przyniesie Ci do {max} % obrotu z subskrypcji przez dwanaście miesięcy — plus bonusy za awans, a od poziomu Elite superprowizję bez ograniczeń czasowych i 0,5 % każdej rezerwacji przez myBestDays.",
       "cta": "Aplikuj teraz",
       "ctaLogin": "Logowanie partnera",
       "chipDauer": "12 miesięcy prowizji od klienta",
@@ -2244,7 +2244,7 @@
       },
       "dauer": {
         "titel": "Dwanaście miesięcy",
-        "text": "Prowizja naliczana jest przez dwanaście miesięcy od pierwszej opłaconej faktury abonamentowej firmy; bezpłatny miesiąc Twoich klientów nie jest wliczany. Jeśli firma zrezygnuje, prowizja kończy się wraz z jej ostatnią płatnością. Udział w rezerwacji i superprowizja są naliczane bez tego ograniczenia."
+        "text": "Prowizja naliczana jest przez dwanaście miesięcy od pierwszej opłaconej faktury abonamentowej firmy; bezpłatny miesiąc Twoich klientów nie jest wliczany. Jeśli firma zrezygnuje, prowizja kończy się wraz z jej ostatnią płatnością. Superprowizja i udział w rezerwacji są naliczane bez tego ograniczenia, wymagają jednak rangi partnera Elite."
       },
       "auszahlung": {
         "titel": "Wypłata",
@@ -2288,7 +2288,7 @@
       },
       "wieviel": {
         "frage": "Ile prowizji mogę zarobić?",
-        "antwort": "Zależy to od przychodów z subskrypcji klientów i Twojej rangi. Powyższa tabela przedstawia stawkę za każdą rangę; przez dwanaście miesięcy za każdego klienta. Do tego dochodzi 0,5% każdej rezerwacji, którą Twoi klienci otrzymają za pośrednictwem myBestDays, jednorazowy bonus za awans za każdą osiągniętą rangę, z zespołem prowizja różnicowa — a od partnera Elite 2,5% superprowizji od całej struktury bez ograniczeń czasowych."
+        "antwort": "Zależy to od przychodów z subskrypcji klientów i Twojej rangi. Powyższa tabela przedstawia stawkę za każdą rangę; przez dwanaście miesięcy za każdego klienta. Do tego dochodzą jednorazowy bonus za awans za każdą osiągniętą rangę oraz, z zespołem, prowizja różnicowa. Od partnera Elite dochodzą superprowizja 2,5 % od całej Twojej struktury i 0,5% każdej rezerwacji, którą Twoi klienci otrzymają za pośrednictwem myBestDays — obie bez ograniczeń czasowych."
       },
       "team": {
         "frage": "Jak działa prowizja zespołowa?",
@@ -2341,7 +2341,7 @@
       "fussnoteTeam": "Prowizja zespołowa to różnica między Twoją stawką a stawką partnera zespołowego od obrotu netto z subskrypcji jego klientów, obie w momencie płatności — dokładnie jeden poziom, bez opłaty za uczestnictwo, bez pieniędzy za pozyskiwanie. Łącznie nigdy więcej niż 30 %.",
       "fussnoteCoMarketing": "Po uzgodnieniu z zespołem partnerskim; zależy od profilu partnera i bieżących działań.",
       "fussnoteRang": "Ranga wynika z Twojej struktury: własnych płacących klientów plus klientów Twoich partnerów zespołowych, każdy liczony raz. Po osiągnięciu nowej rangi od poziomu początkującego przysługuje jednorazowy bonus za awans.",
-      "teamDifferenz": "{satz} % minus stawka partnera zespołowego",
+      "teamUeber": "nad partnerem {rang}",
       "teamNicht": "jeszcze brak zespołu",
       "bonus": "Bonus za awans (jednorazowo)",
       "superProvision": "Superprowizja od całej struktury",

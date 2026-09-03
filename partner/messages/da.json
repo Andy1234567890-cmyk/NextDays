@@ -60,7 +60,7 @@
       "super": "Superprovision",
       "superHinweis": "{satz} af din strukturs abonnementsomsætning, uden tidsbegrænsning",
       "turbo": "myBestDays bookingandel",
-      "turboHinweis": "0,5 % pr. booking via myBestDays for dine kunder og teamkunder",
+      "turboHinweis": "Fra Elite-Partner: 0,5 % pr. booking via myBestDays for dine kunder og teamkunder",
       "bonus": "Oprykningsbonusser",
       "bonusHinweis": "engangsbeløb pr. opnået rang"
     },
@@ -303,10 +303,10 @@
     },
     "regeln": {
       "titel": "Reglerne",
-      "rang": "Teamprovision = din sats minus teampartnerens sats på betalingstidspunktet. Samme rang = 0.",
-      "ebene": "Præcis ét niveau: Dine teampartnere opbygger ikke deres eget team.",
+      "rang": "Teamprovision = din sats minus den højeste sats, der allerede er udbetalt for samme omsætning under dig — på betalingstidspunktet. Samme eller højere rang nedenunder = 0.",
+      "ebene": "Over alle niveauer: Dine teampartnere opbygger deres egne teams, hvert niveau tæller med til rang og teamprovision.",
       "keinGeld": "Ingen penge for rekruttering – kun fra betalt abonnementsomsætning.",
-      "dauer": "12 måneder pr. teamkunde, 30 dages refusionsvindue. Fra Elite desuden 2,5 % superprovision uden tidsbegrænsning."
+      "dauer": "12 måneder pr. teamkunde, 30 dages refusionsvindue. Fra Elite desuden 2,5 % superprovision uden tidsbegrænsning — flere Elite i én kæde deler den ligeligt."
     },
     "kachel": {
       "mitglieder": "Teampartnere (aktive / totalt)",
@@ -498,11 +498,16 @@
     "plz": "Postnummer",
     "ort": "By",
     "nationalitaet": "Nationalitet (landekode)",
+    "idNummer": "CPR-nummer",
+    "idNummerHinweis": "Dit nationale personnummer, f.eks. CPR (DK), personnummer (SE/FI), NIF (ES), PESEL (PL), codice fiscale (IT).",
+    "bundesland": "Region",
     "telefon": "Telefon",
     "webseite": "Hjemmeside eller profil",
     "webseiteHinweis": "Adressen, hvor du annoncerer – kræves til kontrol.",
     "firmenname": "Firmanavn",
     "steuernummer": "CVR-nummer",
+    "registernummer": "CVR-/registreringsnummer",
+    "ustId": "Momsnummer",
     "firmenStrasse": "Firmaadresse",
     "firmaHinweis": "Som tegningsberettiget person anvendes dine ovennævnte oplysninger.",
     "speichern": "Gem oplysninger",

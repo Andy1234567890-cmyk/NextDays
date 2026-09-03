@@ -4,10 +4,11 @@ REGELN (Plan Abschnitt 2, Punkte 4–6; Abschnitt 7 Master-Strategie):
   * Zahlender Kunde = Zuordnung `approved` mit erster bezahlter Rechnung UND
     Abo des Betriebs `active`/`past_due`. Registrierte ohne Zahlung zählen
     nicht (sonst wären Bot-Anmeldungen ein Rang).
-  * Für den Rang zählt die STRUKTUR: eigene Kunden PLUS die Kunden aller
-    Team-Partner (eine Ebene, `sponsor_affiliate_id`), 1:1. Ein Kunde eines
-    Team-Partners zählt also bei zwei Partnern — beim Team-Partner selbst und
-    bei dessen Sponsor. Das ist gewollt (Zettel 3 B „1:1-Anrechnung").
+  * Für den Rang zählt die STRUKTUR: eigene Kunden PLUS die Kunden ALLER
+    Partner darunter, über alle Ebenen (`sponsor_affiliate_id`-Kette,
+    Strukturvertrieb seit 03.09.2026 — vorher eine Ebene), 1:1. Ein Kunde
+    zählt also bei jedem Partner der Kette über seinem Werber einmal. Das ist
+    gewollt (Zettel 3 B „1:1-Anrechnung").
   * Aufstieg SOFORT beim Stichtag. Jeder dabei ERREICHTE Rang mit einem
     Eintrag in `affiliate_tier_bonuses` zahlt einmalig den Aufstiegsbonus —
     auch wenn zwei Ränge in einem Monat übersprungen werden, und nie zweimal
@@ -88,18 +89,39 @@ def zahlende_kunden_je_partner(db: Client) -> dict[str, int]:
 def struktur_kunden_je_partner(
     db: Client, eigene: dict[str, int] | None = None
 ) -> dict[str, int]:
-    """Eigene zahlende Kunden PLUS die der Team-Partner (eine Ebene). Partner
-    ohne Team bekommen ihre eigene Zahl; ein Sponsor ohne eigene Kunden, dessen
-    Team welche hat, steht trotzdem drin."""
+    """Eigene zahlende Kunden PLUS die aller Partner darunter, über ALLE Ebenen.
+
+    Partner ohne Team bekommen ihre eigene Zahl; ein Sponsor ohne eigene
+    Kunden, dessen Struktur welche hat, steht trotzdem drin. Die Summe je
+    Knoten wird einmal berechnet und wiederverwendet (Baum, nicht Pfad-Summe:
+    bei 1000 Partnern in 10 Ebenen sind das 1000 Additionen, nicht 10 000).
+    Ein Zyklus in der Kette (den der DB-Trigger verbietet) wird laut geloggt
+    und dort abgeschnitten, statt endlos zu zählen (Wurzel 8)."""
     eigene = eigene if eigene is not None else zahlende_kunden_je_partner(db)
-    struktur = dict(eigene)
+    kinder: dict[str, list[str]] = {}
     for row in fetch_all_rows(
         db.table("affiliates")
         .select("id, sponsor_affiliate_id")
         .not_.is_("sponsor_affiliate_id", "null")
     ):
-        sponsor = row["sponsor_affiliate_id"]
-        struktur[sponsor] = struktur.get(sponsor, 0) + eigene.get(row["id"], 0)
+        kinder.setdefault(row["sponsor_affiliate_id"], []).append(row["id"])
+    summen: dict[str, int] = {}
+
+    def summe(knoten: str, pfad: frozenset[str]) -> int:
+        if knoten in summen:
+            return summen[knoten]
+        if knoten in pfad:
+            log.error("partner_struktur_zyklus", affiliate_id=knoten)
+            return 0
+        gesamt = eigene.get(knoten, 0) + sum(
+            summe(k, pfad | {knoten}) for k in kinder.get(knoten, [])
+        )
+        summen[knoten] = gesamt
+        return gesamt
+
+    struktur = dict(eigene)
+    for sponsor in kinder:
+        struktur[sponsor] = summe(sponsor, frozenset())
     return struktur
 
 

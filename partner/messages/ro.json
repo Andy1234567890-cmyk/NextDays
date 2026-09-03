@@ -60,7 +60,7 @@
       "super": "Supercomision",
       "superHinweis": "{satz} din veniturile din abonamente ale structurii dumneavoastră, fără limită de durată",
       "turbo": "Cotă de rezervare myBestDays",
-      "turboHinweis": "0,5 % per rezervare prin myBestDays pentru clienții dumneavoastră și clienții echipei",
+      "turboHinweis": "De la Elite-Partner: 0,5 % per rezervare prin myBestDays pentru clienții dumneavoastră și clienții echipei",
       "bonus": "Bonusuri de promovare",
       "bonusHinweis": "o singură dată pentru fiecare rang atins"
     },
@@ -303,10 +303,10 @@
     },
     "regeln": {
       "titel": "Regulile",
-      "rang": "Comision de echipă = rata dumneavoastră minus rata partenerului de echipă, la momentul plății. Același rang = 0.",
-      "ebene": "Exact un nivel: partenerii dumneavoastră de echipă nu își construiesc propria echipă.",
+      "rang": "Comision de echipă = rata dumneavoastră minus cea mai mare rată deja remunerată pentru aceeași cifră de afaceri sub dumneavoastră — la momentul plății. Același rang sau unul superior sub dumneavoastră = 0.",
+      "ebene": "Pe toate nivelurile: partenerii dumneavoastră de echipă își construiesc propriile echipe, fiecare nivel contează pentru rang și comisionul de echipă.",
       "keinGeld": "Fără bani pentru recrutare — doar din veniturile din abonamente plătite.",
-      "dauer": "12 luni per client de echipă, fereastră de rambursare de 30 de zile. De la Elite, suplimentar 2,5 % supercomision fără limită de durată."
+      "dauer": "12 luni per client de echipă, fereastră de rambursare de 30 de zile. De la Elite, suplimentar 2,5 % supercomision fără limită de durată — mai mulți Elite în același lanț îl împart în părți egale."
     },
     "kachel": {
       "mitglieder": "Parteneri de echipă (activi / total)",
@@ -498,11 +498,16 @@
     "plz": "Cod poștal",
     "ort": "Localitate",
     "nationalitaet": "Naționalitate (cod țară)",
+    "idNummer": "Cod numeric personal (CNP)",
+    "idNummerHinweis": "Codul dumneavoastră personal de identificare, de ex. CPR (DK), personnummer (SE/FI), NIF (ES), PESEL (PL), codice fiscale (IT).",
+    "bundesland": "Județ / regiune",
     "telefon": "Telefon",
     "webseite": "Site web sau profil",
     "webseiteHinweis": "Adresa la care faceți publicitate – este necesară pentru verificare.",
     "firmenname": "Numele companiei",
     "steuernummer": "Număr de identificare fiscală",
+    "registernummer": "Număr de înregistrare la Registrul Comerțului",
+    "ustId": "Cod de TVA",
     "firmenStrasse": "Adresa companiei",
     "firmaHinweis": "Ca persoană autorizată să reprezinte, vor fi utilizate informațiile dumneavoastră menționate mai sus.",
     "speichern": "Salvați informațiile",

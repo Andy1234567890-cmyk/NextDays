@@ -2202,7 +2202,7 @@
       "eyebrow": "Partnerski program",
       "headlinePre": "Preporučite myNextDays —",
       "headlineHighlight": "i zaradite",
-      "sub": "Za influencere, savjetnike, agencije i iznajmljivače s mrežom: Svaka tvrtka koja se registrira putem vaše veze i plati pretplatu donosi vam do {max} % prihoda od pretplate tijekom dvanaest mjeseci — plus 0,5 % svake rezervacije putem myBestDays, bonuse za napredovanje i od Elite super proviziju bez vremenskog ograničenja.",
+      "sub": "Za influencere, savjetnike, agencije i iznajmljivače s mrežom: Svaka tvrtka koja se registrira putem vaše veze i plati pretplatu donosi vam do {max} % prihoda od pretplate tijekom dvanaest mjeseci — plus bonuse za napredovanje i od Elite super proviziju bez vremenskog ograničenja i 0,5 % svake rezervacije putem myBestDays.",
       "cta": "Prijavite se sada",
       "ctaLogin": "Prijava partnera",
       "chipDauer": "12 mjeseci provizije po klijentu",
@@ -2244,7 +2244,7 @@
       },
       "dauer": {
         "titel": "Dvanaest mjeseci",
-        "text": "Provizija teče dvanaest mjeseci od prve plaćene pretplate tvrtke; besplatni mjesec vaših klijenata se ne računa. Ako tvrtka otkaže, provizija prestaje s posljednjom uplatom. Udio u rezervacijama i superprovizija teku bez ovog ograničenja."
+        "text": "Provizija teče dvanaest mjeseci od prve plaćene pretplate tvrtke; besplatni mjesec vaših klijenata se ne računa. Ako tvrtka otkaže, provizija prestaje s posljednjom uplatom. Superprovizija i udio u rezervacijama teku bez ovog ograničenja, ali zahtijevaju rang Elite partnera."
       },
       "auszahlung": {
         "titel": "Isplata",
@@ -2288,7 +2288,7 @@
       },
       "wieviel": {
         "frage": "Koliko provizije mogu zaraditi?",
-        "antwort": "To ovisi o prihodu od pretplate vaših klijenata i vašem rangu. Gornja tablica prikazuje stopu po rangu; dvanaest mjeseci po klijentu. Uz to dolazi 0,5 % svake rezervacije koju vaši klijenti dobiju putem myBestDays, jednokratni bonus za napredovanje za svaki postignuti rang, s timom razlika u proviziji — a od Elite partnera 2,5 % superprovizije na cijelu strukturu bez vremenskog ograničenja."
+        "antwort": "To ovisi o prihodu od pretplate vaših klijenata i vašem rangu. Gornja tablica prikazuje stopu po rangu; dvanaest mjeseci po klijentu. Uz to dolaze jednokratni bonus za napredovanje za svaki postignuti rang i, s timom, razlika u proviziji. Od Elite partnera dolaze superprovizija od 2,5 % na cijelu vašu strukturu i 0,5 % svake rezervacije koju vaši klijenti dobiju putem myBestDays — oboje bez vremenskog ograničenja."
       },
       "team": {
         "frage": "Kako funkcionira timska provizija?",
@@ -2323,8 +2323,8 @@
       "teamProvision": "Tim provizija za kupce vaših timskih partnera",
       "dauer": "Trajanje po kupcu",
       "dauerWert": "12 mjeseci",
-      "kunden": "{od}–{do} kupaca koji plaćaju",
-      "kundenOffen": "od {od} kupaca koji plaćaju",
+      "kunden": "{von}–{bis} kupaca koji plaćaju",
+      "kundenOffen": "od {von} kupaca koji plaćaju",
       "vorteile": "Usluge",
       "ja": "uključeno",
       "nein": "nije uključeno",
@@ -2341,7 +2341,7 @@
       "fussnoteTeam": "Tim provizija je razlika između vaše stope i stope timskog partnera na neto prihod od pretplate njegovih kupaca, oboje u trenutku plaćanja — točno jedna razina, bez naknade za sudjelovanje, bez novca za regrutiranje. Ukupno nikada više od 30 %.",
       "fussnoteCoMarketing": "Prema dogovoru s partnerskim timom; ovisi o profilu partnera i tekućim akcijama.",
       "fussnoteRang": "Rang proizlazi iz vaše strukture: vlastiti kupci koji plaćaju plus kupci vaših timskih partnera, svaki se broji jednom. Kada se postigne novi rang od početnika, jednokratno se dodjeljuje bonus za napredovanje.",
-      "teamDifferenz": "{satz} % minus stopa timskog partnera",
+      "teamUeber": "iznad partnera {rang}",
       "teamNicht": "još nema tima",
       "bonus": "Bonus za napredovanje (jednokratno)",
       "superProvision": "Super provizija na cijelu strukturu",

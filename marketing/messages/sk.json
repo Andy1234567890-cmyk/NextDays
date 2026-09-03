@@ -2202,7 +2202,7 @@
       "eyebrow": "Partnerský program",
       "headlinePre": "Odporučte myNextDays —",
       "headlineHighlight": "a zarábajte",
-      "sub": "Pre influencerov, konzultantov, agentúry a prenajímateľov so sieťou: Každá prevádzka, ktorá sa zaregistruje prostredníctvom vášho odkazu a zaplatí predplatné, vám prinesie dvanásť mesiacov až {max} % z obratu z predplatného – plus 0,5 % z každej rezervácie cez myBestDays, bonusy za povýšenie a od úrovne Elite superprovíziu bez časového obmedzenia.",
+      "sub": "Pre influencerov, konzultantov, agentúry a prenajímateľov so sieťou: Každá prevádzka, ktorá sa zaregistruje prostredníctvom vášho odkazu a zaplatí predplatné, vám prinesie dvanásť mesiacov až {max} % z obratu z predplatného – plus bonusy za povýšenie a od úrovne Elite superprovíziu bez časového obmedzenia a 0,5 % z každej rezervácie cez myBestDays.",
       "cta": "Prihláste sa teraz",
       "ctaLogin": "Prihlásenie partnera",
       "chipDauer": "12 mesiacov provízie za zákazníka",
@@ -2230,8 +2230,8 @@
       "eyebrow": "Vaša úroveň",
       "heading": "Čím väčšia je vaša štruktúra, tým vyššia je vaša sadzba",
       "sub": "Sadzba platí pre všetky nové provízie od dosiahnutia hodnosti. Do štruktúry sa započítavajú vaši vlastní platiaci zákazníci a zákazníci vašich tímových partnerov.",
-      "kunden": "{od}–{do} platiacich zákazníkov",
-      "kundenOffen": "od {od} platiacich zákazníkov",
+      "kunden": "{von}–{bis} platiacich zákazníkov",
+      "kundenOffen": "od {von} platiacich zákazníkov",
       "satz": "z obratu z predplatného",
       "nichtAbrufbar": "Úroveň momentálne nie je k dispozícii. Skúste to prosím neskôr."
     },
@@ -2244,7 +2244,7 @@
       },
       "dauer": {
         "titel": "Dvanásť mesiacov",
-        "text": "Provízia plynie dvanásť mesiacov od prvej zaplatenej faktúry za predplatné prevádzky; bezplatný mesiac vašich zákazníkov sa nezapočítava. Ak prevádzka zruší predplatné, provízia končí jej poslednou platbou. Podiel z rezervácií a superprovízia plynú bez tohto obmedzenia."
+        "text": "Provízia plynie dvanásť mesiacov od prvej zaplatenej faktúry za predplatné prevádzky; bezplatný mesiac vašich zákazníkov sa nezapočítava. Ak prevádzka zruší predplatné, provízia končí jej poslednou platbou. Superprovízia a podiel z rezervácií plynú bez tohto obmedzenia, vyžadujú si však postavenie Elite Partner."
       },
       "auszahlung": {
         "titel": "Výplata",
@@ -2288,7 +2288,7 @@
       },
       "wieviel": {
         "frage": "Koľko provízie môžem zarobiť?",
-        "antwort": "Závisí to od príjmov z predplatného vašich zákazníkov a od vášho postavenia. Vyššie uvedená tabuľka zobrazuje sadzbu za každé postavenie; dvanásť mesiacov za každého zákazníka. Okrem toho získate 0,5 % z každej rezervácie, ktorú vaši zákazníci získajú cez myBestDays, jednorazový bonus za postup za každé dosiahnuté postavenie, rozdielovú províziu s tímom – a od Elite Partnera 2,5 % superprovíziu z celej štruktúry bez časového obmedzenia."
+        "antwort": "Závisí to od príjmov z predplatného vašich zákazníkov a od vášho postavenia. Vyššie uvedená tabuľka zobrazuje sadzbu za každé postavenie; dvanásť mesiacov za každého zákazníka. Okrem toho získate jednorazový bonus za postup za každé dosiahnuté postavenie a s tímom rozdielovú províziu. Od Elite Partnera pribúdajú 2,5 % superprovízia z celej vašej štruktúry a 0,5 % z každej rezervácie, ktorú vaši zákazníci získajú cez myBestDays – obe bez časového obmedzenia."
       },
       "team": {
         "frage": "Ako funguje tímová provízia?",
@@ -2323,8 +2323,8 @@
       "teamProvision": "Tímová provízia za zákazníkov vašich tímových partnerov",
       "dauer": "Doba trvania na zákazníka",
       "dauerWert": "12 mesiacov",
-      "kunden": "{od}–{do} platiacich zákazníkov",
-      "kundenOffen": "od {od} platiacich zákazníkov",
+      "kunden": "{von}–{bis} platiacich zákazníkov",
+      "kundenOffen": "od {von} platiacich zákazníkov",
       "vorteile": "Služby",
       "ja": "zahrnuté",
       "nein": "nezahrnuté",
@@ -2341,7 +2341,7 @@
       "fussnoteTeam": "Tímová provízia je rozdiel medzi vašou sadzbou a sadzbou tímového partnera z čistého obratu z predplatného jeho zákazníkov, obe v čase platby – presne jedna úroveň, žiadny účastnícky poplatok, žiadne peniaze za nábor. Spolu nikdy nie viac ako 30 %.",
       "fussnoteCoMarketing": "Po dohode s partnerským tímom; závisí od profilu partnera a prebiehajúcich akcií.",
       "fussnoteRang": "Hodnosť vyplýva z vašej štruktúry: vlastní platiaci zákazníci plus zákazníci vašich tímových partnerov, každý sa počíta raz. Pri dosiahnutí novej hodnosti od úrovne „Začiatočník“ získate jednorazový bonus za povýšenie.",
-      "teamDifferenz": "{satz} % mínus sadzba tímového partnera",
+      "teamUeber": "nad partnerom {rang}",
       "teamNicht": "zatiaľ žiadny tím",
       "bonus": "Bonus za povýšenie (jednorazový)",
       "superProvision": "Superprovízia za celú štruktúru",

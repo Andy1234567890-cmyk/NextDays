@@ -2202,7 +2202,7 @@
       "eyebrow": "Programme de partenariat",
       "headlinePre": "Recommandez myNextDays —",
       "headlineHighlight": "et gagnez de l'argent",
-      "sub": "Pour les influenceurs, consultants, agences et propriétaires avec un réseau : Chaque entreprise qui s'inscrit via votre lien et paie un abonnement vous rapporte jusqu'à {max} % du chiffre d'affaires de l'abonnement pendant douze mois — plus 0,5 % de chaque réservation via myBestDays, des bonus de promotion et, à partir d'Élite, une super commission sans limite de durée.",
+      "sub": "Pour les influenceurs, consultants, agences et propriétaires avec un réseau : Chaque entreprise qui s'inscrit via votre lien et paie un abonnement vous rapporte jusqu'à {max} % du chiffre d'affaires de l'abonnement pendant douze mois — plus des bonus de promotion et, à partir d'Élite, une super commission sans limite de durée et 0,5 % de chaque réservation via myBestDays.",
       "cta": "Postuler maintenant",
       "ctaLogin": "Connexion partenaire",
       "chipDauer": "12 mois de commission par client",
@@ -2244,7 +2244,7 @@
       },
       "dauer": {
         "titel": "Douze mois",
-        "text": "La commission est valable douze mois à compter de la première facture d'abonnement payée de l'entreprise ; le mois gratuit de vos clients n'est pas pris en compte. Si l'entreprise résilie, elle prend fin avec son dernier paiement. La part de réservation et la super commission sont valables sans cette limite."
+        "text": "La commission est valable douze mois à compter de la première facture d'abonnement payée de l'entreprise ; le mois gratuit de vos clients n'est pas pris en compte. Si l'entreprise résilie, elle prend fin avec son dernier paiement. La super commission et la part de réservation sont valables sans cette limite, mais nécessitent le rang de Partenaire Élite."
       },
       "auszahlung": {
         "titel": "Paiement",
@@ -2288,7 +2288,7 @@
       },
       "wieviel": {
         "frage": "Combien de commissions puis-je gagner ?",
-        "antwort": "Cela dépend du chiffre d'affaires d'abonnement de vos clients et de votre rang. Le tableau ci-dessus indique le taux par rang ; pendant douze mois par client. À cela s'ajoutent 0,5 % de chaque réservation que vos clients reçoivent via myBestDays, un bonus de promotion unique pour chaque rang atteint, la commission différentielle avec une équipe — et à partir du statut de Partenaire Élite, 2,5 % de super commission sur l'ensemble de la structure sans limite de durée."
+        "antwort": "Cela dépend du chiffre d'affaires d'abonnement de vos clients et de votre rang. Le tableau ci-dessus indique le taux par rang ; pendant douze mois par client. À cela s'ajoutent un bonus de promotion unique pour chaque rang atteint et, avec une équipe, la commission différentielle. À partir du statut de Partenaire Élite s'ajoutent une super commission de 2,5 % sur l'ensemble de votre structure et 0,5 % de chaque réservation que vos clients reçoivent via myBestDays — les deux sans limite de durée."
       },
       "team": {
         "frage": "Comment fonctionne la commission d'équipe ?",
@@ -2323,8 +2323,8 @@
       "teamProvision": "Commission d'équipe sur les clients de vos partenaires d'équipe",
       "dauer": "Durée par client",
       "dauerWert": "12 mois",
-      "kunden": "{de}–{à} clients payants",
-      "kundenOffen": "à partir de {de} clients payants",
+      "kunden": "{von}–{bis} clients payants",
+      "kundenOffen": "à partir de {von} clients payants",
       "vorteile": "Services",
       "ja": "inclus",
       "nein": "non inclus",
@@ -2341,7 +2341,7 @@
       "fussnoteTeam": "La commission d'équipe est la différence entre votre taux et le taux du partenaire d'équipe sur le chiffre d'affaires net des abonnements de ses clients, les deux au moment du paiement — exactement un niveau, pas de frais de participation, pas d'argent pour le recrutement. Jamais plus de 30 % au total.",
       "fussnoteCoMarketing": "Après accord avec l'équipe partenaire ; dépend du profil du partenaire et des actions en cours.",
       "fussnoteRang": "Le rang est déterminé par votre structure : vos propres clients payants plus les clients de vos partenaires d'équipe, chacun comptant une fois. Lors de l'atteinte d'un nouveau rang à partir de l'Ascendant, un bonus de promotion unique est accordé.",
-      "teamDifferenz": "{satz} % moins le taux du partenaire d'équipe",
+      "teamUeber": "au-dessus d'un {rang}",
       "teamNicht": "pas encore d'équipe",
       "bonus": "Bonus de promotion (unique)",
       "superProvision": "Super commission sur toute la structure",

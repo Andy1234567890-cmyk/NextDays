@@ -2202,7 +2202,7 @@
       "eyebrow": "Partnerprogram",
       "headlinePre": "Ajánlja a myNextDays-t –",
       "headlineHighlight": "és keressen pénzt",
-      "sub": "Influencereknek, tanácsadóknak, ügynökségeknek és hálózattal rendelkező szállásadóknak: Minden vállalkozás, amely az Ön linkjén keresztül regisztrál és előfizetést fizet, tizenkét hónapon keresztül az előfizetési bevétel akár {max} %-át hozza Önnek – plusz 0,5% minden myBestDays-en keresztül történő foglalás után, előléptetési bónuszok és az elit szinttől kezdve egy szuperjutalék időkorlát nélkül.",
+      "sub": "Influencereknek, tanácsadóknak, ügynökségeknek és hálózattal rendelkező szállásadóknak: Minden vállalkozás, amely az Ön linkjén keresztül regisztrál és előfizetést fizet, tizenkét hónapon keresztül az előfizetési bevétel akár {max} %-át hozza Önnek – plusz előléptetési bónuszok és az elit szinttől kezdve egy szuperjutalék időkorlát nélkül és 0,5% minden myBestDays-en keresztül történő foglalás után.",
       "cta": "Jelentkezzen most",
       "ctaLogin": "Partner bejelentkezés",
       "chipDauer": "12 hónap jutalék ügyfelenként",
@@ -2244,7 +2244,7 @@
       },
       "dauer": {
         "titel": "Tizenkét hónap",
-        "text": "A jutalék a vállalkozás első kifizetett előfizetési számlájától számított tizenkét hónapig jár; az ügyfelei ingyenes hónapja nem számít bele. Ha a vállalkozás felmondja, az utolsó befizetésével ér véget. A foglalási részesedés és a szuperjutalék e korlát nélkül jár."
+        "text": "A jutalék a vállalkozás első kifizetett előfizetési számlájától számított tizenkét hónapig jár; az ügyfelei ingyenes hónapja nem számít bele. Ha a vállalkozás felmondja, az utolsó befizetésével ér véget. A szuperjutalék és a foglalási részesedés e korlát nélkül jár, de elit partneri rangot feltételez."
       },
       "auszahlung": {
         "titel": "Kifizetés",
@@ -2288,7 +2288,7 @@
       },
       "wieviel": {
         "frage": "Mennyi jutalékot kereshetek?",
-        "antwort": "Ez az ügyfelei előfizetési bevételétől és az Ön rangjától függ. A fenti táblázat a rangonkénti díjat mutatja; tizenkét hónapig ügyfelenként. Ezen felül az ügyfelei által a myBestDays-en keresztül kapott minden foglalás 0,5%-a, egyszeri feljutási bónusz minden elért rang után, a csapat által elért különbségi jutalék – és az elit partnertől kezdve 2,5% szuperjutalék a teljes struktúrára időbeli korlát nélkül."
+        "antwort": "Ez az ügyfelei előfizetési bevételétől és az Ön rangjától függ. A fenti táblázat a rangonkénti díjat mutatja; tizenkét hónapig ügyfelenként. Ezen felül jár egyszeri feljutási bónusz minden elért rang után, csapattal pedig a különbségi jutalék. Az elit partnertől kezdve jön még a 2,5%-os szuperjutalék a teljes struktúrájára és az ügyfelei által a myBestDays-en keresztül kapott minden foglalás 0,5%-a – mindkettő időbeli korlát nélkül."
       },
       "team": {
         "frage": "Hogyan működik a csapatjutalék?",
@@ -2341,7 +2341,7 @@
       "fussnoteTeam": "A csapatjutalék az Ön díja és a csapattag díja közötti különbség a nettó előfizetési bevételből, mindkettő a fizetés időpontjában – pontosan egy szinten, részvételi díj nélkül, toborzási díj nélkül. Összesen soha nem több mint 30%.",
       "fussnoteCoMarketing": "A partnercsapattal való egyeztetés után; a partner profiljától és az aktuális akcióktól függ.",
       "fussnoteRang": "A rang a struktúrájából adódik: saját fizető ügyfelek, plusz a csapattagok ügyfelei, mindenki egyszer számít. Új rang elérésekor, a feltörekvő szinttől kezdve, egyszeri előléptetési bónusz jár.",
-      "teamDifferenz": "{satz} % mínusz a csapattag díja",
+      "teamUeber": "egy {rang} felett",
       "teamNicht": "még nincs csapat",
       "bonus": "Előléptetési bónusz (egyszeri)",
       "superProvision": "Szuperjutalék a teljes struktúrára",

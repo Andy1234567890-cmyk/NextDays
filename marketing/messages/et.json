@@ -2202,7 +2202,7 @@
       "eyebrow": "Partnerprogramm",
       "headlinePre": "Soovitage myNextDaysi –",
       "headlineHighlight": "ja teenige raha",
-      "sub": "Mõjutajatele, konsultantidele, agentuuridele ja võrgustikuga üürileandjatele: iga ettevõte, mis registreerib end teie lingi kaudu ja maksab tellimuse, toob teile kaksteist kuud kuni {max} % tellimuse käibest – pluss 0,5 % iga myBestDaysi kaudu tehtud broneeringu eest, edutamisboonused ja alates Eliidist supervahendustasu ilma tähtajapiiranguta.",
+      "sub": "Mõjutajatele, konsultantidele, agentuuridele ja võrgustikuga üürileandjatele: iga ettevõte, mis registreerib end teie lingi kaudu ja maksab tellimuse, toob teile kaksteist kuud kuni {max} % tellimuse käibest – pluss edutamisboonused ja alates Eliidist supervahendustasu ilma tähtajapiiranguta ja 0,5 % iga myBestDaysi kaudu tehtud broneeringu eest.",
       "cta": "Kandideeri kohe",
       "ctaLogin": "Partneri sisselogimine",
       "chipDauer": "12 kuud vahendustasu kliendi kohta",
@@ -2244,7 +2244,7 @@
       },
       "dauer": {
         "titel": "Kaksteist kuud",
-        "text": "Komisjon kehtib kaksteist kuud alates ettevõtte esimesest tasulisest tellimuse arvest; teie klientide tasuta kuu ei arvestata. Kui ettevõte lepingu lõpetab, lõpeb see viimase maksega. Broneeringu osa ja superkomisjon kehtivad ilma selle piiranguta."
+        "text": "Komisjon kehtib kaksteist kuud alates ettevõtte esimesest tasulisest tellimuse arvest; teie klientide tasuta kuu ei arvestata. Kui ettevõte lepingu lõpetab, lõpeb see viimase maksega. Superkomisjon ja broneeringu osa kehtivad ilma selle piiranguta, kuid eeldavad eliitpartneri auastet."
       },
       "auszahlung": {
         "titel": "Väljamakse",
@@ -2288,7 +2288,7 @@
       },
       "wieviel": {
         "frage": "Kui palju vahendustasu ma teenida saan?",
-        "antwort": "See sõltub teie klientide tellimuse käibest ja teie auastmest. Ülaltoodud tabel näitab määra auastme kohta; kaksteist kuud iga kliendi kohta. Lisaks 0,5% igast broneeringust, mille teie kliendid saavad myBestDaysi kaudu, ühekordne edutamisboonus iga saavutatud auastme eest, meeskonnaga erinevuskomisjon – ja alates eliitpartnerist 2,5% superkomisjon kogu struktuurilt ilma tähtajapiiranguta."
+        "antwort": "See sõltub teie klientide tellimuse käibest ja teie auastmest. Ülaltoodud tabel näitab määra auastme kohta; kaksteist kuud iga kliendi kohta. Lisaks tuleb ühekordne edutamisboonus iga saavutatud auastme eest ja meeskonnaga erinevuskomisjon. Alates eliitpartnerist lisanduvad 2,5 % superkomisjon kogu teie struktuurilt ja 0,5% igast broneeringust, mille teie kliendid saavad myBestDaysi kaudu – mõlemad ilma tähtajapiiranguta."
       },
       "team": {
         "frage": "Kuidas meeskonnapreemia toimib?",
@@ -2341,7 +2341,7 @@
       "fussnoteTeam": "Meeskonnavahendustasu on teie ja teie meeskonnapartneri määra vahe tema klientide netotellimuse käibelt, mõlemad makse tegemise ajal – täpselt üks tase, ilma osalustasuta, ilma värbamistasuta. Kokku mitte kunagi rohkem kui 30 %.",
       "fussnoteCoMarketing": "Pärast kokkulepet partnerimeeskonnaga; sõltub partneri profiilist ja käimasolevatest kampaaniatest.",
       "fussnoteRang": "Auaste tuleneb teie struktuurist: teie enda maksvad kliendid pluss teie meeskonnapartnerite kliendid, igaüks loeb üks kord. Uue auastme saavutamisel alates Edasijõudnust on ühekordne edutamisboonus.",
-      "teamDifferenz": "{satz} % miinus meeskonnapartneri määr",
+      "teamUeber": "{rang} kohal",
       "teamNicht": "veel meeskonda pole",
       "bonus": "Edutamisboonus (ühekordne)",
       "superProvision": "Supervahendustasu kogu struktuurilt",

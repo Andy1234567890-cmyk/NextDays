@@ -60,7 +60,7 @@
       "super": "Szuperjutalék",
       "superHinweis": "{satz} a struktúrája előfizetési bevételéből, időkorlát nélkül",
       "turbo": "myBestDays foglalási részesedés",
-      "turboHinweis": "0,5% minden myBestDays foglalás után az Ön és csapata ügyfeleinél",
+      "turboHinweis": "Az Elite-Partner rangtól: 0,5% minden myBestDays foglalás után az Ön és csapata ügyfeleinél",
       "bonus": "Előléptetési bónuszok",
       "bonusHinweis": "egyszeri, minden elért rang után"
     },
@@ -303,10 +303,10 @@
     },
     "regeln": {
       "titel": "A szabályok",
-      "rang": "Csapatjutalék = az Ön aránya mínusz a csapattag aránya, a fizetés időpontjában. Azonos rang = 0.",
-      "ebene": "Pontosan egy szint: a csapatpartnerei nem építenek saját csapatot.",
+      "rang": "Csapatjutalék = az Ön aránya mínusz a legmagasabb arány, amelyet ugyanarra a forgalomra Ön alatt már kifizettek — a fizetés időpontjában. Azonos vagy magasabb rang Ön alatt = 0.",
+      "ebene": "Minden szinten át: a csapatpartnerei saját csapatokat építenek, minden szint beleszámít a rangba és a csapatjutalékba.",
       "keinGeld": "Nincs pénz a toborzásért – csak a kifizetett előfizetési bevételből.",
-      "dauer": "12 hónap minden csapat ügyfél után, 30 napos visszatérítési időszak. Az Elite rangtól további 2,5% szuperjutalék időkorlát nélkül."
+      "dauer": "12 hónap minden csapat ügyfél után, 30 napos visszatérítési időszak. Az Elite rangtól további 2,5% szuperjutalék időkorlát nélkül — egy láncban több Elite egyenlő részben osztozik rajta."
     },
     "kachel": {
       "mitglieder": "Csapatpartner (aktív / összesen)",
@@ -498,11 +498,16 @@
     "plz": "Irányítószám",
     "ort": "Helység",
     "nationalitaet": "Állampolgárság (országkód)",
+    "idNummer": "Személyi azonosító",
+    "idNummerHinweis": "Nemzeti személyi azonosítója, pl. CPR (DK), personnummer (SE/FI), NIF (ES), PESEL (PL), codice fiscale (IT).",
+    "bundesland": "Megye / régió",
     "telefon": "Telefon",
     "webseite": "Weboldal vagy profil",
     "webseiteHinweis": "Az a cím, amelyen hirdet – az ellenőrzéshez szükséges.",
     "firmenname": "Cégnév",
     "steuernummer": "Adószám",
+    "registernummer": "Cégjegyzékszám",
+    "ustId": "Közösségi adószám",
     "firmenStrasse": "Cím",
     "firmaHinweis": "Képviseletre jogosult személyként a fent megadott adatai kerülnek felhasználásra.",
     "speichern": "Adatok mentése",

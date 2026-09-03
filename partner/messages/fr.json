@@ -60,7 +60,7 @@
       "super": "Super commission",
       "superHinweis": "{satz} sur le chiffre d'affaires d'abonnement de votre structure, sans limite de durée",
       "turbo": "Part de réservation myBestDays",
-      "turboHinweis": "0,5 % par réservation via myBestDays pour vos clients et les clients de votre équipe",
+      "turboHinweis": "À partir d'Elite-Partner : 0,5 % par réservation via myBestDays pour vos clients et les clients de votre équipe",
       "bonus": "Bonus de promotion",
       "bonusHinweis": "une fois par rang atteint"
     },
@@ -303,10 +303,10 @@
     },
     "regeln": {
       "titel": "Les règles",
-      "rang": "Commission d'équipe = votre taux moins le taux du partenaire d'équipe, au moment du paiement. Même rang = 0.",
-      "ebene": "Un seul niveau : vos partenaires d'équipe ne construisent pas leur propre équipe.",
+      "rang": "Commission d'équipe = votre taux moins le taux le plus élevé déjà rémunéré sur le même chiffre d'affaires en dessous de vous, au moment du paiement. Rang identique ou supérieur en dessous de vous = 0.",
+      "ebene": "Sur tous les niveaux : vos partenaires d'équipe construisent leurs propres équipes, chaque niveau compte pour le rang et la commission d'équipe.",
       "keinGeld": "Pas d'argent pour le recrutement — seulement à partir du chiffre d'affaires des abonnements payés.",
-      "dauer": "12 mois par client d'équipe, fenêtre de remboursement de 30 jours. À partir d'Elite, 2,5 % de super commission supplémentaire sans limite de durée."
+      "dauer": "12 mois par client d'équipe, fenêtre de remboursement de 30 jours. À partir d'Elite, 2,5 % de super commission supplémentaire sans limite de durée — plusieurs Elite dans une même chaîne se la partagent à parts égales."
     },
     "kachel": {
       "mitglieder": "Partenaires d'équipe (actifs / total)",
@@ -498,11 +498,16 @@
     "plz": "Code postal",
     "ort": "Ville",
     "nationalitaet": "Nationalité (code pays)",
+    "idNummer": "Numéro d'identification personnel",
+    "idNummerHinweis": "Votre numéro d'identification national, p. ex. CPR (DK), personnummer (SE/FI), NIF (ES), PESEL (PL), codice fiscale (IT).",
+    "bundesland": "Région",
     "telefon": "Téléphone",
     "webseite": "Site web ou profil",
     "webseiteHinweis": "L'adresse où vous faites de la publicité — nécessaire pour la vérification.",
     "firmenname": "Nom de l'entreprise",
     "steuernummer": "Numéro fiscal",
+    "registernummer": "Numéro d'immatriculation (RCS)",
+    "ustId": "Numéro de TVA intracommunautaire",
     "firmenStrasse": "Adresse de l'entreprise",
     "firmaHinweis": "Vos informations ci-dessus seront utilisées comme personne autorisée à représenter l'entreprise.",
     "speichern": "Enregistrer les informations",

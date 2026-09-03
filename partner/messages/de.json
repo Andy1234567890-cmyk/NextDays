@@ -60,7 +60,7 @@
       "super": "Superprovision",
       "superHinweis": "{satz} auf den Abo-Umsatz Ihrer Struktur, ohne Laufzeitgrenze",
       "turbo": "Buchungsanteil myBestDays",
-      "turboHinweis": "0,5 % je Buchung über myBestDays bei Ihren Kunden und Team-Kunden",
+      "turboHinweis": "Ab Elite-Partner: 0,5 % je Buchung über myBestDays bei Ihren Kunden und Team-Kunden",
       "bonus": "Aufstiegsboni",
       "bonusHinweis": "einmalig je erreichtem Rang"
     },
@@ -303,10 +303,10 @@
     },
     "regeln": {
       "titel": "Die Regeln",
-      "rang": "Team-Provision = Ihr Satz minus der Satz des Team-Partners, zum Zeitpunkt der Zahlung. Gleicher Rang = 0.",
-      "ebene": "Genau eine Ebene: Ihre Team-Partner bauen kein eigenes Team.",
+      "rang": "Team-Provision = Ihr Satz minus der höchste Satz, der auf denselben Umsatz unter Ihnen schon vergütet wurde — zum Zeitpunkt der Zahlung. Gleicher oder höherer Rang darunter = 0.",
+      "ebene": "Über alle Ebenen: Ihre Team-Partner bauen eigene Teams, jede Ebene zählt für Rang und Team-Provision.",
       "keinGeld": "Kein Geld fürs Anwerben — nur aus bezahltem Abo-Umsatz.",
-      "dauer": "12 Monate je Team-Kunde, 30 Tage Erstattungsfenster. Ab Elite zusätzlich 2,5 % Superprovision ohne Laufzeitgrenze."
+      "dauer": "12 Monate je Team-Kunde, 30 Tage Erstattungsfenster. Ab Elite zusätzlich 2,5 % Superprovision ohne Laufzeitgrenze — mehrere Elite in einer Kette teilen sie sich zu gleichen Teilen."
     },
     "kachel": {
       "mitglieder": "Team-Partner (aktiv / gesamt)",
@@ -498,11 +498,16 @@
     "plz": "Postleitzahl",
     "ort": "Ort",
     "nationalitaet": "Staatsangehörigkeit (Länderkürzel)",
+    "idNummer": "Persönliche Kennnummer",
+    "idNummerHinweis": "Die nationale Personenkennung, z. B. CPR (DK), personnummer (SE/FI), NIF (ES), PESEL (PL), codice fiscale (IT).",
+    "bundesland": "Bundesland / Region",
     "telefon": "Telefon",
     "webseite": "Webseite oder Profil",
     "webseiteHinweis": "Die Adresse, unter der Sie werben — wird für die Prüfung benötigt.",
     "firmenname": "Firmenname",
     "steuernummer": "Steuernummer",
+    "registernummer": "Handelsregisternummer",
+    "ustId": "USt-IdNr.",
     "firmenStrasse": "Firmenanschrift",
     "firmaHinweis": "Als vertretungsberechtigte Person werden Ihre oben genannten Angaben verwendet.",
     "speichern": "Angaben speichern",

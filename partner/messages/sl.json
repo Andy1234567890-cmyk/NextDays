@@ -60,7 +60,7 @@
       "super": "Superprovizija",
       "superHinweis": "{satz} od prihodkov od naročnin vaše strukture, brez časovne omejitve",
       "turbo": "Delež rezervacij myBestDays",
-      "turboHinweis": "0,5 % na rezervacijo preko myBestDays pri vaših strankah in strankah ekipe",
+      "turboHinweis": "Od Elite-Partner: 0,5 % na rezervacijo preko myBestDays pri vaših strankah in strankah ekipe",
       "bonus": "Bonusi za napredovanje",
       "bonusHinweis": "enkratno za vsak dosežen rang"
     },
@@ -303,10 +303,10 @@
     },
     "regeln": {
       "titel": "Pravila",
-      "rang": "Provizija za ekipo = vaša stopnja minus stopnja partnerja v ekipi, v trenutku plačila. Enak rang = 0.",
-      "ebene": "Natančno ena raven: vaši ekipni partnerji ne gradijo lastne ekipe.",
+      "rang": "Provizija za ekipo = vaša stopnja minus najvišja stopnja, ki je bila za isti promet pod vami že izplačana — v trenutku plačila. Enak ali višji rang pod vami = 0.",
+      "ebene": "Prek vseh ravni: vaši ekipni partnerji gradijo lastne ekipe, vsaka raven se šteje za rang in provizijo za ekipo.",
       "keinGeld": "Brez denarja za novačenje – samo od plačanih prihodkov od naročnin.",
-      "dauer": "12 mesecev na stranko ekipe, 30-dnevno okno za vračilo. Od Elite dodatno 2,5 % superprovizije brez časovne omejitve."
+      "dauer": "12 mesecev na stranko ekipe, 30-dnevno okno za vračilo. Od Elite dodatno 2,5 % superprovizije brez časovne omejitve — več Elite v eni verigi si jo deli na enake dele."
     },
     "kachel": {
       "mitglieder": "Ekipni partnerji (aktivni / skupno)",
@@ -498,11 +498,16 @@
     "plz": "Poštna številka",
     "ort": "Kraj",
     "nationalitaet": "Državljanstvo (kratica države)",
+    "idNummer": "EMŠO",
+    "idNummerHinweis": "Vaša nacionalna osebna identifikacijska številka, npr. CPR (DK), personnummer (SE/FI), NIF (ES), PESEL (PL), codice fiscale (IT).",
+    "bundesland": "Regija",
     "telefon": "Telefon",
     "webseite": "Spletna stran ali profil",
     "webseiteHinweis": "Naslov, pod katerim oglašujete – potreben za preverjanje.",
     "firmenname": "Ime podjetja",
     "steuernummer": "Davčna številka",
+    "registernummer": "Matična številka podjetja",
+    "ustId": "ID za DDV",
     "firmenStrasse": "Naslov podjetja",
     "firmaHinweis": "Kot pooblaščena oseba se uporabijo vaši zgoraj navedeni podatki.",
     "speichern": "Shrani podatke",

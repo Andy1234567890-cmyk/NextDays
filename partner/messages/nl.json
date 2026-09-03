@@ -60,7 +60,7 @@
       "super": "Superprovisie",
       "superHinweis": "{satz} op de abonnementsomzet van uw structuur, zonder termijnbeperking",
       "turbo": "Boekingsaandeel myBestDays",
-      "turboHinweis": "0,5 % per boeking via myBestDays bij uw klanten en teamklanten",
+      "turboHinweis": "Vanaf Elite-Partner: 0,5 % per boeking via myBestDays bij uw klanten en teamklanten",
       "bonus": "Promotiebonussen",
       "bonusHinweis": "eenmalig per bereikte rang"
     },
@@ -303,10 +303,10 @@
     },
     "regeln": {
       "titel": "De regels",
-      "rang": "Teamprovisie = uw tarief minus het tarief van de teampartner, op het moment van betaling. Gelijke rang = 0.",
-      "ebene": "Precies één niveau: uw teampartners bouwen geen eigen team op.",
+      "rang": "Teamprovisie = uw tarief minus het hoogste tarief dat op dezelfde omzet onder u al is vergoed, op het moment van betaling. Gelijke of hogere rang onder u = 0.",
+      "ebene": "Over alle niveaus: uw teampartners bouwen eigen teams op, elk niveau telt mee voor rang en teamprovisie.",
       "keinGeld": "Geen geld voor werving — alleen uit betaalde abonnementsomzet.",
-      "dauer": "12 maanden per teamklant, 30 dagen restitutieperiode. Vanaf Elite bovendien 2,5 % superprovisie zonder termijnbeperking."
+      "dauer": "12 maanden per teamklant, 30 dagen restitutieperiode. Vanaf Elite bovendien 2,5 % superprovisie zonder termijnbeperking — meerdere Elite in één keten delen die in gelijke delen."
     },
     "kachel": {
       "mitglieder": "Teampartners (actief / totaal)",
@@ -498,11 +498,16 @@
     "plz": "Postcode",
     "ort": "Plaats",
     "nationalitaet": "Nationaliteit (landcode)",
+    "idNummer": "Persoonlijk identificatienummer",
+    "idNummerHinweis": "Uw nationale persoonsnummer, bijv. CPR (DK), personnummer (SE/FI), NIF (ES), PESEL (PL), codice fiscale (IT).",
+    "bundesland": "Provincie / regio",
     "telefon": "Telefoon",
     "webseite": "Website of profiel",
     "webseiteHinweis": "Het adres waarop u adverteert – nodig voor de controle.",
     "firmenname": "Bedrijfsnaam",
     "steuernummer": "Btw-nummer",
+    "registernummer": "KvK- / registratienummer",
+    "ustId": "Btw-identificatienummer",
     "firmenStrasse": "Bedrijfsadres",
     "firmaHinweis": "Als vertegenwoordigingsbevoegde persoon worden uw bovengenoemde gegevens gebruikt.",
     "speichern": "Gegevens opslaan",

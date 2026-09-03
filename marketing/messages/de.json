@@ -2202,7 +2202,7 @@
       "eyebrow": "Partnerprogramm",
       "headlinePre": "Empfehlen Sie myNextDays —",
       "headlineHighlight": "und verdienen Sie mit",
-      "sub": "Für Influencer, Berater, Agenturen und Vermieter mit Netzwerk: Jeder Betrieb, der sich über Ihren Link registriert und ein Abo bezahlt, bringt Ihnen zwölf Monate lang bis zu {max} % des Abo-Umsatzes — plus 0,5 % jeder Buchung über myBestDays, Aufstiegsboni und ab Elite eine Superprovision ohne Laufzeitgrenze.",
+      "sub": "Für Influencer, Berater, Agenturen und Vermieter mit Netzwerk: Jeder Betrieb, der sich über Ihren Link registriert und ein Abo bezahlt, bringt Ihnen zwölf Monate lang bis zu {max} % des Abo-Umsatzes — plus Aufstiegsboni und ab Elite eine Superprovision ohne Laufzeitgrenze und 0,5 % jeder Buchung über myBestDays.",
       "cta": "Jetzt bewerben",
       "ctaLogin": "Partner-Login",
       "chipDauer": "12 Monate Provision je Kunde",
@@ -2229,7 +2229,7 @@
     "staffel": {
       "eyebrow": "Ihre Staffel",
       "heading": "Je größer Ihre Struktur, desto höher Ihr Satz",
-      "sub": "Der Satz gilt für alle neuen Provisionen ab Erreichen des Rangs. Zur Struktur zählen Ihre eigenen zahlenden Kunden und die Kunden Ihrer Team-Partner.",
+      "sub": "Der Satz gilt für alle neuen Provisionen ab Erreichen des Rangs. Zur Struktur zählen Ihre eigenen zahlenden Kunden und die Kunden aller Partner unter Ihnen, über alle Ebenen.",
       "kunden": "{von}–{bis} zahlende Kunden",
       "kundenOffen": "ab {von} zahlende Kunden",
       "satz": "des Abo-Umsatzes",
@@ -2244,7 +2244,7 @@
       },
       "dauer": {
         "titel": "Zwölf Monate",
-        "text": "Die Provision läuft zwölf Monate ab der ersten bezahlten Abo-Rechnung des Betriebs; der Gratismonat Ihrer Kunden zählt nicht mit. Kündigt der Betrieb, endet sie mit seiner letzten Zahlung. Buchungsanteil und Superprovision laufen ohne diese Grenze."
+        "text": "Die Provision läuft zwölf Monate ab der ersten bezahlten Abo-Rechnung des Betriebs; der Gratismonat Ihrer Kunden zählt nicht mit. Kündigt der Betrieb, endet sie mit seiner letzten Zahlung. Superprovision und Buchungsanteil laufen ohne diese Grenze, setzen aber den Rang Elite-Partner voraus."
       },
       "auszahlung": {
         "titel": "Auszahlung",
@@ -2288,11 +2288,11 @@
       },
       "wieviel": {
         "frage": "Wie viel Provision kann ich verdienen?",
-        "antwort": "Das hängt vom Abo-Umsatz Ihrer Kunden und Ihrem Rang ab. Die Staffel oben zeigt den Satz je Rang; zwölf Monate lang je Kunde. Dazu kommen 0,5 % jeder Buchung, die Ihre Kunden über myBestDays erhalten, ein einmaliger Aufstiegsbonus je erreichtem Rang, mit einem Team die Differenzprovision — und ab Elite-Partner 2,5 % Superprovision auf die ganze Struktur ohne Laufzeitgrenze."
+        "antwort": "Das hängt vom Abo-Umsatz Ihrer Kunden und Ihrem Rang ab. Die Staffel oben zeigt den Satz je Rang; zwölf Monate lang je Kunde. Dazu kommen ein einmaliger Aufstiegsbonus je erreichtem Rang und mit einem Team die Differenzprovision. Ab Elite-Partner kommen 2,5 % Superprovision auf Ihre ganze Struktur und 0,5 % jeder Buchung hinzu, die Ihre Kunden über myBestDays erhalten — beide ohne Laufzeitgrenze."
       },
       "team": {
         "frage": "Wie funktioniert die Team-Provision?",
-        "antwort": "Ab dem Rang Aufsteiger: Bewirbt sich ein Partner über Ihren Team-Link und trägt Ihren Code sichtbar in der Bewerbung ein, gehört er nach der Freigabe zu Ihrem Team. Seine Kunden zählen 1:1 für Ihren Rang. Auf den Netto-Abo-Umsatz seiner Kunden erhalten Sie die Differenz zwischen Ihrem Satz und seinem — genau eine Ebene tief, ohne Teilnahmebeitrag, ohne Geld fürs Anwerben."
+        "antwort": "Ab dem Rang Aufsteiger: Bewirbt sich ein Partner über Ihren Team-Link und trägt Ihren Code sichtbar in der Bewerbung ein, gehört er nach der Freigabe zu Ihrem Team — und seine Team-Partner wiederum zu Ihrer Struktur. Die zahlenden Kunden Ihrer gesamten Struktur zählen für Ihren Rang. Auf ihren Netto-Abo-Umsatz erhalten Sie die Differenz zwischen Ihrem Satz und dem höchsten Satz, der darunter bereits vergütet wurde — über alle Ebenen, ohne Teilnahmebeitrag, ohne Geld fürs Anwerben."
       },
       "auszahlung": {
         "frage": "Wie und wann werden Provisionen ausgezahlt?",
@@ -2316,11 +2316,11 @@
     "vergleich": {
       "eyebrow": "Ihre Staffel",
       "heading": "Je mehr zahlende Kunden, desto höher Ihr Satz",
-      "sub": "Der Satz gilt für alle neuen Provisionen ab Erreichen des Rangs. Gezählt wird Ihre Struktur: Ihre eigenen zahlenden Kunden plus die Kunden Ihrer Team-Partner.",
+      "sub": "Der Satz gilt für alle neuen Provisionen ab Erreichen des Rangs. Gezählt wird Ihre Struktur: Ihre eigenen zahlenden Kunden plus die zahlenden Kunden aller Partner unter Ihnen, über alle Ebenen.",
       "nichtAbrufbar": "Die Staffel ist gerade nicht abrufbar. Bitte später erneut versuchen.",
       "plan": "Rang",
       "provision": "Provision auf eigene Kunden",
-      "teamProvision": "Team-Provision auf Kunden Ihrer Team-Partner",
+      "teamProvision": "Team-Provision auf Kunden Ihrer gesamten Struktur (alle Ebenen)",
       "dauer": "Laufzeit je Kunde",
       "dauerWert": "12 Monate",
       "kunden": "{von}–{bis} zahlende Kunden",
@@ -2338,16 +2338,16 @@
         "support": "Persönlicher Ansprechpartner",
         "coMarketing": "Co-Marketing (gemeinsame Aktionen)"
       },
-      "fussnoteTeam": "Team-Provision ist die Differenz zwischen Ihrem Satz und dem Satz des Team-Partners auf den Netto-Abo-Umsatz seiner Kunden, beide zum Zeitpunkt der Zahlung — genau eine Ebene, kein Teilnahmebeitrag, kein Geld fürs Anwerben. Zusammen nie mehr als 30 %.",
+      "fussnoteTeam": "Team-Provision ist die Differenz zwischen Ihrem Satz und dem höchsten Satz, der auf denselben Umsatz unter Ihnen bereits vergütet wurde — über alle Ebenen Ihrer Struktur, jeweils zum Zeitpunkt der Zahlung. Kein Teilnahmebeitrag, kein Geld fürs Anwerben — nur aus bezahltem Abo-Umsatz. Alle Ebenen zusammen nie mehr als 30 %.",
       "fussnoteCoMarketing": "Nach Absprache mit dem Partnerteam; hängt vom Profil des Partners und den laufenden Aktionen ab.",
-      "fussnoteRang": "Der Rang entsteht aus Ihrer Struktur: eigene zahlende Kunden plus die Kunden Ihrer Team-Partner, jeder zählt einmal. Beim Erreichen eines neuen Rangs ab Aufsteiger gibt es einmalig den Aufstiegsbonus.",
-      "teamDifferenz": "{satz} % minus Satz des Team-Partners",
+      "fussnoteRang": "Der Rang entsteht aus Ihrer Struktur: eigene zahlende Kunden plus die Kunden aller Partner unter Ihnen über alle Ebenen, jeder zählt einmal. Beim Erreichen eines neuen Rangs ab Aufsteiger gibt es einmalig den Aufstiegsbonus.",
+      "teamUeber": "über einem {rang}",
       "teamNicht": "noch kein Team",
       "bonus": "Aufstiegsbonus (einmalig)",
       "superProvision": "Superprovision auf die ganze Struktur",
       "marktTurbo": "Buchungsanteil myBestDays",
       "marktTurboWert": "0,5 % je Buchung, unbegrenzt",
-      "fussnoteSuper": "Ab Elite-Partner 2,5 % auf den Netto-Abo-Umsatz aller Kunden Ihrer Struktur — zusätzlich zur Provision, ohne die 12-Monats-Grenze, solange Sie den Rang halten und der Kunde zahlt."
+      "fussnoteSuper": "Ab Elite-Partner 2,5 % auf den Netto-Abo-Umsatz aller Kunden Ihrer Struktur — je Umsatz insgesamt einmal; stehen mehrere Elite-Partner in einer Kette, teilen sie sich die 2,5 % zu gleichen Teilen — zusätzlich zur Provision, ohne die 12-Monats-Grenze, solange Sie den Rang halten und der Kunde zahlt."
     },
     "team": {
       "eyebrow": "Team aufbauen",
@@ -2358,8 +2358,8 @@
         "text": "Sie erhalten Ihren Satz minus den Satz des Team-Partners — beide zum Zeitpunkt der Zahlung. Steht Ihr Team-Partner im gleichen Rang, entsteht keine Team-Provision."
       },
       "ebene": {
-        "titel": "Genau eine Ebene",
-        "text": "Ihre Team-Partner bauen kein eigenes Team unter Ihnen auf. Kein Netzwerk, keine Pyramide."
+        "titel": "Über alle Ebenen",
+        "text": "Ihre Team-Partner bauen eigene Teams auf, und jede Ebene zählt für Ihren Rang und Ihre Team-Provision. Vergütet wird ausschließlich bezahlter Abo-Umsatz — nie das Anwerben, nie ein Beitrag."
       },
       "keinGeld": {
         "titel": "Nur aus echtem Umsatz",

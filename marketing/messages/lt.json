@@ -2202,7 +2202,7 @@
       "eyebrow": "Partnerystės programa",
       "headlinePre": "Rekomenduokite myNextDays –",
       "headlineHighlight": "ir uždirbkite",
-      "sub": "Influenceriams, konsultantams, agentūroms ir nuomotojams su tinklu: Kiekviena įmonė, kuri užsiregistruoja per Jūsų nuorodą ir apmoka prenumeratą, atneša Jums iki {max} % prenumeratos pajamų dvylika mėnesių – plius 0,5 % kiekvieno užsakymo per myBestDays, paaukštinimo premijos ir nuo Elito superkomisinis be termino apribojimo.",
+      "sub": "Influenceriams, konsultantams, agentūroms ir nuomotojams su tinklu: Kiekviena įmonė, kuri užsiregistruoja per Jūsų nuorodą ir apmoka prenumeratą, atneša Jums iki {max} % prenumeratos pajamų dvylika mėnesių – plius paaukštinimo premijos ir nuo Elito superkomisinis be termino apribojimo ir 0,5 % kiekvieno užsakymo per myBestDays.",
       "cta": "Kreiptis dabar",
       "ctaLogin": "Partnerio prisijungimas",
       "chipDauer": "12 mėnesių komisiniai už klientą",
@@ -2230,8 +2230,8 @@
       "eyebrow": "Jūsų lygis",
       "heading": "Kuo didesnė Jūsų struktūra, tuo didesnis Jūsų tarifas",
       "sub": "Šis tarifas taikomas visiems naujiems komisiniams nuo rango pasiekimo. Į struktūrą įeina Jūsų paties mokantys klientai ir Jūsų komandos partnerių klientai.",
-      "kunden": "{nuo}–{iki} mokančių klientų",
-      "kundenOffen": "nuo {nuo} mokančių klientų",
+      "kunden": "{von}–{bis} mokančių klientų",
+      "kundenOffen": "nuo {von} mokančių klientų",
       "satz": "prenumeratos pajamų",
       "nichtAbrufbar": "Lygis šiuo metu nepasiekiamas. Prašome bandyti dar kartą vėliau."
     },
@@ -2244,7 +2244,7 @@
       },
       "dauer": {
         "titel": "Dvylika mėnesių",
-        "text": "Komisinis mokestis skaičiuojamas dvylika mėnesių nuo pirmojo apmokėto įmonės prenumeratos sąskaitos; jūsų klientų nemokamas mėnuo neįskaičiuojamas. Jei įmonė nutraukia sutartį, jis baigiasi su paskutiniu mokėjimu. Užsakymo dalis ir superkomisinis mokestis galioja be šio apribojimo."
+        "text": "Komisinis mokestis skaičiuojamas dvylika mėnesių nuo pirmojo apmokėto įmonės prenumeratos sąskaitos; jūsų klientų nemokamas mėnuo neįskaičiuojamas. Jei įmonė nutraukia sutartį, jis baigiasi su paskutiniu mokėjimu. Superkomisinis mokestis ir užsakymo dalis galioja be šio apribojimo, tačiau reikalauja Elito partnerio rango."
       },
       "auszahlung": {
         "titel": "Išmokėjimas",
@@ -2288,7 +2288,7 @@
       },
       "wieviel": {
         "frage": "Kiek komisinių galiu uždirbti?",
-        "antwort": "Tai priklauso nuo jūsų klientų prenumeratos pajamų ir jūsų rango. Aukščiau esančioje lentelėje nurodytas tarifas pagal rangą; dvylika mėnesių vienam klientui. Be to, 0,5 % nuo kiekvieno užsakymo, kurį jūsų klientai gauna per „myBestDays“, vienkartinė paaukštinimo premija už kiekvieną pasiektą rangą, skirtumo komisinis su komanda – ir nuo Elito partnerio 2,5 % superkomisinis už visą struktūrą be laiko apribojimo."
+        "antwort": "Tai priklauso nuo jūsų klientų prenumeratos pajamų ir jūsų rango. Aukščiau esančioje lentelėje nurodytas tarifas pagal rangą; dvylika mėnesių vienam klientui. Be to, pridedama vienkartinė paaukštinimo premija už kiekvieną pasiektą rangą ir su komanda skirtumo komisinis. Nuo Elito partnerio pridedami 2,5 % superkomisinis už visą jūsų struktūrą ir 0,5 % nuo kiekvieno užsakymo, kurį jūsų klientai gauna per „myBestDays“ – abu be laiko apribojimo."
       },
       "team": {
         "frage": "Kaip veikia komandos komisinis mokestis?",
@@ -2323,8 +2323,8 @@
       "teamProvision": "Komandos komisinis už Jūsų komandos partnerių klientus",
       "dauer": "Trukmė vienam klientui",
       "dauerWert": "12 mėnesių",
-      "kunden": "{nuo}–{iki} mokančių klientų",
-      "kundenOffen": "nuo {nuo} mokančių klientų",
+      "kunden": "{von}–{bis} mokančių klientų",
+      "kundenOffen": "nuo {von} mokančių klientų",
       "vorteile": "Paslaugos",
       "ja": "įskaičiuota",
       "nein": "neįskaičiuota",
@@ -2341,7 +2341,7 @@
       "fussnoteTeam": "Komandos komisinis yra skirtumas tarp Jūsų tarifo ir komandos partnerio tarifo už jo klientų grynąsias prenumeratos pajamas, abu mokėjimo metu – tik vienas lygis, be dalyvavimo mokesčio, be pinigų už verbavimą. Iš viso niekada daugiau nei 30 %.",
       "fussnoteCoMarketing": "Suderinus su partnerių komanda; priklauso nuo partnerio profilio ir vykstančių akcijų.",
       "fussnoteRang": "Rangas atsiranda iš Jūsų struktūros: Jūsų paties mokantys klientai plius Jūsų komandos partnerių klientai, kiekvienas skaičiuojamas vieną kartą. Pasiekus naują rangą nuo Pradedančiojo, vieną kartą gaunama paaukštinimo premija.",
-      "teamDifferenz": "{satz} % minus komandos partnerio tarifas",
+      "teamUeber": "virš partnerio {rang}",
       "teamNicht": "dar nėra komandos",
       "bonus": "Paaukštinimo premija (vienkartinė)",
       "superProvision": "Superkomisinis už visą struktūrą",

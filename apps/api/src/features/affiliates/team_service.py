@@ -15,7 +15,7 @@ from postgrest.exceptions import APIError
 from src.core.logging import get_logger
 from src.core.supabase import fetch_all_rows
 
-from . import attribution
+from . import attribution, stufen
 from .fehler import AffiliateError
 from .schemas import (
     BackofficePartner,
@@ -131,8 +131,37 @@ class TeamMixin:  # pylint: disable=too-few-public-methods
             .order("sponsor_joined_at")
         )
 
+    def _struktur_ids(self, wurzeln: list[str]) -> dict[str, list[str]]:
+        """Je direktem Team-Partner die IDs seiner GANZEN Struktur, er selbst
+        eingeschlossen — aus EINEM Lauf über alle Sponsor-Zuordnungen.
+
+        Seit dem Strukturvertrieb (0533) entstehen Overrides des Sponsors auch
+        aus Kunden von Partnern zwei, drei Ebenen tiefer; ihr `reason` trägt
+        den WERBER, nicht das direkte Mitglied. Ohne diese Zuordnung fielen
+        genau diese Zeilen im Team-Dashboard durchs Raster: in der Summe
+        enthalten, in keiner Mitgliedszeile sichtbar. Zyklen fängt der
+        `gesehen`-Satz, die Größe eine harte Obergrenze (Wurzel 8)."""
+        kinder: dict[str, list[str]] = {}
+        for r in fetch_all_rows(
+            self._db.table("affiliates")
+            .select("id, sponsor_affiliate_id")
+            .not_.is_("sponsor_affiliate_id", "null")
+        ):
+            kinder.setdefault(r["sponsor_affiliate_id"], []).append(r["id"])
+        ergebnis: dict[str, list[str]] = {}
+        for wurzel in wurzeln:
+            gesehen = {wurzel}
+            stapel = [wurzel]
+            while stapel and len(gesehen) < 10_000:
+                for kind in kinder.get(stapel.pop(), []):
+                    if kind not in gesehen:
+                        gesehen.add(kind)
+                        stapel.append(kind)
+            ergebnis[wurzel] = sorted(gesehen)
+        return ergebnis
+
     def _team_zeilen(self, sponsor_id: str, mitglieder: list[str]) -> tuple[list, list]:
-        """(Ertragszeilen der Team-Partner, Override-Zeilen des Sponsors)."""
+        """(Ertragszeilen aller Partner der Struktur, Override-Zeilen des Sponsors)."""
         ertraege = (
             fetch_all_rows(
                 self._db.table("affiliate_commissions")
@@ -157,18 +186,26 @@ class TeamMixin:  # pylint: disable=too-few-public-methods
         Team-Partner."""
         row = self._own_row(ctx)
         mitglieder = self._team_mitglieder(ctx.affiliate_id)
-        ids = [m["id"] for m in mitglieder]
-        ertraege, overrides = self._team_zeilen(ctx.affiliate_id, ids)
+        # Direkte Mitglieder als Zeilen, aber jede Zeile mit ihrer GANZEN
+        # Struktur dahinter: Umsatz, Overrides und zahlende Kunden aller
+        # Partner unter dem Mitglied (Strukturvertrieb, 0533).
+        struktur = self._struktur_ids([m["id"] for m in mitglieder])
+        alle_ids = sorted({i for ids in struktur.values() for i in ids})
+        ertraege, overrides = self._team_zeilen(ctx.affiliate_id, alle_ids)
+        # Dieselbe Zählung wie der Monatslauf für den Rang — eine Quelle.
+        kunden = stufen.struktur_kunden_je_partner(self._db)
         jetzt = datetime.now(UTC)
         seit_30 = (jetzt - timedelta(days=30)).isoformat()
         raenge = {t.id: t for t in self.raenge()}
         aktuell = raenge.get(row["current_tier_id"]) or next(iter(raenge.values()))
 
         def zeilen_von(mid: str) -> list[dict[str, Any]]:
-            return [e for e in ertraege if e["affiliate_id"] == mid]
+            teil = set(struktur.get(mid, [mid]))
+            return [e for e in ertraege if e["affiliate_id"] in teil]
 
         def overrides_von(mid: str) -> list[dict[str, Any]]:
-            return [o for o in overrides if _team_partner_id(o.get("reason")) == mid]
+            teil = set(struktur.get(mid, [mid]))
+            return [o for o in overrides if _team_partner_id(o.get("reason")) in teil]
 
         def nach_status(rows: list[dict[str, Any]], *stati: str) -> list[Betrag]:
             return _summe([r for r in rows if r["status"] in stati])
@@ -181,7 +218,7 @@ class TeamMixin:  # pylint: disable=too-few-public-methods
                 status=m["status"],
                 tier=raenge.get(m["current_tier_id"]) or aktuell,
                 joined_at=m.get("sponsor_joined_at"),
-                paying_customers=self.zahlende_kunden(m["id"]),
+                paying_customers=kunden.get(m["id"], 0),
                 revenue_30d=_summe(
                     [e for e in zeilen_von(m["id"]) if str(e["created_at"]) >= seit_30],
                     "base_amount",
@@ -435,8 +472,17 @@ class TeamMixin:  # pylint: disable=too-few-public-methods
         )
 
     def _bo_team_mitglied(
-        self, m: dict[str, Any], ertraege: list[dict[str, Any]], overrides: list[dict[str, Any]]
+        self,
+        m: dict[str, Any],
+        ertraege: list[dict[str, Any]],
+        overrides: list[dict[str, Any]],
+        *,
+        kunden: dict[str, int],
+        teil: set[str] | None = None,
     ) -> BackofficeTeamMitglied:
+        """`teil` = das Mitglied samt seiner ganzen Struktur; Umsatz und
+        Overrides werden darüber zugeordnet, weil `reason` den WERBER trägt."""
+        teil = teil or {m["id"]}
         return BackofficeTeamMitglied(
             affiliate_id=m["id"],
             name=m["full_name"],
@@ -446,15 +492,15 @@ class TeamMixin:  # pylint: disable=too-few-public-methods
             current_tier_id=m["current_tier_id"],
             joined_at=m.get("sponsor_joined_at"),
             flags=list(m.get("sponsor_flags") or []),
-            paying_customers=self.zahlende_kunden(m["id"]),
+            paying_customers=kunden.get(m["id"], 0),
             revenue_total=_summe(
-                [e for e in ertraege if e["affiliate_id"] == m["id"]], "base_amount"
+                [e for e in ertraege if e["affiliate_id"] in teil], "base_amount"
             ),
             override_total=_summe(
                 [
                     o
                     for o in overrides
-                    if _team_partner_id(o.get("reason")) == m["id"]
+                    if _team_partner_id(o.get("reason")) in teil
                     and o["status"] in ("pending", "held", "approved", "paid")
                 ]
             ),
@@ -463,7 +509,13 @@ class TeamMixin:  # pylint: disable=too-few-public-methods
     def bo_team(self, affiliate_id: str) -> BackofficeTeam:
         row = self._bo_row(affiliate_id)
         mitglieder = self._team_mitglieder(affiliate_id)
-        ertraege, overrides = self._team_zeilen(affiliate_id, [m["id"] for m in mitglieder])
+        # Wie im Partner-Dashboard (`team`): jede Mitgliedszeile mit ihrer
+        # GANZEN Struktur dahinter (0533) — sonst stand im Backoffice neben
+        # einer Team-Provision aus Ebene zwei ein Umsatz von 0.
+        struktur = self._struktur_ids([m["id"] for m in mitglieder])
+        alle_ids = sorted({i for ids in struktur.values() for i in ids})
+        ertraege, overrides = self._team_zeilen(affiliate_id, alle_ids)
+        kunden = stufen.struktur_kunden_je_partner(self._db)
         sponsor: BackofficeTeamMitglied | None = None
         if row.get("sponsor_affiliate_id"):
             sp = _rows(
@@ -486,10 +538,16 @@ class TeamMixin:  # pylint: disable=too-few-public-methods
                     },
                     [],
                     [],
+                    kunden=kunden,
                 )
         return BackofficeTeam(
             sponsor=sponsor,
-            members=[self._bo_team_mitglied(m, ertraege, overrides) for m in mitglieder],
+            members=[
+                self._bo_team_mitglied(
+                    m, ertraege, overrides, kunden=kunden, teil=set(struktur.get(m["id"], []))
+                )
+                for m in mitglieder
+            ],
             override_pending=_summe([o for o in overrides if o["status"] in ("pending", "held")]),
             override_approved=_summe([o for o in overrides if o["status"] == "approved"]),
             override_paid=_summe([o for o in overrides if o["status"] == "paid"]),
@@ -499,8 +557,9 @@ class TeamMixin:  # pylint: disable=too-few-public-methods
         self, affiliate_id: str, req: BackofficeSponsorSetzen, admin: PlatformContext
     ) -> BackofficePartner:
         """Sponsor setzen, umhängen oder lösen — nur hier, mit Grund und Audit.
-        Eine Ebene erzwingt der DB-Trigger; hier wird die Fachregel zusätzlich
-        geprüft, damit der Fehler lesbar ist statt ein 23514."""
+        Zyklen verbietet der DB-Trigger (0533); hier wird die Fachregel
+        zusätzlich geprüft, damit der Fehler lesbar ist statt ein 23514. Ein
+        Ebenen-Limit gibt es seit dem 03.09.2026 nicht mehr (Strukturvertrieb)."""
         row = self._bo_row(affiliate_id)
         updates: dict[str, Any] = {}
         if req.sponsor_affiliate_id is None:
@@ -511,20 +570,24 @@ class TeamMixin:  # pylint: disable=too-few-public-methods
                     "Ein Partner kann nicht sein eigener Sponsor sein.", status_code=422
                 )
             sponsor = self._bo_row(req.sponsor_affiliate_id)
-            if sponsor.get("sponsor_affiliate_id"):
-                raise AffiliateError(
-                    "Der gewählte Sponsor ist selbst Team-Mitglied — nur eine Ebene.",
-                    status_code=422,
-                )
+            # Zyklus: der gewählte Sponsor darf nicht UNTER diesem Partner
+            # stehen, sonst führt die Kette im Kreis. Kette vom Sponsor nach
+            # oben laufen; trifft sie den Partner, ist es ein Kreis.
+            aktuell: str | None = sponsor.get("sponsor_affiliate_id")
+            tiefe = 0
+            while aktuell is not None and tiefe < 25:
+                if aktuell == affiliate_id:
+                    raise AffiliateError(
+                        "Der gewählte Sponsor steht in der Struktur unter diesem Partner — "
+                        "das ergäbe einen Kreis.",
+                        status_code=422,
+                    )
+                aktuell = self._bo_row(aktuell).get("sponsor_affiliate_id")
+                tiefe += 1
             if not attribution.rang_darf_team_fuehren(self._db, sponsor.get("current_tier_id")):
                 raise AffiliateError(
                     "Der gewählte Sponsor darf in seinem Rang noch kein Team führen "
                     "(erst ab Aufsteiger).",
-                    status_code=422,
-                )
-            if self._team_size(affiliate_id) > 0:
-                raise AffiliateError(
-                    "Dieser Partner führt ein Team und kann kein Team-Mitglied werden.",
                     status_code=422,
                 )
             if req.sponsor_affiliate_id != row.get("sponsor_affiliate_id"):

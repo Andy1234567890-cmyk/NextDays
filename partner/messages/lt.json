@@ -60,7 +60,7 @@
       "super": "Super komisiniai",
       "superHinweis": "{satz} nuo jūsų struktūros prenumeratos apyvartos, be termino apribojimo",
       "turbo": "myBestDays užsakymo dalis",
-      "turboHinweis": "0,5 % už kiekvieną užsakymą per myBestDays iš jūsų klientų ir komandos klientų",
+      "turboHinweis": "Nuo Elite-Partner: 0,5 % už kiekvieną užsakymą per myBestDays iš jūsų klientų ir komandos klientų",
       "bonus": "Paaukštinimo premijos",
       "bonusHinweis": "vienkartinis už kiekvieną pasiektą rangą"
     },
@@ -303,10 +303,10 @@
     },
     "regeln": {
       "titel": "Taisyklės",
-      "rang": "Komandos komisiniai = jūsų tarifas minus komandos partnerio tarifas, mokėjimo metu. Tas pats rangas = 0.",
-      "ebene": "Tik vienas lygis: jūsų komandos partneriai nekurs savo komandos.",
+      "rang": "Komandos komisiniai = jūsų tarifas minus aukščiausias tarifas, kuris už tą pačią apyvartą žemiau jūsų jau buvo išmokėtas — mokėjimo metu. Tas pats arba aukštesnis rangas žemiau jūsų = 0.",
+      "ebene": "Per visus lygius: jūsų komandos partneriai kuria savo komandas, kiekvienas lygis įskaitomas rangui ir komandos komisiniams.",
       "keinGeld": "Jokių pinigų už verbavimą – tik iš apmokėtų prenumeratos pajamų.",
-      "dauer": "12 mėnesių už kiekvieną komandos klientą, 30 dienų grąžinimo langas. Nuo Elito papildomai 2,5 % super komisinių be termino apribojimo."
+      "dauer": "12 mėnesių už kiekvieną komandos klientą, 30 dienų grąžinimo langas. Nuo Elito papildomai 2,5 % super komisinių be termino apribojimo — keli Elito partneriai vienoje grandinėje dalijasi jais lygiomis dalimis."
     },
     "kachel": {
       "mitglieder": "Komandos partneriai (aktyvūs / iš viso)",
@@ -498,11 +498,16 @@
     "plz": "Pašto kodas",
     "ort": "Miestas",
     "nationalitaet": "Pilietybė (šalies kodas)",
+    "idNummer": "Asmens kodas",
+    "idNummerHinweis": "Jūsų nacionalinis asmens kodas, pvz., CPR (DK), personnummer (SE/FI), NIF (ES), PESEL (PL), codice fiscale (IT).",
+    "bundesland": "Apskritis / regionas",
     "telefon": "Telefonas",
     "webseite": "Svetainė arba profilis",
     "webseiteHinweis": "Adresas, kuriuo reklamuojate – reikalingas patikrinimui.",
     "firmenname": "Įmonės pavadinimas",
     "steuernummer": "Mokesčių mokėtojo kodas",
+    "registernummer": "Įmonės kodas",
+    "ustId": "PVM mokėtojo kodas",
     "firmenStrasse": "Įmonės adresas",
     "firmaHinweis": "Jūsų aukščiau nurodyti duomenys bus naudojami kaip atstovaujančio asmens duomenys.",
     "speichern": "Išsaugoti duomenis",

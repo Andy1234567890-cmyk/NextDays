@@ -2202,7 +2202,7 @@
       "eyebrow": "Programa de Parceiros",
       "headlinePre": "Indique myNextDays —",
       "headlineHighlight": "e ganhe dinheiro",
-      "sub": "Para influenciadores, consultores, agências e proprietários com rede: Cada empresa que se regista através do seu link e paga uma subscrição, rende-lhe até {max} % do volume de negócios da subscrição durante doze meses — mais 0,5 % de cada reserva via myBestDays, bónus de promoção e, a partir de Elite, uma super comissão sem limite de duração.",
+      "sub": "Para influenciadores, consultores, agências e proprietários com rede: Cada empresa que se regista através do seu link e paga uma subscrição, rende-lhe até {max} % do volume de negócios da subscrição durante doze meses — mais bónus de promoção e, a partir de Elite, uma super comissão sem limite de duração e 0,5 % de cada reserva via myBestDays.",
       "cta": "Candidatar-se agora",
       "ctaLogin": "Login de Parceiro",
       "chipDauer": "12 meses de comissão por cliente",
@@ -2244,7 +2244,7 @@
       },
       "dauer": {
         "titel": "Doze meses",
-        "text": "A comissão é válida por doze meses a partir da primeira fatura de assinatura paga da empresa; o mês gratuito de seus clientes não conta. Se a empresa rescindir, a comissão termina com o último pagamento. A participação na reserva e a supercomissão são válidas sem esse limite."
+        "text": "A comissão é válida por doze meses a partir da primeira fatura de assinatura paga da empresa; o mês gratuito de seus clientes não conta. Se a empresa rescindir, a comissão termina com o último pagamento. A supercomissão e a participação na reserva são válidas sem esse limite, mas exigem a classificação de Parceiro Elite."
       },
       "auszahlung": {
         "titel": "Pagamento",
@@ -2288,7 +2288,7 @@
       },
       "wieviel": {
         "frage": "Quanto de comissão posso ganhar?",
-        "antwort": "Isso depende da receita de assinatura de seus clientes e de sua classificação. A tabela acima mostra a taxa por classificação; por doze meses por cliente. Além disso, há 0,5% de cada reserva que seus clientes recebem via myBestDays, um bônus único de ascensão para cada classificação alcançada, a comissão de diferença com uma equipe — e a partir do Parceiro Elite, 2,5% de supercomissão sobre toda a estrutura sem limite de tempo."
+        "antwort": "Isso depende da receita de assinatura de seus clientes e de sua classificação. A tabela acima mostra a taxa por classificação; por doze meses por cliente. Além disso, há um bônus único de ascensão para cada classificação alcançada e, com uma equipe, a comissão de diferença. A partir do Parceiro Elite, somam-se uma supercomissão de 2,5 % sobre toda a sua estrutura e 0,5% de cada reserva que seus clientes recebem via myBestDays — ambas sem limite de tempo."
       },
       "team": {
         "frage": "Como funciona a comissão da equipe?",
@@ -2323,8 +2323,8 @@
       "teamProvision": "Comissão de equipa sobre clientes dos seus parceiros de equipa",
       "dauer": "Duração por cliente",
       "dauerWert": "12 meses",
-      "kunden": "{de}–{até} clientes pagantes",
-      "kundenOffen": "a partir de {de} clientes pagantes",
+      "kunden": "{von}–{bis} clientes pagantes",
+      "kundenOffen": "a partir de {von} clientes pagantes",
       "vorteile": "Serviços",
       "ja": "incluído",
       "nein": "não incluído",
@@ -2341,7 +2341,7 @@
       "fussnoteTeam": "A comissão de equipa é a diferença entre a sua taxa e a taxa do parceiro de equipa sobre o volume de negócios líquido da subscrição dos seus clientes, ambos no momento do pagamento — exatamente um nível, sem taxa de participação, sem dinheiro para recrutamento. Nunca mais de 30 % no total.",
       "fussnoteCoMarketing": "Mediante acordo com a equipe de parceiros; depende do perfil do parceiro e das ações em andamento.",
       "fussnoteRang": "A classificação resulta da sua estrutura: os seus próprios clientes pagantes mais os clientes dos seus parceiros de equipa, cada um conta uma vez. Ao atingir uma nova classificação a partir de Ascendente, há um bónus de promoção único.",
-      "teamDifferenz": "{satz} % menos a taxa do parceiro de equipa",
+      "teamUeber": "acima de um {rang}",
       "teamNicht": "ainda sem equipa",
       "bonus": "Bónus de promoção (único)",
       "superProvision": "Super comissão sobre toda a estrutura",

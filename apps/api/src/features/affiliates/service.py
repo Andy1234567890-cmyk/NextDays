@@ -1051,16 +1051,11 @@ class AffiliatesService(
                 "reviewed_at": datetime.now(UTC).isoformat(),
             }
         ).eq("id", affiliate_id).execute()
-        # Gegenzustand (Wurzel 1): offene Erträge nicht mehr auszahlen.
-        self._db.table("affiliate_commissions").update(
-            {"status": "held", "reason": "partner_suspended"}
-        ).eq("affiliate_id", affiliate_id).in_("status", ["pending", "approved"]).execute()
-        # Team (0520): auch die Overrides des Sponsors, die aus diesem Partner stammen.
-        self._db.table("affiliate_commissions").update(
-            {"status": "held", "reason": f"team_suspended:{affiliate_id}"}
-        ).eq("kind", "override").eq("reason", f"team:{affiliate_id}").in_(
-            "status", ["pending", "approved"]
-        ).execute()
+        # Gegenzustand (Wurzel 1): nichts mehr auszahlen, was durch diesen
+        # Partner läuft. Zuerst die Team-Provisionen der Kette (ihr Grund trägt
+        # den Werber und muss erhalten bleiben), dann die eigenen Zeilen.
+        self._team_overrides_anhalten(affiliate_id)
+        self._eigene_zeilen_anhalten(affiliate_id)
         log.info("partner_gesperrt", affiliate_id=affiliate_id, by=admin.user_id)
         return self._bo_partner(self._bo_row(affiliate_id))
 
@@ -1076,16 +1071,95 @@ class AffiliatesService(
                 "reviewed_at": datetime.now(UTC).isoformat(),
             }
         ).eq("id", affiliate_id).execute()
-        self._db.table("affiliate_commissions").update({"status": "pending", "reason": None}).eq(
-            "affiliate_id", affiliate_id
-        ).eq("status", "held").eq("reason", "partner_suspended").execute()
-        self._db.table("affiliate_commissions").update(
-            {"status": "pending", "reason": f"team:{affiliate_id}"}
-        ).eq("kind", "override").eq("reason", f"team_suspended:{affiliate_id}").eq(
-            "status", "held"
-        ).execute()
+        self._eigene_zeilen_freigeben(affiliate_id)
+        self._team_overrides_freigeben(affiliate_id)
         log.info("partner_entsperrt", affiliate_id=affiliate_id, by=admin.user_id)
         return self._bo_partner(self._bo_row(affiliate_id))
+
+    _SPERRE = "partner_suspended"
+
+    def _eigene_zeilen_anhalten(self, affiliate_id: str) -> None:
+        """Offene Zeilen des Gesperrten anhalten. Der bisherige Grund (Werber
+        einer Team-Provision, `lifetime:own`, …) bleibt hinter `|` erhalten —
+        vorher wurde er überschrieben und beim Entsperren durch `None`
+        ersetzt, womit die Zuordnung im Team-Dashboard verloren ging."""
+        rows = fetch_all_rows(
+            self._db.table("affiliate_commissions")
+            .select("id, reason")
+            .eq("affiliate_id", affiliate_id)
+            .in_("status", ["pending", "approved"])
+        )
+        je_grund: dict[str | None, list[str]] = {}
+        for r in rows:
+            je_grund.setdefault(r.get("reason"), []).append(r["id"])
+        for grund, ids in je_grund.items():
+            neu = self._SPERRE if grund is None else f"{self._SPERRE}|{grund}"
+            self._db.table("affiliate_commissions").update({"status": "held", "reason": neu}).in_(
+                "id", ids
+            ).execute()
+
+    def _eigene_zeilen_freigeben(self, affiliate_id: str) -> None:
+        rows = fetch_all_rows(
+            self._db.table("affiliate_commissions")
+            .select("id, reason")
+            .eq("affiliate_id", affiliate_id)
+            .eq("status", "held")
+            .like("reason", f"{self._SPERRE}%")
+        )
+        je_grund: dict[str | None, list[str]] = {}
+        for r in rows:
+            grund = str(r["reason"])
+            if grund != self._SPERRE and not grund.startswith(f"{self._SPERRE}|"):
+                continue
+            alt = grund.partition("|")[2] or None
+            je_grund.setdefault(alt, []).append(r["id"])
+        for alt, ids in je_grund.items():
+            self._db.table("affiliate_commissions").update(
+                {"status": "pending", "reason": alt}
+            ).in_("id", ids).execute()
+
+    def _team_overrides_anhalten(self, affiliate_id: str) -> None:
+        """Strukturvertrieb (0533): jede Team-Provision, die DURCH den
+        Gesperrten hindurch entsteht — Werber ist er selbst oder jemand in
+        seiner Struktur —, wird angehalten, wie das Buchen es bei einem nicht
+        freigegebenen Glied der Kette tut. Der Werber steht im Grund weiter,
+        damit das Entsperren ihn wiederherstellt."""
+        struktur = self._struktur_ids([affiliate_id])[affiliate_id]
+        je_werber: dict[str, list[str]] = {}
+        for i in range(0, len(struktur), 200):
+            for r in fetch_all_rows(
+                self._db.table("affiliate_commissions")
+                .select("id, reason")
+                .eq("kind", "override")
+                .in_("status", ["pending", "approved"])
+                .in_("reason", [f"team:{w}" for w in struktur[i : i + 200]])
+            ):
+                werber = _team_partner_id(r["reason"]) or affiliate_id
+                je_werber.setdefault(werber, []).append(r["id"])
+        for werber, ids in je_werber.items():
+            self._db.table("affiliate_commissions").update(
+                {"status": "held", "reason": f"team_suspended:{affiliate_id}:{werber}"}
+            ).in_("id", ids).execute()
+
+    def _team_overrides_freigeben(self, affiliate_id: str) -> None:
+        rows = fetch_all_rows(
+            self._db.table("affiliate_commissions")
+            .select("id, reason")
+            .eq("kind", "override")
+            .eq("status", "held")
+            .like("reason", f"team_suspended:{affiliate_id}%")
+        )
+        je_werber: dict[str, list[str]] = {}
+        for r in rows:
+            teile = str(r["reason"]).split(":")
+            if teile[1] != affiliate_id:
+                continue
+            # Altbestand (0520) ohne Werber: `team_suspended:<id>` — Werber war der Gesperrte.
+            je_werber.setdefault(teile[2] if len(teile) > 2 else affiliate_id, []).append(r["id"])
+        for werber, ids in je_werber.items():
+            self._db.table("affiliate_commissions").update(
+                {"status": "pending", "reason": f"team:{werber}"}
+            ).in_("id", ids).execute()
 
     def bo_referrals(self, affiliate_id: str) -> BackofficeReferralListe:
         refs = self._referrals(affiliate_id)

@@ -60,7 +60,7 @@
       "super": "Superprovize",
       "superHinweis": "{satz} z obratu předplatného vaší struktury, bez časového omezení",
       "turbo": "Podíl na rezervacích myBestDays",
-      "turboHinweis": "0,5 % za každou rezervaci přes myBestDays u vašich zákazníků a týmových zákazníků",
+      "turboHinweis": "Od úrovně Elite-Partner: 0,5 % za každou rezervaci přes myBestDays u vašich zákazníků a týmových zákazníků",
       "bonus": "Bonusy za povýšení",
       "bonusHinweis": "jednorázově za každou dosaženou pozici"
     },
@@ -303,10 +303,10 @@
     },
     "regeln": {
       "titel": "Pravidla",
-      "rang": "Týmová provize = vaše sazba minus sazba týmového partnera, v okamžiku platby. Stejná pozice = 0.",
-      "ebene": "Přesně jedna úroveň: Vaši týmoví partneři si nevytvářejí vlastní tým.",
+      "rang": "Týmová provize = vaše sazba minus nejvyšší sazba, která již byla za stejný obrat vyplacena pod vámi — v okamžiku platby. Stejná nebo vyšší pozice pod vámi = 0.",
+      "ebene": "Přes všechny úrovně: Vaši týmoví partneři si vytvářejí vlastní týmy, každá úroveň se počítá pro pozici i týmovou provizi.",
       "keinGeld": "Žádné peníze za nábor – pouze z placeného obratu z předplatného.",
-      "dauer": "12 měsíců na týmového zákazníka, 30denní lhůta pro vrácení peněz. Od úrovně Elite navíc 2,5 % superprovize bez časového omezení."
+      "dauer": "12 měsíců na týmového zákazníka, 30denní lhůta pro vrácení peněz. Od úrovně Elite navíc 2,5 % superprovize bez časového omezení — více partnerů Elite v jednom řetězci si ji dělí rovným dílem."
     },
     "kachel": {
       "mitglieder": "Týmoví partneři (aktivní / celkem)",
@@ -498,11 +498,16 @@
     "plz": "PSČ",
     "ort": "Město",
     "nationalitaet": "Státní příslušnost (kód země)",
+    "idNummer": "Rodné číslo",
+    "idNummerHinweis": "Vaše národní osobní identifikační číslo, např. CPR (DK), personnummer (SE/FI), NIF (ES), PESEL (PL), codice fiscale (IT).",
+    "bundesland": "Kraj / region",
     "telefon": "Telefon",
     "webseite": "Webová stránka nebo profil",
     "webseiteHinweis": "Adresa, pod kterou inzerujete – je nutná pro ověření.",
     "firmenname": "Název firmy",
     "steuernummer": "Daňové identifikační číslo",
+    "registernummer": "IČO / registrační číslo",
+    "ustId": "DIČ (DPH)",
     "firmenStrasse": "Adresa firmy",
     "firmaHinweis": "Jako oprávněná osoba budou použity vaše výše uvedené údaje.",
     "speichern": "Uložit údaje",

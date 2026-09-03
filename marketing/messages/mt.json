@@ -2202,7 +2202,7 @@
       "eyebrow": "Programm tas-Sħubija",
       "headlinePre": "Irreferi myNextDays —",
       "headlineHighlight": "u aqla' flus",
-      "sub": "Għal Influencers, Konsulenti, Aġenziji u Sidien b'netwerk: Kull negozju li jirreġistra permezz tal-link tiegħek u jħallas abbonament iġiblek sa {max} % tad-dħul mill-abbonament għal tnax-il xahar — flimkien ma' 0.5 % ta' kull prenotazzjoni permezz ta' myBestDays, bonusijiet ta' promozzjoni u, minn Elite 'il fuq, super kummissjoni mingħajr limitu ta' żmien.",
+      "sub": "Għal Influencers, Konsulenti, Aġenziji u Sidien b'netwerk: Kull negozju li jirreġistra permezz tal-link tiegħek u jħallas abbonament iġiblek sa {max} % tad-dħul mill-abbonament għal tnax-il xahar — flimkien ma' bonusijiet ta' promozzjoni u, minn Elite 'il fuq, super kummissjoni mingħajr limitu ta' żmien u 0.5 % ta' kull prenotazzjoni permezz ta' myBestDays.",
       "cta": "Applika issa",
       "ctaLogin": "Login tas-Sħubija",
       "chipDauer": "12-il xahar kummissjoni għal kull klijent",
@@ -2230,8 +2230,8 @@
       "eyebrow": "Il-livell tiegħek",
       "heading": "Aktar ma tkun kbira l-istruttura tiegħek, aktar tkun għolja r-rata tiegħek",
       "sub": "Ir-rata tapplika għall-kummissjonijiet ġodda kollha mill-mument li jintlaħaq il-grad. L-istruttura tinkludi l-klijenti li jħallsu tiegħek stess u l-klijenti tas-sħab tat-tim tiegħek.",
-      "kunden": "{min}-{max} klijenti li jħallsu",
-      "kundenOffen": "minn {min} klijenti li jħallsu",
+      "kunden": "{von}-{bis} klijenti li jħallsu",
+      "kundenOffen": "minn {von} klijenti li jħallsu",
       "satz": "tad-dħul mill-abbonament",
       "nichtAbrufbar": "Il-livell bħalissa mhux disponibbli. Jekk jogħġbok erġa' pprova aktar tard."
     },
@@ -2244,7 +2244,7 @@
       },
       "dauer": {
         "titel": "Tnax-il xahar",
-        "text": "Il-kummissjoni tibda tnax-il xahar mill-ewwel kont ta' abbonament imħallas tal-operazzjoni; ix-xahar b'xejn tal-klijenti tiegħek ma jingħaddx. Jekk l-operazzjoni tikkanċella, tispiċċa bl-aħħar ħlas tagħha. Il-proporzjon tal-prenotazzjoni u s-super kummissjoni jkomplu mingħajr dan il-limitu."
+        "text": "Il-kummissjoni tibda tnax-il xahar mill-ewwel kont ta' abbonament imħallas tal-operazzjoni; ix-xahar b'xejn tal-klijenti tiegħek ma jingħaddx. Jekk l-operazzjoni tikkanċella, tispiċċa bl-aħħar ħlas tagħha. Is-super kummissjoni u l-proporzjon tal-prenotazzjoni jkomplu mingħajr dan il-limitu, iżda jeħtieġu l-grad ta' sieħeb Elite."
       },
       "auszahlung": {
         "titel": "Ħlas",
@@ -2288,7 +2288,7 @@
       },
       "wieviel": {
         "frage": "Kemm nista' naqla' kummissjoni?",
-        "antwort": "Dan jiddependi mid-dħul mill-abbonament tal-klijenti tiegħek u l-grad tiegħek. Il-livell ta' hawn fuq juri r-rata għal kull grad; għal tnax-il xahar għal kull klijent. Barra minn hekk, hemm 0.5% ta' kull prenotazzjoni li l-klijenti tiegħek jirċievu permezz ta' myBestDays, bonus ta' promozzjoni ta' darba għal kull grad miksub, mal-kummissjoni differenzjali ta' tim — u minn sieħeb Elite, 2.5% super kummissjoni fuq l-istruttura kollha mingħajr limitu ta' żmien."
+        "antwort": "Dan jiddependi mid-dħul mill-abbonament tal-klijenti tiegħek u l-grad tiegħek. Il-livell ta' hawn fuq juri r-rata għal kull grad; għal tnax-il xahar għal kull klijent. Barra minn hekk, hemm bonus ta' promozzjoni ta' darba għal kull grad miksub u, ma' tim, il-kummissjoni differenzjali. Minn sieħeb Elite jiżdiedu super kummissjoni ta' 2.5 % fuq l-istruttura kollha tiegħek u 0.5% ta' kull prenotazzjoni li l-klijenti tiegħek jirċievu permezz ta' myBestDays — it-tnejn mingħajr limitu ta' żmien."
       },
       "team": {
         "frage": "Kif taħdem il-kummissjoni tat-tim?",
@@ -2341,7 +2341,7 @@
       "fussnoteTeam": "Il-kummissjoni tat-tim hija d-differenza bejn ir-rata tiegħek u r-rata tas-sieħeb tat-tim fuq id-dħul nett mill-abbonamenti tal-klijenti tiegħu, it-tnejn fil-ħin tal-ħlas — livell wieħed biss, l-ebda miżata ta' parteċipazzjoni, l-ebda flus għar-reklutaġġ. Qatt ma jaqbeż it-30 % b'kollox.",
       "fussnoteCoMarketing": "Wara konsultazzjoni mat-tim tas-sħab; tiddependi fuq il-profil tas-sieħeb u l-azzjonijiet kurrenti.",
       "fussnoteRang": "Il-grad jinħoloq mill-istruttura tiegħek: klijenti li jħallsu tiegħek stess flimkien mal-klijenti tas-sħab tat-tim tiegħek, kull wieħed jgħodd darba. Meta jintlaħaq grad ġdid minn Promotur 'il fuq, jingħata bonus ta' promozzjoni darba.",
-      "teamDifferenz": "{satz} % nieqes ir-rata tas-sieħeb tat-tim",
+      "teamUeber": "fuq {rang}",
       "teamNicht": "għad m'hemmx tim",
       "bonus": "Bonus ta' promozzjoni (darba)",
       "superProvision": "Super kummissjoni fuq l-istruttura kollha",

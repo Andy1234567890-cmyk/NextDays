@@ -57,7 +57,42 @@ def _person(p: Any) -> dict[str, Any]:  # noqa: ANN401
         daten["phone"] = p.phone
     if p.nationality:
         daten["nationality"] = p.nationality.upper()
+    if p.id_number:
+        daten["id_number"] = p.id_number
     return daten
+
+
+# Stripe-Pflichtfeld → Wert aus dem Formular. Nur die Felder, die DIESES Formular
+# liefert; Bank, Zustimmung und Ausweis laufen über ihre eigenen Schritte, und
+# Name/Geburtsdatum/Anschrift erzwingt schon das Schema. Der Präfix ist bei
+# Privatpersonen `individual`, bei Unternehmen `representative` (Persons-API).
+def fehlende_pflichtfelder(
+    minimum: set[str], req: ConnectDaten, *, firma: bool
+) -> list[str]:
+    """Welche der live von Stripe verlangten Felder das Formular NICHT gefüllt
+    hat. Der Fehler soll hier entstehen, nicht erst als offenes Requirement
+    nach dem Absenden — dort steht nur ein Feldname, ohne Formular dazu."""
+    person = "representative" if firma else "individual"
+    werte: dict[str, Any] = {
+        f"{person}.id_number": req.person.id_number,
+        f"{person}.nationality": req.person.nationality,
+        f"{person}.phone": req.person.phone,
+        f"{person}.email": req.person.email,
+        f"{person}.address.state": req.person.address.state,
+    }
+    if firma:
+        werte.update(
+            {
+                "company.tax_id": req.company_tax_id,
+                "company.vat_id": req.company_vat_id,
+                "company.registration_number": req.company_registration_number,
+                "company.phone": req.company_phone,
+                "company.address.state": req.company_address.state
+                if req.company_address
+                else None,
+            }
+        )
+    return sorted(f for f in minimum if f in werte and not werte[f])
 
 
 class ConnectMixin:
@@ -80,7 +115,7 @@ class ConnectMixin:
         """
         rows = (
             self.db.table("affiliates")
-            .select("id, legal_form, stripe_account_id")
+            .select("id, legal_form, stripe_account_id, country, email, vat_id")
             .eq("id", affiliate_id)
             .limit(1)
             .execute()
@@ -92,6 +127,28 @@ class ConnectMixin:
         if not rows[0].get("stripe_account_id"):
             raise AffiliateError("Es besteht noch kein Verbundkonto.", status_code=409)
         firma = rows[0].get("legal_form") == "company"
+
+        # Was wir schon wissen, muss der Partner nicht noch einmal tippen:
+        # E-Mail (Login) und USt-IdNr. (Steuerdaten) kommen aus dem Profil.
+        if not req.person.email and rows[0].get("email"):
+            req = req.model_copy(update={"person": req.person.model_copy(
+                update={"email": rows[0]["email"]}
+            )})
+        if firma and not req.company_vat_id and rows[0].get("vat_id"):
+            req = req.model_copy(update={"company_vat_id": rows[0]["vat_id"]})
+
+        # Pflichtfelder LIVE aus Stripes Ländervorgabe (Wurzel 4) — fehlt eines,
+        # ist das ein 422 mit Feldnamen, kein stilles Requirement danach.
+        land = (rows[0].get("country") or "").upper()
+        minimum = set(
+            connect.pflichtfelder(land, "company" if firma else "individual")["minimum"]
+        )
+        fehlt = fehlende_pflichtfelder(minimum, req, firma=firma)
+        if fehlt:
+            raise AffiliateError(
+                f"Stripe verlangt für {land} zusätzlich: {', '.join(fehlt)}.",
+                status_code=422,
+            )
 
         felder: dict[str, Any] = {"business_profile": {"url": req.url}}
         if firma:
@@ -106,6 +163,10 @@ class ConnectMixin:
             }
             if req.company_tax_id:
                 firmendaten["tax_id"] = req.company_tax_id
+            if req.company_vat_id:
+                firmendaten["vat_id"] = req.company_vat_id
+            if req.company_registration_number:
+                firmendaten["registration_number"] = req.company_registration_number
             if req.company_phone:
                 firmendaten["phone"] = req.company_phone
             felder["company"] = firmendaten

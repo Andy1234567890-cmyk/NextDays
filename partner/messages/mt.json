@@ -60,7 +60,7 @@
       "super": "Superkummissjoni",
       "superHinweis": "{satz} fuq id-dħul mill-abbonamenti tal-istruttura tiegħek, mingħajr limitu ta' żmien",
       "turbo": "Sehem tal-prenotazzjonijiet myBestDays",
-      "turboHinweis": "0.5% għal kull prenotazzjoni permezz ta' myBestDays mal-klijenti tiegħek u l-klijenti tat-tim",
+      "turboHinweis": "Minn Elite-Partner 'l fuq: 0.5% għal kull prenotazzjoni permezz ta' myBestDays mal-klijenti tiegħek u l-klijenti tat-tim",
       "bonus": "Bonuses ta' promozzjoni",
       "bonusHinweis": "darba għal kull grad miksub"
     },
@@ -303,10 +303,10 @@
     },
     "regeln": {
       "titel": "Ir-regoli",
-      "rang": "Kummissjoni tat-tim = ir-rata tiegħek nieqes ir-rata tal-imsieħeb tat-tim, fil-ħin tal-ħlas. L-istess grad = 0.",
-      "ebene": "Eżattament livell wieħed: l-imsieħba tat-tim tiegħek ma jibnux it-tim tagħhom stess.",
+      "rang": "Kummissjoni tat-tim = ir-rata tiegħek nieqes l-ogħla rata li diġà tħallset fuq l-istess fatturat taħtek — fil-ħin tal-ħlas. L-istess grad jew grad ogħla taħtek = 0.",
+      "ebene": "Fuq il-livelli kollha: l-imsieħba tat-tim tiegħek jibnu t-timijiet tagħhom stess, kull livell jgħodd għall-grad u għall-kummissjoni tat-tim.",
       "keinGeld": "L-ebda flus għar-reklutaġġ — biss minn dħul minn abbonamenti mħallsa.",
-      "dauer": "12-il xahar għal kull klijent tat-tim, tieqa ta' rifużjoni ta' 30 jum. Minn Elite 'l fuq, 2.5% superkummissjoni addizzjonali mingħajr limitu ta' żmien."
+      "dauer": "12-il xahar għal kull klijent tat-tim, tieqa ta' rifużjoni ta' 30 jum. Minn Elite 'l fuq, 2.5% superkummissjoni addizzjonali mingħajr limitu ta' żmien — diversi Elite f'katina waħda jaqsmuha f'partijiet indaqs."
     },
     "kachel": {
       "mitglieder": "Imsieħba tat-tim (attivi / totali)",
@@ -498,11 +498,16 @@
     "plz": "Kodiċi postali",
     "ort": "Belt",
     "nationalitaet": "Nazzjonalità (kodiċi tal-pajjiż)",
+    "idNummer": "Numru tal-karta tal-identità",
+    "idNummerHinweis": "In-numru personali nazzjonali tiegħek, eż. CPR (DK), personnummer (SE/FI), NIF (ES), PESEL (PL), codice fiscale (IT).",
+    "bundesland": "Reġjun",
     "telefon": "Telefon",
     "webseite": "Websajt jew profil",
     "webseiteHinweis": "L-indirizz li fih tirreklama — meħtieġ għall-verifika.",
     "firmenname": "Isem tal-kumpanija",
     "steuernummer": "Numru tat-taxxa",
+    "registernummer": "Numru tar-reġistrazzjoni tal-kumpanija",
+    "ustId": "Numru tal-VAT",
     "firmenStrasse": "Indirizz tal-kumpanija",
     "firmaHinweis": "Bħala persuna awtorizzata, id-dettalji tiegħek imsemmija hawn fuq se jintużaw.",
     "speichern": "Issejvja d-dettalji",

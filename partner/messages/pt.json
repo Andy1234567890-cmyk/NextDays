@@ -60,7 +60,7 @@
       "super": "Super comissão",
       "superHinweis": "{satz} sobre o volume de negócios de subscrição da sua estrutura, sem limite de tempo",
       "turbo": "Quota de reserva myBestDays",
-      "turboHinweis": "0,5 % por reserva via myBestDays para os seus clientes e clientes da equipa",
+      "turboHinweis": "A partir de Elite-Partner: 0,5 % por reserva via myBestDays para os seus clientes e clientes da equipa",
       "bonus": "Bónus de ascensão",
       "bonusHinweis": "uma vez por cada classificação alcançada"
     },
@@ -303,10 +303,10 @@
     },
     "regeln": {
       "titel": "As regras",
-      "rang": "Comissão da equipa = a sua taxa menos a taxa do parceiro da equipa, no momento do pagamento. Mesma classificação = 0.",
-      "ebene": "Apenas um nível: seus parceiros de equipe não formam uma equipe própria.",
+      "rang": "Comissão da equipa = a sua taxa menos a taxa mais alta já remunerada sobre o mesmo volume abaixo de si, no momento do pagamento. Mesma classificação ou superior abaixo de si = 0.",
+      "ebene": "Em todos os níveis: seus parceiros de equipe formam equipes próprias, cada nível conta para a classificação e a comissão de equipe.",
       "keinGeld": "Nenhum dinheiro por recrutamento — apenas da receita de assinaturas pagas.",
-      "dauer": "12 meses por cliente da equipa, janela de reembolso de 30 dias. A partir de Elite, um adicional de 2,5 % de super comissão sem limite de tempo."
+      "dauer": "12 meses por cliente da equipa, janela de reembolso de 30 dias. A partir de Elite, um adicional de 2,5 % de super comissão sem limite de tempo — vários Elite numa mesma cadeia partilham-na em partes iguais."
     },
     "kachel": {
       "mitglieder": "Parceiros de equipe (ativos / total)",
@@ -498,11 +498,16 @@
     "plz": "Código postal",
     "ort": "Localidade",
     "nationalitaet": "Nacionalidade (código do país)",
+    "idNummer": "Número de identificação pessoal",
+    "idNummerHinweis": "O seu número de identificação nacional, p. ex. CPR (DK), personnummer (SE/FI), NIF (ES), PESEL (PL), codice fiscale (IT).",
+    "bundesland": "Distrito / região",
     "telefon": "Telefone",
     "webseite": "Website ou perfil",
     "webseiteHinweis": "O endereço onde anuncia — necessário para a verificação.",
     "firmenname": "Nome da empresa",
     "steuernummer": "Número de contribuinte",
+    "registernummer": "Número de registo comercial",
+    "ustId": "NIF (IVA)",
     "firmenStrasse": "Endereço da empresa",
     "firmaHinweis": "Como pessoa autorizada a representar, os seus dados acima mencionados serão utilizados.",
     "speichern": "Guardar dados",

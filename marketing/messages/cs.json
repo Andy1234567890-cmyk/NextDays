@@ -2202,7 +2202,7 @@
       "eyebrow": "Partnerský program",
       "headlinePre": "Doporučte myNextDays —",
       "headlineHighlight": "a vydělávejte s námi",
-      "sub": "Pro influencery, konzultanty, agentury a pronajímatele sítě: Každá firma, která se zaregistruje přes váš odkaz a zaplatí předplatné, vám po dobu dvanácti měsíců přinese až {max} % z obratu předplatného – plus 0,5 % z každé rezervace přes myBestDays, bonusy za povýšení a od Elite superprovizi bez časového omezení.",
+      "sub": "Pro influencery, konzultanty, agentury a pronajímatele sítě: Každá firma, která se zaregistruje přes váš odkaz a zaplatí předplatné, vám po dobu dvanácti měsíců přinese až {max} % z obratu předplatného – plus bonusy za povýšení a od Elite superprovizi bez časového omezení a 0,5 % z každé rezervace přes myBestDays.",
       "cta": "Přihlásit se nyní",
       "ctaLogin": "Přihlášení partnera",
       "chipDauer": "12 měsíců provize za zákazníka",
@@ -2244,7 +2244,7 @@
       },
       "dauer": {
         "titel": "Dvanáct měsíců",
-        "text": "Provize běží dvanáct měsíců od první zaplacené faktury za předplatné podniku; bezplatný měsíc vašich zákazníků se nezapočítává. Pokud podnik zruší předplatné, provize končí s jeho poslední platbou. Podíl z rezervací a superprovize běží bez tohoto omezení."
+        "text": "Provize běží dvanáct měsíců od první zaplacené faktury za předplatné podniku; bezplatný měsíc vašich zákazníků se nezapočítává. Pokud podnik zruší předplatné, provize končí s jeho poslední platbou. Superprovize a podíl z rezervací běží bez tohoto omezení, vyžadují však pozici Elite Partner."
       },
       "auszahlung": {
         "titel": "Výplata",
@@ -2288,7 +2288,7 @@
       },
       "wieviel": {
         "frage": "Kolik provize mohu vydělat?",
-        "antwort": "Závisí to na příjmech z předplatného vašich zákazníků a na vaší pozici. Výše uvedená tabulka ukazuje sazbu za každou pozici; po dobu dvanácti měsíců za každého zákazníka. K tomu se připočítává 0,5 % z každé rezervace, kterou vaši zákazníci obdrží přes myBestDays, jednorázový bonus za dosažení každé pozice, rozdílová provize s týmem – a od Elite Partnera 2,5 % superprovize z celé struktury bez časového omezení."
+        "antwort": "Závisí to na příjmech z předplatného vašich zákazníků a na vaší pozici. Výše uvedená tabulka ukazuje sazbu za každou pozici; po dobu dvanácti měsíců za každého zákazníka. K tomu se připočítává jednorázový bonus za dosažení každé pozice a s týmem rozdílová provize. Od Elite Partnera se přidávají 2,5 % superprovize z celé vaší struktury a 0,5 % z každé rezervace, kterou vaši zákazníci obdrží přes myBestDays – obojí bez časového omezení."
       },
       "team": {
         "frage": "Jak funguje týmová provize?",
@@ -2323,8 +2323,8 @@
       "teamProvision": "Týmová provize za zákazníky vašich týmových partnerů",
       "dauer": "Doba trvání na zákazníka",
       "dauerWert": "12 měsíců",
-      "kunden": "{od}–{do} platících zákazníků",
-      "kundenOffen": "od {od} platících zákazníků",
+      "kunden": "{von}–{bis} platících zákazníků",
+      "kundenOffen": "od {von} platících zákazníků",
       "vorteile": "Služby",
       "ja": "zahrnuto",
       "nein": "nezahrnuto",
@@ -2341,7 +2341,7 @@
       "fussnoteTeam": "Týmová provize je rozdíl mezi vaší sazbou a sazbou týmového partnera z čistého obratu předplatného jeho zákazníků, obě v okamžiku platby – přesně jedna úroveň, žádný účastnický poplatek, žádné peníze za nábor. Celkem nikdy více než 30 %.",
       "fussnoteCoMarketing": "Po dohodě s partnerským týmem; závisí na profilu partnera a probíhajících akcích.",
       "fussnoteRang": "Hodnost vzniká z vaší struktury: vlastní platící zákazníci plus zákazníci vašich týmových partnerů, každý se počítá jednou. Při dosažení nové hodnosti od Začátečníka je jednorázový bonus za povýšení.",
-      "teamDifferenz": "{satz} % minus sazba týmového partnera",
+      "teamUeber": "nad partnerem {rang}",
       "teamNicht": "zatím žádný tým",
       "bonus": "Bonus za povýšení (jednorázově)",
       "superProvision": "Superprovize z celé struktury",

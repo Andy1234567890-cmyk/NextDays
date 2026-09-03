@@ -60,7 +60,7 @@
       "super": "Sárchoimisiún",
       "superHinweis": "{satz} ar ioncam síntiúis do struchtúir, gan teorainn ama",
       "turbo": "Scair áirithinte myBestDays",
-      "turboHinweis": "0.5% in aghaidh na háirithinte trí myBestDays le do chustaiméirí agus custaiméirí foirne",
+      "turboHinweis": "Ó Elite-Partner ar aghaidh: 0.5% in aghaidh na háirithinte trí myBestDays le do chustaiméirí agus custaiméirí foirne",
       "bonus": "Bónais ardú céime",
       "bonusHinweis": "uair amháin in aghaidh gach céime a baineadh amach"
     },
@@ -303,10 +303,10 @@
     },
     "regeln": {
       "titel": "Na rialacha",
-      "rang": "Coimisiún Foirne = Do ráta lúide ráta an chomhpháirtí foirne, ag am na híocaíochta. An chéim chéanna = 0.",
-      "ebene": "Leibhéal amháin go díreach: Ní thógann do chomhpháirtithe foirne a bhfoireann féin.",
+      "rang": "Coimisiún Foirne = Do ráta lúide an ráta is airde a íocadh cheana ar an láimhdeachas céanna faoi do bhun — ag am na híocaíochta. An chéim chéanna nó céim níos airde faoi do bhun = 0.",
+      "ebene": "Thar gach leibhéal: Tógann do chomhpháirtithe foirne a bhfoirne féin, comhaireann gach leibhéal don chéim agus don choimisiún foirne.",
       "keinGeld": "Gan airgead as earcaíocht — ach amháin ó ioncam síntiúis íoctha.",
-      "dauer": "12 mhí in aghaidh an chustaiméara foirne, fuinneog aisíocaíochta 30 lá. Ó Elite, 2.5% sárchoimisiún breise gan teorainn ama."
+      "dauer": "12 mhí in aghaidh an chustaiméara foirne, fuinneog aisíocaíochta 30 lá. Ó Elite, 2.5% sárchoimisiún breise gan teorainn ama — roinneann roinnt Elite in aon slabhra amháin é go cothrom eatarthu."
     },
     "kachel": {
       "mitglieder": "Comhpháirtithe foirne (gníomhach / iomlán)",
@@ -498,11 +498,16 @@
     "plz": "Cód poist",
     "ort": "Cathair",
     "nationalitaet": "Náisiúntacht (cód tíre)",
+    "idNummer": "Uimhir PSP",
+    "idNummerHinweis": "D'uimhir aitheantais phearsanta náisiúnta, m.sh. CPR (DK), personnummer (SE/FI), NIF (ES), PESEL (PL), codice fiscale (IT).",
+    "bundesland": "Contae / réigiún",
     "telefon": "Fón",
     "webseite": "Suíomh Gréasáin nó próifíl",
     "webseiteHinweis": "An seoladh a úsáideann tú le haghaidh fógraíochta - teastaíonn sé le haghaidh fíoraithe.",
     "firmenname": "Ainm na cuideachta",
     "steuernummer": "Uimhir chánach",
+    "registernummer": "Uimhir chláraithe na cuideachta",
+    "ustId": "Uimhir CBL",
     "firmenStrasse": "Seoladh na cuideachta",
     "firmaHinweis": "Mar dhuine údaraithe, úsáidfear do shonraí thuasluaite.",
     "speichern": "Sábháil sonraí",

@@ -22,18 +22,28 @@ des Betriebs; Rechnungen, deren Periode danach beginnt, tragen keine
 Provision mehr.
 
 MASTER-STRATEGIE (0525): Zur Ertragszeile entstehen KINDER mit `parent_id`:
-  * `override`  — Team-Provision des Sponsors = DIFFERENZ seines Satzes zum
-                  Satz des Team-Partners (beide zum Rechnungszeitpunkt);
-                  gleicher Rang → 0 → keine Zeile.
+  * `override`  — Team-Provision der SPONSOR-KETTE (Strukturvertrieb seit
+                  03.09.2026, vorher genau eine Ebene): von unten nach oben
+                  bekommt jeder Sponsor die Differenz seines Satzes zum
+                  HÖCHSTEN auf diesen Umsatz bereits vergüteten Satz (Roll-up).
+                  Kette Einsteiger 15 → Elite 30 → Aufsteiger 20 → Elite 30:
+                  15 %, 0 %, 0 % — die Summe ist immer der höchste Satz der
+                  Kette, der Deckel von 30 % hält von selbst. Differenz zum
+                  DIREKTEN Kind statt zum Höchsten hätte hier 55 % ausgezahlt.
   * `lifetime`  — Superprovision (affiliate_tiers.lifetime_rate, 2,5 % ab
-                  Elite) für den Partner selbst UND für seinen Sponsor, ohne
-                  12-Monats-Grenze — sie entsteht auch, wenn der Ertrag wegen
-                  Laufzeitende NICHT mehr entsteht (dann ohne parent_id, mit
-                  stripe_invoice_id als Backstop).
-  * `booking_share` — Markt-Turbo: 0,5 % (affiliate_program_rates) je bezahlter
-                  myBestDays-Buchung eines geworbenen Betriebs, für Partner UND
-                  Sponsor je eine Zeile; Auslöser ist `payment_intent.succeeded`,
-                  nicht die Abo-Rechnung.
+                  Elite): je Umsatz EIN Topf von 2,5 %, den sich ALLE Elite in
+                  der Kette (der Partner selbst eingeschlossen) zu gleichen
+                  Teilen teilen — ein Elite bekommt alles, zwei je die Hälfte
+                  (Entscheidung 03.09.2026). Rest-Cents an den untersten, damit
+                  die Summe exakt der Topf ist. Ohne 12-Monats-Grenze — sie
+                  entsteht auch, wenn der Ertrag wegen Laufzeitende NICHT mehr
+                  entsteht (dann ohne parent_id, mit stripe_invoice_id als
+                  Backstop).
+  * `booking_share` — Markt-Turbo: 0,5 % (affiliate_program_rates), NUR für
+                  Ränge mit `lifetime_rate` (Elite, 03.09.2026), je bezahlter
+                  myBestDays-Buchung eines geworbenen Betriebs — wie `lifetime`
+                  EIN Topf, geteilt unter allen Elite der Kette; Auslöser ist
+                  `payment_intent.succeeded`, nicht die Abo-Rechnung.
 Die Gegenbuchung folgt IMMER dem Elternteil (Wurzel 1): wird der Ertrag
 zurückgenommen, gehen override und lifetime anteilig mit.
 
@@ -49,7 +59,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from datetime import UTC, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from postgrest.exceptions import APIError
 
@@ -392,7 +402,12 @@ def _lifetime_zeile(
     empfaenger: dict[str, Any],
     parent_id: str | None,
     grund: str,
+    betrag: Decimal | None = None,
 ) -> dict[str, Any] | None:
+    """Eine lifetime-Zeile. `betrag` ist der ANTEIL dieses Empfängers am Topf
+    (siehe `lifetime_buchen`); ohne Angabe der volle Satz auf die Basis. `rate`
+    an der Zeile bleibt der nominelle Satz des Rangs — der Anteil steht im
+    Betrag, nicht in einem gerundeten Bruchsatz."""
     tier = tier_laden(db, empfaenger["current_tier_id"])
     if tier is None:
         log.error("partner_lifetime_rang_fehlt", affiliate_id=empfaenger["id"])
@@ -401,7 +416,8 @@ def _lifetime_zeile(
     if rate <= 0:
         return None
     basis = Decimal(str(gemeinsam["base_amount"]))
-    betrag = (basis * rate).quantize(_CENT, rounding=ROUND_HALF_UP)
+    if betrag is None:
+        betrag = (basis * rate).quantize(_CENT, rounding=ROUND_HALF_UP)
     if betrag <= 0:
         return None
     status = gemeinsam["status"]
@@ -451,6 +467,42 @@ def _lifetime_zeile(
     return (res.data or [zeile])[0]
 
 
+def _anteile(gesamt: Decimal, n: int) -> list[Decimal]:
+    """`gesamt` (Cent-genau) in `n` gleiche Teile; die Rest-Cents bekommen die
+    VORDERSTEN (= die untersten in der Kette). Summe der Teile == gesamt, immer
+    — eine Teilung, die einen Cent verliert oder erfindet, ist ein Buchungs-
+    fehler, kein Rundungsdetail."""
+    if n <= 0 or gesamt <= 0:
+        return []
+    cents = int((gesamt * 100).to_integral_value(rounding=ROUND_HALF_UP))
+    basis, rest = divmod(cents, n)
+    return [
+        (Decimal(basis + (1 if i < rest else 0)) / 100).quantize(_CENT) for i in range(n)
+    ]
+
+
+def _elite_in_kette(
+    db: Client, partner: dict[str, Any], *, log_key: str
+) -> list[tuple[int, dict[str, Any], Decimal, bool]]:
+    """Alle Knoten mit `lifetime_rate` > 0 in [Partner, …Kette nach oben].
+
+    Je Treffer: (Index in der Kette, Knoten, sein lifetime_rate, ob UNTER ihm
+    eine Team-Zuordnung Betrugs-Flags trägt → seine Zeile wird `held`). Die
+    Flags eines Knotens gelten für alles DARÜBER, nicht für ihn selbst."""
+    treffer: list[tuple[int, dict[str, Any], Decimal, bool]] = []
+    flags_darunter = False
+    for i, knoten in enumerate([partner, *_upline(db, partner)]):
+        tier = tier_laden(db, knoten["current_tier_id"])
+        if tier is None:
+            log.error(log_key, affiliate_id=knoten["id"])
+        else:
+            rate = Decimal(str(tier.get("lifetime_rate") or "0"))
+            if rate > 0:
+                treffer.append((i, knoten, rate, flags_darunter))
+        flags_darunter = flags_darunter or bool(knoten.get("sponsor_flags"))
+    return treffer
+
+
 def lifetime_buchen(
     db: Client,
     gemeinsam: dict[str, Any],
@@ -458,31 +510,45 @@ def lifetime_buchen(
     partner: dict[str, Any],
     parent_id: str | None,
 ) -> list[dict[str, Any]]:
-    """Superprovision (0525) zu einer bezahlten Abo-Rechnung: für den Partner
-    selbst (eigener Kunde) UND für seinen Sponsor (Team-Kunde), jeweils nur,
-    wenn der Empfänger zum Rechnungszeitpunkt einen Rang mit `lifetime_rate`
-    hält (Elite). Ohne Laufzeitgrenze — `parent_id` ist None, wenn die
-    Ertragszeile wegen Laufzeitende nicht mehr entsteht."""
+    """Superprovision (0525) zu einer bezahlten Abo-Rechnung — EIN Topf, geteilt.
+
+    Der Topf ist basis × lifetime_rate (2,5 %), einmal je Umsatz. Ihn teilen
+    sich ALLE Elite in der Kette zu gleichen Teilen — der Partner selbst, wenn
+    er Elite ist, und jeder Elite über ihm (03.09.2026: „wenn ein Elite-Partner
+    einen anderen Elite-Partner im Team hat, teilen sie sich die 2,5 %"). Ein
+    Elite allein bekommt alles; mit unbegrenzter Tiefe stapelt sich nichts.
+    Ohne Laufzeitgrenze — `parent_id` ist None, wenn die Ertragszeile wegen
+    Laufzeitende nicht mehr entsteht.
+
+    Der Topf wird mit dem Satz des UNTERSTEN Elite gebildet: heute tragen alle
+    Elite denselben Satz, und stünden je Rang verschiedene, wäre der unterste
+    der Werber-nächste. Rest-Cents gehen an ihn (`_anteile`).
+
+    Der Rang wird VOR dem Einfügen geprüft (`_elite_in_kette`), nicht über den
+    `None`-Rückgabewert von `_lifetime_zeile`: der ist auch bei Duplikat und
+    Betrag 0 `None`. Betrugs-Flags einer Zuordnung UNTER einem Empfänger
+    halten seine Zeile an, die der anderen nicht."""
+    elite = _elite_in_kette(db, partner, log_key="partner_lifetime_rang_fehlt")
+    if not elite:
+        return []
+    basis = Decimal(str(gemeinsam["base_amount"]))
+    topf = (basis * elite[0][2]).quantize(_CENT, rounding=ROUND_HALF_UP)
     zeilen: list[dict[str, Any]] = []
-    eigene = _lifetime_zeile(
-        db, gemeinsam, empfaenger=partner, parent_id=parent_id, grund="lifetime:own"
-    )
-    if eigene:
-        zeilen.append(eigene)
-    sponsor = _sponsor_laden(db, partner)
-    if sponsor is not None:
-        gehalten = dict(gemeinsam)
-        if partner.get("sponsor_flags"):
-            gehalten["status"] = "held"
-        team = _lifetime_zeile(
+    anteile = _anteile(topf, len(elite))
+    for (i, knoten, _rate, flags), anteil in zip(elite, anteile, strict=True):
+        daten = dict(gemeinsam)
+        if flags:
+            daten["status"] = "held"
+        zeile = _lifetime_zeile(
             db,
-            gehalten,
-            empfaenger=sponsor,
+            daten,
+            empfaenger=knoten,
             parent_id=parent_id,
-            grund=f"team:{partner['id']}",
+            grund="lifetime:own" if i == 0 else f"team:{partner['id']}",
+            betrag=anteil,
         )
-        if team:
-            zeilen.append(team)
+        if zeile:
+            zeilen.append(zeile)
     return zeilen
 
 
@@ -513,13 +579,35 @@ def _booking_share_zeile(
     rate: Decimal,
     grund: str,
     held: bool,
-) -> dict[str, Any] | None:
+    betrag: Decimal | None = None,
+) -> dict[str, Any] | Literal["kein_rang", "duplikat"] | None:
+    """Eine `booking_share`-Zeile fuer EINEN Empfaenger.
+
+    Rueckgabe: die Zeile · `"kein_rang"` (Empfaenger ist nicht Elite) ·
+    `"duplikat"` (UNIQUE-Backstop, Redelivery) · `None` (nichts zu buchen:
+    Rang fehlt, Betrag 0). Die drei Nicht-Zeilen sind bewusst getrennt —
+    `None` fuer alles zusammen war die Stelle, an der der Aufrufer eine
+    Redelivery als „kein Elite" meldete (Review 03.09.2026).
+    """
     tier = tier_laden(db, empfaenger["current_tier_id"])
     if tier is None:
         log.error("partner_booking_share_rang_fehlt", affiliate_id=empfaenger["id"])
         return None
+    # Nur Elite (03.09.2026). Erkannt wird der Rang NICHT am Namen, sondern an
+    # `lifetime_rate > 0` — dasselbe Merkmal, an dem die Superprovision haengt
+    # (`_lifetime_zeile`). Ein Namensvergleich auf "Elite" waere ein Hardcode,
+    # der beim naechsten Umbenennen still aufhoert zu greifen (Wurzel 4).
+    #
+    # Die Pruefung steht hier je EMPFAENGER und nicht einmal weiter oben in
+    # `buchungsanteil_buchen`: Partner und Sponsor koennen verschiedene Raenge
+    # halten. Ein Elite-Sponsor ueber einem Starter-Partner bekommt seinen
+    # Anteil, der Starter nicht — und umgekehrt. Eine Pruefung am Aufrufer
+    # wuerde beide gemeinsam abschneiden.
+    if Decimal(str(tier.get("lifetime_rate") or "0")) <= 0:
+        return "kein_rang"
     basis = Decimal(str(basis_zeile["base_amount"]))
-    betrag = (basis * rate).quantize(_CENT, rounding=ROUND_HALF_UP)
+    if betrag is None:
+        betrag = (basis * rate).quantize(_CENT, rounding=ROUND_HALF_UP)
     if betrag <= 0:
         return None
     zeile = {
@@ -541,7 +629,7 @@ def _booking_share_zeile(
                 charge=basis_zeile.get("stripe_charge_id"),
                 affiliate_id=empfaenger["id"],
             )
-            return None
+            return "duplikat"
         raise
     log.info(
         "partner_booking_share_gebucht",
@@ -583,10 +671,16 @@ def buchungsanteil_buchen(
     event_id: str | None,
 ) -> str:
     """Markt-Turbo (0525): eine bezahlte myBestDays-Buchung eines geworbenen
-    Betriebs → je eine `booking_share`-Zeile für den Partner UND für dessen
-    Sponsor, Basis = gezahlter Bruttobetrag in Buchungswährung. Keine
-    Laufzeitgrenze (solange die Zuordnung besteht), Karenz wie alle Zeilen.
-    Ergebniswort: kein_partner | leer | gebucht | duplikat."""
+    Betriebs → je Elite der Kette eine `booking_share`-Zeile mit seinem Anteil,
+    Basis = gezahlter Bruttobetrag in Buchungswährung. Keine Laufzeitgrenze
+    (solange die Zuordnung besteht), Karenz wie alle Zeilen.
+
+    NUR ELITE, EIN TOPF (03.09.2026): alle Knoten mit `lifetime_rate` in der
+    Kette — der Partner selbst und jeder Elite über ihm — teilen sich den
+    Anteil zu gleichen Teilen. Bis dahin bekam ihn jeder Rang, und Partner UND
+    direkter Sponsor je den vollen Satz.
+
+    Ergebniswort: kein_partner | leer | gebucht | duplikat | kein_rang."""
     if not charge_id:
         # Ohne Charge kein Backstop (UNIQUE) — lieber keine Zeile als eine
         # doppelte bei Redelivery (Wurzel 2).
@@ -612,22 +706,32 @@ def buchungsanteil_buchen(
         "period": paid_at.strftime("%Y-%m"),
     }
     held = referral.get("status") == "held"
-    eigene = _booking_share_zeile(
-        db, basis_zeile, empfaenger=p, rate=rate, grund="booking:own", held=held
+    # EIN Topf (basis × 0,5 %), geteilt unter allen Elite der Kette — dieselbe
+    # Regel wie bei der Superprovision. Der Rang wird VOR dem Einfuegen
+    # geprueft, damit ein Duplikat (Redelivery, Wurzel 2) die Aufteilung nicht
+    # verschiebt.
+    elite = _elite_in_kette(db, p, log_key="partner_booking_share_rang_fehlt")
+    if not elite:
+        return "kein_rang"
+    topf = (Decimal(str(basis_zeile["base_amount"])) * rate).quantize(
+        _CENT, rounding=ROUND_HALF_UP
     )
-    sponsor = _sponsor_laden(db, p)
-    team = None
-    if sponsor is not None:
-        team = _booking_share_zeile(
+    ergebnisse = [
+        _booking_share_zeile(
             db,
             basis_zeile,
-            empfaenger=sponsor,
+            empfaenger=knoten,
             rate=rate,
-            grund=f"team:{p['id']}",
-            held=held or bool(p.get("sponsor_flags")),
+            grund="booking:own" if i == 0 else f"team:{p['id']}",
+            held=held or flags,
+            betrag=anteil,
         )
-    if eigene is None and team is None:
-        return "duplikat"
+        for (i, knoten, _rate, flags), anteil in zip(
+            elite, _anteile(topf, len(elite)), strict=True
+        )
+    ]
+    if not any(isinstance(e, dict) for e in ergebnisse):
+        return "duplikat" if "duplikat" in ergebnisse else "leer"
     if event_id:
         log.info("partner_booking_share_event", event_id=event_id, tenant_id=tenant_id)
     return "gebucht"
@@ -672,41 +776,118 @@ def _sponsor_laden(db: Client, partner: dict[str, Any]) -> dict[str, Any] | None
     return rows[0] if rows else None
 
 
+# Härtere Grenze als jede reale Struktur — ein Schutz gegen Endlosschleifen
+# und gegen eine Kette, die aus einem Datenfehler heraus tausend Abfragen
+# auslöst (Wurzel 8). Dieselbe Zahl steht im DB-Trigger (0533).
+UPLINE_MAX = 25
+
+
+def _upline(db: Client, partner: dict[str, Any]) -> list[dict[str, Any]]:
+    """Sponsor-Kette des Partners von unten nach oben, ohne den Partner selbst.
+
+    Bricht LAUT ab bei einem Zyklus (A → B → A) und bei `UPLINE_MAX`. Beides
+    darf die DB gar nicht enthalten (Trigger `affiliates_sponsor_kein_zyklus`),
+    aber ein Trigger kann nachträglich geändert werden — die Schleife hier
+    darf sich darauf nicht verlassen.
+
+    Nebenbei werden `sponsor_flags` des Startknotens nachgeladen, falls sie
+    fehlen: der Ertragspfad lädt den Partner ohne dieses Feld, und die
+    Betrugs-Flags der Team-Zuordnung müssen JEDE Stufe darüber auf `held`
+    setzen — ein fehlendes Feld darf nicht wie „keine Flags" wirken.
+    """
+    if "sponsor_flags" not in partner:
+        rows = (
+            db.table("affiliates")
+            .select("sponsor_affiliate_id, sponsor_flags")
+            .eq("id", partner["id"])
+            .limit(1)
+            .execute()
+        ).data or []
+        if rows:
+            partner["sponsor_affiliate_id"] = rows[0].get("sponsor_affiliate_id")
+            partner["sponsor_flags"] = rows[0].get("sponsor_flags") or []
+    kette: list[dict[str, Any]] = []
+    gesehen = {partner["id"]}
+    knoten = partner
+    while True:
+        sponsor = _sponsor_laden(db, knoten)
+        if sponsor is None:
+            return kette
+        if sponsor["id"] in gesehen:
+            log.error("partner_upline_zyklus", affiliate_id=partner["id"], bei=sponsor["id"])
+            return kette
+        if len(kette) >= UPLINE_MAX:
+            log.error("partner_upline_zu_tief", affiliate_id=partner["id"], tiefe=len(kette))
+            return kette
+        gesehen.add(sponsor["id"])
+        kette.append(sponsor)
+        knoten = sponsor
+
+
 def override_buchen(
     db: Client,
     earn: dict[str, Any],
     *,
     partner: dict[str, Any],
     mails: PartnerMails | None = None,
+) -> list[dict[str, Any]]:
+    """Team-Provision über die ganze Sponsor-Kette (Strukturvertrieb, 03.09.2026).
+
+    Zur Ertragszeile eines Partners entsteht je Sponsor darüber eine
+    Override-Zeile mit Satz = rate(Sponsor) − HÖCHSTER auf diesen Umsatz
+    bereits vergüteter Satz. Start ist der Satz der Ertragszeile; jede
+    positive Differenz hebt die Marke an. Ein Sponsor, dessen Rang die Marke
+    nicht übersteigt, bekommt nichts, die Marke bleibt — so ist die Summe aller
+    Zeilen exakt der höchste Satz der Kette und der Deckel von 30 % hält ohne
+    eigene Prüfung. `held` vererbt sich NACH OBEN: ist eine Stufe angehalten
+    (nicht freigegeben, Betrugs-Flags an der Zuordnung, Ertrag `held`), sind es
+    alle darüber auch — Betrug unten darf oben kein freies Geld erzeugen.
+    Idempotent je (parent_id, affiliate_id) über den Unique-Index (0533).
+    Gibt die angelegten Zeilen zurück (leer bei Duplikat oder ohne Sponsor)."""
+    zeilen: list[dict[str, Any]] = []
+    vergolten = Decimal(str(earn["rate"]))
+    held = earn.get("status") == "held" or partner.get("status") != "approved"
+    darunter = partner
+    for sponsor in _upline(db, partner):
+        tier = tier_laden(db, sponsor["current_tier_id"])
+        held = held or bool(darunter.get("sponsor_flags")) or sponsor.get("status") != "approved"
+        darunter = sponsor
+        if tier is None:
+            log.error("partner_override_rang_fehlt", sponsor=sponsor["id"])
+            continue
+        satz = Decimal(str(tier["rate"]))
+        rate = satz - vergolten
+        if rate <= 0:
+            continue
+        vergolten = satz
+        zeile = _override_zeile(
+            db, earn, sponsor=sponsor, tier=tier, rate=rate, held=held, partner=partner, mails=mails
+        )
+        if zeile is not None:
+            zeilen.append(zeile)
+    return zeilen
+
+
+def _override_zeile(
+    db: Client,
+    earn: dict[str, Any],
+    *,
+    sponsor: dict[str, Any],
+    tier: dict[str, Any],
+    rate: Decimal,
+    held: bool,
+    partner: dict[str, Any],
+    mails: PartnerMails | None,
 ) -> dict[str, Any] | None:
-    """Team-Provision (0520, Differenzmodell seit 0525): zur Ertragszeile eines
-    Team-Partners die Override-Zeile seines Sponsors. Basis = base_amount der
-    Ertragszeile, Satz = rate(Sponsor-Rang) − rate(Team-Partner, wie an der
-    Ertragszeile). Gleicher Rang → Differenz 0 → keine Zeile; der Deckel von
-    30 % ist damit von selbst eingehalten (Partner + Sponsor = Sponsor-Satz).
-    `held`, wenn Sponsor oder Team-Partner nicht freigegeben sind oder die
-    Team-Zuordnung Betrugsflags trägt. Idempotent über den Unique-Index
-    (parent_id, override)."""
-    sponsor = _sponsor_laden(db, partner)
-    if sponsor is None:
-        return None
-    tier = tier_laden(db, sponsor["current_tier_id"])
-    if tier is None:
-        log.error("partner_override_rang_fehlt", sponsor=sponsor["id"])
-        return None
-    rate = max(Decimal(str(tier["rate"])) - Decimal(str(earn["rate"])), Decimal("0"))
+    """Eine Override-Zeile für EINEN Sponsor der Kette; None bei Betrag 0 oder
+    Duplikat. `reason` trägt den URSPRÜNGLICHEN Partner (den Werber des
+    Kunden), nicht den direkten Untergebenen des Sponsors — daran hängt die
+    Zuordnung im Team-Dashboard (`_team_partner_id`)."""
     basis = Decimal(str(earn["base_amount"]))
     betrag = (basis * rate).quantize(_CENT, rounding=ROUND_HALF_UP)
     if betrag <= 0:
         return None
-    status = "pending"
-    if (
-        sponsor.get("status") != "approved"
-        or partner.get("status") != "approved"
-        or partner.get("sponsor_flags")
-        or earn.get("status") == "held"
-    ):
-        status = "held"
+    status = "held" if held else "pending"
     zeile = {
         "referral_id": earn["referral_id"],
         "affiliate_id": sponsor["id"],

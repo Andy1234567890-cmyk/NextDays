@@ -7,7 +7,7 @@ import { ProfilFormular } from "@/components/profil-formular";
 import { SteuerdatenFormular } from "@/components/steuerdaten-formular";
 import { Verbundkonto } from "@/components/verbundkonto";
 import { datum } from "@/lib/format";
-import { getConnect, getMe } from "@/lib/partner";
+import { getConnect, getConnectPflichtfelder, getMe } from "@/lib/partner";
 import { getKanaele } from "@/lib/reichweite";
 
 export default async function ProfilSeite() {
@@ -18,9 +18,14 @@ export default async function ProfilSeite() {
   // — der Server verlangt approved. Der Stand kommt LIVE von Stripe, nicht aus
   // dem Spiegel im Profil: ein veralteter Stand würde hier „bereit" zeigen,
   // während der Auszahlungslauf längst sperrt.
-  const [kanaele, connect] = await Promise.all([
+  // Die Pflichtfelder für Land und Rechtsform kommen LIVE aus Stripes
+  // Ländervorgabe; das Formular macht daraus seine Pflichtmarkierungen. Ist
+  // Stripe nicht erreichbar, bleibt das Formular offen — der Server prüft
+  // dieselbe Liste noch einmal und lehnt Unvollständiges mit Feldnamen ab.
+  const [kanaele, connect, pflicht] = await Promise.all([
     freigegeben ? getKanaele() : null,
     freigegeben ? getConnect() : null,
+    freigegeben ? getConnectPflichtfelder().catch(() => null) : null,
   ]);
 
   return (
@@ -35,7 +40,7 @@ export default async function ProfilSeite() {
       </div>
       {connect && (
         <div className="mt-8">
-          <Verbundkonto profil={me} stand={connect} />
+          <Verbundkonto profil={me} stand={connect} pflicht={pflicht?.minimum ?? []} />
         </div>
       )}
       {kanaele && (

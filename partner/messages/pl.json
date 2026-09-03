@@ -60,7 +60,7 @@
       "super": "Superprowizja",
       "superHinweis": "{satz} od obrotu z subskrypcji Twojej struktury, bez ograniczeń czasowych",
       "turbo": "Udział w rezerwacji myBestDays",
-      "turboHinweis": "0,5% za każdą rezerwację przez myBestDays u Twoich klientów i klientów zespołu",
+      "turboHinweis": "Od rangi Elite-Partner: 0,5% za każdą rezerwację przez myBestDays u Twoich klientów i klientów zespołu",
       "bonus": "Bonusy za awans",
       "bonusHinweis": "jednorazowo za osiągnięcie każdej rangi"
     },
@@ -303,10 +303,10 @@
     },
     "regeln": {
       "titel": "Zasady",
-      "rang": "Prowizja zespołu = Twoja stawka minus stawka partnera zespołu, w momencie płatności. Taka sama ranga = 0.",
-      "ebene": "Dokładnie jeden poziom: Państwa partnerzy zespołowi nie budują własnego zespołu.",
+      "rang": "Prowizja zespołu = Twoja stawka minus najwyższa stawka, która za ten sam obrót została już wypłacona poniżej Ciebie — w momencie płatności. Taka sama lub wyższa ranga poniżej Ciebie = 0.",
+      "ebene": "Przez wszystkie poziomy: Państwa partnerzy zespołowi budują własne zespoły, każdy poziom liczy się do rangi i prowizji zespołu.",
       "keinGeld": "Brak pieniędzy za rekrutację — tylko z opłaconego obrotu z subskrypcji.",
-      "dauer": "12 miesięcy na klienta zespołu, 30 dni na zwrot. Od rangi Elita dodatkowo 2,5% superprowizji bez ograniczeń czasowych."
+      "dauer": "12 miesięcy na klienta zespołu, 30 dni na zwrot. Od rangi Elita dodatkowo 2,5% superprowizji bez ograniczeń czasowych — kilku partnerów rangi Elita w jednym łańcuchu dzieli ją po równo."
     },
     "kachel": {
       "mitglieder": "Partnerzy zespołowi (aktywni / ogółem)",
@@ -498,11 +498,16 @@
     "plz": "Kod pocztowy",
     "ort": "Miejscowość",
     "nationalitaet": "Obywatelstwo (kod kraju)",
+    "idNummer": "Numer PESEL",
+    "idNummerHinweis": "Twój krajowy numer identyfikacyjny, np. CPR (DK), personnummer (SE/FI), NIF (ES), PESEL (PL), codice fiscale (IT).",
+    "bundesland": "Województwo / region",
     "telefon": "Telefon",
     "webseite": "Strona internetowa lub profil",
     "webseiteHinweis": "Adres, pod którym Państwo reklamują – wymagany do weryfikacji.",
     "firmenname": "Nazwa firmy",
     "steuernummer": "Numer identyfikacji podatkowej",
+    "registernummer": "Numer w rejestrze (KRS)",
+    "ustId": "NIP (VAT UE)",
     "firmenStrasse": "Adres firmy",
     "firmaHinweis": "Powyższe dane zostaną użyte jako dane osoby uprawnionej do reprezentacji.",
     "speichern": "Zapisz dane",

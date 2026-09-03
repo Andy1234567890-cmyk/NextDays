@@ -2202,7 +2202,7 @@
       "eyebrow": "Program de parteneriat",
       "headlinePre": "Recomandați myNextDays —",
       "headlineHighlight": "și câștigați",
-      "sub": "Pentru influenceri, consultanți, agenții și proprietari cu rețea: Fiecare afacere care se înregistrează prin linkul dumneavoastră și plătește un abonament vă aduce până la {max} % din venitul din abonament timp de douăsprezece luni - plus 0,5 % din fiecare rezervare prin myBestDays, bonusuri de promovare și, de la Elite, un supercomision fără limită de durată.",
+      "sub": "Pentru influenceri, consultanți, agenții și proprietari cu rețea: Fiecare afacere care se înregistrează prin linkul dumneavoastră și plătește un abonament vă aduce până la {max} % din venitul din abonament timp de douăsprezece luni - plus bonusuri de promovare și, de la Elite, un supercomision fără limită de durată și 0,5 % din fiecare rezervare prin myBestDays.",
       "cta": "Aplicați acum",
       "ctaLogin": "Autentificare partener",
       "chipDauer": "12 luni comision per client",
@@ -2244,7 +2244,7 @@
       },
       "dauer": {
         "titel": "Douăsprezece luni",
-        "text": "Comisionul se aplică timp de douăsprezece luni de la prima factură de abonament plătită a companiei; luna gratuită a clienților dvs. nu este inclusă. Dacă compania anulează, comisionul se încheie cu ultima plată. Cota de rezervare și super-comisionul se aplică fără această limită."
+        "text": "Comisionul se aplică timp de douăsprezece luni de la prima factură de abonament plătită a companiei; luna gratuită a clienților dvs. nu este inclusă. Dacă compania anulează, comisionul se încheie cu ultima plată. Super-comisionul și cota de rezervare se aplică fără această limită, dar necesită rangul de partener Elite."
       },
       "auszahlung": {
         "titel": "Plată",
@@ -2288,7 +2288,7 @@
       },
       "wieviel": {
         "frage": "Cât comision pot câștiga?",
-        "antwort": "Acest lucru depinde de veniturile din abonamente ale clienților dvs. și de rangul dvs. Nivelurile de mai sus arată rata pentru fiecare rang; timp de doisprezece luni pentru fiecare client. În plus, există 0,5% din fiecare rezervare pe care clienții dvs. o primesc prin myBestDays, un bonus unic de promovare pentru fiecare rang atins, comisionul diferențial cu o echipă - și de la partenerul Elite, 2,5% super-comision pe întreaga structură fără limită de durată."
+        "antwort": "Acest lucru depinde de veniturile din abonamente ale clienților dvs. și de rangul dvs. Nivelurile de mai sus arată rata pentru fiecare rang; timp de doisprezece luni pentru fiecare client. În plus, există un bonus unic de promovare pentru fiecare rang atins și, cu o echipă, comisionul diferențial. De la partenerul Elite se adaugă un super-comision de 2,5 % pe întreaga dvs. structură și 0,5% din fiecare rezervare pe care clienții dvs. o primesc prin myBestDays - ambele fără limită de durată."
       },
       "team": {
         "frage": "Cum funcționează comisionul de echipă?",
@@ -2341,7 +2341,7 @@
       "fussnoteTeam": "Comisionul de echipă este diferența dintre rata dumneavoastră și rata partenerului de echipă din venitul net din abonamente al clienților săi, ambele la momentul plății - exact un nivel, fără taxă de participare, fără bani pentru recrutare. În total, niciodată mai mult de 30 %.",
       "fussnoteCoMarketing": "De comun acord cu echipa de parteneri; depinde de profilul partenerului și de acțiunile în curs.",
       "fussnoteRang": "Rangul este determinat de structura dumneavoastră: proprii clienți plătitori plus clienții partenerilor dumneavoastră de echipă, fiecare numărând o singură dată. La atingerea unui nou rang de la „Ascendent”, se acordă un bonus de promovare o singură dată.",
-      "teamDifferenz": "{satz} % minus rata partenerului de echipă",
+      "teamUeber": "deasupra unui {rang}",
       "teamNicht": "încă nu există o echipă",
       "bonus": "Bonus de promovare (o singură dată)",
       "superProvision": "Supercomision pentru întreaga structură",

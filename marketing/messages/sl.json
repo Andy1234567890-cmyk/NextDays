@@ -2202,7 +2202,7 @@
       "eyebrow": "Partnerski program",
       "headlinePre": "Priporočite myNextDays —",
       "headlineHighlight": "in zaslužite z nami",
-      "sub": "Za vplivneže, svetovalce, agencije in najemodajalce z mrežo: Vsako podjetje, ki se registrira preko vaše povezave in plača naročnino, vam prinaša dvanajst mesecev do {max} % prihodkov od naročnine — plus 0,5 % vsake rezervacije preko myBestDays, bonuse za napredovanje in od Elite super provizijo brez časovne omejitve.",
+      "sub": "Za vplivneže, svetovalce, agencije in najemodajalce z mrežo: Vsako podjetje, ki se registrira preko vaše povezave in plača naročnino, vam prinaša dvanajst mesecev do {max} % prihodkov od naročnine — plus bonuse za napredovanje in od Elite super provizijo brez časovne omejitve in 0,5 % vsake rezervacije preko myBestDays.",
       "cta": "Prijavite se zdaj",
       "ctaLogin": "Prijava partnerja",
       "chipDauer": "12 mesecev provizije na stranko",
@@ -2230,8 +2230,8 @@
       "eyebrow": "Vaša stopnja",
       "heading": "Večja kot je vaša struktura, višja je vaša stopnja",
       "sub": "Stopnja velja za vse nove provizije od dosega ranga. V strukturo se štejejo vaše lastne plačljive stranke in stranke vaših timskih partnerjev.",
-      "kunden": "{od}–{do} plačljivih strank",
-      "kundenOffen": "od {od} plačljivih strank",
+      "kunden": "{von}–{bis} plačljivih strank",
+      "kundenOffen": "od {von} plačljivih strank",
       "satz": "prihodkov od naročnine",
       "nichtAbrufbar": "Stopnja trenutno ni na voljo. Poskusite znova pozneje."
     },
@@ -2244,7 +2244,7 @@
       },
       "dauer": {
         "titel": "Dvanajst mesecev",
-        "text": "Provizija teče dvanajst mesecev od prvega plačanega računa za naročnino podjetja; brezplačni mesec vaših strank se ne šteje. Če podjetje odpove, se provizija konča z zadnjim plačilom. Delež rezervacij in superprovizija tečeta brez te omejitve."
+        "text": "Provizija teče dvanajst mesecev od prvega plačanega računa za naročnino podjetja; brezplačni mesec vaših strank se ne šteje. Če podjetje odpove, se provizija konča z zadnjim plačilom. Superprovizija in delež rezervacij tečeta brez te omejitve, vendar zahtevata rang Elite Partner."
       },
       "auszahlung": {
         "titel": "Izplačilo",
@@ -2288,7 +2288,7 @@
       },
       "wieviel": {
         "frage": "Koliko provizije lahko zaslužim?",
-        "antwort": "To je odvisno od prihodkov od naročnin vaših strank in vašega ranga. Zgornja lestvica prikazuje stopnjo za vsak rang; dvanajst mesecev na stranko. Poleg tega prejmete 0,5 % vsake rezervacije, ki jo vaše stranke prejmejo prek myBestDays, enkraten bonus za napredovanje za vsak dosežen rang, razliko v proviziji z ekipo – in od Elite Partnerja naprej 2,5 % superprovizije na celotno strukturo brez časovne omejitve."
+        "antwort": "To je odvisno od prihodkov od naročnin vaših strank in vašega ranga. Zgornja lestvica prikazuje stopnjo za vsak rang; dvanajst mesecev na stranko. Poleg tega prejmete enkraten bonus za napredovanje za vsak dosežen rang in z ekipo razliko v proviziji. Od Elite Partnerja naprej se dodata 2,5 % superprovizija na celotno vašo strukturo in 0,5 % vsake rezervacije, ki jo vaše stranke prejmejo prek myBestDays – oboje brez časovne omejitve."
       },
       "team": {
         "frage": "Kako deluje provizija ekipe?",
@@ -2323,8 +2323,8 @@
       "teamProvision": "Timsko nadomestilo za stranke vaših timskih partnerjev",
       "dauer": "Trajanje na stranko",
       "dauerWert": "12 mesecev",
-      "kunden": "{od}–{do} plačljivih strank",
-      "kundenOffen": "od {od} plačljivih strank",
+      "kunden": "{von}–{bis} plačljivih strank",
+      "kundenOffen": "od {von} plačljivih strank",
       "vorteile": "Storitve",
       "ja": "vključeno",
       "nein": "ni vključeno",
@@ -2341,7 +2341,7 @@
       "fussnoteTeam": "Timsko nadomestilo je razlika med vašo stopnjo in stopnjo timskega partnerja pri neto prihodkih od naročnin njegovih strank, oboje v času plačila — natanko ena raven, brez prispevka za sodelovanje, brez denarja za novačenje. Skupaj nikoli več kot 30 %.",
       "fussnoteCoMarketing": "Po dogovoru s partnersko ekipo; odvisno od profila partnerja in tekočih akcij.",
       "fussnoteRang": "Rang izhaja iz vaše strukture: lastne plačljive stranke in stranke vaših timskih partnerjev, vsak šteje enkrat. Ob dosegu novega ranga od napredovalca dalje prejmete enkratni bonus za napredovanje.",
-      "teamDifferenz": "{satz} % minus stopnja timskega partnerja",
+      "teamUeber": "nad partnerjem {rang}",
       "teamNicht": "še ni ekipe",
       "bonus": "Bonus za napredovanje (enkratno)",
       "superProvision": "Super provizija za celotno strukturo",

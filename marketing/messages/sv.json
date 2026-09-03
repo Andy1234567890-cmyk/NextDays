@@ -2202,7 +2202,7 @@
       "eyebrow": "Partnerprogram",
       "headlinePre": "Rekommendera myNextDays –",
       "headlineHighlight": "och tjäna pengar",
-      "sub": "För influencers, konsulter, byråer och uthyrare med nätverk: Varje företag som registrerar sig via din länk och betalar en prenumeration ger dig upp till {max} % av prenumerationsomsättningen i tolv månader – plus 0,5 % av varje bokning via myBestDays, uppflyttningsbonusar och från Elite en superprovision utan tidsgräns.",
+      "sub": "För influencers, konsulter, byråer och uthyrare med nätverk: Varje företag som registrerar sig via din länk och betalar en prenumeration ger dig upp till {max} % av prenumerationsomsättningen i tolv månader – plus uppflyttningsbonusar och från Elite en superprovision utan tidsgräns och 0,5 % av varje bokning via myBestDays.",
       "cta": "Ansök nu",
       "ctaLogin": "Partnerinloggning",
       "chipDauer": "12 månaders provision per kund",
@@ -2244,7 +2244,7 @@
       },
       "dauer": {
         "titel": "Tolv månader",
-        "text": "Provisionen löper i tolv månader från företagets första betalda abonnemangsfaktura; dina kunders gratismånad räknas inte. Om företaget säger upp avtalet upphör provisionen med den sista betalningen. Bokningsandel och superprovision löper utan denna gräns."
+        "text": "Provisionen löper i tolv månader från företagets första betalda abonnemangsfaktura; dina kunders gratismånad räknas inte. Om företaget säger upp avtalet upphör provisionen med den sista betalningen. Superprovision och bokningsandel löper utan denna gräns, men förutsätter rangen elitpartner."
       },
       "auszahlung": {
         "titel": "Utbetalning",
@@ -2288,7 +2288,7 @@
       },
       "wieviel": {
         "frage": "Hur mycket provision kan jag tjäna?",
-        "antwort": "Det beror på dina kunders abonnemangsintäkter och din rang. Tabellen ovan visar priset per rang; tolv månader per kund. Dessutom tillkommer 0,5 % av varje bokning som dina kunder får via myBestDays, en engångsbonus per uppnådd rang, med ett team får du differensprovision – och från elitpartner får du 2,5 % superprovision på hela strukturen utan tidsbegränsning."
+        "antwort": "Det beror på dina kunders abonnemangsintäkter och din rang. Tabellen ovan visar priset per rang; tolv månader per kund. Dessutom tillkommer en engångsbonus per uppnådd rang och med ett team differensprovision. Från elitpartner tillkommer 2,5 % superprovision på hela din struktur och 0,5 % av varje bokning som dina kunder får via myBestDays – båda utan tidsbegränsning."
       },
       "team": {
         "frage": "Hur fungerar teampremien?",
@@ -2323,8 +2323,8 @@
       "teamProvision": "Teamprovision på dina teampartners kunder",
       "dauer": "Löptid per kund",
       "dauerWert": "12 månader",
-      "kunden": "{från}–{till} betalande kunder",
-      "kundenOffen": "från {från} betalande kunder",
+      "kunden": "{von}–{bis} betalande kunder",
+      "kundenOffen": "från {von} betalande kunder",
       "vorteile": "Tjänster",
       "ja": "ingår",
       "nein": "ingår ej",
@@ -2341,7 +2341,7 @@
       "fussnoteTeam": "Teamprovision är skillnaden mellan din sats och teampartnerns sats på nettoabonnemangsomsättningen för dennes kunder, båda vid betalningstillfället – exakt en nivå, ingen deltagaravgift, inga pengar för rekrytering. Aldrig mer än 30 % totalt.",
       "fussnoteCoMarketing": "Efter överenskommelse med partnerteamet; beror på partnerns profil och pågående kampanjer.",
       "fussnoteRang": "Rangen baseras på din struktur: egna betalande kunder plus dina teampartners kunder, varje kund räknas en gång. När en ny rang uppnås från och med ”uppstigare” utgår en engångsbonus.",
-      "teamDifferenz": "{satz} % minus teampartnerns sats",
+      "teamUeber": "över en {rang}",
       "teamNicht": "inget team ännu",
       "bonus": "Uppflyttningsbonus (engångs)",
       "superProvision": "Superprovision på hela strukturen",

@@ -2202,7 +2202,7 @@
       "eyebrow": "Partner Program",
       "headlinePre": "Refer myNextDays —",
       "headlineHighlight": "and earn money",
-      "sub": "For influencers, consultants, agencies and landlords with a network: Every business that registers via your link and pays for a subscription earns you up to {max} % of the subscription revenue for twelve months — plus 0.5 % of each booking via myBestDays, promotion bonuses and, from Elite, a super commission without a time limit.",
+      "sub": "For influencers, consultants, agencies and landlords with a network: Every business that registers via your link and pays for a subscription earns you up to {max} % of the subscription revenue for twelve months — plus promotion bonuses and, from Elite, a super commission without a time limit and 0.5 % of each booking via myBestDays.",
       "cta": "Apply now",
       "ctaLogin": "Partner Login",
       "chipDauer": "12 months commission per customer",
@@ -2244,7 +2244,7 @@
       },
       "dauer": {
         "titel": "Twelve months",
-        "text": "The commission runs for twelve months from the business's first paid subscription invoice; your customers' free month does not count. If the business cancels, it ends with its last payment. Booking share and super commission run without this limit."
+        "text": "The commission runs for twelve months from the business's first paid subscription invoice; your customers' free month does not count. If the business cancels, it ends with its last payment. Super commission and booking share run without this limit, but require the Elite Partner rank."
       },
       "auszahlung": {
         "titel": "Payout",
@@ -2288,7 +2288,7 @@
       },
       "wieviel": {
         "frage": "How much commission can I earn?",
-        "antwort": "This depends on your customers' subscription revenue and your rank. The tier above shows the rate per rank; for twelve months per customer. In addition, there is 0.5% of each booking your customers receive via myBestDays, a one-time promotion bonus for each rank achieved, the difference commission with a team - and from Elite Partner onwards, 2.5% super commission on the entire structure without a time limit."
+        "antwort": "This depends on your customers' subscription revenue and your rank. The tier above shows the rate per rank; for twelve months per customer. In addition, there is a one-time promotion bonus for each rank achieved and, with a team, the difference commission. From Elite Partner onwards, a 2.5 % super commission on your entire structure and 0.5% of each booking your customers receive via myBestDays are added — both without a time limit."
       },
       "team": {
         "frage": "How does the team commission work?",
@@ -2341,7 +2341,7 @@
       "fussnoteTeam": "Team commission is the difference between your rate and the team partner's rate on the net subscription revenue of their customers, both at the time of payment — exactly one level, no participation fee, no money for recruitment. Never more than 30 % in total.",
       "fussnoteCoMarketing": "By arrangement with the partner team; depends on the partner's profile and ongoing campaigns.",
       "fussnoteRang": "The rank is based on your structure: your own paying customers plus the customers of your team partners, each counted once. Upon reaching a new rank from Climber upwards, a one-time promotion bonus is awarded.",
-      "teamDifferenz": "{satz} % minus team partner's rate",
+      "teamUeber": "above a {rang}",
       "teamNicht": "no team yet",
       "bonus": "Promotion bonus (one-time)",
       "superProvision": "Super commission on the entire structure",

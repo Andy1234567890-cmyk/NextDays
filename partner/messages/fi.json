@@ -60,7 +60,7 @@
       "super": "Superprovisio",
       "superHinweis": "{satz} rakenteesi tilaustuloista, ilman aikarajaa",
       "turbo": "myBestDays-varausten osuus",
-      "turboHinweis": "0,5 % jokaisesta myBestDays-varauksesta asiakkaillesi ja tiimiasiakkaillesi",
+      "turboHinweis": "Elite-Partner-tasosta alkaen: 0,5 % jokaisesta myBestDays-varauksesta asiakkaillesi ja tiimiasiakkaillesi",
       "bonus": "Ylennysbonukset",
       "bonusHinweis": "kertaluonteinen jokaisesta saavutetusta sijoituksesta"
     },
@@ -303,10 +303,10 @@
     },
     "regeln": {
       "titel": "Säännöt",
-      "rang": "Tiimiprovisio = oma prosenttisi miinus tiimikumppanin prosentti, maksuhetkellä. Sama sijoitus = 0.",
-      "ebene": "Vain yksi taso: tiimikumppanisi eivät perusta omaa tiimiä.",
+      "rang": "Tiimiprovisio = oma prosenttisi miinus korkein prosentti, joka on jo maksettu samasta myynnistä alapuolellasi — maksuhetkellä. Sama tai korkeampi sijoitus alapuolellasi = 0.",
+      "ebene": "Kaikilla tasoilla: tiimikumppanisi perustavat omia tiimejä, jokainen taso lasketaan sijoitukseen ja tiimiprovisioon.",
       "keinGeld": "Ei rahaa värväyksestä – vain maksetuista tilaustuloista.",
-      "dauer": "12 kuukautta per tiimiasiakas, 30 päivän palautusikkuna. Eliitistä alkaen lisäksi 2,5 % superprovisio ilman aikarajaa."
+      "dauer": "12 kuukautta per tiimiasiakas, 30 päivän palautusikkuna. Eliitistä alkaen lisäksi 2,5 % superprovisio ilman aikarajaa — useat Eliitit samassa ketjussa jakavat sen tasan."
     },
     "kachel": {
       "mitglieder": "Tiimikumppanit (aktiiviset / yhteensä)",
@@ -498,11 +498,16 @@
     "plz": "Postinumero",
     "ort": "Paikkakunta",
     "nationalitaet": "Kansallisuus (maakoodi)",
+    "idNummer": "Henkilötunnus",
+    "idNummerHinweis": "Kansallinen henkilötunnuksesi, esim. CPR (DK), personnummer (SE/FI), NIF (ES), PESEL (PL), codice fiscale (IT).",
+    "bundesland": "Alue",
     "telefon": "Puhelin",
     "webseite": "Verkkosivusto tai profiili",
     "webseiteHinweis": "Osoite, jossa mainostat – tarvitaan tarkistusta varten.",
     "firmenname": "Yrityksen nimi",
     "steuernummer": "Verotunnus",
+    "registernummer": "Yritys- ja yhteisötunnus",
+    "ustId": "ALV-numero",
     "firmenStrasse": "Yrityksen osoite",
     "firmaHinweis": "Edustajana käytetään yllä mainittuja tietojasi.",
     "speichern": "Tallenna tiedot",

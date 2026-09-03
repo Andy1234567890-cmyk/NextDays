@@ -34,6 +34,15 @@ export function PartnerVergleich({ staffel }: { staffel: Rang[] | null }) {
     );
   }
 
+  // Die Team-Provision ist die Differenz zum darunter schon vergüteten Satz.
+  // Je Rang stehen deshalb alle niedrigeren Ränge mit ihrer Differenz da —
+  // ein Experte sieht, was er über einem Einsteiger UND über einem Aufsteiger
+  // verdient. Gleicher oder höherer Rang darunter ergibt 0 und fehlt.
+  const niedrigereRaenge = (r: Rang) =>
+    staffel
+      .filter((u) => Number(u.rate) < Number(r.rate))
+      .sort((a, b) => a.min_customers - b.min_customers);
+
   const kopf = (label: string) => (
     <tr>
       <th scope="row" className="py-6 pr-6 text-left font-display text-2xl font-extrabold tracking-tight">
@@ -76,8 +85,21 @@ export function PartnerVergleich({ staffel }: { staffel: Rang[] | null }) {
                   <span className="ml-1 align-super text-xs">*</span>
                 </th>
                 {staffel.map((r) => (
-                  <td key={r.id} className="px-3 py-5 text-center text-sm text-muted-foreground">
-                    {r.team_allowed ? t("teamDifferenz", { satz: prozent(r.rate) }) : t("teamNicht")}
+                  <td key={r.id} className="px-3 py-5 text-center">
+                    {r.team_allowed ? (
+                      <ul className="space-y-1">
+                        {niedrigereRaenge(r).map((u) => (
+                          <li key={u.id} className="text-xs text-muted-foreground">
+                            <span className="text-base font-semibold tabular-nums text-foreground">
+                              {prozent((Number(r.rate) - Number(u.rate)).toFixed(4))} %
+                            </span>{" "}
+                            {t("teamUeber", { rang: u.name })}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">{t("teamNicht")}</span>
+                    )}
                   </td>
                 ))}
               </tr>
@@ -102,8 +124,17 @@ export function PartnerVergleich({ staffel }: { staffel: Rang[] | null }) {
               </tr>
               <tr>
                 <th scope="row" className="py-5 pr-6 text-left font-normal text-muted-foreground">{t("marktTurbo")}</th>
+                {/* Nur Elite (03.09.2026). Erkannt an `lifetime_rate > 0` — genau
+                    das Merkmal, an dem `_booking_share_zeile` im Backend die
+                    Zeile entstehen lässt. Ein Vergleich auf den Rangnamen wäre
+                    ein Hardcode, der beim Umbenennen still auseinanderläuft, und
+                    die Tabelle würde etwas anderes versprechen als die
+                    Abrechnung zahlt. Bis dahin stand hier derselbe Wert in JEDER
+                    Spalte, ohne `r` überhaupt anzusehen. */}
                 {staffel.map((r) => (
-                  <td key={r.id} className="px-3 py-5 text-center text-muted-foreground">{t("marktTurboWert")}</td>
+                  <td key={r.id} className="px-3 py-5 text-center text-muted-foreground">
+                    {Number(r.lifetime_rate) > 0 ? t("marktTurboWert") : <span>–</span>}
+                  </td>
                 ))}
               </tr>
               <tr>

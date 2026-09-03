@@ -55,11 +55,24 @@ function Schritt({
   );
 }
 
-export function Verbundkonto({ profil, stand }: { profil: Profil; stand: ConnectStand }) {
+export function Verbundkonto({
+  profil,
+  stand,
+  pflicht,
+}: {
+  profil: Profil;
+  stand: ConnectStand;
+  /** Stripes `verification_fields.minimum` für Land + Rechtsform, live. */
+  pflicht: string[];
+}) {
   const t = useTranslations("verbundkonto");
   const [laeuft, starte] = useTransition();
   const [offen, setOffen] = useState(false);
   const firma = profil.legal_form === "company";
+  // Bei Unternehmen läuft der Mensch als `representative` über die Persons-API,
+  // bei Privatpersonen als `individual` — die Pflichtliste ist danach benannt.
+  const person = firma ? "representative" : "individual";
+  const noetig = (feld: string) => pflicht.includes(feld);
 
   // Personendaten
   const [vorname, setVorname] = useState("");
@@ -72,10 +85,15 @@ export function Verbundkonto({ profil, stand }: { profil: Profil; stand: Connect
   const [plz, setPlz] = useState("");
   const [ort, setOrt] = useState("");
   const [nation, setNation] = useState(profil.country);
+  const [idNummer, setIdNummer] = useState("");
+  const [bundesland, setBundesland] = useState("");
   const [webseite, setWebseite] = useState(profil.channels[0]?.url ?? "");
   // Firmendaten
   const [firmenname, setFirmenname] = useState(profil.company ?? "");
   const [steuernummer, setSteuernummer] = useState("");
+  const [registernummer, setRegisternummer] = useState("");
+  const [ustId, setUstId] = useState(profil.vat_id ?? "");
+  const [firmenBundesland, setFirmenBundesland] = useState("");
   const [firmenStrasse, setFirmenStrasse] = useState("");
   const [firmenPlz, setFirmenPlz] = useState("");
   const [firmenOrt, setFirmenOrt] = useState("");
@@ -170,17 +188,23 @@ export function Verbundkonto({ profil, stand }: { profil: Profil; stand: Connect
                             line1: strasse.trim(),
                             postal_code: plz.trim(),
                             city: ort.trim(),
+                            state: bundesland.trim() || undefined,
                           },
                           nationality: nation.toUpperCase() || undefined,
+                          id_number: idNummer.trim() || undefined,
                         },
                         ...(firma
                           ? {
                               company_name: firmenname.trim(),
                               company_tax_id: steuernummer.trim() || undefined,
+                              company_registration_number: registernummer.trim() || undefined,
+                              company_vat_id: ustId.trim() || undefined,
+                              company_phone: telefon.trim() || undefined,
                               company_address: {
                                 line1: firmenStrasse.trim(),
                                 postal_code: firmenPlz.trim(),
                                 city: firmenOrt.trim(),
+                                state: firmenBundesland.trim() || undefined,
                               },
                             }
                           : {}),
@@ -217,13 +241,26 @@ export function Verbundkonto({ profil, stand }: { profil: Profil; stand: Connect
                     <span className="font-medium">{t("ort")}</span>
                     <input value={ort} onChange={(e) => setOrt(e.target.value)} required maxLength={100} className={EINGABE} />
                   </label>
+                  {noetig(`${person}.address.state`) && (
+                    <label className="flex flex-col gap-1 text-sm">
+                      <span className="font-medium">{t("bundesland")}</span>
+                      <input value={bundesland} onChange={(e) => setBundesland(e.target.value)} required maxLength={100} className={EINGABE} />
+                    </label>
+                  )}
                   <label className="flex flex-col gap-1 text-sm">
                     <span className="font-medium">{t("nationalitaet")}</span>
-                    <input value={nation} onChange={(e) => setNation(e.target.value.toUpperCase())} maxLength={2} className={`${EINGABE} font-mono`} />
+                    <input value={nation} onChange={(e) => setNation(e.target.value.toUpperCase())} required={noetig(`${person}.nationality`)} maxLength={2} className={`${EINGABE} font-mono`} />
                   </label>
+                  {noetig(`${person}.id_number`) && (
+                    <label className="flex flex-col gap-1 text-sm">
+                      <span className="font-medium">{t("idNummer")}</span>
+                      <input value={idNummer} onChange={(e) => setIdNummer(e.target.value)} required maxLength={40} className={`${EINGABE} font-mono`} />
+                      <span className="text-xs text-muted-foreground">{t("idNummerHinweis")}</span>
+                    </label>
+                  )}
                   <label className="flex flex-col gap-1 text-sm">
                     <span className="font-medium">{t("telefon")}</span>
-                    <input value={telefon} onChange={(e) => setTelefon(e.target.value)} type="tel" maxLength={40} className={EINGABE} />
+                    <input value={telefon} onChange={(e) => setTelefon(e.target.value)} type="tel" required={noetig(`${person}.phone`) || noetig("company.phone")} maxLength={40} className={EINGABE} />
                   </label>
                   <label className="flex flex-col gap-1 text-sm sm:col-span-2">
                     <span className="font-medium">{t("webseite")}</span>
@@ -238,8 +275,16 @@ export function Verbundkonto({ profil, stand }: { profil: Profil; stand: Connect
                         <input value={firmenname} onChange={(e) => setFirmenname(e.target.value)} required maxLength={200} className={EINGABE} />
                       </label>
                       <label className="flex flex-col gap-1 text-sm">
+                        <span className="font-medium">{t("registernummer")}</span>
+                        <input value={registernummer} onChange={(e) => setRegisternummer(e.target.value)} required={noetig("company.registration_number")} maxLength={60} className={`${EINGABE} font-mono`} />
+                      </label>
+                      <label className="flex flex-col gap-1 text-sm">
                         <span className="font-medium">{t("steuernummer")}</span>
-                        <input value={steuernummer} onChange={(e) => setSteuernummer(e.target.value)} maxLength={40} className={`${EINGABE} font-mono`} />
+                        <input value={steuernummer} onChange={(e) => setSteuernummer(e.target.value)} required={noetig("company.tax_id")} maxLength={40} className={`${EINGABE} font-mono`} />
+                      </label>
+                      <label className="flex flex-col gap-1 text-sm">
+                        <span className="font-medium">{t("ustId")}</span>
+                        <input value={ustId} onChange={(e) => setUstId(e.target.value.toUpperCase())} required={noetig("company.vat_id")} maxLength={40} className={`${EINGABE} font-mono`} />
                       </label>
                       <label className="flex flex-col gap-1 text-sm">
                         <span className="font-medium">{t("firmenStrasse")}</span>
@@ -253,6 +298,12 @@ export function Verbundkonto({ profil, stand }: { profil: Profil; stand: Connect
                         <span className="font-medium">{t("ort")}</span>
                         <input value={firmenOrt} onChange={(e) => setFirmenOrt(e.target.value)} required maxLength={100} className={EINGABE} />
                       </label>
+                      {noetig("company.address.state") && (
+                        <label className="flex flex-col gap-1 text-sm">
+                          <span className="font-medium">{t("bundesland")}</span>
+                          <input value={firmenBundesland} onChange={(e) => setFirmenBundesland(e.target.value)} required maxLength={100} className={EINGABE} />
+                        </label>
+                      )}
                       <p className="text-xs text-muted-foreground sm:col-span-2">{t("firmaHinweis")}</p>
                     </>
                   )}

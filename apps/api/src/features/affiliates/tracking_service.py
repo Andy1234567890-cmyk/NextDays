@@ -89,6 +89,9 @@ class TrackingMixin:  # pylint: disable=too-few-public-methods
     ) -> tuple[list, list]:  # pragma: no cover
         raise NotImplementedError
 
+    def _struktur_ids(self, wurzeln: list[str]) -> dict[str, list[str]]:  # pragma: no cover
+        raise NotImplementedError
+
     # --- Tracking: Aufrufe und Reichweite ----------------------------------------
 
     def bo_tracking(self, affiliate_id: str) -> BackofficeTracking:
@@ -151,7 +154,12 @@ class TrackingMixin:  # pylint: disable=too-few-public-methods
         tage = [(jetzt - timedelta(days=i)).date().isoformat() for i in range(29, -1, -1)]
         kanaele: list[SocialKanal] = kanaele_aus_zeile(row, SocialKanal)
         mitglieder = self._team_mitglieder(affiliate_id)
-        ertraege, overrides = self._team_zeilen(affiliate_id, [m["id"] for m in mitglieder])
+        # Umsatz der GANZEN Struktur (0533), nicht nur der direkten Mitglieder —
+        # die Override-Summe daneben enthält Ebene zwei ohnehin.
+        struktur = self._struktur_ids([m["id"] for m in mitglieder])
+        ertraege, overrides = self._team_zeilen(
+            affiliate_id, sorted({i for ids in struktur.values() for i in ids})
+        )
         s30, s90 = seit_30.isoformat(), seit_90.isoformat()
         flag_zaehler: dict[str, int] = defaultdict(int)
         for r in fetch_all_rows(

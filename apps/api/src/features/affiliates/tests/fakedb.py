@@ -22,7 +22,7 @@ _UNIQUE: dict[str, list[tuple[tuple[str, ...], dict[str, Any] | None]]] = {
     "affiliate_commissions": [
         (("stripe_invoice_id",), {"kind": "earn"}),
         (("stripe_event_id",), None),
-        (("parent_id",), {"kind": "override"}),
+        (("parent_id", "affiliate_id"), {"kind": "override"}),  # 0533: je Sponsor der Kette
         (("affiliate_id", "tier_id"), {"kind": "bonus"}),
         (("parent_id", "affiliate_id"), {"kind": "lifetime"}),
         (("stripe_charge_id", "affiliate_id"), {"kind": "booking_share"}),

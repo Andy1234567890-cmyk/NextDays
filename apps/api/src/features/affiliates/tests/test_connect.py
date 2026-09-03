@@ -496,3 +496,92 @@ def test_fingerabdruck_ist_stabil_und_nicht_die_iban() -> None:
     b = attribution.iban_fingerabdruck("dk5000400440116243")
     assert a == b  # Leerzeichen und Kleinschreibung sind gleichwertig
     assert "1162" not in a and len(a) == 64
+
+
+# --- Pflichtfelder aus der Ländervorgabe ----------------------------------------
+
+
+def _daten(**extra: Any) -> Any:
+    from src.features.affiliates.schemas import ConnectDaten  # noqa: PLC0415
+
+    person = {
+        "first_name": "Pia",
+        "last_name": "Poulsen",
+        "dob": {"day": 1, "month": 2, "year": 1990},
+        "address": {"line1": "Vej 1", "postal_code": "9881", "city": "Bindslev"},
+    }
+    person.update(extra.pop("person", {}))
+    return ConnectDaten(url="https://example.com", person=person, **extra)
+
+
+def test_pflichtfelder_daenemark_verlangen_cpr_nationalitaet_telefon() -> None:
+    """Stripe (country_specs DK, individual) verlangt id_number, nationality,
+    phone und email — genau die Felder, die das alte Formular nicht abfragte."""
+    from src.features.affiliates.connect_service import fehlende_pflichtfelder  # noqa: PLC0415
+
+    minimum = {
+        "individual.id_number", "individual.nationality", "individual.phone",
+        "individual.email", "individual.first_name", "external_account",
+    }
+    assert fehlende_pflichtfelder(minimum, _daten(), firma=False) == [
+        "individual.email", "individual.id_number", "individual.nationality", "individual.phone",
+    ]
+    voll = _daten(person={"id_number": "010290-1234", "nationality": "DK",
+                          "phone": "+4512345678", "email": "pia@example.com"})
+    assert fehlende_pflichtfelder(minimum, voll, firma=False) == []
+
+
+def test_pflichtfelder_unternehmen_register_und_ust_id() -> None:
+    from src.features.affiliates.connect_service import fehlende_pflichtfelder  # noqa: PLC0415
+
+    minimum = {
+        "company.registration_number", "company.tax_id", "company.vat_id", "company.phone",
+        "representative.id_number", "representative.email", "company.address.state",
+    }
+    req = _daten(company_name="Pia ApS",
+                 company_address={"line1": "Vej 1", "postal_code": "9881", "city": "Bindslev"})
+    assert fehlende_pflichtfelder(minimum, req, firma=True) == [
+        "company.address.state", "company.phone", "company.registration_number",
+        "company.tax_id", "company.vat_id", "representative.email", "representative.id_number",
+    ]
+    # Für Privatpersonen zählen company-/representative-Felder nicht.
+    assert fehlende_pflichtfelder(minimum, req, firma=False) == []
+
+
+def test_daten_senden_fuellt_email_und_ust_id_aus_dem_profil() -> None:
+    """E-Mail und USt-IdNr. stehen im Profil — der Partner tippt sie nicht noch
+    einmal; die Pflichtprüfung sieht sie als erfüllt."""
+    from src.features.affiliates.connect_service import ConnectMixin  # noqa: PLC0415
+
+    db = _db(stripe_account_id=KONTO, legal_form="company", country="DE",
+             vat_id="DE123456789", company="Pia GmbH")
+    gesendet: list[dict[str, Any]] = []
+    personen: list[dict[str, Any]] = []
+
+    class _Svc(ConnectMixin):
+        @property
+        def db(self) -> FakeDb:
+            return db
+
+    import src.features.affiliates.connect_service as modul  # noqa: PLC0415
+
+    original = (
+        modul.connect.pflichtfelder, modul.connect.daten_senden, modul.connect.person_setzen
+    )
+    modul.connect.pflichtfelder = lambda land, art: {  # type: ignore[assignment]
+        "minimum": ["company.vat_id", "representative.email", "company.registration_number"],
+        "zusaetzlich": [],
+    }
+    modul.connect.daten_senden = lambda _db, _a, felder: gesendet.append(felder)  # type: ignore[assignment]
+    modul.connect.person_setzen = lambda _db, _a, person: personen.append(person) or {}  # type: ignore[assignment]
+    try:
+        req = _daten(company_name="Pia GmbH", company_registration_number="HRB 1",
+                     company_address={"line1": "Weg 1", "postal_code": "20095", "city": "Hamburg"})
+        _Svc().connect_daten_senden(AFF, req)
+    finally:
+        (
+            modul.connect.pflichtfelder, modul.connect.daten_senden, modul.connect.person_setzen
+        ) = original
+    assert gesendet[0]["company"]["vat_id"] == "DE123456789"
+    assert gesendet[0]["company"]["registration_number"] == "HRB 1"
+    assert personen[0]["email"] == "pia@example.com"

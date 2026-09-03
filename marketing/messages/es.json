@@ -2202,7 +2202,7 @@
       "eyebrow": "Programa de socios",
       "headlinePre": "Recomiende myNextDays —",
       "headlineHighlight": "y gane dinero",
-      "sub": "Para influencers, consultores, agencias y propietarios con red: Cada negocio que se registre a través de su enlace y pague una suscripción le reportará hasta un {max} % de los ingresos de la suscripción durante doce meses — más un 0,5 % de cada reserva a través de myBestDays, bonos por ascenso y, a partir de Élite, una supercomisión sin límite de duración.",
+      "sub": "Para influencers, consultores, agencias y propietarios con red: Cada negocio que se registre a través de su enlace y pague una suscripción le reportará hasta un {max} % de los ingresos de la suscripción durante doce meses — más bonos por ascenso y, a partir de Élite, una supercomisión sin límite de duración y un 0,5 % de cada reserva a través de myBestDays.",
       "cta": "Solicitar ahora",
       "ctaLogin": "Acceso para socios",
       "chipDauer": "12 meses de comisión por cliente",
@@ -2244,7 +2244,7 @@
       },
       "dauer": {
         "titel": "Doce meses",
-        "text": "La comisión se aplica durante doce meses a partir de la primera factura de suscripción pagada por la empresa; el mes gratuito de sus clientes no cuenta. Si la empresa cancela, la comisión finaliza con su último pago. La parte de la reserva y la supercomisión se aplican sin este límite."
+        "text": "La comisión se aplica durante doce meses a partir de la primera factura de suscripción pagada por la empresa; el mes gratuito de sus clientes no cuenta. Si la empresa cancela, la comisión finaliza con su último pago. La supercomisión y la parte de la reserva se aplican sin este límite, pero requieren el rango de Socio Élite."
       },
       "auszahlung": {
         "titel": "Pago",
@@ -2288,7 +2288,7 @@
       },
       "wieviel": {
         "frage": "¿Cuánta comisión puedo ganar?",
-        "antwort": "Esto depende de los ingresos por suscripciones de sus clientes y de su rango. La tabla anterior muestra la tarifa por rango; durante doce meses por cliente. Además, se añade el 0,5 % de cada reserva que sus clientes reciban a través de myBestDays, una bonificación única por ascenso por cada rango alcanzado, la comisión diferencial con un equipo, y a partir de Socio Élite, el 2,5 % de supercomisión sobre toda la estructura sin límite de duración."
+        "antwort": "Esto depende de los ingresos por suscripciones de sus clientes y de su rango. La tabla anterior muestra la tarifa por rango; durante doce meses por cliente. A esto se añaden una bonificación única por ascenso por cada rango alcanzado y, con un equipo, la comisión diferencial. A partir de Socio Élite se suman una supercomisión del 2,5 % sobre toda su estructura y el 0,5 % de cada reserva que sus clientes reciban a través de myBestDays, ambas sin límite de duración."
       },
       "team": {
         "frage": "¿Cómo funciona la comisión de equipo?",
@@ -2323,8 +2323,8 @@
       "teamProvision": "Comisión de equipo sobre los clientes de sus socios de equipo",
       "dauer": "Duración por cliente",
       "dauerWert": "12 meses",
-      "kunden": "{de}–{a} clientes de pago",
-      "kundenOffen": "a partir de {de} clientes de pago",
+      "kunden": "{von}–{bis} clientes de pago",
+      "kundenOffen": "a partir de {von} clientes de pago",
       "vorteile": "Servicios",
       "ja": "incluido",
       "nein": "no incluido",
@@ -2341,7 +2341,7 @@
       "fussnoteTeam": "La comisión de equipo es la diferencia entre su tarifa y la tarifa del socio de equipo sobre los ingresos netos de la suscripción de sus clientes, ambos en el momento del pago — exactamente un nivel, sin cuota de participación, sin dinero por captación. En total, nunca más del 30 %.",
       "fussnoteCoMarketing": "Previa consulta con el equipo de socios; depende del perfil del socio y de las acciones en curso.",
       "fussnoteRang": "El rango se forma a partir de su estructura: clientes de pago propios más los clientes de sus socios de equipo, cada uno cuenta una vez. Al alcanzar un nuevo rango a partir de Ascendente, se otorga un bono por ascenso una única vez.",
-      "teamDifferenz": "{satz} % menos la tarifa del socio de equipo",
+      "teamUeber": "sobre un {rang}",
       "teamNicht": "aún no hay equipo",
       "bonus": "Bono por ascenso (una vez)",
       "superProvision": "Supercomisión sobre toda la estructura",

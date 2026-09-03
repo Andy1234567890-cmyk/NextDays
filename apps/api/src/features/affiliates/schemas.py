@@ -301,6 +301,9 @@ class ConnectPerson(BaseModel):
     dob: ConnectGeburtstag
     address: ConnectAdresse
     nationality: str | None = Field(default=None, min_length=2, max_length=2)
+    # Persönliche Kennnummer (CPR, personnummer, NIF, PESEL, codice fiscale …) —
+    # Stripe verlangt sie in zehn EU-Ländern, ob, sagt die Ländervorgabe live.
+    id_number: str | None = Field(default=None, min_length=1, max_length=40)
     title: str | None = Field(default=None, max_length=100)
 
 
@@ -317,6 +320,10 @@ class ConnectDaten(BaseModel):
     person: ConnectPerson
     company_name: str | None = Field(default=None, max_length=200)
     company_tax_id: str | None = Field(default=None, max_length=40)
+    # Handelsregisternummer und USt-IdNr. verlangt Stripe in allen 27 EU-Ländern
+    # für Unternehmen; die USt-IdNr. kommt aus dem Profil, wenn hier leer.
+    company_registration_number: str | None = Field(default=None, max_length=60)
+    company_vat_id: str | None = Field(default=None, max_length=40)
     company_address: ConnectAdresse | None = None
     company_phone: str | None = Field(default=None, max_length=40)
 
@@ -542,8 +549,12 @@ class PartnerTeamMitglied(BaseModel):
     status: str
     tier: PartnerRang
     joined_at: datetime | None = None
+    # Zahlende Kunden seiner GANZEN Struktur — er selbst und alle Partner unter
+    # ihm (Strukturvertrieb 0533), dieselbe Zählung wie für den Rang. Nicht nur
+    # seine eigenen Kunden: ein Mitglied mit leerem eigenen Konto, aber drei
+    # aktiven Ebenen darunter, ist für den Sponsor die wertvollste Zeile.
     paying_customers: int
-    # Netto-Abo-Umsatz der Team-Kunden (Basis der Overrides), je Währung.
+    # Netto-Abo-Umsatz aller Kunden dieser Struktur (Basis der Overrides), je Währung.
     revenue_30d: list[Betrag]
     revenue_total: list[Betrag]
     override_pending: list[Betrag]
@@ -564,10 +575,12 @@ class PartnerTeam(BaseModel):
     # Nur gesetzt, wenn der eigene Rang Team-Partner führen darf (team_allowed, 0525).
     team_link: str | None = None
     team_allowed: bool = False
-    # Eigener Satz — die Team-Provision ist die Differenz dazu (0525).
+    # Eigener Satz — die Team-Provision ist die Differenz zwischen ihm und dem
+    # höchsten darunter bereits vergüteten Satz (Roll-up, 0533).
     own_rate: str
     members: list[PartnerTeamMitglied]
     members_active: int
+    # Summe der Struktur-Kunden aller direkten Mitglieder = alle Ebenen darunter.
     team_customers: int
     revenue_30d: list[Betrag]
     override_pending: list[Betrag]

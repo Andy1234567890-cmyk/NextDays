@@ -60,7 +60,7 @@
       "super": "Super commissione",
       "superHinweis": "{satz} sul fatturato dell'abbonamento della Sua struttura, senza limiti di durata",
       "turbo": "Quota di prenotazione myBestDays",
-      "turboHinweis": "0,5 % per ogni prenotazione tramite myBestDays per i Suoi clienti e i clienti del team",
+      "turboHinweis": "A partire da Elite-Partner: 0,5 % per ogni prenotazione tramite myBestDays per i Suoi clienti e i clienti del team",
       "bonus": "Bonus di avanzamento",
       "bonusHinweis": "una tantum per ogni rango raggiunto"
     },
@@ -303,10 +303,10 @@
     },
     "regeln": {
       "titel": "Le regole",
-      "rang": "Commissione del team = la Sua percentuale meno la percentuale del partner del team, al momento del pagamento. Stesso rango = 0.",
-      "ebene": "Esattamente un livello: i Suoi partner del team non creano un proprio team.",
+      "rang": "Commissione del team = la Sua percentuale meno la percentuale più alta già remunerata sullo stesso fatturato sotto di Lei, al momento del pagamento. Rango uguale o superiore sotto di Lei = 0.",
+      "ebene": "Su tutti i livelli: i Suoi partner del team creano propri team, ogni livello conta per il rango e la commissione del team.",
       "keinGeld": "Nessun denaro per il reclutamento — solo dal fatturato degli abbonamenti pagati.",
-      "dauer": "12 mesi per ogni cliente del team, finestra di rimborso di 30 giorni. A partire da Elite, un ulteriore 2,5 % di super commissione senza limiti di durata."
+      "dauer": "12 mesi per ogni cliente del team, finestra di rimborso di 30 giorni. A partire da Elite, un ulteriore 2,5 % di super commissione senza limiti di durata — più Elite in una stessa catena la condividono in parti uguali."
     },
     "kachel": {
       "mitglieder": "Partner del team (attivi / totali)",
@@ -498,11 +498,16 @@
     "plz": "Codice postale",
     "ort": "Località",
     "nationalitaet": "Nazionalità (codice paese)",
+    "idNummer": "Codice fiscale",
+    "idNummerHinweis": "Il tuo codice identificativo personale, ad es. CPR (DK), personnummer (SE/FI), NIF (ES), PESEL (PL), codice fiscale (IT).",
+    "bundesland": "Provincia / regione",
     "telefon": "Telefono",
     "webseite": "Sito web o profilo",
     "webseiteHinweis": "L'indirizzo con cui pubblicizza - necessario per la verifica.",
     "firmenname": "Nome azienda",
     "steuernummer": "Codice fiscale",
+    "registernummer": "Numero di registrazione (REA)",
+    "ustId": "Partita IVA",
     "firmenStrasse": "Indirizzo azienda",
     "firmaHinweis": "I suoi dati sopra menzionati saranno utilizzati come persona autorizzata a rappresentare l'azienda.",
     "speichern": "Salva dati",

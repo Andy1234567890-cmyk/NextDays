@@ -299,26 +299,56 @@ def _anteil(db: FakeDb, *, charge: str = "ch_b1", cents: int = 80000, event: str
 
 
 def test_buchungsanteil_fuer_partner_und_sponsor() -> None:
-    db = _db(eigene=0)
+    # Beide Elite: der Anteil entsteht seit dem 03.09.2026 nur fuer Raenge mit
+    # `lifetime_rate` — und die Pruefung greift je Empfaenger, nicht einmal
+    # fuer den Vorgang.
+    db = _db(eigene=0, sponsor_tier="elite", member_tier="elite")
     _mit_kunde(db)
     assert _anteil(db) == "gebucht"
+    # EIN Topf, geteilt (03.09.2026): beide Elite → 800,00 DKK × 0,5 % = 4,00
+    # DKK, je 2,00 fuer Werber und Elite-Sponsor, in Buchungswaehrung.
     mine = _zeilen(db, "booking_share", MEMBER)
     sp = _zeilen(db, "booking_share", SPONSOR)
     assert len(mine) == 1 and len(sp) == 1
-    # 800,00 DKK × 0,5 % = 4,00 DKK — je Zeile, in Buchungswährung.
     for z in (mine[0], sp[0]):
-        assert Decimal(z["amount"]) == Decimal("4.00") and z["currency"] == "DKK"
+        assert Decimal(z["amount"]) == Decimal("2.00") and z["currency"] == "DKK"
         assert Decimal(z["base_amount"]) == Decimal("800.00")
         assert z["status"] == "pending" and z["stripe_charge_id"] == "ch_b1"
-    assert sp[0]["reason"] == f"team:{MEMBER}" and mine[0]["reason"] == "booking:own"
+    assert mine[0]["reason"] == "booking:own" and sp[0]["reason"] == f"team:{MEMBER}"
 
 
 def test_buchungsanteil_nur_einmal_je_charge() -> None:
-    db = _db(eigene=0)
+    db = _db(eigene=0, sponsor_tier="elite", member_tier="elite")
     _mit_kunde(db)
     assert _anteil(db) == "gebucht"
     assert _anteil(db, event="evt_b2") == "duplikat"
     assert len(_zeilen(db, "booking_share")) == 2
+
+
+def test_buchungsanteil_nur_fuer_elite() -> None:
+    """Unter Elite entsteht keine Zeile — und die Pruefung wirkt je Empfaenger.
+
+    Der zweite Teil ist der eigentliche Punkt: Partner und Sponsor koennen
+    verschiedene Raenge halten. Ein Elite-Sponsor ueber einem Einsteiger
+    bekommt seinen Anteil, der Einsteiger nicht. Eine Pruefung am Aufrufer
+    statt je Empfaenger wuerde hier beide gemeinsam abschneiden und faellt
+    ohne diesen Test nicht auf.
+    """
+    db = _db(eigene=0)
+    _mit_kunde(db)
+    assert _anteil(db) == "kein_rang"
+    assert _zeilen(db, "booking_share") == []
+
+    db = _db(eigene=0, sponsor_tier="elite", member_tier="einsteiger")
+    _mit_kunde(db)
+    assert _anteil(db) == "gebucht"
+    assert _zeilen(db, "booking_share", MEMBER) == []
+    assert len(_zeilen(db, "booking_share", SPONSOR)) == 1
+    # Redelivery im gemischten Fall: der Starter meldet erneut „kein Rang",
+    # der Sponsor laeuft in den UNIQUE-Backstop. Das ist eine Redelivery und
+    # muss als solche gemeldet werden — nicht als Rangbefund (Review 03.09.2026).
+    assert _anteil(db, event="evt_b2") == "duplikat"
+    assert len(_zeilen(db, "booking_share")) == 1
 
 
 def test_buchungsanteil_ohne_partner_oder_charge() -> None:
@@ -342,7 +372,7 @@ def test_buchungsanteil_ohne_partner_oder_charge() -> None:
 
 
 def test_gast_erstattung_nimmt_buchungsanteil_anteilig_zurueck() -> None:
-    db = _db(eigene=0)
+    db = _db(eigene=0, sponsor_tier="elite", member_tier="elite")
     _mit_kunde(db)
     _anteil(db)
     prov.storniere_fuer_charge(
@@ -350,7 +380,8 @@ def test_gast_erstattung_nimmt_buchungsanteil_anteilig_zurueck() -> None:
     )
     gegen = _zeilen(db, "reversal")
     assert len(gegen) == 2
-    assert all(Decimal(g["amount"]) == Decimal("-2.00") for g in gegen)
+    # halbe Erstattung auf je 2,00 → je −1,00
+    assert all(Decimal(g["amount"]) == Decimal("-1.00") for g in gegen)
     assert {g["affiliate_id"] for g in gegen} == {MEMBER, SPONSOR}
 
 

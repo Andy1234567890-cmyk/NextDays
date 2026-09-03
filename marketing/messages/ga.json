@@ -2202,7 +2202,7 @@
       "eyebrow": "Clár Comhpháirtíochta",
       "headlinePre": "Mol myNextDays —",
       "headlineHighlight": "agus tuilleamh",
-      "sub": "Do lucht tionchair, comhairleoirí, gníomhaireachtaí agus tiarnaí talún le líonra: Tugann gach gnó a chláraíonn trí do nasc agus a íocann síntiús suas le {max} % d'ioncam an tsíntiúis duit ar feadh dhá mhí dhéag — móide 0.5 % de gach áirithint trí myBestDays, bónais ardú céime agus, ó Elite, sárchoimisiún gan teorainn ama.",
+      "sub": "Do lucht tionchair, comhairleoirí, gníomhaireachtaí agus tiarnaí talún le líonra: Tugann gach gnó a chláraíonn trí do nasc agus a íocann síntiús suas le {max} % d'ioncam an tsíntiúis duit ar feadh dhá mhí dhéag — móide bónais ardú céime agus, ó Elite, sárchoimisiún gan teorainn ama agus 0.5 % de gach áirithint trí myBestDays.",
       "cta": "Cuir isteach anois",
       "ctaLogin": "Logáil Isteach Comhpháirtí",
       "chipDauer": "Coimisiún 12 mhí in aghaidh an chustaiméara",
@@ -2244,7 +2244,7 @@
       },
       "dauer": {
         "titel": "Dhá mhí dhéag",
-        "text": "Ritheann an coimisiún ar feadh dhá mhí dhéag ón gcéad sonrasc síntiúis íoctha den ghnó; ní áirítear mí saor in aisce do chustaiméirí. Má chuireann an gnó ar ceal, críochnaíonn sé lena íocaíocht dheireanach. Ritheann an sciar áirithinte agus an sárchoimisiún gan an teorainn seo."
+        "text": "Ritheann an coimisiún ar feadh dhá mhí dhéag ón gcéad sonrasc síntiúis íoctha den ghnó; ní áirítear mí saor in aisce do chustaiméirí. Má chuireann an gnó ar ceal, críochnaíonn sé lena íocaíocht dheireanach. Ritheann an sárchoimisiún agus an sciar áirithinte gan an teorainn seo, ach teastaíonn céim Chomhpháirtí Elite uathu."
       },
       "auszahlung": {
         "titel": "Íocaíocht",
@@ -2288,7 +2288,7 @@
       },
       "wieviel": {
         "frage": "Cé mhéad coimisiún is féidir liom a thuilleamh?",
-        "antwort": "Braitheann sé ar ioncam síntiúis do chustaiméirí agus ar do chéim. Taispeánann an tábla thuas an ráta in aghaidh na céime; ar feadh dhá mhí dhéag in aghaidh an chustaiméara. Ina theannta sin, tá 0.5% de gach áirithint a fhaigheann do chustaiméirí trí myBestDays, bónas ardú céime aonuaire do gach céim a baineadh amach, an coimisiún difreálach le foireann — agus ó Chomhpháirtí Elite, 2.5% sárchoimisiún ar an struchtúr iomlán gan teorainn ama."
+        "antwort": "Braitheann sé ar ioncam síntiúis do chustaiméirí agus ar do chéim. Taispeánann an tábla thuas an ráta in aghaidh na céime; ar feadh dhá mhí dhéag in aghaidh an chustaiméara. Ina theannta sin, tá bónas ardú céime aonuaire do gach céim a baineadh amach agus, le foireann, an coimisiún difreálach. Ó Chomhpháirtí Elite, cuirtear sárchoimisiún 2.5 % ar do struchtúr iomlán agus 0.5% de gach áirithint a fhaigheann do chustaiméirí trí myBestDays leis — an dá cheann gan teorainn ama."
       },
       "team": {
         "frage": "Conas a oibríonn coimisiún foirne?",
@@ -2323,8 +2323,8 @@
       "teamProvision": "Coimisiún foirne ar chustaiméirí do chomhpháirtithe foirne",
       "dauer": "Tréimhse in aghaidh an chustaiméara",
       "dauerWert": "12 mhí",
-      "kunden": "{ó}-{go} custaiméirí íocacha",
-      "kundenOffen": "ó {ó} custaiméirí íocacha",
+      "kunden": "{von}-{bis} custaiméirí íocacha",
+      "kundenOffen": "ó {von} custaiméirí íocacha",
       "vorteile": "Seirbhísí",
       "ja": "san áireamh",
       "nein": "gan áireamh",
@@ -2341,7 +2341,7 @@
       "fussnoteTeam": "Is éard is coimisiún foirne ann an difríocht idir do ráta agus ráta an chomhpháirtí foirne ar ghlanioncam síntiúis a chustaiméirí, an dá cheann tráth na híocaíochta — leibhéal amháin go díreach, gan táille rannpháirtíochta, gan airgead le haghaidh earcaíochta. Ní mó ná 30 % riamh le chéile.",
       "fussnoteCoMarketing": "Tar éis comhaontú leis an bhfoireann comhpháirtí; braitheann sé ar phróifíl an chomhpháirtí agus ar na feachtais reatha.",
       "fussnoteRang": "Cruthaítear an chéim ó do struchtúr: do chustaiméirí féin a íocann móide custaiméirí do chomhpháirtithe foirne, comhairtear gach ceann uair amháin. Nuair a shroichtear céim nua ón ardaitheoir, tá bónas ardú céime uair amháin.",
-      "teamDifferenz": "{satz} % lúide ráta an chomhpháirtí foirne",
+      "teamUeber": "os cionn {rang}",
       "teamNicht": "gan foireann fós",
       "bonus": "Bónas ardú céime (uair amháin)",
       "superProvision": "Sárchoimisiún ar an struchtúr iomlán",

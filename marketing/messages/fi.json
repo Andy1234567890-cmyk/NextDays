@@ -2202,7 +2202,7 @@
       "eyebrow": "Kumppanuusohjelma",
       "headlinePre": "Suosittele myNextDays-palvelua —",
       "headlineHighlight": "ja ansaitse",
-      "sub": "Vaikuttajille, konsulteille, toimistoille ja vuokranantajille, joilla on verkosto: Jokainen yritys, joka rekisteröityy linkkisi kautta ja maksaa tilauksen, tuo sinulle kahdentoista kuukauden ajan jopa {max} % tilaustuloista – plus 0,5 % jokaisesta myBestDays-varauksesta, ylennysbonukset ja Elite-tasolta alkaen superprovisio ilman aikarajaa.",
+      "sub": "Vaikuttajille, konsulteille, toimistoille ja vuokranantajille, joilla on verkosto: Jokainen yritys, joka rekisteröityy linkkisi kautta ja maksaa tilauksen, tuo sinulle kahdentoista kuukauden ajan jopa {max} % tilaustuloista – plus ylennysbonukset ja Elite-tasolta alkaen superprovisio ilman aikarajaa ja 0,5 % jokaisesta myBestDays-varauksesta.",
       "cta": "Hae nyt",
       "ctaLogin": "Kumppanin kirjautuminen",
       "chipDauer": "12 kuukauden provisio per asiakas",
@@ -2244,7 +2244,7 @@
       },
       "dauer": {
         "titel": "Kaksitoista kuukautta",
-        "text": "Provisio maksetaan kaksitoista kuukautta yrityksen ensimmäisestä maksetusta tilauslaskusta alkaen; asiakkaidesi ilmainen kuukausi ei sisälly tähän. Jos yritys irtisanoo sopimuksen, provisio päättyy viimeiseen maksuun. Varausosuus ja superprovisio jatkuvat ilman tätä rajoitusta."
+        "text": "Provisio maksetaan kaksitoista kuukautta yrityksen ensimmäisestä maksetusta tilauslaskusta alkaen; asiakkaidesi ilmainen kuukausi ei sisälly tähän. Jos yritys irtisanoo sopimuksen, provisio päättyy viimeiseen maksuun. Superprovisio ja varausosuus jatkuvat ilman tätä rajoitusta, mutta edellyttävät Elite-kumppanin tasoa."
       },
       "auszahlung": {
         "titel": "Maksu",
@@ -2288,7 +2288,7 @@
       },
       "wieviel": {
         "frage": "Kuinka paljon provisiota voin ansaita?",
-        "antwort": "Tämä riippuu asiakkaidesi tilausmyynnistä ja sijoituksestasi. Yllä oleva taulukko näyttää kunkin tason hinnan asiakasta kohden kahdentoista kuukauden ajan. Lisäksi saat 0,5 % jokaisesta varauksesta, jonka asiakkaasi saavat myBestDaysin kautta, kertaluonteisen ylennysbonuksen jokaisesta saavutetusta tasosta, tiimin kanssa erokomission – ja Elite-kumppanista alkaen 2,5 % superkomission koko rakenteesta ilman aikarajaa."
+        "antwort": "Tämä riippuu asiakkaidesi tilausmyynnistä ja sijoituksestasi. Yllä oleva taulukko näyttää kunkin tason hinnan asiakasta kohden kahdentoista kuukauden ajan. Lisäksi saat kertaluonteisen ylennysbonuksen jokaisesta saavutetusta tasosta ja tiimin kanssa erokomission. Elite-kumppanista alkaen tulevat lisäksi 2,5 %:n superkomissio koko rakenteestasi ja 0,5 % jokaisesta varauksesta, jonka asiakkaasi saavat myBestDaysin kautta – molemmat ilman aikarajaa."
       },
       "team": {
         "frage": "Miten tiimiprovisio toimii?",
@@ -2341,7 +2341,7 @@
       "fussnoteTeam": "Tiimipalkkio on erotus oman palkkiosi ja tiimikumppanin palkkion välillä hänen asiakkaidensa netto-tilaustuloista, molemmat maksuhetkellä – täsmälleen yksi taso, ei osallistumismaksua, ei rahaa värväyksestä. Yhteensä enintään 30 %.",
       "fussnoteCoMarketing": "Kumppanitiimin kanssa sovitun mukaisesti; riippuu kumppanin profiilista ja käynnissä olevista kampanjoista.",
       "fussnoteRang": "Taso muodostuu rakenteestasi: omat maksavat asiakkaat plus tiimikumppaneidesi asiakkaat, jokainen lasketaan kerran. Uuden tason saavuttaessa, alkaen nousijasta, maksetaan kertaluonteinen ylennysbonus.",
-      "teamDifferenz": "{satz} % miinus tiimikumppanin palkkio",
+      "teamUeber": "{rang}-kumppanin yläpuolella",
       "teamNicht": "ei vielä tiimiä",
       "bonus": "Ylennysbonus (kertaluonteinen)",
       "superProvision": "Superprovisio koko rakenteesta",

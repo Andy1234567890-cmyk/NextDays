@@ -60,7 +60,7 @@
       "super": "Super provizija",
       "superHinweis": "{satz} na prihod od pretplate vaše strukture, bez vremenskog ograničenja",
       "turbo": "Udio rezervacija myBestDays",
-      "turboHinweis": "0,5 % po rezervaciji putem myBestDays za vaše klijente i timske klijente",
+      "turboHinweis": "Od Elite-Partner: 0,5 % po rezervaciji putem myBestDays za vaše klijente i timske klijente",
       "bonus": "Bonusi za napredovanje",
       "bonusHinweis": "jednokratno za svaki postignuti rang"
     },
@@ -303,10 +303,10 @@
     },
     "regeln": {
       "titel": "Pravila",
-      "rang": "Tim provizija = vaša stopa minus stopa timskog partnera, u trenutku plaćanja. Isti rang = 0.",
-      "ebene": "Samo jedna razina: vaši timski partneri ne grade vlastiti tim.",
+      "rang": "Tim provizija = vaša stopa minus najviša stopa koja je za isti promet već isplaćena ispod vas — u trenutku plaćanja. Isti ili viši rang ispod vas = 0.",
+      "ebene": "Kroz sve razine: vaši timski partneri grade vlastite timove, svaka razina računa se za rang i tim proviziju.",
       "keinGeld": "Nema novca za regrutiranje – samo od plaćenog prihoda od pretplate.",
-      "dauer": "12 mjeseci po timskom klijentu, 30 dana prozor za povrat novca. Od Elite dodatnih 2,5 % super provizije bez vremenskog ograničenja."
+      "dauer": "12 mjeseci po timskom klijentu, 30 dana prozor za povrat novca. Od Elite dodatnih 2,5 % super provizije bez vremenskog ograničenja — više Elite u jednom lancu dijele je na jednake dijelove."
     },
     "kachel": {
       "mitglieder": "Timski partneri (aktivni / ukupno)",
@@ -498,11 +498,16 @@
     "plz": "Poštanski broj",
     "ort": "Mjesto",
     "nationalitaet": "Državljanstvo (kratica države)",
+    "idNummer": "OIB",
+    "idNummerHinweis": "Vaš nacionalni osobni identifikacijski broj, npr. CPR (DK), personnummer (SE/FI), NIF (ES), PESEL (PL), codice fiscale (IT).",
+    "bundesland": "Županija / regija",
     "telefon": "Telefon",
     "webseite": "Web stranica ili profil",
     "webseiteHinweis": "Adresa na kojoj oglašavate – potrebna za provjeru.",
     "firmenname": "Naziv tvrtke",
     "steuernummer": "Porezni broj",
+    "registernummer": "Matični broj subjekta (MBS)",
+    "ustId": "OIB za PDV",
     "firmenStrasse": "Adresa tvrtke",
     "firmaHinweis": "Kao ovlaštena osoba, koristit će se vaši gore navedeni podaci.",
     "speichern": "Spremi podatke",
