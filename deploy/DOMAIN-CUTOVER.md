@@ -1,7 +1,26 @@
-# Domain-Cutover — DanDomain → Cloudflare, Staging-URLs → echte Domänen
+# Domain-Cutover — Staging-URLs → echte Domänen
 
 Stand der Erhebung: 31.07.2026. Alle Angaben unter „Ist-Zustand" sind gegen die
 autoritativen DanDomain-Nameserver geprüft, nicht aus dem Kundencenter abgelesen.
+
+> **Wo das DNS wirklich liegt** (gemessen 03.09.2026, `dig NS`):
+>
+> | Domäne | Nameserver |
+> |---|---|
+> | `mynextdays.com`, `.de`, `.net`, `.org` | **DanDomain** (`ns`/`ns2.dandomain.dk`) |
+> | `mybestdays.eu`, `mybestdays.net` | **DanDomain** |
+> | `mybestdays.dk` | **Cloudflare** (`devin`/`yolanda.ns.cloudflare.com`) |
+> | `mynextdays.dk` | **Cloudflare** — Mail, NICHT ANFASSEN (siehe unten) |
+>
+> Der ursprünglich geplante Umzug nach Cloudflare fand für die DanDomain-Zeilen
+> NIE statt: das DNS-Hotel schaltet die volle Zone frei, Cloudflare war dafür
+> nicht nötig. Die Schritte 1, 2 und 6 unten beschreiben deshalb einen Plan,
+> nicht den Betrieb — der Titel dieses Dokuments trug bis zum 03.09.2026 den
+> Zusatz „DanDomain → Cloudflare" und legte damit das Gegenteil nahe.
+>
+> Praktisch heißt das: DNS-Änderungen an `mynextdays.com` laufen über
+> kundecenter.dandomain.dk → *Mine produkter* → *DNS Hotel* → Domäne →
+> *DNS-Administration*, und werden erst mit **„Udgiv ændringer"** live.
 
 ## Status: mynextdays.com ist LIVE (31.07.2026)
 
@@ -256,20 +275,40 @@ ist die alte Antwort im Cache — abwarten, nicht nachhelfen.
 
 ### Schritt 5 — Redirects der Marken-Domänen
 
-In Cloudflare pro Redirect-Domain unter *Rules → Redirect Rules*:
-Wenn *Hostname enthält* `mynextdays.de` → **301** auf
-`https://mynextdays.com/$1` (Pfad erhalten, „Preserve query string" an).
+> **Der Umzug zu Cloudflare hat für diese Domänen NIE stattgefunden.** Gemessen
+> am 03.09.2026 per `dig NS`: sechs der sieben Domänen liegen weiterhin bei
+> **DanDomain** (`ns.dandomain.dk` / `ns2.dandomain.dk`) — `mynextdays.de`,
+> `.net`, `.org`, `.com` sowie `mybestdays.eu` und `.net`. Einzig
+> `mybestdays.dk` liegt auf Cloudflare (`devin`/`yolanda.ns.cloudflare.com`).
+>
+> Die Anleitung unten war als Cloudflare-Weg geschrieben (Titel des Dokuments:
+> „DanDomain → Cloudflare"). Für alles außer `mybestdays.dk` ist sie damit die
+> Beschreibung eines Plans, nicht des Betriebs. Wer nach „Rules → Redirect
+> Rules" sucht, findet die Zone dort nicht — dieselbe Falle, die schon einmal
+> Zeit gekostet hat (siehe `memory`-Eintrag zur DanDomain-Verwaltung).
 
-Analog für `.net`, `.org` → `mynextdays.com`; `mybestdays.eu`, `mybestdays.net`
-→ `mybestdays.dk`.
+**Bei DanDomain** (der reale Weg für die sechs Domänen): Kundencenter →
+*Mine produkter* → *DNS Hotel* → Domäne → *DNS-Administration* → dort
+**„Ny viderestilling"** (Neue Weiterleitung) statt eines DNS-Records. Wie bei
+jeder Zonenänderung wird sie erst mit **„Udgiv ændringer"** wirksam — ohne
+diesen zweiten Klick sieht die Oberfläche erfolgreich aus und nichts passiert.
 
-**Ziel seit 03.09.2026 auf `www.` ziehen.** Die Regeln oben zeigen auf den
-Apex, und der leitet inzwischen selbst per 308 auf `www.mynextdays.com` weiter
-(`marketing/next.config.ts`) — aus einem Aufruf von `mynextdays.de` werden so
-ZWEI Weiterleitungen. Das funktioniert, kostet aber einen unnötigen Roundtrip
-und verwässert das Signal für Suchmaschinen. Sauber ist
-`https://www.mynextdays.com/$1` als Ziel; eine Schleife kann daraus nicht
-entstehen, weil `.de` und `.com` verschiedene Hosts sind.
+**Bei Cloudflare** (nur `mybestdays.dk`): *Rules → Redirect Rules*, Bedingung
+*Hostname enthält*, **301**, „Preserve query string" an.
+
+Ziele:
+
+| Von | Nach |
+|---|---|
+| `mynextdays.de`, `.net`, `.org` | `https://www.mynextdays.com/$1` |
+| `mybestdays.eu`, `mybestdays.net` | `https://mybestdays.dk/$1` |
+
+**Warum `www.` und nicht der Apex (seit 03.09.2026):** `mynextdays.com` leitet
+selbst per 308 auf `www.mynextdays.com` weiter (`marketing/next.config.ts`).
+Ein Redirect auf den Apex ergäbe also ZWEI Weiterleitungen hintereinander —
+funktioniert, kostet aber einen unnötigen Roundtrip und verwässert das Signal
+für Suchmaschinen. Eine Schleife kann nicht entstehen, weil `.de` und `.com`
+verschiedene Hosts sind.
 
 ### Schritt 6 — Coolify: Domains an die Apps hängen
 
