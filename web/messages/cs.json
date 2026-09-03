@@ -4836,7 +4836,8 @@
         "colorWhiteText": "K tomuto úkolu nejsou žádná upozornění.",
         "manualCreate": "Úkoly lze k rezervaci přidat ručně kliknutím nejprve na rezervaci a poté na „Vytvořit úkol“. Tento úkol je pak s rezervací propojen a lze ho naplánovat vzhledem k ní.",
         "cellCreate": "Úkoly také můžete vytvořit k libovolnému datu kliknutím na <plus>+</plus>, které se zobrazí, když najedete kurzorem na dané datum. Po vytvoření úkolu jej můžete dále upravovat a přidat podúkoly nebo kontrolora.",
-        "scheduledInfo": "Plánované úkoly vytváří systém automaticky a v případě potřeby je posouvá společně s příslušnou rezervací."
+        "scheduledInfo": "Plánované úkoly vytváří systém automaticky a v případě potřeby je posouvá společně s příslušnou rezervací.",
+        "dragMove": "Otevřené úkoly lze přetáhnout myší na jiný den ve stejném řádku objektu. Čas zůstane zachován, všechna ostatní zobrazení se okamžitě aktualizují."
       },
       "navigationLabel": "Navigace",
       "previousMonth": "Předchozí měsíc",
@@ -4848,7 +4849,8 @@
       "months": "[\"Leden\", \"Únor\", \"Březen\", \"Duben\", \"Květen\", \"Červen\", \"Červenec\", \"Srpen\", \"Září\", \"Říjen\", \"Listopad\", \"Prosinec\"]",
       "weekdays": "[\"Neděle\", \"Pondělí\", \"Úterý\", \"Středa\", \"Čtvrtek\", \"Pátek\", \"Sobota\"]",
       "miscRow": "Různé",
-      "today": "Dnes"
+      "today": "Dnes",
+      "dragMoved": "„{title}“ přesunuto na {date}"
     },
     "ruleEditor": {
       "loading": "Načítání…",

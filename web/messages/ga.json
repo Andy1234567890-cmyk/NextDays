@@ -4836,7 +4836,8 @@
         "colorWhiteText": "Níl aon rabhadh don tasc seo.",
         "manualCreate": "Is féidir tascanna a chur le háirithint de láimh trí chliceáil ar an áirithint agus ansin ar „Cruthaigh tasc“. Bíonn an tasc seo nasctha leis an áirithint sin agus is féidir é a sceidealú i gcoibhneas leis an áirithint.",
         "cellCreate": "Is féidir leat tascanna a chruthú ar aon dáta freisin trí chliceáil ar an <plus>+</plus> a thaispeántar nuair a chuireann tú an cúrsóir ar dháta. Tar éis an tasc a chruthú, is féidir leat leanúint ar aghaidh á chur in eagar agus fothascanna nó athbhreithneoir a chur leis.",
-        "scheduledInfo": "Cruthaítear tascanna sceidealta go huathoibríoch ag an gcóras agus aistrítear iad de réir mar is gá in éineacht lena n-áirithint ghaolmhar."
+        "scheduledInfo": "Cruthaítear tascanna sceidealta go huathoibríoch ag an gcóras agus aistrítear iad de réir mar is gá in éineacht lena n-áirithint ghaolmhar.",
+        "dragMove": "Is féidir tascanna oscailte a tharraingt le do luch go lá eile sa tsraith réadmhaoine chéanna. Fanann an t-am mar a bhí, agus déantar gach amharc eile a nuashonrú láithreach."
       },
       "navigationLabel": "Nascleanúint",
       "previousMonth": "An mhí roimhe seo",
@@ -4848,7 +4849,8 @@
       "months": "Eanáir,Feabhra,Márta,Aibreán,Bealtaine,Meitheamh,Iúil,Lúnasa,Meán Fómhair,Deireadh Fómhair,Samhain,Nollaig",
       "weekdays": "Domhnach,Luan,Máirt,Céadaoin,Déardaoin,Aoine,Satharn",
       "miscRow": "Ilghnéitheach",
-      "today": "Inniu"
+      "today": "Inniu",
+      "dragMoved": "Aistríodh “{title}” go dtí an {date}"
     },
     "ruleEditor": {
       "loading": "Á lódáil…",

@@ -4836,7 +4836,8 @@
         "colorWhiteText": "Sellel ülesandel pole hoiatusi.",
         "manualCreate": "Ülesandeid saab broneeringule käsitsi lisada, klõpsates esmalt broneeringul ja seejärel „Loo ülesanne”. See ülesanne on siis seotud selle broneeringuga ja seda saab planeerida broneeringu suhtes.",
         "cellCreate": "Samuti saate luua ülesandeid mistahes kuupäeval, klõpsates ikoonil <plus>+</plus>, mis ilmub, kui viite kursori kuupäeva kohale. Pärast ülesande loomist saate seda edasi muuta ning lisada alamülesandeid või kontrollija.",
-        "scheduledInfo": "Plaanilised ülesanded loob süsteem automaatselt ja vajaduse korral nihutatakse neid koos seotud broneeringuga."
+        "scheduledInfo": "Plaanilised ülesanded loob süsteem automaatselt ja vajaduse korral nihutatakse neid koos seotud broneeringuga.",
+        "dragMove": "Avatud ülesandeid saab hiirega sama objekti rea teisele päevale lohistada. Kellaaeg jääb samaks, kõik teised vaated uuendatakse koheselt."
       },
       "navigationLabel": "Navigatsioon",
       "previousMonth": "Eelmine kuu",
@@ -4848,7 +4849,8 @@
       "months": "Jaanuar,Veebruar,Märts,Aprill,Mai,Juuni,Juuli,August,September,Oktoober,November,Detsember",
       "weekdays": "Pühapäev,Esmaspäev,Teisipäev,Kolmapäev,Neljapäev,Reede,Laupäev",
       "miscRow": "Muud",
-      "today": "Täna"
+      "today": "Täna",
+      "dragMoved": "„{title}“ on edasi lükatud kuupäevale {date}"
     },
     "ruleEditor": {
       "loading": "Laadib…",

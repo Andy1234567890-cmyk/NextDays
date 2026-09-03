@@ -4836,7 +4836,8 @@
         "colorWhiteText": "Niciun avertisment pentru această sarcină.",
         "manualCreate": "Sarcinile pot fi adăugate manual la o rezervare făcând clic mai întâi pe rezervare și apoi pe „Creează sarcină”. Această sarcină este apoi asociată acestei rezervări și poate fi programată relativ la rezervare.",
         "cellCreate": "Puteți crea sarcini și la orice dată, făcând clic pe <plus>+</plus> care apare atunci când poziționați cursorul pe o dată. După crearea sarcinii, o puteți edita în continuare și adăuga subsarcini sau un verificator.",
-        "scheduledInfo": "Sarcinile planificate sunt create automat de sistem și, la nevoie, sunt mutate împreună cu rezervarea aferentă."
+        "scheduledInfo": "Sarcinile planificate sunt create automat de sistem și, la nevoie, sunt mutate împreună cu rezervarea aferentă.",
+        "dragMove": "Puteți trage sarcinile deschise cu mouse-ul într-o altă zi din același rând de obiecte. Ora rămâne neschimbată, toate celelalte vizualizări se actualizează imediat."
       },
       "navigationLabel": "Navigare",
       "previousMonth": "Luna anterioară",
@@ -4848,7 +4849,8 @@
       "months": "Ianuarie,Februarie,Martie,Aprilie,Mai,Iunie,Iulie,August,Septembrie,Octombrie,Noiembrie,Decembrie",
       "weekdays": "Duminică,Luni,Marți,Miercuri,Joi,Vineri,Sâmbătă",
       "miscRow": "Diverse",
-      "today": "Astăzi"
+      "today": "Astăzi",
+      "dragMoved": "„{title}“ a fost amânat pentru {date}"
     },
     "ruleEditor": {
       "loading": "Se încarcă…",

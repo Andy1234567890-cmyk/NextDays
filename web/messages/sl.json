@@ -4836,7 +4836,8 @@
         "colorWhiteText": "Za to nalogo ni opozoril.",
         "manualCreate": "Naloge lahko ročno dodate rezervaciji tako, da najprej kliknete na rezervacijo in nato na „Ustvari nalogo\". Ta naloga je nato povezana s to rezervacijo in jo je mogoče razporediti relativno glede na rezervacijo.",
         "cellCreate": "Naloge lahko ustvarite tudi na poljubnih datumih, tako da kliknete na <plus>+</plus>, ki se prikaže, ko postavite kazalec na datum. Ko je naloga ustvarjena, jo lahko naprej urejate ter dodate podnaloge ali preglednika.",
-        "scheduledInfo": "Načrtovane naloge samodejno ustvari sistem in se po potrebi premaknejo skupaj s pripadajočo rezervacijo."
+        "scheduledInfo": "Načrtovane naloge samodejno ustvari sistem in se po potrebi premaknejo skupaj s pripadajočo rezervacijo.",
+        "dragMove": "Odprte naloge lahko z miško povlečete na drug dan v isti vrstici predmeta. Čas ostane enak, vsi drugi pogledi se takoj posodobijo."
       },
       "navigationLabel": "Navigacija",
       "previousMonth": "Prejšnji mesec",
@@ -4848,7 +4849,8 @@
       "months": "Januar,Februar,Marec,April,Maj,Junij,Julij,Avgust,September,Oktober,November,December",
       "weekdays": "Nedelja,Ponedeljek,Torek,Sreda,Četrtek,Petek,Sobota",
       "miscRow": "Razno",
-      "today": "Danes"
+      "today": "Danes",
+      "dragMoved": "„{title}“ prestavljeno na {date}"
     },
     "ruleEditor": {
       "loading": "Nalaganje …",

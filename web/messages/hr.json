@@ -4836,7 +4836,8 @@
         "colorWhiteText": "Nema upozorenja za ovaj zadatak.",
         "manualCreate": "Zadaci se mogu ručno dodati rezervaciji tako da najprije kliknete na rezervaciju, a zatim na „Izradi zadatak”. Taj je zadatak zatim povezan s tom rezervacijom i može se planirati u odnosu na rezervaciju.",
         "cellCreate": "Zadatke možete izraditi i na bilo koji datum klikom na <plus>+</plus> koji se pojavljuje kada pokazivač postavite na datum. Nakon što je zadatak izrađen, možete ga dalje uređivati i dodati podzadatke ili provjeravatelja.",
-        "scheduledInfo": "Planirane zadatke sustav automatski izrađuje i po potrebi pomiče zajedno s pripadajućom rezervacijom."
+        "scheduledInfo": "Planirane zadatke sustav automatski izrađuje i po potrebi pomiče zajedno s pripadajućom rezervacijom.",
+        "dragMove": "Otvorene zadatke možete povući mišem na drugi dan u istom retku objekta. Vrijeme ostaje isto, svi ostali prikazi se odmah ažuriraju."
       },
       "navigationLabel": "Navigacija",
       "previousMonth": "Prethodni mjesec",
@@ -4848,7 +4849,8 @@
       "months": "[\"Siječanj\",\"Veljača\",\"Ožujak\",\"Travanj\",\"Svibanj\",\"Lipanj\",\"Srpanj\",\"Kolovoz\",\"Rujan\",\"Listopad\",\"Studeni\",\"Prosinac\"]",
       "weekdays": "[\"Nedjelja\",\"Ponedjeljak\",\"Utorak\",\"Srijeda\",\"Četvrtak\",\"Petak\",\"Subota\"]",
       "miscRow": "Razno",
-      "today": "Danas"
+      "today": "Danas",
+      "dragMoved": "„{title}“ premješteno na {date}"
     },
     "ruleEditor": {
       "loading": "Učitavanje…",

@@ -4836,7 +4836,8 @@
         "colorWhiteText": "Aucune alerte pour cette tâche.",
         "manualCreate": "Des tâches peuvent être ajoutées manuellement à une réservation en cliquant d'abord sur la réservation, puis sur « Créer une tâche ». Cette tâche est alors liée à cette réservation et peut être planifiée par rapport à la réservation.",
         "cellCreate": "Vous pouvez aussi créer des tâches à n'importe quelle date en cliquant sur le <plus>+</plus> qui apparaît lorsque vous placez le curseur sur une date. Une fois la tâche créée, vous pouvez continuer à la modifier et ajouter des sous-tâches ou un vérificateur.",
-        "scheduledInfo": "Les tâches planifiées sont créées automatiquement par le système et déplacées si nécessaire avec leur réservation associée."
+        "scheduledInfo": "Les tâches planifiées sont créées automatiquement par le système et déplacées si nécessaire avec leur réservation associée.",
+        "dragMove": "Les tâches ouvertes peuvent être glissées avec la souris vers un autre jour de la même ligne d'objet. L'heure reste la même, toutes les autres vues sont mises à jour immédiatement."
       },
       "navigationLabel": "Navigation",
       "previousMonth": "Mois précédent",
@@ -4848,7 +4849,8 @@
       "months": "[\"Janvier\",\"Février\",\"Mars\",\"Avril\",\"Mai\",\"Juin\",\"Juillet\",\"Août\",\"Septembre\",\"Octobre\",\"Novembre\",\"Décembre\"]",
       "weekdays": "[\"Dimanche\",\"Lundi\",\"Mardi\",\"Mercredi\",\"Jeudi\",\"Vendredi\",\"Samedi\"]",
       "miscRow": "Divers",
-      "today": "Aujourd'hui"
+      "today": "Aujourd'hui",
+      "dragMoved": "« {title} » déplacé au {date}"
     },
     "ruleEditor": {
       "loading": "Chargement…",

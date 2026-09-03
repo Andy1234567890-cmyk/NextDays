@@ -4836,7 +4836,8 @@
         "colorWhiteText": "Não há avisos para esta tarefa.",
         "manualCreate": "As tarefas podem ser adicionadas manualmente a uma reserva clicando primeiro na reserva e depois em «Criar tarefa». Esta tarefa fica então associada a essa reserva e pode ser programada em relação à reserva.",
         "cellCreate": "Também pode criar tarefas em qualquer data clicando no <plus>+</plus> que aparece ao colocar o cursor sobre uma data. Depois de criada a tarefa, pode continuar a editá-la e adicionar subtarefas ou um revisor.",
-        "scheduledInfo": "As tarefas programadas são criadas automaticamente pelo sistema e, se necessário, deslocadas juntamente com a reserva associada."
+        "scheduledInfo": "As tarefas programadas são criadas automaticamente pelo sistema e, se necessário, deslocadas juntamente com a reserva associada.",
+        "dragMove": "Tarefas abertas podem ser arrastadas com o mouse para outro dia na mesma linha do objeto. O horário permanece o mesmo, todas as outras visualizações são atualizadas imediatamente."
       },
       "navigationLabel": "Navegação",
       "previousMonth": "Mês anterior",
@@ -4848,7 +4849,8 @@
       "months": "Janeiro,Fevereiro,Março,Abril,Maio,Junho,Julho,Agosto,Setembro,Outubro,Novembro,Dezembro",
       "weekdays": "Domingo,Segunda-feira,Terça-feira,Quarta-feira,Quinta-feira,Sexta-feira,Sábado",
       "miscRow": "Diversos",
-      "today": "Hoje"
+      "today": "Hoje",
+      "dragMoved": "“{title}” movido para {date}"
     },
     "ruleEditor": {
       "loading": "A carregar…",

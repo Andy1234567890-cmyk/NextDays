@@ -4836,7 +4836,8 @@
         "colorWhiteText": "Ehhez a feladathoz nincs figyelmeztetés.",
         "manualCreate": "Feladatokat manuálisan is hozzáadhat egy foglaláshoz: kattintson a foglalásra, majd a „Feladat létrehozása” gombra. Ez a feladat ezután a foglaláshoz kapcsolódik, és a foglaláshoz viszonyítva ütemezhető.",
         "cellCreate": "Feladatokat bármely dátumon is létrehozhat: kattintson a <plus>+</plus> jelre, amely akkor jelenik meg, ha a kurzort egy dátumra helyezi. A feladat létrehozása után tovább szerkesztheti, illetve alfeladatokat vagy ellenőrt adhat hozzá.",
-        "scheduledInfo": "Az ütemezett feladatokat a rendszer automatikusan hozza létre, és szükség esetén a hozzájuk tartozó foglalással együtt mozgatja."
+        "scheduledInfo": "Az ütemezett feladatokat a rendszer automatikusan hozza létre, és szükség esetén a hozzájuk tartozó foglalással együtt mozgatja.",
+        "dragMove": "A nyitott feladatok az egérrel áthúzhatók ugyanazon objektumsor egy másik napjára. Az időpont megmarad, az összes többi nézet azonnal frissül."
       },
       "navigationLabel": "Navigáció",
       "previousMonth": "Előző hónap",
@@ -4848,7 +4849,8 @@
       "months": "[\"Január\",\"Február\",\"Március\",\"Április\",\"Május\",\"Június\",\"Július\",\"Augusztus\",\"Szeptember\",\"Október\",\"November\",\"December\"]",
       "weekdays": "[\"Vasárnap\",\"Hétfő\",\"Kedd\",\"Szerda\",\"Csütörtök\",\"Péntek\",\"Szombat\"]",
       "miscRow": "Egyéb",
-      "today": "Ma"
+      "today": "Ma",
+      "dragMoved": "„{title}” áthelyezve {date} dátumra"
     },
     "ruleEditor": {
       "loading": "Betöltés…",

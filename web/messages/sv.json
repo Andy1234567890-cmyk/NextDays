@@ -4836,7 +4836,8 @@
         "colorWhiteText": "Inga varningar för denna uppgift.",
         "manualCreate": "Uppgifter kan läggas till manuellt i en bokning genom att först klicka på bokningen och sedan på \"Skapa uppgift\". Denna uppgift kopplas då till bokningen och kan schemaläggas i förhållande till bokningen.",
         "cellCreate": "Du kan även skapa uppgifter på valfria datum genom att klicka på <plus>+</plus> som visas när du placerar markören på ett datum. När uppgiften har skapats kan du fortsätta redigera den och lägga till delmoment eller en granskare.",
-        "scheduledInfo": "Schemalagda uppgifter skapas automatiskt av systemet och flyttas vid behov tillsammans med tillhörande bokning."
+        "scheduledInfo": "Schemalagda uppgifter skapas automatiskt av systemet och flyttas vid behov tillsammans med tillhörande bokning.",
+        "dragMove": "Öppna uppgifter kan dras med musen till en annan dag i samma objektrad. Tiden förblir densamma, alla andra vyer uppdateras omedelbart."
       },
       "navigationLabel": "Navigering",
       "previousMonth": "Föregående månad",
@@ -4848,7 +4849,8 @@
       "months": "Januari,Februari,Mars,April,Maj,Juni,Juli,Augusti,September,Oktober,November,December",
       "weekdays": "Söndag,Måndag,Tisdag,Onsdag,Torsdag,Fredag,Lördag",
       "miscRow": "Övrigt",
-      "today": "Idag"
+      "today": "Idag",
+      "dragMoved": "”{title}” flyttad till {date}"
     },
     "ruleEditor": {
       "loading": "Laddar…",

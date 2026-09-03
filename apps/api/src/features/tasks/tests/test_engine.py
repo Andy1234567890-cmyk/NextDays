@@ -213,6 +213,78 @@ def test_tages_anker_rechnet_in_der_zeitzone_des_objekts() -> None:
     ) == datetime(2026, 8, 9, 22, 0, tzinfo=UTC)
 
 
+def test_tages_anker_ohne_anreisezeit_bleibt_am_richtigen_TAG() -> None:
+    """Der Live-Fehler vom 03.09.2026: 25 Anreisechecks standen EINEN TAG ZU FRUEH.
+
+    Die Kette: ohne gepflegte `checkin_time` setzt `_reservation_anchors` den
+    Anker auf den Tagesbeginn VOR ORT — in Kopenhagen im Sommer also
+    `22:00Z des VORTAGS`. `_trigger_time` nahm davon `.date()`, las damit den
+    Vortag und legte die Aufgabe dorthin.
+
+    Die Korrelation war live lueckenlos und genau deshalb so tueckisch: mit
+    gepflegter Uhrzeit 18 von 18 richtig, ohne sie 25 von 25 falsch. Der
+    bestehende Zonen-Test lief an der Sache vorbei, weil seine Fixture
+    `checkin_time: "16:00"` traegt — also den Fall, der funktioniert.
+
+    Gerechnet wird ab jetzt mit dem KALENDERDATUM der Reservierung
+    (`reservations.check_in` ist eine `date`-Spalte); ein Datum durch eine
+    Zeitzone zu schicken, kann es nur verschieben.
+    """
+    kopenhagen = ZoneInfo("Europe/Copenhagen")
+    ohne_zeit = {
+        "id": "r-ohne-zeit",
+        "check_in": "2026-08-10",
+        "check_out": "2026-08-14",
+        "checkin_time": None,
+        "checkout_time": None,
+        "created_at": "2026-07-01T09:30:00+00:00",
+    }
+    anker = _reservation_anchors(ohne_zeit, kopenhagen)
+    assert anker is not None
+    # Der Anker selbst liegt korrekt im Vortag — das ist 00:00 Ortszeit.
+    assert anker[0] == datetime(2026, 8, 9, 22, 0, tzinfo=UTC)
+
+    # Trotzdem gehoert die Aufgabe auf den 10., nicht auf den 9.
+    start = _trigger_time(
+        "arrival_day", 0, ohne_zeit, anker, time(10, 0), kopenhagen
+    )
+    assert start == datetime(2026, 8, 10, 8, 0, tzinfo=UTC), (
+        f"Anreisecheck am falschen Tag: {start}"
+    )
+    assert start is not None
+    assert start.astimezone(kopenhagen).date() == date(2026, 8, 10)
+
+    # Dasselbe am Abreisetag.
+    ende = _trigger_time(
+        "departure_day", 0, ohne_zeit, anker, time(11, 0), kopenhagen
+    )
+    assert ende is not None
+    assert ende.astimezone(kopenhagen).date() == date(2026, 8, 14)
+
+
+def test_tages_anker_westlich_von_greenwich() -> None:
+    """Gegenprobe in der anderen Richtung — sonst haette ein `+1` denselben Test bestanden.
+
+    In New York (UTC-4 im Sommer) liegt der Tagesbeginn vor Ort am SELBEN
+    UTC-Tag um 04:00Z. Ein Fix, der stumpf einen Tag addiert, faellt hier auf.
+    """
+    ny = ZoneInfo("America/New_York")
+    res = {
+        "id": "r-ny",
+        "check_in": "2026-08-10",
+        "check_out": "2026-08-14",
+        "checkin_time": None,
+        "checkout_time": None,
+        "created_at": "2026-07-01T09:30:00+00:00",
+    }
+    anker = _reservation_anchors(res, ny)
+    assert anker is not None
+    start = _trigger_time("arrival_day", 0, res, anker, time(10, 0), ny)
+    assert start is not None
+    assert start.astimezone(ny).date() == date(2026, 8, 10)
+    assert start == datetime(2026, 8, 10, 14, 0, tzinfo=UTC)
+
+
 def test_unbekannte_zeitzone_bleibt_utc_statt_geraten() -> None:
     """Eine erfundene Zone verschoebe jede Aufgabe still um Stunden (Wurzel 4)."""
     from src.features.tasks.engine import _zone

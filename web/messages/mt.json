@@ -4836,7 +4836,8 @@
         "colorWhiteText": "L-ebda twissija għal dan il-kompitu.",
         "manualCreate": "Il-kompiti jistgħu jiżdiedu manwalment ma' prenotazzjoni billi l-ewwel tikklikkja fuq il-prenotazzjoni u mbagħad fuq “Oħloq kompitu”. Dan il-kompitu jkun imbagħad marbut ma' din il-prenotazzjoni u jista' jiġi skedat b'rabta magħha.",
         "cellCreate": "Tista' wkoll toħloq kompiti fi kwalunkwe data billi tikklikkja fuq il-<plus>+</plus> li jidher meta tqiegħed il-kursur fuq data. Wara li l-kompitu jinħoloq, tista' tkompli teditjah u żżid sotto-kompiti jew verifikatur.",
-        "scheduledInfo": "Il-kompiti skedati jinħolqu awtomatikament mis-sistema u, meta jkun hemm bżonn, jitqiegħdu flimkien mal-prenotazzjoni relatata tagħhom."
+        "scheduledInfo": "Il-kompiti skedati jinħolqu awtomatikament mis-sistema u, meta jkun hemm bżonn, jitqiegħdu flimkien mal-prenotazzjoni relatata tagħhom.",
+        "dragMove": "Il-kompiti miftuħa jistgħu jiġu mkaxkra bil-maws għal ġurnata oħra fl-istess linja tal-oġġett. Il-ħin jibqa' l-istess, il-veduti l-oħra kollha jiġu aġġornati immedjatament."
       },
       "navigationLabel": "Navigazzjoni",
       "previousMonth": "Xahar preċedenti",
@@ -4848,7 +4849,8 @@
       "months": "[\"Jannar\",\"Frar\",\"Marzu\",\"April\",\"Mejju\",\"Ġunju\",\"Lulju\",\"Awwissu\",\"Settembru\",\"Ottubru\",\"Novembru\",\"Diċembru\"]",
       "weekdays": "[\"Il-Ħadd\",\"It-Tnejn\",\"It-Tlieta\",\"L-Erbgħa\",\"Il-Ħamis\",\"Il-Ġimgħa\",\"Is-Sibt\"]",
       "miscRow": "Varji",
-      "today": "Illum"
+      "today": "Illum",
+      "dragMoved": "“{title}” imressaq għal {date}"
     },
     "ruleEditor": {
       "loading": "Qed jitgħabba…",

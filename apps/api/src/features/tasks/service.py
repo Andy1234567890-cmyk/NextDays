@@ -1306,7 +1306,7 @@ class TasksService:
         props = (
             self._db()
             .table("properties")
-            .select("id, title")
+            .select("id, title, timezone")
             .eq("tenant_id", tenant_id)
             .order("title")
             .execute()
@@ -1329,6 +1329,7 @@ class TasksService:
                 TaskCalendarRow(
                     property_id=pid,
                     property_title=p.get("title") or "",
+                    timezone=p.get("timezone") or None,
                     tasks=[t for t in tasks if t.property_id == pid],
                     bookings=[b for b in bookings if b.property_id == pid],
                 )

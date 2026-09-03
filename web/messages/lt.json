@@ -4836,7 +4836,8 @@
         "colorWhiteText": "Šiai užduočiai įspėjimų nėra.",
         "manualCreate": "Užduotis prie rezervacijos galima pridėti rankiniu būdu — spustelėkite rezervaciją, tada „Sukurti užduotį“. Tokia užduotis susiejama su šia rezervacija ir gali būti suplanuota jos atžvilgiu.",
         "cellCreate": "Užduotis galite kurti ir bet kurią dieną — spustelėkite <plus>+</plus>, kuris atsiranda užvedus žymeklį ant datos. Sukūrę užduotį galite ją toliau redaguoti bei pridėti paužduotes ar tikrintoją.",
-        "scheduledInfo": "Suplanuotos užduotys sistemos sukuriamos automatiškai ir prireikus perkeliamos kartu su susijusia rezervacija."
+        "scheduledInfo": "Suplanuotos užduotys sistemos sukuriamos automatiškai ir prireikus perkeliamos kartu su susijusia rezervacija.",
+        "dragMove": "Atviras užduotis galima pele nutempti į kitą tos pačios eilutės dieną. Laikas išlieka tas pats, visi kiti rodiniai atnaujinami iš karto."
       },
       "navigationLabel": "Naršymas",
       "previousMonth": "Ankstesnis mėnuo",
@@ -4848,7 +4849,8 @@
       "months": "[\"Sausis\",\"Vasaris\",\"Kovas\",\"Balandis\",\"Gegužė\",\"Birželis\",\"Liepa\",\"Rugpjūtis\",\"Rugsėjis\",\"Spalis\",\"Lapkritis\",\"Gruodis\"]",
       "weekdays": "[\"Sekmadienis\",\"Pirmadienis\",\"Antradienis\",\"Trečiadienis\",\"Ketvirtadienis\",\"Penktadienis\",\"Šeštadienis\"]",
       "miscRow": "Įvairūs",
-      "today": "Šiandien"
+      "today": "Šiandien",
+      "dragMoved": "„{title}“ perkeltas į {date}"
     },
     "ruleEditor": {
       "loading": "Įkeliama…",

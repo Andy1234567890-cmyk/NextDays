@@ -4836,7 +4836,8 @@
         "colorWhiteText": "Geen waarschuwingen voor deze taak.",
         "manualCreate": "Taken kunnen handmatig aan een boeking worden toegevoegd door eerst op de boeking en dan op „Taak aanmaken\" te klikken. Deze taak is dan gekoppeld aan deze boeking en kan relatief ten opzichte van de boeking worden ingepland.",
         "cellCreate": "Je kunt ook taken op willekeurige data aanmaken door te klikken op de <plus>+</plus> die verschijnt wanneer je je cursor op een datum plaatst. Nadat de taak is aangemaakt, kun je deze verder bewerken en subtaken of een controleur toevoegen.",
-        "scheduledInfo": "Geplande taken worden automatisch door het systeem aangemaakt en indien nodig samen met de bijbehorende boeking verschoven."
+        "scheduledInfo": "Geplande taken worden automatisch door het systeem aangemaakt en indien nodig samen met de bijbehorende boeking verschoven.",
+        "dragMove": "Openstaande taken kunnen met de muis naar een andere dag in dezelfde objectregel worden gesleept. De tijd blijft behouden, alle andere weergaven worden direct bijgewerkt."
       },
       "navigationLabel": "Navigatie",
       "previousMonth": "Vorige maand",
@@ -4848,7 +4849,8 @@
       "months": "Januari,Februari,Maart,April,Mei,Juni,Juli,Augustus,September,Oktober,November,December",
       "weekdays": "Zondag,Maandag,Dinsdag,Woensdag,Donderdag,Vrijdag,Zaterdag",
       "miscRow": "Diversen",
-      "today": "Vandaag"
+      "today": "Vandaag",
+      "dragMoved": "“{title}” verplaatst naar {date}"
     },
     "ruleEditor": {
       "loading": "Laden…",

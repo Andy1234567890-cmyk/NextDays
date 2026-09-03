@@ -4836,7 +4836,8 @@
         "colorWhiteText": "Šim uzdevumam brīdinājumu nav.",
         "manualCreate": "Uzdevumus rezervācijai var pievienot manuāli, vispirms noklikšķinot uz rezervācijas un tad uz „Izveidot uzdevumu”. Šis uzdevums tad ir saistīts ar šo rezervāciju un tiek ieplānots attiecībā pret to.",
         "cellCreate": "Jūs varat izveidot uzdevumus arī jebkurā datumā, noklikšķinot uz <plus>+</plus>, kas parādās, kad novietojat kursoru uz datuma. Pēc uzdevuma izveides varat to tālāk rediģēt un pievienot apakšuzdevumus vai pārbaudītāju.",
-        "scheduledInfo": "Ieplānotos uzdevumus sistēma izveido automātiski, un tie nepieciešamības gadījumā tiek pārcelti kopā ar saistīto rezervāciju."
+        "scheduledInfo": "Ieplānotos uzdevumus sistēma izveido automātiski, un tie nepieciešamības gadījumā tiek pārcelti kopā ar saistīto rezervāciju.",
+        "dragMove": "Atvērtos uzdevumus var vilkt ar peli uz citu dienu tajā pašā objekta rindā. Laiks paliek nemainīgs, visi citi skati tiek nekavējoties atjaunināti."
       },
       "navigationLabel": "Navigācija",
       "previousMonth": "Iepriekšējais mēnesis",
@@ -4848,7 +4849,8 @@
       "months": "[\"Janvāris\",\"Februāris\",\"Marts\",\"Aprīlis\",\"Maijs\",\"Jūnijs\",\"Jūlijs\",\"Augusts\",\"Septembris\",\"Oktobris\",\"Novembris\",\"Decembris\"]",
       "weekdays": "[\"Svētdiena\",\"Pirmdiena\",\"Otrdiena\",\"Trešdiena\",\"Ceturtdiena\",\"Piektdiena\",\"Sestdiena\"]",
       "miscRow": "Dažādi",
-      "today": "Šodien"
+      "today": "Šodien",
+      "dragMoved": "“{title}” pārcelts uz {date}"
     },
     "ruleEditor": {
       "loading": "Ielādē…",

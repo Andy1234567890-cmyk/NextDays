@@ -4836,7 +4836,8 @@
         "colorWhiteText": "No warnings for this task.",
         "manualCreate": "Tasks can be added to a booking manually by first clicking the booking and then “Create task\". This task is then linked to that booking and can be scheduled relative to the booking.",
         "cellCreate": "You can also create tasks on any date by clicking the <plus>+</plus> that appears when you place your cursor on a date. Once the task has been created, you can continue editing it and add subtasks or a reviewer.",
-        "scheduledInfo": "Scheduled tasks are created automatically by the system and moved together with their associated booking when needed."
+        "scheduledInfo": "Scheduled tasks are created automatically by the system and moved together with their associated booking when needed.",
+        "dragMove": "Open tasks can be dragged with the mouse to another day of the same object line. The time remains the same, all other views are updated immediately."
       },
       "navigationLabel": "Navigation",
       "previousMonth": "Previous month",
@@ -4869,7 +4870,8 @@
         "Saturday"
       ],
       "miscRow": "Miscellaneous",
-      "today": "Today"
+      "today": "Today",
+      "dragMoved": "“{title}” moved to {date}"
     },
     "ruleEditor": {
       "loading": "Loading…",

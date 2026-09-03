@@ -180,6 +180,13 @@ class TaskCalendarRow(BaseModel):
 
     property_id: str | None = None
     property_title: str
+    # Die Zeitzone des OBJEKTS. Sie muss mitgehen, weil `start_at`/`due_at`
+    # UTC-Zeitstempel sind, deren Kalendertag in der Objekt-Zone definiert ist
+    # (`engine.py::_at`). Ohne sie müsste die Oberfläche den Tag aus der Zone
+    # des BEDIENERS ableiten — eine Agentur in Kopenhagen sähe die Aufgaben
+    # eines Objekts auf Teneriffa dann eine Spalte verschoben. `None` = keine
+    # gepflegte Zone, dann gilt UTC (dieselbe Auskunft wie in `_at`).
+    timezone: str | None = None
     tasks: list[TaskListItem] = Field(default_factory=list)
     bookings: list[CalendarBooking] = Field(default_factory=list)
 

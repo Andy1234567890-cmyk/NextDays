@@ -5,8 +5,18 @@
 // Buchungs-Balken (aus reservations) + Aufgaben-Balken mit Status-Badge.
 // Filterleiste (Monat ← →, Nutzer, Objekt, Alles zurücksetzen). Live via
 // useRealtime auf tasks + reservations.
+//
+// VERSCHIEBEN PER DRAG & DROP (03.09.2026): eine offene Aufgabe lässt sich mit
+// der Maus auf einen anderen Tag DERSELBEN Objektzeile ziehen. Verschoben wird
+// um ganze Tage in der Ortszeit des Objekts — „08:00–11:00 am 23." wird zu
+// „08:00–11:00 am 25.", auch über eine Zeitumstellung hinweg. Der Weg zum
+// Server ist derselbe wie im Popover (`PATCH /zeitfenster`), deshalb zieht
+// jede andere Ansicht (Team-Aufgaben, Meine Aufgaben, Buchungs-Zeitleiste) per
+// Realtime auf `tasks` nach. Ein Wechsel der Objektzeile ist KEIN Ziel: die
+// Aufgabe hängt an ihrer Buchung, und der Endpunkt kennt kein Objekt.
 import { Icon } from "@iconify/react";
 import { useTranslations, useLocale } from "next-intl";
+import { toast } from "sonner";
 import {
   useCallback,
   useEffect,
@@ -29,6 +39,7 @@ import type { AvailabilitySource } from "@/lib/calendar";
 import { mitarbeiterOptionen } from "@/lib/mitarbeiter-optionen";
 import { UNASSIGNED } from "@/lib/aufgaben-konstanten";
 import { channelLabelLoose } from "@/lib/channel-logos";
+import { fehlerMelden } from "@/lib/fehler-melden";
 import {
   type CalendarBooking,
   type CalendarRow,
@@ -36,8 +47,14 @@ import {
   getTaskCalendar,
   listRules,
   listTaskAssignees,
+  setTaskZeitfenster,
 } from "@/lib/tasks";
 import { useRealtime } from "@/lib/use-realtime";
+import {
+  AufgabenKalenderDebug,
+  type DebugZeile,
+  type Verschiebung,
+} from "./aufgaben-kalender-debug";
 
 // MONTHS/WEEKDAYS werden pro Komponente aus t('tasksCalendar.months'/'weekdays')
 // gebaut (ICU-Objekte lassen sich hier nicht modulweit mit useTranslations
@@ -191,9 +208,30 @@ function packLanes<T>(segs: Seg<T>[]): Seg<T>[][] {
  * Uhrzeit (Tagesbeginn 00:00 auf beiden Seiten), bleibt sie ganztags — eine
  * Hälfte zu raten wäre eine Aussage über eine Zeit, die niemand gepflegt hat.
  */
+function minutenInZone(iso: string, zone: string | null): number | null {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  try {
+    const teile = new Intl.DateTimeFormat("en-GB", {
+      timeZone: zone || "UTC",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).formatToParts(d);
+    const h = teile.find((p) => p.type === "hour")?.value;
+    const m = teile.find((p) => p.type === "minute")?.value;
+    if (h === undefined || m === undefined) return null;
+    // `en-GB` gibt Mitternacht als „24" aus, nicht als „00".
+    return (Number(h) % 24) * 60 + Number(m);
+  } catch {
+    return d.getUTCHours() * 60 + d.getUTCMinutes();
+  }
+}
+
 function tagesHaelfte(
   startIso: string | null,
   endIso: string | null,
+  zone: string | null = null,
 ): { versatz: number; breite: number } {
   const GANZ = { versatz: 0, breite: 1 };
   if (!startIso) return GANZ;
@@ -201,8 +239,16 @@ function tagesHaelfte(
   const end = endIso ? new Date(endIso) : null;
   // Über mehrere Tage: keine Hälfte, das wäre eine Verkürzung.
   if (end && end.getTime() - start.getTime() > 86_400_000) return GANZ;
-  const startMin = start.getUTCHours() * 60 + start.getUTCMinutes();
-  const endMin = end ? end.getUTCHours() * 60 + end.getUTCMinutes() : startMin;
+  // Uhrzeit in der ZEITZONE DES OBJEKTS (03.09.2026). „Am Anreisetag
+  // 08:00–11:00" ist eine an der Regel gepflegte ORTSzeit, die `engine.py`
+  // durch die Objekt-Zone nach UTC rechnet; die Rückrechnung muss durch
+  // dieselbe Zone laufen. Vorher stand hier `getUTCHours` (13:00 Ortszeit galt
+  // als 11:00 = Vormittag) und kurzzeitig `getHours` — letzteres machte die
+  // Tageshälfte vom Standort des BEDIENERS abhängig: dieselbe Aufgabe erschien
+  // in Auckland vormittags und in Kopenhagen nachmittags.
+  const startMin = minutenInZone(startIso, zone);
+  if (startMin === null) return GANZ;
+  const endMin = endIso ? minutenInZone(endIso, zone) ?? startMin : startMin;
   const MITTAG = 12 * 60;
   if (end && endMin > startMin && endMin <= MITTAG) {
     return { versatz: 0, breite: HALF_DAY };
@@ -211,15 +257,119 @@ function tagesHaelfte(
   return GANZ;
 }
 
-// Tag-Index (0-basiert) eines ISO-Datums innerhalb des Monats; clampt an Rand.
-function dayIndex(iso: string, firstDay: Date, days: number): number {
+/** Kalendertag eines Wertes in EINER festen Zeitzone, als `YYYY-MM-DD`.
+ *
+ * DIE ZONE IST DIE DES OBJEKTS, nicht die des Bedieners (03.09.2026).
+ * `start_at`/`due_at` sind UTC-Zeitstempel, deren Kalendertag serverseitig in
+ * der Objekt-Zeitzone festgelegt wurde (`engine.py::_at`: `datetime.combine(
+ * tag, uhr, tzinfo=zone).astimezone(UTC)`). Wer den Tag im Browser mit
+ * `getDate()` zurückrechnet, liest die Zone des BEDIENERS: eine Agentur in
+ * Kopenhagen sähe die Aufgaben eines Objekts auf Teneriffa um eine Spalte
+ * verschoben — und zwar nur die, deren Uhrzeit die Mitternachtsgrenze
+ * überschreitet, was wie ein Zufallsfehler aussieht.
+ *
+ * Fehlt die Zone am Objekt, gilt UTC — dieselbe Auskunft, die `_at`
+ * serverseitig gibt. Ein geratener Ortswert wäre hier ein erfundener
+ * Fallback (Wurzel 4).
+ *
+ * Reine Datumswerte (`2026-09-10`, so kommen `check_in`/`check_out`) tragen
+ * keine Uhrzeit und damit keinen Zonenbezug; sie werden direkt aus der
+ * Zeichenkette gelesen, statt durch eine Zeitzone geschickt zu werden.
+ */
+function tagInZone(iso: string, zone: string | null): string {
+  const nurDatum = /^\d{4}-\d{2}-\d{2}$/.test(iso);
+  if (nurDatum) return iso;
   const d = new Date(iso);
-  const diff = Math.floor(
-    (Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) -
-      firstDay.getTime()) /
-      86_400_000,
-  );
+  if (Number.isNaN(d.getTime())) return iso.slice(0, 10);
+  // `en-CA` liefert ISO-Reihenfolge (YYYY-MM-DD) — die einzige Locale-Angabe,
+  // die hier eine Zusage ist und keine Annahme.
+  try {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: zone || "UTC",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(d);
+  } catch {
+    // Unbekannte Zonenkennung (Datenfehler am Objekt): UTC statt Absturz.
+    return d.toISOString().slice(0, 10);
+  }
+}
+
+/** Spaltenindex eines Kalendertags im Zeitstrahl; clammt an den Rand.
+ *
+ * Beide Seiten sind reine Tageszahlen, deshalb kann hier keine Zeitzone mehr
+ * kippen: `firstDay` ist eine UTC-Mitternacht (`heuteUtc`), der Tag kommt als
+ * `YYYY-MM-DD` aus `tagInZone`.
+ */
+function spalteVonTag(tag: string, firstDay: Date, days: number): number {
+  const [j, m, t] = tag.split("-").map(Number);
+  const diff = Math.round((Date.UTC(j, m - 1, t) - firstDay.getTime()) / 86_400_000);
   return Math.max(0, Math.min(days, diff));
+}
+
+function dayIndex(
+  iso: string,
+  firstDay: Date,
+  days: number,
+  zone: string | null = null,
+): number {
+  return spalteVonTag(tagInZone(iso, zone), firstDay, days);
+}
+
+/** UTC-Mitternacht eines `YYYY-MM-DD`. */
+function utcMitternacht(tag: string): Date {
+  const [j, m, t] = tag.split("-").map(Number);
+  return new Date(Date.UTC(j, m - 1, t));
+}
+
+/**
+ * Der UTC-Zeitpunkt, der in `zone` genau `tag` um `minuten` (seit 00:00) ist.
+ *
+ * Der Zonenversatz wird am ZIEL gemessen, nicht an der Quelle: eine Aufgabe
+ * um 08:00 Ortszeit, die über den Tag der Zeitumstellung hinweg verschoben
+ * wird, liegt danach weiter um 08:00 — nicht um 07:00 oder 09:00, wie es
+ * `+ n × 24 h` in UTC ergäbe. Zwei Näherungsschritte, weil der Versatz am
+ * ersten geratenen Zeitpunkt noch der falsche sein kann (Umstellungsnacht).
+ */
+function utcFuerOrtszeit(tag: string, minuten: number, zone: string | null): Date {
+  const [j, m, t] = tag.split("-").map(Number);
+  const wunsch = Date.UTC(j, m - 1, t, Math.floor(minuten / 60), minuten % 60);
+  let ergebnis = wunsch;
+  for (let i = 0; i < 2; i += 1) {
+    const iso = new Date(ergebnis).toISOString();
+    const [dj, dm, dt] = tagInZone(iso, zone).split("-").map(Number);
+    const dortMin = minutenInZone(iso, zone) ?? 0;
+    const dort = Date.UTC(dj, dm - 1, dt, Math.floor(dortMin / 60), dortMin % 60);
+    ergebnis += wunsch - dort;
+  }
+  return new Date(ergebnis);
+}
+
+/** Einen Zeitstempel um `deltaTage` Kalendertage verschieben — die Uhrzeit
+ *  in der Objekt-Zone bleibt. `null`, wenn der Wert kein Datum ist. */
+function umTageVerschieben(
+  iso: string,
+  deltaTage: number,
+  zone: string | null,
+): string | null {
+  const minuten = minutenInZone(iso, zone);
+  if (minuten === null) return null;
+  const zielTag = tagPlus(utcMitternacht(tagInZone(iso, zone)), deltaTage)
+    .toISOString()
+    .slice(0, 10);
+  return utcFuerOrtszeit(zielTag, minuten, zone).toISOString();
+}
+
+/** Nur offene Aufgaben mit einem Datum lassen sich ziehen. Eine erledigte
+ *  oder stornierte Aufgabe hat stattgefunden bzw. findet nicht statt — ihr
+ *  Termin ist Protokoll, keine Planung. */
+function verschiebbar(t: TaskListItem): boolean {
+  return (
+    t.status !== "done" &&
+    t.status !== "cancelled" &&
+    Boolean(t.start_at ?? t.due_at)
+  );
 }
 
 export function TasksCalendar() {
@@ -264,6 +414,37 @@ export function TasksCalendar() {
     reservationId?: string | null;
     date: string;
   } | null>(null);
+  // Debug-Raster: legt ein Messgitter über die Zeitachse — Spaltennummer,
+  // Datum und die Kante jedes Tages. Ohne es ist nicht ablesbar, auf welchem
+  // TAG eine Pille sitzt, und genau das war die offene Frage (03.09.2026).
+  const [debugRaster, setDebugRaster] = useState(false);
+  // Drag & Drop: die gezogene Aufgabe samt ihrer Zeile und die Zelle, über
+  // der sie gerade schwebt. Die Zeile steckt mit drin, damit eine fremde
+  // Zeile den Drop gar nicht erst annimmt (kein `preventDefault` → der
+  // Browser zeigt „nicht erlaubt").
+  const [dragAufgabe, setDragAufgabe] = useState<{
+    id: string;
+    zeile: string;
+  } | null>(null);
+  // Dieselbe Information als Ref, SYNCHRON in `dragstart` gesetzt.
+  //
+  // WARUM ZWEI: Chrome bricht einen Drag ab, wenn sich das gezogene Element
+  // im selben Tick wie `dragstart` verändert — der State-Update rendert die
+  // Pille sofort neu (Klasse `opacity-40`), Chrome sieht ein anderes Element
+  // unter der Maus und feuert `dragend`, bevor der Zeiger sich bewegt hat.
+  // Gemessen am 03.09.2026 per CDP: 3× dragstart, 3× dragend, kein einziges
+  // dragover; ein nacktes Probe-Div daneben zog einwandfrei. Der State darf
+  // deshalb erst im NÄCHSTEN Tick gesetzt werden (`setTimeout 0`) — die
+  // Zellen brauchen die Zeile aber schon beim ersten `dragover`, und dafür
+  // steht sie hier.
+  const dragRef = useRef<{ id: string; zeile: string } | null>(null);
+  const [dropZiel, setDropZiel] = useState<{
+    zeile: string;
+    tag: string;
+  } | null>(null);
+  // Protokoll aller Verschiebungen dieser Sitzung fürs Diagnose-Panel: was
+  // vorher stand, was gesendet wurde, was der Server sagte.
+  const [verschiebungen, setVerschiebungen] = useState<Verschiebung[]>([]);
   const [users, setUsers] = useState<{ value: string; label: string }[]>([]);
   const [rules, setRules] = useState<{ value: string; label: string }[]>([]);
   const [userFilter, setUserFilter] = useState<string[]>([]);
@@ -320,6 +501,100 @@ export function TasksCalendar() {
   const stillNachladen = useCallback(() => {
     void load(true);
   }, [load]);
+
+  /**
+   * Eine Aufgabe auf einen anderen Kalendertag legen.
+   *
+   * Gerechnet wird der Tagesabstand zwischen dem Tag der Aufgabe (in der
+   * Objekt-Zone, wie er gezeichnet wird) und der Zielzelle; Start und Ende
+   * wandern um genau diesen Abstand, die Uhrzeit bleibt. Der Server zieht
+   * `due_at` nach (Wurzel 1, siehe `set_zeitfenster`).
+   *
+   * Aufgaben ohne `start_at` (Altbestand, nur `due_at`) bekommen den
+   * verschobenen Wert als START: jeder Schreibpfad setzt seit dem 03.09.2026
+   * ein Fenster, und aus einem Ende einen Anfang zu erfinden wäre hier
+   * ebenso falsch wie ein Ende aus dem Nichts — der Start ist die Angabe,
+   * die die Zeitachse zeichnet.
+   *
+   * Optimistisch: die Pille springt sofort, der Server bestätigt oder die
+   * Zeile wird neu geladen. Kein Rücksprung aus einem Schnappschuss, weil
+   * inzwischen ein Realtime-Ereignis andere Aufgaben verändert haben kann.
+   */
+  const aufgabeVerschieben = useCallback(
+    async (aufgabe: TaskListItem, zone: string | null, zielTag: string) => {
+      const iso = aufgabe.start_at ?? aufgabe.due_at;
+      if (!iso) return;
+      const vonTag = tagInZone(iso, zone);
+      const delta = tageZwischen(utcMitternacht(vonTag), utcMitternacht(zielTag));
+      if (delta === 0) return;
+      const neuStart = umTageVerschieben(iso, delta, zone);
+      const neuEnde =
+        aufgabe.start_at && aufgabe.end_at
+          ? umTageVerschieben(aufgabe.end_at, delta, zone)
+          : null;
+      if (!neuStart) return;
+
+      setRows((alt) =>
+        alt.map((r) => ({
+          ...r,
+          tasks: r.tasks.map((x) =>
+            x.id === aufgabe.id
+              ? { ...x, start_at: neuStart, end_at: neuEnde, due_at: neuEnde ?? neuStart }
+              : x,
+          ),
+        })),
+      );
+
+      const eintrag: Verschiebung = {
+        zeit: new Date().toISOString(),
+        titel: aufgabe.title,
+        zone,
+        von: vonTag,
+        nach: zielTag,
+        delta,
+        startVorher: aufgabe.start_at,
+        endeVorher: aufgabe.end_at,
+        dueVorher: aufgabe.due_at,
+        startGesendet: neuStart,
+        endeGesendet: neuEnde,
+        ergebnis: "offen",
+      };
+      setVerschiebungen((v) => [eintrag, ...v].slice(0, 50));
+
+      const res = await setTaskZeitfenster(aufgabe.id, neuStart, neuEnde);
+      const ergebnis = res.ok ? "ok" : res.error;
+      setVerschiebungen((v) =>
+        v.map((e) =>
+          e === eintrag
+            ? {
+                ...e,
+                ergebnis,
+                startServer: res.ok ? res.data.start_at : undefined,
+                endeServer: res.ok ? res.data.end_at : undefined,
+              }
+            : e,
+        ),
+      );
+      if (res.ok) {
+        toast.success(
+          t("tasksCalendar.dragMoved", {
+            title: aufgabe.title,
+            date: utcMitternacht(zielTag).toLocaleDateString(locale, {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            }),
+          }),
+        );
+      } else {
+        fehlerMelden(res);
+      }
+      // Auch bei Erfolg neu laden: Realtime meldet sich zwar, aber die
+      // Pille soll den SERVER-Stand zeigen, nicht die eigene Vorwegnahme.
+      stillNachladen();
+    },
+    [locale, stillNachladen, t],
+  );
 
   // Erstlast MIT Ladezustand, jedes Nachwachsen des Zeitstrahls OHNE.
   //
@@ -486,6 +761,32 @@ export function TasksCalendar() {
     );
   }, [rows, propFilter]);
 
+  /** Diagnose-Zeilen: dieselbe Rechnung wie beim Zeichnen, aber als eigener
+   *  Wert statt als Seiteneffekt im Render. Sie beantworten die Frage, die
+   *  sich aus der Position allein NICHT beantworten lässt: kommt der Tag aus
+   *  `start_at` oder aus `due_at`, in welcher Zone wurde er gerechnet, und
+   *  liegt er im Zeitraum seiner Buchung. */
+  const debugZeilen = useMemo<DebugZeile[]>(() => {
+    const out: DebugZeile[] = [];
+    for (const row of visibleRows) {
+      const zone = row.timezone ?? null;
+      for (const t of row.tasks) {
+        const iso = t.start_at ?? t.due_at;
+        out.push({
+          objekt: row.property_title || "(ohne Objekt)",
+          zone,
+          aufgabe: t,
+          quelle: t.start_at ? "start_at" : t.due_at ? "due_at" : "keins",
+          tag: iso ? tagInZone(iso, zone) : null,
+          endTag: t.end_at ? tagInZone(t.end_at, zone) : null,
+          spalte: iso ? dayIndex(iso, firstDay, days, zone) : 0,
+          buchung: row.bookings.find((b) => b.id === t.reservation_id) ?? null,
+        });
+      }
+    }
+    return out;
+  }, [visibleRows, firstDay, days]);
+
   // Heute-Linie: Index im Zeitstrahl, oder null wenn heute ausserhalb des
   // geladenen Bereichs liegt (weit in die Vergangenheit gescrollt).
   const todayIdx = useMemo(() => {
@@ -576,6 +877,7 @@ export function TasksCalendar() {
                 })}
               </p>
               <p>{t("tasksCalendar.learn.scheduledInfo")}</p>
+              <p>{t("tasksCalendar.learn.dragMove")}</p>
             </div>
           </LearnButton>
         </div>
@@ -739,18 +1041,49 @@ export function TasksCalendar() {
                   data: b,
                 })),
               );
+              const zone = row.timezone ?? null;
+              const zeilenKey = row.property_id ?? "misc";
               const taskLanes = packLanes(
                 row.tasks.map((t) => {
+                  // `due_at` ist das ENDE der Aufgabe, nicht ihr Beginn:
+                  // `engine.py` schreibt `due_at = (end or start)`. Als
+                  // Startspalte gelesen, landete eine Aufgabe, die um 00:00 des
+                  // Folgetags endet, eine Spalte HINTER ihrer Buchung — so
+                  // stand die Reinigung am 14. September, obwohl ihr `start_at`
+                  // korrekt auf dem Abreisetag lag (103 Aufgaben live, gemessen
+                  // am 03.09.2026). Fehlt `start_at` ganz (Altbestand), bleibt
+                  // `due_at` die einzige Quelle; dann wird sein Tag genommen,
+                  // aber die Aufgabe wird ganztags gezeichnet, statt aus einem
+                  // Ende eine Anfangsstunde zu erfinden.
+                  const hatStart = Boolean(t.start_at);
                   const iso = t.start_at ?? t.due_at;
-                  const s = iso ? dayIndex(iso, firstDay, days) : 0;
-                  // Halbtags-Segmente, damit Vor- und Nachmittag desselben Tages
-                  // NEBENEINANDER in einer Lane liegen statt gestapelt: der
-                  // Lane-Packer vergleicht Start und Ende, also müssen die
-                  // Hälften auch in diesen Zahlen stecken.
-                  // Dieselbe Quelle wie `dayIndex` oben: Altaufgaben tragen nur
-                  // `due_at`, und eine Hälfte aus einem anderen Feld als der Tag
-                  // stünde in der falschen Spalte.
-                  const h = tagesHaelfte(iso, t.end_at);
+                  const s = iso ? dayIndex(iso, firstDay, days, zone) : 0;
+                  const tag = iso ? tagInZone(iso, zone) : null;
+                  // AN DER BUCHUNG AUSRICHTEN (03.09.2026): Der Buchungsbalken
+                  // beginnt halbtags versetzt (Anreise mittags) und endet
+                  // mittags am Abreisetag. Eine Aufgabe am Anreisetag, die
+                  // buendig links in der Spalte sitzt, steht damit optisch
+                  // VOR dem Balken — „kreuz und quer", obwohl der Tag stimmt.
+                  // Deshalb: Anreisetag = zweite Haelfte (unter dem Balken-
+                  // anfang), Abreisetag = erste Haelfte (unter dem Balkenende).
+                  // Genau so macht es der Multikalender fuer seine Nebenbalken
+                  // (calendar-board.tsx, „Steht davor eine Buchung, beginnt
+                  // sie versetzt"). Ohne Buchung entscheidet die Uhrzeit.
+                  const buchung = t.reservation_id
+                    ? row.bookings.find((b) => b.id === t.reservation_id)
+                    : undefined;
+                  let h: { versatz: number; breite: number };
+                  if (buchung && tag === buchung.check_in) {
+                    h = { versatz: HALF_DAY, breite: HALF_DAY };
+                  } else if (buchung && tag === buchung.check_out) {
+                    h = { versatz: 0, breite: HALF_DAY };
+                  } else if (hatStart) {
+                    // Halbtags-Segmente, damit Vor- und Nachmittag desselben
+                    // Tages NEBENEINANDER in einer Lane liegen statt gestapelt.
+                    h = tagesHaelfte(t.start_at, t.end_at, zone);
+                  } else {
+                    h = { versatz: 0, breite: 1 };
+                  }
                   return {
                     id: t.id,
                     start: s + h.versatz,
@@ -778,7 +1111,11 @@ export function TasksCalendar() {
                   {/* Objektname (sticky) */}
                   <div
                     style={{ width: `${LABEL}rem` }}
-                    className="sticky left-0 z-10 flex shrink-0 items-center border-r bg-card px-3 text-sm font-medium"
+                    // z-20, nicht z-10: Balken und Pillen liegen auf z-10, und ein
+                    // spaeteres Geschwister gleicher Ebene zeichnet DARUEBER — die
+                    // Objektspalte wirkte durchsichtig, Namen standen ueber den
+                    // Pillen (03.09.2026). Die Kopfzeile bleibt mit z-30 darueber.
+                    className="sticky left-0 z-20 flex shrink-0 items-center border-r bg-card px-3 text-sm font-medium"
                   >
                     {/* Die objektlose Zeile trägt keinen Titel aus dem Backend —
                         wie sie heißt, gehört in die Sprache der Oberfläche. */}
@@ -795,14 +1132,74 @@ export function TasksCalendar() {
                     className="relative shrink-0"
                     style={{ width: `${days * COL}rem` }}
                   >
-                    {/* Hintergrund-Raster + Hover-„+" zum Anlegen je Zelle */}
+                    {/* Hintergrund-Raster + Hover-„+" zum Anlegen je Zelle.
+                        SICHTBARKEIT (03.09.2026): die Linien standen auf
+                        `border-border/40` und waren in den Objektzeilen nicht
+                        zu erkennen — ohne Raster kann niemand ablesen, auf
+                        welchem TAG eine Pille sitzt, und genau das war die
+                        Frage. Volle Randfarbe, dazu ein getönter Grund am
+                        Wochenende und am heutigen Tag als Orientierung. */}
                     {Array.from({ length: days }, (_, i) => {
                       const cellDate = tagKey(i);
+                      const wtag = new Date(`${cellDate}T00:00:00Z`).getUTCDay();
+                      const wochenende = wtag === 0 || wtag === 6;
+                      const istHeute = cellDate === todayKey;
+                      // Drop nur in der EIGENEN Zeile annehmen. Ohne
+                      // `preventDefault` zeigt der Browser „nicht erlaubt"
+                      // und `onDrop` feuert nicht — genau das gewünschte
+                      // Verhalten für fremde Zeilen.
+                      const istZiel =
+                        dropZiel?.zeile === zeilenKey &&
+                        dropZiel.tag === cellDate;
                       return (
                         <div
                           key={i}
                           style={{ left: `${i * COL}rem`, width: `${COL}rem` }}
-                          className="group absolute bottom-0 top-0 border-r border-border/40"
+                          onDragOver={(e) => {
+                            // Aus dem Ref, nicht aus dem State: der State
+                            // hinkt dem Drag um einen Tick hinterher.
+                            if (dragRef.current?.zeile !== zeilenKey) return;
+                            e.preventDefault();
+                            e.dataTransfer.dropEffect = "move";
+                            if (!istZiel) {
+                              setDropZiel({ zeile: zeilenKey, tag: cellDate });
+                            }
+                          }}
+                          onDrop={(e) => {
+                            const quelle = dragRef.current;
+                            if (quelle?.zeile !== zeilenKey) return;
+                            e.preventDefault();
+                            const aufgabe = row.tasks.find(
+                              (x) => x.id === quelle.id,
+                            );
+                            dragRef.current = null;
+                            setDragAufgabe(null);
+                            setDropZiel(null);
+                            if (aufgabe) {
+                              void aufgabeVerschieben(aufgabe, zone, cellDate);
+                            }
+                          }}
+                          // z-0: die Zelle ist der GRUND der Zeile. Ohne
+                          // eigene Ebene liegen die Balken als spätere
+                          // Geschwister darüber und verdecken die Trennlinie
+                          // in genau den Zeilen, in denen man sie braucht —
+                          // dort, wo Pillen stehen. Die Balken bekommen
+                          // ihrerseits z-10 (siehe unten), damit sie
+                          // anklickbar bleiben.
+                          // `border-border` ist rgb(228,228,231) — auf weissem
+                          // Grund gemessen praktisch unsichtbar, und genau
+                          // deshalb war „kein Raster da" richtig, obwohl 2400
+                          // Zellen im DOM standen. `border-neutral-300` ist
+                          // die erste Stufe, die man auf Weiss wirklich sieht.
+                          className={`group absolute bottom-0 top-0 z-0 border-r border-neutral-300 dark:border-neutral-700 ${
+                            istZiel
+                              ? "bg-sky-500/20 ring-2 ring-inset ring-sky-500"
+                              : istHeute
+                                ? "bg-amber-500/10"
+                                : wochenende
+                                  ? "bg-neutral-100 dark:bg-neutral-800/40"
+                                  : ""
+                          }`}
                         >
                           <button
                             type="button"
@@ -842,7 +1239,14 @@ export function TasksCalendar() {
                             key={b.id}
                             type="button"
                             onClick={() => setBookingPop(b)}
-                            className={`absolute flex flex-col justify-center overflow-hidden rounded-(--radius) px-2 py-1 text-left text-xs shadow-sm ${meta.barBg} ${meta.barFg}`}
+                            // Während eine Aufgabe gezogen wird, darf der
+                            // Buchungsbalken die Zelle darunter nicht
+                            // verdecken — sonst gäbe es über der Buchung
+                            // keinen Ablageort, und genau dort liegen die
+                            // meisten Aufgaben.
+                            className={`absolute z-10 flex flex-col justify-center overflow-hidden rounded-(--radius) px-2 py-1 text-left text-xs shadow-sm ${meta.barBg} ${meta.barFg} ${
+                              dragAufgabe ? "pointer-events-none" : ""
+                            }`}
                             style={{
                               left: `calc(${seg.start + leftPad} * ${COL}rem + 0.15rem)`,
                               width: `calc(${widthCols} * ${COL}rem - 0.3rem)`,
@@ -884,12 +1288,46 @@ export function TasksCalendar() {
                       lane.map((seg) => {
                         const t = seg.data;
                         const st = taskStyle(t, todayKey);
+                        const ziehbar = verschiebbar(t);
+                        const wirdGezogen = dragAufgabe?.id === t.id;
                         return (
                           <button
                             key={t.id}
                             type="button"
                             onClick={() => setTaskPop(t)}
-                            className={`absolute flex items-center gap-1 overflow-hidden rounded-(--radius) border px-1.5 text-left text-xs shadow-sm ${st.bg} ${st.border} ${st.text}`}
+                            draggable={ziehbar}
+                            onDragStart={(e) => {
+                              if (!ziehbar) {
+                                e.preventDefault();
+                                return;
+                              }
+                              // setData ist Pflicht, sonst startet der Drag in
+                              // Firefox/Safari nicht.
+                              e.dataTransfer.setData("text/plain", t.id);
+                              e.dataTransfer.effectAllowed = "move";
+                              const quelle = { id: t.id, zeile: zeilenKey };
+                              dragRef.current = quelle;
+                              // NICHT synchron — siehe `dragRef`.
+                              window.setTimeout(() => {
+                                if (dragRef.current === quelle) {
+                                  setDragAufgabe(quelle);
+                                }
+                              }, 0);
+                            }}
+                            onDragEnd={() => {
+                              dragRef.current = null;
+                              setDragAufgabe(null);
+                              setDropZiel(null);
+                            }}
+                            // Während des Ziehens muss die Zelle DARUNTER die
+                            // Drag-Ereignisse bekommen, nicht die Pille selbst
+                            // oder eine Nachbar-Pille: `pointer-events-none`
+                            // auf allen Pillen, solange eine gezogen wird.
+                            className={`absolute z-10 flex items-center gap-1 overflow-hidden rounded-(--radius) border px-1.5 text-left text-xs shadow-sm ${st.bg} ${st.border} ${st.text} ${
+                              ziehbar ? "cursor-grab active:cursor-grabbing" : ""
+                            } ${wirdGezogen ? "opacity-40" : ""} ${
+                              dragAufgabe ? "pointer-events-none" : ""
+                            }`}
                             style={{
                               left: `calc(${seg.start} * ${COL}rem + 0.15rem)`,
                               width: `calc(${seg.end - seg.start} * ${COL}rem - 0.3rem)`,
@@ -907,6 +1345,39 @@ export function TasksCalendar() {
                         );
                       }),
                     )}
+
+                    {/* DEBUG-RASTER: Messgitter über der Zeile. Es liegt
+                        als LETZTES Geschwister auf z-10 ueber den Balken — nicht auf
+                        z-20, sonst wanderte es beim Querscrollen ueber die
+                        Objektspalte. Es ist zum Messen da und
+                        nicht zum Bedienen — verdeckt es eine Pille, ist das
+                        genau die Information, die man sehen will. Pro Tag:
+                        Spaltennummer und Tagesziffer, plus eine kräftige
+                        Kante. Abschaltbar, damit die Ansicht nutzbar bleibt. */}
+                    {debugRaster &&
+                      Array.from({ length: days }, (_, i) => {
+                        const k = tagKey(i);
+                        const wtag = new Date(`${k}T00:00:00Z`).getUTCDay();
+                        return (
+                          <div
+                            key={`dbg-${i}`}
+                            style={{ left: `${i * COL}rem`, width: `${COL}rem` }}
+                            className={`pointer-events-none absolute bottom-0 top-0 z-10 border-l-2 ${
+                              wtag === 0 || wtag === 6
+                                ? "border-rose-500/70 bg-rose-500/5"
+                                : "border-sky-500/70"
+                            }`}
+                          >
+                            <span className="absolute left-0.5 top-0 rounded-br bg-sky-600 px-1 font-mono text-[0.6rem] leading-tight text-white">
+                              {i}
+                            </span>
+                            <span className="absolute bottom-0 left-0.5 rounded-tr bg-neutral-800 px-1 font-mono text-[0.6rem] leading-tight text-white">
+                              {k.slice(8)}
+                            </span>
+                          </div>
+                        );
+                      })}
+
                   </div>
                 </div>
               );
@@ -967,6 +1438,18 @@ export function TasksCalendar() {
             });
             setBookingPop(null);
           }}
+        />
+      )}
+
+      {/* In der Entwicklung immer, in Produktion nur zugeschaltet — dieselbe
+          Regel wie beim Realtime-Panel. */}
+      {(process.env.NODE_ENV === "development" ||
+        process.env.NEXT_PUBLIC_KALENDER_DEBUG === "1") && (
+        <AufgabenKalenderDebug
+          zeilen={debugZeilen}
+          verschiebungen={verschiebungen}
+          rasterAn={debugRaster}
+          onRasterAn={setDebugRaster}
         />
       )}
     </div>

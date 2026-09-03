@@ -113,6 +113,11 @@ export type CalendarBooking = {
 export type CalendarRow = {
   property_id: string | null;
   property_title: string;
+  /** Zeitzone des Objekts. Der Kalendertag von `start_at`/`due_at` ist in
+   *  DIESER Zone definiert, nicht in der des Bedieners — ohne sie stünden die
+   *  Aufgaben eines Objekts in einer anderen Zone eine Spalte verschoben.
+   *  `null` = keine gepflegte Zone, dann gilt UTC. */
+  timezone: string | null;
   tasks: TaskListItem[];
   bookings: CalendarBooking[];
 };

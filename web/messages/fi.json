@@ -4836,7 +4836,8 @@
         "colorWhiteText": "Ei varoituksia tälle tehtävälle.",
         "manualCreate": "Tehtäviä voi lisätä varaukseen manuaalisesti napsauttamalla ensin varausta ja sitten „Luo tehtävä”. Tehtävä liitetään tällöin tähän varaukseen ja se voidaan ajoittaa suhteessa varaukseen.",
         "cellCreate": "Voit myös luoda tehtäviä mille tahansa päivälle napsauttamalla <plus>+</plus>-painiketta, joka ilmestyy, kun viet kohdistimen päivämäärän päälle. Kun tehtävä on luotu, voit muokata sitä edelleen ja lisätä alitehtäviä tai tarkastajan.",
-        "scheduledInfo": "Ajastetut tehtävät luodaan automaattisesti järjestelmän toimesta ja siirretään tarvittaessa yhdessä niihin liittyvän varauksen kanssa."
+        "scheduledInfo": "Ajastetut tehtävät luodaan automaattisesti järjestelmän toimesta ja siirretään tarvittaessa yhdessä niihin liittyvän varauksen kanssa.",
+        "dragMove": "Avoimet tehtävät voi vetää hiirellä saman kohteen toiseen päivään. Kellonaika säilyy, kaikki muut näkymät päivittyvät välittömästi."
       },
       "navigationLabel": "Navigointi",
       "previousMonth": "Edellinen kuukausi",
@@ -4848,7 +4849,8 @@
       "months": "[\"Tammikuu\",\"Helmikuu\",\"Maaliskuu\",\"Huhtikuu\",\"Toukokuu\",\"Kesäkuu\",\"Heinäkuu\",\"Elokuu\",\"Syyskuu\",\"Lokakuu\",\"Marraskuu\",\"Joulukuu\"]",
       "weekdays": "[\"Sunnuntai\",\"Maanantai\",\"Tiistai\",\"Keskiviikko\",\"Torstai\",\"Perjantai\",\"Lauantai\"]",
       "miscRow": "Muut",
-      "today": "Tänään"
+      "today": "Tänään",
+      "dragMoved": "”{title}” siirretty päivälle {date}"
     },
     "ruleEditor": {
       "loading": "Ladataan…",

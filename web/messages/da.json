@@ -4836,7 +4836,8 @@
         "colorWhiteText": "Ingen advarsler for denne opgave.",
         "manualCreate": "Opgaver kan tilføjes manuelt til en booking ved først at klikke på bookingen og derefter på „Opret opgave“. Denne opgave er derefter knyttet til denne booking og kan planlægges i forhold til bookingen.",
         "cellCreate": "Du kan også oprette opgaver på vilkårlige datoer ved at klikke på <plus>+</plus>, som vises, når du placerer markøren på en dato. Når opgaven er oprettet, kan du redigere den yderligere og tilføje underopgaver eller en kontrollant.",
-        "scheduledInfo": "Planlagte opgaver oprettes automatisk af systemet og flyttes efter behov sammen med den tilhørende booking."
+        "scheduledInfo": "Planlagte opgaver oprettes automatisk af systemet og flyttes efter behov sammen med den tilhørende booking.",
+        "dragMove": "Åbne opgaver kan trækkes med musen til en anden dag i samme objektlinje. Klokkeslættet bevares, alle andre visninger opdateres med det samme."
       },
       "navigationLabel": "Navigation",
       "previousMonth": "Forrige måned",
@@ -4848,7 +4849,8 @@
       "months": "[\"Januar\",\"Februar\",\"Marts\",\"April\",\"Maj\",\"Juni\",\"Juli\",\"August\",\"September\",\"Oktober\",\"November\",\"December\"]",
       "weekdays": "[\"Søndag\",\"Mandag\",\"Tirsdag\",\"Onsdag\",\"Torsdag\",\"Fredag\",\"Lørdag\"]",
       "miscRow": "Diverse",
-      "today": "I dag"
+      "today": "I dag",
+      "dragMoved": "„{title}“ flyttet til {date}"
     },
     "ruleEditor": {
       "loading": "Indlæser…",

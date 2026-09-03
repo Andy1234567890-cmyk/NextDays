@@ -208,11 +208,24 @@ def _trigger_time(
         return None
     check_in, check_out = anchors
     if trigger == "arrival_day":
-        # Nur das Datum des Ankers, nicht seine Stunde. `_at` setzt ohne
-        # bekannte Uhrzeit den Tagesbeginn — keine erfundene Stunde (Wurzel 4).
-        base = _at(check_in.date(), clock, zone)
+        # Das KALENDERDATUM der Reservierung, nicht `.date()` des Ankers.
+        #
+        # DER FEHLER (03.09.2026, 25 Aufgaben live betroffen): `check_in` ist
+        # hier bereits der von `_at` nach UTC gerechnete Anker. Ohne gepflegte
+        # `checkin_time` setzt `_at` lokal 00:00 — in Kopenhagen im Sommer also
+        # `22:00Z des VORTAGS`. `.date()` liest daraus den Vortag, und der
+        # Anreisecheck stand einen Tag vor der Anreise. Die Korrelation war
+        # lückenlos: mit gepflegter Uhrzeit 18 von 18 richtig, ohne sie 25 von
+        # 25 falsch — und 1346 von 1531 Buchungen haben keine.
+        #
+        # `reservations.check_in` ist eine `date`-Spalte und damit die Wahrheit
+        # über den Tag; sie durch eine Zeitzone zu schicken, kann sie nur
+        # verschieben.
+        tag = _as_date(reservation.get("check_in")) or check_in.date()
+        base = _at(tag, clock, zone)
     elif trigger == "departure_day":
-        base = _at(check_out.date(), clock, zone)
+        tag = _as_date(reservation.get("check_out")) or check_out.date()
+        base = _at(tag, clock, zone)
     elif trigger == "booking_confirmed":
         created = reservation.get("created_at")
         base = (

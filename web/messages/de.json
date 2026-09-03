@@ -4836,7 +4836,8 @@
         "colorWhiteText": "Keine Warnungen für diese Aufgabe.",
         "manualCreate": "Aufgaben können manuell zu einer Buchung hinzugefügt werden, indem Sie erst auf die Buchung und dann auf „Aufgabe erstellen\" klicken. Diese Aufgabe ist dann mit dieser Buchung verknüpft und kann relativ zur Buchung eingeplant werden.",
         "cellCreate": "Sie können auch Aufgaben an beliebigen Daten erstellen, indem Sie auf das <plus>+</plus> klicken, das erscheint, wenn Sie Ihren Cursor auf ein Datum setzen. Nachdem die Aufgabe erstellt wurde, können Sie sie weiter bearbeiten und Unteraufgaben oder einen Prüfer hinzufügen.",
-        "scheduledInfo": "Geplante Aufgaben werden automatisch vom System erstellt und bei Bedarf zusammen mit ihrer zugehörigen Buchung verschoben."
+        "scheduledInfo": "Geplante Aufgaben werden automatisch vom System erstellt und bei Bedarf zusammen mit ihrer zugehörigen Buchung verschoben.",
+        "dragMove": "Offene Aufgaben lassen sich mit der Maus auf einen anderen Tag derselben Objektzeile ziehen. Die Uhrzeit bleibt erhalten, alle anderen Ansichten aktualisieren sich sofort."
       },
       "navigationLabel": "Navigation",
       "previousMonth": "Vorheriger Monat",
@@ -4869,7 +4870,8 @@
         "Samstag"
       ],
       "miscRow": "Verschiedene",
-      "today": "Heute"
+      "today": "Heute",
+      "dragMoved": "„{title}“ auf den {date} verschoben"
     },
     "ruleEditor": {
       "loading": "Lädt…",

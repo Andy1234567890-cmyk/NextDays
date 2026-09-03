@@ -4836,7 +4836,8 @@
         "colorWhiteText": "K tejto úlohe nie sú žiadne upozornenia.",
         "manualCreate": "Úlohy je možné manuálne pridať k rezervácii kliknutím najprv na rezerváciu a potom na „Vytvoriť úlohu“. Táto úloha je potom prepojená s danou rezerváciou a možno ju naplánovať relatívne k rezervácii.",
         "cellCreate": "Úlohy môžete vytvárať aj v ľubovoľných dátumoch kliknutím na <plus>+</plus>, ktoré sa zobrazí, keď umiestnite kurzor na dátum. Po vytvorení úlohy ju môžete ďalej upravovať a pridať podúlohy alebo kontrolóra.",
-        "scheduledInfo": "Naplánované úlohy vytvára systém automaticky a v prípade potreby sa presúvajú spolu so súvisiacou rezerváciou."
+        "scheduledInfo": "Naplánované úlohy vytvára systém automaticky a v prípade potreby sa presúvajú spolu so súvisiacou rezerváciou.",
+        "dragMove": "Otvorené úlohy môžete presunúť myšou na iný deň v rovnakom riadku objektu. Čas zostane zachovaný, všetky ostatné zobrazenia sa okamžite aktualizujú."
       },
       "navigationLabel": "Navigácia",
       "previousMonth": "Predchádzajúci mesiac",
@@ -4848,7 +4849,8 @@
       "months": "[\"Január\",\"Február\",\"Marec\",\"Apríl\",\"Máj\",\"Jún\",\"Júl\",\"August\",\"September\",\"Október\",\"November\",\"December\"]",
       "weekdays": "[\"Nedeľa\",\"Pondelok\",\"Utorok\",\"Streda\",\"Štvrtok\",\"Piatok\",\"Sobota\"]",
       "miscRow": "Rôzne",
-      "today": "Dnes"
+      "today": "Dnes",
+      "dragMoved": "„{title}“ presunuté na {date}"
     },
     "ruleEditor": {
       "loading": "Načítava sa…",

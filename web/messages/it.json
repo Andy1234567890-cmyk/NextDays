@@ -4836,7 +4836,8 @@
         "colorWhiteText": "Nessun avviso per questa attività.",
         "manualCreate": "Le attività possono essere aggiunte manualmente a una prenotazione cliccando prima sulla prenotazione e poi su «Crea attività». Questa attività viene quindi collegata alla prenotazione e può essere pianificata in relazione ad essa.",
         "cellCreate": "Puoi anche creare attività in qualsiasi data cliccando sul <plus>+</plus> che appare quando posizioni il cursore su una data. Dopo aver creato l'attività, puoi continuare a modificarla e aggiungere sotto-attività o un revisore.",
-        "scheduledInfo": "Le attività pianificate vengono create automaticamente dal sistema e, se necessario, spostate insieme alla prenotazione associata."
+        "scheduledInfo": "Le attività pianificate vengono create automaticamente dal sistema e, se necessario, spostate insieme alla prenotazione associata.",
+        "dragMove": "Le attività aperte possono essere trascinate con il mouse su un altro giorno della stessa riga dell'oggetto. L'ora rimane invariata, tutte le altre visualizzazioni si aggiornano immediatamente."
       },
       "navigationLabel": "Navigazione",
       "previousMonth": "Mese precedente",
@@ -4848,7 +4849,8 @@
       "months": "Gennaio,Febbraio,Marzo,Aprile,Maggio,Giugno,Luglio,Agosto,Settembre,Ottobre,Novembre,Dicembre",
       "weekdays": "Domenica,Lunedì,Martedì,Mercoledì,Giovedì,Venerdì,Sabato",
       "miscRow": "Varie",
-      "today": "Oggi"
+      "today": "Oggi",
+      "dragMoved": "„{title}“ spostato al {date}"
     },
     "ruleEditor": {
       "loading": "Caricamento…",

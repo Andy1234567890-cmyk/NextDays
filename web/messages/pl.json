@@ -4836,7 +4836,8 @@
         "colorWhiteText": "Brak ostrzeżeń dla tego zadania.",
         "manualCreate": "Zadania można dodać do rezerwacji ręcznie, klikając najpierw rezerwację, a następnie „Utwórz zadanie”. To zadanie zostanie wtedy powiązane z tą rezerwacją i można je zaplanować względem niej.",
         "cellCreate": "Możesz też tworzyć zadania w dowolnym terminie, klikając <plus>+</plus>, które pojawia się po najechaniu kursorem na datę. Po utworzeniu zadania możesz je dalej edytować oraz dodać podzadania lub osobę sprawdzającą.",
-        "scheduledInfo": "Zaplanowane zadania są tworzone automatycznie przez system i w razie potrzeby przesuwane razem z powiązaną rezerwacją."
+        "scheduledInfo": "Zaplanowane zadania są tworzone automatycznie przez system i w razie potrzeby przesuwane razem z powiązaną rezerwacją.",
+        "dragMove": "Niezrealizowane zadania można przeciągać myszą na inny dzień w tym samym wierszu obiektu. Godzina pozostaje bez zmian, a wszystkie inne widoki są natychmiast aktualizowane."
       },
       "navigationLabel": "Nawigacja",
       "previousMonth": "Poprzedni miesiąc",
@@ -4848,7 +4849,8 @@
       "months": "[\"Styczeń\",\"Luty\",\"Marzec\",\"Kwiecień\",\"Maj\",\"Czerwiec\",\"Lipiec\",\"Sierpień\",\"Wrzesień\",\"Październik\",\"Listopad\",\"Grudzień\"]",
       "weekdays": "[\"Niedziela\",\"Poniedziałek\",\"Wtorek\",\"Środa\",\"Czwartek\",\"Piątek\",\"Sobota\"]",
       "miscRow": "Różne",
-      "today": "Dziś"
+      "today": "Dziś",
+      "dragMoved": "„{title}” przeniesiono na {date}"
     },
     "ruleEditor": {
       "loading": "Ładowanie…",
