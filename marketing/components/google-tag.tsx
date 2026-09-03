@@ -137,14 +137,46 @@ export function GoogleTag() {
           Zustimmung KEIN einziger Treffer. Nachgemessen am 27.08.2026: null
           Requests, null Cookies. Das ist strenger als Googles Standard und die
           rechtlich richtige Seite; wer diese Zeile entfernt, schaltet die
-          Übertragung ohne Einwilligung ein. */}
+          Übertragung ohne Einwilligung ein.
+
+          WAS HIER AM 03.09.2026 ENTFERNT WURDE — und warum es nicht
+          zurückgehört: Bis dahin standen im `config` zusätzlich
+          `allow_google_signals: false` und
+          `allow_ad_personalization_signals: false`. Beide waren als
+          Datenschutz-Sicherung gedacht, waren aber die FALSCHE Stelle dafür:
+          sie wirken pauschal und blind gegenüber der Einwilligung, nehmen also
+          auch dem Besucher etwas weg, der „Marketing" gerade ausdrücklich
+          erlaubt hat. Die Einwilligung ist der Schalter, nicht eine zweite
+          feste Bremse dahinter.
+
+          Dazu kam ein Sachfehler, den erst die Messung zeigte: Google hat die
+          Zuständigkeit zum 15.06.2026 umgebaut. Seither entscheidet allein
+          `ad_storage` aus dem Einwilligungsmodus über den Werbedatenfluss zu
+          Google Ads; Google Signals steuert NUR NOCH die angereicherten
+          Berichte innerhalb von GA4 (Demografie/Interessen angemeldeter
+          Nutzer). `allow_google_signals: false` blockierte also längst nicht
+          mehr, was der Kommentar hier behauptete — es kostete nur die
+          Berichte. Wirksam blieb allein das zweite Flag, sichtbar als `npa=1`
+          im Treffer (live abgefangen am 03.09.2026 auf mynextdays.com, im
+          selben Treffer mit `gcs=G111`, also voller Zustimmung).
+
+          Rechtlich braucht es die Flags nicht: § 25 Abs. 1 TDDDG verlangt für
+          Retargeting und Werbe-Pixel die vorherige Einwilligung — und mehr
+          nicht. Genau die holt die Leiste ein und meldet sie als `consent
+          update` (lib/pixel.ts für die drei Werbe-Parameter,
+          lib/analytics.ts für `analytics_storage`). Ohne Zustimmung steht
+          weiterhin ALLES auf `denied`, oben in Schritt 2; daran ändert das
+          Entfernen nichts. Wer die Flags wieder einsetzt, dreht keine
+          Datenschutzlücke zu, sondern schaltet eine erteilte Einwilligung
+          wirkungslos — und tut das unsichtbar, weil GA4 die Treffer trotzdem
+          zählt. */}
       <Script
         id="nd-gtag-js"
         strategy="afterInteractive"
         src={`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(GA_MEASUREMENT_ID)}`}
       />
       <Script id="nd-gtag-config" strategy="afterInteractive">
-        {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA_MEASUREMENT_ID}',{'send_page_view':false,'allow_google_signals':false,'allow_ad_personalization_signals':false});`}
+        {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA_MEASUREMENT_ID}',{'send_page_view':false});`}
       </Script>
     </>
   );
