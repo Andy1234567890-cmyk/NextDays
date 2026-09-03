@@ -6,7 +6,19 @@
 // Dashboard-Shells sehen.
 import { type NextRequest, NextResponse } from "next/server";
 
-const FREI = ["/anmelden", "/bewerben", "/passwort-vergessen", "/healthz"];
+// `/passwort-neu` MUSS hier stehen: wer sein Passwort zurücksetzt, ist per
+// Definition nicht angemeldet. Ohne den Eintrag schickte die Middleware ihn
+// auf `/anmelden?weiter=/passwort-neu` — genau dorthin, wo er nicht
+// hinkommt, weil er das Passwort ja nicht kennt (live 03.09.2026, 307 statt
+// 200). Eine Freigabe-Liste, die den Weg aus der Sperre heraus sperrt, ist
+// eine Falle: sie fällt nur auf, wenn jemand den Reset wirklich benutzt.
+const FREI = [
+  "/anmelden",
+  "/bewerben",
+  "/passwort-vergessen",
+  "/passwort-neu",
+  "/healthz",
+];
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
