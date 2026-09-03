@@ -213,23 +213,11 @@ const VR_ACCOUNTING: readonly NavItem[] = [
   { key: "reports", href: "/buchhaltung/berichte", icon: "ph:chart-line", req: "owner_reporting" },
 ];
 
-// Portal-Abzüge + Gebühren-Zuordnung. Steht bei der Betriebsart, nicht in der
-// Buchhaltung: hier wird eingestellt, was ein Portal je Objekt einbehält —
-// eine Stammdaten-Regel des Objektbestands, die die Buchhaltung nur ANWENDET.
-// In BEIDEN Betriebs-Gruppen, weil jeder Betrieb über Portale verkauft.
-const BILLING_RULES: NavItem = {
-  key: "billingRules",
-  href: "/buchhaltung/abrechnungsregeln",
-  icon: "ph:sliders-horizontal",
-  req: "owner_reporting",
-};
-
 // Betriebs-Gruppe „Hotel": Stammdaten + Konditionen, ohne Buchhaltung.
 const HOTEL_GROUP: NavGroup = {
   groupKey: "hotel",
   icon: "ph:buildings",
   items: [
-    BILLING_RULES,
     // Konditionen = Finanzbedingungen → wie der Backend-Endpunkt gegatet.
     { key: "settings", href: "/einstellungen", icon: "ph:gear", req: "manage_property_conditions" },
   ],
@@ -252,7 +240,6 @@ const VR_GROUP: NavGroup = {
       icon: "ph:chart-line-up",
       req: "owner_reporting",
     },
-    BILLING_RULES,
     { key: "settings", href: "/einstellungen", icon: "ph:gear", req: "manage_property_conditions" },
   ],
 };

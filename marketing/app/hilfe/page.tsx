@@ -13,6 +13,7 @@ export const metadata: Metadata = {
   title: "Hilfe-Center · myNextDays",
   description:
     "Antworten und Schritt-für-Schritt-Anleitungen für das myNextDays PMS und den Kanalmanager.",
+  alternates: { canonical: "/hilfe" },
 };
 
 export default async function HelpHomePage() {

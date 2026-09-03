@@ -1361,7 +1361,10 @@
       "notes": "Anteckningar",
       "share": "Andel (%)",
       "commissionOverride": "Provision (%)",
-      "emailLanguage": "Språk för e-post"
+      "emailLanguage": "Språk för e-post",
+      "countryPlaceholder": "Välj land …",
+      "countrySearch": "Sök land …",
+      "countryEmpty": "Inget land hittades."
     },
     "placeholders": {
       "name": "t.ex. Anna Andersson",
@@ -6368,7 +6371,18 @@
       "feeCalculationLabel": "Beräkning",
       "feeVatHint": "En egen skattesats för denna avgift, avvikande från boendets övernattningspris. Av betyder: avgiften följer övernattningspriset.",
       "feeVatIncludedLabel": "Moms i beloppet",
-      "feeVatIncludedHint": "Ingår skattesatsen redan i det angivna beloppet eller läggs den till utöver? Utan denna information skulle beloppet vara tvetydigt."
+      "feeVatIncludedHint": "Ingår skattesatsen redan i det angivna beloppet eller läggs den till utöver? Utan denna information skulle beloppet vara tvetydigt.",
+      "feeTypesLoadFailed": "Avgiftstyperna kunde inte läsas in ({error}). Utan dem kan ingen avgiftstyp väljas — läs in sidan igen.",
+      "feeTypesLoading": "Avgiftstyper läses in …",
+      "bookingFeesTitle": "Levereras av Booking.com",
+      "bookingFeesHint": "Dessa avgifter finns i Booking-bokningarna för detta objekt men är inte upplagda här. Belopp, namn och beräkning kommer från bokningen.",
+      "bookingFeesTake": "Ta över avgifter",
+      "bookingFeesTaken": "{count, plural, one {# avgift övertagen} other {# avgifter övertagna}}",
+      "bookingFeesPerNight": "Per natt",
+      "bookingFeesPerStay": "Per vistelse",
+      "bookingFeesAssignTitle": "Tilldelning saknas",
+      "bookingFeesAssignHint": "Dessa avgifter är upplagda på objektet, men det är inte fastställt vem beloppet tillhör. Utan det kan ägaravräkningen inte beräknas.",
+      "bookingFeesAssign": "Skapa tilldelning"
     },
     "policiesForm": {
       "title": "Villkor",

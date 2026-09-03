@@ -27,6 +27,18 @@ from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.core.supabase import load_scoped
 
+from .booking_gebuehren import (
+    arten_aus_buchungen as booking_arten_am_objekt,
+)
+from .booking_gebuehren import (
+    fehlende_gebuehren as booking_fehlende_gebuehren,
+)
+from .booking_gebuehren import (
+    zugeordnete_arten as booking_zugeordnete_arten,
+)
+from .booking_gebuehren import (
+    zuordnung_nachziehen as booking_zuordnung_nachziehen,
+)
 from .errors import PropertyError
 from .schemas import PropertyUpdate
 
@@ -833,6 +845,153 @@ class GebuehrenMixin:
                     }
                 )
         return {"currency": ziel_currency, "items": items}
+
+    def booking_gebuehren_vorschlag(
+        self, ctx: AuthContext, property_id: str
+    ) -> dict[str, Any]:
+        """Gebühren, die Booking-Buchungen dieses Objekts mitbringen und die fehlen.
+
+        Booking liefert sie an JEDER Buchung mit (Art, Betrag, Name,
+        Berechnungsart, Lage im Preis) — siehe `booking_gebuehren`. Bis
+        03.09.2026 wurde das nirgends ausgewertet: das Objekt kannte die
+        Gebühr nicht, und die Eigentümer-Abrechnung blockierte mit „Die
+        Gebührenart `electricity` ist nicht zugeordnet", obwohl die Angabe im
+        Payload stand.
+        """
+        tenant_id = self._require_tenant(ctx)  # type: ignore[attr-defined]
+        ziel = load_scoped(
+            self._db,  # type: ignore[attr-defined]
+            "properties",
+            property_id,
+            tenant_id,
+            columns="id, currency, type_attributes",
+            not_found=PropertyError("Objekt nicht gefunden.", status_code=404),
+        )
+        bestand = list(
+            ((ziel.get("type_attributes") or {}).get("pricing") or {}).get("fees")
+            or []
+        )
+        fehlende = booking_fehlende_gebuehren(
+            self._db,  # type: ignore[attr-defined]
+            tenant_id,
+            property_id,
+            bestand,
+        )
+        # Arten, die das Portal berechnet und die am Objekt schon stehen, aber
+        # KEINE Abrechnungs-Zuordnung haben. Ohne diese zweite Liste blieb die
+        # Oberfläche stumm, sobald die Gebühr einmal übernommen war: der Block
+        # rendert nur bei `items`, und die Abrechnung blockierte weiter an der
+        # fehlenden Zuordnung (live 03.09.2026 nach dem Übernehmen von
+        # „Stromkosten").
+        alle = booking_arten_am_objekt(
+            self._db,  # type: ignore[attr-defined]
+            tenant_id,
+            property_id,
+            bestand,
+        )
+        neue_arten = {str(f["feeType"]) for f in fehlende}
+        zugeordnet = booking_zugeordnete_arten(
+            self._db,  # type: ignore[attr-defined]
+            tenant_id,
+            [str(f.get("feeType") or "") for f in alle],
+        )
+        offen = [
+            f
+            for f in alle
+            if str(f.get("feeType") or "") not in neue_arten
+            and str(f.get("feeType") or "") not in zugeordnet
+        ]
+        return {
+            "items": fehlende,
+            "unassigned": offen,
+            "currency": str(ziel.get("currency") or "").upper() or None,
+        }
+
+    def booking_gebuehren_uebernehmen(
+        self, ctx: AuthContext, property_id: str
+    ) -> dict[str, Any]:
+        """Die fehlenden Booking-Gebühren am Objekt anlegen.
+
+        Über den regulären Objekt-Update-Weg und NICHT per Direkt-Schreibung:
+        nur so laufen Prüfung (`normalize_fees`), die Spiegelung in
+        `property_pricing_config` und der Portal-Sync wie bei jeder anderen
+        Gebühr.
+
+        Idempotent (Wurzel 2): ein zweiter Aufruf findet die Arten bereits am
+        Objekt und legt nichts an. Bestehende Gebühren bleiben unberührt — der
+        dort gepflegte Betrag ist die Vereinbarung des Betriebs.
+        """
+        tenant_id = self._require_tenant(ctx)  # type: ignore[attr-defined]
+        ziel = load_scoped(
+            self._db,  # type: ignore[attr-defined]
+            "properties",
+            property_id,
+            tenant_id,
+            columns="id, type_attributes",
+            not_found=PropertyError("Objekt nicht gefunden.", status_code=404),
+        )
+        attrs = dict(ziel.get("type_attributes") or {})
+        pricing = dict(attrs.get("pricing") or {})
+        bestand = [f for f in (pricing.get("fees") or []) if isinstance(f, dict)]
+        fehlende = booking_fehlende_gebuehren(
+            self._db,  # type: ignore[attr-defined]
+            tenant_id,
+            property_id,
+            bestand,
+        )
+        # Die Abrechnungs-Zuordnung MITSCHREIBEN, und zwar für ALLE Arten aus
+        # den Booking-Buchungen dieses Objekts — nicht nur für die gerade neu
+        # angelegten.
+        #
+        # WARUM DIE UNTERSCHEIDUNG ZÄHLT: Wer die Gebühr übernommen hat, BEVOR
+        # dieser Schritt existierte, hätte sie sonst nie zugeordnet bekommen —
+        # sie steht am Objekt, gilt damit nicht mehr als „fehlend", und ein
+        # zweiter Klick wäre wirkungslos gewesen (live am 03.09.2026: Gebühr
+        # „Stromkosten" angelegt, Abrechnung blockierte weiter). Deshalb wird
+        # hier über die Buchungs-Arten gelaufen und nicht über die Neuzugänge.
+        arten_aus_buchungen = sorted(
+            {str(f["feeType"]) for f in fehlende}
+            | {
+                str(f.get("feeType") or "")
+                for f in booking_arten_am_objekt(
+                    self._db,  # type: ignore[attr-defined]
+                    tenant_id,
+                    property_id,
+                    bestand,
+                )
+            }
+        )
+        zugeordnet = booking_zuordnung_nachziehen(
+            self._db,  # type: ignore[attr-defined]
+            tenant_id,
+            [a for a in arten_aus_buchungen if a],
+            zugeordnet_von=getattr(ctx, "user_id", None),
+        )
+        if not fehlende:
+            log.info(
+                "booking_gebuehren_nur_zuordnung",
+                tenant_id=tenant_id,
+                property_id=property_id,
+                zuordnung_angelegt=zugeordnet,
+            )
+            return {"uebernommen": zugeordnet, "fees": bestand}
+
+        pricing["fees"] = [*bestand, *fehlende]
+        attrs["pricing"] = pricing
+        self.update(  # type: ignore[attr-defined]
+            ctx, property_id, PropertyUpdate(type_attributes=attrs)
+        )
+        log.info(
+            "booking_gebuehren_uebernommen",
+            tenant_id=tenant_id,
+            property_id=property_id,
+            arten=[f["feeType"] for f in fehlende],
+            zuordnung_angelegt=zugeordnet,
+        )
+        return {
+            "uebernommen": [f["feeType"] for f in fehlende],
+            "fees": pricing["fees"],
+        }
 
     def apply_fee_to_properties(
         self, ctx: AuthContext, property_id: str, fee_id: str, targets: list[str]

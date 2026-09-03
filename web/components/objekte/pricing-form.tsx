@@ -59,6 +59,7 @@ import {
   SelectValue,
 } from "@nextdays/ui/select";
 import { Switch } from "@nextdays/ui/switch";
+import { BookingGebuehrenImport } from "@/components/objekte/pricing/booking-gebuehren-import";
 import { AirbnbGebuehrenImport } from "@/components/objekte/pricing/airbnb-gebuehren-import";
 import { EinschraenkungenEditor } from "@/components/objekte/pricing/einschraenkungen-editor";
 import { ExtraEditor } from "@/components/objekte/pricing/extra-editor";
@@ -729,6 +730,28 @@ export function PricingForm({ initial }: { initial: Property }) {
             <PreisLeer>{t("pricingForm.abgabenNoCurrency")}</PreisLeer>
           ) : undefined
         }
+      />
+
+      {/* Was Booking an seinen Buchungen mitliefert und hier fehlt. Rendert
+          nichts, wenn nichts fehlt. Steht DIREKT unter der Gebührenliste, weil
+          es genau diese Liste ergänzt — nicht in einem eigenen Abschnitt, den
+          man beim Pflegen der Beträge nicht sieht. */}
+      <BookingGebuehrenImport
+        propertyId={p.id}
+        onUebernommen={(fees) => {
+          // Die Übernahme hat SERVERSEITIG geschrieben (regulärer
+          // Objekt-Update-Weg samt Prüfung und Portal-Sync). Hier wird nur die
+          // Anzeige nachgezogen — ein zweites Speichern würde den gerade
+          // geschriebenen Stand mit dem alten überschreiben.
+          setP((alt) => ({
+            ...alt,
+            type_attributes: {
+              ...alt.type_attributes,
+              pricing: { ...readPricing(alt.type_attributes), fees },
+            },
+          }));
+          void loadAbgaben();
+        }}
       />
 
       {/* HIER STAND „Wem gehören die Gebühren?" — ein reiner Verweis auf

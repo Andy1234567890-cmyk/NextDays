@@ -1361,7 +1361,10 @@
       "notes": "Notities",
       "share": "Aandeel (%)",
       "commissionOverride": "Commissie (%)",
-      "emailLanguage": "Taal voor e-mails"
+      "emailLanguage": "Taal voor e-mails",
+      "countryPlaceholder": "Land kiezen …",
+      "countrySearch": "Land zoeken …",
+      "countryEmpty": "Geen land gevonden."
     },
     "placeholders": {
       "name": "bijv. Jan Jansen",
@@ -6368,7 +6371,18 @@
       "feeCalculationLabel": "Berekening",
       "feeVatHint": "Een eigen belastingtarief voor deze toeslag, afwijkend van het overnachtingstarief van de accommodatie. Uit betekent: de toeslag volgt het overnachtingstarief.",
       "feeVatIncludedLabel": "Belasting in bedrag",
-      "feeVatIncludedHint": "Zit het belastingtarief al in het ingevoerde bedrag of komt het er nog bovenop? Zonder deze informatie zou het bedrag dubbelzinnig zijn."
+      "feeVatIncludedHint": "Zit het belastingtarief al in het ingevoerde bedrag of komt het er nog bovenop? Zonder deze informatie zou het bedrag dubbelzinnig zijn.",
+      "feeTypesLoadFailed": "De kostensoorten konden niet worden geladen ({error}). Zonder deze kan er geen kostensoort worden gekozen — laad de pagina opnieuw.",
+      "feeTypesLoading": "Kostensoorten worden geladen …",
+      "bookingFeesTitle": "Geleverd door Booking.com",
+      "bookingFeesHint": "Deze kosten staan in de Booking-reserveringen van dit object, maar zijn hier niet vastgelegd. Bedrag, naam en berekening komen uit de reservering.",
+      "bookingFeesTake": "Kosten overnemen",
+      "bookingFeesTaken": "{count, plural, one {# kostenpost overgenomen} other {# kostenposten overgenomen}}",
+      "bookingFeesPerNight": "Per nacht",
+      "bookingFeesPerStay": "Per verblijf",
+      "bookingFeesAssignTitle": "Toewijzing ontbreekt",
+      "bookingFeesAssignHint": "Deze kosten zijn bij het object vastgelegd, maar er is niet bepaald aan wie het bedrag toekomt. Zonder dat kan de eigenaarsafrekening niet worden berekend.",
+      "bookingFeesAssign": "Toewijzing aanmaken"
     },
     "policiesForm": {
       "title": "Beleid",

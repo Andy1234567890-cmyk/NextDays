@@ -1361,7 +1361,10 @@
       "notes": "Notas",
       "share": "Quota (%)",
       "commissionOverride": "Comissão (%)",
-      "emailLanguage": "Idioma dos e-mails"
+      "emailLanguage": "Idioma dos e-mails",
+      "countryPlaceholder": "Selecionar país …",
+      "countrySearch": "Procurar país …",
+      "countryEmpty": "Nenhum país encontrado."
     },
     "placeholders": {
       "name": "p. ex. João Silva",
@@ -6368,7 +6371,18 @@
       "feeCalculationLabel": "Cálculo",
       "feeVatHint": "Uma taxa de imposto separada para esta taxa, diferente da taxa de pernoite da propriedade. Desativado significa: a taxa segue a taxa de pernoite.",
       "feeVatIncludedLabel": "Imposto no valor",
-      "feeVatIncludedHint": "A taxa de imposto já está incluída no valor inserido ou é adicionada? Sem esta informação, o valor seria ambíguo."
+      "feeVatIncludedHint": "A taxa de imposto já está incluída no valor inserido ou é adicionada? Sem esta informação, o valor seria ambíguo.",
+      "feeTypesLoadFailed": "Não foi possível carregar os tipos de taxa ({error}). Sem eles não é possível selecionar um tipo de taxa — recarregue a página.",
+      "feeTypesLoading": "A carregar tipos de taxa …",
+      "bookingFeesTitle": "Fornecido pela Booking.com",
+      "bookingFeesHint": "Estas taxas constam das reservas Booking deste alojamento, mas não estão registadas aqui. Valor, nome e cálculo vêm da reserva.",
+      "bookingFeesTake": "Assumir taxas",
+      "bookingFeesTaken": "{count, plural, one {# taxa assumida} other {# taxas assumidas}}",
+      "bookingFeesPerNight": "Por noite",
+      "bookingFeesPerStay": "Por estadia",
+      "bookingFeesAssignTitle": "Falta a atribuição",
+      "bookingFeesAssignHint": "Estas taxas estão registadas no alojamento, mas não está definido a quem pertence o valor. Sem isso, o acerto de contas do proprietário não pode ser calculado.",
+      "bookingFeesAssign": "Criar atribuição"
     },
     "policiesForm": {
       "title": "Políticas",

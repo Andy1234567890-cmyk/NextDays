@@ -1361,7 +1361,10 @@
       "notes": "Notatki",
       "share": "Udział (%)",
       "commissionOverride": "Prowizja (%)",
-      "emailLanguage": "Język wiadomości e-mail"
+      "emailLanguage": "Język wiadomości e-mail",
+      "countryPlaceholder": "Wybierz kraj …",
+      "countrySearch": "Szukaj kraju …",
+      "countryEmpty": "Nie znaleziono kraju."
     },
     "placeholders": {
       "name": "np. Jan Kowalski",
@@ -6368,7 +6371,18 @@
       "feeCalculationLabel": "Obliczanie",
       "feeVatHint": "Własna stawka podatku dla tej opłaty, inna niż stawka podatku od noclegów obiektu. Wyłączone oznacza: opłata jest zgodna ze stawką podatku od noclegów.",
       "feeVatIncludedLabel": "Podatek w kwocie",
-      "feeVatIncludedHint": "Czy stawka podatku jest już zawarta w podanej kwocie, czy też jest doliczana? Bez tej informacji kwota byłaby niejednoznaczna."
+      "feeVatIncludedHint": "Czy stawka podatku jest już zawarta w podanej kwocie, czy też jest doliczana? Bez tej informacji kwota byłaby niejednoznaczna.",
+      "feeTypesLoadFailed": "Nie udało się wczytać rodzajów opłat ({error}). Bez nich nie można wybrać rodzaju opłaty — odśwież stronę.",
+      "feeTypesLoading": "Wczytywanie rodzajów opłat …",
+      "bookingFeesTitle": "Dostarczone przez Booking.com",
+      "bookingFeesHint": "Te opłaty znajdują się w rezerwacjach Booking tego obiektu, ale nie są tutaj zapisane. Kwota, nazwa i sposób obliczania pochodzą z rezerwacji.",
+      "bookingFeesTake": "Przejmij opłaty",
+      "bookingFeesTaken": "{count, plural, one {przejęto # opłatę} other {przejęto # opłat}}",
+      "bookingFeesPerNight": "Za noc",
+      "bookingFeesPerStay": "Za pobyt",
+      "bookingFeesAssignTitle": "Brak przypisania",
+      "bookingFeesAssignHint": "Te opłaty są zapisane przy obiekcie, ale nie określono, do kogo należy kwota. Bez tego nie można obliczyć rozliczenia dla właściciela.",
+      "bookingFeesAssign": "Utwórz przypisanie"
     },
     "policiesForm": {
       "title": "Zasady",

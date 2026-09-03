@@ -1361,7 +1361,10 @@
       "notes": "Noti",
       "share": "Sehem (%)",
       "commissionOverride": "Kummissjoni (%)",
-      "emailLanguage": "Lingwa tal-e-mails"
+      "emailLanguage": "Lingwa tal-e-mails",
+      "countryPlaceholder": "Agħżel pajjiż …",
+      "countrySearch": "Fittex pajjiż …",
+      "countryEmpty": "Ma nstab ebda pajjiż."
     },
     "placeholders": {
       "name": "eż. Max Mustermann",
@@ -6368,7 +6371,18 @@
       "feeCalculationLabel": "Kalkolu",
       "feeVatHint": "Rata tat-taxxa separata għal din il-miżata, differenti mir-rata ta' akkomodazzjoni tal-proprjetà. Mitfi tfisser: il-miżata ssegwi r-rata ta' akkomodazzjoni.",
       "feeVatIncludedLabel": "Taxxa fl-ammont",
-      "feeVatIncludedHint": "Ir-rata tat-taxxa hija diġà inkluża fl-ammont imdaħħal jew tiżdied fuqha? Mingħajr din l-informazzjoni, l-ammont ikun ambigwu."
+      "feeVatIncludedHint": "Ir-rata tat-taxxa hija diġà inkluża fl-ammont imdaħħal jew tiżdied fuqha? Mingħajr din l-informazzjoni, l-ammont ikun ambigwu.",
+      "feeTypesLoadFailed": "It-tipi ta' tariffi ma tħalliex jitgħabbew ({error}). Mingħajrhom ma jistax jintgħażel tip ta' tariffa — jekk jogħġbok erġa' tella' l-paġna.",
+      "feeTypesLoading": "It-tipi ta' tariffi qed jitgħabbew …",
+      "bookingFeesTitle": "Mogħti minn Booking.com",
+      "bookingFeesHint": "Dawn it-tariffi jidhru fir-riżervazzjonijiet Booking ta' din il-proprjetà, imma mhumiex imdaħħla hawn. L-ammont, l-isem u l-kalkolu jiġu mir-riżervazzjoni.",
+      "bookingFeesTake": "Ħu t-tariffi",
+      "bookingFeesTaken": "{count, plural, one {ittieħdet # tariffa} other {ittieħdu # tariffi}}",
+      "bookingFeesPerNight": "Kull lejl",
+      "bookingFeesPerStay": "Kull żjara",
+      "bookingFeesAssignTitle": "Nieqes l-assenjament",
+      "bookingFeesAssignHint": "Dawn it-tariffi huma mdaħħla fil-proprjetà, imma mhux definit ta' min hu l-ammont. Mingħajr dan ir-rendikont tas-sid ma jistax jiġi kkalkulat.",
+      "bookingFeesAssign": "Oħloq assenjament"
     },
     "policiesForm": {
       "title": "Politiki",

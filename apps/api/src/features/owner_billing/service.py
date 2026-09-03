@@ -235,8 +235,22 @@ class OwnerBillingService:
     ) -> dict[str, tuple[int, list[str]]]:
         """Welche Gebührenarten stehen im Bestand des Betriebs — und wie oft?
 
-        Quelle ist ``property_pricing_config.fees``, der gespiegelte Preis-Blob.
-        Die Maske zeigt damit nur, was der Betrieb WIRKLICH benutzt: alle 49
+        ZWEI Quellen, und beide sind nötig:
+
+        1. ``property_pricing_config.fees`` — die gepflegten Objekt-Gebühren.
+        2. ``channex_booking.raw`` — die Arten, die PORTAL-Buchungen
+           mitbringen, gelesen mit denselben Lesern wie die Abrechnung
+           (siehe ``_portal_arten``).
+
+        Nur (1) zu lesen war eine stille Lücke: die Abrechnung wirft
+        ``gebuehr_nicht_zugeordnet`` für JEDE Art, die sie antrifft — auch für
+        eine, die ausschließlich über einen Portal-Feed hereinkommt und an
+        keinem Objekt gepflegt ist. Die Maske zeigte dann „alles zugeordnet",
+        während die Abrechnung blockierte, und die Zuordnung, die sie verlangte,
+        war dort gar nicht anlegbar. Genau diese Lücke war am 03.09.2026 die
+        Frage „warum sehen wir nicht, was fehlt?".
+
+        Die Maske zeigt weiterhin nur, was der Betrieb WIRKLICH benutzt: alle 49
         Arten anzubieten hieße, die Agentur 49 Entscheidungen treffen zu
         lassen, von denen 46 nie eine Gebühr betreffen.
 
@@ -269,7 +283,96 @@ class OwnerBillingService:
                 # sie zur Wiedererkennung, nicht als vollständige Liste.
                 if name and name not in liste and len(liste) < 3:
                     liste.append(name)
+
+        # Zweite Quelle: die Arten, die PORTAL-Buchungen mitbringen — gelesen
+        # aus `channex_booking.raw`, nicht aus `reservation_portal_gebuehren`.
+        #
+        # Warum der Payload und nicht die Tabelle: die Tabelle wird beim IMPORT
+        # gefuellt und traegt damit den Stand des Lesers, der damals lief.
+        # Wird der Leser spaeter um eine Gebuehrenart erweitert, bleibt die
+        # Tabelle auf dem alten Stand — die Maske meldete „alles zugeordnet",
+        # waehrend die Abrechnung (die den Payload liest) eine Zuordnung
+        # verlangt. Genau diese Auseinanderentwicklung war der Anlass; die
+        # Maske liest deshalb dieselbe Quelle wie die Rechnung.
+        #
+        # `ota_bezeichnung` als Name zur Wiedererkennung („Stromkosten") —
+        # dasselbe Feld, das die Abrechnung anzeigt.
+        for art, name in self._portal_arten(tenant_id):
+            zaehler[art] = zaehler.get(art, 0) + 1
+            liste = namen.setdefault(art, [])
+            if name and name not in liste and len(liste) < 3:
+                liste.append(name)
+
         return {art: (n, namen.get(art, [])) for art, n in zaehler.items()}
+
+    def _portal_arten(self, tenant_id: str) -> list[tuple[str, str]]:
+        """``(art, anzeigename)`` aus den PAYLOADS der Portal-Buchungen.
+
+        Benutzt DIESELBEN Leser UND DIESELBE QUELLE wie die Abrechnung
+        (`owner_statements.payloads.payloads_laden` +
+        `owner_statements.gebuehren_quelle`) — nicht eine zweite Auslegung
+        derselben Daten. Zwei Leser waeren zwei Wahrheiten: die Maske zeigte
+        eine Art, die die Rechnung nicht sieht, oder umgekehrt.
+
+        Warum NICHT ``reservations.ota_details``: das ist eine GEKUERZTE Kopie
+        des Channex-Payloads. ``rooms[].meta.charge_periods`` — der
+        sprachneutrale Gebuehrenschluessel, an dem die Abrechnung
+        ``ELECTRICITYFEE`` erkennt — fehlt dort vollstaendig (live gemessen
+        03.09.2026 an der Buchung 5522296055: in ``channex_booking.raw``
+        vorhanden, in ``ota_details`` nicht). Die Maske bot ``electricity``
+        deshalb nicht an, waehrend die Abrechnung genau diese Zuordnung
+        verlangte — die Agentur konnte die Blockade nicht aufloesen.
+
+        Eine Buchung, deren Aufstellung nicht lesbar ist, wird UEBERSPRUNGEN
+        statt gemeldet: hier geht es um die Zuordnungsmaske, und ein
+        Lesefehler gehoert in die Abrechnung bzw. in
+        `scripts/diagnose/portal-gebuehren-lesbar.py` — nicht in eine
+        Auswahlliste, die dann gar nicht mehr laedt (Wurzel 5: best effort,
+        solange der Hauptpfad nicht kippt).
+        """
+        # Lokal importiert: `owner_billing` haengt sonst am ganzen
+        # Abrechnungs-Slice, und der importiert seinerseits hierher zurueck.
+        from src.features.owner_statements import (  # noqa: PLC0415
+            gebuehren_quelle as gq,
+        )
+        from src.features.owner_statements.common import (  # noqa: PLC0415
+            PayoutUnbekannt,
+        )
+        from src.features.owner_statements.payloads import (  # noqa: PLC0415
+            payloads_laden,
+        )
+
+        # `external_ref` und `id` gehoeren mit in die Auswahl: `payloads_laden`
+        # findet darueber den CSV-Zwilling bzw. den 0528-Payload.
+        zeilen = (
+            self._db.table("reservations")
+            .select("id, source_channex_booking_id, external_ref")
+            .eq("tenant_id", tenant_id)
+            .execute()
+        ).data or []
+
+        try:
+            payloads = payloads_laden(self._db, tenant_id, zeilen)
+        except Exception:  # noqa: BLE001 — Auswahlliste darf nie kippen
+            log.warning("zuordnungsmaske_payloads_unlesbar", tenant_id=tenant_id)
+            return []
+
+        aus: list[tuple[str, str]] = []
+        for raw in payloads.values():
+            if not isinstance(raw, dict):
+                continue
+            try:
+                posten = gq.booking_gebuehren(raw)
+                bezeichnungen = gq.booking_bezeichnungen(raw)
+            except PayoutUnbekannt:
+                # Nicht auflösbar — die Abrechnung meldet es an ihrer Stelle.
+                continue
+            except Exception:  # noqa: BLE001 — Auswahlliste darf nie kippen
+                log.warning("zuordnungsmaske_payload_unlesbar", tenant_id=tenant_id)
+                continue
+            for art, _betrag in posten or []:
+                aus.append((str(art), bezeichnungen.get(str(art), "")))
+        return aus
 
     def uebersicht(self, ctx: AuthContext) -> FeeClassificationUebersicht:
         """Die Zuordnungsmaske: Bestands-Arten + bereits getroffene Zuordnung.

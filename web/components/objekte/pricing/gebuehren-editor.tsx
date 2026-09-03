@@ -103,6 +103,7 @@ export function GebuehrEditor({
   );
   const [ziele, setZiele] = useState<string[]>([]);
   const [arten, setArten] = useState<FeeTypeEntry[]>([]);
+  const [artenFehler, setArtenFehler] = useState<string | null>(null);
   const [sprache, setSprache] = useState<Locale>("de");
   // USt-Satz als eigener Schalter wie im Standard: aus = die Gebühr folgt dem
   // Übernachtungssatz des Objekts (kein erfundener eigener Satz, Wurzel 4).
@@ -112,7 +113,21 @@ export function GebuehrEditor({
   useEffect(() => {
     void (async () => {
       const res = await listFeeTypes();
-      if (res.ok) setArten(res.data.items);
+      if (res.ok) {
+        setArten(res.data.items);
+        setArtenFehler(null);
+        return;
+      }
+      // NICHT verschlucken (Wurzel 5). Vorher stand hier nur `if (res.ok)`:
+      // schlug der Aufruf fehl, blieb die Liste leer, das Auswahlfeld ging
+      // ohne einen einzigen Eintrag auf, und nichts sagte warum. Genau so
+      // war „Gebührenart öffnet sich nicht" nicht diagnostizierbar — der
+      // Katalog liefert serverseitig 51 Arten, der Fehler lag im Holen.
+      setArtenFehler(res.error);
+      console.error("[gebuehren-editor] Gebührenarten nicht geladen", {
+        error: res.error,
+        status: res.status,
+      });
     })();
   }, []);
 
@@ -220,6 +235,18 @@ export function GebuehrEditor({
             ))}
           </SelectContent>
         </Select>
+        {/* Ein leeres Auswahlfeld ist nicht selbsterklaerend: es sieht aus
+            wie „nichts anzuklicken" statt „Liste nicht geladen". */}
+        {artenFehler && (
+          <p className="text-sm text-destructive">
+            {t("pricingForm.feeTypesLoadFailed", { error: artenFehler })}
+          </p>
+        )}
+        {!artenFehler && arten.length === 0 && (
+          <p className="text-sm text-muted-foreground">
+            {t("pricingForm.feeTypesLoading")}
+          </p>
+        )}
       </Field>
 
       <section className="flex flex-col gap-3">

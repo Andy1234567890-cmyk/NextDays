@@ -25,7 +25,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 
 from .core import errors
 from .core.config import get_settings
@@ -194,6 +194,50 @@ def create_app() -> FastAPI:
         Prüfung, die die Datenbank anfasst, meldet bei jedem DB-Wackler einen
         toten Service."""
         return {"status": "ok", "service": "public-api", "version": "1.0.0"}
+
+    @app.get(
+        "/robots.txt",
+        tags=["Betrieb"],
+        include_in_schema=False,
+        response_class=PlainTextResponse,
+    )
+    def robots() -> str:
+        """robots.txt fuer die API-Domaene.
+
+        Sie fehlte bis zum 03.09.2026 ganz: die Google Search Console meldete
+        fuer `https://open-api.mynextdays.com/robots.txt` „Nicht abgerufen —
+        Nicht gefunden (404)". Ohne die Datei crawlt Google die Domaene nach
+        eigenem Ermessen, also auch die `/v1`-Endpunkte. Die antworten ohne
+        Token mit 401 — ein Crawl-Budget, das ausschliesslich Fehlerseiten
+        einsammelt, und in Googles Bericht sieht die Domaene dauerhaft kaputt
+        aus.
+
+        Was hier ERLAUBT ist, ist eine bewusste Entscheidung: `/docs`,
+        `/referenz` und `/openapi.json` SIND die oeffentliche
+        Entwicklerdokumentation. Wer nach „myNextDays API" sucht, ist ein
+        moeglicher Integrationspartner und soll sie finden — dieselbe
+        Begruendung, aus der `/entwickler` in der Sitemap der Marketing-Seite
+        steht.
+
+        Gesperrt ist alles unter `/v1`: Nutzdaten hinter Auth, die in keinen
+        Index gehoeren.
+
+        Kein `Host:` und keine erfundene Direktive: Die Search Console meldet
+        fuer `Host:` „Regel wird von Googlebot ignoriert" (gemessen am
+        29.08.2026 auf der Marketing-Domaene). Eine wirkungslose Zeile, die
+        eine dauerhafte Warnung erzeugt, verdeckt die naechste echte.
+        """
+        zeilen = [
+            "User-agent: *",
+            "Allow: /docs",
+            "Allow: /referenz",
+            "Allow: /openapi.json",
+            "Disallow: /v1",
+            "",
+            "# Entwicklerdokumentation: https://www.mynextdays.com/entwickler",
+            "",
+        ]
+        return "\n".join(zeilen)
 
     _schema_mit_auth(app)
     return app

@@ -218,6 +218,23 @@ class RentalRow(BaseModel):
     # folgt `PayoutUnbekannt.grund`, damit neue Gründe ohne zweite Namenswelt
     # dazukommen können.
     payout_unbekannt: str | None = None
+    # WELCHE Sache konkret fehlt — der Klartext aus `PayoutUnbekannt.message`,
+    # z. B. „Die Gebührenart „resort" ist nicht zugeordnet".
+    #
+    # Der Grund allein sagt nur die KLASSE des Mangels. Bei
+    # `gebuehr_nicht_zugeordnet` gibt es 49 Gebührenarten; die Meldung „mindestens
+    # eine Gebührenart ist nicht zugeordnet" schickt den Betrieb in die
+    # Abrechnungsregeln, wo er selbst suchen muss, welche gemeint ist. Der Server
+    # WEISS es an jeder Wurfstelle (`gebuehren_quelle.py`) — bis 03.09.2026
+    # landete der Text nur im Log, während die Oberfläche ihn nicht bekam.
+    #
+    # Bewusst der Server-Klartext und KEIN i18n-Key: die Werte sind
+    # Datenbezeichner aus Portal-Feeds und Stammdaten („Rengøringsgebyr",
+    # „RESORTFEE"), keine feste Aufzählung. Ein Katalog dafür wäre am Tag der
+    # ersten unbekannten Art unvollständig, und die UI zeigte dann
+    # `MISSING_MESSAGE`. Der übersetzte Satz bleibt in `payout_unbekannt`; das
+    # Detail ergänzt ihn.
+    payout_unbekannt_detail: str | None = None
     # WOHER die Gebühren dieser Zeile kommen: "ota" (das Portal hat sie
     # gemeldet — Tatsache), "ota_ohne_aufstellung" (Portal-Buchung, deren
     # Payload keine Aufstellung trägt: es werden KEINE Gebühren angesetzt) oder
@@ -454,6 +471,17 @@ class StatementSummary(BaseModel):
     # nur "provision" (kein Satz hinterlegt). Die UI macht daraus den Hinweis,
     # WAS zu tun ist; ohne ihn wäre das „—" eine stumme Lücke (Wurzel 5).
     payout_unbekannt: str | None = None
+    # Klartext-Detail zum Grund (siehe `StatementRentalRow.payout_unbekannt_detail`)
+    # plus die BUCHUNG, an der er hängt. Beides gehört zusammen: die
+    # Zusammenfassung nennt bewusst nur EINEN Grund (`_erster_grund`), und ohne
+    # den Buchungsbezug sucht der Betrieb ihn in einer Liste von Zeilen, die
+    # alle unauffällig aussehen — die betroffene zeigt in ihrer Auszahlungsspalte
+    # ja nur „—".
+    payout_unbekannt_detail: str | None = None
+    # Gast und Anreise der betroffenen Zeile, damit die Meldung auf sie zeigen
+    # kann. KEINE ID: die Meldung liest ein Mensch, und eine UUID hilft ihm
+    # nicht beim Finden der Zeile in der Tabelle.
+    payout_unbekannt_buchung: str | None = None
 
 
 class StatementResponse(BaseModel):

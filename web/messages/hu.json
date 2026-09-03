@@ -1361,7 +1361,10 @@
       "notes": "Megjegyzések",
       "share": "Részesedés (%)",
       "commissionOverride": "Jutalék (%)",
-      "emailLanguage": "E-mailek nyelve"
+      "emailLanguage": "E-mailek nyelve",
+      "countryPlaceholder": "Válassz országot …",
+      "countrySearch": "Ország keresése …",
+      "countryEmpty": "Nem található ország."
     },
     "placeholders": {
       "name": "pl. Kovács János",
@@ -6368,7 +6371,18 @@
       "feeCalculationLabel": "Számítás",
       "feeVatHint": "Saját adókulcs ehhez a díjhoz, eltérően a szálláshely éjszakai díjától. A „Ki” azt jelenti, hogy a díj az éjszakai díjat követi.",
       "feeVatIncludedLabel": "Adó az összegben",
-      "feeVatIncludedHint": "Az adókulcs már benne van a megadott összegben, vagy azon felül kerül felszámolásra? Ezen információ nélkül az összeg kétértelmű lenne."
+      "feeVatIncludedHint": "Az adókulcs már benne van a megadott összegben, vagy azon felül kerül felszámolásra? Ezen információ nélkül az összeg kétértelmű lenne.",
+      "feeTypesLoadFailed": "A díjtípusokat nem sikerült betölteni ({error}). Nélkülük nem választható díjtípus — töltse be újra az oldalt.",
+      "feeTypesLoading": "Díjtípusok betöltése …",
+      "bookingFeesTitle": "A Booking.com szállította",
+      "bookingFeesHint": "Ezek a díjak szerepelnek az ingatlan Booking-foglalásaiban, de itt nincsenek rögzítve. Az összeg, a név és a számítás a foglalásból származik.",
+      "bookingFeesTake": "Díjak átvétele",
+      "bookingFeesTaken": "{count, plural, one {# díj átvéve} other {# díj átvéve}}",
+      "bookingFeesPerNight": "Éjszakánként",
+      "bookingFeesPerStay": "Tartózkodásonként",
+      "bookingFeesAssignTitle": "Hiányzik a hozzárendelés",
+      "bookingFeesAssignHint": "Ezek a díjak rögzítve vannak az ingatlanon, de nincs meghatározva, kihez tartozik az összeg. Enélkül a tulajdonosi elszámolás nem számolható ki.",
+      "bookingFeesAssign": "Hozzárendelés létrehozása"
     },
     "policiesForm": {
       "title": "Irányelvek",

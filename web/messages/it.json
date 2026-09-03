@@ -1361,7 +1361,10 @@
       "notes": "Note",
       "share": "Quota (%)",
       "commissionOverride": "Commissione (%)",
-      "emailLanguage": "Lingua delle e-mail"
+      "emailLanguage": "Lingua delle e-mail",
+      "countryPlaceholder": "Seleziona paese …",
+      "countrySearch": "Cerca paese …",
+      "countryEmpty": "Nessun paese trovato."
     },
     "placeholders": {
       "name": "es. Mario Rossi",
@@ -6368,7 +6371,18 @@
       "feeCalculationLabel": "Calcolo",
       "feeVatHint": "Un'aliquota fiscale separata per questa tassa, diversa dall'aliquota di pernottamento della proprietà. Disattivato significa: la tassa segue l'aliquota di pernottamento.",
       "feeVatIncludedLabel": "Imposta nell'importo",
-      "feeVatIncludedHint": "L'aliquota fiscale è già inclusa nell'importo inserito o viene aggiunta? Senza questa informazione, l'importo sarebbe ambiguo."
+      "feeVatIncludedHint": "L'aliquota fiscale è già inclusa nell'importo inserito o viene aggiunta? Senza questa informazione, l'importo sarebbe ambiguo.",
+      "feeTypesLoadFailed": "Non è stato possibile caricare i tipi di tariffa ({error}). Senza di essi non è selezionabile alcun tipo di tariffa — ricarica la pagina.",
+      "feeTypesLoading": "Caricamento dei tipi di tariffa …",
+      "bookingFeesTitle": "Fornito da Booking.com",
+      "bookingFeesHint": "Queste tariffe sono presenti nelle prenotazioni Booking di questa struttura, ma non sono registrate qui. Importo, nome e calcolo provengono dalla prenotazione.",
+      "bookingFeesTake": "Acquisisci tariffe",
+      "bookingFeesTaken": "{count, plural, one {# tariffa acquisita} other {# tariffe acquisite}}",
+      "bookingFeesPerNight": "Per notte",
+      "bookingFeesPerStay": "Per soggiorno",
+      "bookingFeesAssignTitle": "Assegnazione mancante",
+      "bookingFeesAssignHint": "Queste tariffe sono registrate sulla struttura, ma non è definito a chi appartiene l'importo. Senza questo il rendiconto del proprietario non può essere calcolato.",
+      "bookingFeesAssign": "Crea assegnazione"
     },
     "policiesForm": {
       "title": "Policy",

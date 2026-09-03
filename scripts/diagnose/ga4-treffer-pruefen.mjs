@@ -53,7 +53,11 @@
 //      verlassen wird, muss ihren Treffer beim `pagehide` noch absetzen.
 //
 // AUFRUF (Playwright liegt nicht im Repo, siehe einwilligung-e2e.mjs):
-//   node scripts/diagnose/ga4-treffer-pruefen.mjs [https://mynextdays.com]
+//   node scripts/diagnose/ga4-treffer-pruefen.mjs [https://www.mynextdays.com]
+//
+// MIT www AUFRUFEN: der Apex leitet seit dem 03.09.2026 per 308 auf www um
+// (marketing/next.config.ts). Ein Lauf gegen den Apex misst die
+// Weiterleitung statt der Seite.
 import { chromium } from "playwright";
 
 const BASIS = process.argv[2] ?? "http://localhost:3001";

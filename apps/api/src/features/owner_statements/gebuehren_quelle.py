@@ -84,6 +84,13 @@ from supabase import Client
 from src.core.logging import get_logger
 from src.features.properties.gebuehren import gebuehr_gilt_am
 
+# Die Kataloge stehen in `booking_gebuehrenarten.py`: abgelesene Daten,
+# kein Verhalten (und diese Datei riss mit ihnen die Zeilengrenze).
+from .booking_gebuehrenarten import (
+    _BOOKING_ABGABEN_NAMEN,
+    _BOOKING_ARTEN,
+    _BOOKING_STEUER_NAMEN,
+)
 from .common import Gebuehr, PayoutUnbekannt, zu_decimal
 
 log = get_logger("nextdays.gebuehren_quelle")
@@ -98,7 +105,7 @@ _AIRBNB_ARTEN = {
     "PASS_THROUGH_PET_FEE": "pet_fee",
     "PASS_THROUGH_MANAGEMENT_FEE": "management_fee",
     "PASS_THROUGH_COMMUNITY_FEE": "community_fee",
-    "PASS_THROUGH_LINEN_FEE": "linen_fee",
+    "PASS_THROUGH_LINEN_FEE": "linens",
 }
 
 # Booking.com meldet die Gebührenart NUR als freien Text in
@@ -115,16 +122,6 @@ _AIRBNB_ARTEN = {
 # (er kommt in der Sprache des Inserats). Ein unbekannter Text wirft darum mit
 # einem Grund, der die Art nennt — der Betrieb trägt sie dann hier nach, statt
 # dass ein geratener Betrag in eine Auszahlung läuft.
-_BOOKING_ARTEN = {
-    "reinigungsgebühr": "cleaning_fee",
-    "cleaning fee": "cleaning_fee",
-    "resortgebühr": "resort",
-    "resort fee": "resort",
-    "haustiergebühr": "pet_fee",
-    "pet fee": "pet_fee",
-    "wäschegebühr": "linen_fee",
-    "linen fee": "linen_fee",
-}
 
 # DER SPRACHNEUTRALE WEG — Booking führt dieselben Gebühren ein zweites Mal, als
 # Schlüssel in ``rooms[].meta.charge_periods``::
@@ -153,12 +150,38 @@ _BOOKING_SCHLUESSEL_ARTEN = {
     "CLEANINGFEE": "cleaning_fee",
     "RESORTFEE": "resort",
     "PETFEE": "pet_fee",
-    "LINENFEE": "linen_fee",
+    "LINENFEE": "linens",
     "MANAGEMENTFEE": "management_fee",
     "COMMUNITYFEE": "community_fee",
     "CITYTAX": "city_tax",
     "TOURISTTAX": "city_tax",
     "VAT": "vat",
+    # Ab 03.09.2026, aus dem LIVE-Bestand gemessen: `ELECTRICITYFEE` kommt in
+    # `charge_periods` an (Buchung BDC-5522296055, Feriehus Kornblomst) und
+    # fehlte hier. Weil der Schluessel fehlte, half die zweite Stufe nicht,
+    # der Anzeigename „Stromkosten" stand in keiner Namensliste, und das
+    # `portal:`-Auffangnetz griff — die Abrechnung verlangte eine Zuordnung
+    # fuer `portal:stromkosten`, eine Art, die erst zur Laufzeit entsteht und
+    # in der Zuordnungsmaske nicht anlegbar ist.
+    #
+    # Die uebrigen Arten aus Bookings Extranet-Katalog gleich mit, damit nicht
+    # die naechste einzeln nachgetragen werden muss. Abgelesen am 03.09.2026
+    # (Unterkunft -> Richtlinien -> „Weitere Gebuehren und Kosten"); die
+    # Schluesselform folgt dem Muster der gemessenen (Grossbuchstaben + FEE).
+    "ELECTRICITYFEE": "electricity",
+    "SERVICEFEE": "service_fee",
+    "TOWELFEE": "linens_bath",
+    "BEDLINENFEE": "linens_bed",
+    "GASFEE": "gas",
+    "OILFEE": "oil",
+    "WOODFEE": "wood",
+    "WATERFEE": "water",
+    "TRANSFERFEE": "transportation",
+    # Kurtaxe und Umweltabgabe stehen ABSICHTLICH nicht hier: sie sind
+    # durchlaufende Posten (Entscheidung des Betreibers, 03.09.2026) und
+    # werden anhand ihres Namens uebersprungen (`_BOOKING_ABGABEN_NAMEN`).
+    # Als Gebuehrenart eingetragen verlangten sie eine Zuordnung — „wem
+    # gehoert die Kurtaxe?" ist keine Frage, die es sachlich gibt.
 }
 
 # Steuern sind KEINE Gebühren und gehören nicht in die Auszahlungsrechnung des
@@ -669,23 +692,39 @@ def _ist_booking_steuer(posten: dict[str, Any]) -> bool:
 def _booking_schluessel_arten(zimmer: dict[str, Any]) -> list[str]:
     """Die Gebührenarten aus ``meta.charge_periods`` — sprachneutral.
 
-    Nur die AKTIVEN: ein Eintrag mit ``excluded: true`` beschreibt eine Gebühr,
-    die Booking für dieses Objekt gerade NICHT erhebt (live gemessen an
-    Rævehulen, wo Resort und Reinigung ausgeschlossen sind und stattdessen
-    unsere über Channex gesendeten Posten ankommen). Ihn mitzuzählen würde das
-    Auffangnetz mehrdeutig machen und damit wirkungslos.
+    ``excluded`` wird NICHT als Filter benutzt, und das ist eine Korrektur:
+
+    ``excluded: true`` heißt „nicht im ZIMMERPREIS enthalten", also ein
+    eigener Posten OBENDRAUF — nicht „wird nicht erhoben". Genau so steht es
+    auch in ``booking_gebuehren_zeitraeume`` unten; diese Funktion deutete es
+    bis 03.09.2026 umgekehrt und ÜBERSPRANG jede Art mit ``excluded: true``.
+
+    Der Beleg ist die Channex-Buchungsansicht von BDC-5522296055, wo beide
+    ``excluded: true``-Posten dem Gast berechnet werden::
+
+        Subtotal              DKK 3.937,50   ← Nächte
+        Reinigungsgebühr      DKK   795,00   ← excluded: true
+        Stromkosten           DKK   125,00   ← excluded: true
+        Rate Included:
+        Mehrwertsteuer (25%)                 ← excluded: false
+
+    Umgekehrt ist ``excluded: false`` das, was Booking als „Rate Included"
+    ausweist. Über alle 788 Payloads variiert der Wert je Buchung DERSELBEN Art
+    (``CLEANINGFEE`` 30× true / 5× false, ``RESORTFEE`` 27× true / 5× false) —
+    er beschreibt also die Lage in DIESER Buchung, keine Objekt-Einstellung.
+
+    Weil beide Lagen dem Gast berechnet werden, gehören beide in die Liste:
+    welche Gebühr angefallen ist, sagt die Buchung selbst über ``taxes``. Das
+    Auffangnetz wird davon nicht mehrdeutig — es greift erst, wenn eine Art
+    über KEINEN der drei Wege bestimmbar ist.
     """
     perioden = (zimmer.get("meta") or {}).get("charge_periods")
     if not isinstance(perioden, dict):
         return []
     out: list[str] = []
-    for schluessel, spannen in perioden.items():
+    for schluessel in perioden:
         art = _BOOKING_SCHLUESSEL_ARTEN.get(str(schluessel).strip().upper())
         if art is None or art in out:
-            continue
-        if isinstance(spannen, list) and all(
-            isinstance(s, dict) and s.get("excluded") is True for s in spannen
-        ):
             continue
         out.append(art)
     return out
@@ -727,9 +766,17 @@ def _hat_booking_preisdetails(zimmer: dict[str, Any]) -> bool:
 
     Das Unterscheidungsmerkmal zwischen „leere Gebührenliste = keine Gebühren"
     (Booking) und „leere Gebührenliste = falsche Stelle" (Airbnb). Live geprüft:
-    ``meta.price_details`` gibt es ausschließlich bei Booking-Buchungen mit
+    ``price_details`` gibt es ausschließlich bei Booking-Buchungen mit
     Aufstellung, bei keiner der 22 Airbnb-Buchungen.
+
+    BEIDE Lagen, wie in ``_booking_posten``: direkt am Zimmer (so kommen alle
+    37 Aufstellungen im Live-Bestand) und unter ``meta`` (XML-Fassung des
+    Aggregators). Nur ``meta`` zu prüfen hiess: bei jeder echten
+    Booking-Buchung ``False`` — und damit wurde eine leere ``taxes``-Liste als
+    „falsche Stelle" gelesen, worauf die Stammdaten einsprangen.
     """
+    if isinstance(zimmer.get("price_details"), dict):
+        return True
     meta = zimmer.get("meta")
     if not isinstance(meta, dict):
         return False
@@ -807,9 +854,20 @@ def _booking_posten(raw: object) -> list[object] | None:
     for z in zimmer:
         if not isinstance(z, dict):
             continue
-        details = ((z.get("meta") or {}) if isinstance(z.get("meta"), dict) else {}).get(
-            "price_details"
-        )
+        # ZWEI Lagen, weil Booking beide liefert: `price_details` steht DIREKT
+        # am Zimmer (so kommen alle 37 Aufstellungen im Live-Bestand,
+        # gemessen 03.09.2026) und in der XML-Fassung des Aggregators unter
+        # `meta`. Bis 03.09.2026 wurde NUR `meta` gelesen — dort liegt live
+        # nichts, und damit hat dieser Leser noch nie eine Booking-Aufstellung
+        # gefunden: `booking_gebuehren` gab `None` zurueck, was „traegt keine
+        # Aufstellung" heisst. Die Zeile zeigte „Keine Gebuehren", obwohl der
+        # Payload 795 DKK Reinigung und 125 DKK Strom trug.
+        #
+        # Direkt zuerst: das ist die Form, die der Feed heute schickt.
+        details = z.get("price_details")
+        if not isinstance(details, dict):
+            meta = z.get("meta")
+            details = meta.get("price_details") if isinstance(meta, dict) else None
         if not isinstance(details, dict):
             continue
         sicht = details.get("guest_view")
@@ -893,15 +951,37 @@ def booking_gebuehren(raw: object) -> list[tuple[str, Decimal]] | None:
         if not isinstance(p, dict):
             continue
         text = str(p.get("tax_description") or "").strip()
+        # Abgaben (Kurtaxe, Umweltabgabe) sind durchlaufende Posten und keine
+        # Gebühr des Betriebs — sie gehören nicht in die Eigentümer-Auszahlung
+        # und brauchen deshalb auch keine Zuordnung. Übersprungen statt
+        # gemeldet: eine korrekt gelieferte Abgabe ist kein offener Punkt.
+        if text.casefold() in _BOOKING_ABGABEN_NAMEN:
+            continue
+        # Steuern: durchlaufende Posten, kein Ertrag des Eigentuemers. Am
+        # NAMEN erkannt (siehe `_BOOKING_STEUER_NAMEN`) — `type` ist bei allen
+        # Posten „Inclusive" und unterscheidet nichts. Zusaetzlich das
+        # `type`-Feld, weil Bookings XML-Fassung dort echte Steuerarten fuehrt.
+        klein = text.casefold()
+        if klein.startswith(_BOOKING_STEUER_NAMEN):
+            continue
+        if str(p.get("type") or "").strip().casefold() in _BOOKING_STEUER_TYPEN:
+            continue
         art = _BOOKING_ARTEN.get(text.casefold())
         if art is None:
             raise PayoutUnbekannt(
                 "gebuehr_nicht_zugeordnet",
                 f"Unbekannte Gebührenart „{text or '?'}“ aus der "
-                "Booking.com-Preisaufstellung.",
+                "Booking.com-Preisaufstellung. Booking bietet im Extranet eine "
+                "feste Liste an (Unterkunft → Richtlinien → Weitere Gebühren); "
+                "steht die Art dort und fehlt hier, gehört sie in "
+                "`_BOOKING_ARTEN` nachgetragen.",
             )
         out.append((art, _minor_betrag(p, text)))
     return out
+
+
+# Re-Export: fachlich gehören beide hierher, sie liegen aus Zeilengründen in
+# `booking_leser` (siehe dortigen Kopf). Aufrufer haben so EINE Adresse.
 
 
 def booking_bezeichnungen(raw: object) -> dict[str, str]:
@@ -919,6 +999,8 @@ def booking_bezeichnungen(raw: object) -> dict[str, str]:
         if not isinstance(p, dict):
             continue
         text = str(p.get("tax_description") or "").strip()
+        if text.casefold() in _BOOKING_ABGABEN_NAMEN:
+            continue
         art = _BOOKING_ARTEN.get(text.casefold())
         if art and text:
             out[art] = text
@@ -933,7 +1015,7 @@ _BOOKING_ZEITRAUM_ARTEN = {
     "CLEANINGFEE": "cleaning_fee",
     "RESORTFEE": "resort",
     "PETFEE": "pet_fee",
-    "LINENFEE": "linen_fee",
+    "LINENFEE": "linens",
 }
 
 

@@ -1361,7 +1361,10 @@
       "notes": "Poznámky",
       "share": "Podíl (%)",
       "commissionOverride": "Provize (%)",
-      "emailLanguage": "Jazyk e-mailů"
+      "emailLanguage": "Jazyk e-mailů",
+      "countryPlaceholder": "Vyberte zemi …",
+      "countrySearch": "Hledat zemi …",
+      "countryEmpty": "Žádná země nenalezena."
     },
     "placeholders": {
       "name": "např. Jan Novák",
@@ -6368,7 +6371,18 @@
       "feeCalculationLabel": "Výpočet",
       "feeVatHint": "Vlastní sazba daně pro tento poplatek, odlišná od sazby daně z ubytování. Vypnuto znamená: poplatek se řídí sazbou daně z ubytování.",
       "feeVatIncludedLabel": "Daň v částce",
-      "feeVatIncludedHint": "Je sazba daně již zahrnuta v zadané částce, nebo se připočítává? Bez této informace by byla částka nejednoznačná."
+      "feeVatIncludedHint": "Je sazba daně již zahrnuta v zadané částce, nebo se připočítává? Bez této informace by byla částka nejednoznačná.",
+      "feeTypesLoadFailed": "Typy poplatků se nepodařilo načíst ({error}). Bez nich nelze zvolit žádný typ poplatku — načtěte prosím stránku znovu.",
+      "feeTypesLoading": "Typy poplatků se načítají …",
+      "bookingFeesTitle": "Dodáno z Booking.com",
+      "bookingFeesHint": "Tyto poplatky jsou v rezervacích tohoto objektu z Bookingu, ale nejsou zde zadané. Částka, název a výpočet pocházejí z rezervace.",
+      "bookingFeesTake": "Převzít poplatky",
+      "bookingFeesTaken": "{count, plural, one {# poplatek převzat} other {# poplatků převzato}}",
+      "bookingFeesPerNight": "Za noc",
+      "bookingFeesPerStay": "Za pobyt",
+      "bookingFeesAssignTitle": "Chybí přiřazení",
+      "bookingFeesAssignHint": "Tyto poplatky jsou u objektu zadané, ale není určeno, komu částka patří. Bez toho nelze vyúčtování pro vlastníka spočítat.",
+      "bookingFeesAssign": "Vytvořit přiřazení"
     },
     "policiesForm": {
       "title": "Zásady",

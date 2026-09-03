@@ -1361,7 +1361,10 @@
       "notes": "Pastabos",
       "share": "Dalis (%)",
       "commissionOverride": "Komisinis (%)",
-      "emailLanguage": "El. laiškų kalba"
+      "emailLanguage": "El. laiškų kalba",
+      "countryPlaceholder": "Pasirinkite šalį …",
+      "countrySearch": "Ieškoti šalies …",
+      "countryEmpty": "Šalis nerasta."
     },
     "placeholders": {
       "name": "pvz., Jonas Jonaitis",
@@ -6368,7 +6371,18 @@
       "feeCalculationLabel": "Skaičiavimas",
       "feeVatHint": "Šiam mokesčiui taikomas atskiras mokesčio tarifas, kuris skiriasi nuo apgyvendinimo įstaigos nakvynės mokesčio tarifo. „Išjungta“ reiškia, kad mokesčiui taikomas nakvynės mokesčio tarifas.",
       "feeVatIncludedLabel": "Mokestis sumoje",
-      "feeVatIncludedHint": "Ar mokesčio tarifas jau įtrauktas į įvestą sumą, ar jis pridedamas papildomai? Be šios informacijos suma būtų dviprasmiška."
+      "feeVatIncludedHint": "Ar mokesčio tarifas jau įtrauktas į įvestą sumą, ar jis pridedamas papildomai? Be šios informacijos suma būtų dviprasmiška.",
+      "feeTypesLoadFailed": "Nepavyko įkelti mokesčių tipų ({error}). Be jų negalima pasirinkti mokesčio tipo — perkraukite puslapį.",
+      "feeTypesLoading": "Įkeliami mokesčių tipai …",
+      "bookingFeesTitle": "Pateikė Booking.com",
+      "bookingFeesHint": "Šie mokesčiai yra šio objekto Booking rezervacijose, bet čia neįvesti. Suma, pavadinimas ir apskaičiavimas gaunami iš rezervacijos.",
+      "bookingFeesTake": "Perimti mokesčius",
+      "bookingFeesTaken": "{count, plural, one {perimtas # mokestis} other {perimti # mokesčiai}}",
+      "bookingFeesPerNight": "Už naktį",
+      "bookingFeesPerStay": "Už apsistojimą",
+      "bookingFeesAssignTitle": "Nėra priskyrimo",
+      "bookingFeesAssignHint": "Šie mokesčiai įvesti objektui, bet nenurodyta, kam suma priklauso. Be to savininko atsiskaitymo apskaičiuoti negalima.",
+      "bookingFeesAssign": "Sukurti priskyrimą"
     },
     "policiesForm": {
       "title": "Taisyklės",

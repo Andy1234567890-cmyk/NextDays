@@ -1361,7 +1361,10 @@
       "notes": "Notes",
       "share": "Share (%)",
       "commissionOverride": "Commission (%)",
-      "emailLanguage": "Email language"
+      "emailLanguage": "Email language",
+      "countryPlaceholder": "Select country …",
+      "countrySearch": "Search country …",
+      "countryEmpty": "No country found."
     },
     "placeholders": {
       "name": "e.g. John Doe",
@@ -6389,7 +6392,18 @@
       "feeCalculationLabel": "Calculation",
       "feeVatHint": "A separate tax rate for this fee, deviating from the property's overnight rate. Off means: the fee follows the overnight rate.",
       "feeVatIncludedLabel": "Tax in amount",
-      "feeVatIncludedHint": "Is the tax rate already included in the entered amount or is it added on top? Without this information, the amount would be ambiguous."
+      "feeVatIncludedHint": "Is the tax rate already included in the entered amount or is it added on top? Without this information, the amount would be ambiguous.",
+      "feeTypesLoadFailed": "The fee types could not be loaded ({error}). Without them no fee type can be selected — please reload the page.",
+      "feeTypesLoading": "Loading fee types …",
+      "bookingFeesTitle": "Supplied by Booking.com",
+      "bookingFeesHint": "These fees appear in this property's Booking reservations but are not set up here. Amount, name and calculation come from the reservation.",
+      "bookingFeesTake": "Take over fees",
+      "bookingFeesTaken": "{count, plural, one {# fee taken over} other {# fees taken over}}",
+      "bookingFeesPerNight": "Per night",
+      "bookingFeesPerStay": "Per stay",
+      "bookingFeesAssignTitle": "Assignment missing",
+      "bookingFeesAssignHint": "These fees are set up on the property, but it is not defined who the amount belongs to. Without that the owner statement cannot be calculated.",
+      "bookingFeesAssign": "Create assignment"
     },
     "policiesForm": {
       "title": "Policies",

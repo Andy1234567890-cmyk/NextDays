@@ -1700,3 +1700,222 @@ def test_preise_kopieren_sammelt_nur_echte_portal_scopes() -> None:
         "taxes": [{"id": "t1", "portalScope": ["AirBNB", "portal"]}, {"id": "t2"}],
     })
     assert codes == ["AirBNB", "BookingCom"]
+
+
+# ----------------------------------------------------------------------
+# Booking-Gebühren am Objekt (03.09.2026)
+# ----------------------------------------------------------------------
+def _booking_raw(
+    posten: list[tuple[str, str, str]], lage: dict[str, bool]
+) -> dict:
+    """Ein Booking-Payload in der LIVE-Form von ``channex_booking.raw``.
+
+    Abgelesen 03.09.2026 an der Buchung 5522296055: ``price_details`` liegt
+    unter ``rooms[].meta``, und daneben steht ``charge_periods`` mit den
+    sprachneutralen Schlüsseln und ``excluded``.
+
+    `posten` ist (Anzeigename, Minor-Betrag, charge_frequency).
+    """
+    return {
+        "rooms": [
+            {
+                "meta": {
+                    "price_details": {
+                        "guest_view": {
+                            "taxes": [
+                                {
+                                    "code": "14",
+                                    "type": "Inclusive",
+                                    "amount": minor,
+                                    "decimal_places": 2,
+                                    "currency_code": "DKK",
+                                    "tax_description": text,
+                                    "charge_frequency": freq,
+                                }
+                                for text, minor, freq in posten
+                            ]
+                        }
+                    },
+                    "charge_periods": {
+                        k: [{"to": None, "from": "2026-05-01", "excluded": v}]
+                        for k, v in lage.items()
+                    },
+                }
+            }
+        ]
+    }
+
+
+def test_booking_stromkosten_wird_als_objektgebuehr_erkannt() -> None:
+    """Der Live-Fall: „Stromkosten" fehlt am Objekt und kommt aus der Buchung.
+
+    125,00 DKK bei fünf Nächten und ``charge_frequency: 19`` (je Nacht) ergeben
+    25,00 je Nacht — Booking liefert die SUMME, unsere Nacht-Basis den Satz.
+    """
+    from src.features.properties.booking_gebuehren import fee_aus_posten
+
+    fee = fee_aus_posten(
+        "electricity",
+        {
+            "amount": "12500",
+            "decimal_places": 2,
+            "charge_frequency": "19",
+            "tax_description": "Stromkosten",
+        },
+        naechte=5,
+    )
+    assert fee is not None
+    assert fee["feeType"] == "electricity"
+    assert fee["name"] == "Stromkosten", "Bookings eigener Gasttext muss stehen"
+    assert fee["basis"] == "per_night"
+    assert fee["amount"] == 25.0, "Summe nicht durch die Nächte geteilt"
+
+
+def test_booking_je_aufenthalt_wird_nicht_geteilt() -> None:
+    """``charge_frequency: 12`` ist der Gesamtbetrag — Reinigung bleibt 795,00."""
+    from src.features.properties.booking_gebuehren import fee_aus_posten
+
+    fee = fee_aus_posten(
+        "cleaning_fee",
+        {
+            "amount": "79500",
+            "decimal_places": 2,
+            "charge_frequency": "12",
+            "tax_description": "Reinigungsgebühr",
+        },
+        naechte=5,
+    )
+    assert fee is not None
+    assert fee["basis"] == "per_stay"
+    assert fee["amount"] == 795.0
+
+
+def test_booking_unbekannte_frequenz_wird_verworfen() -> None:
+    """Kein Ratewert für die Basis (Wurzel 4).
+
+    Die Basis entscheidet, ob ein Betrag einmal oder fünfmal in die Rechnung
+    geht. Ein falscher Vorgabewert wäre ein Geldfehler, den niemand als Bug
+    erkennt — deshalb wird verworfen statt „pro Aufenthalt" angenommen.
+    """
+    from src.features.properties.booking_gebuehren import fee_aus_posten
+
+    assert (
+        fee_aus_posten(
+            "electricity",
+            {"amount": "12500", "decimal_places": 2, "charge_frequency": "99"},
+            naechte=5,
+        )
+        is None
+    )
+
+
+def test_booking_decimal_places_wird_gelesen_nicht_angenommen() -> None:
+    """Eine Währung ohne Dezimalstellen käme sonst hundertfach zu hoch an."""
+    from src.features.properties.booking_gebuehren import fee_aus_posten
+
+    fee = fee_aus_posten(
+        "electricity",
+        {
+            "amount": "125",
+            "decimal_places": 0,
+            "charge_frequency": "12",
+            "tax_description": "Strom",
+        },
+        naechte=5,
+    )
+    assert fee is not None
+    assert fee["amount"] == 125.0
+
+
+def test_zuordnung_wird_beim_uebernehmen_mitgeschrieben() -> None:
+    """Der Live-Fehler: Gebühr am Objekt angelegt, Abrechnung blockiert weiter.
+
+    Am 03.09.2026 legte die Übernahme „Stromkosten" korrekt am Objekt an —
+    `fee_classification` blieb aber unberührt, und die Eigentümer-Abrechnung
+    warf weiter `gebuehr_nicht_zugeordnet`. Zwei Tabellen, ein Vorgang: die
+    Gebühr sagt WAS berechnet wird, die Zuordnung WEM das Geld gehört.
+    """
+    from src.features.properties.booking_gebuehren import zuordnung_nachziehen
+
+    geschrieben: list[dict] = []
+
+    class _Tab:
+        def __init__(self, name: str) -> None:
+            self.name = name
+
+        def select(self, *_a: object) -> "_Tab":
+            return self
+
+        def eq(self, *_a: object) -> "_Tab":
+            return self
+
+        def in_(self, *_a: object) -> "_Tab":
+            return self
+
+        def insert(self, werte: dict) -> "_Tab":
+            geschrieben.append(werte)
+            return self
+
+        def execute(self) -> object:
+            class R:
+                data: list[dict] = []
+
+            return R()
+
+    class _DBLeer:
+        def table(self, name: str) -> _Tab:
+            return _Tab(name)
+
+    angelegt = zuordnung_nachziehen(
+        _DBLeer(),  # type: ignore[arg-type]
+        "t-1",
+        ["electricity"],
+        zugeordnet_von="u-1",
+    )
+    assert angelegt == ["electricity"]
+    assert len(geschrieben) == 1
+    zeile = geschrieben[0]
+    assert zeile["fee_type"] == "electricity"
+    assert zeile["gehoert_zu"] == "eigentuemer"
+    assert zeile["provisionspflichtig"] is False
+    assert zeile["property_id"] is None, "Betriebsregel, keine Objekt-Ausnahme"
+
+
+def test_zuordnung_ueberschreibt_bestehende_entscheidung_nicht() -> None:
+    """Eine vorhandene Betriebsregel ist die Wahl des Betriebs (Wurzel 1)."""
+    from src.features.properties.booking_gebuehren import zuordnung_nachziehen
+
+    geschrieben: list[dict] = []
+
+    class _Tab:
+        def select(self, *_a: object) -> "_Tab":
+            return self
+
+        def eq(self, *_a: object) -> "_Tab":
+            return self
+
+        def in_(self, *_a: object) -> "_Tab":
+            return self
+
+        def insert(self, werte: dict) -> "_Tab":
+            geschrieben.append(werte)
+            return self
+
+        def execute(self) -> object:
+            class R:
+                data = [{"fee_type": "cleaning_fee", "property_id": None}]
+
+            return R()
+
+    class _DB:
+        def table(self, _name: str) -> _Tab:
+            return _Tab()
+
+    angelegt = zuordnung_nachziehen(
+        _DB(),  # type: ignore[arg-type]
+        "t-1",
+        ["cleaning_fee"],
+        zugeordnet_von="u-1",
+    )
+    assert angelegt == []
+    assert geschrieben == [], "bestehende Zuordnung wurde überschrieben"

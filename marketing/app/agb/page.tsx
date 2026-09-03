@@ -23,7 +23,11 @@ import type { Metadata } from "next";
 export async function generateMetadata(): Promise<Metadata> {
   const locale = (await getLocale()) as Locale;
   const doc = await ladeRechtsdokument("agb", locale);
-  return { title: `${doc.title} — myNextDays`, description: doc.metaDescription };
+  return {
+    title: `${doc.title} — myNextDays`,
+    description: doc.metaDescription,
+    alternates: { canonical: "/agb" },
+  };
 }
 
 export default async function Page() {

@@ -195,6 +195,49 @@ def get_fee_library(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.get("/{property_id}/booking-gebuehren")
+def get_booking_gebuehren(
+    property_id: str,
+    service: PropertiesServiceDep,
+    ctx: Annotated[
+        AuthContext,
+        Depends(require_granular_permission(Permission.MANAGE_PROPERTY_SETTINGS)),
+    ],
+) -> dict:
+    """Gebühren, die Booking-Buchungen dieses Objekts mitbringen und die fehlen.
+
+    Booking liefert Art, Betrag, Name, Berechnungsart und Lage im Preis an
+    JEDER Buchung mit; bis 03.09.2026 wurde das nirgends ausgewertet, und die
+    Eigentümer-Abrechnung blockierte an einer Gebühr, die im Payload stand.
+
+    Dieselbe Capability wie das Pflegen einer Gebühr, nicht bloß
+    `get_current_user` — Preisdaten sind Vertriebsinformation (Wurzel 9)."""
+    try:
+        return service.booking_gebuehren_vorschlag(ctx, property_id)
+    except PropertyError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/{property_id}/booking-gebuehren/uebernehmen")
+def post_booking_gebuehren_uebernehmen(
+    property_id: str,
+    service: PropertiesServiceDep,
+    ctx: Annotated[
+        AuthContext,
+        Depends(require_granular_permission(Permission.MANAGE_PROPERTY_SETTINGS)),
+    ],
+) -> dict:
+    """Die fehlenden Booking-Gebühren am Objekt anlegen.
+
+    Läuft über den regulären Objekt-Update-Weg (Prüfung, Spiegelung,
+    Portal-Sync) und ist idempotent: ein zweiter Aufruf findet die Arten
+    bereits am Objekt und legt nichts an."""
+    try:
+        return service.booking_gebuehren_uebernehmen(ctx, property_id)
+    except PropertyError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.post("/{property_id}/fees/{fee_id}/apply", response_model=FeeApplyResponse)
 def apply_fee_to_properties(
     property_id: str,

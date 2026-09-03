@@ -26,6 +26,9 @@ export async function generateMetadata({
   return {
     title: `${category.title} · Hilfe-Center · myNextDays`,
     description: category.description,
+    // Aus dem geprüften Slug der gefundenen Kategorie, nicht aus dem
+    // URL-Parameter — gleiche Begründung wie beim Artikel eine Ebene tiefer.
+    alternates: { canonical: `/hilfe/${category.slug}` },
   };
 }
 

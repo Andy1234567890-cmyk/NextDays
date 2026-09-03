@@ -1361,7 +1361,10 @@
       "notes": "Muistiinpanot",
       "share": "Osuus (%)",
       "commissionOverride": "Provisio (%)",
-      "emailLanguage": "Sähköpostien kieli"
+      "emailLanguage": "Sähköpostien kieli",
+      "countryPlaceholder": "Valitse maa …",
+      "countrySearch": "Etsi maata …",
+      "countryEmpty": "Maata ei löytynyt."
     },
     "placeholders": {
       "name": "esim. Matti Meikäläinen",
@@ -6368,7 +6371,18 @@
       "feeCalculationLabel": "Laskelma",
       "feeVatHint": "Tämän maksun oma verokanta, joka poikkeaa majoituskohteen majoitusverokannasta. Pois päältä tarkoittaa: maksu noudattaa majoitusverokantaa.",
       "feeVatIncludedLabel": "Vero sisältyy summaan",
-      "feeVatIncludedHint": "Sisältyykö verokanta jo syötettyyn summaan vai lisätäänkö se siihen? Ilman tätä tietoa summa olisi epäselvä."
+      "feeVatIncludedHint": "Sisältyykö verokanta jo syötettyyn summaan vai lisätäänkö se siihen? Ilman tätä tietoa summa olisi epäselvä.",
+      "feeTypesLoadFailed": "Maksutyyppejä ei voitu ladata ({error}). Ilman niitä maksutyyppiä ei voi valita — lataa sivu uudelleen.",
+      "feeTypesLoading": "Ladataan maksutyyppejä …",
+      "bookingFeesTitle": "Booking.comin toimittama",
+      "bookingFeesHint": "Nämä maksut ovat tämän kohteen Booking-varauksissa, mutta niitä ei ole tallennettu tänne. Summa, nimi ja laskenta tulevat varauksesta.",
+      "bookingFeesTake": "Ota maksut käyttöön",
+      "bookingFeesTaken": "{count, plural, one {# maksu otettu käyttöön} other {# maksua otettu käyttöön}}",
+      "bookingFeesPerNight": "Yötä kohden",
+      "bookingFeesPerStay": "Oleskelua kohden",
+      "bookingFeesAssignTitle": "Kohdistus puuttuu",
+      "bookingFeesAssignHint": "Nämä maksut on tallennettu kohteelle, mutta ei ole määritetty, kenelle summa kuuluu. Ilman sitä omistajan tilitystä ei voi laskea.",
+      "bookingFeesAssign": "Luo kohdistus"
     },
     "policiesForm": {
       "title": "Käytännöt",

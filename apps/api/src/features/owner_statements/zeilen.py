@@ -732,6 +732,13 @@ class ZeilenMixin:
             # Warum eine Zeile ihre Auszahlung nicht ausweisen kann — als
             # maschinenlesbarer Grund, den die UI benennt.
             grund: str | None = None
+            # WAS konkret fehlt, im Klartext des Servers (z. B. welche
+            # Gebührenart). Läuft neben `grund`, weil der Grund nur die KLASSE
+            # des Mangels nennt: bei 49 Gebührenarten hilft „eine Art ist nicht
+            # zugeordnet" niemandem beim Suchen. Bis 03.09.2026 stand dieser
+            # Text NUR im Log (`detail=exc.message`) — die Oberfläche bekam ihn
+            # nie, und die Rückfrage „welche denn?" war nicht beantwortbar.
+            detail: str | None = None
             # Die Kettenglieder der Auszahlung. `None` bleibt bestehen, wenn die
             # Kette nicht lief (Override, Altspalten) oder abbrach — nie 0.
             kette: common.Auszahlung | None = None
@@ -798,6 +805,13 @@ class ZeilenMixin:
                         if vertrag_beginnt_am is not None
                         else "provision"
                     )
+                    detail = (
+                        f"Objekt {listing_id}: Abrechnungsvertrag beginnt erst am "
+                        f"{vertrag_beginnt_am.isoformat()}."
+                        if vertrag_beginnt_am is not None
+                        else f"Objekt {listing_id}: kein Abrechnungsvertrag "
+                        "und kein Provisionssatz hinterlegt."
+                    )
                     log.warning(
                         "abrechnung_zeile_ohne_vertrag",
                         reservation_id=rid,
@@ -847,6 +861,7 @@ class ZeilenMixin:
                         # Handgriff); der zweite Mangel steht im Log.
                         if grund is None:
                             grund = exc.grund
+                            detail = exc.message
                         log.warning(
                             "abrechnung_zeile_unbestimmt",
                             reservation_id=rid,
@@ -974,6 +989,9 @@ class ZeilenMixin:
                     # schickte den Betrieb an die falsche Maske.
                     payout_unbekannt=(
                         None if owner_payout is not None else (grund or "provision")
+                    ),
+                    payout_unbekannt_detail=(
+                        None if owner_payout is not None else detail
                     ),
                     # Nur AUSKUNFT, keine Rechnung: woher die Gebühren dieser
                     # Zeile kommen. Steht auch dann noch da, wenn die Auszahlung

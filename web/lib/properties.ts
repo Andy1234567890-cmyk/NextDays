@@ -274,6 +274,34 @@ export async function listFeeTypes(): Promise<Result<{ items: FeeTypeEntry[] }>>
   return call("/properties/fee-types");
 }
 
+/** Gebühren, die Booking-Buchungen DIESES Objekts mitbringen und die hier fehlen.
+ *
+ *  Booking liefert Art, Betrag, Gastname, Berechnungsart und Lage im Preis an
+ *  JEDER Buchung mit (`rooms[].meta`). Bis 03.09.2026 wurde das nirgends
+ *  ausgewertet: „Stromkosten DKK 125,00" stand im Payload, fehlte am Objekt,
+ *  und die Eigentümer-Abrechnung blockierte an einer Gebühr, die das System
+ *  längst kannte. */
+export async function getBookingGebuehren(
+  id: string,
+): Promise<
+  Result<{ items: Fee[]; unassigned: Fee[]; currency: string | null }>
+> {
+  return call(`/properties/${id}/booking-gebuehren`);
+}
+
+/** Die fehlenden Booking-Gebühren am Objekt anlegen.
+ *
+ *  Schreibt SERVERSEITIG über den regulären Objekt-Update-Weg (Prüfung,
+ *  Spiegelung, Portal-Sync) und ist idempotent — ein zweiter Aufruf legt
+ *  nichts an. */
+export async function uebernehmeBookingGebuehren(
+  id: string,
+): Promise<Result<{ uebernommen: string[]; fees: Fee[] }>> {
+  return call(`/properties/${id}/booking-gebuehren/uebernehmen`, {
+    method: "POST",
+  });
+}
+
 /** Eine bestehende Gebühr des Betriebs, übernehmbar auf dieses Objekt.
  *
  *  `fee` ist der gespeicherte Eintrag selbst — die Übernahme legt genau die

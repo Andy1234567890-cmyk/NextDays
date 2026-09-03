@@ -155,6 +155,28 @@ def _erster_grund(rows: list[RentalRow]) -> str:
     return "provision"
 
 
+def _erstes_detail(rows: list[RentalRow]) -> tuple[str | None, str | None]:
+    """``(detail, buchung)`` derselben Zeile, die ``_erster_grund`` gewählt hat.
+
+    Zwei Werte aus EINER Suche und nicht zwei Durchläufe: liefen sie getrennt,
+    könnten Grund und Detail aus verschiedenen Zeilen stammen, sobald mehrere
+    offen sind — die Meldung nannte dann einen Mangel und die Buchung eines
+    anderen. Das ist schlimmer als kein Detail.
+
+    ``buchung`` ist Gast + Anreise aus der SCHON MASKIERTEN Zeile, nie aus der
+    Rohzeile: für einen Eigentümer ist ``guest`` ``None`` (§4.2), und die Meldung
+    darf nichts zeigen, was die Tabelle unter ihr verbirgt. Fehlt der Name,
+    genügt das Datum — es findet die Zeile ebenso.
+    """
+    for r in rows:
+        if r.owner_payout is None and r.payout_unbekannt:
+            teile = [t for t in (r.guest, r.listing) if t]
+            if r.check_in is not None:
+                teile.append(r.check_in.isoformat())
+            return r.payout_unbekannt_detail, (" · ".join(teile) or None)
+    return None, None
+
+
 def _kommission_anzeige(
     commission_display: Decimal | None, row: dict
 ) -> float | None:
@@ -859,6 +881,11 @@ class OwnerStatementsService(ZeilenMixin):
         # vollständige aussieht (Wurzel 4). Dann ist die Zahl `None` und die
         # UI zeigt „—" samt Grund, bis der Satz gepflegt ist.
         provision_offen = any(r.owner_payout_converted is None for r in rental_rows)
+        # EINE Suche für Detail und Buchungsbezug (siehe `_erstes_detail`):
+        # zweimal aufgerufen könnten sie aus verschiedenen Zeilen stammen.
+        offen_detail, offen_buchung = (
+            _erstes_detail(rental_rows) if provision_offen else (None, None)
+        )
         owner_payout = (
             None
             if provision_offen
@@ -950,6 +977,8 @@ class OwnerStatementsService(ZeilenMixin):
             # Handeln auffordert — sind mehrere Dinge offen, erscheint der nächste
             # Grund nach dem ersten Handgriff.
             payout_unbekannt=_erster_grund(rental_rows) if provision_offen else None,
+            payout_unbekannt_detail=offen_detail,
+            payout_unbekannt_buchung=offen_buchung,
         )
 
     # --- Erzeugen / Lesen / Aktualisieren -----------------------------------
@@ -1276,6 +1305,14 @@ class OwnerStatementsService(ZeilenMixin):
         # bereits die vollständige Aufschlüsselung.
         pm_payout = _d(row["pm_payout"]) if row.get("pm_payout") is not None else None
         darf_fremde_betraege = mask.amounts
+        # EINE Suche für Detail und Buchungsbezug, derselbe Helfer wie im
+        # Live-Pfad: eine gespeicherte Abrechnung soll denselben Satz zeigen
+        # wie ihre Vorschau.
+        snap_detail, snap_buchung = (
+            _erstes_detail(rental_rows)
+            if row.get("owner_payout") is None
+            else (None, None)
+        )
         return StatementSummary(
             total_price=(
                 mask.amount(_money(_d(row["total_price"])))
@@ -1323,6 +1360,14 @@ class OwnerStatementsService(ZeilenMixin):
             payout_unbekannt=(
                 None if row.get("owner_payout") is not None else "provision"
             ),
+            # Detail und Buchungsbezug kommen aus den ZEILEN, nicht aus der
+            # Snapshot-Spalte: die Zeilen werden auch hier neu aufgebaut
+            # (`_build_activity`), und derselbe Helfer wie im Live-Pfad hält
+            # beide Wege bei derselben Aussage. Ohne das zeigte eine
+            # gespeicherte Abrechnung ein „—" ohne Detail, obwohl die Vorschau
+            # derselben Daten es nennt — und niemand könnte sagen, warum.
+            payout_unbekannt_detail=snap_detail,
+            payout_unbekannt_buchung=snap_buchung,
         )
 
     def get(self, ctx: AuthContext, statement_id: str) -> StatementResponse:

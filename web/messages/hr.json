@@ -1361,7 +1361,10 @@
       "notes": "Bilješke",
       "share": "Udio (%)",
       "commissionOverride": "Provizija (%)",
-      "emailLanguage": "Jezik e-pošte"
+      "emailLanguage": "Jezik e-pošte",
+      "countryPlaceholder": "Odaberite zemlju …",
+      "countrySearch": "Traži zemlju …",
+      "countryEmpty": "Nije nađena nijedna zemlja."
     },
     "placeholders": {
       "name": "npr. Ivan Horvat",
@@ -6368,7 +6371,18 @@
       "feeCalculationLabel": "Izračun",
       "feeVatHint": "Vlastita porezna stopa za ovu naknadu, različita od stope noćenja objekta. Isključeno znači: naknada slijedi stopu noćenja.",
       "feeVatIncludedLabel": "Porez u iznosu",
-      "feeVatIncludedHint": "Je li porezna stopa već uključena u uneseni iznos ili se dodaje povrh njega? Bez ove informacije iznos bi bio dvosmislen."
+      "feeVatIncludedHint": "Je li porezna stopa već uključena u uneseni iznos ili se dodaje povrh njega? Bez ove informacije iznos bi bio dvosmislen.",
+      "feeTypesLoadFailed": "Vrste naknada nije bilo moguće učitati ({error}). Bez njih se ne može odabrati vrsta naknade — ponovno učitajte stranicu.",
+      "feeTypesLoading": "Učitavanje vrsta naknada …",
+      "bookingFeesTitle": "Dostavlja Booking.com",
+      "bookingFeesHint": "Ove naknade nalaze se u Booking rezervacijama ovog objekta, ali nisu unesene ovdje. Iznos, naziv i obračun dolaze iz rezervacije.",
+      "bookingFeesTake": "Preuzmi naknade",
+      "bookingFeesTaken": "{count, plural, one {# naknada preuzeta} other {# naknada preuzeto}}",
+      "bookingFeesPerNight": "Po noći",
+      "bookingFeesPerStay": "Po boravku",
+      "bookingFeesAssignTitle": "Nedostaje raspodjela",
+      "bookingFeesAssignHint": "Ove naknade unesene su na objektu, ali nije određeno kome iznos pripada. Bez toga se obračun za vlasnika ne može izračunati.",
+      "bookingFeesAssign": "Kreiraj raspodjelu"
     },
     "policiesForm": {
       "title": "Pravila",

@@ -1361,7 +1361,10 @@
       "notes": "Notas",
       "share": "Cuota (%)",
       "commissionOverride": "Comisión (%)",
-      "emailLanguage": "Idioma de los correos"
+      "emailLanguage": "Idioma de los correos",
+      "countryPlaceholder": "Seleccionar país …",
+      "countrySearch": "Buscar país …",
+      "countryEmpty": "No se encontró ningún país."
     },
     "placeholders": {
       "name": "p. ej. Juan Pérez",
@@ -6368,7 +6371,18 @@
       "feeCalculationLabel": "Cálculo",
       "feeVatHint": "Un tipo impositivo propio para esta tarifa, diferente del tipo de alojamiento del objeto. Apagado significa: la tarifa sigue el tipo de alojamiento.",
       "feeVatIncludedLabel": "Impuesto en el importe",
-      "feeVatIncludedHint": "¿Está el tipo impositivo ya incluido en el importe introducido o se añade? Sin esta información, el importe sería ambiguo."
+      "feeVatIncludedHint": "¿Está el tipo impositivo ya incluido en el importe introducido o se añade? Sin esta información, el importe sería ambiguo.",
+      "feeTypesLoadFailed": "No se pudieron cargar los tipos de tarifa ({error}). Sin ellos no se puede seleccionar ningún tipo de tarifa — vuelve a cargar la página.",
+      "feeTypesLoading": "Cargando tipos de tarifa …",
+      "bookingFeesTitle": "Proporcionado por Booking.com",
+      "bookingFeesHint": "Estas tarifas aparecen en las reservas de Booking de este alojamiento, pero no están registradas aquí. Importe, nombre y cálculo provienen de la reserva.",
+      "bookingFeesTake": "Adoptar tarifas",
+      "bookingFeesTaken": "{count, plural, one {# tarifa adoptada} other {# tarifas adoptadas}}",
+      "bookingFeesPerNight": "Por noche",
+      "bookingFeesPerStay": "Por estancia",
+      "bookingFeesAssignTitle": "Falta la asignación",
+      "bookingFeesAssignHint": "Estas tarifas están registradas en el alojamiento, pero no se ha definido a quién pertenece el importe. Sin ello no se puede calcular la liquidación del propietario.",
+      "bookingFeesAssign": "Crear asignación"
     },
     "policiesForm": {
       "title": "Políticas",

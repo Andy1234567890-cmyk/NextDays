@@ -47,6 +47,32 @@ Der TXT-Eintrag lautet vollständig, mit Präfix:
 google-site-verification=pDUYBvVflztYVL9ulcb-oKBu9YG9kNxruzpyQuxP5kE
 ```
 
+### Offener Handgriff seit 03.09.2026: Property auf www umstellen
+
+Der Apex leitet seit dem 03.09.2026 dauerhaft (308) auf `www.mynextdays.com`
+um — vorher lieferten beide Hosts dieselbe Seite mit 200, jede Adresse existierte
+also doppelt (`marketing/next.config.ts`).
+
+Folge für die Search Console: Die bestehende Property ist ein **URL-Präfix
+`https://mynextdays.com`** (ohne www). Sie sammelt ab dem Deploy **keine Daten
+mehr**, weil jeder Aufruf auf www endet und www für Google eine andere Property
+ist. Der Bericht bleibt dabei sichtbar und wird einfach nicht mehr voller —
+ein Ausfall, der wie „gerade wenig Traffic" aussieht.
+
+**Zu tun, einmalig, im Search-Console-Konto** (nicht im Code lösbar):
+1. Neue Property anlegen, Typ **Domain** (`mynextdays.com`) — nicht URL-Präfix.
+   Sie deckt Apex, www und jede Subdomain zugleich ab, und der dafür nötige
+   DNS-TXT-Eintrag steht bereits (siehe Tabelle oben), es ist also kein neuer
+   Nachweis nötig.
+2. Sitemap dort eintragen: `sitemap.xml`
+   (vollständig `https://www.mynextdays.com/sitemap.xml`).
+3. Die alte Präfix-Property `https://mynextdays.com` stehen lassen, solange die
+   Verlaufsdaten gebraucht werden — sie schadet nicht, füllt sich nur nicht mehr.
+
+Warum Domain- und nicht www-Präfix-Property: Eine Präfix-Property auf www hätte
+dasselbe Problem beim nächsten Hostwechsel wieder. Die Domain-Property ist gegen
+genau diese Umstellung unempfindlich.
+
 Zwei Stolpersteine, beide still: bei DanDomain wird eine Zonenänderung erst
 nach **„Udgiv ændringer"** wirksam (dieselbe Falle wie bei der
 Meta-Domainverifizierung, 27.08.2026), und das Präfix `google-site-verification=`
@@ -58,7 +84,11 @@ gedrückt wird:
 
 ```
 dig +short TXT mynextdays.com | grep google-site-verification
-curl -s https://mynextdays.com | grep -o 'google-site-verification[^>]*'
+# `-L` ist PFLICHT: seit dem 03.09.2026 leitet der Apex dauerhaft (308) auf
+# www um (marketing/next.config.ts). Ohne `-L` bleibt curl bei der leeren
+# Weiterleitungsantwort stehen und meldet einen fehlenden Nachweis, den es
+# nicht gibt — dieselbe Klasse Phantom-Fehler wie beim Meta-Pixel.
+curl -sL https://www.mynextdays.com | grep -o 'google-site-verification[^>]*'
 ```
 
 ## Getrennte Schaltbarkeit (Granularität)

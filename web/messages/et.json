@@ -1361,7 +1361,10 @@
       "notes": "Märkmed",
       "share": "Osalus (%)",
       "commissionOverride": "Komisjonitasu (%)",
-      "emailLanguage": "E-kirjade keel"
+      "emailLanguage": "E-kirjade keel",
+      "countryPlaceholder": "Vali riik …",
+      "countrySearch": "Otsi riiki …",
+      "countryEmpty": "Riiki ei leitud."
     },
     "placeholders": {
       "name": "nt Jaan Tamm",
@@ -6368,7 +6371,18 @@
       "feeCalculationLabel": "Arvutus",
       "feeVatHint": "Selle tasu jaoks eraldi maksumäär, mis erineb majutuse ööbimismäärast. Väljas tähendab: tasu järgib ööbimismäära.",
       "feeVatIncludedLabel": "Maks summas",
-      "feeVatIncludedHint": "Kas maksumäär sisaldub juba sisestatud summas või lisandub sellele? Ilma selle teabeta oleks summa kahemõtteline."
+      "feeVatIncludedHint": "Kas maksumäär sisaldub juba sisestatud summas või lisandub sellele? Ilma selle teabeta oleks summa kahemõtteline.",
+      "feeTypesLoadFailed": "Tasuliike ei õnnestunud laadida ({error}). Ilma nendeta ei saa tasuliiki valida — palun laadi leht uuesti.",
+      "feeTypesLoading": "Tasuliike laaditakse …",
+      "bookingFeesTitle": "Edastatud Booking.com-ist",
+      "bookingFeesHint": "Need tasud on selle objekti Bookingu broneeringutes, kuid pole siia sisestatud. Summa, nimi ja arvestus tulevad broneeringust.",
+      "bookingFeesTake": "Võta tasud üle",
+      "bookingFeesTaken": "{count, plural, one {# tasu võetud üle} other {# tasu võetud üle}}",
+      "bookingFeesPerNight": "Öö kohta",
+      "bookingFeesPerStay": "Peatumise kohta",
+      "bookingFeesAssignTitle": "Määrang puudub",
+      "bookingFeesAssignHint": "Need tasud on objektil sisestatud, kuid pole määratud, kellele summa kuulub. Ilma selleta ei saa omaniku arvestust arvutada.",
+      "bookingFeesAssign": "Loo määrang"
     },
     "policiesForm": {
       "title": "Reeglid",

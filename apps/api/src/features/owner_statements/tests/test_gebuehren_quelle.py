@@ -1052,3 +1052,291 @@ def test_kette_reinigung_bleibt_beim_betrieb() -> None:
     # Netto: 8.980,75 − 1.796,15 + 225,00 (nur die Eigentümer-Gebühr)
     assert ergebnis.netto == Decimal("7409.600")
     assert ergebnis.gebuehren_an_eigentuemer == Decimal("225.00")
+
+
+# ----------------------------------------------------------------------
+# Booking.com: der VOLLSTÄNDIGE Gebührenart-Katalog des Extranets
+# ----------------------------------------------------------------------
+
+# Abgelesen am 03.09.2026 im Booking-Extranet (Unterkunft → Richtlinien →
+# „Weitere Gebühren und Kosten", Auswahlfeld „Gebührenart"). Booking bietet
+# GENAU DIESE Arten an — es ist kein Freitextfeld, die Liste ist also endlich
+# und vollständig abbildbar.
+#
+# Dieser Test ist der Wächter, der bis zum 03.09.2026 fehlte: unsere Liste
+# kannte vier der dreizehn Arten, die übrigen neun fielen in das
+# `portal:<name>`-Auffangnetz. Eine so erzeugte Art entsteht erst zur LAUFZEIT
+# und ist in der Zuordnungsmaske nicht anlegbar — die Abrechnung verlangte dann
+# eine Zuordnung, die niemand vornehmen konnte. Live blockierte „Stromkosten"
+# die Auszahlung von Feriehus Kornblomst (Booking 5522296055), und die Meldung
+# nannte `portal:stromkosten`: einen Wert, der in keiner Tabelle steht.
+BOOKING_DROPDOWN_GEBUEHREN = {
+    "Servicegebühr": "service_fee",
+    "Resortgebühr": "resort",
+    "Reinigung": "cleaning_fee",
+    "Handtücher": "linens_bath",
+    "Strom": "electricity",
+    "Bettwäsche": "linens_bed",
+    "Gas": "gas",
+    "Öl": "oil",
+    "Holz": "wood",
+    "Wasserverbrauch": "water",
+    "Transfergebühr": "transportation",
+}
+
+# Aus demselben Dropdown, aber KEINE Gebühr des Betriebs: eingesammelt und
+# weitergeleitet. Sie gehören nicht in die Eigentümer-Auszahlung und brauchen
+# deshalb keine Zuordnung (Entscheidung des Betreibers, 03.09.2026).
+BOOKING_DROPDOWN_ABGABEN = ("Kurtaxe", "Umweltabgabe")
+
+
+def test_jede_booking_gebuehrenart_wird_aufgeloest() -> None:
+    """KEINE Art aus dem Extranet-Dropdown darf im Auffangnetz landen."""
+    offen: list[str] = []
+    for anzeige, erwartet in BOOKING_DROPDOWN_GEBUEHREN.items():
+        posten = booking_gebuehren(_booking_raw([_posten(anzeige, "12500")]))
+        if posten != [(erwartet, Decimal("125.00"))]:
+            offen.append(f"{anzeige}: {posten} statt {erwartet}")
+    assert not offen, (
+        "Booking-Arten nicht aufgelöst — sie würden als `portal:*` im "
+        "Auffangnetz landen und die Abrechnung blockieren:\n"
+        + "\n".join(offen)
+    )
+
+
+def test_booking_abgaben_werden_uebersprungen() -> None:
+    """Kurtaxe und Umweltabgabe sind durchlaufend, keine Gebühr.
+
+    Sie dürfen weder eine Zuordnung verlangen noch als Ertrag in die
+    Auszahlung laufen — eine Abgabe zwischen Betrieb und Eigentümer zu teilen
+    wäre sachlich falsch.
+    """
+    for anzeige in BOOKING_DROPDOWN_ABGABEN:
+        posten = booking_gebuehren(_booking_raw([_posten(anzeige, "5000")]))
+        assert posten == [], f"{anzeige} wurde als Gebühr behandelt: {posten}"
+
+
+def test_booking_arten_zeigen_auf_bestehende_katalogwerte() -> None:
+    """Kein Zielwert ist erfunden — jeder steht im Gebührenart-Katalog.
+
+    Eine Art, die `FEE_TYPE_CATEGORY` nicht kennt, hätte keine Kategorie und
+    fiele bei der Steuer-/Kategoriezuordnung still durch.
+    """
+    from src.features.owner_statements.gebuehren_quelle import _BOOKING_ARTEN
+    from src.features.properties.gebuehren import FEE_TYPE_CATEGORY
+
+    unbekannt = sorted(set(_BOOKING_ARTEN.values()) - set(FEE_TYPE_CATEGORY))
+    assert not unbekannt, (
+        f"Zielwerte fehlen im Katalog (properties/gebuehren.py): {unbekannt}"
+    )
+
+
+def test_booking_echte_buchung_kornblomst() -> None:
+    """Die Buchung, an der es aufgefallen ist — mit den ECHTEN Werten.
+
+    Booking 5522296055, Feriehus Kornblomst, Anreise 17.09.2026: drei Posten,
+    zwei Gebühren und eine Steuer. Alle drei tragen `code` 14 bzw. 19 — der
+    freie Text ist die einzige Unterscheidung.
+    """
+    posten = booking_gebuehren(
+        _booking_raw(
+            [
+                _posten("Reinigungsgebühr", "79500"),
+                _posten("Stromkosten", "12500", freq=19),
+            ]
+        )
+    )
+    assert posten == [
+        ("cleaning_fee", Decimal("795.00")),
+        ("electricity", Decimal("125.00")),
+    ], f"Erwartet cleaning_fee + electricity, bekommen: {posten}"
+    assert not any(str(a).startswith("portal:") for a, _ in posten)
+
+
+def test_booking_gebuehrenarten_in_mehreren_sprachen() -> None:
+    """Der Anzeigename kommt in der Sprache des INSERATS.
+
+    Derselbe Betrieb führt Objekte auf Deutsch, Englisch und Dänisch — live
+    belegt: „Reinigungsgebühr" (25 Buchungen) neben „Cleaning fee" (11).
+    """
+    for text in ("Stromkosten", "Strom", "Electricity", "Elektrizität", "Strøm"):
+        posten = booking_gebuehren(_booking_raw([_posten(text, "12500")]))
+        assert posten == [("electricity", Decimal("125.00"))], text
+    for text in ("Reinigung", "Reinigungsgebühr", "Cleaning fee", "Rengøringsgebyr"):
+        posten = booking_gebuehren(_booking_raw([_posten(text, "79500")]))
+        assert posten == [("cleaning_fee", Decimal("795.00"))], text
+
+
+def test_unbekannte_booking_art_meldet_den_namen() -> None:
+    """Bleibt doch etwas offen, nennt der Fehler den Text UND den Weg.
+
+    Fail-closed ist hier richtig (kein geratener Betrag) — aber die Meldung muss
+    sagen, was zu tun ist, sonst sucht der Betrieb in der falschen Maske.
+    """
+    with pytest.raises(PayoutUnbekannt) as exc:
+        booking_gebuehren(_booking_raw([_posten("Hubschrauberlandeplatz", "5000")]))
+    assert exc.value.grund == "gebuehr_nicht_zugeordnet"
+    assert "Hubschrauberlandeplatz" in exc.value.message
+    assert "Extranet" in exc.value.message
+
+
+def _booking_raw_direkt(posten: list[dict]) -> dict:
+    """Die Form, die Booking LIVE liefert: `price_details` DIREKT am Zimmer.
+
+    Nicht unter `meta` — im ganzen Live-Bestand (88 Zimmer, gemessen
+    03.09.2026) trägt KEIN einziges Zimmer `meta`, `taxes` oder `days`.
+    """
+    return {
+        "rooms": [
+            {
+                "policies": "…",
+                "meal_plan": "…",
+                "price_details": {"guest_view": {"taxes": posten}},
+            }
+        ]
+    }
+
+
+def test_booking_liest_price_details_direkt_am_zimmer() -> None:
+    """DER Fehler, der die Abrechnung blockierte.
+
+    Der Leser suchte ausschliesslich `rooms[].meta.price_details`. Live liegt
+    `price_details` DIREKT am Zimmer — er hat damit nie eine Booking-Aufstellung
+    gefunden und gab `None` zurueck, was „traegt keine Aufstellung" heisst.
+    Die Zeile zeigte „Keine Gebuehren oder Zusatzleistungen an dieser Buchung",
+    obwohl der Payload 795 DKK Reinigung und 125 DKK Strom trug.
+
+    Gemessen an 88 Booking-Zimmern: 37 tragen `price_details` direkt,
+    NULL unter `meta`, null `taxes`, null `days`.
+    """
+    posten = booking_gebuehren(
+        _booking_raw_direkt(
+            [
+                _posten("Reinigungsgebühr", "79500"),
+                _posten("Stromkosten", "12500", freq=19),
+                _posten("Mehrwertsteuer (25%)", "97150"),
+            ]
+        )
+    )
+    assert posten == [
+        ("cleaning_fee", Decimal("795.00")),
+        ("electricity", Decimal("125.00")),
+    ], f"Aufstellung nicht gelesen: {posten}"
+
+
+def test_booking_liest_price_details_auch_unter_meta() -> None:
+    """Die XML-Fassung des Aggregators bleibt lesbar — kein Rückschritt."""
+    posten = booking_gebuehren(_booking_raw([_posten("Reinigungsgebühr", "79500")]))
+    assert posten == [("cleaning_fee", Decimal("795.00"))]
+
+
+def test_booking_steuern_am_namen_erkannt() -> None:
+    """Steuern sind durchlaufend und dürfen nicht in die Auszahlung.
+
+    `type` ist bei ALLEN 82 Live-Posten „Inclusive" und unterscheidet nichts;
+    der `code` (14 Gebühr, 19 MwSt., 3 Übernachtungssteuer) ist nirgends
+    dokumentiert. Also am Namen — mit Präfix-Vergleich, weil Booking den Satz
+    in den Anzeigenamen setzt („Mehrwertsteuer (25%)").
+    """
+    for text in (
+        "Mehrwertsteuer (25%)",
+        "Übernachtungssteuer (10%)",
+        "Value Added Tax (VAT)",
+        "City tax",
+    ):
+        posten = booking_gebuehren(_booking_raw_direkt([_posten(text, "97150")]))
+        assert posten == [], f"{text} wurde als Gebühr behandelt: {posten}"
+
+
+def test_booking_gebuehr_und_steuer_gemischt() -> None:
+    """Der Live-Fall: drei Posten, zwei Gebühren, eine Steuer — alle `code` 14/19."""
+    posten = booking_gebuehren(
+        _booking_raw_direkt(
+            [
+                _posten("Mehrwertsteuer (25%)", "97150"),
+                _posten("Resortgebühr", "2500", freq=19),
+                _posten("Handtücher", "5000"),
+            ]
+        )
+    )
+    assert posten == [
+        ("resort", Decimal("25.00")),
+        ("linens_bath", Decimal("50.00")),
+    ]
+
+
+def test_electricityfee_schluessel_wird_aufgeloest() -> None:
+    """`ELECTRICITYFEE` aus `charge_periods` — DER Fehler, live gemessen.
+
+    Channex liefert die Gebuehrenart bei JEDER Buchung mit, sprachneutral in
+    `rooms[].meta.charge_periods`. Gemessen an 788 Payloads kommen sechs
+    Schluessel vor: CLEANINGFEE 35x, RESORTFEE 32x, VAT 8x, PETFEE 3x,
+    ELECTRICITYFEE 1x, CITYTAX 1x. `ELECTRICITYFEE` fehlte im Katalog — damit
+    half die zweite Stufe nicht, der Anzeigename „Stromkosten" stand in keiner
+    Namensliste, und das `portal:`-Auffangnetz griff. Die Abrechnung verlangte
+    eine Zuordnung fuer `portal:stromkosten`: eine Art, die erst zur Laufzeit
+    entsteht und in der Zuordnungsmaske nicht anlegbar ist.
+
+    Der Schluessel ist der belastbare Weg, NICHT der Name: er ist konstant,
+    egal in welcher Sprache das Inserat laeuft.
+    """
+    raw = {
+        "rooms": [
+            {
+                "days": {"2026-09-17": "787.50"},
+                "meta": {
+                    "charge_periods": {
+                        "CLEANINGFEE": [{"from": "2026-09-17", "excluded": True}],
+                        "ELECTRICITYFEE": [{"from": "2026-09-17", "excluded": True}],
+                    },
+                    "price_details": {
+                        "guest_view": {
+                            "taxes": [
+                                {
+                                    "code": "14",
+                                    "type": "Inclusive",
+                                    "amount": "79500",
+                                    "decimal_places": 2,
+                                    "currency_code": "DKK",
+                                    "tax_description": "Reinigungsgebühr",
+                                    "charge_frequency": 12,
+                                },
+                                {
+                                    "code": "14",
+                                    "type": "Inclusive",
+                                    "amount": "12500",
+                                    "decimal_places": 2,
+                                    "currency_code": "DKK",
+                                    "tax_description": "Stromkosten",
+                                    "charge_frequency": 19,
+                                },
+                            ]
+                        }
+                    },
+                },
+            }
+        ]
+    }
+    posten = booking_gebuehren(raw)
+    assert posten == [
+        ("cleaning_fee", Decimal("795.00")),
+        ("electricity", Decimal("125.00")),
+    ], f"Erwartet cleaning_fee + electricity, bekommen: {posten}"
+    assert not any(str(a).startswith("portal:") for a, _ in posten)
+
+
+def test_gemessene_channex_schluessel_sind_alle_bekannt() -> None:
+    """Jeder Schluessel, der live vorkommt, muss aufloesbar sein.
+
+    Gemessen am 03.09.2026 an allen 788 Channex-Payloads. Ein unbekannter
+    Schluessel bedeutet: das Auffangnetz greift, und die Abrechnung blockiert
+    mit einer Art, die niemand zuordnen kann.
+    """
+    from src.features.owner_statements.gebuehren_quelle import (
+        _BOOKING_SCHLUESSEL_ARTEN,
+    )
+
+    gemessen = ("CLEANINGFEE", "RESORTFEE", "VAT", "PETFEE",
+                "ELECTRICITYFEE", "CITYTAX")
+    fehlt = [k for k in gemessen if k not in _BOOKING_SCHLUESSEL_ARTEN]
+    assert not fehlt, f"Live vorkommende Schluessel fehlen im Katalog: {fehlt}"

@@ -1361,7 +1361,10 @@
       "notes": "Piezīmes",
       "share": "Daļa (%)",
       "commissionOverride": "Komisija (%)",
-      "emailLanguage": "E-pastu valoda"
+      "emailLanguage": "E-pastu valoda",
+      "countryPlaceholder": "Izvēlieties valsti …",
+      "countrySearch": "Meklēt valsti …",
+      "countryEmpty": "Valsts nav atrasta."
     },
     "placeholders": {
       "name": "piem., Jānis Bērziņš",
@@ -6368,7 +6371,18 @@
       "feeCalculationLabel": "Aprēķins",
       "feeVatHint": "Šai maksai ir savs nodoklis, kas atšķiras no nakšņošanas nodokļa. Izslēgts nozīmē: maksa atbilst nakšņošanas nodoklim.",
       "feeVatIncludedLabel": "Nodoklis summā",
-      "feeVatIncludedHint": "Vai nodoklis jau ir iekļauts ievadītajā summā, vai arī tas tiek pievienots? Bez šīs informācijas summa būtu neskaidra."
+      "feeVatIncludedHint": "Vai nodoklis jau ir iekļauts ievadītajā summā, vai arī tas tiek pievienots? Bez šīs informācijas summa būtu neskaidra.",
+      "feeTypesLoadFailed": "Maksas veidus neizdevās ielādēt ({error}). Bez tiem nevar izvēlēties maksas veidu — lūdzu, pārlādējiet lapu.",
+      "feeTypesLoading": "Notiek maksas veidu ielāde …",
+      "bookingFeesTitle": "Piegādā Booking.com",
+      "bookingFeesHint": "Šīs maksas ir šī objekta Booking rezervācijās, taču tās nav šeit ievadītas. Summa, nosaukums un aprēķins nāk no rezervācijas.",
+      "bookingFeesTake": "Pārņemt maksas",
+      "bookingFeesTaken": "{count, plural, one {pārņemta # maksa} other {pārņemtas # maksas}}",
+      "bookingFeesPerNight": "Par nakti",
+      "bookingFeesPerStay": "Par uzturēšanos",
+      "bookingFeesAssignTitle": "Trūkst piesaistes",
+      "bookingFeesAssignHint": "Šīs maksas ir ievadītas objektam, taču nav noteikts, kam summa pieder. Bez tā īpašnieka norēķinu nevar aprēķināt.",
+      "bookingFeesAssign": "Izveidot piesaisti"
     },
     "policiesForm": {
       "title": "Noteikumi",

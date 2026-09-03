@@ -78,6 +78,17 @@ export type StatementSummary = {
   /** Warum die Auszahlungs-Zahlen fehlen — heute nur `"provision"` (kein Satz
    *  hinterlegt). Die Maske macht daraus den Hinweis, WAS zu tun ist. */
   payout_unbekannt: string | null;
+  /** WAS konkret fehlt, als Klartext vom Server (z. B. welche Gebührenart).
+   *
+   *  Kein i18n-Key, sondern ein Satz: die Werte darin sind Datenbezeichner aus
+   *  Portal-Feeds und Stammdaten und keine feste Aufzählung. Der übersetzte Teil
+   *  steht in `payout_unbekannt`; dies ergänzt ihn um das Einzelne. */
+  payout_unbekannt_detail: string | null;
+  /** WELCHE Buchung den Mangel trägt (Gast · Objekt · Anreise, schon maskiert).
+   *  Die Zusammenfassung nennt bewusst nur EINEN Grund — ohne diesen Bezug
+   *  müsste man ihn in einer Tabelle suchen, in der die betroffene Zeile nur
+   *  ein „—" zeigt. */
+  payout_unbekannt_buchung: string | null;
 };
 
 /** EINE Gebühr oder Zusatzleistung einer Buchung — als eigener Posten.
@@ -153,6 +164,8 @@ export type RentalRow = {
    *  Vertrag, kein Altsatz), `"provision_zeitraum"` (Vertrag beginnt erst nach
    *  der Abreise, Datum in `vertrag_beginnt_am`), `"portal_abzug"`, … */
   payout_unbekannt: string | null;
+  /** Klartext-Detail zum Grund dieser Zeile (z. B. welche Gebührenart). */
+  payout_unbekannt_detail: string | null;
   /** WOHER die Gebühren dieser Zeile kommen:
    *  - `"ota"` — das Portal hat sie gemeldet. Tatsache.
    *  - `"ota_ohne_aufstellung"` — Portal-Buchung, deren Payload keine

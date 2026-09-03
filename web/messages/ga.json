@@ -1361,7 +1361,10 @@
       "notes": "Nótaí",
       "share": "Sciar (%)",
       "commissionOverride": "Coimisiún (%)",
-      "emailLanguage": "Teanga na ríomhphost"
+      "emailLanguage": "Teanga na ríomhphost",
+      "countryPlaceholder": "Roghnaigh tír …",
+      "countrySearch": "Cuardaigh tír …",
+      "countryEmpty": "Níor aimsíodh tír."
     },
     "placeholders": {
       "name": "m.sh. Seán Ó Murchú",
@@ -6368,7 +6371,18 @@
       "feeCalculationLabel": "Ríomh",
       "feeVatHint": "Ráta cánach ar leith don táille seo, atá difriúil ó ráta oíche an réadmhaoine. Ciallaíonn 'As' go leanann an táille an ráta oíche.",
       "feeVatIncludedLabel": "Cáin san áireamh",
-      "feeVatIncludedHint": "An bhfuil an ráta cánach san áireamh cheana féin sa mhéid a iontráladh nó an gcuirtear leis é? Gan an t-eolas seo, bheadh an méid débhríoch."
+      "feeVatIncludedHint": "An bhfuil an ráta cánach san áireamh cheana féin sa mhéid a iontráladh nó an gcuirtear leis é? Gan an t-eolas seo, bheadh an méid débhríoch.",
+      "feeTypesLoadFailed": "Níorbh fhéidir na cineálacha táillí a lódáil ({error}). Gan iad ní féidir cineál táille a roghnú — athlódáil an leathanach le do thoil.",
+      "feeTypesLoading": "Cineálacha táillí á lódáil …",
+      "bookingFeesTitle": "Curtha ar fáil ag Booking.com",
+      "bookingFeesHint": "Tá na táillí seo i áirithintí Booking na maoine seo, ach níl siad curtha isteach anseo. Tagann an méid, an t-ainm agus an ríomh ón áirithint.",
+      "bookingFeesTake": "Glac na táillí",
+      "bookingFeesTaken": "{count, plural, one {Glacadh # táille} other {Glacadh # táille}}",
+      "bookingFeesPerNight": "In aghaidh na hoíche",
+      "bookingFeesPerStay": "In aghaidh na fanachta",
+      "bookingFeesAssignTitle": "Sannachán ar iarraidh",
+      "bookingFeesAssignHint": "Tá na táillí seo curtha isteach ar an maoin, ach níl sé sainithe cé leis an méid. Gan sin ní féidir ráiteas an úinéara a ríomh.",
+      "bookingFeesAssign": "Cruthaigh sannachán"
     },
     "policiesForm": {
       "title": "Polasaithe",

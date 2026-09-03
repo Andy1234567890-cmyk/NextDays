@@ -1361,7 +1361,10 @@
       "notes": "Opombe",
       "share": "Delež (%)",
       "commissionOverride": "Provizija (%)",
-      "emailLanguage": "Jezik e-pošte"
+      "emailLanguage": "Jezik e-pošte",
+      "countryPlaceholder": "Izberite državo …",
+      "countrySearch": "Iskanje države …",
+      "countryEmpty": "Nobena država ni najdena."
     },
     "placeholders": {
       "name": "npr. Janez Novak",
@@ -6368,7 +6371,18 @@
       "feeCalculationLabel": "Izračun",
       "feeVatHint": "Lastna davčna stopnja za to pristojbino, ki se razlikuje od stopnje prenočitve nastanitve. Izključeno pomeni: pristojbina sledi stopnji prenočitve.",
       "feeVatIncludedLabel": "Davek v znesku",
-      "feeVatIncludedHint": "Ali je davčna stopnja že vključena v vneseni znesek ali se prišteje? Brez te informacije bi bil znesek dvoumno določen."
+      "feeVatIncludedHint": "Ali je davčna stopnja že vključena v vneseni znesek ali se prišteje? Brez te informacije bi bil znesek dvoumno določen.",
+      "feeTypesLoadFailed": "Vrst pristojbin ni bilo mogoče naložiti ({error}). Brez njih ni mogoče izbrati vrste pristojbine — znova naložite stran.",
+      "feeTypesLoading": "Nalaganje vrst pristojbin …",
+      "bookingFeesTitle": "Zagotavlja Booking.com",
+      "bookingFeesHint": "Te pristojbine so v rezervacijah Booking tega objekta, vendar tukaj niso vnesene. Znesek, ime in obračun izhajajo iz rezervacije.",
+      "bookingFeesTake": "Prevzemi pristojbine",
+      "bookingFeesTaken": "{count, plural, one {# pristojbina prevzeta} other {# pristojbin prevzetih}}",
+      "bookingFeesPerNight": "Na noč",
+      "bookingFeesPerStay": "Na bivanje",
+      "bookingFeesAssignTitle": "Manjka razporeditev",
+      "bookingFeesAssignHint": "Te pristojbine so vnesene pri objektu, vendar ni določeno, komu znesek pripada. Brez tega obračuna za lastnika ni mogoče izračunati.",
+      "bookingFeesAssign": "Ustvari razporeditev"
     },
     "policiesForm": {
       "title": "Pravilniki",

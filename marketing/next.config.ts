@@ -22,6 +22,46 @@ const nextConfig: NextConfig = {
   // Dockerfile ohne Root-Kontext, ADR-0016) und nutzt daher KEINE @nextdays/*-
   // Packages — die kleine CSP-Kopie ist hier die dokumentierte Ausnahme, kein
   // Wurzel-4-Verstoß. Statische Marketing-Seite ohne Backend/Server Actions.
+  // Eine Adresse je Seite: alles ohne `www.` wird dauerhaft auf `www.`
+  // umgeleitet.
+  //
+  // Der Anlass, live gemessen am 03.09.2026: `https://mynextdays.com/` und
+  // `https://www.mynextdays.com/` lieferten BEIDE 200 mit byte-identischem
+  // Inhalt (je 452.283 Bytes), ohne Weiterleitung in irgendeine Richtung. Alle
+  // 157 Adressen der Sitemap, die `Host:`-Zeile der robots.txt und die 46
+  // Links der llms.txt nennen www — nur der Server selbst kannte diese
+  // Festlegung nicht. Damit existierte jede Seite doppelt, und ein
+  // Sprachmodell, das die Seite abruft, konnte je nach Einstiegspunkt zwei
+  // verschiedene Adressen für denselben Inhalt zitieren.
+  //
+  // Warum `permanent: true` (308): Die Festlegung auf www ist keine
+  // Übergangslösung, sondern die dauerhafte Entscheidung, die schon überall
+  // sonst steht. Ein 307 würde Suchmaschinen und Modellen sagen „gilt nur
+  // heute" und die Dublette bestehen lassen.
+  //
+  // Warum das den `canonical`-Hinweis NICHT ersetzt: Ein Redirect wirkt nur,
+  // wenn jemand den falschen Host tatsächlich abruft. Ein Canonical wirkt
+  // zusätzlich gegen Adressen, die durch Parameter entstehen (Kampagnen-Tags),
+  // und wird bereits von einer Suchmaschine ausgewertet, die die Seite aus
+  // ihrem Zwischenspeicher kennt. Beide zusammen, nicht eines statt des
+  // anderen.
+  //
+  // `has` prüft den Host-Header. Der Ausdruck trifft bewusst NUR den nackten
+  // Apex, nicht jede Subdomain: `open-api.mynextdays.com` ist ein eigener
+  // Dienst und darf hier nicht mit umgeleitet werden. `localhost` und
+  // Coolify-Vorschau-Domains treffen den Ausdruck ebenfalls nicht und bleiben
+  // damit unberührt — sonst wäre die lokale Entwicklung nach dieser Änderung
+  // eine Endlosweiterleitung auf die Produktionsdomain.
+  async redirects() {
+    return [
+      {
+        source: "/:pfad*",
+        has: [{ type: "host", value: "mynextdays.com" }],
+        destination: "https://www.mynextdays.com/:pfad*",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     // Der Support-Chat spricht direkt mit der API (siehe lib/config.ts) — ihre
     // Origin muss in connect-src stehen, sonst blockt der Browser den Aufruf.

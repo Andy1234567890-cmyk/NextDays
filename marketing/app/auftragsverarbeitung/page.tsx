@@ -19,7 +19,11 @@ import type { Metadata } from "next";
 export async function generateMetadata(): Promise<Metadata> {
   const locale = (await getLocale()) as Locale;
   const doc = await ladeRechtsdokument("auftragsverarbeitung", locale);
-  return { title: `${doc.title} — myNextDays`, description: doc.metaDescription };
+  return {
+    title: `${doc.title} — myNextDays`,
+    description: doc.metaDescription,
+    alternates: { canonical: "/auftragsverarbeitung" },
+  };
 }
 
 export default async function Page() {

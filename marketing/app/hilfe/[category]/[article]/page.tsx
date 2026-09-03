@@ -32,6 +32,19 @@ export async function generateMetadata({
   return {
     title: `${hit.article.title} · Hilfe-Center · myNextDays`,
     description: hit.article.excerpt,
+    // Kanonische Adresse. Sie fehlte bis zum 03.09.2026 auf ALLEN 133
+    // Hilfe-Artikeln — zusammen mit der fehlenden apex→www-Weiterleitung stand
+    // damit jeder Artikel unter zwei Hosts ohne Hinweis, welcher gilt.
+    //
+    // Der Pfad wird aus den GEPRÜFTEN Slugs des gefundenen Artikels gebaut,
+    // nicht aus den rohen Parametern der URL: `getArticle` hat oben bereits
+    // entschieden, dass es diesen Artikel gibt. Aus `params` gebaut würde jede
+    // Schreibweise, die zufällig auf denselben Artikel führt, sich selbst als
+    // kanonisch ausweisen — und damit genau die Dubletten bestätigen, die das
+    // Tag verhindern soll.
+    alternates: {
+      canonical: `/hilfe/${hit.category.slug}/${hit.article.slug}`,
+    },
   };
 }
 

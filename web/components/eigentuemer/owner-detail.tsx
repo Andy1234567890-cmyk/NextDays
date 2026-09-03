@@ -15,9 +15,11 @@ import { InfoHinweis } from "@nextdays/ui/info-hinweis";
 import { Input } from "@nextdays/ui/input";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import { Textarea } from "@nextdays/ui/textarea";
-import { COUNTRIES, vatIdLabel } from "@nextdays/ui/countries";
+import { vatIdLabel } from "@nextdays/ui/countries";
+import { SearchableSelect } from "@nextdays/ui/searchable-select";
 import { ObjektMehrfachauswahl } from "@/components/objekt-mehrfachauswahl";
 import { SprachAuswahl } from "@/components/sprache-auswahl";
+import { useCountrySearchOptions } from "@/lib/use-country-options";
 import type { OwnerBillingTerms } from "@/lib/owner-billing";
 import { formatDate } from "@/lib/utils";
 import {
@@ -79,7 +81,7 @@ export function OwnerDetail({
   geltendeVertraege?: OwnerBillingTerms[];
 }) {
   const t = useTranslations("owners");
-  const tCountry = useTranslations("countries");
+  const laenderOptionen = useCountrySearchOptions();
   const locale = useLocale();
   const router = useRouter();
   // Der Vertrag, der OHNE Objekt-Ausnahme gilt (`property_id = null`) — das ist
@@ -436,18 +438,21 @@ export function OwnerDetail({
               onChange={(e) => set("city", e.target.value || null)}
             />
           </Field>
+          {/* Weltweit mit Suche, nicht die EU-Liste aus `@nextdays/ui/countries`:
+              Eigentümer wohnen überall — ein Objekt in Dänemark kann einem
+              Eigentümer in Kanada gehören, und dessen Land war vorher nicht
+              wählbar. 194 Länder in einem nativen `<select>` sind ohne Suche
+              unbenutzbar, deshalb Combobox (Auftrag 03.09.2026). */}
           <Field label={t("fields.country")}>
-            <NativeSelect
+            <SearchableSelect
+              options={laenderOptionen}
               value={owner.country ?? ""}
-              onChange={(e) => set("country", e.target.value || null)}
-            >
-              <option value="">—</option>
-              {COUNTRIES.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {tCountry(c.code)}
-                </option>
-              ))}
-            </NativeSelect>
+              onChange={(v) => set("country", v || null)}
+              placeholder={t("fields.countryPlaceholder")}
+              searchPlaceholder={t("fields.countrySearch")}
+              emptyHint={t("fields.countryEmpty")}
+              clearLabel="—"
+            />
           </Field>
           <Field label={t("fields.taxId")}>
             <Input

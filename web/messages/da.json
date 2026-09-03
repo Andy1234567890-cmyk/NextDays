@@ -1361,7 +1361,10 @@
       "notes": "Noter",
       "share": "Andel (%)",
       "commissionOverride": "Provision (%)",
-      "emailLanguage": "Sprog til e-mails"
+      "emailLanguage": "Sprog til e-mails",
+      "countryPlaceholder": "Vælg land …",
+      "countrySearch": "Søg land …",
+      "countryEmpty": "Intet land fundet."
     },
     "placeholders": {
       "name": "f.eks. Jens Jensen",
@@ -6368,7 +6371,18 @@
       "feeCalculationLabel": "Beregning",
       "feeVatHint": "En separat skattesats for dette gebyr, afvigende fra ejendommens overnatningssats. Fra betyder: gebyret følger overnatningssatsen.",
       "feeVatIncludedLabel": "Skat i beløbet",
-      "feeVatIncludedHint": "Er skattesatsen allerede inkluderet i det indtastede beløb, eller kommer den oveni? Uden denne information ville beløbet være tvetydigt."
+      "feeVatIncludedHint": "Er skattesatsen allerede inkluderet i det indtastede beløb, eller kommer den oveni? Uden denne information ville beløbet være tvetydigt.",
+      "feeTypesLoadFailed": "Gebyrtyperne kunne ikke indlæses ({error}). Uden dem kan der ikke vælges nogen gebyrtype — genindlæs venligst siden.",
+      "feeTypesLoading": "Gebyrtyper indlæses …",
+      "bookingFeesTitle": "Leveret af Booking.com",
+      "bookingFeesHint": "Disse gebyrer står i Booking-reservationerne for dette objekt, men er ikke oprettet her. Beløb, navn og beregning kommer fra reservationen.",
+      "bookingFeesTake": "Overtag gebyrer",
+      "bookingFeesTaken": "{count, plural, one {# gebyr overtaget} other {# gebyrer overtaget}}",
+      "bookingFeesPerNight": "Pr. nat",
+      "bookingFeesPerStay": "Pr. ophold",
+      "bookingFeesAssignTitle": "Tilknytning mangler",
+      "bookingFeesAssignHint": "Disse gebyrer er oprettet på objektet, men det er ikke fastlagt, hvem beløbet tilhører. Uden det kan ejerafregningen ikke beregnes.",
+      "bookingFeesAssign": "Opret tilknytning"
     },
     "policiesForm": {
       "title": "Retningslinjer",

@@ -60,6 +60,7 @@ class _Query:
         self._in: list[tuple[str, list[str]]] = []
         self._order: str | None = None
         self._desc = False
+        self._range: tuple[int, int] | None = None
 
     def select(self, *_a: object, **_k: object) -> "_Query":
         self._op = "select"
@@ -114,6 +115,16 @@ class _Query:
     def limit(self, _n: int) -> "_Query":
         return self
 
+    def range(self, von: int, bis: int) -> "_Query":
+        # Muss WIRKLICH schneiden: `core.supabase.fetch_all_rows` paginiert
+        # ausschliesslich hierueber und bricht ab, sobald eine Seite kuerzer
+        # als die Seitengroesse ist. Ein `return self` ohne Schnitt liefe
+        # endlos; ein fehlendes `range` liess `payloads_laden` still LEER
+        # zurueckkommen — und genau daran war der Test gruen, obwohl die
+        # Maske live nichts fand.
+        self._range = (von, bis)
+        return self
+
     def _match(self, row: dict) -> bool:
         if not all(str(row.get(c)) == str(v) for c, v in self._filters):
             return False
@@ -151,6 +162,9 @@ class _Query:
                 key=lambda r: str(r.get(self._order) or ""),
                 reverse=self._desc,
             )
+        if self._range is not None:
+            von, bis = self._range
+            selected = selected[von : bis + 1]
         return _Result(selected)
 
 
@@ -308,6 +322,144 @@ def test_uebersicht_zeigt_bestandsarten_mit_anzahl() -> None:
     assert nach_art["cleaning_fee"].beispiel_namen == ["Reinigung"]
     # Beide Arten sind unzugeordnet → beide offen.
     assert uebersicht.offen == 2
+
+
+def _booking_payload(
+    posten: list[tuple[str, str]], schluessel: list[str] | None = None
+) -> dict:
+    """Ein Booking-Payload in der LIVE-Form von ``channex_booking.raw``.
+
+    Abgelesen 03.09.2026 an der Buchung 5522296055: ``price_details`` liegt
+    unter ``rooms[].meta``, und daneben steht ``rooms[].meta.charge_periods``
+    mit den SPRACHNEUTRALEN Schlüsseln (``CLEANINGFEE``, ``ELECTRICITYFEE``).
+
+    Diese Fixture stand vorher in der Form von ``reservations.ota_details`` —
+    einer gekürzten Kopie ohne ``meta`` und ohne ``charge_periods``. Damit war
+    sie grün, während die Maske live die falsche Quelle las und
+    ``electricity`` nicht anbot: eine Attrappe in der falschen Form verdeckt
+    genau den Fehler, den der Test sichern soll.
+    """
+    meta: dict = {
+        "price_details": {
+            "guest_view": {
+                "taxes": [
+                    {
+                        "code": "14",
+                        "type": "Inclusive",
+                        "amount": minor,
+                        "decimal_places": 2,
+                        "currency_code": "DKK",
+                        "tax_description": text,
+                        "charge_frequency": 12,
+                    }
+                    for text, minor in posten
+                ]
+            }
+        }
+    }
+    if schluessel:
+        meta["charge_periods"] = {
+            k: [{"to": None, "from": "2026-05-01", "excluded": True}]
+            for k in schluessel
+        }
+    return {"rooms": [{"meta": meta}]}
+
+
+def test_uebersicht_zeigt_arten_aus_portal_buchungen() -> None:
+    """Eine Art, die NUR aus einem Portal-Payload kommt, muss zuordenbar sein.
+
+    Das war die stille Lücke: die Maske las ausschließlich
+    ``property_pricing_config``. Eine Gebührenart, die ein Portal mitbringt und
+    die an keinem Objekt gepflegt ist, erschien dort NICHT — die Maske meldete
+    „alles zugeordnet", während die Abrechnung eine Zuordnung verlangte, die in
+    der Oberfläche gar nicht anlegbar war. Live blockierte so „Stromkosten"
+    (→ `electricity`) die Auszahlung von Feriehus Kornblomst.
+
+    Gelesen wird `channex_booking.raw` — DIESELBE Quelle wie die Abrechnung —
+    und nicht `reservations.ota_details`. Die Kopie in `ota_details` traegt
+    kein `charge_periods`; die Maske erkannte `electricity` daran nicht und
+    bot die Art nicht an, waehrend die Abrechnung sie verlangte.
+    """
+    svc = _svc(
+        {
+            "property_pricing_config": [
+                {"tenant_id": "t-1", "fees": [{"feeType": "cleaning_fee"}]}
+            ],
+            "reservations": [
+                {"id": "r-1", "tenant_id": "t-1", "source_channex_booking_id": "cb-1"},
+                {"id": "r-2", "tenant_id": "t-1", "source_channex_booking_id": "cb-2"},
+                # Fremder Mandant darf die Maske nicht mitprägen.
+                {"id": "r-3", "tenant_id": "t-2", "source_channex_booking_id": "cb-3"},
+            ],
+            "channex_booking": [
+                {
+                    "tenant_id": "t-1",
+                    "channex_booking_id": "cb-1",
+                    "raw": _booking_payload(
+                        [("Stromkosten", "12500")], ["ELECTRICITYFEE"]
+                    ),
+                },
+                {
+                    "tenant_id": "t-1",
+                    "channex_booking_id": "cb-2",
+                    "raw": _booking_payload(
+                        [("Stromkosten", "12500")], ["ELECTRICITYFEE"]
+                    ),
+                },
+                {
+                    "tenant_id": "t-2",
+                    "channex_booking_id": "cb-3",
+                    "raw": _booking_payload([("Handtücher", "5000")], ["TOWELFEE"]),
+                },
+            ],
+        }
+    )
+    uebersicht = svc.uebersicht(_ctx())
+    nach_art = {i.fee_type: i for i in uebersicht.items}
+    assert "electricity" in nach_art, (
+        "Portal-Art fehlt in der Maske — die Abrechnung verlangt eine "
+        f"Zuordnung, die hier nicht anlegbar wäre. Vorhanden: {sorted(nach_art)}"
+    )
+    assert nach_art["electricity"].anzahl == 2
+    assert nach_art["electricity"].beispiel_namen == ["Stromkosten"]
+    assert "linens_bath" not in nach_art
+    # Beide offen: die gepflegte UND die aus dem Portal.
+    assert uebersicht.offen == 2
+
+
+def test_portal_art_und_stammdaten_art_zaehlen_zusammen() -> None:
+    """Dieselbe Art aus beiden Quellen ist EINE Entscheidung, nicht zwei."""
+    svc = _svc(
+        {
+            "property_pricing_config": [
+                {
+                    "tenant_id": "t-1",
+                    "fees": [{"feeType": "cleaning_fee", "name": "Endreinigung"}],
+                }
+            ],
+            "reservations": [
+                {"id": "r-1", "tenant_id": "t-1", "source_channex_booking_id": "cb-1"}
+            ],
+            "channex_booking": [
+                {
+                    "tenant_id": "t-1",
+                    "channex_booking_id": "cb-1",
+                    "raw": _booking_payload(
+                        [("Reinigungsgebühr", "79500")], ["CLEANINGFEE"]
+                    ),
+                }
+            ],
+        }
+    )
+    uebersicht = svc.uebersicht(_ctx())
+    arten = [i.fee_type for i in uebersicht.items]
+    assert arten.count("cleaning_fee") == 1, "Art doppelt in der Maske"
+    nach_art = {i.fee_type: i for i in uebersicht.items}
+    assert nach_art["cleaning_fee"].anzahl == 2
+    assert set(nach_art["cleaning_fee"].beispiel_namen) == {
+        "Endreinigung",
+        "Reinigungsgebühr",
+    }
 
 
 def test_gebuehr_ohne_feetype_laeuft_unter_unknown() -> None:

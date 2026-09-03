@@ -1361,7 +1361,10 @@
       "notes": "Notes",
       "share": "Part (%)",
       "commissionOverride": "Commission (%)",
-      "emailLanguage": "Langue des e-mails"
+      "emailLanguage": "Langue des e-mails",
+      "countryPlaceholder": "Choisir un pays …",
+      "countrySearch": "Rechercher un pays …",
+      "countryEmpty": "Aucun pays trouvé."
     },
     "placeholders": {
       "name": "p. ex. Jean Dupont",
@@ -6368,7 +6371,18 @@
       "feeCalculationLabel": "Calcul",
       "feeVatHint": "Un taux de taxe distinct pour ces frais, différent du taux de nuitée de la propriété. Désactivé signifie que les frais suivent le taux de nuitée.",
       "feeVatIncludedLabel": "Taxe incluse dans le montant",
-      "feeVatIncludedHint": "Le taux de taxe est-il déjà inclus dans le montant saisi ou est-il ajouté en sus ? Sans cette information, le montant serait ambigu."
+      "feeVatIncludedHint": "Le taux de taxe est-il déjà inclus dans le montant saisi ou est-il ajouté en sus ? Sans cette information, le montant serait ambigu.",
+      "feeTypesLoadFailed": "Les types de frais n'ont pas pu être chargés ({error}). Sans eux, aucun type de frais ne peut être sélectionné — veuillez recharger la page.",
+      "feeTypesLoading": "Chargement des types de frais …",
+      "bookingFeesTitle": "Fourni par Booking.com",
+      "bookingFeesHint": "Ces frais figurent dans les réservations Booking de cet hébergement, mais ne sont pas enregistrés ici. Montant, nom et calcul proviennent de la réservation.",
+      "bookingFeesTake": "Reprendre les frais",
+      "bookingFeesTaken": "{count, plural, one {# frais repris} other {# frais repris}}",
+      "bookingFeesPerNight": "Par nuit",
+      "bookingFeesPerStay": "Par séjour",
+      "bookingFeesAssignTitle": "Affectation manquante",
+      "bookingFeesAssignHint": "Ces frais sont enregistrés sur l'hébergement, mais il n'est pas défini à qui appartient le montant. Sans cela, le décompte propriétaire ne peut pas être calculé.",
+      "bookingFeesAssign": "Créer l'affectation"
     },
     "policiesForm": {
       "title": "Règlements",

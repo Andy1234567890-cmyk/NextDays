@@ -448,6 +448,17 @@ jobs:
         if: steps.pruefen.outputs.laufen == 'true'
         run: node scripts/i18n/blocktypen-pruefen.mjs
 
+      # Ein fehlendes Land ist eine Stammdate, die der Kunde nicht eintragen
+      # kann — und ein UNGÜLTIGER Code fällt niemandem auf, weil
+      # Intl.DisplayNames dann den gespeicherten deutschen Namen zurückgibt:
+      # die Auswahl sieht korrekt aus, gespeichert wird ein Kürzel, das kein
+      # Portal kennt. Live waren es 193 statt 242 Gebiete (alle abhängigen
+      # fehlten) und drei falsche Codes (FX/SU/UK statt FR/RU/GB); gemeldet
+      # wurde es vom Nutzer („faroe islands fehlt"), nicht von einem Test.
+      - name: Länderliste vollständig und ISO-konform
+        if: steps.pruefen.outputs.laufen == 'true'
+        run: node scripts/i18n/laenderliste-pruefen.mjs
+
       # Dieselbe Logik in mehreren Kopien — die Fehlerklasse, die bei der
       # Nachprüfung des Baukastens am 27.08.2026 DREIMAL zuschlug: die
       # Menü-Beschriftung stand zweimal da und nur eine Kopie lernte den

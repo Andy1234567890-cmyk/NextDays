@@ -641,6 +641,25 @@ export function StatementEditor({
             className="mb-3 rounded-(--radius) border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
           >
             {t(GRUND_KEYS[st.summary.payout_unbekannt] ?? "summary.payoutUnknown")}
+            {/* WAS konkret fehlt und WO. Der Satz oben nennt die Klasse des
+                Mangels und den Weg zur Maske; ohne diese Zeile blieb offen,
+                WELCHE Gebührenart gemeint ist (es gibt 49) und welche der
+                Buchungen sie betrifft — die Zusammenfassung nennt bewusst nur
+                einen Grund, und die betroffene Zeile zeigt in ihrer
+                Auszahlungsspalte auch nur „—". Der Server wusste beides schon
+                immer und schrieb es bis 03.09.2026 nur ins Log. */}
+            {(st.summary.payout_unbekannt_detail ||
+              st.summary.payout_unbekannt_buchung) && (
+              <span className="mt-2 block font-medium">
+                {st.summary.payout_unbekannt_detail}
+                {st.summary.payout_unbekannt_buchung && (
+                  <span className="font-normal opacity-80">
+                    {" "}
+                    ({st.summary.payout_unbekannt_buchung})
+                  </span>
+                )}
+              </span>
+            )}
           </p>
         )}
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">

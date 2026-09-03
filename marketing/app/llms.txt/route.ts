@@ -130,6 +130,16 @@ export async function GET(): Promise<Response> {
     `- Sitemap: ${siteUrl("/sitemap.xml")}. Search result pages and one-time email ` +
       "links are excluded from it and from crawling.",
   );
+  // Verweis auf die ausführliche Fassung. Diese Datei listet nur die
+  // Hilfe-KATEGORIEN; wer den einzelnen Artikel sucht, findet ihn dort — mit
+  // Auszug, damit die Auswahl ohne Abruf jeder einzelnen Seite möglich ist.
+  zeilen.push(
+    `- Full index with every help article: ${siteUrl("/llms-full.txt")}`,
+  );
+  zeilen.push(
+    `- Canonical host is ${siteUrl("/").replace(/\/$/, "")}; requests without www ` +
+      "are redirected there.",
+  );
   zeilen.push("");
 
   return new Response(zeilen.join("\n"), {

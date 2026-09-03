@@ -22,7 +22,12 @@ import {
   FACEBOOK_DOMAIN_VERIFICATION,
   GOOGLE_SITE_VERIFICATION,
 } from "@/lib/site-verification";
-import { SITE_URL } from "@/lib/site-url";
+import {
+  organisationSchema,
+  produktSchema,
+  websiteSchema,
+} from "@/lib/organisation-schema";
+import { SITE_URL, siteUrl } from "@/lib/site-url";
 import { staffelPreisCent } from "@/lib/tarif";
 
 import type { Metadata } from "next";
@@ -67,6 +72,17 @@ export async function generateMetadata(): Promise<Metadata> {
   // Backend wirklich geliefert hat, nicht mit der angefragten.
   const einstiegCent = liste ? staffelPreisCent(liste.grundtarif_tiers, 1) : null;
 
+  // EINMAL berechnet und an alle drei Stellen gegeben, die sie brauchen:
+  // `description`, Open Graph und Twitter. Drei getrennte Aufrufe wären
+  // dieselbe Formatierung dreimal — und damit die Stelle, an der die
+  // Vorschaukarte irgendwann einen anderen Preis nennt als das Suchergebnis.
+  const beschreibung =
+    liste && einstiegCent !== null
+      ? t("descriptionMitPreis", {
+          preis: formatCurrency(einstiegCent / 100, liste.currency, locale),
+        })
+      : t("description");
+
   return {
     // `metadataBase` macht relative Metadaten-Pfade absolut (Open-Graph-Bilder,
     // kanonische Links). Ohne sie warnt Next beim Bauen und setzt localhost ein —
@@ -89,12 +105,80 @@ export async function generateMetadata(): Promise<Metadata> {
       other: { "facebook-domain-verification": FACEBOOK_DOMAIN_VERIFICATION },
     },
     title: t("title"),
-    description:
-      liste && einstiegCent !== null
-        ? t("descriptionMitPreis", {
-            preis: formatCurrency(einstiegCent / 100, liste.currency, locale),
-          })
-        : t("description"),
+    description: beschreibung,
+    // Kanonische Adresse der Startseite. Sie fehlte hier bis zum 03.09.2026,
+    // während JEDE Unterseite eine hatte — ausgerechnet auf der wichtigsten URL
+    // also nicht. Folge, live nachgemessen: `https://mynextdays.com/` und
+    // `https://www.mynextdays.com/` lieferten zwei byte-identische, beide
+    // indexierbare Dokumente ohne jeden Hinweis, welches das echte ist.
+    //
+    // Der Wert ist relativ ("/"); `metadataBase` oben macht daraus die
+    // www-Adresse — dieselbe, die Sitemap, robots.txt und llms.txt nennen.
+    // Ein zweiter Ort mit einer ausgeschriebenen Domain wäre die Stelle, an der
+    // die vier beim nächsten Domainwechsel auseinanderlaufen (Wurzel 4).
+    //
+    // Das ersetzt KEINE Server-Weiterleitung von apex auf www — die steht in
+    // next.config.ts. Canonical ist ein Hinweis, den eine Suchmaschine
+    // befolgen darf; der Redirect ist die Tatsache. Ein Sprachmodell, das die
+    // Seite abruft, sieht ohnehin nur die Weiterleitung.
+    alternates: { canonical: "/" },
+    openGraph: {
+      type: "website",
+      siteName: "myNextDays",
+      locale,
+      url: siteUrl("/"),
+      title: t("title"),
+      description: beschreibung,
+      // KEIN `images` hier: `app/opengraph-image.tsx` erzeugt das Bild und
+      // Next hängt `og:image` samt Maßen und `alt` von selbst an. Eine hier
+      // getippte Angabe würde das erzeugte Bild VERDRÄNGEN (Next übernimmt es
+      // nur, solange `openGraph.images` nicht gesetzt ist) — also genau das
+      // geprüfte 1200×630-Bild gegen einen handgepflegten Pfad tauschen, der
+      // beim nächsten Umbenennen ins Leere zeigt.
+    },
+    // Twitter/X liest `og:*` als Rückfallebene, aber `summary_large_image`
+    // muss explizit gesetzt sein — ohne die Karte zeigt X nur einen nackten
+    // Link. Titel und Beschreibung kommen aus derselben Quelle wie oben, damit
+    // eine Änderung nicht an einer von drei Stellen hängen bleibt.
+    twitter: {
+      card: "summary_large_image",
+      title: t("title"),
+      description: beschreibung,
+      // `twitter:image` kommt ebenfalls aus opengraph-image.tsx — gleiche
+      // Begründung wie oben.
+    },
+    // Wegweiser für Sprachmodelle auf /llms.txt (llmstxt.org). Die Datei
+    // existiert und liefert 200 — sie war nur von der Seite aus nicht
+    // auffindbar: ein Modell, das die Startseite liest, hatte keinen Hinweis
+    // darauf, dass es eine kompakte, verlässliche Fassung gibt, und musste
+    // 450 KB gerendertes Marketing-HTML raten.
+    //
+    // Zwei Wege, weil es keinen etablierten Standard-Mechanismus gibt:
+    // `<link rel="llms-txt">` (die Konvention, die sich um llmstxt.org
+    // gebildet hat) und ein `<meta name="llms-txt">`, weil manche Abrufer nur
+    // Meta-Tags auswerten. Beide zeigen auf dieselbe absolute URL — eine
+    // relative wäre für einen Abrufer ohne Basis-URL wertlos.
+    other: {
+      "llms-txt": siteUrl("/llms.txt"),
+    },
+    // Die Vorgabe. Bewusst ausgeschrieben statt weggelassen: ohne dieses Tag
+    // ist das Verhalten zwar dasselbe, aber es steht nirgends, dass die Seite
+    // indexiert werden SOLL. `max-snippet: -1` und `max-image-preview: large`
+    // heben die Längenbegrenzung von Snippet und Vorschaubild auf — ohne sie
+    // kürzt Google in manchen Regionen (EU-Leistungsschutzrecht) auf wenige
+    // Wörter, und genau diese Kürzung trifft auch die Textmenge, die
+    // KI-Übersichten aus der Seite übernehmen dürfen.
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-snippet": -1,
+        "max-image-preview": "large",
+        "max-video-preview": -1,
+      },
+    },
   };
 }
 
@@ -103,6 +187,14 @@ export default async function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const locale = await getLocale();
   const messages = await getMessages();
+  const t = await getTranslations("meta");
+
+  // Für das Produkt-Schema BEWUSST die preislose Beschreibung, nicht die aus
+  // `generateMetadata` mit dem Einstiegsbetrag: strukturierte Daten sind eine
+  // dauerhafte Aussage über das Produkt, kein Snippet. Ein Preis darin würde
+  // bei jedem Tarifwechsel eine veraltete Zahl in den Wissensgraphen tragen —
+  // und wäre je Besuchersprache eine andere Währung für dieselbe Entität.
+  const produktBeschreibung = t("description");
 
   return (
     // suppressHydrationWarning: Tag Assistant & Co. schreiben eigene
@@ -134,6 +226,50 @@ export default async function RootLayout({
           Begründung und Datenschutz-Abwägung in components/google-tag.tsx. */}
       <head>
         <GoogleTag />
+        {/* Wegweiser für Sprachmodelle auf /llms.txt (llmstxt.org). Das
+            gleichnamige `<meta>` setzt `generateMetadata` oben; hier steht die
+            Link-Beziehung, die Next selbst nicht kennt — `alternates` erlaubt
+            nur eine feste Liste von `rel`-Werten, `llms-txt` gehört nicht dazu.
+
+            `type` ist ausdrücklich `text/markdown`: llms.txt IST Markdown,
+            ausgeliefert als text/plain. Ein Abrufer, der nur den Content-Type
+            der Antwort sieht, hielte sie sonst für unstrukturierten Text. */}
+        <link
+          rel="llms-txt"
+          type="text/markdown"
+          href={siteUrl("/llms.txt")}
+        />
+        {/* Strukturierte Daten zu Firma, Produkt und Website. Sie stehen im
+            Layout und gelten damit für jede Route — eine Suchmaschine und ein
+            Sprachmodell erfahren auf JEDER Seite, wer myNextDays ist und dass
+            myBestDays etwas anderes ist.
+
+            Drei getrennte `<script>`-Blöcke statt eines `@graph`: jeder Knoten
+            bleibt für sich prüfbar (Rich Results Test meldet den fehlerhaften
+            einzeln), und ein Fehler in einem macht nicht die anderen zwei
+            ungültig. Die Verknüpfung leisten die `@id`-Verweise.
+
+            `JSON.stringify` ist hier sicher, weil ALLE Werte aus dem Repo
+            stammen (content/legal/anbieter) — kein Nutzer-Input, also keine
+            Stelle, an der ein `</script>` im Wert den Block verlassen könnte. */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organisationSchema()),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(websiteSchema()),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(produktSchema(produktBeschreibung)),
+          }}
+        />
       </head>
       <body className={`${inter.variable} ${fraunces.variable} antialiased`}>
         <NextIntlClientProvider locale={locale} messages={messages}>

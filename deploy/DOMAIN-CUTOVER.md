@@ -263,6 +263,14 @@ Wenn *Hostname enthält* `mynextdays.de` → **301** auf
 Analog für `.net`, `.org` → `mynextdays.com`; `mybestdays.eu`, `mybestdays.net`
 → `mybestdays.dk`.
 
+**Ziel seit 03.09.2026 auf `www.` ziehen.** Die Regeln oben zeigen auf den
+Apex, und der leitet inzwischen selbst per 308 auf `www.mynextdays.com` weiter
+(`marketing/next.config.ts`) — aus einem Aufruf von `mynextdays.de` werden so
+ZWEI Weiterleitungen. Das funktioniert, kostet aber einen unnötigen Roundtrip
+und verwässert das Signal für Suchmaschinen. Sauber ist
+`https://www.mynextdays.com/$1` als Ziel; eine Schleife kann daraus nicht
+entstehen, weil `.de` und `.com` verschiedene Hosts sind.
+
 ### Schritt 6 — Coolify: Domains an die Apps hängen
 
 Pro App die Domain eintragen (siehe Zielbild-Tabelle). Coolify fordert das

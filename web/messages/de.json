@@ -1361,7 +1361,10 @@
       "notes": "Notizen",
       "share": "Anteil (%)",
       "commissionOverride": "Provision (%)",
-      "emailLanguage": "Sprache für E-Mails"
+      "emailLanguage": "Sprache für E-Mails",
+      "countryPlaceholder": "Land wählen …",
+      "countrySearch": "Land suchen …",
+      "countryEmpty": "Kein Land gefunden."
     },
     "placeholders": {
       "name": "z. B. Max Mustermann",
@@ -6389,7 +6392,18 @@
       "feeCalculationLabel": "Berechnung",
       "feeVatHint": "Ein eigener Steuersatz für diese Gebühr, abweichend vom Übernachtungssatz des Objekts. Aus heißt: die Gebühr folgt dem Übernachtungssatz.",
       "feeVatIncludedLabel": "Steuer im Betrag",
-      "feeVatIncludedHint": "Steckt der Steuersatz schon im eingegebenen Betrag oder kommt er obendrauf? Ohne diese Angabe wäre der Betrag zweideutig."
+      "feeVatIncludedHint": "Steckt der Steuersatz schon im eingegebenen Betrag oder kommt er obendrauf? Ohne diese Angabe wäre der Betrag zweideutig.",
+      "feeTypesLoadFailed": "Die Gebührenarten konnten nicht geladen werden ({error}). Ohne sie ist keine Gebührenart wählbar — bitte Seite neu laden.",
+      "feeTypesLoading": "Gebührenarten werden geladen …",
+      "bookingFeesTitle": "Von Booking.com mitgeliefert",
+      "bookingFeesHint": "Diese Gebühren stehen in den Booking-Buchungen dieses Objekts, sind hier aber nicht hinterlegt. Betrag, Name und Berechnung kommen aus der Buchung.",
+      "bookingFeesTake": "Gebühren übernehmen",
+      "bookingFeesTaken": "{count, plural, one {# Gebühr übernommen} other {# Gebühren übernommen}}",
+      "bookingFeesPerNight": "Pro Nacht",
+      "bookingFeesPerStay": "Pro Aufenthalt",
+      "bookingFeesAssignTitle": "Zuordnung fehlt",
+      "bookingFeesAssignHint": "Diese Gebühren stehen am Objekt, aber es ist nicht festgelegt, wem der Betrag gehört. Ohne diese Angabe kann die Eigentümer-Abrechnung nicht rechnen.",
+      "bookingFeesAssign": "Zuordnung anlegen"
     },
     "policiesForm": {
       "title": "Buchungskonditionen",

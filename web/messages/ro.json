@@ -1361,7 +1361,10 @@
       "notes": "Note",
       "share": "Cotă (%)",
       "commissionOverride": "Comision (%)",
-      "emailLanguage": "Limba e-mailurilor"
+      "emailLanguage": "Limba e-mailurilor",
+      "countryPlaceholder": "Selectează țara …",
+      "countrySearch": "Caută țara …",
+      "countryEmpty": "Nicio țară găsită."
     },
     "placeholders": {
       "name": "de ex. Ion Popescu",
@@ -6368,7 +6371,18 @@
       "feeCalculationLabel": "Calcul",
       "feeVatHint": "O cotă de impozitare separată pentru această taxă, diferită de cota de cazare a proprietății. Dezactivat înseamnă: taxa urmează cota de cazare.",
       "feeVatIncludedLabel": "Impozit în sumă",
-      "feeVatIncludedHint": "Cota de impozitare este deja inclusă în suma introdusă sau se adaugă la aceasta? Fără această informație, suma ar fi ambiguă."
+      "feeVatIncludedHint": "Cota de impozitare este deja inclusă în suma introdusă sau se adaugă la aceasta? Fără această informație, suma ar fi ambiguă.",
+      "feeTypesLoadFailed": "Tipurile de taxă nu au putut fi încărcate ({error}). Fără ele nu poate fi selectat niciun tip de taxă — reîncarcă pagina.",
+      "feeTypesLoading": "Se încarcă tipurile de taxă …",
+      "bookingFeesTitle": "Furnizat de Booking.com",
+      "bookingFeesHint": "Aceste taxe apar în rezervările Booking ale acestei proprietăți, dar nu sunt înregistrate aici. Suma, denumirea și calculul provin din rezervare.",
+      "bookingFeesTake": "Preia taxele",
+      "bookingFeesTaken": "{count, plural, one {# taxă preluată} other {# taxe preluate}}",
+      "bookingFeesPerNight": "Pe noapte",
+      "bookingFeesPerStay": "Pe sejur",
+      "bookingFeesAssignTitle": "Lipsește alocarea",
+      "bookingFeesAssignHint": "Aceste taxe sunt înregistrate la proprietate, dar nu este stabilit cui aparține suma. Fără aceasta, decontul proprietarului nu poate fi calculat.",
+      "bookingFeesAssign": "Creează alocarea"
     },
     "policiesForm": {
       "title": "Politici",

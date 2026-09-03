@@ -42,3 +42,34 @@ export function useCountryCodeOptions() {
     })).sort((a, b) => sortierer.compare(a.label, b.label));
   }, [locale]);
 }
+
+/** Alle Länder als Optionen für ``SearchableSelect`` — Wert ist der ISO-Code.
+ *
+ *  WOFÜR (03.09.2026): Die Eigentümer-Stammdaten zeigten nur die 27 EU-Staaten
+ *  plus CH/UK (`@nextdays/ui/countries`, jene Liste trägt die EU-Steuer-Labels
+ *  und Telefonvorwahlen und ist dafür richtig). Eigentümer wohnen aber
+ *  weltweit; ein Objekt in Dänemark kann einem Eigentümer in Kanada oder
+ *  Thailand gehören, und dessen Land war nicht wählbar.
+ *
+ *  ``keywords`` macht die Liste über die Anzeigesprache hinaus auffindbar: der
+ *  ISO-Code („DK"), der englische Name („Denmark") und der gespeicherte
+ *  deutsche Name. Ohne sie müsste ein dänischer Betrieb den Landesnamen in der
+ *  Oberflächensprache kennen, um sein eigenes Land zu finden.
+ */
+export function useCountrySearchOptions() {
+  const locale = useLocale();
+  return useMemo(() => {
+    const namen = new Intl.DisplayNames([locale], { type: "region" });
+    // Englisch als zweite Suchsprache: sie ist die Verkehrssprache der
+    // Portale, und „Denmark" tippt sich auf jeder Tastatur.
+    const englisch = new Intl.DisplayNames(["en"], { type: "region" });
+    const sortierer = new Intl.Collator(locale);
+    return COUNTRIES.map((c) => ({
+      value: c.code,
+      // Kennt die Laufzeit den Code nicht, bleibt der gespeicherte Name
+      // stehen — besser der deutsche Name als eine leere Zeile (Wurzel 4).
+      label: namen.of(c.code) ?? c.value,
+      keywords: [c.code, englisch.of(c.code) ?? "", c.value].filter(Boolean),
+    })).sort((a, b) => sortierer.compare(a.label, b.label));
+  }, [locale]);
+}

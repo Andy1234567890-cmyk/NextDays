@@ -11,6 +11,25 @@ import type { Locale } from "@/i18n/locales";
 
 export const metadata: Metadata = {
   title: "Suche · Hilfe-Center · myNextDays",
+  // `noindex`, und damit BEWUSST kein `canonical`.
+  //
+  // Diese Seite zeigt je Suchbegriff anderen Inhalt — sie gehört aus demselben
+  // Grund nicht in den Index, aus dem sie in der robots.txt gesperrt und aus
+  // der Sitemap ausgenommen ist (Begründung dort).
+  //
+  // Warum das hier trotzdem ausgeschrieben steht: Seit das Root-Layout ein
+  // `alternates: { canonical: "/" }` setzt, vererbt Next diesen Wert an jedes
+  // Segment, das `alternates` nicht selbst überschreibt. Ohne diese Zeilen
+  // trüge die Suchseite also `rel=canonical` auf die STARTSEITE — die Aussage
+  // „diese URL ist die Startseite", was etwas völlig anderes und Falsches ist
+  // als „bitte nicht indexieren".
+  //
+  // `alternates` wird deshalb explizit geleert und die Anweisung stattdessen
+  // über `robots` gegeben. Ein Disallow in der robots.txt und ein `noindex`
+  // hier widersprechen sich nicht: das eine hält Crawler fern, das andere
+  // gilt, falls die Adresse auf anderem Weg gefunden wird.
+  alternates: {},
+  robots: { index: false, follow: false },
 };
 
 export default async function HelpSearchPage({

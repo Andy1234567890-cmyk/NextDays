@@ -28,7 +28,11 @@ import type { Metadata } from "next";
 export async function generateMetadata(): Promise<Metadata> {
   const locale = (await getLocale()) as Locale;
   const doc = await ladeRechtsdokument("cookie-richtlinie", locale);
-  return { title: `${doc.title} — myNextDays`, description: doc.metaDescription };
+  return {
+    title: `${doc.title} — myNextDays`,
+    description: doc.metaDescription,
+    alternates: { canonical: "/cookie-richtlinie" },
+  };
 }
 
 export default async function Page() {
