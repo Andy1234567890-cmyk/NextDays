@@ -41,7 +41,7 @@ export default function GuestLogin() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "GuestLogin">>();
-  const { login, register } = useGuestAuth();
+  const { login, register, passwortNeu } = useGuestAuth();
 
   const [registrieren, setRegistrieren] = useState(route.params?.modus === "registrieren");
   const [email, setEmail] = useState("");
@@ -51,18 +51,29 @@ export default function GuestLogin() {
   const [busy, setBusy] = useState(false);
   const [fehler, setFehler] = useState<string | null>(null);
   const [hinweis, setHinweis] = useState<string | null>(null);
+  // Code-Modus: nach dem Anfordern gibt der Gast den Code aus der Mail ein.
+  // Der LINK in der Mail fuehrte bis 03.09.2026 auf Kongs Fehlerseite
+  // (`/verify` statt `/auth/v1/verify`), und es gab nirgends eine Stelle,
+  // an der man ein neues Passwort setzen konnte.
+  const [codeModus, setCodeModus] = useState(false);
+  const [code, setCode] = useState("");
 
   // Serverseitige Mindestlänge (8) hier spiegeln, damit der Nutzer nicht erst
   // ein 422 kassiert. Die verbindliche Prüfung bleibt im Backend.
-  const formularOk =
-    istEmail(email) && passwort.length >= 8 && (!registrieren || name.trim().length > 0);
+  const formularOk = codeModus
+    ? istEmail(email) && code.trim().length >= 6 && passwort.length >= 8
+    : istEmail(email) &&
+      passwort.length >= 8 &&
+      (!registrieren || name.trim().length > 0);
 
   const absenden = async () => {
     if (busy || !formularOk) return; // Wurzel 2: kein doppelter Auth-Request
     setBusy(true);
     setFehler(null);
     setHinweis(null);
-    const res = registrieren
+    const res = codeModus
+      ? await passwortNeu(email.trim(), code.trim(), passwort)
+      : registrieren
       ? await register({
           email: email.trim(),
           password: passwort,
@@ -86,7 +97,13 @@ export default function GuestLogin() {
     }
     setBusy(true);
     await guestPasswordReset(email.trim());
-    setHinweis("Falls ein Konto existiert, ist eine E-Mail zum Zurücksetzen unterwegs.");
+    // In den Code-Modus wechseln: die Mail traegt den Code, und ohne diesen
+    // Schritt wuesste der Gast nicht, wohin damit.
+    setCodeModus(true);
+    setPasswort("");
+    setHinweis(
+      "Falls ein Konto existiert, ist ein Code unterwegs. Gib ihn unten ein und wähle ein neues Passwort.",
+    );
     setBusy(false);
   };
 
@@ -149,10 +166,19 @@ export default function GuestLogin() {
             value={email}
             onChange={setEmail}
             keyboardType="email-address"
-            position={registrieren ? "mitte" : "oben"}
+            position={registrieren || codeModus ? "mitte" : "oben"}
           />
+          {codeModus && (
+            <Feld
+              label="Code aus der E-Mail"
+              value={code}
+              onChange={setCode}
+              keyboardType="phone-pad"
+              position="mitte"
+            />
+          )}
           <Feld
-            label="Passwort"
+            label={codeModus ? "Neues Passwort" : "Passwort"}
             value={passwort}
             onChange={setPasswort}
             secure
@@ -169,7 +195,7 @@ export default function GuestLogin() {
           )}
         </Col>
 
-        {registrieren && passwort.length > 0 && passwort.length < 8 && (
+        {(registrieren || codeModus) && passwort.length > 0 && passwort.length < 8 && (
           <Txt v="xs" soft>
             Das Passwort braucht mindestens 8 Zeichen.
           </Txt>
@@ -190,10 +216,10 @@ export default function GuestLogin() {
         )}
 
         <Btn variant={formularOk && !busy ? "primary" : "ghost"} block onPress={absenden}>
-          {busy ? "Bitte warten …" : "Weiter"}
+          {busy ? "Bitte warten …" : codeModus ? "Passwort setzen" : "Weiter"}
         </Btn>
 
-        {!registrieren && (
+        {!registrieren && !codeModus && (
           <Pressable onPress={passwortVergessen} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
             <Txt v="sm" style={{ textAlign: "center", textDecorationLine: "underline" }}>
               Passwort vergessen

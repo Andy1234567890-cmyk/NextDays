@@ -20,6 +20,7 @@ from .schemas import (
     GuestLoginRequest,
     GuestMessageResponse,
     GuestPasswordResetRequest,
+    GuestPasswortNeuRequest,
     GuestProfilAnlegenRequest,
     GuestProfileResponse,
     GuestProfileUpdateRequest,
@@ -83,6 +84,24 @@ def password_reset(
 ) -> GuestMessageResponse:
     """Passwort-Reset anstoßen. Antwortet IMMER 200 (kein Existenz-Leak)."""
     return service.password_reset(req)
+
+
+@router.post("/password-neu", response_model=GuestSessionResponse)
+def password_neu(
+    req: GuestPasswortNeuRequest, service: GuestAuthServiceDep
+) -> GuestSessionResponse:
+    """Neues Passwort mit dem CODE aus der Reset-Mail setzen und anmelden.
+
+    Der Code statt des Links: der Link zeigte auf
+    `{API_EXTERNAL_URL}/verify?token=…`, und weil jene Variable die Kong-Basis
+    OHNE `/auth/v1` ist, endete er in Kongs „no Route matched" (gemessen
+    03.09.2026). Der Code haengt an keiner URL.
+
+    Oeffentlich wie `/login` — der Code IST der Nachweis."""
+    try:
+        return service.passwort_neu_setzen(req)
+    except GuestAuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
 @router.get("/me", response_model=GuestProfileResponse)

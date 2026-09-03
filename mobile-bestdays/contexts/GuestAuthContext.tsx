@@ -22,6 +22,7 @@ import {
   guestCodeAnfordern as apiGuestCodeAnfordern,
   guestCodePruefen as apiGuestCodePruefen,
   guestLogin as apiGuestLogin,
+  guestPasswortNeu as apiGuestPasswortNeu,
   guestLogout as apiGuestLogout,
   guestProfilAnlegen as apiGuestProfilAnlegen,
   guestRegister as apiGuestRegister,
@@ -39,6 +40,12 @@ type GuestAuthState = {
   guest: GuestProfile | null;
   login: (email: string, password: string) => Promise<Antwort>;
   register: (input: GuestRegisterInput) => Promise<Antwort>;
+  /** Neues Passwort mit dem Code aus der Reset-Mail — meldet gleich an. */
+  passwortNeu: (
+    email: string,
+    code: string,
+    password: string,
+  ) => Promise<Antwort>;
   logout: () => Promise<void>;
   reload: () => Promise<void>;
   /** Schritt 1 der Code-Anmeldung: Code an die Adresse schicken. */
@@ -96,6 +103,23 @@ export function GuestAuthProvider({ children }: { children: ReactNode }) {
       if (!res.ok) return { ok: false, error: res.error };
       if (!(await ladeProfil())) {
         // Token da, Profil nicht ladbar → nicht „halb angemeldet" stehenbleiben.
+        await apiGuestLogout();
+        setStatus("signedOut");
+        return { ok: false, error: "Konto konnte nicht geladen werden." };
+      }
+      setStatus("signedIn");
+      return { ok: true };
+    },
+    [ladeProfil],
+  );
+
+  const passwortNeu = useCallback(
+    async (email: string, code: string, password: string): Promise<Antwort> => {
+      // Wie `login`: die Sitzung ist danach gesetzt, und ein nicht ladbares
+      // Profil darf nicht „halb angemeldet" stehenbleiben.
+      const res = await apiGuestPasswortNeu(email, code, password);
+      if (!res.ok) return { ok: false, error: res.error };
+      if (!(await ladeProfil())) {
         await apiGuestLogout();
         setStatus("signedOut");
         return { ok: false, error: "Konto konnte nicht geladen werden." };
@@ -195,6 +219,7 @@ export function GuestAuthProvider({ children }: { children: ReactNode }) {
       guest,
       login,
       register,
+      passwortNeu,
       logout,
       reload,
       updateProfile,
@@ -207,6 +232,7 @@ export function GuestAuthProvider({ children }: { children: ReactNode }) {
       guest,
       login,
       register,
+      passwortNeu,
       logout,
       reload,
       updateProfile,

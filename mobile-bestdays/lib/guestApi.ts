@@ -37,7 +37,12 @@ function istGastAuthPfad(path: string): boolean {
     path.startsWith("/guest-auth/login") ||
     path.startsWith("/guest-auth/register") ||
     path.startsWith("/guest-auth/refresh") ||
-    path.startsWith("/guest-auth/password-reset")
+    path.startsWith("/guest-auth/password-reset") ||
+    // `password-neu` MUSS hier stehen: der Gast hat beim Zurücksetzen kein
+    // Token, und `password-reset` matcht diesen Pfad NICHT (startsWith).
+    // Ohne den Eintrag haette der Client einen Refresh versucht und die
+    // Anfrage waere an der fehlenden Sitzung gescheitert.
+    path.startsWith("/guest-auth/password-neu")
   );
 }
 

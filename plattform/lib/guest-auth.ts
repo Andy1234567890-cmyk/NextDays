@@ -54,6 +54,27 @@ export async function guestPasswordReset(
   });
 }
 
+/** Neues Passwort mit dem CODE aus der Reset-Mail setzen und anmelden.
+ *
+ *  Der Code und nicht der Link: der Link zeigte auf
+ *  `{API_EXTERNAL_URL}/verify?token=…`, und weil jene GoTrue-Variable die
+ *  Kong-Basis OHNE `/auth/v1` ist, endete er in Kongs „no Route matched"
+ *  (gemessen 03.09.2026). Der Marktplatz versprach dem Gast einen „Link zum
+ *  Zurücksetzen", der ins Nichts führte.
+ *
+ *  Gibt dieselbe Session zurück wie `guestLogin` — der Gast ist nach dem
+ *  Setzen angemeldet. */
+export async function guestPasswortNeu(
+  email: string,
+  code: string,
+  password: string,
+): Promise<Result<GuestSession>> {
+  return guestCall<GuestSession>("guest-auth/password-neu", {
+    method: "POST",
+    body: { email, code, password },
+  });
+}
+
 export async function guestGetMe(): Promise<Result<GuestMe>> {
   return guestCall<GuestMe>("guest-auth/me");
 }

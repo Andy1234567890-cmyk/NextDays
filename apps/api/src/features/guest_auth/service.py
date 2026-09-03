@@ -40,6 +40,7 @@ from .schemas import (
     GuestLoginRequest,
     GuestMessageResponse,
     GuestPasswordResetRequest,
+    GuestPasswortNeuRequest,
     GuestProfileResponse,
     GuestProfileUpdateRequest,
     GuestRefreshRequest,
@@ -236,8 +237,35 @@ class GuestAuthService:
         Existenz-Leak, ob die Adresse ein Konto hat): ein GoTrue-Fehler wird
         geloggt, aber nicht an den Aufrufer durchgereicht (Best-Effort, kippt
         den Hauptpfad nicht — Wurzel 5)."""
+        # `redirect_to` zeigt auf die Marktplatz-Seite, die das neue Passwort
+        # setzt. Ohne diese Angabe nimmt GoTrue seine eigene
+        # `GOTRUE_SITE_URL` — und die zeigt im Stack auf die Supabase-Adresse,
+        # die 404 gibt (gemessen 03.09.2026). Der Gast bekam damit eine Mail,
+        # die einen „Link zum Zurücksetzen" versprach und ins Nichts führte.
+        #
+        # Das Ziel MUSS in `GOTRUE_URI_ALLOW_LIST` stehen (Coolify-Variable
+        # `ADDITIONAL_REDIRECT_URLS` des Supabase-Stacks), sonst verwirft
+        # GoTrue es stillschweigend und fällt auf die Site-URL zurück.
+        #
+        # Fehlt `marketplace_base_url`, wird KEIN Ziel übergeben statt eines
+        # geratenen (Wurzel 4); der Code in der Mail funktioniert weiterhin.
+        # Lokal geholt statt im Konstruktor: der Service wird an mehreren
+        # Stellen ohne Settings gebaut, und eine neue Pflicht-Abhängigkeit
+        # hätte jeden Aufrufer geändert.
+        from src.core.config import get_settings  # noqa: PLC0415
+
+        basis = (get_settings().marketplace_base_url or "").strip().rstrip("/")
+        optionen = {"redirect_to": f"{basis}/passwort-neu"} if basis else None
+        if not basis:
+            log.error(
+                "marketplace_base_url_fehlt",
+                hinweis="MARKETPLACE_BASE_URL setzen — Reset-Mail ohne Ziel.",
+            )
         try:
-            self._anon.auth.reset_password_email(req.email)
+            if optionen:
+                self._anon.auth.reset_password_email(req.email, optionen)
+            else:
+                self._anon.auth.reset_password_email(req.email)
         # noqa: BLE001 — bewusst breit: der Reset ist best-effort und darf die
         # neutrale 200-Antwort nie kippen (sonst leakt der Fehler die Existenz).
         except Exception as exc:  # noqa: BLE001  pylint: disable=broad-exception-caught
@@ -248,6 +276,76 @@ class GuestAuthService:
             )
         return GuestMessageResponse(
             message="Falls ein Konto existiert, wurde eine E-Mail versendet."
+        )
+
+    def passwort_neu_setzen(
+        self, req: GuestPasswortNeuRequest
+    ) -> GuestSessionResponse:
+        """Neues Passwort mit dem Code aus der Reset-Mail setzen und anmelden.
+
+        WARUM DER CODE UND NICHT DER LINK (03.09.2026): Der Link in der Mail
+        zeigte auf ``{API_EXTERNAL_URL}/verify?token=…``. Kong veroeffentlicht
+        GoTrue aber unter ``/auth/v1/`` (``strip_path: true``) — gemessen gibt
+        ``/auth/v1/verify?token=x&type=recovery`` 303 und ``/verify?…`` 404.
+        Der Marktplatz versprach dem Gast einen „Link zum Zuruecksetzen", und
+        der fuehrte auf Kongs Fehlerseite. Der Code steht in derselben Mail
+        und haengt an keiner URL.
+
+        ZWEI SCHRITTE, und der zweite braucht den ersten: ``verify_otp``
+        tauscht Code+Adresse gegen eine Sitzung, und erst MIT dieser Sitzung
+        darf ``update_user`` das Passwort setzen. Ein ``update_user`` ohne
+        vorangegangenes ``verify_otp`` haette kein Token.
+
+        Kein Existenz-Leak (Wurzel 9): ein falscher Code und eine unbekannte
+        Adresse ergeben dieselbe 400er-Meldung.
+        """
+        try:
+            geprueft = self._anon.auth.verify_otp(
+                {
+                    "email": str(req.email),
+                    "token": req.code.strip(),
+                    "type": "recovery",
+                }
+            )
+        except (GoTrueAuthError, *TRANSPORT_FEHLER) as exc:
+            if stoerung_oder_ablehnung(exc) and not isinstance(exc, GoTrueAuthError):
+                raise GuestAuthError(STOERUNG_MELDUNG, status_code=503) from exc
+            log.info("guest_reset_code_ungueltig", email=mask_email(str(req.email)))
+            raise GuestAuthError(
+                "Code ist ungültig oder abgelaufen. Bitte neu anfordern.",
+                status_code=400,
+            ) from exc
+        if geprueft.session is None:
+            raise GuestAuthError(
+                "Code ist ungültig oder abgelaufen. Bitte neu anfordern.",
+                status_code=400,
+            )
+
+        try:
+            self._anon.auth.set_session(
+                geprueft.session.access_token, geprueft.session.refresh_token
+            )
+            self._anon.auth.update_user({"password": req.password.get_secret_value()})
+        except Exception as exc:
+            log.warning(
+                "guest_passwort_setzen_fehlgeschlagen",
+                email=mask_email(str(req.email)),
+                error=str(exc),
+            )
+            raise GuestAuthError(
+                "Passwort konnte nicht gesetzt werden.", status_code=502
+            ) from exc
+        finally:
+            # Die Sitzung IMMER abraeumen — auch im Fehlerfall, sonst traegt
+            # der geteilte `_anon`-Client fremde Anmeldedaten weiter.
+            try:
+                self._anon.auth.sign_out()
+            except Exception:  # noqa: BLE001 — best effort
+                log.debug("guest_signout_nach_reset_fehlgeschlagen")
+
+        log.info("guest_passwort_neu", email=mask_email(str(req.email)))
+        return self.login(
+            GuestLoginRequest(email=req.email, password=req.password)
         )
 
     # --- Profil (guest_id-gescopet, Wurzel 3/9) ----------------------------

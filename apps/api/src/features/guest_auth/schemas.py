@@ -47,6 +47,27 @@ class GuestPasswordResetRequest(BaseModel):
     email: EmailStr
 
 
+class GuestPasswortNeuRequest(BaseModel):
+    """Neues Passwort setzen — mit dem CODE aus der Reset-Mail.
+
+    Der Code (GoTrue nennt ihn ``token``, in der Mail steht er als
+    sechsstellige Zahl) statt des Links: der Link fuehrte über
+    ``{API_EXTERNAL_URL}/verify?token=…``, und weil jene Variable die
+    Kong-Basis OHNE das ``/auth/v1``-Präfix ist, unter dem Kong GoTrue
+    veroeffentlicht, antwortete er mit „no Route matched" (gemessen
+    03.09.2026: ``/auth/v1/verify?…`` gibt 303, ``/verify?…`` gibt 404).
+    Der Code haengt an keiner URL und ist damit unabhaengig vom Proxy.
+
+    ``email`` gehoert dazu, weil GoTrues ``verify_otp`` mit
+    ``type="recovery"`` Code UND Adresse zusammen prueft — ein Code allein
+    ist keiner Person zugeordnet.
+    """
+
+    email: EmailStr
+    code: str = Field(min_length=6, max_length=12)
+    password: SecretStr = Field(min_length=8, max_length=200)
+
+
 class GuestSessionResponse(BaseModel):
     """GoTrue-Session eines Portal-Gasts (identisch zum Tenant-Session-Shape)."""
 

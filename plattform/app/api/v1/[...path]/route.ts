@@ -22,7 +22,8 @@ async function forward(req: NextRequest, path: string[]): Promise<NextResponse> 
   // Access-Token wird hier als Bearer mitgeschickt, damit die gast-gescopeten
   // Endpunkte (guest-auth/me, guest-bookings, guest-stay, guest-messages,
   // guest-wishlist, guest-reviews) greifen. Public Gast-Pfade (booking-engine,
-  // guest-auth/login|register|password-reset, öffentliche Objekt-Bewertungen)
+  // guest-auth/login|register|password-reset|password-neu, öffentliche
+  // Objekt-Bewertungen)
   // haben kein Cookie → kein Token, bleiben public. Die zwei Auth-Welten
   // (Portal-Gast hier vs. Gastgeber auf apps/web) bleiben strikt getrennt.
   const token = await currentToken();

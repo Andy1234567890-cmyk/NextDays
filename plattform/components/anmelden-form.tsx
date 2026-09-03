@@ -7,10 +7,20 @@ import { Icon } from "@iconify/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { guestLogin, guestPasswordReset, guestRegister } from "@/lib/guest-auth";
+import {
+  guestLogin,
+  guestPasswordReset,
+  guestPasswortNeu,
+  guestRegister,
+} from "@/lib/guest-auth";
 import { setGuestSession } from "@/lib/guest-session";
 
-type Modus = "login" | "register" | "reset";
+// `code` ist der vierte Modus: nach dem Anstossen des Resets gibt der Gast
+// hier den CODE aus der Mail ein. Der LINK in der Mail fuehrte bis
+// 03.09.2026 auf Kongs Fehlerseite (`/verify` statt `/auth/v1/verify`), und
+// eine Seite zum Setzen des Passworts gab es ueberhaupt nicht — das
+// Formular versprach einen „Link zum Zuruecksetzen", der ins Nichts fuehrte.
+type Modus = "login" | "register" | "reset" | "code";
 
 export function AnmeldenForm({ weiter }: { weiter: string }) {
   const router = useRouter();
@@ -22,6 +32,8 @@ export function AnmeldenForm({ weiter }: { weiter: string }) {
   const [busy, setBusy] = useState(false);
   const [fehler, setFehler] = useState<string | null>(null);
   const [hinweis, setHinweis] = useState<string | null>(null);
+  const [code, setCode] = useState("");
+  const [wiederholung, setWiederholung] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -33,12 +45,40 @@ export function AnmeldenForm({ weiter }: { weiter: string }) {
       const res = await guestPasswordReset(email);
       setBusy(false);
       if (res.ok) {
+        // Direkt zur Code-Eingabe: die Mail enthaelt den Code, und ohne
+        // diesen Schritt wuesste der Gast nicht, wohin damit.
+        setModus("code");
         setHinweis(
-          "Falls ein Konto mit dieser E-Mail existiert, haben wir dir einen Link zum Zurücksetzen geschickt.",
+          "Falls ein Konto mit dieser E-Mail existiert, haben wir dir einen Code geschickt. Gib ihn hier ein.",
         );
       } else {
         setFehler(res.error);
       }
+      return;
+    }
+
+    if (modus === "code") {
+      // Vor dem Absenden vergleichen: ein Tippfehler in der Wiederholung
+      // wuerde sonst den Code verbrauchen (GoTrue macht ihn beim Pruefen
+      // ungueltig) und eine neue Mail erfordern.
+      if (password !== wiederholung) {
+        setBusy(false);
+        setFehler("Die Passwörter stimmen nicht überein.");
+        return;
+      }
+      const res = await guestPasswortNeu(email, code.trim(), password);
+      if (!res.ok) {
+        setBusy(false);
+        setFehler(res.error);
+        return;
+      }
+      await setGuestSession(
+        res.data.access_token,
+        res.data.refresh_token,
+        res.data.expires_in,
+      );
+      router.replace(weiter);
+      router.refresh();
       return;
     }
 
@@ -118,9 +158,21 @@ export function AnmeldenForm({ weiter }: { weiter: string }) {
           inputMode="email"
         />
 
+        {modus === "code" && (
+          <Feld
+            label="Code aus der E-Mail"
+            icon="ph:key"
+            value={code}
+            onChange={setCode}
+            type="text"
+            required
+            autoComplete="one-time-code"
+          />
+        )}
+
         {modus !== "reset" && (
           <Feld
-            label="Passwort"
+            label={modus === "code" ? "Neues Passwort" : "Passwort"}
             icon="ph:lock-simple"
             value={password}
             onChange={setPassword}
@@ -129,6 +181,18 @@ export function AnmeldenForm({ weiter }: { weiter: string }) {
             autoComplete={
               modus === "login" ? "current-password" : "new-password"
             }
+          />
+        )}
+
+        {modus === "code" && (
+          <Feld
+            label="Passwort wiederholen"
+            icon="ph:lock-simple"
+            value={wiederholung}
+            onChange={setWiederholung}
+            type="password"
+            required
+            autoComplete="new-password"
           />
         )}
 
@@ -162,11 +226,17 @@ export function AnmeldenForm({ weiter }: { weiter: string }) {
           className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-6 font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
         >
           {busy && <Icon icon="ph:spinner" className="size-5 animate-spin" />}
+          {/* „Code senden" statt „Link senden": die Mail traegt beides, aber
+              nur der Code funktioniert (der Link zeigte auf `/verify` statt
+              `/auth/v1/verify`). Eine Beschriftung, die etwas verspricht,
+              was ins Nichts fuehrt, ist selbst der Fehler. */}
           {modus === "login"
             ? "Anmelden"
             : modus === "register"
               ? "Konto erstellen"
-              : "Link senden"}
+              : modus === "code"
+                ? "Passwort setzen"
+                : "Code senden"}
         </button>
       </form>
 
@@ -184,7 +254,7 @@ export function AnmeldenForm({ weiter }: { weiter: string }) {
             Passwort vergessen?
           </button>
         )}
-        {modus === "reset" && (
+        {(modus === "reset" || modus === "code") && (
           <button
             type="button"
             onClick={() => {

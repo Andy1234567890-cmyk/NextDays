@@ -147,6 +147,30 @@ export async function guestRegister(input: GuestRegisterInput): Promise<Result<t
   }
 }
 
+/** Neues Passwort mit dem CODE aus der Reset-Mail setzen — liefert eine Session.
+ *
+ *  Der Code und nicht der Link: der Link in der Mail zeigte auf
+ *  `{API_EXTERNAL_URL}/verify?token=…`, und weil jene GoTrue-Variable die
+ *  Kong-Basis OHNE `/auth/v1` ist, endete er in Kongs „no Route matched"
+ *  (gemessen 03.09.2026). In einer App ist ein Link ohnehin der schlechtere
+ *  Weg — der Code lässt sich abtippen, ohne die App zu verlassen. */
+export async function guestPasswortNeu(
+  email: string,
+  code: string,
+  password: string,
+): Promise<Result<true>> {
+  try {
+    const session = await guestApi<GuestSession>("/guest-auth/password-neu", {
+      method: "POST",
+      body: { email, code, password },
+    });
+    await speichereSession(session);
+    return { ok: true, data: true };
+  } catch (exc) {
+    return { ok: false, error: fehlertext(exc, "Passwort setzen fehlgeschlagen.") };
+  }
+}
+
 /** Passwort-Reset anstoßen. Antwortet serverseitig immer 200 (kein Existenz-Leak). */
 export async function guestPasswordReset(email: string): Promise<Result<string>> {
   try {
