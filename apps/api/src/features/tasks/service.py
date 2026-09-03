@@ -1406,21 +1406,25 @@ class TasksService:
         plus eine erste Zeile für objektlose Aufgaben. Je Zeile die Aufgaben-
         und Buchungs-Balken im Zeitraum.
 
-        Archivierte Objekte (`archived_at`, 0416) bekommen KEINE leere Zeile:
-        „Fewo-Mosbjerg-Sindal", am 21.08.2026 archiviert, stand sonst dauerhaft
-        als Zeile ohne Inhalt im Kalender (03.09.2026). Hängen im Zeitraum aber
-        noch Aufgaben oder Buchungen an einem archivierten Objekt — die letzte
-        Reinigung nach Vertragsende, eine Abreise nach dem Archivieren —, dann
-        erscheint es MIT diesen Inhalten: eine Aufgabe, die niemand sieht, wird
-        nicht gemacht (Wurzel 1: der Gegenzustand zum Archivieren ist nicht
-        „weg", sondern „nur noch, solange etwas zu tun ist").
+        Archivierte Objekte (`archived_at`, 0416) bekommen KEINE Zeile — auch
+        dann nicht, wenn im Zeitraum noch Aufgaben oder Buchungen an ihnen
+        hängen. Entscheidung des Betreibers (03.09.2026): „archiviert = raus
+        aus dem Aufgabenkalender, zurück nur, wenn wir die Archivierung
+        rückgängig machen". „Fewo-Mosbjerg-Sindal", am 21.08.2026 archiviert,
+        stand vorher dauerhaft als leere Zeile da.
+
+        Was dabei NICHT verloren geht: Buchungen und Eigentümer-Abrechnungen
+        (Archivieren setzt nur `archived_at` und das Vertragsende, `archiv.py`),
+        und offene Aufgaben eines archivierten Objekts stehen weiter in „Meine
+        Aufgaben" und „Teamaufgaben" — nur die Objektzeile im Kalender fehlt.
+        Hebt der Betrieb die Archivierung auf, ist die Zeile wieder da.
         """
         tasks = self._calendar_tasks(
             tenant_id, month_from, month_to, assignee_ids, rule_ids, ctx
         )
         bookings = self._calendar_bookings(tenant_id, month_from, month_to)
         # Der geführte Bestand als Grundgerüst, damit auch Objekte ohne
-        # Aufgaben/Buchungen eine Zeile bekommen.
+        # Aufgaben/Buchungen eine Zeile bekommen — und NUR der Bestand.
         props = (
             nur_im_bestand(
                 self._db()
@@ -1429,27 +1433,9 @@ class TasksService:
                 .eq("tenant_id", tenant_id)
             ).execute()
         ).data or []
-        # Archivierte Objekte, an denen im Zeitraum noch etwas hängt, nachladen.
-        bekannt = {str(p["id"]) for p in props}
-        belegt = {t.property_id for t in tasks if t.property_id} | {
-            b.property_id for b in bookings
-        }
-        fehlend = sorted(pid for pid in belegt if pid not in bekannt)
-        if fehlend:
-            nachgeladen = (
-                self._db()
-                .table("properties")
-                .select("id, title, timezone")
-                .eq("tenant_id", tenant_id)
-                .in_("id", fehlend)
-                .execute()
-            ).data or []
-            props = [*props, *nachgeladen]
-        # IMMER hier sortieren, nicht mal in Postgres und mal in Python: die
-        # Collation der Datenbank und der Codepoint-Vergleich von Python ordnen
-        # „Ä" und „Z" verschieden, und die Zeilenreihenfolge wechselte sonst je
-        # nachdem, ob in diesem Monat ein archiviertes Objekt Inhalt hat. Die
-        # ID als zweiter Schlüssel hält gleiche Titel stabil.
+        # Hier sortieren, nicht in Postgres: Collation und Python-Vergleich
+        # ordnen „Ä" und „Z" verschieden; die ID als zweiter Schlüssel hält
+        # gleiche Titel stabil.
         props.sort(key=lambda p: ((p.get("title") or "").casefold(), str(p["id"])))
 
         rows: list[TaskCalendarRow] = []

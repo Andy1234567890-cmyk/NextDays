@@ -2453,10 +2453,12 @@ def test_kalender_blendet_archiviertes_objekt_ohne_inhalt_aus() -> None:
     assert [r.property_id for r in rows] == [None, "p1"]
 
 
-def test_kalender_zeigt_archiviertes_objekt_solange_etwas_daran_haengt() -> None:
-    """Hängt im Zeitraum noch eine Aufgabe oder Buchung am archivierten Objekt,
-    erscheint es MIT ihr: die letzte Reinigung nach Vertragsende darf nicht
-    unsichtbar werden (Wurzel 1)."""
+def test_kalender_laesst_archiviertes_objekt_auch_mit_inhalt_weg() -> None:
+    """Entscheidung des Betreibers (03.09.2026): archiviert = keine Zeile, auch
+    wenn im Zeitraum noch eine Aufgabe oder Buchung daran hängt. Zurück kommt
+    das Objekt nur über das Aufheben der Archivierung. Die Aufgabe selbst
+    bleibt in den Listen (Meine/Team-Aufgaben) sichtbar — hier geht es nur um
+    die Objektzeile."""
     db = _kalender_db(
         [
             {"id": "p-archiv", "tenant_id": "T", "title": "Aus dem Vertrag",
@@ -2477,20 +2479,31 @@ def test_kalender_zeigt_archiviertes_objekt_solange_etwas_daran_haengt() -> None
     rows = svc.calendar(
         "T", "2026-09-01T00:00:00Z", "2026-09-30T23:59:59Z", ctx=_admin()
     ).rows
+    assert [r.property_id for r in rows] == [None, "p1"]
+
+
+def test_kalender_zeile_kehrt_nach_aufheben_der_archivierung_zurueck() -> None:
+    """Der Rückweg: `archived_at` wieder leer → Zeile wieder da, samt Inhalt."""
+    db = _kalender_db(
+        [{"id": "p-zurueck", "tenant_id": "T", "title": "Wieder im Bestand",
+          "archived_at": None}],
+        [{"id": "t-z", "tenant_id": "T", "title": "Reinigung",
+          "status": "open", "property_id": "p-zurueck", "assignee_id": "u1",
+          "start_at": "2026-09-10T08:00:00+00:00",
+          "due_at": "2026-09-10T12:00:00+00:00"}],
+    )
+    svc = TasksService(client=db)
+    rows = svc.calendar(
+        "T", "2026-09-01T00:00:00Z", "2026-09-30T23:59:59Z", ctx=_admin()
+    ).rows
     nach_id = {r.property_id: r for r in rows}
-    assert set(nach_id) == {None, "p1", "p-archiv", "p-archiv2"}
-    assert [t.id for t in nach_id["p-archiv"].tasks] == ["t-archiv"]
-    assert [b.id for b in nach_id["p-archiv2"].bookings] == ["r-archiv"]
-    # Sortiert nach Titel: das Nachgeladene fügt sich ein, statt hinten zu hängen.
-    assert [r.property_title for r in rows[1:]] == [
-        "Aus dem Vertrag", "Buchung offen", "Haus",
-    ]
+    assert set(nach_id) == {None, "p1", "p-zurueck"}
+    assert [x.id for x in nach_id["p-zurueck"].tasks] == ["t-z"]
 
 
 def test_kalender_archiviertes_objekt_mit_inhalt_ausserhalb_bleibt_weg() -> None:
-    """Der Nachlade-Zweig greift nur für Inhalt IM Zeitraum: eine Aufgabe im
-    Vormonat und eine stornierte Buchung im Monat holen die Zeile nicht
-    zurück — sonst stünde das archivierte Objekt doch wieder leer da."""
+    """Auch ohne Inhalt im Zeitraum (Aufgabe im Vormonat, Buchung storniert):
+    keine Zeile — dieselbe Regel, nur der Vollständigkeit halber."""
     db = _kalender_db(
         [{"id": "p-archiv", "tenant_id": "T", "title": "Aus dem Vertrag",
           "archived_at": "2026-08-21T14:11:12+00:00"}],
