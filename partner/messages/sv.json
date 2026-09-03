@@ -223,7 +223,17 @@
     "keinPartnerKonto": "Det finns inget partnerkonto med dessa inloggningsuppgifter.",
     "fehlgeschlagen": "Inloggning misslyckades.",
     "nochKeinKonto": "Inte partner än?",
-    "bewerben": "Ansök nu"
+    "bewerben": "Ansök nu",
+    "passwortSetzen": "Ange nytt lösenord",
+    "passwortWirdGesetzt": "Sparar …",
+    "passwortNeuIntro": "Ange koden från e-postmeddelandet och välj ett nytt lösenord. Därefter är du inloggad.",
+    "resetCode": "Kod från e-postmeddelandet",
+    "resetCodeHinweis": "Det sexsiffriga talet från e-postmeddelandet ”Återställ lösenord”.",
+    "passwortNeu": "Nytt lösenord",
+    "passwortWiederholen": "Upprepa lösenordet",
+    "passwortZuKurz": "Minst 8 tecken.",
+    "passwortStimmtNicht": "Lösenorden stämmer inte överens.",
+    "resetNeuAnfordern": "Begär en ny kod"
   },
   "bewerben": {
     "partner": "Partner",

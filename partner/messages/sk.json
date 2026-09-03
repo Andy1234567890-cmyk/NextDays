@@ -223,7 +223,17 @@
     "keinPartnerKonto": "S týmito prihlasovacími údajmi neexistuje partnerský účet.",
     "fehlgeschlagen": "Prihlásenie zlyhalo.",
     "nochKeinKonto": "Ešte nie ste partnerom?",
-    "bewerben": "Prihláste sa teraz"
+    "bewerben": "Prihláste sa teraz",
+    "passwortSetzen": "Nastaviť nové heslo",
+    "passwortWirdGesetzt": "Ukladá sa …",
+    "passwortNeuIntro": "Zadajte kód z e-mailu a vyberte nové heslo. Potom budete prihlásený.",
+    "resetCode": "Kód z e-mailu",
+    "resetCodeHinweis": "Šesťciferné číslo z e-mailu „Obnovenie hesla“.",
+    "passwortNeu": "Nové heslo",
+    "passwortWiederholen": "Zopakujte heslo",
+    "passwortZuKurz": "Najmenej 8 znakov.",
+    "passwortStimmtNicht": "Heslá sa nezhodujú.",
+    "resetNeuAnfordern": "Vyžiadať nový kód"
   },
   "bewerben": {
     "partner": "Partner",

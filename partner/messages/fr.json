@@ -223,7 +223,17 @@
     "keinPartnerKonto": "Il n'y a pas de compte partenaire avec ces identifiants.",
     "fehlgeschlagen": "Échec de la connexion.",
     "nochKeinKonto": "Pas encore partenaire ?",
-    "bewerben": "Postuler maintenant"
+    "bewerben": "Postuler maintenant",
+    "passwortSetzen": "Définir un nouveau mot de passe",
+    "passwortWirdGesetzt": "Enregistrement …",
+    "passwortNeuIntro": "Saisissez le code reçu par e-mail et choisissez un nouveau mot de passe. Vous serez ensuite connecté.",
+    "resetCode": "Code reçu par e-mail",
+    "resetCodeHinweis": "Le nombre à six chiffres de l’e-mail « Réinitialiser le mot de passe ».",
+    "passwortNeu": "Nouveau mot de passe",
+    "passwortWiederholen": "Répéter le mot de passe",
+    "passwortZuKurz": "Au moins 8 caractères.",
+    "passwortStimmtNicht": "Les mots de passe ne correspondent pas.",
+    "resetNeuAnfordern": "Demander un nouveau code"
   },
   "bewerben": {
     "partner": "Partenaire",

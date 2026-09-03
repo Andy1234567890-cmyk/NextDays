@@ -96,6 +96,37 @@ export async function passwortVergessen(email: string): Promise<Ergebnis> {
   }
 }
 
+/** Neues Passwort mit dem CODE aus der Reset-Mail setzen und gleich anmelden.
+ *
+ *  Der Code und nicht der Link aus der Mail: der Link zeigte auf
+ *  `{API_EXTERNAL_URL}/verify?token=…`, und weil jene GoTrue-Variable ohne das
+ *  `/auth/v1`-Präfix gesetzt war, unter dem Kong GoTrue veröffentlicht, endete
+ *  er in „no Route matched" (live 03.09.2026). Der Code steht in derselben
+ *  Mail und hängt an keiner URL.
+ *
+ *  Bei Erfolg setzt die Aktion die Sitzungs-Cookies wie `anmelden` — der
+ *  Partner ist danach angemeldet und muss sich nicht erneut eintippen. */
+export async function passwortNeuSetzen(
+  email: string,
+  code: string,
+  password: string,
+): Promise<Ergebnis> {
+  try {
+    const session = await api<SessionResponse>("/affiliates/auth/password-neu", {
+      method: "POST",
+      body: { email, code, password },
+      isPublic: true,
+      ...(await browserContext()),
+    });
+    await persistSession(session, PARTNER_COOKIES);
+    return { ok: true };
+  } catch (exc) {
+    if (istStoerung(exc)) return { ok: false, fehler: STOERUNG, status: 503 };
+    const e = exc as ApiError;
+    return { ok: false, fehler: e.message, status: e.status };
+  }
+}
+
 /** Frische Session aus dem Refresh-Cookie. false = nicht möglich (abgemeldet). */
 export async function sitzungErneuern(): Promise<boolean> {
   const refresh = await readToken(PARTNER_COOKIES.refresh);

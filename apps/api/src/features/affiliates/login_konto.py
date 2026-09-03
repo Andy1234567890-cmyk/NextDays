@@ -34,10 +34,23 @@ Konto).
 from __future__ import annotations
 
 from pydantic import SecretStr
+from supabase_auth.errors import AuthError as GoTrueAuthError
 
+from src.core.gotrue_fehler import (
+    STOERUNG_MELDUNG,
+    TRANSPORT_FEHLER,
+    stoerung_oder_ablehnung,
+)
 from src.core.logging import get_logger, mask_email
 
 from .fehler import AffiliateError
+from .schemas import (
+    PartnerLogin,
+    PartnerMessage,
+    PartnerPasswordReset,
+    PartnerPasswortNeu,
+    PartnerSession,
+)
 
 log = get_logger("nextdays.affiliates.login_konto")
 
@@ -70,7 +83,118 @@ def _ist_email_vergeben(exc: Exception) -> bool:
 
 
 class LoginKontoMixin:
-    """Die Login-Konto-Schritte der Bewerbung. Erwartet ``self._db``."""
+    """Die Login-Konto-Schritte. Erwartet ``self._db`` und ``self._anon``."""
+
+    def password_reset(self, req: PartnerPasswordReset) -> PartnerMessage:
+        """Antwortet IMMER neutral (kein Existenz-Leak).
+
+        ``redirect_to`` zeigt auf die Seite der PARTNER-App, die das neue
+        Passwort setzt. Ohne diese Angabe nimmt GoTrue seine eigene
+        ``GOTRUE_SITE_URL`` — und die zeigt im Stack auf die Supabase-Adresse,
+        die 404 gibt (live gemessen 03.09.2026). Der Link in der Mail führte
+        damit ins Nichts, selbst wenn man ihn erreichte.
+
+        Das Ziel MUSS in ``GOTRUE_URI_ALLOW_LIST`` stehen (Coolify-Variable
+        ``ADDITIONAL_REDIRECT_URLS`` des Supabase-Stacks), sonst verwirft
+        GoTrue es stillschweigend und fällt auf die Site-URL zurück — ein
+        Fehler, der niemandem auffällt, weil die Mail trotzdem ankommt.
+
+        Fehlt ``partner_base_url``, wird KEIN Ziel übergeben statt eines
+        geratenen (Wurzel 4): dann bleibt es beim bisherigen Verhalten, und
+        der Code in der Mail funktioniert weiterhin.
+        """
+        basis = (self._settings.partner_base_url or "").strip().rstrip("/")
+        optionen = {"redirect_to": f"{basis}/passwort-neu"} if basis else None
+        if not basis:
+            log.error(
+                "partner_base_url_fehlt",
+                hinweis="PARTNER_BASE_URL setzen — Reset-Mail ohne Rücksprungziel.",
+            )
+        try:
+            if optionen:
+                self._anon.auth.reset_password_email(req.email, optionen)
+            else:
+                self._anon.auth.reset_password_email(req.email)
+        except Exception as exc:  # noqa: BLE001 — best-effort, neutrale Antwort bleibt
+            log.warning(
+                "partner_password_reset_failed", email=mask_email(req.email), error=str(exc)
+            )
+        return PartnerMessage(message="Falls ein Konto existiert, wurde eine E-Mail versendet.")
+
+    def passwort_neu_setzen(self, req: PartnerPasswortNeu) -> PartnerSession:
+        """Neues Passwort mit dem Code aus der Reset-Mail setzen und anmelden.
+
+        WARUM DER CODE UND NICHT DER LINK (03.09.2026): Der Link in der Mail
+        zeigte auf `{API_EXTERNAL_URL}/verify?token=…`. `API_EXTERNAL_URL` war
+        auf die Kong-Basis ohne `/auth/v1` gesetzt — Kong veröffentlicht GoTrue
+        aber unter `/auth/v1/verify` (`strip_path: true`), und `/verify`
+        antwortete mit „no Route matched". Gemessen: `/auth/v1/verify?…` gibt
+        303, `/verify?…` gibt 404. Der Code steht in derselben Mail, hängt an
+        keiner URL und ist damit unabhängig vom Proxy.
+
+        ZWEI SCHRITTE, und der zweite braucht den ersten: `verify_otp` tauscht
+        Code+Adresse gegen eine Sitzung, und erst MIT dieser Sitzung darf
+        `update_user` das Passwort setzen. Ein `update_user` ohne
+        vorangegangenes `verify_otp` würde am fehlenden Token scheitern — die
+        Reihenfolge ist keine Stilfrage.
+
+        Kein Existenz-Leak (Wurzel 9): ein falscher Code und eine unbekannte
+        Adresse ergeben dieselbe 400er-Meldung. Wer raten will, erfährt nicht,
+        ob die Adresse überhaupt ein Partnerkonto hat.
+        """
+        try:
+            geprueft = self._anon.auth.verify_otp(
+                {
+                    "email": str(req.email),
+                    "token": req.code.strip(),
+                    "type": "recovery",
+                }
+            )
+        except (GoTrueAuthError, *TRANSPORT_FEHLER) as exc:
+            if stoerung_oder_ablehnung(exc) and not isinstance(exc, GoTrueAuthError):
+                raise AffiliateError(STOERUNG_MELDUNG, status_code=503) from exc
+            log.info("partner_reset_code_ungueltig", email=mask_email(str(req.email)))
+            raise AffiliateError(
+                "Code ist ungültig oder abgelaufen. Bitte neu anfordern.",
+                status_code=400,
+            ) from exc
+        if geprueft.session is None:
+            raise AffiliateError(
+                "Code ist ungültig oder abgelaufen. Bitte neu anfordern.",
+                status_code=400,
+            )
+
+        # Eigener Client MIT der frisch geprüften Sitzung: `self._anon` ist
+        # geteilt, und ihm hier eine Nutzersitzung aufzudrücken würde den
+        # nächsten Aufrufer betreffen.
+        try:
+            self._anon.auth.set_session(
+                geprueft.session.access_token, geprueft.session.refresh_token
+            )
+            self._anon.auth.update_user(
+                {"password": req.password.get_secret_value()}
+            )
+        except Exception as exc:
+            log.warning(
+                "partner_passwort_setzen_fehlgeschlagen",
+                email=mask_email(str(req.email)),
+                error=str(exc),
+            )
+            raise AffiliateError(
+                "Passwort konnte nicht gesetzt werden.", status_code=502
+            ) from exc
+        finally:
+            # Die Sitzung IMMER wieder abräumen — auch im Fehlerfall, sonst
+            # trägt der geteilte Client fremde Anmeldedaten weiter.
+            try:
+                self._anon.auth.sign_out()
+            except Exception:  # noqa: BLE001 — best effort
+                log.debug("partner_signout_nach_reset_fehlgeschlagen")
+
+        log.info("partner_passwort_neu", email=mask_email(str(req.email)))
+        return self.login(
+            PartnerLogin(email=req.email, password=req.password)
+        )
 
     def _login_konto_sichern(
         self, email: str, password: SecretStr

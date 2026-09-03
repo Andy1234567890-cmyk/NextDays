@@ -223,7 +223,17 @@
     "keinPartnerKonto": "Mit diesen Zugangsdaten gibt es kein Partnerkonto.",
     "fehlgeschlagen": "Anmeldung fehlgeschlagen.",
     "nochKeinKonto": "Noch kein Partner?",
-    "bewerben": "Jetzt bewerben"
+    "bewerben": "Jetzt bewerben",
+    "passwortSetzen": "Neues Passwort setzen",
+    "passwortWirdGesetzt": "Wird gesetzt …",
+    "passwortNeuIntro": "Geben Sie den Code aus der E-Mail ein und wählen Sie ein neues Passwort. Danach sind Sie angemeldet.",
+    "resetCode": "Code aus der E-Mail",
+    "resetCodeHinweis": "Die sechsstellige Zahl aus der E-Mail „Passwort zurücksetzen“.",
+    "passwortNeu": "Neues Passwort",
+    "passwortWiederholen": "Passwort wiederholen",
+    "passwortZuKurz": "Mindestens 8 Zeichen.",
+    "passwortStimmtNicht": "Die Passwörter stimmen nicht überein.",
+    "resetNeuAnfordern": "Neuen Code anfordern"
   },
   "bewerben": {
     "partner": "Partner",

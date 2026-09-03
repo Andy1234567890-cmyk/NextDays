@@ -223,7 +223,17 @@
     "keinPartnerKonto": "С тези данни за достъп няма партньорски акаунт.",
     "fehlgeschlagen": "Неуспешен вход.",
     "nochKeinKonto": "Все още не сте партньор?",
-    "bewerben": "Кандидатствайте сега"
+    "bewerben": "Кандидатствайте сега",
+    "passwortSetzen": "Задаване на нова парола",
+    "passwortWirdGesetzt": "Задава се …",
+    "passwortNeuIntro": "Въведете кода от имейла и изберете нова парола. След това ще бъдете влезли.",
+    "resetCode": "Код от имейла",
+    "resetCodeHinweis": "Шестцифреното число от имейла „Възстановяване на парола“.",
+    "passwortNeu": "Нова парола",
+    "passwortWiederholen": "Повторете паролата",
+    "passwortZuKurz": "Най-малко 8 знака.",
+    "passwortStimmtNicht": "Паролите не съвпадат.",
+    "resetNeuAnfordern": "Заявяване на нов код"
   },
   "bewerben": {
     "partner": "Партньор",

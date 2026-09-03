@@ -223,7 +223,17 @@
     "keinPartnerKonto": "Não existe uma conta de parceiro com estas credenciais.",
     "fehlgeschlagen": "Falha no login.",
     "nochKeinKonto": "Ainda não é parceiro?",
-    "bewerben": "Candidatar-se agora"
+    "bewerben": "Candidatar-se agora",
+    "passwortSetzen": "Definir nova palavra-passe",
+    "passwortWirdGesetzt": "A guardar …",
+    "passwortNeuIntro": "Introduza o código do e-mail e escolha uma nova palavra-passe. Em seguida ficará com sessão iniciada.",
+    "resetCode": "Código do e-mail",
+    "resetCodeHinweis": "O número de seis dígitos do e-mail «Redefinir palavra-passe».",
+    "passwortNeu": "Nova palavra-passe",
+    "passwortWiederholen": "Repetir palavra-passe",
+    "passwortZuKurz": "Pelo menos 8 caracteres.",
+    "passwortStimmtNicht": "As palavras-passe não coincidem.",
+    "resetNeuAnfordern": "Pedir um novo código"
   },
   "bewerben": {
     "partner": "Parceiro",

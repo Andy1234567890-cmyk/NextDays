@@ -223,7 +223,17 @@
     "keinPartnerKonto": "Der findes ingen partnerkonto med disse login-oplysninger.",
     "fehlgeschlagen": "Login mislykkedes.",
     "nochKeinKonto": "Ikke partner endnu?",
-    "bewerben": "Ansøg nu"
+    "bewerben": "Ansøg nu",
+    "passwortSetzen": "Vælg ny adgangskode",
+    "passwortWirdGesetzt": "Gemmes …",
+    "passwortNeuIntro": "Indtast koden fra e-mailen og vælg en ny adgangskode. Derefter er du logget ind.",
+    "resetCode": "Kode fra e-mailen",
+    "resetCodeHinweis": "Det sekscifrede tal fra e-mailen „Nulstil adgangskode“.",
+    "passwortNeu": "Ny adgangskode",
+    "passwortWiederholen": "Gentag adgangskode",
+    "passwortZuKurz": "Mindst 8 tegn.",
+    "passwortStimmtNicht": "Adgangskoderne er ikke ens.",
+    "resetNeuAnfordern": "Anmod om ny kode"
   },
   "bewerben": {
     "partner": "Partner",

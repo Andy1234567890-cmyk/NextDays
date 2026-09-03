@@ -223,7 +223,17 @@
     "keinPartnerKonto": "Ezekkel a belépési adatokkal nem létezik partnerfiók.",
     "fehlgeschlagen": "Sikertelen bejelentkezés.",
     "nochKeinKonto": "Még nem partner?",
-    "bewerben": "Jelentkezzen most"
+    "bewerben": "Jelentkezzen most",
+    "passwortSetzen": "Új jelszó beállítása",
+    "passwortWirdGesetzt": "Mentés …",
+    "passwortNeuIntro": "Adja meg az e-mailben kapott kódot, és válasszon új jelszót. Ezt követően be lesz jelentkezve.",
+    "resetCode": "Kód az e-mailből",
+    "resetCodeHinweis": "A „Jelszó visszaállítása” e-mailben szereplő hatjegyű szám.",
+    "passwortNeu": "Új jelszó",
+    "passwortWiederholen": "Jelszó megismétlése",
+    "passwortZuKurz": "Legalább 8 karakter.",
+    "passwortStimmtNicht": "A jelszavak nem egyeznek.",
+    "resetNeuAnfordern": "Új kód kérése"
   },
   "bewerben": {
     "partner": "Partner",

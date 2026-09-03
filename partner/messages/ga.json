@@ -223,7 +223,17 @@
     "keinPartnerKonto": "Níl aon chuntas comhpháirtí ann leis na dintiúir seo.",
     "fehlgeschlagen": "Theip ar an logáil isteach.",
     "nochKeinKonto": "Níl tú i do chomhpháirtí fós?",
-    "bewerben": "Cuir isteach iarratas anois"
+    "bewerben": "Cuir isteach iarratas anois",
+    "passwortSetzen": "Socraigh pasfhocal nua",
+    "passwortWirdGesetzt": "Á shábháil …",
+    "passwortNeuIntro": "Cuir isteach an cód ón ríomhphost agus roghnaigh pasfhocal nua. Beidh tú sínithe isteach ina dhiaidh sin.",
+    "resetCode": "Cód ón ríomhphost",
+    "resetCodeHinweis": "An uimhir sé dhigit ón ríomhphost „Athshocrú pasfhocail“.",
+    "passwortNeu": "Pasfhocal nua",
+    "passwortWiederholen": "Athchuir an pasfhocal",
+    "passwortZuKurz": "8 gcarachtar ar a laghad.",
+    "passwortStimmtNicht": "Níl na pasfhocail mar a chéile.",
+    "resetNeuAnfordern": "Iarr cód nua"
   },
   "bewerben": {
     "partner": "Comhpháirtí",

@@ -223,7 +223,17 @@
     "keinPartnerKonto": "Nende sisselogimisandmetega partnerkontot ei ole.",
     "fehlgeschlagen": "Sisselogimine ebaõnnestus.",
     "nochKeinKonto": "Pole veel partner?",
-    "bewerben": "Kandideeri kohe"
+    "bewerben": "Kandideeri kohe",
+    "passwortSetzen": "Määra uus parool",
+    "passwortWirdGesetzt": "Salvestatakse …",
+    "passwortNeuIntro": "Sisesta e-kirjast saadud kood ja vali uus parool. Seejärel oled sisse logitud.",
+    "resetCode": "Kood e-kirjast",
+    "resetCodeHinweis": "Kuuekohaline number e-kirjast „Parooli lähtestamine“.",
+    "passwortNeu": "Uus parool",
+    "passwortWiederholen": "Korda parooli",
+    "passwortZuKurz": "Vähemalt 8 tähemärki.",
+    "passwortStimmtNicht": "Paroolid ei kattu.",
+    "resetNeuAnfordern": "Küsi uus kood"
   },
   "bewerben": {
     "partner": "Partner",

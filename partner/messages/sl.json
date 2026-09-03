@@ -223,7 +223,17 @@
     "keinPartnerKonto": "S temi podatki za prijavo ne obstaja partnerski račun.",
     "fehlgeschlagen": "Prijava ni uspela.",
     "nochKeinKonto": "Še niste partner?",
-    "bewerben": "Prijavite se zdaj"
+    "bewerben": "Prijavite se zdaj",
+    "passwortSetzen": "Nastavi novo geslo",
+    "passwortWirdGesetzt": "Shranjevanje …",
+    "passwortNeuIntro": "Vnesite kodo iz e-pošte in izberite novo geslo. Nato boste prijavljeni.",
+    "resetCode": "Koda iz e-pošte",
+    "resetCodeHinweis": "Šestmestna številka iz e-pošte „Ponastavitev gesla“.",
+    "passwortNeu": "Novo geslo",
+    "passwortWiederholen": "Ponovite geslo",
+    "passwortZuKurz": "Najmanj 8 znakov.",
+    "passwortStimmtNicht": "Gesli se ne ujemata.",
+    "resetNeuAnfordern": "Zahtevaj novo kodo"
   },
   "bewerben": {
     "partner": "Partner",

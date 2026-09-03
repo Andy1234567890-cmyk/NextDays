@@ -223,7 +223,17 @@
     "keinPartnerKonto": "Su šiais prisijungimo duomenimis nėra partnerio paskyros.",
     "fehlgeschlagen": "Prisijungti nepavyko.",
     "nochKeinKonto": "Dar nesate partneris?",
-    "bewerben": "Pateikti paraišką dabar"
+    "bewerben": "Pateikti paraišką dabar",
+    "passwortSetzen": "Nustatyti naują slaptažodį",
+    "passwortWirdGesetzt": "Įrašoma …",
+    "passwortNeuIntro": "Įveskite el. laiške gautą kodą ir pasirinkite naują slaptažodį. Po to būsite prisijungę.",
+    "resetCode": "Kodas iš el. laiško",
+    "resetCodeHinweis": "Šešių skaitmenų numeris iš el. laiško „Slaptažodžio atkūrimas“.",
+    "passwortNeu": "Naujas slaptažodis",
+    "passwortWiederholen": "Pakartokite slaptažodį",
+    "passwortZuKurz": "Bent 8 simboliai.",
+    "passwortStimmtNicht": "Slaptažodžiai nesutampa.",
+    "resetNeuAnfordern": "Užsisakyti naują kodą"
   },
   "bewerben": {
     "partner": "Partneris",

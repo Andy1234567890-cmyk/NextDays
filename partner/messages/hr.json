@@ -223,7 +223,17 @@
     "keinPartnerKonto": "S ovim pristupnim podacima ne postoji partnerski račun.",
     "fehlgeschlagen": "Prijava neuspješna.",
     "nochKeinKonto": "Još niste partner?",
-    "bewerben": "Prijavite se sada"
+    "bewerben": "Prijavite se sada",
+    "passwortSetzen": "Postavi novu lozinku",
+    "passwortWirdGesetzt": "Sprema se …",
+    "passwortNeuIntro": "Unesite kod iz e-pošte i odaberite novu lozinku. Nakon toga ste prijavljeni.",
+    "resetCode": "Kod iz e-pošte",
+    "resetCodeHinweis": "Šestocifreni broj iz e-pošte „Ponovno postavljanje lozinke“.",
+    "passwortNeu": "Nova lozinka",
+    "passwortWiederholen": "Ponovi lozinku",
+    "passwortZuKurz": "Najmanje 8 znakova.",
+    "passwortStimmtNicht": "Lozinke se ne podudaraju.",
+    "resetNeuAnfordern": "Zatraži novi kod"
   },
   "bewerben": {
     "partner": "Partner",

@@ -223,7 +223,17 @@
     "keinPartnerKonto": "Ar šiem piekļuves datiem nav partnera konta.",
     "fehlgeschlagen": "Pieteikšanās neizdevās.",
     "nochKeinKonto": "Vēl neesat partneris?",
-    "bewerben": "Pieteikties tagad"
+    "bewerben": "Pieteikties tagad",
+    "passwortSetzen": "Iestatīt jaunu paroli",
+    "passwortWirdGesetzt": "Notiek saglabāšana …",
+    "passwortNeuIntro": "Ievadiet e-pastā saņemto kodu un izvēlieties jaunu paroli. Pēc tam būsiet pieteicies.",
+    "resetCode": "Kods no e-pasta",
+    "resetCodeHinweis": "Sešciparu skaitlis no e-pasta „Paroles atjaunošana“.",
+    "passwortNeu": "Jauna parole",
+    "passwortWiederholen": "Atkārtojiet paroli",
+    "passwortZuKurz": "Vismaz 8 rakstzīmes.",
+    "passwortStimmtNicht": "Paroles nesakrīt.",
+    "resetNeuAnfordern": "Pieprasīt jaunu kodu"
   },
   "bewerben": {
     "partner": "Partneris",

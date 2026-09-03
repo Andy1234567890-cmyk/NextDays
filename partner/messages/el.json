@@ -223,7 +223,17 @@
     "keinPartnerKonto": "Δεν υπάρχει λογαριασμός συνεργάτη με αυτά τα στοιχεία σύνδεσης.",
     "fehlgeschlagen": "Αποτυχία σύνδεσης.",
     "nochKeinKonto": "Δεν είστε ακόμη συνεργάτης;",
-    "bewerben": "Κάντε αίτηση τώρα"
+    "bewerben": "Κάντε αίτηση τώρα",
+    "passwortSetzen": "Ορισμός νέου κωδικού",
+    "passwortWirdGesetzt": "Αποθηκεύεται …",
+    "passwortNeuIntro": "Εισαγάγετε τον κωδικό από το email και επιλέξτε νέο κωδικό πρόσβασης. Στη συνέχεια θα έχετε συνδεθεί.",
+    "resetCode": "Κωδικός από το email",
+    "resetCodeHinweis": "Ο εξαψήφιος αριθμός από το email «Επαναφορά κωδικού».",
+    "passwortNeu": "Νέος κωδικός πρόσβασης",
+    "passwortWiederholen": "Επανάληψη κωδικού",
+    "passwortZuKurz": "Τουλάχιστον 8 χαρακτήρες.",
+    "passwortStimmtNicht": "Οι κωδικοί δεν ταιριάζουν.",
+    "resetNeuAnfordern": "Αίτηση νέου κωδικού"
   },
   "bewerben": {
     "partner": "Συνεργάτης",

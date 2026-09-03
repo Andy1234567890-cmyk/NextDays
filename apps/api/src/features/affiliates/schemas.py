@@ -188,6 +188,25 @@ class PartnerPasswordReset(BaseModel):
     email: EmailStr
 
 
+class PartnerPasswortNeu(BaseModel):
+    """Neues Passwort setzen — mit dem CODE aus der Reset-Mail.
+
+    Der Code (GoTrue nennt ihn `token`, in der Mail steht er als sechsstellige
+    Zahl) statt des Links: der Link führte über
+    `{API_EXTERNAL_URL}/verify?token=…`, und weil `API_EXTERNAL_URL` ohne das
+    `/auth/v1`-Präfix gesetzt war, unter dem Kong GoTrue veröffentlicht,
+    antwortete er mit „no Route matched" (live 03.09.2026). Der Code hängt an
+    keiner URL und funktioniert deshalb unabhängig von der Proxy-Konfiguration.
+
+    `email` gehört dazu, weil GoTrues `verify_otp` mit `type="recovery"` Code
+    UND Adresse zusammen prüft — ein Code allein ist keiner Person zugeordnet.
+    """
+
+    email: EmailStr
+    code: str = Field(min_length=6, max_length=12)
+    password: SecretStr = Field(min_length=8, max_length=200)
+
+
 class PartnerSession(BaseModel):
     access_token: str
     refresh_token: str

@@ -48,6 +48,7 @@ from .schemas import (
     PartnerMaterial,
     PartnerMessage,
     PartnerPasswordReset,
+    PartnerPasswortNeu,
     PartnerProfil,
     PartnerProfilUpdate,
     PartnerProvisionsListe,
@@ -140,6 +141,22 @@ def refresh(req: PartnerRefresh, service: AffiliatesServiceDep) -> PartnerSessio
 @router.post("/auth/password-reset", response_model=PartnerMessage)
 def password_reset(req: PartnerPasswordReset, service: AffiliatesServiceDep) -> PartnerMessage:
     return service.password_reset(req)
+
+
+@router.post("/auth/password-neu", response_model=PartnerSession)
+def password_neu(
+    req: PartnerPasswortNeu, service: AffiliatesServiceDep
+) -> PartnerSession:
+    """Neues Passwort mit dem CODE aus der Reset-Mail setzen und anmelden.
+
+    Der Code statt des Links: der Link zeigte auf
+    `{API_EXTERNAL_URL}/verify?token=…`, und weil jene Variable ohne das
+    `/auth/v1`-Praefix gesetzt war, unter dem Kong GoTrue veroeffentlicht,
+    antwortete er mit „no Route matched" (live 03.09.2026). Der Code hangt an
+    keiner URL.
+
+    Oeffentlich wie `/auth/login` — der Code IST der Nachweis."""
+    return service.passwort_neu_setzen(req)
 
 
 class KlickMeldung(BaseModel):

@@ -223,7 +223,17 @@
     "keinPartnerKonto": "Non esiste un account partner con queste credenziali.",
     "fehlgeschlagen": "Accesso fallito.",
     "nochKeinKonto": "Non è ancora un partner?",
-    "bewerben": "Candidati ora"
+    "bewerben": "Candidati ora",
+    "passwortSetzen": "Imposta una nuova password",
+    "passwortWirdGesetzt": "Salvataggio …",
+    "passwortNeuIntro": "Inserisci il codice ricevuto per e-mail e scegli una nuova password. Successivamente sarai connesso.",
+    "resetCode": "Codice ricevuto per e-mail",
+    "resetCodeHinweis": "Il numero di sei cifre dell’e-mail «Reimposta password».",
+    "passwortNeu": "Nuova password",
+    "passwortWiederholen": "Ripeti la password",
+    "passwortZuKurz": "Almeno 8 caratteri.",
+    "passwortStimmtNicht": "Le password non corrispondono.",
+    "resetNeuAnfordern": "Richiedi un nuovo codice"
   },
   "bewerben": {
     "partner": "Partner",

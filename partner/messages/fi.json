@@ -223,7 +223,17 @@
     "keinPartnerKonto": "Näillä tunnuksilla ei ole kumppanitiliä.",
     "fehlgeschlagen": "Kirjautuminen epäonnistui.",
     "nochKeinKonto": "Etkö ole vielä kumppani?",
-    "bewerben": "Hae nyt"
+    "bewerben": "Hae nyt",
+    "passwortSetzen": "Aseta uusi salasana",
+    "passwortWirdGesetzt": "Tallennetaan …",
+    "passwortNeuIntro": "Syötä sähköpostista saatu koodi ja valitse uusi salasana. Sen jälkeen olet kirjautunut sisään.",
+    "resetCode": "Koodi sähköpostista",
+    "resetCodeHinweis": "Kuusinumeroinen luku sähköpostista ”Salasanan palautus”.",
+    "passwortNeu": "Uusi salasana",
+    "passwortWiederholen": "Toista salasana",
+    "passwortZuKurz": "Vähintään 8 merkkiä.",
+    "passwortStimmtNicht": "Salasanat eivät täsmää.",
+    "resetNeuAnfordern": "Pyydä uusi koodi"
   },
   "bewerben": {
     "partner": "Kumppani",

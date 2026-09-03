@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { passwortVergessen } from "@/lib/auth";
@@ -9,9 +10,9 @@ import { passwortVergessen } from "@/lib/auth";
 // ein Partnerkonto hat, verrät die Seite nicht.
 export function PasswortVergessenFormular() {
   const t = useTranslations("anmelden");
+  const router = useRouter();
   const [laeuft, starte] = useTransition();
   const [email, setEmail] = useState("");
-  const [hinweis, setHinweis] = useState<string | null>(null);
   const [fehler, setFehler] = useState<string | null>(null);
 
   return (
@@ -22,8 +23,15 @@ export function PasswortVergessenFormular() {
         setFehler(null);
         starte(async () => {
           const res = await passwortVergessen(email.trim());
-          if (res.ok) setHinweis(t("resetGesendet"));
-          else setFehler(t("stoerung"));
+          if (res.ok) {
+            // Direkt zur Eingabe des Codes: die Mail enthält ihn, und ohne
+            // diesen Schritt wüsste der Partner nicht, wohin damit. Die
+            // Adresse wandert als Vorbelegung mit — geprüft wird sie
+            // serverseitig gegen den Code.
+            router.push(`/passwort-neu?email=${encodeURIComponent(email.trim())}`);
+            return;
+          }
+          setFehler(t("stoerung"));
         });
       }}
     >
@@ -39,7 +47,6 @@ export function PasswortVergessenFormular() {
         />
       </label>
       {fehler && <p className="text-sm text-accent">{fehler}</p>}
-      {hinweis && <p className="text-sm text-muted-foreground">{hinweis}</p>}
       <button
         type="submit"
         disabled={laeuft || !email.trim()}

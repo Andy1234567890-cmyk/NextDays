@@ -223,7 +223,17 @@
     "keinPartnerKonto": "Met deze inloggegevens bestaat er geen partneraccount.",
     "fehlgeschlagen": "Inloggen mislukt.",
     "nochKeinKonto": "Nog geen partner?",
-    "bewerben": "Nu aanmelden"
+    "bewerben": "Nu aanmelden",
+    "passwortSetzen": "Nieuw wachtwoord instellen",
+    "passwortWirdGesetzt": "Opslaan …",
+    "passwortNeuIntro": "Voer de code uit de e-mail in en kies een nieuw wachtwoord. Daarna bent u ingelogd.",
+    "resetCode": "Code uit de e-mail",
+    "resetCodeHinweis": "Het zescijferige nummer uit de e-mail ‘Wachtwoord opnieuw instellen’.",
+    "passwortNeu": "Nieuw wachtwoord",
+    "passwortWiederholen": "Wachtwoord herhalen",
+    "passwortZuKurz": "Minimaal 8 tekens.",
+    "passwortStimmtNicht": "De wachtwoorden komen niet overeen.",
+    "resetNeuAnfordern": "Nieuwe code aanvragen"
   },
   "bewerben": {
     "partner": "Partner",

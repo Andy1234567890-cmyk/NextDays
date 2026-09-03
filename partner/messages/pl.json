@@ -223,7 +223,17 @@
     "keinPartnerKonto": "Brak konta partnerskiego z tymi danymi logowania.",
     "fehlgeschlagen": "Logowanie nieudane.",
     "nochKeinKonto": "Nie jesteś jeszcze partnerem?",
-    "bewerben": "Złóż wniosek teraz"
+    "bewerben": "Złóż wniosek teraz",
+    "passwortSetzen": "Ustaw nowe hasło",
+    "passwortWirdGesetzt": "Zapisywanie …",
+    "passwortNeuIntro": "Wpisz kod z wiadomości e-mail i wybierz nowe hasło. Następnie będziesz zalogowany.",
+    "resetCode": "Kod z wiadomości e-mail",
+    "resetCodeHinweis": "Sześciocyfrowa liczba z wiadomości „Resetowanie hasła”.",
+    "passwortNeu": "Nowe hasło",
+    "passwortWiederholen": "Powtórz hasło",
+    "passwortZuKurz": "Co najmniej 8 znaków.",
+    "passwortStimmtNicht": "Hasła nie są zgodne.",
+    "resetNeuAnfordern": "Poproś o nowy kod"
   },
   "bewerben": {
     "partner": "Partner",

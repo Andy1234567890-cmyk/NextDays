@@ -73,9 +73,7 @@ from .schemas import (
     PartnerKundenListe,
     PartnerLogin,
     PartnerMaterial,
-    PartnerMessage,
     PartnerNaechsterRang,
-    PartnerPasswordReset,
     PartnerProfil,
     PartnerProfilUpdate,
     PartnerProvision,
@@ -336,16 +334,6 @@ class AffiliatesService(
             refresh_token=res.session.refresh_token,
             expires_in=res.session.expires_in,
         )
-
-    def password_reset(self, req: PartnerPasswordReset) -> PartnerMessage:
-        """Antwortet IMMER neutral (kein Existenz-Leak)."""
-        try:
-            self._anon.auth.reset_password_email(req.email)
-        except Exception as exc:  # noqa: BLE001 — best-effort, neutrale Antwort bleibt
-            log.warning(
-                "partner_password_reset_failed", email=mask_email(req.email), error=str(exc)
-            )
-        return PartnerMessage(message="Falls ein Konto existiert, wurde eine E-Mail versendet.")
 
     def _reauth(self, ctx: AffiliateContext, password: SecretStr) -> None:
         """Passwort-Rückfrage vor sicherheitskritischen Änderungen (Wurzel 7)."""

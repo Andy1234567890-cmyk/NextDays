@@ -223,7 +223,17 @@
     "keinPartnerKonto": "Nu există un cont de partener cu aceste date de acces.",
     "fehlgeschlagen": "Autentificare eșuată.",
     "nochKeinKonto": "Nu sunteți încă partener?",
-    "bewerben": "Aplicați acum"
+    "bewerben": "Aplicați acum",
+    "passwortSetzen": "Setează o parolă nouă",
+    "passwortWirdGesetzt": "Se salvează …",
+    "passwortNeuIntro": "Introdu codul din e-mail și alege o parolă nouă. Apoi vei fi conectat.",
+    "resetCode": "Cod din e-mail",
+    "resetCodeHinweis": "Numărul de șase cifre din e-mailul „Resetare parolă”.",
+    "passwortNeu": "Parolă nouă",
+    "passwortWiederholen": "Repetă parola",
+    "passwortZuKurz": "Cel puțin 8 caractere.",
+    "passwortStimmtNicht": "Parolele nu coincid.",
+    "resetNeuAnfordern": "Solicită un cod nou"
   },
   "bewerben": {
     "partner": "Partener",

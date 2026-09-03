@@ -223,7 +223,17 @@
     "keinPartnerKonto": "No partner account exists with these credentials.",
     "fehlgeschlagen": "Login failed.",
     "nochKeinKonto": "Not a partner yet?",
-    "bewerben": "Apply now"
+    "bewerben": "Apply now",
+    "passwortSetzen": "Set a new password",
+    "passwortWirdGesetzt": "Saving …",
+    "passwortNeuIntro": "Enter the code from the email and choose a new password. You will be signed in afterwards.",
+    "resetCode": "Code from the email",
+    "resetCodeHinweis": "The six-digit number from the “Reset password” email.",
+    "passwortNeu": "New password",
+    "passwortWiederholen": "Repeat password",
+    "passwortZuKurz": "At least 8 characters.",
+    "passwortStimmtNicht": "The passwords do not match.",
+    "resetNeuAnfordern": "Request a new code"
   },
   "bewerben": {
     "partner": "Partner",

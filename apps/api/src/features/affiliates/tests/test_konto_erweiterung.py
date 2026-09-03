@@ -176,3 +176,135 @@ class _Secret:
 
     def get_secret_value(self) -> str:
         return self._wert
+
+
+# ----------------------------------------------------------------------
+# Passwort-Reset mit Code (03.09.2026)
+# ----------------------------------------------------------------------
+def test_reset_prueft_code_bevor_es_das_passwort_setzt() -> None:
+    """Die Reihenfolge ist keine Stilfrage.
+
+    `verify_otp` tauscht Code+Adresse gegen eine Sitzung, und erst MIT dieser
+    Sitzung darf `update_user` das Passwort setzen. Ein `update_user` ohne
+    vorangegangenes `verify_otp` hätte kein Token und würde scheitern.
+    """
+    from src.features.affiliates.schemas import PartnerPasswortNeu
+    from src.features.affiliates.service import AffiliatesService
+
+    ablauf: list[str] = []
+
+    class _Sitzung:
+        access_token = "at"
+        refresh_token = "rt"
+
+    class _Auth:
+        def verify_otp(self, params: dict) -> object:
+            ablauf.append(f"verify:{params['type']}:{params['token']}")
+
+            class _R:
+                session = _Sitzung()
+
+            return _R()
+
+        def set_session(self, *_a: str) -> None:
+            ablauf.append("set_session")
+
+        def update_user(self, attrs: dict) -> None:
+            ablauf.append("update_user")
+            assert "password" in attrs
+
+        def sign_out(self) -> None:
+            ablauf.append("sign_out")
+
+    class _Anon:
+        auth = _Auth()
+
+    svc = AffiliatesService.__new__(AffiliatesService)
+    svc._anon = _Anon()  # type: ignore[attr-defined]
+    svc.login = lambda req: "SESSION"  # type: ignore[assignment]
+
+    ergebnis = svc.passwort_neu_setzen(
+        PartnerPasswortNeu(
+            email="a@example.com", code="298259", password="geheim1234"
+        )
+    )
+
+    assert ergebnis == "SESSION"
+    assert ablauf == [
+        "verify:recovery:298259",
+        "set_session",
+        "update_user",
+        "sign_out",
+    ], f"falsche Reihenfolge: {ablauf}"
+
+
+def test_reset_raeumt_die_sitzung_auch_im_fehlerfall_ab() -> None:
+    """Der geteilte `_anon`-Client darf keine fremde Anmeldung weitertragen.
+
+    Ohne das `finally` hätte der nächste Aufrufer von `_anon` die Sitzung des
+    zurücksetzenden Partners benutzt.
+    """
+    from src.features.affiliates.schemas import PartnerPasswortNeu
+    from src.features.affiliates.service import AffiliateError, AffiliatesService
+
+    ablauf: list[str] = []
+
+    class _Auth:
+        def verify_otp(self, _p: dict) -> object:
+            class _R:
+                class session:  # noqa: N801
+                    access_token = "at"
+                    refresh_token = "rt"
+
+            return _R()
+
+        def set_session(self, *_a: str) -> None:
+            ablauf.append("set_session")
+
+        def update_user(self, _a: dict) -> None:
+            raise RuntimeError("GoTrue kaputt")
+
+        def sign_out(self) -> None:
+            ablauf.append("sign_out")
+
+    class _Anon:
+        auth = _Auth()
+
+    svc = AffiliatesService.__new__(AffiliatesService)
+    svc._anon = _Anon()  # type: ignore[attr-defined]
+
+    with pytest.raises(AffiliateError) as exc:
+        svc.passwort_neu_setzen(
+            PartnerPasswortNeu(
+                email="a@example.com", code="298259", password="geheim1234"
+            )
+        )
+    assert exc.value.status_code == 502
+    assert "sign_out" in ablauf, "Sitzung blieb am geteilten Client hängen"
+
+
+def test_reset_ohne_sitzung_ist_ein_ungueltiger_code() -> None:
+    """`verify_otp` ohne Session = Code falsch oder abgelaufen, kein 500."""
+    from src.features.affiliates.schemas import PartnerPasswortNeu
+    from src.features.affiliates.service import AffiliateError, AffiliatesService
+
+    class _Auth:
+        def verify_otp(self, _p: dict) -> object:
+            class _R:
+                session = None
+
+            return _R()
+
+    class _Anon:
+        auth = _Auth()
+
+    svc = AffiliatesService.__new__(AffiliatesService)
+    svc._anon = _Anon()  # type: ignore[attr-defined]
+
+    with pytest.raises(AffiliateError) as exc:
+        svc.passwort_neu_setzen(
+            PartnerPasswortNeu(
+                email="a@example.com", code="000000", password="geheim1234"
+            )
+        )
+    assert exc.value.status_code == 400

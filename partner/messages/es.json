@@ -223,7 +223,17 @@
     "keinPartnerKonto": "No existe una cuenta de socio con estas credenciales.",
     "fehlgeschlagen": "Error de inicio de sesión.",
     "nochKeinKonto": "¿Aún no es socio?",
-    "bewerben": "Solicitar ahora"
+    "bewerben": "Solicitar ahora",
+    "passwortSetzen": "Establecer nueva contraseña",
+    "passwortWirdGesetzt": "Guardando …",
+    "passwortNeuIntro": "Introduce el código del correo y elige una nueva contraseña. Después estarás conectado.",
+    "resetCode": "Código del correo",
+    "resetCodeHinweis": "El número de seis dígitos del correo «Restablecer contraseña».",
+    "passwortNeu": "Nueva contraseña",
+    "passwortWiederholen": "Repetir contraseña",
+    "passwortZuKurz": "Al menos 8 caracteres.",
+    "passwortStimmtNicht": "Las contraseñas no coinciden.",
+    "resetNeuAnfordern": "Solicitar un código nuevo"
   },
   "bewerben": {
     "partner": "Socio",

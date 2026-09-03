@@ -223,7 +223,17 @@
     "keinPartnerKonto": "M'hemm l-ebda kont ta' sieħeb b'dawn id-dettalji tal-login.",
     "fehlgeschlagen": "Login falla.",
     "nochKeinKonto": "Għadek m'intix sieħeb?",
-    "bewerben": "Applika issa"
+    "bewerben": "Applika issa",
+    "passwortSetzen": "Issettja password ġdida",
+    "passwortWirdGesetzt": "Qed jinħażen …",
+    "passwortNeuIntro": "Daħħal il-kodiċi mill-email u agħżel password ġdida. Wara tkun illoggjat.",
+    "resetCode": "Kodiċi mill-email",
+    "resetCodeHinweis": "In-numru ta’ sitt ċifri mill-email „Irrisettja l-password“.",
+    "passwortNeu": "Password ġdida",
+    "passwortWiederholen": "Irrepeti l-password",
+    "passwortZuKurz": "Mill-inqas 8 karattri.",
+    "passwortStimmtNicht": "Il-passwords ma jaqblux.",
+    "resetNeuAnfordern": "Itlob kodiċi ġdid"
   },
   "bewerben": {
     "partner": "Sieħeb",
