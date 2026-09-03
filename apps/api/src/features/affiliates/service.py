@@ -41,6 +41,7 @@ from .connect_service import ConnectMixin
 from .fehler import AffiliateError
 from .kanaele import kanaele_aus_zeile
 from .leads_service import LeadsMixin
+from .login_konto import LoginKontoMixin
 from .mails import PartnerMails
 from .schemas import (
     BackofficeEntscheidung,
@@ -139,7 +140,11 @@ def _maskiert(method: str | None, details: dict[str, Any]) -> str | None:
     return mask_email(email) if email else None
 
 
-class AffiliatesService(TeamMixin, TrackingMixin, ConnectMixin, LeadsMixin):
+
+
+class AffiliatesService(
+    LoginKontoMixin, TeamMixin, TrackingMixin, ConnectMixin, LeadsMixin
+):
     slice_name = "affiliates"
 
     def __init__(
@@ -222,7 +227,12 @@ class AffiliatesService(TeamMixin, TrackingMixin, ConnectMixin, LeadsMixin):
                 status_code=422,
             )
 
-        user_id = self._create_auth_user(req.email, req.password)
+        # `neu_angelegt` entscheidet, was ein Rollback darf: bei einem
+        # ERWEITERTEN Bestandskonto (siehe `_create_auth_user`) darf es das
+        # Konto NIE löschen — das wäre die Löschung eines fremden PMS-Zugangs
+        # wegen eines fehlgeschlagenen Bewerbungs-Inserts (Wurzel 1: der
+        # Gegenzustand ist die Partner-Kennung, nicht das Konto).
+        user_id, neu_angelegt = self._login_konto_sichern(req.email, req.password)
         try:
             self._db.table("affiliates").insert(
                 {
@@ -242,14 +252,14 @@ class AffiliatesService(TeamMixin, TrackingMixin, ConnectMixin, LeadsMixin):
                 }
             ).execute()
         except APIError as exc:
-            self._rollback_auth_user(user_id)
+            self._rollback_login_konto(user_id, neu_angelegt=neu_angelegt)
             if getattr(exc, "code", None) == _UNIQUE_VIOLATION:
                 raise AffiliateError(
                     "Für diese E-Mail gibt es bereits eine Bewerbung.", status_code=409
                 ) from exc
             raise
         except Exception:
-            self._rollback_auth_user(user_id)
+            self._rollback_login_konto(user_id, neu_angelegt=neu_angelegt)
             raise
         if req.vat_id:
             self._vat_pruefen_und_merken(user_id, req.vat_id)
@@ -267,36 +277,6 @@ class AffiliatesService(TeamMixin, TrackingMixin, ConnectMixin, LeadsMixin):
         self._mails.bewerbung_eingegangen(email=req.email, name=req.full_name, sprache=req.language)
         log.info("partner_bewerbung", affiliate_id=user_id, email=mask_email(req.email))
         return self.login(PartnerLogin(email=req.email, password=req.password))
-
-    def _create_auth_user(self, email: str, password: SecretStr) -> str:
-        try:
-            res = self._db.auth.admin.create_user(
-                {
-                    "email": email,
-                    "password": password.get_secret_value(),
-                    # Wie bei portal_guests (Staging-Provisorium, dort dokumentiert):
-                    # die Freigabe ist ohnehin manuell, der Bewerber kann bis
-                    # dahin nichts auslösen.
-                    "email_confirm": True,
-                    # DAS Erkennungsmerkmal der Partner-Welt (core.security).
-                    "app_metadata": {"affiliate": True},
-                }
-            )
-        except Exception as exc:
-            log.warning("partner_create_user_failed", email=mask_email(email), error=str(exc))
-            raise AffiliateError(
-                "Konto konnte nicht angelegt werden (E-Mail evtl. vergeben).",
-                status_code=409,
-            ) from exc
-        if res.user is None:
-            raise AffiliateError("Konto konnte nicht angelegt werden.", status_code=500)
-        return res.user.id
-
-    def _rollback_auth_user(self, user_id: str) -> None:
-        try:
-            self._db.auth.admin.delete_user(user_id)
-        except Exception as exc:  # noqa: BLE001 — Best-effort-Rollback, nur loggen
-            log.error("partner_rollback_user_failed", user_id=user_id, error=str(exc))
 
     def _vat_pruefen_und_merken(self, affiliate_id: str, vat_id: str) -> bool | None:
         ergebnis = self._vies(vat_id)

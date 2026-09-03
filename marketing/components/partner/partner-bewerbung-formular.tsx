@@ -97,10 +97,19 @@ export function PartnerBewerbungFormular({ sponsorVorgabe }: { sponsorVorgabe: s
           });
           setFertig(true);
         } catch (exc) {
-          if (exc instanceof BewerbungFehler && exc.status === 409) setFehler(t("fehler.doppelt"));
+          // Bei 409 den SERVER-Text zeigen, nicht pauschal „bereits
+          // beworben": der Server unterscheidet zwei Fälle, die für den
+          // Bewerber ganz verschiedene Schritte bedeuten — eine vorhandene
+          // Bewerbung (anmelden) und eine anderweitig vergebene E-Mail
+          // (andere Adresse nehmen). Live am 03.09.2026 stand „Melden Sie
+          // sich im Partner-Dashboard an", während es dort kein Konto gab:
+          // die Adresse hatte ein normales PMS-Konto, aber keine Bewerbung.
+          // `fehler.doppelt` bleibt der Rückfall, wenn der Server keinen
+          // Text mitschickt.
+          if (exc instanceof BewerbungFehler && exc.status === 409) setFehler(exc.detail || t("fehler.doppelt"));
           else if (exc instanceof BewerbungFehler && exc.status === 422) setFehler(exc.detail || t("fehler.eingabe"));
           else if (exc instanceof BewerbungFehler && exc.status === 403) setFehler(t("fehler.captcha"));
-          else setFehler(t("fehler.allgemein"));
+          else setFehler((exc instanceof BewerbungFehler && exc.detail) || t("fehler.allgemein"));
         } finally {
           setLaeuft(false);
         }
@@ -235,7 +244,20 @@ export function PartnerBewerbungFormular({ sponsorVorgabe }: { sponsorVorgabe: s
         </span>
       </label>
 
-      {fehler && <p className="rounded-xl border border-accent/40 bg-accent/5 px-4 py-3 text-sm">{fehler}</p>}
+      {/* Als FEHLER erkennbar und für Screenreader angekündigt. Vorher stand
+          hier die Akzentfarbe des Absende-Knopfes (`border-accent/40
+          bg-accent/5`) — die Meldung sah aus wie ein neutraler Hinweis, und
+          weil sie ÜBER dem Knopf steht, klickte man weiter (live gemeldet
+          03.09.2026). `role="alert"` liest sie beim Erscheinen vor, ohne dass
+          der Fokus springt. */}
+      {fehler && (
+        <p
+          role="alert"
+          className="rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+        >
+          {fehler}
+        </p>
+      )}
 
       <button type="submit" disabled={laeuft || !zustimmung} className="rounded-full bg-accent px-6 py-3 text-base font-semibold text-accent-foreground disabled:opacity-50">
         {laeuft ? t("sendet") : t("absenden")}
