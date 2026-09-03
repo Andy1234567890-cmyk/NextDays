@@ -1270,7 +1270,31 @@
     },
     "filterIncomplete": "Solo incompleto",
     "unnamed": "Senza nome",
-    "unnamedFromChannel": "Ospite {channel}"
+    "unnamedFromChannel": "Ospite {channel}",
+    "pageRange": "{from}–{to} di {total}",
+    "pageOf": "Pagina {page} di {pages}",
+    "prevPage": "Indietro",
+    "nextPage": "Avanti",
+    "duplicates": {
+      "title": "{count, plural, one {1 potenziale ospite duplicato} other {# potenziali ospiti duplicati}}",
+      "subtitle": "{guests, plural, one {1 voce interessata} other {# voci interessate}} — l'unione mantiene tutte le prenotazioni.",
+      "loading": "Verifica in corso...",
+      "targetBadge": "Destinazione",
+      "noContact": "Nessun dato di contatto",
+      "contactHidden": "Dati di contatto disponibili",
+      "stays": "{count, plural, one {1 soggiorno} other {# soggiorni}}",
+      "mergeAction": "Unisci",
+      "confirmText": "{count, plural, one {Una voce verrà unita} other {# voci verranno unite}} in \"{target}\".",
+      "confirmHint": "Prenotazioni, messaggi e note verranno trasferiti. La voce unita verrà quindi anonimizzata — questa operazione non può essere annullata.",
+      "confirmMerge": "Unisci ora",
+      "merging": "Unione in corso...",
+      "cancel": "Annulla",
+      "reason": {
+        "name": "Stesso nome",
+        "email": "Stessa e-mail",
+        "phone": "Stesso numero di telefono"
+      }
+    }
   },
   "fotos": {
     "title": "Foto",

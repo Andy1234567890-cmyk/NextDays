@@ -1270,7 +1270,31 @@
     },
     "filterIncomplete": "Samo nepotpuno",
     "unnamed": "Bez imena",
-    "unnamedFromChannel": "{channel} gost"
+    "unnamedFromChannel": "{channel} gost",
+    "pageRange": "{from}–{to} od {total}",
+    "pageOf": "Stranica {page} od {pages}",
+    "prevPage": "Natrag",
+    "nextPage": "Dalje",
+    "duplicates": {
+      "title": "{count, plural, one {1 mogući dupli gost} other {# moguća dupla gosta}}",
+      "subtitle": "{guests, plural, one {1 unos pogođen} other {# unosa pogođeno}} — spajanje zadržava sve rezervacije.",
+      "loading": "Provjerava se...",
+      "targetBadge": "Cilj",
+      "noContact": "Nema podataka za kontakt",
+      "contactHidden": "Podaci za kontakt dostupni",
+      "stays": "{count, plural, one {1 boravak} other {# boravaka}}",
+      "mergeAction": "Spoji",
+      "confirmText": "{count, plural, one {Jedan unos bit će spojen} other {# unosa bit će spojeno}} u „{target}“.",
+      "confirmHint": "Rezervacije, poruke i bilješke bit će prenesene. Spojeni unos bit će anonimiziran nakon toga — to se ne može poništiti.",
+      "confirmMerge": "Spoji sada",
+      "merging": "Spaja se...",
+      "cancel": "Odustani",
+      "reason": {
+        "name": "Isto ime",
+        "email": "Ista adresa e-pošte",
+        "phone": "Isti broj telefona"
+      }
+    }
   },
   "fotos": {
     "title": "Fotografije",

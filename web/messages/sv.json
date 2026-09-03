@@ -1270,7 +1270,31 @@
     },
     "filterIncomplete": "Endast ofullständig",
     "unnamed": "Utan namn",
-    "unnamedFromChannel": "{channel}-gäst"
+    "unnamedFromChannel": "{channel}-gäst",
+    "pageRange": "{from}–{to} av {total}",
+    "pageOf": "Sida {page} av {pages}",
+    "prevPage": "Tillbaka",
+    "nextPage": "Nästa",
+    "duplicates": {
+      "title": "{count, plural, one {1 potentiell dublettgäst} other {# potentiella dublettgäster}}",
+      "subtitle": "{guests, plural, one {1 post påverkas} other {# poster påverkas}} – sammanslagning behåller alla bokningar.",
+      "loading": "Kontrollerar…",
+      "targetBadge": "Mål",
+      "noContact": "Inga kontaktuppgifter",
+      "contactHidden": "Kontaktuppgifter finns",
+      "stays": "{count, plural, one {1 vistelse} other {# vistelser}}",
+      "mergeAction": "Slå samman",
+      "confirmText": "{count, plural, one {En post} other {# poster}} slås samman till ”{target}”.",
+      "confirmHint": "Bokningar, meddelanden och anteckningar flyttas med. Den sammanslagna posten anonymiseras därefter – detta kan inte ångras.",
+      "confirmMerge": "Slå samman nu",
+      "merging": "Slår samman…",
+      "cancel": "Avbryt",
+      "reason": {
+        "name": "Samma namn",
+        "email": "Samma e-postadress",
+        "phone": "Samma telefonnummer"
+      }
+    }
   },
   "fotos": {
     "title": "Foton",

@@ -1270,7 +1270,31 @@
     },
     "filterIncomplete": "Nepilnīgi",
     "unnamed": "Bez vārda",
-    "unnamedFromChannel": "{channel} viesis"
+    "unnamedFromChannel": "{channel} viesis",
+    "pageRange": "No {from} līdz {to} no {total}",
+    "pageOf": "Lapa {page} no {pages}",
+    "prevPage": "Atpakaļ",
+    "nextPage": "Tālāk",
+    "duplicates": {
+      "title": "{count, plural, one {1 iespējamais dublētais viesis} other {# iespējamie dublētie viesi}}",
+      "subtitle": "{guests, plural, one {1 ieraksts tiks ietekmēts} other {# ieraksti tiks ietekmēti}} — apvienojot tiks saglabātas visas rezervācijas.",
+      "loading": "Notiek pārbaude…",
+      "targetBadge": "Mērķis",
+      "noContact": "Nav kontaktinformācijas",
+      "contactHidden": "Ir kontaktinformācija",
+      "stays": "{count, plural, one {1 uzturēšanās} other {# uzturēšanās}}",
+      "mergeAction": "Apvienot",
+      "confirmText": "{count, plural, one {Viens ieraksts tiks apvienots} other {# ieraksti tiks apvienoti}} ar “{target}”.",
+      "confirmHint": "Rezervācijas, ziņojumi un piezīmes tiks pārvietoti. Apvienotais ieraksts pēc tam tiks anonimizēts — to nevar atsaukt.",
+      "confirmMerge": "Apvienot tagad",
+      "merging": "Notiek apvienošana…",
+      "cancel": "Atcelt",
+      "reason": {
+        "name": "Viens un tas pats vārds",
+        "email": "Viena un tā pati e-pasta adrese",
+        "phone": "Viens un tas pats tālruņa numurs"
+      }
+    }
   },
   "fotos": {
     "title": "Fotoattēli",

@@ -1270,7 +1270,31 @@
     },
     "filterIncomplete": "Only incomplete",
     "unnamed": "No name",
-    "unnamedFromChannel": "{channel} guest"
+    "unnamedFromChannel": "{channel} guest",
+    "pageRange": "{from}–{to} of {total}",
+    "pageOf": "Page {page} of {pages}",
+    "prevPage": "Back",
+    "nextPage": "Next",
+    "duplicates": {
+      "title": "{count, plural, one {1 possible duplicate guest} other {# possible duplicate guests}}",
+      "subtitle": "{guests, plural, one {1 entry affected} other {# entries affected}} — merging keeps all bookings.",
+      "loading": "Checking …",
+      "reason": {
+        "name": "Same name",
+        "email": "Same email address",
+        "phone": "Same phone number"
+      },
+      "targetBadge": "Target",
+      "noContact": "No contact details",
+      "contactHidden": "Contact details available",
+      "stays": "{count, plural, one {1 stay} other {# stays}}",
+      "mergeAction": "Merge",
+      "confirmText": "{count, plural, one {One entry will be merged} other {# entries will be merged}} into \"{target}\".",
+      "confirmHint": "Bookings, messages, and notes will be transferred. The merged entry will then be anonymized — this cannot be undone.",
+      "confirmMerge": "Merge now",
+      "merging": "Merging …",
+      "cancel": "Cancel"
+    }
   },
   "fotos": {
     "title": "Photos",

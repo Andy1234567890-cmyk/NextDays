@@ -1270,7 +1270,31 @@
     },
     "filterIncomplete": "Apenas incompleto",
     "unnamed": "Sem nome",
-    "unnamedFromChannel": "Convidado {channel}"
+    "unnamedFromChannel": "Convidado {channel}",
+    "pageRange": "{from}–{to} de {total}",
+    "pageOf": "Página {page} de {pages}",
+    "prevPage": "Anterior",
+    "nextPage": "Próximo",
+    "duplicates": {
+      "title": "{count, plural, one {1 possível hóspede duplicado} other {# possíveis hóspedes duplicados}}",
+      "subtitle": "{guests, plural, one {1 entrada afetada} other {# entradas afetadas}} — a fusão mantém todas as reservas.",
+      "loading": "Verificando…",
+      "targetBadge": "Destino",
+      "noContact": "Nenhum dado de contato",
+      "contactHidden": "Dados de contato disponíveis",
+      "stays": "{count, plural, one {1 estadia} other {# estadias}}",
+      "mergeAction": "Mesclar",
+      "confirmText": "{count, plural, one {Uma entrada será mesclada} other {# entradas serão mescladas}} em \"{target}\".",
+      "confirmHint": "Reservas, mensagens e notas serão transferidas. A entrada mesclada será então anonimizada — isso não pode ser desfeito.",
+      "confirmMerge": "Mesclar agora",
+      "merging": "Mesclando…",
+      "cancel": "Cancelar",
+      "reason": {
+        "name": "Mesmo nome",
+        "email": "Mesmo e-mail",
+        "phone": "Mesmo número de telefone"
+      }
+    }
   },
   "fotos": {
     "title": "Fotos",

@@ -1270,7 +1270,31 @@
     },
     "filterIncomplete": "Incomplet",
     "unnamed": "Fără nume",
-    "unnamedFromChannel": "Oaspete {channel}"
+    "unnamedFromChannel": "Oaspete {channel}",
+    "pageRange": "{from}–{to} din {total}",
+    "pageOf": "Pagina {page} din {pages}",
+    "prevPage": "Înapoi",
+    "nextPage": "Înainte",
+    "duplicates": {
+      "title": "{count, plural, one {1 posibil oaspete duplicat} other {# posibili oaspeți duplicați}}",
+      "subtitle": "{guests, plural, one {1 înregistrare afectată} other {# înregistrări afectate}} — îmbinarea păstrează toate rezervările.",
+      "loading": "Se verifică...",
+      "targetBadge": "Țintă",
+      "noContact": "Fără detalii de contact",
+      "contactHidden": "Detalii de contact disponibile",
+      "stays": "{count, plural, one {1 ședere} other {# șederi}}",
+      "mergeAction": "Îmbinare",
+      "confirmText": "{count, plural, one {O înregistrare va fi} other {# înregistrări vor fi}} îmbinate în „{target}”.",
+      "confirmHint": "Rezervările, mesajele și notițele vor fi transferate. Înregistrarea îmbinată va fi apoi anonimizată — această acțiune nu poate fi anulată.",
+      "confirmMerge": "Îmbină acum",
+      "merging": "Se îmbină...",
+      "cancel": "Anulează",
+      "reason": {
+        "name": "Același nume",
+        "email": "Aceeași adresă de e-mail",
+        "phone": "Același număr de telefon"
+      }
+    }
   },
   "fotos": {
     "title": "Fotografii",

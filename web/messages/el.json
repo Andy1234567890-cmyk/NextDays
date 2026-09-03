@@ -1270,7 +1270,31 @@
     },
     "filterIncomplete": "Μόνο ημιτελές",
     "unnamed": "Χωρίς όνομα",
-    "unnamedFromChannel": "Επισκέπτης {channel}"
+    "unnamedFromChannel": "Επισκέπτης {channel}",
+    "pageRange": "{from}–{to} από {total}",
+    "pageOf": "Σελίδα {page} από {pages}",
+    "prevPage": "Πίσω",
+    "nextPage": "Επόμενο",
+    "duplicates": {
+      "title": "{count, plural, one {1 πιθανός διπλός επισκέπτης} other {# πιθανοί διπλοί επισκέπτες}}",
+      "subtitle": "{guests, plural, one {1 καταχώριση επηρεάζεται} other {# καταχωρίσεις επηρεάζονται}} — η συγχώνευση διατηρεί όλες τις κρατήσεις.",
+      "loading": "Ελέγχεται…",
+      "targetBadge": "Προορισμός",
+      "noContact": "Δεν υπάρχουν στοιχεία επικοινωνίας",
+      "contactHidden": "Στοιχεία επικοινωνίας διαθέσιμα",
+      "stays": "{count, plural, one {1 διαμονή} other {# διαμονές}}",
+      "mergeAction": "Συγχώνευση",
+      "confirmText": "{count, plural, one {Μία καταχώριση θα} other {# καταχωρίσεις θα}} συγχωνευτεί στην «{target}».",
+      "confirmHint": "Οι κρατήσεις, τα μηνύματα και οι σημειώσεις μεταφέρονται. Η συγχωνευμένη καταχώριση θα ανωνυμοποιηθεί μετά — αυτό δεν μπορεί να αναιρεθεί.",
+      "confirmMerge": "Συγχώνευση τώρα",
+      "merging": "Συγχωνεύεται…",
+      "cancel": "Ακύρωση",
+      "reason": {
+        "name": "Ίδιο όνομα",
+        "email": "Ίδια διεύθυνση email",
+        "phone": "Ίδιος αριθμός τηλεφώνου"
+      }
+    }
   },
   "fotos": {
     "title": "Φωτογραφίες",

@@ -1270,7 +1270,31 @@
     },
     "filterIncomplete": "Csak hiányos",
     "unnamed": "Név nélkül",
-    "unnamedFromChannel": "{channel}-vendég"
+    "unnamedFromChannel": "{channel}-vendég",
+    "pageRange": "{from}–{to} / {total}",
+    "pageOf": "{page} / {pages} oldal",
+    "prevPage": "Vissza",
+    "nextPage": "Tovább",
+    "duplicates": {
+      "title": "{count, plural, one {1 lehetséges ismétlődő vendég} other {# lehetséges ismétlődő vendég}}",
+      "subtitle": "{guests, plural, one {1 bejegyzés érintett} other {# bejegyzés érintett}} – az egyesítés megtartja az összes foglalást.",
+      "loading": "Ellenőrzés folyamatban…",
+      "targetBadge": "Cél",
+      "noContact": "Nincs elérhetőség",
+      "contactHidden": "Elérhetőség megadva",
+      "stays": "{count, plural, one {1 tartózkodás} other {# tartózkodás}}",
+      "mergeAction": "Egyesítés",
+      "confirmText": "{count, plural, one {Egy bejegyzés} other {# bejegyzés}} egyesítve lesz a(z) „{target}” bejegyzésbe.",
+      "confirmHint": "A foglalások, üzenetek és jegyzetek átkerülnek. Az egyesített bejegyzés ezután anonimizálva lesz – ez nem vonható vissza.",
+      "confirmMerge": "Egyesítés most",
+      "merging": "Egyesítés folyamatban…",
+      "cancel": "Mégse",
+      "reason": {
+        "name": "Azonos név",
+        "email": "Azonos e-mail-cím",
+        "phone": "Azonos telefonszám"
+      }
+    }
   },
   "fotos": {
     "title": "Fotók",

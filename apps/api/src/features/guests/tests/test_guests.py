@@ -64,6 +64,7 @@ class _Query:
         self._op = "select"
         self._eq: dict = {}
         self._in: tuple | None = None
+        self._is: tuple | None = None
         self._or: str | None = None
         self._payload = None
         self._count = None
@@ -138,6 +139,14 @@ class _Query:
         self._in = (col, list(vals))
         return self
 
+    def is_(self, col, val):  # noqa: ANN001, ANN201
+        """PostgREST `is.null` / `is.not.null` — der Dubletten-Scan schliesst
+        damit anonymisierte Gaeste aus. Ein No-Op hier hiesse: der Test „nach
+        dem Merge wird die Quelle nicht erneut vorgeschlagen" waere gruen,
+        ohne den Filter zu pruefen."""
+        self._is = (col, val)
+        return self
+
     def or_(self, expr):  # noqa: ANN001, ANN201
         self._or = expr
         return self
@@ -176,6 +185,12 @@ class _Query:
         if self._in:
             col, vals = self._in
             if r.get(col) not in vals:
+                return False
+        if self._is:
+            col, val = self._is
+            ist_null = r.get(col) is None
+            erwartet_null = str(val).lower() == "null"
+            if ist_null is not erwartet_null:
                 return False
         if self._or:
             # einfache ilike-OR-Suche über die genannten Spalten
@@ -608,6 +623,141 @@ def test_merge_404_when_guest_foreign() -> None:
     with pytest.raises(GuestsError) as exc:
         svc.merge(_CTX, "g1", "g2")
     assert exc.value.status_code == 404
+
+
+# --- Dubletten-Vorschlag ----------------------------------------------------
+#
+# Anlass, live am 03.09.2026 in der Gaestekartei: „Andreas Dumler" stand
+# zweimal. Eine Zeile ohne jeden Kontakt (Aufenthalt 2026-08-16), eine mit
+# Booking-Alias-Mail und Rufnummer (2027-07-31). Kein Anzeigefehler — der
+# Resolver mergt bewusst nie ueber den Namen, und ohne Kontaktmerkmal gab es
+# keinen Schluessel.
+def test_dubletten_findet_gleichen_namen() -> None:
+    """Der live gesehene Fall: gleicher Name, nur eine Zeile hat Kontakt."""
+    store = {"guests": [
+        _guest_row(id="g1", name="Andreas Dumler", email=None, phone=None,
+                   last_stay_at="2026-08-16"),
+        _guest_row(id="g2", name="Andreas Dumler",
+                   email="adumle.357783@guest.booking.com",
+                   phone="+4917621113286", last_stay_at="2027-07-31"),
+        _guest_row(id="g3", name="Anna Adam", email="anna@x.de"),
+    ]}
+    out = _svc(store).duplicates(_CTX)
+    assert out.total == 1
+    gruppe = out.groups[0]
+    assert gruppe.reason == "name"
+    assert sorted(g.id for g in gruppe.guests) == ["g1", "g2"]
+    # Die Zeile MIT Kontakt ist als Ziel erkennbar — daran haengt die
+    # Empfehlung in der Oberflaeche.
+    mit_kontakt = [g.id for g in gruppe.guests if g.has_contact]
+    assert mit_kontakt == ["g2"]
+
+
+def test_dubletten_ignoriert_namenlose_platzhalter() -> None:
+    """'—' ist kein Name und darf nie gruppieren.
+
+    Sonst waeren alle namenlosen Airbnb-Gaeste eine einzige Riesen-Dublette —
+    beim Beta-Betrieb 150 Zeilen in einer Gruppe, und der Vorschlag waere
+    Schrott statt Hilfe.
+    """
+    store = {"guests": [
+        _guest_row(id="g1", name="—", email=None, phone=None),
+        _guest_row(id="g2", name="—", email=None, phone=None),
+        _guest_row(id="g3", name="  ", email=None, phone=None),
+    ]}
+    out = _svc(store).duplicates(_CTX)
+    assert out.groups == []
+
+
+def test_dubletten_erkennt_gleiche_email_vor_name() -> None:
+    """Gleiche E-Mail ist der belastbarste Hinweis und steht zuerst."""
+    store = {"guests": [
+        _guest_row(id="g1", name="A. Mueller", email="Anna@X.de", phone=None),
+        _guest_row(id="g2", name="Anna Mueller", email="anna@x.de", phone=None),
+        _guest_row(id="g3", name="Bob Bau", email="b1@x.de", phone=None),
+        _guest_row(id="g4", name="Bob Bau", email="b2@x.de", phone=None),
+    ]}
+    out = _svc(store).duplicates(_CTX)
+    assert [g.reason for g in out.groups] == ["email", "name"]
+    # Case-insensitiv gruppiert (wie der Unique-Index auf lower(email)).
+    assert sorted(g.id for g in out.groups[0].guests) == ["g1", "g2"]
+
+
+def test_dubletten_gast_nur_in_einer_gruppe() -> None:
+    """Ein Gast darf nie in zwei Gruppen stehen.
+
+    Sonst schlaegt die Oberflaeche denselben Merge zweimal vor (einmal unter
+    „E-Mail", einmal unter „Name") und der zweite Klick trifft eine bereits
+    anonymisierte Quelle.
+    """
+    store = {"guests": [
+        _guest_row(id="g1", name="Anna Mueller", email="anna@x.de", phone=None),
+        _guest_row(id="g2", name="Anna Mueller", email="anna@x.de", phone=None),
+    ]}
+    out = _svc(store).duplicates(_CTX)
+    assert out.total == 1
+    assert out.groups[0].reason == "email"
+
+
+def test_dubletten_uebergeht_anonymisierte() -> None:
+    """Nach dem Merge darf die Quelle nicht erneut vorgeschlagen werden.
+
+    `merge` anonymisiert die Quelle (Name „Zusammengefuehrt", Kontakt genullt).
+    Ohne den `anonymized_at`-Filter bliebe sie in der Liste und der Betrieb
+    wuerde denselben Fall endlos wieder angeboten bekommen.
+    """
+    store = {"guests": [
+        _guest_row(id="g1", name="Andreas Dumler", email=None, phone=None,
+                   anonymized_at="2026-09-03T10:00:00Z"),
+        _guest_row(id="g2", name="Andreas Dumler", email="a@x.de", phone=None),
+    ]}
+    out = _svc(store).duplicates(_CTX)
+    assert out.groups == []
+
+
+def test_dubletten_bleibt_im_tenant() -> None:
+    """Wurzel 3: gleicher Name in einem FREMDEN Tenant ist keine Dublette."""
+    store = {"guests": [
+        _guest_row(id="g1", name="Andreas Dumler", email=None, phone=None),
+        _guest_row(id="g2", tenant="t2", name="Andreas Dumler",
+                   email=None, phone=None),
+    ]}
+    out = _svc(store).duplicates(_CTX)
+    assert out.groups == []
+
+
+def test_dubletten_has_contact_trotz_maskierung() -> None:
+    """staff sieht keine Kontaktwerte — die Ziel-Empfehlung muss trotzdem stimmen.
+
+    `has_contact` wird aus den ROHEN Spalten abgeleitet. Waere es im Frontend
+    aus `email`/`phone` berechnet, stuende fuer eingeschraenkte Rollen ueberall
+    „kein Kontakt" und der Betrieb wuerde in die falsche Richtung mergen.
+    """
+    store = {"guests": [
+        _guest_row(id="g1", name="Andreas Dumler", email=None, phone=None),
+        _guest_row(id="g2", name="Andreas Dumler", email="a@x.de",
+                   phone="+4917621113286"),
+    ]}
+    svc = _svc(store, role="staff", perms=["pm_guest_details"])
+    out = svc.duplicates(AuthContext(user_id="u", tenant_id="t1", role="staff"))
+    gruppe = out.groups[0]
+    ziel = next(g for g in gruppe.guests if g.id == "g2")
+    assert ziel.has_contact is True
+    # Der Wert selbst bleibt maskiert (kein Kontakt-Einblick fuer staff).
+    assert ziel.email != "a@x.de"
+
+
+def test_dubletten_gleiche_telefonnummer_verschieden_formatiert() -> None:
+    """+49 176 … und 0049176… sind dieselbe Nummer (E.164-Normalisierung)."""
+    store = {"guests": [
+        _guest_row(id="g1", name="Andreas D.", email=None,
+                   phone="+49 176 21113286"),
+        _guest_row(id="g2", name="A. Dumler", email=None,
+                   phone="004917621113286"),
+    ]}
+    out = _svc(store).duplicates(_CTX)
+    assert out.total == 1
+    assert out.groups[0].reason == "phone"
 
 
 # --- EDIT_GUEST-Berechtigung (Schreibrecht) ---------------------------------

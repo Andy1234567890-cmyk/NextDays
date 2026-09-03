@@ -1270,7 +1270,31 @@
     },
     "filterIncomplete": "Ainult mittetäielik",
     "unnamed": "Nimetu",
-    "unnamedFromChannel": "{channel}-külaline"
+    "unnamedFromChannel": "{channel}-külaline",
+    "pageRange": "{from}–{to} kokku {total}-st",
+    "pageOf": "Leht {page} / {pages}",
+    "prevPage": "Tagasi",
+    "nextPage": "Edasi",
+    "duplicates": {
+      "title": "{count, plural, one {1 võimalik topeltkülaline} other {# võimalikku topeltkülalist}}",
+      "subtitle": "{guests, plural, one {1 kirje mõjutatud} other {# kirjet mõjutatud}} – ühendamisel säilivad kõik broneeringud.",
+      "loading": "Kontrollitakse ...",
+      "targetBadge": "Sihtkoht",
+      "noContact": "Kontaktandmed puuduvad",
+      "contactHidden": "Kontaktandmed olemas",
+      "stays": "{count, plural, one {1 peatumine} other {# peatumist}}",
+      "mergeAction": "Ühenda",
+      "confirmText": "{count, plural, one {Üks kirje ühendatakse} other {# kirjet ühendatakse}} kirjes „{target}“.",
+      "confirmHint": "Broneeringud, sõnumid ja märkmed teisaldatakse. Ühendatud kirje anonüümitakse pärast seda – seda ei saa tagasi võtta.",
+      "confirmMerge": "Ühenda kohe",
+      "merging": "Ühendatakse ...",
+      "cancel": "Tühista",
+      "reason": {
+        "name": "Sama nimi",
+        "email": "Sama e-posti aadress",
+        "phone": "Sama telefoninumber"
+      }
+    }
   },
   "fotos": {
     "title": "Fotod",

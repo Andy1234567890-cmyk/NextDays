@@ -164,6 +164,29 @@ export type GuestInvoice = {
   currency: string | null;
 };
 
+/** Ein Gast, der als Dublette zu einem anderen in Frage kommt. */
+export type DuplicateCandidate = {
+  id: string;
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  stays_count: number;
+  last_stay_at: string | null;
+  needs_review: boolean;
+  /** Hat dieser Gast Kontaktdaten? Serverseitig aus den ROHEN Spalten
+   *  abgeleitet — nicht aus `email`/`phone` dieses Objekts berechnen: die sind
+   *  für eingeschränkte Rollen maskiert (null), obwohl der Gast Kontakt HAT.
+   *  Daran hängt die Empfehlung, welcher der beiden das Ziel sein soll. */
+  has_contact: boolean;
+};
+
+/** Gäste, die auf dieselbe Person deuten. `reason` benennt, woran erkannt. */
+export type DuplicateGroup = {
+  key: string;
+  reason: "name" | "email" | "phone";
+  guests: DuplicateCandidate[];
+};
+
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 type ListT<T> = { items: T[]; total: number };
 
@@ -192,6 +215,12 @@ export async function listGuests(
     segment?: string;
     blocked?: boolean;
     needsReview?: boolean;
+    /** Zeilen je Seite. Der Server begrenzt auf 200 (Wurzel 8). */
+    limit?: number;
+    /** Zeilen überspringen — die Grundlage des Blätterns. Fehlte bisher
+     *  vollständig: die Liste zeigte dauerhaft die ersten 50 von 510 Gästen,
+     *  und die restlichen 460 waren nur über die Suche erreichbar. */
+    offset?: number;
   } = {},
 ): Promise<Result<ListT<GuestListItem>>> {
   const p = new URLSearchParams();
@@ -201,6 +230,8 @@ export async function listGuests(
   if (opts.blocked !== undefined) p.set("blocked", String(opts.blocked));
   if (opts.needsReview !== undefined)
     p.set("needs_review", String(opts.needsReview));
+  if (opts.limit !== undefined) p.set("limit", String(opts.limit));
+  if (opts.offset !== undefined) p.set("offset", String(opts.offset));
   const qs = p.toString() ? `?${p.toString()}` : "";
   return call<ListT<GuestListItem>>(qs);
 }
@@ -227,6 +258,28 @@ export async function deleteGuest(
 ): Promise<Result<{ deleted?: boolean; anonymized?: boolean }>> {
   return call<{ deleted?: boolean; anonymized?: boolean }>(`/${id}`, {
     method: "DELETE",
+  });
+}
+
+// --- Dubletten --------------------------------------------------------------
+/** Mögliche Dubletten der Kartei. Vorschlag, keine Automatik — das
+ *  Zusammenführen bleibt ein bewusster Klick (`mergeGuests`). */
+export async function listDuplicates(): Promise<
+  Result<{ groups: DuplicateGroup[]; total: number }>
+> {
+  return call<{ groups: DuplicateGroup[]; total: number }>("/duplicates");
+}
+
+/** `source` in `target` zusammenführen: Reservierungen, Buchungen und
+ *  Sub-Ressourcen wandern ans Ziel, die Quelle wird anonymisiert. Nicht
+ *  umkehrbar — die Oberfläche fragt vorher. */
+export async function mergeGuests(
+  sourceId: string,
+  targetId: string,
+): Promise<Result<{ merged: boolean; target_id: string }>> {
+  return call<{ merged: boolean; target_id: string }>("/merge", {
+    method: "POST",
+    body: { source_id: sourceId, target_id: targetId },
   });
 }
 

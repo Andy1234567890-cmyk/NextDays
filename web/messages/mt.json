@@ -1270,7 +1270,31 @@
     },
     "filterIncomplete": "Mhux kompluta",
     "unnamed": "Bla isem",
-    "unnamedFromChannel": "Mistieden {channel}"
+    "unnamedFromChannel": "Mistieden {channel}",
+    "pageRange": "Minn {from} sa {to} minn {total}",
+    "pageOf": "Paġna {page} minn {pages}",
+    "prevPage": "Lura",
+    "nextPage": "Li jmiss",
+    "duplicates": {
+      "title": "{count, plural, one {1 mistieden duplikat possibbli} other {# mistednin duplikati possibbli}}",
+      "subtitle": "{guests, plural, one {1 dħul affettwat} other {# dħul affettwati}} — l-għaqda żżomm il-bookings kollha.",
+      "loading": "Qed jiġi vverifikat …",
+      "targetBadge": "Mira",
+      "noContact": "Ebda dettalji ta' kuntatt",
+      "contactHidden": "Dettalji ta' kuntatt preżenti",
+      "stays": "{count, plural, one {1 soġġorn} other {# soġġorni}}",
+      "mergeAction": "Għaqqad",
+      "confirmText": "{count, plural, one {Dħul wieħed qed} other {# Dħul qed}} jiġi magħqud f' \"{target}\".",
+      "confirmHint": "Bookings, messaġġi u noti se jiġu trasferiti. Id-dħul magħqud imbagħad jiġi anonimizzat — dan ma jistax jiġi annullat.",
+      "confirmMerge": "Għaqqad issa",
+      "merging": "Qed jiġi magħqud …",
+      "cancel": "Ikkanċella",
+      "reason": {
+        "name": "L-istess isem",
+        "email": "L-istess indirizz elettroniku",
+        "phone": "L-istess numru tat-telefon"
+      }
+    }
   },
   "fotos": {
     "title": "Ritratti",

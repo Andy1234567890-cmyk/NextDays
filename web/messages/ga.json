@@ -1270,7 +1270,31 @@
     },
     "filterIncomplete": "Neamhiomlán amháin",
     "unnamed": "Gan ainm",
-    "unnamedFromChannel": "Aoi {channel}"
+    "unnamedFromChannel": "Aoi {channel}",
+    "pageRange": "{from}–{to} de {total}",
+    "pageOf": "Leathanach {page} de {pages}",
+    "prevPage": "Ar ais",
+    "nextPage": "Ar Aghaidh",
+    "duplicates": {
+      "title": "{count, plural, one {1 aoi féideartha dúblach} other {# aoi féideartha dúblach}}",
+      "subtitle": "{guests, plural, one {1 iontráil i gceist} other {# iontráil i gceist}} — coimeádfaidh an cónascadh gach áirithint.",
+      "loading": "Á sheiceáil …",
+      "targetBadge": "Sprioc",
+      "noContact": "Gan sonraí teagmhála",
+      "contactHidden": "Sonraí teagmhála ar fáil",
+      "stays": "{count, plural, one {1 fanacht} other {# fanacht}}",
+      "mergeAction": "Cónascadh",
+      "confirmText": "{count, plural, one {Tá iontráil amháin á cónascadh} other {# iontráil á gcónascadh}} isteach i “{target}”.",
+      "confirmHint": "Aistreofar áirithintí, teachtaireachtaí agus nótaí. Déanfar an iontráil chónasctha a ainmneacha ina dhiaidh sin — ní féidir é seo a chealú.",
+      "confirmMerge": "Cónascadh anois",
+      "merging": "Á chónascadh …",
+      "cancel": "Cealaigh",
+      "reason": {
+        "name": "Ainm céanna",
+        "email": "Ríomhphost céanna",
+        "phone": "Uimhir theileafóin chéanna"
+      }
+    }
   },
   "fotos": {
     "title": "Grianghraif",

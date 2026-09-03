@@ -23,6 +23,7 @@ from .schemas import (
     ContactResponse,
     DocumentCreate,
     DocumentResponse,
+    DuplicateListResponse,
     GuestCreate,
     GuestListResponse,
     GuestResponse,
@@ -98,6 +99,20 @@ def create_guest(
 ) -> GuestResponse:
     try:
         return service.create(ctx, req)
+    except GuestsError as exc:
+        raise _h(exc) from exc
+
+
+# WICHTIG: vor `/{guest_id}` deklarieren — sonst matcht die Pfad-Route zuerst
+# und „duplicates" landet als guest_id im Detail-Endpunkt (404 statt Liste).
+@router.get("/duplicates", response_model=DuplicateListResponse)
+def list_duplicates(
+    service: GuestsServiceDep, ctx: _guest,
+    limit: Annotated[int, Query(ge=1, le=200)] = 50,
+) -> DuplicateListResponse:
+    """Mögliche Dubletten der Gästekartei — Vorschlag, keine Automatik."""
+    try:
+        return service.duplicates(ctx, limit=limit)
     except GuestsError as exc:
         raise _h(exc) from exc
 

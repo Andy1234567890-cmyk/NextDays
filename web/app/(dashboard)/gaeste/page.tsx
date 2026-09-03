@@ -9,7 +9,13 @@ import { listGuests } from "@/lib/guests";
 export const dynamic = "force-dynamic";
 
 export default async function GaestePage() {
-  const [res, acc] = await Promise.all([listGuests(), getAccount()]);
+  // limit MUSS zu SEITENGROESSE in guests-list.tsx passen: die erste Seite
+  // kommt von hier, alle weiteren aus der Client-Komponente. Verschiedene
+  // Werte hiessen, dass beim Blaettern Zeilen doppelt oder gar nicht kaemen.
+  const [res, acc] = await Promise.all([
+    listGuests({ limit: 50, offset: 0 }),
+    getAccount(),
+  ]);
   const access = acc.ok
     ? guestAccessFor(acc.data.role, acc.data.permissions)
     : guestAccessFor(null, []);

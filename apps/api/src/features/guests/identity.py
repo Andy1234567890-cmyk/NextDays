@@ -463,13 +463,27 @@ def _create_guest(
     # Aufrufern wäre sie sechs Kopien, von denen die siebte fehlt.
     abgeleiteter_name = name or email or "—"
     ohne_echten_namen = abgeleiteter_name == "—"
+    # Auch ein Gast MIT Namen, aber OHNE jeden Kontakt ist unvollständig.
+    #
+    # WARUM DIESE ZEILE: Bis hierher hing die Markierung allein am Namen. Ein
+    # Gast mit Namen und ohne E-Mail/Telefon galt damit als gepflegt — obwohl
+    # ihn niemand erreichen kann und obwohl genau er die Dubletten erzeugt:
+    # ohne Kontaktmerkmal hat der Resolver keinen Schlüssel und legt bei der
+    # nächsten Buchung derselben Person neu an (er mergt nie über den Namen).
+    #
+    # Live am 03.09.2026: „Andreas Dumler" stand zweimal in der Kartei — einmal
+    # ohne jeden Kontakt, einmal mit Booking-Mail und Telefon. BEIDE Zeilen
+    # trugen `needs_review = false`, der Filter „Nur unvollständige" fand also
+    # keine davon. Die kontaktlose Zeile war die Ursache der Dublette und war
+    # zugleich die einzige, die man nicht finden konnte.
+    ohne_kontakt = not (email or phone)
     payload: dict[str, Any] = {
         "tenant_id": tenant_id,
         # name ist NOT NULL → bei reiner Kanal-ID/E-Mail auf E-Mail/'—' ableiten.
         "name": abgeleiteter_name,
         "email": email,
         "phone": phone,
-        "needs_review": needs_review or ohne_echten_namen,
+        "needs_review": needs_review or ohne_echten_namen or ohne_kontakt,
     }
     # Gästemappen-Stammdaten (0046) strukturiert mitschreiben, sofern der Kanal
     # sie liefert — sonst zeigt die Gästekartei nur den zusammengesetzten Namen

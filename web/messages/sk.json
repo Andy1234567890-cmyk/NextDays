@@ -1270,7 +1270,31 @@
     },
     "filterIncomplete": "Len neúplné",
     "unnamed": "Bez mien",
-    "unnamedFromChannel": "{channel} hosť"
+    "unnamedFromChannel": "{channel} hosť",
+    "pageRange": "{from} – {to} z {total}",
+    "pageOf": "Strana {page} z {pages}",
+    "prevPage": "Späť",
+    "nextPage": "Ďalej",
+    "duplicates": {
+      "title": "{count, plural, one {1 možný duplicitný hosť} other {# možných duplicitných hostí}}",
+      "subtitle": "{guests, plural, one {1 dotknutý záznam} other {# dotknutých záznamov}} – zlúčením sa zachovajú všetky rezervácie.",
+      "loading": "Prebieha kontrola…",
+      "targetBadge": "Cieľ",
+      "noContact": "Žiadne kontaktné údaje",
+      "contactHidden": "Kontaktné údaje k dispozícii",
+      "stays": "{count, plural, one {1 pobyt} other {# pobytov}}",
+      "mergeAction": "Zlúčiť",
+      "confirmText": "{count, plural, one {Jeden záznam bude zlúčený} other {# záznamov bude zlúčených}} do „{target}“.",
+      "confirmHint": "Rezervácie, správy a poznámky sa presunú. Zlúčený záznam bude potom anonymizovaný – toto sa nedá vrátiť späť.",
+      "confirmMerge": "Zlúčiť teraz",
+      "merging": "Prebieha zlučovanie…",
+      "cancel": "Zrušiť",
+      "reason": {
+        "name": "Rovnaké meno",
+        "email": "Rovnaký e-mail",
+        "phone": "Rovnaké telefónne číslo"
+      }
+    }
   },
   "fotos": {
     "title": "Fotografie",

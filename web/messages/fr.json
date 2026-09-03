@@ -1270,7 +1270,31 @@
     },
     "filterIncomplete": "Incomplet seulement",
     "unnamed": "Sans nom",
-    "unnamedFromChannel": "Invité {channel}"
+    "unnamedFromChannel": "Invité {channel}",
+    "pageRange": "{from}–{to} sur {total}",
+    "pageOf": "Page {page} sur {pages}",
+    "prevPage": "Précédent",
+    "nextPage": "Suivant",
+    "duplicates": {
+      "title": "{count, plural, one {1 doublon potentiel} other {# doublons potentiels}}",
+      "subtitle": "{guests, plural, one {1 entrée concernée} other {# entrées concernées}} — la fusion conserve toutes les réservations.",
+      "loading": "Vérification en cours…",
+      "targetBadge": "Cible",
+      "noContact": "Aucune coordonnée",
+      "contactHidden": "Coordonnées disponibles",
+      "stays": "{count, plural, one {1 séjour} other {# séjours}}",
+      "mergeAction": "Fusionner",
+      "confirmText": "{count, plural, one {Une entrée sera} other {# entrées seront}} fusionnée(s) dans « {target} ».",
+      "confirmHint": "Les réservations, messages et notes seront transférés. L'entrée fusionnée sera ensuite anonymisée — cette action est irréversible.",
+      "confirmMerge": "Fusionner maintenant",
+      "merging": "Fusion en cours…",
+      "cancel": "Annuler",
+      "reason": {
+        "name": "Même nom",
+        "email": "Même adresse e-mail",
+        "phone": "Même numéro de téléphone"
+      }
+    }
   },
   "fotos": {
     "title": "Photos",

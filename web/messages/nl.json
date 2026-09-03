@@ -1270,7 +1270,31 @@
     },
     "filterIncomplete": "Slechts onvolledig",
     "unnamed": "Zonder naam",
-    "unnamedFromChannel": "{channel}-gast"
+    "unnamedFromChannel": "{channel}-gast",
+    "pageRange": "{from}-{to} van {total}",
+    "pageOf": "Pagina {page} van {pages}",
+    "prevPage": "Vorige",
+    "nextPage": "Volgende",
+    "duplicates": {
+      "title": "{count, plural, one {1 mogelijke dubbele gast} other {# mogelijke dubbele gasten}}",
+      "subtitle": "{guests, plural, one {1 vermelding beïnvloed} other {# vermeldingen beïnvloed}} — samenvoegen behoudt alle boekingen.",
+      "loading": "Bezig met controleren…",
+      "targetBadge": "Doel",
+      "noContact": "Geen contactgegevens",
+      "contactHidden": "Contactgegevens aanwezig",
+      "stays": "{count, plural, one {1 verblijf} other {# verblijven}}",
+      "mergeAction": "Samenvoegen",
+      "confirmText": "{count, plural, one {Eén vermelding wordt} other {# vermeldingen worden}} samengevoegd in '{target}'.",
+      "confirmHint": "Boekingen, berichten en notities worden overgedragen. De samengevoegde vermelding wordt daarna geanonimiseerd — dit kan niet ongedaan worden gemaakt.",
+      "confirmMerge": "Nu samenvoegen",
+      "merging": "Bezig met samenvoegen…",
+      "cancel": "Annuleren",
+      "reason": {
+        "name": "Zelfde naam",
+        "email": "Zelfde e-mailadres",
+        "phone": "Zelfde telefoonnummer"
+      }
+    }
   },
   "fotos": {
     "title": "Foto's",

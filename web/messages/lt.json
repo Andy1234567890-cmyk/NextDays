@@ -1270,7 +1270,31 @@
     },
     "filterIncomplete": "Tik nepilnas",
     "unnamed": "Be pavadinimo",
-    "unnamedFromChannel": "{channel} svečias"
+    "unnamedFromChannel": "{channel} svečias",
+    "pageRange": "{from}-{to} iš {total}",
+    "pageOf": "Puslapis {page} iš {pages}",
+    "prevPage": "Atgal",
+    "nextPage": "Pirmyn",
+    "duplicates": {
+      "title": "{count, plural, one {1 galimas pasikartojantis svečias} other {# galimi pasikartojantys svečiai}}",
+      "subtitle": "{guests, plural, one {1 įrašas paveiktas} other {# įrašai paveikti}} – sujungus išlieka visi užsakymai.",
+      "loading": "Tikrinama…",
+      "targetBadge": "Paskirtis",
+      "noContact": "Nėra kontaktinių duomenų",
+      "contactHidden": "Kontaktiniai duomenys yra",
+      "stays": "{count, plural, one {1 viešnagė} other {# viešnagės}}",
+      "mergeAction": "Sujungti",
+      "confirmText": "{count, plural, one {Vienas įrašas bus sujungtas} other {# įrašai bus sujungti}} į „{target}“.",
+      "confirmHint": "Užsakymai, žinutės ir pastabos bus perkelti. Sujungtas įrašas bus anonimizuotas – to negalima atšaukti.",
+      "confirmMerge": "Sujungti dabar",
+      "merging": "Sujungiama…",
+      "cancel": "Atšaukti",
+      "reason": {
+        "name": "Tas pats vardas",
+        "email": "Tas pats el. pašto adresas",
+        "phone": "Tas pats telefono numeris"
+      }
+    }
   },
   "fotos": {
     "title": "Nuotraukos",

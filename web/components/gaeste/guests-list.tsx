@@ -24,7 +24,12 @@ import { useFormatter, useTranslations } from "next-intl";
 import { Button } from "@nextdays/ui/button";
 import type { GuestAccess } from "@/lib/guests-access";
 import { channelLabel, channelLogo } from "@/lib/channel-logos";
+import { GuestDuplicates } from "@/components/gaeste/guest-duplicates";
 import { type GuestListItem, createGuest, listGuests } from "@/lib/guests";
+
+/** Zeilen je Seite. Muss zum `limit` der Server-Komponente (gaeste/page.tsx)
+ *  passen, sonst stimmt die erste Seite nicht mit den nachgeladenen überein. */
+const SEITENGROESSE = 50;
 
 export function GuestsList({
   guests,
@@ -40,10 +45,14 @@ export function GuestsList({
   const t = useTranslations("guests");
   const router = useRouter();
   const [rows, setRows] = useState<GuestListItem[]>(guests);
+  const [gesamt, setGesamt] = useState(total);
   const [q, setQ] = useState("");
   const [onlyBlocked, setOnlyBlocked] = useState(false);
   const [onlyIncomplete, setOnlyIncomplete] = useState(false);
   const [showNew, setShowNew] = useState(false);
+  // Angezeigte Seite (0-basiert). Der Server liefert `total` mit, daraus ergibt
+  // sich die Seitenzahl — kein Raten am Ende der Liste.
+  const [seite, setSeite] = useState(0);
   const [pending, start] = useTransition();
 
   // Realtime-Pflicht: RealtimeRefresh (gaeste/page.tsx) löst router.refresh()
@@ -51,27 +60,48 @@ export function GuestsList({
   // synchronisieren, sonst zeigt die Tabelle bis zur nächsten Suche alte Daten.
   useEffect(() => {
     setRows(guests);
-  }, [guests]);
+    setGesamt(total);
+  }, [guests, total]);
 
   const reload = (opts: {
     q?: string;
     blocked?: boolean;
     needsReview?: boolean;
+    seite?: number;
   }) =>
     start(async () => {
-      const res = await listGuests(opts);
-      if (res.ok) setRows(res.data.items);
+      const ziel = opts.seite ?? 0;
+      const res = await listGuests({
+        ...opts,
+        limit: SEITENGROESSE,
+        offset: ziel * SEITENGROESSE,
+      });
+      if (res.ok) {
+        setRows(res.data.items);
+        // `total` ist die Gesamtzahl der TREFFER, nicht der geladenen Zeilen —
+        // die Blätter-Leiste muss sich nach dem Filtern mitverkleinern.
+        setGesamt(res.data.total);
+        setSeite(ziel);
+      }
     });
 
   // Ein Ort für den aktuellen Filterstand: sonst vergisst jeder neue Auslöser
   // (Suchknopf, Enter, eine zweite Checkbox) irgendeinen Teil und setzt ihn
   // still zurück.
   const filterStand = (
-    aenderung: { blocked?: boolean; needsReview?: boolean } = {},
+    aenderung: {
+      blocked?: boolean;
+      needsReview?: boolean;
+      seite?: number;
+    } = {},
   ) => ({
     q: q || undefined,
     blocked: (aenderung.blocked ?? onlyBlocked) || undefined,
     needsReview: (aenderung.needsReview ?? onlyIncomplete) || undefined,
+    // Ohne `seite` heisst jede Filter-/Suchaenderung: zurueck auf Seite 1.
+    // Sonst stünde man nach dem Filtern auf Seite 7 einer dreiseitigen
+    // Treffermenge und die Tabelle wäre leer.
+    seite: aenderung.seite ?? 0,
   });
 
   return (
@@ -80,7 +110,7 @@ export function GuestsList({
         <div>
           <h1 className="font-display text-xl font-bold">{t("title")}</h1>
           <p className="text-sm text-muted-foreground">
-            {t("count", { count: total })}
+            {t("count", { count: gesamt })}
           </p>
         </div>
         {access.canEdit && (
@@ -90,6 +120,13 @@ export function GuestsList({
           </Button>
         )}
       </div>
+
+      {/* Dubletten-Vorschlag: erscheint nur, wenn es welche gibt. Über der
+          Suche, weil er den Bestand betrifft und nicht die aktuelle Sicht. */}
+      <GuestDuplicates
+        canEdit={access.canEdit}
+        onMerged={() => reload(filterStand({ seite }))}
+      />
 
       {/* Suche + Filter */}
       <div className="flex flex-wrap items-center gap-2">
@@ -210,12 +247,84 @@ export function GuestsList({
         </table>
       </div>
 
+      <Blaetterleiste
+        seite={seite}
+        gesamt={gesamt}
+        geladen={rows.length}
+        pending={pending}
+        onSeite={(z) => reload(filterStand({ seite: z }))}
+      />
+
       {showNew && (
         <NewGuestDialog
           onClose={() => setShowNew(false)}
           onCreated={(id) => router.push(`/gaeste/${id}`)}
         />
       )}
+    </div>
+  );
+}
+
+/** Blättern durch die Gästeliste.
+ *
+ *  WARUM ES DAS BRAUCHT: Der Server begrenzt die Liste auf `limit` Zeilen
+ *  (Wurzel 8), im Frontend wurde `offset` aber nie gesetzt. Bei 510 Gästen sah
+ *  der Betrieb dauerhaft die ersten 50 — die anderen 460 waren nur über die
+ *  Suche erreichbar, und wer den Namen nicht kannte, kam nicht an sie heran.
+ *
+ *  Die Seitenzahl kommt aus `total` (der Server zählt exakt, `count="exact"`),
+ *  nicht aus „sind es genau `limit` Zeilen?" — das wäre auf der letzten,
+ *  vollen Seite falsch.
+ */
+function Blaetterleiste({
+  seite,
+  gesamt,
+  geladen,
+  pending,
+  onSeite,
+}: {
+  seite: number;
+  gesamt: number;
+  geladen: number;
+  pending: boolean;
+  onSeite: (seite: number) => void;
+}) {
+  const t = useTranslations("guests");
+  const seiten = Math.max(1, Math.ceil(gesamt / SEITENGROESSE));
+  // Eine einzige Seite braucht keine Leiste.
+  if (seiten <= 1) return null;
+
+  const von = seite * SEITENGROESSE + 1;
+  const bis = seite * SEITENGROESSE + geladen;
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <p className="text-sm text-muted-foreground">
+        {t("pageRange", { from: von, to: bis, total: gesamt })}
+      </p>
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => onSeite(seite - 1)}
+          disabled={pending || seite === 0}
+        >
+          <Icon icon="ph:caret-left" className="size-4" />
+          {t("prevPage")}
+        </Button>
+        <span className="text-sm text-muted-foreground">
+          {t("pageOf", { page: seite + 1, pages: seiten })}
+        </span>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => onSeite(seite + 1)}
+          disabled={pending || seite + 1 >= seiten}
+        >
+          {t("nextPage")}
+          <Icon icon="ph:caret-right" className="size-4" />
+        </Button>
+      </div>
     </div>
   );
 }

@@ -1270,7 +1270,31 @@
     },
     "filterIncomplete": "Kun ufuldstændig",
     "unnamed": "Uden navn",
-    "unnamedFromChannel": "{channel}-gæst"
+    "unnamedFromChannel": "{channel}-gæst",
+    "pageRange": "{from}–{to} af {total}",
+    "pageOf": "Side {page} af {pages}",
+    "prevPage": "Tilbage",
+    "nextPage": "Næste",
+    "duplicates": {
+      "title": "{count, plural, one {1 potentiel dobbelt gæst} other {# potentielle dobbelte gæster}}",
+      "subtitle": "{guests, plural, one {1 post påvirket} other {# poster påvirket}} — fletning bevarer alle bookinger.",
+      "loading": "Kontrollerer ...",
+      "targetBadge": "Mål",
+      "noContact": "Ingen kontaktoplysninger",
+      "contactHidden": "Kontaktoplysninger tilgængelige",
+      "stays": "{count, plural, one {1 ophold} other {# ophold}}",
+      "mergeAction": "Flet",
+      "confirmText": "{count, plural, one {Én post flettes} other {# poster flettes}} til \"{target}\".",
+      "confirmHint": "Bookinger, beskeder og noter overføres. Den flettede post anonymiseres derefter – dette kan ikke fortrydes.",
+      "confirmMerge": "Flet nu",
+      "merging": "Fletter ...",
+      "cancel": "Annuller",
+      "reason": {
+        "name": "Samme navn",
+        "email": "Samme e-mailadresse",
+        "phone": "Samme telefonnummer"
+      }
+    }
   },
   "fotos": {
     "title": "Fotos",

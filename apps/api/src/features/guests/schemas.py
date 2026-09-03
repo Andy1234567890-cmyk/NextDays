@@ -7,6 +7,7 @@ guest_masking-Helper maskiert (DSGVO-Daten-Split) — die Schemas erlauben dafü
 durchgängig None.
 """
 from datetime import date, datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -280,6 +281,46 @@ class ListResponse(BaseModel):
 class MergeRequest(BaseModel):
     source_id: str                          # wird in target zusammengeführt
     target_id: str
+
+
+class DuplicateCandidate(BaseModel):
+    """Ein Gast, der als Dublette zu einem anderen in Frage kommt.
+
+    Bewusst dieselben Felder wie `GuestListItem` (plus `has_contact`): die
+    Oberfläche zeigt beide Kandidaten in einer Zeile und muss entscheiden
+    können, WELCHER das Ziel des Zusammenführens sein soll — der mit den
+    Kontaktdaten. Ohne dieses Feld müsste das Frontend `email`/`phone` selbst
+    auswerten, was bei maskierten Rollen (§4.3) falsch herauskäme: dort sind
+    beide null, obwohl der Gast Kontaktdaten HAT.
+    """
+
+    id: str
+    name: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    stays_count: int = 0
+    last_stay_at: date | None = None
+    needs_review: bool = False
+    # Aus den ROHEN Spalten abgeleitet, vor der Maskierung — sonst wäre die
+    # Empfehlung „dieser ist das Ziel" für staff/cleaner immer leer.
+    has_contact: bool = False
+
+
+class DuplicateGroup(BaseModel):
+    """Gäste desselben Tenants mit identischem Vergleichsnamen.
+
+    `reason` benennt, WORAN die Dublette erkannt wurde — nie ein blankes
+    „mögliches Duplikat", das der Betrieb nicht nachvollziehen kann.
+    """
+
+    key: str                                # normalisierter Vergleichsname
+    reason: Literal["name", "email", "phone"]
+    guests: list[DuplicateCandidate]
+
+
+class DuplicateListResponse(BaseModel):
+    groups: list[DuplicateGroup]
+    total: int
 
 
 class SliceHealth(BaseModel):

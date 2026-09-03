@@ -369,3 +369,48 @@ def test_gast_mit_namen_bleibt_ungemarkt() -> None:
     zeile = db.store["guests"][0]
     assert zeile["name"] == "Anna Adam"
     assert zeile["needs_review"] is False
+
+
+def test_gast_ohne_kontakt_ist_pruefbeduerftig() -> None:
+    """Ein Gast MIT Namen, aber OHNE jeden Kontakt ist unvollstaendig.
+
+    Live am 03.09.2026: „Andreas Dumler" stand zweimal in der Kartei — einmal
+    ohne E-Mail und Telefon (Aufenthalt 2026-08-16), einmal mit
+    Booking-Alias-Mail und Rufnummer (2027-07-31). BEIDE trugen
+    `needs_review = false`, der Filter „Nur unvollstaendige" fand also keine.
+
+    Genau die kontaktlose Zeile verursacht die Dublette: ohne Kontaktmerkmal hat
+    der Resolver keinen Schluessel (er mergt nie ueber den Namen) und legt bei
+    der naechsten Buchung derselben Person neu an. Sie war zugleich die einzige,
+    die man in der Kartei nicht finden konnte.
+    """
+    db = _DB()
+    gid = resolve_or_create_guest(
+        db, "t1",
+        GuestContact(channel="ota", name="Andreas Dumler",
+                     stable_external_ref="booking-77"),
+    )
+    assert gid is not None
+    zeile = db.store["guests"][0]
+    assert zeile["name"] == "Andreas Dumler"
+    assert zeile["email"] is None
+    assert zeile["phone"] is None
+    assert zeile["needs_review"] is True
+
+
+def test_gast_mit_nur_telefon_bleibt_ungemarkt() -> None:
+    """Eine Rufnummer allein ist ein Kontakt — und ein Match-Schluessel.
+
+    Die Markierung haengt am FEHLENDEN Kontakt, nicht an einer fehlenden
+    E-Mail. Sonst waere jeder Gast, den ein Portal nur mit Telefonnummer
+    liefert, dauerhaft als unvollstaendig gefuehrt, obwohl der Resolver ihn
+    wiederfindet.
+    """
+    db = _DB()
+    resolve_or_create_guest(
+        db, "t1",
+        GuestContact(channel="ota", name="Anette Loekling",
+                     phone="+4741230551"),
+    )
+    zeile = db.store["guests"][0]
+    assert zeile["needs_review"] is False

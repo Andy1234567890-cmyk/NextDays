@@ -1270,7 +1270,31 @@
     },
     "filterIncomplete": "Vain puutteellinen",
     "unnamed": "Nimetön",
-    "unnamedFromChannel": "{channel}-vieras"
+    "unnamedFromChannel": "{channel}-vieras",
+    "pageRange": "{from}-{to}/{total}",
+    "pageOf": "Sivu {page}/{pages}",
+    "prevPage": "Takaisin",
+    "nextPage": "Seuraava",
+    "duplicates": {
+      "title": "{count, plural, one {1 mahdollinen päällekkäinen vieras} other {# mahdollista päällekkäistä vierasta}}",
+      "subtitle": "{guests, plural, one {1 kohde vaikuttaa} other {# kohdetta vaikuttaa}} – yhdistäminen säilyttää kaikki varaukset.",
+      "loading": "Tarkistetaan…",
+      "targetBadge": "Kohde",
+      "noContact": "Ei yhteystietoja",
+      "contactHidden": "Yhteystiedot saatavilla",
+      "stays": "{count, plural, one {1 oleskelu} other {# oleskelua}}",
+      "mergeAction": "Yhdistä",
+      "confirmText": "{count, plural, one {Yksi kohde yhdistetään} other {# kohdetta yhdistetään}} kohteeseen ”{target}”.",
+      "confirmHint": "Varaukset, viestit ja muistiinpanot siirretään. Yhdistetty kohde anonymisoidaan tämän jälkeen – tätä ei voi kumota.",
+      "confirmMerge": "Yhdistä nyt",
+      "merging": "Yhdistetään…",
+      "cancel": "Peruuta",
+      "reason": {
+        "name": "Sama nimi",
+        "email": "Sama sähköpostiosoite",
+        "phone": "Sama puhelinnumero"
+      }
+    }
   },
   "fotos": {
     "title": "Kuvat",

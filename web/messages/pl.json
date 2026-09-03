@@ -1270,7 +1270,31 @@
     },
     "filterIncomplete": "Tylko niekompletne",
     "unnamed": "Bez nazwiska",
-    "unnamedFromChannel": "Gość {channel}"
+    "unnamedFromChannel": "Gość {channel}",
+    "pageRange": "Od {from} do {to} z {total}",
+    "pageOf": "Strona {page} z {pages}",
+    "prevPage": "Wstecz",
+    "nextPage": "Dalej",
+    "duplicates": {
+      "title": "{count, plural, one {1 potencjalny duplikat gościa} other {# potencjalne duplikaty gości}}",
+      "subtitle": "{guests, plural, one {1 wpis, którego dotyczy problem} other {# wpisów, których dotyczy problem}} — scalenie zachowuje wszystkie rezerwacje.",
+      "loading": "Sprawdzanie…",
+      "targetBadge": "Cel",
+      "noContact": "Brak danych kontaktowych",
+      "contactHidden": "Dane kontaktowe dostępne",
+      "stays": "{count, plural, one {1 pobyt} other {# pobyty}}",
+      "mergeAction": "Scal",
+      "confirmText": "{count, plural, one {Jeden wpis zostanie scalony} other {# wpisy zostaną scalone}} do „{target}”.",
+      "confirmHint": "Rezerwacje, wiadomości i notatki zostaną przeniesione. Scalony wpis zostanie następnie zanonimizowany — tego nie można cofnąć.",
+      "confirmMerge": "Scal teraz",
+      "merging": "Scalanie…",
+      "cancel": "Anuluj",
+      "reason": {
+        "name": "To samo imię i nazwisko",
+        "email": "Ten sam adres e-mail",
+        "phone": "Ten sam numer telefonu"
+      }
+    }
   },
   "fotos": {
     "title": "Zdjęcia",

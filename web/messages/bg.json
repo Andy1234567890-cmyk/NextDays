@@ -1270,7 +1270,31 @@
     },
     "filterIncomplete": "Само непълни",
     "unnamed": "Без име",
-    "unnamedFromChannel": "{channel} гост"
+    "unnamedFromChannel": "{channel} гост",
+    "pageRange": "{from}–{to} от {total}",
+    "pageOf": "Страница {page} от {pages}",
+    "prevPage": "Назад",
+    "nextPage": "Напред",
+    "duplicates": {
+      "title": "{count, plural, one {1 възможен дублиран гост} other {# възможни дублирани гости}}",
+      "subtitle": "{guests, plural, one {1 запис е засегнат} other {# записа са засегнати}} — сливането запазва всички резервации.",
+      "loading": "Проверява се...",
+      "targetBadge": "Цел",
+      "noContact": "Няма данни за контакт",
+      "contactHidden": "Налични данни за контакт",
+      "stays": "{count, plural, one {1 престой} other {# престоя}}",
+      "mergeAction": "Обединяване",
+      "confirmText": "{count, plural, one {Един запис ще бъде обединен} other {# записа ще бъдат обединени}} в „{target}“.",
+      "confirmHint": "Резервациите, съобщенията и бележките ще бъдат прехвърлени. Обединеният запис ще бъде анонимизиран след това — това не може да бъде отменено.",
+      "confirmMerge": "Обединяване сега",
+      "merging": "Обединява се...",
+      "cancel": "Отказ",
+      "reason": {
+        "name": "Същото име",
+        "email": "Същият имейл адрес",
+        "phone": "Същият телефонен номер"
+      }
+    }
   },
   "fotos": {
     "title": "Снимки",

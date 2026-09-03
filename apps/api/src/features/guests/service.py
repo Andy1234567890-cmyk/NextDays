@@ -13,6 +13,7 @@ Rechnungsbezug besteht (statt hartem Delete).
 # (PEP 563) lösen `list[str]` etc. erst zur Laufzeit auf → kein Namenskonflikt.
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
 
@@ -22,6 +23,7 @@ from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.features.auth.guest_masking import GuestMask, load_guest_mask
 
+from .identity import normalize_email, normalize_phone
 from .schemas import (
     AddressCreate,
     AddressResponse,
@@ -32,6 +34,9 @@ from .schemas import (
     ContactResponse,
     DocumentCreate,
     DocumentResponse,
+    DuplicateCandidate,
+    DuplicateGroup,
+    DuplicateListResponse,
     GuestCreate,
     GuestInvoiceItem,
     GuestListItem,
@@ -660,6 +665,161 @@ class GuestsService:
             for r in (res.data or [])
         ]
         return ListResponse(items=items, total=len(items))
+
+    # --- Dubletten -----------------------------------------------------------
+    #
+    # WARUM ES DIESEN ENDPUNKT GIBT: Der Resolver (identity.py) mergt bewusst
+    # NIE über den Namen — zwei echte „Andreas Müller" dürfen nicht zu einer
+    # Person verschmelzen. Kommt dieselbe Person aber einmal MIT und einmal
+    # OHNE Kontaktdaten herein (CSV-Import, Airbnb-Feed ohne E-Mail), fehlt
+    # jeder Schlüssel und es entstehen zwei Zeilen.
+    #
+    # Live am 03.09.2026 gesehen: „Andreas Dumler" zweimal in der Kartei — eine
+    # Zeile ohne jeden Kontakt (Aufenthalt 2026-08-16), eine mit
+    # Booking-Alias-Mail und Telefon (2027-07-31). Kein Anzeigefehler, sondern
+    # zwei Datensätze ohne Verbindung.
+    #
+    # Die Auflösung ist bewusst ein VORSCHLAG, keine Automatik: das
+    # Zusammenführen bleibt die Entscheidung des Betriebs (`merge`), weil nur
+    # er weiß, ob es dieselbe Person ist. Der Endpunkt sagt lediglich, wo
+    # hinzusehen ist.
+    #
+    # Die Gruppierung passiert in Python und nicht per SQL-GROUP BY, weil
+    # PostgREST kein Gruppieren über einen normalisierten Ausdruck anbietet und
+    # ein RPC dafür eine eigene SECURITY-DEFINER-Funktion bräuchte (Wurzel 6:
+    # mehr Angriffsfläche für dieselbe Anzeige). Die Zeilenzahl je Tenant ist
+    # dreistellig — das trägt eine Schleife.
+
+    # Obergrenze für den Dubletten-Scan (Wurzel 8: kein unbegrenzter Bereich).
+    # Wer mehr Gäste hat, bekommt die Dubletten der ersten Seite, nicht einen
+    # Timeout. Bewusst großzügig, damit ein normaler Betrieb vollständig
+    # geprüft wird.
+    _DUPLICATE_SCAN_LIMIT = 5000
+
+    @staticmethod
+    def _vergleichsname(name: str | None) -> str | None:
+        """Namen für den Dubletten-Vergleich normalisieren.
+
+        Trim + lowercase + Mehrfach-Leerzeichen zu einem. BEWUSST nicht mehr:
+        keine Umlaut-Faltung und kein Fuzzy-Vergleich — „Müller" und „Muller"
+        bleiben getrennt. Eine unscharfe Übereinstimmung würde falsche
+        Zusammenführungen VORSCHLAGEN, und ein Vorschlag, dem der Betrieb
+        folgt, ist so gut wie eine Automatik (Wurzel 4: nichts erfinden).
+
+        Der Platzhalter '—' (guests.name ist NOT NULL) ist KEIN Name und darf
+        nie gruppieren — sonst wären alle namenlosen Airbnb-Gäste eine einzige
+        Riesen-Dublette.
+        """
+        cleaned = " ".join((name or "").split()).lower()
+        if not cleaned or cleaned == "—":
+            return None
+        return cleaned
+
+    def duplicates(
+        self, ctx: AuthContext, *, limit: int = 50
+    ) -> DuplicateListResponse:
+        """Gäste desselben Tenants finden, die auf dieselbe Person deuten.
+
+        Drei Erkennungswege, absteigend nach Belastbarkeit. Jede Gruppe nennt
+        ihren Grund, damit der Betrieb die Empfehlung prüfen kann statt ihr zu
+        glauben:
+          - `email` / `phone`: gleicher Kontakt bei verschiedenen Gästen. Das
+            kann der Unique-Index (0113) nicht verhindern, wenn die eine Zeile
+            den Wert erst später bekam.
+          - `name`: identischer Vergleichsname. Der schwächste Hinweis, aber
+            der einzige, der den live gesehenen Fall trifft.
+
+        Anonymisierte Gäste (`anonymized_at`) sind bereits zusammengeführt oder
+        DSGVO-gelöscht und werden nie vorgeschlagen — sonst würde die Liste
+        nach jedem Merge die eigene Quelle erneut anbieten.
+        """
+        tenant_id = self._require_tenant(ctx)
+        mask = self._mask(ctx)
+        rows = (
+            self._db()
+            .table("guests")
+            .select(
+                "id, name, email, phone, stays_count, last_stay_at, "
+                "needs_review, anonymized_at"
+            )
+            .eq("tenant_id", tenant_id)
+            .is_("anonymized_at", "null")
+            .order("created_at")
+            .limit(self._DUPLICATE_SCAN_LIMIT)
+            .execute()
+        ).data or []
+
+        # Ein Gast darf in HÖCHSTENS einer Gruppe erscheinen: sonst schlägt die
+        # Oberfläche denselben Merge zweimal vor (einmal unter „E-Mail", einmal
+        # unter „Name") und der zweite Klick trifft eine bereits anonymisierte
+        # Quelle (404/Fehler nach erfolgreichem ersten Merge).
+        vergeben: set[str] = set()
+        gruppen: list[DuplicateGroup] = []
+
+        for grund, schluessel in (
+            ("email", self._dubletten_schluessel_email),
+            ("phone", self._dubletten_schluessel_phone),
+            ("name", self._dubletten_schluessel_name),
+        ):
+            for key, gruppe in self._gruppieren(rows, schluessel).items():
+                offen = [r for r in gruppe if str(r["id"]) not in vergeben]
+                if len(offen) < 2:
+                    continue
+                vergeben.update(str(r["id"]) for r in offen)
+                gruppen.append(
+                    DuplicateGroup(
+                        key=key,
+                        reason=grund,
+                        guests=[self._dublette(r, mask) for r in offen],
+                    )
+                )
+
+        # Die belastbarsten Gruppen zuerst — nicht die zufällige Reihenfolge des
+        # Durchlaufs. Innerhalb desselben Grundes die mit den meisten Zeilen.
+        rang = {"email": 0, "phone": 1, "name": 2}
+        gruppen.sort(key=lambda g: (rang[g.reason], -len(g.guests), g.key))
+        return DuplicateListResponse(
+            groups=gruppen[:limit], total=len(gruppen)
+        )
+
+    @staticmethod
+    def _dubletten_schluessel_email(row: dict) -> str | None:
+        return normalize_email(row.get("email"))
+
+    @staticmethod
+    def _dubletten_schluessel_phone(row: dict) -> str | None:
+        return normalize_phone(row.get("phone"))
+
+    @classmethod
+    def _dubletten_schluessel_name(cls, row: dict) -> str | None:
+        return cls._vergleichsname(row.get("name"))
+
+    @staticmethod
+    def _gruppieren(
+        rows: list[dict], schluessel: Callable[[dict], str | None]
+    ) -> dict[str, list[dict]]:
+        """Zeilen nach einem Schlüssel bündeln; Zeilen ohne Schlüssel fallen raus."""
+        eimer: dict[str, list[dict]] = {}
+        for row in rows:
+            key = schluessel(row)
+            if key:
+                eimer.setdefault(key, []).append(row)
+        return {k: v for k, v in eimer.items() if len(v) > 1}
+
+    @staticmethod
+    def _dublette(row: dict, mask: GuestMask) -> DuplicateCandidate:
+        # `has_contact` VOR der Maskierung aus den Rohspalten ableiten: sonst
+        # wäre die Ziel-Empfehlung für staff/cleaner immer „kein Kontakt".
+        return DuplicateCandidate(
+            id=str(row["id"]),
+            name=mask.name(row.get("name")),
+            email=mask.contact_value(row.get("email")),
+            phone=mask.contact_value(row.get("phone")),
+            stays_count=row.get("stays_count") or 0,
+            last_stay_at=row.get("last_stay_at"),
+            needs_review=bool(row.get("needs_review")),
+            has_contact=bool(row.get("email") or row.get("phone")),
+        )
 
     # Sub-Ressourcen mit `guest_id`-Fremdschlüssel (n:1 zum Gast) — beim Merge
     # werden alle Zeilen von source → target umgehängt. `guest_preferences` ist

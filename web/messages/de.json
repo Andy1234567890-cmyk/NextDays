@@ -1270,6 +1270,30 @@
       "private": "Privat",
       "business": "Geschäftlich",
       "email": "E-Mail"
+    },
+    "pageRange": "{from}–{to} von {total}",
+    "pageOf": "Seite {page} von {pages}",
+    "prevPage": "Zurück",
+    "nextPage": "Weiter",
+    "duplicates": {
+      "title": "{count, plural, one {1 möglicher doppelter Gast} other {# mögliche doppelte Gäste}}",
+      "subtitle": "{guests, plural, one {1 Eintrag betroffen} other {# Einträge betroffen}} — zusammenführen behält alle Buchungen.",
+      "loading": "Wird geprüft …",
+      "reason": {
+        "name": "Gleicher Name",
+        "email": "Gleiche E-Mail-Adresse",
+        "phone": "Gleiche Telefonnummer"
+      },
+      "targetBadge": "Ziel",
+      "noContact": "Keine Kontaktdaten",
+      "contactHidden": "Kontaktdaten vorhanden",
+      "stays": "{count, plural, one {1 Aufenthalt} other {# Aufenthalte}}",
+      "mergeAction": "Zusammenführen",
+      "confirmText": "{count, plural, one {Ein Eintrag wird} other {# Einträge werden}} in „{target}“ zusammengeführt.",
+      "confirmHint": "Buchungen, Nachrichten und Notizen wandern mit. Der zusammengeführte Eintrag wird danach anonymisiert — das lässt sich nicht widerrufen.",
+      "confirmMerge": "Jetzt zusammenführen",
+      "merging": "Wird zusammengeführt …",
+      "cancel": "Abbrechen"
     }
   },
   "fotos": {
