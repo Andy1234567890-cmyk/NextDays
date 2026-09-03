@@ -30,7 +30,14 @@ CODE_MIN = 3
 CODE_MAX = 31
 
 LegalForm = Literal["company", "private"]
-PayoutMethod = Literal["wise", "sepa", "paypal"]
+# `stripe` MUSS dabei sein: `connect.konto_anlegen` schreibt genau diesen Wert
+# in `affiliates.payout_method`, und der CHECK der Tabelle erlaubt ihn (0522).
+# Er fehlte hier — dadurch warf JEDER Aufruf von `/affiliates/me` einen
+# ValidationError, sobald ein Partner ein Verbundkonto eröffnet hatte, und das
+# ganze Partner-Dashboard lief in „Application error" (live 03.09.2026,
+# digest 3505509738). Ein Wert, den das eigene Modul schreibt, muss im eigenen
+# Schema stehen; die drei alten Wege sind Altbestand ohne Wirkung (0522).
+PayoutMethod = Literal["wise", "sepa", "paypal", "stripe"]
 
 
 def vat_id_bereinigen(v: str | None) -> str | None:

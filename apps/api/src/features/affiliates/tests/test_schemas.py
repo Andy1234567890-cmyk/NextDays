@@ -233,3 +233,50 @@ def test_unbekannte_adresse_behaelt_die_angabe() -> None:
     # Kein bekannter Host → die Angabe des Bewerbers bleibt stehen.
     k = SocialKanal(platform="blog", url="https://pia.example/blog")
     assert k.platform == "blog"
+
+
+# --- Auszahlungsweg „stripe" (03.09.2026) -------------------------------------
+
+
+def test_payout_method_kennt_stripe() -> None:
+    """`stripe` MUSS ein gültiger Auszahlungsweg sein.
+
+    DER LIVE-AUSFALL: `connect.konto_anlegen` schreibt
+    `affiliates.payout_method = 'stripe'` (der CHECK der Tabelle erlaubt es
+    seit 0522). Das Pydantic-Literal kannte nur die drei ALTEN Wege. Folge:
+    sobald ein Partner ein Verbundkonto eröffnet hatte, warf `/affiliates/me`
+    einen ValidationError — HTTP 500 — und das KOMPLETTE Partner-Dashboard
+    zeigte „Application error: a server-side exception has occurred"
+    (digest 3505509738). Nicht eine Seite: jede, weil das Profil im Layout
+    geladen wird.
+
+    Der Fehler war unsichtbar, solange kein Konto existierte. Er entstand nicht
+    beim Schreiben, sondern beim LESEN — der Schreibpfad kam durch die DB
+    (CHECK erlaubt), nur das Lesemodell nicht.
+    """
+    from src.features.affiliates.schemas import PayoutMethod
+
+    erlaubt = set(PayoutMethod.__args__)  # type: ignore[attr-defined]
+    assert "stripe" in erlaubt, "connect.py schreibt diesen Wert"
+    # Die drei alten Wege bleiben: Altbestand darf keinen 422 auslösen (0522).
+    assert {"wise", "sepa", "paypal"} <= erlaubt
+
+
+def test_payout_method_deckt_den_db_check() -> None:
+    """Das Literal und der CHECK der Tabelle müssen deckungsgleich sein.
+
+    Gemessen an der Live-DB (03.09.2026):
+        CHECK (payout_method IS NULL OR payout_method = ANY
+               (ARRAY['wise','sepa','paypal','stripe']))
+    Ein Wert, den die DB erlaubt und das Schema nicht, ist genau der Ausfall
+    oben. Umgekehrt wäre es ein 500 beim Schreiben. Wer die Liste erweitert,
+    braucht BEIDE Stellen plus eine Migration.
+    """
+    from src.features.affiliates.schemas import PayoutMethod
+
+    assert set(PayoutMethod.__args__) == {  # type: ignore[attr-defined]
+        "wise",
+        "sepa",
+        "paypal",
+        "stripe",
+    }
