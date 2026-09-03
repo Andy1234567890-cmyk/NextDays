@@ -11,6 +11,8 @@ import {
   STATUS_LABEL,
 } from "@/lib/partner";
 import { getOffeneVideos, getRaenge, getTrackingSummary } from "@/lib/partner";
+
+import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { reichweite } from "@/lib/kanaele";
 import { getReichweiteSummary } from "@/lib/reichweite";
 
@@ -45,6 +47,10 @@ export default async function PartnerSeite({
 
   return (
     <div className="px-8 py-8 lg:px-12 lg:py-12">
+      {/* Neue Bewerbung, Freigabe, Rangwechsel — die Liste UND die Kachelzahlen. */}
+      <RealtimeRefresh table="affiliates" />
+      {/* Der Zähler „Videofreigabe“ oben rechts. */}
+      <RealtimeRefresh table="affiliate_posts" />
       <div className="flex flex-wrap items-baseline justify-between gap-4">
         <div>
           <h1 className="font-sans text-[2rem] font-bold tracking-tight">Partner</h1>

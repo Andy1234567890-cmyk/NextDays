@@ -28,6 +28,8 @@ import {
 } from "@/lib/partner";
 import { getReichweite } from "@/lib/reichweite";
 
+import { RealtimeRefresh } from "@/components/realtime-refresh";
+
 // Schlüssel aus payout_details (vom Partner gepflegt) → lesbare Bezeichnung.
 const AUSZAHLUNGSFELD: Record<string, string> = {
   iban: "IBAN",
@@ -101,6 +103,12 @@ export default async function PartnerDetailSeite({
 
   return (
     <div className="px-8 py-8 lg:px-12 lg:py-12">
+      {/* Nur DIESE Zeile, nicht die ganze Tabelle: die Detailseite zeigt einen
+          Partner, und ein Abo ohne Filter würde bei jeder fremden Änderung
+          neu laden. */}
+      <RealtimeRefresh table="affiliates" filter={`id=eq.${id}`} />
+      {/* Beiträge dieses Partners (Videofreigabe, Kennzahlen). */}
+      <RealtimeRefresh table="affiliate_posts" filter={`affiliate_id=eq.${id}`} />
       <Link href="/partner" className="text-sm font-semibold text-muted-foreground underline-offset-4 hover:underline">
         ← Partner
       </Link>

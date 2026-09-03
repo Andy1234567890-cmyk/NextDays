@@ -6,10 +6,14 @@ import Link from "next/link";
 import { PartnerMaterial } from "@/components/partner-material";
 import { getMaterial } from "@/lib/partner";
 
+import { RealtimeRefresh } from "@/components/realtime-refresh";
+
 export default async function MaterialSeite() {
   const material = await getMaterial();
   return (
     <div className="px-8 py-8 lg:px-12 lg:py-12">
+      {/* Material angelegt/geändert — auch aus einem zweiten Backoffice-Fenster. */}
+      <RealtimeRefresh table="affiliate_assets" />
       <div className="flex flex-wrap items-baseline justify-between gap-4">
         <div>
           <h1 className="font-sans text-[2rem] font-bold tracking-tight">Werbematerial</h1>

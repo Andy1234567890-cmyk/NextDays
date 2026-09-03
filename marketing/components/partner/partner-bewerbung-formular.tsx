@@ -20,9 +20,12 @@ import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
+import { useEinwilligung } from "@/components/einwilligung/use-einwilligung";
 import { KanalIcon } from "@/components/partner/kanal-icon";
 import { PARTNER_LOGIN_URL, PARTNER_URL } from "@/lib/app-url";
-import { captchaVorbereiten } from "@/lib/captcha";
+import { CaptchaEinwilligungFehlt, captchaVorbereiten } from "@/lib/captcha";
+import { EINWILLIGUNG_OEFFNEN, NICHTS_ERLAUBT } from "@/lib/einwilligung";
+import { RECAPTCHA_SITE_KEY } from "@/lib/config";
 import {
   handleBeispiel,
   handleEingabeDeuten,
@@ -41,6 +44,9 @@ const FELD = "w-full rounded-xl border border-border bg-background px-4 py-2.5 t
 
 export function PartnerBewerbungFormular({ sponsorVorgabe }: { sponsorVorgabe: string }) {
   const t = useTranslations("partnerBewerbung");
+  // Derselbe Katalog wie im Kontaktformular: der Zweck ist identisch, und zwei
+  // Texte für eine Einwilligung würden auseinander laufen.
+  const tEin = useTranslations("einwilligung.kontakt");
   const locale = useLocale();
   const [email, setEmail] = useState("");
   const [passwort, setPasswort] = useState("");
@@ -59,6 +65,14 @@ export function PartnerBewerbungFormular({ sponsorVorgabe }: { sponsorVorgabe: s
   const [fehler, setFehler] = useState<string | null>(null);
   const [fertig, setFertig] = useState(false);
   const captchaGeladen = useRef(false);
+  // Reaktiv, damit Hinweis und Knopfsperre verschwinden, sobald zugestimmt
+  // wird — ohne Neuladen der Seite.
+  const { entscheidung, geladen, speichern } = useEinwilligung();
+  // Nur wenn überhaupt ein Schlüssel konfiguriert ist: lokal lädt nichts von
+  // Google, dann darf kein Hinweis einen Dienst behaupten, den es nicht gibt.
+  // `geladen` verhindert, dass er vor dem Lesen des Speichers aufblitzt.
+  const spamschutzFehlt =
+    RECAPTCHA_SITE_KEY !== "" && geladen && entscheidung?.auswahl.funktional !== true;
 
   useEffect(() => {
     if (!captchaGeladen.current) {
@@ -94,6 +108,9 @@ export function PartnerBewerbungFormular({ sponsorVorgabe }: { sponsorVorgabe: s
       onSubmit={async (e) => {
         e.preventDefault();
         setFehler(null);
+        // Rückhalt: der Knopf ist in diesem Fall schon gesperrt. Ein Absenden
+        // per Tastatur oder aus einem Skript soll nicht in einen 403 laufen.
+        if (spamschutzFehlt) return;
         if (!socialDabei) {
           setFehler(t("fehler.social"));
           return;
@@ -131,6 +148,15 @@ export function PartnerBewerbungFormular({ sponsorVorgabe }: { sponsorVorgabe: s
           });
           setFertig(true);
         } catch (exc) {
+          // Fehlende Einwilligung zuerst: kein HTTP-Fehler, sondern ein
+          // fehlender Vorzustand. Der Hinweis samt Erlauben-Knopf steht durch
+          // `spamschutzFehlt` schon im Formular; zusätzlich die Leiste öffnen,
+          // damit der Bewerber auch dort entscheiden kann. Kein Fehlertext:
+          // „Seite neu laden" wäre eine Anweisung, die nichts ändert.
+          if (exc instanceof CaptchaEinwilligungFehlt) {
+            window.dispatchEvent(new Event(EINWILLIGUNG_OEFFNEN));
+            return;
+          }
           // Bei 409 den SERVER-Text zeigen, nicht pauschal „bereits
           // beworben": der Server unterscheidet zwei Fälle, die für den
           // Bewerber ganz verschiedene Schritte bedeuten — eine vorhandene
@@ -329,6 +355,31 @@ export function PartnerBewerbungFormular({ sponsorVorgabe }: { sponsorVorgabe: s
           weil sie ÜBER dem Knopf steht, klickte man weiter (live gemeldet
           03.09.2026). `role="alert"` liest sie beim Erscheinen vor, ohne dass
           der Fokus springt. */}
+      {/* Einwilligung für den externen Spamschutz — GLEICHES Muster wie im
+          Kontaktformular, mit demselben Textkatalog (`einwilligung.kontakt`):
+          Hinweis samt Erlauben-Knopf IM Formular, und der Absende-Knopf ist
+          gesperrt, solange die Erlaubnis fehlt.
+
+          WAS VORHER PASSIERTE (03.09.2026): hier gab es keine dieser beiden
+          Vorkehrungen. Ohne Einwilligung lud kein reCAPTCHA, `captchaToken`
+          gab still `null` zurück, der Server lehnte mit 403 ab, und der
+          Bewerber las „Bitte Seite neu laden und erneut versuchen" — eine
+          Anweisung, die am Zustand nichts ändert. Eine echte Bewerbung ist so
+          verloren gegangen. Das Kontaktformular hatte die Lösung längst; sie
+          fehlte nur an DIESEM Formular. */}
+      {spamschutzFehlt && (
+        <div className="rounded-2xl border border-border bg-muted/40 p-5 text-sm">
+          <p className="leading-relaxed text-muted-foreground">{tEin("hinweis")}</p>
+          <button
+            type="button"
+            onClick={() => speichern({ ...(entscheidung?.auswahl ?? NICHTS_ERLAUBT), funktional: true })}
+            className="mt-4 rounded-full border border-border px-4 py-2 text-sm font-semibold hover:border-foreground"
+          >
+            {tEin("erlauben")}
+          </button>
+        </div>
+      )}
+
       {fehler && (
         <p
           role="alert"
@@ -338,7 +389,7 @@ export function PartnerBewerbungFormular({ sponsorVorgabe }: { sponsorVorgabe: s
         </p>
       )}
 
-      <button type="submit" disabled={laeuft || !zustimmung} className="rounded-full bg-accent px-6 py-3 text-base font-semibold text-accent-foreground disabled:opacity-50">
+      <button type="submit" disabled={laeuft || !zustimmung || spamschutzFehlt} className="rounded-full bg-accent px-6 py-3 text-base font-semibold text-accent-foreground disabled:opacity-50">
         {laeuft ? t("sendet") : t("absenden")}
       </button>
       <p className="text-xs text-muted-foreground">{t("pruefungHinweis")}</p>

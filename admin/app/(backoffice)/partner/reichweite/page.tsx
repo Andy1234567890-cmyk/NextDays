@@ -10,6 +10,8 @@ import { getPlatformMe } from "@/lib/backoffice";
 import { type Plattform, PLATTFORM_META, reichweite as kurz } from "@/lib/kanaele";
 import { getReichweiteSummary, getSchwellen } from "@/lib/reichweite";
 
+import { RealtimeRefresh } from "@/components/realtime-refresh";
+
 const zahl = (n: number) => new Intl.NumberFormat("de").format(n);
 
 export default async function ReichweiteSeite() {
@@ -17,6 +19,10 @@ export default async function ReichweiteSeite() {
 
   return (
     <div className="px-8 py-8 lg:px-12 lg:py-12">
+      {/* Reichweite steckt in affiliates.channels. */}
+      <RealtimeRefresh table="affiliates" />
+      {/* Beitragsliste und ihre Kennzahlen. */}
+      <RealtimeRefresh table="affiliate_posts" />
       <div className="flex flex-wrap items-baseline justify-between gap-4">
         <div>
           <h1 className="font-sans text-[2rem] font-bold tracking-tight">Reichweite</h1>

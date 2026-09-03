@@ -6,6 +6,8 @@ import { PartnerAuszahlungen } from "@/components/partner/partner-auszahlungen";
 import { getPlatformMe } from "@/lib/backoffice";
 import { getAuszahlungen } from "@/lib/partner";
 
+import { RealtimeRefresh } from "@/components/realtime-refresh";
+
 const TABS = [
   { status: "pending", label: "Offen" },
   { status: "processing", label: "In Bearbeitung" },
@@ -25,6 +27,8 @@ export default async function AuszahlungenSeite({
 
   return (
     <div className="px-8 py-8 lg:px-12 lg:py-12">
+      {/* Stripe-Zustand und Rang ändern die Auszahlbarkeit. Die Finanztabellen selbst bleiben gesperrt (Wurzel 6, 0539). */}
+      <RealtimeRefresh table="affiliates" />
       <Link href="/partner" className="text-sm font-semibold text-muted-foreground underline-offset-4 hover:underline">
         ← Partner
       </Link>

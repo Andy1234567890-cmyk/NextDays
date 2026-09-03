@@ -85,6 +85,21 @@ if [ -n "$LISTEN" ]; then
   done)")
 fi
 
+# RealtimeRefresh in `admin` nimmt EINE Tabelle als JSX-Attribut
+# (`<RealtimeRefresh table="affiliates" />`), nicht als Liste. Dieses Muster
+# fehlte, und damit war die Prüfung für die ganze Backoffice-Sektion blind:
+# sieben Seiten hatten Abos, von denen keines je gegen Grant und Publikation
+# geprüft wurde (gefunden am 03.09.2026 beim Nachrüsten der Partner-Seiten).
+# Ein Prüfskript, das ein verbreitetes Aufrufmuster nicht kennt, meldet „alles
+# in Ordnung" über Abos, die es nicht angesehen hat — schlimmer als kein
+# Skript, weil man ihm glaubt.
+ATTRIBUTE=$(cd "$WURZEL" && grep -rHn -oE '<RealtimeRefresh[[:space:]]+table="[a-zA-Z0-9_]+"' \
+  --include="*.tsx" --exclude-dir=node_modules "${PROJEKTE[@]}" 2>/dev/null \
+  | sed -E 's/^([^:]+):([0-9]+):.*table="([a-zA-Z0-9_]+)"/\3\t\1:\2/' || true)
+if [ -n "$ATTRIBUTE" ]; then
+  TREFFER=$(printf '%s\n%s' "$TREFFER" "$ATTRIBUTE")
+fi
+
 # Dynamische Tabellennamen kann das Skript nicht auflösen — sichtbar machen,
 # statt sie stillschweigend zu übergehen. Typdeklarationen (`table: string`)
 # und die Weiterreichung in RealtimeRefresh sind kein Befund.

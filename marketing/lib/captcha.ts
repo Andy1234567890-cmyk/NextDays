@@ -49,6 +49,42 @@ let ladevorgang: Promise<Grecaptcha> | null = null;
  * ist. Mehrfache Aufrufe teilen dasselbe Versprechen — sonst hängen bei zwei
  * schnellen Klicks zwei Skript-Tags in der Seite.
  */
+/**
+ * Der Spamschutz braucht eine Einwilligung, hat aber keine.
+ *
+ * Eigener Fehlertyp, weil der Aufrufer das ANDERS behandeln muss als einen
+ * Netzfehler: hier ist nichts kaputt, es fehlt eine Entscheidung des
+ * Besuchers. Das Formular öffnet daraufhin die Einwilligungs-Leiste, statt
+ * „Bitte Seite neu laden" anzuzeigen — eine Anweisung, die den Zustand nicht
+ * ändert und die Absendung endlos scheitern lässt.
+ *
+ * WAS VORHER PASSIERTE (03.09.2026): `captchaToken` gab bei fehlender
+ * Einwilligung still `null` zurück. Die Bewerbung ging ohne Token an den
+ * Server, der lehnte sie mit 403 „Spamschutz-Prüfung fehlt" ab, und der
+ * Bewerber las „Bitte Seite neu laden und erneut versuchen". Neuladen half
+ * nicht. Eine echte Partner-Bewerbung ist so verloren gegangen — gemeldet
+ * wurde es nicht vom System, sondern vom Betrieb („wir haben eine neue
+ * Bewerbung aber sie kommt nicht an"). Ein `null`, das einen fehlenden
+ * Vorzustand als Erfolg tarnt, ist derselbe Fehler wie ein verschluckter
+ * Exception (Wurzel 5).
+ */
+export class CaptchaEinwilligungFehlt extends Error {
+  constructor() {
+    super("Für den Spamschutz fehlt die Einwilligung.");
+    this.name = "CaptchaEinwilligungFehlt";
+  }
+}
+
+/** True, wenn der Spamschutz in dieser Umgebung überhaupt gebraucht wird. */
+export function captchaNoetig(): boolean {
+  return RECAPTCHA_SITE_KEY !== "";
+}
+
+/** True, wenn die Einwilligung für den Spamschutz vorliegt. */
+export function captchaErlaubt(): boolean {
+  return istErlaubt("funktional");
+}
+
 export function captchaVorbereiten(): Promise<Grecaptcha> | null {
   if (!RECAPTCHA_SITE_KEY) return null;
   if (typeof window === "undefined") return null;
@@ -104,6 +140,13 @@ export function captchaVorbereiten(): Promise<Grecaptcha> | null {
  * (`CAPTCHA_AKTION` in `features/contact/service.py`) — Google prüft ihn gegen.
  */
 export async function captchaToken(aktion: string): Promise<string | null> {
+  // Kein Schlüssel = diese Umgebung hat keinen Spamschutz (lokal). Das ist
+  // ein gültiger Zustand, `null` ist hier die richtige Antwort.
+  if (!captchaNoetig()) return null;
+  // Fehlende EINWILLIGUNG ist etwas anderes: der Schutz ist eingerichtet und
+  // der Server verlangt ein Token. Ein `null` hier hieße „ohne Token
+  // absenden", also garantiert 403. Deshalb laut statt still (Wurzel 5).
+  if (!captchaErlaubt()) throw new CaptchaEinwilligungFehlt();
   const vorbereitung = captchaVorbereiten();
   if (!vorbereitung) return null;
   const g = await vorbereitung;

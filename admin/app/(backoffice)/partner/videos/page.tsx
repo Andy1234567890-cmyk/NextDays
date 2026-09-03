@@ -6,12 +6,16 @@ import Link from "next/link";
 import { PartnerVideos } from "@/components/partner-videos";
 import { getOffeneVideos } from "@/lib/partner";
 
+import { RealtimeRefresh } from "@/components/realtime-refresh";
+
 export const dynamic = "force-dynamic";
 
 export default async function VideosSeite() {
   const beitraege = await getOffeneVideos();
   return (
     <div className="px-8 py-8 lg:px-12 lg:py-12">
+      {/* Neuer Beitrag zur Prüfung, Video nachgereicht. */}
+      <RealtimeRefresh table="affiliate_posts" />
       <div className="flex flex-wrap items-baseline justify-between gap-4">
         <div>
           <h1 className="font-sans text-[2rem] font-bold tracking-tight">Videofreigabe</h1>

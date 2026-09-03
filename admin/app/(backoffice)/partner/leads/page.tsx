@@ -6,6 +6,8 @@ import Link from "next/link";
 import { PartnerLeads } from "@/components/partner-leads";
 import { getLeads, type LeadKategorie, type LeadStatus } from "@/lib/partner";
 
+import { RealtimeRefresh } from "@/components/realtime-refresh";
+
 export default async function LeadsSeite({
   searchParams,
 }: {
@@ -19,6 +21,8 @@ export default async function LeadsSeite({
   });
   return (
     <div className="px-8 py-8 lg:px-12 lg:py-12">
+      {/* Lead angelegt, Status geändert, CSV importiert. */}
+      <RealtimeRefresh table="affiliate_leads" />
       <div className="flex flex-wrap items-baseline justify-between gap-4">
         <div>
           <h1 className="font-sans text-[2rem] font-bold tracking-tight">Multiplikatoren</h1>
