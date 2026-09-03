@@ -2397,20 +2397,22 @@
     "ustIdHinweis": "Kontrolleres mod EU-systemet VIES. Uden bekræftet nummer udbetales der ikke til virksomheder.",
     "kanaele": {
       "titel": "Dine sociale mediekonti",
-      "hinweis": "Obligatorisk: mindst én social mediekonto (Instagram, TikTok, YouTube, Facebook, LinkedIn …) med adresse, handle og rækkevidde (følgere). Hjemmeside, blog eller nyhedsbrev er også velkomment. Vi kontrollerer konti før godkendelse.",
+      "hinweis": "Obligatorisk: mindst én social-medie-konto (Instagram, TikTok, YouTube, Facebook, LinkedIn …) med brugernavn og rækkevidde (følgere). Brugernavnet er tilstrækkeligt – vi tilføjer profiladressen. Hjemmeside, blog eller nyhedsbrev er velkomne som supplement. Vi gennemgår konti før godkendelse.",
       "plattform": "Platform",
-      "handle": "Handle (valgfrit)",
       "reichweite": "Rækkevidde (følgere)",
       "hinzufuegen": "Tilføj kanal",
       "entfernen": "Fjern kanal",
-      "socialPflicht": "Mindst én social mediekonto med rækkevidde er obligatorisk – en hjemmeside alene er ikke nok.",
+      "socialPflicht": "Mindst én social-medie-konto med brugernavn og rækkevidde er obligatorisk – en hjemmeside alene er ikke tilstrækkeligt.",
       "plattformen": {
         "website": "Hjemmeside",
         "blog": "Blog",
         "newsletter": "Nyhedsbrev",
         "podcast": "Podcast",
         "other": "Andet"
-      }
+      },
+      "handlePflicht": "Brugernavn",
+      "handleUngueltig": "Brugernavnet må kun indeholde bogstaver, tal, punktum, understregning og bindestreg – uden @ og uden mellemrum.",
+      "adresse": "Adresse (https://…)"
     },
     "plattform": {
       "website": "Hjemmeside",
@@ -2430,7 +2432,7 @@
     "sendet": "Sender …",
     "pruefungHinweis": "Denne formular er beskyttet af reCAPTCHA. Efter indsendelse gennemgår vores partnerteam dine konti og rækkevidde; du modtager en e-mail med beslutningen.",
     "fehler": {
-      "social": "Angiv venligst mindst én social mediekonto med adresse og rækkevidde.",
+      "social": "Angiv venligst mindst én social mediekonto med brugernavn og rækkevidde.",
       "doppelt": "Der er allerede en ansøgning for denne e-mail. Log ind på partner-dashboardet.",
       "eingabe": "Kontroller venligst dine indtastninger.",
       "captcha": "Spambeskyttelseskontrollen mislykkedes. Genindlæs venligst siden og prøv igen.",
@@ -2440,6 +2442,8 @@
       "titel": "Ansøgning modtaget",
       "text": "Tak! Vi gennemgår dine konti og rækkevidde personligt og kontakter dig via e-mail. Dit partner-dashboard er tilgængeligt med din e-mail og dit password — links og koder bliver aktive ved godkendelse.",
       "login": "Til partner-login"
-    }
+    },
+    "newsletter": "Send mig nyheder om partnerprogrammet, nye reklamematerialer og produktopdateringer via e-mail.",
+    "newsletterFreiwillig": "Frivilligt, kan afmeldes når som helst."
   }
 }

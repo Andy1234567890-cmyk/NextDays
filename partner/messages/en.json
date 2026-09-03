@@ -288,7 +288,6 @@
   },
   "kanaele": {
     "plattformLabel": "Platform",
-    "handle": "Handle (optional)",
     "reichweite": "Reach (Followers)",
     "hinzufuegen": "Add channel",
     "entfernen": "Remove channel",
@@ -299,7 +298,9 @@
       "podcast": "Podcast",
       "other": "Other"
     },
-    "socialPflicht": "At least one social media account is required — a website alone is not sufficient."
+    "socialPflicht": "At least one social media account is required — a website alone is not sufficient.",
+    "handlePflicht": "Username",
+    "handleUngueltig": "The username may only contain letters, numbers, periods, underscores, and hyphens — no @ and no spaces."
   },
   "team": {
     "titel": "Team",

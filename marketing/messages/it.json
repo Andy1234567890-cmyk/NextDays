@@ -2397,20 +2397,22 @@
     "ustIdHinweis": "Verificata tramite il sistema VIES dell'UE. Senza un numero confermato, nessun pagamento alle aziende.",
     "kanaele": {
       "titel": "I tuoi account social media",
-      "hinweis": "Obbligatorio: almeno un account social media (Instagram, TikTok, YouTube, Facebook, LinkedIn…) con indirizzo, handle e portata (follower). Sito web, blog o newsletter sono benvenuti come aggiunta. Verifichiamo gli account prima dell'approvazione.",
+      "hinweis": "Obbligatorio: almeno un account social media (Instagram, TikTok, YouTube, Facebook, LinkedIn...) con nome utente e portata (follower). Il nome utente è sufficiente, aggiungeremo l'indirizzo del profilo. Sito web, blog o newsletter sono benvenuti in aggiunta. Verifichiamo gli account prima dell'approvazione.",
       "plattform": "Piattaforma",
-      "handle": "Handle (opzionale)",
       "reichweite": "Portata (follower)",
       "hinzufuegen": "Aggiungi canale",
       "entfernen": "Rimuovi canale",
-      "socialPflicht": "Almeno un account social media con portata è obbligatorio — un sito web da solo non è sufficiente.",
+      "socialPflicht": "Almeno un account social media con nome utente e portata è obbligatorio; un sito web da solo non è sufficiente.",
       "plattformen": {
         "website": "Sito web",
         "blog": "Blog",
         "newsletter": "Newsletter",
         "podcast": "Podcast",
         "other": "Altro"
-      }
+      },
+      "handlePflicht": "Nome utente",
+      "handleUngueltig": "Il nome utente può contenere solo lettere, numeri, punti, trattini bassi e trattini, senza @ e senza spazi.",
+      "adresse": "Indirizzo (https://…)"
     },
     "plattform": {
       "website": "Sito web",
@@ -2430,7 +2432,7 @@
     "sendet": "Invio in corso…",
     "pruefungHinweis": "Questo modulo è protetto da reCAPTCHA. Dopo l'invio, il nostro team di partner esaminerà i vostri account e la vostra portata; riceverete un'e-mail con la decisione.",
     "fehler": {
-      "social": "Si prega di fornire almeno un account di social media con indirizzo e portata.",
+      "social": "Si prega di fornire almeno un account di social media con nome utente e portata.",
       "doppelt": "Esiste già una candidatura per questa e-mail. Accedere alla dashboard del partner.",
       "eingabe": "Si prega di controllare i dati inseriti.",
       "captcha": "Il controllo antispam non è riuscito. Si prega di ricaricare la pagina e riprovare.",
@@ -2440,6 +2442,8 @@
       "titel": "Candidatura ricevuta",
       "text": "Grazie! Esamineremo personalmente i vostri account e la vostra portata e vi contatteremo via e-mail. La vostra dashboard partner è accessibile con la vostra e-mail e la vostra password — i link e i codici saranno attivi con l'approvazione.",
       "login": "Al login partner"
-    }
+    },
+    "newsletter": "Inviatemi via e-mail notizie sul programma partner, nuovi materiali promozionali e aggiornamenti sui prodotti.",
+    "newsletterFreiwillig": "Volontario, annullabile in qualsiasi momento."
   }
 }

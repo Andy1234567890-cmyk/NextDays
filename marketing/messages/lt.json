@@ -2397,20 +2397,22 @@
     "ustIdHinweis": "Bus patikrinta ES VIES sistemoje. Be patvirtinto numerio įmonėms išmokos nebus mokamos.",
     "kanaele": {
       "titel": "Jūsų socialinės žiniasklaidos paskyros",
-      "hinweis": "Privaloma: bent viena socialinės žiniasklaidos paskyra (Instagram, TikTok, YouTube, Facebook, LinkedIn…) su adresu, vartotojo vardu ir pasiekiamumu (sekėjais). Svetainė, tinklaraštis ar naujienlaiškis yra papildomai laukiami. Paskyras patikriname prieš patvirtinimą.",
+      "hinweis": "Privaloma: bent viena socialinės žiniasklaidos paskyra („Instagram“, „TikTok“, „YouTube“, „Facebook“, „LinkedIn“ ir kt.) su vartotojo vardu ir pasiekiamumu (sekėjais). Užtenka vartotojo vardo – profilio adresą pridėsime. Svetainė, tinklaraštis ar naujienlaiškis taip pat laukiami. Paskyras patikrinsime prieš patvirtindami.",
       "plattform": "Platforma",
-      "handle": "Vartotojo vardas (neprivaloma)",
       "reichweite": "Pasiekiamumas (sekėjai)",
       "hinzufuegen": "Pridėti kanalą",
       "entfernen": "Pašalinti kanalą",
-      "socialPflicht": "Privaloma bent viena socialinės žiniasklaidos paskyra su pasiekiamumu – vien tik svetainės nepakanka.",
+      "socialPflicht": "Privaloma bent viena socialinės žiniasklaidos paskyra su vartotojo vardu ir pasiekiamumu – vien svetainės nepakanka.",
       "plattformen": {
         "website": "Svetainė",
         "blog": "Tinklaraštis",
         "newsletter": "Naujienlaiškis",
         "podcast": "Podcast'as",
         "other": "Kita"
-      }
+      },
+      "handlePflicht": "Vartotojo vardas",
+      "handleUngueltig": "Vartotojo varde gali būti tik raidės, skaičiai, taškai, pabraukimo brūkšniai ir brūkšneliai – be @ ir be tarpų.",
+      "adresse": "Adresas (https://…)"
     },
     "plattform": {
       "website": "Svetainė",
@@ -2430,7 +2432,7 @@
     "sendet": "Siunčiama...",
     "pruefungHinweis": "Ši forma yra apsaugota reCAPTCHA. Pateikus paraišką, mūsų partnerių komanda patikrins jūsų paskyras ir pasiekiamumą; sprendimą gausite el. paštu.",
     "fehler": {
-      "social": "Nurodykite bent vieną socialinės žiniasklaidos paskyrą su adresu ir pasiekiamumu.",
+      "social": "Nurodykite bent vieną socialinės žiniasklaidos paskyrą su vartotojo vardu ir pasiekiamumu.",
       "doppelt": "Šiam el. paštui jau yra pateikta paraiška. Prisijunkite prie partnerių valdymo pulto.",
       "eingabe": "Patikrinkite savo įvestus duomenis.",
       "captcha": "Nepavyko atlikti apsaugos nuo šlamšto patikrinimo. Įkelkite puslapį iš naujo ir bandykite dar kartą.",
@@ -2440,6 +2442,8 @@
       "titel": "Paraiška gauta",
       "text": "Ačiū! Mes asmeniškai patikrinsime jūsų paskyras ir pasiekiamumą ir susisieksime el. paštu. Jūsų partnerių valdymo pultas pasiekiamas naudojant jūsų el. paštą ir slaptažodį – nuorodos ir kodai taps aktyvūs patvirtinus.",
       "login": "Į partnerių prisijungimą"
-    }
+    },
+    "newsletter": "Siųskite man naujienas apie partnerių programą, naują reklamą ir produktų naujienas el. paštu.",
+    "newsletterFreiwillig": "Savanoriška, galima bet kada atsisakyti."
   }
 }

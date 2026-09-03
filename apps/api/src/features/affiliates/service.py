@@ -35,7 +35,7 @@ from src.core.logging import get_logger, mask_email
 from src.core.security import AffiliateContext, PlatformContext
 from src.core.supabase import fetch_all_rows
 
-from . import attribution, vies
+from . import attribution, newsletter_anmeldung, vies
 from .attribution import code_normalisieren, code_vorschlag
 from .connect_service import ConnectMixin
 from .fehler import AffiliateError
@@ -273,7 +273,23 @@ class AffiliatesService(
                 bewerber_name=req.full_name.strip(),
             )
         self._mails.bewerbung_eingegangen(email=req.email, name=req.full_name, sprache=req.language)
-        log.info("partner_bewerbung", affiliate_id=user_id, email=mask_email(req.email))
+        if req.newsletter_opt_in:
+            # Freiwillige zweite Box: Double-Opt-in wie beim Marketing-Popup.
+            # Ein Fehlschlag hier lässt die Bewerbung stehen (s. Modul-Docstring).
+            newsletter_anmeldung.anmelden(
+                self._db,
+                email=req.email,
+                sprache=req.language,
+                consent_text=req.newsletter_consent_text,
+                ip=ip,
+                user_agent=user_agent,
+            )
+        log.info(
+            "partner_bewerbung",
+            affiliate_id=user_id,
+            email=mask_email(req.email),
+            newsletter=req.newsletter_opt_in,
+        )
         return self.login(PartnerLogin(email=req.email, password=req.password))
 
     def _vat_pruefen_und_merken(self, affiliate_id: str, vat_id: str) -> bool | None:

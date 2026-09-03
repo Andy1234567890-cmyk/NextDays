@@ -1,5 +1,5 @@
 """Tests für den tasks-Slice (Lastenheft §2.5 + §4.3)."""
-from datetime import UTC, datetime
+from datetime import UTC, datetime, time
 from unittest.mock import MagicMock
 
 import pytest
@@ -966,6 +966,161 @@ def test_regel_unbestimmbare_ordnung_wird_durchgelassen() -> None:
             end_offset_minutes=0,
         )
     )
+
+
+# --- Regel loeschen raeumt ihre offenen Aufgaben ab (03.09.2026) -------------
+
+
+def test_regel_loeschen_entfernt_die_offenen_aufgaben() -> None:
+    """Sonst bleiben sie ohne Herkunft im Kalender stehen.
+
+    Live gemeldet als „warum sind die jetzt doppelt?": eine Regel wurde
+    umgebaut, indem man sie loeschte und neu anlegte — danach stand jede
+    Anreise zweimal da, weil `on delete set null` die alten Aufgaben
+    zurueckliess. 243 Zeilen hingen so an geloeschten Regeln.
+    """
+    svc, m = _svc()
+    kette = m.table.return_value
+    kette.select.return_value.eq.return_value.eq.return_value.in_.return_value.\
+        execute.return_value.data = [{"id": "t1"}, {"id": "t2"}]
+    kette.delete.return_value.eq.return_value.eq.return_value.execute.\
+        return_value.data = [{"id": "r1"}]
+
+    svc.delete_rule("T", "r1")
+
+    # Der Statusfilter ist der Kern: erledigte Aufgaben belegen geleistete
+    # Arbeit und muessen stehen bleiben.
+    stati = kette.select.return_value.eq.return_value.eq.return_value.in_.\
+        call_args[0]
+    assert stati[0] == "status"
+    assert set(stati[1]) == {"open", "in_progress"}
+
+
+def test_regel_loeschen_ruehrt_bei_404_keine_aufgabe_an() -> None:
+    """Die Regel-Loeschung prueft Existenz UND Tenant (Wurzel 3). Erst wenn sie
+    durch ist, darf an Aufgaben etwas passieren — sonst raeumte ein Fehlgriff
+    fremde Zeilen ab."""
+    svc, m = _svc()
+    kette = m.table.return_value
+    kette.select.return_value.eq.return_value.eq.return_value.in_.return_value.\
+        execute.return_value.data = [{"id": "t1"}]
+    kette.delete.return_value.eq.return_value.eq.return_value.execute.\
+        return_value.data = []
+
+    with pytest.raises(TaskError) as exc:
+        svc.delete_rule("T", "gibtesnicht")
+    assert exc.value.status_code == 404
+    # Kein Aufgaben-Delete: das laeuft ueber `.delete().eq().in_()`, waehrend
+    # die Regel-Loeschung `.delete().eq().eq()` ist.
+    assert not kette.delete.return_value.eq.return_value.in_.called
+
+
+# --- Tages-Anker mit Uhrzeitfenster (0535) -----------------------------------
+
+
+def test_tages_anker_uhrzeit_ende_vor_start_wird_abgelehnt() -> None:
+    """„Am Anreisetag 14:00 bis 10:00": gleicher Anker, gleicher Versatz — nur
+    die UHRZEIT unterscheidet sich. Ohne sie im Vergleich waere der Fall
+    unsichtbar durchgerutscht, und genau ihn kann der Nutzer neu einstellen."""
+    with pytest.raises(TaskError) as exc:
+        TasksService._pruefe_zeitfenster(
+            _regel(
+                start_trigger=TaskTrigger.arrival_day,
+                end_trigger=TaskTrigger.arrival_day,
+                start_offset_minutes=0,
+                end_offset_minutes=0,
+                start_clock=time(14, 0),
+                end_clock=time(10, 0),
+            )
+        )
+    assert exc.value.status_code == 422
+
+
+def test_tages_anker_uhrzeit_von_bis_ist_erlaubt() -> None:
+    TasksService._pruefe_zeitfenster(
+        _regel(
+            start_trigger=TaskTrigger.arrival_day,
+            end_trigger=TaskTrigger.arrival_day,
+            start_offset_minutes=0,
+            end_offset_minutes=0,
+            start_clock=time(10, 0),
+            end_clock=time(14, 0),
+        )
+    )
+
+
+def test_uhrzeit_wird_bei_fremdem_anker_entfernt() -> None:
+    """Der Gegenzustand (Wurzel 1): wer von „Am Anreisetag 10-14 Uhr" auf
+    „Beim Check-in" umstellt, darf keine tote Uhrzeit in der Zeile lassen."""
+    req = _regel(
+        start_trigger=TaskTrigger.check_in,
+        end_trigger=TaskTrigger.check_out,
+        end_offset_minutes=0,
+        start_clock=time(10, 0),
+        end_clock=time(14, 0),
+    )
+    TasksService._bereinige_uhrzeiten(req)
+    assert req.start_clock is None
+    assert req.end_clock is None
+
+
+def test_uhrzeit_bleibt_am_tages_anker_stehen() -> None:
+    req = _regel(
+        start_trigger=TaskTrigger.departure_day,
+        end_trigger=TaskTrigger.departure_day,
+        start_offset_minutes=0,
+        end_offset_minutes=0,
+        start_clock=time(8, 0),
+        end_clock=time(11, 0),
+    )
+    TasksService._bereinige_uhrzeiten(req)
+    assert req.start_clock == time(8, 0)
+    assert req.end_clock == time(11, 0)
+
+
+def test_alter_versatz_wird_am_tages_anker_genullt() -> None:
+    """DIE WURZEL des Fehlers vom 03.09.2026.
+
+    Die Regel „Velk T" wurde von „Tage vor der Anreise → Beim Check-in" auf
+    „Am Anreisetag 10:00 bis 16:00" umgestellt. Der alte
+    `end_offset_minutes=1440` blieb stehen, weil sein Feld bei diesem Anker
+    unsichtbar ist — der Motor rechnete 16:00 + einen ganzen Tag und legte das
+    Ende auf den Folgetag.
+    """
+    req = _regel(
+        start_trigger=TaskTrigger.arrival_day,
+        end_trigger=TaskTrigger.arrival_day,
+        start_offset_minutes=0,
+        end_offset_minutes=1440,
+        start_clock=time(10, 0),
+        end_clock=time(16, 0),
+    )
+    TasksService._bereinige_uhrzeiten(req)
+    assert req.end_offset_minutes == 0
+    assert req.start_offset_minutes == 0
+    assert req.start_clock == time(10, 0)
+    assert req.end_clock == time(16, 0)
+
+
+def test_versatz_fremder_anker_bleibt_unangetastet() -> None:
+    """„Velk J" steht live auf `check_in` + 1440 und meint das so. Dort mit zu
+    nullen waere eine stille Aenderung fremder Regeln."""
+    req = _regel(
+        start_trigger=TaskTrigger.days_before_check_in,
+        end_trigger=TaskTrigger.check_in,
+        start_offset_minutes=-2880,
+        end_offset_minutes=1440,
+    )
+    TasksService._bereinige_uhrzeiten(req)
+    assert req.start_offset_minutes == -2880
+    assert req.end_offset_minutes == 1440
+
+
+def test_anreisetag_zaehlt_zur_anreise_achse() -> None:
+    """Sonst meldete die Deckungspruefung ein Objekt als „ohne Anreise-Regel",
+    obwohl genau diese Regel dafuer existiert."""
+    assert "arrival_day" in TasksService._ANREISE_TRIGGER
+    assert "departure_day" not in TasksService._ANREISE_TRIGGER
 
 
 # --- Zeitfenster von Hand setzen (31.08.2026) --------------------------------

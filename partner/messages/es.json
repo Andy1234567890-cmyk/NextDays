@@ -288,7 +288,6 @@
   },
   "kanaele": {
     "plattformLabel": "Plataforma",
-    "handle": "Identificador (opcional)",
     "reichweite": "Alcance (seguidores)",
     "hinzufuegen": "Añadir canal",
     "entfernen": "Eliminar canal",
@@ -299,7 +298,9 @@
       "podcast": "Pódcast",
       "other": "Otro"
     },
-    "socialPflicht": "Al menos una cuenta de redes sociales es obligatoria; un sitio web por sí solo no es suficiente."
+    "socialPflicht": "Se requiere al menos una cuenta de redes sociales; un sitio web por sí solo no es suficiente.",
+    "handlePflicht": "Nombre de usuario",
+    "handleUngueltig": "El nombre de usuario solo puede contener letras, números, puntos, guiones bajos y guiones, sin @ ni espacios."
   },
   "team": {
     "titel": "Equipo",

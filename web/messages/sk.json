@@ -1888,7 +1888,12 @@
       "requestLift": "Požiadať o zrušenie",
       "liftRequested": "Požiadané o zrušenie — rozhodne správa.",
       "liftPending": "Požiadané o zrušenie. Zablokovanie platí, kým správa nerozhodne.",
-      "liftRejected": "Zrušenie zamietnuté — zablokovanie zostáva"
+      "liftRejected": "Zrušenie zamietnuté — zablokovanie zostáva",
+      "serviceStatus": {
+        "angefragt": "čaká na schválenie",
+        "genehmigt": "schválené",
+        "abgelehnt": "zamietnuté"
+      }
     },
     "meter": {
       "title": "Zaznamenať stav merača",
@@ -5253,7 +5258,9 @@
         "after_check_in_24h": "Po príchode (max. 24 hodín)",
         "check_out": "Pri odchode",
         "days_before_check_in": "Dni pred príchodom",
-        "days_after_check_out": "Dni po odchode"
+        "days_after_check_out": "Dni po odchode",
+        "arrival_day": "V deň príchodu",
+        "departure_day": "V deň odchodu"
       },
       "triggerHint": {
         "booking_confirmed": "Úloha vznikne hneď po potvrdení rezervácie.",
@@ -5261,7 +5268,9 @@
         "after_check_in_24h": "24 hodín po príchode — nikdy však po odchode: pri krátkych pobytoch končí úloha odchodom.",
         "check_out": "Úloha je viazaná na odchod rezervácie.",
         "days_before_check_in": "Úloha vznikne uvedený počet dní pred príchodom.",
-        "days_after_check_out": "Úloha vznikne uvedený počet dní po odchode."
+        "days_after_check_out": "Úloha vznikne uvedený počet dní po odchode.",
+        "arrival_day": "Úloha je naplánovaná na deň príchodu. Tu si nastavíte čas – čas príchodu hosťa nie je dôležitý.",
+        "departure_day": "Úloha je naplánovaná na deň odchodu. Tu si nastavíte čas – čas odchodu hosťa nie je dôležitý."
       },
       "offsetDays": "Dni",
       "periodLabel": "Nastaviť dátum začiatku a konca",
@@ -5308,7 +5317,8 @@
       "sourceLanguageLabel": "Jazyk názvu",
       "sourceLanguageEmpty": "Neuvedené",
       "sourceLanguageHint": "Názov sa automaticky preloží pre čitateľov v iných jazykoch — interne zostáva tak, ako ste ho zadali.",
-      "sourceLanguageMissing": "Bez uvedenia sa názov nepreloží: vlastníci a zamestnanci ho uvidia presne tak, ako je tu."
+      "sourceLanguageMissing": "Bez uvedenia sa názov nepreloží: vlastníci a zamestnanci ho uvidia presne tak, ako je tu.",
+      "clockLabel": "Čas"
     },
     "taskPage": {
       "backToMyTasks": "Na moje úlohy",
@@ -7275,13 +7285,22 @@
         "terminationByOwner": "Majiteľ to sám vysvetlil v žiadosti.",
         "terminationHint": "Majiteľ chce zmluvu ukončiť, nielen blokovať noci. Namiesto blokovania prístupu bude dátum ukončenia zmluvy nastavený priamo na nehnuteľnosti – tým sa ukončí jej marketing na všetkých portáloch.",
         "terminationReady": "Výpoveď je možné zaregistrovať.",
-        "terminationSummary": "Zmluva končí {datum} – od tohto dňa sa nehnuteľnosť už nikde nebude predávať."
+        "terminationSummary": "Zmluva končí {datum} – od tohto dňa sa nehnuteľnosť už nikde nebude predávať.",
+        "services": "Objednané služby",
+        "servicesHint": "O každej službe rozhodnite jednotlivo. Len to, čo schválite, sa stane úlohou a bude fakturované – samotné zablokovanie je od toho nezávislé.",
+        "serviceNotePlaceholder": "Odôvodnenie pre majiteľa (odporúčané v prípade zamietnutia)",
+        "servicesTermination": "V prípade zrušenia nevzniká pobyt – objednané služby zanikajú."
       },
       "terminationRequested": "Majiteľ chce zmluvu ukončiť.",
       "terminationSet": "Zmluva končí {datum}.",
       "servicesOrdered": "Objednané služby",
       "servicesNone": "Žiadne služby neboli objednané — nevznikne žiadna úloha.",
-      "liftRequested": "Chcem zrušiť blokovanie"
+      "liftRequested": "Chcem zrušiť blokovanie",
+      "serviceStatus": {
+        "angefragt": "vyžiadané",
+        "genehmigt": "schválené",
+        "abgelehnt": "zamietnuté"
+      }
     }
   },
   "seasons": {

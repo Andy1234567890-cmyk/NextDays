@@ -1888,7 +1888,12 @@
       "requestLift": "Solicitar levantamento",
       "liftRequested": "Levantamento solicitado — a administração decide.",
       "liftPending": "Levantamento solicitado. O bloqueio permanece até que a administração decida.",
-      "liftRejected": "Levantamento recusado — o bloqueio permanece"
+      "liftRejected": "Levantamento recusado — o bloqueio permanece",
+      "serviceStatus": {
+        "angefragt": "aguardando aprovação",
+        "genehmigt": "aprovado",
+        "abgelehnt": "rejeitado"
+      }
     },
     "meter": {
       "title": "Registar leitura de contador",
@@ -5253,7 +5258,9 @@
         "after_check_in_24h": "Após o check-in (máx. 24 horas)",
         "check_out": "No check-out",
         "days_before_check_in": "Dias antes do check-in",
-        "days_after_check_out": "Dias após o check-out"
+        "days_after_check_out": "Dias após o check-out",
+        "arrival_day": "No dia da chegada",
+        "departure_day": "No dia da partida"
       },
       "triggerHint": {
         "booking_confirmed": "A tarefa é criada assim que a reserva é confirmada.",
@@ -5261,7 +5268,9 @@
         "after_check_in_24h": "24 horas após o check-in — mas nunca depois do check-out: em estadias curtas a tarefa termina com a partida.",
         "check_out": "A tarefa está ligada ao check-out da reserva.",
         "days_before_check_in": "A tarefa é criada o número de dias indicado antes do check-in.",
-        "days_after_check_out": "A tarefa é criada o número de dias indicado após o check-out."
+        "days_after_check_out": "A tarefa é criada o número de dias indicado após o check-out.",
+        "arrival_day": "A tarefa é no dia da chegada. Defina a hora aqui — a hora de check-in do hóspede não importa.",
+        "departure_day": "A tarefa é no dia da partida. Defina a hora aqui — a hora de check-out do hóspede não importa."
       },
       "offsetDays": "Dias",
       "periodLabel": "Definir data de início e de fim",
@@ -5308,7 +5317,8 @@
       "sourceLanguageLabel": "Idioma do nome",
       "sourceLanguageEmpty": "Não indicado",
       "sourceLanguageHint": "O nome é traduzido automaticamente para leitores de outros idiomas — internamente mantém-se como o escreveu.",
-      "sourceLanguageMissing": "Sem esta indicação, o nome não é traduzido: proprietários e colaboradores vê-lo-ão exatamente como aparece aqui."
+      "sourceLanguageMissing": "Sem esta indicação, o nome não é traduzido: proprietários e colaboradores vê-lo-ão exatamente como aparece aqui.",
+      "clockLabel": "Hora"
     },
     "taskPage": {
       "backToMyTasks": "Para as minhas tarefas",
@@ -7275,13 +7285,22 @@
         "terminationByOwner": "O próprio proprietário explicou isso no pedido.",
         "terminationHint": "O proprietário deseja rescindir o contrato, e não apenas bloquear as noites. Em vez de bloquear o acesso, a data de término do contrato será definida diretamente na propriedade, encerrando assim sua publicidade em todos os portais.",
         "terminationReady": "O aviso de rescisão pode ser registrado.",
-        "terminationSummary": "O contrato termina a partir de {datum} — a partir desta data, o imóvel não será mais vendido em nenhum lugar."
+        "terminationSummary": "O contrato termina a partir de {datum} — a partir desta data, o imóvel não será mais vendido em nenhum lugar.",
+        "services": "Serviços solicitados",
+        "servicesHint": "Decida sobre cada serviço individualmente. Apenas o que você aprovar será adicionado à tarefa e cobrado — o bloqueio em si é independente disso.",
+        "serviceNotePlaceholder": "Justificativa para o proprietário (recomendado em caso de recusa)",
+        "servicesTermination": "Em caso de rescisão, não há estadia — os serviços solicitados são cancelados."
       },
       "terminationRequested": "O proprietário deseja rescindir o contrato.",
       "terminationSet": "O contrato termina em {datum}.",
       "servicesOrdered": "Serviços encomendados",
       "servicesNone": "Nenhum serviço encomendado — não será criada nenhuma tarefa.",
-      "liftRequested": "Deseja levantar o bloqueio"
+      "liftRequested": "Deseja levantar o bloqueio",
+      "serviceStatus": {
+        "angefragt": "solicitado",
+        "genehmigt": "aprovado",
+        "abgelehnt": "recusado"
+      }
     }
   },
   "seasons": {

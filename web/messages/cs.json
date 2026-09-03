@@ -1888,7 +1888,12 @@
       "requestLift": "Požádat o zrušení",
       "liftRequested": "Zrušení vyžádáno — rozhodne správa.",
       "liftPending": "Zrušení vyžádáno. Zablokování platí, dokud správa nerozhodne.",
-      "liftRejected": "Zrušení zamítnuto — zablokování zůstává"
+      "liftRejected": "Zrušení zamítnuto — zablokování zůstává",
+      "serviceStatus": {
+        "angefragt": "čeká na schválení",
+        "genehmigt": "schváleno",
+        "abgelehnt": "zamítnuto"
+      }
     },
     "meter": {
       "title": "Zaznamenat stav měřidla",
@@ -5253,7 +5258,9 @@
         "after_check_in_24h": "Po příjezdu (max. 24 hodin)",
         "check_out": "Při odjezdu",
         "days_before_check_in": "Dny před příjezdem",
-        "days_after_check_out": "Dny po odjezdu"
+        "days_after_check_out": "Dny po odjezdu",
+        "arrival_day": "V den příjezdu",
+        "departure_day": "V den odjezdu"
       },
       "triggerHint": {
         "booking_confirmed": "Úkol vznikne, jakmile je rezervace potvrzena.",
@@ -5261,7 +5268,9 @@
         "after_check_in_24h": "24 hodin po příjezdu — nikdy však po odjezdu: u krátkých pobytů končí úkol s odjezdem.",
         "check_out": "Úkol se váže na odjezd rezervace.",
         "days_before_check_in": "Úkol vznikne uvedený počet dní před příjezdem.",
-        "days_after_check_out": "Úkol vznikne uvedený počet dní po odjezdu."
+        "days_after_check_out": "Úkol vznikne uvedený počet dní po odjezdu.",
+        "arrival_day": "Úkol je splatný v den příjezdu. Zde nastavíte čas – čas přihlášení hosta nehraje roli.",
+        "departure_day": "Úkol je splatný v den odjezdu. Zde nastavíte čas – čas odhlášení hosta nehraje roli."
       },
       "offsetDays": "Dny",
       "periodLabel": "Počáteční a koncové datum",
@@ -5308,7 +5317,8 @@
       "sourceLanguageLabel": "Jazyk názvu",
       "sourceLanguageEmpty": "Neuvedeno",
       "sourceLanguageHint": "Název se automaticky přeloží pro čtenáře v jiných jazycích — interně zůstává tak, jak jste jej zadali.",
-      "sourceLanguageMissing": "Bez uvedení se název nepřekládá: vlastníci a zaměstnanci jej uvidí přesně tak, jak je zde."
+      "sourceLanguageMissing": "Bez uvedení se název nepřekládá: vlastníci a zaměstnanci jej uvidí přesně tak, jak je zde.",
+      "clockLabel": "Čas"
     },
     "taskPage": {
       "backToMyTasks": "Na mé úkoly",
@@ -7275,13 +7285,22 @@
         "terminationByOwner": "Majitel to sám v žádosti vysvětlil.",
         "terminationHint": "Majitel chce smlouvu vypovědět, nejen blokovat noclehy. Místo blokování přístupu bude datum ukončení smlouvy nastaveno přímo na nemovitosti – tím se ukončí její marketing na všech portálech.",
         "terminationReady": "Výpověď lze zaregistrovat.",
-        "terminationSummary": "Smlouva končí dnem {datum} – od tohoto dne se nemovitost již nikde neprodává."
+        "terminationSummary": "Smlouva končí dnem {datum} – od tohoto dne se nemovitost již nikde neprodává.",
+        "services": "Objednané služby",
+        "servicesHint": "O každé službě rozhodněte jednotlivě. Pouze to, co schválíte, se stane úkolem a bude účtováno – samotné zablokování je nezávislé.",
+        "serviceNotePlaceholder": "Odůvodnění pro majitele (doporučeno v případě zamítnutí)",
+        "servicesTermination": "Při zrušení nevzniká pobyt – objednané služby propadají."
       },
       "terminationRequested": "Majitel si přeje ukončit smlouvu.",
       "terminationSet": "Smlouva končí dne {datum}.",
       "servicesOrdered": "Objednané služby",
       "servicesNone": "Žádné služby nebyly objednány — nevznikne žádný úkol.",
-      "liftRequested": "Chci zrušit blokaci"
+      "liftRequested": "Chci zrušit blokaci",
+      "serviceStatus": {
+        "angefragt": "vyžádáno",
+        "genehmigt": "schváleno",
+        "abgelehnt": "zamítnuto"
+      }
     }
   },
   "seasons": {

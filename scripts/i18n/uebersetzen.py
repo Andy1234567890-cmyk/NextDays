@@ -44,6 +44,10 @@ AUFRUF
     # 3. Direkt in die Sprachdateien schreiben (Namensraum als Pfad)
     uv run python scripts/i18n/uebersetzen.py quelle.json --ziel website.meinBereich
 
+    # Andere App als `web` (marketing, partner, admin, plattform, …)
+    uv run python scripts/i18n/uebersetzen.py quelle.json \
+        --app marketing --ziel partnerBewerbung.kanaele
+
 Das Ergebnis ist ``{"keys": [...], "texte": {"de": [...], "bg": [...], ...}}`` —
 dieselbe Form, die ``renderer-texte-erzeugen.py`` erwartet.
 """
@@ -256,17 +260,43 @@ def uebersetze(de: list[str], sprache: str, client) -> list[str]:  # noqa: ANN00
     return ergebnis
 
 
-def _in_sprachdateien(ziel: str, keys: list[str], texte: dict[str, list[str]]) -> None:
-    """Das Ergebnis in ``web/messages/<code>.json`` schreiben.
+# Apps mit eigenem `messages/`-Verzeichnis. `--app` wählt, in welches
+# geschrieben wird; ohne Angabe bleibt es `web` (das Dashboard, der häufigste
+# Fall). Vorher war der Pfad hart auf `web` verdrahtet — für Texte einer
+# anderen App war das Werkzeug damit unbenutzbar, obwohl es fachlich passt
+# (03.09.2026, Partner-Bewerbung auf der Marketing-Seite).
+APPS: tuple[str, ...] = (
+    "web",
+    "marketing",
+    "partner",
+    "admin",
+    "plattform",
+    "gastgeber",
+    "builder",
+)
+
+
+def _in_sprachdateien(
+    ziel: str, keys: list[str], texte: dict[str, list[str]], app: str = "web"
+) -> None:
+    """Das Ergebnis in ``<app>/messages/<code>.json`` schreiben.
 
     ``ziel`` ist der Namensraum als Punktpfad (``website.meinBereich``). Er wird
     angelegt, falls er fehlt. Bestehende Werte werden ÜBERSCHRIEBEN — wer das
     nicht will, prüft vorher; ein stilles Auslassen wäre die schlechtere
     Überraschung.
+
+    Fehlt eine Sprachdatei der App, bricht der Lauf ab: die Apps haben NICHT
+    alle denselben Sprachumfang, und eine neu angelegte Datei mit nur diesem
+    einen Namensraum wäre eine Sprachfassung, die es vorher nicht gab.
     """
     import collections  # noqa: PLC0415
 
-    wurzel = Path(__file__).resolve().parents[2] / "web" / "messages"
+    if app not in APPS:
+        raise SystemExit(f"Unbekannte App {app!r}. Erlaubt: {', '.join(APPS)}")
+    wurzel = Path(__file__).resolve().parents[2] / app / "messages"
+    if not wurzel.is_dir():
+        raise SystemExit(f"{wurzel} gibt es nicht.")
     pfad = ziel.split(".")
     for code, werte in texte.items():
         datei = wurzel / f"{code}.json"
@@ -284,7 +314,7 @@ def _in_sprachdateien(ziel: str, keys: list[str], texte: dict[str, list[str]]) -
         datei.write_text(
             json.dumps(daten, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
         )
-    print(f"{len(texte)} Sprachdateien aktualisiert ({ziel})", file=sys.stderr)
+    print(f"{len(texte)} Sprachdateien aktualisiert ({app}/messages, {ziel})", file=sys.stderr)
 
 
 def main() -> None:
@@ -292,7 +322,13 @@ def main() -> None:
     p.add_argument("quelle", help="JSON mit deutschen Texten (Schlüssel → Text)")
     p.add_argument(
         "--ziel",
-        help="Namensraum als Punktpfad — dann direkt in web/messages/ schreiben",
+        help="Namensraum als Punktpfad — dann direkt in <app>/messages/ schreiben",
+    )
+    p.add_argument(
+        "--app",
+        default="web",
+        choices=APPS,
+        help="Ziel-App für --ziel (Standard: web)",
     )
     p.add_argument(
         "--aus",
@@ -319,7 +355,7 @@ def main() -> None:
         print(f"  {code} ✓", file=sys.stderr)
 
     if args.ziel:
-        _in_sprachdateien(args.ziel, keys, texte)
+        _in_sprachdateien(args.ziel, keys, texte, args.app)
     if args.aus:
         Path(args.aus).write_text(
             json.dumps({"keys": keys, "texte": texte}, ensure_ascii=False, indent=1)

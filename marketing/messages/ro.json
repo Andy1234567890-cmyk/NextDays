@@ -2397,20 +2397,22 @@
     "ustIdHinweis": "Va fi verificat în sistemul UE VIES. Fără un număr confirmat, nu se efectuează plăți către companii.",
     "kanaele": {
       "titel": "Conturile dumneavoastră de social media",
-      "hinweis": "Obligatoriu: cel puțin un cont de social media (Instagram, TikTok, YouTube, Facebook, LinkedIn…) cu adresă, nume de utilizator și acoperire (urmăritori). Site web, blog sau newsletter sunt binevenite ca supliment. Verificăm conturile înainte de aprobare.",
+      "hinweis": "Obligatoriu: cel puțin un cont de social media (Instagram, TikTok, YouTube, Facebook, LinkedIn…) cu nume de utilizator și acoperire (urmăritori). Numele de utilizator este suficient — vom adăuga adresa profilului. Site web, blog sau newsletter sunt binevenite ca supliment. Vom verifica conturile înainte de aprobare.",
       "plattform": "Platformă",
-      "handle": "Nume de utilizator (opțional)",
       "reichweite": "Acoperire (urmăritori)",
       "hinzufuegen": "Adăugați canal",
       "entfernen": "Eliminați canal",
-      "socialPflicht": "Este obligatoriu cel puțin un cont de social media cu acoperire — un site web singur nu este suficient.",
+      "socialPflicht": "Este obligatoriu cel puțin un cont de social media cu nume de utilizator și acoperire — un site web singur nu este suficient.",
       "plattformen": {
         "website": "Site web",
         "blog": "Blog",
         "newsletter": "Newsletter",
         "podcast": "Podcast",
         "other": "Altele"
-      }
+      },
+      "handlePflicht": "Nume de utilizator",
+      "handleUngueltig": "Numele de utilizator poate conține doar litere, cifre, punct, subliniere și cratimă — fără @ și fără spații.",
+      "adresse": "Adresă (https://…)"
     },
     "plattform": {
       "website": "Site web",
@@ -2430,7 +2432,7 @@
     "sendet": "Se trimite...",
     "pruefungHinweis": "Acest formular este protejat de reCAPTCHA. După trimitere, echipa noastră de parteneri vă va verifica conturile și acoperirea; veți primi un e-mail cu decizia.",
     "fehler": {
-      "social": "Vă rugăm să introduceți cel puțin un cont de social media cu adresă și acoperire.",
+      "social": "Vă rugăm să furnizați cel puțin un cont de social media cu nume de utilizator și acoperire.",
       "doppelt": "Există deja o cerere pentru acest e-mail. Vă rugăm să vă conectați la tabloul de bord al partenerului.",
       "eingabe": "Vă rugăm să verificați datele introduse.",
       "captcha": "Verificarea anti-spam a eșuat. Vă rugăm să reîncărcați pagina și să încercați din nou.",
@@ -2440,6 +2442,8 @@
       "titel": "Cerere primită",
       "text": "Vă mulțumim! Vă vom verifica personal conturile și acoperirea și vă vom contacta prin e-mail. Tabloul de bord al partenerului este accesibil cu e-mailul și parola dumneavoastră — linkurile și codurile vor deveni active la aprobare.",
       "login": "La autentificarea partenerului"
-    }
+    },
+    "newsletter": "Trimiteți-mi prin e-mail știri despre programul de parteneriat, materiale promoționale noi și actualizări de produse.",
+    "newsletterFreiwillig": "Voluntar, se poate anula oricând."
   }
 }

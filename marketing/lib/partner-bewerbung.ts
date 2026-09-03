@@ -22,6 +22,11 @@ export type Bewerbung = {
   pitch: string | null;
   terms_accepted: boolean;
   terms_version: string;
+  // Zweite, freiwillige Einwilligung — getrennt von `terms_accepted`. Der
+  // Wortlaut geht mit, weil er der Nachweis ist (DSGVO Art. 7 Abs. 1); der
+  // Server startet damit dasselbe Double-Opt-in wie das Marketing-Popup.
+  newsletter_opt_in: boolean;
+  newsletter_consent_text: string | null;
   website: string | null;
 };
 

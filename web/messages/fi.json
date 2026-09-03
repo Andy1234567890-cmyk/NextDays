@@ -1888,7 +1888,12 @@
       "requestLift": "Pyydä kumoamista",
       "liftRequested": "Kumoamista pyydetty — hallinto päättää.",
       "liftPending": "Kumoamista pyydetty. Esto on voimassa, kunnes hallinto on päättänyt.",
-      "liftRejected": "Kumoaminen hylätty — esto pysyy voimassa"
+      "liftRejected": "Kumoaminen hylätty — esto pysyy voimassa",
+      "serviceStatus": {
+        "angefragt": "Odottaa hyväksyntää",
+        "genehmigt": "Hyväksytty",
+        "abgelehnt": "Hylätty"
+      }
     },
     "meter": {
       "title": "Kirjaa mittarilukema",
@@ -5253,7 +5258,9 @@
         "after_check_in_24h": "Sisäänkirjautumisen jälkeen (enint. 24 h)",
         "check_out": "Uloskirjautuessa",
         "days_before_check_in": "Päiviä ennen saapumista",
-        "days_after_check_out": "Päiviä lähdön jälkeen"
+        "days_after_check_out": "Päiviä lähdön jälkeen",
+        "arrival_day": "Saapumispäivänä",
+        "departure_day": "Lähtöpäivänä"
       },
       "triggerHint": {
         "booking_confirmed": "Tehtävä syntyy heti, kun varaus on vahvistettu.",
@@ -5261,7 +5268,9 @@
         "after_check_in_24h": "24 tuntia sisäänkirjautumisen jälkeen — mutta ei koskaan lähdön jälkeen: lyhyillä oleskeluilla tehtävä päättyy lähtöön.",
         "check_out": "Tehtävä sidotaan varauksen lähtöön.",
         "days_before_check_in": "Tehtävä syntyy annetun päivämäärän verran ennen saapumista.",
-        "days_after_check_out": "Tehtävä syntyy annetun päivämäärän verran lähdön jälkeen."
+        "days_after_check_out": "Tehtävä syntyy annetun päivämäärän verran lähdön jälkeen.",
+        "arrival_day": "Tehtävä on saapumispäivänä. Aika asetetaan tässä – vieraan sisäänkirjautumisaika ei ole merkityksellinen.",
+        "departure_day": "Tehtävä on lähtöpäivänä. Aika asetetaan tässä – vieraan uloskirjautumisaika ei ole merkityksellinen."
       },
       "offsetDays": "Päivät",
       "periodLabel": "Alku- ja loppupäivä",
@@ -5308,7 +5317,8 @@
       "sourceLanguageLabel": "Nimen kieli",
       "sourceLanguageEmpty": "Ei määritetty",
       "sourceLanguageHint": "Nimi käännetään automaattisesti muunkielisille lukijoille — sisäisesti se pysyy sellaisena kuin sen kirjoitit.",
-      "sourceLanguageMissing": "Ilman tietoa nimeä ei käännetä: omistajat ja työntekijät näkevät sen juuri sellaisena kuin se on tässä."
+      "sourceLanguageMissing": "Ilman tietoa nimeä ei käännetä: omistajat ja työntekijät näkevät sen juuri sellaisena kuin se on tässä.",
+      "clockLabel": "Aika"
     },
     "taskPage": {
       "backToMyTasks": "Omiin tehtäviin",
@@ -7275,13 +7285,22 @@
         "terminationByOwner": "Omistaja selitti tämän itse hakemuksessa.",
         "terminationHint": "Omistaja haluaa irtisanoa sopimuksen, ei vain estää öitä. Pääsyn estämisen sijaan sopimuksen päättymispäivä asetetaan suoraan kiinteistölle – näin ollen sen markkinointi kaikissa portaaleissa lopetetaan.",
         "terminationReady": "Irtisanomisilmoitus voidaan rekisteröidä.",
-        "terminationSummary": "Sopimus päättyy {datum} alkaen — tästä päivästä lähtien kiinteistöä ei enää myydä missään."
+        "terminationSummary": "Sopimus päättyy {datum} alkaen — tästä päivästä lähtien kiinteistöä ei enää myydä missään.",
+        "services": "Tilatut palvelut",
+        "servicesHint": "Päätä jokaisesta palvelusta erikseen. Vain hyväksymäsi palvelut toteutetaan ja laskutetaan – itse esto on tästä riippumaton.",
+        "serviceNotePlaceholder": "Perustelu omistajalle (suositellaan hylättäessä)",
+        "servicesTermination": "Irtisanomisesta ei synny oleskelua – tilatut palvelut peruuntuvat."
       },
       "terminationRequested": "Omistaja haluaa irtisanoa sopimuksen.",
       "terminationSet": "Sopimus päättyy {datum}.",
       "servicesOrdered": "Tilatut palvelut",
       "servicesNone": "Palveluita ei tilattu — tehtävää ei luoda.",
-      "liftRequested": "Haluan kumota eston"
+      "liftRequested": "Haluan kumota eston",
+      "serviceStatus": {
+        "angefragt": "pyydetty",
+        "genehmigt": "hyväksytty",
+        "abgelehnt": "hylätty"
+      }
     }
   },
   "seasons": {

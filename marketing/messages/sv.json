@@ -2397,20 +2397,22 @@
     "ustIdHinweis": "Kontrolleras mot EU:s VIES-system. Utan bekräftat nummer ingen utbetalning till företag.",
     "kanaele": {
       "titel": "Dina sociala medier-konton",
-      "hinweis": "Obligatoriskt: minst ett sociala medier-konto (Instagram, TikTok, YouTube, Facebook, LinkedIn …) med adress, användarnamn och räckvidd (följare). Webbplats, blogg eller nyhetsbrev är gärna extra. Vi granskar kontona före godkännande.",
+      "hinweis": "Obligatoriskt: minst ett sociala medier-konto (Instagram, TikTok, YouTube, Facebook, LinkedIn …) med användarnamn och räckvidd (följare). Användarnamnet räcker – vi lägger till profiladressen. Webbplats, blogg eller nyhetsbrev är också välkommet. Vi granskar kontona före godkännande.",
       "plattform": "Plattform",
-      "handle": "Användarnamn (valfritt)",
       "reichweite": "Räckvidd (följare)",
       "hinzufuegen": "Lägg till kanal",
       "entfernen": "Ta bort kanal",
-      "socialPflicht": "Minst ett sociala medier-konto med räckvidd är obligatoriskt — enbart en webbplats räcker inte.",
+      "socialPflicht": "Minst ett sociala medier-konto med användarnamn och räckvidd är obligatoriskt – enbart en webbplats räcker inte.",
       "plattformen": {
         "website": "Webbplats",
         "blog": "Blogg",
         "newsletter": "Nyhetsbrev",
         "podcast": "Podcast",
         "other": "Övrigt"
-      }
+      },
+      "handlePflicht": "Användarnamn",
+      "handleUngueltig": "Användarnamnet får endast innehålla bokstäver, siffror, punkt, understreck och bindestreck – utan @ och utan mellanslag.",
+      "adresse": "Adress (https://…)"
     },
     "plattform": {
       "website": "Webbplats",
@@ -2430,7 +2432,7 @@
     "sendet": "Skickar ...",
     "pruefungHinweis": "Detta formulär skyddas av reCAPTCHA. Efter inskick granskar vårt partnerteam dina konton och räckvidd; du får ett e-postmeddelande med beslutet.",
     "fehler": {
-      "social": "Ange minst ett sociala medier-konto med adress och räckvidd.",
+      "social": "Ange minst ett sociala medier-konto med användarnamn och räckvidd.",
       "doppelt": "Det finns redan en ansökan för denna e-postadress. Logga in på partnerpanelen.",
       "eingabe": "Kontrollera dina uppgifter.",
       "captcha": "Spamskyddskontrollen misslyckades. Ladda om sidan och försök igen.",
@@ -2440,6 +2442,8 @@
       "titel": "Ansökan mottagen",
       "text": "Tack! Vi granskar dina konton och räckvidd personligen och återkommer via e-post. Din partnerpanel är tillgänglig med din e-postadress och ditt lösenord – länkar och koder blir aktiva vid godkännande.",
       "login": "Till partnerinloggning"
-    }
+    },
+    "newsletter": "Skicka mig nyheter om partnerprogrammet, nya reklammaterial och produktuppdateringar via e-post.",
+    "newsletterFreiwillig": "Frivilligt, kan avbeställas när som helst."
   }
 }

@@ -1888,7 +1888,12 @@
       "requestLift": "Tühistamist taotleda",
       "liftRequested": "Tühistamine taotletud — haldus otsustab.",
       "liftPending": "Tühistamine taotletud. Blokeering kehtib, kuni haldus on otsustanud.",
-      "liftRejected": "Tühistamine tagasi lükatud — blokeering jääb kehtima"
+      "liftRejected": "Tühistamine tagasi lükatud — blokeering jääb kehtima",
+      "serviceStatus": {
+        "angefragt": "ootab heakskiitu",
+        "genehmigt": "heaks kiidetud",
+        "abgelehnt": "tagasi lükatud"
+      }
     },
     "meter": {
       "title": "Sisesta näidu lugem",
@@ -5253,7 +5258,9 @@
         "after_check_in_24h": "Pärast saabumist (max 24 tundi)",
         "check_out": "Lahkumisel",
         "days_before_check_in": "Päevi enne saabumist",
-        "days_after_check_out": "Päevi pärast lahkumist"
+        "days_after_check_out": "Päevi pärast lahkumist",
+        "arrival_day": "Saabumiskuupäeval",
+        "departure_day": "Lahkumiskuupäeval"
       },
       "triggerHint": {
         "booking_confirmed": "Ülesanne tekib kohe, kui broning on kinnitatud.",
@@ -5261,7 +5268,9 @@
         "after_check_in_24h": "24 tundi pärast saabumist — kuid mitte üle lahkumise: lühikeste ööbimiste puhul lõpeb ülesanne lahkumisega.",
         "check_out": "Ülesanne on seotud broningu lahkumisega.",
         "days_before_check_in": "Ülesanne tekib määratud arv päevi enne saabumist.",
-        "days_after_check_out": "Ülesanne tekib määratud arv päevi pärast lahkumist."
+        "days_after_check_out": "Ülesanne tekib määratud arv päevi pärast lahkumist.",
+        "arrival_day": "Ülesanne on saabumispäeval. Kellaaja määrate siin – külalise sisseregistreerimise aeg ei ole oluline.",
+        "departure_day": "Ülesanne on lahkumispäeval. Kellaaja määrate siin – külalise väljaregistreerimise aeg ei ole oluline."
       },
       "offsetDays": "Päevad",
       "periodLabel": "Alguse ja lõpu kuupäev",
@@ -5308,7 +5317,8 @@
       "sourceLanguageLabel": "Nime keel",
       "sourceLanguageEmpty": "Määramata",
       "sourceLanguageHint": "Nimi tõlgitakse automaatselt teiste keelte lugejatele — sisemiselt jääb see selliseks, nagu te selle sisestasite.",
-      "sourceLanguageMissing": "Ilma määramist nime ei tõlgita: omanikud ja töötajad näevad seda täpselt nii, nagu see siin on."
+      "sourceLanguageMissing": "Ilma määramist nime ei tõlgita: omanikud ja töötajad näevad seda täpselt nii, nagu see siin on.",
+      "clockLabel": "Kellaaeg"
     },
     "taskPage": {
       "backToMyTasks": "Minu ülesannete juurde",
@@ -7275,13 +7285,22 @@
         "terminationByOwner": "Omanik selgitas seda avalduses ise.",
         "terminationHint": "Omanik soovib lepingu lõpetada, mitte ainult öid blokeerida. Juurdepääsu blokeerimise asemel määratakse lepingu lõppkuupäev otse kinnisvarale – lõpetades sellega selle turundamise kõigis portaalides.",
         "terminationReady": "Lõpetamisteate saab registreerida.",
-        "terminationSummary": "Leping lõpeb alates {datum} – alates sellest päevast ei müüda seda kinnisvara enam kusagil."
+        "terminationSummary": "Leping lõpeb alates {datum} – alates sellest päevast ei müüda seda kinnisvara enam kusagil.",
+        "services": "Tellitud teenused",
+        "servicesHint": "Otsustage iga teenuse kohta eraldi. Ainult see, mille te heaks kiidate, muutub ülesandeks ja arveldatakse – broneering ise on sellest sõltumatu.",
+        "serviceNotePlaceholder": "Põhjendus omanikule (tagasilükkamisel soovitatav)",
+        "servicesTermination": "Lõpetamise korral majutust ei toimu – tellitud teenused tühistatakse."
       },
       "terminationRequested": "Omanik soovib lepingu lõpetada.",
       "terminationSet": "Leping lõpeb {datum}-il.",
       "servicesOrdered": "Tellitud teenused",
       "servicesNone": "Teenuseid ei tellitud — ülesannet ei looda.",
-      "liftRequested": "Soovin blokeeringu tühistada"
+      "liftRequested": "Soovin blokeeringu tühistada",
+      "serviceStatus": {
+        "angefragt": "päring esitatud",
+        "genehmigt": "kinnitatud",
+        "abgelehnt": "keeldutud"
+      }
     }
   },
   "seasons": {

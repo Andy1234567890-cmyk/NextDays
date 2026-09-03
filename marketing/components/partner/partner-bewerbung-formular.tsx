@@ -1,9 +1,20 @@
 "use client";
 
 // Bewerbungsformular des Partnerprogramms auf der Marketing-Seite. Pflicht:
-// mindestens ein Social-Media-Konto mit Adresse, Handle und Reichweite — das
+// mindestens ein Social-Media-Konto mit BENUTZERNAME und Reichweite — das
 // Backoffice prüft es vor der Freigabe (Prüfliste dort). Der Sponsor-Code aus
 // dem Team-Link steht sichtbar im Formular (kein Cookie).
+//
+// Gefragt wird der Benutzername, nicht die Profil-Adresse: die kennen die
+// meisten Bewerber nicht, sie steht in keiner App sichtbar (03.09.2026, siehe
+// lib/kanaele.ts). Die Adresse baut der Server aus Plattform + Benutzername;
+// eine eingeklebte Adresse wird erkannt und zerlegt. Generische Kanäle
+// (Website, Blog, Newsletter, Podcast, WhatsApp) haben keinen Benutzernamen —
+// dort bleibt das Adressfeld.
+//
+// Die Newsletter-Box ist die ZWEITE, freiwillige Einwilligung, getrennt von der
+// Pflicht-Zustimmung zu den Partner-Bedingungen und nicht vorausgewählt (DSGVO
+// Art. 4 Nr. 11). Der angehakte Wortlaut geht als Nachweis mit an den Server.
 import { Icon } from "@iconify/react";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
@@ -12,7 +23,16 @@ import { useEffect, useRef, useState } from "react";
 import { KanalIcon } from "@/components/partner/kanal-icon";
 import { PARTNER_LOGIN_URL, PARTNER_URL } from "@/lib/app-url";
 import { captchaVorbereiten } from "@/lib/captcha";
-import { type Plattform, PLATTFORM_META, PLATTFORMEN, plattformAusUrl } from "@/lib/kanaele";
+import {
+  handleBeispiel,
+  handleEingabeDeuten,
+  handleGueltig,
+  hatHandle,
+  type Plattform,
+  PLATTFORM_META,
+  PLATTFORMEN,
+  plattformAusUrl,
+} from "@/lib/kanaele";
 import { BewerbungFehler, bewerbungSenden, LAENDER, landName, PARTNER_TERMS_VERSION } from "@/lib/partner-bewerbung";
 
 type KanalEingabe = { platform: Plattform; url: string; handle: string; followers: string };
@@ -33,6 +53,7 @@ export function PartnerBewerbungFormular({ sponsorVorgabe }: { sponsorVorgabe: s
   const [sponsor, setSponsor] = useState(sponsorVorgabe.toUpperCase());
   const [pitch, setPitch] = useState("");
   const [zustimmung, setZustimmung] = useState(false);
+  const [newsletter, setNewsletter] = useState(false);
   const [website, setWebsite] = useState(""); // Honigtopf
   const [laeuft, setLaeuft] = useState(false);
   const [fehler, setFehler] = useState<string | null>(null);
@@ -47,7 +68,9 @@ export function PartnerBewerbungFormular({ sponsorVorgabe }: { sponsorVorgabe: s
   }, []);
 
   const setze = (i: number, patch: Partial<KanalEingabe>) => setKanaele(kanaele.map((k, j) => (j === i ? { ...k, ...patch } : k)));
-  const socialDabei = kanaele.some((k) => PLATTFORM_META[k.platform].marke && k.url.trim());
+  const gefuellt = (k: KanalEingabe) => Boolean(k.handle.trim() || k.url.trim());
+  const socialDabei = kanaele.some((k) => PLATTFORM_META[k.platform].marke && gefuellt(k));
+  const handlesGueltig = kanaele.every((k) => handleGueltig(k.handle));
   const label = (p: Plattform) => (PLATTFORM_META[p].marke ? PLATTFORM_META[p].label : t(`plattform.${p}`));
 
   if (fertig) {
@@ -75,6 +98,10 @@ export function PartnerBewerbungFormular({ sponsorVorgabe }: { sponsorVorgabe: s
           setFehler(t("fehler.social"));
           return;
         }
+        if (!handlesGueltig) {
+          setFehler(t("kanaele.handleUngueltig"));
+          return;
+        }
         setLaeuft(true);
         try {
           await bewerbungSenden({
@@ -87,12 +114,19 @@ export function PartnerBewerbungFormular({ sponsorVorgabe }: { sponsorVorgabe: s
             vat_id: rechtsform === "company" ? ustId.trim() || null : null,
             language: locale,
             channels: kanaele
-              .filter((k) => k.url.trim())
+              .filter(gefuellt)
+              // `url` bleibt leer, wenn nur der Benutzername steht — die
+              // Adresse baut der Server aus dem Profil-Muster. Sie hier
+              // zusammenzusetzen wäre eine zweite Kopie derselben Regel.
               .map((k) => ({ platform: k.platform, url: k.url.trim(), handle: k.handle.trim() || null, followers: k.followers ? Number(k.followers) : null })),
             sponsor_code: sponsor.trim() || null,
             pitch: pitch.trim() || null,
             terms_accepted: zustimmung,
             terms_version: PARTNER_TERMS_VERSION,
+            newsletter_opt_in: newsletter,
+            // Der Wortlaut in der Sprache, in der er angehakt wurde — er ist
+            // der Nachweis (DSGVO Art. 7 Abs. 1), nicht ein Anzeigetext.
+            newsletter_consent_text: newsletter ? t("newsletter") : null,
             website: website || null,
           });
           setFertig(true);
@@ -173,18 +207,49 @@ export function PartnerBewerbungFormular({ sponsorVorgabe }: { sponsorVorgabe: s
                   </option>
                 ))}
               </select>
-              <input
-                type="url"
-                required
-                maxLength={500}
-                placeholder={PLATTFORM_META[k.platform].beispiel}
-                value={k.url}
-                onChange={(e) => {
-                  const erkannt = plattformAusUrl(e.target.value);
-                  setze(i, { url: e.target.value, ...(erkannt ? { platform: erkannt } : {}) });
-                }}
-                className={FELD + " col-span-3 min-w-0 sm:col-span-1"}
-              />
+              {hatHandle(k.platform) ? (
+                <div className="col-span-3 flex min-w-0 items-center rounded-xl border border-border bg-background focus-within:border-foreground sm:col-span-1">
+                  <span aria-hidden className="shrink-0 pl-3 text-sm text-muted-foreground">
+                    @
+                  </span>
+                  <input
+                    type="text"
+                    required
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    maxLength={100}
+                    aria-label={t("kanaele.handlePflicht")}
+                    aria-invalid={!handleGueltig(k.handle)}
+                    placeholder={handleBeispiel(k.platform)}
+                    value={k.handle}
+                    onChange={(e) => {
+                      // Wer „Link kopieren" benutzt, klebt eine ganze Adresse
+                      // ein — die wird erkannt, zerlegt und behalten.
+                      const gedeutet = handleEingabeDeuten(e.target.value);
+                      setze(i, {
+                        handle: gedeutet.handle ?? (gedeutet.url ? "" : e.target.value),
+                        ...(gedeutet.plattform ? { platform: gedeutet.plattform } : {}),
+                        ...(gedeutet.url ? { url: gedeutet.url } : { url: "" }),
+                      });
+                    }}
+                    className="min-w-0 flex-1 bg-transparent px-2 py-2.5 text-sm outline-none"
+                  />
+                </div>
+              ) : (
+                <input
+                  type="url"
+                  required
+                  maxLength={500}
+                  placeholder={PLATTFORM_META[k.platform].beispiel}
+                  value={k.url}
+                  onChange={(e) => {
+                    const erkannt = plattformAusUrl(e.target.value);
+                    setze(i, { url: e.target.value, ...(erkannt ? { platform: erkannt } : {}) });
+                  }}
+                  className={FELD + " col-span-3 min-w-0 sm:col-span-1"}
+                />
+              )}
               {kanaele.length > 1 ? (
                 <button type="button" aria-label={t("kanaele.entfernen")} onClick={() => setKanaele(kanaele.filter((_, j) => j !== i))} className="col-start-3 row-start-1 rounded-full p-2 text-muted-foreground hover:bg-muted sm:col-start-4">
                   <Icon icon="ph:x" className="size-4" />
@@ -192,7 +257,6 @@ export function PartnerBewerbungFormular({ sponsorVorgabe }: { sponsorVorgabe: s
               ) : (
                 <span className="col-start-3 row-start-1 sm:col-start-4" />
               )}
-              <input type="text" maxLength={100} placeholder={t("kanaele.handle")} value={k.handle} onChange={(e) => setze(i, { handle: e.target.value })} className={FELD + " col-span-3 min-w-0 sm:col-span-2 sm:col-start-2"} />
               <input
                 type="text"
                 inputMode="numeric"
@@ -203,6 +267,9 @@ export function PartnerBewerbungFormular({ sponsorVorgabe }: { sponsorVorgabe: s
                 onChange={(e) => setze(i, { followers: e.target.value.replace(/[^\d]/g, "") })}
                 className={FELD + " col-span-3 min-w-0 sm:col-span-2 sm:col-start-2"}
               />
+              {!handleGueltig(k.handle) && (
+                <p className="col-span-3 text-xs text-accent sm:col-span-4">{t("kanaele.handleUngueltig")}</p>
+              )}
             </div>
           ))}
           {!socialDabei && <p className="text-xs text-accent">{t("kanaele.socialPflicht")}</p>}
@@ -241,6 +308,18 @@ export function PartnerBewerbungFormular({ sponsorVorgabe }: { sponsorVorgabe: s
             {t("bedingungen")}
           </Link>{" "}
           <span className="text-muted-foreground">({t("version", { version: PARTNER_TERMS_VERSION })})</span>
+        </span>
+      </label>
+
+      {/* Zweite, FREIWILLIGE Einwilligung. Bewusst getrennt von der
+          Pflicht-Zustimmung darüber und nicht vorausgewählt: eine
+          vorangekreuzte Box ist keine Einwilligung (DSGVO Art. 4 Nr. 11,
+          EuGH „Planet49"). Sie ist keine Bedingung der Bewerbung — der
+          Absende-Knopf hängt allein an `zustimmung`. */}
+      <label className="flex items-start gap-2 text-sm">
+        <input type="checkbox" checked={newsletter} onChange={(e) => setNewsletter(e.target.checked)} className="mt-0.5 size-4" />
+        <span>
+          {t("newsletter")} <span className="text-muted-foreground">{t("newsletterFreiwillig")}</span>
         </span>
       </label>
 

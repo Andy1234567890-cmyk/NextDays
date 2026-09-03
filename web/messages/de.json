@@ -1888,7 +1888,12 @@
       "requestLift": "Aufhebung beantragen",
       "liftRequested": "Aufhebung beantragt — die Verwaltung entscheidet.",
       "liftPending": "Aufhebung beantragt. Die Sperrung gilt, bis die Verwaltung entschieden hat.",
-      "liftRejected": "Aufhebung abgelehnt — die Sperrung bleibt"
+      "liftRejected": "Aufhebung abgelehnt — die Sperrung bleibt",
+      "serviceStatus": {
+        "angefragt": "wartet auf Genehmigung",
+        "genehmigt": "genehmigt",
+        "abgelehnt": "abgelehnt"
+      }
     },
     "meter": {
       "title": "Zählerstand erfassen",
@@ -5274,7 +5279,9 @@
         "after_check_in_24h": "Nach dem Check-in (max. 24 Stunden)",
         "check_out": "Beim Check-out",
         "days_before_check_in": "Tage vor der Anreise",
-        "days_after_check_out": "Tage nach der Abreise"
+        "days_after_check_out": "Tage nach der Abreise",
+        "arrival_day": "Am Anreisetag",
+        "departure_day": "Am Abreisetag"
       },
       "triggerHint": {
         "booking_confirmed": "Die Aufgabe entsteht, sobald die Buchung bestätigt ist.",
@@ -5282,7 +5289,9 @@
         "after_check_in_24h": "24 Stunden nach dem Check-in — aber nie über den Check-out hinaus: bei Kurzaufenthalten endet die Aufgabe mit der Abreise.",
         "check_out": "Die Aufgabe hängt am Check-out der Reservierung.",
         "days_before_check_in": "Die Aufgabe entsteht die angegebene Zahl an Tagen vor der Anreise.",
-        "days_after_check_out": "Die Aufgabe entsteht die angegebene Zahl an Tagen nach der Abreise."
+        "days_after_check_out": "Die Aufgabe entsteht die angegebene Zahl an Tagen nach der Abreise.",
+        "arrival_day": "Die Aufgabe liegt am Tag der Anreise. Die Uhrzeit legen Sie hier fest — die Check-in-Zeit des Gastes spielt dabei keine Rolle.",
+        "departure_day": "Die Aufgabe liegt am Tag der Abreise. Die Uhrzeit legen Sie hier fest — die Check-out-Zeit des Gastes spielt dabei keine Rolle."
       },
       "offsetDays": "Tage",
       "periodLabel": "Anfangs- und End-Datum festlegen",
@@ -5329,7 +5338,8 @@
       "sourceLanguageLabel": "Sprache des Namens",
       "sourceLanguageEmpty": "Nicht angegeben",
       "sourceLanguageHint": "Der Name wird für Leser anderer Sprachen automatisch übersetzt — intern bleibt er, wie Sie ihn eingetippt haben.",
-      "sourceLanguageMissing": "Ohne Angabe wird der Name nicht übersetzt: Eigentümer und Mitarbeiter sehen ihn genau so, wie er hier steht."
+      "sourceLanguageMissing": "Ohne Angabe wird der Name nicht übersetzt: Eigentümer und Mitarbeiter sehen ihn genau so, wie er hier steht.",
+      "clockLabel": "Uhrzeit"
     },
     "taskPage": {
       "backToMyTasks": "Zu meinen Aufgaben",
@@ -7296,13 +7306,22 @@
         "terminationSummary": "Vertragsende ab {datum} — ab diesem Tag wird das Objekt nirgends mehr verkauft.",
         "approveTermination": "Vertragsende eintragen",
         "bookingsAfterEnd": "{anzahl} Buchungen nach dem Vertragsende",
-        "bookingsAfterEndHint": "Sie bleiben gültig und werden bedient — der Vertrag läuft für sie aus. Gesperrt werden nur die freien Tage."
+        "bookingsAfterEndHint": "Sie bleiben gültig und werden bedient — der Vertrag läuft für sie aus. Gesperrt werden nur die freien Tage.",
+        "services": "Bestellte Leistungen",
+        "servicesHint": "Entscheiden Sie über jede Leistung einzeln. Nur was Sie genehmigen, wird zur Aufgabe und abgerechnet — die Sperre selbst ist davon unabhängig.",
+        "serviceNotePlaceholder": "Begründung für den Eigentümer (bei Ablehnung empfohlen)",
+        "servicesTermination": "Bei einer Kündigung entsteht kein Aufenthalt — die bestellten Leistungen entfallen."
       },
       "terminationRequested": "Der Eigentümer möchte den Vertrag beenden.",
       "terminationSet": "Vertrag endet am {datum}.",
       "servicesOrdered": "Bestellte Leistungen",
       "servicesNone": "Keine Leistungen bestellt — es entsteht keine Aufgabe.",
-      "liftRequested": "Möchte die Sperrung aufheben"
+      "liftRequested": "Möchte die Sperrung aufheben",
+      "serviceStatus": {
+        "angefragt": "angefragt",
+        "genehmigt": "genehmigt",
+        "abgelehnt": "abgelehnt"
+      }
     }
   },
   "seasons": {

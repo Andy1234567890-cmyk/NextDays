@@ -176,6 +176,41 @@ function packLanes<T>(segs: Seg<T>[]): Seg<T>[][] {
   return lanes;
 }
 
+/**
+ * Welche HÄLFTE des Tages eine Aufgabe belegt — als Bruchteil einer Spalte.
+ *
+ * Der Wechseltag trägt beides: der abreisende Gast wird vormittags
+ * ausgecheckt und gereinigt, der anreisende kommt nachmittags. Als zwei
+ * Ganztags-Chips stapeln sich diese Aufgaben untereinander und der Tag wirkt
+ * doppelt belegt — genau so, wie es beim Buchungsbalken schon per `HALF_DAY`
+ * gelöst ist.
+ *
+ * Die Hälfte kommt aus der UHRZEIT der Aufgabe, nicht aus ihrem Auslöser: eine
+ * Regel „Am Anreisetag 08:00–11:00" gehört in den Vormittag, auch wenn sie am
+ * Anreisetag hängt. Liegt die Aufgabe über Mittag oder trägt sie gar keine
+ * Uhrzeit (Tagesbeginn 00:00 auf beiden Seiten), bleibt sie ganztags — eine
+ * Hälfte zu raten wäre eine Aussage über eine Zeit, die niemand gepflegt hat.
+ */
+function tagesHaelfte(
+  startIso: string | null,
+  endIso: string | null,
+): { versatz: number; breite: number } {
+  const GANZ = { versatz: 0, breite: 1 };
+  if (!startIso) return GANZ;
+  const start = new Date(startIso);
+  const end = endIso ? new Date(endIso) : null;
+  // Über mehrere Tage: keine Hälfte, das wäre eine Verkürzung.
+  if (end && end.getTime() - start.getTime() > 86_400_000) return GANZ;
+  const startMin = start.getUTCHours() * 60 + start.getUTCMinutes();
+  const endMin = end ? end.getUTCHours() * 60 + end.getUTCMinutes() : startMin;
+  const MITTAG = 12 * 60;
+  if (end && endMin > startMin && endMin <= MITTAG) {
+    return { versatz: 0, breite: HALF_DAY };
+  }
+  if (startMin >= MITTAG) return { versatz: HALF_DAY, breite: HALF_DAY };
+  return GANZ;
+}
+
 // Tag-Index (0-basiert) eines ISO-Datums innerhalb des Monats; clampt an Rand.
 function dayIndex(iso: string, firstDay: Date, days: number): number {
   const d = new Date(iso);
@@ -708,7 +743,20 @@ export function TasksCalendar() {
                 row.tasks.map((t) => {
                   const iso = t.start_at ?? t.due_at;
                   const s = iso ? dayIndex(iso, firstDay, days) : 0;
-                  return { id: t.id, start: s, end: s + 1, data: t };
+                  // Halbtags-Segmente, damit Vor- und Nachmittag desselben Tages
+                  // NEBENEINANDER in einer Lane liegen statt gestapelt: der
+                  // Lane-Packer vergleicht Start und Ende, also müssen die
+                  // Hälften auch in diesen Zahlen stecken.
+                  // Dieselbe Quelle wie `dayIndex` oben: Altaufgaben tragen nur
+                  // `due_at`, und eine Hälfte aus einem anderen Feld als der Tag
+                  // stünde in der falschen Spalte.
+                  const h = tagesHaelfte(iso, t.end_at);
+                  return {
+                    id: t.id,
+                    start: s + h.versatz,
+                    end: s + h.versatz + h.breite,
+                    data: t,
+                  };
                 }),
               );
               // Vertikale Position jeder Lane (Buchungen oben, Aufgaben unter
@@ -843,8 +891,8 @@ export function TasksCalendar() {
                             onClick={() => setTaskPop(t)}
                             className={`absolute flex items-center gap-1 overflow-hidden rounded-(--radius) border px-1.5 text-left text-xs shadow-sm ${st.bg} ${st.border} ${st.text}`}
                             style={{
-                              left: `${seg.start * COL + 0.15}rem`,
-                              width: `${COL - 0.3}rem`,
+                              left: `calc(${seg.start} * ${COL}rem + 0.15rem)`,
+                              width: `calc(${seg.end - seg.start} * ${COL}rem - 0.3rem)`,
                               top: `${laneTop(false, laneIdx)}rem`,
                               height: `${TASK_H}rem`,
                             }}

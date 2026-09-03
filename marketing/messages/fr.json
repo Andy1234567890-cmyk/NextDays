@@ -2397,20 +2397,22 @@
     "ustIdHinweis": "Vérifié par le système européen VIES. Aucun paiement aux entreprises sans numéro confirmé.",
     "kanaele": {
       "titel": "Vos comptes de médias sociaux",
-      "hinweis": "Obligatoire : au moins un compte de média social (Instagram, TikTok, YouTube, Facebook, LinkedIn…) avec adresse, identifiant et portée (abonnés). Site web, blog ou newsletter sont les bienvenus en complément. Nous vérifions les comptes avant approbation.",
+      "hinweis": "Obligatoire : au moins un compte de réseau social (Instagram, TikTok, YouTube, Facebook, LinkedIn…) avec nom d'utilisateur et portée (abonnés). Le nom d'utilisateur suffit — nous complétons l'adresse du profil. Site web, blog ou newsletter sont les bienvenus en complément. Nous vérifions les comptes avant approbation.",
       "plattform": "Plateforme",
-      "handle": "Identifiant (facultatif)",
       "reichweite": "Portée (abonnés)",
       "hinzufuegen": "Ajouter un canal",
       "entfernen": "Supprimer le canal",
-      "socialPflicht": "Au moins un compte de média social avec portée est obligatoire — un site web seul ne suffit pas.",
+      "socialPflicht": "Au moins un compte de réseau social avec nom d'utilisateur et portée est obligatoire — un site web seul ne suffit pas.",
       "plattformen": {
         "website": "Site web",
         "blog": "Blog",
         "newsletter": "Newsletter",
         "podcast": "Podcast",
         "other": "Autre"
-      }
+      },
+      "handlePflicht": "Nom d'utilisateur",
+      "handleUngueltig": "Le nom d'utilisateur ne peut contenir que des lettres, des chiffres, des points, des tirets bas et des tirets — sans @ et sans espaces.",
+      "adresse": "Adresse (https://…)"
     },
     "plattform": {
       "website": "Site web",
@@ -2430,7 +2432,7 @@
     "sendet": "Envoi en cours…",
     "pruefungHinweis": "Ce formulaire est protégé par reCAPTCHA. Après l'envoi, notre équipe de partenaires vérifiera vos comptes et votre portée ; vous recevrez un e-mail concernant la décision.",
     "fehler": {
-      "social": "Veuillez indiquer au moins un compte de réseau social avec adresse et portée.",
+      "social": "Veuillez indiquer au moins un compte de réseau social avec nom d'utilisateur et portée.",
       "doppelt": "Il existe déjà une candidature pour cet e-mail. Connectez-vous au tableau de bord des partenaires.",
       "eingabe": "Veuillez vérifier vos saisies.",
       "captcha": "La vérification anti-spam a échoué. Veuillez recharger la page et réessayer.",
@@ -2440,6 +2442,8 @@
       "titel": "Candidature reçue",
       "text": "Merci ! Nous vérifions personnellement vos comptes et votre portée et vous contacterons par e-mail. Votre tableau de bord partenaire est accessible avec votre e-mail et votre mot de passe — les liens et les codes seront actifs après approbation.",
       "login": "Vers la connexion partenaire"
-    }
+    },
+    "newsletter": "Envoyez-moi des actualités sur le programme de partenariat, de nouveaux supports publicitaires et des mises à jour de produits par e-mail.",
+    "newsletterFreiwillig": "Volontaire, désabonnement possible à tout moment."
   }
 }

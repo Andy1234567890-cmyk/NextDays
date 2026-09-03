@@ -508,10 +508,21 @@ export type Sperrantrag = {
   aufhebung_entscheidungsnotiz: string | null;
 };
 
-/** Eine bestellte Leistung samt Namen ihrer Regel (0510). */
+/** Eine bestellte Leistung samt Namen ihrer Regel (0510) und dem Zustand
+ *  ihrer Genehmigung (0538): „angefragt" | „genehmigt" | „abgelehnt". Nur
+ *  Genehmigtes wird zur Aufgabe. */
 export type SperrantragLeistung = {
   rule_id: string;
   name: string;
+  status: string;
+  entscheidungsnotiz: string | null;
+};
+
+/** Die Entscheidung der Agentur ueber EINE bestellte Leistung (0538). */
+export type LeistungEntscheidung = {
+  rule_id: string;
+  genehmigt: boolean;
+  notiz: string | null;
 };
 
 /** Anträge des Mandanten. Ohne `status` alle, `pending` ist die Warteschlange. */
@@ -644,6 +655,11 @@ export async function approveBlockRequest(
    *  weggelassenes Argument ist dort nicht verlässlich `undefined` — siehe
    *  `blockRequestKollisionen`. Der Aufrufer übergibt immer beides. */
   kuendigung: { vertragsende: string | null } | null,
+  /** Entscheidung JE bestellter Leistung (0538). Hat der Antrag Bestellungen,
+   *  verlangt der Server fuer jede eine — sonst 422. Eine fehlende als
+   *  „genehmigt" zu werten waere die blinde Mitgenehmigung, die 0538
+   *  abstellt. Ebenfalls PFLICHT-Argument (siehe `kuendigung`). */
+  leistungen: LeistungEntscheidung[],
 ): Promise<Result<Sperrantrag>> {
   return call(`/calendar/block-requests/${id}/approve`, {
     method: "POST",
@@ -653,6 +669,7 @@ export async function approveBlockRequest(
       // Leer → der Server nimmt den Antragsbeginn („ab da nicht mehr
       // vermieten" = „ab da kein Vertrag"). Nichts wird hier geraten.
       vertragsende: kuendigung?.vertragsende ?? null,
+      leistungen,
     },
   });
 }

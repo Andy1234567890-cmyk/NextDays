@@ -126,3 +126,110 @@ def test_bewerbung_alter_kanal_website_reicht_nicht() -> None:
     # Altweg channel_url mit reiner Website → ebenfalls Pflichtverletzung.
     with pytest.raises(ValidationError, match="Social-Media"):
         PartnerBewerbung(**_bewerbung(channel_url="https://pia.example"))
+
+
+# --- Handle führt, Adresse ist optional (03.09.2026) --------------------------
+
+
+def test_kanal_nur_handle_baut_adresse() -> None:
+    k = SocialKanal(platform="instagram", handle="@pia.reist")
+    assert k.handle == "pia.reist"
+    assert k.url == "https://www.instagram.com/pia.reist"
+
+
+def test_kanal_handle_je_plattform_richtig_gebaut() -> None:
+    assert SocialKanal(platform="tiktok", handle="pia").url == "https://www.tiktok.com/@pia"
+    assert SocialKanal(platform="youtube", handle="pia").url == "https://www.youtube.com/@pia"
+    assert (
+        SocialKanal(platform="linkedin", handle="pia").url
+        == "https://www.linkedin.com/in/pia"
+    )
+    assert SocialKanal(platform="telegram", handle="pia").url == "https://t.me/pia"
+
+
+def test_kanal_adresse_liefert_handle_nach() -> None:
+    k = SocialKanal(platform="linkedin", url="https://www.linkedin.com/in/pia-partner/")
+    assert k.handle == "pia-partner"
+
+
+def test_kanal_adresse_gewinnt_vor_gebautem_muster() -> None:
+    # Wer eine echte Adresse angibt, behält sie — auch wenn sie nicht dem
+    # Muster entspricht (Kurz-Links, Vanity-Pfade).
+    k = SocialKanal(platform="instagram", handle="pia", url="https://instagr.am/pia_alt")
+    assert k.url == "https://instagr.am/pia_alt"
+    assert k.handle == "pia"
+
+
+def test_kanal_ohne_handle_und_ohne_adresse_faellt() -> None:
+    with pytest.raises(ValidationError, match="Benutzername oder Adresse"):
+        SocialKanal(platform="instagram")
+
+
+def test_kanal_handle_mit_unerlaubten_zeichen_faellt() -> None:
+    with pytest.raises(ValidationError):
+        SocialKanal(platform="instagram", handle="pia/../etc")
+    with pytest.raises(ValidationError):
+        SocialKanal(platform="instagram", handle="pia reist")
+
+
+def test_website_braucht_weiterhin_die_adresse() -> None:
+    # Generische Kanäle haben kein Profil-Muster — ein Handle allein reicht nicht.
+    for plattform in ("website", "blog", "newsletter", "podcast", "other", "whatsapp"):
+        with pytest.raises(ValidationError, match="vollständige Adresse"):
+            SocialKanal(platform=plattform, handle="pia")
+
+
+def test_bewerbung_mit_handle_statt_url() -> None:
+    daten = _bewerbung()
+    daten.pop("channel_url")
+    daten["channels"] = [{"platform": "instagram", "handle": "pia", "followers": 4200}]
+    b = PartnerBewerbung(**daten)
+    assert b.channel_url == "https://www.instagram.com/pia"
+    assert b.channels[0].handle == "pia"
+
+
+def test_bewerbung_doppelter_handle_faellt() -> None:
+    # Zwei Handles auf derselben Plattform ergeben dieselbe Adresse — der
+    # bestehende Dublettenschutz greift auch über den gebauten Wert.
+    daten = _bewerbung()
+    daten.pop("channel_url")
+    daten["channels"] = [
+        {"platform": "instagram", "handle": "pia"},
+        {"platform": "instagram", "handle": "@pia"},
+    ]
+    with pytest.raises(ValidationError, match="doppelt"):
+        PartnerBewerbung(**daten)
+
+
+# --- Newsletter-Einwilligung --------------------------------------------------
+
+
+def test_newsletter_standardmaessig_aus() -> None:
+    # Eine vorausgewählte Box wäre keine Einwilligung (DSGVO Art. 4 Nr. 11).
+    assert PartnerBewerbung(**_bewerbung()).newsletter_opt_in is False
+
+
+def test_newsletter_mit_wortlaut() -> None:
+    b = PartnerBewerbung(
+        **_bewerbung(newsletter_opt_in=True, newsletter_consent_text="Ja, Neuigkeiten.")
+    )
+    assert b.newsletter_opt_in is True
+    assert b.newsletter_consent_text == "Ja, Neuigkeiten."
+
+
+def test_adresse_korrigiert_die_plattform() -> None:
+    """Die Adresse entscheidet, nicht das mitgeschickte Feld.
+
+    Sonst stünde eine YouTube-Adresse als „instagram" in der Zeile — mit
+    fremdem Logo im Backoffice und der falschen Reichweitenprüfung. Das
+    Formular korrigiert es beim Tippen; ein direkter API-Aufruf tat es nicht.
+    """
+    k = SocialKanal(platform="instagram", url="https://www.youtube.com/@piareist")
+    assert k.platform == "youtube"
+    assert k.handle == "piareist"
+
+
+def test_unbekannte_adresse_behaelt_die_angabe() -> None:
+    # Kein bekannter Host → die Angabe des Bewerbers bleibt stehen.
+    k = SocialKanal(platform="blog", url="https://pia.example/blog")
+    assert k.platform == "blog"

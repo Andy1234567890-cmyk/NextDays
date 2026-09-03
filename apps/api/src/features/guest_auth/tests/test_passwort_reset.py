@@ -146,14 +146,26 @@ def test_reset_ohne_sitzung_ist_ein_ungueltiger_code() -> None:
     assert exc.value.status_code == 400
 
 
-def test_reset_mail_traegt_das_rueckspringziel() -> None:
+def test_reset_mail_traegt_das_rueckspringziel(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """``redirect_to`` MUSS mitgehen, sonst landet der Gast auf der 404-Seite.
 
     Ohne die Angabe nimmt GoTrue seine ``GOTRUE_SITE_URL``, und die zeigt im
     Stack auf die Supabase-Adresse — live gemessen 404. Der Gast bekam eine
     Mail, die einen Link versprach und ins Nichts führte.
+
+    ``MARKETPLACE_BASE_URL`` wird hier GESETZT, nicht aus der Umgebung gelesen:
+    lokal steht sie in der `.env`, im CI-Runner nicht — der Test war damit grün
+    auf dem Entwicklerrechner und rot in der Pipeline (03.09.2026). Dieselbe
+    Wurzel wie ein zeitzonenabhängiger Test: er prüfte die Umgebung mit, nicht
+    nur den Code.
     """
+    from src.core.config import get_settings
     from src.features.guest_auth.schemas import GuestPasswordResetRequest
+
+    monkeypatch.setenv("MARKETPLACE_BASE_URL", "https://mybestdays.example")
+    get_settings.cache_clear()
 
     gesehen: dict[str, Any] = {}
 
@@ -173,3 +185,6 @@ def test_reset_mail_traegt_das_rueckspringziel() -> None:
     # eigene Reset-Seite, die Code-Eingabe sitzt im Anmelde-Formular. Ein
     # Ziel auf eine Route, die es nicht gibt, wäre derselbe Fehler wie vorher.
     assert ziel.endswith("/anmelden?reset=1"), ziel
+    # Die Einstellungen sind gecacht (lru_cache) — ohne dieses Leeren trüge
+    # der nächste Test die hier gesetzte Adresse weiter.
+    get_settings.cache_clear()

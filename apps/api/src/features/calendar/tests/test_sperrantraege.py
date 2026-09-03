@@ -22,7 +22,7 @@ from typing import Any
 import pytest
 
 from src.core.security import AuthContext
-from src.features.calendar.schemas import BlockRequestDecision
+from src.features.calendar.schemas import BlockRequestDecision, LeistungEntscheidung
 from src.features.calendar.service import CalendarError
 from src.features.calendar.sperrantraege import SperrantragService
 from src.features.calendar.sperrantrag_meldung import melde_neuen_antrag
@@ -426,9 +426,31 @@ def _tables(*, einheiten: int = 1, mit_eigentuemer: bool = True) -> dict[str, li
         "stop_sell": [],
         "reservation_events": [],
         "reservation_cancellation_log": [],
-        "task_rules": [],
+        "task_rules": [
+            # Zwei bestellbare Leistungen (0538): die Regelnamen braucht der
+            # Listenpfad, sonst faellt die Bestellung als „geloescht" heraus.
+            {"id": "rule-rein", "tenant_id": "t-1", "name": "Endreinigung",
+             "kind": "auto", "active": True},
+            {"id": "rule-waesche", "tenant_id": "t-1", "name": "Waesche",
+             "kind": "auto", "active": True},
+        ],
         "tasks": [],
+        "block_request_services": [],
     }
+
+
+def _bestellt(tables: dict[str, list[dict]], *rule_ids: str) -> None:
+    """Der Eigentuemer hat zu ANTRAG diese Leistungen bestellt (Zustand wie
+    nach `request_block`: `angefragt`)."""
+    for rid in rule_ids:
+        tables["block_request_services"].append(
+            {"id": f"brs-{rid}", "block_request_id": ANTRAG, "rule_id": rid,
+             "status": "angefragt"}
+        )
+
+
+def _leistung(rule_id: str, genehmigt: bool, notiz: str | None = None) -> LeistungEntscheidung:
+    return LeistungEntscheidung(rule_id=rule_id, genehmigt=genehmigt, notiz=notiz)
 
 
 def _svc(tables: dict[str, list[dict]] | None = None) -> SperrantragService:
@@ -558,6 +580,125 @@ def test_genehmigen_bei_gebuchtem_tag_409_und_bleibt_offen() -> None:
     assert antrag["decided_by"] is None
     assert antrag["decided_at"] is None
     assert _eigennutzungen(tables) == []
+
+
+# --- Leistungen je Zeile genehmigen (0538) ------------------------------------
+#
+# Vorgabe des Betriebs (03.09.2026): „ein Eigentuemer muss eine Reinigung buchen
+# und eine Endreinigung. Die muss genehmigt werden von der Agentur." Bis 0538
+# fuhr die Bestellung mit der Genehmigung des Antrags blind mit.
+
+
+def _status(tables: dict[str, list[dict]]) -> dict[str, str]:
+    return {
+        str(z["rule_id"]): str(z.get("status"))
+        for z in tables["block_request_services"]
+    }
+
+
+def test_genehmigen_entscheidet_jede_leistung_einzeln() -> None:
+    """Sperre genehmigt, Endreinigung genehmigt, Waesche abgelehnt."""
+    tables = _tables()
+    _bestellt(tables, "rule-rein", "rule-waesche")
+    req = BlockRequestDecision(
+        leistungen=[
+            _leistung("rule-rein", True),
+            _leistung("rule-waesche", False, "diese Woche nicht"),
+        ]
+    )
+    item = _svc(tables).genehmigen(_ctx(), ANTRAG, req)
+    assert item.status == "approved"
+    assert _status(tables) == {"rule-rein": "genehmigt", "rule-waesche": "abgelehnt"}
+    # Die Antwort traegt den Zustand je Leistung samt Begruendung.
+    je = {b.rule_id: b for b in item.bestellte_leistungen}
+    assert je["rule-rein"].status == "genehmigt"
+    assert je["rule-waesche"].status == "abgelehnt"
+    assert je["rule-waesche"].entscheidungsnotiz == "diese Woche nicht"
+    # Entscheidungsspur an der Zeile.
+    abgelehnt = next(z for z in tables["block_request_services"] if z["rule_id"] == "rule-waesche")
+    assert abgelehnt["entschieden_von"] == "admin-1"
+
+
+def test_genehmigen_ohne_entscheidung_zu_bestellter_leistung_422() -> None:
+    """Die blinde Mitgenehmigung von vor 0538 — jetzt ein Fehler, VOR dem Claim.
+
+    Ein Client, der die Leistungen nicht kennt (Altstand), scheitert laut,
+    statt eine Endreinigung zu genehmigen, die niemand gesehen hat.
+    """
+    tables = _tables()
+    _bestellt(tables, "rule-rein")
+    with pytest.raises(CalendarError) as exc:
+        _svc(tables).genehmigen(_ctx(), ANTRAG, _entscheidung())
+    assert exc.value.status_code == 422
+    # Nichts angefasst: Antrag offen, Zeile unveraendert, keine Eigennutzung.
+    assert tables["block_requests"][0]["status"] == "pending"
+    assert _status(tables) == {"rule-rein": "angefragt"}
+    assert _eigennutzungen(tables) == []
+
+
+def test_genehmigen_entscheidung_zu_nicht_bestellter_leistung_422() -> None:
+    tables = _tables()
+    _bestellt(tables, "rule-rein")
+    with pytest.raises(CalendarError) as exc:
+        _svc(tables).genehmigen(
+            _ctx(), ANTRAG,
+            BlockRequestDecision(
+                leistungen=[_leistung("rule-rein", True), _leistung("rule-waesche", True)]
+            ),
+        )
+    assert exc.value.status_code == 422
+    assert tables["block_requests"][0]["status"] == "pending"
+
+
+def test_genehmigen_ohne_bestellung_braucht_keine_entscheidung() -> None:
+    """Der Normalfall: nichts bestellt, `leistungen` leer, alles wie bisher."""
+    tables = _tables()
+    item = _svc(tables).genehmigen(_ctx(), ANTRAG, _entscheidung())
+    assert item.status == "approved"
+    assert item.bestellte_leistungen == []
+
+
+def test_rollback_setzt_leistungen_zurueck() -> None:
+    """Scheitert die Belegung, gehen die Leistungsentscheidungen mit dem Claim
+    zurueck (Wurzel 1) — sonst faende der naechste Lauf eine Entscheidung vor,
+    die niemand in diesem Lauf getroffen hat."""
+    tables = _tables()
+    _bestellt(tables, "rule-rein")
+    tables["availability"].append(
+        {"property_id": OBJEKT, "date": "2026-03-02", "status": "booked",
+         "source": "airbnb", "unit_id": EINHEIT_A}
+    )
+    svc = _svc(tables)
+    with pytest.raises(Exception):  # noqa: PT011,B017 — Fehlerklasse ist hier egal
+        svc.genehmigen(
+            _ctx(), ANTRAG,
+            BlockRequestDecision(leistungen=[_leistung("rule-rein", True)]),
+        )
+    assert tables["block_requests"][0]["status"] == "pending"
+    assert _status(tables) == {"rule-rein": "angefragt"}
+    zeile = tables["block_request_services"][0]
+    assert zeile["entschieden_von"] is None
+
+
+def test_ablehnen_lehnt_auch_die_leistungen_ab() -> None:
+    tables = _tables()
+    _bestellt(tables, "rule-rein", "rule-waesche")
+    item = _svc(tables).ablehnen(_ctx(), ANTRAG, _entscheidung("leider nein"))
+    assert item.status == "rejected"
+    assert _status(tables) == {"rule-rein": "abgelehnt", "rule-waesche": "abgelehnt"}
+    assert all(b.status == "abgelehnt" for b in item.bestellte_leistungen)
+
+
+def test_zuruecknehmen_lehnt_die_leistungen_ab() -> None:
+    tables = _tables()
+    _bestellt(tables, "rule-rein")
+    svc = _svc(tables)
+    svc.genehmigen(
+        _ctx(), ANTRAG, BlockRequestDecision(leistungen=[_leistung("rule-rein", True)])
+    )
+    assert _status(tables) == {"rule-rein": "genehmigt"}
+    svc.zuruecknehmen(_ctx(), ANTRAG, _entscheidung("doch nicht"))
+    assert _status(tables) == {"rule-rein": "abgelehnt"}
 
 
 def test_ablehnen_sperrt_nichts() -> None:

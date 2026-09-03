@@ -528,6 +528,11 @@ export async function requestBlockLift(
 export type BestellteLeistung = {
   rule_id: string;
   name: string;
+  /** Was die Agentur entschieden hat (0538): „angefragt" | „genehmigt" |
+   *  „abgelehnt". Eine genehmigte Sperre mit abgelehnter Endreinigung heisst:
+   *  selbst putzen (lassen). Beim Angebot (`getBestellbareLeistungen`) leer. */
+  status?: string;
+  entscheidungsnotiz?: string | null;
 };
 
 /** Was zu einer Sperre DIESES Objekts bestellbar ist. */

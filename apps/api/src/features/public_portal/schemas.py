@@ -207,6 +207,11 @@ class BestellteLeistung(BaseModel):
 
     rule_id: str
     name: str
+    # Was die Agentur daraus gemacht hat (0538): angefragt | genehmigt |
+    # abgelehnt. Der Eigentuemer MUSS das sehen — eine genehmigte Sperre mit
+    # abgelehnter Endreinigung heisst: er muss selbst putzen (lassen).
+    status: str = "angefragt"
+    entscheidungsnotiz: str | None = None
 
 
 class BlockRequestItem(BaseModel):

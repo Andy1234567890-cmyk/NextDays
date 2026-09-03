@@ -438,9 +438,30 @@ export function PortalSperrungen({
                         Abrechnung, und ohne sie liesse sich hinterher nicht
                         nachvollziehen, warum eine Reinigung berechnet wurde. */}
                     {r.bestellte_leistungen.length > 0 && (
-                      <span className="truncate text-xs text-muted-foreground">
-                        {t("block.servicesOrdered")}:{" "}
-                        {r.bestellte_leistungen.map((b) => b.name).join(", ")}
+                      <span className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                        {t("block.servicesOrdered")}:
+                        {/* Je Leistung ihr Zustand (0538). „bestellt" ist nicht
+                            „genehmigt": eine genehmigte Sperre mit abgelehnter
+                            Endreinigung heisst selbst putzen (lassen) — das
+                            muss hier stehen, nicht erst in der Abrechnung. */}
+                        {r.bestellte_leistungen.map((b) => (
+                          <span
+                            key={b.rule_id}
+                            className={`rounded-full px-2 py-0.5 ${
+                              b.status === "genehmigt"
+                                ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                                : b.status === "abgelehnt"
+                                  ? "bg-destructive/10 text-destructive"
+                                  : "bg-secondary text-secondary-foreground"
+                            }`}
+                            title={b.entscheidungsnotiz ?? undefined}
+                          >
+                            {b.name}
+                            {b.status
+                              ? ` · ${t(`block.serviceStatus.${b.status}`)}`
+                              : ""}
+                          </span>
+                        ))}
                       </span>
                     )}
                     {/* Wo mein Aufhebungswunsch steht (0513). „beantragt" ist

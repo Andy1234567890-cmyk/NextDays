@@ -2397,20 +2397,22 @@
     "ustIdHinweis": "Wordt gecontroleerd via het EU VIES-systeem. Zonder bevestigd nummer geen uitbetaling aan bedrijven.",
     "kanaele": {
       "titel": "Uw socialmedia-accounts",
-      "hinweis": "Verplicht: minimaal één socialmedia-account (Instagram, TikTok, YouTube, Facebook, LinkedIn …) met adres, handle en bereik (volgers). Website, blog of nieuwsbrief zijn optioneel.",
+      "hinweis": "Verplicht: minimaal één socialmedia-account (Instagram, TikTok, YouTube, Facebook, LinkedIn …) met gebruikersnaam en bereik (volgers). De gebruikersnaam is voldoende — wij vullen het profieladres aan. Website, blog of nieuwsbrief zijn optioneel. Wij controleren de accounts voor goedkeuring.",
       "plattform": "Platform",
-      "handle": "Handle (optioneel)",
       "reichweite": "Bereik (volgers)",
       "hinzufuegen": "Kanaal toevoegen",
       "entfernen": "Kanaal verwijderen",
-      "socialPflicht": "Minimaal één socialmedia-account met bereik is verplicht — een website alleen is niet voldoende.",
+      "socialPflicht": "Minimaal één socialmedia-account met gebruikersnaam en bereik is verplicht — een website alleen is niet voldoende.",
       "plattformen": {
         "website": "Website",
         "blog": "Blog",
         "newsletter": "Nieuwsbrief",
         "podcast": "Podcast",
         "other": "Overig"
-      }
+      },
+      "handlePflicht": "Gebruikersnaam",
+      "handleUngueltig": "De gebruikersnaam mag alleen letters, cijfers, punten, underscores en koppeltekens bevatten — zonder @ en zonder spaties.",
+      "adresse": "Adres (https://…)"
     },
     "plattform": {
       "website": "Website",
@@ -2430,7 +2432,7 @@
     "sendet": "Wordt verzonden …",
     "pruefungHinweis": "Dit formulier wordt beschermd door reCAPTCHA. Na verzending controleert ons partnerteam uw accounts en bereik; u ontvangt een e-mail met de beslissing.",
     "fehler": {
-      "social": "Geef ten minste één socialmedia-account op met adres en bereik.",
+      "social": "Geef ten minste één socialmedia-account op met gebruikersnaam en bereik.",
       "doppelt": "Er is al een aanvraag voor dit e-mailadres. Meld u aan bij het partnerdashboard.",
       "eingabe": "Controleer uw invoer.",
       "captcha": "De spamcontrole is mislukt. Laad de pagina opnieuw en probeer het nogmaals.",
@@ -2440,6 +2442,8 @@
       "titel": "Aanvraag ontvangen",
       "text": "Bedankt! We controleren uw accounts en bereik persoonlijk en nemen contact met u op via e-mail. Uw partnerdashboard is toegankelijk met uw e-mailadres en wachtwoord — links en codes worden actief na goedkeuring.",
       "login": "Naar partnerlogin"
-    }
+    },
+    "newsletter": "Stuur mij nieuws over het partnerprogramma, nieuwe promotiematerialen en productupdates per e-mail.",
+    "newsletterFreiwillig": "Vrijwillig, u kunt zich op elk moment afmelden."
   }
 }

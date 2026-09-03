@@ -1888,7 +1888,12 @@
       "requestLift": "Itlob tneħħija",
       "liftRequested": "Tneħħija mitluba — l-amministrazzjoni tiddeċiedi.",
       "liftPending": "Tneħħija mitluba. L-imblokk jibqa' validu sakemm tiddeċiedi l-amministrazzjoni.",
-      "liftRejected": "Tneħħija miċħuda — l-imblokk jibqa'"
+      "liftRejected": "Tneħħija miċħuda — l-imblokk jibqa'",
+      "serviceStatus": {
+        "angefragt": "pendenti għall-approvazzjoni",
+        "genehmigt": "approvat",
+        "abgelehnt": "rifjutat"
+      }
     },
     "meter": {
       "title": "Irreġistra qari tal-arloġġ",
@@ -5253,7 +5258,9 @@
         "after_check_in_24h": "Wara l-check-in (mass. 24 siegħa)",
         "check_out": "Mal-check-out",
         "days_before_check_in": "Jiem qabel il-check-in",
-        "days_after_check_out": "Jiem wara l-check-out"
+        "days_after_check_out": "Jiem wara l-check-out",
+        "arrival_day": "Fil-jum tal-wasla",
+        "departure_day": "Fil-jum tat-tluq"
       },
       "triggerHint": {
         "booking_confirmed": "Il-kompitu jinħoloq malli tiġi kkonfermata r-riżervazzjoni.",
@@ -5261,7 +5268,9 @@
         "after_check_in_24h": "24 siegħa wara l-check-in — imma qatt wara l-check-out: fi żjarat qosra l-kompitu jispiċċa mat-tluq.",
         "check_out": "Il-kompitu jorbot mal-check-out tar-riżervazzjoni.",
         "days_before_check_in": "Il-kompitu jinħoloq in-numru ta' jiem indikat qabel il-check-in.",
-        "days_after_check_out": "Il-kompitu jinħoloq in-numru ta' jiem indikat wara l-check-out."
+        "days_after_check_out": "Il-kompitu jinħoloq in-numru ta' jiem indikat wara l-check-out.",
+        "arrival_day": "Il-kompitu huwa fil-jum tal-wasla. Hawnhekk tissettja l-ħin — il-ħin tal-check-in tal-mistieden ma jimpurtax.",
+        "departure_day": "Il-kompitu huwa fil-jum tat-tluq. Hawnhekk tissettja l-ħin — il-ħin tal-check-out tal-mistieden ma jimpurtax."
       },
       "offsetDays": "Jiem",
       "periodLabel": "Issettja d-data tal-bidu u tat-tmiem",
@@ -5308,7 +5317,8 @@
       "sourceLanguageLabel": "Lingwa tal-isem",
       "sourceLanguageEmpty": "Mhux speċifikat",
       "sourceLanguageHint": "L-isem jiġi tradott awtomatikament għal qarrejja ta' lingwi oħra — internament jibqa' kif ktibtu.",
-      "sourceLanguageMissing": "Mingħajr din l-indikazzjoni l-isem ma jiġix tradott: is-sidien u l-persunal jarawh eżattament kif jidher hawn."
+      "sourceLanguageMissing": "Mingħajr din l-indikazzjoni l-isem ma jiġix tradott: is-sidien u l-persunal jarawh eżattament kif jidher hawn.",
+      "clockLabel": "Ħin"
     },
     "taskPage": {
       "backToMyTasks": "Lura għall-kompiti tiegħi",
@@ -7275,13 +7285,22 @@
         "terminationByOwner": "Is-sid spjega dan hu stess fl-applikazzjoni.",
         "terminationHint": "Is-sid irid itemm il-kuntratt, mhux biss jimblokka l-iljieli. Minflok ma jimblokka l-aċċess, id-data tat-tmiem tal-kuntratt se tiġi ssettjata direttament fuq il-proprjetà – u b'hekk tintemm il-kummerċjalizzazzjoni tagħha fuq il-portali kollha.",
         "terminationReady": "L-avviż tat-terminazzjoni jista' jiġi rreġistrat.",
-        "terminationSummary": "Il-kuntratt jintemm minn {datum} — minn din il-ġurnata 'l quddiem, il-proprjetà ma tibqax tinbiegħ imkien."
+        "terminationSummary": "Il-kuntratt jintemm minn {datum} — minn din il-ġurnata 'l quddiem, il-proprjetà ma tibqax tinbiegħ imkien.",
+        "services": "Servizzi ordnati",
+        "servicesHint": "Iddeċiedi dwar kull servizz individwalment. Dak biss li tapprova jiġi assenjat u fatturat — il-lock innifsu huwa indipendenti minn dan.",
+        "serviceNotePlaceholder": "Raġuni għas-sid (rakkomandat jekk tiġi rrifjutata)",
+        "servicesTermination": "Fil-każ ta' kanċellazzjoni, ma tinħoloqx soġġorn — is-servizzi ordnati jiġu kkanċellati."
       },
       "terminationRequested": "Is-sid jixtieq itemm il-kuntratt.",
       "terminationSet": "Il-kuntratt jintemm fl-{datum}.",
       "servicesOrdered": "Servizzi ordnati",
       "servicesNone": "Ma ġie ordnat ebda servizz — ma jinħoloqx kompitu.",
-      "liftRequested": "Nixtieq inneħħi l-imblokk"
+      "liftRequested": "Nixtieq inneħħi l-imblokk",
+      "serviceStatus": {
+        "angefragt": "mitluba",
+        "genehmigt": "approvata",
+        "abgelehnt": "miċħuda"
+      }
     }
   },
   "seasons": {

@@ -2397,20 +2397,22 @@
     "ustIdHinweis": "Bude ověřeno proti systému EU VIES. Bez potvrzeného čísla nebude společnostem vyplacena žádná platba.",
     "kanaele": {
       "titel": "Vaše účty sociálních médií",
-      "hinweis": "Povinné: alespoň jeden účet sociálních médií (Instagram, TikTok, YouTube, Facebook, LinkedIn …) s adresou, uživatelským jménem a dosahem (sledující). Webové stránky, blog nebo newsletter jsou vítány jako doplněk. Účty ověřujeme před schválením.",
+      "hinweis": "Povinné: alespoň jeden účet na sociálních sítích (Instagram, TikTok, YouTube, Facebook, LinkedIn …) s uživatelským jménem a dosahem (sledující). Uživatelské jméno stačí – adresu profilu doplníme. Webové stránky, blog nebo newsletter jsou vítány jako doplněk. Účty zkontrolujeme před schválením.",
       "plattform": "Platforma",
-      "handle": "Uživatelské jméno (volitelné)",
       "reichweite": "Dosah (sledující)",
       "hinzufuegen": "Přidat kanál",
       "entfernen": "Odebrat kanál",
-      "socialPflicht": "Alespoň jeden účet sociálních médií s dosahem je povinný – samotná webová stránka nestačí.",
+      "socialPflicht": "Alespoň jeden účet na sociálních sítích s uživatelským jménem a dosahem je povinný – samotná webová stránka nestačí.",
       "plattformen": {
         "website": "Webové stránky",
         "blog": "Blog",
         "newsletter": "Newsletter",
         "podcast": "Podcast",
         "other": "Jiné"
-      }
+      },
+      "handlePflicht": "Uživatelské jméno",
+      "handleUngueltig": "Uživatelské jméno může obsahovat pouze písmena, čísla, tečky, podtržítka a pomlčky – bez @ a bez mezer.",
+      "adresse": "Adresa (https://…)"
     },
     "plattform": {
       "website": "Webové stránky",
@@ -2430,7 +2432,7 @@
     "sendet": "Odesílání…",
     "pruefungHinweis": "Tento formulář je chráněn službou reCAPTCHA. Po odeslání náš partnerský tým zkontroluje vaše účty a dosah; obdržíte e-mail s rozhodnutím.",
     "fehler": {
-      "social": "Uveďte prosím alespoň jeden účet sociálních médií s adresou a dosahem.",
+      "social": "Uveďte prosím alespoň jeden účet sociálních médií s uživatelským jménem a dosahem.",
       "doppelt": "Pro tento e-mail již existuje žádost. Přihlaste se prosím do partnerského panelu.",
       "eingabe": "Zkontrolujte prosím své zadání.",
       "captcha": "Kontrola ochrany proti spamu selhala. Obnovte prosím stránku a zkuste to znovu.",
@@ -2440,6 +2442,8 @@
       "titel": "Žádost přijata",
       "text": "Děkujeme! Osobně zkontrolujeme vaše účty a dosah a ozveme se vám e-mailem. Váš partnerský panel je přístupný pomocí vašeho e-mailu a hesla – odkazy a kódy se aktivují po schválení.",
       "login": "K přihlášení partnera"
-    }
+    },
+    "newsletter": "Zasílejte mi e-mailem novinky o partnerském programu, nové reklamní materiály a aktualizace produktů.",
+    "newsletterFreiwillig": "Dobrovolné, lze kdykoli odhlásit."
   }
 }

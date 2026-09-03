@@ -2397,20 +2397,22 @@
     "ustIdHinweis": "Déanfar é a sheiceáil i gcoinne chóras VIES an AE. Gan uimhir dheimhnithe, ní dhéanfar aon íocaíocht le cuideachtaí.",
     "kanaele": {
       "titel": "Do Chuntais Meán Sóisialta",
-      "hinweis": "Éigeantach: cuntas meán sóisialta amháin ar a laghad (Instagram, TikTok, YouTube, Facebook, LinkedIn …) le seoladh, láimhseáil agus teacht (leanúnaí). Suíomh Gréasáin, Blag nó Nuachtlitir breise más mian leat. Déanaimid na cuntais a sheiceáil sula gceadaítear iad.",
+      "hinweis": "Riachtanach: cuntas meán sóisialta amháin ar a laghad (Instagram, TikTok, YouTube, Facebook, LinkedIn …) le hainm úsáideora agus teacht (leanúna). Is leor an t-ainm úsáideora — cuirfimid an seoladh próifíle leis. Suíomh Gréasáin, blag nó nuachtlitir breise más mian leat. Déanaimid na cuntais a sheiceáil sula gceadaítear iad.",
       "plattform": "Ardán",
-      "handle": "Láimhseáil (roghnach)",
       "reichweite": "Teacht (Leanúnaí)",
       "hinzufuegen": "Cuir Cainéal Leis",
       "entfernen": "Bain Cainéal",
-      "socialPflicht": "Tá cuntas meán sóisialta amháin ar a laghad le teacht éigeantach — ní leor suíomh Gréasáin amháin.",
+      "socialPflicht": "Tá cuntas meán sóisialta amháin ar a laghad le hainm úsáideora agus teacht riachtanach — ní leor suíomh Gréasáin amháin.",
       "plattformen": {
         "website": "Suíomh Gréasáin",
         "blog": "Blag",
         "newsletter": "Nuachtlitir",
         "podcast": "Podchraoladh",
         "other": "Eile"
-      }
+      },
+      "handlePflicht": "Ainm úsáideora",
+      "handleUngueltig": "Ní féidir ach litreacha, uimhreacha, ponc, fleiscín íochtair agus fleiscín a bheith san ainm úsáideora — gan @ agus gan spásanna.",
+      "adresse": "Seoladh (https://…)"
     },
     "plattform": {
       "website": "Suíomh Gréasáin",
@@ -2430,7 +2432,7 @@
     "sendet": "Á sheoladh …",
     "pruefungHinweis": "Tá an fhoirm seo cosanta ag reCAPTCHA. Tar éis duit é a chur isteach, déanfaidh ár bhfoireann comhpháirtíochta d’iarratas a athbhreithniú. Gheobhaidh tú ríomhphost faoin gcinneadh.",
     "fehler": {
-      "social": "Cuir cuntas meán sóisialta amháin ar a laghad leis an seoladh agus an teacht.",
+      "social": "Cuir cuntas meán sóisialta amháin ar a laghad leis an ainm úsáideora agus an teacht.",
       "doppelt": "Tá iarratas ann cheana don ríomhphost seo. Logáil isteach chuig an deais comhpháirtíochta.",
       "eingabe": "Seiceáil do chuid ionchur.",
       "captcha": "Theip ar an seiceáil frith-turscair. Athlódáil an leathanach agus bain triail eile as.",
@@ -2440,6 +2442,8 @@
       "titel": "Iarratas faighte",
       "text": "Go raibh maith agat! Déanfaimid athbhreithniú pearsanta ar do chuntais agus ar do theacht, agus rachaimid i dteagmháil leat trí ríomhphost. Is féidir rochtain a fháil ar do dheais comhpháirtíochta le do ríomhphost agus do phasfhocal — beidh na naisc agus na cóid gníomhach nuair a cheadófar iad.",
       "login": "Chun logáil isteach mar chomhpháirtí"
-    }
+    },
+    "newsletter": "Seol chuig ríomhphost nuacht an chláir chomhpháirtíochta, ábhair nua fógraíochta agus nuashonruithe táirgí.",
+    "newsletterFreiwillig": "Deonach, is féidir díliostáil am ar bith."
   }
 }

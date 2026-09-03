@@ -91,14 +91,24 @@ with paare as (
          (case
             when tr.end_trigger is not null then
               (case when tr.end_trigger in ('check_in','days_before_check_in',
-                                            'after_check_in_24h','booking_confirmed')
+                                            'after_check_in_24h','booking_confirmed',
+                                            'arrival_day')
                     then r.check_in else r.check_out end)::timestamp
               + (tr.end_offset_minutes || ' minutes')::interval
+              -- Tages-Anker (0535): die Uhrzeit steht an der Regel, nicht an
+              -- der Buchung. Ohne Uhrzeit bleibt es der Tagesbeginn.
+              + (case when tr.end_trigger in ('arrival_day','departure_day')
+                      then coalesce(tr.end_clock, tr.start_clock, '00:00'::time) - '00:00'::time
+                      else '0'::interval end)
             else
               (case when tr.start_trigger in ('check_in','days_before_check_in',
-                                              'after_check_in_24h','booking_confirmed')
+                                              'after_check_in_24h','booking_confirmed',
+                                              'arrival_day')
                     then r.check_in else r.check_out end)::timestamp
               + (tr.start_offset_minutes || ' minutes')::interval
+              + (case when tr.start_trigger in ('arrival_day','departure_day')
+                      then coalesce(tr.start_clock, '00:00'::time) - '00:00'::time
+                      else '0'::interval end)
           end) as termin
   from reservations r
   join properties p on p.id = r.property_id
@@ -148,7 +158,7 @@ with wirksam as (
   select r.tenant_id, r.id as rule_id,
          case when r.start_trigger in
                    ('check_in','days_before_check_in','after_check_in_24h',
-                    'booking_confirmed')
+                    'booking_confirmed','arrival_day')
               then 'anreise' else 'abreise' end as art,
          exists(select 1 from task_rule_assignments a where a.rule_id=r.id)
            as hat_zuordnung

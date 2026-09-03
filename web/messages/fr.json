@@ -1888,7 +1888,12 @@
       "requestLift": "Demander la levée",
       "liftRequested": "Levée demandée — l'administration décide.",
       "liftPending": "Levée demandée. Le blocage reste en vigueur jusqu'à la décision de l'administration.",
-      "liftRejected": "Levée refusée — le blocage est maintenu"
+      "liftRejected": "Levée refusée — le blocage est maintenu",
+      "serviceStatus": {
+        "angefragt": "en attente d'approbation",
+        "genehmigt": "approuvé",
+        "abgelehnt": "refusé"
+      }
     },
     "meter": {
       "title": "Saisir un relevé de compteur",
@@ -5253,7 +5258,9 @@
         "after_check_in_24h": "Après l'arrivée (max. 24 heures)",
         "check_out": "Au départ",
         "days_before_check_in": "Jours avant l'arrivée",
-        "days_after_check_out": "Jours après le départ"
+        "days_after_check_out": "Jours après le départ",
+        "arrival_day": "Le jour d'arrivée",
+        "departure_day": "Le jour de départ"
       },
       "triggerHint": {
         "booking_confirmed": "La tâche est créée dès que la réservation est confirmée.",
@@ -5261,7 +5268,9 @@
         "after_check_in_24h": "24 heures après l'arrivée, mais jamais après le départ : pour les courts séjours, la tâche se termine au départ.",
         "check_out": "La tâche est liée au départ de la réservation.",
         "days_before_check_in": "La tâche est créée le nombre de jours indiqué avant l'arrivée.",
-        "days_after_check_out": "La tâche est créée le nombre de jours indiqué après le départ."
+        "days_after_check_out": "La tâche est créée le nombre de jours indiqué après le départ.",
+        "arrival_day": "La tâche est le jour de l'arrivée. Vous définissez l'heure ici — l'heure d'arrivée du client n'a pas d'importance.",
+        "departure_day": "La tâche est le jour du départ. Vous définissez l'heure ici — l'heure de départ du client n'a pas d'importance."
       },
       "offsetDays": "Jours",
       "periodLabel": "Définir la date de début et de fin",
@@ -5308,7 +5317,8 @@
       "sourceLanguageLabel": "Langue du nom",
       "sourceLanguageEmpty": "Non renseignée",
       "sourceLanguageHint": "Le nom est traduit automatiquement pour les lecteurs d'autres langues — en interne, il reste tel que vous l'avez saisi.",
-      "sourceLanguageMissing": "Sans cette indication, le nom n'est pas traduit : les propriétaires et le personnel le verront exactement tel qu'il figure ici."
+      "sourceLanguageMissing": "Sans cette indication, le nom n'est pas traduit : les propriétaires et le personnel le verront exactement tel qu'il figure ici.",
+      "clockLabel": "Heure"
     },
     "taskPage": {
       "backToMyTasks": "Vers mes tâches",
@@ -7275,13 +7285,22 @@
         "terminationByOwner": "Le propriétaire l'a lui-même expliqué dans sa demande.",
         "terminationHint": "Le propriétaire souhaite résilier le contrat, et non simplement bloquer des nuits. Au lieu de bloquer l'accès, la date de fin du contrat sera directement indiquée sur le bien, ce qui mettra fin à sa diffusion sur tous les portails de location.",
         "terminationReady": "L'avis de résiliation peut être enregistré.",
-        "terminationSummary": "Le contrat prend fin le {datum} — à compter de ce jour, le bien ne sera plus vendu nulle part."
+        "terminationSummary": "Le contrat prend fin le {datum} — à compter de ce jour, le bien ne sera plus vendu nulle part.",
+        "services": "Prestations commandées",
+        "servicesHint": "Décidez de chaque prestation individuellement. Seules les prestations que vous approuvez seront exécutées et facturées — le blocage lui-même est indépendant de cela.",
+        "serviceNotePlaceholder": "Justification pour le propriétaire (recommandé en cas de refus)",
+        "servicesTermination": "En cas de résiliation, il n'y a pas de séjour — les prestations commandées sont annulées."
       },
       "terminationRequested": "Le propriétaire souhaite résilier le contrat.",
       "terminationSet": "Le contrat prend fin le {datum}.",
       "servicesOrdered": "Prestations commandées",
       "servicesNone": "Aucune prestation commandée — aucune tâche ne sera créée.",
-      "liftRequested": "Souhaite lever le blocage"
+      "liftRequested": "Souhaite lever le blocage",
+      "serviceStatus": {
+        "angefragt": "demandé",
+        "genehmigt": "approuvé",
+        "abgelehnt": "refusé"
+      }
     }
   },
   "seasons": {

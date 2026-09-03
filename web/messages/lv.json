@@ -1888,7 +1888,12 @@
       "requestLift": "Pieprasīt atcelšanu",
       "liftRequested": "Atcelšana pieprasīta — lēmumu pieņems administrācija.",
       "liftPending": "Atcelšana pieprasīta. Bloķēšana paliek spēkā, līdz administrācija pieņems lēmumu.",
-      "liftRejected": "Atcelšana noraidīta — bloķēšana paliek spēkā"
+      "liftRejected": "Atcelšana noraidīta — bloķēšana paliek spēkā",
+      "serviceStatus": {
+        "angefragt": "gaida apstiprinājumu",
+        "genehmigt": "apstiprināts",
+        "abgelehnt": "noraidīts"
+      }
     },
     "meter": {
       "title": "Ievadīt skaitītāja rādījumu",
@@ -5253,7 +5258,9 @@
         "after_check_in_24h": "Pēc ierašanās (maks. 24 stundas)",
         "check_out": "Izbraucot",
         "days_before_check_in": "Dienas pirms ierašanās",
-        "days_after_check_out": "Dienas pēc izbraukšanas"
+        "days_after_check_out": "Dienas pēc izbraukšanas",
+        "arrival_day": "Ierašanās dienā",
+        "departure_day": "Izbraukšanas dienā"
       },
       "triggerHint": {
         "booking_confirmed": "Uzdevums rodas, tiklīdz rezervācija ir apstiprināta.",
@@ -5261,7 +5268,9 @@
         "after_check_in_24h": "24 stundas pēc ierašanās — bet nekad pēc izbraukšanas: īsās uzturēšanās laikā uzdevums beidzas ar aizbraukšanu.",
         "check_out": "Uzdevums ir piesaistīts rezervācijas izbraukšanai.",
         "days_before_check_in": "Uzdevums rodas norādīto dienu skaitu pirms ierašanās.",
-        "days_after_check_out": "Uzdevums rodas norādīto dienu skaitu pēc izbraukšanas."
+        "days_after_check_out": "Uzdevums rodas norādīto dienu skaitu pēc izbraukšanas.",
+        "arrival_day": "Uzdevums ir iestatīts ierašanās dienā. Šeit iestatāt laiku — viesa reģistrēšanās laiks nav svarīgs.",
+        "departure_day": "Uzdevums ir iestatīts izbraukšanas dienā. Šeit iestatāt laiku — viesa izrakstīšanās laiks nav svarīgs."
       },
       "offsetDays": "Dienas",
       "periodLabel": "Sākuma un beigu datums",
@@ -5308,7 +5317,8 @@
       "sourceLanguageLabel": "Nosaukuma valoda",
       "sourceLanguageEmpty": "Nav norādīta",
       "sourceLanguageHint": "Nosaukums tiek automātiski tulkots citu valodu lasītājiem — iekšēji tas paliek tāds, kādu to ievadījāt.",
-      "sourceLanguageMissing": "Bez norādes nosaukums netiek tulkots: īpašnieki un darbinieki to redzēs tieši tādu, kāds tas ir šeit."
+      "sourceLanguageMissing": "Bez norādes nosaukums netiek tulkots: īpašnieki un darbinieki to redzēs tieši tādu, kāds tas ir šeit.",
+      "clockLabel": "Laiks"
     },
     "taskPage": {
       "backToMyTasks": "Uz maniem uzdevumiem",
@@ -7275,13 +7285,22 @@
         "terminationByOwner": "Īpašnieks to pats paskaidroja pieteikumā.",
         "terminationHint": "Īpašnieks vēlas lauzt līgumu, nevis tikai bloķēt naktis. Piekļuves bloķēšanas vietā līguma beigu datums tiks noteikts tieši īpašumam, tādējādi pārtraucot tā mārketingu visos portālos.",
         "terminationReady": "Paziņojumu par līguma izbeigšanu var reģistrēt.",
-        "terminationSummary": "Līgums beidzas no {datum} — no šīs dienas īpašums vairs netiks nekur pārdots."
+        "terminationSummary": "Līgums beidzas no {datum} — no šīs dienas īpašums vairs netiks nekur pārdots.",
+        "services": "Pasūtītie pakalpojumi",
+        "servicesHint": "Izlemiet par katru pakalpojumu atsevišķi. Tikai tas, ko apstiprināsiet, tiks uzskatīts par uzdevumu un izrakstīts rēķins — bloķēšana pati par sevi ir neatkarīga no tā.",
+        "serviceNotePlaceholder": "Pamatojums īpašniekam (ieteicams atteikuma gadījumā)",
+        "servicesTermination": "Uzlaušanas gadījumā uzturēšanās nenotiek — pasūtītie pakalpojumi tiek atcelti."
       },
       "terminationRequested": "Īpašnieks vēlas lauzt līgumu.",
       "terminationSet": "Līgums beidzas {datum}.",
       "servicesOrdered": "Pasūtītie pakalpojumi",
       "servicesNone": "Pakalpojumi nav pasūtīti — uzdevums netiks izveidots.",
-      "liftRequested": "Vēlos atcelt bloķēšanu"
+      "liftRequested": "Vēlos atcelt bloķēšanu",
+      "serviceStatus": {
+        "angefragt": "pieprasīts",
+        "genehmigt": "apstiprināts",
+        "abgelehnt": "atteikts"
+      }
     }
   },
   "seasons": {

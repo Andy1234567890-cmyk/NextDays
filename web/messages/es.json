@@ -1888,7 +1888,12 @@
       "requestLift": "Solicitar levantamiento",
       "liftRequested": "Levantamiento solicitado — la administración decide.",
       "liftPending": "Levantamiento solicitado. El bloqueo se mantiene hasta que la administración decida.",
-      "liftRejected": "Levantamiento denegado — el bloqueo permanece"
+      "liftRejected": "Levantamiento denegado — el bloqueo permanece",
+      "serviceStatus": {
+        "angefragt": "pendiente de aprobación",
+        "genehmigt": "aprobado",
+        "abgelehnt": "rechazado"
+      }
     },
     "meter": {
       "title": "Registrar lectura de contador",
@@ -5253,7 +5258,9 @@
         "after_check_in_24h": "Tras la entrada (máx. 24 horas)",
         "check_out": "En la salida",
         "days_before_check_in": "Días antes de la entrada",
-        "days_after_check_out": "Días después de la salida"
+        "days_after_check_out": "Días después de la salida",
+        "arrival_day": "El día de llegada",
+        "departure_day": "El día de salida"
       },
       "triggerHint": {
         "booking_confirmed": "La tarea se crea en cuanto se confirma la reserva.",
@@ -5261,7 +5268,9 @@
         "after_check_in_24h": "24 horas después de la entrada, pero nunca más allá de la salida: en estancias cortas la tarea termina con la partida.",
         "check_out": "La tarea se vincula a la salida de la reserva.",
         "days_before_check_in": "La tarea se crea los días indicados antes de la entrada.",
-        "days_after_check_out": "La tarea se crea los días indicados después de la salida."
+        "days_after_check_out": "La tarea se crea los días indicados después de la salida.",
+        "arrival_day": "La tarea es el día de llegada. La hora se establece aquí, la hora de check-in del huésped no importa.",
+        "departure_day": "La tarea es el día de salida. La hora se establece aquí, la hora de check-out del huésped no importa."
       },
       "offsetDays": "Días",
       "periodLabel": "Fecha de inicio y de fin",
@@ -5308,7 +5317,8 @@
       "sourceLanguageLabel": "Idioma del nombre",
       "sourceLanguageEmpty": "Sin especificar",
       "sourceLanguageHint": "El nombre se traduce automáticamente para lectores de otros idiomas; internamente se mantiene tal como lo escribió.",
-      "sourceLanguageMissing": "Sin esta indicación, el nombre no se traduce: propietarios y personal lo verán exactamente como aparece aquí."
+      "sourceLanguageMissing": "Sin esta indicación, el nombre no se traduce: propietarios y personal lo verán exactamente como aparece aquí.",
+      "clockLabel": "Hora"
     },
     "taskPage": {
       "backToMyTasks": "A mis tareas",
@@ -7275,13 +7285,22 @@
         "terminationByOwner": "El propietario lo explicó él mismo en la solicitud.",
         "terminationHint": "El propietario desea rescindir el contrato, no solo bloquear las noches. En lugar de bloquear el acceso, la fecha de finalización del contrato se establecerá directamente en la propiedad, poniendo fin así a su publicidad en todos los portales.",
         "terminationReady": "El aviso de rescisión puede registrarse.",
-        "terminationSummary": "El contrato finaliza el día {datum}; a partir de ese día, la propiedad ya no se venderá en ningún lugar."
+        "terminationSummary": "El contrato finaliza el día {datum}; a partir de ese día, la propiedad ya no se venderá en ningún lugar.",
+        "services": "Servicios solicitados",
+        "servicesHint": "Decida sobre cada servicio individualmente. Solo lo que apruebe se convertirá en tarea y se facturará; el bloqueo en sí es independiente de esto.",
+        "serviceNotePlaceholder": "Justificación para el propietario (recomendado en caso de rechazo)",
+        "servicesTermination": "En caso de cancelación, no se produce ninguna estancia; los servicios solicitados se cancelan."
       },
       "terminationRequested": "El propietario desea rescindir el contrato.",
       "terminationSet": "El contrato finaliza el {datum}.",
       "servicesOrdered": "Servicios solicitados",
       "servicesNone": "No se han solicitado servicios: no se creará ninguna tarea.",
-      "liftRequested": "Desea levantar el bloqueo"
+      "liftRequested": "Desea levantar el bloqueo",
+      "serviceStatus": {
+        "angefragt": "solicitado",
+        "genehmigt": "aprobado",
+        "abgelehnt": "rechazado"
+      }
     }
   },
   "seasons": {

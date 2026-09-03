@@ -288,7 +288,6 @@
   },
   "kanaele": {
     "plattformLabel": "Plattform",
-    "handle": "Användarnamn (valfritt)",
     "reichweite": "Räckvidd (följare)",
     "hinzufuegen": "Lägg till kanal",
     "entfernen": "Ta bort kanal",
@@ -299,7 +298,9 @@
       "podcast": "Podcast",
       "other": "Övrigt"
     },
-    "socialPflicht": "Minst ett sociala mediekonto är obligatoriskt – enbart en webbplats räcker inte."
+    "socialPflicht": "Minst ett sociala medier-konto är obligatoriskt – enbart en webbplats räcker inte.",
+    "handlePflicht": "Användarnamn",
+    "handleUngueltig": "Användarnamnet får endast innehålla bokstäver, siffror, punkt, understreck och bindestreck – utan @ och utan mellanslag."
   },
   "team": {
     "titel": "Team",

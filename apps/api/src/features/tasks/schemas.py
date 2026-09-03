@@ -393,7 +393,9 @@ class TaskTrigger(StrEnum):
     """Zeitanker einer planmäßigen Regel relativ zur Reservierung (0272).
 
     Die Feinjustierung steckt immer in `start_offset_minutes`/`end_offset_minutes`
-    — bei ``days_before_check_in`` trägt sie die ganze Distanz.
+    — bei ``days_before_check_in`` trägt sie die ganze Distanz. Bei den beiden
+    Tages-Ankern ``arrival_day``/``departure_day`` (0535) traegt stattdessen
+    ``start_clock``/``end_clock`` die Uhrzeit.
     """
 
     booking_confirmed = "booking_confirmed"
@@ -402,6 +404,11 @@ class TaskTrigger(StrEnum):
     check_out = "check_out"
     days_before_check_in = "days_before_check_in"
     days_after_check_out = "days_after_check_out"
+    # Die beiden TAGES-Anker (0535). Unterschied zu `check_in`/`check_out`: die
+    # haengen an der Uhrzeit der Buchung, diese am Datum — die Uhrzeit kommt
+    # dann aus `start_clock`/`end_clock` der Regel.
+    arrival_day = "arrival_day"
+    departure_day = "departure_day"
 
 
 class RuleCreate(BaseModel):
@@ -435,6 +442,12 @@ class RuleCreate(BaseModel):
     end_trigger: TaskTrigger | None = None
     start_offset_minutes: int = Field(default=0, ge=-525_600, le=525_600)
     end_offset_minutes: int = Field(default=0, ge=-525_600, le=525_600)
+    # Uhrzeitfenster der Aufgabe an einem TAGES-Anker (0535). Wirkt nur bei
+    # `arrival_day`/`departure_day`; bei den Uhrzeit-Ankern bleibt die Zeit der
+    # Buchung massgeblich. None = keine Uhrzeit gepflegt, der Motor setzt dann
+    # den Tagesbeginn statt einer erfundenen Standardstunde (Wurzel 4).
+    start_clock: time | None = None
+    end_clock: time | None = None
 
     # kind='recurring': Kalenderfenster, Uhrzeit, geschätzte Dauer.
     starts_on: date | None = None
@@ -502,6 +515,8 @@ class RuleDetail(RuleListItem):
     end_trigger: TaskTrigger | None = None
     start_offset_minutes: int = 0
     end_offset_minutes: int = 0
+    start_clock: time | None = None
+    end_clock: time | None = None
     starts_on: date | None = None
     ends_on: date | None = None
     start_time: time | None = None

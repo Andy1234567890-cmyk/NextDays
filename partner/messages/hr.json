@@ -288,7 +288,6 @@
   },
   "kanaele": {
     "plattformLabel": "Platforma",
-    "handle": "Ručka (opcionalno)",
     "reichweite": "Doseg (pratitelji)",
     "hinzufuegen": "Dodaj kanal",
     "entfernen": "Ukloni kanal",
@@ -299,7 +298,9 @@
       "podcast": "Podcast",
       "other": "Ostalo"
     },
-    "socialPflicht": "Najmanje jedan profil na društvenim mrežama je obavezan – sama web stranica nije dovoljna."
+    "socialPflicht": "Obavezan je barem jedan račun na društvenim mrežama — sama web stranica nije dovoljna.",
+    "handlePflicht": "Korisničko ime",
+    "handleUngueltig": "Korisničko ime može sadržavati samo slova, brojeve, točke, podvlake i crtice — bez @ i bez razmaka."
   },
   "team": {
     "titel": "Tim",

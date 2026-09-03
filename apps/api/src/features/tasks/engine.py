@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import calendar
 from datetime import UTC, date, datetime, time, timedelta
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from postgrest.exceptions import APIError
 from supabase import Client
@@ -113,10 +114,22 @@ def _parse_clock(value: object) -> time | None:
         return None
 
 
-def _at(day: date, clock: time | None) -> datetime:
+def _at(day: date, clock: time | None, zone: ZoneInfo | None = None) -> datetime:
     """Tag + Uhrzeit → UTC-Zeitstempel. Ohne bekannte Uhrzeit gilt der TAG
-    (00:00), nicht eine erfundene Standardstunde (Wurzel 4)."""
-    return datetime.combine(day, clock or time(0, 0), tzinfo=UTC)
+    (00:00), nicht eine erfundene Standardstunde (Wurzel 4).
+
+    `zone` ist die Zeitzone des OBJEKTS. Sie ist bei den Tages-Ankern nicht
+    Kosmetik, sondern der Unterschied zwischen richtig und falsch: „10:00 am
+    Anreisetag" meint 10:00 vor Ort. In UTC gerechnet stünde die Reinigung in
+    Dänemark im Sommer um 12:00 vor der Tür, und eine Aufgabe ohne Uhrzeit
+    zeigte „02:00" statt Tagesbeginn — genau so gemeldet am 03.09.2026.
+
+    Ohne Zone bleibt es bei UTC. Das ist die ehrliche Auskunft für ein Objekt
+    ohne gepflegte Zeitzone, keine geratene Ortszeit (Wurzel 4).
+    """
+    return datetime.combine(day, clock or time(0, 0), tzinfo=zone or UTC).astimezone(
+        UTC
+    )
 
 
 def _as_date(value: object) -> date | None:
@@ -134,16 +147,40 @@ def _as_date(value: object) -> date | None:
 
 def _reservation_anchors(
     reservation: dict[str, object],
+    zone: ZoneInfo | None = None,
 ) -> tuple[datetime, datetime] | None:
-    """Check-in- und Check-out-Zeitpunkt der Reservierung."""
+    """Check-in- und Check-out-Zeitpunkt der Reservierung.
+
+    `zone` ist die Zeitzone des OBJEKTS, und sie gehoert hierher, nicht nur an
+    die Tages-Anker. „Check-in um 16:00" meint 16:00 VOR ORT; in UTC gerechnet
+    stuende die Aufgabe zwei Stunden daneben.
+
+    Sichtbar wird es dort, wo die Buchung GAR KEINE Uhrzeit hat — live bei 351
+    von 536 Buchungen dieses Betriebs (03.09.2026). `_at` setzt dann den
+    Tagesbeginn, und in UTC gerechnet zeigte der Kalender „02:00" statt
+    Mitternacht. Gemeldet wurde genau dieses Bild: „das Zeitfenster stimmt
+    auch nicht".
+    """
     check_in = _as_date(reservation.get("check_in"))
     check_out = _as_date(reservation.get("check_out"))
     if check_in is None or check_out is None:
         return None
     return (
-        _at(check_in, _parse_clock(reservation.get("checkin_time"))),
-        _at(check_out, _parse_clock(reservation.get("checkout_time"))),
+        _at(check_in, _parse_clock(reservation.get("checkin_time")), zone),
+        _at(check_out, _parse_clock(reservation.get("checkout_time")), zone),
     )
+
+
+def _zone(name: object) -> ZoneInfo | None:
+    """Die Zeitzone eines Objekts. Unbekanntes ergibt None, nicht UTC-als-ob:
+    eine geratene Zone verschiebt jede Aufgabe still um Stunden (Wurzel 4)."""
+    if not isinstance(name, str) or not name.strip():
+        return None
+    try:
+        return ZoneInfo(name.strip())
+    except (ZoneInfoNotFoundError, ValueError):
+        log.warning("task_zeitzone_unbekannt", zone=name)
+        return None
 
 
 def _trigger_time(
@@ -151,13 +188,32 @@ def _trigger_time(
     offset_minutes: int,
     reservation: dict[str, object],
     anchors: tuple[datetime, datetime],
+    clock: time | None = None,
+    zone: ZoneInfo | None = None,
 ) -> datetime | None:
     """Zeitpunkt eines Triggers. `offset_minutes` ist IMMER die Feinjustierung
-    mit Vorzeichen — bei `days_before_check_in` trägt sie die ganze Distanz."""
+    mit Vorzeichen — bei `days_before_check_in` trägt sie die ganze Distanz.
+
+    `clock` ist die an der REGEL gepflegte Uhrzeit (0535). Sie gilt
+    ausschliesslich bei den Tages-Ankern `arrival_day`/`departure_day`: dort
+    zaehlt nur das DATUM der Reservierung, die Stunde kommt aus der Regel. Bei
+    allen uebrigen Ankern bleibt die Uhrzeit der Buchung massgeblich — sonst
+    haette dieselbe Aufgabe zwei Wahrheiten.
+
+    `zone` ist die Zeitzone des Objekts; sie gilt aus demselben Grund nur bei
+    den Tages-Ankern. Bei den uebrigen steckt die Zone schon in den Ankern
+    selbst, die aus der Buchung kommen.
+    """
     if not trigger:
         return None
     check_in, check_out = anchors
-    if trigger == "booking_confirmed":
+    if trigger == "arrival_day":
+        # Nur das Datum des Ankers, nicht seine Stunde. `_at` setzt ohne
+        # bekannte Uhrzeit den Tagesbeginn — keine erfundene Stunde (Wurzel 4).
+        base = _at(check_in.date(), clock, zone)
+    elif trigger == "departure_day":
+        base = _at(check_out.date(), clock, zone)
+    elif trigger == "booking_confirmed":
         created = reservation.get("created_at")
         base = (
             datetime.fromisoformat(str(created).replace("Z", "+00:00"))
@@ -270,6 +326,22 @@ def _rules(db: Client, tenant_id: str, kind: str) -> list[dict[str, object]]:
         .eq("active", True)
         .execute()
     ).data or []
+
+
+def _objekt_zonen(db: Client, tenant_id: str) -> dict[str, ZoneInfo | None]:
+    """Die Zeitzone je Objekt des Betriebs, in EINEM Abruf.
+
+    Die Alternative waere eine Abfrage je Buchung — beim Nachzug ueber hunderte
+    Reservierungen ist das derselbe Datensatz hundertfach. Ein Objekt ohne
+    gepflegte Zone bekommt `None` und rechnet weiter in UTC (`_at`).
+    """
+    rows = (
+        db.table("properties")
+        .select("id, timezone")
+        .eq("tenant_id", tenant_id)
+        .execute()
+    ).data or []
+    return {str(r["id"]): _zone(r.get("timezone")) for r in rows}
 
 
 def _rule_properties(db: Client, rule_ids: list[str]) -> dict[str, set[str]]:
@@ -422,6 +494,7 @@ def _regel_zeitfenster(
     rule: dict[str, object],
     reservation: dict[str, object],
     anchors: tuple[datetime, datetime],
+    zone: ZoneInfo | None = None,
 ) -> tuple[datetime, datetime | None] | None:
     """Start- und Endzeitpunkt einer planmäßigen Regel für diese Buchung.
 
@@ -435,12 +508,20 @@ def _regel_zeitfenster(
             int(rule.get("start_offset_minutes") or 0),
             reservation,
             anchors,
+            _parse_clock(rule.get("start_clock")),
+            zone,
         )
         end = _trigger_time(
             str(rule.get("end_trigger") or "") or None,
             int(rule.get("end_offset_minutes") or 0),
             reservation,
             anchors,
+            # Ohne eigene Endzeit gilt die Startzeit weiter: eine Regel „von
+            # 10:00", deren Ende nur den Tag nennt, endet um 10:00 desselben
+            # Tages und nicht um Mitternacht davor (das waere ein Ende VOR dem
+            # Start und fiele unten stumm heraus).
+            _parse_clock(rule.get("end_clock")) or _parse_clock(rule.get("start_clock")),
+            zone,
         )
     except RuleEngineError as exc:
         log.warning("task_rule_trigger_unbekannt", rule_id=rule["id"], error=str(exc))
@@ -488,6 +569,7 @@ def _regel_anwenden(
     verschieben: bool = True,
     nicht_vor: datetime | None = None,
     bestellt: dict[str, set[str]] | None = None,
+    zone: ZoneInfo | None = None,
 ) -> bool:
     """EINE planmäßige Regel auf EINE Reservierung anwenden.
 
@@ -516,7 +598,7 @@ def _regel_anwenden(
     if not regel_erlaubt(reservation, str(rule["id"]), bestellt or {}):
         return False
 
-    fenster = _regel_zeitfenster(rule, reservation, anchors)
+    fenster = _regel_zeitfenster(rule, reservation, anchors, zone)
     if fenster is None:
         return False
     start, end = fenster
@@ -576,6 +658,7 @@ def nachziehen_planmaessig(
     horizon_days: int = HORIZON_DAYS,
     rueckblick_tage: int = NACHZUG_RUECKBLICK_TAGE,
     rule_id: str | None = None,
+    verschieben: bool = False,
 ) -> int:
     """Planmäßige Regeln gegen ALLE Buchungen im Fenster abgleichen.
 
@@ -596,9 +679,18 @@ def nachziehen_planmaessig(
     `sync_for_reservation` nicht ruft. Er ERSETZT den Aufruf nicht — eine
     Aufgabe soll sofort da sein, nicht erst beim nächsten Tick.
 
-    Nur ANLEGEN, nie verschieben: das Verschieben gehört dem Schreibpfad, der
-    den neuen Zeitraum kennt. `rule_id` grenzt den Lauf auf eine Regel ein
-    (Aufruf direkt nach dem Speichern einer Regel).
+    Standardmäßig nur ANLEGEN, nie verschieben — der stündliche Tick soll nicht
+    bei jedem Lauf dieselben Werte erneut in jede Aufgabe schreiben.
+    `rule_id` grenzt den Lauf auf eine Regel ein (Aufruf direkt nach dem
+    Speichern einer Regel).
+
+    `verschieben=True` zieht zusätzlich die schon vorhandenen Aufgaben auf die
+    neuen Zeiten nach. Genau das fehlte (03.09.2026): wer die Zeiten einer
+    Regel änderte, sah die Änderung nur an KÜNFTIGEN Aufgaben — die bereits
+    erzeugten behielten stumm ihr altes Fenster, und der Kalender zeigte
+    weiter den alten Stand. Erledigte und stornierte Aufgaben bleiben dabei
+    unberührt (`_regel_anwenden`): eine gemachte Reinigung verschiebt sich
+    nicht mehr.
     """
     rules = [
         r
@@ -618,6 +710,9 @@ def nachziehen_planmaessig(
     # angewandt: eine Buchung kann im Rückblick liegen und ihre Anreise-Aufgabe
     # trotzdem weit davor (langer Aufenthalt).
     fruehester_termin = _at(today - timedelta(days=rueckblick_tage), None)
+    # Einmal je LAUF, nicht je Seite: die Objektliste eines Betriebs ist klein
+    # und aendert sich waehrend eines Nachzugs nicht.
+    zonen = _objekt_zonen(db, tenant_id)
     von = (today - timedelta(days=rueckblick_tage)).isoformat()
     bis = (today + timedelta(days=horizon_days)).isoformat()
 
@@ -656,6 +751,8 @@ def nachziehen_planmaessig(
             assignments,
             items,
             fruehester_termin,
+            zonen,
+            verschieben,
         )
         if len(reservations) < _NACHZUG_SEITE:
             break
@@ -687,6 +784,8 @@ def _nachzug_seite(
     assignments: dict[str, set[str]],
     items: dict[str, list[dict[str, object]]],
     fruehester_termin: datetime,
+    zonen: dict[str, ZoneInfo | None],
+    verschieben: bool,
 ) -> int:
     """Eine Seite Reservierungen gegen die Regeln abgleichen."""
     known = _vorhandene_aufgaben(
@@ -698,11 +797,12 @@ def _nachzug_seite(
     bestellt = bestellte_regeln(db, reservations)
     created = 0
     for reservation in reservations:
-        anchors = _reservation_anchors(reservation)
-        if anchors is None:
-            continue
         reservation_id = str(reservation["id"])
         property_id = str(reservation.get("property_id") or "")
+        zone = zonen.get(property_id)
+        anchors = _reservation_anchors(reservation, zone)
+        if anchors is None:
+            continue
         for rule in rules:
             zuordnung = assignments.get(str(rule["id"]))
             if zuordnung and property_id not in zuordnung:
@@ -715,9 +815,10 @@ def _nachzug_seite(
                 anchors,
                 items.get(_checklist_source(rule), []),
                 known.get((reservation_id, str(rule["id"]))),
-                verschieben=False,
+                verschieben=verschieben,
                 nicht_vor=fruehester_termin,
                 bestellt=bestellt,
+                zone=zone,
             ):
                 created += 1
     return created
@@ -762,12 +863,27 @@ def sync_for_reservation(
         # dann mit `confirmed`.
         return 0
 
-    anchors = _reservation_anchors(reservation)
+    # Die Zeitzone DIESES Objekts — VOR den Ankern, weil sie in sie eingeht.
+    # Ein gezielter Abruf statt der ganzen Liste: hier geht es um eine Buchung.
+    property_id = reservation.get("property_id")
+    zone = None
+    if property_id:
+        zeile = (
+            db.table("properties")
+            .select("timezone")
+            .eq("id", str(property_id))
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if zeile:
+            zone = _zone(zeile[0].get("timezone"))
+
+    anchors = _reservation_anchors(reservation, zone)
     if anchors is None:
         log.warning("task_rules_ohne_zeitraum", reservation_id=reservation_id)
         return 0
 
-    property_id = reservation.get("property_id")
     rules = _rules(db, tenant_id, "auto")
     assignments = _rule_properties(db, [str(r["id"]) for r in rules])
     matching = [
@@ -811,6 +927,7 @@ def sync_for_reservation(
             items.get(_checklist_source(rule), []),
             existing.get(str(rule["id"])),
             bestellt=bestellt,
+            zone=zone,
         ):
             touched += 1
 

@@ -2397,20 +2397,22 @@
     "ustIdHinweis": "Preverjeno v sistemu EU VIES. Brez potrjene številke ni izplačila podjetjem.",
     "kanaele": {
       "titel": "Vaši računi družbenih medijev",
-      "hinweis": "Obvezno: vsaj en račun družbenih medijev (Instagram, TikTok, YouTube, Facebook, LinkedIn …) z naslovom, uporabniškim imenom in dosegom (sledilci). Spletna stran, blog ali glasilo so dobrodošli kot dodatek. Račune preverimo pred odobritvijo.",
+      "hinweis": "Obvezno: vsaj en račun družbenega omrežja (Instagram, TikTok, YouTube, Facebook, LinkedIn …) z uporabniškim imenom in dosegom (sledilci). Uporabniško ime zadostuje – naslov profila bomo dodali mi. Spletna stran, blog ali e-novice so dobrodošli kot dodatek. Račune bomo preverili pred objavo.",
       "plattform": "Platforma",
-      "handle": "Uporabniško ime (neobvezno)",
       "reichweite": "Doseg (sledilci)",
       "hinzufuegen": "Dodaj kanal",
       "entfernen": "Odstrani kanal",
-      "socialPflicht": "Vsaj en račun družbenih medijev z dosegom je obvezen – samo spletna stran ni dovolj.",
+      "socialPflicht": "Vsaj en račun družbenega omrežja z uporabniškim imenom in dosegom je obvezen – samo spletna stran ne zadostuje.",
       "plattformen": {
         "website": "Spletna stran",
         "blog": "Blog",
         "newsletter": "Glasilo",
         "podcast": "Podcast",
         "other": "Drugo"
-      }
+      },
+      "handlePflicht": "Uporabniško ime",
+      "handleUngueltig": "Uporabniško ime lahko vsebuje samo črke, številke, pike, podčrtaje in pomišljaje – brez @ in brez presledkov.",
+      "adresse": "Naslov (https://…)"
     },
     "plattform": {
       "website": "Spletna stran",
@@ -2430,7 +2432,7 @@
     "sendet": "Pošiljanje …",
     "pruefungHinweis": "Ta obrazec je zaščiten z reCAPTCHA. Po oddaji bo naša partnerska ekipa pregledala vaše račune in doseg; po e-pošti boste prejeli odločitev.",
     "fehler": {
-      "social": "Navedite vsaj en račun družabnih medijev z naslovom in dosegom.",
+      "social": "Navedite vsaj en račun družabnega omrežja z uporabniškim imenom in dosegom.",
       "doppelt": "Za ta e-poštni naslov že obstaja prijava. Prijavite se v partnersko nadzorno ploščo.",
       "eingabe": "Preverite svoje vnose.",
       "captcha": "Preverjanje zaščite pred vsiljeno pošto ni uspelo. Osvežite stran in poskusite znova.",
@@ -2440,6 +2442,8 @@
       "titel": "Prijava prejeta",
       "text": "Hvala! Osebno bomo pregledali vaše račune in doseg ter vas kontaktirali po e-pošti. Do partnerske nadzorne plošče lahko dostopate s svojim e-poštnim naslovom in geslom – povezave in kode bodo aktivne po odobritvi.",
       "login": "Na partnersko prijavo"
-    }
+    },
+    "newsletter": "Po e-pošti mi pošljite novice o partnerskem programu, nova promocijska gradiva in posodobitve izdelkov.",
+    "newsletterFreiwillig": "Prostovoljno, odjava je možna kadar koli."
   }
 }

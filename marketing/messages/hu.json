@@ -2397,20 +2397,22 @@
     "ustIdHinweis": "Az EU VIES rendszerében ellenőrizzük. Jóváhagyott szám nélkül nincs kifizetés a vállalatoknak.",
     "kanaele": {
       "titel": "Közösségi média fiókjai",
-      "hinweis": "Kötelező: legalább egy közösségi média fiók (Instagram, TikTok, YouTube, Facebook, LinkedIn…) címmel, felhasználónévvel és eléréssel (követők). Weboldal, blog vagy hírlevél is szívesen látott. A fiókokat a jóváhagyás előtt ellenőrizzük.",
+      "hinweis": "Kötelező: legalább egy közösségi média fiók (Instagram, TikTok, YouTube, Facebook, LinkedIn…) felhasználónévvel és eléréssel (követők). A felhasználónév elegendő – a profilcímet mi egészítjük ki. Weboldal, blog vagy hírlevél is szívesen látott. A fiókokat jóváhagyás előtt ellenőrizzük.",
       "plattform": "Platform",
-      "handle": "Felhasználónév (opcionális)",
       "reichweite": "Elérés (követők)",
       "hinzufuegen": "Csatorna hozzáadása",
       "entfernen": "Csatorna eltávolítása",
-      "socialPflicht": "Legalább egy közösségi média fiók eléréssel kötelező — egy weboldal önmagában nem elegendő.",
+      "socialPflicht": "Legalább egy közösségi média fiók felhasználónévvel és eléréssel kötelező – önmagában egy weboldal nem elegendő.",
       "plattformen": {
         "website": "Weboldal",
         "blog": "Blog",
         "newsletter": "Hírlevél",
         "podcast": "Podcast",
         "other": "Egyéb"
-      }
+      },
+      "handlePflicht": "Felhasználónév",
+      "handleUngueltig": "A felhasználónév csak betűket, számokat, pontot, aláhúzást és kötőjelet tartalmazhat – @ és szóköz nélkül.",
+      "adresse": "Cím (https://…)"
     },
     "plattform": {
       "website": "Weboldal",
@@ -2430,7 +2432,7 @@
     "sendet": "Küldés folyamatban…",
     "pruefungHinweis": "Ez az űrlap reCAPTCHA védelemmel van ellátva. Az elküldés után partnercsapatunk ellenőrzi fiókjait és elérését; e-mailben értesítést kap a döntésről.",
     "fehler": {
-      "social": "Kérjük, adjon meg legalább egy közösségi média fiókot címmel és eléréssel.",
+      "social": "Kérjük, adjon meg legalább egy közösségi média fiókot felhasználónévvel és eléréssel.",
       "doppelt": "Ehhez az e-mail címhez már tartozik egy jelentkezés. Kérjük, jelentkezzen be a partneri irányítópultba.",
       "eingabe": "Kérjük, ellenőrizze adatait.",
       "captcha": "A spamvédelem ellenőrzése sikertelen. Kérjük, töltse újra az oldalt, és próbálja meg újra.",
@@ -2440,6 +2442,8 @@
       "titel": "Jelentkezés beérkezett",
       "text": "Köszönjük! Személyesen ellenőrizzük fiókjait és elérését, és e-mailben felvesszük Önnel a kapcsolatot. Partneri irányítópultja e-mail címével és jelszavával érhető el – a linkek és kódok az engedélyezéssel válnak aktívvá.",
       "login": "Partner bejelentkezéshez"
-    }
+    },
+    "newsletter": "Kérem, küldjenek nekem e-mailben híreket a partnerprogramról, új promóciós anyagokat és termékfrissítéseket.",
+    "newsletterFreiwillig": "Önkéntes, bármikor lemondható."
   }
 }

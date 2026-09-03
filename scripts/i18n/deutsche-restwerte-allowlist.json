@@ -11,6 +11,567 @@
   },
   "erlaubt": [
     {
+      "schluessel": "amenities.bar",
+      "grund": "international",
+      "sprachen": [
+        "pl"
+      ]
+    },
+    {
+      "schluessel": "amenities.fitness",
+      "grund": "international",
+      "sprachen": [
+        "pl"
+      ]
+    },
+    {
+      "schluessel": "common.languages.hr",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ],
+      "notiz": "Sprachname; nl schreibt ihn wortgleich"
+    },
+    {
+      "schluessel": "finance.TechnicalTemplate.professionalServices",
+      "grund": "technisch",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "inbox.aiTone_neutral",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiBadgeAutomatic",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiBadgeEscalation",
+      "grund": "international",
+      "sprachen": [
+        "da"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiColCategory",
+      "grund": "international",
+      "sprachen": [
+        "cs"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiColFact",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "et",
+        "pl",
+        "sk"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiColProperty",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "et",
+        "hr",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiColRule",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiContextTab",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiDeliveryAutoShort",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiFieldActive",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiFieldName",
+      "grund": "international",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiFieldTitle",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiFilter",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "et",
+        "hr",
+        "nl",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiImportPdfMax",
+      "grund": "kuerzel",
+      "sprachen": [
+        "cs",
+        "en",
+        "hu",
+        "it",
+        "nl",
+        "ro",
+        "sk",
+        "sv"
+      ],
+      "notiz": "PDF und MB sind Kuerzel, max. lautet in diesen Sprachen gleich"
+    },
+    {
+      "schluessel": "inbox.kiLength_standard",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "et",
+        "fr",
+        "hu",
+        "it",
+        "mt",
+        "ro",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiRuleCopyName",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiTestAs",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiTestGuest",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiTestRule",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "inbox.kiUsedTimes",
+      "grund": "maske",
+      "sprachen": "alle",
+      "notiz": "Zahl plus Multiplikationszeichen - in keiner Sprache ein Wort"
+    },
+    {
+      "schluessel": "reviews.aiDayCounts",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "sv"
+      ],
+      "notiz": "alle drei Woerter lauten in da/sv gleich; Wort fuer Wort geprueft am 30.08.2026. en war ein echter Uebersetzungsfehler (endete auf 'neutral' statt 'negative') und wurde behoben, nicht hier eingetragen"
+    },
+    {
+      "schluessel": "reviews.aiNegative",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "ro"
+      ],
+      "notiz": "da/ro schreiben 'Negativ' wortgleich"
+    },
+    {
+      "schluessel": "reviews.aiNeutral",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "es"
+      ],
+      "notiz": "'Neutral' lautet in diesen Sprachen gleich"
+    },
+    {
+      "schluessel": "reviews.aiPositive",
+      "grund": "international",
+      "sprachen": [
+        "da"
+      ],
+      "notiz": "da schreibt 'Positiv' wortgleich"
+    },
+    {
+      "schluessel": "reviews.autoRatingLabel",
+      "grund": "international",
+      "sprachen": [
+        "fr"
+      ],
+      "notiz": "franzoesisch 'Note' = Note, echtes Homograph"
+    },
+    {
+      "schluessel": "reviews.column.replied",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "hr",
+        "mt",
+        "nl",
+        "pl",
+        "ro",
+        "sl",
+        "sv"
+      ],
+      "notiz": "'Status' ist in diesen Sprachen das gebraeuchliche Wort"
+    },
+    {
+      "schluessel": "reviews.column.scale",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "hr",
+        "lv",
+        "mt",
+        "pl",
+        "sv"
+      ],
+      "notiz": "'Skala' lautet in diesen Sprachen gleich"
+    },
+    {
+      "schluessel": "reviews.column.score_5",
+      "grund": "international",
+      "sprachen": [
+        "fr"
+      ],
+      "notiz": "franzoesisch 'Note' = Note, echtes Homograph"
+    },
+    {
+      "schluessel": "reviews.filterRating",
+      "grund": "international",
+      "sprachen": [
+        "fr"
+      ],
+      "notiz": "franzoesisch 'Note' = Note, echtes Homograph"
+    },
+    {
+      "schluessel": "reviews.filters",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "et",
+        "hr",
+        "nl",
+        "sk",
+        "sl",
+        "sv"
+      ],
+      "notiz": "'Filter' ist in diesen Sprachen das gebraeuchliche Wort"
+    },
+    {
+      "schluessel": "website.blog.aufStartseite",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.cm.adresse",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.feldArten.link",
+      "grund": "international",
+      "sprachen": [
+        "hu"
+      ]
+    },
+    {
+      "schluessel": "website.blog.felder.branche",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.buttonText",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.finalText",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.finalUeberschrift",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.galerieLinks",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.galerieOben",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.galerieRechts",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.galerieUnten",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.introText",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.introUeberschrift",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.karussell1",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.karussell2",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.karussell3",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.karussell4",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.karussellZeigen",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.kunde",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.vollerTitel",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.websiteLink",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.filter",
+      "grund": "international",
+      "sprachen": [
+        "hr"
+      ]
+    },
+    {
+      "schluessel": "website.blog.layouts",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "mt",
+        "pt"
+      ]
+    },
+    {
+      "schluessel": "website.blog.status",
+      "grund": "international",
+      "sprachen": [
+        "mt",
+        "pt",
+        "ro",
+        "sl"
+      ]
+    },
+    {
+      "schluessel": "website.blog.titel",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.titelbild",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.cms.filter",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "et",
+        "hr",
+        "nl",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "website.cms.status",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "hr",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "website.cms.statusLive",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "fi",
+        "it",
+        "mt",
+        "nl",
+        "ro",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "website.cms.typ.link",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "et",
+        "hu",
+        "it",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "ro"
+      ]
+    },
+    {
+      "schluessel": "website.felder.anordnungRaster",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "schluessel": "website.menue.schema",
+      "grund": "international",
+      "sprachen": [
+        "en",
+        "it",
+        "lt",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "website.reiter.cms",
+      "grund": "kuerzel",
+      "sprachen": [
+        "bg",
+        "cs",
+        "da",
+        "el",
+        "en",
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "ga",
+        "hr",
+        "hu",
+        "it",
+        "lv",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
       "wert": "+ BCC",
       "grund": "kuerzel",
       "sprachen": "alle"
@@ -95,6 +656,14 @@
     },
     {
       "wert": "Adresse",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "fr"
+      ]
+    },
+    {
+      "wert": "Adresse (https://…)",
       "grund": "international",
       "sprachen": [
         "da",
@@ -2284,6 +2853,14 @@
       ]
     },
     {
+      "wert": "Netto",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "fi"
+      ]
+    },
+    {
       "wert": "Netto: {amount}",
       "grund": "maske",
       "sprachen": [
@@ -3265,6 +3842,16 @@
       ]
     },
     {
+      "wert": "Status",
+      "grund": "international",
+      "sprachen": [
+        "mt",
+        "pt",
+        "ro",
+        "sl"
+      ]
+    },
+    {
       "wert": "Status:",
       "grund": "maske",
       "sprachen": [
@@ -3809,33 +4396,6 @@
       ]
     },
     {
-      "schluessel": "amenities.bar",
-      "grund": "international",
-      "sprachen": [
-        "pl"
-      ]
-    },
-    {
-      "schluessel": "amenities.fitness",
-      "grund": "international",
-      "sprachen": [
-        "pl"
-      ]
-    },
-    {
-      "schluessel": "common.languages.hr",
-      "grund": "international",
-      "sprachen": [
-        "nl"
-      ],
-      "notiz": "Sprachname; nl schreibt ihn wortgleich"
-    },
-    {
-      "schluessel": "finance.TechnicalTemplate.professionalServices",
-      "grund": "technisch",
-      "sprachen": "alle"
-    },
-    {
       "wert": "ft²",
       "grund": "kuerzel",
       "sprachen": [
@@ -3892,187 +4452,6 @@
         "da",
         "sv"
       ]
-    },
-    {
-      "schluessel": "inbox.aiTone_neutral",
-      "grund": "international",
-      "sprachen": [
-        "da",
-        "en",
-        "sv"
-      ]
-    },
-    {
-      "schluessel": "inbox.kiBadgeAutomatic",
-      "grund": "international",
-      "sprachen": [
-        "nl"
-      ]
-    },
-    {
-      "schluessel": "inbox.kiBadgeEscalation",
-      "grund": "international",
-      "sprachen": [
-        "da"
-      ]
-    },
-    {
-      "schluessel": "inbox.kiColCategory",
-      "grund": "international",
-      "sprachen": [
-        "cs"
-      ]
-    },
-    {
-      "schluessel": "inbox.kiColFact",
-      "grund": "international",
-      "sprachen": [
-        "cs",
-        "et",
-        "pl",
-        "sk"
-      ]
-    },
-    {
-      "schluessel": "inbox.kiColProperty",
-      "grund": "international",
-      "sprachen": [
-        "cs",
-        "et",
-        "hr",
-        "sk",
-        "sl",
-        "sv"
-      ]
-    },
-    {
-      "schluessel": "inbox.kiColRule",
-      "grund": "international",
-      "sprachen": [
-        "da",
-        "nl",
-        "sv"
-      ]
-    },
-    {
-      "schluessel": "inbox.kiContextTab",
-      "grund": "international",
-      "sprachen": [
-        "cs",
-        "sk",
-        "sv"
-      ]
-    },
-    {
-      "schluessel": "inbox.kiDeliveryAutoShort",
-      "grund": "international",
-      "sprachen": [
-        "nl"
-      ]
-    },
-    {
-      "schluessel": "inbox.kiFieldActive",
-      "grund": "international",
-      "sprachen": [
-        "da",
-        "sv"
-      ]
-    },
-    {
-      "schluessel": "inbox.kiFieldName",
-      "grund": "international",
-      "sprachen": [
-        "en"
-      ]
-    },
-    {
-      "schluessel": "inbox.kiFieldTitle",
-      "grund": "international",
-      "sprachen": [
-        "da",
-        "nl",
-        "sv"
-      ]
-    },
-    {
-      "schluessel": "inbox.kiFilter",
-      "grund": "international",
-      "sprachen": [
-        "da",
-        "en",
-        "et",
-        "hr",
-        "nl",
-        "sk",
-        "sl",
-        "sv"
-      ]
-    },
-    {
-      "schluessel": "inbox.kiImportPdfMax",
-      "grund": "kuerzel",
-      "sprachen": [
-        "cs",
-        "en",
-        "hu",
-        "it",
-        "nl",
-        "ro",
-        "sk",
-        "sv"
-      ],
-      "notiz": "PDF und MB sind Kuerzel, max. lautet in diesen Sprachen gleich"
-    },
-    {
-      "schluessel": "inbox.kiLength_standard",
-      "grund": "international",
-      "sprachen": [
-        "da",
-        "en",
-        "et",
-        "fr",
-        "hu",
-        "it",
-        "mt",
-        "ro",
-        "sv"
-      ]
-    },
-    {
-      "schluessel": "inbox.kiRuleCopyName",
-      "grund": "international",
-      "sprachen": [
-        "nl"
-      ]
-    },
-    {
-      "schluessel": "inbox.kiTestAs",
-      "grund": "international",
-      "sprachen": [
-        "nl"
-      ]
-    },
-    {
-      "schluessel": "inbox.kiTestGuest",
-      "grund": "international",
-      "sprachen": [
-        "nl"
-      ]
-    },
-    {
-      "schluessel": "inbox.kiTestRule",
-      "grund": "international",
-      "sprachen": [
-        "da",
-        "nl",
-        "sv"
-      ]
-    },
-    {
-      "schluessel": "inbox.kiUsedTimes",
-      "grund": "maske",
-      "sprachen": "alle",
-      "notiz": "Zahl plus Multiplikationszeichen - in keiner Sprache ein Wort"
     },
     {
       "wert": "jun., sen., MBA",
@@ -4163,359 +4542,6 @@
       "sprachen": "alle"
     },
     {
-      "schluessel": "reviews.aiDayCounts",
-      "grund": "international",
-      "sprachen": [
-        "da",
-        "sv"
-      ],
-      "notiz": "alle drei Woerter lauten in da/sv gleich; Wort fuer Wort geprueft am 30.08.2026. en war ein echter Uebersetzungsfehler (endete auf 'neutral' statt 'negative') und wurde behoben, nicht hier eingetragen"
-    },
-    {
-      "schluessel": "reviews.aiNegative",
-      "grund": "international",
-      "sprachen": [
-        "da",
-        "ro"
-      ],
-      "notiz": "da/ro schreiben 'Negativ' wortgleich"
-    },
-    {
-      "schluessel": "reviews.aiNeutral",
-      "grund": "international",
-      "sprachen": [
-        "da",
-        "en",
-        "es"
-      ],
-      "notiz": "'Neutral' lautet in diesen Sprachen gleich"
-    },
-    {
-      "schluessel": "reviews.aiPositive",
-      "grund": "international",
-      "sprachen": [
-        "da"
-      ],
-      "notiz": "da schreibt 'Positiv' wortgleich"
-    },
-    {
-      "schluessel": "reviews.autoRatingLabel",
-      "grund": "international",
-      "sprachen": [
-        "fr"
-      ],
-      "notiz": "franzoesisch 'Note' = Note, echtes Homograph"
-    },
-    {
-      "schluessel": "reviews.column.replied",
-      "grund": "international",
-      "sprachen": [
-        "da",
-        "en",
-        "hr",
-        "mt",
-        "nl",
-        "pl",
-        "ro",
-        "sl",
-        "sv"
-      ],
-      "notiz": "'Status' ist in diesen Sprachen das gebraeuchliche Wort"
-    },
-    {
-      "schluessel": "reviews.column.scale",
-      "grund": "international",
-      "sprachen": [
-        "da",
-        "hr",
-        "lv",
-        "mt",
-        "pl",
-        "sv"
-      ],
-      "notiz": "'Skala' lautet in diesen Sprachen gleich"
-    },
-    {
-      "schluessel": "reviews.column.score_5",
-      "grund": "international",
-      "sprachen": [
-        "fr"
-      ],
-      "notiz": "franzoesisch 'Note' = Note, echtes Homograph"
-    },
-    {
-      "schluessel": "reviews.filterRating",
-      "grund": "international",
-      "sprachen": [
-        "fr"
-      ],
-      "notiz": "franzoesisch 'Note' = Note, echtes Homograph"
-    },
-    {
-      "schluessel": "reviews.filters",
-      "grund": "international",
-      "sprachen": [
-        "da",
-        "en",
-        "et",
-        "hr",
-        "nl",
-        "sk",
-        "sl",
-        "sv"
-      ],
-      "notiz": "'Filter' ist in diesen Sprachen das gebraeuchliche Wort"
-    },
-    {
-      "schluessel": "website.blog.aufStartseite",
-      "grund": "vorlagenfeld",
-      "sprachen": "alle"
-    },
-    {
-      "schluessel": "website.blog.cm.adresse",
-      "grund": "vorlagenfeld",
-      "sprachen": "alle"
-    },
-    {
-      "schluessel": "website.blog.feldArten.link",
-      "grund": "international",
-      "sprachen": [
-        "hu"
-      ]
-    },
-    {
-      "schluessel": "website.blog.felder.branche",
-      "grund": "vorlagenfeld",
-      "sprachen": "alle"
-    },
-    {
-      "schluessel": "website.blog.felder.buttonText",
-      "grund": "vorlagenfeld",
-      "sprachen": "alle"
-    },
-    {
-      "schluessel": "website.blog.felder.finalText",
-      "grund": "vorlagenfeld",
-      "sprachen": "alle"
-    },
-    {
-      "schluessel": "website.blog.felder.finalUeberschrift",
-      "grund": "vorlagenfeld",
-      "sprachen": "alle"
-    },
-    {
-      "schluessel": "website.blog.felder.galerieLinks",
-      "grund": "vorlagenfeld",
-      "sprachen": "alle"
-    },
-    {
-      "schluessel": "website.blog.felder.galerieOben",
-      "grund": "vorlagenfeld",
-      "sprachen": "alle"
-    },
-    {
-      "schluessel": "website.blog.felder.galerieRechts",
-      "grund": "vorlagenfeld",
-      "sprachen": "alle"
-    },
-    {
-      "schluessel": "website.blog.felder.galerieUnten",
-      "grund": "vorlagenfeld",
-      "sprachen": "alle"
-    },
-    {
-      "schluessel": "website.blog.felder.introText",
-      "grund": "vorlagenfeld",
-      "sprachen": "alle"
-    },
-    {
-      "schluessel": "website.blog.felder.introUeberschrift",
-      "grund": "vorlagenfeld",
-      "sprachen": "alle"
-    },
-    {
-      "schluessel": "website.blog.felder.karussell1",
-      "grund": "vorlagenfeld",
-      "sprachen": "alle"
-    },
-    {
-      "schluessel": "website.blog.felder.karussell2",
-      "grund": "vorlagenfeld",
-      "sprachen": "alle"
-    },
-    {
-      "schluessel": "website.blog.felder.karussell3",
-      "grund": "vorlagenfeld",
-      "sprachen": "alle"
-    },
-    {
-      "schluessel": "website.blog.felder.karussell4",
-      "grund": "vorlagenfeld",
-      "sprachen": "alle"
-    },
-    {
-      "schluessel": "website.blog.felder.karussellZeigen",
-      "grund": "vorlagenfeld",
-      "sprachen": "alle"
-    },
-    {
-      "schluessel": "website.blog.felder.kunde",
-      "grund": "vorlagenfeld",
-      "sprachen": "alle"
-    },
-    {
-      "schluessel": "website.blog.felder.vollerTitel",
-      "grund": "vorlagenfeld",
-      "sprachen": "alle"
-    },
-    {
-      "schluessel": "website.blog.felder.websiteLink",
-      "grund": "vorlagenfeld",
-      "sprachen": "alle"
-    },
-    {
-      "schluessel": "website.blog.filter",
-      "grund": "international",
-      "sprachen": [
-        "hr"
-      ]
-    },
-    {
-      "schluessel": "website.blog.layouts",
-      "grund": "international",
-      "sprachen": [
-        "da",
-        "en",
-        "mt",
-        "pt"
-      ]
-    },
-    {
-      "schluessel": "website.blog.status",
-      "grund": "international",
-      "sprachen": [
-        "mt",
-        "pt",
-        "ro",
-        "sl"
-      ]
-    },
-    {
-      "schluessel": "website.blog.titel",
-      "grund": "vorlagenfeld",
-      "sprachen": "alle"
-    },
-    {
-      "schluessel": "website.blog.titelbild",
-      "grund": "vorlagenfeld",
-      "sprachen": "alle"
-    },
-    {
-      "schluessel": "website.cms.filter",
-      "grund": "international",
-      "sprachen": [
-        "da",
-        "en",
-        "et",
-        "hr",
-        "nl",
-        "sk",
-        "sl",
-        "sv"
-      ]
-    },
-    {
-      "schluessel": "website.cms.status",
-      "grund": "international",
-      "sprachen": [
-        "da",
-        "en",
-        "hr",
-        "mt",
-        "nl",
-        "pl",
-        "pt",
-        "sl",
-        "sv"
-      ]
-    },
-    {
-      "schluessel": "website.cms.statusLive",
-      "grund": "international",
-      "sprachen": [
-        "da",
-        "en",
-        "fi",
-        "it",
-        "mt",
-        "nl",
-        "ro",
-        "sv"
-      ]
-    },
-    {
-      "schluessel": "website.cms.typ.link",
-      "grund": "international",
-      "sprachen": [
-        "da",
-        "en",
-        "et",
-        "hu",
-        "it",
-        "mt",
-        "nl",
-        "pl",
-        "pt",
-        "ro"
-      ]
-    },
-    {
-      "schluessel": "website.felder.anordnungRaster",
-      "grund": "international",
-      "sprachen": [
-        "nl"
-      ]
-    },
-    {
-      "schluessel": "website.menue.schema",
-      "grund": "international",
-      "sprachen": [
-        "en",
-        "it",
-        "lt",
-        "nl",
-        "sv"
-      ]
-    },
-    {
-      "schluessel": "website.reiter.cms",
-      "grund": "kuerzel",
-      "sprachen": [
-        "bg",
-        "cs",
-        "da",
-        "el",
-        "en",
-        "es",
-        "et",
-        "fi",
-        "fr",
-        "ga",
-        "hr",
-        "hu",
-        "it",
-        "lv",
-        "mt",
-        "nl",
-        "pl",
-        "pt",
-        "ro",
-        "sk",
-        "sl",
-        "sv"
-      ]
-    },
-    {
       "wert": "{size} ft² · ",
       "grund": "kuerzel",
       "sprachen": [
@@ -4569,24 +4595,6 @@
         "sk",
         "sl",
         "sv"
-      ]
-    },
-    {
-      "wert": "Netto",
-      "grund": "international",
-      "sprachen": [
-        "cs",
-        "fi"
-      ]
-    },
-    {
-      "wert": "Status",
-      "grund": "international",
-      "sprachen": [
-        "mt",
-        "pt",
-        "ro",
-        "sl"
       ]
     }
   ]

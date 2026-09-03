@@ -14,7 +14,14 @@ from pydantic import BaseModel, EmailStr, Field, SecretStr, field_validator, mod
 from src.core.countries import is_iso2_country
 from src.core.mail_sprache import SUPPORTED, normalisieren
 
-from .kanaele import SOCIAL_PLATTFORMEN, Plattform, plattform_aus_url
+from .kanaele import (
+    SOCIAL_PLATTFORMEN,
+    Plattform,
+    handle_aus_url,
+    handle_bereinigen,
+    plattform_aus_url,
+    profil_url,
+)
 
 # Der Code, wie er in Links steht. Groß-/Kleinschreibung ist egal — der Server
 # normalisiert auf Großbuchstaben. Die Grenzen decken sich mit dem CHECK in
@@ -55,7 +62,15 @@ def _http_url(v: str) -> str:
 
 
 class SocialKanal(BaseModel):
-    """Ein Kanal des Partners: Plattform, Profil-Adresse, optional Handle und Reichweite.
+    """Ein Kanal des Partners: Plattform, Benutzername (Handle) und Reichweite.
+
+    ENTWEDER `handle` ODER `url` genügt — nicht beides. Bei den echten
+    Netzwerken (`HANDLE_PLATTFORMEN`) reicht der Handle, und die Adresse baut
+    der Server daraus; bei generischen Kanälen (Website, Blog, Newsletter,
+    Podcast, Sonstiges) und bei WhatsApp gibt es keinen Handle, dort bleibt die
+    Adresse Pflicht. Wer eine Adresse schickt, behält sie; der Handle wird dann
+    daraus gelesen. Grund für den Vorrang des Handles: Bewerber kennen ihren
+    Benutzernamen, nicht die Profil-URL (03.09.2026, siehe kanaele.py).
 
     Die Reichweite (`followers`) ist eine Selbstauskunft — bis der Partner das
     Konto verbindet (0521): dann trägt `followers` den letzten Snapshot,
@@ -66,7 +81,7 @@ class SocialKanal(BaseModel):
     """
 
     platform: Plattform
-    url: str = Field(min_length=4, max_length=500)
+    url: str = Field(default="", max_length=500)
     handle: str | None = Field(default=None, max_length=100)
     followers: int | None = Field(default=None, ge=0, le=1_000_000_000)
     followers_self_reported: int | None = Field(default=None, ge=0, le=1_000_000_000)
@@ -77,13 +92,39 @@ class SocialKanal(BaseModel):
     @field_validator("url")
     @classmethod
     def _url_http(cls, v: str) -> str:
-        return _http_url(v)
+        # Leer ist erlaubt (dann führt der Handle); ein GESETZTER Wert muss
+        # http(s) sein — Wurzel 8, er wird zum Link im Backoffice.
+        return _http_url(v) if v.strip() else ""
 
     @field_validator("handle")
     @classmethod
     def _handle(cls, v: str | None) -> str | None:
-        w = (v or "").strip().lstrip("@")
-        return w or None
+        return handle_bereinigen(v)
+
+    @model_validator(mode="after")
+    def _adresse_oder_handle(self) -> SocialKanal:
+        """Handle und Adresse zur Deckung bringen — genau EINE Quelle genügt."""
+        if not self.url and not self.handle:
+            raise ValueError("Benutzername oder Adresse des Kanals fehlt.")
+        if self.url:
+            # Die ADRESSE entscheidet über die Plattform, nicht das mitgeschickte
+            # Feld: eine youtube.com-Adresse unter `platform: instagram` wäre ein
+            # Kanal mit fremdem Logo und fremder Reichweitenprüfung. Das Formular
+            # korrigiert es beim Tippen — ein direkter API-Aufruf tat es nicht.
+            erkannt = plattform_aus_url(self.url)
+            if erkannt is not None:
+                self.platform = erkannt  # type: ignore[assignment]
+        if self.url and not self.handle:
+            self.handle = handle_aus_url(self.url)
+        if not self.url:
+            gebaut = profil_url(self.platform, self.handle or "")
+            if gebaut is None:
+                raise ValueError(
+                    "Für diesen Kanal ist die vollständige Adresse nötig "
+                    "(Website, Blog, Newsletter, Podcast, WhatsApp, Sonstiges)."
+                )
+            self.url = gebaut
+        return self
 
 
 def _kanaele_pruefen(kanaele: list[SocialKanal]) -> list[SocialKanal]:
@@ -127,6 +168,13 @@ class PartnerBewerbung(BaseModel):
     pitch: str | None = Field(default=None, max_length=2000)
     terms_accepted: bool
     terms_version: str = Field(min_length=1, max_length=40)
+    # Newsletter: FREIWILLIG und getrennt von der Pflicht-Zustimmung oben.
+    # Standard false — eine vorausgewählte Box ist keine Einwilligung
+    # (DSGVO Art. 4 Nr. 11, EuGH „Planet49"). `newsletter_consent_text` ist der
+    # Wortlaut, den der Bewerber angehakt hat; er wird als Nachweis gespeichert
+    # (Art. 7 Abs. 1). Ohne Häkchen wird nichts eingetragen.
+    newsletter_opt_in: bool = False
+    newsletter_consent_text: str | None = Field(default=None, max_length=1000)
     # reCAPTCHA-Enterprise-Token (Aktion "partner_bewerbung").
     captcha_token: str | None = Field(default=None, max_length=4000)
     # Honigtopf: ein Feld, das kein Mensch sieht. Gefüllt → Bot.

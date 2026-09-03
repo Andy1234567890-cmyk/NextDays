@@ -51,6 +51,11 @@ from .sperrantrag_kollisionen import (
     konflikt_text,
     naechste_freie_spanne,
 )
+from .sperrantrag_leistungen import (
+    leistungen_alle_setzen,
+    leistungen_entscheiden,
+    leistungen_pruefen,
+)
 from .sperrantrag_vorgaenge import VorgaengeMixin
 
 log = get_logger("nextdays.sperrantraege")
@@ -316,7 +321,7 @@ class SperrantragService(VorgaengeMixin):
             return {}
         zeilen = (
             self._db.table("block_request_services")
-            .select("block_request_id, rule_id")
+            .select("block_request_id, rule_id, status, entscheidungsnotiz")
             .in_("block_request_id", antrags_ids)
             .execute()
         ).data or []
@@ -349,7 +354,16 @@ class SperrantragService(VorgaengeMixin):
             if rule_id not in namen:
                 continue
             out.setdefault(str(z["block_request_id"]), []).append(
-                BestellteLeistungItem(rule_id=rule_id, name=namen[rule_id])
+                BestellteLeistungItem(
+                    rule_id=rule_id,
+                    name=namen[rule_id],
+                    # 0538: der Zustand der Genehmigung je Leistung. Der Fake
+                    # der Tests kennt keinen DB-Default, deshalb der Rueckfall
+                    # auf den Anfangszustand — er ist KEIN erfundener Wert,
+                    # sondern der, den die Spalte selbst setzt.
+                    status=str(z.get("status") or "angefragt"),
+                    entscheidungsnotiz=z.get("entscheidungsnotiz"),
+                )
             )
         return out
 
@@ -501,6 +515,9 @@ class SperrantragService(VorgaengeMixin):
         # Genehmigung, ohne den Antrag angefasst zu haben — ein Claim, den man
         # gleich wieder zurückrollt, ist eine überflüssige Zustandsänderung.
         owner_id = self._eigentuemer(ctx, str(antrag["property_id"]))
+        # Dasselbe für die Leistungen (0538), VOR dem Claim: ein 422 hier
+        # lässt den Antrag unberührt.
+        leistungen = leistungen_pruefen(self._db, antrag_id, req)
         try:
             geclaimt = self._claim(
                 antrag_id,
@@ -558,6 +575,11 @@ class SperrantragService(VorgaengeMixin):
             # gescheitertes Anlegen, sonst bliebe der Antrag „approved" ohne
             # eine einzige belegte Nacht.
             self._kollisionen_riegel(ctx, antrag, rng, antrag_id)
+            # Leistungen VOR der Eigennutzung entscheiden (0538): deren
+            # Anlegen stößt `sync_for_reservation` an, das den Zustand der
+            # Bestellzeilen liest — auf `angefragt` entstünde keine Aufgabe.
+            # Im try: scheitert die Belegung, rollt `_zuruecksetzen` sie mit.
+            leistungen_entscheiden(self._db, ctx, antrag_id, leistungen)
             self._eigennutzung_anlegen(ctx, antrag, owner_id, rng)
         except BaseException as exc:
             log.warning(
@@ -942,6 +964,9 @@ class SperrantragService(VorgaengeMixin):
                 "keine zweite Entscheidung möglich.",
                 status_code=409,
             )
+        # Mit dem Antrag fallen seine Bestellungen (0538, Wurzel 1): sonst
+        # stünde „Endreinigung: angefragt" unter einer Ablehnung.
+        leistungen_alle_setzen(self._db, ctx, antrag_id, "abgelehnt", req.note)
         log.info(
             "sperrantrag_abgelehnt", tenant_id=ctx.tenant_id, antrag_id=antrag_id
         )
@@ -1005,6 +1030,9 @@ class SperrantragService(VorgaengeMixin):
                 f"(Antrag ist {_status_text(antrag.get('status'))}).",
                 status_code=409,
             )
+        # Mit der Sperre fällt die Arbeit dazu (0538): die Aufgaben über den
+        # Storno der Eigennutzung, die Bestellzeilen hier.
+        leistungen_alle_setzen(self._db, ctx, antrag_id, "abgelehnt", req.note)
         log.info(
             "sperrantrag_widerruf_claim_gesetzt",
             tenant_id=ctx.tenant_id,
@@ -1295,6 +1323,9 @@ class SperrantragService(VorgaengeMixin):
         ).eq("id", antrag_id).eq("tenant_id", ctx.tenant_id).eq(
             "status", "approved"
         ).execute()
+        # Die Leistungsentscheidungen gehören zum selben Claim (0538) und
+        # gehen mit ihm zurück.
+        leistungen_alle_setzen(self._db, ctx, antrag_id, "angefragt", None)
 
     def _auf_genehmigt_zurueck(self, ctx: AuthContext, antrag_id: str) -> None:
         """Widerruf aufheben: der Antrag bleibt genehmigt (Sperre steht).

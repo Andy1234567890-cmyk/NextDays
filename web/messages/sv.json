@@ -1888,7 +1888,12 @@
       "requestLift": "Begär upphävande",
       "liftRequested": "Upphävande begärt — förvaltningen beslutar.",
       "liftPending": "Upphävande begärt. Spärren gäller tills förvaltningen har beslutat.",
-      "liftRejected": "Upphävande nekat — spärren kvarstår"
+      "liftRejected": "Upphävande nekat — spärren kvarstår",
+      "serviceStatus": {
+        "angefragt": "väntar på godkännande",
+        "genehmigt": "godkänd",
+        "abgelehnt": "nekad"
+      }
     },
     "meter": {
       "title": "Registrera mätarställning",
@@ -5253,7 +5258,9 @@
         "after_check_in_24h": "Efter incheckning (max 24 timmar)",
         "check_out": "Vid utcheckning",
         "days_before_check_in": "Dagar före incheckning",
-        "days_after_check_out": "Dagar efter utcheckning"
+        "days_after_check_out": "Dagar efter utcheckning",
+        "arrival_day": "På ankomstdagen",
+        "departure_day": "På avresedagen"
       },
       "triggerHint": {
         "booking_confirmed": "Uppgiften skapas så snart bokningen bekräftas.",
@@ -5261,7 +5268,9 @@
         "after_check_in_24h": "24 timmar efter incheckning — men aldrig efter utcheckning: vid korta vistelser slutar uppgiften vid avresan.",
         "check_out": "Uppgiften är kopplad till bokningens utcheckning.",
         "days_before_check_in": "Uppgiften skapas angivet antal dagar före incheckning.",
-        "days_after_check_out": "Uppgiften skapas angivet antal dagar efter utcheckning."
+        "days_after_check_out": "Uppgiften skapas angivet antal dagar efter utcheckning.",
+        "arrival_day": "Uppgiften utförs på ankomstdagen. Du bestämmer tidpunkten här – gästens incheckningstid spelar ingen roll.",
+        "departure_day": "Uppgiften utförs på avresedagen. Du bestämmer tidpunkten här – gästens utcheckningstid spelar ingen roll."
       },
       "offsetDays": "Dagar",
       "periodLabel": "Ange start- och slutdatum",
@@ -5308,7 +5317,8 @@
       "sourceLanguageLabel": "Namnets språk",
       "sourceLanguageEmpty": "Ej angivet",
       "sourceLanguageHint": "Namnet översätts automatiskt för läsare med andra språk — internt förblir det som du skrev det.",
-      "sourceLanguageMissing": "Utan uppgift översätts namnet inte: ägare och personal ser det exakt som det står här."
+      "sourceLanguageMissing": "Utan uppgift översätts namnet inte: ägare och personal ser det exakt som det står här.",
+      "clockLabel": "Tid"
     },
     "taskPage": {
       "backToMyTasks": "Till mina uppgifter",
@@ -7275,13 +7285,22 @@
         "terminationByOwner": "Ägaren förklarade detta själv i ansökan.",
         "terminationHint": "Ägaren vill säga upp kontraktet, inte bara blockera nätter. Istället för att blockera åtkomst kommer kontraktets slutdatum att sättas direkt på fastigheten – och därmed avslutas marknadsföringen på alla portaler.",
         "terminationReady": "Uppsägningsbeskedet kan registreras.",
-        "terminationSummary": "Kontraktet slutar från och med {datum} — från och med denna dag kommer fastigheten inte längre att säljas någonstans."
+        "terminationSummary": "Kontraktet slutar från och med {datum} — från och med denna dag kommer fastigheten inte längre att säljas någonstans.",
+        "services": "Beställda tjänster",
+        "servicesHint": "Fatta beslut om varje tjänst individuellt. Endast det du godkänner blir en uppgift och faktureras – själva spärren är oberoende av detta.",
+        "serviceNotePlaceholder": "Motivering för ägaren (rekommenderas vid avslag)",
+        "servicesTermination": "Vid en uppsägning uppstår ingen vistelse – de beställda tjänsterna bortfaller."
       },
       "terminationRequested": "Ägaren vill säga upp avtalet.",
       "terminationSet": "Kontraktet slutar den {datum}.",
       "servicesOrdered": "Beställda tjänster",
       "servicesNone": "Inga tjänster beställda — ingen uppgift skapas.",
-      "liftRequested": "Vill häva spärren"
+      "liftRequested": "Vill häva spärren",
+      "serviceStatus": {
+        "angefragt": "förfrågad",
+        "genehmigt": "godkänd",
+        "abgelehnt": "nekad"
+      }
     }
   },
   "seasons": {

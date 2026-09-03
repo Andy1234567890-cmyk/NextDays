@@ -2397,20 +2397,22 @@
     "ustIdHinweis": "Tiks pārbaudīts pret ES VIES sistēmu. Bez apstiprināta numura uzņēmumiem netiek veikti maksājumi.",
     "kanaele": {
       "titel": "Jūsu sociālo mediju konti",
-      "hinweis": "Obligāti: vismaz viens sociālo mediju konts (Instagram, TikTok, YouTube, Facebook, LinkedIn …) ar adresi, lietotājvārdu un sasniedzamību (sekotāji). Papildus var norādīt vietni, emuāru vai jaunumu vēstuli. Mēs pārbaudām kontus pirms apstiprināšanas.",
+      "hinweis": "Obligāti: vismaz viens sociālo mediju konts (Instagram, TikTok, YouTube, Facebook, LinkedIn u.c.) ar lietotājvārdu un sasniedzamību (sekotājiem). Pietiek ar lietotājvārdu — profila adresi pievienosim mēs. Papildus varat norādīt vietni, emuāru vai jaunumu vēstuli. Mēs pārbaudīsim kontus pirms apstiprināšanas.",
       "plattform": "Platforma",
-      "handle": "Lietotājvārds (pēc izvēles)",
       "reichweite": "Sasniedzamība (sekotāji)",
       "hinzufuegen": "Pievienot kanālu",
       "entfernen": "Noņemt kanālu",
-      "socialPflicht": "Obligāti ir vismaz viens sociālo mediju konts ar sasniedzamību — tikai vietne nav pietiekama.",
+      "socialPflicht": "Obligāti ir vismaz viens sociālo mediju konts ar lietotājvārdu un sasniedzamību — ar vietni vien nepietiek.",
       "plattformen": {
         "website": "Vietne",
         "blog": "Emuārs",
         "newsletter": "Jaunumu vēstule",
         "podcast": "Podkāsts",
         "other": "Cits"
-      }
+      },
+      "handlePflicht": "Lietotājvārds",
+      "handleUngueltig": "Lietotājvārdā var būt tikai burti, cipari, punkti, pasvītras un defises — bez @ un bez atstarpēm.",
+      "adresse": "Adrese (https://…)"
     },
     "plattform": {
       "website": "Vietne",
@@ -2430,7 +2432,7 @@
     "sendet": "Tiek sūtīts…",
     "pruefungHinweis": "Šī veidlapa ir aizsargāta ar reCAPTCHA. Pēc nosūtīšanas mūsu partneru komanda pārbaudīs jūsu kontus un sasniedzamību; jūs saņemsiet e-pastu ar lēmumu.",
     "fehler": {
-      "social": "Lūdzu, norādiet vismaz vienu sociālo mediju kontu ar adresi un sasniedzamību.",
+      "social": "Lūdzu, norādiet vismaz vienu sociālo mediju kontu ar lietotājvārdu un sasniedzamību.",
       "doppelt": "Šai e-pasta adresei jau ir pieteikums. Lūdzu, piesakieties partneru informācijas panelī.",
       "eingabe": "Lūdzu, pārbaudiet ievadītos datus.",
       "captcha": "Spama aizsardzības pārbaude neizdevās. Lūdzu, atsvaidziniet lapu un mēģiniet vēlreiz.",
@@ -2440,6 +2442,8 @@
       "titel": "Pieteikums saņemts",
       "text": "Paldies! Mēs personīgi pārbaudīsim jūsu kontus un sasniedzamību un sazināsimies ar jums pa e-pastu. Jūsu partneru informācijas panelis ir pieejams ar jūsu e-pastu un paroli — saites un kodi kļūs aktīvi pēc apstiprināšanas.",
       "login": "Uz partneru pieteikšanos"
-    }
+    },
+    "newsletter": "Sūtiet man jaunumus par partnerprogrammu, jaunus reklāmas materiālus un produktu atjauninājumus pa e-pastu.",
+    "newsletterFreiwillig": "Brīvprātīgi, var atteikties jebkurā laikā."
   }
 }

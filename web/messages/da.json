@@ -1888,7 +1888,12 @@
       "requestLift": "Anmod om ophævelse",
       "liftRequested": "Ophævelse anmodet — administrationen træffer afgørelse.",
       "liftPending": "Ophævelse anmodet. Spærringen gælder, indtil administrationen har truffet afgørelse.",
-      "liftRejected": "Ophævelse afvist — spærringen forbliver"
+      "liftRejected": "Ophævelse afvist — spærringen forbliver",
+      "serviceStatus": {
+        "angefragt": "afventer godkendelse",
+        "genehmigt": "godkendt",
+        "abgelehnt": "afvist"
+      }
     },
     "meter": {
       "title": "Registrer måleraflæsning",
@@ -5253,7 +5258,9 @@
         "after_check_in_24h": "Efter check-in (maks. 24 timer)",
         "check_out": "Ved check-ud",
         "days_before_check_in": "Dage før check-in",
-        "days_after_check_out": "Dage efter check-ud"
+        "days_after_check_out": "Dage efter check-ud",
+        "arrival_day": "På ankomstdagen",
+        "departure_day": "På afrejsedagen"
       },
       "triggerHint": {
         "booking_confirmed": "Opgaven oprettes, så snart reservationen er bekræftet.",
@@ -5261,7 +5268,9 @@
         "after_check_in_24h": "24 timer efter check-in — dog aldrig efter check-ud: ved korte ophold slutter opgaven ved afrejsen.",
         "check_out": "Opgaven knyttes til reservationens check-ud.",
         "days_before_check_in": "Opgaven oprettes det angivne antal dage før check-in.",
-        "days_after_check_out": "Opgaven oprettes det angivne antal dage efter check-ud."
+        "days_after_check_out": "Opgaven oprettes det angivne antal dage efter check-ud.",
+        "arrival_day": "Opgaven er på ankomstdagen. Du angiver tidspunktet her – gæstens check-in-tid er irrelevant.",
+        "departure_day": "Opgaven er på afrejsedagen. Du angiver tidspunktet her – gæstens check-ud-tid er irrelevant."
       },
       "offsetDays": "Dage",
       "periodLabel": "Start- og slutdato",
@@ -5308,7 +5317,8 @@
       "sourceLanguageLabel": "Navnets sprog",
       "sourceLanguageEmpty": "Ikke angivet",
       "sourceLanguageHint": "Navnet oversættes automatisk for læsere med andre sprog — internt bliver det, som du har skrevet det.",
-      "sourceLanguageMissing": "Uden angivelse oversættes navnet ikke: ejere og medarbejdere ser det præcis, som det står her."
+      "sourceLanguageMissing": "Uden angivelse oversættes navnet ikke: ejere og medarbejdere ser det præcis, som det står her.",
+      "clockLabel": "Tid"
     },
     "taskPage": {
       "backToMyTasks": "Til mine opgaver",
@@ -7275,13 +7285,22 @@
         "terminationByOwner": "Ejeren forklarede dette selv i ansøgningen.",
         "terminationHint": "Ejeren ønsker at opsige kontrakten, ikke blot at blokere overnatninger. I stedet for at blokere adgangen, vil kontraktens slutdato blive fastsat direkte på ejendommen – og dermed afslutte markedsføringen på alle portaler.",
         "terminationReady": "Opsigelsen kan tinglyses.",
-        "terminationSummary": "Kontrakten udløber fra {datum} — fra denne dag og fremefter vil ejendommen ikke længere blive solgt nogen steder."
+        "terminationSummary": "Kontrakten udløber fra {datum} — fra denne dag og fremefter vil ejendommen ikke længere blive solgt nogen steder.",
+        "services": "Bestilte ydelser",
+        "servicesHint": "Beslut om hver ydelse individuelt. Kun det, du godkender, bliver til en opgave og faktureres – selve blokeringen er uafhængig heraf.",
+        "serviceNotePlaceholder": "Begrundelse for ejer (anbefales ved afvisning)",
+        "servicesTermination": "Ved en opsigelse opstår der intet ophold – de bestilte ydelser bortfalder."
       },
       "terminationRequested": "Ejeren ønsker at ophæve kontrakten.",
       "terminationSet": "Kontrakten udløber den {datum}.",
       "servicesOrdered": "Bestilte ydelser",
       "servicesNone": "Ingen ydelser bestilt — der oprettes ingen opgave.",
-      "liftRequested": "Ønsker at ophæve spærringen"
+      "liftRequested": "Ønsker at ophæve spærringen",
+      "serviceStatus": {
+        "angefragt": "Anmodet",
+        "genehmigt": "Godkendt",
+        "abgelehnt": "Afvist"
+      }
     }
   },
   "seasons": {

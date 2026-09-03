@@ -1888,7 +1888,12 @@
       "requestLift": "Richiedi annullamento",
       "liftRequested": "Annullamento richiesto — la direzione decide.",
       "liftPending": "Annullamento richiesto. Il blocco rimane valido fino alla decisione della direzione.",
-      "liftRejected": "Annullamento rifiutato — il blocco rimane"
+      "liftRejected": "Annullamento rifiutato — il blocco rimane",
+      "serviceStatus": {
+        "angefragt": "in attesa di approvazione",
+        "genehmigt": "approvato",
+        "abgelehnt": "rifiutato"
+      }
     },
     "meter": {
       "title": "Registra lettura contatore",
@@ -5253,7 +5258,9 @@
         "after_check_in_24h": "Dopo il check-in (max 24 ore)",
         "check_out": "Al check-out",
         "days_before_check_in": "Giorni prima del check-in",
-        "days_after_check_out": "Giorni dopo il check-out"
+        "days_after_check_out": "Giorni dopo il check-out",
+        "arrival_day": "Il giorno dell'arrivo",
+        "departure_day": "Il giorno della partenza"
       },
       "triggerHint": {
         "booking_confirmed": "L'attività nasce non appena la prenotazione è confermata.",
@@ -5261,7 +5268,9 @@
         "after_check_in_24h": "24 ore dopo il check-in, ma mai oltre il check-out: nei soggiorni brevi l'attività finisce con la partenza.",
         "check_out": "L'attività è legata al check-out della prenotazione.",
         "days_before_check_in": "L'attività nasce il numero di giorni indicato prima del check-in.",
-        "days_after_check_out": "L'attività nasce il numero di giorni indicato dopo il check-out."
+        "days_after_check_out": "L'attività nasce il numero di giorni indicato dopo il check-out.",
+        "arrival_day": "L'attività è il giorno dell'arrivo. L'orario è impostato qui — l'orario di check-in dell'ospite non è rilevante.",
+        "departure_day": "L'attività è il giorno della partenza. L'orario è impostato qui — l'orario di check-out dell'ospite non è rilevante."
       },
       "offsetDays": "Giorni",
       "periodLabel": "Imposta data di inizio e fine",
@@ -5308,7 +5317,8 @@
       "sourceLanguageLabel": "Lingua del nome",
       "sourceLanguageEmpty": "Non indicata",
       "sourceLanguageHint": "Il nome viene tradotto automaticamente per i lettori di altre lingue; internamente resta come lo ha digitato.",
-      "sourceLanguageMissing": "Senza questa indicazione il nome non viene tradotto: proprietari e personale lo vedranno esattamente come appare qui."
+      "sourceLanguageMissing": "Senza questa indicazione il nome non viene tradotto: proprietari e personale lo vedranno esattamente come appare qui.",
+      "clockLabel": "Ora"
     },
     "taskPage": {
       "backToMyTasks": "Alle mie attività",
@@ -7275,13 +7285,22 @@
         "terminationByOwner": "Il proprietario lo ha spiegato personalmente nella domanda.",
         "terminationHint": "Il proprietario desidera rescindere il contratto, non solo bloccare le notti disponibili. Invece di bloccare l'accesso, la data di scadenza del contratto verrà impostata direttamente sulla struttura, interrompendo così la sua promozione su tutti i portali.",
         "terminationReady": "La comunicazione di cessazione del rapporto può essere registrata.",
-        "terminationSummary": "Il contratto scade a partire da {datum}: da oggi in poi, l'immobile non sarà più venduto da nessuna parte."
+        "terminationSummary": "Il contratto scade a partire da {datum}: da oggi in poi, l'immobile non sarà più venduto da nessuna parte.",
+        "services": "Servizi ordinati",
+        "servicesHint": "Decida su ogni servizio singolarmente. Solo ciò che approva diventerà un compito e verrà fatturato — il blocco stesso è indipendente da ciò.",
+        "serviceNotePlaceholder": "Motivazione per il proprietario (consigliato in caso di rifiuto)",
+        "servicesTermination": "In caso di disdetta non si verifica alcun soggiorno — i servizi ordinati vengono annullati."
       },
       "terminationRequested": "Il proprietario desidera rescindere il contratto.",
       "terminationSet": "Il contratto termina il giorno {datum}.",
       "servicesOrdered": "Servizi ordinati",
       "servicesNone": "Nessun servizio ordinato: non verrà creata alcuna attività.",
-      "liftRequested": "Desidera annullare il blocco"
+      "liftRequested": "Desidera annullare il blocco",
+      "serviceStatus": {
+        "angefragt": "richiesto",
+        "genehmigt": "approvato",
+        "abgelehnt": "rifiutato"
+      }
     }
   },
   "seasons": {

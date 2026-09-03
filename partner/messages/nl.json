@@ -288,7 +288,6 @@
   },
   "kanaele": {
     "plattformLabel": "Platform",
-    "handle": "Handle (optioneel)",
     "reichweite": "Bereik (volgers)",
     "hinzufuegen": "Kanaal toevoegen",
     "entfernen": "Kanaal verwijderen",
@@ -299,7 +298,9 @@
       "podcast": "Podcast",
       "other": "Overig"
     },
-    "socialPflicht": "Minimaal één socialmedia-account is verplicht — een website alleen is niet voldoende."
+    "socialPflicht": "Minimaal één socialmedia-account is verplicht — een website alleen is niet voldoende.",
+    "handlePflicht": "Gebruikersnaam",
+    "handleUngueltig": "De gebruikersnaam mag alleen letters, cijfers, punten, onderstreepjes en koppeltekens bevatten — zonder @ en zonder spaties."
   },
   "team": {
     "titel": "Team",

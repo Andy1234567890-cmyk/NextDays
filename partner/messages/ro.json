@@ -288,7 +288,6 @@
   },
   "kanaele": {
     "plattformLabel": "Platformă",
-    "handle": "Nume de utilizator (opțional)",
     "reichweite": "Audiență (urmăritori)",
     "hinzufuegen": "Adăugați canal",
     "entfernen": "Eliminați canal",
@@ -299,7 +298,9 @@
       "podcast": "Podcast",
       "other": "Altele"
     },
-    "socialPflicht": "Este obligatoriu cel puțin un cont de social media – un site web nu este suficient."
+    "socialPflicht": "Este obligatoriu cel puțin un cont de social media — un site web nu este suficient.",
+    "handlePflicht": "Nume de utilizator",
+    "handleUngueltig": "Numele de utilizator poate conține doar litere, cifre, puncte, liniuțe de subliniere și cratime — fără @ și fără spații."
   },
   "team": {
     "titel": "Echipă",

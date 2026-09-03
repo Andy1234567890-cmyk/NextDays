@@ -288,7 +288,6 @@
   },
   "kanaele": {
     "plattformLabel": "Ardán",
-    "handle": "Ainm úsáideora (roghnach)",
     "reichweite": "Sroicheadh (Leanúnaí)",
     "hinzufuegen": "Cuir Cainéal Leis",
     "entfernen": "Bain Cainéal",
@@ -299,7 +298,9 @@
       "podcast": "Podchraoladh",
       "other": "Eile"
     },
-    "socialPflicht": "Tá cuntas meán sóisialta amháin ar a laghad éigeantach — ní leor suíomh Gréasáin amháin."
+    "socialPflicht": "Ní mór cuntas meán sóisialta amháin ar a laghad a bheith ann — ní leor suíomh Gréasáin amháin.",
+    "handlePflicht": "Ainm úsáideora",
+    "handleUngueltig": "Ní féidir ach litreacha, uimhreacha, poncanna, fleiscíní agus fochomharthaí a bheith san ainm úsáideora — gan @ ná spásanna."
   },
   "team": {
     "titel": "Foireann",

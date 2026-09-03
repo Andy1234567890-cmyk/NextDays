@@ -34,6 +34,7 @@ import {
   PRIORITAETEN,
   START_TRIGGER,
   TRIGGER_MIT_TAGEN,
+  TRIGGER_MIT_UHRZEIT,
   WOCHENTAGE,
 } from "@/lib/aufgaben-konstanten";
 import { listProperties } from "@/lib/properties";
@@ -92,6 +93,8 @@ const LEER: RuleInput = {
   end_trigger: null,
   start_offset_minutes: 0,
   end_offset_minutes: 0,
+  start_clock: null,
+  end_clock: null,
   starts_on: null,
   ends_on: null,
   start_time: null,
@@ -169,6 +172,9 @@ export function RuleEditorPage({
           end_trigger: r.end_trigger,
           start_offset_minutes: r.start_offset_minutes,
           end_offset_minutes: r.end_offset_minutes,
+          // Der Server liefert „HH:MM:SS"; das Uhrzeitfeld will „HH:MM".
+          start_clock: r.start_clock ? r.start_clock.slice(0, 5) : null,
+          end_clock: r.end_clock ? r.end_clock.slice(0, 5) : null,
           starts_on: r.starts_on,
           ends_on: r.ends_on,
           start_time: r.start_time ? r.start_time.slice(0, 5) : null,
@@ -377,17 +383,21 @@ export function RuleEditorPage({
             options={START_TRIGGER}
             value={form.start_trigger}
             offsetMinutes={form.start_offset_minutes}
+            uhrzeit={form.start_clock}
             negativ
             onTrigger={(v) => set("start_trigger", v)}
             onOffset={(v) => set("start_offset_minutes", v)}
+            onUhrzeit={(v) => set("start_clock", v)}
           />
           <TriggerFeld
             label={t("ruleEditorPage.endTriggerLabel")}
             options={END_TRIGGER}
             value={form.end_trigger}
             offsetMinutes={form.end_offset_minutes}
+            uhrzeit={form.end_clock}
             onTrigger={(v) => set("end_trigger", v)}
             onOffset={(v) => set("end_offset_minutes", v)}
+            onUhrzeit={(v) => set("end_clock", v)}
           />
         </Block>
       ) : (
@@ -553,20 +563,28 @@ function TriggerFeld({
   options,
   value,
   offsetMinutes,
+  uhrzeit,
   negativ,
   onTrigger,
   onOffset,
+  onUhrzeit,
 }: {
   label: string;
   options: TaskTrigger[];
   value: TaskTrigger | null;
   offsetMinutes: number;
+  uhrzeit: string | null;
   negativ?: boolean;
   onTrigger: (v: TaskTrigger | null) => void;
   onOffset: (v: number) => void;
+  onUhrzeit: (v: string | null) => void;
 }) {
   const t = useTranslations("reservations");
   const brauchtTage = value ? TRIGGER_MIT_TAGEN.includes(value) : false;
+  // Nur die Tages-Anker tragen eine eigene Uhrzeit (0535). Bei „Beim Check-in"
+  // gilt die Uhrzeit der Buchung — ein Feld dafür wäre eine zweite Wahrheit,
+  // die der Server ohnehin verwirft.
+  const brauchtUhrzeit = value ? TRIGGER_MIT_UHRZEIT.includes(value) : false;
   const tage = Math.abs(Math.round(offsetMinutes / MINUTEN_PRO_TAG));
 
   return (
@@ -600,6 +618,18 @@ function TriggerFeld({
               const days = Math.max(0, Number(e.target.value) || 0);
               onOffset(days * MINUTEN_PRO_TAG * (negativ ? -1 : 1));
             }}
+          />
+        </label>
+      )}
+
+      {brauchtUhrzeit && (
+        <label className="flex items-center gap-2 text-sm">
+          <span>{t("ruleEditorPage.clockLabel")}</span>
+          <Input
+            type="time"
+            className="w-32"
+            value={uhrzeit ?? ""}
+            onChange={(e) => onUhrzeit(e.target.value || null)}
           />
         </label>
       )}

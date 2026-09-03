@@ -458,6 +458,16 @@ class MultiRestrictionRowsRequest(BaseModel):
 
 # --- Sperr-Anträge der Eigentümer (Agentur-Sicht, 0332) --------------------
 
+class LeistungEntscheidung(BaseModel):
+    """Die Entscheidung der Agentur ueber EINE bestellte Leistung (0538)."""
+
+    rule_id: str
+    genehmigt: bool
+    # Vor allem bei Ablehnung: der Eigentuemer hat bestellt und muss erfahren,
+    # warum er die Leistung nicht bekommt.
+    notiz: str | None = Field(default=None, max_length=1000)
+
+
 class BlockRequestDecision(BaseModel):
     """Entscheidung über einen Sperrantrag. Die Notiz ist optional und geht als
     Begründung an den Eigentümer (bei Ablehnung fachlich erwartet)."""
@@ -480,6 +490,18 @@ class BlockRequestDecision(BaseModel):
     # Vertrag läuft noch bis Monatsende) wird hier ausdrücklich gesetzt, statt
     # ihn aus dem Antrag zu raten (Wurzel 4).
     vertragsende: date | None = None
+    # Entscheidung JE bestellter Leistung (0538). Bis dahin fuhren die
+    # Bestellungen mit der Genehmigung des Antrags blind mit: Antrag genehmigt
+    # = alle Leistungen genehmigt, ohne dass die Agentur sie im Pruefdialog
+    # ueberhaupt sah. Jetzt entscheidet sie jede einzeln — eine Sperre kann
+    # genehmigt und die Endreinigung dazu abgelehnt sein.
+    #
+    # Hat der Antrag Bestellungen, MUSS fuer jede eine Entscheidung mitkommen
+    # (sonst 422). Eine fehlende Entscheidung als „genehmigt" zu werten waere
+    # genau die blinde Mitgenehmigung, die hier abgestellt wird; sie als
+    # „abgelehnt" zu werten wuerde eine Bestellung wortlos verwerfen. Beides
+    # sind erfundene Werte (Wurzel 4).
+    leistungen: list[LeistungEntscheidung] = Field(default_factory=list, max_length=50)
 
 
 class BestellteLeistungItem(BaseModel):
@@ -491,6 +513,10 @@ class BestellteLeistungItem(BaseModel):
 
     rule_id: str
     name: str
+    # Zustand der Genehmigung (0538): angefragt | genehmigt | abgelehnt.
+    # Nur `genehmigt` wird zur Aufgabe.
+    status: str = "angefragt"
+    entscheidungsnotiz: str | None = None
 
 
 class SperrantragItem(BaseModel):

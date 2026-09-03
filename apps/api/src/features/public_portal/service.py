@@ -2243,7 +2243,7 @@ def bestellungen_laden(
         return {}
     zeilen = (
         db.table("block_request_services")
-        .select("block_request_id, rule_id")
+        .select("block_request_id, rule_id, status, entscheidungsnotiz")
         .in_("block_request_id", antrags_ids)
         .execute()
     ).data or []
@@ -2277,7 +2277,14 @@ def bestellungen_laden(
         if rule_id not in namen:
             continue
         out.setdefault(str(z["block_request_id"]), []).append(
-            BestellteLeistung(rule_id=rule_id, name=namen[rule_id])
+            BestellteLeistung(
+                rule_id=rule_id,
+                name=namen[rule_id],
+                # 0538: was die Agentur entschieden hat. Der Rueckfall ist der
+                # DB-Default der Spalte, kein erfundener Wert (Fake ohne Default).
+                status=str(z.get("status") or "angefragt"),
+                entscheidungsnotiz=z.get("entscheidungsnotiz"),
+            )
         )
     return out
 

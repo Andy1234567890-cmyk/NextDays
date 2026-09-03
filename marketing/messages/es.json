@@ -2397,20 +2397,22 @@
     "ustIdHinweis": "Se verificará con el sistema VIES de la UE. Sin un número confirmado, no se realizarán pagos a empresas.",
     "kanaele": {
       "titel": "Sus cuentas de redes sociales",
-      "hinweis": "Obligatorio: al menos una cuenta de red social (Instagram, TikTok, YouTube, Facebook, LinkedIn…) con dirección, nombre de usuario y alcance (seguidores). Sitio web, blog o boletín informativo son bienvenidos como adicionales. Revisamos las cuentas antes de la aprobación.",
+      "hinweis": "Obligatorio: al menos una cuenta de redes sociales (Instagram, TikTok, YouTube, Facebook, LinkedIn…) con nombre de usuario y alcance (seguidores). El nombre de usuario es suficiente; nosotros añadiremos la dirección del perfil. Se agradece añadir un sitio web, blog o boletín. Revisaremos las cuentas antes de la aprobación.",
       "plattform": "Plataforma",
-      "handle": "Nombre de usuario (opcional)",
       "reichweite": "Alcance (seguidores)",
       "hinzufuegen": "Añadir canal",
       "entfernen": "Eliminar canal",
-      "socialPflicht": "Es obligatorio tener al menos una cuenta de red social con alcance — un sitio web por sí solo no es suficiente.",
+      "socialPflicht": "Es obligatorio tener al menos una cuenta de redes sociales con nombre de usuario y alcance; un sitio web por sí solo no es suficiente.",
       "plattformen": {
         "website": "Sitio web",
         "blog": "Blog",
         "newsletter": "Boletín informativo",
         "podcast": "Podcast",
         "other": "Otros"
-      }
+      },
+      "handlePflicht": "Nombre de usuario",
+      "handleUngueltig": "El nombre de usuario solo puede contener letras, números, puntos, guiones bajos y guiones, sin @ ni espacios.",
+      "adresse": "Dirección (https://…)"
     },
     "plattform": {
       "website": "Sitio web",
@@ -2430,7 +2432,7 @@
     "sendet": "Enviando…",
     "pruefungHinweis": "Este formulario está protegido por reCAPTCHA. Después de enviarlo, nuestro equipo de socios revisará sus cuentas y alcance; recibirá un correo electrónico con la decisión.",
     "fehler": {
-      "social": "Por favor, proporcione al menos una cuenta de redes sociales con dirección y alcance.",
+      "social": "Por favor, indique al menos una cuenta de red social con nombre de usuario y alcance.",
       "doppelt": "Ya existe una solicitud para este correo electrónico. Inicie sesión en el panel de socios.",
       "eingabe": "Por favor, revise sus entradas.",
       "captcha": "La verificación antispam falló. Por favor, recargue la página e inténtelo de nuevo.",
@@ -2440,6 +2442,8 @@
       "titel": "Solicitud recibida",
       "text": "¡Gracias! Revisaremos sus cuentas y alcance personalmente y nos pondremos en contacto por correo electrónico. Su panel de socios es accesible con su correo electrónico y contraseña; los enlaces y códigos se activarán con la aprobación.",
       "login": "Ir al inicio de sesión de socios"
-    }
+    },
+    "newsletter": "Envíenme noticias del programa de socios, nuevos materiales promocionales y actualizaciones de productos por correo electrónico.",
+    "newsletterFreiwillig": "Voluntario, puede darse de baja en cualquier momento."
   }
 }

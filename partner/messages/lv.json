@@ -288,7 +288,6 @@
   },
   "kanaele": {
     "plattformLabel": "Platforma",
-    "handle": "Rokturis (pēc izvēles)",
     "reichweite": "Sasniedzamība (sekotāji)",
     "hinzufuegen": "Pievienot kanālu",
     "entfernen": "Noņemt kanālu",
@@ -299,7 +298,9 @@
       "podcast": "Aplāde",
       "other": "Cits"
     },
-    "socialPflicht": "Vismaz viens sociālo mediju konts ir obligāts — tikai vietne nav pietiekama."
+    "socialPflicht": "Vismaz viens sociālo mediju konts ir obligāts — tikai ar vietni nepietiek.",
+    "handlePflicht": "Lietotājvārds",
+    "handleUngueltig": "Lietotājvārdā drīkst būt tikai burti, cipari, punkti, pasvītras un defises — bez @ un atstarpēm."
   },
   "team": {
     "titel": "Komanda",

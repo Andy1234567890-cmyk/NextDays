@@ -1888,7 +1888,12 @@
       "requestLift": "Feloldás kérése",
       "liftRequested": "Feloldás kérve — az adminisztráció dönt.",
       "liftPending": "Feloldás kérve. A zárolás addig érvényes, amíg az adminisztráció döntést nem hoz.",
-      "liftRejected": "Feloldás elutasítva — a zárolás érvényben marad"
+      "liftRejected": "Feloldás elutasítva — a zárolás érvényben marad",
+      "serviceStatus": {
+        "angefragt": "jóváhagyásra vár",
+        "genehmigt": "jóváhagyva",
+        "abgelehnt": "elutasítva"
+      }
     },
     "meter": {
       "title": "Mérőállás rögzítése",
@@ -5253,7 +5258,9 @@
         "after_check_in_24h": "Bejelentkezés után (max. 24 óra)",
         "check_out": "Kijelentkezéskor",
         "days_before_check_in": "Nappal a bejelentkezés előtt",
-        "days_after_check_out": "Nappal a kijelentkezés után"
+        "days_after_check_out": "Nappal a kijelentkezés után",
+        "arrival_day": "Érkezés napján",
+        "departure_day": "Távozás napján"
       },
       "triggerHint": {
         "booking_confirmed": "A feladat a foglalás visszaigazolásakor jön létre.",
@@ -5261,7 +5268,9 @@
         "after_check_in_24h": "24 órával a bejelentkezés után – de sosem a kijelentkezés után: rövid tartózkodásnál a feladat a távozással ér véget.",
         "check_out": "A feladat a foglalás kijelentkezéséhez kötődik.",
         "days_before_check_in": "A feladat a megadott számú nappal a bejelentkezés előtt jön létre.",
-        "days_after_check_out": "A feladat a megadott számú nappal a kijelentkezés után jön létre."
+        "days_after_check_out": "A feladat a megadott számú nappal a kijelentkezés után jön létre.",
+        "arrival_day": "A feladat az érkezés napján esedékes. Itt állíthatja be az időt – a vendég bejelentkezési ideje nem számít.",
+        "departure_day": "A feladat az elutazás napján esedékes. Itt állíthatja be az időt – a vendég kijelentkezési ideje nem számít."
       },
       "offsetDays": "Nap",
       "periodLabel": "Kezdő és záró dátum",
@@ -5308,7 +5317,8 @@
       "sourceLanguageLabel": "A név nyelve",
       "sourceLanguageEmpty": "Nincs megadva",
       "sourceLanguageHint": "A nevet automatikusan lefordítjuk a más nyelvű olvasók számára — belsőleg úgy marad, ahogyan beírta.",
-      "sourceLanguageMissing": "Megadás nélkül a nevet nem fordítjuk le: a tulajdonosok és a munkatársak pontosan úgy látják, ahogy itt szerepel."
+      "sourceLanguageMissing": "Megadás nélkül a nevet nem fordítjuk le: a tulajdonosok és a munkatársak pontosan úgy látják, ahogy itt szerepel.",
+      "clockLabel": "Idő"
     },
     "taskPage": {
       "backToMyTasks": "A feladataimhoz",
@@ -7275,13 +7285,22 @@
         "terminationByOwner": "A tulajdonos maga magyarázta ezt a kérelemben.",
         "terminationHint": "A tulajdonos fel akarja mondani a szerződést, nem csak éjszakákat akar lefoglalni. A hozzáférés blokkolása helyett a szerződés lejárati dátumát közvetlenül az ingatlanon fogják meghatározni – ezzel véget vetve annak marketingjének minden portálon.",
         "terminationReady": "A felmondási nyilatkozatot be lehet jelenteni.",
-        "terminationSummary": "A szerződés {datum} dátummal lejár — ettől a naptól kezdve az ingatlant sehol sem lehet értékesíteni."
+        "terminationSummary": "A szerződés {datum} dátummal lejár — ettől a naptól kezdve az ingatlant sehol sem lehet értékesíteni.",
+        "services": "Rendelt szolgáltatások",
+        "servicesHint": "Döntsön minden szolgáltatásról külön-külön. Csak az Ön által jóváhagyott szolgáltatások válnak feladattá és kerülnek elszámolásra – a zárolás ettől független.",
+        "serviceNotePlaceholder": "Indoklás a tulajdonosnak (elutasítás esetén javasolt)",
+        "servicesTermination": "Felmondás esetén nem jön létre tartózkodás – a megrendelt szolgáltatások törlődnek."
       },
       "terminationRequested": "A tulajdonos fel kívánja bontani a szerződést.",
       "terminationSet": "A szerződés {datum} dátummal lejár.",
       "servicesOrdered": "Megrendelt szolgáltatások",
       "servicesNone": "Nem rendeltek szolgáltatást — nem jön létre feladat.",
-      "liftRequested": "Szeretné feloldani a zárolást"
+      "liftRequested": "Szeretné feloldani a zárolást",
+      "serviceStatus": {
+        "angefragt": "kért",
+        "genehmigt": "jóváhagyott",
+        "abgelehnt": "elutasított"
+      }
     }
   },
   "seasons": {

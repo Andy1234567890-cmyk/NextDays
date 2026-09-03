@@ -2397,20 +2397,22 @@
     "ustIdHinweis": "Will be checked against the EU VIES system. No payout to companies without a confirmed number.",
     "kanaele": {
       "titel": "Your Social Media Accounts",
-      "hinweis": "Required: at least one social media account (Instagram, TikTok, YouTube, Facebook, LinkedIn …) with address, handle, and reach (followers). Website, blog, or newsletter are welcome additions. We review accounts before approval.",
+      "hinweis": "Required: at least one social media account (Instagram, TikTok, YouTube, Facebook, LinkedIn …) with username and reach (followers). The username is sufficient — we will add the profile URL. Website, blog, or newsletter are welcome additions. We check the accounts before approval.",
       "plattform": "Platform",
-      "handle": "Handle (optional)",
       "reichweite": "Reach (Followers)",
       "hinzufuegen": "Add Channel",
       "entfernen": "Remove Channel",
-      "socialPflicht": "At least one social media account with reach is required — a website alone is not sufficient.",
+      "socialPflicht": "At least one social media account with username and reach is required — a website alone is not sufficient.",
       "plattformen": {
         "website": "Website",
         "blog": "Blog",
         "newsletter": "Newsletter",
         "podcast": "Podcast",
         "other": "Other"
-      }
+      },
+      "handlePflicht": "Username",
+      "handleUngueltig": "The username may only contain letters, numbers, periods, underscores, and hyphens — without @ and without spaces.",
+      "adresse": "URL (https://…)"
     },
     "plattform": {
       "website": "Website",
@@ -2430,7 +2432,7 @@
     "sendet": "Sending …",
     "pruefungHinweis": "This form is protected by reCAPTCHA. After submission, our partner team will review your accounts and reach; you will receive an email with the decision.",
     "fehler": {
-      "social": "Please provide at least one social media account with address and reach.",
+      "social": "Please provide at least one social media account with username and reach.",
       "doppelt": "An application for this email already exists. Please log in to the partner dashboard.",
       "eingabe": "Please check your entries.",
       "captcha": "The spam protection check failed. Please reload the page and try again.",
@@ -2440,6 +2442,8 @@
       "titel": "Application received",
       "text": "Thank you! We will personally review your accounts and reach and contact you by email. Your partner dashboard can be accessed with your email and password — links and codes will become active upon approval.",
       "login": "To partner login"
-    }
+    },
+    "newsletter": "Send me news about the partner program, new advertising materials and product updates by e-mail.",
+    "newsletterFreiwillig": "Voluntary, can be unsubscribed at any time."
   }
 }

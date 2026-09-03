@@ -1888,7 +1888,12 @@
       "requestLift": "Zażądaj anulowania",
       "liftRequested": "Zażądano anulowania — decyzja należy do zarządu.",
       "liftPending": "Zażądano anulowania. Blokada obowiązuje do czasu podjęcia decyzji przez zarząd.",
-      "liftRejected": "Anulowanie odrzucone — blokada pozostaje"
+      "liftRejected": "Anulowanie odrzucone — blokada pozostaje",
+      "serviceStatus": {
+        "angefragt": "oczekuje na zatwierdzenie",
+        "genehmigt": "zatwierdzone",
+        "abgelehnt": "odrzucone"
+      }
     },
     "meter": {
       "title": "Zapisz stan licznika",
@@ -5253,7 +5258,9 @@
         "after_check_in_24h": "Po zameldowaniu (maks. 24 godziny)",
         "check_out": "Przy wymeldowaniu",
         "days_before_check_in": "Dni przed zameldowaniem",
-        "days_after_check_out": "Dni po wymeldowaniu"
+        "days_after_check_out": "Dni po wymeldowaniu",
+        "arrival_day": "W dniu przyjazdu",
+        "departure_day": "W dniu wyjazdu"
       },
       "triggerHint": {
         "booking_confirmed": "Zadanie powstaje, gdy tylko rezerwacja zostanie potwierdzona.",
@@ -5261,7 +5268,9 @@
         "after_check_in_24h": "24 godziny po zameldowaniu — ale nigdy po wymeldowaniu: przy krótkim pobycie zadanie kończy się wyjazdem.",
         "check_out": "Zadanie jest powiązane z wymeldowaniem rezerwacji.",
         "days_before_check_in": "Zadanie powstaje podaną liczbę dni przed zameldowaniem.",
-        "days_after_check_out": "Zadanie powstaje podaną liczbę dni po wymeldowaniu."
+        "days_after_check_out": "Zadanie powstaje podaną liczbę dni po wymeldowaniu.",
+        "arrival_day": "Zadanie przypada na dzień przyjazdu. Tutaj określa się godzinę — godzina zameldowania gościa nie ma znaczenia.",
+        "departure_day": "Zadanie przypada na dzień wyjazdu. Tutaj określa się godzinę — godzina wymeldowania gościa nie ma znaczenia."
       },
       "offsetDays": "Dni",
       "periodLabel": "Ustaw datę początkową i końcową",
@@ -5308,7 +5317,8 @@
       "sourceLanguageLabel": "Język nazwy",
       "sourceLanguageEmpty": "Nie podano",
       "sourceLanguageHint": "Nazwa jest automatycznie tłumaczona dla osób czytających w innych językach — wewnętrznie pozostaje taka, jak ją wpisano.",
-      "sourceLanguageMissing": "Bez tej informacji nazwa nie jest tłumaczona: właściciele i pracownicy zobaczą ją dokładnie tak, jak tutaj."
+      "sourceLanguageMissing": "Bez tej informacji nazwa nie jest tłumaczona: właściciele i pracownicy zobaczą ją dokładnie tak, jak tutaj.",
+      "clockLabel": "Godzina"
     },
     "taskPage": {
       "backToMyTasks": "Do moich zadań",
@@ -7275,13 +7285,22 @@
         "terminationByOwner": "Właściciel sam wyjaśnił to we wniosku.",
         "terminationHint": "Właściciel chce rozwiązać umowę, a nie tylko zablokować noclegi. Zamiast blokować dostęp, data zakończenia umowy zostanie ustawiona bezpośrednio na obiekcie – co zakończy jego marketing na wszystkich portalach.",
         "terminationReady": "Wypowiedzenie umowy może zostać zarejestrowane.",
-        "terminationSummary": "Umowa kończy się z dniem {datum} — od tego dnia nieruchomość nie będzie już nigdzie sprzedawana."
+        "terminationSummary": "Umowa kończy się z dniem {datum} — od tego dnia nieruchomość nie będzie już nigdzie sprzedawana.",
+        "services": "Zamówione usługi",
+        "servicesHint": "Zdecyduj o każdej usłudze indywidualnie. Tylko to, co zatwierdzisz, zostanie zadaniem i zostanie rozliczone — sama blokada jest od tego niezależna.",
+        "serviceNotePlaceholder": "Uzasadnienie dla właściciela (zalecane w przypadku odrzucenia)",
+        "servicesTermination": "W przypadku anulowania rezerwacji nie powstaje pobyt — zamówione usługi zostają anulowane."
       },
       "terminationRequested": "Właściciel chce rozwiązać umowę.",
       "terminationSet": "Kontrakt kończy się {datum}.",
       "servicesOrdered": "Zamówione usługi",
       "servicesNone": "Nie zamówiono usług — nie powstanie żadne zadanie.",
-      "liftRequested": "Chcę anulować blokadę"
+      "liftRequested": "Chcę anulować blokadę",
+      "serviceStatus": {
+        "angefragt": "zapytano",
+        "genehmigt": "zatwierdzono",
+        "abgelehnt": "odrzucono"
+      }
     }
   },
   "seasons": {

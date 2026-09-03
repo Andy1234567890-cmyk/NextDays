@@ -2397,20 +2397,22 @@
     "ustIdHinweis": "Wird gegen das EU-System VIES geprüft. Ohne bestätigte Nummer keine Auszahlung an Unternehmen.",
     "kanaele": {
       "titel": "Ihre Social-Media-Konten",
-      "hinweis": "Pflicht: mindestens ein Social-Media-Konto (Instagram, TikTok, YouTube, Facebook, LinkedIn …) mit Adresse, Handle und Reichweite (Follower). Website, Blog oder Newsletter gern zusätzlich. Wir prüfen die Konten vor der Freigabe.",
+      "hinweis": "Pflicht: mindestens ein Social-Media-Konto (Instagram, TikTok, YouTube, Facebook, LinkedIn …) mit Benutzernamen und Reichweite (Follower). Den Benutzernamen genügt — die Profil-Adresse ergänzen wir. Website, Blog oder Newsletter gern zusätzlich. Wir prüfen die Konten vor der Freigabe.",
       "plattform": "Plattform",
-      "handle": "Handle (optional)",
       "reichweite": "Reichweite (Follower)",
       "hinzufuegen": "Kanal hinzufügen",
       "entfernen": "Kanal entfernen",
-      "socialPflicht": "Mindestens ein Social-Media-Konto mit Reichweite ist Pflicht — eine Website allein reicht nicht.",
+      "socialPflicht": "Mindestens ein Social-Media-Konto mit Benutzernamen und Reichweite ist Pflicht — eine Website allein reicht nicht.",
       "plattformen": {
         "website": "Website",
         "blog": "Blog",
         "newsletter": "Newsletter",
         "podcast": "Podcast",
         "other": "Sonstiges"
-      }
+      },
+      "handlePflicht": "Benutzername",
+      "handleUngueltig": "Der Benutzername darf nur Buchstaben, Zahlen, Punkt, Unterstrich und Bindestrich enthalten — ohne @ und ohne Leerzeichen.",
+      "adresse": "Adresse (https://…)"
     },
     "plattform": {
       "website": "Website",
@@ -2430,7 +2432,7 @@
     "sendet": "Wird gesendet …",
     "pruefungHinweis": "Dieses Formular ist durch reCAPTCHA geschützt. Nach dem Absenden prüft unser Partnerteam Ihre Konten und Reichweite; Sie erhalten eine E-Mail zur Entscheidung.",
     "fehler": {
-      "social": "Bitte mindestens ein Social-Media-Konto mit Adresse und Reichweite angeben.",
+      "social": "Bitte mindestens ein Social-Media-Konto mit Benutzernamen und Reichweite angeben.",
       "doppelt": "Für diese E-Mail gibt es bereits eine Bewerbung. Melden Sie sich im Partner-Dashboard an.",
       "eingabe": "Bitte prüfen Sie Ihre Eingaben.",
       "captcha": "Die Spamschutz-Prüfung ist fehlgeschlagen. Bitte Seite neu laden und erneut versuchen.",
@@ -2440,6 +2442,8 @@
       "titel": "Bewerbung eingegangen",
       "text": "Danke! Wir prüfen Ihre Konten und Reichweite persönlich und melden uns per E-Mail. Ihr Partner-Dashboard ist mit Ihrer E-Mail und Ihrem Passwort erreichbar — Links und Codes werden mit der Freigabe aktiv.",
       "login": "Zum Partner-Login"
-    }
+    },
+    "newsletter": "Schickt mir Neuigkeiten zum Partnerprogramm, neue Werbemittel und Produkt-Updates per E-Mail.",
+    "newsletterFreiwillig": "Freiwillig, jederzeit abbestellbar."
   }
 }

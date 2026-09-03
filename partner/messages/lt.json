@@ -288,7 +288,6 @@
   },
   "kanaele": {
     "plattformLabel": "Platforma",
-    "handle": "Pseudonimas (nebūtina)",
     "reichweite": "Pasiekiamumas (sekėjai)",
     "hinzufuegen": "Pridėti kanalą",
     "entfernen": "Pašalinti kanalą",
@@ -299,7 +298,9 @@
       "podcast": "Tinklalaidė",
       "other": "Kita"
     },
-    "socialPflicht": "Privaloma bent viena socialinės medijos paskyra – vien svetainės nepakanka."
+    "socialPflicht": "Privaloma turėti bent vieną socialinės žiniasklaidos paskyrą – tik svetainės nepakanka.",
+    "handlePflicht": "Vartotojo vardas",
+    "handleUngueltig": "Vartotojo varde gali būti tik raidės, skaičiai, taškai, pabraukimo brūkšniai ir brūkšneliai – be @ ir be tarpų."
   },
   "team": {
     "titel": "Komanda",

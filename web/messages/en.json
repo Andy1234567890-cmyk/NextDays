@@ -1888,7 +1888,12 @@
       "requestLift": "Request cancellation",
       "liftRequested": "Cancellation requested — administration will decide.",
       "liftPending": "Cancellation requested. The block remains until the administration has decided.",
-      "liftRejected": "Cancellation denied — the block remains"
+      "liftRejected": "Cancellation denied — the block remains",
+      "serviceStatus": {
+        "angefragt": "pending approval",
+        "genehmigt": "approved",
+        "abgelehnt": "rejected"
+      }
     },
     "meter": {
       "title": "Add meter reading",
@@ -5274,7 +5279,9 @@
         "after_check_in_24h": "After check-in (max. 24 hours)",
         "check_out": "At check-out",
         "days_before_check_in": "Days before check-in",
-        "days_after_check_out": "Days after check-out"
+        "days_after_check_out": "Days after check-out",
+        "arrival_day": "On arrival day",
+        "departure_day": "On departure day"
       },
       "triggerHint": {
         "booking_confirmed": "The task is created as soon as the booking is confirmed.",
@@ -5282,7 +5289,9 @@
         "after_check_in_24h": "24 hours after check-in — but never past check-out: on short stays the task ends with the departure.",
         "check_out": "The task is tied to the check-out of the reservation.",
         "days_before_check_in": "The task is created the given number of days before check-in.",
-        "days_after_check_out": "The task is created the given number of days after check-out."
+        "days_after_check_out": "The task is created the given number of days after check-out.",
+        "arrival_day": "The task is on the day of arrival. You set the time here — the guest's check-in time does not matter.",
+        "departure_day": "The task is on the day of departure. You set the time here — the guest's check-out time does not matter."
       },
       "offsetDays": "Days",
       "periodLabel": "Set start and end date",
@@ -5329,7 +5338,8 @@
       "sourceLanguageLabel": "Language of the name",
       "sourceLanguageEmpty": "Not specified",
       "sourceLanguageHint": "The name is translated automatically for readers of other languages — internally it stays exactly as you typed it.",
-      "sourceLanguageMissing": "Without this, the name is not translated: owners and staff will see it exactly as it appears here."
+      "sourceLanguageMissing": "Without this, the name is not translated: owners and staff will see it exactly as it appears here.",
+      "clockLabel": "Time"
     },
     "taskPage": {
       "backToMyTasks": "Back to my tasks",
@@ -7296,13 +7306,22 @@
         "terminationByOwner": "The owner explained this himself in the application.",
         "terminationHint": "The owner wants to terminate the contract, not just block off nights. Instead of blocking access, the contract end date will be set directly on the property – thus ending its marketing on all portals.",
         "terminationReady": "The termination notice can be registered.",
-        "terminationSummary": "Contract ends from {datum} — from this day onwards, the property will no longer be sold anywhere."
+        "terminationSummary": "Contract ends from {datum} — from this day onwards, the property will no longer be sold anywhere.",
+        "services": "Ordered services",
+        "servicesHint": "Decide on each service individually. Only what you approve will become a task and be billed — the block itself is independent of this.",
+        "serviceNotePlaceholder": "Reason for the owner (recommended if rejected)",
+        "servicesTermination": "In case of cancellation, no stay occurs — the ordered services are forfeited."
       },
       "terminationRequested": "The owner wishes to terminate the contract.",
       "terminationSet": "Contract ends on {datum}.",
       "servicesOrdered": "Services ordered",
       "servicesNone": "No services ordered — no task will be created.",
-      "liftRequested": "Wants to cancel the block"
+      "liftRequested": "Wants to cancel the block",
+      "serviceStatus": {
+        "angefragt": "requested",
+        "genehmigt": "approved",
+        "abgelehnt": "declined"
+      }
     }
   },
   "seasons": {

@@ -17,7 +17,7 @@ Aufgaben-Lebenszyklus. Der Dienst delegiert dorthin.
 # lesbarer — es verteilt ihn nur. Was ein eigenes Thema IST, ist bereits
 # ausgelagert (engine, schedule_label, kosten_rueckmeldung).
 import secrets
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, time
 from uuid import UUID
 
 from postgrest.exceptions import APIError
@@ -103,6 +103,7 @@ from .schemas import (
     TaskRuleKind,
     TaskSource,
     TaskStatus,
+    TaskTrigger,
     UngedecktesObjekt,
 )
 
@@ -2207,7 +2208,17 @@ class TasksService:
 
     # Trigger, die am ANREISE-Anker hängen; alles andere hängt an der Abreise.
     _ANREISE_TRIGGER = frozenset(
-        {"check_in", "days_before_check_in", "after_check_in_24h", "booking_confirmed"}
+        {
+            "check_in",
+            "days_before_check_in",
+            "after_check_in_24h",
+            "booking_confirmed",
+            # Der Tages-Anker der Anreise (0535). Ohne ihn hier zaehlte eine
+            # Regel „Am Anreisetag" zur ABREISE-Achse — die Deckungspruefung
+            # haette das Objekt dann als „ohne Anreise-Regel" gemeldet, obwohl
+            # genau diese Regel dafuer existiert.
+            "arrival_day",
+        }
     )
 
     def regel_deckung(self, tenant_id: str) -> RegelDeckung:
@@ -2394,6 +2405,8 @@ class TasksService:
             end_trigger=r.get("end_trigger"),
             start_offset_minutes=int(r.get("start_offset_minutes") or 0),
             end_offset_minutes=int(r.get("end_offset_minutes") or 0),
+            start_clock=r.get("start_clock"),
+            end_clock=r.get("end_clock"),
             starts_on=r.get("starts_on"),
             ends_on=r.get("ends_on"),
             start_time=r.get("start_time"),
@@ -2454,13 +2467,66 @@ class TasksService:
         (`booking_confirmed` liegt irgendwann vor der Anreise, aber wie weit,
         weiss nur die Buchung).
         """
-        if trigger in ("check_in", "days_before_check_in"):
+        if trigger in ("check_in", "days_before_check_in", "arrival_day"):
             return 0
         if trigger == "after_check_in_24h":
             return 1440
-        if trigger in ("check_out", "days_after_check_out"):
+        if trigger in ("check_out", "days_after_check_out", "departure_day"):
             return TasksService._SPAETER
         return None
+
+    # Die beiden Tages-Anker (0535): nur bei ihnen traegt die Regel eine eigene
+    # Uhrzeit. Bei jedem anderen Anker gilt die Uhrzeit der Buchung.
+    _TAGES_TRIGGER = frozenset({"arrival_day", "departure_day"})
+
+    @classmethod
+    def _uhr_minuten(cls, trigger: TaskTrigger | None, clock: time | None) -> int:
+        """Minuten seit Mitternacht, sofern der Anker eine Regel-Uhrzeit kennt.
+
+        Bei allen uebrigen Ankern 0 — dort kommt die Uhrzeit aus der Buchung
+        und laesst sich ohne konkrete Buchung nicht vergleichen.
+        """
+        if clock is None or trigger is None:
+            return 0
+        if trigger.value not in cls._TAGES_TRIGGER:
+            return 0
+        return clock.hour * 60 + clock.minute
+
+    @classmethod
+    def _bereinige_uhrzeiten(cls, req: RuleCreate) -> None:
+        """Uhrzeit UND Versatz an den Anker angleichen, der gerade gilt.
+
+        DER GEGENZUSTAND (Wurzel 1), und zwar in BEIDE Richtungen. Eine Regel
+        traegt vier Zeitangaben — zwei Anker, zwei Versaetze, zwei Uhrzeiten —
+        von denen je nach Anker nur ein Teil ausgewertet wird. Die Oberflaeche
+        blendet die unbenutzten Felder aus, schickt aber weiterhin ihre alten
+        Werte mit. Wer eine Regel umstellt, schleppt damit stumm mit, was
+        vorher galt.
+
+        LIVE PASSIERT (03.09.2026): die Regel „Velk T" wurde von
+        „Tage vor der Anreise → Beim Check-in" auf „Am Anreisetag 10:00 bis
+        16:00" umgestellt. Der alte `end_offset_minutes` von 1440 blieb stehen,
+        weil sein Feld bei diesem Anker unsichtbar ist — der Motor rechnete
+        16:00 + 1440 Minuten und legte das Ende auf den FOLGETAG. Gemeldet
+        wurde es als „das Zeitfenster stimmt auch nicht", nicht als Bug im
+        Versatz: sichtbar war nur das falsche Ergebnis.
+
+        Der Versatz wird deshalb NUR an den beiden Tages-Ankern genullt, nicht
+        ueberall: an den uebrigen Ankern ist ein Versatz eine gueltige, wenn
+        auch nicht mehr per Formular editierbare Einstellung — „Velk J" steht
+        live auf `check_in` + 1440 und meint das so. Ihn dort mitzunullen waere
+        eine stille Aenderung fremder Regeln.
+        """
+        start = req.start_trigger.value if req.start_trigger else None
+        ende = req.end_trigger.value if req.end_trigger else None
+        if start not in cls._TAGES_TRIGGER:
+            req.start_clock = None
+        else:
+            req.start_offset_minutes = 0
+        if ende not in cls._TAGES_TRIGGER:
+            req.end_clock = None
+        else:
+            req.end_offset_minutes = 0
 
     @classmethod
     def _pruefe_zeitfenster(cls, req: RuleCreate) -> None:
@@ -2494,6 +2560,12 @@ class TasksService:
             return
         s = s_rang + (req.start_offset_minutes or 0)
         e = e_rang + (req.end_offset_minutes or 0)
+        # Bei den Tages-Ankern (0535) traegt die UHRZEIT die Unterscheidung, nicht
+        # der Versatz: „Am Anreisetag 14:00 bis 10:00" haette denselben Rang und
+        # denselben Versatz und waere ohne diese Zeilen durchgerutscht — genau
+        # der Fall, den der Nutzer hier neu einstellen kann.
+        s += cls._uhr_minuten(req.start_trigger, req.start_clock)
+        e += cls._uhr_minuten(req.end_trigger, req.end_clock or req.start_clock)
         if e < s:
             raise TaskError(
                 "Das Ende der Aufgabe liegt vor ihrem Start. Prüfe Auslöser "
@@ -2502,6 +2574,7 @@ class TasksService:
             )
 
     def create_rule(self, tenant_id: str, req: RuleCreate) -> RuleDetail:
+        self._bereinige_uhrzeiten(req)
         self._pruefe_zeitfenster(req)
         self._require_own_properties(tenant_id, req.property_ids)
         # Mit Objektbezug prüfen (wie in `update_rule`): ohne ihn bleibt es eine
@@ -2522,6 +2595,7 @@ class TasksService:
     ) -> RuleDetail:
         # Dieselbe Pruefung wie beim Anlegen: die 161 falschen Aufgaben sind
         # durch eine GEAENDERTE Regel entstanden, nicht durch eine neue.
+        self._bereinige_uhrzeiten(req)
         self._pruefe_zeitfenster(req)
         self._require_own_properties(tenant_id, req.property_ids)
         # Objektbezug MITGEBEN: ohne ihn ist die Prüfung eine nackte
@@ -2564,11 +2638,15 @@ class TasksService:
         self._zustaendigen_nachziehen(
             tenant_id, rule_id, alter_zustaendiger, req.assignee_id
         )
-        self._regel_nachziehen(tenant_id, rule_id)
+        # Beim ÄNDERN wird verschoben: die vorhandenen Aufgaben tragen sonst
+        # weiter das alte Zeitfenster.
+        self._regel_nachziehen(tenant_id, rule_id, verschieben=True)
         self._regel_uebersetzen(tenant_id, rule_id)
         return self.get_rule(tenant_id, rule_id)
 
-    def _regel_nachziehen(self, tenant_id: str, rule_id: str) -> None:
+    def _regel_nachziehen(
+        self, tenant_id: str, rule_id: str, *, verschieben: bool = False
+    ) -> None:
         """Fehlende Aufgaben dieser Regel für BESTEHENDE Buchungen anlegen.
 
         Der Gegenzustand zum Speichern einer Regel (Wurzel 1). Eine planmäßige
@@ -2581,6 +2659,15 @@ class TasksService:
         angelegt. Gemeldet als „heute ist eine Anreise, dazu gibt es keine
         Aufgabe".
 
+        `verschieben=True` zieht zusätzlich die SCHON vorhandenen Aufgaben auf
+        die neuen Zeiten nach — der zweite fehlende Gegenzustand (Wurzel 1).
+        Beim ÄNDERN einer Regel ist das der eigentliche Zweck: wer das
+        Zeitfenster einer Regel korrigiert, meint die bestehenden Aufgaben mit.
+        Ohne das blieb die Korrektur unsichtbar (03.09.2026, gemeldet als „die
+        Daten werden nicht übergeben"), und es gab keinen Weg zu den alten
+        Aufgaben außer sie einzeln von Hand zu setzen. Beim ANLEGEN einer Regel
+        gibt es nichts zu verschieben, dort bleibt es beim Standard.
+
         Best-effort (Wurzel 5): die Regel IST gespeichert. Ein Fehler hier darf
         den Aufrufer nicht glauben lassen, das Speichern sei misslungen — er
         würde es wiederholen. Der stündliche Tick holt den Nachzug ohnehin.
@@ -2591,6 +2678,7 @@ class TasksService:
                 tenant_id,
                 today=datetime.now(UTC).date(),
                 rule_id=rule_id,
+                verschieben=verschieben,
             )
         except APIError:  # noqa: BLE001 - Nachzug, nicht der Hauptpfad
             log.exception(
@@ -2725,9 +2813,42 @@ class TasksService:
             )
 
     def delete_rule(self, tenant_id: str, rule_id: str) -> None:
+        """Regel loeschen — samt ihrer noch OFFENEN Aufgaben (Wurzel 1).
+
+        DER GEGENZUSTAND, der gefehlt hat. Der Fremdschluessel steht auf
+        `on delete set null`: eine geloeschte Regel liess ihre Aufgaben
+        zurueck, ohne Herkunft und ohne Weg, sie wieder loszuwerden. Der
+        Nachzug legt sie nicht neu an (die Regel ist ja weg), also blieben sie
+        einfach stehen.
+
+        LIVE PASSIERT (03.09.2026): eine Regel wurde umgebaut, indem man sie
+        loeschte und neu anlegte — danach stand im Kalender jede Anreise
+        DOPPELT, einmal aus der alten und einmal aus der neuen Regel. Gemeldet
+        als „warum sind die jetzt doppelt?". Zu diesem Zeitpunkt hingen 243
+        Aufgaben an geloeschten Regeln, 117 davon offen.
+
+        ERLEDIGTE bleiben stehen: sie belegen geleistete Arbeit, haengen an
+        Kosten und Fotos, und ein Loeschen waere Geschichtsfaelschung. Nur was
+        noch zu tun ist, verschwindet mit seiner Regel — es ist ja niemand
+        mehr da, der es anordnet.
+        """
+        db = self._db()
+        # Die Aufgaben MUESSEN vor dem Regel-Delete eingesammelt werden: der
+        # Fremdschluessel steht auf `on delete set null`, danach traegt keine
+        # Zeile mehr die `rule_id` und sie sind nicht mehr auffindbar.
+        offen = (
+            db.table("tasks")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .eq("rule_id", rule_id)
+            .in_("status", [TaskStatus.open.value, TaskStatus.in_progress.value])
+            .execute()
+        ).data or []
+        # Die Regel zuerst loeschen: dieser Schritt prueft Existenz UND Tenant
+        # (Wurzel 3). Erst wenn er durch ist, darf an den Aufgaben etwas
+        # passieren — sonst raeumte ein 404 fremde Zeilen ab.
         res = (
-            self._db()
-            .table("task_rules")
+            db.table("task_rules")
             .delete()
             .eq("id", rule_id)
             .eq("tenant_id", tenant_id)
@@ -2735,6 +2856,14 @@ class TasksService:
         )
         if not res.data:
             raise TaskError("Regel nicht gefunden.", status_code=404)
+        if offen:
+            db.table("tasks").delete().eq("tenant_id", tenant_id).in_(
+                "id", [str(r["id"]) for r in offen]
+            ).execute()
+            log.info(
+                "task_regel_geloescht_mit_aufgaben",
+                extra={"rule_id": rule_id, "offene_aufgaben": len(offen)},
+            )
 
     @staticmethod
     def _rule_payload(tenant_id: str, req: RuleCreate) -> dict[str, object]:
@@ -2758,6 +2887,12 @@ class TasksService:
             "end_trigger": req.end_trigger.value if req.end_trigger else None,
             "start_offset_minutes": req.start_offset_minutes,
             "end_offset_minutes": req.end_offset_minutes,
+            # Uhrzeitfenster der Tages-Anker (0535). Nur bei
+            # `arrival_day`/`departure_day` gepflegt — `_bereinige_uhrzeiten`
+            # raeumt sie bei jedem anderen Anker weg, damit keine tote Angabe
+            # in der Zeile stehen bleibt (Wurzel 1: der Gegenzustand).
+            "start_clock": req.start_clock.isoformat() if req.start_clock else None,
+            "end_clock": req.end_clock.isoformat() if req.end_clock else None,
             "starts_on": req.starts_on.isoformat() if req.starts_on else None,
             "ends_on": req.ends_on.isoformat() if req.ends_on else None,
             "start_time": req.start_time.isoformat() if req.start_time else None,

@@ -13,8 +13,10 @@ import { Btn, Col, Row, Spinner, Txt } from "@/components/ui/kit";
 import { EmptyState } from "@/components/ui/patterns";
 import { useAuth } from "@/contexts/AuthContext";
 import {
+  type BestellteLeistung,
   createBlockRequest,
   createMeterReading,
+  getBestellbareLeistungen,
   getBlockRequests,
   getMeterReadings,
   getOwnerProperties,
@@ -230,6 +232,37 @@ function BlockForm({ propertyId, onDone }: { propertyId: string | null; onDone: 
   const [end, setEnd] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  // Bestellte Leistungen (0510/0538): ohne Bestellung entsteht zur Sperre
+  // KEINE Aufgabe; die Verwaltung genehmigt jede bestellte einzeln. Bis 0538
+  // kannte diese App das Feld nicht — ein Antrag von hier erzeugte garantiert
+  // keine Reinigung.
+  const [leistungen, setLeistungen] = useState<BestellteLeistung[]>([]);
+  const [bestellt, setBestellt] = useState<string[]>([]);
+  const [leistungenFehler, setLeistungenFehler] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!propertyId) {
+      setLeistungen([]);
+      setBestellt([]);
+      return;
+    }
+    let aktuell = true;
+    void getBestellbareLeistungen(propertyId).then((res) => {
+      if (!aktuell) return;
+      if (res.ok) {
+        setLeistungen(res.data.items);
+        setLeistungenFehler(null);
+      } else {
+        // Ladefehler ≠ „nichts bestellbar" (Wurzel 4/5).
+        setLeistungen([]);
+        setLeistungenFehler(res.error);
+      }
+      setBestellt([]);
+    });
+    return () => {
+      aktuell = false;
+    };
+  }, [propertyId]);
 
   const submit = async () => {
     if (busy) return; // Doppel-Submit-Sperre (Wurzel 2)
@@ -251,11 +284,13 @@ function BlockForm({ propertyId, onDone }: { propertyId: string | null; onDone: 
       property_id: propertyId,
       start_date: start,
       end_date: end,
+      bestellte_leistungen: bestellt,
     });
     setBusy(false);
     if (res.ok) {
       setStart("");
       setEnd("");
+      setBestellt([]);
       setMsg("Anfrage gestellt.");
       onDone();
     } else {
@@ -286,6 +321,42 @@ function BlockForm({ propertyId, onDone }: { propertyId: string | null; onDone: 
           editable={!busy}
         />
       </Row>
+      {leistungenFehler ? (
+        <Txt v="xs" color={t.palette.accent}>
+          {leistungenFehler}
+        </Txt>
+      ) : leistungen.length > 0 ? (
+        <Col gap={4}>
+          <Txt v="sm">Leistungen bestellen</Txt>
+          <Txt v="xs" color={t.palette.faint}>
+            Nur was Sie ankreuzen, wird zu Ihrer Sperrung ausgeführt und abgerechnet — sobald
+            Ihre Verwaltung es genehmigt hat.
+          </Txt>
+          {leistungen.map((l) => {
+            const aktiv = bestellt.includes(l.rule_id);
+            return (
+              <Pressable
+                key={l.rule_id}
+                disabled={busy}
+                onPress={() =>
+                  setBestellt((alt) =>
+                    aktiv ? alt.filter((x) => x !== l.rule_id) : [...alt, l.rule_id],
+                  )
+                }
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: aktiv }}
+                accessibilityLabel={l.name}
+                style={{ paddingVertical: 6 }}
+              >
+                <Txt v="sm" color={aktiv ? t.palette.accent : t.palette.ink}>
+                  {aktiv ? "☑ " : "☐ "}
+                  {l.name}
+                </Txt>
+              </Pressable>
+            );
+          })}
+        </Col>
+      ) : null}
       {msg && (
         <Txt v="xs" color={t.palette.accent}>
           {msg}

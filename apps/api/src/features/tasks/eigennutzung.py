@@ -20,6 +20,11 @@ gereinigt wird. Nur eben, weil der Eigentümer es bestellt hat. Deshalb kein
 Schalter „Aufgaben bei Eigennutzung aus", sondern eine Bestellung
 (`block_request_services`, 0510): angekreuzt = Aufgabe, nicht angekreuzt = keine.
 
+**Bestellt ist nicht genehmigt (0538).** Die Agentur entscheidet ueber jede
+bestellte Leistung einzeln (`block_request_services.status`); nur `genehmigt`
+wird zur Aufgabe. Vorher fuhr die Bestellung mit der Genehmigung des Antrags
+blind mit — die Agentur sah sie im Pruefdialog nicht einmal.
+
 **Fail-closed (Wurzel 5).** Lässt sich die Bestellung nicht ermitteln — die
 Reservierung trägt keine `block_request_id`, weil sie von Hand als Eigennutzung
 erfasst wurde —, entsteht KEINE Aufgabe. Die Gegenrichtung wäre, im Zweifel zu
@@ -78,11 +83,17 @@ def bestellte_regeln(
         block = antrags_ids[start : start + _BLOCK]
         rows = (
             db.table("block_request_services")
-            .select("block_request_id, rule_id")
+            .select("block_request_id, rule_id, status")
             .in_("block_request_id", block)
             .execute()
         ).data or []
         for row in rows:
+            # 0538: bestellt ist nicht genehmigt. Nur was die Agentur
+            # freigegeben hat, wird zur Aufgabe. `angefragt` und `abgelehnt`
+            # bleiben draussen — fail-closed (Wurzel 5): eine noch offene
+            # Entscheidung ist keine Freigabe.
+            if str(row.get("status") or "") != "genehmigt":
+                continue
             bestellungen.setdefault(str(row["block_request_id"]), set()).add(
                 str(row["rule_id"])
             )

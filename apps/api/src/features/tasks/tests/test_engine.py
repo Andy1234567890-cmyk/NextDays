@@ -6,6 +6,7 @@ Die Idempotenz selbst hängt am UNIQUE-Index der Live-DB — sie wird gegen die
 echte Datenbank verifiziert, nicht gegen einen Mock (der bewiese nur den Mock).
 """
 from datetime import UTC, date, datetime, time
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -85,6 +86,141 @@ def test_after_check_in_24h_endet_spaetestens_zum_check_out() -> None:
     assert _trigger_time("after_check_in_24h", 0, kurz, anchors) == datetime(
         2026, 8, 11, 10, 0, tzinfo=UTC
     )
+
+
+def test_tages_anker_ignorieren_die_uhrzeit_der_buchung() -> None:
+    """Der Unterschied zu `check_in`/`check_out` (0535): NUR das Datum zaehlt.
+
+    Der Gast checkt um 16:00 ein und um 10:00 aus. Eine Regel „Am Anreisetag
+    ab 09:00" muss trotzdem um 09:00 stehen — sonst waere der Empfang erst
+    fertig, wenn der Gast schon da ist.
+    """
+    anchors = _anchors()
+    assert _trigger_time(
+        "arrival_day", 0, _RESERVATION, anchors, time(9, 0)
+    ) == datetime(2026, 8, 10, 9, 0, tzinfo=UTC)
+    assert _trigger_time(
+        "departure_day", 0, _RESERVATION, anchors, time(14, 30)
+    ) == datetime(2026, 8, 14, 14, 30, tzinfo=UTC)
+
+
+def test_tages_anker_ohne_uhrzeit_bleibt_der_tagesbeginn() -> None:
+    """Keine erfundene Standardstunde (Wurzel 4) — 00:00 des Ankertags."""
+    anchors = _anchors()
+    assert _trigger_time("arrival_day", 0, _RESERVATION, anchors, None) == datetime(
+        2026, 8, 10, 0, 0, tzinfo=UTC
+    )
+
+
+def test_tages_anker_nimmt_den_versatz_weiterhin_mit() -> None:
+    anchors = _anchors()
+    assert _trigger_time(
+        "departure_day", 60, _RESERVATION, anchors, time(10, 0)
+    ) == datetime(2026, 8, 14, 11, 0, tzinfo=UTC)
+
+
+def test_uhrzeit_wirkt_nicht_auf_die_uhrzeit_anker() -> None:
+    """Eine Regel-Uhrzeit an `check_in` waere eine zweite Wahrheit — der Motor
+    ignoriert sie, und der Service raeumt sie beim Speichern ohnehin weg."""
+    anchors = _anchors()
+    assert _trigger_time(
+        "check_in", 0, _RESERVATION, anchors, time(9, 0)
+    ) == datetime(2026, 8, 10, 16, 0, tzinfo=UTC)
+
+
+def test_regel_zeitfenster_nimmt_die_uhrzeiten_der_regel() -> None:
+    """Von-bis am selben Tag: „Am Anreisetag 10:00 bis 14:00"."""
+    from src.features.tasks.engine import _regel_zeitfenster
+
+    regel = {
+        "id": "rule1",
+        "start_trigger": "arrival_day",
+        "end_trigger": "arrival_day",
+        "start_offset_minutes": 0,
+        "end_offset_minutes": 0,
+        "start_clock": "10:00",
+        "end_clock": "14:00",
+    }
+    fenster = _regel_zeitfenster(regel, _RESERVATION, _anchors())
+    assert fenster == (
+        datetime(2026, 8, 10, 10, 0, tzinfo=UTC),
+        datetime(2026, 8, 10, 14, 0, tzinfo=UTC),
+    )
+
+
+def test_regel_ohne_endzeit_endet_zur_startzeit_nicht_um_mitternacht() -> None:
+    """Ohne eigene Endzeit gilt die Startzeit weiter. Faellt das Ende sonst auf
+    00:00, laege es VOR dem Start und der Motor wuerfe es stumm weg."""
+    from src.features.tasks.engine import _regel_zeitfenster
+
+    regel = {
+        "id": "rule1",
+        "start_trigger": "arrival_day",
+        "end_trigger": "departure_day",
+        "start_offset_minutes": 0,
+        "end_offset_minutes": 0,
+        "start_clock": "10:00",
+        "end_clock": None,
+    }
+    fenster = _regel_zeitfenster(regel, _RESERVATION, _anchors())
+    assert fenster == (
+        datetime(2026, 8, 10, 10, 0, tzinfo=UTC),
+        datetime(2026, 8, 14, 10, 0, tzinfo=UTC),
+    )
+
+
+def test_anker_ohne_uhrzeit_ist_mitternacht_vor_ort() -> None:
+    """DER HAEUFIGSTE FALL, und lange falsch: 351 von 536 Live-Buchungen tragen
+    gar keine `checkin_time` (03.09.2026). Ohne Zone landete die Aufgabe auf
+    00:00 UTC, was der Kalender in Daenemark als „02:00" zeigte."""
+    ohne_zeit = {**_RESERVATION, "checkin_time": None, "checkout_time": None}
+    kopenhagen = ZoneInfo("Europe/Copenhagen")
+    anchors = _reservation_anchors(ohne_zeit, kopenhagen)
+    assert anchors is not None
+    assert anchors[0] == datetime(2026, 8, 9, 22, 0, tzinfo=UTC)  # 10.8. 00:00 lokal
+
+
+def test_anker_mit_uhrzeit_meint_ortszeit() -> None:
+    """Auch mit gepflegter Uhrzeit: „Check-in 16:00" heisst 16:00 vor Ort."""
+    anchors = _reservation_anchors(_RESERVATION, ZoneInfo("Europe/Copenhagen"))
+    assert anchors is not None
+    assert anchors[0] == datetime(2026, 8, 10, 14, 0, tzinfo=UTC)  # 16:00 lokal
+
+
+def test_anker_ohne_zone_bleibt_utc() -> None:
+    """Der Altbestand ohne gepflegte Objektzeitzone rechnet unveraendert weiter."""
+    anchors = _reservation_anchors(_RESERVATION)
+    assert anchors is not None
+    assert anchors[0] == datetime(2026, 8, 10, 16, 0, tzinfo=UTC)
+
+
+def test_tages_anker_rechnet_in_der_zeitzone_des_objekts() -> None:
+    """„10:00 am Anreisetag" meint 10:00 VOR ORT.
+
+    In UTC gerechnet stuende die Reinigung in Daenemark im Sommer um 12:00 vor
+    der Tuer. Gemeldet wurde der Fall an seiner sichtbaren Seite (03.09.2026):
+    eine Aufgabe ohne Uhrzeit zeigte „02:00" statt Tagesbeginn.
+    """
+    anchors = _anchors()
+    kopenhagen = ZoneInfo("Europe/Copenhagen")
+    # 10.08.2026 ist Sommerzeit: Europe/Copenhagen = UTC+2.
+    assert _trigger_time(
+        "arrival_day", 0, _RESERVATION, anchors, time(10, 0), kopenhagen
+    ) == datetime(2026, 8, 10, 8, 0, tzinfo=UTC)
+    # Ohne Uhrzeit ist es der TAGESBEGINN vor Ort, nicht 00:00 UTC.
+    assert _trigger_time(
+        "arrival_day", 0, _RESERVATION, anchors, None, kopenhagen
+    ) == datetime(2026, 8, 9, 22, 0, tzinfo=UTC)
+
+
+def test_unbekannte_zeitzone_bleibt_utc_statt_geraten() -> None:
+    """Eine erfundene Zone verschoebe jede Aufgabe still um Stunden (Wurzel 4)."""
+    from src.features.tasks.engine import _zone
+
+    assert _zone("Europe/Copenhagen") is not None
+    assert _zone("Mars/Olympus") is None
+    assert _zone("") is None
+    assert _zone(None) is None
 
 
 def test_ohne_trigger_gibt_es_keinen_zeitpunkt() -> None:
@@ -308,6 +444,25 @@ _REINIGUNG = {
     "end_trigger": "days_after_check_out",
     "end_offset_minutes": 1440,
 }
+
+
+def test_bestellte_regeln_zaehlt_nur_genehmigte() -> None:
+    """Bestellt ist nicht genehmigt (0538). `angefragt` und `abgelehnt` bleiben
+    draussen — fail-closed: eine offene Entscheidung ist keine Freigabe."""
+    from unittest.mock import MagicMock
+
+    from src.features.tasks.eigennutzung import bestellte_regeln
+
+    db = MagicMock()
+    db.table.return_value.select.return_value.in_.return_value.execute.return_value.data = [
+        {"block_request_id": "br1", "rule_id": "r-ok", "status": "genehmigt"},
+        {"block_request_id": "br1", "rule_id": "r-offen", "status": "angefragt"},
+        {"block_request_id": "br1", "rule_id": "r-nein", "status": "abgelehnt"},
+    ]
+    res = bestellte_regeln(
+        db, [{"id": "res1", "is_owner_stay": True, "block_request_id": "br1"}]
+    )
+    assert res == {"res1": {"r-ok"}}
 
 
 def test_eigennutzung_ohne_bestellung_erzeugt_keine_aufgabe() -> None:

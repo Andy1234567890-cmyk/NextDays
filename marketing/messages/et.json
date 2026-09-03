@@ -2397,20 +2397,22 @@
     "ustIdHinweis": "Kontrollitakse EL-i VIES-süsteemi kaudu. Ilma kinnitatud numbriga ei maksta ettevõtetele välja.",
     "kanaele": {
       "titel": "Teie sotsiaalmeedia kontod",
-      "hinweis": "Kohustuslik: vähemalt üks sotsiaalmeedia konto (Instagram, TikTok, YouTube, Facebook, LinkedIn …) koos aadressi, kasutajanime ja ulatusega (jälgijad). Veebisait, blogi või uudiskiri on teretulnud lisana. Kontrollime kontosid enne heakskiitu.",
+      "hinweis": "Nõutav: vähemalt üks sotsiaalmeedia konto (Instagram, TikTok, YouTube, Facebook, LinkedIn …) kasutajanime ja levialaga (jälgijad). Piisab kasutajanimest – profiili aadressi lisame meie. Veebisait, blogi või uudiskiri on teretulnud lisaks. Kontrollime kontosid enne avaldamist.",
       "plattform": "Platvorm",
-      "handle": "Kasutajanimi (valikuline)",
       "reichweite": "Ulatus (jälgijad)",
       "hinzufuegen": "Lisa kanal",
       "entfernen": "Eemalda kanal",
-      "socialPflicht": "Vähemalt üks sotsiaalmeedia konto koos ulatusega on kohustuslik – ainult veebisait ei ole piisav.",
+      "socialPflicht": "Vähemalt üks sotsiaalmeedia konto kasutajanime ja levialaga on kohustuslik – ainult veebisaidist ei piisa.",
       "plattformen": {
         "website": "Veebisait",
         "blog": "Blogi",
         "newsletter": "Uudiskiri",
         "podcast": "Podcast",
         "other": "Muu"
-      }
+      },
+      "handlePflicht": "Kasutajanimi",
+      "handleUngueltig": "Kasutajanimi tohib sisaldada ainult tähti, numbreid, punkte, alakriipse ja sidekriipse – ilma @ ja tühikuteta.",
+      "adresse": "Aadress (https://…)"
     },
     "plattform": {
       "website": "Veebisait",
@@ -2430,7 +2432,7 @@
     "sendet": "Saadan ...",
     "pruefungHinweis": "See vorm on kaitstud reCAPTCHA-ga. Pärast esitamist kontrollib meie partnerimeeskond teie kontosid ja leviala; teile saadetakse otsuse kohta e-kiri.",
     "fehler": {
-      "social": "Palun sisestage vähemalt üks sotsiaalmeedia konto koos aadressi ja levialaga.",
+      "social": "Palun lisage vähemalt üks sotsiaalmeedia konto kasutajanime ja levialaga.",
       "doppelt": "Selle e-posti aadressiga on juba avaldus olemas. Logige sisse partneri juhtpaneelile.",
       "eingabe": "Palun kontrollige oma sisestusi.",
       "captcha": "Rämpsposti kaitse kontroll ebaõnnestus. Palun laadige leht uuesti ja proovige uuesti.",
@@ -2440,6 +2442,8 @@
       "titel": "Avaldus vastu võetud",
       "text": "Aitäh! Kontrollime teie kontosid ja leviala isiklikult ning võtame teiega e-posti teel ühendust. Teie partneri juhtpaneelile pääseb ligi teie e-posti ja parooliga – lingid ja koodid aktiveeruvad pärast heakskiitu.",
       "login": "Partneri sisselogimisele"
-    }
+    },
+    "newsletter": "Saada mulle e-posti teel partnerprogrammi uudiseid, uusi reklaammaterjale ja tooteuuendusi.",
+    "newsletterFreiwillig": "Vabatahtlik, tellimuse saab igal ajal tühistada."
   }
 }

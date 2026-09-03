@@ -30,6 +30,13 @@ export type SocialKanal = {
   url: string;
   handle: string | null;
   followers: number | null;
+  // Reichweite (0521): bei verbundenem Konto trägt `followers` den letzten
+  // Snapshot und `verified` ist gesetzt; die Selbstauskunft steht daneben.
+  // Pflegt ausschließlich der Server — Eingaben hierzu werden überschrieben.
+  followers_self_reported?: number | null;
+  verified?: boolean;
+  verified_at?: string | null;
+  connection_id?: string | null;
 };
 
 /** Anzeige je Plattform: Markenname (nicht übersetzt), Icon, Markenfarbe, Beispiel-Adresse. */
@@ -105,4 +112,96 @@ export function plattformAusUrl(url: string): Plattform | null {
 export function reichweite(n: number | null, locale = "de"): string {
   if (n === null) return "";
   return new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 1 }).format(n);
+}
+
+// Profil-Adresse je Plattform aus dem Handle — gespiegelt aus
+// apps/api/.../kanaele.py (`_PROFIL_MUSTER`). Eine Plattform ohne Eintrag hier
+// braucht die vollständige Adresse; der Handle allein genügt dort nicht.
+//
+// WARUM DER HANDLE FÜHRT (03.09.2026): die Bewerbung verlangte vorher die
+// Profil-ADRESSE. Bewerber kennen aber ihren Benutzernamen, nicht die URL — die
+// steht in keiner App sichtbar und muss über „Profil teilen → Link kopieren"
+// geholt werden. Wer sie nicht findet, tippt etwas Falsches oder bricht ab.
+const PROFIL_MUSTER: Partial<Record<Plattform, string>> = {
+  instagram: "https://www.instagram.com/{h}",
+  tiktok: "https://www.tiktok.com/@{h}",
+  youtube: "https://www.youtube.com/@{h}",
+  facebook: "https://www.facebook.com/{h}",
+  x: "https://x.com/{h}",
+  linkedin: "https://www.linkedin.com/in/{h}",
+  pinterest: "https://www.pinterest.com/{h}",
+  threads: "https://www.threads.net/@{h}",
+  twitch: "https://www.twitch.tv/{h}",
+  snapchat: "https://www.snapchat.com/add/{h}",
+  telegram: "https://t.me/{h}",
+};
+
+/** True, wenn bei dieser Plattform der Benutzername allein genügt. */
+export function hatHandle(p: Plattform): boolean {
+  return PROFIL_MUSTER[p] !== undefined;
+}
+
+/** Wie der Benutzername auf dieser Plattform angezeigt wird (Beispiel im Feld). */
+export function handleBeispiel(p: Plattform): string {
+  return p === "linkedin" ? "pia-partner" : "pia.reist";
+}
+
+// Erlaubte Zeichen eines Handles — dieselbe Regel wie serverseitig, damit die
+// Meldung schon beim Tippen kommt und nicht erst als 422.
+const HANDLE_ERLAUBT = /^[A-Za-z0-9._-]{1,100}$/;
+
+/** Handle normalisieren: @ und Leerzeichen weg. Leer → null. */
+export function handleBereinigen(handle: string): string | null {
+  const wert = handle.trim().replace(/^@+/, "").trim();
+  return wert || null;
+}
+
+/** True, wenn der Handle serverseitig durchgeht (leer gilt als „noch nichts getippt"). */
+export function handleGueltig(handle: string): boolean {
+  const wert = handleBereinigen(handle);
+  return wert === null || HANDLE_ERLAUBT.test(wert);
+}
+
+// Pfadsegmente, die KEIN Handle sind (LinkedIn `/in/`, YouTube `/channel/` …).
+const KEIN_HANDLE = new Set(["in", "add", "channel", "c", "user", "p", "pin", "profile.php"]);
+
+/** Profil-Adresse aus Plattform + Handle; null, wenn die Plattform keine hat. */
+export function profilUrl(p: Plattform, handle: string): string | null {
+  const muster = PROFIL_MUSTER[p];
+  const wert = handleBereinigen(handle);
+  if (muster === undefined || wert === null) return null;
+  return muster.replace("{h}", encodeURIComponent(wert));
+}
+
+/** Handle aus einer Profil-Adresse lesen; null, wenn keiner erkennbar ist. */
+export function handleAusUrl(url: string): string | null {
+  let pfad: string;
+  try {
+    pfad = new URL(url.trim()).pathname;
+  } catch {
+    return null;
+  }
+  for (const teil of pfad.split("/")) {
+    const stueck = teil.trim().replace(/^@+/, "");
+    if (!stueck || KEIN_HANDLE.has(stueck.toLowerCase())) continue;
+    return HANDLE_ERLAUBT.test(stueck) ? stueck : null;
+  }
+  return null;
+}
+
+/**
+ * Eingabe im Handle-Feld deuten. Wer eine ganze Adresse einklebt (häufig, weil
+ * „Link kopieren" genau das liefert), soll nicht scheitern: dann wird die
+ * Plattform am Host erkannt und der Handle aus dem Pfad gelesen.
+ */
+export function handleEingabeDeuten(eingabe: string): {
+  handle: string | null;
+  plattform: Plattform | null;
+  url: string | null;
+} {
+  const wert = eingabe.trim();
+  if (!/^https?:\/\//i.test(wert)) {
+    return { handle: handleBereinigen(wert), plattform: null, url: null };
+  }
+  return { handle: handleAusUrl(wert), plattform: plattformAusUrl(wert), url: wert };
 }

@@ -288,7 +288,6 @@
   },
   "kanaele": {
     "plattformLabel": "Platform",
-    "handle": "Felhasználónév (opcionális)",
     "reichweite": "Elérés (követők)",
     "hinzufuegen": "Csatorna hozzáadása",
     "entfernen": "Csatorna eltávolítása",
@@ -299,7 +298,9 @@
       "podcast": "Podcast",
       "other": "Egyéb"
     },
-    "socialPflicht": "Legalább egy közösségi média fiók kötelező – önmagában egy weboldal nem elegendő."
+    "socialPflicht": "Legalább egy közösségi média fiók kötelező – egy weboldal önmagában nem elegendő.",
+    "handlePflicht": "Felhasználónév",
+    "handleUngueltig": "A felhasználónév csak betűket, számokat, pontot, aláhúzásjelet és kötőjelet tartalmazhat – @ és szóköz nélkül."
   },
   "team": {
     "titel": "Csapat",

@@ -2397,20 +2397,22 @@
     "ustIdHinweis": "Bude skontrolované v systéme VIES EÚ. Bez potvrdeného čísla sa spoločnostiam nevyplácajú žiadne platby.",
     "kanaele": {
       "titel": "Vaše účty sociálnych médií",
-      "hinweis": "Povinné: aspoň jeden účet sociálnych médií (Instagram, TikTok, YouTube, Facebook, LinkedIn...) s adresou, menom používateľa a dosahom (sledovatelia). Webová stránka, blog alebo newsletter sú vítané ako doplnok. Účty skontrolujeme pred schválením.",
+      "hinweis": "Povinné: aspoň jeden účet sociálnych médií (Instagram, TikTok, YouTube, Facebook, LinkedIn...) s používateľským menom a dosahom (sledovatelia). Používateľské meno stačí – adresu profilu doplníme. Webová stránka, blog alebo newsletter sú vítané ako doplnok. Účty skontrolujeme pred schválením.",
       "plattform": "Platforma",
-      "handle": "Meno používateľa (voliteľné)",
       "reichweite": "Dosah (sledovatelia)",
       "hinzufuegen": "Pridať kanál",
       "entfernen": "Odstrániť kanál",
-      "socialPflicht": "Povinný je aspoň jeden účet sociálnych médií s dosahom – samotná webová stránka nestačí.",
+      "socialPflicht": "Aspoň jeden účet sociálnych médií s používateľským menom a dosahom je povinný – samotná webová stránka nestačí.",
       "plattformen": {
         "website": "Webová stránka",
         "blog": "Blog",
         "newsletter": "Newsletter",
         "podcast": "Podcast",
         "other": "Iné"
-      }
+      },
+      "handlePflicht": "Používateľské meno",
+      "handleUngueltig": "Používateľské meno môže obsahovať iba písmená, čísla, bodky, podčiarkovníky a pomlčky – bez @ a bez medzier.",
+      "adresse": "Adresa (https://...)"
     },
     "plattform": {
       "website": "Webová stránka",
@@ -2430,7 +2432,7 @@
     "sendet": "Odosiela sa...",
     "pruefungHinweis": "Tento formulár je chránený službou reCAPTCHA. Po odoslaní náš partnerský tím skontroluje vaše účty a dosah; dostanete e-mail s rozhodnutím.",
     "fehler": {
-      "social": "Uveďte aspoň jeden účet sociálnych médií s adresou a dosahom.",
+      "social": "Uveďte aspoň jeden účet sociálnych médií s používateľským menom a dosahom.",
       "doppelt": "Pre tento e-mail už existuje žiadosť. Prihláste sa do partnerského panela.",
       "eingabe": "Skontrolujte svoje údaje.",
       "captcha": "Kontrola ochrany proti spamu zlyhala. Obnovte stránku a skúste to znova.",
@@ -2440,6 +2442,8 @@
       "titel": "Žiadosť prijatá",
       "text": "Ďakujeme! Vaše účty a dosah skontrolujeme osobne a ozveme sa vám e-mailom. Váš partnerský panel je prístupný pomocou vášho e-mailu a hesla – odkazy a kódy budú aktívne po schválení.",
       "login": "Prejsť na partnerské prihlásenie"
-    }
+    },
+    "newsletter": "Posielajte mi e-mailom novinky o partnerskom programe, nové reklamné materiály a aktualizácie produktov.",
+    "newsletterFreiwillig": "Dobrovoľné, odber môžete kedykoľvek zrušiť."
   }
 }

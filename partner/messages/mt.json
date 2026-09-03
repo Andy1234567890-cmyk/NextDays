@@ -288,7 +288,6 @@
   },
   "kanaele": {
     "plattformLabel": "Pjattaforma",
-    "handle": "Handle (mhux obbligatorju)",
     "reichweite": "Reach (Segwaċi)",
     "hinzufuegen": "Żid kanal",
     "entfernen": "Neħħi kanal",
@@ -299,7 +298,9 @@
       "podcast": "Podcast",
       "other": "Oħrajn"
     },
-    "socialPflicht": "Mill-inqas kont wieħed tal-midja soċjali huwa obbligatorju — websajt waħda biss mhix biżżejjed."
+    "socialPflicht": "Mill-inqas kont wieħed tal-midja soċjali huwa obbligatorju — websajt waħda mhix biżżejjed.",
+    "handlePflicht": "Isem tal-utent",
+    "handleUngueltig": "L-isem tal-utent jista' jkun fih biss ittri, numri, tikek, singijiet u singijiet, mingħajr @ u mingħajr spazji."
   },
   "team": {
     "titel": "Tim",

@@ -2397,20 +2397,22 @@
     "ustIdHinweis": "Iċċekkjat kontra s-sistema tal-UE VIES. Mingħajr numru kkonfermat, l-ebda ħlas lill-kumpaniji.",
     "kanaele": {
       "titel": "Il-kontijiet tal-midja soċjali tiegħek",
-      "hinweis": "Obbligatorju: mill-inqas kont wieħed tal-midja soċjali (Instagram, TikTok, YouTube, Facebook, LinkedIn ...) bl-indirizz, il-handle u l-firxa (segwaċi). Website, blog jew newsletter huma milqugħa bħala addizzjonali. Aħna nirrevedu l-kontijiet qabel l-approvazzjoni.",
+      "hinweis": "Obbligatorju: mill-inqas kont wieħed tal-midja soċjali (Instagram, TikTok, YouTube, Facebook, LinkedIn …) bl-isem tal-utent u l-firxa (segwaċi). L-isem tal-utent huwa biżżejjed — aħna nżidu l-indirizz tal-profil. Websajt, blog jew newsletter huma milqugħa bħala żieda. Aħna niċċekkjaw il-kontijiet qabel l-approvazzjoni.",
       "plattform": "Pjattaforma",
-      "handle": "Handle (mhux obbligatorju)",
       "reichweite": "Firxa (segwaċi)",
       "hinzufuegen": "Żid kanal",
       "entfernen": "Neħħi kanal",
-      "socialPflicht": "Mill-inqas kont wieħed tal-midja soċjali bil-firxa huwa obbligatorju — website waħedha mhix biżżejjed.",
+      "socialPflicht": "Mill-inqas kont wieħed tal-midja soċjali bl-isem tal-utent u l-firxa huwa obbligatorju — websajt waħda biss mhix biżżejjed.",
       "plattformen": {
         "website": "Website",
         "blog": "Blog",
         "newsletter": "Newsletter",
         "podcast": "Podcast",
         "other": "Oħrajn"
-      }
+      },
+      "handlePflicht": "Isem tal-utent",
+      "handleUngueltig": "L-isem tal-utent jista' jkun fih biss ittri, numri, tikek, singijiet ta' taħt u singijiet — mingħajr @ u mingħajr spazji.",
+      "adresse": "Indirizz (https://…)"
     },
     "plattform": {
       "website": "Website",
@@ -2430,7 +2432,7 @@
     "sendet": "Qed tintbagħat...",
     "pruefungHinweis": "Din il-formola hija protetta minn reCAPTCHA. Wara li tintbagħat, it-tim tas-sħab tagħna jivverifika l-kontijiet u l-firxa tiegħek; tirċievi email bid-deċiżjoni.",
     "fehler": {
-      "social": "Jekk jogħġbok speċifika mill-inqas kont wieħed tal-midja soċjali bl-indirizz u l-firxa.",
+      "social": "Jekk jogħġbok ipprovdi mill-inqas kont wieħed tal-midja soċjali bl-isem tal-utent u l-firxa.",
       "doppelt": "Diġà hemm applikazzjoni għal din l-email. Idħol fid-dashboard tas-sħab.",
       "eingabe": "Jekk jogħġbok iċċekkja l-inputs tiegħek.",
       "captcha": "Il-verifika tal-protezzjoni kontra l-ispam falliet. Jekk jogħġbok erġa' kkarga l-paġna u erġa' pprova.",
@@ -2440,6 +2442,8 @@
       "titel": "Applikazzjoni rċevuta",
       "text": "Grazzi! Aħna nivverifikaw il-kontijiet u l-firxa tiegħek personalment u nikkuntattjawk permezz ta' email. Id-dashboard tas-sħab tiegħek huwa aċċessibbli bl-email u l-password tiegħek — il-links u l-kodiċijiet isiru attivi mal-approvazzjoni.",
       "login": "Għall-login tas-sħab"
-    }
+    },
+    "newsletter": "Ibgħatli aħbarijiet tal-programm ta' sħubija, materjali promozzjonali ġodda u aġġornamenti tal-prodott bl-email.",
+    "newsletterFreiwillig": "Volontarju, tista' tneħħi l-abbonament fi kwalunkwe ħin."
   }
 }

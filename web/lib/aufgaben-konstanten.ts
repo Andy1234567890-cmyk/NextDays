@@ -15,6 +15,8 @@ export const LEERER_ZEITPLAN: RuleSchedule = {
   end_trigger: null,
   start_offset_minutes: 0,
   end_offset_minutes: 0,
+  start_clock: null,
+  end_clock: null,
   starts_on: null,
   ends_on: null,
   start_time: null,
@@ -24,9 +26,14 @@ export const LEERER_ZEITPLAN: RuleSchedule = {
 /** Auswahl für „wann die Aufgabe beginnen soll" (planmäßige Regeln). */
 export const START_TRIGGER: TaskTrigger[] = [
   "booking_confirmed",
+  // Die Tages-Anker stehen jeweils NEBEN ihrem Uhrzeit-Anker, weil genau dort
+  // die Verwechslungsgefahr sitzt: „Beim Check-in" hängt an der Uhrzeit des
+  // Gastes, „Am Anreisetag" nur am Datum.
   "check_in",
+  "arrival_day",
   "after_check_in_24h",
   "check_out",
+  "departure_day",
   "days_before_check_in",
   "days_after_check_out",
 ];
@@ -34,8 +41,10 @@ export const START_TRIGGER: TaskTrigger[] = [
 /** Für das Ende gibt es „bei Buchungsbestätigung" nicht — das wäre vor dem Start. */
 export const END_TRIGGER: TaskTrigger[] = [
   "check_in",
+  "arrival_day",
   "after_check_in_24h",
   "check_out",
+  "departure_day",
   "days_before_check_in",
   "days_after_check_out",
 ];
@@ -45,6 +54,10 @@ export const TRIGGER_MIT_TAGEN: TaskTrigger[] = [
   "days_before_check_in",
   "days_after_check_out",
 ];
+
+/** Diese beiden Auslöser tragen ihre Uhrzeit an der REGEL (0535) — bei allen
+ *  anderen gilt die Uhrzeit der Buchung, und das Uhrzeitfeld bleibt aus. */
+export const TRIGGER_MIT_UHRZEIT: TaskTrigger[] = ["arrival_day", "departure_day"];
 
 export const MINUTEN_PRO_TAG = 1440;
 

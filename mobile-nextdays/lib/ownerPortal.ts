@@ -346,10 +346,31 @@ export async function getBlockRequests(): Promise<
   return call("/public-portal/block-requests");
 }
 
+/** Eine bestellbare Leistung zu einer Sperre (0510). Der Name kommt vom
+ *  Server — die Regelliste selbst darf ein Eigentümer nicht sehen (§4.3). */
+export type BestellteLeistung = {
+  rule_id: string;
+  name: string;
+};
+
+/** Was zu einer Sperre DIESES Objekts bestellbar ist. Bis 0538 kannte die App
+ *  das nicht: ein Antrag von hier bestellte strukturell nie eine Leistung und
+ *  erzeugte damit garantiert keine Reinigung. */
+export async function getBestellbareLeistungen(
+  propertyId: string,
+): Promise<Result<{ items: BestellteLeistung[] }>> {
+  return call(
+    `/public-portal/block-requests/leistungen/${encodeURIComponent(propertyId)}`,
+  );
+}
+
 export async function createBlockRequest(input: {
   property_id: string;
   start_date: string;
   end_date: string;
+  /** Regel-IDs der Leistungen, die ich zu dieser Sperre bestelle (0510).
+   *  Leer = keine Aufgabe. Die Agentur genehmigt jede einzeln (0538). */
+  bestellte_leistungen?: string[];
 }): Promise<Result<BlockRequest>> {
   return call("/public-portal/block-requests", { method: "POST", body: input });
 }

@@ -33,6 +33,7 @@ import { Textarea } from "@nextdays/ui/textarea";
 import { useRealtime } from "@/lib/use-realtime";
 import {
   type Sperrantrag,
+  type LeistungEntscheidung,
   approveBlockRequest,
   listBlockRequests,
   rejectBlockRequest,
@@ -123,12 +124,13 @@ export function SperrantragQueue({
     antrag: Sperrantrag,
     aktion: Aktion,
     kuendigung: { vertragsende: string | null } | null = null,
+    leistungen: LeistungEntscheidung[] = [],
   ): Promise<{ ok: true } | { ok: false; error: string }> => {
     setLaeuft(antrag.id);
     const notiz = (notizen[antrag.id] ?? "").trim() || null;
     const res =
       aktion === "approve"
-        ? await approveBlockRequest(antrag.id, notiz, kuendigung)
+        ? await approveBlockRequest(antrag.id, notiz, kuendigung, leistungen)
         : aktion === "reject"
           ? await rejectBlockRequest(antrag.id, notiz)
           : aktion === "rejectLift"
@@ -296,11 +298,27 @@ export function SperrantragQueue({
                           </span>
                         )}
                         {a.bestellte_leistungen.length > 0 ? (
-                          <span className="text-sm">
-                            {t("blockRequests.servicesOrdered")}:{" "}
-                            {a.bestellte_leistungen
-                              .map((b) => b.name)
-                              .join(", ")}
+                          <span className="flex flex-wrap items-center gap-1.5 text-sm">
+                            {t("blockRequests.servicesOrdered")}:
+                            {/* Je Leistung ihr Zustand (0538): „bestellt" ist
+                                nicht „genehmigt". Eine Sperre kann genehmigt
+                                und die Endreinigung dazu abgelehnt sein. */}
+                            {a.bestellte_leistungen.map((b) => (
+                              <span
+                                key={b.rule_id}
+                                className={`rounded-full px-2 py-0.5 text-xs ${
+                                  b.status === "genehmigt"
+                                    ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                                    : b.status === "abgelehnt"
+                                      ? "bg-destructive/10 text-destructive"
+                                      : "bg-secondary text-secondary-foreground"
+                                }`}
+                                title={b.entscheidungsnotiz ?? undefined}
+                              >
+                                {b.name} ·{" "}
+                                {t(`blockRequests.serviceStatus.${b.status}`)}
+                              </span>
+                            ))}
                           </span>
                         ) : (
                           <span className="text-xs text-muted-foreground">
@@ -389,7 +407,7 @@ export function SperrantragQueue({
           laeuft={laeuft === pruefung.id}
           fehler={pruefFehler}
           onClose={() => setPruefung(null)}
-          onGenehmigen={(kuendigung) => {
+          onGenehmigen={(kuendigung, leistungen) => {
             const antrag = pruefung;
             setPruefFehler(null);
             void (async () => {
@@ -397,6 +415,7 @@ export function SperrantragQueue({
                 antrag,
                 "approve",
                 kuendigung,
+                leistungen,
               );
               if (ergebnis.ok) setPruefung(null);
               else setPruefFehler(ergebnis.error);

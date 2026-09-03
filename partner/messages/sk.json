@@ -288,7 +288,6 @@
   },
   "kanaele": {
     "plattformLabel": "Platforma",
-    "handle": "Meno používateľa (voliteľné)",
     "reichweite": "Dosah (sledovatelia)",
     "hinzufuegen": "Pridať kanál",
     "entfernen": "Odstrániť kanál",
@@ -299,7 +298,9 @@
       "podcast": "Podcast",
       "other": "Iné"
     },
-    "socialPflicht": "Aspoň jeden účet sociálnych médií je povinný – samotná webová stránka nestačí."
+    "socialPflicht": "Aspoň jeden účet sociálnych médií je povinný – samotná webová stránka nestačí.",
+    "handlePflicht": "Používateľské meno",
+    "handleUngueltig": "Používateľské meno môže obsahovať iba písmená, čísla, bodky, podčiarkovníky a pomlčky – bez @ a medzier."
   },
   "team": {
     "titel": "Tím",

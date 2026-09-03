@@ -288,7 +288,6 @@
   },
   "kanaele": {
     "plattformLabel": "Platforma",
-    "handle": "Uživatelské jméno (volitelné)",
     "reichweite": "Dosah (sledující)",
     "hinzufuegen": "Přidat kanál",
     "entfernen": "Odebrat kanál",
@@ -299,7 +298,9 @@
       "podcast": "Podcast",
       "other": "Jiné"
     },
-    "socialPflicht": "Alespoň jeden účet na sociálních sítích je povinný – samotná webová stránka nestačí."
+    "socialPflicht": "Je vyžadován alespoň jeden účet na sociálních sítích – samotná webová stránka nestačí.",
+    "handlePflicht": "Uživatelské jméno",
+    "handleUngueltig": "Uživatelské jméno může obsahovat pouze písmena, čísla, tečky, podtržítka a pomlčky – bez @ a mezer."
   },
   "team": {
     "titel": "Tým",

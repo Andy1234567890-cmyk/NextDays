@@ -12,7 +12,9 @@ import { Pressable, ScrollView, View } from "react-native";
 import { Feld } from "@/components/ui/Feld";
 import { Btn, Kachel, KachelKopf, Txt } from "@/components/ui/kit";
 import {
+  type BestellteLeistung,
   createBlockRequest,
+  getBestellbareLeistungen,
   getOwnerProperties,
   type PortalProperty,
 } from "@/lib/ownerPortal";
@@ -44,6 +46,11 @@ export default function Sperrantrag({
   const [laeuft, setLaeuft] = useState(false);
   const [fehler, setFehler] = useState<string | null>(null);
   const [fertig, setFertig] = useState(false);
+  // Bestellte Leistungen (0510/0538). Ohne Bestellung entsteht zur Sperre
+  // KEINE Aufgabe; die Agentur genehmigt jede bestellte einzeln.
+  const [leistungen, setLeistungen] = useState<BestellteLeistung[]>([]);
+  const [bestellt, setBestellt] = useState<string[]>([]);
+  const [leistungenFehler, setLeistungenFehler] = useState<string | null>(null);
 
   useEffect(() => {
     void getOwnerProperties().then((res) => {
@@ -56,6 +63,34 @@ export default function Sperrantrag({
     // Auswahl neu laden.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Die bestellbaren Leistungen hängen am OBJEKT. Beim Objektwechsel wird
+  // die Auswahl geleert statt mitgenommen — sonst stünde eine Bestellung im
+  // Formular, die der Server für dieses Objekt mit 422 abweist.
+  useEffect(() => {
+    if (!objektId) {
+      setLeistungen([]);
+      setBestellt([]);
+      return;
+    }
+    let aktuell = true;
+    void getBestellbareLeistungen(objektId).then((res) => {
+      if (!aktuell) return;
+      if (res.ok) {
+        setLeistungen(res.data.items);
+        setLeistungenFehler(null);
+      } else {
+        // Ein Ladefehler ist nicht dasselbe wie „nichts bestellbar" (Wurzel
+        // 4/5): sonst hält der Eigentümer das Nichts für die Wahrheit.
+        setLeistungen([]);
+        setLeistungenFehler(res.error);
+      }
+      setBestellt([]);
+    });
+    return () => {
+      aktuell = false;
+    };
+  }, [objektId]);
 
   const senden = async () => {
     if (!objektId) {
@@ -72,6 +107,7 @@ export default function Sperrantrag({
       property_id: objektId,
       start_date: von,
       end_date: bis,
+      bestellte_leistungen: bestellt,
     });
     setLaeuft(false);
     if (res.ok) {
@@ -143,6 +179,51 @@ export default function Sperrantrag({
               Beide Tage gehören zum Zeitraum.
             </Txt>
           </Kachel>
+
+          {/* Leistungen bestellen (0510/0538). Nur was hier angekreuzt ist,
+              wird zur Sperre ausgeführt und abgerechnet — nach Genehmigung
+              durch die Verwaltung. Ohne Auswahl entsteht keine Aufgabe. */}
+          {leistungenFehler ? (
+            <Kachel>
+              <Txt v="sm" color={t.palette.accent}>
+                {leistungenFehler}
+              </Txt>
+            </Kachel>
+          ) : leistungen.length > 0 ? (
+            <Kachel>
+              <KachelKopf titel="Leistungen bestellen" />
+              <Txt v="xs" faint style={{ marginBottom: 6 }}>
+                Nur was Sie ankreuzen, wird zu Ihrer Sperrung ausgeführt und
+                abgerechnet — sobald Ihre Verwaltung es genehmigt hat.
+              </Txt>
+              {leistungen.map((l, idx) => {
+                const aktiv = bestellt.includes(l.rule_id);
+                return (
+                  <Pressable
+                    key={l.rule_id}
+                    onPress={() =>
+                      setBestellt((alt) =>
+                        aktiv ? alt.filter((x) => x !== l.rule_id) : [...alt, l.rule_id],
+                      )
+                    }
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: aktiv }}
+                    accessibilityLabel={l.name}
+                    style={{
+                      paddingVertical: 10,
+                      borderTopWidth: idx === 0 ? 0 : 1,
+                      borderTopColor: t.palette.line,
+                    }}
+                  >
+                    <Txt v="title" color={aktiv ? t.palette.accent : t.palette.ink}>
+                      {aktiv ? "☑ " : "☐ "}
+                      {l.name}
+                    </Txt>
+                  </Pressable>
+                );
+              })}
+            </Kachel>
+          ) : null}
 
           {fehler ? (
             <Kachel>

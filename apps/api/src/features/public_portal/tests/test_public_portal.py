@@ -879,6 +879,9 @@ def test_sperrantrag_mit_bestellung_speichert_sie() -> None:
     )
     assert [b.rule_id for b in item.bestellte_leistungen] == ["rule-rein"]
     assert item.bestellte_leistungen[0].name == "Endreinigung"
+    # 0538: frisch bestellt heisst NICHT genehmigt — der Eigentuemer sieht,
+    # dass die Agentur noch entscheidet.
+    assert item.bestellte_leistungen[0].status == "angefragt"
 
 
 def test_sperrantrag_ohne_bestellung_bleibt_leer() -> None:

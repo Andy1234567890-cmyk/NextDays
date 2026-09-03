@@ -288,7 +288,6 @@
   },
   "kanaele": {
     "plattformLabel": "Platvorm",
-    "handle": "Käepide (valikuline)",
     "reichweite": "Ulatus (jälgijad)",
     "hinzufuegen": "Lisa kanal",
     "entfernen": "Eemalda kanal",
@@ -299,7 +298,9 @@
       "podcast": "Podcast",
       "other": "Muu"
     },
-    "socialPflicht": "Vähemalt üks sotsiaalmeedia konto on kohustuslik – ainult veebisaidist ei piisa."
+    "socialPflicht": "Vähemalt üks sotsiaalmeedia konto on kohustuslik – ainult veebilehest ei piisa.",
+    "handlePflicht": "Kasutajanimi",
+    "handleUngueltig": "Kasutajanimi tohib sisaldada ainult tähti, numbreid, punkte, alakriipse ja sidekriipse – ilma @-märgi ja tühikuteta."
   },
   "team": {
     "titel": "Meeskond",

@@ -288,7 +288,6 @@
   },
   "kanaele": {
     "plattformLabel": "Plattform",
-    "handle": "Handle (optional)",
     "reichweite": "Reichweite (Follower)",
     "hinzufuegen": "Kanal hinzufügen",
     "entfernen": "Kanal entfernen",
@@ -299,7 +298,9 @@
       "podcast": "Podcast",
       "other": "Sonstiges"
     },
-    "socialPflicht": "Mindestens ein Social-Media-Konto ist Pflicht — eine Website allein reicht nicht."
+    "socialPflicht": "Mindestens ein Social-Media-Konto ist Pflicht — eine Website allein reicht nicht.",
+    "handlePflicht": "Benutzername",
+    "handleUngueltig": "Der Benutzername darf nur Buchstaben, Zahlen, Punkt, Unterstrich und Bindestrich enthalten — ohne @ und ohne Leerzeichen."
   },
   "team": {
     "titel": "Team",

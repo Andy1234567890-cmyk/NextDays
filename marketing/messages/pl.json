@@ -2397,20 +2397,22 @@
     "ustIdHinweis": "Sprawdzane w systemie VIES UE. Bez potwierdzonego numeru brak wypłat dla firm.",
     "kanaele": {
       "titel": "Twoje konta w mediach społecznościowych",
-      "hinweis": "Wymagane: co najmniej jedno konto w mediach społecznościowych (Instagram, TikTok, YouTube, Facebook, LinkedIn…) z adresem, nazwą użytkownika i zasięgiem (obserwujący). Strona internetowa, blog lub newsletter są mile widziane jako dodatkowe. Sprawdzamy konta przed zatwierdzeniem.",
+      "hinweis": "Wymagane: co najmniej jedno konto w mediach społecznościowych (Instagram, TikTok, YouTube, Facebook, LinkedIn…) z nazwą użytkownika i zasięgiem (obserwujący). Wystarczy nazwa użytkownika — adres profilu uzupełnimy. Strona internetowa, blog lub newsletter są mile widziane jako dodatek. Konta sprawdzamy przed aktywacją.",
       "plattform": "Platforma",
-      "handle": "Nazwa użytkownika (opcjonalnie)",
       "reichweite": "Zasięg (obserwujący)",
       "hinzufuegen": "Dodaj kanał",
       "entfernen": "Usuń kanał",
-      "socialPflicht": "Wymagane jest co najmniej jedno konto w mediach społecznościowych z zasięgiem — sama strona internetowa nie wystarczy.",
+      "socialPflicht": "Wymagane jest co najmniej jedno konto w mediach społecznościowych z nazwą użytkownika i zasięgiem — sama strona internetowa nie wystarczy.",
       "plattformen": {
         "website": "Strona internetowa",
         "blog": "Blog",
         "newsletter": "Newsletter",
         "podcast": "Podcast",
         "other": "Inne"
-      }
+      },
+      "handlePflicht": "Nazwa użytkownika",
+      "handleUngueltig": "Nazwa użytkownika może zawierać tylko litery, cyfry, kropki, podkreślenia i myślniki — bez @ i spacji.",
+      "adresse": "Adres (https://…)"
     },
     "plattform": {
       "website": "Strona internetowa",
@@ -2430,7 +2432,7 @@
     "sendet": "Wysyłanie…",
     "pruefungHinweis": "Ten formularz jest chroniony przez reCAPTCHA. Po przesłaniu nasz zespół partnerski sprawdzi Twoje konta i zasięg; otrzymasz e-mail z decyzją.",
     "fehler": {
-      "social": "Proszę podać co najmniej jedno konto w mediach społecznościowych z adresem i zasięgiem.",
+      "social": "Proszę podać co najmniej jedno konto w mediach społecznościowych z nazwą użytkownika i zasięgiem.",
       "doppelt": "Dla tego adresu e-mail istnieje już zgłoszenie. Zaloguj się do panelu partnera.",
       "eingabe": "Proszę sprawdzić wprowadzone dane.",
       "captcha": "Sprawdzanie ochrony przed spamem nie powiodło się. Proszę odświeżyć stronę i spróbować ponownie.",
@@ -2440,6 +2442,8 @@
       "titel": "Zgłoszenie przyjęte",
       "text": "Dziękujemy! Osobiście sprawdzimy Twoje konta i zasięg, a następnie skontaktujemy się z Tobą drogą mailową. Twój panel partnera jest dostępny za pomocą Twojego adresu e-mail i hasła — linki i kody staną się aktywne po zatwierdzeniu.",
       "login": "Do logowania partnera"
-    }
+    },
+    "newsletter": "Prosimy o przesyłanie mi e-mailem informacji o programie partnerskim, nowych materiałach promocyjnych i aktualizacjach produktów.",
+    "newsletterFreiwillig": "Dobrowolne, z możliwością rezygnacji w dowolnym momencie."
   }
 }

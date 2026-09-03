@@ -288,7 +288,6 @@
   },
   "kanaele": {
     "plattformLabel": "Alusta",
-    "handle": "Käyttäjätunnus (valinnainen)",
     "reichweite": "Tavoittavuus (seuraajat)",
     "hinzufuegen": "Lisää kanava",
     "entfernen": "Poista kanava",
@@ -299,7 +298,9 @@
       "podcast": "Podcast",
       "other": "Muu"
     },
-    "socialPflicht": "Vähintään yksi sosiaalisen median tili on pakollinen – pelkkä verkkosivusto ei riitä."
+    "socialPflicht": "Vähintään yksi sosiaalisen median tili on pakollinen – pelkkä verkkosivusto ei riitä.",
+    "handlePflicht": "Käyttäjätunnus",
+    "handleUngueltig": "Käyttäjätunnus saa sisältää vain kirjaimia, numeroita, pisteitä, alaviivoja ja yhdysviivoja – ei @-merkkejä tai välilyöntejä."
   },
   "team": {
     "titel": "Tiimi",

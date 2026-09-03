@@ -176,7 +176,11 @@ export type TaskTrigger =
   | "after_check_in_24h"
   | "check_out"
   | "days_before_check_in"
-  | "days_after_check_out";
+  | "days_after_check_out"
+  // Tages-Anker (0535): nur das DATUM der Reservierung zaehlt, die Uhrzeit
+  // kommt aus `start_clock`/`end_clock` der Regel.
+  | "arrival_day"
+  | "departure_day";
 
 export type RuleSchedule = {
   template_rule_id: string | null;
@@ -184,6 +188,10 @@ export type RuleSchedule = {
   end_trigger: TaskTrigger | null;
   start_offset_minutes: number;
   end_offset_minutes: number;
+  /** Uhrzeitfenster „HH:MM" der Tages-Anker (0535). Bei jedem anderen Ausloeser
+   *  `null` — dort gilt die Uhrzeit der Buchung. */
+  start_clock: string | null;
+  end_clock: string | null;
   starts_on: string | null;
   ends_on: string | null;
   /** „HH:MM" bzw. „HH:MM:SS" — leer, wenn keine Uhrzeit gesetzt ist. */

@@ -1888,7 +1888,12 @@
       "requestLift": "Zatražiti ukidanje",
       "liftRequested": "Ukidanje zatraženo — uprava odlučuje.",
       "liftPending": "Ukidanje zatraženo. Zabrana vrijedi dok uprava ne donese odluku.",
-      "liftRejected": "Ukidanje odbijeno — zabrana ostaje"
+      "liftRejected": "Ukidanje odbijeno — zabrana ostaje",
+      "serviceStatus": {
+        "angefragt": "čeka odobrenje",
+        "genehmigt": "odobreno",
+        "abgelehnt": "odbijeno"
+      }
     },
     "meter": {
       "title": "Unesi stanje brojila",
@@ -5253,7 +5258,9 @@
         "after_check_in_24h": "Nakon prijave (najviše 24 sata)",
         "check_out": "Kod odjave",
         "days_before_check_in": "Dana prije prijave",
-        "days_after_check_out": "Dana nakon odjave"
+        "days_after_check_out": "Dana nakon odjave",
+        "arrival_day": "Na dan dolaska",
+        "departure_day": "Na dan odlaska"
       },
       "triggerHint": {
         "booking_confirmed": "Zadatak nastaje čim je rezervacija potvrđena.",
@@ -5261,7 +5268,9 @@
         "after_check_in_24h": "24 sata nakon prijave — ali nikada nakon odjave: kod kratkih boravaka zadatak završava odlaskom.",
         "check_out": "Zadatak je vezan uz odjavu rezervacije.",
         "days_before_check_in": "Zadatak nastaje navedeni broj dana prije prijave.",
-        "days_after_check_out": "Zadatak nastaje navedeni broj dana nakon odjave."
+        "days_after_check_out": "Zadatak nastaje navedeni broj dana nakon odjave.",
+        "arrival_day": "Zadatak je na dan dolaska. Ovdje određujete vrijeme — vrijeme prijave gosta nije važno.",
+        "departure_day": "Zadatak je na dan odlaska. Ovdje određujete vrijeme — vrijeme odjave gosta nije važno."
       },
       "offsetDays": "Dana",
       "periodLabel": "Datum početka i završetka",
@@ -5308,7 +5317,8 @@
       "sourceLanguageLabel": "Jezik naziva",
       "sourceLanguageEmpty": "Nije navedeno",
       "sourceLanguageHint": "Naziv se automatski prevodi za čitatelje drugih jezika — interno ostaje kako ste ga upisali.",
-      "sourceLanguageMissing": "Bez navoda naziv se ne prevodi: vlasnici i zaposlenici vidjet će ga točno onako kako je ovdje."
+      "sourceLanguageMissing": "Bez navoda naziv se ne prevodi: vlasnici i zaposlenici vidjet će ga točno onako kako je ovdje.",
+      "clockLabel": "Vrijeme"
     },
     "taskPage": {
       "backToMyTasks": "Na moje zadatke",
@@ -7275,13 +7285,22 @@
         "terminationByOwner": "Vlasnik je to sam objasnio u prijavi.",
         "terminationHint": "Vlasnik želi raskinuti ugovor, ne samo blokirati noćenja. Umjesto blokiranja pristupa, datum završetka ugovora bit će postavljen izravno na nekretnini – čime će se zaustaviti njezin marketing na svim portalima.",
         "terminationReady": "Otkaz ugovora može se registrirati.",
-        "terminationSummary": "Ugovor završava {datum} — od tog dana nadalje, nekretnina se više neće nigdje prodavati."
+        "terminationSummary": "Ugovor završava {datum} — od tog dana nadalje, nekretnina se više neće nigdje prodavati.",
+        "services": "Naručene usluge",
+        "servicesHint": "Odlučite o svakoj usluzi pojedinačno. Samo ono što odobrite postaje zadatak i naplaćuje se – samo blokiranje je neovisno o tome.",
+        "serviceNotePlaceholder": "Obrazloženje za vlasnika (preporučuje se u slučaju odbijanja)",
+        "servicesTermination": "U slučaju otkazivanja, boravak se ne ostvaruje – naručene usluge se poništavaju."
       },
       "terminationRequested": "Vlasnik želi raskinuti ugovor.",
       "terminationSet": "Ugovor završava {datum}.",
       "servicesOrdered": "Naručene usluge",
       "servicesNone": "Nisu naručene usluge — neće nastati nijedan zadatak.",
-      "liftRequested": "Želi ukinuti zabranu"
+      "liftRequested": "Želi ukinuti zabranu",
+      "serviceStatus": {
+        "angefragt": "zatraženo",
+        "genehmigt": "odobreno",
+        "abgelehnt": "odbijeno"
+      }
     }
   },
   "seasons": {

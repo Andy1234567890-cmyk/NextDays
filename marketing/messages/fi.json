@@ -2397,20 +2397,22 @@
     "ustIdHinweis": "Tarkistetaan EU:n VIES-järjestelmästä. Ilman vahvistettua numeroa yrityksille ei makseta.",
     "kanaele": {
       "titel": "Sosiaalisen median tilisi",
-      "hinweis": "Pakollinen: vähintään yksi sosiaalisen median tili (Instagram, TikTok, YouTube, Facebook, LinkedIn …) osoitteella, käyttäjätunnuksella ja kattavuudella (seuraajat). Verkkosivusto, blogi tai uutiskirje ovat mielellään lisäksi. Tarkistamme tilit ennen hyväksyntää.",
+      "hinweis": "Pakollinen: vähintään yksi sosiaalisen median tili (Instagram, TikTok, YouTube, Facebook, LinkedIn …) käyttäjänimellä ja kattavuudella (seuraajat). Käyttäjänimi riittää – lisäämme profiiliosoitteen. Verkkosivusto, blogi tai uutiskirje ovat myös tervetulleita. Tarkistamme tilit ennen hyväksyntää.",
       "plattform": "Alusta",
-      "handle": "Käyttäjätunnus (valinnainen)",
       "reichweite": "Kattavuus (seuraajat)",
       "hinzufuegen": "Lisää kanava",
       "entfernen": "Poista kanava",
-      "socialPflicht": "Vähintään yksi sosiaalisen median tili kattavuudella on pakollinen – pelkkä verkkosivusto ei riitä.",
+      "socialPflicht": "Vähintään yksi sosiaalisen median tili käyttäjänimellä ja kattavuudella on pakollinen – pelkkä verkkosivusto ei riitä.",
       "plattformen": {
         "website": "Verkkosivusto",
         "blog": "Blogi",
         "newsletter": "Uutiskirje",
         "podcast": "Podcast",
         "other": "Muuta"
-      }
+      },
+      "handlePflicht": "Käyttäjänimi",
+      "handleUngueltig": "Käyttäjänimi saa sisältää vain kirjaimia, numeroita, pisteitä, alaviivoja ja yhdysviivoja – ilman @-merkkiä ja välilyöntejä.",
+      "adresse": "Osoite (https://…)"
     },
     "plattform": {
       "website": "Verkkosivusto",
@@ -2430,7 +2432,7 @@
     "sendet": "Lähetetään…",
     "pruefungHinweis": "Tämä lomake on reCAPTCHA-suojattu. Lähetyksen jälkeen kumppanitiimimme tarkistaa tilisi ja kattavuutesi; saat sähköpostin päätöksestä.",
     "fehler": {
-      "social": "Anna vähintään yksi sosiaalisen median tili osoitteella ja kattavuudella.",
+      "social": "Ilmoita vähintään yksi sosiaalisen median tili käyttäjätunnuksella ja kattavuudella.",
       "doppelt": "Tälle sähköpostille on jo hakemus. Kirjaudu sisään kumppanin hallintapaneeliin.",
       "eingabe": "Tarkista syöttämäsi tiedot.",
       "captcha": "Roskapostisuojaus epäonnistui. Lataa sivu uudelleen ja yritä uudelleen.",
@@ -2440,6 +2442,8 @@
       "titel": "Hakemus vastaanotettu",
       "text": "Kiitos! Tarkistamme tilisi ja kattavuutesi henkilökohtaisesti ja otamme sinuun yhteyttä sähköpostitse. Kumppanin hallintapaneeliisi pääsee sähköpostiosoitteellasi ja salasanallasi – linkit ja koodit aktivoituvat hyväksynnän myötä.",
       "login": "Kumppanin kirjautumiseen"
-    }
+    },
+    "newsletter": "Lähetä minulle sähköpostitse kumppanuusohjelman uutisia, uusia mainosmateriaaleja ja tuotepäivityksiä.",
+    "newsletterFreiwillig": "Vapaaehtoista, tilauksen voi peruuttaa milloin tahansa."
   }
 }

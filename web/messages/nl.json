@@ -1888,7 +1888,12 @@
       "requestLift": "Opheffing aanvragen",
       "liftRequested": "Opheffing aangevraagd — de beheerder beslist.",
       "liftPending": "Opheffing aangevraagd. De blokkering blijft van kracht totdat de beheerder heeft beslist.",
-      "liftRejected": "Opheffing afgewezen — de blokkering blijft"
+      "liftRejected": "Opheffing afgewezen — de blokkering blijft",
+      "serviceStatus": {
+        "angefragt": "wacht op goedkeuring",
+        "genehmigt": "goedgekeurd",
+        "abgelehnt": "afgewezen"
+      }
     },
     "meter": {
       "title": "Meterstand registreren",
@@ -5253,7 +5258,9 @@
         "after_check_in_24h": "Na check-in (max. 24 uur)",
         "check_out": "Bij check-out",
         "days_before_check_in": "Dagen voor check-in",
-        "days_after_check_out": "Dagen na check-out"
+        "days_after_check_out": "Dagen na check-out",
+        "arrival_day": "Op de dag van aankomst",
+        "departure_day": "Op de dag van vertrek"
       },
       "triggerHint": {
         "booking_confirmed": "De taak ontstaat zodra de boeking is bevestigd.",
@@ -5261,7 +5268,9 @@
         "after_check_in_24h": "24 uur na check-in — maar nooit voorbij de check-out: bij kort verblijf eindigt de taak bij het vertrek.",
         "check_out": "De taak hangt aan de check-out van de boeking.",
         "days_before_check_in": "De taak ontstaat het opgegeven aantal dagen voor de check-in.",
-        "days_after_check_out": "De taak ontstaat het opgegeven aantal dagen na de check-out."
+        "days_after_check_out": "De taak ontstaat het opgegeven aantal dagen na de check-out.",
+        "arrival_day": "De taak is op de dag van aankomst. U stelt hier de tijd in — de check-in tijd van de gast is niet van belang.",
+        "departure_day": "De taak is op de dag van vertrek. U stelt hier de tijd in — de check-out tijd van de gast is niet van belang."
       },
       "offsetDays": "Dagen",
       "periodLabel": "Start- en einddatum instellen",
@@ -5308,7 +5317,8 @@
       "sourceLanguageLabel": "Taal van de naam",
       "sourceLanguageEmpty": "Niet opgegeven",
       "sourceLanguageHint": "De naam wordt automatisch vertaald voor lezers van andere talen — intern blijft hij zoals u hem hebt ingetypt.",
-      "sourceLanguageMissing": "Zonder opgave wordt de naam niet vertaald: eigenaren en medewerkers zien hem precies zoals hij hier staat."
+      "sourceLanguageMissing": "Zonder opgave wordt de naam niet vertaald: eigenaren en medewerkers zien hem precies zoals hij hier staat.",
+      "clockLabel": "Tijd"
     },
     "taskPage": {
       "backToMyTasks": "Naar mijn taken",
@@ -7275,13 +7285,22 @@
         "terminationByOwner": "De eigenaar heeft dit zelf uitgelegd in de aanvraag.",
         "terminationHint": "De eigenaar wil het contract beëindigen, niet alleen de toegang blokkeren. In plaats van de toegang te blokkeren, wordt de einddatum van het contract direct op de accommodatie ingesteld – waardoor de advertentie op alle platforms stopt.",
         "terminationReady": "De opzegging kan worden geregistreerd.",
-        "terminationSummary": "Het contract eindigt op {datum} — vanaf deze dag zal het pand nergens meer te koop worden aangeboden."
+        "terminationSummary": "Het contract eindigt op {datum} — vanaf deze dag zal het pand nergens meer te koop worden aangeboden.",
+        "services": "Bestelde diensten",
+        "servicesHint": "Beslis over elke dienst afzonderlijk. Alleen wat u goedkeurt, wordt een taak en wordt gefactureerd — de blokkering zelf staat hier los van.",
+        "serviceNotePlaceholder": "Reden voor de eigenaar (aanbevolen bij afwijzing)",
+        "servicesTermination": "Bij een opzegging ontstaat geen verblijf — de bestelde diensten komen te vervallen."
       },
       "terminationRequested": "De eigenaar wenst het contract te beëindigen.",
       "terminationSet": "Het contract eindigt op {datum}.",
       "servicesOrdered": "Bestelde diensten",
       "servicesNone": "Geen diensten besteld — er wordt geen taak aangemaakt.",
-      "liftRequested": "Wil de blokkering opheffen"
+      "liftRequested": "Wil de blokkering opheffen",
+      "serviceStatus": {
+        "angefragt": "aangevraagd",
+        "genehmigt": "goedgekeurd",
+        "abgelehnt": "afgewezen"
+      }
     }
   },
   "seasons": {

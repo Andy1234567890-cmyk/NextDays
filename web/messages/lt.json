@@ -1888,7 +1888,12 @@
       "requestLift": "Prašyti panaikinimo",
       "liftRequested": "Panaikinimas užklaustas — sprendžia administracija.",
       "liftPending": "Panaikinimas užklaustas. Blokavimas galioja, kol administracija priims sprendimą.",
-      "liftRejected": "Panaikinimas atmestas — blokavimas lieka"
+      "liftRejected": "Panaikinimas atmestas — blokavimas lieka",
+      "serviceStatus": {
+        "angefragt": "laukia patvirtinimo",
+        "genehmigt": "patvirtinta",
+        "abgelehnt": "atmesta"
+      }
     },
     "meter": {
       "title": "Įvesti skaitiklio rodmenį",
@@ -5253,7 +5258,9 @@
         "after_check_in_24h": "Po atvykimo (ne daugiau kaip 24 val.)",
         "check_out": "Išvykstant",
         "days_before_check_in": "Dienos prieš atvykimą",
-        "days_after_check_out": "Dienos po išvykimo"
+        "days_after_check_out": "Dienos po išvykimo",
+        "arrival_day": "Atvykimo dieną",
+        "departure_day": "Išvykimo dieną"
       },
       "triggerHint": {
         "booking_confirmed": "Užduotis sukuriama, kai tik užsakymas patvirtinamas.",
@@ -5261,7 +5268,9 @@
         "after_check_in_24h": "24 valandos po atvykimo — bet niekada po išvykimo: trumpo viešnagės atveju užduotis baigiasi išvykus.",
         "check_out": "Užduotis susieta su užsakymo išvykimu.",
         "days_before_check_in": "Užduotis sukuriama nurodytą dienų skaičių prieš atvykimą.",
-        "days_after_check_out": "Užduotis sukuriama nurodytą dienų skaičių po išvykimo."
+        "days_after_check_out": "Užduotis sukuriama nurodytą dienų skaičių po išvykimo.",
+        "arrival_day": "Užduotis atliekama atvykimo dieną. Čia nurodote laiką – svečio atvykimo laikas nesvarbus.",
+        "departure_day": "Užduotis atliekama išvykimo dieną. Čia nurodote laiką – svečio išvykimo laikas nesvarbus."
       },
       "offsetDays": "Dienos",
       "periodLabel": "Pradžios ir pabaigos data",
@@ -5308,7 +5317,8 @@
       "sourceLanguageLabel": "Pavadinimo kalba",
       "sourceLanguageEmpty": "Nenurodyta",
       "sourceLanguageHint": "Pavadinimas automatiškai išverčiamas kitomis kalbomis skaitantiems — viduje jis lieka toks, kokį įvedėte.",
-      "sourceLanguageMissing": "Nenurodžius pavadinimas neverčiamas: savininkai ir darbuotojai matys jį būtent taip, kaip čia."
+      "sourceLanguageMissing": "Nenurodžius pavadinimas neverčiamas: savininkai ir darbuotojai matys jį būtent taip, kaip čia.",
+      "clockLabel": "Laikas"
     },
     "taskPage": {
       "backToMyTasks": "Į mano užduotis",
@@ -7275,13 +7285,22 @@
         "terminationByOwner": "Savininkas pats tai paaiškino paraiškoje.",
         "terminationHint": "Savininkas nori nutraukti sutartį, o ne tik užblokuoti naktis. Užuot užblokavus prieigą, sutarties pabaigos data bus nustatyta tiesiai ant nekilnojamojo turto – taip nutraukiant jo rinkodarą visuose portaluose.",
         "terminationReady": "Pranešimą apie atleidimą galima užregistruoti.",
-        "terminationSummary": "Sutartis baigiasi nuo {datum} – nuo šios dienos turtas niekur nebeparduodamas."
+        "terminationSummary": "Sutartis baigiasi nuo {datum} – nuo šios dienos turtas niekur nebeparduodamas.",
+        "services": "Užsakytos paslaugos",
+        "servicesHint": "Dėl kiekvienos paslaugos spręskite atskirai. Tik tai, ką patvirtinsite, bus užsakyta ir apmokėta – pats blokavimas nepriklauso nuo to.",
+        "serviceNotePlaceholder": "Paaiškinimas savininkui (rekomenduojama atmetus)",
+        "servicesTermination": "Nutraukus sutartį, viešnagė neįvyksta – užsakytos paslaugos atšaukiamos."
       },
       "terminationRequested": "Savininkas nori nutraukti sutartį.",
       "terminationSet": "Sutartis baigiasi {datum}.",
       "servicesOrdered": "Užsakytos paslaugos",
       "servicesNone": "Paslaugų neužsakyta — užduotis nebus sukurta.",
-      "liftRequested": "Nori panaikinti blokavimą"
+      "liftRequested": "Nori panaikinti blokavimą",
+      "serviceStatus": {
+        "angefragt": "užklausta",
+        "genehmigt": "patvirtinta",
+        "abgelehnt": "atmesta"
+      }
     }
   },
   "seasons": {

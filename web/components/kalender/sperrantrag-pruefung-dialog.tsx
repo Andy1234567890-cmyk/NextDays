@@ -34,6 +34,7 @@ import { Input } from "@nextdays/ui/input";
 import { Label } from "@nextdays/ui/label";
 import { formatCurrency } from "@/lib/currency";
 import {
+  type LeistungEntscheidung,
   type Sperrantrag,
   type SperrantragKollisionen,
   blockRequestKollisionen,
@@ -57,8 +58,13 @@ export function SperrantragPruefungDialog({
   open: boolean;
   onClose: () => void;
   /** `kuendigung` gesetzt → als Vertragskündigung genehmigen (Vertragsende
-   *  setzen statt Nächte sperren). `null` → normale Sperrung. */
-  onGenehmigen: (kuendigung: { vertragsende: string | null } | null) => void;
+   *  setzen statt Nächte sperren). `null` → normale Sperrung.
+   *  `leistungen`: die Entscheidung je bestellter Leistung (0538) — der Server
+   *  verlangt fuer jede eine, sonst 422. */
+  onGenehmigen: (
+    kuendigung: { vertragsende: string | null } | null,
+    leistungen: LeistungEntscheidung[],
+  ) => void;
   laeuft: boolean;
   /** Der Grund, aus dem der Server die Genehmigung eben abgelehnt hat. Er
    *  gehört HIER hin und nicht nur in die Liste hinter dem Dialog: wer gerade
@@ -82,6 +88,28 @@ export function SperrantragPruefungDialog({
   // Das Vertragsende. Leer = der Server nimmt den Antragsbeginn; ein eigener
   // Wert wird ausdrücklich gesetzt (der Vertrag läuft z. B. bis Monatsende).
   const [ende, setEnde] = useState("");
+  // Die Entscheidung je bestellter Leistung (0538). Bis dahin fuhren die
+  // Bestellungen mit der Genehmigung des Antrags blind mit — und kamen in
+  // diesem Dialog nicht einmal vor: die Agentur sah sie nur in der Zeile der
+  // Warteschlange DAHINTER. Jetzt stehen sie hier, jede mit eigenem Schalter.
+  // Vorbelegt mit „genehmigt": der Eigentuemer hat bestellt, der Regelfall ist
+  // die Freigabe — die Ablehnung ist der bewusste Eingriff.
+  const [leistungen, setLeistungen] = useState<
+    Record<string, { genehmigt: boolean; notiz: string }>
+  >(() =>
+    Object.fromEntries(
+      antrag.bestellte_leistungen.map((b) => [
+        b.rule_id,
+        { genehmigt: true, notiz: "" },
+      ]),
+    ),
+  );
+  const leistungsEntscheidungen = (): LeistungEntscheidung[] =>
+    antrag.bestellte_leistungen.map((b) => ({
+      rule_id: b.rule_id,
+      genehmigt: leistungen[b.rule_id]?.genehmigt ?? true,
+      notiz: (leistungen[b.rule_id]?.notiz ?? "").trim() || null,
+    }));
 
   useEffect(() => {
     if (!open) return;
@@ -187,6 +215,82 @@ export function SperrantragPruefungDialog({
             )}
           </div>
 
+          {/* Bestellte Leistungen (0538): jede einzeln genehmigen oder
+              ablehnen. Bei einer Kuendigung entsteht kein Aufenthalt, also
+              auch keine Leistung — dann nur der Hinweis. */}
+          {antrag.bestellte_leistungen.length > 0 && (
+            <section className="flex flex-col gap-2 rounded-(--radius) border border-border p-3">
+              <h3 className="text-sm font-medium">
+                {t("blockRequests.check.services")}
+              </h3>
+              {alsKuendigung ? (
+                <p className="text-xs text-muted-foreground">
+                  {t("blockRequests.check.servicesTermination")}
+                </p>
+              ) : (
+                <>
+                  <p className="text-xs text-muted-foreground">
+                    {t("blockRequests.check.servicesHint")}
+                  </p>
+                  <ul className="flex flex-col divide-y divide-border">
+                    {antrag.bestellte_leistungen.map((b) => {
+                      const e = leistungen[b.rule_id] ?? {
+                        genehmigt: true,
+                        notiz: "",
+                      };
+                      return (
+                        <li key={b.rule_id} className="flex flex-col gap-2 py-2">
+                          <label className="flex items-center gap-2.5 text-sm">
+                            <input
+                              type="checkbox"
+                              className="size-4 shrink-0"
+                              checked={e.genehmigt}
+                              disabled={laeuft}
+                              onChange={(ev) =>
+                                setLeistungen((alt) => ({
+                                  ...alt,
+                                  [b.rule_id]: {
+                                    ...e,
+                                    genehmigt: ev.target.checked,
+                                  },
+                                }))
+                              }
+                            />
+                            <span className="font-medium">{b.name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {t(
+                                e.genehmigt
+                                  ? "blockRequests.serviceStatus.genehmigt"
+                                  : "blockRequests.serviceStatus.abgelehnt",
+                              )}
+                            </span>
+                          </label>
+                          {!e.genehmigt && (
+                            <Input
+                              className="ml-6.5"
+                              placeholder={t(
+                                "blockRequests.check.serviceNotePlaceholder",
+                              )}
+                              value={e.notiz}
+                              disabled={laeuft}
+                              maxLength={1000}
+                              onChange={(ev) =>
+                                setLeistungen((alt) => ({
+                                  ...alt,
+                                  [b.rule_id]: { ...e, notiz: ev.target.value },
+                                }))
+                              }
+                            />
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </>
+              )}
+            </section>
+          )}
+
           {befund && <Befund k={befund} antrag={antrag} />}
 
           {/* Die Ablehnung des Servers — sie steht UNTER dem Befund, weil sie
@@ -208,6 +312,10 @@ export function SperrantragPruefungDialog({
               onClick={() =>
                 onGenehmigen(
                   alsKuendigung ? { vertragsende: ende || null } : null,
+                  // Bei einer Kuendigung gibt es keinen Aufenthalt und damit
+                  // keine Leistung zu entscheiden — der Server prueft dort
+                  // nicht, also geht nichts mit.
+                  alsKuendigung ? [] : leistungsEntscheidungen(),
                 )
               }
             >

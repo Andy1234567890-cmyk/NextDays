@@ -1,13 +1,28 @@
 "use client";
 
-// Kanal-Editor: eine Zeile je Kanal (Plattform mit Original-Logo, Adresse,
-// Handle, Reichweite). Die Plattform wird aus der eingegebenen Adresse
-// erkannt, solange der Partner sie nicht selbst gewählt hat.
+// Kanal-Editor: eine Zeile je Kanal (Plattform mit Original-Logo,
+// Benutzername, Reichweite).
+//
+// Bei den echten Netzwerken ist der BENUTZERNAME das Eingabefeld, nicht die
+// Adresse — die baut der Server daraus (03.09.2026, s. lib/kanaele.ts). Klebt
+// jemand eine ganze Adresse ein, wird sie erkannt und zerlegt. Generische
+// Kanäle (Website, Blog, Newsletter, Podcast, WhatsApp) haben keinen
+// Benutzernamen; dort bleibt das Adressfeld stehen.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 
 import { KanalIcon } from "@/components/kanal-icon";
-import { type Plattform, PLATTFORM_META, PLATTFORMEN, plattformAusUrl, type SocialKanal } from "@/lib/kanaele";
+import {
+  handleBeispiel,
+  handleEingabeDeuten,
+  handleGueltig,
+  hatHandle,
+  type Plattform,
+  PLATTFORM_META,
+  PLATTFORMEN,
+  plattformAusUrl,
+  type SocialKanal,
+} from "@/lib/kanaele";
 
 const istSocial = (p: Plattform) => PLATTFORM_META[p].marke;
 
@@ -29,15 +44,21 @@ export function kanaeleAusProfil(kanaele: SocialKanal[]): KanalEingabe[] {
   }));
 }
 
+/** Ausgefüllt = Benutzername ODER Adresse steht (eine Quelle genügt). */
+export function kanalGefuellt(k: KanalEingabe): boolean {
+  return Boolean(k.handle.trim() || k.url.trim());
+}
+
 export function kanaeleZuApi(kanaele: KanalEingabe[]): SocialKanal[] {
-  return kanaele
-    .filter((k) => k.url.trim())
-    .map((k) => ({
-      platform: k.platform,
-      url: k.url.trim(),
-      handle: k.handle.trim() || null,
-      followers: k.followers.trim() ? Number(k.followers.replace(/\D/g, "")) || 0 : null,
-    }));
+  return kanaele.filter(kanalGefuellt).map((k) => ({
+    platform: k.platform,
+    // Leer lassen, wenn nur der Benutzername steht — der Server baut die
+    // Adresse aus dem Profil-Muster. Eine hier zusammengesetzte URL wäre eine
+    // zweite Kopie derselben Regel.
+    url: k.url.trim(),
+    handle: k.handle.trim() || null,
+    followers: k.followers.trim() ? Number(k.followers.replace(/\D/g, "")) || 0 : null,
+  }));
 }
 
 const FELD = "rounded-full border border-border bg-transparent px-4 py-2 text-sm outline-none focus-visible:border-foreground";
@@ -76,19 +97,50 @@ export function KanaeleFeld({
                 </option>
               ))}
             </select>
-            <input
-              type="url"
-              required
-              maxLength={500}
-              placeholder={PLATTFORM_META[k.platform].beispiel}
-              value={k.url}
-              onChange={(e) => {
-                const url = e.target.value;
-                const erkannt = plattformAusUrl(url);
-                setze(i, { url, ...(erkannt ? { platform: erkannt } : {}) });
-              }}
-              className={FELD + " col-span-3 min-w-0 sm:col-span-1"}
-            />
+            {hatHandle(k.platform) ? (
+              <div className="col-span-3 flex min-w-0 items-center gap-0 sm:col-span-1">
+                <span aria-hidden className="shrink-0 pl-1 text-sm text-muted-foreground">
+                  @
+                </span>
+                <input
+                  type="text"
+                  required
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  maxLength={100}
+                  aria-label={t("handlePflicht")}
+                  aria-invalid={!handleGueltig(k.handle)}
+                  placeholder={handleBeispiel(k.platform)}
+                  value={k.handle}
+                  onChange={(e) => {
+                    const gedeutet = handleEingabeDeuten(e.target.value);
+                    setze(i, {
+                      handle: gedeutet.handle ?? (gedeutet.url ? "" : e.target.value),
+                      ...(gedeutet.plattform ? { platform: gedeutet.plattform } : {}),
+                      // Eine eingeklebte Adresse gewinnt: Kurz- und
+                      // Vanity-Links folgen keinem Muster.
+                      ...(gedeutet.url ? { url: gedeutet.url } : { url: "" }),
+                    });
+                  }}
+                  className={FELD + " min-w-0 flex-1"}
+                />
+              </div>
+            ) : (
+              <input
+                type="url"
+                required
+                maxLength={500}
+                placeholder={PLATTFORM_META[k.platform].beispiel}
+                value={k.url}
+                onChange={(e) => {
+                  const url = e.target.value;
+                  const erkannt = plattformAusUrl(url);
+                  setze(i, { url, ...(erkannt ? { platform: erkannt } : {}) });
+                }}
+                className={FELD + " col-span-3 min-w-0 sm:col-span-1"}
+              />
+            )}
             {kanaele.length > 1 ? (
               <button
                 type="button"
@@ -103,14 +155,6 @@ export function KanaeleFeld({
             )}
             <input
               type="text"
-              maxLength={100}
-              placeholder={t("handle")}
-              value={k.handle}
-              onChange={(e) => setze(i, { handle: e.target.value })}
-              className={FELD + " col-span-3 min-w-0 sm:col-span-2 sm:col-start-2"}
-            />
-            <input
-              type="text"
               inputMode="numeric"
               maxLength={12}
               placeholder={t("reichweite")}
@@ -119,9 +163,10 @@ export function KanaeleFeld({
               className={FELD + " col-span-3 min-w-0 sm:col-span-2 sm:col-start-2"}
             />
           </div>
+          {!handleGueltig(k.handle) && <p className="mt-2 text-xs text-accent">{t("handleUngueltig")}</p>}
         </div>
       ))}
-      {!kanaele.some((k) => istSocial(k.platform) && k.url.trim()) && (
+      {!kanaele.some((k) => istSocial(k.platform) && kanalGefuellt(k)) && (
         <p className="text-xs text-accent">{t("socialPflicht")}</p>
       )}
       {kanaele.length < max && (

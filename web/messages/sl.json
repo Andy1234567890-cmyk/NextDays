@@ -1888,7 +1888,12 @@
       "requestLift": "Zahtevaj preklic",
       "liftRequested": "Preklic zahtevan — odloča uprava.",
       "liftPending": "Preklic zahtevan. Zapora velja, dokler uprava ne odloči.",
-      "liftRejected": "Preklic zavrnjen — zapora ostaja"
+      "liftRejected": "Preklic zavrnjen — zapora ostaja",
+      "serviceStatus": {
+        "angefragt": "čaka na odobritev",
+        "genehmigt": "odobreno",
+        "abgelehnt": "zavrnjeno"
+      }
     },
     "meter": {
       "title": "Vnesi stanje števca",
@@ -5253,7 +5258,9 @@
         "after_check_in_24h": "Po prijavi (največ 24 ur)",
         "check_out": "Ob odjavi",
         "days_before_check_in": "Dni pred prijavo",
-        "days_after_check_out": "Dni po odjavi"
+        "days_after_check_out": "Dni po odjavi",
+        "arrival_day": "Na dan prihoda",
+        "departure_day": "Na dan odhoda"
       },
       "triggerHint": {
         "booking_confirmed": "Naloga nastane takoj, ko je rezervacija potrjena.",
@@ -5261,7 +5268,9 @@
         "after_check_in_24h": "24 ur po prijavi — a nikoli po odjavi: pri kratkih bivanjih se naloga konča z odhodom.",
         "check_out": "Naloga je vezana na odjavo rezervacije.",
         "days_before_check_in": "Naloga nastane navedeno število dni pred prijavo.",
-        "days_after_check_out": "Naloga nastane navedeno število dni po odjavi."
+        "days_after_check_out": "Naloga nastane navedeno število dni po odjavi.",
+        "arrival_day": "Naloga je na dan prihoda. Tukaj določite čas — čas prijave gosta ni pomemben.",
+        "departure_day": "Naloga je na dan odhoda. Tukaj določite čas — čas odjave gosta ni pomemben."
       },
       "offsetDays": "Dni",
       "periodLabel": "Določite začetni in končni datum",
@@ -5308,7 +5317,8 @@
       "sourceLanguageLabel": "Jezik imena",
       "sourceLanguageEmpty": "Ni navedeno",
       "sourceLanguageHint": "Ime se samodejno prevede za bralce v drugih jezikih — interno ostane tako, kot ste ga vnesli.",
-      "sourceLanguageMissing": "Brez navedbe se ime ne prevede: lastniki in zaposleni ga bodo videli točno tako, kot je tukaj."
+      "sourceLanguageMissing": "Brez navedbe se ime ne prevede: lastniki in zaposleni ga bodo videli točno tako, kot je tukaj.",
+      "clockLabel": "Ura"
     },
     "taskPage": {
       "backToMyTasks": "Na moje naloge",
@@ -7275,13 +7285,22 @@
         "terminationByOwner": "Lastnik je to v prijavi pojasnil sam.",
         "terminationHint": "Lastnik želi prekiniti pogodbo, ne le blokirati nočitev. Namesto blokiranja dostopa bo datum izteka pogodbe določen neposredno na nepremičnini – s tem se bo končalo njeno trženje na vseh portalih.",
         "terminationReady": "Odpoved pogodbe o zaposlitvi se lahko registrira.",
-        "terminationSummary": "Pogodba se konča z {datum} – od tega dne naprej nepremičnina ne bo več naprodaj nikjer."
+        "terminationSummary": "Pogodba se konča z {datum} – od tega dne naprej nepremičnina ne bo več naprodaj nikjer.",
+        "services": "Naročene storitve",
+        "servicesHint": "O vsaki storitvi se odločite posamično. Samo tisto, kar odobrite, bo postalo naloga in bo zaračunano – sama blokada je neodvisna od tega.",
+        "serviceNotePlaceholder": "Utemeljitev za lastnika (priporočljivo v primeru zavrnitve)",
+        "servicesTermination": "V primeru odpovedi ne pride do bivanja – naročene storitve se prekličejo."
       },
       "terminationRequested": "Lastnik želi prekiniti pogodbo.",
       "terminationSet": "Pogodba se konča na {datum}.",
       "servicesOrdered": "Naročene storitve",
       "servicesNone": "Nobena storitev ni naročena — nobena naloga ne bo nastala.",
-      "liftRequested": "Želim preklicati zaporo"
+      "liftRequested": "Želim preklicati zaporo",
+      "serviceStatus": {
+        "angefragt": "povpraševano",
+        "genehmigt": "odobreno",
+        "abgelehnt": "zavrnjeno"
+      }
     }
   },
   "seasons": {

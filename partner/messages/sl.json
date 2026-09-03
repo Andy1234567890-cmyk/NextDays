@@ -288,7 +288,6 @@
   },
   "kanaele": {
     "plattformLabel": "Platforma",
-    "handle": "Ročaj (neobvezno)",
     "reichweite": "Doseg (sledilci)",
     "hinzufuegen": "Dodaj kanal",
     "entfernen": "Odstrani kanal",
@@ -299,7 +298,9 @@
       "podcast": "Podcast",
       "other": "Drugo"
     },
-    "socialPflicht": "Vsaj en račun družbenih medijev je obvezen – samo spletna stran ni dovolj."
+    "socialPflicht": "Vsaj en račun družabnih medijev je obvezen – samo spletna stran ni dovolj.",
+    "handlePflicht": "Uporabniško ime",
+    "handleUngueltig": "Uporabniško ime lahko vsebuje samo črke, številke, pike, podčrtaje in pomišljaje – brez @ in brez presledkov."
   },
   "team": {
     "titel": "Ekipa",

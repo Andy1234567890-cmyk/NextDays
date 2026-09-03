@@ -1888,7 +1888,12 @@
       "requestLift": "Cealú a iarraidh",
       "liftRequested": "Cealú iarrtha — déanfaidh an bhainistíocht cinneadh.",
       "liftPending": "Cealú iarrtha. Fanann an blocáil i bhfeidhm go dtí go ndéanfaidh an bhainistíocht cinneadh.",
-      "liftRejected": "Cealú diúltaithe — fanann an blocáil"
+      "liftRejected": "Cealú diúltaithe — fanann an blocáil",
+      "serviceStatus": {
+        "angefragt": "ag feitheamh le ceadú",
+        "genehmigt": "ceadaithe",
+        "abgelehnt": "diúltaithe"
+      }
     },
     "meter": {
       "title": "Cláraigh léamh méadair",
@@ -5253,7 +5258,9 @@
         "after_check_in_24h": "Tar éis an teacht isteach (uas. 24 uair)",
         "check_out": "Ag an imeacht",
         "days_before_check_in": "Laethanta roimh an teacht isteach",
-        "days_after_check_out": "Laethanta tar éis an imeachta"
+        "days_after_check_out": "Laethanta tar éis an imeachta",
+        "arrival_day": "Ar lá teachta",
+        "departure_day": "Ar lá imeachta"
       },
       "triggerHint": {
         "booking_confirmed": "Cruthaítear an tasc chomh luath is a dheimhnítear an áirithint.",
@@ -5261,7 +5268,9 @@
         "after_check_in_24h": "24 uair tar éis an teacht isteach — ach riamh tar éis an imeachta: i gcás gearrfhanachta críochnaíonn an tasc leis an imeacht.",
         "check_out": "Tá an tasc ceangailte le himeacht na háirithinte.",
         "days_before_check_in": "Cruthaítear an tasc an líon laethanta sonraithe roimh an teacht isteach.",
-        "days_after_check_out": "Cruthaítear an tasc an líon laethanta sonraithe tar éis an imeachta."
+        "days_after_check_out": "Cruthaítear an tasc an líon laethanta sonraithe tar éis an imeachta.",
+        "arrival_day": "Tá an tasc ar lá an teachta. Socraíonn tú an t-am anseo — níl aon bhaint ag am isteach an aoi leis seo.",
+        "departure_day": "Tá an tasc ar lá an imeachta. Socraíonn tú an t-am anseo — níl aon bhaint ag am imeachta an aoi leis seo."
       },
       "offsetDays": "Laethanta",
       "periodLabel": "Socraigh dáta tosaigh agus deiridh",
@@ -5308,7 +5317,8 @@
       "sourceLanguageLabel": "Teanga an ainm",
       "sourceLanguageEmpty": "Gan sonrú",
       "sourceLanguageHint": "Aistrítear an t-ainm go huathoibríoch do léitheoirí teangacha eile — go hinmheánach fanann sé mar a chlóscríobh tú é.",
-      "sourceLanguageMissing": "Gan sonrú, ní aistrítear an t-ainm: feicfidh úinéirí agus foireann é go beacht mar atá sé anseo."
+      "sourceLanguageMissing": "Gan sonrú, ní aistrítear an t-ainm: feicfidh úinéirí agus foireann é go beacht mar atá sé anseo.",
+      "clockLabel": "Am"
     },
     "taskPage": {
       "backToMyTasks": "Ar ais chuig mo thascanna",
@@ -7275,13 +7285,22 @@
         "terminationByOwner": "Mhínigh an t-úinéir é seo é féin san iarratas.",
         "terminationHint": "Tá an t-úinéir ag iarraidh deireadh a chur leis an gconradh, ní hamháin oícheanta a bhac. In ionad rochtain a bhac, socrófar dáta deiridh an chonartha go díreach ar an maoin – rud a chuirfidh deireadh lena margaíocht ar gach tairseach.",
         "terminationReady": "Is féidir an fógra foirceanta a chlárú.",
-        "terminationSummary": "Críochnaíonn an conradh ó {datum} — ón lá seo ar aghaidh, ní dhíolfar an mhaoin in áit ar bith a thuilleadh."
+        "terminationSummary": "Críochnaíonn an conradh ó {datum} — ón lá seo ar aghaidh, ní dhíolfar an mhaoin in áit ar bith a thuilleadh.",
+        "services": "Seirbhísí ordaithe",
+        "servicesHint": "Cinneadh a dhéanamh ar gach seirbhís ina haonar. Ní dhéanfar ach an méid a cheadaíonn tú a shannadh agus a bhilleáil — tá an blocáil féin neamhspleách air seo.",
+        "serviceNotePlaceholder": "Cúis leis an úinéir (molta má dhiúltaítear é)",
+        "servicesTermination": "Ní chruthaíonn cealú fanacht — cuirtear na seirbhísí ordaithe ar ceal."
       },
       "terminationRequested": "Tá an t-úinéir ag iarraidh an conradh a fhoirceannadh.",
       "terminationSet": "Críochnaíonn an conradh ar {datum}.",
       "servicesOrdered": "Seirbhísí ordaithe",
       "servicesNone": "Níor ordaíodh aon seirbhís — ní chruthófar aon tasc.",
-      "liftRequested": "Ba mhaith liom an blocáil a chealú"
+      "liftRequested": "Ba mhaith liom an blocáil a chealú",
+      "serviceStatus": {
+        "angefragt": "iarrtha",
+        "genehmigt": "ceadaithe",
+        "abgelehnt": "diúltaithe"
+      }
     }
   },
   "seasons": {
