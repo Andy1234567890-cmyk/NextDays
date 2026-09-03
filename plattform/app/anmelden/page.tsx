@@ -9,9 +9,9 @@ import { isGuestLoggedIn } from "@/lib/guest-session";
 export default async function AnmeldenPage({
   searchParams,
 }: {
-  searchParams: Promise<{ weiter?: string }>;
+  searchParams: Promise<{ weiter?: string; reset?: string }>;
 }) {
-  const { weiter } = await searchParams;
+  const { weiter, reset } = await searchParams;
   // Nur interne Pfade als Weiterleitungsziel zulassen (kein Open-Redirect).
   // `startsWith("/")` allein reichte NICHT: "//fremde-domain.tld" beginnt mit
   // "/", ist aber eine absolute URL auf eine fremde Origin.
@@ -75,7 +75,10 @@ export default async function AnmeldenPage({
         <div className="mb-6 md:hidden">
           <Logo />
         </div>
-        <AnmeldenForm weiter={ziel} />
+        {/* `reset=1` kommt aus der Reset-Mail (`redirect_to`) und oeffnet
+            direkt die Code-Eingabe. Ohne das landet der Gast auf dem
+            Login und weiss nicht, wohin mit dem Code aus der Mail. */}
+        <AnmeldenForm weiter={ziel} resetStart={reset === "1"} />
         <p className="mt-6 max-w-md text-center text-xs text-muted-foreground sm:mt-8">
           Mit der Anmeldung stimmst du den Nutzungsbedingungen und der
           Datenschutzerklärung von myBestDays zu.

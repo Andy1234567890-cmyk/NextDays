@@ -255,7 +255,12 @@ class GuestAuthService:
         from src.core.config import get_settings  # noqa: PLC0415
 
         basis = (get_settings().marketplace_base_url or "").strip().rstrip("/")
-        optionen = {"redirect_to": f"{basis}/passwort-neu"} if basis else None
+        # Ziel ist `/anmelden?reset=1` und NICHT `/passwort-neu`: der
+        # Marktplatz hat keine eigene Reset-Seite, die Code-Eingabe sitzt im
+        # Anmelde-Formular (vierter Modus). Ein `redirect_to` auf eine Route,
+        # die es nicht gibt, waere derselbe Fehler wie vorher — nur eine
+        # Ebene spaeter.
+        optionen = {"redirect_to": f"{basis}/anmelden?reset=1"} if basis else None
         if not basis:
             log.error(
                 "marketplace_base_url_fehlt",

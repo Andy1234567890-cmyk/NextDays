@@ -22,9 +22,16 @@ import { setGuestSession } from "@/lib/guest-session";
 // Formular versprach einen „Link zum Zuruecksetzen", der ins Nichts fuehrte.
 type Modus = "login" | "register" | "reset" | "code";
 
-export function AnmeldenForm({ weiter }: { weiter: string }) {
+export function AnmeldenForm({
+  weiter,
+  resetStart = false,
+}: {
+  weiter: string;
+  /** true = aus der Reset-Mail gekommen: direkt die Code-Eingabe zeigen. */
+  resetStart?: boolean;
+}) {
   const router = useRouter();
-  const [modus, setModus] = useState<Modus>("login");
+  const [modus, setModus] = useState<Modus>(resetStart ? "code" : "login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");

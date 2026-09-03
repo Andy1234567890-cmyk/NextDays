@@ -169,4 +169,7 @@ def test_reset_mail_traegt_das_rueckspringziel() -> None:
 
     ziel = (gesehen.get("options") or {}).get("redirect_to")
     assert ziel, "kein redirect_to übergeben — die Mail führt ins Nichts"
-    assert ziel.endswith("/passwort-neu"), ziel
+    # `/anmelden?reset=1` und NICHT `/passwort-neu`: der Marktplatz hat keine
+    # eigene Reset-Seite, die Code-Eingabe sitzt im Anmelde-Formular. Ein
+    # Ziel auf eine Route, die es nicht gibt, wäre derselbe Fehler wie vorher.
+    assert ziel.endswith("/anmelden?reset=1"), ziel
