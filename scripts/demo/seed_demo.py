@@ -114,6 +114,16 @@ def betrieb_anlegen(db: Supabase, betrieb: Betrieb, passwort: str) -> str:
         "business_type": betrieb.business_type,
         "accommodation_type": betrieb.accommodation_type,
         "account_type": "pms",
+        # MUSS hier stehen, nicht nur in der Migration: `aufraeumen` loescht die
+        # Mandanten-Zeile, dieser Upsert legt sie neu an — ein per Migration
+        # gesetztes `is_demo` faellt damit auf den Default `false`. Genau so ging
+        # die Absicherung der Vorfuehrung verloren (0529): Schreibsperre,
+        # Bereichssperre, Schloss-Symbole und der `storybook_chat`-Ausschluss
+        # haengen alle an diesem einen Schalter, und ohne ihn war die
+        # oeffentliche Vorfuehrung voll bedienbar. Explizit auch im
+        # `False`-Fall setzen, damit ein Betrieb das Flag nicht aus einer
+        # frueheren Zeile behaelt (Wurzel 1: Gegenzustand mitpflegen).
+        "is_demo": betrieb.ist_vorfuehrung,
     }])
     # Ohne diese Zeile blendet das Dashboard den Einrichtungs-Assistenten statt
     # der Kennzahlen ein — im Screenshot sähe der Betrieb wie ein leeres,

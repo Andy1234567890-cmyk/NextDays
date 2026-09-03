@@ -49,6 +49,12 @@ export const PORTAL_KATEGORIEN: readonly string[] = [
   "owner_booking",
   // Antwort der Verwaltung auf einen eigenen Sperr-Antrag (0332).
   "block_decision",
+  // Ein FAMILIENMITGLIED wuenscht eine Sperrzeit und braucht die Zustimmung
+  // des Eigentuemers (0389/0390). Die Meldung ging live schon hinaus
+  // (`public_portal/familie.py`), der Schalter dazu war im Portal aber nicht
+  // erreichbar — eine Kategorie, die man nicht abstellen kann, obwohl der
+  // Katalog sie als abwaehlbar fuehrt.
+  "block_freigabe",
   // Statuswechsel an einer beauftragten Dienstleistung (0330).
   "owner_service",
   "account_activity",

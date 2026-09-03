@@ -21,6 +21,8 @@ import {
 import { formatCurrency } from "@/lib/currency";
 import type { Auswertung, BuchungZeile } from "@/lib/auswertung-typen";
 
+import { VergleichHinweis } from "./vergleich-delta";
+
 const SPALTEN = [
   "property",
   "guest",
@@ -86,10 +88,20 @@ export function ReiterBuchungen({ a }: { a: Auswertung }) {
 
   const zeigt = useMemo(() => (s: Spalte) => sichtbar.includes(s), [sichtbar]);
 
+  // Der Leerzustand meldet auch, was der Vorzeitraum hatte — „dieses Jahr
+  // keine Buchungen, letztes Jahr 34" ist die Aussage, nicht bloß „leer".
   if (!a.buchungen.length) {
     return (
-      <Card className="p-8 text-center text-sm text-muted-foreground">
-        {t("empty")}
+      <Card className="flex flex-col gap-1 p-8 text-center text-sm text-muted-foreground">
+        <span>{t("empty")}</span>
+        {a.vorher && (
+          <span className="text-xs">
+            {t("compareRowCount", {
+              label: t(`compare.${a.vorher.vergleich}`),
+              count: a.vorher.buchungen_gesamt,
+            })}
+          </span>
+        )}
       </Card>
     );
   }
@@ -100,10 +112,33 @@ export function ReiterBuchungen({ a }: { a: Auswertung }) {
   const datum = (iso: string) => (iso ? new Date(iso).toLocaleDateString() : "—");
 
   return (
+    <div className="flex flex-col gap-3">
+      {a.vorher && (
+        <VergleichHinweis
+          vergleich={a.vorher.vergleich}
+          von={a.vorher.von}
+          bis={a.vorher.bis}
+        />
+      )}
     <Card className="overflow-hidden">
+      {/* `min-w-0` links: ohne das schiebt die Zeilenzahl das Spalten-Menü
+          auf schmalen Bildschirmen aus der Karte. */}
       <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
-        <span className="text-sm text-muted-foreground">
-          {t("table.rowCount", { count: a.buchungen.length })}
+        <span className="flex min-w-0 flex-col text-sm text-muted-foreground">
+          <span className="truncate">
+            {t("table.rowCount", { count: a.buchungen.length })}
+          </span>
+          {a.vorher && (
+            // Vom Vorzeitraum steht hier NUR die Summe. Seine Einzelbuchungen
+            // gehören nicht in diese Tabelle: sie wären zwischen den aktuellen
+            // nicht unterscheidbar (das Backend liefert sie deshalb gar nicht).
+            <span className="truncate text-xs">
+              {t("compareRowCount", {
+                label: t(`compare.${a.vorher.vergleich}`),
+                count: a.vorher.buchungen_gesamt,
+              })}
+            </span>
+          )}
         </span>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -209,5 +244,6 @@ export function ReiterBuchungen({ a }: { a: Auswertung }) {
         </table>
       </div>
     </Card>
+    </div>
   );
 }

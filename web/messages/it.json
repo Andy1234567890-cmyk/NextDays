@@ -4470,7 +4470,8 @@
         "vorlagen": "Modelli di attività",
         "planmaessig": "Attività pianificate",
         "regelmaessig": "Attività ricorrenti",
-        "vertretungen": "Sostituzioni"
+        "vertretungen": "Sostituzioni",
+        "dienstleistungen": "Servizi"
       }
     },
     "propertyCalendar": {
@@ -5101,7 +5102,15 @@
       },
       "rowOpenCalendar": "Apri nel calendario",
       "rowOpenBooking": "Apri la prenotazione",
-      "rowOpenInbox": "Apri la conversazione"
+      "rowOpenInbox": "Apri la conversazione",
+      "ownerRequests": "Operazioni del proprietario",
+      "ownerRequestsLabel": "in attesa di una sua decisione",
+      "ownerRequestsExplain": "Richieste di blocco e sblocco da parte dei proprietari. Finché nessuno decide, il proprietario attende una risposta e le notti rimangono nello stato in cui si trovano.",
+      "ownerRequestsPending": "Richieste di blocco aperte",
+      "ownerRequestsLift": "Richieste di sblocco",
+      "ownerRequestsTermination": "Termini di contratto annunciati",
+      "ownerRequestsNone": "Nessuna operazione aperta.",
+      "ownerRequestsOldest": "Richiesta aperta più vecchia: {count, plural, =0 {oggi} one {da un giorno} other {da # giorni}}"
     },
     "mobileAppHint": "La vista attività per gli spostamenti è già disponibile in modo responsive sul web (Le mie attività + dettaglio con caricamento foto). Un'app mobile separata seguirà come progetto a sé.",
     "aufgabenFilter": {
@@ -12243,7 +12252,8 @@
       "properties": "Oggetti",
       "allProperties": "Tutti gli oggetti",
       "channels": "Canali",
-      "allChannels": "Tutti i canali"
+      "allChannels": "Tutti i canali",
+      "compare": "Confronta"
     },
     "basis": {
       "anreise": "Per arrivo",
@@ -12316,13 +12326,48 @@
     },
     "ownerStayCount": "{count, plural, one {# uso personale} other {# usi personali}}",
     "ownerStayRow": "Uso personale",
-    "ownerStayRowHint": "Proprietario che vive nell'immobile – nessuna vendita"
+    "ownerStayRowHint": "Proprietario che vive nell'immobile – nessuna vendita",
+    "compare": {
+      "keiner": "Nessun confronto",
+      "1j": "Anno precedente",
+      "2j": "2 anni fa",
+      "5j": "5 anni fa"
+    },
+    "compareBanner": "{label}: confronto con {von} – {bis}",
+    "comparePrevious": "precedente {value}",
+    "compareNoBase": "nessun valore precedente",
+    "compareOnlyBefore": "solo nel periodo di confronto",
+    "compareRowCount": "{label}: {count, plural, =0 {nessuna prenotazione} one {# prenotazione} other {# prenotazioni}}",
+    "compareBaselinePrevious": "Variazione rispetto al periodo precedente di pari durata",
+    "compareCurrencyMismatch": "Anno precedente in {currency} – non confrontabile",
+    "compareCurrencyUnclear": "Valuta non chiara nel periodo di confronto",
+    "compareCurrencyMismatchHint": "Nel periodo di confronto era in vigore una valuta diversa. Una variazione percentuale sarebbe un effetto del tasso di cambio e non un dato aziendale.",
+    "compareChartCurrencyMismatch": "Il periodo di confronto era in una valuta diversa, pertanto la linea dell'anno precedente non viene tracciata.",
+    "compareLocked": "Un confronto è possibile per un periodo massimo di un anno."
   },
   "tasks": {
     "fehler": {
       "requestId": "ID: {id}",
       "kopieren": "Copia dettagli",
       "kopiert": "Copiato"
+    },
+    "servicePrices": {
+      "title": "Prezzi dei servizi",
+      "intro": "Costo di un servizio ordinato dal proprietario. Al completamento dell'attività, questo genera una voce nella sua fattura. Senza prezzo non viene generata alcuna voce e il servizio rimane non fatturato.",
+      "missing": "Nessun prezzo",
+      "set": "Imposta prezzo",
+      "change": "Modifica",
+      "remove": "Rimuovi",
+      "amount": "Importo",
+      "currency": "Valuta",
+      "scope": "Si applica a",
+      "allProperties": "Tutte le proprietà",
+      "save": "Salva",
+      "cancel": "Annulla",
+      "saved": "Prezzo salvato.",
+      "removed": "Prezzo rimosso.",
+      "amountInvalid": "Inserire un importo a partire da 0.",
+      "currencyInvalid": "Inserire una valuta di tre lettere (ad es. DKK)."
     }
   }
 }

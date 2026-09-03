@@ -12,6 +12,7 @@ from datetime import date, timedelta
 
 from src.core.security import AuthContext
 from src.core.supabase import fetch_all_rows
+from src.core.zeitraum import jahre_datumsgleich
 from src.features.auth.granular_permissions import Permission, load_permission
 from src.features.booking_conditions.plan import (
     erste_zahlung,
@@ -80,7 +81,9 @@ def _assert_stats_span(date_from: date, date_to: date) -> None:
         )
 
 
-def _stats_untergrenze(date_from: date, date_to: date) -> str:
+def _stats_untergrenze(
+    date_from: date, date_to: date, jahre_zurueck: int = 0
+) -> str:
     """Früheste `created_at`-Grenze, ab der Kennzahlen-Zeilen geladen werden.
 
     Die Aggregation ordnet Zeilen über das BUCHUNGSDATUM (`created_at`) zu, nicht
@@ -89,6 +92,12 @@ def _stats_untergrenze(date_from: date, date_to: date) -> str:
     `date_from` — deren Zeilen müssen mitgeladen werden, sonst stünden die
     Vergleichswerte still auf 0 und jede Veränderungsrate wäre falsch.
 
+    `jahre_zurueck` > 0 zieht die Grenze zusätzlich auf den Jahresvergleich
+    (1/2/5 Jahre). OHNE das wäre der Jahresvergleich eine stille Attrappe: das
+    Fenster reicht bei einem Monatszeitraum nur wenige Monate zurück, die Zeilen
+    von vor fünf Jahren kämen also gar nicht erst an, und die Rechnung meldete
+    pflichtschuldig „0 Umsatz im Vorjahr" statt „nicht geladen" (Wurzel 4/5).
+
     Bewusst NUR eine Untergrenze, keine Obergrenze: `days_booked_ahead` misst die
     weiteste ZUKÜNFTIGE Anreise (`check_in >= today`) aus Buchungen, die in der
     Periode entstanden sind. Ein `created_at <= date_to`-Filter wäre dafür
@@ -96,7 +105,13 @@ def _stats_untergrenze(date_from: date, date_to: date) -> str:
     daher bleibt die Zukunft offen und nur der unbegrenzte Altbestand fällt weg.
     """
     spanne = (date_to - date_from).days + 1
-    return (date_from - timedelta(days=spanne * (COMPARE_PERIODS + 1))).isoformat()
+    grenze = date_from - timedelta(days=spanne * (COMPARE_PERIODS + 1))
+    if jahre_zurueck:
+        # Ein Puffer von einer Spanne unter dem Vergleichszeitraum: dessen
+        # eigene Zeilen müssen vollständig drin sein.
+        vergleich_start = jahre_datumsgleich(date_from, jahre_zurueck)
+        grenze = min(grenze, vergleich_start - timedelta(days=spanne))
+    return grenze.isoformat()
 
 
 class ReadsMixin(ReservationsBase):
@@ -278,6 +293,7 @@ class ReadsMixin(ReservationsBase):
         date_from: date,
         date_to: date,
         property_ids: list[str] | None,
+        vergleich_jahre: int = 0,
     ) -> tuple[list[dict], bool, int]:
         """Gemeinsames Laden fürs GLOBALE Kontrollzentrum: alle Objekt-
         Reservierungen des Tenants (owner-gescoped, optional auf `property_ids`
@@ -315,7 +331,10 @@ class ReadsMixin(ReservationsBase):
             .select("*")
             .eq("tenant_id", tenant_id)
             .in_("property_id", sorted(allowed))
-            .gte("created_at", _stats_untergrenze(date_from, date_to))
+            .gte(
+                "created_at",
+                _stats_untergrenze(date_from, date_to, vergleich_jahre),
+            )
             .order("created_at", desc=True)
             .order("id", desc=True)
         )
@@ -328,14 +347,20 @@ class ReadsMixin(ReservationsBase):
         date_from: date,
         date_to: date,
         property_ids: list[str] | None = None,
+        vergleich_jahre: int = 0,
     ) -> PropertyStats:
         """Globale Kontrollzentrum-Kennzahlen: dieselben KPIs + Kanal-Verteilung +
         Sparklines wie der Objekt-Reiter, aber über ALLE (owner-sichtbaren)
         Objekte des Tenants zusammengefasst. Optionaler `property_ids`-Filter
         („Ausgewählte Unterkünfte"). Belegungsrate durch die Objektanzahl geteilt.
+
+        `vergleich_jahre` (0/1/2/5) verschiebt den Vergleichsanker jeder
+        `change_pct` von der Vorperiode auf denselben Zeitraum vor so vielen
+        Jahren. Das Ladefenster zieht mit — sonst wären die Vorjahreszeilen gar
+        nicht geladen und jede Veränderung stünde still auf „−100 %".
         """
         rows, show_amounts, count = self._load_tenant_stats_rows(
-            ctx, date_from, date_to, property_ids
+            ctx, date_from, date_to, property_ids, vergleich_jahre
         )
         return compute_property_stats(
             property_id="",
@@ -345,6 +370,7 @@ class ReadsMixin(ReservationsBase):
             date_to=date_to,
             show_amounts=show_amounts,
             property_count=count,
+            vergleich_jahre=vergleich_jahre,
         )
 
     def tenant_metric_detail(

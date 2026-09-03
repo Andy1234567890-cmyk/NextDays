@@ -518,3 +518,36 @@ class TaskCompletePayload(BaseModel):
 class SliceHealth(BaseModel):
     slice: str
     status: str = "ok"
+
+# --- Preise beauftragbarer Dienstleistungen (0531) --------------------------
+
+
+class DienstleistungPreis(BaseModel):
+    """Ein gepflegter Preis: Betriebsregel (`property_id=None`) oder Ausnahme."""
+
+    id: str
+    service_type_id: str
+    property_id: str | None = None
+    amount: float
+    currency: str
+    note: str | None = None
+
+
+class DienstleistungPreisSetzen(BaseModel):
+    """Preis anlegen/aendern. Waehrung PFLICHT — nie ein Default (Wurzel 4):
+    der Betrieb kann in DKK fuehren und Objekte in EUR haben."""
+
+    service_type_id: str
+    # None = Regel fuer alle Objekte; gesetzt = Ausnahme fuer genau eines.
+    property_id: str | None = None
+    amount: Decimal = Field(ge=0, le=1_000_000)
+    currency: str = Field(min_length=3, max_length=3, pattern=r"^[A-Za-z]{3}$")
+    note: str | None = Field(default=None, max_length=500)
+
+
+class DienstleistungPreisListe(BaseModel):
+    """Die Preise plus der Katalog: ein Typ OHNE Preis muss sichtbar bleiben —
+    genau dort bleibt eine ausgefuehrte Leistung unberechnet."""
+
+    preise: list[DienstleistungPreis] = Field(default_factory=list)
+    typen: list[dict[str, object]] = Field(default_factory=list)

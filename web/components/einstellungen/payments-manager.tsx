@@ -108,17 +108,17 @@ export function PaymentsManager({
 
         <Card className="flex flex-col gap-4 p-5">
           <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-3">
+            <div className="flex min-w-0 items-center gap-3">
               {/* Echtes Stripe-Original-Logo (public/channels/stripe.svg) —
                   kein generisches Icon (Nutzer-Vorgabe: nur Originallogos). */}
-              <span className="flex h-9 w-16 items-center justify-center">
+              <span className="flex h-9 w-16 shrink-0 items-center justify-center">
                 <img
                   src="/channels/stripe.svg"
                   alt="Stripe"
                   className="h-6 w-auto"
                 />
               </span>
-              <div className="flex flex-col">
+              <div className="flex min-w-0 flex-col">
                 {stripeActive && (
                   <span className="w-fit rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-600">
                     Aktiviert
@@ -132,6 +132,7 @@ export function PaymentsManager({
 
             {stripeActive ? (
               <Button
+                className="shrink-0"
                 variant="outline"
                 size="sm"
                 disabled={pending}
@@ -141,6 +142,7 @@ export function PaymentsManager({
               </Button>
             ) : settings.stripe_connected && settings.stripe_charges_enabled ? (
               <Button
+                className="shrink-0"
                 size="sm"
                 disabled={pending}
                 onClick={() => save({ active_card_gateway: "stripe" })}
@@ -148,7 +150,7 @@ export function PaymentsManager({
                 Aktivieren
               </Button>
             ) : (
-              <Button size="sm" variant="outline" asChild>
+              <Button className="shrink-0" size="sm" variant="outline" asChild>
                 <a href="/konto">{t("payments.connectStripe")}</a>
               </Button>
             )}
@@ -248,16 +250,16 @@ export function PaymentsManager({
         {/* PayPal — eigenes Geschäftskonto verbinden (Multiparty) */}
         <Card className="flex flex-col gap-4 p-5">
           <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-3">
+            <div className="flex min-w-0 items-center gap-3">
               {/* Echtes PayPal-Original-Logo (public/channels/paypal.svg). */}
-              <span className="flex h-9 w-20 items-center justify-center">
+              <span className="flex h-9 w-20 shrink-0 items-center justify-center">
                 <img
                   src="/channels/paypal.svg"
                   alt="PayPal"
                   className="h-6 w-auto"
                 />
               </span>
-              <div className="flex flex-col">
+              <div className="flex min-w-0 flex-col">
                 {settings.paypal_connected && (
                   <span className="w-fit rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-600">
                     Verbunden
@@ -278,6 +280,7 @@ export function PaymentsManager({
 
             {settings.paypal_connected ? (
               <Button
+                className="shrink-0"
                 variant="outline"
                 size="sm"
                 disabled={pending}
@@ -286,7 +289,7 @@ export function PaymentsManager({
                 Status prüfen
               </Button>
             ) : (
-              <Button size="sm" disabled={pending} onClick={connectPaypal}>
+              <Button className="shrink-0" size="sm" disabled={pending} onClick={connectPaypal}>
                 PayPal verbinden
               </Button>
             )}
@@ -311,11 +314,11 @@ export function PaymentsManager({
         {/* Manuelle Zahlungen */}
         <Card className="flex flex-col gap-4 p-5">
           <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <span className="flex size-9 items-center justify-center rounded-(--radius) bg-muted">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-(--radius) bg-muted">
                 <Icon icon="ph:bank" className="size-5 text-foreground" />
               </span>
-              <div className="flex flex-col">
+              <div className="flex min-w-0 flex-col">
                 <span className="font-medium">{t("payments.manualPayments")}</span>
                 <span className="text-xs text-muted-foreground">
                   Banküberweisung, Bargeld, POS. Erfordert manuelle Erfassung —
@@ -324,6 +327,7 @@ export function PaymentsManager({
               </div>
             </div>
             <Switch
+              className="shrink-0"
               checked={form.manual_payments_enabled}
               disabled={pending}
               onCheckedChange={(v) =>

@@ -4470,7 +4470,8 @@
         "vorlagen": "Tehtävämallit",
         "planmaessig": "Ajastetut tehtävät",
         "regelmaessig": "Toistuvat tehtävät",
-        "vertretungen": "Sijaisuudet"
+        "vertretungen": "Sijaisuudet",
+        "dienstleistungen": "Palvelut"
       }
     },
     "propertyCalendar": {
@@ -5101,7 +5102,15 @@
       },
       "rowOpenCalendar": "Avaa kalenterissa",
       "rowOpenBooking": "Avaa varaus",
-      "rowOpenInbox": "Avaa keskustelu"
+      "rowOpenInbox": "Avaa keskustelu",
+      "ownerRequests": "Omistajan toiminnot",
+      "ownerRequestsLabel": "odottaa päätöstäsi",
+      "ownerRequestsExplain": "Omistajien estopyynnöt ja peruutukset. Niin kauan kuin kukaan ei päätä, omistaja odottaa vastausta ja yöt pysyvät ennallaan.",
+      "ownerRequestsPending": "Avoimet estopyynnöt",
+      "ownerRequestsLift": "Peruutukset",
+      "ownerRequestsTermination": "Ilmoitetut sopimusten päättymiset",
+      "ownerRequestsNone": "Ei avoimia toimintoja.",
+      "ownerRequestsOldest": "Vanhin avoin pyyntö: {count, plural, =0 {tänään} one {yhden päivän ajan} other {# päivän ajan}}"
     },
     "mobileAppHint": "Tehtävänäkymä liikkeellä ollessa on jo saatavilla responsiivisesti verkossa (Omat tehtävät + tiedot kuvien lataamisella). Erillinen mobiilisovellus tulee omana projektinaan.",
     "aufgabenFilter": {
@@ -12243,7 +12252,8 @@
       "properties": "Kohteet",
       "allProperties": "Kaikki kohteet",
       "channels": "Kanavat",
-      "allChannels": "Kaikki kanavat"
+      "allChannels": "Kaikki kanavat",
+      "compare": "Vertailu"
     },
     "basis": {
       "anreise": "Saapumisen mukaan",
@@ -12316,13 +12326,48 @@
     },
     "ownerStayCount": "{count, plural, one {# oma käyttö} other {# omat käytöt}}",
     "ownerStayRow": "Oma käyttö",
-    "ownerStayRowHint": "Asunnonomistaja omassa kohteessa – ei myyntiä"
+    "ownerStayRowHint": "Asunnonomistaja omassa kohteessa – ei myyntiä",
+    "compare": {
+      "keiner": "Ei vertailua",
+      "1j": "Edellinen vuosi",
+      "2j": "2 vuotta sitten",
+      "5j": "5 vuotta sitten"
+    },
+    "compareBanner": "{label}: verrattuna kohteeseen {von} – {bis}",
+    "comparePrevious": "edellinen {value}",
+    "compareNoBase": "ei edellistä arvoa",
+    "compareOnlyBefore": "vain vertailujaksolla",
+    "compareRowCount": "{label}: {count, plural, =0 {ei varauksia} one {# varaus} other {# varausta}}",
+    "compareBaselinePrevious": "Muutos edelliseen, samankestoiseen jaksoon verrattuna",
+    "compareCurrencyMismatch": "Edellinen vuosi valuutassa {currency} – ei vertailukelpoinen",
+    "compareCurrencyUnclear": "Valuutta vertailujaksolla epäselvä",
+    "compareCurrencyMismatchHint": "Vertailujaksolla oli käytössä eri valuutta. Prosentuaalinen muutos olisi valuuttakurssivaikutus eikä liiketoimintaluku.",
+    "compareChartCurrencyMismatch": "Vertailujakso oli eri valuutassa – edellisen vuoden riviä ei siksi piirretä.",
+    "compareLocked": "Vertailu on mahdollista enintään vuoden ajanjaksolle."
   },
   "tasks": {
     "fehler": {
       "requestId": "Tunnus: {id}",
       "kopieren": "Kopioi tiedot",
       "kopiert": "Kopioitu"
+    },
+    "servicePrices": {
+      "title": "Palvelujen hinnat",
+      "intro": "Mitä omistajan tilaama palvelu maksaa. Kun tehtävä on suoritettu, tästä tulee kohde hänen laskutukseensa. Ilman hintaa ei synny kohdetta, ja palvelu jää laskuttamatta.",
+      "missing": "Ei hintaa",
+      "set": "Aseta hinta",
+      "change": "Muokkaa",
+      "remove": "Poista",
+      "amount": "Määrä",
+      "currency": "Valuutta",
+      "scope": "Koskee",
+      "allProperties": "Kaikki kohteet",
+      "save": "Tallenna",
+      "cancel": "Peruuta",
+      "saved": "Hinta tallennettu.",
+      "removed": "Hinta poistettu.",
+      "amountInvalid": "Syötä summa alkaen 0.",
+      "currencyInvalid": "Syötä kolmikirjaiminen valuuttakoodi (esim. DKK)."
     }
   }
 }

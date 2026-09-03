@@ -4470,7 +4470,8 @@
         "vorlagen": "Ülesannete mallid",
         "planmaessig": "Plaanilised ülesanded",
         "regelmaessig": "Korduvad ülesanded",
-        "vertretungen": "Asendused"
+        "vertretungen": "Asendused",
+        "dienstleistungen": "Teenused"
       }
     },
     "propertyCalendar": {
@@ -5101,7 +5102,15 @@
       },
       "rowOpenCalendar": "Ava kalendris",
       "rowOpenBooking": "Ava broneering",
-      "rowOpenInbox": "Ava vestlus"
+      "rowOpenInbox": "Ava vestlus",
+      "ownerRequests": "Omaniku toimingud",
+      "ownerRequestsLabel": "ootavad teie otsust",
+      "ownerRequestsExplain": "Omanike broneeringute blokeerimise taotlused ja tühistamissoovid. Kuni keegi ei otsusta, ootab omanik vastust ja ööd jäävad selliseks, nagu nad on.",
+      "ownerRequestsPending": "Avatud blokeerimistaotlused",
+      "ownerRequestsLift": "Tühistamissoovid",
+      "ownerRequestsTermination": "Teatatud lepingu lõppemised",
+      "ownerRequestsNone": "Avatud toiminguid ei ole.",
+      "ownerRequestsOldest": "Vanim avatud taotlus: {count, plural, =0 {täna} one {eile} other {# päeva tagasi}}"
     },
     "mobileAppHint": "Ülesannete vaade liikvel olles on juba veebis reageeriv (Minu ülesanded + detailid fotode üleslaadimisega). Eraldi mobiilirakendus tuleb omaette projektina.",
     "aufgabenFilter": {
@@ -12243,7 +12252,8 @@
       "properties": "Objektid",
       "allProperties": "Kõik objektid",
       "channels": "Kanalid",
-      "allChannels": "Kõik kanalid"
+      "allChannels": "Kõik kanalid",
+      "compare": "Võrdle"
     },
     "basis": {
       "anreise": "Saabumise järgi",
@@ -12316,13 +12326,48 @@
     },
     "ownerStayCount": "{count, plural, one {# isiklik kasutus} other {# isiklikku kasutust}}",
     "ownerStayRow": "Oman kasutus",
-    "ownerStayRowHint": "Majaomanik oma objektil – mitte müügiks"
+    "ownerStayRowHint": "Majaomanik oma objektil – mitte müügiks",
+    "compare": {
+      "keiner": "Võrdlus puudub",
+      "1j": "Eelmine aasta",
+      "2j": "2 aastat tagasi",
+      "5j": "5 aastat tagasi"
+    },
+    "compareBanner": "{label}: võrreldud {von} – {bis}",
+    "comparePrevious": "eelmine {value}",
+    "compareNoBase": "eelnev väärtus puudub",
+    "compareOnlyBefore": "ainult võrdlusperioodil",
+    "compareRowCount": "{label}: {count, plural, =0 {broneeringuid pole} one {# broneering} other {# broneeringut}}",
+    "compareBaselinePrevious": "muutus võrreldes eelmise, sama pika perioodiga",
+    "compareCurrencyMismatch": "eelmine aasta {currency} – pole võrreldav",
+    "compareCurrencyUnclear": "võrdlusperioodi valuuta on ebaselge",
+    "compareCurrencyMismatchHint": "Võrdlusperioodil kehtis teine valuuta. Protsentuaalne muutus oleks vahetuskursi efekt, mitte äritulemus.",
+    "compareChartCurrencyMismatch": "Võrdlusperiood oli teises valuutas – seetõttu eelmise aasta joont ei kuvata.",
+    "compareLocked": "Võrdlus on võimalik kuni ühe aasta pikkuse perioodi kohta."
   },
   "tasks": {
     "fehler": {
       "requestId": "ID: {id}",
       "kopieren": "Kopeeri andmed",
       "kopiert": "Kopeeritud"
+    },
+    "servicePrices": {
+      "title": "Teenuste hinnad",
+      "intro": "Mida omaniku tellitud teenus maksab. Ülesande täitmisel luuakse sellest tema arveldusse kanne. Ilma hinnata kannet ei teki ja teenus jääb arvestamata.",
+      "missing": "Hinda pole",
+      "set": "Määra hind",
+      "change": "Muuda",
+      "remove": "Eemalda",
+      "amount": "Summa",
+      "currency": "Valuuta",
+      "scope": "Kehtib",
+      "allProperties": "Kõik objektid",
+      "save": "Salvesta",
+      "cancel": "Tühista",
+      "saved": "Hind salvestatud.",
+      "removed": "Hind eemaldatud.",
+      "amountInvalid": "Palun sisestage summa alates 0.",
+      "currencyInvalid": "Palun sisestage kolmetäheline valuuta (nt DKK)."
     }
   }
 }

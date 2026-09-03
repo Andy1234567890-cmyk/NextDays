@@ -725,3 +725,52 @@ export async function updateRule(
 export async function deleteRule(ruleId: string): Promise<Result<void>> {
   return call(`/tasks/rules/${encodeURIComponent(ruleId)}`, { method: "DELETE" });
 }
+
+// --- Preise beauftragbarer Dienstleistungen (0531) --------------------------
+//
+// Der Eigentümer bestellt im Portal eine Leistung; beim Abschluss der Aufgabe
+// entsteht daraus ein Posten in SEINER Abrechnung. Ohne gepflegten Preis
+// entsteht keiner — die Leistung wäre ausgeführt und unberechnet. Genau das
+// war live der Fall (gemeldet 03.09.2026).
+
+export type DienstleistungPreis = {
+  id: string;
+  service_type_id: string;
+  /** null = Regel für alle Objekte; gesetzt = Ausnahme für genau eines. */
+  property_id: string | null;
+  amount: number;
+  currency: string;
+  note: string | null;
+};
+
+export type DienstleistungTyp = {
+  id: string;
+  key: string;
+  kategorie: string;
+  aktiv: boolean;
+  tenant_id: string | null;
+};
+
+export async function listDienstleistungPreise(): Promise<
+  Result<{ preise: DienstleistungPreis[]; typen: DienstleistungTyp[] }>
+> {
+  return call("/tasks/dienstleistung-preise");
+}
+
+export async function setDienstleistungPreis(input: {
+  service_type_id: string;
+  property_id?: string | null;
+  amount: number;
+  currency: string;
+  note?: string | null;
+}): Promise<Result<DienstleistungPreis>> {
+  return call("/tasks/dienstleistung-preise", { method: "PUT", body: input });
+}
+
+export async function deleteDienstleistungPreis(
+  preisId: string,
+): Promise<Result<void>> {
+  return call(`/tasks/dienstleistung-preise/${encodeURIComponent(preisId)}`, {
+    method: "DELETE",
+  });
+}

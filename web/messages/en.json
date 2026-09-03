@@ -4470,7 +4470,8 @@
         "vorlagen": "Task templates",
         "planmaessig": "Scheduled tasks",
         "regelmaessig": "Recurring tasks",
-        "vertretungen": "Cover"
+        "vertretungen": "Cover",
+        "dienstleistungen": "Services"
       }
     },
     "propertyCalendar": {
@@ -5122,7 +5123,15 @@
       },
       "rowOpenCalendar": "Open in calendar",
       "rowOpenBooking": "Open booking",
-      "rowOpenInbox": "Open conversation in inbox"
+      "rowOpenInbox": "Open conversation in inbox",
+      "ownerRequests": "Owner processes",
+      "ownerRequestsLabel": "awaiting your decision",
+      "ownerRequestsExplain": "Owner requests to block dates or cancel blocks. As long as no one decides, the owner awaits a response and the nights remain in their current state.",
+      "ownerRequestsPending": "Open block requests",
+      "ownerRequestsLift": "Cancellation requests",
+      "ownerRequestsTermination": "Announced contract endings",
+      "ownerRequestsNone": "No open processes.",
+      "ownerRequestsOldest": "Oldest open request: {count, plural, =0 {today} one {1 day ago} other {# days ago}}"
     },
     "mobileAppHint": "The task view for on the go is already available responsively on the web (My tasks + detail with photo upload). A separate mobile app will follow as its own project.",
     "aufgabenFilter": {
@@ -12264,7 +12273,8 @@
       "properties": "Properties",
       "allProperties": "All properties",
       "channels": "Channels",
-      "allChannels": "All channels"
+      "allChannels": "All channels",
+      "compare": "Compare"
     },
     "basis": {
       "anreise": "By arrival",
@@ -12337,13 +12347,48 @@
     },
     "ownerStayCount": "{count, plural, one {# own use} other {# own uses}}",
     "ownerStayRow": "Owner-occupied",
-    "ownerStayRowHint": "Homeowner in own property — no sale"
+    "ownerStayRowHint": "Homeowner in own property — no sale",
+    "compare": {
+      "keiner": "No comparison",
+      "1j": "Previous year",
+      "2j": "2 years ago",
+      "5j": "5 years ago"
+    },
+    "compareBanner": "{label}: compared with {von} – {bis}",
+    "comparePrevious": "previous {value}",
+    "compareNoBase": "no previous value",
+    "compareOnlyBefore": "only in the comparison period",
+    "compareRowCount": "{label}: {count, plural, =0 {no bookings} one {# booking} other {# bookings}}",
+    "compareBaselinePrevious": "change compared to the previous period of the same length",
+    "compareCurrencyMismatch": "previous year in {currency} – not comparable",
+    "compareCurrencyUnclear": "currency in the comparison period is ambiguous",
+    "compareCurrencyMismatchHint": "A different currency was used in the comparison period. A percentage change would be an exchange rate effect and not a business figure.",
+    "compareChartCurrencyMismatch": "The comparison period was in a different currency – the previous year's line is therefore not drawn.",
+    "compareLocked": "A comparison is possible for a period of up to one year."
   },
   "tasks": {
     "fehler": {
       "requestId": "ID: {id}",
       "kopieren": "Copy details",
       "kopiert": "Copied"
+    },
+    "servicePrices": {
+      "title": "Service prices",
+      "intro": "What a service ordered by the owner costs. When the task is completed, this creates an item in their invoice. Without a price, no item is created, and the service remains uncharged.",
+      "missing": "No price",
+      "set": "Set price",
+      "change": "Edit",
+      "remove": "Remove",
+      "amount": "Amount",
+      "currency": "Currency",
+      "scope": "Applies to",
+      "allProperties": "All properties",
+      "save": "Save",
+      "cancel": "Cancel",
+      "saved": "Price saved.",
+      "removed": "Price removed.",
+      "amountInvalid": "Please enter an amount from 0.",
+      "currencyInvalid": "Please enter a three-letter currency (e.g. DKK)."
     }
   }
 }

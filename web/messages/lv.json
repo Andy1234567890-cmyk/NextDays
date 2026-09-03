@@ -4470,7 +4470,8 @@
         "vorlagen": "Uzdevumu veidnes",
         "planmaessig": "Ieplānotie uzdevumi",
         "regelmaessig": "Regulārie uzdevumi",
-        "vertretungen": "Aizvietošana"
+        "vertretungen": "Aizvietošana",
+        "dienstleistungen": "Pakalpojumi"
       }
     },
     "propertyCalendar": {
@@ -5101,7 +5102,15 @@
       },
       "rowOpenCalendar": "Atvērt kalendārā",
       "rowOpenBooking": "Atvērt rezervāciju",
-      "rowOpenInbox": "Atvērt sarunu"
+      "rowOpenInbox": "Atvērt sarunu",
+      "ownerRequests": "Īpašnieku darbības",
+      "ownerRequestsLabel": "gaida jūsu lēmumu",
+      "ownerRequestsExplain": "Īpašnieku bloķēšanas pieprasījumi un atcelšanas pieprasījumi. Kamēr neviens nepieņem lēmumu, īpašnieks gaida atbildi, un naktis paliek tādā stāvoklī, kādā tās ir.",
+      "ownerRequestsPending": "Atvērtie bloķēšanas pieprasījumi",
+      "ownerRequestsLift": "Atcelšanas pieprasījumi",
+      "ownerRequestsTermination": "Paziņotie līgumu termiņi beidzas",
+      "ownerRequestsNone": "Nav atvērtu darbību.",
+      "ownerRequestsOldest": "Vecākais atvērtais pieprasījums: {count, plural, =0 {šodien} one {pirms vienas dienas} other {pirms # dienām}}"
     },
     "mobileAppHint": "Uzdevumu skats ceļā jau ir pieejams responsīvi tīmeklī (Mani uzdevumi + detaļas ar fotoattēlu augšupielādi). Atsevišķa mobilā lietotne sekos kā atsevišķs projekts.",
     "aufgabenFilter": {
@@ -12243,7 +12252,8 @@
       "properties": "Objekti",
       "allProperties": "Visi objekti",
       "channels": "Kanāli",
-      "allChannels": "Visi kanāli"
+      "allChannels": "Visi kanāli",
+      "compare": "Salīdzināt"
     },
     "basis": {
       "anreise": "Pēc ierašanās",
@@ -12316,13 +12326,48 @@
     },
     "ownerStayCount": "{count, plural, one {# pašu lietošanai} other {# pašu lietošanai}}",
     "ownerStayRow": "Pašpatēriņš",
-    "ownerStayRowHint": "Mājas īpašnieks savā īpašumā — nav pārdošanā"
+    "ownerStayRowHint": "Mājas īpašnieks savā īpašumā — nav pārdošanā",
+    "compare": {
+      "keiner": "Nav salīdzinājuma",
+      "1j": "Iepriekšējais gads",
+      "2j": "Pirms 2 gadiem",
+      "5j": "Pirms 5 gadiem"
+    },
+    "compareBanner": "{label}: salīdzināts ar {von} – {bis}",
+    "comparePrevious": "iepriekš {value}",
+    "compareNoBase": "nav iepriekšējās vērtības",
+    "compareOnlyBefore": "tikai salīdzināmajā periodā",
+    "compareRowCount": "{label}: {count, plural, =0 {nav rezervāciju} one {# rezervācija} other {# rezervācijas}}",
+    "compareBaselinePrevious": "izmaiņas salīdzinājumā ar iepriekšējo, tāda paša garuma periodu",
+    "compareCurrencyMismatch": "iepriekšējais gads {currency} – nav salīdzināms",
+    "compareCurrencyUnclear": "valūta salīdzināmajā periodā ir neskaidra",
+    "compareCurrencyMismatchHint": "Salīdzināmajā periodā bija cita valūta. Procentuālās izmaiņas būtu valūtas kursa efekts, nevis biznesa rādītājs.",
+    "compareChartCurrencyMismatch": "Salīdzināmais periods bija citā valūtā – tāpēc iepriekšējā gada līnija netiek zīmēta.",
+    "compareLocked": "Salīdzinājums ir iespējams līdz viena gada periodam."
   },
   "tasks": {
     "fehler": {
       "requestId": "ID: {id}",
       "kopieren": "Kopēt detaļas",
       "kopiert": "Nokopēts"
+    },
+    "servicePrices": {
+      "title": "Pakalpojumu cenas",
+      "intro": "Cik maksā īpašnieka pasūtītais pakalpojums. Kad uzdevums ir pabeigts, tas kļūst par ierakstu viņa norēķinu pārskatā. Bez cenas netiek izveidots neviens ieraksts, un pakalpojums paliek neapmaksāts.",
+      "missing": "Nav cenas",
+      "set": "Iestatīt cenu",
+      "change": "Mainīt",
+      "remove": "Noņemt",
+      "amount": "Summa",
+      "currency": "Valūta",
+      "scope": "Attiecas uz",
+      "allProperties": "Visiem īpašumiem",
+      "save": "Saglabāt",
+      "cancel": "Atcelt",
+      "saved": "Cena saglabāta.",
+      "removed": "Cena noņemta.",
+      "amountInvalid": "Lūdzu, ievadiet summu, sākot no 0.",
+      "currencyInvalid": "Lūdzu, ievadiet trīs burtu valūtas kodu (piemēram, DKK)."
     }
   }
 }

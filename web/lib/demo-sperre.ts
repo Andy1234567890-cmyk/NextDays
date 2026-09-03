@@ -1,4 +1,4 @@
-// Welche Bereiche in der Vorführung gesperrt sind (0408).
+// Welche Bereiche in der Vorführung gesperrt sind.
 //
 // Sie werden NICHT ausgeblendet: der Besucher soll sehen, dass es den Bereich
 // gibt — nur eben, dass er ihn hier nicht öffnen kann. Ein verstecktes Menü
@@ -7,24 +7,37 @@
 //
 // Diese Liste ist die ANZEIGE. Der Schutz liegt im Backend
 // (`features/auth/demo_gate.py`, `GESPERRTE_PRAEFIXE`): ohne ihn holte man die
-// Daten per Direktaufruf trotzdem. Beide Listen decken dieselben Bereiche ab —
-// wird hier einer ergänzt, gehört er auch dorthin.
+// Daten per Direktaufruf trotzdem. Wird hier einer ergänzt, gehört er auch
+// dorthin.
+//
+// Am 02.09.2026 nachgezogen: zehn Einträge trugen hier ein Schloss, das die API
+// nicht kannte — per URL waren die Bereiche trotzdem ladbar. Die Entscheidung
+// war „unsichtbar", die fehlenden Präfixe stehen seither in
+// `demo_gate.GESPERRTE_PRAEFIXE` (`/tasks`, `/booking-conditions`,
+// `/calendar/block-requests`) bzw. `GESPERRTE_ENDPUNKTE` (die drei
+// `/pricing/*`-Pfade des Dynamic Pricing).
+//
+// Vier Einträge sind dabei ENTFALLEN, weil es die Seiten nicht gibt:
+// `/aufgaben` (die Fläche heißt `/reservierungen/aufgaben`), `/werkzeuge`,
+// `/gaeste/kategorien`, `/gaeste/monatsbericht`, `/gaeste/gutscheine` — kein
+// Menüpunkt und kein Verzeichnis unter `web/app/(dashboard)/`. Ein Eintrag für
+// eine Seite, die es nicht gibt, sperrt nichts und verdeckt nur, was die Liste
+// wirklich abdeckt.
+//
+// `/pricing` ist bewusst NICHT als Präfix gesperrt: darunter hängen Preise,
+// Promotions und Rate-Grid, also gerade das, was die Vorführung zeigen soll.
+// Nur das Dynamic-Pricing-Panel ist gesperrt (siehe `GESPERRTE_ENDPUNKTE`).
 const GESPERRT: readonly string[] = [
   "/buchhaltung",
   "/eigentuemer",
   "/dynamic-pricing",
   "/reservierungen/aufgaben",
-  "/aufgaben",
   "/einstellungen",
   "/stop-sell",
   "/kalender/sperrantraege",
-  "/gaeste/kategorien",
-  "/gaeste/monatsbericht",
-  "/gaeste/gutscheine",
   "/reisebueros",
   "/channels",
   "/website",
-  "/werkzeuge",
   "/konto",
 ];
 

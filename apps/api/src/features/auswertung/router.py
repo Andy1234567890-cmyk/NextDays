@@ -16,8 +16,8 @@ from src.features.auth.dependencies import require_granular_permission
 from src.features.auth.granular_permissions import Permission
 
 from .dependencies import AuswertungServiceDep
-from .schemas import AuswertungResponse, Bezug, SliceHealth
-from .service import MAX_TAGE
+from .schemas import AuswertungResponse, Bezug, SliceHealth, Vergleich
+from .service import MAX_TAGE, MAX_TAGE_VERGLEICH
 
 router = APIRouter(prefix="/auswertung", tags=["auswertung"])
 
@@ -42,6 +42,7 @@ def auswertung(
     bezug: Bezug = Bezug.ANREISE,
     property_id: Annotated[list[str] | None, Query()] = None,
     channel: Annotated[list[str] | None, Query()] = None,
+    vergleich: Vergleich = Vergleich.KEINER,
 ) -> AuswertungResponse:
     """Kennzahlen, Verlauf, Kanäle, Objekte, Buchungen und Gäste eines Zeitraums."""
     if bis < von:
@@ -50,6 +51,15 @@ def auswertung(
     # alle Buchungen und Kalendernächte des Betriebs.
     if (bis - von).days > MAX_TAGE:
         raise HTTPException(422, "Der Zeitraum darf höchstens 5 Jahre umfassen.")
+    # Ein Vergleich rechnet den GANZEN Bericht ein zweites Mal. Bei einem
+    # Zeitraum nahe der Obergrenze wäre das der doppelte Vollscan, also die
+    # Grenze durch die Hintertür — deshalb ein eigener, engerer Deckel für den
+    # Vergleichsfall (Wurzel 8).
+    if vergleich is not Vergleich.KEINER and (bis - von).days > MAX_TAGE_VERGLEICH:
+        raise HTTPException(
+            422,
+            "Mit Vergleich darf der Zeitraum höchstens 1 Jahr umfassen.",
+        )
     return service.auswerten(
         ctx,
         von=von,
@@ -57,4 +67,5 @@ def auswertung(
         bezug=bezug,
         property_ids=property_id,
         channels=channel,
+        vergleich=vergleich,
     )

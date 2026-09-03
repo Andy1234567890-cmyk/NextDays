@@ -4470,7 +4470,8 @@
         "vorlagen": "Aufgabenvorlagen",
         "planmaessig": "Planmäßige Aufgaben",
         "regelmaessig": "Regelmäßige Aufgaben",
-        "vertretungen": "Vertretungen"
+        "vertretungen": "Vertretungen",
+        "dienstleistungen": "Dienstleistungen"
       }
     },
     "propertyCalendar": {
@@ -5078,6 +5079,14 @@
       "stayingGuests": "Gäste im Haus",
       "stayingGuestsLabel": "Gäste im Haus",
       "noStayingGuests": "Zurzeit ist niemand im Haus.",
+      "ownerRequests": "Eigentümer-Vorgänge",
+      "ownerRequestsLabel": "warten auf Ihre Entscheidung",
+      "ownerRequestsExplain": "Sperranträge und Aufhebungswünsche der Eigentümer. Solange niemand entscheidet, wartet der Eigentümer auf eine Antwort und die Nächte bleiben in dem Zustand, in dem sie sind.",
+      "ownerRequestsPending": "Offene Sperranträge",
+      "ownerRequestsLift": "Aufhebungswünsche",
+      "ownerRequestsTermination": "Angekündigte Vertragsenden",
+      "ownerRequestsNone": "Keine offenen Vorgänge.",
+      "ownerRequestsOldest": "Ältester offener Antrag: {count, plural, =0 {heute} one {seit einem Tag} other {seit # Tagen}}",
       "upcomingLabel": "Anstehende Reservierungen",
       "revenuePerBooking": "Ø Umsatz",
       "revenuePerBookingLabel": "Umsatz je Buchung",
@@ -12267,7 +12276,8 @@
       "properties": "Objekte",
       "allProperties": "Alle Objekte",
       "channels": "Kanäle",
-      "allChannels": "Alle Kanäle"
+      "allChannels": "Alle Kanäle",
+      "compare": "Vergleich"
     },
     "basis": {
       "anreise": "Nach Anreise",
@@ -12337,13 +12347,48 @@
       "perBooking": "Ø Gäste je Buchung",
       "origin": "Herkunft",
       "unknownCountry": "Unbekannt"
-    }
+    },
+    "compare": {
+      "keiner": "Kein Vergleich",
+      "1j": "Vorjahr",
+      "2j": "Vor 2 Jahren",
+      "5j": "Vor 5 Jahren"
+    },
+    "compareBanner": "{label}: verglichen wird mit {von} – {bis}",
+    "comparePrevious": "vorher {value}",
+    "compareNoBase": "kein Vorwert",
+    "compareOnlyBefore": "nur im Vergleichszeitraum",
+    "compareRowCount": "{label}: {count, plural, =0 {keine Buchungen} one {# Buchung} other {# Buchungen}}",
+    "compareBaselinePrevious": "Veränderung gegenüber der vorherigen, gleich langen Periode",
+    "compareCurrencyMismatch": "Vorjahr in {currency} – nicht vergleichbar",
+    "compareCurrencyUnclear": "Währung im Vergleichszeitraum uneindeutig",
+    "compareCurrencyMismatchHint": "Im Vergleichszeitraum galt eine andere Währung. Eine Veränderung in Prozent wäre ein Wechselkurs-Effekt und keine Geschäftszahl.",
+    "compareChartCurrencyMismatch": "Der Vergleichszeitraum lag in einer anderen Währung – die Vorjahreslinie wird deshalb nicht gezeichnet.",
+    "compareLocked": "Ein Vergleich ist bis zu einem Zeitraum von einem Jahr möglich."
   },
   "tasks": {
     "fehler": {
       "requestId": "Kennung: {id}",
       "kopieren": "Details kopieren",
       "kopiert": "Kopiert"
+    },
+    "servicePrices": {
+      "title": "Preise der Dienstleistungen",
+      "intro": "Was eine vom Eigentümer bestellte Leistung kostet. Beim Abschluss der Aufgabe entsteht daraus ein Posten in seiner Abrechnung. Ohne Preis entsteht kein Posten, und die Leistung bleibt unberechnet.",
+      "missing": "Kein Preis",
+      "set": "Preis setzen",
+      "change": "Ändern",
+      "remove": "Entfernen",
+      "amount": "Betrag",
+      "currency": "Währung",
+      "scope": "Gilt für",
+      "allProperties": "Alle Objekte",
+      "save": "Speichern",
+      "cancel": "Abbrechen",
+      "saved": "Preis gespeichert.",
+      "removed": "Preis entfernt.",
+      "amountInvalid": "Bitte einen Betrag ab 0 eingeben.",
+      "currencyInvalid": "Bitte eine Währung mit drei Buchstaben eingeben (z. B. DKK)."
     }
   }
 }

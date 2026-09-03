@@ -123,7 +123,7 @@ def demo_schreibzugriff_pruefen(methode: str, ctx: AuthContext) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Gesperrte Bereiche (0408)
+# Gesperrte Bereiche (reiner Code-Riegel, KEINE Migration)
 # ---------------------------------------------------------------------------
 # Manche Bereiche sollen in der Vorführung gar nicht EINSEHBAR sein, nicht bloß
 # unveränderlich: Buchhaltung, Eigentümer-Reporting, Kanalmanager, Konto samt
@@ -158,6 +158,29 @@ GESPERRTE_PRAEFIXE: tuple[str, ...] = (
     "/crm",                  # Firmen/Kategorien
     "/login-devices",        # Konto: Geräteverlauf
     "/privacy-settings",     # Konto: Datenschutz
+    # --- 02.09.2026 nachgezogen ---
+    # Diese Bereiche trugen in der Sidebar (`web/lib/demo-sperre.ts`) längst ein
+    # Schloss, ohne dass die API sie verweigerte: das Menü zeigte „gesperrt",
+    # ein Aufruf per URL lieferte die Daten trotzdem. Genau der Fall, den der
+    # Absatz oben als Optik beschreibt.
+    "/tasks",                # Aufgaben (Frontend: /aufgaben, /reservierungen/aufgaben)
+    "/booking-conditions",   # Einstellungen: Buchungsbedingungen
+    "/calendar/block-requests",  # Kalender: Sperranträge
+)
+
+# Einzelne Endpunkte, die gesperrt sind, OHNE dass ihr Präfix es ist.
+#
+# WARUM ES DIESE ZWEITE LISTE BRAUCHT: `/pricing` darf NICHT als Präfix
+# gesperrt werden — darunter hängen die Preise, die Promotions und das
+# Rate-Grid, also das, was eine Vorführung gerade zeigen soll (`/pricing`
+# speist `lib/pricing.ts`, `lib/promotions.ts` und `lib/subscriptions.ts`).
+# Gesperrt ist nur das Dynamic-Pricing-Panel, und das sitzt auf zwei
+# Unterpfaden desselben Routers. Ein Präfix hätte hier die halbe Demo
+# mitgenommen.
+GESPERRTE_ENDPUNKTE: tuple[str, ...] = (
+    "/pricing/overview",     # Dynamic Pricing: Übersicht
+    "/pricing/settings",     # Dynamic Pricing: Regeln je Objekt
+    "/pricing/explain",      # Dynamic Pricing: Preisherleitung
 )
 
 _BEREICH_GESPERRT = (
@@ -208,7 +231,8 @@ def _pfad_gesperrt(pfad: str) -> bool:
     """
     rest = pfad.split("/api/v1", 1)[-1] if "/api/v1" in pfad else pfad
     return any(
-        rest == p or rest.startswith(p + "/") for p in GESPERRTE_PRAEFIXE
+        rest == p or rest.startswith(p + "/")
+        for p in (*GESPERRTE_PRAEFIXE, *GESPERRTE_ENDPUNKTE)
     )
 
 

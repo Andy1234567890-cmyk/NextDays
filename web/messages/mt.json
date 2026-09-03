@@ -4470,7 +4470,8 @@
         "vorlagen": "Mudelli tal-kompiti",
         "planmaessig": "Kompiti skedati",
         "regelmaessig": "Kompiti regolari",
-        "vertretungen": "Sostituzzjoni"
+        "vertretungen": "Sostituzzjoni",
+        "dienstleistungen": "Servizzi"
       }
     },
     "propertyCalendar": {
@@ -5101,7 +5102,15 @@
       },
       "rowOpenCalendar": "Iftaħ fil-kalendarju",
       "rowOpenBooking": "Iftaħ ir-riżervazzjoni",
-      "rowOpenInbox": "Iftaħ il-konversazzjoni"
+      "rowOpenInbox": "Iftaħ il-konversazzjoni",
+      "ownerRequests": "Operazzjonijiet tas-sid",
+      "ownerRequestsLabel": "jistennew id-deċiżjoni tiegħek",
+      "ownerRequestsExplain": "Talbiet ta' imblukkar u talbiet ta' unblocking mis-sidien. Sakemm ħadd ma jiddeċiedi, is-sid jistenna tweġiba u l-iljieli jibqgħu fl-istat li fihom jinsabu.",
+      "ownerRequestsPending": "Talbiet ta' imblukkar miftuħa",
+      "ownerRequestsLift": "Talbiet ta' unblocking",
+      "ownerRequestsTermination": "Tmiem ta' kuntratti mħabbra",
+      "ownerRequestsNone": "L-ebda operazzjoni miftuħa.",
+      "ownerRequestsOldest": "L-eqdem talba miftuħa: {count, plural, =0 {illum} one {minn jum ilu} other {minn # ijiem ilu}}"
     },
     "mobileAppHint": "Il-veduta tal-kompiti waqt li tkun barra diġà hija disponibbli b'mod responsiv fuq il-web (Il-kompiti tiegħi + dettalji bit-tlugħ ta' ritratti). App mobbli separata se ssegwi bħala proġett għalih.",
     "aufgabenFilter": {
@@ -12243,7 +12252,8 @@
       "properties": "Oġġetti",
       "allProperties": "L-oġġetti kollha",
       "channels": "Kanali",
-      "allChannels": "Il-kanali kollha"
+      "allChannels": "Il-kanali kollha",
+      "compare": "Qabbel"
     },
     "basis": {
       "anreise": "Skont il-wasla",
@@ -12316,13 +12326,48 @@
     },
     "ownerStayCount": "{count, plural, one {# Użu personali} other {# Użi personali}}",
     "ownerStayRow": "Użu personali",
-    "ownerStayRowHint": "Sid ta' dar fil-proprjetà tiegħu stess — mhux għall-bejgħ"
+    "ownerStayRowHint": "Sid ta' dar fil-proprjetà tiegħu stess — mhux għall-bejgħ",
+    "compare": {
+      "keiner": "Ebda paragun",
+      "1j": "Sena li għaddiet",
+      "2j": "Sentejn ilu",
+      "5j": "5 snin ilu"
+    },
+    "compareBanner": "{label}: imqabbla ma' {von} – {bis}",
+    "comparePrevious": "preċedenti {value}",
+    "compareNoBase": "l-ebda valur preċedenti",
+    "compareOnlyBefore": "biss fil-perjodu ta' paragun",
+    "compareRowCount": "{label}: {count, plural, =0 {l-ebda prenotazzjoni} one {# prenotazzjoni} other {# prenotazzjonijiet}}",
+    "compareBaselinePrevious": "Bidla meta mqabbla mal-perjodu preċedenti tal-istess tul",
+    "compareCurrencyMismatch": "Sena preċedenti f' {currency} – mhux komparabbli",
+    "compareCurrencyUnclear": "Munita mhux ambigwa fil-perjodu ta' paragun",
+    "compareCurrencyMismatchHint": "Fil-perjodu ta' paragun, kienet applikata munita differenti. Bidla fil-persentaġġ tkun effett tar-rata tal-kambju u mhux figura kummerċjali.",
+    "compareChartCurrencyMismatch": "Il-perjodu ta' paragun kien f'munita differenti – il-linja tas-sena preċedenti għalhekk ma tinġibidx.",
+    "compareLocked": "Paragun huwa possibbli sa perjodu ta' sena."
   },
   "tasks": {
     "fehler": {
       "requestId": "ID: {id}",
       "kopieren": "Ikkopja d-dettalji",
       "kopiert": "Kopjat"
+    },
+    "servicePrices": {
+      "title": "Prezzijiet tas-servizzi",
+      "intro": "X'jiswa servizz ordnat mis-sid. Meta jitlesta l-kompitu, dan joħloq oġġett fil-kont tiegħu. Mingħajr prezz, ma jinħoloqx oġġett, u s-servizz jibqa' mhux ikkalkulat.",
+      "missing": "Ebda prezz",
+      "set": "Issettja l-prezz",
+      "change": "Editja",
+      "remove": "Neħħi",
+      "amount": "Ammont",
+      "currency": "Munita",
+      "scope": "Applika għal",
+      "allProperties": "Il-proprjetajiet kollha",
+      "save": "Ħlief",
+      "cancel": "Ikkanċella",
+      "saved": "Prezz salvat.",
+      "removed": "Prezz imneħħi.",
+      "amountInvalid": "Jekk jogħġbok daħħal ammont minn 0.",
+      "currencyInvalid": "Jekk jogħġbok daħħal munita bi tliet ittri (eż. DKK)."
     }
   }
 }

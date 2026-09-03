@@ -4470,7 +4470,8 @@
         "vorlagen": "Taaksjablonen",
         "planmaessig": "Geplande taken",
         "regelmaessig": "Terugkerende taken",
-        "vertretungen": "Vervangingen"
+        "vertretungen": "Vervangingen",
+        "dienstleistungen": "Diensten"
       }
     },
     "propertyCalendar": {
@@ -5101,7 +5102,15 @@
       },
       "rowOpenCalendar": "Openen in agenda",
       "rowOpenBooking": "Boeking openen",
-      "rowOpenInbox": "Gesprek openen in postvak"
+      "rowOpenInbox": "Gesprek openen in postvak",
+      "ownerRequests": "Eigenaarsacties",
+      "ownerRequestsLabel": "wachten op uw beslissing",
+      "ownerRequestsExplain": "Blokkadeverzoeken en annuleringsverzoeken van de eigenaars. Zolang niemand beslist, wacht de eigenaar op een antwoord en blijven de nachten in de staat waarin ze zijn.",
+      "ownerRequestsPending": "Openstaande blokkadeverzoeken",
+      "ownerRequestsLift": "Annuleringsverzoeken",
+      "ownerRequestsTermination": "Aangekondigde contracteinden",
+      "ownerRequestsNone": "Geen openstaande acties.",
+      "ownerRequestsOldest": "Oudste openstaande verzoek: {count, plural, =0 {vandaag} one {één dag geleden} other {# dagen geleden}}"
     },
     "mobileAppHint": "De takenweergave voor onderweg is al responsive beschikbaar op het web (Mijn taken + detail met foto-upload). Een aparte mobiele app volgt als eigen project.",
     "aufgabenFilter": {
@@ -12243,7 +12252,8 @@
       "properties": "Objecten",
       "allProperties": "Alle objecten",
       "channels": "Kanalen",
-      "allChannels": "Alle kanalen"
+      "allChannels": "Alle kanalen",
+      "compare": "Vergelijken"
     },
     "basis": {
       "anreise": "Op aankomst",
@@ -12316,13 +12326,48 @@
     },
     "ownerStayCount": "{count, plural, one {# Eigen gebruik} other {# Eigen gebruik}}",
     "ownerStayRow": "Eigen gebruik",
-    "ownerStayRowHint": "Huiseigenaar in eigen object — geen verkoop"
+    "ownerStayRowHint": "Huiseigenaar in eigen object — geen verkoop",
+    "compare": {
+      "keiner": "Geen vergelijking",
+      "1j": "Vorig jaar",
+      "2j": "2 jaar geleden",
+      "5j": "5 jaar geleden"
+    },
+    "compareBanner": "{label}: vergeleken met {von} – {bis}",
+    "comparePrevious": "voorheen {value}",
+    "compareNoBase": "geen vorige waarde",
+    "compareOnlyBefore": "alleen in de vergelijkingsperiode",
+    "compareRowCount": "{label}: {count, plural, =0 {geen boekingen} one {# boeking} other {# boekingen}}",
+    "compareBaselinePrevious": "Verandering ten opzichte van de vorige, even lange periode",
+    "compareCurrencyMismatch": "Vorig jaar in {currency} – niet vergelijkbaar",
+    "compareCurrencyUnclear": "Valuta in de vergelijkingsperiode onduidelijk",
+    "compareCurrencyMismatchHint": "In de vergelijkingsperiode gold een andere valuta. Een procentuele verandering zou een wisselkoerseffect zijn en geen bedrijfscijfer.",
+    "compareChartCurrencyMismatch": "De vergelijkingsperiode had een andere valuta – de lijn van vorig jaar wordt daarom niet getekend.",
+    "compareLocked": "Een vergelijking is mogelijk tot een periode van één jaar."
   },
   "tasks": {
     "fehler": {
       "requestId": "ID: {id}",
       "kopieren": "Details kopiëren",
       "kopiert": "Gekopieerd"
+    },
+    "servicePrices": {
+      "title": "Prijzen van diensten",
+      "intro": "Wat een door de eigenaar bestelde dienst kost. Bij het voltooien van de taak wordt dit een item in zijn factuur. Zonder prijs ontstaat er geen item en blijft de dienst onbetaald.",
+      "missing": "Geen prijs",
+      "set": "Prijs instellen",
+      "change": "Wijzigen",
+      "remove": "Verwijderen",
+      "amount": "Bedrag",
+      "currency": "Valuta",
+      "scope": "Geldt voor",
+      "allProperties": "Alle objecten",
+      "save": "Opslaan",
+      "cancel": "Annuleren",
+      "saved": "Prijs opgeslagen.",
+      "removed": "Prijs verwijderd.",
+      "amountInvalid": "Voer een bedrag in vanaf 0.",
+      "currencyInvalid": "Voer een valutacode van drie letters in (bijv. DKK)."
     }
   }
 }

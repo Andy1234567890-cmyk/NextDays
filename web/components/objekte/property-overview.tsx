@@ -467,8 +467,8 @@ function SectionCard({
   const kanaele = useKanalZeilen(feld ?? "");
   return (
     <Card className="flex flex-col gap-3 p-5">
-      <div className="flex items-start justify-between">
-        <div className="flex flex-col gap-1.5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="font-display text-lg font-extrabold">{title}</h3>
             {kanaele.length > 0 && <ChannelBadge kanaele={kanaele} />}

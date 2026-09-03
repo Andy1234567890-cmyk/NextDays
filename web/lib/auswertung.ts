@@ -28,6 +28,9 @@ export async function getAuswertung(
   if (filter.bezug) qs.set("bezug", filter.bezug);
   for (const id of filter.propertyIds ?? []) qs.append("property_id", id);
   for (const c of filter.channels ?? []) qs.append("channel", c);
+  if (filter.vergleich && filter.vergleich !== "keiner") {
+    qs.set("vergleich", filter.vergleich);
+  }
 
   try {
     const data = await api<Auswertung>(`/auswertung?${qs.toString()}`, { token });

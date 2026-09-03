@@ -15,6 +15,18 @@
  *  weil vorher jede Kennzahl anders rechnete. */
 export type Bezug = "anreise" | "abreise" | "buchung" | "uebernachtung";
 
+/** Mit welchem früheren Zeitraum verglichen wird.
+ *
+ *  DATUMSGLEICH, nicht wochentagsgleich (Entscheidung 03.09.2026):
+ *  31.08.–29.09.2026 wird zu 31.08.–29.09.2025. Gleiche Kalendertage, gleiche
+ *  Feiertage, gleiche Saisonlage. Eine Verschiebung um 52 Wochen ließe das
+ *  Datum um bis zu drei Tage wandern und verschöbe Monatsgrenzen. */
+export type Vergleich = "keiner" | "1j" | "2j" | "5j";
+
+/** Reihenfolge der Auswahl. `keiner` ist die Vorgabe — der Vergleich kostet
+ *  eine zweite Rechnung und wird bewusst eingeschaltet. */
+export const VERGLEICHE: readonly Vergleich[] = ["keiner", "1j", "2j", "5j"];
+
 export type Kennzahlen = {
   currency: string | null;
   umsatz: number;
@@ -39,6 +51,14 @@ export type Punkt = {
   umsatz: number;
   naechte: number;
   buchungen: number;
+  /** NUR im Vergleichsbericht gesetzt: `period`, um die Vergleichsjahre nach
+   *  vorn gerechnet („2025-08-03" → „2026-08-03").
+   *
+   *  Der Schlüssel, über den die Oberfläche beide Zeitreihen verbindet. Über
+   *  die POSITION ginge es nicht: das Backend legt nur Punkte an, in denen
+   *  etwas liegt, die Reihen sind also verschieden lang und Index `i` meint in
+   *  beiden einen anderen Kalendertag. */
+  period_normal?: string | null;
 };
 
 export type KanalZeile = {
@@ -115,6 +135,27 @@ export type GaesteBericht = {
   herkunft: HerkunftZeile[];
 };
 
+/** Der Vorzeitraum — dieselbe Rechnung, andere Daten.
+ *
+ *  OHNE Buchungsliste: der Reiter „Buchungen" zeigt vom Vorjahr nur die
+ *  Summenzeile (`buchungen_gesamt`). Einzelbuchungen von damals wären in der
+ *  Tabelle des laufenden Zeitraums nicht unterscheidbar. */
+export type VergleichBericht = {
+  vergleich: Vergleich;
+  von: string;
+  bis: string;
+  /** Die Währung von DAMALS. Weicht sie von der aktuellen ab, sind Beträge
+   *  nicht vergleichbar — dann keine Prozent-Veränderung behaupten (Wurzel 4). */
+  currency: string | null;
+  waehrungen: string[];
+  kennzahlen: Kennzahlen;
+  verlauf: Punkt[];
+  kanaele: KanalZeile[];
+  objekte: ObjektZeile[];
+  gaeste: GaesteBericht;
+  buchungen_gesamt: number;
+};
+
 export type Auswertung = {
   von: string;
   bis: string;
@@ -128,6 +169,9 @@ export type Auswertung = {
   objekte: ObjektZeile[];
   buchungen: BuchungZeile[];
   gaeste: GaesteBericht;
+  /** `null`, wenn kein Vergleich angefordert wurde. Ein leerer Bericht wäre
+   *  etwas anderes — er behauptete „Vorjahr: alles null". */
+  vorher: VergleichBericht | null;
 };
 
 export type AuswertungFilter = {
@@ -136,6 +180,7 @@ export type AuswertungFilter = {
   bezug?: Bezug;
   propertyIds?: string[];
   channels?: string[];
+  vergleich?: Vergleich;
 };
 
 /** Die vier Reiter. Reihenfolge = Anzeigereihenfolge. */

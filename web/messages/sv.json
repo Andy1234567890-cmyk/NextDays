@@ -4470,7 +4470,8 @@
         "vorlagen": "Uppgiftsmallar",
         "planmaessig": "Schemalagda uppgifter",
         "regelmaessig": "Återkommande uppgifter",
-        "vertretungen": "Ersättning"
+        "vertretungen": "Ersättning",
+        "dienstleistungen": "Tjänster"
       }
     },
     "propertyCalendar": {
@@ -5101,7 +5102,15 @@
       },
       "rowOpenCalendar": "Öppna i kalendern",
       "rowOpenBooking": "Öppna bokningen",
-      "rowOpenInbox": "Öppna konversationen"
+      "rowOpenInbox": "Öppna konversationen",
+      "ownerRequests": "Ägarprocesser",
+      "ownerRequestsLabel": "väntar på ditt beslut",
+      "ownerRequestsExplain": "Ägarens blockeringsförfrågningar och avbokningsförfrågningar. Så länge ingen fattar ett beslut väntar ägaren på ett svar och nätterna förblir i sitt nuvarande tillstånd.",
+      "ownerRequestsPending": "Öppna blockeringsförfrågningar",
+      "ownerRequestsLift": "Avbokningsförfrågningar",
+      "ownerRequestsTermination": "Aviserade avtalsslut",
+      "ownerRequestsNone": "Inga öppna processer.",
+      "ownerRequestsOldest": "Äldsta öppna förfrågan: {count, plural, =0 {idag} one {sedan en dag} other {sedan # dagar}}"
     },
     "mobileAppHint": "Uppgiftsvyn för på språng finns redan responsivt på webben (Mina uppgifter + detaljer med fotouppladdning). En separat mobilapp kommer som ett eget projekt.",
     "aufgabenFilter": {
@@ -12243,7 +12252,8 @@
       "properties": "Objekt",
       "allProperties": "Alla objekt",
       "channels": "Kanaler",
-      "allChannels": "Alla kanaler"
+      "allChannels": "Alla kanaler",
+      "compare": "Jämför"
     },
     "basis": {
       "anreise": "Efter ankomst",
@@ -12316,13 +12326,48 @@
     },
     "ownerStayCount": "{count, plural, one {# egen användning} other {# egen användning}}",
     "ownerStayRow": "Egen användning",
-    "ownerStayRowHint": "Husägare i egen fastighet – ingen försäljning"
+    "ownerStayRowHint": "Husägare i egen fastighet – ingen försäljning",
+    "compare": {
+      "keiner": "Ingen jämförelse",
+      "1j": "Föregående år",
+      "2j": "2 år sedan",
+      "5j": "5 år sedan"
+    },
+    "compareBanner": "{label}: jämfört med {von} – {bis}",
+    "comparePrevious": "föregående {value}",
+    "compareNoBase": "inget föregående värde",
+    "compareOnlyBefore": "endast under jämförelseperioden",
+    "compareRowCount": "{label}: {count, plural, =0 {inga bokningar} one {# bokning} other {# bokningar}}",
+    "compareBaselinePrevious": "förändring jämfört med föregående period av samma längd",
+    "compareCurrencyMismatch": "föregående år i {currency} – ej jämförbart",
+    "compareCurrencyUnclear": "valutan under jämförelseperioden är oklar",
+    "compareCurrencyMismatchHint": "Under jämförelseperioden gällde en annan valuta. En procentuell förändring skulle vara en växelkursseffekt och inte en affärssiffra.",
+    "compareChartCurrencyMismatch": "Jämförelseperioden var i en annan valuta – därför ritas inte föregående års linje.",
+    "compareLocked": "En jämförelse är möjlig upp till en period på ett år."
   },
   "tasks": {
     "fehler": {
       "requestId": "ID: {id}",
       "kopieren": "Kopiera detaljer",
       "kopiert": "Kopierad"
+    },
+    "servicePrices": {
+      "title": "Priser för tjänster",
+      "intro": "Vad en tjänst som beställts av ägaren kostar. När uppgiften är slutförd skapas en post i ägarens faktura. Utan pris skapas ingen post, och tjänsten förblir obetald.",
+      "missing": "Inget pris",
+      "set": "Ange pris",
+      "change": "Ändra",
+      "remove": "Ta bort",
+      "amount": "Belopp",
+      "currency": "Valuta",
+      "scope": "Gäller för",
+      "allProperties": "Alla objekt",
+      "save": "Spara",
+      "cancel": "Avbryt",
+      "saved": "Pris sparat.",
+      "removed": "Pris borttaget.",
+      "amountInvalid": "Ange ett belopp från 0.",
+      "currencyInvalid": "Ange en valuta med tre bokstäver (t.ex. DKK)."
     }
   }
 }

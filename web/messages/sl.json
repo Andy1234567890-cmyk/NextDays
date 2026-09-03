@@ -4470,7 +4470,8 @@
         "vorlagen": "Predloge nalog",
         "planmaessig": "Načrtovane naloge",
         "regelmaessig": "Redne naloge",
-        "vertretungen": "Nadomeščanja"
+        "vertretungen": "Nadomeščanja",
+        "dienstleistungen": "Storitve"
       }
     },
     "propertyCalendar": {
@@ -5101,7 +5102,15 @@
       },
       "rowOpenCalendar": "Odpri v koledarju",
       "rowOpenBooking": "Odpri rezervacijo",
-      "rowOpenInbox": "Odpri pogovor"
+      "rowOpenInbox": "Odpri pogovor",
+      "ownerRequests": "Dejanja lastnika",
+      "ownerRequestsLabel": "čakajo na vašo odločitev",
+      "ownerRequestsExplain": "Zahteve lastnikov za blokado in preklic. Dokler se nihče ne odloči, lastnik čaka na odgovor in nočitve ostanejo v stanju, v kakršnem so.",
+      "ownerRequestsPending": "Odprte zahteve za blokado",
+      "ownerRequestsLift": "Zahteve za preklic",
+      "ownerRequestsTermination": "Napovedani konci pogodb",
+      "ownerRequestsNone": "Ni odprtih dejanj.",
+      "ownerRequestsOldest": "Najstarejša odprta zahteva: {count, plural, =0 {danes} one {od enega dne} other {od # dni}}"
     },
     "mobileAppHint": "Pogled opravil za na pot je že odziven na spletu (Moja opravila + podrobnosti z nalaganjem fotografij). Ločena mobilna aplikacija bo sledila kot samostojen projekt.",
     "aufgabenFilter": {
@@ -12243,7 +12252,8 @@
       "properties": "Objekti",
       "allProperties": "Vsi objekti",
       "channels": "Kanali",
-      "allChannels": "Vsi kanali"
+      "allChannels": "Vsi kanali",
+      "compare": "Primerjava"
     },
     "basis": {
       "anreise": "Po prihodu",
@@ -12316,13 +12326,48 @@
     },
     "ownerStayCount": "{count, plural, one {# lastna uporaba} other {# lastne uporabe}}",
     "ownerStayRow": "Lastna uporaba",
-    "ownerStayRowHint": "Lastnik nepremičnine v svojem objektu – brez prodaje"
+    "ownerStayRowHint": "Lastnik nepremičnine v svojem objektu – brez prodaje",
+    "compare": {
+      "keiner": "Brez primerjave",
+      "1j": "Lansko leto",
+      "2j": "Pred 2 letoma",
+      "5j": "Pred 5 leti"
+    },
+    "compareBanner": "{label}: primerjano z {von} – {bis}",
+    "comparePrevious": "prejšnja vrednost {value}",
+    "compareNoBase": "ni prejšnje vrednosti",
+    "compareOnlyBefore": "samo v primerjalnem obdobju",
+    "compareRowCount": "{label}: {count, plural, =0 {ni rezervacij} one {# rezervacija} few {# rezervacije} other {# rezervacij}}",
+    "compareBaselinePrevious": "Sprememba glede na prejšnje, enako dolgo obdobje",
+    "compareCurrencyMismatch": "Preteklo leto v {currency} – ni primerljivo",
+    "compareCurrencyUnclear": "Valuta v primerjalnem obdobju je nejasna",
+    "compareCurrencyMismatchHint": "V primerjalnem obdobju je veljala druga valuta. Sprememba v odstotkih bi bila učinek menjalnega tečaja in ne poslovna številka.",
+    "compareChartCurrencyMismatch": "Primerjalno obdobje je bilo v drugi valuti – zato črta preteklega leta ni narisana.",
+    "compareLocked": "Primerjava je mogoča za obdobje do enega leta."
   },
   "tasks": {
     "fehler": {
       "requestId": "ID: {id}",
       "kopieren": "Kopiraj podrobnosti",
       "kopiert": "Kopirano"
+    },
+    "servicePrices": {
+      "title": "Cene storitev",
+      "intro": "Koliko stane storitev, ki jo naroči lastnik. Ko je naloga zaključena, se to prikaže kot postavka v njegovem obračunu. Brez cene ni postavke in storitev ostane neobračunana.",
+      "missing": "Brez cene",
+      "set": "Nastavi ceno",
+      "change": "Spremeni",
+      "remove": "Odstrani",
+      "amount": "Znesek",
+      "currency": "Valuta",
+      "scope": "Velja za",
+      "allProperties": "Vse nepremičnine",
+      "save": "Shrani",
+      "cancel": "Prekliči",
+      "saved": "Cena shranjena.",
+      "removed": "Cena odstranjena.",
+      "amountInvalid": "Vnesite znesek od 0 naprej.",
+      "currencyInvalid": "Vnesite trimestno kodo valute (npr. DKK)."
     }
   }
 }

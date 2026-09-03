@@ -4470,7 +4470,8 @@
         "vorlagen": "Teimpléid tascanna",
         "planmaessig": "Tascanna sceidealta",
         "regelmaessig": "Tascanna rialta",
-        "vertretungen": "Ionadaíocht"
+        "vertretungen": "Ionadaíocht",
+        "dienstleistungen": "Seirbhísí"
       }
     },
     "propertyCalendar": {
@@ -5101,7 +5102,15 @@
       },
       "rowOpenCalendar": "Oscail san fhéilire",
       "rowOpenBooking": "Oscail an áirithint",
-      "rowOpenInbox": "Oscail an comhrá"
+      "rowOpenInbox": "Oscail an comhrá",
+      "ownerRequests": "Oibríochtaí Úinéara",
+      "ownerRequestsLabel": "ag fanacht le do chinneadh",
+      "ownerRequestsExplain": "Iarratais ar bhlocáil agus iarratais ar dhíbhlocáil ó úinéirí. Go dtí go ndéanfaidh duine éigin cinneadh, beidh an t-úinéir ag fanacht le freagra agus fanfaidh na hoícheanta mar atá siad.",
+      "ownerRequestsPending": "Iarratais oscailte ar bhlocáil",
+      "ownerRequestsLift": "Iarratais ar dhíbhlocáil",
+      "ownerRequestsTermination": "Foirceannadh conarthaí fógartha",
+      "ownerRequestsNone": "Gan aon oibríochtaí oscailte.",
+      "ownerRequestsOldest": "An t-iarratas oscailte is sine: {count, plural, =0 {inniu} one {ó inné} other {ó # lá anuas}}"
     },
     "mobileAppHint": "Tá an t-amharc tascanna don bhóthar ar fáil cheana go freagrúil ar an ngréasán (Mo thascanna + sonraí le huaslódáil grianghraf). Leanfaidh aip mhóibíleach ar leith mar thionscadal dá cuid féin.",
     "aufgabenFilter": {
@@ -12243,7 +12252,8 @@
       "properties": "Réada",
       "allProperties": "Gach réad",
       "channels": "Cainéil",
-      "allChannels": "Gach cainéal"
+      "allChannels": "Gach cainéal",
+      "compare": "Comparáid"
     },
     "basis": {
       "anreise": "De réir dáta teachta",
@@ -12316,13 +12326,48 @@
     },
     "ownerStayCount": "{count, plural, one {# Úsáid phearsanta} other {# Úsáidí pearsanta}}",
     "ownerStayRow": "Úsáid phearsanta",
-    "ownerStayRowHint": "Úinéir tí ina réadmhaoin féin — gan díol"
+    "ownerStayRowHint": "Úinéir tí ina réadmhaoin féin — gan díol",
+    "compare": {
+      "keiner": "Gan comparáid",
+      "1j": "An bhliain seo caite",
+      "2j": "2 bhliain ó shin",
+      "5j": "5 bliana ó shin"
+    },
+    "compareBanner": "{label}: á chur i gcomparáid le {von} – {bis}",
+    "comparePrevious": "roimhe seo {value}",
+    "compareNoBase": "gan luach roimhe seo",
+    "compareOnlyBefore": "ach amháin sa tréimhse chomparáide",
+    "compareRowCount": "{label}: {count, plural, =0 {gan áirithintí} one {# áirithint} other {# áirithintí}}",
+    "compareBaselinePrevious": "Athrú i gcomparáid leis an tréimhse roimhe seo, ar an fhad chéanna",
+    "compareCurrencyMismatch": "An bhliain roimhe sin in {currency} – ní féidir comparáid a dhéanamh",
+    "compareCurrencyUnclear": "Airgeadra neamhchinnte sa tréimhse chomparáide",
+    "compareCurrencyMismatchHint": "Bhí airgeadra difriúil i bhfeidhm sa tréimhse chomparáide. Bheadh athrú céatadáin ina éifeacht ráta malairte agus ní ina fhigiúr gnó.",
+    "compareChartCurrencyMismatch": "Bhí an tréimhse chomparáide in airgeadra difriúil – mar sin ní tharraingítear an líne don bhliain roimhe sin.",
+    "compareLocked": "Is féidir comparáid a dhéanamh suas le tréimhse bliana."
   },
   "tasks": {
     "fehler": {
       "requestId": "Aitheantas: {id}",
       "kopieren": "Cóipeáil sonraí",
       "kopiert": "Cóipeáilte"
+    },
+    "servicePrices": {
+      "title": "Praghsanna seirbhísí",
+      "intro": "An costas a bhaineann le seirbhís a d'ordaigh an t-úinéir. Nuair a chríochnaítear an tasc, cruthaítear mír ar a bhille. Gan praghas, ní chruthófar mír, agus ní ghearrfar táille ar an tseirbhís.",
+      "missing": "Gan praghas",
+      "set": "Socraigh praghas",
+      "change": "Athraigh",
+      "remove": "Bain",
+      "amount": "Méid",
+      "currency": "Airgeadra",
+      "scope": "Baineann le",
+      "allProperties": "Gach réadmhaoin",
+      "save": "Sábháil",
+      "cancel": "Cealaigh",
+      "saved": "Praghas sábháilte.",
+      "removed": "Praghas bainte.",
+      "amountInvalid": "Cuir isteach méid ó 0 le do thoil.",
+      "currencyInvalid": "Cuir isteach airgeadra trí litir le do thoil (m.sh. DKK)."
     }
   }
 }

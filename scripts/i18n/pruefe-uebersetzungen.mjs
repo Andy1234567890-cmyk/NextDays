@@ -75,7 +75,30 @@ function platzhalter(text) {
   // erzeugte Fehlalarm bei jeder Sprache, deren Wörter anders anfangen als die
   // deutschen (kyrillisch matcht \w nicht) — die Meldung hing dann an der
   // Zielsprache statt am Fehler.
-  const gefunden = [...String(text).matchAll(/\{\s*(\w+)\s*(?:\}|,)/g)].map(
+  //
+  // EINWORTIGE ZWEIGE waren die verbleibende Lücke: „=0 {heute}" liefert der
+  // Regex `heute` als Variablennamen, weil ein einzelnes Wort in Klammern von
+  // `{name}` nicht zu unterscheiden ist. Alle 89 Plurale im Bestand hatten
+  // mehrwortige Zweige, deshalb fiel es nie auf; der erste einwortige Zweig
+  // ließ die Prüfung 23 korrekte Übersetzungen als „PLATZHALTER KAPUTT"
+  // melden (03.09.2026). Ein Gate, das richtige Arbeit anzeigt, wird
+  // abgeschaltet statt befolgt.
+  //
+  // Lösung: die ICU-Zweige VOR der Suche entfernen. Ein Zweig beginnt immer
+  // mit seiner Kategorie (`one`, `=0`, `few` …) und einer öffnenden Klammer —
+  // was darin steht, ist Text, keine Variable. Verschachtelte Variablen in
+  // Zweigen („one {# von {gesamt}}") bleiben erhalten: entfernt wird nur die
+  // Kategorie samt ihrer Klammer-Grenzen, nicht der Inhalt.
+  // WORTGRENZE ist Pflicht: „Prenotazione {ref}" endet auf `one`, und ohne
+  // `\b` schlug die Regex mitten im Wort zu — sie fraß den Platzhalter von
+  // neun italienischen Texten („Prenotazi\u0000ref}") und meldete sie als
+  // fehlend. Ein Zweig steht immer am Anfang oder nach Leerraum/Klammer, nie
+  // als Wortende.
+  const ohneZweige = String(text).replace(
+    /(?:^|[\s{}])(?:=\d+|zero|one|two|few|many|other)\s*\{/g,
+    "\u0000",
+  );
+  const gefunden = [...ohneZweige.matchAll(/\{\s*(\w+)\s*(?:\}|,)/g)].map(
     (treffer) => treffer[1],
   );
   return new Set(

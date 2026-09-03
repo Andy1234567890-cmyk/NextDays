@@ -5,10 +5,10 @@
 // Bis zum Raster-Umbau lag sie unexportiert in reservations-dashboard.tsx. Sie
 // steht jetzt in einer eigenen Datei, weil der Kachel-Katalog
 // (`lib/dashboard-katalog.ts`) jede Kachel einzeln adressieren muss.
-import { Icon } from "@iconify/react";
 import Link from "next/link";
 
 import { Card, CardContent } from "@nextdays/ui/card";
+import { KachelKopf } from "@/components/dashboard/kachel-kopf";
 
 export function ObjektKachel({
   icon,
@@ -28,10 +28,7 @@ export function ObjektKachel({
     >
       <Card className="h-full transition-colors hover:border-accent/40">
         <CardContent className="flex flex-col gap-4 p-6">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Icon icon={icon} className="size-5" />
-            <h3 className="font-semibold text-foreground">{title}</h3>
-          </div>
+          <KachelKopf icon={icon} title={title} gross />
           <div>
             <p className="font-display text-4xl font-extrabold leading-none">
               {value}

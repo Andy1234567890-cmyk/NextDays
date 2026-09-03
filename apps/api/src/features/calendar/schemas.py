@@ -3,7 +3,7 @@
 Bildet die availability-Tabelle ab (Migration 0004): eine Zeile pro
 (property_id, date) = die eine Wahrheit gegen Double-Bookings.
 """
-from datetime import date
+from datetime import date, datetime
 from enum import StrEnum
 from typing import ClassVar
 
@@ -544,6 +544,40 @@ class SperrantragItem(BaseModel):
 class SperrantragListe(BaseModel):
     items: list[SperrantragItem]
     total: int
+
+
+class EigentuemerVorgaenge(BaseModel):
+    """Was an Eigentuemer-Vorgaengen auf dem Tisch liegt — fuer die Startseite.
+
+    WARUM ALS EIGENE ZAHL UND NICHT AUS DER LISTE GERECHNET: Die Startseite
+    braucht drei Bestaende, die aus DERSELBEN Tabelle kommen, aber
+    verschiedene Handgriffe verlangen. Sie aus `SperrantragListe` zu zaehlen
+    hiesse, die ganze Liste samt Objekttiteln, Namen und bestellten Leistungen
+    zu laden, um am Ende drei Zahlen anzuzeigen.
+
+    Der Sperrantrags-Workflow war bis 03.09.2026 vollstaendig gebaut (Antrag,
+    Familien-Freigabe, Kollisionspruefung, Entscheidung, Kuendigungswertung,
+    Aufhebung) und hatte seine eigene Seite unter /kalender/sperrantraege —
+    aber KEINEN Hinweis auf der Startseite. Ein Betrieb, der nicht wusste,
+    dass dort etwas liegt, sah es nie; der Eigentuemer wartete auf eine
+    Antwort, die niemand gab. Die Benachrichtigung allein reicht nicht: sie
+    ist ein Ereignis, das vorbeizieht, kein Bestand, der stehen bleibt.
+    """
+
+    # Antraege, die auf die Entscheidung der Agentur warten (`status='pending'`).
+    offen: int = 0
+    # Aufhebungswuensche zu SCHON GENEHMIGTEN Sperren (`aufhebung='beantragt'`).
+    # Eigener Zaehler, weil es der umgekehrte Handgriff ist: hier gibt die
+    # Agentur Naechte WIEDER FREI. Jeder Tag ohne Entscheidung ist ein Tag, an
+    # dem gesperrt bleibt, was niemand mehr braucht.
+    aufhebung_offen: int = 0
+    # Angekuendigte Vertragsenden aus genehmigten Kuendigungs-Antraegen (0377):
+    # der Eigentuemer hat erklaert, den Vertrag zu beenden. Kein Handgriff in
+    # der Warteschlange, aber die Zahl, die der Betrieb kennen MUSS.
+    kuendigungen: int = 0
+    # Der aelteste offene Antrag — das Alter ist die Dringlichkeit. `None`,
+    # wenn nichts offen ist (kein erfundenes Datum, Wurzel 4).
+    aeltester_offen_am: datetime | None = None
 
 
 class SperrantragKollision(BaseModel):

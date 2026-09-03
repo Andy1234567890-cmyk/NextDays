@@ -4470,7 +4470,8 @@
         "vorlagen": "Șabloane de sarcini",
         "planmaessig": "Sarcini planificate",
         "regelmaessig": "Sarcini recurente",
-        "vertretungen": "Înlocuiri"
+        "vertretungen": "Înlocuiri",
+        "dienstleistungen": "Servicii"
       }
     },
     "propertyCalendar": {
@@ -5101,7 +5102,15 @@
       },
       "rowOpenCalendar": "Deschide în calendar",
       "rowOpenBooking": "Deschide rezervarea",
-      "rowOpenInbox": "Deschide conversația"
+      "rowOpenInbox": "Deschide conversația",
+      "ownerRequests": "Acțiuni proprietar",
+      "ownerRequestsLabel": "în așteptarea deciziei dumneavoastră",
+      "ownerRequestsExplain": "Solicitări de blocare și deblocare de la proprietari. Atâta timp cât nimeni nu decide, proprietarul așteaptă un răspuns, iar nopțile rămân în starea în care sunt.",
+      "ownerRequestsPending": "Solicitări de blocare deschise",
+      "ownerRequestsLift": "Solicitări de deblocare",
+      "ownerRequestsTermination": "Încetări de contract anunțate",
+      "ownerRequestsNone": "Nicio acțiune deschisă.",
+      "ownerRequestsOldest": "Cea mai veche solicitare deschisă: {count, plural, =0 {astăzi} one {de o zi} other {de # zile}}"
     },
     "mobileAppHint": "Vizualizarea sarcinilor pentru deplasări este deja disponibilă responsiv pe web (Sarcinile mele + detalii cu încărcare de fotografii). O aplicație mobilă separată va urma ca proiect propriu.",
     "aufgabenFilter": {
@@ -12243,7 +12252,8 @@
       "properties": "Obiecte",
       "allProperties": "Toate obiectele",
       "channels": "Canale",
-      "allChannels": "Toate canalele"
+      "allChannels": "Toate canalele",
+      "compare": "Comparație"
     },
     "basis": {
       "anreise": "După data sosirii",
@@ -12316,13 +12326,48 @@
     },
     "ownerStayCount": "{count, plural, one {# utilizare proprie} other {# utilizări proprii}}",
     "ownerStayRow": "Utilizare proprie",
-    "ownerStayRowHint": "Proprietar în proprietatea proprie — fără vânzare"
+    "ownerStayRowHint": "Proprietar în proprietatea proprie — fără vânzare",
+    "compare": {
+      "keiner": "Fără comparație",
+      "1j": "Anul trecut",
+      "2j": "Acum 2 ani",
+      "5j": "Acum 5 ani"
+    },
+    "compareBanner": "{label}: comparat cu {von} – {bis}",
+    "comparePrevious": "anterior {value}",
+    "compareNoBase": "fără valoare anterioară",
+    "compareOnlyBefore": "doar în perioada de comparație",
+    "compareRowCount": "{label}: {count, plural, =0 {fără rezervări} one {# rezervare} other {# rezervări}}",
+    "compareBaselinePrevious": "Modificare față de perioada anterioară, de aceeași durată",
+    "compareCurrencyMismatch": "Anul precedent în {currency} – incomparabil",
+    "compareCurrencyUnclear": "Monedă ambiguă în perioada de comparație",
+    "compareCurrencyMismatchHint": "În perioada de comparație a fost utilizată o altă monedă. O modificare procentuală ar fi un efect al cursului de schimb și nu o cifră de afaceri.",
+    "compareChartCurrencyMismatch": "Perioada de comparație a fost într-o altă monedă – linia anului precedent nu este, prin urmare, trasată.",
+    "compareLocked": "O comparație este posibilă pentru o perioadă de până la un an."
   },
   "tasks": {
     "fehler": {
       "requestId": "ID: {id}",
       "kopieren": "Copiați detaliile",
       "kopiert": "Copiat"
+    },
+    "servicePrices": {
+      "title": "Prețuri servicii",
+      "intro": "Cât costă un serviciu comandat de proprietar. La finalizarea sarcinii, acesta devine un element în factura sa. Fără preț, nu se creează niciun element, iar serviciul rămâne nefacturat.",
+      "missing": "Fără preț",
+      "set": "Setare preț",
+      "change": "Modificare",
+      "remove": "Eliminare",
+      "amount": "Sumă",
+      "currency": "Monedă",
+      "scope": "Se aplică la",
+      "allProperties": "Toate proprietățile",
+      "save": "Salvare",
+      "cancel": "Anulare",
+      "saved": "Preț salvat.",
+      "removed": "Preț eliminat.",
+      "amountInvalid": "Introduceți o sumă de la 0.",
+      "currencyInvalid": "Introduceți o monedă din trei litere (de ex. DKK)."
     }
   }
 }

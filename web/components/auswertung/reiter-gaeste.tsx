@@ -12,11 +12,16 @@ import { Card } from "@nextdays/ui/card";
 import { countryName } from "@nextdays/ui/countries";
 import type { Auswertung } from "@/lib/auswertung-typen";
 
+import { VergleichDelta, VergleichHinweis, deltaStand } from "./vergleich-delta";
+
 export function ReiterGaeste({ a }: { a: Auswertung }) {
   const t = useTranslations("analysis");
   const g = a.gaeste;
 
-  if (!g.herkunft.length) {
+  const v = a.vorher?.gaeste;
+
+  // Leer nur, wenn BEIDE Zeiträume nichts hergeben.
+  if (!g.herkunft.length && !a.vorher?.gaeste.herkunft.length) {
     return (
       <Card className="p-8 text-center text-sm text-muted-foreground">
         {t("empty")}
@@ -24,11 +29,28 @@ export function ReiterGaeste({ a }: { a: Auswertung }) {
     );
   }
 
-  const zahl = (v: number | null, suffix = "") =>
-    v === null ? "—" : `${v}${suffix}`;
+  const zahl = (wert: number | null, suffix = "") =>
+    wert === null ? "—" : `${wert}${suffix}`;
+
+  /** Vergleichszeile einer Gäste-Kachel. Alle Größen hier sind Zählwerte oder
+   *  Quoten — währungsunabhängig, deshalb ohne Währungsprüfung. */
+  const delta = (jetzt: number | null, vorwert: number | null, suffix = "") =>
+    a.vorher ? (
+      <VergleichDelta
+        stand={deltaStand(jetzt, vorwert)}
+        vorherAnzeige={zahl(vorwert, suffix)}
+      />
+    ) : null;
 
   return (
     <div className="flex flex-col gap-4">
+      {a.vorher && (
+        <VergleichHinweis
+          vergleich={a.vorher.vergleich}
+          von={a.vorher.von}
+          bis={a.vorher.bis}
+        />
+      )}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Card className="flex flex-col gap-1 p-4">
           <span className="text-xs font-medium text-muted-foreground">
@@ -37,6 +59,7 @@ export function ReiterGaeste({ a }: { a: Auswertung }) {
           <span className="font-display text-xl font-extrabold tabular-nums">
             {g.gaeste_gesamt.toLocaleString()}
           </span>
+          {delta(g.gaeste_gesamt, v?.gaeste_gesamt ?? null)}
         </Card>
         <Card className="flex flex-col gap-1 p-4">
           <span className="text-xs font-medium text-muted-foreground">
@@ -48,6 +71,12 @@ export function ReiterGaeste({ a }: { a: Auswertung }) {
                 die Wahrheit „nicht erkennbar" lautet (Wurzel 4). */}
             {g.personen_zuordenbar === 0 ? "—" : zahl(g.wiederkehrer_pct, " %")}
           </span>
+          {/* Nur vergleichen, wo BEIDE Zeiträume überhaupt zuordenbare
+              Personen hatten: sonst verglichen wir „nicht erkennbar" mit einer
+              Quote und bekämen eine Veränderung, die es nicht gibt. */}
+          {g.personen_zuordenbar > 0 && (v?.personen_zuordenbar ?? 0) > 0
+            ? delta(g.wiederkehrer_pct, v?.wiederkehrer_pct ?? null, " %")
+            : null}
           <span className="text-xs text-muted-foreground">
             {g.personen_zuordenbar === 0
               ? t("guests.notIdentifiable")
@@ -64,6 +93,7 @@ export function ReiterGaeste({ a }: { a: Auswertung }) {
           <span className="font-display text-xl font-extrabold tabular-nums">
             {zahl(g.aufenthalt_schnitt)}
           </span>
+          {delta(g.aufenthalt_schnitt, v?.aufenthalt_schnitt ?? null)}
         </Card>
         <Card className="flex flex-col gap-1 p-4">
           <span className="text-xs font-medium text-muted-foreground">
@@ -72,6 +102,7 @@ export function ReiterGaeste({ a }: { a: Auswertung }) {
           <span className="font-display text-xl font-extrabold tabular-nums">
             {zahl(g.gaeste_je_buchung)}
           </span>
+          {delta(g.gaeste_je_buchung, v?.gaeste_je_buchung ?? null)}
         </Card>
       </div>
 

@@ -11,28 +11,38 @@ import { useTranslations } from "next-intl";
 
 import { Card } from "@nextdays/ui/card";
 import { formatCurrency } from "@/lib/currency";
-import type { Kennzahlen } from "@/lib/auswertung-typen";
+import type { Kennzahlen, VergleichBericht } from "@/lib/auswertung-typen";
+
+import { VergleichDelta, VergleichHinweis, deltaStand } from "./vergleich-delta";
 
 function Kachel({
   label,
   wert,
   hinweis,
   icon,
+  vergleich,
 }: {
   label: string;
   wert: string;
   hinweis?: string;
   icon: string;
+  /** Die Vergleichszeile, wenn ein Vorzeitraum geladen ist. */
+  vergleich?: React.ReactNode;
 }) {
   return (
     <Card className="flex flex-col gap-1 p-4">
-      <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-        <Icon icon={icon} className="size-3.5" />
-        {label}
+      {/* `min-w-0` + `truncate`: sonst schiebt ein langes Label die Kachel
+          auf schmalen Bildschirmen auseinander. */}
+      <span className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-muted-foreground">
+        <Icon icon={icon} className="size-3.5 shrink-0" />
+        <span className="truncate" title={label}>
+          {label}
+        </span>
       </span>
       <span className="font-display text-xl font-extrabold tabular-nums">
         {wert}
       </span>
+      {vergleich}
       {hinweis && (
         <span className="text-xs text-muted-foreground">{hinweis}</span>
       )}
@@ -43,9 +53,11 @@ function Kachel({
 export function KennzahlKacheln({
   k,
   waehrungen,
+  vorher,
 }: {
   k: Kennzahlen;
   waehrungen: string[];
+  vorher?: VergleichBericht | null;
 }) {
   const t = useTranslations("analysis");
 
@@ -56,8 +68,59 @@ export function KennzahlKacheln({
   const geld = (v: number | null) =>
     v === null || !k.currency ? "—" : formatCurrency(v, k.currency);
 
+  // Betrags-Deltas nur bei GLEICHER Währung. Lag der Vorzeitraum in einer
+  // anderen (Betrieb hat gewechselt, oder damals mehrere), wäre die
+  // Veränderung ein Wechselkurs-Artefakt und keine Geschäftszahl.
+  const geldVergleichbar =
+    !!vorher && !!k.currency && vorher.currency === k.currency;
+
+  /** Die Vergleichszeile einer BETRAGS-Kachel. */
+  const geldDelta = (
+    jetzt: number | null,
+    vorwert: number | null,
+    invertiert = false,
+  ) =>
+    vorher ? (
+      <VergleichDelta
+        stand={deltaStand(jetzt, vorwert, {
+          waehrungGleich: geldVergleichbar,
+          vorherWaehrung: vorher.currency,
+        })}
+        vorherAnzeige={
+          vorwert === null || !vorher.currency
+            ? "—"
+            : formatCurrency(vorwert, vorher.currency)
+        }
+        invertiert={invertiert}
+      />
+    ) : undefined;
+
+  /** Die Vergleichszeile einer ZÄHL-/PROZENT-Kachel (währungsunabhängig). */
+  const zahlDelta = (
+    jetzt: number | null,
+    vorwert: number | null,
+    suffix = "",
+    invertiert = false,
+  ) =>
+    vorher ? (
+      <VergleichDelta
+        stand={deltaStand(jetzt, vorwert)}
+        vorherAnzeige={z(vorwert, suffix)}
+        invertiert={invertiert}
+      />
+    ) : undefined;
+
+  const v = vorher?.kennzahlen;
+
   return (
     <div className="flex flex-col gap-3">
+      {vorher && (
+        <VergleichHinweis
+          vergleich={vorher.vergleich}
+          von={vorher.von}
+          bis={vorher.bis}
+        />
+      )}
       {waehrungen.length > 1 && (
         // Mehrere Währungen: das Backend addiert bewusst nicht. Ohne diesen
         // Hinweis stünde überall „—" und niemand wüsste, warum.
@@ -71,18 +134,21 @@ export function KennzahlKacheln({
           icon="ph:currency-circle-dollar"
           label={t("kpi.revenue")}
           wert={geld(k.umsatz)}
+          vergleich={geldDelta(k.umsatz, v?.umsatz ?? null)}
           hinweis={t("kpi.bookingsCount", { count: k.buchungen })}
         />
         <Kachel
           icon="ph:calendar-check"
           label={t("kpi.occupancy")}
           wert={z(k.auslastung_pct, " %")}
+          vergleich={zahlDelta(k.auslastung_pct, v?.auslastung_pct ?? null, " %")}
           hinweis={t("kpi.ofBookable", { count: k.naechte_buchbar })}
         />
         <Kachel
           icon="ph:moon"
           label={t("kpi.nights")}
           wert={k.naechte.toLocaleString()}
+          vergleich={zahlDelta(k.naechte, v?.naechte ?? null)}
           hinweis={
             k.aufenthalt_schnitt === null
               ? undefined
@@ -93,18 +159,28 @@ export function KennzahlKacheln({
           icon="ph:tag"
           label={t("kpi.adr")}
           wert={geld(k.adr)}
+          vergleich={geldDelta(k.adr, v?.adr ?? null)}
           hinweis={t("kpi.adrHint")}
         />
         <Kachel
           icon="ph:trend-up"
           label={t("kpi.revpar")}
           wert={geld(k.revpar)}
+          vergleich={geldDelta(k.revpar, v?.revpar ?? null)}
           hinweis={t("kpi.revparHint")}
         />
         <Kachel
           icon="ph:x-circle"
           label={t("kpi.cancellations")}
           wert={z(k.stornoquote_pct, " %")}
+          vergleich={zahlDelta(
+            k.stornoquote_pct,
+            v?.stornoquote_pct ?? null,
+            " %",
+            // Eine STEIGENDE Stornoquote ist schlecht: hier ist mehr nicht
+            // besser, deshalb dreht `invertiert` die Farbgebung um.
+            true,
+          )}
           hinweis={t("kpi.cancelHint", { count: k.stornos })}
         />
       </div>

@@ -35,6 +35,37 @@ class Bezug(StrEnum):
     UEBERNACHTUNG = "uebernachtung"  # anteilig, je Nacht im Zeitraum
 
 
+class Vergleich(StrEnum):
+    """Mit welchem früheren Zeitraum verglichen wird.
+
+    DATUMSGLEICH, nicht wochentagsgleich (Entscheidung des Betreibers,
+    03.09.2026): 31.08.–29.09.2026 wird zu 31.08.–29.09.2025. Der Vorwert steht
+    damit auf denselben Kalendertagen — gleiche Feiertage, gleiche Schulferien,
+    gleiche Saisonlage. Die Alternative (Verschiebung um 52 Wochen, damit
+    Wochenenden aufeinanderfallen) lässt das Datum um bis zu drei Tage wandern
+    und verschiebt Monatsgrenzen; für einen Bericht, der nach Monaten gegliedert
+    ist, wäre das die schlechtere Wahl.
+
+    Der 29.02. hat keinen datumsgleichen Partner in einem Nicht-Schaltjahr. Er
+    wird auf den 28.02. gelegt (`_jahre_zurueck`) — die einzige Stelle, an der
+    „datumsgleich" nicht wörtlich gelten kann.
+    """
+
+    KEINER = "keiner"
+    JAHR_1 = "1j"
+    JAHR_2 = "2j"
+    JAHR_5 = "5j"
+
+
+#: Wie viele Jahre der jeweilige Vergleich zurückgeht. `KEINER` fehlt hier
+#: bewusst: er ist kein Zeitraum, sondern seine Abwesenheit.
+VERGLEICH_JAHRE: dict[Vergleich, int] = {
+    Vergleich.JAHR_1: 1,
+    Vergleich.JAHR_2: 2,
+    Vergleich.JAHR_5: 5,
+}
+
+
 class Kennzahlen(BaseModel):
     """Die Kachelreihe oben — der Kern jeder Auswertung."""
 
@@ -66,6 +97,17 @@ class Punkt(BaseModel):
     umsatz: float = 0.0
     naechte: int = 0
     buchungen: int = 0
+    #: NUR im Vergleichsbericht gesetzt: `period`, um die Vergleichsjahre nach
+    #: VORN gerechnet — „2025-08-03" wird zu „2026-08-03".
+    #:
+    #: Damit kann die Oberfläche die beiden Zeitreihen über den SCHLÜSSEL
+    #: zusammenführen. Über die Position ginge es nicht: `_verlauf` legt nur
+    #: Eimer an, in denen etwas liegt, die Reihen sind also verschieden lang.
+    #: Live gemessen (03.09.2026): drei Buchungstage 2026 gegen zwei 2025
+    #: ergaben per Index „3. August 2026 gegen 1. August 2025" und „10. August
+    #: gegen 25. August" — eine Kurve, die plausibel aussieht und falsche Tage
+    #: gegenüberstellt.
+    period_normal: str | None = None
 
 
 class KanalZeile(BaseModel):
@@ -170,6 +212,39 @@ class GaesteBericht(BaseModel):
     herkunft: list[HerkunftZeile] = Field(default_factory=list)
 
 
+class VergleichBericht(BaseModel):
+    """Der Vorzeitraum — dieselbe Rechnung, andere Daten.
+
+    ENTHÄLT KEINE BUCHUNGSLISTE. Der Reiter „Buchungen" zeigt vom Vorjahr nur
+    die Summenzeile; die einzelnen Buchungen von damals gehören nicht in eine
+    Tabelle des laufenden Zeitraums — sie wären dort nicht unterscheidbar und
+    verdoppelten die Ladelast des größten Reiters.
+
+    `kanaele` und `objekte` sind je Schlüssel (channel bzw. property_id) mit dem
+    laufenden Zeitraum zusammenzuführen. Ein Kanal, den es NUR im Vorjahr gab,
+    steht deshalb trotzdem hier — die Oberfläche zeigt ihn als Zeile ohne
+    aktuellen Wert, statt ihn verschwinden zu lassen.
+    """
+
+    vergleich: Vergleich
+    von: str
+    bis: str
+    # Die Währung des VORZEITRAUMS. Sie kann von der aktuellen abweichen (der
+    # Betrieb hat gewechselt, oder damals lagen mehrere vor). Dann sind
+    # Beträge NICHT vergleichbar und die Oberfläche sagt das, statt eine
+    # Veränderung in Prozent zu behaupten (Wurzel 4).
+    currency: str | None = None
+    waehrungen: list[str] = Field(default_factory=list)
+    kennzahlen: Kennzahlen
+    verlauf: list[Punkt] = Field(default_factory=list)
+    kanaele: list[KanalZeile] = Field(default_factory=list)
+    objekte: list[ObjektZeile] = Field(default_factory=list)
+    gaeste: GaesteBericht = Field(default_factory=GaesteBericht)
+    # Wie viele Buchungen der Vorzeitraum hatte (die Summenzeile des
+    # Buchungen-Reiters). Die Liste selbst fehlt bewusst, siehe oben.
+    buchungen_gesamt: int = 0
+
+
 class AuswertungResponse(BaseModel):
     """Die ganze Auswertung eines Zeitraums — eine Abfrage, alle Reiter.
 
@@ -192,6 +267,10 @@ class AuswertungResponse(BaseModel):
     objekte: list[ObjektZeile] = Field(default_factory=list)
     buchungen: list[BuchungZeile] = Field(default_factory=list)
     gaeste: GaesteBericht = Field(default_factory=GaesteBericht)
+    # Der Vorzeitraum, wenn einer angefordert wurde. `None` bei
+    # `Vergleich.KEINER` — ein leerer Bericht wäre etwas anderes als keiner
+    # (er behauptete „Vorjahr: alles null").
+    vorher: VergleichBericht | None = None
 
 
 class SliceHealth(BaseModel):

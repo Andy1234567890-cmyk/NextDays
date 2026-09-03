@@ -13,7 +13,8 @@ Geprüft wird, was fachlich schiefgehen KANN und keine DB erzwingt:
 """
 from datetime import date
 
-from src.features.auswertung.schemas import Bezug
+from src.core.zeitraum import jahre_datumsgleich
+from src.features.auswertung.schemas import Bezug, Vergleich
 from src.features.auswertung.service import (
     AuswertungService,
     _naechte,
@@ -498,14 +499,60 @@ def test_alle_vier_bezuege_laufen_durch():
 
 
 def test_verlauf_gruppiert_ueber_90_tage_nach_monaten():
+    """Über 90 Tage Monate, darunter Tage — und die Reihe ist LÜCKENLOS.
+
+    Sie beginnt am Anfang des ZEITRAUMS, nicht beim ersten Buchungstag: eine
+    Kategorieachse verteilt ihre Punkte gleich breit, Lücken verzerrten also
+    die Zeitachse (siehe `test_verlauf_ist_lueckenlos`).
+    """
     res = _service(reservations=[_buchung()], properties=_OBJ).auswerten(
         _Ctx(), von=date(2026, 1, 1), bis=date(2026, 12, 31)
     )
-    assert res.verlauf[0].period == "2026-08"      # Monat
+    assert [p.period for p in res.verlauf] == [
+        f"2026-{m:02d}" for m in range(1, 13)
+    ]
+    # Der Umsatz liegt im Monat der Buchung (10.08.), die anderen tragen 0.
+    umsaetze = {p.period: p.umsatz for p in res.verlauf}
+    assert umsaetze["2026-08"] == 4000
+    assert umsaetze["2026-01"] == 0
+
     res_kurz = _service(reservations=[_buchung()], properties=_OBJ).auswerten(
         _Ctx(), von=date(2026, 8, 1), bis=date(2026, 8, 31)
     )
-    assert res_kurz.verlauf[0].period == "2026-08-10"  # Tag
+    assert res_kurz.verlauf[0].period == "2026-08-01"  # Tag, ab Zeitraumbeginn
+    assert len(res_kurz.verlauf) == 31
+
+
+def test_verlauf_ist_lueckenlos():
+    """Jeder Tag des Zeitraums bekommt einen Punkt — auch die ohne Buchung.
+
+    DER FEHLER, den das verhindert (gemeldet 03.09.2026, gemessen an der
+    Live-DB): Eine Diagramm-Kategorieachse verteilt ihre Punkte GLEICH BREIT.
+    Standen nur Tage mit Buchungen darauf, war die Zeitachse verzerrt — im
+    Zeitraum 31.08.–29.09.2026 fehlten 12 von 30 Tagen, und der Sprung vom
+    20.09. auf den 25.09. (fünf Tage) sah genauso breit aus wie der vom 01.09.
+    auf den 02.09. (ein Tag). Die Kurve zeigte einen Verlauf, den es nie gab.
+    """
+    res = _service(
+        reservations=[
+            _buchung(id="a", check_in="2026-08-02", check_out="2026-08-04",
+                     total_amount=100),
+            _buchung(id="b", check_in="2026-08-09", check_out="2026-08-11",
+                     total_amount=200),
+        ],
+        properties=_OBJ,
+    ).auswerten(_Ctx(), von=date(2026, 8, 1), bis=date(2026, 8, 10))
+
+    assert [p.period for p in res.verlauf] == [
+        f"2026-08-{t:02d}" for t in range(1, 11)
+    ]
+    werte = {p.period: p.umsatz for p in res.verlauf}
+    assert werte["2026-08-02"] == 100
+    assert werte["2026-08-09"] == 200
+    # Ein Tag ohne Buchung trägt 0.0 — das ist die WAHRE Aussage („an dem Tag
+    # kein Umsatz"), keine erfundene.
+    assert werte["2026-08-05"] == 0.0
+    assert werte["2026-08-05"] == 0
 
 
 # ----------------------------------------------------------------------
@@ -605,3 +652,311 @@ def test_buchung_eines_fremden_objekts_wird_verworfen():
     ).auswerten(_Ctx(), von=date(2026, 8, 1), bis=date(2026, 8, 31))
     assert res.kennzahlen.buchungen == 0
     assert res.buchungen == []
+
+
+# ----------------------------------------------------------------------
+# Vergleich mit dem Vorjahr (1/2/5 Jahre)
+# ----------------------------------------------------------------------
+
+
+def test_jahre_zurueck_ist_datumsgleich():
+    """Derselbe Kalendertag, nicht 365 Tage.
+
+    Wie weit 365·n danebenliegt, hängt von den dazwischenliegenden Schaltjahren
+    ab (ein bis zwei Tage beim 5-Jahres-Sprung) — gemessen in
+    `core/tests/test_zeitraum_jahresvergleich.py`.
+    """
+    assert jahre_datumsgleich(date(2026, 9, 29), 1) == date(2025, 9, 29)
+    assert jahre_datumsgleich(date(2026, 9, 29), 2) == date(2024, 9, 29)
+    assert jahre_datumsgleich(date(2026, 9, 29), 5) == date(2021, 9, 29)
+
+
+def test_jahre_zurueck_schalttag_faellt_auf_28_februar():
+    """Den 29.02.2024 gibt es 2023 nicht — er wird der 28.02., nicht der 01.03.
+
+    Der 01.03. läge im nächsten MONAT und damit in einem anderen Balken der
+    Zeitreihe; der Vorwert stünde dann im falschen Monatseimer.
+    """
+    assert jahre_datumsgleich(date(2024, 2, 29), 1) == date(2023, 2, 28)
+    assert jahre_datumsgleich(date(2024, 2, 29), 5) == date(2019, 2, 28)
+    # Ein Schalttag auf einen anderen Schalttag bleibt der 29.
+    assert jahre_datumsgleich(date(2024, 2, 29), 4) == date(2020, 2, 29)
+
+
+def test_ohne_vergleich_bleibt_vorher_none():
+    """`None`, nicht ein leerer Bericht — der behauptete „Vorjahr: alles null"."""
+    res = _service(reservations=[_buchung()], properties=_OBJ).auswerten(
+        _Ctx(), von=date(2026, 8, 1), bis=date(2026, 8, 31)
+    )
+    assert res.vorher is None
+
+
+def _db_je_zeitraum(nach_jahr):
+    """Attrappe, die Reservierungen NACH ANGEFRAGTEM ZEITRAUM ausgibt.
+
+    Die übrige Test-Attrappe filtert bewusst nicht — hier ist die Unterscheidung
+    aber der Kern: gäbe sie beide Male dieselben Zeilen aus, wäre jeder
+    Vergleichstest grün, ohne irgendetwas zu beweisen.
+    """
+
+    class _Q:
+        def __init__(self, tabelle, tabellen):
+            self._tabelle = tabelle
+            self._tabellen = tabellen
+            self._jahr = None
+
+        def select(self, *_a, **_k):
+            return self
+
+        def eq(self, *_a):
+            return self
+
+        def is_(self, *_a):
+            return self
+
+        def gte(self, feld, wert):
+            if self._tabelle == "reservations":
+                self._jahr = int(str(wert)[:4])
+            return self
+
+        def lte(self, *_a):
+            return self
+
+        def lt(self, *_a):
+            return self
+
+        def gt(self, *_a):
+            return self
+
+        def in_(self, *_a):
+            return self
+
+        def order(self, *_a, **_k):
+            return self
+
+        def range(self, *_a):
+            return self
+
+        def limit(self, *_a):
+            return self
+
+        def execute(self):
+            rows = self._tabellen.get(self._tabelle, [])
+            if self._tabelle == "reservations":
+                rows = nach_jahr.get(self._jahr, [])
+
+            class _R:
+                data = list(rows)
+
+            return _R()
+
+    class _DBZ:
+        def __init__(self, tabellen):
+            self._tabellen = tabellen
+
+        def table(self, name):
+            return _Q(name, self._tabellen)
+
+    return _DBZ({"properties": _OBJ})
+
+
+def test_vergleich_rechnet_den_vorzeitraum_getrennt():
+    """Der Vorwert stammt aus dem VERSCHOBENEN Zeitraum, nicht aus demselben."""
+    db = _db_je_zeitraum(
+        {
+            2026: [_buchung(id="heute", total_amount=4000)],
+            2025: [
+                _buchung(id="a", check_in="2025-08-10", check_out="2025-08-14",
+                         total_amount=1000),
+                _buchung(id="b", check_in="2025-08-20", check_out="2025-08-22",
+                         total_amount=500),
+            ],
+        }
+    )
+    res = AuswertungService(db).auswerten(
+        _Ctx(),
+        von=date(2026, 8, 1),
+        bis=date(2026, 8, 31),
+        vergleich=Vergleich.JAHR_1,
+    )
+    assert res.kennzahlen.umsatz == 4000
+    assert res.kennzahlen.buchungen == 1
+    assert res.vorher is not None
+    assert res.vorher.von == "2025-08-01"
+    assert res.vorher.bis == "2025-08-31"
+    assert res.vorher.kennzahlen.umsatz == 1500
+    assert res.vorher.kennzahlen.buchungen == 2
+
+
+def test_vergleich_fuenf_jahre_trifft_das_richtige_jahr():
+    db = _db_je_zeitraum(
+        {
+            2026: [_buchung(total_amount=4000)],
+            2021: [
+                _buchung(check_in="2021-08-10", check_out="2021-08-12",
+                         total_amount=777)
+            ],
+        }
+    )
+    res = AuswertungService(db).auswerten(
+        _Ctx(),
+        von=date(2026, 8, 1),
+        bis=date(2026, 8, 31),
+        vergleich=Vergleich.JAHR_5,
+    )
+    assert res.vorher is not None
+    assert res.vorher.von == "2021-08-01"
+    assert res.vorher.kennzahlen.umsatz == 777
+
+
+def test_vergleich_ohne_daten_im_vorjahr_ist_nicht_none():
+    """Ein Vorjahr OHNE Buchungen ist eine Aussage („damals nichts"), kein Fehler.
+
+    Es darf deshalb nicht mit „kein Vergleich angefordert" zusammenfallen —
+    `vorher` steht, die Kennzahlen sind leer, und die Oberfläche kann den
+    Unterschied zeigen.
+    """
+    db = _db_je_zeitraum({2026: [_buchung()], 2024: []})
+    res = AuswertungService(db).auswerten(
+        _Ctx(),
+        von=date(2026, 8, 1),
+        bis=date(2026, 8, 31),
+        vergleich=Vergleich.JAHR_2,
+    )
+    assert res.vorher is not None
+    assert res.vorher.kennzahlen.buchungen == 0
+    assert res.vorher.kennzahlen.umsatz == 0
+    # Kein erfundener Nenner: ohne Nächte gibt es keinen Ø Nachtpreis.
+    assert res.vorher.kennzahlen.adr is None
+
+
+def test_vergleich_traegt_keine_buchungsliste():
+    """Nur die Summenzeile — die Einzelbuchungen von damals gehören nicht
+    in die Tabelle des laufenden Zeitraums."""
+    db = _db_je_zeitraum(
+        {2026: [_buchung()], 2025: [_buchung(check_in="2025-08-10",
+                                             check_out="2025-08-12")]}
+    )
+    res = AuswertungService(db).auswerten(
+        _Ctx(),
+        von=date(2026, 8, 1),
+        bis=date(2026, 8, 31),
+        vergleich=Vergleich.JAHR_1,
+    )
+    assert res.vorher is not None
+    assert res.vorher.buchungen_gesamt == 1
+    assert not hasattr(res.vorher, "buchungen")
+
+
+def test_vergleichsverlauf_traegt_den_partnerschluessel():
+    """Jeder Vorjahrespunkt weiß, welchem Punkt der Gegenwart er entspricht.
+
+    DER FEHLER, den das verhindert (gemessen 03.09.2026): `_verlauf` legt nur
+    Eimer an, in denen etwas liegt — die beiden Reihen sind also verschieden
+    lang. Wer sie über die POSITION verbindet, stellt drei Buchungstage 2026
+    zwei Buchungstagen 2025 gegenüber und paart „3. August 2026" mit
+    „1. August 2025", „10. August" mit „25. August". Eine Kurve, die plausibel
+    aussieht und falsche Tage vergleicht.
+    """
+    db = _db_je_zeitraum(
+        {
+            2026: [
+                _buchung(id="a", check_in="2026-08-03", check_out="2026-08-05",
+                         total_amount=1000),
+                _buchung(id="b", check_in="2026-08-10", check_out="2026-08-12",
+                         total_amount=2000),
+                _buchung(id="c", check_in="2026-08-20", check_out="2026-08-22",
+                         total_amount=3000),
+            ],
+            2025: [
+                _buchung(id="x", check_in="2025-08-01", check_out="2025-08-03",
+                         total_amount=500),
+                _buchung(id="y", check_in="2025-08-25", check_out="2025-08-27",
+                         total_amount=900),
+            ],
+        }
+    )
+    res = AuswertungService(db).auswerten(
+        _Ctx(),
+        von=date(2026, 8, 1),
+        bis=date(2026, 8, 31),
+        vergleich=Vergleich.JAHR_1,
+    )
+    assert res.vorher is not None
+    # Seit die Reihen lückenlos sind, decken sie sich Punkt für Punkt — der
+    # Partnerschlüssel bleibt trotzdem nötig: er trägt die Jahresverschiebung
+    # („2025-08-01" gehört über „2026-08-01"), und ohne ihn müsste die
+    # Oberfläche wieder über die Position paaren.
+    assert len(res.verlauf) == 31
+    assert len(res.vorher.verlauf) == 31
+
+    paare = {p.period_normal: p.umsatz for p in res.vorher.verlauf}
+    assert paare["2026-08-01"] == 500.0
+    assert paare["2026-08-25"] == 900.0
+    # Ein Tag, an dem im Vorjahr nichts gebucht wurde, trägt 0 — der Punkt
+    # existiert, damit die Achse zeitlich stimmt.
+    assert paare["2026-08-03"] == 0.0
+
+    # Die Werte der Gegenwart stehen auf ihren EIGENEN Tagen, nicht verschoben.
+    jetzt = {p.period: p.umsatz for p in res.verlauf}
+    assert jetzt["2026-08-03"] == 1000.0
+    assert jetzt["2026-08-10"] == 2000.0
+    assert jetzt["2026-08-20"] == 3000.0
+
+
+def test_vergleichsverlauf_monatsschluessel():
+    """Bei Monatsauflösung wird das Jahr im Schlüssel `YYYY-MM` verschoben."""
+    db = _db_je_zeitraum(
+        {
+            2026: [_buchung(check_in="2026-03-10", check_out="2026-03-12")],
+            2025: [
+                _buchung(id="v", check_in="2025-03-10", check_out="2025-03-12",
+                         total_amount=700)
+            ],
+        }
+    )
+    res = AuswertungService(db).auswerten(
+        _Ctx(),
+        # Über 90 Tage → Monatsauflösung.
+        von=date(2026, 1, 1),
+        bis=date(2026, 12, 31),
+        vergleich=Vergleich.JAHR_1,
+    )
+    assert res.vorher is not None
+    # Zwölf Monate, lückenlos — und jeder trägt seinen Partner der Gegenwart.
+    assert [p.period for p in res.vorher.verlauf] == [
+        f"2025-{m:02d}" for m in range(1, 13)
+    ]
+    assert [p.period_normal for p in res.vorher.verlauf] == [
+        f"2026-{m:02d}" for m in range(1, 13)
+    ]
+    umsaetze = {p.period_normal: p.umsatz for p in res.vorher.verlauf}
+    assert umsaetze["2026-03"] == 700
+
+
+def test_vergleichsverlauf_teilt_die_aufloesung_des_hauptzeitraums():
+    """Beide Reihen tragen dieselbe Einteilung — auch am 90-Tage-Grenzfall.
+
+    01.01.–01.04.2020 sind 91 Tage (monatlich), ein Jahr früher 90 (täglich).
+    Ohne Vorgabe bestünde die Vorjahreslinie aus Tageswerten und die Hauptlinie
+    aus Monatssummen — auf einer Achse mit derselben Skala.
+    """
+    db = _db_je_zeitraum(
+        {
+            2020: [_buchung(check_in="2020-02-10", check_out="2020-02-12")],
+            2019: [
+                _buchung(id="v", check_in="2019-02-10", check_out="2019-02-12",
+                         total_amount=400)
+            ],
+        }
+    )
+    res = AuswertungService(db).auswerten(
+        _Ctx(),
+        von=date(2020, 1, 1),
+        bis=date(2020, 4, 1),
+        vergleich=Vergleich.JAHR_1,
+    )
+    assert res.vorher is not None
+    # Beide Monatsschlüssel (Länge 7), nicht einer davon ein Tagesschlüssel.
+    assert all(len(p.period) == 7 for p in res.verlauf)
+    assert all(len(p.period) == 7 for p in res.vorher.verlauf)

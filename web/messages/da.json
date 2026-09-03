@@ -4470,7 +4470,8 @@
         "vorlagen": "Opgaveskabeloner",
         "planmaessig": "Planlagte opgaver",
         "regelmaessig": "Faste opgaver",
-        "vertretungen": "Afløsning"
+        "vertretungen": "Afløsning",
+        "dienstleistungen": "Tjenester"
       }
     },
     "propertyCalendar": {
@@ -5101,7 +5102,15 @@
       },
       "rowOpenCalendar": "Åbn i kalenderen",
       "rowOpenBooking": "Åbn booking",
-      "rowOpenInbox": "Åbn samtale i indbakken"
+      "rowOpenInbox": "Åbn samtale i indbakken",
+      "ownerRequests": "Ejerværktøjer",
+      "ownerRequestsLabel": "afventer Deres beslutning",
+      "ownerRequestsExplain": "Ejers anmodninger om blokering og ophævelse. Indtil nogen træffer en beslutning, afventer ejeren et svar, og nætterne forbliver i deres nuværende tilstand.",
+      "ownerRequestsPending": "Åbne blokeringsanmodninger",
+      "ownerRequestsLift": "Anmodninger om ophævelse",
+      "ownerRequestsTermination": "Varslede kontraktudløb",
+      "ownerRequestsNone": "Ingen åbne sager.",
+      "ownerRequestsOldest": "Ældste åbne anmodning: {count, plural, =0 {i dag} one {siden én dag} other {siden # dage}}"
     },
     "mobileAppHint": "Opgavevisningen til farten er allerede tilgængelig responsivt på nettet (Mine opgaver + detaljer med foto-upload). En separat mobilapp følger som et selvstændigt projekt.",
     "aufgabenFilter": {
@@ -12243,7 +12252,8 @@
       "properties": "Objekter",
       "allProperties": "Alle objekter",
       "channels": "Kanaler",
-      "allChannels": "Alle kanaler"
+      "allChannels": "Alle kanaler",
+      "compare": "Sammenlign"
     },
     "basis": {
       "anreise": "Efter ankomst",
@@ -12316,13 +12326,48 @@
     },
     "ownerStayCount": "{count, plural, one {# Egen brug} other {# Egen brug}}",
     "ownerStayRow": "Egen brug",
-    "ownerStayRowHint": "Boligejer i egen ejendom — intet salg"
+    "ownerStayRowHint": "Boligejer i egen ejendom — intet salg",
+    "compare": {
+      "keiner": "Ingen sammenligning",
+      "1j": "Sidste år",
+      "2j": "For 2 år siden",
+      "5j": "For 5 år siden"
+    },
+    "compareBanner": "{label}: sammenlignes med {von} – {bis}",
+    "comparePrevious": "før {value}",
+    "compareNoBase": "ingen tidligere værdi",
+    "compareOnlyBefore": "kun i sammenligningsperioden",
+    "compareRowCount": "{label}: {count, plural, =0 {ingen bookinger} one {# booking} other {# bookinger}}",
+    "compareBaselinePrevious": "ændring i forhold til den foregående periode af samme længde",
+    "compareCurrencyMismatch": "forrige år i {currency} – kan ikke sammenlignes",
+    "compareCurrencyUnclear": "valuta i sammenligningsperioden er uklar",
+    "compareCurrencyMismatchHint": "I sammenligningsperioden var der en anden valuta. En ændring i procent ville være en vekselkurs-effekt og ikke et forretningstal.",
+    "compareChartCurrencyMismatch": "Sammenligningsperioden var i en anden valuta – derfor tegnes linjen for det foregående år ikke.",
+    "compareLocked": "En sammenligning er mulig for en periode på op til et år."
   },
   "tasks": {
     "fehler": {
       "requestId": "ID: {id}",
       "kopieren": "Kopier detaljer",
       "kopiert": "Kopieret"
+    },
+    "servicePrices": {
+      "title": "Priser for tjenester",
+      "intro": "Hvad en service bestilt af ejeren koster. Når opgaven er afsluttet, oprettes en post i ejerens regnskab. Uden pris oprettes ingen post, og servicen forbliver uafregnet.",
+      "missing": "Ingen pris",
+      "set": "Indstil pris",
+      "change": "Rediger",
+      "remove": "Fjern",
+      "amount": "Beløb",
+      "currency": "Valuta",
+      "scope": "Gælder for",
+      "allProperties": "Alle ejendomme",
+      "save": "Gem",
+      "cancel": "Annuller",
+      "saved": "Pris gemt.",
+      "removed": "Pris fjernet.",
+      "amountInvalid": "Indtast venligst et beløb fra 0.",
+      "currencyInvalid": "Indtast venligst en valuta med tre bogstaver (f.eks. DKK)."
     }
   }
 }

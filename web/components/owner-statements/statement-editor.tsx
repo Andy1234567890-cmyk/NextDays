@@ -1941,10 +1941,15 @@ function Section({
   return (
     <section className="border-b border-border pb-5">
       <div className="flex items-center justify-between gap-4 py-3">
-        <div className="flex items-center gap-2">
-          <button type="button" onClick={() => setOpen((v) => !v)} className="flex items-center gap-2">
-            <h2 className="font-display text-lg font-extrabold">{title}</h2>
-            <Icon icon={open ? "ph:caret-up" : "ph:caret-down"} className="size-4 text-muted-foreground" />
+        {/* `min-w-0` + `truncate`: ohne das kann die Titel-Gruppe nicht unter
+            ihre Inhaltsbreite schrumpfen und schiebt `right` — hier eine
+            Segment-Leiste samt Knopf — aus der Sektion heraus (derselbe
+            Fehler wie in den Dashboard-Kacheln, siehe
+            components/dashboard/kachel-kopf.tsx). */}
+        <div className="flex min-w-0 items-center gap-2">
+          <button type="button" onClick={() => setOpen((v) => !v)} className="flex min-w-0 items-center gap-2">
+            <h2 className="truncate font-display text-lg font-extrabold" title={title}>{title}</h2>
+            <Icon icon={open ? "ph:caret-up" : "ph:caret-down"} className="size-4 shrink-0 text-muted-foreground" />
           </button>
           {info}
         </div>

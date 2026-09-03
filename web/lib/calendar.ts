@@ -515,6 +515,24 @@ export type SperrantragLeistung = {
 };
 
 /** Anträge des Mandanten. Ohne `status` alle, `pending` ist die Warteschlange. */
+/** Die drei Bestaende der Eigentuemer-Vorgaenge fuer die Startseite. */
+export type EigentuemerVorgaenge = {
+  /** Antraege, die auf die Entscheidung der Agentur warten. */
+  offen: number;
+  /** Aufhebungswuensche zu schon genehmigten Sperren — der umgekehrte
+   *  Handgriff: hier gibt die Agentur Naechte WIEDER FREI. */
+  aufhebung_offen: number;
+  /** Angekuendigte Vertragsenden aus genehmigten Kuendigungs-Antraegen (0377). */
+  kuendigungen: number;
+  /** Der aelteste offene Antrag; null, wenn nichts offen ist. */
+  aeltester_offen_am: string | null;
+};
+
+/** Zaehlt, ohne die ganze Liste samt Titeln und Leistungen zu laden. */
+export async function getEigentuemerVorgaenge(): Promise<Result<EigentuemerVorgaenge>> {
+  return call("/calendar/block-requests/vorgaenge");
+}
+
 export async function listBlockRequests(
   status?: string,
 ): Promise<Result<{ items: Sperrantrag[]; total: number }>> {

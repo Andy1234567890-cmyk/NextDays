@@ -682,11 +682,14 @@ function statsQuery(
   dateFrom?: string,
   dateTo?: string,
   propertyIds?: string[],
+  vergleichJahre = 0,
 ): string {
   const params = new URLSearchParams();
   if (dateFrom) params.set("date_from", dateFrom);
   if (dateTo) params.set("date_to", dateTo);
   for (const id of propertyIds ?? []) params.append("property_id", id);
+  // 0 ist die Vorgabe des Backends (Vorperiode) und wird nicht mitgeschickt.
+  if (vergleichJahre) params.set("vergleich_jahre", String(vergleichJahre));
   const qs = params.toString();
   return qs ? `?${qs}` : "";
 }
@@ -697,8 +700,13 @@ export async function getTenantStats(
   dateFrom?: string,
   dateTo?: string,
   propertyIds?: string[],
+  /** 0 = Vorperiode (Vorgabe), 1/2/5 = derselbe Zeitraum vor so vielen Jahren.
+   *  Verschiebt den Anker JEDER `change_pct` dieser Antwort. */
+  vergleichJahre = 0,
 ): Promise<Result<PropertyStats>> {
-  return call(`/reservations/stats${statsQuery(dateFrom, dateTo, propertyIds)}`);
+  return call(
+    `/reservations/stats${statsQuery(dateFrom, dateTo, propertyIds, vergleichJahre)}`,
+  );
 }
 
 /** KPI-Detailseite tenant-weit (Kontrollzentrum „ANSEHEN"). */

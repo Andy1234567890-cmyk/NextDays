@@ -4470,7 +4470,8 @@
         "vorlagen": "Šablóny úloh",
         "planmaessig": "Plánované úlohy",
         "regelmaessig": "Pravidelné úlohy",
-        "vertretungen": "Zástupy"
+        "vertretungen": "Zástupy",
+        "dienstleistungen": "Služby"
       }
     },
     "propertyCalendar": {
@@ -5101,7 +5102,15 @@
       },
       "rowOpenCalendar": "Otvoriť v kalendári",
       "rowOpenBooking": "Otvoriť rezerváciu",
-      "rowOpenInbox": "Otvoriť konverzáciu"
+      "rowOpenInbox": "Otvoriť konverzáciu",
+      "ownerRequests": "Operácie vlastníka",
+      "ownerRequestsLabel": "čakajú na vaše rozhodnutie",
+      "ownerRequestsExplain": "Žiadosti vlastníka o blokovanie a zrušenie. Kým sa nikto nerozhodne, vlastník čaká na odpoveď a noci zostávajú v stave, v akom sú.",
+      "ownerRequestsPending": "Otvorené žiadosti o blokovanie",
+      "ownerRequestsLift": "Žiadosti o zrušenie",
+      "ownerRequestsTermination": "Oznámené ukončenia zmlúv",
+      "ownerRequestsNone": "Žiadne otvorené operácie.",
+      "ownerRequestsOldest": "Najstaršia otvorená žiadosť: {count, plural, =0 {dnes} one {jeden deň} few {# dni} many {# dní} other {# dní}}"
     },
     "mobileAppHint": "Zobrazenie úloh na cestách je už responzívne dostupné na webe (Moje úlohy + detail s nahraním fotiek). Samostatná mobilná aplikácia príde ako vlastný projekt.",
     "aufgabenFilter": {
@@ -12243,7 +12252,8 @@
       "properties": "Objekty",
       "allProperties": "Všetky objekty",
       "channels": "Kanály",
-      "allChannels": "Všetky kanály"
+      "allChannels": "Všetky kanály",
+      "compare": "Porovnať"
     },
     "basis": {
       "anreise": "Podľa príchodu",
@@ -12316,13 +12326,48 @@
     },
     "ownerStayCount": "{count, plural, one {# Vlastné použitie} other {# Vlastné použitia}}",
     "ownerStayRow": "Vlastné použitie",
-    "ownerStayRowHint": "Majiteľ býva v objekte – žiadny predaj"
+    "ownerStayRowHint": "Majiteľ býva v objekte – žiadny predaj",
+    "compare": {
+      "keiner": "Žiadne porovnanie",
+      "1j": "Predchádzajúci rok",
+      "2j": "Pred 2 rokmi",
+      "5j": "Pred 5 rokmi"
+    },
+    "compareBanner": "{label}: porovnáva sa s {von} – {bis}",
+    "comparePrevious": "predchádzajúca hodnota {value}",
+    "compareNoBase": "žiadna predchádzajúca hodnota",
+    "compareOnlyBefore": "len v porovnávacom období",
+    "compareRowCount": "{label}: {count, plural, =0 {žiadne rezervácie} one {# rezervácia} few {# rezervácie} other {# rezervácií}}",
+    "compareBaselinePrevious": "Zmena oproti predchádzajúcemu, rovnako dlhému obdobiu",
+    "compareCurrencyMismatch": "Predchádzajúci rok v {currency} – neporovnateľné",
+    "compareCurrencyUnclear": "Mena v porovnávacom období je nejednoznačná",
+    "compareCurrencyMismatchHint": "V porovnávacom období platila iná mena. Percentuálna zmena by bola kurzovým efektom a nie obchodným číslom.",
+    "compareChartCurrencyMismatch": "Porovnávacie obdobie bolo v inej mene – preto sa čiara predchádzajúceho roka nekreslí.",
+    "compareLocked": "Porovnanie je možné až do obdobia jedného roka."
   },
   "tasks": {
     "fehler": {
       "requestId": "ID: {id}",
       "kopieren": "Kopírovať detaily",
       "kopiert": "Skopírované"
+    },
+    "servicePrices": {
+      "title": "Ceny služieb",
+      "intro": "Čo stojí služba objednaná majiteľom. Po dokončení úlohy sa z nej stane položka v jeho vyúčtovaní. Bez ceny nevznikne žiadna položka a služba zostane nevyúčtovaná.",
+      "missing": "Žiadna cena",
+      "set": "Nastaviť cenu",
+      "change": "Zmeniť",
+      "remove": "Odstrániť",
+      "amount": "Suma",
+      "currency": "Mena",
+      "scope": "Platí pre",
+      "allProperties": "Všetky objekty",
+      "save": "Uložiť",
+      "cancel": "Zrušiť",
+      "saved": "Cena uložená.",
+      "removed": "Cena odstránená.",
+      "amountInvalid": "Zadajte sumu od 0.",
+      "currencyInvalid": "Zadajte trojpísmenový kód meny (napr. DKK)."
     }
   }
 }

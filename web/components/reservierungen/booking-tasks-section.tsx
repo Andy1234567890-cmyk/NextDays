@@ -92,9 +92,9 @@ export function BookingTasksSection({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="font-display text-lg font-bold">{t("bookingTasksSection.title")}</h2>
+        <h2 className="truncate font-display text-lg font-bold">{t("bookingTasksSection.title")}</h2>
         {tasks.length > 0 && (
-          <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-muted-foreground">
+          <span className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-muted-foreground">
             {t("bookingTasksSection.doneCount", {
               done: tasks.filter((task) => task.status === "done").length,
               total: tasks.length,

@@ -4470,7 +4470,8 @@
         "vorlagen": "Feladatsablonok",
         "planmaessig": "Ütemezett feladatok",
         "regelmaessig": "Ismétlődő feladatok",
-        "vertretungen": "Helyettesítések"
+        "vertretungen": "Helyettesítések",
+        "dienstleistungen": "Szolgáltatások"
       }
     },
     "propertyCalendar": {
@@ -5101,7 +5102,15 @@
       },
       "rowOpenCalendar": "Megnyitás a naptárban",
       "rowOpenBooking": "Foglalás megnyitása",
-      "rowOpenInbox": "Beszélgetés megnyitása"
+      "rowOpenInbox": "Beszélgetés megnyitása",
+      "ownerRequests": "Tulajdonosi műveletek",
+      "ownerRequestsLabel": "döntésre vár",
+      "ownerRequestsExplain": "A tulajdonosok zárolási és feloldási kérelmei. Amíg senki sem dönt, a tulajdonos válaszra vár, és az éjszakák abban az állapotban maradnak, amiben vannak.",
+      "ownerRequestsPending": "Nyitott zárolási kérelmek",
+      "ownerRequestsLift": "Feloldási kérelmek",
+      "ownerRequestsTermination": "Bejelentett szerződéslejáratok",
+      "ownerRequestsNone": "Nincsenek nyitott műveletek.",
+      "ownerRequestsOldest": "Legrégebbi nyitott kérelem: {count, plural, =0 {ma} one {egy napja} other {# napja}}"
     },
     "mobileAppHint": "A feladatnézet útközbeni használatra már reszponzívan elérhető a weben (Feladataim + részletek fotófeltöltéssel). Külön mobilalkalmazás önálló projektként következik.",
     "aufgabenFilter": {
@@ -12243,7 +12252,8 @@
       "properties": "Objektumok",
       "allProperties": "Összes objektum",
       "channels": "Csatornák",
-      "allChannels": "Összes csatorna"
+      "allChannels": "Összes csatorna",
+      "compare": "Összehasonlítás"
     },
     "basis": {
       "anreise": "Érkezés szerint",
@@ -12316,13 +12326,48 @@
     },
     "ownerStayCount": "{count, plural, one {# saját használat} other {# saját használat}}",
     "ownerStayRow": "Saját használat",
-    "ownerStayRowHint": "Tulajdonos a saját ingatlanában – nem eladó"
+    "ownerStayRowHint": "Tulajdonos a saját ingatlanában – nem eladó",
+    "compare": {
+      "keiner": "Nincs összehasonlítás",
+      "1j": "Előző év",
+      "2j": "2 évvel ezelőtt",
+      "5j": "5 évvel ezelőtt"
+    },
+    "compareBanner": "{label}: összehasonlítva {von} – {bis}",
+    "comparePrevious": "előzőleg {value}",
+    "compareNoBase": "nincs előző érték",
+    "compareOnlyBefore": "csak az összehasonlítási időszakban",
+    "compareRowCount": "{label}: {count, plural, =0 {nincs foglalás} one {# foglalás} other {# foglalás}}",
+    "compareBaselinePrevious": "Változás az előző, azonos hosszúságú időszakhoz képest",
+    "compareCurrencyMismatch": "Előző év {currency} – nem összehasonlítható",
+    "compareCurrencyUnclear": "Az összehasonlítási időszakban a valuta nem egyértelmű",
+    "compareCurrencyMismatchHint": "Az összehasonlítási időszakban más valuta volt érvényben. A százalékos változás árfolyamhatás lenne, nem üzleti adat.",
+    "compareChartCurrencyMismatch": "Az összehasonlítási időszak más valutában volt – ezért az előző évi vonal nem kerül megrajzolásra.",
+    "compareLocked": "Összehasonlítás legfeljebb egyéves időszakra lehetséges."
   },
   "tasks": {
     "fehler": {
       "requestId": "Azonosító: {id}",
       "kopieren": "Részletek másolása",
       "kopiert": "Másolva"
+    },
+    "servicePrices": {
+      "title": "Szolgáltatások árai",
+      "intro": "Mennyibe kerül egy tulajdonos által megrendelt szolgáltatás. A feladat elvégzésekor ez egy tételt hoz létre az elszámolásában. Ár nélkül nem jön létre tétel, és a szolgáltatás díjmentes marad.",
+      "missing": "Nincs ár",
+      "set": "Ár beállítása",
+      "change": "Módosítás",
+      "remove": "Eltávolítás",
+      "amount": "Összeg",
+      "currency": "Pénznem",
+      "scope": "Érvényes",
+      "allProperties": "Minden szálláshely",
+      "save": "Mentés",
+      "cancel": "Mégse",
+      "saved": "Ár elmentve.",
+      "removed": "Ár eltávolítva.",
+      "amountInvalid": "Kérjük, adjon meg egy összeget 0-tól kezdve.",
+      "currencyInvalid": "Kérjük, adjon meg egy hárombetűs pénznemet (pl. DKK)."
     }
   }
 }

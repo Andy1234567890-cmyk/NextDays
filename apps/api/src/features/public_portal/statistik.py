@@ -14,6 +14,7 @@ die hier vorkommen.
 """
 from __future__ import annotations
 
+from collections import Counter, defaultdict
 from datetime import date
 
 from .schemas import (
@@ -68,23 +69,46 @@ def _vorlaufzeit_tage(row: dict) -> int | None:
 
 
 def _kanal_verteilung(anreisen: list[dict]) -> list[PortalStatisticsChannel]:
-    """Anreisen und deren Nächte je Buchungskanal — ohne jeden Betrag."""
-    gruppen: dict[tuple[str, str | None], dict] = {}
+    """Anreisen und deren Nächte je Buchungskanal — ohne jeden Betrag.
+
+    GRUPPIERT WIRD NACH `channel` ALLEIN, nicht nach `(channel, ota_name)`
+    (03.09.2026). Der Portalname kommt roh aus der Quelle und ist NICHT
+    normiert; Channex liefert je nach Alter des Datensatzes verschiedene
+    Schreibweisen. Live gemessen im Beta-Betrieb spaltete das DREI Kanäle:
+
+        airbnb   → „Airbnb" 277 ×      / „AirBNB" 28 ×
+        booking  → „Booking.com" 256 × / „BookingCom" 60 ×
+        portal   → None 136 ×          / „myBestDays" 1 ×
+
+    Jede Spaltung ergab zwei Zeilen für denselben Kanal, beide gleich
+    beschriftet (die Anzeige normalisiert, die Gruppierung nicht) — eine
+    Aufstellung, die nur auffällt, wenn man die Zeilen zusammenzählt.
+
+    `channel` ist ein DB-Enum und damit die einzige verlässliche Achse. Der
+    Portalname wird als Beschriftung mitgeführt, und zwar die HÄUFIGSTE
+    Schreibweise je Kanal. Dieselbe Regel wie in
+    `reservations.property_stats._channel_breakdown` und
+    `auswertung.service._kanaele`.
+    """
+    gruppen: dict[str, dict] = {}
+    namen: dict[str, Counter[str]] = defaultdict(Counter)
     for row in anreisen:
-        schluessel = (str(row.get("channel") or "direct"), row.get("ota_name"))
+        schluessel = str(row.get("channel") or "direct")
+        if roh_name := row.get("ota_name"):
+            namen[schluessel][str(roh_name)] += 1
         slot = gruppen.setdefault(schluessel, {"reservations": 0, "nights": 0})
         slot["reservations"] += 1
         slot["nights"] += _naechte(row)
     return [
         PortalStatisticsChannel(
             channel=channel,
-            ota_name=ota_name,
+            ota_name=(
+                namen[channel].most_common(1)[0][0] if namen.get(channel) else None
+            ),
             reservations=werte["reservations"],
             nights=werte["nights"],
         )
-        for (channel, ota_name), werte in sorted(
-            gruppen.items(), key=lambda kv: (kv[0][0], kv[0][1] or "")
-        )
+        for channel, werte in sorted(gruppen.items())
     ]
 
 

@@ -282,7 +282,7 @@ function buildGroups(
   // Riegel in `app/(dashboard)/buchhaltung/layout.tsx`, beide gehören zusammen.
   //
   // NICHT `is_demo`: das ist die anonyme Schaufenster-Vorführung, und dort ist
-  // `/buchhaltung` gerade GESPERRT (`demo_gate.GESPERRTE_PRAEFIXE`, 0408). Die
+  // `/buchhaltung` gerade GESPERRT (`demo_gate.GESPERRTE_PRAEFIXE`). Die
   // Bedingung wäre also genau falsch herum — der Punkt erschiene ausgerechnet
   // dort, wo die API ihn verweigert.
   const accountingGroup: NavGroup = {
@@ -471,7 +471,7 @@ export function AppSidebar({
   // taugen (DATEV außerhalb Deutschlands). Bewusst das LAND und nicht die
   // Sprache: der Beta-Betrieb sitzt in DK und arbeitet auf Deutsch.
   country?: string | null;
-  // Vorführ-Zugang (0408): gesperrte Bereiche bleiben SICHTBAR, werden aber
+  // Vorführ-Zugang: gesperrte Bereiche bleiben SICHTBAR, werden aber
   // als nicht öffenbar markiert. Ausblenden würde den Umfang der Software
   // verstecken; der Schutz selbst liegt ohnehin im Backend (`demo_gate`).
   istDemo?: boolean;
@@ -485,7 +485,7 @@ export function AppSidebar({
   // Navigation gesperrt, bis die Einrichtung steht.
   //
   // SICHTBAR gesperrt, nicht ausgeblendet — sonst wirkt die Software kleiner,
-  // als sie ist (dieselbe Entscheidung wie beim Vorfuehr-Zugang, 0408).
+  // als sie ist (dieselbe Entscheidung wie beim Vorfuehr-Zugang).
   //
   // Frei bleiben nur die Wege, die aus der Sackgasse HERAUSFUEHREN: das
   // Dashboard mit seinen „Ersten Schritten" und `/konto`, wo Firmendaten und
@@ -934,7 +934,7 @@ export function AppSidebar({
   );
 }
 
-/** Ein Menüpunkt, der in der Vorführung nicht geöffnet werden kann (0408).
+/** Ein Menüpunkt, der in der Vorführung nicht geöffnet werden kann.
  *
  * Sichtbar, aber nicht klickbar — der Besucher soll den Umfang der Software
  * sehen und zugleich erkennen, wo die Vorführung endet. Ein ausgeblendeter

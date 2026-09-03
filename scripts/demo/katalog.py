@@ -106,6 +106,14 @@ class Betrieb:  # pylint: disable=too-many-instance-attributes
     kontakt_name: str
     firma: "Firma"
     objekte: list[Objekt] = field(default_factory=list)
+    # Oeffentlich anmeldbarer Vorfuehr-Mandant (`tenants.is_demo`, 0407/0529).
+    # Muss der Seed MITSETZEN: er loescht die Mandanten-Zeile und legt sie neu
+    # an, wodurch das per Migration gesetzte Flag auf den Default `false` fiel —
+    # damit war die gesamte Vorfuehr-Absicherung wirkungslos (405-Schreibsperre,
+    # 403-Bereichssperre, Schloss-Symbole, `storybook_chat`-Ausschluss), live
+    # gemessen am 02.09.2026. Nur Nordlicht traegt es; Seeblick und Alpenzeit
+    # sind Fotomodelle und sollen nicht oeffentlich anmeldbar sein (0407).
+    ist_vorfuehrung: bool = False
 
 
 _FEWO_BASIS = ["wifi", "heating", "non_smoking_rooms", "smoke_alarms", "key_access"]
@@ -187,6 +195,7 @@ NORDLICHT = Betrieb(
     login="merle.ahrens@mynextdays.com",
     kontakt_name="Merle Ahrens",
     firma=FIRMA_NORDLICHT,
+    ist_vorfuehrung=True,
     objekte=[
         Objekt(
             schluessel="duenenblick",

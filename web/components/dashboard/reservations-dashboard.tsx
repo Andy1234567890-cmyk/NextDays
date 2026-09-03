@@ -14,8 +14,14 @@ import { Fragment } from "react";
 
 import { Card, CardContent } from "@nextdays/ui/card";
 import { InfoHinweis } from "@nextdays/ui/info-hinweis";
+import type { EigentuemerVorgaenge } from "@/lib/calendar";
 import type { NachrichtenMetrik } from "@/components/dashboard/kpi-kachel";
 import { KpiKachel, NachrichtenKachel } from "@/components/dashboard/kpi-kachel";
+import { EigentuemerKachel } from "@/components/dashboard/eigentuemer-kachel";
+import {
+  KachelKopf,
+  PeriodBadge,
+} from "@/components/dashboard/kachel-kopf";
 import { ListenKarte } from "@/components/dashboard/listen-karte";
 import { fmtDate } from "@/lib/dashboard-format";
 import { kanalAbzeichen } from "@/lib/kanal-marke";
@@ -30,17 +36,6 @@ function SectionHeader({ icon, title }: { icon: string; title: string }) {
       <Icon icon={icon} className="size-6 text-muted-foreground" />
       <h2 className="font-display text-xl font-bold">{title}</h2>
     </div>
-  );
-}
-
-// Fester Zustands-Hinweis auf einer Karte, die keinen Zeitraum kennt
-// („Aktuell" bei den offenen Konversationen). Wo es einen Zeitraum GIBT, steht
-// an dieser Stelle ein Selektor, kein Text.
-function PeriodBadge({ label }: { label: string }) {
-  return (
-    <span className="shrink-0 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-muted-foreground">
-      {label}
-    </span>
   );
 }
 
@@ -120,15 +115,14 @@ function NachrichtenAbschnitt({ daten }: { daten: NachrichtenKennzahlen }) {
         </div>
         <Card>
           <CardContent className="flex flex-col gap-4 p-6">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Icon icon="ph:envelope-open" className="size-5" />
-                <h3 className="font-semibold text-foreground">
-                  {t("dashboard.unreadConversations")}
-                </h3>
-                {/* Was die Zahl bedeutet („Konversationen warten auf
-                    Antwort"), steckt hinter dem „i" statt als Zeile unter der
-                    Zahl zu stehen. */}
+            <KachelKopf
+              icon="ph:envelope-open"
+              title={t("dashboard.unreadConversations")}
+              gross
+              info={
+                /* Was die Zahl bedeutet („Konversationen warten auf
+                   Antwort"), steckt hinter dem „i" statt als Zeile unter der
+                   Zahl zu stehen. */
                 <InfoHinweis
                   titel={t("dashboard.unreadConversations")}
                   text={t("dashboard.unreadConversationsLabel")}
@@ -136,9 +130,9 @@ function NachrichtenAbschnitt({ daten }: { daten: NachrichtenKennzahlen }) {
                     label: t("dashboard.unreadConversations"),
                   })}
                 />
-              </div>
-              <PeriodBadge label={t("dashboard.badgeCurrent")} />
-            </div>
+              }
+              rechts={<PeriodBadge label={t("dashboard.badgeCurrent")} />}
+            />
             <div>
               <p className="font-display text-4xl font-extrabold leading-none">
                 {daten.ungelesen}
@@ -199,12 +193,17 @@ function NachrichtenAbschnitt({ daten }: { daten: NachrichtenKennzahlen }) {
 export function ReservationsDashboard({
   data,
   nachrichten,
+  vorgaenge,
 }: {
   data: Dashboard;
   // null, wenn der Posteingang für diese Rolle nicht zugänglich ist. Dann
   // entfällt der ganze Abschnitt — leere Nachrichtenzahlen anzuzeigen hieße
   // „nichts los", obwohl in Wahrheit nichts geladen wurde.
   nachrichten: NachrichtenKennzahlen | null;
+  // null, wenn die Rolle nicht über Sperranträge entscheiden darf
+  // (APPROVE_BLOCK). Dieselbe Regel wie bei `nachrichten`: die Kachel entfällt
+  // dann ganz, statt Nullen zu zeigen, die „nichts offen" behaupten würden.
+  vorgaenge: EigentuemerVorgaenge | null;
 }) {
   const t = useTranslations("reservations");
   return (
@@ -267,6 +266,11 @@ export function ReservationsDashboard({
           entries={data.im_haus}
           empty={t("dashboard.noStayingGuests")}
         />
+        {/* Der sechste Platz im zweispaltigen Raster stand leer. Hier gehört
+            er hin: Eigentümer-Vorgänge sind Entscheidungen des Betriebs wie
+            die Buchungs-Freigabe daneben, nur aus der anderen Richtung — der
+            Eigentümer will sein Objekt selbst nutzen. */}
+        {vorgaenge && <EigentuemerKachel daten={vorgaenge} />}
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">

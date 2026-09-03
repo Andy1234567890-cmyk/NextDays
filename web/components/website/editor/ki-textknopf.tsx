@@ -40,7 +40,7 @@ const ARTEN: { art: UmschreibArt; icon: string }[] = [
   { art: "kuerzen", icon: "solar:minimize-square-linear" },
   { art: "verlaengern", icon: "solar:maximize-square-linear" },
   { art: "ton", icon: "solar:pallete-2-linear" },
-  { art: "rechtschreibung", icon: "solar:spellcheck-linear" },
+  { art: "rechtschreibung", icon: "solar:check-read-linear" },
   { art: "uebersetzen", icon: "solar:global-linear" },
 ];
 

@@ -4470,7 +4470,8 @@
         "vorlagen": "Užduočių šablonai",
         "planmaessig": "Planinės užduotys",
         "regelmaessig": "Pasikartojančios užduotys",
-        "vertretungen": "Pavadavimai"
+        "vertretungen": "Pavadavimai",
+        "dienstleistungen": "Paslaugos"
       }
     },
     "propertyCalendar": {
@@ -5101,7 +5102,15 @@
       },
       "rowOpenCalendar": "Atidaryti kalendoriuje",
       "rowOpenBooking": "Atidaryti rezervaciją",
-      "rowOpenInbox": "Atidaryti pokalbį"
+      "rowOpenInbox": "Atidaryti pokalbį",
+      "ownerRequests": "Savininko veiksmai",
+      "ownerRequestsLabel": "laukia jūsų sprendimo",
+      "ownerRequestsExplain": "Savininkų užblokavimo ir atšaukimo užklausos. Kol niekas nepriims sprendimo, savininkas lauks atsakymo, o naktys liks tokios, kokios yra.",
+      "ownerRequestsPending": "Atviri užblokavimo prašymai",
+      "ownerRequestsLift": "Atšaukimo prašymai",
+      "ownerRequestsTermination": "Paskelbtos sutarties pabaigos",
+      "ownerRequestsNone": "Nėra atvirų veiksmų.",
+      "ownerRequestsOldest": "Seniausias atviras prašymas: {count, plural, =0 {šiandien} one {nuo vienos dienos} other {nuo # dienų}}"
     },
     "mobileAppHint": "Užduočių rodinys kelyje jau prieinamas adaptyviai internete (Mano užduotys + detalės su nuotraukų įkėlimu). Atskira mobilioji programėlė bus atskiras projektas.",
     "aufgabenFilter": {
@@ -12243,7 +12252,8 @@
       "properties": "Objektai",
       "allProperties": "Visi objektai",
       "channels": "Kanalai",
-      "allChannels": "Visi kanalai"
+      "allChannels": "Visi kanalai",
+      "compare": "Palyginti"
     },
     "basis": {
       "anreise": "Pagal atvykimą",
@@ -12316,13 +12326,48 @@
     },
     "ownerStayCount": "{count, plural, one {# nuosavybė} other {# nuosavybės}}",
     "ownerStayRow": "Nuosavas naudojimas",
-    "ownerStayRowHint": "Nekilnojamojo turto savininkas savo objekte – neparduodama"
+    "ownerStayRowHint": "Nekilnojamojo turto savininkas savo objekte – neparduodama",
+    "compare": {
+      "keiner": "Nėra palyginimo",
+      "1j": "Praėjusiais metais",
+      "2j": "Prieš 2 metus",
+      "5j": "Prieš 5 metus"
+    },
+    "compareBanner": "{label}: lyginama su {von} – {bis}",
+    "comparePrevious": "ankstesnė {value}",
+    "compareNoBase": "nėra ankstesnės vertės",
+    "compareOnlyBefore": "tik lyginamuoju laikotarpiu",
+    "compareRowCount": "{label}: {count, plural, =0 {nėra užsakymų} one {# užsakymas} other {# užsakymai}}",
+    "compareBaselinePrevious": "Pokytis, palyginti su ankstesniu, tokio pat ilgio laikotarpiu",
+    "compareCurrencyMismatch": "Praėję metai {currency} – nepalyginama",
+    "compareCurrencyUnclear": "Valiuta lyginamuoju laikotarpiu neaiški",
+    "compareCurrencyMismatchHint": "Lyginamuoju laikotarpiu galiojo kita valiuta. Procentinis pokytis būtų valiutos kurso efektas, o ne verslo rodiklis.",
+    "compareChartCurrencyMismatch": "Lyginamasis laikotarpis buvo kita valiuta – todėl praėjusių metų eilutė nebraižoma.",
+    "compareLocked": "Palyginimas galimas iki vienerių metų laikotarpio."
   },
   "tasks": {
     "fehler": {
       "requestId": "ID: {id}",
       "kopieren": "Kopijuoti detales",
       "kopiert": "Nukopijuota"
+    },
+    "servicePrices": {
+      "title": "Paslaugų kainos",
+      "intro": "Kiek kainuoja savininko užsakyta paslauga. Užbaigus užduotį, tai taps jo atsiskaitymo elementu. Be kainos nebus jokio elemento, o paslauga liks neapmokėta.",
+      "missing": "Nėra kainos",
+      "set": "Nustatyti kainą",
+      "change": "Keisti",
+      "remove": "Pašalinti",
+      "amount": "Suma",
+      "currency": "Valiuta",
+      "scope": "Taikoma",
+      "allProperties": "Visiems objektams",
+      "save": "Išsaugoti",
+      "cancel": "Atšaukti",
+      "saved": "Kaina išsaugota.",
+      "removed": "Kaina pašalinta.",
+      "amountInvalid": "Įveskite sumą nuo 0.",
+      "currencyInvalid": "Įveskite trijų raidžių valiutos kodą (pvz., DKK)."
     }
   }
 }

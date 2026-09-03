@@ -15,6 +15,7 @@ import { Card, CardContent } from "@nextdays/ui/card";
 import { getMe } from "@/lib/auth";
 import { getNachrichtenKennzahlen } from "@/lib/inbox";
 import { getOnboarding, type OnboardingStatus } from "@/lib/onboarding";
+import { getEigentuemerVorgaenge } from "@/lib/calendar";
 import { getDashboard } from "@/lib/reservations";
 
 export const dynamic = "force-dynamic";
@@ -59,9 +60,14 @@ export default async function DashboardPage() {
   // Beide Quellen der Startseite parallel. Die Nachrichten-Kennzahlen sind
   // NICHT kritisch: wer keinen Zugang zum Posteingang hat, bekommt dort eine
   // Absage — dann entfällt der Abschnitt, statt die ganze Seite zu kippen.
-  const [dashboard, kennzahlen] = await Promise.all([
+  // Eigentuemer-Vorgaenge sind wie die Nachrichten NICHT kritisch: ohne
+  // APPROVE_BLOCK antwortet der Endpunkt mit 403 (staff/cleaner, aber auch ein
+  // Eigentuemer im eigenen Konto). Dann entfaellt die Kachel, statt die
+  // Startseite mit einer Fehlerkarte zu ersetzen.
+  const [dashboard, kennzahlen, vorgaenge] = await Promise.all([
     getDashboard(),
     getNachrichtenKennzahlen(),
+    getEigentuemerVorgaenge(),
   ]);
   if (!dashboard.ok) {
     return (
@@ -121,6 +127,7 @@ export default async function DashboardPage() {
       <ReservationsDashboard
         data={dashboard.data}
         nachrichten={kennzahlen.ok ? kennzahlen.data : null}
+        vorgaenge={vorgaenge.ok ? vorgaenge.data : null}
       />
     </>
   );

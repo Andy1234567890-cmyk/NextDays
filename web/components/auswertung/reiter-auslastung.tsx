@@ -19,12 +19,17 @@ import { useTranslations } from "next-intl";
 
 import { Card } from "@nextdays/ui/card";
 import { formatCurrency } from "@/lib/currency";
-import type { Auswertung } from "@/lib/auswertung-typen";
+import type { Auswertung, ObjektZeile } from "@/lib/auswertung-typen";
+import { zeilenVereinen } from "@/lib/auswertung-vergleich";
+
+import { VergleichDelta, VergleichHinweis, deltaStand } from "./vergleich-delta";
 
 export function ReiterAuslastung({ a }: { a: Auswertung }) {
   const t = useTranslations("analysis");
 
-  if (!a.objekte.length) {
+  // Leer nur, wenn BEIDE Zeiträume nichts hergeben — sonst verschwände der
+  // Vergleich genau dann, wenn er am meisten sagt.
+  if (!a.objekte.length && !a.vorher?.objekte.length) {
     return (
       <Card className="p-8 text-center text-sm text-muted-foreground">
         {t("empty")}
@@ -35,8 +40,35 @@ export function ReiterAuslastung({ a }: { a: Auswertung }) {
   const geld = (v: number | null) =>
     v === null || !a.currency ? "—" : formatCurrency(v, a.currency);
   const pct = (v: number | null) => (v === null ? "—" : `${v} %`);
+  const geldVorher = (v: number | null) =>
+    v === null || !a.vorher?.currency
+      ? "—"
+      : formatCurrency(v, a.vorher.currency);
+
+  // Ein Objekt, das es NUR im Vorjahr gab (inzwischen archiviert), bleibt
+  // sichtbar — sein Wegfall erklärt einen Umsatzrückgang.
+  const zeilen = zeilenVereinen(
+    a.objekte,
+    a.vorher?.objekte,
+    (o: ObjektZeile) => o.property_id,
+  );
+  // `!!a.currency` ist der entscheidende Teil: liegen in BEIDEN Zeiträumen
+  // mehrere Währungen vor, ist `currency` beide Male `null` — und `null ===
+  // null` wäre `true`. Ohne diese Prüfung liefe ein Delta aus zwei
+  // Misch­summen durch, die beide keine gültige Zahl sind, und die Zeile
+  // zeigte „— · +14,2 %": ein Prozentwert ohne Bezugswert (Wurzel 4).
+  const geldVergleichbar =
+    !!a.vorher && !!a.currency && a.vorher.currency === a.currency;
 
   return (
+    <div className="flex flex-col gap-3">
+      {a.vorher && (
+        <VergleichHinweis
+          vergleich={a.vorher.vergleich}
+          von={a.vorher.von}
+          bis={a.vorher.bis}
+        />
+      )}
     <Card className="overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
@@ -76,44 +108,88 @@ export function ReiterAuslastung({ a }: { a: Auswertung }) {
             </tr>
           </thead>
           <tbody>
-            {a.objekte.map((o) => (
+            {zeilen.map(({ key, jetzt, vorher }) => {
+              const o = jetzt ?? vorher;
+              if (!o) return null;
+              // Nur im Vorzeitraum vorhanden (Objekt inzwischen archiviert):
+              // die Gegenwartsspalten stehen auf „—", statt eine 0 zu
+              // behaupten, die nach „nichts verkauft" aussähe.
+              const nurFrueher = jetzt === null;
+              return (
               <tr
-                key={o.property_id}
-                className="border-b border-border last:border-0"
+                key={key}
+                className={
+                  "border-b border-border last:border-0 " +
+                  (nurFrueher ? "text-muted-foreground" : "")
+                }
               >
-                <td className="px-4 py-3">{o.title}</td>
-                <td className="px-4 py-3 text-right tabular-nums">
-                  {o.naechte_buchbar}
+                <td className="px-4 py-3">
+                  {o.title}
+                  {nurFrueher && (
+                    <span className="ml-2 text-xs">{t("compareOnlyBefore")}</span>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-right tabular-nums">
-                  {o.naechte_gebucht}
+                  {nurFrueher ? "—" : o.naechte_buchbar}
+                </td>
+                <td className="px-4 py-3 text-right tabular-nums">
+                  {nurFrueher ? "—" : o.naechte_gebucht}
                 </td>
                 <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
-                  {o.naechte_gesperrt}
+                  {nurFrueher ? "—" : o.naechte_gesperrt}
                 </td>
                 <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
-                  {o.naechte_stop_sell}
+                  {nurFrueher ? "—" : o.naechte_stop_sell}
                 </td>
                 <td className="px-4 py-3 text-right font-semibold tabular-nums">
-                  {pct(o.auslastung_pct)}
+                  {nurFrueher ? "—" : pct(o.auslastung_pct)}
+                  {a.vorher && (
+                    <span className="mt-0.5 flex justify-end font-normal">
+                      <VergleichDelta
+                        klein
+                        stand={deltaStand(
+                          jetzt?.auslastung_pct ?? null,
+                          vorher?.auslastung_pct ?? null,
+                        )}
+                        vorherAnzeige={pct(vorher?.auslastung_pct ?? null)}
+                      />
+                    </span>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-right tabular-nums">
-                  {o.anreisen}
+                  {nurFrueher ? "—" : o.anreisen}
                 </td>
                 <td className="px-4 py-3 text-right tabular-nums">
-                  {geld(o.umsatz)}
+                  {nurFrueher ? "—" : geld(o.umsatz)}
+                  {a.vorher && (
+                    <span className="mt-0.5 flex justify-end">
+                      <VergleichDelta
+                        klein
+                        stand={deltaStand(
+                          jetzt?.umsatz ?? null,
+                          vorher?.umsatz ?? null,
+                          {
+                            waehrungGleich: geldVergleichbar,
+                            vorherWaehrung: a.vorher?.currency ?? null,
+                          },
+                        )}
+                        vorherAnzeige={geldVorher(vorher?.umsatz ?? null)}
+                      />
+                    </span>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-right tabular-nums">
-                  {geld(o.adr)}
+                  {nurFrueher ? "—" : geld(o.adr)}
                 </td>
                 <td className="px-4 py-3 text-right tabular-nums">
-                  {geld(o.revpar)}
+                  {nurFrueher ? "—" : geld(o.revpar)}
                 </td>
                 <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
-                  {o.stornos}
+                  {nurFrueher ? "—" : o.stornos}
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -124,5 +200,6 @@ export function ReiterAuslastung({ a }: { a: Auswertung }) {
         {t("occupancyFootnote")}
       </p>
     </Card>
+    </div>
   );
 }

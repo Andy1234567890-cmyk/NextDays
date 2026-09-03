@@ -15,6 +15,7 @@ Reservierungs-Pfad ab (RPC `create_reservation_atomic`), weil die Genehmigung
 """
 from __future__ import annotations
 
+import pathlib
 from datetime import date, timedelta
 from typing import Any
 
@@ -1567,3 +1568,92 @@ def test_neuer_antrag_ohne_begruendung_laesst_absatz_weg(
     meldung = gesendet[0]
     assert meldung["text_key"] == ["sperrantrag.rumpf_neu"]
     assert "grund" not in meldung["text_werte"]
+
+
+# --- Startseiten-Kennzahl und die stumme Aufhebungs-Ablehnung (03.09.2026) ---
+
+
+def test_vorgaenge_zaehlt_nur_was_die_agentur_sehen_darf() -> None:
+    """Drei Bestaende, und die Familien-Stufe bleibt aussen vor.
+
+    Ein Antrag in `owner_freigabe='offen'` existiert fuer die Agentur nicht
+    (0389) — ihn auf der Startseite zu zaehlen hiesse, eine Entscheidung
+    anzukuendigen, die sie nicht treffen kann.
+    """
+    from src.features.calendar.sperrantraege import SperrantragService
+
+    zeilen = [
+        # offen und sichtbar
+        {"status": "pending", "aufhebung": "keine", "created_at": "2026-08-01T10:00:00+00:00",
+         "owner_freigabe": "nicht_noetig", "vertragsende_gesetzt_auf": None},
+        {"status": "pending", "aufhebung": "keine", "created_at": "2026-08-20T10:00:00+00:00",
+         "owner_freigabe": "freigegeben", "vertragsende_gesetzt_auf": None},
+        # genehmigt mit Aufhebungswunsch
+        {"status": "approved", "aufhebung": "beantragt", "created_at": "2026-07-01T10:00:00+00:00",
+         "owner_freigabe": "nicht_noetig", "vertragsende_gesetzt_auf": None},
+        # genehmigte Kuendigung
+        {"status": "approved", "aufhebung": "keine", "created_at": "2026-06-01T10:00:00+00:00",
+         "owner_freigabe": "nicht_noetig", "vertragsende_gesetzt_auf": "2027-01-01"},
+        # abgelehnt mit Aufhebungswunsch → zaehlt NICHT (nichts freizugeben)
+        {"status": "rejected", "aufhebung": "beantragt", "created_at": "2026-05-01T10:00:00+00:00",
+         "owner_freigabe": "nicht_noetig", "vertragsende_gesetzt_auf": None},
+    ]
+
+    class _Q:
+        def __getattr__(self, name):
+            if name.startswith("_"):
+                raise AttributeError(name)
+            return lambda *_a, **_k: self
+
+        def execute(self):
+            return type("R", (), {"data": zeilen})()
+
+    class _Db:
+        def table(self, _name):
+            return _Q()
+
+    svc = SperrantragService.__new__(SperrantragService)
+    svc._db = _Db()  # noqa: SLF001
+    res = svc.vorgaenge(_ctx())
+
+    assert res.offen == 2
+    assert res.aufhebung_offen == 1, "nur an GENEHMIGTEN Sperren"
+    assert res.kuendigungen == 1
+    # Das Alter ist die Dringlichkeit: der aelteste OFFENE, nicht der aelteste.
+    assert res.aeltester_offen_am is not None
+    assert res.aeltester_offen_am.date().isoformat() == "2026-08-01"
+
+
+def test_abgelehnte_aufhebung_meldet_und_hat_eigenen_dedup() -> None:
+    """Der stumme Uebergang (03.09.2026): Ablehnung des Aufhebungswunsches.
+
+    Zwei Fehler in einem: es ging KEINE Meldung hinaus, und der Dedup-Schluessel
+    haengt am `status` — der bleibt hier 'approved'. Ueber `status` waere die
+    Ablehnung derselbe Schluessel wie die Genehmigung von damals und am
+    Unique-Index (0287) verschluckt worden.
+    """
+    from src.features.calendar import sperrantraege as modul
+
+    quelle = (
+        pathlib.Path(modul.__file__).read_text(encoding="utf-8")
+        if hasattr(modul, "__file__") else ""
+    )
+    assert "AUFHEBUNG_ABGELEHNT" in quelle
+    assert "self._melde_entscheidung(ctx, neu, AUFHEBUNG_ABGELEHNT)" in quelle, (
+        "aufhebung_ablehnen meldet nicht — der Eigentuemer erfaehrt nie, dass "
+        "seine Sperre bestehen bleibt."
+    )
+    assert 'dedup_key=f"block_decision:{antrag[\'id\']}:{entscheidung}"' in quelle, (
+        "Der Dedup-Schluessel muss die ENTSCHEIDUNG tragen, nicht den Status."
+    )
+    # Die Notiz kommt aus der richtigen Spalte: sonst stuende zur
+    # Aufhebungs-Ablehnung die Begruendung der Genehmigung von damals.
+    assert modul._NOTIZ_SPALTE[modul.AUFHEBUNG_ABGELEHNT] == (  # noqa: SLF001
+        "aufhebung_entscheidungsnotiz"
+    )
+    # Und der Text existiert in allen 24 Sprachen (eigener Test dafuer in
+    # core/tests/test_mail_texte.py; hier nur die Verdrahtung).
+    from src.core.mail_texte import TEXTE
+
+    for key in modul._ENTSCHEIDUNGS_TEXTE[modul.AUFHEBUNG_ABGELEHNT]:  # noqa: SLF001
+        assert key in TEXTE, key

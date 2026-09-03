@@ -13,6 +13,7 @@ import { useId, useState, useTransition } from "react";
 
 import { Card, CardContent } from "@nextdays/ui/card";
 import { InfoHinweis } from "@nextdays/ui/info-hinweis";
+import { KachelKopf } from "@/components/dashboard/kachel-kopf";
 import { formatCurrency } from "@/lib/currency";
 import type { NachrichtenKennzahl } from "@/lib/inbox";
 import { getNachrichtenKennzahlen } from "@/lib/inbox";
@@ -131,34 +132,34 @@ function KachelRahmen({
   return (
     <Card>
       <CardContent className="flex h-full flex-col gap-4 p-6">
-        <div className="flex items-start justify-between gap-3">
-          {/* Der Titel bleibt einzeilig, aber vollständig: eine Stufe kleiner
-              statt gekürzt. Abgeschnitten („Ø gese…") war er nicht mehr
-              lesbar, umgebrochen zog er die Kopfzeile in die Höhe und die
-              Karten einer Reihe wurden unterschiedlich hoch. */}
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Icon icon={icon} className="size-4 shrink-0" />
-            <h3 className="whitespace-nowrap text-sm font-semibold text-foreground">
-              {title}
-            </h3>
-            {/* Was die Zahl zählt („Umsatz je Buchung", „Bestätigte
-                Reservierungen"), steckt hinter dem „i" statt als Zeile unter
-                der Zahl zu stehen. `InfoHinweis` ist ein Popover, kein
-                Tooltip: es öffnet auf Klick und ist damit auch auf dem Tablet
-                erreichbar (packages/ui/src/info-hinweis.tsx). */}
+        {/* Der Titel bleibt einzeilig und kürzt sich bei Enge selbst — der
+            volle Text steht im `title` und hinter dem „i". Umgebrochen zöge er
+            die Kopfzeile in die Höhe und die Karten einer Reihe würden
+            unterschiedlich hoch. */}
+        <KachelKopf
+          icon={icon}
+          title={title}
+          info={
+            /* Was die Zahl zählt („Umsatz je Buchung", „Bestätigte
+               Reservierungen"), steckt hinter dem „i" statt als Zeile unter
+               der Zahl zu stehen. `InfoHinweis` ist ein Popover, kein
+               Tooltip: es öffnet auf Klick und ist damit auch auf dem Tablet
+               erreichbar (packages/ui/src/info-hinweis.tsx). */
             <InfoHinweis
               titel={title}
               text={unitLabel}
               ariaLabel={tGemein("explain", { label: title })}
             />
-          </div>
-          <ZeitraumSelektor
-            wert={zeitraum}
-            onWechsel={onWechsel}
-            laedt={laedt}
-            label={t("dashboard.zeitraum.label", { kachel: title })}
-          />
-        </div>
+          }
+          rechts={
+            <ZeitraumSelektor
+              wert={zeitraum}
+              onWechsel={onWechsel}
+              laedt={laedt}
+              label={t("dashboard.zeitraum.label", { kachel: title })}
+            />
+          }
+        />
         <div className="mt-auto">
           {/* Die Zahl steht allein in ihrer Zeile, die Veränderung darunter.
               Kein `truncate` auf der Zahl — ein Betrag mit Tausendern und

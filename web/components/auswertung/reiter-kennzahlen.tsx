@@ -40,7 +40,16 @@ import {
   type StatPoint,
   getTenantStats,
 } from "@/lib/reservations";
+import { jahreZurueck } from "@/lib/auswertung-vergleich";
 import type { FilterStand } from "./filterleiste";
+import { VergleichHinweis } from "./vergleich-delta";
+
+/** Wie viele Jahre der gewählte Vergleich zurückgeht — 0 = Vorperiode.
+ *
+ *  Der Reiter liest aus dem reservations-Slice, der den Anker als ZAHL nimmt
+ *  (`vergleich_jahre`), nicht als Enum. Die Übersetzung steht hier, damit die
+ *  Filterleiste weiterhin nur ihre eigenen Werte kennt. */
+const VERGLEICH_JAHRE: Record<string, number> = { "1j": 1, "2j": 2, "5j": 5 };
 
 export function ReiterKennzahlen({ stand }: { stand: FilterStand }) {
   const t = useTranslations("analysis");
@@ -53,7 +62,12 @@ export function ReiterKennzahlen({ stand }: { stand: FilterStand }) {
     let abgebrochen = false;
     setLaedt(true);
     void (async () => {
-      const res = await getTenantStats(stand.von, stand.bis, stand.propertyIds);
+      const res = await getTenantStats(
+        stand.von,
+        stand.bis,
+        stand.propertyIds,
+        VERGLEICH_JAHRE[stand.vergleich] ?? 0,
+      );
       if (abgebrochen) return;
       if (res.ok) {
         setStats(res.data);
@@ -69,7 +83,10 @@ export function ReiterKennzahlen({ stand }: { stand: FilterStand }) {
     return () => {
       abgebrochen = true;
     };
-  }, [stand.von, stand.bis, stand.propertyIds]);
+    // `stand.vergleich` gehört in die Abhängigkeiten: ohne ihn bliebe beim
+    // Umschalten die alte Antwort stehen und die Kacheln zeigten weiter den
+    // Vorperioden-Vergleich, während die Leiste „Vorjahr" behauptet.
+  }, [stand.von, stand.bis, stand.propertyIds, stand.vergleich]);
 
   const geld = useCallback(
     (v: number) => (stats ? formatCurrency(v, stats.currency) : String(v)),
@@ -119,7 +136,21 @@ export function ReiterKennzahlen({ stand }: { stand: FilterStand }) {
 
   return (
     <div className={laedt ? "flex flex-col gap-4 opacity-60" : "flex flex-col gap-4"}>
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between gap-3">
+        {/* Welcher Anker gilt: ohne diese Zeile sähe „−40 %" beim
+            Vorjahresvergleich genauso aus wie beim Vorperiodenvergleich, und
+            niemand wüsste, worauf sich die Zahl bezieht. */}
+        {stand.vergleich === "keiner" ? (
+          <span className="text-xs text-muted-foreground">
+            {t("compareBaselinePrevious")}
+          </span>
+        ) : (
+          <VergleichHinweis
+            vergleich={stand.vergleich}
+            von={jahreZurueck(stand.von, VERGLEICH_JAHRE[stand.vergleich] ?? 0)}
+            bis={jahreZurueck(stand.bis, VERGLEICH_JAHRE[stand.vergleich] ?? 0)}
+          />
+        )}
         <ControlCenterLearn />
       </div>
       <StatsKpiGrid

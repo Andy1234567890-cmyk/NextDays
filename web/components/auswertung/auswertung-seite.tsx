@@ -30,7 +30,11 @@ import { getAuswertung } from "@/lib/auswertung";
 import type { Auswertung, Reiter } from "@/lib/auswertung-typen";
 
 import { AuswertungNav } from "./auswertung-nav";
-import { Filterleiste, type FilterStand } from "./filterleiste";
+import {
+  Filterleiste,
+  vergleichMoeglich,
+  type FilterStand,
+} from "./filterleiste";
 import { KennzahlKacheln } from "./kennzahl-kacheln";
 import { ReiterAnalytics } from "./reiter-analytics";
 import { ReiterAuslastung } from "./reiter-auslastung";
@@ -62,7 +66,18 @@ export function AuswertungSeite({
     bezug: "anreise",
     propertyIds: [],
     channels: [],
+    vergleich: "keiner",
   }));
+  // Wird der Zeitraum über die Vergleichsgrenze hinaus verlängert, fällt der
+  // Vergleich mit. Ohne das schickte die Seite einen Wert weiter, den das
+  // Backend mit 422 abweist — die Filterleiste zeigt dann „kein Vergleich",
+  // gesendet würde aber „1j". Zustand und Anzeige müssen dasselbe sagen.
+  const setzenGeprueft = useCallback((s: FilterStand) => {
+    setStand(
+      vergleichMoeglich(s.von, s.bis) ? s : { ...s, vergleich: "keiner" },
+    );
+  }, []);
+
   const [reiter, setReiter] = useState<Reiter>("kennzahlen");
   const [daten, setDaten] = useState<Auswertung | null>(null);
   const [fehler, setFehler] = useState<string | null>(null);
@@ -77,6 +92,7 @@ export function AuswertungSeite({
       bezug: s.bezug,
       propertyIds: s.propertyIds,
       channels: s.channels,
+      vergleich: s.vergleich,
     });
     if (res.ok) setDaten(res.data);
     else {
@@ -101,7 +117,7 @@ export function AuswertungSeite({
 
       <Filterleiste
         stand={stand}
-        setzen={setStand}
+        setzen={setzenGeprueft}
         objekte={objekte}
         kanaele={kanaele}
         laedt={laedt}
@@ -118,6 +134,7 @@ export function AuswertungSeite({
         <KennzahlKacheln
           k={daten.kennzahlen}
           waehrungen={daten.waehrungen}
+          vorher={daten.vorher}
         />
       )}
 

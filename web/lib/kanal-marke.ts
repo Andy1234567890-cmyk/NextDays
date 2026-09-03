@@ -14,7 +14,7 @@ const OTA_ICON: Record<string, string> = {
   "booking.com": "simple-icons:bookingdotcom",
   airbnb: "simple-icons:airbnb",
   expedia: "simple-icons:expedia",
-  vrbo: "ph:house",
+  vrbo: "ph:tree-palm",
   whatsapp: "ph:whatsapp-logo",
 };
 
@@ -28,7 +28,10 @@ const KANAL_ABZEICHEN: Record<string, { icon: string; fg: string }> = {
   bookingcom: { icon: "simple-icons:bookingdotcom", fg: "text-channel-booking" },
   airbnb: { icon: "simple-icons:airbnb", fg: "text-channel-airbnb" },
   expedia: { icon: "simple-icons:expedia", fg: "text-channel-expedia" },
-  vrbo: { icon: "ph:house-fill", fg: "text-channel-vrbo" },
+  // Palme, nicht Haus — gleichlautend mit `calendar-channels.ts`: ein Haus
+  // wäre dort dasselbe Zeichen wie „Direkt" und nur an der Farbe zu
+  // unterscheiden. Iconify hat kein Vrbo-Markenzeichen.
+  vrbo: { icon: "ph:tree-palm-fill", fg: "text-channel-vrbo" },
   whatsapp: { icon: "simple-icons:whatsapp", fg: "text-emerald-600" },
   mybestdays: { icon: "ph:globe-hemisphere-west-fill", fg: "text-channel-portal" },
 };

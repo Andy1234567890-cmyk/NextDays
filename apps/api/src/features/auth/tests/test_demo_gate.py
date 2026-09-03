@@ -128,7 +128,7 @@ def test_methode_wird_gross_geschrieben_verglichen() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Bereichs-Sperre (0408)
+# Bereichs-Sperre (reiner Code-Riegel, keine Migration)
 # ---------------------------------------------------------------------------
 # Anders als der Schreib-Riegel gilt sie auch fuer LESENDE Anfragen: die
 # gesperrten Bereiche sollen gar nicht einsehbar sein. Geprueft wird deshalb
@@ -145,6 +145,17 @@ GESPERRT_BEISPIELE = (
     "/api/v1/owners/17",
     "/api/v1/owner-reporting/monat",
     "/api/v1/subscriptions/aktuell",
+    # Am 02.09.2026 nachgezogen: trugen in der Sidebar ein Schloss, waren per
+    # URL aber ladbar.
+    "/api/v1/tasks",
+    "/api/v1/tasks/42",
+    "/api/v1/booking-conditions",
+    "/api/v1/calendar/block-requests",
+    "/api/v1/calendar/block-requests/9/approve",
+    # Dynamic Pricing — einzelne Endpunkte, NICHT das ganze `/pricing`.
+    "/api/v1/pricing/overview",
+    "/api/v1/pricing/settings/abc",
+    "/api/v1/pricing/explain/abc",
 )
 ERLAUBT_BEISPIELE = (
     "/api/v1/calendar/monat",
@@ -152,6 +163,16 @@ ERLAUBT_BEISPIELE = (
     "/api/v1/inbox/threads",
     "/api/v1/properties",
     "/api/v1/dashboard",
+    # Diese vier sind die eigentliche Falle: `/pricing` traegt die Preise, die
+    # Promotions und das Rate-Grid — also das, was die Vorfuehrung ZEIGEN soll.
+    # Waere `/pricing` als Praefix gesperrt worden statt der drei
+    # Dynamic-Pricing-Endpunkte, haette die Demo ihren Kern verloren.
+    "/api/v1/pricing/effective",
+    "/api/v1/pricing/quote",
+    "/api/v1/pricing/discounts",
+    "/api/v1/rates",
+    # `/calendar` selbst bleibt offen — nur `block-requests` darunter ist zu.
+    "/api/v1/calendar",
 )
 
 

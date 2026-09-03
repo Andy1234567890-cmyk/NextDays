@@ -12,20 +12,14 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 import { Card, CardContent } from "@nextdays/ui/card";
+import {
+  KachelKopf,
+  PeriodBadge,
+} from "@/components/dashboard/kachel-kopf";
 import { fmtDate } from "@/lib/dashboard-format";
 import { kanalAbzeichen } from "@/lib/kanal-marke";
 import type { NachrichtenKennzahlen } from "@/lib/inbox";
 import { channelLabelLoose } from "@/lib/channel-logos";
-
-/** Fester Zustands-Hinweis auf einer Karte, die keinen Zeitraum kennt. Wo es
- *  einen Zeitraum GIBT, steht an dieser Stelle ein Selektor, kein Text. */
-export function PeriodBadge({ label }: { label: string }) {
-  return (
-    <span className="shrink-0 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-muted-foreground">
-      {label}
-    </span>
-  );
-}
 
 export function UngelesenKarte({ daten }: { daten: NachrichtenKennzahlen }) {
   const t = useTranslations("reservations");
@@ -33,15 +27,12 @@ export function UngelesenKarte({ daten }: { daten: NachrichtenKennzahlen }) {
   return (
     <Card className="h-full">
       <CardContent className="flex h-full flex-col gap-4 p-6">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Icon icon="ph:envelope-open" className="size-5" />
-            <h3 className="font-semibold text-foreground">
-              {t("dashboard.unreadConversations")}
-            </h3>
-          </div>
-          <PeriodBadge label={t("dashboard.badgeCurrent")} />
-        </div>
+        <KachelKopf
+          icon="ph:envelope-open"
+          title={t("dashboard.unreadConversations")}
+          gross
+          rechts={<PeriodBadge label={t("dashboard.badgeCurrent")} />}
+        />
         <div>
           <p className="font-display text-4xl font-extrabold leading-none">
             {daten.ungelesen}

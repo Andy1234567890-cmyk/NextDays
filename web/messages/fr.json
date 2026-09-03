@@ -4470,7 +4470,8 @@
         "vorlagen": "Modèles de tâches",
         "planmaessig": "Tâches planifiées",
         "regelmaessig": "Tâches récurrentes",
-        "vertretungen": "Remplacements"
+        "vertretungen": "Remplacements",
+        "dienstleistungen": "Services"
       }
     },
     "propertyCalendar": {
@@ -5101,7 +5102,15 @@
       },
       "rowOpenCalendar": "Ouvrir dans le calendrier",
       "rowOpenBooking": "Ouvrir la réservation",
-      "rowOpenInbox": "Ouvrir la conversation"
+      "rowOpenInbox": "Ouvrir la conversation",
+      "ownerRequests": "Opérations du propriétaire",
+      "ownerRequestsLabel": "en attente de votre décision",
+      "ownerRequestsExplain": "Demandes de blocage et d'annulation des propriétaires. Tant que personne ne prend de décision, le propriétaire attend une réponse et les nuits restent dans leur état actuel.",
+      "ownerRequestsPending": "Demandes de blocage en attente",
+      "ownerRequestsLift": "Demandes d'annulation",
+      "ownerRequestsTermination": "Fins de contrat annoncées",
+      "ownerRequestsNone": "Aucune opération en attente.",
+      "ownerRequestsOldest": "Demande en attente la plus ancienne : {count, plural, =0 {aujourd'hui} one {depuis un jour} other {depuis # jours}}"
     },
     "mobileAppHint": "La vue des tâches en déplacement est déjà disponible de façon responsive sur le web (Mes tâches + détail avec téléversement de photos). Une application mobile distincte suivra dans un projet dédié.",
     "aufgabenFilter": {
@@ -12243,7 +12252,8 @@
       "properties": "Objets",
       "allProperties": "Tous les objets",
       "channels": "Canaux",
-      "allChannels": "Tous les canaux"
+      "allChannels": "Tous les canaux",
+      "compare": "Comparaison"
     },
     "basis": {
       "anreise": "Par arrivée",
@@ -12316,13 +12326,48 @@
     },
     "ownerStayCount": "{count, plural, one {# usage personnel} other {# usages personnels}}",
     "ownerStayRow": "Usage personnel",
-    "ownerStayRowHint": "Propriétaire occupant — pas de vente"
+    "ownerStayRowHint": "Propriétaire occupant — pas de vente",
+    "compare": {
+      "keiner": "Aucune comparaison",
+      "1j": "Année précédente",
+      "2j": "Il y a 2 ans",
+      "5j": "Il y a 5 ans"
+    },
+    "compareBanner": "{label} : comparé à {von} – {bis}",
+    "comparePrevious": "précédent {value}",
+    "compareNoBase": "pas de valeur précédente",
+    "compareOnlyBefore": "uniquement dans la période de comparaison",
+    "compareRowCount": "{label} : {count, plural, =0 {aucune réservation} one {# réservation} other {# réservations}}",
+    "compareBaselinePrevious": "Changement par rapport à la période précédente de même durée",
+    "compareCurrencyMismatch": "Année précédente en {currency} – non comparable",
+    "compareCurrencyUnclear": "Devise ambiguë dans la période de comparaison",
+    "compareCurrencyMismatchHint": "Une devise différente était en vigueur pendant la période de comparaison. Une variation en pourcentage serait un effet de taux de change et non un chiffre d'affaires.",
+    "compareChartCurrencyMismatch": "La période de comparaison était dans une devise différente – la ligne de l'année précédente n'est donc pas tracée.",
+    "compareLocked": "Une comparaison est possible jusqu'à une période d'un an."
   },
   "tasks": {
     "fehler": {
       "requestId": "ID: {id}",
       "kopieren": "Copier les détails",
       "kopiert": "Copié"
+    },
+    "servicePrices": {
+      "title": "Prix des services",
+      "intro": "Ce que coûte un service commandé par le propriétaire. À la fin de la tâche, cela crée un poste dans sa facture. Sans prix, aucun poste n'est créé et le service reste impayé.",
+      "missing": "Pas de prix",
+      "set": "Définir le prix",
+      "change": "Modifier",
+      "remove": "Supprimer",
+      "amount": "Montant",
+      "currency": "Devise",
+      "scope": "S'applique à",
+      "allProperties": "Toutes les propriétés",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "saved": "Prix enregistré.",
+      "removed": "Prix supprimé.",
+      "amountInvalid": "Veuillez saisir un montant à partir de 0.",
+      "currencyInvalid": "Veuillez saisir une devise à trois lettres (par exemple, DKK)."
     }
   }
 }

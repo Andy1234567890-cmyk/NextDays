@@ -36,6 +36,24 @@ const KATEGORIE_ICON: Record<string, string> = {
   // Eigenes Warnsymbol statt der generischen Glocke: eine nicht zugestellte
   // Gastnachricht ist kein Hinweis, sondern offene Arbeit — der Gast wartet.
   zustellproblem: "ph:warning-circle",
+  // Die vier Kategorien, deren Empfaenger ein EIGENTUEMER ist. Sie standen
+  // hier nicht, weil die Glocke lange nur in der Agentur-Topbar hing; im
+  // Portal trugen damit alle vier dasselbe neutrale Symbol, und der Blick
+  // konnte „Buchung an deinem Objekt" nicht von „Antwort auf deinen
+  // Sperrantrag" unterscheiden.
+  owner_booking: "ph:calendar-check",
+  owner_service: "ph:wrench",
+  block_decision: "ph:hand-palm",
+  block_freigabe: "ph:users-three",
+  // Die Gegenstuecke auf der Betriebsseite — dieselbe Luecke.
+  betrieb_buchung: "ph:calendar-plus",
+  block_request: "ph:hand-palm",
+  task_assigned: "ph:list-checks",
+  task_substitution: "ph:user-switch",
+  anfrage_offen: "ph:question",
+  ki_eskalation: "ph:sparkle",
+  portal_rate_verwaist: "ph:tag",
+  testphase_endet: "ph:hourglass",
 };
 
 export function Glocke() {

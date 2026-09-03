@@ -32,8 +32,10 @@ from supabase import Client
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.core.supabase import fetch_all_rows
+from src.core.zeitraum import jahre_datumsgleich
 
 from .schemas import (
+    VERGLEICH_JAHRE,
     AuswertungResponse,
     Bezug,
     BuchungZeile,
@@ -43,12 +45,17 @@ from .schemas import (
     Kennzahlen,
     ObjektZeile,
     Punkt,
+    Vergleich,
+    VergleichBericht,
 )
 
 log = get_logger("nextdays.auswertung")
 
 # Harte Obergrenzen (Wurzel 8): ein offener Zeitraum wäre ein Vollscan.
 MAX_TAGE = 1830          # 5 Jahre
+# Mit Vergleich läuft der Bericht ZWEIMAL. 5 Jahre × 2 wäre der doppelte
+# Vollscan; der Vergleich ist auf höchstens ein Jahr Zeitraum begrenzt.
+MAX_TAGE_VERGLEICH = 366 # 1 Jahr (Schaltjahr eingerechnet)
 MAX_BUCHUNGEN = 5_000    # Tabellenreiter
 
 # Stornierte Buchungen zählen für die Quote, nicht für Umsatz/Nächte.
@@ -73,6 +80,58 @@ def _naechte(check_in: str, check_out: str) -> int:
     except (TypeError, ValueError):
         return 0
     return max((b - a).days, 0)
+
+
+def _perioden(von: date, bis: date, monatlich: bool) -> list[str]:
+    """Alle Perioden-Schlüssel des Zeitraums — lückenlos, in Reihenfolge.
+
+    Bei Monatsauflösung „YYYY-MM", sonst „YYYY-MM-DD". Grundlage der
+    lückenlosen Zeitreihe (siehe `_verlauf`).
+    """
+    if not monatlich:
+        tage = (bis - von).days
+        return [(von + timedelta(days=i)).isoformat() for i in range(tage + 1)]
+    schluessel: list[str] = []
+    jahr, monat = von.year, von.month
+    while (jahr, monat) <= (bis.year, bis.month):
+        schluessel.append(f"{jahr:04d}-{monat:02d}")
+        monat += 1
+        if monat > 12:
+            jahr, monat = jahr + 1, 1
+    return schluessel
+
+
+def _verlauf_normalisiert(punkte: list[Punkt], jahre: int) -> list[Punkt]:
+    """Jedem Punkt des Vorzeitraums seinen Partner-Schlüssel der Gegenwart geben.
+
+    „2025-08-03" (+1 Jahr) → `period_normal` „2026-08-03"; bei Monats-
+    auflösung „2025-08" → „2026-08". Die Oberfläche verbindet die beiden
+    Zeitreihen über DIESEN Wert.
+
+    Der 29.02. bekommt in einem Nicht-Schaltjahr den 28.02. als Partner —
+    dieselbe Regel wie `jahre_datumsgleich`, nur in die andere Richtung. Damit
+    trifft er denselben Punkt, den die Hinrechnung erzeugt hätte.
+    """
+    fertig: list[Punkt] = []
+    for p in punkte:
+        roh = p.period
+        try:
+            if len(roh) == 7:  # Monat: YYYY-MM
+                jahr, monat = roh.split("-")
+                normal = f"{int(jahr) + jahre:04d}-{monat}"
+            else:  # Tag: YYYY-MM-DD
+                tag = date.fromisoformat(roh)
+                try:
+                    normal = tag.replace(year=tag.year + jahre).isoformat()
+                except ValueError:
+                    # 29.02. ohne Partner im Zieljahr.
+                    normal = tag.replace(year=tag.year + jahre, day=28).isoformat()
+        except (TypeError, ValueError):
+            # Ein Schlüssel, den wir nicht deuten können, bekommt keinen
+            # Partner — er wird dann NICHT gepaart, statt falsch gepaart.
+            normal = None
+        fertig.append(p.model_copy(update={"period_normal": normal}))
+    return fertig
 
 
 def _quote(zaehler: float, nenner: float) -> float | None:
@@ -103,10 +162,102 @@ class AuswertungService:
         bezug: Bezug = Bezug.ANREISE,
         property_ids: list[str] | None = None,
         channels: list[str] | None = None,
+        vergleich: Vergleich = Vergleich.KEINER,
     ) -> AuswertungResponse:
-        """Die ganze Auswertung. Wurzel 3: alles auf den Tenant gescopet."""
+        """Die ganze Auswertung. Wurzel 3: alles auf den Tenant gescopet.
+
+        `vergleich` rechnet denselben Bericht ein zweites Mal für den
+        datumsgleichen Zeitraum vor 1/2/5 Jahren und hängt ihn als `vorher` an.
+        Beide Durchläufe teilen sich `_rechnen` — eine zweite Rechenlogik für
+        den Vorwert wäre genau der Fehler, den Hostaway 09/2025 nachbessern
+        musste (Kennzahlen, die je Ansicht anders zustande kommen).
+        """
         tenant_id = ctx.tenant_id
         objekte = self._objekte(tenant_id, property_ids)
+        antwort = self._rechnen(
+            tenant_id,
+            objekte=objekte,
+            von=von,
+            bis=bis,
+            bezug=bezug,
+            channels=channels,
+        )
+        jahre = VERGLEICH_JAHRE.get(vergleich)
+        if jahre is not None:
+            antwort.vorher = self._vorzeitraum(
+                tenant_id,
+                objekte=objekte,
+                von=von,
+                bis=bis,
+                bezug=bezug,
+                channels=channels,
+                vergleich=vergleich,
+                jahre=jahre,
+            )
+        return antwort
+
+    def _vorzeitraum(
+        self,
+        tenant_id: str,
+        *,
+        objekte: dict[str, str],
+        von: date,
+        bis: date,
+        bezug: Bezug,
+        channels: list[str] | None,
+        vergleich: Vergleich,
+        jahre: int,
+    ) -> VergleichBericht:
+        """Derselbe Bericht für den datumsgleichen Zeitraum vor `jahre` Jahren.
+
+        DIE OBJEKTMENGE IST DIE VON HEUTE, nicht die von damals. Wer heute drei
+        Objekte auswertet, will die Zahlen DIESER drei Objekte im Vorjahr sehen
+        — nicht die eines vierten, das inzwischen weg ist. Objekte, die es
+        damals noch nicht gab, tragen im Vorwert schlicht nichts bei.
+        """
+        v_von = jahre_datumsgleich(von, jahre)
+        v_bis = jahre_datumsgleich(bis, jahre)
+        vorher = self._rechnen(
+            tenant_id,
+            objekte=objekte,
+            von=v_von,
+            bis=v_bis,
+            bezug=bezug,
+            channels=channels,
+            # Die Einteilung des HAUPTzeitraums, nicht die eigene: sonst
+            # trägt die eine Reihe Tage und die andere Monate.
+            monatlich=(bis - von).days > 90,
+        )
+        return VergleichBericht(
+            vergleich=vergleich,
+            von=v_von.isoformat(),
+            bis=v_bis.isoformat(),
+            currency=vorher.currency,
+            waehrungen=vorher.waehrungen,
+            kennzahlen=vorher.kennzahlen,
+            verlauf=_verlauf_normalisiert(vorher.verlauf, jahre),
+            kanaele=vorher.kanaele,
+            objekte=vorher.objekte,
+            gaeste=vorher.gaeste,
+            buchungen_gesamt=len(vorher.buchungen),
+        )
+
+    def _rechnen(
+        self,
+        tenant_id: str,
+        *,
+        objekte: dict[str, str],
+        von: date,
+        bis: date,
+        bezug: Bezug,
+        channels: list[str] | None,
+        monatlich: bool | None = None,
+    ) -> AuswertungResponse:
+        """Der Rechenkern EINES Zeitraums — von Haupt- und Vorzeitraum geteilt.
+
+        `monatlich` gibt dem Vorzeitraum die Auflösung des HAUPTzeitraums vor,
+        damit beide Zeitreihen dieselbe Einteilung tragen (siehe `_verlauf`).
+        """
         erlaubt = set(objekte)
         buchungen = self._buchungen(tenant_id, von, bis, bezug, erlaubt, channels)
         verfuegbar = self._verfuegbarkeit(von, bis, erlaubt)
@@ -139,7 +290,7 @@ class AuswertungService:
             currency=currency,
             waehrungen=waehrungen,
             kennzahlen=self._kennzahlen(gueltig, storniert, verfuegbar, currency),
-            verlauf=self._verlauf(gueltig, von, bis, bezug),
+            verlauf=self._verlauf(gueltig, von, bis, bezug, monatlich),
             kanaele=self._kanaele(alle_gueltig),
             objekte=self._objektzeilen(gueltig, storniert, verfuegbar, objekte),
             buchungen=self._buchungszeilen(buchungen, objekte),
@@ -365,21 +516,54 @@ class AuswertungService:
 
     @staticmethod
     def _verlauf(
-        buchungen: list[dict[str, Any]], von: date, bis: date, bezug: Bezug
+        buchungen: list[dict[str, Any]],
+        von: date,
+        bis: date,
+        bezug: Bezug,
+        monatlich: bool | None = None,
     ) -> list[Punkt]:
         """Zeitreihe. Über 90 Tage nach Monaten, darunter nach Tagen.
 
         Dieselbe Schwelle wie Hostaway („Nach mehr als 90 Tagen entspricht der
         Zeitraum vollen Monaten").
+
+        `monatlich` wird vom VERGLEICHSFALL vorgegeben. Warum es nicht jeder
+        Zeitraum selbst entscheiden darf (gemessen 03.09.2026): der
+        datumsgleiche Jahressprung kann die Spanne um einen Tag ändern, wenn ein
+        29. Februar dazwischenliegt. In 90 geprüften Zeitraum/Jahre-Kombinationen
+        fiel der eine Zeitraum dadurch über die 90-Tage-Schwelle und der andere
+        darunter — etwa 01.01.–01.04.2020 (91 Tage, monatlich) gegen
+        01.01.–01.04.2019 (90 Tage, täglich). Die Vorjahreslinie bestünde dann
+        aus TAGESwerten und die Hauptlinie aus MONATSsummen, auf einer Achse mit
+        derselben Skala: ein scheinbarer Einbruch um über 90 %, den niemand als
+        Darstellungsfehler erkennt.
+
+        DIE REIHE IST LÜCKENLOS: jeder Tag (bzw. Monat) des Zeitraums bekommt
+        einen Punkt, auch wenn an ihm nichts gebucht wurde. Vorher entstanden
+        nur Eimer, in denen etwas lag — und weil eine Diagramm-Kategorieachse
+        ihre Punkte GLEICH BREIT verteilt, war die Zeitachse verzerrt: im
+        Zeitraum 31.08.–29.09.2026 fehlten 12 von 30 Tagen, und der Sprung vom
+        20.09. auf den 25.09. (fünf Tage) sah genauso breit aus wie der vom
+        01.09. auf den 02.09. (ein Tag). Die Kurve zeigte damit einen Verlauf,
+        den es so nie gab (gemessen 03.09.2026).
+
+        Ein Tag ohne Buchung trägt `0.0` und nicht `None`: null Umsatz an einem
+        Tag ohne Buchung ist die WAHRE Aussage, keine erfundene (anders als bei
+        einem Tag, der außerhalb des Zeitraums liegt — der taucht gar nicht
+        erst auf).
         """
-        monatlich = (bis - von).days > 90
+        if monatlich is None:
+            monatlich = (bis - von).days > 90
         feld = {
             Bezug.ANREISE: "check_in",
             Bezug.ABREISE: "check_out",
             Bezug.BUCHUNG: "booked_at",
             Bezug.UEBERNACHTUNG: "check_in",
         }[bezug]
-        eimer: dict[str, Punkt] = {}
+        # Erst das lückenlose Gerüst, dann die Buchungen hineinlegen.
+        eimer: dict[str, Punkt] = {
+            key: Punkt(period=key) for key in _perioden(von, bis, monatlich)
+        }
         for b in buchungen:
             roh = str(b.get(feld) or "")[:10]
             if not roh:

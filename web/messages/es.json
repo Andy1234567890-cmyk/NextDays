@@ -4470,7 +4470,8 @@
         "vorlagen": "Plantillas de tareas",
         "planmaessig": "Tareas planificadas",
         "regelmaessig": "Tareas recurrentes",
-        "vertretungen": "Sustituciones"
+        "vertretungen": "Sustituciones",
+        "dienstleistungen": "Servicios"
       }
     },
     "propertyCalendar": {
@@ -5101,7 +5102,15 @@
       },
       "rowOpenCalendar": "Abrir en el calendario",
       "rowOpenBooking": "Abrir la reserva",
-      "rowOpenInbox": "Abrir la conversación"
+      "rowOpenInbox": "Abrir la conversación",
+      "ownerRequests": "Operaciones del propietario",
+      "ownerRequestsLabel": "esperando su decisión",
+      "ownerRequestsExplain": "Solicitudes de bloqueo y cancelación de los propietarios. Mientras nadie decida, el propietario espera una respuesta y las noches permanecen en el estado en que se encuentran.",
+      "ownerRequestsPending": "Solicitudes de bloqueo abiertas",
+      "ownerRequestsLift": "Solicitudes de cancelación",
+      "ownerRequestsTermination": "Finalizaciones de contrato anunciadas",
+      "ownerRequestsNone": "No hay operaciones abiertas.",
+      "ownerRequestsOldest": "Solicitud abierta más antigua: {count, plural, =0 {hoy} one {desde hace un día} other {desde hace # días}}"
     },
     "mobileAppHint": "La vista de tareas para el día a día ya está disponible de forma responsive en la web (Mis tareas + detalle con subida de fotos). Una app móvil independiente llegará como proyecto propio.",
     "aufgabenFilter": {
@@ -12243,7 +12252,8 @@
       "properties": "Objetos",
       "allProperties": "Todos los objetos",
       "channels": "Canales",
-      "allChannels": "Todos los canales"
+      "allChannels": "Todos los canales",
+      "compare": "Comparar"
     },
     "basis": {
       "anreise": "Por llegada",
@@ -12316,13 +12326,48 @@
     },
     "ownerStayCount": "{count, plural, one {# uso propio} other {# usos propios}}",
     "ownerStayRow": "Uso propio",
-    "ownerStayRowHint": "Propietario en su propio inmueble — sin venta"
+    "ownerStayRowHint": "Propietario en su propio inmueble — sin venta",
+    "compare": {
+      "keiner": "Sin comparación",
+      "1j": "Año anterior",
+      "2j": "Hace 2 años",
+      "5j": "Hace 5 años"
+    },
+    "compareBanner": "{label}: comparado con {von} – {bis}",
+    "comparePrevious": "anteriormente {value}",
+    "compareNoBase": "sin valor previo",
+    "compareOnlyBefore": "solo en el período de comparación",
+    "compareRowCount": "{label}: {count, plural, =0 {ninguna reserva} one {# reserva} other {# reservas}}",
+    "compareBaselinePrevious": "Cambio respecto al período anterior de igual duración",
+    "compareCurrencyMismatch": "Año anterior en {currency} – no comparable",
+    "compareCurrencyUnclear": "Moneda ambigua en el período de comparación",
+    "compareCurrencyMismatchHint": "Durante el período de comparación, se utilizó una moneda diferente. Un cambio porcentual sería un efecto del tipo de cambio y no una cifra de negocio.",
+    "compareChartCurrencyMismatch": "El período de comparación fue en una moneda diferente, por lo que la línea del año anterior no se dibuja.",
+    "compareLocked": "Es posible comparar hasta un período de un año."
   },
   "tasks": {
     "fehler": {
       "requestId": "ID: {id}",
       "kopieren": "Copiar detalles",
       "kopiert": "Copiado"
+    },
+    "servicePrices": {
+      "title": "Precios de los servicios",
+      "intro": "Lo que cuesta un servicio solicitado por el propietario. Al completar la tarea, esto crea un elemento en su factura. Sin precio, no se crea ningún elemento y el servicio no se cobra.",
+      "missing": "Sin precio",
+      "set": "Establecer precio",
+      "change": "Modificar",
+      "remove": "Eliminar",
+      "amount": "Importe",
+      "currency": "Moneda",
+      "scope": "Aplicable a",
+      "allProperties": "Todas las propiedades",
+      "save": "Guardar",
+      "cancel": "Cancelar",
+      "saved": "Precio guardado.",
+      "removed": "Precio eliminado.",
+      "amountInvalid": "Introduzca un importe a partir de 0.",
+      "currencyInvalid": "Introduzca una divisa de tres letras (por ejemplo, DKK)."
     }
   }
 }

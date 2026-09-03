@@ -14,6 +14,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import date, timedelta
 
+from src.core.zeitraum import jahre_datumsgleich
+
 from .schemas import (
     ChannelBreakdown,
     DashboardKpi,
@@ -111,19 +113,49 @@ def _channel_breakdown(
     rows: list[dict], lo: date, hi: date, show_money: bool
 ) -> list[ChannelBreakdown]:
     """Einnahmen + Nächte je Kanal (Donut) für die aktuelle Periode. Beträge
-    None ohne Sicht. Nur Buchungen der Periode (Buchungsdatum)."""
+    None ohne Sicht. Nur Buchungen der Periode (Buchungsdatum).
+
+    GRUPPIERT WIRD NACH `channel`, NICHT nach `ota_name` (03.09.2026).
+
+    Der Portalname kommt roh aus der Quelle und ist NICHT normiert: Channex
+    liefert je nach Alter des Datensatzes verschiedene Schreibweisen desselben
+    Portals. Live gemessen im Beta-Betrieb:
+
+        Booking.com  255 Buchungen        BookingCom   52 Buchungen
+        Airbnb       276 Buchungen        AirBNB       28 Buchungen
+
+    Nach `ota_name` gruppiert erschien Booking.com deshalb ZWEIMAL im Donut —
+    mit geteiltem Umsatz (388.528 und 256.825 DKK) und zwei Segmenten, die
+    beide „Booking.com" beschriftet waren, weil die Anzeige normalisiert und
+    die Gruppierung nicht. Eine Aufstellung, die nur auffällt, wenn man die
+    Zeilen zusammenzählt.
+
+    `channel` ist ein DB-Enum und damit die einzige verlässliche Achse. Der
+    Portalname wird nur noch als Beschriftung mitgeführt, und zwar die
+    HÄUFIGSTE Schreibweise je Kanal — nicht die erstbeste, sonst entschiede die
+    Zeilenreihenfolge über den angezeigten Namen.
+
+    Dieselbe Regel wie in `auswertung.service._kanaele`; die beiden Slices
+    zeigen dem Betrieb sonst verschiedene Kanalzahlen für denselben Zeitraum.
+    """
     chan: dict[str, dict] = {}
+    namen: dict[str, dict[str, int]] = {}
     for r in rows:
         if not lo <= _booked_on(r) <= hi:
             continue
-        key = r.get("ota_name") or r.get("channel") or "direct"
+        key = str(r.get("channel") or "direct")
+        if roh_name := r.get("ota_name"):
+            namen.setdefault(key, {})
+            namen[key][str(roh_name)] = namen[key].get(str(roh_name), 0) + 1
         slot = chan.setdefault(
             key,
-            {"channel": r.get("channel") or "direct",
-             "ota_name": r.get("ota_name"), "amount": 0.0, "nights": 0},
+            {"channel": key, "ota_name": None, "amount": 0.0, "nights": 0},
         )
         slot["amount"] += float(r.get("total_amount") or 0)
         slot["nights"] += _row_nights(r)
+    for key, slot in chan.items():
+        if varianten := namen.get(key):
+            slot["ota_name"] = max(varianten.items(), key=lambda p: p[1])[0]
     return [
         ChannelBreakdown(
             channel=v["channel"],
@@ -160,6 +192,7 @@ def compute_property_stats(
     date_to: date,
     show_amounts: bool,
     property_count: int = 1,
+    vergleich_jahre: int = 0,
 ) -> PropertyStats:
     """Alle KPIs + Kanal-Verteilung + Sparkline-Zeitreihen aus Reservierungs-Zeilen.
 
@@ -170,16 +203,34 @@ def compute_property_stats(
 
     `show_amounts` = Betrags-Sichtbarkeit (mask.amounts). Betrags-KPIs sind None,
     wenn keine Betrags-Sichtbarkeit ODER gemischte Währungen vorliegen (keine
-    Mischsumme). Die Vorperiode ist gleich lang und liegt direkt davor. Periode +
-    Sparkline nutzen das Buchungsdatum (created_at).
+    Mischsumme). Periode + Sparkline nutzen das Buchungsdatum (created_at).
+
+    DER VERGLEICHSANKER (`vergleich_jahre`):
+    0 (Vorgabe) = die unmittelbar vorhergehende, gleich lange Periode — was der
+    Objekt-Reiter immer schon zeigt. 1/2/5 = derselbe Zeitraum vor so vielen
+    Jahren, datumsgleich (`core.zeitraum.jahre_datumsgleich`).
+
+    Bewusst EIN Parameter an EINER Stelle statt einer zweiten Rechnung: jede
+    `change_pct` dieser Funktion hängt an `prev_from`/`prev_to`. Ein zweiter
+    Rechenweg für den Jahresvergleich wäre genau der Fehler, den Hostaway
+    09/2025 nachbessern musste — Kennzahlen, die je Ansicht anders entstehen.
+
+    ACHTUNG beim Aufrufer: die Zeilen für den Vergleichszeitraum müssen
+    GELADEN sein (`reads._stats_untergrenze(..., jahre_zurueck=…)`). Fehlen sie,
+    rechnet diese Funktion pflichtschuldig „0 im Vorjahr" statt „nicht
+    geladen" — eine plausible Falschaussage (Wurzel 4).
     """
     currencies = {r["currency"] for r in rows if r.get("currency")}
     currency = next(iter(currencies)) if len(currencies) == 1 else ""
     show_money = show_amounts and len(currencies) == 1
 
     span = (date_to - date_from).days + 1
-    prev_from = date_from - timedelta(days=span)
-    prev_to = date_from - timedelta(days=1)
+    if vergleich_jahre:
+        prev_from = jahre_datumsgleich(date_from, vergleich_jahre)
+        prev_to = jahre_datumsgleich(date_to, vergleich_jahre)
+    else:
+        prev_from = date_from - timedelta(days=span)
+        prev_to = date_from - timedelta(days=1)
     today = date.today()
 
     active = [r for r in rows if r.get("status") != "cancelled"]

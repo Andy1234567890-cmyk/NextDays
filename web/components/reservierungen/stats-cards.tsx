@@ -27,6 +27,7 @@ import {
 import type { AvailabilitySource } from "@/lib/calendar";
 import { useCalendarLabels } from "@/lib/use-calendar-labels";
 import { channelLabelLoose } from "@/lib/channel-logos";
+import { channelChartColor, channelMeta } from "@/lib/calendar-channels";
 import type { PropertyStats, StatKpi, StatMetric, StatPoint } from "@/lib/reservations";
 
 // Kanal-Segmentfarben aus dem Chart-Token-System (var(--chart-1..5)).
@@ -195,23 +196,57 @@ function ChannelDonut({
 }) {
   const t = useTranslations("reservations");
   const { channelLabel } = useCalendarLabels();
+  // Farbe UND Bildmarke kommen aus dem Kanal, nicht aus der Position in der
+  // Liste (03.09.2026). Vorher lief die Füllung über `CHART_VARS[i]` — eine
+  // Palette in fester Reihenfolge: Booking.com bekam Orange, Airbnb Rot,
+  // je nachdem, wer zuerst in den Daten stand. Damit war die Farbe nicht nur
+  // fremd, sondern auch unbeständig: derselbe Kanal wechselte sie, sobald ein
+  // anderer dazukam oder wegfiel. Booking.com ist #003580, Airbnb #ff5a5f —
+  // die Tokens dafür stehen längst in `globals.css`.
   const data = useMemo(() => {
     return stats.by_channel
-      .map((c, i) => ({
-        key: c.ota_name ?? c.channel,
-        label: c.ota_name
-          ? channelLabelLoose(c.ota_name)
-          : channelLabel(c.channel as AvailabilitySource),
-        value: (metric === "amount" ? c.amount : c.nights) ?? 0,
-        fill: CHART_VARS[i % CHART_VARS.length],
-      }))
+      .map((c) => {
+        const quelle = c.channel as AvailabilitySource;
+        return {
+          key: c.channel,
+          label: c.ota_name
+            ? channelLabelLoose(c.ota_name)
+            : channelLabel(quelle),
+          value: (metric === "amount" ? c.amount : c.nights) ?? 0,
+          fill: channelChartColor(quelle),
+          // Die BILDMARKE aus `CHANNEL_META`, NICHT die Wortmarke aus
+          // `channelLogoLoose` (gemessen 03.09.2026, nachdem ich es andersherum
+          // versucht hatte).
+          //
+          // `public/channels/*` führt 43 echte Original-Logos — aber es sind
+          // WORTmarken: „Booking.com" hat ein Seitenverhältnis von 5,9 : 1,
+          // Vrbo 3,1 : 1, myBestDays 3,6 : 1. In das 1-rem-Quadrat dieser
+          // Liste gezwungen wird jede davon zu einem unleserlichen Fleck —
+          // im Bildschirmfoto nachgeprüft. Quadratische Bildmarken gibt es
+          // im Ordner nur für Airbnb und WhatsApp.
+          //
+          // Die simple-icons-Glyphen SIND die offiziellen Bildmarken derselben
+          // Marken (Booking.coms „B.", Airbnbs Bélo) und tragen hier die
+          // Markenfarbe. Wo es keine gibt — Vrbo hat kein Iconify-Zeichen,
+          // `simple-icons:vrbo` existiert nicht — steht ein neutrales Symbol
+          // statt einer geratenen Marke (Regel „Portal-Logos nur echt").
+          icon: channelMeta(quelle).logo,
+        };
+      })
       .filter((d) => d.value > 0);
   }, [stats.by_channel, metric, channelLabel]);
 
+  // Der Config-Schlüssel ist das LABEL, nicht der Kanalcode.
+  //
+  // `ChartLegendContent` schlägt über `nameKey="label"` nach und nimmt dabei
+  // den WERT des Feldes als Schlüssel (`getPayloadConfigFromPayload`). Stand
+  // dort der Kanalcode („direct"), fand die Legende nichts und rendert einen
+  // Eintrag OHNE Text — auf dem Screenshot vom 03.09.2026 der leere grüne
+  // Kasten neben den drei „Booking.com".
   const config = useMemo<ChartConfig>(() => {
     const c: ChartConfig = {};
-    data.forEach((d, i) => {
-      c[d.key] = { label: d.label, color: CHART_VARS[i % CHART_VARS.length] };
+    data.forEach((d) => {
+      c[d.label] = { label: d.label, color: d.fill };
     });
     return c;
   }, [data]);
@@ -231,11 +266,27 @@ function ChannelDonut({
           <ul className="flex min-w-32 flex-col gap-1.5 text-sm">
             {data.map((d) => (
               <li key={d.key} className="flex items-center gap-2">
-                <span
-                  className="inline-block size-2.5 shrink-0 rounded-full"
-                  style={{ backgroundColor: d.fill }}
-                  aria-hidden
-                />
+                {/* Die echte Bildmarke in der Kanalfarbe statt eines bunten
+                    Punktes. `CHANNEL_META` führt sie ohnehin — dieselbe
+                    Zuordnung wie im Kalender und im Posteingang, damit ein
+                    Kanal überall gleich aussieht (Regel „Portal-Logos nur
+                    echt": kein geratenes Ersatz-Icon für Marken, die wir
+                    nicht haben — dort steht ein neutrales Symbol).
+
+                    Nur der `icon`-Zweig: KEIN Kanal im Katalog trägt derzeit
+                    `kind: "img"` (geprüft 03.09.2026), ein `<img>`-Zweig wäre
+                    also toter Code — samt der `no-img-element`-Warnung, die
+                    er mitbrächte. Kommt ein Kanal mit Bilddatei dazu, gehört
+                    er hier ergänzt; bis dahin bliebe seine Zeile ohne Marke,
+                    nicht ohne Zahl. */}
+                {d.icon.kind === "icon" && (
+                  <Icon
+                    icon={d.icon.icon}
+                    className="size-4 shrink-0"
+                    style={{ color: d.fill }}
+                    aria-hidden
+                  />
+                )}
                 <span className="font-medium">{d.label}:</span>
                 <span className="text-accent">{fmt(d.value)}</span>
               </li>

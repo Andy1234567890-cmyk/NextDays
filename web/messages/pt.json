@@ -4470,7 +4470,8 @@
         "vorlagen": "Modelos de tarefas",
         "planmaessig": "Tarefas programadas",
         "regelmaessig": "Tarefas recorrentes",
-        "vertretungen": "Substituições"
+        "vertretungen": "Substituições",
+        "dienstleistungen": "Serviços"
       }
     },
     "propertyCalendar": {
@@ -5101,7 +5102,15 @@
       },
       "rowOpenCalendar": "Abrir no calendário",
       "rowOpenBooking": "Abrir a reserva",
-      "rowOpenInbox": "Abrir a conversa"
+      "rowOpenInbox": "Abrir a conversa",
+      "ownerRequests": "Ações do proprietário",
+      "ownerRequestsLabel": "aguardando sua decisão",
+      "ownerRequestsExplain": "Pedidos de bloqueio e desbloqueio de proprietários. Enquanto ninguém decidir, o proprietário aguarda uma resposta e as noites permanecem no estado em que se encontram.",
+      "ownerRequestsPending": "Pedidos de bloqueio em aberto",
+      "ownerRequestsLift": "Pedidos de desbloqueio",
+      "ownerRequestsTermination": "Rescisões de contrato anunciadas",
+      "ownerRequestsNone": "Nenhuma ação em aberto.",
+      "ownerRequestsOldest": "Pedido em aberto mais antigo: {count, plural, =0 {hoje} one {há um dia} other {há # dias}}"
     },
     "mobileAppHint": "A vista de tarefas para o dia a dia já está disponível de forma responsiva na web (As minhas tarefas + detalhe com carregamento de fotos). Uma aplicação móvel separada seguirá como projeto próprio.",
     "aufgabenFilter": {
@@ -12243,7 +12252,8 @@
       "properties": "Objetos",
       "allProperties": "Todos os objetos",
       "channels": "Canais",
-      "allChannels": "Todos os canais"
+      "allChannels": "Todos os canais",
+      "compare": "Comparar"
     },
     "basis": {
       "anreise": "Por chegada",
@@ -12316,13 +12326,48 @@
     },
     "ownerStayCount": "{count, plural, one {# uso próprio} other {# usos próprios}}",
     "ownerStayRow": "Uso próprio",
-    "ownerStayRowHint": "Proprietário no próprio imóvel — sem venda"
+    "ownerStayRowHint": "Proprietário no próprio imóvel — sem venda",
+    "compare": {
+      "keiner": "Sem comparação",
+      "1j": "Ano anterior",
+      "2j": "Há 2 anos",
+      "5j": "Há 5 anos"
+    },
+    "compareBanner": "{label}: comparado com {von} – {bis}",
+    "comparePrevious": "anteriormente {value}",
+    "compareNoBase": "sem valor anterior",
+    "compareOnlyBefore": "apenas no período de comparação",
+    "compareRowCount": "{label}: {count, plural, =0 {nenhuma reserva} one {# reserva} other {# reservas}}",
+    "compareBaselinePrevious": "Alteração em relação ao período anterior de igual duração",
+    "compareCurrencyMismatch": "Ano anterior em {currency} – não comparável",
+    "compareCurrencyUnclear": "Moeda ambígua no período de comparação",
+    "compareCurrencyMismatchHint": "No período de comparação, uma moeda diferente estava em vigor. Uma alteração percentual seria um efeito da taxa de câmbio e não um número de negócios.",
+    "compareChartCurrencyMismatch": "O período de comparação estava em uma moeda diferente – a linha do ano anterior não é desenhada por esse motivo.",
+    "compareLocked": "Uma comparação é possível por um período de até um ano."
   },
   "tasks": {
     "fehler": {
       "requestId": "ID: {id}",
       "kopieren": "Copiar detalhes",
       "kopiert": "Copiado"
+    },
+    "servicePrices": {
+      "title": "Preços dos serviços",
+      "intro": "O custo de um serviço encomendado pelo proprietário. Ao concluir a tarefa, este valor será adicionado à fatura. Sem preço, não há item e o serviço não é cobrado.",
+      "missing": "Sem preço",
+      "set": "Definir preço",
+      "change": "Alterar",
+      "remove": "Remover",
+      "amount": "Valor",
+      "currency": "Moeda",
+      "scope": "Aplicável a",
+      "allProperties": "Todos os objetos",
+      "save": "Salvar",
+      "cancel": "Cancelar",
+      "saved": "Preço salvo.",
+      "removed": "Preço removido.",
+      "amountInvalid": "Por favor, insira um valor a partir de 0.",
+      "currencyInvalid": "Por favor, insira uma moeda de três letras (por exemplo, DKK)."
     }
   }
 }

@@ -58,8 +58,18 @@ export const CHANNEL_META: Record<AvailabilitySource, ChannelMeta> = {
     textFg: "text-channel-airbnb",
   },
   vrbo: {
-    // Kein Vrbo-Markenlogo in Iconify → klares Ferienhaus-Symbol als Platzhalter.
-    logo: { kind: "icon", icon: "ph:house-fill" },
+    // Kein Vrbo-Markenlogo in Iconify (`simple-icons:vrbo` existiert nicht,
+    // geprüft 03.09.2026) und keine quadratische Bildmarke im Ordner — die
+    // Datei `public/channels/vrbo.svg` ist eine WORTmarke mit 3,1 : 1 und
+    // wird auf 1 rem zum Fleck. Also ein neutrales Symbol statt einer
+    // geratenen Marke (Regel „Portal-Logos nur echt").
+    //
+    // Palme statt Haus: `ph:house-fill` war dasselbe Zeichen wie bei „Direkt"
+    // (`ph:house-line-fill`) und unterschied sich nur in der Farbe — in der
+    // Kanal-Liste der Startseite standen dadurch zwei nahezu gleiche Häuser
+    // untereinander. Die Palme trägt dieselbe Aussage („Ferienunterkunft"),
+    // ohne mit dem eigenen Direktkanal verwechselbar zu sein.
+    logo: { kind: "icon", icon: "ph:tree-palm-fill" },
     barBg: "bg-channel-vrbo",
     barFg: "text-white",
     dotBg: "bg-channel-vrbo",
@@ -127,4 +137,24 @@ export const CHANNEL_SOURCES: AvailabilitySource[] = [
 
 export function channelMeta(source: AvailabilitySource): ChannelMeta {
   return CHANNEL_META[source] ?? CHANNEL_META.portal;
+}
+
+/**
+ * Die Kanalfarbe als CSS-Wert — für Diagramme, die eine Farbe brauchen und
+ * keine Tailwind-Klasse setzen können (recharts füllt Segmente über `fill`).
+ *
+ * Abgeleitet aus `dotBg` statt als zwölftes Feld je Kanal: `bg-channel-airbnb`
+ * und `var(--channel-airbnb)` sind derselbe Token, und zwei getrennt gepflegte
+ * Listen driften. Ein neuer Kanal bekommt seine Diagrammfarbe damit
+ * automatisch mit.
+ *
+ * Kanäle ohne `--channel-*`-Token (manual/ical/contract_end tragen
+ * `bg-neutral-*`) sind keine Vertriebskanäle und tauchen in keinem Diagramm
+ * auf; sie bekommen die neutrale Sammelfarbe statt einer geratenen.
+ */
+export function channelChartColor(source: AvailabilitySource): string {
+  const token = channelMeta(source).dotBg;
+  return token.startsWith("bg-channel-")
+    ? `var(--${token.slice("bg-".length)})`
+    : "var(--channel-ota-other)";
 }

@@ -4470,7 +4470,8 @@
         "vorlagen": "Szablony zadań",
         "planmaessig": "Zadania planowe",
         "regelmaessig": "Zadania cykliczne",
-        "vertretungen": "Zastępstwa"
+        "vertretungen": "Zastępstwa",
+        "dienstleistungen": "Usługi"
       }
     },
     "propertyCalendar": {
@@ -5101,7 +5102,15 @@
       },
       "rowOpenCalendar": "Otwórz w kalendarzu",
       "rowOpenBooking": "Otwórz rezerwację",
-      "rowOpenInbox": "Otwórz rozmowę"
+      "rowOpenInbox": "Otwórz rozmowę",
+      "ownerRequests": "Operacje właściciela",
+      "ownerRequestsLabel": "oczekuje na Państwa decyzję",
+      "ownerRequestsExplain": "Wnioski właścicieli o zablokowanie i anulowanie. Dopóki nikt nie zdecyduje, właściciel czeka na odpowiedź, a noce pozostają w stanie, w jakim są.",
+      "ownerRequestsPending": "Otwarte wnioski o zablokowanie",
+      "ownerRequestsLift": "Wnioski o anulowanie",
+      "ownerRequestsTermination": "Zapowiedziane zakończenia umów",
+      "ownerRequestsNone": "Brak otwartych operacji.",
+      "ownerRequestsOldest": "Najstarszy otwarty wniosek: {count, plural, =0 {dzisiaj} one {od jednego dnia} few {od # dni} many {od # dni} other {od # dni}}"
     },
     "mobileAppHint": "Widok zadań w terenie jest już dostępny responsywnie w sieci (Moje zadania + szczegóły z przesyłaniem zdjęć). Osobna aplikacja mobilna powstanie jako oddzielny projekt.",
     "aufgabenFilter": {
@@ -12243,7 +12252,8 @@
       "properties": "Obiekty",
       "allProperties": "Wszystkie obiekty",
       "channels": "Kanały",
-      "allChannels": "Wszystkie kanały"
+      "allChannels": "Wszystkie kanały",
+      "compare": "Porównanie"
     },
     "basis": {
       "anreise": "Według daty przyjazdu",
@@ -12316,13 +12326,48 @@
     },
     "ownerStayCount": "{count, plural, one {# użycie własne} other {# użycia własne}}",
     "ownerStayRow": "Użytek własny",
-    "ownerStayRowHint": "Właściciel mieszka w obiekcie — brak sprzedaży"
+    "ownerStayRowHint": "Właściciel mieszka w obiekcie — brak sprzedaży",
+    "compare": {
+      "keiner": "Brak porównania",
+      "1j": "Poprzedni rok",
+      "2j": "2 lata temu",
+      "5j": "5 lat temu"
+    },
+    "compareBanner": "{label}: porównanie z {von} – {bis}",
+    "comparePrevious": "wcześniej {value}",
+    "compareNoBase": "brak wartości poprzedniej",
+    "compareOnlyBefore": "tylko w okresie porównawczym",
+    "compareRowCount": "{label}: {count, plural, =0 {brak rezerwacji} one {# rezerwacja} few {# rezerwacje} other {# rezerwacji}}",
+    "compareBaselinePrevious": "zmiana w stosunku do poprzedniego, tak samo długiego okresu",
+    "compareCurrencyMismatch": "rok poprzedni w {currency} – brak możliwości porównania",
+    "compareCurrencyUnclear": "waluta w okresie porównawczym niejednoznaczna",
+    "compareCurrencyMismatchHint": "W okresie porównawczym obowiązywała inna waluta. Zmiana procentowa byłaby efektem kursu walutowego, a nie wynikiem biznesowym.",
+    "compareChartCurrencyMismatch": "Okres porównawczy był w innej walucie – dlatego linia z poprzedniego roku nie jest rysowana.",
+    "compareLocked": "Porównanie jest możliwe dla okresu do jednego roku."
   },
   "tasks": {
     "fehler": {
       "requestId": "Identyfikator: {id}",
       "kopieren": "Kopiuj szczegóły",
       "kopiert": "Skopiowano"
+    },
+    "servicePrices": {
+      "title": "Ceny usług",
+      "intro": "Ile kosztuje usługa zamówiona przez właściciela. Po zakończeniu zadania staje się ona pozycją w jego rozliczeniu. Bez ceny nie powstaje pozycja, a usługa pozostaje nierozliczona.",
+      "missing": "Brak ceny",
+      "set": "Ustaw cenę",
+      "change": "Zmień",
+      "remove": "Usuń",
+      "amount": "Kwota",
+      "currency": "Waluta",
+      "scope": "Dotyczy",
+      "allProperties": "Wszystkie obiekty",
+      "save": "Zapisz",
+      "cancel": "Anuluj",
+      "saved": "Cena zapisana.",
+      "removed": "Cena usunięta.",
+      "amountInvalid": "Proszę wprowadzić kwotę od 0.",
+      "currencyInvalid": "Proszę wprowadzić trzyliterowy kod waluty (np. DKK)."
     }
   }
 }

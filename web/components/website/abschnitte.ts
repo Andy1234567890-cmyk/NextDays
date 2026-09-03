@@ -260,7 +260,7 @@ export const LAYOUT_BAUSTEINE: readonly LayoutBaustein[] = [
     kind: "section",
     spalten: 2,
     breiten: [8, 4],
-    icon: "ph:sidebar-flip",
+    icon: "ph:sidebar-simple",
     label: "zweiEinDrittel",
     hinweis: "zweiEinDrittelHinweis",
   },

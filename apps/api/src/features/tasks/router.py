@@ -11,22 +11,27 @@ from fastapi import (
     Query,
     UploadFile,
 )
+from supabase import Client
 
 from src.core.security import (
     AuthContext,
     get_current_user,
     require_internal_cron_secret,
 )
-from src.core.supabase import get_service_client
+from src.core.supabase import get_service_client, load_scoped
 from src.features.auth.dependencies import require_permission
 from src.features.auth.permissions import Capability, has_capability
 
+from . import abrechnung
 from .schemas import (
     BulkAssignRequest,
     BulkTaskRequest,
     ChecklistItemCreate,
     ChecklistItemToggle,
     ChecklistPhotoCreate,
+    DienstleistungPreis,
+    DienstleistungPreisListe,
+    DienstleistungPreisSetzen,
     InspectionDecision,
     InspectionItem,
     InventoryItemCreate,
@@ -813,3 +818,90 @@ def delete_task(
         service.delete_task(_tenant(ctx), task_id, ctx)
     except TaskError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+# --- Preise beauftragbarer Dienstleistungen (0531) --------------------------
+#
+# WARUM DIESE ROUTEN HIER LIEGEN: Der Preis wird beim ABSCHLUSS einer Aufgabe
+# gebraucht (`tasks.abrechnung.posten_anlegen`), also in diesem Slice. Der
+# Katalog selbst (`service_types`) gehoert dem Portal-Slice, weil dort
+# BESTELLT wird — gepflegt wird der Preis aber vom Betrieb.
+#
+# MANAGE_TASKS als Guard: wer Aufgaben verwaltet, verantwortet auch, was sie
+# kosten. Ein Eigentuemer hat die Faehigkeit nicht und darf den Preis, der ihm
+# berechnet wird, nicht selbst setzen (Wurzel 3/9).
+
+
+@router.get("/dienstleistung-preise", response_model=DienstleistungPreisListe)
+def list_dienstleistung_preise(
+    ctx: Annotated[AuthContext, Depends(_manage())],
+    db: Annotated[Client, Depends(get_service_client)],
+) -> DienstleistungPreisListe:
+    """Gepflegte Preise UND der Katalog — ein Typ ohne Preis bleibt sichtbar."""
+    tenant_id = _tenant(ctx)
+    typen = (
+        db.table("service_types")
+        .select("id, key, kategorie, aktiv, tenant_id")
+        .or_(f"tenant_id.is.null,tenant_id.eq.{tenant_id}")
+        .eq("aktiv", True)
+        .order("sortierung")
+        .execute()
+    ).data or []
+    return DienstleistungPreisListe(
+        preise=[
+            DienstleistungPreis(
+                id=str(z["id"]),
+                service_type_id=str(z["service_type_id"]),
+                property_id=str(z["property_id"]) if z.get("property_id") else None,
+                amount=float(z["amount"]),
+                currency=str(z["currency"]),
+                note=z.get("note"),
+            )
+            for z in abrechnung.preise_laden(db, tenant_id)
+        ],
+        typen=typen,
+    )
+
+
+@router.put("/dienstleistung-preise", response_model=DienstleistungPreis)
+def put_dienstleistung_preis(
+    req: DienstleistungPreisSetzen,
+    ctx: Annotated[AuthContext, Depends(_manage())],
+    db: Annotated[Client, Depends(get_service_client)],
+) -> DienstleistungPreis:
+    """Preis anlegen oder aendern. Idempotent (ein Preis je Ziel)."""
+    tenant_id = _tenant(ctx)
+    # Objekt-Ausnahme nur fuer EIGENE Objekte (Wurzel 3): die ID kommt aus dem
+    # Request und wird nie ungeprueft geschrieben.
+    if req.property_id:
+        load_scoped(
+            db, "properties", req.property_id, tenant_id,
+            not_found="Objekt nicht gefunden.",
+        )
+    zeile = abrechnung.preis_setzen(
+        db,
+        tenant_id=tenant_id,
+        service_type_id=req.service_type_id,
+        property_id=req.property_id,
+        amount=req.amount,
+        currency=req.currency,
+        note=req.note,
+    )
+    return DienstleistungPreis(
+        id=str(zeile["id"]),
+        service_type_id=str(zeile["service_type_id"]),
+        property_id=str(zeile["property_id"]) if zeile.get("property_id") else None,
+        amount=float(zeile["amount"]),
+        currency=str(zeile["currency"]),
+        note=zeile.get("note"),
+    )
+
+
+@router.delete("/dienstleistung-preise/{preis_id}", status_code=204)
+def delete_dienstleistung_preis(
+    preis_id: str,
+    ctx: Annotated[AuthContext, Depends(_manage())],
+    db: Annotated[Client, Depends(get_service_client)],
+) -> None:
+    """Preis entfernen. Danach entsteht fuer diese Leistung kein Posten mehr."""
+    if not abrechnung.preis_loeschen(db, tenant_id=_tenant(ctx), preis_id=preis_id):
+        raise HTTPException(status_code=404, detail="Preis nicht gefunden.")

@@ -210,6 +210,13 @@ class DienstleistungsService:
             "end_at": end_at.isoformat() if end_at else None,
             "due_at": (end_at or start_at).isoformat(),
             "source": "manual",
+            # DER EIGENTUEMER hat sie bestellt (0510/0531). Das Kennzeichen
+            # stand hier nicht und blieb auf `false`, obwohl genau dieser Pfad
+            # die Eigentuemer-Bestellung IST. Es entscheidet zweierlei: dass
+            # die Aufgabe auch bei einer Eigennutzung entsteht (0510) und dass
+            # sie beim Abschluss in die Abrechnung des Eigentuemers wandert
+            # (0531). Ohne es blieb die ausgefuehrte Leistung unberechnet.
+            "ordered_by_owner": True,
             "priority": 0,
         }
         row, neu = self._insert_idempotent(tenant_id, zeile, dedup)

@@ -51,6 +51,7 @@ from .sperrantrag_kollisionen import (
     konflikt_text,
     naechste_freie_spanne,
 )
+from .sperrantrag_vorgaenge import VorgaengeMixin
 
 log = get_logger("nextdays.sperrantraege")
 
@@ -87,6 +88,13 @@ MAX_SPERR_NAECHTE = 730
 GENEHMIGT = "genehmigt"
 ABGELEHNT = "abgelehnt"
 ZURUECKGENOMMEN = "zurueckgenommen"
+# Der Aufhebungswunsch wurde abgelehnt: die Sperrung BLEIBT. Eigene Konstante
+# und eigener Text, weil es fachlich das Gegenteil von `ZURUECKGENOMMEN` ist —
+# dort wird freigegeben, hier bleibt gesperrt. Bis 03.09.2026 meldete dieser
+# Uebergang GAR NICHTS: der Eigentuemer hatte um Freigabe gebeten und erfuhr
+# nie, dass sie abgelehnt wurde. Er sah im Portal weiter „beantragt" und
+# wartete auf eine Antwort, die schon gefallen war.
+AUFHEBUNG_ABGELEHNT = "aufhebung_abgelehnt"
 
 # Auditgrund für den Storno der Eigennutzung, wenn die Entscheidung keine
 # Anmerkung trägt. Bewusst ein interner Protokolltext und kein Kundentext: er
@@ -107,10 +115,25 @@ _ENTSCHEIDUNGS_TEXTE: dict[str, tuple[str, str]] = {
         "sperrantrag.entschieden_zurueckgenommen",
         "sperrantrag.rumpf_zurueckgenommen",
     ),
+    AUFHEBUNG_ABGELEHNT: (
+        "sperrantrag.entschieden_aufhebung_abgelehnt",
+        "sperrantrag.rumpf_aufhebung_abgelehnt",
+    ),
+}
+
+# Welche Notiz-Spalte den optionalen zweiten Absatz speist. Die Entscheidung
+# ueber den Antrag steht in `decision_note`, die ueber den Aufhebungswunsch in
+# `aufhebung_entscheidungsnotiz` — beide zu lesen waere falsch: der Eigentuemer
+# bekaeme zur Aufhebungs-Ablehnung die Begruendung von damals.
+_NOTIZ_SPALTE: dict[str, str] = {
+    GENEHMIGT: "decision_note",
+    ABGELEHNT: "decision_note",
+    ZURUECKGENOMMEN: "decision_note",
+    AUFHEBUNG_ABGELEHNT: "aufhebung_entscheidungsnotiz",
 }
 
 
-class SperrantragService:
+class SperrantragService(VorgaengeMixin):
     """Agentur-Sicht auf die Sperr-Anträge der Eigentümer."""
 
     def __init__(self, db: Client, calendar: CalendarService | None = None) -> None:
@@ -205,6 +228,7 @@ class SperrantragService:
             for r in rows
         ]
         return SperrantragListe(items=items, total=len(items))
+
 
     def _titel(self, tenant_id: str, property_ids: set[str]) -> dict[str, str]:
         """Objekttitel. `tenant_id` ist Pflicht — siehe `_namen` (Wurzel 3)."""
@@ -1080,12 +1104,17 @@ class SperrantragService:
                 status_code=409,
             )
         self._aufhebung_abschliessen(ctx, antrag_id, "abgelehnt", req.note)
+        neu = self._laden(ctx, antrag_id)
+        # Der Eigentuemer MUSS es erfahren: er hat um Freigabe gebeten, und
+        # die Antwort ist „nein". Ohne Meldung stand im Portal weiter
+        # „beantragt" und er wartete auf eine schon gefallene Entscheidung.
+        self._melde_entscheidung(ctx, neu, AUFHEBUNG_ABGELEHNT)
         log.info(
             "sperrantrag_aufhebung_abgelehnt",
             tenant_id=ctx.tenant_id,
             antrag_id=antrag_id,
         )
-        return self._einzel_item(self._laden(ctx, antrag_id), ctx)
+        return self._einzel_item(neu, ctx)
 
     def _vertragsende_widerrufen(
         self, ctx: AuthContext, antrag: dict
@@ -1326,7 +1355,7 @@ class SperrantragService:
             str(antrag["property_id"]), ""
         ) or str(antrag["property_id"])[:8]
         zeitraum = f"{antrag['start_date']} – {antrag['end_date']}"
-        notiz = str(antrag.get("decision_note") or "").strip()
+        notiz = str(antrag.get(_NOTIZ_SPALTE[entscheidung]) or "").strip()
         werte: dict[str, object] = {"titel": titel, "zeitraum": zeitraum}
         # Die Anmerkung ist OPTIONAL und darum ein zweiter Absatz, kein
         # Satzende im Rumpf: fehlt sie, darf kein leeres „Anmerkung:" dastehen.
@@ -1358,7 +1387,15 @@ class SperrantragService:
                 tenant_id=ctx.tenant_id,
                 property_id=str(antrag["property_id"]),
                 ziel_pfad="/portal/sperrungen",
-                dedup_key=f"block_decision:{antrag['id']}:{antrag.get('status')}",
+                # Die ENTSCHEIDUNG im Schluessel, nicht `status`: bei einer
+                # Aufhebungs-Entscheidung bleibt `status` auf 'approved'
+                # stehen. Ueber `status` waere die Ablehnung des
+                # Aufhebungswunsches also derselbe Schluessel wie die
+                # Genehmigung des Antrags von damals — sie waere am
+                # Unique-Index (0287) verschluckt worden, solange jene
+                # ungelesen ist, und das ist sie ohne Glocke im Portal immer
+                # (Wurzel 2: der Schluessel beschreibt das EREIGNIS).
+                dedup_key=f"block_decision:{antrag['id']}:{entscheidung}",
             )
         except Exception as exc:  # noqa: BLE001 — Nebenpfad, siehe Docstring
             log.warning(

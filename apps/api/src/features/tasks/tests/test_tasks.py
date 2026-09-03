@@ -1736,3 +1736,175 @@ def test_keine_ungeblockte_in_liste_im_slice() -> None:
     assert not treffer, (
         f"{len(treffer)} ungeblockte in_()-Liste(n) — `_in_bloecken` benutzen."
     )
+
+
+# --- Bestellte Leistung → Abrechnungsposten (0531, gemeldet 03.09.2026) -----
+
+
+class _PreisDb:
+    """Stub mit genau den Tabellen, die `abrechnung` anfasst."""
+
+    def __init__(self, **tabellen: list[dict]) -> None:
+        self.tabellen = {"service_type_prices": [], "owner_expenses": [],
+                         "owners": [], "tasks": [], **tabellen}
+        self.inserts: list[tuple[str, dict]] = []
+        self.updates: list[tuple[str, dict]] = []
+        self.deletes: list[str] = []
+
+    def table(self, name: str) -> "_PreisQ":
+        return _PreisQ(name, self)
+
+
+class _PreisQ:
+    def __init__(self, name: str, db: _PreisDb) -> None:
+        self._n = name
+        self._db = db
+        self._daten: list[dict] = list(db.tabellen.get(name, []))
+
+    def select(self, *_a, **_k) -> "_PreisQ":
+        return self
+
+    def insert(self, zeile: dict) -> "_PreisQ":
+        self._db.inserts.append((self._n, zeile))
+        self._daten = [{**zeile, "id": f"neu-{self._n}"}]
+        return self
+
+    def update(self, zeile: dict) -> "_PreisQ":
+        self._db.updates.append((self._n, zeile))
+        return self
+
+    def delete(self) -> "_PreisQ":
+        self._db.deletes.append(self._n)
+        return self
+
+    def __getattr__(self, name: str):
+        if name.startswith("_"):
+            raise AttributeError(name)
+        return lambda *_a, **_k: self
+
+    def execute(self):
+        return type("R", (), {"data": self._daten})()
+
+
+def _aufgabe(**over) -> dict:
+    basis = {
+        "id": "task-1",
+        "ordered_by_owner": True,
+        "owner_expense_id": None,
+        "service_type_id": "st-1",
+        "property_id": "prop-1",
+        "requested_by": "user-owner",
+        "title": "Endreinigung",
+        "completed_at": "2026-10-30T09:00:00+00:00",
+    }
+    return {**basis, **over}
+
+
+def test_ohne_preis_entsteht_kein_posten() -> None:
+    """Ein Posten mit 0,00 waere eine geschenkte Leistung (Wurzel 4).
+
+    Der Mangel wird laut protokolliert, aber die Abrechnung erfindet keinen
+    Betrag.
+    """
+    from src.features.tasks import abrechnung
+
+    db = _PreisDb(owners=[{"id": "own-1"}])
+    assert abrechnung.posten_anlegen(db, tenant_id="t-1", zeile=_aufgabe()) is None
+    assert not db.inserts
+
+
+def test_nur_eigentuemer_bestellungen_werden_berechnet() -> None:
+    """Eine gewoehnliche Betriebsaufgabe ist im Provisionsmodell enthalten."""
+    from src.features.tasks import abrechnung
+
+    db = _PreisDb(
+        owners=[{"id": "own-1"}],
+        service_type_prices=[{"property_id": None, "amount": "950", "currency": "DKK"}],
+    )
+    ergebnis = abrechnung.posten_anlegen(
+        db, tenant_id="t-1", zeile=_aufgabe(ordered_by_owner=False)
+    )
+    assert ergebnis is None
+    assert not db.inserts, "eine Betriebsaufgabe darf dem Eigentuemer nicht berechnet werden"
+
+
+def test_posten_traegt_abschlusstag_und_richtung() -> None:
+    """Der ABSCHLUSStag entscheidet die Abrechnungsperiode (Wurzel 5b)."""
+    from src.features.tasks import abrechnung
+
+    db = _PreisDb(
+        owners=[{"id": "own-1"}],
+        service_type_prices=[{"property_id": None, "amount": "950", "currency": "DKK"}],
+    )
+    abrechnung.posten_anlegen(db, tenant_id="t-1", zeile=_aufgabe())
+    posten = next(z for t, z in db.inserts if t == "owner_expenses")
+    assert posten["date"] == "2026-10-30", "nicht heute, sondern der Abschlusstag"
+    assert posten["direction"] == "from_owner"
+    assert posten["amount"] == "950"
+    assert posten["currency"] == "DKK"
+    assert posten["owner_id"] == "own-1"
+    assert "statement_id" not in posten, (
+        "der Posten haengt frei am Eigentuemer — eine schon verschickte "
+        "Abrechnung darf er nicht veraendern"
+    )
+
+
+def test_zweiter_abschluss_legt_keinen_zweiten_posten_an() -> None:
+    """Wurzel 2: Doppelklick, Redelivery, Nachlauf."""
+    from src.features.tasks import abrechnung
+
+    db = _PreisDb(
+        owners=[{"id": "own-1"}],
+        service_type_prices=[{"property_id": None, "amount": "950", "currency": "DKK"}],
+    )
+    assert abrechnung.posten_anlegen(
+        db, tenant_id="t-1", zeile=_aufgabe(owner_expense_id="exp-1")
+    ) is None
+    assert not db.inserts
+
+
+def test_objekt_ausnahme_schlaegt_betriebsregel() -> None:
+    """Dieselbe Vorrang-Regel wie bei den Gebuehren."""
+    from src.features.tasks import abrechnung
+
+    db = _PreisDb(service_type_prices=[
+        {"property_id": None, "amount": "950", "currency": "DKK"},
+        {"property_id": "prop-1", "amount": "1250", "currency": "DKK"},
+    ])
+    treffer = abrechnung.preis_finden(
+        db, tenant_id="t-1", service_type_id="st-1", property_id="prop-1"
+    )
+    assert treffer is not None and str(treffer[0]) == "1250"
+
+
+def test_abgerechneter_posten_bleibt_bei_ruecknahme_stehen() -> None:
+    """Eine fakturierte Zeile darf nicht ruecklings verschwinden (Wurzel 1)."""
+    from src.features.tasks import abrechnung
+
+    db = _PreisDb(owner_expenses=[{"id": "exp-1", "statement_id": "stmt-1"}])
+    assert abrechnung.posten_zuruecknehmen(
+        db, tenant_id="t-1", zeile={"id": "task-1", "owner_expense_id": "exp-1"}
+    ) is False
+    assert "owner_expenses" not in db.deletes
+
+
+def test_portal_bestellung_setzt_das_kennzeichen() -> None:
+    """Ohne `ordered_by_owner` blieb die bestellte Leistung unberechnet."""
+    from pathlib import Path
+
+    quelle = (
+        Path(__file__).resolve().parents[2]
+        / "public_portal" / "dienstleistungen.py"
+    ).read_text(encoding="utf-8")
+    assert '"ordered_by_owner": True' in quelle
+
+
+def test_abschluss_und_ruecknahme_haengen_am_abrechnungsmodul() -> None:
+    """Beide Tueren zu `done` fuehren durch die Abrechnung."""
+    from pathlib import Path
+
+    quelle = (
+        Path(__file__).resolve().parents[1] / "service.py"
+    ).read_text(encoding="utf-8")
+    assert "abrechnung.posten_anlegen(" in quelle
+    assert "abrechnung.posten_zuruecknehmen(" in quelle

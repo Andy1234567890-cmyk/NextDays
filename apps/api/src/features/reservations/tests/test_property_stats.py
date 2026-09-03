@@ -246,3 +246,141 @@ def test_metric_detail_count_metric_always_visible() -> None:
     # Zählmetrik ist auch ohne Betrags-Sicht sichtbar.
     assert detail.is_money is False and detail.visible is True
     assert sum(p.value for p in detail.series) == 3.0
+
+
+# ----------------------------------------------------------------------
+# Der Vergleichsanker: Vorperiode (Vorgabe) vs. Jahresvergleich
+# ----------------------------------------------------------------------
+
+
+def _stats(rows, *, vergleich_jahre=0):
+    return compute_property_stats(
+        property_id="p1",
+        property_title="Haus A",
+        rows=rows,
+        date_from=date(2026, 7, 1),
+        date_to=date(2026, 7, 31),
+        show_amounts=True,
+        vergleich_jahre=vergleich_jahre,
+    )
+
+
+def test_vergleich_vorgabe_bleibt_die_vorperiode() -> None:
+    """Ohne Parameter zeigt der Objekt-Reiter weiter den Juni, nicht den Vorjahr.
+
+    Der Regressionstest zum neuen Parameter: die bestehende Anzeige darf sich
+    durch seine Einführung NICHT verschoben haben.
+    """
+    rows = [
+        _res(created_at="2026-07-10T09:00:00Z", total_amount=200.0),
+        # Juni = unmittelbare Vorperiode
+        _res(created_at="2026-06-10T09:00:00Z", total_amount=100.0),
+        # Juli 2025 = Jahresvergleich, hier NICHT der Anker
+        _res(created_at="2025-07-10T09:00:00Z", total_amount=999.0),
+    ]
+    stats = _stats(rows)
+    # 200 gegen 100 = +100 %
+    assert stats.revenue.change_pct == 100.0
+
+
+def test_vergleich_ein_jahr_ankert_auf_dem_vorjahr() -> None:
+    """Mit `vergleich_jahre=1` ist der Juni egal — verglichen wird Juli 2025."""
+    rows = [
+        _res(created_at="2026-07-10T09:00:00Z", total_amount=200.0),
+        _res(created_at="2026-06-10T09:00:00Z", total_amount=100.0),
+        _res(created_at="2025-07-10T09:00:00Z", total_amount=400.0),
+    ]
+    stats = _stats(rows, vergleich_jahre=1)
+    # 200 gegen 400 = -50 %
+    assert stats.revenue.change_pct == -50.0
+
+
+def test_vergleich_fuenf_jahre_trifft_2021() -> None:
+    rows = [
+        _res(created_at="2026-07-10T09:00:00Z", total_amount=300.0),
+        _res(created_at="2021-07-10T09:00:00Z", total_amount=150.0),
+        # Dazwischenliegende Jahre dürfen den Anker nicht verschieben.
+        _res(created_at="2023-07-10T09:00:00Z", total_amount=9999.0),
+    ]
+    stats = _stats(rows, vergleich_jahre=5)
+    assert stats.revenue.change_pct == 100.0
+
+
+# ----------------------------------------------------------------------
+# Kanal-Donut: eine Zeile je Kanal, nicht je Schreibweise
+# ----------------------------------------------------------------------
+
+
+def test_donut_fasst_schreibweisen_desselben_portals_zusammen() -> None:
+    """`BookingCom` und `Booking.com` sind EIN Kanal, nicht zwei.
+
+    DER FEHLER, den das verhindert (gemeldet 03.09.2026, gemessen am
+    Beta-Betrieb): Channex liefert je nach Alter des Datensatzes verschiedene
+    Schreibweisen — live 255 × „Booking.com" gegen 52 × „BookingCom" und
+    276 × „Airbnb" gegen 28 × „AirBNB". Nach `ota_name` gruppiert erschien
+    Booking.com ZWEIMAL im Donut, mit geteiltem Umsatz und zwei Segmenten,
+    die beide „Booking.com" hießen.
+    """
+    rows = [
+        _res(created_at="2026-07-05T09:00:00Z", channel="booking",
+             ota_name="Booking.com", total_amount=100.0),
+        _res(created_at="2026-07-06T09:00:00Z", channel="booking",
+             ota_name="Booking.com", total_amount=200.0),
+        _res(created_at="2026-07-07T09:00:00Z", channel="booking",
+             ota_name="BookingCom", total_amount=300.0),
+        _res(created_at="2026-07-08T09:00:00Z", channel="airbnb",
+             ota_name="AirBNB", total_amount=50.0),
+    ]
+    stats = compute_property_stats(
+        property_id="p1",
+        property_title="Haus A",
+        rows=rows,
+        date_from=date(2026, 7, 1),
+        date_to=date(2026, 7, 31),
+        show_amounts=True,
+    )
+    kanaele = {c.channel: c for c in stats.by_channel}
+    assert set(kanaele) == {"booking", "airbnb"}, "eine Zeile je KANAL"
+    assert kanaele["booking"].amount == 600.0, "alle drei Buchungen in einer Zeile"
+    assert kanaele["airbnb"].amount == 50.0
+
+
+def test_donut_beschriftet_mit_der_haeufigsten_schreibweise() -> None:
+    """Nicht die erstbeste — sonst entschiede die Zeilenreihenfolge den Namen."""
+    rows = [
+        # Die seltene Variante steht ZUERST in der Liste.
+        _res(created_at="2026-07-05T09:00:00Z", channel="booking",
+             ota_name="BookingCom", total_amount=10.0),
+        _res(created_at="2026-07-06T09:00:00Z", channel="booking",
+             ota_name="Booking.com", total_amount=10.0),
+        _res(created_at="2026-07-07T09:00:00Z", channel="booking",
+             ota_name="Booking.com", total_amount=10.0),
+    ]
+    stats = compute_property_stats(
+        property_id="p1",
+        property_title="Haus A",
+        rows=rows,
+        date_from=date(2026, 7, 1),
+        date_to=date(2026, 7, 31),
+        show_amounts=True,
+    )
+    assert stats.by_channel[0].ota_name == "Booking.com"
+
+
+def test_donut_ohne_portalnamen_behaelt_den_kanal() -> None:
+    """Direktbuchungen tragen keinen `ota_name` — die Zeile bleibt trotzdem."""
+    rows = [
+        _res(created_at="2026-07-05T09:00:00Z", channel="direct",
+             ota_name=None, total_amount=80.0),
+    ]
+    stats = compute_property_stats(
+        property_id="p1",
+        property_title="Haus A",
+        rows=rows,
+        date_from=date(2026, 7, 1),
+        date_to=date(2026, 7, 31),
+        show_amounts=True,
+    )
+    assert len(stats.by_channel) == 1
+    assert stats.by_channel[0].channel == "direct"
+    assert stats.by_channel[0].ota_name is None

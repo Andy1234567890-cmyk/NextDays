@@ -46,6 +46,7 @@ from src.features.notification_settings.ereignisse import (
     melde_vertretung_gesucht,
 )
 
+from . import abrechnung
 from .engine import (
     materialize_recurring,
     nachziehen_planmaessig,
@@ -1533,6 +1534,31 @@ class TasksService:
             patch["completed_at"] = None
             patch["completed_by"] = None
             patch["inspection_state"] = None
+            # UND den Abrechnungsposten (0531): eine Leistung, die nicht mehr
+            # als erledigt gilt, darf dem Eigentuemer nicht berechnet bleiben.
+            # Nur der eigene Posten, und nur solange er in keiner
+            # festgeschriebenen Abrechnung steckt — das entscheidet
+            # `posten_zuruecknehmen`. Der `owner_expense_id` wird dort
+            # mitgeloest, deshalb steht er NICHT in diesem Patch.
+            try:
+                zeile = (
+                    self._db()
+                    .table("tasks")
+                    .select("id, owner_expense_id")
+                    .eq("id", task_id)
+                    .eq("tenant_id", tenant_id)
+                    .limit(1)
+                    .execute()
+                ).data or []
+                if zeile:
+                    abrechnung.posten_zuruecknehmen(
+                        self._db(), tenant_id=tenant_id, zeile=zeile[0]
+                    )
+            except Exception as exc:  # noqa: BLE001 — Nebenpfad wie oben
+                log.error(
+                    "dienstleistung_posten_ruecknahme_fehlgeschlagen",
+                    task_id=task_id, error=str(exc)[:200],
+                )
         self._db().table("tasks").update(patch).eq("id", task_id).eq(
             "tenant_id", tenant_id
         ).execute()
@@ -2041,6 +2067,21 @@ class TasksService:
             task_id=task_id,
             zeile=res.data[0],
         )
+        # Und sie wird ihm BERECHNET (0531). Bis hierher endete die Kette mit
+        # der Meldung: die bestellte Leistung war erledigt, stand aber in
+        # keiner Abrechnung — ausgefuehrte Arbeit, die niemand fakturiert.
+        # Best-effort wie die Meldung daneben: der Abschluss ist der
+        # Hauptpfad, jeder Grund fuer einen fehlenden Posten steht im Log
+        # (Wurzel 5, kein stilles Verschlucken).
+        try:
+            abrechnung.posten_anlegen(
+                self._db(), tenant_id=tenant_id, zeile=res.data[0]
+            )
+        except Exception as exc:  # noqa: BLE001 — Nebenpfad, siehe Docstring
+            log.error(
+                "dienstleistung_posten_fehlgeschlagen",
+                task_id=task_id, error=str(exc)[:200],
+            )
         return self.get_detail(tenant_id, task_id, ctx)
 
     def list_inspection(

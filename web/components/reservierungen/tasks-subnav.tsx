@@ -33,6 +33,9 @@ const TAB_SLUGS = [
   "vorlagen",
   "planmaessig",
   "regelmaessig",
+  // Preise der bestellbaren Dienstleistungen (0531): sie entscheiden, was
+  // eine vom Eigentuemer bestellte Leistung in seiner Abrechnung kostet.
+  "dienstleistungen",
 ] as const;
 
 const TAB_KEYS: Record<(typeof TAB_SLUGS)[number], string> = {
@@ -44,6 +47,7 @@ const TAB_KEYS: Record<(typeof TAB_SLUGS)[number], string> = {
   vorlagen: "tabs.vorlagen",
   planmaessig: "tabs.planmaessig",
   regelmaessig: "tabs.regelmaessig",
+  dienstleistungen: "tabs.dienstleistungen",
 };
 
 export function TasksSubnav() {

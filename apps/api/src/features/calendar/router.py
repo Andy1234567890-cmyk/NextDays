@@ -24,6 +24,7 @@ from .schemas import (
     BulkEditResult,
     DateRange,
     DayAvailability,
+    EigentuemerVorgaenge,
     FreieEinheitenResponse,
     MultiRestrictionRowsRequest,
     PriceOverrideRequest,
@@ -536,6 +537,26 @@ def list_block_requests(
     (`pending` ist die Warteschlange)."""
     try:
         return service.liste(ctx, status=status_filter)
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/block-requests/vorgaenge", response_model=EigentuemerVorgaenge)
+def block_request_vorgaenge(
+    service: SperrantragServiceDep,
+    ctx: Annotated[CurrentUser, Depends(_APPROVE)],
+) -> EigentuemerVorgaenge:
+    """Die drei Bestaende der Eigentuemer-Vorgaenge fuer die Startseite.
+
+    VOR `/block-requests/{request_id}/...`: sonst faengt die Pfad-Variable
+    „vorgaenge" ein und der Dienst suchte einen Antrag mit dieser ID (404).
+
+    Derselbe Guard wie die Warteschlange (`APPROVE_BLOCK`) — die Zahl sagt
+    aus, wie viele Entscheidungen anstehen, und ist damit dieselbe Auskunft
+    wie die Liste selbst (Wurzel 9: gleicher Scope wie der List-Pfad).
+    """
+    try:
+        return service.vorgaenge(ctx)
     except CalendarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

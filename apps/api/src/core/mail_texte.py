@@ -2798,6 +2798,82 @@ TEXTE: dict[str, dict[str, str]] = {
     # Anmerkung/Begründung hängen als eigener Absatz an den Rumpf. Eigener
     # Schlüssel statt eines Satzendes im Rumpf, weil sie OPTIONAL sind: fehlt
     # die Notiz, darf kein leeres „Anmerkung:" dastehen.
+    "sperrantrag.entschieden_aufhebung_abgelehnt": {
+        "bg": "Отмяната е отказана: {titel}",
+        "cs": "Zrušení zamítnuto: {titel}",
+        "da": "Annullering afvist: {titel}",
+        "de": "Aufhebung abgelehnt: {titel}",
+        "el": "Απόρριψη άρσης αποκλεισμού: {titel}",
+        "en": "Cancellation denied: {titel}",
+        "es": "Cancelación rechazada: {titel}",
+        "et": "Tühistamine tagasi lükatud: {titel}",
+        "fi": "Estämisen poisto hylätty: {titel}",
+        "fr": "Annulation refusée : {titel}",
+        "ga": "Cealadh diúltaithe: {titel}",
+        "hr": "Otkazivanje odbijeno: {titel}",
+        "hu": "Feloldás elutasítva: {titel}",
+        "it": "Cancellazione rifiutata: {titel}",
+        "lt": "Atšaukimas atmestas: {titel}",
+        "lv": "Atcelšana noraidīta: {titel}",
+        "mt": "Kanċellazzjoni rrifjutata: {titel}",
+        "nl": "Annulering geweigerd: {titel}",
+        "pl": "Anulowanie odrzucone: {titel}",
+        "pt": "Cancelamento recusado: {titel}",
+        "ro": "Anulare refuzată: {titel}",
+        "sk": "Zrušenie zamietnuté: {titel}",
+        "sl": "Preklic zavrnjena: {titel}",
+        "sv": "Avbokning nekad: {titel}",
+    },
+    "sperrantrag.rumpf_aufhebung_abgelehnt": {
+        "bg": "Заявката Ви за отмяна на блокирането за {titel} ({zeitraum}) беше "
+              "отказана. Блокирането остава.",
+        "cs": "Váš požadavek na zrušení blokace pro {titel} ({zeitraum}) byl zamítnut. "
+              "Blokace zůstává v platnosti.",
+        "da": "Din anmodning om at annullere blokeringen for {titel} ({zeitraum}) er "
+              "blevet afvist. Blokeringen forbliver aktiv.",
+        "de": "Ihr Wunsch, die Sperrung für {titel} ({zeitraum}) aufzuheben, wurde "
+              "abgelehnt. Die Sperrung bleibt bestehen.",
+        "el": "Το αίτημά σας για άρση αποκλεισμού για το {titel} ({zeitraum}) "
+              "απορρίφθηκε. Ο αποκλεισμός παραμένει σε ισχύ.",
+        "en": "Your request to cancel the block for {titel} ({zeitraum}) has been "
+              "denied. The block remains in place.",
+        "es": "Su solicitud de cancelar el bloqueo de {titel} ({zeitraum}) ha sido "
+              "rechazada. El bloqueo permanece activo.",
+        "et": "Teie taotlus tühistada broneeringu blokeering {titel} ({zeitraum}) "
+              "lükati tagasi. Blokeering jääb kehtima.",
+        "fi": "Pyyntösi poistaa estäminen kohteesta {titel} ({zeitraum}) on hylätty. "
+              "Estäminen pysyy voimassa.",
+        "fr": "Votre demande d'annulation du blocage pour {titel} ({zeitraum}) a été "
+              "refusée. Le blocage reste en place.",
+        "ga": "Diúltaíodh d'iarratas chun an bac ar {titel} ({zeitraum}) a chealú. "
+              "Fanann an bac i bhfeidhm.",
+        "hr": "Vaš zahtjev za otkazivanje blokade za {titel} ({zeitraum}) je odbijen. "
+              "Blokada ostaje na snazi.",
+        "hu": "A(z) {titel} ({zeitraum}) zárolásának feloldására irányuló kérését "
+              "elutasítottuk. A zárolás érvényben marad.",
+        "it": "La sua richiesta di cancellare il blocco per {titel} ({zeitraum}) è "
+              "stata rifiutata. Il blocco rimane attivo.",
+        "lt": "Jūsų prašymas atšaukti blokavimą {titel} ({zeitraum}) buvo atmestas. "
+              "Blokavimas lieka galioti.",
+        "lv": "Jūsu pieprasījums atcelt bloķēšanu {titel} ({zeitraum}) tika noraidīts. "
+              "Bloķēšana paliek spēkā.",
+        "mt": "It-talba tiegħek biex tneħħi l-imblokk għal {titel} ({zeitraum}) ġiet "
+              "irrifjutata. L-imblokk jibqa' fis-seħħ.",
+        "nl": "Uw verzoek om de blokkering voor {titel} ({zeitraum}) op te heffen, is "
+              "geweigerd. De blokkering blijft bestaan.",
+        "pl": "Państwa prośba o anulowanie blokady dla {titel} ({zeitraum}) została "
+              "odrzucona. Blokada pozostaje aktywna.",
+        "pt": "O seu pedido para cancelar o bloqueio de {titel} ({zeitraum}) foi "
+              "recusado. O bloqueio permanece ativo.",
+        "ro": "Solicitarea dumneavoastră de a anula blocarea pentru {titel} "
+              "({zeitraum}) a fost refuzată. Blocarea rămâne activă.",
+        "sk": "Vaša žiadosť o zrušenie blokovania pre {titel} ({zeitraum}) bola "
+              "zamietnutá. Blokovanie zostáva v platnosti.",
+        "sl": "Vaša zahteva za preklic blokade za {titel} ({zeitraum}) je bila "
+              "zavrnjena. Blokada ostaja v veljavi.",
+        "sv": "Din begäran om att avboka blockeringen för {titel} ({zeitraum}) har "
+              "nekats. Blockeringen kvarstår.",
+    },
     "sperrantrag.anmerkung": {
         "bg": "Забележка: {notiz}",
         "cs": "Poznámka: {notiz}",

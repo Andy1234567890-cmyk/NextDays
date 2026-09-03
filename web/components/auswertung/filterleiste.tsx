@@ -14,7 +14,8 @@ import { useTranslations } from "next-intl";
 import { DatePicker } from "@nextdays/ui/date-picker";
 import { MultiSelect } from "@nextdays/ui/multi-select";
 import { NativeSelect } from "@nextdays/ui/native-select";
-import type { Bezug } from "@/lib/auswertung-typen";
+import type { Bezug, Vergleich } from "@/lib/auswertung-typen";
+import { VERGLEICHE } from "@/lib/auswertung-typen";
 
 export type FilterStand = {
   von: string;
@@ -22,7 +23,33 @@ export type FilterStand = {
   bezug: Bezug;
   propertyIds: string[];
   channels: string[];
+  vergleich: Vergleich;
 };
+
+/** Ab welcher Zeitraumlänge das Backend den Vergleich ablehnt (422).
+ *
+ *  Muss zu `MAX_TAGE_VERGLEICH` in `apps/api/.../auswertung/service.py`
+ *  passen: ein Vergleich rechnet den ganzen Bericht zweimal, ein 5-Jahres-
+ *  Zeitraum wäre damit der doppelte Vollscan. Die Oberfläche sperrt die
+ *  Auswahl deshalb VORHER und sagt warum — einen 422 abzuwarten hieße, den
+ *  Nutzer gegen eine Wand laufen zu lassen. */
+const MAX_TAGE_VERGLEICH = 366;
+
+function spanneTage(von: string, bis: string): number {
+  const a = Date.parse(von);
+  const b = Date.parse(bis);
+  if (Number.isNaN(a) || Number.isNaN(b)) return 0;
+  return Math.round((b - a) / 86_400_000);
+}
+
+/** Ob der Zeitraum kurz genug für einen Vergleich ist.
+ *
+ *  Exportiert, weil die SEITE sie ebenfalls braucht: sie muss den Vergleich
+ *  zurücksetzen, wenn der Zeitraum wächst — sonst zeigt die Leiste „kein
+ *  Vergleich" und gesendet wird trotzdem „1j". */
+export function vergleichMoeglich(von: string, bis: string): boolean {
+  return spanneTage(von, bis) <= MAX_TAGE_VERGLEICH;
+}
 
 /** Schnellwahl-Zeiträume. `monat` ist die Vorgabe — die Seite heißt
  *  „Auswertung", der Regelfall ist der laufende Monat. */
@@ -72,6 +99,11 @@ export function Filterleiste({
       const z = zeitraum(s);
       return z && z.von === stand.von && z.bis === stand.bis;
     }) ?? "frei";
+  // Über einem Jahr Zeitraum lehnt das Backend den Vergleich ab (doppelter
+  // Vollscan). Die Auswahl wird dann gesperrt UND begründet, statt den 422
+  // erst nach dem Klick zu zeigen.
+  const vergleichGesperrt = !vergleichMoeglich(stand.von, stand.bis);
+
   const BEZUEGE: readonly Bezug[] = [
     "anreise",
     "abreise",
@@ -152,6 +184,30 @@ export function Filterleiste({
           </NativeSelect>
         </label>
 
+        {/* Der Vergleichszeitraum. Steht neben dem Bezug, weil beide
+            dasselbe tun: sie ändern, WORAUF sich jede Zahl der Seite
+            bezieht — nur der eine zeitlich innerhalb, der andere über Jahre
+            hinweg. */}
+        <label className="flex flex-col gap-1">
+          <span className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
+            <Icon icon="ph:chart-line" className="size-3.5" />
+            {t("filter.compare")}
+          </span>
+          <NativeSelect
+            value={vergleichGesperrt ? "keiner" : stand.vergleich}
+            disabled={vergleichGesperrt}
+            onChange={(e) =>
+              setzen({ ...stand, vergleich: e.target.value as Vergleich })
+            }
+          >
+            {VERGLEICHE.map((v) => (
+              <option key={v} value={v}>
+                {t(`compare.${v}`)}
+              </option>
+            ))}
+          </NativeSelect>
+        </label>
+
         <div className="flex min-w-48 flex-col gap-1">
           <span className="text-xs font-medium text-muted-foreground">
             {t("filter.properties")}
@@ -183,6 +239,9 @@ export function Filterleiste({
       <p className="text-xs text-muted-foreground">
         {t(`basisHint.${stand.bezug}`)}
       </p>
+      {vergleichGesperrt && (
+        <p className="text-xs text-muted-foreground">{t("compareLocked")}</p>
+      )}
     </div>
   );
 }

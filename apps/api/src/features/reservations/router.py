@@ -116,6 +116,38 @@ def dashboard_liste(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+#: Längster Zeitraum, den ein Statistik-Endpunkt auswertet.
+#:
+#: Wurzel 8: `reads._stats_untergrenze` lädt Zeilen ab
+#: `date_from − Spanne × (COMPARE_PERIODS + 1)` — das Ladefenster wächst also
+#: mit dem FÜNFFACHEN des angefragten Zeitraums. Ohne Deckel zog eine Anfrage
+#: über sieben Jahre das Fenster bis 1984 auf (gemessen 03.09.2026); mit
+#: `vergleich_jahre=5` kommt der Jahressprung noch obendrauf. Die Grenze
+#: entspricht der des Auswertungs-Slice (`auswertung.service.MAX_TAGE`), damit
+#: beide Statistik-Wege dieselbe Zusage machen.
+MAX_STATS_TAGE = 1830  # 5 Jahre
+
+
+def _stats_zeitraum(
+    date_from: date | None, date_to: date | None
+) -> tuple[date, date]:
+    """Zeitraum der Statistik-Endpunkte — mit Vorgabe und harter Obergrenze.
+
+    Gemeinsam für alle drei, damit die Grenze nicht an zwei von drei Stellen
+    steht und der dritte Endpunkt sie still umgeht.
+    """
+    heute = date.today()
+    ende = date_to or heute
+    start = date_from or (ende - timedelta(days=29))
+    if ende < start:
+        raise HTTPException(422, "„Bis“ darf nicht vor „Von“ liegen.")
+    if (ende - start).days > MAX_STATS_TAGE:
+        raise HTTPException(
+            422, "Der Zeitraum darf höchstens 5 Jahre umfassen."
+        )
+    return start, ende
+
+
 @router.get("/stats", response_model=PropertyStats)
 def tenant_stats(
     service: ReservationsServiceDep,
@@ -123,16 +155,22 @@ def tenant_stats(
     date_from: Annotated[date | None, Query()] = None,
     date_to: Annotated[date | None, Query()] = None,
     property_id: Annotated[list[str] | None, Query()] = None,
+    vergleich_jahre: Annotated[int, Query(ge=0, le=5)] = 0,
 ) -> PropertyStats:
     """Globale Kontrollzentrum-Kennzahlen: zusammengefasst über ALLE (owner-
     sichtbaren) Objekte des Tenants. `property_id` (wiederholbar) filtert auf
     ausgewählte Objekte („Ausgewählte Unterkünfte"). Ohne Zeitraum: letzte 30
-    Tage. Beträge maskiert; Belegungsrate durch die Objektanzahl geteilt."""
-    today = date.today()
-    end = date_to or today
-    start = date_from or (end - timedelta(days=29))
+    Tage. Beträge maskiert; Belegungsrate durch die Objektanzahl geteilt.
+
+    `vergleich_jahre` (0/1/2/5) verschiebt den Anker jeder Veränderungsrate von
+    der Vorperiode auf denselben Zeitraum vor so vielen Jahren. `ge/le` deckelt
+    den Wert hart: ohne Grenze zöge ein beliebiger Wert das Ladefenster
+    unbegrenzt weit auf (Wurzel 8)."""
+    start, end = _stats_zeitraum(date_from, date_to)
     try:
-        return service.tenant_stats(ctx, start, end, property_id)
+        return service.tenant_stats(
+            ctx, start, end, property_id, vergleich_jahre=vergleich_jahre
+        )
     except ReservationError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -149,9 +187,7 @@ def tenant_metric_detail(
     """KPI-Detailseite (Kontrollzentrum „ANSEHEN") tenant-weit: Tagesreihe +
     Vergleichsperioden + Breakout für EINE Metrik über alle (gefilterten)
     Objekte. Ohne Zeitraum: letzte 30 Tage."""
-    today = date.today()
-    end = date_to or today
-    start = date_from or (end - timedelta(days=29))
+    start, end = _stats_zeitraum(date_from, date_to)
     try:
         return service.tenant_metric_detail(ctx, metric, start, end, property_id)
     except ReservationError as exc:
@@ -168,9 +204,7 @@ def property_stats(
 ) -> PropertyStats:
     """Objekt-Kennzahlen für den Statistiken-Reiter. Ohne Zeitraum: letzte 30
     Tage (inkl. heute). Owner-scoped; Beträge maskiert."""
-    today = date.today()
-    end = date_to or today
-    start = date_from or (end - timedelta(days=29))
+    start, end = _stats_zeitraum(date_from, date_to)
     try:
         return service.property_stats(ctx, property_id, start, end)
     except ReservationError as exc:
@@ -192,9 +226,7 @@ def property_metric_detail(
     """KPI-Detailseite (Klick auf eine Statistik-Kachel): Tagesreihe + vier
     gleich lange Vergleichsperioden davor + Breakout-Matrix für EINE Kennzahl.
     Ohne Zeitraum: letzte 30 Tage. Owner-scoped; Geldmetriken maskiert."""
-    today = date.today()
-    end = date_to or today
-    start = date_from or (end - timedelta(days=29))
+    start, end = _stats_zeitraum(date_from, date_to)
     try:
         title, detail = service.property_metric_detail(
             ctx, property_id, metric, start, end
