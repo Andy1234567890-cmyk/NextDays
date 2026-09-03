@@ -58,6 +58,14 @@ class Kategorie:
     # noetig: Buchungsbestaetigungen, Richtlinien, Konto-Sicherheit).
     # Airbnb zeigt den Schalter dort ausgegraut-an.
     email_pflicht: bool = False
+    # In WELCHER App ein Push dieser Kategorie landet (ADR-0019/0022). Ein Push
+    # erreicht ein GERAET, nicht ein Konto — dieselbe Person kann Verwaltungs-
+    # und Eigentuemer-App installiert haben, und die Meldung gehoert genau in
+    # eine davon. Steht hier und nicht im Versandpfad, weil die Zustaendigkeit
+    # eine Eigenschaft der Kategorie ist: wer eine neue anlegt, entscheidet sie
+    # in derselben Zeile mit. Aus dem Schluesselnamen ableiten waere falsch —
+    # `block_decision` geht an den Eigentuemer und traegt kein `owner_`.
+    push_app: str = "mynextdays"
 
     def spalte(self, kanal: Kanal) -> str:
         return f"{self.schluessel}_{kanal.value}"
@@ -74,6 +82,10 @@ _MAIL_SMS_PUSH = (Kanal.EMAIL, Kanal.SMS, Kanal.PUSH)
 # Mail + Push ohne SMS. Fuer Meldungen, die den Betrieb schnell erreichen
 # sollen, aber keine SMS wert sind.
 _MAIL_PUSH = (Kanal.EMAIL, Kanal.PUSH)
+# Die Eigentuemer-App (ADR-0022). Steht als Konstante da, damit ein Tippfehler
+# im String nicht erst beim Versand auffaellt — dort waere er stumm: ein
+# unbekannter Wert findet einfach kein Geraet.
+_OWNER_APP = "mynextdaysowner"
 
 KATALOG: tuple[Kategorie, ...] = (
     # --- Tab „Angebote und Updates" (Marketing) --------------------------
@@ -114,8 +126,18 @@ KATALOG: tuple[Kategorie, ...] = (
     Kategorie("task_substitution", Tab.KONTO, "aufgaben", _MAIL_SMS_PUSH),
     # E-Mail Pflicht: Buchung/Aenderung/Storno am eigenen Objekt ist die
     # vertragliche Kerninformation des Eigentuemers (wie guest_policies).
-    Kategorie("owner_booking", Tab.KONTO, "aktivitaet", _MAIL_SMS, email_pflicht=True),
-    Kategorie("owner_service", Tab.KONTO, "aufgaben", _MAIL_SMS),
+    # PUSH seit ADR-0022, weil es jetzt eine Eigentuemer-App gibt, die ihn
+    # empfangen kann. `push_app` MUSS mitgesetzt werden: ohne das ginge die
+    # Meldung an Geraete der Verwaltungs-App (Default) — also an ein Telefon,
+    # auf dem der Eigentuemer gar nicht angemeldet ist.
+    Kategorie(
+        "owner_booking", Tab.KONTO, "aktivitaet", _MAIL_SMS_PUSH,
+        email_pflicht=True, push_app=_OWNER_APP,
+    ),
+    Kategorie(
+        "owner_service", Tab.KONTO, "aufgaben", _MAIL_SMS_PUSH,
+        push_app=_OWNER_APP,
+    ),
     # --- Betrieb: Buchungseingang (16.08.2026) ----------------------------
     # Wieder eine eigene Kategorie und kein Mitbenutzen von `owner_booking` —
     # aus demselben Grund wie oben, dem EMPFAENGER: `owner_booking` geht an den
@@ -144,7 +166,13 @@ KATALOG: tuple[Kategorie, ...] = (
     # taeglich Antraege bearbeitet, darf den Mail-Kanal abwaehlen — die Glocke
     # bleibt ohnehin an.
     Kategorie("block_request", Tab.KONTO, "aktivitaet", _MAIL_SMS),
-    Kategorie("block_decision", Tab.KONTO, "aktivitaet", _MAIL_SMS),
+    # An den ANTRAGSTELLENDEN Eigentuemer, darum `push_app` wie bei owner_*.
+    # Der Schluessel traegt kein `owner_`-Praefix — ein Ableiten aus dem Namen
+    # haette diese Kategorie an die falsche App geschickt.
+    Kategorie(
+        "block_decision", Tab.KONTO, "aktivitaet", _MAIL_SMS_PUSH,
+        push_app=_OWNER_APP,
+    ),
     # --- Stufe 1 der Freigabe (0389) --------------------------------------
     # Dritte Kategorie aus demselben Grund wie die beiden darueber: ein
     # anderer EMPFAENGER. Diese geht an den EIGENTUEMER, dessen Familie eine

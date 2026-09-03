@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Release-Keystore für eine der beiden Apps erzeugen — EINMALIG, danach nie wieder.
+# Release-Keystore für eine der drei Apps erzeugen — EINMALIG, danach nie wieder.
 #
 # WARUM DAS EIN EIGENES SKRIPT IST: Der Keystore ist unersetzlich. Android bindet
 # die Identität einer App an ihren Signatur-Schlüssel; ein verlorener Keystore
@@ -20,10 +20,17 @@
 set -euo pipefail
 
 app="${1:-}"
-if [[ "$app" != "mobile-nextdays" && "$app" != "mobile-bestdays" ]]; then
-  echo "Aufruf: $0 <mobile-nextdays|mobile-bestdays>" >&2
-  exit 2
-fi
+# Drei Apps seit ADR-0022. Eine Allowlist und keine Prüfung auf „Ordner
+# existiert": ein Tippfehler soll hier abbrechen, nicht einen Schlüssel unter
+# falschem Namen anlegen — der wäre später von einem echten nicht zu
+# unterscheiden.
+case "$app" in
+  mobile-nextdays|mobile-bestdays|mobile-owner) ;;
+  *)
+    echo "Aufruf: $0 <mobile-nextdays|mobile-bestdays|mobile-owner>" >&2
+    exit 2
+    ;;
+esac
 
 # Die App-ID gehört zum Schlüssel, nicht zum Skript — sie steht in build.gradle.
 wurzel="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -40,6 +47,7 @@ app_id="$(sed -n 's/.*applicationId "\([^"]*\)".*/\1/p' "$gradle" | head -1)"
 case "$app" in
   mobile-nextdays) praefix="MYNEXTDAYS" ;;
   mobile-bestdays) praefix="MYBESTDAYS" ;;
+  mobile-owner)    praefix="MYNEXTDAYSOWNER" ;;
 esac
 
 ziel_ordner="$HOME/.keystores"

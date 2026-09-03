@@ -547,10 +547,10 @@ jobs:
         if: steps.pruefen.outputs.laufen == 'true'
         run: node scripts/i18n/pruefe-uebersetzungen.mjs web
 
-  # Die beiden Mobile-Apps (ADR-0019) hängen nicht am Wurzel-Workspace (React
+  # Die drei Mobile-Apps (ADR-0019/ADR-0022) hängen nicht am Wurzel-Workspace (React
   # Native braucht sein eigenes, nicht gehobenes node_modules — deshalb hat jede
   # App ein eigenes bun.lock), nutzen aber denselben Paketmanager. Matrix statt
-  # zwei Jobs: der Job-NAME `mobile` bleibt, damit die needs-Kette des
+  # drei Jobs: der Job-NAME `mobile` bleibt, damit die needs-Kette des
   # deploy-Jobs unverändert gilt.
   mobile:
     name: Mobile (${{ matrix.app }})
@@ -559,7 +559,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [mobile-bestdays, mobile-nextdays]
+        app: [mobile-bestdays, mobile-nextdays, mobile-owner]
     defaults:
       run:
         working-directory: ${{ matrix.app }}
@@ -811,14 +811,38 @@ jobs:
           # Release eine ruhige Meldung, KEIN Stacktrace. Driftet eine der
           # Apps, zeigt genau sie dem Kunden interne Pfade. Das ist kein
           # UI-Geschmack (ADR-0016), sondern ein Zustand.
+          #
+          # DREI Apps seit ADR-0022 (mobile-owner). Verglichen wird jede App
+          # gegen mobile-bestdays als Referenz — paarweise waere die dritte
+          # unbemerkt gedriftet, solange die ersten zwei sich decken.
+          #
+          # `lib/datei.ts` steht in der ZWEITEN Liste: mobile-owner fuehrt sie
+          # bewusst NICHT (die App laedt nichts hoch, also traegt sie auch den
+          # Dateiwaehler nicht als natives Modul). Wer sie dort ergaenzt, muss
+          # `@react-native-documents/picker` mitliefern — sonst bricht JEDER
+          # Test, der die Datei in der Importkette hat.
+          set -e
           for f in lib/currency.ts lib/realtime.ts lib/config.ts \
                    lib/config.secrets.example.ts lib/appwechsel.ts \
                    lib/ausstattung.ts lib/absturzmeldung.ts \
-                   lib/datei.ts components/Fehlergrenze.tsx \
+                   components/Fehlergrenze.tsx \
                    theme/tokens.ts theme/ThemeProvider.tsx \
                    navigation/tab-style.tsx; do
+            for app in mobile-nextdays mobile-owner; do
+              diff -u "mobile-bestdays/$f" "$app/$f"
+            done
+          done
+          # Nur in den beiden Apps mit Upload-Pfad.
+          for f in lib/datei.ts; do
             diff -u "mobile-bestdays/$f" "mobile-nextdays/$f"
           done
+          # Gegenprobe, dass die Ausnahme eine Ausnahme BLEIBT und nicht zur
+          # stillen Luecke wird: liegt die Datei doch in mobile-owner, muss sie
+          # auch verglichen werden — dann gehoert sie in die erste Liste.
+          if [ -f mobile-owner/lib/datei.ts ]; then
+            echo "mobile-owner/lib/datei.ts existiert jetzt — in die obere Liste aufnehmen." >&2
+            exit 1
+          fi
 
       - name: Ausstattungs-Labels aus web/messages erzeugt
         if: steps.pruefen.outputs.laufen == 'true'
@@ -839,12 +863,22 @@ jobs:
           # System-Dateiwaehler fuer Anhaenge. Zwei Fassungen hiessen zwei
           # verschiedene native Module bei gleichem JS — ein Fehler, der sich
           # dann nur in EINER App reproduziert.
+          #
+          # DREI Apps seit ADR-0022. `mobile-owner` fuehrt bewusst KEINEN
+          # Dateiwaehler (kein Upload-Pfad) — ein Paket, das eine App nicht
+          # hat, wird dort uebersprungen ("null"), statt den Job zu faellen.
+          # Was sie HAT, muss aber dieselbe Fassung sein: zwei Fassungen heissen
+          # zwei verschiedene native Module bei gleichem JS, und ein Bug
+          # reproduziert sich dann nur in EINER App.
           for p in react react-native @supabase/supabase-js \
                    @react-navigation/native react-native-keychain \
                    @react-native-documents/picker; do
             a=$(jq -r --arg p "$p" '.dependencies[$p]' mobile-bestdays/package.json)
-            b=$(jq -r --arg p "$p" '.dependencies[$p]' mobile-nextdays/package.json)
-            [ "$a" = "$b" ] || { echo "$p: $a (bestdays) != $b (nextdays)"; exit 1; }
+            for app in mobile-nextdays mobile-owner; do
+              b=$(jq -r --arg p "$p" '.dependencies[$p]' "$app/package.json")
+              [ "$b" = "null" ] && continue
+              [ "$a" = "$b" ] || { echo "$p: $a (bestdays) != $b ($app)"; exit 1; }
+            done
           done
 
   marketing-konsistenz:
@@ -928,6 +962,7 @@ jobs:
       kanal-enums: ${{ steps.bereiche.outputs.kanal-enums }}
       mobile-bestdays: ${{ steps.bereiche.outputs.mobile-bestdays }}
       mobile-nextdays: ${{ steps.bereiche.outputs.mobile-nextdays }}
+      mobile-owner: ${{ steps.bereiche.outputs.mobile-owner }}
       mobile-android: ${{ steps.bereiche.outputs.mobile-android }}
       mobile-konsistenz: ${{ steps.bereiche.outputs.mobile-konsistenz }}
       marketing-konsistenz: ${{ steps.bereiche.outputs.marketing-konsistenz }}
@@ -974,6 +1009,17 @@ jobs:
 
       - name: Bereichs-Regeln deckungsgleich mit ci.yml
         run: bash scripts/ci/bereiche-pruefen.sh
+
+      # Prueft die AUSLIEFERUNG, nicht den Code: hat jede Mobile-App einen
+      # Release-Workflow, ihre EIGENE Tester-Gruppe, den passenden
+      # Keystore-Praefix und einen Signatur-Beweis? Die Pruef-Jobs unten sehen
+      # das nicht — eine neue App faellt dort nicht auf, sie ist einfach nie
+      # ausgeliefert worden. Genau so stand `mobile-owner` am 03.09.2026 einen
+      # Tag lang da: alle Pruefungen gruen, keine Auslieferung moeglich.
+      # Laeuft immer (nicht bereichsgesteuert), weil die Kette auch bricht,
+      # wenn nur ein Workflow geaendert wird.
+      - name: Mobile-Release-Kette vollstaendig
+        run: bash scripts/mobile/release-kette-pruefen.sh
 
       - name: Betroffene Apps ermitteln
         id: ermitteln

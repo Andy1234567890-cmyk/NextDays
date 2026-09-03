@@ -42,6 +42,13 @@ Geschmacksfrage: das Owner-Portal hängt an der Tenant-Auth (`/auth/login`, Roll
 `owner`, `/public-portal/*`). In der Marktplatz-App bräuchte es den kompletten
 Tenant-Stack — der Split wäre damit aufgehoben.
 
+> **ERSETZT am 02.09.2026 durch [ADR-0022](0022-dritte-mobile-app-eigentuemer.md):**
+> der Eigentümer hat seit dann eine EIGENE App (`mobile-owner`,
+> `com.mynextdays.owner`). Der Grund gegen die Marktplatz-App gilt weiter — die
+> neue App hängt an derselben Tenant-Auth und bleibt damit auf der myNextDays-
+> Seite der Markengrenze. Das Eigentümer-Erlebnis in `mobile-nextdays`
+> (`OwnerTabs`) bleibt bestehen und wird nicht abgeschaltet.
+
 **Beide Projekte bleiben außerhalb des bun-Root-Workspace**, je mit eigenem
 `bun.lock` — wie `mobile` heute schon.
 

@@ -36,7 +36,7 @@ set -uo pipefail
 : "${PSQL_DSN:=}"
 
 WURZEL="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-PROJEKTE=(web admin gastgeber plattform partner mobile-bestdays mobile-nextdays)
+PROJEKTE=(web admin gastgeber plattform partner mobile-bestdays mobile-nextdays mobile-owner)
 
 rot(){ printf '\033[31m%s\033[0m\n' "$*"; }
 gruen(){ printf '\033[32m%s\033[0m\n' "$*"; }

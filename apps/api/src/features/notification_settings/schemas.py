@@ -122,9 +122,10 @@ class PushGeraetRegistrierung(BaseModel):
 
     token: str = Field(min_length=10, max_length=4096)
     platform: Literal["ios", "android"]
-    # Welche der beiden Apps (ADR-0019). Ohne diese Angabe landete eine
-    # Betriebs-Meldung auf dem Gast-Telefon derselben Person.
-    app: Literal["mynextdays", "mybestdays"]
+    # Welche der DREI Apps (ADR-0019/0022). Ohne diese Angabe landete eine
+    # Betriebs-Meldung auf dem Gast-Telefon derselben Person — oder, seit es
+    # die Eigentuemer-App gibt, eine Verwaltungs-Meldung beim Eigentuemer.
+    app: Literal["mynextdays", "mybestdays", "mynextdaysowner"]
 
 
 class PushGeraetAbmeldung(BaseModel):

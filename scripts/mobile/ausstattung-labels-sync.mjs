@@ -33,7 +33,7 @@ import path from "node:path";
 const HIER = path.dirname(fileURLToPath(import.meta.url));
 const WURZEL = path.resolve(HIER, "..", "..");
 const KATALOGE = ["amenities", "eigeneAusstattung"];
-const APPS = ["mobile-nextdays", "mobile-bestdays"];
+const APPS = ["mobile-nextdays", "mobile-bestdays", "mobile-owner"];
 const ZIEL = path.join("lib", "ausstattung.ts");
 
 const pruefen = process.argv.includes("--pruefen");
@@ -139,6 +139,6 @@ if (pruefen && abweichungen > 0) {
 }
 console.log(
   abweichungen === 0
-    ? `✓ ${eintraege.length} Merkmale, beide Apps deckungsgleich mit web/messages`
+    ? `✓ ${eintraege.length} Merkmale, ${APPS.length} Apps deckungsgleich mit web/messages`
     : `✓ ${eintraege.length} Merkmale in ${abweichungen} Datei(en) geschrieben`,
 );

@@ -16,7 +16,7 @@ log = structlog.get_logger(__name__)
 # waechst die Tabelle mit jedem neu installierten Telefon.
 VERALTET_TAGE = 60
 
-_APPS = frozenset({"mynextdays", "mybestdays"})
+_APPS = frozenset({"mynextdays", "mybestdays", "mynextdaysowner"})
 _PLATTFORMEN = frozenset({"ios", "android"})
 
 

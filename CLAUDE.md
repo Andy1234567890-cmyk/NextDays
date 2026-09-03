@@ -260,6 +260,32 @@ ist, nicht was dort steht — verifiziert wird weiterhin am Code.
   einem frühen Return, unvollständige Hook-Dependencies, verschluckte Fehler
   ohne `cause`. Warnungen (`any`, `<img>`) brechen noch nicht ab — neue keine
   dazu. Geteilte Pakete: `bun run lint:packages`.
+- **Der Rechner hat 8 GB — nie zwei Bau-Werkzeuge gleichzeitig.** VOR jedem
+  Emulator-/Simulator-/Build-Start messen: `uptime` (Load < 5 auf 8 Kernen) und
+  `sysctl vm.swapusage`. Ist der Load hoch, ERST aufräumen: Dev-Server beenden,
+  `./gradlew --stop` nach jedem Gradle-Lauf, Emulator und Simulator nie
+  parallel. Reale Kosten auf diesem MacBook Pro M2: Android-Emulator ~3 GB,
+  Gradle-Heap 2 GB, Metro ~0,5 GB, Next.js-Dev-Server samt esbuild ~1,5 GB,
+  VS Code samt Erweiterungen ~2 GB — die Summe übersteigt 8 GB, und keine
+  Einstellung ändert das. `-memory 1024` wird vom Android-16-Image ignoriert
+  (es meldet intern 2,5 GB), ein Wunschwert also, kein Limit.
+  **Beim Messen ist die Seitengröße 16 KB, nicht 4 KB**: `vm_stat`-Seiten mit
+  `16384` multiplizieren (oder `sysctl -n hw.pagesize` lesen) — mit 4096
+  gerechnet sind alle Zahlen um den Faktor 4 zu niedrig, und genau das führte
+  am 02.09.2026 zur Falschaussage „Emulator belegt 0,8 GB" bei real über 3 GB.
+  Für Android ist auf diesem Rechner das **echte Handy per USB** der richtige
+  Weg (die App läuft auf dem Telefon, der Mac liefert nur das JS-Bundle); der
+  iOS-Simulator ist billig, weil er den Kernel mit macOS teilt, der
+  Android-Emulator virtualisiert eine ganze ARM-Maschine.
+  Anlass (02.09.2026): nebenher lief der Next.js-Dev-Server von `web`
+  (esbuild 42 % + next-server 38 % CPU), dazu kamen Emulator, Gradle, Metro,
+  Debug-Chrome und ein Runtime-Download — Load 16, Swap 14,8 GB, und Androids
+  System UI hängte sich mit „isn't responding" auf. Gemeldet wurde es nicht vom
+  System, sondern vom Nutzer: *„meine ram haben noch nie so rumgesponnen"*.
+  Nach dem Beenden des Dev-Servers halbierte sich der Swap auf 7,4 GB, nach dem
+  Aushängen des CoreSimulator-Volumes fiel „komprimiert" von 3,06 auf 0,64 GB
+  und der Load auf 4,7. Es war reine Werkzeug-Last — messbar in einer Sekunde,
+  gemessen erst nach vier Anläufen.
 - **Frontend: NIE `next build` auf dem Rechner des Nutzers.** Kein
   `bunx next build`, nicht mit `--distDir`, nicht in einem Worktree, nicht
   „nur einmal zur Prüfung". Den Build fährt AUSSCHLIESSLICH Coolify beim

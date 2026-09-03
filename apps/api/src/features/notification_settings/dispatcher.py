@@ -296,6 +296,7 @@ class NotificationDispatcher:
                 betreff_key=betreff_key, betreff_werte=betreff_werte,
                 text_key=text_key, text_werte=text_werte,
                 sprache=sprache, tenant_id=tenant_id,
+                kategorie_schluessel=schluessel,
             )
 
         log.info(
@@ -385,6 +386,8 @@ class NotificationDispatcher:
         # Nur fuer den Verlaufs-Eintrag bei Fehlschlag, nicht mehr fuer die
         # Sprache: die steht oben.
         tenant_id: str | None = None,
+        # Entscheidet bei Push, WELCHE App das Geraet sein muss (ADR-0022).
+        kategorie_schluessel: str = "",
     ) -> None:
         """Einen Kanal bedienen. Fehler landen im Ergebnis, nie im Aufrufer.
 
@@ -396,7 +399,10 @@ class NotificationDispatcher:
             # Push hat keine Adresse, sondern Geraete-Tokens — und muss deshalb
             # VOR der Adresspruefung abzweigen, sonst scheiterte er immer mit
             # „keine Adresse hinterlegt".
-            self._sende_push(empfaenger, betreff, text, ziel_pfad, ergebnis)
+            self._sende_push(
+                empfaenger, betreff, text, ziel_pfad, ergebnis,
+                kategorie_schluessel=kategorie_schluessel,
+            )
             return
         ziel = empfaenger.get("email" if kanal is Kanal.EMAIL else "phone")
         if not ziel:
@@ -520,14 +526,27 @@ class NotificationDispatcher:
         text: str,
         ziel_pfad: str | None,
         ergebnis: Zustellung,
+        *,
+        kategorie_schluessel: str = "",
     ) -> None:
-        """Push an alle Geraete dieses Nutzers in der BETRIEBS-App.
+        """Push an die Geraete dieses Nutzers in der ZUSTAENDIGEN App.
 
-        Bewusst nur `mynextdays`: die Kategorien mit Push-Kanal
-        (`betrieb_buchung`, `messages`) sind Betriebs-Meldungen. Auf dem
-        Marktplatz-Telefon derselben Person haetten sie nichts zu suchen —
-        das ist die Markengrenze aus ADR-0019, und sie muss hier stehen, weil
-        ein Push das Geraet erreicht, nicht ein Konto.
+        Welche App zustaendig ist, haengt an der KATEGORIE, nicht am Konto: ein
+        Push erreicht ein Geraet. Bis ADR-0022 stand hier fest `mynextdays`,
+        was mit zwei Apps vollstaendig war — `betrieb_buchung` und `messages`
+        sind Verwaltungs-Meldungen und haben auf dem Marktplatz-Telefon
+        derselben Person nichts zu suchen (Markengrenze ADR-0019).
+
+        Mit der dritten App genuegt das nicht mehr: `owner_*`-Kategorien
+        gehoeren dem Eigentuemer und damit auf `mynextdaysowner`. Waere es bei
+        der festen Kennung geblieben, haette ein Eigentuemer die Meldungen der
+        Verwaltung bekommen — dieselbe Verwechslung wie damals zwischen den
+        Marken, nur eine Ebene tiefer.
+
+        Die Zustaendigkeit steht als `push_app` im KATALOG, nicht hier: sie ist
+        eine Eigenschaft der Kategorie, und wer eine neue anlegt, entscheidet
+        sie in derselben Zeile. Aus dem Schluesselnamen ableiten waere falsch —
+        `block_decision` geht an den Eigentuemer und traegt kein `owner_`.
 
         KEINE Uebersetzung ueber `betreff_key`/`text_key` wie bei Mail/SMS: der
         Aufrufer liefert bereits kurzen Text, und ein Push ist kein Dokument.
@@ -543,12 +562,16 @@ class NotificationDispatcher:
             ergebnis.fehlgeschlagen[Kanal.PUSH.value] = "kein Nutzerbezug"
             return
         geraete = PushGeraeteService(self._db)
-        tokens = geraete.tokens_fuer(user_id, app="mynextdays")
+        kategorie = NACH_SCHLUESSEL.get(kategorie_schluessel)
+        ziel_app = kategorie.push_app if kategorie else "mynextdays"
+        tokens = geraete.tokens_fuer(user_id, app=ziel_app)
         if not tokens:
             # Kein registriertes Geraet ist KEIN Fehler: die meisten Nutzer
             # haben die App nicht. Als „uebersprungen" vermerken, damit es im
             # Log unterscheidbar bleibt von einem echten Fehlschlag.
-            ergebnis.uebersprungen.append(f"{Kanal.PUSH.value} (kein Geraet)")
+            ergebnis.uebersprungen.append(
+                f"{Kanal.PUSH.value} (kein Geraet in {ziel_app})"
+            )
             return
         try:
             zugestellt, zu_loeschen = push_senden(

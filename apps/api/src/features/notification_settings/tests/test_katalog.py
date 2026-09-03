@@ -46,6 +46,10 @@ MIGRATIONEN = (
     # KI-Eskalation (Mail + Push, kein SMS: eine Beschwerde ist dringend, aber
     # SMS ist fuer Fristen von Stunden reserviert).
     "0499_ki_eskalation_benachrichtigung.sql",
+    # Push in die Eigentuemer-App (ADR-0022): owner_booking, owner_service,
+    # block_decision bekommen den Kanal, seit es eine App gibt, die ihn
+    # empfangen kann.
+    "0532_push_app_eigentuemer.sql",
 )
 
 
@@ -151,3 +155,50 @@ def test_schema_hat_genau_die_katalog_felder() -> None:
     felder = set(NotificationSettings.model_fields) - {"marketing_unsubscribed_all"}
     erwartet = set(SPALTEN) - {"marketing_unsubscribed_all"}
     assert felder == erwartet
+
+
+# --- Push-Zustaendigkeit je App (ADR-0022) ----------------------------------
+# Ein Push erreicht ein GERAET, nicht ein Konto. Faellt `push_app` auf den
+# Default zurueck, geht eine Eigentuemer-Meldung an die Verwaltungs-App — dort
+# ist der Eigentuemer nicht angemeldet, die Meldung verschwindet, und niemand
+# sieht einen Fehler. Genau diese Stille rechtfertigt die Tests.
+
+EIGENTUEMER_KATEGORIEN = ("owner_booking", "owner_service", "block_decision")
+
+
+def test_eigentuemer_kategorien_pushen_in_die_owner_app() -> None:
+    for schluessel in EIGENTUEMER_KATEGORIEN:
+        kategorie = NACH_SCHLUESSEL[schluessel]
+        assert kategorie.push_app == "mynextdaysowner", (
+            f"{schluessel} pusht nach {kategorie.push_app!r} — eine Meldung "
+            "fuer den Eigentuemer landete damit auf einem Telefon der "
+            "Verwaltungs-App."
+        )
+
+
+def test_eigentuemer_kategorien_haben_den_push_kanal() -> None:
+    """Ohne PUSH in `kanaele` ist `push_app` toter Buchstabe."""
+    for schluessel in EIGENTUEMER_KATEGORIEN:
+        assert Kanal.PUSH in NACH_SCHLUESSEL[schluessel].kanaele, schluessel
+
+
+def test_verwaltungs_kategorien_bleiben_bei_der_pms_app() -> None:
+    """Die Gegenrichtung: der Umbau darf nichts umgehaengt haben."""
+    for schluessel in ("betrieb_buchung", "messages", "task_substitution"):
+        assert NACH_SCHLUESSEL[schluessel].push_app == "mynextdays", schluessel
+
+
+def test_jede_push_kategorie_nennt_eine_bekannte_app() -> None:
+    """Ein Tippfehler in `push_app` findet still kein Geraet — hier faellt er auf.
+
+    Die Werte muessen zur Allowlist des Geraete-Services passen; sonst lehnt
+    die Anmeldung ab (400) oder der Versand sucht eine App, die es nicht gibt.
+    """
+    from src.features.notification_settings.geraete import _APPS
+
+    for kategorie in KATALOG:
+        if Kanal.PUSH in kategorie.kanaele:
+            assert kategorie.push_app in _APPS, (
+                f"{kategorie.schluessel}: push_app={kategorie.push_app!r} "
+                f"ist keine bekannte App {sorted(_APPS)}"
+            )

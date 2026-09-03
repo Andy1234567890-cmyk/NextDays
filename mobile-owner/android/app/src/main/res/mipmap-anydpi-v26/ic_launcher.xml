@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Adaptives App-Icon (Android 8+). Es fehlte, und genau daran lag der weisse
+     Rand auf dem Startbildschirm: ohne diese Datei nimmt der Launcher das
+     Legacy-Bitmap `ic_launcher.png` und malt es UNMASKIERT, samt seiner weissen
+     Ecken (das Bitmap ist ein schwarzes Rounded-Rect auf weissem Grund — auf
+     iOS unsichtbar, weil dort das System immer selbst maskiert).
+
+     Mit dieser Datei liefert die App Vordergrund und Hintergrund getrennt, und
+     der Launcher schneidet seine eigene Form heraus (Kreis, Squircle,
+     Rounded-Square — je Hersteller). Ecken koennen dann nicht mehr in einer
+     Fremdfarbe stehenbleiben. -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background" />
+    <foreground android:drawable="@mipmap/ic_launcher_foreground" />
+</adaptive-icon>

@@ -1,0 +1,180 @@
+apply plugin: "com.android.application"
+apply plugin: "org.jetbrains.kotlin.android"
+apply plugin: "com.facebook.react"
+// Nach com.android.application, sonst findet das Plugin die Variants
+// nicht. Verarbeitet google-services.json (gitignoriert, pro Arbeitsplatz).
+//
+// BEDINGT, anders als in den Schwester-Apps: `com.mynextdays.owner` hat noch
+// keine Firebase-App (siehe GOOGLE-SERVICES-FEHLT.md). Ohne die Datei bricht
+// das Plugin den Build mit "No matching client found for package name" ab —
+// die ganze App waere dann nicht startbar, nur weil Push fehlt.
+//
+// Der Mangel bleibt aber NICHT still (Wurzel 5): fehlt die Datei, schreibt der
+// Build eine deutliche Warnung. Ein Konfigurationswert, dessen Fehlen niemand
+// merkt, ist derselbe Fehler wie ein verschluckter Exception — hier waere es
+// "Push funktioniert scheinbar, liefert aber nie etwas aus".
+if (file("google-services.json").exists()) {
+    apply plugin: "com.google.gms.google-services"
+} else {
+    logger.warn("")
+    logger.warn("╔═══════════════════════════════════════════════════════════════════╗")
+    logger.warn("║ WARNUNG: android/app/google-services.json fehlt.                  ║")
+    logger.warn("║ Die App baut und laeuft — aber PUSH IST TOT (keine Meldungen).     ║")
+    logger.warn("║ Behebung: android/app/GOOGLE-SERVICES-FEHLT.md                    ║")
+    logger.warn("╚═══════════════════════════════════════════════════════════════════╝")
+    logger.warn("")
+}
+
+/**
+ * This is the configuration block to customize your React Native Android app.
+ * By default you don't need to apply any configuration, just uncomment the lines you need.
+ */
+react {
+    /* Folders */
+    //   The root of your project, i.e. where "package.json" lives. Default is '../..'
+    // root = file("../../")
+    //   The folder where the react-native NPM package is. Default is ../../node_modules/react-native
+    // reactNativeDir = file("../../node_modules/react-native")
+    //   The folder where the react-native Codegen package is. Default is ../../node_modules/@react-native/codegen
+    // codegenDir = file("../../node_modules/@react-native/codegen")
+    //   The cli.js file which is the React Native CLI entrypoint. Default is ../../node_modules/react-native/cli.js
+    // cliFile = file("../../node_modules/react-native/cli.js")
+
+    /* Variants */
+    //   The list of variants to that are debuggable. For those we're going to
+    //   skip the bundling of the JS bundle and the assets. Default is "debug", "debugOptimized".
+    //   If you add flavors like lite, prod, etc. you'll have to list your debuggableVariants.
+    // debuggableVariants = ["liteDebug", "liteDebugOptimized", "prodDebug", "prodDebugOptimized"]
+
+    /* Bundling */
+    //   A list containing the node command and its flags. Default is just 'node'.
+    // nodeExecutableAndArgs = ["node"]
+    //
+    //   The command to run when bundling. By default is 'bundle'
+    // bundleCommand = "ram-bundle"
+    //
+    //   The path to the CLI configuration file. Default is empty.
+    // bundleConfig = file(../rn-cli.config.js)
+    //
+    //   The name of the generated asset file containing your JS bundle
+    // bundleAssetName = "MyApplication.android.bundle"
+    //
+    //   The entry file for bundle generation. Default is 'index.android.js' or 'index.js'
+    // entryFile = file("../js/MyApplication.android.js")
+    //
+    //   A list of extra flags to pass to the 'bundle' commands.
+    //   See https://github.com/react-native-community/cli/blob/main/docs/commands.md#bundle
+    // extraPackagerArgs = []
+
+    /* Hermes Commands */
+    //   The hermes compiler command to run. By default it is 'hermesc'
+    // hermesCommand = "$rootDir/my-custom-hermesc/bin/hermesc"
+    //
+    //   The list of flags to pass to the Hermes compiler. By default is "-O", "-output-source-map"
+    // hermesFlags = ["-O", "-output-source-map"]
+
+    /* Autolinking */
+    autolinkLibrariesWithApp()
+}
+
+/**
+ * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
+ */
+def enableProguardInReleaseBuilds = false
+
+/**
+ * The preferred build flavor of JavaScriptCore (JSC)
+ *
+ * For example, to use the international variant, you can use:
+ * `def jscFlavor = io.github.react-native-community:jsc-android-intl:2026004.+`
+ *
+ * The international variant includes ICU i18n library and necessary data
+ * allowing to use e.g. `Date.toLocaleString` and `String.localeCompare` that
+ * give correct results when using with locales other than en-US. Note that
+ * this variant is about 6MiB larger per architecture than default.
+ */
+def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
+
+android {
+    ndkVersion rootProject.ext.ndkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+    compileSdk rootProject.ext.compileSdkVersion
+
+    namespace "com.mynextdays.owner"
+    defaultConfig {
+        applicationId "com.mynextdays.owner"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        // Version aus dem CI-Lauf, sonst der lokale Stand. Ein Release-Build
+        // MUSS einen hoeheren versionCode tragen als der vorige, sonst lehnt
+        // Play den Upload ab und App Distribution zeigt Testern kein Update.
+        // Der Wert kommt vom Workflow (-PversionCode=<run_number>) statt aus
+        // einer hier gepflegten Zahl: die vergisst man, und zwei Builds mit
+        // gleicher Nummer sind nicht unterscheidbar.
+        // Klammer DIREKT am Methodennamen und Auswertung in eine eigene
+        // Variable: `versionCode (ausdruck)` mit Leerzeichen liest Groovy als
+        // `versionCode(ausdruck)` — also den Getter der Property, dem der
+        // Ausdruck als Argument uebergeben wird. Beim Auswerten von `:app` bricht
+        // das mit „Value is null" ab, und zwar UNABHAENGIG davon, ob
+        // -PversionCode uebergeben wird. Deshalb war dieser Build nie lauffaehig
+        // (der Verteil-Workflow wurde nie erfolgreich ausgefuehrt).
+        def ndVersionCode = (project.findProperty("versionCode") ?: "1") as String
+        def ndVersionName = (project.findProperty("versionName") ?: "1.0") as String
+        versionCode ndVersionCode.toInteger()
+        versionName ndVersionName
+    }
+    signingConfigs {
+        debug {
+            storeFile file('debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+        // Release-Signatur AUSSCHLIESSLICH aus nicht eingecheckten Credentials
+        // (M-1): Keystore-Pfad/Passwörter kommen aus gradle.properties bzw.
+        // Umgebungsvariablen (CI-Secret), NIE aus dem Repo. Ohne diese Werte gibt
+        // es keine gültige Release-Signatur — der Debug-Keystore wird nie mehr
+        // für Release verwendet.
+        release {
+            def storeFilePath = System.getenv("MYNEXTDAYSOWNER_RELEASE_STORE_FILE")
+                ?: (project.findProperty("MYNEXTDAYSOWNER_RELEASE_STORE_FILE") ?: "")
+            if (storeFilePath) {
+                storeFile file(storeFilePath)
+                storePassword System.getenv("MYNEXTDAYSOWNER_RELEASE_STORE_PASSWORD")
+                    ?: project.findProperty("MYNEXTDAYSOWNER_RELEASE_STORE_PASSWORD")
+                keyAlias System.getenv("MYNEXTDAYSOWNER_RELEASE_KEY_ALIAS")
+                    ?: project.findProperty("MYNEXTDAYSOWNER_RELEASE_KEY_ALIAS")
+                keyPassword System.getenv("MYNEXTDAYSOWNER_RELEASE_KEY_PASSWORD")
+                    ?: project.findProperty("MYNEXTDAYSOWNER_RELEASE_KEY_PASSWORD")
+            }
+        }
+    }
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
+        release {
+            // Release-Signatur nur, wenn echte Credentials gesetzt sind. Sonst
+            // KEINE Signatur (Build liefert unsigniertes Release-APK) statt es
+            // still mit dem Debug-Key zu signieren — fail-closed (Wurzel 5).
+            def hasReleaseKey = (System.getenv("MYNEXTDAYSOWNER_RELEASE_STORE_FILE")
+                ?: project.findProperty("MYNEXTDAYSOWNER_RELEASE_STORE_FILE")) != null
+            if (hasReleaseKey) {
+                signingConfig signingConfigs.release
+            }
+            minifyEnabled enableProguardInReleaseBuilds
+            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+        }
+    }
+}
+
+dependencies {
+    // The version of react-native is set by the React Native Gradle Plugin
+    implementation("com.facebook.react:react-android")
+
+    if (hermesEnabled.toBoolean()) {
+        implementation("com.facebook.react:hermes-android")
+    } else {
+        implementation jscFlavor
+    }
+}

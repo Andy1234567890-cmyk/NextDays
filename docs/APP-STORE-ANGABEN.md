@@ -5,14 +5,33 @@ hier stehen die fertigen Antworten, damit bei der Einreichung nichts geraten wir
 Die Angaben sind gegen den Code geprüft (Abhängigkeiten, Privacy Manifest,
 Berechtigungen), nicht geschätzt.
 
-Zwei Apps = zwei vollständige Sätze. Vertauschen ist ein Ablehnungsgrund, weil
-Apple das Privacy Label gegen das Manifest im Binary prüft.
+Drei Apps = drei vollständige Sätze (ADR-0022). Vertauschen ist ein
+Ablehnungsgrund, weil Apple das Privacy Label gegen das Manifest im jeweiligen
+Binary prüft — und weil die drei Apps unterschiedlich viel dürfen: die
+Eigentümer-App hat bewusst KEINE Kamera- und Medienberechtigung, ein von
+myNextDays kopierter Satz würde also Zugriffe angeben, die es im Binary nicht
+gibt.
 
-**Reihenfolge:** Aktuell ist nur **myNextDays** dran (Abschnitt 1). Abschnitt 2
-zu myBestDays ist Vorarbeit — dort ist im Code noch nichts umgesetzt (kein
-Löschweg, kein Rechtliches-Abschnitt, Privacy Manifest noch leer). Die Angaben
-dort erst verwenden, wenn die App gebaut ist; sonst steht im Store-Formular
-etwas, was das Binary nicht hergibt.
+**Reihenfolge (Stand 03.09.2026):**
+
+| # | App | Bundle | Stand |
+|---|-----|--------|-------|
+| 1 | myNextDays | `com.mynextdays.app` | bei Google Play **in Prüfung** (seit 31.08.2026) |
+| 2 | myNextDays Eigentümer | `com.mynextdays.owner` | **als nächstes** — Abschnitt 2 |
+| 3 | myBestDays | `com.mybestdays.app` | danach — Abschnitt 3 (Vorarbeit) |
+
+Das Play-Konto ist mit dem Firebase-Projekt verbunden (03.09.2026). Das gilt auf
+PROJEKT-Ebene; jede App braucht zusätzlich ihre eigene Registrierung je
+`applicationId`, sonst findet das google-services-Plugin keinen Client.
+
+Abschnitt 3 zu myBestDays ist Vorarbeit — dort ist im Code noch nichts umgesetzt
+(kein Löschweg, kein Rechtliches-Abschnitt, Privacy Manifest noch leer). Die
+Angaben dort erst verwenden, wenn die App gebaut ist; sonst steht im
+Store-Formular etwas, was das Binary nicht hergibt.
+
+Ein Fund an App 1 gilt für alle drei: die erste App eines Kontos durchläuft die
+volle Konto- und DSA-Prüfung, die folgenden erben sie. Also erst an App 1
+beheben, dann App 2 einreichen — sonst wird derselbe Mangel dreimal abgelehnt.
 
 ---
 
@@ -37,12 +56,39 @@ Deckungsgleich mit `ios/MyNextDays/PrivacyInfo.xcprivacy`:
 | Nutzer-ID | ja | ja | nein | App-Funktionalität |
 | Andere Nutzerinhalte (Nachrichten, Notizen, Storno-Gründe) | ja | ja | nein | App-Funktionalität |
 | Andere Daten (Gast-/Buchungsdaten des Betriebs) | ja | ja | nein | App-Funktionalität |
+| **Fotos** | ja | ja | nein | App-Funktionalität (Fotonachweis an Aufgaben) |
+| **Geräte- oder andere IDs** | ja | ja | nein | App-Funktionalität (Push-Zustellung) |
+| **Absturzprotokolle** | ja | **nein** | nein | Fehlerbehebung |
+
+Die letzten drei Zeilen sind am 31.08.2026 dazugekommen, nachdem ein Abgleich
+gegen den Code drei Abweichungen fand. Sie standen vorher als „nicht erhoben"
+in dieser Datei — eine Data-Safety-Erklärung, die vom Binary abweicht, ist ein
+Sperrgrund, und niemandem wäre es aufgefallen:
+- **Fotos**: `android/app/src/main/AndroidManifest.xml` deklariert `CAMERA`,
+  `lib/foto.ts` nimmt auf bzw. wählt aus, `lib/tasks.ts` lädt als `FormData`
+  hoch (`uploadTaskPhoto`/`uploadChecklistPhoto`), genutzt in
+  `screens/TaskDetail.tsx` für Checklisten-Pflichtfotos. Das Foto hängt an einer
+  Aufgabe eines Betriebs, ist also mit Identität verknüpft. `READ_MEDIA_*`
+  bleibt bewusst NICHT deklariert (System-Photo-Picker liefert die URI ohne
+  Leserecht) — das ist kein Widerspruch, die Berechtigung ist etwas anderes als
+  die Datenart.
+- **Geräte-IDs**: `lib/push.ts` (`tokenMelden`) sendet das FCM-Gerätetoken per
+  `PUT /notification-settings/push-geraet` über `lib/api.ts`, also im
+  Auth-Kontext des angemeldeten Nutzers → verknüpft. Gegenzustand vorhanden:
+  `pushAbmelden()` beim Logout (Wurzel 1).
+- **Absturzprotokolle**: `lib/absturzmeldung.ts` sendet seit dem 30.08.2026
+  `POST /api/v1/diagnostics/startabsturz` mit Stacktrace (max. 4000 Zeichen),
+  Komponentenkette, Plattform, Android-Version und Laufzeit seit Prozessstart —
+  bewusst ohne Token, also NICHT mit dem Konto verknüpft.
 
 Nicht erhoben, und das ist belegbar (Abhängigkeiten geprüft: React Navigation,
-supabase-js, Keychain, Gesture Handler, Safe Area, Screens, SVG, URL-Polyfill —
-kein Analytics-, Werbe- oder Crash-SDK):
-- kein Standort, keine Kontakte, keine Fotos, keine Gesundheitsdaten
-- keine Diagnose- oder Nutzungsdaten
+supabase-js, Keychain, Gesture Handler, Safe Area, Screens, SVG, URL-Polyfill;
+Firebase nur `app` + `messaging` — kein Analytics-, Werbe- oder Crash-SDK):
+- kein Standort (keine `ACCESS_*_LOCATION`, kein `Geolocation`-Aufruf; die
+  lat/lng in `lib/reservations.ts` sind die des OBJEKTS, nicht des Geräts)
+- keine Kontakte, keine Gesundheitsdaten, keine Fotomediathek-Leseberechtigung
+- keine Nutzungs-/Verhaltensdaten (kein Analytics; die Absturzprotokolle oben
+  sind Fehlerbehebung, kein Nutzungsprofil)
 - **kein Tracking** → kein ATT-Dialog, im Data-Safety-Formular „Keine Daten für
   Werbung oder Marketing geteilt"
 
@@ -133,7 +179,97 @@ Gewerbliche Nutzer (Ferienhausvermieter, Hotels). Kein nutzergenerierter
 
 ---
 
-## 2. myBestDays (`mobile-bestdays`, Bundle `com.mybestdays.app`) — VORARBEIT
+## 2. myNextDays Eigentümer (`mobile-owner`, Bundle `com.mynextdays.owner`)
+
+Die zweite Einreichung (ADR-0022). Dieser Satz ist NICHT von Abschnitt 1
+abgeleitet, sondern gegen `mobile-owner/` geprüft — die App darf bewusst
+weniger, und ein kopierter Satz würde Zugriffe angeben, die es im Binary nicht
+gibt.
+
+### Kategorie und Einordnung
+- Primär: Wirtschaft (Business) · Sekundär: Finanzen
+- Altersfreigabe: 4+ / Alle Altersgruppen — kein nutzergenerierter öffentlicher
+  Inhalt, kein Chat
+- Zielgruppe (Google): Nein, nicht für Kinder
+- Anmeldung erforderlich: ja (Eigentümer-Rolle; eine andere Rolle bekommt den
+  Hinweis-Screen `FalscheRolle`, keinen Zugang)
+
+### Datenschutz-Angaben
+Deckungsgleich mit `ios/MyNextDaysOwner/PrivacyInfo.xcprivacy`:
+
+| Datenart | erhoben | mit Identität verknüpft | für Tracking | Zweck |
+|---|---|---|---|---|
+| E-Mail-Adresse | ja | ja | nein | App-Funktionalität |
+| Name | ja | ja | nein | App-Funktionalität |
+| Telefonnummer | ja | ja | nein | App-Funktionalität |
+| Nutzer-ID | ja | ja | nein | App-Funktionalität |
+| Andere Nutzerinhalte (Sperrantrag-Begründung, Zählerstand) | ja | ja | nein | App-Funktionalität |
+| Andere Daten (Objekt-/Buchungsdaten des Eigentümers) | ja | ja | nein | App-Funktionalität |
+| Geräte- oder andere IDs | ja | ja | nein | App-Funktionalität (Push-Zustellung) |
+| Absturzprotokolle | ja | **nein** | nein | Fehlerbehebung |
+
+**Der Unterschied zu myNextDays: KEINE Fotos.** Im Store-Formular gehört hier
+„nicht erhoben", und das ist belegt, nicht angenommen:
+`android/app/src/main/AndroidManifest.xml` deklariert ausschließlich `INTERNET`
+und `POST_NOTIFICATIONS` — kein `CAMERA`, kein `READ_MEDIA_*`; es gibt keinen
+Picker und kein `lib/datei.ts` (die Datei fehlt absichtlich, die CI prüft das);
+kein Aufrufer erzeugt ein `FormData` (`lib/api.ts` KANN es, niemand nutzt es);
+und `screens/Fotoalbum.tsx` zeigt mit `<Image source={{uri}}>` nur Server-URLs
+an. Anzeigen ist kein Erheben. Das Privacy Manifest trug die Foto-Zeile
+zunächst aus der Kopiervorlage und wurde am 03.09.2026 korrigiert — eine
+Angabe, die das Binary nicht hergibt, ist bei Apple ein Sperrgrund, nicht die
+sichere Seite.
+
+Nicht erhoben (Abhängigkeiten geprüft: React Navigation, supabase-js, Keychain,
+Gesture Handler, Safe Area, Screens, SVG, URL-Polyfill; Firebase nur `app` +
+`messaging` — kein Analytics-, Werbe- oder Crash-SDK):
+- kein Standort, keine Kontakte, keine Gesundheitsdaten, keine Fotos
+- keine Nutzungs-/Verhaltensdaten
+- **kein Tracking** → kein ATT-Dialog
+
+Zu den Beträgen: die Eigentümer-API maskiert Geldwerte serverseitig
+(`payout: null`), die App zeigt dann „—". Das ändert die Datenarten oben nicht,
+ist aber die Antwort auf eine Reviewer-Rückfrage nach Finanzdaten.
+
+Datenübertragung: verschlüsselt (HTTPS/TLS).
+
+### Pflicht-URLs
+Aus `lib/rechtliches.ts` (Basis `https://www.mynextdays.com`), in der App unter
+„Mehr → Rechtliches" verlinkt:
+- Datenschutz: `/datenschutz` · Nutzungsbedingungen: `/agb`
+- Auftragsverarbeitung: `/auftragsverarbeitung` · Cookie-Richtlinie:
+  `/cookie-richtlinie` · Impressum: `/impressum`
+- Kontakt: `info@mynextdays.dk`, `+4593903991`
+
+### OFFEN vor der Einreichung — Konto-Löschung
+**Die App hat keinen Löschweg.** `mobile-nextdays` hat
+`lib/konto.ts → kontoLoeschen()`; in `mobile-owner` existiert weder die
+Funktion noch ein Konto-Screen (`screens/Mehr.tsx` bietet Konto, App-Wechsel,
+Rechtliches, Abmelden — kein Löschen). Google verlangt für Apps mit
+Konto-Anmeldung einen Löschweg IN der App oder eine öffentlich erreichbare
+Löschseite.
+
+Der Web-Weg ist vorhanden und live geprüft:
+`https://mynextdays.com/konto-loeschen` (200, trägt das Formular). Damit ist die
+Einreichung formal möglich. Zu entscheiden ist, ob das reicht oder ob der
+In-App-Weg nachgezogen wird — beim Eigentümer ist die Frage nicht rein
+formal: sein Konto hängt an Objekten eines Betriebs, „Konto löschen" darf also
+nicht die Objektzuordnung mitreißen (Wurzel 1). Der Löschpfad der PMS-App ist
+deshalb nicht ungeprüft übernehmbar.
+
+### Weiter offen (aus ADR-0022)
+- Firebase-App für `com.mynextdays.owner` (Android + iOS) — die Play↔Firebase-
+  Verbindung besteht auf Projektebene, die App-Registrierung je
+  `applicationId` fehlt noch.
+- Release-Keystore + die drei `MYNEXTDAYSOWNER_RELEASE_*`-Secrets.
+- Screenshots (eigener Satz; die der PMS-App zeigen andere Oberflächen).
+- Store-Beschreibung: Zielgruppe ist der Eigentümer, nicht der Betrieb.
+- Eigenes App-Icon (derzeit die myNextDays-Assets, im Launcher nicht
+  unterscheidbar).
+
+---
+
+## 3. myBestDays (`mobile-bestdays`, Bundle `com.mybestdays.app`) — VORARBEIT
 
 > Diese App ist noch nicht umgesetzt. Der Abschnitt hält die Recherche fest,
 > damit sie nicht zweimal gemacht werden muss. Vor der Einreichung müssen erst
@@ -209,7 +345,7 @@ der Bestätigung hingewiesen.
 
 ---
 
-## 3. Was vor der ERSTEN Einreichung von myNextDays noch fehlt (kein Code)
+## 4. Was vor der ERSTEN Einreichung von myNextDays noch fehlt (kein Code)
 
 1. **Händler-Status (DSA)** bei Apple und Google verifiziert — sonst wird die App
    in der EU nicht ausgeliefert bzw. automatisch entfernt. Wochen Vorlauf.

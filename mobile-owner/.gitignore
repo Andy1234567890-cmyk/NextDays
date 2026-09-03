@@ -1,0 +1,93 @@
+# OSX
+#
+.DS_Store
+
+# Xcode
+#
+build/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata
+*.xccheckout
+*.moved-aside
+DerivedData
+*.hmap
+*.ipa
+*.xcuserstate
+**/.xcode.env.local
+
+# Android/IntelliJ
+#
+build/
+.idea
+.gradle
+local.properties
+*.iml
+*.hprof
+.cxx/
+*.keystore
+!debug.keystore
+.kotlin/
+
+# node.js
+#
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# fastlane
+#
+# It is recommended to not store the screenshots in the git repo. Instead, use fastlane to re-generate the
+# screenshots whenever they are needed.
+# For more information about the recommended setup visit:
+# https://docs.fastlane.tools/best-practices/source-control/
+
+**/fastlane/report.xml
+**/fastlane/Preview.html
+**/fastlane/screenshots
+**/fastlane/test_output
+
+# Bundle artifact
+*.jsbundle
+
+# Ruby / CocoaPods
+**/Pods/
+/vendor/bundle/
+
+# Temporary files created by Metro to check the health of the file watcher
+.metro-health-check*
+
+# testing
+/coverage
+
+# Yarn
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# Lokale Secrets (echter anon-Key etc.) — Vorlage: lib/config.secrets.example.ts
+# Diese Regel FEHLTE hier bis zum 31.08.2026, waehrend mobile-bestdays sie
+# hatte: beim App-Verdoppeln (ADR-0019) wurde sie nicht mitkopiert, und
+# lib/config.secrets.ts rutschte mit dem echten anon-Key ins Repo — obwohl die
+# Datei in ihrer ersten Zeile selbst „GITIGNORIERT" behauptet und die CI fuer
+# beide Apps extra einen Platzhalter kopiert. Gefunden hat es das neue Gate
+# scripts/security/frontend-geheimnisse-pruefen.mjs.
+lib/config.secrets.ts
+
+# Firebase — Konfiguration enthaelt einen echten API-Schluessel und gehoert
+# nicht ins Repo (CLAUDE.md: keine echten Credentials in Repo-Dateien). Die
+# Datei wird pro Arbeitsplatz geholt, in der CI aus einem Secret geschrieben:
+#   firebase apps:sdkconfig ANDROID <app-id> --out android/app/google-services.json
+google-services.json
+GoogleService-Info.plist
+.firebase/
+firebase-debug.log

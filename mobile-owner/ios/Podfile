@@ -1,0 +1,68 @@
+# Resolve react_native_pods.rb with node to allow for hoisting
+require Pod::Executable.execute_command('node', ['-p',
+  'require.resolve(
+    "react-native/scripts/react_native_pods.rb",
+    {paths: [process.argv[1]]},
+  )', __dir__]).strip
+
+platform :ios, min_ios_version_supported
+prepare_react_native_project!
+
+linkage = ENV['USE_FRAMEWORKS']
+if linkage != nil
+  Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
+  use_frameworks! :linkage => linkage.to_sym
+end
+
+# Firebase ueber CocoaPods aufloesen, NICHT ueber den Swift Package Manager.
+#
+# WARUM: react-native-firebase 26 zieht firebase-ios-sdk per SPM. Dessen
+# Produkte sind "automatic libraries" (nicht `type: .dynamic`), also bettet
+# JEDES react-native-firebase-Pod seine eigene Kopie ein — mit der statischen
+# Linkage, die React Native hier verwendet, kollidieren die Kopien beim Linken
+# als Duplicate-Symbol-Fehler. `pod install` bricht deshalb ab mit
+# "[react-native-firebase] SPM + static linkage is not supported".
+#
+# Der Schalter MUSS vor dem target-Block stehen, sonst liest ihn das Pod-Skript
+# nicht mehr.
+#
+# Die andere von der Meldung angebotene Loesung (`use_frameworks! :linkage =>
+# :dynamic`) wurde bewusst NICHT gewaehlt: sie aendert die Linkage fuer ALLE
+# Pods und damit das Ladeverhalten der ganzen App — ein viel groesserer Eingriff
+# als Firebase auf den Weg zu schicken, den CocoaPods ohnehin beherrscht.
+$RNFirebaseDisableSPM = true
+
+# Modul-Maps fuer alle Pods erzeugen.
+#
+# WARUM: Mit `$RNFirebaseDisableSPM` kommt Firebase ueber CocoaPods, und dort
+# ist `FirebaseCoreInternal` ein SWIFT-Pod, der von `GoogleUtilities`
+# (Objective-C, ohne modulemap) abhaengt. Als statische Bibliothek kann Swift
+# ein Modul ohne Modul-Map nicht importieren — `pod install` bricht ab mit
+# "The following Swift pods cannot yet be integrated as static libraries".
+#
+# Global statt `:modular_headers => true` je Abhaengigkeit: die Kette
+# GoogleUtilities → FirebaseCore → FirebaseCoreInternal → FirebaseCoreExtension
+# → FirebaseInstallations → FirebaseMessaging betrifft ohnehin jedes
+# Firebase-Pod, und eine Aufzaehlung veraltet beim naechsten
+# Firebase-Update still (Wurzel 4). Modul-Maps sind der Standardweg von
+# CocoaPods und aendern das Ladeverhalten der App nicht.
+use_modular_headers!
+
+target 'MyNextDaysOwner' do
+  config = use_native_modules!
+
+  use_react_native!(
+    :path => config[:reactNativePath],
+    # An absolute path to your application root.
+    :app_path => "#{Pod::Config.instance.installation_root}/.."
+  )
+
+  post_install do |installer|
+    react_native_post_install(
+      installer,
+      config[:reactNativePath],
+      :mac_catalyst_enabled => false,
+      # :ccache_enabled => true
+    )
+  end
+end
