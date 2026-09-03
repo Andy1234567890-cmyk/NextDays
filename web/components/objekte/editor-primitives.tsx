@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Button } from "@nextdays/ui/button";
+import { InfoHinweis } from "@nextdays/ui/info-hinweis";
 import { Label } from "@nextdays/ui/label";
 import {
   Sheet,
@@ -16,6 +17,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@nextdays/ui/sheet";
+import { Switch } from "@nextdays/ui/switch";
 import {
   type Channel,
   CHANNEL_LABELS,
@@ -186,22 +188,121 @@ export function Field({
   label,
   required,
   hint,
+  hintLabel,
   children,
 }: {
   label: React.ReactNode;
   required?: boolean;
-  /** Erklärender Text unter dem Feld (optional). */
+  /** Erklärender Text zum Feld (optional). Steht als „i" HINTER dem Label, nicht
+   *  als Absatz darunter: Ansage des Betriebs vom 02.09.2026 („die ganzen
+   *  zusatz texte immer als i icon und dort hinter"). Ein Formular mit einem
+   *  Erklärsatz je Feld liest sich sonst wie eine Anleitung, und die Felder
+   *  selbst rücken aus dem Blick. */
   hint?: React.ReactNode;
+  /** Was der „i"-Knopf vorliest. Ohne Angabe wird das Label genommen — bei einem
+   *  Label, das kein Text ist, MUSS er gesetzt werden, sonst hat der Knopf für
+   *  einen Screenreader keinen Namen. */
+  hintLabel?: string;
   children: React.ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <Label>
-        {label}
-        {required && <span className="ml-0.5 text-destructive">*</span>}
+      <Label className="flex items-center gap-1.5">
+        <span>
+          {label}
+          {required && <span className="ml-0.5 text-destructive">*</span>}
+        </span>
+        {hint && (
+          <FeldInfo hint={hint} ariaLabel={hintLabel ?? textAus(label)} />
+        )}
       </Label>
       {children}
-      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+    </div>
+  );
+}
+
+/** Das „i" hinter einem Label oder einer Abschnitts-Überschrift.
+ *
+ *  Liegt hier und nicht in jedem Editor, damit die Erklärungen überall gleich
+ *  aussehen und gleich bedienbar sind (Klick statt Hover — auf einem Tablet
+ *  gibt es kein Hover, siehe `InfoHinweis`). */
+export function FeldInfo({
+  hint,
+  ariaLabel,
+}: {
+  hint: React.ReactNode;
+  ariaLabel: string;
+}) {
+  return (
+    <InfoHinweis
+      // `InfoHinweis` nimmt Text; ein Knoten (z. B. ein Hinweis mit Zahl) wird
+      // als Kind gerendert, statt ihn zu String zu zwingen.
+      text={typeof hint === "string" ? hint : ""}
+      ariaLabel={ariaLabel}
+    >
+      {typeof hint === "string" ? undefined : hint}
+    </InfoHinweis>
+  );
+}
+
+/** Sprechender Name für den „i"-Knopf, wenn das Label ein reiner Text ist. */
+function textAus(label: React.ReactNode): string {
+  return typeof label === "string" ? label : "Info";
+}
+
+// Abschnitts-Überschrift mit „i" dahinter. Dieselbe Regel wie bei `Field`: die
+// Erklärung steht hinter dem Symbol, nicht als Absatz unter dem Titel.
+export function SectionTitle({
+  children,
+  hint,
+  hintLabel,
+}: {
+  children: React.ReactNode;
+  hint?: React.ReactNode;
+  hintLabel?: string;
+}) {
+  return (
+    <h3 className="flex items-center gap-1.5 font-display text-lg font-extrabold">
+      <span>{children}</span>
+      {hint && <FeldInfo hint={hint} ariaLabel={hintLabel ?? textAus(children)} />}
+    </h3>
+  );
+}
+
+// Schalter-Zeile mit „i" hinter der Beschriftung. Der ganze Titel bleibt
+// klickbar (Label), das „i" nicht — sonst schaltete ein Klick auf die Erklärung
+// den Schalter um.
+export function SwitchRow({
+  label,
+  hint,
+  hintLabel,
+  checked,
+  onCheckedChange,
+  size = "lg",
+}: {
+  label: string;
+  hint?: React.ReactNode;
+  hintLabel?: string;
+  checked: boolean;
+  onCheckedChange: (next: boolean) => void;
+  /** `lg` = Abschnitts-Schalter (eigene Überschrift), `sm` = Zeile im Fluss. */
+  size?: "lg" | "sm";
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-1.5">
+        <label
+          className={
+            size === "lg"
+              ? "cursor-pointer font-display text-lg font-extrabold"
+              : "cursor-pointer text-sm font-medium"
+          }
+        >
+          <span onClick={() => onCheckedChange(!checked)}>{label}</span>
+        </label>
+        {hint && <FeldInfo hint={hint} ariaLabel={hintLabel ?? label} />}
+      </div>
+      <Switch checked={checked} onCheckedChange={onCheckedChange} />
     </div>
   );
 }
