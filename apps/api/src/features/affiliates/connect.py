@@ -13,9 +13,23 @@ Plattformland DK, 02.09.2026):
   * `tos_acceptance.service_agreement='full'`. Der `recipient`-Weg existiert für
     eine dänische Plattform NICHT (alle 43 Kontoländer melden `tos_types=['full']`)
     und schlösse EWR-Überweisungen aus.
-  * Capability NUR `transfers`. Der Partner nimmt keine Gästezahlungen an —
-    `card_payments` anzufordern würde die KYC-Last ohne Nutzen erhöhen (MCC,
-    Website-Anforderungen, Statement-Descriptor).
+  * Capabilities `transfers` UND `card_payments`. Fachlich bräuchte ein Partner
+    nur `transfers` — er nimmt keine Gästezahlungen an. Stripe lässt das aber
+    nicht ohne ausdrückliche Freigabe der Plattform zu und lehnt schon das
+    Anlegen ab:
+        „Your platform needs approval for accounts to have requested the
+         `transfers` capability without the `card_payments` capability."
+    Live gemessen am 03.09.2026 (Plattformkonto acct_1TqaVh…, DK): mit
+    `capabilities={"transfers": …}` allein wird KEIN Konto angelegt — der
+    Partner sah im Dashboard nur diese Meldung und kam nicht weiter. Das
+    bestehende Betriebs-Konto (acct_1U19sh…) trägt beide Capabilities aktiv,
+    die Kombination geht also durch.
+    Der Preis sind mehr Pflichtfelder je Partner (Branchencode, Website,
+    Abbuchungsbezeichnung). Das ist die bewusste Entscheidung des Betriebs vom
+    03.09.2026 („die Partner müssen alle wichtige daten hinterlegen"), damit
+    Auszahlungen SOFORT möglich sind, statt auf Stripes Freigabe zu warten.
+    Kommt die Freigabe, kann `card_payments` hier wieder entfallen — der Rest
+    des Moduls hängt nicht daran (Auszahlung läuft über `transfers`).
 
 PFLICHTFELDER, die daraus folgen (DK-Plattform, EWR-Konto, `transfers`):
   * `individual`: Name, Geburtsdatum, Adresse, Nationalität, Telefon,
@@ -60,8 +74,14 @@ if TYPE_CHECKING:
 
 log = get_logger("nextdays.affiliates.connect")
 
-# Nur diese Capability. Siehe Modul-Docstring.
-_CAPABILITIES = {"transfers": {"requested": True}}
+# Beide Capabilities. `transfers` ist die fachlich nötige (Auszahlung an den
+# Partner); `card_payments` fordert Stripe zusätzlich ein, solange die
+# Plattform keine Freigabe für „transfers ohne card_payments" hat. Siehe
+# Modul-Docstring — ohne sie schlägt bereits `accounts.create` fehl.
+_CAPABILITIES = {
+    "transfers": {"requested": True},
+    "card_payments": {"requested": True},
+}
 # Branchencode 7311 = Werbedienstleistungen — was ein Partner tatsächlich tut.
 # Ohne MCC bleibt ein Requirement offen und blockiert die Freischaltung.
 _MCC = "7311"

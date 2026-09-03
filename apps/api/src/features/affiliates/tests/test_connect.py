@@ -133,19 +133,31 @@ def _db(**partner: Any) -> FakeDb:
 # --- Anlage -------------------------------------------------------------------
 
 
-def test_konto_wird_mit_transfers_und_full_agreement_angelegt() -> None:
+def test_konto_wird_mit_beiden_capabilities_und_full_agreement_angelegt() -> None:
     """Die Kontoform ist die Entscheidung aus 0522 — sie muss im Aufruf stehen.
 
-    `recipient` gibt es für eine DK-Plattform nicht, `card_payments` braucht ein
-    Partner nie. Beides wäre live erst auffällig, wenn die Freischaltung hängt.
+    `recipient` gibt es für eine DK-Plattform nicht. `card_payments` MUSS mit,
+    obwohl ein Partner es fachlich nie braucht: Stripe lehnt sonst schon das
+    Anlegen ab („Your platform needs approval for accounts to have requested
+    the `transfers` capability without the `card_payments` capability").
+
+    Dieser Test behauptete bis zum 03.09.2026 das GEGENTEIL — er prüfte
+    ausdrücklich, dass `card_payments` NICHT mitgeht, und war grün, während
+    live kein einziges Verbundkonto entstand. Ein Test, der eine unbelegte
+    Annahme festschreibt, macht sie nicht wahr; er verhindert nur, dass die
+    Korrektur auffällt. Belegt ist jetzt beides: der Fehler wurde gegen das
+    Live-Konto reproduziert, und das Bestandskonto acct_1U19sh… trägt beide
+    Capabilities aktiv, ohne offene Requirements.
     """
     db, sc = _db(), _Stripe()
     connect.konto_anlegen(db, AFF, stripe=sc)
     params = sc.angelegt[0]
     assert params["type"] == "custom"
     assert params["tos_acceptance"]["service_agreement"] == "full"
-    assert params["capabilities"] == {"transfers": {"requested": True}}
-    assert "card_payments" not in params["capabilities"]
+    assert params["capabilities"] == {
+        "transfers": {"requested": True},
+        "card_payments": {"requested": True},
+    }
     assert params["country"] == "DK"
     assert params["business_type"] == "individual"
     assert params["metadata"]["affiliate_id"] == AFF
@@ -585,3 +597,63 @@ def test_daten_senden_fuellt_email_und_ust_id_aus_dem_profil() -> None:
     assert gesendet[0]["company"]["vat_id"] == "DE123456789"
     assert gesendet[0]["company"]["registration_number"] == "HRB 1"
     assert personen[0]["email"] == "pia@example.com"
+
+
+def test_business_profile_traegt_einen_namen() -> None:
+    """`business_profile.name` MUSS mitgehen, seit `card_payments` angefordert wird.
+
+    Stripe leitet daraus die Abbuchungsbezeichnung ab. Fehlt der Name, bleibt
+    ein Requirement offen und die Freischaltung hängt — ohne dass in der
+    Oberfläche sichtbar wäre, woran. Firmenname bei Unternehmen, sonst der
+    Personenname; kein erfundener Ersatzwert (Wurzel 4).
+    """
+    import src.features.affiliates.connect_service as modul  # noqa: PLC0415
+    from src.features.affiliates.connect_service import ConnectMixin  # noqa: PLC0415
+
+    def _senden(db_zeile: dict[str, Any], firma: bool, req_extra: dict[str, Any]) -> dict[str, Any]:
+        db = _db(**db_zeile)
+        gesendet: list[dict[str, Any]] = []
+
+        class _Svc(ConnectMixin):
+            @property
+            def db(self) -> FakeDb:
+                return db
+
+        original = (
+            modul.connect.pflichtfelder,
+            modul.connect.daten_senden,
+            modul.connect.person_setzen,
+            modul.connect.status_abgleichen,
+        )
+        modul.connect.pflichtfelder = lambda land, art: {  # type: ignore[assignment]
+            "minimum": [], "zusaetzlich": [],
+        }
+        modul.connect.daten_senden = lambda _db, _a, felder: gesendet.append(felder)  # type: ignore[assignment]
+        modul.connect.person_setzen = lambda _db, _a, _person: {}  # type: ignore[assignment]
+        modul.connect.status_abgleichen = lambda _db, _a: {}  # type: ignore[assignment]
+        try:
+            _Svc().connect_daten_senden(AFF, _daten(**req_extra))
+        finally:
+            (
+                modul.connect.pflichtfelder,
+                modul.connect.daten_senden,
+                modul.connect.person_setzen,
+                modul.connect.status_abgleichen,
+            ) = original
+        return gesendet[0]["business_profile"]
+
+    # Privatperson: der Personenname.
+    profil = _senden({"stripe_account_id": KONTO, "legal_form": "private"}, False, {})
+    assert profil["name"] == "Pia Poulsen"
+    assert profil["url"] == "https://example.com"
+
+    # Unternehmen: der Firmenname gewinnt.
+    profil = _senden(
+        {"stripe_account_id": KONTO, "legal_form": "company", "company": "Pia ApS"},
+        True,
+        {
+            "company_name": "Pia ApS",
+            "company_address": {"line1": "Vej 1", "postal_code": "9881", "city": "Bindslev"},
+        },
+    )
+    assert profil["name"] == "Pia ApS"

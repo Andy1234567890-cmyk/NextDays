@@ -150,7 +150,21 @@ class ConnectMixin:
                 status_code=422,
             )
 
-        felder: dict[str, Any] = {"business_profile": {"url": req.url}}
+        # `business_profile.name` geht MIT: seit `card_payments` mit angefordert
+        # wird (03.09.2026, s. connect.py), leitet Stripe daraus die
+        # Abbuchungsbezeichnung ab. Fehlt der Name, bleibt ein Requirement
+        # offen und die Freischaltung hängt — ohne dass jemand sieht, woran.
+        # Firmenname bei Unternehmen, sonst der Personenname; ein erfundener
+        # Ersatzwert kommt nicht in Frage (Wurzel 4).
+        anzeigename = (req.company_name or "").strip() if firma else ""
+        if not anzeigename:
+            anzeigename = " ".join(
+                teil for teil in (req.person.first_name, req.person.last_name) if teil
+            ).strip()
+        profil: dict[str, Any] = {"url": req.url}
+        if anzeigename:
+            profil["name"] = anzeigename
+        felder: dict[str, Any] = {"business_profile": profil}
         if firma:
             if not req.company_name or not req.company_address:
                 raise AffiliateError(
