@@ -1930,7 +1930,8 @@
       "familyAccess": "Adgange",
       "propertyArea": "Objekter",
       "photoAlbum": "Fotoalbum",
-      "statistics": "Statistik"
+      "statistics": "Statistik",
+      "tasks": "Opgaver"
     },
     "overview": {
       "occupancy": "Belægning",
@@ -2193,6 +2194,26 @@
         "guestNights": "Gæstenætter",
         "ownerStay": "Egen benyttelse"
       }
+    },
+    "tasks": {
+      "title": "Mine opgaver",
+      "hint": "Opgaver, som administrationen har tildelt dig for dine ejendomme. Giv besked, når du starter, og når du er færdig.",
+      "openTitle": "Åben",
+      "doneTitle": "Udført",
+      "empty": "Du har ingen opgaver tildelt i øjeblikket.",
+      "emptyDone": "Intet udført endnu.",
+      "start": "Start",
+      "complete": "Meld udført",
+      "started": "Opgave startet.",
+      "completed": "Opgave meldt udført.",
+      "property": "Ejendom",
+      "window": "Tidsrum",
+      "booking": "Booking",
+      "noWindow": "Intet tidsrum",
+      "loadFailed": "Opgaver kunne ikke indlæses.",
+      "statusOpen": "Åben",
+      "statusInProgress": "I gang",
+      "statusDone": "Udført"
     }
   },
   "travelAgencies": {
@@ -4489,7 +4510,8 @@
       "pickDateTime": "Dato og tid",
       "timeLabelShort": "Tid",
       "clear": "Ryd",
-      "done": "Færdig"
+      "done": "Færdig",
+      "toObject": "Til ejendommen"
     },
     "tasksSubnav": {
       "pmModul": "PM-modul",
@@ -4577,7 +4599,10 @@
       "completeButton": "Afslut",
       "inBooking": "Til reservation {ref}",
       "assignedTo": "Til {name}",
-      "doneBy": "Afkrydset af {name}"
+      "doneBy": "Afkrydset af {name}",
+      "checklistTitle": "Tjekliste",
+      "checklistOpen": "Åbn",
+      "checklistProgress": "{done} af {total} udført"
     },
     "checkoutPaymentDialog": {
       "title": "Hvordan betaler gæsten?",
@@ -5167,7 +5192,13 @@
       "propertiesCaption": "Valgte boliger",
       "allProperties": "Alle boliger",
       "propertiesDialog": "Vælg boliger",
-      "propertiesSearch": "Søg efter navn eller by"
+      "propertiesSearch": "Søg efter navn eller by",
+      "allDates": "Alle datoer",
+      "dateFrom": "fra {datum}",
+      "dateUntil": "til {datum}",
+      "dateFromLabel": "Fra",
+      "dateUntilLabel": "Til",
+      "dateClear": "Fjern periode"
     },
     "aufgabenReiter": {
       "current": "AKTUELLE",
@@ -5320,7 +5351,9 @@
       "sourceLanguageEmpty": "Ikke angivet",
       "sourceLanguageHint": "Navnet oversættes automatisk for læsere med andre sprog — internt bliver det, som du har skrevet det.",
       "sourceLanguageMissing": "Uden angivelse oversættes navnet ikke: ejere og medarbejdere ser det præcis, som det står her.",
-      "clockLabel": "Tid"
+      "clockLabel": "Tid",
+      "templateMissingHint": "Uden opgave-skabelon og uden egne punkter oprettes opgaver uden tjekliste – i appen ser medarbejderen så kun titlen.",
+      "templateBackfillHint": "Ved lagring får eksisterende åbne opgaver for denne regel også point, hvis de ikke allerede har det."
     },
     "taskPage": {
       "backToMyTasks": "Til mine opgaver",
@@ -5417,7 +5450,8 @@
       "unbekannt": "Hidtidig tildeling",
       "gesetzt": "Ansvarlig ændret",
       "abgezogen": "Tildeling fjernet",
-      "aktion": "Tildel til …"
+      "aktion": "Tildel til …",
+      "eigentuemer": "Ejer"
     },
     "substitutions": {
       "title": "Afløsning",

@@ -2,6 +2,11 @@
 // übernommen wurde, ist dort geprüft; hier steht nur das Neue.
 import { deckkraft } from "@/components/widgets/Ring";
 import { statusName } from "@/screens/Abrechnungen";
+import {
+  aufteilen,
+  statusName as aufgabenStatus,
+  zeitfensterText,
+} from "@/screens/Aufgaben";
 import { zeitraumGrenzen } from "@/screens/Auszahlungen";
 import { zeitraumPlausibel } from "@/screens/Sperrantrag";
 import { kanalName, kanalTeile } from "@/screens/Ueberblick";
@@ -174,5 +179,52 @@ describe("kanalTeile", () => {
 
   it("gibt bei leerer Eingabe eine leere Liste — der Ring zeigt dann Strich", () => {
     expect(kanalTeile([])).toEqual([]);
+  });
+});
+
+// --- Eigentümer-Aufgaben (03.09.2026) ---------------------------------------
+
+describe("zeitfensterText", () => {
+  it("nennt Tag und Uhrzeit, das Ende am selben Tag nur als Uhrzeit", () => {
+    const a = new Date(2026, 8, 13, 10, 0).toISOString();
+    const b = new Date(2026, 8, 13, 14, 0).toISOString();
+    expect(zeitfensterText(a, b)).toBe("13.09., 10:00 – 14:00");
+  });
+
+  // Typografische Anführungszeichen NICHT im String-Literal (brechen es).
+  it("zeigt ein Ende am Folgetag MIT Datum, sonst saehe 02:00 bis 02:00 wie ein Nullfenster aus", () => {
+    const a = new Date(2026, 8, 13, 22, 0).toISOString();
+    const b = new Date(2026, 8, 14, 2, 0).toISOString();
+    expect(zeitfensterText(a, b)).toBe("13.09., 22:00 – 14.09., 02:00");
+  });
+
+  it("erfindet ohne Start kein Fenster", () => {
+    expect(zeitfensterText(null, null)).toBe("Kein Zeitfenster");
+  });
+});
+
+describe("aufteilen", () => {
+  const basis = {
+    title: "Reinigung", property_id: "p1", property_title: "Britt",
+    start_at: null, end_at: null, reservation_ref: null,
+    checklist_total: 0, checklist_done: 0,
+  };
+  it("legt erledigte und stornierte nach unten, alles andere bleibt offen", () => {
+    const { offen, erledigt } = aufteilen([
+      { ...basis, id: "1", status: "open" },
+      { ...basis, id: "2", status: "in_progress" },
+      { ...basis, id: "3", status: "done" },
+      { ...basis, id: "4", status: "cancelled" },
+      { ...basis, id: "5", status: "accepted" },
+    ]);
+    expect(offen.map((x) => x.id)).toEqual(["1", "2", "5"]);
+    expect(erledigt.map((x) => x.id)).toEqual(["3", "4"]);
+  });
+});
+
+describe("aufgabenStatus", () => {
+  it("übersetzt die bekannten Codes und lässt Unbekanntes roh stehen", () => {
+    expect(aufgabenStatus("in_progress")).toBe("In Arbeit");
+    expect(aufgabenStatus("wasauchimmer")).toBe("wasauchimmer");
   });
 });

@@ -1930,7 +1930,8 @@
       "familyAccess": "Access",
       "photoAlbum": "Photo album",
       "propertyArea": "Property area",
-      "statistics": "Statistics"
+      "statistics": "Statistics",
+      "tasks": "Tasks"
     },
     "overview": {
       "occupancy": "Occupancy",
@@ -2193,6 +2194,26 @@
       "previous": "Previous image",
       "subtitle": "All images from your properties, grouped by property.",
       "title": "Photo album"
+    },
+    "tasks": {
+      "title": "My tasks",
+      "hint": "Tasks that the administration has assigned to you for your properties. Report back when you start and when you finish.",
+      "openTitle": "Open",
+      "doneTitle": "Done",
+      "empty": "No tasks are currently assigned to you.",
+      "emptyDone": "Nothing done yet.",
+      "start": "Start",
+      "complete": "Mark as done",
+      "started": "Task started.",
+      "completed": "Task reported as done.",
+      "property": "Property",
+      "window": "Time slot",
+      "booking": "Booking",
+      "noWindow": "No time slot",
+      "loadFailed": "Tasks could not be loaded.",
+      "statusOpen": "Open",
+      "statusInProgress": "In progress",
+      "statusDone": "Done"
     }
   },
   "travelAgencies": {
@@ -4489,7 +4510,8 @@
       "pickDateTime": "Date & Time",
       "timeLabelShort": "Time",
       "clear": "Clear",
-      "done": "Done"
+      "done": "Done",
+      "toObject": "To the property"
     },
     "tasksSubnav": {
       "pmModul": "PM module",
@@ -4577,7 +4599,10 @@
       "completeButton": "Complete",
       "inBooking": "To booking {ref}",
       "assignedTo": "For {name}",
-      "doneBy": "Checked off by {name}"
+      "doneBy": "Checked off by {name}",
+      "checklistTitle": "Checklist",
+      "checklistOpen": "Open",
+      "checklistProgress": "{done} of {total} completed"
     },
     "checkoutPaymentDialog": {
       "title": "How is the guest paying?",
@@ -5188,7 +5213,13 @@
       "propertiesCaption": "Selected accommodations",
       "allProperties": "All accommodations",
       "propertiesDialog": "Select accommodations",
-      "propertiesSearch": "Search by name or city"
+      "propertiesSearch": "Search by name or city",
+      "allDates": "All dates",
+      "dateFrom": "from {datum}",
+      "dateUntil": "until {datum}",
+      "dateFromLabel": "From",
+      "dateUntilLabel": "To",
+      "dateClear": "Clear date range"
     },
     "aufgabenReiter": {
       "current": "CURRENT",
@@ -5341,7 +5372,9 @@
       "sourceLanguageEmpty": "Not specified",
       "sourceLanguageHint": "The name is translated automatically for readers of other languages — internally it stays exactly as you typed it.",
       "sourceLanguageMissing": "Without this, the name is not translated: owners and staff will see it exactly as it appears here.",
-      "clockLabel": "Time"
+      "clockLabel": "Time",
+      "templateMissingHint": "Without a task template and without your own points, tasks are created without a checklist – in the app, the employee will only see the title.",
+      "templateBackfillHint": "When saving, existing open tasks of this rule will also receive the points, if they do not have any yet."
     },
     "taskPage": {
       "backToMyTasks": "Back to my tasks",
@@ -5438,7 +5471,8 @@
       "unbekannt": "Previous assignee",
       "gesetzt": "Assignee changed",
       "abgezogen": "Assignment removed",
-      "aktion": "Assign to …"
+      "aktion": "Assign to …",
+      "eigentuemer": "Owner"
     },
     "substitutions": {
       "title": "Cover requests",

@@ -1930,7 +1930,8 @@
       "familyAccess": "Prístupy",
       "propertyArea": "Oblasť objektov",
       "photoAlbum": "Fotoalbum",
-      "statistics": "Štatistiky"
+      "statistics": "Štatistiky",
+      "tasks": "Úlohy"
     },
     "overview": {
       "occupancy": "Obsadenosť",
@@ -2193,6 +2194,26 @@
         "guestNights": "Noci hostí",
         "ownerStay": "Vlastné užívanie"
       }
+    },
+    "tasks": {
+      "title": "Moje úlohy",
+      "hint": "Úlohy, ktoré vám správa pridelila k vašim nehnuteľnostiam. Nahláste, keď začnete a keď skončíte.",
+      "openTitle": "Otvorené",
+      "doneTitle": "Hotovo",
+      "empty": "Momentálne vám nie je pridelená žiadna úloha.",
+      "emptyDone": "Zatiaľ nič hotové.",
+      "start": "Začať",
+      "complete": "Nahlásiť hotovo",
+      "started": "Úloha začala.",
+      "completed": "Úloha nahlásená ako hotová.",
+      "property": "Nehnuteľnosť",
+      "window": "Časové okno",
+      "booking": "Rezervácia",
+      "noWindow": "Žiadne časové okno",
+      "loadFailed": "Úlohy sa nepodarilo načítať.",
+      "statusOpen": "Otvorené",
+      "statusInProgress": "Prebieha",
+      "statusDone": "Hotovo"
     }
   },
   "travelAgencies": {
@@ -4489,7 +4510,8 @@
       "pickDateTime": "Dátum a čas",
       "timeLabelShort": "Čas",
       "clear": "Vyprázdniť",
-      "done": "Hotovo"
+      "done": "Hotovo",
+      "toObject": "K nehnuteľnosti"
     },
     "tasksSubnav": {
       "pmModul": "PM modul",
@@ -4577,7 +4599,10 @@
       "completeButton": "Dokončiť",
       "inBooking": "Na rezerváciu {ref}",
       "assignedTo": "Pre {name}",
-      "doneBy": "Odškrtol(a) {name}"
+      "doneBy": "Odškrtol(a) {name}",
+      "checklistTitle": "Kontrolný zoznam",
+      "checklistOpen": "Otvoriť",
+      "checklistProgress": "Dokončené: {done} z {total}"
     },
     "checkoutPaymentDialog": {
       "title": "Ako hosť platí?",
@@ -5167,7 +5192,13 @@
       "propertiesCaption": "Vybrané ubytovania",
       "allProperties": "Všetky ubytovania",
       "propertiesDialog": "Vybrať ubytovania",
-      "propertiesSearch": "Hľadať podľa názvu alebo mesta"
+      "propertiesSearch": "Hľadať podľa názvu alebo mesta",
+      "allDates": "Všetky dátumy",
+      "dateFrom": "od {datum}",
+      "dateUntil": "do {datum}",
+      "dateFromLabel": "Od",
+      "dateUntilLabel": "Do",
+      "dateClear": "Zrušiť obdobie"
     },
     "aufgabenReiter": {
       "current": "AKTUÁLNE",
@@ -5320,7 +5351,9 @@
       "sourceLanguageEmpty": "Neuvedené",
       "sourceLanguageHint": "Názov sa automaticky preloží pre čitateľov v iných jazykoch — interne zostáva tak, ako ste ho zadali.",
       "sourceLanguageMissing": "Bez uvedenia sa názov nepreloží: vlastníci a zamestnanci ho uvidia presne tak, ako je tu.",
-      "clockLabel": "Čas"
+      "clockLabel": "Čas",
+      "templateMissingHint": "Bez šablóny úloh a bez vlastných bodov sa úlohy vytvárajú bez kontrolného zoznamu – v aplikácii potom zamestnankyňa uvidí iba názov.",
+      "templateBackfillHint": "Pri uložení získajú body aj existujúce otvorené úlohy tohto pravidla, ak ich ešte nemajú."
     },
     "taskPage": {
       "backToMyTasks": "Na moje úlohy",
@@ -5417,7 +5450,8 @@
       "unbekannt": "Doterajšie priradenie",
       "gesetzt": "Priradenie zmenené",
       "abgezogen": "Priradenie zrušené",
-      "aktion": "Priradiť …"
+      "aktion": "Priradiť …",
+      "eigentuemer": "Majiteľ"
     },
     "substitutions": {
       "title": "Zástupy",

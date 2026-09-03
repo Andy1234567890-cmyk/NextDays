@@ -50,12 +50,17 @@ export function TaskCreatePopup({
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    void listTaskAssignees().then((r) => {
+    // MIT Objekt (03.09.2026): erst dann stehen Eigentümer zur Wahl, und
+    // nur der, dem dieses Objekt gehört. Ohne das Objekt böte die Liste
+    // Personen an, deren Wahl der Server anschließend mit 422 ablehnt.
+    void listTaskAssignees(propertyId).then((r) => {
       if (r.ok) {
-        setUsers(mitarbeiterOptionen(r.data));
+        setUsers(
+          mitarbeiterOptionen(r.data, { eigentuemer: t("zustaendig.eigentuemer") }),
+        );
       }
     });
-  }, []);
+  }, [propertyId, t]);
 
   const save = async () => {
     if (!title.trim()) {

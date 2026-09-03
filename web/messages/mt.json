@@ -1930,7 +1930,8 @@
       "familyAccess": "Aċċessi",
       "propertyArea": "Dettalji tal-proprjetà",
       "photoAlbum": "Album tar-ritratti",
-      "statistics": "Statistiċi"
+      "statistics": "Statistiċi",
+      "tasks": "Ħidmiet"
     },
     "overview": {
       "occupancy": "Okkupazzjoni",
@@ -2193,6 +2194,26 @@
         "guestNights": "Iljieli tal-mistednin",
         "ownerStay": "Użu tas-sid"
       }
+    },
+    "tasks": {
+      "title": "Il-kompiti tiegħi",
+      "hint": "Kompiti assenjati lilek mill-amministrazzjoni fil-proprjetajiet tiegħek. Irrapporta lura meta tibda u meta tispiċċa.",
+      "openTitle": "Miftuħa",
+      "doneTitle": "Magħmula",
+      "empty": "Bħalissa m'hemm l-ebda kompitu assenjat lilek.",
+      "emptyDone": "Għadu ma sar xejn.",
+      "start": "Ibda",
+      "complete": "Irrapporta bħala magħmula",
+      "started": "Kompitu beda.",
+      "completed": "Kompitu rrapportat bħala magħmul.",
+      "property": "Proprjetà",
+      "window": "Tieqa ta' żmien",
+      "booking": "Booking",
+      "noWindow": "L-ebda tieqa ta' żmien",
+      "loadFailed": "Il-kompiti ma setgħux jitgħabbew.",
+      "statusOpen": "Miftuħa",
+      "statusInProgress": "Qed isir",
+      "statusDone": "Magħmula"
     }
   },
   "travelAgencies": {
@@ -4489,7 +4510,8 @@
       "pickDateTime": "Data u Ħin",
       "timeLabelShort": "Ħin",
       "clear": "Żvojta",
-      "done": "Magħmul"
+      "done": "Magħmul",
+      "toObject": "Mur lill-proprjetà"
     },
     "tasksSubnav": {
       "pmModul": "Modulu PM",
@@ -4577,7 +4599,10 @@
       "completeButton": "Ikkompleta",
       "inBooking": "Għar-riżervazzjoni {ref}",
       "assignedTo": "Għal {name}",
-      "doneBy": "Immarkat minn {name}"
+      "doneBy": "Immarkat minn {name}",
+      "checklistTitle": "Lista ta' kontroll",
+      "checklistOpen": "Iftaħ",
+      "checklistProgress": "{done} minn {total} kompluti"
     },
     "checkoutPaymentDialog": {
       "title": "Kif se jħallas il-mistieden?",
@@ -5167,7 +5192,13 @@
       "propertiesCaption": "Akkomodazzjoni magħżula",
       "allProperties": "L-akkomodazzjoni kollha",
       "propertiesDialog": "Agħżel akkomodazzjoni",
-      "propertiesSearch": "Fittex bl-isem jew bil-belt"
+      "propertiesSearch": "Fittex bl-isem jew bil-belt",
+      "allDates": "Id-dati kollha",
+      "dateFrom": "mill-{datum}",
+      "dateUntil": "sal-{datum}",
+      "dateFromLabel": "Minn",
+      "dateUntilLabel": "Sa",
+      "dateClear": "Neħħi l-perjodu"
     },
     "aufgabenReiter": {
       "current": "KURRENTI",
@@ -5320,7 +5351,9 @@
       "sourceLanguageEmpty": "Mhux speċifikat",
       "sourceLanguageHint": "L-isem jiġi tradott awtomatikament għal qarrejja ta' lingwi oħra — internament jibqa' kif ktibtu.",
       "sourceLanguageMissing": "Mingħajr din l-indikazzjoni l-isem ma jiġix tradott: is-sidien u l-persunal jarawh eżattament kif jidher hawn.",
-      "clockLabel": "Ħin"
+      "clockLabel": "Ħin",
+      "templateMissingHint": "Mingħajr mudell ta' kompitu u mingħajr punti proprji, jinħolqu kompiti mingħajr lista ta' kontroll – fl-app l-impjegata tara biss it-titlu.",
+      "templateBackfillHint": "Meta l-iffrankar, il-kompiti miftuħa eżistenti għal din ir-regola se jirċievu wkoll il-punti, jekk għadhom m'għandhomx."
     },
     "taskPage": {
       "backToMyTasks": "Lura għall-kompiti tiegħi",
@@ -5417,7 +5450,8 @@
       "unbekannt": "Assenjazzjoni preċedenti",
       "gesetzt": "Ir-responsabbli nbidel",
       "abgezogen": "L-assenjazzjoni tneħħiet",
-      "aktion": "Assenja lil …"
+      "aktion": "Assenja lil …",
+      "eigentuemer": "Sid"
     },
     "substitutions": {
       "title": "Sostituzzjoni",

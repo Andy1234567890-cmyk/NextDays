@@ -1930,7 +1930,8 @@
       "familyAccess": "Dostępy",
       "propertyArea": "Dane obiektów",
       "photoAlbum": "Album zdjęć",
-      "statistics": "Statystyki"
+      "statistics": "Statystyki",
+      "tasks": "Zadania"
     },
     "overview": {
       "occupancy": "Obłożenie",
@@ -2193,6 +2194,26 @@
         "guestNights": "Noce gości",
         "ownerStay": "Użytek własny"
       }
+    },
+    "tasks": {
+      "title": "Moje zadania",
+      "hint": "Zadania, które zarząd przypisał Ci w Twoich obiektach. Zgłoś, kiedy zaczynasz i kiedy kończysz.",
+      "openTitle": "Otwarte",
+      "doneTitle": "Wykonane",
+      "empty": "Obecnie nie masz przypisanych zadań.",
+      "emptyDone": "Jeszcze nic nie zrobiono.",
+      "start": "Rozpocznij",
+      "complete": "Zgłoś jako wykonane",
+      "started": "Zadanie rozpoczęte.",
+      "completed": "Zadanie zgłoszone jako wykonane.",
+      "property": "Obiekt",
+      "window": "Przedział czasowy",
+      "booking": "Rezerwacja",
+      "noWindow": "Brak przedziału czasowego",
+      "loadFailed": "Nie udało się załadować zadań.",
+      "statusOpen": "Otwarte",
+      "statusInProgress": "W toku",
+      "statusDone": "Wykonane"
     }
   },
   "travelAgencies": {
@@ -4489,7 +4510,8 @@
       "pickDateTime": "Data i czas",
       "timeLabelShort": "Czas",
       "clear": "Wyczyść",
-      "done": "Gotowe"
+      "done": "Gotowe",
+      "toObject": "Do obiektu"
     },
     "tasksSubnav": {
       "pmModul": "Moduł PM",
@@ -4577,7 +4599,10 @@
       "completeButton": "Zakończ",
       "inBooking": "Do rezerwacji {ref}",
       "assignedTo": "Dla {name}",
-      "doneBy": "Odhaczone przez {name}"
+      "doneBy": "Odhaczone przez {name}",
+      "checklistTitle": "Lista kontrolna",
+      "checklistOpen": "Otwórz",
+      "checklistProgress": "Ukończono {done} z {total}"
     },
     "checkoutPaymentDialog": {
       "title": "Jak płaci gość?",
@@ -5167,7 +5192,13 @@
       "propertiesCaption": "Wybrane obiekty",
       "allProperties": "Wszystkie obiekty",
       "propertiesDialog": "Wybierz obiekty",
-      "propertiesSearch": "Szukaj po nazwie lub mieście"
+      "propertiesSearch": "Szukaj po nazwie lub mieście",
+      "allDates": "Wszystkie daty",
+      "dateFrom": "od {datum}",
+      "dateUntil": "do {datum}",
+      "dateFromLabel": "Od",
+      "dateUntilLabel": "Do",
+      "dateClear": "Usuń zakres dat"
     },
     "aufgabenReiter": {
       "current": "BIEŻĄCE",
@@ -5320,7 +5351,9 @@
       "sourceLanguageEmpty": "Nie podano",
       "sourceLanguageHint": "Nazwa jest automatycznie tłumaczona dla osób czytających w innych językach — wewnętrznie pozostaje taka, jak ją wpisano.",
       "sourceLanguageMissing": "Bez tej informacji nazwa nie jest tłumaczona: właściciele i pracownicy zobaczą ją dokładnie tak, jak tutaj.",
-      "clockLabel": "Godzina"
+      "clockLabel": "Godzina",
+      "templateMissingHint": "Bez szablonu zadań i bez własnych punktów zadania są tworzone bez listy kontrolnej – w aplikacji pracownik widzi wtedy tylko tytuł.",
+      "templateBackfillHint": "Podczas zapisywania, istniejące otwarte zadania tej reguły również otrzymają punkty, jeśli jeszcze ich nie mają."
     },
     "taskPage": {
       "backToMyTasks": "Do moich zadań",
@@ -5417,7 +5450,8 @@
       "unbekannt": "Dotychczasowe przypisanie",
       "gesetzt": "Zmieniono osobę odpowiedzialną",
       "abgezogen": "Cofnięto przypisanie",
-      "aktion": "Przypisz do …"
+      "aktion": "Przypisz do …",
+      "eigentuemer": "Właściciel"
     },
     "substitutions": {
       "title": "Zastępstwa",

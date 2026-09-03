@@ -69,13 +69,18 @@ export function TaskPopover({
   task,
   onClose,
   onDeleted,
-  onPhotos,
+  onOpen,
   darfZuweisen = false,
 }: {
   task: TaskListItem;
   onClose: () => void;
   onDeleted: () => void;
-  onPhotos: () => void;
+  /** Öffnet die AUFGABE (Detailansicht mit Checkliste, Fortschritt, Fotos).
+   *  Hieß bis zum 03.09.2026 `onPhotos` und stand hinter dem Knopf „Fotos" —
+   *  während „Ansehen" zum OBJEKT führte. Wer wissen wollte, ob die
+   *  Mitarbeiterin die Aufgabe erledigt hat, landete auf der Objektübersicht
+   *  und fand nichts. */
+  onOpen: () => void;
 
   /** Eigener Guard statt „der Kalender ist ohnehin MANAGE_TASKS-geschützt":
    *  diese Komponente kennt ihren Aufrufer nicht. Heute gibt es genau einen,
@@ -155,9 +160,11 @@ export function TaskPopover({
     von !== alsLokal(task.start_at ?? task.due_at) ||
     bis !== alsLokal(task.end_at);
 
-  // „Ansehen" führt zum Objekt. Bei Zusatzleistungs-Aufgaben direkt zum
-  // Zusatzleistungen-Reiter, sonst zur Objektübersicht. Ohne Objekt kein Link.
-  const viewHref = task.property_id
+  // „Zum Objekt": bei Zusatzleistungs-Aufgaben direkt zum Zusatzleistungen-
+  // Reiter, sonst zur Objektübersicht. Ohne Objekt kein Link. Das war bis zum
+  // 03.09.2026 der Knopf „Ansehen" — irreführend, weil niemand unter „Ansehen"
+  // einer Aufgabe das Objekt erwartet.
+  const objektHref = task.property_id
     ? task.title.toLowerCase().startsWith("zusatzleistung")
       ? `/objekte/${task.property_id}/zusatzleistungen`
       : `/objekte/${task.property_id}`
@@ -333,13 +340,18 @@ export function TaskPopover({
             Anordnung in allen 24 Sprachen gleich. Die Objekt-Spalte bleibt
             leer, wenn es kein Objekt gibt, statt die anderen zu verschieben. */}
         <div className="grid grid-cols-3 gap-2 border-t bg-muted/30 px-4 py-3">
-          <Button variant="outline" size="sm" onClick={onPhotos}>
-            <Icon icon="ph:camera" className="size-4" />
-            {t("taskPopover.photos")}
+          {/* „Ansehen" öffnet die Aufgabe selbst — Checkliste mit Haken je
+              Punkt, Fotos, Auslagen, Rückmeldung. Der Fotoweg liegt darin. */}
+          <Button variant="outline" size="sm" onClick={onOpen}>
+            <Icon icon="ph:eye" className="size-4" />
+            {t("taskPopover.view")}
           </Button>
-          {viewHref ? (
+          {objektHref ? (
             <Button variant="outline" size="sm" asChild>
-              <Link href={viewHref}>{t("taskPopover.view")}</Link>
+              <Link href={objektHref}>
+                <Icon icon="ph:house" className="size-4" />
+                {t("taskPopover.toObject")}
+              </Link>
             </Button>
           ) : (
             <span aria-hidden />

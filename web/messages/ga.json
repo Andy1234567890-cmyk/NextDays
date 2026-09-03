@@ -1930,7 +1930,8 @@
       "familyAccess": "Rochtain",
       "propertyArea": "Limistéar réadmhaoine",
       "photoAlbum": "Albam grianghraf",
-      "statistics": "Staitisticí"
+      "statistics": "Staitisticí",
+      "tasks": "Tascanna"
     },
     "overview": {
       "occupancy": "Áitíocht",
@@ -2193,6 +2194,26 @@
         "guestNights": "Oícheanta aíonna",
         "ownerStay": "Úsáid an úinéara"
       }
+    },
+    "tasks": {
+      "title": "Mo Thascanna",
+      "hint": "Thascanna a shann an lucht bainistíochta duit ag d’áitribh. Tabhair tuairisc ar an uair a thosaíonn tú agus ar an uair a chríochnaíonn tú.",
+      "openTitle": "Oscailte",
+      "doneTitle": "Críochnaithe",
+      "empty": "Níl aon tasc sannta duit faoi láthair.",
+      "emptyDone": "Níor críochnaíodh aon rud fós.",
+      "start": "Tosaigh",
+      "complete": "Tuairiscigh Críochnaithe",
+      "started": "Tasc tosaithe.",
+      "completed": "Tasc tuairiscithe mar chríochnaithe.",
+      "property": "Maoin",
+      "window": "Fuinneog Ama",
+      "booking": "Áirithint",
+      "noWindow": "Gan Fuinneog Ama",
+      "loadFailed": "Níorbh fhéidir tascanna a luchtú.",
+      "statusOpen": "Oscailte",
+      "statusInProgress": "Ar Siúl",
+      "statusDone": "Críochnaithe"
     }
   },
   "travelAgencies": {
@@ -4489,7 +4510,8 @@
       "pickDateTime": "Dáta & Am",
       "timeLabelShort": "Am",
       "clear": "Glan",
-      "done": "Déanta"
+      "done": "Déanta",
+      "toObject": "Go to property"
     },
     "tasksSubnav": {
       "pmModul": "Modúl PM",
@@ -4577,7 +4599,10 @@
       "completeButton": "Críochnaigh",
       "inBooking": "Chuig áirithint {ref}",
       "assignedTo": "Do {name}",
-      "doneBy": "Ticeáilte ag {name}"
+      "doneBy": "Ticeáilte ag {name}",
+      "checklistTitle": "Seicliosta",
+      "checklistOpen": "Oscailte",
+      "checklistProgress": "{done} as {total} críochnaithe"
     },
     "checkoutPaymentDialog": {
       "title": "Conas a íocann an t-aoi?",
@@ -5167,7 +5192,13 @@
       "propertiesCaption": "Cóiríocht roghnaithe",
       "allProperties": "Gach cóiríocht",
       "propertiesDialog": "Roghnaigh cóiríocht",
-      "propertiesSearch": "Cuardaigh de réir ainm nó cathrach"
+      "propertiesSearch": "Cuardaigh de réir ainm nó cathrach",
+      "allDates": "Gach dáta",
+      "dateFrom": "ó {datum}",
+      "dateUntil": "go dtí {datum}",
+      "dateFromLabel": "Ó",
+      "dateUntilLabel": "Go dtí",
+      "dateClear": "Glan an tréimhse"
     },
     "aufgabenReiter": {
       "current": "REATHA",
@@ -5320,7 +5351,9 @@
       "sourceLanguageEmpty": "Gan sonrú",
       "sourceLanguageHint": "Aistrítear an t-ainm go huathoibríoch do léitheoirí teangacha eile — go hinmheánach fanann sé mar a chlóscríobh tú é.",
       "sourceLanguageMissing": "Gan sonrú, ní aistrítear an t-ainm: feicfidh úinéirí agus foireann é go beacht mar atá sé anseo.",
-      "clockLabel": "Am"
+      "clockLabel": "Am",
+      "templateMissingHint": "Gan teimpléad tascanna agus gan pointí féin, cruthaítear tascanna gan seicliosta – san aip ní fheiceann an fostaí ach an teideal.",
+      "templateBackfillHint": "Nuair a shábhálfar é, gheobhaidh tascanna oscailte atá ann cheana féin don riail seo na pointí freisin, mura bhfuil siad acu cheana féin."
     },
     "taskPage": {
       "backToMyTasks": "Ar ais chuig mo thascanna",
@@ -5417,7 +5450,8 @@
       "unbekannt": "Sannadh roimhe seo",
       "gesetzt": "Athraíodh an sannadh",
       "abgezogen": "Baineadh an sannadh",
-      "aktion": "Sann do …"
+      "aktion": "Sann do …",
+      "eigentuemer": "Úinéir"
     },
     "substitutions": {
       "title": "Ionadaíocht",

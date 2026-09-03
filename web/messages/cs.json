@@ -1930,7 +1930,8 @@
       "familyAccess": "Přístupy",
       "propertyArea": "Objekty",
       "photoAlbum": "Fotoalbum",
-      "statistics": "Statistiky"
+      "statistics": "Statistiky",
+      "tasks": "Úkoly"
     },
     "overview": {
       "occupancy": "Obsazenost",
@@ -2193,6 +2194,26 @@
         "guestNights": "Noci hostů",
         "ownerStay": "Vlastní užívání"
       }
+    },
+    "tasks": {
+      "title": "Moje úkoly",
+      "hint": "Úkoly, které vám správa přidělila k vašim objektům. Oznamte, až začnete a až budete hotovi.",
+      "openTitle": "Otevřené",
+      "doneTitle": "Vyřízené",
+      "empty": "Momentálně vám není přidělen žádný úkol.",
+      "emptyDone": "Zatím nic vyřízeno.",
+      "start": "Začít",
+      "complete": "Nahlásit hotovo",
+      "started": "Úkol zahájen.",
+      "completed": "Úkol nahlášen jako vyřízený.",
+      "property": "Objekt",
+      "window": "Časové okno",
+      "booking": "Rezervace",
+      "noWindow": "Žádné časové okno",
+      "loadFailed": "Úkoly nelze načíst.",
+      "statusOpen": "Otevřené",
+      "statusInProgress": "Probíhá",
+      "statusDone": "Vyřízené"
     }
   },
   "travelAgencies": {
@@ -4489,7 +4510,8 @@
       "pickDateTime": "Datum a čas",
       "timeLabelShort": "Čas",
       "clear": "Vyprázdnit",
-      "done": "Hotovo"
+      "done": "Hotovo",
+      "toObject": "K objektu"
     },
     "tasksSubnav": {
       "pmModul": "PM modul",
@@ -4577,7 +4599,10 @@
       "completeButton": "Dokončit",
       "inBooking": "K rezervaci {ref}",
       "assignedTo": "Pro {name}",
-      "doneBy": "Odškrtl(a) {name}"
+      "doneBy": "Odškrtl(a) {name}",
+      "checklistTitle": "Kontrolní seznam",
+      "checklistOpen": "Otevřít",
+      "checklistProgress": "Dokončeno: {done} z {total}"
     },
     "checkoutPaymentDialog": {
       "title": "Jak host platí?",
@@ -5167,7 +5192,13 @@
       "propertiesCaption": "Vybrané ubytování",
       "allProperties": "Všechna ubytování",
       "propertiesDialog": "Vybrat ubytování",
-      "propertiesSearch": "Hledat podle názvu nebo města"
+      "propertiesSearch": "Hledat podle názvu nebo města",
+      "allDates": "Všechna data",
+      "dateFrom": "od {datum}",
+      "dateUntil": "do {datum}",
+      "dateFromLabel": "Od",
+      "dateUntilLabel": "Do",
+      "dateClear": "Zrušit období"
     },
     "aufgabenReiter": {
       "current": "AKTUÁLNÍ",
@@ -5320,7 +5351,9 @@
       "sourceLanguageEmpty": "Neuvedeno",
       "sourceLanguageHint": "Název se automaticky přeloží pro čtenáře v jiných jazycích — interně zůstává tak, jak jste jej zadali.",
       "sourceLanguageMissing": "Bez uvedení se název nepřekládá: vlastníci a zaměstnanci jej uvidí přesně tak, jak je zde.",
-      "clockLabel": "Čas"
+      "clockLabel": "Čas",
+      "templateMissingHint": "Bez šablony úkolu a bez vlastních bodů vznikají úkoly bez kontrolního seznamu – v aplikaci pak zaměstnankyně vidí pouze název.",
+      "templateBackfillHint": "Při uložení získají body i stávající otevřené úkoly tohoto pravidla, pokud je ještě nemají."
     },
     "taskPage": {
       "backToMyTasks": "Na mé úkoly",
@@ -5417,7 +5450,8 @@
       "unbekannt": "Dosavadní přiřazení",
       "gesetzt": "Přiřazení změněno",
       "abgezogen": "Přiřazení zrušeno",
-      "aktion": "Přiřadit …"
+      "aktion": "Přiřadit …",
+      "eigentuemer": "Majitel"
     },
     "substitutions": {
       "title": "Zástupy",

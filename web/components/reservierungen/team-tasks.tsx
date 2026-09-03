@@ -14,7 +14,13 @@ import { AufgabenTabelle } from "@/components/reservierungen/aufgaben-tabelle";
 import { MassenaktionenFab } from "@/components/reservierungen/massenaktionen-fab";
 import { TaskDetailModal } from "@/components/reservierungen/task-detail-modal";
 import { mitarbeiterOptionen } from "@/lib/mitarbeiter-optionen";
-import { UNASSIGNED, tagesendeIso } from "@/lib/aufgaben-konstanten";
+import {
+  LEERER_ZEITRAUM,
+  UNASSIGNED,
+  type Zeitraum,
+  tagesendeIso,
+  zeitraumGrenzen,
+} from "@/lib/aufgaben-konstanten";
 import { listProperties } from "@/lib/properties";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import { STATUS_REIHENFOLGE } from "@/lib/aufgaben-status";
@@ -41,6 +47,11 @@ export function TeamTasks() {
   const [propFilter, setPropFilter] = useState<string[]>([]);
   const [userFilter, setUserFilter] = useState<string[]>([]);
   const [ruleFilter, setRuleFilter] = useState<string[]>([]);
+  // Datumsfilter „von–bis". Anders als der Statusfilter wirkt er SERVERSEITIG:
+  // er grenzt die Menge wirklich ein, statt geladene Zeilen zu verbergen —
+  // sonst zeigte der Reiter „Aktuell" weiter alle Aufgaben und nur die Tabelle
+  // darunter wäre gefiltert.
+  const [zeitraum, setZeitraum] = useState<Zeitraum>(LEERER_ZEITRAUM);
   // Filter nach ARBEITSZUSTAND (offen · angenommen · in Arbeit · erledigt ·
   // abgesagt). Er ergaenzt die Reiter, ersetzt sie NICHT: die Reiter teilen
   // zeitlich (aktuell/bevorstehend/abgeschlossen), dieser Filter nach dem
@@ -68,13 +79,14 @@ export function TeamTasks() {
         property_ids: propFilter,
         assignee_ids: userFilter,
         rule_ids: ruleFilter,
+        ...zeitraumGrenzen(zeitraum),
         tagesende: tagesendeIso(),
       });
       if (res.ok) setRows(res.data);
       else fehlerMelden(res);
       setLoading(false);
     },
-    [tab, propFilter, userFilter, ruleFilter],
+    [tab, propFilter, userFilter, ruleFilter, zeitraum],
   );
 
   const stillNachladen = useCallback(() => {
@@ -179,6 +191,7 @@ export function TeamTasks() {
             </span>
           )}
           <AufgabenFilter
+            zeitraum={{ wert: zeitraum, onChange: setZeitraum }}
             filters={[
               {
                 key: "rule",

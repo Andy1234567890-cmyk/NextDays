@@ -1930,7 +1930,8 @@
       "familyAccess": "Accesos",
       "propertyArea": "Alojamientos",
       "photoAlbum": "Álbum de fotos",
-      "statistics": "Estadísticas"
+      "statistics": "Estadísticas",
+      "tasks": "Tareas"
     },
     "overview": {
       "occupancy": "Ocupación",
@@ -2193,6 +2194,26 @@
         "guestNights": "Noches de huéspedes",
         "ownerStay": "Uso propio"
       }
+    },
+    "tasks": {
+      "title": "Mis tareas",
+      "hint": "Tareas que la administración le ha asignado en sus propiedades. Informe cuando empiece y cuando termine.",
+      "openTitle": "Abierto",
+      "doneTitle": "Completado",
+      "empty": "Actualmente no tiene ninguna tarea asignada.",
+      "emptyDone": "Todavía no se ha hecho nada.",
+      "start": "Empezar",
+      "complete": "Marcar como completado",
+      "started": "Tarea iniciada.",
+      "completed": "Tarea marcada como completada.",
+      "property": "Propiedad",
+      "window": "Franja horaria",
+      "booking": "Reserva",
+      "noWindow": "Sin franja horaria",
+      "loadFailed": "No se pudieron cargar las tareas.",
+      "statusOpen": "Abierto",
+      "statusInProgress": "En curso",
+      "statusDone": "Completado"
     }
   },
   "travelAgencies": {
@@ -4489,7 +4510,8 @@
       "pickDateTime": "Fecha y hora",
       "timeLabelShort": "Hora",
       "clear": "Borrar",
-      "done": "Listo"
+      "done": "Listo",
+      "toObject": "Ir a la propiedad"
     },
     "tasksSubnav": {
       "pmModul": "Módulo PM",
@@ -4577,7 +4599,10 @@
       "completeButton": "Completar",
       "inBooking": "A la reserva {ref}",
       "assignedTo": "Para {name}",
-      "doneBy": "Marcado por {name}"
+      "doneBy": "Marcado por {name}",
+      "checklistTitle": "Lista de control",
+      "checklistOpen": "Abrir",
+      "checklistProgress": "{done} de {total} completado"
     },
     "checkoutPaymentDialog": {
       "title": "¿Cómo paga el huésped?",
@@ -5167,7 +5192,13 @@
       "propertiesCaption": "Alojamientos seleccionados",
       "allProperties": "Todos los alojamientos",
       "propertiesDialog": "Seleccionar alojamientos",
-      "propertiesSearch": "Buscar por nombre o ciudad"
+      "propertiesSearch": "Buscar por nombre o ciudad",
+      "allDates": "Todas las fechas",
+      "dateFrom": "desde {datum}",
+      "dateUntil": "hasta {datum}",
+      "dateFromLabel": "Desde",
+      "dateUntilLabel": "Hasta",
+      "dateClear": "Quitar periodo"
     },
     "aufgabenReiter": {
       "current": "ACTUALES",
@@ -5320,7 +5351,9 @@
       "sourceLanguageEmpty": "Sin especificar",
       "sourceLanguageHint": "El nombre se traduce automáticamente para lectores de otros idiomas; internamente se mantiene tal como lo escribió.",
       "sourceLanguageMissing": "Sin esta indicación, el nombre no se traduce: propietarios y personal lo verán exactamente como aparece aquí.",
-      "clockLabel": "Hora"
+      "clockLabel": "Hora",
+      "templateMissingHint": "Sin plantilla de tarea y sin puntos propios, las tareas se crean sin lista de verificación; en la aplicación, la empleada solo verá el título.",
+      "templateBackfillHint": "Al guardar, las tareas abiertas existentes de esta regla también recibirán los puntos, si aún no los tienen."
     },
     "taskPage": {
       "backToMyTasks": "A mis tareas",
@@ -5417,7 +5450,8 @@
       "unbekannt": "Asignación anterior",
       "gesetzt": "Responsable cambiado",
       "abgezogen": "Asignación retirada",
-      "aktion": "Asignar a …"
+      "aktion": "Asignar a …",
+      "eigentuemer": "Propietario"
     },
     "substitutions": {
       "title": "Sustituciones",

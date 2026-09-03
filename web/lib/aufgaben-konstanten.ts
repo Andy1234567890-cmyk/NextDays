@@ -103,3 +103,44 @@ export function tagesendeIso(): string {
   d.setHours(24, 0, 0, 0);
   return d.toISOString();
 }
+
+/** Ein Datum im Datumsfilter, als `YYYY-MM-DD` (die Form von `<input
+ *  type="date">`). Leer = diese Grenze ist offen. */
+export type Zeitraum = { von: string; bis: string };
+
+export const LEERER_ZEITRAUM: Zeitraum = { von: "", bis: "" };
+
+/**
+ * Die beiden Tagesdaten des Filters in ZEITPUNKTE umrechnen, wie sie das
+ * Backend erwartet: `von` = Tagesbeginn, `bis` = Beginn des Tages DANACH
+ * (exklusive Obergrenze).
+ *
+ * Nur im BROWSER aufrufen — derselbe Grund wie bei `tagesendeIso`: der
+ * Kalendertag einer Aufgabe ist in der Zone des OBJEKTS definiert und die
+ * Hälfte der Objekte hat keine gepflegte Zone, also darf der Server keine
+ * unterstellen (Wurzel 4). Hier gilt die Zone des Bedieners, denn er hat
+ * „20.08." in seinem Kalender gemeint.
+ *
+ * Warum `bis` exklusiv der Folgetag ist: der gewählte Endtag muss GANZ
+ * enthalten sein. Mit dem Tagesbeginn als Obergrenze fiele eine Aufgabe am
+ * 20.08. um 10:00 aus dem Filter „20.08.–20.08." heraus, und der Nutzer sähe
+ * eine leere Liste für einen Tag, an dem Aufgaben stehen.
+ */
+export function zeitraumGrenzen(zeitraum: Zeitraum): {
+  von?: string;
+  bis?: string;
+} {
+  const grenzen: { von?: string; bis?: string } = {};
+  if (zeitraum.von) {
+    const start = new Date(`${zeitraum.von}T00:00:00`);
+    if (!Number.isNaN(start.getTime())) grenzen.von = start.toISOString();
+  }
+  if (zeitraum.bis) {
+    const ende = new Date(`${zeitraum.bis}T00:00:00`);
+    if (!Number.isNaN(ende.getTime())) {
+      ende.setDate(ende.getDate() + 1);
+      grenzen.bis = ende.toISOString();
+    }
+  }
+  return grenzen;
+}

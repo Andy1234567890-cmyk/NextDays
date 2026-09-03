@@ -1930,7 +1930,8 @@
       "familyAccess": "Достъпи",
       "propertyArea": "Обекти",
       "photoAlbum": "Фотоалбум",
-      "statistics": "Статистика"
+      "statistics": "Статистика",
+      "tasks": "Задачи"
     },
     "overview": {
       "occupancy": "Заетост",
@@ -2193,6 +2194,26 @@
         "guestNights": "Нощувки на гости",
         "ownerStay": "Собствено ползване"
       }
+    },
+    "tasks": {
+      "title": "Мои задачи",
+      "hint": "Задачи, които администрацията Ви е възложила за Вашите обекти. Докладвайте, когато започнете и когато приключите.",
+      "openTitle": "Отворено",
+      "doneTitle": "Изпълнено",
+      "empty": "В момента нямате възложена задача.",
+      "emptyDone": "Все още нищо не е изпълнено.",
+      "start": "Започване",
+      "complete": "Докладване като изпълнено",
+      "started": "Задачата е започната.",
+      "completed": "Задачата е докладвана като изпълнена.",
+      "property": "Обект",
+      "window": "Времеви прозорец",
+      "booking": "Резервация",
+      "noWindow": "Няма времеви прозорец",
+      "loadFailed": "Задачите не можаха да бъдат заредени.",
+      "statusOpen": "Отворено",
+      "statusInProgress": "В процес",
+      "statusDone": "Изпълнено"
     }
   },
   "travelAgencies": {
@@ -4489,7 +4510,8 @@
       "pickDateTime": "Дата и час",
       "timeLabelShort": "Час",
       "clear": "Изчистване",
-      "done": "Готово"
+      "done": "Готово",
+      "toObject": "Към обекта"
     },
     "tasksSubnav": {
       "pmModul": "PM модул",
@@ -4577,7 +4599,10 @@
       "completeButton": "Завърши",
       "inBooking": "Към резервация {ref}",
       "assignedTo": "За {name}",
-      "doneBy": "Отметнато от {name}"
+      "doneBy": "Отметнато от {name}",
+      "checklistTitle": "Контролен списък",
+      "checklistOpen": "Отваряне",
+      "checklistProgress": "{done} от {total} завършени"
     },
     "checkoutPaymentDialog": {
       "title": "Как плаща гостът?",
@@ -5167,7 +5192,13 @@
       "propertiesCaption": "Избрани обекти",
       "allProperties": "Всички обекти",
       "propertiesDialog": "Избор на обекти",
-      "propertiesSearch": "Търсене по име или град"
+      "propertiesSearch": "Търсене по име или град",
+      "allDates": "Всички дати",
+      "dateFrom": "от {datum}",
+      "dateUntil": "до {datum}",
+      "dateFromLabel": "От",
+      "dateUntilLabel": "До",
+      "dateClear": "Изчисти периода"
     },
     "aufgabenReiter": {
       "current": "АКТУАЛНИ",
@@ -5320,7 +5351,9 @@
       "sourceLanguageEmpty": "Не е посочен",
       "sourceLanguageHint": "Името се превежда автоматично за читатели на други езици — вътрешно остава така, както сте го въвели.",
       "sourceLanguageMissing": "Без посочване името не се превежда: собствениците и служителите ще го виждат точно както е тук.",
-      "clockLabel": "Час"
+      "clockLabel": "Час",
+      "templateMissingHint": "Без шаблон за задача и без собствени точки, задачите се създават без контролен списък – в приложението служителката вижда само заглавието.",
+      "templateBackfillHint": "При запазване съществуващите отворени задачи на това правило също ще получат точки, ако все още нямат такива."
     },
     "taskPage": {
       "backToMyTasks": "Към моите задачи",
@@ -5417,7 +5450,8 @@
       "unbekannt": "Досегашно назначение",
       "gesetzt": "Изпълнителят е променен",
       "abgezogen": "Назначението е оттеглено",
-      "aktion": "Възлагане на …"
+      "aktion": "Възлагане на …",
+      "eigentuemer": "Собственик"
     },
     "substitutions": {
       "title": "Заместване",

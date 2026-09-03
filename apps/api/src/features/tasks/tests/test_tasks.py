@@ -587,6 +587,27 @@ class _FakeQuery:
         self._filters.append((col, ("__in__", tuple(str(v) for v in vals))))
         return self
 
+    def neq(self, col: str, val: object) -> "_FakeQuery":
+        self._filters.append((col, ("__neq__", val)))
+        return self
+
+    def lt(self, col: str, val: object) -> "_FakeQuery":
+        # ISO-Datumstexte vergleichen sich zeichenweise richtig.
+        self._filters.append((col, ("__lt__", val)))
+        return self
+
+    def gt(self, col: str, val: object) -> "_FakeQuery":
+        self._filters.append((col, ("__gt__", val)))
+        return self
+
+    def is_(self, col: str, val: object) -> "_FakeQuery":
+        # PostgREST-`is` prüft NULL-Sein. Muss echt filtern: der Bestandsfilter
+        # `nur_im_bestand` hängt daran, und eine Attrappe, die ihn durchwinkt,
+        # bewiese, dass archivierte Objekte ausgeblendet werden, obwohl sie es
+        # nicht sind.
+        self._filters.append((col, ("__is__", val)))
+        return self
+
     def order(self, *_a: object, **_k: object) -> "_FakeQuery":
         return self
 
@@ -613,6 +634,19 @@ class _FakeQuery:
         for col, val in self._filters:
             if isinstance(val, tuple) and val and val[0] == "__in__":
                 if str(row.get(col)) not in val[1]:
+                    return False
+            elif isinstance(val, tuple) and val and val[0] == "__is__":
+                ist_null = row.get(col) is None
+                if ist_null != (val[1] in ("null", None)):
+                    return False
+            elif isinstance(val, tuple) and val and val[0] == "__neq__":
+                if str(row.get(col)) == str(val[1]):
+                    return False
+            elif isinstance(val, tuple) and val and val[0] == "__lt__":
+                if not str(row.get(col)) < str(val[1]):
+                    return False
+            elif isinstance(val, tuple) and val and val[0] == "__gt__":
+                if not str(row.get(col)) > str(val[1]):
                     return False
             elif str(row.get(col)) != str(val):
                 return False
@@ -693,6 +727,131 @@ def _admin() -> AuthContext:
 
 def _cleaner() -> AuthContext:
     return AuthContext(user_id="u1", tenant_id="T", role="cleaner")
+
+
+def _owner() -> AuthContext:
+    return AuthContext(user_id="o1", tenant_id="T", role="owner")
+
+
+# --- Eigentümer als Zuständiger (03.09.2026) ---------------------------------
+#
+# Der Nutzer: „hier in das popup müssen wir eine funktion bekommen wenn ich
+# unter Zuständig auch den haus eigentümer auswählen kann". Manche Eigentümer
+# reinigen oder empfangen selbst. Bis dahin war der Eigentümer BEWUSST aus der
+# Auswahl entfernt, weil er die Aufgabe nie hätte öffnen können — ihn nur in
+# die Liste zu setzen wäre derselbe Fehler noch einmal. Deshalb prüfen diese
+# Tests den GANZEN Weg: Auswahl, Schreibpfad, Lesepfad, Regel-Sperre.
+
+
+def _eigentuemer_db(**extra: list[dict]) -> _FakeDB:
+    basis = dict(
+        users=[
+            {"id": "u1", "tenant_id": "T", "full_name": "Reinigung",
+             "role": "cleaner", "email": "r@x.dk"},
+            {"id": "o1", "tenant_id": "T", "full_name": "Eigentümer Britt",
+             "role": "owner", "email": "o@x.dk"},
+        ],
+        owner_property_assignments=[
+            {"tenant_id": "T", "user_id": "o1", "property_id": "p1"},
+        ],
+        staff_property_assignments=[
+            {"tenant_id": "T", "user_id": "u1", "property_id": "p1"},
+            {"tenant_id": "T", "user_id": "u1", "property_id": "p2"},
+        ],
+        properties=[
+            {"id": "p1", "tenant_id": "T", "title": "Britt", "currency": "DKK"},
+            {"id": "p2", "tenant_id": "T", "title": "Dora", "currency": "DKK"},
+        ],
+        tasks=[
+            {"id": "t1", "tenant_id": "T", "title": "Reinigung", "status": "open",
+             "property_id": "p1", "assignee_id": "u1"},
+            {"id": "t2", "tenant_id": "T", "title": "Reinigung", "status": "open",
+             "property_id": "p1", "assignee_id": "o1"},
+            {"id": "t3", "tenant_id": "T", "title": "Reinigung", "status": "open",
+             "property_id": "p2", "assignee_id": "o1"},
+            {"id": "t4", "tenant_id": "T", "title": "Lager", "status": "open",
+             "property_id": None, "assignee_id": "o1"},
+        ],
+    )
+    basis.update(extra)
+    return _FakeDB(_tables(**basis))
+
+
+def test_eigentuemer_steht_nur_fuer_sein_objekt_zur_wahl() -> None:
+    """Ohne Objekt fehlt er (Pool-Aufgabe, Filter, Regel-Editor); mit seinem
+    Objekt ist er da; mit einem fremden nicht. Dieselbe Regel wie der
+    Schreibpfad — die Liste darf nichts versprechen, was 422 wird."""
+    svc = TasksService(client=_eigentuemer_db())
+    assert "o1" not in {o.user_id for o in svc.moegliche_zustaendige("T")}
+    assert {o.user_id for o in svc.moegliche_zustaendige("T", "p1")} == {"u1", "o1"}
+    assert "o1" not in {o.user_id for o in svc.moegliche_zustaendige("T", "p2")}
+
+
+def test_eigentuemer_zuweisung_nur_an_eigenem_objekt() -> None:
+    """Schreibpfad: eigenes Objekt geht durch, fremdes und Pool sind 422 —
+    eine Zuweisung, die der Empfänger nie sähe, ist kein Erfolg."""
+    svc = TasksService(client=_eigentuemer_db())
+    svc._require_own_assignee("T", "o1", "p1")  # eigenes Objekt: ok
+    with pytest.raises(TaskError) as exc:
+        svc._require_own_assignee("T", "o1", "p2")
+    assert exc.value.status_code == 422
+    with pytest.raises(TaskError) as exc:
+        svc._require_own_assignee("T", "o1", None)
+    assert exc.value.status_code == 422
+    assert "Objektbezug" in exc.value.message
+
+
+def test_eigentuemer_sieht_nur_die_ihm_zugewiesene_aufgabe_an_seinem_objekt() -> None:
+    """Lesepfad, derselbe Scope wie die Liste (Wurzel 9).
+
+    t1: fremde Zuweisung an seinem Haus — NICHT sichtbar (wer putzt, ist
+    Personaleinsatz des Betriebs, §4.3). t2: seine Aufgabe an seinem Haus —
+    sichtbar. t3: seine Aufgabe an einem fremden Haus — nicht sichtbar.
+    t4: Pool-Aufgabe — nicht sichtbar. Alles Unsichtbare ist 404, nie 403:
+    kein Orakel über fremde Aufgaben.
+    """
+    svc = TasksService(client=_eigentuemer_db())
+    svc._require_own_task("T", "t2", _owner())
+    for fremd in ("t1", "t3", "t4"):
+        with pytest.raises(TaskError) as exc:
+            svc._require_own_task("T", fremd, _owner())
+        assert exc.value.status_code == 404, fremd
+
+
+def test_zuweisung_an_eigentuemer_loest_die_meldung_aus(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """„die mail muss an den eigentümer raus gehen sobald er eingeteilt wird".
+
+    Der Weg ist derselbe wie beim Personal: `set_assignee` → 
+    `melde_aufgaben_zuweisung` → Dispatcher (Glocke + Mail). Dieser Test hält
+    fest, dass der Eigentümer diesen Weg auch wirklich erreicht — mit SEINER
+    id als Empfänger und dem Objekt, damit die Mail das Portal-Ziel bekommt.
+    """
+    gerufen: list[dict] = []
+    monkeypatch.setattr(
+        "src.features.tasks.service.melde_aufgaben_zuweisung",
+        lambda *_a, **k: gerufen.append(k),
+    )
+    svc = TasksService(client=_eigentuemer_db())
+    d = svc.set_assignee("T", "t1", "o1", _admin())  # t1: p1, vorher u1
+    assert d.assignee_id == "o1"
+    assert len(gerufen) == 1, "keine Meldung an den Eigentümer"
+    assert gerufen[0]["assignee_id"] == "o1"
+    assert gerufen[0]["property_id"] == "p1"
+    assert gerufen[0]["task_id"] == "t1"
+
+
+def test_regel_darf_keinem_eigentuemer_gehoeren() -> None:
+    """Eine Regel legt Aufgaben an ALLEN ihren Objekten an — auch an fremden.
+    `_require_own_assignee` prüft beim Regel-Speichern nur das erste Objekt und
+    ließe das durch; deshalb die eigene Sperre."""
+    svc = TasksService(client=_eigentuemer_db())
+    with pytest.raises(TaskError) as exc:
+        svc._kein_eigentuemer_als_regelzustaendiger("T", "o1")
+    assert exc.value.status_code == 422
+    svc._kein_eigentuemer_als_regelzustaendiger("T", "u1")  # Personal: ok
+    svc._kein_eigentuemer_als_regelzustaendiger("T", None)  # ohne Zuständigen: ok
 
 
 def test_vertretung_benachrichtigt_die_moeglichen_vertreter(monkeypatch) -> None:
@@ -906,10 +1065,82 @@ def _regel(**kw: object) -> RuleCreate:
         "start_trigger": TaskTrigger.check_in,
         "end_trigger": TaskTrigger.check_in,
         "start_offset_minutes": 0,
-        "end_offset_minutes": 1440,
+        # 240, nicht 1440: ein 24-Stunden-Fenster an derselben Basis ist seit
+        # dem 03.09.2026 selbst ein Ablehnungsgrund — als Vorgabe wuerde es
+        # jeden „erlaubt"-Test aus dem falschen Grund kippen.
+        "end_offset_minutes": 240,
     }
     basis.update(kw)
     return RuleCreate(**basis)  # type: ignore[arg-type]
+
+
+# --- Regel-Zeitfenster: Uhrzeit am Tagesanker, kein 24h-Fenster (03.09.2026) --
+
+
+def test_regel_tagesanker_ohne_uhrzeit_wird_abgelehnt() -> None:
+    """„Am Anreisetag" ohne Stunde heisst Tagesbeginn 00:00 — keine Arbeitszeit.
+
+    Live standen 261 Aufgaben so da; die Detailansicht zeigte „Von 02:00",
+    weil der Altbestand ohne Zone gerechnet war. Der Anker verlangt die Stunde.
+    """
+    with pytest.raises(TaskError) as exc:
+        TasksService._pruefe_zeitfenster(
+            _regel(
+                start_trigger=TaskTrigger.arrival_day,
+                end_trigger=TaskTrigger.arrival_day,
+                start_clock=None,
+                end_clock=None,
+                end_offset_minutes=0,
+            )
+        )
+    assert exc.value.status_code == 422
+    assert "Uhrzeit" in exc.value.message
+
+
+def test_regel_tagesanker_mit_uhrzeit_ist_erlaubt() -> None:
+    """Die korrigierte Live-Form: Reinigung am Abreisetag 10:00 bis 14:00."""
+    TasksService._pruefe_zeitfenster(
+        _regel(
+            start_trigger=TaskTrigger.departure_day,
+            end_trigger=TaskTrigger.departure_day,
+            start_clock=time(10, 0),
+            end_clock=time(14, 0),
+            end_offset_minutes=0,
+        )
+    )
+
+
+def test_regel_fenster_ueber_einen_tag_wird_abgelehnt() -> None:
+    """„Beim Check-in bis Check-in + 1440" — die Form der 233 falschen Aufgaben.
+
+    Das Ende liegt einen ganzen Tag nach dem Start; im Kalender endete die
+    Aufgabe eine Spalte hinter ihrer Buchung. Der Nutzer: „hinweise sind auch
+    fehler".
+    """
+    with pytest.raises(TaskError) as exc:
+        TasksService._pruefe_zeitfenster(
+            _regel(
+                start_trigger=TaskTrigger.check_in,
+                end_trigger=TaskTrigger.check_in,
+                end_offset_minutes=1440,
+            )
+        )
+    assert exc.value.status_code == 422
+    assert "über den Tag" in exc.value.message
+
+
+def test_regel_anreise_bis_abreise_ist_kein_24h_fehler() -> None:
+    """Zwei VERSCHIEDENE Basen duerfen weiter auseinanderliegen — eine
+    Aufenthaltsaufgabe von der Anreise bis zur Abreise ist kein Fehler."""
+    TasksService._pruefe_zeitfenster(
+        _regel(
+            start_trigger=TaskTrigger.arrival_day,
+            end_trigger=TaskTrigger.departure_day,
+            start_clock=time(10, 0),
+            end_clock=time(14, 0),
+            end_offset_minutes=0,
+        )
+    )
 
 
 def test_regel_ende_vor_start_wird_abgelehnt() -> None:
@@ -2063,3 +2294,217 @@ def test_abschluss_und_ruecknahme_haengen_am_abrechnungsmodul() -> None:
     ).read_text(encoding="utf-8")
     assert "abrechnung.posten_anlegen(" in quelle
     assert "abrechnung.posten_zuruecknehmen(" in quelle
+
+
+def test_zeitraum_filter_prueft_ueberschneidung_nicht_nur_den_start() -> None:
+    """Der Datumsfilter „von–bis" trifft jede Aufgabe, die den Zeitraum berührt.
+
+    Ein `start_at BETWEEN` waere hier falsch: die Aufgabe vom 20.08. 10:00–16:00
+    aus der Teamliste muss beim Filter „20.08.–20.08." erscheinen, und eine
+    ueber Nacht laufende an BEIDEN Tagen. `bis` ist der Beginn des Folgetags und
+    damit exklusiv — sonst fiele der gewaehlte Endtag halb heraus.
+    """
+    from datetime import UTC, datetime
+
+    from src.features.tasks.schemas import Task
+
+    def _t(tid: str, start: datetime | None, ende: datetime | None = None) -> Task:
+        return Task(
+            id=tid,
+            tenant_id="T",
+            title=tid,
+            status=TaskStatus.open,
+            start_at=start,
+            end_at=ende,
+        )
+
+    # Filter „20.08." — von 20.08. 00:00 bis 21.08. 00:00 (exklusiv).
+    von = datetime(2026, 8, 20, 0, 0, tzinfo=UTC)
+    bis = datetime(2026, 8, 21, 0, 0, tzinfo=UTC)
+
+    aufgaben = [
+        # Die Live-Form aus dem Screenshot: Anreisecheck 10:00–16:00.
+        _t(
+            "im_fenster",
+            datetime(2026, 8, 20, 10, 0, tzinfo=UTC),
+            datetime(2026, 8, 20, 16, 0, tzinfo=UTC),
+        ),
+        # Beginnt davor, laeuft hinein: beruehrt den Zeitraum.
+        _t(
+            "ueber_nacht",
+            datetime(2026, 8, 19, 22, 0, tzinfo=UTC),
+            datetime(2026, 8, 20, 6, 0, tzinfo=UTC),
+        ),
+        _t("tag_davor", datetime(2026, 8, 19, 9, 0, tzinfo=UTC)),
+        _t("tag_danach", datetime(2026, 8, 21, 9, 0, tzinfo=UTC)),
+    ]
+
+    treffer = {t.id for t in TasksService._im_zeitraum(aufgaben, von, bis)}
+    assert treffer == {"im_fenster", "ueber_nacht"}
+
+    # Offene Grenzen: nur „ab" bzw. nur „bis".
+    ab_20 = {t.id for t in TasksService._im_zeitraum(aufgaben, von, None)}
+    assert ab_20 == {"im_fenster", "ueber_nacht", "tag_danach"}
+    bis_20 = {t.id for t in TasksService._im_zeitraum(aufgaben, None, bis)}
+    assert bis_20 == {"im_fenster", "ueber_nacht", "tag_davor"}
+
+    # Ohne Filter bleibt die Liste unangetastet.
+    assert len(TasksService._im_zeitraum(aufgaben, None, None)) == 4
+
+
+def test_zeitraum_filter_nutzt_faelligkeit_wenn_kein_start_gesetzt_ist() -> None:
+    """Ohne `start_at` gilt `due_at` — dieselbe Kette wie in `_filter_bucket`.
+
+    Ein reines `start_at`-Kriterium haette jede Aufgabe ohne Startzeitpunkt
+    verschluckt: live waren das die 30 Zusatzleistungs-Aufgaben, die nur eine
+    Faelligkeit trugen. Ein Filter, der Zeilen versteckt, die er zeigen muesste,
+    ist schlimmer als keiner — man sieht ihm nicht an, dass etwas fehlt.
+    """
+    from datetime import UTC, datetime
+
+    from src.features.tasks.schemas import Task
+
+    von = datetime(2026, 8, 20, 0, 0, tzinfo=UTC)
+    bis = datetime(2026, 8, 21, 0, 0, tzinfo=UTC)
+
+    nur_faellig = Task(
+        id="nur_faellig",
+        tenant_id="T",
+        title="Waeschepaket",
+        status=TaskStatus.open,
+        due_at=datetime(2026, 8, 20, 12, 0, tzinfo=UTC),
+    )
+    ohne_termin = Task(
+        id="ohne_termin", tenant_id="T", title="irgendwann", status=TaskStatus.open
+    )
+
+    treffer = {t.id for t in TasksService._im_zeitraum([nur_faellig, ohne_termin], von, bis)}
+    # Die faellige ist drin; die ohne jeden Zeitpunkt liegt an keinem Tag und
+    # taucht deshalb in KEINEM Zeitraum auf (statt in jedem).
+    assert treffer == {"nur_faellig"}
+
+    # Ohne gesetzten Filter bleibt sie sichtbar.
+    assert len(TasksService._im_zeitraum([nur_faellig, ohne_termin], None, None)) == 2
+
+
+def test_zeitraum_grenzen_werden_mit_422_abgelehnt_nicht_mit_500() -> None:
+    """Vertauschter, zu weiter oder unlesbarer Zeitraum → 422.
+
+    Zwei Regeln in einem Test, weil sie denselben Eingang schuetzen:
+    angreiferkontrollierter Input darf keinen 500 erzeugen (Wurzel 5), und jeder
+    unbegrenzte Bereich braucht eine harte Obergrenze (Wurzel 8) — ein Zeitraum
+    „1900–2999" waere sonst ein Vollabzug der Tabelle durch einen Filter, der
+    wie eine Einschraenkung aussieht.
+    """
+    from src.features.tasks.router import _zeitraum
+
+    # Der gute Fall: `bis` wird zum exklusiven Folgetag-Zeitpunkt des Clients.
+    ab, bis_zu = _zeitraum("2026-08-20T00:00:00+02:00", "2026-08-21T00:00:00+02:00")
+    assert ab is not None and bis_zu is not None and bis_zu > ab
+
+    # Beide Grenzen offen ist erlaubt — das ist „kein Filter".
+    assert _zeitraum(None, None) == (None, None)
+
+    with pytest.raises(TaskError) as vertauscht:
+        _zeitraum("2026-08-21T00:00:00+02:00", "2026-08-20T00:00:00+02:00")
+    assert vertauscht.value.status_code == 422
+
+    with pytest.raises(TaskError) as zu_weit:
+        _zeitraum("1900-01-01T00:00:00+00:00", "2999-12-31T00:00:00+00:00")
+    assert zu_weit.value.status_code == 422
+
+    # Unlesbar und ohne Zone: beides Client-Fehler, kein Serverfehler.
+    with pytest.raises(TaskError) as kaputt:
+        _zeitraum("gestern", None)
+    assert kaputt.value.status_code == 422
+    with pytest.raises(TaskError) as ohne_zone:
+        _zeitraum("2026-08-20T00:00:00", None)
+    assert ohne_zone.value.status_code == 422
+
+
+# --- Aufgabenkalender: archivierte Objekte -----------------------------------
+
+
+def _kalender_db(
+    extra_props: list[dict],
+    extra_tasks: list[dict],
+    reservations: list[dict] | None = None,
+) -> _FakeDB:
+    tables = _tables()
+    tables["properties"].extend(extra_props)
+    tables["tasks"].extend(extra_tasks)
+    tables["reservations"] = reservations or []
+    return _FakeDB(tables)
+
+
+def test_kalender_blendet_archiviertes_objekt_ohne_inhalt_aus() -> None:
+    """Ein archiviertes Objekt ohne Aufgaben/Buchungen im Zeitraum bekommt
+    KEINE Zeile — live stand „Fewo-Mosbjerg-Sindal" (archiviert 21.08.2026)
+    dauerhaft als leere Zeile im Aufgabenkalender."""
+    db = _kalender_db(
+        [{"id": "p-archiv", "tenant_id": "T", "title": "Fewo-Mosbjerg-Sindal",
+          "archived_at": "2026-08-21T14:11:12+00:00"}],
+        [],
+    )
+    svc = TasksService(client=db)
+    rows = svc.calendar(
+        "T", "2026-09-01T00:00:00Z", "2026-09-30T23:59:59Z", ctx=_admin()
+    ).rows
+    assert [r.property_id for r in rows] == [None, "p1"]
+
+
+def test_kalender_zeigt_archiviertes_objekt_solange_etwas_daran_haengt() -> None:
+    """Hängt im Zeitraum noch eine Aufgabe oder Buchung am archivierten Objekt,
+    erscheint es MIT ihr: die letzte Reinigung nach Vertragsende darf nicht
+    unsichtbar werden (Wurzel 1)."""
+    db = _kalender_db(
+        [
+            {"id": "p-archiv", "tenant_id": "T", "title": "Aus dem Vertrag",
+             "archived_at": "2026-08-21T14:11:12+00:00"},
+            {"id": "p-archiv2", "tenant_id": "T", "title": "Buchung offen",
+             "archived_at": "2026-08-21T14:11:12+00:00"},
+        ],
+        [{"id": "t-archiv", "tenant_id": "T", "title": "Letzte Reinigung",
+          "status": "open", "property_id": "p-archiv", "assignee_id": "u1",
+          "start_at": "2026-09-10T08:00:00+00:00",
+          "due_at": "2026-09-10T12:00:00+00:00"}],
+        [{"id": "r-archiv", "tenant_id": "T", "property_id": "p-archiv2",
+          "channel": "airbnb", "ota_name": None, "adults": 2, "children": 0,
+          "check_in": "2026-09-12", "check_out": "2026-09-14",
+          "status": "confirmed"}],
+    )
+    svc = TasksService(client=db)
+    rows = svc.calendar(
+        "T", "2026-09-01T00:00:00Z", "2026-09-30T23:59:59Z", ctx=_admin()
+    ).rows
+    nach_id = {r.property_id: r for r in rows}
+    assert set(nach_id) == {None, "p1", "p-archiv", "p-archiv2"}
+    assert [t.id for t in nach_id["p-archiv"].tasks] == ["t-archiv"]
+    assert [b.id for b in nach_id["p-archiv2"].bookings] == ["r-archiv"]
+    # Sortiert nach Titel: das Nachgeladene fügt sich ein, statt hinten zu hängen.
+    assert [r.property_title for r in rows[1:]] == [
+        "Aus dem Vertrag", "Buchung offen", "Haus",
+    ]
+
+
+def test_kalender_archiviertes_objekt_mit_inhalt_ausserhalb_bleibt_weg() -> None:
+    """Der Nachlade-Zweig greift nur für Inhalt IM Zeitraum: eine Aufgabe im
+    Vormonat und eine stornierte Buchung im Monat holen die Zeile nicht
+    zurück — sonst stünde das archivierte Objekt doch wieder leer da."""
+    db = _kalender_db(
+        [{"id": "p-archiv", "tenant_id": "T", "title": "Aus dem Vertrag",
+          "archived_at": "2026-08-21T14:11:12+00:00"}],
+        [{"id": "t-alt", "tenant_id": "T", "title": "Alte Reinigung",
+          "status": "open", "property_id": "p-archiv", "assignee_id": "u1",
+          "start_at": "2026-08-10T08:00:00+00:00",
+          "due_at": "2026-08-10T12:00:00+00:00"}],
+        [{"id": "r-storno", "tenant_id": "T", "property_id": "p-archiv",
+          "channel": "airbnb", "ota_name": None, "adults": 2, "children": 0,
+          "check_in": "2026-09-12", "check_out": "2026-09-14",
+          "status": "cancelled"}],
+    )
+    svc = TasksService(client=db)
+    rows = svc.calendar(
+        "T", "2026-09-01T00:00:00Z", "2026-09-30T23:59:59Z", ctx=_admin()
+    ).rows
+    assert [r.property_id for r in rows] == [None, "p1"]

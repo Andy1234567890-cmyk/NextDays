@@ -1930,7 +1930,8 @@
       "familyAccess": "Accessi",
       "propertyArea": "Area alloggi",
       "photoAlbum": "Album fotografico",
-      "statistics": "Statistiche"
+      "statistics": "Statistiche",
+      "tasks": "Compiti"
     },
     "overview": {
       "occupancy": "Occupazione",
@@ -2193,6 +2194,26 @@
         "guestNights": "Notti ospiti",
         "ownerStay": "Uso proprio"
       }
+    },
+    "tasks": {
+      "title": "Le mie attività",
+      "hint": "Attività che l'amministrazione le ha assegnato per le sue proprietà. Segnali quando inizia e quando finisce.",
+      "openTitle": "Aperto",
+      "doneTitle": "Completato",
+      "empty": "Al momento non le è stata assegnata alcuna attività.",
+      "emptyDone": "Ancora niente di fatto.",
+      "start": "Iniziare",
+      "complete": "Segnala come completato",
+      "started": "Attività iniziata.",
+      "completed": "Attività segnalata come completata.",
+      "property": "Proprietà",
+      "window": "Finestra temporale",
+      "booking": "Prenotazione",
+      "noWindow": "Nessuna finestra temporale",
+      "loadFailed": "Impossibile caricare le attività.",
+      "statusOpen": "Aperto",
+      "statusInProgress": "In corso",
+      "statusDone": "Completato"
     }
   },
   "travelAgencies": {
@@ -4489,7 +4510,8 @@
       "pickDateTime": "Data e ora",
       "timeLabelShort": "Ora",
       "clear": "Cancella",
-      "done": "Fatto"
+      "done": "Fatto",
+      "toObject": "Alla proprietà"
     },
     "tasksSubnav": {
       "pmModul": "Modulo PM",
@@ -4577,7 +4599,10 @@
       "completeButton": "Concludi",
       "inBooking": "Alla prenotazione {ref}",
       "assignedTo": "Per {name}",
-      "doneBy": "Spuntato da {name}"
+      "doneBy": "Spuntato da {name}",
+      "checklistTitle": "Lista di controllo",
+      "checklistOpen": "Apri",
+      "checklistProgress": "{done} di {total} completati"
     },
     "checkoutPaymentDialog": {
       "title": "Come paga l'ospite?",
@@ -5167,7 +5192,13 @@
       "propertiesCaption": "Alloggi selezionati",
       "allProperties": "Tutti gli alloggi",
       "propertiesDialog": "Seleziona alloggi",
-      "propertiesSearch": "Cerca per nome o città"
+      "propertiesSearch": "Cerca per nome o città",
+      "allDates": "Tutte le date",
+      "dateFrom": "dal {datum}",
+      "dateUntil": "al {datum}",
+      "dateFromLabel": "Dal",
+      "dateUntilLabel": "Al",
+      "dateClear": "Rimuovi periodo"
     },
     "aufgabenReiter": {
       "current": "ATTUALI",
@@ -5320,7 +5351,9 @@
       "sourceLanguageEmpty": "Non indicata",
       "sourceLanguageHint": "Il nome viene tradotto automaticamente per i lettori di altre lingue; internamente resta come lo ha digitato.",
       "sourceLanguageMissing": "Senza questa indicazione il nome non viene tradotto: proprietari e personale lo vedranno esattamente come appare qui.",
-      "clockLabel": "Ora"
+      "clockLabel": "Ora",
+      "templateMissingHint": "Senza un modello di attività e senza punti propri, le attività vengono create senza una checklist – nell'app la dipendente vedrà solo il titolo.",
+      "templateBackfillHint": "Al momento del salvataggio, anche le attività aperte esistenti di questa regola riceveranno i punti, se non ne hanno ancora."
     },
     "taskPage": {
       "backToMyTasks": "Alle mie attività",
@@ -5417,7 +5450,8 @@
       "unbekannt": "Assegnazione precedente",
       "gesetzt": "Responsabile modificato",
       "abgezogen": "Assegnazione rimossa",
-      "aktion": "Assegna a …"
+      "aktion": "Assegna a …",
+      "eigentuemer": "Proprietario"
     },
     "substitutions": {
       "title": "Sostituzioni",

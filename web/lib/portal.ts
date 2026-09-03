@@ -644,6 +644,45 @@ export async function getServiceRequests(): Promise<
   return call("/public-portal/service-requests");
 }
 
+// --- Eigene Aufgaben (03.09.2026) --------------------------------------------
+// Manche Eigentümer reinigen oder empfangen selbst. Die Verwaltung weist ihnen
+// die Aufgabe im Aufgaben-Popup zu; hier sieht der Eigentümer sie und meldet
+// zurück. Der Contract ist schmal (kein Zuständiger, keine Kosten — §4.2/§4.3);
+// den Scope (nur die IHM zugewiesene Aufgabe an SEINEM Objekt) zieht der Server.
+
+export type PortalTask = {
+  id: string;
+  title: string;
+  /** Rohwert des Enums: open | accepted | in_progress | done | cancelled. */
+  status: string;
+  property_id: string | null;
+  property_title: string | null;
+  start_at: string | null;
+  end_at: string | null;
+  reservation_ref: string | null;
+  checklist_total: number;
+  checklist_done: number;
+};
+
+export async function getOwnerTasks(): Promise<
+  Result<{ items: PortalTask[]; total: number }>
+> {
+  return call("/public-portal/tasks");
+}
+
+export async function startOwnerTask(taskId: string): Promise<Result<PortalTask>> {
+  return call(`/public-portal/tasks/${encodeURIComponent(taskId)}/start`, {
+    method: "POST",
+  });
+}
+
+/** Foto-Pflicht der Checkliste kommt als 422 im Klartext zurück. */
+export async function completeOwnerTask(taskId: string): Promise<Result<PortalTask>> {
+  return call(`/public-portal/tasks/${encodeURIComponent(taskId)}/complete`, {
+    method: "POST",
+  });
+}
+
 export async function createServiceRequest(input: {
   property_id: string;
   service_type_id?: string | null;

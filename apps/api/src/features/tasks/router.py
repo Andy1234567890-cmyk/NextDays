@@ -125,6 +125,46 @@ def _tagesgrenze(wert: str | None) -> datetime | None:
     return grenze
 
 
+# Obergrenze des Datumsfilters in Tagen. Jeder unbegrenzte Bereich bekommt eine
+# harte Grenze (Wurzel 8): ein Zeitraum „01.01.1900 bis 31.12.2999" wäre sonst
+# ein kostenloser Vollabzug der Tabelle über einen Filter, der wie eine
+# Einschränkung aussieht. Fünf Jahre sind mehr, als eine Aufgabenliste je
+# braucht (die weiteste echte Nutzung ist ein Jahresrückblick), und klein
+# genug, um die Menge zu begrenzen.
+_MAX_ZEITRAUM_TAGE = 366 * 5
+
+
+def _zeitraum(
+    von: str | None, bis: str | None
+) -> tuple[datetime | None, datetime | None]:
+    """Die Grenzen des Datumsfilters (`bis` ist der EXKLUSIVE Endzeitpunkt).
+
+    Beide Werte kommen als zonenbewusste Zeitpunkte vom Client, aus demselben
+    Grund wie `tagesende`: der Kalendertag einer Aufgabe ist in der Zone des
+    OBJEKTS definiert, und die Hälfte der Objekte hat keine gepflegte Zone —
+    hier eine zu unterstellen wäre ein erfundener Wert (Wurzel 4). Der Client
+    rechnet „20.08." deshalb selbst in den Tagesbeginn seiner Zone um.
+
+    Ein vertauschter oder unlesbarer Zeitraum ist ein Fehler des Aufrufers und
+    wird als 422 gemeldet, nicht stillschweigend zurechtgebogen: eine Liste
+    unter einem Filter auszugeben, der etwas anderes sagt als gemeint, ist die
+    stille Falschaussage aus Wurzel 5.
+    """
+    ab, bis_zu = _tagesgrenze(von), _tagesgrenze(bis)
+    if ab is not None and bis_zu is not None:
+        if bis_zu <= ab:
+            raise TaskError(
+                "Das Enddatum des Zeitraums muss nach dem Startdatum liegen.",
+                status_code=422,
+            )
+        if (bis_zu - ab).days > _MAX_ZEITRAUM_TAGE:
+            raise TaskError(
+                f"Der Zeitraum darf höchstens {_MAX_ZEITRAUM_TAGE} Tage umfassen.",
+                status_code=422,
+            )
+    return ab, bis_zu
+
+
 @router.get("/mine", response_model=list[TaskListItem])
 def my_tasks(
     service: TasksServiceDep,
@@ -133,18 +173,32 @@ def my_tasks(
     ],
     status_bucket: str | None = None,
     property_id: Annotated[list[str] | None, Query()] = None,
+    von: str | None = None,
+    bis: str | None = None,
     tagesende: str | None = None,
 ) -> list[TaskListItem]:
     """Dieselbe Tabelle wie Teamaufgaben, hart auf den angemeldeten Nutzer
     gescopt (Wurzel 9). Liefert Objekt, Buchungsreferenz und Checklisten-Stand —
     ohne die ist die Liste für eine Reinigungskraft nicht arbeitsfähig."""
+    # Die Zeitangaben des Clients werden hier zu 422 statt zu 500: ohne dieses
+    # `except` verlässt der TaskError aus `_zeitraum`/`_tagesgrenze` die Route
+    # als unbehandelte Ausnahme (es gibt keinen globalen TaskError-Handler),
+    # und ein unlesbarer Query-Wert wäre ein Serverfehler — genau das, was
+    # Wurzel 5 für angreiferkontrollierten Input ausschließt.
+    try:
+        ab, bis_zu = _zeitraum(von, bis)
+        grenze = _tagesgrenze(tagesende)
+    except TaskError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
     return service.list_own_tasks(
         _tenant(ctx),
         ctx.user_id,
         status_bucket=status_bucket,
         property_ids=property_id,
         ctx=ctx,
-        tagesende=_tagesgrenze(tagesende),
+        von=ab,
+        bis=bis_zu,
+        tagesende=grenze,
     )
 
 
@@ -495,11 +549,13 @@ def list_assignees(
     """Wer kann Zuständige:r einer Aufgabe sein?
 
     NICHT `/auth/account/users` — die Liste ist für die Hauptkontakt-Auswahl
-    gedacht und enthält alle Nutzer des Betriebs, auch Eigentümer. Ein `owner`
-    hat `VIEW_OWN_TASKS` aber nicht: eine ihm zugewiesene Aufgabe könnte er
-    nie öffnen. Live standen dadurch 23 Eigentümer neben 2 wirklich
-    berechtigten Personen in der Auswahl — und 11 Aufgaben auf Konten, die sie
-    nie zu sehen bekamen.
+    gedacht und enthält alle Nutzer des Betriebs ohne Rücksicht darauf, ob
+    sie eine Aufgabe je öffnen könnten. Live standen dadurch einmal 23
+    Eigentümer neben 2 berechtigten Personen in der Auswahl — und 11 Aufgaben
+    auf Konten, die sie nie zu sehen bekamen.
+
+    Eigentümer stehen seit dem 03.09.2026 zur Wahl, aber nur MIT `property_id`
+    und nur, wenn ihnen dieses Objekt gehört (`moegliche_zustaendige`).
     """
     try:
         return service.moegliche_zustaendige(_tenant(ctx), property_id)
@@ -515,17 +571,27 @@ def team_tasks(
     property_id: Annotated[list[str] | None, Query()] = None,
     assignee_id: Annotated[list[str] | None, Query()] = None,
     rule_id: Annotated[list[str] | None, Query()] = None,
+    von: str | None = None,
+    bis: str | None = None,
     tagesende: str | None = None,
 ) -> list[TaskListItem]:
     """Filter sind MEHRFACH wählbar (Lodgify-Dialoge). `assignee_id=none` meint
-    „Nicht zugeordnet"."""
+    „Nicht zugeordnet". `von`/`bis` grenzen auf einen Zeitraum ein — siehe
+    `_zeitraum`."""
+    try:
+        ab, bis_zu = _zeitraum(von, bis)
+        grenze = _tagesgrenze(tagesende)
+    except TaskError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
     return service.list_team_tasks(
         _tenant(ctx),
         status_bucket,
         property_id,
         assignee_id,
         rule_id,
-        tagesende=_tagesgrenze(tagesende),
+        von=ab,
+        bis=bis_zu,
+        tagesende=grenze,
         ctx=ctx,
     )
 

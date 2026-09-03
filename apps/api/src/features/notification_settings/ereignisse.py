@@ -162,7 +162,8 @@ def melde_aufgaben_zuweisung(
         # bekaeme der Client nach erfolgreich angelegter Aufgabe einen 500 —
         # und weil `create_task` nicht idempotent ist, erzeugte sein Retry eine
         # ZWEITE Aufgabe (Wurzel 5 kippt dann Wurzel 2).
-        if not _gehoert_zum_tenant(db, assignee_id, tenant_id):
+        rolle = _empfaenger_rolle(db, assignee_id, tenant_id)
+        if rolle is None:
             # Der Dispatcher loest den Empfaenger allein ueber `users.id` auf,
             # ohne Tenant-Filter. Die Pruefung gehoert deshalb hierher: eine
             # Aufgabe darf niemanden ausserhalb ihres Mandanten anschreiben
@@ -172,6 +173,14 @@ def melde_aufgaben_zuweisung(
                 tenant_id=tenant_id, task_id=task_id,
             )
             return
+        # EIGENTUEMER (03.09.2026): er kann seit heute Zustaendiger sein
+        # (reinigt/empfaengt selbst) und bekommt dieselbe Mail — aber sein Ziel
+        # ist das Eigentuemer-Portal. `/aufgaben/{id}` liegt im Dashboard der
+        # Verwaltung, das er nicht oeffnen kann: der Link in der Mail liefe fuer
+        # ihn ins Leere, obwohl die Mail stimmt. Die Portal-Liste zeigt genau
+        # die ihm zugewiesenen Aufgaben; eine Detailseite gibt es dort bewusst
+        # nicht (§4.2, er plant nicht, er meldet zurueck).
+        ziel = "/portal/aufgaben" if rolle == "owner" else f"/aufgaben/{task_id}"
         _dispatcher(db).sende(
             user_id=assignee_id,
             schluessel=SCHLUESSEL_AUFGABE,
@@ -206,7 +215,7 @@ def melde_aufgaben_zuweisung(
             # Die Form ist bewusst UNVERÄNDERT `/aufgaben/{task_id}`: genau so
             # steht sie in den Mails, die längst in Postfächern liegen. Eine
             # schönere Adresse würde die alten Links endgültig brechen.
-            ziel_pfad=f"/aufgaben/{task_id}",
+            ziel_pfad=ziel,
             property_id=property_id,
             dedup_key=_aufgaben_dedup(
                 "aufgabe_zugewiesen", task_id, assignee_id, vorgang
@@ -729,6 +738,26 @@ def _objekt_titel(db: Client, tenant_id: str, property_id: str) -> str:
     ).data or []
     titel = (rows[0].get("title") if rows else None) or ""
     return titel.strip() or property_id[:8]
+
+
+def _empfaenger_rolle(db: Client, user_id: str, tenant_id: str) -> str | None:
+    """Rolle des Empfaengers im Mandanten — `None`, wenn er nicht dazugehoert.
+
+    Eine Abfrage fuer zwei Fragen (gehoert er dazu? welche Rolle?), weil das
+    Sprungziel der Aufgaben-Mail seit dem 03.09.2026 von der Rolle abhaengt:
+    Eigentuemer landen im Portal, alle anderen im Dashboard.
+    """
+    rows = (
+        db.table("users")
+        .select("id, role")
+        .eq("id", user_id)
+        .eq("tenant_id", tenant_id)
+        .limit(1)
+        .execute()
+    ).data or []
+    if not rows:
+        return None
+    return str(rows[0].get("role") or "")
 
 
 def _gehoert_zum_tenant(db: Client, user_id: str, tenant_id: str) -> bool:

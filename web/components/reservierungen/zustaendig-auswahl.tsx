@@ -58,12 +58,16 @@ export function ZustaendigAuswahl({
     // `.then()` in eine bereits geschlossene Karte (Popover, Modal, FAB).
     let abgebrochen = false;
     void listTaskAssignees(propertyId).then((r) => {
-      if (!abgebrochen && r.ok) setUsers(mitarbeiterOptionen(r.data));
+      if (!abgebrochen && r.ok) {
+        setUsers(
+          mitarbeiterOptionen(r.data, { eigentuemer: t("zustaendig.eigentuemer") }),
+        );
+      }
     });
     return () => {
       abgebrochen = true;
     };
-  }, [propertyId]);
+  }, [propertyId, t]);
 
   // Der aktuelle Wert MUSS wählbar bleiben, auch wenn er nicht in der Liste
   // steht — etwa weil der Zuständige inzwischen gesperrt wurde. Sonst spränge

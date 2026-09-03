@@ -21,6 +21,8 @@ export type RootStackParamList = {
   SperrAntrag: { propertyId?: string } | undefined;
   Zaehlerstand: { propertyId: string; titel: string };
   Abrechnungen: undefined;
+  // Aufgaben, die die Verwaltung dem Eigentümer zugewiesen hat (03.09.2026).
+  Aufgaben: undefined;
   Profil: undefined;
   // Falsche Rolle: kein Erlebnis, sondern ein Hinweis (siehe Kopf).
   FalscheRolle: undefined;

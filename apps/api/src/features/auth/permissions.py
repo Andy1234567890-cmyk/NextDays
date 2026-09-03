@@ -132,6 +132,14 @@ _OWNER: frozenset[Capability] = frozenset({
     # deshalb bewusst ohne MANAGE_REVIEWS.
     Capability.VIEW_REVIEWS,
     Capability.VIEW_GUEST_LIMITED,  # nur Vorname, kein Gesamtpreis (§4.2)
+    # Der Eigentümer als ZUSTÄNDIGER (03.09.2026): manche Eigentümer reinigen
+    # oder empfangen selbst — die Verwaltung will sie im Aufgaben-Popup unter
+    # „Zuständig" auswählen können. Ohne dieses Recht stand er nicht zur Wahl
+    # (und vorher, als er es doch tat, lagen 11 Aufgaben auf Konten, die sie
+    # nie öffnen konnten). Der Scope ist enger als bei staff: er sieht und
+    # schließt AUSSCHLIESSLICH Aufgaben, die IHM zugewiesen sind UND an einem
+    # SEINER Objekte hängen — erzwungen im TasksService, nicht hier.
+    Capability.VIEW_OWN_TASKS,
 })
 
 # Mitarbeiter/Dienstleister (§4.3): operativ, eigene Verfügbarkeiten,

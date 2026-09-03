@@ -1930,7 +1930,8 @@
       "familyAccess": "Piekļuves",
       "propertyArea": "Objektu dati",
       "photoAlbum": "Fotoalbums",
-      "statistics": "Statistika"
+      "statistics": "Statistika",
+      "tasks": "Uzdevumi"
     },
     "overview": {
       "occupancy": "Aizņemtība",
@@ -2193,6 +2194,26 @@
         "guestNights": "Viesu naktis",
         "ownerStay": "Īpašnieka lietojums"
       }
+    },
+    "tasks": {
+      "title": "Mani uzdevumi",
+      "hint": "Uzdevumi, ko administrācija jums piešķīrusi jūsu īpašumos. Ziņojiet, kad sākat un kad pabeidzat.",
+      "openTitle": "Atvērts",
+      "doneTitle": "Pabeigts",
+      "empty": "Jums pašlaik nav piešķirts neviens uzdevums.",
+      "emptyDone": "Vēl nekas nav izdarīts.",
+      "start": "Sākt",
+      "complete": "Ziņot par pabeigšanu",
+      "started": "Uzdevums sākts.",
+      "completed": "Uzdevums atzīmēts kā pabeigts.",
+      "property": "Īpašums",
+      "window": "Laika posms",
+      "booking": "Rezervācija",
+      "noWindow": "Nav laika posma",
+      "loadFailed": "Nevarēja ielādēt uzdevumus.",
+      "statusOpen": "Atvērts",
+      "statusInProgress": "Izstrādē",
+      "statusDone": "Pabeigts"
     }
   },
   "travelAgencies": {
@@ -4489,7 +4510,8 @@
       "pickDateTime": "Datums un laiks",
       "timeLabelShort": "Laiks",
       "clear": "Dzēst",
-      "done": "Gatavs"
+      "done": "Gatavs",
+      "toObject": "Uz īpašumu"
     },
     "tasksSubnav": {
       "pmModul": "PM modulis",
@@ -4577,7 +4599,10 @@
       "completeButton": "Pabeigt",
       "inBooking": "Uz rezervāciju {ref}",
       "assignedTo": "Priekš {name}",
-      "doneBy": "Atzīmēja {name}"
+      "doneBy": "Atzīmēja {name}",
+      "checklistTitle": "Kontrolsaraksts",
+      "checklistOpen": "Atvērt",
+      "checklistProgress": "Pabeigti {done} no {total}"
     },
     "checkoutPaymentDialog": {
       "title": "Kā viesis maksā?",
@@ -5167,7 +5192,13 @@
       "propertiesCaption": "Atlasītās naktsmītnes",
       "allProperties": "Visas naktsmītnes",
       "propertiesDialog": "Atlasīt naktsmītnes",
-      "propertiesSearch": "Meklēt pēc nosaukuma vai pilsētas"
+      "propertiesSearch": "Meklēt pēc nosaukuma vai pilsētas",
+      "allDates": "Visi datumi",
+      "dateFrom": "no {datum}",
+      "dateUntil": "līdz {datum}",
+      "dateFromLabel": "No",
+      "dateUntilLabel": "Līdz",
+      "dateClear": "Notīrīt periodu"
     },
     "aufgabenReiter": {
       "current": "PAŠREIZĒJIE",
@@ -5320,7 +5351,9 @@
       "sourceLanguageEmpty": "Nav norādīta",
       "sourceLanguageHint": "Nosaukums tiek automātiski tulkots citu valodu lasītājiem — iekšēji tas paliek tāds, kādu to ievadījāt.",
       "sourceLanguageMissing": "Bez norādes nosaukums netiek tulkots: īpašnieki un darbinieki to redzēs tieši tādu, kāds tas ir šeit.",
-      "clockLabel": "Laiks"
+      "clockLabel": "Laiks",
+      "templateMissingHint": "Bez uzdevuma veidnes un bez saviem punktiem uzdevumi tiek veidoti bez kontrolsaraksta – lietotnē darbiniece redz tikai nosaukumu.",
+      "templateBackfillHint": "Saglabājot, arī esošie atvērtie uzdevumi, kas atbilst šim noteikumam, saņems punktus, ja tiem vēl nav piešķirti."
     },
     "taskPage": {
       "backToMyTasks": "Uz maniem uzdevumiem",
@@ -5417,7 +5450,8 @@
       "unbekannt": "Iepriekšējais piešķīrums",
       "gesetzt": "Atbildīgais mainīts",
       "abgezogen": "Piešķīrums atsaukts",
-      "aktion": "Piešķirt …"
+      "aktion": "Piešķirt …",
+      "eigentuemer": "Īpašnieks"
     },
     "substitutions": {
       "title": "Aizvietošana",

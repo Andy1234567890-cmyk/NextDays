@@ -1602,3 +1602,62 @@ def test_eigennutzung_wird_als_eigentuemer_storniert(
     kwargs = reservations.return_value.cancel.call_args.kwargs
     assert kwargs["partei"].value == "eigentuemer"
     assert kwargs["reason_code"].value == "eigennutzung_aufgeloest"
+
+
+# --- Archivierte Objekte (0416) -----------------------------------------------
+
+
+def test_available_properties_blendet_archivierte_aus() -> None:
+    """Ein archiviertes Objekt ist aus dem Vertrag heraus und darf keinem
+    Eigentümer mehr angeboten werden — live stand „Fewo-Mosbjerg-Sindal"
+    (archiviert 21.08.2026) weiter als freies Objekt in der Auswahl."""
+    svc = _svc(
+        {
+            "properties": [
+                {"id": "p-1", "tenant_id": "t-1", "title": "Villa"},
+                {"id": "p-arch", "tenant_id": "t-1", "title": "Fewo-Mosbjerg-Sindal",
+                 "archived_at": "2026-08-21T14:11:12+00:00"},
+            ]
+        }
+    )
+    a = svc.create(_ctx(), OwnerCreate(name="A"))
+    assert {p.id for p in svc.available_properties(_ctx(), a.id).items} == {"p-1"}
+
+
+def test_assign_property_lehnt_archiviertes_objekt_ab() -> None:
+    """Dieselbe Grenze serverseitig: die Auswahl zeigt es nicht, ein direkter
+    Aufruf mit der ID darf es ebenso wenig zuordnen (Wurzel 3)."""
+    svc = _svc(
+        {
+            "properties": [
+                {"id": "p-arch", "tenant_id": "t-1", "title": "Archiv",
+                 "archived_at": "2026-08-21T14:11:12+00:00"},
+            ]
+        }
+    )
+    a = svc.create(_ctx(), OwnerCreate(name="A"))
+    with pytest.raises(OwnerError) as exc:
+        svc.assign_property(_ctx(), a.id, OwnerPropertyAssign(property_id="p-arch"))
+    assert exc.value.status_code == 422
+
+
+def test_assign_properties_batch_lehnt_archiviertes_objekt_mit_namen_ab() -> None:
+    """Der Batch-Pfad ist der, den Detailseite und Anlege-Dialog wirklich
+    nutzen — er muss dieselbe Grenze ziehen wie der Einzelpfad und das Objekt
+    beim Namen nennen."""
+    svc = _svc(
+        {
+            "properties": [
+                {"id": "p-1", "tenant_id": "t-1", "title": "Villa"},
+                {"id": "p-arch", "tenant_id": "t-1", "title": "Fewo-Mosbjerg-Sindal",
+                 "archived_at": "2026-08-21T14:11:12+00:00"},
+            ]
+        }
+    )
+    a = svc.create(_ctx(), OwnerCreate(name="A"))
+    with pytest.raises(OwnerError) as exc:
+        svc.assign_properties(_ctx(), a.id, ["p-1", "p-arch"])
+    assert exc.value.status_code == 422
+    assert "Fewo-Mosbjerg-Sindal" in str(exc.value)
+    # Nichts geschrieben: auch das gültige Objekt bleibt unzugeordnet.
+    assert svc.get(_ctx(), a.id).properties == []

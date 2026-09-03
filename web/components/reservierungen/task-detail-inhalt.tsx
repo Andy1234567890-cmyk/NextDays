@@ -45,6 +45,7 @@ import {
   uploadTaskPhoto,
 } from "@/lib/tasks";
 import { AUFGABEN_STATUS, naechsteZustaende } from "@/lib/aufgaben-status";
+import { ChecklistePopup } from "./checkliste-popup";
 import { ZustaendigAuswahl } from "./zustaendig-auswahl";
 import { formatCurrency } from "@/lib/currency";
 
@@ -80,6 +81,8 @@ export function TaskDetailInhalt({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingItem, setUploadingItem] = useState<string | null>(null);
+  // Eigenes Popup für die Punkte, siehe Kommentar an der Stelle unten.
+  const [checklisteOffen, setChecklisteOffen] = useState(false);
 
   const load = useCallback(async () => {
     const res = await getTaskDetail(taskId);
@@ -366,90 +369,60 @@ export function TaskDetailInhalt({
         </span>
       </div>
 
+      {/* Die Checkliste steht NICHT mehr hier im Fließtext, sondern in einem
+          eigenen Popup. Bis zum 03.09.2026 hingen 16 Punkte samt Fotoknöpfen
+          als eine Liste unter dem Status; die Detailansicht wurde damit
+          bildschirmhoch, und Auslagen, Rückmeldung und Abschließen lagen
+          unerreichbar darunter. Gemeldet als „wir müssen die Checkliste in
+          einem separaten Popup sehen, nicht in einer ewig langen Liste". */}
       {detail.checklist.length > 0 && (
-        <ul className="flex flex-col gap-1.5">
-          {detail.checklist.map((item) => {
-            const needsPhoto = item.requires_photo && item.photos.length === 0;
-            return (
-              <li
-                key={item.id}
-                className={`flex items-center gap-2 rounded-(--radius) border p-2.5 ${
-                  needsPhoto ? "border-amber-500" : ""
-                }`}
-              >
-                {/* Anklickbar seit 0360. Die Spalte `done` gab es vorher schon,
-                    aber keinen Weg dorthin — die Punkte standen da und ließen
-                    sich nicht anfassen. */}
-                <button
-                  type="button"
-                  disabled={uploadingItem !== null}
-                  aria-pressed={item.done}
-                  aria-label={item.label}
-                  onClick={() => void punktUmschalten(item.id, !item.done)}
-                  className="shrink-0 disabled:opacity-50"
-                >
-                  <Icon
-                    icon={item.done ? "ph:check-circle-fill" : "ph:circle"}
-                    className={`size-5 ${
-                      item.done ? "text-emerald-500" : "text-muted-foreground"
-                    }`}
-                  />
-                </button>
-                <div className="min-w-0 flex-1">
-                  <p
-                    className={`truncate text-sm ${
-                      item.done ? "text-muted-foreground line-through" : ""
-                    }`}
-                  >
-                    {item.label}
-                  </p>
-                  {item.room && (
-                    <p className="text-xs text-muted-foreground">{item.room}</p>
-                  )}
-                  {/* Wer abgehakt hat — beim Reinigungsnachweis ist genau das
-                      die Frage. Fehlt der Name (Altbestand), steht nichts da
-                      statt einer erfundenen Person. */}
-                  {item.done && item.done_by_name && (
-                    <p className="text-xs text-muted-foreground">
-                      {t("taskDetailModal.doneBy", { name: item.done_by_name })}
-                    </p>
-                  )}
-                </div>
-                {item.requires_photo && (
-                  <label
-                    className={`flex cursor-pointer items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition-colors ${
-                      needsPhoto
-                        ? "border-amber-500 text-amber-600 hover:bg-amber-500/10"
-                        : "border-emerald-500 text-emerald-600 hover:bg-emerald-500/10"
-                    }`}
-                  >
-                    <Icon
-                      icon={
-                        uploadingItem === item.id ? "ph:spinner" : "ph:camera"
-                      }
-                      className="size-4"
-                    />
-                    {uploadingItem === item.id
-                      ? t("taskDetailModal.loading")
-                      : item.photos.length > 0
-                        ? t("taskDetailModal.photoCount", {
-                            count: item.photos.length,
-                          })
-                        : t("taskDetailModal.takePhoto")}
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      capture="environment"
-                      className="hidden"
-                      disabled={uploadingItem !== null}
-                      onChange={(e) => uploadPhoto(item.id, e.target.files?.[0])}
-                    />
-                  </label>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+        <button
+          type="button"
+          onClick={() => setChecklisteOffen(true)}
+          className="flex items-center gap-3 rounded-(--radius) border p-3 text-left transition-colors hover:bg-secondary"
+        >
+          <Icon
+            icon={
+              detail.checklist.every((i) => i.done)
+                ? "ph:check-circle-fill"
+                : "ph:list-checks"
+            }
+            className={`size-6 shrink-0 ${
+              detail.checklist.every((i) => i.done)
+                ? "text-emerald-500"
+                : "text-muted-foreground"
+            }`}
+          />
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-medium">
+              {t("taskDetailModal.checklistTitle")}
+            </span>
+            <span className="block text-xs text-muted-foreground">
+              {t("taskDetailModal.checklistProgress", {
+                done: detail.checklist.filter((i) => i.done).length,
+                total: detail.checklist.length,
+              })}
+              {missingPhotos.length > 0 &&
+                ` · ${t("taskDetailModal.missingPhotosNotice", {
+                  count: missingPhotos.length,
+                })}`}
+            </span>
+          </span>
+          <span className="rounded-full border px-3 py-1 text-xs">
+            {t("taskDetailModal.checklistOpen")}
+          </span>
+        </button>
+      )}
+
+      {checklisteOffen && (
+        <ChecklistePopup
+          titel={detail.title}
+          punkte={detail.checklist}
+          uploadingItem={uploadingItem}
+          onToggle={punktUmschalten}
+          onPhoto={uploadPhoto}
+          onClose={() => setChecklisteOffen(false)}
+        />
       )}
 
       {missingPhotos.length > 0 && (

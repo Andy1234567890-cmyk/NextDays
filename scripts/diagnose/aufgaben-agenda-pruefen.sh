@@ -36,7 +36,7 @@
 #   DB_USER=supabase_admin
 #   DB_NAME=postgres
 #
-# Exit 0 = keine harten Befunde, Exit 1 = mindestens einer (3, 7).
+# Exit 0 = keine harten Befunde, Exit 1 = mindestens einer (3, 3b–3g, 7).
 # ============================================================================
 set -uo pipefail
 
@@ -103,14 +103,19 @@ abschnitt "3b) Aufgabe steht nicht am Tag ihrer Buchung"
 # Ein Treffer heisst nicht zwingend „kaputt": eine Regel darf bewusst einen Tag
 # vorher greifen (Vorbereitung). Er heisst „hier weicht die Aufgabe vom Anker
 # ihrer Regel ab, sieh nach". Deshalb steht die Regel mit in der Ausgabe.
-ausgabe=$(psql_exec "select r.name, count(*), min(t.start_at::date - res.check_in),
-                            max(t.start_at::date - res.check_in)
+# Der Tag wird in der ZONE DES OBJEKTS gelesen, nicht als UTC-Datum: eine
+# Aufgabe um 00:00 Kopenhagen ist 22:00Z des Vortags, und `::date` auf dem
+# UTC-Wert meldete sie faelschlich einen Tag zu frueh (03.09.2026).
+ausgabe=$(psql_exec "select r.name, count(*),
+                            min((t.start_at at time zone coalesce(nullif(p.timezone,''),'UTC'))::date - res.check_in),
+                            max((t.start_at at time zone coalesce(nullif(p.timezone,''),'UTC'))::date - res.check_in)
                      from public.tasks t
                      join public.reservations res on res.id = t.reservation_id
+                     join public.properties p on p.id = t.property_id
                      join public.task_rules r on r.id = t.rule_id
                      where t.start_at is not null
-                       and r.start_trigger in ('check_in','days_before_check_in')
-                       and t.start_at::date <> res.check_in
+                       and r.start_trigger in ('check_in','days_before_check_in','arrival_day')
+                       and (t.start_at at time zone coalesce(nullif(p.timezone,''),'UTC'))::date <> res.check_in
                      group by r.name order by 2 desc limit 20")
 if [ -n "$ausgabe" ]; then
   printf '%s\n' "${rot}  BEFUND — Regel | Anzahl | min/max Tage Abweichung:${aus}"
@@ -134,6 +139,98 @@ ausgabe=$(psql_exec "select name, start_trigger, start_offset_minutes,
                        and coalesce(end_offset_minutes,0) < coalesce(start_offset_minutes,0)")
 if [ -n "$ausgabe" ]; then
   printf '%s\n' "${rot}  BEFUND — diese Regeln legen das Ende vor den Start:${aus}"
+  printf '%s\n' "$ausgabe" | sed 's/^/    /'
+  befunde=$((befunde + 1))
+else
+  printf '%s\n' "${gruen}  keine${aus}"
+fi
+
+abschnitt "3d) Aufgabe liegt VOR der Anreise oder NACH der Abreise ihrer Buchung"
+# Der Fund vom 03.09.2026: 25 „Anreisecheck" standen einen Tag vor der
+# Anreise. Ursache war `.date()` auf einem bereits nach UTC gerechneten Anker
+# (`engine._trigger_time`) — ohne gepflegte Anreisezeit ist das der Vortag.
+# Der Tag wird hier in der Zone des OBJEKTS gelesen. „Endreinigung nach
+# Abreise" liegt per Definition hinter dem Auszug und ist ausgenommen.
+ausgabe=$(psql_exec "select t.title, count(*),
+                            sum(case when tag < res.check_in then 1 else 0 end) as vor_anreise,
+                            sum(case when tag > res.check_out then 1 else 0 end) as nach_abreise
+                     from (select t.*, (t.start_at at time zone coalesce(nullif(p.timezone,''),'UTC'))::date as tag
+                           from public.tasks t join public.properties p on p.id = t.property_id
+                           where t.start_at is not null) t
+                     join public.reservations res on res.id = t.reservation_id
+                     where t.title not ilike '%nach Abreise%'
+                       and (tag < res.check_in or tag > res.check_out)
+                     group by t.title order by 2 desc limit 20")
+if [ -n "$ausgabe" ]; then
+  printf '%s\n' "${rot}  BEFUND — Titel | Anzahl | vor Anreise | nach Abreise:${aus}"
+  printf '%s\n' "$ausgabe" | sed 's/^/    /'
+  befunde=$((befunde + 1))
+else
+  printf '%s\n' "${gruen}  keine${aus}"
+fi
+
+abschnitt "3e) Zeitfenster läuft über Mitternacht (Ende an einem anderen Tag als der Start)"
+# 233 Aufgaben live (03.09.2026): Regeln mit `days_after_check_out` bzw.
+# `+1440 Minuten` und ohne Uhrzeit ergaben Fenster „02:00 bis 02:00 am
+# Folgetag". Eine Reinigung dauert keine 24 Stunden. Zwei verschiedene Anker
+# (Anreise bis Abreise) sind eine Aufenthaltsaufgabe und hier nicht gemeint —
+# geprueft werden nur Aufgaben, deren Regel dieselbe Basis fuer Start und Ende
+# traegt, plus alle regellosen mit Fenster ueber Mitternacht.
+ausgabe=$(psql_exec "select coalesce(r.name, t.title), count(*)
+                     from public.tasks t
+                     join public.properties p on p.id = t.property_id
+                     left join public.task_rules r on r.id = t.rule_id
+                     where t.start_at is not null and t.end_at is not null
+                       and (r.id is null or r.start_trigger = r.end_trigger
+                            or (r.start_trigger in ('check_in','days_before_check_in','arrival_day')
+                                and r.end_trigger in ('check_in','days_before_check_in','arrival_day','after_check_in_24h'))
+                            or (r.start_trigger in ('check_out','days_after_check_out','departure_day')
+                                and r.end_trigger in ('check_out','days_after_check_out','departure_day')))
+                       and (t.end_at at time zone coalesce(nullif(p.timezone,''),'UTC'))::date
+                         > (t.start_at at time zone coalesce(nullif(p.timezone,''),'UTC'))::date
+                     group by 1 order by 2 desc limit 20")
+if [ -n "$ausgabe" ]; then
+  printf '%s\n' "${rot}  BEFUND — Regel/Titel | Anzahl:${aus}"
+  printf '%s\n' "$ausgabe" | sed 's/^/    /'
+  befunde=$((befunde + 1))
+else
+  printf '%s\n' "${gruen}  keine${aus}"
+fi
+
+abschnitt "3f) Aufgabe mit Fälligkeit, aber ohne Startzeit (kein Zeitfenster)"
+# 30 Zusatzleistungs-Aufgaben live (03.09.2026): `_task_fuer_addon` schrieb nur
+# `due_at`. Ohne `start_at` weiss niemand, WANN die Aufgabe zu tun ist, und
+# der Kalender musste den Tag aus dem ENDE holen. Abschnitt 2 zaehlt dasselbe
+# nur — seit dem 03.09. ist es ein Befund, weil jeder Schreibpfad ein Fenster
+# setzt.
+ausgabe=$(psql_exec "select title, count(*) from public.tasks
+                     where start_at is null and due_at is not null
+                       and status not in ('done','cancelled')
+                     group by title order by 2 desc limit 20")
+if [ -n "$ausgabe" ]; then
+  printf '%s\n' "${rot}  BEFUND — offene Aufgaben ohne Startzeit:${aus}"
+  printf '%s\n' "$ausgabe" | sed 's/^/    /'
+  befunde=$((befunde + 1))
+else
+  printf '%s\n' "${gruen}  keine${aus}"
+fi
+
+abschnitt "3g) Regel am Tagesanker ohne Uhrzeit oder mit 24h-Fenster an derselben Basis"
+# Die WURZEL von 3e: seit dem 03.09.2026 weist der Server beide Formen beim
+# Speichern ab (`_pruefe_zeitfenster`). Dieser Abschnitt findet, was VORHER
+# angelegt wurde oder am Server vorbei in die Tabelle kam.
+ausgabe=$(psql_exec "select name, start_trigger, start_clock, end_trigger, end_clock, end_offset_minutes
+                     from public.task_rules
+                     where kind = 'auto' and start_trigger is not null
+                       and ((start_trigger in ('arrival_day','departure_day') and start_clock is null)
+                         or (end_trigger in ('arrival_day','departure_day') and coalesce(end_clock, start_clock) is null)
+                         or ((start_trigger in ('check_in','days_before_check_in','arrival_day')
+                              and end_trigger in ('check_in','days_before_check_in','arrival_day')
+                              or start_trigger in ('check_out','days_after_check_out','departure_day')
+                              and end_trigger in ('check_out','days_after_check_out','departure_day'))
+                             and coalesce(end_offset_minutes,0) - coalesce(start_offset_minutes,0) >= 1440))")
+if [ -n "$ausgabe" ]; then
+  printf '%s\n' "${rot}  BEFUND — diese Regeln erzeugen Fenster ohne Uhrzeit oder über den Tag hinaus:${aus}"
   printf '%s\n' "$ausgabe" | sed 's/^/    /'
   befunde=$((befunde + 1))
 else

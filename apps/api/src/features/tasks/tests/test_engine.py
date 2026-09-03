@@ -649,3 +649,110 @@ def test_jeder_engine_pfad_liest_is_owner_stay() -> None:
                 f"{pfad.name}: Reservierungs-Select ohne block_request_id — "
                 "die Bestellung wäre nicht auffindbar (0510)."
             )
+
+
+# --- Checkliste: Kopie beim Anlegen und Nachzug bei Vorlagenwechsel ----------
+#
+# Bis zum 03.09.2026 gab es hierfür keinen einzigen Test — und live stand
+# `checklist_items` für 460 Aufgaben leer, weil die Vorlage erst NACH der
+# Anlage an die Regel gehängt worden war.
+
+
+class _SchreibDb:
+    """Nimmt Inserts/Updates entgegen und protokolliert sie je Tabelle."""
+
+    def __init__(self) -> None:
+        self.inserts: dict[str, list] = {}
+        self.updates: dict[str, list] = {}
+
+    def table(self, name: str) -> "_SchreibDb._Q":
+        return _SchreibDb._Q(self, name)
+
+    class _Q:
+        def __init__(self, db: "_SchreibDb", name: str) -> None:
+            self._db, self._name = db, name
+
+        def insert(self, rows: object) -> "_SchreibDb._Q":
+            self._db.inserts.setdefault(self._name, []).append(rows)
+            return self
+
+        def update(self, patch: dict) -> "_SchreibDb._Q":
+            self._db.updates.setdefault(self._name, []).append(patch)
+            return self
+
+        def eq(self, *_a: object) -> "_SchreibDb._Q":
+            return self
+
+        def execute(self) -> object:
+            return type("R", (), {"data": []})()
+
+
+_PUNKTE = [
+    {"label": "køb blomster", "sort_order": 0},
+    {"label": "er der kaffe og kaffefiltre?", "sort_order": 1, "requires_photo": True},
+]
+
+_REGEL_ANREISE = {
+    "id": "rule1",
+    "name": "Anreisecheck",
+    "start_trigger": "arrival_day",
+    "start_offset_minutes": 0,
+    "start_clock": "14:00",
+    "end_trigger": "arrival_day",
+    "end_clock": "18:00",
+    "end_offset_minutes": 0,
+}
+
+
+def test_nachzug_kopiert_fehlende_checkliste_in_offene_aufgabe() -> None:
+    """Vorlage nachträglich verknüpft: die offene Aufgabe ohne Punkte bekommt
+    sie — auch im stündlichen Abgleich (`verschieben=False`), denn fehlende
+    Punkte sind „Fehlendes", nicht „Verschieben". Zeiten bleiben unberührt."""
+    db = _SchreibDb()
+    known = {"id": "task1", "status": "open", "hat_checkliste": False}
+    assert _regel_anwenden(
+        db, "t1", _REGEL_ANREISE, _RESERVATION, _anchors(), _PUNKTE, known,
+        verschieben=False,
+    )
+    [zeilen] = db.inserts["checklist_items"]
+    assert [z["label"] for z in zeilen] == [p["label"] for p in _PUNKTE]
+    assert all(z["task_id"] == "task1" for z in zeilen)
+    assert zeilen[1]["requires_photo"] is True
+    assert "tasks" not in db.updates
+    # Der Datensatz weiß danach, dass er Punkte hat — ein zweiter Durchlauf im
+    # selben Lauf kopiert nicht erneut.
+    assert known["hat_checkliste"] is True
+
+
+def test_nachzug_kopiert_nicht_in_aufgabe_die_schon_punkte_hat() -> None:
+    """Momentaufnahme-Prinzip: eine Aufgabe MIT Punkten bleibt, wie sie ist —
+    auch wenn die Vorlage inzwischen anders aussieht. Kein DB-Zugriff."""
+    assert not _regel_anwenden(
+        _KeineDb(), "t1", _REGEL_ANREISE, _RESERVATION, _anchors(), _PUNKTE,
+        {"id": "task1", "status": "open", "hat_checkliste": True},
+        verschieben=False,
+    )
+
+
+def test_nachzug_laesst_erledigte_aufgabe_ohne_checkliste() -> None:
+    """Erledigt heißt: getan, wie es damals stand. Nachträgliche Punkte wären
+    eine Falschaussage über die Arbeit. Kein DB-Zugriff."""
+    for status in ("done", "cancelled"):
+        assert not _regel_anwenden(
+            _KeineDb(), "t1", _REGEL_ANREISE, _RESERVATION, _anchors(), _PUNKTE,
+            {"id": "task1", "status": status, "hat_checkliste": False},
+            verschieben=True,
+        )
+
+
+def test_nachzug_mit_verschieben_zieht_punkte_und_zeiten() -> None:
+    """Regel-Speichern (`verschieben=True`): beides in einem Zug."""
+    db = _SchreibDb()
+    assert _regel_anwenden(
+        db, "t1", _REGEL_ANREISE, _RESERVATION, _anchors(), _PUNKTE,
+        {"id": "task1", "status": "open", "hat_checkliste": False},
+        verschieben=True,
+    )
+    assert "checklist_items" in db.inserts
+    [patch] = db.updates["tasks"]
+    assert {"start_at", "end_at", "due_at"} <= set(patch)

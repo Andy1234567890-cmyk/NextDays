@@ -65,6 +65,11 @@ type PortalNavItem = {
 const NAV: readonly PortalNavItem[] = [
   { key: "overview", href: "/portal", icon: "ph:squares-four" },
   { key: "calendar", href: "/portal/kalender", icon: "ph:calendar-blank" },
+  // Aufgaben, die die Verwaltung dem Eigentümer zugewiesen hat (03.09.2026):
+  // manche Eigentümer reinigen oder empfangen selbst. Immer sichtbar — die
+  // Liste ist leer, wenn nichts zugewiesen ist; ein Menüpunkt, der erst
+  // erscheint, wenn es etwas gibt, wäre nicht auffindbar.
+  { key: "tasks", href: "/portal/aufgaben", icon: "ph:check-square" },
   {
     key: "propertyArea",
     href: "/portal/objekte",

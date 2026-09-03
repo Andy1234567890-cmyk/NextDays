@@ -1930,7 +1930,8 @@
       "familyAccess": "Dostopi",
       "propertyArea": "Področje objektov",
       "photoAlbum": "Foto album",
-      "statistics": "Statistika"
+      "statistics": "Statistika",
+      "tasks": "Naloge"
     },
     "overview": {
       "occupancy": "Zasedenost",
@@ -2193,6 +2194,26 @@
         "guestNights": "Noči gostov",
         "ownerStay": "Lastna raba"
       }
+    },
+    "tasks": {
+      "title": "Moja opravila",
+      "hint": "Opravila, ki vam jih je dodelila uprava za vaše objekte. Sporočite, ko začnete in ko končate.",
+      "openTitle": "Odprto",
+      "doneTitle": "Opravljeno",
+      "empty": "Trenutno vam ni dodeljeno nobeno opravilo.",
+      "emptyDone": "Še nič opravljenega.",
+      "start": "Začni",
+      "complete": "Poročaj kot opravljeno",
+      "started": "Opravilo se je začelo.",
+      "completed": "Opravilo je bilo označeno kot dokončano.",
+      "property": "Objekt",
+      "window": "Časovni okvir",
+      "booking": "Rezervacija",
+      "noWindow": "Ni časovnega okvira",
+      "loadFailed": "Opravil ni bilo mogoče naložiti.",
+      "statusOpen": "Odprto",
+      "statusInProgress": "V delu",
+      "statusDone": "Opravljeno"
     }
   },
   "travelAgencies": {
@@ -4489,7 +4510,8 @@
       "pickDateTime": "Datum in čas",
       "timeLabelShort": "Čas",
       "clear": "Počisti",
-      "done": "Končano"
+      "done": "Končano",
+      "toObject": "Na nastanitev"
     },
     "tasksSubnav": {
       "pmModul": "PM modul",
@@ -4577,7 +4599,10 @@
       "completeButton": "Zaključi",
       "inBooking": "Na rezervacijo {ref}",
       "assignedTo": "Za {name}",
-      "doneBy": "Odkljukal(a) {name}"
+      "doneBy": "Odkljukal(a) {name}",
+      "checklistTitle": "Kontrolni seznam",
+      "checklistOpen": "Odpri",
+      "checklistProgress": "Opravljenih {done} od {total}"
     },
     "checkoutPaymentDialog": {
       "title": "Kako gost plača?",
@@ -5167,7 +5192,13 @@
       "propertiesCaption": "Izbrane nastanitve",
       "allProperties": "Vse nastanitve",
       "propertiesDialog": "Izberi nastanitve",
-      "propertiesSearch": "Iskanje po imenu ali mestu"
+      "propertiesSearch": "Iskanje po imenu ali mestu",
+      "allDates": "Vsi datumi",
+      "dateFrom": "od {datum}",
+      "dateUntil": "do {datum}",
+      "dateFromLabel": "Od",
+      "dateUntilLabel": "Do",
+      "dateClear": "Odstrani obdobje"
     },
     "aufgabenReiter": {
       "current": "TRENUTNE",
@@ -5320,7 +5351,9 @@
       "sourceLanguageEmpty": "Ni navedeno",
       "sourceLanguageHint": "Ime se samodejno prevede za bralce v drugih jezikih — interno ostane tako, kot ste ga vnesli.",
       "sourceLanguageMissing": "Brez navedbe se ime ne prevede: lastniki in zaposleni ga bodo videli točno tako, kot je tukaj.",
-      "clockLabel": "Ura"
+      "clockLabel": "Ura",
+      "templateMissingHint": "Brez predloge opravila in brez lastnih točk se opravila ustvarijo brez kontrolnega seznama – v aplikaciji bo zaposlena videla samo naslov.",
+      "templateBackfillHint": "Ob shranjevanju bodo tudi obstoječe odprte naloge tega pravila prejele točke, če jih še nimajo."
     },
     "taskPage": {
       "backToMyTasks": "Na moje naloge",
@@ -5417,7 +5450,8 @@
       "unbekannt": "Dosedanja dodelitev",
       "gesetzt": "Dodelitev spremenjena",
       "abgezogen": "Dodelitev preklicana",
-      "aktion": "Dodeli …"
+      "aktion": "Dodeli …",
+      "eigentuemer": "Lastnik"
     },
     "substitutions": {
       "title": "Nadomeščanja",

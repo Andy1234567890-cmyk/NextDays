@@ -479,6 +479,18 @@ def _insert_task(
         return None
     task_id = str(res.data[0]["id"])
     _copy_checklist(db, task_id, items)
+    if not items and payload.get("rule_id"):
+        # LAUT, nicht stumm (Wurzel 5): eine planmäßige Regel ohne Vorlage und
+        # ohne eigene Punkte erzeugt Aufgaben, die in der App nur einen Titel
+        # zeigen. Live liefen so vier aktive Regeln (03.09.2026), und niemand
+        # sah es, bis eine Mitarbeiterin fragte, wo die Checkliste sei.
+        log.warning(
+            "task_ohne_checkliste_angelegt",
+            tenant_id=str(payload.get("tenant_id") or ""),
+            task_id=task_id,
+            rule_id=str(payload["rule_id"]),
+            titel=str(payload.get("title") or ""),
+        )
     # Der Zugewiesene erfährt von der Aufgabe (0331). Genau hier, weil dies der
     # EINZIGE Insert-Punkt der Engine ist — und nur bei echter Neuanlage: ein
     # 23505 oben ist oben schon abgebogen, ein zweiter Lauf meldet also nicht
@@ -570,6 +582,65 @@ def _regel_zeitfenster(
     return start, end
 
 
+def _vorhandene_nachziehen(
+    db: Client,
+    tenant_id: str,
+    rule: dict[str, object],
+    known: dict[str, object],
+    items: list[dict[str, object]],
+    start: datetime,
+    end: datetime | None,
+    property_id: object,
+    *,
+    verschieben: bool,
+) -> bool:
+    """Eine SCHON vorhandene Regel-Aufgabe nachziehen: Punkte und Zeiten.
+
+    Erledigt oder storniert: in Ruhe lassen — eine Verschiebung der Buchung
+    macht eine bereits gemachte Reinigung nicht ungeschehen, und ihre
+    Checkliste ist eine Momentaufnahme dessen, was getan wurde.
+
+    FEHLENDE CHECKLISTE NACHZIEHEN (03.09.2026). Die Punkte werden sonst nur
+    im Moment des Inserts kopiert — aus der Vorlage, die die Regel GENAU DANN
+    hatte. Wer die Vorlage später an die Regel hängt (live: „Anreisecheck
+    14–18", Vorlage um 19:44 verknüpft, alle 42 Aufgaben existierten längst),
+    erreichte damit keine einzige Aufgabe; in der App stand „keine Checkliste
+    hinterlegt" (Wurzel 1: Gegenzustand). Gilt auch bei `verschieben=False`:
+    das ist „nur Fehlendes anlegen", und fehlende Punkte SIND Fehlendes.
+    Idempotent, weil nur Aufgaben OHNE einen einzigen Punkt bedient werden —
+    ein Doppellauf schreibt nichts doppelt (Wurzel 2).
+
+    Zeiten nur, wenn der Lauf verschieben darf (Regel-Speichern), nicht im
+    stündlichen Abgleich — der schriebe sonst jede Stunde dieselben Werte in
+    jede Aufgabe (Realtime-Rauschen ohne Änderung).
+    """
+    if known.get("status") in (TaskStatus.done.value, TaskStatus.cancelled.value):
+        return False
+    punkte_nachgezogen = False
+    if items and not known.get("hat_checkliste"):
+        _copy_checklist(db, str(known["id"]), items)
+        known["hat_checkliste"] = True
+        punkte_nachgezogen = True
+        log.info(
+            "task_checkliste_nachgezogen",
+            tenant_id=tenant_id,
+            task_id=str(known["id"]),
+            rule_id=str(rule["id"]),
+            punkte=len(items),
+        )
+    if not verschieben:
+        return punkte_nachgezogen
+    db.table("tasks").update(
+        {
+            "start_at": start.isoformat(),
+            "end_at": end.isoformat() if end else None,
+            "due_at": (end or start).isoformat(),
+            "property_id": property_id,
+        }
+    ).eq("id", known["id"]).eq("tenant_id", tenant_id).execute()
+    return True
+
+
 def _regel_anwenden(
     db: Client,
     tenant_id: str,
@@ -622,24 +693,17 @@ def _regel_anwenden(
 
     property_id = reservation.get("property_id")
     if known:
-        # Zwei Gründe, eine vorhandene Aufgabe in Ruhe zu lassen: der Lauf darf
-        # nicht verschieben (`verschieben=False`, stündlicher Abgleich), oder
-        # sie ist erledigt bzw. storniert — eine Verschiebung der Buchung macht
-        # eine bereits gemachte Reinigung nicht ungeschehen.
-        if not verschieben or known.get("status") in (
-            TaskStatus.done.value,
-            TaskStatus.cancelled.value,
-        ):
-            return False
-        db.table("tasks").update(
-            {
-                "start_at": start.isoformat(),
-                "end_at": end.isoformat() if end else None,
-                "due_at": (end or start).isoformat(),
-                "property_id": property_id,
-            }
-        ).eq("id", known["id"]).eq("tenant_id", tenant_id).execute()
-        return True
+        return _vorhandene_nachziehen(
+            db,
+            tenant_id,
+            rule,
+            known,
+            items,
+            start,
+            end,
+            property_id,
+            verschieben=verschieben,
+        )
 
     return bool(
         _insert_task(
@@ -837,10 +901,35 @@ def _nachzug_seite(
     return created
 
 
+def _mit_checkliste(db: Client, task_ids: list[str]) -> set[str]:
+    """Die Aufgaben unter `task_ids`, die schon mindestens einen Punkt tragen.
+
+    Grundlage für den Nachzug fehlender Checklisten (`_regel_anwenden`): eine
+    Aufgabe MIT Punkten ist eine Momentaufnahme und bleibt unangetastet, eine
+    OHNE bekommt die Punkte ihrer Quelle. Ohne diese Menge müsste der Nachzug
+    je Aufgabe nachfragen — bei 200 Buchungen je Seite 200 Roundtrips.
+    """
+    out: set[str] = set()
+    for start in range(0, len(task_ids), _BLOCK):
+        block = task_ids[start : start + _BLOCK]
+        rows = (
+            db.table("checklist_items")
+            .select("task_id")
+            .in_("task_id", block)
+            .execute()
+        ).data or []
+        out.update(str(r["task_id"]) for r in rows)
+    return out
+
+
 def _vorhandene_aufgaben(
     db: Client, tenant_id: str, reservation_ids: list[str]
 ) -> dict[tuple[str, str], dict[str, object]]:
-    """Schon erzeugte Regel-Aufgaben als {(reservation_id, rule_id): Zeile}."""
+    """Schon erzeugte Regel-Aufgaben als {(reservation_id, rule_id): Zeile}.
+
+    Jede Zeile trägt zusätzlich `hat_checkliste`, damit `_regel_anwenden`
+    fehlende Punkte nachziehen kann, ohne je Aufgabe nachzufragen.
+    """
     out: dict[tuple[str, str], dict[str, object]] = {}
     for start in range(0, len(reservation_ids), _BLOCK):
         block = reservation_ids[start : start + _BLOCK]
@@ -854,6 +943,9 @@ def _vorhandene_aufgaben(
         ).data or []
         for row in rows:
             out[(str(row["reservation_id"]), str(row["rule_id"]))] = row
+    mit = _mit_checkliste(db, [str(r["id"]) for r in out.values()])
+    for row in out.values():
+        row["hat_checkliste"] = str(row["id"]) in mit
     return out
 
 
@@ -923,6 +1015,9 @@ def sync_for_reservation(
         ).data
         or []
     }
+    mit = _mit_checkliste(db, [str(r["id"]) for r in existing.values()])
+    for row in existing.values():
+        row["hat_checkliste"] = str(row["id"]) in mit
 
     # 0510: Bei einer Eigentümersperrung entstehen nur die Aufgaben, die der
     # Eigentümer zu seiner Sperre BESTELLT hat. Für jede gewöhnliche Buchung

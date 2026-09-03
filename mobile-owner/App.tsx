@@ -21,6 +21,7 @@ import { realtimeTokenQuelleSetzen } from "@/lib/realtime";
 import { Tabs } from "@/navigation/Tabs";
 import type { RootStackParamList } from "@/navigation/types";
 import Abrechnungen from "@/screens/Abrechnungen";
+import Aufgaben from "@/screens/Aufgaben";
 import Anmelden from "@/screens/Anmelden";
 import FalscheRolle from "@/screens/FalscheRolle";
 import Fotoalbum from "@/screens/Fotoalbum";
@@ -129,6 +130,11 @@ function Root() {
               name="Abrechnungen"
               component={Abrechnungen}
               options={{ headerShown: true, title: "Abrechnungen" }}
+            />
+            <Stack.Screen
+              name="Aufgaben"
+              component={Aufgaben}
+              options={{ headerShown: true, title: "Meine Aufgaben" }}
             />
             <Stack.Screen
               name="SperrAntrag"

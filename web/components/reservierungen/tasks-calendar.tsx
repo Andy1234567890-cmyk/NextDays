@@ -1408,7 +1408,7 @@ export function TasksCalendar() {
             setTaskPop(null);
             stillNachladen();
           }}
-          onPhotos={() => {
+          onOpen={() => {
             setPhotoTaskId(taskPop.id);
             setTaskPop(null);
           }}

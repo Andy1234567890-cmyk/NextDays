@@ -527,6 +527,38 @@ h1, h2, h3 {
   }
 }
 
+/* Scrollbalken DAUERHAFT sichtbar, schmal.
+   WARUM (03.09.2026): Der Aufgaben-Kalender trug `scrollbar-thin`, aber die
+   Klasse war nirgends definiert. Der Browser nahm die System-Scrollbar, und
+   macOS blendet die als Overlay nach etwa einer Sekunde Ruhe aus — gemeldet
+   als „rechts und links scrollbar unten verschwindet ab und zu". Für eine
+   Zeitachse, die man waagerecht durchsucht, ist der Regler das Bedienelement,
+   nicht Dekoration: er muss stehen bleiben.
+   Ein per `::-webkit-scrollbar` gestalteter Balken ist in Chrome/Safari/Edge
+   KEIN Overlay mehr und bleibt sichtbar; Firefox kennt dafür nur
+   `scrollbar-width: thin` + `scrollbar-color` (dort bleibt er ohnehin). */
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+  &::-webkit-scrollbar {
+    height: 0.625rem;
+    width: 0.625rem;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-foreground);
+    background-clip: padding-box;
+  }
+}
+
 /* Kalender: Sperre vs. Stop-Sell auf einen Blick unterscheidbar.
    Beides sind ZWEI getrennte Achsen (Sperre = Verfügbarkeit 0, Stop-Sell =
    Rate-Plan-Restriktion) und können am selben Tag GLEICHZEITIG gelten. Vorher

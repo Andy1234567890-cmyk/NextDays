@@ -14,9 +14,11 @@ from src.features.auth.dependencies import require_permission
 from src.features.auth.granular_permissions import Permission
 from src.features.auth.permissions import Capability
 
+from .aufgaben import TaskError
 from .dependencies import (
     DienstleistungsServiceDep,
     OwnerFamilyServiceDep,
+    PortalAufgabenServiceDep,
     PublicPortalServiceDep,
     require_portal_recht,
 )
@@ -41,6 +43,7 @@ from .schemas import (
     PortalStatisticsResponse,
     SliceHealth,
 )
+from .schemas_aufgaben import PortalTaskItem, PortalTaskList
 from .schemas_dienstleistungen import (
     ServiceRequestCreate,
     ServiceRequestItem,
@@ -67,6 +70,10 @@ _VIEW = require_permission(Capability.VIEW_CALENDAR)  # noqa: N816  pylint: disa
 _REPORTS = require_permission(Capability.VIEW_OWNER_REPORTS)  # noqa: N816  pylint: disable=invalid-name
 _BLOCK = require_permission(Capability.REQUEST_BLOCK)  # noqa: N816  pylint: disable=invalid-name
 _METER = require_permission(Capability.ADD_METER_READING)  # noqa: N816  pylint: disable=invalid-name
+# Eigene Aufgaben (03.09.2026): dasselbe Recht wie im Tasks-Slice. Der
+# Eigentümer trägt es seit heute; den Objekt-/Zuweisungs-Scope erzwingt der
+# TasksService, nicht diese Route.
+_TASKS = require_permission(Capability.VIEW_OWN_TASKS)  # noqa: N816  pylint: disable=invalid-name
 
 
 @router.get("/health", response_model=SliceHealth)
@@ -399,6 +406,53 @@ def my_service_requests(
 # Der zweite allein sah lange aus, als genügte er (ein Mitglied ist für
 # niemanden Anker). Für die Einladung stimmte das nicht: dort ENTSTEHT der
 # Anker erst. Deshalb beide.
+
+
+# --- Eigene Aufgaben (03.09.2026) -------------------------------------------
+# Manche Eigentümer reinigen oder empfangen selbst. Die Verwaltung weist ihnen
+# die Aufgabe im Aufgaben-Popup zu; hier sehen sie sie und melden zurück.
+# Portal UND Eigentümer-App sprechen ausschließlich diesen Weg.
+
+
+@router.get("/tasks", response_model=PortalTaskList)
+def my_tasks(
+    service: PortalAufgabenServiceDep,
+    ctx: Annotated[AuthContext, Depends(_TASKS)],
+) -> PortalTaskList:
+    """Nur die dem Eigentümer zugewiesenen Aufgaben an seinen Objekten —
+    nicht die des Personals an seinem Haus (§4.3). Den Scope zieht der
+    TasksService (Wurzel 9), die Liste hier ist nur die schmale Sicht."""
+    try:
+        return service.liste(ctx)
+    except TaskError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/tasks/{task_id}/start", response_model=PortalTaskItem)
+def start_task(
+    task_id: str,
+    service: PortalAufgabenServiceDep,
+    ctx: Annotated[AuthContext, Depends(_TASKS)],
+) -> PortalTaskItem:
+    """„Ich bin dran" — Arbeitszustand `in_progress`. Fremde Aufgabe = 404."""
+    try:
+        return service.anfangen(ctx, task_id)
+    except TaskError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/tasks/{task_id}/complete", response_model=PortalTaskItem)
+def complete_task(
+    task_id: str,
+    service: PortalAufgabenServiceDep,
+    ctx: Annotated[AuthContext, Depends(_TASKS)],
+) -> PortalTaskItem:
+    """Erledigt melden — mit Foto-Pflicht der Checkliste (422 im Klartext),
+    dieselbe Regel wie für das Personal."""
+    try:
+        return service.erledigt(ctx, task_id)
+    except TaskError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
 @router.get("/familie/rolle", response_model=PortalRolleInfo)

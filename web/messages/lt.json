@@ -1930,7 +1930,8 @@
       "familyAccess": "Prieigos",
       "propertyArea": "Objektų duomenys",
       "photoAlbum": "Nuotraukų albumas",
-      "statistics": "Statistika"
+      "statistics": "Statistika",
+      "tasks": "Užduotys"
     },
     "overview": {
       "occupancy": "Užimtumas",
@@ -2193,6 +2194,26 @@
         "guestNights": "Svečių naktys",
         "ownerStay": "Savininko naudojimas"
       }
+    },
+    "tasks": {
+      "title": "Mano užduotys",
+      "hint": "Užduotys, kurias valdymas jums priskyrė jūsų objektuose. Praneškite, kai pradėsite ir kai baigsite.",
+      "openTitle": "Atidaryta",
+      "doneTitle": "Atlikta",
+      "empty": "Jums šiuo metu nepriskirta jokia užduotis.",
+      "emptyDone": "Dar nieko nepadaryta.",
+      "start": "Pradėti",
+      "complete": "Pranešti, kad atlikta",
+      "started": "Užduotis pradėta.",
+      "completed": "Užduotis pažymėta kaip atlikta.",
+      "property": "Objektas",
+      "window": "Laiko tarpas",
+      "booking": "Užsakymas",
+      "noWindow": "Nėra laiko tarpo",
+      "loadFailed": "Nepavyko įkelti užduočių.",
+      "statusOpen": "Atidaryta",
+      "statusInProgress": "Vykdoma",
+      "statusDone": "Atlikta"
     }
   },
   "travelAgencies": {
@@ -4489,7 +4510,8 @@
       "pickDateTime": "Data ir laikas",
       "timeLabelShort": "Laikas",
       "clear": "Išvalyti",
-      "done": "Atlikta"
+      "done": "Atlikta",
+      "toObject": "Į nuosavybę"
     },
     "tasksSubnav": {
       "pmModul": "PV modulis",
@@ -4577,7 +4599,10 @@
       "completeButton": "Užbaigti",
       "inBooking": "Į užsakymą {ref}",
       "assignedTo": "Skirta {name}",
-      "doneBy": "Pažymėjo {name}"
+      "doneBy": "Pažymėjo {name}",
+      "checklistTitle": "Kontrolinis sąrašas",
+      "checklistOpen": "Atidaryti",
+      "checklistProgress": "Atlikta {done} iš {total}"
     },
     "checkoutPaymentDialog": {
       "title": "Kaip svečias moka?",
@@ -5167,7 +5192,13 @@
       "propertiesCaption": "Pasirinktos apgyvendinimo vietos",
       "allProperties": "Visos apgyvendinimo vietos",
       "propertiesDialog": "Pasirinkti apgyvendinimo vietas",
-      "propertiesSearch": "Ieškoti pagal pavadinimą ar miestą"
+      "propertiesSearch": "Ieškoti pagal pavadinimą ar miestą",
+      "allDates": "Visos datos",
+      "dateFrom": "nuo {datum}",
+      "dateUntil": "iki {datum}",
+      "dateFromLabel": "Nuo",
+      "dateUntilLabel": "Iki",
+      "dateClear": "Išvalyti laikotarpį"
     },
     "aufgabenReiter": {
       "current": "DABARTINĖS",
@@ -5320,7 +5351,9 @@
       "sourceLanguageEmpty": "Nenurodyta",
       "sourceLanguageHint": "Pavadinimas automatiškai išverčiamas kitomis kalbomis skaitantiems — viduje jis lieka toks, kokį įvedėte.",
       "sourceLanguageMissing": "Nenurodžius pavadinimas neverčiamas: savininkai ir darbuotojai matys jį būtent taip, kaip čia.",
-      "clockLabel": "Laikas"
+      "clockLabel": "Laikas",
+      "templateMissingHint": "Be užduoties šablono ir be jokių punktų užduotys bus sukurtos be kontrolinio sąrašo – programėlėje darbuotoja matys tik pavadinimą.",
+      "templateBackfillHint": "Išsaugant, esami atviri uždaviniai, susiję su šia taisykle, taip pat gaus taškus, jei jų dar neturi."
     },
     "taskPage": {
       "backToMyTasks": "Į mano užduotis",
@@ -5417,7 +5450,8 @@
       "unbekannt": "Ankstesnis priskyrimas",
       "gesetzt": "Priskyrimas pakeistas",
       "abgezogen": "Priskyrimas atšauktas",
-      "aktion": "Priskirti …"
+      "aktion": "Priskirti …",
+      "eigentuemer": "Savininkas"
     },
     "substitutions": {
       "title": "Pavadavimai",

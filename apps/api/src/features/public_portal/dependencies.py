@@ -14,7 +14,9 @@ from src.features.auth.granular_permissions import (
     has_pm_access,
 )
 from src.features.auth.permissions import Capability, effective_capabilities
+from src.features.tasks.service import TasksService
 
+from .aufgaben import PortalAufgabenService
 from .dienstleistungen import DienstleistungsService
 from .familie import FamilieError, OwnerFamilyService
 from .service import PublicPortalService
@@ -34,6 +36,16 @@ def get_public_portal_service() -> PublicPortalService:
 
 PublicPortalServiceDep = Annotated[
     PublicPortalService, Depends(get_public_portal_service)
+]
+
+
+def get_portal_aufgaben_service() -> PortalAufgabenService:
+    # Derselbe TasksService wie im Tasks-Slice — EINE Logik, EIN Scope.
+    return PortalAufgabenService(TasksService(client=get_service_client()))
+
+
+PortalAufgabenServiceDep = Annotated[
+    PortalAufgabenService, Depends(get_portal_aufgaben_service)
 ]
 
 

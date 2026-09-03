@@ -95,7 +95,7 @@ def _tables() -> dict[str, list[dict]]:
     return {
         "users": [
             {"id": "staff-1", "tenant_id": "t-1"},
-            {"id": "owner-portal", "tenant_id": "t-1"},
+            {"id": "owner-portal", "tenant_id": "t-1", "role": "owner"},
             {"id": "owner-abrechnung", "tenant_id": "t-1"},
             {"id": "fremd-1", "tenant_id": "t-999"},
         ],
@@ -139,6 +139,22 @@ def test_zuweisung_verlinkt_die_aufgabe_selbst(dispatcher: _Dispatcher) -> None:
         assignee_id="staff-1", titel="endreinigung",
     )
     assert dispatcher.aufrufe[0]["ziel_pfad"] == "/aufgaben/task-1"
+
+
+def test_zuweisung_an_eigentuemer_verlinkt_das_portal(dispatcher: _Dispatcher) -> None:
+    """Der Eigentuemer kann seit dem 03.09.2026 Zustaendiger sein. Seine Mail
+    darf nicht ins Dashboard zeigen (`/aufgaben/<id>` — dort hat er keinen
+    Zutritt), sondern in die Portal-Liste seiner Aufgaben. Ein Link, der fuer
+    den Empfaenger 403/404 ist, ist derselbe Fehler wie kein Link."""
+    ereignisse.melde_aufgaben_zuweisung(
+        _DB(_tables()), tenant_id="t-1", task_id="task-1",
+        assignee_id="owner-portal", titel="Reinigung", property_id="p-1",
+    )
+    assert len(dispatcher.aufrufe) == 1
+    ruf = dispatcher.aufrufe[0]
+    assert ruf["user_id"] == "owner-portal"
+    assert ruf["schluessel"] == "task_assigned"
+    assert ruf["ziel_pfad"] == "/portal/aufgaben"
 
 
 def test_ohne_zugewiesenen_passiert_nichts(dispatcher: _Dispatcher) -> None:

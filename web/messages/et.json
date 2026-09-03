@@ -1930,7 +1930,8 @@
       "familyAccess": "Ligipääsud",
       "propertyArea": "Objektide ala",
       "photoAlbum": "Fotoalbum",
-      "statistics": "Statistika"
+      "statistics": "Statistika",
+      "tasks": "Ülesanded"
     },
     "overview": {
       "occupancy": "Täituvus",
@@ -2193,6 +2194,26 @@
         "guestNights": "Külalisööd",
         "ownerStay": "Omaniku kasutus"
       }
+    },
+    "tasks": {
+      "title": "Minu ülesanded",
+      "hint": "Ülesanded, mille haldus on teile teie objektidel määranud. Andke teada, kui alustate ja kui olete lõpetanud.",
+      "openTitle": "Avatud",
+      "doneTitle": "Tehtud",
+      "empty": "Teile pole praegu ühtegi ülesannet määratud.",
+      "emptyDone": "Midagi pole veel tehtud.",
+      "start": "Alusta",
+      "complete": "Märgi tehtuks",
+      "started": "Ülesanne alustatud.",
+      "completed": "Ülesanne märgitud tehtuks.",
+      "property": "Objekt",
+      "window": "Ajavahemik",
+      "booking": "Broneering",
+      "noWindow": "Ajavahemik puudub",
+      "loadFailed": "Ülesandeid ei saanud laadida.",
+      "statusOpen": "Avatud",
+      "statusInProgress": "Töös",
+      "statusDone": "Tehtud"
     }
   },
   "travelAgencies": {
@@ -4489,7 +4510,8 @@
       "pickDateTime": "Kuupäev ja kellaaeg",
       "timeLabelShort": "Kellaaeg",
       "clear": "Tühjenda",
-      "done": "Valmis"
+      "done": "Valmis",
+      "toObject": "Objekti juurde"
     },
     "tasksSubnav": {
       "pmModul": "PM-moodul",
@@ -4577,7 +4599,10 @@
       "completeButton": "Lõpeta",
       "inBooking": "Broningule {ref}",
       "assignedTo": "Kasutajale {name}",
-      "doneBy": "Märkis {name}"
+      "doneBy": "Märkis {name}",
+      "checklistTitle": "Kontrollnimekiri",
+      "checklistOpen": "Ava",
+      "checklistProgress": "{done} / {total} tehtud"
     },
     "checkoutPaymentDialog": {
       "title": "Kuidas külaline tasub?",
@@ -5167,7 +5192,13 @@
       "propertiesCaption": "Valitud majutused",
       "allProperties": "Kõik majutused",
       "propertiesDialog": "Vali majutused",
-      "propertiesSearch": "Otsi nime või linna järgi"
+      "propertiesSearch": "Otsi nime või linna järgi",
+      "allDates": "Kõik kuupäevad",
+      "dateFrom": "alates {datum}",
+      "dateUntil": "kuni {datum}",
+      "dateFromLabel": "Alates",
+      "dateUntilLabel": "Kuni",
+      "dateClear": "Eemalda ajavahemik"
     },
     "aufgabenReiter": {
       "current": "PRAEGUSED",
@@ -5320,7 +5351,9 @@
       "sourceLanguageEmpty": "Määramata",
       "sourceLanguageHint": "Nimi tõlgitakse automaatselt teiste keelte lugejatele — sisemiselt jääb see selliseks, nagu te selle sisestasite.",
       "sourceLanguageMissing": "Ilma määramist nime ei tõlgita: omanikud ja töötajad näevad seda täpselt nii, nagu see siin on.",
-      "clockLabel": "Kellaaeg"
+      "clockLabel": "Kellaaeg",
+      "templateMissingHint": "Ilma ülesande mallita ja ilma oma punktideta luuakse ülesanded ilma kontrollnimekirjata – rakenduses näeb töötaja siis ainult pealkirja.",
+      "templateBackfillHint": "Salvestamisel saavad ka selle reegli olemasolevad avatud ülesanded punktid, kui neil neid veel pole."
     },
     "taskPage": {
       "backToMyTasks": "Minu ülesannete juurde",
@@ -5417,7 +5450,8 @@
       "unbekannt": "Senine määrang",
       "gesetzt": "Vastutaja muudetud",
       "abgezogen": "Määrang tühistatud",
-      "aktion": "Määra …"
+      "aktion": "Määra …",
+      "eigentuemer": "Omanik"
     },
     "substitutions": {
       "title": "Asendused",

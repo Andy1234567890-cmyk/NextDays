@@ -1930,7 +1930,8 @@
       "familyAccess": "Zugänge",
       "photoAlbum": "Fotoalbum",
       "propertyArea": "Objektbereich",
-      "statistics": "Statistik"
+      "statistics": "Statistik",
+      "tasks": "Aufgaben"
     },
     "overview": {
       "occupancy": "Belegung",
@@ -2193,6 +2194,26 @@
       "previous": "Voriges Bild",
       "subtitle": "Alle Bilder deiner Objekte, gruppiert nach Objekt.",
       "title": "Fotoalbum"
+    },
+    "tasks": {
+      "title": "Meine Aufgaben",
+      "hint": "Aufgaben, die die Verwaltung dir an deinen Objekten zugewiesen hat. Melde zurück, wenn du anfängst und wenn du fertig bist.",
+      "openTitle": "Offen",
+      "doneTitle": "Erledigt",
+      "empty": "Dir ist aktuell keine Aufgabe zugewiesen.",
+      "emptyDone": "Noch nichts erledigt.",
+      "start": "Anfangen",
+      "complete": "Erledigt melden",
+      "started": "Aufgabe angefangen.",
+      "completed": "Aufgabe als erledigt gemeldet.",
+      "property": "Objekt",
+      "window": "Zeitfenster",
+      "booking": "Buchung",
+      "noWindow": "Kein Zeitfenster",
+      "loadFailed": "Aufgaben konnten nicht geladen werden.",
+      "statusOpen": "Offen",
+      "statusInProgress": "In Arbeit",
+      "statusDone": "Erledigt"
     }
   },
   "travelAgencies": {
@@ -4489,7 +4510,8 @@
       "pickDateTime": "Datum & Uhrzeit",
       "timeLabelShort": "Uhrzeit",
       "clear": "Leeren",
-      "done": "Fertig"
+      "done": "Fertig",
+      "toObject": "Zum Objekt"
     },
     "tasksSubnav": {
       "pmModul": "PM-Modul",
@@ -4577,7 +4599,10 @@
       "completeButton": "Abschließen",
       "inBooking": "Zur Buchung {ref}",
       "assignedTo": "Für {name}",
-      "doneBy": "Abgehakt von {name}"
+      "doneBy": "Abgehakt von {name}",
+      "checklistTitle": "Checkliste",
+      "checklistOpen": "Öffnen",
+      "checklistProgress": "{done} von {total} erledigt"
     },
     "checkoutPaymentDialog": {
       "title": "Wie bezahlt der Gast?",
@@ -5188,7 +5213,13 @@
       "propertiesCaption": "Ausgewählte Unterkünfte",
       "allProperties": "Alle Unterkünfte",
       "propertiesDialog": "Unterkünfte auswählen",
-      "propertiesSearch": "Suche nach Name oder Stadt"
+      "propertiesSearch": "Suche nach Name oder Stadt",
+      "allDates": "Alle Termine",
+      "dateFrom": "ab {datum}",
+      "dateUntil": "bis {datum}",
+      "dateFromLabel": "Von",
+      "dateUntilLabel": "Bis",
+      "dateClear": "Zeitraum entfernen"
     },
     "aufgabenReiter": {
       "current": "AKTUELL",
@@ -5341,7 +5372,9 @@
       "sourceLanguageEmpty": "Nicht angegeben",
       "sourceLanguageHint": "Der Name wird für Leser anderer Sprachen automatisch übersetzt — intern bleibt er, wie Sie ihn eingetippt haben.",
       "sourceLanguageMissing": "Ohne Angabe wird der Name nicht übersetzt: Eigentümer und Mitarbeiter sehen ihn genau so, wie er hier steht.",
-      "clockLabel": "Uhrzeit"
+      "clockLabel": "Uhrzeit",
+      "templateMissingHint": "Ohne Aufgabenvorlage und ohne eigene Punkte entstehen Aufgaben ohne Checkliste – in der App sieht die Mitarbeiterin dann nur den Titel.",
+      "templateBackfillHint": "Beim Speichern erhalten auch bestehende offene Aufgaben dieser Regel die Punkte, sofern sie noch keine haben."
     },
     "taskPage": {
       "backToMyTasks": "Zu meinen Aufgaben",
@@ -5527,7 +5560,8 @@
       "unbekannt": "Bisherige Zuweisung",
       "gesetzt": "Zuständigkeit geändert",
       "abgezogen": "Zuweisung zurückgenommen",
-      "aktion": "Zuweisen an …"
+      "aktion": "Zuweisen an …",
+      "eigentuemer": "Eigentümer"
     },
     "substitutions": {
       "title": "Vertretungen",

@@ -1930,7 +1930,8 @@
       "familyAccess": "Accesuri",
       "propertyArea": "Zona proprietăților",
       "photoAlbum": "Album foto",
-      "statistics": "Statistici"
+      "statistics": "Statistici",
+      "tasks": "Sarcini"
     },
     "overview": {
       "occupancy": "Ocupare",
@@ -2193,6 +2194,26 @@
         "guestNights": "Nopți cu oaspeți",
         "ownerStay": "Uz propriu"
       }
+    },
+    "tasks": {
+      "title": "Sarcinile mele",
+      "hint": "Sarcini pe care administrația vi le-a atribuit la proprietățile dumneavoastră. Anunțați când începeți și când ați terminat.",
+      "openTitle": "Deschis",
+      "doneTitle": "Finalizat",
+      "empty": "Nu vă este atribuită nicio sarcină în prezent.",
+      "emptyDone": "Nimic finalizat încă.",
+      "start": "Începeți",
+      "complete": "Marcați ca finalizat",
+      "started": "Sarcina a început.",
+      "completed": "Sarcina a fost marcată ca finalizată.",
+      "property": "Proprietate",
+      "window": "Interval orar",
+      "booking": "Rezervare",
+      "noWindow": "Fără interval orar",
+      "loadFailed": "Sarcinile nu au putut fi încărcate.",
+      "statusOpen": "Deschis",
+      "statusInProgress": "În lucru",
+      "statusDone": "Finalizat"
     }
   },
   "travelAgencies": {
@@ -4489,7 +4510,8 @@
       "pickDateTime": "Dată și oră",
       "timeLabelShort": "Oră",
       "clear": "Golire",
-      "done": "Gata"
+      "done": "Gata",
+      "toObject": "Spre proprietate"
     },
     "tasksSubnav": {
       "pmModul": "Modul PM",
@@ -4577,7 +4599,10 @@
       "completeButton": "Finalizează",
       "inBooking": "Către rezervarea {ref}",
       "assignedTo": "Pentru {name}",
-      "doneBy": "Bifat de {name}"
+      "doneBy": "Bifat de {name}",
+      "checklistTitle": "Listă de verificare",
+      "checklistOpen": "Deschideți",
+      "checklistProgress": "{done} din {total} finalizate"
     },
     "checkoutPaymentDialog": {
       "title": "Cum plătește oaspetele?",
@@ -5167,7 +5192,13 @@
       "propertiesCaption": "Cazări selectate",
       "allProperties": "Toate cazările",
       "propertiesDialog": "Selectează cazări",
-      "propertiesSearch": "Caută după nume sau oraș"
+      "propertiesSearch": "Caută după nume sau oraș",
+      "allDates": "Toate datele",
+      "dateFrom": "de la {datum}",
+      "dateUntil": "până la {datum}",
+      "dateFromLabel": "De la",
+      "dateUntilLabel": "Până la",
+      "dateClear": "Șterge perioada"
     },
     "aufgabenReiter": {
       "current": "CURENTE",
@@ -5320,7 +5351,9 @@
       "sourceLanguageEmpty": "Nespecificată",
       "sourceLanguageHint": "Denumirea este tradusă automat pentru cititorii din alte limbi — intern rămâne așa cum ați introdus-o.",
       "sourceLanguageMissing": "Fără această indicație, denumirea nu este tradusă: proprietarii și personalul o vor vedea exact așa cum apare aici.",
-      "clockLabel": "Ora"
+      "clockLabel": "Ora",
+      "templateMissingHint": "Fără un șablon de sarcină și fără puncte proprii, sarcinile sunt create fără o listă de verificare – în aplicație, angajatul va vedea doar titlul.",
+      "templateBackfillHint": "La salvare, sarcinile deschise existente ale acestei reguli vor primi, de asemenea, puncte, dacă nu au deja."
     },
     "taskPage": {
       "backToMyTasks": "La sarcinile mele",
@@ -5417,7 +5450,8 @@
       "unbekannt": "Atribuire anterioară",
       "gesetzt": "Responsabil modificat",
       "abgezogen": "Atribuire retrasă",
-      "aktion": "Atribuie lui …"
+      "aktion": "Atribuie lui …",
+      "eigentuemer": "Proprietar"
     },
     "substitutions": {
       "title": "Înlocuiri",

@@ -1930,7 +1930,8 @@
       "familyAccess": "Åtkomster",
       "propertyArea": "Objektområde",
       "photoAlbum": "Fotoalbum",
-      "statistics": "Statistik"
+      "statistics": "Statistik",
+      "tasks": "Uppgifter"
     },
     "overview": {
       "occupancy": "Beläggning",
@@ -2193,6 +2194,26 @@
         "guestNights": "Gästnätter",
         "ownerStay": "Eget nyttjande"
       }
+    },
+    "tasks": {
+      "title": "Mina uppgifter",
+      "hint": "Uppgifter som administrationen har tilldelat dig för dina fastigheter. Rapportera när du börjar och när du är klar.",
+      "openTitle": "Öppen",
+      "doneTitle": "Färdig",
+      "empty": "Du har för närvarande inga uppgifter tilldelade.",
+      "emptyDone": "Inget gjort än.",
+      "start": "Börja",
+      "complete": "Markera som klar",
+      "started": "Uppgiften har påbörjats.",
+      "completed": "Uppgiften har markerats som klar.",
+      "property": "Fastighet",
+      "window": "Tidsfönster",
+      "booking": "Bokning",
+      "noWindow": "Inget tidsfönster",
+      "loadFailed": "Kunde inte ladda uppgifter.",
+      "statusOpen": "Öppen",
+      "statusInProgress": "Pågående",
+      "statusDone": "Färdig"
     }
   },
   "travelAgencies": {
@@ -4489,7 +4510,8 @@
       "pickDateTime": "Datum och tid",
       "timeLabelShort": "Tid",
       "clear": "Töm",
-      "done": "Färdig"
+      "done": "Färdig",
+      "toObject": "Till boendet"
     },
     "tasksSubnav": {
       "pmModul": "PM-modul",
@@ -4577,7 +4599,10 @@
       "completeButton": "Avsluta",
       "inBooking": "Till bokning {ref}",
       "assignedTo": "För {name}",
-      "doneBy": "Avbockad av {name}"
+      "doneBy": "Avbockad av {name}",
+      "checklistTitle": "Checklista",
+      "checklistOpen": "Öppna",
+      "checklistProgress": "{done} av {total} slutförda"
     },
     "checkoutPaymentDialog": {
       "title": "Hur betalar gästen?",
@@ -5167,7 +5192,13 @@
       "propertiesCaption": "Valda boenden",
       "allProperties": "Alla boenden",
       "propertiesDialog": "Välj boenden",
-      "propertiesSearch": "Sök på namn eller stad"
+      "propertiesSearch": "Sök på namn eller stad",
+      "allDates": "Alla datum",
+      "dateFrom": "från {datum}",
+      "dateUntil": "till {datum}",
+      "dateFromLabel": "Från",
+      "dateUntilLabel": "Till",
+      "dateClear": "Rensa period"
     },
     "aufgabenReiter": {
       "current": "AKTUELLA",
@@ -5320,7 +5351,9 @@
       "sourceLanguageEmpty": "Ej angivet",
       "sourceLanguageHint": "Namnet översätts automatiskt för läsare med andra språk — internt förblir det som du skrev det.",
       "sourceLanguageMissing": "Utan uppgift översätts namnet inte: ägare och personal ser det exakt som det står här.",
-      "clockLabel": "Tid"
+      "clockLabel": "Tid",
+      "templateMissingHint": "Utan uppgiftsmall och utan egna punkter skapas uppgifter utan checklista – i appen ser medarbetaren då bara titeln.",
+      "templateBackfillHint": "Vid spara får även befintliga öppna uppgifter för denna regel poäng, om de inte redan har det."
     },
     "taskPage": {
       "backToMyTasks": "Till mina uppgifter",
@@ -5417,7 +5450,8 @@
       "unbekannt": "Tidigare tilldelning",
       "gesetzt": "Ansvarig ändrad",
       "abgezogen": "Tilldelning borttagen",
-      "aktion": "Tilldela …"
+      "aktion": "Tilldela …",
+      "eigentuemer": "Ägare"
     },
     "substitutions": {
       "title": "Ersättning",

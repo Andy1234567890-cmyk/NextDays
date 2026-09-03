@@ -1930,7 +1930,8 @@
       "familyAccess": "Käyttöoikeudet",
       "propertyArea": "Kohdealue",
       "photoAlbum": "Kuva-albumi",
-      "statistics": "Tilastot"
+      "statistics": "Tilastot",
+      "tasks": "Tehtävät"
     },
     "overview": {
       "occupancy": "Käyttöaste",
@@ -2193,6 +2194,26 @@
         "guestNights": "Vierasyöt",
         "ownerStay": "Omistajan käyttö"
       }
+    },
+    "tasks": {
+      "title": "Tehtäväni",
+      "hint": "Tehtävät, jotka hallinto on antanut sinulle kohteissasi. Ilmoita, kun aloitat ja kun olet valmis.",
+      "openTitle": "Avoinna",
+      "doneTitle": "Valmis",
+      "empty": "Sinulle ei ole tällä hetkellä määritetty tehtäviä.",
+      "emptyDone": "Ei vielä tehty mitään.",
+      "start": "Aloita",
+      "complete": "Merkitse valmiiksi",
+      "started": "Tehtävä aloitettu.",
+      "completed": "Tehtävä merkitty valmiiksi.",
+      "property": "Kohde",
+      "window": "Aikaikkuna",
+      "booking": "Varaus",
+      "noWindow": "Ei aikaikkunaa",
+      "loadFailed": "Tehtäviä ei voitu ladata.",
+      "statusOpen": "Avoinna",
+      "statusInProgress": "Työn alla",
+      "statusDone": "Valmis"
     }
   },
   "travelAgencies": {
@@ -4489,7 +4510,8 @@
       "pickDateTime": "Päivämäärä ja aika",
       "timeLabelShort": "Aika",
       "clear": "Tyhjennä",
-      "done": "Valmis"
+      "done": "Valmis",
+      "toObject": "Kohteeseen"
     },
     "tasksSubnav": {
       "pmModul": "PM-moduuli",
@@ -4577,7 +4599,10 @@
       "completeButton": "Merkitse valmiiksi",
       "inBooking": "Varaukseen {ref}",
       "assignedTo": "Henkilölle {name}",
-      "doneBy": "Kuittasi {name}"
+      "doneBy": "Kuittasi {name}",
+      "checklistTitle": "Tarkistuslista",
+      "checklistOpen": "Avaa",
+      "checklistProgress": "{done} / {total} valmis"
     },
     "checkoutPaymentDialog": {
       "title": "Miten vieras maksaa?",
@@ -5167,7 +5192,13 @@
       "propertiesCaption": "Valitut majoitukset",
       "allProperties": "Kaikki majoitukset",
       "propertiesDialog": "Valitse majoitukset",
-      "propertiesSearch": "Hae nimellä tai kaupungilla"
+      "propertiesSearch": "Hae nimellä tai kaupungilla",
+      "allDates": "Kaikki päivämäärät",
+      "dateFrom": "alkaen {datum}",
+      "dateUntil": "asti {datum}",
+      "dateFromLabel": "Alkaen",
+      "dateUntilLabel": "Päättyen",
+      "dateClear": "Poista aikaväli"
     },
     "aufgabenReiter": {
       "current": "NYKYISET",
@@ -5320,7 +5351,9 @@
       "sourceLanguageEmpty": "Ei määritetty",
       "sourceLanguageHint": "Nimi käännetään automaattisesti muunkielisille lukijoille — sisäisesti se pysyy sellaisena kuin sen kirjoitit.",
       "sourceLanguageMissing": "Ilman tietoa nimeä ei käännetä: omistajat ja työntekijät näkevät sen juuri sellaisena kuin se on tässä.",
-      "clockLabel": "Aika"
+      "clockLabel": "Aika",
+      "templateMissingHint": "Ilman tehtävämallia ja omia pisteitä tehtävät luodaan ilman tarkistuslistaa – sovelluksessa työntekijä näkee vain otsikon.",
+      "templateBackfillHint": "Tallennettaessa myös olemassa olevat avoimet tehtävät saavat pisteitä, jos niillä ei vielä ole niitä."
     },
     "taskPage": {
       "backToMyTasks": "Omiin tehtäviin",
@@ -5417,7 +5450,8 @@
       "unbekannt": "Aiempi vastuuhenkilö",
       "gesetzt": "Vastuuhenkilö vaihdettu",
       "abgezogen": "Vastuu poistettu",
-      "aktion": "Määrää vastuuhenkilö …"
+      "aktion": "Määrää vastuuhenkilö …",
+      "eigentuemer": "Omistaja"
     },
     "substitutions": {
       "title": "Sijaisuudet",

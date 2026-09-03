@@ -17,6 +17,7 @@ from __future__ import annotations
 from postgrest.exceptions import APIError
 from supabase import Client
 
+from src.core.bestand import nur_im_bestand
 from src.core.logging import get_logger, mask_email
 from src.core.mail_sprache import normalisieren
 from src.core.security import AuthContext
@@ -118,6 +119,17 @@ class OwnersService:
             .execute()
         ).data or []
         return {str(r["id"]) for r in rows}
+
+    def _ist_archiviert(self, tenant_id: str, property_id: str) -> bool:
+        rows = (
+            self._db.table("properties")
+            .select("archived_at")
+            .eq("id", property_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        return bool(rows and rows[0].get("archived_at"))
 
     def _links(self, owner_id: str) -> list[OwnerPropertyLink]:
         rows = (
@@ -391,22 +403,31 @@ class OwnersService:
 
         # Titel gleich mitladen: sie werden in den Fehlermeldungen gebraucht.
         # Ein zweiter Ladevorgang nur für den Text wäre eine Runde zu viel.
-        eigene = {
-            str(r["id"]): r["title"]
-            for r in (
-                self._db.table("properties")
-                .select("id, title")
-                .eq("tenant_id", tenant_id)
-                .in_("id", property_ids)
-                .execute()
-            ).data
-            or []
-        }
+        zeilen = (
+            self._db.table("properties")
+            .select("id, title, archived_at")
+            .eq("tenant_id", tenant_id)
+            .in_("id", property_ids)
+            .execute()
+        ).data or []
+        eigene = {str(r["id"]): r["title"] for r in zeilen}
         fremd = [pid for pid in property_ids if pid not in eigene]
         if fremd:
             raise OwnerError(
                 "Mindestens ein Objekt gehört nicht zu diesem Konto.",
                 status_code=400,
+            )
+        # Dieselbe Grenze wie in `_zuordenbare_objekte` (Wurzel 3/9): die
+        # Auswahl zeigt Archiviertes nicht, der Schreibpfad nimmt es per ID
+        # ebenso wenig an — und zwar in DIESEM Pfad, denn die Mehrfachauswahl
+        # der Detailseite und der Anlege-Dialog laufen hier, nicht über
+        # `assign_property`.
+        archiviert = [r["title"] for r in zeilen if r.get("archived_at")]
+        if archiviert:
+            raise OwnerError(
+                "Archivierte Objekte können keinem Eigentümer mehr zugeordnet "
+                f"werden: {', '.join(sorted(str(t) for t in archiviert))}.",
+                status_code=422,
             )
 
         # Schon vergeben? Vor dem Schreiben prüfen, damit der Betreiber eine
@@ -1314,7 +1335,11 @@ class OwnersService:
         bei 18 ähnlich benannten Objekten ist die Adresse das
         Unterscheidungsmerkmal. Fehlen sie, bleiben sie leer — kein Platzhalter.
         """
-        query = (
+        # Nur der geführte Bestand: ein archiviertes Objekt (0416) ist aus dem
+        # Vertrag heraus und darf keinem Eigentümer mehr angeboten werden. Live
+        # stand „Fewo-Mosbjerg-Sindal" (archiviert 21.08.2026) hier weiter als
+        # freies Objekt (03.09.2026).
+        query = nur_im_bestand(
             self._db.table("properties")
             .select("id, title, street, house_number, city, photos")
             .eq("tenant_id", tenant_id)
@@ -1358,6 +1383,15 @@ class OwnersService:
         if req.property_id not in self._tenant_property_ids(tenant_id):
             raise OwnerError(
                 "Objekt gehört nicht zu diesem Konto.", status_code=400
+            )
+        # Dieselbe Grenze wie in `_zuordenbare_objekte`, serverseitig
+        # erzwungen (Wurzel 3): die Auswahl zeigt Archiviertes nicht mehr, ein
+        # direkter Aufruf mit der ID darf es ebenso wenig zuordnen.
+        if self._ist_archiviert(tenant_id, req.property_id):
+            raise OwnerError(
+                "Objekt ist archiviert und kann keinem Eigentümer mehr "
+                "zugeordnet werden.",
+                status_code=422,
             )
         # Exklusivität: ein Objekt darf nur EINEM Eigentümer gehören. Ist es
         # bereits einem ANDEREN Owner zugeordnet, klar abweisen (kein stilles

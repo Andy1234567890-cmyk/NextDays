@@ -54,10 +54,17 @@ export default function Mehr({ navigation }: { navigation: Nav }) {
 
         <Kachel pad={0}>
           <Reihe
+            icon="check"
+            titel="Meine Aufgaben"
+            unter="Was die Verwaltung Ihnen zugewiesen hat"
+            auf={() => navigation.navigate("Aufgaben")}
+          />
+          <Reihe
             icon="doc"
             titel="Abrechnungen"
             unter="Abgeschlossene Abrechnungen"
             auf={() => navigation.navigate("Abrechnungen")}
+            erste={false}
           />
           <Reihe
             icon="cam"

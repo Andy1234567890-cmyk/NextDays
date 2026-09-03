@@ -1930,7 +1930,8 @@
       "familyAccess": "Hozzáférések",
       "propertyArea": "Ingatlanadatok",
       "photoAlbum": "Fotóalbum",
-      "statistics": "Statisztikák"
+      "statistics": "Statisztikák",
+      "tasks": "Feladatok"
     },
     "overview": {
       "occupancy": "Foglaltság",
@@ -2193,6 +2194,26 @@
         "guestNights": "Vendégéjszakák",
         "ownerStay": "Saját használat"
       }
+    },
+    "tasks": {
+      "title": "Feladataim",
+      "hint": "Az adminisztráció által az Ön objektumaihoz rendelt feladatok. Jelentse, ha elkezdi és ha befejezte.",
+      "openTitle": "Nyitott",
+      "doneTitle": "Elkészült",
+      "empty": "Jelenleg nincs feladat hozzárendelve Önhöz.",
+      "emptyDone": "Még semmi sem készült el.",
+      "start": "Elkezd",
+      "complete": "Kész jelentése",
+      "started": "Feladat elkezdve.",
+      "completed": "Feladat készre jelentve.",
+      "property": "Objektum",
+      "window": "Időkeret",
+      "booking": "Foglalás",
+      "noWindow": "Nincs időkeret",
+      "loadFailed": "A feladatokat nem sikerült betölteni.",
+      "statusOpen": "Nyitott",
+      "statusInProgress": "Folyamatban",
+      "statusDone": "Elkészült"
     }
   },
   "travelAgencies": {
@@ -4489,7 +4510,8 @@
       "pickDateTime": "Dátum és idő",
       "timeLabelShort": "Idő",
       "clear": "Törlés",
-      "done": "Kész"
+      "done": "Kész",
+      "toObject": "Az ingatlanhoz"
     },
     "tasksSubnav": {
       "pmModul": "PM-modul",
@@ -4577,7 +4599,10 @@
       "completeButton": "Lezárás",
       "inBooking": "A(z) {ref} foglaláshoz",
       "assignedTo": "{name} részére",
-      "doneBy": "Kipipálta: {name}"
+      "doneBy": "Kipipálta: {name}",
+      "checklistTitle": "Ellenőrzőlista",
+      "checklistOpen": "Megnyitás",
+      "checklistProgress": "{done} / {total} kész"
     },
     "checkoutPaymentDialog": {
       "title": "Hogyan fizet a vendég?",
@@ -5167,7 +5192,13 @@
       "propertiesCaption": "Kiválasztott szállások",
       "allProperties": "Összes szállás",
       "propertiesDialog": "Szállások kiválasztása",
-      "propertiesSearch": "Keresés név vagy város szerint"
+      "propertiesSearch": "Keresés név vagy város szerint",
+      "allDates": "Minden dátum",
+      "dateFrom": "{datum}-tól",
+      "dateUntil": "{datum}-ig",
+      "dateFromLabel": "Ettől",
+      "dateUntilLabel": "Eddig",
+      "dateClear": "Időszak törlése"
     },
     "aufgabenReiter": {
       "current": "AKTUÁLIS",
@@ -5320,7 +5351,9 @@
       "sourceLanguageEmpty": "Nincs megadva",
       "sourceLanguageHint": "A nevet automatikusan lefordítjuk a más nyelvű olvasók számára — belsőleg úgy marad, ahogyan beírta.",
       "sourceLanguageMissing": "Megadás nélkül a nevet nem fordítjuk le: a tulajdonosok és a munkatársak pontosan úgy látják, ahogy itt szerepel.",
-      "clockLabel": "Idő"
+      "clockLabel": "Idő",
+      "templateMissingHint": "Feladatsablon és saját pontok nélkül a feladatok ellenőrzőlista nélkül jönnek létre – az alkalmazásban az alkalmazott csak a címet látja.",
+      "templateBackfillHint": "Mentéskor a szabályhoz tartozó meglévő nyitott feladatok is megkapják a pontokat, ha még nincsenek pontjaik."
     },
     "taskPage": {
       "backToMyTasks": "A feladataimhoz",
@@ -5417,7 +5450,8 @@
       "unbekannt": "Korábbi hozzárendelés",
       "gesetzt": "Felelős módosítva",
       "abgezogen": "Hozzárendelés visszavonva",
-      "aktion": "Hozzárendelés …"
+      "aktion": "Hozzárendelés …",
+      "eigentuemer": "Tulajdonos"
     },
     "substitutions": {
       "title": "Helyettesítések",

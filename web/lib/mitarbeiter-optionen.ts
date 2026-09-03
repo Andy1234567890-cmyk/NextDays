@@ -30,6 +30,11 @@ export type MitarbeiterOption = {
  */
 export function mitarbeiterOptionen(
   users: TaskAssigneeOption[],
+  /** Beschriftung, die hinter einen EIGENTÜMER gehängt wird (übersetzt vom
+   *  Aufrufer). Ohne sie stünde der Hauseigentümer ununterscheidbar neben dem
+   *  Personal — und genau dieser Unterschied entscheidet, wer die Aufgabe im
+   *  Portal statt im Team-Kalender sieht (03.09.2026). */
+  kennungen: { eigentuemer?: string } = {},
 ): MitarbeiterOption[] {
   // Gesperrte filtert bereits der Server heraus (`/tasks/assignees`), ebenso
   // Rollen ohne `view_own_tasks`. Hier bleibt nur die Beschriftung.
@@ -39,13 +44,19 @@ export function mitarbeiterOptionen(
     const name = u.full_name?.trim();
     if (name) proName.set(name, (proName.get(name) ?? 0) + 1);
   }
+  const zusatz = (u: TaskAssigneeOption): string =>
+    u.role === "owner" && kennungen.eigentuemer
+      ? ` · ${kennungen.eigentuemer}`
+      : "";
   return aktiv.map((u) => {
     const name = u.full_name?.trim();
-    if (!name) return { value: u.user_id, label: u.email ?? u.user_id };
+    if (!name) {
+      return { value: u.user_id, label: `${u.email ?? u.user_id}${zusatz(u)}` };
+    }
     const mehrdeutig = (proName.get(name) ?? 0) > 1;
     return {
       value: u.user_id,
-      label: mehrdeutig && u.email ? `${name} (${u.email})` : name,
+      label: `${mehrdeutig && u.email ? `${name} (${u.email})` : name}${zusatz(u)}`,
     };
   });
 }

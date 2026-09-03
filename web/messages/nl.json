@@ -1930,7 +1930,8 @@
       "familyAccess": "Toegangen",
       "propertyArea": "Objectgegevens",
       "photoAlbum": "Fotoalbum",
-      "statistics": "Statistieken"
+      "statistics": "Statistieken",
+      "tasks": "Taken"
     },
     "overview": {
       "occupancy": "Bezetting",
@@ -2193,6 +2194,26 @@
         "guestNights": "Gastnachten",
         "ownerStay": "Eigen gebruik"
       }
+    },
+    "tasks": {
+      "title": "Mijn taken",
+      "hint": "Taken die het management aan u heeft toegewezen voor uw objecten. Meld wanneer u begint en wanneer u klaar bent.",
+      "openTitle": "Open",
+      "doneTitle": "Voltooid",
+      "empty": "U heeft momenteel geen taken toegewezen gekregen.",
+      "emptyDone": "Nog niets voltooid.",
+      "start": "Beginnen",
+      "complete": "Als voltooid melden",
+      "started": "Taak gestart.",
+      "completed": "Taak als voltooid gemeld.",
+      "property": "Object",
+      "window": "Tijdvak",
+      "booking": "Boeking",
+      "noWindow": "Geen tijdvak",
+      "loadFailed": "Taken konden niet worden geladen.",
+      "statusOpen": "Open",
+      "statusInProgress": "Bezig",
+      "statusDone": "Voltooid"
     }
   },
   "travelAgencies": {
@@ -4489,7 +4510,8 @@
       "pickDateTime": "Datum & tijd",
       "timeLabelShort": "Tijd",
       "clear": "Wissen",
-      "done": "Klaar"
+      "done": "Klaar",
+      "toObject": "Naar accommodatie"
     },
     "tasksSubnav": {
       "pmModul": "PM-module",
@@ -4577,7 +4599,10 @@
       "completeButton": "Afronden",
       "inBooking": "Naar boeking {ref}",
       "assignedTo": "Voor {name}",
-      "doneBy": "Afgevinkt door {name}"
+      "doneBy": "Afgevinkt door {name}",
+      "checklistTitle": "Checklist",
+      "checklistOpen": "Openen",
+      "checklistProgress": "{done} van {total} voltooid"
     },
     "checkoutPaymentDialog": {
       "title": "Hoe betaalt de gast?",
@@ -5167,7 +5192,13 @@
       "propertiesCaption": "Geselecteerde accommodaties",
       "allProperties": "Alle accommodaties",
       "propertiesDialog": "Accommodaties selecteren",
-      "propertiesSearch": "Zoeken op naam of stad"
+      "propertiesSearch": "Zoeken op naam of stad",
+      "allDates": "Alle data",
+      "dateFrom": "vanaf {datum}",
+      "dateUntil": "tot {datum}",
+      "dateFromLabel": "Van",
+      "dateUntilLabel": "Tot",
+      "dateClear": "Periode wissen"
     },
     "aufgabenReiter": {
       "current": "ACTUEEL",
@@ -5320,7 +5351,9 @@
       "sourceLanguageEmpty": "Niet opgegeven",
       "sourceLanguageHint": "De naam wordt automatisch vertaald voor lezers van andere talen — intern blijft hij zoals u hem hebt ingetypt.",
       "sourceLanguageMissing": "Zonder opgave wordt de naam niet vertaald: eigenaren en medewerkers zien hem precies zoals hij hier staat.",
-      "clockLabel": "Tijd"
+      "clockLabel": "Tijd",
+      "templateMissingHint": "Zonder taaksjabloon en zonder eigen punten ontstaan taken zonder checklist – in de app ziet de medewerkster dan alleen de titel.",
+      "templateBackfillHint": "Bij het opslaan krijgen bestaande openstaande taken van deze regel ook de punten, mits ze deze nog niet hebben."
     },
     "taskPage": {
       "backToMyTasks": "Naar mijn taken",
@@ -5417,7 +5450,8 @@
       "unbekannt": "Vorige toewijzing",
       "gesetzt": "Verantwoordelijke gewijzigd",
       "abgezogen": "Toewijzing ingetrokken",
-      "aktion": "Toewijzen aan …"
+      "aktion": "Toewijzen aan …",
+      "eigentuemer": "Eigenaar"
     },
     "substitutions": {
       "title": "Vervangingen",

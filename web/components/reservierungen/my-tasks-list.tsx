@@ -19,7 +19,12 @@ import { AufgabenTabelle } from "@/components/reservierungen/aufgaben-tabelle";
 import { MassenaktionenFab } from "@/components/reservierungen/massenaktionen-fab";
 import { TaskDetailModal } from "@/components/reservierungen/task-detail-modal";
 import { listProperties } from "@/lib/properties";
-import { tagesendeIso } from "@/lib/aufgaben-konstanten";
+import {
+  LEERER_ZEITRAUM,
+  type Zeitraum,
+  tagesendeIso,
+  zeitraumGrenzen,
+} from "@/lib/aufgaben-konstanten";
 import { type TaskListItem, completeTask, listMyTasks } from "@/lib/tasks";
 import { useRealtime } from "@/lib/use-realtime";
 
@@ -31,6 +36,10 @@ export function MyTasksList() {
     { value: string; label: string }[]
   >([]);
   const [propFilter, setPropFilter] = useState<string[]>([]);
+  // Serverseitiger Datumsfilter, siehe `team-tasks.tsx`. Für eine
+  // Reinigungskraft ist er die häufigste Frage überhaupt: „was steht diese
+  // Woche an".
+  const [zeitraum, setZeitraum] = useState<Zeitraum>(LEERER_ZEITRAUM);
   const [selected, setSelected] = useState<string[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -42,6 +51,7 @@ export function MyTasksList() {
     const res = await listMyTasks({
       status_bucket: tab,
       property_ids: propFilter,
+      ...zeitraumGrenzen(zeitraum),
       // Im Browser gebildet: die Server-Action kennt nur die Zeit des
       // Rechenzentrums, nicht die des Betriebs.
       tagesende: tagesendeIso(),
@@ -49,7 +59,7 @@ export function MyTasksList() {
     if (res.ok) setRows(res.data);
     else fehlerMelden(res);
     setLoading(false);
-  }, [tab, propFilter]);
+  }, [tab, propFilter, zeitraum]);
 
   useEffect(() => {
     void load();
@@ -88,6 +98,7 @@ export function MyTasksList() {
           {t("myTasksList.title")}
         </h1>
         <AufgabenFilter
+          zeitraum={{ wert: zeitraum, onChange: setZeitraum }}
           filters={[
             {
               key: "property",

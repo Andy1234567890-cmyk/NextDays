@@ -431,6 +431,20 @@ export function RuleEditorPage({
             ))}
           </ul>
         )}
+        {/* Ohne Vorlage und ohne eigene Punkte entstehen Aufgaben, die in der
+            App nur einen Titel zeigen. Bis zum 03.09.2026 speicherte der Editor
+            das stumm — live liefen vier Regeln so, und die Frage „wo ist die
+            Checkliste?" kam von der Mitarbeiterin, nicht vom System. */}
+        {kind === "auto" && !form.template_rule_id && form.items.length === 0 && (
+          <p className="rounded-(--radius) border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-800 dark:text-amber-300">
+            {t("ruleEditorPage.templateMissingHint")}
+          </p>
+        )}
+        {kind === "auto" && (form.template_rule_id || form.items.length > 0) && (
+          <p className="text-xs text-muted-foreground">
+            {t("ruleEditorPage.templateBackfillHint")}
+          </p>
+        )}
       </Block>
 
       {/* Empfänger + Inspektion */}

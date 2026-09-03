@@ -10,6 +10,7 @@ from typing import Any
 
 from supabase import Client
 
+from src.core.bestand import nur_im_bestand
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 
@@ -271,10 +272,14 @@ class DashboardService:
 
         # Das Geruest ist KEIN Objekt des Kunden: es traegt nur den Platz frei,
         # bis die echten Airbnb-Daten kommen (airbnb_uebernahme.GERUEST_TITEL).
+        # Nur der geführte Bestand (0416): ein archiviertes Objekt zählt weder
+        # als „Objekt vorhanden" noch als Träger eines Preisplans.
         alle_props = (
-            db.table("properties")
-            .select("id, title, airbnb_listing_id")
-            .eq("tenant_id", tenant_id)
+            nur_im_bestand(
+                db.table("properties")
+                .select("id, title, airbnb_listing_id")
+                .eq("tenant_id", tenant_id)
+            )
             .limit(50)
             .execute()
         ).data or []

@@ -17,12 +17,13 @@ Aufgaben-Lebenszyklus. Der Dienst delegiert dorthin.
 # lesbarer — es verteilt ihn nur. Was ein eigenes Thema IST, ist bereits
 # ausgelagert (engine, schedule_label, kosten_rueckmeldung).
 import secrets
-from datetime import UTC, date, datetime, time
+from datetime import UTC, date, datetime, time, timedelta
 from uuid import UUID
 
 from postgrest.exceptions import APIError
 from supabase import Client
 
+from src.core.bestand import nur_im_bestand
 from src.core.ki import KiError, VertexClient
 from src.core.logging import get_logger
 from src.core.mail_sprache import normalisieren
@@ -283,6 +284,17 @@ class TasksService:
                 for t in tasks
                 if t.property_id is None or t.property_id in allowed
             ]
+        if ctx is not None and is_owner(ctx):
+            # EIGENTÜMER (03.09.2026): enger als staff. Er sieht nur, was IHM
+            # zugewiesen ist UND an einem SEINER Objekte hängt — nicht die
+            # Aufgaben des Personals an seinem Haus (wer putzt, ist
+            # Personaleinsatz des Betriebs, §4.3) und keine Pool-Aufgaben.
+            meine = owner_property_ids(self._db(), ctx)
+            tasks = [
+                t
+                for t in tasks
+                if self._eigentuemer_sieht(ctx, t.property_id, t.assignee_id, meine)
+            ]
         return tasks
 
     def list_by_reservation(
@@ -467,7 +479,19 @@ class TasksService:
     ) -> Task | None:
         """Vorbereitungs-Aufgabe bei Kauf einer Zusatzleistung (Trigger
         ``addon_purchased``). Fällig am Anreisetag; ein Task je gekauftem Item.
-        Best-effort: Fehler werden geloggt, nicht propagiert (kein Kauf-Abbruch)."""
+        Best-effort: Fehler werden geloggt, nicht propagiert (kein Kauf-Abbruch).
+
+        ZEITFENSTER (03.09.2026): Hier stand nur ``due_at``. Eine Aufgabe ohne
+        ``start_at`` hat kein Zeitfenster — niemand sieht, WANN sie zu tun ist,
+        und der Kalender musste sich den Tag aus ``due_at`` holen, also aus dem
+        ENDE. Live betraf das 30 Aufgaben („Wäschepaket", „Babybett").
+
+        Das Fenster ist derselbe Vormittag wie bei den übrigen
+        anreisebezogenen Aufgaben: die Zusatzleistung muss VOR der Anreise im
+        Objekt sein. ``due_at`` bleibt das Ende, damit die Fälligkeit sich
+        nicht verschiebt.
+        """
+        start_at = self._addon_fenster_start(due_at)
         try:
             res = (
                 self._db()
@@ -479,6 +503,8 @@ class TasksService:
                         "reservation_id": reservation_id,
                         "title": f"Zusatzleistung vorbereiten: {addon_label}",
                         "status": TaskStatus.open.value,
+                        "start_at": start_at,
+                        "end_at": due_at,
                         "due_at": due_at,
                     }
                 )
@@ -491,6 +517,24 @@ class TasksService:
         return self._to_task(res.data[0]) if res.data else None
 
     # --- Checklisten + Foto-Nachweise (§2.5) ---
+
+    @staticmethod
+    def _addon_fenster_start(due_at: str) -> str:
+        """Beginn des Vorbereitungsfensters: vier Stunden vor der Fälligkeit.
+
+        Vier Stunden, weil das die Spanne der übrigen anreisebezogenen Regeln
+        ist (Empfang 14:00–18:00). Ein auf die Minute gleicher Start und Ende
+        wäre kein Fenster, und ein geratener Tagesbeginn stünde bei einer
+        Zeitzone östlich von UTC nachts (Wurzel 4).
+        """
+        try:
+            ende = datetime.fromisoformat(due_at.replace("Z", "+00:00"))
+        except ValueError:
+            # Unlesbares Datum: kein erfundener Start, dann bleibt es beim
+            # Ende allein — sichtbar als Aufgabe ohne Fenster, nicht als
+            # stille Falschangabe.
+            return due_at
+        return (ende - timedelta(hours=4)).isoformat()
 
     def _require_own_task(
         self, tenant_id: str, task_id: str, ctx: AuthContext | None = None
@@ -510,7 +554,7 @@ class TasksService:
         owned = (
             self._db()
             .table("tasks")
-            .select("id, property_id")
+            .select("id, property_id, assignee_id")
             .eq("id", task_id)
             .eq("tenant_id", tenant_id)
             .limit(1)
@@ -524,6 +568,10 @@ class TasksService:
                 # Gleiche Fehlermeldung wie „nicht vorhanden": kein Orakel
                 # darüber, ob eine fremde Aufgabe existiert.
                 raise TaskError("Aufgabe nicht gefunden.", status_code=404)
+        if ctx is not None and is_owner(ctx) and not self._eigentuemer_sieht(
+            ctx, owned[0].get("property_id"), owned[0].get("assignee_id")
+        ):
+            raise TaskError("Aufgabe nicht gefunden.", status_code=404)
 
     def _require_own_checklist_item(
         self, tenant_id: str, item_id: str, ctx: AuthContext | None = None
@@ -1142,6 +1190,8 @@ class TasksService:
         property_ids: list[str] | None = None,
         assignee_ids: list[str] | None = None,
         rule_ids: list[str] | None = None,
+        von: datetime | None = None,
+        bis: datetime | None = None,
         tagesende: datetime | None = None,
         ctx: AuthContext | None = None,
     ) -> list[TaskListItem]:
@@ -1155,6 +1205,8 @@ class TasksService:
             property_ids=property_ids,
             assignee_ids=assignee_ids,
             rule_ids=rule_ids,
+            von=von,
+            bis=bis,
             ctx=ctx,
         )
         return self._enrich(
@@ -1168,13 +1220,20 @@ class TasksService:
         status_bucket: str | None = None,
         property_ids: list[str] | None = None,
         ctx: AuthContext | None = None,
+        von: datetime | None = None,
+        bis: datetime | None = None,
         tagesende: datetime | None = None,
     ) -> list[TaskListItem]:
         """„Meine Aufgaben": dieselbe Tabelle wie Teamaufgaben, aber hart auf den
         angemeldeten Nutzer gescopt (Wurzel 9 — der Filter ist keine Anzeigehilfe,
         er ist die Autorisierung)."""
         rows = self._filtered_tasks(
-            tenant_id, property_ids=property_ids, assignee_ids=[user_id], ctx=ctx
+            tenant_id,
+            property_ids=property_ids,
+            assignee_ids=[user_id],
+            von=von,
+            bis=bis,
+            ctx=ctx,
         )
         if ctx is not None and is_staff(ctx):
             allowed = staff_property_ids(self._db(), ctx)
@@ -1192,6 +1251,8 @@ class TasksService:
         property_ids: list[str] | None = None,
         assignee_ids: list[str] | None = None,
         rule_ids: list[str] | None = None,
+        von: datetime | None = None,
+        bis: datetime | None = None,
         ctx: AuthContext | None = None,
     ) -> list[Task]:
         """Gemeinsamer Lesepfad der Listen und des Kalenders.
@@ -1199,6 +1260,18 @@ class TasksService:
         Mehrfachauswahl wirkt wirklich: früher griff der Nutzerfilter nur bei
         GENAU einer Auswahl, jede weitere blieb folgenlos. Der Sonderwert
         ``none`` in `assignee_ids` meint „Nicht zugeordnet" (Lodgify-Eintrag).
+
+        `von`/`bis` sind die Grenzen des Datumsfilters als ZEITPUNKTE (`bis` =
+        Beginn des Tages NACH dem gewählten Enddatum, exklusiv). Sie kommen
+        fertig gerechnet vom Client, wie schon `tagesende`: der Kalendertag
+        eines Aufgaben-Zeitstempels ist in der Zone des OBJEKTS definiert
+        (`engine.py::_at`), und live haben 24 von 43 Objekten keine gepflegte
+        Zone — eine hier zu unterstellen wäre ein erfundener Wert (Wurzel 4).
+
+        Geprüft wird ÜBERSCHNEIDUNG, nicht `start_at BETWEEN`: eine Aufgabe vom
+        20.08. 10:00–16:00 muss beim Filter „20.08.–20.08." erscheinen, und eine
+        über Nacht laufende auch an beiden Tagen. Eine Aufgabe überschneidet den
+        Zeitraum, wenn sie vor dessen Ende beginnt und nach dessen Anfang endet.
         """
         q = self._db().table("tasks").select("*").eq("tenant_id", tenant_id)
         if property_ids:
@@ -1226,7 +1299,42 @@ class TasksService:
             rows = [
                 t for t in rows if t.assignee_id is None or t.assignee_id in allowed
             ]
-        return rows
+        return self._im_zeitraum(rows, von, bis)
+
+    @staticmethod
+    def _im_zeitraum(
+        tasks: list[Task], von: datetime | None, bis: datetime | None
+    ) -> list[Task]:
+        """Überschneidung mit dem Datumsfilter (`bis` exklusiv).
+
+        Bewusst in Python und nicht als PostgREST-Bedingung: der Zeitpunkt einer
+        Aufgabe steht in DREI nullbaren Spalten mit Vorrang
+        ``start_at → due_at``, genau wie in `_filter_bucket`. Als
+        ``or``-Verkettung über nullbare Spalten wäre dieselbe Regel zweimal
+        formuliert und beim nächsten Feld auseinandergelaufen; ein ``lt`` auf
+        ``start_at`` allein hätte JEDE Aufgabe ohne Startzeitpunkt verschluckt
+        (live 30 Zusatzleistungs-Aufgaben, die nur ``due_at`` trugen). Die Menge
+        ist tenant-begrenzt und für die Reiter-Einteilung ohnehin schon geladen.
+
+        Eine Aufgabe ohne JEDEN Zeitpunkt hat keinen Tag, an dem sie liegt: sie
+        fällt aus einem Datumsfilter heraus, statt in jedem Zeitraum
+        aufzutauchen. Ohne gesetzten Filter bleibt sie sichtbar.
+        """
+        if von is None and bis is None:
+            return tasks
+        treffer: list[Task] = []
+        for t in tasks:
+            beginn = t.start_at or t.due_at
+            if beginn is None:
+                continue
+            # Ohne Ende ist die Aufgabe ein Zeitpunkt, kein Zeitraum.
+            ende = t.end_at or t.due_at or beginn
+            if bis is not None and beginn >= bis:
+                continue
+            if von is not None and ende < von:
+                continue
+            treffer.append(t)
+        return treffer
 
     @staticmethod
     def _filter_bucket(
@@ -1294,23 +1402,55 @@ class TasksService:
         rule_ids: list[str] | None = None,
         ctx: AuthContext | None = None,
     ) -> TaskCalendarResponse:
-        """Kalender-Timeline: ALLE Objekte als Zeilen (auch leere) plus eine
-        erste Zeile für objektlose Aufgaben. Je Zeile die Aufgaben- und
-        Buchungs-Balken im Zeitraum."""
+        """Kalender-Timeline: alle GEFÜHRTEN Objekte als Zeilen (auch leere)
+        plus eine erste Zeile für objektlose Aufgaben. Je Zeile die Aufgaben-
+        und Buchungs-Balken im Zeitraum.
+
+        Archivierte Objekte (`archived_at`, 0416) bekommen KEINE leere Zeile:
+        „Fewo-Mosbjerg-Sindal", am 21.08.2026 archiviert, stand sonst dauerhaft
+        als Zeile ohne Inhalt im Kalender (03.09.2026). Hängen im Zeitraum aber
+        noch Aufgaben oder Buchungen an einem archivierten Objekt — die letzte
+        Reinigung nach Vertragsende, eine Abreise nach dem Archivieren —, dann
+        erscheint es MIT diesen Inhalten: eine Aufgabe, die niemand sieht, wird
+        nicht gemacht (Wurzel 1: der Gegenzustand zum Archivieren ist nicht
+        „weg", sondern „nur noch, solange etwas zu tun ist").
+        """
         tasks = self._calendar_tasks(
             tenant_id, month_from, month_to, assignee_ids, rule_ids, ctx
         )
         bookings = self._calendar_bookings(tenant_id, month_from, month_to)
-        # Alle Objekte des Tenants als Grundgerüst (sortiert nach Titel), damit
-        # auch Objekte ohne Aufgaben/Buchungen eine Zeile bekommen.
+        # Der geführte Bestand als Grundgerüst, damit auch Objekte ohne
+        # Aufgaben/Buchungen eine Zeile bekommen.
         props = (
-            self._db()
-            .table("properties")
-            .select("id, title, timezone")
-            .eq("tenant_id", tenant_id)
-            .order("title")
-            .execute()
+            nur_im_bestand(
+                self._db()
+                .table("properties")
+                .select("id, title, timezone")
+                .eq("tenant_id", tenant_id)
+            ).execute()
         ).data or []
+        # Archivierte Objekte, an denen im Zeitraum noch etwas hängt, nachladen.
+        bekannt = {str(p["id"]) for p in props}
+        belegt = {t.property_id for t in tasks if t.property_id} | {
+            b.property_id for b in bookings
+        }
+        fehlend = sorted(pid for pid in belegt if pid not in bekannt)
+        if fehlend:
+            nachgeladen = (
+                self._db()
+                .table("properties")
+                .select("id, title, timezone")
+                .eq("tenant_id", tenant_id)
+                .in_("id", fehlend)
+                .execute()
+            ).data or []
+            props = [*props, *nachgeladen]
+        # IMMER hier sortieren, nicht mal in Postgres und mal in Python: die
+        # Collation der Datenbank und der Codepoint-Vergleich von Python ordnen
+        # „Ä" und „Z" verschieden, und die Zeilenreihenfolge wechselte sonst je
+        # nachdem, ob in diesem Monat ein archiviertes Objekt Inhalt hat. Die
+        # ID als zweiter Schlüssel hält gleiche Titel stabil.
+        props.sort(key=lambda p: ((p.get("title") or "").casefold(), str(p["id"])))
 
         rows: list[TaskCalendarRow] = []
         # Objektlose Aufgaben immer zuerst. Der Zeilentitel bleibt LEER — wie die
@@ -1420,6 +1560,12 @@ class TasksService:
             prop = row[0].get("property_id")
             if prop is not None and prop not in staff_property_ids(self._db(), ctx):
                 raise TaskError("Aufgabe nicht gefunden.", status_code=404)
+        if ctx is not None and is_owner(ctx) and not self._eigentuemer_sieht(
+            ctx, row[0].get("property_id"), row[0].get("assignee_id")
+        ):
+            # Derselbe Scope wie die Liste (Wurzel 9), dieselbe Meldung wie
+            # „nicht vorhanden": kein Orakel über fremde Aufgaben.
+            raise TaskError("Aufgabe nicht gefunden.", status_code=404)
         task = self._to_task(
             row[0], self._regelnamen_fuer(row, ctx, tenant_id)
         )
@@ -1636,12 +1782,13 @@ class TasksService:
     ) -> list[TaskAssigneeOption]:
         """Wer kann überhaupt Zuständige:r einer Aufgabe sein?
 
-        NICHT alle Nutzer des Betriebs. Ein `owner` hat `VIEW_OWN_TASKS`
-        nicht — er könnte eine ihm zugewiesene Aufgabe nie öffnen. Ihn zur
-        Auswahl zu stellen erzeugt eine Zuweisung, die im Nichts endet: live
-        standen 11 Aufgaben auf Eigentümer-Konten, die sie nie zu sehen
-        bekamen, und die Auswahlliste zeigte 23 Eigentümer neben 2 wirklich
-        berechtigten Personen.
+        NICHT alle Nutzer des Betriebs. Bis zum 03.09.2026 hatte ein `owner`
+        `VIEW_OWN_TASKS` nicht und stand deshalb nie zur Wahl — davor lagen
+        live 11 Aufgaben auf Eigentümer-Konten, die sie nie zu sehen bekamen.
+        Seit dem 03.09.2026 kann er Aufgaben übernehmen (manche Eigentümer
+        reinigen selbst), aber NUR an einem Objekt, das ihm gehört: ohne
+        `property_id` fehlt er weiterhin, mit `property_id` nur, wenn
+        `owner_property_assignments` ihn dort führt.
 
         Die Menge kommt aus der CAPABILITY, nicht aus einer hier
         abgeschriebenen Rollenliste: wer `VIEW_OWN_TASKS` hat, kann eine
@@ -1682,6 +1829,26 @@ class TasksService:
                 ).data
                 or []
             }
+        # EIGENTÜMER (03.09.2026): stehen NUR zur Wahl, wenn ein Objekt genannt
+        # ist und es ihnen gehört. Ohne Objekt (Pool-Aufgabe, Filterleisten,
+        # Regel-Editor) fehlen sie — ein Eigentümer kann keine Pool-Aufgabe
+        # sehen, und eine Regel legt Aufgaben an ALLEN ihren Objekten an.
+        # Dieselbe Prüfung wie `_require_own_assignee`: die Liste darf nichts
+        # versprechen, was der Schreibpfad ablehnt.
+        eigentuemer_frei: set[str] = set()
+        if property_id is not None:
+            eigentuemer_frei = {
+                str(r["user_id"])
+                for r in (
+                    self._db()
+                    .table("owner_property_assignments")
+                    .select("user_id")
+                    .eq("tenant_id", tenant_id)
+                    .eq("property_id", property_id)
+                    .execute()
+                ).data
+                or []
+            }
         optionen: list[TaskAssigneeOption] = []
         for r in rows:
             if r.get("deactivated_at"):
@@ -1695,6 +1862,8 @@ class TasksService:
                 # landet, dessen Rechte niemand kennt.
                 darf = False
             if not darf:
+                continue
+            if rolle == UserRole.owner.value and str(r["id"]) not in eigentuemer_frei:
                 continue
             if (
                 freigegeben is not None
@@ -2250,10 +2419,9 @@ class TasksService:
         # ENTWÜRFE bleiben drin: ein Entwurf geht irgendwann live, und dann soll
         # die Regel schon greifen.
         props = (
-            db.table("properties")
-            .select("id, title")
-            .eq("tenant_id", tenant_id)
-            .is_("archived_at", "null")
+            nur_im_bestand(
+                db.table("properties").select("id, title").eq("tenant_id", tenant_id)
+            )
             .order("title")
             .execute()
         ).data or []
@@ -2555,6 +2723,20 @@ class TasksService:
         Lieber eine Regel durchlassen, die nur in seltenen Buchungen schief
         steht, als eine gueltige abzulehnen.
         """
+        # TAGESANKER OHNE UHRZEIT (03.09.2026): „Am Anreisetag" ohne Stunde
+        # heisst im Motor Tagesbeginn 00:00 vor Ort — keine Arbeitszeit, und
+        # bei Altdaten ohne Zone stand daraus „02:00" in der Detailansicht.
+        # 261 Aufgaben live so entstanden. Der Anker verlangt die Stunde.
+        for seite, trig, clock in (
+            ("Beginn", req.start_trigger, req.start_clock),
+            ("Ende", req.end_trigger, req.end_clock or req.start_clock),
+        ):
+            if trig is not None and trig.value in cls._TAGES_TRIGGER and clock is None:
+                raise TaskError(
+                    f"Für den Tagesanker beim {seite} fehlt die Uhrzeit. "
+                    "Trage ein, um wie viel Uhr die Aufgabe beginnt und endet.",
+                    status_code=422,
+                )
         s_rang = cls._trigger_rang(req.start_trigger.value if req.start_trigger else None)
         e_rang = cls._trigger_rang(req.end_trigger.value if req.end_trigger else None)
         if s_rang is None or e_rang is None:
@@ -2567,6 +2749,20 @@ class TasksService:
         # der Fall, den der Nutzer hier neu einstellen kann.
         s += cls._uhr_minuten(req.start_trigger, req.start_clock)
         e += cls._uhr_minuten(req.end_trigger, req.end_clock or req.start_clock)
+        # FENSTER UEBER DEN TAG HINAUS (03.09.2026): gleiche Basis, aber das
+        # Ende 24 Stunden oder mehr nach dem Start — „Beim Check-in bis
+        # Check-in + 1440" — ergibt eine Aufgabe, die ueber Mitternacht laeuft
+        # und im Kalender eine Spalte weiter endet als ihre Buchung. Live 233
+        # Aufgaben (Velk T 120, Reng T 67, Velk J 41, Reng J 5), vom Nutzer
+        # als falsch benannt: „hinweise sind auch fehler". Zwei VERSCHIEDENE
+        # Basen (Anreise bis Abreise) bleiben erlaubt — das ist eine
+        # Aufenthaltsaufgabe, kein Fehler.
+        if s_rang == e_rang and e - s >= 1440:
+            raise TaskError(
+                "Das Zeitfenster läuft über den Tag hinaus (24 Stunden oder "
+                "mehr). Eine Aufgabe am selben Anker endet am selben Tag.",
+                status_code=422,
+            )
         if e < s:
             raise TaskError(
                 "Das Ende der Aufgabe liegt vor ihrem Start. Prüfe Auslöser "
@@ -2584,6 +2780,7 @@ class TasksService:
         self._require_own_assignee(
             tenant_id, req.assignee_id, (req.property_ids or [None])[0]
         )
+        self._kein_eigentuemer_als_regelzustaendiger(tenant_id, req.assignee_id)
         self._require_own_template(tenant_id, req.template_rule_id)
         row = self._insert("task_rules", self._rule_payload(tenant_id, req))
         self._replace_rule_children(tenant_id, row["id"], req)
@@ -2608,6 +2805,7 @@ class TasksService:
             req.assignee_id,
             (req.property_ids or [None])[0],
         )
+        self._kein_eigentuemer_als_regelzustaendiger(tenant_id, req.assignee_id)
         if req.template_rule_id == rule_id:
             raise TaskError(
                 "Eine Regel kann nicht ihre eigene Vorlage sein.", status_code=422
@@ -2969,6 +3167,52 @@ class TasksService:
         if len(owned) != len(clean):
             raise TaskError("Unbekanntes Objekt referenziert.", status_code=422)
 
+    def _eigentuemer_sieht(
+        self,
+        ctx: AuthContext,
+        property_id: object,
+        assignee_id: object,
+        meine: set[str] | None = None,
+    ) -> bool:
+        """Sieht dieser Eigentümer diese Aufgabe? Nur die IHM zugewiesene an
+        SEINEM Objekt (03.09.2026). `meine` kann vorgeladen mitkommen, damit
+        eine Liste nicht je Zeile die Zuordnung abfragt."""
+        if str(assignee_id or "") != ctx.user_id or property_id is None:
+            return False
+        if meine is None:
+            meine = owner_property_ids(self._db(), ctx)
+        return str(property_id) in meine
+
+    def _kein_eigentuemer_als_regelzustaendiger(
+        self, tenant_id: str, assignee_id: str | None
+    ) -> None:
+        """Eine REGEL darf keinem Eigentümer gehören.
+
+        Ihre Aufgaben entstehen an ALLEN zugeordneten Objekten — auch an denen
+        anderer Eigentümer. `_require_own_assignee` prüft beim Regel-Speichern
+        nur das ERSTE Objekt und ließe das durch; der Motor legte dann Aufgaben
+        an fremden Häusern auf sein Konto, die er nie sähe. Ein Eigentümer wird
+        einzelnen Aufgaben zugewiesen, nicht Regeln.
+        """
+        if not assignee_id:
+            return
+        zeile = (
+            self._db()
+            .table("users")
+            .select("role")
+            .eq("tenant_id", tenant_id)
+            .eq("id", assignee_id)
+            .limit(1)
+            .execute()
+        ).data
+        if zeile and str(zeile[0].get("role") or "") == UserRole.owner.value:
+            raise TaskError(
+                "Eine Regel kann keinem Eigentümer zugewiesen werden — ihre "
+                "Aufgaben entstehen an allen zugeordneten Objekten. Weise ihm "
+                "einzelne Aufgaben zu.",
+                status_code=422,
+            )
+
     def _require_own_assignee(
         self,
         tenant_id: str,
@@ -3024,6 +3268,35 @@ class TasksService:
                 "Diese Rolle kann keine Aufgaben sehen und würde sie nie öffnen.",
                 status_code=422,
             )
+        if rolle == UserRole.owner.value:
+            # EIGENTÜMER (03.09.2026): nur an einem Objekt, das ihm gehört. Eine
+            # Pool-Aufgabe sähe er nie (sein Lesepfad verlangt ein eigenes
+            # Objekt), ein fremdes Objekt ebenso wenig — beides wäre eine
+            # Zuweisung ins Nichts, genau die Klasse Fehler, die diese Prüfung
+            # bei staff seit dem 17.08.2026 verhindert.
+            if property_id is None:
+                raise TaskError(
+                    "Ein Eigentümer kann nur Aufgaben an einem eigenen Objekt "
+                    "übernehmen — diese Aufgabe hat keinen Objektbezug.",
+                    status_code=422,
+                )
+            gehoert = (
+                self._db()
+                .table("owner_property_assignments")
+                .select("property_id")
+                .eq("tenant_id", tenant_id)
+                .eq("user_id", assignee_id)
+                .eq("property_id", property_id)
+                .limit(1)
+                .execute()
+            ).data
+            if not gehoert:
+                raise TaskError(
+                    "Dieses Objekt gehört nicht diesem Eigentümer — er würde die "
+                    "Aufgabe nicht sehen.",
+                    status_code=422,
+                )
+            return
         if property_id is None:
             # Pool-Aufgabe ohne Objektbezug: für jede berechtigte Rolle sichtbar.
             return
