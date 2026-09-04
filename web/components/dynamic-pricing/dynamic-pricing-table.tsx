@@ -195,6 +195,17 @@ export function DynamicPricingTable({ items }: { items: DpOverviewItem[] }) {
                         >
                           {STATUS_BADGE[it.status].label}
                         </span>
+                        {/* Warten Preise auf die Freigabe? Nur dann sichtbar —
+                            ein Dauerhinweis ohne Handlungsbedarf wird nach
+                            zwei Tagen übersehen, und mit ihm der, der zählt. */}
+                        {it.freigabe_noetig && it.offene_tage > 0 && (
+                          <span
+                            className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+                            title={`${it.offene_tage} berechnete Tage warten auf die Freigabe`}
+                          >
+                            {it.offene_tage} nicht gesendet
+                          </span>
+                        )}
                         {/* Verteilkanäle mit Original-Logos — hinter dem Badge. */}
                         {it.channels.length > 0 ? (
                           <span className="flex items-center gap-1.5">

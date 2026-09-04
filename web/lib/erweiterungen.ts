@@ -62,8 +62,9 @@ const DYNAMISCHE_PREISE: Erweiterung = {
       "wenn Sie es einschalten.",
     "Der berechnete Preis geht denselben Weg wie ein von Hand gesetzter: in den " +
       "Kalender, auf Ihre Buchungswebsite, auf den myBestDays-Marktplatz und über " +
-      "die Portale zu Booking, Airbnb & Co. Ein manuell gesetzter Tagespreis " +
-      "gewinnt immer — die Automatik überschreibt Ihre Entscheidung nie.",
+      "die Portale zu Booking, Airbnb & Co. Solange das Modul für ein Objekt an " +
+      "ist, übernimmt es dessen Preisgestaltung; schalten Sie es ab, gelten Ihre " +
+      "eigenen Tagespreise sofort wieder.",
   ],
   soFunktioniert: [
     "Sie schalten das Modul pro Objekt ein — nicht alle Objekte müssen mitmachen.",
@@ -71,7 +72,8 @@ const DYNAMISCHE_PREISE: Erweiterung = {
     "Abgeleitete Rate-Pläne folgen der neu berechneten Basisrate automatisch.",
     "Die 30-Tage-Vorschau zeigt je Objekt, welcher Preis an welchem Tag entsteht " +
       "und welcher Faktor ihn verursacht hat.",
-    "Ein manueller Tagespreis im Kalender hat immer Vorrang und bleibt stehen.",
+    "Ihre eigenen Tagespreise bleiben gespeichert und greifen sofort wieder, " +
+      "sobald Sie das Modul für das Objekt abschalten.",
   ],
   einrichtung: [
     "Auf „Aktivieren“ klicken — das Modul wird Ihrem laufenden Abo zugeordnet. " +
@@ -101,8 +103,8 @@ const DYNAMISCHE_PREISE: Erweiterung = {
       icon: "lucide:sliders-horizontal",
       titel: "Kontrolle behalten",
       text:
-        "Mindest- und Höchstpreis setzen die Grenzen, und ein manuell " +
-        "gesetzter Tagespreis gewinnt immer gegen die Automatik.",
+        "Mindest- und Höchstpreis setzen die Grenzen, und Sie entscheiden je " +
+        "Objekt, ob die Automatik überhaupt läuft.",
     },
     {
       icon: "lucide:trending-up",

@@ -36,8 +36,18 @@ class _Q:
     def limit(self, *_a: object, **_k: object) -> "_Q":
         return self
 
+    def is_(self, *_a: object, **_k: object) -> "_Q":
+        return self
+
+    def range(self, *_a: object, **_k: object) -> "_Q":
+        return self
+
     def upsert(self, payload: object, **_k: object) -> "_Q":
         self._op, self._payload = "upsert", payload
+        return self
+
+    def update(self, payload: object, **_k: object) -> "_Q":
+        self._op, self._payload = "update", payload
         return self
 
     def execute(self) -> object:
@@ -50,6 +60,9 @@ class _Q:
             rows = self._payload if isinstance(self._payload, list) else [self._payload]
             self._db.writes[self._table].extend(rows)  # type: ignore[arg-type]
             r.data = rows  # type: ignore[attr-defined]
+        elif self._op == "update":
+            self._db.updates.setdefault(self._table, []).append(self._payload)  # type: ignore[arg-type]
+            r.data = []  # type: ignore[attr-defined]
         else:
             r.data = self._db.tables.get(self._table, [])  # type: ignore[attr-defined]
         return r
@@ -59,6 +72,7 @@ class _DB:
     def __init__(self, tables: dict[str, list[dict]]) -> None:
         self.tables = tables
         self.writes: dict[str, list[dict]] = {}
+        self.updates: dict[str, list[dict]] = {}
 
     def table(self, name: str) -> _Q:
         return _Q(self, name)
@@ -285,3 +299,51 @@ def test_e2e_enabled_pusht_immer_an_channex() -> None:
         svc.recompute_property("p1", start=date(2026, 7, 1), end=date(2026, 7, 2))
         assert "dynamic_prices" in db.writes
         assert pushed == ["push"]
+
+
+# --- gesendet_am: Stempel folgt dem Preis (0554, Nachbesserung 04.09.2026) ----
+
+
+def test_geaenderter_preis_verliert_den_stempel_unveraenderter_behaelt_ihn() -> None:
+    """Die Freigabe schuetzte nur beim ersten Mal: ein einmal gestempelter Tag
+    blieb gestempelt, auch wenn der Preis sich aenderte. Jetzt verliert nur
+    der GEAENDERTE Tag den Stempel, der unveraenderte behaelt ihn."""
+    db = _db(enabled=True, base=100.0)
+    # Bestand: Tag 1 stimmt (100), Tag 2 stand auf 80 → aendert sich.
+    heute = date.today()
+    db.tables["dynamic_prices"] = [
+        {"date": heute.isoformat(), "price": 100.0},
+        {"date": (heute + timedelta(days=1)).isoformat(), "price": 80.0},
+    ]
+    svc = DynamicPricingRecompute(db)  # type: ignore[arg-type]
+    svc._modul_gebucht = lambda *_a, **_k: True  # type: ignore[method-assign]
+    svc._push_to_channex = lambda *a, **k: False  # type: ignore[method-assign]
+    svc.recompute_property("p1", start=heute, end=heute + timedelta(days=3))
+    rows = {r["date"]: r for r in db.writes["dynamic_prices"]}
+    assert "gesendet_am" not in rows[heute.isoformat()]
+    assert rows[(heute + timedelta(days=1)).isoformat()]["gesendet_am"] is None
+    # Tag 3 gab es noch nicht → neu → ungestempelt.
+    assert rows[(heute + timedelta(days=2)).isoformat()]["gesendet_am"] is None
+
+
+def test_erfolgreicher_push_stempelt_ohne_freigabepflicht() -> None:
+    """Der normale Push stempelte nie — nach dem Einschalten der Freigabe galten
+    540 laengst gesendete Tage als „nicht gesendet" (live 04.09.2026)."""
+    db = _db(enabled=True, base=100.0)
+    svc = DynamicPricingRecompute(db)  # type: ignore[arg-type]
+    svc._modul_gebucht = lambda *_a, **_k: True  # type: ignore[method-assign]
+    svc._push_to_channex = lambda *a, **k: True  # type: ignore[method-assign]
+    heute = date.today()
+    svc.recompute_property("p1", start=heute, end=heute + timedelta(days=3))
+    assert db.updates.get("dynamic_prices"), "kein Stempel nach erfolgreichem Push"
+    assert "gesendet_am" in db.updates["dynamic_prices"][0]
+
+
+def test_fehlgeschlagener_push_stempelt_nicht() -> None:
+    db = _db(enabled=True, base=100.0)
+    svc = DynamicPricingRecompute(db)  # type: ignore[arg-type]
+    svc._modul_gebucht = lambda *_a, **_k: True  # type: ignore[method-assign]
+    svc._push_to_channex = lambda *a, **k: False  # type: ignore[method-assign]
+    heute = date.today()
+    svc.recompute_property("p1", start=heute, end=heute + timedelta(days=3))
+    assert "dynamic_prices" not in db.updates

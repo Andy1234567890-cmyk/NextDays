@@ -739,7 +739,7 @@ Buchungsstrecke lesen Preise ausschließlich hierüber. Leseendpoints `view_cale
 
 | Methode | Pfad                                              | Beschreibung                                                                                                                                                                                                                 |
 | ------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET`   | `/api/v1/pricing/effective?property_id&start&end` | Effektivpreis je Tag — Priorität manueller `price_overrides`(Tag) > `dynamic_prices` (Regel-Engine) > Wochentagspreis > `rate_plans.base_price`; sonst `null` (kein Fallback)                                                |
+| `GET`   | `/api/v1/pricing/effective?property_id&start&end` | Effektivpreis je Tag — Priorität `dynamic_prices` (Regel-Engine, NUR bei `dp_settings.enabled`) > manueller `price_overrides`(Tag) > Wochentagspreis > `rate_plans.base_price`; sonst `null` (kein Fallback)                                                |
 | `POST`  | `/api/v1/pricing/quote`                           | Vollständige Aufschlüsselung `{property_id, check_in, check_out, guests, channel}` → `lines[]` (Übernachtung, Markup, Gebühren, Rabatt, Steuern), `nightly_total`, `total`, `priceless`                                      |
 | `GET`   | `/api/v1/pricing/overview`                        | Alle Objekte des Kontos mit DP-Status (eine Zeile je Objekt: `enabled`, `base_mode`, `base_rate_mode`, effektiver `base_rate`, `min_price`, `max_price`, `currency`) **+ `module_active`** (ist das kostenpflichtige Modul „Dynamische Preise" gebucht?) — die Dynamic-Pricing-Objekt-Tabelle. `manage_calendar` |
 | `GET`   | `/api/v1/pricing/settings/{property_id}`          | Dynamic-Pricing-Einstellungen (dp_settings) eines Objekts (Defaults, falls leer). `manage_calendar`                                                                                                                          |
@@ -3056,3 +3056,30 @@ und `marketing/lib/captcha.ts` (lädt das Google-Skript erst beim ersten Anfasse
 des Formulars). Die beiden Postfächer stehen in
 `marketing/content/legal/anbieter.ts` (`email`, `emailTechnik`) — in den 24
 Sprachdateien stehen nur die Platzhalter `{info}`/`{technik}`.
+
+## personal — Personal & Dienstplan (`/api/v1/personal`, 0540–0542, ADR-0023)
+
+Gastromatic für Reinigungs-/Hausmeisterpersonal: Akte, Dienstplan, Abwesenheit,
+Zeiterfassung, Lohnvorbereitung. Konzept in `docs/PERSONAL-DIENSTPLAN-KONZEPT.md`.
+
+Fähigkeiten (permissions.py): `manage_personal` (Akte, Stammdaten, Regeln; Rolle
+frisch aus der DB), `plan_schichten`, `view_team_schedule`, `view_own_schedule`,
+`track_own_time`, `request_absence`, `approve_absence`, `confirm_time`,
+`export_lohn` (Rolle frisch aus der DB). Neue Rolle `shift_lead` = staff +
+plan/team/approve/confirm, nur für Personen an gemeinsam freigegebenen Objekten.
+
+| Bereich | Endpunkte |
+|---|---|
+| Mitarbeitende & Akte | `GET /mitarbeiter` (mit `kosten_monat` je Währung + `kosten_hinweise`), `GET /mitarbeiter/{id}/uebersicht` (Kopf: Kontakt, Einladung, letzter Login, Zähler, Monat Soll/Plan/Ist, kommende Schichten, Kosten — Team; Leitungsfelder sonst `null`), `GET/PUT /mitarbeiter/{id}/akte` (0543: `familienstand`, `kinder_anzahl`, `lohnmerkmale[]`, `arbeitgeber_aufschlag_pct`), `GET/PUT …/qualifikationen`, `GET …/dokumente`, `POST …/dokumente` (Multipart, Magic-Bytes, Bucket `personal-dokumente`), `POST …/dokumente/anfragen` (+ `dokument_nummer`, `ausgestellt_am`, `behoerde`), `PATCH/DELETE /dokumente/{id}` |
+| Kartei (0543, MANAGE) | `GET/POST /mitarbeiter/{id}/{vertraege\|massnahmen\|vorfaelle\|gespraeche}`, `PATCH /kartei/{bereich}/{id}`, `DELETE /kartei/{bereich}/{id}`, `POST /kartei/vertraege/{id}/nachtraege`, `DELETE /kartei/nachtraege/{id}`; `GET /mitarbeiter/{id}/{nachweise\|schulungen}` auch Team (Scope), Schreiben MANAGE. Alle `*Update` tragen `geleert[]` (Weglassen ≠ Löschen); ein `dokument_id` muss zur SELBEN Person gehören (422). |
+| Stammdaten | `GET/POST /fremdfirmen`, `PATCH /fremdfirmen/{id}`, `GET/POST /arbeitsbereiche`, `PATCH /arbeitsbereiche/{id}`, `GET /regeln`, `GET /regeln/vorschlag` (Länderwerte mit Quelle), `PUT /regeln` (bestätigt), `GET/PUT /pausenmodelle`, `GET/POST /vorlagen`, `PATCH /vorlagen/{id}`, `POST /feiertage/import` |
+| Dienstplan | `GET /dienstplan?woche=`, `GET /dienstplan/mein`, `POST /dienstplan/konflikte`, `POST /schichten`, `PATCH/DELETE /schichten/{id}` (veröffentlicht → abgesagt statt gelöscht), `POST /schichten/{id}/bestaetigen`, `…/bewerben`, `GET …/bewerbungen`, `POST …/bewerbungen/entscheiden`, `POST /dienstplan/kopieren`, `POST /dienstplan/veroeffentlichen`, `POST /dienstplan/gelesen`, `POST /dienstplan/bedarf` (aus Aufgaben, UNIQUE je task_id) |
+| Abwesenheit | `GET/POST /abwesenheiten`, `POST /abwesenheiten/{id}/entscheiden` (genehmigt → Schichten abgesagt), `…/stornieren`, `GET /urlaubskonten?jahr=`, `GET/PUT /mitarbeiter/{id}/urlaubskonto`, `GET/POST /urlaubssperren`, `DELETE /urlaubssperren/{id}`, `GET /mitarbeiter/{id}/verfuegbarkeiten`, `POST /verfuegbarkeiten`, `DELETE /verfuegbarkeiten/{id}`, `GET /krankenstand` |
+| Zeiterfassung | `GET /zeiterfassung/offen`, `POST /zeiterfassung/start` (idempotenz_key, Geräte-Zeitpunkt), `POST /zeiterfassung/pause?beenden=`, `POST /zeiterfassung/ende`, `GET /zeiterfassung?von&bis&user_id`, `PATCH /zeiterfassung/{id}` (Pflichtgrund, Protokoll), `POST /zeiterfassung/nachtrag`, `POST /zeiterfassung/{id}/bestaetigen`, `DELETE /zeiterfassung/{id}?grund=`, `GET /mitarbeiter/{id}/arbeitszeitkonto`, `POST /arbeitszeitkonto`, `GET/POST /monatsabschluesse` |
+| Auswertung | `GET /auswertung?von&bis` (Soll/Plan/Ist, Zuschläge minutenweise, Kosten je Person/Objekt, Hinweise statt stiller 0), `POST /lohnexport` (CSV oder DATEV-LODAS; 422 ohne Berater-/Mandantennummer, Lohnarten, Personalnummern) |
+
+Fehlerform: `detail` als Objekt `{message, code?, konflikte?, hinweise?}` — `409`
+mit `konflikte` heißt „Hinweise, mit `warnungen_akzeptieren=true` speicherbar",
+`422` mit `konflikte` heißt Regelverstoß (Ruhezeit, Höchststunden, Doppelbelegung,
+Abwesenheit). Ohne bestätigte Regeln: `422 {code: "regeln_fehlen"}`.
+

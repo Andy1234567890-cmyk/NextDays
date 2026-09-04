@@ -1,10 +1,12 @@
 // Dynamic Pricing (Hostaway-Modell) — zentrale Objekt-Tabelle: pro Objekt
 // Basispreis (+ Modus), Min/Max, Aktiv-Toggle, Bearbeiten-Slider und 30-Tage-
-// Vorschau. Eine Preis-Wahrheit (Resolver); ein manueller Tagespreis im Kalender
-// gewinnt immer. Server Component lädt die Übersicht; der Client-Teil bearbeitet.
+// Vorschau. Eine Preis-Wahrheit (Resolver); ist DP für ein Objekt an, gewinnt der
+// berechnete Preis, sonst der manuelle Tagespreis aus dem Kalender.
+// Server Component lädt die Übersicht; der Client-Teil bearbeitet.
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
+import { DpFreigabeSammelleiste } from "@/components/dynamic-pricing/dp-freigabe-sammelleiste";
 import { DynamicPricingTable } from "@/components/dynamic-pricing/dynamic-pricing-table";
 import { ModulVerkaufsseite } from "@/components/erweiterungen/modul-verkaufsseite";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
@@ -42,12 +44,17 @@ export default async function DynamicPricingPage() {
         <p className="text-sm text-muted-foreground">
           Lass myNextDays die Nachtpreise automatisch nach Saison, Wochenende,
           Auslastung, Vorlaufzeit und Markt anpassen. Aktiviere es pro Objekt und
-          lege Basispreis-Strategie sowie Mindest-/Höchstpreis fest. Ein manuell
-          gesetzter Tagespreis im Kalender hat immer Vorrang.
+          lege Basispreis-Strategie sowie Mindest-/Höchstpreis fest. Ab dem
+          Aktivieren übernimmt die Automatik die Preise dieses Objekts — auch vor
+          einem im Kalender gesetzten Tagespreis. Beim Abschalten gilt dieser
+          sofort wieder.
         </p>
       </header>
       {res.ok ? (
-        <DynamicPricingTable items={res.data.items} />
+        <>
+          <DpFreigabeSammelleiste items={res.data.items} />
+          <DynamicPricingTable items={res.data.items} />
+        </>
       ) : (
         <Card className="p-5 text-sm text-destructive">
           Objekte konnten nicht geladen werden: {res.error}

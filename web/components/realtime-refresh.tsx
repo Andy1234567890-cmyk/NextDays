@@ -31,7 +31,7 @@ export function RealtimeRefresh({
   // Feste Zahl an Hooks: bis zu 6 Tabellen je Seite (Hook-Regeln verlangen eine
   // konstante Aufrufanzahl — daher kein .map über tables). 6, weil die Dynamic-
   // Pricing-Vorschau alle preis-speisenden Tabellen der Resolver-Kette abonnieren
-  // muss (price_overrides > dynamic_prices > property_pricing_config > rate_plans
+  // muss (dynamic_prices bei aktivem DP > price_overrides > property_pricing_config > rate_plans
   // + availability + dp_settings), damit ein manueller Tagespreis sofort erscheint.
   useRealtime({ table: tables[0] ?? "", filter, onChange: () => router.refresh(), enabled: !!tables[0] });
   useRealtime({ table: tables[1] ?? "", onChange: () => router.refresh(), enabled: !!tables[1] });

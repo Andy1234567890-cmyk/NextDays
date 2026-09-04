@@ -73,6 +73,20 @@ class DpSettings:
     # max_days_before >= days_before, gewichtet den Auslastungs-Faktor. Leer =
     # keine Bucket-Dämpfung (Gewicht 1.0, Verhalten wie zuvor).
     occupancy_lead_buckets: list[dict] = field(default_factory=list)
+    # Aufschlag für weit entfernte Termine: [{days_before, uplift_pct}].
+    # Es gilt die WEITESTE erreichte Schwelle. Leer = kein Aufschlag.
+    far_future: list[dict] = field(default_factory=list)
+    # Warten berechnete Preise auf eine Freigabe (0554)? Die Engine RECHNET
+    # unverändert weiter — das Flag steuert nur, ob der Resolver die Preise
+    # herausgibt. Es steht hier, weil die Übersicht es je Objekt anzeigt.
+    freigabe_noetig: bool = False
+    # Auslastungs-STUFEN statt stufenloser Kurve (0550). Ablesbare Leiter:
+    # [{"ab_pct": 80, "adjust_pct": 15}, ...] — es gilt die HÖCHSTE erreichte
+    # Stufe. Sind Stufen gepflegt, ERSETZEN sie occupancy_sensitivity samt
+    # Deckeln und Vorlauf-Gewicht für den Auslastungs-Faktor: zwei Mechanismen
+    # nebeneinander ergäben zwei Auslastungs-Einträge in der Faktor-
+    # Aufschlüsselung, die sich überlagern — nicht mehr erklärbar.
+    occupancy_steps: list[dict] = field(default_factory=list)
     # RateBoard-Baustein — Wetter als externer Nachfrage-Faktor (opt-in). Gutes
     # Wetter am Anreisetag → Aufschlag, schlechtes → leichter Rabatt. weather_max_
     # adjust_pct deckelt die Wirkung symmetrisch. 0/aus = kein Wetter-Effekt.
@@ -124,6 +138,13 @@ class DpSettings:
             occupancy_premium_cap_pct=_as_float(
                 row.get("occupancy_premium_cap_pct"), 15.0
             ),
+            occupancy_steps=[
+                r for r in (row.get("occupancy_steps") or []) if isinstance(r, dict)
+            ],
+            far_future=[
+                r for r in (row.get("far_future") or []) if isinstance(r, dict)
+            ],
+            freigabe_noetig=bool(row.get("freigabe_noetig")),
             occupancy_lead_buckets=[
                 r for r in (row.get("occupancy_lead_buckets") or []) if isinstance(r, dict)
             ],
@@ -239,6 +260,31 @@ def _lead_bucket_weight(days_before: int, settings: DpSettings) -> float:
     return best[1] if best else 1.0
 
 
+def _occupancy_step_factor(occupancy: float, steps: list[dict]) -> float:
+    """Auslastungs-Stufenleiter → Faktor. Es gilt die HÖCHSTE erreichte Stufe.
+
+    Kein Addieren und keine Interpolation: bei 82 % greift die 80-%-Stufe mit
+    ihrem Wert, nicht 50+75+80 zusammen und auch kein Zwischenwert. Nur so
+    lässt sich der Aufschlag direkt aus der Tabelle ablesen — und genau das ist
+    der Zweck der Leiter gegenüber der stufenlosen Kurve.
+
+    Stufen ohne brauchbare Zahlen werden übersprungen (der DB-CHECK lässt sie
+    gar nicht erst zu; hier bleibt es robust gegen Altbestand).
+    """
+    pct = occupancy * 100.0
+    beste: float | None = None
+    hoechste_schwelle = -1.0
+    for s in steps:
+        ab, adj = s.get("ab_pct"), s.get("adjust_pct")
+        if not isinstance(ab, (int, float)) or not isinstance(adj, (int, float)):
+            continue
+        if hoechste_schwelle < ab <= pct:
+            hoechste_schwelle, beste = float(ab), float(adj)
+    if beste is None:
+        return 1.0  # unterhalb der niedrigsten Stufe: neutral
+    return round(1.0 + beste / 100.0, 6)
+
+
 def _occupancy_factor(signals: DaySignals, settings: DpSettings) -> float:
     """Auslastung → Auf/Abschlag. Bei occupancy=None neutral (kein Signal).
 
@@ -247,7 +293,12 @@ def _occupancy_factor(signals: DaySignals, settings: DpSettings) -> float:
     Roadmap-Phase 1: asymmetrische Deckelung — Rabatte bis occupancy_discount_cap,
     Aufschläge bis occupancy_premium_cap (Wettbewerber-Best-Practice: füllen
     wichtiger als abschöpfen)."""
-    if signals.occupancy is None or settings.occupancy_sensitivity <= 0:
+    if signals.occupancy is None:
+        return 1.0
+    # Stufenleiter gepflegt? Dann gilt SIE — ablesbar statt gerechnet.
+    if settings.occupancy_steps:
+        return _occupancy_step_factor(signals.occupancy, settings.occupancy_steps)
+    if settings.occupancy_sensitivity <= 0:
         return 1.0
     delta = (signals.occupancy - _OCCUPANCY_PIVOT) / _OCCUPANCY_PIVOT  # -1..+1
     weight = _lead_bucket_weight(signals.days_before, settings)
@@ -365,6 +416,33 @@ def _last_minute_factor(signals: DaySignals, settings: DpSettings) -> float:
     return 1.0 - best_discount / 100.0
 
 
+def _far_future_factor(signals: DaySignals, settings: DpSettings) -> float:
+    """Aufschlag für weit entfernte Termine (Gegenstück zum Last-Minute-Rabatt).
+
+    Wer ein Jahr im Voraus bucht, plant fest und vergleicht weniger — dieselbe
+    Nacht ist ihm mehr wert als dem Kurzentschlossenen. Die Stufen wirken wie
+    die Last-Minute-Regeln, nur in die andere Richtung: es gilt die WEITESTE
+    erreichte Schwelle, damit "ab 330 Tagen +25 %" nicht von "ab 180 Tagen
+    +10 %" überschrieben wird.
+
+    Leer = neutral. Ein leerer Standard ist Absicht: ein Aufschlag, den
+    niemand eingestellt hat, darf nicht stillschweigend gelten.
+    """
+    if signals.days_before <= 0 or not settings.far_future:
+        return 1.0
+    bester_aufschlag = 0.0
+    weiteste: int | None = None
+    for regel in settings.far_future:
+        schwelle = int(regel.get("days_before") or 0)
+        aufschlag = _as_float(regel.get("uplift_pct"), 0.0)
+        if schwelle <= 0 or signals.days_before < schwelle:
+            continue
+        if weiteste is None or schwelle > weiteste:
+            weiteste = schwelle
+            bester_aufschlag = aufschlag
+    return 1.0 + bester_aufschlag / 100.0
+
+
 def _orphan_factor(signals: DaySignals, settings: DpSettings) -> float:
     """1–2-Nächte-Lücke → Rabatt, um die Lücke füllbar zu machen."""
     if signals.is_orphan_gap and settings.orphan_gap_discount_pct:
@@ -438,6 +516,8 @@ def compute_day(base: float, settings: DpSettings, signals: DaySignals) -> DayRe
         # Phase 2: Pickup-Velocity (antizipativ, neutral ohne Signal).
         "pickup": _pickup_factor(signals, settings),
         "last_minute": _last_minute_factor(signals, settings),
+        # Gegenstück zum Last-Minute-Rabatt: Aufschlag für lange Vorausbuchung.
+        "far_future": _far_future_factor(signals, settings),
         "orphan": _orphan_factor(signals, settings),
         # Phase 2: Markt-/Wettbewerbs-Faktor (neutral 1.0 ohne Signal/Markt aus).
         "market": _market_factor(base, signals, settings),

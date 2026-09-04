@@ -417,3 +417,116 @@ def test_autopilot_spalte_wird_ignoriert() -> None:
     s = DpSettings.from_row({"enabled": True, "autopilot_enabled": True})
     assert s.enabled is True
     assert not hasattr(s, "autopilot_enabled")
+
+
+# --- Auslastungs-STUFEN (0550): ablesbare Leiter statt stufenloser Kurve ------
+
+_STUFEN = [
+    {"ab_pct": 50, "adjust_pct": 5},
+    {"ab_pct": 75, "adjust_pct": 12},
+    {"ab_pct": 90, "adjust_pct": 25},
+]
+
+
+def test_stufen_hoechste_erreichte_gilt() -> None:
+    # 82 % erreicht die 75er-Stufe (+12 %), NICHT 5+12 addiert und auch keinen
+    # interpolierten Zwischenwert. Genau das macht die Leiter ablesbar.
+    s = _settings(occupancy_steps=_STUFEN, weekend_uplift_pct=0)
+    res = compute_day(
+        _BASE, s, DaySignals(day=date(2026, 7, 1), occupancy=0.82, days_before=200)
+    )
+    assert res.price == 112.0
+    assert res.factors["occupancy"] == 1.12
+
+
+def test_stufen_unterhalb_der_niedrigsten_neutral() -> None:
+    # 40 % erreicht keine Stufe → kein Auf- und kein Abschlag.
+    s = _settings(occupancy_steps=_STUFEN, weekend_uplift_pct=0)
+    res = compute_day(
+        _BASE, s, DaySignals(day=date(2026, 7, 1), occupancy=0.40, days_before=200)
+    )
+    assert res.price == 100.0
+    assert res.factors["occupancy"] == 1.0
+
+
+def test_stufen_ersetzen_die_kurve() -> None:
+    # Sind Stufen gepflegt, gilt NUR die Leiter — die Empfindlichkeits-Kurve und
+    # ihre Deckel treten zurück. Sonst stünden zwei Auslastungs-Einträge in der
+    # Aufschlüsselung, die sich überlagern.
+    s = _settings(
+        occupancy_steps=[{"ab_pct": 50, "adjust_pct": 5}],
+        occupancy_sensitivity=90.0,   # würde ohne Stufen weit mehr bewegen
+        occupancy_premium_cap_pct=80.0,
+        weekend_uplift_pct=0,
+    )
+    res = compute_day(
+        _BASE, s, DaySignals(day=date(2026, 7, 1), occupancy=1.0, days_before=200)
+    )
+    assert res.price == 105.0
+
+
+def test_stufen_negativ_senken_den_preis() -> None:
+    # Schwache Zeiträume: eine Stufe darf auch nach unten wirken.
+    s = _settings(
+        occupancy_steps=[{"ab_pct": 0, "adjust_pct": -10}],
+        weekend_uplift_pct=0,
+    )
+    res = compute_day(
+        _BASE, s, DaySignals(day=date(2026, 7, 1), occupancy=0.10, days_before=200)
+    )
+    assert res.price == 90.0
+
+
+# --------------------------------------------------------------------------
+# Far-Future-Aufschlag (0555) — Gegenstück zum Last-Minute-Rabatt
+# --------------------------------------------------------------------------
+
+_FERN = [
+    {"days_before": 180, "uplift_pct": 10},
+    {"days_before": 240, "uplift_pct": 15},
+    {"days_before": 330, "uplift_pct": 25},
+]
+
+
+def test_far_future_weiteste_stufe_gewinnt() -> None:
+    """Anders als beim Last-Minute-Rabatt gilt die WEITESTE erreichte Stufe.
+
+    Gälte wie dort die engste, überschriebe „ab 180 Tagen +10 %" den höheren
+    Aufschlag bei 350 Tagen — die Leiter liefe verkehrt herum.
+    """
+    s = _settings(far_future=_FERN, weekend_uplift_pct=0)
+    fuer = {
+        t: compute_day(200.0, s, DaySignals(day=date(2026, 6, 1), days_before=t))
+        for t in (30, 179, 180, 250, 350)
+    }
+    assert fuer[30].factors["far_future"] == 1.0
+    assert fuer[179].factors["far_future"] == 1.0
+    assert round(fuer[180].factors["far_future"], 4) == 1.10
+    assert round(fuer[250].factors["far_future"], 4) == 1.15
+    assert round(fuer[350].factors["far_future"], 4) == 1.25
+
+
+def test_far_future_leer_ist_neutral() -> None:
+    """Ein Aufschlag, den niemand eingestellt hat, darf nicht gelten."""
+    # Basispreis unter dem Höchstpreis des Test-Helfers (300), sonst misst der
+    # Test den Deckel statt den Faktor.
+    s = _settings(far_future=[], weekend_uplift_pct=0)
+    r = compute_day(200.0, s, DaySignals(day=date(2026, 6, 1), days_before=400))
+    assert r.factors["far_future"] == 1.0
+    assert round(r.price, 2) == 200.0
+
+
+def test_far_future_und_last_minute_schliessen_sich_aus() -> None:
+    """Beide Regeln greifen nie am selben Tag: der eine wirkt nah, der andere
+    fern. Ein Tag mit beiden Faktoren wäre ein Rechenfehler."""
+    s = _settings(
+        far_future=_FERN,
+        last_minute=[{"days_before": 7, "discount_pct": 20}],
+        weekend_uplift_pct=0,
+    )
+    nah = compute_day(200.0, s, DaySignals(day=date(2026, 6, 1), days_before=5))
+    fern = compute_day(200.0, s, DaySignals(day=date(2026, 6, 1), days_before=350))
+    assert nah.factors["last_minute"] < 1.0
+    assert nah.factors["far_future"] == 1.0
+    assert fern.factors["far_future"] > 1.0
+    assert fern.factors["last_minute"] == 1.0

@@ -5,6 +5,8 @@
 // Manuell (eigener Basispreis) — plus Mindest-/Höchstpreis und (eingeklappt) die
 // erweiterten Regeln (Wochenende/Auslastung/Last-Minute/Orphan/Markt). Lädt die
 // vollständigen Einstellungen beim Öffnen und speichert per PUT.
+import { MarktKarte } from "./markt-karte";
+
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -29,10 +31,16 @@ import {
 import { formatCurrency } from "@/lib/currency";
 import {
   type BaseRateMode,
+  getMarktStand,
+  getStufenVorschau,
+  type MarktStand,
+  type StufenVorschau,
   type DpOverviewItem,
   type DpSettings,
   getDpSettings,
+  type FarFutureRule,
   type LastMinuteRule,
+  type OccupancyStep,
   type RateRule,
   saveDpSettings,
 } from "@/lib/dynamic-pricing";
@@ -78,6 +86,12 @@ export function DpEditSheet({
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [advanced, setAdvanced] = useState(false);
+  // Was die drei Stufen im Schnitt kosten. Ohne diese Zahlen ist „aggressiv"
+  // ein Wort ohne Bedeutung — man wählt blind. Der Server rechnet sie.
+  const [stufen, setStufen] = useState<StufenVorschau | null>(null);
+  // Gibt es ueberhaupt einen Markt? Ohne diese Auskunft ist der Schalter
+  // "Marktdaten nutzen" von einer Attrappe nicht zu unterscheiden.
+  const [markt, setMarkt] = useState<MarktStand | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -85,6 +99,14 @@ export function DpEditSheet({
       if (!active) return;
       if (res.ok) setS(res.data);
       else setLoadError(res.error);
+    });
+    // Parallel, nicht davor: die Vorschau ist eine Zusatzinformation und darf
+    // das Öffnen des Panels nicht verzögern.
+    void getStufenVorschau(item.property_id).then((res) => {
+      if (active && res.ok) setStufen(res.data);
+    });
+    void getMarktStand(item.property_id).then((res) => {
+      if (active && res.ok) setMarkt(res.data);
     });
     return () => {
       active = false;
@@ -115,14 +137,27 @@ export function DpEditSheet({
       market_enabled: s.market_enabled,
       market_sensitivity: s.market_sensitivity,
       market_max_adjust_pct: s.market_max_adjust_pct,
-      market_key: s.market_key,
-      comp_refs: s.comp_refs,
       weather_enabled: s.weather_enabled ?? false,
       weather_max_adjust_pct: s.weather_max_adjust_pct ?? 10,
       rate_rules: s.rate_rules ?? [],
+      occupancy_steps: s.occupancy_steps ?? [],
+      freigabe_noetig: s.freigabe_noetig ?? false,
+      far_future: s.far_future ?? [],
     });
     setBusy(false);
     if (res.ok) {
+      // Was der Server WIRKLICH gespeichert hat, nicht was wir geschickt
+      // haben: ein Feld, das unterwegs verloren geht, sah bisher wie Erfolg
+      // aus (occupancy_steps fehlte im Schema und wurde still verworfen).
+      const gespeichert = res.data.occupancy_steps?.length ?? 0;
+      const gewollt = s.occupancy_steps?.length ?? 0;
+      if (gespeichert !== gewollt) {
+        setMsg(
+          `Die Auslastungsstufen wurden nicht gespeichert (${gewollt} gesendet, ` +
+            `${gespeichert} zurückgemeldet). Bitte die Seite neu laden.`,
+        );
+        return;
+      }
       onSaved();
     } else {
       setMsg(res.error);
@@ -154,7 +189,7 @@ export function DpEditSheet({
               <span className="leading-tight">
                 <span className="flex items-center gap-1.5 font-semibold">
                   Dynamic Pricing aktiv
-                  <InfoHint text="Ist dies an, berechnet die Engine die Tagespreise dieses Objekts automatisch und veröffentlicht sie überall — Kalender, eigene Plattform und alle verbundenen Portale. Ein im Kalender manuell gesetzter Tagespreis hat immer Vorrang." />
+                  <InfoHint text="Ist dies an, berechnet die Engine die Tagespreise dieses Objekts automatisch und veröffentlicht sie überall — Kalender, eigene Plattform und alle verbundenen Portale. Ab dem Einschalten übernimmt die Automatik die Preisgestaltung dieses Objekts und ersetzt auch bereits gesetzte Tagespreise. Schaltest du wieder ab, gelten diese sofort erneut — sie bleiben erhalten." />
                 </span>
                 <span className="block text-sm text-muted-foreground">
                   Standardmäßig aus — du entscheidest pro Objekt. An heißt:
@@ -182,6 +217,15 @@ export function DpEditSheet({
               />
               {s.base_mode === "data_driven" && (
                 <div className="ml-6 flex flex-col gap-2">
+                  {/* Die Beträge sind der Ø-Preis der nächsten 90 Tage, nicht
+                      ein fester Basispreis. „Aggressiv" kann deshalb NIEDRIGER
+                      liegen als „konservativ": bei schwacher Auslastung
+                      verstärkt es den Abschlag, statt ihn zu dämpfen. Ohne
+                      diesen Satz wirkt die Reihenfolge wie ein Fehler. */}
+                  <p className="text-xs text-muted-foreground">
+                    Ø-Preis der nächsten 90 Tage. Aggressiv reagiert stärker auf
+                    die Buchungslage — nach oben wie nach unten.
+                  </p>
                   {RATE_MODES.map((m) => (
                     <RadioRow
                       key={m.value}
@@ -191,10 +235,8 @@ export function DpEditSheet({
                       hint={m.hint}
                       info={m.info}
                       right={
-                        item.base_rate !== null &&
-                        cur !== null &&
-                        m.value === "recommended"
-                          ? formatCurrency(item.base_rate, cur)
+                        stufen?.[m.value] != null && cur !== null
+                          ? formatCurrency(stufen[m.value] as number, cur)
                           : undefined
                       }
                       onSelect={() => set("base_rate_mode", m.value)}
@@ -246,6 +288,37 @@ export function DpEditSheet({
               </Field>
             </div>
 
+            {/* Freigabe: steht ABSICHTLICH nicht unter „Erweiterte Regeln".
+                Sie entscheidet, ob überhaupt etwas an die Portale geht — das
+                ist keine Feinheit, sondern die Grundfrage. */}
+            <label className="flex cursor-pointer items-center justify-between gap-3 border-t pt-4">
+              <span className="leading-tight">
+                <span className="flex items-center gap-1.5 font-semibold">
+                  Preise erst nach Freigabe senden
+                  <InfoHint text="Die Automatik rechnet weiter, sendet aber nichts an die Portale, bis du im Kalender auf „Preise senden“ klickst. Sinnvoll, solange du den Regeln noch nicht blind vertraust — die Zahl geht sonst sofort an Airbnb und Booking." />
+                </span>
+                <span className="block text-sm text-muted-foreground">
+                  Berechnete Preise warten auf deinen Blick, statt sofort zu
+                  gehen.
+                </span>
+              </span>
+              <Switch
+                checked={s.freigabe_noetig ?? false}
+                onCheckedChange={(c) => set("freigabe_noetig", c)}
+              />
+            </label>
+            {/* Die Folge SOFORT benennen, nicht erst nach dem Speichern: ab
+                jetzt geht nichts mehr an die Portale, bis jemand freigibt.
+                Ein Schalter, dessen Wirkung man erst merkt, wenn Preise
+                fehlen, ist eine Falle. */}
+            {s.freigabe_noetig && (
+              <p className="-mt-1 rounded-(--radius) bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+                Ab dem Speichern gehen keine berechneten Preise mehr an die
+                Portale. Du gibst sie in der Objektliste oder im Kalender des
+                Objekts frei.
+              </p>
+            )}
+
             {/* Erweiterte Regeln (eingeklappt) */}
             <div className="flex flex-col gap-3 border-t pt-4">
               <button
@@ -278,7 +351,14 @@ export function DpEditSheet({
                       <NumInput
                         value={s.occupancy_sensitivity}
                         onChange={(n) => set("occupancy_sensitivity", n ?? 0)}
+                        disabled={(s.occupancy_steps ?? []).length > 0}
                       />
+                      {(s.occupancy_steps ?? []).length > 0 && (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Ohne Wirkung — es gelten die Auslastungsstufen weiter
+                          unten.
+                        </p>
+                      )}
                     </Field>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -312,6 +392,16 @@ export function DpEditSheet({
                   <LastMinuteEditor
                     rules={s.last_minute}
                     onChange={(r) => set("last_minute", r)}
+                  />
+
+                  <FarFutureEditor
+                    rules={s.far_future ?? []}
+                    onChange={(r) => set("far_future", r)}
+                  />
+
+                  <OccupancyStepsEditor
+                    steps={s.occupancy_steps ?? []}
+                    onChange={(r) => set("occupancy_steps", r)}
                   />
 
                   <RateRulesEditor
@@ -354,11 +444,11 @@ export function DpEditSheet({
                     <span className="leading-tight">
                       <span className="flex items-center gap-1.5 font-semibold">
                         Marktdaten nutzen
-                        <InfoHint text="Zusätzlich zu deinen eigenen Regeln richtet die Engine den Preis am Wettbewerb und der Marktnachfrage aus. Benötigt eine Marktdaten-Quelle (Markt-Schlüssel/Vergleichsobjekte unten). Ohne Quelle bleibt dieser Faktor wirkungslos." />
+                        <InfoHint text="Einmal täglich werden die öffentlich ausgeschriebenen Preise ganzer Unterkünfte im Umkreis von rund 50 km abgerufen. Die Karte zeigt jeden Preis als Punkt, die Engine richtet deinen Preis am Median aus. Du musst nichts eintragen. Fremde Objektnamen werden weder gespeichert noch angezeigt." />
                       </span>
                       <span className="block text-sm text-muted-foreground">
-                        Preis zusätzlich am Wettbewerb/der Marktnachfrage
-                        ausrichten (benötigt eine Marktdaten-Quelle).
+                        Preis am Median vergleichbarer Objekte in der Umgebung
+                        ausrichten.
                       </span>
                     </span>
                     <Switch
@@ -368,6 +458,20 @@ export function DpEditSheet({
                   </label>
                   {s.market_enabled && (
                     <>
+                      {/* Die Marktkarte ist die wichtigste Auskunft dieses
+                          Blocks: ohne sie steht der Schalter auf "an" und
+                          niemand sieht, ob er wirkt (live am 04.09.2026: an,
+                          ohne Quelle, Faktor an allen 400 Tagen 1,0). Sie zeigt
+                          jeden Angebotspreis der Umgebung als Punkt, nie
+                          fremde Objektnamen. */}
+                      {markt && (
+                        <MarktKarte
+                          stand={markt}
+                          lat={markt.lat}
+                          lng={markt.lng}
+                          titel={item.title ?? null}
+                        />
+                      )}
                       <div className="grid grid-cols-2 gap-4">
                         <Field
                           label={t("marketSensitivity")}
@@ -388,36 +492,13 @@ export function DpEditSheet({
                           />
                         </Field>
                       </div>
-                      <Field
-                        label={t("marketKey")}
-                        hint="Kennung des Marktes/der Region, aus der die Vergleichsdaten kommen (von deiner Marktdaten-Quelle vorgegeben). Beispiel: de-muenchen."
-                      >
-                        <Input
-                          value={s.market_key ?? ""}
-                          placeholder={t("marketKeyPlaceholder")}
-                          onChange={(e) =>
-                            set("market_key", e.target.value || null)
-                          }
-                        />
-                      </Field>
-                      <Field
-                        label={t("compSet")}
-                        hint="Liste vergleichbarer Objekte (Comp-Set), an deren Preisen sich die Engine orientiert. Kennungen kommagetrennt eintragen. Leer = die Engine nutzt den allgemeinen Marktdurchschnitt der Region."
-                      >
-                        <Input
-                          value={s.comp_refs.join(", ")}
-                          placeholder={t("compSetPlaceholder")}
-                          onChange={(e) =>
-                            set(
-                              "comp_refs",
-                              e.target.value
-                                .split(",")
-                                .map((x) => x.trim())
-                                .filter(Boolean),
-                            )
-                          }
-                        />
-                      </Field>
+                      {/* KEINE Handeingabe von Markt-Schlüssel/Comp-Set mehr:
+                          es gibt keine externe Marktquelle, an die ein
+                          Schlüssel ginge, und Objekt-IDs tippt niemand ab.
+                          Beide Felder standen ohne Wirkung im Formular
+                          (Attrappe, vom Nutzer am 04.09.2026 beanstandet).
+                          Die Marktregel arbeitet ausschließlich mit der
+                          täglichen Umgebungsbeobachtung oben. */}
                     </>
                   )}
                 </div>
@@ -558,6 +639,160 @@ function LastMinuteEditor({
       >
         <Icon icon="ph:plus" className="size-4" /> Regel hinzufügen
       </Button>
+    </div>
+  );
+}
+
+// Aufschlag für lange Vorausbuchung — das Gegenstück zum Last-Minute-Rabatt.
+// Beide stehen bewusst nebeneinander: sie beantworten dieselbe Frage (was ist
+// die Nacht wert, je nach Vorlauf?) in entgegengesetzte Richtungen.
+function FarFutureEditor({
+  rules,
+  onChange,
+}: {
+  rules: FarFutureRule[];
+  onChange: (rules: FarFutureRule[]) => void;
+}) {
+  // Aufsteigend: die Leiter wird von nah nach fern gelesen, und es gilt die
+  // weiteste erreichte Stufe.
+  const sortiert = [...rules].sort((a, b) => a.days_before - b.days_before);
+
+  function aendern(i: number, patch: Partial<FarFutureRule>) {
+    onChange(sortiert.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <Label className="flex items-center gap-1.5">
+        Aufschlag bei langer Vorausbuchung
+        <InfoHint text="Wer früh bucht, plant fest und vergleicht weniger — Hochzeiten, Familientreffen, Sommerferien mit Schulkindern. Beispiel: „ab 180 Tagen +10 %, ab 330 Tagen +25 %“. Es gilt immer die weiteste erreichte Stufe." />
+      </Label>
+      {sortiert.length === 0 && (
+        <p className="text-sm text-muted-foreground">
+          Kein Aufschlag — ferne Termine kosten wie nahe.
+        </p>
+      )}
+      {sortiert.map((r, i) => (
+        <div key={i} className="flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground">ab</span>
+          <NumInput
+            value={r.days_before}
+            onChange={(n) =>
+              aendern(i, {
+                days_before: Math.min(730, Math.max(1, n ?? 1)),
+              })
+            }
+            className="w-20"
+          />
+          <span className="text-muted-foreground">Tagen</span>
+          <NumInput
+            value={r.uplift_pct}
+            onChange={(n) =>
+              aendern(i, { uplift_pct: Math.min(300, Math.max(0, n ?? 0)) })
+            }
+            className="w-20"
+          />
+          <span className="text-muted-foreground">% Aufschlag</span>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Entfernen"
+            onClick={() => onChange(sortiert.filter((_, idx) => idx !== i))}
+          >
+            <Icon icon="ph:trash" className="size-4 text-muted-foreground" />
+          </Button>
+        </div>
+      ))}
+      {sortiert.length < 10 && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-fit gap-1.5"
+          onClick={() =>
+            onChange([...sortiert, { days_before: 180, uplift_pct: 10 }])
+          }
+        >
+          <Icon icon="ph:plus" className="size-4" /> Stufe hinzufügen
+        </Button>
+      )}
+    </div>
+  );
+}
+
+// Auslastungs-Stufenleiter: ablesbare Preisliste statt abstrakter Schraube.
+// Sind Stufen gepflegt, ERSETZEN sie die Auslastungs-Empfindlichkeit — deshalb
+// steht das hier ausdruecklich, sonst sucht man spaeter die Wirkung der Schraube.
+function OccupancyStepsEditor({
+  steps,
+  onChange,
+}: {
+  steps: OccupancyStep[];
+  onChange: (steps: OccupancyStep[]) => void;
+}) {
+  // Nach Schwelle sortiert anzeigen: die Leiter wird von unten nach oben
+  // gelesen, und es gilt die hoechste erreichte Stufe.
+  const sortiert = [...steps].sort((a, b) => a.ab_pct - b.ab_pct);
+
+  function aendern(i: number, patch: Partial<OccupancyStep>) {
+    onChange(sortiert.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <Label className="flex items-center gap-1.5">
+        Auslastungsstufen
+        <InfoHint text="Ablesbare Stufenleiter statt Empfindlichkeits-Schraube: „ab 80 % Auslastung +15 %“. Es gilt immer nur die höchste erreichte Stufe — es wird nichts addiert. Sobald hier Stufen stehen, ersetzen sie die Auslastungs-Empfindlichkeit." />
+      </Label>
+      {sortiert.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          Keine Stufen — es gilt die Auslastungs-Empfindlichkeit oben.
+        </p>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          Aktiv — diese Stufen ersetzen die Auslastungs-Empfindlichkeit.
+        </p>
+      )}
+      {sortiert.map((r, i) => (
+        <div key={i} className="flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground">ab</span>
+          <NumInput
+            value={r.ab_pct}
+            onChange={(n) =>
+              aendern(i, { ab_pct: Math.min(100, Math.max(0, n ?? 0)) })
+            }
+            className="w-20"
+          />
+          <span className="text-muted-foreground">% Auslastung</span>
+          {/* Signiert: ein Abschlag (ab 30 % -> -10 %) ist ausdruecklich
+              erlaubt, NumInput mit min=0 wuerde ihn verhindern. */}
+          <NumInputSigned
+            value={r.adjust_pct}
+            onChange={(n) =>
+              aendern(i, { adjust_pct: Math.min(300, Math.max(-90, n ?? 0)) })
+            }
+            className="w-20"
+          />
+          <span className="text-muted-foreground">% Preis</span>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Entfernen"
+            onClick={() => onChange(sortiert.filter((_, idx) => idx !== i))}
+          >
+            <Icon icon="ph:trash" className="size-4 text-muted-foreground" />
+          </Button>
+        </div>
+      ))}
+      {sortiert.length < 20 && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-fit gap-1.5"
+          onClick={() => onChange([...sortiert, { ab_pct: 80, adjust_pct: 10 }])}
+        >
+          <Icon icon="ph:plus" className="size-4" /> Stufe hinzufügen
+        </Button>
+      )}
     </div>
   );
 }
@@ -758,11 +993,13 @@ function NumInput({
   onChange,
   placeholder,
   className,
+  disabled,
 }: {
   value: number | null;
   onChange: (v: number | null) => void;
   placeholder?: string;
   className?: string;
+  disabled?: boolean;
 }) {
   return (
     <Input
@@ -771,6 +1008,7 @@ function NumInput({
       value={value ?? ""}
       placeholder={placeholder}
       className={className}
+      disabled={disabled}
       onChange={(e) => {
         const v = e.target.value;
         onChange(v === "" ? null : Number(v));

@@ -870,7 +870,7 @@ function MonthBlock({
     void load();
   }, [load]);
 
-  // Der Preis kommt aus dem Resolver über price_overrides > dynamic_prices >
+  // Der Preis kommt aus dem Resolver über dynamic_prices (bei aktivem DP) > price_overrides >
   // weekday (property_pricing_config) > base (rate_plans); dp_settings schaltet
   // Dynamic Pricing je Objekt; stop_sell beeinflusst die als 'blocked' gezeigte
   // Belegung. Ohne diese Abos bliebe der Monat stale (Realtime-Pflicht).

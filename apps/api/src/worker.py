@@ -41,6 +41,7 @@ from src.jobs import (
     feed_abgleich_tick,
     feed_nachpflege,
     geld_laeufe,
+    markt_beobachtung_tick,
     partner_laeufe,
     portal_raten_tick,
     public_api_storno,
@@ -169,6 +170,10 @@ REVIEWS_TICK_SECONDS = 60 * 60
 # reicht: die Termine sind tagesgenau und der Lauf ist idempotent (UNIQUE-Index
 # auf (rule_id, occurrence_on)), ein zweiter Durchlauf legt nichts doppelt an.
 TASKS_TICK_SECONDS = 60 * 60
+# Personal (0541): Feiertage sicherstellen, offene Stempelungen und ablaufende
+# Dokumente melden. Stündlich reicht — alle drei sind tages- bzw. stundengenau
+# und idempotent (dedup_key je Meldung, UNIQUE auf feiertage).
+PERSONAL_TICK_SECONDS = 60 * 60
 # Fällige Automails versenden (Buchungsbestätigung, Anreise-Info, Check-out …).
 # JEDE MINUTE, nicht stündlich: seit 0303 lässt sich der Versatz in Minuten
 # angeben („30 Minuten nach Buchung"), und ein Stundenraster machte daraus je
@@ -648,6 +653,7 @@ HANDLERS: dict[
     "sync_airbnb_zimmer": _handle_sync_airbnb_zimmer,
     "reconcile_tenant": _handle_reconcile_tenant,
     "abgleich_feed_buchungen": feed_abgleich_tick.handle,
+    "markt_beobachtung": markt_beobachtung_tick.handle,
     "reconcile_rate_plan_prices": _handle_reconcile_rate_plan_prices,
     "recompute_property": _handle_recompute_property,
     "push_ari": _handle_push_ari,
@@ -730,6 +736,7 @@ class Worker:
         self._last_partner_tick = 0.0
         self._last_reviews_tick = 0.0
         self._last_tasks_tick = 0.0
+        self._last_personal_tick = 0.0
         self._last_automails_tick = 0.0
         self._last_automail_planung_tick = 0.0
         self._last_content_heal_tick = 0.0
@@ -1176,6 +1183,23 @@ class Worker:
         except Exception as exc:  # noqa: BLE001
             log.warning("tasks_tick_failed", error=str(exc)[:200])
 
+    async def _personal_tick(self, loop_time: float) -> None:
+        """Stündlich: Feiertage je Betriebsland nachziehen, vergessene
+        Stempelungen und ablaufende Dokumente an die Leitung melden (0541)."""
+        if loop_time - self._last_personal_tick < PERSONAL_TICK_SECONDS:
+            return
+        self._last_personal_tick = loop_time
+        try:
+            stand = await asyncio.to_thread(self._personal_stuendlich)
+            log.info("personal_tick", **stand)
+        except Exception as exc:  # noqa: BLE001 — Tick darf den Worker nie kippen
+            log.warning("personal_tick_failed", error=str(exc)[:200])
+
+    def _personal_stuendlich(self) -> dict[str, object]:
+        from src.features.personal.tick import stuendlich  # noqa: PLC0415 — Worker-Import
+
+        return stuendlich(self._db)
+
     def _materialize_recurring_tasks(self) -> None:
         from src.features.tasks.service import TasksService
 
@@ -1388,6 +1412,11 @@ class Worker:
         # Ebenfalls taeglich: Feed-Staging ↔ Reservierungen (Selbstheilung, nur
         # DB, kein Channex-Call) — `src/jobs/feed_abgleich_tick`.
         feed_abgleich_tick.einreihen(self._db, bucket)
+        # Ebenfalls taeglich, betriebsuebergreifend EINMAL: das Preisniveau der
+        # Umgebung ins Raster holen (`markt_beobachtung`). Kein Channex-Call.
+        # Der Recompute liest danach nur noch — eine Preisberechnung haengt nie
+        # an der Erreichbarkeit der Fremdquelle.
+        markt_beobachtung_tick.einreihen(self._db, bucket)
 
     def _enqueue_outbox_all(self) -> None:
         """Offene AUSGEHENDE Pushes nachziehen (Availability + Restriktionen).
@@ -1461,6 +1490,7 @@ class Worker:
             await self._partner_tick(loop_time)
             await self._reviews_tick(loop_time)
             await self._tasks_tick(loop_time)
+            await self._personal_tick(loop_time)
             await self._automails_tick(loop_time)
             await self._automail_planung_tick(loop_time)
             await self._content_heal_tick(loop_time)

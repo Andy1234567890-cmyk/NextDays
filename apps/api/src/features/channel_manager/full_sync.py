@@ -479,6 +479,12 @@ class FullSyncMixin:
                 stop_all.add(r["date"])
 
         resolver = PricingResolver(service_client=db)
+        # Tage, die auf die Preis-Freigabe warten, gehen NICHT an die Portale.
+        # Der Full-Sync ist einer von drei Push-Wegen; alle fragen dieselbe
+        # Stelle, sonst wäre die Freigabe an einem davon eine Attrappe.
+        from src.features.pricing.freigabe import gesperrte_tage  # noqa: PLC0415
+
+        gesperrt = gesperrte_tage(db, property_id, start, end + timedelta(days=1))
         rows: list[dict[str, Any]] = []
         for plan in plans:
             rp_id = plan["id"]
@@ -493,8 +499,9 @@ class FullSyncMixin:
                     round(float(entry.price) * 100)
                     if entry.price is not None else None
                 )
-                if cents is not None and cents > 0:
-                    prices[entry.date.isoformat()] = cents
+                iso_tag = entry.date.isoformat()
+                if cents is not None and cents > 0 and iso_tag not in gesperrt:
+                    prices[iso_tag] = cents
 
             run_start: date | None = None
             run_vec: tuple | None = None

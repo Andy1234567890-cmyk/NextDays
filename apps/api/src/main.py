@@ -85,6 +85,7 @@ from .features.owner_statements.router import router as owner_statements_router
 from .features.owners.router import router as owners_router
 from .features.payments.router import router as payments_router
 from .features.payouts.router import router as payouts_router
+from .features.personal.router import router as personal_router
 from .features.platform_admin.router import router as platform_admin_router
 from .features.pricing.router import router as pricing_router
 from .features.privacy_settings.router import router as privacy_settings_router
@@ -190,6 +191,9 @@ _SLICE_ROUTERS = [
     ocr_router,
     public_portal_router,
     tasks_router,
+    # Personal & Dienstplan (0540/0541, ADR-0023): Akte, Dienstplan,
+    # Abwesenheit, Zeiterfassung, Lohnvorbereitung.
+    personal_router,
     media_router,
     travel_agencies_router,
     crm_router,

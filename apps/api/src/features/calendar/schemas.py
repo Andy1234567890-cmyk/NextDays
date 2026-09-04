@@ -90,6 +90,24 @@ class DayAvailability(BaseModel):
     # Faktor-Aufschlüsselung bei dynamischem Preis ({faktor: multiplikator}) für
     # den „Warum dieser Preis?"-Tooltip. None außer bei price_source=dynamic.
     price_factors: dict[str, float] | None = None
+    # Wetter des Tages am STANDORT DES OBJEKTS (properties.lat/lng) — für die
+    # Anzeige im Preiskalender, nicht nur als Faktor im Preis. Ein eingeschaltetes
+    # Wetter, dessen Wirkung man nirgends sieht, ist von "aus" nicht zu
+    # unterscheiden (Befund 04.09.2026).
+    #
+    # `wetter_quelle` ist die wichtigste der drei Angaben: 'prognose' = echte
+    # Vorhersage (nur wenige Tage weit), 'saisonal' = langjähriges Tagesmittel.
+    # Beides als "Wetter" auszugeben wäre eine Falschaussage (Wurzel 5b).
+    wetter_score: float | None = None
+    wetter_quelle: str | None = None
+    wetter_temp_c: float | None = None
+    wetter_niederschlag_mm: float | None = None
+    wetter_bewoelkung_pct: float | None = None
+    # Wartet der berechnete Preis dieses Tages noch auf die Freigabe? Dann
+    # gilt er lokal (Kalender, Angebot, eigene Plattform) bereits, ist aber
+    # noch NICHT an die Portale gegangen. Ohne diese Kennzeichnung stünde im
+    # Kalender ein Preis, von dem niemand weiss, ob Airbnb ihn schon kennt.
+    preis_wartet_auf_freigabe: bool = False
     # Mindestaufenthalt aus dem Rate-Plan des Objekts (per-Tag-Restriktionen v2).
     min_stay: int | None = None
     # CTA/CTD-Restriktionen je Tag (Default false bei fehlender availability-Zeile).

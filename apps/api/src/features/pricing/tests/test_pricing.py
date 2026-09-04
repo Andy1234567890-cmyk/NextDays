@@ -4,6 +4,7 @@ Verifiziert die Prioritätsreihenfolge (override > weekday > base), dass ohne
 Preis None bleibt (kein Fallback), und die Quote-Aufschlüsselung (Längenpreis,
 Kurzaufenthalt, Extra-Gast, Markup, Gebühren, Aktion, Steuern).
 """
+import dataclasses
 from datetime import date, timedelta
 
 import pytest
@@ -110,14 +111,20 @@ def _resolver(
     overrides: list[dict] | None = None,
     config: dict | None = None,
     dynamic: list[dict] | None = None,
+    dp_enabled: bool | None = None,
     addons: list[dict] | None = None,
     rate_plan_overrides: list[dict] | None = None,
     discounts: list[dict] | None = None,
 ) -> PricingResolver:
+    # Dynamic Pricing gilt als eingeschaltet, sobald der Test dynamische Preise
+    # mitgibt (`dp_enabled` überschreibt das gezielt — z. B. um zu prüfen, dass
+    # der manuelle Tagespreis nach dem Abschalten wieder greift).
+    aktiv = dp_enabled if dp_enabled is not None else bool(dynamic)
     tables: dict[str, list[dict]] = {
         "rate_plans": [{"base_price": base, "currency": "EUR"}] if base is not None else [],
         "price_overrides": overrides or [],
         "property_pricing_config": [config] if config else [],
+        "dp_settings": [{"property_id": "p", "enabled": aktiv}],
         "dynamic_prices": dynamic or [],
         "property_addons": addons or [],
         "rate_plan_price_overrides": rate_plan_overrides or [],
@@ -127,7 +134,7 @@ def _resolver(
     return PricingResolver(service_client=_DB(tables))
 
 
-# --- Effektivpreis: Priorität override > weekday > base ----------------------
+# --- Effektivpreis: dynamic (nur bei aktivem DP) > override > weekday > base ---
 
 
 def test_effective_uses_base_when_no_override() -> None:
@@ -162,15 +169,45 @@ def test_effective_dynamic_beats_weekday_and_base() -> None:
     assert days[0].price == 175.0 and days[0].source == "dynamic"
 
 
-def test_effective_manual_override_beats_dynamic() -> None:
-    # Manueller Host-Override gewinnt IMMER über den Dynamic-Pricing-Vorschlag.
+def test_dynamic_schlaegt_manuellen_tagespreis_wenn_dp_an() -> None:
+    # Hat die Agentur Dynamic Pricing eingeschaltet, übernimmt der Autopilot die
+    # Preisgestaltung — auch gegen einen älteren manuellen Tagespreis. Live-Anlass
+    # (04.09.2026): ein Saisonpreis vom 07.08. verdeckte die berechneten Preise.
     r = _resolver(
         base=100.0,
         overrides=[{"date": "2026-07-01", "price": 220}],
         dynamic=[{"date": "2026-07-01", "price": 175}],
+        dp_enabled=True,
+    )
+    days = r.effective_prices("p", date(2026, 7, 1), date(2026, 7, 2))
+    assert days[0].price == 175.0 and days[0].source == "dynamic"
+
+
+def test_manueller_tagespreis_greift_sofort_wieder_wenn_dp_aus() -> None:
+    # Der Knackpunkt: schaltet die Agentur ab, gilt SOFORT wieder der manuelle
+    # Tagespreis. Die dynamic_prices-Zeilen bleiben dabei bestehen (sie werden
+    # nicht gelöscht) — sie dürfen nur nicht mehr wirken.
+    r = _resolver(
+        base=100.0,
+        overrides=[{"date": "2026-07-01", "price": 220}],
+        dynamic=[{"date": "2026-07-01", "price": 175}],
+        dp_enabled=False,
     )
     days = r.effective_prices("p", date(2026, 7, 1), date(2026, 7, 2))
     assert days[0].price == 220.0 and days[0].source == "override"
+
+
+def test_dp_aus_kein_geisterpreis_ohne_override() -> None:
+    # Ohne manuellen Tagespreis darf ein alter dynamic_prices-Bestand nach dem
+    # Abschalten NICHT weitergelten — sonst bliebe der Autopilot-Preis stehen,
+    # obwohl DP aus ist.
+    r = _resolver(
+        base=100.0,
+        dynamic=[{"date": "2026-07-01", "price": 175}],
+        dp_enabled=False,
+    )
+    days = r.effective_prices("p", date(2026, 7, 1), date(2026, 7, 2))
+    assert days[0].price == 100.0 and days[0].source == "base"
 
 
 def test_effective_dp_off_falls_back_to_base() -> None:
@@ -1588,3 +1625,386 @@ def test_quote_bezeichnungen_in_der_sprache_des_gastes() -> None:
     assert {"Cleaning", "City tax"} <= labels("fr")
     # Ein unbekannter Code ebenso — kein Absturz, kein leeres Label.
     assert {"Cleaning", "City tax"} <= labels("zh")
+
+
+# --------------------------------------------------------------------------
+# Schreibweg der Einstellungen: ein Feld, das DpSettingsUpdate nicht kennt,
+# wird von Pydantic STILL verworfen — `update` speichert dann nichts und meldet
+# trotzdem Erfolg. Genau so ging am 04.09.2026 ein angenommener KI-Vorschlag
+# verloren: die Entscheidungshistorie sagte "angenommen", dp_settings.
+# occupancy_steps blieb []. Die Engine las das Feld längst, nur schreiben
+# konnte es niemand.
+# --------------------------------------------------------------------------
+
+_LEITER = [
+    {"ab_pct": 60, "adjust_pct": 4},
+    {"ab_pct": 80, "adjust_pct": 10},
+    {"ab_pct": 90, "adjust_pct": 15},
+]
+
+
+def test_dp_update_kennt_occupancy_steps() -> None:
+    """Der Kern des Fehlers: das Feld muss den Patch überleben."""
+    from src.features.pricing.schemas import DpSettingsUpdate
+
+    patch = DpSettingsUpdate(occupancy_steps=_LEITER).model_dump(
+        mode="json", exclude_none=True
+    )
+    assert patch["occupancy_steps"] == _LEITER
+
+
+def test_dp_update_alle_berater_felder_kommen_an() -> None:
+    """Jedes Feld, das der KI-Berater vorschlagen kann, muss schreibbar sein.
+
+    Der Berater erzeugt seine Vorschläge über `feld=`-Namen; steht einer davon
+    nicht in DpSettingsUpdate, ist "Übernehmen" eine Attrappe. Der Test liest
+    die Namen aus dem Berater-Modul, damit ein neues Feld ihn bricht statt
+    stillschweigend ins Leere zu laufen.
+    """
+    import re
+    from pathlib import Path
+
+    from src.features.pricing.schemas import DpSettingsUpdate
+
+    quelle = (
+        Path(__file__).resolve().parents[1] / "ki_berater.py"
+    ).read_text(encoding="utf-8")
+    felder = set(re.findall(r'feld="([a-z_]+)"', quelle))
+    assert felder, "Keine feld=-Namen im Berater gefunden — Regex prüfen."
+    unbekannt = felder - set(DpSettingsUpdate.model_fields)
+    assert not unbekannt, (
+        f"Der Berater schlägt Felder vor, die DpSettingsUpdate nicht kennt: "
+        f"{sorted(unbekannt)} — 'Übernehmen' würde nichts speichern."
+    )
+
+
+def test_dp_update_occupancy_steps_grenzen_wie_db_check() -> None:
+    """Pydantic muss dieselben Grenzen ziehen wie dp_occupancy_steps_gueltig
+    (0550) — sonst wirft die DATENBANK einen 500 auf einen Wert, den das
+    Schema durchgelassen hat."""
+    from src.features.pricing.schemas import DpSettingsUpdate
+
+    for schlecht in (
+        [{"ab_pct": 120, "adjust_pct": 5}],
+        [{"ab_pct": -1, "adjust_pct": 5}],
+        [{"ab_pct": 50, "adjust_pct": 400}],
+        [{"ab_pct": 50, "adjust_pct": -95}],
+        [{"ab_pct": 50}],
+    ):
+        with pytest.raises(ValidationError):
+            DpSettingsUpdate(occupancy_steps=schlecht)
+    # Mehr als 20 Stufen lehnt der DB-CHECK ab.
+    with pytest.raises(ValidationError):
+        DpSettingsUpdate(
+            occupancy_steps=[{"ab_pct": i, "adjust_pct": 1} for i in range(21)]
+        )
+
+
+def test_dp_update_abschlag_stufe_erlaubt() -> None:
+    """Negative Anpassung ist ausdrücklich vorgesehen (schwache Zeiträume)."""
+    from src.features.pricing.schemas import DpSettingsUpdate
+
+    u = DpSettingsUpdate(occupancy_steps=[{"ab_pct": 30, "adjust_pct": -10}])
+    assert u.occupancy_steps is not None
+    assert u.occupancy_steps[0].adjust_pct == -10
+
+
+def test_dp_update_leerer_patch_wird_abgewiesen() -> None:
+    """Ein Patch ohne Felder speichert nichts und darf nicht Erfolg melden."""
+    from unittest.mock import MagicMock
+
+    from src.features.pricing.schemas import DpSettingsUpdate
+    from src.features.pricing.settings_service import DpSettingsService
+
+    svc = DpSettingsService(service_client=MagicMock())
+    svc._require_own_property = lambda *a, **k: None  # noqa: SLF001
+    ctx = MagicMock(tenant_id="t1", role="admin")
+    with pytest.raises(PricingError) as exc:
+        svc.update(ctx, "p1", DpSettingsUpdate())
+    assert exc.value.status_code == 422
+
+
+def test_dp_response_gibt_occupancy_steps_zurueck() -> None:
+    """Rückweg: was gespeichert ist, muss das Frontend auch sehen — sonst
+    zeigt die Oberfläche eine leere Leiter über einer aktiven Regel."""
+    from src.features.pricing.settings_service import _DEFAULTS, DpSettingsService
+
+    resp = DpSettingsService._to_response(  # noqa: SLF001
+        "p1", {**_DEFAULTS, "occupancy_steps": _LEITER}
+    )
+    assert [s.model_dump() for s in resp.occupancy_steps] == _LEITER
+
+
+def test_berater_mindestpreis_liest_zukunft_nicht_vergangenheit() -> None:
+    """`dynamic_prices` ist der berechnete VORRAT (heute → Zukunft), keine
+    Historie. Die Mindestpreis-Prüfung lief ursprünglich über denselben
+    Rückblick wie die Auslastungsprüfung und fand deshalb ausnahmslos null
+    Zeilen — sie konnte nie einen Vorschlag machen, und das stille `return
+    None` verbarg es. Der Test hält den Zeitraum fest.
+    """
+    from datetime import date as _date
+    from unittest.mock import MagicMock
+
+    from src.features.pricing.ki_berater import DpKiBerater
+
+    gefragt: dict[str, str] = {}
+
+    class _Abfrage:
+        def select(self, *_a: object, **_k: object) -> "_Abfrage":
+            return self
+
+        def eq(self, *_a: object, **_k: object) -> "_Abfrage":
+            return self
+
+        def gte(self, _spalte: str, wert: str) -> "_Abfrage":
+            gefragt["ab"] = wert
+            return self
+
+        def lt(self, _spalte: str, wert: str) -> "_Abfrage":
+            gefragt["bis"] = wert
+            return self
+
+        def execute(self) -> MagicMock:
+            return MagicMock(data=[])
+
+    db = MagicMock()
+    db.table.return_value = _Abfrage()
+    berater = DpKiBerater(db)
+
+    von, bis = _date(2025, 9, 4), _date(2026, 9, 4)
+    berater._spanne_pruefen("p1", {}, von, bis)  # noqa: SLF001
+
+    # Gesucht wird AB dem Stichtag (heute), nicht davor.
+    assert gefragt["ab"] == bis.isoformat(), (
+        f"Mindestpreis-Prüfung liest ab {gefragt['ab']} — muss ab {bis} "
+        "(heute) in die Zukunft lesen, dort stehen die berechneten Preise."
+    )
+    assert gefragt["bis"] > gefragt["ab"]
+
+
+def test_berater_prueft_immer_alle_regeln_mit_grund() -> None:
+    """Jede Prüfung muss ein Ergebnis MIT Grund liefern — auch wenn sie nichts
+    vorschlägt. Ein stilles None ist im Betrieb nicht von einem Defekt zu
+    unterscheiden ("keine Vorschläge" nannte zwei mögliche Ursachen und keine
+    Antwort)."""
+    from src.features.pricing.ki_berater import DpKiBerater, Pruefung
+
+    # Leere Einstellungen, keine Nächte: jede Prüfung muss dennoch berichten.
+    berater = DpKiBerater(None)
+    ergebnis = berater._stufen_pruefen({}, set(), 5)  # noqa: SLF001
+    assert isinstance(ergebnis, Pruefung)
+    assert ergebnis.ergebnis == "zu_wenig_daten"
+    assert ergebnis.grund
+
+    gepflegt = berater._stufen_pruefen(  # noqa: SLF001
+        {"occupancy_steps": [{"ab_pct": 80, "adjust_pct": 10}]}, set(), 400
+    )
+    assert isinstance(gepflegt, Pruefung)
+    assert gepflegt.ergebnis == "passt"
+    assert "gepflegt" in gepflegt.grund
+
+
+# --------------------------------------------------------------------------
+# Tagesmodus + Freigabe (0554)
+# --------------------------------------------------------------------------
+
+
+def test_tagesmodus_zeitraum_hat_obergrenze() -> None:
+    """Wurzel 8: ein unbegrenzter Datumsbereich ist ein Angriff — und ein
+    vertippter Endtermin würde hunderttausende Zeilen schreiben."""
+    from datetime import date as _date
+
+    from src.features.pricing.tagesmodus_service import TagesmodusService
+
+    svc = TagesmodusService.__new__(TagesmodusService)
+    # 400 Tage sind erlaubt, 401 nicht.
+    assert len(svc._zeitraum_pruefen(  # noqa: SLF001
+        _date(2026, 1, 1), _date(2026, 1, 1) + timedelta(days=399)
+    )) == 400
+    with pytest.raises(PricingError) as exc:
+        svc._zeitraum_pruefen(  # noqa: SLF001
+            _date(2026, 1, 1), _date(2026, 1, 1) + timedelta(days=400)
+        )
+    assert exc.value.status_code == 422
+
+
+def test_tagesmodus_ende_vor_start_wird_abgewiesen() -> None:
+    from datetime import date as _date
+
+    from src.features.pricing.tagesmodus_service import TagesmodusService
+
+    svc = TagesmodusService.__new__(TagesmodusService)
+    with pytest.raises(PricingError):
+        svc._zeitraum_pruefen(_date(2026, 5, 10), _date(2026, 5, 1))  # noqa: SLF001
+
+
+def test_tagesmodus_wechsel_von_manuell_loest_override() -> None:
+    """Wurzel 1 — der Gegenzustand: wer von 'manuell' zurück auf 'dynamisch'
+    stellt, muss den festen Preis loswerden. Bliebe er in price_overrides
+    stehen, schlüge er weiterhin die Automatik, und der Nutzer sähe seine
+    Wahl wirkungslos."""
+    from datetime import date as _date
+    from unittest.mock import MagicMock
+
+    from src.features.pricing.tagesmodus_service import TagesmodusService
+
+    geloescht: dict[str, object] = {}
+
+    class _Tabelle:
+        def __init__(self, name: str) -> None:
+            self.name = name
+
+        def select(self, *_a: object, **_k: object) -> "_Tabelle":
+            return self
+
+        def eq(self, spalte: str, wert: object) -> "_Tabelle":
+            if self.name == "price_overrides":
+                geloescht.setdefault("eq", []).append((spalte, wert))  # type: ignore[union-attr]
+            return self
+
+        def in_(self, _spalte: str, werte: list[str]) -> "_Tabelle":
+            if self.name == "price_overrides":
+                geloescht["tage"] = werte
+            return self
+
+        def gte(self, *_a: object) -> "_Tabelle":
+            return self
+
+        def lte(self, *_a: object) -> "_Tabelle":
+            return self
+
+        def limit(self, *_a: object) -> "_Tabelle":
+            return self
+
+        def delete(self) -> "_Tabelle":
+            if self.name == "price_overrides":
+                geloescht["aufgerufen"] = True
+            return self
+
+        def upsert(self, *_a: object, **_k: object) -> "_Tabelle":
+            return self
+
+        def execute(self) -> MagicMock:
+            if self.name == "properties":
+                return MagicMock(data=[{"id": "p1"}])
+            if self.name == "dp_day_modes":
+                # Zwei Tage stehen aktuell auf 'manuell'.
+                return MagicMock(
+                    data=[{"date": "2026-06-01"}, {"date": "2026-06-02"}]
+                )
+            return MagicMock(data=[])
+
+    db = MagicMock()
+    db.table.side_effect = _Tabelle
+    svc = TagesmodusService(db)
+    ctx = MagicMock(tenant_id="t1", role="admin")
+
+    svc.setzen(
+        ctx, "p1",
+        von=_date(2026, 6, 1), bis=_date(2026, 6, 2), modus="dynamisch",
+    )
+
+    assert geloescht.get("aufgerufen"), (
+        "Wechsel auf 'dynamisch' hat den festen Preis NICHT gelöst — er würde "
+        "die Automatik weiter überstimmen."
+    )
+    assert geloescht.get("tage") == ["2026-06-01", "2026-06-02"]
+
+
+def test_tagesmodus_anpassung_braucht_prozent() -> None:
+    """Eine Anpassung ohne Wert wäre eine Regel, die stillschweigend nichts
+    tut — genau die Klasse Fehler, die 'occupancy_steps' hatte."""
+    from datetime import date as _date
+    from unittest.mock import MagicMock
+
+    from src.features.pricing.tagesmodus_service import TagesmodusService
+
+    svc = TagesmodusService(MagicMock())
+    svc._require_own_property = lambda *a, **k: None  # noqa: SLF001
+    with pytest.raises(PricingError) as exc:
+        svc.setzen(
+            MagicMock(tenant_id="t1"), "p1",
+            von=_date(2026, 6, 1), bis=_date(2026, 6, 1), modus="anpassung",
+        )
+    assert exc.value.status_code == 422
+
+
+def test_tagesmodus_grenzen_wie_db_check() -> None:
+    """Deckungsgleich mit dem CHECK aus 0554 (-90 bis 300)."""
+    from datetime import date as _date
+    from unittest.mock import MagicMock
+
+    from src.features.pricing.tagesmodus_service import TagesmodusService
+
+    svc = TagesmodusService(MagicMock())
+    svc._require_own_property = lambda *a, **k: None  # noqa: SLF001
+    for schlecht in (-91.0, 301.0):
+        with pytest.raises(PricingError):
+            svc.setzen(
+                MagicMock(tenant_id="t1"), "p1",
+                von=_date(2026, 6, 1), bis=_date(2026, 6, 1),
+                modus="anpassung", adjust_pct=schlecht,
+            )
+
+
+def test_dp_update_kennt_freigabe_noetig() -> None:
+    """Der Schalter muss schreibbar sein — sonst dieselbe stille Attrappe wie
+    bei occupancy_steps (Feld fehlt im Schema, Pydantic verwirft es, 200)."""
+    from src.features.pricing.schemas import DpSettingsUpdate
+
+    patch = DpSettingsUpdate(freigabe_noetig=True).model_dump(
+        mode="json", exclude_none=True
+    )
+    assert patch == {"freigabe_noetig": True}
+
+
+def test_dp_felder_ueberall_bekannt() -> None:
+    """Jedes Feld der Antwort muss auch die Engine-Dataclass kennen.
+
+    DREIMAL an einem Tag dieselbe Klasse: ein Feld wird in der Migration
+    angelegt, im Pydantic-Schema ergänzt — und die Engine-Dataclass bzw. der
+    Schreibweg vergessen. Die Folgen waren jeweils still oder spät:
+      * occupancy_steps  — „Übernehmen" meldete Erfolg und speicherte nichts
+      * freigabe_noetig  — die Objektliste warf 500 (AttributeError)
+    Der Test vergleicht die Feldmengen, statt auf den nächsten Zufallsfund zu
+    warten.
+    """
+    from src.features.pricing.engine import DpSettings as EngineSettings
+    from src.features.pricing.schemas import DpSettingsResponse, DpSettingsUpdate
+
+    engine_felder = {f.name for f in dataclasses.fields(EngineSettings)}
+    # Felder, die bewusst NICHT in der Rechen-Dataclass liegen:
+    #   property_id          — beschreibt das Objekt, nicht die Rechenregeln
+    #   market_key/comp_refs — Adressierung der Markt-QUELLE, nicht Teil der
+    #                          Rechnung; der Recompute liest sie aus der
+    #                          Rohzeile (siehe recompute._settings_row)
+    nur_antwort = {"property_id", "market_key", "comp_refs"}
+    fehlend = set(DpSettingsResponse.model_fields) - engine_felder - nur_antwort
+    assert not fehlend, (
+        f"Diese Felder kennt die Engine-Dataclass nicht: {sorted(fehlend)} — "
+        "die Übersicht liest sie von dort und wirft sonst AttributeError."
+    )
+
+    # Und umgekehrt: alles Schreibbare muss auch lesbar zurückkommen.
+    nicht_lesbar = set(DpSettingsUpdate.model_fields) - set(
+        DpSettingsResponse.model_fields
+    )
+    assert not nicht_lesbar, (
+        f"Schreibbar, aber nicht lesbar: {sorted(nicht_lesbar)} — gespeicherte "
+        "Werte wären in der Oberfläche unsichtbar."
+    )
+
+
+def test_dp_defaults_decken_alle_antwortfelder() -> None:
+    """_DEFAULTS muss jedes Antwortfeld kennen — sonst steht bei einem Objekt
+    ohne dp_settings-Zeile ein Feld auf dem Pydantic-Default statt auf dem
+    fachlich gewollten Wert."""
+    from src.features.pricing.schemas import DpSettingsResponse
+    from src.features.pricing.settings_service import _DEFAULTS
+
+    ohne = (
+        set(DpSettingsResponse.model_fields)
+        - set(_DEFAULTS)
+        - {"property_id"}
+    )
+    assert not ohne, f"Kein Default hinterlegt für: {sorted(ohne)}"

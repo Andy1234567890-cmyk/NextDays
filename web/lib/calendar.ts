@@ -34,12 +34,22 @@ export type DayAvailability = {
   date: string; // YYYY-MM-DD
   status: AvailabilityStatus;
   source: AvailabilitySource;
-  price: number | null; // Tagespreis (Override > dynamic > weekday > base); null ohne Rate-Plan
+  price: number | null; // Tagespreis (dynamic bei aktivem DP > Override > weekday > base); null ohne Rate-Plan
   // Herkunft des Preises: override | dynamic | weekday | base | none.
   price_source?: string;
   // Faktor-Aufschlüsselung bei dynamischem Preis ({faktor: multiplikator}) für
   // den „Warum dieser Preis?"-Tooltip. Nur bei price_source=dynamic gesetzt.
   price_factors?: Record<string, number> | null;
+  // Gilt lokal schon, ist aber noch nicht an die Portale gegangen.
+  preis_wartet_auf_freigabe?: boolean;
+  // Wetter am Standort DES OBJEKTS. `wetter_quelle` unterscheidet die echte
+  // Vorhersage ("prognose", nur wenige Tage weit) vom langjährigen Tagesmittel
+  // ("saisonal") — beides als "Wetter" zu zeigen wäre eine Falschaussage.
+  wetter_score?: number | null;
+  wetter_quelle?: string | null;
+  wetter_temp_c?: number | null;
+  wetter_niederschlag_mm?: number | null;
+  wetter_bewoelkung_pct?: number | null;
   min_stay: number | null; // Mindestaufenthalt aus dem Rate-Plan
   // CTA/CTD-Restriktionen je Tag (Default false ohne availability-Zeile).
   closed_to_arrival?: boolean;

@@ -59,6 +59,15 @@ FUNKTIONEN = frozenset(
         # Topf liesse sich später nicht sagen, welcher den Deckel gesprengt hat.
         "wissen_import",
         "wissen_lernen",
+        # Bewertungs-KI (0549). Beide Richtungen getrennt, aus demselben Grund
+        # wie die zwei Zeilen darüber: sie laufen unterschiedlich oft, und in
+        # einem Topf liesse sich nicht sagen, welche den Deckel gesprengt hat.
+        "bewertung_gast",
+        "bewertung_antwort",
+        # Regel-Berater im Dynamic Pricing (0553). Derselbe Zwang wie oben:
+        # hier UND im DB-Check. Fehlte beim ersten Live-Lauf am 04.09.2026 —
+        # der laute `ki_nutzung_unbekannte_funktion`-Log hat es sofort gezeigt.
+        "dp_regel_berater",
         # Bewertungs-Auswertung (0501). Getrennt aus demselben Grund wie
         # oben: 'bewertung_deuten' ist ein kleiner Aufruf je neuer Bewertung
         # und läuft im Tick, 'bewertung_bilanz' ein großer über sechzig Texte
@@ -80,6 +89,19 @@ FUNKTIONEN = frozenset(
         # Zusatzleistung ein kurzer, der auf n Objekten steht. In einem Topf
         # liesse sich nicht sagen, welcher den Deckel gesprengt hat.
         "addon_uebersetzen",
+        # Personal-Dienstplan (0546). ZWEI STELLEN, immer gemeinsam: hier UND
+        # der check-Constraint `site_ai_usage_funktion_check` in 0546.
+        #
+        # Drei Namen und nicht einer, weil sich die Aufrufe grundlegend
+        # unterscheiden: 'personal_prognose' laeuft einmal je Woche und
+        # erklaert eine gerechnete Zahl, 'personal_autoplan' einmal je
+        # Planungslauf und vergleicht Varianten, 'personal_assistent' beliebig
+        # oft auf Zuruf im Plan. Der Assistent ist der einzige, der den Deckel
+        # sprengen kann — in einem Topf mit den anderen liesse sich das nicht
+        # sagen, und die Frage „welcher Knopf kostet?" waere unbeantwortbar.
+        "personal_prognose",
+        "personal_autoplan",
+        "personal_assistent",
     }
 )
 

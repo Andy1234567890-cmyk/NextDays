@@ -36,6 +36,9 @@ dependencies = [
     # Signatur des OAuth-state. Bisher nur transitiv (firebase-admin/pyjwt) —
     # explizit, damit ein Wegfall dort die Kanalanbindung nicht still killt.
     "cryptography>=43",
+    "holidays>=0.103",
+    "ortools>=9.15.6755",
+    "pyairbnb>=2.2.2",
 ]
 
 [project.optional-dependencies]
@@ -65,6 +68,7 @@ select = ["E", "F", "I", "B", "UP", "ANN", "S"]
 # Mailkatalog des Partnerprogramms: 24 Sprachfassungen je Satz, maschinell
 # erzeugt — Umbrüche in Übersetzungen wären Wartungsrauschen, keine Lesbarkeit.
 "**/mail_texte_partner.py" = ["E501"]
+"**/mail_texte_personal.py" = ["E501"]
 
 [tool.pylint.main]
 # Ruff (oben) ist der primäre Linter (Stil, Imports, Bugbear, Security,

@@ -9,7 +9,7 @@ laufenden Stack. Kein stilles Exception-Swallowing (PROJECT.md).
 # pylint: disable=too-many-lines  # kohärente Kalender-Domäne (Verfügbarkeit/
 # Preis/Stop-Sell/Saisons/Bulk) — ein Split zerrisse die eng gekoppelte
 # Spiegelungs- und Push-Logik (gleiches Muster wie ari_push.py).
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 from supabase import Client
@@ -241,7 +241,106 @@ class CalendarService:
             for d in self._resolver().effective_prices(property_id, rng.start, rng.end)
         }
         _base, min_stay = self._fetch_rate_plan(property_id)
-        return self._build_days(rng, rows, effective, min_stay)
+        return self._build_days(
+            rng,
+            rows,
+            effective,
+            min_stay,
+            self._wetter(property_id, rng),
+            self._wartende_tage(property_id, rng),
+        )
+
+    def _wartende_tage(self, property_id: str, rng: DateRange) -> set[str]:
+        """Tage, deren berechneter Preis noch nicht an die Portale ging.
+
+        Der Preis GILT lokal bereits (Kalender, Angebot, eigene Plattform);
+        nur die Portale kennen ihn noch nicht. Ohne diese Kennzeichnung stuende
+        im Kalender eine Zahl, von der niemand weiss, ob Airbnb sie hat.
+
+        Nutzt den Client DIESES Service, statt sich selbst einen zu holen: ein
+        eigener Verbindungsaufbau liefe auch im Unit-Test los.
+        """
+        from src.features.pricing.freigabe import gesperrte_tage  # noqa: PLC0415
+
+        try:
+            return gesperrte_tage(self._db(), property_id, rng.start, rng.end)
+        except Exception as exc:  # noqa: BLE001 - Kennzeichnung ist Beiwerk
+            log.warning("kalender_wartende_tage_unlesbar", error=str(exc)[:200])
+            return set()
+
+    def _wetter(self, property_id: str, rng: DateRange) -> dict[str, object]:
+        """Wetter je Tag am STANDORT DES OBJEKTS — für die Anzeige im Kalender.
+
+        Best-effort und bewusst leise: das Wetter ist Beiwerk der Kalenderansicht,
+        ein Ausfall der Wetterquelle darf den Kalender nie kippen. Die Quelle
+        selbst loggt laut, wenn sie nicht arbeiten kann (fehlender Schlüssel,
+        abgelehnter Abruf) — hier bleibt nur die leere Menge.
+        """
+        try:
+            from src.features.pricing.weather import (  # noqa: PLC0415
+                WeatherProvider,
+            )
+
+            row = (
+                self._db()
+                .table("properties")
+                .select("lat, lng")
+                .eq("id", property_id)
+                .limit(1)
+                .execute()
+            ).data or []
+            if not row or row[0].get("lat") is None or row[0].get("lng") is None:
+                return {}
+            heute = datetime.now(UTC).date()
+            tage = list(rng.nights())
+            return WeatherProvider().wetter_tage(
+                row[0]["lat"], row[0]["lng"], tage, heute,
+                normalwerte=self._klima_normalwerte(property_id, tage),
+            )
+        except Exception as exc:  # noqa: BLE001 — Anzeige-Beiwerk, nie den Kalender kippen
+            log.warning("kalender_wetter_nicht_ladbar", error=str(exc)[:200])
+            return {}
+
+    def _klima_normalwerte(
+        self, property_id: str, tage: "list[date]"
+    ) -> dict[str, object]:
+        """Langjährige Tagesmittel des Objekts als WetterTag je ISO-Datum.
+
+        Deckt die Tage jenseits des Vorhersagehorizonts ab (Kalendertag-genau,
+        jahresunabhängig — der Wert für den 14. Mai gilt in jedem Jahr)."""
+        from src.features.pricing.weather import WetterTag  # noqa: PLC0415
+
+        rows = (
+            self._db()
+            .table("klima_normalwerte")
+            .select("monat, tag, score, temp_c, niederschlag_mm, bewoelkung_pct")
+            .eq("property_id", property_id)
+            .execute()
+        ).data or []
+        if not rows:
+            return {}
+        je_kalendertag = {(r["monat"], r["tag"]): r for r in rows}
+        out: dict[str, object] = {}
+        for d in tage:
+            r = je_kalendertag.get((d.month, d.day))
+            if r is None:
+                continue
+            out[d.isoformat()] = WetterTag(
+                score=float(r["score"]),
+                quelle="saisonal",
+                temp_c=float(r["temp_c"]) if r.get("temp_c") is not None else None,
+                niederschlag_mm=(
+                    float(r["niederschlag_mm"])
+                    if r.get("niederschlag_mm") is not None
+                    else None
+                ),
+                bewoelkung_pct=(
+                    float(r["bewoelkung_pct"])
+                    if r.get("bewoelkung_pct") is not None
+                    else None
+                ),
+            )
+        return out
 
     @staticmethod
     def _build_days(
@@ -249,6 +348,8 @@ class CalendarService:
         rows: list[dict],
         effective: dict,
         min_stay: int | None,
+        wetter: dict[str, object] | None = None,
+        wartende: set[str] | None = None,
     ) -> list[DayAvailability]:
         """Tagesliste aus availability-Zeilen + effektiven Preisen bauen. Eine
         Quelle für Einzel- (get_availability) und Batch-Pfad (get_board), damit
@@ -282,6 +383,7 @@ class CalendarService:
             key = day.isoformat()
             row = by_date.get(key)
             eff = effective.get(key)
+            w = (wetter or {}).get(key)
             result.append(
                 DayAvailability(
                     date=day,
@@ -298,6 +400,14 @@ class CalendarService:
                     price=eff.price if eff else None,
                     price_source=eff.source if eff else "none",
                     price_factors=eff.factors if eff else None,
+                    preis_wartet_auf_freigabe=bool(
+                        wartende and key in wartende
+                    ),
+                    wetter_score=getattr(w, "score", None),
+                    wetter_quelle=getattr(w, "quelle", None),
+                    wetter_temp_c=getattr(w, "temp_c", None),
+                    wetter_niederschlag_mm=getattr(w, "niederschlag_mm", None),
+                    wetter_bewoelkung_pct=getattr(w, "bewoelkung_pct", None),
                     min_stay=min_stay,
                     closed_to_arrival=bool(
                         row.get("closed_to_arrival") if row else False
@@ -1850,6 +1960,21 @@ class CalendarService:
         # den Request auf so viele Round-Trips gestreckt wie der Zeitraum Tage hat.
         for block_start, block_end, cents in self._preisbloecke(days):
             self._push_channex_rate(property_id, block_start, block_end, cents)
+
+    def preisbloecke(
+        self, days: "list[EffectivePriceDay]"
+    ) -> list[tuple[date, date, int]]:
+        """Öffentliche Fassade für `_preisbloecke` (Pricing-Slice nutzt sie beim
+        Umlegen des Dynamic-Pricing-Schalters, damit die Verdichtungsregel nicht
+        ein zweites Mal entsteht)."""
+        return self._preisbloecke(days)
+
+    def push_channex_rate(
+        self, property_id: str, start: date, end: date, rate_cents: int | None
+    ) -> None:
+        """Öffentliche Fassade für `_push_channex_rate` (end EXKLUSIV), damit der
+        Pricing-Slice denselben Push-Weg nutzt statt eines zweiten."""
+        self._push_channex_rate(property_id, start, end, rate_cents)
 
     @staticmethod
     def _preisbloecke(

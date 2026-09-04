@@ -2,7 +2,8 @@
 
 // Dynamic-Pricing-Einstellungen je Objekt — Server-Actions gegen den FastAPI-
 // pricing-Slice (/api/v1/pricing/settings/{property_id}). Die Regel-Engine
-// berechnet täglich dynamic_prices; ein manueller price_override gewinnt immer.
+// berechnet täglich dynamic_prices; bei aktivem DP gewinnen sie vor einem
+// manuellen price_override, sonst greift dieser wieder (Resolver-Gate).
 import { ApiError, api } from "@/lib/api";
 import { currentToken } from "@/lib/session-token";
 
@@ -18,6 +19,42 @@ export type RateRuleMatch = {
 export type RateRule = { match: RateRuleMatch; adjust_pct: number };
 
 // Basispreis-Modus (Hostaway-Modell).
+/** Ein Regel-Vorschlag des KI-Beraters. `belege` sind die Zahlen, aus denen er
+ *  entstand — sie stehen in der Oberfläche daneben, damit man ihn prüfen kann
+ *  statt ihn glauben zu müssen. `begruendung` kommt von Gemini und kann fehlen
+ *  (KI nicht eingerichtet oder Tagesdeckel); der Vorschlag bleibt gültig. */
+export type KiVorschlag = {
+  feld: string;
+  titel: string;
+  wert_alt: unknown;
+  wert_neu: unknown;
+  belege: Record<string, number | string>;
+  begruendung: string | null;
+  /** Wirkung auf die Preise der nächsten 365 Tage — die eigentliche
+   *  Entscheidungsgrundlage. Eine Regel allein („ab 80 % → +10 %") sagt nicht,
+   *  wie viele Kronen das sind. `null`, wenn nicht berechenbar. */
+  wirkung: {
+    tage: number;
+    tage_geaendert: number;
+    schnitt_vorher: number;
+    schnitt_nachher: number;
+    max_plus: number;
+    max_minus: number;
+  } | null;
+};
+
+/** Aufschlag für lange Vorausbuchung. Es gilt die WEITESTE erreichte Stufe. */
+export type FarFutureRule = {
+  days_before: number;
+  uplift_pct: number;
+};
+
+/** Eine Stufe der Auslastungs-Leiter. Es gilt die HÖCHSTE erreichte Stufe. */
+export type OccupancyStep = {
+  ab_pct: number;
+  adjust_pct: number;
+};
+
 export type BaseMode = "data_driven" | "manual";
 export type BaseRateMode = "conservative" | "recommended" | "aggressive";
 
@@ -47,6 +84,12 @@ export type DpSettings = {
   weather_enabled: boolean;
   weather_max_adjust_pct: number;
   rate_rules: RateRule[];
+  // Auslastungs-Stufenleiter: nicht leer => ersetzt occupancy_sensitivity.
+  occupancy_steps: OccupancyStep[];
+  // Berechnete Preise warten auf den Freigabe-Knopf, statt sofort zu gehen.
+  freigabe_noetig: boolean;
+  // Aufschlag für lange Vorausbuchung. Leer = kein Aufschlag.
+  far_future: FarFutureRule[];
 };
 
 export type DpSettingsInput = Partial<Omit<DpSettings, "property_id">>;
@@ -64,6 +107,8 @@ export type DpOverviewItem = {
   base_rate: number | null;
   min_price: number | null;
   max_price: number | null;
+  freigabe_noetig: boolean;
+  offene_tage: number;
   // Verteilkanäle, auf denen das Objekt live ist: "platform" + OTA-Portal-Codes.
   channels: string[];
 };
@@ -74,7 +119,7 @@ type Result<T> =
 
 async function call<T>(
   path: string,
-  opts: { method?: "GET" | "PUT"; body?: unknown } = {},
+  opts: { method?: "GET" | "PUT" | "POST"; body?: unknown } = {},
 ): Promise<Result<T>> {
   const token = await currentToken();
   if (!token) return { ok: false, error: "Nicht angemeldet." };
@@ -117,6 +162,55 @@ export async function explainDpPrice(
   );
 }
 
+/** Regel-Vorschläge des KI-Beraters — EINSTELLUNGEN, keine Preise.
+ *  Eine leere Liste ist gültig; `hinweis` sagt dann, warum. */
+/** Was EINE Regel-Prüfung ergeben hat — auch wenn sie nichts vorschlägt. */
+export type KiPruefung = {
+  name: string;
+  titel: string;
+  ergebnis: "vorschlag" | "passt" | "zu_wenig_daten" | "ruht" | "aus";
+  grund: string;
+  belege: Record<string, number | string>;
+};
+
+export async function getKiVorschlaege(
+  propertyId: string,
+): Promise<
+  Result<{
+    property_id: string;
+    vorschlaege: KiVorschlag[];
+    hinweis: string | null;
+    pruefungen: KiPruefung[];
+  }>
+> {
+  return call(
+    `/pricing/settings/${encodeURIComponent(propertyId)}/ki-vorschlaege`,
+  );
+}
+
+/** Einen Vorschlag übernehmen. Der Server nimmt den WERT aus seiner eigenen,
+ *  frisch gerechneten Empfehlung — der Client schickt nur, welches Feld. */
+export async function kiVorschlagAnnehmen(
+  propertyId: string,
+  feld: string,
+): Promise<Result<DpSettings>> {
+  return call(
+    `/pricing/settings/${encodeURIComponent(propertyId)}/ki-vorschlaege/annehmen`,
+    { method: "POST", body: { feld } },
+  );
+}
+
+/** Einen Vorschlag ablehnen — er ruht, bis sich die Zahl deutlich ändert. */
+export async function kiVorschlagAblehnen(
+  propertyId: string,
+  feld: string,
+): Promise<Result<null>> {
+  return call(
+    `/pricing/settings/${encodeURIComponent(propertyId)}/ki-vorschlaege/ablehnen`,
+    { method: "POST", body: { feld } },
+  );
+}
+
 /** Dynamic-Pricing-Einstellungen setzen (Upsert; bei enabled sofortiger Recompute). */
 export async function saveDpSettings(
   propertyId: string,
@@ -126,4 +220,120 @@ export async function saveDpSettings(
     method: "PUT",
     body: input,
   });
+}
+
+/** Preis-Modus eines Tages. „dynamisch" ist der Standard (kein Eintrag). */
+export type Tagesmodus = "dynamisch" | "anpassung" | "manuell";
+
+export type TagesmodusEintrag = {
+  date: string;
+  modus: Tagesmodus;
+  adjust_pct: number | null;
+};
+
+export type FreigabeStand = {
+  property_id: string;
+  freigabe_noetig: boolean;
+  offen: number;
+};
+
+/** Modus für einen Datumsbereich setzen (Start und Ende einschliesslich). */
+export async function setTagesmodus(
+  propertyId: string,
+  input: {
+    von: string;
+    bis: string;
+    modus: Tagesmodus;
+    adjust_pct?: number | null;
+    preis?: number | null;
+  },
+): Promise<Result<{ property_id: string; tage: number; modus: string }>> {
+  return call(`/pricing/tagesmodus/${encodeURIComponent(propertyId)}`, {
+    method: "PUT",
+    body: input,
+  });
+}
+
+export async function getTagesmodi(
+  propertyId: string,
+  von: string,
+  bis: string,
+): Promise<Result<TagesmodusEintrag[]>> {
+  const q = new URLSearchParams({ von, bis }).toString();
+  return call(`/pricing/tagesmodus/${encodeURIComponent(propertyId)}?${q}`);
+}
+
+export async function getFreigabeStand(
+  propertyId: string,
+): Promise<Result<FreigabeStand>> {
+  return call(`/pricing/freigabe/${encodeURIComponent(propertyId)}`);
+}
+
+export async function freigabeErteilen(
+  propertyId: string,
+): Promise<Result<FreigabeStand>> {
+  return call(`/pricing/freigabe/${encodeURIComponent(propertyId)}`, {
+    method: "POST",
+  });
+}
+
+/** Durchschnittlicher Tagespreis je Aggressivitäts-Stufe (null = kein Basispreis). */
+export type StufenVorschau = {
+  property_id: string;
+  conservative: number | null;
+  recommended: number | null;
+  aggressive: number | null;
+};
+
+export async function getStufenVorschau(
+  propertyId: string,
+): Promise<Result<StufenVorschau>> {
+  return call(`/pricing/stufen-vorschau/${encodeURIComponent(propertyId)}`);
+}
+
+/** Ein Tag der Marktkurve: Median der Umgebung, ohne Fremdnamen. */
+export type MarktPunkt = {
+  tag: string;
+  markt_median: number;
+  p25: number | null;
+  p75: number | null;
+  anzahl: number;
+  /** Eigener berechneter Preis am selben Tag — fuer den Abstand. */
+  eigener_preis: number | null;
+};
+
+/** Ein beobachteter Angebotspreis der Region — ein Punkt auf der Karte.
+ *  Kein Name, keine ID, kein Link; der Ort ist auf ~100 m gerundet. */
+export type MarktAngebot = {
+  /** Aufenthaltstag, fuer den dieser Preis gilt. */
+  tag: string;
+  lat: number;
+  lng: number;
+  preis: number;
+};
+
+/** Preisniveau der Umgebung: Kennzahlen + Kurve fuer die Karte. */
+export type MarktStand = {
+  property_id: string;
+  vergleichsobjekte: number;
+  mindestens_noetig: number;
+  radius_km: number;
+  markt_median: number | null;
+  waehrung: string | null;
+  /** Wann WIR zuletzt abgerufen haben — nicht, wann der Markt sich aenderte. */
+  stand_vom: string | null;
+  quelle: string | null;
+  /** Standort des eigenen Objekts fuer die Karte. */
+  lat: number | null;
+  lng: number | null;
+  verlauf: MarktPunkt[];
+  /** Alle Angebotspreise je Stichtag (je Tag gedeckelt, Server). */
+  angebote: MarktAngebot[];
+  hinweis: string | null;
+};
+
+export async function getMarktStand(
+  propertyId: string,
+): Promise<Result<MarktStand>> {
+  return call(`/pricing/markt-stand/${encodeURIComponent(propertyId)}`);
 }

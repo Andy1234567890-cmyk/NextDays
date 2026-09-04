@@ -27,7 +27,7 @@ export type DayAvailability = {
   date: string; // YYYY-MM-DD
   status: AvailabilityStatus;
   source: AvailabilitySource;
-  // Tagespreis (Resolver override>dynamic>weekday>base); null ohne Rate-Plan.
+  // Tagespreis (Resolver: dynamic bei aktivem DP > override > weekday > base); null ohne Rate-Plan.
   price: number | null;
   price_source: string; // override | dynamic | weekday | base | none
   price_factors: Record<string, number> | null;

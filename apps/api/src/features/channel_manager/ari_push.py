@@ -1977,6 +1977,16 @@ class AriPushMixin:
         )
 
         resolver = PricingResolver(service_client=db)
+        # Tage, die auf die Preis-Freigabe warten, gehören NICHT ins Soll: der
+        # Reconciler sähe sie sonst als Drift und schickte sie an die Portale —
+        # genau der Weg, an dem der frühere "Autopilot" scheiterte, weil sein
+        # Gate nur im Recompute sass. Alle drei Push-Wege fragen dieselbe
+        # Stelle (siehe pricing/freigabe.py).
+        from src.features.pricing.freigabe import (  # noqa: PLC0415
+            gesperrte_tage,
+        )
+
+        gesperrt = gesperrte_tage(db, property_id, start, end + timedelta(days=1))
         out: dict[str, dict[str, int]] = {}
         for rp in local_rate_plan_ids:
             try:
@@ -2005,6 +2015,8 @@ class AriPushMixin:
                 if cents <= 0:
                     continue
                 iso = entry.date.isoformat()
+                if iso in gesperrt:
+                    continue
                 faktor = faktoren.get(iso)
                 if faktor is not None:
                     cents = max(1, int(round(cents * faktor)))

@@ -202,6 +202,30 @@ class RateRule(BaseModel):
     adjust_pct: float = Field(ge=-100, le=200)
 
 
+class FarFutureRule(BaseModel):
+    """Aufschlag fuer lange Vorausbuchung: ab `days_before` Tagen `uplift_pct`.
+
+    Gegenstueck zu LastMinuteRule. Es gilt die WEITESTE erreichte Schwelle.
+    Grenzen deckungsgleich mit dem DB-CHECK `dp_far_future_gueltig` (0555).
+    """
+
+    days_before: int = Field(ge=1, le=730)
+    uplift_pct: float = Field(ge=0, le=300)
+
+
+class OccupancyStep(BaseModel):
+    """Eine Stufe der Auslastungs-Leiter: ab `ab_pct` Auslastung `adjust_pct`.
+
+    Es gilt die HÖCHSTE erreichte Stufe — kein Addieren, keine Interpolation.
+    Die Grenzen sind deckungsgleich mit dem DB-CHECK
+    `dp_occupancy_steps_gueltig` (0550): weicht eines von beiden ab, wirft die
+    Datenbank einen 500 auf einen Wert, den das Schema durchgelassen hat.
+    """
+
+    ab_pct: float = Field(ge=0, le=100)
+    adjust_pct: float = Field(ge=-90, le=300)
+
+
 class DpSettingsResponse(BaseModel):
     """Dynamic-Pricing-Konfiguration eines Objekts (dp_settings)."""
 
@@ -230,6 +254,14 @@ class DpSettingsResponse(BaseModel):
     weather_enabled: bool = False
     weather_max_adjust_pct: float = 10.0
     rate_rules: list[RateRule] = []
+    # Auslastungs-Stufenleiter (0550). Nicht leer => ersetzt
+    # occupancy_sensitivity fuer den Auslastungs-Faktor.
+    occupancy_steps: list[OccupancyStep] = []
+    # Aufschlag fuer lange Vorausbuchung (0555). Leer = kein Aufschlag.
+    far_future: list[FarFutureRule] = []
+    # Freigabe vor dem Senden (0554): true = berechnete Preise warten auf den
+    # Knopf, statt sofort an die Portale zu gehen.
+    freigabe_noetig: bool = False
 
 
 class DpSettingsUpdate(BaseModel):
@@ -258,6 +290,11 @@ class DpSettingsUpdate(BaseModel):
     weather_enabled: bool | None = None
     weather_max_adjust_pct: float | None = Field(default=None, ge=0, le=100)
     rate_rules: list[RateRule] | None = None
+    # Hoechstens 20 Stufen — dieselbe Grenze wie der DB-CHECK aus 0550.
+    occupancy_steps: list[OccupancyStep] | None = Field(default=None, max_length=20)
+    # Hoechstens 10 Stufen — dieselbe Grenze wie der DB-CHECK aus 0555.
+    far_future: list[FarFutureRule] | None = Field(default=None, max_length=10)
+    freigabe_noetig: bool | None = None
 
 
 class DpOverviewItem(BaseModel):
@@ -280,6 +317,10 @@ class DpOverviewItem(BaseModel):
     # Buchungsplattform, wenn status=active) + aktive OTA-Portal-Codes aus
     # channex_channel_connection (z. B. BookingCom, AirBNB, VRBO, Expedia).
     channels: list[str] = []
+    # Wartet dieses Objekt mit dem Senden auf eine Freigabe, und wie viele
+    # berechnete Tage stehen aus? 0 = nichts offen (oder keine Freigabepflicht).
+    freigabe_noetig: bool = False
+    offene_tage: int = 0
 
 
 class DpOverviewResponse(BaseModel):

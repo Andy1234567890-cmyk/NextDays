@@ -29,6 +29,10 @@ log = get_logger("nextdays.pricing.recompute")
 
 # Standard-Planungshorizont (Tage ab heute), wie im Channex-state_length-Init.
 DEFAULT_HORIZON_DAYS = 540
+# Horizont für den Min/Max-Vorschlag (suggest_range). Ein volles Jahr, damit
+# JEDE Saison einmal vorkommt: mit 120 Tagen fehlte im Winter die Hochsaison
+# komplett, und der vorgeschlagene Höchstpreis lag entsprechend zu niedrig.
+VORSCHLAG_HORIZONT_TAGE = 365
 # Fenster (Tage) für das Auslastungssignal um einen Tag herum.
 _OCCUPANCY_WINDOW = 30
 
@@ -115,28 +119,94 @@ class DynamicPricingRecompute:
 
         results = self._price_curve(property_id, base, settings, today, rng_start, rng_end)
         tenant_id = self._tenant_for_property(property_id)
-        rows = [
-            {
-                "property_id": property_id,
-                "date": cur.isoformat(),
-                "price": res.price,
-                "min_stay": res.min_stay,
-                # Faktor-Aufschlüsselung persistieren („Warum dieser Preis?").
-                "factors": {k: round(v, 4) for k, v in res.factors.items()},
-                "computed_at": datetime.now(UTC).isoformat(),
-            }
-            for cur, res in results
-        ]
+        # Tagesmodus je Datum: 'anpassung' verschiebt den berechneten Preis um
+        # einen Prozentsatz, 'manuell' nimmt den Tag ganz aus der Automatik.
+        # Der ANGEPASSTE Wert wird gespeichert, nicht der rohe — sonst müsste
+        # jeder Leser (Resolver, Channex-Push, Kalender, Quote) die Anpassung
+        # selbst nachrechnen, und wer es vergisst, sendet den falschen Preis.
+        modi = self._tagesmodi(property_id, rng_start, rng_end)
+        rows = []
+        for cur, res in results:
+            iso = cur.isoformat()
+            eintrag = modi.get(iso)
+            modus = (eintrag or {}).get("modus", "dynamisch")
+            if modus == "manuell":
+                # Der feste Preis steht in price_overrides und gewinnt dort
+                # ohnehin gegen dynamic; hier gar nicht erst schreiben, damit
+                # kein Geisterpreis zurückbleibt, wenn der Override fällt.
+                continue
+            preis = res.price
+            faktoren = {k: round(v, 4) for k, v in res.factors.items()}
+            if modus == "anpassung":
+                pct = float((eintrag or {}).get("adjust_pct") or 0.0)
+                preis = round(preis * (1 + pct / 100), 2)
+                # Als eigener Faktor sichtbar: „Warum dieser Preis?" muss die
+                # Handanpassung nennen, sonst wirkt sie wie ein Rechenfehler.
+                faktoren["tagesanpassung"] = round(1 + pct / 100, 4)
+            rows.append(
+                {
+                    "property_id": property_id,
+                    "date": iso,
+                    "price": preis,
+                    "min_stay": res.min_stay,
+                    "factors": faktoren,
+                    "computed_at": datetime.now(UTC).isoformat(),
+                }
+            )
 
         if rows:
             # In dynamic_prices schreiben → Kalender, Quote UND die eigene
             # Plattform (booking_engine) lesen den Preis automatisch über den
-            # Resolver (Pull, Priorität override > dynamic > weekday > base).
-            # KEIN Push dorthin nötig. Nur externe OTAs (Channex) müssen den
-            # Preis aktiv geschickt bekommen — das macht _push_to_channex.
-            self._db().table("dynamic_prices").upsert(
-                rows, on_conflict="property_id,date"
-            ).execute()
+            # Resolver (Pull). KEIN Push dorthin nötig. Nur externe OTAs
+            # (Channex) müssen den Preis aktiv geschickt bekommen — das macht
+            # _push_to_channex.
+            #
+            # `gesendet_am` (0554) trennt „gerechnet" von „an die Portale
+            # übergeben". Zwei Fehler stecken sonst darin (live 04.09.2026:
+            # „540 Tage nicht gesendet", obwohl alle 540 längst draußen waren):
+            #   * Der normale Push stempelte nie → nach dem Einschalten der
+            #     Freigabe galt ALLES als ungesendet, der Reconciler nahm es
+            #     aus dem Soll.
+            #   * Ein einmal gestempelter Tag blieb gestempelt, auch wenn der
+            #     Preis sich änderte → die Freigabe schützte nur beim ersten Mal.
+            # Deshalb: geänderte Preise verlieren den Stempel (Wurzel 1, der
+            # Gegenzustand), gesendete bekommen ihn.
+            bestand = self._bestand_preise(property_id, rng_start, rng_end)
+            geaendert = [
+                r for r in rows if bestand.get(r["date"]) != float(r["price"])
+            ]
+            unveraendert = [
+                r for r in rows if bestand.get(r["date"]) == float(r["price"])
+            ]
+            if unveraendert:
+                self._db().table("dynamic_prices").upsert(
+                    unveraendert, on_conflict="property_id,date"
+                ).execute()
+            if geaendert:
+                self._db().table("dynamic_prices").upsert(
+                    [{**r, "gesendet_am": None} for r in geaendert],
+                    on_conflict="property_id,date",
+                ).execute()
+            # Freigabe verlangt? Dann gehen nur die bereits freigegebenen Tage
+            # raus. Gerechnet und gespeichert ist alles — der Kalender zeigt
+            # weiterhin die echten Preise, nur die Portale warten.
+            #
+            # Die Sperre liegt in `freigabe.gesperrte_tage`, weil ALLE drei
+            # Push-Wege sie brauchen (hier, ari_push, full_sync). Ein Gate in
+            # nur einem wäre die Attrappe, an der schon der frühere
+            # "Autopilot"-Modus scheiterte.
+            from .freigabe import gesperrte_tage  # noqa: PLC0415
+
+            gesperrt = gesperrte_tage(self._db(), property_id, rng_start, rng_end)
+            if gesperrt:
+                rows = [r for r in rows if r["date"] not in gesperrt]
+                if not rows:
+                    log.info(
+                        "dynamic_pricing_alles_wartet_auf_freigabe",
+                        property_id=property_id,
+                        gesperrt=len(gesperrt),
+                    )
+                    return len(gesperrt)
             # EIN Schalter, EINE Wahrheit: enabled heißt, die dynamischen
             # Tagespreise gelten überall — lokal (Resolver-Pull) UND auf den
             # Portalen. Der frühere Autopilot-Zwischenmodus („rechnen, aber
@@ -144,13 +214,123 @@ class DynamicPricingRecompute:
             # Full-Sync bauen ihre Soll-Kurve aus demselben Resolver und
             # pushten die Preise ohnehin. Ein Gate nur hier gaukelte eine
             # Kontrolle vor, die es nie gab.
-            self._push_to_channex(tenant_id, property_id, rows)
+            if self._push_to_channex(tenant_id, property_id, rows) and not gesperrt:
+                # Alles im Bereich ist übergeben → stempeln. Bei Freigabepflicht
+                # (gesperrt nicht leer) sind die gepushten Tage genau die schon
+                # gestempelten; die wartenden bleiben NULL, bis jemand freigibt.
+                self._gesendet_stempeln(property_id, rng_start, rng_end)
         log.info(
             "dynamic_pricing_recompute_property",
             property_id=property_id,
             days=len(rows),
         )
         return len(rows)
+
+    def _bestand_preise(
+        self, property_id: str, von: date, bis: date
+    ) -> dict[str, float]:
+        """Bereits gespeicherte Tagespreise {ISO: preis} — um zu erkennen,
+        welche Tage sich WIRKLICH ändern. Fail-soft leer: dann gilt alles als
+        geändert und verliert den Stempel — der vorsichtige Fehler."""
+        try:
+            rows = fetch_all_rows(
+                self._db()
+                .table("dynamic_prices")
+                .select("date, price")
+                .eq("property_id", property_id)
+                .gte("date", von.isoformat())
+                .lt("date", bis.isoformat())
+                .order("date")
+            )
+        except Exception as exc:  # noqa: BLE001
+            log.warning("dynamic_prices_bestand_unlesbar", error=str(exc)[:200])
+            return {}
+        out: dict[str, float] = {}
+        for r in rows:
+            try:
+                out[str(r["date"])[:10]] = float(r["price"])
+            except (TypeError, ValueError, KeyError):
+                continue
+        return out
+
+    def _gesendet_stempeln(self, property_id: str, von: date, bis: date) -> None:
+        """Alle noch ungestempelten Tage im Bereich als übergeben markieren.
+
+        „Übergeben" heißt: `push_rates_batch` hat die Absicht in der
+        Restriktions-Outbox persistiert; von dort zieht der Cron nach, falls
+        Channex gerade nicht antwortet. Best-effort, aber laut."""
+        try:
+            self._db().table("dynamic_prices").update(
+                {"gesendet_am": datetime.now(UTC).isoformat()}
+            ).eq("property_id", property_id).is_("gesendet_am", "null").gte(
+                "date", von.isoformat()
+            ).lt("date", bis.isoformat()).execute()
+        except Exception as exc:  # noqa: BLE001
+            log.warning(
+                "dynamic_prices_stempel_fehlgeschlagen",
+                property_id=property_id,
+                error=str(exc)[:200],
+            )
+
+    def _tagesmodi(
+        self, property_id: str, von: date, bis: date
+    ) -> dict[str, dict]:
+        """Tagesmodus je ISO-Datum. Keine Zeile = 'dynamisch' (Standard).
+
+        Fail-SOFT bewusst: fehlt die Tabelle (Migration nicht eingespielt),
+        rechnet die Automatik wie bisher weiter. Das ist hier richtig, weil
+        der Standard ohnehin 'dynamisch' ist — ein leeres Ergebnis bedeutet
+        dasselbe wie "keine Sonderbehandlung", nicht "Regel verloren".
+        """
+        try:
+            res = (
+                self._db()
+                .table("dp_day_modes")
+                .select("date, modus, adjust_pct")
+                .eq("property_id", property_id)
+                .gte("date", von.isoformat())
+                .lt("date", bis.isoformat())
+                .execute()
+            ).data or []
+        except Exception as exc:  # noqa: BLE001 — kein Modus = Standard
+            log.warning("dp_day_modes_unavailable", error=str(exc))
+            return {}
+        return {r["date"]: r for r in res if isinstance(r.get("date"), str)}
+
+    # -- Öffentliche Fassade für Vorschauen -----------------------------------
+    # Der KI-Regel-Berater rechnet mit DENSELBEN Funktionen eine Wirkungs-
+    # vorschau ("was macht dieser Vorschlag mit den Preisen?"). Eigene
+    # Nachbauten dort würden abweichen, sobald hier etwas geändert wird — die
+    # Vorschau zeigte dann etwas anderes als der spätere Lauf.
+    def load_base_price(self, property_id: str) -> float | None:
+        """Basispreis des Objekts (None = keiner hinterlegt)."""
+        return self._load_base_price(property_id)
+
+    def preis_kurve(
+        self,
+        property_id: str,
+        base: float,
+        settings: DpSettings,
+        today: date,
+        rng_start: date,
+        rng_end: date,
+    ) -> list[tuple[date, DayResult]]:
+        """Tageskurve für Vorschauen (Stufen-Vorschau, KI-Berater).
+
+        Schreibt KEINE dynamic_prices. Der Pfad legt aber wie der echte Lauf
+        Pickup-Snapshots ab (idempotent je Tag) — die Vorschau soll denselben
+        Weg gehen wie der Lauf, sonst zeigt sie etwas anderes.
+
+        `_settings_row` wird nachgeladen, falls der Aufrufer die Zeile nicht
+        selbst geladen hat: `_market_by_date` liest `market_key`/`comp_refs`
+        daraus. Ohne diesen Schritt rechnete jede Vorschau ein von Hand
+        gepflegtes Comp-Set stillschweigend als „kein Comp-Set" (Umgebung) —
+        und der KI-Berater hätte eine andere Wirkung gezeigt als der Lauf."""
+        if self._settings_row is None:
+            self._load_settings(property_id)
+        return self._price_curve(
+            property_id, base, settings, today, rng_start, rng_end
+        )
 
     def _price_curve(
         self,
@@ -167,7 +347,9 @@ class DynamicPricingRecompute:
         tenant_id = self._tenant_for_property(property_id)
         event_pct = self._event_pct_by_date(tenant_id, rng_start, rng_end)
         booked = self._booked_dates(property_id, rng_start, rng_end)
-        market = self._market_by_date(settings, tenant_id, rng_start, rng_end)
+        market = self._market_by_date(
+            property_id, settings, tenant_id, rng_start, rng_end
+        )
 
         # Pickup: heutigen Belegungs-Snapshot je Aufenthaltstag persistieren
         # (Lern-Fundament + Velocity-Quelle). Best-effort — fehlt die Tabelle/
@@ -203,7 +385,7 @@ class DynamicPricingRecompute:
         return out
 
     def suggest_range(
-        self, property_id: str, *, horizon_days: int = 120
+        self, property_id: str, *, horizon_days: int = VORSCHLAG_HORIZONT_TAGE
     ) -> dict[str, float] | None:
         """Empfohlene Preisspanne (min/max) für Smart Pricing aus der ECHTEN
         Dynamic-Pricing-Engine über den Horizont — die Extrema der von Nachfrage/
@@ -230,7 +412,12 @@ class DynamicPricingRecompute:
         return {"min": round(min(prices)), "max": round(max(prices))}
 
     def _market_by_date(
-        self, settings: DpSettings, tenant_id: str | None, start: date, end: date
+        self,
+        property_id: str,
+        settings: DpSettings,
+        tenant_id: str | None,
+        start: date,
+        end: date,
     ) -> dict[str, MarketDay]:
         """Markt-Signal je Tag über den konfigurierten Provider — NUR wenn der
         Vermieter Marktdaten aktiviert hat (market_enabled). Ohne Aktivierung oder
@@ -250,27 +437,55 @@ class DynamicPricingRecompute:
             days.append(cur)
             cur += timedelta(days=1)
         try:
-            provider = self._market_provider(comp_refs, tenant_id)
+            provider = self._market_provider(
+                property_id, comp_refs, tenant_id
+            )
             return provider.market_signal(market_key, comp_refs, days)
         except Exception as exc:  # noqa: BLE001 — Markt-Signal ist best-effort
             log.warning("market_signal_failed", error=str(exc))
             return {}
 
     def _market_provider(
-        self, comp_refs: list[str], tenant_id: str | None
+        self, property_id: str, comp_refs: list[str], tenant_id: str | None
     ) -> MarketSignalProvider:
-        """Markt-Provider wählen (Roadmap-Phase 3). Ist ein Comp-Set gesetzt UND
-        kein expliziter externer Provider konfiguriert, nutzt die Plattform-Quelle
-        (eigene Daten, SiteMinder-Prinzip). Sonst der env-konfigurierte Provider
-        (AirDNA/Null). Späterer Booking-Insights-Provider dockt hier an."""
+        """Markt-Provider wählen.
+
+        Reihenfolge, vom Speziellen zum Allgemeinen:
+          1. Ein von Hand gepflegtes Comp-Set gewinnt — wer Objekte ausdrücklich
+             benennt, will genau die verglichen haben (PlatformProvider).
+          2. Sonst die MARKTBEOBACHTUNG: das Preisniveau der Umgebung, das der
+             tägliche Lauf im Raster abgelegt hat (`markt_beobachtung`). Das ist
+             der Normalfall.
+          3. Ist für die Zelle nichts hinterlegt, der UMKREIS über die eigene
+             Plattform. Er bleibt als Rückfall, greift aber selten: gemessen am
+             04.09.2026 haben 40 von 44 aktiven Objekten keinen einzigen
+             Nachbarn eines fremden Betriebs, weil erst fünf Betriebe auf der
+             Plattform sind.
+          4. Ein ausdrücklich konfigurierter externer Anbieter (AirDNA) hat
+             Vorrang vor allem — wer dafür zahlt, will ihn nutzen.
+
+        Kein Provider ruft hier eine Fremdquelle ab: alle lesen nur. Eine
+        Preisberechnung hängt damit nie an der Erreichbarkeit eines Dritten.
+        """
         from src.core.config import get_settings
 
         env_choice = (get_settings().market_data_provider or "").strip().lower()
-        if comp_refs and env_choice in ("", "null", "platform") and self._client is not None:
+        if env_choice not in ("", "null", "platform", "umkreis", "umgebung"):
+            return get_market_provider()
+        if self._client is None:
+            return get_market_provider()
+        if comp_refs:
             from .market.platform import PlatformProvider
 
             return PlatformProvider(self._client, tenant_id)
-        return get_market_provider()
+        from .market.umgebung import UmgebungProvider
+
+        umgebung = UmgebungProvider(self._client, property_id)
+        if umgebung.hat_daten():
+            return umgebung
+        from .market.umkreis import UmkreisProvider
+
+        return UmkreisProvider(self._client, property_id, tenant_id)
 
     # -- Pickup (Roadmap-Phase 2) -------------------------------------------
     # Fenster (Tage), über das die Pickup-Geschwindigkeit gemessen wird: Stand
@@ -676,12 +891,19 @@ class DynamicPricingRecompute:
         return bool(next1 and free_prev and prev2)
 
     # -- Verteilung ----------------------------------------------------------
-    def _apply_overrides(
+    def _apply_overrides(  # noqa: F811  # verwaist, siehe Docstring
         self, property_id: str, rows: list[dict]
     ) -> list[dict]:
-        """Rohe dynamic_prices-`rows` mit manuellen Tagespreisen überlagern, damit
-        der an Channex gesendete Preis der effektive ist (override > dynamic). Gibt
-        eine NEUE Liste zurück; die übergebenen (persistierten) Zeilen bleiben roh."""
+        """VERWAIST — hat seit dem 04.09.2026 keinen Aufrufer mehr.
+
+        Überlagerte die berechneten Tagespreise vor dem Channex-Push mit
+        `price_overrides` (alte Rangfolge override > dynamic). Genau das ist
+        entfallen: bei eingeschaltetem Dynamic Pricing gewinnt jetzt der
+        berechnete Preis, sonst wird gar nicht erst gerechnet. Nicht wieder
+        einhängen, ohne die Rangfolge in `PricingResolver._effective_for_day`
+        gleichzeitig zu ändern — sonst widersprechen sich Anzeige und Portal-Push.
+
+        Bleibt vorerst stehen (kein Löschauftrag)."""
         span = [_as_date(r["date"]) for r in rows]
         overrides = (
             self._db()
@@ -707,20 +929,26 @@ class DynamicPricingRecompute:
 
     def _push_to_channex(
         self, tenant_id: str | None, property_id: str, rows: list[dict]
-    ) -> None:
+    ) -> bool:
         """Geänderte Tage als Restrictions (Preis in Cent + Min-Stay) an Channex
         pushen. Run-Length-Encoding: aufeinanderfolgende Tage mit gleichem
         (price, min_stay) werden zu einem Intervall gebündelt. Best-effort —
-        Fehler dürfen das Schreiben nicht kippen (reconcile-Cron gleicht ab)."""
+        Fehler dürfen das Schreiben nicht kippen (reconcile-Cron gleicht ab).
+
+        True = die Absicht liegt in der Outbox (übergeben), False = nichts
+        übergeben. Der Aufrufer stempelt nur bei True."""
         if not tenant_id or self._client is None or not rows:
-            return
-        # Manuelle Tagespreise (price_overrides, z. B. Saisonpreise) gewinnen IMMER —
-        # lokal über den Resolver (override > dynamic) UND nach außen: ohne diese
-        # Überlagerung pusht der Autopilot seinen rohen dynamic_prices-Wert an
-        # Channex und überschreibt bei den OTAs einen gesetzten Saisonpreis
-        # (Gegenzustand, Wurzel 1). Die persistierten dynamic_prices bleiben roh
-        # (reine Empfehlung/Vorschau) — nur der GESENDETE Preis wird effektiv.
-        rows = self._apply_overrides(property_id, rows)
+            return False
+        # KEINE Überlagerung mit price_overrides mehr: hierher kommt man nur aus
+        # `recompute_property`, das bei `not settings.enabled` schon vorher
+        # abbricht — an dieser Stelle ist Dynamic Pricing also per Definition AN,
+        # und dann gilt der berechnete Preis. Würde hier weiter der manuelle
+        # Tagespreis daraufgelegt, ginge an die Portale genau der Wert, den der
+        # Autopilot ersetzen soll (live belegt am 04.09.2026: ein Saisonpreis von
+        # 577,50 DKK vom 07.08. verdeckte die berechneten 569–715 DKK).
+        # Der Resolver hält dieselbe Rangfolge (`_effective_for_day`); die
+        # price_overrides-Zeilen bleiben unangetastet und greifen sofort wieder,
+        # sobald die Agentur Dynamic Pricing abschaltet.
         try:
             from src.features.channel_manager.channex_client import (
                 ChannexBudgetExhausted,
@@ -768,6 +996,7 @@ class DynamicPricingRecompute:
                 )
                 seg_start = i
             cm.push_rates_batch(tenant_id, property_id, segments)
+            return True
         except ChannexBudgetExhausted:
             # MUSS bis _run_job durchschlagen, damit der Job DEFERRED wird (statt
             # fälschlich 'done'): das kontoweite Channex-Budget ist erschöpft, der
@@ -781,3 +1010,4 @@ class DynamicPricingRecompute:
                 property_id=property_id,
                 error=str(exc),
             )
+            return False

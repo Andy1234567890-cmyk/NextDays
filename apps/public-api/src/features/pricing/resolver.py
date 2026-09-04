@@ -4,10 +4,16 @@ Vorher lagen Preise in vier unverbundenen Quellen, die nicht zusammenspielten
 (Objekt-Preise erschienen nicht im Kalender/Quote). Dieser Resolver vereint sie:
 
   effective_price(property_id, day) -> Effektivpreis EINES Tages in der Reihenfolge
-    manueller price_override(Tag) > dynamic_price(Regel-Engine, Tag)
+    dynamic_price(Regel-Engine, Tag) > manueller price_override(Tag)
     > weekday_price(Wochentag, falls custom_by_weekday) > rate_plan.base_price.
-    Kein Preis vorhanden → None (kein erfundener Fallback). Ein manuell gesetzter
-    Override gewinnt IMMER über den Dynamic-Pricing-Vorschlag.
+    Kein Preis vorhanden → None (kein erfundener Fallback).
+
+    Der dynamische Preis steht dabei NUR zur Verfügung, wenn die Agentur Dynamic
+    Pricing für das Objekt eingeschaltet hat (`dp_settings.enabled`); sonst wird
+    er gar nicht erst geladen. Ab dem Einschalten übernimmt der Autopilot die
+    Preisgestaltung nach den eingestellten Kriterien und überstimmt bestehende
+    Tagespreise. Beim Ausschalten gilt sofort wieder der manuelle Tagespreis —
+    seine Zeile in `price_overrides` bleibt die ganze Zeit unangetastet stehen.
 
   quote(req) -> vollständige Buchungs-Aufschlüsselung: nimmt die Effektiv-Tages-
     preise, wendet Längenpreis/Kurzaufenthalt/Extra-Gast pro Nacht an, dann
@@ -519,13 +525,45 @@ class PricingResolver:
                 out[day] = price
         return out
 
+    def _dp_enabled(self, property_id: str) -> bool:
+        """Hat die Agentur Dynamic Pricing für DIESES Objekt eingeschaltet?
+
+        Das Gate für die gesamte Rangfolge (siehe `_effective_for_day`). Es sitzt
+        bewusst am LADEN und nicht an der Auswertung: bei `false` kommt gar kein
+        dynamic_price in den Resolver, damit greifen sofort wieder Override →
+        Wochentag → Basis. Die berechneten Zeilen bleiben dabei unangetastet in
+        `dynamic_prices` stehen (sie sind Vorschau/Empfehlung) — ohne dieses Gate
+        wären sie nach dem Abschalten Geisterpreise, die weiter gälten.
+
+        Fail-CLOSED: fehlende Zeile/Tabelle oder Query-Fehler = DP AUS. Ein
+        stiller Fehler darf nie dazu führen, dass der Autopilot den manuellen
+        Preis des Betriebs überstimmt."""
+        try:
+            res = (
+                self._db()
+                .table("dp_settings")
+                .select("enabled")
+                .eq("property_id", property_id)
+                .limit(1)
+                .execute()
+            ).data or []
+        except Exception as exc:  # noqa: BLE001 — fehlende Tabelle = DP aus
+            log.warning("dp_settings_unavailable", error=str(exc))
+            return False
+        return bool(res) and bool(res[0].get("enabled"))
+
     def _load_dynamic(
         self, property_id: str, check_in: date, check_out: date
     ) -> dict[str, dict]:
         """Dynamic-Pricing-Tagespreise (Regel-Engine) inkl. Faktor-Aufschlüsselung.
         {ISO-Datum: {"price": float, "factors": dict}}. Optional wie die Konfig:
         fehlt die Tabelle (nicht migriert) oder die factors-Spalte → leer/None, der
-        Resolver fällt auf weekday/base zurück (kein erfundener Preis)."""
+        Resolver fällt auf weekday/base zurück (kein erfundener Preis).
+
+        Ist Dynamic Pricing für das Objekt AUS, wird nichts geladen — der zuvor
+        berechnete Bestand darf dann nicht mehr wirken (siehe `_dp_enabled`)."""
+        if not self._dp_enabled(property_id):
+            return {}
         try:
             res = (
                 self._db()
@@ -554,7 +592,8 @@ class PricingResolver:
     def effective_price(
         self, property_id: str, day: date, *, rate_plan_id: str | None = None
     ) -> EffectivePriceDay:
-        """Effektivpreis EINES Tages: rate_plan > override > dynamic > weekday > base.
+        """Effektivpreis EINES Tages: rate_plan > dynamic (nur bei aktivem DP)
+        > override > weekday > base.
 
         `rate_plan_id` optional — nur gesetzt, wenn ein KONKRETER Rate-Plan bepreist
         wird (Channex-Push pro Rate-Plan, Hotel-Quote). Ohne ihn bleibt das Verhalten
@@ -580,9 +619,12 @@ class PricingResolver:
             return EffectivePriceDay(
                 date=day, price=rate_plan_overrides[key], source="rate_plan"
             )
-        # Manueller Property-Override gewinnt vor Dynamic Pricing.
-        if key in overrides:
-            return EffectivePriceDay(date=day, price=overrides[key], source="override")
+        # Dynamic Pricing gewinnt vor dem manuellen Tagespreis — aber NUR, wenn die
+        # Agentur es für dieses Objekt eingeschaltet hat: `dynamic` ist sonst leer
+        # (Gate in `_load_dynamic`/`_load_dynamic_bulk`). Ab dem Einschalten
+        # übernimmt der Autopilot die Preisgestaltung nach den eingestellten
+        # Kriterien; beim Ausschalten greift der manuelle Preis sofort wieder,
+        # weil seine Zeile in `price_overrides` unangetastet stehen bleibt.
         if key in dynamic:
             return EffectivePriceDay(
                 date=day,
@@ -590,6 +632,8 @@ class PricingResolver:
                 source="dynamic",
                 factors=dynamic[key].get("factors"),
             )
+        if key in overrides:
+            return EffectivePriceDay(date=day, price=overrides[key], source="override")
         weekday = config.weekday_price(day)
         if weekday is not None:
             return EffectivePriceDay(date=day, price=weekday, source="weekday")
@@ -656,7 +700,8 @@ class PricingResolver:
     ) -> list[EffectivePriceDay]:
         """Tages-Preiskurve EINES Rate-Plans über [check_in, check_out).
 
-        manual: base + eigene Datumspreise > override > dynamic > weekday > base.
+        manual: base + eigene Datumspreise > dynamic (nur bei aktivem DP)
+        > override > weekday > base.
         derived: Parent-Kurve rekursiv auflösen, dann pro Tag den Offset anwenden
         (erst Betrag, dann Prozent; ≤ 0 → kein Preis). Property-weite override/
         dynamic/weekday gelten NUR für manual — ein abgeleiteter Preis folgt
@@ -741,9 +786,40 @@ class PricingResolver:
                 out.setdefault(pid, {})[day] = price
         return out
 
+    def _dp_enabled_bulk(self, property_ids: list[str]) -> set[str]:
+        """Die Objekte aus `property_ids`, für die Dynamic Pricing AN ist.
+
+        Sammelabfrage statt `_dp_enabled` je Objekt — der Board-Pfad lädt
+        hunderte Objekte, eine Query je Objekt wäre ein N+1. Fail-CLOSED wie
+        der Einzelpfad: wer nicht in der Menge steht, hat DP aus."""
+        if not property_ids:
+            return set()
+        try:
+            res = (
+                self._db()
+                .table("dp_settings")
+                .select("property_id, enabled")
+                .in_("property_id", property_ids)
+                .execute()
+            ).data or []
+        except Exception as exc:  # noqa: BLE001 — fehlende Tabelle = DP aus
+            log.warning("dp_settings_bulk_unavailable", error=str(exc))
+            return set()
+        return {
+            r["property_id"]
+            for r in res
+            if isinstance(r.get("property_id"), str) and r.get("enabled")
+        }
+
     def _load_dynamic_bulk(
         self, property_ids: list[str], check_in: date, check_out: date
     ) -> dict[str, dict[str, dict]]:
+        # Nur Objekte MIT eingeschaltetem Dynamic Pricing (Gate wie im
+        # Einzelpfad, siehe _dp_enabled). Ist es nirgends an, entfällt die
+        # dynamic_prices-Query ganz.
+        aktiv = self._dp_enabled_bulk(property_ids)
+        if not aktiv:
+            return {}
         # KEIN try/except-Fallback: schlägt die Query fehl, muss der Board-Call
         # hart scheitern (500) statt still leere DP-Preise zu liefern und damit
         # falsche (zu niedrige) Tagespreise anzuzeigen.
@@ -751,7 +827,7 @@ class PricingResolver:
             self._db()
             .table("dynamic_prices")
             .select("property_id, date, price, factors")
-            .in_("property_id", property_ids)
+            .in_("property_id", sorted(aktiv))
             .gte("date", check_in.isoformat())
             .lt("date", check_out.isoformat())
             .execute()
