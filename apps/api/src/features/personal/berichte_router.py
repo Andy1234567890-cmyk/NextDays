@@ -48,6 +48,7 @@ def berichte_katalog(ctx: Team, service: BerichteServiceDep) -> list[BerichtKata
 
 @router.get("/berichte/{name}", response_model=None)
 def bericht(  # noqa: PLR0913 — die fünf Filter des Vertrags plus das Format
+    # pylint: disable=redefined-builtin  # `format` ist der Query-Name (s. u.)
     name: str,
     ctx: Team,
     service: BerichteServiceDep,
@@ -57,7 +58,11 @@ def bericht(  # noqa: PLR0913 — die fünf Filter des Vertrags plus das Format
     property_id: Annotated[str | None, Query()] = None,
     user_id: Annotated[str | None, Query()] = None,
     beschaeftigungsart: Annotated[Beschaeftigungsart | None, Query()] = None,
-    format: Annotated[str, Query(pattern="^(json|csv)$")] = "json",  # noqa: A002 — Vertragsname
+    # `format` ist der QUERY-Name aus dem Vertrag (?format=csv) und damit nicht
+    # frei wählbar — FastAPI leitet ihn aus dem Parameternamen ab. Beide Prüfer
+    # melden dasselbe: ruff A002 hier, pylint W0622 oben an der Signatur (dort,
+    # weil pylint den Befund der Funktion zuordnet, nicht der Parameterzeile).
+    format: Annotated[str, Query(pattern="^(json|csv)$")] = "json",  # noqa: A002
 ) -> Response | BerichtResponse:
     """Ein Bericht als JSON oder CSV (§4.2). Guard je Bericht sitzt im Dienst."""
     try:
