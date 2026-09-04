@@ -79,6 +79,16 @@ class Capability(StrEnum):
     # Eigene Fähigkeit statt MANAGE_TENANT, damit ein Betrieb sie gezielt
     # vergeben kann, ohne die gesamte Mandantenverwaltung mitzugeben.
     MANAGE_CONNECTIONS = "manage_connections"
+    # Personal & Dienstplan (0541, Konzept E5/E6)
+    MANAGE_PERSONAL = "manage_personal"          # Akte, Stammdaten, Regeln, Fremdfirmen
+    PLAN_SCHICHTEN = "plan_schichten"            # Dienstplan schreiben, veröffentlichen
+    VIEW_TEAM_SCHEDULE = "view_team_schedule"    # Dienstplan des Teams lesen
+    VIEW_OWN_SCHEDULE = "view_own_schedule"      # eigener Dienstplan, bestätigen, bewerben
+    TRACK_OWN_TIME = "track_own_time"            # eigene Stempeluhr
+    REQUEST_ABSENCE = "request_absence"          # eigene Abwesenheit beantragen
+    APPROVE_ABSENCE = "approve_absence"          # Abwesenheiten entscheiden
+    CONFIRM_TIME = "confirm_time"                # Zeiten bestätigen/korrigieren
+    EXPORT_LOHN = "export_lohn"                  # Lohnvorbereitung/DATEV (Geld, nur Leitung)
 
 
 # Volle Fähigkeiten (admin = alles).
@@ -111,6 +121,17 @@ _CO_ADMIN: frozenset[Capability] = frozenset({
     Capability.RECEIVE_SYSTEM_ALERTS,
     Capability.ASSIGN_STAFF_TO_PROPERTY,
     Capability.MANAGE_SITE_CONFIG,  # gebrandete Buchungs-Site der Agentur pflegen
+    # Personal (0541): der Co-Admin führt den Betrieb operativ mit — Akte,
+    # Plan, Abwesenheiten, Zeiten und die Lohnvorbereitung eingeschlossen.
+    Capability.MANAGE_PERSONAL,
+    Capability.PLAN_SCHICHTEN,
+    Capability.VIEW_TEAM_SCHEDULE,
+    Capability.VIEW_OWN_SCHEDULE,
+    Capability.TRACK_OWN_TIME,
+    Capability.REQUEST_ABSENCE,
+    Capability.APPROVE_ABSENCE,
+    Capability.CONFIRM_TIME,
+    Capability.EXPORT_LOHN,
 })
 
 # Eigentümer (§4.2): Daten-Split, Sperrung beantragen, Zählerstände, Services
@@ -151,6 +172,23 @@ _STAFF: frozenset[Capability] = frozenset({
     Capability.REQUEST_SUBSTITUTE,
     Capability.MANAGE_NOTIFICATION_PREFS,
     Capability.VIEW_GUEST_LIMITED,      # nur Belegungszeit, keine Namen (§4.3)
+    # Personal (0541): der eigene Dienstplan, die eigene Stempeluhr, der eigene
+    # Antrag. Nichts vom Team, nichts aus der Akte.
+    Capability.VIEW_OWN_SCHEDULE,
+    Capability.TRACK_OWN_TIME,
+    Capability.REQUEST_ABSENCE,
+})
+
+# Schichtleitung (0540/0541, Konzept E6): staff PLUS Planung, Teamplan,
+# Abwesenheiten entscheiden und Zeiten bestätigen — jeweils NUR für die
+# Personen und Objekte, die ihr zugewiesen sind (Scope im PersonalService,
+# `personal_sieht_person` auf DB-Ebene). Bewusst OHNE MANAGE_PERSONAL (Akte,
+# Lohn, Regeln) und OHNE EXPORT_LOHN: Planung ist keine Personalverwaltung.
+_SHIFT_LEAD: frozenset[Capability] = _STAFF | frozenset({
+    Capability.PLAN_SCHICHTEN,
+    Capability.VIEW_TEAM_SCHEDULE,
+    Capability.APPROVE_ABSENCE,
+    Capability.CONFIRM_TIME,
 })
 
 ROLE_CAPABILITIES: dict[UserRole, frozenset[Capability]] = {
@@ -159,6 +197,7 @@ ROLE_CAPABILITIES: dict[UserRole, frozenset[Capability]] = {
     UserRole.owner: _OWNER,
     UserRole.staff: _STAFF,
     UserRole.cleaner: _STAFF,  # cleaner = wie staff (operativ)
+    UserRole.shift_lead: _SHIFT_LEAD,
 }
 
 
@@ -356,6 +395,11 @@ _DB_ROLLE_ERFORDERLICH: frozenset[Capability] = frozenset({
     # JWT-Rolle zu hängen heißt, dass ein gerade herabgestufter Verwalter noch
     # Konten mit Rechten anlegen kann — und die überleben den Token.
     Capability.MANAGE_STAFF,
+    # Personalakte und Lohnexport (0541): sensible Personendaten und Geld. Eine
+    # herabgestufte Leitung darf nicht bis zum Token-Ablauf weiter Akten lesen
+    # oder Lohnläufe exportieren.
+    Capability.MANAGE_PERSONAL,
+    Capability.EXPORT_LOHN,
 })
 
 

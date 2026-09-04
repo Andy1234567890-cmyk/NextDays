@@ -357,7 +357,6 @@ function buildGroups(
 // aber unverlinkt. Zum Freischalten den jeweiligen groupKey hier entfernen.
 const HIDDEN_AT_LAUNCH: ReadonlySet<string> = new Set([
   "marketplace",
-  "staff",
   "jobs",
 ]);
 
@@ -378,11 +377,27 @@ const STATIC_GROUPS: readonly NavGroup[] = [
   {
     groupKey: "staff",
     icon: "ph:users-three",
+    // Personal & Dienstplan (0541). `req` = Fähigkeit aus permissions.py; die
+    // Rollen-Whitelists oben entscheiden zusätzlich, was staff/shift_lead sehen.
     items: [
-      { key: "employees", href: "/hr/mitarbeiter", icon: "ph:identification-badge" },
-      { key: "absence", href: "/hr/abwesenheit", icon: "ph:airplane-takeoff" },
-      { key: "shiftPlan", href: "/hr/schichtplan", icon: "ph:calendar-check" },
-      { key: "evaluation", href: "/hr/auswertung", icon: "ph:chart-bar" },
+      // Der Schichtplan zuerst: er ist die Arbeitsfläche, alles andere ist
+      // Stammdaten und Auswertung dazu (Betreiber, 04.09.2026).
+      { key: "shiftPlan", href: "/hr/schichtplan", icon: "ph:calendar-check", req: "view_team_schedule" },
+      { key: "employees", href: "/hr/mitarbeiter", icon: "ph:identification-badge", req: "view_team_schedule" },
+      { key: "absence", href: "/hr/abwesenheit", icon: "ph:airplane-takeoff", req: "view_team_schedule" },
+      { key: "timeTracking", href: "/hr/zeiterfassung", icon: "ph:timer", req: "view_team_schedule" },
+      // Die eigene Stempeluhr (0544). `track_own_time` hat JEDE planbare Rolle
+      // — der Eintrag ist damit auch für staff/cleaner sichtbar, und nur
+      // dieser eine (STAFF_ALLOWED_HREFS unten).
+      { key: "timeClock", href: "/hr/stempeluhr", icon: "ph:clock-user", req: "track_own_time" },
+      // Schluessel `staffReports`, nicht `reports`: den hat die Buchhaltung
+      // schon (/buchhaltung/berichte). Zwei Bereiche mit demselben Label waeren
+      // in der Navigation nicht unterscheidbar.
+      { key: "staffReports", href: "/hr/berichte", icon: "ph:list-magnifying-glass", req: "view_team_schedule" },
+      { key: "evaluation", href: "/hr/auswertung", icon: "ph:chart-bar", req: "export_lohn" },
+      // Lohnläufe mit Statuskette (0547) — Geld, also nur die Leitung.
+      { key: "payroll", href: "/hr/lohn", icon: "ph:receipt", req: "export_lohn" },
+      { key: "hrSettings", href: "/hr/einstellungen", icon: "ph:gear-six", req: "manage_personal" },
     ],
   },
   {
@@ -402,6 +417,7 @@ const ROLE_KEYS: Record<string, string> = {
   owner: "owner",
   staff: "staff",
   cleaner: "cleaner",
+  shift_lead: "shiftLead",
 };
 
 // Eigentümer-Portal (Lastenheft §4.2): read-only, stark reduzierte Navigation.
@@ -436,6 +452,29 @@ const STAFF_ALLOWED_HREFS: readonly string[] = [
   "/", // Dashboard
   "/objekte", // read-only, per RLS 0136 auf zugewiesene Objekte begrenzt
   "/reservierungen/aufgaben", // Meine Aufgaben (Kern-Fläche)
+  // Personal (0544): die EIGENE Stempeluhr — und nur sie. Bis 0543 hatten
+  // Mitarbeitende im Web gar keine Personalfläche (die Mitarbeitersicht war
+  // der App vorbehalten, ADR-0023 E5); wer aber am Rechner arbeitet, braucht
+  // einen Weg zu stempeln, ohne dass ein Terminal steht. Die Seite zeigt
+  // ausschliesslich eigene Daten (Guard `track_own_time`, Scope im Dienst) —
+  // kein Team, kein Lohn, keine fremden Zeiten.
+  "/hr/stempeluhr",
+];
+
+// Schichtleitung (0540): wie staff PLUS die Planungsflächen ihres Teams. Die
+// Akte (/hr/mitarbeiter/<id>) ist über `req: manage_personal` gesperrt; die
+// Liste zeigt ihr nur Namen und Arbeitsbereiche.
+const SHIFT_LEAD_ALLOWED_HREFS: readonly string[] = [
+  ...STAFF_ALLOWED_HREFS,
+  "/hr/mitarbeiter",
+  "/hr/schichtplan",
+  "/hr/abwesenheit",
+  "/hr/zeiterfassung",
+  // Berichte (0547): die Schichtleitung sieht dort nur die Team-Berichte —
+  // welche, entscheidet der SERVER (`export_lohn` fehlt ihr, die Finanz-
+  // berichte stehen gar nicht im Katalog). Die Whitelist gibt hier also den
+  // Weg frei, nicht den Inhalt.
+  "/hr/berichte",
 ];
 
 export function AppSidebar({
@@ -450,7 +489,7 @@ export function AppSidebar({
   einrichtungOffen = false,
 }: {
   email?: string;
-  role?: "admin" | "co_admin" | "owner" | "staff" | "cleaner" | null;
+  role?: "admin" | "co_admin" | "owner" | "staff" | "cleaner" | "shift_lead" | null;
   permissions?: string[];
   capabilities?: string[];
   accommodationType?: AccommodationType;
@@ -547,6 +586,9 @@ export function AppSidebar({
       (role === "staff" || role === "cleaner") &&
       !STAFF_ALLOWED_HREFS.includes(item.href)
     ) {
+      return false;
+    }
+    if (role === "shift_lead" && !SHIFT_LEAD_ALLOWED_HREFS.includes(item.href)) {
       return false;
     }
     return true;

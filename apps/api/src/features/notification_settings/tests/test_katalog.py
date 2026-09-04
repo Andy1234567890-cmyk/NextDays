@@ -50,6 +50,10 @@ MIGRATIONEN = (
     # block_decision bekommen den Kanal, seit es eine App gibt, die ihn
     # empfangen kann.
     "0532_push_app_eigentuemer.sql",
+    # Personal & Dienstplan (0541/0542): fuenf Kategorien, je Empfaenger eine.
+    "0542_personal_benachrichtigungen.sql",
+    # Personal-Ausbau (0544–0547): Tausch, Ueberstunden, Verspaetung.
+    "0548_personal_benachrichtigungen_ausbau.sql",
 )
 
 

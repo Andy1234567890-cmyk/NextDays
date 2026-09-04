@@ -27,7 +27,7 @@ import {
   logout as apiLogout,
 } from "@/lib/auth";
 
-export type Role = "admin" | "co_admin" | "owner" | "staff" | "cleaner";
+export type Role = "admin" | "co_admin" | "owner" | "staff" | "cleaner" | "shift_lead";
 
 // Contract: apps/api/src/features/auth/schemas.py → MeResponse.
 export type Me = {

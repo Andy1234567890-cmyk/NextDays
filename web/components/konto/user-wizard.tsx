@@ -19,6 +19,7 @@
 // gehen mit `POST /auth/invite` mit und landen in derselben `users`-Zeile wie
 // Name und Rolle.
 import { Icon } from "@iconify/react";
+import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
@@ -67,11 +68,20 @@ import {
 export function UserWizard({
   trigger,
   tenantCountry = null,
+  defaultRole = "",
+  roleOptions,
+  erfolgLink,
 }: {
   trigger: React.ReactNode;
   /** Land des Betriebs (ISO-2) — Vorbelegung der Telefon-Vorwahl. `null` heißt
    *  „nicht erfasst"; dann bleibt es bei der Vorgabe des Telefonfelds. */
   tenantCountry?: string | null;
+  /** Rolle vorbelegen (Personal → „Mitarbeiter hinzufügen": staff). */
+  defaultRole?: string;
+  /** Nur diese Rollen anbieten (Personal: staff, cleaner, shift_lead). */
+  roleOptions?: readonly string[];
+  /** Zusätzlicher Sprung nach dem Anlegen, z. B. „Zur Akte". */
+  erfolgLink?: (userId: string) => { href: string; label: string };
 }) {
   const t = useTranslations("account");
   // Vorbelegung der E-Mail-Sprache: die Sprache, in der der Betreiber GERADE
@@ -97,8 +107,10 @@ export function UserWizard({
   const [spoken, setSpoken] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
   // Schritt 3
-  const [role, setRole] = useState("");
-  const [perms, setPerms] = useState<Set<string>>(new Set());
+  const [role, setRole] = useState(defaultRole);
+  const [perms, setPerms] = useState<Set<string>>(
+    new Set(defaultRole ? ROLE_DEFAULT_PERMISSIONS[defaultRole] ?? [] : []),
+  );
   // Schritt 4 — Objektzuweisung (nur für Rollen mit Objektbezug)
   const [properties, setProperties] = useState<Property[]>([]);
   const [selectedProps, setSelectedProps] = useState<Set<string>>(new Set());
@@ -117,7 +129,8 @@ export function UserWizard({
     setFirstName(""); setLastName(""); setEmail("");
     setPhone(""); setAdditionalPhone(""); setHidePhones(false);
     setLanguage(uiLocale); setSpoken([]); setNotes("");
-    setRole(""); setPerms(new Set());
+    setRole(defaultRole);
+    setPerms(new Set(defaultRole ? ROLE_DEFAULT_PERMISSIONS[defaultRole] ?? [] : []));
     setSelectedProps(new Set());
     setSubmitting(false); setError(null); setCreated(null);
   };
@@ -136,7 +149,7 @@ export function UserWizard({
 
   // Nur diese Rollen haben einen Objektbezug (Zuweisung/Freigabe pro Objekt).
   const roleNeedsProperties =
-    role === "owner" || role === "staff" || role === "cleaner";
+    role === "owner" || role === "staff" || role === "cleaner" || role === "shift_lead";
 
   const last = WIZARD_STEPS.length - 1;
   const next = () => setStep((s) => Math.min(s + 1, last));
@@ -236,7 +249,11 @@ export function UserWizard({
 
         <div className="flex-1 overflow-y-auto p-4">
           {created ? (
-            <StepSuccess email={created.email} userId={created.userId} />
+            <StepSuccess
+              email={created.email}
+              userId={created.userId}
+              link={erfolgLink?.(created.userId)}
+            />
           ) : (
             <>
               {step === 0 && (
@@ -261,6 +278,7 @@ export function UserWizard({
               {step === 2 && (
                 <StepRole
                   role={role} setRole={onRoleChange}
+                  roleOptions={roleOptions}
                   perms={perms} togglePerm={togglePerm}
                 />
               )}
@@ -459,8 +477,12 @@ function StepExtra(p: {
 function StepRole(p: {
   role: string; setRole: (v: string) => void;
   perms: Set<string>; togglePerm: (id: string) => void;
+  roleOptions?: readonly string[];
 }) {
   const t = useTranslations("account");
+  const rollen = p.roleOptions
+    ? ROLES.filter((r) => p.roleOptions?.includes(r.value))
+    : ROLES;
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-1.5">
@@ -472,7 +494,7 @@ function StepRole(p: {
             <SelectValue placeholder={t("userWizard.chooseRole")} />
           </SelectTrigger>
           <SelectContent>
-            {ROLES.map((r) => (
+            {rollen.map((r) => (
               <SelectItem key={r.value} value={r.value}>
                 {t(`roles.${r.value}`)}
               </SelectItem>
@@ -575,7 +597,15 @@ function StepProperties({
  * meistens SOFORT auffällt („ist nichts angekommen?") und der Betreiber dann
  * noch im Wizard steht. Der reguläre Platz für den Fall „Tage später" ist die
  * Nutzerliste (`user-list.tsx`) — beide rufen dieselbe Aktion. */
-function StepSuccess({ email, userId }: { email: string; userId: string }) {
+function StepSuccess({
+  email,
+  userId,
+  link,
+}: {
+  email: string;
+  userId: string;
+  link?: { href: string; label: string };
+}) {
   const t = useTranslations("account");
   const [sending, setSending] = useState(false);
 
@@ -622,6 +652,14 @@ function StepSuccess({ email, userId }: { email: string; userId: string }) {
         <Icon icon="ph:envelope-simple" className="size-4" aria-hidden />
         {sending ? t("userWizard.inviteResending") : t("userWizard.inviteResend")}
       </Button>
+      {link && (
+        <Button asChild className="gap-2 rounded-full">
+          <Link href={link.href}>
+            <Icon icon="ph:identification-badge" className="size-4" aria-hidden />
+            {link.label}
+          </Link>
+        </Button>
+      )}
     </div>
   );
 }

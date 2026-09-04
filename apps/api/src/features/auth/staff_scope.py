@@ -20,7 +20,7 @@ from src.core.security import AuthContext
 # zuweist, muss wissen, ob dessen Rolle überhaupt am Objekt-Scope hängt
 # (tasks._require_own_assignee). Eine zweite Kopie derselben Menge wäre die
 # Stelle, an der beide auseinanderlaufen.
-STAFF_ROLES = frozenset({"staff", "cleaner"})
+STAFF_ROLES = frozenset({"staff", "cleaner", "shift_lead"})
 
 # Altname, solange interne Aufrufer ihn tragen.
 _STAFF_ROLES = STAFF_ROLES

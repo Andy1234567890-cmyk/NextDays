@@ -139,6 +139,7 @@ ROLE_DEFAULT_PERMISSIONS: dict[UserRole, frozenset[Permission]] = {
     UserRole.owner: _OWNER,
     UserRole.staff: _STAFF,
     UserRole.cleaner: _STAFF,
+    UserRole.shift_lead: _STAFF,
 }
 
 
@@ -239,6 +240,7 @@ _PM_UMBRELLA_ROLES: frozenset[UserRole] = frozenset({
     UserRole.co_admin,
     UserRole.staff,
     UserRole.cleaner,
+    UserRole.shift_lead,
 })
 
 

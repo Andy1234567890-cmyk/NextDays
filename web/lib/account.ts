@@ -9,7 +9,7 @@ import { revalidatePath } from "next/cache";
 import { ApiError, api } from "@/lib/api";
 import { currentToken } from "@/lib/session-token";
 
-export type UserRole = "admin" | "co_admin" | "owner" | "staff" | "cleaner";
+export type UserRole = "admin" | "co_admin" | "owner" | "staff" | "cleaner" | "shift_lead";
 
 export type Account = {
   user_id: string;

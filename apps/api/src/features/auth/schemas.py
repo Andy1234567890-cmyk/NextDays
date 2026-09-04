@@ -64,6 +64,10 @@ class UserRole(StrEnum):
     owner = "owner"        # Eigentümer-Portal (Daten-Split, §4.2)
     staff = "staff"        # Mitarbeiter-Portal (Smartphone, §4.3)
     cleaner = "cleaner"    # Reinigungskraft (wie staff, operativ)
+    # Schichtleitung (0540, Konzept E6): plant Dienste, entscheidet Abwesenheiten
+    # und bestätigt Zeiten — nur für Personen an ihr freigegebenen Objekten.
+    # Sonst wie staff: keine Akte, kein Lohn, keine Finanzen (§4.3).
+    shift_lead = "shift_lead"
 
 
 class RegisterRequest(BaseModel):

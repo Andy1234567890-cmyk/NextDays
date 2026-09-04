@@ -10,6 +10,7 @@ export const ROLES = [
   { value: "admin" },
   { value: "co_admin" },
   { value: "owner" },
+  { value: "shift_lead" },
   { value: "staff" },
   { value: "cleaner" },
 ] as const;

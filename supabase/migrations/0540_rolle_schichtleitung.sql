@@ -1,0 +1,23 @@
+-- 0540 — Neue Nutzerrolle `shift_lead` (Schichtleitung)
+--
+-- Entscheidung des Betreibers vom 03.09.2026 (docs/PERSONAL-DIENSTPLAN-KONZEPT.md,
+-- E6): Die Rollen im Personalbereich sind Admin, Co-Admin und Schichtleitung.
+-- Eine Schichtleitung plant Dienste, entscheidet Abwesenheiten und bestätigt
+-- Zeiten — aber nur für die Personen und Objekte, die ihr zugewiesen sind
+-- (`staff_property_assignments`). Sie sieht keine Personalakte, keinen Lohn und
+-- keine Finanzen (§4.3). Im Übrigen verhält sie sich wie `staff`: eigene
+-- Aufgaben, eigene Verfügbarkeit, Objekt-Scope über die Zuweisung.
+--
+-- NUR der Enum-Wert steht in dieser Datei. `alter type … add value` darf in
+-- einer Transaktion laufen (PG ≥ 12), aber der neue Wert ist in DERSELBEN
+-- Transaktion noch nicht benutzbar („unsafe use of new value") — und
+-- apply-migrations.sh fährt jede Datei in genau einer Transaktion. Alles, was
+-- den Wert verwendet (Scope-Helfer, Policies, Tabellen), steht deshalb in
+-- 0541, das erst nach dem Commit dieser Datei läuft.
+--
+-- Die übrigen vier Stellen der Rollen-Kette (Pydantic `UserRole`, Frontend-
+-- Unions, Rollen-Labels in 24 Sprachen, Mobile-Router) werden im selben
+-- Änderungssatz nachgezogen; `scripts/i18n/rollen-pruefen.mjs` hält sie
+-- deckungsgleich (dieselbe Kette wie bei den Kanal-Enums).
+
+alter type public.user_role add value if not exists 'shift_lead';

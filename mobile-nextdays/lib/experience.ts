@@ -22,6 +22,9 @@ const BY_ROLE: Record<Role, ExperienceTarget> = {
   // Mitarbeiter starten im Aufgaben-Fokus (Tabs-Ausbau folgt in P3).
   staff: { route: "HostTabs", params: { screen: "Dashboard" } },
   cleaner: { route: "HostTabs", params: { screen: "Dashboard" } },
+  // Schichtleitung (0540): in dieser App wie staff — die Planungsflächen
+  // kommen mit der eigenen Mitarbeiter-App (ADR-0023, E5), nicht hier.
+  shift_lead: { route: "HostTabs", params: { screen: "Dashboard" } },
 };
 
 /**

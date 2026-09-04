@@ -32,7 +32,7 @@ import { PermissionGroups } from "./permission-groups";
 import { ROLE_DEFAULT_PERMISSIONS } from "./user-wizard-data";
 
 // Rollen, die vergeben werden dürfen. Admin fehlt bewusst.
-const VERGEBBARE_ROLLEN: UserRole[] = ["co_admin", "owner", "staff", "cleaner"];
+const VERGEBBARE_ROLLEN: UserRole[] = ["co_admin", "shift_lead", "owner", "staff", "cleaner"];
 
 export function BenutzerRolleSheet({
   user,

@@ -104,7 +104,10 @@ export function BenutzerDetail({
 
   const name = namenTeilen(user.full_name);
   const rolleMitObjekten =
-    user.role === "owner" || user.role === "staff" || user.role === "cleaner";
+    user.role === "owner" ||
+    user.role === "staff" ||
+    user.role === "cleaner" ||
+    user.role === "shift_lead";
   const aktiv = user.is_active !== false;
 
   const prozent = (wert: number | null | undefined) =>

@@ -54,6 +54,12 @@ const KATEGORIE_ICON: Record<string, string> = {
   ki_eskalation: "ph:sparkle",
   portal_rate_verwaist: "ph:tag",
   testphase_endet: "ph:hourglass",
+  // Personal & Dienstplan (0541/0542)
+  dienstplan: "ph:calendar-check",
+  abwesenheit_antrag: "ph:airplane-takeoff",
+  abwesenheit_entscheidung: "ph:airplane-landing",
+  schicht_offen: "ph:user-plus",
+  zeit_hinweis: "ph:timer",
 };
 
 export function Glocke() {

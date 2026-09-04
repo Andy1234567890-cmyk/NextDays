@@ -41,6 +41,7 @@ from __future__ import annotations
 from src.core.mail_sprache import FALLBACK, SUPPORTED
 from src.core.mail_texte_partner import TEXTE_PARTNER
 from src.core.mail_texte_partner_reichweite import TEXTE_PARTNER_REICHWEITE
+from src.core.mail_texte_personal import TEXTE_PERSONAL
 
 
 class MailTextFehlt(Exception):
@@ -3602,5 +3603,6 @@ def text(schluessel: str, sprache: str, **werte: object) -> str:
 # Vollständigkeitstest sie wie jeden anderen Schlüssel sehen.
 TEXTE.update(TEXTE_PARTNER)
 TEXTE.update(TEXTE_PARTNER_REICHWEITE)
+TEXTE.update(TEXTE_PERSONAL)
 
 __all__ = ["SUPPORTED", "TEXTE", "MailTextFehlt", "text"]

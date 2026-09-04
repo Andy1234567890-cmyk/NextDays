@@ -29,7 +29,10 @@ export default async function NutzerDetailPage({
   const user = nutzerRes.data;
 
   const rolleMitObjekten =
-    user.role === "owner" || user.role === "staff" || user.role === "cleaner";
+    user.role === "owner" ||
+    user.role === "staff" ||
+    user.role === "cleaner" ||
+    user.role === "shift_lead";
 
   const [objekteRes, kontoRes, zuordnungRes] = await Promise.all([
     listProperties(),

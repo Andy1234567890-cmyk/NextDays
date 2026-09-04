@@ -1,7 +1,8 @@
 """Baut den Demo-Bestand für Marketing-Screenshots auf.
 
 Zwei Demo-Betriebe mit Objekten, Fotos, Gästen, Buchungen über alle
-Vertriebskanäle, Sperrungen, Stop-Sells und Reinigungsaufgaben — so viel Leben,
+Vertriebskanäle, Sperrungen, Stop-Sells, Reinigungsaufgaben und einem
+vollständigen Personalbereich (Akte, Dienstplan, Zeiten — `personal.py`) — so viel Leben,
 dass ein Screenshot der App wie ein echter Betrieb aussieht und nicht wie eine
 leere Testinstallation.
 
@@ -19,6 +20,8 @@ Buchungen entstehen ausschließlich über `create_reservation_atomic(..., false)
 Aufruf:
     apps/api/.venv/bin/python scripts/demo/fotos.py        # einmal: Fotos holen
     apps/api/.venv/bin/python scripts/demo/seed_demo.py
+    apps/api/.venv/bin/python scripts/demo/seed_demo.py \
+        --betrieb seeblick --nur-personal --passwort '<DEIN_WERT>'
 """
 from __future__ import annotations
 
@@ -47,6 +50,7 @@ from gaestemappe import type_attributes  # noqa: E402
 from posteingang import threads_anlegen  # noqa: E402
 from katalog import BETRIEBE, GAESTE, Betrieb, Objekt  # noqa: E402
 from konfig import Supabase, demo_id  # noqa: E402
+from personal import personal_anlegen  # noqa: E402
 # pylint: enable=wrong-import-position
 
 # Fester Zufallskeim: gleiche Belegung bei jedem Lauf. Ein Screenshot, der nach
@@ -695,6 +699,9 @@ def main() -> int:
                         help="Demo-Tenants nur entfernen, nichts neu anlegen")
     parser.add_argument("--passwort", help="Passwort der Demo-Logins "
                                            "(sonst wird eines erzeugt und ausgegeben)")
+    parser.add_argument("--nur-personal", action="store_true",
+                        help="NUR den Personalbereich aufbauen — Objekte, Buchungen "
+                             "und Fotos des Betriebs bleiben unangetastet")
     argumente = parser.parse_args()
 
     db = Supabase()
@@ -704,6 +711,22 @@ def main() -> int:
         if argumente.betrieb and betrieb.schluessel != argumente.betrieb:
             continue
         print(f"\n{betrieb.name}")
+        # `--nur-personal` setzt auf den BESTEHENDEN Bestand auf: es räumt
+        # nicht auf und legt keine Objekte neu an. Ein Vollaufbau würde
+        # Buchungen und Fotos neu würfeln — die Screenshots der Marketing-Seite
+        # zeigten danach andere Zahlen (siehe Modulkopf).
+        if argumente.nur_personal:
+            tenant_id = demo_id(f"tenant:{betrieb.schluessel}")
+            vorhandene = db.select("properties", tenant_id=f"eq.{tenant_id}", select="id")
+            if not vorhandene:
+                print("  übersprungen: Betrieb noch nicht aufgebaut")
+                continue
+            admin = db.select("users", tenant_id=f"eq.{tenant_id}",
+                              role="eq.admin", select="id")
+            personal_anlegen(db, tenant_id, admin[0]["id"],
+                             [z["id"] for z in vorhandene], passwort)
+            continue
+
         aufraeumen(db, betrieb)
         if argumente.nur_loeschen:
             continue
@@ -724,6 +747,11 @@ def main() -> int:
         # zeigt die App Buchungen, aber ein leeres Postfach.
         threads = threads_anlegen(db, tenant_id, buchungen)
         print(f"  {threads} Posteingang-Threads")
+        # Personal zuletzt: der Dienstplan hängt an den Objekten und der
+        # Admin-Zeile, die weiter oben entstehen.
+        admin_id = db.select("users", tenant_id=f"eq.{tenant_id}",
+                             role="eq.admin", select="id")[0]["id"]
+        personal_anlegen(db, tenant_id, admin_id, list(objekt_ids.values()), passwort)
 
     if not argumente.nur_loeschen:
         print("\nLogins:")

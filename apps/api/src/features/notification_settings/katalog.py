@@ -241,6 +241,34 @@ KATALOG: tuple[Kategorie, ...] = (
     # sichtbar, auch wenn niemand eine Mail bekommt. Ein Betrieb, der den
     # Posteingang ohnehin offen hat, darf den Mail-Kanal abwaehlen.
     Kategorie("ki_eskalation", Tab.KONTO, "nachrichten", _MAIL_PUSH),
+    # --- Personal & Dienstplan (0541) -------------------------------------
+    # Fuenf Kategorien, je EMPFAENGER eine — dieselbe Regel wie bei Aufgaben
+    # und Sperrantraegen: wer eine Meldung abschaltet, darf keine fremde
+    # mit-abschalten. Alle mit Push (die spaetere Mitarbeiter-App), keine SMS:
+    # Dienstplan und Antraege haben Tage Vorlauf, keine Stunden.
+    # An die MITARBEITENDE: Plan veroeffentlicht / geaendert.
+    Kategorie("dienstplan", Tab.KONTO, "personal", _MAIL_PUSH),
+    # An die LEITUNG (admin/co_admin/shift_lead im Scope): Antrag eingegangen.
+    Kategorie("abwesenheit_antrag", Tab.KONTO, "personal", _MAIL_PUSH),
+    # An den ANTRAGSTELLER: genehmigt / abgelehnt.
+    Kategorie("abwesenheit_entscheidung", Tab.KONTO, "personal", _MAIL_PUSH),
+    # An Mitarbeitende mit Freigabe fuer das Objekt: offene Schicht (Bewerbung).
+    Kategorie("schicht_offen", Tab.KONTO, "personal", _MAIL_PUSH),
+    # An die LEITUNG: Stempelung offen seit Stunden / weicht vom Plan ab. Nur
+    # Mail — der Hinweis kommt aus dem Worker-Tick, nicht aus einer Handlung.
+    Kategorie("zeit_hinweis", Tab.KONTO, "personal", _MAIL),
+    # --- Ausbau 0544/0548: vier weitere, je EMPFAENGER eine ----------------
+    # An die angefragte Person (Kollegin bietet ihre Schicht an) UND an die
+    # Leitung, sobald angenommen wurde und die Freigabe fehlt.
+    Kategorie("schicht_tausch", Tab.KONTO, "personal", _MAIL_PUSH),
+    # An die LEITUNG: Ueberstundenantrag eingegangen.
+    Kategorie("ueberstunden_antrag", Tab.KONTO, "personal", _MAIL_PUSH),
+    # An den ANTRAGSTELLER: genehmigt / abgelehnt.
+    Kategorie("ueberstunden_entscheidung", Tab.KONTO, "personal", _MAIL_PUSH),
+    # An die LEITUNG: die Schicht hat begonnen, es wurde nicht gestempelt.
+    # Die EINZIGE Personal-Kategorie, bei der Push die Dringlichkeit trifft:
+    # ein unbesetzter Dienst ist in einer Stunde nicht mehr zu retten.
+    Kategorie("verspaetung", Tab.KONTO, "personal", _MAIL_PUSH),
 )
 
 NACH_SCHLUESSEL: dict[str, Kategorie] = {k.schluessel: k for k in KATALOG}

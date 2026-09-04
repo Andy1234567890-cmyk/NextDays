@@ -67,6 +67,7 @@ class _Buckets:
         self.einladung_resend = parse_limit(settings.rate_limit_einladung_resend)
         self.nachberechnung = parse_limit(settings.rate_limit_nachberechnung)
         self.partner_kanal = parse_limit(settings.rate_limit_partner_kanal)
+        self.personal_terminal = parse_limit(settings.rate_limit_personal_terminal)
 
 
 def _is_exempt(path: str) -> bool:
@@ -327,6 +328,14 @@ _PARTNER_KLICK_PATHS = ("/affiliates/clicks",)
 # drücken. Eigener strenger Eimer (Wurzel 8), sensibel (IP-Zähler).
 _PARTNER_KANAL_PATHS = ("/affiliates/channels/",)
 
+# Stempel-Terminal des Personalbereichs (0544). Der Gerätepfad trägt kein
+# Nutzer-JWT, sondern einen Token im Header, und `/terminal/stempeln` prüft
+# eine vierstellige PIN — beides von außen erreichbar. Eigener Eimer pro IP
+# (Wurzel 8), sensibel: bei Redis-Ausfall lieber eine Stempelung abweisen als
+# das PIN-Durchprobieren ungezählt durchlassen. Die Personensperre nach fünf
+# Fehlversuchen sitzt zusätzlich im Dienst.
+_PERSONAL_TERMINAL_PATHS = ("/personal/terminal/",)
+
 # Absturzmeldung der mobilen Apps VOR der Anmeldung (30.08.2026). Sie muss
 # offen sein, weil genau die gesuchten Abstuerze passieren, bevor ein Token
 # existiert — damit ist sie aber auch von jedem aufrufbar und schreibt in eine
@@ -436,6 +445,7 @@ _BUCKET_REGELN: tuple[tuple[str, tuple[str, ...], str, bool], ...] = (
     ("public_support", _STARTABSTURZ_PATHS, "public_support", True),
     ("public_support", _PARTNER_KLICK_PATHS, "public_support", True),
     ("partner_kanal", _PARTNER_KANAL_PATHS, "partner_kanal", True),
+    ("personal_terminal", _PERSONAL_TERMINAL_PATHS, "personal_terminal", True),
     ("ai", _AI_PATHS, "ai", False),
     ("ai", _BLOG_IMPORT_PATHS, "ai", False),
     ("website_ki", _WEBSITE_KI_PATHS, "website_ki", False),

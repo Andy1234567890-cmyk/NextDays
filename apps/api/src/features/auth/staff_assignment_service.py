@@ -22,7 +22,7 @@ from .service import AuthError
 log = get_logger("nextdays.auth.staff_assignment")
 
 # Rollen, die einem Objekt als Mitarbeiter freigegeben werden können.
-_STAFF_ROLES = frozenset({"staff", "cleaner"})
+_STAFF_ROLES = frozenset({"staff", "cleaner", "shift_lead"})
 
 
 class StaffAssignmentService:

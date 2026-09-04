@@ -67,6 +67,14 @@ function ueberspringen(pathname: string): boolean {
     // waere hier nicht nur nutzlos, sondern falsch: sie wuerde eine vorhandene
     // Sitzung eines ECHTEN Betriebs verlaengern, bevor die Demo sie ersetzt.
     pathname.startsWith("/demo") ||
+    // Stempel-Terminal (0544): das Geraet haengt an der Wand, hat KEINEN
+    // angemeldeten Nutzer, und seine Berechtigung ist der Token im Link —
+    // genau wie bei /einladung und /passwort-neu. Ohne diesen Eintrag wuerde
+    // die Middleware bei JEDEM Terminal-Aufruf eine Token-Erneuerung
+    // versuchen und ein noch vorhandenes `nd_refresh`-Cookie des Geraets
+    // dabei verbrauchen: die Person, die sich zuletzt an diesem Tablet
+    // angemeldet hatte, waere ausgeloggt, ohne dass jemand etwas getan hat.
+    pathname.startsWith("/terminal") ||
     pathname.startsWith("/auth/") ||
     pathname.startsWith("/api/")
   );

@@ -25,6 +25,7 @@ const DACH_ROLLEN: ReadonlySet<string> = new Set<string>([
   "co_admin",
   "staff",
   "cleaner",
+  "shift_lead",
 ]);
 
 /** Gilt das PM-Dach für diese Rolle? (`pm_umbrella_applies`) */

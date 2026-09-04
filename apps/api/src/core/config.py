@@ -98,6 +98,14 @@ class Settings(BaseSettings):
     # ein Angreifer könnte den Callback in Serie drücken — eigener strenger
     # Eimer, nicht der default (Wurzel 8).
     rate_limit_partner_kanal: str = "10/60"
+    # Stempel-Terminal des Personalbereichs (0544). Der Gerätepfad
+    # (/personal/terminal/…) trägt KEIN Nutzer-JWT, sondern einen Geräte-Token
+    # im Header und prüft eine PIN — er ist damit von außen erreichbar und
+    # durchprobierbar. Eigener Eimer, nicht der default (Wurzel 8): 30/60 lässt
+    # eine Rezeption mit Andrang stempeln und stoppt das Durchprobieren.
+    # Die Sperre nach fünf Fehlversuchen je Stempel-ID sitzt zusätzlich im
+    # Dienst — der Eimer zählt pro IP, die Sperre pro Person.
+    rate_limit_personal_terminal: str = "30/60"
     # Öffentliche (nicht-eingeloggte) Such-/Listings-/Kalender-Endpunkte:
     # Scraper-Schutz PRO IP. 240/60 statt 60/60 — 60 war zu knapp und traf bei
     # Büro-NAT (mehrere Mitarbeiter, eine IP) mehrere Nutzer gemeinsam.
@@ -555,6 +563,10 @@ class Settings(BaseSettings):
     # base64) UND für die Signatur des OAuth-`state`. Fehlt er, kann kein
     # Konto verbunden werden (fail-closed).
     affiliate_token_key: SecretStr = SecretStr("")
+    # Schlüssel (32 Byte, base64) für die AES-GCM-Verschlüsselung sensibler
+    # Personalakten-Felder (Steuer-ID, SV-Nummer, IBAN; 0541). Fehlt er, lassen
+    # sich diese Felder weder speichern noch lesen — fail-closed, kein Klartext.
+    personal_akte_key: SecretStr = SecretStr("")
 
     # Öffentliche Adresse des myBestDays-Marktplatzes (plattform/). Ziel des
     # Links in der Bewertungs-Erinnerung an den Gast. Fehlt sie, wird KEINE
