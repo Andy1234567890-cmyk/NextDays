@@ -560,3 +560,122 @@ export async function copyAutoTemplate(
 export async function deleteAutoTemplate(id: string): Promise<Result<void>> {
   return call(`/reviews/templates/${id}`, { method: "DELETE" });
 }
+
+// ---------------------------------------------------------- Bewertungs-KI
+// Beide Richtungen teilen sich Katalog und Einstellungen (0549): es ist
+// derselbe Betrieb, der redet. Die Zustellart steht je Richtung, weil eine
+// öffentliche Antwort auf eine 1-Stern-Bewertung riskanter ist als eine
+// Gastbewertung, die ausser dem Gast kaum jemand sieht.
+
+/** Wer schreibt über wen. */
+export type KiRichtung = "gast_bewerten" | "antwort";
+
+/** Geht der Text von selbst raus oder wird er nur entworfen? */
+export type KiZustellart = "entwurf" | "automatisch";
+
+export type KiKatalogFrage = {
+  schluessel: string;
+  frage: string;
+  beispiel: string;
+  antwort: string | null;
+  /** Bei welchen Noten diese Antwort in den Prompt geht. Leer = immer. */
+  noten: number[];
+  richtungen: KiRichtung[];
+};
+
+export type KiKatalogAntwort = {
+  fragen: KiKatalogFrage[];
+  beantwortet: number;
+  gesamt: number;
+};
+
+export type KiSettings = {
+  ki_aktiv: boolean;
+  zustellart_gast_bewerten: KiZustellart;
+  zustellart_antwort: KiZustellart;
+  /** Unter dieser Note bleibt die ANTWORT Entwurf, auch bei 'automatisch'. */
+  antwort_mensch_ab_note: number | null;
+  tonfall: string;
+  unterschrift: string | null;
+  sprache: string;
+  verzoegerung_minuten: number;
+};
+
+export type KiTestFrage = {
+  richtung: KiRichtung;
+  note: number;
+  gast_text?: string | null;
+  gast_name?: string | null;
+  property_id?: string | null;
+  sprache?: string | null;
+};
+
+export type KiTestAntwort = {
+  text: string;
+  zustellart: KiZustellart;
+  /** Warum NICHT automatisch zugestellt würde. null = es ginge raus. */
+  grund: string | null;
+  verwendete_fragen: string[];
+  /** Das Modell bittet um menschliche Prüfung. */
+  mensch_pruefen: string | null;
+  offene_fragen: string[];
+};
+
+export type KiProtokollEintrag = {
+  id: string;
+  richtung: KiRichtung;
+  quelle: string;
+  bezug_id: string | null;
+  note: number | null;
+  eingabe_auszug: string | null;
+  ergebnis: string | null;
+  zustellart: KiZustellart;
+  gesendet_at: string | null;
+  verwendete_fragen: string[];
+  grund: string | null;
+  created_at: string | null;
+};
+
+export type KiProtokollList = { items: KiProtokollEintrag[]; total: number };
+
+export async function getKiKatalog(): Promise<Result<KiKatalogAntwort>> {
+  return call("/reviews/ki/katalog");
+}
+
+/** Eine Antwort setzen. Leerer Text LÖSCHT sie — die einzige Art, eine
+ *  Haltung zurückzunehmen. */
+export async function saveKiKatalogFrage(
+  schluessel: string,
+  antwort: string,
+): Promise<Result<KiKatalogAntwort>> {
+  return call("/reviews/ki/katalog", {
+    method: "PUT",
+    body: { schluessel, antwort },
+  });
+}
+
+export async function getKiSettings(): Promise<Result<KiSettings>> {
+  return call("/reviews/ki/settings");
+}
+
+export async function saveKiSettings(
+  s: KiSettings,
+): Promise<Result<KiSettings>> {
+  return call("/reviews/ki/settings", { method: "PUT", body: s });
+}
+
+/** Die Probe. SENDET NICHTS — sie zeigt, was im Ernstfall passieren würde. */
+export async function kiTesten(
+  req: KiTestFrage,
+): Promise<Result<KiTestAntwort>> {
+  return call("/reviews/ki/test", { method: "POST", body: req });
+}
+
+export async function getKiProtokoll(
+  richtung?: KiRichtung,
+  limit = 50,
+): Promise<Result<KiProtokollList>> {
+  const qs = new URLSearchParams({ limit: String(limit) });
+  if (richtung) qs.set("richtung", richtung);
+  return call(`/reviews/ki/protokoll?${qs.toString()}`);
+}

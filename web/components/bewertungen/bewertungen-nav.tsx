@@ -16,7 +16,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 
-// Drei Reiter, nicht vier — und nicht zwei.
+// Vier Reiter.
 //
 // Hostaway hat an dieser Stelle zwei (`MANAGE REVIEWS` · `AUTO-REVIEWS`), und
 // so weit folgen wir: „Qualität" ist zu einem eigenen Hauptmenüpunkt geworden
@@ -33,6 +33,12 @@ const EINTRAEGE = [
   { key: "navAll", href: "/bewertungen", icon: "ph:star" },
   { key: "navQueue", href: "/bewertungen/geplant", icon: "ph:clock-countdown" },
   { key: "navAutomation", href: "/bewertungen/einstellungen", icon: "ph:robot" },
+  // Die KI ist ein eigener Reiter und kein Abschnitt unter den Vorlagen: sie
+  // deckt BEIDE Richtungen ab (wir bewerten den Gast UND wir antworten
+  // öffentlich auf seine Bewertung), während die Vorlagen nur die erste
+  // kennen. Unter „Automatik" versteckt wäre die zweite Richtung dort, wo
+  // niemand sie sucht.
+  { key: "navKi", href: "/bewertungen/ki", icon: "ph:sparkle" },
 ] as const;
 
 export function BewertungenNav() {

@@ -50,7 +50,12 @@ _SPALTEN = (
     "id, tenant_id, source, reservation_id, review_id, property_id, guest_name, "
     "status, send_at, expires_at, rating, text, private_text, score_cleanliness, "
     "score_communication, score_house_rules, recommended, tags, sent_at, error, "
-    "created_at, updated_at"
+    "created_at, updated_at, "
+    # Richtung und Herkunft des Textes (0549). MUSS mitgelesen werden: ohne
+    # `richtung` schickt `send_entry` eine öffentliche Antwort als
+    # Gastbewertung ans Portal — der Text stünde dann als unsere Bewertung
+    # DES GASTES da.
+    "richtung, ki_erzeugt, antwort_auf_id"
 )
 
 
@@ -330,7 +335,15 @@ class ReviewQueue:
         self, rows: list[dict], spalte: str, schluessel: str
     ) -> list[dict]:
         """Zeilen, für die noch kein Warteschlangen-Eintrag existiert — egal in
-        welchem Status. Ein übersprungener Eintrag darf NICHT wieder auftauchen."""
+        welchem Status. Ein übersprungener Eintrag darf NICHT wieder auftauchen.
+
+        Nur Einträge der Richtung 'gast_bewerten' zählen. Seit 0549 steht in
+        derselben Tabelle auch die öffentliche ANTWORT, und die trägt dieselbe
+        ``review_id``: ohne den Filter läse eine vorhandene Antwort wie eine
+        vorhandene Gastbewertung, und die Gastbewertung würde nie angelegt —
+        ein stiller Ausfall genau des Vorgangs, für den es diese Methode gibt
+        (Wurzel 1: der Gegenzustand der zweiten Richtung gehört mitgepflegt).
+        """
         if not rows:
             return []
         ids = [str(r[schluessel]) for r in rows]
@@ -339,6 +352,7 @@ class ReviewQueue:
             for x in (
                 self._db.table("guest_review_queue")
                 .select(spalte)
+                .eq("richtung", "gast_bewerten")
                 .in_(spalte, ids)
                 .execute()
             ).data
@@ -412,9 +426,9 @@ class ReviewQueue:
         return gastnote is not None and gastnote >= int(schwelle)
 
     # ----------------------------------------------------------------- lesen
-    def list_for_tenant(
+    def list_for_tenant(  # noqa: PLR0913 — Filter der Liste, jeder optional
         self, tenant_id: str, *, status: str | None, property_ids: list[str] | None,
-        limit: int, offset: int,
+        limit: int, offset: int, richtung: str | None = None,
     ) -> tuple[list[dict], int]:
         query = (
             self._db.table("guest_review_queue")
@@ -423,6 +437,8 @@ class ReviewQueue:
         )
         if status:
             query = query.eq("status", status)
+        if richtung:
+            query = query.eq("richtung", richtung)
         if property_ids is not None:
             query = query.in_("property_id", property_ids)
         res = (
@@ -509,7 +525,14 @@ class ReviewQueue:
             return False  # jemand anderes war schneller
 
         try:
-            if entry["source"] == "marketplace":
+            # Die RICHTUNG entscheidet zuerst, erst danach die Quelle: ein
+            # Antwort-Eintrag mit source='ota' ist eine öffentliche Antwort
+            # UNTER einer Bewertung, keine Gastbewertung. Beides über denselben
+            # Zweig zu schicken hiesse, den Text an `guest_review` zu geben —
+            # er stünde dann als unsere Bewertung DES GASTES beim Portal.
+            if entry.get("richtung") == "antwort":
+                self._senden_antwort(service, tenant_id, entry)
+            elif entry["source"] == "marketplace":
                 self._senden_marktplatz(service, tenant_id, entry)
             else:
                 self._senden_ota(service, tenant_id, entry)
@@ -523,6 +546,35 @@ class ReviewQueue:
             )
             return False
         return True
+
+    def _senden_antwort(
+        self, service: ReviewsService, tenant_id: str, entry: dict
+    ) -> None:
+        """Die öffentliche ANTWORT unter einer Bewertung abschicken.
+
+        Sie geht über denselben Weg wie die Antwort von Hand
+        (``ReviewsService.reply``) — erst zum Portal, dann in den eigenen
+        Bestand (Wurzel 1). Kein zweiter Pfad daneben: der bestehende spiegelt
+        den Erfolg selbst, und eine Kopie davon liefe auseinander, sobald
+        jemand das Spiegeln anfasst.
+        """
+        from .schemas import ReviewSource
+        from .service import ReviewError
+
+        text = (entry.get("text") or "").strip()
+        if not text:
+            raise ReviewError("Kein Antworttext hinterlegt.", status_code=422)
+        bezug = entry.get("antwort_auf_id") or entry.get("review_id")
+        if not bezug:
+            raise ReviewError(
+                "Keine Bewertung, auf die geantwortet wird.", status_code=422
+            )
+        quelle = (
+            ReviewSource.marketplace
+            if entry.get("source") == "marketplace"
+            else ReviewSource.ota
+        )
+        service.reply(service.system_context(tenant_id), quelle, str(bezug), text)
 
     def _senden_marktplatz(
         self, service: ReviewsService, tenant_id: str, entry: dict

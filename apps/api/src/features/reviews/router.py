@@ -27,6 +27,13 @@ from .schemas import (
     AutoTemplateList,
     AutoTemplateRequest,
     GuestReviewByHost,
+    KiKatalogAntwort,
+    KiKatalogSpeichern,
+    KiProtokollList,
+    KiRichtung,
+    KiSettings,
+    KiTestAntwort,
+    KiTestFrage,
     OtaGuestReviewRequest,
     QualityDashboard,
     QueueEntry,
@@ -397,11 +404,20 @@ def list_queue(
     status_filter: Annotated[QueueStatus | None, Query(alias="status")] = None,
     limit: Annotated[int, Query(ge=1, le=MAX_PAGE_SIZE)] = DEFAULT_PAGE_SIZE,
     offset: Annotated[int, Query(ge=0)] = 0,
+    richtung: KiRichtung | None = None,
 ) -> QueueListResponse:
-    """Geplante Bewertungen, nächste Fälligkeit zuerst — mit Restfrist."""
+    """Geplante Texte, nächste Fälligkeit zuerst — mit Restfrist.
+
+    Ohne `richtung` kommen beide: die Bewertungen über Gäste UND die
+    öffentlichen Antworten auf Bewertungen über uns.
+    """
     try:
         return service.list_queue(
-            ctx, status=status_filter, limit=limit, offset=offset
+            ctx,
+            status=status_filter,
+            limit=limit,
+            offset=offset,
+            richtung=richtung,
         )
     except ReviewError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
@@ -467,6 +483,89 @@ def tick(
 
 
 # ---- Detail/Antwort zuletzt: {source} würde sonst /summary & Co. abfangen ----
+# ---- Bewertungs-KI: Haltungs-Katalog, Einstellungen, Probe, Protokoll ----
+# Beide Richtungen teilen sich Katalog und Einstellungen (0549): es ist
+# derselbe Betrieb, der redet. Die Zustellart steht je Richtung, weil eine
+# öffentliche Antwort auf eine 1-Stern-Bewertung riskanter ist als eine
+# Gastbewertung, die ausser dem Gast kaum jemand sieht.
+
+
+@router.get("/ki/katalog", response_model=KiKatalogAntwort)
+def ki_katalog(service: ReviewsServiceDep, ctx: ViewCtx) -> KiKatalogAntwort:
+    """Die zehn Fragen samt den Antworten des Betriebs."""
+    try:
+        return service.ki_katalog(ctx)
+    except ReviewError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.put("/ki/katalog", response_model=KiKatalogAntwort)
+def ki_katalog_speichern(
+    req: KiKatalogSpeichern, service: ReviewsServiceDep, ctx: ManageCtx
+) -> KiKatalogAntwort:
+    """Eine Antwort setzen. Leerer Text löscht sie — die einzige Art, eine
+    Haltung zurückzunehmen."""
+    try:
+        return service.ki_katalog_speichern(ctx, req)
+    except ReviewError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/ki/settings", response_model=KiSettings)
+def ki_settings(service: ReviewsServiceDep, ctx: ViewCtx) -> KiSettings:
+    try:
+        return service.ki_settings(ctx)
+    except ReviewError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.put("/ki/settings", response_model=KiSettings)
+def ki_settings_speichern(
+    req: KiSettings, service: ReviewsServiceDep, ctx: ManageCtx
+) -> KiSettings:
+    """Der grosse Schalter und die Zustellart je Richtung."""
+    try:
+        return service.ki_settings_speichern(ctx, req)
+    except ReviewError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/ki/test", response_model=KiTestAntwort)
+def ki_test(
+    req: KiTestFrage, service: ReviewsServiceDep, ctx: ManageCtx
+) -> KiTestAntwort:
+    """Eine Probe. SENDET NICHTS.
+
+    `ManageCtx` und nicht `ViewCtx`: der Aufruf kostet einen Vertex-Aufruf und
+    ist damit eine Aktion, keine Ansicht (Wurzel 9).
+    """
+    try:
+        return service.ki_testen(ctx, req)
+    except ReviewError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/ki/protokoll", response_model=KiProtokollList)
+def ki_protokoll(
+    service: ReviewsServiceDep,
+    ctx: ViewCtx,
+    richtung: KiRichtung | None = None,
+    limit: Annotated[int, Query(ge=1, le=200)] = 50,
+) -> KiProtokollList:
+    """Was die KI tatsächlich getextet hat — die Diagnosespur."""
+    try:
+        return service.ki_protokoll(
+            ctx, richtung=richtung.value if richtung else None, limit=limit
+        )
+    except ReviewError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# ACHTUNG — REIHENFOLGE: Alles mit festem Pfad MUSS über den
+# `/{source}/{review_id}`-Routen stehen. FastAPI nimmt die erste passende
+# Route, und `/{source}/…` passt auch auf `/ki/katalog` — `ki` landet dann
+# als `source`, das Enum lehnt es ab, und der Aufruf endet als 422 statt
+# beim richtigen Endpunkt. Live passiert: die ganze KI-Seite bekam nur 422.
 @router.get("/{source}/{review_id}", response_model=UnifiedReview)
 def get_review(
     source: ReviewSource, review_id: str, service: ReviewsServiceDep, ctx: ViewCtx

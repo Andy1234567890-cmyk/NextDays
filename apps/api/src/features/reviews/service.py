@@ -35,6 +35,7 @@ from .common import (
     plaintext,
     scores_map,
 )
+from .ki_mixin import BewertungsKiMixin
 from .publication import resolve_publication
 from .queue import ReviewQueue
 from .schemas import (
@@ -53,6 +54,7 @@ from .schemas import (
     ChannelSummary,
     GuestReviewByHost,
     GuestScores,
+    KiRichtung,
     OtaGuestReviewRequest,
     QualityDashboard,
     QualityPoint,
@@ -204,8 +206,13 @@ def _ota_categories(raw: object) -> list[CategoryScore]:
     return out
 
 
-class ReviewsService:
-    """Cockpit über beide Bewertungs-Welten (service_role, applikativ gescopt)."""
+class ReviewsService(BewertungsKiMixin):
+    """Cockpit über beide Bewertungs-Welten (service_role, applikativ gescopt).
+
+    Die Bewertungs-KI (Katalog, Einstellungen, Probe, Takt) kommt aus
+    :class:`BewertungsKiMixin` — sie reicht nur den Scope dieser Klasse durch
+    und wäre hier 45 Zeilen ohne eigenen Bezug zu den Abfragen.
+    """
 
     def __init__(
         self,
@@ -1178,15 +1185,22 @@ class ReviewsService:
         return out
 
     # -------------------------------------------------------- Warteschlange
-    def list_queue(
+    def list_queue(  # noqa: PLR0913 — Filter der Liste, jeder optional
         self,
         ctx: AuthContext,
         *,
         status: QueueStatus | None,
         limit: int,
         offset: int,
+        richtung: KiRichtung | None = None,
     ) -> QueueListResponse:
-        """Geplante Bewertungen des Betriebs, nächste Fälligkeit zuerst."""
+        """Geplante Texte des Betriebs, nächste Fälligkeit zuerst.
+
+        Ohne `richtung` kommen BEIDE — die Bewertungen über Gäste und die
+        öffentlichen Antworten. Das ist gewollt: die Frage des Betriebs lautet
+        „was geht demnächst in meinem Namen raus?", und die Antwort darauf ist
+        nicht nach Richtung getrennt.
+        """
         db, tenant_id = self._require(ctx)
         limit = max(1, min(limit, MAX_PAGE_SIZE))
         offset = max(0, offset)
@@ -1199,6 +1213,7 @@ class ReviewsService:
             property_ids=eigene,
             limit=limit,
             offset=offset,
+            richtung=richtung.value if richtung else None,
         )
         return QueueListResponse(
             items=[self._to_queue_entry(r) for r in rows],
@@ -1245,6 +1260,11 @@ class ReviewsService:
             property_id=str(row["property_id"]) if row.get("property_id") else None,
             property_title=prop.get("title"),
             guest_name=row.get("guest_name"),
+            richtung=KiRichtung(row.get("richtung") or "gast_bewerten"),
+            ki_erzeugt=bool(row.get("ki_erzeugt")),
+            antwort_auf_id=(
+                str(row["antwort_auf_id"]) if row.get("antwort_auf_id") else None
+            ),
             reservation_id=(
                 str(row["reservation_id"]) if row.get("reservation_id") else None
             ),
@@ -1423,6 +1443,11 @@ class ReviewsService:
         # Schlange stehen), dann verfallen lassen, dann versenden — in dieser
         # Reihenfolge geht nichts raus, dessen Fenster schon zu ist.
         queued, reminded = automation.run()
+        # Die KI VOR dem Versand: sie erzeugt Texte für Einträge, die sonst
+        # ohne Text liegen bleiben, und legt Antwort-Entwürfe auf frisch
+        # gespiegelte Portal-Bewertungen an. Liefe sie danach, wäre jeder ihrer
+        # Texte einen ganzen Tick zu spät.
+        queued += self._ki_texte()
         warteschlange = self.queue()
         expired = warteschlange.expire_overdue()
         rated = warteschlange.send_due(self)

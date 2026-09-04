@@ -242,6 +242,22 @@ class QueueStatus(StrEnum):
     fehler = "fehler"
 
 
+class KiRichtung(StrEnum):
+    """Wer schreibt über wen."""
+
+    # Wir bewerten den Gast (Airbnb-Gastbewertung).
+    gast_bewerten = "gast_bewerten"
+    # Wir antworten öffentlich auf die Bewertung eines Gastes über uns.
+    antwort = "antwort"
+
+
+class KiZustellart(StrEnum):
+    """Geht der Text von selbst raus oder wird er nur entworfen?"""
+
+    entwurf = "entwurf"
+    automatisch = "automatisch"
+
+
 class QueueEntry(BaseModel):
     """Eine geplante Bewertung des Betriebs über seinen Gast."""
 
@@ -267,6 +283,14 @@ class QueueEntry(BaseModel):
     tags: list[str] = []
     sent_at: datetime | None = None
     error: str | None = None
+    # Welcher der beiden Texte das ist (0549). Die Oberfläche muss sie
+    # unterscheiden: eine Gastbewertung sieht der Gast, eine Antwort steht
+    # öffentlich unter der Bewertung.
+    richtung: KiRichtung = KiRichtung.gast_bewerten
+    # Kam der Text von der KI? Nur zur Anzeige — der Betrieb soll vor der
+    # Freigabe sehen, was ein Mensch und was ein Modell geschrieben hat.
+    ki_erzeugt: bool = False
+    antwort_auf_id: str | None = None
 
 
 class QueueListResponse(BaseModel):
@@ -458,3 +482,112 @@ class AutoTemplateRequest(BaseModel):
 
 class AutoTemplateList(BaseModel):
     items: list[AutoTemplate] = []
+
+
+# ---------------------------------------------------------- Bewertungs-KI
+# Beide Richtungen teilen sich Katalog und Einstellungen; die Zustellart steht
+# je Richtung, weil sie unterschiedlich riskant sind (0549).
+
+
+class KiKatalogFrage(BaseModel):
+    """Eine Katalogfrage samt der Antwort des Betriebs.
+
+    Frage und Beispiel kommen aus dem Code (`ki_katalog.KATALOG`), die Antwort
+    aus der Datenbank. Beides zusammen, weil die Oberfläche sonst den Katalog
+    ein zweites Mal führen müsste — und dann liefe er auseinander.
+    """
+
+    schluessel: str
+    frage: str
+    beispiel: str
+    antwort: str | None = None
+    # Bei welchen Noten diese Antwort in den Prompt geht. Leer = immer.
+    noten: list[int] = []
+    richtungen: list[KiRichtung] = []
+
+
+class KiKatalogAntwort(BaseModel):
+    """Der ganze Katalog mit Füllstand."""
+
+    fragen: list[KiKatalogFrage] = []
+    beantwortet: int = 0
+    gesamt: int = 0
+
+
+class KiKatalogSpeichern(BaseModel):
+    """Eine Antwort setzen oder leeren.
+
+    Leerer Text löscht die Antwort — das ist die einzige Art, eine Haltung
+    zurückzunehmen, und sie darf nicht als „gespeichert" durchgehen.
+    """
+
+    schluessel: str = Field(min_length=1, max_length=80)
+    antwort: str = Field(default="", max_length=1500)
+
+
+class KiSettings(BaseModel):
+    """Der grosse Schalter und die Zustellart je Richtung."""
+
+    ki_aktiv: bool = False
+    zustellart_gast_bewerten: KiZustellart = KiZustellart.entwurf
+    zustellart_antwort: KiZustellart = KiZustellart.entwurf
+    # Unter dieser Note bleibt die ANTWORT Entwurf, auch bei 'automatisch'.
+    antwort_mensch_ab_note: int | None = Field(default=None, ge=1, le=5)
+    tonfall: str = "freundlich"
+    unterschrift: str | None = Field(default=None, max_length=300)
+    sprache: str = Field(default="auto", min_length=2, max_length=10)
+    verzoegerung_minuten: int = Field(default=60, ge=0, le=10080)
+
+
+class KiTestFrage(BaseModel):
+    """Eine Probe. Sendet nichts.
+
+    Der Betrieb gibt die Bewertung ein, die er erwartet, und sieht den Text,
+    der im Ernstfall entstünde — samt Zustellart und Begründung.
+    """
+
+    richtung: KiRichtung = KiRichtung.antwort
+    note: int = Field(default=5, ge=1, le=5)
+    # Der Bewertungstext des Gastes. Bei 'gast_bewerten' meist leer.
+    gast_text: str | None = Field(default=None, max_length=4000)
+    gast_name: str | None = Field(default=None, max_length=200)
+    property_id: str | None = None
+    sprache: str | None = Field(default=None, max_length=10)
+
+
+class KiTestAntwort(BaseModel):
+    """Was im Ernstfall passieren würde."""
+
+    text: str
+    zustellart: KiZustellart
+    # Warum NICHT automatisch zugestellt würde. None = es ginge raus.
+    grund: str | None = None
+    # Welche Katalogfragen den Text getragen haben — die eigentliche Diagnose.
+    verwendete_fragen: list[str] = []
+    # Das Modell bittet um menschliche Prüfung (Vorwurf, den nur ein Mensch
+    # beurteilen kann).
+    mensch_pruefen: str | None = None
+    # Unbeantwortete Katalogfragen, die zu dieser Note gehört hätten.
+    offene_fragen: list[str] = []
+
+
+class KiProtokollEintrag(BaseModel):
+    """Eine Zeile der Spur — was die KI tatsächlich getextet hat."""
+
+    id: str
+    richtung: KiRichtung
+    quelle: str
+    bezug_id: str | None = None
+    note: int | None = None
+    eingabe_auszug: str | None = None
+    ergebnis: str | None = None
+    zustellart: KiZustellart
+    gesendet_at: datetime | None = None
+    verwendete_fragen: list[str] = []
+    grund: str | None = None
+    created_at: datetime | None = None
+
+
+class KiProtokollList(BaseModel):
+    items: list[KiProtokollEintrag] = []
+    total: int = 0
