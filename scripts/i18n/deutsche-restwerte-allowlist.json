@@ -4596,6 +4596,249 @@
         "sl",
         "sv"
       ]
+    },
+    {
+      "schluessel": "personal.kartei.sprachstufe.a1",
+      "grund": "kuerzel",
+      "sprachen": "alle",
+      "notiz": "GER-Sprachniveau — international einheitlich"
+    },
+    {
+      "schluessel": "personal.kartei.sprachstufe.a2",
+      "grund": "kuerzel",
+      "sprachen": "alle",
+      "notiz": "GER-Sprachniveau — international einheitlich"
+    },
+    {
+      "schluessel": "personal.kartei.sprachstufe.b1",
+      "grund": "kuerzel",
+      "sprachen": "alle",
+      "notiz": "GER-Sprachniveau — international einheitlich"
+    },
+    {
+      "schluessel": "personal.kartei.sprachstufe.b2",
+      "grund": "kuerzel",
+      "sprachen": "alle",
+      "notiz": "GER-Sprachniveau — international einheitlich"
+    },
+    {
+      "schluessel": "personal.kartei.sprachstufe.c1",
+      "grund": "kuerzel",
+      "sprachen": "alle",
+      "notiz": "GER-Sprachniveau — international einheitlich"
+    },
+    {
+      "schluessel": "personal.kartei.sprachstufe.c2",
+      "grund": "kuerzel",
+      "sprachen": "alle",
+      "notiz": "GER-Sprachniveau — international einheitlich"
+    },
+    {
+      "schluessel": "personal.gespraechArt.feedback",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "it",
+        "mt",
+        "nl",
+        "pt",
+        "ro",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "personal.kartei.institution",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "fr",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "personal.kartei.version",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "fr",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "personal.kartei.niveau",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "fr",
+        "nl"
+      ]
+    },
+    {
+      "schluessel": "personal.kartei.note",
+      "grund": "international",
+      "sprachen": [
+        "fr"
+      ]
+    },
+    {
+      "schluessel": "personal.kartei.trainer",
+      "grund": "international",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "schluessel": "personal.kartei.plan",
+      "grund": "international",
+      "sprachen": [
+        "en",
+        "es",
+        "pl"
+      ]
+    },
+    {
+      "schluessel": "personal.kartei.planStunden",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "es",
+        "hr",
+        "pl",
+        "ro",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "personal.dienstplan.ist",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "es",
+        "fr",
+        "hr",
+        "nl",
+        "pl",
+        "ro",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "personal.auswertung.plan",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "es",
+        "fr",
+        "hr",
+        "pl",
+        "ro"
+      ]
+    },
+    {
+      "schluessel": "personal.zeit.planAbweichung",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "es",
+        "fr",
+        "hr",
+        "nl",
+        "pl",
+        "ro",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "personal.mitarbeiter.kachelExtern",
+      "grund": "international",
+      "sprachen": [
+        "nl",
+        "ro",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "personal.filter.extern",
+      "grund": "international",
+      "sprachen": [
+        "nl",
+        "ro",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "personal.dokArt.attest",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "nl"
+      ]
+    },
+    {
+      "schluessel": "personal.abwesenheit.kommentar",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "personal.urlaub.rest",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "nl"
+      ]
+    },
+    {
+      "schluessel": "personal.zeit.pause",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "fr"
+      ]
+    },
+    {
+      "schluessel": "personal.verfuegbar.form",
+      "grund": "international",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "schluessel": "personal.auswertung.kosten",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "schluessel": "personal.akte.felder.notfall_telefon",
+      "grund": "international",
+      "sprachen": [
+        "mt"
+      ]
+    },
+    {
+      "schluessel": "personal.einstellungen.telefon",
+      "grund": "international",
+      "sprachen": [
+        "mt"
+      ]
+    },
+    {
+      "schluessel": "personal.zeit.netto",
+      "grund": "international",
+      "sprachen": [
+        "mt"
+      ]
     }
   ]
 }

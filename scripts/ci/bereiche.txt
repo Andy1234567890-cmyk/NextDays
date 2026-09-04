@@ -44,7 +44,7 @@ marketing|marketing/ packages/eslint-config/
 storybook|storybook/ packages/eslint-config/
 
 # --- Querprüfungen ---------------------------------------------------------
-# Der Job führt SECHS Skripte aus, jedes mit eigenen Quellen:
+# Der Job führt SIEBEN Skripte aus, jedes mit eigenen Quellen:
 #   kanal-enums-pruefen.mjs        supabase/migrations, reservations+calendar
 #                                  schemas, web/lib, mobile-nextdays/lib,
 #                                  web/messages
@@ -55,13 +55,20 @@ storybook|storybook/ packages/eslint-config/
 #   provisionssaetze-pruefen.mjs   marketing/messages + web/messages
 #   sprachlisten-pruefen.mjs       web/i18n/locales.ts, site_config/schemas.py,
 #                                  builder/lib/sprache.ts, builder/lib/texte.ts
+#   intl-laufzeitfehler-pruefen.mjs ALLE messages/*.json und ALLE t()-Aufrufe
+#                                  der sieben Frontends — deshalb stehen unten
+#                                  `web/components/` und die uebrigen Apps
+#                                  KOMPLETT drin, nicht nur
+#                                  `web/components/website/`. Vorher liefen
+#                                  genau die Komponenten nicht durch den Job,
+#                                  die ihre Sprachdatei benutzen.
 #   blocktypen-pruefen.mjs         supabase/migrations, site_config/schemas.py,
 #                                  web/lib/site-pages.ts,
 #                                  web/components/website/abschnitte.ts,
 #                                  builder/lib/site.ts,
 #                                  builder/components/blocks/block-renderer.tsx,
 #                                  web/messages
-kanal-enums|supabase/migrations/ apps/api/src/core/mail_texte.py apps/api/src/features/notification_settings/ web/app/ scripts/diagnose/ apps/api/src/features/reservations/ apps/api/src/features/calendar/ apps/api/src/features/inbox/ apps/api/src/features/api_clients/ apps/api/src/features/site_config/ apps/public-api/src/core/ web/i18n/ web/lib/ web/messages/ web/components/website/ marketing/messages/ mobile-nextdays/lib/ builder/lib/ builder/components/blocks/ scripts/i18n/
+kanal-enums|supabase/migrations/ apps/api/src/core/mail_texte.py apps/api/src/features/notification_settings/ web/app/ scripts/diagnose/ apps/api/src/features/reservations/ apps/api/src/features/calendar/ apps/api/src/features/inbox/ apps/api/src/features/api_clients/ apps/api/src/features/site_config/ apps/public-api/src/core/ web/i18n/ web/lib/ web/messages/ web/components/ marketing/ plattform/ gastgeber/ admin/ partner/ mobile-nextdays/lib/ builder/lib/ builder/components/blocks/ scripts/i18n/
 
 # --- Mobile ----------------------------------------------------------------
 mobile-bestdays|mobile-bestdays/

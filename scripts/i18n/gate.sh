@@ -26,6 +26,7 @@ echo "3/7  Kanal-Enums deckungsgleich mit dem Backend?"
 # App-unabhängig (prüft web + mobile-nextdays gegen die Pydantic-Enums), läuft
 # aber hier mit: ein neuer Kanalwert ist immer auch ein fehlendes Label.
 node scripts/i18n/kanal-enums-pruefen.mjs
+node scripts/i18n/rollen-pruefen.mjs
 
 echo
 echo "4/7  Platzhalter-Etiketten vollständig?"

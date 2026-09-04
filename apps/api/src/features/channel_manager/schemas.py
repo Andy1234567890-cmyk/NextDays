@@ -270,6 +270,12 @@ class ChannelResponse(BaseModel):
     portal: str          # menschlich, z.B. "Booking.com"
     title: str | None = None
     is_active: bool = False
+    # Was der Aktivierung beim Portal noch fehlt, in Klartext (kommagetrennt).
+    # None = alles bereit. Kein Fehler — die Verbindung steht, aber Channex gibt
+    # den Kanal ohne diese Angaben nicht frei, und er bliebe sonst still auf
+    # „Disabled". Besonders bei Kanaelen ohne Extranet (Google) ist das der
+    # Regelfall: dort verlangt das Portal den kompletten Objekt-Inhalt von uns.
+    readiness_offen: str | None = None
 
 
 class ChannelListResponse(BaseModel):
@@ -464,6 +470,11 @@ class PrepareChannelResponse(BaseModel):
     portal: str                          # menschlicher Name
     ota_rooms: list[OtaRoom] = Field(default_factory=list)
     rooms: list[LocalRoomOption] = Field(default_factory=list)
+    # Der Kanal ordnet SELBST zu (`mapping_mode: "direct"`, z.B. Google Hotel
+    # Search): es gibt keine OTA-Zimmer, `ota_rooms` ist dann rechtmaessig leer.
+    # Die Maske darf das nicht als Zugangsdaten-Fehler deuten, sondern verbindet
+    # ohne Zimmer-Auswahl. Default false = bisheriges Verhalten.
+    direktzuordnung: bool = False
 
 
 class ChannelMapping(BaseModel):
@@ -471,7 +482,11 @@ class ChannelMapping(BaseModel):
     Zimmers werden serverseitig auf die Rate-Plans des Objekts expandiert."""
 
     local_property_id: str
-    room_type_code: int | str            # OTA-Zimmer-Code (Sandbox: String)
+    # None bei Kanaelen mit Direktzuordnung (`mapping_mode: "direct"`): dort
+    # gibt es keinen OTA-Zimmer-Code, den man senden koennte. Bewusst optional
+    # statt eines Leerstrings — der landete ueber `_mapped_room_for_property`
+    # als erfundener Ersatzwert in `ota_room_type_code` (Wurzel 4).
+    room_type_code: int | str | None = None   # OTA-Zimmer-Code (Sandbox: String)
     occupancy: int = 2
     pricing_type: str = "Standard"
 

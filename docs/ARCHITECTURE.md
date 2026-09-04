@@ -158,6 +158,7 @@ flowchart TB
             CAL["calendar — Verfügbarkeit, Double-Booking, Preis-Override (liest Preis via pricing-Resolver); Sperr-Anträge der Eigentümer entscheiden (sperrantraege.py, APPROVE_BLOCK): genehmigen sperrt Nächte + pusht ARI, widerrufen gibt nur die eigenen wieder frei (availability.block_request_id)"]
             PRICE["pricing — Preis-Resolver (effective_price + quote) + Dynamic-Pricing-Engine (dynamic_prices; Regeln + gelernte Pickup-Kurve/Wetter; enabled = überall gültig inkl. OTA-Push)"]
             TASKS["tasks — Aufgaben, Checklisten+Foto, Vertretung, Inventar"]
+            PERSONAL["personal — Personal & Dienstplan: Akte (verschlüsselt), Schichten mit Konfliktprüfung, Abwesenheit/Urlaubskonto, Zeiterfassung, Lohnvorbereitung DATEV (0540–0542, ADR-0023)"]
             BUCH["buchhaltung — Rechnungen + Kunden (aus Taskilo, tenant-vereinheitlicht) + Firmenprofil/Logo; Nummernkreise (next_document_number)"]
             OWN["owners — Eigentümer-Stammdaten, Objekt-Zuweisung (Anteil + Provisions-Override je Objekt)"]
             OWNST["owner_statements — Auszahlungs-Abrechnung (Provision je Objekt, EU-Steuer/Reverse-Charge, Storno, Mehrwährung via ECB-Tageskurs)"]
@@ -765,9 +766,13 @@ vorhandenen Channex-ARI-Push (Preis in Cent + Min-Stay, run-length-kodiert) aus.
 Konfiguration je Objekt in **`dp_settings`** (opt-in, **default AUS**). Der tägliche
 Lauf kommt über `POST /pricing/recompute` (Cron-Secret, Coolify Scheduled Task,
 Horizont 540 Tage); zusätzlich rechnet `reservations.create/cancel` die betroffenen
-Tage (±2) sofort neu (Auslastung/Orphan ändern sich). **Manuell schlägt automatisch:**
-ein vom Host gesetzter `price_override` gewinnt im Resolver immer über den DP-Vorschlag;
-bei DP-AUS gibt es keine `dynamic_prices` und der Resolver fällt auf Basis zurück.
+Tage (±2) sofort neu (Auslastung/Orphan ändern sich). **Der Schalter entscheidet:**
+ist `dp_settings.enabled` an, gewinnt der berechnete Preis im Resolver auch über einen
+gesetzten `price_override` — die Agentur übergibt die Preisgestaltung dieses Objekts
+bewusst an die Automatik. Ist er aus, lädt der Resolver `dynamic_prices` gar nicht erst
+(`_load_dynamic`/`_load_dynamic_bulk`, fail-closed) und der manuelle Tagespreis greift
+SOFORT wieder. Die `price_overrides`-Zeilen werden dabei nie gelöscht; ohne dieses Gate
+wäre ein alter `dynamic_prices`-Bestand nach dem Abschalten ein Geisterpreis.
 **Phase 2 (Migration `0056`)** ergänzt einen **Markt-/Wettbewerbs-Faktor** über eine
 pluggable Provider-Schnittstelle (`pricing/market/`: `MarketSignalProvider` → comp_price/
 demand_index/event_uplift_pct). Auswahl per Env `MARKET_DATA_PROVIDER`: Default

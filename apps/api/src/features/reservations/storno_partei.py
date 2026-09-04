@@ -29,6 +29,7 @@ _PARTEI_JE_ROLLE: dict[UserRole, CancelParty] = {
     UserRole.co_admin: CancelParty.betrieb,
     UserRole.staff: CancelParty.betrieb,
     UserRole.cleaner: CancelParty.betrieb,
+    UserRole.shift_lead: CancelParty.betrieb,
     UserRole.owner: CancelParty.eigentuemer,
 }
 

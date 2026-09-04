@@ -418,6 +418,21 @@ jobs:
       - name: Enums und Labels deckungsgleich
         if: steps.pruefen.outputs.laufen == 'true'
         run: node scripts/i18n/kanal-enums-pruefen.mjs
+      - name: Rollen-Kette (DB → Pydantic → Unions → Labels)
+        if: steps.pruefen.outputs.laufen == 'true'
+        run: node scripts/i18n/rollen-pruefen.mjs
+
+      # Drei Intl-Fehlerklassen, die weder `tsc` noch ESLint sehen und erst im
+      # Browser als roter Konsolenfehler auftauchen: ein Schlüssel mit "." IN
+      # einer Ebene (next-intl verwirft dann die GANZE Sprachdatei), ein `t()`
+      # auf einen Schlüssel, den es nicht gibt, und ein `t()` ohne Werte,
+      # obwohl der Text Platzhalter erwartet. Anlass 04.09.2026: der Dienstplan
+      # warf alle drei gleichzeitig — 426 Punkt-Schlüssel je Sprache aus einem
+      # flachen Übersetzungslauf, dazu drei falsche Farbnamen in der
+      # Website-Designleiste, die es seit Monaten gab.
+      - name: Intl-Laufzeitfehler
+        if: steps.pruefen.outputs.laufen == 'true'
+        run: node scripts/i18n/intl-laufzeitfehler-pruefen.mjs
 
       # Jeder Platzhalter aus dem Backend-Katalog braucht sein Etikett in allen
       # 24 Sprachen. Die Prüfung darüber vergleicht die Sprachen UNTEREINANDER

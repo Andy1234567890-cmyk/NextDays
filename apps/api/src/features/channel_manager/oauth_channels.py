@@ -763,6 +763,13 @@ class OAuthChannelsMixin:
         "bedrooms_count": "Anzahl Schlafzimmer",
         "bathrooms_count": "Anzahl Badezimmer",
         "beds_count": "Anzahl Betten",
+        # Nur Google verlangt diese beiden — es hat kein Extranet, also muss
+        # der ganze Objekt-Inhalt von uns kommen. Bei Ferienobjekten fordert es
+        # zusaetzlich eine Website mit https:// und MINDESTENS ACHT Fotos
+        # (Channex-Doku „Google Vacation Rental"); ein Hotel kommt mit einem
+        # Foto aus. Ohne Klartext stand hier der rohe Feldname.
+        "website": "Website des Betriebs (mit https://)",
+        "content": "Fotos und Beschreibung",
     }
     _READINESS_RELATION_KLARTEXT: dict[str, str] = {
         "Mapping": "Zuordnung der Anzeigen zu deinen Objekten",

@@ -1,0 +1,282 @@
+{
+  "personal": {
+    "berichte": {
+      "titel": "Berichte",
+      "untertitel": "{anzahl, plural, =0 {Kein Bericht freigegeben} one {Ein Bericht} other {# Berichte}} — Zeit, Abwesenheit, Kosten und Personal als Tabelle, CSV oder PDF.",
+      "suche": "Bericht suchen …",
+      "nurLeitung": "Nur Leitung",
+      "zeitraum": "Zeitraum",
+      "zeitraumZeile": "{von} – {bis} · {anzahl, plural, =0 {keine Zeile} one {eine Zeile} other {# Zeilen}}",
+      "summe": "Summe",
+      "sortieren": "Nach dieser Spalte sortieren",
+      "drucken": "Drucken",
+      "csv": "CSV",
+      "csvFertig": "{name} heruntergeladen.",
+      "erzeugtAm": "Erzeugt am {zeit}",
+      "gruppen": {
+        "zeit": "Arbeitszeit",
+        "abwesenheit": "Abwesenheit",
+        "finanzen": "Kosten & Lohn",
+        "personal": "Personal",
+        "plan": "Dienstplan"
+      },
+      "keine": {
+        "titel": "Kein Bericht verfügbar",
+        "text": "Für deine Rolle ist kein Bericht freigegeben. Kosten- und Lohnberichte sehen nur Inhaber und Co-Administration."
+      },
+      "leer": {
+        "titel": "Keine Daten im Zeitraum",
+        "text": "Im gewählten Zeitraum gibt es nichts zu zeigen. Prüfe Zeitraum und Filter.",
+        "tabelle": "Keine Zeilen."
+      },
+      "filter": {
+        "titel": "Filter",
+        "dieserMonat": "Dieser Monat",
+        "vormonat": "Vormonat",
+        "diesesJahr": "Dieses Jahr",
+        "alleBereiche": "Alle Arbeitsbereiche",
+        "alleObjekte": "Alle Objekte",
+        "allePersonen": "Alle Personen",
+        "alleArten": "Alle Beschäftigungsarten",
+        "zuruecksetzen": "Filter zurücksetzen"
+      },
+      "namen": {
+        "stundenkonten": {
+          "titel": "Stundenkonten",
+          "beschreibung": "Soll, Ist, Monatssaldo, Arbeitszeitkonto, Guttage und Resturlaub je Person."
+        },
+        "soll_ist": {
+          "titel": "Soll/Ist je Tag",
+          "beschreibung": "Geplante gegen erfasste Zeit für jeden Tag und jede Person, mit der Abweichung."
+        },
+        "monatsabschluesse": {
+          "titel": "Monatsabschlüsse",
+          "beschreibung": "Welche Person welchen Monat freigegeben hat — und wo der Abschluss noch fehlt."
+        },
+        "zuschlaege": {
+          "titel": "Zuschläge",
+          "beschreibung": "Nacht-, Sonntags-, Feiertags- und Überstunden je Person in Minuten und Geld."
+        },
+        "personalkosten": {
+          "titel": "Personalkosten",
+          "beschreibung": "Plan- und Ist-Kosten je Tag, Arbeitsbereich und Objekt, Fremdfirmen getrennt."
+        },
+        "pkq_verlauf": {
+          "titel": "Personalkostenquote",
+          "beschreibung": "Umsatz, Kosten, Quote und Produktivität je Tag gegen die gesetzten Ziele."
+        },
+        "produktivitaet": {
+          "titel": "Produktivität je Bereich",
+          "beschreibung": "Stunden, Umsatzanteil und Umsatz pro Stunde für jeden Arbeitsbereich."
+        },
+        "verdienstgrenzen": {
+          "titel": "Verdienstgrenzen",
+          "beschreibung": "Wer eine Grenze hat, wie viel verbraucht und geplant ist und wie viel bleibt."
+        },
+        "lohnvorschau": {
+          "titel": "Lohnvorschau",
+          "beschreibung": "Was je Person an das Lohnprogramm gehen würde — Grundlage für den Lohnlauf."
+        },
+        "urlaub": {
+          "titel": "Urlaubskonten",
+          "beschreibung": "Anspruch, Übertrag, genommene und beantragte Tage, Rest und Verfallsdatum."
+        },
+        "krank": {
+          "titel": "Krankenstand",
+          "beschreibung": "Kranktage, Kind-Krank-Tage und Zahl der Fälle je Person."
+        },
+        "abwesenheiten": {
+          "titel": "Abwesenheitsanträge",
+          "beschreibung": "Jeder Antrag mit Art, Zeitraum, Status und der Entscheidung."
+        },
+        "fristen": {
+          "titel": "Fristen & Nachweise",
+          "beschreibung": "Dokumente, Nachweise und Schulungen mit ihrem Ablauf — abgelaufene zuerst sichtbar."
+        },
+        "mitarbeiter": {
+          "titel": "Mitarbeiterliste",
+          "beschreibung": "Stammdaten aller Personen: Rolle, Position, Beschäftigung, Ein- und Austritt."
+        },
+        "dienstplan": {
+          "titel": "Dienstplan",
+          "beschreibung": "Alle Schichten des Zeitraums als flache Liste mit Pause und Nettozeit."
+        }
+      },
+      "spalten": {
+        "person": "Person",
+        "personalnummer": "Personalnr.",
+        "beschaeftigungsart": "Beschäftigung",
+        "rolle": "Rolle",
+        "position": "Position",
+        "firma": "Firma",
+        "eintritt": "Eintritt",
+        "austritt": "Austritt",
+        "wochenstunden": "Wochenstunden",
+        "arbeitsbereich": "Arbeitsbereich",
+        "arbeitsbereiche": "Arbeitsbereiche",
+        "objekt": "Objekt",
+        "datum": "Datum",
+        "wochentag": "Wochentag",
+        "monat": "Monat",
+        "zeitraum": "Zeitraum",
+        "von": "Von",
+        "bis": "Bis",
+        "art": "Art",
+        "titel": "Bezeichnung",
+        "status": "Status",
+        "notiz": "Notiz",
+        "hinweise": "Hinweise",
+        "soll_minuten": "Soll",
+        "ist_minuten": "Ist",
+        "plan_minuten": "Plan",
+        "differenz_minuten": "Differenz",
+        "netto_minuten": "Netto",
+        "minuten": "Stunden",
+        "pause_min": "Pause",
+        "saldo_minuten": "Saldo",
+        "saldo_monat_minuten": "Saldo Monat",
+        "azk_saldo_minuten": "Arbeitszeitkonto",
+        "stundenlimit_minuten": "Stundenlimit",
+        "grund_minuten": "Grundzeit",
+        "nacht_minuten": "Nacht",
+        "sonntag_minuten": "Sonntag",
+        "feiertag_minuten": "Feiertag",
+        "ueberstunden_minuten": "Überstunden",
+        "nacht_minor": "Nacht (Geld)",
+        "sonntag_minor": "Sonntag (Geld)",
+        "feiertag_minor": "Feiertag (Geld)",
+        "ueberstunden_minor": "Überstunden (Geld)",
+        "summe_minor": "Summe",
+        "brutto_minor": "Brutto",
+        "kosten_minor": "Kosten",
+        "kosten_plan_minor": "Kosten Plan",
+        "kosten_ist_minor": "Kosten Ist",
+        "davon_fremd_minor": "davon Fremdfirmen",
+        "umsatz_minor": "Umsatz",
+        "umsatz_anteil_minor": "Umsatzanteil",
+        "produktivitaet_minor": "Umsatz je Stunde",
+        "ziel_produktivitaet_minor": "Ziel Umsatz je Stunde",
+        "quote_pct": "Personalkostenquote",
+        "ziel_quote_pct": "Zielquote",
+        "grenze_minor": "Grenze",
+        "verbraucht_minor": "Verbraucht",
+        "geplant_minor": "Geplant",
+        "rest_minor": "Rest",
+        "guttage": "Guttage",
+        "anspruch": "Anspruch",
+        "uebertrag": "Übertrag",
+        "genommen": "Genommen",
+        "beantragt": "Beantragt",
+        "rest": "Rest",
+        "urlaub_rest": "Resturlaub",
+        "urlaub_tage": "Urlaubstage",
+        "krank_tage": "Kranktage",
+        "kind_krank_tage": "Kind krank",
+        "unbezahlt_tage": "Unbezahlt",
+        "tage": "Tage",
+        "faelle": "Fälle",
+        "letzter_fall": "Letzter Fall",
+        "einsaetze": "Einsätze",
+        "personen": "Personen",
+        "verfall_am": "Verfällt am",
+        "ablauf_am": "Läuft ab am",
+        "tage_bis_ablauf": "Tage bis Ablauf",
+        "freigegeben_am": "Freigegeben am",
+        "fehlt": "Fehlt",
+        "entschieden_von": "Entschieden von",
+        "entschieden_am": "Entschieden am"
+      },
+      "art": {
+        "dokument": "Dokument",
+        "nachweis": "Nachweis",
+        "schulung": "Schulung"
+      },
+      "status": {
+        "ok": "In Ordnung",
+        "abweichung": "Abweichung",
+        "fehlt": "Fehlt",
+        "ohne_plan": "Ohne Plan",
+        "knapp": "Knapp",
+        "ueberschritten": "Überschritten",
+        "gueltig": "Gültig",
+        "bald": "Läuft bald ab",
+        "abgelaufen": "Abgelaufen",
+        "aktiv": "Aktiv",
+        "inaktiv": "Inaktiv",
+        "entwurf": "Entwurf",
+        "veroeffentlicht": "Veröffentlicht",
+        "bestaetigt": "Bestätigt",
+        "abgesagt": "Abgesagt",
+        "beantragt": "Beantragt",
+        "genehmigt": "Genehmigt",
+        "abgelehnt": "Abgelehnt",
+        "storniert": "Storniert"
+      }
+    },
+    "lohn": {
+      "titel": "Lohnläufe",
+      "untertitel": "Monat prüfen, freigeben und an das Lohnprogramm übergeben. Exportiert werden ausschließlich bestätigte Zeiten.",
+      "jahr": "Jahr",
+      "keinLauf": "Noch nicht angelegt",
+      "pruefliste": "Prüfliste",
+      "befunde": "{anzahl, plural, one {Ein Befund} other {# Befunde}}",
+      "beheben": "Beheben",
+      "exportFormat": "Exportformat",
+      "angelegt": "Lohnlauf angelegt.",
+      "geprueft": "Prüfung abgeschlossen.",
+      "freigegeben": "Lohnlauf freigegeben.",
+      "exportiert": "{name} heruntergeladen.",
+      "zurueckgesetzt": "Lohnlauf auf Entwurf zurückgesetzt.",
+      "geprueftAm": "geprüft {zeit}",
+      "freigegebenAm": "freigegeben {zeit}",
+      "exportiertAm": "exportiert {zeit} ({name})",
+      "pruefungKopf": "{personen, plural, one {Eine Person} other {# Personen}} · {zeiten, plural, one {eine Zeitbuchung} other {# Zeitbuchungen}} · geprüft {zeit}",
+      "pruefungSauber": "Keine Befunde — der Monat ist bereit für die Freigabe.",
+      "fehlerTitel": "{anzahl, plural, one {Ein Fehler blockiert die Freigabe} other {# Fehler blockieren die Freigabe}}",
+      "warnungTitel": "{anzahl, plural, one {Eine Warnung} other {# Warnungen}} — Freigabe möglich",
+      "freigabeGesperrtFehler": "Erst {anzahl, plural, one {den offenen Fehler} other {die # offenen Fehler}} beheben und erneut prüfen.",
+      "freigabeGesperrtUngeprueft": "Erst prüfen, dann freigeben.",
+      "zuruecksetzenTitel": "Lohnlauf zurücksetzen",
+      "zuruecksetzenText": "Der Monat geht auf Entwurf zurück. Prüfung und Freigabe verfallen; ein bereits erzeugter Export bleibt beim Lohnprogramm gültig, bis er dort ersetzt wird.",
+      "zuruecksetzenGrund": "Warum wird zurückgesetzt? Der Grund bleibt am Lauf.",
+      "status": {
+        "entwurf": "Entwurf",
+        "geprueft": "Geprüft",
+        "freigegeben": "Freigegeben",
+        "exportiert": "Exportiert"
+      },
+      "aktion": {
+        "anlegen": "Anlegen",
+        "pruefen": "Prüfen",
+        "freigeben": "Freigeben",
+        "exportieren": "Exportieren",
+        "zuruecksetzen": "Zurücksetzen"
+      },
+      "format": {
+        "csv": "CSV (allgemein)",
+        "datev_lodas": "DATEV LODAS"
+      },
+      "pruefung": {
+        "zeit_unbestaetigt": "Erfasste Zeit ist nicht bestätigt",
+        "stempelung_offen": "Stempelung läuft noch",
+        "monatsabschluss_fehlt": "Monatsabschluss fehlt",
+        "lohn_fehlt": "Kein Lohn in der Akte",
+        "waehrung_fehlt": "Währung fehlt zum Lohn",
+        "lohnart_fehlt": "Lohnart nicht zugeordnet",
+        "verdienstgrenze_ueberschritten": "Verdienstgrenze überschritten",
+        "schicht_ohne_zeit": "Schicht ohne erfasste Zeit",
+        "zeit_ohne_schicht": "Erfasste Zeit ohne Schicht",
+        "ueberstunden_offen": "Überstundenantrag offen"
+      }
+    },
+    "fehlercode": {
+      "nicht_geprueft": "Erst prüfen, dann freigeben.",
+      "zeitraum_zu_lang": "Der Zeitraum ist zu lang.",
+      "nicht_freigegeben": "Erst freigeben, dann exportieren.",
+      "grund_fehlt": "Ohne Grund lässt sich der Lauf nicht zurücksetzen.",
+      "bericht_unbekannt": "Diesen Bericht gibt es nicht.",
+      "format_unbekannt": "Dieses Ausgabeformat gibt es nicht.",
+      "lohnlauf_unbekannt": "Diesen Lohnlauf gibt es nicht."
+    }
+  }
+}

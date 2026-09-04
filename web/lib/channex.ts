@@ -243,6 +243,11 @@ export type ChannelConnection = {
   portal: string;
   title: string | null;
   is_active: boolean;
+  // Klartext dessen, was dem Portal für die Aktivierung noch fehlt (z.B.
+  // „Zeitzone, Stornobedingungen"). null = alles bereit. Kein Fehler: die
+  // Verbindung steht, aber das Portal gibt sie ohne diese Angaben nicht frei
+  // und bliebe sonst still auf „nicht aktiv".
+  readiness_offen?: string | null;
 };
 
 // OTA-seitige Zimmer/Raten (aus mapping_details) + lokale Preispläne zum Zuordnen.
@@ -277,6 +282,11 @@ export type PrepareResult = {
   portal: string;
   ota_rooms: OtaRoom[];
   rooms: LocalRoomOption[];
+  // Der Kanal ordnet SELBST zu (Katalog `mapping_mode: "direct"`, z.B. Google
+  // Hotel Search). Dann liefert das Portal keine Zimmer und `ota_rooms` ist
+  // rechtmäßig leer — kein Zugangsdaten-Fehler. Die Maske fragt in diesem Fall
+  // kein OTA-Zimmer ab, sondern verbindet direkt.
+  direktzuordnung: boolean;
 };
 export type ChannelMapping = {
   // Das eigene Zimmer (Objekt), dem dieses OTA-Zimmer zugeordnet wird.
@@ -284,7 +294,11 @@ export type ChannelMapping = {
   // STRING: Airbnb-Listing-IDs (19-stellig) verlieren als JS-`number`
   // Präzision — `1133122057704952480` würde zu `…400`. Das Backend nimmt
   // `int | str`, Booking-Codes gehen als Ziffernstring genauso durch.
-  room_type_code: string;
+  //
+  // null bei Kanälen mit Direktzuordnung: dort gibt es keinen OTA-Zimmer-Code.
+  // Bewusst null statt "" — ein Leerstring landete serverseitig als
+  // erfundener Ersatzwert in der Verbindungszeile.
+  room_type_code: string | null;
   occupancy?: number;
   pricing_type?: string;
 };

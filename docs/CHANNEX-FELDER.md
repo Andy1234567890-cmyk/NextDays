@@ -549,7 +549,7 @@ sind wir). Der belastbare Vertrag steht im Katalog `GET channels/list`.
 | `params` | die Eingabemaske des Kanals | Typen: `string` (110), `boolean` (66), `select` (17), `hidden` (13), `password` (8), `switch` (3), `number` (3), `integer` (2), `slug` (1) |
 | `params[].rules` | bedingte Sichtbarkeit | `{apply:"hidden", when:<Wert>, influence_field:"<feld>"}` — z. B. `email` ist versteckt, solange `send_email_notifications=false` |
 | `params[].default` | Vorbelegung | vorhanden ⇒ optionale Einstellung, fehlt ⇒ Pflichtangabe des Kunden |
-| `mapping_mode` | Art der Zuordnung | `room_rate_multioccupancy` (39), `direct` (5), `listing` (2), `tree` (1, Yatra), keins (5) |
+| `mapping_mode` | Art der Zuordnung | `room_rate_multioccupancy`, `direct`, `listing`, `tree` (Yatra), keins — Stand 04.09.2026 bei 123 Kanälen: `direct` bei ACHT (GoogleHotelARI, Hopper, HRS, Inntopia, OpenShopping, MitchellCorp, Nuitee, Wihp), am 01.08.2026 waren es fünf. Die Zahl ist nicht stabil → im Code am Katalog lesen (`_ist_direktzuordnung`), nie an einer Liste |
 | `mapping_is_not_required` | Kanal ohne Zimmerbegriff | Avis, Budget, Europcar, Hertz, Payless, HopperHomes |
 | `rate_params` | die Felder EINER Zuordnungszeile | Booking/Expedia: `room_type_code`, `rate_plan_code`, `occupancy`, `pricing_type`, `primary_occ`, `readonly` · Airbnb: `listing_id`, `airbnb_rate_plan_id` · `null` bei `direct` |
 | `property_mapping` | ein Kanal, mehrere Objekte? | `single` (45), `multiple` (2: Airbnb, HopperHomes) |
@@ -594,7 +594,21 @@ enthält nur noch den inaktiven Airbnb-Kanal.
 
 Nicht end-to-end bewiesen (kein Konto/keine Zugangsdaten): `direct` (Google),
 `tree` (Yatra) und die Kanäle ohne Zuordnung (Mietwagen). Deren Zuordnungs-
-Aufbau folgt dem Katalog, ist aber nur durch Unit-Tests abgedeckt.
+Aufbau folgt dem Katalog.
+
+Für `direct` gibt es seit dem 04.09.2026 Tests
+(`tests/test_direktzuordnung_kanaele.py`): Modus-Erkennung, Rate-Plan-Aufbau
+ohne OTA-Codes, Abgrenzung zum Zimmerweg, Readiness-Klartext und die
+Zimmerzahlen. Bis dahin behauptete dieser Absatz eine Unit-Test-Abdeckung, die
+es nicht gab — `_build_rate_plans` hatte keinen einzigen ausführenden Test, und
+`prepare_channel` gab den Modus nicht heraus, weshalb die Verbinden-Maske jedes
+leere `ota_rooms` als Zugangsdaten-Fehler ausgab (live 04.09.2026 bei Google).
+
+Was am `direct`-Pfad weiter offen ist, weil es ein Google-Konto braucht: der
+`POST /channels` selbst und die Freigabe durch Google. Google hat kein Extranet
+und prüft den kompletten Objekt-Inhalt (`check_readiness`); erscheint das Objekt
+nicht, liegt es laut Channex-Doku an fehlenden Angaben, und geprüft wird erst
+nach 1 (Hotel) bzw. 4 Wochen (Ferienobjekt) erneut.
 
 ---
 

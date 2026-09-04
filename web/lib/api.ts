@@ -174,7 +174,7 @@ export type MeResponse = {
   user_id: string;
   email: string | null;
   tenant_id: string | null;
-  role: "admin" | "co_admin" | "owner" | "staff" | "cleaner" | null;
+  role: "admin" | "co_admin" | "owner" | "staff" | "cleaner" | "shift_lead" | null;
   capabilities: string[];
   permissions: string[];  // Feingranulare Berechtigungen (für UI-Gating)
   // Beherbergungsart des Mandanten (Migration 0090): steuert die Navigation.

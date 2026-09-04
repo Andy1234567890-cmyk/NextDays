@@ -310,7 +310,24 @@ def _in_sprachdateien(
         for teil in pfad:
             knoten = knoten.setdefault(teil, collections.OrderedDict())
         for k, w in zip(keys, werte, strict=True):
-            knoten[k] = w
+            # Ein Schlüssel wie "verdienstgrenze.titel" wird VERSCHACHTELT,
+            # nicht wörtlich gesetzt: next-intl drückt Verschachtelung selbst
+            # über "." aus und verwirft die GANZE Sprachdatei, sobald ein
+            # Schlüssel einen Punkt enthält ("INVALID_KEY"). Am 04.09.2026
+            # standen so 426 solcher Schlüssel je Sprache in web/messages —
+            # die Personal-Oberfläche war ohne jede Übersetzung, obwohl alle
+            # Werte da waren und jedes Vollständigkeits-Gate grün meldete.
+            *eltern, blatt = k.split(".")
+            tief = knoten
+            for teil in eltern:
+                vorhanden = tief.get(teil)
+                if vorhanden is not None and not isinstance(vorhanden, dict):
+                    raise SystemExit(
+                        f"{datei.name}: {'.'.join([ziel, *eltern])} ist ein Text, "
+                        f"unter dem {k!r} nicht liegen kann."
+                    )
+                tief = tief.setdefault(teil, collections.OrderedDict())
+            tief[blatt] = w
         datei.write_text(
             json.dumps(daten, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
         )

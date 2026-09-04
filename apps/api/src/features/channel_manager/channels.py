@@ -128,6 +128,103 @@ class ChannelsMixin:
                 return entry
         return {}
 
+    def _ist_direktzuordnung(self, spec: dict[str, Any]) -> bool:
+        """Ordnet dieser Kanal die Zimmer SELBST zu (`mapping_mode: "direct"`)?
+
+        Dann liefert `mapping_details` bauartbedingt KEINE OTA-Zimmer — leeres
+        `ota_rooms` ist die richtige Antwort, kein Zugangsdaten-Fehler. Mit-
+        geschickt werden nur die eigenen Preisplaene (`_build_rate_plans_direct`),
+        die Zuordnung macht der Kanal (Google matcht ueber Adresse, Telefon und
+        Objektname; Belege in docs/channex-komplette-dokumentation.md).
+
+        Live im Katalog (04.09.2026): ACHT Kanaele tragen `direct` —
+        GoogleHotelARI, Hopper, HRS, Inntopia, OpenShopping, MitchellCorp,
+        Nuitee, Wihp. `docs/CHANNEX-FELDER.md` nennt fuenf, das ist der Stand
+        vom 01.08.2026; deshalb wird der Modus am Katalog gelesen und nie an
+        einem Portal-Code festgemacht (Wurzel 4).
+
+        `not rate_params` zaehlt mit, weil ein Kanal ohne Raten-Parameter keine
+        OTA-Codes kennt, die man zuordnen koennte (z. B. Payless: kein
+        `mapping_mode`, keine `rate_params`). DIESELBE Bedingung nutzt
+        `_build_rate_plans` — sonst zeigt die Maske eine Zuordnung, die der
+        Anlege-Pfad gar nicht auswertet."""
+        return spec.get("mapping_mode") == "direct" or not spec.get("rate_params")
+
+    def _zimmerzahlen_ergaenzen(
+        self, db: Client, tenant_id: str, property_id: str,
+        spec: dict[str, Any], settings: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Schlaf-/Badezimmer- und Bettenzahl aus dem Objekt in die Kanal-
+        Settings schreiben, wenn der Kanal sie fuehrt.
+
+        Google verlangt sie bei Ferienobjekten AM KANAL, nicht an der Property
+        (Channex-Doku „Google Vacation Rental": `bathrooms_count`,
+        `bedrooms_count`, `beds_count` unter „In Channel Settings"). Der Katalog
+        gibt ihnen den Default 1 — wer den stehen laesst, meldet Google fuer
+        JEDES Ferienobjekt eine Ein-Zimmer-Wohnung mit einem Bett. Beim Objekt
+        „FeWo *Stjerneskud*" waeren das 1/1/1 statt der echten 2/1/2 (gemessen
+        04.09.2026): eine falsche Angabe im Inserat, die niemand als Fehler
+        erkennt, weil sie plausibel aussieht (Wurzel 4).
+
+        Nur Felder, die der Katalog fuer DIESEN Kanal auch kennt, und nur, wenn
+        der Kunde nichts eigenes eingetragen hat. Fehlt der Wert am Objekt,
+        bleibt das Feld unberuehrt — dann gilt der Katalog-Default, aber nicht
+        auf unsere Erfindung hin."""
+        params = spec.get("params") or {}
+        gesucht = {
+            "bedrooms_count": "schlafzimmer",
+            "bathrooms_count": "badezimmer",
+            "beds_count": "betten",
+        }
+        if not any(k in params for k in gesucht):
+            return settings
+        # Best effort: die Zahlen sind eine ANREICHERUNG. Faellt der Lesezugriff
+        # aus, wird der Kanal ohne sie verbunden — eine kosmetische Ergaenzung
+        # darf den Connect nicht kippen (Wurzel 5). Der Aufruf sitzt vor jedem
+        # Channex-Schreibzugriff, es entsteht also auch kein halber Zustand.
+        try:
+            row = (
+                db.table("properties")
+                .select("type_attributes")
+                .eq("tenant_id", tenant_id)
+                .eq("id", property_id)
+                .limit(1)
+                .execute()
+            ).data
+        except Exception as exc:  # noqa: BLE001 — Connect nie am Nachschlagen kippen
+            log.warning(
+                "kanal_zimmerzahlen_lesen_fehlgeschlagen",
+                property_id=property_id, error=str(exc)[:200],
+            )
+            return settings
+        attrs = ((row[0].get("type_attributes") if row else None) or {})
+        ergaenzt = dict(settings)
+        gesetzt: dict[str, int] = {}
+        for kanal_feld, objekt_feld in gesucht.items():
+            if kanal_feld not in params:
+                continue
+            if ergaenzt.get(kanal_feld) not in (None, ""):
+                continue  # Eingabe des Kunden hat Vorrang
+            wert = attrs.get(objekt_feld)
+            # `badezimmer` steht als FLOAT in den Objektdaten (der Airbnb-Import
+            # schreibt `float(bad)`, und Airbnb kennt Halbbaeder: 1.5). Ein
+            # int-Guard verwarf es still — dann ginge Googles Katalog-Default 1
+            # hinaus, also bei 2,5 Baedern die Angabe „1". Genau der Ersatzwert,
+            # den dieser Helfer verhindern soll. `int()` wie beim Schwester-Leser
+            # in site_config/ki_profil.py, weil das Portal Ganzzahlen fuehrt.
+            if isinstance(wert, bool) or not isinstance(wert, (int, float)):
+                continue
+            if wert <= 0:
+                continue
+            ergaenzt[kanal_feld] = int(wert)
+            gesetzt[kanal_feld] = int(wert)
+        if gesetzt:
+            log.info(
+                "kanal_zimmerzahlen_aus_objekt",
+                property_id=property_id, gesetzt=gesetzt,
+            )
+        return ergaenzt
+
     def _is_known_portal(self, code: str) -> bool:
         """Ist `code` ein real verbindbarer Kanal? Gegen den LIVE-Katalog geprüft
         (alle vom Account unterstützten Kanäle, nicht nur die kuratierten). Bei
@@ -401,6 +498,11 @@ class ChannelsMixin:
         db = self._require_db()
         if not self._is_known_portal(portal_code):
             raise ChannelManagerError("Unbekanntes Portal.", status_code=400)
+        # EINMAL den Katalog-Eintrag holen und unten weiterverwenden. Jeder
+        # `_channel_spec`/`_is_known_portal` ist ein eigener `channels/list`-
+        # Aufruf (kein Cache im Client) — im Log stehen sonst drei Runden fuer
+        # einen Klick.
+        spec = self._channel_spec(portal_code)
 
         # Objekt bei Channex registrieren, falls noch nicht geschehen. Ein Objekt
         # kann aktiv sein, ohne dass der (best-effort/asynchrone) Content-Sync je
@@ -482,8 +584,15 @@ class ChannelsMixin:
         # ZIMMER (Objekte) dieser Property an — bei einer geteilten Hotel-Property
         # alle Zimmer des Hotels, bei einer FeWo das eine Objekt.
         local_rooms = self._local_room_options(db, tenant_id, channex_property_id)
+        # Ordnet der Kanal selbst zu, ist ein leeres `ota_rooms` KEIN Fehler.
+        # Ohne diese Angabe deutete die Maske es als Zugangsdaten-Problem und
+        # bot keinen Verbinden-Knopf an — eine Sackgasse fuer Google & Co.,
+        # obwohl `connect_channel` den Kanal ueber `_build_rate_plans_direct`
+        # anlegen kann. Der Client entscheidet daran, welche Maske er zeigt.
+        direktzuordnung = self._ist_direktzuordnung(spec)
         log.info("prepare_debug", portal_code=portal_code,
                  channex_property_id=channex_property_id,
+                 direktzuordnung=direktzuordnung,
                  ota_rooms=[{"id": r.get("id"), "title": r.get("title")}
                             for r in rooms],
                  local_rooms=local_rooms)
@@ -491,6 +600,9 @@ class ChannelsMixin:
             "portal": self._portal_label(portal_code),
             "ota_rooms": rooms,        # [{id, title, rates:[{id, title, …}]}]
             "rooms": local_rooms,      # [{local_property_id, title}]
+            # true = der Kanal ordnet selbst zu; die Maske fragt dann kein
+            # OTA-Zimmer ab (es gibt keins) und verbindet direkt.
+            "direktzuordnung": direktzuordnung,
         }
 
     @staticmethod
@@ -582,7 +694,11 @@ class ChannelsMixin:
     ) -> dict[str, Any]:
         """Skill-Schritte 3+4: Kanal mit Zimmer-Zuordnung anlegen und aktivieren.
         `mappings` = [{local_property_id, room_type_code, occupancy, pricing_type}]
-        — Zuordnung Zimmer→Zimmer; die Raten werden serverseitig expandiert."""
+        — Zuordnung Zimmer→Zimmer; die Raten werden serverseitig expandiert.
+
+        Bei Kanaelen mit Direktzuordnung (`mapping_mode: "direct"`) traegt jedes
+        Mapping NUR `local_property_id` — es gibt keinen OTA-Zimmer-Code, und
+        `_build_rate_plans_direct` schickt allein die eigenen Preisplaene."""
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
         # Wie in `prepare_channel`: ohne Trace-Kontext schreibt der Sink nichts,
@@ -638,11 +754,20 @@ class ChannelsMixin:
         if existing and existing[0].get("channex_channel_id"):
             log.info("connect_debug_reuse_db_channel",
                      channel_id=existing[0]["channex_channel_id"])
+            # Die offenen Punkte AUCH hier melden. Dieser Zweig ist der zweite
+            # Klick — und genau der ist bei einem Kanal, der wegen fehlender
+            # Angaben auf „Disabled" haengt, der Regelfall: der Betrieb klickt
+            # erneut, weil nichts passiert ist. Ohne diese Zeile bekaeme er dann
+            # den Erfolgstext („wird ab sofort abgeglichen") statt der Liste,
+            # was fehlt — also genau das stille Nichts, das dieser Weg beseitigt.
             return {
                 "id": existing[0]["channex_channel_id"],
                 "portal": self._portal_label(portal_code),
                 "title": title or self._portal_label(portal_code),
                 "is_active": bool(existing[0].get("is_active")),
+                "readiness_offen": self._readiness_offen(
+                    existing[0]["channex_channel_id"]
+                ) or None,
             }
 
         group_id = self._require_group(db, tenant_id, channex_property_id)
@@ -653,6 +778,9 @@ class ChannelsMixin:
             settings = self._oauth_channel_settings(
                 db, tenant_id, property_id, portal_code
             ) or settings
+        settings = self._zimmerzahlen_ergaenzen(
+            db, tenant_id, property_id, spec, settings
+        )
         log.info("connect_debug_group_and_settings", group_id=group_id,
                  settings=settings)
 
@@ -673,7 +801,9 @@ class ChannelsMixin:
         # zugewiesenen OTA-Zimmers auf die Rate-Plans des Objekts gemappt (Primary
         # zuerst). Echte OTAs INTEGER-Codes, Sandbox String-Codes — Helfer trennt das.
         rate_plans = (
-            self._build_rate_plans(db, tenant_id, portal_code, mappings, ota_rooms)
+            self._build_rate_plans(
+                db, tenant_id, portal_code, mappings, ota_rooms, spec,
+            )
             if mapping_required
             else []
         )
@@ -807,7 +937,7 @@ class ChannelsMixin:
         # Nur wenn der Katalog die Aktion für dieses Portal führt — nicht jedes
         # Portal kennt sie, und ein erfundener Aufruf wäre ein 404 im Log
         # (Wurzel 4: nichts raten, den Katalog fragen).
-        _aktionen = self._channel_spec(portal_code).get("actions") or []
+        _aktionen = spec.get("actions") or []
         log.info(
             "connect_pull_future_pruefung",
             portal_code=portal_code, channel_id=channel_id,
@@ -904,19 +1034,49 @@ class ChannelsMixin:
                 property_id=property_id, error=str(exc)[:200],
             )
 
+        # Was der Aktivierung noch im Weg steht, NENNEN statt still zu lassen.
+        # Channex gibt einen Kanal ohne vollstaendige Angaben nicht frei; er
+        # bleibt dann auf „Disabled", und der Grund steht nur in
+        # `POST channels/{id}/check_readiness` (undokumentiert, live belegt).
+        #
+        # Bei Kanaelen mit Direktzuordnung ist das der Regelfall, nicht die
+        # Ausnahme: Google hat kein Extranet und verlangt darum den kompletten
+        # Objekt-Inhalt von uns — Adresse, Telefon, Karte, Zeitzone, Hausordnung,
+        # Stornobedingungen, mindestens eine Ausstattung, Fotos und eine
+        # Beschreibung (Ferienobjekte: Website mit https:// und mindestens ACHT
+        # Fotos). Fehlt davon etwas, erscheint die Unterkunft bei Google nie —
+        # ohne Fehlermeldung, und laut Doku pruefen sie erst nach 1 bzw. 4 Wochen
+        # erneut. Genau dieses stille Nichts hat der Betrieb sonst zu tragen.
+        offene_punkte = self._readiness_offen(channel_id) if channel_id else ""
+        log.info(
+            "connect_readiness",
+            portal_code=portal_code, channel_id=channel_id,
+            direktzuordnung=self._ist_direktzuordnung(spec),
+            offene_punkte=offene_punkte or "keine",
+        )
         return {
             "id": channel_id,
             "portal": self._portal_label(portal_code),
             "title": a.get("title") or title or self._portal_label(portal_code),
             "is_active": is_active,
+            # Leerer String = alles bereit. Kein Fehler: die Verbindung steht,
+            # nur die Aktivierung/Sichtbarkeit haengt an diesen Angaben.
+            "readiness_offen": offene_punkte or None,
         }
 
     def _build_rate_plans(
         self, db: Client, tenant_id: str, portal_code: str,
         mappings: list[dict[str, Any]], ota_rooms: list[dict[str, Any]],
+        spec: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
         """rate_plans-Array aus ZIMMER-Zuordnungen bauen (gemeinsam von
         connect_channel und finalize_oauth_channel).
+
+        `spec` = der Katalog-Eintrag des Kanals, wenn der Aufrufer ihn schon
+        hat. Jeder `_channel_spec` ist ein eigener `channels/list`-Aufruf (der
+        Client cached nicht) — ohne Durchgabe holt ein Connect denselben Katalog
+        mehrfach. Ohne Angabe wird er hier geholt, damit Aufrufer ohne Spec
+        (finalize_oauth_channel) unveraendert funktionieren.
 
         Der Nutzer ordnet Zimmer→Zimmer zu (Booking-Zimmer → mein Objekt). Booking/
         Channex verlangen aber, dass JEDE Rate des OTA-Zimmers gemappt ist. Wir
@@ -954,12 +1114,12 @@ class ChannelsMixin:
         Schritt — der Pfad antwortet auf GET mit 404, was nichts über POST sagt.
         """
         is_sandbox = portal_code == self._SANDBOX_CODE
-        spec = self._channel_spec(portal_code)
+        if spec is None:
+            spec = self._channel_spec(portal_code)
         rate_params: dict[str, Any] = spec.get("rate_params") or {}
         # `direct` (z.B. Google): der Kanal kennt keine OTA-Codes, die Zuordnung
         # macht der Provider selbst — es geht nur die Rate-Plan-ID mit.
-        direct_mode = spec.get("mapping_mode") == "direct" or not rate_params
-        if direct_mode:
+        if self._ist_direktzuordnung(spec):
             return self._build_rate_plans_direct(
                 db, tenant_id, mappings, portal_code
             )
@@ -1200,8 +1360,15 @@ class ChannelsMixin:
                 gesehen.add(channex_rate_plan_id)
                 rate_plans.append({"rate_plan_id": channex_rate_plan_id})
         if not rate_plans:
+            # NICHT "Bitte ein Zimmer zuordnen" wie im Zimmerweg: ein Kanal mit
+            # Direktzuordnung hat gar keine Zimmer-Auswahl, der Kunde koennte
+            # der Aufforderung also nicht folgen. Kommt hier nichts zusammen,
+            # fehlt entweder die Objektzuordnung (die prueft `connect_channel`
+            # vorher) oder — der reale Fall — ein Preis.
             raise ChannelManagerError(
-                "Bitte mindestens ein Zimmer zuordnen.", status_code=422
+                "Für dieses Objekt liegt noch kein Preis vor, den wir an das "
+                "Portal geben könnten. Setze den Grundpreis unter „Preise“.",
+                status_code=422,
             )
         return rate_plans
 
@@ -1233,11 +1400,23 @@ class ChannelsMixin:
             # `_preis_von_airbnb_nachholen` holt ihn vor diesem Punkt. Wer hier
             # ankommt, hat einen Abruf hinter sich, der keinen Preis fand —
             # deshalb nennt die Meldung beide Wege statt nur das Formular.
+            #
+            # Den Airbnb-Weg aber NUR bei Airbnb nennen: an jedem anderen Portal
+            # ist er ein Umweg ins Leere. Google zeigte diese Meldung mit, und
+            # der Kunde suchte eine Airbnb-Synchronisierung, die sein Objekt
+            # nichts angeht.
+            if portal_code in self._OAUTH_PORTALS:
+                raise ChannelManagerError(
+                    "Für dieses Objekt liegt noch kein Preis vor — das Portal "
+                    "verlangt beim Zuordnen einen Preis. Rufe das Objekt unter "
+                    "„Synchronisierung“ erneut bei Airbnb ab, oder setze den "
+                    "Grundpreis unter „Preise“ selbst.",
+                    status_code=422,
+                )
             raise ChannelManagerError(
                 "Für dieses Objekt liegt noch kein Preis vor — das Portal "
-                "verlangt beim Zuordnen einen Preis. Rufe das Objekt unter "
-                "„Synchronisierung“ erneut bei Airbnb ab, oder setze den "
-                "Grundpreis unter „Preise“ selbst.",
+                "verlangt beim Zuordnen einen Preis. Setze den Grundpreis "
+                "unter „Preise“.",
                 status_code=422,
             )
         # Scope je lokalem Plan auflösen, um Kanal-Pläne richtig einzusortieren.
@@ -1746,14 +1925,20 @@ class ChannelsMixin:
         """OTA-Zimmertyp (Code + Klarname), auf den dieses Objekt gemappt ist.
         Aus dem Mapping dieses Objekts (room_type_code) + den OTA-Zimmerdetails
         (Titel per Code). None/None, wenn kein Mapping für das Objekt existiert
-        (kein Raten, Wurzel 4)."""
+        (kein Raten, Wurzel 4).
+
+        Auch bei LEEREM Code None: Kanaele mit Direktzuordnung (Google & Co.)
+        haben keinen OTA-Zimmer-Code. Ein `""` wuerde hier sonst als
+        `ota_room_type_code` in `channex_channel_connection` landen und in der
+        Objekt-Ansicht als leeres Feld erscheinen — ein erfundener Ersatzwert
+        statt der Wahrheit „dieser Kanal kennt keine Zimmer-Codes"."""
         entry = next(
             (m for m in mappings if m.get("local_property_id") == property_id), None
         )
         if not entry:
             return None, None
         code = entry.get("room_type_code")
-        if code is None:
+        if code is None or str(code).strip() == "":
             return None, None
         code_str = str(code)
         title = next(

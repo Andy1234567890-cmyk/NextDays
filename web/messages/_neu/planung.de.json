@@ -1,0 +1,253 @@
+{
+  "personal": {
+    "dienstplan": {
+      "ohneBereich": "Ohne Bereich",
+      "personenAnzahl": "{anzahl} Personen"
+    },
+    "filter": {
+      "alleBereiche": "Alle Bereiche",
+      "alleObjekte": "Alle Objekte",
+      "allePersonen": "Alle Personen",
+      "suche": "Suchen",
+      "zuruecksetzen": "Filter zurücksetzen"
+    },
+    "konflikte": {
+      "jugendschutz_stunden": "Jugendschutz: {alter} Jahre, höchstens {max_stunden} h am Tag — geplant sind {ist_stunden} h",
+      "jugendschutz_nacht": "Jugendschutz: {alter} Jahre, keine Arbeit zwischen {nacht_von} und {nacht_bis}",
+      "verdienstgrenze": "Verdienstgrenze: geplant {geplant_minor} von {grenze_minor} {currency}"
+    },
+    "kennzahlen": {
+      "hotel": "Haus",
+      "anreisen": "Anreisen",
+      "abreisen": "Abreisen",
+      "gaesteImHaus": "Gäste im Haus",
+      "belegung": "Belegung",
+      "belegungTitel": "{belegt} von {gesamt} Einheiten belegt",
+      "besetzungTitel": "Soll {soll} · Ist {ist}",
+      "summeHotel": "Woche",
+      "umsatz": "Umsatz",
+      "personalkosten": "Personalkosten",
+      "quote": "Personalkostenquote",
+      "produktivitaet": "Produktivität je Stunde",
+      "zielProduktivitaet": "Ziel {wert}",
+      "stundenlimit": "Stundenlimit",
+      "einsaetze": "Einsätze",
+      "budget": "Budget",
+      "planStunden": "Planstunden",
+      "wetter": "Wetter",
+      "niederschlag": "{mm} mm Niederschlag",
+      "nichtGeladen": "Kennzahlen konnten nicht geladen werden."
+    },
+    "legende": {
+      "title": "Legende",
+      "zeichen": "Zeichen",
+      "zustaende": "Zustände",
+      "bereiche": "Arbeitsbereiche",
+      "bestaetigt": "Bestätigt",
+      "warnung": "Hinweis",
+      "fehler": "Regelverstoß",
+      "tausch": "Tausch offen",
+      "geburtstag": "Geburtstag",
+      "schichtleitung": "Schichtleitung",
+      "ausAufgabe": "Aus einer Aufgabe erzeugt",
+      "kiErzeugt": "KI-erzeugt",
+      "entwurf": "Entwurf",
+      "veroeffentlicht": "Veröffentlicht",
+      "offeneSchicht": "Offene Schicht",
+      "abwesend": "Abwesend",
+      "wunsch": "Wunschzeit",
+      "gesperrt": "Gesperrte Zeit"
+    },
+    "mehrfach": {
+      "auswaehlen": "Mehrere auswählen",
+      "beenden": "Auswahl beenden",
+      "ausgewaehlt": "{anzahl} ausgewählt",
+      "verschieben": "Verschieben",
+      "zuweisen": "Zuweisen",
+      "zuweisenAn": "Person wählen",
+      "freigeben": "Freigeben",
+      "loeschen": "Löschen"
+    },
+    "liste": {
+      "leerTitel": "Keine Schichten",
+      "leerText": "Im gewählten Zeitraum ist mit diesen Filtern nichts geplant."
+    },
+    "monat": {
+      "hint": "Monatsübersicht: je Tag die Anzahl der Schichten. Ein Klick öffnet den Tag.",
+      "weitere": "+{anzahl} weitere"
+    },
+    "tag": {
+      "hint": "Tagesansicht: alle Personen mit ihren Schichten, Wunsch- und Sperrzeiten."
+    },
+    "tausch": {
+      "titel": "Schicht tauschen",
+      "anfragen": "Anfragen",
+      "anWen": "An wen",
+      "gegenSchicht": "Gegen welche Schicht",
+      "ohneGegenschicht": "Nur übernehmen (ohne Gegenschicht)",
+      "gegenHint": "Mit Gegenschicht werden bei der Freigabe beide Schichten in einem Schritt getauscht.",
+      "mitGegenschicht": "Tausch gegen {zeit}",
+      "offene": "Offene Tauschanfragen",
+      "freigeben": "Freigeben",
+      "verwerfen": "Ablehnen"
+    },
+    "wochenvorlagen": {
+      "knopf": "Wochenvorlagen",
+      "titel": "Wochenvorlagen",
+      "hint": "Ein Zeitgerüst einmal speichern und auf andere Wochen legen. Ziel ist die angezeigte Woche ab {woche}.",
+      "laden": "Vorlagen werden geladen …",
+      "leerTitel": "Noch keine Vorlage",
+      "leerText": "Speichere die angezeigte Woche als Vorlage, um sie später wieder zu verwenden.",
+      "ausDieserWoche": "Aus dieser Woche speichern",
+      "namensVorschlag": "Woche ab {woche}",
+      "mitPersonen": "Mit Personen",
+      "mitPersonenSpeichernHint": "Aus: nur Zeiten, Bereiche und Objekte werden gespeichert — ohne Zuordnung zu Personen.",
+      "anzahlSchichten": "{anzahl} Schichten",
+      "umbenennen": "Umbenennen",
+      "anwenden": "Auf diese Woche anwenden",
+      "loeschenFrage": "Vorlage „{name}\" wirklich löschen?",
+      "gespeichert": "Vorlage „{name}\" gespeichert.",
+      "angewendet": "{angelegt} angelegt, {vorhanden} waren schon da."
+    },
+    "bedarf": {
+      "knopf": "Bedarf",
+      "titel": "Bedarf planen",
+      "hint": "Wie viele Personen braucht welcher Bereich wann. Der Plan wird gegen diesen Bedarf gemessen, und die Autoplanung nimmt ihre offenen Schichten daraus.",
+      "laden": "Bedarf wird geladen …",
+      "keineBereiche": "Es ist noch kein Arbeitsbereich angelegt — ohne Bereich gibt es keinen Bedarf.",
+      "vorlagenTitel": "Wochentag-Vorlagen",
+      "vorlagenHint": "Gilt in jeder Woche, bis eine Tageszeile sie übersteuert.",
+      "tageTitel": "Tagesübersteuerung",
+      "tageZeitraum": "{von} bis {bis}",
+      "ersetztHinweis": "Eine Tageszeile ERSETZT die Wochentag-Vorlage desselben Bereichs an diesem Tag — sie kommt nicht dazu.",
+      "wochentag": "Wochentag",
+      "wochentage": {
+        "0": "Montag",
+        "1": "Dienstag",
+        "2": "Mittwoch",
+        "3": "Donnerstag",
+        "4": "Freitag",
+        "5": "Samstag",
+        "6": "Sonntag"
+      },
+      "zeitfenster": "Zeitfenster",
+      "anzahl": "Anzahl",
+      "alleObjekte": "Alle Objekte",
+      "zeileHinzu": "Zeile hinzufügen",
+      "zeileEntfernen": "Zeile entfernen",
+      "keineVorlagen": "Noch keine Wochentag-Vorlage.",
+      "keineTage": "Keine Tageszeile in diesem Zeitraum.",
+      "prognoseZeileHint": "Von der KI-Prognose erzeugt — wird beim Speichern nicht überschrieben.",
+      "vorlagenSpeichern": "Vorlagen speichern",
+      "tageSpeichern": "Tage speichern",
+      "ersetztAlleVorlagen": "Speichern ersetzt ALLE Wochentag-Vorlagen des Betriebs durch diese {anzahl} Zeilen.",
+      "ersetztAlleTage": "Speichern ersetzt alle Tageszeilen von {von} bis {bis} durch diese {anzahl} Zeilen.",
+      "vorlagenGespeichert": "{anzahl} Wochentag-Vorlagen gespeichert.",
+      "tageGespeichert": "{anzahl} Tageszeilen gespeichert."
+    },
+    "ki": {
+      "titel": "KI-Unterstützung",
+      "kennzeichen": "KI-erzeugt",
+      "verbrauch": "{verbrauch} von {limit} Aufrufen heute",
+      "nichtKonfiguriertKurz": "Nicht eingerichtet",
+      "nichtKonfiguriert": "Die KI-Unterstützung ist für diesen Betrieb noch nicht eingerichtet. Prognose, Autoplanung und Assistent stehen deshalb nicht zur Verfügung.",
+      "solver": "Löser: {solver}",
+      "abschnitt": {
+        "prognose": "Prognose",
+        "autoplan": "Autoplanung",
+        "assistent": "Assistent"
+      },
+      "prognoseHint": "Rechnet aus An- und Abreisen, Gästen im Haus und den Produktivitätsannahmen je Bereich, wie viele Stunden die Woche braucht.",
+      "prognoseErzeugen": "Prognose erzeugen",
+      "prognoseLeer": "Die Prognose enthält keine Bereiche.",
+      "prognoseFehler": "Die Prognose konnte nicht erzeugt werden.",
+      "zuDenAnnahmen": "Zu den Produktivitätsannahmen",
+      "stunden": "Stunden",
+      "stundenWert": "{wert} h",
+      "basis": "Grundlage",
+      "basisWert": "{basis}: {wert}",
+      "erklaerung": "Erklärung",
+      "alsBedarfUebernehmen": "Als Bedarf übernehmen",
+      "schonUebernommen": "Am {datum} übernommen",
+      "bedarfUebernommen": "{angelegt} Bedarfszeilen angelegt, {vorhanden} waren schon da.",
+      "autoplanHint": "Verteilt die offenen Schichten auf die Personen. Harte Regeln (Qualifikation, Abwesenheit, Ruhezeit, Jugendschutz) hält der Löser immer ein; der Planungstyp entscheidet, was er darüber hinaus gewichtet.",
+      "autoplanStarten": "Autoplanung starten",
+      "planungstyp": "Planungstyp",
+      "varianten": "Varianten",
+      "zeitlimit": "Zeitlimit",
+      "sekunden": "{n} Sekunden",
+      "nurOffene": "Nur offene Schichten besetzen (bestehende Zuordnungen bleiben)",
+      "rechnet": "Der Löser rechnet …",
+      "variante": "Variante {n}",
+      "variantenErklaerung": "Unterschiede der Varianten",
+      "varianteUebernehmen": "Übernehmen",
+      "bereitsUebernommen": "Übernommen",
+      "varianteUebernommen": "{angelegt} Schichten angelegt, {vorhanden} waren schon da.",
+      "laufVerwerfen": "Lauf verwerfen",
+      "verwerfenFrage": "Die Entwürfe dieses Planungslaufs wirklich löschen?",
+      "laufVerworfen": "{anzahl} Entwürfe gelöscht.",
+      "dauer": "Gerechnet in {ms} ms",
+      "kennzahl": {
+        "schichten": "Schichten",
+        "stunden": "Stunden",
+        "unbesetzt": "Unbesetzt",
+        "kosten": "Kosten",
+        "fairness": "Fairness",
+        "wunsch": "Wunsch erfüllt",
+        "konflikte": "Hinweise"
+      },
+      "typ": {
+        "performer": {
+          "name": "Leistung",
+          "beschreibung": "Sollstunden und Qualifikation zuerst — die stärkste Besetzung je Bereich, Wünsche und Fairness treten zurück."
+        },
+        "alleskoenner": {
+          "name": "Ausgewogen",
+          "beschreibung": "Alle Ziele gleich stark gewichtet — die Voreinstellung, wenn kein Kriterium herausstechen soll."
+        },
+        "superfaire": {
+          "name": "Sehr fair",
+          "beschreibung": "Wunschzeiten und gleichmäßige Verteilung schlagen alles andere; Kosten bleiben unberücksichtigt."
+        },
+        "zeitschwaermer": {
+          "name": "Sollstunden",
+          "beschreibung": "Trifft die vereinbarten Wochenstunden so genau wie möglich, auch wenn Qualifikation dabei nachrangig wird."
+        },
+        "talentscout": {
+          "name": "Qualifikation",
+          "beschreibung": "Setzt hohe Qualifikationsstufen ein, wo sie gebraucht werden — Sollstunden sind zweitrangig."
+        },
+        "faire": {
+          "name": "Fair",
+          "beschreibung": "Sollstunden plus gleichmäßige Verteilung von Wochenenden und Einsätzen, ohne Kostenziel."
+        },
+        "philanthrop": {
+          "name": "Team",
+          "beschreibung": "Qualifikation und gleichmäßige Verteilung im Vordergrund, Kosten spielen keine Rolle."
+        }
+      },
+      "assistentHint": "Fragen zur Woche ab {woche} — Plan, Abwesenheiten, Verfügbarkeiten und offene Schichten. Löhne und Kennungen sieht der Assistent nicht.",
+      "frage": "Frage",
+      "fragePlatzhalter": "Wer könnte am Samstag den Frühdienst übernehmen?",
+      "fragen": "Fragen",
+      "antwort": "Antwort",
+      "quellen": "Herangezogen"
+    },
+    "drucken": {
+      "knopf": "Drucken",
+      "kw": "KW",
+      "keineSchichten": "In dieser Woche ist keine Schicht geplant.",
+      "entwurfHinweis": "Gestrichelt umrandet = Entwurf, noch nicht veröffentlicht.",
+      "erzeugtAm": "Erzeugt am {zeitpunkt}",
+      "fehler": "Das PDF konnte nicht erzeugt werden."
+    },
+    "fehlercode": {
+      "produktivitaet_fehlt": "Für keinen Arbeitsbereich ist eine Produktivitätsannahme hinterlegt — ohne sie kann die Prognose keine Stunden rechnen.",
+      "zeitraum_zu_lang": "Der Zeitraum ist zu lang. Höchstens 42 Tage auf einmal.",
+      "tausch_offen": "Für diese Schicht läuft schon eine Tauschanfrage.",
+      "qualifikation": "Die gewählte Person ist für diesen Arbeitsbereich nicht qualifiziert.",
+      "max_zusammenhaengend": "Höchstens {max} Urlaubstage zusammenhängend — beantragt sind {tage}.",
+      "waehrung_fehlt": "Es ist keine Währung hinterlegt. Der Betrag lässt sich deshalb nicht ausweisen."
+    }
+  }
+}

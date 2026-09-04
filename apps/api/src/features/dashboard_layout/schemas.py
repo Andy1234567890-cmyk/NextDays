@@ -48,7 +48,7 @@ KachelGroesse = Literal["s", "m", "l"]
 # volle Enum-Wertebereich der DB, nicht nur admin/co_admin: welche Rolle die
 # Startseite heute erreicht, ist eine Frage der Navigation und darf sich aendern,
 # ohne dass gespeicherte Standards ungueltig werden.
-RollenName = Literal["admin", "co_admin", "owner", "staff", "cleaner"]
+RollenName = Literal["admin", "co_admin", "owner", "staff", "cleaner", "shift_lead"]
 
 # Obergrenzen. 19 Kacheln gibt es real; 40 laesst Luft fuer Wachstum, ohne dass
 # jemand ein 10-MB-Layout ablegen kann.

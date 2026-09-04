@@ -151,10 +151,19 @@ export function ThemeBaender({
           {(palette.length > 0
             ? palette.map((f) => ({ id: f.id, name: f.name, wert: f.color }))
             : [
-                { id: "primary", name: t("design.primaer"), wert: stand.primary_color },
-                { id: "secondary", name: t("design.flaeche"), wert: stand.secondary_color },
-                { id: "background", name: t("design.hintergrund"), wert: stand.background_color },
-                { id: "foreground", name: t("design.schrift"), wert: stand.foreground_color },
+                // Die Farbnamen stehen unter `design.farbrolle`, nicht direkt
+                // unter `design` — die drei ersten Schlüssel gab es dort gar
+                // nicht (der Browser zeigte den Schlüsselnamen), und
+                // `design.schrift` heißt „Schriftart", also die Schriftwahl und
+                // nicht die Schriftfarbe.
+                { id: "primary", name: t("design.farbrolle.primaer"), wert: stand.primary_color },
+                { id: "secondary", name: t("design.farbrolle.flaeche"), wert: stand.secondary_color },
+                {
+                  id: "background",
+                  name: t("design.farbrolle.hintergrund"),
+                  wert: stand.background_color,
+                },
+                { id: "foreground", name: t("design.textFarbe"), wert: stand.foreground_color },
               ].filter((f) => f.wert)
           ).map((f) => (
             <span

@@ -59,7 +59,12 @@ type MappingRow = {
   // rundete sie zu `1133122057704952400`, also auf eine Anzeige, die es nicht
   // gibt. Booking-Codes sind kürzer und überleben beides; als String ist beides
   // korrekt, und das Backend nimmt `int | str`.
-  room_type_code: string;
+  //
+  // null bei Kanälen mit Direktzuordnung (Google & Co.): dort gibt es kein
+  // Portal-Zimmer und damit keinen Code. Bewusst null statt "" — ein
+  // Leerstring landete serverseitig als erfundener Ersatzwert in der
+  // Verbindungszeile.
+  room_type_code: string | null;
   roomLabel: string;
   rateSummary: string; // die Raten des OTA-Zimmers, nur zur Anzeige
   // Die Raten EINZELN — nicht nur als zusammengeklebter Text. Jede Portal-Rate
@@ -172,6 +177,26 @@ function buildMappingRows(
   });
 }
 
+// Zeilen für einen Kanal mit DIREKTZUORDNUNG (Katalog `mapping_mode: "direct"`,
+// z.B. Google Hotel Search): das Portal liefert keine Zimmer, es ordnet selbst
+// zu (Google über Adresse, Telefon und Objektname). Deshalb eine Zeile je
+// EIGENEM Objekt, ohne Portal-Code und ohne Raten-Anzeige — mitgeschickt werden
+// serverseitig nur die eigenen Preispläne.
+function buildDirektRows(localRooms: LocalRoomOption[]): MappingRow[] {
+  return localRooms.map((lr) => ({
+    room_type_code: null,
+    roomLabel: lr.title,
+    rateSummary: "",
+    rates: [],
+    // Der Kanal deklariert keine `rate_params`, also wertet der Server weder
+    // pricing_type noch occupancy aus. Die Felder bleiben trotzdem im Typ, weil
+    // dieselbe Zeile die Zuordnungstabelle speist.
+    pricing_type: "Standard",
+    occupancy: 2,
+    local_property_id: lr.local_property_id,
+  }));
+}
+
 export function ChannelConnectButton({
   label,
   /** Ersetzt das Stecker-Symbol durch ein eigenes Zeichen — im Onboarding das
@@ -242,9 +267,20 @@ export function ChannelConnectButton({
   const [, setOtaRooms] = useState<OtaRoom[]>([]);
   const [localRooms, setLocalRooms] = useState<LocalRoomOption[]>([]);
   const [rows, setRows] = useState<MappingRow[]>([]);
+  // Kanal mit Direktzuordnung (Katalog `mapping_mode: "direct"`, z.B. Google):
+  // das Portal liefert keine Zimmer, die Zuordnung macht es selbst. Ohne diese
+  // Unterscheidung deutete die Maske das leere `ota_rooms` als Zugangsdaten-
+  // Fehler und bot keinen Verbinden-Knopf — Sackgasse, obwohl der Server den
+  // Kanal anlegen kann.
+  const [direktzuordnung, setDirektzuordnung] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
+  // Was dem Portal für die Aktivierung noch fehlt (Klartext vom Server). Ohne
+  // diese Anzeige bleibt der Kanal beim Portal still auf „Disabled": Channex
+  // gibt ihn ohne vollständige Angaben nicht frei, meldet das aber nicht als
+  // Fehler. Bei Portalen ohne Extranet (Google) ist das der Regelfall.
+  const [readinessOffen, setReadinessOffen] = useState<string | null>(null);
 
   // OAuth-Flow (Airbnb): erzeugte OAuth-URL, Verbundenheits-Status, Host-ID.
   const [oauthUrl, setOauthUrl] = useState<string | null>(null);
@@ -476,6 +512,11 @@ export function ChannelConnectButton({
     setOtaRooms([]);
     setLocalRooms([]);
     setRows([]);
+    // Gehört zum Zustand des VORIGEN Portals: bliebe er stehen, zeigte ein
+    // danach gewähltes Booking.com die Direktzuordnungs-Maske, sobald es einmal
+    // keine Zimmer liefert. Beide prepare-Pfade setzen ihn ohnehin neu — hier
+    // steht er, damit die Aufräumliste vollständig ist.
+    setDirektzuordnung(false);
     setError(null);
     setOauthUrl(null);
     setOauthConnected(false);
@@ -490,6 +531,7 @@ export function ChannelConnectButton({
   function close() {
     setOpen(false);
     setDone(null);
+    setReadinessOffen(null);
     reset();
   }
 
@@ -749,15 +791,21 @@ export function ChannelConnectButton({
       }
       setOtaRooms(res.data.ota_rooms);
       setLocalRooms(res.data.rooms);
+      setDirektzuordnung(res.data.direktzuordnung);
       setRows(
-        buildMappingRows(res.data.ota_rooms, res.data.rooms, {
-          // Ferienobjekt mit genau einer Portal-Einheit: die Zuordnung ist
-          // zwingend 1:1 und wird nicht erfragt.
-          einzelnesObjekt:
-            res.data.rooms.length === 1 && res.data.ota_rooms.length === 1
-              ? propertyId
-              : null,
-        }),
+        res.data.direktzuordnung
+          ? // Der Kanal ordnet selbst zu: es gibt kein OTA-Zimmer zum Wählen.
+            // Eine Zeile je EIGENEM Objekt, ohne Portal-Code — mehr braucht
+            // der Server für diesen Kanal nicht.
+            buildDirektRows(res.data.rooms)
+          : buildMappingRows(res.data.ota_rooms, res.data.rooms, {
+              // Ferienobjekt mit genau einer Portal-Einheit: die Zuordnung ist
+              // zwingend 1:1 und wird nicht erfragt.
+              einzelnesObjekt:
+                res.data.rooms.length === 1 && res.data.ota_rooms.length === 1
+                  ? propertyId
+                  : null,
+            }),
       );
       setStep("mapping");
     });
@@ -852,15 +900,21 @@ export function ChannelConnectButton({
       }
       setOtaRooms(res.data.ota_rooms);
       setLocalRooms(res.data.rooms);
+      setDirektzuordnung(res.data.direktzuordnung);
       setRows(
-        buildMappingRows(res.data.ota_rooms, res.data.rooms, {
-          // Ferienobjekt mit genau einer Portal-Einheit: die Zuordnung ist
-          // zwingend 1:1 und wird nicht erfragt.
-          einzelnesObjekt:
-            res.data.rooms.length === 1 && res.data.ota_rooms.length === 1
-              ? propertyId
-              : null,
-        }),
+        res.data.direktzuordnung
+          ? // Der Kanal ordnet selbst zu: es gibt kein OTA-Zimmer zum Wählen.
+            // Eine Zeile je EIGENEM Objekt, ohne Portal-Code — mehr braucht
+            // der Server für diesen Kanal nicht.
+            buildDirektRows(res.data.rooms)
+          : buildMappingRows(res.data.ota_rooms, res.data.rooms, {
+              // Ferienobjekt mit genau einer Portal-Einheit: die Zuordnung ist
+              // zwingend 1:1 und wird nicht erfragt.
+              einzelnesObjekt:
+                res.data.rooms.length === 1 && res.data.ota_rooms.length === 1
+                  ? propertyId
+                  : null,
+            }),
       );
       setStep("mapping");
     });
@@ -939,6 +993,7 @@ export function ChannelConnectButton({
             "Das Portal ist noch nicht aktiv — aktiviere es, wenn du dort " +
             "verkaufen willst.",
         );
+        setReadinessOffen(res.data.readiness_offen ?? null);
         setStep("done");
         onDone?.();
       } else {
@@ -1086,10 +1141,28 @@ export function ChannelConnectButton({
                   <Icon icon="ph:check-bold" className="size-6" />
                 </span>
                 <p className="font-medium">{done}</p>
-                <p className="text-sm text-muted-foreground">
-                  Verfügbarkeit und Preise werden ab sofort automatisch
-                  abgeglichen.
-                </p>
+                {readinessOffen ? (
+                  /* Das Portal verlangt noch Angaben. NENNEN, nicht schweigen:
+                     ohne sie gibt das Portal die Verbindung nicht frei, und der
+                     Kanal bliebe ohne Hinweis auf „nicht aktiv" stehen. */
+                  <div className="w-full rounded-lg border border-amber-300 bg-amber-50 p-3 text-left text-sm dark:border-amber-800 dark:bg-amber-950">
+                    <p className="font-medium text-amber-900 dark:text-amber-200">
+                      Das Portal braucht noch diese Angaben:
+                    </p>
+                    <p className="mt-1 text-amber-800 dark:text-amber-300">
+                      {readinessOffen}
+                    </p>
+                    <p className="mt-2 text-amber-700 dark:text-amber-400">
+                      Ergänze sie am Objekt — bis dahin lässt sich das Portal
+                      nicht aktivieren.
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Verfügbarkeit und Preise werden ab sofort automatisch
+                    abgeglichen.
+                  </p>
+                )}
                 <div className="flex gap-2">
                   <Button onClick={reset} variant="outline">
                     Weiteres Portal verbinden
@@ -1557,6 +1630,47 @@ export function ChannelConnectButton({
                   </>
                 ) : localRooms.length === 0 ? (
                   <ErrorBox text="Für dieses Konto sind noch keine Zimmer mit Preis angelegt. Lege zuerst ein Zimmer mit Grundpreis an." />
+                ) : direktzuordnung ? (
+                  /* Kanal mit DIREKTZUORDNUNG (z.B. Google Hotel Search): das
+                     Portal liefert keine Zimmer, weil es selbst zuordnet —
+                     Google über Adresse, Telefon und Objektname. Ein leeres
+                     `ota_rooms` ist hier die richtige Antwort und KEIN
+                     Zugangsdaten-Fehler; vorher endete dieser Fall in der
+                     Meldung „Das Portal liefert keine Zimmer" ohne Verbinden-
+                     Knopf, also in einer Sackgasse. Mitgeschickt werden die
+                     eigenen Preispläne des Objekts. */
+                  <>
+                    <p className="text-sm text-muted-foreground">
+                      Dieses Portal ordnet die Objekte selbst zu — es gibt keine
+                      Portal-Zimmer zum Auswählen. Wir übergeben{" "}
+                      {rows.length === 1
+                        ? "dein Objekt"
+                        : `deine ${rows.length} Objekte`}{" "}
+                      mit den freigegebenen Preisen; das Portal erkennt die
+                      Unterkunft anhand von Adresse, Telefon und Name.
+                    </p>
+                    <ul className="flex flex-col gap-1 text-sm">
+                      {rows.map((r) => (
+                        <li key={r.local_property_id} className="text-foreground">
+                          {r.roomLabel}
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="text-xs text-muted-foreground">
+                      Bis die Unterkunft beim Portal erscheint, können einige
+                      Tage vergehen. Fehlen dort Angaben (Adresse, Telefon,
+                      Fotos, Beschreibung), bleibt sie unsichtbar, bis sie
+                      vollständig sind.
+                    </p>
+                    {error && <ErrorBox text={error} />}
+                    <Button onClick={connect} disabled={pending}>
+                      {pending ? (
+                        <Spinner text="Verbinde …" />
+                      ) : (
+                        "Verbinden & aktivieren"
+                      )}
+                    </Button>
+                  </>
                 ) : rows.length === 0 ? (
                   /* Bei einem OAuth-Portal gibt es keine Zugangsdaten, die man
                      prüfen könnte — der alte Text schickte den Kunden auf eine
