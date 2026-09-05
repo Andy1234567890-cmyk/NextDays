@@ -1988,7 +1988,7 @@ def test_dp_felder_ueberall_bekannt() -> None:
     nur_antwort = {
         "property_id", "market_key", "comp_refs",
         "freigabe_ab_tagen", "rate_plan_id", "quellmaerkte", "saison_verfuegbar",
-        "saison_preis_von", "saison_preis_bis", "saison_tage",
+        "saison_preis_von", "saison_preis_bis", "saison_tage", "saison_preis_heute",
     }
     fehlend = set(DpSettingsResponse.model_fields) - engine_felder - nur_antwort
     assert not fehlend, (
@@ -2020,7 +2020,7 @@ def test_dp_defaults_decken_alle_antwortfelder() -> None:
         # aus dem Saisonkalender abgeleitet (0565).
         - {
             "property_id", "saison_verfuegbar",
-            "saison_preis_von", "saison_preis_bis", "saison_tage",
+            "saison_preis_von", "saison_preis_bis", "saison_tage", "saison_preis_heute",
         }
     )
     assert not ohne, f"Kein Default hinterlegt für: {sorted(ohne)}"

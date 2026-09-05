@@ -183,6 +183,7 @@ class DpSettingsService:
             if preise:
                 antwort.saison_preis_von = min(preise.values())
                 antwort.saison_preis_bis = max(preise.values())
+            antwort.saison_preis_heute = preise.get(heute.isoformat())
         return antwort
 
     def update(
@@ -520,6 +521,11 @@ class DpSettingsService:
         saison_by_prop = saison_untergrenzen_bulk(
             self._db(), mit_saison, heute, heute + timedelta(days=365)
         )
+        # Der Wert HEUTE je Objekt: der Kalender gilt Tag fuer Tag, die Liste
+        # zeigt den heutigen Mindestpreis, nicht eine Spanne ueber das Jahr.
+        heute_by_prop = saison_untergrenzen_bulk(
+            self._db(), mit_saison, heute, heute + timedelta(days=1)
+        )
 
         items: list[DpOverviewItem] = []
         for p in props:
@@ -557,6 +563,9 @@ class DpSettingsService:
                     saison_mindestpreis=s.saison_mindestpreis,
                     saison_preis_von=saison[0] if saison else None,
                     saison_preis_bis=saison[1] if saison else None,
+                    saison_preis_heute=(
+                        heute_by_prop[pid][0] if pid in heute_by_prop else None
+                    ),
                     channels=channels,
                     freigabe_noetig=s.freigabe_noetig,
                     offene_tage=offen_by_prop.get(pid, 0),

@@ -196,12 +196,6 @@ export function DpEditSheet({
   const cur = item.currency;
   // Saison-Untergrenze (0565): wirkt nur, wenn Kalender da UND Regel an.
   const saisonAktiv = Boolean(s?.saison_verfuegbar && s?.saison_mindestpreis);
-  const saisonSpanne =
-    s?.saison_preis_von != null && s?.saison_preis_bis != null
-      ? s.saison_preis_von === s.saison_preis_bis
-        ? formatCurrency(s.saison_preis_von, cur)
-        : `${formatCurrency(s.saison_preis_von, cur)} – ${formatCurrency(s.saison_preis_bis, cur)}`
-      : null;
 
   return (
     <Sheet open onOpenChange={(o) => !o && onClose()}>
@@ -321,11 +315,11 @@ export function DpEditSheet({
             <div className="grid grid-cols-2 gap-4">
               {saisonAktiv ? (
                 <Field
-                  label={cur ? `Mindestpreis (${cur})` : "Mindestpreis"}
-                  hint="Kommt aus dem Saisonkalender: der Saisonpreis des Tages ist die Untergrenze."
+                  label={cur ? `Mindestpreis heute (${cur})` : "Mindestpreis heute"}
+                  hint="Kommt aus dem Saisonkalender und gilt Tag für Tag: an jedem Tag ist der Preis seiner Saison die Untergrenze. Hier steht der Wert von heute."
                 >
                   <div className="flex h-9 items-center rounded-(--radius) border bg-muted/40 px-3 text-sm tabular-nums">
-                    {saisonSpanne ?? "—"}
+                    {s.saison_preis_heute == null ? "—" : formatCurrency(s.saison_preis_heute, cur)}
                   </div>
                 </Field>
               ) : (
@@ -400,7 +394,7 @@ export function DpEditSheet({
                     !s.saison_verfuegbar
                       ? "kein Saisonkalender"
                       : s.saison_mindestpreis
-                        ? saisonSpanne ?? "aus dem Saisonkalender"
+                        ? "je Tag aus dem Saisonkalender"
                         : "aus"
                   }
                 />

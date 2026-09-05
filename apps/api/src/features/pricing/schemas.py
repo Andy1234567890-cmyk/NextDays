@@ -279,6 +279,9 @@ class DpSettingsResponse(BaseModel):
     saison_preis_von: float | None = None
     saison_preis_bis: float | None = None
     saison_tage: int = 0
+    # Der Saison-Mindestpreis HEUTE — der Kalender gilt Tag fuer Tag, die
+    # Oberflaeche zeigt deshalb den Wert des Tages, keine Spanne.
+    saison_preis_heute: float | None = None
     # 0562 — DP wirkt nur auf diesen Ratenplan; None = alle Plaene des Objekts.
     rate_plan_id: str | None = None
     # 0562 — Feiertage/Schulferien aus dem Feed; 0 = aus. Quellmaerkte = Laender
@@ -362,6 +365,7 @@ class DpOverviewItem(BaseModel):
     saison_mindestpreis: bool = False
     saison_preis_von: float | None = None
     saison_preis_bis: float | None = None
+    saison_preis_heute: float | None = None
     # Verteilkanäle, auf denen das Objekt LIVE ist: "platform" (eigene
     # Buchungsplattform, wenn status=active) + aktive OTA-Portal-Codes aus
     # channex_channel_connection (z. B. BookingCom, AirBNB, VRBO, Expedia).

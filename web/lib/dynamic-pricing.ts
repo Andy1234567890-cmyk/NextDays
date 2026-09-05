@@ -105,6 +105,8 @@ export type DpSettings = {
   saison_preis_von: number | null;
   saison_preis_bis: number | null;
   saison_tage: number;
+  // Der Saison-Mindestpreis heute — der Kalender gilt Tag für Tag.
+  saison_preis_heute: number | null;
   // 0562 — DP wirkt nur auf diesen Ratenplan; null = alle.
   rate_plan_id: string | null;
   // 0562 — Feiertage/Schulferien aus dem Feed; 0 = aus. Quellmärkte ISO-2.
@@ -119,7 +121,12 @@ export type DpSettings = {
 export type DpSettingsInput = Partial<
   Omit<
     DpSettings,
-    "property_id" | "saison_verfuegbar" | "saison_preis_von" | "saison_preis_bis" | "saison_tage"
+    | "property_id"
+    | "saison_verfuegbar"
+    | "saison_preis_von"
+    | "saison_preis_bis"
+    | "saison_tage"
+    | "saison_preis_heute"
   >
 >;
 
@@ -141,6 +148,7 @@ export type DpOverviewItem = {
   saison_mindestpreis: boolean;
   saison_preis_von: number | null;
   saison_preis_bis: number | null;
+  saison_preis_heute: number | null;
   freigabe_noetig: boolean;
   offene_tage: number;
   // Verteilkanäle, auf denen das Objekt live ist: "platform" + OTA-Portal-Codes.

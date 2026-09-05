@@ -277,13 +277,13 @@ export function DynamicPricingTable({ items }: { items: DpOverviewItem[] }) {
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
                     {it.saison_mindestpreis ? (
-                      // Regel an: der Mindestpreis kommt aus dem Saisonkalender.
-                      <span className="whitespace-nowrap">
-                        {it.saison_preis_von == null || it.saison_preis_bis == null
-                          ? "—"
-                          : it.saison_preis_von === it.saison_preis_bis
-                            ? fmtMoney(it.saison_preis_von, it.currency)
-                            : `${fmtMoney(it.saison_preis_von, it.currency)} – ${fmtMoney(it.saison_preis_bis, it.currency)}`}
+                      // Regel an: der Mindestpreis kommt aus dem Saisonkalender,
+                      // Tag fuer Tag — hier der Wert von HEUTE.
+                      <span
+                        className="whitespace-nowrap"
+                        title="Mindestpreis heute aus dem Saisonkalender — gilt je Tag nach Saison"
+                      >
+                        {it.saison_preis_heute == null ? "—" : fmtMoney(it.saison_preis_heute, it.currency)}
                       </span>
                     ) : (
                       fmtMoney(it.min_price, it.currency)
