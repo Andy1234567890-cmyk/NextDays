@@ -36,15 +36,28 @@ const PACE_TEXT: Record<
 };
 
 type Woche = {
-  /** Erster Tag der Woche, formatiert (X-Achse). */
+  /** Montag der Kalenderwoche, formatiert (X-Achse). */
   ab: string;
   abIso: string;
+  /** Zeitraum für den Tooltip („07.09.–13.09."). */
+  zeitraum: string;
+  naechte: number;
+  naechteBelegt: number;
   belegt: number;
   erwartet: number | null;
   markt: number | null;
   /** Belegt vs. Erwartung: über/unter/ohne Erwartung — steuert die Balkenfarbe. */
   lage: "vor" | "hinter" | "neutral";
 };
+
+/** Montag der Kalenderwoche eines ISO-Tags (Mo–So wie im Belegungskalender). */
+function montagVon(iso: string): string {
+  const d = new Date(`${iso}T00:00:00`);
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const t = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${t}`;
+}
 
 export function DpForecastKarte({ propertyId }: { propertyId: string }) {
   const locale = useLocale();
@@ -72,32 +85,42 @@ export function DpForecastKarte({ propertyId }: { propertyId: string }) {
   }
   if (!f) return null;
 
-  // 90 Tage als Wochen: je Woche der Anteil belegter Tage (Balken) und die
-  // gelernte Erwartung (Linie). Ein Tag pro Pixel wäre unlesbar.
-  const wochen: Woche[] = [];
-  for (let i = 0; i < f.tage.length; i += 7) {
-    const stueck = f.tage.slice(i, i + 7);
+  // 90 Tage als KALENDERWOCHEN (Mo–So, wie der Belegungskalender): je Woche
+  // der Anteil belegter Nächte (Balken) und die gelernte Erwartung (Linie).
+  // Wochen ab „heute" (Sa–Fr) liessen sich nicht mit dem Kalender abgleichen
+  // (05.09.2026). Erste und letzte Woche sind meist angeschnitten — der
+  // Tooltip nennt deshalb Zeitraum und Nächte, nicht nur Prozent.
+  const kurz = (iso: string) =>
+    new Date(`${iso}T00:00:00`).toLocaleDateString(locale, { day: "2-digit", month: "2-digit" });
+  const gruppen = new Map<string, typeof f.tage>();
+  for (const t of f.tage) {
+    const key = montagVon(t.date);
+    gruppen.set(key, [...(gruppen.get(key) ?? []), t]);
+  }
+  const wochen: Woche[] = [...gruppen.entries()].map(([montag, stueck]) => {
     const e = stueck.filter((t) => t.erwartet !== null);
     const m = stueck.filter((t) => t.markt_angebote !== null);
-    const belegt = Math.round((stueck.filter((t) => t.belegt).length / stueck.length) * 100);
+    const naechteBelegt = stueck.filter((t) => t.belegt).length;
+    const belegt = Math.round((naechteBelegt / stueck.length) * 100);
     const erwartet = e.length
       ? Math.round((e.reduce((s, t) => s + (t.erwartet ?? 0), 0) / e.length) * 100)
       : null;
-    const ab = stueck[0]?.date ?? "";
-    wochen.push({
-      abIso: ab,
-      ab: ab
-        ? new Date(`${ab}T00:00:00`).toLocaleDateString(locale, { day: "2-digit", month: "2-digit" })
-        : "",
+    const erster = stueck[0]?.date ?? montag;
+    const letzter = stueck[stueck.length - 1]?.date ?? montag;
+    return {
+      abIso: montag,
+      ab: kurz(montag),
+      zeitraum: `${kurz(erster)} – ${kurz(letzter)}`,
+      naechte: stueck.length,
+      naechteBelegt,
       belegt,
       erwartet,
       markt: m.length
         ? Math.round(m.reduce((s, t) => s + (t.markt_angebote ?? 0), 0) / m.length)
         : null,
-      lage:
-        erwartet === null ? "neutral" : belegt >= erwartet ? "vor" : "hinter",
-    });
-  }
+      lage: erwartet === null ? "neutral" : belegt >= erwartet ? "vor" : "hinter",
+    };
+  });
   const mitErwartung = wochen.some((w) => w.erwartet !== null);
   const mitMarkt = wochen.some((w) => w.markt !== null);
 
@@ -150,7 +173,7 @@ export function DpForecastKarte({ propertyId }: { propertyId: string }) {
             tickLine={false}
             axisLine={false}
             fontSize={11}
-            width={44}
+            width={52}
           />
           {mitMarkt && (
             <YAxis
@@ -166,12 +189,27 @@ export function DpForecastKarte({ propertyId }: { propertyId: string }) {
           <ChartTooltip
             content={
               <ChartTooltipContent
-                labelFormatter={(label) => `Woche ab ${String(label)}`}
-                formatter={(value, name) =>
-                  name === "markt"
-                    ? [`${value} Objekte frei`, "Freie Angebote im Umkreis"]
-                    : [`${value} %`, name === "belegt" ? "Belegt" : "Erwartet"]
-                }
+                labelFormatter={(_label, payload) => {
+                  const w = (payload?.[0]?.payload ?? null) as Woche | null;
+                  return w ? `Woche ${w.zeitraum}` : "";
+                }}
+                formatter={(value, name, item) => {
+                  const w = (item as { payload?: Woche }).payload;
+                  return (
+                    <div className="flex w-full items-baseline justify-between gap-4">
+                      <span className="text-muted-foreground">
+                        {name === "markt" ? "Freie Angebote im Umkreis" : name === "belegt" ? "Belegt" : "Erwartet"}
+                      </span>
+                      <span className="font-mono font-medium tabular-nums">
+                        {name === "markt"
+                          ? `${value}`
+                          : name === "belegt" && w
+                            ? `${w.naechteBelegt} von ${w.naechte} Nächten · ${value} %`
+                            : `${value} %`}
+                      </span>
+                    </div>
+                  );
+                }}
               />
             }
           />
