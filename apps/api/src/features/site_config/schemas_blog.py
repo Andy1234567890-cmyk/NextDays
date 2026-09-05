@@ -13,7 +13,7 @@ die uebrigen Module gueltig.
 """
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from .schemas import PublicBlock, PublicPageMeta, PublicSiteResponse
 
@@ -112,12 +112,26 @@ class PublicBlogAngaben(BaseModel):
 
 
 class PublicPostListResponse(BaseModel):
+    """Die Beitragsliste einer Website.
+
+    `extra="forbid"`: ein Feld, das der Service uebergibt und das hier fehlt,
+    wirft — statt still zu verschwinden. Genau das passierte zweimal mit
+    `blog` (28.08. im Einzelbeitrag, 05.09.2026 hier): der Service uebergab
+    es, pydantic verwarf es, der Renderer las `liste.blog.blog_name` und die
+    Blog-Seite wie der RSS-Feed antworteten 500 (Wurzel 5).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
     items: list[PublicPost] = Field(default_factory=list)
     total: int = 0
     # Alle vorkommenden Schlagwörter, für die Filterleiste. Aus DIESER Seite der
     # Liste und nicht aus allen Beiträgen: eine zweite Abfrage über den ganzen
     # Bestand nur für die Leiste wäre der teurere Teil des Aufrufs.
     tags: list[str] = Field(default_factory=list)
+    #: Blogname und RSS-Angaben (0457) — Blog-Seite, Beitraege-Block und RSS
+    #: lesen sie aus der LISTE, nicht aus einem Einzelbeitrag.
+    blog: PublicBlogAngaben = Field(default_factory=PublicBlogAngaben)
 
 
 class PublicPostEigenesFeld(BaseModel):
@@ -135,6 +149,8 @@ class PublicPostEigenesFeld(BaseModel):
 
 class PublicPostResponse(BaseModel):
     """Ein einzelner Beitrag mit seinen Abschnitten."""
+
+    model_config = ConfigDict(extra="forbid")
 
     tenant_id: str
     post: PublicPost

@@ -295,7 +295,16 @@ export async function ladeBeitraege(
       },
     );
     if (!res.ok) return { items: [], total: 0, tags: [], blog: BLOG_LEER };
-    return (await res.json()) as BeitragsListe;
+    const roh = (await res.json()) as Partial<BeitragsListe>;
+    // Fehlt `blog` in der Antwort (aeltere API, verworfenes Feld), gilt
+    // „nicht eingestellt" — nie ein Zugriff auf undefined. Am 05.09.2026
+    // fielen Blog-Seite und RSS mit 500 aus, weil genau das passierte.
+    return {
+      items: roh.items ?? [],
+      total: roh.total ?? 0,
+      tags: roh.tags ?? [],
+      blog: roh.blog ?? BLOG_LEER,
+    };
   } catch {
     return { items: [], total: 0, tags: [], blog: BLOG_LEER };
   } finally {
