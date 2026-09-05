@@ -101,6 +101,10 @@ export type DpSettings = {
   saison_mindestpreis: boolean;
   // Nur lesend: hat das Objekt einen Saisonkalender? Sonst ist die Regel gesperrt.
   saison_verfuegbar: boolean;
+  // Nur lesend: Spanne der Saisonpreise im Push-Horizont und betroffene Tage.
+  saison_preis_von: number | null;
+  saison_preis_bis: number | null;
+  saison_tage: number;
   // 0562 — DP wirkt nur auf diesen Ratenplan; null = alle.
   rate_plan_id: string | null;
   // 0562 — Feiertage/Schulferien aus dem Feed; 0 = aus. Quellmärkte ISO-2.
@@ -113,7 +117,10 @@ export type DpSettings = {
 };
 
 export type DpSettingsInput = Partial<
-  Omit<DpSettings, "property_id" | "saison_verfuegbar">
+  Omit<
+    DpSettings,
+    "property_id" | "saison_verfuegbar" | "saison_preis_von" | "saison_preis_bis" | "saison_tage"
+  >
 >;
 
 /** Eine Zeile der Dynamic-Pricing-Objekt-Übersicht (Hostaway-Tabelle). */

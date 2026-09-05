@@ -273,6 +273,12 @@ class DpSettingsResponse(BaseModel):
     # Hat das Objekt einen Saisonkalender? Ohne ihn ist die Regel nicht
     # waehlbar (Server lehnt mit 422 ab, Oberflaeche zeigt sie gesperrt).
     saison_verfuegbar: bool = False
+    # Nur lesend, damit die Regel sichtbar wird: Spanne der Saisonpreise im
+    # Push-Horizont (365 Tage) und wie viele Tage sie betrifft. None/0 ohne
+    # Kalender oder ohne Grundpreis (Prozent-Saison ohne Basis hat keinen Preis).
+    saison_preis_von: float | None = None
+    saison_preis_bis: float | None = None
+    saison_tage: int = 0
     # 0562 — DP wirkt nur auf diesen Ratenplan; None = alle Plaene des Objekts.
     rate_plan_id: str | None = None
     # 0562 — Feiertage/Schulferien aus dem Feed; 0 = aus. Quellmaerkte = Laender

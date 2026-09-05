@@ -28,7 +28,7 @@ from .schemas import (
     DpSettingsResponse,
     DpSettingsUpdate,
 )
-from .zusatzsignale import saison_vorhanden, verlauf_schreiben
+from .zusatzsignale import saison_untergrenze_je_tag, saison_vorhanden, verlauf_schreiben
 
 if TYPE_CHECKING:
     from .resolver import PricingResolver
@@ -160,6 +160,24 @@ class DpSettingsService:
                 "dp_saison_regel_ohne_kalender",
                 property_id=property_id,
             )
+        if antwort.saison_verfuegbar:
+            # Sichtbar machen, was die Regel tut: Spanne und Tage der Saison-
+            # Untergrenze im Push-Horizont. Ohne das stand neben dem Schalter
+            # weiter „Mindestpreis 541,45" und der Betrieb hielt die Regel fuer
+            # wirkungslos (05.09.2026).
+            from .recompute import DynamicPricingRecompute  # noqa: PLC0415
+
+            basis = DynamicPricingRecompute(service_client=self._db()).load_base_price(
+                property_id
+            )
+            heute = datetime.now(UTC).date()
+            preise = saison_untergrenze_je_tag(
+                self._db(), property_id, basis, heute, heute + timedelta(days=365)
+            )
+            antwort.saison_tage = len(preise)
+            if preise:
+                antwort.saison_preis_von = min(preise.values())
+                antwort.saison_preis_bis = max(preise.values())
         return antwort
 
     def update(

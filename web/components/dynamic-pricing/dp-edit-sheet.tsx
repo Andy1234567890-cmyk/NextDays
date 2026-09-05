@@ -194,6 +194,14 @@ export function DpEditSheet({
   }
 
   const cur = item.currency;
+  // Saison-Untergrenze (0565): wirkt nur, wenn Kalender da UND Regel an.
+  const saisonAktiv = Boolean(s?.saison_verfuegbar && s?.saison_mindestpreis);
+  const saisonSpanne =
+    s?.saison_preis_von != null && s?.saison_preis_bis != null
+      ? s.saison_preis_von === s.saison_preis_bis
+        ? formatCurrency(s.saison_preis_von, cur)
+        : `${formatCurrency(s.saison_preis_von, cur)} – ${formatCurrency(s.saison_preis_bis, cur)}`
+      : null;
 
   return (
     <Sheet open onOpenChange={(o) => !o && onClose()}>
@@ -310,14 +318,33 @@ export function DpEditSheet({
             {/* Min/Max-Leitplanken */}
             <div className="grid grid-cols-2 gap-4">
               <Field
-                label={cur ? `Mindestpreis (${cur})` : "Mindestpreis"}
-                hint="Unter diesen Preis geht die Engine nie — egal wie niedrig die Nachfrage ist. Leer = kein Limit."
+                label={
+                  saisonAktiv
+                    ? cur
+                      ? `Mindestpreis ohne Saison (${cur})`
+                      : "Mindestpreis ohne Saison"
+                    : cur
+                      ? `Mindestpreis (${cur})`
+                      : "Mindestpreis"
+                }
+                hint={
+                  saisonAktiv
+                    ? "Gilt nur an Tagen ohne Saison. An Saisontagen ist der Saisonpreis des Tages die Untergrenze (Regel ‚Mindestpreis aus dem Saisonkalender'). Leer = kein Limit."
+                    : "Unter diesen Preis geht die Engine nie — egal wie niedrig die Nachfrage ist. Leer = kein Limit."
+                }
               >
                 <NumInput
                   value={s.min_price}
                   onChange={(n) => set("min_price", n)}
                   placeholder={t("noLimit")}
                 />
+                {saisonAktiv && (
+                  <p className="mt-1.5 text-xs text-muted-foreground">
+                    {saisonSpanne
+                      ? `An ${s.saison_tage} Saisontagen gilt der Saisonpreis: ${saisonSpanne}`
+                      : "Saisonkalender ohne Preis — Prozent-Saison braucht einen Grundpreis."}
+                  </p>
+                )}
               </Field>
               <Field
                 label={cur ? `Höchstpreis (${cur})` : "Höchstpreis"}
@@ -379,7 +406,9 @@ export function DpEditSheet({
                     !s.saison_verfuegbar
                       ? "kein Saisonkalender"
                       : s.saison_mindestpreis
-                        ? "Saisonpreis ist die Untergrenze"
+                        ? saisonSpanne
+                          ? `Untergrenze ${saisonSpanne} an ${s.saison_tage} Tagen`
+                          : "Saisonpreis ist die Untergrenze"
                         : "aus"
                   }
                 />
