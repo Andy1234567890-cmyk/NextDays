@@ -6,10 +6,11 @@ ihre Zeilen selbst.
 """
 from __future__ import annotations
 
-from datetime import date, datetime
+from collections import defaultdict
+from datetime import date, datetime, timedelta
 from typing import Any
 
-from .schemas import VerteilungZeile
+from .schemas import VerteilungZeile, WochentagZeile
 
 
 def zahl(wert: Any) -> float:  # noqa: ANN401 - kommt roh aus der DB
@@ -132,3 +133,66 @@ def _storno_vorlauf_tage(b: dict[str, Any]) -> int | None:
         return None
     tage = (anreise - storniert.date()).days
     return tage if tage >= 0 else 0
+
+def quote(zaehler: float, nenner: float) -> float | None:
+    """Prozentwert oder None — ein Nenner von 0 ist keine 0, sondern nichts."""
+    return round(zaehler * 100 / nenner, 2) if nenner else None
+
+
+def teil(zaehler: float, nenner: float) -> float | None:
+    return round(zaehler / nenner, 2) if nenner else None
+
+
+def wochentage(
+    gueltig: list[dict[str, Any]],
+    kalender: dict[str, dict[str, set[str]]],
+    von: date,
+    bis: date,
+    erlaubt: set[str],
+) -> list[WochentagZeile]:
+    """Leistung je Wochentag (SiteMinder „Day of week").
+
+    Nenner je Wochentag: alle Tage dieses Wochentags im Zeitraum × Objekte,
+    abzüglich gesperrter und verkaufsgesperrter Tage — derselbe Nenner wie
+    die Auslastung, nur nach Wochentag geschnitten. Umsatz je Wochentag
+    verteilt den Buchungsbetrag gleichmäßig auf seine Nächte, weil die
+    Portale keinen Preis je Nacht liefern; das steht in der Oberfläche.
+    """
+    zeilen = {w: WochentagZeile(wochentag=w) for w in range(7)}
+    tag = von
+    tage_je_wt: dict[int, int] = defaultdict(int)
+    while tag <= bis:
+        tage_je_wt[tag.weekday()] += 1
+        tag += timedelta(days=1)
+    for w, z in zeilen.items():
+        z.naechte_buchbar = tage_je_wt[w] * len(erlaubt)
+    for pid in erlaubt:
+        k = kalender.get(pid)
+        if not k:
+            continue
+        for t in k["gesperrt"] | k["stop_sell"]:
+            d = datum(t)
+            if d is not None:
+                zeilen[d.weekday()].naechte_buchbar -= 1
+        for t in k["gebucht"]:
+            d = datum(t)
+            if d is not None:
+                zeilen[d.weekday()].naechte_gebucht += 1
+    umsatz_naechte: dict[int, int] = defaultdict(int)
+    for b in gueltig:
+        a = datum(b.get("check_in"))
+        n = naechte(b.get("check_in"), b.get("check_out"))
+        if a is None or n <= 0:
+            continue
+        zeilen[a.weekday()].anreisen += 1
+        je_nacht = zahl(b.get("total_amount")) / n
+        for i in range(n):
+            w = (a + timedelta(days=i)).weekday()
+            zeilen[w].umsatz += je_nacht
+            umsatz_naechte[w] += 1
+    for w, z in zeilen.items():
+        z.umsatz = round(z.umsatz, 2)
+        z.naechte_buchbar = max(z.naechte_buchbar, 0)
+        z.auslastung_pct = quote(z.naechte_gebucht, z.naechte_buchbar)
+        z.adr = teil(z.umsatz, umsatz_naechte[w])
+    return [zeilen[w] for w in range(7)]

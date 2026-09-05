@@ -525,6 +525,27 @@ class PricingResolver:
                 out[day] = price
         return out
 
+    def _dp_rate_plan_scope(self, property_id: str) -> str | None:
+        """Auf welchen Ratenplan DP begrenzt ist (0562). None = alle Plaene.
+
+        Fail-OFFEN auf None (= bisheriges Verhalten): ein Lesefehler darf nicht
+        dazu fuehren, dass ein Plan ploetzlich keine dynamischen Preise mehr
+        bekommt."""
+        try:
+            res = (
+                self._db()
+                .table("dp_settings")
+                .select("rate_plan_id")
+                .eq("property_id", property_id)
+                .limit(1)
+                .execute()
+            ).data or []
+        except Exception as exc:  # noqa: BLE001
+            log.warning("dp_settings_rate_plan_unlesbar", error=str(exc))
+            return None
+        rp = res[0].get("rate_plan_id") if res else None
+        return str(rp) if rp else None
+
     def _dp_enabled(self, property_id: str) -> bool:
         """Hat die Agentur Dynamic Pricing für DIESES Objekt eingeschaltet?
 
@@ -676,6 +697,12 @@ class PricingResolver:
         config = self._load_config(property_id)
         days = _nights(check_in, check_out)
         if rate_plan_id:
+            # DP je Ratenplan (0562, SiteMinder-Modell): ist DP auf EINEN Plan
+            # begrenzt, bekommen die anderen keine dynamischen Preise — fuer
+            # sie gilt Datumspreis > Override > Wochentag > Basis wie ohne DP.
+            scope = self._dp_rate_plan_scope(property_id) if dynamic else None
+            if scope and scope != rate_plan_id:
+                dynamic = {}
             return self._rate_plan_curve(
                 property_id, rate_plan_id, days, check_in, check_out,
                 overrides, dynamic, config,

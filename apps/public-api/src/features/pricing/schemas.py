@@ -268,6 +268,11 @@ class DpSettingsResponse(BaseModel):
     # 0562 — Vorjahresanker (Hostaway „Historical anchoring"): hebt an, nie ab.
     anker_enabled: bool = False
     anker_max_pct: float = 20.0
+    # 0565 — Saisonpreis des Saisonkalenders als Untergrenze (nie Obergrenze).
+    saison_mindestpreis: bool = False
+    # Hat das Objekt einen Saisonkalender? Ohne ihn ist die Regel nicht
+    # waehlbar (Server lehnt mit 422 ab, Oberflaeche zeigt sie gesperrt).
+    saison_verfuegbar: bool = False
     # 0562 — DP wirkt nur auf diesen Ratenplan; None = alle Plaene des Objekts.
     rate_plan_id: str | None = None
     # 0562 — Feiertage/Schulferien aus dem Feed; 0 = aus. Quellmaerkte = Laender
@@ -318,6 +323,7 @@ class DpSettingsUpdate(BaseModel):
     freigabe_ab_tagen: int | None = Field(default=None, ge=0, le=730)
     anker_enabled: bool | None = None
     anker_max_pct: float | None = Field(default=None, ge=0, le=100)
+    saison_mindestpreis: bool | None = None
     rate_plan_id: str | None = None
     feiertag_uplift_pct: float | None = Field(default=None, ge=0, le=300)
     ferien_uplift_pct: float | None = Field(default=None, ge=0, le=300)
