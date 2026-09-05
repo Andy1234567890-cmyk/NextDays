@@ -56,6 +56,7 @@ def _db(**extra: list[dict]) -> FakeDB:
         "channex_review": [],
         "guest_reviews_by_host": [],
         "review_automation": [],
+        "review_auto_template": [],
         "review_automation_log": [],
         "reservations": [],
         "portal_guests": [],
@@ -456,6 +457,46 @@ def test_automatik_plant_statt_zu_senden() -> None:
     # Zweiter Lauf darf NICHTS nachlegen (Wurzel 2).
     assert automatik.run(today=date(2026, 7, 25)) == (0, 0)
     assert len(db.tables["guest_review_queue"]) == 1
+
+
+def test_aktive_vorlage_schaltet_auto_bewertung_ein() -> None:
+    """Der Live-Fall vom 05.09.2026: aktive Vorlage, `auto_review_active=false`,
+    `guest_reminder_active=true`.
+
+    Der `or_`-Filter holte die Zeile wegen der Erinnerung herein, und der
+    Vorlagen-Ersatzpfad uebersprang sie danach mit `if tenant_id in nach_tenant`.
+    Ergebnis: die aktive Vorlage „Thank you" plante in vier Wochen keine
+    einzige Bewertung — genau die Attrappe, die der Ersatzpfad ausschliessen
+    soll (Wurzel 1)."""
+    db = _automatik_db(auto_review_active=False, guest_reminder_active=False)
+    db.tables["review_auto_template"] = [
+        {"id": "vor-1", "tenant_id": TENANT, "aktiv": True, "name": "Thank you",
+         "nach_tagen": 3, "note": 5, "min_gastnote": None,
+         "texte": ["Danke fuer den Besuch!"], "privater_text": None,
+         "objekt_ids": [PROP_A]}
+    ]
+    geplant, _ = ReviewAutomation(service_client=db).run(today=date(2026, 7, 25))
+    assert geplant == 1, "aktive Vorlage muss die Auto-Bewertung einschalten"
+
+
+def test_aktive_vorlage_behaelt_die_eigenen_einstellungen() -> None:
+    """Nur das FLAG wird gehoben, nicht die uebrigen Werte: `after_days` und
+    die Schwellen sind Einstellungen des Betriebs, kein Vorgabewert (Wurzel 4).
+
+    Vorlauf 9 Tage, Abreise 20.07. → am 25.07. noch NICHT faellig. Griffe der
+    Ersatzwert 3, waere hier faelschlich eingeplant."""
+    db = _automatik_db(
+        auto_review_active=False,
+        guest_reminder_active=False,
+        auto_review_after_days=9,
+    )
+    db.tables["review_auto_template"] = [
+        {"id": "vor-1", "tenant_id": TENANT, "aktiv": True, "name": "Thank you",
+         "nach_tagen": None, "note": 5, "min_gastnote": None,
+         "texte": ["Danke fuer den Besuch!"], "privater_text": None,
+         "objekt_ids": [PROP_A]}
+    ]
+    assert ReviewAutomation(service_client=db).run(today=date(2026, 7, 25)) == (0, 0)
 
 
 def test_automatik_wartet_bis_die_frist_erreicht_ist() -> None:

@@ -102,9 +102,40 @@ class ReviewAutomation:
             .eq("aktiv", True)
             .execute()
         ).data or []
+        # Betriebe mit Vorlage, deren Zeile der `or_`-Filter oben NICHT geholt
+        # hat (beide Flags aus). Ohne sie stünde unten die Ersatz-Konfiguration
+        # mit `auto_review_after_days=3`, obwohl der Betrieb dort etwas anderes
+        # eingestellt hat — ein erfundener Wert über einem echten (Wurzel 4).
+        fehlend = [
+            str(z["tenant_id"])
+            for z in mit_vorlage
+            if str(z["tenant_id"]) not in nach_tenant
+        ]
+        if fehlend:
+            for zeile in (
+                db.table("review_automation")
+                .select("*")
+                .in_("tenant_id", sorted(set(fehlend)))
+                .execute()
+            ).data or []:
+                nach_tenant[str(zeile["tenant_id"])] = zeile
+
         for zeile in mit_vorlage:
             tenant_id = str(zeile["tenant_id"])
             if tenant_id in nach_tenant:
+                # Eine aktive Vorlage IST die Ansage, automatisch zu bewerten —
+                # auch wenn die alte Betriebs-Automatik aus ist. Sonst ist die
+                # Vorlage genau die Attrappe, die dieser Block verhindern soll:
+                # live gesehen am 05.09.2026 bei einem Betrieb mit aktiver
+                # Vorlage „Thank you", `auto_review_active=false` und
+                # `guest_reminder_active=true` — der `or_`-Filter holte ihn
+                # herein, das `continue` überging ihn, und `_rate_due_guests`
+                # lief in vier Wochen kein einziges Mal (Wurzel 1: der
+                # Gegenzustand zum neuen Weg muss mitgepflegt werden).
+                #
+                # Nur das FLAG wird gehoben, keine anderen Werte: `after_days`
+                # und die Schwellen sind Einstellungen des Betriebs.
+                nach_tenant[tenant_id]["auto_review_active"] = True
                 continue
             # Ersatz-Konfiguration mit den Vorgabewerten aus 0263. Sie liefert
             # nur die Felder, die `fill` als Rückfall liest — die Vorlage

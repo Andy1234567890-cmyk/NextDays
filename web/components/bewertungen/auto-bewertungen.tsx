@@ -27,6 +27,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
 import { NativeSelect } from "@nextdays/ui/native-select";
+import { Switch } from "@nextdays/ui/switch";
 import { Textarea } from "@nextdays/ui/textarea";
 import {
   type AutoTemplate,
@@ -179,12 +180,14 @@ function VorlagenKarte({
     .map((id) => objekte.find((o) => o.id === id)?.title ?? id)
     .sort();
 
-  function umschalten() {
+  // `ziel` kommt vom Switch, statt `vorlage.aktiv` erneut zu invertieren:
+  // der Schalter kennt den Zustand, den der Nutzer gerade gewaehlt hat.
+  function umschalten(ziel: boolean) {
     onFehler(null);
     starte(async () => {
       const res = await updateAutoTemplate(vorlage.id, {
         ...alsAntrag(vorlage),
-        aktiv: !vorlage.aktiv,
+        aktiv: ziel,
       });
       if (res.ok) onGeaendert();
       else onFehler(res.error);
@@ -243,28 +246,21 @@ function VorlagenKarte({
 
       {canManage && (
         <div className="flex items-center gap-3 rounded-(--radius) bg-secondary/50 px-3 py-2">
-          <button
-            type="button"
-            onClick={umschalten}
-            disabled={pending}
-            aria-pressed={vorlage.aktiv}
-            className="flex items-center gap-2 text-sm"
-          >
-            <span
-              className={
-                "relative h-5 w-9 shrink-0 rounded-full transition-colors " +
-                (vorlage.aktiv ? "bg-emerald-500" : "bg-muted-foreground/30")
-              }
-            >
-              <span
-                className={
-                  "absolute top-0.5 size-4 rounded-full bg-white transition-all " +
-                  (vorlage.aktiv ? "left-4.5" : "left-0.5")
-                }
-              />
-            </span>
+          {/* Das Switch-PRIMITIV, nicht ein zweiter handgebauter Schalter.
+              Vorher stand hier eine eigene Nachbildung mit `bg-emerald-500`,
+              waehrend die Gast-Erinnerung darunter das Primitiv benutzt: zwei
+              Schalter im selben Zustand „an", einer gruen, einer schwarz.
+              Gemeldet am 05.09.2026 („nur ist er schwarz und nicht gruen").
+              Eine zweite Kopie eines Bedienelements driftet immer — die Farbe
+              gehoert an EINE Stelle (packages/ui/src/switch.tsx). */}
+          <label className="flex cursor-pointer items-center gap-2 text-sm">
+            <Switch
+              checked={vorlage.aktiv}
+              disabled={pending}
+              onCheckedChange={umschalten}
+            />
             {vorlage.aktiv ? t("autoActive") : t("autoInactive")}
-          </button>
+          </label>
           <span className="h-6 w-px bg-border" />
           <IconKnopf
             icon="ph:pencil-simple"
