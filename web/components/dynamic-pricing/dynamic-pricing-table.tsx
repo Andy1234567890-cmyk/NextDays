@@ -30,9 +30,27 @@ import {
 import { DpEditSheet } from "./dp-edit-sheet";
 
 const BASE_MODE_LABEL: Record<BaseMode, string> = {
-  data_driven: "Datengetrieben",
+  data_driven: "Grundpreis",
+  market: "Marktpreis",
   manual: "Manuell",
 };
+
+// Sende-Status je Objekt (Hostaway: SUBSCRIBED – PRICES SYNCED / NOT SYNCED).
+function sendeStatus(it: DpOverviewItem): { label: string; cls: string } {
+  if (!it.enabled) {
+    return { label: "Automatik aus", cls: "bg-muted text-muted-foreground" };
+  }
+  if (it.freigabe_noetig && it.offene_tage > 0) {
+    return {
+      label: `${it.offene_tage} warten auf Freigabe`,
+      cls: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
+    };
+  }
+  return {
+    label: "Preise gesendet",
+    cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
+  };
+}
 const RATE_MODE_LABEL: Record<BaseRateMode, string> = {
   conservative: "Konservativ",
   recommended: "Empfohlen",
@@ -147,7 +165,13 @@ export function DynamicPricingTable({ items }: { items: DpOverviewItem[] }) {
                 <Th className="w-full">Objekt</Th>
                 <Th
                   className="whitespace-nowrap"
-                  hint="Der aktuelle Basispreis (Anker) dieses Objekts und der gewählte Modus darunter (Datengetrieben mit Konservativ/Empfohlen/Aggressiv oder Manuell). Auf diesen Preis rechnen alle Regeln."
+                  hint="Automatik aus: der Grundpreis gilt. Preise gesendet: die berechneten Preise sind an den Portalen. Warten auf Freigabe: berechnet, aber noch nicht gesendet — im Kalender freigeben."
+                >
+                  Status
+                </Th>
+                <Th
+                  className="whitespace-nowrap"
+                  hint="Der aktuelle Basispreis (Anker) dieses Objekts und der gewählte Modus darunter (Grundpreis oder Marktpreis mit Konservativ/Empfohlen/Aggressiv, oder Manuell). Auf diesen Preis rechnen alle Regeln."
                 >
                   Basispreis
                 </Th>
@@ -195,17 +219,6 @@ export function DynamicPricingTable({ items }: { items: DpOverviewItem[] }) {
                         >
                           {STATUS_BADGE[it.status].label}
                         </span>
-                        {/* Warten Preise auf die Freigabe? Nur dann sichtbar —
-                            ein Dauerhinweis ohne Handlungsbedarf wird nach
-                            zwei Tagen übersehen, und mit ihm der, der zählt. */}
-                        {it.freigabe_noetig && it.offene_tage > 0 && (
-                          <span
-                            className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-300"
-                            title={`${it.offene_tage} berechnete Tage warten auf die Freigabe`}
-                          >
-                            {it.offene_tage} nicht gesendet
-                          </span>
-                        )}
                         {/* Verteilkanäle mit Original-Logos — hinter dem Badge. */}
                         {it.channels.length > 0 ? (
                           <span className="flex items-center gap-1.5">
@@ -242,13 +255,23 @@ export function DynamicPricingTable({ items }: { items: DpOverviewItem[] }) {
                       </div>
                     </div>
                   </td>
+                  <td className="whitespace-nowrap px-4 py-3">
+                    {(() => {
+                      const st = sendeStatus(it);
+                      return (
+                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${st.cls}`}>
+                          {st.label}
+                        </span>
+                      );
+                    })()}
+                  </td>
                   <td className="px-4 py-3">
                     <div className="leading-tight">
                       <span>{fmtMoney(it.base_rate, it.currency)}</span>
                       <span className="block text-xs text-muted-foreground">
                         {it.base_mode === "manual"
                           ? BASE_MODE_LABEL.manual
-                          : RATE_MODE_LABEL[it.base_rate_mode]}
+                          : `${BASE_MODE_LABEL[it.base_mode]} · ${RATE_MODE_LABEL[it.base_rate_mode]}`}
                       </span>
                     </div>
                   </td>

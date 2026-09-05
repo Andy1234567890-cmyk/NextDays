@@ -353,7 +353,8 @@
     "hrSettings": "Inställningar",
     "timeClock": "Stämpelklocka",
     "payroll": "Lön",
-    "staffReports": "Personalrapporter"
+    "staffReports": "Personalrapporter",
+    "prices": "Priser & Marknad"
   },
   "exemption": {
     "labelNamed": "Skattebefriad ({scheme}) — inget momsreg.nr krävs",
@@ -12390,7 +12391,7 @@
   },
   "analysis": {
     "title": "Utvärdering",
-    "subtitle": "Nyckeltal, bokningar, beläggning och kanaler för en viss period.",
+    "subtitle": "Nyckeltal, bokningar, beläggning, kanaler, gäster, utgifter, takt och mönster för en period.",
     "loading": "Beräknas ...",
     "empty": "Det finns inga data för denna period.",
     "ownerStay": "Egen användning",
@@ -12404,14 +12405,23 @@
       "buchungen": "Bokningar",
       "auslastung": "Beläggning",
       "kanaele": "Kanaler",
-      "gaeste": "Gäster"
+      "gaeste": "Gäster",
+      "ausgaben": "Utgifter & extra",
+      "pace": "Takt",
+      "muster": "Mönster",
+      "stornos": "Avbokningar"
     },
     "range": {
       "monat": "Denna månad",
       "vormonat": "Föregående månad",
       "quartal": "Kvartal",
       "jahr": "År",
-      "frei": "Fritt val"
+      "frei": "Fritt val",
+      "vorjahr": "Föregående år",
+      "letzte30": "Senaste 30 dagarna",
+      "naechste30": "Nästa 30 dagar",
+      "letzte12monate": "Senaste 12 månaderna",
+      "naechste12monate": "Nästa 12 månader"
     },
     "filter": {
       "range": "Period",
@@ -12422,7 +12432,27 @@
       "allProperties": "Alla objekt",
       "channels": "Kanaler",
       "allChannels": "Alla kanaler",
-      "compare": "Jämför"
+      "compare": "Jämför",
+      "button": "Filter",
+      "reset": "Återställ",
+      "apply": "Verkställ",
+      "cancel": "Avbryt",
+      "clear": "Rensa val",
+      "nSelected": "{count, plural, one {# vald} other {# valda}}",
+      "nProperties": "{count, plural, one {# objekt} other {# objekt}}",
+      "allStatuses": "Alla statusar",
+      "searchProperties": "Sök objekt ...",
+      "noMatch": "Inga träffar.",
+      "rangeHint": "Snabbvalet förblir dynamiskt i sparade vyer: \"Förra månaden\" är alltid förra månaden från idag.",
+      "statusHint": "Utan val räknas alla statusar. Avbokade bokningar inkluderas endast i avbokningsgraden, inte i omsättning och nätter.",
+      "dim": {
+        "zeitraum": "Period",
+        "bezug": "Tilldelning",
+        "objekte": "Objekt",
+        "kanaele": "Kanaler",
+        "status": "Status",
+        "vergleich": "Jämförelse"
+      }
     },
     "basis": {
       "anreise": "Efter ankomst",
@@ -12454,11 +12484,31 @@
       "revenueOverTime": "Intäktsutveckling",
       "shareByChannel": "Intäktsandel per kanal",
       "revenueByProperty": "Intäkt per objekt",
-      "footnote": "Total intäkt under perioden: {total}"
+      "footnote": "Total intäkt under perioden: {total}",
+      "overTime": "{metric} över tid",
+      "otherProperties": "{count, plural, one {# ytterligare objekt} other {# ytterligare objekt}}",
+      "metric": "Nyckeltal",
+      "metricValues": {
+        "umsatz": "Omsättning",
+        "naechte": "Nätter",
+        "buchungen": "Bokningar"
+      },
+      "groupBy": "Gruppera",
+      "groupValues": {
+        "keine": "Ingen",
+        "kanal": "Kanal",
+        "objekt": "Objekt"
+      },
+      "type": "Diagram",
+      "typeValues": {
+        "linie": "Linje",
+        "balken": "Stapel"
+      }
     },
     "table": {
       "rowCount": "{count, plural, one {# bokning} other {# bokningar}}",
-      "columns": "Kolumner"
+      "columns": "Kolumner",
+      "total": "Summa"
     },
     "col": {
       "property": "Objekt",
@@ -12480,7 +12530,30 @@
       "bookingsShort": "Bokningar",
       "net": "Netto",
       "share": "Andel",
-      "country": "Land"
+      "country": "Land",
+      "month": "Månad",
+      "ownerNights": "Egen användning",
+      "accommodation": "Övernattning",
+      "cleaning": "Städning",
+      "otherFees": "Övriga avgifter",
+      "addons": "Tilläggstjänster",
+      "gross": "Gästpris",
+      "paymentFee": "Betalningsavgift",
+      "date": "Datum",
+      "name": "Beskrivning",
+      "category": "Kategori",
+      "kind": "Typ",
+      "amount": "Belopp",
+      "receipt": "Kvitto",
+      "count": "Antal",
+      "weekday": "Veckodag",
+      "value": "Värde",
+      "period": "Period",
+      "checkIn": "Ankomst",
+      "checkOut": "Avresa",
+      "currency": "Valuta",
+      "source": "Källa",
+      "reason": "Anledning"
     },
     "guests": {
       "total": "Gäster",
@@ -12512,7 +12585,146 @@
     "compareCurrencyUnclear": "valutan under jämförelseperioden är oklar",
     "compareCurrencyMismatchHint": "Under jämförelseperioden gällde en annan valuta. En procentuell förändring skulle vara en växelkursseffekt och inte en affärssiffra.",
     "compareChartCurrencyMismatch": "Jämförelseperioden var i en annan valuta – därför ritas inte föregående års linje.",
-    "compareLocked": "En jämförelse är möjlig upp till en period på ett år."
+    "compareLocked": "En jämförelse är möjlig upp till en period på ett år.",
+    "status": {
+      "pending": "Öppen",
+      "confirmed": "Bekräftad",
+      "checked_in": "Incheckad",
+      "checked_out": "Utcheckad",
+      "completed": "Avslutad",
+      "cancelled": "Avbokad",
+      "declined": "Nekad",
+      "expired": "Förfallen",
+      "requested": "Förfrågan"
+    },
+    "bookings": {
+      "per": {
+        "buchung": "Per bokning",
+        "objekt": "Per objekt"
+      },
+      "propertyCount": "{count, plural, one {# Objekt} other {# Objekt}}",
+      "showEmpty": "Visa objekt utan bokningar",
+      "reconstructed": "Rekonstruerats från objektavgifterna – portalen har inte tillhandahållit någon specifikation.",
+      "commissionComputed": "Beräknat utifrån den angivna provisionssatsen – ej rapporterat av portalen.",
+      "withoutBreakdown": "{count, plural, one {# bokning utan prisuppdelning – endast totalpriset visas.} other {# bokningar utan prisuppdelning – endast totalpriset visas.}}",
+      "withoutBreakdownShort": "Utan uppdelning",
+      "reconstructedCount": "{count, plural, one {# uppdelning (*) rekonstruerad från objektavgifter.} other {# uppdelningar (*) rekonstruerade från objektavgifter.}}"
+    },
+    "occupancy": {
+      "byMonth": "Per månad",
+      "propertyCount": "{count, plural, one {# objekt} other {# objekt}}"
+    },
+    "expenses": {
+      "empty": "Inga transaktioner under denna period.",
+      "emptyHint": "Utgifter och tillägg uppstår i ägarens redovisning och från beställda tjänster.",
+      "expenses": "Utgifter",
+      "extras": "Tillägg",
+      "balance": "Saldo",
+      "balanceHint": "Tillägg minus utgifter",
+      "count": "Poster",
+      "byCategory": "Per kategori",
+      "byProperty": "Per objekt",
+      "noCategory": "Utan kategori",
+      "noProperty": "Utan objekt (konto)",
+      "rowCount": "{count, plural, one {# post} other {# poster}}",
+      "kind": {
+        "ausgabe": "Utgift",
+        "extra": "Tillägg"
+      },
+      "footnote": "Perioden är postens datum. Utgifter belastar ägaren, tillägg gynnar ägaren – så som de står i redovisningen."
+    },
+    "pace": {
+      "title": "Bokningsstatus för de kommande 12 månaderna",
+      "subtitle": "Status {heute} jämfört med status {vorjahr} för samma månader ett år tidigare.",
+      "vsLastYear": "jämfört med föregående års brytdatum",
+      "now": "Bokat idag",
+      "lastYearSameDay": "Föregående år samma dag",
+      "lastYearFinal": "Föregående år vid slutet",
+      "nowNights": "Bokat idag (nätter)",
+      "nowRevenue": "Bokat idag (omsättning)",
+      "lastYearSameDayNights": "Föregående år samma dag (nätter)",
+      "delta": "Skillnad",
+      "lastYearFinalNights": "Föregående år vid slutet (nätter)",
+      "lastYearFinalRevenue": "Föregående år vid slutet (omsättning)",
+      "footnote": "Föregående års brytdatum räknar endast bokningar med faktisk bokningstidpunkt från portalen.",
+      "withoutTimestamp": "{count, plural, one {# föregående års bokning utan tidsstämpel saknas i brytdatumvärdet.} other {# föregående års bokningar utan tidsstämpel saknas i brytdatumvärdet.}}"
+    },
+    "patterns": {
+      "weekday": "Prestanda per veckodag",
+      "weekdayHint": "Beläggning och omsättning per veckodag. Omsättningen för en bokning fördelas jämnt över dess nätter – portalerna anger inget pris per natt.",
+      "leadTime": "Bokningsfönster",
+      "leadTimeHint": "Dagar mellan bokning och ankomst. Endast bokningar med faktisk bokningstidpunkt.",
+      "stayLength": "Vistelsens längd",
+      "stayLengthHint": "Fördelning av bokade nätter per vistelse.",
+      "days": "Dagar",
+      "nights": "Nätter",
+      "daysValue": "{n} dagar"
+    },
+    "cancellations": {
+      "empty": "Inga avbokningar under denna period.",
+      "emptyHint": "{count, plural, one {# giltig bokning, ingen avbokad.} other {# giltiga bokningar, ingen avbokad.}}",
+      "nights": "Avbokade nätter",
+      "lostRevenue": "Förlorad intäkt",
+      "lostRevenueHint": "Totalt pris för avbokade bokningar – en del av nätterna har sålts på nytt.",
+      "leadTime": "Ø ledtid",
+      "leadTimeBase": "{count} av {total} med avbokningstidpunkt",
+      "byChannel": "Per kanal",
+      "byLeadTime": "Per ledtid (dagar före ankomst)",
+      "byReason": "Per orsak",
+      "noReason": "Ingen orsak angiven",
+      "footnote": "Avbokningsgrad = avbokade / (giltiga + avbokade). Ledtiden räknar endast med bokningar som har en avbokningstidpunkt."
+    },
+    "views": {
+      "button": "Vyer",
+      "title": "Sparade vyer",
+      "empty": "Ingen vy har sparats än.",
+      "new": "Spara aktuell vy",
+      "delete": "Radera",
+      "saveTitle": "Spara vy",
+      "saveHint": "Sparar period, filter, kolumner och flikinställningar – endast för dig.",
+      "namePlaceholder": "t.ex. föregående månad per objekt",
+      "save": "Spara"
+    },
+    "export": {
+      "button": "Ladda ner rapport",
+      "title": "Format",
+      "csv": "CSV (aktuell tabell)",
+      "xlsx": "Excel (alla fliktabeller)",
+      "pdf": "PDF",
+      "hint": "Det som visas här exporteras – med de aktiva filtren.",
+      "generated": "Skapad den {when}",
+      "failed": "Export misslyckades."
+    },
+    "prices": {
+      "title": "Priser & marknad",
+      "subtitle": "Var ditt pris ligger i förhållande till omgivningen, vad automatiken gör med grundpriset och hur du hanterar förslagen.",
+      "property": "Objekt",
+      "noProperties": "Inget objekt med dynamisk prissättning. Aktivera automatiken under ”Dynamisk prissättning” – då visas rapporten här.",
+      "distance": "Ø Avstånd till marknaden",
+      "distanceHint": "{n} brytdagar med eget pris",
+      "position": "Läge för brytdagar",
+      "below": "under marknad",
+      "at": "på marknad",
+      "above": "över marknad",
+      "uplift": "Automatik mot grundpris",
+      "upliftHint": "{days} dagar i horisonten · Grundpris {base}",
+      "noBase": "Inget grundpris angivet",
+      "range": "Prisintervall",
+      "rangeHint": "Ø {avg}",
+      "ki": "Regelrådgivare",
+      "kiHint": "{accepted} accepterade · {rejected} avvisade (90 dagar)",
+      "kiTotal": "totalt {accepted} / {rejected}",
+      "chart": "Pris mot omgivning per brytdag",
+      "chartHint": "Band = mittenfältet i omgivningen (25:e–75:e percentilen), linje = median. Ditt pris streckat, grundpris grått.",
+      "market": "Omgivning (median)",
+      "mid": "Mittenfält",
+      "own": "Ditt pris",
+      "base": "Grundpris",
+      "table": "Brytdagar",
+      "offers": "Erbjudanden",
+      "footnote": "Observerat område runt {km} km · Brytdagar för daglig marknadsövervakning · senast hämtat av oss {when}.",
+      "loading": "Rapporten beräknas …"
+    }
   },
   "tasks": {
     "fehler": {

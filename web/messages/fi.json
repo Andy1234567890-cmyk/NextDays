@@ -353,7 +353,8 @@
     "hrSettings": "Asetukset",
     "timeClock": "Työajanseuranta",
     "payroll": "Palkka",
-    "staffReports": "Henkilöstöraportit"
+    "staffReports": "Henkilöstöraportit",
+    "prices": "Hinnat ja markkinat"
   },
   "exemption": {
     "labelNamed": "Verovapaa ({scheme}) — ALV-numeroa ei tarvita",
@@ -12390,7 +12391,7 @@
   },
   "analysis": {
     "title": "Analyysi",
-    "subtitle": "Ajanjakson tunnusluvut, varaukset, käyttöaste ja kanavat.",
+    "subtitle": "Tunnusluvut, varaukset, käyttöaste, kanavat, vieraat, kulut, Pace ja ajanjakson mallit.",
     "loading": "Lasketaan...",
     "empty": "Tälle ajanjaksolle ei ole tietoja.",
     "ownerStay": "Oma käyttö",
@@ -12404,14 +12405,23 @@
       "buchungen": "Varaukset",
       "auslastung": "Käyttöaste",
       "kanaele": "Kanavat",
-      "gaeste": "Asiakkaat"
+      "gaeste": "Asiakkaat",
+      "ausgaben": "Kulut ja lisäpalvelut",
+      "pace": "Pace",
+      "muster": "Mallit",
+      "stornos": "Peruutukset"
     },
     "range": {
       "monat": "Tämä kuukausi",
       "vormonat": "Edellinen kuukausi",
       "quartal": "Neljännes",
       "jahr": "Vuosi",
-      "frei": "Vapaavalintainen"
+      "frei": "Vapaavalintainen",
+      "vorjahr": "Edellinen vuosi",
+      "letzte30": "Viimeiset 30 päivää",
+      "naechste30": "Seuraavat 30 päivää",
+      "letzte12monate": "Viimeiset 12 kuukautta",
+      "naechste12monate": "Seuraavat 12 kuukautta"
     },
     "filter": {
       "range": "Ajanjakso",
@@ -12422,7 +12432,27 @@
       "allProperties": "Kaikki kohteet",
       "channels": "Kanavat",
       "allChannels": "Kaikki kanavat",
-      "compare": "Vertailu"
+      "compare": "Vertailu",
+      "button": "Suodatin",
+      "reset": "Palauta",
+      "apply": "Käytä",
+      "cancel": "Peruuta",
+      "clear": "Tyhjennä valinta",
+      "nSelected": "{count, plural, one {# valittu} other {# valittu}}",
+      "nProperties": "{count, plural, one {# kohde} other {# kohdetta}}",
+      "allStatuses": "Kaikki tilat",
+      "searchProperties": "Etsi kohdetta…",
+      "noMatch": "Ei tuloksia.",
+      "rangeHint": "Pikavalinta pysyy dynaamisena tallennetuissa näkymissä: ”Edellinen kuukausi” on aina tämän päivän edellinen kuukausi.",
+      "statusHint": "Ilman valintaa kaikki tilat lasketaan. Peruutetut varaukset sisältyvät vain peruutusasteeseen, eivät liikevaihtoon ja öihin.",
+      "dim": {
+        "zeitraum": "Ajanjakso",
+        "bezug": "Määritys",
+        "objekte": "Kohteet",
+        "kanaele": "Kanavat",
+        "status": "Tila",
+        "vergleich": "Vertailu"
+      }
     },
     "basis": {
       "anreise": "Saapumisen mukaan",
@@ -12454,11 +12484,31 @@
       "revenueOverTime": "Liikevaihdon kehitys",
       "shareByChannel": "Liikevaihdon osuus kanavittain",
       "revenueByProperty": "Liikevaihto per kohde",
-      "footnote": "Kokonaisliikevaihto ajanjaksolla: {total}"
+      "footnote": "Kokonaisliikevaihto ajanjaksolla: {total}",
+      "overTime": "{metric} ajan mittaan",
+      "otherProperties": "{count, plural, one {# muu kohde} other {# muuta kohdetta}}",
+      "metric": "Mittari",
+      "metricValues": {
+        "umsatz": "Liikevaihto",
+        "naechte": "Yöt",
+        "buchungen": "Varaukset"
+      },
+      "groupBy": "Ryhmittele",
+      "groupValues": {
+        "keine": "Ei mitään",
+        "kanal": "Kanava",
+        "objekt": "Kohde"
+      },
+      "type": "Kaavio",
+      "typeValues": {
+        "linie": "Viiva",
+        "balken": "Palkki"
+      }
     },
     "table": {
       "rowCount": "{count, plural, one {# varaus} other {# varausta}}",
-      "columns": "Sarakkeet"
+      "columns": "Sarakkeet",
+      "total": "Summa"
     },
     "col": {
       "property": "Kohde",
@@ -12480,7 +12530,30 @@
       "bookingsShort": "Varaukset",
       "net": "Netto",
       "share": "Osuus",
-      "country": "Maa"
+      "country": "Maa",
+      "month": "Kuukausi",
+      "ownerNights": "Oma käyttö",
+      "accommodation": "Yöpyminen",
+      "cleaning": "Siivous",
+      "otherFees": "Muut maksut",
+      "addons": "Lisäpalvelut",
+      "gross": "Vierashinta",
+      "paymentFee": "Maksu",
+      "date": "Päivämäärä",
+      "name": "Kuvaus",
+      "category": "Kategoria",
+      "kind": "Tyyppi",
+      "amount": "Määrä",
+      "receipt": "Kuitti",
+      "count": "Määrä",
+      "weekday": "Viikonpäivä",
+      "value": "Arvo",
+      "period": "Ajanjakso",
+      "checkIn": "Saapuminen",
+      "checkOut": "Lähtö",
+      "currency": "Valuutta",
+      "source": "Lähde",
+      "reason": "Syy"
     },
     "guests": {
       "total": "Asiakkaat",
@@ -12512,7 +12585,146 @@
     "compareCurrencyUnclear": "Valuutta vertailujaksolla epäselvä",
     "compareCurrencyMismatchHint": "Vertailujaksolla oli käytössä eri valuutta. Prosentuaalinen muutos olisi valuuttakurssivaikutus eikä liiketoimintaluku.",
     "compareChartCurrencyMismatch": "Vertailujakso oli eri valuutassa – edellisen vuoden riviä ei siksi piirretä.",
-    "compareLocked": "Vertailu on mahdollista enintään vuoden ajanjaksolle."
+    "compareLocked": "Vertailu on mahdollista enintään vuoden ajanjaksolle.",
+    "status": {
+      "pending": "Avoinna",
+      "confirmed": "Vahvistettu",
+      "checked_in": "Sisäänkirjautunut",
+      "checked_out": "Uloskirjautunut",
+      "completed": "Valmis",
+      "cancelled": "Peruutettu",
+      "declined": "Hylätty",
+      "expired": "Vanhentunut",
+      "requested": "Tiedusteltu"
+    },
+    "bookings": {
+      "per": {
+        "buchung": "Per varaus",
+        "objekt": "Per kohde"
+      },
+      "propertyCount": "{count, plural, one {# kohde} other {# kohdetta}}",
+      "showEmpty": "Näytä kohteet ilman varauksia",
+      "reconstructed": "Kohteiden maksuista rekonstruoitu – portaali ei toimittanut erittelyä.",
+      "commissionComputed": "Laskettu tallennetusta provisiosta – portaali ei ilmoittanut.",
+      "withoutBreakdown": "{count, plural, one {# varaus ilman erittelyä – vain kokonaishinta.} other {# varausta ilman erittelyä – vain kokonaishinta.}}",
+      "withoutBreakdownShort": "Ilman erittelyä",
+      "reconstructedCount": "{count, plural, one {# erittely (*) rekonstruoitu kohteen maksuista.} other {# erittelyä (*) rekonstruoitu kohteen maksuista.}}"
+    },
+    "occupancy": {
+      "byMonth": "Kuukausittain",
+      "propertyCount": "{count, plural, one {# kohde} other {# kohdetta}}"
+    },
+    "expenses": {
+      "empty": "Ei tiliöintikohteita tällä ajanjaksolla.",
+      "emptyHint": "Kulut ja lisäpalvelut syntyvät omistajan tilityksessä ja tilatuista palveluista.",
+      "expenses": "Kulut",
+      "extras": "Lisäpalvelut",
+      "balance": "Saldo",
+      "balanceHint": "Lisäpalvelut miinus kulut",
+      "count": "Kohteet",
+      "byCategory": "Kategorian mukaan",
+      "byProperty": "Kohteen mukaan",
+      "noCategory": "Ei kategoriaa",
+      "noProperty": "Ei kohdetta (tili)",
+      "rowCount": "{count, plural, one {# kohde} other {# kohdetta}}",
+      "kind": {
+        "ausgabe": "Kulu",
+        "extra": "Lisäpalvelu"
+      },
+      "footnote": "Ajanjakso on kohteen päivämäärä. Kulut rasittavat omistajaa, lisäpalvelut hyödyttävät häntä – sellaisina kuin ne ovat tilityksessä."
+    },
+    "pace": {
+      "title": "Varaustilanne seuraaville 12 kuukaudelle",
+      "subtitle": "Tilanne {heute} verrattuna tilanteeseen {vorjahr} samoina kuukausina vuotta aiemmin.",
+      "vsLastYear": "verrattuna edellisen vuoden vertailupäivään",
+      "now": "Tänään varattu",
+      "lastYearSameDay": "Edellinen vuosi samana päivänä",
+      "lastYearFinal": "Edellinen vuosi lopussa",
+      "nowNights": "Tänään varattu (yöt)",
+      "nowRevenue": "Tänään varattu (liikevaihto)",
+      "lastYearSameDayNights": "Edellinen vuosi samana päivänä (yöt)",
+      "delta": "Ero",
+      "lastYearFinalNights": "Edellinen vuosi lopussa (yöt)",
+      "lastYearFinalRevenue": "Edellinen vuosi lopussa (liikevaihto)",
+      "footnote": "Edellisen vuoden vertailupäivä laskee vain varaukset, joilla on todellinen varausajankohta portaalista.",
+      "withoutTimestamp": "{count, plural, one {# edellisen vuoden varaus ilman aikaleimaa puuttuu vertailupäivän arvosta.} other {# edellisen vuoden varaukset ilman aikaleimaa puuttuvat vertailupäivän arvosta.}}"
+    },
+    "patterns": {
+      "weekday": "Suorituskyky viikonpäivittäin",
+      "weekdayHint": "Käyttöaste ja liikevaihto viikonpäivittäin. Varauksen liikevaihto jakautuu tasaisesti sen öille – portaalit eivät anna hintaa per yö.",
+      "leadTime": "Varausikkuna",
+      "leadTimeHint": "Päivät varauksen ja saapumisen välillä. Vain varaukset, joilla on todellinen varausajankohta.",
+      "stayLength": "Oleskelun kesto",
+      "stayLengthHint": "Varattujen öiden jakautuminen per oleskelu.",
+      "days": "Päivää",
+      "nights": "Yötä",
+      "daysValue": "{n} päivää"
+    },
+    "cancellations": {
+      "empty": "Ei peruutuksia tällä ajanjaksolla.",
+      "emptyHint": "{count, plural, one {# voimassa oleva varaus, ei peruutettu.} other {# voimassa olevaa varausta, ei peruutettu.}}",
+      "nights": "Peruutetut yöt",
+      "lostRevenue": "Menetetty liikevaihto",
+      "lostRevenueHint": "Peruutettujen varausten kokonaishinta – osa öistä myytiin uudelleen.",
+      "leadTime": "Keskimääräinen varausaika",
+      "leadTimeBase": "{count} / {total} peruutuspäivämäärällä",
+      "byChannel": "Kanavan mukaan",
+      "byLeadTime": "Varausajan mukaan (päivää ennen saapumista)",
+      "byReason": "Syyn mukaan",
+      "noReason": "Ei syytä annettu",
+      "footnote": "Peruutusprosentti = peruutettu / (voimassa oleva + peruutettu). Varausaika lasketaan vain varauksista, joilla on peruutuspäivämäärä."
+    },
+    "views": {
+      "button": "Näkymät",
+      "title": "Tallennetut näkymät",
+      "empty": "Ei tallennettuja näkymiä.",
+      "new": "Tallenna nykyinen näkymä",
+      "delete": "Poista",
+      "saveTitle": "Tallenna näkymä",
+      "saveHint": "Tallentaa ajanjakson, suodattimet, sarakkeet ja välilehtiasetukset – vain sinulle.",
+      "namePlaceholder": "esim. edellinen kuukausi per kohde",
+      "save": "Tallenna"
+    },
+    "export": {
+      "button": "Lataa raportti",
+      "title": "Muoto",
+      "csv": "CSV (nykyinen taulukko)",
+      "xlsx": "Excel (kaikki välilehden taulukot)",
+      "pdf": "PDF",
+      "hint": "Viedään täsmälleen se, mitä tässä näkyy – aktiivisten suodattimien kanssa.",
+      "generated": "Luotu {when}",
+      "failed": "Vienti epäonnistui."
+    },
+    "prices": {
+      "title": "Hinnat ja markkinat",
+      "subtitle": "Miten hintasi vertautuu ympäristöön, mitä automatiikka tekee perushinnasta ja miten käsittelet ehdotuksia.",
+      "property": "Kohde",
+      "noProperties": "Ei kohdetta dynaamisella hinnoittelulla. Kytke automatiikka päälle kohdasta ”Dynaaminen hinnoittelu” – sitten raportti ilmestyy tähän.",
+      "distance": "Ø etäisyys markkinoihin",
+      "distanceHint": "{n} määräpäivää omalla hinnalla",
+      "position": "Määräpäivien sijainti",
+      "below": "markkinoiden alapuolella",
+      "at": "markkinoilla",
+      "above": "markkinoiden yläpuolella",
+      "uplift": "Automaattinen vs. perushinta",
+      "upliftHint": "{days} päivää horisontissa · perushinta {base}",
+      "noBase": "Perushintaa ei ole tallennettu",
+      "range": "Hintojen vaihteluväli",
+      "rangeHint": "Ø {avg}",
+      "ki": "Sääntökonsultti",
+      "kiHint": "{accepted} hyväksytty · {rejected} hylätty (90 päivää)",
+      "kiTotal": "yhteensä {accepted} / {rejected}",
+      "chart": "Hinta vs. ympäristö määräpäivittäin",
+      "chartHint": "Alue = ympäristön keskialue (25.–75. persentiili), viiva = mediaani. Hintasi katkoviivalla, perushinta harmaalla.",
+      "market": "Ympäristö (mediaani)",
+      "mid": "Keskialue",
+      "own": "Hintasi",
+      "base": "Perushinta",
+      "table": "Määräpäivät",
+      "offers": "Tarjoukset",
+      "footnote": "Havaittu alue noin {km} km · Päivittäisen markkinaseurannan määräpäivät · viimeksi haettu meiltä {when}.",
+      "loading": "Raporttia lasketaan…"
+    }
   },
   "tasks": {
     "fehler": {

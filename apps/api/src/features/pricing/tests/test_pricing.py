@@ -1978,7 +1978,17 @@ def test_dp_felder_ueberall_bekannt() -> None:
     #   market_key/comp_refs — Adressierung der Markt-QUELLE, nicht Teil der
     #                          Rechnung; der Recompute liest sie aus der
     #                          Rohzeile (siehe recompute._settings_row)
-    nur_antwort = {"property_id", "market_key", "comp_refs"}
+    #   freigabe_ab_tagen    — steuert den PUSH (freigabe.py), nicht den Preis
+    #   rate_plan_id         — steuert, WOHIN gepusht wird (recompute liest die
+    #                          Rohzeile), nicht die Rechnung
+    #   quellmaerkte         — adressiert die Feiertags-QUELLE (Laender), die
+    #                          Engine bekommt daraus nur ist_feiertag/ist_ferien
+    #   saison_verfuegbar    — nur LESEND: „hat das Objekt einen Saisonkalender"
+    #                          (0565), abgeleitet aus dem Kalender, keine Regel
+    nur_antwort = {
+        "property_id", "market_key", "comp_refs",
+        "freigabe_ab_tagen", "rate_plan_id", "quellmaerkte", "saison_verfuegbar",
+    }
     fehlend = set(DpSettingsResponse.model_fields) - engine_felder - nur_antwort
     assert not fehlend, (
         f"Diese Felder kennt die Engine-Dataclass nicht: {sorted(fehlend)} — "
@@ -2005,6 +2015,26 @@ def test_dp_defaults_decken_alle_antwortfelder() -> None:
     ohne = (
         set(DpSettingsResponse.model_fields)
         - set(_DEFAULTS)
-        - {"property_id"}
+        # saison_verfuegbar ist kein gespeicherter Wert, sondern wird je Abruf
+        # aus dem Saisonkalender abgeleitet (0565).
+        - {"property_id", "saison_verfuegbar"}
     )
     assert not ohne, f"Kein Default hinterlegt für: {sorted(ohne)}"
+
+
+def test_dp_saison_regel_ohne_kalender_wird_abgewiesen(monkeypatch) -> None:  # noqa: ANN001
+    """0565: ohne Saisonkalender ist „Mindestpreis aus dem Saisonkalender"
+    nicht waehlbar — der Server sagt 422, statt eine Attrappe zu speichern."""
+    from unittest.mock import MagicMock
+
+    from src.features.pricing import settings_service as ss
+    from src.features.pricing.schemas import DpSettingsUpdate
+
+    svc = ss.DpSettingsService(service_client=MagicMock())
+    svc._require_own_property = lambda *a, **k: None  # noqa: SLF001
+    monkeypatch.setattr(ss, "saison_vorhanden", lambda *_a, **_k: False)
+    ctx = MagicMock(tenant_id="t1", role="admin")
+    with pytest.raises(PricingError) as exc:
+        svc.update(ctx, "p1", DpSettingsUpdate(saison_mindestpreis=True))
+    assert exc.value.status_code == 422
+    assert "Saisonkalender" in exc.value.message

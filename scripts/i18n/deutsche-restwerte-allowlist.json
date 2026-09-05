@@ -3909,10 +3909,29 @@
       "wert": "Stop-Sell",
       "grund": "fachbegriff",
       "sprachen": [
+        "bg",
         "cs",
         "da",
+        "el",
         "en",
-        "es"
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "ga",
+        "hr",
+        "hu",
+        "it",
+        "lt",
+        "lv",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
       ]
     },
     {
@@ -4839,6 +4858,101 @@
       "sprachen": [
         "mt"
       ]
+    },
+    {
+      "schluessel": "analysis.export.pdf",
+      "grund": "kuerzel",
+      "sprachen": "alle",
+      "notiz": "Dateiformat PDF"
+    },
+    {
+      "schluessel": "analysis.tab.pace",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "en",
+        "fi",
+        "nl"
+      ],
+      "notiz": "Revenue-Management-Begriff (SiteMinder „Pace“), in diesen Sprachen unübersetzt gebräuchlich"
+    },
+    {
+      "schluessel": "analysis.expenses.balance",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "es",
+        "et",
+        "fi",
+        "it",
+        "nl",
+        "pl",
+        "pt",
+        "sv"
+      ],
+      "notiz": "Saldo lautet in diesen Sprachen gleich"
+    },
+    {
+      "schluessel": "analysis.expenses.kind.extra",
+      "grund": "international",
+      "sprachen": [
+        "en",
+        "es",
+        "fr",
+        "hu",
+        "it",
+        "mt",
+        "nl",
+        "pt",
+        "ro"
+      ],
+      "notiz": "Extra lautet in diesen Sprachen gleich"
+    },
+    {
+      "schluessel": "analysis.chart.type",
+      "grund": "international",
+      "sprachen": [
+        "et"
+      ],
+      "notiz": "et: diagramm"
+    },
+    {
+      "schluessel": "analysis.filter.button",
+      "grund": "international",
+      "sprachen": [
+        "hr"
+      ],
+      "notiz": "hr: filter"
+    },
+    {
+      "schluessel": "analysis.expenses.count",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ],
+      "notiz": "nl: posten = Posten"
+    },
+    {
+      "schluessel": "analysis.chart.typeValues.linie",
+      "grund": "international",
+      "sprachen": [
+        "ro"
+      ],
+      "notiz": "ro: linie"
+    },
+    {
+      "schluessel": "analysis.chart.groupValues.objekt",
+      "grund": "international",
+      "sprachen": [
+        "sl"
+      ],
+      "notiz": "sl: objekt"
+    },
+    {
+      "schluessel": "analysis.prices.rangeHint",
+      "grund": "maske",
+      "sprachen": "alle",
+      "notiz": "Ø + Platzhalter, kein Wort"
     }
   ]
 }

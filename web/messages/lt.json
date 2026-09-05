@@ -353,7 +353,8 @@
     "hrSettings": "Nustatymai",
     "timeClock": "Laiko apskaita",
     "payroll": "Atlyginimas",
-    "staffReports": "Personalo ataskaitos"
+    "staffReports": "Personalo ataskaitos",
+    "prices": "Kainos ir rinka"
   },
   "exemption": {
     "labelNamed": "Atleista nuo mokesčio ({scheme}) — PVM kodas nereikalingas",
@@ -12390,7 +12391,7 @@
   },
   "analysis": {
     "title": "Vertinimas",
-    "subtitle": "Laikotarpio rodikliai, užsakymai, užimtumas ir kanalai.",
+    "subtitle": "Pagrindiniai rodikliai, užsakymai, užimtumas, kanalai, svečiai, išlaidos, tempas ir laikotarpio modeliai.",
     "loading": "Skaičiuojama...",
     "empty": "Šiam laikotarpiui duomenų nėra.",
     "ownerStay": "Nuosavas naudojimas",
@@ -12404,14 +12405,23 @@
       "buchungen": "Užsakymai",
       "auslastung": "Užimtumas",
       "kanaele": "Kanalai",
-      "gaeste": "Svečiai"
+      "gaeste": "Svečiai",
+      "ausgaben": "Išlaidos ir papildomi mokesčiai",
+      "pace": "Tempas",
+      "muster": "Modeliai",
+      "stornos": "Atšaukimai"
     },
     "range": {
       "monat": "Šis mėnuo",
       "vormonat": "Praėjęs mėnuo",
       "quartal": "Ketvirtis",
       "jahr": "Metai",
-      "frei": "Laisvai pasirinktas"
+      "frei": "Laisvai pasirinktas",
+      "vorjahr": "Praėję metai",
+      "letzte30": "Paskutinės 30 dienų",
+      "naechste30": "Kitos 30 dienų",
+      "letzte12monate": "Paskutiniai 12 mėnesių",
+      "naechste12monate": "Kiti 12 mėnesių"
     },
     "filter": {
       "range": "Laikotarpis",
@@ -12422,7 +12432,27 @@
       "allProperties": "Visi objektai",
       "channels": "Kanalai",
       "allChannels": "Visi kanalai",
-      "compare": "Palyginti"
+      "compare": "Palyginti",
+      "button": "Filtras",
+      "reset": "Atstatyti",
+      "apply": "Taikyti",
+      "cancel": "Atšaukti",
+      "clear": "Išvalyti pasirinkimą",
+      "nSelected": "{count, plural, one {# pasirinkta} other {# pasirinkta}}",
+      "nProperties": "{count, plural, one {# objektas} other {# objektai}}",
+      "allStatuses": "Visi statusai",
+      "searchProperties": "Ieškoti objekto…",
+      "noMatch": "Nėra atitikmenų.",
+      "rangeHint": "Greitasis pasirinkimas išlieka dinamiškas išsaugotuose rodiniuose: „Praėjęs mėnuo“ visada yra praėjęs mėnuo nuo šiandien.",
+      "statusHint": "Be pasirinkimo skaičiuojami visi statusai. Atšaukti užsakymai įtraukiami tik į atšaukimų rodiklį, o ne į pajamas ir naktis.",
+      "dim": {
+        "zeitraum": "Laikotarpis",
+        "bezug": "Priskyrimas",
+        "objekte": "Objektai",
+        "kanaele": "Kanalai",
+        "status": "Statusas",
+        "vergleich": "Palyginimas"
+      }
     },
     "basis": {
       "anreise": "Pagal atvykimą",
@@ -12454,11 +12484,31 @@
       "revenueOverTime": "Pajamų istorija",
       "shareByChannel": "Pajamų dalis pagal kanalą",
       "revenueByProperty": "Pajamos už objektą",
-      "footnote": "Bendra pajamų suma per laikotarpį: {total}"
+      "footnote": "Bendra pajamų suma per laikotarpį: {total}",
+      "overTime": "{metric} laikui bėgant",
+      "otherProperties": "{count, plural, one {# papildomas objektas} other {# papildomi objektai}}",
+      "metric": "Metrika",
+      "metricValues": {
+        "umsatz": "Pajamos",
+        "naechte": "Naktys",
+        "buchungen": "Užsakymai"
+      },
+      "groupBy": "Grupuoti",
+      "groupValues": {
+        "keine": "Nėra",
+        "kanal": "Kanalas",
+        "objekt": "Objektas"
+      },
+      "type": "Diagrama",
+      "typeValues": {
+        "linie": "Linija",
+        "balken": "Juosta"
+      }
     },
     "table": {
       "rowCount": "{count, plural, one {# užsakymas} other {# užsakymai}}",
-      "columns": "Stulpeliai"
+      "columns": "Stulpeliai",
+      "total": "Suma"
     },
     "col": {
       "property": "Objektas",
@@ -12480,7 +12530,30 @@
       "bookingsShort": "Užsakymai",
       "net": "Neto",
       "share": "Dalis",
-      "country": "Šalis"
+      "country": "Šalis",
+      "month": "Mėnuo",
+      "ownerNights": "Savininko naudojimasis",
+      "accommodation": "Nakvynė",
+      "cleaning": "Valymas",
+      "otherFees": "Kiti mokesčiai",
+      "addons": "Papildomos paslaugos",
+      "gross": "Svečio kaina",
+      "paymentFee": "Mokėjimo mokestis",
+      "date": "Data",
+      "name": "Aprašymas",
+      "category": "Kategorija",
+      "kind": "Tipas",
+      "amount": "Suma",
+      "receipt": "Kvitas",
+      "count": "Kiekis",
+      "weekday": "Savaitės diena",
+      "value": "Vertė",
+      "period": "Laikotarpis",
+      "checkIn": "Atvykimas",
+      "checkOut": "Išvykimas",
+      "currency": "Valiuta",
+      "source": "Šaltinis",
+      "reason": "Priežastis"
     },
     "guests": {
       "total": "Svečiai",
@@ -12512,7 +12585,146 @@
     "compareCurrencyUnclear": "Valiuta lyginamuoju laikotarpiu neaiški",
     "compareCurrencyMismatchHint": "Lyginamuoju laikotarpiu galiojo kita valiuta. Procentinis pokytis būtų valiutos kurso efektas, o ne verslo rodiklis.",
     "compareChartCurrencyMismatch": "Lyginamasis laikotarpis buvo kita valiuta – todėl praėjusių metų eilutė nebraižoma.",
-    "compareLocked": "Palyginimas galimas iki vienerių metų laikotarpio."
+    "compareLocked": "Palyginimas galimas iki vienerių metų laikotarpio.",
+    "status": {
+      "pending": "Atidaryta",
+      "confirmed": "Patvirtinta",
+      "checked_in": "Užregistruota",
+      "checked_out": "Išregistruota",
+      "completed": "Baigta",
+      "cancelled": "Atšaukta",
+      "declined": "Atmesta",
+      "expired": "Pasibaigęs",
+      "requested": "Užklausta"
+    },
+    "bookings": {
+      "per": {
+        "buchung": "Užsakymui",
+        "objekt": "Objektui"
+      },
+      "propertyCount": "{count, plural, one {# Objektas} other {# Objektai}}",
+      "showEmpty": "Rodyti objektus be užsakymų",
+      "reconstructed": "Atkurta iš objekto mokesčių – portalas nepateikė išklotinės.",
+      "commissionComputed": "Apskaičiuota pagal nustatytą komisinį mokestį – portalo nepranešta.",
+      "withoutBreakdown": "{count, plural, one {# užsakymas be kainos išklotinės – rodoma tik bendra kaina.} other {# užsakymai be kainos išklotinės – rodoma tik bendra kaina.}}",
+      "withoutBreakdownShort": "Be išklotinės",
+      "reconstructedCount": "{count, plural, one {# išklotinė (*) atkurta iš objekto mokesčių.} other {# išklotinės (*) atkurtos iš objekto mokesčių.}}"
+    },
+    "occupancy": {
+      "byMonth": "Per mėnesį",
+      "propertyCount": "{count, plural, one {# objektas} other {# objektai}}"
+    },
+    "expenses": {
+      "empty": "Šiuo laikotarpiu nėra atsiskaitymo elementų.",
+      "emptyHint": "Išlaidos ir papildomos paslaugos atsiranda savininko atsiskaityme ir iš užsakytų paslaugų.",
+      "expenses": "Išlaidos",
+      "extras": "Papildomos paslaugos",
+      "balance": "Balansas",
+      "balanceHint": "Papildomos paslaugos minus išlaidos",
+      "count": "Elementai",
+      "byCategory": "Pagal kategoriją",
+      "byProperty": "Pagal objektą",
+      "noCategory": "Be kategorijos",
+      "noProperty": "Be objekto (sąskaita)",
+      "rowCount": "{count, plural, one {# elementas} other {# elementai}}",
+      "kind": {
+        "ausgabe": "Išlaidos",
+        "extra": "Papildoma paslauga"
+      },
+      "footnote": "Laikotarpis yra elemento data. Išlaidos tenka savininkui, papildomos paslaugos – jo naudai, kaip nurodyta atsiskaityme."
+    },
+    "pace": {
+      "title": "Užsakymų būklė per ateinančius 12 mėnesių",
+      "subtitle": "Būklė {heute} palyginti su būkle {vorjahr} tiems patiems mėnesiams prieš metus.",
+      "vsLastYear": "palyginti su praėjusių metų atskaitos data",
+      "now": "Užsakyta šiandien",
+      "lastYearSameDay": "Praėjusiais metais tą pačią dieną",
+      "lastYearFinal": "Praėjusiais metais pabaigoje",
+      "nowNights": "Užsakyta šiandien (naktys)",
+      "nowRevenue": "Užsakyta šiandien (pajamos)",
+      "lastYearSameDayNights": "Praėjusiais metais tą pačią dieną (naktys)",
+      "delta": "Skirtumas",
+      "lastYearFinalNights": "Praėjusiais metais pabaigoje (naktys)",
+      "lastYearFinalRevenue": "Praėjusiais metais pabaigoje (pajamos)",
+      "footnote": "Praėjusių metų atskaitos data apima tik užsakymus su tikru portalo užsakymo laiku.",
+      "withoutTimestamp": "{count, plural, one {# praėjusių metų užsakymas be laiko žymos trūksta atskaitos datos vertėje.} other {# praėjusių metų užsakymai be laiko žymos trūksta atskaitos datos vertėje.}}"
+    },
+    "patterns": {
+      "weekday": "Paslaugos pagal savaitės dieną",
+      "weekdayHint": "Užimtumas ir pajamos pagal savaitės dieną. Užsakymo pajamos tolygiai paskirstomos per naktis – portalai nenurodo kainos už naktį.",
+      "leadTime": "Užsakymo langas",
+      "leadTimeHint": "Dienos tarp užsakymo ir atvykimo. Tik užsakymai su tikru užsakymo laiku.",
+      "stayLength": "Viešnagės trukmė",
+      "stayLengthHint": "Užsakytų naktų pasiskirstymas pagal viešnagę.",
+      "days": "Dienos",
+      "nights": "Naktys",
+      "daysValue": "{n} dienos"
+    },
+    "cancellations": {
+      "empty": "Šiuo laikotarpiu atšaukimų nėra.",
+      "emptyHint": "{count, plural, one {# galiojantis užsakymas, neatšauktas.} other {# galiojantys užsakymai, neatšaukti.}}",
+      "nights": "Atšauktos naktys",
+      "lostRevenue": "Negautos pajamos",
+      "lostRevenueHint": "Bendra atšauktų užsakymų kaina – dalis naktų buvo perparduota.",
+      "leadTime": "Vid. išankstinis užsakymas",
+      "leadTimeBase": "{count} iš {total} su atšaukimo data",
+      "byChannel": "Pagal kanalą",
+      "byLeadTime": "Pagal išankstinį užsakymą (dienos iki atvykimo)",
+      "byReason": "Pagal priežastį",
+      "noReason": "Priežastis nenurodyta",
+      "footnote": "Atšaukimo rodiklis = atšaukta / (galioja + atšaukta). Išankstinis užsakymas skaičiuojamas tik su užsakymais, turinčiais atšaukimo datą."
+    },
+    "views": {
+      "button": "Peržiūros",
+      "title": "Išsaugotos peržiūros",
+      "empty": "Dar nėra išsaugotų peržiūrų.",
+      "new": "Išsaugoti dabartinę peržiūrą",
+      "delete": "Ištrinti",
+      "saveTitle": "Išsaugoti peržiūrą",
+      "saveHint": "Išsaugo laikotarpį, filtrus, stulpelius ir skirtukų nustatymus – tik jums.",
+      "namePlaceholder": "pvz., praėjęs mėnuo pagal objektą",
+      "save": "Išsaugoti"
+    },
+    "export": {
+      "button": "Atsisiųsti ataskaitą",
+      "title": "Formatas",
+      "csv": "CSV (dabartinė lentelė)",
+      "xlsx": "Excel (visi skirtuko lapai)",
+      "pdf": "PDF",
+      "hint": "Eksportuojama tiksliai tai, kas čia nurodyta – su aktyviais filtrais.",
+      "generated": "Sukurta {when}",
+      "failed": "Eksportavimas nepavyko."
+    },
+    "prices": {
+      "title": "Kainos ir rinka",
+      "subtitle": "Kokia jūsų kaina, palyginti su aplinka, ką automatinė sistema daro su bazine kaina ir kaip elgiatės su pasiūlymais.",
+      "property": "Objektas",
+      "noProperties": "Nėra objekto su dinamine kainodara. Įjunkite automatiką skiltyje „Dinaminė kainodara“ – tada čia pasirodys ataskaita.",
+      "distance": "Ø atstumas iki rinkos",
+      "distanceHint": "{n} nustatytos datos su individualia kaina",
+      "position": "Nustatytų datų vieta",
+      "below": "žemiau rinkos",
+      "at": "rinkoje",
+      "above": "virš rinkos",
+      "uplift": "Automatinė sistema prieš bazinę kainą",
+      "upliftHint": "{days} dienų horizonte · bazinė kaina {base}",
+      "noBase": "Bazinė kaina nenurodyta",
+      "range": "Kainų diapazonas",
+      "rangeHint": "Ø {avg}",
+      "ki": "Taisyklių patarėjas",
+      "kiHint": "{accepted} priimta · {rejected} atmesta (90 dienų)",
+      "kiTotal": "iš viso {accepted} / {rejected}",
+      "chart": "Kaina, palyginti su aplinka, pagal nustatytą datą",
+      "chartHint": "Juosta = vidutinis aplinkos laukas (25–75 procentilis), linija = mediana. Jūsų kaina punktyrine linija, bazinė kaina pilka.",
+      "market": "Aplinka (mediana)",
+      "mid": "Vidutinis laukas",
+      "own": "Jūsų kaina",
+      "base": "Bazinė kaina",
+      "table": "Nustatytos datos",
+      "offers": "Pasiūlymai",
+      "footnote": "Stebima sritis apie {km} km · Kasdienės rinkos stebėjimo datos · paskutinį kartą gauta {when}.",
+      "loading": "Ataskaita skaičiuojama…"
+    }
   },
   "tasks": {
     "fehler": {

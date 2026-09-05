@@ -12,7 +12,7 @@
 // einzelner Tag. Ein Dialog je Tag hiesse siebenmal dasselbe klicken — und
 // wer das umgeht, indem er die globale Regel verstellt, ändert damit
 // ungewollt das ganze Jahr.
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@nextdays/ui/button";
 import {
@@ -24,7 +24,39 @@ import {
 import { Input } from "@nextdays/ui/input";
 import { Label } from "@nextdays/ui/label";
 import { formatCurrency } from "@/lib/currency";
-import { setTagesmodus, type Tagesmodus } from "@/lib/dynamic-pricing";
+import {
+  getVerlauf,
+  setTagesmodus,
+  type Tagesmodus,
+  type VerlaufEintrag,
+} from "@/lib/dynamic-pricing";
+
+// Verlauf je Ereignis in einen Satz (SiteMinder „History").
+function verlaufText(e: VerlaufEintrag): string {
+  const d = e.details as Record<string, unknown>;
+  switch (e.ereignis) {
+    case "tagesmodus":
+      return d.modus === "manuell"
+        ? `Fester Preis ${d.preis ?? ""} gesetzt`
+        : d.modus === "anpassung"
+          ? `Anpassung ${Number(d.adjust_pct) >= 0 ? "+" : ""}${d.adjust_pct} % gesetzt`
+          : "Auf dynamischen Preis gestellt";
+    case "freigabe":
+      return `${d.tage ?? ""} Tage freigegeben`;
+    case "gesendet":
+      return `An die Portale gesendet (${d.tage ?? ""} Tage, ${d.min ?? ""}–${d.max ?? ""})`;
+    case "einstellungen":
+      return `Einstellungen geändert: ${(d.felder as string[] | undefined)?.join(", ") ?? ""}`;
+    case "preisgrenze":
+      return `Preisgrenze „${d.bezeichnung ?? ""}" ${d.aktion ?? ""}`;
+    case "automatik_an":
+      return "Automatik eingeschaltet";
+    case "automatik_aus":
+      return "Automatik ausgeschaltet";
+    default:
+      return e.ereignis;
+  }
+}
 
 /** Ein Modus mit seiner Erklärung — die Wahl braucht mehr als ein Etikett. */
 const MODI: { wert: Tagesmodus; titel: string; hilfe: string }[] = [
@@ -49,6 +81,8 @@ export function DpTagesmodusDialog({
   propertyId,
   currency,
   startDatum,
+  startModus = "dynamisch",
+  startAnpassungPct = null,
   berechneterPreis,
   offen,
   onSchliessen,
@@ -58,7 +92,12 @@ export function DpTagesmodusDialog({
   currency: string | null;
   /** Vorbelegung für Start und Ende (der angeklickte Tag). */
   startDatum: string;
-  /** Was die Automatik für diesen Tag errechnet hat — als Vorschau. */
+  /** Was für diesen Tag bereits gilt. Ein Dialog, der bei einem festen
+   *  Preis „Dynamischer Preis" vorwählt, behauptet einen Zustand, der nicht
+   *  stimmt — und der Nutzer sieht seine eigene Einstellung nicht wieder. */
+  startModus?: Tagesmodus;
+  startAnpassungPct?: number | null;
+  /** Der Preis dieses Tages ohne Tagesanpassung — Vorschau und Vorbelegung. */
   berechneterPreis: number | null;
   offen: boolean;
   onSchliessen: () => void;
@@ -66,13 +105,29 @@ export function DpTagesmodusDialog({
 }) {
   const [von, setVon] = useState(startDatum);
   const [bis, setBis] = useState(startDatum);
-  const [modus, setModus] = useState<Tagesmodus>("dynamisch");
-  const [anpassung, setAnpassung] = useState("10");
+  const [modus, setModus] = useState<Tagesmodus>(startModus);
+  const [anpassung, setAnpassung] = useState(
+    startAnpassungPct != null ? String(startAnpassungPct) : "10",
+  );
   const [preis, setPreis] = useState(
     berechneterPreis != null ? String(Math.round(berechneterPreis)) : "",
   );
   const [busy, setBusy] = useState(false);
   const [fehler, setFehler] = useState<string | null>(null);
+  // Verlauf dieses Tages: wer hat wann was gesetzt, wann ging was raus.
+  const [verlauf, setVerlauf] = useState<VerlaufEintrag[] | null>(null);
+  const [verlaufOffen, setVerlaufOffen] = useState(false);
+  useEffect(() => {
+    if (!offen) return;
+    let aktiv = true;
+    setVerlauf(null);
+    getVerlauf(propertyId, startDatum).then((res) => {
+      if (aktiv && res.ok) setVerlauf(res.data);
+    });
+    return () => {
+      aktiv = false;
+    };
+  }, [offen, propertyId, startDatum]);
 
   // Bei jedem Öffnen auf den angeklickten Tag zurück: ein Dialog, der noch
   // den Bereich von vorhin zeigt, schreibt sonst unbemerkt woanders hin.
@@ -81,7 +136,8 @@ export function DpTagesmodusDialog({
     setZuletztGeoeffnet(startDatum);
     setVon(startDatum);
     setBis(startDatum);
-    setModus("dynamisch");
+    setModus(startModus);
+    setAnpassung(startAnpassungPct != null ? String(startAnpassungPct) : "10");
     setFehler(null);
     setPreis(
       berechneterPreis != null ? String(Math.round(berechneterPreis)) : "",
@@ -229,6 +285,37 @@ export function DpTagesmodusDialog({
         )}
 
         {fehler && <p className="mt-3 text-sm text-destructive">{fehler}</p>}
+
+        {/* Verlauf (SiteMinder „History"): eingeklappt, damit der Dialog
+            seine Aufgabe behält — erst setzen, dann nachsehen. */}
+        <div className="mt-4 border-t pt-3">
+          <button
+            type="button"
+            onClick={() => setVerlaufOffen((v) => !v)}
+            className="flex w-full items-center justify-between text-sm font-medium"
+          >
+            Verlauf für diesen Tag
+            <span className="text-xs text-muted-foreground">
+              {verlauf === null ? "lädt…" : `${verlauf.length} Einträge`}
+            </span>
+          </button>
+          {verlaufOffen && verlauf && (
+            <ul className="mt-2 flex max-h-40 flex-col gap-1.5 overflow-y-auto text-xs">
+              {verlauf.length === 0 && (
+                <li className="text-muted-foreground">Noch keine Einträge.</li>
+              )}
+              {verlauf.map((e) => (
+                <li key={e.id} className="flex flex-col leading-tight">
+                  <span>{verlaufText(e)}</span>
+                  <span className="text-muted-foreground">
+                    {new Date(e.created_at).toLocaleString("de-DE")} ·{" "}
+                    {e.user_name ?? (e.user_id ? "Mitarbeiter" : "Automatik")}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
         <div className="mt-4 flex justify-end gap-2">
           <Button type="button" variant="ghost" onClick={onSchliessen}>

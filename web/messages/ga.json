@@ -353,7 +353,8 @@
     "hrSettings": "Socruithe",
     "timeClock": "Clogáil Isteach/Amach",
     "payroll": "Pá",
-    "staffReports": "Tuarascálacha Foirne"
+    "staffReports": "Tuarascálacha Foirne",
+    "prices": "Praghsanna & Margadh"
   },
   "exemption": {
     "labelNamed": "Díolúine cánach ({scheme}) — níl uimhir CBL ag teastáil",
@@ -12390,7 +12391,7 @@
   },
   "analysis": {
     "title": "Anailís",
-    "subtitle": "Príomhtháscairí, áirithintí, ráta áitíochta agus cainéil do thréimhse.",
+    "subtitle": "Príomhtháscairí, áirithintí, ráta áitíochta, cainéil, aíonna, caiteachas, luas agus patrúin tréimhse.",
     "loading": "Á ríomh …",
     "empty": "Níl aon sonraí don tréimhse seo.",
     "ownerStay": "Úsáid phearsanta",
@@ -12404,14 +12405,23 @@
       "buchungen": "Áirithintí",
       "auslastung": "Ráta áitíochta",
       "kanaele": "Cainéil",
-      "gaeste": "Aíonna"
+      "gaeste": "Aíonna",
+      "ausgaben": "Caiteachas & Breiseáin",
+      "pace": "Luas",
+      "muster": "Patrúin",
+      "stornos": "Cealuithe"
     },
     "range": {
       "monat": "An mhí seo",
       "vormonat": "An mhí seo caite",
       "quartal": "Ráithe",
       "jahr": "Bliain",
-      "frei": "Saor-roghnaithe"
+      "frei": "Saor-roghnaithe",
+      "vorjahr": "An Bhliain Roimhe Seo",
+      "letzte30": "Na 30 Lá is Déanaí",
+      "naechste30": "Na 30 Lá Eile",
+      "letzte12monate": "Na 12 Mhí is Déanaí",
+      "naechste12monate": "Na 12 Mhí Eile"
     },
     "filter": {
       "range": "Tréimhse",
@@ -12422,7 +12432,27 @@
       "allProperties": "Gach réad",
       "channels": "Cainéil",
       "allChannels": "Gach cainéal",
-      "compare": "Comparáid"
+      "compare": "Comparáid",
+      "button": "Scagairí",
+      "reset": "Athshocraigh",
+      "apply": "Cuir i bhFeidhm",
+      "cancel": "Cealaigh",
+      "clear": "Glan an rogha",
+      "nSelected": "{count, plural, one {# roghnaithe} other {# roghnaithe}}",
+      "nProperties": "{count, plural, one {# réad} other {# réad}}",
+      "allStatuses": "Gach Stádas",
+      "searchProperties": "Cuardaigh réad…",
+      "noMatch": "Gan torthaí.",
+      "rangeHint": "Fanann an roghnú tapa dinimiciúil in amharcanna sábháilte: is é “An mhí seo caite” an mhí seo caite ó inniu i gcónaí.",
+      "statusHint": "Gan roghnú, áirítear gach stádas. Ní chuirtear áirithintí cealaithe san áireamh ach sa ráta cealaithe, ní in ioncam agus in oícheanta.",
+      "dim": {
+        "zeitraum": "Tréimhse",
+        "bezug": "Sannadh",
+        "objekte": "Réada",
+        "kanaele": "Cainéil",
+        "status": "Stádas",
+        "vergleich": "Comparáid"
+      }
     },
     "basis": {
       "anreise": "De réir dáta teachta",
@@ -12454,11 +12484,31 @@
       "revenueOverTime": "Treocht ioncaim",
       "shareByChannel": "Comhroinn ioncaim de réir cainéil",
       "revenueByProperty": "Ioncam in aghaidh an áitribh",
-      "footnote": "Ioncam iomlán sa tréimhse: {total}"
+      "footnote": "Ioncam iomlán sa tréimhse: {total}",
+      "overTime": "{metric} le himeacht ama",
+      "otherProperties": "{count, plural, one {# réad eile} other {# réad eile}}",
+      "metric": "Príomhtháscaire",
+      "metricValues": {
+        "umsatz": "Ioncam",
+        "naechte": "Oícheanta",
+        "buchungen": "Áirithintí"
+      },
+      "groupBy": "Grúpáil",
+      "groupValues": {
+        "keine": "Dada",
+        "kanal": "Cainéal",
+        "objekt": "Réad"
+      },
+      "type": "Graf",
+      "typeValues": {
+        "linie": "Líne",
+        "balken": "Barra"
+      }
     },
     "table": {
       "rowCount": "{count, plural, one {# Áirithint} other {# Áirithintí}}",
-      "columns": "Colúin"
+      "columns": "Colúin",
+      "total": "Suim"
     },
     "col": {
       "property": "Áitreabh",
@@ -12480,7 +12530,30 @@
       "bookingsShort": "Áirithintí",
       "net": "Glan",
       "share": "Comhroinn",
-      "country": "Tír"
+      "country": "Tír",
+      "month": "Mí",
+      "ownerNights": "Úsáid an úinéara",
+      "accommodation": "Oíche",
+      "cleaning": "Glanadh",
+      "otherFees": "Táillí eile",
+      "addons": "Seirbhísí breise",
+      "gross": "Praghas aoi",
+      "paymentFee": "Táille íocaíochta",
+      "date": "Dáta",
+      "name": "Cur síos",
+      "category": "Catagóir",
+      "kind": "Cineál",
+      "amount": "Méid",
+      "receipt": "Admháil",
+      "count": "Cainníocht",
+      "weekday": "Lá na seachtaine",
+      "value": "Luach",
+      "period": "Tréimhse",
+      "checkIn": "Teacht",
+      "checkOut": "Imeacht",
+      "currency": "Airgeadra",
+      "source": "Foinse",
+      "reason": "Cúis"
     },
     "guests": {
       "total": "Aíonna",
@@ -12512,7 +12585,146 @@
     "compareCurrencyUnclear": "Airgeadra neamhchinnte sa tréimhse chomparáide",
     "compareCurrencyMismatchHint": "Bhí airgeadra difriúil i bhfeidhm sa tréimhse chomparáide. Bheadh athrú céatadáin ina éifeacht ráta malairte agus ní ina fhigiúr gnó.",
     "compareChartCurrencyMismatch": "Bhí an tréimhse chomparáide in airgeadra difriúil – mar sin ní tharraingítear an líne don bhliain roimhe sin.",
-    "compareLocked": "Is féidir comparáid a dhéanamh suas le tréimhse bliana."
+    "compareLocked": "Is féidir comparáid a dhéanamh suas le tréimhse bliana.",
+    "status": {
+      "pending": "Oscailte",
+      "confirmed": "Deimhnithe",
+      "checked_in": "Seiceáilte isteach",
+      "checked_out": "Seiceáilte amach",
+      "completed": "Críochnaithe",
+      "cancelled": "Curtha ar ceal",
+      "declined": "Diúltaithe",
+      "expired": "Éagtha",
+      "requested": "Iarrtha"
+    },
+    "bookings": {
+      "per": {
+        "buchung": "In aghaidh na háirithinte",
+        "objekt": "In aghaidh an réadmhaoine"
+      },
+      "propertyCount": "{count, plural, one {# Réadmhaoin} other {# Réadmhaoine}}",
+      "showEmpty": "Taispeáin réadmhaoine gan áirithintí",
+      "reconstructed": "Athchruthaithe ó tháillí réadmhaoine — níor sholáthair an tairseach miondealú.",
+      "commissionComputed": "Ríofa ón ráta coimisiúin stóráilte — níor tuairiscíodh ón tairseach.",
+      "withoutBreakdown": "{count, plural, one {# áirithint gan miondealú praghsanna — níl ach an praghas iomlán ann.} other {# áirithint gan miondealú praghsanna — níl ach an praghas iomlán ann.}}",
+      "withoutBreakdownShort": "Gan miondealú",
+      "reconstructedCount": "{count, plural, one {# miondealú (*) athchruthaithe ó tháillí maoine.} other {# miondealuithe (*) athchruthaithe ó tháillí maoine.}}"
+    },
+    "occupancy": {
+      "byMonth": "In aghaidh na míosa",
+      "propertyCount": "{count, plural, one {# maoin} other {# maoine}}"
+    },
+    "expenses": {
+      "empty": "Níl aon earraí billeála sa tréimhse seo.",
+      "emptyHint": "Tagann caiteachas agus breiseanna chun cinn i ráiteas an úinéara agus ó sheirbhísí ordaithe.",
+      "expenses": "Caiteachas",
+      "extras": "Breiseanna",
+      "balance": "Iarmhéid",
+      "balanceHint": "Breiseanna lúide caiteachas",
+      "count": "Míreanna",
+      "byCategory": "De réir catagóire",
+      "byProperty": "De réir maoine",
+      "noCategory": "Gan catagóir",
+      "noProperty": "Gan maoin (cuntas)",
+      "rowCount": "{count, plural, one {# mír} other {# míreanna}}",
+      "kind": {
+        "ausgabe": "Caiteachas",
+        "extra": "Breiseán"
+      },
+      "footnote": "Is é dáta na míre an tréimhse. Is ar chostas an úinéara a thagann caiteachas, agus chun a leasa a thagann breiseanna — mar atá siad sa ráiteas."
+    },
+    "pace": {
+      "title": "Stádas áirithinte don chéad 12 mhí eile",
+      "subtitle": "Stádas {heute} i gcoinne an stádais ar {vorjahr} do na míonna céanna bliain roimhe sin.",
+      "vsLastYear": "i gcomparáid le dáta tagartha na bliana roimhe sin",
+      "now": "Áirithintí inniu",
+      "lastYearSameDay": "An bhliain roimhe sin ar an lá céanna",
+      "lastYearFinal": "An bhliain roimhe sin ag an deireadh",
+      "nowNights": "Áirithintí inniu (oícheanta)",
+      "nowRevenue": "Áirithintí inniu (ioncam)",
+      "lastYearSameDayNights": "An bhliain roimhe sin ar an lá céanna (oícheanta)",
+      "delta": "Fad",
+      "lastYearFinalNights": "An bhliain roimhe sin ag an deireadh (oícheanta)",
+      "lastYearFinalRevenue": "An bhliain roimhe sin ag an deireadh (ioncam)",
+      "footnote": "Ní áirítear i ndáta tagartha na bliana roimhe sin ach áirithintí le fíor-am áirithinte an tairseach.",
+      "withoutTimestamp": "{count, plural, one {# áirithint na bliana roimhe sin gan stampa ama in easnamh ó luach an dáta tagartha.} other {# áirithintí na bliana roimhe sin gan stampa ama in easnamh ó luach an dáta tagartha.}}"
+    },
+    "patterns": {
+      "weekday": "Feidhmíocht in aghaidh an lae seachtaine",
+      "weekdayHint": "Úsáid agus ioncam in aghaidh an lae seachtaine. Tá ioncam áirithinte dáilte go cothrom ar a oícheanta — ní sholáthraíonn na tairseacha praghas in aghaidh na hoíche.",
+      "leadTime": "Fuinneog áirithinte",
+      "leadTimeHint": "Laethanta idir áirithint agus teacht. Níl ach áirithintí le fíor-am áirithinte.",
+      "stayLength": "Fad an fhanachta",
+      "stayLengthHint": "Dáileadh na n-oícheanta áirithinte in aghaidh an fhanachta.",
+      "days": "Laethanta",
+      "nights": "Oícheanta",
+      "daysValue": "{n} Lá"
+    },
+    "cancellations": {
+      "empty": "Gan cealuithe sa tréimhse seo.",
+      "emptyHint": "{count, plural, one {# áirithint bhailí, gan aon chealú.} other {# áirithintí bailí, gan aon chealú.}}",
+      "nights": "Oícheanta Cealaithe",
+      "lostRevenue": "Ioncam Caillte",
+      "lostRevenueHint": "Praghas iomlán na n-áirithintí cealaithe — athdhíoladh cuid de na hoícheanta.",
+      "leadTime": "Réamhfhógra Meánach",
+      "leadTimeBase": "{count} de {total} le ham cealaithe",
+      "byChannel": "De réir Cainéil",
+      "byLeadTime": "De réir Réamhfhógra (Laethanta roimh theacht)",
+      "byReason": "De réir Cúise",
+      "noReason": "Gan Cúis Sonraithe",
+      "footnote": "Ráta Cealaithe = cealaithe / (bailí + cealaithe). Ní áirítear sa réamhfhógra ach áirithintí a bhfuil am cealaithe acu."
+    },
+    "views": {
+      "button": "Amharcanna",
+      "title": "Amharcanna Sábháilte",
+      "empty": "Níl aon amharc sábháilte fós.",
+      "new": "Sábháil an Amharc Reatha",
+      "delete": "Scrios",
+      "saveTitle": "Sábháil Amharc",
+      "saveHint": "Sábhálann sé tréimhse, scagairí, colúin agus socruithe cluaisíní — duitse amháin.",
+      "namePlaceholder": "m.sh. An mhí seo caite de réir réadmhaoine",
+      "save": "Sábháil"
+    },
+    "export": {
+      "button": "Íoslódáil Tuarascáil",
+      "title": "Formáid",
+      "csv": "CSV (tábla reatha)",
+      "xlsx": "Excel (gach tábla den chluaisín)",
+      "pdf": "PDF",
+      "hint": "Easpórtáiltear go díreach an méid atá anseo — leis na scagairí gníomhacha.",
+      "generated": "Cruthaithe ar {when}",
+      "failed": "Theip ar an easpórtáil."
+    },
+    "prices": {
+      "title": "Praghsanna & Margadh",
+      "subtitle": "Cá seasann do phraghas i gcomparáid leis an gceantar, cad a dhéanann an córas uathoibríoch leis an mbunphraghas agus conas a dhéileálann tú leis na moltaí.",
+      "property": "Réadmhaoin",
+      "noProperties": "Níl aon réadmhaoin le Praghsáil Dinimiciúil. Cuir an córas uathoibríoch ar siúl faoi “Phaghsáil Dinimiciúil” – ansin beidh an tuarascáil le feiceáil anseo.",
+      "distance": "Meánfhad ón margadh",
+      "distanceHint": "{n} Dátaí tagartha le do phraghas féin",
+      "position": "Suíomh na ndátaí tagartha",
+      "below": "faoi bhun an mhargaidh",
+      "at": "ag an margadh",
+      "above": "os cionn an mhargaidh",
+      "uplift": "Uathoibríoch i gcoinne an bhunphraghais",
+      "upliftHint": "{days} lá san fhéilire · Bunphraghas {base}",
+      "noBase": "Níl aon bhunphraghas curtha isteach",
+      "range": "Raon na bpraghsanna",
+      "rangeHint": "Meán {avg}",
+      "ki": "Comhairleoir rialacha",
+      "kiHint": "{accepted} glactha · {rejected} diúltaithe (90 lá)",
+      "kiTotal": "iomlán {accepted} / {rejected}",
+      "chart": "Praghas i gcoinne an cheantair in aghaidh an dáta tagartha",
+      "chartHint": "Banna = réimse lárnach an cheantair (25ú-75ú peircintíl), Líne = Meán. Do phraghas poncaithe, bunphraghas liath.",
+      "market": "Ceantar (Meán)",
+      "mid": "Réimse lárnach",
+      "own": "Do phraghas",
+      "base": "Bunphraghas",
+      "table": "Dátaí tagartha",
+      "offers": "Tairiscintí",
+      "footnote": "Ceantar faireacháin thart ar {km} km · Dátaí tagartha an fhaireacháin laethúil ar an margadh · arna aisghabháil go deireanach uainn {when}.",
+      "loading": "Á ríomh tuarascáil …"
+    }
   },
   "tasks": {
     "fehler": {

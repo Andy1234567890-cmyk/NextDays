@@ -135,6 +135,19 @@ def _service(reservations=(), availability=(), properties=(), stop_sell=()):
 _OBJ = [{"id": "p1", "title": "Feriehus Line"}]
 
 
+def _tage(status, anzahl, ab=1, monat="2026-08", pid="p1"):
+    """`anzahl` Kalenderzeilen mit fortlaufendem Datum.
+
+    Seit dem Ausbau 05.09.2026 führt der Service die Kalendertage als MENGEN
+    (Monats- und Wochentagsberichte schneiden dieselben Tage) — zwei Zeilen
+    mit demselben Datum sind EIN Tag. Testzeilen brauchen deshalb ein Datum.
+    """
+    return [
+        {"property_id": pid, "date": f"{monat}-{ab + i:02d}", "status": status}
+        for i in range(anzahl)
+    ]
+
+
 def test_gesperrte_tage_fallen_aus_dem_nenner():
     """31 Tage, 10 gesperrt → Nenner 21; davon 7 belegt → 33,33 %.
 
@@ -143,11 +156,7 @@ def test_gesperrte_tage_fallen_aus_dem_nenner():
     mit, auch die ohne Kalenderzeile — sonst bestrafte eine Lücke in der
     Pflege die Kennzahl in die andere Richtung.
     """
-    verf = (
-        [{"property_id": "p1", "status": "blocked"}] * 10
-        + [{"property_id": "p1", "status": "booked"}] * 7
-        + [{"property_id": "p1", "status": "open"}] * 14
-    )
+    verf = _tage("blocked", 10, ab=1) + _tage("booked", 7, ab=11) + _tage("open", 14, ab=18)
     res = _service(availability=verf, properties=_OBJ).auswerten(
         _Ctx(), von=date(2026, 8, 1), bis=date(2026, 8, 31)
     )
@@ -209,7 +218,7 @@ def test_eigennutzung_zaehlt_als_belegt():
     Kalender (live `source='direct'`, 74 Tage) und zählt für die Auslastung
     mit — in den GELD-Kennzahlen bleibt sie draußen.
     """
-    verf = [{"property_id": "p1", "status": "booked"}] * 10
+    verf = _tage("booked", 10, ab=1)
     res = _service(
         reservations=[
             _buchung(
@@ -960,3 +969,464 @@ def test_vergleichsverlauf_teilt_die_aufloesung_des_hauptzeitraums():
     # Beide Monatsschlüssel (Länge 7), nicht einer davon ein Tagesschlüssel.
     assert all(len(p.period) == 7 for p in res.verlauf)
     assert all(len(p.period) == 7 for p in res.vorher.verlauf)
+
+
+# ----------------------------------------------------------------------
+# Ausbau 05.09.2026 — Finanzfelder, Monat, Wochentag, Muster, Stornos,
+# Ausgaben, Pace, Ansichten
+# ----------------------------------------------------------------------
+
+
+def _service_voll(**tabellen):
+    """Attrappe mit allen Tabellen, die der ausgebaute Service liest."""
+    basis = {
+        "reservations": [],
+        "availability": [],
+        "properties": _OBJ,
+        "stop_sell": [],
+        "reservation_portal_finanzen": [],
+        "reservation_portal_gebuehren": [],
+        "reservation_addons": [],
+        "owner_expenses": [],
+    }
+    basis.update(tabellen)
+    return AuswertungService(_DB(basis))
+
+
+def test_finanzfelder_kommen_aus_der_zerlegung_nicht_aus_dem_gesamtpreis():
+    """Ohne Zerlegung bleiben die Felder leer — keine Rückrechnung (Wurzel 4)."""
+    res = _service_voll(
+        reservations=[_buchung(id="r1", total_amount=5000), _buchung(id="r2", total_amount=3000)],
+        reservation_portal_finanzen=[
+            {
+                "reservation_id": "r1", "uebernachtung": 4000, "brutto": 5000,
+                "provision": 750, "provision_gemeldet": True, "zahlungsgebuehr": 50,
+                "quelle": "ota", "currency": "DKK",
+            }
+        ],
+        reservation_portal_gebuehren=[
+            {"reservation_id": "r1", "art": "cleaning_fee", "betrag": 800},
+            {"reservation_id": "r1", "art": "linens_bed", "betrag": 200},
+        ],
+        reservation_addons=[
+            {"reservation_id": "r1", "price": 100, "qty": 2, "cancelled_at": None},
+            {"reservation_id": "r1", "price": 999, "qty": 1,
+             "cancelled_at": "2026-08-01T10:00:00Z"},
+        ],
+    ).auswerten(_Ctx(), von=date(2026, 8, 1), bis=date(2026, 8, 31))
+    z = {b.id: b for b in res.buchungen}
+    assert z["r1"].uebernachtung == 4000
+    assert z["r1"].reinigung == 800
+    assert z["r1"].sonstige_gebuehren == 200
+    assert z["r1"].zusatzleistungen == 200, "stornierte Zusatzleistung zählt nicht"
+    assert z["r1"].brutto == 5000
+    assert z["r1"].provision == 750 and z["r1"].provision_gemeldet is True
+    assert z["r1"].netto == 4200  # 5000 − 750 − 50
+    assert z["r1"].finanz_quelle == "ota"
+    # r2 ohne Zerlegung: NICHTS erfunden.
+    assert z["r2"].uebernachtung is None and z["r2"].brutto is None
+    assert z["r2"].netto is None and z["r2"].umsatz == 3000
+    # Je Objekt: Summe nur aus r1, r2 als fehlend gezählt.
+    o = res.objekte_finanzen[0]
+    assert o.buchungen == 2 and o.ohne_zerlegung == 1
+    assert o.brutto == 5000 and o.netto == 4200
+
+
+def test_provision_der_buchung_schlaegt_die_rekonstruierte():
+    """`ota_commission` (gemeldet) hat Vorrang vor der errechneten Provision."""
+    res = _service_voll(
+        reservations=[_buchung(id="r1", ota_commission=600)],
+        reservation_portal_finanzen=[
+            {
+                "reservation_id": "r1", "uebernachtung": 4000, "brutto": 4000,
+                "provision": 720, "provision_gemeldet": False, "zahlungsgebuehr": 0,
+                "quelle": "stammdaten", "currency": "DKK",
+            }
+        ],
+    ).auswerten(_Ctx(), von=date(2026, 8, 1), bis=date(2026, 8, 31))
+    assert res.buchungen[0].provision == 600
+    assert res.buchungen[0].netto == 3400
+
+
+def test_monatszeilen_summieren_sich_zur_objektzeile():
+    """Hostaway „By month": dieselben Tage, nur nach Monat geschnitten."""
+    verf = _tage("booked", 5, ab=1, monat="2026-08") + _tage("booked", 3, ab=1, monat="2026-09")
+    res = _service_voll(
+        reservations=[
+            _buchung(id="a", check_in="2026-08-01", check_out="2026-08-06", total_amount=5000),
+            _buchung(id="b", check_in="2026-09-01", check_out="2026-09-04", total_amount=3000),
+        ],
+        availability=verf,
+    ).auswerten(_Ctx(), von=date(2026, 8, 1), bis=date(2026, 9, 30))
+    monate = {m.monat: m for m in res.objekte_monatlich}
+    assert set(monate) == {"2026-08", "2026-09"}
+    assert monate["2026-08"].naechte_buchbar == 31 and monate["2026-09"].naechte_buchbar == 30
+    assert monate["2026-08"].naechte_gebucht == 5 and monate["2026-09"].naechte_gebucht == 3
+    assert monate["2026-08"].umsatz == 5000 and monate["2026-09"].umsatz == 3000
+    obj = res.objekte[0]
+    assert obj.naechte_gebucht == sum(m.naechte_gebucht for m in res.objekte_monatlich)
+    assert obj.umsatz == sum(m.umsatz for m in res.objekte_monatlich)
+
+
+def test_eigennutzungsnaechte_stehen_als_eigene_spalte():
+    res = _service_voll(
+        reservations=[
+            _buchung(id="e", check_in="2026-08-01", check_out="2026-08-08",
+                     total_amount=0, is_owner_stay=True),
+        ],
+    ).auswerten(_Ctx(), von=date(2026, 8, 1), bis=date(2026, 8, 31))
+    assert res.objekte[0].naechte_eigennutzung == 7
+    assert res.objekte_monatlich[0].naechte_eigennutzung == 7
+
+
+def test_wochentage_verteilen_den_umsatz_auf_die_naechte():
+    """Fr 07.08. bis So 09.08.2026: zwei Nächte (Fr, Sa) à 1000."""
+    res = _service_voll(
+        reservations=[
+            _buchung(id="w", check_in="2026-08-07", check_out="2026-08-09", total_amount=2000)
+        ],
+        availability=[
+            {"property_id": "p1", "date": "2026-08-07", "status": "booked"},
+            {"property_id": "p1", "date": "2026-08-08", "status": "booked"},
+        ],
+    ).auswerten(_Ctx(), von=date(2026, 8, 1), bis=date(2026, 8, 31))
+    wt = {z.wochentag: z for z in res.wochentage}
+    assert wt[4].umsatz == 1000 and wt[5].umsatz == 1000   # Fr, Sa
+    assert wt[4].adr == 1000 and wt[6].adr is None          # So: keine Nacht
+    assert wt[4].anreisen == 1
+    # August 2026 hat 4 Freitage → 4 buchbare, 1 gebuchte.
+    assert wt[4].naechte_buchbar == 4 and wt[4].naechte_gebucht == 1
+    assert wt[4].auslastung_pct == 25.0
+
+
+def test_buchungsfenster_nur_mit_echtem_buchungszeitpunkt():
+    """Ohne `booked_at` kein Eimer — statt eines erfundenen Vorlaufs (Wurzel 5b)."""
+    res = _service_voll(
+        reservations=[
+            _buchung(id="a", check_in="2026-08-10", booked_at="2026-08-08T12:00:00Z"),  # 2 Tage
+            _buchung(id="b", check_in="2026-08-10", booked_at="2026-06-01T12:00:00Z"),  # 70 Tage
+            _buchung(id="c", check_in="2026-08-10", booked_at=None),
+        ],
+    ).auswerten(_Ctx(), von=date(2026, 8, 1), bis=date(2026, 8, 31))
+    eimer = {z.schluessel: z for z in res.buchungsfenster}
+    assert eimer["0-3"].buchungen == 1
+    assert eimer["61-90"].buchungen == 1
+    assert sum(z.buchungen for z in res.buchungsfenster) == 2
+    assert eimer["0-3"].anteil_pct == 50.0
+
+
+def test_aufenthaltsdauer_eimer():
+    res = _service_voll(
+        reservations=[
+            _buchung(id="a", check_in="2026-08-01", check_out="2026-08-02"),   # 1
+            _buchung(id="b", check_in="2026-08-01", check_out="2026-08-08"),   # 7
+            _buchung(id="c", check_in="2026-08-01", check_out="2026-08-20"),   # 19
+        ],
+    ).auswerten(_Ctx(), von=date(2026, 8, 1), bis=date(2026, 8, 31))
+    eimer = {z.schluessel: z.buchungen for z in res.aufenthaltsdauer}
+    assert eimer["1"] == 1 and eimer["7"] == 1 and eimer["14+"] == 1
+
+
+def test_stornobericht_kanal_grund_vorlauf():
+    res = _service_voll(
+        reservations=[
+            _buchung(id="ok"),
+            _buchung(id="s1", status="cancelled", channel="airbnb", total_amount=2000,
+                     check_in="2026-08-20", cancelled_at="2026-08-15T09:00:00Z",
+                     cancel_reason="guest_request"),
+            _buchung(id="s2", status="cancelled", channel="airbnb", total_amount=1000,
+                     check_in="2026-08-20", cancelled_at=None, cancel_reason=None),
+        ],
+    ).auswerten(_Ctx(), von=date(2026, 8, 1), bis=date(2026, 8, 31))
+    s = res.stornos
+    assert s.stornos == 2 and s.umsatz_entgangen == 3000
+    assert s.stornoquote_pct == 66.67   # 2 von 3
+    assert s.mit_zeitpunkt == 1 and s.vorlauf_tage == 5.0
+    assert s.kanaele[0].channel == "airbnb" and s.kanaele[0].stornos == 2
+    gruende = {g.grund: g.anzahl for g in s.gruende}
+    assert gruende == {"guest_request": 1, None: 1}
+    vorlauf = {z.schluessel: z.buchungen for z in s.vorlauf}
+    assert vorlauf["2-7"] == 1 and sum(vorlauf.values()) == 1
+
+
+def test_ausgaben_und_extras_nach_richtung_getrennt():
+    """Hostaway: Ausgaben = zulasten (`from_owner`), Extras = zugunsten."""
+    res = _service_voll(
+        owner_expenses=[
+            {"id": "x1", "date": "2026-08-03", "concept": "Reinigung", "category": "cleaning",
+             "listing_id": "p1", "direction": "from_owner", "amount": 500, "currency": "DKK",
+             "storage_path": "belege/x1.pdf"},
+            {"id": "x2", "date": "2026-08-05", "concept": "Kaffee", "category": "extras",
+             "listing_id": "p1", "direction": "to_owner", "amount": 50, "currency": "DKK"},
+            {"id": "x3", "date": "2026-08-09", "concept": "Konto-Gebühr", "category": None,
+             "listing_id": None, "direction": "from_owner", "amount": 20, "currency": "DKK"},
+        ],
+    ).auswerten(_Ctx(), von=date(2026, 8, 1), bis=date(2026, 8, 31))
+    a = res.ausgaben
+    assert a.anzahl == 3 and a.currency == "DKK"
+    assert a.ausgaben == 520 and a.extras == 50 and a.saldo == -470
+    kat = {k.schluessel: k for k in a.kategorien}
+    assert kat["cleaning"].ausgaben == 500 and kat["extras"].extras == 50
+    assert kat[None].anzahl == 1, "Posten ohne Kategorie bleibt sichtbar"
+    assert a.posten[0].date == "2026-08-09", "neueste zuerst"
+    assert {p.id: p.hat_beleg for p in a.posten}["x1"] is True
+
+
+def test_ausgaben_mehrere_waehrungen_werden_nicht_addiert():
+    res = _service_voll(
+        owner_expenses=[
+            {"id": "x1", "date": "2026-08-03", "concept": "A", "direction": "from_owner",
+             "amount": 500, "currency": "DKK"},
+            {"id": "x2", "date": "2026-08-03", "concept": "B", "direction": "from_owner",
+             "amount": 500, "currency": "EUR"},
+        ],
+    ).auswerten(_Ctx(), von=date(2026, 8, 1), bis=date(2026, 8, 31))
+    assert res.ausgaben.currency is None
+    assert res.ausgaben.waehrungen == ["DKK", "EUR"]
+
+
+def test_verlauf_je_kanal_summiert_sich_zum_gesamtverlauf():
+    res = _service_voll(
+        reservations=[
+            _buchung(id="a", channel="airbnb", total_amount=1000),
+            _buchung(id="b", channel="booking", total_amount=3000),
+        ],
+    ).auswerten(_Ctx(), von=date(2026, 8, 1), bis=date(2026, 8, 31))
+    assert set(res.verlauf_je_kanal) == {"airbnb", "booking"}
+    gesamt = sum(p.umsatz for p in res.verlauf)
+    je_kanal = sum(p.umsatz for reihe in res.verlauf_je_kanal.values() for p in reihe)
+    assert gesamt == je_kanal == 4000
+    assert "p1" in res.verlauf_je_objekt
+
+
+def test_status_filter_wird_durchgereicht():
+    """Die Attrappe filtert nicht — geprüft wird, dass der Filter ankommt."""
+    gesehen = {}
+
+    class _Q2(_Query):
+        def in_(self, feld, werte):
+            gesehen[feld] = list(werte)
+            return self
+
+    class _DB2(_DB):
+        def table(self, name):
+            return _Q2(self._tabellen.get(name, []))
+
+    AuswertungService(_DB2({"properties": _OBJ})).auswerten(
+        _Ctx(), von=date(2026, 8, 1), bis=date(2026, 8, 31), status=["cancelled"]
+    )
+    assert gesehen.get("status") == ["cancelled"]
+
+
+def test_vorzeitraum_ist_schlank_aber_traegt_die_muster():
+    res = _service_voll(
+        reservations=[_buchung(id="a", check_in="2026-08-10", check_out="2026-08-12")],
+    ).auswerten(
+        _Ctx(), von=date(2026, 8, 1), bis=date(2026, 8, 31), vergleich=Vergleich.JAHR_1
+    )
+    assert res.vorher is not None
+    assert len(res.vorher.wochentage) == 7
+    assert len(res.vorher.aufenthaltsdauer) == 7
+
+
+# --- Pace -----------------------------------------------------------------
+
+
+def _db_pace(jetzt, vorjahr):
+    """Attrappe, die nach angefragtem Jahr unterscheidet — wie `_db_je_zeitraum`."""
+
+    class _Q:
+        def __init__(self, tabelle, tabellen):
+            self._tabelle = tabelle
+            self._tabellen = tabellen
+            self._jahr = None
+
+        def select(self, *_a, **_k):
+            return self
+
+        def eq(self, *_a):
+            return self
+
+        def is_(self, *_a):
+            return self
+
+        def gte(self, feld, wert):
+            if self._tabelle == "reservations" and feld == "check_in":
+                self._jahr = int(str(wert)[:4])
+            return self
+
+        def lte(self, *_a):
+            return self
+
+        def lt(self, *_a):
+            return self
+
+        def gt(self, *_a):
+            return self
+
+        def in_(self, *_a):
+            return self
+
+        def order(self, *_a, **_k):
+            return self
+
+        def range(self, *_a):
+            return self
+
+        def limit(self, *_a):
+            return self
+
+        def execute(self):
+            rows = self._tabellen.get(self._tabelle, [])
+            if self._tabelle == "reservations":
+                rows = rows.get(self._jahr, [])
+
+            class _R:
+                data = rows
+
+            return _R()
+
+    class _D:
+        def table(self, name):
+            return _Q(name, {"properties": _OBJ, "reservations": {2026: jetzt, 2025: vorjahr}})
+
+    return _D()
+
+
+def test_pace_vergleicht_mit_dem_stichtag_des_vorjahres():
+    """Heute 05.09.2026. Für Oktober 2026 sind 4 Nächte gebucht. Im Vorjahr
+    waren am 05.09.2025 für Oktober 2025 zwei Nächte gebucht (eine weitere kam
+    erst am 20.09.), am Ende wurden es 5."""
+    heute = date(2026, 9, 5)
+    jetzt = [_buchung(id="j", check_in="2026-10-10", check_out="2026-10-14", total_amount=4000)]
+    vorjahr = [
+        _buchung(id="v1", check_in="2025-10-03", check_out="2025-10-05", total_amount=2000,
+                 booked_at="2025-08-01T10:00:00Z"),
+        _buchung(id="v2", check_in="2025-10-20", check_out="2025-10-23", total_amount=3000,
+                 booked_at="2025-09-20T10:00:00Z"),
+    ]
+    res = AuswertungService(_db_pace(jetzt, vorjahr)).pace(_Ctx(), heute=heute)
+    assert res.stichtag == "2026-09-05"
+    assert len(res.monate) == 12 and res.monate[0].monat == "2026-09"
+    okt = next(m for m in res.monate if m.monat == "2026-10")
+    assert okt.jetzt_naechte == 4 and okt.jetzt_umsatz == 4000
+    assert okt.vorjahr_stichtag_naechte == 2 and okt.vorjahr_stichtag_umsatz == 2000
+    assert okt.vorjahr_ende_naechte == 5 and okt.vorjahr_ende_umsatz == 5000
+    assert okt.delta_naechte_pct == 100.0
+    assert res.vorjahr_ohne_zeitstempel == 0
+
+
+def test_pace_zaehlt_vorjahresbuchungen_ohne_zeitstempel():
+    """Ohne `booked_at` kein Stichtagswert — aber gezählt, nicht verschwiegen."""
+    heute = date(2026, 9, 5)
+    vorjahr = [_buchung(id="v", check_in="2025-10-03", check_out="2025-10-05", booked_at=None)]
+    res = AuswertungService(_db_pace([], vorjahr)).pace(_Ctx(), heute=heute)
+    okt = next(m for m in res.monate if m.monat == "2026-10")
+    assert okt.vorjahr_stichtag_naechte == 0
+    assert okt.vorjahr_ende_naechte == 2
+    assert okt.delta_naechte_pct is None
+    assert res.vorjahr_ohne_zeitstempel == 1
+
+
+# --- Ansichten --------------------------------------------------------------
+
+
+class _AnsichtenDB:
+    """Attrappe mit Schreibpfad für `auswertung_ansichten`."""
+
+    def __init__(self):
+        self.rows = []
+        self.geloescht = []
+
+    def table(self, name):
+        assert name == "auswertung_ansichten"
+        db = self
+
+        class _Q:
+            def __init__(self):
+                self._payload = None
+                self._modus = "select"
+                self._filter = {}
+
+            def select(self, *_a, **_k):
+                return self
+
+            def eq(self, feld, wert):
+                self._filter[feld] = wert
+                return self
+
+            def order(self, *_a, **_k):
+                return self
+
+            def range(self, *_a):
+                return self
+
+            def insert(self, payload):
+                self._modus = "insert"
+                self._payload = payload
+                return self
+
+            def update(self, payload):
+                self._modus = "update"
+                self._payload = payload
+                return self
+
+            def delete(self):
+                self._modus = "delete"
+                return self
+
+            def execute(self):
+                class _R:
+                    data = []
+
+                if self._modus == "insert":
+                    row = {
+                        "id": f"a{len(db.rows) + 1}",
+                        "created_at": "2026-09-05T10:00:00Z",
+                        **self._payload,
+                    }
+                    db.rows.append(row)
+                    _R.data = [row]
+                elif self._modus == "update":
+                    for r in db.rows:
+                        if r["id"] == self._filter.get("id"):
+                            r.update(self._payload)
+                            _R.data = [r]
+                elif self._modus == "delete":
+                    db.geloescht.append(self._filter)
+                    db.rows = [r for r in db.rows if r["id"] != self._filter.get("id")]
+                else:
+                    _R.data = [
+                        r for r in db.rows
+                        if all(r.get(k) == v for k, v in self._filter.items())
+                    ]
+                return _R()
+
+        return _Q()
+
+
+class _CtxUser:
+    tenant_id = "t1"
+    user_id = "u1"
+
+
+def test_ansicht_anlegen_ist_idempotent_und_scopet_auf_den_nutzer():
+    from src.features.auswertung.schemas import AnsichtAnlegen
+
+    db = _AnsichtenDB()
+    svc = AuswertungService(db)
+    a1 = svc.ansicht_anlegen(
+        _CtxUser(), AnsichtAnlegen(name="Letzter Monat", reiter="buchungen",
+                                   filter={"schnell": "vormonat"}, spalten=["property"])
+    )
+    a2 = svc.ansicht_anlegen(
+        _CtxUser(), AnsichtAnlegen(name="Letzter Monat", reiter="buchungen",
+                                   filter={"schnell": "vormonat"}, spalten=["property", "revenue"])
+    )
+    assert a1.id == a2.id, "gleicher Name im selben Reiter ersetzt statt doppelt"
+    assert a2.spalten == ["property", "revenue"]
+    assert db.rows[0]["user_id"] == "u1" and db.rows[0]["tenant_id"] == "t1"
+    assert len(svc.ansichten(_CtxUser(), "buchungen")) == 1
+    svc.ansicht_loeschen(_CtxUser(), a1.id)
+    assert db.geloescht[0]["user_id"] == "u1", "Löschen nur im eigenen Scope"
+    assert svc.ansichten(_CtxUser()) == []

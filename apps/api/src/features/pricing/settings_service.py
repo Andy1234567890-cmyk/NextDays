@@ -14,11 +14,13 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.core.supabase import fetch_all_rows
 from src.features.auth.owner_scope import is_owner, owner_property_ids
 from src.features.subscriptions.entitlements import modul_aktiv
 from src.features.subscriptions.schemas import DYNPRICING_MODULE_KEY
 
 from .engine import DpSettings
+from .freigabe import freigabe_fenster, freigabe_noetig, freigabe_regel, gesendet_stempeln
 from .resolver import PricingError
 from .schemas import (
     DpOverviewItem,
@@ -26,6 +28,7 @@ from .schemas import (
     DpSettingsResponse,
     DpSettingsUpdate,
 )
+from .zusatzsignale import saison_vorhanden, verlauf_schreiben
 
 if TYPE_CHECKING:
     from .resolver import PricingResolver
@@ -67,7 +70,35 @@ _DEFAULTS = {
     "occupancy_steps": [],
     "freigabe_noetig": False,
     "far_future": [],
+    # 0562
+    "freigabe_ab_tagen": None,
+    "anker_enabled": False,
+    "anker_max_pct": 20.0,
+    "saison_mindestpreis": False,
+    "rate_plan_id": None,
+    "feiertag_uplift_pct": 0.0,
+    "ferien_uplift_pct": 0.0,
+    "quellmaerkte": [],
+    "occupancy_discount_cap_pct": 20.0,
+    "occupancy_premium_cap_pct": 15.0,
+    "occupancy_lead_buckets": [],
 }
+
+
+def _laender_normalisieren(werte: list[str]) -> list[str]:
+    """ISO-3166-1 alpha-2, gross, ohne Doppelte — ein „de" und ein „DE" sind
+    dasselbe Land, kein zweiter Quellmarkt. Alles andere ist 422."""
+    out: list[str] = []
+    for w in werte:
+        code = str(w).strip().upper()
+        if len(code) != 2 or not code.isalpha():
+            raise PricingError(
+                f"Quellmarkt '{w}' ist kein Laendercode (ISO-2, z. B. DE).",
+                status_code=422,
+            )
+        if code not in out:
+            out.append(code)
+    return out
 
 
 class DpSettingsService:
@@ -120,7 +151,16 @@ class DpSettingsService:
             .execute()
         ).data or []
         row = {**_DEFAULTS, **(res[0] if res else {})}
-        return self._to_response(property_id, row)
+        antwort = self._to_response(property_id, row)
+        # Ob die Saison-Regel waehlbar ist, entscheidet der Kalender, nicht die
+        # Zeile: die Oberflaeche sperrt den Schalter danach.
+        antwort.saison_verfuegbar = saison_vorhanden(self._db(), property_id)
+        if antwort.saison_mindestpreis and not antwort.saison_verfuegbar:
+            log.warning(
+                "dp_saison_regel_ohne_kalender",
+                property_id=property_id,
+            )
+        return antwort
 
     def update(
         self, ctx: AuthContext, property_id: str, req: DpSettingsUpdate
@@ -155,7 +195,26 @@ class DpSettingsService:
         # Stand VOR dem Schreiben: nur eine echte Änderung des Schalters löst den
         # Umschalt-Push aus (ein Speichern ohne Wechsel darf keine Portal-Last
         # erzeugen).
+        # 0562: DP je Ratenplan — der Plan muss zum Objekt gehoeren und darf
+        # nicht abgeleitet sein (SiteMinder: „rate plan must not be derived";
+        # ein abgeleiteter Plan folgt seinem Parent, zwei Quellen waeren Wurzel 4).
+        if patch.get("rate_plan_id"):
+            self._ratenplan_pruefen(property_id, str(patch["rate_plan_id"]))
+        # 0565: die Saison-Regel braucht einen Saisonkalender. Ohne ihn gibt es
+        # keine Untergrenze, die sie setzen koennte — ein „an" waere eine
+        # Attrappe (fail-closed, wie das Modul-Gate oben).
+        if patch.get("saison_mindestpreis") and not saison_vorhanden(
+            self._db(), property_id
+        ):
+            raise PricingError(
+                "Kein Saisonkalender angelegt — die Regel 'Mindestpreis aus dem "
+                "Saisonkalender' braucht mindestens eine Saison mit Zeitraum.",
+                status_code=422,
+            )
+        if "quellmaerkte" in patch and patch["quellmaerkte"] is not None:
+            patch["quellmaerkte"] = _laender_normalisieren(patch["quellmaerkte"])
         vorher = self._ist_aktiv(property_id)
+        freigabe_vorher = freigabe_noetig(self._db(), property_id)
         row = {"property_id": property_id, **patch}
         self._db().table("dp_settings").upsert(
             row, on_conflict="property_id"
@@ -165,11 +224,79 @@ class DpSettingsService:
             property_id=property_id,
             fields=sorted(patch.keys()),
         )
+        # Verlauf (0562): welche Felder, von wem. Der Schalter bekommt einen
+        # eigenen Eintrag — er ist die Handlung, die man spaeter sucht.
+        heute = datetime.now(UTC).date()
+        if "enabled" in patch and bool(patch["enabled"]) is not vorher:
+            verlauf_schreiben(
+                self._db(), property_id, von=heute, bis=heute,
+                ereignis="automatik_an" if patch["enabled"] else "automatik_aus",
+                user_id=ctx.user_id,
+            )
+        felder = sorted(k for k in patch if k != "enabled")
+        if felder:
+            verlauf_schreiben(
+                self._db(), property_id, von=heute, bis=heute,
+                ereignis="einstellungen",
+                details={"felder": felder},
+                user_id=ctx.user_id,
+            )
+        if "freigabe_noetig" in patch and bool(patch["freigabe_noetig"]) is not (
+            freigabe_vorher
+        ):
+            if patch["freigabe_noetig"]:
+                self._bestand_als_gesendet_stempeln(property_id)
+            else:
+                # Freigabe AUS = zurück zum Normalfall „DP ändert den Preis".
+                # Der aufgestaute Rückstand muss jetzt raus, sonst verkaufen die
+                # Portale weiter zum alten Preis und niemand sieht es. Wurzel 1:
+                # der Schalter hat einen Gegenzustand in BEIDE Richtungen —
+                # bisher pflegte ihn nur die Einschalt-Richtung.
+                self._preise_neu_verteilen(property_id, eingeschaltet=True)
         if "enabled" in patch and bool(patch["enabled"]) is not vorher:
             self._preise_neu_verteilen(
                 property_id, eingeschaltet=bool(patch["enabled"])
             )
         return self.get(ctx, property_id)
+
+    def _bestand_als_gesendet_stempeln(self, property_id: str) -> None:
+        """Beim EINSCHALTEN der Freigabe: was schon draußen ist, bleibt draußen.
+
+        Wurzel 1 — der Gegenzustand zum Schalter. Ohne das erfand jedes
+        Einschalten einen Rückstau aus der Vergangenheit: die bereits an die
+        Portale gemeldeten Tage trugen keinen Stempel (den setzte der Push
+        früher nicht), galten ab dem Klick also als „wartet auf Freigabe".
+        Live am 04.09.2026 waren das 540 Tage, die längst bei Channex lagen —
+        die Leiste verlangte eine Freigabe für etwas bereits Verkauftes.
+
+        Die Freigabe gilt ab JETZT, für künftige Änderungen. Sie ist keine
+        rückwirkende Prüfpflicht für Preise, die der Betrieb nie zurückhalten
+        wollte.
+        """
+        von, bis = freigabe_fenster(ab_tagen=freigabe_regel(self._db(), property_id)[1])
+        try:
+            res = (
+                self._db()
+                .table("dynamic_prices")
+                .update({"gesendet_am": datetime.now(UTC).isoformat()})
+                .eq("property_id", property_id)
+                .is_("gesendet_am", "null")
+                .gte("date", von)
+                .lte("date", bis)
+                .execute()
+            )
+        except Exception as exc:  # noqa: BLE001
+            log.warning(
+                "dp_bestand_stempeln_fehlgeschlagen",
+                property_id=property_id,
+                error=str(exc)[:200],
+            )
+            return
+        log.info(
+            "dp_freigabe_eingeschaltet_bestand_gestempelt",
+            property_id=property_id,
+            tage=len(res.data or []),
+        )
 
     def stufen_vorschau(
         self, ctx: AuthContext, property_id: str
@@ -230,6 +357,28 @@ class DpSettingsService:
             out[modus] = round(sum(preise) / len(preise), 2) if preise else None
         return out
 
+    def _ratenplan_pruefen(self, property_id: str, rate_plan_id: str) -> None:
+        """Wurzel 3 + 4: der Plan gehoert zum Objekt und ist nicht abgeleitet."""
+        res = (
+            self._db()
+            .table("rate_plans")
+            .select("id, rate_mode")
+            .eq("id", rate_plan_id)
+            .eq("property_id", property_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not res:
+            raise PricingError(
+                "Der Ratenplan gehoert nicht zu diesem Objekt.", status_code=422
+            )
+        if (res[0].get("rate_mode") or "manual") == "derived":
+            raise PricingError(
+                "Ein abgeleiteter Ratenplan folgt seinem Basisplan — waehle den "
+                "Basisplan fuer Dynamic Pricing.",
+                status_code=422,
+            )
+
     def _ist_aktiv(self, property_id: str) -> bool:
         """Aktueller Schalterstand (fail-CLOSED: keine Zeile = aus)."""
         res = (
@@ -284,6 +433,18 @@ class DpSettingsService:
                 error=str(exc)[:200],
             )
             return
+        # STEMPELN, was dynamisch rausging (Wurzel 1, Gegenzustand des Pushs).
+        # Ohne das behauptete der Zähler nach dem Umlegen auf „Sofort" weiter
+        # „366 Tage nicht gesendet" — live am 05.09.2026, obwohl der Schatten
+        # zu 100 % stimmte. Beim ABschalten der Automatik gehen Overrides und
+        # Grundpreis hinaus, keine dynamischen Preise: dann gibt es nichts zu
+        # stempeln.
+        if eingeschaltet:
+            gesendet_stempeln(
+                self._db(),
+                property_id,
+                [t.date.isoformat() for t in tage if t.source == "dynamic"],
+            )
         log.info(
             "dp_umschalt_push",
             property_id=property_id,
@@ -372,17 +533,21 @@ class DpSettingsService:
         """
         if not property_ids:
             return {}
-        heute = datetime.now(UTC).date().isoformat()
+        von, bis = freigabe_fenster()
         try:
-            res = (
+            # Paginiert: je Objekt bis zu 366 offene Tage — schon ab drei
+            # Objekten reisst PostgREST bei 1000 Zeilen still ab, und die
+            # Liste zeigte dann für die hinteren Objekte zu wenig an.
+            res = fetch_all_rows(
                 self._db()
                 .table("dynamic_prices")
                 .select("property_id")
                 .in_("property_id", property_ids)
                 .is_("gesendet_am", "null")
-                .gte("date", heute)
-                .execute()
-            ).data or []
+                .gte("date", von)
+                .lte("date", bis)
+                .order("property_id")
+            )
         except Exception as exc:  # noqa: BLE001 — Zusatzinfo, kein Hauptpfad
             log.warning("dp_offene_freigaben_unlesbar", error=str(exc)[:200])
             return {}
@@ -523,7 +688,7 @@ class DpSettingsService:
             market_key=row.get("market_key"),
             comp_refs=[str(r) for r in (row.get("comp_refs") or [])],
             base_mode=_choice(
-                row.get("base_mode"), ("data_driven", "manual"), "data_driven"
+                row.get("base_mode"), ("data_driven", "market", "manual"), "data_driven"
             ),
             base_rate_mode=_choice(
                 row.get("base_rate_mode"),
@@ -542,6 +707,23 @@ class DpSettingsService:
             freigabe_noetig=bool(row.get("freigabe_noetig")),
             far_future=[
                 r for r in (row.get("far_future") or []) if isinstance(r, dict)
+            ],
+            freigabe_ab_tagen=(
+                int(row["freigabe_ab_tagen"])
+                if row.get("freigabe_ab_tagen") is not None
+                else None
+            ),
+            anker_enabled=bool(row.get("anker_enabled")),
+            anker_max_pct=float(row.get("anker_max_pct") or 0),
+            saison_mindestpreis=bool(row.get("saison_mindestpreis")),
+            rate_plan_id=(str(row["rate_plan_id"]) if row.get("rate_plan_id") else None),
+            feiertag_uplift_pct=float(row.get("feiertag_uplift_pct") or 0),
+            ferien_uplift_pct=float(row.get("ferien_uplift_pct") or 0),
+            quellmaerkte=[str(c) for c in (row.get("quellmaerkte") or []) if c],
+            occupancy_discount_cap_pct=float(row.get("occupancy_discount_cap_pct") or 0),
+            occupancy_premium_cap_pct=float(row.get("occupancy_premium_cap_pct") or 0),
+            occupancy_lead_buckets=[
+                r for r in (row.get("occupancy_lead_buckets") or []) if isinstance(r, dict)
             ],
         )
 

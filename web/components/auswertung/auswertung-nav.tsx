@@ -7,9 +7,9 @@
 // Navigation, die den Inhalt beschneidet, den sie erschließt, sitzt falsch —
 // dieselbe Begründung wie bei den Bewertungen.
 //
-// Die Reiter sind KEINE Routen, sondern Zustand: alle fünf lesen dieselbe
-// Antwort desselben Aufrufs. Ein Routenwechsel je Reiter hieße fünf Abrufe
-// mit womöglich fünf verschiedenen Ergebnissen.
+// Die Reiter sind KEINE Routen, sondern Zustand: fast alle lesen dieselbe
+// Antwort desselben Aufrufs. Ein Routenwechsel je Reiter hieße zehn Abrufe
+// mit womöglich zehn verschiedenen Ergebnissen.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 
@@ -20,8 +20,12 @@ const EINTRAEGE: readonly { key: Reiter; icon: string }[] = [
   { key: "analytics", icon: "ph:chart-line" },
   { key: "buchungen", icon: "ph:list-bullets" },
   { key: "auslastung", icon: "ph:calendar-check" },
+  { key: "ausgaben", icon: "ph:receipt" },
   { key: "kanaele", icon: "ph:share-network" },
   { key: "gaeste", icon: "ph:users" },
+  { key: "pace", icon: "ph:speedometer" },
+  { key: "muster", icon: "ph:chart-bar" },
+  { key: "stornos", icon: "ph:x-circle" },
 ];
 
 export function AuswertungNav({
@@ -34,7 +38,7 @@ export function AuswertungNav({
   const t = useTranslations("analysis");
 
   return (
-    // Waagerecht scrollbar statt umbrechend: auf dem Telefon bleiben die fünf
+    // Waagerecht scrollbar statt umbrechend: auf dem Telefon bleiben die
     // Reiter EINE Zeile, sonst springt der Inhalt beim Wechsel nach unten.
     <nav
       className="-mx-1 flex gap-1 overflow-x-auto border-b border-border px-1 pb-0"

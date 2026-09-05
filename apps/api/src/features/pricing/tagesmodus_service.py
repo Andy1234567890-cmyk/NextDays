@@ -32,7 +32,9 @@ from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.features.auth.owner_scope import is_owner
 
+from .freigabe import freigabe_fenster, freigabe_regel
 from .resolver import PricingError
+from .zusatzsignale import verlauf_schreiben
 
 log = get_logger("nextdays.pricing.tagesmodus")
 
@@ -40,6 +42,8 @@ log = get_logger("nextdays.pricing.tagesmodus")
 # Angriff (und ein Versehen: ein vertippter Endtermin in ferner Zukunft würde
 # hunderttausende Zeilen schreiben).
 _MAX_TAGE = 400
+# PostgREST-Filter `in_` mit hunderten Werten — in Blöcken, wie im Recompute.
+_IN_BLOCK = 100
 
 _MODI = ("dynamisch", "anpassung", "manuell")
 
@@ -159,12 +163,34 @@ class TagesmodusService:
 
         if modus == "manuell":
             self._override_setzen(property_id, tage, float(preis or 0))
+            # Gegenzustand SOFORT und HIER, nicht erst im Recompute-Job: der
+            # Resolver lässt `dynamic` vor `override` gewinnen. Solange die
+            # alte dynamic_prices-Zeile steht, zeigen Kalender, Quote und der
+            # Portal-Abgleich weiter den Automatikpreis — der feste Preis ist
+            # gespeichert und wirkt nirgends. Live am 05.09.2026: 850 gesetzt,
+            # 654,23 blieb an allen drei Stellen, weil der Worker mit älterem
+            # Code lief und den Tag nur übersprang. Der Job bleibt zuständig
+            # für den Push; die Wahrheit im Kalender darf nicht an ihm hängen.
+            self._dynamik_ausbuchen(property_id, tage)
         elif vorher_manuell:
             # Gegenzustand: die Tage, die eben noch manuell waren, geben ihren
             # festen Preis zurück. Ohne das bliebe er liegen und schlüge die
             # gerade gewählte Automatik.
             self._override_entfernen(property_id, vorher_manuell)
 
+        verlauf_schreiben(
+            self._db(),
+            property_id,
+            von=von,
+            bis=bis,
+            ereignis="tagesmodus",
+            details={
+                "modus": modus,
+                "adjust_pct": adjust_pct if modus == "anpassung" else None,
+                "preis": float(preis) if modus == "manuell" and preis is not None else None,
+            },
+            user_id=ctx.user_id,
+        )
         log.info(
             "dp_tagesmodus_gesetzt",
             property_id=property_id,
@@ -208,6 +234,27 @@ class TagesmodusService:
             on_conflict="property_id,date",
         ).execute()
 
+    def _dynamik_ausbuchen(self, property_id: str, tage: list[date]) -> None:
+        """Berechnete Zeilen der festen Tage löschen (Wurzel 1)."""
+        isos = [t.isoformat() for t in tage]
+        geloescht = 0
+        for i in range(0, len(isos), _IN_BLOCK):
+            res = (
+                self._db()
+                .table("dynamic_prices")
+                .delete()
+                .eq("property_id", property_id)
+                .in_("date", isos[i : i + _IN_BLOCK])
+                .execute()
+            )
+            geloescht += len(res.data or [])
+        log.info(
+            "dp_tagesmodus_dynamik_ausgebucht",
+            property_id=property_id,
+            tage=len(isos),
+            geloescht=geloescht,
+        )
+
     def _override_entfernen(self, property_id: str, iso_tage: list[str]) -> None:
         self._db().table("price_overrides").delete().eq(
             "property_id", property_id
@@ -236,16 +283,21 @@ class TagesmodusService:
 
     # -- Freigabe -------------------------------------------------------------
     def offene_anzahl(self, ctx: AuthContext, property_id: str) -> int:
-        """Wie viele berechnete Tage warten auf die Freigabe?"""
+        """Wie viele berechnete Tage warten auf die Freigabe?
+
+        Nur im Freigabe-Fenster (s. `freigabe.FREIGABE_HORIZONT_TAGE`): Tage
+        dahinter werden gar nicht erst gepusht, warten also auf nichts.
+        """
         self._require_own_property(ctx, property_id)
-        heute = datetime.now(UTC).date()
+        von, bis = freigabe_fenster(ab_tagen=freigabe_regel(self._db(), property_id)[1])
         res = (
             self._db()
             .table("dynamic_prices")
             .select("date", count="exact")
             .eq("property_id", property_id)
             .is_("gesendet_am", "null")
-            .gte("date", heute.isoformat())
+            .gte("date", von)
+            .lte("date", bis)
             .execute()
         )
         return int(res.count or 0)
@@ -258,14 +310,15 @@ class TagesmodusService:
         nichts mehr und schickt nichts erneut.
         """
         self._require_own_property(ctx, property_id)
-        heute = datetime.now(UTC).date()
+        von, bis = freigabe_fenster(ab_tagen=freigabe_regel(self._db(), property_id)[1])
         offen = (
             self._db()
             .table("dynamic_prices")
             .select("date")
             .eq("property_id", property_id)
             .is_("gesendet_am", "null")
-            .gte("date", heute.isoformat())
+            .gte("date", von)
+            .lte("date", bis)
             .execute()
         ).data or []
         if not offen:
@@ -277,8 +330,8 @@ class TagesmodusService:
         self._db().table("dynamic_prices").update(
             {"gesendet_am": datetime.now(UTC).isoformat()}
         ).eq("property_id", property_id).is_("gesendet_am", "null").gte(
-            "date", heute.isoformat()
-        ).execute()
+            "date", von
+        ).lte("date", bis).execute()
 
         from src.jobs.queue import try_enqueue_recompute  # noqa: PLC0415
 
@@ -287,6 +340,16 @@ class TagesmodusService:
             # Token-Budget (kein Umgehen des kontoweiten Limits).
             try_enqueue_recompute(self._db(), ctx.tenant_id, property_id)
 
+        tage_iso = sorted(str(o["date"])[:10] for o in offen)
+        verlauf_schreiben(
+            self._db(),
+            property_id,
+            von=date.fromisoformat(tage_iso[0]),
+            bis=date.fromisoformat(tage_iso[-1]),
+            ereignis="freigabe",
+            details={"tage": len(offen)},
+            user_id=ctx.user_id,
+        )
         log.info(
             "dp_preise_freigegeben", property_id=property_id, tage=len(offen)
         )

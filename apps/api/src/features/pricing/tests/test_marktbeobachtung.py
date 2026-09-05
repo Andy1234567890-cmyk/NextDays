@@ -344,3 +344,26 @@ def test_preis_kurve_laedt_settings_zeile_nach() -> None:
     rc._price_curve = MagicMock(return_value=[])  # type: ignore[method-assign]
     rc.preis_kurve("p1", 100.0, DpSettings(), date(2026, 9, 5), date(2026, 9, 5), date(2026, 9, 6))
     rc._load_settings.assert_called_once_with("p1")
+
+
+def test_leere_zelle_stoesst_den_lauf_selbst_an(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    """Kein Raster fuer die Zelle heisst nicht „warten bis morgen": der Lauf
+    wird sofort eingereiht (Dedup je Tag). Live 05.09.2026: 0559 hatte die
+    Zeilen des Vortags geloescht, die Karte zeigte bis zum Tagestakt den
+    abgelehnten Hinweistext."""
+    from src.features.pricing.market import stand
+
+    eingereiht: list[tuple[str, str | None]] = []
+
+    def _enqueue(_db, job_type, *, payload, dedup_key=None, **_k):  # type: ignore[no-untyped-def]
+        eingereiht.append((job_type, dedup_key))
+
+    monkeypatch.setattr(stand, "enqueue", _enqueue)
+    monkeypatch.setattr(
+        stand, "_standort", lambda _db, _pid: (object(), "DKK", 57.3, 9.9)
+    )
+    monkeypatch.setattr(stand, "_raster", lambda *_a, **_k: [])
+    res = stand.marktstand_bauen(object(), "p1")  # type: ignore[arg-type]
+    assert eingereiht and eingereiht[0][0] == "markt_beobachtung"
+    assert eingereiht[0][1] is not None and "nachholen" in eingereiht[0][1]
+    assert res.hinweis is not None and "abgerufen" in res.hinweis

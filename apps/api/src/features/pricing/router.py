@@ -26,20 +26,31 @@ from src.features.auth.granular_permissions import Permission
 from src.features.auth.permissions import Capability
 from src.jobs.queue import try_enqueue_recompute
 
+from .auskunft import AuskunftService
 from .ki_berater import DpKiBerater
 from .ki_schemas import (
+    Forecast,
     FreigabeStand,
     KiPruefung,
     KiVorschlaegeResponse,
     KiVorschlag,
     KiVorschlagAnnehmen,
     MarktStand,
+    Portalstand,
+    Preisbericht,
+    Preisgrenze,
+    PreisgrenzeAnlegen,
     StufenVorschau,
     TagesmodusAntwort,
     TagesmodusEintrag,
     TagesmodusSetzen,
+    VerlaufEintrag,
+    VorschauTag,
 )
 from .market.stand import marktstand_bauen
+from .portalstand import PortalstandService
+from .preisbericht import PreisberichtService
+from .preisgrenzen_service import PreisgrenzenService
 from .recompute import DynamicPricingRecompute
 from .resolver import PricingError, PricingResolver
 from .schemas import (
@@ -523,16 +534,28 @@ def freigabe_stand(
         Depends(require_granular_permission(Permission.PM_BOOKING_TOTAL)),
     ],
 ) -> FreigabeStand:
-    """Wie viele berechnete Tage warten auf die Freigabe?"""
+    """Wie viele berechnete Tage sind noch nicht an den Portalen?
+
+    Im SOFORT-Modus (keine Freigabepflicht) darf hier keine Frage an den
+    Betrieb entstehen: stehen Tage ohne Stempel, reiht der Abruf den Lauf
+    ein (coalesced je Objekt, Wurzel 2), der pusht und stempelt — die
+    Software macht es, nicht der Nutzer. `sendet` sagt der Oberfläche, dass
+    es läuft.
+    """
     try:
         stand = settings.get(ctx, property_id)
         offen = service.offene_anzahl(ctx, property_id)
     except PricingError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    sendet = False
+    if offen and not stand.freigabe_noetig and stand.enabled and ctx.tenant_id:
+        try_enqueue_recompute(get_service_client(), ctx.tenant_id, property_id)
+        sendet = True
     return FreigabeStand(
         property_id=property_id,
         freigabe_noetig=stand.freigabe_noetig,
         offen=offen,
+        sendet=sendet,
     )
 
 
@@ -608,3 +631,173 @@ def markt_stand(
     except PricingError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
     return marktstand_bauen(get_service_client(), property_id, ctx.tenant_id)
+
+
+@router.get("/preisbericht/{property_id}", response_model=Preisbericht)
+def preisbericht(
+    property_id: str,
+    settings: DpSettingsServiceDep,
+    ctx: Annotated[
+        AuthContext,
+        Depends(require_granular_permission(Permission.PM_BOOKING_TOTAL)),
+    ],
+) -> Preisbericht:
+    """Die Auswertung des Dynamic Pricing: Preis gegen Markt je Stichtag,
+    Uplift gegen den Grundpreis, Umgang mit den Berater-Vorschlägen.
+
+    Gleicher Scope wie /markt-stand: Eigentum prüfen, Preis-Recht verlangen.
+    """
+    try:
+        settings.require_own_property(ctx, property_id)
+    except PricingError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    return PreisberichtService(get_service_client()).bericht(property_id)
+
+
+# ---------------------------------------------------------------------------
+# 0562 — Preisgrenzen je Zeitraum, Soll/Ist an den Portalen, Vorschau,
+# Forecast, Verlauf. Lesen: PM_BOOKING_TOTAL (Preise sind Vertriebsdaten);
+# Schreiben: MANAGE_CALENDAR + EDIT_CALENDAR_BOOKINGS wie der Tagesmodus.
+# ---------------------------------------------------------------------------
+
+
+def get_preisgrenzen_service() -> PreisgrenzenService:
+    return PreisgrenzenService(service_client=get_service_client())
+
+
+def get_portalstand_service() -> PortalstandService:
+    return PortalstandService(service_client=get_service_client())
+
+
+def get_auskunft_service() -> AuskunftService:
+    return AuskunftService(service_client=get_service_client())
+
+
+PreisgrenzenDep = Annotated[PreisgrenzenService, Depends(get_preisgrenzen_service)]
+PortalstandDep = Annotated[PortalstandService, Depends(get_portalstand_service)]
+AuskunftDep = Annotated[AuskunftService, Depends(get_auskunft_service)]
+_LesenDep = Annotated[
+    AuthContext, Depends(require_granular_permission(Permission.PM_BOOKING_TOTAL))
+]
+_SchreibenDep = Annotated[
+    AuthContext, Depends(require_permission(Capability.MANAGE_CALENDAR))
+]
+
+
+@router.get("/preisgrenzen/{property_id}", response_model=list[Preisgrenze])
+def preisgrenzen_liste(
+    property_id: str, service: PreisgrenzenDep, ctx: _LesenDep
+) -> list[Preisgrenze]:
+    """Mindest-/Hoechstpreise je Zeitraum (SiteMinder „Floor and ceiling overrides")."""
+    try:
+        return service.liste(ctx, property_id)
+    except PricingError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/preisgrenzen/{property_id}",
+    response_model=Preisgrenze,
+    dependencies=[
+        Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS))
+    ],
+)
+def preisgrenze_anlegen(
+    property_id: str, req: PreisgrenzeAnlegen, service: PreisgrenzenDep, ctx: _SchreibenDep
+) -> Preisgrenze:
+    try:
+        return service.anlegen(ctx, property_id, req)
+    except PricingError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.delete(
+    "/preisgrenzen/{property_id}/{grenze_id}",
+    status_code=204,
+    dependencies=[
+        Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS))
+    ],
+)
+def preisgrenze_loeschen(
+    property_id: str, grenze_id: str, service: PreisgrenzenDep, ctx: _SchreibenDep
+) -> None:
+    """Idempotent (Wurzel 2): eine fehlende Grenze ist kein Fehler."""
+    try:
+        service.loeschen(ctx, property_id, grenze_id)
+    except PricingError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/portalstand/{property_id}", response_model=Portalstand)
+def portalstand(
+    property_id: str,
+    von: Annotated[date, Query(description="Erster Tag (ISO)")],
+    bis: Annotated[date, Query(description="Letzter Tag (ISO, inklusive)")],
+    service: PortalstandDep,
+    ctx: _LesenDep,
+) -> Portalstand:
+    """Was wir berechnet haben gegen das, was laut Schatten bei den Portalen steht."""
+    try:
+        return service.stand(ctx, property_id, von, bis)
+    except PricingError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/portalstand/{property_id}/angleichen",
+    status_code=202,
+    dependencies=[
+        Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS))
+    ],
+)
+def portalstand_angleichen(
+    property_id: str, service: PortalstandDep, ctx: _SchreibenDep
+) -> dict[str, str]:
+    """Die Differenz jetzt nachsenden — als Job im Channex-Budget."""
+    try:
+        service.angleichen(ctx, property_id)
+    except PricingError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    return {"status": "eingereiht"}
+
+
+@router.get("/vorschau/{property_id}", response_model=list[VorschauTag])
+def vorschau(
+    property_id: str,
+    von: Annotated[date, Query(description="Erster Tag (ISO)")],
+    bis: Annotated[date, Query(description="Letzter Tag (ISO, inklusive)")],
+    service: AuskunftDep,
+    ctx: _LesenDep,
+) -> list[VorschauTag]:
+    """So saehe die Kurve mit eingeschalteter Automatik aus — nichts wird
+    gespeichert oder gesendet (Hostaway „Subscribe & Review")."""
+    try:
+        return service.vorschau(ctx, property_id, von, bis)
+    except PricingError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/forecast/{property_id}", response_model=Forecast)
+def forecast(property_id: str, service: AuskunftDep, ctx: _LesenDep) -> Forecast:
+    """Belegt vs. gelernte Erwartung der naechsten 90 Tage, dazu die
+    Angebotsdichte der Umgebung."""
+    try:
+        return service.forecast(ctx, property_id)
+    except PricingError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/verlauf/{property_id}", response_model=list[VerlaufEintrag])
+def verlauf(
+    property_id: str,
+    service: AuskunftDep,
+    ctx: _LesenDep,
+    tag: Annotated[
+        date | None, Query(description="Nur Eintraege, die diesen Tag enthalten")
+    ] = None,
+) -> list[VerlaufEintrag]:
+    """Wer hat wann was gesetzt, wann ging was raus (SiteMinder „History")."""
+    try:
+        return service.verlauf(ctx, property_id, tag)
+    except PricingError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

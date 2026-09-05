@@ -1,10 +1,11 @@
 "use client";
 
 // Basispreis-Slider (Hostaway-„Set your base rate"): pro Objekt die Basispreis-
-// Strategie wählen — Datengetrieben (Konservativ/Empfohlen/Aggressiv) oder
+// Strategie wählen — Grundpreis oder Marktpreis (Konservativ/Empfohlen/Aggressiv) oder
 // Manuell (eigener Basispreis) — plus Mindest-/Höchstpreis und (eingeklappt) die
 // erweiterten Regeln (Wochenende/Auslastung/Last-Minute/Orphan/Markt). Lädt die
 // vollständigen Einstellungen beim Öffnen und speichert per PUT.
+import { DpPreisgrenzen } from "./dp-preisgrenzen";
 import { MarktKarte } from "./markt-karte";
 
 import { Icon } from "@iconify/react";
@@ -12,6 +13,12 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { Button } from "@nextdays/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@nextdays/ui/dialog";
 import { Input } from "@nextdays/ui/input";
 import { Label } from "@nextdays/ui/label";
 import {
@@ -29,6 +36,7 @@ import {
   TooltipTrigger,
 } from "@nextdays/ui/tooltip";
 import { formatCurrency } from "@/lib/currency";
+import { listRatePlans, type RatePlan } from "@/lib/rates";
 import {
   type BaseRateMode,
   getMarktStand,
@@ -86,12 +94,17 @@ export function DpEditSheet({
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [advanced, setAdvanced] = useState(false);
+  // Rückfrage beim EINSCHALTEN der Freigabepflicht (s. Dialog am Ende).
+  const [freigabeFrage, setFreigabeFrage] = useState(false);
   // Was die drei Stufen im Schnitt kosten. Ohne diese Zahlen ist „aggressiv"
   // ein Wort ohne Bedeutung — man wählt blind. Der Server rechnet sie.
   const [stufen, setStufen] = useState<StufenVorschau | null>(null);
   // Gibt es ueberhaupt einen Markt? Ohne diese Auskunft ist der Schalter
   // "Marktdaten nutzen" von einer Attrappe nicht zu unterscheiden.
   const [markt, setMarkt] = useState<MarktStand | null>(null);
+  // Ratenplaene des Objekts fuer „Preise gelten fuer" (0562). Nur Basisplaene
+  // sind waehlbar — ein abgeleiteter folgt seinem Parent.
+  const [plaene, setPlaene] = useState<RatePlan[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -107,6 +120,9 @@ export function DpEditSheet({
     });
     void getMarktStand(item.property_id).then((res) => {
       if (active && res.ok) setMarkt(res.data);
+    });
+    void listRatePlans(item.property_id).then((res) => {
+      if (active && res.ok) setPlaene(res.data.items);
     });
     return () => {
       active = false;
@@ -143,6 +159,19 @@ export function DpEditSheet({
       occupancy_steps: s.occupancy_steps ?? [],
       freigabe_noetig: s.freigabe_noetig ?? false,
       far_future: s.far_future ?? [],
+      // 0562
+      freigabe_ab_tagen: s.freigabe_noetig ? (s.freigabe_ab_tagen ?? null) : null,
+      anker_enabled: s.anker_enabled ?? false,
+      anker_max_pct: s.anker_max_pct ?? 20,
+      // Ohne Saisonkalender nie „an" schicken — der Server lehnt es mit 422
+      // ab, und der Schalter ist dann ohnehin gesperrt.
+      saison_mindestpreis: s.saison_verfuegbar ? (s.saison_mindestpreis ?? false) : false,
+      rate_plan_id: s.rate_plan_id ?? null,
+      feiertag_uplift_pct: s.feiertag_uplift_pct ?? 0,
+      ferien_uplift_pct: s.ferien_uplift_pct ?? 0,
+      quellmaerkte: s.quellmaerkte ?? [],
+      occupancy_discount_cap_pct: s.occupancy_discount_cap_pct ?? 20,
+      occupancy_premium_cap_pct: s.occupancy_premium_cap_pct ?? 15,
     });
     setBusy(false);
     if (res.ok) {
@@ -206,16 +235,30 @@ export function DpEditSheet({
             <div className="flex flex-col gap-3">
               <Label className="flex items-center gap-1.5">
                 Basispreis
-                <InfoHint text="Der Ausgangspreis (Anker), auf den alle Regeln wie Wochenende, Auslastung oder Markt rechnen. Du wählst, ob die Engine ihn automatisch ermittelt (Datengetrieben) oder du ihn selbst setzt (Manuell)." />
+                <InfoHint text="Der Ausgangspreis (Anker), auf den alle Regeln wie Wochenende, Auslastung oder Markt rechnen. Grundpreis = dein Ratenplan, Marktpreis = täglicher Median der Umgebung, Manuell = dein fester Wert." />
               </Label>
+              {/* Ehrliches Etikett: dieser Modus nimmt den Grundpreis des
+                  Ratenplans — nicht „Daten". Der datengetriebene Anker ist
+                  „Marktpreis" darunter (Hostaway „Market-driven base price"). */}
               <RadioRow
                 checked={s.base_mode === "data_driven"}
-                title="Datengetrieben"
-                hint="Informiert durch unsere Engine, laufend aktualisiert."
-                info="Die Engine ermittelt den Basispreis automatisch aus deinem Grundpreis und passt ihn laufend an Nachfrage, Saison und Markt an. Du musst keinen festen Preis vorgeben."
+                title="Grundpreis"
+                hint="Dein Grundpreis aus dem Ratenplan, die Regeln rechnen darauf."
+                info="Anker ist der Grundpreis deines Ratenplans. Alle Regeln (Wochenende, Auslastung, Vorlauf, Markt-Korrektur …) rechnen auf diesen Wert."
                 onSelect={() => set("base_mode", "data_driven")}
               />
-              {s.base_mode === "data_driven" && (
+              <RadioRow
+                checked={s.base_mode === "market"}
+                title="Marktpreis"
+                hint={
+                  markt?.markt_median != null && cur
+                    ? `Median der Umgebung heute: ${formatCurrency(markt.markt_median, cur)} — je Tag neu.`
+                    : "Median der Umgebung je Tag als Anker; ohne Marktwert gilt der Grundpreis."
+                }
+                info="Anker ist der tägliche Median der öffentlich ausgeschriebenen Preise ganzer Unterkünfte im Umkreis von rund 50 km (die Marktkarte unten zeigt sie). Fehlt für einen Tag ein Marktwert, gilt dort dein Grundpreis — sichtbar in „Warum dieser Preis?“ als Marktbasis."
+                onSelect={() => set("base_mode", "market")}
+              />
+              {(s.base_mode === "data_driven" || s.base_mode === "market") && (
                 <div className="ml-6 flex flex-col gap-2">
                   {/* Die Beträge sind der Ø-Preis der nächsten 90 Tage, nicht
                       ein fester Basispreis. „Aggressiv" kann deshalb NIEDRIGER
@@ -288,36 +331,148 @@ export function DpEditSheet({
               </Field>
             </div>
 
-            {/* Freigabe: steht ABSICHTLICH nicht unter „Erweiterte Regeln".
-                Sie entscheidet, ob überhaupt etwas an die Portale geht — das
-                ist keine Feinheit, sondern die Grundfrage. */}
-            <label className="flex cursor-pointer items-center justify-between gap-3 border-t pt-4">
-              <span className="leading-tight">
-                <span className="flex items-center gap-1.5 font-semibold">
-                  Preise erst nach Freigabe senden
-                  <InfoHint text="Die Automatik rechnet weiter, sendet aber nichts an die Portale, bis du im Kalender auf „Preise senden“ klickst. Sinnvoll, solange du den Regeln noch nicht blind vertraust — die Zahl geht sonst sofort an Airbnb und Booking." />
-                </span>
-                <span className="block text-sm text-muted-foreground">
-                  Berechnete Preise warten auf deinen Blick, statt sofort zu
-                  gehen.
-                </span>
-              </span>
-              <Switch
-                checked={s.freigabe_noetig ?? false}
-                onCheckedChange={(c) => set("freigabe_noetig", c)}
-              />
-            </label>
-            {/* Die Folge SOFORT benennen, nicht erst nach dem Speichern: ab
-                jetzt geht nichts mehr an die Portale, bis jemand freigibt.
-                Ein Schalter, dessen Wirkung man erst merkt, wenn Preise
-                fehlen, ist eine Falle. */}
-            {s.freigabe_noetig && (
-              <p className="-mt-1 rounded-(--radius) bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
-                Ab dem Speichern gehen keine berechneten Preise mehr an die
-                Portale. Du gibst sie in der Objektliste oder im Kalender des
-                Objekts frei.
-              </p>
-            )}
+            {/* Ausnahmen je Zeitraum (SiteMinder „Floor and ceiling overrides"). */}
+            <DpPreisgrenzen propertyId={item.property_id} currency={cur} />
+
+            {/* Weitere Preisregeln als lesbare Liste (Hostaway „Additional
+                pricing rules") — was gilt, auf einen Blick; bearbeitet wird
+                unter „Erweiterte Regeln". */}
+            <div className="flex flex-col gap-2 border-t pt-4">
+              <Label className="flex items-center gap-1.5">
+                Weitere Preisregeln
+                <InfoHint text="Zusammenfassung der aktiven Regeln. Ändern kannst du sie unter „Erweiterte Regeln“ weiter unten." />
+              </Label>
+              <ul className="flex flex-col gap-1 text-sm">
+                <RegelZeile
+                  titel="Frühbucher-Aufschlag"
+                  text={
+                    (s.far_future ?? []).length
+                      ? [...(s.far_future ?? [])]
+                          .sort((a, b) => a.days_before - b.days_before)
+                          .map((r) => `+${r.uplift_pct} % ab ${r.days_before} Tagen`)
+                          .join(" · ")
+                      : "aus"
+                  }
+                />
+                <RegelZeile
+                  titel="Last-Minute-Rabatt"
+                  text={
+                    (s.last_minute ?? []).length
+                      ? [...(s.last_minute ?? [])]
+                          .sort((a, b) => b.days_before - a.days_before)
+                          .map((r) => `−${r.discount_pct} % ab ${r.days_before} Tagen`)
+                          .join(" · ")
+                      : "aus"
+                  }
+                />
+                <RegelZeile
+                  titel="Vorjahresanker"
+                  text={
+                    s.anker_enabled
+                      ? `hebt bis +${s.anker_max_pct ?? 20} % auf den Vorjahresbestwert`
+                      : "aus"
+                  }
+                />
+                <RegelZeile
+                  titel="Saison-Mindestpreis"
+                  text={
+                    !s.saison_verfuegbar
+                      ? "kein Saisonkalender"
+                      : s.saison_mindestpreis
+                        ? "Saisonpreis ist die Untergrenze"
+                        : "aus"
+                  }
+                />
+                <RegelZeile
+                  titel="Wochenende"
+                  text={s.weekend_uplift_pct ? `+${s.weekend_uplift_pct} % Fr/Sa` : "aus"}
+                />
+                <RegelZeile
+                  titel="Lückenfüllung"
+                  text={
+                    s.orphan_gap_discount_pct
+                      ? `−${s.orphan_gap_discount_pct} % für 1–2-Nächte-Lücken`
+                      : "aus"
+                  }
+                />
+                <RegelZeile
+                  titel="Feiertage & Ferien"
+                  text={
+                    (s.feiertag_uplift_pct ?? 0) > 0 || (s.ferien_uplift_pct ?? 0) > 0
+                      ? `Feiertag +${s.feiertag_uplift_pct ?? 0} % · Schulferien +${s.ferien_uplift_pct ?? 0} %`
+                      : "aus"
+                  }
+                />
+              </ul>
+            </div>
+
+            {/* Senden an die Portale (0562): sofort · nur nahe Tage warten ·
+                alle warten. SiteMinder „Automate: Always / within X days". */}
+            <div className="flex flex-col gap-3 border-t pt-4">
+              <Label className="flex items-center gap-1.5">
+                Preise an die Portale senden
+                <InfoHint text="„Sofort“ ist der Normalfall: jede Preisänderung geht direkt an Airbnb und Booking. Mit Freigabe warten Tage, bis du im Kalender auf „Preise senden“ klickst — entweder nur die nahen (die teuren Fehler) oder alle." />
+              </Label>
+              <select
+                value={
+                  !s.freigabe_noetig
+                    ? "sofort"
+                    : s.freigabe_ab_tagen != null
+                      ? "nah"
+                      : "alle"
+                }
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === "sofort") {
+                    set("freigabe_noetig", false);
+                    set("freigabe_ab_tagen", null);
+                    return;
+                  }
+                  // Einschalten ist die folgenreiche Richtung — Rückfrage.
+                  if (!s.freigabe_noetig) setFreigabeFrage(true);
+                  else set("freigabe_noetig", true);
+                  set("freigabe_ab_tagen", v === "nah" ? (s.freigabe_ab_tagen ?? 14) : null);
+                }}
+                className="rounded-(--radius) border bg-transparent px-3 py-2 text-sm"
+              >
+                <option value="sofort">Sofort — jede Änderung geht direkt raus</option>
+                <option value="nah">Erst nach Freigabe — nur Tage innerhalb von … Tagen</option>
+                <option value="alle">Erst nach Freigabe — alle Tage</option>
+              </select>
+              {s.freigabe_noetig && s.freigabe_ab_tagen != null && (
+                <Field
+                  label="Freigabe für Tage innerhalb von (Tagen)"
+                  hint="Tage mit kürzerem Vorlauf als dieser Wert warten auf deine Freigabe; fernere gehen automatisch. 14 heißt: die nächsten zwei Wochen siehst du vorher, der Rest läuft."
+                >
+                  <NumInput
+                    value={s.freigabe_ab_tagen}
+                    onChange={(n) => set("freigabe_ab_tagen", Math.max(0, n ?? 0))}
+                    className="w-32"
+                  />
+                </Field>
+              )}
+              {plaene.length > 1 && (
+                <Field
+                  label="Preise gelten für"
+                  hint="Bei mehreren Ratenplänen (Hotel: BAR, B&B …) kann Dynamic Pricing auf einen Plan begrenzt werden. Abgeleitete Pläne folgen ihrem Basisplan und sind nicht wählbar."
+                >
+                  <select
+                    value={s.rate_plan_id ?? ""}
+                    onChange={(e) => set("rate_plan_id", e.target.value || null)}
+                    className="w-full rounded-(--radius) border bg-transparent px-3 py-2 text-sm"
+                  >
+                    <option value="">Alle Ratenpläne</option>
+                    {plaene
+                      .filter((rp) => rp.rate_mode !== "derived")
+                      .map((rp) => (
+                        <option key={rp.id} value={rp.id}>
+                          {rp.name} ({formatCurrency(rp.base_price, rp.currency)})
+                        </option>
+                      ))}
+                  </select>
+                </Field>
+              )}
+            </div>
 
             {/* Erweiterte Regeln (eingeklappt) */}
             <div className="flex flex-col gap-3 border-t pt-4">
@@ -408,6 +563,125 @@ export function DpEditSheet({
                     rules={s.rate_rules ?? []}
                     onChange={(r) => set("rate_rules", r)}
                   />
+
+                  {/* Vorjahresanker (Hostaway „Historical anchoring") */}
+                  <label className="flex cursor-pointer items-center justify-between gap-3">
+                    <span className="leading-tight">
+                      <span className="flex items-center gap-1.5 font-semibold">
+                        Vorjahresanker
+                        <InfoHint text="Der beste Nachtpreis, zu dem dieselbe Woche im Vorjahr gebucht wurde, zieht den Preis nach oben — nie nach unten, höchstens um den Deckel. Schützt davor, unter dem zu verkaufen, was letztes Jahr nachweislich ging." />
+                      </span>
+                      <span className="block text-sm text-muted-foreground">
+                        Nie unter dem Vorjahresbestwert derselben Woche.
+                      </span>
+                    </span>
+                    <Switch
+                      checked={s.anker_enabled ?? false}
+                      onCheckedChange={(c) => set("anker_enabled", c)}
+                    />
+                  </label>
+                  {s.anker_enabled && (
+                    <Field
+                      label="Höchstens anheben um (%)"
+                      hint="Deckel der Anhebung. 20 % heißt: liegt der berechnete Preis mehr als ein Fünftel unter dem Vorjahresbestwert, wird nur um 20 % angehoben."
+                    >
+                      <NumInput
+                        value={s.anker_max_pct}
+                        onChange={(n) => set("anker_max_pct", n ?? 0)}
+                        className="w-32"
+                      />
+                    </Field>
+                  )}
+
+                  {/* Saison-Mindestpreis (0565): der Saisonkalender setzt die
+                      Untergrenze, nie die Obergrenze. Ohne Kalender gesperrt —
+                      ein Schalter, der nichts steuert, wäre eine Attrappe. */}
+                  <label
+                    className={
+                      s.saison_verfuegbar
+                        ? "flex cursor-pointer items-center justify-between gap-3"
+                        : "flex items-center justify-between gap-3 opacity-60"
+                    }
+                  >
+                    <span className="leading-tight">
+                      <span className="flex items-center gap-1.5 font-semibold">
+                        Mindestpreis aus dem Saisonkalender
+                        <InfoHint text="An jedem Tag, der in einer Saison liegt, ist der Saisonpreis dieses Tages die Untergrenze: die Automatik darf darüber, nie darunter. Bei mehreren Saisons zählt die Saison, in der der Tag liegt. Tage ohne Saison behalten den Mindestpreis von oben. Der Höchstpreis bleibt unberührt." />
+                      </span>
+                      <span className="block text-sm text-muted-foreground">
+                        {s.saison_verfuegbar
+                          ? "Nie unter dem Saisonpreis des Tages. Höchstpreis bleibt."
+                          : "Kein Saisonkalender angelegt — zuerst unter Preise eine Saison mit Zeitraum anlegen."}
+                      </span>
+                    </span>
+                    <Switch
+                      checked={s.saison_verfuegbar ? (s.saison_mindestpreis ?? false) : false}
+                      disabled={!s.saison_verfuegbar}
+                      onCheckedChange={(c) => set("saison_mindestpreis", c)}
+                    />
+                  </label>
+
+                  {/* Feiertage & Schulferien (Feed, 0562) */}
+                  <div className="flex flex-col gap-3">
+                    <Label className="flex items-center gap-1.5">
+                      Feiertage & Schulferien
+                      <InfoHint text="Gesetzliche Feiertage und Schulferien des Objektlands und deiner Quellmärkte werden täglich aus öffentlichen Kalendern geladen. 0 % = aus. Quellmärkte: Länder, aus denen deine Gäste anreisen (Dänemark: DE, NL)." />
+                    </Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <Field label="Feiertag-Aufschlag (%)">
+                        <NumInput
+                          value={s.feiertag_uplift_pct}
+                          onChange={(n) => set("feiertag_uplift_pct", n ?? 0)}
+                        />
+                      </Field>
+                      <Field label="Schulferien-Aufschlag (%)">
+                        <NumInput
+                          value={s.ferien_uplift_pct}
+                          onChange={(n) => set("ferien_uplift_pct", n ?? 0)}
+                        />
+                      </Field>
+                    </div>
+                    <Field
+                      label="Quellmärkte (Ländercodes)"
+                      hint="Zwei Buchstaben je Land, durch Komma getrennt — z. B. DE, NL, SE. Das Objektland zählt immer."
+                    >
+                      <Input
+                        value={(s.quellmaerkte ?? []).join(", ")}
+                        placeholder="DE, NL"
+                        onChange={(e) =>
+                          set(
+                            "quellmaerkte",
+                            e.target.value
+                              .split(",")
+                              .map((c) => c.trim().toUpperCase())
+                              .filter((c) => c.length > 0),
+                          )
+                        }
+                      />
+                    </Field>
+                  </div>
+
+                  {/* Deckel des Auslastungs-/Pickup-Faktors — bisher nur per DB. */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field
+                      label="Auslastungs-Rabatt höchstens (%)"
+                      hint="Wie tief Auslastung und Buchungstempo den Preis senken dürfen. Ohne Wirkung, wenn Auslastungsstufen gepflegt sind."
+                    >
+                      <NumInput
+                        value={s.occupancy_discount_cap_pct}
+                        onChange={(n) => set("occupancy_discount_cap_pct", n ?? 0)}
+                      />
+                    </Field>
+                    <Field
+                      label="Auslastungs-Aufschlag höchstens (%)"
+                      hint="Wie weit Auslastung und Buchungstempo den Preis heben dürfen."
+                    >
+                      <NumInput
+                        value={s.occupancy_premium_cap_pct}
+                        onChange={(n) => set("occupancy_premium_cap_pct", n ?? 0)}
+                      />
+                    </Field>
+                  </div>
 
                   {/* Wetter (RateBoard-Baustein, DWD-Daten) */}
                   <label className="flex cursor-pointer items-center justify-between gap-3">
@@ -514,7 +788,64 @@ export function DpEditSheet({
           </div>
         )}
       </SheetContent>
+
+      {/* Rückfrage beim Einschalten der Freigabepflicht.
+          Dynamic Pricing an heisst: die Automatik ändert den Preis, auch auf
+          den Portalen. Wer das abschaltet, kehrt diese Zusage um — dann
+          verkaufen Airbnb und Booking so lange den ALTEN Preis, bis jemand
+          freigibt. Live am 04.09.2026 standen so 435 von 540 Tagen falsch
+          bei Channex, ohne dass die Oberfläche es sagte. Das wird gefragt. */}
+      <Dialog open={freigabeFrage} onOpenChange={setFreigabeFrage}>
+        <DialogContent className="max-w-md">
+          <DialogTitle>Preise nicht mehr automatisch senden?</DialogTitle>
+          <DialogDescription asChild>
+            <div className="flex flex-col gap-3 text-sm">
+              <p>
+                Dynamic Pricing rechnet weiter, schickt aber nichts mehr an die
+                Portale. Airbnb und Booking verkaufen so lange zum
+                <strong> bisherigen Preis</strong>, bis du im Kalender auf
+                „Preise senden“ klickst.
+              </p>
+              <p className="text-muted-foreground">
+                Ohne diesen Schalter geht jede Preisänderung sofort hinaus —
+                das ist der Normalfall.
+              </p>
+            </div>
+          </DialogDescription>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setFreigabeFrage(false)}
+            >
+              Abbrechen
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                set("freigabe_noetig", true);
+                setFreigabeFrage(false);
+              }}
+            >
+              Erst nach Freigabe senden
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Sheet>
+  );
+}
+
+// Eine Zeile der Regel-Zusammenfassung (Hostaway-Stil: Name, dann was gilt).
+function RegelZeile({ titel, text }: { titel: string; text: string }) {
+  const aus = text === "aus";
+  return (
+    <li className="flex items-baseline justify-between gap-3">
+      <span className="text-muted-foreground">{titel}</span>
+      <span className={aus ? "text-xs text-muted-foreground/70" : "text-right font-medium"}>
+        {text}
+      </span>
+    </li>
   );
 }
 

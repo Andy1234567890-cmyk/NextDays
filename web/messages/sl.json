@@ -353,7 +353,8 @@
     "hrSettings": "Nastavitve",
     "timeClock": "Ura",
     "payroll": "Plača",
-    "staffReports": "Poročila osebja"
+    "staffReports": "Poročila osebja",
+    "prices": "Cene in trg"
   },
   "exemption": {
     "labelNamed": "Oproščeno davka ({scheme}) — ID za DDV ni potreben",
@@ -12390,7 +12391,7 @@
   },
   "analysis": {
     "title": "Analiza",
-    "subtitle": "Ključni podatki, rezervacije, zasedenost in kanali za določeno obdobje.",
+    "subtitle": "Ključni kazalniki, rezervacije, zasedenost, kanali, gostje, stroški, tempo in vzorci za določeno obdobje.",
     "loading": "Izračunavam …",
     "empty": "Za to obdobje ni podatkov.",
     "ownerStay": "Lastna uporaba",
@@ -12404,14 +12405,23 @@
       "buchungen": "Rezervacije",
       "auslastung": "Zasedenost",
       "kanaele": "Kanali",
-      "gaeste": "Gostje"
+      "gaeste": "Gostje",
+      "ausgaben": "Stroški in dodatki",
+      "pace": "Tempo",
+      "muster": "Vzorci",
+      "stornos": "Odpovedi"
     },
     "range": {
       "monat": "Ta mesec",
       "vormonat": "Prejšnji mesec",
       "quartal": "Četrtletje",
       "jahr": "Leto",
-      "frei": "Poljubno"
+      "frei": "Poljubno",
+      "vorjahr": "Preteklo leto",
+      "letzte30": "Zadnjih 30 dni",
+      "naechste30": "Naslednjih 30 dni",
+      "letzte12monate": "Zadnjih 12 mesecev",
+      "naechste12monate": "Naslednjih 12 mesecev"
     },
     "filter": {
       "range": "Časovno obdobje",
@@ -12422,7 +12432,27 @@
       "allProperties": "Vsi objekti",
       "channels": "Kanali",
       "allChannels": "Vsi kanali",
-      "compare": "Primerjava"
+      "compare": "Primerjava",
+      "button": "Filter",
+      "reset": "Ponastavi",
+      "apply": "Uporabi",
+      "cancel": "Prekliči",
+      "clear": "Počisti izbiro",
+      "nSelected": "{count, plural, one {# izbran} other {# izbranih}}",
+      "nProperties": "{count, plural, one {# objekt} other {# objektov}}",
+      "allStatuses": "Vsi statusi",
+      "searchProperties": "Iskanje objekta …",
+      "noMatch": "Ni zadetkov.",
+      "rangeHint": "Hitra izbira ostane dinamična v shranjenih pogledih: »Pretekli mesec« je vedno pretekli mesec od danes.",
+      "statusHint": "Brez izbire se upoštevajo vsi statusi. Odpovedane rezervacije se upoštevajo samo pri stopnji odpovedi, ne pa pri prihodkih in nočitvah.",
+      "dim": {
+        "zeitraum": "Obdobje",
+        "bezug": "Dodelitev",
+        "objekte": "Objekti",
+        "kanaele": "Kanali",
+        "status": "Statusi",
+        "vergleich": "Primerjava"
+      }
     },
     "basis": {
       "anreise": "Po prihodu",
@@ -12454,11 +12484,31 @@
       "revenueOverTime": "Zgodovina prihodkov",
       "shareByChannel": "Delež prihodkov po kanalu",
       "revenueByProperty": "Prihodek na nastanitev",
-      "footnote": "Skupni prihodek v obdobju: {total}"
+      "footnote": "Skupni prihodek v obdobju: {total}",
+      "overTime": "{metric} skozi čas",
+      "otherProperties": "{count, plural, one {# dodaten objekt} other {# dodatni objekti}}",
+      "metric": "Metrika",
+      "metricValues": {
+        "umsatz": "Prihodki",
+        "naechte": "Nočitve",
+        "buchungen": "Rezervacije"
+      },
+      "groupBy": "Združi",
+      "groupValues": {
+        "keine": "Brez",
+        "kanal": "Kanal",
+        "objekt": "Objekt"
+      },
+      "type": "Grafikon",
+      "typeValues": {
+        "linie": "Črta",
+        "balken": "Stolpec"
+      }
     },
     "table": {
       "rowCount": "{count, plural, one {# rezervacija} other {# rezervacije}}",
-      "columns": "Stolpci"
+      "columns": "Stolpci",
+      "total": "Skupaj"
     },
     "col": {
       "property": "Nastanitev",
@@ -12480,7 +12530,30 @@
       "bookingsShort": "Rezervacije",
       "net": "Neto",
       "share": "Delež",
-      "country": "Država"
+      "country": "Država",
+      "month": "Mesec",
+      "ownerNights": "Lastna uporaba",
+      "accommodation": "Nočitev",
+      "cleaning": "Čiščenje",
+      "otherFees": "Preostale pristojbine",
+      "addons": "Dodatne storitve",
+      "gross": "Cena za gosta",
+      "paymentFee": "Pristojbina za plačilo",
+      "date": "Datum",
+      "name": "Opis",
+      "category": "Kategorija",
+      "kind": "Vrsta",
+      "amount": "Znesek",
+      "receipt": "Potrdilo",
+      "count": "Število",
+      "weekday": "Dan v tednu",
+      "value": "Vrednost",
+      "period": "Obdobje",
+      "checkIn": "Prihod",
+      "checkOut": "Odhod",
+      "currency": "Valuta",
+      "source": "Vir",
+      "reason": "Razlog"
     },
     "guests": {
       "total": "Gostje",
@@ -12512,7 +12585,146 @@
     "compareCurrencyUnclear": "Valuta v primerjalnem obdobju je nejasna",
     "compareCurrencyMismatchHint": "V primerjalnem obdobju je veljala druga valuta. Sprememba v odstotkih bi bila učinek menjalnega tečaja in ne poslovna številka.",
     "compareChartCurrencyMismatch": "Primerjalno obdobje je bilo v drugi valuti – zato črta preteklega leta ni narisana.",
-    "compareLocked": "Primerjava je mogoča za obdobje do enega leta."
+    "compareLocked": "Primerjava je mogoča za obdobje do enega leta.",
+    "status": {
+      "pending": "Odprto",
+      "confirmed": "Potrjeno",
+      "checked_in": "Prijavljen",
+      "checked_out": "Odjavljen",
+      "completed": "Zaključeno",
+      "cancelled": "Preklicano",
+      "declined": "Zavrnjeno",
+      "expired": "Poteklo",
+      "requested": "Zahtevano"
+    },
+    "bookings": {
+      "per": {
+        "buchung": "Na rezervacijo",
+        "objekt": "Na nastanitev"
+      },
+      "propertyCount": "{count, plural, one {# nastanitev} other {# nastanitve}}",
+      "showEmpty": "Prikaži nastanitve brez rezervacij",
+      "reconstructed": "Rekonstruirano iz pristojbin za nastanitev – portal ni zagotovil razčlenitve.",
+      "commissionComputed": "Izračunano iz shranjene provizije – portal ni sporočil.",
+      "withoutBreakdown": "{count, plural, one {# rezervacija brez specifikacije cene – prikazana je samo skupna cena.} other {# rezervacije brez specifikacije cene – prikazana je samo skupna cena.}}",
+      "withoutBreakdownShort": "Brez specifikacije",
+      "reconstructedCount": "{count, plural, one {# specifikacija (*) rekonstruirana iz stroškov objekta.} other {# specifikacije (*) rekonstruirane iz stroškov objekta.}}"
+    },
+    "occupancy": {
+      "byMonth": "Na mesec",
+      "propertyCount": "{count, plural, one {# objekt} other {# objekti}}"
+    },
+    "expenses": {
+      "empty": "V tem obdobju ni obračunskih postavk.",
+      "emptyHint": "Stroški in dodatki nastanejo pri obračunu lastnika in iz naročenih storitev.",
+      "expenses": "Stroški",
+      "extras": "Dodatki",
+      "balance": "Stanje",
+      "balanceHint": "Dodatki minus stroški",
+      "count": "Postavke",
+      "byCategory": "Po kategoriji",
+      "byProperty": "Po objektu",
+      "noCategory": "Brez kategorije",
+      "noProperty": "Brez objekta (račun)",
+      "rowCount": "{count, plural, one {# postavka} other {# postavke}}",
+      "kind": {
+        "ausgabe": "Strošek",
+        "extra": "Dodatek"
+      },
+      "footnote": "Obdobje je datum postavke. Stroški bremenijo lastnika, dodatki pa so v njegovo korist – tako kot so navedeni v obračunu."
+    },
+    "pace": {
+      "title": "Stanje rezervacij za naslednjih 12 mesecev",
+      "subtitle": "Stanje {heute} v primerjavi s stanjem {vorjahr} za iste mesece leto prej.",
+      "vsLastYear": "v primerjavi z referenčnim datumom prejšnjega leta",
+      "now": "Danes rezervirano",
+      "lastYearSameDay": "Prejšnje leto na isti dan",
+      "lastYearFinal": "Prejšnje leto na koncu",
+      "nowNights": "Danes rezervirano (nočitve)",
+      "nowRevenue": "Danes rezervirano (prihodki)",
+      "lastYearSameDayNights": "Prejšnje leto na isti dan (nočitve)",
+      "delta": "Razdalja",
+      "lastYearFinalNights": "Prejšnje leto na koncu (nočitve)",
+      "lastYearFinalRevenue": "Prejšnje leto na koncu (prihodki)",
+      "footnote": "Referenčni datum prejšnjega leta upošteva samo rezervacije z dejanskim časom rezervacije portala.",
+      "withoutTimestamp": "{count, plural, one {# rezervacija iz prejšnjega leta brez časovnega žiga manjka v vrednosti referenčnega datuma.} other {# rezervacije iz prejšnjega leta brez časovnega žiga manjkajo v vrednosti referenčnega datuma.}}"
+    },
+    "patterns": {
+      "weekday": "Uspešnost po dnevu v tednu",
+      "weekdayHint": "Zasedenost in prihodki po dnevu v tednu. Prihodki rezervacije so enakomerno porazdeljeni na njene nočitve – portali ne zagotavljajo cene na noč.",
+      "leadTime": "Rezervacijsko okno",
+      "leadTimeHint": "Dnevi med rezervacijo in prihodom. Samo rezervacije z dejanskim časom rezervacije.",
+      "stayLength": "Dolžina bivanja",
+      "stayLengthHint": "Porazdelitev rezerviranih nočitev po bivanju.",
+      "days": "Dnevi",
+      "nights": "Nočitve",
+      "daysValue": "{n} dni"
+    },
+    "cancellations": {
+      "empty": "V tem obdobju ni odpovedi.",
+      "emptyHint": "{count, plural, one {# veljavna rezervacija, nobena odpovedana.} other {# veljavne rezervacije, nobena odpovedana.}}",
+      "nights": "Odpovedane nočitve",
+      "lostRevenue": "Izgubljeni prihodek",
+      "lostRevenueHint": "Skupna cena odpovedanih rezervacij – del nočitev je bil ponovno prodan.",
+      "leadTime": "Ø Predhodni čas",
+      "leadTimeBase": "{count} od {total} z datumom odpovedi",
+      "byChannel": "Po kanalu",
+      "byLeadTime": "Po predhodnem času (dni pred prihodom)",
+      "byReason": "Po razlogih",
+      "noReason": "Razlog ni naveden",
+      "footnote": "Stopnja odpovedi = odpovedano / (veljavno + odpovedano). Predhodni čas upošteva samo rezervacije z datumom odpovedi."
+    },
+    "views": {
+      "button": "Pogledi",
+      "title": "Shranjeni pogledi",
+      "empty": "Še ni shranjenih pogledov.",
+      "new": "Shrani trenutni pogled",
+      "delete": "Izbriši",
+      "saveTitle": "Shrani pogled",
+      "saveHint": "Shrani obdobje, filtre, stolpce in nastavitve zavihkov – samo za vas.",
+      "namePlaceholder": "npr. prejšnji mesec po objektu",
+      "save": "Shrani"
+    },
+    "export": {
+      "button": "Prenesi poročilo",
+      "title": "Oblika",
+      "csv": "CSV (trenutna tabela)",
+      "xlsx": "Excel (vse tabele zavihka)",
+      "pdf": "PDF",
+      "hint": "Izvoženo bo natanko to, kar je tukaj – z aktivnimi filtri.",
+      "generated": "Ustvarjeno {when}",
+      "failed": "Izvoz ni uspel."
+    },
+    "prices": {
+      "title": "Cene in trg",
+      "subtitle": "Kje je vaša cena v primerjavi z okolico, kaj avtomatika naredi iz osnovne cene in kako ravnate s predlogi.",
+      "property": "Nastanitev",
+      "noProperties": "Ni nastanitve z dinamičnim določanjem cen. Vklopite avtomatiko pod »Dinamično določanje cen« – nato se bo tukaj prikazalo poročilo.",
+      "distance": "Ø razdalja do trga",
+      "distanceHint": "{n} datumov s svojo ceno",
+      "position": "Položaj datumov",
+      "below": "pod trgom",
+      "at": "na trgu",
+      "above": "nad trgom",
+      "uplift": "Avtomatika proti osnovni ceni",
+      "upliftHint": "{days} dni v obzorju · osnovna cena {base}",
+      "noBase": "Osnovna cena ni določena",
+      "range": "Razpon cen",
+      "rangeHint": "Ø {avg}",
+      "ki": "Svetovalec za pravila",
+      "kiHint": "{accepted} sprejetih · {rejected} zavrnjenih (90 dni)",
+      "kiTotal": "skupno {accepted} / {rejected}",
+      "chart": "Cena glede na okolico na datum",
+      "chartHint": "Pas = srednje območje okolice (25.–75. percentil), črta = mediana. Vaša cena črtkana, osnovna cena siva.",
+      "market": "Okolica (mediana)",
+      "mid": "Srednje območje",
+      "own": "Vaša cena",
+      "base": "Osnovna cena",
+      "table": "Datumi",
+      "offers": "Ponudbe",
+      "footnote": "Opazovano območje okoli {km} km · Datumi dnevnega spremljanja trga · nazadnje pridobljeno pri nas {when}.",
+      "loading": "Poročilo se izračunava …"
+    }
   },
   "tasks": {
     "fehler": {

@@ -353,7 +353,8 @@
     "hrSettings": "Indstillinger",
     "timeClock": "Tidsregistrering",
     "payroll": "Løn",
-    "staffReports": "Personalrapporter"
+    "staffReports": "Personalrapporter",
+    "prices": "Priser og marked"
   },
   "exemption": {
     "labelNamed": "Momsfritaget ({scheme}) — intet momsnr. nødvendigt",
@@ -12390,7 +12391,7 @@
   },
   "analysis": {
     "title": "Evaluering",
-    "subtitle": "Nøgletal, bookinger, belægning og kanaler for en periode.",
+    "subtitle": "Nøgletal, bookinger, belægning, kanaler, gæster, udgifter, pace og mønstre for en periode.",
     "loading": "Beregnes ...",
     "empty": "Der er ingen data for denne periode.",
     "ownerStay": "Egen brug",
@@ -12404,14 +12405,23 @@
       "buchungen": "Bookinger",
       "auslastung": "Belægning",
       "kanaele": "Kanaler",
-      "gaeste": "Gæster"
+      "gaeste": "Gæster",
+      "ausgaben": "Udgifter & Ekstra",
+      "pace": "Pace",
+      "muster": "Mønstre",
+      "stornos": "Afbestillinger"
     },
     "range": {
       "monat": "Denne måned",
       "vormonat": "Sidste måned",
       "quartal": "Kvartal",
       "jahr": "År",
-      "frei": "Frit valg"
+      "frei": "Frit valg",
+      "vorjahr": "Forrige år",
+      "letzte30": "Sidste 30 dage",
+      "naechste30": "Næste 30 dage",
+      "letzte12monate": "Sidste 12 måneder",
+      "naechste12monate": "Næste 12 måneder"
     },
     "filter": {
       "range": "Periode",
@@ -12422,7 +12432,27 @@
       "allProperties": "Alle objekter",
       "channels": "Kanaler",
       "allChannels": "Alle kanaler",
-      "compare": "Sammenlign"
+      "compare": "Sammenlign",
+      "button": "Filtre",
+      "reset": "Nulstil",
+      "apply": "Anvend",
+      "cancel": "Annuller",
+      "clear": "Ryd valg",
+      "nSelected": "{count, plural, one {# valgt} other {# valgt}}",
+      "nProperties": "{count, plural, one {# ejendom} other {# ejendomme}}",
+      "allStatuses": "Alle statusser",
+      "searchProperties": "Søg ejendom...",
+      "noMatch": "Ingen resultater.",
+      "rangeHint": "Hurtigvalget forbliver dynamisk i gemte visninger: \"Forrige måned\" er altid den forrige måned fra i dag.",
+      "statusHint": "Uden valg tælles alle statusser. Afbestilte bookinger indgår kun i afbestillingsprocenten, ikke i omsætning og nætter.",
+      "dim": {
+        "zeitraum": "Periode",
+        "bezug": "Tildeling",
+        "objekte": "Ejendomme",
+        "kanaele": "Kanaler",
+        "status": "Statusser",
+        "vergleich": "Sammenligning"
+      }
     },
     "basis": {
       "anreise": "Efter ankomst",
@@ -12454,11 +12484,31 @@
       "revenueOverTime": "Omsætningsudvikling",
       "shareByChannel": "Omsætningsandel pr. kanal",
       "revenueByProperty": "Omsætning pr. ejendom",
-      "footnote": "Samlet omsætning i perioden: {total}"
+      "footnote": "Samlet omsætning i perioden: {total}",
+      "overTime": "{metric} over tid",
+      "otherProperties": "{count, plural, one {# yderligere ejendom} other {# yderligere ejendomme}}",
+      "metric": "Nøgletal",
+      "metricValues": {
+        "umsatz": "Omsætning",
+        "naechte": "Nætter",
+        "buchungen": "Bookinger"
+      },
+      "groupBy": "Gruppér",
+      "groupValues": {
+        "keine": "Ingen",
+        "kanal": "Kanal",
+        "objekt": "Ejendom"
+      },
+      "type": "Diagram",
+      "typeValues": {
+        "linie": "Linje",
+        "balken": "Søjle"
+      }
     },
     "table": {
       "rowCount": "{count, plural, one {# booking} other {# bookinger}}",
-      "columns": "Kolonner"
+      "columns": "Kolonner",
+      "total": "Sum"
     },
     "col": {
       "property": "Ejendom",
@@ -12480,7 +12530,30 @@
       "bookingsShort": "Bookinger",
       "net": "Netto",
       "share": "Andel",
-      "country": "Land"
+      "country": "Land",
+      "month": "Måned",
+      "ownerNights": "Egen brug",
+      "accommodation": "Overnatning",
+      "cleaning": "Rengøring",
+      "otherFees": "Øvrige gebyrer",
+      "addons": "Tillægsydelser",
+      "gross": "Gæstepris",
+      "paymentFee": "Betalingsgebyr",
+      "date": "Dato",
+      "name": "Betegnelse",
+      "category": "Kategori",
+      "kind": "Type",
+      "amount": "Beløb",
+      "receipt": "Kvittering",
+      "count": "Antal",
+      "weekday": "Ugedag",
+      "value": "Værdi",
+      "period": "Periode",
+      "checkIn": "Ankomst",
+      "checkOut": "Afrejse",
+      "currency": "Valuta",
+      "source": "Kilde",
+      "reason": "Årsag"
     },
     "guests": {
       "total": "Gæster",
@@ -12512,7 +12585,146 @@
     "compareCurrencyUnclear": "valuta i sammenligningsperioden er uklar",
     "compareCurrencyMismatchHint": "I sammenligningsperioden var der en anden valuta. En ændring i procent ville være en vekselkurs-effekt og ikke et forretningstal.",
     "compareChartCurrencyMismatch": "Sammenligningsperioden var i en anden valuta – derfor tegnes linjen for det foregående år ikke.",
-    "compareLocked": "En sammenligning er mulig for en periode på op til et år."
+    "compareLocked": "En sammenligning er mulig for en periode på op til et år.",
+    "status": {
+      "pending": "Åben",
+      "confirmed": "Bekræftet",
+      "checked_in": "Checket ind",
+      "checked_out": "Checket ud",
+      "completed": "Afsluttet",
+      "cancelled": "Annulleret",
+      "declined": "Afvist",
+      "expired": "Udløbet",
+      "requested": "Forespurgt"
+    },
+    "bookings": {
+      "per": {
+        "buchung": "Pr. booking",
+        "objekt": "Pr. ejendom"
+      },
+      "propertyCount": "{count, plural, one {# ejendom} other {# ejendomme}}",
+      "showEmpty": "Vis ejendomme uden bookinger",
+      "reconstructed": "Rekonstrueret ud fra ejendomsgebyrer – portalen har ikke leveret en oversigt.",
+      "commissionComputed": "Beregnet ud fra den angivne provisionssats – ikke rapporteret af portalen.",
+      "withoutBreakdown": "{count, plural, one {# booking uden prisoversigt — kun totalprisen vises.} other {# bookinger uden prisoversigt — kun totalprisen vises.}}",
+      "withoutBreakdownShort": "Uden oversigt",
+      "reconstructedCount": "{count, plural, one {# oversigt (*) rekonstrueret fra ejendomsgebyrer.} other {# oversigter (*) rekonstrueret fra ejendomsgebyrer.}}"
+    },
+    "occupancy": {
+      "byMonth": "Pr. måned",
+      "propertyCount": "{count, plural, one {# ejendom} other {# ejendomme}}"
+    },
+    "expenses": {
+      "empty": "Ingen afregningsposter i denne periode.",
+      "emptyHint": "Udgifter og ekstraomkostninger opstår i ejerens afregning og fra bestilte ydelser.",
+      "expenses": "Udgifter",
+      "extras": "Ekstraomkostninger",
+      "balance": "Saldo",
+      "balanceHint": "Ekstraomkostninger minus udgifter",
+      "count": "Post",
+      "byCategory": "Efter kategori",
+      "byProperty": "Efter ejendom",
+      "noCategory": "Uden kategori",
+      "noProperty": "Uden ejendom (konto)",
+      "rowCount": "{count, plural, one {# post} other {# poster}}",
+      "kind": {
+        "ausgabe": "Udgift",
+        "extra": "Ekstraomkostning"
+      },
+      "footnote": "Perioden er postens dato. Udgifter belaster ejeren, ekstraomkostninger gavner ham — som de fremgår af regnskabet."
+    },
+    "pace": {
+      "title": "Bookingstatus for de næste 12 måneder",
+      "subtitle": "Status {heute} sammenlignet med status {vorjahr} for de samme måneder et år tidligere.",
+      "vsLastYear": "sammenlignet med sidste års skæringsdato",
+      "now": "Booket i dag",
+      "lastYearSameDay": "Sidste år samme dag",
+      "lastYearFinal": "Sidste år ved udgangen",
+      "nowNights": "Booket i dag (nætter)",
+      "nowRevenue": "Booket i dag (omsætning)",
+      "lastYearSameDayNights": "Sidste år samme dag (nætter)",
+      "delta": "Afstand",
+      "lastYearFinalNights": "Sidste år ved udgangen (nætter)",
+      "lastYearFinalRevenue": "Sidste år ved udgangen (omsætning)",
+      "footnote": "Sidste års skæringsdato tæller kun bookinger med reel bookingtidspunkt fra portalen.",
+      "withoutTimestamp": "{count, plural, one {# sidste års booking uden tidsstempel mangler i skæringsdatoens værdi.} other {# sidste års bookinger uden tidsstempel mangler i skæringsdatoens værdi.}}"
+    },
+    "patterns": {
+      "weekday": "Ydelse pr. ugedag",
+      "weekdayHint": "Belægning og omsætning pr. ugedag. Omsætningen fra en booking fordeles jævnt over dens nætter — portalerne angiver ikke en pris pr. nat.",
+      "leadTime": "Bookingvindue",
+      "leadTimeHint": "Dage mellem booking og ankomst. Kun bookinger med reel bookingtidspunkt.",
+      "stayLength": "Opholdets varighed",
+      "stayLengthHint": "Fordeling af de bookede nætter pr. ophold.",
+      "days": "Dage",
+      "nights": "Nætter",
+      "daysValue": "{n} dage"
+    },
+    "cancellations": {
+      "empty": "Ingen annulleringer i denne periode.",
+      "emptyHint": "{count, plural, one {# gyldig booking, ingen annulleret.} other {# gyldige bookinger, ingen annulleret.}}",
+      "nights": "Annullerede nætter",
+      "lostRevenue": "Mistet omsætning",
+      "lostRevenueHint": "Samlet pris for annullerede bookinger – nogle nætter blev videresolgt.",
+      "leadTime": "Gns. gennemløbstid",
+      "leadTimeBase": "{count} af {total} med annulleringstidspunkt",
+      "byChannel": "Efter kanal",
+      "byLeadTime": "Efter gennemløbstid (dage før ankomst)",
+      "byReason": "Efter årsag",
+      "noReason": "Ingen årsag angivet",
+      "footnote": "Annulleringsrate = annulleret / (gyldig + annulleret). Gennemløbstiden beregnes kun for bookinger med et annulleringstidspunkt."
+    },
+    "views": {
+      "button": "Visninger",
+      "title": "Gemte visninger",
+      "empty": "Ingen visning er gemt endnu.",
+      "new": "Gem aktuel visning",
+      "delete": "Slet",
+      "saveTitle": "Gem visning",
+      "saveHint": "Gemmer periode, filtre, kolonner og faneindstillinger – kun for dig.",
+      "namePlaceholder": "f.eks. sidste måned pr. ejendom",
+      "save": "Gem"
+    },
+    "export": {
+      "button": "Download rapport",
+      "title": "Format",
+      "csv": "CSV (aktuel tabel)",
+      "xlsx": "Excel (alle tabeller på fanen)",
+      "pdf": "PDF",
+      "hint": "Det, der vises her, eksporteres – med de aktive filtre.",
+      "generated": "Oprettet den {when}",
+      "failed": "Eksport mislykkedes."
+    },
+    "prices": {
+      "title": "Priser & marked",
+      "subtitle": "Hvor din pris ligger i forhold til omgivelserne, hvad automatikken gør med grundprisen, og hvordan du håndterer forslagene.",
+      "property": "Objekt",
+      "noProperties": "Intet objekt med dynamisk prissætning. Slå automatikken til under „Dynamisk prissætning“ – så vises rapporten her.",
+      "distance": "Ø afstand til markedet",
+      "distanceHint": "{n} skæringsdatoer med egen pris",
+      "position": "Placering af skæringsdatoer",
+      "below": "under markedet",
+      "at": "på markedet",
+      "above": "over markedet",
+      "uplift": "Automatik mod grundpris",
+      "upliftHint": "{days} dage i horisonten · Grundpris {base}",
+      "noBase": "Ingen grundpris angivet",
+      "range": "Prisinterval",
+      "rangeHint": "Ø {avg}",
+      "ki": "Regelrådgiver",
+      "kiHint": "{accepted} accepteret · {rejected} afvist (90 dage)",
+      "kiTotal": "i alt {accepted} / {rejected}",
+      "chart": "Pris i forhold til omgivelser pr. skæringsdato",
+      "chartHint": "Bånd = midterste felt i omgivelserne (25.-75. percentil), linje = median. Din pris stiplet, grundpris grå.",
+      "market": "Omgivelser (median)",
+      "mid": "Midterste felt",
+      "own": "Din pris",
+      "base": "Grundpris",
+      "table": "Skæringsdatoer",
+      "offers": "Tilbud",
+      "footnote": "Overvåget område ca. {km} km · Skæringsdatoer for daglig markedsovervågning · senest hentet hos os {when}.",
+      "loading": "Rapport beregnes …"
+    }
   },
   "tasks": {
     "fehler": {

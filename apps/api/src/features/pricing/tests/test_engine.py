@@ -530,3 +530,127 @@ def test_far_future_und_last_minute_schliessen_sich_aus() -> None:
     assert nah.factors["far_future"] == 1.0
     assert fern.factors["far_future"] > 1.0
     assert fern.factors["last_minute"] == 1.0
+
+
+# --- 0562: Marktbasis, Vorjahresanker, Feiertage, Tagesgrenzen -----------------
+
+
+def test_marktbasis_ersetzt_den_grundpreis_und_ist_sichtbar() -> None:
+    """Hostaway „Market-driven base price": der Median der Umgebung ist die
+    Basis. Ohne Marktwert am Tag gilt der Grundpreis — und der Faktor sagt es."""
+    s = _settings(weekend_uplift_pct=0, base_mode="market", min_price=None, max_price=None)
+    mit = compute_day(
+        _BASE, s, DaySignals(day=date(2026, 7, 1), days_before=200, comp_price=150.0)
+    )
+    assert mit.price == 150.0
+    assert mit.factors["marktbasis"] == 1.5
+    ohne = compute_day(_BASE, s, DaySignals(day=date(2026, 7, 1), days_before=200))
+    assert ohne.price == 100.0
+    assert ohne.factors["marktbasis"] == 1.0
+
+
+def test_marktbasis_wirkt_nicht_ohne_den_modus() -> None:
+    s = _settings(weekend_uplift_pct=0, market_enabled=False, min_price=None, max_price=None)
+    r = compute_day(
+        _BASE, s, DaySignals(day=date(2026, 7, 1), days_before=200, comp_price=150.0)
+    )
+    assert r.price == 100.0
+    assert r.factors["marktbasis"] == 1.0
+
+
+def test_vorjahresanker_hebt_nur_an_und_ist_gedeckelt() -> None:
+    """Hostaway „Historical anchoring … always increases the price"."""
+    s = _settings(
+        weekend_uplift_pct=0, anker_enabled=True, anker_max_pct=20.0,
+        min_price=None, max_price=None,
+    )
+    sig = DaySignals(day=date(2026, 7, 1), days_before=200)
+    # Anker ueber dem Preis, innerhalb des Deckels → genau auf den Anker.
+    sig.anker_price = 110.0
+    assert compute_day(_BASE, s, sig).price == 110.0
+    # Anker weit darueber → nur bis zum Deckel (+20 %).
+    sig.anker_price = 200.0
+    r = compute_day(_BASE, s, sig)
+    assert r.price == 120.0
+    assert r.factors["anker"] == 1.2
+    # Anker UNTER dem Preis → nichts passiert (nie nach unten).
+    sig.anker_price = 80.0
+    r = compute_day(_BASE, s, sig)
+    assert r.price == 100.0
+    assert r.factors["anker"] == 1.0
+
+
+def test_vorjahresanker_aus_ist_neutral() -> None:
+    s = _settings(weekend_uplift_pct=0, anker_enabled=False, min_price=None, max_price=None)
+    r = compute_day(
+        _BASE, s, DaySignals(day=date(2026, 7, 1), days_before=200, anker_price=500.0)
+    )
+    assert r.price == 100.0
+
+
+def test_feiertag_und_ferien_stapeln_als_aufschlaege() -> None:
+    s = _settings(
+        weekend_uplift_pct=0, feiertag_uplift_pct=10.0, ferien_uplift_pct=5.0,
+        min_price=None, max_price=None,
+    )
+    r = compute_day(
+        _BASE, s,
+        DaySignals(day=date(2026, 7, 1), days_before=200, ist_feiertag=True, ist_ferien=True),
+    )
+    assert r.price == round(100.0 * 1.10 * 1.05, 2)
+    assert r.factors["feiertag"] == 1.1
+    assert r.factors["ferien"] == 1.05
+    # 0 % = neutral, auch wenn der Tag ein Feiertag ist.
+    s0 = _settings(weekend_uplift_pct=0, min_price=None, max_price=None)
+    r0 = compute_day(
+        _BASE, s0, DaySignals(day=date(2026, 7, 1), days_before=200, ist_feiertag=True)
+    )
+    assert r0.price == 100.0
+
+
+def test_tagesgrenze_schlaegt_die_globale_grenze() -> None:
+    """SiteMinder „Floor and ceiling overrides": die Grenze des Zeitraums
+    gewinnt gegen dp_settings.min/max_price."""
+    s = _settings(weekend_uplift_pct=0, min_price=50.0, max_price=300.0)
+    # Tages-Mindestpreis 120 hebt den 100er an, obwohl global 50 erlaubt waere.
+    r = compute_day(
+        _BASE, s, DaySignals(day=date(2026, 7, 1), days_before=200, min_price_tag=120.0)
+    )
+    assert r.price == 120.0
+    # Tages-Hoechstpreis 90 kappt, obwohl global 300 erlaubt waere.
+    r2 = compute_day(
+        _BASE, s, DaySignals(day=date(2026, 7, 1), days_before=200, max_price_tag=90.0)
+    )
+    assert r2.price == 90.0
+    # Ohne Tagesgrenze gilt weiter die globale.
+    s2 = _settings(weekend_uplift_pct=0, min_price=150.0, max_price=300.0)
+    assert compute_day(_BASE, s2, DaySignals(day=date(2026, 7, 1), days_before=200)).price == 150.0
+
+
+def test_saison_untergrenze_hebt_an_und_kappt_nie() -> None:
+    """0565: der Saisonkalender bestimmt den Mindestpreis — nie die Obergrenze
+    (Anweisung 05.09.2026). Ersetzt am Saisontag die globale Untergrenze."""
+    s = _settings(weekend_uplift_pct=0, min_price=50.0, max_price=300.0, saison_mindestpreis=True)
+    tag = DaySignals(day=date(2026, 7, 1), days_before=200, saison_min_price=130.0)
+    r = compute_day(_BASE, s, tag)
+    assert r.price == 130.0
+    assert r.factors["saison_untergrenze"] == 1.3
+    # Liegt der berechnete Preis ueber dem Saisonpreis, passiert nichts — der
+    # Saisonpreis ist keine Decke.
+    hoch = DaySignals(day=date(2026, 7, 1), days_before=200, saison_min_price=80.0)
+    r2 = compute_day(_BASE, s, hoch)
+    assert r2.price == 100.0
+    assert r2.factors["saison_untergrenze"] == 1.0
+    # Die Obergrenze bleibt die der Einstellungen: Saison 400 wird bei 300 gekappt.
+    r3 = compute_day(
+        _BASE, s, DaySignals(day=date(2026, 7, 1), days_before=200, saison_min_price=400.0)
+    )
+    assert r3.price == 300.0
+    # Regel aus: das Signal wirkt nicht.
+    aus = _settings(weekend_uplift_pct=0, min_price=50.0, max_price=300.0)
+    r4 = compute_day(_BASE, aus, tag)
+    assert r4.price == 100.0
+    assert "saison_untergrenze" not in r4.factors
+    # Kein Saisontag: die globale Untergrenze gilt weiter.
+    s5 = _settings(weekend_uplift_pct=0, min_price=150.0, max_price=300.0, saison_mindestpreis=True)
+    assert compute_day(_BASE, s5, DaySignals(day=date(2026, 7, 1), days_before=200)).price == 150.0

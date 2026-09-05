@@ -353,7 +353,8 @@
     "hrSettings": "Settings",
     "timeClock": "Time Clock",
     "payroll": "Payroll",
-    "staffReports": "HR Reports"
+    "staffReports": "HR Reports",
+    "prices": "Prices & Market"
   },
   "exemption": {
     "labelNamed": "Tax-exempt ({scheme}) — no VAT ID required",
@@ -12411,7 +12412,7 @@
   },
   "analysis": {
     "title": "Evaluation",
-    "subtitle": "Key figures, bookings, occupancy, and channels for a period.",
+    "subtitle": "Key figures, bookings, occupancy, channels, guests, expenses, pace and patterns for a period.",
     "loading": "Calculating …",
     "empty": "No data available for this period.",
     "ownerStay": "Owner usage",
@@ -12425,14 +12426,23 @@
       "buchungen": "Bookings",
       "auslastung": "Occupancy",
       "kanaele": "Channels",
-      "gaeste": "Guests"
+      "gaeste": "Guests",
+      "ausgaben": "Expenses & Extras",
+      "pace": "Pace",
+      "muster": "Patterns",
+      "stornos": "Cancellations"
     },
     "range": {
       "monat": "This month",
       "vormonat": "Previous month",
       "quartal": "Quarter",
       "jahr": "Year",
-      "frei": "Freely chosen"
+      "frei": "Freely chosen",
+      "vorjahr": "Previous year",
+      "letzte30": "Last 30 days",
+      "naechste30": "Next 30 days",
+      "letzte12monate": "Last 12 months",
+      "naechste12monate": "Next 12 months"
     },
     "filter": {
       "range": "Period",
@@ -12443,7 +12453,27 @@
       "allProperties": "All properties",
       "channels": "Channels",
       "allChannels": "All channels",
-      "compare": "Compare"
+      "compare": "Compare",
+      "button": "Filter",
+      "reset": "Reset",
+      "apply": "Apply",
+      "cancel": "Cancel",
+      "clear": "Clear selection",
+      "nSelected": "{count, plural, one {# selected} other {# selected}}",
+      "nProperties": "{count, plural, one {# property} other {# properties}}",
+      "allStatuses": "All statuses",
+      "searchProperties": "Search property ...",
+      "noMatch": "No matches.",
+      "rangeHint": "The quick selection remains dynamic in saved views: \"Previous month\" is always the previous month from today.",
+      "statusHint": "Without selection, all statuses are counted. Canceled bookings are only included in the cancellation rate, not in revenue and nights.",
+      "dim": {
+        "zeitraum": "Period",
+        "bezug": "Assignment",
+        "objekte": "Properties",
+        "kanaele": "Channels",
+        "status": "Status",
+        "vergleich": "Comparison"
+      }
     },
     "basis": {
       "anreise": "By arrival",
@@ -12475,11 +12505,31 @@
       "revenueOverTime": "Revenue trend",
       "shareByChannel": "Revenue share per channel",
       "revenueByProperty": "Revenue per property",
-      "footnote": "Total revenue in period: {total}"
+      "footnote": "Total revenue in period: {total}",
+      "overTime": "{metric} over time",
+      "otherProperties": "{count, plural, one {# more property} other {# more properties}}",
+      "metric": "Metric",
+      "metricValues": {
+        "umsatz": "Revenue",
+        "naechte": "Nights",
+        "buchungen": "Bookings"
+      },
+      "groupBy": "Group",
+      "groupValues": {
+        "keine": "None",
+        "kanal": "Channel",
+        "objekt": "Property"
+      },
+      "type": "Chart",
+      "typeValues": {
+        "linie": "Line",
+        "balken": "Bar"
+      }
     },
     "table": {
       "rowCount": "{count, plural, one {# Booking} other {# Bookings}}",
-      "columns": "Columns"
+      "columns": "Columns",
+      "total": "Total"
     },
     "col": {
       "property": "Property",
@@ -12501,7 +12551,30 @@
       "bookingsShort": "Bookings",
       "net": "Net",
       "share": "Share",
-      "country": "Country"
+      "country": "Country",
+      "month": "Month",
+      "ownerNights": "Owner usage",
+      "accommodation": "Overnight stay",
+      "cleaning": "Cleaning",
+      "otherFees": "Other fees",
+      "addons": "Additional services",
+      "gross": "Guest price",
+      "paymentFee": "Payment fee",
+      "date": "Date",
+      "name": "Description",
+      "category": "Category",
+      "kind": "Type",
+      "amount": "Amount",
+      "receipt": "Receipt",
+      "count": "Quantity",
+      "weekday": "Weekday",
+      "value": "Value",
+      "period": "Period",
+      "checkIn": "Arrival",
+      "checkOut": "Departure",
+      "currency": "Currency",
+      "source": "Source",
+      "reason": "Reason"
     },
     "guests": {
       "total": "Guests",
@@ -12533,7 +12606,146 @@
     "compareCurrencyUnclear": "currency in the comparison period is ambiguous",
     "compareCurrencyMismatchHint": "A different currency was used in the comparison period. A percentage change would be an exchange rate effect and not a business figure.",
     "compareChartCurrencyMismatch": "The comparison period was in a different currency – the previous year's line is therefore not drawn.",
-    "compareLocked": "A comparison is possible for a period of up to one year."
+    "compareLocked": "A comparison is possible for a period of up to one year.",
+    "status": {
+      "pending": "Open",
+      "confirmed": "Confirmed",
+      "checked_in": "Checked in",
+      "checked_out": "Checked out",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "declined": "Declined",
+      "expired": "Expired",
+      "requested": "Requested"
+    },
+    "bookings": {
+      "per": {
+        "buchung": "Per booking",
+        "objekt": "Per property"
+      },
+      "propertyCount": "{count, plural, one {# Property} other {# Properties}}",
+      "showEmpty": "Show properties without bookings",
+      "reconstructed": "Reconstructed from property fees - the portal did not provide a breakdown.",
+      "commissionComputed": "Calculated from the stored commission rate - not reported by the portal.",
+      "withoutBreakdown": "{count, plural, one {# booking without price breakdown — only the total price is shown.} other {# bookings without price breakdown — only the total price is shown.}}",
+      "withoutBreakdownShort": "Without breakdown",
+      "reconstructedCount": "{count, plural, one {# breakdown (*) reconstructed from property fees.} other {# breakdowns (*) reconstructed from property fees.}}"
+    },
+    "occupancy": {
+      "byMonth": "Per month",
+      "propertyCount": "{count, plural, one {# property} other {# properties}}"
+    },
+    "expenses": {
+      "empty": "No billing items in this period.",
+      "emptyHint": "Expenses and extras arise in the owner statement and from ordered services.",
+      "expenses": "Expenses",
+      "extras": "Extras",
+      "balance": "Balance",
+      "balanceHint": "Extras minus expenses",
+      "count": "Items",
+      "byCategory": "By category",
+      "byProperty": "By property",
+      "noCategory": "Without category",
+      "noProperty": "Without property (account)",
+      "rowCount": "{count, plural, one {# item} other {# items}}",
+      "kind": {
+        "ausgabe": "Expense",
+        "extra": "Extra"
+      },
+      "footnote": "Period is the date of the item. Expenses are at the owner's charge, extras in their favor — as they appear in the statement."
+    },
+    "pace": {
+      "title": "Booking status for the next 12 months",
+      "subtitle": "Status {heute} compared to status on {vorjahr} for the same months one year earlier.",
+      "vsLastYear": "compared to previous year's cut-off date",
+      "now": "Booked today",
+      "lastYearSameDay": "Previous year on the same day",
+      "lastYearFinal": "Previous year at the end",
+      "nowNights": "Booked today (nights)",
+      "nowRevenue": "Booked today (revenue)",
+      "lastYearSameDayNights": "Previous year on the same day (nights)",
+      "delta": "Difference",
+      "lastYearFinalNights": "Previous year at the end (nights)",
+      "lastYearFinalRevenue": "Previous year at the end (revenue)",
+      "footnote": "The previous year's cut-off date only counts bookings with a real booking timestamp from the portal.",
+      "withoutTimestamp": "{count, plural, one {# previous year's booking without timestamp is missing from the cut-off value.} other {# previous year's bookings without timestamp are missing from the cut-off value.}}"
+    },
+    "patterns": {
+      "weekday": "Performance per weekday",
+      "weekdayHint": "Occupancy and revenue per weekday. The revenue of a booking is evenly distributed across its nights — portals do not provide a price per night.",
+      "leadTime": "Booking window",
+      "leadTimeHint": "Days between booking and arrival. Only bookings with a real booking timestamp.",
+      "stayLength": "Length of stay",
+      "stayLengthHint": "Distribution of booked nights per stay.",
+      "days": "Days",
+      "nights": "Nights",
+      "daysValue": "{n} days"
+    },
+    "cancellations": {
+      "empty": "No cancellations in this period.",
+      "emptyHint": "{count, plural, one {# valid booking, none cancelled.} other {# valid bookings, none cancelled.}}",
+      "nights": "Cancelled nights",
+      "lostRevenue": "Lost revenue",
+      "lostRevenueHint": "Total price of cancelled bookings — some nights were re-sold.",
+      "leadTime": "Ø Lead time",
+      "leadTimeBase": "{count} of {total} with cancellation date",
+      "byChannel": "By channel",
+      "byLeadTime": "By lead time (days before arrival)",
+      "byReason": "By reason",
+      "noReason": "No reason given",
+      "footnote": "Cancellation rate = cancelled / (valid + cancelled). Lead time only considers bookings with a cancellation date."
+    },
+    "views": {
+      "button": "Views",
+      "title": "Saved views",
+      "empty": "No view saved yet.",
+      "new": "Save current view",
+      "delete": "Delete",
+      "saveTitle": "Save view",
+      "saveHint": "Saves period, filters, columns, and tab settings — for you only.",
+      "namePlaceholder": "e.g. Previous month per property",
+      "save": "Save"
+    },
+    "export": {
+      "button": "Download report",
+      "title": "Format",
+      "csv": "CSV (current table)",
+      "xlsx": "Excel (all tabs)",
+      "pdf": "PDF",
+      "hint": "The export will contain exactly what is shown here — with active filters.",
+      "generated": "Created on {when}",
+      "failed": "Export failed."
+    },
+    "prices": {
+      "title": "Prices & Market",
+      "subtitle": "Where your price stands compared to the competition, what the automatic pricing does with the base price, and how to handle the suggestions.",
+      "property": "Property",
+      "noProperties": "No property with Dynamic Pricing. Turn on the automatic pricing under \"Dynamic Pricing\" - the report will then appear here.",
+      "distance": "Avg. distance to market",
+      "distanceHint": "{n} key dates with own price",
+      "position": "Position of key dates",
+      "below": "below market",
+      "at": "at market",
+      "above": "above market",
+      "uplift": "Automatic vs. base price",
+      "upliftHint": "{days} days in horizon · Base price {base}",
+      "noBase": "No base price set",
+      "range": "Price range",
+      "rangeHint": "Avg. {avg}",
+      "ki": "Rule advisor",
+      "kiHint": "{accepted} accepted · {rejected} rejected (90 days)",
+      "kiTotal": "total {accepted} / {rejected}",
+      "chart": "Price vs. competition per key date",
+      "chartHint": "Band = middle range of competition (25th–75th percentile), line = median. Your price dashed, base price gray.",
+      "market": "Competition (median)",
+      "mid": "Middle range",
+      "own": "Your price",
+      "base": "Base price",
+      "table": "Key dates",
+      "offers": "Offers",
+      "footnote": "Observed area approx. {km} km · Key dates of daily market observation · last retrieved by us {when}.",
+      "loading": "Report is being calculated …"
+    }
   },
   "tasks": {
     "fehler": {

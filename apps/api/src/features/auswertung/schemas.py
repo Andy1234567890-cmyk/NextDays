@@ -150,12 +150,29 @@ class ObjektZeile(BaseModel):
     # es etwas Drittes ist: weder belegt noch verkaufbar. Ohne sie
     # verschwänden diese Tage unerklärt aus dem Nenner.
     naechte_stop_sell: int = 0
+    # Nächte, die der Eigentümer selbst belegt hat (Hostaway „Owner-stay
+    # nights"). Sie zählen als belegt, tragen aber keinen Umsatz — ohne diese
+    # Spalte sähe ein Haus mit 30 % Eigennutzung aus wie eines, das schlecht
+    # verkauft.
+    naechte_eigennutzung: int = 0
     auslastung_pct: float | None = None
     anreisen: int = 0
     umsatz: float = 0.0
     adr: float | None = None
     revpar: float | None = None
     stornos: int = 0
+
+
+class ObjektMonatZeile(ObjektZeile):
+    """Eine Zeile je Objekt UND Monat (Hostaway „By month" im Occupancy Report).
+
+    Dieselben Spalten wie `ObjektZeile`, zusätzlich der Monat („YYYY-MM").
+    Die Monatszeilen eines Objekts summieren sich zur Objektzeile — dieselbe
+    Rechnung, nur feiner geschnitten; eine eigene Logik wäre eine zweite
+    Wahrheit.
+    """
+
+    monat: str
 
 
 class BuchungZeile(BaseModel):
@@ -178,6 +195,176 @@ class BuchungZeile(BaseModel):
     # Fehlt er (CSV-Import, Lodgify-Migration, manuell), bleibt er leer.
     booked_at: str | None = None
     is_owner_stay: bool = False
+    # ---- Finanzfelder (Hostaway „Rental Activity": Base rate, Guest fees,
+    # Tax, Rental revenue, Owner payout) ----
+    #
+    # Quelle ist die gespeicherte Portal-Zerlegung (`reservation_portal_finanzen`
+    # + `reservation_portal_gebuehren`, 0366) und die Zusatzleistungen
+    # (`reservation_addons`). Fehlt die Zerlegung, bleiben die Felder `None` —
+    # der Gesamtpreis `umsatz` steht trotzdem da. NIE wird der Grundpreis aus
+    # dem Gesamtpreis „zurückgerechnet" (Wurzel 4).
+    uebernachtung: float | None = None
+    reinigung: float | None = None
+    # Alle übrigen Gebührenposten des Portals (Bettwäsche, Strom, Kurtaxe, …)
+    # als Summe; die Einzelposten stehen in `gebuehren_je_art`.
+    sonstige_gebuehren: float | None = None
+    gebuehren_je_art: dict[str, float] = Field(default_factory=dict)
+    # Gebuchte Zusatzleistungen (nicht Teil des Portal-Gastpreises).
+    zusatzleistungen: float | None = None
+    # Der Gastpreis laut Portal (Übernachtung + Gebühren).
+    brutto: float | None = None
+    # `True`, wenn das Portal die Provision GEMELDET hat; `False`, wenn sie aus
+    # dem hinterlegten Satz errechnet ist. Ohne diese Kennzeichnung sähe eine
+    # Rekonstruktion aus wie ein Beleg (Wurzel 5b).
+    provision_gemeldet: bool | None = None
+    zahlungsgebuehr: float | None = None
+    # Brutto − Provision − Zahlungsgebühr: was nach dem Portal beim Betrieb
+    # ankommt. Nicht die Eigentümer-Auszahlung — die hängt am
+    # Abrechnungsvertrag und steht in der Eigentümer-Abrechnung.
+    netto: float | None = None
+    # 'ota' = Aufstellung des Portals, 'stammdaten' = aus den Objekt-Gebühren
+    # rekonstruiert (begründete Schätzung, so gekennzeichnet).
+    finanz_quelle: str | None = None
+    # Storno-Daten, nur bei stornierten Buchungen gesetzt.
+    cancelled_at: str | None = None
+    cancel_reason: str | None = None
+
+
+class ObjektFinanzZeile(BaseModel):
+    """Finanzfelder je Objekt summiert (Hostaway „Per listing")."""
+
+    property_id: str
+    title: str
+    buchungen: int = 0
+    naechte: int = 0
+    umsatz: float = 0.0
+    uebernachtung: float | None = None
+    reinigung: float | None = None
+    sonstige_gebuehren: float | None = None
+    zusatzleistungen: float | None = None
+    brutto: float | None = None
+    provision: float | None = None
+    zahlungsgebuehr: float | None = None
+    netto: float | None = None
+    # Wie viele Buchungen dieses Objekts KEINE Zerlegung tragen. Steht sie über
+    # 0, sind die Summen unvollständig — und das gehört daneben.
+    ohne_zerlegung: int = 0
+
+
+class WochentagZeile(BaseModel):
+    """Leistung je Wochentag (SiteMinder „Day of week performance").
+
+    `wochentag` 0 = Montag … 6 = Sonntag (ISO). Umsatz und ADR je Wochentag
+    verteilen den Buchungsbetrag GLEICHMÄSSIG auf die Nächte der Buchung — die
+    Portale liefern keinen Preis je Nacht. Das steht in der Oberfläche dran.
+    """
+
+    wochentag: int
+    naechte_buchbar: int = 0
+    naechte_gebucht: int = 0
+    auslastung_pct: float | None = None
+    anreisen: int = 0
+    umsatz: float = 0.0
+    adr: float | None = None
+
+
+class VerteilungZeile(BaseModel):
+    """Ein Eimer einer Verteilung (Buchungsfenster, Aufenthaltsdauer)."""
+
+    schluessel: str
+    von: int
+    # `None` = offen nach oben („91+ Tage").
+    bis: int | None = None
+    buchungen: int = 0
+    naechte: int = 0
+    umsatz: float = 0.0
+    anteil_pct: float = 0.0
+
+
+class StornoKanalZeile(BaseModel):
+    """Stornierungen je Kanal."""
+
+    channel: str
+    ota_name: str | None = None
+    stornos: int = 0
+    naechte: int = 0
+    # Der Umsatz, der mit den Stornos wegfiel (Gesamtpreis der stornierten
+    # Buchungen). Kein „Verlust": ein Teil der Nächte wurde neu verkauft.
+    umsatz_entgangen: float = 0.0
+    # Ø Tage zwischen Storno und geplanter Anreise — nur wo `cancelled_at`
+    # vorliegt.
+    vorlauf_tage: float | None = None
+    stornoquote_pct: float | None = None
+
+
+class StornoGrundZeile(BaseModel):
+    grund: str | None = None
+    anzahl: int = 0
+
+
+class StornoBericht(BaseModel):
+    """Der Storno-Bericht — Kanal, Vorlauf, Grund."""
+
+    stornos: int = 0
+    naechte: int = 0
+    umsatz_entgangen: float = 0.0
+    stornoquote_pct: float | None = None
+    vorlauf_tage: float | None = None
+    # Wie viele Stornos ein `cancelled_at` tragen — die Grundlage des Vorlaufs.
+    mit_zeitpunkt: int = 0
+    kanaele: list[StornoKanalZeile] = Field(default_factory=list)
+    gruende: list[StornoGrundZeile] = Field(default_factory=list)
+    # Stornos je Vorlauf-Eimer (Tage vor Anreise).
+    vorlauf: list[VerteilungZeile] = Field(default_factory=list)
+
+
+class AusgabePosten(BaseModel):
+    """Ein Verrechnungsposten (`owner_expenses`) im Zeitraum."""
+
+    id: str
+    date: str
+    name: str
+    kategorie: str | None = None
+    property_id: str | None = None
+    property_title: str | None = None
+    reservation_id: str | None = None
+    # 'ausgabe' (zulasten des Eigentümers, `from_owner`) oder 'extra'
+    # (zugunsten, `to_owner`) — Hostaways Aufteilung „Ausgaben = negative
+    # Werte, Extras = positive Werte".
+    art: str
+    betrag: float
+    currency: str | None = None
+    hat_beleg: bool = False
+
+
+class AusgabeGruppe(BaseModel):
+    """Summe je Kategorie oder je Objekt."""
+
+    schluessel: str | None = None
+    title: str | None = None
+    anzahl: int = 0
+    ausgaben: float = 0.0
+    extras: float = 0.0
+    saldo: float = 0.0
+
+
+class AusgabenBericht(BaseModel):
+    """Hostaways „Expenses & Extras" — aus den Verrechnungsposten der
+    Eigentümer-Abrechnung, nach Datum des Postens im Zeitraum.
+
+    `currency` ist gesetzt, wenn ALLE Posten dieselbe Währung tragen; sonst
+    `None`, und die Oberfläche addiert nicht (Wurzel 4).
+    """
+
+    currency: str | None = None
+    waehrungen: list[str] = Field(default_factory=list)
+    anzahl: int = 0
+    ausgaben: float = 0.0
+    extras: float = 0.0
+    saldo: float = 0.0
+    kategorien: list[AusgabeGruppe] = Field(default_factory=list)
+    objekte: list[AusgabeGruppe] = Field(default_factory=list)
+    posten: list[AusgabePosten] = Field(default_factory=list)
 
 
 class HerkunftZeile(BaseModel):
@@ -243,6 +430,10 @@ class VergleichBericht(BaseModel):
     # Wie viele Buchungen der Vorzeitraum hatte (die Summenzeile des
     # Buchungen-Reiters). Die Liste selbst fehlt bewusst, siehe oben.
     buchungen_gesamt: int = 0
+    wochentage: list[WochentagZeile] = Field(default_factory=list)
+    buchungsfenster: list[VerteilungZeile] = Field(default_factory=list)
+    aufenthaltsdauer: list[VerteilungZeile] = Field(default_factory=list)
+    stornos: StornoBericht = Field(default_factory=StornoBericht)
 
 
 class AuswertungResponse(BaseModel):
@@ -266,11 +457,72 @@ class AuswertungResponse(BaseModel):
     kanaele: list[KanalZeile] = Field(default_factory=list)
     objekte: list[ObjektZeile] = Field(default_factory=list)
     buchungen: list[BuchungZeile] = Field(default_factory=list)
+    # Finanzfelder je Objekt summiert — Hostaways Umschalter „Per listing".
+    objekte_finanzen: list[ObjektFinanzZeile] = Field(default_factory=list)
+    # Auslastung je Objekt und Monat — Hostaways „By month".
+    objekte_monatlich: list[ObjektMonatZeile] = Field(default_factory=list)
     gaeste: GaesteBericht = Field(default_factory=GaesteBericht)
+    # Muster: Wochentag, Buchungsfenster, Aufenthaltsdauer.
+    wochentage: list[WochentagZeile] = Field(default_factory=list)
+    buchungsfenster: list[VerteilungZeile] = Field(default_factory=list)
+    aufenthaltsdauer: list[VerteilungZeile] = Field(default_factory=list)
+    stornos: StornoBericht = Field(default_factory=StornoBericht)
+    ausgaben: AusgabenBericht = Field(default_factory=AusgabenBericht)
+    # Zeitreihe je Kanal bzw. je Objekt (Hostaway „Gruppieren nach").
+    verlauf_je_kanal: dict[str, list[Punkt]] = Field(default_factory=dict)
+    verlauf_je_objekt: dict[str, list[Punkt]] = Field(default_factory=dict)
     # Der Vorzeitraum, wenn einer angefordert wurde. `None` bei
     # `Vergleich.KEINER` — ein leerer Bericht wäre etwas anderes als keiner
     # (er behauptete „Vorjahr: alles null").
     vorher: VergleichBericht | None = None
+
+
+class PaceMonat(BaseModel):
+    """Ein künftiger Monat im Pace-Bericht (SiteMinder „Pace").
+
+    `jetzt_*` ist der heutige Buchungsstand (On the Books) für diesen Monat.
+    `vorjahr_stichtag_*` ist, was für denselben Monat vor einem Jahr am
+    gleichen Kalendertag bereits gebucht WAR — nur Buchungen mit echtem
+    `booked_at`, sonst ließe sich der Stichtag nicht bestimmen (Wurzel 5b).
+    `vorjahr_ende_*` ist, was der Monat am Ende tatsächlich brachte.
+    """
+
+    monat: str
+    jetzt_naechte: int = 0
+    jetzt_buchungen: int = 0
+    jetzt_umsatz: float = 0.0
+    vorjahr_stichtag_naechte: int = 0
+    vorjahr_stichtag_buchungen: int = 0
+    vorjahr_stichtag_umsatz: float = 0.0
+    vorjahr_ende_naechte: int = 0
+    vorjahr_ende_umsatz: float = 0.0
+    # Abstand des heutigen Standes zum Vorjahres-Stichtag, in Nächten.
+    delta_naechte_pct: float | None = None
+
+
+class PaceBericht(BaseModel):
+    stichtag: str
+    currency: str | None = None
+    waehrungen: list[str] = Field(default_factory=list)
+    monate: list[PaceMonat] = Field(default_factory=list)
+    # Vorjahresbuchungen OHNE `booked_at` — sie fehlen im Stichtags-Vergleich
+    # und stehen deshalb als Zahl daneben, statt still zu fehlen.
+    vorjahr_ohne_zeitstempel: int = 0
+
+
+class AnsichtAnlegen(BaseModel):
+    """Eine gespeicherte Ansicht (Hostaway „Custom View")."""
+
+    name: str = Field(min_length=1, max_length=80)
+    reiter: str = Field(min_length=1, max_length=40)
+    filter: dict = Field(default_factory=dict)
+    spalten: list[str] = Field(default_factory=list, max_length=60)
+    optionen: dict = Field(default_factory=dict)
+
+
+class Ansicht(AnsichtAnlegen):
+    id: str
+    created_at: str | None = None
 
 
 class SliceHealth(BaseModel):

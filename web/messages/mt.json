@@ -353,7 +353,8 @@
     "hrSettings": "Settings",
     "timeClock": "Arloġġ tal-ħin",
     "payroll": "Paga",
-    "staffReports": "Rapporti tal-persunal"
+    "staffReports": "Rapporti tal-persunal",
+    "prices": "Prezzijiet u Suq"
   },
   "exemption": {
     "labelNamed": "Eżenti mit-taxxa ({scheme}) — l-ebda VAT meħtieġa",
@@ -12390,7 +12391,7 @@
   },
   "analysis": {
     "title": "Analiżi",
-    "subtitle": "Metriċi, prenotazzjonijiet, okkupanza u kanali għal perjodu.",
+    "subtitle": "Metriċi, prenotazzjonijiet, okkupanza, kanali, mistednin, spejjeż, ritmu u mudelli għal perjodu.",
     "loading": "Qed jiġi kkalkulat…",
     "empty": "M'hemmx data għal dan il-perjodu.",
     "ownerStay": "Użu personali",
@@ -12404,14 +12405,23 @@
       "buchungen": "Prenotazzjonijiet",
       "auslastung": "Okkupanza",
       "kanaele": "Kanali",
-      "gaeste": "Mistednin"
+      "gaeste": "Mistednin",
+      "ausgaben": "Spejjeż u Ekstras",
+      "pace": "Ritmu",
+      "muster": "Mudelli",
+      "stornos": "Kanċellazzjonijiet"
     },
     "range": {
       "monat": "Dan ix-xahar",
       "vormonat": "Xahar ta' qabel",
       "quartal": "Kwart",
       "jahr": "Sena",
-      "frei": "Mhux speċifikat"
+      "frei": "Mhux speċifikat",
+      "vorjahr": "Sena li għaddiet",
+      "letzte30": "L-aħħar 30 jum",
+      "naechste30": "It-30 jum li jmiss",
+      "letzte12monate": "L-aħħar 12-il xahar",
+      "naechste12monate": "It-12-il xahar li jmiss"
     },
     "filter": {
       "range": "Perjodu",
@@ -12422,7 +12432,27 @@
       "allProperties": "L-oġġetti kollha",
       "channels": "Kanali",
       "allChannels": "Il-kanali kollha",
-      "compare": "Qabbel"
+      "compare": "Qabbel",
+      "button": "Filtru",
+      "reset": "Irrisettja",
+      "apply": "Applika",
+      "cancel": "Ikkanċella",
+      "clear": "Żvojta l-għażla",
+      "nSelected": "{count, plural, one {# magħżula} other {# magħżula}}",
+      "nProperties": "{count, plural, one {# proprjetà} other {# proprjetajiet}}",
+      "allStatuses": "L-istatusijiet kollha",
+      "searchProperties": "Fittex proprjetà …",
+      "noMatch": "Ebda riżultat.",
+      "rangeHint": "L-għażla ta' malajr tibqa' dinamika fil-veduti ssejvjati: \"Xahar li għadda\" dejjem ikun ix-xahar ta' qabel illum.",
+      "statusHint": "Mingħajr għażla, l-istatusijiet kollha jingħaddu. Il-prenotazzjonijiet ikkanċellati jgħoddu biss għar-rata ta' kanċellazzjoni, mhux għad-dħul u l-iljieli.",
+      "dim": {
+        "zeitraum": "Perjodu",
+        "bezug": "Assenjazzjoni",
+        "objekte": "Proprjetajiet",
+        "kanaele": "Kanali",
+        "status": "Status",
+        "vergleich": "Paragun"
+      }
     },
     "basis": {
       "anreise": "Skont il-wasla",
@@ -12454,11 +12484,31 @@
       "revenueOverTime": "Xejra tad-dħul",
       "shareByChannel": "Sehem tad-dħul skont il-kanal",
       "revenueByProperty": "Dħul għal kull proprjetà",
-      "footnote": "Dħul totali fil-perjodu: {total}"
+      "footnote": "Dħul totali fil-perjodu: {total}",
+      "overTime": "{metric} matul iż-żmien",
+      "otherProperties": "{count, plural, one {# proprjetà oħra} other {# proprjetajiet oħra}}",
+      "metric": "Metrika",
+      "metricValues": {
+        "umsatz": "Dħul",
+        "naechte": "Iljieli",
+        "buchungen": "Prenotazzjonijiet"
+      },
+      "groupBy": "Iggruppa",
+      "groupValues": {
+        "keine": "Ebda",
+        "kanal": "Kanal",
+        "objekt": "Proprjetà"
+      },
+      "type": "Ċart",
+      "typeValues": {
+        "linie": "Linja",
+        "balken": "Barra"
+      }
     },
     "table": {
       "rowCount": "{count, plural, one {# Prenotazzjoni} other {# Prenotazzjonijiet}}",
-      "columns": "Kolonni"
+      "columns": "Kolonni",
+      "total": "Ammont"
     },
     "col": {
       "property": "Proprjetà",
@@ -12480,7 +12530,30 @@
       "bookingsShort": "Prenotazzjonijiet",
       "net": "Nett",
       "share": "Sehem",
-      "country": "Pajjiż"
+      "country": "Pajjiż",
+      "month": "Xahar",
+      "ownerNights": "Użu mill-proprjetarju",
+      "accommodation": "Lejl",
+      "cleaning": "Tindif",
+      "otherFees": "Ħlasijiet oħra",
+      "addons": "Servizzi addizzjonali",
+      "gross": "Prezz tal-klijent",
+      "paymentFee": "Ħlas tal-pagament",
+      "date": "Data",
+      "name": "Deskrizzjoni",
+      "category": "Kategorija",
+      "kind": "Tip",
+      "amount": "Ammont",
+      "receipt": "Irċevuta",
+      "count": "Kwantità",
+      "weekday": "Jum tal-ġimgħa",
+      "value": "Valur",
+      "period": "Perjodu",
+      "checkIn": "Check-in",
+      "checkOut": "Check-out",
+      "currency": "Munita",
+      "source": "Sors",
+      "reason": "Raġuni"
     },
     "guests": {
       "total": "Mistednin",
@@ -12512,7 +12585,146 @@
     "compareCurrencyUnclear": "Munita mhux ambigwa fil-perjodu ta' paragun",
     "compareCurrencyMismatchHint": "Fil-perjodu ta' paragun, kienet applikata munita differenti. Bidla fil-persentaġġ tkun effett tar-rata tal-kambju u mhux figura kummerċjali.",
     "compareChartCurrencyMismatch": "Il-perjodu ta' paragun kien f'munita differenti – il-linja tas-sena preċedenti għalhekk ma tinġibidx.",
-    "compareLocked": "Paragun huwa possibbli sa perjodu ta' sena."
+    "compareLocked": "Paragun huwa possibbli sa perjodu ta' sena.",
+    "status": {
+      "pending": "Miftuħa",
+      "confirmed": "Ikkonfermata",
+      "checked_in": "Check-in",
+      "checked_out": "Check-out",
+      "completed": "Magħluqa",
+      "cancelled": "Ikkanċellata",
+      "declined": "Rifjutata",
+      "expired": "Skaduta",
+      "requested": "Mitolba"
+    },
+    "bookings": {
+      "per": {
+        "buchung": "Għal kull prenotazzjoni",
+        "objekt": "Għal kull proprjetà"
+      },
+      "propertyCount": "{count, plural, one {# Proprjetà} other {# Proprjetajiet}}",
+      "showEmpty": "Uri proprjetajiet mingħajr prenotazzjonijiet",
+      "reconstructed": "Rikostruwit mill-miżati tal-proprjetà — il-portal ma pprovdax rendikont.",
+      "commissionComputed": "Ikkalkulat mir-rata ta' kummissjoni maħżuna — mhux irrappurtat mill-portal.",
+      "withoutBreakdown": "{count, plural, one {# prenotazzjoni mingħajr speċifikazzjoni tal-prezz — hemm biss il-prezz totali.} other {# prenotazzjonijiet mingħajr speċifikazzjoni tal-prezz — hemm biss il-prezz totali.}}",
+      "withoutBreakdownShort": "Mingħajr speċifikazzjoni",
+      "reconstructedCount": "{count, plural, one {# speċifikazzjoni (*) rikostruwita mill-miżati tal-proprjetà.} other {# speċifikazzjonijiet (*) rikostruwiti mill-miżati tal-proprjetà.}}"
+    },
+    "occupancy": {
+      "byMonth": "Kull xahar",
+      "propertyCount": "{count, plural, one {# proprjetà} other {# proprjetajiet}}"
+    },
+    "expenses": {
+      "empty": "L-ebda oġġetti ta' kontabilità f'dan il-perjodu.",
+      "emptyHint": "L-ispejjeż u l-ekstras jinqalgħu fil-kont tal-proprjetarju u minn servizzi ordnati.",
+      "expenses": "Spejjeż",
+      "extras": "Ekstras",
+      "balance": "Bilanċ",
+      "balanceHint": "Ekstras nieqes spejjeż",
+      "count": "Oġġetti",
+      "byCategory": "Skont il-kategorija",
+      "byProperty": "Skont il-proprjetà",
+      "noCategory": "Mingħajr kategorija",
+      "noProperty": "Mingħajr proprjetà (kont)",
+      "rowCount": "{count, plural, one {# oġġett} other {# oġġetti}}",
+      "kind": {
+        "ausgabe": "Spiża",
+        "extra": "Extra"
+      },
+      "footnote": "Il-perjodu huwa d-data tal-oġġett. L-ispejjeż huma għad-detriment tal-proprjetarju, l-ekstras huma għall-benefiċċju tiegħu — kif jidhru fil-kont."
+    },
+    "pace": {
+      "title": "Status tal-prenotazzjonijiet għat-12-il xahar li ġejjin",
+      "subtitle": "Status illum ({heute}) meta mqabbel mal-istatus fl-{vorjahr} għall-istess xhur sena qabel.",
+      "vsLastYear": "meta mqabbel mad-data ta' referenza tas-sena preċedenti",
+      "now": "Ibbukkjat illum",
+      "lastYearSameDay": "Sena preċedenti fl-istess jum",
+      "lastYearFinal": "Sena preċedenti fl-aħħar",
+      "nowNights": "Ibbukkjat illum (iljieli)",
+      "nowRevenue": "Ibbukkjat illum (dħul)",
+      "lastYearSameDayNights": "Sena preċedenti fl-istess jum (iljieli)",
+      "delta": "Differenza",
+      "lastYearFinalNights": "Sena preċedenti fl-aħħar (iljieli)",
+      "lastYearFinalRevenue": "Sena preċedenti fl-aħħar (dħul)",
+      "footnote": "Id-data ta' referenza tas-sena preċedenti tqis biss prenotazzjonijiet b'ħin ta' prenotazzjoni reali mill-portal.",
+      "withoutTimestamp": "{count, plural, one {# prenotazzjoni tas-sena preċedenti mingħajr timestamp hija nieqsa mill-valur tad-data ta' referenza.} other {# prenotazzjonijiet tas-sena preċedenti mingħajr timestamp huma nieqsa mill-valur tad-data ta' referenza.}}"
+    },
+    "patterns": {
+      "weekday": "Prestazzjoni skont il-jum tal-ġimgħa",
+      "weekdayHint": "Okkupanza u dħul skont il-jum tal-ġimgħa. Id-dħul ta' prenotazzjoni huwa mqassam b'mod uniformi fuq l-iljieli tagħha — il-portali ma jipprovdux prezz għal kull lejl.",
+      "leadTime": "Tieqa tal-prenotazzjoni",
+      "leadTimeHint": "Jiem bejn il-prenotazzjoni u l-wasla. Prenotazzjonijiet b'ħin ta' prenotazzjoni reali biss.",
+      "stayLength": "Tul ta' żmien tal-waqfa",
+      "stayLengthHint": "Distribuzzjoni tal-iljieli bbukkjati għal kull waqfa.",
+      "days": "Jiem",
+      "nights": "Iljieli",
+      "daysValue": "{n} jiem"
+    },
+    "cancellations": {
+      "empty": "Ebda kanċellazzjoni f'dan il-perjodu.",
+      "emptyHint": "{count, plural, one {# prenotazzjoni valida, ebda waħda kkanċellata.} other {# prenotazzjonijiet validi, ebda waħda kkanċellata.}}",
+      "nights": "Iljieli kkanċellati",
+      "lostRevenue": "Dħul mitluf",
+      "lostRevenueHint": "Prezz totali tal-prenotazzjonijiet ikkanċellati — parti mill-iljieli reġgħu nbiegħu.",
+      "leadTime": "Ħin medju ta' avviż",
+      "leadTimeBase": "{count} minn {total} bil-ħin tal-kanċellazzjoni",
+      "byChannel": "Skont il-kanal",
+      "byLeadTime": "Skont il-ħin ta' avviż (jiem qabel il-wasla)",
+      "byReason": "Skont ir-raġuni",
+      "noReason": "Ebda raġuni speċifikata",
+      "footnote": "Rata ta' kanċellazzjoni = ikkanċellati / (validi + ikkanċellati). Il-ħin ta' avviż jinkludi biss prenotazzjonijiet b'ħin ta' kanċellazzjoni."
+    },
+    "views": {
+      "button": "Veduti",
+      "title": "Veduti ssejvjati",
+      "empty": "Għadha ma ġiet issejvjata l-ebda veduta.",
+      "new": "Issejvja l-veduta attwali",
+      "delete": "Ħassar",
+      "saveTitle": "Issejvja l-veduta",
+      "saveHint": "Issejvja l-perjodu, il-filtri, il-kolonni u s-settings tat-tab — għalik biss.",
+      "namePlaceholder": "eż. Xahar ta' qabel għal kull proprjetà",
+      "save": "Issejvja"
+    },
+    "export": {
+      "button": "Niżżel ir-rapport",
+      "title": "Format",
+      "csv": "CSV (tabella attwali)",
+      "xlsx": "Excel (it-tabelli kollha tat-tab)",
+      "pdf": "PDF",
+      "hint": "Jiġi esportat eżatt dak li jidher hawn — bil-filtri attivi.",
+      "generated": "Maħluq fi {when}",
+      "failed": "Esportazzjoni falliet."
+    },
+    "prices": {
+      "title": "Prezzijiet u Suq",
+      "subtitle": "Fejn il-prezz tiegħek jinsab meta mqabbel mal-madwar, x'jagħmel l-awtomatiku mill-prezz bażi u kif timmaniġġja s-suġġerimenti.",
+      "property": "Proprjetà",
+      "noProperties": "L-ebda proprjetà bi prezzijiet dinamiċi. Ixgħel l-awtomatiku taħt \"Prezzijiet Dinamiċi\" – imbagħad jidher ir-rapport hawn.",
+      "distance": "Distanza medja mis-suq",
+      "distanceHint": "{n} dati ewlenin bi prezz proprju",
+      "position": "Pożizzjoni tad-dati ewlenin",
+      "below": "taħt is-suq",
+      "at": "fis-suq",
+      "above": "fuq is-suq",
+      "uplift": "Awtomatiku kontra prezz bażi",
+      "upliftHint": "{days} ijiem fl-orizzont · Prezz bażi {base}",
+      "noBase": "L-ebda prezz bażi ma ġie ssettjat",
+      "range": "Firxa tal-prezzijiet",
+      "rangeHint": "Medja {avg}",
+      "ki": "Konsulent tar-regoli",
+      "kiHint": "{accepted} aċċettati · {rejected} miċħuda (90 jum)",
+      "kiTotal": "total {accepted} / {rejected}",
+      "chart": "Prezz kontra l-madwar għal kull data ewlenija",
+      "chartHint": "Medda = medda tan-nofs tal-madwar (25-75 perċentil), Linja = Medjan. Il-prezz tiegħek bit-tikek, prezz bażi bil-griż.",
+      "market": "Madwar (Medjan)",
+      "mid": "Medda tan-nofs",
+      "own": "Il-prezz tiegħek",
+      "base": "Prezz bażi",
+      "table": "Dati ewlenin",
+      "offers": "Offerti",
+      "footnote": "Żona osservata madwar {km} km · Dati ewlenin tal-osservazzjoni tas-suq ta' kuljum · l-aħħar aċċessata minna {when}.",
+      "loading": "Ir-rapport qed jiġi kkalkulat..."
+    }
   },
   "tasks": {
     "fehler": {

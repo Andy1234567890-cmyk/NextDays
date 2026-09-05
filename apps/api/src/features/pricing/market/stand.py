@@ -19,6 +19,7 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.supabase import fetch_all_rows
+from src.jobs.queue import enqueue
 
 from ..ki_schemas import MarktAngebot, MarktPunkt, MarktStand
 from .beobachtung import _MIN_OBJEKTE, _ZELLE_GRAD, Zelle
@@ -47,6 +48,20 @@ _ZELLE_KM = round(_ZELLE_GRAD * 111.0)
 # die Antwort auf Megabytes treiben und die Karte traege machen. Greift er,
 # bleiben die dem Objekt NAECHSTEN Punkte — sie sind der relevantere Wettbewerb.
 _MAX_ANGEBOTE_JE_TAG = 300
+
+
+def _lauf_nachholen(db: Client, heute: date) -> None:
+    """Die Marktbeobachtung ausserplanmaessig einreihen — hoechstens einmal je
+    Tag (Dedup-Key), betriebsuebergreifend wie der Tagestakt. Best-effort:
+    scheitert das Einreihen, bleibt die Auskunft trotzdem stehen."""
+    try:
+        enqueue(
+            db, "markt_beobachtung",
+            payload={},
+            dedup_key=f"markt_beobachtung:nachholen:{heute.isoformat()}",
+        )
+    except Exception as exc:  # noqa: BLE001 — Auskunft darf nicht kippen
+        log.warning("markt_beobachtung_nachholen_fehlgeschlagen", error=str(exc)[:200])
 
 
 def marktstand_bauen(
@@ -78,6 +93,12 @@ def marktstand_bauen(
     heute = date.today()
     zeilen = _raster(db, zelle, waehrung, heute, heute + timedelta(days=_KURVE_TAGE))
     if not zeilen:
+        # Leere Zelle heisst nicht „warten bis morgen": der Lauf wird JETZT
+        # eingereiht (Dedup je Tag), der Worker fuellt das Raster in Minuten.
+        # Live am 05.09.2026: Migration 0559 hatte die Zeilen des Vortags
+        # geloescht, und die Karte zeigte bis zum naechsten Tagestakt genau
+        # den Hinweistext, den der Nutzer ausdruecklich abgelehnt hatte.
+        _lauf_nachholen(db, heute)
         return MarktStand(
             property_id=property_id,
             mindestens_noetig=_MIN_OBJEKTE,
@@ -86,9 +107,8 @@ def marktstand_bauen(
             lat=lat,
             lng=lng,
             hinweis=(
-                "Für diese Region liegen noch keine Marktdaten vor. Die "
-                "Beobachtung läuft einmal täglich; nach dem nächsten Lauf "
-                "steht hier das Preisniveau der Umgebung."
+                "Die Marktdaten dieser Region werden gerade abgerufen — in "
+                "wenigen Minuten steht hier das Preisniveau der Umgebung."
             ),
         )
 

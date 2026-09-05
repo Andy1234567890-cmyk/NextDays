@@ -55,7 +55,9 @@ export type OccupancyStep = {
   adjust_pct: number;
 };
 
-export type BaseMode = "data_driven" | "manual";
+// data_driven = Grundpreis des Ratenplans, market = Median der Umgebung je Tag
+// (Hostaway „Market-driven base price"), manual = Handwert.
+export type BaseMode = "data_driven" | "market" | "manual";
 export type BaseRateMode = "conservative" | "recommended" | "aggressive";
 
 export type DpSettings = {
@@ -90,9 +92,29 @@ export type DpSettings = {
   freigabe_noetig: boolean;
   // Aufschlag für lange Vorausbuchung. Leer = kein Aufschlag.
   far_future: FarFutureRule[];
+  // 0562 — Freigabe nur für Tage mit Vorlauf <= X; null = alle Tage.
+  freigabe_ab_tagen: number | null;
+  // 0562 — Vorjahresanker (hebt an, nie ab), gedeckelt.
+  anker_enabled: boolean;
+  anker_max_pct: number;
+  // 0565 — Saisonpreis des Saisonkalenders als Untergrenze, nie Obergrenze.
+  saison_mindestpreis: boolean;
+  // Nur lesend: hat das Objekt einen Saisonkalender? Sonst ist die Regel gesperrt.
+  saison_verfuegbar: boolean;
+  // 0562 — DP wirkt nur auf diesen Ratenplan; null = alle.
+  rate_plan_id: string | null;
+  // 0562 — Feiertage/Schulferien aus dem Feed; 0 = aus. Quellmärkte ISO-2.
+  feiertag_uplift_pct: number;
+  ferien_uplift_pct: number;
+  quellmaerkte: string[];
+  // Deckel des Auslastungs-/Pickup-Faktors (bisher nur per DB änderbar).
+  occupancy_discount_cap_pct: number;
+  occupancy_premium_cap_pct: number;
 };
 
-export type DpSettingsInput = Partial<Omit<DpSettings, "property_id">>;
+export type DpSettingsInput = Partial<
+  Omit<DpSettings, "property_id" | "saison_verfuegbar">
+>;
 
 /** Eine Zeile der Dynamic-Pricing-Objekt-Übersicht (Hostaway-Tabelle). */
 export type DpOverviewItem = {
@@ -119,7 +141,7 @@ type Result<T> =
 
 async function call<T>(
   path: string,
-  opts: { method?: "GET" | "PUT" | "POST"; body?: unknown } = {},
+  opts: { method?: "GET" | "PUT" | "POST" | "DELETE"; body?: unknown } = {},
 ): Promise<Result<T>> {
   const token = await currentToken();
   if (!token) return { ok: false, error: "Nicht angemeldet." };
@@ -234,7 +256,11 @@ export type TagesmodusEintrag = {
 export type FreigabeStand = {
   property_id: string;
   freigabe_noetig: boolean;
+  /** Ungestempelte Tage im Sende-Fenster. Mit Freigabepflicht: warten auf
+   *  den Klick. Ohne: die Automatik ist dran (`sendet`). */
   offen: number;
+  /** Sofort-Modus mit offenen Tagen: der Server hat den Lauf eingereiht. */
+  sendet: boolean;
 };
 
 /** Modus für einen Datumsbereich setzen (Start und Ende einschliesslich). */
@@ -337,3 +363,194 @@ export async function getMarktStand(
 ): Promise<Result<MarktStand>> {
   return call(`/pricing/markt-stand/${encodeURIComponent(propertyId)}`);
 }
+
+
+// --- 0562: Preisgrenzen, Portalstand, Vorschau, Forecast, Verlauf ---------------
+
+/** Mindest-/Höchstpreis für einen Zeitraum (SiteMinder „Floor and ceiling override"). */
+export type Preisgrenze = {
+  id: string;
+  property_id: string;
+  bezeichnung: string;
+  von: string;
+  bis: string;
+  /** 0 = Montag … 6 = Sonntag; null = alle Tage. */
+  wochentage: number[] | null;
+  jaehrlich: boolean;
+  min_price: number | null;
+  max_price: number | null;
+};
+
+export type PreisgrenzeInput = Omit<Preisgrenze, "id" | "property_id">;
+
+export async function listPreisgrenzen(
+  propertyId: string,
+): Promise<Result<Preisgrenze[]>> {
+  return call(`/pricing/preisgrenzen/${encodeURIComponent(propertyId)}`);
+}
+
+export async function createPreisgrenze(
+  propertyId: string,
+  input: PreisgrenzeInput,
+): Promise<Result<Preisgrenze>> {
+  return call(`/pricing/preisgrenzen/${encodeURIComponent(propertyId)}`, {
+    method: "POST",
+    body: input,
+  });
+}
+
+export async function deletePreisgrenze(
+  propertyId: string,
+  grenzeId: string,
+): Promise<Result<null>> {
+  return call(
+    `/pricing/preisgrenzen/${encodeURIComponent(propertyId)}/${encodeURIComponent(grenzeId)}`,
+    { method: "DELETE" },
+  );
+}
+
+/** Soll/Ist eines Tages: berechnet vs. laut Schatten bei den Portalen. */
+export type PortalstandTag = {
+  date: string;
+  berechnet: number | null;
+  portal: number | null;
+  abweichung_pct: number | null;
+  /** Greift eine Aktion, ist `berechnet` bereits gesenkt — um so viel Prozent. */
+  aktion_pct?: number | null;
+};
+
+export type Portalstand = {
+  property_id: string;
+  waehrung: string | null;
+  rate_plan_id: string | null;
+  tage: PortalstandTag[];
+  abweichend: number;
+  /** Wann UNSER Schatten zuletzt fortgeschrieben wurde. */
+  schatten_stand: string | null;
+  hinweis: string | null;
+};
+
+export async function getPortalstand(
+  propertyId: string,
+  von: string,
+  bis: string,
+): Promise<Result<Portalstand>> {
+  const q = new URLSearchParams({ von, bis }).toString();
+  return call(`/pricing/portalstand/${encodeURIComponent(propertyId)}?${q}`);
+}
+
+export async function portalstandAngleichen(
+  propertyId: string,
+): Promise<Result<{ status: string }>> {
+  return call(`/pricing/portalstand/${encodeURIComponent(propertyId)}/angleichen`, {
+    method: "POST",
+  });
+}
+
+/** Ein Tag der Kurve, wie sie MIT Automatik wäre — nichts wird gespeichert. */
+export type VorschauTag = {
+  date: string;
+  price: number;
+  factors: Record<string, number>;
+};
+
+export async function getVorschau(
+  propertyId: string,
+  von: string,
+  bis: string,
+): Promise<Result<VorschauTag[]>> {
+  const q = new URLSearchParams({ von, bis }).toString();
+  return call(`/pricing/vorschau/${encodeURIComponent(propertyId)}?${q}`);
+}
+
+export type ForecastTag = {
+  date: string;
+  belegt: boolean;
+  /** Gelernte Erwartung 0..1; null = keine gelernte Zelle. */
+  erwartet: number | null;
+  /** Freie Angebote der Umgebung; null = kein Stichtag in der Nähe. */
+  markt_angebote: number | null;
+};
+
+export type Forecast = {
+  property_id: string;
+  horizont_tage: number;
+  tage: ForecastTag[];
+  belegt_pct: number;
+  erwartet_pct: number | null;
+  pace: "vor" | "im_plan" | "hinter" | null;
+  hinweis: string | null;
+};
+
+export async function getForecast(propertyId: string): Promise<Result<Forecast>> {
+  return call(`/pricing/forecast/${encodeURIComponent(propertyId)}`);
+}
+
+export type VerlaufEintrag = {
+  id: string;
+  von: string;
+  bis: string;
+  ereignis:
+    | "tagesmodus"
+    | "freigabe"
+    | "gesendet"
+    | "einstellungen"
+    | "preisgrenze"
+    | "automatik_an"
+    | "automatik_aus";
+  details: Record<string, unknown>;
+  /** null = Automatik (Cron/Worker). */
+  user_id: string | null;
+  user_name: string | null;
+  created_at: string;
+};
+
+export async function getVerlauf(
+  propertyId: string,
+  tag?: string,
+): Promise<Result<VerlaufEintrag[]>> {
+  const q = tag ? `?${new URLSearchParams({ tag }).toString()}` : "";
+  return call(`/pricing/verlauf/${encodeURIComponent(propertyId)}${q}`);
+}
+
+/** Ein Stichtag des Preisberichts (Seite „Preise & Markt"). */
+export type PreisberichtPunkt = {
+  tag: string;
+  markt_median: number;
+  p25: number | null;
+  p75: number | null;
+  anzahl: number;
+  eigener_preis: number | null;
+  grundpreis: number | null;
+  abstand_pct: number | null;
+};
+
+export type Preisbericht = {
+  property_id: string;
+  waehrung: string | null;
+  stand_vom: string | null;
+  radius_km: number;
+  hinweis: string | null;
+  verlauf: PreisberichtPunkt[];
+  abstand_schnitt_pct: number | null;
+  stichtage_unter_markt: number;
+  stichtage_am_markt: number;
+  stichtage_ueber_markt: number;
+  grundpreis: number | null;
+  horizont_tage: number;
+  tage_mit_preis: number;
+  preis_schnitt: number | null;
+  preis_min: number | null;
+  preis_max: number | null;
+  uplift_pct: number | null;
+  ki_angenommen: number;
+  ki_abgelehnt: number;
+  ki_angenommen_90: number;
+  ki_abgelehnt_90: number;
+};
+
+/** Die Auswertung des Dynamic Pricing für ein Objekt. */
+export async function getPreisbericht(propertyId: string): Promise<Result<Preisbericht>> {
+  return call(`/pricing/preisbericht/${encodeURIComponent(propertyId)}`);
+}
+

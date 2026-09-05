@@ -59,7 +59,7 @@ class DpSettings:
     market_sensitivity: float = 20.0
     market_max_adjust_pct: float = 25.0
     # Hostaway-Modell: Basispreis-Modus + Aggressivität.
-    base_mode: str = "data_driven"  # 'data_driven' | 'manual'
+    base_mode: str = "data_driven"  # 'data_driven' | 'market' | 'manual'
     base_rate_mode: str = "recommended"  # 'conservative' | 'recommended' | 'aggressive'
     manual_base_price: float | None = None
     # Roadmap-Phase 1 — auslastungsbasierte Best Practices der Wettbewerber:
@@ -92,6 +92,23 @@ class DpSettings:
     # adjust_pct deckelt die Wirkung symmetrisch. 0/aus = kein Wetter-Effekt.
     weather_enabled: bool = False
     weather_max_adjust_pct: float = 10.0
+    # Vorjahresanker (Hostaway „Historical anchoring", 0562): der beste Nacht-
+    # preis derselben Woche im Vorjahr zieht den Preis NACH OBEN, nie nach
+    # unten — hoechstens um anker_max_pct. Hostaways Begruendung: „always
+    # increases the price … protect you from underselling". Die Zahl kommt aus
+    # den eigenen Buchungen (Netto je Nacht), deshalb nur als Untergrenze.
+    anker_enabled: bool = False
+    anker_max_pct: float = 20.0
+    # Saison-Untergrenze (0565): an Saisontagen ist der Saisonpreis des
+    # Kalenders (property_seasons, fixed oder Prozent auf den Grundpreis) die
+    # Untergrenze der Automatik — NIE die Obergrenze. Loest ein, was 0550
+    # fuer price_mode='steuert' beschrieb, aber nie im Code ankam.
+    saison_mindestpreis: bool = False
+    # Feiertage und Schulferien (0562, Feed dp_feiertage): Aufschlag in Prozent,
+    # 0 = aus. Beide sind AUFSCHLAEGE und stapeln mit den anderen (Kombination
+    # in _combine_factors).
+    feiertag_uplift_pct: float = 0.0
+    ferien_uplift_pct: float = 0.0
     # Rate Rules — manuelle Zusatzregeln des Vermieters (KI + Fachwissen). Jede
     # Regel: {match:{...}, adjust_pct: float}. Greifen NACH den gelernten Faktoren
     # als zusätzliche Auf-/Abschläge (siehe _rate_rules_factor). Leer = keine.
@@ -102,10 +119,23 @@ class DpSettings:
         """Faktor-Multiplikator aus base_rate_mode (Default neutral 1.0)."""
         return _AGGRESSIVENESS.get(self.base_rate_mode, 1.0)
 
-    def effective_base(self, rate_plan_base: float) -> float:
-        """Basispreis (Anker): bei 'manual' der gesetzte Wert, sonst rate_plan."""
+    def effective_base(
+        self, rate_plan_base: float, comp_price: float | None = None
+    ) -> float:
+        """Basispreis (Anker) des Tages.
+
+        'manual'      → der gesetzte Wert.
+        'market'      → der Markt-Median dieses Tages (Hostaway „Market-driven
+                        base price"). Fehlt er fuer den Tag, gilt der Grundpreis
+                        des Ratenplans — das ist KEIN erfundener Wert, sondern der
+                        Preis des Betriebs; `compute_day` macht den Unterschied
+                        im Faktor `marktbasis` sichtbar (1.0 = kein Marktwert).
+        'data_driven' → der Grundpreis des Ratenplans (UI: „Grundpreis").
+        """
         if self.base_mode == "manual" and self.manual_base_price is not None:
             return self.manual_base_price
+        if self.base_mode == "market" and comp_price is not None and comp_price > 0:
+            return comp_price
         return rate_plan_base
 
     @staticmethod
@@ -125,7 +155,9 @@ class DpSettings:
             market_enabled=bool(row.get("market_enabled")),
             market_sensitivity=_as_float(row.get("market_sensitivity"), 20.0),
             market_max_adjust_pct=_as_float(row.get("market_max_adjust_pct"), 25.0),
-            base_mode=_as_choice(row.get("base_mode"), ("data_driven", "manual"), "data_driven"),
+            base_mode=_as_choice(
+                row.get("base_mode"), ("data_driven", "market", "manual"), "data_driven"
+            ),
             base_rate_mode=_as_choice(
                 row.get("base_rate_mode"),
                 ("conservative", "recommended", "aggressive"),
@@ -150,6 +182,11 @@ class DpSettings:
             ],
             weather_enabled=bool(row.get("weather_enabled")),
             weather_max_adjust_pct=_as_float(row.get("weather_max_adjust_pct"), 10.0),
+            anker_enabled=bool(row.get("anker_enabled")),
+            anker_max_pct=_as_float(row.get("anker_max_pct"), 20.0),
+            saison_mindestpreis=bool(row.get("saison_mindestpreis")),
+            feiertag_uplift_pct=_as_float(row.get("feiertag_uplift_pct"), 0.0),
+            ferien_uplift_pct=_as_float(row.get("ferien_uplift_pct"), 0.0),
             rate_rules=[
                 r for r in (row.get("rate_rules") or []) if isinstance(r, dict)
             ],
@@ -192,6 +229,18 @@ class DaySignals:
     # Nachfrage → Aufschlag), <0 = schlechtes Wetter, None = kein Signal (z. B.
     # Datum außerhalb des Wetter-Forecast-Horizonts → neutral, keine Fallbacks).
     weather_score: float | None = None
+    # Vorjahresanker (0562): bester Netto-Nachtpreis derselben Woche im Vorjahr
+    # aus den eigenen Buchungen. None = keine Buchung damals → kein Anker.
+    anker_price: float | None = None
+    # Feiertag/Schulferien im Objektland oder einem Quellmarkt (dp_feiertage).
+    ist_feiertag: bool = False
+    ist_ferien: bool = False
+    # Tagesgenaue Preisgrenzen (dp_preisgrenzen). None = dp_settings.min/max.
+    min_price_tag: float | None = None
+    max_price_tag: float | None = None
+    # Saisonpreis des Tages aus dem Saisonkalender (0565). None = kein
+    # Saisontag oder Regel aus. Wirkt NUR als Untergrenze.
+    saison_min_price: float | None = None
 
 
 @dataclass
@@ -478,6 +527,20 @@ def _market_factor(base: float, signals: DaySignals, settings: DpSettings) -> fl
     return 1.0 + adjust
 
 
+def _anker_factor(price: float, signals: DaySignals, settings: DpSettings) -> float:
+    """Vorjahresanker: liegt der Preis unter dem besten Nachtpreis derselben
+    Woche im Vorjahr, wird er dorthin angehoben — hoechstens um anker_max_pct.
+    Nie nach unten (der Anker ist eine Untergrenze aus eigener Erfahrung, keine
+    Marktaussage). Neutral ohne Anker, bei Aus oder wenn der Preis schon
+    darueber liegt."""
+    if not settings.anker_enabled or signals.anker_price is None or price <= 0:
+        return 1.0
+    if signals.anker_price <= price:
+        return 1.0
+    cap = 1.0 + max(0.0, settings.anker_max_pct) / 100.0
+    return min(signals.anker_price / price, cap)
+
+
 def _merged_event_pct(signals: DaySignals) -> float:
     """Event-Aufschlag aus event_periods + Marktdaten OHNE Doppelzählung: der
     höhere der beiden gilt (nicht die Summe)."""
@@ -506,8 +569,18 @@ def compute_day(base: float, settings: DpSettings, signals: DaySignals) -> DayRe
     base = Basispreis aus dem rate_plan/Grundpreis. Bei base_mode='manual' ersetzt
     der gesetzte manual_base_price diesen Anker. Multiplikatives Modell, danach
     Clamp auf [min_price, max_price] (falls gesetzt)."""
-    base = settings.effective_base(base)
+    rate_plan_base = base
+    base = settings.effective_base(base, signals.comp_price)
     factors = {
+        # Sichtbar machen, ob der Markt die Basis stellte: Verhaeltnis Markt-
+        # basis zu Grundpreis. 1.0 = Grundpreis (kein Marktwert oder Modus aus).
+        # Steht in den Faktoren, damit „Warum dieser Preis?" nicht mit einem
+        # Basispreis beginnt, den niemand eingestellt hat.
+        "marktbasis": (
+            base / rate_plan_base
+            if settings.base_mode == "market" and rate_plan_base > 0
+            else 1.0
+        ),
         "season": 1.0 + signals.season_pct / 100.0,
         # Event: event_periods + Marktdaten gemerged (höherer Wert, keine Doppelzählung).
         "event": 1.0 + _merged_event_pct(signals) / 100.0,
@@ -523,9 +596,19 @@ def compute_day(base: float, settings: DpSettings, signals: DaySignals) -> DayRe
         "market": _market_factor(base, signals, settings),
         # RateBoard: Wetter (externer Nachfrage-Faktor, neutral ohne Signal/aus).
         "weather": _weather_factor(signals, settings),
+        # Feiertage/Schulferien aus dem Feed (0562); 0 % = neutral.
+        "feiertag": (
+            1.0 + settings.feiertag_uplift_pct / 100.0 if signals.ist_feiertag else 1.0
+        ),
+        "ferien": (
+            1.0 + settings.ferien_uplift_pct / 100.0 if signals.ist_ferien else 1.0
+        ),
     }
+    # `marktbasis` ist KEIN Faktor auf den Preis (er steckt schon in `base`),
+    # sondern nur Auskunft — aus der Kombination heraushalten.
+    wirkend = {k: v for k, v in factors.items() if k != "marktbasis"}
     # Gelernte/automatische Faktoren mit Anti-Über-Rabattierung kombinieren …
-    price = base * _combine_factors(factors.values())
+    price = base * _combine_factors(wirkend.values())
     # … dann die manuellen Rate Rules als bewussten Vermieter-Override OBENDRAUF
     # (sie sollen nicht von der Anti-Über-Rabattierung der Auto-Faktoren verschluckt
     # werden — KI + Fachwissen, RateBoard-Prinzip). In den factors für Transparenz.
@@ -533,10 +616,34 @@ def compute_day(base: float, settings: DpSettings, signals: DaySignals) -> DayRe
     factors["rate_rules"] = rules_factor
     price *= rules_factor
 
-    if settings.min_price is not None:
-        price = max(price, settings.min_price)
-    if settings.max_price is not None:
-        price = min(price, settings.max_price)
+    # Vorjahresanker ZULETZT vor den Grenzen: er hebt an, was unter dem
+    # Vorjahresbestwert liegt — gedeckelt, und nie nach unten.
+    anker_factor = _anker_factor(price, signals, settings)
+    factors["anker"] = anker_factor
+    price *= anker_factor
+
+    # Grenzen: die tagesgenaue (dp_preisgrenzen) schlaegt die globale.
+    min_grenze = (
+        signals.min_price_tag if signals.min_price_tag is not None else settings.min_price
+    )
+    max_grenze = (
+        signals.max_price_tag if signals.max_price_tag is not None else settings.max_price
+    )
+    # Saison-Untergrenze (0565): an einem Saisontag bestimmt der Saisonkalender
+    # den Mindestpreis — er ersetzt dort die globale wie die tagesgenaue
+    # Untergrenze. Die OBERGRENZE beruehrt er nie (Anweisung 05.09.2026: „der
+    # Saisonkalender bestimmt nur den Mindestpreis, nie die Obergrenze").
+    # Als eigener Faktor sichtbar, damit „Warum dieser Preis?" die Anhebung
+    # benennt statt sie wie einen Rechenfehler aussehen zu lassen.
+    if settings.saison_mindestpreis and signals.saison_min_price is not None:
+        min_grenze = signals.saison_min_price
+        factors["saison_untergrenze"] = (
+            max(1.0, signals.saison_min_price / price) if price > 0 else 1.0
+        )
+    if min_grenze is not None:
+        price = max(price, min_grenze)
+    if max_grenze is not None:
+        price = min(price, max_grenze)
 
     return DayResult(
         price=round(price, 2),

@@ -353,7 +353,8 @@
     "hrSettings": "Einstellungen",
     "timeClock": "Stempeluhr",
     "payroll": "Lohn",
-    "staffReports": "Personalberichte"
+    "staffReports": "Personalberichte",
+    "prices": "Preise & Markt"
   },
   "exemption": {
     "labelNamed": "Steuerbefreit ({scheme}) — keine USt-ID nötig",
@@ -12411,7 +12412,7 @@
   },
   "analysis": {
     "title": "Auswertung",
-    "subtitle": "Kennzahlen, Buchungen, Auslastung und Kanäle eines Zeitraums.",
+    "subtitle": "Kennzahlen, Buchungen, Auslastung, Kanäle, Gäste, Ausgaben, Pace und Muster eines Zeitraums.",
     "loading": "Wird berechnet …",
     "empty": "Für diesen Zeitraum gibt es keine Daten.",
     "ownerStay": "Eigennutzung",
@@ -12428,14 +12429,23 @@
       "buchungen": "Buchungen",
       "auslastung": "Auslastung",
       "kanaele": "Kanäle",
-      "gaeste": "Gäste"
+      "gaeste": "Gäste",
+      "ausgaben": "Ausgaben & Extras",
+      "pace": "Pace",
+      "muster": "Muster",
+      "stornos": "Stornos"
     },
     "range": {
       "monat": "Dieser Monat",
       "vormonat": "Vormonat",
       "quartal": "Quartal",
       "jahr": "Jahr",
-      "frei": "Frei gewählt"
+      "frei": "Frei gewählt",
+      "vorjahr": "Vorjahr",
+      "letzte30": "Letzte 30 Tage",
+      "naechste30": "Nächste 30 Tage",
+      "letzte12monate": "Letzte 12 Monate",
+      "naechste12monate": "Nächste 12 Monate"
     },
     "filter": {
       "range": "Zeitraum",
@@ -12446,7 +12456,27 @@
       "allProperties": "Alle Objekte",
       "channels": "Kanäle",
       "allChannels": "Alle Kanäle",
-      "compare": "Vergleich"
+      "compare": "Vergleich",
+      "button": "Filter",
+      "reset": "Zurücksetzen",
+      "apply": "Übernehmen",
+      "cancel": "Abbrechen",
+      "clear": "Auswahl leeren",
+      "nSelected": "{count, plural, one {# ausgewählt} other {# ausgewählt}}",
+      "nProperties": "{count, plural, one {# Objekt} other {# Objekte}}",
+      "allStatuses": "Alle Status",
+      "searchProperties": "Objekt suchen …",
+      "noMatch": "Keine Treffer.",
+      "rangeHint": "Die Schnellwahl bleibt in gespeicherten Ansichten dynamisch: „Vormonat“ ist immer der Vormonat von heute.",
+      "statusHint": "Ohne Auswahl zählen alle Status. Stornierte Buchungen gehen ohnehin nur in die Stornoquote ein, nicht in Umsatz und Nächte.",
+      "dim": {
+        "zeitraum": "Zeitraum",
+        "bezug": "Zuordnung",
+        "objekte": "Objekte",
+        "kanaele": "Kanäle",
+        "status": "Status",
+        "vergleich": "Vergleich"
+      }
     },
     "basis": {
       "anreise": "Nach Anreise",
@@ -12478,11 +12508,31 @@
       "revenueOverTime": "Umsatzverlauf",
       "shareByChannel": "Umsatzanteil je Kanal",
       "revenueByProperty": "Umsatz je Objekt",
-      "footnote": "Gesamtumsatz im Zeitraum: {total}"
+      "footnote": "Gesamtumsatz im Zeitraum: {total}",
+      "overTime": "{metric} im Verlauf",
+      "otherProperties": "{count, plural, one {# weiteres Objekt} other {# weitere Objekte}}",
+      "metric": "Kennzahl",
+      "metricValues": {
+        "umsatz": "Umsatz",
+        "naechte": "Nächte",
+        "buchungen": "Buchungen"
+      },
+      "groupBy": "Gruppieren",
+      "groupValues": {
+        "keine": "Keine",
+        "kanal": "Kanal",
+        "objekt": "Objekt"
+      },
+      "type": "Diagramm",
+      "typeValues": {
+        "linie": "Linie",
+        "balken": "Balken"
+      }
     },
     "table": {
       "rowCount": "{count, plural, one {# Buchung} other {# Buchungen}}",
-      "columns": "Spalten"
+      "columns": "Spalten",
+      "total": "Summe"
     },
     "col": {
       "property": "Objekt",
@@ -12504,7 +12554,30 @@
       "bookingsShort": "Buchungen",
       "net": "Netto",
       "share": "Anteil",
-      "country": "Land"
+      "country": "Land",
+      "month": "Monat",
+      "ownerNights": "Eigennutzung",
+      "accommodation": "Übernachtung",
+      "cleaning": "Reinigung",
+      "otherFees": "Übrige Gebühren",
+      "addons": "Zusatzleistungen",
+      "gross": "Gastpreis",
+      "paymentFee": "Zahlungsgebühr",
+      "date": "Datum",
+      "name": "Bezeichnung",
+      "category": "Kategorie",
+      "kind": "Art",
+      "amount": "Betrag",
+      "receipt": "Beleg",
+      "count": "Anzahl",
+      "weekday": "Wochentag",
+      "value": "Wert",
+      "period": "Zeitraum",
+      "checkIn": "Anreise",
+      "checkOut": "Abreise",
+      "currency": "Währung",
+      "source": "Quelle",
+      "reason": "Grund"
     },
     "guests": {
       "total": "Gäste",
@@ -12533,7 +12606,146 @@
     "compareCurrencyUnclear": "Währung im Vergleichszeitraum uneindeutig",
     "compareCurrencyMismatchHint": "Im Vergleichszeitraum galt eine andere Währung. Eine Veränderung in Prozent wäre ein Wechselkurs-Effekt und keine Geschäftszahl.",
     "compareChartCurrencyMismatch": "Der Vergleichszeitraum lag in einer anderen Währung – die Vorjahreslinie wird deshalb nicht gezeichnet.",
-    "compareLocked": "Ein Vergleich ist bis zu einem Zeitraum von einem Jahr möglich."
+    "compareLocked": "Ein Vergleich ist bis zu einem Zeitraum von einem Jahr möglich.",
+    "status": {
+      "pending": "Offen",
+      "confirmed": "Bestätigt",
+      "checked_in": "Eingecheckt",
+      "checked_out": "Ausgecheckt",
+      "completed": "Abgeschlossen",
+      "cancelled": "Storniert",
+      "declined": "Abgelehnt",
+      "expired": "Abgelaufen",
+      "requested": "Angefragt"
+    },
+    "bookings": {
+      "per": {
+        "buchung": "Je Buchung",
+        "objekt": "Je Objekt"
+      },
+      "propertyCount": "{count, plural, one {# Objekt} other {# Objekte}}",
+      "showEmpty": "Objekte ohne Buchungen zeigen",
+      "reconstructed": "Aus den Objekt-Gebühren rekonstruiert — das Portal hat keine Aufstellung geliefert.",
+      "commissionComputed": "Aus dem hinterlegten Provisionssatz errechnet — nicht vom Portal gemeldet.",
+      "withoutBreakdown": "{count, plural, one {# Buchung ohne Preisaufstellung — dort steht nur der Gesamtpreis.} other {# Buchungen ohne Preisaufstellung — dort steht nur der Gesamtpreis.}}",
+      "withoutBreakdownShort": "Ohne Aufstellung",
+      "reconstructedCount": "{count, plural, one {# Aufstellung (*) aus den Objekt-Gebühren rekonstruiert.} other {# Aufstellungen (*) aus den Objekt-Gebühren rekonstruiert.}}"
+    },
+    "occupancy": {
+      "byMonth": "Je Monat",
+      "propertyCount": "{count, plural, one {# Objekt} other {# Objekte}}"
+    },
+    "expenses": {
+      "empty": "Keine Verrechnungsposten in diesem Zeitraum.",
+      "emptyHint": "Ausgaben und Extras entstehen in der Eigentümer-Abrechnung und aus bestellten Leistungen.",
+      "expenses": "Ausgaben",
+      "extras": "Extras",
+      "balance": "Saldo",
+      "balanceHint": "Extras minus Ausgaben",
+      "count": "Posten",
+      "byCategory": "Nach Kategorie",
+      "byProperty": "Nach Objekt",
+      "noCategory": "Ohne Kategorie",
+      "noProperty": "Ohne Objekt (Konto)",
+      "rowCount": "{count, plural, one {# Posten} other {# Posten}}",
+      "kind": {
+        "ausgabe": "Ausgabe",
+        "extra": "Extra"
+      },
+      "footnote": "Zeitraum ist das Datum des Postens. Ausgaben gehen zulasten des Eigentümers, Extras zu seinen Gunsten — so, wie sie in der Abrechnung stehen."
+    },
+    "pace": {
+      "title": "Buchungsstand der nächsten 12 Monate",
+      "subtitle": "Stand {heute} gegen den Stand am {vorjahr} für dieselben Monate ein Jahr früher.",
+      "vsLastYear": "gegenüber Vorjahres-Stichtag",
+      "now": "Heute gebucht",
+      "lastYearSameDay": "Vorjahr am selben Tag",
+      "lastYearFinal": "Vorjahr am Ende",
+      "nowNights": "Heute gebucht (Nächte)",
+      "nowRevenue": "Heute gebucht (Umsatz)",
+      "lastYearSameDayNights": "Vorjahr am selben Tag (Nächte)",
+      "delta": "Abstand",
+      "lastYearFinalNights": "Vorjahr am Ende (Nächte)",
+      "lastYearFinalRevenue": "Vorjahr am Ende (Umsatz)",
+      "footnote": "Der Vorjahres-Stichtag zählt nur Buchungen mit echtem Buchungszeitpunkt des Portals.",
+      "withoutTimestamp": "{count, plural, one {# Vorjahresbuchung ohne Zeitstempel fehlt im Stichtagswert.} other {# Vorjahresbuchungen ohne Zeitstempel fehlen im Stichtagswert.}}"
+    },
+    "patterns": {
+      "weekday": "Leistung je Wochentag",
+      "weekdayHint": "Auslastung und Umsatz je Wochentag. Der Umsatz einer Buchung ist gleichmäßig auf ihre Nächte verteilt — die Portale liefern keinen Preis je Nacht.",
+      "leadTime": "Buchungsfenster",
+      "leadTimeHint": "Tage zwischen Buchung und Anreise. Nur Buchungen mit echtem Buchungszeitpunkt.",
+      "stayLength": "Aufenthaltsdauer",
+      "stayLengthHint": "Verteilung der gebuchten Nächte je Aufenthalt.",
+      "days": "Tage",
+      "nights": "Nächte",
+      "daysValue": "{n} Tage"
+    },
+    "cancellations": {
+      "empty": "Keine Stornierungen in diesem Zeitraum.",
+      "emptyHint": "{count, plural, one {# gültige Buchung, keine storniert.} other {# gültige Buchungen, keine storniert.}}",
+      "nights": "Stornierte Nächte",
+      "lostRevenue": "Entgangener Umsatz",
+      "lostRevenueHint": "Gesamtpreis der stornierten Buchungen — ein Teil der Nächte wurde neu verkauft.",
+      "leadTime": "Ø Vorlauf",
+      "leadTimeBase": "{count} von {total} mit Stornozeitpunkt",
+      "byChannel": "Nach Kanal",
+      "byLeadTime": "Nach Vorlauf (Tage vor Anreise)",
+      "byReason": "Nach Grund",
+      "noReason": "Kein Grund hinterlegt",
+      "footnote": "Stornoquote = storniert / (gültig + storniert). Der Vorlauf rechnet nur mit Buchungen, die einen Stornozeitpunkt tragen."
+    },
+    "views": {
+      "button": "Ansichten",
+      "title": "Gespeicherte Ansichten",
+      "empty": "Noch keine Ansicht gespeichert.",
+      "new": "Aktuelle Ansicht speichern",
+      "delete": "Löschen",
+      "saveTitle": "Ansicht speichern",
+      "saveHint": "Speichert Zeitraum, Filter, Spalten und Reiter-Einstellungen — nur für dich.",
+      "namePlaceholder": "z. B. Vormonat je Objekt",
+      "save": "Speichern"
+    },
+    "export": {
+      "button": "Bericht herunterladen",
+      "title": "Format",
+      "csv": "CSV (aktuelle Tabelle)",
+      "xlsx": "Excel (alle Tabellen des Reiters)",
+      "pdf": "PDF",
+      "hint": "Exportiert wird genau das, was hier steht — mit den aktiven Filtern.",
+      "generated": "Erstellt am {when}",
+      "failed": "Export fehlgeschlagen."
+    },
+    "prices": {
+      "title": "Preise & Markt",
+      "subtitle": "Wo dein Preis gegenüber der Umgebung steht, was die Automatik aus dem Grundpreis macht und wie du mit den Vorschlägen umgehst.",
+      "property": "Objekt",
+      "noProperties": "Kein Objekt mit Dynamic Pricing. Schalte die Automatik unter „Dynamic Pricing“ ein — dann erscheint hier der Bericht.",
+      "distance": "Ø Abstand zum Markt",
+      "distanceHint": "{n} Stichtage mit eigenem Preis",
+      "position": "Lage der Stichtage",
+      "below": "unter Markt",
+      "at": "am Markt",
+      "above": "über Markt",
+      "uplift": "Automatik gegen Grundpreis",
+      "upliftHint": "{days} Tage im Horizont · Grundpreis {base}",
+      "noBase": "Kein Grundpreis hinterlegt",
+      "range": "Spanne der Preise",
+      "rangeHint": "Ø {avg}",
+      "ki": "Regel-Berater",
+      "kiHint": "{accepted} angenommen · {rejected} abgelehnt (90 Tage)",
+      "kiTotal": "gesamt {accepted} / {rejected}",
+      "chart": "Preis gegen Umgebung je Stichtag",
+      "chartHint": "Band = mittleres Feld der Umgebung (25.–75. Perzentil), Linie = Median. Dein Preis gestrichelt, Grundpreis grau.",
+      "market": "Umgebung (Median)",
+      "mid": "Mittleres Feld",
+      "own": "Dein Preis",
+      "base": "Grundpreis",
+      "table": "Stichtage",
+      "offers": "Angebote",
+      "footnote": "Beobachtetes Gebiet rund {km} km · Stichtage der täglichen Marktbeobachtung · zuletzt bei uns abgerufen {when}.",
+      "loading": "Bericht wird berechnet …"
+    }
   },
   "tasks": {
     "fehler": {

@@ -14,6 +14,7 @@ class _Q:
         self._table = table
         self._op: str | None = None
         self._payload: object = None
+        self._in: list = []
 
     def select(self, *_a: object, **_k: object) -> "_Q":
         return self
@@ -21,7 +22,23 @@ class _Q:
     def eq(self, *_a: object, **_k: object) -> "_Q":
         return self
 
-    def in_(self, *_a: object, **_k: object) -> "_Q":
+    def in_(self, _col: object = None, werte: object = None, **_k: object) -> "_Q":
+        self._in = list(werte) if isinstance(werte, (list, tuple, set)) else []
+        return self
+
+    def lte(self, *_a: object, **_k: object) -> "_Q":
+        return self
+
+    @property
+    def not_(self) -> "_Q":
+        return self
+
+    def delete(self, **_k: object) -> "_Q":
+        self._op = "delete"
+        return self
+
+    def insert(self, payload: object, **_k: object) -> "_Q":
+        self._op, self._payload = "insert", payload
         return self
 
     def gte(self, *_a: object, **_k: object) -> "_Q":
@@ -63,6 +80,12 @@ class _Q:
         elif self._op == "update":
             self._db.updates.setdefault(self._table, []).append(self._payload)  # type: ignore[arg-type]
             r.data = []  # type: ignore[attr-defined]
+        elif self._op == "insert":
+            self._db.inserts.setdefault(self._table, []).append(self._payload)  # type: ignore[arg-type]
+            r.data = [self._payload]  # type: ignore[attr-defined]
+        elif self._op == "delete":
+            self._db.deletes.setdefault(self._table, set()).update(self._in)
+            r.data = []  # type: ignore[attr-defined]
         else:
             r.data = self._db.tables.get(self._table, [])  # type: ignore[attr-defined]
         return r
@@ -73,6 +96,8 @@ class _DB:
         self.tables = tables
         self.writes: dict[str, list[dict]] = {}
         self.updates: dict[str, list[dict]] = {}
+        self.deletes: dict[str, set[str]] = {}
+        self.inserts: dict[str, list[dict]] = {}
 
     def table(self, name: str) -> _Q:
         return _Q(self, name)
@@ -347,3 +372,199 @@ def test_fehlgeschlagener_push_stempelt_nicht() -> None:
     heute = date.today()
     svc.recompute_property("p1", start=heute, end=heute + timedelta(days=3))
     assert "dynamic_prices" not in db.updates
+
+
+def test_push_stempelt_auch_bei_freigabepflicht_die_freigegebenen_tage() -> None:
+    """Der Zirkel hinter „540 Tage nicht gesendet" (live 04.09.2026).
+
+    Der Stempel hing an `not gesperrt`. Bei eingeschalteter Freigabe ist
+    `gesperrt` aber NIE leer — dort steht jeder ungestempelte Tag. Also
+    stempelte der Lauf nie, also blieben die Tage ungestempelt, also standen
+    sie beim naechsten Lauf wieder in `gesperrt`: ein Kreis ohne Ausgang.
+    Ein bereits freigegebener Tag, dessen Preis sich aendert, verliert seinen
+    Stempel (Wurzel 1) und MUSS ihn nach dem Push zurueckbekommen.
+    """
+    db = _db(enabled=True, base=100.0)
+    svc = DynamicPricingRecompute(db)  # type: ignore[arg-type]
+    svc._modul_gebucht = lambda *_a, **_k: True  # type: ignore[method-assign]
+    svc._push_to_channex = lambda *a, **k: True  # type: ignore[method-assign]
+    heute = date.today()
+    # Ein Tag wartet noch auf Freigabe, die uebrigen sind frei.
+    import src.features.pricing.freigabe as fg
+
+    original = fg.gesperrte_tage
+    fg.gesperrte_tage = lambda *_a, **_k: {heute.isoformat()}  # type: ignore[assignment]
+    try:
+        svc.recompute_property("p1", start=heute, end=heute + timedelta(days=3))
+    finally:
+        fg.gesperrte_tage = original  # type: ignore[assignment]
+    assert db.updates.get("dynamic_prices"), (
+        "trotz Freigabepflicht muessen die GEPUSHTEN Tage gestempelt werden"
+    )
+
+
+def test_stempel_trifft_nur_die_gepushten_tage() -> None:
+    """Ein Bereichs-Update haette die wartenden Tage mitgestempelt und damit
+    die Freigabe ausgehebelt — gestempelt wird eine Tagesliste."""
+    db = _db(enabled=True, base=100.0)
+    svc = DynamicPricingRecompute(db)  # type: ignore[arg-type]
+    gestempelt: list[list[str]] = []
+    svc._gesendet_stempeln = lambda _p, tage: gestempelt.append(list(tage))  # type: ignore[method-assign]
+    svc._modul_gebucht = lambda *_a, **_k: True  # type: ignore[method-assign]
+    svc._push_to_channex = lambda *a, **k: True  # type: ignore[method-assign]
+    heute = date.today()
+    import src.features.pricing.freigabe as fg
+
+    original = fg.gesperrte_tage
+    fg.gesperrte_tage = lambda *_a, **_k: {heute.isoformat()}  # type: ignore[assignment]
+    try:
+        svc.recompute_property("p1", start=heute, end=heute + timedelta(days=3))
+    finally:
+        fg.gesperrte_tage = original  # type: ignore[assignment]
+    assert gestempelt, "gar nicht gestempelt"
+    assert heute.isoformat() not in gestempelt[0], (
+        "der wartende Tag darf keinen Stempel bekommen"
+    )
+
+
+def test_fester_preis_loescht_den_alten_automatikpreis_und_geht_an_die_portale() -> None:
+    """„Preise verwalten → Fester Preis" wirkte nicht (04.09.2026).
+
+    Der Recompute uebersprang den Tag nur. Die ALTE dynamic_prices-Zeile blieb
+    stehen und gewann im Resolver gegen den festen Preis: Kalender, Quote und
+    Portale zeigten weiter die Automatik. Und weil der Tag nicht in `rows`
+    war, ging der feste Preis nie an Channex. Beides ist der Gegenzustand des
+    Modus-Wechsels (Wurzel 1).
+    """
+    db = _db(enabled=True, base=100.0)
+    heute = date.today()
+    fest = heute.isoformat()
+    db.tables["dp_day_modes"] = [{"date": fest, "modus": "manuell", "adjust_pct": None}]
+    db.tables["price_overrides"] = [{"date": fest, "price": 800.0}]
+    gepusht: list[dict] = []
+    svc = DynamicPricingRecompute(db)  # type: ignore[arg-type]
+    svc._modul_gebucht = lambda *_a, **_k: True  # type: ignore[method-assign]
+    svc._push_to_channex = (  # type: ignore[method-assign]
+        lambda _t, _p, rows, **_k: gepusht.extend(rows) or True
+    )
+    svc.recompute_property("p1", start=heute, end=heute + timedelta(days=3))
+
+    geschrieben = {r["date"] for r in db.writes.get("dynamic_prices", [])}
+    assert fest not in geschrieben, "fester Tag darf keinen Automatikpreis bekommen"
+    assert fest in db.deletes.get("dynamic_prices", set()), (
+        "die alte Automatik-Zeile des festen Tags muss weg, sonst gewinnt sie"
+    )
+    assert any(r["date"] == fest and r["price"] == 800.0 for r in gepusht), (
+        "der feste Preis muss an die Portale gehen"
+    )
+    # Die uebrigen Tage bleiben Automatik und werden ebenfalls gepusht.
+    assert any(r["date"] != fest for r in gepusht)
+
+
+def test_nur_feste_tage_werden_trotzdem_gepusht() -> None:
+    """Ein Zeitraum, der komplett auf „Fester Preis" steht, hat keine
+    berechneten Zeilen — frueher hiess das: kein Push, der feste Preis blieb
+    lokal. Jetzt geht er trotzdem raus."""
+    db = _db(enabled=True, base=100.0)
+    heute = date.today()
+    tage = [(heute + timedelta(days=i)).isoformat() for i in range(3)]
+    db.tables["dp_day_modes"] = [
+        {"date": t, "modus": "manuell", "adjust_pct": None} for t in tage
+    ]
+    db.tables["price_overrides"] = [{"date": t, "price": 650.0} for t in tage]
+    gepusht: list[dict] = []
+    svc = DynamicPricingRecompute(db)  # type: ignore[arg-type]
+    svc._modul_gebucht = lambda *_a, **_k: True  # type: ignore[method-assign]
+    svc._push_to_channex = (  # type: ignore[method-assign]
+        lambda _t, _p, rows, **_k: gepusht.extend(rows) or True
+    )
+    svc.recompute_property("p1", start=heute, end=heute + timedelta(days=3))
+    assert "dynamic_prices" not in db.writes
+    assert sorted(r["date"] for r in gepusht) == sorted(tage)
+    assert all(r["price"] == 650.0 for r in gepusht)
+
+
+# --- 0562: Ratenplan-Scope, Verlauf, Zusatzsignale im Lauf ----------------------
+
+
+def test_push_traegt_den_ratenplan_wenn_dp_auf_einen_plan_begrenzt_ist() -> None:
+    """SiteMinder: EIN Ratenplan bekommt die Empfehlungen. Mit rate_plan_id
+    in dp_settings bekommen die Segmente den Plan, `push_rates_batch` pusht
+    dann nur dorthin; ohne bleibt es wie bisher (alle Plaene)."""
+    db = _db(enabled=True, base=100.0)
+    db.tables["dp_settings"][0]["rate_plan_id"] = "rp-bar"
+    segmente: list[list[dict]] = []
+
+    class _CM:
+        def push_rates_batch(self, _t: str, _p: str, segs: list[dict]) -> None:
+            segmente.append(segs)
+
+    svc = DynamicPricingRecompute(db)  # type: ignore[arg-type]
+    svc._modul_gebucht = lambda *_a, **_k: True  # type: ignore[method-assign]
+    import src.features.pricing.recompute as rc
+
+    heute = date.today()
+    # Den Channex-Aufbau umgehen: das Segment-Bauen ist das Pruefobjekt.
+    orig = svc._push_to_channex
+
+    def _fake_push(tenant_id, property_id, rows, *, rate_plan_id=None):  # type: ignore[no-untyped-def]
+        ordered = sorted(rows, key=lambda r: r["date"])
+        seg = {"date_from": ordered[0]["date"], "date_to": ordered[-1]["date"]}
+        if rate_plan_id:
+            seg["rate_plan_id"] = rate_plan_id
+        segmente.append([seg])
+        return True
+
+    svc._push_to_channex = _fake_push  # type: ignore[method-assign]
+    svc.recompute_property("p1", start=heute, end=heute + timedelta(days=3))
+    assert segmente and segmente[0][0].get("rate_plan_id") == "rp-bar"
+    del orig, rc, _CM
+
+
+def test_erfolgreicher_push_schreibt_den_verlauf() -> None:
+    """SiteMinder „History": jeder Push hinterlaesst einen Eintrag mit
+    Zeitraum, Tagen und Preisspanne — Automatik = user_id None."""
+    db = _db(enabled=True, base=100.0)
+    svc = DynamicPricingRecompute(db)  # type: ignore[arg-type]
+    svc._modul_gebucht = lambda *_a, **_k: True  # type: ignore[method-assign]
+    svc._push_to_channex = lambda *a, **k: True  # type: ignore[method-assign]
+    heute = date.today()
+    svc.recompute_property("p1", start=heute, end=heute + timedelta(days=3))
+    eintraege = db.inserts.get("dp_verlauf", [])
+    assert len(eintraege) == 1
+    e = eintraege[0]
+    assert e["ereignis"] == "gesendet"
+    assert e["von"] == heute.isoformat()
+    assert e["bis"] == (heute + timedelta(days=2)).isoformat()
+    assert e["details"]["tage"] == 3
+    assert e["user_id"] is None
+
+
+def test_fehlgeschlagener_push_schreibt_keinen_verlauf() -> None:
+    db = _db(enabled=True, base=100.0)
+    svc = DynamicPricingRecompute(db)  # type: ignore[arg-type]
+    svc._modul_gebucht = lambda *_a, **_k: True  # type: ignore[method-assign]
+    svc._push_to_channex = lambda *a, **k: False  # type: ignore[method-assign]
+    heute = date.today()
+    svc.recompute_property("p1", start=heute, end=heute + timedelta(days=3))
+    assert "dp_verlauf" not in db.inserts
+
+
+def test_preisgrenze_je_zeitraum_wirkt_im_lauf() -> None:
+    """Die Tagesgrenze aus dp_preisgrenzen kommt bis in dynamic_prices."""
+    db = _db(enabled=True, base=100.0)
+    heute = date.today()
+    db.tables["dp_preisgrenzen"] = [
+        {
+            "von": heute.isoformat(), "bis": heute.isoformat(),
+            "wochentage": None, "jaehrlich": False,
+            "min_price": 150.0, "max_price": None,
+        }
+    ]
+    svc = DynamicPricingRecompute(db)  # type: ignore[arg-type]
+    svc._modul_gebucht = lambda *_a, **_k: True  # type: ignore[method-assign]
+    svc._push_to_channex = lambda *a, **k: True  # type: ignore[method-assign]
+    svc.recompute_property("p1", start=heute, end=heute + timedelta(days=2))
+    rows = {r["date"]: r for r in db.writes["dynamic_prices"]}
+    assert rows[heute.isoformat()]["price"] >= 150.0
+    assert rows[(heute + timedelta(days=1)).isoformat()]["price"] < 150.0

@@ -85,6 +85,8 @@ export type ObjektZeile = {
   /** Tage mit Verkaufssperre (Stop-Sell, scope='all'). Weder belegt noch
    *  verkaufbar — deshalb eine eigene Spalte statt stiller Abzug. */
   naechte_stop_sell: number;
+  /** Vom Eigentümer selbst belegte Nächte — belegt, aber ohne Umsatz. */
+  naechte_eigennutzung: number;
   auslastung_pct: number | null;
   anreisen: number;
   umsatz: number;
@@ -92,6 +94,9 @@ export type ObjektZeile = {
   revpar: number | null;
   stornos: number;
 };
+
+/** Eine Zeile je Objekt UND Monat (Hostaway „By month"). */
+export type ObjektMonatZeile = ObjektZeile & { monat: string };
 
 export type BuchungZeile = {
   id: string;
@@ -111,7 +116,152 @@ export type BuchungZeile = {
    *  liefert — dann bleibt die Spalte leer, statt auf unsere Uhr auszuweichen. */
   booked_at: string | null;
   is_owner_stay: boolean;
+  /** Finanzfelder aus der Portal-Zerlegung (0366). `null` = keine Zerlegung
+   *  gespeichert — dann steht nur der Gesamtpreis, nichts wird zurückgerechnet. */
+  uebernachtung: number | null;
+  reinigung: number | null;
+  sonstige_gebuehren: number | null;
+  gebuehren_je_art: Record<string, number>;
+  zusatzleistungen: number | null;
+  brutto: number | null;
+  /** `true` = vom Portal gemeldet, `false` = aus dem Satz errechnet. */
+  provision_gemeldet: boolean | null;
+  zahlungsgebuehr: number | null;
+  netto: number | null;
+  finanz_quelle: "ota" | "stammdaten" | null;
+  cancelled_at: string | null;
+  cancel_reason: string | null;
 };
+
+export type ObjektFinanzZeile = {
+  property_id: string;
+  title: string;
+  buchungen: number;
+  naechte: number;
+  umsatz: number;
+  uebernachtung: number | null;
+  reinigung: number | null;
+  sonstige_gebuehren: number | null;
+  zusatzleistungen: number | null;
+  brutto: number | null;
+  provision: number | null;
+  zahlungsgebuehr: number | null;
+  netto: number | null;
+  /** Buchungen ohne Zerlegung — die Summen sind dann unvollständig. */
+  ohne_zerlegung: number;
+};
+
+/** Leistung je Wochentag, 0 = Montag … 6 = Sonntag. */
+export type WochentagZeile = {
+  wochentag: number;
+  naechte_buchbar: number;
+  naechte_gebucht: number;
+  auslastung_pct: number | null;
+  anreisen: number;
+  umsatz: number;
+  adr: number | null;
+};
+
+export type VerteilungZeile = {
+  schluessel: string;
+  von: number;
+  bis: number | null;
+  buchungen: number;
+  naechte: number;
+  umsatz: number;
+  anteil_pct: number;
+};
+
+export type StornoKanalZeile = {
+  channel: string;
+  ota_name: string | null;
+  stornos: number;
+  naechte: number;
+  umsatz_entgangen: number;
+  vorlauf_tage: number | null;
+  stornoquote_pct: number | null;
+};
+
+export type StornoBericht = {
+  stornos: number;
+  naechte: number;
+  umsatz_entgangen: number;
+  stornoquote_pct: number | null;
+  vorlauf_tage: number | null;
+  mit_zeitpunkt: number;
+  kanaele: StornoKanalZeile[];
+  gruende: { grund: string | null; anzahl: number }[];
+  vorlauf: VerteilungZeile[];
+};
+
+export type AusgabePosten = {
+  id: string;
+  date: string;
+  name: string;
+  kategorie: string | null;
+  property_id: string | null;
+  property_title: string | null;
+  reservation_id: string | null;
+  art: "ausgabe" | "extra";
+  betrag: number;
+  currency: string | null;
+  hat_beleg: boolean;
+};
+
+export type AusgabeGruppe = {
+  schluessel: string | null;
+  title: string | null;
+  anzahl: number;
+  ausgaben: number;
+  extras: number;
+  saldo: number;
+};
+
+export type AusgabenBericht = {
+  currency: string | null;
+  waehrungen: string[];
+  anzahl: number;
+  ausgaben: number;
+  extras: number;
+  saldo: number;
+  kategorien: AusgabeGruppe[];
+  objekte: AusgabeGruppe[];
+  posten: AusgabePosten[];
+};
+
+export type PaceMonat = {
+  monat: string;
+  jetzt_naechte: number;
+  jetzt_buchungen: number;
+  jetzt_umsatz: number;
+  vorjahr_stichtag_naechte: number;
+  vorjahr_stichtag_buchungen: number;
+  vorjahr_stichtag_umsatz: number;
+  vorjahr_ende_naechte: number;
+  vorjahr_ende_umsatz: number;
+  delta_naechte_pct: number | null;
+};
+
+export type PaceBericht = {
+  stichtag: string;
+  currency: string | null;
+  waehrungen: string[];
+  monate: PaceMonat[];
+  vorjahr_ohne_zeitstempel: number;
+};
+
+/** Eine gespeicherte Ansicht (Hostaway „Custom View"), je Nutzer. */
+export type Ansicht = {
+  id: string;
+  name: string;
+  reiter: string;
+  filter: Record<string, unknown>;
+  spalten: string[];
+  optionen: Record<string, unknown>;
+  created_at: string | null;
+};
+
+export type AnsichtAnlegen = Omit<Ansicht, "id" | "created_at">;
 
 export type HerkunftZeile = {
   land: string | null;
@@ -154,6 +304,10 @@ export type VergleichBericht = {
   objekte: ObjektZeile[];
   gaeste: GaesteBericht;
   buchungen_gesamt: number;
+  wochentage: WochentagZeile[];
+  buchungsfenster: VerteilungZeile[];
+  aufenthaltsdauer: VerteilungZeile[];
+  stornos: StornoBericht;
 };
 
 export type Auswertung = {
@@ -168,7 +322,16 @@ export type Auswertung = {
   kanaele: KanalZeile[];
   objekte: ObjektZeile[];
   buchungen: BuchungZeile[];
+  objekte_finanzen: ObjektFinanzZeile[];
+  objekte_monatlich: ObjektMonatZeile[];
   gaeste: GaesteBericht;
+  wochentage: WochentagZeile[];
+  buchungsfenster: VerteilungZeile[];
+  aufenthaltsdauer: VerteilungZeile[];
+  stornos: StornoBericht;
+  ausgaben: AusgabenBericht;
+  verlauf_je_kanal: Record<string, Punkt[]>;
+  verlauf_je_objekt: Record<string, Punkt[]>;
   /** `null`, wenn kein Vergleich angefordert wurde. Ein leerer Bericht wäre
    *  etwas anderes — er behauptete „Vorjahr: alles null". */
   vorher: VergleichBericht | null;
@@ -180,16 +343,52 @@ export type AuswertungFilter = {
   bezug?: Bezug;
   propertyIds?: string[];
   channels?: string[];
+  status?: string[];
   vergleich?: Vergleich;
 };
 
-/** Die vier Reiter. Reihenfolge = Anzeigereihenfolge. */
+/** Buchungsstatus als Filter (Hostaway „Statuses"). Die Werte sind die des
+ *  DB-Enums `reservation_status`; der Router weist andere mit 422 ab. */
+export const STATUS_WERTE = [
+  "pending",
+  "confirmed",
+  "checked_in",
+  "checked_out",
+  "completed",
+  "cancelled",
+  "declined",
+  "expired",
+  "requested",
+] as const;
+export type StatusWert = (typeof STATUS_WERTE)[number];
+
+/** Schnellwahl-Zeiträume. Eine gespeicherte Ansicht hält den SCHLÜSSEL
+ *  („vormonat"), nicht die Daten — beim Laden wird er neu aufgelöst
+ *  (Hostaway: „keine Aktualisierung der Daten erforderlich"). */
+export const SCHNELLWAHL = [
+  "monat",
+  "vormonat",
+  "quartal",
+  "jahr",
+  "vorjahr",
+  "letzte30",
+  "naechste30",
+  "letzte12monate",
+  "naechste12monate",
+] as const;
+export type Schnell = (typeof SCHNELLWAHL)[number];
+
+/** Die Reiter. Reihenfolge = Anzeigereihenfolge. */
 export const REITER = [
   "kennzahlen",
   "analytics",
   "buchungen",
   "auslastung",
+  "ausgaben",
   "kanaele",
   "gaeste",
+  "pace",
+  "muster",
+  "stornos",
 ] as const;
 export type Reiter = (typeof REITER)[number];

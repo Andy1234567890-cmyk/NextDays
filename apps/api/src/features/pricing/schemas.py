@@ -262,6 +262,30 @@ class DpSettingsResponse(BaseModel):
     # Freigabe vor dem Senden (0554): true = berechnete Preise warten auf den
     # Knopf, statt sofort an die Portale zu gehen.
     freigabe_noetig: bool = False
+    # 0562 — Freigabe nur fuer nahe Tage: NULL = alle Tage, sonst warten nur
+    # Tage mit Vorlauf <= X (SiteMinder „Enabled for dates within X days").
+    freigabe_ab_tagen: int | None = None
+    # 0562 — Vorjahresanker (Hostaway „Historical anchoring"): hebt an, nie ab.
+    anker_enabled: bool = False
+    anker_max_pct: float = 20.0
+    # 0565 — Saisonpreis des Saisonkalenders als Untergrenze (nie Obergrenze).
+    saison_mindestpreis: bool = False
+    # Hat das Objekt einen Saisonkalender? Ohne ihn ist die Regel nicht
+    # waehlbar (Server lehnt mit 422 ab, Oberflaeche zeigt sie gesperrt).
+    saison_verfuegbar: bool = False
+    # 0562 — DP wirkt nur auf diesen Ratenplan; None = alle Plaene des Objekts.
+    rate_plan_id: str | None = None
+    # 0562 — Feiertage/Schulferien aus dem Feed; 0 = aus. Quellmaerkte = Laender
+    # (ISO-2), deren Ferien zusaetzlich zum Objektland zaehlen.
+    feiertag_uplift_pct: float = 0.0
+    ferien_uplift_pct: float = 0.0
+    quellmaerkte: list[str] = []
+    # Bisher nur in der Engine, nicht im Schema — deshalb nur per DB aenderbar.
+    # Asymmetrische Deckel des Auslastungs-/Pickup-Faktors (0060) und die
+    # Vorlauf-Gewichte {max_days_before, weight}.
+    occupancy_discount_cap_pct: float = 20.0
+    occupancy_premium_cap_pct: float = 15.0
+    occupancy_lead_buckets: list[dict] = []
 
 
 class DpSettingsUpdate(BaseModel):
@@ -281,7 +305,7 @@ class DpSettingsUpdate(BaseModel):
     market_max_adjust_pct: float | None = Field(default=None, ge=0, le=100)
     market_key: str | None = None
     comp_refs: list[str] | None = None
-    base_mode: str | None = Field(default=None, pattern="^(data_driven|manual)$")
+    base_mode: str | None = Field(default=None, pattern="^(data_driven|market|manual)$")
     base_rate_mode: str | None = Field(
         default=None, pattern="^(conservative|recommended|aggressive)$"
     )
@@ -295,6 +319,19 @@ class DpSettingsUpdate(BaseModel):
     # Hoechstens 10 Stufen — dieselbe Grenze wie der DB-CHECK aus 0555.
     far_future: list[FarFutureRule] | None = Field(default=None, max_length=10)
     freigabe_noetig: bool | None = None
+    # 0562 — Grenzen deckungsgleich mit den DB-CHECKs derselben Migration.
+    freigabe_ab_tagen: int | None = Field(default=None, ge=0, le=730)
+    anker_enabled: bool | None = None
+    anker_max_pct: float | None = Field(default=None, ge=0, le=100)
+    saison_mindestpreis: bool | None = None
+    rate_plan_id: str | None = None
+    feiertag_uplift_pct: float | None = Field(default=None, ge=0, le=300)
+    ferien_uplift_pct: float | None = Field(default=None, ge=0, le=300)
+    # ISO-3166-1 alpha-2, hoechstens 10 Quellmaerkte.
+    quellmaerkte: list[str] | None = Field(default=None, max_length=10)
+    occupancy_discount_cap_pct: float | None = Field(default=None, ge=0, le=100)
+    occupancy_premium_cap_pct: float | None = Field(default=None, ge=0, le=100)
+    occupancy_lead_buckets: list[dict] | None = Field(default=None, max_length=10)
 
 
 class DpOverviewItem(BaseModel):

@@ -23,7 +23,16 @@ from src.features.subscriptions.entitlements import modul_aktiv
 from src.features.subscriptions.schemas import DYNPRICING_MODULE_KEY
 
 from .engine import DayResult, DaySignals, DpSettings, compute_day
+from .freigabe import gesendet_stempeln
 from .market import MarketDay, MarketSignalProvider, get_market_provider
+from .zusatzsignale import (
+    anker_je_tag,
+    feiertage_je_tag,
+    objektland,
+    preisgrenzen_je_tag,
+    saison_untergrenze_je_tag,
+    verlauf_schreiben,
+)
 
 log = get_logger("nextdays.pricing.recompute")
 
@@ -35,6 +44,8 @@ DEFAULT_HORIZON_DAYS = 540
 VORSCHLAG_HORIZONT_TAGE = 365
 # Fenster (Tage) für das Auslastungssignal um einen Tag herum.
 _OCCUPANCY_WINDOW = 30
+# Wie viele Tage je `in_`-Filter (Stempeln, Ausbuchen). Mehr sprengt die URL.
+_IN_BLOCK = 100
 
 
 def _as_date(value: object) -> date:
@@ -126,14 +137,20 @@ class DynamicPricingRecompute:
         # selbst nachrechnen, und wer es vergisst, sendet den falschen Preis.
         modi = self._tagesmodi(property_id, rng_start, rng_end)
         rows = []
+        manuell: list[tuple[str, int]] = []
         for cur, res in results:
             iso = cur.isoformat()
             eintrag = modi.get(iso)
             modus = (eintrag or {}).get("modus", "dynamisch")
             if modus == "manuell":
-                # Der feste Preis steht in price_overrides und gewinnt dort
-                # ohnehin gegen dynamic; hier gar nicht erst schreiben, damit
-                # kein Geisterpreis zurückbleibt, wenn der Override fällt.
+                # Der feste Preis steht in price_overrides. Hier NICHT
+                # schreiben — aber auch nicht einfach überspringen: der Resolver
+                # lässt `dynamic` vor `override` gewinnen, und die ALTE
+                # dynamic_prices-Zeile dieses Tags stand weiter da. Ergebnis
+                # (04.09.2026): „Fester Preis 800" gesetzt, Kalender und
+                # Portale zeigten unverändert den alten Automatikpreis. Der Tag
+                # wird deshalb unten ausgebucht und sein fester Preis gepusht.
+                manuell.append((iso, res.min_stay))
                 continue
             preis = res.price
             faktoren = {k: round(v, 4) for k, v in res.factors.items()}
@@ -153,6 +170,8 @@ class DynamicPricingRecompute:
                     "computed_at": datetime.now(UTC).isoformat(),
                 }
             )
+
+        manuell_rows = self._manuell_ausbuchen(property_id, manuell)
 
         if rows:
             # In dynamic_prices schreiben → Kalender, Quote UND die eigene
@@ -187,6 +206,11 @@ class DynamicPricingRecompute:
                     [{**r, "gesendet_am": None} for r in geaendert],
                     on_conflict="property_id,date",
                 ).execute()
+        # An die Portale geht die berechnete Kurve PLUS die festen Tage — ein
+        # fester Preis, der nur lokal gilt, wäre auf Airbnb und Booking ein
+        # anderer Preis als im Kalender.
+        zu_senden = rows + manuell_rows
+        if zu_senden:
             # Freigabe verlangt? Dann gehen nur die bereits freigegebenen Tage
             # raus. Gerechnet und gespeichert ist alles — der Kalender zeigt
             # weiterhin die echten Preise, nur die Portale warten.
@@ -199,8 +223,8 @@ class DynamicPricingRecompute:
 
             gesperrt = gesperrte_tage(self._db(), property_id, rng_start, rng_end)
             if gesperrt:
-                rows = [r for r in rows if r["date"] not in gesperrt]
-                if not rows:
+                zu_senden = [r for r in zu_senden if r["date"] not in gesperrt]
+                if not zu_senden:
                     log.info(
                         "dynamic_pricing_alles_wartet_auf_freigabe",
                         property_id=property_id,
@@ -214,17 +238,108 @@ class DynamicPricingRecompute:
             # Full-Sync bauen ihre Soll-Kurve aus demselben Resolver und
             # pushten die Preise ohnehin. Ein Gate nur hier gaukelte eine
             # Kontrolle vor, die es nie gab.
-            if self._push_to_channex(tenant_id, property_id, rows) and not gesperrt:
-                # Alles im Bereich ist übergeben → stempeln. Bei Freigabepflicht
-                # (gesperrt nicht leer) sind die gepushten Tage genau die schon
-                # gestempelten; die wartenden bleiben NULL, bis jemand freigibt.
-                self._gesendet_stempeln(property_id, rng_start, rng_end)
+            if self._push_to_channex(
+                tenant_id, property_id, zu_senden, rate_plan_id=self._dp_rate_plan_id()
+            ):
+                # Verlauf (SiteMinder „History"): EIN Eintrag je Push.
+                gesendet = sorted(str(r["date"])[:10] for r in zu_senden)
+                verlauf_schreiben(
+                    self._db(),
+                    property_id,
+                    von=date.fromisoformat(gesendet[0]),
+                    bis=date.fromisoformat(gesendet[-1]),
+                    ereignis="gesendet",
+                    details={
+                        "tage": len(gesendet),
+                        "min": min(float(r["price"]) for r in zu_senden),
+                        "max": max(float(r["price"]) for r in zu_senden),
+                    },
+                )
+                # Gestempelt wird, was WIRKLICH rausging, nicht der ganze
+                # Bereich. Der frühere Zusatz `and not gesperrt` war der
+                # Zirkel hinter „540 Tage nicht gesendet": bei Freigabepflicht
+                # ist `gesperrt` nie leer (dort steht jeder ungestempelte Tag),
+                # also stempelte der Lauf NIE, also blieben die Tage
+                # ungestempelt, also standen sie beim nächsten Lauf wieder in
+                # `gesperrt`. Ein freigegebener Tag, dessen Preis sich änderte,
+                # verlor seinen Stempel (oben, Wurzel 1) und bekam ihn nie
+                # zurück — obwohl er soeben gepusht wurde.
+                # Feste Tage haben keine dynamic_prices-Zeile; für sie trifft
+                # das Update nichts, was korrekt ist.
+                self._gesendet_stempeln(
+                    property_id, [str(r["date"])[:10] for r in zu_senden]
+                )
         log.info(
             "dynamic_pricing_recompute_property",
             property_id=property_id,
             days=len(rows),
         )
         return len(rows)
+
+    def _manuell_ausbuchen(
+        self, property_id: str, tage: list[tuple[str, int]]
+    ) -> list[dict]:
+        """Feste Tage aus der Automatik nehmen — der Gegenzustand (Wurzel 1).
+
+        Zwei Dinge, die vorher beide fehlten:
+          1. Die alte dynamic_prices-Zeile des Tags löschen. Solange sie steht,
+             gewinnt sie im Resolver gegen den festen Preis, und der Nutzer
+             sieht nach „Fester Preis" weiter die Automatik.
+          2. Den festen Preis für den Portal-Push zurückgeben. `_push_to_channex`
+             kennt nur die berechneten Zeilen; ohne diese Rückgabe erreichte der
+             feste Preis Airbnb und Booking nie.
+        Rückgabe: Push-Zeilen {property_id, date, price, min_stay} der Tage, die
+        einen festen Preis in `price_overrides` haben.
+        """
+        if not tage:
+            return []
+        isos = [iso for iso, _ in tage]
+        try:
+            for i in range(0, len(isos), _IN_BLOCK):
+                self._db().table("dynamic_prices").delete().eq(
+                    "property_id", property_id
+                ).in_("date", isos[i : i + _IN_BLOCK]).execute()
+        except Exception as exc:  # noqa: BLE001 — laut, aber der Lauf geht weiter
+            log.warning(
+                "dynamic_prices_manuell_ausbuchen_fehlgeschlagen",
+                property_id=property_id,
+                error=str(exc)[:200],
+            )
+        fest: dict[str, float] = {}
+        try:
+            for i in range(0, len(isos), _IN_BLOCK):
+                res = (
+                    self._db()
+                    .table("price_overrides")
+                    .select("date, price")
+                    .eq("property_id", property_id)
+                    .in_("date", isos[i : i + _IN_BLOCK])
+                    .not_.is_("price", "null")
+                    .execute()
+                ).data or []
+                for r in res:
+                    if r.get("price") is not None:
+                        fest[str(r["date"])[:10]] = float(r["price"])
+        except Exception as exc:  # noqa: BLE001
+            log.warning(
+                "price_overrides_fuer_feste_tage_unlesbar",
+                property_id=property_id,
+                error=str(exc)[:200],
+            )
+            return []
+        if len(fest) < len(isos):
+            # Modus 'manuell' ohne Betrag: das darf der Service nicht zulassen
+            # (422) — steht es trotzdem so da, wird es benannt, nicht erfunden.
+            log.warning(
+                "dp_manuell_ohne_preis",
+                property_id=property_id,
+                tage=sorted(set(isos) - set(fest)),
+            )
+        return [
+            {"property_id": property_id, "date": iso, "price": fest[iso], "min_stay": ms}
+            for iso, ms in tage
+            if iso in fest
+        ]
 
     def _bestand_preise(
         self, property_id: str, von: date, bis: date
@@ -253,24 +368,10 @@ class DynamicPricingRecompute:
                 continue
         return out
 
-    def _gesendet_stempeln(self, property_id: str, von: date, bis: date) -> None:
-        """Alle noch ungestempelten Tage im Bereich als übergeben markieren.
-
-        „Übergeben" heißt: `push_rates_batch` hat die Absicht in der
-        Restriktions-Outbox persistiert; von dort zieht der Cron nach, falls
-        Channex gerade nicht antwortet. Best-effort, aber laut."""
-        try:
-            self._db().table("dynamic_prices").update(
-                {"gesendet_am": datetime.now(UTC).isoformat()}
-            ).eq("property_id", property_id).is_("gesendet_am", "null").gte(
-                "date", von.isoformat()
-            ).lt("date", bis.isoformat()).execute()
-        except Exception as exc:  # noqa: BLE001
-            log.warning(
-                "dynamic_prices_stempel_fehlgeschlagen",
-                property_id=property_id,
-                error=str(exc)[:200],
-            )
+    def _gesendet_stempeln(self, property_id: str, tage: list[str]) -> None:
+        """Genau die übergebenen Tage als gesendet markieren — über den EINEN
+        Helfer in `freigabe.py`, den auch der Umschalt-Push nutzt."""
+        gesendet_stempeln(self._db(), property_id, tage)
 
     def _tagesmodi(
         self, property_id: str, von: date, bis: date
@@ -305,6 +406,15 @@ class DynamicPricingRecompute:
     def load_base_price(self, property_id: str) -> float | None:
         """Basispreis des Objekts (None = keiner hinterlegt)."""
         return self._load_base_price(property_id)
+
+    def load_settings(self, property_id: str) -> DpSettings:
+        """Einstellungen des Objekts — laedt auch `_settings_row` (Comp-Set,
+        Quellmaerkte, Ratenplan), das die Kurve braucht."""
+        return self._load_settings(property_id)
+
+    def booked_dates(self, property_id: str, start: date, end: date) -> set[str]:
+        """Belegte/gesperrte Tage als ISO-Set (dieselbe Quelle wie die Engine)."""
+        return self._booked_dates(property_id, start, end)
 
     def preis_kurve(
         self,
@@ -363,11 +473,35 @@ class DynamicPricingRecompute:
         )
         # Wetter (RateBoard): nur wenn aktiviert; ferne Tage → kein Score (neutral).
         weather = self._weather_by_date(property_id, settings, today, rng_start, rng_end)
+        # 0562: Preisgrenzen je Zeitraum, Vorjahresanker, Feiertage/Ferien.
+        # Alle drei lesen nur; fehlt eine Tabelle, bleibt das Signal leer.
+        grenzen = preisgrenzen_je_tag(self._db(), property_id, rng_start, rng_end)
+        anker = (
+            anker_je_tag(self._db(), property_id, rng_start, rng_end)
+            if settings.anker_enabled
+            else {}
+        )
+        feiertage = self._feiertage_by_date(property_id, settings, rng_start, rng_end)
+        # 0565: Saisonpreis als Untergrenze — Prozent-Saisons beziehen sich auf
+        # den Grundpreis des Ratenplans (`base`), nicht auf die Marktbasis.
+        saison = (
+            saison_untergrenze_je_tag(self._db(), property_id, base, rng_start, rng_end)
+            if settings.saison_mindestpreis
+            else {}
+        )
+        if settings.saison_mindestpreis:
+            log.info(
+                "dp_saison_untergrenze_geladen",
+                property_id=property_id,
+                saisontage=len(saison),
+            )
 
         out: list[tuple[date, DayResult]] = []
         cur = rng_start
         while cur < rng_end:
             md = market.get(cur.isoformat())
+            grenze = grenzen.get(cur.isoformat(), (None, None))
+            frei = feiertage.get(cur.isoformat(), {})
             signals = DaySignals(
                 day=cur,
                 event_pct=event_pct.get(cur.isoformat(), 0.0),
@@ -379,6 +513,12 @@ class DynamicPricingRecompute:
                 market_event_pct=md.event_uplift_pct if md else None,
                 pickup_velocity=velocity.get(cur.isoformat()),
                 weather_score=weather.get(cur.isoformat()),
+                anker_price=anker.get(cur.isoformat()),
+                ist_feiertag=bool(frei.get("feiertag")),
+                ist_ferien=bool(frei.get("ferien")),
+                min_price_tag=grenze[0],
+                max_price_tag=grenze[1],
+                saison_min_price=saison.get(cur.isoformat()),
             )
             out.append((cur, compute_day(base, settings, signals)))
             cur += timedelta(days=1)
@@ -687,6 +827,25 @@ class DynamicPricingRecompute:
         )
 
     # -- Quellen laden -------------------------------------------------------
+    def _feiertage_by_date(
+        self, property_id: str, settings: DpSettings, start: date, end: date
+    ) -> dict[str, dict[str, bool]]:
+        """Feiertage/Ferien je Tag — nur wenn ein Aufschlag eingestellt ist,
+        sonst wird gar nicht erst gelesen. Laender: Objektland + Quellmaerkte
+        (`dp_settings.quellmaerkte`)."""
+        if settings.feiertag_uplift_pct <= 0 and settings.ferien_uplift_pct <= 0:
+            return {}
+        laender: list[str] = []
+        land = objektland(self._db(), property_id)
+        if land:
+            laender.append(land)
+        row = self._settings_row or {}
+        laender.extend(str(c) for c in (row.get("quellmaerkte") or []) if c)
+        if not laender:
+            log.info("dp_feiertage_ohne_land", property_id=property_id)
+            return {}
+        return feiertage_je_tag(self._db(), laender, start, end)
+
     def _load_settings(self, property_id: str) -> DpSettings:
         res = (
             self._db()
@@ -927,8 +1086,19 @@ class DynamicPricingRecompute:
             for r in rows
         ]
 
+    def _dp_rate_plan_id(self) -> str | None:
+        """Auf welchen Ratenplan DP wirkt (0562). None = alle Plaene des Objekts."""
+        row = self._settings_row or {}
+        rp = row.get("rate_plan_id")
+        return str(rp) if rp else None
+
     def _push_to_channex(
-        self, tenant_id: str | None, property_id: str, rows: list[dict]
+        self,
+        tenant_id: str | None,
+        property_id: str,
+        rows: list[dict],
+        *,
+        rate_plan_id: str | None = None,
     ) -> bool:
         """Geänderte Tage als Restrictions (Preis in Cent + Min-Stay) an Channex
         pushen. Run-Length-Encoding: aufeinanderfolgende Tage mit gleichem
@@ -986,14 +1156,17 @@ class DynamicPricingRecompute:
                     continue
                 first = ordered[seg_start]
                 last = ordered[i - 1]
-                segments.append(
-                    {
-                        "date_from": _as_date(first["date"]),
-                        "date_to": _as_date(last["date"]),  # inklusiv
-                        "rate_cents": round(float(first["price"]) * 100),
-                        "min_stay": first.get("min_stay"),
-                    }
-                )
+                segment = {
+                    "date_from": _as_date(first["date"]),
+                    "date_to": _as_date(last["date"]),  # inklusiv
+                    "rate_cents": round(float(first["price"]) * 100),
+                    "min_stay": first.get("min_stay"),
+                }
+                # DP je Ratenplan (0562): mit rate_plan_id pusht
+                # `push_rates_batch` NUR an diesen Plan; ohne an alle.
+                if rate_plan_id:
+                    segment["rate_plan_id"] = rate_plan_id
+                segments.append(segment)
                 seg_start = i
             cm.push_rates_batch(tenant_id, property_id, segments)
             return True

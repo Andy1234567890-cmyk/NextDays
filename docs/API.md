@@ -745,6 +745,27 @@ Buchungsstrecke lesen Preise ausschließlich hierüber. Leseendpoints `view_cale
 | `GET`   | `/api/v1/pricing/settings/{property_id}`          | Dynamic-Pricing-Einstellungen (dp_settings) eines Objekts (Defaults, falls leer). `manage_calendar`                                                                                                                          |
 | `PUT`   | `/api/v1/pricing/settings/{property_id}`          | Dynamic-Pricing-Einstellungen setzen (Upsert); bei `enabled=true` sofortiger Recompute — **ohne gebuchtes Modul 402** (die Engine würde ohnehin nicht rechnen). `manage_calendar` + `edit_calendar_bookings`                  |
 | `POST`  | `/api/v1/pricing/recompute`                       | Interner Cron (Header `X-Internal-Cron-Secret`): berechnet die dynamischen Preise aller Objekte mit aktiviertem DP neu (Horizont 540 Tage) + Channex-Push                                                                    |
+| `GET`/`POST`/`DELETE` | `/api/v1/pricing/preisgrenzen/{property_id}[/{grenze_id}]` | Mindest-/Höchstpreis je Zeitraum (0562, SiteMinder „Floor and ceiling overrides"): Zeitraum, optional Wochentage (0=Mo), optional jährlich. Spezifischste Grenze gewinnt; ohne Treffer gilt `dp_settings.min/max_price`. Lesen `pm_booking_total`, Schreiben `manage_calendar` + `edit_calendar_bookings` |
+| `GET`   | `/api/v1/pricing/portalstand/{property_id}?von&bis` | Soll/Ist je Tag: berechneter Preis in DERSELBEN Rechnung wie der Push (Resolver, gesenkt um den Aktionsfaktor, ohne Freigabe-wartende Tage; `aktion_pct` je Tag) gegen den lokalen Schatten des zuletzt gepushten Stands (`channex_ari_shadow`); `abweichend` zählt Tage mit > 0,5 % Differenz. Der Fehler vom 04.09.2026 (435/540 Tage falsch an den Portalen) wird damit sichtbar |
+| `POST`  | `/api/v1/pricing/portalstand/{property_id}/angleichen` | Differenz jetzt nachsenden — reiht `reconcile_rate_plan_prices` als Job ein (202). Derselbe Abgleich läuft seit 0562 täglich für alle DP-Objekte (`jobs/dp_portal_abgleich_tick`) |
+| `GET`   | `/api/v1/pricing/vorschau/{property_id}?von&bis`   | Kurve, wie sie MIT eingeschalteter Automatik wäre — `preis_kurve`, nichts wird gespeichert oder gesendet (Hostaway „Subscribe & Review"). Max. 366 Tage |
+| `GET`   | `/api/v1/pricing/forecast/{property_id}`          | Nächste 90 Tage: belegt vs. gelernte Erwartung (Pickup-Modell aus `dp_pickup_snapshots`), Angebotsdichte der Umgebung, `pace` vor/im_plan/hinter — `null` ohne gelernte Kurve (kein erfundener Wert) |
+| `GET`   | `/api/v1/pricing/verlauf/{property_id}[?tag]`     | Verlauf (`dp_verlauf`, SiteMinder „History"): Tagesmodus, Freigabe, Push, Einstellungen, Preisgrenzen — mit Nutzer (Anzeigename) oder Automatik |
+
+**Dynamic Pricing, Ausbau 0562 (05.09.2026, nach Vergleich mit Hostaway/SiteMinder):**
+`dp_settings` kennt `base_mode='market'` (Anker = täglicher Markt-Median, sonst
+Grundpreis, sichtbar als Faktor `marktbasis`), `freigabe_ab_tagen` (Freigabe nur
+für Tage mit Vorlauf ≤ X — fernere gehen automatisch), `anker_enabled/anker_max_pct`
+(Vorjahresanker: bester Netto-Nachtpreis derselben Woche im Vorjahr hebt an, nie ab),
+`saison_mindestpreis` (0565: der Saisonpreis des Saisonkalenders ist am Saisontag die
+Untergrenze, nie die Obergrenze; Faktor `saison_untergrenze`; ohne Saisonkalender → 422,
+Antwort meldet `saison_verfuegbar`),
+`rate_plan_id` (DP wirkt nur auf diesen Plan; abgeleitete Pläne → 422),
+`feiertag_uplift_pct/ferien_uplift_pct/quellmaerkte` (Feed `dp_feiertage` aus
+Nager.Date + OpenHolidays, Tagesjob `feiertage_feed`). Grenzen aller Regeln sind
+jetzt auch DB-CHECKs (Wurzel 6). Freigabe-Zählung und -Fenster enden am Push-Horizont
+(365), nicht am Rechenhorizont (540) — sonst „540 Tage nicht gesendet" an einem
+30-Tage-Kalender.
 
 **Dynamic Pricing (Phase 1, regelbasiert, Migration `0055`):** Eine Regel-Engine
 (`pricing/engine.py`, reine Funktionen) berechnet täglich je (Objekt, Tag) einen
@@ -2002,6 +2023,31 @@ und auf 2 MB HTML gedeckelt (Wurzel 8). Ein zweiter, serverseitiger Renderer
 wäre eine Dublette mit eigenem SSRF-Vektor; den Scope trägt der Datenpfad:
 `GET /api/v1/owner-statements/{id}` gibt einem Eigentümer nur die EIGENE
 Abrechnung (`_require_statement_visible`, sonst 404).
+
+---
+
+## auswertung (Auswertung — Hostaway „Financial Reporting" in voller Tiefe)
+
+EIN Endpunkt für alle Reiter der Seite `/auswertung`: alle teilen Zeitraum,
+Bezug und Objektfilter, ihre Kennzahlen müssen übereinstimmen. Ausbau
+05.09.2026 nach Hostaway (Rental Activity je Buchung/je Objekt, Occupancy je
+Monat, Expenses & Extras, Custom Views, Download) und SiteMinder (Pace,
+Wochentag, Buchungsfenster, Aufenthaltsdauer, Stornos).
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| `GET` | `/api/v1/auswertung?von&bis&bezug&property_id*&channel*&status*&vergleich` | Kennzahlen, Verlauf (gesamt + `verlauf_je_kanal`/`verlauf_je_objekt`), Kanäle, Objekte (+ `naechte_eigennutzung`), `objekte_monatlich` (je Objekt × Monat), Buchungen mit Finanzfeldern aus der Portal-Zerlegung 0366 (`uebernachtung`, `reinigung`, `sonstige_gebuehren`, `gebuehren_je_art`, `zusatzleistungen`, `brutto`, `provision`, `provision_gemeldet`, `zahlungsgebuehr`, `netto`, `finanz_quelle`), `objekte_finanzen` (je Objekt summiert, `ohne_zerlegung` zählt Lücken), Gäste, `wochentage`, `buchungsfenster`, `aufenthaltsdauer`, `stornos` (Kanal/Grund/Vorlauf), `ausgaben` (Verrechnungsposten `owner_expenses` nach Datum, Ausgabe = `from_owner`, Extra = `to_owner`). `status` filtert auf Werte des Enums `reservation_status` (unbekannt → 422). Grenzen: 5 Jahre, mit Vergleich 1 Jahr, 5 000 Buchungen, 2 000 Posten. Fehlende Grundlage → `null`, nie 0 (Wurzel 4). |
+| `GET` | `/api/v1/auswertung/pace?property_id*&channel*` | SiteMinder „Pace": Buchungsstand der nächsten 12 Monate (Nächte/Buchungen/Umsatz) gegen denselben Kalendertag im Vorjahr (`vorjahr_stichtag_*`, nur Buchungen mit echtem `booked_at`) und das Vorjahres-Ende (`vorjahr_ende_*`). `vorjahr_ohne_zeitstempel` zählt, was im Stichtagswert fehlt (Wurzel 5b). |
+| `GET` | `/api/v1/auswertung/ansichten?reiter` | Gespeicherte Ansichten des angemeldeten NUTZERS (0563 `auswertung_ansichten`: Filter, Spalten, Optionen je Reiter). |
+| `POST` | `/api/v1/auswertung/ansichten` | Ansicht speichern; gleicher Name im selben Reiter ersetzt (idempotent, UNIQUE-Backstop). Höchstens 50 je Reiter. |
+| `DELETE` | `/api/v1/auswertung/ansichten/{id}` | Eigene Ansicht löschen (Scope tenant + user wie die Liste, Wurzel 9). 204 auch bei Unbekannt. |
+
+Autorisierung: `download_booking_report` (Umsatz, Provision, Herkunft — nicht
+für Reinigungskräfte, §4.3). Export (CSV/Excel/PDF) erzeugt der Browser aus
+den geladenen Zahlen (`web/lib/auswertung-export.ts`) — kein zweiter
+Rechenweg im Backend. Die DP-Auswertung „Preise & Markt" liest
+`GET /api/v1/pricing/preisbericht/{property_id}` (Preis gegen Umgebung je
+Stichtag, Uplift gegen Grundpreis, Berater-Entscheidungen).
 
 ---
 

@@ -353,7 +353,8 @@
     "hrSettings": "Ajustes",
     "timeClock": "Reloj de fichar",
     "payroll": "Nómina",
-    "staffReports": "Informes de personal"
+    "staffReports": "Informes de personal",
+    "prices": "Precios y mercado"
   },
   "exemption": {
     "labelNamed": "Exento de impuestos ({scheme}) — no se requiere NIF/IVA",
@@ -12390,7 +12391,7 @@
   },
   "analysis": {
     "title": "Evaluación",
-    "subtitle": "Indicadores clave, reservas, ocupación y canales de un período.",
+    "subtitle": "Indicadores, reservas, ocupación, canales, huéspedes, gastos, ritmo y patrones de un periodo.",
     "loading": "Calculando…",
     "empty": "No hay datos para este período.",
     "ownerStay": "Uso propio",
@@ -12404,14 +12405,23 @@
       "buchungen": "Reservas",
       "auslastung": "Ocupación",
       "kanaele": "Canales",
-      "gaeste": "Huéspedes"
+      "gaeste": "Huéspedes",
+      "ausgaben": "Gastos y extras",
+      "pace": "Ritmo",
+      "muster": "Patrones",
+      "stornos": "Cancelaciones"
     },
     "range": {
       "monat": "Este mes",
       "vormonat": "Mes anterior",
       "quartal": "Trimestre",
       "jahr": "Año",
-      "frei": "Selección libre"
+      "frei": "Selección libre",
+      "vorjahr": "Año anterior",
+      "letzte30": "Últimos 30 días",
+      "naechste30": "Próximos 30 días",
+      "letzte12monate": "Últimos 12 meses",
+      "naechste12monate": "Próximos 12 meses"
     },
     "filter": {
       "range": "Período",
@@ -12422,7 +12432,27 @@
       "allProperties": "Todos los objetos",
       "channels": "Canales",
       "allChannels": "Todos los canales",
-      "compare": "Comparar"
+      "compare": "Comparar",
+      "button": "Filtro",
+      "reset": "Restablecer",
+      "apply": "Aplicar",
+      "cancel": "Cancelar",
+      "clear": "Borrar selección",
+      "nSelected": "{count, plural, one {# seleccionado} other {# seleccionados}}",
+      "nProperties": "{count, plural, one {# propiedad} other {# propiedades}}",
+      "allStatuses": "Todos los estados",
+      "searchProperties": "Buscar propiedad…",
+      "noMatch": "No hay resultados.",
+      "rangeHint": "La selección rápida permanece dinámica en las vistas guardadas: «Mes anterior» es siempre el mes anterior a hoy.",
+      "statusHint": "Sin selección, se cuentan todos los estados. Las reservas canceladas solo se incluyen en la tasa de cancelación, no en los ingresos ni en las noches.",
+      "dim": {
+        "zeitraum": "Período",
+        "bezug": "Asignación",
+        "objekte": "Propiedades",
+        "kanaele": "Canales",
+        "status": "Estado",
+        "vergleich": "Comparación"
+      }
     },
     "basis": {
       "anreise": "Por llegada",
@@ -12454,11 +12484,31 @@
       "revenueOverTime": "Tendencia de ingresos",
       "shareByChannel": "Cuota de ingresos por canal",
       "revenueByProperty": "Ingresos por propiedad",
-      "footnote": "Ingresos totales en el período: {total}"
+      "footnote": "Ingresos totales en el período: {total}",
+      "overTime": "{metric} a lo largo del tiempo",
+      "otherProperties": "{count, plural, one {# propiedad adicional} other {# propiedades adicionales}}",
+      "metric": "Métrica",
+      "metricValues": {
+        "umsatz": "Ingresos",
+        "naechte": "Noches",
+        "buchungen": "Reservas"
+      },
+      "groupBy": "Agrupar",
+      "groupValues": {
+        "keine": "Ninguno",
+        "kanal": "Canal",
+        "objekt": "Propiedad"
+      },
+      "type": "Gráfico",
+      "typeValues": {
+        "linie": "Línea",
+        "balken": "Barra"
+      }
     },
     "table": {
       "rowCount": "{count, plural, one {# reserva} other {# reservas}}",
-      "columns": "Columnas"
+      "columns": "Columnas",
+      "total": "Total"
     },
     "col": {
       "property": "Propiedad",
@@ -12480,7 +12530,30 @@
       "bookingsShort": "Reservas",
       "net": "Neto",
       "share": "Cuota",
-      "country": "País"
+      "country": "País",
+      "month": "Mes",
+      "ownerNights": "Uso propio",
+      "accommodation": "Noche",
+      "cleaning": "Limpieza",
+      "otherFees": "Otras tarifas",
+      "addons": "Servicios adicionales",
+      "gross": "Precio de huésped",
+      "paymentFee": "Tarifa de pago",
+      "date": "Fecha",
+      "name": "Designación",
+      "category": "Categoría",
+      "kind": "Tipo",
+      "amount": "Importe",
+      "receipt": "Recibo",
+      "count": "Cantidad",
+      "weekday": "Día de la semana",
+      "value": "Valor",
+      "period": "Período",
+      "checkIn": "Llegada",
+      "checkOut": "Salida",
+      "currency": "Moneda",
+      "source": "Fuente",
+      "reason": "Motivo"
     },
     "guests": {
       "total": "Huéspedes",
@@ -12512,7 +12585,146 @@
     "compareCurrencyUnclear": "Moneda ambigua en el período de comparación",
     "compareCurrencyMismatchHint": "Durante el período de comparación, se utilizó una moneda diferente. Un cambio porcentual sería un efecto del tipo de cambio y no una cifra de negocio.",
     "compareChartCurrencyMismatch": "El período de comparación fue en una moneda diferente, por lo que la línea del año anterior no se dibuja.",
-    "compareLocked": "Es posible comparar hasta un período de un año."
+    "compareLocked": "Es posible comparar hasta un período de un año.",
+    "status": {
+      "pending": "Abierto",
+      "confirmed": "Confirmado",
+      "checked_in": "Registrado",
+      "checked_out": "Salida realizada",
+      "completed": "Completado",
+      "cancelled": "Cancelado",
+      "declined": "Rechazado",
+      "expired": "Expirado",
+      "requested": "Solicitado"
+    },
+    "bookings": {
+      "per": {
+        "buchung": "Por reserva",
+        "objekt": "Por propiedad"
+      },
+      "propertyCount": "{count, plural, one {# Propiedad} other {# Propiedades}}",
+      "showEmpty": "Mostrar propiedades sin reservas",
+      "reconstructed": "Reconstruido a partir de las tarifas de la propiedad; el portal no proporcionó un desglose.",
+      "commissionComputed": "Calculado a partir de la tasa de comisión almacenada; no informado por el portal.",
+      "withoutBreakdown": "{count, plural, one {# reserva sin desglose de precios — solo se muestra el precio total.} other {# reservas sin desglose de precios — solo se muestra el precio total.}}",
+      "withoutBreakdownShort": "Sin desglose",
+      "reconstructedCount": "{count, plural, one {# desglose (*) reconstruido a partir de las tarifas del objeto.} other {# desgloses (*) reconstruidos a partir de las tarifas del objeto.}}"
+    },
+    "occupancy": {
+      "byMonth": "Por mes",
+      "propertyCount": "{count, plural, one {# objeto} other {# objetos}}"
+    },
+    "expenses": {
+      "empty": "No hay partidas de compensación en este período.",
+      "emptyHint": "Los gastos y extras se generan en la liquidación del propietario y de los servicios solicitados.",
+      "expenses": "Gastos",
+      "extras": "Extras",
+      "balance": "Saldo",
+      "balanceHint": "Extras menos gastos",
+      "count": "Partida",
+      "byCategory": "Por categoría",
+      "byProperty": "Por objeto",
+      "noCategory": "Sin categoría",
+      "noProperty": "Sin objeto (cuenta)",
+      "rowCount": "{count, plural, one {# partida} other {# partidas}}",
+      "kind": {
+        "ausgabe": "Gasto",
+        "extra": "Extra"
+      },
+      "footnote": "El período es la fecha de la partida. Los gastos corren a cargo del propietario, los extras a su favor, tal como figuran en la liquidación."
+    },
+    "pace": {
+      "title": "Estado de reservas de los próximos 12 meses",
+      "subtitle": "Estado a {heute} frente al estado a {vorjahr} para los mismos meses un año antes.",
+      "vsLastYear": "frente a la fecha de referencia del año anterior",
+      "now": "Reservado hoy",
+      "lastYearSameDay": "Año anterior el mismo día",
+      "lastYearFinal": "Año anterior al final",
+      "nowNights": "Reservado hoy (noches)",
+      "nowRevenue": "Reservado hoy (facturación)",
+      "lastYearSameDayNights": "Año anterior el mismo día (noches)",
+      "delta": "Diferencia",
+      "lastYearFinalNights": "Año anterior al final (noches)",
+      "lastYearFinalRevenue": "Año anterior al final (facturación)",
+      "footnote": "La fecha de referencia del año anterior solo cuenta las reservas con una fecha de reserva real del portal.",
+      "withoutTimestamp": "{count, plural, one {# reserva del año anterior sin marca de tiempo falta en el valor de la fecha de referencia.} other {# reservas del año anterior sin marca de tiempo faltan en el valor de la fecha de referencia.}}"
+    },
+    "patterns": {
+      "weekday": "Rendimiento por día de la semana",
+      "weekdayHint": "Ocupación e ingresos por día de la semana. Los ingresos de una reserva se distribuyen uniformemente entre sus noches; los portales no proporcionan un precio por noche.",
+      "leadTime": "Ventana de reserva",
+      "leadTimeHint": "Días entre la reserva y la llegada. Solo reservas con fecha de reserva real.",
+      "stayLength": "Duración de la estancia",
+      "stayLengthHint": "Distribución de las noches reservadas por estancia.",
+      "days": "Días",
+      "nights": "Noches",
+      "daysValue": "{n} días"
+    },
+    "cancellations": {
+      "empty": "Sin cancelaciones en este período.",
+      "emptyHint": "{count, plural, one {# reserva válida, ninguna cancelada.} other {# reservas válidas, ninguna cancelada.}}",
+      "nights": "Noches canceladas",
+      "lostRevenue": "Ingresos perdidos",
+      "lostRevenueHint": "Precio total de las reservas canceladas — parte de las noches se revendieron.",
+      "leadTime": "Ø Antelación",
+      "leadTimeBase": "{count} de {total} con fecha de cancelación",
+      "byChannel": "Por canal",
+      "byLeadTime": "Por antelación (días antes de la llegada)",
+      "byReason": "Por motivo",
+      "noReason": "Ningún motivo registrado",
+      "footnote": "Tasa de cancelación = canceladas / (válidas + canceladas). La antelación solo considera reservas con fecha de cancelación."
+    },
+    "views": {
+      "button": "Vistas",
+      "title": "Vistas guardadas",
+      "empty": "Aún no se ha guardado ninguna vista.",
+      "new": "Guardar vista actual",
+      "delete": "Eliminar",
+      "saveTitle": "Guardar vista",
+      "saveHint": "Guarda el período, los filtros, las columnas y la configuración de las pestañas — solo para usted.",
+      "namePlaceholder": "p. ej., Mes anterior por propiedad",
+      "save": "Guardar"
+    },
+    "export": {
+      "button": "Descargar informe",
+      "title": "Formato",
+      "csv": "CSV (tabla actual)",
+      "xlsx": "Excel (todas las tablas de la pestaña)",
+      "pdf": "PDF",
+      "hint": "Se exportará exactamente lo que aparece aquí — con los filtros activos.",
+      "generated": "Creado el {when}",
+      "failed": "Error de exportación."
+    },
+    "prices": {
+      "title": "Precios y mercado",
+      "subtitle": "Dónde se sitúa su precio en relación con el entorno, qué hace el sistema automático con el precio base y cómo gestionar las sugerencias.",
+      "property": "Propiedad",
+      "noProperties": "Ninguna propiedad con precios dinámicos. Active el sistema automático en \"Precios dinámicos\"; el informe aparecerá aquí.",
+      "distance": "Diferencia media con el mercado",
+      "distanceHint": "{n} fechas clave con precio propio",
+      "position": "Ubicación de las fechas clave",
+      "below": "por debajo del mercado",
+      "at": "en el mercado",
+      "above": "por encima del mercado",
+      "uplift": "Sistema automático frente a precio base",
+      "upliftHint": "{days} días en el horizonte · Precio base {base}",
+      "noBase": "No hay precio base guardado",
+      "range": "Rango de precios",
+      "rangeHint": "Ø {avg}",
+      "ki": "Asesor de reglas",
+      "kiHint": "{accepted} aceptadas · {rejected} rechazadas (90 días)",
+      "kiTotal": "total {accepted} / {rejected}",
+      "chart": "Precio frente al entorno por fecha clave",
+      "chartHint": "Banda = rango medio del entorno (percentil 25-75), línea = mediana. Su precio en línea discontinua, precio base en gris.",
+      "market": "Entorno (mediana)",
+      "mid": "Rango medio",
+      "own": "Su precio",
+      "base": "Precio base",
+      "table": "Fechas clave",
+      "offers": "Ofertas",
+      "footnote": "Área observada alrededor de {km} km · Fechas clave de la observación diaria del mercado · última recuperación por nosotros {when}.",
+      "loading": "Calculando informe..."
+    }
   },
   "tasks": {
     "fehler": {

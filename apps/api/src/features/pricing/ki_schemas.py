@@ -103,11 +103,20 @@ class TagesmodusAntwort(BaseModel):
 
 
 class FreigabeStand(BaseModel):
-    """Wie viele berechnete Tage warten auf die Freigabe?"""
+    """Wie viele berechnete Tage sind noch nicht an den Portalen?
+
+    `offen` zählt ungestempelte Tage im Sende-Fenster. Was das BEDEUTET, hängt
+    an `freigabe_noetig`: mit Freigabepflicht warten sie auf den Klick des
+    Betriebs; ohne (Sofort-Modus) ist die Automatik dran — dann ist `sendet`
+    gesetzt, weil der Abruf den Lauf bereits eingereiht hat. Ein Zähler ohne
+    diese Unterscheidung fragte den Betrieb nach einer Freigabe, die er
+    ausdrücklich abgeschaltet hatte (05.09.2026).
+    """
 
     property_id: str
     freigabe_noetig: bool
     offen: int
+    sendet: bool = False
 
 
 class StufenVorschau(BaseModel):
@@ -202,3 +211,147 @@ class MarktStand(BaseModel):
     angebote: list[MarktAngebot] = Field(default_factory=list)
     # Warum es (noch) kein Signal gibt — leer, wenn eines vorliegt.
     hinweis: str | None = None
+
+
+# --- 0562: Preisgrenzen, Portalstand, Verlauf, Vorschau, Forecast ---------------
+
+
+class Preisgrenze(BaseModel):
+    """Mindest-/Hoechstpreis fuer einen Zeitraum (SiteMinder „Floor and ceiling
+    override"). Mindestens eine der beiden Grenzen ist gesetzt."""
+
+    id: str
+    property_id: str
+    bezeichnung: str
+    von: date
+    bis: date
+    # 0 = Montag … 6 = Sonntag; None = alle Tage.
+    wochentage: list[int] | None = None
+    jaehrlich: bool = False
+    min_price: float | None = None
+    max_price: float | None = None
+
+
+class PreisgrenzeAnlegen(BaseModel):
+    bezeichnung: str = Field(min_length=1, max_length=80)
+    von: date
+    bis: date
+    wochentage: list[int] | None = Field(default=None, max_length=7)
+    jaehrlich: bool = False
+    min_price: float | None = Field(default=None, ge=0)
+    max_price: float | None = Field(default=None, ge=0)
+
+
+class PortalstandTag(BaseModel):
+    """Soll/Ist eines Tages: was wir berechnet haben, was laut unserem Schatten
+    (`channex_ari_shadow`) bei den Portalen steht."""
+
+    date: date
+    berechnet: float | None = None
+    portal: float | None = None
+    # berechnet - portal in Prozent vom Portalpreis; None ohne Vergleich.
+    abweichung_pct: float | None = None
+    # Greift an diesem Tag eine Aktion, ist `berechnet` bereits gesenkt —
+    # hier steht um wie viel (z. B. -20.0), damit die Zahl erklärbar bleibt.
+    aktion_pct: float | None = None
+
+
+class Portalstand(BaseModel):
+    property_id: str
+    waehrung: str | None = None
+    # Ratenplan, gegen dessen Schatten verglichen wird.
+    rate_plan_id: str | None = None
+    tage: list[PortalstandTag]
+    # Wie viele Tage im Zeitraum weichen um mehr als die Toleranz ab?
+    abweichend: int = 0
+    # Wann UNSER Schatten zuletzt fortgeschrieben wurde (Wurzel 5b).
+    schatten_stand: str | None = None
+    hinweis: str | None = None
+
+
+class VerlaufEintrag(BaseModel):
+    id: str
+    von: date
+    bis: date
+    ereignis: str
+    details: dict[str, Any] = Field(default_factory=dict)
+    # None = Automatik (Cron/Worker).
+    user_id: str | None = None
+    user_name: str | None = None
+    created_at: str
+
+
+class VorschauTag(BaseModel):
+    """Ein Tag der Kurve, wie sie MIT eingeschaltetem Dynamic Pricing waere.
+    Nichts davon wird gespeichert oder gesendet."""
+
+    date: date
+    price: float
+    factors: dict[str, float] = Field(default_factory=dict)
+
+
+class ForecastTag(BaseModel):
+    date: date
+    belegt: bool
+    # Gelernte Erwartung, dass dieser Tag bei diesem Vorlauf belegt ist (0..1).
+    # None = keine gelernte Zelle (Cold-Start) — kein erfundener Wert.
+    erwartet: float | None = None
+    # Freie Angebote der Umgebung an diesem Tag (markt_beobachtung.anzahl);
+    # None = kein Stichtag in der Naehe.
+    markt_angebote: int | None = None
+
+
+class Forecast(BaseModel):
+    property_id: str
+    horizont_tage: int
+    tage: list[ForecastTag]
+    # Kennzahlen ueber den Horizont.
+    belegt_pct: float
+    erwartet_pct: float | None = None
+    # „vor" = mehr belegt als gelernt erwartet, „hinter" = weniger, None ohne Modell.
+    pace: Literal["vor", "im_plan", "hinter"] | None = None
+    hinweis: str | None = None
+
+
+class PreisberichtPunkt(BaseModel):
+    """Ein Stichtag des Preisberichts: Markt, eigener Preis, Grundpreis."""
+
+    tag: str
+    markt_median: float
+    p25: float | None = None
+    p75: float | None = None
+    anzahl: int = 0
+    eigener_preis: float | None = None
+    grundpreis: float | None = None
+    # (eigener − Markt) / Markt in Prozent; None ohne eigenen Preis.
+    abstand_pct: float | None = None
+
+
+class Preisbericht(BaseModel):
+    """Die Auswertung des Dynamic Pricing für ein Objekt (Seite „Preise & Markt")."""
+
+    property_id: str
+    waehrung: str | None = None
+    stand_vom: str | None = None
+    radius_km: float = 50.0
+    hinweis: str | None = None
+    verlauf: list[PreisberichtPunkt] = Field(default_factory=list)
+    # Mittlerer Abstand zum Markt-Median über alle Stichtage mit eigenem Preis.
+    abstand_schnitt_pct: float | None = None
+    # Stichtage nach Lage: unter −8 %, zwischen, ab +8 % — dieselben Grenzen
+    # wie die Farbskala der Karte.
+    stichtage_unter_markt: int = 0
+    stichtage_am_markt: int = 0
+    stichtage_ueber_markt: int = 0
+    grundpreis: float | None = None
+    horizont_tage: int = 365
+    tage_mit_preis: int = 0
+    preis_schnitt: float | None = None
+    preis_min: float | None = None
+    preis_max: float | None = None
+    # Summe der berechneten Preise gegen Grundpreis × Tage, in Prozent.
+    uplift_pct: float | None = None
+    ki_angenommen: int = 0
+    ki_abgelehnt: int = 0
+    ki_angenommen_90: int = 0
+    ki_abgelehnt_90: int = 0

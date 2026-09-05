@@ -353,7 +353,8 @@
     "hrSettings": "Iestatījumi",
     "timeClock": "Laika uzskaite",
     "payroll": "Alga",
-    "staffReports": "Personāla atskaites"
+    "staffReports": "Personāla atskaites",
+    "prices": "Cenas un tirgus"
   },
   "exemption": {
     "labelNamed": "Atbrīvots no nodokļa ({scheme}) — PVN nr. nav vajadzīgs",
@@ -12390,7 +12391,7 @@
   },
   "analysis": {
     "title": "Novērtējums",
-    "subtitle": "Perioda rādītāji, rezervācijas, noslogojums un kanāli.",
+    "subtitle": "Galvenie rādītāji, rezervācijas, noslogojums, kanāli, viesi, izdevumi, temps un perioda modeļi.",
     "loading": "Tiek aprēķināts …",
     "empty": "Šim periodam nav datu.",
     "ownerStay": "Pašpatēriņš",
@@ -12404,14 +12405,23 @@
       "buchungen": "Rezervācijas",
       "auslastung": "Noslogojums",
       "kanaele": "Kanāli",
-      "gaeste": "Viesi"
+      "gaeste": "Viesi",
+      "ausgaben": "Izdevumi un papildpakalpojumi",
+      "pace": "Temps",
+      "muster": "Modeļi",
+      "stornos": "Atcelšanas"
     },
     "range": {
       "monat": "Šis mēnesis",
       "vormonat": "Iepriekšējais mēnesis",
       "quartal": "Ceturksnis",
       "jahr": "Gads",
-      "frei": "Brīvi izvēlēts"
+      "frei": "Brīvi izvēlēts",
+      "vorjahr": "Iepriekšējais gads",
+      "letzte30": "Pēdējās 30 dienas",
+      "naechste30": "Nākamās 30 dienas",
+      "letzte12monate": "Pēdējie 12 mēneši",
+      "naechste12monate": "Nākamie 12 mēneši"
     },
     "filter": {
       "range": "Laika posms",
@@ -12422,7 +12432,27 @@
       "allProperties": "Visi objekti",
       "channels": "Kanāli",
       "allChannels": "Visi kanāli",
-      "compare": "Salīdzināt"
+      "compare": "Salīdzināt",
+      "button": "Filtrs",
+      "reset": "Atiestatīt",
+      "apply": "Lietot",
+      "cancel": "Atcelt",
+      "clear": "Notīrīt atlasi",
+      "nSelected": "{count, plural, one {# atlasīts} other {# atlasīti}}",
+      "nProperties": "{count, plural, one {# objekts} other {# objekti}}",
+      "allStatuses": "Visi statusi",
+      "searchProperties": "Meklēt objektu…",
+      "noMatch": "Nav rezultātu.",
+      "rangeHint": "Ātrā izvēle saglabātajos skatos paliek dinamiska: “Iepriekšējais mēnesis” vienmēr ir mēnesis pirms šodienas.",
+      "statusHint": "Bez atlases tiek ņemti vērā visi statusi. Atceltās rezervācijas jebkurā gadījumā tiek iekļautas tikai atcelšanas rādītājā, nevis ieņēmumos un naktīs.",
+      "dim": {
+        "zeitraum": "Periods",
+        "bezug": "Piešķiršana",
+        "objekte": "Objekti",
+        "kanaele": "Kanāli",
+        "status": "Statuss",
+        "vergleich": "Salīdzinājums"
+      }
     },
     "basis": {
       "anreise": "Pēc ierašanās",
@@ -12454,11 +12484,31 @@
       "revenueOverTime": "Ieņēmumu vēsture",
       "shareByChannel": "Ieņēmumu daļa pa kanāliem",
       "revenueByProperty": "Ieņēmumi par īpašumu",
-      "footnote": "Kopējie ieņēmumi periodā: {total}"
+      "footnote": "Kopējie ieņēmumi periodā: {total}",
+      "overTime": "{metric} laika gaitā",
+      "otherProperties": "{count, plural, one {# cits objekts} other {# citi objekti}}",
+      "metric": "Metrika",
+      "metricValues": {
+        "umsatz": "Ieņēmumi",
+        "naechte": "Naktis",
+        "buchungen": "Rezervācijas"
+      },
+      "groupBy": "Grupēt",
+      "groupValues": {
+        "keine": "Nav",
+        "kanal": "Kanāls",
+        "objekt": "Objekts"
+      },
+      "type": "Diagramma",
+      "typeValues": {
+        "linie": "Līnija",
+        "balken": "Josla"
+      }
     },
     "table": {
       "rowCount": "{count, plural, one {# rezervācija} other {# rezervācijas}}",
-      "columns": "Kolonnas"
+      "columns": "Kolonnas",
+      "total": "Kopsumma"
     },
     "col": {
       "property": "Īpašums",
@@ -12480,7 +12530,30 @@
       "bookingsShort": "Rezervācijas",
       "net": "Neto",
       "share": "Daļa",
-      "country": "Valsts"
+      "country": "Valsts",
+      "month": "Mēnesis",
+      "ownerNights": "Pašpatēriņš",
+      "accommodation": "Nakšņošana",
+      "cleaning": "Tīrīšana",
+      "otherFees": "Citas maksas",
+      "addons": "Papildu pakalpojumi",
+      "gross": "Viesa cena",
+      "paymentFee": "Maksājuma maksa",
+      "date": "Datums",
+      "name": "Apraksts",
+      "category": "Kategorija",
+      "kind": "Veids",
+      "amount": "Summa",
+      "receipt": "Kvīts",
+      "count": "Skaits",
+      "weekday": "Nedēļas diena",
+      "value": "Vērtība",
+      "period": "Periods",
+      "checkIn": "Ierašanās",
+      "checkOut": "Izbraukšana",
+      "currency": "Valūta",
+      "source": "Avots",
+      "reason": "Iemesls"
     },
     "guests": {
       "total": "Viesi",
@@ -12512,7 +12585,146 @@
     "compareCurrencyUnclear": "valūta salīdzināmajā periodā ir neskaidra",
     "compareCurrencyMismatchHint": "Salīdzināmajā periodā bija cita valūta. Procentuālās izmaiņas būtu valūtas kursa efekts, nevis biznesa rādītājs.",
     "compareChartCurrencyMismatch": "Salīdzināmais periods bija citā valūtā – tāpēc iepriekšējā gada līnija netiek zīmēta.",
-    "compareLocked": "Salīdzinājums ir iespējams līdz viena gada periodam."
+    "compareLocked": "Salīdzinājums ir iespējams līdz viena gada periodam.",
+    "status": {
+      "pending": "Atvērts",
+      "confirmed": "Apstiprināts",
+      "checked_in": "Reģistrējies",
+      "checked_out": "Izrakstījies",
+      "completed": "Pabeigts",
+      "cancelled": "Atcelts",
+      "declined": "Noraidīts",
+      "expired": "Termiņš beidzies",
+      "requested": "Pieprasīts"
+    },
+    "bookings": {
+      "per": {
+        "buchung": "Par rezervāciju",
+        "objekt": "Par īpašumu"
+      },
+      "propertyCount": "{count, plural, one {# īpašums} other {# īpašumi}}",
+      "showEmpty": "Rādīt īpašumus bez rezervācijām",
+      "reconstructed": "Rekonstruēts no īpašuma maksām — portāls nav sniedzis pārskatu.",
+      "commissionComputed": "Aprēķināts no saglabātās komisijas likmes — portāls nav ziņojis.",
+      "withoutBreakdown": "{count, plural, one {# rezervācija bez cenu sadalījuma — tur ir tikai kopējā cena.} other {# rezervācijas bez cenu sadalījuma — tur ir tikai kopējā cena.}}",
+      "withoutBreakdownShort": "Bez sadalījuma",
+      "reconstructedCount": "{count, plural, one {# sadalījums (*) rekonstruēts no īpašuma maksām.} other {# sadalījumi (*) rekonstruēti no īpašuma maksām.}}"
+    },
+    "occupancy": {
+      "byMonth": "Mēnesī",
+      "propertyCount": "{count, plural, one {# īpašums} other {# īpašumi}}"
+    },
+    "expenses": {
+      "empty": "Šajā periodā nav norēķinu posteņu.",
+      "emptyHint": "Izdevumi un papildpakalpojumi rodas īpašnieka norēķinos un no pasūtītajiem pakalpojumiem.",
+      "expenses": "Izdevumi",
+      "extras": "Papildpakalpojumi",
+      "balance": "Bilance",
+      "balanceHint": "Papildpakalpojumi mīnus izdevumi",
+      "count": "Postenis",
+      "byCategory": "Pēc kategorijas",
+      "byProperty": "Pēc īpašuma",
+      "noCategory": "Bez kategorijas",
+      "noProperty": "Bez īpašuma (konts)",
+      "rowCount": "{count, plural, one {# postenis} other {# posteņi}}",
+      "kind": {
+        "ausgabe": "Izdevums",
+        "extra": "Papildpakalpojums"
+      },
+      "footnote": "Periods ir posteņa datums. Izdevumi ir uz īpašnieka rēķina, papildpakalpojumi — viņa labā, kā norādīts rēķinā."
+    },
+    "pace": {
+      "title": "Nākamo 12 mēnešu rezervāciju statuss",
+      "subtitle": "Statuss {heute} salīdzinājumā ar statusu {vorjahr} tiem pašiem mēnešiem gadu iepriekš.",
+      "vsLastYear": "salīdzinājumā ar iepriekšējā gada atskaites datumu",
+      "now": "Šodien rezervēts",
+      "lastYearSameDay": "Iepriekšējais gads tajā pašā dienā",
+      "lastYearFinal": "Iepriekšējais gads beigās",
+      "nowNights": "Šodien rezervēts (naktis)",
+      "nowRevenue": "Šodien rezervēts (apgrozījums)",
+      "lastYearSameDayNights": "Iepriekšējais gads tajā pašā dienā (naktis)",
+      "delta": "Starpība",
+      "lastYearFinalNights": "Iepriekšējais gads beigās (naktis)",
+      "lastYearFinalRevenue": "Iepriekšējais gads beigās (apgrozījums)",
+      "footnote": "Iepriekšējā gada atskaites datums ietver tikai rezervācijas ar portāla reālo rezervācijas laiku.",
+      "withoutTimestamp": "{count, plural, one {# iepriekšējā gada rezervācija bez laika zīmoga trūkst atskaites datuma vērtībā.} other {# iepriekšējā gada rezervācijas bez laika zīmoga trūkst atskaites datuma vērtībā.}}"
+    },
+    "patterns": {
+      "weekday": "Veiktspēja pa nedēļas dienām",
+      "weekdayHint": "Noslogojums un apgrozījums pa nedēļas dienām. Rezervācijas apgrozījums vienmērīgi sadalīts pa naktīm — portāli nenodrošina cenu par nakti.",
+      "leadTime": "Rezervācijas logs",
+      "leadTimeHint": "Dienas starp rezervāciju un ierašanos. Tikai rezervācijas ar reālu rezervācijas laiku.",
+      "stayLength": "Uzturēšanās ilgums",
+      "stayLengthHint": "Rezervēto nakšu sadalījums pa uzturēšanās reizēm.",
+      "days": "Dienas",
+      "nights": "Naktis",
+      "daysValue": "{n} dienas"
+    },
+    "cancellations": {
+      "empty": "Šajā periodā nav atcelšanas.",
+      "emptyHint": "{count, plural, one {# derīga rezervācija, nav atcelta.} other {# derīgas rezervācijas, nav atceltas.}}",
+      "nights": "Atceltās naktis",
+      "lostRevenue": "Zaudētie ieņēmumi",
+      "lostRevenueHint": "Atcelto rezervāciju kopējā cena — daļa nakšu tika pārdotas atkārtoti.",
+      "leadTime": "Vid. laiks pirms ierašanās",
+      "leadTimeBase": "{count} no {total} ar atcelšanas laiku",
+      "byChannel": "Pēc kanāla",
+      "byLeadTime": "Pēc laika pirms ierašanās (dienas pirms ierašanās)",
+      "byReason": "Pēc iemesla",
+      "noReason": "Nav norādīts iemesls",
+      "footnote": "Atcelšanas rādītājs = atceltas / (derīgas + atceltas). Laiks pirms ierašanās tiek aprēķināts tikai rezervācijām, kurām ir atcelšanas laiks."
+    },
+    "views": {
+      "button": "Skati",
+      "title": "Saglabātie skati",
+      "empty": "Vēl nav saglabāts neviens skats.",
+      "new": "Saglabāt pašreizējo skatu",
+      "delete": "Dzēst",
+      "saveTitle": "Saglabāt skatu",
+      "saveHint": "Saglabā periodu, filtrus, kolonnas un cilnes iestatījumus — tikai jums.",
+      "namePlaceholder": "piem., iepriekšējais mēnesis katram objektam",
+      "save": "Saglabāt"
+    },
+    "export": {
+      "button": "Lejupielādēt pārskatu",
+      "title": "Formāts",
+      "csv": "CSV (pašreizējā tabula)",
+      "xlsx": "Excel (visas cilnes tabulas)",
+      "pdf": "PDF",
+      "hint": "Tiks eksportēts tieši tas, kas ir redzams šeit — ar aktīvajiem filtriem.",
+      "generated": "Izveidots {when}",
+      "failed": "Eksportēšana neizdevās."
+    },
+    "prices": {
+      "title": "Cenas un tirgus",
+      "subtitle": "Kur atrodas jūsu cena salīdzinājumā ar apkārtni, ko automātika dara ar bāzes cenu un kā rīkoties ar ieteikumiem.",
+      "property": "Objekts",
+      "noProperties": "Nav objekta ar dinamisko cenu noteikšanu. Ieslēdziet automātiku sadaļā “Dinamiskā cenu noteikšana” — tad šeit parādīsies pārskats.",
+      "distance": "Vidējā attālums līdz tirgum",
+      "distanceHint": "{n} atskaites datumi ar savu cenu",
+      "position": "Atskaites datumu atrašanās vieta",
+      "below": "zem tirgus",
+      "at": "tirgū",
+      "above": "virs tirgus",
+      "uplift": "Automātika pret bāzes cenu",
+      "upliftHint": "{days} dienas horizontā · Bāzes cena {base}",
+      "noBase": "Nav norādīta bāzes cena",
+      "range": "Cenu diapazons",
+      "rangeHint": "Vid. {avg}",
+      "ki": "Noteikumu konsultants",
+      "kiHint": "{accepted} pieņemti · {rejected} noraidīti (90 dienas)",
+      "kiTotal": "kopā {accepted} / {rejected}",
+      "chart": "Cena pret apkārtni katrā atskaites datumā",
+      "chartHint": "Josla = apkārtnes vidējais lauks (25.–75. procentile), līnija = mediāna. Jūsu cena ir pārtraukta līnija, bāzes cena ir pelēka.",
+      "market": "Apkārtne (mediāna)",
+      "mid": "Vidējais lauks",
+      "own": "Jūsu cena",
+      "base": "Bāzes cena",
+      "table": "Atskaites datumi",
+      "offers": "Piedāvājumi",
+      "footnote": "Novērotais apgabals ap {km} km · Ikdienas tirgus novērošanas atskaites datumi · pēdējo reizi pie mums izgūts {when}.",
+      "loading": "Pārskats tiek aprēķināts…"
+    }
   },
   "tasks": {
     "fehler": {

@@ -353,7 +353,8 @@
     "hrSettings": "Setări",
     "timeClock": "Pontaj",
     "payroll": "Salarizare",
-    "staffReports": "Rapoarte personal"
+    "staffReports": "Rapoarte personal",
+    "prices": "Prețuri și piață"
   },
   "exemption": {
     "labelNamed": "Scutit de impozit ({scheme}) — nu este necesar cod TVA",
@@ -12390,7 +12391,7 @@
   },
   "analysis": {
     "title": "Evaluare",
-    "subtitle": "Indicatori cheie, rezervări, grad de ocupare și canale pentru o anumită perioadă.",
+    "subtitle": "Indicatori cheie, rezervări, grad de ocupare, canale, oaspeți, cheltuieli, ritm și modele pentru o anumită perioadă.",
     "loading": "Se calculează...",
     "empty": "Nu există date pentru această perioadă.",
     "ownerStay": "Utilizare proprie",
@@ -12404,14 +12405,23 @@
       "buchungen": "Rezervări",
       "auslastung": "Grad de ocupare",
       "kanaele": "Canale",
-      "gaeste": "Oaspeți"
+      "gaeste": "Oaspeți",
+      "ausgaben": "Cheltuieli și extra",
+      "pace": "Ritm",
+      "muster": "Model",
+      "stornos": "Anulări"
     },
     "range": {
       "monat": "Luna aceasta",
       "vormonat": "Luna precedentă",
       "quartal": "Trimestru",
       "jahr": "An",
-      "frei": "Selectare liberă"
+      "frei": "Selectare liberă",
+      "vorjahr": "Anul precedent",
+      "letzte30": "Ultimele 30 de zile",
+      "naechste30": "Următoarele 30 de zile",
+      "letzte12monate": "Ultimele 12 luni",
+      "naechste12monate": "Următoarele 12 luni"
     },
     "filter": {
       "range": "Perioadă",
@@ -12422,7 +12432,27 @@
       "allProperties": "Toate obiectele",
       "channels": "Canale",
       "allChannels": "Toate canalele",
-      "compare": "Comparație"
+      "compare": "Comparație",
+      "button": "Filtru",
+      "reset": "Resetare",
+      "apply": "Aplicare",
+      "cancel": "Anulare",
+      "clear": "Golire selecție",
+      "nSelected": "{count, plural, one {# selectat} other {# selectate}}",
+      "nProperties": "{count, plural, one {# proprietate} other {# proprietăți}}",
+      "allStatuses": "Toate statusurile",
+      "searchProperties": "Căutare proprietate...",
+      "noMatch": "Niciun rezultat.",
+      "rangeHint": "Selecția rapidă rămâne dinamică în vizualizările salvate: „Luna precedentă” este întotdeauna luna precedentă față de astăzi.",
+      "statusHint": "Fără selecție, toate statusurile sunt numărate. Rezervările anulate sunt incluse doar în rata de anulare, nu în venituri și nopți.",
+      "dim": {
+        "zeitraum": "Perioadă",
+        "bezug": "Atribuire",
+        "objekte": "Proprietăți",
+        "kanaele": "Canale",
+        "status": "Statusuri",
+        "vergleich": "Comparație"
+      }
     },
     "basis": {
       "anreise": "După data sosirii",
@@ -12454,11 +12484,31 @@
       "revenueOverTime": "Istoricul veniturilor",
       "shareByChannel": "Ponderea veniturilor pe canal",
       "revenueByProperty": "Venit pe proprietate",
-      "footnote": "Venit total în perioada: {total}"
+      "footnote": "Venit total în perioada: {total}",
+      "overTime": "{metric} în timp",
+      "otherProperties": "{count, plural, one {# proprietate suplimentară} other {# proprietăți suplimentare}}",
+      "metric": "Indicator cheie",
+      "metricValues": {
+        "umsatz": "Venituri",
+        "naechte": "Nopți",
+        "buchungen": "Rezervări"
+      },
+      "groupBy": "Grupare",
+      "groupValues": {
+        "keine": "Niciunul",
+        "kanal": "Canal",
+        "objekt": "Proprietate"
+      },
+      "type": "Diagramă",
+      "typeValues": {
+        "linie": "Linie",
+        "balken": "Bară"
+      }
     },
     "table": {
       "rowCount": "{count, plural, one {# rezervare} other {# rezervări}}",
-      "columns": "Coloane"
+      "columns": "Coloane",
+      "total": "Total"
     },
     "col": {
       "property": "Proprietate",
@@ -12480,7 +12530,30 @@
       "bookingsShort": "Rezervări",
       "net": "Net",
       "share": "Cotă",
-      "country": "Țară"
+      "country": "Țară",
+      "month": "Lună",
+      "ownerNights": "Uz propriu",
+      "accommodation": "Noapte",
+      "cleaning": "Curățenie",
+      "otherFees": "Alte taxe",
+      "addons": "Servicii suplimentare",
+      "gross": "Preț oaspete",
+      "paymentFee": "Taxă de plată",
+      "date": "Dată",
+      "name": "Descriere",
+      "category": "Categorie",
+      "kind": "Tip",
+      "amount": "Sumă",
+      "receipt": "Chitanță",
+      "count": "Cantitate",
+      "weekday": "Zi a săptămânii",
+      "value": "Valoare",
+      "period": "Perioadă",
+      "checkIn": "Sosire",
+      "checkOut": "Plecare",
+      "currency": "Monedă",
+      "source": "Sursă",
+      "reason": "Motiv"
     },
     "guests": {
       "total": "Oaspeți",
@@ -12512,7 +12585,146 @@
     "compareCurrencyUnclear": "Monedă ambiguă în perioada de comparație",
     "compareCurrencyMismatchHint": "În perioada de comparație a fost utilizată o altă monedă. O modificare procentuală ar fi un efect al cursului de schimb și nu o cifră de afaceri.",
     "compareChartCurrencyMismatch": "Perioada de comparație a fost într-o altă monedă – linia anului precedent nu este, prin urmare, trasată.",
-    "compareLocked": "O comparație este posibilă pentru o perioadă de până la un an."
+    "compareLocked": "O comparație este posibilă pentru o perioadă de până la un an.",
+    "status": {
+      "pending": "Deschis",
+      "confirmed": "Confirmat",
+      "checked_in": "Cazat",
+      "checked_out": "Plecat",
+      "completed": "Finalizat",
+      "cancelled": "Anulat",
+      "declined": "Refuzat",
+      "expired": "Expirat",
+      "requested": "Solicitat"
+    },
+    "bookings": {
+      "per": {
+        "buchung": "Per rezervare",
+        "objekt": "Per proprietate"
+      },
+      "propertyCount": "{count, plural, one {# Proprietate} other {# Proprietăți}}",
+      "showEmpty": "Afișați proprietățile fără rezervări",
+      "reconstructed": "Reconstruit din taxele proprietății — portalul nu a furnizat o defalcare.",
+      "commissionComputed": "Calculat din rata comisionului stocată — nu a fost raportat de portal.",
+      "withoutBreakdown": "{count, plural, one {# rezervare fără defalcare de preț — este afișat doar prețul total.} other {# rezervări fără defalcare de preț — este afișat doar prețul total.}}",
+      "withoutBreakdownShort": "Fără defalcare",
+      "reconstructedCount": "{count, plural, one {# defalcare (*) reconstruită din taxele proprietății.} other {# defalcări (*) reconstruite din taxele proprietății.}}"
+    },
+    "occupancy": {
+      "byMonth": "Pe lună",
+      "propertyCount": "{count, plural, one {# proprietate} other {# proprietăți}}"
+    },
+    "expenses": {
+      "empty": "Nu există elemente de decontare în această perioadă.",
+      "emptyHint": "Cheltuielile și extra-urile apar în decontul proprietarului și din serviciile comandate.",
+      "expenses": "Cheltuieli",
+      "extras": "Extra-uri",
+      "balance": "Sold",
+      "balanceHint": "Extra-uri minus cheltuieli",
+      "count": "Articole",
+      "byCategory": "După categorie",
+      "byProperty": "După proprietate",
+      "noCategory": "Fără categorie",
+      "noProperty": "Fără proprietate (cont)",
+      "rowCount": "{count, plural, one {# articol} other {# articole}}",
+      "kind": {
+        "ausgabe": "Cheltuială",
+        "extra": "Extra"
+      },
+      "footnote": "Perioada este data articolului. Cheltuielile sunt în detrimentul proprietarului, extra-urile în favoarea sa — așa cum apar în decont."
+    },
+    "pace": {
+      "title": "Starea rezervărilor pentru următoarele 12 luni",
+      "subtitle": "Starea la {heute} comparativ cu starea la {vorjahr} pentru aceleași luni cu un an mai devreme.",
+      "vsLastYear": "comparativ cu data de referință a anului precedent",
+      "now": "Rezervat astăzi",
+      "lastYearSameDay": "Anul precedent în aceeași zi",
+      "lastYearFinal": "Anul precedent la sfârșit",
+      "nowNights": "Rezervat astăzi (nopți)",
+      "nowRevenue": "Rezervat astăzi (venituri)",
+      "lastYearSameDayNights": "Anul precedent în aceeași zi (nopți)",
+      "delta": "Diferență",
+      "lastYearFinalNights": "Anul precedent la sfârșit (nopți)",
+      "lastYearFinalRevenue": "Anul precedent la sfârșit (venituri)",
+      "footnote": "Data de referință a anului precedent include doar rezervările cu un moment real de rezervare al portalului.",
+      "withoutTimestamp": "{count, plural, one {# rezervare din anul precedent fără marcaj temporal lipsește din valoarea datei de referință.} other {# rezervări din anul precedent fără marcaj temporal lipsesc din valoarea datei de referință.}}"
+    },
+    "patterns": {
+      "weekday": "Performanța pe zi a săptămânii",
+      "weekdayHint": "Gradul de ocupare și veniturile pe zi a săptămânii. Venitul unei rezervări este distribuit uniform pe nopțile sale — portalurile nu oferă un preț pe noapte.",
+      "leadTime": "Fereastra de rezervare",
+      "leadTimeHint": "Zile între rezervare și sosire. Doar rezervările cu un moment real de rezervare.",
+      "stayLength": "Durata șederii",
+      "stayLengthHint": "Distribuția nopților rezervate pe ședere.",
+      "days": "Zile",
+      "nights": "Nopți",
+      "daysValue": "{n} zile"
+    },
+    "cancellations": {
+      "empty": "Fără anulări în această perioadă.",
+      "emptyHint": "{count, plural, one {# rezervare validă, niciuna anulată.} other {# rezervări valide, niciuna anulată.}}",
+      "nights": "Nopți anulate",
+      "lostRevenue": "Venituri pierdute",
+      "lostRevenueHint": "Prețul total al rezervărilor anulate — o parte din nopți au fost revândute.",
+      "leadTime": "Timp mediu de rezervare",
+      "leadTimeBase": "{count} din {total} cu dată de anulare",
+      "byChannel": "După canal",
+      "byLeadTime": "După timpul de rezervare (zile înainte de sosire)",
+      "byReason": "După motiv",
+      "noReason": "Niciun motiv specificat",
+      "footnote": "Rata de anulare = anulate / (valide + anulate). Timpul de rezervare ia în considerare doar rezervările cu o dată de anulare."
+    },
+    "views": {
+      "button": "Vizualizări",
+      "title": "Vizualizări salvate",
+      "empty": "Nicio vizualizare salvată încă.",
+      "new": "Salvați vizualizarea curentă",
+      "delete": "Ștergeți",
+      "saveTitle": "Salvați vizualizarea",
+      "saveHint": "Salvează perioada, filtrele, coloanele și setările filelor — doar pentru dvs.",
+      "namePlaceholder": "ex. Luna precedentă per proprietate",
+      "save": "Salvați"
+    },
+    "export": {
+      "button": "Descărcați raportul",
+      "title": "Format",
+      "csv": "CSV (tabel curent)",
+      "xlsx": "Excel (toate tabelele din filă)",
+      "pdf": "PDF",
+      "hint": "Se exportă exact ceea ce este afișat aici — cu filtrele active.",
+      "generated": "Creat la {when}",
+      "failed": "Export eșuat."
+    },
+    "prices": {
+      "title": "Prețuri și piață",
+      "subtitle": "Unde se situează prețul dumneavoastră în comparație cu zona înconjurătoare, ce face automatizarea cu prețul de bază și cum gestionați sugestiile.",
+      "property": "Proprietate",
+      "noProperties": "Nicio proprietate cu prețuri dinamice. Activați automatizarea sub „Prețuri dinamice” – apoi raportul va apărea aici.",
+      "distance": "Diferența medie față de piață",
+      "distanceHint": "{n} date cheie cu preț propriu",
+      "position": "Poziția datelor cheie",
+      "below": "sub piață",
+      "at": "pe piață",
+      "above": "peste piață",
+      "uplift": "Automatizare vs. preț de bază",
+      "upliftHint": "{days} zile în orizont · Preț de bază {base}",
+      "noBase": "Niciun preț de bază introdus",
+      "range": "Intervalul prețurilor",
+      "rangeHint": "Medie {avg}",
+      "ki": "Consultant reguli",
+      "kiHint": "{accepted} acceptate · {rejected} respinse (90 de zile)",
+      "kiTotal": "total {accepted} / {rejected}",
+      "chart": "Preț vs. zonă înconjurătoare pe dată cheie",
+      "chartHint": "Bandă = intervalul mediu al zonei înconjurătoare (percentila 25-75), linie = mediană. Prețul dumneavoastră este punctat, prețul de bază este gri.",
+      "market": "Zonă înconjurătoare (mediană)",
+      "mid": "Interval mediu",
+      "own": "Prețul dumneavoastră",
+      "base": "Preț de bază",
+      "table": "Date cheie",
+      "offers": "Oferte",
+      "footnote": "Zona observată în jurul a {km} km · Date cheie ale observării zilnice a pieței · ultima preluare de la noi {when}.",
+      "loading": "Se calculează raportul…"
+    }
   },
   "tasks": {
     "fehler": {

@@ -2,14 +2,27 @@
 // Sync-Funktion dürfen aus einem Server-Actions-Modul nicht exportiert werden.
 
 // Deutsche Labels für die Dynamic-Pricing-Faktoren („Warum dieser Preis?").
+// Jeder Schlüssel, den die Engine schreibt (engine.compute_day + Tagesmodus),
+// steht hier — ein fehlender erschien als Rohschlüssel („far_future +10 %")
+// in der Erklärung. Prüfung: apps/api/.../tests/test_pricing.py.
 export const FACTOR_LABELS: Record<string, string> = {
+  marktbasis: "Marktbasis",
   season: "Saison",
   event: "Event",
   weekend: "Wochenende",
   occupancy: "Auslastung",
+  pickup: "Buchungstempo",
   last_minute: "Last-Minute",
+  far_future: "Frühbucher-Aufschlag",
   orphan: "Lückenfüllung",
   market: "Markt",
+  weather: "Wetter",
+  feiertag: "Feiertag",
+  ferien: "Schulferien",
+  rate_rules: "Eigene Regeln",
+  anker: "Vorjahresanker",
+  saison_untergrenze: "Saison-Untergrenze",
+  tagesanpassung: "Tagesanpassung",
 };
 
 // factors (Multiplikatoren, 1.0 = neutral) → lesbare Erklärzeilen mit %-Beitrag.

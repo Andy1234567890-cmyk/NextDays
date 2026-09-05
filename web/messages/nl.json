@@ -353,7 +353,8 @@
     "hrSettings": "Instellingen",
     "timeClock": "Tijdregistratie",
     "payroll": "Salaris",
-    "staffReports": "Personeelsrapporten"
+    "staffReports": "Personeelsrapporten",
+    "prices": "Prijzen & Markt"
   },
   "exemption": {
     "labelNamed": "Vrijgesteld van belasting ({scheme}) — geen btw-nummer nodig",
@@ -12390,7 +12391,7 @@
   },
   "analysis": {
     "title": "Evaluatie",
-    "subtitle": "Kerncijfers, boekingen, bezetting en kanalen van een periode.",
+    "subtitle": "Kerncijfers, boekingen, bezetting, kanalen, gasten, uitgaven, pace en patronen van een periode.",
     "loading": "Wordt berekend …",
     "empty": "Voor deze periode zijn er geen gegevens.",
     "ownerStay": "Eigen gebruik",
@@ -12404,14 +12405,23 @@
       "buchungen": "Boekingen",
       "auslastung": "Bezetting",
       "kanaele": "Kanalen",
-      "gaeste": "Gasten"
+      "gaeste": "Gasten",
+      "ausgaben": "Uitgaven & extra's",
+      "pace": "Pace",
+      "muster": "Patronen",
+      "stornos": "Annuleringen"
     },
     "range": {
       "monat": "Deze maand",
       "vormonat": "Vorige maand",
       "quartal": "Kwartaal",
       "jahr": "Jaar",
-      "frei": "Vrij gekozen"
+      "frei": "Vrij gekozen",
+      "vorjahr": "Vorig jaar",
+      "letzte30": "Afgelopen 30 dagen",
+      "naechste30": "Volgende 30 dagen",
+      "letzte12monate": "Afgelopen 12 maanden",
+      "naechste12monate": "Volgende 12 maanden"
     },
     "filter": {
       "range": "Periode",
@@ -12422,7 +12432,27 @@
       "allProperties": "Alle objecten",
       "channels": "Kanalen",
       "allChannels": "Alle kanalen",
-      "compare": "Vergelijken"
+      "compare": "Vergelijken",
+      "button": "Filter",
+      "reset": "Resetten",
+      "apply": "Toepassen",
+      "cancel": "Annuleren",
+      "clear": "Selectie wissen",
+      "nSelected": "{count, plural, one {# geselecteerd} other {# geselecteerd}}",
+      "nProperties": "{count, plural, one {# object} other {# objecten}}",
+      "allStatuses": "Alle statussen",
+      "searchProperties": "Object zoeken …",
+      "noMatch": "Geen resultaten.",
+      "rangeHint": "De snelle selectie blijft dynamisch in opgeslagen weergaven: \"Vorige maand\" is altijd de vorige maand vanaf vandaag.",
+      "statusHint": "Zonder selectie tellen alle statussen. Geannuleerde boekingen worden alleen meegenomen in het annuleringspercentage, niet in omzet en nachten.",
+      "dim": {
+        "zeitraum": "Periode",
+        "bezug": "Toewijzing",
+        "objekte": "Objecten",
+        "kanaele": "Kanalen",
+        "status": "Status",
+        "vergleich": "Vergelijking"
+      }
     },
     "basis": {
       "anreise": "Op aankomst",
@@ -12454,11 +12484,31 @@
       "revenueOverTime": "Omzetverloop",
       "shareByChannel": "Omzetaandeel per kanaal",
       "revenueByProperty": "Omzet per object",
-      "footnote": "Totale omzet in periode: {total}"
+      "footnote": "Totale omzet in periode: {total}",
+      "overTime": "{metric} in de loop van de tijd",
+      "otherProperties": "{count, plural, one {# ander object} other {# andere objecten}}",
+      "metric": "Kerncijfer",
+      "metricValues": {
+        "umsatz": "Omzet",
+        "naechte": "Nachten",
+        "buchungen": "Boekingen"
+      },
+      "groupBy": "Groeperen",
+      "groupValues": {
+        "keine": "Geen",
+        "kanal": "Kanaal",
+        "objekt": "Object"
+      },
+      "type": "Diagram",
+      "typeValues": {
+        "linie": "Lijn",
+        "balken": "Staaf"
+      }
     },
     "table": {
       "rowCount": "{count, plural, one {# boeking} other {# boekingen}}",
-      "columns": "Kolommen"
+      "columns": "Kolommen",
+      "total": "Totaal"
     },
     "col": {
       "property": "Object",
@@ -12480,7 +12530,30 @@
       "bookingsShort": "Boekingen",
       "net": "Netto",
       "share": "Aandeel",
-      "country": "Land"
+      "country": "Land",
+      "month": "Maand",
+      "ownerNights": "Eigen gebruik",
+      "accommodation": "Overnachting",
+      "cleaning": "Schoonmaak",
+      "otherFees": "Overige kosten",
+      "addons": "Extra diensten",
+      "gross": "Gastprijs",
+      "paymentFee": "Betalingskosten",
+      "date": "Datum",
+      "name": "Omschrijving",
+      "category": "Categorie",
+      "kind": "Type",
+      "amount": "Bedrag",
+      "receipt": "Bon",
+      "count": "Aantal",
+      "weekday": "Weekdag",
+      "value": "Waarde",
+      "period": "Periode",
+      "checkIn": "Aankomst",
+      "checkOut": "Vertrek",
+      "currency": "Valuta",
+      "source": "Bron",
+      "reason": "Reden"
     },
     "guests": {
       "total": "Gasten",
@@ -12512,7 +12585,146 @@
     "compareCurrencyUnclear": "Valuta in de vergelijkingsperiode onduidelijk",
     "compareCurrencyMismatchHint": "In de vergelijkingsperiode gold een andere valuta. Een procentuele verandering zou een wisselkoerseffect zijn en geen bedrijfscijfer.",
     "compareChartCurrencyMismatch": "De vergelijkingsperiode had een andere valuta – de lijn van vorig jaar wordt daarom niet getekend.",
-    "compareLocked": "Een vergelijking is mogelijk tot een periode van één jaar."
+    "compareLocked": "Een vergelijking is mogelijk tot een periode van één jaar.",
+    "status": {
+      "pending": "Open",
+      "confirmed": "Bevestigd",
+      "checked_in": "Ingecheckt",
+      "checked_out": "Uitgecheckt",
+      "completed": "Voltooid",
+      "cancelled": "Geannuleerd",
+      "declined": "Geweigerd",
+      "expired": "Verlopen",
+      "requested": "Aangevraagd"
+    },
+    "bookings": {
+      "per": {
+        "buchung": "Per boeking",
+        "objekt": "Per object"
+      },
+      "propertyCount": "{count, plural, one {# object} other {# objecten}}",
+      "showEmpty": "Toon objecten zonder boekingen",
+      "reconstructed": "Gereconstrueerd uit de objectkosten — het portaal heeft geen overzicht geleverd.",
+      "commissionComputed": "Berekend op basis van het opgeslagen provisiepercentage — niet gemeld door het portaal.",
+      "withoutBreakdown": "{count, plural, one {# boeking zonder prijsoverzicht — alleen de totaalprijs wordt weergegeven.} other {# boekingen zonder prijsoverzicht — alleen de totaalprijs wordt weergegeven.}}",
+      "withoutBreakdownShort": "Zonder overzicht",
+      "reconstructedCount": "{count, plural, one {# overzicht (*) gereconstrueerd uit objectkosten.} other {# overzichten (*) gereconstrueerd uit objectkosten.}}"
+    },
+    "occupancy": {
+      "byMonth": "Per maand",
+      "propertyCount": "{count, plural, one {# object} other {# objecten}}"
+    },
+    "expenses": {
+      "empty": "Geen verrekeningsposten in deze periode.",
+      "emptyHint": "Uitgaven en extra's ontstaan in de eigenaarsafrekening en uit bestelde diensten.",
+      "expenses": "Uitgaven",
+      "extras": "Extra's",
+      "balance": "Saldo",
+      "balanceHint": "Extra's minus uitgaven",
+      "count": "Posten",
+      "byCategory": "Per categorie",
+      "byProperty": "Per object",
+      "noCategory": "Zonder categorie",
+      "noProperty": "Zonder object (rekening)",
+      "rowCount": "{count, plural, one {# post} other {# posten}}",
+      "kind": {
+        "ausgabe": "Uitgave",
+        "extra": "Extra"
+      },
+      "footnote": "De periode is de datum van de post. Uitgaven zijn ten laste van de eigenaar, extra's ten gunste van hem — zoals vermeld in de afrekening."
+    },
+    "pace": {
+      "title": "Boekingsstatus van de komende 12 maanden",
+      "subtitle": "Status {heute} versus status op {vorjahr} voor dezelfde maanden een jaar eerder.",
+      "vsLastYear": "vergeleken met peildatum vorig jaar",
+      "now": "Vandaag geboekt",
+      "lastYearSameDay": "Vorig jaar op dezelfde dag",
+      "lastYearFinal": "Vorig jaar aan het einde",
+      "nowNights": "Vandaag geboekt (nachten)",
+      "nowRevenue": "Vandaag geboekt (omzet)",
+      "lastYearSameDayNights": "Vorig jaar op dezelfde dag (nachten)",
+      "delta": "Verschil",
+      "lastYearFinalNights": "Vorig jaar aan het einde (nachten)",
+      "lastYearFinalRevenue": "Vorig jaar aan het einde (omzet)",
+      "footnote": "De peildatum van vorig jaar telt alleen boekingen met een echte boekingstijd van het portaal.",
+      "withoutTimestamp": "{count, plural, one {# boeking van vorig jaar zonder tijdstempel ontbreekt in de peildatumwaarde.} other {# boekingen van vorig jaar zonder tijdstempel ontbreken in de peildatumwaarde.}}"
+    },
+    "patterns": {
+      "weekday": "Prestatie per weekdag",
+      "weekdayHint": "Bezetting en omzet per weekdag. De omzet van een boeking wordt gelijkmatig verdeeld over de nachten — de portalen leveren geen prijs per nacht.",
+      "leadTime": "Boekingsvenster",
+      "leadTimeHint": "Dagen tussen boeking en aankomst. Alleen boekingen met een echte boekingstijd.",
+      "stayLength": "Verblijfsduur",
+      "stayLengthHint": "Verdeling van de geboekte nachten per verblijf.",
+      "days": "Dagen",
+      "nights": "Nachten",
+      "daysValue": "{n} dagen"
+    },
+    "cancellations": {
+      "empty": "Geen annuleringen in deze periode.",
+      "emptyHint": "{count, plural, one {# geldige boeking, geen geannuleerd.} other {# geldige boekingen, geen geannuleerd.}}",
+      "nights": "Geannuleerde nachten",
+      "lostRevenue": "Gemiste omzet",
+      "lostRevenueHint": "Totaalprijs van geannuleerde boekingen — een deel van de nachten is opnieuw verkocht.",
+      "leadTime": "Ø Doorlooptijd",
+      "leadTimeBase": "{count} van {total} met annuleringsdatum",
+      "byChannel": "Per kanaal",
+      "byLeadTime": "Per doorlooptijd (dagen voor aankomst)",
+      "byReason": "Per reden",
+      "noReason": "Geen reden opgegeven",
+      "footnote": "Annuleringspercentage = geannuleerd / (geldig + geannuleerd). De doorlooptijd houdt alleen rekening met boekingen met een annuleringsdatum."
+    },
+    "views": {
+      "button": "Weergaven",
+      "title": "Opgeslagen weergaven",
+      "empty": "Nog geen weergave opgeslagen.",
+      "new": "Huidige weergave opslaan",
+      "delete": "Verwijderen",
+      "saveTitle": "Weergave opslaan",
+      "saveHint": "Slaat periode, filters, kolommen en tabbladinstellingen op — alleen voor u.",
+      "namePlaceholder": "bijv. Vorige maand per object",
+      "save": "Opslaan"
+    },
+    "export": {
+      "button": "Rapport downloaden",
+      "title": "Formaat",
+      "csv": "CSV (huidige tabel)",
+      "xlsx": "Excel (alle tabellen van het tabblad)",
+      "pdf": "PDF",
+      "hint": "Er wordt precies geëxporteerd wat hier staat — met de actieve filters.",
+      "generated": "Gemaakt op {when}",
+      "failed": "Exporteren mislukt."
+    },
+    "prices": {
+      "title": "Prijzen & Markt",
+      "subtitle": "Waar uw prijs staat ten opzichte van de omgeving, wat de automaat met de basisprijs doet en hoe u met de voorstellen omgaat.",
+      "property": "Object",
+      "noProperties": "Geen object met Dynamic Pricing. Schakel de automaat in onder „Dynamic Pricing“ — dan verschijnt hier het rapport.",
+      "distance": "Ø Afstand tot de markt",
+      "distanceHint": "{n} peildagen met eigen prijs",
+      "position": "Locatie van de peildagen",
+      "below": "onder de markt",
+      "at": "op de markt",
+      "above": "boven de markt",
+      "uplift": "Automaat versus basisprijs",
+      "upliftHint": "{days} dagen in de horizon · Basisprijs {base}",
+      "noBase": "Geen basisprijs ingesteld",
+      "range": "Bereik van de prijzen",
+      "rangeHint": "Ø {avg}",
+      "ki": "Regeladviseur",
+      "kiHint": "{accepted} geaccepteerd · {rejected} afgewezen (90 dagen)",
+      "kiTotal": "totaal {accepted} / {rejected}",
+      "chart": "Prijs versus omgeving per peildag",
+      "chartHint": "Band = middenveld van de omgeving (25e-75e percentiel), lijn = mediaan. Uw prijs gestippeld, basisprijs grijs.",
+      "market": "Omgeving (mediaan)",
+      "mid": "Middenveld",
+      "own": "Uw prijs",
+      "base": "Basisprijs",
+      "table": "Peildagen",
+      "offers": "Aanbiedingen",
+      "footnote": "Geobserveerd gebied rond {km} km · Peildagen van de dagelijkse marktobservatie · laatst door ons opgevraagd {when}.",
+      "loading": "Rapport wordt berekend …"
+    }
   },
   "tasks": {
     "fehler": {

@@ -38,8 +38,10 @@ from src.features.properties.vertragsende import vertragsenden_nachziehen
 from src.jobs import (
     airbnb_historie_tick,
     bestandsimport_tick,
+    dp_portal_abgleich_tick,
     feed_abgleich_tick,
     feed_nachpflege,
+    feiertage_tick,
     geld_laeufe,
     markt_beobachtung_tick,
     partner_laeufe,
@@ -654,6 +656,7 @@ HANDLERS: dict[
     "reconcile_tenant": _handle_reconcile_tenant,
     "abgleich_feed_buchungen": feed_abgleich_tick.handle,
     "markt_beobachtung": markt_beobachtung_tick.handle,
+    "feiertage_feed": feiertage_tick.handle,
     "reconcile_rate_plan_prices": _handle_reconcile_rate_plan_prices,
     "recompute_property": _handle_recompute_property,
     "push_ari": _handle_push_ari,
@@ -1417,6 +1420,14 @@ class Worker:
         # Der Recompute liest danach nur noch — eine Preisberechnung haengt nie
         # an der Erreichbarkeit der Fremdquelle.
         markt_beobachtung_tick.einreihen(self._db, bucket)
+        # Ebenfalls taeglich, EINMAL fuer alle: Feiertage und Schulferien der
+        # Objektlaender und Quellmaerkte (`feiertage_feed`, 0562). Kein
+        # Channex-Call; der Recompute liest nur `dp_feiertage`.
+        feiertage_tick.einreihen(self._db, bucket)
+        # Ebenfalls taeglich: Portalpreise der DP-Objekte gegen das Soll
+        # abgleichen (`reconcile_rate_plan_prices`, bisher nur auf Klick —
+        # 435 falsche Tage lagen so tagelang bei Channex, 04.09.2026).
+        dp_portal_abgleich_tick.einreihen(self._db, bucket)
 
     def _enqueue_outbox_all(self) -> None:
         """Offene AUSGEHENDE Pushes nachziehen (Availability + Restriktionen).

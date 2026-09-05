@@ -353,7 +353,8 @@
     "hrSettings": "Seaded",
     "timeClock": "Tööajaaruanne",
     "payroll": "Palk",
-    "staffReports": "Töötajate aruanded"
+    "staffReports": "Töötajate aruanded",
+    "prices": "Hinnad ja turg"
   },
   "exemption": {
     "labelNamed": "Maksuvaba ({scheme}) — KMKR-numbrit pole vaja",
@@ -12390,7 +12391,7 @@
   },
   "analysis": {
     "title": "Analüüs",
-    "subtitle": "Perioodi mõõdikud, broneeringud, täituvus ja kanalid.",
+    "subtitle": "Perioodi põhinäitajad, broneeringud, täituvus, kanalid, külalised, kulud, tempo ja mustrid.",
     "loading": "Arvutatakse...",
     "empty": "Selle perioodi kohta andmed puuduvad.",
     "ownerStay": "Oma tarbeks",
@@ -12404,14 +12405,23 @@
       "buchungen": "Broneeringud",
       "auslastung": "Täituvus",
       "kanaele": "Kanalid",
-      "gaeste": "Külalised"
+      "gaeste": "Külalised",
+      "ausgaben": "Kulud ja lisad",
+      "pace": "Tempo",
+      "muster": "Mustrid",
+      "stornos": "Tühistamised"
     },
     "range": {
       "monat": "See kuu",
       "vormonat": "Eelmine kuu",
       "quartal": "Kvartal",
       "jahr": "Aasta",
-      "frei": "Vabalt valitud"
+      "frei": "Vabalt valitud",
+      "vorjahr": "Eelmine aasta",
+      "letzte30": "Viimased 30 päeva",
+      "naechste30": "Järgmised 30 päeva",
+      "letzte12monate": "Viimased 12 kuud",
+      "naechste12monate": "Järgmised 12 kuud"
     },
     "filter": {
       "range": "Ajavahemik",
@@ -12422,7 +12432,27 @@
       "allProperties": "Kõik objektid",
       "channels": "Kanalid",
       "allChannels": "Kõik kanalid",
-      "compare": "Võrdle"
+      "compare": "Võrdle",
+      "button": "Filter",
+      "reset": "Lähtesta",
+      "apply": "Rakenda",
+      "cancel": "Tühista",
+      "clear": "Tühjenda valik",
+      "nSelected": "{count, plural, one {# valitud} other {# valitud}}",
+      "nProperties": "{count, plural, one {# objekt} other {# objekti}}",
+      "allStatuses": "Kõik staatused",
+      "searchProperties": "Otsi objekti...",
+      "noMatch": "Tulemusi ei leitud.",
+      "rangeHint": "Kiirvalik jääb salvestatud vaadetes dünaamiliseks: „Eelmine kuu“ on alati tänasele eelnev kuu.",
+      "statusHint": "Ilma valikuta arvestatakse kõiki staatuseid. Tühistatud broneeringud arvestatakse ainult tühistamismäära, mitte käibe ja ööde hulka.",
+      "dim": {
+        "zeitraum": "Periood",
+        "bezug": "Määramine",
+        "objekte": "Objektid",
+        "kanaele": "Kanalid",
+        "status": "Staatus",
+        "vergleich": "Võrdlus"
+      }
     },
     "basis": {
       "anreise": "Saabumise järgi",
@@ -12454,11 +12484,31 @@
       "revenueOverTime": "Tulu ajalugu",
       "shareByChannel": "Tulu osakaal kanali kohta",
       "revenueByProperty": "Tulu objekti kohta",
-      "footnote": "Kogutulu perioodil: {total}"
+      "footnote": "Kogutulu perioodil: {total}",
+      "overTime": "{metric} ajas",
+      "otherProperties": "{count, plural, one {# muu objekt} other {# muud objekti}}",
+      "metric": "Mõõdik",
+      "metricValues": {
+        "umsatz": "Käive",
+        "naechte": "Ööd",
+        "buchungen": "Broneeringud"
+      },
+      "groupBy": "Rühmita",
+      "groupValues": {
+        "keine": "Puudub",
+        "kanal": "Kanal",
+        "objekt": "Objekt"
+      },
+      "type": "Diagramm",
+      "typeValues": {
+        "linie": "Joon",
+        "balken": "Tulp"
+      }
     },
     "table": {
       "rowCount": "{count, plural, one {# broneering} other {# broneeringut}}",
-      "columns": "Veerud"
+      "columns": "Veerud",
+      "total": "Summa"
     },
     "col": {
       "property": "Objekt",
@@ -12480,7 +12530,30 @@
       "bookingsShort": "Broneeringud",
       "net": "Neto",
       "share": "Osakaal",
-      "country": "Riik"
+      "country": "Riik",
+      "month": "Kuu",
+      "ownerNights": "Oma tarbeks",
+      "accommodation": "Ööbimine",
+      "cleaning": "Puhastus",
+      "otherFees": "Muud tasud",
+      "addons": "Lisateenused",
+      "gross": "Külalise hind",
+      "paymentFee": "Maksetasu",
+      "date": "Kuupäev",
+      "name": "Kirjeldus",
+      "category": "Kategooria",
+      "kind": "Tüüp",
+      "amount": "Summa",
+      "receipt": "Kviitung",
+      "count": "Kogus",
+      "weekday": "Nädala päev",
+      "value": "Väärtus",
+      "period": "Periood",
+      "checkIn": "Saabumine",
+      "checkOut": "Lahkumine",
+      "currency": "Valuuta",
+      "source": "Allikas",
+      "reason": "Põhjus"
     },
     "guests": {
       "total": "Külalised",
@@ -12512,7 +12585,146 @@
     "compareCurrencyUnclear": "võrdlusperioodi valuuta on ebaselge",
     "compareCurrencyMismatchHint": "Võrdlusperioodil kehtis teine valuuta. Protsentuaalne muutus oleks vahetuskursi efekt, mitte äritulemus.",
     "compareChartCurrencyMismatch": "Võrdlusperiood oli teises valuutas – seetõttu eelmise aasta joont ei kuvata.",
-    "compareLocked": "Võrdlus on võimalik kuni ühe aasta pikkuse perioodi kohta."
+    "compareLocked": "Võrdlus on võimalik kuni ühe aasta pikkuse perioodi kohta.",
+    "status": {
+      "pending": "Avatud",
+      "confirmed": "Kinnitatud",
+      "checked_in": "Sisse registreeritud",
+      "checked_out": "Välja registreeritud",
+      "completed": "Lõpetatud",
+      "cancelled": "Tühistatud",
+      "declined": "Keelatud",
+      "expired": "Aegunud",
+      "requested": "Päring tehtud"
+    },
+    "bookings": {
+      "per": {
+        "buchung": "Broneeringu kohta",
+        "objekt": "Objekti kohta"
+      },
+      "propertyCount": "{count, plural, one {# objekt} other {# objekti}}",
+      "showEmpty": "Näita objekte ilma broneeringuteta",
+      "reconstructed": "Rekonstrueeritud objekti tasudest – portaal ei esitanud jaotust.",
+      "commissionComputed": "Arvutatud salvestatud vahendustasu määra alusel – portaal ei teatanud.",
+      "withoutBreakdown": "{count, plural, one {# broneering ilma hinnajaotuseta – seal on ainult koguhind.} other {# broneeringut ilma hinnajaotuseta – seal on ainult koguhind.}}",
+      "withoutBreakdownShort": "Ilma jaotuseta",
+      "reconstructedCount": "{count, plural, one {# jaotus (*) rekonstrueeritud objekti tasudest.} other {# jaotust (*) rekonstrueeritud objekti tasudest.}}"
+    },
+    "occupancy": {
+      "byMonth": "Kuu kohta",
+      "propertyCount": "{count, plural, one {# objekt} other {# objekti}}"
+    },
+    "expenses": {
+      "empty": "Sellel perioodil puuduvad arvelduskirjed.",
+      "emptyHint": "Kulud ja lisad tekivad omaniku arvelduses ja tellitud teenustest.",
+      "expenses": "Kulud",
+      "extras": "Lisad",
+      "balance": "Saldo",
+      "balanceHint": "Lisad miinus kulud",
+      "count": "Kirje",
+      "byCategory": "Kategooria järgi",
+      "byProperty": "Objekti järgi",
+      "noCategory": "Ilma kategooriata",
+      "noProperty": "Ilma objektita (konto)",
+      "rowCount": "{count, plural, one {# kirje} other {# kirjet}}",
+      "kind": {
+        "ausgabe": "Kulu",
+        "extra": "Lisa"
+      },
+      "footnote": "Periood on kirje kuupäev. Kulud on omaniku kanda, lisad tema kasuks – nii nagu need arvelduses on."
+    },
+    "pace": {
+      "title": "Järgmise 12 kuu broneeringute seis",
+      "subtitle": "Seis {heute} võrreldes seisuga {vorjahr} samadel kuudel aasta varem.",
+      "vsLastYear": "võrreldes eelmise aasta võrdluskuupäevaga",
+      "now": "Täna broneeritud",
+      "lastYearSameDay": "Eelmine aasta samal päeval",
+      "lastYearFinal": "Eelmine aasta lõpus",
+      "nowNights": "Täna broneeritud (ööd)",
+      "nowRevenue": "Täna broneeritud (käive)",
+      "lastYearSameDayNights": "Eelmine aasta samal päeval (ööd)",
+      "delta": "Vahemaa",
+      "lastYearFinalNights": "Eelmine aasta lõpus (ööd)",
+      "lastYearFinalRevenue": "Eelmine aasta lõpus (käive)",
+      "footnote": "Eelmise aasta võrdluskuupäev arvestab ainult broneeringuid, millel on portaali tegelik broneerimisaeg.",
+      "withoutTimestamp": "{count, plural, one {# eelmise aasta broneering ilma ajatemplita puudub võrdluskuupäeva väärtusest.} other {# eelmise aasta broneeringud ilma ajatemplita puuduvad võrdluskuupäeva väärtusest.}}"
+    },
+    "patterns": {
+      "weekday": "Tulemuslikkus nädalapäeva kohta",
+      "weekdayHint": "Täituvus ja käive nädalapäeva kohta. Broneeringu käive jaotub ühtlaselt selle ööde vahel – portaalid ei anna hinda öö kohta.",
+      "leadTime": "Broneerimisaken",
+      "leadTimeHint": "Päevad broneerimise ja saabumise vahel. Ainult broneeringud tegeliku broneerimisajaga.",
+      "stayLength": "Viibimise kestus",
+      "stayLengthHint": "Broneeritud ööde jaotus viibimise kohta.",
+      "days": "Päeva",
+      "nights": "Ööd",
+      "daysValue": "{n} päeva"
+    },
+    "cancellations": {
+      "empty": "Sellel perioodil tühistamisi ei ole.",
+      "emptyHint": "{count, plural, one {# kehtiv broneering, tühistamisi ei ole.} other {# kehtivat broneeringut, tühistamisi ei ole.}}",
+      "nights": "Tühistatud ööd",
+      "lostRevenue": "Kaotatud tulu",
+      "lostRevenueHint": "Tühistatud broneeringute koguhind – osa öödest müüdi uuesti.",
+      "leadTime": "Keskmine etteteatamisaeg",
+      "leadTimeBase": "{count} / {total} tühistamisajaga",
+      "byChannel": "Kanali järgi",
+      "byLeadTime": "Etteteatamisaja järgi (päeva enne saabumist)",
+      "byReason": "Põhjuse järgi",
+      "noReason": "Põhjust ei ole sisestatud",
+      "footnote": "Tühistamismäär = tühistatud / (kehtiv + tühistatud). Etteteatamisaeg arvestab ainult broneeringutega, millel on tühistamisaeg."
+    },
+    "views": {
+      "button": "Vaated",
+      "title": "Salvestatud vaated",
+      "empty": "Ühtegi vaadet ei ole veel salvestatud.",
+      "new": "Salvesta praegune vaade",
+      "delete": "Kustuta",
+      "saveTitle": "Salvesta vaade",
+      "saveHint": "Salvestab perioodi, filtrid, veerud ja vahekaardi seaded – ainult teile.",
+      "namePlaceholder": "nt eelmine kuu objekti kohta",
+      "save": "Salvesta"
+    },
+    "export": {
+      "button": "Laadi aruanne alla",
+      "title": "Formaat",
+      "csv": "CSV (praegune tabel)",
+      "xlsx": "Excel (kõik vahekaardi tabelid)",
+      "pdf": "PDF",
+      "hint": "Eksporditakse täpselt see, mis siin on – koos aktiivsete filtritega.",
+      "generated": "Loodud {when}",
+      "failed": "Eksport ebaõnnestus."
+    },
+    "prices": {
+      "title": "Hinnad ja turg",
+      "subtitle": "Kus on teie hind võrreldes ümbrusega, mida automaatika baashinnast teeb ja kuidas ettepanekutega toime tulla.",
+      "property": "Objekt",
+      "noProperties": "Dünaamilise hinnastamisega objekti pole. Lülitage automaatika sisse jaotises „Dünaamiline hinnastamine” – siis ilmub siia aruanne.",
+      "distance": "Ø Kaugus turust",
+      "distanceHint": "{n} tähtpäeva oma hinnaga",
+      "position": "Tähtpäevade asukoht",
+      "below": "alla turuhinna",
+      "at": "turuhinnaga",
+      "above": "üle turuhinna",
+      "uplift": "Automaatika vs baashind",
+      "upliftHint": "{days} päeva horisondis · Baashind {base}",
+      "noBase": "Baashinda pole sisestatud",
+      "range": "Hindade vahemik",
+      "rangeHint": "Ø {avg}",
+      "ki": "Reeglite nõustaja",
+      "kiHint": "{accepted} aktsepteeritud · {rejected} tagasi lükatud (90 päeva)",
+      "kiTotal": "kokku {accepted} / {rejected}",
+      "chart": "Hind võrreldes ümbrusega tähtpäeva kohta",
+      "chartHint": "Vahemik = ümbruse keskmine väli (25.–75. protsentiil), joon = mediaan. Teie hind on katkendlik, baashind hall.",
+      "market": "Ümbrus (mediaan)",
+      "mid": "Keskmine väli",
+      "own": "Teie hind",
+      "base": "Baashind",
+      "table": "Tähtpäevad",
+      "offers": "Pakkumised",
+      "footnote": "Vaadeldud ala umbes {km} km · Igapäevase turuseire tähtpäevad · viimati meilt küsitud {when}.",
+      "loading": "Aruannet arvutatakse …"
+    }
   },
   "tasks": {
     "fehler": {

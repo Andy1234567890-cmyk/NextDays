@@ -346,7 +346,11 @@ function buildGroups(
       groupKey: "analysis",
       icon: "ph:chart-line",
       items: [
-        { key: "overview", href: "/auswertung", icon: "ph:chart-line", req: "view_finances" },
+        { key: "overview", href: "/auswertung", icon: "ph:chart-line", req: "view_finances", exact: true },
+        // Preise & Markt: die Auswertung des Dynamic Pricing (Preis gegen
+        // Umgebung, Uplift, Berater). Eigene Seite, weil sie je OBJEKT liest
+        // und keinen Zeitraum kennt — sie passt nicht in die Reiter oben.
+        { key: "prices", href: "/auswertung/preise", icon: "ph:chart-line-up", req: "view_finances" },
       ],
     },
     ...STATIC_GROUPS.filter((g) => !HIDDEN_AT_LAUNCH.has(g.groupKey)),

@@ -353,7 +353,8 @@
     "hrSettings": "Postavke",
     "timeClock": "Evidencija radnog vremena",
     "payroll": "Plaća",
-    "staffReports": "Izvješća o osoblju"
+    "staffReports": "Izvješća o osoblju",
+    "prices": "Cijene i tržište"
   },
   "exemption": {
     "labelNamed": "Oslobođeno poreza ({scheme}) — PDV broj nije potreban",
@@ -12390,7 +12391,7 @@
   },
   "analysis": {
     "title": "Analiza",
-    "subtitle": "Ključni pokazatelji, rezervacije, popunjenost i kanali za određeno razdoblje.",
+    "subtitle": "Ključni pokazatelji, rezervacije, popunjenost, kanali, gosti, troškovi, tempo i obrasci za određeno razdoblje.",
     "loading": "Izračunava se…",
     "empty": "Nema podataka za ovo razdoblje.",
     "ownerStay": "Vlastito korištenje",
@@ -12404,14 +12405,23 @@
       "buchungen": "Rezervacije",
       "auslastung": "Popunjenost",
       "kanaele": "Kanali",
-      "gaeste": "Gosti"
+      "gaeste": "Gosti",
+      "ausgaben": "Troškovi i dodaci",
+      "pace": "Tempo",
+      "muster": "Obrasci",
+      "stornos": "Otkazivanja"
     },
     "range": {
       "monat": "Ovaj mjesec",
       "vormonat": "Prethodni mjesec",
       "quartal": "Kvartal",
       "jahr": "Godina",
-      "frei": "Slobodan odabir"
+      "frei": "Slobodan odabir",
+      "vorjahr": "Prethodna godina",
+      "letzte30": "Zadnjih 30 dana",
+      "naechste30": "Sljedećih 30 dana",
+      "letzte12monate": "Zadnjih 12 mjeseci",
+      "naechste12monate": "Sljedećih 12 mjeseci"
     },
     "filter": {
       "range": "Razdoblje",
@@ -12422,7 +12432,27 @@
       "allProperties": "Svi objekti",
       "channels": "Kanali",
       "allChannels": "Svi kanali",
-      "compare": "Usporedba"
+      "compare": "Usporedba",
+      "button": "Filter",
+      "reset": "Poništi",
+      "apply": "Primijeni",
+      "cancel": "Odustani",
+      "clear": "Očisti odabir",
+      "nSelected": "{count, plural, one {# odabrano} other {# odabrano}}",
+      "nProperties": "{count, plural, one {# objekt} other {# objekta}}",
+      "allStatuses": "Svi statusi",
+      "searchProperties": "Pretraži objekt…",
+      "noMatch": "Nema rezultata.",
+      "rangeHint": "Brzi odabir ostaje dinamičan u spremljenim prikazima: „Prethodni mjesec“ uvijek je prethodni mjesec od danas.",
+      "statusHint": "Bez odabira, svi statusi se broje. Otkazane rezervacije uključene su samo u stopu otkazivanja, ne u prihode i noćenja.",
+      "dim": {
+        "zeitraum": "Razdoblje",
+        "bezug": "Dodjela",
+        "objekte": "Objekti",
+        "kanaele": "Kanali",
+        "status": "Statusi",
+        "vergleich": "Usporedba"
+      }
     },
     "basis": {
       "anreise": "Prema dolasku",
@@ -12454,11 +12484,31 @@
       "revenueOverTime": "Povijest prihoda",
       "shareByChannel": "Udio prihoda po kanalu",
       "revenueByProperty": "Prihod po objektu",
-      "footnote": "Ukupni prihod u razdoblju: {total}"
+      "footnote": "Ukupni prihod u razdoblju: {total}",
+      "overTime": "{metric} tijekom vremena",
+      "otherProperties": "{count, plural, one {# dodatni objekt} other {# dodatna objekta}}",
+      "metric": "Ključni pokazatelj",
+      "metricValues": {
+        "umsatz": "Prihod",
+        "naechte": "Noćenja",
+        "buchungen": "Rezervacije"
+      },
+      "groupBy": "Grupiraj",
+      "groupValues": {
+        "keine": "Ništa",
+        "kanal": "Kanal",
+        "objekt": "Objekt"
+      },
+      "type": "Grafikon",
+      "typeValues": {
+        "linie": "Linija",
+        "balken": "Traka"
+      }
     },
     "table": {
       "rowCount": "{count, plural, one {# rezervacija} other {# rezervacije}}",
-      "columns": "Stupci"
+      "columns": "Stupci",
+      "total": "Ukupno"
     },
     "col": {
       "property": "Objekt",
@@ -12480,7 +12530,30 @@
       "bookingsShort": "Rezervacije",
       "net": "Neto",
       "share": "Udio",
-      "country": "Zemlja"
+      "country": "Zemlja",
+      "month": "Mjesec",
+      "ownerNights": "Vlastito korištenje",
+      "accommodation": "Noćenje",
+      "cleaning": "Čišćenje",
+      "otherFees": "Ostale naknade",
+      "addons": "Dodatne usluge",
+      "gross": "Cijena za gosta",
+      "paymentFee": "Naknada za plaćanje",
+      "date": "Datum",
+      "name": "Opis",
+      "category": "Kategorija",
+      "kind": "Vrsta",
+      "amount": "Iznos",
+      "receipt": "Potvrda",
+      "count": "Količina",
+      "weekday": "Dan u tjednu",
+      "value": "Vrijednost",
+      "period": "Razdoblje",
+      "checkIn": "Dolazak",
+      "checkOut": "Odlazak",
+      "currency": "Valuta",
+      "source": "Izvor",
+      "reason": "Razlog"
     },
     "guests": {
       "total": "Gosti",
@@ -12512,7 +12585,146 @@
     "compareCurrencyUnclear": "Valuta u usporednom razdoblju je nejasna",
     "compareCurrencyMismatchHint": "U usporednom razdoblju vrijedila je druga valuta. Postotna promjena bila bi učinak tečajne razlike, a ne poslovni podatak.",
     "compareChartCurrencyMismatch": "Usporedno razdoblje bilo je u drugoj valuti – stoga se linija prethodne godine ne prikazuje.",
-    "compareLocked": "Usporedba je moguća za razdoblje do jedne godine."
+    "compareLocked": "Usporedba je moguća za razdoblje do jedne godine.",
+    "status": {
+      "pending": "Otvoreno",
+      "confirmed": "Potvrđeno",
+      "checked_in": "Prijavljen",
+      "checked_out": "Odjavljen",
+      "completed": "Završeno",
+      "cancelled": "Otkazano",
+      "declined": "Odbijeno",
+      "expired": "Isteklo",
+      "requested": "Zatraženo"
+    },
+    "bookings": {
+      "per": {
+        "buchung": "Po rezervaciji",
+        "objekt": "Po objektu"
+      },
+      "propertyCount": "{count, plural, one {# objekt} few {# objekta} other {# objekata}}",
+      "showEmpty": "Prikaži objekte bez rezervacija",
+      "reconstructed": "Rekonstruirano iz naknada za objekt — portal nije dostavio specifikaciju.",
+      "commissionComputed": "Izračunato iz pohranjene stope provizije — portal nije prijavio.",
+      "withoutBreakdown": "{count, plural, one {# rezervacija bez raščlambe cijene — prikazana je samo ukupna cijena.} other {# rezervacije bez raščlambe cijene — prikazana je samo ukupna cijena.}}",
+      "withoutBreakdownShort": "Bez raščlambe",
+      "reconstructedCount": "{count, plural, one {# raščlamba (*) rekonstruirana iz naknada za objekt.} other {# raščlambe (*) rekonstruirane iz naknada za objekt.}}"
+    },
+    "occupancy": {
+      "byMonth": "Mjesečno",
+      "propertyCount": "{count, plural, one {# objekt} other {# objekta}}"
+    },
+    "expenses": {
+      "empty": "Nema stavki obračuna u ovom razdoblju.",
+      "emptyHint": "Troškovi i dodaci nastaju u obračunu vlasnika i iz naručenih usluga.",
+      "expenses": "Troškovi",
+      "extras": "Dodaci",
+      "balance": "Stanje",
+      "balanceHint": "Dodaci minus troškovi",
+      "count": "Stavke",
+      "byCategory": "Po kategoriji",
+      "byProperty": "Po objektu",
+      "noCategory": "Bez kategorije",
+      "noProperty": "Bez objekta (račun)",
+      "rowCount": "{count, plural, one {# stavka} other {# stavke}}",
+      "kind": {
+        "ausgabe": "Trošak",
+        "extra": "Dodatak"
+      },
+      "footnote": "Razdoblje je datum stavke. Troškovi idu na teret vlasnika, dodaci u njegovu korist — onako kako su navedeni u obračunu."
+    },
+    "pace": {
+      "title": "Status rezervacija za sljedećih 12 mjeseci",
+      "subtitle": "Status {heute} u odnosu na status {vorjahr} za iste mjesece godinu dana ranije.",
+      "vsLastYear": "u odnosu na referentni datum prethodne godine",
+      "now": "Danas rezervirano",
+      "lastYearSameDay": "Prethodna godina na isti dan",
+      "lastYearFinal": "Prethodna godina na kraju",
+      "nowNights": "Danas rezervirano (noćenja)",
+      "nowRevenue": "Danas rezervirano (prihod)",
+      "lastYearSameDayNights": "Prethodna godina na isti dan (noćenja)",
+      "delta": "Razmak",
+      "lastYearFinalNights": "Prethodna godina na kraju (noćenja)",
+      "lastYearFinalRevenue": "Prethodna godina na kraju (prihod)",
+      "footnote": "Referentni datum prethodne godine uključuje samo rezervacije s stvarnim vremenom rezervacije portala.",
+      "withoutTimestamp": "{count, plural, one {# rezervacija iz prethodne godine bez vremenske oznake nedostaje u vrijednosti referentnog datuma.} other {# rezervacije iz prethodne godine bez vremenske oznake nedostaju u vrijednosti referentnog datuma.}}"
+    },
+    "patterns": {
+      "weekday": "Učinak po danu u tjednu",
+      "weekdayHint": "Popunjenost i prihod po danu u tjednu. Prihod od rezervacije ravnomjerno je raspoređen na njezine noći — portali ne daju cijenu po noći.",
+      "leadTime": "Prozor rezervacije",
+      "leadTimeHint": "Dani između rezervacije i dolaska. Samo rezervacije s stvarnim vremenom rezervacije.",
+      "stayLength": "Trajanje boravka",
+      "stayLengthHint": "Raspodjela rezerviranih noćenja po boravku.",
+      "days": "Dani",
+      "nights": "Noćenja",
+      "daysValue": "{n} dana"
+    },
+    "cancellations": {
+      "empty": "Bez otkazivanja u ovom razdoblju.",
+      "emptyHint": "{count, plural, one {# važeća rezervacija, nijedna otkazana.} other {# važeće rezervacije, nijedna otkazana.}}",
+      "nights": "Otkazana noćenja",
+      "lostRevenue": "Izgubljeni prihod",
+      "lostRevenueHint": "Ukupna cijena otkazanih rezervacija — dio noćenja ponovno je prodan.",
+      "leadTime": "Ø Vrijeme isporuke",
+      "leadTimeBase": "{count} od {total} s datumom otkazivanja",
+      "byChannel": "Po kanalu",
+      "byLeadTime": "Po vremenu isporuke (dana prije dolaska)",
+      "byReason": "Po razlogu",
+      "noReason": "Nema navedenog razloga",
+      "footnote": "Stopa otkazivanja = otkazano / (važeće + otkazano). Vrijeme isporuke računa se samo za rezervacije koje imaju datum otkazivanja."
+    },
+    "views": {
+      "button": "Prikazi",
+      "title": "Spremljeni prikazi",
+      "empty": "Još nema spremljenih prikaza.",
+      "new": "Spremi trenutni prikaz",
+      "delete": "Izbriši",
+      "saveTitle": "Spremi prikaz",
+      "saveHint": "Sprema razdoblje, filtre, stupce i postavke kartica — samo za vas.",
+      "namePlaceholder": "npr. Prethodni mjesec po objektu",
+      "save": "Spremi"
+    },
+    "export": {
+      "button": "Preuzmi izvješće",
+      "title": "Format",
+      "csv": "CSV (trenutna tablica)",
+      "xlsx": "Excel (sve tablice kartice)",
+      "pdf": "PDF",
+      "hint": "Izvozi se točno ono što je ovdje navedeno — s aktivnim filtrima.",
+      "generated": "Stvoreno {when}",
+      "failed": "Izvoz nije uspio."
+    },
+    "prices": {
+      "title": "Cijene i tržište",
+      "subtitle": "Gdje se vaša cijena nalazi u odnosu na okolinu, što automatika radi s osnovnom cijenom i kako postupati s prijedlozima.",
+      "property": "Objekt",
+      "noProperties": "Nema objekta s dinamičkim određivanjem cijena. Uključite automatiku pod „Dinamičko određivanje cijena“ – tada će se ovdje pojaviti izvještaj.",
+      "distance": "Ø Udaljenost od tržišta",
+      "distanceHint": "{n} datuma s vlastitom cijenom",
+      "position": "Položaj datuma",
+      "below": "ispod tržišta",
+      "at": "na tržištu",
+      "above": "iznad tržišta",
+      "uplift": "Automatika naspram osnovne cijene",
+      "upliftHint": "{days} dana u horizontu · Osnovna cijena {base}",
+      "noBase": "Nema unesene osnovne cijene",
+      "range": "Raspon cijena",
+      "rangeHint": "Ø {avg}",
+      "ki": "Savjetnik za pravila",
+      "kiHint": "{accepted} prihvaćeno · {rejected} odbijeno (90 dana)",
+      "kiTotal": "ukupno {accepted} / {rejected}",
+      "chart": "Cijena u odnosu na okolinu po datumu",
+      "chartHint": "Raspon = srednje polje okoline (25.-75. percentil), linija = medijan. Vaša cijena isprekidana, osnovna cijena siva.",
+      "market": "Okolina (medijan)",
+      "mid": "Srednje polje",
+      "own": "Vaša cijena",
+      "base": "Osnovna cijena",
+      "table": "Datumi",
+      "offers": "Ponude",
+      "footnote": "Promatrano područje oko {km} km · Datumi dnevnog praćenja tržišta · zadnji put preuzeto kod nas {when}.",
+      "loading": "Izvještaj se izračunava…"
+    }
   },
   "tasks": {
     "fehler": {

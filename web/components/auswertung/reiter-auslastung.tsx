@@ -15,17 +15,32 @@
 //
 // Hostaway rechnet gegen ALLE Tage und kennt weder Stop-Sell noch die
 // Trennung — dort drückt jede Sperre die Kennzahl.
-import { useTranslations } from "next-intl";
+//
+// SEIT 05.09.2026 wie Hostaway: Umschalter „je Monat" (eine Zeile je Objekt
+// und Monat), Spalte „Eigennutzung" (Owner-stay nights) und eine Summenzeile.
+import { useLocale, useTranslations } from "next-intl";
 
 import { Card } from "@nextdays/ui/card";
+import { Switch } from "@nextdays/ui/switch";
 import { formatCurrency } from "@/lib/currency";
-import type { Auswertung, ObjektZeile } from "@/lib/auswertung-typen";
+import type { Auswertung, ObjektMonatZeile, ObjektZeile } from "@/lib/auswertung-typen";
 import { zeilenVereinen } from "@/lib/auswertung-vergleich";
 
 import { VergleichDelta, VergleichHinweis, deltaStand } from "./vergleich-delta";
 
-export function ReiterAuslastung({ a }: { a: Auswertung }) {
+export type AuslastungOptionen = { jeMonat: boolean };
+
+export function ReiterAuslastung({
+  a,
+  optionen,
+  setOptionen,
+}: {
+  a: Auswertung;
+  optionen: AuslastungOptionen;
+  setOptionen: (o: AuslastungOptionen) => void;
+}) {
   const t = useTranslations("analysis");
+  const locale = useLocale();
 
   // Leer nur, wenn BEIDE Zeiträume nichts hergeben — sonst verschwände der
   // Vergleich genau dann, wenn er am meisten sagt.
@@ -44,6 +59,8 @@ export function ReiterAuslastung({ a }: { a: Auswertung }) {
     v === null || !a.vorher?.currency
       ? "—"
       : formatCurrency(v, a.vorher.currency);
+  const monatsname = (m: string) =>
+    new Date(`${m}-01T00:00:00`).toLocaleDateString(locale, { month: "short", year: "numeric" });
 
   // Ein Objekt, das es NUR im Vorjahr gab (inzwischen archiviert), bleibt
   // sichtbar — sein Wegfall erklärt einen Umsatzrückgang.
@@ -60,6 +77,61 @@ export function ReiterAuslastung({ a }: { a: Auswertung }) {
   const geldVergleichbar =
     !!a.vorher && !!a.currency && a.vorher.currency === a.currency;
 
+  // Summenzeile über die Gegenwart. Die Auslastung der Summe ist
+  // gebucht / buchbar über alle Objekte — nicht der Mittelwert der Prozente.
+  const alle = a.objekte;
+  const sumBuchbar = alle.reduce((n, o) => n + o.naechte_buchbar, 0);
+  const sumGebucht = alle.reduce((n, o) => n + o.naechte_gebucht, 0);
+  const sumUmsatz = alle.reduce((n, o) => n + o.umsatz, 0);
+  const sumNaechteVerkauft = alle.reduce(
+    (n, o) => n + (o.adr && o.umsatz ? Math.round(o.umsatz / o.adr) : 0),
+    0,
+  );
+
+  const kopf = (
+    <tr>
+      <th className="px-3 py-3 font-medium">{t("col.property")}</th>
+      {optionen.jeMonat && (
+        <th className="px-3 py-3 font-medium whitespace-nowrap">{t("col.month")}</th>
+      )}
+      {(
+        [
+          "bookable",
+          "booked",
+          "ownerNights",
+          "blocked",
+          "stopSell",
+        ] as const
+      ).map((k) => (
+        <th key={k} className="px-3 py-3 text-right font-medium whitespace-nowrap">
+          {t(`col.${k}`)}
+        </th>
+      ))}
+      <th className="px-3 py-3 text-right font-medium whitespace-nowrap">{t("kpi.occupancy")}</th>
+      <th className="px-3 py-3 text-right font-medium whitespace-nowrap">{t("col.arrivals")}</th>
+      <th className="px-3 py-3 text-right font-medium whitespace-nowrap">{t("kpi.revenue")}</th>
+      <th className="px-3 py-3 text-right font-medium">{t("kpi.adr")}</th>
+      <th className="px-3 py-3 text-right font-medium">{t("kpi.revpar")}</th>
+      <th className="px-3 py-3 text-right font-medium whitespace-nowrap">{t("col.cancellations")}</th>
+    </tr>
+  );
+
+  const zahlenZellen = (o: ObjektZeile | ObjektMonatZeile, gedimmt: boolean) => (
+    <>
+      <td className="px-3 py-2.5 text-right tabular-nums">{gedimmt ? "—" : o.naechte_buchbar}</td>
+      <td className="px-3 py-2.5 text-right tabular-nums">{gedimmt ? "—" : o.naechte_gebucht}</td>
+      <td className="px-3 py-2.5 text-right tabular-nums text-muted-foreground">
+        {gedimmt ? "—" : o.naechte_eigennutzung || "—"}
+      </td>
+      <td className="px-3 py-2.5 text-right tabular-nums text-muted-foreground">
+        {gedimmt ? "—" : o.naechte_gesperrt}
+      </td>
+      <td className="px-3 py-2.5 text-right tabular-nums text-muted-foreground">
+        {gedimmt ? "—" : o.naechte_stop_sell}
+      </td>
+    </>
+  );
+
   return (
     <div className="flex flex-col gap-3">
       {a.vorher && (
@@ -69,137 +141,147 @@ export function ReiterAuslastung({ a }: { a: Auswertung }) {
           bis={a.vorher.bis}
         />
       )}
-    <Card className="overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="border-b border-border bg-muted/40 text-left">
-            <tr>
-              <th className="px-4 py-3 font-medium">{t("col.property")}</th>
-              <th className="px-4 py-3 text-right font-medium whitespace-nowrap">
-                {t("col.bookable")}
-              </th>
-              <th className="px-4 py-3 text-right font-medium whitespace-nowrap">
-                {t("col.booked")}
-              </th>
-              <th className="px-4 py-3 text-right font-medium whitespace-nowrap">
-                {t("col.blocked")}
-              </th>
-              <th className="px-4 py-3 text-right font-medium whitespace-nowrap">
-                {t("col.stopSell")}
-              </th>
-              <th className="px-4 py-3 text-right font-medium whitespace-nowrap">
-                {t("kpi.occupancy")}
-              </th>
-              <th className="px-4 py-3 text-right font-medium whitespace-nowrap">
-                {t("col.arrivals")}
-              </th>
-              <th className="px-4 py-3 text-right font-medium whitespace-nowrap">
-                {t("kpi.revenue")}
-              </th>
-              <th className="px-4 py-3 text-right font-medium">
-                {t("kpi.adr")}
-              </th>
-              <th className="px-4 py-3 text-right font-medium">
-                {t("kpi.revpar")}
-              </th>
-              <th className="px-4 py-3 text-right font-medium whitespace-nowrap">
-                {t("col.cancellations")}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {zeilen.map(({ key, jetzt, vorher }) => {
-              const o = jetzt ?? vorher;
-              if (!o) return null;
-              // Nur im Vorzeitraum vorhanden (Objekt inzwischen archiviert):
-              // die Gegenwartsspalten stehen auf „—", statt eine 0 zu
-              // behaupten, die nach „nichts verkauft" aussähe.
-              const nurFrueher = jetzt === null;
-              return (
-              <tr
-                key={key}
-                className={
-                  "border-b border-border last:border-0 " +
-                  (nurFrueher ? "text-muted-foreground" : "")
-                }
-              >
-                <td className="px-4 py-3">
-                  {o.title}
-                  {nurFrueher && (
-                    <span className="ml-2 text-xs">{t("compareOnlyBefore")}</span>
-                  )}
+      <Card className="overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
+          <span className="text-sm text-muted-foreground">
+            {t("occupancy.propertyCount", { count: a.objekte.length })}
+          </span>
+          <label className="flex items-center gap-2 text-sm">
+            <Switch
+              checked={optionen.jeMonat}
+              onCheckedChange={(v) => setOptionen({ jeMonat: v })}
+            />
+            {t("occupancy.byMonth")}
+          </label>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="border-b border-border bg-muted/40 text-left">{kopf}</thead>
+            <tbody>
+              {optionen.jeMonat
+                ? a.objekte_monatlich.map((o) => (
+                    <tr key={`${o.property_id}-${o.monat}`} className="border-b border-border last:border-0">
+                      <td className="px-3 py-2.5">{o.title}</td>
+                      <td className="px-3 py-2.5 whitespace-nowrap">{monatsname(o.monat)}</td>
+                      {zahlenZellen(o, false)}
+                      <td className="px-3 py-2.5 text-right font-semibold tabular-nums">{pct(o.auslastung_pct)}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">{o.anreisen}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">{geld(o.umsatz)}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">{geld(o.adr)}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">{geld(o.revpar)}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums text-muted-foreground">{o.stornos}</td>
+                    </tr>
+                  ))
+                : zeilen.map(({ key, jetzt, vorher }) => {
+                    const o = jetzt ?? vorher;
+                    if (!o) return null;
+                    // Nur im Vorzeitraum vorhanden (Objekt inzwischen archiviert):
+                    // die Gegenwartsspalten stehen auf „—", statt eine 0 zu
+                    // behaupten, die nach „nichts verkauft" aussähe.
+                    const nurFrueher = jetzt === null;
+                    return (
+                      <tr
+                        key={key}
+                        className={
+                          "border-b border-border last:border-0 " +
+                          (nurFrueher ? "text-muted-foreground" : "")
+                        }
+                      >
+                        <td className="px-3 py-2.5">
+                          {o.title}
+                          {nurFrueher && (
+                            <span className="ml-2 text-xs">{t("compareOnlyBefore")}</span>
+                          )}
+                        </td>
+                        {zahlenZellen(o, nurFrueher)}
+                        <td className="px-3 py-2.5 text-right font-semibold tabular-nums">
+                          {nurFrueher ? "—" : pct(o.auslastung_pct)}
+                          {a.vorher && (
+                            <span className="mt-0.5 flex justify-end font-normal">
+                              <VergleichDelta
+                                klein
+                                stand={deltaStand(
+                                  jetzt?.auslastung_pct ?? null,
+                                  vorher?.auslastung_pct ?? null,
+                                )}
+                                vorherAnzeige={pct(vorher?.auslastung_pct ?? null)}
+                              />
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2.5 text-right tabular-nums">{nurFrueher ? "—" : o.anreisen}</td>
+                        <td className="px-3 py-2.5 text-right tabular-nums">
+                          {nurFrueher ? "—" : geld(o.umsatz)}
+                          {a.vorher && (
+                            <span className="mt-0.5 flex justify-end">
+                              <VergleichDelta
+                                klein
+                                stand={deltaStand(
+                                  jetzt?.umsatz ?? null,
+                                  vorher?.umsatz ?? null,
+                                  {
+                                    waehrungGleich: geldVergleichbar,
+                                    vorherWaehrung: a.vorher?.currency ?? null,
+                                  },
+                                )}
+                                vorherAnzeige={geldVorher(vorher?.umsatz ?? null)}
+                              />
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2.5 text-right tabular-nums">{nurFrueher ? "—" : geld(o.adr)}</td>
+                        <td className="px-3 py-2.5 text-right tabular-nums">{nurFrueher ? "—" : geld(o.revpar)}</td>
+                        <td className="px-3 py-2.5 text-right tabular-nums text-muted-foreground">
+                          {nurFrueher ? "—" : o.stornos}
+                        </td>
+                      </tr>
+                    );
+                  })}
+            </tbody>
+            {/* Summenzeile — Hostaways TOTALS. Die Auslastung ist gebucht /
+                buchbar über alles, nicht der Mittelwert der Zeilen. */}
+            <tfoot className="border-t-2 border-foreground/40 bg-muted/30 font-semibold">
+              <tr>
+                <td className="px-3 py-2.5">{t("table.total")}</td>
+                {optionen.jeMonat && <td />}
+                <td className="px-3 py-2.5 text-right tabular-nums">{sumBuchbar}</td>
+                <td className="px-3 py-2.5 text-right tabular-nums">{sumGebucht}</td>
+                <td className="px-3 py-2.5 text-right tabular-nums">
+                  {alle.reduce((n, o) => n + o.naechte_eigennutzung, 0) || "—"}
                 </td>
-                <td className="px-4 py-3 text-right tabular-nums">
-                  {nurFrueher ? "—" : o.naechte_buchbar}
+                <td className="px-3 py-2.5 text-right tabular-nums">
+                  {alle.reduce((n, o) => n + o.naechte_gesperrt, 0)}
                 </td>
-                <td className="px-4 py-3 text-right tabular-nums">
-                  {nurFrueher ? "—" : o.naechte_gebucht}
+                <td className="px-3 py-2.5 text-right tabular-nums">
+                  {alle.reduce((n, o) => n + o.naechte_stop_sell, 0)}
                 </td>
-                <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
-                  {nurFrueher ? "—" : o.naechte_gesperrt}
+                <td className="px-3 py-2.5 text-right tabular-nums">
+                  {sumBuchbar ? `${Math.round((sumGebucht * 10000) / sumBuchbar) / 100} %` : "—"}
                 </td>
-                <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
-                  {nurFrueher ? "—" : o.naechte_stop_sell}
+                <td className="px-3 py-2.5 text-right tabular-nums">
+                  {alle.reduce((n, o) => n + o.anreisen, 0)}
                 </td>
-                <td className="px-4 py-3 text-right font-semibold tabular-nums">
-                  {nurFrueher ? "—" : pct(o.auslastung_pct)}
-                  {a.vorher && (
-                    <span className="mt-0.5 flex justify-end font-normal">
-                      <VergleichDelta
-                        klein
-                        stand={deltaStand(
-                          jetzt?.auslastung_pct ?? null,
-                          vorher?.auslastung_pct ?? null,
-                        )}
-                        vorherAnzeige={pct(vorher?.auslastung_pct ?? null)}
-                      />
-                    </span>
-                  )}
+                <td className="px-3 py-2.5 text-right tabular-nums">{geld(Math.round(sumUmsatz * 100) / 100)}</td>
+                <td className="px-3 py-2.5 text-right tabular-nums">
+                  {sumNaechteVerkauft ? geld(Math.round((sumUmsatz / sumNaechteVerkauft) * 100) / 100) : "—"}
                 </td>
-                <td className="px-4 py-3 text-right tabular-nums">
-                  {nurFrueher ? "—" : o.anreisen}
+                <td className="px-3 py-2.5 text-right tabular-nums">
+                  {sumBuchbar ? geld(Math.round((sumUmsatz / sumBuchbar) * 100) / 100) : "—"}
                 </td>
-                <td className="px-4 py-3 text-right tabular-nums">
-                  {nurFrueher ? "—" : geld(o.umsatz)}
-                  {a.vorher && (
-                    <span className="mt-0.5 flex justify-end">
-                      <VergleichDelta
-                        klein
-                        stand={deltaStand(
-                          jetzt?.umsatz ?? null,
-                          vorher?.umsatz ?? null,
-                          {
-                            waehrungGleich: geldVergleichbar,
-                            vorherWaehrung: a.vorher?.currency ?? null,
-                          },
-                        )}
-                        vorherAnzeige={geldVorher(vorher?.umsatz ?? null)}
-                      />
-                    </span>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-right tabular-nums">
-                  {nurFrueher ? "—" : geld(o.adr)}
-                </td>
-                <td className="px-4 py-3 text-right tabular-nums">
-                  {nurFrueher ? "—" : geld(o.revpar)}
-                </td>
-                <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
-                  {nurFrueher ? "—" : o.stornos}
+                <td className="px-3 py-2.5 text-right tabular-nums">
+                  {alle.reduce((n, o) => n + o.stornos, 0)}
                 </td>
               </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-      {/* Der Nenner gehört unter die Tabelle, nicht in einen Hilfe-Artikel:
-          zwei Systeme mit verschiedenen Nennern zeigen für denselben Monat
-          verschiedene Prozente, und niemand fände den Grund. */}
-      <p className="border-t border-border px-4 py-3 text-xs text-muted-foreground">
-        {t("occupancyFootnote")}
-      </p>
-    </Card>
+            </tfoot>
+          </table>
+        </div>
+        {/* Der Nenner gehört unter die Tabelle, nicht in einen Hilfe-Artikel:
+            zwei Systeme mit verschiedenen Nennern zeigen für denselben Monat
+            verschiedene Prozente, und niemand fände den Grund. */}
+        <p className="border-t border-border px-4 py-3 text-xs text-muted-foreground">
+          {t("occupancyFootnote")}
+        </p>
+      </Card>
     </div>
   );
 }

@@ -31,6 +31,15 @@ import { APIProvider, Map, AdvancedMarker } from "@vis.gl/react-google-maps";
 import { useMemo, useState } from "react";
 
 import { Icon } from "@iconify/react";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  Line,
+  LineChart,
+  XAxis,
+  YAxis,
+} from "@nextdays/ui/chart";
 
 import { formatCurrency } from "@/lib/currency";
 import type { MarktAngebot, MarktPunkt, MarktStand } from "@/lib/dynamic-pricing";
@@ -92,6 +101,21 @@ export function MarktKarte({ stand, lat, lng, titel }: Props) {
   }, [gewaehlt, stand.verlauf]);
 
   const abw = punkt ? abweichung(punkt) : null;
+
+  // Die Zeitleiste: ein Punkt je Stichtag, Farbe = Abstand des eigenen
+  // Preises zum Markt an diesem Tag.
+  const zeitleiste = useMemo(
+    () =>
+      stand.verlauf.map((p) => ({
+        tag: p.tag,
+        kurz: new Date(p.tag).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }),
+        lang: new Date(p.tag).toLocaleDateString("de-DE"),
+        markt: p.markt_median,
+        eigen: p.eigener_preis,
+        farbe: farbeFuer(abweichung(p)),
+      })),
+    [stand.verlauf],
+  );
 
   // Nur die Angebote des gewählten Tages: die Karte muss beim Umschalten
   // mitwechseln, sonst zeigt sie stillschweigend ein anderes Datum.
@@ -218,35 +242,83 @@ export function MarktKarte({ stand, lat, lng, titel }: Props) {
         </p>
       )}
 
-      {/* Verlauf: die beobachteten Stichtage, farbig nach Abstand. */}
-      <div className="flex flex-wrap gap-1">
-        {stand.verlauf.map((p) => {
-          const a = abweichung(p);
-          const aktiv = (gewaehlt ?? stand.verlauf[0]?.tag) === p.tag;
-          return (
-            <button
-              key={p.tag}
-              type="button"
-              onClick={() => setGewaehlt(p.tag)}
-              className={`rounded-(--radius) px-2 py-1 text-xs transition ${
-                aktiv ? "ring-2 ring-accent" : ""
-              }`}
-              style={{
-                background: `${farbeFuer(a)}22`,
-                color: farbeFuer(a),
+      {/* Verlauf: die beobachteten Stichtage als ZEITLEISTE, nicht als 22
+          rote Pillen (Screenshot 05.09.2026 — „da müssen wir ein besseres UI
+          erstellen"). Median der Umgebung als Linie, der eigene Preis
+          gestrichelt, der gewählte Stichtag als Punkt. Ein Klick auf die
+          Kurve wechselt den Tag der Karte. Die Farbe des Punkts ist der
+          Abstand zum Markt — dieselbe Skala wie der eigene Marker. */}
+      <div className="rounded-(--radius) border p-2">
+        <ChartContainer
+          config={{
+            markt: { label: "Umgebung (Median)", color: "var(--chart-1)" },
+            eigen: { label: "Dein Preis", color: "var(--foreground)" },
+          }}
+          className="h-28 w-full"
+        >
+          <LineChart
+            data={zeitleiste}
+            onClick={(e) => {
+              // recharts tippt den Klick eng; die Nutzlast des aktiven Punkts
+              // liegt trotzdem unter `activePayload`.
+              const roh = e as unknown as { activePayload?: { payload?: { tag?: string } }[] } | null;
+              const tag = roh?.activePayload?.[0]?.payload?.tag;
+              if (tag) setGewaehlt(tag);
+            }}
+            style={{ cursor: "pointer" }}
+          >
+            <XAxis dataKey="kurz" tickLine={false} axisLine={false} fontSize={10} interval="preserveStartEnd" />
+            <YAxis hide domain={["auto", "auto"]} />
+            <ChartTooltip
+              content={<ChartTooltipContent labelFormatter={(_, p) => String(p?.[0]?.payload?.lang ?? "")} />}
+            />
+            <Line
+              type="monotone"
+              dataKey="eigen"
+              stroke="var(--color-eigen)"
+              strokeWidth={1.5}
+              strokeDasharray="4 3"
+              dot={false}
+              connectNulls
+              isAnimationActive={false}
+            />
+            <Line
+              type="monotone"
+              dataKey="markt"
+              stroke="var(--color-markt)"
+              strokeWidth={2}
+              isAnimationActive={false}
+              dot={(props: { cx?: number; cy?: number; payload?: { tag?: string; farbe?: string } }) => {
+                const aktivTag = gewaehlt ?? stand.verlauf[0]?.tag;
+                const ist = props.payload?.tag === aktivTag;
+                return (
+                  <circle
+                    key={props.payload?.tag}
+                    cx={props.cx}
+                    cy={props.cy}
+                    r={ist ? 5 : 2.5}
+                    fill={props.payload?.farbe ?? "var(--color-markt)"}
+                    stroke={ist ? "white" : "none"}
+                    strokeWidth={ist ? 2 : 0}
+                  />
+                );
               }}
-              title={`${new Date(p.tag).toLocaleDateString("de-DE")}: Markt ${formatCurrency(
-                p.markt_median,
-                waehrung,
-              )}`}
-            >
-              {new Date(p.tag).toLocaleDateString("de-DE", {
-                day: "2-digit",
-                month: "2-digit",
-              })}
-            </button>
-          );
-        })}
+            />
+          </LineChart>
+        </ChartContainer>
+        <div className="flex items-center justify-between px-1 text-xs text-muted-foreground">
+          <span>
+            {stand.verlauf.length} Stichtage ·{" "}
+            {new Date(stand.verlauf[0]?.tag ?? "").toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" })}
+            {" – "}
+            {new Date(stand.verlauf[stand.verlauf.length - 1]?.tag ?? "").toLocaleDateString("de-DE", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "2-digit",
+            })}
+          </span>
+          <span>Klick auf die Kurve wechselt den Tag der Karte</span>
+        </div>
       </div>
 
       {/* Herkunft der Zahlen, klar als UNSERE Uhr benannt (Wurzel 5b). */}

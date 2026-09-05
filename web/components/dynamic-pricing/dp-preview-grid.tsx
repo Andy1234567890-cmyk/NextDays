@@ -6,12 +6,13 @@
 // Read-only — manuelle Tagespreise setzt man im Kalender; sie greifen, sobald
 // Dynamic Pricing für das Objekt abgeschaltet wird.
 import { useLocale } from "next-intl";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { DayAvailability } from "@/lib/calendar";
 import { Card } from "@nextdays/ui/card";
 import { useRouter } from "next/navigation";
 
+import { DpPortalstandLeiste } from "./dp-portalstand-leiste";
 import { DpTagesmodusDialog } from "./dp-tagesmodus-dialog";
 import {
   Dialog,
@@ -21,7 +22,12 @@ import {
 } from "@nextdays/ui/dialog";
 import { formatCurrency } from "@/lib/currency";
 import { explainFactors } from "@/lib/dp-factors";
-import { explainDpPrice } from "@/lib/dynamic-pricing";
+import {
+  explainDpPrice,
+  getVorschau,
+  type Portalstand,
+  type VorschauTag,
+} from "@/lib/dynamic-pricing";
 
 const WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
@@ -83,14 +89,21 @@ function todayIso(): string {
   return `${d.getFullYear()}-${m}-${t}`;
 }
 
+// Hostaway „Upcoming weeks": die naechsten fuenf Wochen als Liste statt Monat.
+const WOCHEN_ANSICHT_TAGE = 35;
+
 export function DpPreviewGrid({
   days,
   propertyId,
   currency,
+  automatikAn = true,
 }: {
   days: DayAvailability[];
   propertyId: string;
   currency: string | null;
+  /** Bei „aus" zeigt der Kalender die Kurve als Vorschau (grau, gestrichelt):
+   *  so saehe es mit Automatik aus — Hostaway „Subscribe & Review". */
+  automatikAn?: boolean;
 }) {
   // Die Seite ist eine Server-Komponente; nach einer Änderung holt
   // router.refresh() die neuen Preise, ohne dass der Nutzer neu lädt.
@@ -113,6 +126,42 @@ export function DpPreviewGrid({
   const [monat, setMonat] = useState<number | null>(null);
   const aktiverMonat = monat ?? monate[0] ?? monatsIndex(todayIso());
   const posic = monate.indexOf(aktiverMonat);
+  // Kalender (Monat) oder „Naechste Wochen" (Hostaway „Upcoming weeks").
+  const [ansicht, setAnsicht] = useState<"kalender" | "wochen">("kalender");
+  // Soll/Ist je Tag von der Portalstand-Leiste — markiert abweichende Tage.
+  const [portal, setPortal] = useState<Record<string, number>>({});
+  const portalStand = useCallback((st: Portalstand) => {
+    const map: Record<string, number> = {};
+    for (const t of st.tage) {
+      if (t.abweichung_pct !== null && Math.abs(t.abweichung_pct) > 0.5 && t.portal !== null) {
+        map[t.date] = t.portal;
+      }
+    }
+    setPortal(map);
+  }, []);
+  // Vorschau-Kurve bei ausgeschalteter Automatik: fuer den angezeigten Monat.
+  const [vorschau, setVorschau] = useState<Record<string, VorschauTag>>({});
+  useEffect(() => {
+    if (automatikAn) return;
+    const tage = days.filter((d) => monatsIndex(d.date) === aktiverMonat);
+    if (tage.length === 0) return;
+    const heute = todayIso();
+    const von = tage[0].date < heute ? heute : tage[0].date;
+    const bis = tage[tage.length - 1].date;
+    if (bis < von) return;
+    let aktiv = true;
+    getVorschau(propertyId, von, bis).then((res) => {
+      if (!aktiv || !res.ok) return;
+      setVorschau((prev) => {
+        const next = { ...prev };
+        for (const v of res.data) next[v.date] = v;
+        return next;
+      });
+    });
+    return () => {
+      aktiv = false;
+    };
+  }, [automatikAn, aktiverMonat, days, propertyId]);
 
   async function loadExplanation(day: string) {
     setOffenerTag(day);
@@ -190,10 +239,46 @@ export function DpPreviewGrid({
             Heute
           </button>
         )}
-        <span className="ml-auto text-xs text-muted-foreground">
-          {monatsTage.length} Tage
-        </span>
+        <div className="ml-auto flex items-center gap-2">
+          <div className="flex rounded-(--radius) border text-xs">
+            <button
+              type="button"
+              onClick={() => setAnsicht("kalender")}
+              className={`px-2.5 py-1 ${ansicht === "kalender" ? "bg-muted font-semibold" : "text-muted-foreground"}`}
+            >
+              Kalender
+            </button>
+            <button
+              type="button"
+              onClick={() => setAnsicht("wochen")}
+              className={`px-2.5 py-1 ${ansicht === "wochen" ? "bg-muted font-semibold" : "text-muted-foreground"}`}
+            >
+              Nächste Wochen
+            </button>
+          </div>
+          <span className="text-xs text-muted-foreground">{monatsTage.length} Tage</span>
+        </div>
       </div>
+      <div className="px-3 pt-3 empty:hidden">
+        <DpPortalstandLeiste propertyId={propertyId} onStand={portalStand} />
+      </div>
+      {!automatikAn && (
+        <p className="border-b bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+          Automatik ist aus. Grau gestrichelt siehst du, was Dynamic Pricing mit
+          deinen Einstellungen rechnen würde — gespeichert oder gesendet wird
+          davon nichts, bis du einschaltest.
+        </p>
+      )}
+      {ansicht === "wochen" && (
+        <WochenListe
+          days={days}
+          currency={currency}
+          locale={locale}
+          portal={portal}
+          onTag={(d) => setModusTag(d)}
+        />
+      )}
+      {ansicht === "kalender" && (<>
       <div className="grid grid-cols-7 border-b">
         {WEEKDAYS.map((w) => (
           <div
@@ -279,6 +364,24 @@ export function DpPreviewGrid({
                   {fmt(d.price, currency, locale)}
                 </button>
               </div>
+              {/* Vorschau bei Automatik aus: so würde die Automatik rechnen. */}
+              {!automatikAn && vorschau[d.date] && (
+                <span
+                  className="mt-0.5 self-end rounded border border-dashed px-1 text-[0.65rem] text-muted-foreground"
+                  title={explainFactors(vorschau[d.date].factors) || "Vorschau der Automatik"}
+                >
+                  ⚡ {fmt(vorschau[d.date].price, currency, locale)}
+                </span>
+              )}
+              {/* Portal weicht ab: die Zahl, die Airbnb/Booking gerade zeigen. */}
+              {portal[d.date] !== undefined && (
+                <span
+                  className="mt-0.5 self-end rounded bg-red-100 px-1 text-[0.65rem] font-medium text-red-800 dark:bg-red-950 dark:text-red-300"
+                  title="An den Portalen steht ein anderer Preis als hier berechnet"
+                >
+                  Portal {fmt(portal[d.date], currency, locale)}
+                </span>
+              )}
               {/* Wetter am Standort des Objekts. Die Herkunft steht dabei:
                   eine Vorhersage gibt es nur wenige Tage weit, danach ist es
                   das langjährige Mittel dieses Kalendertages. */}
@@ -337,6 +440,7 @@ export function DpPreviewGrid({
           );
         })}
       </div>
+      </>)}
       {/* Erklärung als Popup statt in der Zelle: der Fließtext ist mehrere
           Zeilen lang und war im 7-Spalten-Raster nicht lesbar. */}
       <Dialog
@@ -387,19 +491,99 @@ export function DpPreviewGrid({
         </DialogContent>
       </Dialog>
 
-      {modusTag && (
+      {modusTag && (() => {
+        const tag = days.find((x) => x.date === modusTag);
+        // Der Zustand des Tages aus dem, was der Kalender ohnehin weiß:
+        // `override` = fester Preis; ein Faktor `tagesanpassung` = Anpassung
+        // (der gespeicherte Preis ist bereits verschoben, die Vorschau
+        // braucht den rohen).
+        const faktor = tag?.price_factors?.tagesanpassung;
+        const anpassung = faktor != null && faktor !== 1;
+        const startModus =
+          tag?.price_source === "override"
+            ? "manuell"
+            : anpassung
+              ? "anpassung"
+              : "dynamisch";
+        const roh =
+          tag?.price == null ? null : anpassung ? tag.price / faktor : tag.price;
+        return (
         <DpTagesmodusDialog
           propertyId={propertyId}
           currency={currency}
           startDatum={modusTag}
-          berechneterPreis={
-            days.find((x) => x.date === modusTag)?.price ?? null
-          }
+          startModus={startModus}
+          startAnpassungPct={anpassung ? Math.round((faktor - 1) * 100) : null}
+          berechneterPreis={roh}
           offen
           onSchliessen={() => setModusTag(null)}
           onGespeichert={() => router.refresh()}
         />
-      )}
+        );
+      })()}
     </Card>
+  );
+}
+
+
+/** „Nächste Wochen" (Hostaway „Upcoming weeks"): die kommenden 35 Tage als
+ *  Liste — Datum, Preis, Herkunft, Portalstand. Zum Überfliegen, nicht zum
+ *  Blättern. */
+function WochenListe({
+  days,
+  currency,
+  locale,
+  portal,
+  onTag,
+}: {
+  days: DayAvailability[];
+  currency: string | null;
+  locale: string;
+  portal: Record<string, number>;
+  onTag: (iso: string) => void;
+}) {
+  const heute = todayIso();
+  const liste = days.filter((d) => d.date >= heute).slice(0, WOCHEN_ANSICHT_TAGE);
+  if (liste.length === 0) {
+    return <p className="px-3 py-6 text-sm text-muted-foreground">Keine Tage im Zeitraum.</p>;
+  }
+  return (
+    <ul className="divide-y">
+      {liste.map((d) => {
+        const dt = new Date(d.date + "T00:00:00");
+        const wochenstart = dt.getDay() === 1;
+        return (
+          <li
+            key={d.date}
+            className={`flex items-center gap-3 px-3 py-1.5 text-sm ${wochenstart ? "border-t-2" : ""}`}
+          >
+            <span className="w-28 text-muted-foreground">
+              {dt.toLocaleDateString(locale, { weekday: "short", day: "2-digit", month: "2-digit" })}
+            </span>
+            <button
+              type="button"
+              onClick={() => onTag(d.date)}
+              className="font-semibold hover:underline"
+              title="Preise verwalten"
+            >
+              {d.price_source === "dynamic" && <span className="text-accent">⚡ </span>}
+              {d.price_source === "override" && <span className="text-muted-foreground">✎ </span>}
+              {fmt(d.price, currency, locale)}
+            </button>
+            {d.preis_wartet_auf_freigabe && (
+              <span className="text-xs text-amber-700 dark:text-amber-300">wartet auf Freigabe</span>
+            )}
+            {portal[d.date] !== undefined && (
+              <span className="rounded bg-red-100 px-1.5 text-xs font-medium text-red-800 dark:bg-red-950 dark:text-red-300">
+                Portal {fmt(portal[d.date], currency, locale)}
+              </span>
+            )}
+            <span className="ml-auto text-xs text-muted-foreground">
+              {d.status !== "open" ? "belegt/gesperrt" : d.min_stay ? `min. ${d.min_stay} N.` : ""}
+            </span>
+          </li>
+        );
+      })}
+    </ul>
   );
 }

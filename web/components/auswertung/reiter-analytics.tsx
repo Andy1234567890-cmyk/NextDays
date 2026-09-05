@@ -65,7 +65,34 @@ type VerlaufPunkt = {
   vorherUmsatz?: number | null;
 };
 
-export function ReiterAnalytics({ a }: { a: Auswertung }) {
+export type AnalyticsOptionen = {
+  /** Hostaways „Gruppieren nach": keine, Kanäle, Objekte. */
+  gruppe: "keine" | "kanal" | "objekt";
+  /** Hostaways Diagrammtyp für den Verlauf. */
+  diagramm: "linie" | "balken";
+  /** Welche Kennzahl der Verlauf zeigt. */
+  kennzahl: "umsatz" | "naechte" | "buchungen";
+};
+
+export const ANALYTICS_VORGABE: AnalyticsOptionen = {
+  gruppe: "keine",
+  diagramm: "linie",
+  kennzahl: "umsatz",
+};
+
+// Höchstens so viele Gruppen im Verlauf — mehr Linien sind nicht lesbar; die
+// übrigen Objekte laufen unter „weitere".
+const MAX_GRUPPEN = 6;
+
+export function ReiterAnalytics({
+  a,
+  optionen = ANALYTICS_VORGABE,
+  setOptionen,
+}: {
+  a: Auswertung;
+  optionen?: AnalyticsOptionen;
+  setOptionen?: (o: AnalyticsOptionen) => void;
+}) {
   const t = useTranslations("analysis");
   // Kanalnamen aus `calendar.channel.*` — dem EINEN Katalog, den
   // `scripts/i18n/kanal-enums-pruefen.mjs` über alle fünf Stellen
@@ -143,6 +170,98 @@ export function ReiterAnalytics({ a }: { a: Auswertung }) {
     return reihe.sort((x, y) => x.period.localeCompare(y.period));
   })();
 
+  // GRUPPIERTER VERLAUF (Hostaway „Gruppieren nach Kanälen / Einträgen"):
+  // je Gruppe eine Reihe aus `verlauf_je_kanal` bzw. `verlauf_je_objekt`.
+  // Die Gruppenreihen kommen aus demselben Rechenweg wie die Gesamtreihe
+  // und summieren sich exakt zu ihr. Bei Objekten werden die sechs größten
+  // gezeigt, der Rest als „weitere" — zwölf Linien liest niemand.
+  const kennzahl = optionen.kennzahl;
+  const gruppen: { key: string; name: string; farbe: string; reihe: typeof a.verlauf }[] = (() => {
+    if (optionen.gruppe === "keine") return [];
+    if (optionen.gruppe === "kanal") {
+      return Object.entries(a.verlauf_je_kanal).map(([ch, reihe]) => ({
+        key: ch,
+        name: channelLabel(ch as AvailabilitySource),
+        farbe: channelChartColor(ch as AvailabilitySource),
+        reihe,
+      }));
+    }
+    const nachUmsatz = [...a.objekte].sort((x, y) => y.umsatz - x.umsatz);
+    const top = nachUmsatz.slice(0, MAX_GRUPPEN);
+    const rest = nachUmsatz.slice(MAX_GRUPPEN);
+    const zeilen = top.map((o, i) => ({
+      key: o.property_id,
+      name: o.title,
+      farbe: FARBEN[i % FARBEN.length],
+      reihe: a.verlauf_je_objekt[o.property_id] ?? [],
+    }));
+    if (rest.length) {
+      const summe = new Map<string, { umsatz: number; naechte: number; buchungen: number }>();
+      for (const o of rest) {
+        for (const p of a.verlauf_je_objekt[o.property_id] ?? []) {
+          const e = summe.get(p.period) ?? { umsatz: 0, naechte: 0, buchungen: 0 };
+          e.umsatz += p.umsatz;
+          e.naechte += p.naechte;
+          e.buchungen += p.buchungen;
+          summe.set(p.period, e);
+        }
+      }
+      zeilen.push({
+        key: "__rest",
+        name: t("chart.otherProperties", { count: rest.length }),
+        farbe: "var(--muted-foreground)",
+        reihe: [...summe.entries()]
+          .sort(([x], [y]) => x.localeCompare(y))
+          .map(([period, e]) => ({ period, ...e })),
+      });
+    }
+    return zeilen;
+  })();
+  const gruppenDaten: Record<string, string | number | null>[] = (() => {
+    if (!gruppen.length) return [];
+    const perioden = a.verlauf.map((p) => p.period);
+    return perioden.map((period) => {
+      const zeile: Record<string, string | number | null> = { period };
+      for (const g of gruppen) {
+        const p = g.reihe.find((x) => x.period === period);
+        zeile[g.key] = p ? p[kennzahl] : 0;
+      }
+      return zeile;
+    });
+  })();
+  const gruppenConfig: ChartConfig = Object.fromEntries(
+    gruppen.map((g) => [g.key, { label: g.name, color: g.farbe }]),
+  );
+  const kennzahlLabel = t(
+    kennzahl === "umsatz" ? "kpi.revenue" : kennzahl === "naechte" ? "kpi.nights" : "col.bookingsShort",
+  );
+
+  const steuerung = setOptionen ? (
+    <div className="flex flex-wrap items-center gap-2 text-xs">
+      <Umschalter
+        label={t("chart.metric")}
+        wert={optionen.kennzahl}
+        werte={["umsatz", "naechte", "buchungen"] as const}
+        text={(v) => t(`chart.metricValues.${v}`)}
+        setzen={(v) => setOptionen({ ...optionen, kennzahl: v })}
+      />
+      <Umschalter
+        label={t("chart.groupBy")}
+        wert={optionen.gruppe}
+        werte={["keine", "kanal", "objekt"] as const}
+        text={(v) => t(`chart.groupValues.${v}`)}
+        setzen={(v) => setOptionen({ ...optionen, gruppe: v })}
+      />
+      <Umschalter
+        label={t("chart.type")}
+        wert={optionen.diagramm}
+        werte={["linie", "balken"] as const}
+        text={(v) => t(`chart.typeValues.${v}`)}
+        setzen={(v) => setOptionen({ ...optionen, diagramm: v })}
+      />
+    </div>
+  ) : null;
+
   // Kanal-Donut: Farbe und Name aus dem KANAL, nicht aus der Listenposition
   // (03.09.2026, dieselbe Wurzel wie im Kontrollzentrum).
   //
@@ -208,17 +327,79 @@ export function ReiterAnalytics({ a }: { a: Auswertung }) {
         />
       )}
       <Card className="flex flex-col gap-3 p-5">
-        <h3 className="font-display text-base font-extrabold">
-          {t("chart.revenueOverTime")}
-        </h3>
-        {a.vorher && !waehrungGleich && (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="font-display text-base font-extrabold">
+            {optionen.gruppe === "keine" && kennzahl === "umsatz"
+              ? t("chart.revenueOverTime")
+              : t("chart.overTime", { metric: kennzahlLabel })}
+          </h3>
+          {steuerung}
+        </div>
+        {a.vorher && !waehrungGleich && optionen.gruppe === "keine" && kennzahl === "umsatz" && (
           // Der Vergleich ist angefordert, aber nicht darstellbar. Das
           // stillschweigend wegzulassen sähe aus wie „kein Vorjahr vorhanden".
           <p className="text-xs text-muted-foreground">
             {t("compareChartCurrencyMismatch")}
           </p>
         )}
-        {nurUnvergleichbaresVorjahr ? (
+        {gruppen.length ? (
+          <ChartContainer config={gruppenConfig} className="h-64 w-full">
+            {optionen.diagramm === "balken" ? (
+              <BarChart data={gruppenDaten}>
+                <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                <XAxis dataKey="period" tickLine={false} axisLine={false} fontSize={11} />
+                <YAxis tickLine={false} axisLine={false} fontSize={11} width={70} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartLegend content={<ChartLegendContent />} />
+                {gruppen.map((g) => (
+                  <Bar key={g.key} dataKey={g.key} stackId="g" fill={`var(--color-${g.key})`} radius={2} />
+                ))}
+              </BarChart>
+            ) : (
+              <LineChart data={gruppenDaten}>
+                <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                <XAxis dataKey="period" tickLine={false} axisLine={false} fontSize={11} />
+                <YAxis tickLine={false} axisLine={false} fontSize={11} width={70} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartLegend content={<ChartLegendContent />} />
+                {gruppen.map((g) => (
+                  <Line
+                    key={g.key}
+                    type="monotone"
+                    dataKey={g.key}
+                    stroke={`var(--color-${g.key})`}
+                    strokeWidth={2}
+                    dot={false}
+                    connectNulls
+                  />
+                ))}
+              </LineChart>
+            )}
+          </ChartContainer>
+        ) : optionen.diagramm === "balken" || kennzahl !== "umsatz" ? (
+          <ChartContainer
+            config={{ [kennzahl]: { label: kennzahlLabel, color: FARBEN[0] } }}
+            className="h-64 w-full"
+          >
+            {optionen.diagramm === "balken" ? (
+              <BarChart data={a.verlauf}>
+                <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                <XAxis dataKey="period" tickLine={false} axisLine={false} fontSize={11} />
+                <YAxis tickLine={false} axisLine={false} fontSize={11} width={70} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey={kennzahl} fill={`var(--color-${kennzahl})`} radius={3} />
+              </BarChart>
+            ) : (
+              <LineChart data={a.verlauf}>
+                <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                <XAxis dataKey="period" tickLine={false} axisLine={false} fontSize={11} />
+                <YAxis tickLine={false} axisLine={false} fontSize={11} width={70} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Line type="monotone" dataKey={kennzahl} stroke={`var(--color-${kennzahl})`} strokeWidth={2} dot={false} />
+              </LineChart>
+            )}
+          </ChartContainer>
+        ) : nurUnvergleichbaresVorjahr ? (
           // Nichts zu zeichnen: der laufende Zeitraum ist leer, und die
           // Vorjahreslinie scheidet wegen der Währung aus. Ein leeres
           // Diagrammgerüst behauptete „Verlauf bei null" (Wurzel 4).
@@ -335,5 +516,40 @@ export function ReiterAnalytics({ a }: { a: Auswertung }) {
         {t("chart.footnote", { total: geld(a.kennzahlen.umsatz) })}
       </p>
     </div>
+  );
+}
+
+function Umschalter<T extends string>({
+  label,
+  wert,
+  werte,
+  text,
+  setzen,
+}: {
+  label: string;
+  wert: T;
+  werte: readonly T[];
+  text: (v: T) => string;
+  setzen: (v: T) => void;
+}) {
+  return (
+    <label className="flex items-center gap-1.5">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="inline-flex rounded-md border border-border p-0.5">
+        {werte.map((v) => (
+          <button
+            key={v}
+            type="button"
+            onClick={() => setzen(v)}
+            className={
+              "rounded px-2 py-0.5 transition-colors " +
+              (wert === v ? "bg-foreground text-background" : "hover:bg-muted")
+            }
+          >
+            {text(v)}
+          </button>
+        ))}
+      </span>
+    </label>
   );
 }

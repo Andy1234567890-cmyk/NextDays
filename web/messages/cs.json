@@ -353,7 +353,8 @@
     "hrSettings": "Nastavení",
     "timeClock": "Docházka",
     "payroll": "Mzda",
-    "staffReports": "Přehledy zaměstnanců"
+    "staffReports": "Přehledy zaměstnanců",
+    "prices": "Ceny a trh"
   },
   "exemption": {
     "labelNamed": "Osvobozeno od daně ({scheme}) — DIČ není nutné",
@@ -12390,7 +12391,7 @@
   },
   "analysis": {
     "title": "Vyhodnocení",
-    "subtitle": "Klíčové ukazatele, rezervace, obsazenost a kanály za určité období.",
+    "subtitle": "Klíčové ukazatele, rezervace, obsazenost, kanály, hosté, výdaje, tempo a vzorce pro dané období.",
     "loading": "Probíhá výpočet…",
     "empty": "Pro toto období nejsou k dispozici žádná data.",
     "ownerStay": "Vlastní užívání",
@@ -12404,14 +12405,23 @@
       "buchungen": "Rezervace",
       "auslastung": "Obsazenost",
       "kanaele": "Kanály",
-      "gaeste": "Hosté"
+      "gaeste": "Hosté",
+      "ausgaben": "Výdaje a doplňky",
+      "pace": "Tempo",
+      "muster": "Vzorce",
+      "stornos": "Storna"
     },
     "range": {
       "monat": "Tento měsíc",
       "vormonat": "Předchozí měsíc",
       "quartal": "Čtvrtletí",
       "jahr": "Rok",
-      "frei": "Libovolné"
+      "frei": "Libovolné",
+      "vorjahr": "Předchozí rok",
+      "letzte30": "Posledních 30 dní",
+      "naechste30": "Příštích 30 dní",
+      "letzte12monate": "Posledních 12 měsíců",
+      "naechste12monate": "Příštích 12 měsíců"
     },
     "filter": {
       "range": "Období",
@@ -12422,7 +12432,27 @@
       "allProperties": "Všechny objekty",
       "channels": "Kanály",
       "allChannels": "Všechny kanály",
-      "compare": "Porovnat"
+      "compare": "Porovnat",
+      "button": "Filtr",
+      "reset": "Resetovat",
+      "apply": "Použít",
+      "cancel": "Zrušit",
+      "clear": "Vymazat výběr",
+      "nSelected": "{count, plural, one {# vybrán} other {# vybráno}}",
+      "nProperties": "{count, plural, one {# objekt} other {# objektů}}",
+      "allStatuses": "Všechny stavy",
+      "searchProperties": "Hledat objekt…",
+      "noMatch": "Žádné výsledky.",
+      "rangeHint": "Rychlý výběr zůstává v uložených zobrazeních dynamický: „Minulý měsíc“ je vždy minulý měsíc ode dneška.",
+      "statusHint": "Bez výběru se počítají všechny stavy. Stornované rezervace se stejně započítávají pouze do míry storna, nikoli do obratu a nocí.",
+      "dim": {
+        "zeitraum": "Období",
+        "bezug": "Přiřazení",
+        "objekte": "Objekty",
+        "kanaele": "Kanály",
+        "status": "Stav",
+        "vergleich": "Srovnání"
+      }
     },
     "basis": {
       "anreise": "Podle příjezdu",
@@ -12454,11 +12484,31 @@
       "revenueOverTime": "Vývoj tržeb",
       "shareByChannel": "Podíl tržeb podle kanálu",
       "revenueByProperty": "Tržby za objekt",
-      "footnote": "Celkové tržby v období: {total}"
+      "footnote": "Celkové tržby v období: {total}",
+      "overTime": "{metric} v průběhu",
+      "otherProperties": "{count, plural, one {# další objekt} other {# dalších objektů}}",
+      "metric": "Metrika",
+      "metricValues": {
+        "umsatz": "Obrat",
+        "naechte": "Noci",
+        "buchungen": "Rezervace"
+      },
+      "groupBy": "Seskupit",
+      "groupValues": {
+        "keine": "Žádné",
+        "kanal": "Kanál",
+        "objekt": "Objekt"
+      },
+      "type": "Graf",
+      "typeValues": {
+        "linie": "Čára",
+        "balken": "Pruh"
+      }
     },
     "table": {
       "rowCount": "{count, plural, one {# rezervace} other {# rezervace}}",
-      "columns": "Sloupce"
+      "columns": "Sloupce",
+      "total": "Suma"
     },
     "col": {
       "property": "Objekt",
@@ -12480,7 +12530,30 @@
       "bookingsShort": "Rezervace",
       "net": "Netto",
       "share": "Podíl",
-      "country": "Země"
+      "country": "Země",
+      "month": "Měsíc",
+      "ownerNights": "Vlastní užívání",
+      "accommodation": "Nocleh",
+      "cleaning": "Úklid",
+      "otherFees": "Ostatní poplatky",
+      "addons": "Doplňkové služby",
+      "gross": "Cena pro hosta",
+      "paymentFee": "Poplatek za platbu",
+      "date": "Datum",
+      "name": "Označení",
+      "category": "Kategorie",
+      "kind": "Typ",
+      "amount": "Částka",
+      "receipt": "Doklad",
+      "count": "Počet",
+      "weekday": "Den v týdnu",
+      "value": "Hodnota",
+      "period": "Období",
+      "checkIn": "Příjezd",
+      "checkOut": "Odjezd",
+      "currency": "Měna",
+      "source": "Zdroj",
+      "reason": "Důvod"
     },
     "guests": {
       "total": "Hosté",
@@ -12512,7 +12585,146 @@
     "compareCurrencyUnclear": "Měna ve srovnávacím období je nejednoznačná",
     "compareCurrencyMismatchHint": "Ve srovnávacím období platila jiná měna. Procentuální změna by byla efektem směnného kurzu, nikoli obchodním údajem.",
     "compareChartCurrencyMismatch": "Srovnávací období bylo v jiné měně – proto se čára předchozího roku nekreslí.",
-    "compareLocked": "Srovnání je možné až do období jednoho roku."
+    "compareLocked": "Srovnání je možné až do období jednoho roku.",
+    "status": {
+      "pending": "Otevřeno",
+      "confirmed": "Potvrzeno",
+      "checked_in": "Přihlášeno",
+      "checked_out": "Odhlášeno",
+      "completed": "Dokončeno",
+      "cancelled": "Zrušeno",
+      "declined": "Odmítnuto",
+      "expired": "Prošlé",
+      "requested": "Vyžádáno"
+    },
+    "bookings": {
+      "per": {
+        "buchung": "Za rezervaci",
+        "objekt": "Za objekt"
+      },
+      "propertyCount": "{count, plural, one {# Objekt} other {# Objekty}}",
+      "showEmpty": "Zobrazit objekty bez rezervací",
+      "reconstructed": "Rekonstruováno z poplatků za objekt – portál neposkytl žádný výpis.",
+      "commissionComputed": "Vypočteno z uložené provize – portálem nehlášeno.",
+      "withoutBreakdown": "{count, plural, one {# rezervace bez rozpisu cen — je tam jen celková cena.} other {# rezervací bez rozpisu cen — je tam jen celková cena.}}",
+      "withoutBreakdownShort": "Bez rozpisu",
+      "reconstructedCount": "{count, plural, one {# rozpis (*) rekonstruovaný z poplatků za objekt.} other {# rozpisy (*) rekonstruované z poplatků za objekt.}}"
+    },
+    "occupancy": {
+      "byMonth": "Za měsíc",
+      "propertyCount": "{count, plural, one {# objekt} other {# objektů}}"
+    },
+    "expenses": {
+      "empty": "V tomto období nejsou žádné transakční položky.",
+      "emptyHint": "Výdaje a doplňky vznikají ve vyúčtování majitele a z objednaných služeb.",
+      "expenses": "Výdaje",
+      "extras": "Doplňky",
+      "balance": "Zůstatek",
+      "balanceHint": "Doplňky minus výdaje",
+      "count": "Položky",
+      "byCategory": "Podle kategorie",
+      "byProperty": "Podle objektu",
+      "noCategory": "Bez kategorie",
+      "noProperty": "Bez objektu (účet)",
+      "rowCount": "{count, plural, one {# položka} other {# položek}}",
+      "kind": {
+        "ausgabe": "Výdaj",
+        "extra": "Doplněk"
+      },
+      "footnote": "Období je datum položky. Výdaje jdou na vrub majitele, doplňky v jeho prospěch — tak, jak jsou uvedeny ve vyúčtování."
+    },
+    "pace": {
+      "title": "Stav rezervací na příštích 12 měsíců",
+      "subtitle": "Stav k {heute} oproti stavu k {vorjahr} za stejné měsíce o rok dříve.",
+      "vsLastYear": "oproti srovnávacímu datu předchozího roku",
+      "now": "Dnes rezervováno",
+      "lastYearSameDay": "Předchozí rok ve stejný den",
+      "lastYearFinal": "Předchozí rok na konci",
+      "nowNights": "Dnes rezervováno (nocí)",
+      "nowRevenue": "Dnes rezervováno (obrat)",
+      "lastYearSameDayNights": "Předchozí rok ve stejný den (nocí)",
+      "delta": "Rozdíl",
+      "lastYearFinalNights": "Předchozí rok na konci (nocí)",
+      "lastYearFinalRevenue": "Předchozí rok na konci (obrat)",
+      "footnote": "Srovnávací datum předchozího roku zahrnuje pouze rezervace se skutečným časem rezervace portálu.",
+      "withoutTimestamp": "{count, plural, one {# rezervace z předchozího roku bez časového razítka chybí v hodnotě srovnávacího data.} other {# rezervací z předchozího roku bez časového razítka chybí v hodnotě srovnávacího data.}}"
+    },
+    "patterns": {
+      "weekday": "Výkon za den v týdnu",
+      "weekdayHint": "Vytížení a obrat za den v týdnu. Obrat rezervace je rovnoměrně rozdělen na její noci — portály neposkytují cenu za noc.",
+      "leadTime": "Rezervační okno",
+      "leadTimeHint": "Dny mezi rezervací a příjezdem. Pouze rezervace se skutečným časem rezervace.",
+      "stayLength": "Délka pobytu",
+      "stayLengthHint": "Rozdělení rezervovaných nocí za pobyt.",
+      "days": "Dny",
+      "nights": "Noci",
+      "daysValue": "{n} dní"
+    },
+    "cancellations": {
+      "empty": "V tomto období nelze stornovat.",
+      "emptyHint": "{count, plural, one {# platná rezervace, žádná zrušena.} other {# platné rezervace, žádná zrušena.}}",
+      "nights": "Zrušené noci",
+      "lostRevenue": "Ztracené příjmy",
+      "lostRevenueHint": "Celková cena zrušených rezervací – část nocí byla znovu prodána.",
+      "leadTime": "Ø Předstih",
+      "leadTimeBase": "{count} z {total} s datem zrušení",
+      "byChannel": "Podle kanálu",
+      "byLeadTime": "Podle předstihu (dny před příjezdem)",
+      "byReason": "Podle důvodu",
+      "noReason": "Důvod není uveden",
+      "footnote": "Míra zrušení = zrušeno / (platné + zrušeno). Předstih se počítá pouze u rezervací, které mají datum zrušení."
+    },
+    "views": {
+      "button": "Zobrazení",
+      "title": "Uložená zobrazení",
+      "empty": "Zatím žádné zobrazení nebylo uloženo.",
+      "new": "Uložit aktuální zobrazení",
+      "delete": "Smazat",
+      "saveTitle": "Uložit zobrazení",
+      "saveHint": "Uloží období, filtry, sloupce a nastavení záložek – pouze pro vás.",
+      "namePlaceholder": "např. Předchozí měsíc na objekt",
+      "save": "Uložit"
+    },
+    "export": {
+      "button": "Stáhnout zprávu",
+      "title": "Formát",
+      "csv": "CSV (aktuální tabulka)",
+      "xlsx": "Excel (všechny tabulky záložky)",
+      "pdf": "PDF",
+      "hint": "Exportuje se přesně to, co je zde uvedeno – s aktivními filtry.",
+      "generated": "Vytvořeno {when}",
+      "failed": "Export se nezdařil."
+    },
+    "prices": {
+      "title": "Ceny a trh",
+      "subtitle": "Jak si vaše cena stojí ve srovnání s okolím, co automatika dělá se základní cenou a jak nakládáte s návrhy.",
+      "property": "Objekt",
+      "noProperties": "Žádný objekt s dynamickým stanovováním cen. Zapněte automatiku v sekci „Dynamické stanovování cen“ – poté se zde objeví zpráva.",
+      "distance": "Ø Odstup od trhu",
+      "distanceHint": "{n} rozhodných dnů s vlastní cenou",
+      "position": "Umístění rozhodných dnů",
+      "below": "pod trhem",
+      "at": "na trhu",
+      "above": "nad trhem",
+      "uplift": "Automatika vs. základní cena",
+      "upliftHint": "{days} dní v horizontu · Základní cena {base}",
+      "noBase": "Není uložena žádná základní cena",
+      "range": "Rozsah cen",
+      "rangeHint": "Ø {avg}",
+      "ki": "Poradce pro pravidla",
+      "kiHint": "{accepted} přijato · {rejected} odmítnuto (90 dní)",
+      "kiTotal": "celkem {accepted} / {rejected}",
+      "chart": "Cena vs. okolí za rozhodný den",
+      "chartHint": "Pásmo = střední pole okolí (25.–75. percentil), čára = medián. Vaše cena čárkovaně, základní cena šedě.",
+      "market": "Okolí (medián)",
+      "mid": "Střední pole",
+      "own": "Vaše cena",
+      "base": "Základní cena",
+      "table": "Rozhodné dny",
+      "offers": "Nabídky",
+      "footnote": "Sledovaná oblast kolem {km} km · Rozhodné dny denního sledování trhu · naposledy u nás načteno {when}.",
+      "loading": "Zpráva se počítá…"
+    }
   },
   "tasks": {
     "fehler": {

@@ -353,7 +353,8 @@
     "hrSettings": "Beállítások",
     "timeClock": "Időóra",
     "payroll": "Bér",
-    "staffReports": "Személyzeti jelentések"
+    "staffReports": "Személyzeti jelentések",
+    "prices": "Árak és piac"
   },
   "exemption": {
     "labelNamed": "Adómentes ({scheme}) — nincs szükség adószámra",
@@ -12390,7 +12391,7 @@
   },
   "analysis": {
     "title": "Értékelés",
-    "subtitle": "Mutatók, foglalások, kihasználtság és csatornák egy időszakra vonatkozóan.",
+    "subtitle": "A kiválasztott időszak főbb mutatói, foglalásai, kihasználtsága, csatornái, vendégei, kiadásai, üteme és mintázatai.",
     "loading": "Számítás folyamatban…",
     "empty": "Ehhez az időszakhoz nincsenek adatok.",
     "ownerStay": "Saját használat",
@@ -12404,14 +12405,23 @@
       "buchungen": "Foglalások",
       "auslastung": "Kihasználtság",
       "kanaele": "Csatornák",
-      "gaeste": "Vendégek"
+      "gaeste": "Vendégek",
+      "ausgaben": "Kiadások és extrák",
+      "pace": "Ütem",
+      "muster": "Mintázat",
+      "stornos": "Lemondások"
     },
     "range": {
       "monat": "Ez a hónap",
       "vormonat": "Előző hónap",
       "quartal": "Negyedév",
       "jahr": "Év",
-      "frei": "Szabadon választott"
+      "frei": "Szabadon választott",
+      "vorjahr": "Előző év",
+      "letzte30": "Elmúlt 30 nap",
+      "naechste30": "Következő 30 nap",
+      "letzte12monate": "Elmúlt 12 hónap",
+      "naechste12monate": "Következő 12 hónap"
     },
     "filter": {
       "range": "Időszak",
@@ -12422,7 +12432,27 @@
       "allProperties": "Összes objektum",
       "channels": "Csatornák",
       "allChannels": "Összes csatorna",
-      "compare": "Összehasonlítás"
+      "compare": "Összehasonlítás",
+      "button": "Szűrő",
+      "reset": "Visszaállítás",
+      "apply": "Alkalmaz",
+      "cancel": "Mégse",
+      "clear": "Kiválasztás törlése",
+      "nSelected": "{count, plural, one {# kiválasztva} other {# kiválasztva}}",
+      "nProperties": "{count, plural, one {# ingatlan} other {# ingatlan}}",
+      "allStatuses": "Összes állapot",
+      "searchProperties": "Ingatlan keresése…",
+      "noMatch": "Nincs találat.",
+      "rangeHint": "A gyorsválasztó dinamikus marad a mentett nézetekben: „Előző hónap” mindig a mai nap előző hónapja.",
+      "statusHint": "Kiválasztás nélkül minden állapot számít. A lemondott foglalások csak a lemondási arányba számítanak bele, nem a bevételbe és az éjszakákba.",
+      "dim": {
+        "zeitraum": "Időszak",
+        "bezug": "Hozzárendelés",
+        "objekte": "Ingatlanok",
+        "kanaele": "Csatornák",
+        "status": "Állapotok",
+        "vergleich": "Összehasonlítás"
+      }
     },
     "basis": {
       "anreise": "Érkezés szerint",
@@ -12454,11 +12484,31 @@
       "revenueOverTime": "Bevételi előzmények",
       "shareByChannel": "Bevételi részesedés csatornánként",
       "revenueByProperty": "Bevétel ingatlanonként",
-      "footnote": "Összes bevétel az időszakban: {total}"
+      "footnote": "Összes bevétel az időszakban: {total}",
+      "overTime": "{metric} az idő múlásával",
+      "otherProperties": "{count, plural, one {# további ingatlan} other {# további ingatlan}}",
+      "metric": "Mutató",
+      "metricValues": {
+        "umsatz": "Bevétel",
+        "naechte": "Éjszakák",
+        "buchungen": "Foglalások"
+      },
+      "groupBy": "Csoportosítás",
+      "groupValues": {
+        "keine": "Nincs",
+        "kanal": "Csatorna",
+        "objekt": "Ingatlan"
+      },
+      "type": "Diagram",
+      "typeValues": {
+        "linie": "Vonal",
+        "balken": "Sáv"
+      }
     },
     "table": {
       "rowCount": "{count, plural, one {# foglalás} other {# foglalás}}",
-      "columns": "Oszlopok"
+      "columns": "Oszlopok",
+      "total": "Összeg"
     },
     "col": {
       "property": "Ingatlan",
@@ -12480,7 +12530,30 @@
       "bookingsShort": "Foglalások",
       "net": "Nettó",
       "share": "Arány",
-      "country": "Ország"
+      "country": "Ország",
+      "month": "Hónap",
+      "ownerNights": "Saját használat",
+      "accommodation": "Éjszaka",
+      "cleaning": "Takarítás",
+      "otherFees": "Egyéb díjak",
+      "addons": "Kiegészítő szolgáltatások",
+      "gross": "Vendégár",
+      "paymentFee": "Fizetési díj",
+      "date": "Dátum",
+      "name": "Megnevezés",
+      "category": "Kategória",
+      "kind": "Típus",
+      "amount": "Összeg",
+      "receipt": "Nyugta",
+      "count": "Darabszám",
+      "weekday": "Hét napja",
+      "value": "Érték",
+      "period": "Időszak",
+      "checkIn": "Érkezés",
+      "checkOut": "Távozás",
+      "currency": "Pénznem",
+      "source": "Forrás",
+      "reason": "Ok"
     },
     "guests": {
       "total": "Vendégek",
@@ -12512,7 +12585,146 @@
     "compareCurrencyUnclear": "Az összehasonlítási időszakban a valuta nem egyértelmű",
     "compareCurrencyMismatchHint": "Az összehasonlítási időszakban más valuta volt érvényben. A százalékos változás árfolyamhatás lenne, nem üzleti adat.",
     "compareChartCurrencyMismatch": "Az összehasonlítási időszak más valutában volt – ezért az előző évi vonal nem kerül megrajzolásra.",
-    "compareLocked": "Összehasonlítás legfeljebb egyéves időszakra lehetséges."
+    "compareLocked": "Összehasonlítás legfeljebb egyéves időszakra lehetséges.",
+    "status": {
+      "pending": "Nyitott",
+      "confirmed": "Megerősítve",
+      "checked_in": "Bejelentkezve",
+      "checked_out": "Kijelentkezve",
+      "completed": "Befejezve",
+      "cancelled": "Törölve",
+      "declined": "Elutasítva",
+      "expired": "Lejárt",
+      "requested": "Érdeklődés"
+    },
+    "bookings": {
+      "per": {
+        "buchung": "Foglalásonként",
+        "objekt": "Objektumonként"
+      },
+      "propertyCount": "{count, plural, one {# Objektum} other {# Objektum}}",
+      "showEmpty": "Objektumok megjelenítése foglalások nélkül",
+      "reconstructed": "Az objektum díjaiból rekonstruálva – a portál nem adott meg kimutatást.",
+      "commissionComputed": "A tárolt jutalékból számítva – a portál nem jelentette.",
+      "withoutBreakdown": "{count, plural, one {# foglalás árképzés nélkül – csak a teljes ár van feltüntetve.} other {# foglalás árképzés nélkül – csak a teljes ár van feltüntetve.}}",
+      "withoutBreakdownShort": "Árképzés nélkül",
+      "reconstructedCount": "{count, plural, one {# árképzés (*) az ingatlan díjaiból rekonstruálva.} other {# árképzések (*) az ingatlan díjaiból rekonstruálva.}}"
+    },
+    "occupancy": {
+      "byMonth": "Havonta",
+      "propertyCount": "{count, plural, one {# ingatlan} other {# ingatlan}}"
+    },
+    "expenses": {
+      "empty": "Ebben az időszakban nincsenek elszámolási tételek.",
+      "emptyHint": "A kiadások és extrák a tulajdonosi elszámolásban és a megrendelt szolgáltatásokból keletkeznek.",
+      "expenses": "Kiadások",
+      "extras": "Extrák",
+      "balance": "Egyenleg",
+      "balanceHint": "Extrák mínusz kiadások",
+      "count": "Tételek",
+      "byCategory": "Kategória szerint",
+      "byProperty": "Ingatlan szerint",
+      "noCategory": "Kategória nélkül",
+      "noProperty": "Ingatlan nélkül (számla)",
+      "rowCount": "{count, plural, one {# tétel} other {# tétel}}",
+      "kind": {
+        "ausgabe": "Kiadás",
+        "extra": "Extra"
+      },
+      "footnote": "Az időszak a tétel dátuma. A kiadások a tulajdonost terhelik, az extrák az ő javára íródnak – ahogy az elszámolásban szerepelnek."
+    },
+    "pace": {
+      "title": "A következő 12 hónap foglaltsági állapota",
+      "subtitle": "A(z) {heute} napi állapot a(z) {vorjahr} napi állapottal összehasonlítva, ugyanazokra a hónapokra egy évvel korábban.",
+      "vsLastYear": "az előző év azonos napjához képest",
+      "now": "Ma lefoglalva",
+      "lastYearSameDay": "Előző év azonos napon",
+      "lastYearFinal": "Előző év végén",
+      "nowNights": "Ma lefoglalva (éjszakák)",
+      "nowRevenue": "Ma lefoglalva (bevétel)",
+      "lastYearSameDayNights": "Előző év azonos napon (éjszakák)",
+      "delta": "Különbség",
+      "lastYearFinalNights": "Előző év végén (éjszakák)",
+      "lastYearFinalRevenue": "Előző év végén (bevétel)",
+      "footnote": "Az előző év fordulónapja csak azokat a foglalásokat veszi figyelembe, amelyek valódi foglalási időponttal rendelkeznek a portálon.",
+      "withoutTimestamp": "{count, plural, one {# előző évi foglalás időbélyeg nélkül hiányzik a fordulónapi értékből.} other {# előző évi foglalások időbélyeg nélkül hiányoznak a fordulónapi értékből.}}"
+    },
+    "patterns": {
+      "weekday": "Teljesítmény hétköznaponként",
+      "weekdayHint": "Kihasználtság és bevétel hétköznaponként. Egy foglalás bevétele egyenletesen oszlik el az éjszakákra – a portálok nem adnak árat éjszakánként.",
+      "leadTime": "Foglalási ablak",
+      "leadTimeHint": "Napok a foglalás és az érkezés között. Csak a valódi foglalási időponttal rendelkező foglalások.",
+      "stayLength": "Tartózkodás hossza",
+      "stayLengthHint": "A lefoglalt éjszakák eloszlása tartózkodásonként.",
+      "days": "Nap",
+      "nights": "Éj",
+      "daysValue": "{n} nap"
+    },
+    "cancellations": {
+      "empty": "Nincs lemondás ebben az időszakban.",
+      "emptyHint": "{count, plural, one {# érvényes foglalás, nincs lemondva.} other {# érvényes foglalás, nincs lemondva.}}",
+      "nights": "Lemondott éjszakák",
+      "lostRevenue": "Elvesztett bevétel",
+      "lostRevenueHint": "A lemondott foglalások teljes ára – az éjszakák egy részét újraértékesítették.",
+      "leadTime": "Átlagos átfutási idő",
+      "leadTimeBase": "{count} / {total} lemondási időponttal",
+      "byChannel": "Csatorna szerint",
+      "byLeadTime": "Átfutási idő szerint (napok az érkezés előtt)",
+      "byReason": "Ok szerint",
+      "noReason": "Nincs megadva ok",
+      "footnote": "Lemondási arány = lemondott / (érvényes + lemondott). Az átfutási idő csak azokat a foglalásokat veszi figyelembe, amelyek rendelkeznek lemondási időponttal."
+    },
+    "views": {
+      "button": "Nézetek",
+      "title": "Mentett nézetek",
+      "empty": "Még nincs mentett nézet.",
+      "new": "Aktuális nézet mentése",
+      "delete": "Törlés",
+      "saveTitle": "Nézet mentése",
+      "saveHint": "Mentési időszak, szűrők, oszlopok és lapbeállítások – csak Önnek.",
+      "namePlaceholder": "pl. Előző hónap objektumonként",
+      "save": "Mentés"
+    },
+    "export": {
+      "button": "Jelentés letöltése",
+      "title": "Formátum",
+      "csv": "CSV (aktuális táblázat)",
+      "xlsx": "Excel (a lap összes táblázata)",
+      "pdf": "PDF",
+      "hint": "Pontosan az exportálódik, ami itt van – az aktív szűrőkkel.",
+      "generated": "Létrehozva: {when}",
+      "failed": "Exportálás sikertelen."
+    },
+    "prices": {
+      "title": "Árak és piac",
+      "subtitle": "Hol áll az ára a környékhez képest, mit tesz az automatika az alapárral, és hogyan kezelje a javaslatokat.",
+      "property": "Objektum",
+      "noProperties": "Nincs objektum dinamikus árazással. Kapcsolja be az automatikát a „Dinamikus árazás” alatt – ekkor jelenik meg a jelentés.",
+      "distance": "Ø Távolság a piactól",
+      "distanceHint": "{n} határidő saját árral",
+      "position": "A határidők helyzete",
+      "below": "piac alatt",
+      "at": "piacon",
+      "above": "piac felett",
+      "uplift": "Automatika az alapár ellenében",
+      "upliftHint": "{days} nap a horizonton · Alapár {base}",
+      "noBase": "Nincs alapár megadva",
+      "range": "Árak tartománya",
+      "rangeHint": "Ø {avg}",
+      "ki": "Szabálytanácsadó",
+      "kiHint": "{accepted} elfogadva · {rejected} elutasítva (90 nap)",
+      "kiTotal": "összesen {accepted} / {rejected}",
+      "chart": "Ár a környezethez képest határidőnként",
+      "chartHint": "Sáv = a környezet középső tartománya (25–75. percentilis), vonal = medián. Az Ön ára szaggatott, az alapár szürke.",
+      "market": "Környezet (medián)",
+      "mid": "Középső tartomány",
+      "own": "Az Ön ára",
+      "base": "Alapár",
+      "table": "Határidők",
+      "offers": "Ajánlatok",
+      "footnote": "Megfigyelt terület kb. {km} km · A napi piackutatás határidői · utoljára lekérdezve nálunk: {when}.",
+      "loading": "Jelentés számítása folyamatban…"
+    }
   },
   "tasks": {
     "fehler": {

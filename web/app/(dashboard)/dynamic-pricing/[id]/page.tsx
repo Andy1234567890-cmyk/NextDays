@@ -5,7 +5,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { DpForecastKarte } from "@/components/dynamic-pricing/dp-forecast-karte";
 import { DpFreigabeLeiste } from "@/components/dynamic-pricing/dp-freigabe-leiste";
+import { DpKopfAktionen } from "@/components/dynamic-pricing/dp-kopf-aktionen";
+import { DpStatusBadge } from "@/components/dynamic-pricing/dp-status-badge";
 import { DpPreviewGrid } from "@/components/dynamic-pricing/dp-preview-grid";
 import { KiBeraterKarte } from "@/components/dynamic-pricing/ki-berater-karte";
 import { ModulVerkaufsseite } from "@/components/erweiterungen/modul-verkaufsseite";
@@ -97,6 +100,8 @@ export default async function Page({
           "rate_plans",
           "availability",
           "dp_settings",
+          "dp_preisgrenzen",
+          "dp_verlauf",
         ]}
       />
       <header className="flex flex-col gap-1">
@@ -110,26 +115,23 @@ export default async function Page({
           <h1 className="font-display text-2xl font-extrabold">
             {prop.data.title}
           </h1>
-          {/* Zustand auf einen Blick: rechnet die Automatik hier überhaupt,
-              und ist alles gesendet? Aus der bereits geladenen Übersicht —
-              keine zweite Abfrage. */}
-          {dpStand && (
-            <span
-              className={
-                dpStand.enabled
-                  ? "rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-                  : "rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground"
-              }
-            >
-              {dpStand.enabled ? "Automatik an" : "Automatik aus"}
-            </span>
-          )}
-          {dpStand?.freigabe_noetig && dpStand.offene_tage > 0 && (
-            <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-              {dpStand.offene_tage} Tage nicht gesendet
-            </span>
-          )}
+          {/* Hostaway: Aktionen oben rechts — beenden/starten, Preise senden. */}
+          <div className="ml-auto shrink-0">
+            <DpKopfAktionen
+              propertyId={id}
+              enabled={dpStand?.enabled ?? false}
+              offenInitial={dpStand?.offene_tage ?? 0}
+              freigabeNoetig={dpStand?.freigabe_noetig ?? false}
+            />
+          </div>
         </div>
+        {/* Status-Badge unter dem Titel (Hostaway: „SUBSCRIBED – PRICES NOT
+            SYNCED"): EIN Etikett für Automatik-Zustand und Sendestand. */}
+        <DpStatusBadge
+          enabled={dpStand?.enabled ?? false}
+          offen={dpStand?.offene_tage ?? 0}
+          freigabeNoetig={dpStand?.freigabe_noetig ?? false}
+        />
         <p className="text-sm text-muted-foreground">
           Berechnete Tagespreise, Monat für Monat. Solange Dynamic Pricing an
           ist, gelten sie überall — auch vor einem im Kalender gesetzten
@@ -139,9 +141,16 @@ export default async function Page({
       {/* Regel-Berater ÜBER dem Kalender: er ändert die Regeln, deren Wirkung
           man darunter sofort sieht. */}
       <DpFreigabeLeiste propertyId={id} />
+      {/* Forecast & Pace (SiteMinder) — nur bei laufender Automatik sinnvoll. */}
+      {dpStand?.enabled && <DpForecastKarte propertyId={id} />}
       <KiBeraterKarte propertyId={id} currency={currency} />
       {avail.ok ? (
-        <DpPreviewGrid days={avail.data} propertyId={id} currency={currency} />
+        <DpPreviewGrid
+          days={avail.data}
+          propertyId={id}
+          currency={currency}
+          automatikAn={dpStand?.enabled ?? false}
+        />
       ) : (
         <Card className="p-5 text-sm text-destructive">
           Preise konnten nicht geladen werden: {avail.error}
