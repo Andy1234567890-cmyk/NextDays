@@ -244,3 +244,17 @@ def test_abgleich_setzt_eigene_antwort_nicht_zurueck() -> None:
     zeile = db.tables["channex_review"][0]
     assert zeile["reply"] == "Unsere Antwort"
     assert zeile["is_replied"] is True
+
+
+def test_verstrichene_frist_heisst_verfallen_auch_wenn_channex_nein_sagt() -> None:
+    """Airbnb 25.07.2026: `is_expired=false` neben `expired_at` 24.08. — das
+    Portal nimmt nichts mehr an; die Bewertung darf nicht „offen" stehen."""
+    from datetime import UTC, datetime
+
+    from src.features.channel_manager.reviews_sync import _frist_verstrichen
+
+    jetzt = datetime(2026, 9, 5, 12, 0, tzinfo=UTC)
+    assert _frist_verstrichen("2026-08-24T17:24:04.778000", jetzt) is True
+    assert _frist_verstrichen("2026-11-28T12:34:49.000000", jetzt) is False
+    assert _frist_verstrichen(None, jetzt) is False
+    assert _frist_verstrichen("", jetzt) is False

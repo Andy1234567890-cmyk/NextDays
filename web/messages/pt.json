@@ -11580,7 +11580,15 @@
     "replyDeadline": "Responder até {date}",
     "kiProtokollTitle": "Registro – o que a IA fez",
     "kiProtokollOutput": "Texto da IA",
-    "kiProtokollAll": "Ambas as direções"
+    "kiProtokollAll": "Ambas as direções",
+    "kiStatus": {
+      "freigabe": "{n, plural, one {# rascunho de IA aguardando sua aprovação} other {# rascunhos de IA aguardando sua aprovação}}",
+      "nichtsFreizugeben": "Nada para aprovar",
+      "naechsterLauf": "Próxima execução de IA {time}",
+      "naechsterLaufTakt": "IA executa a cada {min} minutos",
+      "kiAus": "IA de avaliação desativada",
+      "katalogLeer": "Textos de IA ausentes – a IA não está escrevendo"
+    }
   },
   "glocke": {
     "leer": "Sem notificações",

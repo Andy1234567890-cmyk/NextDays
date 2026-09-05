@@ -11580,7 +11580,15 @@
     "replyDeadline": "Rispondi entro il {date}",
     "kiProtokollTitle": "Registro – cosa ha fatto l'IA",
     "kiProtokollOutput": "Testo dell'IA",
-    "kiProtokollAll": "Entrambe le direzioni"
+    "kiProtokollAll": "Entrambe le direzioni",
+    "kiStatus": {
+      "freigabe": "{n, plural, one {# bozza AI in attesa di approvazione} other {# bozze AI in attesa di approvazione}}",
+      "nichtsFreizugeben": "Nessuna approvazione",
+      "naechsterLauf": "Prossima esecuzione AI {time}",
+      "naechsterLaufTakt": "AI in esecuzione ogni {min} minuti",
+      "kiAus": "AI di revisione disattivata",
+      "katalogLeer": "Testi AI mancanti – l'AI non scrive"
+    }
   },
   "glocke": {
     "leer": "Nessuna notifica",

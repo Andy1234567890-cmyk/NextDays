@@ -94,6 +94,28 @@ Ausgeführt vom Worker-Tick (`REVIEWS_TICK_SECONDS`, stündlich), der zugleich d
 Fristablauf veröffentlicht und die Portal-Bewertungen spiegelt; derselbe Lauf
 hängt als `POST /reviews/tick` hinter dem internen Cron-Secret.
 
+## KI live — Diagnose und Realtime-Signal (0568)
+
+`GET /reviews/ki/diagnose` nennt je offener Portal-Bewertung GENAU EINEN Grund
+(`KiDiagnoseStufe`, `ki_diagnose.py`), in der Prüfreihenfolge des Laufs:
+Warteschlangen-Eintrag (gesendet / Entwurf wartet / geplant / Fehler /
+übersprungen / verfallen) → Protokoll ohne Eintrag (KI hat abgelehnt) →
+Bewertungsmerkmal (verdeckt, Frist vorbei, älter als der Rückblick) →
+Betriebseinstellung (KI aus, Katalog leer) → „wartet auf Lauf". Dazu der
+Rahmen: letzter/nächster Lauf, letzter Schritt, Zustellart.
+
+Realtime: `channex_review`, `guest_review_queue` und `review_ki_protokoll`
+sind für den Client gesperrt (Wurzel 6). Das Signal ist `review_ki_stand` —
+eine Zeile je Betrieb ohne Nutzdaten, die `KiStore.stand_setzen` bei jedem
+Schritt des Laufs (`ki_lauf.py`) und bei jedem KI-Versand (`queue.py`)
+fortschreibt. Die Oberfläche (`web/components/bewertungen/ki-live-panel.tsx`)
+hört darauf und holt die Diagnose neu.
+
+`POST /reviews/ki/lauf` fährt den Lauf sofort und NUR für den eigenen Betrieb
+(`run(only_tenant=…)`, `send_due(only_tenant=…)`) — der Worker-Tick bleibt
+stündlich (`ki_lauf.TAKT_SEKUNDEN` = `worker.REVIEWS_TICK_SECONDS`, per Test
+deckungsgleich). Eigener Rate-Limit-Eimer (`/reviews/ki/lauf`).
+
 ## Abgrenzung
 
 Portal-Bewertungen sind **intern**. Öffentlich — myBestDays-Marktplatz, Website

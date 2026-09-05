@@ -11580,7 +11580,15 @@
     "replyDeadline": "Odpowiedz do {date}",
     "kiProtokollTitle": "Dziennik – co zrobiła AI",
     "kiProtokollOutput": "Tekst AI",
-    "kiProtokollAll": "Oba kierunki"
+    "kiProtokollAll": "Oba kierunki",
+    "kiStatus": {
+      "freigabe": "{n, plural, one {# projekt AI czeka na Twoją zgodę} other {# projekty AI czekają na Twoją zgodę}}",
+      "nichtsFreizugeben": "Brak do zatwierdzenia",
+      "naechsterLauf": "Następne uruchomienie AI {time}",
+      "naechsterLaufTakt": "AI uruchamia się co {min} minuty",
+      "kiAus": "AI oceniająca wyłączona",
+      "katalogLeer": "Brak tekstów AI – AI nic nie pisze"
+    }
   },
   "glocke": {
     "leer": "Brak powiadomień",

@@ -11580,7 +11580,15 @@
     "replyDeadline": "Răspuns până la {date}",
     "kiProtokollTitle": "Jurnal – ce a făcut AI",
     "kiProtokollOutput": "Textul AI",
-    "kiProtokollAll": "Ambele direcții"
+    "kiProtokollAll": "Ambele direcții",
+    "kiStatus": {
+      "freigabe": "{n, plural, one {# ciornă AI așteaptă aprobarea dumneavoastră} other {# ciorne AI așteaptă aprobarea dumneavoastră}}",
+      "nichtsFreizugeben": "Nimic de aprobat",
+      "naechsterLauf": "Următoarea rulare AI {time}",
+      "naechsterLaufTakt": "AI rulează la fiecare {min} minute",
+      "kiAus": "AI de evaluare dezactivat",
+      "katalogLeer": "Textele AI lipsesc – AI nu scrie nimic"
+    }
   },
   "glocke": {
     "leer": "Nicio notificare",

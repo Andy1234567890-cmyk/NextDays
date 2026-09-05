@@ -45,6 +45,7 @@ from .ki_text import (
     Textvorschlag,
     katalog_gepflegt,
     katalog_laden,
+    kategorien_auf_fuenf,
     text_erzeugen,
 )
 from .schemas import KiRichtung, KiSettings, KiZustellart
@@ -57,11 +58,30 @@ log = get_logger("nextdays.reviews.ki_lauf")
 # ein Vertex-Aufruf steht und nicht nur eine Zeile.
 MAX_JE_LAUF = 15
 
+# Wie viele KANDIDATEN ein Lauf sichtet, bevor er die schon erledigten
+# aussiebt. Getrennt von MAX_JE_LAUF, und zwar absichtlich: bis 05.09.2026
+# stand das Limit 15 direkt an der Kandidaten-Abfrage (neueste zuerst), und
+# die Aussiebung kam DANACH. Sobald 15 neuere Bewertungen schon einen Entwurf
+# hatten (oder ohne Text waren), belegten sie alle Plätze — die älteren, die
+# der Frist am nächsten waren, kamen in keinem Lauf mehr an die Reihe. Live:
+# vier Bewertungen vom 07.–09.08. standen fünf Läufe lang auf „wartet auf
+# Lauf", während jeder Lauf nur 2–3 Texte schrieb. Das sah aus wie ein zu
+# strenges Rate-Limit; es war eine Auswahl, die die Falschen zuerst nahm.
+# Die 200 sind der harte Deckel gegen einen unbegrenzten Bereich (Wurzel 8),
+# gemessen an der PostgREST-URL für das anschliessende `in_` (200 UUIDs).
+_MAX_KANDIDATEN = 200
+
 # Wie weit zurück Bewertungen beantwortet werden. Ohne Fenster würde ein frisch
 # eingeschalteter Betrieb rückwirkend jede Altbewertung beantworten — eine
 # Antwort auf eine zwei Jahre alte Bewertung wirkt wie ein Versehen, und bei
 # 400 Bewertungen auf einen Schlag wie ein Bot.
 _LOOKBACK_TAGE = 30
+
+# Der Takt des Worker-Ticks, in dem dieser Lauf hängt. MUSS gleich
+# `worker.REVIEWS_TICK_SECONDS` sein (ein Test hält beide deckungsgleich):
+# die Diagnose rechnet daraus „nächster Lauf um …" — eine falsche Zahl hier
+# wäre eine plausible Falschaussage in der Oberfläche (Wurzel 5b).
+TAKT_SEKUNDEN = 60 * 60
 
 
 class BewertungsKiLauf:
@@ -72,18 +92,22 @@ class BewertungsKiLauf:
         self._store = KiStore(db)
 
     # ----------------------------------------------------------------- Lauf
-    def run(self, *, now: datetime | None = None) -> tuple[int, int]:
+    def run(
+        self, *, now: datetime | None = None, only_tenant: str | None = None
+    ) -> tuple[int, int]:
         """Alle Betriebe mit eingeschalteter Bewertungs-KI abarbeiten.
+
+        `only_tenant`: der von Hand angestossene Lauf (`POST /reviews/ki/lauf`)
+        arbeitet NUR den eigenen Betrieb ab (Wurzel 3) — der Worker lässt es
+        leer und nimmt alle.
 
         Rückgabe: (Antworten auf Gastbewertungen, Bewertungen über Gäste).
         """
         jetzt = now or datetime.now(UTC)
-        configs = (
-            self._db.table("review_ki_settings")
-            .select("*")
-            .eq("ki_aktiv", True)
-            .execute()
-        ).data or []
+        q = self._db.table("review_ki_settings").select("*").eq("ki_aktiv", True)
+        if only_tenant:
+            q = q.eq("tenant_id", only_tenant)
+        configs = q.execute().data or []
 
         antworten = 0
         bewertungen = 0
@@ -91,6 +115,7 @@ class BewertungsKiLauf:
             tenant_id = str(roh["tenant_id"])
             settings = KiSettings(**{k: v for k, v in roh.items() if k != "tenant_id"})
             katalog = katalog_laden(self._db, tenant_id)
+            self._store.stand_setzen(tenant_id, "Lauf gestartet")
             if not katalog_gepflegt(katalog):
                 # Ohne eine einzige Antwort schreibt das Modell das
                 # statistische Mittel aller Gastgeber im Internet. Das ist
@@ -100,15 +125,23 @@ class BewertungsKiLauf:
                 log.warning(
                     "review_ki_katalog_leer", tenant_id=tenant_id
                 )
+                self._store.stand_setzen(
+                    tenant_id,
+                    "Katalog leer — die KI schreibt nichts, bis eine Haltung hinterlegt ist",
+                    lauf_abgeschlossen=True,
+                )
                 continue
-            antworten += self._antworten_erzeugen(
-                tenant_id, settings, katalog, jetzt
-            )
+            neu = self._antworten_erzeugen(tenant_id, settings, katalog, jetzt)
+            antworten += neu
             # Ohne `jetzt`: Fälligkeit und Note dieser Einträge stammen aus
             # `ReviewQueue.fill` und bleiben unangetastet — hier wird nur der
             # fehlende Text nachgetragen (Wurzel 1).
-            bewertungen += self._gastbewertungen_erzeugen(
-                tenant_id, settings, katalog
+            gast = self._gastbewertungen_erzeugen(tenant_id, settings, katalog)
+            bewertungen += gast
+            self._store.stand_setzen(
+                tenant_id,
+                f"Lauf beendet: {neu} Antwort-Entwürfe, {gast} Gastbewertungen",
+                lauf_abgeschlossen=True,
             )
         if antworten or bewertungen:
             log.info(
@@ -126,10 +159,42 @@ class BewertungsKiLauf:
         katalog: dict[str, str],
         jetzt: datetime,
     ) -> int:
-        """Öffentliche Antworten auf Bewertungen, die noch keine haben."""
+        """Öffentliche Antworten auf Bewertungen, die noch keine haben.
+
+        Auch reine Sternevergaben (kein Text, nur Noten) bekommen seit dem
+        05.09.2026 einen Entwurf — gestützt auf die Kategorienoten, die der
+        Gast wirklich vergeben hat (``kategorien_auf_fuenf``). Vorher galten
+        sie als „nichts zu beantworten"; der Betrieb beantwortete sie dann
+        von Hand.
+
+        Rückgabe: erzeugte Entwürfe.
+        """
         offen = self._unbeantwortete_bewertungen(tenant_id, jetzt)
         gezaehlt = 0
+        versuche = 0
         for bewertung in offen:
+            if _frist_vorbei(bewertung.get("reply_expires_at"), jetzt):
+                # Das Portal nimmt keine Antwort mehr an — ein Modellaufruf
+                # dafür wäre bezahltes Nichts. Der Spiegel (`is_expired`)
+                # hinkt hier: Channex meldet `is_expired=false` auch nach
+                # verstrichenem `expired_at` (live 05.09.2026, Airbnb 25.07.).
+                continue
+            if versuche >= MAX_JE_LAUF:
+                # Deckel zählt MODELLAUFRUFE, nicht Treffer: auch eine
+                # abgelehnte Antwort hat Geld gekostet. Der Rest wartet auf
+                # den nächsten Tick — sichtbar im Stand, nicht still.
+                self._store.stand_setzen(
+                    tenant_id,
+                    f"Deckel {MAX_JE_LAUF} je Lauf erreicht — Rest im nächsten Lauf",
+                )
+                log.info(
+                    "review_ki_lauf_deckel",
+                    tenant_id=tenant_id,
+                    max_je_lauf=MAX_JE_LAUF,
+                    kandidaten=len(offen),
+                )
+                break
+            versuche += 1
             if self._eine_antwort(tenant_id, settings, katalog, bewertung, jetzt):
                 gezaehlt += 1
         return gezaehlt
@@ -150,14 +215,18 @@ class BewertungsKiLauf:
             self._db.table("channex_review")
             .select(
                 "id, property_id, guest_name, ota, overall_score, content, "
-                "received_at, created_at, is_replied, is_expired"
+                "scores, reply_expires_at, received_at, created_at, "
+                "is_replied, is_expired"
             )
             .eq("tenant_id", tenant_id)
             .eq("is_replied", False)
             .eq("is_expired", False)
             .gte("received_at", seit)
-            .order("received_at", desc=True)
-            .limit(MAX_JE_LAUF)
+            # Älteste zuerst: sie stehen der Antwortfrist am nächsten. Der
+            # Lauf-Deckel sitzt NICHT hier, sondern beim Erzeugen (s.
+            # _MAX_KANDIDATEN) — hier würde er die Falschen abschneiden.
+            .order("received_at", desc=False)
+            .limit(_MAX_KANDIDATEN)
             .execute()
         ).data or []
         return self._ohne_warteschlangen_eintrag(tenant_id, zeilen)
@@ -214,10 +283,10 @@ class BewertungsKiLauf:
     ) -> bool:
         note = _note_auf_fuenf(bewertung.get("overall_score"))
         text = (bewertung.get("content") or "").strip()
-        if not text:
-            # Eine Bewertung ohne Text ist eine reine Sternevergabe. Darauf zu
-            # antworten hiesse, über etwas zu schreiben, das niemand gesagt
-            # hat — das Modell müsste den Inhalt erfinden (Wurzel 4).
+        # Ohne Text UND ohne jede Note gäbe es nichts, worauf sich eine Antwort
+        # stützen könnte — das Modell müsste den Inhalt erfinden (Wurzel 4).
+        kategorien = kategorien_auf_fuenf(bewertung.get("scores"))
+        if not text and note is None and not kategorien:
             return False
         vorschlag = self._erzeugen(
             tenant_id,
@@ -226,15 +295,19 @@ class BewertungsKiLauf:
             Bewertungslage(
                 richtung=KiRichtung.antwort.value,
                 note=note,
-                gast_text=text,
+                gast_text=text or None,
                 gast_name=bewertung.get("guest_name"),
                 objekt_titel=self._titel(tenant_id, bewertung.get("property_id")),
                 ota_name=bewertung.get("ota"),
+                kategorien=kategorien,
             ),
             bezug_id=str(bewertung["id"]),
         )
         if vorschlag is None:
             return False
+        self._store.stand_setzen(
+            tenant_id, f"Antwort auf {bewertung.get('ota') or 'Portal'}-Bewertung entworfen"
+        )
         zustellart, grund = self._store.zustellart_entscheiden(
             settings, KiRichtung.antwort.value, note, vorschlag.mensch_pruefen
         )
@@ -255,6 +328,9 @@ class BewertungsKiLauf:
                 verwendete_fragen=vorschlag.verwendete_fragen,
                 grund=grund or "Modell lieferte keinen Text — ein Mensch antwortet.",
                 antwort=vorschlag.antwort,
+            )
+            self._store.stand_setzen(
+                tenant_id, "KI bittet um menschliche Prüfung — kein Entwurf angelegt"
             )
             return False
         angelegt = self._in_warteschlange(
@@ -433,6 +509,7 @@ class BewertungsKiLauf:
                 verwendete_fragen=[],
                 grund=f"KI-Fehler ({exc.status_code}): {exc.message}",
             )
+            self._store.stand_setzen(tenant_id, f"KI-Fehler ({exc.status_code})")
             return None
         buchen(
             self._db,
@@ -485,6 +562,20 @@ def _faellig(jetzt: datetime, settings: KiSettings, zustellart: str) -> str:
     if zustellart != "automatisch":
         return jetzt.isoformat()
     return (jetzt + timedelta(minutes=settings.verzoegerung_minuten)).isoformat()
+
+
+def _frist_vorbei(roh: object, jetzt: datetime) -> bool:
+    """Antwortfrist des Portals (``reply_expires_at``, 0567) verstrichen?
+    Unbekannte Frist = nicht vorbei (kein geratener Wert, Wurzel 4)."""
+    if not isinstance(roh, str) or not roh.strip():
+        return False
+    try:
+        frist = datetime.fromisoformat(roh.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    if frist.tzinfo is None:
+        frist = frist.replace(tzinfo=UTC)
+    return frist < jetzt
 
 
 def _note_auf_fuenf(roh: object) -> int | None:

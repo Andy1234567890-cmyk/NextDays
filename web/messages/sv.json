@@ -11580,7 +11580,15 @@
     "replyDeadline": "Svara senast {date}",
     "kiProtokollTitle": "Logg – vad AI:n har gjort",
     "kiProtokollOutput": "AI-text",
-    "kiProtokollAll": "Båda riktningar"
+    "kiProtokollAll": "Båda riktningar",
+    "kiStatus": {
+      "freigabe": "{n, plural, one {# AI-utkast väntar på ditt godkännande} other {# AI-utkast väntar på ditt godkännande}}",
+      "nichtsFreizugeben": "Inget att godkänna",
+      "naechsterLauf": "Nästa AI-körning {time}",
+      "naechsterLaufTakt": "AI körs var {min} minut",
+      "kiAus": "Gransknings-AI av",
+      "katalogLeer": "AI-texter saknas – AI skriver inget"
+    }
   },
   "glocke": {
     "leer": "Inga aviseringar",

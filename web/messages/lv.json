@@ -11580,7 +11580,15 @@
     "replyDeadline": "Atbildēt līdz {date}",
     "kiProtokollTitle": "Žurnāls – ko veica AI",
     "kiProtokollOutput": "AI teksts",
-    "kiProtokollAll": "Abi virzieni"
+    "kiProtokollAll": "Abi virzieni",
+    "kiStatus": {
+      "freigabe": "{n, plural, one {# AI melnraksts gaida jūsu apstiprinājumu} other {# AI melnraksti gaida jūsu apstiprinājumu}}",
+      "nichtsFreizugeben": "Nav ko apstiprināt",
+      "naechsterLauf": "Nākamais AI izpildes laiks {time}",
+      "naechsterLaufTakt": "AI darbojas ik pēc {min} minūtēm",
+      "kiAus": "Vērtēšanas AI izslēgts",
+      "katalogLeer": "AI tekstu trūkst – AI neko neraksta"
+    }
   },
   "glocke": {
     "leer": "Nav paziņojumu",

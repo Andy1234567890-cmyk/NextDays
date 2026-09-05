@@ -11601,7 +11601,15 @@
     "replyDeadline": "Respond by {date}",
     "kiProtokollTitle": "Protocol - what the AI did",
     "kiProtokollOutput": "AI text",
-    "kiProtokollAll": "Both directions"
+    "kiProtokollAll": "Both directions",
+    "kiStatus": {
+      "freigabe": "{n, plural, one {# AI draft awaits your approval} other {# AI drafts await your approval}}",
+      "nichtsFreizugeben": "Nothing to approve",
+      "naechsterLauf": "Next AI run {time}",
+      "naechsterLaufTakt": "AI runs every {min} minutes",
+      "kiAus": "Review AI off",
+      "katalogLeer": "AI texts missing - AI writes nothing"
+    }
   },
   "glocke": {
     "leer": "No notifications",

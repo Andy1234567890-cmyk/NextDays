@@ -11580,7 +11580,15 @@
     "replyDeadline": "Atsakyti iki {date}",
     "kiProtokollTitle": "Žurnalas – ką atliko DI",
     "kiProtokollOutput": "DI tekstas",
-    "kiProtokollAll": "Abi kryptys"
+    "kiProtokollAll": "Abi kryptys",
+    "kiStatus": {
+      "freigabe": "{n, plural, one {# AI juodraštis laukia jūsų patvirtinimo} other {# AI juodraščiai laukia jūsų patvirtinimo}}",
+      "nichtsFreizugeben": "Nėra ką tvirtinti",
+      "naechsterLauf": "Kitas AI paleidimas {time}",
+      "naechsterLaufTakt": "AI veikia kas {min} min.",
+      "kiAus": "Vertinimo AI išjungtas",
+      "katalogLeer": "Trūksta AI tekstų – AI nieko nerašo"
+    }
   },
   "glocke": {
     "leer": "Pranešimų nėra",

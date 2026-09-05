@@ -11580,7 +11580,15 @@
     "replyDeadline": "Irrispondi sa {date}",
     "kiProtokollTitle": "Log - x'għamlet l-AI",
     "kiProtokollOutput": "Test tal-AI",
-    "kiProtokollAll": "Iż-żewġ direzzjonijiet"
+    "kiProtokollAll": "Iż-żewġ direzzjonijiet",
+    "kiStatus": {
+      "freigabe": "{n, plural, one {# abbozz tal-AI jistenna l-approvazzjoni tiegħek} other {# abbozzi tal-AI jistennew l-approvazzjoni tiegħek}}",
+      "nichtsFreizugeben": "Xejn x'tapprova",
+      "naechsterLauf": "Tmexxija tal-AI li jmiss {time}",
+      "naechsterLaufTakt": "L-AI taħdem kull {min} minuti",
+      "kiAus": "AI tal-klassifikazzjoni mitfija",
+      "katalogLeer": "Testi tal-AI neqsin – l-AI ma tikteb xejn"
+    }
   },
   "glocke": {
     "leer": "L-ebda notifika",

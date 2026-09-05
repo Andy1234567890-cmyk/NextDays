@@ -600,6 +600,16 @@ class ReviewQueue:
             raise
         if entry.get("ki_erzeugt"):
             self._ki_protokoll_gesendet(tenant_id, entry)
+            # Live-Signal (0568): der Betrieb sieht „gesendet" sofort, nicht
+            # erst beim nächsten Seitenaufruf.
+            from .ki_store import KiStore
+
+            KiStore(self._db).stand_setzen(
+                tenant_id,
+                "KI-Antwort an das Portal gesendet"
+                if entry.get("richtung") == "antwort"
+                else "KI-Gastbewertung an das Portal gesendet",
+            )
         return True
 
     def _fehler(self, entry: dict, grund: str) -> None:
@@ -730,8 +740,15 @@ class ReviewQueue:
             aus_warteschlange=True,
         )
 
-    def send_due(self, service: ReviewsService, *, now: datetime | None = None) -> int:
-        """Alle fälligen Einträge versenden (Worker-Tick, mandantenübergreifend).
+    def send_due(
+        self,
+        service: ReviewsService,
+        *,
+        now: datetime | None = None,
+        only_tenant: str | None = None,
+    ) -> int:
+        """Alle fälligen Einträge versenden (Worker-Tick, mandantenübergreifend;
+        `only_tenant` beim Handlauf aus der Oberfläche — Wurzel 3).
 
         NUR ``zustellart = 'automatisch'``. Ein Entwurf hat ebenfalls
         ``status='geplant'`` und ein ``send_at`` in der Vergangenheit (damit er
@@ -739,16 +756,16 @@ class ReviewQueue:
         05.09.2026 fehlte dieser Filter, und sieben KI-„Entwürfe" gingen im
         Tick ihrer Entstehung öffentlich an die Portale (0566)."""
         jetzt = (now or datetime.now(UTC)).isoformat()
-        faellig = (
+        q = (
             self._db.table("guest_review_queue")
             .select(_SPALTEN)
             .eq("status", "geplant")
             .eq("zustellart", "automatisch")
             .lte("send_at", jetzt)
-            .order("send_at")
-            .limit(_BATCH)
-            .execute()
-        ).data or []
+        )
+        if only_tenant:
+            q = q.eq("tenant_id", only_tenant)
+        faellig = q.order("send_at").limit(_BATCH).execute().data or []
         from src.features.channel_manager.channex_client import (
             ChannexBudgetExhausted,
         )

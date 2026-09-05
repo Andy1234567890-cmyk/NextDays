@@ -100,6 +100,9 @@ type Props = {
   initialTotal: number;
   summary: ReviewSummary | null;
   canManage: boolean;
+  /** KI-Status-Badge (0568), direkt unter den Kennzahlen: Freigaben offen,
+   *  nächster Lauf. Als Slot, weil es eigenen Realtime-Zustand hat. */
+  kiStatus?: React.ReactNode;
   /** Objekte für den Filter. Ohne sie gäbe es nichts auszuwählen, und ein
    *  leeres Dropdown wäre eine Attrappe. */
   objekte: { id: string; title: string }[];
@@ -110,6 +113,7 @@ export function BewertungsTabelle({
   initialTotal,
   summary,
   canManage,
+  kiStatus,
   objekte,
 }: Props) {
   const t = useTranslations("reviews");
@@ -296,6 +300,7 @@ export function BewertungsTabelle({
       )}
 
       {kennzahlen && <Kennzahlen summary={kennzahlen} />}
+      {kiStatus}
 
       <Filterleiste
         anzahl={aktiveFilter}

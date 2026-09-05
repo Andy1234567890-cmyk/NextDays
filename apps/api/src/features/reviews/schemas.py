@@ -648,3 +648,79 @@ class KiProtokollEintrag(BaseModel):
 class KiProtokollList(BaseModel):
     items: list[KiProtokollEintrag] = []
     total: int = 0
+
+
+# --------------------------------------------------------------- KI-Diagnose
+class KiDiagnoseStufe(StrEnum):
+    """Warum eine offene Portal-Bewertung (noch) keine Antwort hat.
+
+    Jede Stufe ist EIN Grund, den die Oberfläche als Satz zeigt. Die
+    Reihenfolge hier ist die Prüfreihenfolge in `ki_diagnose` — der erste
+    zutreffende Grund gewinnt.
+    """
+
+    # Warteschlange kennt die Bewertung schon:
+    gesendet = "gesendet"  # Antwort raus, Spiegel hinkt (is_replied noch false)
+    entwurf_wartet = "entwurf_wartet"  # Entwurf liegt vor, Mensch muss abschicken
+    geplant = "geplant"  # automatisch, geht zur Fälligkeit raus
+    fehler = "fehler"  # Versand scheiterte, Grund am Eintrag
+    uebersprungen = "uebersprungen"  # Mensch hat den Entwurf übersprungen
+    abgelaufen = "abgelaufen"  # Eintrag verfiel, bevor er rausging
+    # KI hat es angesehen, aber keinen Eintrag angelegt:
+    ki_abgelehnt = "ki_abgelehnt"  # Protokoll mit Grund (Mensch prüfen / KI-Fehler)
+    # KI kommt gar nicht dran:
+    verdeckt = "verdeckt"  # Airbnb hält sie verdeckt — nichts zu beantworten
+    frist_vorbei = "frist_vorbei"  # Portal nimmt keine Antwort mehr an (0567)
+    zu_alt = "zu_alt"  # älter als das Rückblickfenster der KI
+    ki_aus = "ki_aus"  # Schalter aus
+    katalog_leer = "katalog_leer"  # keine einzige Katalogantwort
+    # Alles erfüllt, nur der Takt fehlt noch:
+    wartet_auf_lauf = "wartet_auf_lauf"
+
+
+class KiDiagnoseEintrag(BaseModel):
+    """Eine offene Portal-Bewertung mit dem Grund, warum sie offen ist."""
+
+    review_id: str
+    kanal: str | None = None
+    gast_name: str | None = None
+    objekt_titel: str | None = None
+    note_5: int | None = None
+    received_at: datetime | None = None
+    reply_expires_at: datetime | None = None
+    hat_text: bool = False
+    stufe: KiDiagnoseStufe
+    # Details je Stufe — nur gefüllt, wo es sie gibt.
+    warteschlange_status: str | None = None
+    zustellart: KiZustellart | None = None
+    send_at: datetime | None = None
+    sent_at: datetime | None = None
+    fehler: str | None = None
+    protokoll_grund: str | None = None
+    protokoll_at: datetime | None = None
+
+
+class KiDiagnose(BaseModel):
+    """Live-Bild der Bewertungs-KI: Rahmen + jede offene Bewertung."""
+
+    ki_aktiv: bool
+    katalog_gepflegt: bool
+    zustellart_antwort: KiZustellart
+    verzoegerung_minuten: int
+    rueckblick_tage: int
+    takt_minuten: int
+    letzter_lauf_at: datetime | None = None
+    letzter_schritt: str | None = None
+    schritt_at: datetime | None = None
+    naechster_lauf_at: datetime | None = None
+    offen: int = 0
+    items: list[KiDiagnoseEintrag] = []
+
+
+class KiLaufErgebnis(BaseModel):
+    """Was ein von Hand angestossener Lauf erzeugt hat."""
+
+    antworten: int
+    gastbewertungen: int
+    # Fällige automatische Einträge, die im selben Zug rausgingen.
+    gesendet: int

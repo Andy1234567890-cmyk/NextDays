@@ -710,3 +710,70 @@ export async function getKiProtokoll(
   if (richtung) qs.set("richtung", richtung);
   return call(`/reviews/ki/protokoll?${qs.toString()}`);
 }
+
+// ------------------------------------------------------------ KI-Live-Diagnose
+/** Warum eine offene Portal-Bewertung (noch) keine Antwort hat — EIN Grund
+ *  je Zeile, in der Prüfreihenfolge des KI-Laufs (Backend `KiDiagnoseStufe`). */
+export type KiDiagnoseStufe =
+  | "gesendet"
+  | "entwurf_wartet"
+  | "geplant"
+  | "fehler"
+  | "uebersprungen"
+  | "abgelaufen"
+  | "ki_abgelehnt"
+  | "verdeckt"
+  | "frist_vorbei"
+  | "zu_alt"
+  | "ki_aus"
+  | "katalog_leer"
+  | "wartet_auf_lauf";
+
+export type KiDiagnoseEintrag = {
+  review_id: string;
+  kanal: string | null;
+  gast_name: string | null;
+  objekt_titel: string | null;
+  note_5: number | null;
+  received_at: string | null;
+  reply_expires_at: string | null;
+  hat_text: boolean;
+  stufe: KiDiagnoseStufe;
+  warteschlange_status: string | null;
+  zustellart: KiZustellart | null;
+  send_at: string | null;
+  sent_at: string | null;
+  fehler: string | null;
+  protokoll_grund: string | null;
+  protokoll_at: string | null;
+};
+
+export type KiDiagnose = {
+  ki_aktiv: boolean;
+  katalog_gepflegt: boolean;
+  zustellart_antwort: KiZustellart;
+  verzoegerung_minuten: number;
+  rueckblick_tage: number;
+  takt_minuten: number;
+  letzter_lauf_at: string | null;
+  letzter_schritt: string | null;
+  schritt_at: string | null;
+  naechster_lauf_at: string | null;
+  offen: number;
+  items: KiDiagnoseEintrag[];
+};
+
+export type KiLaufErgebnis = {
+  antworten: number;
+  gastbewertungen: number;
+  gesendet: number;
+};
+
+export async function getKiDiagnose(): Promise<Result<KiDiagnose>> {
+  return call("/reviews/ki/diagnose");
+}
+
+/** Den KI-Lauf für den eigenen Betrieb sofort fahren (sonst stündlich). */
+export async function kiLaufStarten(): Promise<Result<KiLaufErgebnis>> {
+  return call("/reviews/ki/lauf", { method: "POST" });
+}

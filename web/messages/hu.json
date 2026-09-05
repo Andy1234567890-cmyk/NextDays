@@ -11580,7 +11580,15 @@
     "replyDeadline": "Válasz {date} dátumig",
     "kiProtokollTitle": "Napló – amit az AI tett",
     "kiProtokollOutput": "AI szövege",
-    "kiProtokollAll": "Mindkét irány"
+    "kiProtokollAll": "Mindkét irány",
+    "kiStatus": {
+      "freigabe": "{n, plural, one {# AI-vázlat vár jóváhagyásra} other {# AI-vázlat vár jóváhagyásra}}",
+      "nichtsFreizugeben": "Nincs jóváhagyandó",
+      "naechsterLauf": "Következő AI-futás {time}",
+      "naechsterLaufTakt": "Az AI {min} percenként fut",
+      "kiAus": "Értékelés AI kikapcsolva",
+      "katalogLeer": "Hiányzó AI-szövegek – az AI nem ír semmit"
+    }
   },
   "glocke": {
     "leer": "Nincsenek értesítések",

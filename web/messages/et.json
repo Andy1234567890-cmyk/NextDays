@@ -11580,7 +11580,15 @@
     "replyDeadline": "Vastake hiljemalt {date}",
     "kiProtokollTitle": "Logi – mida tehisintellekt tegi",
     "kiProtokollOutput": "AI tekst",
-    "kiProtokollAll": "Mõlemad suunad"
+    "kiProtokollAll": "Mõlemad suunad",
+    "kiStatus": {
+      "freigabe": "{n, plural, one {# AI-mustand ootab teie heakskiitu} other {# AI-mustandit ootab teie heakskiitu}}",
+      "nichtsFreizugeben": "Midagi pole heaks kiita",
+      "naechsterLauf": "Järgmine AI-käivitus {time}",
+      "naechsterLaufTakt": "AI töötab iga {min} minuti järel",
+      "kiAus": "Arvustuste AI on välja lülitatud",
+      "katalogLeer": "AI-tekstid puuduvad – AI ei kirjuta midagi"
+    }
   },
   "glocke": {
     "leer": "Teateid pole",

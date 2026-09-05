@@ -374,6 +374,49 @@ class KiStore:
                 fehler=str(exc)[:300],
             )
 
+    # ------------------------------------------------ Live-Stand (0568)
+    def stand_setzen(
+        self, tenant_id: str, schritt: str, *, lauf_abgeschlossen: bool = False
+    ) -> None:
+        """Das Realtime-Signal fortschreiben: EINE Zeile je Betrieb.
+
+        Die drei Nutzdaten-Tabellen der KI sind für den Client gesperrt
+        (Wurzel 6); diese Zeile ist die einzige, auf die die Oberfläche ein Abo
+        halten kann. `schritt` ist ein kurzer Satz OHNE Gastnamen oder Texte —
+        nur „was passiert gerade". Best effort: das Signal darf den Lauf nicht
+        kippen, meldet seinen Ausfall aber LAUT (Wurzel 5).
+        """
+        jetzt = _jetzt()
+        zeile: dict[str, object] = {
+            "tenant_id": tenant_id,
+            "letzter_schritt": schritt[:200],
+            "schritt_at": jetzt,
+            "updated_at": jetzt,
+        }
+        if lauf_abgeschlossen:
+            zeile["letzter_lauf_at"] = jetzt
+            zeile["laeufe"] = int((self.stand(tenant_id) or {}).get("laeufe") or 0) + 1
+        try:
+            self._db.table("review_ki_stand").upsert(
+                zeile, on_conflict="tenant_id"
+            ).execute()
+        except Exception as exc:  # noqa: BLE001 — Signal, nicht Hauptpfad
+            log.warning(
+                "review_ki_stand_nicht_geschrieben",
+                tenant_id=tenant_id,
+                fehler=str(exc)[:200],
+            )
+
+    def stand(self, tenant_id: str) -> dict | None:
+        zeilen = (
+            self._db.table("review_ki_stand")
+            .select("letzter_lauf_at, letzter_schritt, schritt_at, laeufe")
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        return zeilen[0] if zeilen else None
+
     def protokoll(
         self,
         tenant_id: str,

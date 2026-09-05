@@ -11580,7 +11580,15 @@
     "replyDeadline": "Απάντηση έως {date}",
     "kiProtokollTitle": "Πρωτόκολλο – τι έκανε η ΤΝ",
     "kiProtokollOutput": "Κείμενο της ΤΝ",
-    "kiProtokollAll": "Και οι δύο κατευθύνσεις"
+    "kiProtokollAll": "Και οι δύο κατευθύνσεις",
+    "kiStatus": {
+      "freigabe": "{n, plural, one {# σχέδιο τεχνητής νοημοσύνης αναμένει την έγκρισή σας} other {# σχέδια τεχνητής νοημοσύνης αναμένουν την έγκρισή σας}}",
+      "nichtsFreizugeben": "Τίποτα προς έγκριση",
+      "naechsterLauf": "Επόμενη εκτέλεση AI {time}",
+      "naechsterLaufTakt": "Η AI εκτελείται κάθε {min} λεπτά",
+      "kiAus": "AI αξιολόγησης απενεργοποιημένη",
+      "katalogLeer": "Λείπουν κείμενα AI – η AI δεν γράφει τίποτα"
+    }
   },
   "glocke": {
     "leer": "Καμία ειδοποίηση",

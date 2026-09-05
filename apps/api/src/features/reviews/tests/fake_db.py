@@ -27,6 +27,8 @@ class Query:  # noqa: PLR0904 — Fluent-Builder, jede Methode ein Einzeiler
         self._cmp: list[tuple[str, str, Any]] = []
         self._want_count = False
         self._range: tuple[int, int] | None = None
+        self._order: tuple[str, bool] | None = None
+        self._limit: int | None = None
         self._not = False
 
     # -- Aufbau ---------------------------------------------------------------
@@ -91,10 +93,16 @@ class Query:  # noqa: PLR0904 — Fluent-Builder, jede Methode ein Einzeiler
         self._not = False
         return self
 
-    def order(self, *_a: object, **_k: object) -> Query:
+    def order(self, col: str, *, desc: bool = False, **_k: object) -> Query:
+        # Ehrlich sortieren: der KI-Lauf hängt daran, WELCHE Zeilen ein
+        # `limit` übrig lässt (05.09.2026 — Limit vor Aussiebung nahm die
+        # Neuesten und liess die Fristnächsten liegen). Eine Fake, die
+        # `order`/`limit` verschluckt, hätte den Fehler nie gezeigt.
+        self._order = (col, desc)
         return self
 
-    def limit(self, _n: int) -> Query:
+    def limit(self, n: int) -> Query:
+        self._limit = n
         return self
 
     def range(self, start: int, end: int) -> Query:
@@ -158,9 +166,18 @@ class Query:  # noqa: PLR0904 — Fluent-Builder, jede Methode ein Einzeiler
                 rows.remove(row)
             return Result(list(treffer))
         gesamt = len(treffer)
+        if self._order:
+            col, desc = self._order
+            # None sortiert ans Ende wie bei PostgREST (nullslast).
+            treffer.sort(
+                key=lambda r: (self._value(r, col) is None, self._value(r, col) or ""),
+                reverse=desc,
+            )
         if self._range:
             start, end = self._range
             treffer = treffer[start : end + 1]
+        if self._limit is not None:
+            treffer = treffer[: self._limit]
         return Result(list(treffer), count=gesamt if self._want_count else None)
 
 

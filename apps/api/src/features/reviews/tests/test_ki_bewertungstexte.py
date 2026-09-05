@@ -333,3 +333,79 @@ def test_schwelle_ohne_note_bleibt_entwurf() -> None:
     art, grund = KiStore.zustellart_entscheiden(s, "antwort", None, None)
     assert art is KiZustellart.entwurf
     assert grund and "Keine Note" in grund
+
+
+# ------------------------------------------------- Reine Sternevergabe
+def test_kategorienoten_kommen_auf_die_fuenfer_skala() -> None:
+    from src.features.reviews.ki_text import kategorien_auf_fuenf
+
+    noten = kategorien_auf_fuenf(
+        [
+            {"score": 7.5, "category": "clean"},
+            {"score": 10, "category": "staff"},
+            {"score": 0, "category": "value"},  # 0 = nicht vergeben
+            {"score": "x", "category": "location"},
+            {"score": 8, "category": "neu_bei_channex"},
+            "kaputt",
+        ]
+    )
+    assert noten == (("Sauberkeit", 3.8), ("Personal", 5.0), ("neu_bei_channex", 4.0))
+    assert kategorien_auf_fuenf(None) == ()
+
+
+def test_prompt_ohne_gasttext_stuetzt_sich_auf_die_noten() -> None:
+    """Booking liefert bei sechs von 22 Bewertungen keinen Text, aber sechs
+    Kategorienoten. Die KI bekommt sie als Sachverhalt und die ausdrückliche
+    Anweisung, nichts dazuzuerfinden."""
+    from src.features.reviews.ki_text import NUR_NOTEN_HINWEIS, _lageblock, text_erzeugen
+
+    lage = Bewertungslage(
+        richtung=KiRichtung.antwort.value,
+        note=4,
+        kategorien=(("Sauberkeit", 3.8), ("Lage", 5.0)),
+        ota_name="BookingCom",
+    )
+    assert "Kategorienoten des Gastes (von 5): Sauberkeit 3,8 · Lage 5,0" in _lageblock(lage)
+
+    class _Client:
+        def __init__(self) -> None:
+            self.user = ""
+
+        def erzeuge(self, *, system: str, user: str, **_k: object) -> object:
+            del system
+            self.user = user
+            return type("Roh", (), {"text": "Vielen Dank."})()
+
+    client = _Client()
+    text_erzeugen(
+        object(),  # type: ignore[arg-type]  # Katalog wird vorgeladen übergeben
+        "t-1",
+        lage=lage,
+        einstellungen={"sprache": "de"},
+        katalog={"lob_5_sterne": "Danke!"},
+        client=client,  # type: ignore[arg-type]
+    )
+    assert NUR_NOTEN_HINWEIS in client.user
+    assert "DIE BEWERTUNG DES GASTES" not in client.user
+
+
+def test_prompt_mit_gasttext_ohne_noten_hinweis() -> None:
+    from src.features.reviews.ki_text import NUR_NOTEN_HINWEIS, text_erzeugen
+
+    class _Client:
+        user = ""
+
+        def erzeuge(self, *, system: str, user: str, **_k: object) -> object:
+            del system
+            type(self).user = user
+            return type("Roh", (), {"text": "Danke."})()
+
+    text_erzeugen(
+        object(),  # type: ignore[arg-type]
+        "t-1",
+        lage=Bewertungslage(richtung=KiRichtung.antwort.value, note=5, gast_text="Toll."),
+        einstellungen={"sprache": "de"},
+        katalog={"lob_5_sterne": "Danke!"},
+        client=_Client(),  # type: ignore[arg-type]
+    )
+    assert NUR_NOTEN_HINWEIS not in _Client.user

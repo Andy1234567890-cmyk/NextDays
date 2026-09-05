@@ -11580,7 +11580,15 @@
     "replyDeadline": "Отговор до {date}",
     "kiProtokollTitle": "Протокол – какво е направил изкуственият интелект",
     "kiProtokollOutput": "Текст на изкуствения интелект",
-    "kiProtokollAll": "И двете посоки"
+    "kiProtokollAll": "И двете посоки",
+    "kiStatus": {
+      "freigabe": "{n, plural, one {# AI чернова чака вашето одобрение} other {# AI чернови чакат вашето одобрение}}",
+      "nichtsFreizugeben": "Няма за одобрение",
+      "naechsterLauf": "Следващо AI изпълнение {time}",
+      "naechsterLaufTakt": "AI работи на всеки {min} минути",
+      "kiAus": "AI за преглед е изключен",
+      "katalogLeer": "AI текстове липсват – AI не пише нищо"
+    }
   },
   "glocke": {
     "leer": "Няма известия",

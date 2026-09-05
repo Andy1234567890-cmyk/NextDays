@@ -11580,7 +11580,15 @@
     "replyDeadline": "Odpovedať do {date}",
     "kiProtokollTitle": "Protokol – čo urobila AI",
     "kiProtokollOutput": "Text AI",
-    "kiProtokollAll": "Oba smery"
+    "kiProtokollAll": "Oba smery",
+    "kiStatus": {
+      "freigabe": "{n, plural, one {# návrh UI čaká na vaše schválenie} other {# návrhy UI čakajú na vaše schválenie}}",
+      "nichtsFreizugeben": "Nič na schválenie",
+      "naechsterLauf": "Ďalšie spustenie UI {time}",
+      "naechsterLaufTakt": "UI sa spúšťa každých {min} minút",
+      "kiAus": "UI hodnotenia vypnutá",
+      "katalogLeer": "Chýbajú texty UI – UI nič nepíše"
+    }
   },
   "glocke": {
     "leer": "Žiadne oznámenia",

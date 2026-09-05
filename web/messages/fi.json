@@ -11580,7 +11580,15 @@
     "replyDeadline": "Vastaa {date} mennessä",
     "kiProtokollTitle": "Pöytäkirja – mitä tekoäly teki",
     "kiProtokollOutput": "Tekoälyn teksti",
-    "kiProtokollAll": "Molemmat suunnat"
+    "kiProtokollAll": "Molemmat suunnat",
+    "kiStatus": {
+      "freigabe": "{n, plural, one {# tekoälyluonnos odottaa hyväksyntääsi} other {# tekoälyluonnosta odottaa hyväksyntääsi}}",
+      "nichtsFreizugeben": "Ei hyväksyttävää",
+      "naechsterLauf": "Seuraava tekoälyajo {time}",
+      "naechsterLaufTakt": "Tekoäly käynnistyy {min} minuutin välein",
+      "kiAus": "Arviointi-tekoäly pois päältä",
+      "katalogLeer": "Tekoälytekstit puuttuvat – tekoäly ei kirjoita mitään"
+    }
   },
   "glocke": {
     "leer": "Ei ilmoituksia",

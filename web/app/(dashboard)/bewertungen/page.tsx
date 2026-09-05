@@ -4,19 +4,23 @@
 import { notFound } from "next/navigation";
 
 import { BewertungsTabelle } from "@/components/bewertungen/bewertungs-tabelle";
+import { KiStatusBadge } from "@/components/bewertungen/ki-status-badge";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { Card } from "@nextdays/ui/card";
 import { getMe } from "@/lib/auth";
 import { listProperties } from "@/lib/properties";
-import { listReviews, reviewSummary } from "@/lib/reviews";
+import { getKiDiagnose, listReviews, reviewSummary } from "@/lib/reviews";
 
 export const dynamic = "force-dynamic";
 
 export default async function BewertungenPage() {
-  const [liste, kennzahlen, me, objekte] = await Promise.all([
+  const [liste, kennzahlen, me, kiDiagnose, objekte] = await Promise.all([
     listReviews({ limit: 25, offset: 0 }),
     reviewSummary(),
     getMe(),
+    // KI-Status-Badge (0568): Freigaben offen? Nächster Lauf? Erster Stand
+    // vom Server, danach hält das Realtime-Signal `review_ki_stand` es aktuell.
+    getKiDiagnose(),
     // Für den Objektfilter. Ein Dropdown ohne Inhalt wäre eine Attrappe —
     // schlägt das Laden fehl, entfällt der Filter, statt leer dazustehen.
     listProperties(),
@@ -51,6 +55,7 @@ export default async function BewertungenPage() {
         initialTotal={liste.data.total}
         summary={kennzahlen.ok ? kennzahlen.data : null}
         canManage={canManage}
+        kiStatus={<KiStatusBadge initial={kiDiagnose.ok ? kiDiagnose.data : null} />}
         objekte={
           objekte.ok
             ? objekte.data.items.map((o) => ({

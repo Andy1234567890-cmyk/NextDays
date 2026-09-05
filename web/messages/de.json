@@ -11601,7 +11601,15 @@
     "replyDeadline": "Antwort bis {date}",
     "kiProtokollTitle": "Protokoll – was die KI getan hat",
     "kiProtokollOutput": "Text der KI",
-    "kiProtokollAll": "Beide Richtungen"
+    "kiProtokollAll": "Beide Richtungen",
+    "kiStatus": {
+      "freigabe": "{n, plural, one {# KI-Entwurf wartet auf Ihre Freigabe} other {# KI-Entwürfe warten auf Ihre Freigabe}}",
+      "nichtsFreizugeben": "Nichts freizugeben",
+      "naechsterLauf": "Nächster KI-Lauf {time}",
+      "naechsterLaufTakt": "KI läuft alle {min} Minuten",
+      "kiAus": "Bewertungs-KI aus",
+      "katalogLeer": "KI-Texte fehlen – die KI schreibt nichts"
+    }
   },
   "glocke": {
     "leer": "Keine Benachrichtigungen",

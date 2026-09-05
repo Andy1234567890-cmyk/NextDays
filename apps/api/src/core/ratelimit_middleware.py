@@ -229,6 +229,8 @@ _AI_PATHS = (
     # (Wurzel 8: teure Endpunkte gehören in den eigenen Eimer, nicht default).
     "/reviews/ai/",
     "/reviews/ki/test",
+    # Von Hand angestossener KI-Lauf (bis 15 Modellaufrufe je Klick).
+    "/reviews/ki/lauf",
 )
 
 # Stock-Foto-Suche des Website-Baukastens (0461). Jeder Aufruf geht an Pexels

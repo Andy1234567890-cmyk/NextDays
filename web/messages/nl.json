@@ -11580,7 +11580,15 @@
     "replyDeadline": "Antwoord voor {date}",
     "kiProtokollTitle": "Protocol – wat de AI heeft gedaan",
     "kiProtokollOutput": "Tekst van de AI",
-    "kiProtokollAll": "Beide richtingen"
+    "kiProtokollAll": "Beide richtingen",
+    "kiStatus": {
+      "freigabe": "{n, plural, one {# AI-concept wacht op uw goedkeuring} other {# AI-concepten wachten op uw goedkeuring}}",
+      "nichtsFreizugeben": "Niets goed te keuren",
+      "naechsterLauf": "Volgende AI-run {time}",
+      "naechsterLaufTakt": "AI draait elke {min} minuten",
+      "kiAus": "Beoordelings-AI uit",
+      "katalogLeer": "AI-teksten ontbreken – de AI schrijft niets"
+    }
   },
   "glocke": {
     "leer": "Geen meldingen",

@@ -11580,7 +11580,15 @@
     "replyDeadline": "Freagair faoin {date}",
     "kiProtokollTitle": "Logáil – cad a rinne an intleacht shaorga",
     "kiProtokollOutput": "Téacs na hintleachta saorga",
-    "kiProtokollAll": "An dá threo"
+    "kiProtokollAll": "An dá threo",
+    "kiStatus": {
+      "freigabe": "{n, plural, one {# dréacht intleachta saorga amháin ag fanacht le do cheadú} other {# dréachtaí intleachta saorga ag fanacht le do cheadú}}",
+      "nichtsFreizugeben": "Níl aon rud le ceadú",
+      "naechsterLauf": "An chéad rith eile de chuid na hintleachta saorga {time}",
+      "naechsterLaufTakt": "Ritheann an intleacht shaorga gach {min} nóiméad",
+      "kiAus": "Intleacht shaorga athbhreithnithe as",
+      "katalogLeer": "Tá téacsanna intleachta saorga in easnamh – níl an intleacht shaorga ag scríobh tada"
+    }
   },
   "glocke": {
     "leer": "Gan fógraí",

@@ -27,8 +27,10 @@ from .schemas import (
     AutoTemplateList,
     AutoTemplateRequest,
     GuestReviewByHost,
+    KiDiagnose,
     KiKatalogAntwort,
     KiKatalogSpeichern,
+    KiLaufErgebnis,
     KiProtokollList,
     KiRichtung,
     KiSettings,
@@ -563,6 +565,31 @@ def ki_protokoll(
         return service.ki_protokoll(
             ctx, richtung=richtung.value if richtung else None, limit=limit
         )
+    except ReviewError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/ki/diagnose", response_model=KiDiagnose)
+def ki_diagnose(service: ReviewsServiceDep, ctx: ViewCtx) -> KiDiagnose:
+    """Warum ist jede offene Portal-Bewertung noch offen, und was tut die KI?
+
+    Das Live-Bild hinter der Kennzahl „offen". Realtime-Signal dazu ist die
+    Tabelle `review_ki_stand` (0568) — die Oberfläche hört darauf und holt
+    diese Diagnose bei jedem Schritt neu.
+    """
+    try:
+        return service.ki_diagnose(ctx)
+    except ReviewError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/ki/lauf", response_model=KiLaufErgebnis)
+def ki_lauf_jetzt(service: ReviewsServiceDep, ctx: ManageCtx) -> KiLaufErgebnis:
+    """Den KI-Lauf für den eigenen Betrieb SOFORT fahren (sonst stündlich im
+    Worker). Idempotent über die UNIQUE-Indizes der Warteschlange und das
+    Protokoll (Wurzel 2): ein zweiter Klick findet nichts Neues."""
+    try:
+        return service.ki_lauf_jetzt(ctx)
     except ReviewError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

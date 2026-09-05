@@ -11580,7 +11580,15 @@
     "replyDeadline": "Odgovor do {date}",
     "kiProtokollTitle": "Zapisnik – što je AI učinio",
     "kiProtokollOutput": "Tekst AI-ja",
-    "kiProtokollAll": "Oba smjera"
+    "kiProtokollAll": "Oba smjera",
+    "kiStatus": {
+      "freigabe": "{n, plural, one {# AI nacrt čeka vaše odobrenje} other {# AI nacrta čekaju vaše odobrenje}}",
+      "nichtsFreizugeben": "Nema za odobriti",
+      "naechsterLauf": "Sljedeće AI pokretanje {time}",
+      "naechsterLaufTakt": "AI se pokreće svakih {min} minuta",
+      "kiAus": "AI za recenzije isključen",
+      "katalogLeer": "AI tekstovi nedostaju – AI ne piše ništa"
+    }
   },
   "glocke": {
     "leer": "Nema obavijesti",

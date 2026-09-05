@@ -11580,7 +11580,15 @@
     "replyDeadline": "Réponse avant le {date}",
     "kiProtokollTitle": "Journal – ce qu'a fait l'IA",
     "kiProtokollOutput": "Texte de l'IA",
-    "kiProtokollAll": "Les deux sens"
+    "kiProtokollAll": "Les deux sens",
+    "kiStatus": {
+      "freigabe": "{n, plural, one {# ébauche IA en attente de votre approbation} other {# ébauches IA en attente de votre approbation}}",
+      "nichtsFreizugeben": "Rien à approuver",
+      "naechsterLauf": "Prochaine exécution IA {time}",
+      "naechsterLaufTakt": "L'IA s'exécute toutes les {min} minutes",
+      "kiAus": "IA d'évaluation désactivée",
+      "katalogLeer": "Textes IA manquants – l'IA n'écrit rien"
+    }
   },
   "glocke": {
     "leer": "Aucune notification",

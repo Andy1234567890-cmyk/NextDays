@@ -70,6 +70,14 @@ def _reply_text(value: object) -> str | None:
     return None
 
 
+def _frist_verstrichen(value: object, jetzt: datetime | None = None) -> bool:
+    """Liegt Channex' `expired_at` in der Vergangenheit? Unbekannt = nein."""
+    iso = _as_utc(value)
+    if iso is None:
+        return False
+    return datetime.fromisoformat(iso) < (jetzt or datetime.now(UTC))
+
+
 def _as_utc(value: object) -> str | None:
     """Channex-Zeitstempel → ISO-8601 mit UTC-Zone. Channex liefert die
     Zeitstempel ohne Zonen-Suffix (`2022-06-06T05:45:23.000000`), sie sind
@@ -159,7 +167,12 @@ class ReviewsSyncMixin:
             "scores": scores if isinstance(scores, list) else [],
             "tags": tags if isinstance(tags, list) else [],
             "is_hidden": bool(attrs.get("is_hidden")),
-            "is_expired": bool(attrs.get("is_expired")),
+            # Channex' `is_expired` hinkt: eine Airbnb-Bewertung vom 25.07. trug
+            # am 05.09. noch `is_expired=false` bei `expired_at` 24.08. — und
+            # stand als „offen" in der Liste. Die Frist ist die verbindlichere
+            # Aussage desselben Portals; ist sie verstrichen, ist es verfallen.
+            "is_expired": bool(attrs.get("is_expired"))
+            or _frist_verstrichen(attrs.get("expired_at")),
             # Antwortfrist des Portals (0567). Channex nennt sie `expired_at`,
             # auch solange sie in der Zukunft liegt.
             "reply_expires_at": _as_utc(attrs.get("expired_at")),
@@ -192,8 +205,13 @@ class ReviewsSyncMixin:
         darf sie nicht auf den Default zurücksetzen (Wurzel 1)."""
         if not records:
             return 0
+        # default_to_null=False (Prefer: missing=default): `is_replied`/`reply`
+        # stehen nur in MANCHEN Datensätzen (s. `_review_record`). PostgREST
+        # füllt bei einem Bulk-Upsert fehlende Schlüssel sonst mit NULL —
+        # live 05.09.2026: `null value in column "is_replied" violates
+        # not-null constraint`, der ganze Abgleich antwortete 500.
         db.table("channex_review").upsert(
-            records, on_conflict="channex_review_id"
+            records, on_conflict="channex_review_id", default_to_null=False
         ).execute()
         return len(records)
 

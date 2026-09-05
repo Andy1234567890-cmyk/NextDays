@@ -11580,7 +11580,15 @@
     "replyDeadline": "Svar inden {date}",
     "kiProtokollTitle": "Log – hvad AI har gjort",
     "kiProtokollOutput": "AI-tekst",
-    "kiProtokollAll": "Begge retninger"
+    "kiProtokollAll": "Begge retninger",
+    "kiStatus": {
+      "freigabe": "{n, plural, one {# AI-udkast afventer din godkendelse} other {# AI-udkast afventer din godkendelse}}",
+      "nichtsFreizugeben": "Intet at godkende",
+      "naechsterLauf": "Næste AI-kørsel {time}",
+      "naechsterLaufTakt": "AI kører hvert {min} minut",
+      "kiAus": "Anmeldelses-AI slået fra",
+      "katalogLeer": "AI-tekster mangler – AI skriver intet"
+    }
   },
   "glocke": {
     "leer": "Ingen notifikationer",

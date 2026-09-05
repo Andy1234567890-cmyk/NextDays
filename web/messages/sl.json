@@ -11580,7 +11580,15 @@
     "replyDeadline": "Odgovor do {date}",
     "kiProtokollTitle": "Dnevnik – kaj je storila umetna inteligenca",
     "kiProtokollOutput": "Besedilo umetne inteligence",
-    "kiProtokollAll": "Obe smeri"
+    "kiProtokollAll": "Obe smeri",
+    "kiStatus": {
+      "freigabe": "{n, plural, one {# osnutek UI čaka na vašo odobritev} other {# osnutki UI čakajo na vašo odobritev}}",
+      "nichtsFreizugeben": "Nič za odobritev",
+      "naechsterLauf": "Naslednji zagon UI {time}",
+      "naechsterLaufTakt": "UI se zažene vsakih {min} minut",
+      "kiAus": "UI za ocene izklopljena",
+      "katalogLeer": "Besedila UI manjkajo – UI ne piše ničesar"
+    }
   },
   "glocke": {
     "leer": "Ni obvestil",
