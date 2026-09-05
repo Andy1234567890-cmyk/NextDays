@@ -31,7 +31,16 @@ _FACTOR_LABELS = {
     "market": "Markt/Wettbewerb",
     "weather": "Wetter",
     "rate_rules": "Eigene Regel",
+    "feiertag": "Feiertag",
+    "ferien": "Schulferien",
+    "far_future": "Frühbucher",
+    "anker": "Vorjahresanker",
+    "tagesanpassung": "Tagesanpassung",
+    "saison_untergrenze": "Saison-Untergrenze",
 }
+# Auskunftsfaktoren: sie beschreiben, WOHER der Ausgangspreis kommt, und stecken
+# schon in base_price — als Rechenschritt waeren sie doppelt gezaehlt.
+_NUR_AUSKUNFT = {"marktbasis", "saisonbasis"}
 
 
 class PriceExplainError(Exception):
@@ -51,6 +60,7 @@ def explain_price(
     currency: str,
     day: str | None = None,
     client: GroqClient | None = None,
+    base_label: str = "Grundpreis",
 ) -> str:
     """Klartext-Begründung für einen berechneten Tagespreis.
 
@@ -77,7 +87,7 @@ def explain_price(
     ups: list[tuple[float, str, float]] = []   # (betrag-pct, label, mult)
     downs: list[tuple[float, str, float]] = []
     for key, mult in factors.items():
-        if abs(mult - 1.0) < 0.005:
+        if key in _NUR_AUSKUNFT or abs(mult - 1.0) < 0.005:
             continue
         pct = round((mult - 1.0) * 100, 1)
         label = _FACTOR_LABELS.get(key, key)
@@ -86,7 +96,7 @@ def explain_price(
     downs.sort(reverse=True)
 
     # Schrittfolge wie die Engine: Basis → alle Aufschläge → stärkster Rabatt.
-    steps: list[str] = [f"Start: Grundpreis {cur_str(base_price)}."]
+    steps: list[str] = [f"Start: {base_label} {cur_str(base_price)}."]
     running = base_price
     for pct, label, mult in ups:
         running *= mult

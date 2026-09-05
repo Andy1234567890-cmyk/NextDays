@@ -7,6 +7,7 @@
 // in der Erklärung. Prüfung: apps/api/.../tests/test_pricing.py.
 export const FACTOR_LABELS: Record<string, string> = {
   marktbasis: "Marktbasis",
+  saisonbasis: "Saisonpreis als Basis",
   season: "Saison",
   event: "Event",
   weekend: "Wochenende",

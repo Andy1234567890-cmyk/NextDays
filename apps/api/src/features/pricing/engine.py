@@ -571,6 +571,13 @@ def compute_day(base: float, settings: DpSettings, signals: DaySignals) -> DayRe
     Clamp auf [min_price, max_price] (falls gesetzt)."""
     rate_plan_base = base
     base = settings.effective_base(base, signals.comp_price)
+    # Saisonkalender aktiv (0565): an einem Saisontag ist der Saisonpreis des
+    # Tages der AUSGANGSPUNKT der Rechnung — nicht der Ratenplan-Grundpreis und
+    # nicht die Marktbasis (Anweisung 05.09.2026: „wir haben Saisonpreis aktiv
+    # und nicht den Rateplan"). Unten ist er zusaetzlich die Untergrenze.
+    saison_basis = settings.saison_mindestpreis and signals.saison_min_price is not None
+    if saison_basis:
+        base = float(signals.saison_min_price)  # type: ignore[arg-type]
     factors = {
         # Sichtbar machen, ob der Markt die Basis stellte: Verhaeltnis Markt-
         # basis zu Grundpreis. 1.0 = Grundpreis (kein Marktwert oder Modus aus).
@@ -578,8 +585,13 @@ def compute_day(base: float, settings: DpSettings, signals: DaySignals) -> DayRe
         # Basispreis beginnt, den niemand eingestellt hat.
         "marktbasis": (
             base / rate_plan_base
-            if settings.base_mode == "market" and rate_plan_base > 0
+            if settings.base_mode == "market" and rate_plan_base > 0 and not saison_basis
             else 1.0
+        ),
+        # Dasselbe fuer die Saison: Verhaeltnis Saisonpreis zu Grundpreis, nur
+        # Auskunft (steckt schon in `base`), 1.0 = kein Saisontag/Regel aus.
+        "saisonbasis": (
+            base / rate_plan_base if saison_basis and rate_plan_base > 0 else 1.0
         ),
         "season": 1.0 + signals.season_pct / 100.0,
         # Event: event_periods + Marktdaten gemerged (höherer Wert, keine Doppelzählung).
@@ -604,9 +616,9 @@ def compute_day(base: float, settings: DpSettings, signals: DaySignals) -> DayRe
             1.0 + settings.ferien_uplift_pct / 100.0 if signals.ist_ferien else 1.0
         ),
     }
-    # `marktbasis` ist KEIN Faktor auf den Preis (er steckt schon in `base`),
-    # sondern nur Auskunft — aus der Kombination heraushalten.
-    wirkend = {k: v for k, v in factors.items() if k != "marktbasis"}
+    # `marktbasis`/`saisonbasis` sind KEINE Faktoren auf den Preis (sie stecken
+    # schon in `base`), sondern nur Auskunft — aus der Kombination heraushalten.
+    wirkend = {k: v for k, v in factors.items() if k not in ("marktbasis", "saisonbasis")}
     # Gelernte/automatische Faktoren mit Anti-Über-Rabattierung kombinieren …
     price = base * _combine_factors(wirkend.values())
     # … dann die manuellen Rate Rules als bewussten Vermieter-Override OBENDRAUF

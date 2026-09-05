@@ -405,7 +405,7 @@ def explain_dynamic_price(
     service = DpSettingsService(service_client=db)
     try:
         # Scope-Prüfung, DB-Zugriffe und Basispreis-Ableitung liegen im Service.
-        base_price, price, factors, currency = service.explain_input(
+        base_price, price, factors, currency, base_label = service.explain_input(
             ctx, property_id, day.isoformat()
         )
         explanation = explain_price(
@@ -414,6 +414,7 @@ def explain_dynamic_price(
             factors=factors,
             currency=currency,
             day=day.isoformat(),
+            base_label=base_label,
         )
     except PricingError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

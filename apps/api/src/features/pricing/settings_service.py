@@ -613,9 +613,14 @@ class DpSettingsService:
 
     def explain_input(
         self, ctx: AuthContext, property_id: str, tag: str
-    ) -> tuple[float, float, dict[str, float], str]:
+    ) -> tuple[float, float, dict[str, float], str, str]:
         """Eingangsdaten für die Preis-Begründung: (basispreis, preis, faktoren,
-        währung).
+        währung, basis_label).
+
+        Der Basispreis ist der, mit dem die Engine WIRKLICH gerechnet hat:
+        Ratenplan-Grundpreis × `marktbasis` × `saisonbasis` (beides Auskunfts-
+        faktoren der Engine). Vorher stand hier immer der Ratenplan-Grundpreis —
+        am 4.9.2026 „550 DKK", obwohl der Saisonpreis 577,50 die Basis war.
 
         Liegt im Service, nicht im Router: hier hängen Scope-Prüfung, zwei
         DB-Abfragen und die Basispreis-/Währungsableitung zusammen — ein Router
@@ -662,7 +667,17 @@ class DpSettingsService:
         # Währung gesetzt. Fehlt der Plan, keine Währung erfinden (Wurzel 4):
         # leer lassen, die Formatierung rendert dann symbollos.
         waehrung = (rate_rows[0].get("currency") if rate_rows else None) or ""
-        return basispreis, preis, faktoren, waehrung
+        saisonbasis = faktoren.get("saisonbasis", 1.0)
+        marktbasis = faktoren.get("marktbasis", 1.0)
+        basispreis = round(basispreis * saisonbasis * marktbasis, 2)
+        label = (
+            "Saisonpreis des Tages"
+            if abs(saisonbasis - 1.0) >= 0.005
+            else "Marktbasis"
+            if abs(marktbasis - 1.0) >= 0.005
+            else "Grundpreis"
+        )
+        return basispreis, preis, faktoren, waehrung, label
 
     def _settings_by_property(self, ids: list[str]) -> dict[str, dict]:
         rows = (

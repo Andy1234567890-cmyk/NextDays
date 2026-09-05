@@ -633,14 +633,26 @@ def test_saison_untergrenze_hebt_an_und_kappt_nie() -> None:
     s = _settings(weekend_uplift_pct=0, min_price=50.0, max_price=300.0, saison_mindestpreis=True)
     tag = DaySignals(day=date(2026, 7, 1), days_before=200, saison_min_price=130.0)
     r = compute_day(_BASE, s, tag)
+    # Der Saisonpreis ist der AUSGANGSPUNKT (nicht der Ratenplan-Grundpreis 100)
+    # und zugleich die Untergrenze.
     assert r.price == 130.0
-    assert r.factors["saison_untergrenze"] == 1.3
-    # Liegt der berechnete Preis ueber dem Saisonpreis, passiert nichts — der
-    # Saisonpreis ist keine Decke.
-    hoch = DaySignals(day=date(2026, 7, 1), days_before=200, saison_min_price=80.0)
-    r2 = compute_day(_BASE, s, hoch)
-    assert r2.price == 100.0
-    assert r2.factors["saison_untergrenze"] == 1.0
+    assert r.factors["saisonbasis"] == 1.3
+    assert r.factors["saison_untergrenze"] == 1.0
+    # Saisonpreis unter dem Grundpreis: es wird trotzdem vom Saisonpreis gerechnet.
+    tief = DaySignals(day=date(2026, 7, 1), days_before=200, saison_min_price=80.0)
+    r2 = compute_day(_BASE, s, tief)
+    assert r2.price == 80.0
+    assert r2.factors["saisonbasis"] == 0.8
+    # Ein Rabatt darf den Saisonpreis nicht unterschreiten: Untergrenze greift.
+    s_rabatt = _settings(
+        weekend_uplift_pct=0, min_price=None, max_price=None, saison_mindestpreis=True,
+        last_minute=[{"days_before": 7, "discount_pct": 20.0}],
+    )
+    r_rabatt = compute_day(
+        _BASE, s_rabatt, DaySignals(day=date(2026, 7, 1), days_before=3, saison_min_price=130.0)
+    )
+    assert r_rabatt.price == 130.0
+    assert r_rabatt.factors["saison_untergrenze"] > 1.0
     # Die Obergrenze bleibt die der Einstellungen: Saison 400 wird bei 300 gekappt.
     r3 = compute_day(
         _BASE, s, DaySignals(day=date(2026, 7, 1), days_before=200, saison_min_price=400.0)
