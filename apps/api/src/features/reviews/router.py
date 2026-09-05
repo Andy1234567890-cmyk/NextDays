@@ -42,6 +42,7 @@ from .schemas import (
     QueueUpdateRequest,
     RateGuestRequest,
     ReplyRequest,
+    ReplyState,
     ReviewListResponse,
     ReviewSource,
     ReviewSummary,
@@ -73,6 +74,8 @@ def list_reviews(  # noqa: PLR0913 — Filter des Cockpits, jeder optional
     property_id: Annotated[str | None, Query()] = None,
     channel_code: Annotated[str | None, Query(max_length=64)] = None,
     unanswered: Annotated[bool, Query()] = False,
+    # Antwortstand: offen (beantwortbar) · beantwortet · frist_abgelaufen.
+    antwort: Annotated[ReplyState | None, Query()] = None,
     # Volltextsuche im Bewertungstext. Gedeckelt (Wurzel 8) — eine
     # 10-000-Zeichen-Suche wäre kein Suchbegriff, sondern eine Last.
     suche: Annotated[str | None, Query(max_length=120)] = None,
@@ -96,6 +99,7 @@ def list_reviews(  # noqa: PLR0913 — Filter des Cockpits, jeder optional
             property_id=property_id,
             channel_code=channel_code,
             unanswered=unanswered,
+            reply_state=antwort,
             suche=suche.strip() or None if suche else None,
             rating_min=rating_min,
             rating_max=rating_max,
@@ -217,6 +221,7 @@ def export_reviews(  # noqa: PLR0913 — dieselben Filter wie die Liste
     property_id: Annotated[str | None, Query()] = None,
     channel_code: Annotated[str | None, Query(max_length=64)] = None,
     unanswered: Annotated[bool, Query()] = False,
+    antwort: Annotated[ReplyState | None, Query()] = None,
     suche: Annotated[str | None, Query(max_length=120)] = None,
     rating_min: Annotated[float | None, Query(ge=0, le=5)] = None,
     rating_max: Annotated[float | None, Query(ge=0, le=5)] = None,
@@ -241,6 +246,7 @@ def export_reviews(  # noqa: PLR0913 — dieselben Filter wie die Liste
             property_id=property_id,
             channel_code=channel_code,
             unanswered=unanswered,
+            reply_state=antwort,
             suche=suche.strip() or None if suche else None,
             rating_min=rating_min,
             rating_max=rating_max,

@@ -58,6 +58,18 @@ def _as_float(value: object) -> float | None:
     return None
 
 
+def _reply_text(value: object) -> str | None:
+    """Channex liefert die Antwort als Objekt ``{"reply": "…"}`` (so auch im
+    eigenen POST-Body), älter als nackter String. Beides lesen — vorher fiel
+    das Objekt durch ``isinstance(str)`` still auf None, und jede Antwort
+    galt beim nächsten Abgleich als nicht vorhanden."""
+    if isinstance(value, dict):
+        value = value.get("reply")
+    if isinstance(value, str) and value.strip():
+        return value.strip()
+    return None
+
+
 def _as_utc(value: object) -> str | None:
     """Channex-Zeitstempel → ISO-8601 mit UTC-Zone. Channex liefert die
     Zeitstempel ohne Zonen-Suffix (`2022-06-06T05:45:23.000000`), sie sind
@@ -132,8 +144,8 @@ class ReviewsSyncMixin:
             return None
         scores = attrs.get("scores")
         tags = attrs.get("tags")
-        reply = attrs.get("reply")
-        return {
+        reply = _reply_text(attrs.get("reply"))
+        record = {
             "tenant_id": mapping["tenant_id"],
             "property_id": mapping.get("property_id"),
             "property_map_id": mapping.get("map_id"),
@@ -147,13 +159,27 @@ class ReviewsSyncMixin:
             "scores": scores if isinstance(scores, list) else [],
             "tags": tags if isinstance(tags, list) else [],
             "is_hidden": bool(attrs.get("is_hidden")),
-            "is_replied": bool(attrs.get("is_replied")),
             "is_expired": bool(attrs.get("is_expired")),
-            "reply": reply if isinstance(reply, str) and reply.strip() else None,
+            # Antwortfrist des Portals (0567). Channex nennt sie `expired_at`,
+            # auch solange sie in der Zukunft liegt.
+            "reply_expires_at": _as_utc(attrs.get("expired_at")),
             "received_at": _as_utc(attrs.get("received_at")),
             "ota_updated_at": _as_utc(attrs.get("updated_at")),
             "raw": attrs,
         }
+        # Antwort NUR setzen, wenn Channex eine kennt. Nach unserem eigenen
+        # Reply (200, lokal per `_mark_review_replied` gespiegelt) meldet Channex
+        # die Antwort erst verzögert; ein Abgleich dazwischen setzte sie sonst
+        # auf NULL/„unbeantwortet" zurück — live 05.09.2026: vier eben
+        # beantwortete Bewertungen standen wieder als „Offen" da, und eine
+        # zweite Antwort wäre möglich gewesen (Wurzel 1/2). Ohne die Schlüssel
+        # lässt der Upsert die Spalten unangetastet; neue Zeilen bekommen den
+        # Spalten-Default false.
+        if reply or attrs.get("is_replied"):
+            record["is_replied"] = True
+            if reply:
+                record["reply"] = reply
+        return record
 
     def _upsert_reviews(
         self, db: Client, records: list[dict[str, Any]]

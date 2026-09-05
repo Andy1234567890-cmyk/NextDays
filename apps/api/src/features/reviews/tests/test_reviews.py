@@ -15,7 +15,12 @@ import pytest
 
 from src.core.security import AuthContext
 from src.features.reviews.automation import ReviewAutomation
-from src.features.reviews.common import mask_author, plaintext
+from src.features.reviews.common import (
+    mask_author,
+    ota_categories,
+    plaintext,
+    score_5_from_ten,
+)
 from src.features.reviews.publication import publish_overdue, resolve_publication
 from src.features.reviews.queue import ReviewQueue
 from src.features.reviews.schemas import (
@@ -28,8 +33,6 @@ from src.features.reviews.schemas import (
 from src.features.reviews.service import (
     ReviewError,
     ReviewsService,
-    _ota_categories,
-    _score_5_from_ten,
 )
 
 from .fake_db import FakeDB
@@ -139,9 +142,9 @@ def _ota(**over: object) -> dict:
 def test_portal_note_wird_halbiert() -> None:
     # 9/10 sind 4,5 Sterne — nicht 9. Ohne das steht eine Booking-Bewertung
     # in derselben Liste wie eine 5-Sterne-Bewertung „doppelt so gut" da.
-    assert _score_5_from_ten(9.0) == 4.5
-    assert _score_5_from_ten(None) is None
-    assert _score_5_from_ten("keine Zahl") is None
+    assert score_5_from_ten(9.0) == 4.5
+    assert score_5_from_ten(None) is None
+    assert score_5_from_ten("keine Zahl") is None
 
 
 def test_kategorien_ohne_note_werden_verworfen() -> None:
@@ -151,7 +154,7 @@ def test_kategorien_ohne_note_werden_verworfen() -> None:
         {"score": 8},                     # ohne Kategorie → raus
         "kaputt",
     ]
-    kategorien = _ota_categories(roh)
+    kategorien = ota_categories(roh)
     assert [k.key for k in kategorien] == ["clean"]
     assert kategorien[0].scale is ReviewScale.ten
 
@@ -433,7 +436,7 @@ def _automatik_db(**over: object) -> FakeDB:
         reservations=[
             {"id": "res-1", "tenant_id": TENANT, "property_id": PROP_A,
              "guest_email": "a@example.com", "check_out": "2026-07-20",
-             "status": "completed"}
+             "status": "completed", "channel": "portal"}
         ],
     )
 
@@ -655,3 +658,203 @@ def test_kein_entwurf_wenn_das_fenster_schon_zu_ist() -> None:
     db.tables["reservations"][0]["check_out"] = "2026-07-01"
     assert ReviewAutomation(service_client=db).run(today=date(2026, 7, 20)) == (0, 0)
     assert db.tables["guest_review_queue"] == []
+
+
+# --------------------------------------------------------- Zustellart (0566)
+def test_entwurf_wird_vom_versandlauf_nicht_angefasst() -> None:
+    # Anlass 05.09.2026: Sieben KI-„Entwürfe" mit send_at=jetzt gingen im
+    # selben Tick öffentlich an die Portale, weil send_due nur status und
+    # Fälligkeit prüfte. Ein Entwurf wartet auf einen Menschen — immer.
+    db = _automatik_db()
+    ReviewAutomation(service_client=db).run(today=date(2026, 7, 25))
+    eintrag = db.tables["guest_review_queue"][0]
+    assert eintrag["zustellart"] == "automatisch"  # Vorlagen-Automatik = zugesagt
+    eintrag["zustellart"] = "entwurf"
+    service = ReviewsService(service_client=db)
+    assert ReviewQueue(db).send_due(service) == 0
+    assert eintrag["status"] == "geplant"
+    assert db.tables["guest_reviews_by_host"] == []
+    # „Jetzt abschicken" durch einen Menschen ist der EINZIGE Weg raus.
+    service.send_queue_entry(_ctx(), str(eintrag["id"]))
+    assert eintrag["status"] == "gesendet"
+    assert len(db.tables["guest_reviews_by_host"]) == 1
+
+
+def test_queue_entry_traegt_die_zustellart() -> None:
+    db = _automatik_db()
+    ReviewAutomation(service_client=db).run(today=date(2026, 7, 25))
+    db.tables["guest_review_queue"][0]["zustellart"] = "entwurf"
+    service = ReviewsService(service_client=db)
+    res = service.list_queue(_ctx(), status=None, limit=10, offset=0)
+    assert res.items[0].zustellart.value == "entwurf"
+
+
+def test_notenfilter_geht_ganzzahlig_an_die_marktplatz_spalte(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # `reviews.rating` ist integer; PostgREST lehnte "3.0" mit 422 ab und die
+    # ganze Liste war tot (live 05.09.2026).
+    from .fake_db import Query
+
+    db = _db(reviews=[_markt(id="r-1", rating=3), _markt(id="r-2", rating=5)])
+    gesehen: list[object] = []
+    original = Query.lte
+
+    def lte(self: Query, col: str, val: object) -> Query:
+        if col == "rating":
+            gesehen.append(val)
+        return original(self, col, val)
+
+    monkeypatch.setattr(Query, "lte", lte)
+    res = ReviewsService(service_client=db).list_reviews(
+        _ctx(), rating_max=3.0, limit=10, offset=0
+    )
+    assert gesehen == [3]
+    assert all(type(v) is int for v in gesehen)
+    assert {r.id for r in res.items} == {"r-1"}
+
+
+def test_erinnerung_nur_an_marktplatz_gaeste() -> None:
+    # Die Erinnerung führt auf die myBestDays-Bewertungsseite mit Gastkonto.
+    # Ein Airbnb-Gast (Relay-Adresse) bekäme einen toten Link.
+    db = _automatik_db(
+        auto_review_active=False, guest_reminder_active=True,
+        guest_reminder_after_days=1,
+    )
+    db.tables["reservations"].append(
+        {"id": "res-air", "tenant_id": TENANT, "property_id": PROP_A,
+         "guest_email": "x@guest.airbnb.com", "check_out": "2026-07-20",
+         "status": "completed", "channel": "airbnb"}
+    )
+    kandidaten = ReviewAutomation(service_client=db)._due_reservations(
+        db, TENANT, 1, date(2026, 7, 25)
+    )
+    assert [r["id"] for r in kandidaten] == ["res-1"]
+
+
+def test_antwort_von_hand_raeumt_nur_den_antwort_entwurf_ab() -> None:
+    # Gastbewertung und Antwort hängen an DERSELBEN Airbnb-Bewertung. Wer den
+    # Gast bewertet, hat nicht geantwortet — und umgekehrt (Wurzel 1, gezielt).
+    db = _db()
+    db.tables["guest_review_queue"] = [
+        {"id": "q-gast", "tenant_id": TENANT, "review_id": "rev-1",
+         "status": "geplant", "richtung": "gast_bewerten"},
+        {"id": "q-antwort", "tenant_id": TENANT, "review_id": "rev-1",
+         "status": "geplant", "richtung": "antwort"},
+    ]
+    n = ReviewQueue(db).erledigt_durch_handarbeit(
+        TENANT, review_id="rev-1", richtung="antwort"
+    )
+    assert n == 1
+    stati = {z["id"]: z["status"] for z in db.tables["guest_review_queue"]}
+    assert stati == {"q-gast": "geplant", "q-antwort": "uebersprungen"}
+
+
+def test_zweite_antwort_auf_portal_bewertung_wird_abgewiesen() -> None:
+    # Wurzel 2: Portale nehmen EINE Antwort je Bewertung. Doppelklick, Retry
+    # oder ein noch geplanter KI-Entwurf dürfen keine zweite einreichen.
+    db = _db(channex_review=[_ota(is_replied=True, reply="Danke!")])
+    service = ReviewsService(service_client=db)
+    with pytest.raises(ReviewError) as exc:
+        service.reply(_ctx(), ReviewSource.ota, "o-1", "Noch einmal danke")
+    assert exc.value.status_code == 409
+
+
+def test_plaintext_loest_html_entitaeten_auf() -> None:
+    # nh3 escaped `&` zu `&amp;` — im Textfeld, im KI-Prompt und beim Portal
+    # stünde sonst „Familie Jensen &amp; Team".
+    assert plaintext("Kaffee & Kuchen <b>fein</b>") == "Kaffee & Kuchen fein"
+    assert plaintext("<b>x</b> &lt;y&gt;") == "x <y>"
+
+
+def test_csv_zellen_sind_formelsicher() -> None:
+    from src.features.reviews.export import als_csv
+
+    service = ReviewsService(
+        service_client=_db(reviews=[_markt(text="=HYPERLINK(\"http://x\")")])
+    )
+    res = service.list_reviews(_ctx(), limit=10, offset=0)
+    csv_text = als_csv(res.items, ["text"])
+    assert "'=HYPERLINK" in csv_text
+
+
+def test_antwortstand_filter_trennt_offen_von_frist_abgelaufen() -> None:
+    from src.features.reviews.schemas import ReplyState
+
+    db = _db(
+        reviews=[_markt(id="m-offen", host_reply=None)],
+        channex_review=[
+            _ota(id="o-offen", is_replied=False, is_expired=False),
+            _ota(id="o-zu", is_replied=False, is_expired=True),
+            _ota(id="o-ok", is_replied=True, is_expired=True, reply="Danke"),
+        ],
+    )
+    service = ReviewsService(service_client=db)
+
+    def ids(state: ReplyState) -> set[str]:
+        res = service.list_reviews(_ctx(), reply_state=state, limit=25, offset=0)
+        return {r.id for r in res.items}
+
+    assert ids(ReplyState.offen) == {"m-offen", "o-offen"}
+    assert ids(ReplyState.beantwortet) == {"o-ok"}
+    # Der Marktplatz kennt kein Antwortfenster — dort gibt es kein „abgelaufen".
+    assert ids(ReplyState.frist_abgelaufen) == {"o-zu"}
+
+
+def test_kennzahlen_zaehlen_abgelaufene_frist_getrennt() -> None:
+    db = _db(
+        channex_review=[
+            _ota(id="o-offen", is_replied=False, is_expired=False),
+            _ota(id="o-zu", is_replied=False, is_expired=True),
+            _ota(id="o-ok", is_replied=True, is_expired=True, reply="Danke"),
+        ]
+    )
+    s = ReviewsService(service_client=db).summary(_ctx())
+    assert (s.count, s.unanswered, s.expired_unanswered) == (3, 2, 1)
+
+
+def test_antwortfrist_kommt_aus_dem_spiegel() -> None:
+    db = _db(
+        channex_review=[_ota(reply_expires_at="2026-09-20T10:00:00+00:00")]
+    )
+    res = ReviewsService(service_client=db).list_reviews(_ctx(), limit=5, offset=0)
+    assert res.items[0].reply_expires_at is not None
+    assert res.items[0].reply_expires_at.isoformat().startswith("2026-09-20")
+
+
+def test_verdeckte_bewertung_ist_nicht_offen() -> None:
+    # Airbnb zeigt die Bewertung erst, wenn beide Seiten abgegeben haben. Bis
+    # dahin gibt es nichts zu beantworten: kein „Offen", keine Antwort-Aktion.
+    from src.features.reviews.schemas import ReplyState
+
+    db = _db(
+        channex_review=[
+            _ota(id="o-verdeckt", is_hidden=True, content=None),
+            _ota(id="o-offen"),
+        ]
+    )
+    service = ReviewsService(service_client=db)
+    offen = service.list_reviews(_ctx(), reply_state=ReplyState.offen, limit=10, offset=0)
+    assert {r.id for r in offen.items} == {"o-offen"}
+    verdeckt = service.list_reviews(
+        _ctx(), reply_state=ReplyState.verdeckt, limit=10, offset=0
+    )
+    assert {r.id for r in verdeckt.items} == {"o-verdeckt"}
+    assert verdeckt.items[0].can_reply is False
+    s = service.summary(_ctx())
+    assert (s.unanswered, s.hidden_unanswered, s.expired_unanswered) == (2, 1, 0)
+
+
+def test_ki_schreibt_je_bewertung_hoechstens_einmal() -> None:
+    # Ein Protokoll-Eintrag zur Bewertung genügt — auch ohne Warteschlangen-
+    # Eintrag (Modell bat um Prüfung, Text leer). Kein zweiter Versuch.
+    from src.features.reviews.ki_lauf import BewertungsKiLauf
+
+    db = _db()
+    db.tables["guest_review_queue"] = []
+    db.tables["review_ki_protokoll"] = [
+        {"tenant_id": TENANT, "richtung": "antwort", "bezug_id": "o-1", "quelle": "ota"}
+    ]
+    lauf = BewertungsKiLauf(db)
+    rest = lauf._ohne_warteschlangen_eintrag(TENANT, [{"id": "o-1"}, {"id": "o-2"}])
+    assert [z["id"] for z in rest] == ["o-2"]

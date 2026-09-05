@@ -202,6 +202,15 @@ class KiStore:
             )
         if richtung == KiRichtung.antwort.value:
             schwelle = settings.antwort_mensch_ab_note
+            if schwelle is not None and note is None:
+                # Fail-closed (Wurzel 5): wer „unter X Sternen ein Mensch"
+                # gesetzt hat, will keine automatische Antwort auf eine
+                # Bewertung, deren Note wir nicht kennen (verdeckt, 0).
+                return (
+                    KiZustellart.entwurf,
+                    f"Keine Note bekannt, Schwelle {schwelle} gesetzt — "
+                    "ohne Note entscheidet ein Mensch.",
+                )
             if schwelle is not None and note is not None and note < schwelle:
                 return (
                     KiZustellart.entwurf,
@@ -383,8 +392,10 @@ class KiStore:
         if richtung:
             q = q.eq("richtung", richtung)
         zeilen = q.execute().data or []
+        kontext = self._protokoll_kontext(tenant_id, zeilen)
         items = [
             KiProtokollEintrag(
+                **kontext.get(str(z.get("bezug_id") or ""), {}),
                 id=str(z["id"]),
                 richtung=z["richtung"],
                 quelle=z["quelle"],
@@ -401,6 +412,67 @@ class KiStore:
             for z in zeilen
         ]
         return KiProtokollList(items=items, total=len(items))
+
+    def _protokoll_kontext(
+        self, tenant_id: str, zeilen: list[dict]
+    ) -> dict[str, dict]:
+        """Gast, Kanal, Objekt und Warteschlangen-Stand je Bezug — in drei
+        Abfragen für die ganze Seite, nicht je Zeile.
+
+        Ohne das stand im Protokoll nur eine UUID; niemand konnte ablesen, WEN
+        die KI beantwortet hat und ob der Text wartet, raus ist oder scheiterte
+        (Debugging-Pflicht: sichtbar machen, was die KI tut)."""
+        ids = sorted(
+            {str(z["bezug_id"]) for z in zeilen if z.get("bezug_id") and z.get("quelle") == "ota"}
+        )
+        if not ids:
+            return {}
+        bewertungen = (
+            self._db.table("channex_review")
+            .select("id, guest_name, ota, property_id")
+            .eq("tenant_id", tenant_id)
+            .in_("id", ids)
+            .execute()
+        ).data or []
+        objekt_ids = sorted({str(b["property_id"]) for b in bewertungen if b.get("property_id")})
+        titel = {
+            str(p["id"]): p.get("title")
+            for p in (
+                (
+                    self._db.table("properties")
+                    .select("id, title")
+                    .eq("tenant_id", tenant_id)
+                    .in_("id", objekt_ids)
+                    .execute()
+                ).data
+                or []
+            )
+        } if objekt_ids else {}
+        schlange = {
+            str(q["antwort_auf_id"]): q
+            for q in (
+                (
+                    self._db.table("guest_review_queue")
+                    .select("antwort_auf_id, status, error")
+                    .eq("tenant_id", tenant_id)
+                    .in_("antwort_auf_id", ids)
+                    .execute()
+                ).data
+                or []
+            )
+        }
+        kontext: dict[str, dict] = {}
+        for b in bewertungen:
+            bid = str(b["id"])
+            eintrag = schlange.get(bid) or {}
+            kontext[bid] = {
+                "gast_name": b.get("guest_name"),
+                "kanal": b.get("ota"),
+                "objekt_titel": titel.get(str(b.get("property_id") or "")),
+                "warteschlange_status": eintrag.get("status"),
+                "warteschlange_fehler": eintrag.get("error"),
+            }
+        return kontext
 
 def _jetzt() -> str:
     return datetime.now(UTC).isoformat()

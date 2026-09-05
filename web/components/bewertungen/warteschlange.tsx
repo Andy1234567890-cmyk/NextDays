@@ -40,15 +40,18 @@ const STATUS: QueueStatus[] = [
 export function Warteschlange({
   initial,
   initialTotal,
+  initialCounts,
   canManage,
 }: {
   initial: QueueEntry[];
   initialTotal: number;
+  initialCounts: Record<string, number>;
   canManage: boolean;
 }) {
   const t = useTranslations("reviews");
   const [items, setItems] = useState(initial);
   const [total, setTotal] = useState(initialTotal);
+  const [counts, setCounts] = useState(initialCounts);
   const [status, setStatus] = useState<QueueStatus | "">("geplant");
   const [fehler, setFehler] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -66,6 +69,7 @@ export function Warteschlange({
       if (res.ok) {
         setItems(res.data.items);
         setTotal(res.data.total);
+        setCounts(res.data.counts);
         setFehler(null);
       } else {
         setFehler(res.error);
@@ -73,6 +77,28 @@ export function Warteschlange({
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
+
+  function mehrLaden() {
+    // Blättern über `offset` — vorher waren ab 26 Einträgen die übrigen
+    // unerreichbar, obwohl „25 von 40" daneben stand.
+    startTransition(async () => {
+      const res = await listQueue({
+        status: status || undefined,
+        limit: SEITE,
+        offset: items.length,
+      });
+      if (res.ok) {
+        setItems((alt) => {
+          const bekannt = new Set(alt.map((x) => x.id));
+          return [...alt, ...res.data.items.filter((x) => !bekannt.has(x.id))];
+        });
+        setTotal(res.data.total);
+        setFehler(null);
+      } else {
+        setFehler(res.error);
+      }
+    });
+  }
 
   function ersetzen(neu: QueueEntry) {
     // Passt der Eintrag nicht mehr zum Filter, verschwindet er aus der Liste —
@@ -102,10 +128,12 @@ export function Warteschlange({
             value={status}
             onChange={(e) => setStatus(e.target.value as QueueStatus | "")}
           >
-            <option value="">{t("queueAll")}</option>
+            <option value="">
+              {t("queueAll")} ({Object.values(counts).reduce((a, b) => a + b, 0)})
+            </option>
             {STATUS.map((s) => (
               <option key={s} value={s}>
-                {t(`queueState.${s}`)}
+                {t(`queueState.${s}`)} ({counts[s] ?? 0})
               </option>
             ))}
           </NativeSelect>
@@ -115,7 +143,26 @@ export function Warteschlange({
       {fehler && <Card className="p-4 text-sm text-destructive">{fehler}</Card>}
 
       {items.length === 0 ? (
-        <Card className="p-6 text-sm text-muted-foreground">{t("queueEmpty")}</Card>
+        <Card className="flex flex-col gap-3 p-6 text-sm text-muted-foreground">
+          {/* „Nichts geplant" bei Filter „Abgelaufen" liest sich, als fehle
+              etwas — dabei gibt es schlicht keinen Eintrag mit diesem Status.
+              Darunter die anderen Stände als Sprungmarken: 13 gesendete Texte
+              sollen nicht hinter einem leeren „geplant" verschwinden. */}
+          <span>
+            {status
+              ? t("queueEmptyFiltered", { status: t(`queueState.${status}`) })
+              : t("queueEmpty")}
+          </span>
+          {STATUS.some((s) => s !== status && (counts[s] ?? 0) > 0) && (
+            <span className="flex flex-wrap gap-2">
+              {STATUS.filter((s) => s !== status && (counts[s] ?? 0) > 0).map((s) => (
+                <Button key={s} variant="outline" size="sm" onClick={() => setStatus(s)}>
+                  {t(`queueState.${s}`)} · {counts[s]}
+                </Button>
+              ))}
+            </span>
+          )}
+        </Card>
       ) : (
         <div className="flex flex-col gap-3">
           {items.map((e) => (
@@ -131,9 +178,14 @@ export function Warteschlange({
       )}
 
       {total > items.length && (
-        <p className="text-sm text-muted-foreground">
-          {t("queueShown", { shown: items.length, total })}
-        </p>
+        <div className="flex items-center gap-3">
+          <p className="text-sm text-muted-foreground">
+            {t("queueShown", { shown: items.length, total })}
+          </p>
+          <Button variant="outline" onClick={mehrLaden} disabled={pending}>
+            {t("queueLoadMore")}
+          </Button>
+        </div>
       )}
       {pending && (
         <p className="text-sm text-muted-foreground">{t("loading")}</p>
@@ -145,6 +197,13 @@ export function Warteschlange({
 function Frist({ eintrag }: { eintrag: QueueEntry }) {
   const t = useTranslations("reviews");
   if (eintrag.status !== "geplant") return null;
+  // Ein Entwurf hat keine Fälligkeit — er wartet auf einen Menschen. „Heute
+  // fällig" daran wäre die Aufforderung, etwas ungelesen rauszuschicken.
+  if (eintrag.zustellart === "entwurf") {
+    return (
+      <span className="text-sm text-amber-600">{t("queueAwaitingRelease")}</span>
+    );
+  }
   // Die Frist des Kanals hat Vorrang: sie entscheidet, ob es überhaupt noch
   // geht. Ist sie unbekannt, zeigen wir die Fälligkeit — nie eine geratene Zahl.
   if (eintrag.days_left != null) {
@@ -186,18 +245,32 @@ function Zeile({
   const [pending, startTransition] = useTransition();
 
   const geplant = eintrag.status === "geplant";
-  const kanal =
-    eintrag.source === "marketplace" ? MARKETPLACE_CHANNEL : channelLabel("AirBNB");
+  const antwort = eintrag.richtung === "antwort";
+  const entwurf = eintrag.zustellart === "entwurf";
+  // Der Kanal kommt aus der zugehörigen Bewertung (Backend), nicht aus einer
+  // Annahme — eine Booking-Antwort stand hier vorher als „Airbnb".
+  const kanal = !eintrag.channel_code
+    ? t("queuePortal")
+    : eintrag.channel_code === MARKETPLACE_CHANNEL
+      ? MARKETPLACE_CHANNEL
+      : channelLabel(eintrag.channel_code);
 
   function speichern() {
     onFehler(null);
     startTransition(async () => {
-      const res = await updateQueueEntry(eintrag.id, {
-        rating: note,
-        text: text.trim() || null,
-        private_text: privat.trim() || null,
-        recommended: empfehlung,
-      });
+      // Eine Antwort HAT nur den Text — Note/Empfehlung/Privatnachricht
+      // weist das Backend für sie mit 422 ab.
+      const res = await updateQueueEntry(
+        eintrag.id,
+        antwort
+          ? { text: text.trim() || null }
+          : {
+              rating: note,
+              text: text.trim() || null,
+              private_text: privat.trim() || null,
+              recommended: empfehlung,
+            },
+      );
       if (res.ok) {
         onChanged(res.data);
         setOffen(false);
@@ -211,8 +284,15 @@ function Zeile({
     onFehler(null);
     startTransition(async () => {
       const res = await fn();
-      if (res.ok) onChanged(res.data);
-      else onFehler(res.error);
+      if (!res.ok) {
+        onFehler(res.error);
+        return;
+      }
+      // „Jetzt abschicken" antwortet auch bei gescheitertem Versand mit 200
+      // und status='fehler' — der Grund steht am Eintrag. Ohne diesen Zweig
+      // verschwand er aus „geplant" und niemand sah, warum.
+      if (res.data.status === "fehler" && res.data.error) onFehler(res.data.error);
+      onChanged(res.data);
     });
   }
 
@@ -222,6 +302,15 @@ function Zeile({
         <div className="flex flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <span className="font-medium">{kanal}</span>
+            <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
+              {antwort ? t("queueKindAntwort") : t("queueKindGast")}
+            </span>
+            {eintrag.ki_erzeugt && (
+              <span className="flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
+                <Icon icon="ph:sparkle" className="size-3" />
+                {t("queueKiText")}
+              </span>
+            )}
             {eintrag.guest_name && (
               <span className="text-muted-foreground">· {eintrag.guest_name}</span>
             )}
@@ -232,7 +321,11 @@ function Zeile({
             )}
           </div>
           <span className="text-xs text-muted-foreground">
-            {t("queueSendAt", { date: formatDate(eintrag.send_at, locale) })}
+            {eintrag.status === "gesendet" && eintrag.sent_at
+              ? t("queueSentAt", { date: formatDate(eintrag.sent_at, locale) })
+              : geplant && !entwurf
+                ? t("queueSendAt", { date: formatDate(eintrag.send_at, locale) })
+                : null}
           </span>
         </div>
         <div className="flex flex-col items-end gap-1">
@@ -249,6 +342,7 @@ function Zeile({
 
       {offen ? (
         <div className="flex flex-col gap-3 rounded-(--radius) border border-border bg-muted/40 p-3">
+          {!antwort && (
           <div className="flex flex-wrap items-center gap-4">
             <label className="flex items-center gap-2 text-sm">
               {t("autoRating")}
@@ -269,9 +363,10 @@ function Zeile({
               <Switch checked={empfehlung} onCheckedChange={setEmpfehlung} />
             </label>
           </div>
+          )}
           <label className="flex flex-col gap-1">
             <span className="text-xs font-medium text-muted-foreground">
-              {t("publicText")}
+              {antwort ? t("queueReplyText") : t("publicText")}
             </span>
             <Textarea
               rows={3}
@@ -279,6 +374,7 @@ function Zeile({
               onChange={(e) => setText(e.target.value)}
             />
           </label>
+          {!antwort && (
           <label className="flex flex-col gap-1">
             <span className="text-xs font-medium text-muted-foreground">
               {t("privateText")}
@@ -289,6 +385,7 @@ function Zeile({
               onChange={(e) => setPrivat(e.target.value)}
             />
           </label>
+          )}
           <div className="flex gap-2">
             <Button onClick={speichern} disabled={pending}>
               {t("save")}
@@ -300,6 +397,9 @@ function Zeile({
         </div>
       ) : (
         <>
+          {/* Sterne nur an der Gastbewertung: an einer Antwort wäre `rating`
+              die Note des GASTES — als unsere Sterne gezeigt eine Falschaussage. */}
+          {!antwort && (
           <div className="flex items-center gap-2">
             <span className="flex items-center gap-0.5">
               {[1, 2, 3, 4, 5].map((i) => (
@@ -316,6 +416,7 @@ function Zeile({
               </span>
             )}
           </div>
+          )}
           {eintrag.text && (
             <p className="text-sm whitespace-pre-line">{eintrag.text}</p>
           )}
@@ -341,7 +442,7 @@ function Zeile({
             onClick={() => aktion(() => sendQueueEntry(eintrag.id))}
           >
             <Icon icon="ph:paper-plane-tilt" className="size-4" />
-            {t("queueSendNow")}
+            {entwurf ? t("queueRelease") : t("queueSendNow")}
           </Button>
         </div>
       )}

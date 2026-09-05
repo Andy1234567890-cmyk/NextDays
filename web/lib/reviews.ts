@@ -43,6 +43,10 @@ export type UnifiedReview = {
   is_replied: boolean;
   /** false, wenn das Antwortfenster des Portals zu ist. */
   can_reply: boolean;
+  /** Bis wann das Portal eine Antwort annimmt; null = nicht gemeldet. */
+  reply_expires_at: string | null;
+  /** Die Antwort kam aus der KI-Warteschlange. */
+  reply_ki: boolean;
   /** myBestDays: null = noch verdeckt (Zwei-Wege-Frist läuft). */
   published_at: string | null;
   /** Portale: Airbnb hält verdeckt, bis beide Seiten abgegeben haben. */
@@ -148,6 +152,10 @@ export type ReviewSummary = {
   count: number;
   average_5: number | null;
   unanswered: number;
+  /** Davon mit geschlossenem Antwortfenster — nicht mehr beantwortbar. */
+  expired_unanswered: number;
+  /** Davon noch verdeckt (Airbnb, zweiseitig) — noch nichts zu beantworten. */
+  hidden_unanswered: number;
   /** Anteil beantworteter Bewertungen (0..1). null bei null Bewertungen. */
   response_rate: number | null;
   by_channel: ChannelSummary[];
@@ -199,6 +207,14 @@ export type QueueEntry = {
   tags: string[];
   sent_at: string | null;
   error: string | null;
+  /** Gastbewertung ODER öffentliche Antwort unter einer Bewertung (0549). */
+  richtung: KiRichtung;
+  ki_erzeugt: boolean;
+  antwort_auf_id: string | null;
+  /** 'entwurf' wartet auf einen Menschen; 'automatisch' geht zur Fälligkeit raus (0566). */
+  zustellart: KiZustellart;
+  /** Portal der zugehörigen Bewertung; myBestDays beim Marktplatz; null = unbekannt. */
+  channel_code: string | null;
 };
 
 export type QueueList = {
@@ -206,6 +222,8 @@ export type QueueList = {
   total: number;
   limit: number;
   offset: number;
+  /** Anzahl je Status über den ganzen Bestand, unabhängig vom Filter. */
+  counts: Record<string, number>;
 };
 
 export type QueuePatch = {
@@ -278,11 +296,15 @@ export type AutoTemplateRequest = {
   property_ids: string[];
 };
 
+export type ReplyState = "offen" | "beantwortet" | "frist_abgelaufen" | "verdeckt";
+
 export type ReviewFilter = {
   source?: ReviewSource;
   propertyId?: string;
   channelCode?: string;
   unanswered?: boolean;
+  /** Antwortstand: offen (beantwortbar) · beantwortet · frist_abgelaufen. */
+  replyState?: ReplyState;
   /** Volltext im Bewertungstext — NICHT im Gastnamen: der ist auf der
    *  Marktplatzseite bewusst maskiert, und eine Namenssuche liesse ihn
    *  Zeichen für Zeichen erraten. */
@@ -359,6 +381,7 @@ export async function listReviews(filter: ReviewFilter = {}): Promise<Result<Rev
   if (filter.propertyId) qs.set("property_id", filter.propertyId);
   if (filter.channelCode) qs.set("channel_code", filter.channelCode);
   if (filter.unanswered) qs.set("unanswered", "true");
+  if (filter.replyState) qs.set("antwort", filter.replyState);
   if (filter.suche) qs.set("suche", filter.suche);
   if (filter.ratingMin != null) qs.set("rating_min", String(filter.ratingMin));
   if (filter.ratingMax != null) qs.set("rating_max", String(filter.ratingMax));
@@ -520,6 +543,7 @@ export async function exportReviewsCsv(
   if (filter.propertyId) qs.set("property_id", filter.propertyId);
   if (filter.channelCode) qs.set("channel_code", filter.channelCode);
   if (filter.unanswered) qs.set("unanswered", "true");
+  if (filter.replyState) qs.set("antwort", filter.replyState);
   if (filter.suche) qs.set("suche", filter.suche);
   if (filter.ratingMin != null) qs.set("rating_min", String(filter.ratingMin));
   if (filter.ratingMax != null) qs.set("rating_max", String(filter.ratingMax));
@@ -634,6 +658,13 @@ export type KiProtokollEintrag = {
   verwendete_fragen: string[];
   grund: string | null;
   created_at: string | null;
+  /** Kontext der beantworteten Bewertung; null bei Test-KI oder Marktplatz. */
+  gast_name: string | null;
+  kanal: string | null;
+  objekt_titel: string | null;
+  /** Stand des Warteschlangen-Eintrags; null = kein Eintrag entstanden. */
+  warteschlange_status: string | null;
+  warteschlange_fehler: string | null;
 };
 
 export type KiProtokollList = { items: KiProtokollEintrag[]; total: number };

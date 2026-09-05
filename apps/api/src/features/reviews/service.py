@@ -14,6 +14,7 @@ ihnen verwehrt, auch wenn sie die Bewertung sehen.
 """
 from __future__ import annotations
 
+import math
 from collections.abc import Callable
 from datetime import UTC, date, datetime, timedelta
 from typing import TYPE_CHECKING, Any, TypeVar
@@ -24,7 +25,12 @@ from supabase import Client
 from src.core.ki import KiError
 from src.core.logging import get_logger
 from src.core.security import AuthContext
-from src.core.supabase import escape_like, get_service_client, load_scoped
+from src.core.supabase import (
+    escape_like,
+    fetch_all_rows,
+    get_service_client,
+    load_scoped,
+)
 from src.features.auth.owner_scope import is_owner, owner_property_ids
 
 from .common import (
@@ -32,12 +38,15 @@ from .common import (
     SCORE_COLUMNS,
     as_dt,
     mask_author,
+    ota_categories,
     plaintext,
+    score_5_from_ten,
     scores_map,
+    seite_laden,
 )
 from .ki_mixin import BewertungsKiMixin
 from .publication import resolve_publication
-from .queue import ReviewQueue
+from .queue import ReviewQueue, kanaele_fuer, ki_antwort_ids, zu_eintrag
 from .schemas import (
     MARKETPLACE_CHANNEL,
     MAX_PAGE_SIZE,
@@ -64,6 +73,7 @@ from .schemas import (
     QueueStatus,
     QueueUpdateRequest,
     RateGuestRequest,
+    ReplyState,
     ReviewAi,
     ReviewListResponse,
     ReviewScale,
@@ -93,7 +103,8 @@ SYSTEM_USER_ID = "00000000-0000-0000-0000-000000000000"
 _OTA_COLUMNS = (
     "id, tenant_id, property_id, channex_review_id, ota, ota_reservation_id, "
     "guest_name, content, overall_score, scores, is_hidden, is_replied, "
-    "is_expired, reply, reply_at, guest_review_sent_at, received_at, created_at, "
+    "is_expired, reply_expires_at, reply, reply_at, guest_review_sent_at, "
+    "received_at, created_at, "
     # KI-Deutung (0501). Mitgelesen statt nachgeladen: sie steht in derselben
     # Zeile, ein zweiter Aufruf je Bewertung wäre N+1 für vier Felder.
     "ki_stimmung, ki_themen, ki_kernaussage, ki_bewertet_at"
@@ -129,16 +140,6 @@ class ReviewError(Exception):
         super().__init__(message)
         self.message = message
         self.status_code = status_code
-
-
-def _score_5_from_ten(value: object) -> float | None:
-    """Portal-Note (0..10) auf 5 Sterne normalisieren. None bleibt None."""
-    if value is None:
-        return None
-    try:
-        return round(float(value) / 2, 2)
-    except (TypeError, ValueError):
-        return None
 
 
 def _to_ai(row: dict) -> ReviewAi | None:
@@ -183,27 +184,6 @@ def _to_ai(row: dict) -> ReviewAi | None:
         kernaussage=row.get("ki_kernaussage"),
         bewertet_at=bewertet,
     )
-
-
-def _ota_categories(raw: object) -> list[CategoryScore]:
-    """``scores``-Array einer Portal-Bewertung → Kategorien. Einträge ohne
-    brauchbare Note werden verworfen, statt eine 0 zu erfinden (Wurzel 4)."""
-    if not isinstance(raw, list):
-        return []
-    out: list[CategoryScore] = []
-    for entry in raw:
-        if not isinstance(entry, dict):
-            continue
-        key = entry.get("category")
-        value = entry.get("score", entry.get("rating"))
-        if not isinstance(key, str) or value is None:
-            continue
-        try:
-            score = float(value)
-        except (TypeError, ValueError):
-            continue
-        out.append(CategoryScore(key=key, score=score, scale=ReviewScale.ten))
-    return out
 
 
 class ReviewsService(BewertungsKiMixin):
@@ -284,6 +264,7 @@ class ReviewsService(BewertungsKiMixin):
         property_id: str | None = None,
         channel_code: str | None = None,
         unanswered: bool = False,
+        reply_state: ReplyState | None = None,
         suche: str | None = None,
         rating_min: float | None = None,
         rating_max: float | None = None,
@@ -316,9 +297,12 @@ class ReviewsService(BewertungsKiMixin):
         items: list[UnifiedReview] = []
         total = 0
 
-        if source in (None, ReviewSource.marketplace) and channel_code in (
-            None,
-            MARKETPLACE_CHANNEL,
+        # Der Marktplatz kennt kein Antwortfenster — „Frist abgelaufen" gibt es
+        # dort nicht, also auch keine Treffer.
+        if (
+            source in (None, ReviewSource.marketplace)
+            and channel_code in (None, MARKETPLACE_CHANNEL)
+            and reply_state not in (ReplyState.frist_abgelaufen, ReplyState.verdeckt)
         ):
             markt, markt_total = self._load_marketplace(
                 db,
@@ -330,6 +314,7 @@ class ReviewsService(BewertungsKiMixin):
                 rating_max=rating_max,
                 sentiment=sentiment,
                 unanswered=unanswered,
+                reply_state=reply_state,
                 limit=bedarf,
             )
             items.extend(markt)
@@ -347,6 +332,7 @@ class ReviewsService(BewertungsKiMixin):
                 rating_max=rating_max,
                 sentiment=sentiment,
                 unanswered=unanswered,
+                reply_state=reply_state,
                 limit=bedarf,
             )
             items.extend(ota)
@@ -362,9 +348,14 @@ class ReviewsService(BewertungsKiMixin):
 
     @staticmethod
     def _sortkey(review: UnifiedReview) -> datetime:
-        """Neueste zuerst. Fehlt der Zeitstempel, sortiert die Bewertung ans
-        Ende statt die Sortierung zu sprengen."""
-        return review.received_at or datetime.min.replace(tzinfo=UTC)
+        """Neueste zuerst — nach dem Quell-Zeitstempel (Wurzel 5b). Fehlt er,
+        zählt unser Eingang nur für die REIHENFOLGE, nie für die Anzeige;
+        fehlt auch der, sortiert die Bewertung ans Ende."""
+        return (
+            review.received_at
+            or review.created_at
+            or datetime.min.replace(tzinfo=UTC)
+        )
 
     def _load_marketplace(  # noqa: PLR0913 — Filter durchgereicht
         self,
@@ -378,6 +369,7 @@ class ReviewsService(BewertungsKiMixin):
         rating_max: float | None = None,
         sentiment: str | None = None,
         unanswered: bool,
+        reply_state: ReplyState | None = None,
         limit: int,
     ) -> tuple[list[UnifiedReview], int]:
         query = (
@@ -393,29 +385,28 @@ class ReviewsService(BewertungsKiMixin):
             query = query.eq("property_id", property_id)
         elif property_ids is not None:
             query = query.in_("property_id", property_ids)
-        if unanswered:
+        if unanswered or reply_state is ReplyState.offen:
             query = query.is_("host_reply", "null")
+        elif reply_state is ReplyState.beantwortet:
+            query = query.not_.is_("host_reply", "null")
         if suche:
             # Nur im Bewertungstext, NICHT im Gastnamen: die Marktplatzseite
             # maskiert den Autor bewusst (`mask_author`), und eine Suche, die
             # den vollen Namen als Filter annimmt, würde ihn Zeichen für
             # Zeichen erraten lassen.
             query = query.ilike("text", f"%{escape_like(suche)}%")
-        # Die Marktplatz-Skala ist 1..5, die Filtergrenzen kommen in 5er-Skala
-        # herein — hier also direkt, beim Portal geteilt durch 2 (siehe unten).
+        # Die Marktplatz-Skala ist 1..5 GANZZAHLIG, die Filtergrenzen kommen
+        # als Kommazahl herein. Ganzzahlig an PostgREST, sonst antwortet die DB
+        # mit `invalid input syntax for type integer: "3.0"` → 422 für die
+        # ganze Liste (live 05.09.2026). ceil/floor halten die Bedeutung:
+        # rating >= 2.5 ⇔ rating >= 3, rating <= 3.5 ⇔ rating <= 3.
         if rating_min is not None:
-            query = query.gte("rating", rating_min)
+            query = query.gte("rating", math.ceil(rating_min))
         if rating_max is not None:
-            query = query.lte("rating", rating_max)
+            query = query.lte("rating", math.floor(rating_max))
         if sentiment:
             query = query.eq("ki_stimmung", sentiment)
-        res = (
-            query.order("created_at", desc=True)
-            .range(0, max(limit, 1) - 1)
-            .execute()
-        )
-        rows = res.data or []
-        total = res.count if res.count is not None else len(rows)
+        rows, total = seite_laden(query.order("created_at", desc=True), limit)
         bereits = self._reservations_mit_gastbewertung(
             db, tenant_id, [str(r["reservation_id"]) for r in rows if r.get("reservation_id")]
         )
@@ -452,6 +443,7 @@ class ReviewsService(BewertungsKiMixin):
         rating_max: float | None = None,
         sentiment: str | None = None,
         unanswered: bool,
+        reply_state: ReplyState | None = None,
         limit: int,
     ) -> tuple[list[UnifiedReview], int]:
         query = (
@@ -468,6 +460,16 @@ class ReviewsService(BewertungsKiMixin):
             query = query.eq("ota", channel_code)
         if unanswered:
             query = query.eq("is_replied", False)
+        if reply_state is ReplyState.offen:
+            query = (
+                query.eq("is_replied", False).eq("is_expired", False).eq("is_hidden", False)
+            )
+        elif reply_state is ReplyState.beantwortet:
+            query = query.eq("is_replied", True)
+        elif reply_state is ReplyState.frist_abgelaufen:
+            query = query.eq("is_replied", False).eq("is_expired", True)
+        elif reply_state is ReplyState.verdeckt:
+            query = query.eq("is_replied", False).eq("is_expired", False).eq("is_hidden", True)
         if suche:
             query = query.ilike("content", f"%{escape_like(suche)}%")
         # Portal-Noten laufen 0..10, die Filtergrenzen kommen in der 5er-Skala
@@ -480,14 +482,9 @@ class ReviewsService(BewertungsKiMixin):
             query = query.lte("overall_score", rating_max * 2)
         if sentiment:
             query = query.eq("ki_stimmung", sentiment)
-        res = (
-            query.order("received_at", desc=True)
-            .range(0, max(limit, 1) - 1)
-            .execute()
-        )
-        rows = res.data or []
-        total = res.count if res.count is not None else len(rows)
-        return [self._to_ota(r) for r in rows], total
+        rows, total = seite_laden(query.order("received_at", desc=True), limit)
+        ki = ki_antwort_ids(db, tenant_id, [str(r["id"]) for r in rows])
+        return [self._to_ota(r, ki) for r in rows], total
 
     # ------------------------------------------------------------- Abbildungen
     @staticmethod
@@ -528,7 +525,7 @@ class ReviewsService(BewertungsKiMixin):
         )
 
     @staticmethod
-    def _to_ota(row: dict) -> UnifiedReview:
+    def _to_ota(row: dict, ki_antworten: set[str] | None = None) -> UnifiedReview:
         prop = row.get("properties") or {}
         score = row.get("overall_score")
         return UnifiedReview(
@@ -541,16 +538,24 @@ class ReviewsService(BewertungsKiMixin):
             text=row.get("content"),
             score=float(score) if score is not None else None,
             scale=ReviewScale.ten,
-            score_5=_score_5_from_ten(score),
-            categories=_ota_categories(row.get("scores")),
+            score_5=score_5_from_ten(score),
+            categories=ota_categories(row.get("scores")),
             reply=row.get("reply"),
             reply_at=as_dt(row.get("reply_at")),
             is_replied=bool(row.get("is_replied")),
-            can_reply=not bool(row.get("is_expired")),
+            # Verdeckt heisst: das Portal zeigt uns die Bewertung noch nicht —
+            # auf etwas Unsichtbares lässt sich nicht antworten.
+            can_reply=not bool(row.get("is_expired")) and not bool(row.get("is_hidden")),
+            reply_expires_at=as_dt(row.get("reply_expires_at")),
+            reply_ki=str(row.get("id")) in (ki_antworten or set()),
             is_hidden=bool(row.get("is_hidden")),
             ota_reservation_id=row.get("ota_reservation_id"),
             guest_rated=bool(row.get("guest_review_sent_at")),
-            received_at=as_dt(row.get("received_at") or row.get("created_at")),
+            # Wurzel 5b: `received_at` ist der Zeitpunkt beim Portal. Fehlt er,
+            # bleibt er leer — `created_at` ist UNSER Spiegel-Zeitpunkt und
+            # würde als Bewertungsdatum ausgegeben eine Falschaussage sein.
+            received_at=as_dt(row.get("received_at")),
+            created_at=as_dt(row.get("created_at")),
             ai=_to_ai(row),
         )
 
@@ -565,30 +570,43 @@ class ReviewsService(BewertungsKiMixin):
 
         je_kanal: dict[str, list[float | None]] = {}
         offen: dict[str, int] = {}
+        frist_zu = 0
+        verdeckt = 0
 
+        # `fetch_all_rows`: PostgREST kappt bei 1000 Zeilen (config.toml
+        # max_rows). Ohne Paginierung stünden Durchschnitt und Zähler ab der
+        # tausendsten Bewertung still falsch neben einer Liste, die exakt zählt.
         markt = db.table("reviews").select(
-            "rating, host_reply, properties!inner(tenant_id)"
+            "id, rating, host_reply, properties!inner(tenant_id)"
         ).eq("properties.tenant_id", tenant_id)
         if eigene is not None:
             markt = markt.in_("property_id", eigene)
-        for row in (markt.execute().data or []):
+        for row in fetch_all_rows(markt.order("id")):
             je_kanal.setdefault(MARKETPLACE_CHANNEL, []).append(float(row["rating"]))
             if not row.get("host_reply"):
                 offen[MARKETPLACE_CHANNEL] = offen.get(MARKETPLACE_CHANNEL, 0) + 1
 
         ota = (
             db.table("channex_review")
-            .select("ota, overall_score, is_replied")
+            .select("id, ota, overall_score, is_replied, is_expired, is_hidden")
             .eq("tenant_id", tenant_id)
             .eq("is_archived", False)
         )
         if eigene is not None:
             ota = ota.in_("property_id", eigene)
-        for row in (ota.execute().data or []):
+        for row in fetch_all_rows(ota.order("id")):
             code = row.get("ota") or "unbekannt"
-            je_kanal.setdefault(code, []).append(_score_5_from_ten(row.get("overall_score")))
+            je_kanal.setdefault(code, []).append(score_5_from_ten(row.get("overall_score")))
+            # `unanswered` zählt, was NICHT beantwortet ist — auch bei
+            # abgelaufener Frist. Die Kachel heisst „Beantwortet"; wer
+            # Abgelaufene herausrechnet, zeigt 160/188 bei 30 echten Antworten
+            # (live 05.09.2026). Die Frist zeigt die Liste je Zeile.
             if not row.get("is_replied"):
                 offen[code] = offen.get(code, 0) + 1
+                if row.get("is_expired"):
+                    frist_zu += 1
+                elif row.get("is_hidden"):
+                    verdeckt += 1
 
         kanaele: list[ChannelSummary] = []
         alle: list[float] = []
@@ -612,6 +630,8 @@ class ReviewsService(BewertungsKiMixin):
             count=gesamt,
             average_5=round(sum(alle) / len(alle), 2) if alle else None,
             unanswered=unbeantwortet,
+            expired_unanswered=frist_zu,
+            hidden_unanswered=verdeckt,
             response_rate=(
                 round((gesamt - unbeantwortet) / gesamt, 4) if gesamt else None
             ),
@@ -633,7 +653,8 @@ class ReviewsService(BewertungsKiMixin):
                     [str(row["reservation_id"])] if row.get("reservation_id") else [],
                 ),
             )
-        return self._to_ota(self._own_ota(db, tenant_id, ctx, review_id))
+        row = self._own_ota(db, tenant_id, ctx, review_id)
+        return self._to_ota(row, ki_antwort_ids(db, tenant_id, [str(row["id"])]))
 
     def _own_marketplace(
         self, db: Client, tenant_id: str, ctx: AuthContext, review_id: str
@@ -698,13 +719,29 @@ class ReviewsService(BewertungsKiMixin):
             raise ReviewError(
                 "Die Antwortfrist dieses Portals ist abgelaufen.", status_code=409
             )
+        if row.get("is_replied"):
+            # Idempotenz VOR dem Seiteneffekt (Wurzel 2): Portale nehmen eine
+            # Antwort je Bewertung; ein Doppelklick, ein Retry oder ein noch
+            # geplanter KI-Entwurf darf keine zweite einreichen.
+            raise ReviewError(
+                "Diese Bewertung ist bereits beantwortet — Antworten beim "
+                "Portal lassen sich nicht ändern.",
+                status_code=409,
+            )
         # Erst zum Portal, dann in den eigenen Bestand — reply_review spiegelt
         # den Erfolg selbst (Wurzel 1). Fehler des Portals kommen als
         # ChannelManagerError und werden hier zu unserem Fehlerbild.
         self._portal_call(
             lambda cm: cm.reply_review(ctx, str(row["channex_review_id"]), clean)
         )
-        return self._to_ota(self._own_ota(db, tenant_id, ctx, review_id))
+        # Gegenzustand (Wurzel 1): ein noch geplanter Antwort-Entwurf zu
+        # dieser Bewertung ist damit gegenstandslos. Der Eintrag, der gerade
+        # aus der Warteschlange sendet, ist schon 'gesendet' und bleibt es.
+        self.queue().erledigt_durch_handarbeit(
+            tenant_id, review_id=review_id, richtung="antwort"
+        )
+        row = self._own_ota(db, tenant_id, ctx, review_id)
+        return self._to_ota(row, ki_antwort_ids(db, tenant_id, [str(row["id"])]))
 
     def delete_reply(self, ctx: AuthContext, review_id: str) -> None:
         """Antwort entfernen — nur auf dem Marktplatz. Portale kennen kein
@@ -921,7 +958,8 @@ class ReviewsService(BewertungsKiMixin):
         )
         if not aus_warteschlange:
             self.queue().erledigt_durch_handarbeit(tenant_id, review_id=review_id)
-        return self._to_ota(self._own_ota(db, tenant_id, ctx, review_id))
+        row = self._own_ota(db, tenant_id, ctx, review_id)
+        return self._to_ota(row, ki_antwort_ids(db, tenant_id, [str(row["id"])]))
 
     # -------------------------------------------------------------- Automatik
     def get_automation(self, ctx: AuthContext) -> AutomationConfig:
@@ -1043,7 +1081,7 @@ class ReviewsService(BewertungsKiMixin):
         )
         if eigene is not None:
             markt = markt.in_("property_id", eigene)
-        for row in (markt.execute().data or []):
+        for row in fetch_all_rows(markt.order("created_at")):
             punkte.append({
                 "tag": str(row["created_at"])[:10],
                 "score_5": float(row["rating"]),
@@ -1070,17 +1108,17 @@ class ReviewsService(BewertungsKiMixin):
         )
         if eigene is not None:
             ota = ota.in_("property_id", eigene)
-        for row in (ota.execute().data or []):
+        for row in fetch_all_rows(ota.order("received_at")):
             punkte.append({
                 "tag": str(row.get("received_at") or row["created_at"])[:10],
-                "score_5": _score_5_from_ten(row.get("overall_score")),
+                "score_5": score_5_from_ten(row.get("overall_score")),
                 "replied": bool(row.get("is_replied")),
                 "property_id": (
                     str(row["property_id"]) if row.get("property_id") else None
                 ),
                 "kanal": row.get("ota") or "unbekannt",
                 "categories": [
-                    (c.key, c.score / 2) for c in _ota_categories(row.get("scores"))
+                    (c.key, c.score / 2) for c in ota_categories(row.get("scores"))
                 ],
             })
         return punkte
@@ -1215,28 +1253,30 @@ class ReviewsService(BewertungsKiMixin):
             offset=offset,
             richtung=richtung.value if richtung else None,
         )
+        kanaele = kanaele_fuer(db, tenant_id, rows)
         return QueueListResponse(
-            items=[self._to_queue_entry(r) for r in rows],
+            items=[zu_eintrag(r, kanaele) for r in rows],
             total=total,
             limit=limit,
             offset=offset,
+            counts=self.queue().status_counts(tenant_id, property_ids=eigene),
         )
 
     def update_queue_entry(
         self, ctx: AuthContext, entry_id: str, req: QueueUpdateRequest
     ) -> QueueEntry:
-        _, tenant_id = self._require_write(ctx)
-        return self._to_queue_entry(
-            self.queue().update(tenant_id, entry_id, req.model_dump(exclude_none=True))
-        )
+        db, tenant_id = self._require_write(ctx)
+        row = self.queue().update(tenant_id, entry_id, req.model_dump(exclude_none=True))
+        return zu_eintrag(row, kanaele_fuer(db, tenant_id, [row]))
 
     def skip_queue_entry(self, ctx: AuthContext, entry_id: str) -> QueueEntry:
-        _, tenant_id = self._require_write(ctx)
-        return self._to_queue_entry(self.queue().skip(tenant_id, entry_id))
+        db, tenant_id = self._require_write(ctx)
+        row = self.queue().skip(tenant_id, entry_id)
+        return zu_eintrag(row, kanaele_fuer(db, tenant_id, [row]))
 
     def send_queue_entry(self, ctx: AuthContext, entry_id: str) -> QueueEntry:
         """Jetzt abschicken statt auf die Fälligkeit zu warten. Unumkehrbar."""
-        _, tenant_id = self._require_write(ctx)
+        db, tenant_id = self._require_write(ctx)
         warteschlange = self.queue()
         entry = warteschlange.own(tenant_id, entry_id)
         if entry["status"] != "geplant":
@@ -1244,48 +1284,8 @@ class ReviewsService(BewertungsKiMixin):
                 "Nur geplante Bewertungen lassen sich abschicken.", status_code=409
             )
         warteschlange.send_entry(self, tenant_id, entry)
-        return self._to_queue_entry(warteschlange.own(tenant_id, entry_id))
-
-    @staticmethod
-    def _to_queue_entry(row: dict) -> QueueEntry:
-        prop = row.get("properties") or {}
-        send_at = as_dt(row["send_at"])
-        expires_at = as_dt(row.get("expires_at"))
-        jetzt = datetime.now(UTC)
-        tags = row.get("tags")
-        return QueueEntry(
-            id=str(row["id"]),
-            source=ReviewSource(row["source"]),
-            status=QueueStatus(row["status"]),
-            property_id=str(row["property_id"]) if row.get("property_id") else None,
-            property_title=prop.get("title"),
-            guest_name=row.get("guest_name"),
-            richtung=KiRichtung(row.get("richtung") or "gast_bewerten"),
-            ki_erzeugt=bool(row.get("ki_erzeugt")),
-            antwort_auf_id=(
-                str(row["antwort_auf_id"]) if row.get("antwort_auf_id") else None
-            ),
-            reservation_id=(
-                str(row["reservation_id"]) if row.get("reservation_id") else None
-            ),
-            review_id=str(row["review_id"]) if row.get("review_id") else None,
-            send_at=send_at,
-            expires_at=expires_at,
-            days_until_send=(send_at - jetzt).days if send_at else None,
-            days_left=(expires_at - jetzt).days if expires_at else None,
-            rating=int(row["rating"]),
-            text=row.get("text"),
-            private_text=row.get("private_text"),
-            scores=GuestScores(
-                cleanliness=row.get("score_cleanliness"),
-                communication=row.get("score_communication"),
-                house_rules=row.get("score_house_rules"),
-            ),
-            recommended=bool(row.get("recommended", True)),
-            tags=[str(t) for t in tags] if isinstance(tags, list) else [],
-            sent_at=as_dt(row.get("sent_at")),
-            error=row.get("error"),
-        )
+        row = warteschlange.own(tenant_id, entry_id)
+        return zu_eintrag(row, kanaele_fuer(db, tenant_id, [row]))
 
     # ------------------------------------------------ Auto-Bewertungs-Vorlagen
     def _vorlagen(self, db: Client) -> VorlagenStore:
@@ -1293,7 +1293,13 @@ class ReviewsService(BewertungsKiMixin):
 
     def list_templates(self, ctx: AuthContext) -> AutoTemplateList:
         db, tenant_id = self._require(ctx)
-        return AutoTemplateList(items=self._vorlagen(db).liste(tenant_id))
+        eigene = self._visible_property_ids(db, ctx)
+        items = self._vorlagen(db).liste(tenant_id)
+        if eigene is not None:
+            # Wurzel 9: derselbe Scope wie Liste und Qualität — ein Eigentümer
+            # sieht Vorlagen (Texte, Objekt-Zuordnung) nur für SEINE Objekte.
+            items = [v for v in items if set(v.property_ids) & set(eigene)]
+        return AutoTemplateList(items=items)
 
     def get_template(self, ctx: AuthContext, vorlagen_id: str) -> AutoTemplate:
         db, tenant_id = self._require(ctx)

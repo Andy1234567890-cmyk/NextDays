@@ -394,6 +394,7 @@ def test_handbewertung_raeumt_geplanten_eintrag_ab() -> None:
                 "review_id": "r-1",
                 "reservation_id": None,
                 "status": "geplant",
+                "richtung": "gast_bewerten",
                 "error": None,
             }
         ]
@@ -570,7 +571,7 @@ def test_export_zerlegt_booking_rohtext() -> None:
 
     assert (
         _lesbarer_text("Headline: Super\r\n\r\nPositive: Schön.\r\n\r\nNegative: Laut.")
-        == "Super | + Schön. | - Laut."
+        == "Super | Positiv: Schön. | Negativ: Laut."
     )
 
 
@@ -580,7 +581,7 @@ def test_export_laesst_leeren_abschnitt_weg() -> None:
     from src.features.reviews.export import _lesbarer_text
 
     assert _lesbarer_text("Headline: \r\n\r\nPositive: Schön.\r\n\r\nNegative: ") == (
-        "+ Schön."
+        "Positiv: Schön."
     )
 
 

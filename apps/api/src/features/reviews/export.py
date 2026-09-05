@@ -36,6 +36,7 @@ SPALTEN: dict[str, str] = {
     "text": "Bewertung",
     "reply": "Antwort",
     "replied": "Beantwortet",
+    "reply_deadline": "Antwortfrist bis",
     "hidden": "Verdeckt",
     "ai_sentiment": "Stimmung (KI)",
     "ai_themes": "Themen (KI)",
@@ -96,11 +97,20 @@ def _lesbarer_text(roh: str | None) -> str:
     stuecke = []
     if teile["headline"]:
         stuecke.append(" ".join(teile["headline"]))
+    # Als Wort, nicht als Zeichen: eine Zelle, die mit „+" oder „-" beginnt,
+    # liest Excel als Formel (#NAME?) — dieselbe Klasse wie „=" und „@".
     if teile["positive"]:
-        stuecke.append("+ " + " ".join(teile["positive"]))
+        stuecke.append("Positiv: " + " ".join(teile["positive"]))
     if teile["negative"]:
-        stuecke.append("- " + " ".join(teile["negative"]))
+        stuecke.append("Negativ: " + " ".join(teile["negative"]))
     return " | ".join(stuecke)
+
+
+def _formelsicher(wert: str) -> str:
+    """CSV-Injektion (Wurzel 8): Gast- und Portaltext sind fremder Input. Ein
+    führendes ``=``/``+``/``-``/``@`` würde in Excel/LibreOffice als Formel
+    ausgeführt — ein Apostroph davor macht daraus Text."""
+    return "'" + wert if wert and wert[0] in "=+-@" else wert
 
 
 def _ja_nein(wert: bool) -> str:
@@ -135,6 +145,12 @@ _ZELLE: dict[str, Callable[[UnifiedReview], str]] = {
     "text": lambda r: _lesbarer_text(r.text),
     "reply": lambda r: r.reply or "",
     "replied": lambda r: _ja_nein(r.is_replied),
+    # Leer, wenn das Portal keine Frist meldet — kein geratenes Datum.
+    "reply_deadline": lambda r: (
+        r.reply_expires_at.strftime("%Y-%m-%d")
+        if isinstance(r.reply_expires_at, datetime)
+        else ""
+    ),
     "hidden": lambda r: _ja_nein(r.is_hidden),
     "ai_sentiment": lambda r: r.ai.stimmung.value if r.ai else "",
     "ai_themes": lambda r: (
@@ -162,5 +178,5 @@ def als_csv(reviews: list[UnifiedReview], spalten: list[str] | None = None) -> s
     schreiber = csv.writer(puffer, delimiter=";", quoting=csv.QUOTE_MINIMAL)
     schreiber.writerow([SPALTEN[s] for s in gewaehlt])
     for review in reviews:
-        schreiber.writerow([_ZELLE[s](review) for s in gewaehlt])
+        schreiber.writerow([_formelsicher(_ZELLE[s](review)) for s in gewaehlt])
     return "﻿" + puffer.getvalue()

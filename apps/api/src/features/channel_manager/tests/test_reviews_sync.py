@@ -216,3 +216,31 @@ def test_einzelabruf_ohne_aktives_mapping_spiegelt_nicht() -> None:
     channex = _Channex([], einzeln={"r-1": _review("r-1", CX_FREMD)})
     assert _Sync(db, channex).sync_single_review("r-1") is False
     assert db.tables["channex_review"] == []
+
+
+def test_antwort_als_objekt_wird_gelesen_und_gilt_als_beantwortet() -> None:
+    # Channex liefert `reply` als Objekt {"reply": "…"}; vorher fiel es still
+    # auf None und die Bewertung galt als unbeantwortet.
+    db = _db()
+    sync = _Sync(db, _Channex([[_review("r-1", CX_A, reply={"reply": "Danke!"})]]))
+    sync._pull_reviews(db)
+    zeile = db.tables["channex_review"][0]
+    assert zeile["reply"] == "Danke!"
+    assert zeile["is_replied"] is True
+
+
+def test_abgleich_setzt_eigene_antwort_nicht_zurueck() -> None:
+    # Wurzel 1/2: nach unserem Reply meldet Channex die Antwort erst verzögert.
+    # Ein Abgleich dazwischen darf „beantwortet" nicht auf „offen" drehen —
+    # sonst wäre eine zweite Antwort möglich (live 05.09.2026, vier Fälle).
+    db = _db()
+    sync = _Sync(db, _Channex([[_review("r-1", CX_A)]] * 2))
+    sync._pull_reviews(db)
+    zeile = db.tables["channex_review"][0]
+    zeile["reply"] = "Unsere Antwort"
+    zeile["is_replied"] = True
+    sync._channex.calls = 0
+    sync._pull_reviews(db)
+    zeile = db.tables["channex_review"][0]
+    assert zeile["reply"] == "Unsere Antwort"
+    assert zeile["is_replied"] is True

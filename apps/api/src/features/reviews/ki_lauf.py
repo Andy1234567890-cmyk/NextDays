@@ -3,7 +3,9 @@
 Was hier passiert: Für Bewertungen, die noch keine Antwort haben, und für
 Gäste, die noch nicht bewertet sind, erzeugt die KI einen Text und legt ihn als
 ENTWURF in ``guest_review_queue``. Der Versand ist derselbe wie bisher
-(``ReviewQueue.send_due``) — diese Datei schickt nichts.
+(``ReviewQueue.send_due``) — diese Datei schickt nichts. Die entschiedene
+Zustellart steht AM EINTRAG (``zustellart``, 0566): ``send_due`` nimmt nur
+'automatisch', ein 'entwurf' wartet auf „Abschicken" durch einen Menschen.
 
 **Warum die bestehende Warteschlange und keine zweite.** Sie kann bereits
 alles, was hier gebraucht wird: Fälligkeit, Sichtbarkeit, Ändern,
@@ -25,6 +27,7 @@ nicht ändern.
 """
 from __future__ import annotations
 
+import math
 from datetime import UTC, datetime, timedelta
 
 from postgrest.exceptions import APIError
@@ -44,7 +47,7 @@ from .ki_text import (
     katalog_laden,
     text_erzeugen,
 )
-from .schemas import KiRichtung, KiSettings
+from .schemas import KiRichtung, KiSettings, KiZustellart
 
 log = get_logger("nextdays.reviews.ki_lauf")
 
@@ -163,7 +166,14 @@ class BewertungsKiLauf:
         self, tenant_id: str, zeilen: list[dict]
     ) -> list[dict]:
         """Bewertungen, für die noch kein Antwort-Entwurf existiert — egal in
-        welchem Status. Ein übersprungener Entwurf darf NICHT wiederkommen."""
+        welchem Status. Ein übersprungener Entwurf darf NICHT wiederkommen.
+
+        Zusätzlich zählt das PROTOKOLL: die KI schreibt je Bewertung höchstens
+        einmal. Live 05.09.2026: ein Text bat um menschliche Prüfung
+        („Bewertung auf Italienisch"), blieb ohne Warteschlangen-Eintrag, und
+        eine Stunde später erzeugte der Tick ihn neu — diesmal ohne Bitte —
+        und schickte ihn. Ein zweiter Versuch ist kein zweiter Blick, sondern
+        Würfeln, bis das Modell keine Bedenken mehr hat."""
         if not zeilen:
             return []
         ids = [str(z["id"]) for z in zeilen]
@@ -178,6 +188,19 @@ class BewertungsKiLauf:
             ).data
             or []
             if x.get("antwort_auf_id")
+        }
+        vorhanden |= {
+            str(x["bezug_id"])
+            for x in (
+                self._db.table("review_ki_protokoll")
+                .select("bezug_id")
+                .eq("tenant_id", tenant_id)
+                .eq("richtung", KiRichtung.antwort.value)
+                .in_("bezug_id", ids)
+                .execute()
+            ).data
+            or []
+            if x.get("bezug_id")
         }
         return [z for z in zeilen if str(z["id"]) not in vorhanden]
 
@@ -208,12 +231,32 @@ class BewertungsKiLauf:
                 objekt_titel=self._titel(tenant_id, bewertung.get("property_id")),
                 ota_name=bewertung.get("ota"),
             ),
+            bezug_id=str(bewertung["id"]),
         )
         if vorschlag is None:
             return False
         zustellart, grund = self._store.zustellart_entscheiden(
             settings, KiRichtung.antwort.value, note, vorschlag.mensch_pruefen
         )
+        if not vorschlag.text.strip():
+            # Das Modell hat NUR die Bitte um Prüfung geliefert. Kein Eintrag
+            # ohne Text — aber sichtbar im Protokoll, und der Bezug ist damit
+            # abgehakt: kein neuer Versuch im nächsten Tick.
+            self._store.protokollieren(
+                tenant_id,
+                richtung=KiRichtung.antwort.value,
+                quelle="ota",
+                bezug_id=str(bewertung["id"]),
+                note=note,
+                eingabe=text,
+                ergebnis="",
+                zustellart=KiZustellart.entwurf.value,
+                gesendet=False,
+                verwendete_fragen=vorschlag.verwendete_fragen,
+                grund=grund or "Modell lieferte keinen Text — ein Mensch antwortet.",
+                antwort=vorschlag.antwort,
+            )
+            return False
         angelegt = self._in_warteschlange(
             tenant_id,
             {
@@ -226,12 +269,21 @@ class BewertungsKiLauf:
                 "rating": note or NOTE_LOB,
                 "text": vorschlag.text,
                 "ki_erzeugt": True,
+                # Die Zustellart steht AM EINTRAG: der Versandlauf nimmt nur
+                # 'automatisch'. Vorher stand sie nur in den Einstellungen,
+                # und `send_due` schickte Entwürfe im selben Tick (0566).
+                "zustellart": zustellart.value,
                 "send_at": _faellig(jetzt, settings, zustellart.value),
                 # Das Fenster des Portals kennen wir nicht sicher; `is_expired`
                 # im Spiegel entscheidet beim Absenden. Kein geratenes Datum.
                 "expires_at": None,
             },
         )
+        if not angelegt:
+            # Steht schon (UNIQUE) oder hat keinen Text: kein Protokoll für
+            # etwas, das nirgends liegt — sonst zählt die Spur Texte, die es
+            # in der Warteschlange nie gab.
+            return False
         self._store.protokollieren(
             tenant_id,
             richtung=KiRichtung.antwort.value,
@@ -246,7 +298,7 @@ class BewertungsKiLauf:
             grund=grund,
             antwort=vorschlag.antwort,
         )
-        return angelegt
+        return True
 
     # ------------------------------------ Richtung 2: Wir bewerten den Gast
     def _gastbewertungen_erzeugen(
@@ -292,6 +344,7 @@ class BewertungsKiLauf:
                     gast_name=eintrag.get("guest_name"),
                     objekt_titel=self._titel(tenant_id, eintrag.get("property_id")),
                 ),
+                bezug_id=str(eintrag.get("reservation_id") or eintrag["id"]),
             )
             if vorschlag is None:
                 continue
@@ -303,8 +356,15 @@ class BewertungsKiLauf:
             )
             # Nur den Text nachtragen — Fälligkeit und Note der Zeile bleiben,
             # sie stammen aus `fill` und dessen Regeln (Wurzel 1).
+            # Mit der Zustellart der KI-Einstellung: ein Text, den die KI
+            # geschrieben hat, geht bei 'entwurf' nicht von selbst raus, auch
+            # wenn die Vorlagen-Automatik die Zeile als 'automatisch' anlegte.
             self._db.table("guest_review_queue").update(
-                {"text": vorschlag.text, "ki_erzeugt": True}
+                {
+                    "text": vorschlag.text,
+                    "ki_erzeugt": True,
+                    "zustellart": zustellart.value,
+                }
             ).eq("id", eintrag["id"]).eq("tenant_id", tenant_id).eq(
                 "status", "geplant"
             ).execute()
@@ -326,12 +386,13 @@ class BewertungsKiLauf:
         return gezaehlt
 
     # --------------------------------------------------------------- Hilfen
-    def _erzeugen(
+    def _erzeugen(  # noqa: PLR0913 — ein Lauf, alles durchgereicht
         self,
         tenant_id: str,
         settings: KiSettings,
         katalog: dict[str, str],
         lage: Bewertungslage,
+        bezug_id: str | None = None,
     ) -> Textvorschlag | None:
         """Einen Text erzeugen und die Nutzung buchen.
 
@@ -356,6 +417,21 @@ class BewertungsKiLauf:
                 richtung=lage.richtung,
                 status=exc.status_code,
                 fehler=exc.message[:200],
+            )
+            # In die Spur, nicht nur ins Server-Log: der Betrieb sieht im
+            # Protokoll „KI-Fehler (429): Tageslimit erreicht" statt nichts.
+            self._store.protokollieren(
+                tenant_id,
+                richtung=lage.richtung,
+                quelle="ota" if lage.ota_name else "marketplace",
+                bezug_id=bezug_id,
+                note=lage.note,
+                eingabe=lage.gast_text or "",
+                ergebnis="",
+                zustellart=KiZustellart.entwurf.value,
+                gesendet=False,
+                verwendete_fragen=[],
+                grund=f"KI-Fehler ({exc.status_code}): {exc.message}",
             )
             return None
         buchen(
@@ -414,10 +490,13 @@ def _faellig(jetzt: datetime, settings: KiSettings, zustellart: str) -> str:
 def _note_auf_fuenf(roh: object) -> int | None:
     """Portal-Note auf die 1..5-Skala bringen.
 
-    Channex liefert 0..10 (Booking.com) ODER 1..5 (Airbnb) — welche, hängt am
-    Portal. Ein Wert über 5 kann nur die Zehnerskala sein; darunter ist die
-    Zuordnung eindeutig. Kein geratener Skalenfaktor bei fehlendem Wert
-    (Wurzel 4): dann gibt es keine Note, und der Prompt sagt das auch.
+    ``channex_review.overall_score`` ist für JEDES Portal 0..10 (0262: Channex
+    normalisiert auch Airbnb darauf; live 05.09.2026: Airbnb 6..10, Booking
+    7..10). Dieselbe Rechnung wie ``_score_5_from_ten`` in der Liste — vorher
+    galt hier „≤ 5 ist schon die Sternskala", und eine 4/10 (zwei Sterne)
+    wurde als Vier-Sterne-Lob beantwortet, an der Schwelle vorbei. Kein
+    geratener Wert bei fehlender Note (Wurzel 4): dann gibt es keine, und der
+    Prompt sagt das auch.
     """
     if roh is None:
         return None
@@ -427,9 +506,8 @@ def _note_auf_fuenf(roh: object) -> int | None:
         return None
     if wert <= 0:
         return None
-    if wert > 5:
-        wert = wert / 2
-    return max(1, min(5, round(wert)))
+    # Kaufmännisch runden (2,5 → 3), nicht Pythons Banker-Rundung (2,5 → 2).
+    return max(1, min(5, math.floor(wert / 2 + 0.5)))
 
 
 def _als_note(roh: object) -> int | None:

@@ -8,6 +8,7 @@ mitsamt ihrer Skala erhalten, damit die Anzeige nichts erfindet (Wurzel 4).
 """
 from datetime import date, datetime
 from enum import StrEnum
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -129,6 +130,11 @@ class UnifiedReview(BaseModel):
     is_replied: bool = False
     # Antwort noch möglich? Portale schließen ihr Antwortfenster (is_expired).
     can_reply: bool = True
+    # Bis wann das Portal eine Antwort annimmt (Channex `expired_at`, 0567).
+    # None = vom Portal nicht gemeldet — kein geratenes Datum.
+    reply_expires_at: datetime | None = None
+    # Die Antwort stammt aus der KI-Warteschlange (ki_erzeugt, gesendet).
+    reply_ki: bool = False
     # myBestDays: double-blind — None heißt verdeckt.
     published_at: datetime | None = None
     # Portale: Airbnb hält die Bewertung verdeckt, bis beide Seiten abgegeben haben.
@@ -138,10 +144,29 @@ class UnifiedReview(BaseModel):
     # Betrieb hat den Gast bereits bewertet (Zwei-Wege).
     guest_rated: bool = False
     received_at: datetime | None = None
+    # UNSER Eingang (Spiegel/Anlage) — nur Sortier-Rückfall und „Eingang bei
+    # uns", nie als Zeitpunkt beim Portal ausgeben (Wurzel 5b).
+    created_at: datetime | None = None
     # KI-Deutung (0501). None heißt „noch nicht ausgewertet" — ausdrücklich
     # nicht „nichts gefunden". Ohne diese Unterscheidung sähe eine Bewertung,
     # die der Nachlauf noch nicht erreicht hat, aus wie eine ohne Aussage.
     ai: ReviewAi | None = None
+
+
+class ReplyState(StrEnum):
+    """Antwortstand einer Bewertung — der Filter der Liste.
+
+    „Offen" heisst beantwortbar. Eine unbeantwortete Bewertung mit
+    geschlossenem Antwortfenster ist kein Handlungsbedarf mehr; sie als „offen"
+    zu führen war die Aufforderung zu etwas, das nicht mehr geht.
+    """
+
+    offen = "offen"
+    beantwortet = "beantwortet"
+    frist_abgelaufen = "frist_abgelaufen"
+    # Airbnb hält die Bewertung verdeckt, bis beide Seiten abgegeben haben —
+    # bis dahin gibt es nichts zu beantworten. Kein „offen".
+    verdeckt = "verdeckt"
 
 
 class ReviewListResponse(BaseModel):
@@ -163,7 +188,13 @@ class ReviewSummary(BaseModel):
 
     count: int = 0
     average_5: float | None = None
+    # Alles ohne Antwort — auch mit geschlossenem Fenster.
     unanswered: int = 0
+    # Davon: Antwortfenster des Portals zu.
+    expired_unanswered: int = 0
+    # Davon: noch verdeckt (Airbnb, zweiseitig) — noch nichts zu beantworten.
+    # `unanswered - expired - hidden` ist das, was der Betrieb jetzt tun KANN.
+    hidden_unanswered: int = 0
     # Anteil beantworteter Bewertungen (0..1). None, wenn es keine gibt —
     # 100 % bei null Bewertungen wäre eine Lüge (Wurzel 4).
     response_rate: float | None = None
@@ -221,7 +252,10 @@ class AutomationConfig(BaseModel):
     """Automatik je Betrieb: Gast automatisch bewerten + Erinnerung an den Gast."""
 
     auto_review_active: bool = False
-    auto_review_after_days: int = Field(default=3, ge=0, le=30)
+    # Höchstens 13: nach 14 Tagen endet das Zwei-Wege-Fenster (DOUBLE_BLIND_
+    # DAYS) — ein längerer Vorlauf liesse jeden Eintrag VOR dem Versand
+    # „abgelaufen" werden, still und ohne Fehler.
+    auto_review_after_days: int = Field(default=3, ge=0, le=13)
     # Nur bewerten, wenn der Gast selbst mindestens so gut bewertet hat.
     # None = immer bewerten.
     auto_review_min_rating: int | None = Field(default=None, ge=1, le=5)
@@ -291,6 +325,14 @@ class QueueEntry(BaseModel):
     # Freigabe sehen, was ein Mensch und was ein Modell geschrieben hat.
     ki_erzeugt: bool = False
     antwort_auf_id: str | None = None
+    # Geht der Eintrag zur Fälligkeit von selbst raus oder wartet er auf einen
+    # Menschen (0566)? Die Oberfläche zeigt daran „geht am … raus" oder
+    # „wartet auf Freigabe" — nie ein Fälligkeitsdatum an einem Entwurf.
+    zustellart: KiZustellart = KiZustellart.automatisch
+    # Portal der Bewertung, auf die geantwortet wird bzw. deren Gast bewertet
+    # wird (aus `channex_review.ota`). None beim Marktplatz — dort ist der
+    # Kanal die Quelle selbst.
+    channel_code: str | None = None
 
 
 class QueueListResponse(BaseModel):
@@ -298,6 +340,10 @@ class QueueListResponse(BaseModel):
     total: int = 0
     limit: int
     offset: int
+    # Anzahl je Status über den ganzen Bestand (unabhängig vom Filter). Die
+    # Oberfläche zeigt sie im Filter: „Geplant (0) · Gesendet (13)" — sonst
+    # stand bei leerem „geplant" nur „nichts", obwohl 13 Texte raus waren.
+    counts: dict[str, int] = {}
 
 
 class QueueUpdateRequest(BaseModel):
@@ -472,7 +518,7 @@ class AutoTemplateRequest(BaseModel):
 
     name: str = Field(min_length=1, max_length=120)
     aktiv: bool = True
-    nach_tagen: int = Field(default=3, ge=0, le=30)
+    nach_tagen: int = Field(default=3, ge=0, le=13)
     note: int = Field(default=5, ge=1, le=5)
     min_gastnote: int | None = Field(default=None, ge=1, le=5)
     texte: list[str] = Field(default_factory=list, max_length=MAX_TEXTE)
@@ -533,7 +579,8 @@ class KiSettings(BaseModel):
     zustellart_antwort: KiZustellart = KiZustellart.entwurf
     # Unter dieser Note bleibt die ANTWORT Entwurf, auch bei 'automatisch'.
     antwort_mensch_ab_note: int | None = Field(default=None, ge=1, le=5)
-    tonfall: str = "freundlich"
+    # Deckungsgleich mit dem DB-CHECK (0549) — sonst 500 statt 422.
+    tonfall: Literal["freundlich", "formell", "locker", "herzlich"] = "freundlich"
     unterschrift: str | None = Field(default=None, max_length=300)
     sprache: str = Field(default="auto", min_length=2, max_length=10)
     verzoegerung_minuten: int = Field(default=60, ge=0, le=10080)
@@ -586,6 +633,16 @@ class KiProtokollEintrag(BaseModel):
     verwendete_fragen: list[str] = []
     grund: str | None = None
     created_at: datetime | None = None
+    # Kontext aus der Bewertung, auf die sich der Lauf bezog (channex_review):
+    # damit der Betrieb sieht, WEN die KI beantwortet hat, nicht nur eine ID.
+    gast_name: str | None = None
+    kanal: str | None = None
+    objekt_titel: str | None = None
+    # Stand des zugehörigen Warteschlangen-Eintrags: geplant (wartet) ·
+    # gesendet · uebersprungen · fehler · abgelaufen. None = kein Eintrag
+    # (Test-KI oder Anlegen gescheitert).
+    warteschlange_status: str | None = None
+    warteschlange_fehler: str | None = None
 
 
 class KiProtokollList(BaseModel):

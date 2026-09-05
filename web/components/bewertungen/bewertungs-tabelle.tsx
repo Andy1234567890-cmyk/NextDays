@@ -37,9 +37,10 @@ import {
   STANDARD_SPALTEN,
 } from "@/lib/reviews-kanal";
 import { zerlegeBewertungstext } from "@/lib/reviews-text";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatDateTime } from "@/lib/utils";
 import {
   type AiSentiment,
+  type ReplyState,
   type ReviewSource,
   type ReviewSummary,
   type UnifiedReview,
@@ -48,6 +49,7 @@ import {
   listReviews,
   rateGuest,
   replyToReview,
+  reviewSummary,
   sendOtaGuestReview,
   syncOtaReviews,
 } from "@/lib/reviews";
@@ -111,13 +113,14 @@ export function BewertungsTabelle({
   objekte,
 }: Props) {
   const t = useTranslations("reviews");
+  const locale = useLocale();
   const [items, setItems] = useState(initial);
   const [total, setTotal] = useState(initialTotal);
 
   const [quelle, setQuelle] = useState<ReviewSource | "">("");
   const [kanal, setKanal] = useState("");
   const [objekt, setObjekt] = useState("");
-  const [nurOffen, setNurOffen] = useState(false);
+  const [antwortStand, setAntwortStand] = useState<ReplyState | "">("");
   const [stimmung, setStimmung] = useState<AiSentiment | "">("");
   const [note, setNote] = useState<string>("");
   const [suchfeld, setSuchfeld] = useState("");
@@ -146,7 +149,7 @@ export function BewertungsTabelle({
       source: quelle || undefined,
       channelCode: kanal || undefined,
       propertyId: objekt || undefined,
-      unanswered: nurOffen,
+      replyState: antwortStand || undefined,
       sentiment: stimmung || undefined,
       // „ab 4 Sternen" / „bis 2 Sterne" — zwei Zahlenfelder wären für die
       // häufigste Frage („zeig mir die schlechten") zu umständlich.
@@ -154,7 +157,7 @@ export function BewertungsTabelle({
       ratingMax: note === "schlecht" ? 3 : undefined,
       suche: suche || undefined,
     }),
-    [quelle, kanal, objekt, nurOffen, stimmung, note, suche],
+    [quelle, kanal, objekt, antwortStand, stimmung, note, suche],
   );
 
   // Ungefilterte Startansicht = die Server-Wahrheit. Nach einem Realtime-
@@ -163,7 +166,7 @@ export function BewertungsTabelle({
   // Standardzustand übernehmen, sonst würde ein Ereignis eine gefilterte oder
   // geblätterte Ansicht zurücksetzen.
   const standardAnsicht =
-    !quelle && !kanal && !objekt && !nurOffen && !stimmung && !note &&
+    !quelle && !kanal && !objekt && !antwortStand && !stimmung && !note &&
     !suche && seite === 0 && proSeite === SEITE;
   useEffect(() => {
     if (!standardAnsicht) return;
@@ -196,9 +199,21 @@ export function BewertungsTabelle({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter, seite, proSeite]);
 
+  // Kennzahlen als Zustand: nach Antwort, Löschen und Abgleich ändern sie
+  // sich, kamen aber nur einmal als Prop — „Beantwortet 20/188" blieb bis zum
+  // Reload stehen, während die Zeile schon „Beantwortet" zeigte.
+  const [kennzahlen, setKennzahlen] = useState(summary);
+  useEffect(() => setKennzahlen(summary), [summary]);
+  function kennzahlenLaden() {
+    startTransition(async () => {
+      const res = await reviewSummary();
+      if (res.ok) setKennzahlen(res.data);
+    });
+  }
+
   const kanaele = useMemo(
-    () => (summary?.by_channel ?? []).map((c) => c.channel_code),
-    [summary],
+    () => (kennzahlen?.by_channel ?? []).map((c) => c.channel_code),
+    [kennzahlen],
   );
 
   function neuLaden() {
@@ -213,26 +228,35 @@ export function BewertungsTabelle({
         setTotal(res.data.total);
       }
     });
+    kennzahlenLaden();
   }
 
+  // Der Abgleich zieht alle Portal-Bewertungen bei Channex — das dauert
+  // Sekunden. Ohne sichtbares Ergebnis wusste niemand, ob er lief; deshalb
+  // Zeit und Anzahl anzeigen und die Liste in JEDEM Fall neu laden.
+  const [abgleich, setAbgleich] = useState<{ zeit: string; anzahl: number } | null>(null);
   function abgleichen() {
     setFehler(null);
     startTransition(async () => {
       const res = await syncOtaReviews();
-      if (res.ok) neuLaden();
-      else setFehler(res.error);
+      if (res.ok) {
+        setAbgleich({ zeit: new Date().toISOString(), anzahl: res.data.mirrored });
+      } else {
+        setFehler(res.error);
+      }
+      neuLaden();
     });
   }
 
   const aktiveFilter =
     (quelle ? 1 : 0) + (kanal ? 1 : 0) + (objekt ? 1 : 0) +
-    (nurOffen ? 1 : 0) + (stimmung ? 1 : 0) + (note ? 1 : 0) + (suche ? 1 : 0);
+    (antwortStand ? 1 : 0) + (stimmung ? 1 : 0) + (note ? 1 : 0) + (suche ? 1 : 0);
 
   function filterLeeren() {
     setQuelle("");
     setKanal("");
     setObjekt("");
-    setNurOffen(false);
+    setAntwortStand("");
     setStimmung("");
     setNote("");
     setSuchfeld("");
@@ -253,14 +277,25 @@ export function BewertungsTabelle({
           <ExportKnopf filter={filter} spalten={spalten} />
           {canManage && (
             <Button variant="outline" onClick={abgleichen} disabled={pending}>
-              <Icon icon="ph:arrows-clockwise" className="size-4" />
+              <Icon
+                icon="ph:arrows-clockwise"
+                className={`size-4 ${pending ? "animate-spin" : ""}`}
+              />
               {t("sync")}
             </Button>
           )}
         </div>
       </header>
+      {abgleich && (
+        <p className="text-xs text-muted-foreground">
+          {t("syncResult", {
+            time: formatDateTime(abgleich.zeit, locale),
+            count: abgleich.anzahl,
+          })}
+        </p>
+      )}
 
-      {summary && <Kennzahlen summary={summary} />}
+      {kennzahlen && <Kennzahlen summary={kennzahlen} />}
 
       <Filterleiste
         anzahl={aktiveFilter}
@@ -340,17 +375,21 @@ export function BewertungsTabelle({
             <option value="negativ">{t("aiNegative")}</option>
           </NativeSelect>
         </FilterFeld>
-        <label className="flex items-center gap-2 pb-2 text-sm">
-          <input
-            type="checkbox"
-            checked={nurOffen}
+        <FilterFeld label={t("filterReplyState")}>
+          <NativeSelect
+            value={antwortStand}
             onChange={(e) => {
               setSeite(0);
-              setNurOffen(e.target.checked);
+              setAntwortStand(e.target.value as ReplyState | "");
             }}
-          />
-          {t("onlyUnanswered")}
-        </label>
+          >
+            <option value="">{t("replyStateAll")}</option>
+            <option value="offen">{t("open")}</option>
+            <option value="beantwortet">{t("answered")}</option>
+            <option value="verdeckt">{t("replyHidden")}</option>
+            <option value="frist_abgelaufen">{t("replyWindowClosed")}</option>
+          </NativeSelect>
+        </FilterFeld>
       </Filterleiste>
 
       {fehler && <Card className="p-4 text-sm text-destructive">{fehler}</Card>}
@@ -402,13 +441,15 @@ export function BewertungsTabelle({
                     review={r}
                     spalten={sichtbar}
                     canManage={canManage}
-                    onChanged={(neu) =>
+                    onChanged={(neu) => {
                       setItems((alt) =>
                         alt.map((x) =>
                           x.source === neu.source && x.id === neu.id ? neu : x,
                         ),
-                      )
-                    }
+                      );
+                      // Antwort gesetzt/entfernt → „Beantwortet x/y" muss mit.
+                      kennzahlenLaden();
+                    }}
                   />
                 ))
               )}
@@ -675,6 +716,12 @@ function Kennzahlen({ summary }: { summary: ReviewSummary }) {
         label={t("qualityAnswered")}
         wert={String(beantwortet)}
         von={summary.count}
+        hinweis={t("kpiOpenHint", {
+          offen:
+            summary.unanswered - summary.expired_unanswered - summary.hidden_unanswered,
+          verdeckt: summary.hidden_unanswered,
+          abgelaufen: summary.expired_unanswered,
+        })}
         ton={
           summary.unanswered === 0
             ? "gut"
@@ -691,11 +738,13 @@ function Kachel({
   label,
   wert,
   von,
+  hinweis,
   ton,
 }: {
   label: string;
   wert: string;
   von?: number;
+  hinweis?: string;
   ton?: "gut" | "warnung";
 }) {
   const farbe =
@@ -707,6 +756,7 @@ function Kachel({
         <span className={`text-2xl font-semibold ${farbe}`}>{wert}</span>
         {von != null && <span className="text-sm text-muted-foreground">/ {von}</span>}
       </span>
+      {hinweis && <span className="text-xs text-muted-foreground">{hinweis}</span>}
     </Card>
   );
 }
@@ -810,11 +860,56 @@ function Zeile({
           <span className="flex items-center gap-1 whitespace-nowrap text-muted-foreground">
             <Icon icon="ph:check-circle" className="size-4" />
             {t("answered")}
+            {review.reply_ki && (
+              <span
+                className="ml-1 flex items-center gap-0.5 rounded-full bg-secondary px-1.5 py-0.5 text-xs"
+                title={t("kiReplyBadge")}
+              >
+                <Icon icon="ph:sparkle" className="size-3" />
+                KI
+              </span>
+            )}
+          </span>
+        ) : review.can_reply ? (
+          <span className="flex flex-col whitespace-nowrap text-amber-600">
+            <span className="flex items-center gap-1">
+              <Icon icon="ph:clock" className="size-4" />
+              {t("open")}
+            </span>
+            {/* Die Frist des Portals, wenn es sie meldet — kein geratenes Datum. */}
+            {review.reply_expires_at && (
+              <span className="text-xs text-muted-foreground">
+                {t("replyDeadline", { date: formatDate(review.reply_expires_at, locale) })}
+              </span>
+            )}
+          </span>
+        ) : review.is_hidden ? (
+          // Airbnb hält die Bewertung verdeckt, bis beide Seiten abgegeben
+          // haben — noch nichts zu beantworten, also kein „Offen".
+          <span className="flex flex-col whitespace-nowrap text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Icon icon="ph:eye-slash" className="size-4" />
+              {t("replyHidden")}
+            </span>
+            {review.reply_expires_at && (
+              <span className="text-xs">
+                {t("replyDeadline", { date: formatDate(review.reply_expires_at, locale) })}
+              </span>
+            )}
           </span>
         ) : (
-          <span className="flex items-center gap-1 whitespace-nowrap text-amber-600">
-            <Icon icon="ph:clock" className="size-4" />
-            {t("open")}
+          // Unbeantwortet, aber das Portal nimmt keine Antwort mehr an: kein
+          // „Offen" — das wäre eine Aufforderung zu etwas, das nicht mehr geht.
+          <span className="flex flex-col whitespace-nowrap text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Icon icon="ph:clock-countdown" className="size-4" />
+              {t("replyWindowClosed")}
+            </span>
+            {review.reply_expires_at && (
+              <span className="text-xs">
+                {formatDate(review.reply_expires_at, locale)}
+              </span>
+            )}
           </span>
         );
       case "score_5":
@@ -887,6 +982,7 @@ function Detail({
   onChanged: (neu: UnifiedReview) => void;
 }) {
   const t = useTranslations("reviews");
+  const locale = useLocale();
   const [offen, setOffen] = useState(false);
   const [gastOffen, setGastOffen] = useState(false);
   const [gastNote, setGastNote] = useState(5);
@@ -1034,7 +1130,18 @@ function Detail({
 
       {review.reply && !offen && (
         <div className="rounded-(--radius) border border-border bg-card p-3">
-          <p className="text-xs font-medium text-muted-foreground">{t("yourReply")}</p>
+          <p className="flex flex-wrap items-center gap-2 text-xs font-medium text-muted-foreground">
+            {t("yourReply")}
+            {review.reply_ki && (
+              <span className="flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5">
+                <Icon icon="ph:sparkle" className="size-3" />
+                {t("kiReplyBadge")}
+              </span>
+            )}
+            {review.reply_at && (
+              <span>· {formatDateTime(review.reply_at, locale)}</span>
+            )}
+          </p>
           <p className="text-sm whitespace-pre-line">{review.reply}</p>
         </div>
       )}
@@ -1108,10 +1215,15 @@ function Detail({
             </>
           ) : (
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" onClick={() => setOffen(true)}>
-                <Icon icon="ph:chat-circle-text" className="size-4" />
-                {review.reply ? t("editReply") : t("reply")}
-              </Button>
+              {/* Beim Portal gibt es kein „Antwort ändern" — der Hinweis
+                  darüber sagt es, der Knopf widersprach ihm; das Backend
+                  weist die zweite Antwort inzwischen mit 409 ab. */}
+              {!(review.source === "ota" && review.is_replied) && (
+                <Button variant="outline" onClick={() => setOffen(true)}>
+                  <Icon icon="ph:chat-circle-text" className="size-4" />
+                  {review.reply ? t("editReply") : t("reply")}
+                </Button>
+              )}
               {review.reply && review.source === "marketplace" && (
                 <Button variant="outline" onClick={entfernen} disabled={pending}>
                   {t("deleteReply")}
@@ -1134,7 +1246,11 @@ function Detail({
       )}
 
       {!review.can_reply && (
-        <p className="text-xs text-muted-foreground">{t("expired")}</p>
+        <p className="text-xs text-muted-foreground">
+          {review.reply_expires_at
+            ? t("replyExpiredOn", { date: formatDate(review.reply_expires_at, locale) })
+            : t("expired")}
+        </p>
       )}
     </div>
   );

@@ -128,10 +128,19 @@ class ReviewAutomation:
         erinnert = 0
         for cfg in nach_tenant.values():
             tenant_id = str(cfg["tenant_id"])
-            if cfg.get("auto_review_active"):
-                geplant += self._rate_due_guests(db, tenant_id, cfg, heute)
-            if cfg.get("guest_reminder_active"):
-                erinnert += self._remind_due_guests(db, tenant_id, cfg, heute)
+            try:
+                if cfg.get("auto_review_active"):
+                    geplant += self._rate_due_guests(db, tenant_id, cfg, heute)
+                if cfg.get("guest_reminder_active"):
+                    erinnert += self._remind_due_guests(db, tenant_id, cfg, heute)
+            except APIError as exc:
+                # Je Betrieb isoliert (Wurzel 5): ein DB-Fehler bei EINEM
+                # Mandanten darf weder die übrigen noch — im Tick dahinter —
+                # Fristablauf und Versand aller anderen ausfallen lassen.
+                log.error(
+                    "review_automation_tenant_fehlgeschlagen",
+                    tenant_id=tenant_id, code=exc.code, error=exc.message[:200],
+                )
         if geplant or erinnert:
             log.info("review_automation_run", queued=geplant, reminded=erinnert)
         return geplant, erinnert
@@ -248,7 +257,14 @@ class ReviewAutomation:
     def _due_reservations(
         self, db: Client, tenant_id: str, after_days: int, heute: date
     ) -> list[dict]:
-        """Abgereiste Reservierungen im Fälligkeitsfenster."""
+        """Abgereiste MARKTPLATZ-Reservierungen im Fälligkeitsfenster.
+
+        Nur ``channel='portal'``: die Erinnerung führt auf die myBestDays-
+        Bewertungsseite, die ein Gastkonto verlangt. Ein Booking- oder
+        Airbnb-Gast (Relay-Adresse, kein Konto) bekäme eine Mail mit einem
+        Link, der ihn zur Anmeldung schickt — die Portale laden ihre Gäste
+        selbst ein, genau wie es der Hinweis in der Oberfläche verspricht.
+        """
         bis = heute - timedelta(days=after_days)
         von = bis - timedelta(days=_LOOKBACK_DAYS)
         return (
@@ -257,6 +273,7 @@ class ReviewAutomation:
                 "id, property_id, guest_email, check_out, status, guest_language"
             )
             .eq("tenant_id", tenant_id)
+            .eq("channel", "portal")
             .in_("status", list(_ELIGIBLE_STATUS))
             .lte("check_out", bis.isoformat())
             .gte("check_out", von.isoformat())

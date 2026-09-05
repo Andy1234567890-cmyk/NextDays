@@ -30,6 +30,9 @@ Gelesen wird aus beiden Tabellen, **geschrieben quellenspezifisch**:
   den eigenen Bestand (Wurzel 1). Eine Antwort, die im Cockpit steht, aber beim
   Gast nie ankommt, wäre schlimmer als gar keine.
 
+Eine Portal-Bewertung mit `is_replied` nimmt keine zweite Antwort (409, Wurzel
+2); eine Antwort von Hand räumt den geplanten KI-Antwort-Entwurf ab (Wurzel 1).
+
 Portal-Fehler werden NICHT roh durchgereicht: der channel_manager übersetzt sie
 (4xx → „beim Portal nicht mehr verfügbar", sonst „Portal antwortet nicht") —
 Provider-Sprache hat im Kundentext nichts zu suchen.
@@ -50,8 +53,20 @@ fällig und noch `geplant` ist. Vorher lief die Automatik blind: sie berechnete
 die Fälligen und schickte im selben Atemzug ab — eine abgeschickte öffentliche
 Bewertung lässt sich bei keinem Portal zurücknehmen.
 
+- Jeder Eintrag trägt seine **Zustellart** (`zustellart`, 0566):
+  `automatisch` geht zur Fälligkeit von selbst raus (Vorlagen-Automatik, KI
+  bei „Automatisch senden"), `entwurf` wartet auf „Abschicken" durch einen
+  Menschen. `send_due` nimmt NUR `automatisch`. Anlass (05.09.2026): sieben
+  KI-Entwürfe mit `send_at=jetzt` gingen im Tick ihrer Entstehung öffentlich
+  an Booking.com — die Zustellart stand nur in den Einstellungen.
+- Gastbewertung und öffentliche Antwort hängen an DERSELBEN Airbnb-Bewertung;
+  eindeutig ist deshalb `(review_id, richtung)` (0566), nicht `review_id`.
+  `erledigt_durch_handarbeit` räumt gezielt je Richtung ab.
 - Der Status wird VOR dem Versand beansprucht (Wurzel 2); ein zweiter Worker
-  oder ein Retry reicht nichts doppelt ein.
+  oder ein Retry reicht nichts doppelt ein. Scheitert der Versand an einem
+  Fremdfehler (kein `ReviewError`), geht die Zeile zurück auf `fehler` und das
+  Signal wird weitergereicht; `send_due` isoliert je Eintrag, nur
+  `ChannexBudgetExhausted` beendet den Lauf.
 - Ein Fehlschlag landet als `fehler` samt Grund in derselben Zeile (Wurzel 5) —
   sie taucht in der Oberfläche auf, statt still zu verschwinden.
 - Ein übersprungener Eintrag BLEIBT stehen, sonst legte ihn der nächste Tick neu

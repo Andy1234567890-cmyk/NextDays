@@ -15,6 +15,7 @@ Zwei Quellen:
 """
 from __future__ import annotations
 
+import math
 import secrets
 from datetime import UTC, date, datetime, time, timedelta
 from typing import TYPE_CHECKING, Any
@@ -23,8 +24,18 @@ from postgrest.exceptions import APIError
 from supabase import Client
 
 from src.core.logging import get_logger
+from src.core.supabase import fetch_all_rows
 
-from .common import DOUBLE_BLIND_DAYS, plaintext
+from .common import DOUBLE_BLIND_DAYS, as_dt, plaintext
+from .schemas import (
+    MARKETPLACE_CHANNEL,
+    GuestScores,
+    KiRichtung,
+    KiZustellart,
+    QueueEntry,
+    QueueStatus,
+    ReviewSource,
+)
 
 if TYPE_CHECKING:  # nur Typen — zur Laufzeit lazy importiert
     from .service import ReviewsService
@@ -55,7 +66,10 @@ _SPALTEN = (
     # `richtung` schickt `send_entry` eine öffentliche Antwort als
     # Gastbewertung ans Portal — der Text stünde dann als unsere Bewertung
     # DES GASTES da.
-    "richtung, ki_erzeugt, antwort_auf_id"
+    "richtung, ki_erzeugt, antwort_auf_id, "
+    # Zustellart (0566). MUSS mitgelesen werden: die Oberfläche unterscheidet
+    # daran „geht am … raus" von „wartet auf Freigabe".
+    "zustellart"
 )
 
 
@@ -323,6 +337,10 @@ class ReviewQueue:
         """
         if not (eintrag.get("text") or "").strip():
             return False
+        # Die Vorlagen-Automatik hat genau das zugesagt: planen, zeigen, zur
+        # Fälligkeit senden. Explizit statt DB-Vorgabe, damit der Test-Doppel
+        # dasselbe sieht wie die Live-DB.
+        eintrag.setdefault("zustellart", "automatisch")
         try:
             self._db.table("guest_review_queue").insert(eintrag).execute()
         except APIError as exc:
@@ -449,6 +467,23 @@ class ReviewQueue:
         rows = res.data or []
         return rows, (res.count if res.count is not None else len(rows))
 
+    def status_counts(
+        self, tenant_id: str, *, property_ids: list[str] | None
+    ) -> dict[str, int]:
+        """Anzahl je Status über den ganzen Bestand des Betriebs."""
+        query = (
+            self._db.table("guest_review_queue")
+            .select("status")
+            .eq("tenant_id", tenant_id)
+        )
+        if property_ids is not None:
+            query = query.in_("property_id", property_ids)
+        zaehler: dict[str, int] = {}
+        for row in fetch_all_rows(query.order("id")):
+            st = str(row.get("status") or "")
+            zaehler[st] = zaehler.get(st, 0) + 1
+        return zaehler
+
     def own(self, tenant_id: str, entry_id: str) -> dict:
         from src.core.supabase import load_scoped
 
@@ -475,6 +510,13 @@ class ReviewQueue:
                 "Nur geplante Bewertungen lassen sich ändern.", status_code=409
             )
         sauber = {k: v for k, v in patch.items() if v is not None}
+        if eintrag.get("richtung") == "antwort" and set(sauber) - {"text"}:
+            # Eine öffentliche Antwort HAT keine Note, Empfehlung oder
+            # Privatnachricht — `_senden_antwort` schickt nur den Text. Was
+            # hier gespeichert würde, wäre eine Attrappe (Wurzel 4).
+            raise ReviewError(
+                "An einer Antwort lässt sich nur der Text ändern.", status_code=422
+            )
         for feld in ("text", "private_text"):
             if feld in sauber:
                 sauber[feld] = plaintext(sauber[feld])
@@ -537,15 +579,61 @@ class ReviewQueue:
             else:
                 self._senden_ota(service, tenant_id, entry)
         except ReviewError as exc:
-            self._db.table("guest_review_queue").update(
-                {"status": "fehler", "sent_at": None, "error": exc.message[:500]}
-            ).eq("id", entry["id"]).execute()
+            self._fehler(entry, exc.message)
             log.warning(
                 "review_queue_versand_fehlgeschlagen",
                 entry_id=entry["id"], source=entry["source"], error=exc.message[:200],
             )
             return False
+        except Exception as exc:
+            # Kein ReviewError (APIError, Channex-Budget, Netz): OHNE diesen
+            # Zweig bliebe die Zeile auf 'gesendet' mit sent_at stehen, obwohl
+            # nichts raus ist — der Claim von oben wäre eine Falschaussage.
+            # Zurück auf 'fehler' und WEITERREICHEN (Wurzel 5: das Signal
+            # gehört dem Aufrufer, nicht dem Log).
+            self._fehler(entry, f"{type(exc).__name__}: {exc}")
+            log.error(
+                "review_queue_versand_abgebrochen",
+                entry_id=entry["id"], source=entry["source"],
+                grund=type(exc).__name__, error=str(exc)[:200],
+            )
+            raise
+        if entry.get("ki_erzeugt"):
+            self._ki_protokoll_gesendet(tenant_id, entry)
         return True
+
+    def _fehler(self, entry: dict, grund: str) -> None:
+        self._db.table("guest_review_queue").update(
+            {"status": "fehler", "sent_at": None, "error": grund[:500]}
+        ).eq("id", entry["id"]).execute()
+
+    def _ki_protokoll_gesendet(self, tenant_id: str, entry: dict) -> None:
+        """Gegenzustand (Wurzel 1): Der KI-Lauf protokolliert jeden Text mit
+        ``gesendet_at = NULL`` — geschickt wird er erst hier. Ohne das Nachtragen
+        stünde im Protokoll „nicht gesendet" unter einem Text, der öffentlich
+        beim Portal steht. Best effort: die Spur darf den Versand nicht kippen,
+        meldet ihren Ausfall aber LAUT (Wurzel 5)."""
+        # Dieselbe Reihenfolge wie der KI-Lauf beim Protokollieren: Antwort →
+        # Bewertung, Marktplatz-Gastbewertung → Reservierung, Airbnb-
+        # Gastbewertung → die Warteschlangen-Zeile selbst.
+        bezug = (
+            entry.get("antwort_auf_id")
+            or entry.get("reservation_id")
+            or entry.get("id")
+        )
+        if not bezug:
+            return
+        try:
+            self._db.table("review_ki_protokoll").update(
+                {"gesendet_at": datetime.now(UTC).isoformat()}
+            ).eq("tenant_id", tenant_id).eq("bezug_id", str(bezug)).eq(
+                "richtung", entry.get("richtung") or "gast_bewerten"
+            ).is_("gesendet_at", "null").execute()
+        except APIError as exc:  # noqa: BLE001 — Spur, nicht Hauptpfad
+            log.warning(
+                "review_ki_protokoll_gesendet_fehlgeschlagen",
+                entry_id=entry["id"], error=str(exc)[:200],
+            )
 
     def _senden_antwort(
         self, service: ReviewsService, tenant_id: str, entry: dict
@@ -643,21 +731,43 @@ class ReviewQueue:
         )
 
     def send_due(self, service: ReviewsService, *, now: datetime | None = None) -> int:
-        """Alle fälligen Einträge versenden (Worker-Tick, mandantenübergreifend)."""
+        """Alle fälligen Einträge versenden (Worker-Tick, mandantenübergreifend).
+
+        NUR ``zustellart = 'automatisch'``. Ein Entwurf hat ebenfalls
+        ``status='geplant'`` und ein ``send_at`` in der Vergangenheit (damit er
+        in der Liste oben steht) — er wartet aber auf einen Menschen. Am
+        05.09.2026 fehlte dieser Filter, und sieben KI-„Entwürfe" gingen im
+        Tick ihrer Entstehung öffentlich an die Portale (0566)."""
         jetzt = (now or datetime.now(UTC)).isoformat()
         faellig = (
             self._db.table("guest_review_queue")
             .select(_SPALTEN)
             .eq("status", "geplant")
+            .eq("zustellart", "automatisch")
             .lte("send_at", jetzt)
             .order("send_at")
             .limit(_BATCH)
             .execute()
         ).data or []
+        from src.features.channel_manager.channex_client import (
+            ChannexBudgetExhausted,
+        )
+
         gesendet = 0
         for entry in faellig:
-            if self.send_entry(service, str(entry["tenant_id"]), entry):
-                gesendet += 1
+            try:
+                if self.send_entry(service, str(entry["tenant_id"]), entry):
+                    gesendet += 1
+            except ChannexBudgetExhausted:
+                # Kontroll-Signal: ohne Budget scheitert jeder weitere
+                # Portal-Eintrag genauso — nicht 49 Zeilen auf 'fehler'
+                # stellen, sondern den Lauf beenden (Wurzel 5).
+                raise
+            except Exception as exc:  # noqa: BLE001 — je Eintrag isoliert, Zeile trägt den Grund
+                log.error(
+                    "review_queue_eintrag_uebersprungen",
+                    entry_id=entry["id"], grund=type(exc).__name__,
+                )
         if gesendet:
             log.info("review_queue_versendet", count=gesendet)
         return gesendet
@@ -682,10 +792,13 @@ class ReviewQueue:
         *,
         reservation_id: str | None = None,
         review_id: str | None = None,
+        richtung: str = "gast_bewerten",
     ) -> int:
         """Gegenzustand (Wurzel 1): Wer von Hand bewertet, macht den geplanten
         Eintrag derselben Reservierung gegenstandslos — er MUSS mit abgeräumt
-        werden.
+        werden. Mit ``richtung``: die Gastbewertung und die öffentliche
+        Antwort hängen an DERSELBEN Airbnb-Bewertung (review_id) — wer den
+        Gast von Hand bewertet, hat damit nicht geantwortet, und umgekehrt.
 
         Ohne das findet der Betrieb Tage später einen roten Eintrag in seiner
         Warteschlange ('Für diese Bewertung wurde der Gast bereits bewertet.'),
@@ -701,11 +814,16 @@ class ReviewQueue:
             .update(
                 {
                     "status": "uebersprungen",
-                    "error": "Von Hand bewertet — der geplante Versand entfällt.",
+                    "error": (
+                        "Von Hand beantwortet — der geplante Versand entfällt."
+                        if richtung == "antwort"
+                        else "Von Hand bewertet — der geplante Versand entfällt."
+                    ),
                 }
             )
             .eq("tenant_id", tenant_id)
             .eq("status", "geplant")
+            .eq("richtung", richtung)
         )
         query = (
             query.eq("review_id", review_id)
@@ -722,3 +840,96 @@ class ReviewQueue:
                 review_id=review_id,
             )
         return len(rows)
+
+
+# ------------------------------------------------------------- Abbildung
+def _tage_bis(ziel: datetime | None, jetzt: datetime) -> int | None:
+    """Ganze Tage bis `ziel`, aufgerundet; negativ = überfällig; None = unbekannt."""
+    if ziel is None:
+        return None
+    return math.ceil((ziel - jetzt).total_seconds() / 86400)
+
+
+def kanaele_fuer(db: Client, tenant_id: str, rows: list[dict]) -> dict[str, str]:
+    """Portal je Warteschlangen-Zeile (review_id → channex_review.ota), in
+    EINER Abfrage für die Seite. Ohne das nannte die Oberfläche jeden
+    Portal-Eintrag „Airbnb" — eine Booking-Antwort stand als Airbnb da."""
+    ids = sorted({str(r["review_id"]) for r in rows if r.get("review_id")})
+    if not ids:
+        return {}
+    zeilen = (
+        db.table("channex_review")
+        .select("id, ota")
+        .eq("tenant_id", tenant_id)
+        .in_("id", ids)
+        .execute()
+    ).data or []
+    return {str(z["id"]): str(z["ota"]) for z in zeilen if z.get("ota")}
+
+def zu_eintrag(row: dict, kanaele: dict[str, str] | None = None) -> QueueEntry:
+    prop = row.get("properties") or {}
+    send_at = as_dt(row["send_at"])
+    expires_at = as_dt(row.get("expires_at"))
+    jetzt = datetime.now(UTC)
+    tags = row.get("tags")
+    return QueueEntry(
+        id=str(row["id"]),
+        source=ReviewSource(row["source"]),
+        status=QueueStatus(row["status"]),
+        property_id=str(row["property_id"]) if row.get("property_id") else None,
+        property_title=prop.get("title"),
+        guest_name=row.get("guest_name"),
+        richtung=KiRichtung(row.get("richtung") or "gast_bewerten"),
+        ki_erzeugt=bool(row.get("ki_erzeugt")),
+        zustellart=KiZustellart(row.get("zustellart") or "automatisch"),
+        channel_code=(
+            MARKETPLACE_CHANNEL
+            if row.get("source") == "marketplace"
+            else (kanaele or {}).get(str(row.get("review_id") or ""))
+        ),
+        antwort_auf_id=(
+            str(row["antwort_auf_id"]) if row.get("antwort_auf_id") else None
+        ),
+        reservation_id=(
+            str(row["reservation_id"]) if row.get("reservation_id") else None
+        ),
+        review_id=str(row["review_id"]) if row.get("review_id") else None,
+        send_at=send_at,
+        expires_at=expires_at,
+        # Aufgerundet: 23 Stunden Frist sind „noch 1 Tag", nicht 0; und
+        # zwischen zwei Ticks steht kein „-1 Tage".
+        days_until_send=_tage_bis(send_at, jetzt),
+        days_left=_tage_bis(expires_at, jetzt),
+        rating=int(row["rating"]),
+        text=row.get("text"),
+        private_text=row.get("private_text"),
+        scores=GuestScores(
+            cleanliness=row.get("score_cleanliness"),
+            communication=row.get("score_communication"),
+            house_rules=row.get("score_house_rules"),
+        ),
+        recommended=bool(row.get("recommended", True)),
+        tags=[str(t) for t in tags] if isinstance(tags, list) else [],
+        sent_at=as_dt(row.get("sent_at")),
+        error=row.get("error"),
+    )
+
+
+def ki_antwort_ids(db: Client, tenant_id: str, review_ids: list[str]) -> set[str]:
+    """Bewertungen, deren öffentliche Antwort aus der KI-Warteschlange kam und
+    gesendet ist — EINE Abfrage je Seite. Die Liste zeigt daran „KI-Antwort":
+    ohne die Markierung sah niemand, welche Antworten ein Modell geschrieben hat."""
+    ids = sorted({str(r) for r in review_ids if r})
+    if not ids:
+        return set()
+    zeilen = (
+        db.table("guest_review_queue")
+        .select("antwort_auf_id")
+        .eq("tenant_id", tenant_id)
+        .eq("richtung", "antwort")
+        .eq("ki_erzeugt", True)
+        .eq("status", "gesendet")
+        .in_("antwort_auf_id", ids)
+        .execute()
+    ).data or []
+    return {str(z["antwort_auf_id"]) for z in zeilen if z.get("antwort_auf_id")}

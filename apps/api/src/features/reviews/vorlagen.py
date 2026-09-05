@@ -43,6 +43,7 @@ _SPALTEN = (
 # Der Fehlercode, mit dem der Trigger aus 0503 eine zweite aktive Vorlage
 # auf demselben Objekt abweist.
 _SCHON_AKTIV = "23505"
+_CHECK_VERLETZT = "23514"
 
 
 class VorlagenStore:
@@ -211,9 +212,12 @@ class VorlagenStore:
             "texte": quelle.get("texte") or [],
             "privater_text": quelle.get("privater_text"),
         }
-        neu = (
-            self._db.table("review_auto_template").insert(nutzlast).execute()
-        ).data or []
+        try:
+            neu = (
+                self._db.table("review_auto_template").insert(nutzlast).execute()
+            ).data or []
+        except APIError as exc:
+            raise self._uebersetzt(exc) from exc
         if not neu:
             from .service import ReviewError
 
@@ -311,9 +315,19 @@ class VorlagenStore:
                 "Auto-Bewertung aktiv. Schalte sie zuerst ab.",
                 status_code=409,
             )
-        return ReviewError(
-            exc.message or "Speichern fehlgeschlagen.", status_code=400
+        if exc.code == _CHECK_VERLETZT:
+            # Der CHECK aus 0503: eine AKTIVE Vorlage braucht mindestens einen
+            # Text. Der Karten-Schalter schickt genau diesen Fall.
+            return ReviewError(
+                "Eine aktive Vorlage braucht mindestens einen Bewertungstext.",
+                status_code=422,
+            )
+        # Kein roher Postgres-Text im Kundentext (Wurzel 5: präzise oder
+        # generisch, nie die Innereien) — der Grund steht im Log.
+        log.warning(
+            "review_vorlage_db_fehler", code=exc.code, error=(exc.message or "")[:200]
         )
+        return ReviewError("Speichern fehlgeschlagen.", status_code=400)
 
     @staticmethod
     def _zu_modell(zeile: dict) -> AutoTemplate:

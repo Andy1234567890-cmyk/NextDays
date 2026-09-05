@@ -10,16 +10,17 @@ import { KiSeite } from "@/components/bewertungen/ki-seite";
 import { Card } from "@nextdays/ui/card";
 import { getMe } from "@/lib/auth";
 import { listProperties } from "@/lib/properties";
-import { getKiKatalog, getKiSettings } from "@/lib/reviews";
+import { getKiKatalog, getKiProtokoll, getKiSettings } from "@/lib/reviews";
 
 export const dynamic = "force-dynamic";
 
 export default async function BewertungsKiPage() {
-  const [katalog, settings, me, objekte] = await Promise.all([
+  const [katalog, settings, me, objekte, protokoll] = await Promise.all([
     getKiKatalog(),
     getKiSettings(),
     getMe(),
     listProperties(),
+    getKiProtokoll(undefined, 100),
   ]);
 
   if (!katalog.ok) {
@@ -35,6 +36,7 @@ export default async function BewertungsKiPage() {
       katalog={katalog.data}
       settings={settings.data}
       canManage={me?.capabilities.includes("manage_reviews") ?? false}
+      protokoll={protokoll.ok ? protokoll.data.items : []}
       objekte={
         objekte.ok
           ? objekte.data.items.map((o) => ({ id: o.id, title: o.title ?? o.id }))

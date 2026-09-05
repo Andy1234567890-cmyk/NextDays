@@ -26,6 +26,7 @@ export default async function GeplanteBewertungenPage() {
     <Warteschlange
       initial={liste.data.items}
       initialTotal={liste.data.total}
+      initialCounts={liste.data.counts}
       canManage={me?.capabilities.includes("manage_reviews") ?? false}
     />
   );

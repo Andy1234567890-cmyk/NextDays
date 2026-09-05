@@ -13,9 +13,14 @@ eine Seite die Antwortform der anderen mitbestimmen.
 """
 from __future__ import annotations
 
+import html
 from datetime import date, datetime
 
 import nh3
+
+from src.core.supabase import fetch_all_rows
+
+from .schemas import CategoryScore, ReviewScale
 
 # Reservierungs-Status, der als „abgeschlossen" gilt (Nachweis echter Gast).
 COMPLETED_STATUS = "completed"
@@ -67,7 +72,12 @@ def plaintext(value: str | None) -> str | None:
     Text → None (kein leerer String in der DB)."""
     if value is None:
         return None
-    cleaned = nh3.clean(value, tags=set(), attributes={}).strip()
+    # nh3 gibt HTML zurück, auch bei leerer Allowlist: aus „Kaffee & Kuchen"
+    # wird „Kaffee &amp; Kuchen". Das Ziel ist hier aber PLAINTEXT — der Wert
+    # geht ins Textfeld zurück, in den KI-Prompt („Unterschrift unverändert")
+    # und ans Portal. Deshalb die Entitäten wieder auflösen; Tags sind da
+    # schon weg, also kann kein Markup zurückkommen.
+    cleaned = html.unescape(nh3.clean(value, tags=set(), attributes={})).strip()
     return cleaned or None
 
 
@@ -127,3 +137,55 @@ def checked_out(check_out: object, today: date) -> bool:
     """True, wenn die Abreise vor heute liegt (Aufenthalt vorbei)."""
     parsed = as_date(check_out)
     return parsed is not None and parsed < today
+
+
+# PostgREST-Deckel je Antwort (supabase/config.toml `max_rows`).
+_PG_MAX_ROWS = 1000
+
+
+def seite_laden(query: object, limit: int) -> tuple[list[dict], int]:
+    """Bis zu `limit` Zeilen samt exaktem Gesamtzähler.
+
+    PostgREST kappt JEDE Antwort bei 1000 Zeilen (config.toml max_rows), auch
+    mit `.range()`. Der Export (bis 5000) und tiefe Seiten liefen deshalb still
+    hinein: Datei kürzer als `total`, Seite 41 leer bei aktivem „Weiter". Über
+    dem Deckel wird deshalb seitenweise geladen (`fetch_all_rows`) und erst
+    danach geschnitten; der Zähler kommt aus dem ersten Aufruf."""
+    seite = min(max(limit, 1), _PG_MAX_ROWS)
+    erste = query.range(0, seite - 1).execute()  # type: ignore[attr-defined]
+    rows = list(erste.data or [])
+    total = erste.count if erste.count is not None else len(rows)
+    if limit > _PG_MAX_ROWS and total > _PG_MAX_ROWS:
+        rows = fetch_all_rows(query)[:limit]
+    return rows, total
+
+
+def score_5_from_ten(value: object) -> float | None:
+    """Portal-Note (0..10) auf 5 Sterne normalisieren. None bleibt None."""
+    if value is None:
+        return None
+    try:
+        return round(float(value) / 2, 2)
+    except (TypeError, ValueError):
+        return None
+
+
+def ota_categories(raw: object) -> list[CategoryScore]:
+    """``scores``-Array einer Portal-Bewertung → Kategorien. Einträge ohne
+    brauchbare Note werden verworfen, statt eine 0 zu erfinden (Wurzel 4)."""
+    if not isinstance(raw, list):
+        return []
+    out: list[CategoryScore] = []
+    for entry in raw:
+        if not isinstance(entry, dict):
+            continue
+        key = entry.get("category")
+        value = entry.get("score", entry.get("rating"))
+        if not isinstance(key, str) or value is None:
+            continue
+        try:
+            score = float(value)
+        except (TypeError, ValueError):
+            continue
+        out.append(CategoryScore(key=key, score=score, scale=ReviewScale.ten))
+    return out

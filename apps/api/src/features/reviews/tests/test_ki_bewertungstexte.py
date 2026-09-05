@@ -245,8 +245,12 @@ def test_vorgabe_ist_entwurf() -> None:
 @pytest.mark.parametrize(
     ("roh", "erwartet"),
     [
-        (5, 5),      # Airbnb, 1..5
-        (1, 1),
+        # overall_score ist für JEDES Portal 0..10 (0262) — eine 5 sind
+        # zweieinhalb Sterne, keine fünf. Vorher stand hier (5, 5) und die
+        # KI dankte für eine schlechte Bewertung.
+        (5, 3),      # 2,5 → kaufmännisch auf 3
+        (4, 2),
+        (1, 1),      # 0,5 → mindestens 1
         (10, 5),     # Booking, 0..10
         (8, 4),
         (6, 3),
@@ -258,8 +262,8 @@ def test_vorgabe_ist_entwurf() -> None:
     ],
 )
 def test_note_auf_fuenf(roh: object, erwartet: int | None) -> None:
-    """Ein Wert über 5 kann nur die Zehnerskala sein; darunter ist die
-    Zuordnung eindeutig. Fehlt der Wert, gibt es KEINE Note — kein geratener
+    """Immer die Zehnerskala halbiert — wie `_score_5_from_ten` in der Liste.
+    Fehlt der Wert, gibt es KEINE Note — kein geratener
     Skalenfaktor (Wurzel 4)."""
     assert _note_auf_fuenf(roh) == erwartet
 
@@ -316,3 +320,16 @@ def test_feste_pfade_stehen_vor_den_platzhaltern() -> None:
         "Diese festen Pfade stehen HINTER /{source}/… und werden von ihr "
         f"abgefangen: {zu_spaet}"
     )
+
+
+def test_schwelle_ohne_note_bleibt_entwurf() -> None:
+    # Fail-closed (Wurzel 5): „unter 3 Sternen ein Mensch" — und die Note ist
+    # unbekannt (verdeckte Bewertung, Channex 0). Dann entscheidet ein Mensch.
+    s = KiSettings(
+        ki_aktiv=True,
+        zustellart_antwort=KiZustellart.automatisch,
+        antwort_mensch_ab_note=3,
+    )
+    art, grund = KiStore.zustellart_entscheiden(s, "antwort", None, None)
+    assert art is KiZustellart.entwurf
+    assert grund and "Keine Note" in grund

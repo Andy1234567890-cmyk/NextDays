@@ -221,7 +221,15 @@ _REFRESH_PATHS = ("/auth/refresh", "/guest-auth/refresh", "/affiliates/auth/refr
 # Systems. Er steht ohne führenden Pfad in der Liste, weil die ID dazwischen
 # liegt (`/platform/announcements/{id}/uebersetzen`) und hier per Teilstring
 # verglichen wird.
-_AI_PATHS = ("/dashboard/voice", "/content/translate", "/uebersetzen")
+_AI_PATHS = (
+    "/dashboard/voice",
+    "/content/translate",
+    "/uebersetzen",
+    # Bewertungs-KI: Deutung, Bilanz, Test-KI — je Aufruf ein Modellaufruf
+    # (Wurzel 8: teure Endpunkte gehören in den eigenen Eimer, nicht default).
+    "/reviews/ai/",
+    "/reviews/ki/test",
+)
 
 # Stock-Foto-Suche des Website-Baukastens (0461). Jeder Aufruf geht an Pexels
 # bzw. Unsplash und verbraucht ein Kontingent, das für ALLE Betriebe gemeinsam

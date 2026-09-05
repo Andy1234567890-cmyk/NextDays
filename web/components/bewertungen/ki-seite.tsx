@@ -31,6 +31,7 @@ import { Textarea } from "@nextdays/ui/textarea";
 import {
   type KiKatalogAntwort,
   type KiKatalogFrage,
+  type KiProtokollEintrag,
   type KiSettings,
   type KiZustellart,
   getKiKatalog,
@@ -38,6 +39,7 @@ import {
   saveKiSettings,
 } from "@/lib/reviews";
 
+import { KiProtokoll } from "./ki-protokoll";
 import { KiTestPanel } from "./ki-test-panel";
 
 type Objekt = { id: string; title: string };
@@ -47,11 +49,13 @@ export function KiSeite({
   settings: initialSettings,
   objekte,
   canManage,
+  protokoll,
 }: {
   katalog: KiKatalogAntwort;
   settings: KiSettings;
   objekte: Objekt[];
   canManage: boolean;
+  protokoll: KiProtokollEintrag[];
 }) {
   const t = useTranslations("reviews");
   const [katalog, setKatalog] = useState(initialKatalog);
@@ -159,6 +163,7 @@ export function KiSeite({
               onGespeichert={nachladen}
               onFehler={setFehler}
             />
+            <KiProtokoll initial={protokoll} />
           </div>
         </div>
 
