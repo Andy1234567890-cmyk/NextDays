@@ -629,17 +629,23 @@ def compute_day(base: float, settings: DpSettings, signals: DaySignals) -> DayRe
     max_grenze = (
         signals.max_price_tag if signals.max_price_tag is not None else settings.max_price
     )
-    # Saison-Untergrenze (0565): an einem Saisontag bestimmt der Saisonkalender
-    # den Mindestpreis — er ersetzt dort die globale wie die tagesgenaue
-    # Untergrenze. Die OBERGRENZE beruehrt er nie (Anweisung 05.09.2026: „der
-    # Saisonkalender bestimmt nur den Mindestpreis, nie die Obergrenze").
-    # Als eigener Faktor sichtbar, damit „Warum dieser Preis?" die Anhebung
-    # benennt statt sie wie einen Rechenfehler aussehen zu lassen.
-    if settings.saison_mindestpreis and signals.saison_min_price is not None:
-        min_grenze = signals.saison_min_price
-        factors["saison_untergrenze"] = (
-            max(1.0, signals.saison_min_price / price) if price > 0 else 1.0
+    # Saison-Untergrenze (0565): ist die Regel an, kommt der Mindestpreis AUS
+    # DEM SAISONKALENDER — Punkt (Anweisung 05.09.2026: „Saisonkalender aktiv:
+    # min wird aus Saisonkalender geholt, punkt"). dp_settings.min_price
+    # spielt dann keine Rolle; Tage ohne Saison haben nur noch eine
+    # ausdrueckliche Ausnahme je Zeitraum als Untergrenze. Die OBERGRENZE
+    # beruehrt der Kalender nie. Als eigener Faktor sichtbar, damit „Warum
+    # dieser Preis?" die Anhebung benennt.
+    if settings.saison_mindestpreis:
+        min_grenze = (
+            signals.saison_min_price
+            if signals.saison_min_price is not None
+            else signals.min_price_tag
         )
+        if signals.saison_min_price is not None:
+            factors["saison_untergrenze"] = (
+                max(1.0, signals.saison_min_price / price) if price > 0 else 1.0
+            )
     if min_grenze is not None:
         price = max(price, min_grenze)
     if max_grenze is not None:

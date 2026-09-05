@@ -136,6 +136,11 @@ export type DpOverviewItem = {
   base_rate: number | null;
   min_price: number | null;
   max_price: number | null;
+  // 0565 — Regel „Mindestpreis aus dem Saisonkalender" an: min_price gilt nur
+  // ohne Saison, die Saisontage liegen in dieser Spanne.
+  saison_mindestpreis: boolean;
+  saison_preis_von: number | null;
+  saison_preis_bis: number | null;
   freigabe_noetig: boolean;
   offene_tage: number;
   // Verteilkanäle, auf denen das Objekt live ist: "platform" + OTA-Portal-Codes.

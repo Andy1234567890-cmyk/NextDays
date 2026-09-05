@@ -356,6 +356,12 @@ class DpOverviewItem(BaseModel):
     base_rate: float | None = None
     min_price: float | None = None
     max_price: float | None = None
+    # 0565 — Regel „Mindestpreis aus dem Saisonkalender" an? Dann ist
+    # min_price nur die Untergrenze OHNE Saison; die Saisontage liegen in der
+    # Spanne von/bis (None, wenn der Kalender keinen Preis ergibt).
+    saison_mindestpreis: bool = False
+    saison_preis_von: float | None = None
+    saison_preis_bis: float | None = None
     # Verteilkanäle, auf denen das Objekt LIVE ist: "platform" (eigene
     # Buchungsplattform, wenn status=active) + aktive OTA-Portal-Codes aus
     # channex_channel_connection (z. B. BookingCom, AirBNB, VRBO, Expedia).

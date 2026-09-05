@@ -140,3 +140,28 @@ def test_saison_vorhanden_braucht_eine_zuweisung() -> None:
 
     assert saison_vorhanden(_DB({"property_season_assignments": [{"id": "z"}]}), "p1")
     assert not saison_vorhanden(_DB({"property_season_assignments": []}), "p1")
+
+
+def test_saison_untergrenzen_bulk_je_objekt() -> None:
+    from src.features.pricing.zusatzsignale import saison_untergrenzen_bulk
+
+    db = _DB(
+        {
+            "property_seasons": [
+                {"id": "a", "property_id": "p1", "mode": "percent", "amount": 30},
+                {"id": "b", "property_id": "p2", "mode": "fixed", "amount": 900},
+            ],
+            "property_season_assignments": [
+                {"property_id": "p1", "season_id": "a", "start_date": "2027-07-01",
+                 "end_date": "2027-07-03", "created_at": "2026-01-01T00:00:00Z"},
+                {"property_id": "p2", "season_id": "b", "start_date": "2027-07-01",
+                 "end_date": "2027-07-01", "created_at": "2026-01-01T00:00:00Z"},
+            ],
+        }
+    )
+    out = saison_untergrenzen_bulk(
+        db, {"p1": 500.0, "p2": None, "p3": 100.0}, date(2027, 7, 1), date(2027, 7, 10)
+    )
+    assert out["p1"] == (650.0, 650.0, 3)
+    assert out["p2"] == (900.0, 900.0, 1)  # fixed braucht keinen Grundpreis
+    assert "p3" not in out

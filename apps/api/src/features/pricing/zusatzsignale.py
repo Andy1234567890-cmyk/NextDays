@@ -377,3 +377,59 @@ def _saisonpreis(saison: dict[str, Any], base: float | None) -> float | None:
     if base is None or base <= 0:
         return None
     return round(base * (1 + betrag / 100), 2)
+
+
+def saison_untergrenzen_bulk(
+    db: Client,
+    basis_je_objekt: dict[str, float | None],
+    start: date,
+    end: date,
+) -> dict[str, tuple[float, float, int]]:
+    """{property_id: (min, max, tage)} der Saison-Untergrenzen im Horizont —
+    fuer die Objektliste in ZWEI Abfragen statt einer je Zeile (N+1).
+    Objekte ohne Saisontag mit Preis fehlen im Ergebnis."""
+    ids = list(basis_je_objekt)
+    if not ids:
+        return {}
+    out: dict[str, tuple[float, float, int]] = {}
+    try:
+        for i in range(0, len(ids), 100):
+            block = ids[i : i + 100]
+            saisons = {
+                str(r["id"]): r
+                for r in fetch_all_rows(
+                    db.table("property_seasons")
+                    .select("id, property_id, mode, amount")
+                    .in_("property_id", block)
+                )
+            }
+            zuweisungen = fetch_all_rows(
+                db.table("property_season_assignments")
+                .select("property_id, season_id, start_date, end_date, created_at")
+                .in_("property_id", block)
+                .lte("start_date", (end - timedelta(days=1)).isoformat())
+                .gte("end_date", start.isoformat())
+                .order("created_at")
+            )
+            je_tag: dict[str, dict[str, float]] = defaultdict(dict)
+            for z in zuweisungen:
+                pid = str(z.get("property_id"))
+                saison = saisons.get(str(z.get("season_id")))
+                von, bis = _as_date(z.get("start_date")), _as_date(z.get("end_date"))
+                if saison is None or von is None or bis is None:
+                    continue
+                preis = _saisonpreis(saison, basis_je_objekt.get(pid))
+                if preis is None:
+                    continue
+                tag = max(von, start)
+                letzter = min(bis, end - timedelta(days=1))
+                while tag <= letzter:
+                    je_tag[pid][tag.isoformat()] = preis
+                    tag += timedelta(days=1)
+            for pid, tage in je_tag.items():
+                if tage:
+                    out[pid] = (min(tage.values()), max(tage.values()), len(tage))
+    except Exception as exc:  # noqa: BLE001 — Tabelle fehlt = kein Kalender
+        log.warning("saison_untergrenzen_bulk_unlesbar", error=str(exc)[:200])
+        return {}
+    return out

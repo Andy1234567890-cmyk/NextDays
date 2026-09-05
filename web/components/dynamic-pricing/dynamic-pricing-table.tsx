@@ -276,7 +276,18 @@ export function DynamicPricingTable({ items }: { items: DpOverviewItem[] }) {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
-                    {fmtMoney(it.min_price, it.currency)}
+                    {it.saison_mindestpreis ? (
+                      // Regel an: der Mindestpreis kommt aus dem Saisonkalender.
+                      <span className="whitespace-nowrap">
+                        {it.saison_preis_von == null || it.saison_preis_bis == null
+                          ? "—"
+                          : it.saison_preis_von === it.saison_preis_bis
+                            ? fmtMoney(it.saison_preis_von, it.currency)
+                            : `${fmtMoney(it.saison_preis_von, it.currency)} – ${fmtMoney(it.saison_preis_bis, it.currency)}`}
+                      </span>
+                    ) : (
+                      fmtMoney(it.min_price, it.currency)
+                    )}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
                     {fmtMoney(it.max_price, it.currency)}

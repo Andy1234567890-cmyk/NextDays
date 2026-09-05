@@ -28,7 +28,12 @@ from .schemas import (
     DpSettingsResponse,
     DpSettingsUpdate,
 )
-from .zusatzsignale import saison_untergrenze_je_tag, saison_vorhanden, verlauf_schreiben
+from .zusatzsignale import (
+    saison_untergrenze_je_tag,
+    saison_untergrenzen_bulk,
+    saison_vorhanden,
+    verlauf_schreiben,
+)
 
 if TYPE_CHECKING:
     from .resolver import PricingResolver
@@ -503,6 +508,18 @@ class DpSettingsService:
         # EINE Abfrage für alle — die Liste zeigt bis zu hunderte Objekte,
         # eine Abfrage je Zeile wäre ein N+1.
         offen_by_prop = self._offene_freigaben(ids)
+        # 0565: Spanne der Saison-Untergrenze je Objekt mit eingeschalteter
+        # Regel — sonst stand in der Liste weiter nur der Mindestpreis ohne
+        # Saison und die Regel schien wirkungslos (05.09.2026).
+        mit_saison = {
+            pid: _opt_float((rate_by_prop.get(pid) or {}).get("base_price"))
+            for pid in ids
+            if DpSettings.from_row(settings_by_prop.get(pid)).saison_mindestpreis
+        }
+        heute = datetime.now(UTC).date()
+        saison_by_prop = saison_untergrenzen_bulk(
+            self._db(), mit_saison, heute, heute + timedelta(days=365)
+        )
 
         items: list[DpOverviewItem] = []
         for p in props:
@@ -510,6 +527,7 @@ class DpSettingsService:
             s = DpSettings.from_row(settings_by_prop.get(pid))
             rate = rate_by_prop.get(pid, {})
             rate_base = _opt_float(rate.get("base_price"))
+            saison = saison_by_prop.get(pid)
             # Effektiver Anker: manuell gesetzt oder Grundpreis (kein Erfinden).
             base_rate = (
                 s.manual_base_price
@@ -536,6 +554,9 @@ class DpSettingsService:
                     base_rate=base_rate,
                     min_price=s.min_price,
                     max_price=s.max_price,
+                    saison_mindestpreis=s.saison_mindestpreis,
+                    saison_preis_von=saison[0] if saison else None,
+                    saison_preis_bis=saison[1] if saison else None,
                     channels=channels,
                     freigabe_noetig=s.freigabe_noetig,
                     offene_tage=offen_by_prop.get(pid, 0),

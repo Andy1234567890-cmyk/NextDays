@@ -651,6 +651,12 @@ def test_saison_untergrenze_hebt_an_und_kappt_nie() -> None:
     r4 = compute_day(_BASE, aus, tag)
     assert r4.price == 100.0
     assert "saison_untergrenze" not in r4.factors
-    # Kein Saisontag: die globale Untergrenze gilt weiter.
+    # Regel an, kein Saisontag: dp_settings.min_price zaehlt NICHT mehr — der
+    # Mindestpreis kommt aus dem Saisonkalender, Punkt. Nur eine ausdrueckliche
+    # Ausnahme je Zeitraum bleibt als Untergrenze.
     s5 = _settings(weekend_uplift_pct=0, min_price=150.0, max_price=300.0, saison_mindestpreis=True)
-    assert compute_day(_BASE, s5, DaySignals(day=date(2026, 7, 1), days_before=200)).price == 150.0
+    assert compute_day(_BASE, s5, DaySignals(day=date(2026, 7, 1), days_before=200)).price == 100.0
+    r6 = compute_day(
+        _BASE, s5, DaySignals(day=date(2026, 7, 1), days_before=200, min_price_tag=120.0)
+    )
+    assert r6.price == 120.0
