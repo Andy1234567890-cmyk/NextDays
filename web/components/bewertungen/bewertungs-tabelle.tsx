@@ -368,7 +368,8 @@ export function BewertungsTabelle({
                     key={s}
                     className={
                       "px-3 py-2.5 text-xs font-medium text-muted-foreground " +
-                      (s === "score_5" ? "text-right" : "")
+                      (s === "score_5" ? "text-right " : "") +
+                      (s === "text" ? "w-full max-w-0" : "")
                     }
                   >
                     {t(`column.${s}`)}
@@ -801,7 +802,7 @@ function Zeile({
                 title={t(`ai${review.ai.stimmung === "positiv" ? "Positive" : review.ai.stimmung === "neutral" ? "Neutral" : "Negative"}`)}
               />
             )}
-            <span className="block max-w-md truncate">{vorschau || "–"}</span>
+            <span className="block min-w-0 truncate">{vorschau || "–"}</span>
           </span>
         );
       case "replied":
@@ -847,7 +848,12 @@ function Zeile({
           <td
             key={s}
             className={
-              "px-3 py-2.5 align-middle " + (s === "score_5" ? "text-right" : "")
+              "px-3 py-2.5 align-middle " +
+              (s === "score_5" ? "text-right " : "") +
+              // Die Textspalte nimmt den Rest und kürzt — ohne max-w-0 zählt
+              // ihre Vorschau als Mindestbreite, und die Tabelle wächst über
+              // die Karte hinaus (Sterne und letzte Spalte abgeschnitten).
+              (s === "text" ? "w-full max-w-0" : "")
             }
           >
             {zelle(s)}
