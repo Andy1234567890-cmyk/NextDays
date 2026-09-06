@@ -253,6 +253,9 @@ export function ChannelConnectButton({
   const [properties, setProperties] = useState<{ id: string; title: string }[]>([]);
   const [propertyId, setPropertyId] = useState<string | null>(null);
   const [selected, setSelected] = useState<SupportedPortal | null>(null);
+  // Der Rücksprung von Airbnb setzt das hier statt `selected`: zu dem Zeitpunkt
+  // ist der Portal-Katalog noch nicht geladen (er kommt erst mit `open`).
+  const [oauthPortalNachziehen, setOauthPortalNachziehen] = useState(false);
   const [values, setValues] = useState<Record<string, PortalValue>>({});
   // Freier Kanal-Titel (wie in der Referenz-Oberfläche); leer = Portalname.
   const [title, setTitle] = useState("");
@@ -348,6 +351,23 @@ export function ChannelConnectButton({
     });
   }, [open, presetPropertyId]);
 
+  // Das Portal für den OAuth-Schritt nachziehen, sobald der Katalog da ist.
+  //
+  // Nur für den Rücksprung (`oauthPortalNachziehen`), nicht generell: wer den
+  // Assistenten normal öffnet, soll weiterhin selbst wählen. `AirBNB` ist hier
+  // richtig hart, weil ausschliesslich Airbnb diesen Rücksprung erzeugt — der
+  // Effekt hängt an derselben Stelle, die `oauthRuecksprung(kanal, "AirBNB")`
+  // aufruft. Fehlt der Code im Katalog, bleibt der Merker stehen und der Nutzer
+  // landet über den Zurück-Weg bei der Portalwahl, statt vor einer leeren
+  // Fläche zu sitzen.
+  useEffect(() => {
+    if (!oauthPortalNachziehen || selected) return;
+    const airbnb = portals.find((p) => p.code === "AirBNB");
+    if (!airbnb) return;
+    setSelected(airbnb);
+    setOauthPortalNachziehen(false);
+  }, [oauthPortalNachziehen, selected, portals]);
+
   // RÜCKSPRUNG von Airbnb auswerten — hier entsteht zum ersten Mal etwas.
   //
   // Channex hängt nach erfolgreicher Autorisierung
@@ -385,6 +405,15 @@ export function ChannelConnectButton({
 
     setOpen(true);
     setStep("oauth");
+    // Merken, dass der OAuth-Schritt ein Portal braucht: `selected` lebt nur im
+    // React-State und ist nach dem Rücksprung von Airbnb (voller Seitenaufbau)
+    // immer `null`. Der OAuth-Zweig verlangt aber `step === "oauth" && selected`
+    // — ohne Portal fiel die ganze Schrittkette auf ihr abschliessendes `: null`
+    // durch, und der Dialog stand LEER da: Überschrift und Objektname, darunter
+    // nichts. Live am 06.09.2026 an „Feriehus Snerlebo" (18 von 19 verbunden);
+    // im Serverlog war nichts zu sehen, weil eine leere Fläche keine Anfrage
+    // stellt. Ein eigener Effekt setzt das Portal, sobald der Katalog da ist.
+    setOauthPortalNachziehen(true);
     startTransition(async () => {
       oauthProtokoll("ruecksprung", {
         portal: "AirBNB",
@@ -1832,7 +1861,31 @@ export function ChannelConnectButton({
                   </>
                 )}
               </div>
-            ) : null}
+            ) : (
+              /* Passt KEIN Schritt, stand hier bis zum 06.09.2026 ein blankes
+                 `null`: der Dialog zeigte Überschrift und Objektname und
+                 darunter nichts — ohne Meldung, ohne Knopf, ohne Serveranfrage.
+                 Eine leere Fläche ist der schlechteste Fehlerzustand, weil sie
+                 wie ein Ladehänger aussieht (Wurzel 5). Jetzt führt jeder
+                 unerwartete Zustand zurück zur Portalwahl. */
+              <div className="flex flex-col gap-3">
+                <p className="text-sm text-muted-foreground">
+                  Dieser Schritt lässt sich gerade nicht anzeigen. Wähle das
+                  Portal erneut.
+                </p>
+                {error && <ErrorBox text={error} />}
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSelected(null);
+                    setOauthPortalNachziehen(false);
+                    setStep(propertyId ? "portal" : "object");
+                  }}
+                >
+                  Zur Portalwahl
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       )}
