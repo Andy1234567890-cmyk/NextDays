@@ -6677,7 +6677,7 @@
       },
       "airbnbPull": {
         "button": "Bei Airbnb abrufen",
-        "hint": "Ordnet dieses Objekt bei Airbnb zu und holt den Preis von dort.",
+        "hint": "Holt Fotos, Texte, Ausstattung, Zimmer und Regeln dieser Anzeige von Airbnb. Der Grundpreis bleibt wie bei uns gepflegt – Preise gehen von hier an Airbnb; nur ein noch leerer Preisplan wird mit Airbnbs Preis gefüllt.",
         "priceTaken": "Preis von Airbnb übernommen: {price} · Mindestaufenthalt {nights, plural, one {eine Nacht} other {# Nächte}}",
         "noPrice": "Airbnb hat keinen Preis übergeben. Die Zuordnung steht.",
         "currency": "Währung: {currency}",

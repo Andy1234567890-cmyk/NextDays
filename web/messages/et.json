@@ -6656,7 +6656,7 @@
       },
       "airbnbPull": {
         "button": "Too Airbnb-st",
-        "hint": "Seob selle objekti Airbnb-s ja toob hinna sealt.",
+        "hint": "Tooge selle kuulutuse fotod, tekstid, sisustus, toad ja reeglid Airbnb-st. Baashind jääb samaks nagu meil – hinnad lähevad siit Airbnb-sse; ainult tühi hinnaplaan täidetakse Airbnb hinnaga.",
         "priceTaken": "Hind võetud Airbnb-st: {price} · minimaalne viibimisaeg {nights, plural, one {üks öö} other {# ööd}}",
         "noPrice": "Airbnb ei edastanud hinda. Sidumine on paigas.",
         "currency": "Valuuta: {currency}",

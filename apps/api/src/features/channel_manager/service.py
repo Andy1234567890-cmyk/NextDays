@@ -23,6 +23,7 @@ from .airbnb_diagnose import AirbnbDiagnoseMixin
 from .airbnb_direkt import AirbnbDirektMixin
 from .airbnb_foto_raum import AirbnbFotoRaumMixin
 from .airbnb_gebuehren import AirbnbGebuehrenMixin
+from .airbnb_hausregeln import AirbnbHausregelnMixin
 from .airbnb_historie import AirbnbHistorieMixin
 from .airbnb_historie_dienst import AirbnbHistorieDienstMixin
 from .airbnb_historie_import import AirbnbHistorieImportMixin
@@ -109,6 +110,9 @@ class ChannelManagerService(
     # Room-Type und Rate-Plan bei Channex anzulegen — ohne sie gibt es kein
     # Mapping und Airbnb liefert keinen Preis.
     AirbnbObjektAbrufMixin,
+    # `_hausregeln_direkt_uebernehmen` — vom Objekt-Abruf gerufen, liest über
+    # AirbnbDirektMixin (unten) Airbnbs Booking-Settings.
+    AirbnbHausregelnMixin,
     # Braucht `airbnb_objekt_abrufen` (oben) und `_voll_push_einreihen`
     # (OtaExtrasMixin, unten) — nur Aufrufe zur Laufzeit, keine MRO-Abhängigkeit.
     AirbnbVollAbgleichMixin,

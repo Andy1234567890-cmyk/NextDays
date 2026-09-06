@@ -6656,7 +6656,7 @@
       },
       "airbnbPull": {
         "button": "Gauti iš Airbnb",
-        "hint": "Priskiria šį objektą „Airbnb“ ir iš ten paima kainą.",
+        "hint": "Gauti nuotraukas, tekstus, įrangą, kambarius ir taisykles iš šio Airbnb skelbimo. Bazinė kaina lieka tokia, kokia yra pas mus – kainos iš čia keliauja į Airbnb; tik dar tuščias kainoraštis bus užpildytas Airbnb kaina.",
         "priceTaken": "Kaina perimta iš „Airbnb“: {price} · minimali viešnagė {nights, plural, one {# naktis} few {# naktys} many {# nakties} other {# naktų}}",
         "noPrice": "„Airbnb“ nepateikė kainos. Priskyrimas atliktas.",
         "currency": "Valiuta: {currency}",

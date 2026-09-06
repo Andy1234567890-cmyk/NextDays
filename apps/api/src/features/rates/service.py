@@ -363,21 +363,9 @@ class RatesService:
         #              Content-Sync. Den Wert, den Channex' Kalender anzeigt und
         #              für Buchungen erzwingt, ist die per-Datum-Restriction —
         #              genau die blieb ungesetzt.
-        try:
-            enqueue(
-                self._db(),
-                "reconcile_rate_plan_prices",
-                tenant_id=tenant_id,
-                payload={"tenant_id": tenant_id, "property_id": req.property_id},
-                dedup_key=dedup_key(
-                    tenant_id, req.property_id, "reconcile_rate_plan_prices"
-                ),
-            )
-        except Exception as exc:  # noqa: BLE001 — Einreihen kippt den Request nie
-            log.warning(
-                "rate_plan_created_reconcile_enqueue_failed",
-                tenant_id=tenant_id, error=str(exc)[:200],
-            )
+        self._preis_sofort_uebertragen(
+            tenant_id, req.property_id, grund="rate_plan_created_reconcile_enqueue_failed"
+        )
         if req.min_stay and req.min_stay > 1:
             self._push_min_stay_restriction(
                 tenant_id, req.property_id, req.min_stay,
@@ -458,21 +446,9 @@ class RatesService:
         self._sync_property(tenant_id, req.property_id, prop.get("title"), eff_currency)
         # Neuer Basispreis → Tageskurve bei Channex veraltet: Reconcile einreihen
         # (coalesced; ohne Mapping zieht der 15-min-Tick nach dem Content-Sync nach).
-        try:
-            enqueue(
-                self._db(),
-                "reconcile_rate_plan_prices",
-                tenant_id=tenant_id,
-                payload={"tenant_id": tenant_id, "property_id": req.property_id},
-                dedup_key=dedup_key(
-                    tenant_id, req.property_id, "reconcile_rate_plan_prices"
-                ),
-            )
-        except Exception as exc:  # noqa: BLE001 — Einreihen kippt den Request nie
-            log.warning(
-                "rate_base_price_reconcile_enqueue_failed",
-                tenant_id=tenant_id, error=str(exc)[:200],
-            )
+        self._preis_sofort_uebertragen(
+            tenant_id, req.property_id, grund="rate_base_price_reconcile_enqueue_failed"
+        )
         log.info("rate_base_price_set", tenant_id=tenant_id, property_id=req.property_id)
         return self._row(result)
 
@@ -595,24 +571,9 @@ class RatesService:
             "offset_amount", "offset_percent",
         }
         if price_relevant & set(patch):
-            try:
-                enqueue(
-                    self._db(),
-                    "reconcile_rate_plan_prices",
-                    tenant_id=tenant_id,
-                    payload={
-                        "tenant_id": tenant_id,
-                        "property_id": row["property_id"],
-                    },
-                    dedup_key=dedup_key(
-                        tenant_id, row["property_id"], "reconcile_rate_plan_prices"
-                    ),
-                )
-            except Exception as exc:  # noqa: BLE001 — Einreihen kippt den Request nie
-                log.warning(
-                    "rate_plan_reconcile_enqueue_failed",
-                    tenant_id=tenant_id, error=str(exc)[:200],
-                )
+            self._preis_sofort_uebertragen(
+                tenant_id, row["property_id"], grund="rate_plan_reconcile_enqueue_failed"
+            )
         else:
             # Sonst: hängen Kinder an diesem Plan, kann eine sonstige Änderung sie
             # trotzdem betreffen (der Reconcile oben deckt das Objekt bereits ab,
@@ -743,22 +704,9 @@ class RatesService:
         Objekt: mehrere Kinder = EIN Job."""
         if not self._derived_children(rate_plan_id):
             return
-        try:
-            enqueue(
-                self._db(),
-                "reconcile_rate_plan_prices",
-                tenant_id=tenant_id,
-                payload={"tenant_id": tenant_id, "property_id": property_id},
-                dedup_key=dedup_key(
-                    tenant_id, property_id, "reconcile_rate_plan_prices"
-                ),
-            )
-        except Exception as exc:  # noqa: BLE001 — Einreihen darf den Request nie kippen
-            log.warning(
-                "rate_plan_child_propagation_enqueue_failed",
-                tenant_id=tenant_id, rate_plan_id=rate_plan_id,
-                error=str(exc)[:200],
-            )
+        self._preis_sofort_uebertragen(
+            tenant_id, property_id, grund="rate_plan_child_propagation_enqueue_failed"
+        )
 
     def _require_own_rate_plan(self, tenant_id: str, rate_plan_id: str) -> dict:
         """Einen Rate-Plan laden UND auf den Tenant scopen in EINEM Schritt (Wurzel 3:
@@ -879,21 +827,9 @@ class RatesService:
         tenant_id = self._require_tenant(ctx)
         plan = self._require_own_rate_plan(tenant_id, rate_plan_id)
         property_id = plan["property_id"]
-        try:
-            enqueue(
-                self._db(),
-                "reconcile_rate_plan_prices",
-                tenant_id=tenant_id,
-                payload={"tenant_id": tenant_id, "property_id": property_id},
-                dedup_key=dedup_key(
-                    tenant_id, property_id, "reconcile_rate_plan_prices"
-                ),
-            )
-        except Exception as exc:  # noqa: BLE001 — Einreihen darf den Request nie kippen
-            log.warning(
-                "resync_prices_enqueue_failed",
-                tenant_id=tenant_id, rate_plan_id=rate_plan_id, error=str(exc)[:200],
-            )
+        self._preis_sofort_uebertragen(
+            tenant_id, property_id, grund="resync_prices_enqueue_failed"
+        )
         log.info(
             "rate_plan_prices_resync_requested",
             tenant_id=tenant_id, rate_plan_id=rate_plan_id,
@@ -1250,6 +1186,41 @@ class RatesService:
                 ]
             },
         )
+
+    def _preis_sofort_uebertragen(
+        self, tenant_id: str, property_id: str, *, grund: str
+    ) -> None:
+        """Die Preiskurve des Objekts JETZT an die Portale geben — erzwungen.
+
+        Jede Preis-Speicherung (Grundpreis, Plan anlegen/ändern, abgeleitete
+        Pläne) landet hier. `erzwingen` heißt: der Worker vergleicht nicht mit
+        dem Schatten des letzten Pushs, er sendet die Soll-Kurve. Live gemessen
+        (06.09.2026, „Feriehus Snerlebo"): der Betrieb speicherte 750 DKK, der
+        Differenz-Lauf hielt den Schatten (750) für Channex' Stand (900) und
+        schickte nichts — „der Preis geht nicht raus, wenn wir speichern".
+
+        Eigener Dedup-Schlüssel (`speichern`): ein offener Differenz-Job des
+        15-Minuten-Ticks darf die Speicherung nicht verschlucken (Coalescing
+        nimmt den ERSTEN Job, und der wäre der ohne `erzwingen`).
+        Einreihen kippt den Request nie; der Fehlgrund steht im Log.
+        """
+        try:
+            enqueue(
+                self._db(),
+                "reconcile_rate_plan_prices",
+                tenant_id=tenant_id,
+                payload={
+                    "tenant_id": tenant_id,
+                    "property_id": property_id,
+                    "erzwingen": True,
+                },
+                dedup_key=dedup_key(
+                    tenant_id, property_id, "reconcile_rate_plan_prices",
+                    suffix="speichern",
+                ),
+            )
+        except Exception as exc:  # noqa: BLE001 — Einreihen kippt den Request nie
+            log.warning(grund, tenant_id=tenant_id, error=str(exc)[:200])
 
     def _sync_property(
         self, tenant_id: str, property_id: str, title: str | None, currency: str | None

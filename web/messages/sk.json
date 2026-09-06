@@ -6656,7 +6656,7 @@
       },
       "airbnbPull": {
         "button": "Načítať z Airbnb",
-        "hint": "Priradí tento objekt na Airbnb a načíta odtiaľ cenu.",
+        "hint": "Získajte fotografie, texty, vybavenie, izby a pravidlá tohto inzerátu z Airbnb. Základná cena zostáva taká, ako je u nás udržiavaná – ceny idú odtiaľto na Airbnb; iba prázdny cenový plán sa vyplní cenou z Airbnb.",
         "priceTaken": "Cena prevzatá z Airbnb: {price} · minimálny pobyt {nights, plural, one {jedna noc} few {# noci} many {# noci} other {# nocí}}",
         "noPrice": "Airbnb neodovzdalo žiadnu cenu. Priradenie je nastavené.",
         "currency": "Mena: {currency}",

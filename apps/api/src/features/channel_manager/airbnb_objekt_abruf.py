@@ -136,6 +136,18 @@ _AVAILABILITY_VORGABE: dict[str, int | str] = {
 }
 
 
+def _preis_gepflegt(base_price: object) -> bool:
+    """Ist das ein vom Betrieb gepflegter Grundpreis — kein Platzhalter?
+
+    `_preisplan_sicherstellen` legt neue Pläne mit `base_price = 0` an; alles
+    über 0 hat jemand bewusst eingetragen (Assistent, Preise-Seite, Kalender).
+    """
+    try:
+        return float(base_price or 0) > 0
+    except (TypeError, ValueError):
+        return False
+
+
 def _je_kanal(wert: int | str) -> dict[str, Any]:
     """Einen Wert in die `PerChannel`-Form der Maske bringen."""
     return {
@@ -339,7 +351,11 @@ class AirbnbObjektAbrufMixin:
             .execute()
         ).data or []
         if vorhanden:
-            return {"id": str(vorhanden[0]["id"]), "angelegt": False}
+            return {
+                "id": str(vorhanden[0]["id"]),
+                "angelegt": False,
+                "base_price": vorhanden[0].get("base_price"),
+            }
 
         waehrung = stammdaten.get("currency") or prop.get("currency")
         if not waehrung:
@@ -545,6 +561,34 @@ class AirbnbObjektAbrufMixin:
         preisteil = settings.get("pricing_setting") or {}
         regeln = settings.get("availability_rule") or {}
         buchung = settings.get("booking_setting") or {}
+
+        if not plan.get("angelegt") and _preis_gepflegt(plan.get("base_price")):
+            # Der Preis fließt von UNS zu Airbnb (Push-Kanal, Entscheidung vom
+            # 06.09.2026). Was Airbnb hier zurückgibt, ist unser eigener,
+            # zuletzt gesendeter Preis — ihn zu übernehmen macht den Abruf zur
+            # Schleife: live setzte der Voll-Abgleich den frisch auf 750 DKK
+            # gesenkten Grundpreis auf Airbnbs 900 zurück, und der Voll-Push
+            # schickte die 900 wieder hin. Ersetzt wird nur der Platzhalter
+            # eines eben angelegten Plans (base_price 0). Die übrigen Angaben
+            # (Check-in-Zeiten, Haustiere, max. Nächte) ergänzen weiterhin nur
+            # leere Felder.
+            uebrige = self._weitere_felder_uebernehmen(
+                db, property_id, preisteil, regeln, buchung
+            )
+            log.info(
+                "airbnb_objekt_preis_bleibt_eigener",
+                tenant_id=tenant_id, property_id=property_id,
+                listing_id=listing_id, base_price=plan.get("base_price"),
+                airbnb_preis=self._nachtpreis(preisteil), weitere=uebrige,
+            )
+            return {
+                "uebernommen": False,
+                "hinweis": (
+                    "Der Grundpreis bleibt wie bei uns gepflegt — Preise gehen "
+                    "von hier an Airbnb, nicht umgekehrt."
+                ),
+                "weitere": uebrige,
+            }
 
         preis = self._nachtpreis(preisteil)
         if preis is None and ersatz_preisteil:
@@ -933,92 +977,6 @@ class AirbnbObjektAbrufMixin:
                 "id", zu_loeschen
             ).execute()
         return len(neue) + len(zu_loeschen)
-
-    def _hausregeln_direkt_uebernehmen(
-        self, db: Client, tenant_id: str, property_id: str,
-        listing_id: str, token: str,
-    ) -> list[str]:
-        """Airbnbs Hausregeln über die EIGENE API holen und speichern.
-
-        Warum nicht über Channex: die Mapping-Antwort liefert `booking_setting`
-        nur als Beifang, und die Felder aus Airbnbs „House rules"-Maske fehlen
-        darin. `v2/booking_settings/{id}` gibt sie vollständig — live verifiziert,
-        siehe `airbnb_booking_settings_direkt`.
-
-        Ziel ist `type_attributes.policies`, denn dort liest sie sowohl das
-        Frontend (`web/lib/policy-meta.ts`) als auch der Channex-Push
-        (`content_sync`). Der Airbnb-Rohblock wird daneben abgelegt: er ist der
-        Beleg, woher die Werte kommen.
-
-        Nur LEERE Felder werden gefüllt (Wurzel 1) — was der Betrieb selbst
-        eingestellt hat, gilt. Rückgabe: die Namen der wirklich gesetzten Felder,
-        damit die UI nicht „übernommen" meldet, wo nichts übernommen wurde.
-        """
-        roh = self.airbnb_booking_settings_direkt(  # type: ignore[attr-defined]
-            token, listing_id
-        )
-        if not roh:
-            return []
-
-        rows = (
-            db.table("properties").select("type_attributes")
-            .eq("tenant_id", tenant_id).eq("id", property_id)
-            .limit(1).execute()
-        ).data or []
-        if not rows:
-            return []
-        attrs = rows[0].get("type_attributes") or {}
-        if not isinstance(attrs, dict):
-            attrs = {}
-        policies = attrs.get("policies")
-        policies = dict(policies) if isinstance(policies, dict) else {}
-
-        gesetzt: list[str] = []
-        # Check-in/-out: Airbnbs Zeitwerte inklusive „FLEXIBLE"/„NOT_SELECTED"
-        # und der Stunden über 23 (Doku: start bis 26, Ende bis 27).
-        for feld, wert in (
-            ("checkInTime", ali.check_in_start(roh)),
-            ("checkInTimeEnd", ali.check_in_ende(roh)),
-            ("checkOutTime", ali.check_out(roh)),
-        ):
-            if wert and not policies.get(feld):
-                policies[feld] = wert
-                gesetzt.append(feld)
-
-        regeln = ali.gastregeln_uebernehmen(roh)
-        for feld, wert in regeln.items():
-            if feld not in policies:
-                policies[feld] = wert
-                gesetzt.append(feld)
-
-        storno = ali.storno_uebernehmen(roh)
-        if storno and not policies.get("airbnbStorno"):
-            policies["airbnbStorno"] = storno
-            gesetzt.append("airbnbStorno")
-
-        sofort = ali.sofortbuchung_uebernehmen(roh)
-        if sofort and not policies.get("airbnbSofortbuchung"):
-            policies["airbnbSofortbuchung"] = sofort
-            gesetzt.append("airbnbSofortbuchung")
-
-        if not gesetzt:
-            return []
-
-        neue_attrs = {
-            **attrs,
-            "policies": policies,
-            # Rohform daneben (wie bei `airbnb.booking_setting`): Beleg der
-            # Herkunft und Vergleichsgrundlage für einen späteren Abruf.
-            "airbnbHausregeln": roh,
-        }
-        db.table("properties").update({"type_attributes": neue_attrs}).eq(
-            "tenant_id", tenant_id
-        ).eq("id", property_id).execute()
-        log.info(
-            "airbnb_hausregeln_uebernommen",
-            property_id=property_id, felder=gesetzt,
-        )
-        return gesetzt
 
     @staticmethod
     def _details_interner_name(

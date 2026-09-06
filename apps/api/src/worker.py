@@ -434,7 +434,10 @@ def _handle_reconcile_rate_plan_prices(
     ('Jetzt übertragen'). Der 15-min-Tick macht dasselbe für alle Objekte; hier
     sofort auf Nutzer-Wunsch. Budget durchreichen (Channex-Read/-Push zieht Token)."""
     _svc(db, budget).reconcile_rate_plan_prices(
-        payload["tenant_id"], payload["property_id"]
+        payload["tenant_id"], payload["property_id"],
+        # Gesetzt von jeder Preis-Speicherung (rates/service): ohne Schatten-
+        # Vergleich senden. Alte Jobs ohne das Feld bleiben der Differenz-Lauf.
+        erzwingen=bool(payload.get("erzwingen")),
     )
 
 

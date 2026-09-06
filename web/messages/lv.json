@@ -6656,7 +6656,7 @@
       },
       "airbnbPull": {
         "button": "Iegūt no Airbnb",
-        "hint": "Piešķir šo objektu Airbnb un pārņem no tā cenu.",
+        "hint": "Iegūstiet fotoattēlus, tekstus, aprīkojumu, istabas un noteikumus šim sludinājumam no Airbnb. Pamatcena paliek tāda, kāda tā ir pie mums – cenas no šejienes tiek nosūtītas uz Airbnb; tikai tukšs cenu plāns tiks aizpildīts ar Airbnb cenām.",
         "priceTaken": "Cena pārņemta no Airbnb: {price} · minimālā uzturēšanās {nights, plural, zero {# nakšu} one {# nakts} other {# naktis}}",
         "noPrice": "Airbnb nenodeva nevienu cenu. Piešķīrums ir izveidots.",
         "currency": "Valūta: {currency}",

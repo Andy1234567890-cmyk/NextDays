@@ -6656,7 +6656,7 @@
       },
       "airbnbPull": {
         "button": "Iġbor minn Airbnb",
-        "hint": "Jassenja din il-proprjetà fuq Airbnb u jiġbor il-prezz minn hemm.",
+        "hint": "Niżżel ritratti, testi, faċilitajiet, kmamar u regoli ta' din il-listing minn Airbnb. Il-prezz bażiku jibqa' kif inhu miżmum għandna – il-prezzijiet jgħaddu minn hawn għal Airbnb; biss pjan ta' prezzijiet vojt se jimtela bil-prezz ta' Airbnb.",
         "priceTaken": "Prezz meħud minn Airbnb: {price} · soġġorn minimu {nights, plural, one {lejl wieħed} two {jumejn iljieli} few {# iljieli} many {# lejl} other {# lejl}}",
         "noPrice": "Airbnb ma bagħatx ebda prezz. L-assenjazzjoni saret.",
         "currency": "Munita: {currency}",

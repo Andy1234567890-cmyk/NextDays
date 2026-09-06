@@ -6677,7 +6677,7 @@
       },
       "airbnbPull": {
         "button": "Fetch from Airbnb",
-        "hint": "Maps this listing at Airbnb and pulls the price from there.",
+        "hint": "Fetches photos, texts, amenities, rooms, and rules of this listing from Airbnb. The base price remains as maintained by us – prices go from here to Airbnb; only an empty price plan will be filled with Airbnb's price.",
         "priceTaken": "Price taken from Airbnb: {price} · minimum stay {nights, plural, one {one night} other {# nights}}",
         "noPrice": "Airbnb did not return a price. The mapping is in place.",
         "currency": "Currency: {currency}",

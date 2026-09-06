@@ -6656,7 +6656,7 @@
       },
       "airbnbPull": {
         "button": "Hent fra Airbnb",
-        "hint": "Tildeler dette objekt hos Airbnb og henter prisen derfra.",
+        "hint": "Henter billeder, tekster, faciliteter, værelser og regler for denne annonce fra Airbnb. Grundprisen forbliver som vedligeholdt hos os – priser overføres herfra til Airbnb; kun en tom prisplan udfyldes med Airbnbs pris.",
         "priceTaken": "Pris overtaget fra Airbnb: {price} · minimumsophold {nights, plural, one {en nat} other {# nætter}}",
         "noPrice": "Airbnb sendte ingen pris. Tildelingen er på plads.",
         "currency": "Valuta: {currency}",

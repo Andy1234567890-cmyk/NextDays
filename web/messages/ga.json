@@ -6656,7 +6656,7 @@
       },
       "airbnbPull": {
         "button": "Faigh ó Airbnb",
-        "hint": "Sannann sé an mhaoin seo ar Airbnb agus tarraingíonn an praghas as sin.",
+        "hint": "Faigh grianghraif, téacsanna, áiseanna, seomraí agus rialacha an fhógra seo ó Airbnb. Fanann an bunphraghas mar atá coinnithe againn – téann praghsanna as seo go Airbnb; ní líontar ach plean praghsanna folamh le praghas Airbnb.",
         "priceTaken": "Praghas tógtha ó Airbnb: {price} · íosfhanacht {nights, plural, one {# oíche} two {# oíche} few {# oíche} many {# n-oíche} other {# oíche}}",
         "noPrice": "Níor sheol Airbnb aon phraghas. Tá an sannadh i bhfeidhm.",
         "currency": "Airgeadra: {currency}",

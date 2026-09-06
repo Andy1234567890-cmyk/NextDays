@@ -6656,7 +6656,7 @@
       },
       "airbnbPull": {
         "button": "Hae Airbnb:stä",
-        "hint": "Liittää tämän kohteen Airbnb:ssä ja hakee hinnan sieltä.",
+        "hint": "Hae tämän ilmoituksen valokuvat, tekstit, varustus, huoneet ja säännöt Airbnb:stä. Perushinta pysyy meillä ylläpidettynä – hinnat siirtyvät tästä eteenpäin Airbnb:hen; vain tyhjä hintasuunnitelma täytetään Airbnb:n hinnalla.",
         "priceTaken": "Hinta otettu Airbnb:stä: {price} · vähimmäisoleskelu {nights, plural, one {yksi yö} other {# yötä}}",
         "noPrice": "Airbnb ei palauttanut hintaa. Liitos on tehty.",
         "currency": "Valuutta: {currency}",

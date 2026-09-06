@@ -6656,7 +6656,7 @@
       },
       "airbnbPull": {
         "button": "Letöltés az Airbnb-ről",
-        "hint": "Hozzárendeli ezt az ingatlant az Airbnb-n, és onnan veszi át az árat.",
+        "hint": "Lekéri a hirdetés fotóit, szövegeit, felszereltségét, szobáit és szabályait az Airbnb-ről. Az alapár a nálunk megadott marad – az árak innen mennek az Airbnb-re; csak egy még üres árterv lesz feltöltve az Airbnb árával.",
         "priceTaken": "Ár átvéve az Airbnb-ről: {price} · minimális tartózkodás {nights, plural, one {egy éjszaka} other {# éjszaka}}",
         "noPrice": "Az Airbnb nem adott meg árat. A hozzárendelés érvényben van.",
         "currency": "Valuta: {currency}",

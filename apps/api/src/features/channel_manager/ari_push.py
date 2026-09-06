@@ -1553,12 +1553,25 @@ class AriPushMixin:
             return None
 
     def reconcile_rate_plan_prices(
-        self, tenant_id: str, property_id: str, horizon_days: int = 365
+        self, tenant_id: str, property_id: str, horizon_days: int = 365,
+        *, erzwingen: bool = False,
     ) -> dict[str, int]:
         """Push-only-Abgleich: vergleicht das volle Soll je Plan gegen den
         LOKALEN Schatten des zuletzt gepushten Stands (`channex_ari_shadow`) und
-        pusht NUR die Differenz — pro Rate-Plan. Abgeglichen werden ZWEI Größen,
-        beide als durchgehende Kurve über den Horizont:
+        pusht NUR die Differenz — pro Rate-Plan.
+
+        `erzwingen=True` (jede Preis-Speicherung des Betriebs): der Schatten
+        wird NICHT befragt, die volle Soll-Kurve geht raus — als RLE-gebündelte
+        Segmente, also wenige Werte in einem Request, keine Flut. Warum: der
+        Schatten ist eine Annahme darüber, was bei Channex steht, und diese
+        Annahme war live falsch (06.09.2026, „Feriehus Snerlebo": Schatten 750,
+        Channex 900, weil ein Voll-Push den Schatten nicht schrieb). Wer
+        „Speichern" drückt, bekommt keinen Vergleich mit einer Annahme, sondern
+        den Push. Der Differenz-Modus bleibt für den 15-Minuten-Tick über alle
+        Objekte, wo die Ersparnis zählt.
+
+        Abgeglichen werden ZWEI Größen, beide als durchgehende Kurve über den
+        Horizont:
         - Preis: Resolver (Datumspreis > Overrides > Dynamic > Wochentag >
           Plan-Basis), gesenkt um den Aktionsfaktor.
         - Mindestaufenthalt: Grundwert (`rate_plans.min_stay`, sonst
@@ -1608,9 +1621,10 @@ class AriPushMixin:
         )
 
         # IST: unser eigener Schatten des zuletzt GEPUSHTEN Stands — kein
-        # Channex-Read (siehe Docstring).
-        shadow = self._load_ari_shadow(
-            db, tenant_id, local_rate_plan_ids, today, horizon
+        # Channex-Read (siehe Docstring). Erzwungen = leerer Ist → alles Drift.
+        shadow = (
+            {} if erzwingen
+            else self._load_ari_shadow(db, tenant_id, local_rate_plan_ids, today, horizon)
         )
 
         # Differenz je Rate-Plan sammeln und als rate-plan-genaue Segmente pushen.
@@ -1653,6 +1667,7 @@ class AriPushMixin:
                 "reconcile_rate_prices_drift_pushed",
                 tenant_id=tenant_id, property_id=property_id,
                 checked=result["checked"], drift=result["drift"],
+                erzwungen=erzwingen, segmente=len(segments),
             )
         return result
 
@@ -2112,11 +2127,17 @@ class AriPushMixin:
                 )
             bucket = grouped.setdefault(
                 plans[0]["channex_property_id"],
-                {"values": [], "outbox": [], "pids": []},
+                {"values": [], "outbox": [], "pids": [], "schatten": []},
             )
             bucket["values"].extend(values)
             bucket["outbox"].append(outbox_id)
             bucket["pids"].append(property_id)
+            # Für den Ist-Spiegel nach dem Push: dieselben Zeilen, je Objekt mit
+            # seinen lokalen Plan-IDs (siehe `_push_restriction_bucket`).
+            bucket["schatten"].append((
+                property_id, rows,
+                [m["local_rate_plan_id"] for m in plans if m.get("local_rate_plan_id")],
+            ))
         for bucket in grouped.values():
             self._push_restriction_bucket(tenant_id, bucket)
 
@@ -2140,6 +2161,16 @@ class AriPushMixin:
                 )
             for oid in bucket["outbox"]:
                 self._mark_restriction_outbox(oid, "done")
+            # Den Ist-Spiegel fortschreiben — GENAU wie `push_rates_batch`.
+            # Der Voll-Push ließ ihn bis zum 06.09.2026 unangetastet: er sendete
+            # Preise über 500 Tage, der Schatten behielt den Stand des letzten
+            # Delta-Pushes. Live an „Feriehus Snerlebo": 12:25 Delta-Push 750
+            # (Schatten 750), 12:48 Voll-Push 900 (Schatten weiter 750), 12:53
+            # Grundpreis erneut 750 → der Abgleich sah „750 = 750", schickte
+            # nichts, und bei Channex stand 900. Ein Push, der den Spiegel nicht
+            # pflegt, macht jeden späteren Abgleich blind (Wurzel 1).
+            for property_id, rows, lokale in bucket.get("schatten") or []:
+                self._write_ari_shadow(tenant_id, property_id, rows, lokale)
             # Was WIRKLICH in der Nutzlast stand — nicht nur die Anzahl.
             # Ohne das war jeder Push eine Blackbox: "values: 60, status 200"
             # sagt nicht, ob min_stay/max_stay ueberhaupt drin waren. Am

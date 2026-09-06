@@ -6656,7 +6656,7 @@
       },
       "airbnbPull": {
         "button": "Récupérer depuis Airbnb",
-        "hint": "Associe ce logement chez Airbnb et y récupère le prix.",
+        "hint": "Récupère les photos, textes, équipements, chambres et règles de cette annonce d'Airbnb. Le prix de base reste tel que géré chez nous – les prix sont envoyés d'ici à Airbnb ; seul un plan tarifaire encore vide sera rempli avec les prix d'Airbnb.",
         "priceTaken": "Prix repris d'Airbnb : {price} · séjour minimum {nights, plural, one {une nuit} many {# nuits} other {# nuits}}",
         "noPrice": "Airbnb n'a transmis aucun prix. L'association est en place.",
         "currency": "Devise : {currency}",

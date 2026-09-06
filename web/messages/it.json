@@ -6656,7 +6656,7 @@
       },
       "airbnbPull": {
         "button": "Recupera da Airbnb",
-        "hint": "Assegna questa struttura su Airbnb e ne recupera il prezzo.",
+        "hint": "Recupera foto, testi, servizi, camere e regole di questo annuncio da Airbnb. Il prezzo base rimane come gestito da noi – i prezzi vanno da qui ad Airbnb; solo un piano tariffario ancora vuoto verrà riempito con il prezzo di Airbnb.",
         "priceTaken": "Prezzo ripreso da Airbnb: {price} · soggiorno minimo {nights, plural, one {una notte} many {# notti} other {# notti}}",
         "noPrice": "Airbnb non ha trasmesso alcun prezzo. L'assegnazione è attiva.",
         "currency": "Valuta: {currency}",

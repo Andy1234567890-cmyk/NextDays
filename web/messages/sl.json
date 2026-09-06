@@ -6656,7 +6656,7 @@
       },
       "airbnbPull": {
         "button": "Pridobi iz Airbnb",
-        "hint": "Dodeli ta objekt pri Airbnb in od tam prevzame ceno.",
+        "hint": "Pridobite fotografije, besedila, opremo, sobe in pravila tega oglasa iz Airbnb. Osnovna cena ostaja enaka kot pri nas – cene gredo od tu na Airbnb; le prazen cenik bo zapolnjen z Airbnb cenami.",
         "priceTaken": "Cena prevzeta od Airbnb: {price} · najkrajše bivanje {nights, plural, one {# nočitev} two {# nočitvi} few {# nočitve} other {# nočitev}}",
         "noPrice": "Airbnb ni posredoval cene. Dodelitev je vzpostavljena.",
         "currency": "Valuta: {currency}",

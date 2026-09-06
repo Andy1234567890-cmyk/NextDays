@@ -6656,7 +6656,7 @@
       },
       "airbnbPull": {
         "button": "Dohvati s Airbnba",
-        "hint": "Dodjeljuje ovaj objekt na Airbnbu i odatle preuzima cijenu.",
+        "hint": "Dohvatite fotografije, tekstove, opremu, sobe i pravila ovog oglasa s Airbnba. Osnovna cijena ostaje ista kao što je kod nas pohranjena – cijene se odavde šalju na Airbnb; samo prazan cjenik bit će popunjen cijenama s Airbnba.",
         "priceTaken": "Cijena preuzeta s Airbnba: {price} · minimalni boravak {nights, plural, one {jedno noćenje} few {# noćenja} other {# noćenja}}",
         "noPrice": "Airbnb nije poslao cijenu. Dodjela je postavljena.",
         "currency": "Valuta: {currency}",

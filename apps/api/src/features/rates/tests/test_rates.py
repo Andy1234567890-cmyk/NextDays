@@ -274,6 +274,10 @@ def test_resync_prices_enqueues_reconcile(monkeypatch) -> None:  # noqa: ANN001
     assert len(calls) == 1
     _args, kw = calls[0]
     assert _args[1] == "reconcile_rate_plan_prices"
+    # Eine Speicherung SENDET — sie vergleicht nicht mit dem Schatten des letzten
+    # Pushs (der war live falsch, Snerlebo 06.09.2026). Eigener Dedup-Schlüssel,
+    # damit ein offener Differenz-Job des Ticks sie nicht verschluckt.
+    assert kw["payload"]["erzwingen"] is True
     assert kw["payload"]["property_id"] == "p-1"
 
 

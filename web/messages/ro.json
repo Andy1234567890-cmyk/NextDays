@@ -6656,7 +6656,7 @@
       },
       "airbnbPull": {
         "button": "Preluare de la Airbnb",
-        "hint": "Atribuie această proprietate pe Airbnb și preia prețul de acolo.",
+        "hint": "Preluarea fotografiilor, textelor, dotărilor, camerelor și regulilor acestei înregistrări de pe Airbnb. Prețul de bază rămâne cel gestionat de noi – prețurile sunt trimise de aici către Airbnb; doar un plan de prețuri gol va fi completat cu prețul de pe Airbnb.",
         "priceTaken": "Preț preluat de la Airbnb: {price} · sejur minim {nights, plural, one {o noapte} few {# nopți} other {# de nopți}}",
         "noPrice": "Airbnb nu a transmis niciun preț. Atribuirea este activă.",
         "currency": "Monedă: {currency}",

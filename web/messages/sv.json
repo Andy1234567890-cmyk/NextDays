@@ -6656,7 +6656,7 @@
       },
       "airbnbPull": {
         "button": "Hämta från Airbnb",
-        "hint": "Tilldelar det här objektet hos Airbnb och hämtar priset därifrån.",
+        "hint": "Hämta foton, texter, utrustning, rum och regler för denna annons från Airbnb. Grundpriset förblir detsamma som hos oss – priser skickas härifrån till Airbnb; endast en tom prisplan fylls med Airbnbs pris.",
         "priceTaken": "Pris hämtat från Airbnb: {price} · minsta vistelse {nights, plural, one {en natt} other {# nätter}}",
         "noPrice": "Airbnb skickade inget pris. Tilldelningen är klar.",
         "currency": "Valuta: {currency}",

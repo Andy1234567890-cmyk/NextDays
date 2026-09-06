@@ -6656,7 +6656,7 @@
       },
       "airbnbPull": {
         "button": "Ophalen bij Airbnb",
-        "hint": "Wijst dit object toe bij Airbnb en haalt de prijs daar op.",
+        "hint": "Haal foto's, teksten, voorzieningen, kamers en regels van deze advertentie op bij Airbnb. De basisprijs blijft zoals bij ons beheerd – prijzen gaan vanaf hier naar Airbnb; alleen een nog leeg prijsplan wordt gevuld met de prijs van Airbnb.",
         "priceTaken": "Prijs van Airbnb overgenomen: {price} · minimumverblijf {nights, plural, one {één nacht} other {# nachten}}",
         "noPrice": "Airbnb heeft geen prijs meegegeven. De toewijzing staat.",
         "currency": "Valuta: {currency}",

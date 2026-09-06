@@ -6656,7 +6656,7 @@
       },
       "airbnbPull": {
         "button": "Pobierz z Airbnb",
-        "hint": "Przypisuje ten obiekt w Airbnb i pobiera stamtąd cenę.",
+        "hint": "Pobierz zdjęcia, teksty, wyposażenie, pokoje i zasady tego ogłoszenia z Airbnb. Cena podstawowa pozostaje taka, jak u nas – ceny są przesyłane stąd do Airbnb; tylko pusty plan cenowy zostanie wypełniony cenami z Airbnb.",
         "priceTaken": "Cena przejęta z Airbnb: {price} · minimalny pobyt {nights, plural, one {jedna noc} few {# noce} many {# nocy} other {# nocy}}",
         "noPrice": "Airbnb nie przekazało żadnej ceny. Przypisanie jest aktywne.",
         "currency": "Waluta: {currency}",

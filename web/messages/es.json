@@ -6656,7 +6656,7 @@
       },
       "airbnbPull": {
         "button": "Obtener de Airbnb",
-        "hint": "Asigna este alojamiento en Airbnb y trae el precio desde allí.",
+        "hint": "Obtener fotos, textos, equipamiento, habitaciones y reglas de este anuncio de Airbnb. El precio base se mantiene como está en nuestro sistema; los precios se envían desde aquí a Airbnb; solo un plan de precios vacío se llenará con los precios de Airbnb.",
         "priceTaken": "Precio tomado de Airbnb: {price} · estancia mínima {nights, plural, one {una noche} many {# noches} other {# noches}}",
         "noPrice": "Airbnb no ha devuelto ningún precio. La asignación está hecha.",
         "currency": "Moneda: {currency}",
