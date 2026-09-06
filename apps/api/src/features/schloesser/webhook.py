@@ -30,6 +30,8 @@ from src.core.config import get_settings
 from src.core.logging import get_logger
 from src.core.supabase import get_service_client
 
+from .service import SchloesserService
+
 router = APIRouter(prefix="/schloesser", tags=["schloesser"])
 log = get_logger("nextdays.schloesser.webhook")
 
@@ -120,30 +122,75 @@ def _signatur_pruefen(request: Request, roh: bytes) -> None:
     fehlgeschlagener Signaturvergleich ist eine Authentifizierungsfrage, keine
     Formatfrage. Beides verhindert Endlos-Retries einer Zustellung, die wir
     ohnehin nie annehmen werden.
+
+    MEHRERE SECRETS werden der Reihe nach probiert (`_secrets_lesen`). Das
+    ist kein aufgeweichter Schutz: jedes einzelne muss eine vollgültige
+    Svix-Signatur ergeben, es gibt nur mehr als einen erlaubten Absender —
+    denselben Fall deckt Svix mit seiner Secret-Rotation selbst ab. Die
+    Anzahl steht bewusst NICHT in der Fehlermeldung nach außen, nur im Log.
     """
-    secret = get_settings().seam_webhook_secret.get_secret_value().strip()
-    if not secret:
+    secrets = _secrets_lesen()
+    if not secrets:
         log.error("schloesser.webhook_secret_fehlt")
         raise HTTPException(
             status_code=401,
             detail="Webhook-Pruefung ist nicht konfiguriert.",
         )
-    try:
-        Webhook(secret).verify(roh, dict(request.headers))
-    except WebhookVerificationError as exc:
-        # Kein Log des Payloads: er ist angreiferkontrolliert.
-        log.warning("schloesser.webhook_signatur_ungueltig")
-        raise HTTPException(
-            status_code=401, detail="Signatur passt nicht."
-        ) from exc
-    except (ValueError, TypeError) as exc:
-        # Ein unbrauchbares Secret (falsches Format) ist Konfiguration, kein
-        # Angriff — trotzdem fail-closed, aber mit eigener Meldung.
-        log.error("schloesser.webhook_secret_unbrauchbar", grund=str(exc)[:200])
+
+    kopf = dict(request.headers)
+    unbrauchbar = 0
+    for secret in secrets:
+        try:
+            Webhook(secret).verify(roh, kopf)
+            return
+        except WebhookVerificationError:
+            # Passt nicht — das nächste probieren. Kein Log des Payloads:
+            # er ist angreiferkontrolliert.
+            continue
+        except (ValueError, TypeError):
+            # Ein unbrauchbares Secret (falsches Format) ist Konfiguration,
+            # kein Angriff. Es darf die anderen nicht blockieren, muss aber
+            # sichtbar bleiben — sonst sucht man den Fehler bei Seam.
+            unbrauchbar += 1
+            continue
+
+    if unbrauchbar == len(secrets):
+        log.error(
+            "schloesser.webhook_secret_unbrauchbar",
+            extra={"anzahl": unbrauchbar},
+        )
         raise HTTPException(
             status_code=401,
             detail="Webhook-Pruefung ist nicht konfiguriert.",
-        ) from exc
+        )
+    log.warning(
+        "schloesser.webhook_signatur_ungueltig",
+        extra={"geprueft": len(secrets), "unbrauchbar": unbrauchbar},
+    )
+    raise HTTPException(status_code=401, detail="Signatur passt nicht.")
+
+
+def _secrets_lesen() -> list[str]:
+    """Die konfigurierten Signing Secrets, kommagetrennt.
+
+    Jeder Seam-Endpunkt hat sein EIGENES Secret, und ein Betrieb hat
+    regelmäßig zwei Workspaces (Sandbox und Produktion), die an dieselbe URL
+    senden. Mit nur einem Wert schließen sie sich gegenseitig aus — und weil
+    Svix bei 401 NICHT wiederholt, sind die abgelehnten Ereignisse endgültig
+    verloren, nicht nur verzögert.
+
+    Duplikate werden entfernt, die Reihenfolge bleibt: ein doppelt
+    eingetragener Wert soll nicht doppelt geprüft werden.
+    """
+    roh = get_settings().seam_webhook_secret.get_secret_value()
+    gesehen: set[str] = set()
+    ergebnis: list[str] = []
+    for teil in roh.split(","):
+        wert = teil.strip()
+        if wert and wert not in gesehen:
+            gesehen.add(wert)
+            ergebnis.append(wert)
+    return ergebnis
 
 
 def _eingang_vormerken(
@@ -189,6 +236,8 @@ def _verarbeiten(db: Client, nutzlast: dict[str, Any]) -> None:
         _grant_ereignis(db, typ, nutzlast)
     elif typ.startswith("device."):
         _geraet_ereignis(db, typ, nutzlast)
+    elif typ.startswith("connected_account."):
+        _konto_ereignis(db, typ, nutzlast)
 
 
 def _grant_ereignis(
@@ -253,3 +302,82 @@ def _geraet_ereignis(
     db.table("seam_device").update(werte).eq(
         "seam_device_id", str(device_id)
     ).execute()
+
+
+def _konto_ereignis(
+    db: Client, typ: str, nutzlast: dict[str, Any]
+) -> None:
+    """Zustandswechsel eines verbundenen Hersteller-Kontos.
+
+    WARUM DAS HIER NÖTIG IST: `verbindung_uebernehmen` im Service hängt an
+    der Rückkehr aus dem Webview. Schließt der Kunde das Fenster nach
+    erfolgreicher Anmeldung, ist sein Konto bei Seam verbunden und bei uns
+    unsichtbar — er sieht eine leere Schlösser-Seite und meldet „geht nicht".
+    Dieses Ereignis ist der zweite, unabhängige Weg zum selben Zustand.
+
+    DER MANDANT KOMMT AUS UNSEREN EIGENEN METADATEN (Wurzel 3): beim Erzeugen
+    des Webviews setzen wir `custom_metadata={"tenant_id": …}`, und Seam
+    reicht sie unverändert durch. Fehlt sie, wird NICHT geraten — das
+    Ereignis wird gespeichert und übersprungen. Ein Webview aus der Zeit vor
+    dieser Änderung trägt sie nicht; für den greift weiterhin die Rückkehr.
+    """
+    konto_id = nutzlast.get("connected_account_id")
+    if not konto_id:
+        return
+
+    metadaten = nutzlast.get("connected_account_custom_metadata")
+    tenant_id = ""
+    if isinstance(metadaten, dict):
+        tenant_id = str(metadaten.get("tenant_id") or "").strip()
+
+    if typ in {"connected_account.created", "connected_account.connected"}:
+        if not tenant_id:
+            # Kein Fehler, sondern der Altfall: ohne Kennung ist das Ereignis
+            # keinem Betrieb zuordenbar. Laut protokollieren statt raten
+            # (Wurzel 4) — die Rückkehr-URL legt die Verbindung dann an.
+            log.info(
+                "schloesser.konto_ereignis_ohne_tenant",
+                extra={
+                    "connected_account_id": str(konto_id),
+                    "event_type": typ,
+                },
+            )
+            return
+        # Der Service ist die EINE Stelle, die `seam_connection` schreibt —
+        # der Webhook baut den Zustand nicht selbst nach (Wurzel 1).
+        SchloesserService(db).verbindung_aus_ereignis(
+            tenant_id,
+            str(konto_id),
+            provider=_provider_aus(nutzlast),
+        )
+    elif typ == "connected_account.disconnected":
+        # Der Betrieb hat sein Hersteller-Konto getrennt oder das Passwort
+        # geändert. Nur der Zustand wird gespiegelt; die Zeile bleibt, damit
+        # die Zuordnung der Geräte beim Wiederverbinden erhalten ist.
+        db.table("seam_connection").update(
+            {"status": "disconnected"}
+        ).eq("connected_account_id", str(konto_id)).execute()
+    elif typ == "connected_account.deleted":
+        # Bewusst ebenfalls `disconnected` und kein eigener Wert: der CHECK in
+        # 0573 kennt nur pending/connected/error/disconnected, und fachlich
+        # ist „gelöscht" für uns dasselbe wie „getrennt" — die Zeile bleibt
+        # stehen, damit die Gerätezuordnung beim Wiederverbinden hält. Ein
+        # neuer Zustand wäre eine Migration wert, keine erfundene Konstante
+        # (Wurzel 4).
+        db.table("seam_connection").update(
+            {"status": "disconnected"}
+        ).eq("connected_account_id", str(konto_id)).execute()
+
+
+def _provider_aus(nutzlast: dict[str, Any]) -> str | None:
+    """Den Hersteller aus dem Ereignis lesen, wenn er dabeisteht.
+
+    Seam benennt das Feld je Ereignis unterschiedlich; fehlt es, bleibt es
+    `None` und der Service trägt „unbekannt" ein — kein erfundener Wert
+    (Wurzel 4).
+    """
+    for feld in ("provider", "accepted_provider", "device_provider"):
+        wert = nutzlast.get(feld)
+        if wert:
+            return str(wert)
+    return None

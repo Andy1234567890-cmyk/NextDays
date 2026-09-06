@@ -250,7 +250,9 @@ class SchloesserService:
                 "danach lässt sich das Konto verbinden.",
                 status_code=409,
             )
-        return self._client.webview_erzeugen(rueckkehr_url, anbieter=gebucht)
+        return self._client.webview_erzeugen(
+            rueckkehr_url, anbieter=gebucht, tenant_id=tenant_id
+        )
 
     def verbindung_uebernehmen(
         self, tenant_id: str, webview_id: str
@@ -315,6 +317,67 @@ class SchloesserService:
         if neu_id:
             self.geraete_abgleichen(tenant_id, neu_id)
         return {"status": "connected", "connectionId": neu_id}
+
+    def verbindung_aus_ereignis(
+        self, tenant_id: str, konto_id: str, provider: str | None = None
+    ) -> str | None:
+        """Die Verbindung aus einem Webhook-Ereignis anlegen oder bestätigen.
+
+        WARUM ES DIESEN ZWEITEN WEG GIBT: `verbindung_uebernehmen` hängt an
+        der Rückkehr aus dem Webview — schließt der Kunde das Fenster, bevor
+        er zurückgeleitet wird, ist sein Schloss-Konto bei Seam verbunden und
+        bei uns unsichtbar. Seam meldet denselben Vorgang zusätzlich als
+        `connected_account.connected`; dieser Weg fängt genau den Fall.
+
+        Der Mandant kommt AUSSCHLIESSLICH aus der `custom_metadata`, die wir
+        beim Erzeugen des Webviews selbst gesetzt haben (Wurzel 3) — nie aus
+        einem anderen Feld der Nutzlast, die angreiferkontrolliert ist.
+
+        IDEMPOTENT (Wurzel 2): Redelivery und der parallele Rückkehr-Pfad
+        laufen beide hier durch. Eine vorhandene Zeile wird bestätigt, nicht
+        verdoppelt.
+        """
+        vorhanden = (
+            self.db.table("seam_connection")
+            .select("id, tenant_id")
+            .eq("connected_account_id", str(konto_id))
+            .limit(1)
+            .execute()
+        ).data or []
+        if vorhanden:
+            zeile = vorhanden[0]
+            if str(zeile.get("tenant_id")) != str(tenant_id):
+                # Dasselbe Schloss-Konto bei zwei Betrieben: hier NICHT
+                # werfen, sondern stehen lassen und laut loggen — ein
+                # Webhook darf keinen Zustand fremder Mandanten anfassen.
+                log.warning(
+                    "schloesser.verbindung_fremder_tenant",
+                    extra={"connected_account_id": str(konto_id)},
+                )
+                return None
+            self.db.table("seam_connection").update(
+                {"status": "connected", "error_code": None}
+            ).eq("id", zeile["id"]).eq("tenant_id", tenant_id).execute()
+            return str(zeile["id"])
+
+        eingefuegt = (
+            self.db.table("seam_connection")
+            .insert(
+                {
+                    "tenant_id": str(tenant_id),
+                    "connected_account_id": str(konto_id),
+                    "provider": str(provider or "unbekannt").lower(),
+                    "status": "connected",
+                    "connected_at": datetime.now(UTC).isoformat(),
+                }
+            )
+            .execute()
+        ).data or []
+        neu_id = str(eingefuegt[0]["id"]) if eingefuegt else None
+        if neu_id:
+            # Ohne Geräte ist die Verbindung für den Kunden eine leere Seite.
+            self.geraete_abgleichen(str(tenant_id), neu_id)
+        return neu_id
 
     def verbindungen_lesen(self, tenant_id: str) -> list[dict]:
         return (

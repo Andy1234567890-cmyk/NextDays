@@ -323,6 +323,15 @@ class Settings(BaseSettings):
     # Webhook-Endpunkt mit 401 ab — fail-CLOSED (Wurzel 5). „Noch nicht
     # konfiguriert" ist kein Grund, eine ungeprüfte Schreibschnittstelle in
     # unsere Zustandstabelle offenzulassen.
+    #
+    # MEHRERE SECRETS, KOMMAGETRENNT. Jeder Seam-Endpunkt hat sein EIGENES
+    # Signing Secret, und ein Betrieb hat regelmäßig zwei Workspaces
+    # (Sandbox zum Ausprobieren, Produktion für echte Schlösser) — beide
+    # senden an dieselbe URL. Mit nur einem Wert schließen sie sich
+    # gegenseitig aus: wer die Sandbox einträgt, dessen echte Ereignisse
+    # fallen auf den Boden, und Svix wiederholt bei 401 NICHT, sie sind also
+    # endgültig weg. Deshalb wird der Wert als Liste gelesen; der Endpunkt
+    # probiert der Reihe nach. Fail-closed bleibt: eine leere Liste lehnt ab.
     seam_webhook_secret: SecretStr = SecretStr("")
     # llama-3.3-70b-versatile wird von Groq stillgelegt (Deprecation 2026);
     # empfohlener Production-Nachfolger: openai/gpt-oss-120b.

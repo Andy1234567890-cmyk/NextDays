@@ -983,3 +983,224 @@ def test_fremde_marke_bekommt_keine_codes() -> None:
     # das Gate sperrt die fehlende Buchung, nicht die Marke an sich.
     db.rows["tenant_module_entitlement"][0]["module_key"] = "schloss_nuki"
     assert _service(db).zugang_planen(_TENANT, buchung_id) is not None
+
+
+# =========================================================================
+# Verbindung aus dem Webhook (der Weg, wenn der Kunde das Fenster schließt)
+# =========================================================================
+class _SeamOhneGeraete(_SeamStub):
+    """Ein verbundenes Konto, an dem noch kein Gerät hängt.
+
+    Der Abgleich läuft nach dem Anlegen automatisch; für diese Tests zählt
+    nur die Verbindungszeile, nicht die Geräteliste.
+    """
+
+    def geraete_lesen(self, _konto_id: str) -> list:
+        return []
+
+
+def test_verbindung_entsteht_auch_ohne_rueckkehr() -> None:
+    """`connected_account.connected` legt die Verbindung an.
+
+    Der Anlass: `verbindung_uebernehmen` hängt an der Rückkehr aus dem
+    Webview. Schließt der Kunde das Fenster nach erfolgreicher Anmeldung, ist
+    sein Konto bei Seam verbunden und bei uns unsichtbar — er sieht eine leere
+    Schlösser-Seite und meldet „geht nicht".
+    """
+    db = FakeDb()
+    dienst = SchloesserService(db)
+    dienst._client = _SeamOhneGeraete()  # noqa: SLF001 - Test setzt den Stub
+
+    neu_id = dienst.verbindung_aus_ereignis(_TENANT, "konto-1", "igloohome")
+
+    assert neu_id
+    zeilen = db.rows.setdefault("seam_connection", [])
+    assert len(zeilen) == 1
+    assert zeilen[0]["tenant_id"] == _TENANT
+    assert zeilen[0]["status"] == "connected"
+    assert zeilen[0]["provider"] == "igloohome"
+
+
+def test_zweites_ereignis_erzeugt_keine_zweite_verbindung() -> None:
+    """Redelivery ist bei Webhooks der Normalfall (Wurzel 2).
+
+    Derselbe Vorgang kommt zusätzlich über die Rückkehr-URL — beide Wege
+    dürfen zusammen nur EINE Zeile ergeben.
+    """
+    db = FakeDb()
+    dienst = SchloesserService(db)
+    dienst._client = _SeamOhneGeraete()  # noqa: SLF001 - Test setzt den Stub
+
+    erste = dienst.verbindung_aus_ereignis(_TENANT, "konto-1", "nuki")
+    zweite = dienst.verbindung_aus_ereignis(_TENANT, "konto-1", "nuki")
+
+    assert erste == zweite
+    assert len(db.rows.setdefault("seam_connection", [])) == 1
+
+
+def test_ereignis_fasst_fremden_tenant_nicht_an() -> None:
+    """Dasselbe Schloss-Konto bei zwei Betrieben (Wurzel 3).
+
+    Ein Webhook trägt keinen Sitzungskontext. Käme hier ein fremder Mandant
+    durch, könnte ein Ereignis den Zustand eines anderen Betriebs verändern —
+    deshalb wird die Zeile in Ruhe gelassen und `None` zurückgegeben.
+    """
+    db = FakeDb()
+    db.rows["seam_connection"] = [
+        {
+            "id": "verb-1",
+            "tenant_id": "fremder-betrieb",
+            "connected_account_id": "konto-1",
+            "status": "connected",
+        }
+    ]
+    dienst = SchloesserService(db)
+    dienst._client = _SeamStub()  # noqa: SLF001 - Test setzt den Stub
+
+    assert dienst.verbindung_aus_ereignis(_TENANT, "konto-1") is None
+    # Unverändert: weder Mandant noch Status angefasst.
+    assert db.rows.setdefault("seam_connection", [])[0]["tenant_id"] == "fremder-betrieb"
+
+
+def test_webview_traegt_den_betrieb_mit() -> None:
+    """Ohne `custom_metadata` ist das spätere Ereignis nicht zuordenbar.
+
+    Live gesehen (06.09.2026): die Ereignisse trugen
+    `connected_account_custom_metadata: {}`, weil beim Erzeugen des Webviews
+    nichts mitgegeben wurde. Damit war `connected_account.created` keinem
+    Betrieb zuzuordnen und der Webhook-Weg wertlos.
+    """
+    erfasst: dict[str, Any] = {}
+
+    class _Client:
+        def webview_erzeugen(
+            self, url: str, *, anbieter: Any = None, tenant_id: Any = None
+        ) -> dict:
+            erfasst["tenant_id"] = tenant_id
+            return {"url": "https://connect.example/x", "webview_id": "wv-1"}
+
+    db = FakeDb()
+    db.rows["tenant_module"] = [
+        {"tenant_id": _TENANT, "module_key": "schloss_igloohome", "aktiv": True}
+    ]
+    dienst = SchloesserService(db)
+    dienst._client = _Client()  # noqa: SLF001 - Test setzt den Stub
+    dienst.gebuchte_anbieter = lambda _t: ["igloohome"]  # type: ignore[method-assign]
+
+    dienst.verbindung_starten(_TENANT, "https://app.example/zurueck")
+
+    assert erfasst["tenant_id"] == _TENANT
+
+
+# =========================================================================
+# Mehrere Signing Secrets (Sandbox UND Produktion an derselben URL)
+# =========================================================================
+def _signieren(secret: str, rumpf: bytes) -> dict[str, str]:
+    """Eine gültige Svix-Signatur bauen — wie Seam sie sendet."""
+    import base64
+    import hashlib
+    import hmac
+
+    key = base64.b64decode(secret.split("_", 1)[1])
+    msg_id, ts = "msg_test", str(int(datetime.now(UTC).timestamp()))
+    sig = base64.b64encode(
+        hmac.new(
+            key, f"{msg_id}.{ts}.".encode() + rumpf, hashlib.sha256
+        ).digest()
+    ).decode()
+    return {
+        "svix-id": msg_id,
+        "svix-timestamp": ts,
+        "svix-signature": f"v1,{sig}",
+    }
+
+
+_SECRET_A = "whsec_MfKQ9r8GKYqrTwjUPD8ILPZIo2LaLaSw"
+_SECRET_B = "whsec_TWpVMk16WTNPRGt3TVRJek5EVTJOemc1TURFeQ=="
+
+
+def test_zweites_secret_wird_auch_akzeptiert(monkeypatch: Any) -> None:
+    """Sandbox und Produktion senden an dieselbe URL.
+
+    Jeder Seam-Endpunkt hat sein eigenes Signing Secret. Mit nur einem Wert
+    schließen sich die beiden Workspaces gegenseitig aus — und weil Svix bei
+    401 NICHT wiederholt, sind die abgelehnten Ereignisse endgültig verloren.
+    """
+    from src.core.config import get_settings
+    from src.features.schloesser import webhook as wh
+
+    get_settings.cache_clear()
+    monkeypatch.setenv("SEAM_WEBHOOK_SECRET", f"{_SECRET_A},{_SECRET_B}")
+    get_settings.cache_clear()
+
+    rumpf = b'{"event_id":"e1","event_type":"noop.probe"}'
+    # Mit dem ZWEITEN Secret signiert — das erste passt nicht.
+    kopf = _signieren(_SECRET_B, rumpf)
+
+    class _Req:
+        headers = kopf
+
+    wh._signatur_pruefen(_Req(), rumpf)  # noqa: SLF001 - Prüfpfad ist der Test
+    get_settings.cache_clear()
+
+
+def test_falsches_secret_bleibt_abgelehnt(monkeypatch: Any) -> None:
+    """Mehrere erlaubte Absender heißen NICHT „weniger Prüfung".
+
+    Jedes einzelne Secret muss eine vollgültige Signatur ergeben; ein
+    fremdes wird weiterhin mit 401 abgewiesen (fail-closed, Wurzel 5).
+    """
+    from fastapi import HTTPException
+
+    from src.core.config import get_settings
+    from src.features.schloesser import webhook as wh
+
+    get_settings.cache_clear()
+    monkeypatch.setenv("SEAM_WEBHOOK_SECRET", _SECRET_A)
+    get_settings.cache_clear()
+
+    rumpf = b'{"event_id":"e1","event_type":"noop.probe"}'
+    kopf = _signieren(_SECRET_B, rumpf)  # nicht konfiguriert
+
+    class _Req:
+        headers = kopf
+
+    with pytest.raises(HTTPException) as fehler:
+        wh._signatur_pruefen(_Req(), rumpf)  # noqa: SLF001 - Prüfpfad
+    assert fehler.value.status_code == 401
+    get_settings.cache_clear()
+
+
+def test_ohne_secret_wird_abgelehnt(monkeypatch: Any) -> None:
+    """Leere Liste = fail-CLOSED, nie durchlassen."""
+    from fastapi import HTTPException
+
+    from src.core.config import get_settings
+    from src.features.schloesser import webhook as wh
+
+    get_settings.cache_clear()
+    monkeypatch.setenv("SEAM_WEBHOOK_SECRET", "  ,  ")
+    get_settings.cache_clear()
+
+    class _Req:
+        headers: dict[str, str] = {}
+
+    with pytest.raises(HTTPException) as fehler:
+        wh._signatur_pruefen(_Req(), b"{}")  # noqa: SLF001 - Prüfpfad
+    assert fehler.value.status_code == 401
+    get_settings.cache_clear()
+
+
+def test_doppelt_eingetragenes_secret_zaehlt_einmal(monkeypatch: Any) -> None:
+    """Ein versehentlich doppelter Eintrag soll nicht doppelt geprüft werden."""
+    from src.core.config import get_settings
+    from src.features.schloesser import webhook as wh
+
+    get_settings.cache_clear()
+    monkeypatch.setenv(
+        "SEAM_WEBHOOK_SECRET", f"{_SECRET_A}, {_SECRET_A} ,{_SECRET_B}"
+    )
+    get_settings.cache_clear()
+
+    assert wh._secrets_lesen() == [_SECRET_A, _SECRET_B]  # noqa: SLF001
+    get_settings.cache_clear()

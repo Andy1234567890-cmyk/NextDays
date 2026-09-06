@@ -292,7 +292,11 @@ class SeamClient:
 
     # -- Verbinden ---------------------------------------------------------
     def webview_erzeugen(
-        self, rueckkehr_url: str, *, anbieter: list[str] | None = None
+        self,
+        rueckkehr_url: str,
+        *,
+        anbieter: list[str] | None = None,
+        tenant_id: str | None = None,
     ) -> dict[str, Any]:
         """Ein Connect Webview: die Anmeldemaske des HERSTELLERS.
 
@@ -342,6 +346,16 @@ class SeamClient:
                 # ein „verbunden, aber nichts passiert" ist der häufigste
                 # Supportfall dieser Anbieter.
                 automatically_manage_new_devices=True,
+                # Der Betrieb REIST MIT (Wurzel 3): das spätere Webhook-
+                # Ereignis `connected_account.connected` trägt keinen
+                # Sitzungskontext, und ohne diese Kennung ist es keinem
+                # Mandanten zuordenbar — die Verbindung entstünde dann NUR
+                # über die Rückkehr-URL, also nie bei geschlossenem Fenster.
+                # Seam reicht `custom_metadata` unverändert an das Ereignis
+                # durch (`connected_account_custom_metadata`).
+                custom_metadata=(
+                    {"tenant_id": str(tenant_id)} if tenant_id else {}
+                ),
             )
         except SeamNichtKonfiguriert:
             raise
