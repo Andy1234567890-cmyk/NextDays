@@ -171,6 +171,7 @@ export default async function DashboardLayout({
           country={me?.country ?? null}
           istDemo={Boolean(me?.is_demo)}
           istIntern={Boolean(me?.is_internal)}
+          module={me?.enabled_modules ?? []}
           einrichtungOffen={einrichtungOffen}
         />
         <SidebarInset>

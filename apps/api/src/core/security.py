@@ -187,6 +187,7 @@ def get_current_user(
     _mfa_gate(request, ctx)
     _aktiv_gate(ctx)
     _demo_gate(request, ctx)
+    _modul_gate(request, ctx)
     _sitzung_protokollieren(request, ctx)
     return ctx
 
@@ -284,6 +285,23 @@ def _demo_gate(request: Request, ctx: AuthContext) -> None:
     # denselben Grund, egal ob gelesen oder geschrieben wird (0408).
     demo_bereich_pruefen(request.url.path, ctx)
     demo_schreibzugriff_pruefen(request.method, ctx)
+
+
+def _modul_gate(request: Request, ctx: AuthContext) -> None:
+    """Bereiche, die dieser Betrieb nicht freigeschaltet hat (0572).
+
+    Sitzt neben `_demo_gate` und aus demselben Grund an dieser einen Stelle:
+    ein Bereich besteht aus Dutzenden Endpunkten, und ein ausgeblendeter
+    Menuepunkt ist keine Sperre — wer die Adresse kennt, kaeme sonst durch.
+
+    Import in der Funktion, weil `features.auth` seinerseits `core.security`
+    importiert.
+    """
+    from src.features.auth.modul_freischaltung import (  # noqa: PLC0415
+        modul_pruefen,
+    )
+
+    modul_pruefen(ctx, request.url.path)
 
 
 def _mfa_gate(request: Request, ctx: AuthContext) -> None:

@@ -913,6 +913,10 @@ class AuthService:
             accommodation_type=tenant_meta.get("accommodation_type"),
             is_demo=bool(tenant_meta.get("is_demo")),
             is_internal=bool(tenant_meta.get("is_internal")),
+            # Liste, nie None: eine fehlende Spalte oder ein leeres Feld sind
+            # beide „kein Modul freigeschaltet" — der Aufrufer soll dafuer
+            # keinen Sonderfall brauchen.
+            enabled_modules=list(tenant_meta.get("enabled_modules") or []),
             account_type=tenant_meta.get("account_type"),
             default_language=tenant_meta.get("default_language"),
             country=tenant_meta.get("country"),
@@ -930,7 +934,7 @@ class AuthService:
             self._service.table("tenants")
             .select(
                 "name, accommodation_type, account_type, default_language, "
-                "country, is_demo, is_internal"
+                "country, is_demo, is_internal, enabled_modules"
             )
             .eq("id", tenant_id)
             .limit(1)

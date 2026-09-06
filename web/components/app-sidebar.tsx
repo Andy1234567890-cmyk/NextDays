@@ -131,6 +131,26 @@ const MAIN: readonly NavItem[] = [
   },
 ];
 
+// Welcher Menuepunkt haengt an welchem freischaltbaren Modul (0572)?
+//
+// Die Praefixe MUESSEN zu `MODUL_PRAEFIXE` in
+// `apps/api/.../auth/modul_freischaltung.py` passen: dort sperrt der Server,
+// hier blendet die Navigation aus. Laufen die beiden auseinander, entsteht
+// genau der Zustand, den `demo_gate` schon einmal hatte — ein Menuepunkt, der
+// sichtbar ist und dessen Aufruf mit 404 endet.
+const MODUL_PFADE: Record<string, string> = {
+  "/hr": "personal",
+  "/website": "website_builder",
+};
+
+/** Braucht dieser Pfad ein Modul, das der Betrieb nicht hat? */
+function modulFehlt(href: string, module: string[]): boolean {
+  const treffer = Object.entries(MODUL_PFADE).find(
+    ([pfad]) => href === pfad || href.startsWith(pfad + "/"),
+  );
+  return treffer ? !module.includes(treffer[1]) : false;
+}
+
 // Fuß der Navigation: kontoweite Flächen, die zu keinem Objekt und keiner
 // Buchung gehören. Sie standen in der aufklappbaren Gruppe „Werkzeuge" — ein
 // Deckel über genau zwei Punkten, der beide hinter einen zusätzlichen Klick
@@ -244,6 +264,11 @@ const VR_GROUP: NavGroup = {
   ],
 };
 
+// Die Modul-Freischaltung (0572) steht bewusst NICHT hier, sondern in `canSee`:
+// gefiltert wird auf Punkt-Ebene, und eine Gruppe ohne sichtbare Punkte faellt
+// beim Rendern ohnehin weg (`items.length === 0 → null`). Diese Funktion
+// dieselbe Liste ein zweites Mal filtern zu lassen waere eine zweite Wahrheit
+// darueber, was sichtbar ist.
 function buildGroups(
   accommodationType: AccommodationType,
   istIntern: boolean,
@@ -490,6 +515,7 @@ export function AppSidebar({
   country = null,
   istDemo = false,
   istIntern = false,
+  module = [],
   einrichtungOffen = false,
 }: {
   email?: string;
@@ -509,6 +535,8 @@ export function AppSidebar({
   // Buchhaltung frei, die noch in Entwicklung ist. Getrennt von `istDemo` —
   // das ist die anonyme Vorführung, dort ist die Buchhaltung gesperrt.
   istIntern?: boolean;
+  /** Freigeschaltete Module dieses Betriebs (0572), z. B. „personal". */
+  module?: string[];
   // Firmendaten ODER Abo fehlen: die Oberflaeche ist dann eine SACKGASSE —
   // veroeffentlichen geht nicht (422), Geld kann nicht ankommen. Statt den
   // Betrieb das auf jeder Seite einzeln herausfinden zu lassen, bleibt die
@@ -595,6 +623,8 @@ export function AppSidebar({
     if (role === "shift_lead" && !SHIFT_LEAD_ALLOWED_HREFS.includes(item.href)) {
       return false;
     }
+    // Nicht freigeschaltetes Modul (0572): der Punkt erscheint gar nicht.
+    if (modulFehlt(item.href, module)) return false;
     return true;
   };
 

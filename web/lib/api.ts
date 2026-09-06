@@ -187,6 +187,9 @@ export type MeResponse = {
    *  Buchhaltung). NICHT `is_demo` — das ist die anonyme Schaufenster-
    *  Vorfuehrung und sperrt Schreibzugriffe samt Buchhaltung. */
   is_internal?: boolean;
+  /** Freigeschaltete, noch nicht allgemein verfuegbare Module (0572).
+   *  Leer = nur die allgemein verfuegbaren Bereiche. */
+  enabled_modules?: string[];
   // Standardsprache des BETRIEBS (Migration 0335): zweite Stufe der
   // Mail-Sprachkette (eigene Wahl → Betrieb → Englisch). Sie gilt für jeden
   // Empfänger ohne eigene Sprachwahl. null = nicht erfasst → Englisch; das ist

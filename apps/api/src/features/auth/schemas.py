@@ -357,6 +357,11 @@ class MeResponse(BaseModel):
     # Module frei (derzeit die Buchhaltung, 13 Platzhalter-Unterseiten), damit
     # sie erprobt werden koennen, ohne vor einem zahlenden Betrieb zu stehen.
     is_internal: bool = False
+    # Freigeschaltete, noch nicht allgemein verfuegbare Module (0572). Leer =
+    # nur die allgemein verfuegbaren Bereiche. Getrennt von `is_internal`, weil
+    # das die drei Fotomodell-Konten des Hauses meint — der Beta-Betrieb, der
+    # ein unfertiges Modul erproben soll, ist keines davon.
+    enabled_modules: list[str] = Field(default_factory=list)
     # Betriebsmodell (0180): 'pms' (Abo, apps/web) oder 'marketplace' (8%-Fee,
     # plattform/). Steuert, welche Oberfläche/welches Billing gilt.
     account_type: str | None = None
