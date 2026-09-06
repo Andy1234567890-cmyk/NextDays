@@ -38,6 +38,7 @@ import {
 import { channelBrand } from "@/lib/channel-logos";
 import { oauthProtokoll } from "@/lib/oauth-protokoll";
 import { listProperties } from "@/lib/properties";
+import { setBasePrice } from "@/lib/rates";
 
 // "oauth" = Airbnb-Verbindung über OAuth-URL (kein Credential): URL öffnen oder
 // an den Eigentümer kopieren, dann auf Verbindung warten und Mapping setzen.
@@ -182,6 +183,19 @@ function buildMappingRows(
 // zu (Google über Adresse, Telefon und Objektname). Deshalb eine Zeile je
 // EIGENEM Objekt, ohne Portal-Code und ohne Raten-Anzeige — mitgeschickt werden
 // serverseitig nur die eigenen Preispläne.
+/** Meldet der Server einen fehlenden Grundpreis?
+ *
+ *  Am TEXT erkannt, nicht am Status: 422 trägt auch „Zugangsdaten abgelehnt",
+ *  und eine Preismaske wäre dort die falsche Antwort. Der Wortlaut stammt aus
+ *  `content_sync.py` („Kein Preisplan vorhanden — die Unterkunft kann ohne
+ *  Preis nicht an die Buchungsportale übermittelt werden."); geprüft wird nur
+ *  der stabile Kern, damit eine spätere Umformulierung des Nachsatzes das
+ *  Erkennen nicht bricht.
+ */
+function istPreisFehler(fehler: string): boolean {
+  return fehler.toLowerCase().includes("kein preisplan vorhanden");
+}
+
 function buildDirektRows(localRooms: LocalRoomOption[]): MappingRow[] {
   return localRooms.map((lr) => ({
     room_type_code: null,
@@ -250,12 +264,35 @@ export function ChannelConnectButton({
   const [step, setStep] = useState<Step>("portal");
 
   const [portals, setPortals] = useState<SupportedPortal[]>([]);
-  const [properties, setProperties] = useState<{ id: string; title: string }[]>([]);
+  // `currency` mitführen: der Grundpreis wird in der Währung DIESES Objekts
+  // gespeichert (0161). Kein Ersatzwert — fehlt sie, fragt die Maske nicht nach
+  // einem Preis, dessen Einheit niemand kennt (Wurzel 4).
+  const [properties, setProperties] = useState<
+    { id: string; title: string; currency: string | null }[]
+  >([]);
   const [propertyId, setPropertyId] = useState<string | null>(null);
   const [selected, setSelected] = useState<SupportedPortal | null>(null);
   // Der Rücksprung von Airbnb setzt das hier statt `selected`: zu dem Zeitpunkt
   // ist der Portal-Katalog noch nicht geladen (er kommt erst mit `open`).
   const [oauthPortalNachziehen, setOauthPortalNachziehen] = useState(false);
+  // Fehlender Grundpreis ist KEIN Fehler, sondern ein offener Schritt.
+  //
+  // `prepare` registriert das Objekt bei Channex (`_ensure_property_registered`
+  // → `sync_content`), und das lehnt ohne Preisplan mit 422 ab — zu Recht: ohne
+  // Preis entstuende ein 0-Waehrung-Verkauf. Frueher endete der Assistent damit
+  // in einer Sackgasse: die Maske zeigte „Fuer dieses Konto sind noch keine
+  // Zimmer mit Preis angelegt", weil `localRooms` leer blieb — obwohl das Zimmer
+  // sehr wohl existierte und der Server nur den PREIS vermisste.
+  //
+  // Airbnb liefert keinen Preis; live gemessen am 06.09.2026 an Listing
+  // 1768637952856703501: `v2/listings/{id}` gibt 29 Felder, KEIN einziges
+  // preisbezogenes, und `pricing_settings`/`calendar_rules`/`calendars`
+  // antworten mit `route_not_found`. Airbnb ist ein Push-Kanal — der Preis geht
+  // von uns dorthin. Er MUSS also hier erfragt werden; importieren kann ihn
+  // niemand.
+  const [preisNoetig, setPreisNoetig] = useState(false);
+  const [preisEingabe, setPreisEingabe] = useState("");
+  const [preisSpeichert, setPreisSpeichert] = useState(false);
   const [values, setValues] = useState<Record<string, PortalValue>>({});
   // Freier Kanal-Titel (wie in der Referenz-Oberfläche); leer = Portalname.
   const [title, setTitle] = useState("");
@@ -333,7 +370,11 @@ export function ChannelConnectButton({
       const [p, props] = await Promise.all([listPortals(), listProperties()]);
       if (p.ok) setPortals(p.data);
       if (!props.ok || props.data.items.length === 0) return;
-      const liste = props.data.items.map((it) => ({ id: it.id, title: it.title }));
+      const liste = props.data.items.map((it) => ({
+        id: it.id,
+        title: it.title,
+        currency: it.currency,
+      }));
       setProperties(liste);
       // Objekt NUR setzen, wenn es eindeutig ist: entweder vorgegeben (Aufruf
       // vom Objekt aus) oder es gibt genau eines. Sonst fragt der Assistent —
@@ -546,6 +587,10 @@ export function ChannelConnectButton({
     // keine Zimmer liefert. Beide prepare-Pfade setzen ihn ohnehin neu — hier
     // steht er, damit die Aufräumliste vollständig ist.
     setDirektzuordnung(false);
+    // Auch die Preis-Nachfrage: bliebe sie stehen, zeigte ein danach gewaehltes
+    // Portal die Preismaske eines fremden Vorgangs.
+    setPreisNoetig(false);
+    setPreisEingabe("");
     setError(null);
     setOauthUrl(null);
     setOauthConnected(false);
@@ -803,6 +848,50 @@ export function ChannelConnectButton({
     }
   }
 
+  /** Grundpreis speichern und die Vorbereitung sofort fortsetzen.
+   *
+   *  `setBasePrice` ist ein Upsert im Backend (ersten Plan ändern oder anlegen)
+   *  — ein Doppelklick legt damit keinen zweiten Plan an (Wurzel 2). Danach
+   *  läuft genau der Abruf erneut, der eben am fehlenden Preis scheiterte; der
+   *  Nutzer landet im nächsten Schritt, statt den Assistenten neu zu öffnen.
+   */
+  function preisSpeichernUndWeiter() {
+    if (!propertyId || !selected) return;
+    const waehrung = properties.find((p) => p.id === propertyId)?.currency;
+    if (!waehrung) {
+      // Kein Ersatzwert: ohne Objektwährung wäre die Zahl bedeutungslos, und
+      // ein geratenes EUR wäre bei der ersten Buchung echtes Geld (Wurzel 4).
+      setError(
+        "Für dieses Objekt ist keine Währung hinterlegt. Trage sie zuerst im " +
+          "Objekt ein, dann kann der Grundpreis gesetzt werden.",
+      );
+      return;
+    }
+    const betrag = Number(preisEingabe.replace(",", "."));
+    if (!Number.isFinite(betrag) || betrag <= 0) {
+      setError("Bitte einen Grundpreis größer als 0 eingeben.");
+      return;
+    }
+    setError(null);
+    setPreisSpeichert(true);
+    void setBasePrice(propertyId, betrag, waehrung).then((res) => {
+      setPreisSpeichert(false);
+      if (!res.ok) {
+        setError(res.error);
+        return;
+      }
+      setPreisNoetig(false);
+      setPreisEingabe("");
+      // Weiter im Ablauf: OAuth-Portale über den Kanal, die übrigen über die
+      // eingegebenen Zugangsdaten — dieselbe Verzweigung wie beim ersten Anlauf.
+      if (selected.connection_type === "oauth") {
+        loadOAuthMapping();
+      } else {
+        loadMapping();
+      }
+    });
+  }
+
   // Nach „verbunden": Mapping laden (bestehender Pfad) und finalisieren.
   function loadOAuthMapping() {
     if (!selected || !propertyId) return;
@@ -815,9 +904,19 @@ export function ChannelConnectButton({
         account_id: kontoId,
       });
       if (!res.ok) {
+        // Fehlender Preisplan → Preisfeld statt Fehlermeldung (siehe
+        // `preisNoetig`). Erkannt am Text des Servers, nicht am Status: 422
+        // trägt auch andere Gründe (abgelehnte Zugangsdaten), und die dürfen
+        // nicht in der Preismaske landen.
+        if (istPreisFehler(res.error)) {
+          setPreisNoetig(true);
+          setError(null);
+          return;
+        }
         setError(res.error);
         return;
       }
+      setPreisNoetig(false);
       setOtaRooms(res.data.ota_rooms);
       setLocalRooms(res.data.rooms);
       setDirektzuordnung(res.data.direktzuordnung);
@@ -924,9 +1023,19 @@ export function ChannelConnectButton({
         settings,
       });
       if (!res.ok) {
+        // Fehlender Preisplan → Preisfeld statt Fehlermeldung (siehe
+        // `preisNoetig`). Erkannt am Text des Servers, nicht am Status: 422
+        // trägt auch andere Gründe (abgelehnte Zugangsdaten), und die dürfen
+        // nicht in der Preismaske landen.
+        if (istPreisFehler(res.error)) {
+          setPreisNoetig(true);
+          setError(null);
+          return;
+        }
         setError(res.error);
         return;
       }
+      setPreisNoetig(false);
       setOtaRooms(res.data.ota_rooms);
       setLocalRooms(res.data.rooms);
       setDirektzuordnung(res.data.direktzuordnung);
@@ -1256,6 +1365,54 @@ export function ChannelConnectButton({
                     </p>
                   )}
                 </div>
+              </div>
+            ) : preisNoetig && selected ? (
+              /* Grundpreis nachtragen — der EINE Wert, den Airbnb nicht liefert.
+                 Steht vor den uebrigen Schritten, weil `prepare` ohne Preisplan
+                 gar nicht erst durchlaeuft: der Server registriert das Objekt
+                 bei Channex und lehnt ohne Preis mit 422 ab. */
+              <div className="flex flex-col gap-4">
+                <StepBack onClick={() => setStep("portal")} text="Anderes Portal" />
+                <PortalHead portal={selected} />
+                <p className="text-sm text-muted-foreground">
+                  Für dieses Objekt fehlt noch der Grundpreis pro Nacht.{" "}
+                  {selected.code === "AirBNB"
+                    ? "Airbnb gibt Preise nicht heraus — sie fließen von hier zu Airbnb, nicht umgekehrt."
+                    : "Ohne Preis kann die Unterkunft nicht an das Portal übermittelt werden."}
+                </p>
+                <label className="flex flex-col gap-1.5 text-sm">
+                  <span className="font-medium">
+                    Grundpreis pro Nacht
+                    {/* Die Währung DIESES Objekts, nie ein geratenes Zeichen
+                        (Wurzel 4). Fehlt sie, sagt das Speichern es klar. */}
+                    {properties.find((p) => p.id === propertyId)?.currency
+                      ? ` (${properties.find((p) => p.id === propertyId)?.currency})`
+                      : ""}
+                  </span>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={preisEingabe}
+                    onChange={(e) => setPreisEingabe(e.target.value)}
+                    placeholder="z. B. 950"
+                    className="rounded-(--radius) border border-border bg-background p-2"
+                  />
+                </label>
+                <p className="text-xs text-muted-foreground">
+                  Du kannst ihn später jederzeit im Kalender ändern; Saison- und
+                  Tagespreise kommen dort obendrauf.
+                </p>
+                {error && <ErrorBox text={error} />}
+                <Button
+                  onClick={preisSpeichernUndWeiter}
+                  disabled={preisSpeichert || !preisEingabe.trim()}
+                >
+                  {preisSpeichert ? (
+                    <Spinner text="Speichere …" />
+                  ) : (
+                    "Preis speichern & weiter"
+                  )}
+                </Button>
               </div>
             ) : step === "oauth" && selected ? (
               /* Schritt 2 (OAuth): Airbnb-Konto verbinden */
@@ -1658,7 +1815,12 @@ export function ChannelConnectButton({
                     </Button>
                   </>
                 ) : localRooms.length === 0 ? (
-                  <ErrorBox text="Für dieses Konto sind noch keine Zimmer mit Preis angelegt. Lege zuerst ein Zimmer mit Grundpreis an." />
+                  /* Hier ist wirklich KEIN Objekt an der Portal-Property —
+                     nicht bloss der Preis offen (das faengt `preisNoetig` ab,
+                     bevor dieser Schritt ueberhaupt erscheint). Die alte
+                     Meldung sprach von „Zimmer mit Preis" und schickte den
+                     Betrieb einen Preis anlegen, obwohl das Objekt fehlte. */
+                  <ErrorBox text="Diesem Portal-Konto ist noch kein Objekt zugeordnet. Übernimm die Anzeigen des Kontos oder lege zuerst ein Objekt an." />
                 ) : direktzuordnung ? (
                   /* Kanal mit DIREKTZUORDNUNG (z.B. Google Hotel Search): das
                      Portal liefert keine Zimmer, weil es selbst zuordnet —
