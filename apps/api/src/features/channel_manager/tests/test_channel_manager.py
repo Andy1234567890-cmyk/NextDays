@@ -176,8 +176,11 @@ def test_room_facility_ids_uses_own_catalogue() -> None:
         _channex_room_facility_ids,
     )
 
-    klima = "9f5726e2-f979-4b6b-a69e-cbca387bc7ea"  # Airconditioning (Zimmer)
-    balkon = "363c2057-2cdf-4cbc-af98-069c2d573952"  # Balcony (Zimmer)
+    # Live-UUIDs aus /room_facilities/options (06.09.2026). Die Vorgänger waren
+    # ungültig — Channex nahm sie mit 200 an und legte nichts ab; sichtbar wird
+    # das nur im Live-Vergleich (scripts/diagnose/channex_facilities_pruefen.py).
+    klima = "da28a45b-fb1f-4dd3-82c3-5890d13e4d49"  # Airconditioning (Zimmer)
+    balkon = "19cb8824-a6f1-4bf4-a949-439cca90df16"  # Balcony (Zimmer)
     assert _channex_room_facility_ids(["airconditioning"]) == [klima]
     assert _channex_room_facility_ids(["airconditioning", "balcony"]) == [klima, balkon]
     # Unbekannt → weglassen statt 422 zu riskieren.

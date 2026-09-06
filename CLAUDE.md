@@ -400,6 +400,15 @@ ist, nicht was dort steht — verifiziert wird weiterhin am Code.
   (Marken, Kürzel, Wörter, die in DIESER Sprache wirklich gleich lauten), steht
   mit Grund und Sprachliste in `deutsche-restwerte-allowlist.json` — nie
   pauschal „gilt überall", nie eingetragen, nur damit die Zahl sinkt.
+- Ausstattung/Facility-Mapping berührt — oder ein Portal zeigt keine Zimmer-
+  Ausstattung? `uv run --project apps/api python
+  scripts/diagnose/channex_facilities_pruefen.py` vergleicht beide Maps
+  (`_CHANNEX_FACILITY`, `_CHANNEX_ROOM_FACILITY`) live mit
+  `/property_facilities/options` und `/room_facilities/options`. Channex
+  quittiert UNBEKANNTE Facility-UUIDs mit 200 und legt nichts ab: am 06.09.2026
+  waren alle 191 Zimmer-UUIDs ungültig, der Sync meldete „39 gesendet", jeder
+  Room-Type stand bei allen Portalen ohne Ausstattung. Der Unit-Test prüfte
+  die Map gegen sich selbst — nur der Live-Vergleich sieht das.
 - Kanal/Enum berührt? `node scripts/i18n/kanal-enums-pruefen.mjs` — hält
   DB-Enum → Pydantic → Frontend-Unions → Kanal-Meta → `calendar.channel.*`
   aller 24 Sprachen UND den serverseitigen Mail-Katalog `kanal.*`
