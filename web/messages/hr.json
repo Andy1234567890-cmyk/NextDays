@@ -5833,7 +5833,7 @@
       "customCityLabel": "Vlastiti naziv grada",
       "mapHint": "Uredi adresu iznad kako bi ažurirao kartu i koordinate.",
       "showPreciseLocationLabel": "Prikaži točnu lokaciju",
-      "showPreciseLocationHint": "Dopusti gostima da prije rezervacije vide točnu lokaciju na karti.",
+      "showPreciseLocationHint": "Omogućite gostima da vide točnu lokaciju na karti prije rezervacije. Primjenjuje se na Airbnb i vašu vlastitu web stranicu; Booking.com ne podržava ovu postavku i uvijek prikazuje adresu.",
       "placesSearchPlaceholder": "Unesi adresu i odaberi prijedlog …",
       "loading": "Učitavanje …",
       "unitKilometers": "kilometri",

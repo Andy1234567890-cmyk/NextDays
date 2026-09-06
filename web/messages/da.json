@@ -5833,7 +5833,7 @@
       "customCityLabel": "Eget bynavn",
       "mapHint": "Rediger adressen ovenfor for at opdatere kort og koordinater.",
       "showPreciseLocationLabel": "Vis præcis beliggenhed",
-      "showPreciseLocationHint": "Lad gæster se den præcise beliggenhed på kortet før bookingen.",
+      "showPreciseLocationHint": "Gæster kan se den nøjagtige placering på kortet før booking. Gælder for Airbnb og din egen hjemmeside; Booking.com understøtter ikke denne indstilling og viser altid adressen der.",
       "placesSearchPlaceholder": "Indtast adresse og vælg forslag …",
       "loading": "Indlæser …",
       "unitKilometers": "Kilometer",

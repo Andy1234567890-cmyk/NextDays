@@ -652,7 +652,7 @@ class PropertiesService(
         # Gegenzustand muss mitgepflegt werden).
         if laengenpreise_geaendert(alte_attrs, changes):
             try_enqueue_airbnb_aktionen(self._db, tenant_id, property_id)
-        airbnb_direkt_nachziehen(self._db, tenant_id, property_id, changes)
+        airbnb_direkt_nachziehen(self._db, tenant_id, property_id, changes, alte_attrs)
         # Verfügbarkeits-Formular an die Portale spiegeln (Wurzel 1: sonst
         # blieben Mindest-/Maximalaufenthalt und die gesperrten Check-in/-out-
         # Tage dort auf dem alten Stand). Best-effort, kippt das Speichern nie.

@@ -5833,7 +5833,7 @@
       "customCityLabel": "Pielāgots pilsētas nosaukums",
       "mapHint": "Rediģē adresi augstāk, lai atjauninātu karti un koordinātas.",
       "showPreciseLocationLabel": "Rādīt precīzu atrašanās vietu",
-      "showPreciseLocationHint": "Ļauj viesiem pirms rezervēšanas kartē redzēt precīzu atrašanās vietu.",
+      "showPreciseLocationHint": "Ļaujiet viesiem pirms rezervēšanas kartē redzēt precīzu atrašanās vietu. Attiecas uz Airbnb un jūsu pašu vietni; Booking.com šo iestatījumu nepazīst un vienmēr parāda adresi.",
       "placesSearchPlaceholder": "Ievadi adresi un izvēlies ieteikumu …",
       "loading": "Notiek ielāde …",
       "unitKilometers": "kilometri",

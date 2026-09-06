@@ -5833,7 +5833,7 @@
       "customCityLabel": "Ainm baile saincheaptha",
       "mapHint": "Cuir an seoladh thuas in eagar chun an léarscáil agus na comhordanáidí a nuashonrú.",
       "showPreciseLocationLabel": "Taispeáin an suíomh beacht",
-      "showPreciseLocationHint": "Lig d'aíonna an suíomh beacht a fheiceáil ar an léarscáil roimh an áirithint.",
+      "showPreciseLocationHint": "Lig do chliaint an suíomh cruinn a fheiceáil ar an léarscáil sula ndéanann siad áirithint. Oibríonn sé seo le Airbnb agus le do shuíomh Gréasáin féin; níl an socrú seo ag Booking.com agus taispeánann sé an seoladh i gcónaí.",
       "placesSearchPlaceholder": "Cuir isteach seoladh agus roghnaigh moladh …",
       "loading": "Á lódáil …",
       "unitKilometers": "Ciliméadar",

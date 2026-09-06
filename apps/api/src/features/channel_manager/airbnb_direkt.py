@@ -78,6 +78,22 @@ class AirbnbSchreibfehler(RuntimeError):
     """
 
 
+def standort_schalter(type_attributes: object) -> bool | None:
+    """Der Schalter „Genauen Standort anzeigen" aus `type_attributes.location`.
+
+    Nur ein echter Bool zählt: fehlt der Schalter, ist er „nicht gepflegt" und
+    geht nicht an Airbnb (Wurzel 4) — ein `false` dagegen ist eine Entscheidung
+    des Betriebs und geht raus.
+    """
+    if not isinstance(type_attributes, dict):
+        return None
+    location = type_attributes.get("location")
+    if not isinstance(location, dict):
+        return None
+    wert = location.get("showPreciseLocation")
+    return wert if isinstance(wert, bool) else None
+
+
 def _foto_url(foto: dict[str, Any]) -> str | None:
     """Beste verfügbare Auflösung eines Airbnb-Fotos.
 
@@ -535,8 +551,13 @@ class AirbnbDirektMixin:
         flaeche: float | None,
         einheit: str | None,
         max_gaeste: int | None,
+        genauer_standort: bool | None = None,
     ) -> dict[str, Any]:
-        """Fläche und Kapazität zurück an Airbnb.
+        """Fläche, Kapazität und Standort-Genauigkeit zurück an Airbnb.
+
+        `genauer_standort` ist der Schalter „Genauen Standort anzeigen" der
+        Standort-Maske → Airbnbs `display_exact_location_to_guest` (Hinweg in
+        `airbnb_standort`). `None` = nicht gepflegt, geht nicht raus.
 
         `PUT v2/listings/{id}` mit FLACHEM Payload, bewusst am Aggregator
         vorbei: Channex' ausgehender Payload trägt nur Verfügbarkeit, Preis und
@@ -579,6 +600,8 @@ class AirbnbDirektMixin:
             }
         if isinstance(max_gaeste, int) and max_gaeste > 0:
             nutzlast["person_capacity"] = max_gaeste
+        if isinstance(genauer_standort, bool):
+            nutzlast["display_exact_location_to_guest"] = genauer_standort
         if not nutzlast:
             log.info(
                 "airbnb_stammdaten_nichts_zu_senden",
@@ -605,6 +628,9 @@ class AirbnbDirektMixin:
             .get("listing_size", {})
             .get("size", nachher.get("groesse")),
             "kapazitaet": nutzlast.get("person_capacity", nachher.get("kapazitaet")),
+            "genauer_standort": nutzlast.get(
+                "display_exact_location_to_guest", nachher.get("genauer_standort")
+            ),
         }
         angekommen = all(nachher.get(k) == v for k, v in soll.items())
         log.info(
@@ -640,7 +666,11 @@ class AirbnbDirektMixin:
         ) else listing
         groesse = ((daten.get("property_details") or {})
                    .get("listing_size") or {}).get("size")
-        return {"groesse": groesse, "kapazitaet": daten.get("person_capacity")}
+        return {
+            "groesse": groesse,
+            "kapazitaet": daten.get("person_capacity"),
+            "genauer_standort": daten.get("display_exact_location_to_guest"),
+        }
 
     def airbnb_listings_direkt(self, token: str, user_id: str) -> list[dict[str, Any]]:
         """Alle Listings des Hosts MIT Adresse, Zimmerzahl und Ausstattung.
@@ -1231,7 +1261,10 @@ class AirbnbDirektMixin:
         db = self._require_db()  # type: ignore[attr-defined]
         prop = load_scoped(
             db, "properties", property_id, tenant_id,
-            columns="id, airbnb_listing_id, size_value, size_unit, max_guests",
+            columns=(
+                "id, airbnb_listing_id, size_value, size_unit, max_guests, "
+                "type_attributes"
+            ),
             not_found=ChannelManagerError("Objekt nicht gefunden.", status_code=404),
         )
         listing_id = prop.get("airbnb_listing_id")
@@ -1248,5 +1281,6 @@ class AirbnbDirektMixin:
             prop.get("size_value"),
             prop.get("size_unit"),
             prop.get("max_guests"),
+            genauer_standort=standort_schalter(prop.get("type_attributes")),
         )
         return {"listing_id": str(listing_id), "geschrieben": geschrieben}

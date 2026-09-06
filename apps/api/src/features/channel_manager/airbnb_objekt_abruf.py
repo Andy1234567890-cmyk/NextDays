@@ -81,7 +81,7 @@ from src.core.security import AuthContext
 from src.core.supabase import load_scoped
 
 from . import airbnb_listing_import as ali
-from . import airbnb_zugang
+from . import airbnb_standort, airbnb_zugang
 from .airbnb_verfuegbarkeit import VORLAUF_ZU_OPTION
 from .channex_client import ChannexError
 from .common import (
@@ -1113,6 +1113,7 @@ class AirbnbObjektAbrufMixin:
 
         # Airbnbs Verfügbarkeitsregeln in das Feld, das die MASKE liest.
         AirbnbObjektAbrufMixin._verfuegbarkeit_in_maske(alt, neu, gesetzt)
+        airbnb_standort.standort_uebernehmen(listing, alt, neu, gesetzt)
 
     @staticmethod
     def _verfuegbarkeit_in_maske(

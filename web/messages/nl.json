@@ -5833,7 +5833,7 @@
       "customCityLabel": "Eigen plaatsnaam",
       "mapHint": "Bewerk het adres hierboven om kaart en coördinaten bij te werken.",
       "showPreciseLocationLabel": "Exacte locatie tonen",
-      "showPreciseLocationHint": "Laat gasten vóór het boeken de exacte locatie op de kaart zien.",
+      "showPreciseLocationHint": "Laat gasten de exacte locatie op de kaart zien voordat ze boeken. Dit geldt voor Airbnb en uw eigen website; Booking.com kent deze instelling niet en toont daar altijd het adres.",
       "placesSearchPlaceholder": "Adres invoeren en suggestie kiezen …",
       "loading": "Laden …",
       "unitKilometers": "Kilometer",

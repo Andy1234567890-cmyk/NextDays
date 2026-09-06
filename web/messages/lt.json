@@ -5833,7 +5833,7 @@
       "customCityLabel": "Savas miesto pavadinimas",
       "mapHint": "Redaguok adresą aukščiau, kad atnaujintum schemą ir koordinates.",
       "showPreciseLocationLabel": "Rodyti tikslią vietą",
-      "showPreciseLocationHint": "Leisk svečiams prieš rezervuojant matyti tikslią vietą žemėlapyje.",
+      "showPreciseLocationHint": "Leiskite svečiams prieš užsakymą pamatyti tikslią vietą žemėlapyje. Taikoma „Airbnb“ ir jūsų svetainei; „Booking.com“ šio nustatymo nepalaiko ir visada rodo adresą.",
       "placesSearchPlaceholder": "Įvesk adresą ir pasirink pasiūlymą …",
       "loading": "Įkeliama …",
       "unitKilometers": "Kilometrai",

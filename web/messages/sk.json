@@ -5833,7 +5833,7 @@
       "customCityLabel": "Vlastný názov mesta",
       "mapHint": "Upravte adresu vyššie, aby sa aktualizovala mapa a súradnice.",
       "showPreciseLocationLabel": "Zobraziť presnú polohu",
-      "showPreciseLocationHint": "Nechajte hostí pred rezerváciou vidieť presnú polohu na mape.",
+      "showPreciseLocationHint": "Umožnite hosťom zobraziť presnú polohu na mape pred rezerváciou. Platí pre Airbnb a vašu vlastnú webovú stránku; Booking.com toto nastavenie nepozná a vždy tam zobrazuje adresu.",
       "placesSearchPlaceholder": "Zadajte adresu a vyberte návrh …",
       "loading": "Načítava sa …",
       "unitKilometers": "Kilometre",

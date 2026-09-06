@@ -523,6 +523,19 @@ def gebaeudedaten_uebernehmen(listing: dict[str, Any]) -> dict[str, Any]:
     return ergebnis
 
 
+def standort_genauigkeit(listing: dict[str, Any]) -> bool | None:
+    """Zeigt Airbnb dem Gast VOR der Buchung den genauen Standort?
+
+    `display_exact_location_to_guest` am Listing (Airbnb Connection API,
+    `action/listing_details`; live an „Feriehus Snerlebo" 06.09.2026: `true`).
+    Bei uns ist das der Schalter „Genauen Standort anzeigen" der Standort-Maske
+    (`type_attributes.location.showPreciseLocation`). Nur ein echter Bool zählt —
+    fehlt das Feld, ist es „unbekannt", nicht „aus" (Wurzel 4).
+    """
+    wert = listing.get("display_exact_location_to_guest")
+    return wert if isinstance(wert, bool) else None
+
+
 def interner_name(listing: dict[str, Any]) -> str | None:
     """`listing_nickname` → der interne Name des Objekts.
 

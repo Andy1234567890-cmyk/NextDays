@@ -5833,7 +5833,7 @@
       "customCityLabel": "Lastno ime mesta",
       "mapHint": "Uredi naslov zgoraj, da posodobiš zemljevid in koordinate.",
       "showPreciseLocationLabel": "Prikaži natančno lokacijo",
-      "showPreciseLocationHint": "Gostom pred rezervacijo omogoči, da vidijo natančno lokacijo na zemljevidu.",
+      "showPreciseLocationHint": "Gostom omogočite ogled natančne lokacije na zemljevidu pred rezervacijo. Velja za Airbnb in vaše spletno mesto; Booking.com te nastavitve ne pozna in tam vedno prikaže naslov.",
       "placesSearchPlaceholder": "Vnesi naslov in izberi predlog …",
       "loading": "Nalaganje …",
       "unitKilometers": "Kilometri",

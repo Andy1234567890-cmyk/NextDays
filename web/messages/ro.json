@@ -5833,7 +5833,7 @@
       "customCityLabel": "Nume de oraș propriu",
       "mapHint": "Editează adresa de mai sus pentru a actualiza harta și coordonatele.",
       "showPreciseLocationLabel": "Afișează locația exactă",
-      "showPreciseLocationHint": "Lasă oaspeții să vadă locația exactă pe hartă înainte de rezervare.",
+      "showPreciseLocationHint": "Permiteți oaspeților să vadă locația exactă pe hartă înainte de a rezerva. Se aplică pentru Airbnb și pentru propriul site web; Booking.com nu are această setare și afișează întotdeauna adresa.",
       "placesSearchPlaceholder": "Introdu adresa și alege o sugestie …",
       "loading": "Se încarcă …",
       "unitKilometers": "Kilometri",

@@ -5833,7 +5833,7 @@
       "customCityLabel": "Egyedi városnév",
       "mapHint": "Szerkeszd a fenti címet a térkép és a koordináták frissítéséhez.",
       "showPreciseLocationLabel": "Pontos helyszín megjelenítése",
-      "showPreciseLocationHint": "Engedd, hogy a vendégek foglalás előtt lássák a pontos helyszínt a térképen.",
+      "showPreciseLocationHint": "A vendégek a foglalás előtt láthatják a pontos helyet a térképen. Ez az Airbnb-re és az Ön webhelyére vonatkozik; a Booking.com nem ismeri ezt a beállítást, és mindig a címet mutatja.",
       "placesSearchPlaceholder": "Add meg a címet, és válaszd ki a javaslatot …",
       "loading": "Betöltés …",
       "unitKilometers": "Kilométer",

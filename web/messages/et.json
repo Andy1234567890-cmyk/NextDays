@@ -5833,7 +5833,7 @@
       "customCityLabel": "Oma linnanimi",
       "mapHint": "Muuda ülal olevat aadressi, et uuendada kaarti ja koordinaate.",
       "showPreciseLocationLabel": "Näita täpset asukohta",
-      "showPreciseLocationHint": "Luba külalistel enne broneerimist näha täpset asukohta kaardil.",
+      "showPreciseLocationHint": "Laske külalistel enne broneerimist kaardil täpset asukohta näha. Kehtib Airbnb ja teie enda veebisaidi kohta; Booking.com seda seadet ei tunne ja näitab seal alati aadressi.",
       "placesSearchPlaceholder": "Sisesta aadress ja vali soovitus …",
       "loading": "Laadimine …",
       "unitKilometers": "Kilomeetrit",

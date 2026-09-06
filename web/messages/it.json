@@ -5833,7 +5833,7 @@
       "customCityLabel": "Nome città personalizzato",
       "mapHint": "Modifica l'indirizzo sopra per aggiornare mappa e coordinate.",
       "showPreciseLocationLabel": "Mostra posizione precisa",
-      "showPreciseLocationHint": "Consenti agli ospiti di vedere la posizione precisa sulla mappa prima della prenotazione.",
+      "showPreciseLocationHint": "Consenti agli ospiti di vedere la posizione esatta sulla mappa prima di prenotazione. Funziona per Airbnb e per il tuo sito web; Booking.com non supporta questa impostazione e mostra sempre l'indirizzo.",
       "placesSearchPlaceholder": "Inserisci l'indirizzo e scegli un suggerimento …",
       "loading": "Caricamento …",
       "unitKilometers": "Chilometri",

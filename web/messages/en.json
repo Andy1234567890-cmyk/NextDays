@@ -5854,7 +5854,7 @@
       "customCityLabel": "Custom city name",
       "mapHint": "Edit the address above to update the map and coordinates.",
       "showPreciseLocationLabel": "Show precise location",
-      "showPreciseLocationHint": "Let guests see the precise location on the map before booking.",
+      "showPreciseLocationHint": "Allow guests to see the exact location on the map before booking. This applies to Airbnb and your own website; Booking.com does not support this setting and always shows the address.",
       "placesSearchPlaceholder": "Enter address and pick a suggestion …",
       "loading": "Loading …",
       "unitKilometers": "Kilometres",
