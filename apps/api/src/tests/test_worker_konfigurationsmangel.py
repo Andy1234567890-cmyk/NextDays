@@ -68,15 +68,25 @@ def test_startpruefung_meldet_jede_fehlende_pflichtvariable(
 def test_startpruefung_schweigt_bei_vollstaendiger_umgebung(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Kein Rauschen im Normalfall — sonst liest die Meldung bald niemand."""
-    monkeypatch.setattr(
-        pflichtumgebung, "get_settings",
-        lambda: SimpleNamespace(
-            stripe_secret_key=SimpleNamespace(get_secret_value=lambda: "sk_test_x"),
-            app_base_url="https://app.mynextdays.com",
-            company_legal_name="myNextDays ApS",
-        ),
+    """Kein Rauschen im Normalfall — sonst liest die Meldung bald niemand.
+
+    DIE VOLLSTÄNDIGE UMGEBUNG WIRD AUS `_PFLICHT_ENV` ERZEUGT, nicht von Hand
+    aufgezählt: eine handgeschriebene Liste veraltet genau dann, wenn jemand
+    eine neue Pflichtvariable einträgt — und dann meldet dieser Test einen
+    Mangel, den es nicht gibt. Real passiert mit `SEAM_API_KEY` (0573): der
+    Wert kam zu `_PFLICHT_ENV` dazu, dieser Mock nicht, der Test wurde rot,
+    und weil kein Deploy bei rotem CI läuft, stand die Schloss-Route auf dem
+    Server nie zur Verfügung (HTTP 404 auf den Seam-Webhook).
+    """
+    vollstaendig = SimpleNamespace(
+        **{
+            w.settings_feld: SimpleNamespace(get_secret_value=lambda: "gesetzt")
+            if w.env_name.endswith(("_KEY", "_SECRET", "_TOKEN"))
+            else f"wert-fuer-{w.settings_feld}"
+            for w in worker_modul._PFLICHT_ENV  # noqa: SLF001
+        }
     )
+    monkeypatch.setattr(pflichtumgebung, "get_settings", lambda: vollstaendig)
     worker_modul._pflichtvariablen_melden()  # noqa: SLF001
     assert "pflichtvariable_fehlt" not in _ohne_farben(
         capsys.readouterr().out
