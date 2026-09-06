@@ -308,6 +308,22 @@ class Settings(BaseSettings):
     # NEXT_PUBLIC_-Gegenstück — die Suche läuft über den Proxy in diesem Dienst.
     pexels_api_key: SecretStr = SecretStr("")
     unsplash_access_key: SecretStr = SecretStr("")
+    # Seam (Smart-Locks über einen Aggregator, 0573). Fehlt der Schlüssel,
+    # sind die Schloss-Funktionen aus und sagen das auch — `SeamNichtKonfiguriert`
+    # ist eine eigene Fehlerklasse, damit ein Konfigurationsmangel nicht wie ein
+    # Netzfehler aussieht und deshalb nie behoben wird (Wurzel 5, Lehre aus der
+    # Mail-Variablen-Drift vom 25.08.2026).
+    #
+    # Gehört in BEIDE Coolify-Anwendungen: `api` erzeugt Zugänge auf Anforderung,
+    # `worker` fährt den Takt (Grants 72 h vor Gültigkeit anlegen, Codes
+    # zurücklesen, abgelaufene aufräumen). Nur in einer von beiden gesetzt heißt:
+    # die Oberfläche funktioniert und der Automatikpfad läuft stumm ins Leere.
+    seam_api_key: SecretStr = SecretStr("")
+    # Signatur-Secret der Seam-Webhooks (Svix). Fehlt es, lehnt der
+    # Webhook-Endpunkt mit 401 ab — fail-CLOSED (Wurzel 5). „Noch nicht
+    # konfiguriert" ist kein Grund, eine ungeprüfte Schreibschnittstelle in
+    # unsere Zustandstabelle offenzulassen.
+    seam_webhook_secret: SecretStr = SecretStr("")
     # llama-3.3-70b-versatile wird von Groq stillgelegt (Deprecation 2026);
     # empfohlener Production-Nachfolger: openai/gpt-oss-120b.
     groq_model: str = "openai/gpt-oss-120b"

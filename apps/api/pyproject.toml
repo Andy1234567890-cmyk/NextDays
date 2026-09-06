@@ -39,6 +39,8 @@ dependencies = [
     "holidays>=0.103",
     "ortools>=9.15.6755",
     "pyairbnb>=2.2.2",
+    "seam>=3.14.1",
+    "svix>=1.99.1",
 ]
 
 [project.optional-dependencies]

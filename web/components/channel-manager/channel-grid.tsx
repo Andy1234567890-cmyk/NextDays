@@ -14,6 +14,8 @@ import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState, useTransition } from "react";
 
 import { channelLogo } from "@/lib/channel-logos";
+import { ladeVerbindungen } from "@/lib/schloesser-api";
+import type { SchlossVerbindung } from "@/lib/schloesser-typen";
 import {
   getWhatsAppOnboardingStatus,
   type WhatsAppOnboardingStatus,
@@ -358,11 +360,17 @@ export function ChannelGrid({ overview }: { overview: ChannelOverview | null }) 
 
       {/* Direkter Gästekanal — eigene WhatsApp-Nummer des Betriebs. Bewusst
           eigene Kategorie: das ist kein Buchungsportal (es kommen keine
-          Buchungen darüber), sondern der Kommunikationsweg zum Gast. */}
+          Buchungen darüber), sondern der Kommunikationsweg zum Gast.
+          Die Schlösser stehen daneben, weil sie derselben Art sind: keine
+          Buchungsquelle, sondern etwas, das AN der Buchung hängt. */}
       <section className="flex flex-col gap-3">
         <CategoryHeading>{t("categoryMessaging")}</CategoryHeading>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <WhatsAppKanalKarte
+            connectLabel={t("connect")}
+            connectedLabel={t("connected")}
+          />
+          <SchloesserKanalKarte
             connectLabel={t("connect")}
             connectedLabel={t("connected")}
           />
@@ -391,6 +399,49 @@ export function ChannelGrid({ overview }: { overview: ChannelOverview | null }) 
  *  damit der Channex-Overview nichts über WhatsApp wissen muss. Solange geladen
  *  wird, zeigt die Karte „nicht verbunden" — das ist der häufigere Fall und
  *  vermeidet ein Aufblitzen des falschen Zustands. */
+function SchloesserKanalKarte({
+  connectLabel,
+  connectedLabel,
+}: {
+  connectLabel: string;
+  connectedLabel: string;
+}) {
+  const [verbindungen, setVerbindungen] = useState<SchlossVerbindung[] | null>(
+    null,
+  );
+
+  useEffect(() => {
+    void ladeVerbindungen().then((r) => setVerbindungen(r.ok ? r.data : null));
+  }, []);
+
+  // Verbunden heisst: mindestens EIN Konto ist wirklich nutzbar. Ein Konto im
+  // Zustand `pending` (Anmeldung beim Hersteller abgebrochen) oder `error`
+  // zaehlt NICHT — die Kachel wuerde sonst „verbunden" zeigen, waehrend keine
+  // Codes entstehen.
+  const nutzbar = (verbindungen ?? []).filter((v) => v.status === "connected");
+  const verbunden = nutzbar.length > 0;
+
+  return (
+    <ChannelCard
+      // KEIN Logo: `ChannelCard` nimmt ausdrücklich nur echte Marken-SVGs, und
+      // „Schlösser" ist keine Marke, sondern eine Gattung (igloohome, Nuki,
+      // Salto … stehen alle darunter). Ohne Logo zeigt die Karte den Namen —
+      // richtig hier, statt ein Symbol zu erfinden.
+      alt="Schlösser"
+      connected={verbunden}
+      badge={
+        verbunden
+          ? nutzbar.length === 1
+            ? connectedLabel
+            : `${nutzbar.length} Konten`
+          : connectedLabel
+      }
+      href="/channels/schloesser"
+      connectLabel={connectLabel}
+    />
+  );
+}
+
 function WhatsAppKanalKarte({
   connectLabel,
   connectedLabel,

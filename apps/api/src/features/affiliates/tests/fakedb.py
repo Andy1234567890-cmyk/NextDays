@@ -33,6 +33,11 @@ _UNIQUE: dict[str, list[tuple[tuple[str, ...], dict[str, Any] | None]]] = {
         (("stripe_transfer_id",), None),
     ],
     "affiliates": [(("email",), None)],
+    # 0574: ein Geraet kostet je Monat genau einmal. Die Regel gehoert
+    # hierher, weil der Test „zweiter Lauf belastet nicht doppelt" sonst
+    # nichts beweisen kann — er wuerde gruen sein, obwohl die echte DB
+    # der einzige Ort ist, der die Doppelbelastung verhindert.
+    "schloesser_ledger": [(("seam_device_id", "monat"), None)],
 }
 
 
@@ -59,6 +64,18 @@ class _Not:
 
     def is_(self, spalte: str, wert: Any) -> _Query:  # noqa: ANN401
         self._q._filter.append(lambda r: not _is(r.get(spalte), wert))
+        return self._q
+
+    def in_(self, spalte: str, werte: list[Any]) -> _Query:
+        """`not_.in_` — im Projekt gängig (tasks/engine, sperrantrag, 0573).
+
+        Fehlte hier, obwohl der Produktionscode es an mehreren Stellen nutzt:
+        ein Testdoppel, das eine echte Abfrageform nicht kennt, lässt den
+        Aufruf mit AttributeError scheitern und sieht wie ein Fehler im
+        geprüften Code aus.
+        """
+        menge = list(werte)
+        self._q._filter.append(lambda r: r.get(spalte) not in menge)
         return self._q
 
 

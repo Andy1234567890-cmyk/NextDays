@@ -135,6 +135,39 @@ class GuestStayService:
         return rows[0] if rows else None
 
     # --- Türcode-Freigabe (fail-CLOSED) ----------------------------------
+    def _buchungscode(self, reservation: dict) -> str | None:
+        """Der Smart-Lock-Code DIESER Buchung, falls vorhanden (0573).
+
+        Nur nutzbare Zustände: `aktiv` (am Gerät bestätigt) und `angelegt`
+        (an Seam übergeben). Ein geplanter Zugang hat noch keinen Code, ein
+        fehlgeschlagener keinen gültigen, ein widerrufener keinen erlaubten —
+        in all diesen Fällen `None`, damit der objektweite Code greift oder
+        das Feld ehrlich leer bleibt (Wurzel 4).
+
+        SCOPE: Gescopet wird über die `reservation_id`, die aus dem
+        Gast-Token stammt und in `_reservation_for_email` bereits gegen die
+        E-Mail des Tokens geprüft wurde. Ein `tenant_id`-Filter ist hier NICHT
+        möglich — der Gast-Ladepfad liest ihn bewusst nicht mit —, aber auch
+        nicht nötig: die Reservierungs-ID ist der engere Schlüssel, und ein
+        Zugang hängt per Fremdschlüssel an genau einer Reservierung.
+        """
+        reservation_id = reservation.get("id")
+        if not reservation_id:
+            return None
+        treffer = (
+            self._db()
+            .table("seam_zugang")
+            .select("code")
+            .eq("reservation_id", str(reservation_id))
+            .in_("status", ["aktiv", "angelegt"])
+            .order("created_at", desc=True)
+            .limit(1)
+            .execute()
+        ).data or []
+        return str(treffer[0]["code"]) if treffer and treffer[0].get(
+            "code"
+        ) else None
+
     def _resolve_door_code(
         self, portal_row: dict, reservation: dict
     ) -> tuple[str | None, str | None]:
@@ -252,6 +285,13 @@ class GuestStayService:
                 status_code=404,
             )
         prop = self._property(res["property_id"])
+        # Smart-Lock-Code dieser Buchung (0573) schlägt den objektweiten Wert.
+        # Er wird in die Portal-Zeile GESCHRIEBEN, statt an
+        # `_resolve_door_code` vorbeigeführt zu werden: so laufen beide
+        # Codequellen durch dieselben Freigaberegeln (bezahlt? ab Check-in?).
+        # Ein zweiter Weg um die Regeln herum wäre die Stelle, an der eine der
+        # beiden Prüfungen beim nächsten Mal fehlt.
+        portal = {**portal, "door_code": self._buchungscode(res) or portal.get("door_code")}
         door_code, hidden_reason = self._resolve_door_code(portal, res)
         return GuestStayResponse(
             reservation_id=str(res["id"]),

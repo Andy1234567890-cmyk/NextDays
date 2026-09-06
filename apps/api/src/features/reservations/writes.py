@@ -158,6 +158,78 @@ class WritesMixin(ReservationsBase):
                 error=str(exc)[:200],
             )
 
+    def _schlosscode_zurueckziehen(
+        self, tenant_id: str, reservation_id: str
+    ) -> None:
+        """Storno/Ablehnung → Türcode zurückziehen (Gegenzustand, Wurzel 1).
+
+        Fünftes Glied der Kette neben `_release_nights`, `_sync_task_rules`,
+        `_cancel_dynpricing_usage` und `_cancel_commission`: wer eine Buchung
+        beendet, muss auch den Zugang beenden, sonst kommt ein Gast ins Haus,
+        der nicht mehr gebucht hat.
+
+        BEST-EFFORT wie die Geschwister: ein Storno darf nicht scheitern, weil
+        ein Schloss offline ist. Der Zustand bleibt dann `fehlgeschlagen` an
+        der Zugangszeile stehen und ist dort sichtbar — das ist der
+        Unterschied zu „verschluckt".
+
+        WICHTIG: Bei Offline-Codes (igloohome algoPIN) ist ein Widerruf
+        physikalisch unmöglich; der Service verbucht das als
+        `nicht_widerrufbar` samt Ablaufdatum. Das ist kein Fehler dieser
+        Methode, sondern die ehrliche Antwort — die Oberfläche zeigt sie an,
+        statt „zurückgezogen" zu behaupten (Wurzel 5b).
+        """
+        if self._client is None:
+            return
+        try:
+            from src.features.schloesser.service import (  # noqa: PLC0415
+                SchloesserService,
+            )
+
+            SchloesserService(self._client).zugang_widerrufen(
+                tenant_id, reservation_id
+            )
+        except Exception as exc:  # noqa: BLE001 — best-effort, Storno bleibt
+            log.warning(
+                "schlosscode_widerruf_failed",
+                tenant_id=tenant_id,
+                reservation_id=reservation_id,
+                error=str(exc)[:200],
+            )
+
+    def _schlosscode_mitziehen(
+        self, tenant_id: str, reservation_id: str
+    ) -> None:
+        """Verschiebung/Objektwechsel → Zugang nachziehen (Wurzel 1).
+
+        NICHT widerrufen: die Buchung besteht weiter, nur ihr Zeitraum (oder
+        ihr Objekt) hat sich geändert. `zugang_planen` ist idempotent und
+        zieht den Zeitraum des bestehenden Zugangs nach.
+
+        Bei einem OBJEKTWECHSEL sind es andere Schlösser — dann entsteht ein
+        neuer Code. Guesty macht es genauso und weist ausdrücklich darauf hin,
+        dass der alte Code dann nicht mehr geht; bei Offline-Schlössern läuft
+        er allerdings weiter, was der Service als `nicht_widerrufbar`
+        festhält. Beides ist für den Betrieb sichtbar, statt still zu bleiben.
+        """
+        if self._client is None:
+            return
+        try:
+            from src.features.schloesser.service import (  # noqa: PLC0415
+                SchloesserService,
+            )
+
+            SchloesserService(self._client).zugang_planen(
+                tenant_id, reservation_id
+            )
+        except Exception as exc:  # noqa: BLE001 — best-effort, Move bleibt
+            log.warning(
+                "schlosscode_mitziehen_failed",
+                tenant_id=tenant_id,
+                reservation_id=reservation_id,
+                error=str(exc)[:200],
+            )
+
     def _nachberechnung_link_schliessen(
         self, tenant_id: str, reservation_id: str
     ) -> None:
@@ -576,6 +648,12 @@ class WritesMixin(ReservationsBase):
 
         # Planmäßige Aufgaben aus den Regeln erzeugen (0272).
         self._sync_task_rules(tenant_id, str(row["id"]))
+        # Türcode vormerken — aber NUR für einen echten Verkauf. Eine offene
+        # Anfrage (`requested`) bekommt keinen Zugang: sie ist noch nicht
+        # entschieden, und bei igloohome sind pro Tag nur DREI PINs möglich,
+        # die eine später abgelehnte Anfrage sonst mitverbraucht.
+        if str(req.status.value) != "requested":
+            self._schlosscode_mitziehen(tenant_id, str(row["id"]))
 
         # Loyalty-Aggregate des Gastes (Aufenthalte/Umsatz) neu berechnen.
         if guest_id:
@@ -1191,6 +1269,10 @@ class WritesMixin(ReservationsBase):
         self._sperrantrag_zeitraum_mitziehen(
             tenant_id, current, req.check_in, req.check_out
         )
+        # Türcode mitziehen (Wurzel 1): neuer Zeitraum = neue Gültigkeit, neues
+        # Objekt = andere Schlösser. Ohne das öffnet der Code am alten Termin
+        # und am neuen nicht.
+        self._schlosscode_mitziehen(tenant_id, reservation_id)
         # Provision nachziehen: ein Upsell (reprice) ändert den Umsatz, ein
         # Objektwechsel kann das Objekt in einen anderen Veröffentlichungs-
         # Status bringen — beides muss in der offenen Ledger-Zeile ankommen.
@@ -1478,6 +1560,12 @@ class WritesMixin(ReservationsBase):
         # Wurzel 1) — eine stornierte OTA-Buchung darf nicht mit abgerechnet
         # werden.
         self._cancel_commission(tenant_id, reservation_id)
+
+        # Türcode zurückziehen (Wurzel 1) — ein Gast ohne Buchung darf nicht
+        # mehr ins Haus. Bei Offline-Schlössern (algoPIN) ist der Code nicht
+        # entziehbar; das wird als `nicht_widerrufbar` samt Ablaufdatum
+        # festgehalten, statt einen Widerruf zu behaupten, den es nicht gab.
+        self._schlosscode_zurueckziehen(tenant_id, reservation_id)
 
         # Genehmigten Sperrantrag mit entwerten (Wurzel 1). Der umgekehrte Weg
         # ist gebaut — `sperrantraege.zuruecknehmen` storniert die Eigennutzung
@@ -2098,6 +2186,9 @@ class WritesMixin(ReservationsBase):
         # an (eine offene Anfrage plant keine Reinigung); ohne diesen Aufruf
         # bekam eine angenommene Anfrage nie eine Anreise-/Reinigungsaufgabe.
         self._sync_task_rules(tenant_id, reservation_id)
+        # Aus derselben Logik der Türcode: erst mit der Annahme gibt es einen
+        # Gast, der ins Haus soll.
+        self._schlosscode_mitziehen(tenant_id, reservation_id)
         self._log_event(
             tenant_id, reservation_id, "request_accepted", by_user_id=ctx.user_id,
         )
@@ -2168,6 +2259,10 @@ class WritesMixin(ReservationsBase):
         # die Monatssumme, obwohl der Verkauf nie zustande kam.
         self._cancel_dynpricing_usage(tenant_id, reservation_id)
         self._cancel_commission(tenant_id, reservation_id)
+        # Auch eine abgelehnte Anfrage kann schon einen Zugang haben: Anfragen
+        # aus dem OTA-Import bringen bestätigte Zeiträume mit, und ein
+        # Last-Minute-Fall legt den Code sofort an.
+        self._schlosscode_zurueckziehen(tenant_id, reservation_id)
 
         # Aufgaben-Gegenzustand (Wurzel 1): eine abgelehnte Anfrage darf keine
         # Reinigung stehen lassen. Regulär ist hier nichts zu räumen — die
@@ -2232,6 +2327,11 @@ class WritesMixin(ReservationsBase):
                 self._cancel_commission(r["tenant_id"], r["id"])
                 # Aufgaben-Gegenzustand wie bei decline (Wurzel 1).
                 self._sync_task_rules(str(r["tenant_id"]), str(r["id"]))
+                # Türcode-Gegenzustand wie bei decline (Wurzel 1): eine
+                # verfallene Anfrage darf keinen gültigen Zugang hinterlassen.
+                self._schlosscode_zurueckziehen(
+                    str(r["tenant_id"]), str(r["id"])
+                )
                 self._log_event(
                     r["tenant_id"], r["id"], "request_expired", by_user_id=None,
                 )

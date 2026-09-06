@@ -64,6 +64,38 @@ COMMISSION_RATE_STANDARD = 0.005
 # nicht irgendwann einen Satz bewirbt, den das System nicht abrechnet.
 MARKETPLACE_FEE_BPS_STANDARD = 800
 
+# --- Schlösser: Preis je verwaltetem Gerät und Monat (0574) ----------------
+# FESTGELEGT je Währung, NICHT umgerechnet. Unser Einkauf bei Seam ist in USD
+# (5 USD/Gerät/Monat), die Rechnung des Betriebs läuft in seiner Währung. Ein
+# aus dem Tageskurs abgeleiteter Preis wäre ein erfundener Wert (Wurzel 4) und
+# würde sich monatlich ändern, ohne dass der Kunde etwas davon versteht.
+#
+# 3,00 EUR ist eine ENTSCHEIDUNG DES BETREIBERS (06.09.2026), nicht aus den
+# Kosten abgeleitet: Seam kostet uns 5 USD je Gerät und Monat, also rund
+# 4,60 EUR. Die Differenz ist ein bewusster Zuschuss — der Marktvergleich
+# (Lodgify 7 USD / 6 EUR, Smoobu 4 EUR) liegt deutlich darüber. Wer diesen
+# Wert später ändert, sollte wissen, dass er unter dem Einkauf liegt; die
+# bereits erfassten Ledger-Zeilen bleiben davon unberührt (sie tragen ihren
+# Betrag als Tatsache).
+#
+# Die übrigen Währungen sind der EUR-Wert in grober Kaufkraftparität, ebenfalls
+# fest — nicht tageskursabhängig.
+#
+# Eine Währung, die hier FEHLT, führt bewusst dazu, dass keine Gebühr erfasst
+# wird (mit ERROR im Log) — lieber eine Gebühr verlieren als einen geschätzten
+# Betrag stellen.
+SCHLOSS_PREIS_JE_GERAET: dict[str, float] = {
+    "EUR": 3.00,
+    "DKK": 22.00,
+    "SEK": 34.00,
+    "NOK": 34.00,
+    "PLN": 13.00,
+    "CZK": 75.00,
+    "CHF": 3.00,
+    "GBP": 2.50,
+    "USD": 3.50,
+}
+
 DYNPRICING_MODULE_KEY = "dynamische_preise"
 DYNPRICING_RATE = 0.005  # 0,5 % als Faktor (wie commission_ledger.rate)
 

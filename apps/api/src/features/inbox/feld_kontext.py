@@ -124,6 +124,50 @@ class FeldKontextMixin:
         return treffer[0] if treffer else {}
 
     @staticmethod
+    def _tuercode(
+        db: Client,
+        tenant_id: str,
+        reservation_id: str | None,
+        fester_code: str | None,
+    ) -> str | None:
+        """Der Türcode für `{{door_code}}` — buchungsbezogen VOR objektweit.
+
+        ZWEI QUELLEN, klare Rangfolge (0573):
+          1. Der Zugang DIESER Buchung aus einem Smart Lock. Er gilt nur für
+             diesen Gast und diesen Zeitraum — die bessere Auskunft.
+          2. Der objektweite `property_guest_portal.door_code`, den der
+             Betrieb von Hand pflegt. Gilt weiter für alle, die kein Smart
+             Lock haben (die Mehrheit).
+
+        Ausgeliefert wird der Buchungscode nur, wenn er WIRKLICH nutzbar ist:
+        `aktiv` (am Gerät bestätigt) oder `angelegt` (an Seam übergeben). Ein
+        geplanter, fehlgeschlagener oder widerrufener Zugang liefert bewusst
+        NICHTS — dann greift der objektweite Code, und fehlt auch der, bleibt
+        das Feld leer und der Versand schlägt mit `FeldFehlt` fehl. Genau so
+        soll es sein: eine Anreisemail mit falschem oder leerem Code ist
+        schlimmer als eine, die nicht rausgeht (Wurzel 4).
+
+        Ein `nicht_widerrufbar`-Zugang liefert ebenfalls nichts: die Buchung
+        ist storniert, der Code läuft nur technisch weiter — ihn erneut zu
+        verschicken wäre falsch.
+        """
+        if not reservation_id:
+            return fester_code
+        treffer = (
+            db.table("seam_zugang")
+            .select("code, status")
+            .eq("tenant_id", tenant_id)
+            .eq("reservation_id", reservation_id)
+            .in_("status", ["aktiv", "angelegt"])
+            .order("created_at", desc=True)
+            .limit(1)
+            .execute()
+        ).data or []
+        if treffer and treffer[0].get("code"):
+            return str(treffer[0]["code"])
+        return fester_code
+
+    @staticmethod
     def _zahlungslink(db: Client, tenant_id: str, reservation_id: str | None) -> str | None:
         """Die URL des OFFENEN Zahlungslinks dieser Buchung — sonst None.
 
@@ -215,7 +259,6 @@ class FeldKontextMixin:
             ).data or []
             if portal:
                 portal_zeile = portal[0]
-        tuercode = portal_zeile.get("door_code")
         wlan_netz = portal_zeile.get("wifi_ssid")
         wlan_passwort = portal_zeile.get("wifi_password")
 
@@ -275,7 +318,15 @@ class FeldKontextMixin:
             property_name=prop.get("title") if prop else None,
             property_address=prop.get("address") if prop else None,
             property_city=prop.get("city") if prop else None,
-            door_code=tuercode,
+            # Türcode: der Zugang DIESER Buchung schlägt den objektweiten
+            # Code (0573). Ein Betrieb ohne Smart Lock bekommt unverändert
+            # seinen gepflegten Wert.
+            door_code=self._tuercode(
+                db,
+                tenant_id,
+                reservierung.get("id"),
+                portal_zeile.get("door_code"),
+            ),
             wifi_ssid=wlan_netz,
             wifi_password=wlan_passwort,
             company_name=firma[0].get("name") if firma else None,

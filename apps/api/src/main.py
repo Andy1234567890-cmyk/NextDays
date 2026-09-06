@@ -101,6 +101,8 @@ from .features.public_portal.router import router as public_portal_router
 from .features.rates.router import router as rates_router
 from .features.reservations.router import router as reservations_router
 from .features.reviews.router import router as reviews_router
+from .features.schloesser.router import router as schloesser_router
+from .features.schloesser.webhook import router as schloesser_webhook_router
 from .features.site_config.ki_router import ki_router as site_config_ki_router
 from .features.site_config.router import manage_router as site_config_manage_router
 from .features.site_config.router import public_router as site_config_public_router
@@ -177,6 +179,8 @@ _SLICE_ROUTERS = [
     property_taxes_router,
     taxpayer_router,
     external_calendar_router,
+    schloesser_router,
+    schloesser_webhook_router,
     cohosts_router,
     donations_router,
     diagnostics_router,

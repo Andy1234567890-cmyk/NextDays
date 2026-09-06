@@ -50,6 +50,7 @@ from .schemas import (
     SliceHealth,
     SubscriptionStatusResponse,
 )
+from .schloesser_gebuehr import SchloesserGebuehrMixin
 
 log = get_logger("nextdays.subscriptions")
 
@@ -70,6 +71,7 @@ _f = field
 
 class SubscriptionsService(
     DynPricingBillingMixin,
+    SchloesserGebuehrMixin,
     RechnungsadresseMixin,
     ProvisionsdeckelMixin,
     AufstellungMixin,

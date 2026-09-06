@@ -47,6 +47,7 @@ from src.jobs import (
     partner_laeufe,
     portal_raten_tick,
     public_api_storno,
+    schloesser_tick,
     worker_verlauf,
 )
 from src.jobs.channex_budget import ChannexBudget
@@ -657,6 +658,7 @@ HANDLERS: dict[
     "abgleich_feed_buchungen": feed_abgleich_tick.handle,
     "markt_beobachtung": markt_beobachtung_tick.handle,
     "feiertage_feed": feiertage_tick.handle,
+    "schloesser_codes": schloesser_tick.handle,
     "reconcile_rate_plan_prices": _handle_reconcile_rate_plan_prices,
     "recompute_property": _handle_recompute_property,
     "push_ari": _handle_push_ari,
@@ -703,6 +705,11 @@ _PFLICHT_ENV: tuple[Pflichtwert, ...] = (
     Pflichtwert(
         "COMPANY_LEGAL_NAME", "company_legal_name",
         "Anbieterangaben in der Fußzeile jeder Mail",
+    ),
+    Pflichtwert(
+        "SEAM_API_KEY", "seam_api_key",
+        "Türcodes für Buchungen: geplante Zugänge werden nicht ans Schloss "
+        "gegeben, Gäste bekommen keinen Code (0573)",
     ),
 )
 
@@ -1454,6 +1461,14 @@ class Worker:
         # der Reconcile-Tick läuft nur noch täglich und träfe das Stundenfenster
         # sonst fast nie — der von Channex verlangte tägliche Voll-Push fiele aus.
         self._enqueue_full_sync_nightly()
+        # Tuercodes (0573): faellige Zugaenge anlegen, Codes von Salto/algoPIN
+        # zuruecklesen, abgelaufene aufraeumen. Haengt an DIESEM Tick und nicht
+        # am taeglichen: eine Last-Minute-Buchung braucht ihren Code in Minuten,
+        # nicht morgen — und ein fehlgeschlagener Versuch soll im selben
+        # 72-Stunden-Vorlauffenster mehrfach wiederholt werden koennen (genau
+        # der Grund, warum Hostaway/Guesty 72 h vorher programmieren). Der Job
+        # macht ohne faellige Zeilen null Fremdaufrufe.
+        schloesser_tick.einreihen(self._db, bucket)
 
     async def _deploy_tick(self, loop_time: float) -> None:
         """Coolify-Zustand nach public.deploy_spiegel schreiben (Ersatz fuer
