@@ -7563,7 +7563,13 @@
       "close": "Zavrieť",
       "updated": "aktualizované",
       "portal": "už z portálu"
-    }
+    },
+    "chooseAccountTitle": "Vybrať účet",
+    "chooseAccountIntro": "Je prepojených viacero účtov Airbnb. Vyberte účet, z ktorého sa majú importovať ponuky.",
+    "chooseAccountProperties": "{count} nehnuteľností u nás",
+    "detailErrorTitle": "Kanál sa momentálne nenačítava",
+    "detailErrorIntro": "Toto zobrazenie nedokázalo načítať katalóg kanálov. Vaše pripojenie k portálu to neovplyvní – nie je potrebné nič znova autorizovať. Skúste to znova hneď.",
+    "detailErrorRetry": "Znova načítať"
   },
   "calendarSync": {
     "title": "Import/export kalendára",

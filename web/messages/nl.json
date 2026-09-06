@@ -7563,7 +7563,13 @@
       "close": "Sluiten",
       "updated": "bijgewerkt",
       "portal": "al op het portaal"
-    }
+    },
+    "chooseAccountTitle": "Account selecteren",
+    "chooseAccountIntro": "Er zijn meerdere Airbnb-accounts gekoppeld. Selecteer het account waarvan u de advertenties wilt overnemen.",
+    "chooseAccountProperties": "{count} objecten bij ons",
+    "detailErrorTitle": "Kanaal kan momenteel niet worden geladen",
+    "detailErrorIntro": "Deze weergave kon de kanaalcatalogus niet ophalen. Uw verbinding met het portaal wordt hierdoor niet beïnvloed — er hoeft niets opnieuw te worden geautoriseerd. Probeer het zo meteen nog eens.",
+    "detailErrorRetry": "Opnieuw laden"
   },
   "calendarSync": {
     "title": "Agenda importeren/exporteren",

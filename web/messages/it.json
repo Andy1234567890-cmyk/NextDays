@@ -7563,7 +7563,13 @@
       "close": "Chiudere",
       "updated": "aggiornato",
       "portal": "già dal portale"
-    }
+    },
+    "chooseAccountTitle": "Seleziona account",
+    "chooseAccountIntro": "Sono collegati più account Airbnb. Seleziona l'account da cui importare gli annunci.",
+    "chooseAccountProperties": "{count} proprietà con noi",
+    "detailErrorTitle": "Impossibile caricare il canale",
+    "detailErrorIntro": "Questa vista non è riuscita a recuperare il catalogo dei canali. La tua connessione al portale non è interessata — non è necessaria una nuova autorizzazione. Riprova tra poco.",
+    "detailErrorRetry": "Ricarica"
   },
   "calendarSync": {
     "title": "Importa/esporta calendario",

@@ -56,9 +56,25 @@ export default async function ChannelDetailPage({
   // meta aus dem Live-Katalog (Overview) ableiten: existiert der Kanal nicht,
   // ist die Route ungültig (echter Fake-Code) → 404. Bekannte bekommen ihr
   // SVG-Logo, der Rest Label + Icon aus dem Backend-Katalog.
-  const otaEntry = overview.ok
-    ? overview.data.ota.find((c) => c.code === code)
-    : undefined;
+  //
+  // Ein FEHLGESCHLAGENER Abruf ist etwas anderes als ein unbekannter Kanal
+  // (Wurzel 5). Vorher liefen beide Fälle in dasselbe `undefined` und damit in
+  // denselben 404 — die Seite behauptete „Kanal gibt es nicht", während in
+  // Wahrheit nur der Katalog-Aufruf gekippt war. Live am 06.09.2026 beim
+  // Rücksprung von Airbnb (`/channels/AirBNB?success=true&channel_id=…`):
+  // dort laufen mehrere Seiten gleichzeitig los, jeder Detail-Abruf braucht
+  // vier Channex-Calls und 1,3–1,6 s, und der Betrieb sah nach erfolgreicher
+  // Autorisierung eine 404-Seite — der schlimmste denkbare Moment, weil er
+  // annehmen muss, die Verbindung sei fehlgeschlagen. Sie war es nicht.
+  //
+  // Der Abruffehler wird deshalb GEMELDET statt in einen 404 übersetzt.
+  if (!overview.ok) {
+    throw new Error(
+      `Kanalkatalog nicht abrufbar (${code}): ${overview.error}`,
+      { cause: overview.error },
+    );
+  }
+  const otaEntry = overview.data.ota.find((c) => c.code === code);
   if (!otaEntry) notFound();
   const meta: ChannelMeta = {
     code,

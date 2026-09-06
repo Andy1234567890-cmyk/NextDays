@@ -7563,7 +7563,13 @@
       "close": "Dún",
       "updated": "nuashonraithe",
       "portal": "cheana ón tairseach"
-    }
+    },
+    "chooseAccountTitle": "Roghnaigh cuntas",
+    "chooseAccountIntro": "Tá roinnt cuntas Airbnb nasctha. Roghnaigh an cuntas ar mhaith leat a fhógraí a allmhairiú.",
+    "chooseAccountProperties": "{count} réadmhaoin linn",
+    "detailErrorTitle": "Ní féidir an cainéal a luchtú faoi láthair",
+    "detailErrorIntro": "Níorbh fhéidir leis an amharc seo catalóg an chainéil a fháil. Níl tionchar aige seo ar do nasc leis an tairseach — ní gá aon rud a údarú arís. Bain triail eile as ar ball.",
+    "detailErrorRetry": "Luchtaigh arís"
   },
   "calendarSync": {
     "title": "Iompórtáil/easpórtáil féilire",

@@ -7563,7 +7563,13 @@
       "close": "Stäng",
       "updated": "uppdaterad",
       "portal": "redan från portalen"
-    }
+    },
+    "chooseAccountTitle": "Välj konto",
+    "chooseAccountIntro": "Flera Airbnb-konton är anslutna. Välj det konto vars annonser ska importeras.",
+    "chooseAccountProperties": "{count} objekt hos oss",
+    "detailErrorTitle": "Kanalen kan inte laddas just nu",
+    "detailErrorIntro": "Den här vyn kunde inte hämta kanalkatalogen. Din anslutning till portalen påverkas inte – ingen ny auktorisering krävs. Försök igen om en liten stund.",
+    "detailErrorRetry": "Ladda om"
   },
   "calendarSync": {
     "title": "Importera/exportera kalender",

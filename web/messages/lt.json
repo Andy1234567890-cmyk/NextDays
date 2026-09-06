@@ -7563,7 +7563,13 @@
       "close": "Uždaryti",
       "updated": "atnaujinta",
       "portal": "jau iš portalo"
-    }
+    },
+    "chooseAccountTitle": "Pasirinkti paskyrą",
+    "chooseAccountIntro": "Yra prijungtos kelios „Airbnb“ paskyros. Pasirinkite paskyrą, iš kurios norite importuoti skelbimus.",
+    "chooseAccountProperties": "{count} objektai pas mus",
+    "detailErrorTitle": "Kanalo šiuo metu negalima įkelti",
+    "detailErrorIntro": "Šis rodinys negalėjo gauti kanalų katalogo. Jūsų ryšys su portalu nepaveiktas – nereikia iš naujo autorizuoti. Bandykite dar kartą.",
+    "detailErrorRetry": "Įkelti iš naujo"
   },
   "calendarSync": {
     "title": "Kalendoriaus importas / eksportas",

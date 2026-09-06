@@ -7563,7 +7563,13 @@
       "close": "Aizvērt",
       "updated": "atjaunināts",
       "portal": "jau no portāla"
-    }
+    },
+    "chooseAccountTitle": "Izvēlēties kontu",
+    "chooseAccountIntro": "Ir savienoti vairāki Airbnb konti. Lūdzu, izvēlieties kontu, kura sludinājumi tiks importēti.",
+    "chooseAccountProperties": "{count} īpašumi pie mums",
+    "detailErrorTitle": "Kanālu nevar ielādēt",
+    "detailErrorIntro": "Šis skats nevarēja ielādēt kanālu katalogu. Jūsu savienojums ar portālu netiek ietekmēts — nekas nav jāautorizē atkārtoti. Lūdzu, mēģiniet vēlreiz.",
+    "detailErrorRetry": "Ielādēt vēlreiz"
   },
   "calendarSync": {
     "title": "Kalendāra imports/eksports",

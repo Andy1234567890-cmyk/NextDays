@@ -7563,7 +7563,13 @@
       "close": "Zapri",
       "updated": "posodobljeno",
       "portal": "že na portalu"
-    }
+    },
+    "chooseAccountTitle": "Izberite račun",
+    "chooseAccountIntro": "Povezanih je več računov Airbnb. Izberite račun, iz katerega želite uvoziti oglase.",
+    "chooseAccountProperties": "{count} objektov pri nas",
+    "detailErrorTitle": "Kanala trenutno ni mogoče naložiti",
+    "detailErrorIntro": "Ta pogled ni mogel pridobiti kataloga kanalov. Vaša povezava s portalom ni prizadeta – ni vam treba ponovno avtorizirati ničesar. Poskusite znova čez nekaj časa.",
+    "detailErrorRetry": "Znova naloži"
   },
   "calendarSync": {
     "title": "Uvoz/izvoz koledarja",

@@ -7563,7 +7563,13 @@
       "close": "Sulje",
       "updated": "päivitetty",
       "portal": "jo portaalista"
-    }
+    },
+    "chooseAccountTitle": "Valitse tili",
+    "chooseAccountIntro": "Useita Airbnb-tilejä on yhdistetty. Valitse tili, jonka ilmoitukset haluat tuoda.",
+    "chooseAccountProperties": "{count} kohdetta meillä",
+    "detailErrorTitle": "Kanavaa ei voi ladata juuri nyt",
+    "detailErrorIntro": "Näkymä ei voinut hakea kanavaluetteloa. Tämä ei vaikuta yhteyteesi portaaliin – uudelleenvaltuutusta ei tarvita. Yritä uudelleen hetken kuluttua.",
+    "detailErrorRetry": "Lataa uudelleen"
   },
   "calendarSync": {
     "title": "Tuo/vie kalenteri",

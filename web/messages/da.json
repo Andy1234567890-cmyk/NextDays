@@ -7563,7 +7563,13 @@
       "close": "Luk",
       "updated": "opdateret",
       "portal": "allerede fra portalen"
-    }
+    },
+    "chooseAccountTitle": "Vælg konto",
+    "chooseAccountIntro": "Der er flere Airbnb-konti forbundet. Vælg den konto, hvis annoncer skal overtages.",
+    "chooseAccountProperties": "{count} objekter hos os",
+    "detailErrorTitle": "Kanal kan ikke indlæses lige nu",
+    "detailErrorIntro": "Denne visning kunne ikke hente kanalkataloget. Din forbindelse til portalen er ikke berørt af dette – intet skal godkendes igen. Prøv igen om et øjeblik.",
+    "detailErrorRetry": "Indlæs igen"
   },
   "calendarSync": {
     "title": "Importér/eksportér kalender",

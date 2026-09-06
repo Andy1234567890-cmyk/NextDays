@@ -7584,7 +7584,13 @@
       "mayClose": "Der Import läuft auf dem Server weiter — du kannst diese Seite schließen.",
       "andMore": "… und {count} weitere",
       "close": "Schließen"
-    }
+    },
+    "chooseAccountTitle": "Konto auswählen",
+    "chooseAccountIntro": "Es sind mehrere Airbnb-Konten verbunden. Wähle das Konto, dessen Anzeigen übernommen werden sollen.",
+    "chooseAccountProperties": "{count} Objekte bei uns",
+    "detailErrorTitle": "Kanal lässt sich gerade nicht laden",
+    "detailErrorIntro": "Diese Ansicht konnte den Kanalkatalog nicht abrufen. Deine Verbindung zum Portal ist davon nicht betroffen — es muss nichts erneut autorisiert werden. Versuche es gleich noch einmal.",
+    "detailErrorRetry": "Erneut laden"
   },
   "calendarSync": {
     "title": "Kalender importieren/exportieren",

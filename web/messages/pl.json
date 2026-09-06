@@ -7563,7 +7563,13 @@
       "close": "Zamknij",
       "updated": "zaktualizowany",
       "portal": "już z portalu"
-    }
+    },
+    "chooseAccountTitle": "Wybierz konto",
+    "chooseAccountIntro": "Połączono wiele kont Airbnb. Wybierz konto, z którego mają zostać zaimportowane ogłoszenia.",
+    "chooseAccountProperties": "{count} obiektów u nas",
+    "detailErrorTitle": "Nie można załadować kanału",
+    "detailErrorIntro": "Ten widok nie mógł pobrać katalogu kanałów. Nie ma to wpływu na połączenie z portalem — nie trzeba ponownie autoryzować. Spróbuj ponownie za chwilę.",
+    "detailErrorRetry": "Załaduj ponownie"
   },
   "calendarSync": {
     "title": "Importuj/eksportuj kalendarz",

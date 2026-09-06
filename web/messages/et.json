@@ -7563,7 +7563,13 @@
       "close": "Sulge",
       "updated": "uuendatud",
       "portal": "juba portaalist"
-    }
+    },
+    "chooseAccountTitle": "Vali konto",
+    "chooseAccountIntro": "Ühendatud on mitu Airbnb kontot. Palun valige konto, mille kuulutused tuleks üle võtta.",
+    "chooseAccountProperties": "{count} objekti meil",
+    "detailErrorTitle": "Kanalit ei saa praegu laadida",
+    "detailErrorIntro": "See vaade ei saanud kanalite kataloogi laadida. Teie ühendus portaaliga ei ole sellest mõjutatud – midagi ei pea uuesti autoriseerima. Palun proovige kohe uuesti.",
+    "detailErrorRetry": "Laadi uuesti"
   },
   "calendarSync": {
     "title": "Kalendri import/eksport",

@@ -7563,7 +7563,13 @@
       "close": "Bezárás",
       "updated": "frissítve",
       "portal": "már a portálról"
-    }
+    },
+    "chooseAccountTitle": "Fiók kiválasztása",
+    "chooseAccountIntro": "Több Airbnb-fiók is csatlakoztatva van. Válassza ki azt a fiókot, amelynek hirdetéseit át szeretné venni.",
+    "chooseAccountProperties": "{count} ingatlan nálunk",
+    "detailErrorTitle": "A csatorna jelenleg nem tölthető be",
+    "detailErrorIntro": "Ez a nézet nem tudta lekérni a csatornakatalógust. A portálhoz való csatlakozása nincs hatással – nem kell újra engedélyeznie semmit. Kérjük, próbálja meg újra később.",
+    "detailErrorRetry": "Újratöltés"
   },
   "calendarSync": {
     "title": "Naptár importálása/exportálása",

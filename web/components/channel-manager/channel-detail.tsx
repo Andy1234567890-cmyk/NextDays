@@ -15,6 +15,12 @@ import { ChannelConnectButton } from "@/components/channel-manager/channel-conne
 import { ImportFortschritt } from "@/components/channel-manager/import-fortschritt";
 import { PortalKontenButton } from "@/components/channel-manager/portal-konten";
 import { Button } from "@nextdays/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@nextdays/ui/dialog";
 import { Input } from "@nextdays/ui/input";
 import type {
   ChannelDetail as ChannelDetailData,
@@ -38,6 +44,8 @@ import {
   syncChannexBookings,
   triggerFullSync,
   uebernehmeAirbnbListings,
+  type OtaAccount,
+  listChannelAccounts,
 } from "@/lib/channex";
 import { formatCurrency } from "@/lib/currency";
 import {
@@ -338,6 +346,12 @@ function MappingTable({
   const [suchtAnzeigen, setSuchtAnzeigen] = useState(false);
   const [anzeigenMeldung, setAnzeigenMeldung] = useState<string | null>(null);
   const [anzeigenFehler, setAnzeigenFehler] = useState(false);
+  // Führt der Betrieb mehrere Airbnb-Zugänge (0304), muss er sagen, WESSEN
+  // Anzeigen übernommen werden — der Server lehnt sonst mit 409 ab, statt ein
+  // Konto zu raten. Vorher rief der Knopf ohne `account_id` auf, und eine
+  // Agentur mit zwei Vermietern bekam nur diese Meldung ohne jede Fläche, das
+  // Konto zu wählen.
+  const [kontoWahl, setKontoWahl] = useState<OtaAccount[] | null>(null);
 
   /** Die Airbnb-Anzeigen erneut lesen und anlegen, was bei uns fehlt.
    *
@@ -347,10 +361,10 @@ function MappingTable({
    *  dort eine, liegt es an Airbnb (nicht verbundene, pausierte oder
    *  ausgeblendete Anzeigen liefert der Aggregator nicht) — der Betrieb muss
    *  das sehen, statt sie bei uns vergeblich zu suchen. */
-  function anzeigenSuchen() {
+  function uebernahmeStarten(accountId: string | null) {
     setSuchtAnzeigen(true);
     setAnzeigenMeldung(null);
-    void uebernehmeAirbnbListings().then((res) => {
+    void uebernehmeAirbnbListings(accountId).then((res) => {
       setSuchtAnzeigen(false);
       setAnzeigenFehler(!res.ok);
       if (!res.ok) {
@@ -367,6 +381,34 @@ function MappingTable({
           : t("findNewListingsNone", { found: d.listings_gefunden }),
       );
       if (d.created > 0) router.refresh();
+    });
+  }
+
+  /** Vor der Übernahme klären, WELCHES Konto gemeint ist.
+   *
+   *  Gezählt werden nur Konten mit Kanal: ein Zugang ohne `channel_id` ist ein
+   *  laufender Verbindungsversuch, den der Server bei der Übernahme ohnehin
+   *  aussortiert. Ihn mitzuzählen würde eine Auswahl erzwingen, wo es real nur
+   *  ein übernahmefähiges Konto gibt. */
+  function anzeigenSuchen() {
+    setSuchtAnzeigen(true);
+    setAnzeigenMeldung(null);
+    void listChannelAccounts(portalCode).then((res) => {
+      if (!res.ok) {
+        setSuchtAnzeigen(false);
+        setAnzeigenFehler(true);
+        setAnzeigenMeldung(res.error);
+        return;
+      }
+      const nutzbar = res.data.items.filter((k) => k.channel_id);
+      if (nutzbar.length > 1) {
+        setSuchtAnzeigen(false);
+        setKontoWahl(nutzbar);
+        return;
+      }
+      // Genau eines (oder keines): den Server entscheiden lassen — er kennt
+      // den Fall „noch nicht verbunden" und meldet ihn mit eigenem Text.
+      uebernahmeStarten(nutzbar[0]?.id ?? null);
     });
   }
   // Hotel-ID einer BEREITS verbundenen Zeile: bei einem Hotel teilen alle
@@ -453,6 +495,47 @@ function MappingTable({
           {anzeigenMeldung}
         </p>
       )}
+      {/* Kontoauswahl vor der Übernahme (0304). Ohne sie endete der Knopf bei
+          einem Betrieb mit zwei Airbnb-Zugängen in der Sackgasse: der Server
+          verlangt eine Entscheidung, die Oberfläche bot keine. */}
+      <Dialog
+        open={kontoWahl !== null}
+        onOpenChange={(o) => {
+          if (!o) setKontoWahl(null);
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogTitle>{t("chooseAccountTitle")}</DialogTitle>
+          <DialogDescription>{t("chooseAccountIntro")}</DialogDescription>
+          <div className="flex flex-col gap-2">
+            {(kontoWahl ?? []).map((k) => (
+              <button
+                key={k.id}
+                type="button"
+                className="flex flex-col items-start gap-0.5 rounded-(--radius) border border-border p-3 text-left hover:bg-muted/60"
+                onClick={() => {
+                  setKontoWahl(null);
+                  uebernahmeStarten(k.id);
+                }}
+              >
+                <span className="text-sm font-medium">
+                  {k.display_name || t("accountUnnamed")}
+                </span>
+                {/* Die Portal-Kennung dazu: zwei Konten desselben Vermieters
+                    heißen oft gleich — die Host-ID unterscheidet sie. */}
+                {k.hotel_id && (
+                  <span className="font-mono text-xs text-muted-foreground">
+                    {k.hotel_id}
+                  </span>
+                )}
+                <span className="text-xs text-muted-foreground">
+                  {t("chooseAccountProperties", { count: k.properties })}
+                </span>
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
       <Input
         value={suche}
         onChange={(e) => setSuche(e.target.value)}

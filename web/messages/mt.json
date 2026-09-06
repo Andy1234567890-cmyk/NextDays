@@ -7563,7 +7563,13 @@
       "close": "Agħlaq",
       "updated": "aġġornat",
       "portal": "diġà mill-portal"
-    }
+    },
+    "chooseAccountTitle": "Agħżel kont",
+    "chooseAccountIntro": "Hemm diversi kontijiet ta' Airbnb konnessi. Agħżel il-kont li trid timporta l-listi tiegħu.",
+    "chooseAccountProperties": "{count} proprjetajiet magħna",
+    "detailErrorTitle": "Il-kanal bħalissa ma jistax jitgħabba",
+    "detailErrorIntro": "Din il-veduta ma setgħetx iġġib il-katalogu tal-kanali. Il-konnessjoni tiegħek mal-portal mhijiex affettwata — m'hemmx bżonn li terġa' tawtorizza xi ħaġa. Jekk jogħġbok erġa' pprova dalwaqt.",
+    "detailErrorRetry": "Erġa' għabbi"
   },
   "calendarSync": {
     "title": "Importazzjoni/esportazzjoni tal-kalendarju",

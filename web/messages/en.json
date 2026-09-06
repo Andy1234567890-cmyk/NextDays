@@ -7584,7 +7584,13 @@
       "close": "Close",
       "updated": "updated",
       "portal": "already from the portal"
-    }
+    },
+    "chooseAccountTitle": "Select account",
+    "chooseAccountIntro": "Multiple Airbnb accounts are connected. Please select the account whose listings you want to import.",
+    "chooseAccountProperties": "{count} properties with us",
+    "detailErrorTitle": "Channel cannot be loaded",
+    "detailErrorIntro": "This view could not retrieve the channel catalog. Your connection to the portal is not affected — no re-authorization is needed. Please try again shortly.",
+    "detailErrorRetry": "Reload"
   },
   "calendarSync": {
     "title": "Import/export calendar",

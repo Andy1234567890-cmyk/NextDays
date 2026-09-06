@@ -7563,7 +7563,13 @@
       "close": "Zatvori",
       "updated": "ažurirano",
       "portal": "već s portala"
-    }
+    },
+    "chooseAccountTitle": "Odaberite račun",
+    "chooseAccountIntro": "Povezano je više Airbnb računa. Odaberite račun čije oglase želite preuzeti.",
+    "chooseAccountProperties": "{count} objekata kod nas",
+    "detailErrorTitle": "Učitavanje kanala trenutačno nije moguće",
+    "detailErrorIntro": "Ovaj prikaz nije uspio dohvatiti katalog kanala. Vaša veza s portalom nije pogođena — nema potrebe za ponovnom autorizacijom. Pokušajte ponovno odmah.",
+    "detailErrorRetry": "Ponovno učitaj"
   },
   "calendarSync": {
     "title": "Uvoz/izvoz kalendara",

@@ -7563,7 +7563,13 @@
       "close": "Închidere",
       "updated": "actualizat",
       "portal": "deja de pe portal"
-    }
+    },
+    "chooseAccountTitle": "Selectați contul",
+    "chooseAccountIntro": "Sunt conectate mai multe conturi Airbnb. Selectați contul ale cărui anunțuri doriți să le preluați.",
+    "chooseAccountProperties": "{count} proprietăți la noi",
+    "detailErrorTitle": "Canalul nu poate fi încărcat în acest moment",
+    "detailErrorIntro": "Această vizualizare nu a putut prelua catalogul de canale. Conexiunea dvs. la portal nu este afectată - nu este necesară o nouă autorizare. Vă rugăm să încercați din nou imediat.",
+    "detailErrorRetry": "Reîncărcați"
   },
   "calendarSync": {
     "title": "Import/export calendar",
