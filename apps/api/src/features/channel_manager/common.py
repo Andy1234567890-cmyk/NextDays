@@ -14,6 +14,17 @@ from src.core.logging import get_logger
 
 log = get_logger("nextdays.channel_manager")
 
+# Der EINE Wortlaut fuer „kein Preisplan". Er steht an zwei Stellen im Server
+# (content_sync beim Registrieren, prepare_channel VOR dem Zuordnen) und der
+# Verbinden-Assistent erkennt ihn am Text (`istPreisFehler` prueft den Kern
+# „kein preisplan vorhanden"), um statt einer Sackgasse das Preisfeld zu
+# zeigen. Zwei Kopien des Satzes waeren zwei Wahrheiten: eine umformulierte
+# Kopie faellt im Assistenten still in die generische Fehlermeldung zurueck.
+KEIN_PREISPLAN_MELDUNG = (
+    "Kein Preisplan vorhanden — die Unterkunft kann ohne Preis nicht "
+    "an die Buchungsportale übermittelt werden."
+)
+
 _UUID_MUSTER = re.compile(
     r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
 )

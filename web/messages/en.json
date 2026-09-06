@@ -7590,7 +7590,12 @@
     "chooseAccountProperties": "{count} properties with us",
     "detailErrorTitle": "Channel cannot be loaded",
     "detailErrorIntro": "This view could not retrieve the channel catalog. Your connection to the portal is not affected — no re-authorization is needed. Please try again shortly.",
-    "detailErrorRetry": "Reload"
+    "detailErrorRetry": "Reload",
+    "fullResyncAirbnb": "Import everything from Airbnb – photos, texts, amenities, rooms, rules, and pricing for this property – then re-import availability, rates, and restrictions",
+    "fullResyncAirbnbDone": "Imported from Airbnb: {fotos} new photos, {felder} details. Availability and rates are now being imported.",
+    "fullResyncQueued": "Full sync queued – availability, rates, and restrictions are being re-imported.",
+    "fullResyncFailed": "Full sync failed: {error}",
+    "toggleFailed": "Toggle failed: {error}"
   },
   "calendarSync": {
     "title": "Import/export calendar",

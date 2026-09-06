@@ -290,6 +290,12 @@ export function ChannelConnectButton({
   // antworten mit `route_not_found`. Airbnb ist ein Push-Kanal — der Preis geht
   // von uns dorthin. Er MUSS also hier erfragt werden; importieren kann ihn
   // niemand.
+  // Nach dem Ruecksprung soll der Dialog ins Mapping — aber MIT Daten. Der
+  // Ruecksprung-Effekt kann `loadOAuthMapping` nicht selbst rufen: er haengt
+  // an `[]` und sieht ein eingefrorenes `selected = null`, der Aufruf kehrte
+  // sofort zurueck. Also nur merken; der Effekt unten zieht nach, sobald
+  // Portal und Objekt im State stehen.
+  const [mappingNachziehen, setMappingNachziehen] = useState(false);
   const [preisNoetig, setPreisNoetig] = useState(false);
   const [preisEingabe, setPreisEingabe] = useState("");
   const [preisSpeichert, setPreisSpeichert] = useState(false);
@@ -409,6 +415,17 @@ export function ChannelConnectButton({
     setOauthPortalNachziehen(false);
   }, [oauthPortalNachziehen, selected, portals]);
 
+  // Mapping nach dem Ruecksprung laden — erst wenn `selected` (aus dem
+  // Portal-Nachziehen) und `propertyId` (aus dem Oeffnen) beide da sind.
+  // `loadOAuthMapping` liest `kontoId`, den der Ruecksprung gesetzt hat, aus
+  // dem aktuellen Render und nicht aus einer eingefrorenen Closure.
+  useEffect(() => {
+    if (!mappingNachziehen || !selected || !propertyId) return;
+    setMappingNachziehen(false);
+    loadOAuthMapping();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mappingNachziehen, selected, propertyId]);
+
   // RÜCKSPRUNG von Airbnb auswerten — hier entsteht zum ersten Mal etwas.
   //
   // Channex hängt nach erfolgreicher Autorisierung
@@ -505,7 +522,14 @@ export function ChannelConnectButton({
         // verbunden" (das war frueher der Fall und las sich wie ein Abbruch).
         setError(geholt.error);
       }
-      setStep("mapping");
+      // NICHT `setStep("mapping")`: das sprang in den Mapping-Schritt, ohne je
+      // `prepare` gerufen zu haben. `localRooms` war damit noch das leere
+      // Anfangs-Array, und die Maske meldete „kein Objekt zugeordnet",
+      // obwohl die Uebernahme dasselbe Objekt Sekunden zuvor bestaetigt hatte
+      // — live am 06.09.2026 an „Feriehus Snerlebo", direkt nach
+      // `airbnb_uebernahme_fertig aktualisiert=18`. Der Server haette
+      // `rooms=[Snerlebo]` geliefert; er wurde nur nicht gefragt.
+      setMappingNachziehen(true);
     });
     // Nur beim ersten Rendern: der Rücksprung steht genau einmal in der Adresse.
   }, []);
@@ -522,7 +546,16 @@ export function ChannelConnectButton({
       if (!aktiv || !res.ok) return;
       setKonten(res.data.items);
       const verbunden = res.data.items.filter((k) => k.channel_id);
-      setKontoId(verbunden.length === 1 ? verbunden[0].id : null);
+      // Einen SCHON gesetzten Wert nicht ueberschreiben. Der Ruecksprung von
+      // Airbnb setzt `kontoId` auf das eben autorisierte Konto — die einzig
+      // richtige Quelle. Dieser Effekt feuert kurz darauf (sobald `selected`
+      // nachgezogen ist), fand bei zwei verbundenen Konten „mehrdeutig" und
+      // setzte null zurueck. Welcher von beiden gewann, war Timing: um 09:40
+      // der Ruecksprung, um 09:49 dieser Effekt — dann ging `prepare` ohne
+      // Konto los, der Server fand keinen Kanal, schickte leere Settings an
+      // Channex und der Betrieb sah „Bad Request" (06.09.2026, Snerlebo).
+      // Die Vorbelegung gilt nur, wenn noch nichts gewaehlt ist.
+      setKontoId((prev) => prev ?? (verbunden.length === 1 ? verbunden[0].id : null));
     });
     return () => {
       aktiv = false;
@@ -591,6 +624,12 @@ export function ChannelConnectButton({
     // Portal die Preismaske eines fremden Vorgangs.
     setPreisNoetig(false);
     setPreisEingabe("");
+    setMappingNachziehen(false);
+    // Gehoert zum Zustand DIESES Vorgangs: bliebe das Konto stehen, wuerde der
+    // Konten-Effekt es beim naechsten Oeffnen nicht mehr vorbelegen (er
+    // respektiert seit heute einen gesetzten Wert) — und ein Objekt landete
+    // womoeglich beim Konto des vorigen Vorgangs.
+    setKontoId(null);
     setError(null);
     setOauthUrl(null);
     setOauthConnected(false);
@@ -727,12 +766,22 @@ export function ChannelConnectButton({
         res.data.skipped > 0
           ? ` ${res.data.skipped} Objekt(e) konnten nicht übernommen werden.`
           : "";
-      // Die Preis-Lücke wird GENANNT, nicht verschwiegen: Airbnb gibt über
-      // Channex keine Preise heraus (nur Titel, Stadt, Land, Kapazität). Wer
-      // das nicht liest, wartet vergeblich darauf, dass Preise „noch kommen".
-      // Der Preis ist KEINE Nebensache, sondern der nächste Pflichtschritt: das
-      // Portal verlangt beim Zuordnen Zimmer UND Tarif. Ohne Preis gibt es
-      // keinen Tarif, und die Anzeigen bleiben dort „nicht zugeordnet".
+      // Die Preis-Lücke wird GENANNT, nicht verschwiegen: Airbnb gibt KEINE
+      // Preise heraus — weder über Channex (acht Felder, kein Preis) noch
+      // direkt (live gemessen 06.09.2026 an Listing 1768637952856703501:
+      // `v2/listings/{id}` 29 Felder ohne ein einziges preisbezogenes,
+      // `pricing_settings`/`calendar_rules`/`calendars` → route_not_found).
+      // Airbnb ist ein Push-Kanal, der Preis fliesst von uns dorthin.
+      //
+      // Bis heute stand hier das GEGENTEIL im Text („Preise musst du nicht
+      // abtippen: sie kommen beim Verbinden aus deiner Airbnb-Anzeige mit"),
+      // waehrend dieser Kommentar behauptete, die Luecke werde genannt. Der
+      // Betrieb hat dem Text geglaubt und beim Verbinden erwartet, dass alles
+      // aus Airbnb kommt — eine Falschaussage, die niemand als Bug erkennt,
+      // weil sie plausibel klingt (Wurzel 5b). Kommentar und Text sagen jetzt
+      // dasselbe. Der Preis ist der naechste Pflichtschritt: das Portal
+      // verlangt beim Zuordnen Zimmer UND Tarif; der Verbinden-Assistent
+      // fragt ihn ab, sobald er fehlt.
       // Wie viele Anzeigen das Portal übergeben hat, wird GENANNT: Airbnb
       // liefert Anzeigen nicht mit, die dort schon an eine andere Software
       // gebunden sind (Sync-Status „Connected"), ebenso unlisted/snoozed und
@@ -747,9 +796,9 @@ export function ChannelConnectButton({
       setObjectImportMsg(
         anzahl > 0
           ? `${anzahl} Objekt(e) übernommen — du findest sie unter „Objekte“. ` +
-            "Preise musst du nicht abtippen: sie kommen beim Verbinden aus " +
-            "deiner Airbnb-Anzeige mit. Prüfe sie danach unter „Preise“ — von " +
-            `dort gehen deine Preise an alle Portale.${gefunden}${rest}`
+            "Airbnb übergibt keine Preise: den Grundpreis pro Nacht fragt der " +
+            "Assistent beim Verbinden ab, danach gehen deine Preise von hier " +
+            `an alle Portale.${gefunden}${rest}`
           : "Noch keine Objekte gefunden. Airbnb braucht nach dem Verbinden " +
             "manchmal einen Moment — bitte in einer Minute erneut versuchen.",
       );

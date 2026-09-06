@@ -7569,7 +7569,12 @@
     "chooseAccountProperties": "{count} objekter hos os",
     "detailErrorTitle": "Kanal kan ikke indlæses lige nu",
     "detailErrorIntro": "Denne visning kunne ikke hente kanalkataloget. Din forbindelse til portalen er ikke berørt af dette – intet skal godkendes igen. Prøv igen om et øjeblik.",
-    "detailErrorRetry": "Indlæs igen"
+    "detailErrorRetry": "Indlæs igen",
+    "fullResyncAirbnb": "Overfør alt fra Airbnb – fotos, tekster, faciliteter, værelser, regler og pris for denne ejendom – og overfør derefter tilgængelighed, priser og restriktioner igen",
+    "fullResyncAirbnbDone": "Overført fra Airbnb: {fotos} nye fotos, {felder} oplysninger. Tilgængelighed og priser overføres nu.",
+    "fullResyncQueued": "Fuld synkronisering er sat i kø – tilgængelighed, priser og restriktioner overføres igen.",
+    "fullResyncFailed": "Fuld synkronisering mislykkedes: {error}",
+    "toggleFailed": "Skift mislykkedes: {error}"
   },
   "calendarSync": {
     "title": "Importér/eksportér kalender",

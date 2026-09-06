@@ -7569,7 +7569,12 @@
     "chooseAccountProperties": "{count} réadmhaoin linn",
     "detailErrorTitle": "Ní féidir an cainéal a luchtú faoi láthair",
     "detailErrorIntro": "Níorbh fhéidir leis an amharc seo catalóg an chainéil a fháil. Níl tionchar aige seo ar do nasc leis an tairseach — ní gá aon rud a údarú arís. Bain triail eile as ar ball.",
-    "detailErrorRetry": "Luchtaigh arís"
+    "detailErrorRetry": "Luchtaigh arís",
+    "fullResyncAirbnb": "Gach rud a thógáil ó Airbnb – grianghraif, téacsanna, áiseanna, seomraí, rialacha agus praghas an réadmhaoine seo – agus ansin infhaighteacht, praghsanna agus srianta a aistriú arís",
+    "fullResyncAirbnbDone": "Tógtha ó Airbnb: {fotos} grianghraif nua, {felder} sonraí. Tá infhaighteacht agus praghsanna á n-aistriú anois.",
+    "fullResyncQueued": "Comhardú iomlán curtha i scuaine – tá infhaighteacht, praghsanna agus srianta á n-aistriú arís.",
+    "fullResyncFailed": "Theip ar an gcomhardú iomlán: {error}",
+    "toggleFailed": "Theip ar an athrú: {error}"
   },
   "calendarSync": {
     "title": "Iompórtáil/easpórtáil féilire",

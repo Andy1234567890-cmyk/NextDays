@@ -7569,7 +7569,12 @@
     "chooseAccountProperties": "{count} objekata kod nas",
     "detailErrorTitle": "Učitavanje kanala trenutačno nije moguće",
     "detailErrorIntro": "Ovaj prikaz nije uspio dohvatiti katalog kanala. Vaša veza s portalom nije pogođena — nema potrebe za ponovnom autorizacijom. Pokušajte ponovno odmah.",
-    "detailErrorRetry": "Ponovno učitaj"
+    "detailErrorRetry": "Ponovno učitaj",
+    "fullResyncAirbnb": "Preuzmite sve s Airbnba – fotografije, tekstove, opremu, sobe, pravila i cijenu ovog objekta – a zatim ponovno prenesite dostupnost, cijene i ograničenja",
+    "fullResyncAirbnbDone": "Preuzeto s Airbnba: {fotos} novih fotografija, {felder} podataka. Dostupnost i cijene se sada prenose.",
+    "fullResyncQueued": "Potpuna sinkronizacija u redu čekanja – dostupnost, cijene i ograničenja se ponovno prenose.",
+    "fullResyncFailed": "Potpuna sinkronizacija nije uspjela: {error}",
+    "toggleFailed": "Prebacivanje nije uspjelo: {error}"
   },
   "calendarSync": {
     "title": "Uvoz/izvoz kalendara",

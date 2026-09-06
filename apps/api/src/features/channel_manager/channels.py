@@ -15,7 +15,12 @@ from src.core.security import AuthContext, secrets_match
 from src.jobs import worker_verlauf
 
 from .channex_client import ChannexError
-from .common import ChannelManagerError, _booking_room_type, log
+from .common import (
+    KEIN_PREISPLAN_MELDUNG,
+    ChannelManagerError,
+    _booking_room_type,
+    log,
+)
 from .ota_konten import (
     KontoNichtGefunden,
     gehoert_kanal_dem_betrieb,
@@ -516,6 +521,20 @@ class ChannelsMixin:
         channex_property_id = self._ensure_property_registered(
             db, tenant_id, property_id
         )
+        # Preis AUCH dann verlangen, wenn die Registrierung schon steht.
+        #
+        # Die 422 oben kommt nur aus `sync_content`, und das laeuft nur, wenn
+        # noch KEINE `channex_property_map` existiert. Die Airbnb-Uebernahme
+        # registriert Objekte aber ausdruecklich ohne Preis
+        # (`channex_registrierung_ohne_preis`) — danach findet
+        # `_ensure_property_registered` die Map, kehrt frueh zurueck, und der
+        # Preis wird nie geprueft. Live am 06.09.2026 an „Feriehus Snerlebo":
+        # prepare lieferte 200, der Assistent zeigte die Zuordnung, und ein
+        # Klick auf „Verbinden & aktivieren" haette ein Objekt OHNE Preis ans
+        # Portal gebracht — genau der 0-Waehrung-Verkauf, den die Sperre in
+        # content_sync verhindern soll. Dieselbe Meldung, damit der Assistent
+        # sie als Preisfrage erkennt und das Preisfeld zeigt (Wurzel 4/5).
+        self._require_preisplan(db, property_id)
         # Trace-Kontext setzen, damit `test_connection` und `mapping_details`
         # in `channex_debug_log` landen. Ohne ihn schreibt der Sink nichts (er
         # braucht einen Tenant) — und dann ist NICHT nachvollziehbar, welche
@@ -546,6 +565,22 @@ class ChannelsMixin:
                          ((kanal_settings or {}).get("tokens") or {}).keys()),
                      token_invalid=(kanal_settings or {}).get("token_invalid"))
             settings = kanal_settings or settings
+            if not settings:
+                # NICHT mit leeren Settings zu Channex: dessen Antwort darauf
+                # ist ein nacktes `{"errors": {"title": "Bad Request"}}`, und
+                # genau diese zwei Woerter standen dem Betrieb im Assistenten
+                # (06.09.2026, „Feriehus Snerlebo", channex_debug_log 09:49:48,
+                # request_body `{"channel":"AirBNB","settings":{}}`). Der Grund
+                # ist aber bekannt und benennbar: kein Konto uebergeben, und das
+                # Objekt haengt noch an keinem Kanal — bei ZWEI verbundenen
+                # Airbnb-Konten laesst sich das Konto nicht raten (Wurzel 4).
+                # Der Assistent hat dafuer die Kontowahl im OAuth-Schritt.
+                raise ChannelManagerError(
+                    "Für dieses Objekt lässt sich das Portal-Konto nicht "
+                    "bestimmen. Wähle das Konto aus, dessen Anzeige dieses "
+                    "Objekt ist.",
+                    status_code=409,
+                )
 
         # 1) Zugangsdaten prüfen. ACHTUNG (live verifiziert): Channex liefert
         #    HTTP 200 AUCH bei falschen Daten — der Erfolg steht in data.success.
@@ -1804,69 +1839,20 @@ class ChannelsMixin:
     def set_connection_active(
         self, ctx: AuthContext, *, property_id: str, portal_code: str, is_active: bool
     ) -> dict[str, Any]:
-        """Kanal pro (Objekt × Portal) an-/abschalten (selektiver Verkaufsstopp).
+        """Kanal pro (Objekt × Portal) an-/abschalten — über den Hebel des Portals.
 
-        Anders als disconnect_channel bleibt der Channex-Channel bestehen
-        (sofortiges Re-Aktivieren). „Aus" = kein ARI/Preis-Push mehr UND der
-        Channex-Channel wird hart deaktiviert, damit das OTA wirklich stoppt;
-        eingehende Buchungen werden weiterhin importiert."""
-        tenant_id = self._require_tenant(ctx)
-        db = self._require_db()
-        # `id` mitlesen: geschrieben wird GENAU DIE Zeile, deren Kanal hier
-        # geschaltet wird. Vorher lief der Update über
-        # (tenant, property, portal) — bei zwei Konten am selben Objekt (0304)
-        # wurde ein Kanal real deaktiviert, aber BEIDE Zeilen zeigten „aus":
-        # das zweite Konto verkauft weiter, während die Oberfläche Stopp meldet
-        # (fail-open, Wurzel 5).
-        row = (
-            db.table("channex_channel_connection")
-            .select("id, channex_channel_id, ota_hotel_id")
-            .eq("tenant_id", tenant_id)
-            .eq("property_id", property_id)
-            .eq("ota_portal_code", portal_code)
-            .order("created_at")
-            .limit(1)
-            .execute()
-        ).data
-        if not row:
-            raise ChannelManagerError("Kanal-Verbindung nicht gefunden.", status_code=404)
-
-        channel_id = row[0].get("channex_channel_id")
-        # Ohne Kanal beim Provider gibt es nichts zu aktivieren. Würden wir hier
-        # nur unsere Zeile auf `true` drehen, zeigte die Oberfläche
-        # „Synchronisiert", während gar kein Kanal existiert — ein fail-open-
-        # Geisterzustand (Wurzel 5). Nach dem Trennen bleibt die Zeile bewusst
-        # mit der Hotel-ID stehen, damit der Re-Connect sie vorbefüllt.
-        if is_active and not channel_id:
-            raise ChannelManagerError(
-                "Diese Verbindung wurde getrennt. Bitte das Portal neu verbinden.",
-                status_code=409,
-            )
-        if channel_id:
-            try:
-                if is_active:
-                    self._channex.activate_channel(channel_id)
-                else:
-                    self._channex.deactivate_channel(channel_id)
-            except ChannexError as exc:
-                raise self._wrap_channex(exc) from exc
-
-        db.table("channex_channel_connection").update(
-            {"is_active": is_active}
-        ).eq("tenant_id", tenant_id).eq("id", row[0]["id"]).execute()
-        log.info(
-            "channex_connection_toggled",
-            tenant_id=tenant_id, property_id=property_id,
-            portal_code=portal_code, is_active=is_active,
+        Bis zum 06.09.2026 schaltete dieser Weg den Channex-KANAL
+        (`deactivate_channel`/`activate_channel`). Bei Airbnb ist der Kanal das
+        Konto: an `9a46827b…` hängen 18 Anzeigen, „Pausieren" an EINEM Objekt
+        hätte alle 18 gestoppt. Live verhinderte das nur Channex' 422 „remove
+        mappings before" — Zufall, kein Schutz. Der richtige Hebel je Portal
+        steht in `objekt_verkauf` (Airbnb: die Anzeige zurückziehen; Booking &
+        Co.: der Kanal, nach Objekt-Zählung) und wird hier benutzt statt ein
+        zweites Mal gebaut. Eingehende Buchungen laufen weiter; beim Wieder-
+        Anschalten holt der Router die ARI nach."""
+        return self.portal_verkauf_schalten(  # type: ignore[attr-defined]
+            ctx, property_id=property_id, portal_code=portal_code, aktiv=is_active,
         )
-        return {
-            "portal_code": portal_code,
-            "portal": self._portal_label(portal_code),
-            "hotel_id": row[0].get("ota_hotel_id"),
-            "channel_id": channel_id,
-            "is_active": is_active,
-            "last_error": None,
-        }
 
     def resync_property_ari(self, tenant_id: str, property_id: str) -> None:
         """Nach Re-Aktivierung eines Kanals frische ARI für das Objekt herstellen.
@@ -3016,6 +3002,24 @@ class ChannelsMixin:
             .execute()
         )
         return pm.data[0]["channex_property_id"] if pm.data else None
+
+    def _require_preisplan(self, db: Client, property_id: str) -> None:
+        """422 mit `KEIN_PREISPLAN_MELDUNG`, wenn das Objekt keinen Preisplan hat.
+
+        Dieselbe Bedingung wie in `sync_content` (dort inline), hier fuer den
+        Fall, dass die Registrierung bereits existiert und `sync_content`
+        deshalb gar nicht laeuft. Nur EXISTENZ eines Plans — Waehrung und
+        Betrag prueft weiterhin `sync_content`, sobald es laeuft.
+        """
+        res = (
+            db.table("rate_plans")
+            .select("id")
+            .eq("property_id", property_id)
+            .limit(1)
+            .execute()
+        )
+        if not (res.data or []):
+            raise ChannelManagerError(KEIN_PREISPLAN_MELDUNG, status_code=422)
 
     def _require_property_mapping(
         self, db: Client, tenant_id: str, property_id: str

@@ -7569,7 +7569,12 @@
     "chooseAccountProperties": "{count} objektai pas mus",
     "detailErrorTitle": "Kanalo šiuo metu negalima įkelti",
     "detailErrorIntro": "Šis rodinys negalėjo gauti kanalų katalogo. Jūsų ryšys su portalu nepaveiktas – nereikia iš naujo autorizuoti. Bandykite dar kartą.",
-    "detailErrorRetry": "Įkelti iš naujo"
+    "detailErrorRetry": "Įkelti iš naujo",
+    "fullResyncAirbnb": "Importuoti viską iš Airbnb – šios nuosavybės nuotraukas, tekstus, patogumus, kambarius, taisykles ir kainą – ir tada iš naujo perkelti prieinamumą, kainas ir apribojimus",
+    "fullResyncAirbnbDone": "Importuota iš Airbnb: {fotos} naujų nuotraukų, {felder} duomenų. Prieinamumas ir kainos dabar perkeliami.",
+    "fullResyncQueued": "Visiškas sinchronizavimas įdėtas į eilę – prieinamumas, kainos ir apribojimai perkeliami iš naujo.",
+    "fullResyncFailed": "Visiškas sinchronizavimas nepavyko: {error}",
+    "toggleFailed": "Perjungimas nepavyko: {error}"
   },
   "calendarSync": {
     "title": "Kalendoriaus importas / eksportas",

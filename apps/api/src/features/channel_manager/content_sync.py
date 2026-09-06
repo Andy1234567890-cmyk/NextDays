@@ -17,6 +17,7 @@ from src.core.countries import normalize_country
 from . import content_builder
 from .channex_client import ChannexError
 from .common import (
+    KEIN_PREISPLAN_MELDUNG,
     ChannelManagerError,
     _availability_settings,
     _channex_facility_ids,
@@ -276,11 +277,7 @@ class ContentSyncMixin:
         # KEIN Fallback: ohne Rate-Plan (mit echtem Preis) wird nichts an Channex
         # gepusht — sonst entstünde eine unvollständige Property (0-€-Verkauf).
         if not rate_plans:
-            raise ChannelManagerError(
-                "Kein Preisplan vorhanden — die Unterkunft kann ohne Preis nicht "
-                "an die Buchungsportale übermittelt werden.",
-                status_code=422,
-            )
+            raise ChannelManagerError(KEIN_PREISPLAN_MELDUNG, status_code=422)
         # Währung (Priorität, alles ECHTE Werte — kein EUR-Fallback, Wurzel 4):
         # 1) übergebene, 2) zentrale Objektwährung (properties.currency, 0161 —
         # die Wahrheit), 3) älteste Rate-Plan-Währung (Bestand ohne gesetzte

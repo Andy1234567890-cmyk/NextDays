@@ -11,6 +11,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from supabase import Client
+
 from src.core.security import AuthContext
 
 from .channex_client import ChannexError
@@ -841,6 +843,16 @@ class OtaExtrasMixin:
         pm = self._require_own_property_map(ctx, map_id)
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
+        self._voll_push_einreihen(db, tenant_id, pm["property_id"])
+        return {"status": "queued", "property_id": pm["property_id"]}
+
+    def _voll_push_einreihen(
+        self, db: Client, tenant_id: str, property_id: str
+    ) -> None:
+        """Den manuellen Voll-Push (DB→Channex + Buchungen/Gespräche zurück)
+        als Job einreihen. Ein Einreiher für beide Knöpfe — der Kanalseite
+        (`trigger_full_sync`) und dem Airbnb-Voll-Abgleich
+        (`airbnb_voll_abgleich`), der erst holt und dann schickt."""
         try:
             from src.jobs.queue import dedup_key, enqueue
 
@@ -848,11 +860,11 @@ class OtaExtrasMixin:
                 db, "full_sync_property", tenant_id=tenant_id,
                 payload={
                     "tenant_id": tenant_id,
-                    "property_id": pm["property_id"],
+                    "property_id": property_id,
                     "vollstaendig": True,
                 },
                 dedup_key=dedup_key(
-                    tenant_id, pm["property_id"], "full_sync_property",
+                    tenant_id, property_id, "full_sync_property",
                     suffix="manuell",
                 ),
             )
@@ -861,4 +873,3 @@ class OtaExtrasMixin:
             raise ChannelManagerError(
                 "Full-Sync konnte nicht eingereiht werden.", status_code=502
             ) from exc
-        return {"status": "queued", "property_id": pm["property_id"]}

@@ -7569,7 +7569,12 @@
     "chooseAccountProperties": "{count} objekt hos oss",
     "detailErrorTitle": "Kanalen kan inte laddas just nu",
     "detailErrorIntro": "Den här vyn kunde inte hämta kanalkatalogen. Din anslutning till portalen påverkas inte – ingen ny auktorisering krävs. Försök igen om en liten stund.",
-    "detailErrorRetry": "Ladda om"
+    "detailErrorRetry": "Ladda om",
+    "fullResyncAirbnb": "Importera allt från Airbnb – foton, texter, bekvämligheter, rum, regler och pris för detta objekt – och överför sedan tillgänglighet, priser och restriktioner igen",
+    "fullResyncAirbnbDone": "Importerat från Airbnb: {fotos} nya foton, {felder} uppgifter. Tillgänglighet och priser överförs nu.",
+    "fullResyncQueued": "Fullständig matchning köad – tillgänglighet, priser och restriktioner överförs igen.",
+    "fullResyncFailed": "Fullständig matchning misslyckades: {error}",
+    "toggleFailed": "Växling misslyckades: {error}"
   },
   "calendarSync": {
     "title": "Importera/exportera kalender",

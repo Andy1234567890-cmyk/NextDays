@@ -102,6 +102,12 @@ _PUBLISHED: Final = "published"
 HEBEL_MAPPING: Final = "mapping_published"
 HEBEL_KANAL: Final = "channel_active"
 
+# Airbnb-Anzeige, die an diesem Kanal gar nicht zugeordnet ist: beim Pausieren
+# ALLER Portale kein Fehler (es gibt dort nichts zu stoppen), beim Schalten
+# EINES Portals von der Kanalseite dagegen die Antwort an den Betrieb — sonst
+# stünde die Zeile auf „Pausiert", ohne dass am Portal etwas geschehen ist.
+_OHNE_ZUORDNUNG: Final = "keine Zuordnung an diesem Kanal"
+
 
 class ObjektVerkaufMixin:
     """Objekt bei allen Portalen aus dem Verkauf nehmen / zurückholen."""
@@ -347,6 +353,178 @@ class ObjektVerkaufMixin:
             "portale": portale,
         }
 
+    # ---- EIN Portal schalten (Kanalseite: „Pausieren"/„Aktivieren") -------
+
+    def portal_verkauf_schalten(
+        self, ctx: AuthContext, *, property_id: str, portal_code: str, aktiv: bool
+    ) -> dict[str, Any]:
+        """EIN Objekt bei EINEM Portal aus dem Verkauf nehmen oder zurückholen.
+
+        Derselbe Hebel je Portal wie beim Pausieren aller Portale, aus demselben
+        Grund: `set_connection_active` schaltete bis zum 06.09.2026 den KANAL
+        (`deactivate_channel`). Bei Airbnb ist der Kanal das Konto mit allen
+        Anzeigen — „Pausieren" an „Feriehus Merete" hätte 18 Inserate gestoppt.
+        Live verhinderte das nur Channex' 422 „remove mappings before": Glück,
+        kein Schutz.
+
+        Der Vorzustand landet in `property_sales_pause` (0375), dieselbe
+        Sicherung wie beim Pausieren aller Portale. „Verkauf fortsetzen" am
+        Objekt findet deshalb auch eine hier gesetzte Pause und hebt sie auf;
+        umgekehrt hebt „Aktivieren" hier eine dort gesetzte Pause dieses
+        Portals auf. Ein Zustand, zwei Knöpfe.
+
+        Fehler des Portals werden GEWORFEN, nicht als Teilergebnis zurückgegeben
+        (anders als beim Pausieren aller Portale): hier gibt es nur ein Portal,
+        und die Zeile darf nur den Zustand zeigen, der am Portal zurückgelesen
+        wurde.
+        """
+        tenant_id = self._require_tenant(ctx)  # type: ignore[attr-defined]
+        db = self._require_db()  # type: ignore[attr-defined]
+        verbindung = self._verkauf_verbindung(db, tenant_id, property_id, portal_code)
+        self._trace_step(  # type: ignore[attr-defined]
+            tenant_id=tenant_id, property_id=property_id,
+            step="portal_aktivieren" if aktiv else "portal_pausieren",
+        )
+
+        if aktiv:
+            ergebnis = self._portal_einschalten(
+                db, tenant_id, property_id, verbindung, ctx.user_id
+            )
+        else:
+            ergebnis = self._portal_abschalten(
+                db, tenant_id, property_id, verbindung, ctx.user_id
+            )
+        if ergebnis.get("uebersprungen") == _OHNE_ZUORDNUNG:
+            raise ChannelManagerError(
+                "Dieses Objekt ist an diesem Portal-Konto keiner Anzeige "
+                "zugeordnet — es gibt dort nichts zu schalten. Verbinde das "
+                "Objekt zuerst.",
+                status_code=409,
+            )
+        if ergebnis.get("fehler"):
+            raise ChannelManagerError(str(ergebnis["fehler"]), status_code=409)
+
+        # „stand bereits so" schreibt keiner der Hebel in die Zeile — sie muss
+        # trotzdem den gelesenen Stand tragen.
+        db.table("channex_channel_connection").update({"is_active": aktiv}).eq(
+            "tenant_id", tenant_id
+        ).eq("id", verbindung["id"]).execute()
+        log.info(
+            "portal_verkauf_geschaltet",
+            tenant_id=tenant_id, property_id=property_id,
+            portal_code=portal_code, aktiv=aktiv,
+            hebel=ergebnis.get("hebel"),
+            uebersprungen=ergebnis.get("uebersprungen"),
+            user_id=ctx.user_id,
+        )
+        return {
+            "portal_code": portal_code,
+            "portal": self._portal_label(portal_code),  # type: ignore[attr-defined]
+            "hotel_id": verbindung.get("hotel_id"),
+            "channel_id": verbindung["channel_id"],
+            "is_active": aktiv,
+            "last_error": None,
+        }
+
+    def _verkauf_verbindung(
+        self, db: Client, tenant_id: str, property_id: str, portal_code: str
+    ) -> dict[str, Any]:
+        """Die Verbindung (Objekt × Portal) MIT Kanal — oder der Grund, warum nicht."""
+        for verbindung in self._verkauf_verbindungen(db, tenant_id, property_id):
+            if verbindung["portal_code"] == portal_code:
+                return verbindung
+        ohne_kanal = (
+            db.table("channex_channel_connection")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .eq("ota_portal_code", portal_code)
+            .limit(1)
+            .execute()
+        ).data or []
+        if ohne_kanal:
+            # Nach dem Trennen bleibt die Zeile ohne Kanal-ID stehen (Vorbelegung
+            # für den Re-Connect). Sie auf „an" zu drehen zeigte „Synchronisiert"
+            # ohne Kanal — ein Geisterzustand (Wurzel 5).
+            raise ChannelManagerError(
+                "Diese Verbindung wurde getrennt. Bitte das Portal neu verbinden.",
+                status_code=409,
+            )
+        raise ChannelManagerError("Kanal-Verbindung nicht gefunden.", status_code=404)
+
+    def _portal_einschalten(
+        self,
+        db: Client,
+        tenant_id: str,
+        property_id: str,
+        verbindung: dict[str, Any],
+        user_id: str | None,
+    ) -> dict[str, Any]:
+        """EIN Portal wieder an — gesicherte Pause zuerst, sonst direkt.
+
+        Liegt eine offene Pause vor, wird sie wie beim Fortsetzen aller Portale
+        geschlossen. War das Portal laut Pause schon VOR ihr aus, stellt das
+        Wiederherstellen nichts an — der Betrieb hat hier aber ausdrücklich
+        „Aktivieren" gedrückt, also wird danach direkt geschaltet. Ohne Pause
+        (vor dem 06.09.2026 pausiert, oder am Portal selbst abgeschaltet) ebenso.
+        """
+        code = verbindung["portal_code"]
+        channel_id = verbindung["channel_id"]
+        pausen = (
+            db.table("property_sales_pause")
+            .select("*")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .eq("portal_code", code)
+            .is_("beendet_at", "null")
+            .limit(1)
+            .execute()
+        ).data or []
+        if pausen:
+            ergebnis = self._portal_wiederherstellen(
+                db, tenant_id, property_id, pausen[0], user_id
+            )
+            if ergebnis.get("fehler") or ergebnis.get("wiederhergestellt"):
+                return ergebnis
+
+        ergebnis = {
+            "portal_code": code,
+            "portal": self._portal_label(code),  # type: ignore[attr-defined]
+            "channel_id": channel_id,
+        }
+        if code in _MAPPING_PORTALE:
+            try:
+                attrs = self._kanal_attribute(channel_id)
+            except ChannexError as exc:
+                log.warning(
+                    "verkauf_kanal_nicht_lesbar", tenant_id=tenant_id,
+                    property_id=property_id, portal_code=code,
+                    channel_id=channel_id, fehler=exc.message,
+                )
+                return {**ergebnis, "hebel": HEBEL_MAPPING, "fehler": exc.message}
+            mapping = self._mapping_des_objekts(db, tenant_id, property_id, attrs)
+            if not mapping:
+                return {**ergebnis, "hebel": HEBEL_MAPPING,
+                        "uebersprungen": _OHNE_ZUORDNUNG}
+            settings = mapping.get("settings") or {}
+            if settings.get(_PUBLISHED):
+                return {**ergebnis, "hebel": HEBEL_MAPPING, "ist_aktiv": True,
+                        "uebersprungen": "war bereits an"}
+            return self._published_schalten(
+                db, tenant_id, property_id,
+                channel_id=channel_id,
+                listing_id=str(settings.get("listing_id") or ""),
+                mapping_id=str(mapping.get("id") or ""),
+                sichtbar=True, portal_code=code,
+                ergebnis={**ergebnis, "hebel": HEBEL_MAPPING},
+            )
+
+        fertig = self._kanal_wieder_an(
+            db, tenant_id, {"portal_code": code, "property_id": property_id},
+            channel_id,
+        )
+        return {**ergebnis, "hebel": HEBEL_KANAL, **fertig}
+
     # ---- Portale abschalten -------------------------------------------------
 
     def _portal_abschalten(
@@ -401,7 +579,7 @@ class ObjektVerkaufMixin:
         if not mapping:
             # Keine Zuordnung = dieses Objekt geht über diesen Kanal nicht ans
             # Portal. Nichts abzuschalten, und das ist kein Fehler.
-            return {**ergebnis, "uebersprungen": "keine Zuordnung an diesem Kanal"}
+            return {**ergebnis, "uebersprungen": _OHNE_ZUORDNUNG}
 
         mapping_id = str(mapping.get("id") or "")
         settings = mapping.get("settings") or {}
@@ -497,6 +675,10 @@ class ObjektVerkaufMixin:
                 property_id=property_id, portal_code=portal_code,
                 listing_id=listing_id, soll=sichtbar, ist=nachher,
             )
+            if not sichtbar:
+                # Das Portal verkauft weiter — die eben gesicherte Pause
+                # beschreibt nichts (gleiche Regel wie beim Sendefehler oben).
+                self._pause_verwerfen(db, tenant_id, property_id, portal_code)
             return {
                 **ergebnis,
                 "fehler": (
@@ -504,6 +686,15 @@ class ObjektVerkaufMixin:
                     f"(published={nachher})."
                 ),
             }
+        # Die Verbindungszeile ist, was die Kanalseite als „Synchronisiert"/
+        # „Pausiert" zeigt. Der Kanal-Hebel schreibt sie schon; der Anzeigen-
+        # Hebel ließ sie stehen — nach dem Pausieren stand die Zeile grün,
+        # während die Anzeige zurückgezogen war (Wurzel 5, fail-open).
+        db.table("channex_channel_connection").update(
+            {"is_active": sichtbar}
+        ).eq("tenant_id", tenant_id).eq("property_id", property_id).eq(
+            "ota_portal_code", portal_code
+        ).eq("channex_channel_id", channel_id).execute()
         return {
             **ergebnis,
             ("wiederhergestellt" if sichtbar else "abgeschaltet"): True,

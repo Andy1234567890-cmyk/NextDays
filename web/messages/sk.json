@@ -7569,7 +7569,12 @@
     "chooseAccountProperties": "{count} nehnuteľností u nás",
     "detailErrorTitle": "Kanál sa momentálne nenačítava",
     "detailErrorIntro": "Toto zobrazenie nedokázalo načítať katalóg kanálov. Vaše pripojenie k portálu to neovplyvní – nie je potrebné nič znova autorizovať. Skúste to znova hneď.",
-    "detailErrorRetry": "Znova načítať"
+    "detailErrorRetry": "Znova načítať",
+    "fullResyncAirbnb": "Prevziať všetko z Airbnb – fotografie, texty, vybavenie, izby, pravidlá a cenu tohto objektu – a potom znova preniesť dostupnosť, ceny a obmedzenia",
+    "fullResyncAirbnbDone": "Prevzaté z Airbnb: {fotos} nových fotografií, {felder} údajov. Dostupnosť a ceny sa teraz prenášajú.",
+    "fullResyncQueued": "Úplná synchronizácia zaradená – dostupnosť, ceny a obmedzenia sa prenášajú znova.",
+    "fullResyncFailed": "Úplná synchronizácia zlyhala: {error}",
+    "toggleFailed": "Prepnúť zlyhalo: {error}"
   },
   "calendarSync": {
     "title": "Import/export kalendára",

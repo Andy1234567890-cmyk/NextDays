@@ -7569,7 +7569,12 @@
     "chooseAccountProperties": "{count} propriedades connosco",
     "detailErrorTitle": "Não foi possível carregar o canal",
     "detailErrorIntro": "Esta vista não conseguiu aceder ao catálogo de canais. A sua ligação ao portal não foi afetada — não é necessário reautorizar nada. Tente novamente em breve.",
-    "detailErrorRetry": "Recarregar"
+    "detailErrorRetry": "Recarregar",
+    "fullResyncAirbnb": "Importar tudo do Airbnb – fotos, textos, comodidades, quartos, regras e preço deste imóvel – e depois transferir novamente a disponibilidade, os preços e as restrições",
+    "fullResyncAirbnbDone": "Importado do Airbnb: {fotos} novas fotos, {felder} detalhes. A disponibilidade e os preços estão a ser transferidos.",
+    "fullResyncQueued": "Sincronização completa enfileirada – a disponibilidade, os preços e as restrições estão a ser transferidos novamente.",
+    "fullResyncFailed": "Sincronização completa falhou: {error}",
+    "toggleFailed": "A alternância falhou: {error}"
   },
   "calendarSync": {
     "title": "Importar/exportar calendário",

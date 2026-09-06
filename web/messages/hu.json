@@ -7569,7 +7569,12 @@
     "chooseAccountProperties": "{count} ingatlan nálunk",
     "detailErrorTitle": "A csatorna jelenleg nem tölthető be",
     "detailErrorIntro": "Ez a nézet nem tudta lekérni a csatornakatalógust. A portálhoz való csatlakozása nincs hatással – nem kell újra engedélyeznie semmit. Kérjük, próbálja meg újra később.",
-    "detailErrorRetry": "Újratöltés"
+    "detailErrorRetry": "Újratöltés",
+    "fullResyncAirbnb": "Mindent átvesz az Airbnb-ről – fotókat, szövegeket, felszereltséget, szobákat, szabályokat és az ingatlan árát –, majd újra átviszi a rendelkezésre állást, az árakat és a korlátozásokat",
+    "fullResyncAirbnbDone": "Átvéve az Airbnb-ről: {fotos} új fotó, {felder} adat. A rendelkezésre állás és az árak most átvitelre kerülnek.",
+    "fullResyncQueued": "Teljes szinkronizálás sorba állítva – a rendelkezésre állás, az árak és a korlátozások újra átvitelre kerülnek.",
+    "fullResyncFailed": "Teljes szinkronizálás sikertelen: {error}",
+    "toggleFailed": "Átkapcsolás sikertelen: {error}"
   },
   "calendarSync": {
     "title": "Naptár importálása/exportálása",

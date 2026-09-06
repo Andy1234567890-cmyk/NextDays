@@ -7569,7 +7569,12 @@
     "chooseAccountProperties": "{count} proprjetajiet magħna",
     "detailErrorTitle": "Il-kanal bħalissa ma jistax jitgħabba",
     "detailErrorIntro": "Din il-veduta ma setgħetx iġġib il-katalogu tal-kanali. Il-konnessjoni tiegħek mal-portal mhijiex affettwata — m'hemmx bżonn li terġa' tawtorizza xi ħaġa. Jekk jogħġbok erġa' pprova dalwaqt.",
-    "detailErrorRetry": "Erġa' għabbi"
+    "detailErrorRetry": "Erġa' għabbi",
+    "fullResyncAirbnb": "Importa kollox minn Airbnb – ritratti, testi, faċilitajiet, kmamar, regoli u prezzijiet ta' din il-proprjetà – u mbagħad ittrasferixxi mill-ġdid id-disponibbiltà, il-prezzijiet u r-restrizzjonijiet",
+    "fullResyncAirbnbDone": "Importat minn Airbnb: {fotos} ritratti ġodda, {felder} dettalji. Id-disponibbiltà u l-prezzijiet issa qed jiġu trasferiti.",
+    "fullResyncQueued": "Sinkronizzazzjoni sħiħa fil-kju – id-disponibbiltà, il-prezzijiet u r-restrizzjonijiet qed jiġu trasferiti mill-ġdid.",
+    "fullResyncFailed": "Sinkronizzazzjoni sħiħa falliet: {error}",
+    "toggleFailed": "Il-bidla falliet: {error}"
   },
   "calendarSync": {
     "title": "Importazzjoni/esportazzjoni tal-kalendarju",

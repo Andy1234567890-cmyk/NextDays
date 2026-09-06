@@ -32,6 +32,7 @@ import type {
 import {
   activateChannel,
   airbnbHistorieLaufStand,
+  airbnbVollAbgleich,
   airbnbHistorieLaufStarten,
   disconnectChannel,
   getCsvTemplate,
@@ -620,10 +621,38 @@ function MappingRow({
       ? "bg-destructive/10 text-destructive"
       : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300";
 
+  // Airbnb ist das einzige Portal, das Inhalte HERGIBT: dort holt der
+  // Voll-Abgleich zuerst alles dieses Objekts (Fotos, Texte, Ausstattung,
+  // Zimmer, Regeln, Preis) und schickt danach unseren Stand. Bei allen anderen
+  // Portalen ist er nur der Push. Beide Wege melden, was geschah — vorher
+  // verschwand die Antwort ungelesen (Wurzel 5).
+  const istAirbnbZeile = portalCode === "AirBNB";
+
   function fullSync() {
     if (!mapId) return;
     startTransition(async () => {
-      await triggerFullSync(mapId);
+      if (istAirbnbZeile) {
+        const res = await airbnbVollAbgleich(row.property_id);
+        if (!res.ok) {
+          toast.error(t("fullResyncFailed", { error: res.error }));
+          return;
+        }
+        toast.success(
+          t("fullResyncAirbnbDone", {
+            fotos: res.data.fotos_uebernommen,
+            felder: res.data.uebernommene_felder.length,
+          }),
+        );
+        if (res.data.hinweis) toast.warning(res.data.hinweis);
+        onConnected();
+        return;
+      }
+      const res = await triggerFullSync(mapId);
+      if (!res.ok) {
+        toast.error(t("fullResyncFailed", { error: res.error }));
+        return;
+      }
+      toast.success(t("fullResyncQueued"));
     });
   }
 
@@ -632,7 +661,12 @@ function MappingRow({
     setActive(next); // optimistisch
     startTransition(async () => {
       const res = await setConnectionActive(row.property_id, portalCode, next);
-      if (!res.ok) setActive(!next); // zurückrollen bei Fehler
+      if (!res.ok) {
+        setActive(!next); // zurückrollen bei Fehler
+        // Der Grund kommt vom Server (z. B. „Dieser Kanal trägt 18 Objekte …")
+        // — stumm zurückrollen hieße, den Betrieb raten zu lassen.
+        toast.error(t("toggleFailed", { error: res.error }));
+      }
     });
   }
 
@@ -758,7 +792,7 @@ function MappingRow({
                 size="sm"
                 onClick={fullSync}
                 disabled={pending || !mapId || !active}
-                title={t("fullResync")}
+                title={istAirbnbZeile ? t("fullResyncAirbnb") : t("fullResync")}
               >
                 <Icon
                   icon={pending ? "ph:spinner" : "ph:arrows-counter-clockwise"}

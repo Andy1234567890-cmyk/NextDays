@@ -7569,7 +7569,12 @@
     "chooseAccountProperties": "{count} īpašumi pie mums",
     "detailErrorTitle": "Kanālu nevar ielādēt",
     "detailErrorIntro": "Šis skats nevarēja ielādēt kanālu katalogu. Jūsu savienojums ar portālu netiek ietekmēts — nekas nav jāautorizē atkārtoti. Lūdzu, mēģiniet vēlreiz.",
-    "detailErrorRetry": "Ielādēt vēlreiz"
+    "detailErrorRetry": "Ielādēt vēlreiz",
+    "fullResyncAirbnb": "Importēt visu no Airbnb — šī īpašuma fotoattēlus, tekstus, aprīkojumu, istabas, noteikumus un cenu — un pēc tam no jauna pārsūtīt pieejamību, cenas un ierobežojumus",
+    "fullResyncAirbnbDone": "Importēts no Airbnb: {fotos} jauni fotoattēli, {felder} informācija. Pieejamība un cenas tagad tiek pārsūtītas.",
+    "fullResyncQueued": "Pilna sinhronizācija ir rindā — pieejamība, cenas un ierobežojumi tiek pārsūtīti no jauna.",
+    "fullResyncFailed": "Pilna sinhronizācija neizdevās: {error}",
+    "toggleFailed": "Pārslēgšana neizdevās: {error}"
   },
   "calendarSync": {
     "title": "Kalendāra imports/eksports",

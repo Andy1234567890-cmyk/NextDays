@@ -7569,7 +7569,12 @@
     "chooseAccountProperties": "{count} proprietà con noi",
     "detailErrorTitle": "Impossibile caricare il canale",
     "detailErrorIntro": "Questa vista non è riuscita a recuperare il catalogo dei canali. La tua connessione al portale non è interessata — non è necessaria una nuova autorizzazione. Riprova tra poco.",
-    "detailErrorRetry": "Ricarica"
+    "detailErrorRetry": "Ricarica",
+    "fullResyncAirbnb": "Importa tutto da Airbnb – foto, testi, servizi, stanze, regole e prezzi di questa proprietà – e poi trasferisci nuovamente disponibilità, prezzi e restrizioni",
+    "fullResyncAirbnbDone": "Importato da Airbnb: {fotos} nuove foto, {felder} dettagli. Disponibilità e prezzi sono ora in fase di trasferimento.",
+    "fullResyncQueued": "Sincronizzazione completa in coda – disponibilità, prezzi e restrizioni verranno trasferiti nuovamente.",
+    "fullResyncFailed": "Sincronizzazione completa fallita: {error}",
+    "toggleFailed": "Attivazione/disattivazione fallita: {error}"
   },
   "calendarSync": {
     "title": "Importa/esporta calendario",

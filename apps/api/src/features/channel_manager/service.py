@@ -33,6 +33,7 @@ from .airbnb_profilbilder import AirbnbProfilbilderMixin
 from .airbnb_registrierung import AirbnbRegistrierungMixin
 from .airbnb_uebernahme import AirbnbUebernahmeMixin
 from .airbnb_verfuegbarkeit_push import AirbnbVerfuegbarkeitPushMixin
+from .airbnb_voll_abgleich import AirbnbVollAbgleichMixin
 from .airbnb_zimmer_push import AirbnbZimmerPushMixin
 from .ari_push import AriPushMixin
 from .bestandsimport_dienst import BestandsimportDienstMixin
@@ -108,6 +109,9 @@ class ChannelManagerService(
     # Room-Type und Rate-Plan bei Channex anzulegen — ohne sie gibt es kein
     # Mapping und Airbnb liefert keinen Preis.
     AirbnbObjektAbrufMixin,
+    # Braucht `airbnb_objekt_abrufen` (oben) und `_voll_push_einreihen`
+    # (OtaExtrasMixin, unten) — nur Aufrufe zur Laufzeit, keine MRO-Abhängigkeit.
+    AirbnbVollAbgleichMixin,
     # VOR/neben AirbnbObjektAbrufMixin gelesen: dessen `_listing_mapping_setzen`
     # ruft `_settings_vom_bestehenden_mapping`, wenn Channex die Zuordnung mit
     # „rate plan already exists" ablehnt (dann fehlt die Antwort-Nutzlast). Nur

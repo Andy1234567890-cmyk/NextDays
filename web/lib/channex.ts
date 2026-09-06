@@ -830,9 +830,15 @@ export type AirbnbObjektAbrufResult = {
   // (dort ist `content.photos` leer), sondern direkt aus `v2/listing_photos`.
   // 0 = keine NEUEN; schon vorhandene werden nicht doppelt angelegt.
   fotos_uebernommen: number;
+  // Was aus `action/listing_details` kam (Zimmer, Betten, Storno, WLAN …) —
+  // getrennt, damit sichtbar ist, ob dieser Weg gegriffen hat.
+  details_uebernommen: string[];
   // Steht NUR, wenn der Preis NICHT kam — mit dem Grund. Ein leeres Feld bei
   // preis_uebernommen: false wäre eine verschluckte Fehlermeldung.
   hinweis: string | null;
+  // Nur beim Voll-Abgleich der Kanalseite: der Voll-Push (Verfügbarkeit,
+  // Preise, Restriktionen; Buchungen/Gespräche zurück) ist eingereiht.
+  push_eingereiht: boolean;
 };
 
 /**
@@ -848,6 +854,25 @@ export async function airbnbObjektAbrufen(
 ): Promise<Result<AirbnbObjektAbrufResult>> {
   const res = await call<AirbnbObjektAbrufResult>(
     `/properties/${propertyId}/airbnb/abrufen`,
+    { method: "POST" },
+  );
+  if (res.ok) revalidatePath(`/objekte/${propertyId}`);
+  return res;
+}
+
+/**
+ * Voll-Abgleich am Airbnb-Kanal für EIN Objekt: ALLES aus Airbnb übernehmen
+ * (Fotos, Texte, Ausstattung, Zimmer, Regeln, Preis) und danach Verfügbarkeit,
+ * Preise und Restriktionen neu übertragen, Buchungen/Gespräche zurückholen.
+ *
+ * Bei allen anderen Portalen ist der Voll-Abgleich nur der Push
+ * (`triggerFullSync`) — kein anderes Portal gibt Inhalte her.
+ */
+export async function airbnbVollAbgleich(
+  propertyId: string,
+): Promise<Result<AirbnbObjektAbrufResult>> {
+  const res = await call<AirbnbObjektAbrufResult>(
+    `/properties/${propertyId}/airbnb/voll-abgleich`,
     { method: "POST" },
   );
   if (res.ok) revalidatePath(`/objekte/${propertyId}`);
@@ -1339,9 +1364,11 @@ export async function channelPropertyDetail(
   );
 }
 
-// Kanal pro (Objekt × Portal) an-/abschalten (selektiver Stop-Sell).
-// „Aus" stoppt ARI/Preis-Push und deaktiviert den Channex-Channel; eingehende
-// Buchungen werden weiter importiert.
+// Kanal pro (Objekt × Portal) an-/abschalten — mit dem Hebel des Portals:
+// bei Airbnb wird NUR diese Anzeige zurückgezogen (der Kanal ist dort das Konto
+// mit allen Anzeigen), bei Booking & Co. der Kanal des Objekts. Eingehende
+// Buchungen werden weiter importiert. Der Server liest den Stand zurück und
+// antwortet mit dem Grund, wenn das Portal nicht mitzieht.
 export async function setConnectionActive(
   propertyId: string,
   portalCode: string,

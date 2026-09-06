@@ -636,6 +636,28 @@ def airbnb_objekt_abrufen(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.post(
+    "/properties/{property_id}/airbnb/voll-abgleich",
+    response_model=AirbnbObjektAbrufResponse,
+)
+def airbnb_voll_abgleich(
+    property_id: str, service: ChannelManagerServiceDep, ctx: _write
+) -> AirbnbObjektAbrufResponse:
+    """Voll-Abgleich am Airbnb-Kanal für EIN Objekt: alles aus Airbnb übernehmen
+    (Fotos, Texte, Ausstattung, Zimmer, Regeln, Preis), danach Verfügbarkeit,
+    Preise und Restriktionen neu hinschicken und Buchungen/Gespräche zurückholen.
+
+    Der Knopf ist derselbe wie bei den anderen Portalen — dort ist er nur der
+    Push, weil kein anderes Portal Inhalte hergibt. Scope im Service (Wurzel 3).
+    """
+    try:
+        return AirbnbObjektAbrufResponse(
+            **service.airbnb_voll_abgleich(ctx, property_id)
+        )
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.get("/properties/{property_id}/airbnb/historie/plan")
 def airbnb_historie_plan(
     property_id: str, von: str, bis: str,

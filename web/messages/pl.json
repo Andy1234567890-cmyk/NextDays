@@ -7569,7 +7569,12 @@
     "chooseAccountProperties": "{count} obiektów u nas",
     "detailErrorTitle": "Nie można załadować kanału",
     "detailErrorIntro": "Ten widok nie mógł pobrać katalogu kanałów. Nie ma to wpływu na połączenie z portalem — nie trzeba ponownie autoryzować. Spróbuj ponownie za chwilę.",
-    "detailErrorRetry": "Załaduj ponownie"
+    "detailErrorRetry": "Załaduj ponownie",
+    "fullResyncAirbnb": "Importuj wszystko z Airbnb – zdjęcia, teksty, wyposażenie, pokoje, zasady i cenę tego obiektu – a następnie ponownie prześlij dostępność, ceny i ograniczenia",
+    "fullResyncAirbnbDone": "Zaimportowano z Airbnb: {fotos} nowych zdjęć, {felder} danych. Dostępność i ceny są teraz przesyłane.",
+    "fullResyncQueued": "Pełna synchronizacja w kolejce – dostępność, ceny i ograniczenia są ponownie przesyłane.",
+    "fullResyncFailed": "Pełna synchronizacja nie powiodła się: {error}",
+    "toggleFailed": "Przełączenie nie powiodło się: {error}"
   },
   "calendarSync": {
     "title": "Importuj/eksportuj kalendarz",

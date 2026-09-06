@@ -461,6 +461,19 @@ class LocalRoomOption(BaseModel):
     # Entsprechung (kein Vorschlag, der Nutzer wählt selbst).
     suggested_bcrt_code: int | None = None
     suggested_bcrt_name: str | None = None
+    # Bei einem aus Airbnb uebernommenen Objekt: die Listing-ID der Anzeige.
+    # Damit waehlt die UI die Anzeige EXAKT vor, statt ueber Namen zu raten.
+    #
+    # Dieses Feld FEHLTE hier bis zum 06.09.2026, obwohl `_local_room_options`
+    # es seit langem berechnete und `prepare_debug` es auch loggte. FastAPI
+    # serialisiert ueber dieses Modell und verwirft unbekannte Felder still —
+    # der Server hatte die Antwort, das Frontend bekam sie nie. Sichtbar wurde
+    # es an „Feriehus Snerlebo": 18 Anzeigen, die richtige in `local_rooms`
+    # samt ID, und die Auswahl stand trotzdem auf „nicht zuordnen", weil der
+    # Namensvergleich (`suggested_bcrt_name` „Holiday home") an daenischen
+    # Titeln nichts findet. Ein Log, das die Antwort VOR der Serialisierung
+    # zeigt, beweist nicht, was ankommt (Wurzel 5).
+    airbnb_listing_id: str | None = None
 
 
 class PrepareChannelResponse(BaseModel):
@@ -630,6 +643,11 @@ class AirbnbObjektAbrufResponse(BaseModel):
     # dieser Weg gegriffen hat — leer + `hinweis` heißt: er hat es nicht.
     details_uebernommen: list[str] = []
     hinweis: str | None = None
+    # Nur beim Voll-Abgleich der Kanalseite: nach dem Holen wurde der Voll-Push
+    # (Verfügbarkeit 500 Tage, Preise, Restriktionen; Buchungen/Gespräche
+    # zurück) eingereiht. `false` beim reinen Abruf der Objektseite — und wenn
+    # das Einreihen scheiterte; dann steht der Grund in `hinweis`.
+    push_eingereiht: bool = False
 
 
 class OAuthBeginResponse(BaseModel):

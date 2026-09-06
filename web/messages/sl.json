@@ -7569,7 +7569,12 @@
     "chooseAccountProperties": "{count} objektov pri nas",
     "detailErrorTitle": "Kanala trenutno ni mogoče naložiti",
     "detailErrorIntro": "Ta pogled ni mogel pridobiti kataloga kanalov. Vaša povezava s portalom ni prizadeta – ni vam treba ponovno avtorizirati ničesar. Poskusite znova čez nekaj časa.",
-    "detailErrorRetry": "Znova naloži"
+    "detailErrorRetry": "Znova naloži",
+    "fullResyncAirbnb": "Prevzemite vse iz Airbnb – fotografije, besedila, opremo, sobe, pravila in ceno te nepremičnine – nato pa ponovno prenesite razpoložljivost, cene in omejitve.",
+    "fullResyncAirbnbDone": "Prevzeto iz Airbnb: {fotos} novih fotografij, {felder} podrobnosti. Razpoložljivost in cene se prenašajo.",
+    "fullResyncQueued": "Popolna sinhronizacija v čakalni vrsti – razpoložljivost, cene in omejitve se ponovno prenašajo.",
+    "fullResyncFailed": "Popolna sinhronizacija ni uspela: {error}",
+    "toggleFailed": "Preklop ni uspel: {error}"
   },
   "calendarSync": {
     "title": "Uvoz/izvoz koledarja",

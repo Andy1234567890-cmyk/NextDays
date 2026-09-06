@@ -7569,7 +7569,12 @@
     "chooseAccountProperties": "{count} proprietăți la noi",
     "detailErrorTitle": "Canalul nu poate fi încărcat în acest moment",
     "detailErrorIntro": "Această vizualizare nu a putut prelua catalogul de canale. Conexiunea dvs. la portal nu este afectată - nu este necesară o nouă autorizare. Vă rugăm să încercați din nou imediat.",
-    "detailErrorRetry": "Reîncărcați"
+    "detailErrorRetry": "Reîncărcați",
+    "fullResyncAirbnb": "Importați totul de pe Airbnb – fotografii, texte, dotări, camere, reguli și prețul acestei proprietăți – și apoi retransmiteți disponibilitatea, prețurile și restricțiile",
+    "fullResyncAirbnbDone": "Importat de pe Airbnb: {fotos} fotografii noi, {felder} detalii. Disponibilitatea și prețurile sunt acum transmise.",
+    "fullResyncQueued": "Sincronizare completă în așteptare – disponibilitatea, prețurile și restricțiile sunt retransmise.",
+    "fullResyncFailed": "Sincronizare completă eșuată: {error}",
+    "toggleFailed": "Comutare eșuată: {error}"
   },
   "calendarSync": {
     "title": "Import/export calendar",

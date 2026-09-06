@@ -7569,7 +7569,12 @@
     "chooseAccountProperties": "{count} objecten bij ons",
     "detailErrorTitle": "Kanaal kan momenteel niet worden geladen",
     "detailErrorIntro": "Deze weergave kon de kanaalcatalogus niet ophalen. Uw verbinding met het portaal wordt hierdoor niet beïnvloed — er hoeft niets opnieuw te worden geautoriseerd. Probeer het zo meteen nog eens.",
-    "detailErrorRetry": "Opnieuw laden"
+    "detailErrorRetry": "Opnieuw laden",
+    "fullResyncAirbnb": "Alles van Airbnb overnemen – foto's, teksten, voorzieningen, kamers, regels en prijs van deze accommodatie – en daarna beschikbaarheid, prijzen en restricties opnieuw overdragen",
+    "fullResyncAirbnbDone": "Overgenomen van Airbnb: {fotos} nieuwe foto's, {felder} gegevens. Beschikbaarheid en prijzen worden nu overgedragen.",
+    "fullResyncQueued": "Volledige synchronisatie in de wachtrij geplaatst – beschikbaarheid, prijzen en restricties worden opnieuw overgedragen.",
+    "fullResyncFailed": "Volledige synchronisatie mislukt: {error}",
+    "toggleFailed": "Schakelen mislukt: {error}"
   },
   "calendarSync": {
     "title": "Agenda importeren/exporteren",

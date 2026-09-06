@@ -7590,7 +7590,12 @@
     "chooseAccountProperties": "{count} Objekte bei uns",
     "detailErrorTitle": "Kanal lässt sich gerade nicht laden",
     "detailErrorIntro": "Diese Ansicht konnte den Kanalkatalog nicht abrufen. Deine Verbindung zum Portal ist davon nicht betroffen — es muss nichts erneut autorisiert werden. Versuche es gleich noch einmal.",
-    "detailErrorRetry": "Erneut laden"
+    "detailErrorRetry": "Erneut laden",
+    "fullResyncAirbnb": "Alles aus Airbnb übernehmen – Fotos, Texte, Ausstattung, Zimmer, Regeln und Preis dieses Objekts – und danach Verfügbarkeit, Preise und Restriktionen neu übertragen",
+    "fullResyncAirbnbDone": "Aus Airbnb übernommen: {fotos} neue Fotos, {felder} Angaben. Verfügbarkeit und Preise werden jetzt übertragen.",
+    "fullResyncQueued": "Voll-Abgleich eingereiht – Verfügbarkeit, Preise und Restriktionen werden neu übertragen.",
+    "fullResyncFailed": "Voll-Abgleich fehlgeschlagen: {error}",
+    "toggleFailed": "Umschalten fehlgeschlagen: {error}"
   },
   "calendarSync": {
     "title": "Kalender importieren/exportieren",

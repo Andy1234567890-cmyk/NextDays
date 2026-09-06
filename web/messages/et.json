@@ -7569,7 +7569,12 @@
     "chooseAccountProperties": "{count} objekti meil",
     "detailErrorTitle": "Kanalit ei saa praegu laadida",
     "detailErrorIntro": "See vaade ei saanud kanalite kataloogi laadida. Teie ühendus portaaliga ei ole sellest mõjutatud – midagi ei pea uuesti autoriseerima. Palun proovige kohe uuesti.",
-    "detailErrorRetry": "Laadi uuesti"
+    "detailErrorRetry": "Laadi uuesti",
+    "fullResyncAirbnb": "Kõik Airbnb-st üle võtta – selle majutuskoha fotod, tekstid, sisustus, toad, reeglid ja hind – ning seejärel saadavus, hinnad ja piirangud uuesti üle kanda",
+    "fullResyncAirbnbDone": "Airbnb-st üle võetud: {fotos} uut fotot, {felder} andmed. Saadavus ja hinnad kantakse nüüd üle.",
+    "fullResyncQueued": "Täielik sünkroonimine järjekorras – saadavus, hinnad ja piirangud kantakse uuesti üle.",
+    "fullResyncFailed": "Täielik sünkroonimine ebaõnnestus: {error}",
+    "toggleFailed": "Ümberlülitamine ebaõnnestus: {error}"
   },
   "calendarSync": {
     "title": "Kalendri import/eksport",

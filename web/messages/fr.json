@@ -7569,7 +7569,12 @@
     "chooseAccountProperties": "{count} objets chez nous",
     "detailErrorTitle": "Impossible de charger le canal",
     "detailErrorIntro": "Cette vue n'a pas pu récupérer le catalogue de chaînes. Votre connexion au portail n'est pas affectée — aucune réautorisation n'est nécessaire. Veuillez réessayer ultérieurement.",
-    "detailErrorRetry": "Recharger"
+    "detailErrorRetry": "Recharger",
+    "fullResyncAirbnb": "Tout reprendre d'Airbnb – photos, textes, équipements, chambres, règles et prix de cette propriété – puis retransférer les disponibilités, les prix et les restrictions",
+    "fullResyncAirbnbDone": "Repris d'Airbnb : {fotos} nouvelles photos, {felder} informations. Les disponibilités et les prix sont en cours de transfert.",
+    "fullResyncQueued": "Synchronisation complète en cours – les disponibilités, les prix et les restrictions sont en cours de retransfert.",
+    "fullResyncFailed": "Synchronisation complète échouée : {error}",
+    "toggleFailed": "Échec du basculement : {error}"
   },
   "calendarSync": {
     "title": "Importer/exporter le calendrier",
