@@ -23,6 +23,7 @@ import pytest
 from src.features.affiliates.tests.fakedb import FakeDb
 from src.features.schloesser.seam_client import (
     SeamClient,
+    SeamFehler,
     SeamNichtKonfiguriert,
     SeamZugang,
 )
@@ -1204,3 +1205,31 @@ def test_doppelt_eingetragenes_secret_zaehlt_einmal(monkeypatch: Any) -> None:
 
     assert wh._secrets_lesen() == [_SECRET_A, _SECRET_B]  # noqa: SLF001
     get_settings.cache_clear()
+
+
+def test_seam_fehler_beim_abgleich_kippt_die_verbindung_nicht() -> None:
+    """Der Geräteabgleich darf den Webhook nicht auf 500 reißen.
+
+    Live gesehen (06.09.2026): `Invalid uuid for "connected_account_id"` aus
+    `devices.list` schlug bis nach außen durch — der Endpunkt antwortete 500,
+    OBWOHL die Verbindungszeile korrekt geschrieben war. Svix wiederholt bei
+    5xx endlos; aus einem einmaligen Fremdfehler wird so eine Dauerschleife.
+
+    Die Verbindung steht zu diesem Zeitpunkt bereits. Der Abgleich ist
+    best-effort mit lautem Log, die Geräte holt der nächste Aufruf nach.
+    """
+    class _SeamKaputt(_SeamStub):
+        def geraete_lesen(self, _konto_id: str) -> list:
+            raise SeamFehler("Invalid uuid", status_code=422)
+
+    db = FakeDb()
+    dienst = SchloesserService(db)
+    dienst._client = _SeamKaputt()  # noqa: SLF001 - Test setzt den Stub
+
+    neu_id = dienst.verbindung_aus_ereignis(_TENANT, "konto-1", "igloohome")
+
+    # Kein Durchschlagen — und die Zeile steht trotzdem.
+    assert neu_id
+    zeilen = db.rows["seam_connection"]
+    assert len(zeilen) == 1
+    assert zeilen[0]["status"] == "connected"

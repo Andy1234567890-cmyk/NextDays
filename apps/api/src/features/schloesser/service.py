@@ -375,8 +375,26 @@ class SchloesserService:
         ).data or []
         neu_id = str(eingefuegt[0]["id"]) if eingefuegt else None
         if neu_id:
-            # Ohne Geräte ist die Verbindung für den Kunden eine leere Seite.
-            self.geraete_abgleichen(str(tenant_id), neu_id)
+            # Ohne Geräte ist die Verbindung für den Kunden eine leere Seite —
+            # aber sie darf den Webhook NICHT kippen. Der Abgleich ruft Seam,
+            # und jeder Fehler dort (Timeout, Rate-Limit, Konto schon wieder
+            # weg) käme sonst als 500 heraus; Svix wiederholt bei 5xx endlos,
+            # und die Verbindung STEHT zu diesem Zeitpunkt bereits.
+            # Live gesehen (06.09.2026): `Invalid uuid for
+            # "connected_account_id"` riss den ganzen Endpunkt auf 500,
+            # obwohl die Zeile korrekt angelegt war.
+            # Best-effort mit lautem Log (Wurzel 5) — die Geräte holt der
+            # nächste Aufruf der Oberfläche nach.
+            try:
+                self.geraete_abgleichen(str(tenant_id), neu_id)
+            except SeamFehler as exc:  # noqa: BLE001 - Hauptpfad steht schon
+                log.warning(
+                    "schloesser.geraete_abgleich_nach_ereignis_fehlgeschlagen",
+                    extra={
+                        "connection_id": neu_id,
+                        "grund": str(exc)[:200],
+                    },
+                )
         return neu_id
 
     def verbindungen_lesen(self, tenant_id: str) -> list[dict]:

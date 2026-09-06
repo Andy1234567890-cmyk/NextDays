@@ -91,10 +91,21 @@ async def webhook(request: Request) -> dict:
 
     try:
         _verarbeiten(db, nutzlast)
-    except (ValueError, KeyError, TypeError) as exc:
-        # Spezifisch gefangen: eine unerwartete Nutzlastform darf den
-        # Endpunkt nicht mit 500 quittieren (Seam würde endlos wiederholen),
-        # muss aber sichtbar bleiben.
+    except HTTPException:
+        # Ein Fehler unserer eigenen Signatur-/Scope-Prüfung gehört nach
+        # außen und wird nicht in „angenommen" umgedeutet.
+        raise
+    except Exception as exc:  # noqa: BLE001 - siehe Begründung
+        # BEWUSST BREIT, und das ist hier die richtige Wahl: die Verarbeitung
+        # ruft Seam (Geräteabgleich) und die DB. Jeder Fehler dort — Timeout,
+        # Rate-Limit, ein Konto, das es nicht mehr gibt — käme sonst als 500
+        # heraus, und Svix wiederholt bei 5xx ENDLOS dieselbe Zustellung.
+        # Live gesehen (06.09.2026): `Invalid uuid for
+        # "connected_account_id"` riss den Endpunkt auf 500, obwohl der
+        # Zustand korrekt geschrieben war.
+        # Der Fehler wird NICHT verschluckt (Wurzel 5): er steht an der
+        # Eingangszeile und im Log, und die Zeile ist über
+        # `seam_webhook_eingang.fehler` auffindbar.
         db.table("seam_webhook_eingang").update(
             {"fehler": str(exc)[:500]}
         ).eq("event_id", ereignis_id).execute()
