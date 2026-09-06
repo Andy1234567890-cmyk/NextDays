@@ -27,7 +27,7 @@ stündliche Tick greift `failed` nie wieder auf (Wurzel 1).
 """
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date
 from typing import TYPE_CHECKING
 
 from src.core.logging import get_logger
@@ -131,17 +131,6 @@ def run_payouts(db: Client) -> None:
         )
 
 
-def _vormonat(heute: date) -> date:
-    """Der erste Tag des abgelaufenen Monats.
-
-    Der Monatslauf fakturiert den VORMONAT — die Gebührenzeilen müssen deshalb
-    auf denselben Monat lauten, nicht auf den laufenden. Ohne diese Umrechnung
-    würde der Lauf am 1. Oktober die Oktober-Gebühren erfassen und die
-    September-Rechnung leer stellen.
-    """
-    return (heute.replace(day=1) - timedelta(days=1)).replace(day=1)
-
-
 def bill_commissions(db: Client, heute: date) -> None:
     """Offene Provisionen + Nutzungsgebühren aller Betriebe für den Vormonat.
 
@@ -163,13 +152,15 @@ def bill_commissions(db: Client, heute: date) -> None:
     # eigenes Invoice-Item. Eigener Lauf, damit ein Fehler im einen Pfad den
     # anderen nicht mitreißt (Wurzel 5).
     svc.bill_all_dynpricing(period=periode)
-    # Schloss-Gebühr (3 EUR je Gerät und Monat, 0574). ERST erfassen, dann
-    # fakturieren: die Erfassung legt die Zeilen des ABGELAUFENEN Monats an,
-    # und ohne sie hätte der Lauf nichts zu stellen. Beides hier statt in zwei
-    # Ticks, weil die Reihenfolge zwingend ist — ein eigener Erfassungs-Tick
-    # könnte nach dem Fakturieren laufen und die Gebühr um einen Monat
-    # verschieben.
-    svc.erfasse_schloss_gebuehren(_vormonat(heute))
+    # Schloss-Gebühr je GERÄT (0574) ist STILLGELEGT (Entscheidung 06.09.2026):
+    # abgerechnet wird stattdessen je ANBIETER als Abo-Modul (0577). Beides
+    # gleichzeitig hätte den Betrieb doppelt belastet — einmal „igloohome-Modul"
+    # und einmal je Schloss.
+    #
+    # Der FAKTURIER-Lauf bleibt bewusst stehen: es können Zeilen aus der Zeit
+    # vor der Umstellung offen sein, und eine erbrachte Leistung nicht
+    # abzurechnen wäre ein stiller Verlust. Die ERFASSUNG ist weg — es
+    # entstehen keine neuen Zeilen mehr.
     svc.bill_all_schloesser(period=periode)
 
 

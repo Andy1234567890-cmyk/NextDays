@@ -32,6 +32,99 @@ MODULE_PRICE_LOOKUP: dict[str, str] = {
     "modul6_hotel": "modul6_flat",
     "modul7_avatar": "modul7_flat",
 }
+# --- Schloss-Anbieter: je Hersteller ein buchbares Modul (0577) ------------
+# Der Betrieb bucht genau den Hersteller, dessen Schlösser er besitzt.
+# Entscheidung vom 06.09.2026; vorher war eine geräteweise Gebühr (0574)
+# gebaut, die damit stillgelegt ist — sonst zahlte der Kunde doppelt.
+#
+# DIE KENNUNG IST SEAMS PROVIDER-NAME. Damit ist die Verbindung zwischen
+# gebuchtem Modul und dem Provider-Filter im Connect Webview eindeutig: ohne
+# gebuchtes Modul erscheint der Hersteller dort nicht. Ein eigener Namensraum
+# hätte bedeutet, dass eine Marke bei uns anders heißt als bei Seam.
+#
+# Die Liste ist mit `web/lib/schloss-anbieter.ts` deckungsgleich zu halten;
+# `scripts/i18n/schloss-anbieter-pruefen.mjs` erzwingt das.
+SCHLOSS_ANBIETER: tuple[str, ...] = (
+    # Endkunden-Schlösser (Seams Kategorie `consumer_smartlocks`)
+    "igloohome",
+    "nuki",
+    "ttlock",
+    "yale",
+    "august",
+    "tedee",
+    "schlage",
+    "kwikset",
+    "lockly",
+    "smartthings",
+    "akiles",
+    "ultraloq",
+    "wyze",
+    "keyincode",
+    "korelock",
+    "sifely",
+    "dusaw",
+    "yacan",
+    "thirty_three_lock",
+    "dormakaba_oracode",
+    # Schlüsselboxen
+    "keynest",
+    # Zutrittssysteme für Gebäude (Seams `access_control_systems`)
+    "salto_ks",
+    "salto_space",
+    "assa_abloy_vostio",
+    "assa_abloy_credential_service",
+    "dormakaba_ambiance",
+    "dormakaba_community",
+    "visionline",
+    "hotek",
+    "latch",
+    "brivo",
+    "legic_connect",
+)
+
+SCHLOSS_MODUL_PREFIX = "schloss_"
+
+
+def schloss_modul_key(kennung: str) -> str:
+    """Modul-Schlüssel eines Anbieters, wie er im Abo steht."""
+    return f"{SCHLOSS_MODUL_PREFIX}{kennung}"
+
+
+def kennung_aus_schloss_modul(module_key: str) -> str | None:
+    """Seam-Kennung aus dem Modul-Schlüssel — oder None, wenn kein Schloss-Modul.
+
+    Die EINE Stelle, die diese Zuordnung kennt. Ohne sie müsste jeder Aufrufer
+    das Präfix selbst abschneiden, und beim nächsten Umbau macht es einer
+    anders.
+    """
+    if not module_key.startswith(SCHLOSS_MODUL_PREFIX):
+        return None
+    kennung = module_key[len(SCHLOSS_MODUL_PREFIX) :]
+    return kennung if kennung in SCHLOSS_ANBIETER else None
+
+
+# Stripe-lookup_key je Anbieter-Modul. Angelegt wird der Preis mit
+# `scripts/stripe/schloss-preise-anlegen.py`.
+SCHLOSS_PRICE_LOOKUP: dict[str, str] = {
+    schloss_modul_key(k): f"schloss_{k}_flat" for k in SCHLOSS_ANBIETER
+}
+
+# DIE SCHLOSS-PREISE GEHÖREN IN `MODULE_PRICE_LOOKUP`, nicht daneben.
+#
+# WARUM DIESE ZEILE ENTSCHEIDEND IST: `add_module` entscheidet AN DIESEM DICT,
+# ob eine Stripe-Abo-Position entsteht. Ein Modul, das hier fehlt, gilt als
+# „nutzungsabhängig" und wird nachgelagert über den Ledger fakturiert. Für die
+# Schloss-Module gibt es diesen Ledger-Pfad aber nicht mehr (die Abrechnung je
+# Gerät aus 0574 ist mit 0577 stillgelegt) — sie wären also freigeschaltet und
+# NIE berechnet, während die Oberfläche „Abgerechnet wird monatlich" verspricht.
+#
+# Als getrenntes Dict war genau das der Zustand: `SCHLOSS_PRICE_LOOKUP` wurde
+# nur von der Preis-ANZEIGE gelesen, nicht vom Buchen, Kündigen oder Checkout.
+# Ein zweites Dict derselben Tatsache ist die Wurzel (Wurzel 4) — deshalb steht
+# der Bestand jetzt an EINER Stelle und `SCHLOSS_PRICE_LOOKUP` bleibt nur als
+# benannte Teilmenge für die Preisliste.
+MODULE_PRICE_LOOKUP.update(SCHLOSS_PRICE_LOOKUP)
+
 MODULE_KEYS = frozenset(
     {
         "modul3_buchhaltung",
@@ -41,6 +134,7 @@ MODULE_KEYS = frozenset(
         "modul7_avatar",
         "dynamische_preise",
     }
+    | {schloss_modul_key(k) for k in SCHLOSS_ANBIETER}
 )
 
 # --- Dynamische Preise: 0,5 % vom Buchungsumsatz (nutzungsabhängig) ---------

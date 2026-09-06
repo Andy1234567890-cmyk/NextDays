@@ -19,6 +19,11 @@ import { Button } from "@nextdays/ui/button";
 import { getMe } from "@/lib/auth";
 import { preisAnzeige, type Erweiterung } from "@/lib/erweiterungen";
 import {
+  istSchlossModul,
+  kennungAusModulKey,
+  LOGO_BRAUCHT_DUNKEL,
+} from "@/lib/schloss-anbieter";
+import {
   addSubscriptionModule,
   getPricing,
   getSubscriptionStatus,
@@ -27,7 +32,10 @@ import {
   type SubscriptionStatus,
 } from "@/lib/subscriptions";
 
-import { PreisverlaufIllustration } from "./illustrationen";
+import {
+  PreisverlaufIllustration,
+  TuercodeIllustration,
+} from "./illustrationen";
 
 type Loaded = {
   canManage: boolean;
@@ -36,6 +44,11 @@ type Loaded = {
   status: SubscriptionStatus | null;
   error: string | null;
 };
+
+function logoBrauchtDunkel(moduleKey: string): boolean {
+  const kennung = kennungAusModulKey(moduleKey);
+  return kennung !== null && LOGO_BRAUCHT_DUNKEL.includes(kennung);
+}
 
 export function ErweiterungDetail({ eintrag }: { eintrag: Erweiterung }) {
   const locale = useLocale();
@@ -143,8 +156,30 @@ export function ErweiterungDetail({ eintrag }: { eintrag: Erweiterung }) {
       {/* Kopfzeile: Icon · Name/Untertitel · Aktion */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex min-w-0 items-start gap-3">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-muted">
-            <Icon icon={eintrag.icon} className="size-6" />
+          <span
+            className={
+              "flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl " +
+              // Weiße Original-Logos (Wyze, Dusaw) brauchen dunklen Grund,
+              // sonst sind sie auf der hellen Fläche unsichtbar. Das Logo
+              // selbst bleibt unangetastet.
+              (logoBrauchtDunkel(eintrag.moduleKey) ? "bg-zinc-900" : "bg-muted")
+            }
+          >
+            {/* Das echte Hersteller-Logo, wenn es vorliegt — sonst das Symbol
+                des Moduls. Kein nachgebautes Logo (die Rechte liegen beim
+                Hersteller), und keine 404-Kachel: `anbieterLogo` gibt `null`,
+                wenn für die Marke kein Original beschafft werden konnte. */}
+            {eintrag.logo ? (
+              // Lokale Markendatei — siehe erweiterungen-liste.tsx.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={eintrag.logo}
+                alt={eintrag.name}
+                className="max-h-7 max-w-8 object-contain"
+              />
+            ) : (
+              <Icon icon={eintrag.icon} className="size-6" />
+            )}
           </span>
           <div className="min-w-0">
             <h1 className="font-display text-2xl font-extrabold">{eintrag.name}</h1>
@@ -225,11 +260,19 @@ export function ErweiterungDetail({ eintrag }: { eintrag: Erweiterung }) {
       </dl>
 
       {/* Vorschau — Lodgify zeigt hier Produktbilder/Video des Moduls. Bei uns
-          das eigene Motiv: Preisverlauf zwischen den beiden Grenzen. */}
+          das eigene Motiv, und zwar DAS ZUM MODUL PASSENDE: die Preiskurve
+          gehört zu Dynamic Pricing, die Türcode-Kette zu den Schlössern. Vorher
+          stand hier fest die Preiskurve — auf jeder Schloss-Seite also ein Bild
+          mit „Mindestpreis/Höchstpreis", das über das Modul etwas Falsches
+          behauptet. */}
       <section className="flex flex-col gap-3">
         <h2 className="font-display text-xl font-extrabold">Vorschau</h2>
         <div className="overflow-hidden rounded-2xl border border-border bg-card p-4 sm:p-6">
-          <PreisverlaufIllustration className="h-auto w-full" />
+          {istSchlossModul(eintrag.moduleKey) ? (
+            <TuercodeIllustration className="h-auto w-full" />
+          ) : (
+            <PreisverlaufIllustration className="h-auto w-full" />
+          )}
         </div>
       </section>
 

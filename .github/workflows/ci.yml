@@ -421,6 +421,9 @@ jobs:
       - name: Rollen-Kette (DB → Pydantic → Unions → Labels)
         if: steps.pruefen.outputs.laufen == 'true'
         run: node scripts/i18n/rollen-pruefen.mjs
+      - name: Schloss-Anbieter deckungsgleich (Katalog → Schema → Provider → Migration → Preis)
+        if: steps.pruefen.outputs.laufen == 'true'
+        run: node scripts/i18n/schloss-anbieter-pruefen.mjs
 
       # Drei Intl-Fehlerklassen, die weder `tsc` noch ESLint sehen und erst im
       # Browser als roter Konsolenfehler auftauchen: ein Schlüssel mit "." IN

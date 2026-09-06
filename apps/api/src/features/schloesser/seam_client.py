@@ -291,7 +291,9 @@ class SeamClient:
         }
 
     # -- Verbinden ---------------------------------------------------------
-    def webview_erzeugen(self, rueckkehr_url: str) -> dict[str, Any]:
+    def webview_erzeugen(
+        self, rueckkehr_url: str, *, anbieter: list[str] | None = None
+    ) -> dict[str, Any]:
         """Ein Connect Webview: die Anmeldemaske des HERSTELLERS.
 
         Der Kunde meldet sich dort bei seinem eigenen Schloss-Konto an; Seam
@@ -320,9 +322,19 @@ class SeamClient:
         der richtige Fehler: lieber ein Anbieter zu wenig als ein
         Fremd-PMS zu viel.
         """
+        # Die GEBUCHTEN Anbieter des Betriebs, sonst alle Schloss-Anbieter.
+        # Je Anbieter ein Modul (0577): wer igloohome gebucht hat, sieht nur
+        # igloohome. `SCHLOSS_PROVIDER` bleibt die Obergrenze — ein gebuchtes
+        # Modul kann nie einen Anbieter freischalten, der kein Schloss ist.
+        erlaubt = [a for a in (anbieter or SCHLOSS_PROVIDER) if a in SCHLOSS_PROVIDER]
+        if not erlaubt:
+            raise SeamFehler(
+                "Keiner der gebuchten Hersteller ist ein Schloss-Anbieter.",
+                status_code=422,
+            )
         try:
             webview = self._client().connect_webviews.create(
-                accepted_providers=list(SCHLOSS_PROVIDER),
+                accepted_providers=erlaubt,
                 custom_redirect_url=rueckkehr_url,
                 custom_redirect_failure_url=rueckkehr_url,
                 # Neue Geräte sofort verwaltbar — sonst müsste der Kunde

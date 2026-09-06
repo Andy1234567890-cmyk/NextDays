@@ -18,6 +18,8 @@ from typing import Any
 
 from stripe import StripeError as _StripeError
 
+from src.core.logging import get_logger
+
 from .errors import SubscriptionsError
 from .errors import field as _f
 from .provisionsdeckel import COMMISSION_CAP_CURRENCY, COMMISSION_CAP_EUR
@@ -27,6 +29,7 @@ from .schemas import (
     DYNPRICING_RATE,
     GRUNDTARIF_LOOKUP_KEY,
     MARKETPLACE_FEE_BPS_STANDARD,
+    SCHLOSS_PRICE_LOOKUP,
     ModulePrice,
     PriceTier,
     PricingResponse,
@@ -119,6 +122,9 @@ def _waehrungsoptionen(preis: object) -> dict[str, Any]:
         except (TypeError, ValueError):
             return {}
     return {str(k).lower(): v for k, v in rein.items()}
+
+
+log = get_logger("nextdays.subscriptions.preisliste")
 
 
 class PreislisteMixin:
@@ -260,6 +266,15 @@ class PreislisteMixin:
                 )
             )
         currency = gewuenscht or standard
+        # Schloss-Anbieter (0577): EIN Aufruf für alle 32, nicht einer je
+        # Anbieter. Bei 32 Einzelabfragen wäre jeder Aufruf der Preisliste
+        # 38 Stripe-Requests — dieselbe Art Fehler wie ein N+1 im Kalender.
+        #
+        # UND BEWUSST AUSSERHALB der Wunschwährungs-Regel oben („ein Modul ohne
+        # die Wunschwährung verwirft sie für ALLES"): ein einzelner Anbieter,
+        # dessen Preis noch keine DKK-Option trägt, darf nicht die Währung der
+        # gesamten Preisliste kippen. Er erscheint dann in der Leitwährung.
+        modules.extend(self._schloss_preise(currency))
         # Nutzungsabhängige Module haben keinen Stripe-Preis (der Betrag
         # entsteht erst je Buchung im Ledger). Sie stehen trotzdem im Katalog,
         # damit die UI sie anbieten kann — mit Prozentsatz statt Betrag.
@@ -276,6 +291,63 @@ class PreislisteMixin:
         return PricingResponse(
             currency=currency, grundtarif_tiers=tiers, modules=modules
         )
+
+    def _schloss_preise(self, currency: str) -> list[ModulePrice]:
+        """Die Stripe-Preise aller Schloss-Anbieter — in EINEM Aufruf.
+
+        Stripe nimmt bis zu zehn `lookup_keys` je Anfrage, deshalb in Blöcken.
+        Ein Anbieter ohne angelegten Preis wird WEGGELASSEN, nicht geraten
+        (Wurzel 4): die Kachel zeigt dann, dass der Preis nicht geladen werden
+        konnte, statt einen erfundenen Betrag.
+        """
+        gesucht = {
+            lookup: mkey for mkey, lookup in SCHLOSS_PRICE_LOOKUP.items()
+        }
+        gefunden: list[ModulePrice] = []
+        schluessel = sorted(gesucht)
+        for i in range(0, len(schluessel), 10):
+            block = schluessel[i : i + 10]
+            try:
+                res = self._stripe.v1.prices.list(
+                    params={
+                        "lookup_keys": block,
+                        "active": True,
+                        "limit": len(block),
+                        "expand": ["data.currency_options"],
+                    }
+                )
+            except _StripeError as exc:
+                raise self._stripe_err(exc) from exc
+            for preis in getattr(res, "data", None) or []:
+                lookup = str(_f(preis, "lookup_key", "") or "")
+                mkey = gesucht.get(lookup)
+                if not mkey:
+                    continue
+                option = _waehrungsoptionen(preis).get(currency.lower())
+                if option is None:
+                    # KEIN Rückfall auf die Leitwährung (Wurzel 4): der Betrag
+                    # der EUR-Fassung würde mit `currency` der Antwort
+                    # beschriftet, ein Betrieb in Dänemark sähe also „3,00 kr."
+                    # statt 22,00 kr. Ein falscher Preis ist schlimmer als
+                    # keiner — ohne Eintrag lässt die Preisliste den Anbieter
+                    # weg, und die Kachel schreibt, dass der Preis nicht
+                    # geladen werden konnte.
+                    log.warning(
+                        "schloss_preis_ohne_waehrungsoption",
+                        lookup_key=lookup,
+                        currency=currency,
+                    )
+                    continue
+                gefunden.append(
+                    ModulePrice(
+                        module_key=mkey,
+                        lookup_key=lookup,
+                        unit_amount=int(_f(option, "unit_amount", 0) or 0),
+                        per_unit_label=None,
+                        tiers=None,
+                    )
+                )
+        return gefunden
 
     def get_public_pricing(
         self, currency: str | None = None

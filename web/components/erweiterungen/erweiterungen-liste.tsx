@@ -15,6 +15,10 @@ import { useCallback, useEffect, useState } from "react";
 import { getMe } from "@/lib/auth";
 import { ERWEITERUNGEN, preisAnzeige } from "@/lib/erweiterungen";
 import {
+  kennungAusModulKey,
+  LOGO_BRAUCHT_DUNKEL,
+} from "@/lib/schloss-anbieter";
+import {
   getPricing,
   getSubscriptionStatus,
   type Pricing,
@@ -98,7 +102,7 @@ export function ErweiterungenListe() {
         </p>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {ERWEITERUNGEN.map((e) => {
           const preis = preisAnzeige(
             state.pricing?.modules.find((m) => m.module_key === e.moduleKey),
@@ -111,9 +115,22 @@ export function ErweiterungenListe() {
               href={`/erweiterungen/${e.slug}`}
               className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-colors hover:border-foreground/20"
             >
-              {/* Icon-Fläche (bei Lodgify das Logo des Anbieters) */}
-              <div className="flex h-32 items-center justify-center bg-muted/50">
-                <Icon icon={e.icon} className="size-10 text-foreground" />
+              {/* Logo-Fläche. Bei Schloss-Anbietern das Marken-SVG, sonst
+                  das Symbol des Moduls. Fehlt die Logodatei, zeigt die Kachel
+                  den MARKENNAMEN — bewusst kein selbst gezeichnetes Logo: ein
+                  nachgebautes Hersteller-Logo ist kein Original, und die
+                  Rechte liegen beim Hersteller. */}
+              <div
+                className={
+                  "flex h-24 items-center justify-center " +
+                  (dunkleFlaeche(e.moduleKey) ? "bg-zinc-900" : "bg-muted/50")
+                }
+              >
+                <MarkenFlaeche
+                  logo={e.logo}
+                  icon={e.icon}
+                  name={e.name}
+                />
               </div>
               <div className="flex flex-1 flex-col gap-1 p-4">
                 <div className="flex items-start justify-between gap-2">
@@ -153,5 +170,54 @@ export function ErweiterungenListe() {
         </p>
       </div>
     </div>
+  );
+}
+
+/** Trägt das ORIGINAL-Logo dieser Marke weiße Schrift, braucht die Fläche
+ *  einen dunklen Grund — sonst ist das Logo auf der hellen Kachel unsichtbar.
+ *  Das Logo selbst bleibt unangetastet; Umfärben wäre ein Eingriff in die
+ *  Marke. Betroffen ist nur, wer keine dunkle Fassung veröffentlicht. */
+function dunkleFlaeche(moduleKey: string): boolean {
+  const kennung = kennungAusModulKey(moduleKey);
+  return kennung !== null && LOGO_BRAUCHT_DUNKEL.includes(kennung);
+}
+
+function MarkenFlaeche({
+  logo,
+  icon,
+  name,
+}: {
+  logo?: string | null;
+  icon: string;
+  name: string;
+}) {
+  // `fehlt` statt eines serverseitigen Dateichecks: der Katalog soll nicht
+  // wissen müssen, welche Dateien im public-Ordner liegen. Der Browser sagt
+  // es uns über `onError`, und bis dahin ist die Fläche leer statt falsch.
+  const [fehlt, setFehlt] = useState(false);
+
+  if (!logo || fehlt) {
+    // Der MARKENNAME steht hier immer, auch wenn es gar keine Logodatei gibt
+    // (`logo === null`, weil für diese Marke kein Original beschaffbar war).
+    // Vorher hing er an `logo &&` — genau im dokumentierten Fall zeigte die
+    // Kachel also nur ein anonymes Schloss-Symbol.
+    return (
+      <div className="flex flex-col items-center gap-2">
+        <Icon icon={icon} className="size-10 text-foreground" />
+        <span className="font-display text-sm font-extrabold">{name}</span>
+      </div>
+    );
+  }
+  // Lokale Logodatei, keine Remote-URL: `next/image` würde 31 kleine
+  // Markendateien durch den Optimizer schicken, ohne etwas zu sparen — und
+  // `onError` (der Rückfall auf den Markennamen) braucht das rohe <img>.
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={logo}
+      alt={name}
+      className="max-h-12 max-w-[60%] object-contain"
+      onError={() => setFehlt(true)}
+    />
   );
 }

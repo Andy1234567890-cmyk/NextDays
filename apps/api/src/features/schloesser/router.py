@@ -103,15 +103,27 @@ def verbindung_starten(
 ) -> dict:
     """Die Anmeldemaske des Herstellers öffnen (Seam Connect Webview).
 
-    `ctx` steht hier für die Berechtigungsprüfung (MANAGE_CONNECTIONS), nicht
-    als Datenquelle: der Aufruf legt noch keine Zeile an. Gescopet wird beim
-    Übernehmen.
+    In der Maske erscheinen nur die Hersteller, deren Modul der Betrieb
+    gebucht hat (0577). Ohne gebuchtes Modul antwortet der Aufruf mit 409 und
+    dem Hinweis auf „Erweiterungen".
     """
-    del ctx  # nur für die Berechtigungsprüfung, kein Datenbezug
     try:
-        return service.verbindung_starten(str(daten.rueckkehr_url))
+        return service.verbindung_starten(
+            ctx.tenant_id, str(daten.rueckkehr_url)
+        )
     except SeamFehler as exc:
         raise _seam_fehler(exc) from exc
+
+
+@router.get("/anbieter")
+def anbieter_lesen(ctx: _kalender, service: ServiceDep) -> dict:
+    """Welche Schloss-Hersteller hat dieser Betrieb gebucht?
+
+    Für die Oberfläche: sie zeigt damit, ob überhaupt ein Verbinden möglich
+    ist, und verlinkt sonst auf „Erweiterungen". MANAGE_CALENDAR genügt —
+    es ist eine Lese-Auskunft ohne Geheimnis.
+    """
+    return {"gebucht": service.gebuchte_anbieter(ctx.tenant_id)}
 
 
 @router.post("/verbindungen/uebernehmen")

@@ -46,6 +46,11 @@ from src.core.config import get_settings
 from src.core.logging import get_logger
 from src.core.supabase import load_scoped
 from src.features.reservations._base import anzeigename
+from src.features.subscriptions.schemas import (
+    SCHLOSS_ANBIETER,
+    kennung_aus_schloss_modul,
+    schloss_modul_key,
+)
 
 from .seam_client import (
     SeamClient,
@@ -190,20 +195,62 @@ class SchloesserService:
     # =====================================================================
     # Verbindung
     # =====================================================================
-    def verbindung_starten(self, rueckkehr_url: str) -> dict:
+    def gebuchte_anbieter(self, tenant_id: str) -> list[str]:
+        """Die Schloss-Hersteller, die dieser Betrieb gebucht hat (0577).
+
+        JE ANBIETER EIN MODUL: der Betrieb bucht genau den Hersteller, dessen
+        Schlösser er besitzt. Nur diese erscheinen in der Anmeldemaske — ein
+        nicht gebuchter Hersteller ist dort nicht wählbar, und ein Gerät an
+        einem nicht gebuchten Konto bekommt keine Codes.
+
+        EINE Abfrage statt 32 (`in_` auf die Modulschlüssel): 32 Einzelabfragen
+        bei jedem Öffnen der Maske wären dieselbe Art Fehler wie ein N+1 im
+        Kalender.
+        """
+        schluessel = [schloss_modul_key(k) for k in SCHLOSS_ANBIETER]
+        zeilen = (
+            self.db.table("tenant_module_entitlement")
+            .select("module_key, active")
+            .eq("tenant_id", tenant_id)
+            .in_("module_key", schluessel)
+            .execute()
+        ).data or []
+        gebucht: list[str] = []
+        for z in zeilen:
+            if not z.get("active"):
+                continue
+            kennung = kennung_aus_schloss_modul(str(z.get("module_key") or ""))
+            if kennung:
+                gebucht.append(kennung)
+        return sorted(gebucht)
+
+    def verbindung_starten(self, tenant_id: str, rueckkehr_url: str) -> dict:
         """Ein Connect Webview für den Betrieb erzeugen.
 
         Der Kunde meldet sich in der Maske bei SEINEM Hersteller an. Wir
         legen die Zeile erst an, wenn Seam eine Webview-Kennung geliefert hat
         — sonst sammelt die Tabelle Zeilen für abgebrochene Versuche.
 
-        OHNE `tenant_id`: an dieser Stelle entsteht noch keine Zeile, es wird
-        nichts gelesen und nichts geschrieben. Ein Parameter, der nur so
-        aussieht, als würde er scopen, ist schlechter als keiner — beim
-        nächsten Lesen hält man den Scope für geprüft. Der Tenant kommt erst
-        in `verbindung_uebernehmen` ins Spiel, wo die Zeile angelegt wird.
+        DER TENANT WIRD HIER GEBRAUCHT (0577): in der Maske erscheinen nur die
+        Hersteller, deren Modul der Betrieb gebucht hat. Ohne gebuchtes Modul
+        gibt es keine Auswahl — und damit auch keine Verbindung, für die
+        niemand zahlt.
+
+        Ohne ein einziges gebuchtes Anbieter-Modul schlägt der Aufruf klar
+        fehl, statt eine leere Maske zu öffnen: eine Auswahl ohne Optionen ist
+        für den Betrieb nicht unterscheidbar von einer Störung.
         """
-        return self._client.webview_erzeugen(rueckkehr_url)
+        gebucht = self.gebuchte_anbieter(tenant_id)
+        if not gebucht:
+            raise SchloesserFehler(
+                # Einfache Anführungszeichen im Text: das typografische
+                # schließende beendet sonst das String-Literal (Projektregel).
+                "Es ist noch kein Schloss-Hersteller gebucht. Unter "
+                "‚Erweiterungen‘ den Hersteller Ihrer Schlösser aktivieren — "
+                "danach lässt sich das Konto verbinden.",
+                status_code=409,
+            )
+        return self._client.webview_erzeugen(rueckkehr_url, anbieter=gebucht)
 
     def verbindung_uebernehmen(
         self, tenant_id: str, webview_id: str
@@ -1053,16 +1100,86 @@ class SchloesserService:
         # Doppelte entfernen (ein Gerät kann an Einheit UND Gebäude hängen),
         # Reihenfolge stabil halten.
         eindeutig = list(dict.fromkeys(ids))
-        return (
+        zeilen = (
             self.db.table("seam_device")
             .select(
                 "id, seam_device_id, display_name, can_revoke, "
-                "is_offline_capable, time_granularity"
+                "is_offline_capable, time_granularity, connection_id"
             )
             .eq("tenant_id", tenant_id)
             .in_("id", eindeutig)
             .execute()
         ).data or []
+        return self._nur_gebuchte_anbieter(tenant_id, zeilen)
+
+    def _nur_gebuchte_anbieter(
+        self, tenant_id: str, zeilen: list[dict]
+    ) -> list[dict]:
+        """Geräte wegfiltern, deren Hersteller-Modul nicht (mehr) gebucht ist.
+
+        WARUM HIER UND NICHT NUR BEIM VERBINDEN: das Modul-Gate saß
+        ausschließlich in `verbindung_starten` — also einmalig, beim Anmelden
+        beim Hersteller. Wer danach kündigte, bekam für seine schon
+        verbundenen Geräte WEITER Türcodes: Leistung ohne Abo, unbefristet
+        (Wurzel 5, fail-open). `dynpricing` macht es richtig und prüft das
+        Entitlement vor der Leistung, nicht vor der Einrichtung.
+
+        DIESE EINE STELLE REICHT, weil jede Code-Erzeugung über
+        `_geraete_fuer_buchung` läuft — ein Gate je Aufrufer wäre eine Stelle
+        zu viel, die beim nächsten neuen Pfad vergessen wird.
+
+        Fällt die Marke nicht zuzuordnen (kein Join-Ergebnis), wird das Gerät
+        AUSGELASSEN und nicht durchgelassen: ein Zugang, dessen Abrechenbarkeit
+        wir nicht belegen können, ist der Fall, der stillschweigend Leistung
+        verschenkt.
+        """
+        if not zeilen:
+            return []
+        gebucht = set(self.gebuchte_anbieter(tenant_id))
+        marken = self._marken_der_verbindungen(
+            tenant_id,
+            [str(z["connection_id"]) for z in zeilen if z.get("connection_id")],
+        )
+        erlaubt: list[dict] = []
+        for z in zeilen:
+            marke = marken.get(str(z.get("connection_id") or ""))
+            if marke and marke in gebucht:
+                erlaubt.append(z)
+            else:
+                log.info(
+                    "schloesser.geraet_ohne_gebuchtes_modul",
+                    tenant_id=tenant_id,
+                    device_id=z.get("id"),
+                    provider=marke,
+                )
+        return erlaubt
+
+    def _marken_der_verbindungen(
+        self, tenant_id: str, verbindungs_ids: list[str]
+    ) -> dict[str, str]:
+        """Marke je Verbindung — EINE Abfrage, kein N+1 und kein Join.
+
+        Bewusst getrennt statt als PostgREST-Join (`seam_connection(provider)`)
+        in der Geräte-Abfrage: der Join wäre live korrekt, aber die
+        In-Memory-Fake-DB der Tests löst Select-Spalten nicht auf und liefert
+        ihn als `None`. Ein Gate, das dort immer sperrt, hätte 15 Tests rot
+        gemacht, ohne dass an der Fachlogik etwas falsch ist — und die
+        naheliegende „Reparatur" wäre gewesen, das Gate wieder zu lockern.
+        """
+        if not verbindungs_ids:
+            return {}
+        zeilen = (
+            self.db.table("seam_connection")
+            .select("id, provider")
+            .eq("tenant_id", tenant_id)
+            .in_("id", list(dict.fromkeys(verbindungs_ids)))
+            .execute()
+        ).data or []
+        return {
+            str(z["id"]): str(z.get("provider") or "").strip()
+            for z in zeilen
+            if z.get("id")
+        }
 
     def _geraete_ids(
         self, tenant_id: str, spalte: str, wert: str

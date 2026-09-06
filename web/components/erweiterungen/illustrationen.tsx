@@ -175,3 +175,57 @@ export const SCHRITT_ILLUSTRATIONEN = [
   GrenzenIllustration,
   KalenderPreiseIllustration,
 ] as const;
+
+/**
+ * Hero-Motiv der Schloss-Module: Buchung → Türcode → Tür.
+ *
+ * WARUM EIN EIGENES MOTIV: die Schloss-Seiten zeigten bis 06.09.2026 die
+ * `PreisverlaufIllustration` — die Grafik des Dynamic-Pricing-Moduls, weil sie
+ * in der Detailseite fest verdrahtet war. Auf der igloohome-Seite stand damit
+ * eine Preiskurve mit „Mindestpreis/Höchstpreis": ein Bild, das über das Modul
+ * eine falsche Aussage macht.
+ *
+ * Bewusst KEIN Marken-Motiv und keine Geräteform eines Herstellers: dieselbe
+ * Zeichnung gilt für alle 32 Anbieter. Die Marke steht als echtes Logo in der
+ * Kopfzeile, nicht in einer nachgebauten Produktzeichnung.
+ *
+ * Der Code im Bild ist bewusst maskiert (Punkte statt Ziffern) — ein
+ * ausgeschriebener Beispielcode wäre eine erfundene Angabe (Wurzel 4) und
+ * würde in Screenshots wie ein echter Code aussehen.
+ */
+export function TuercodeIllustration({ className }: { className?: string }) {
+  return (
+    <Zeichnung viewBox="0 0 520 220" className={className} label="">
+      {/* Links: die Buchung als Karte mit Zeitraum. */}
+      <rect x="24" y="52" width="118" height="116" rx="10" />
+      <path d="M24 84h118" />
+      <path d="M52 52V40M114 52V40" />
+      <path d="M46 108h74M46 128h48" opacity={0.55} />
+
+      {/* Pfeil Buchung → Code. */}
+      <path d="M158 110h44" className="text-primary" opacity={0.9} />
+      <path d="m194 102 8 8-8 8" className="text-primary" opacity={0.9} />
+
+      {/* Mitte: der Code als Tastenfeld, Ziffern maskiert. */}
+      <rect x="216" y="60" width="96" height="100" rx="12" className="text-primary" />
+      <circle cx="240" cy="88" r="4" className="text-primary" />
+      <circle cx="264" cy="88" r="4" className="text-primary" />
+      <circle cx="288" cy="88" r="4" className="text-primary" />
+      <circle cx="240" cy="112" r="4" className="text-primary" opacity={0.5} />
+      <circle cx="264" cy="112" r="4" className="text-primary" opacity={0.5} />
+      <circle cx="288" cy="112" r="4" className="text-primary" opacity={0.5} />
+      <path d="M240 136h48" className="text-primary" opacity={0.5} />
+
+      {/* Pfeil Code → Tür. */}
+      <path d="M328 110h44" className="text-primary" opacity={0.9} />
+      <path d="m364 102 8 8-8 8" className="text-primary" opacity={0.9} />
+
+      {/* Rechts: die Tür mit Schloss und Griff. */}
+      <path d="M388 176V56a8 8 0 0 1 8-8h84a8 8 0 0 1 8 8v120" />
+      <path d="M376 176h124" />
+      <circle cx="464" cy="116" r="5" />
+      <rect x="410" y="98" width="30" height="26" rx="5" className="text-primary" />
+      <path d="M416 98v-7a9 9 0 0 1 18 0v7" className="text-primary" />
+    </Zeichnung>
+  );
+}

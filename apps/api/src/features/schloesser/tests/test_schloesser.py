@@ -93,10 +93,31 @@ def _grunddaten(
     db.rows.setdefault("property_units", []).extend([
         {"id": "u1", "property_id": "p1", "properties": {"tenant_id": _TENANT}},
     ])
+    # Verbindung UND gebuchtes Modul gehören zum Grundzustand: ein Gerät ohne
+    # beides ist real nicht erreichbar (verbunden wird nur, wer das Modul des
+    # Herstellers gebucht hat), und Türcodes entstehen nur für gebuchte Marken
+    # — auch nach dem Verbinden, nicht nur davor.
+    db.rows.setdefault("seam_connection", []).extend([
+        {
+            "id": "c1",
+            "tenant_id": _TENANT,
+            "provider": "igloohome",
+            "connected_account_id": "acct-1",
+            "status": "verbunden",
+        },
+    ])
+    db.rows.setdefault("tenant_module_entitlement", []).extend([
+        {
+            "tenant_id": _TENANT,
+            "module_key": "schloss_igloohome",
+            "active": True,
+        },
+    ])
     db.rows.setdefault("seam_device", []).extend([
         {
             "id": "d1",
             "tenant_id": _TENANT,
+            "connection_id": "c1",
             "seam_device_id": "seam-d1",
             "display_name": "Haustür",
             "can_revoke": kann_widerrufen,
@@ -410,6 +431,7 @@ def test_gemeinschaftstuer_gilt_fuer_alle_einheiten_des_gebaeudes() -> None:
         {
             "id": "d2",
             "tenant_id": _TENANT,
+            "connection_id": "c1",
             "seam_device_id": "seam-d2",
             "display_name": "Hauseingang",
             "can_revoke": True,
@@ -917,3 +939,47 @@ def test_unbekannte_kapazitaet_blockiert_nicht() -> None:
     seam = _SeamStub()
     _service(db, seam).zugang_anlegen(_TENANT, "zg1")
     assert len(seam.angelegt) == 1
+
+
+def test_gekuendigtes_modul_erzeugt_keine_codes_mehr() -> None:
+    """Nach der Kündigung entstehen keine Türcodes mehr — auch für schon
+    verbundene Geräte.
+
+    DAS WAR DIE LÜCKE: das Modul-Gate saß nur in `verbindung_starten`, also
+    einmalig beim Anmelden beim Hersteller. Wer danach kündigte, bekam für
+    seine bereits verbundenen Schlösser unbefristet weiter Codes — Leistung
+    ohne Abo (Wurzel 5, fail-open). Geprüft wird deshalb der Zustand NACH dem
+    Verbinden, nicht der Weg dorthin.
+    """
+    db = FakeDb()
+    buchung_id, _ = _grunddaten(db, kann_widerrufen=True)
+    # Der Betrieb kündigt: das Entitlement steht auf inaktiv, Verbindung und
+    # Gerät bleiben bestehen (Seam weiß davon nichts).
+    db.rows["tenant_module_entitlement"][0]["active"] = False
+
+    # Kein Fehler nach außen: eine Buchung ohne nutzbares Schloss ist ein
+    # normaler Zustand (die meisten Objekte haben keines). Entscheidend ist,
+    # dass KEIN Zugang entsteht — sonst wäre der Code erzeugt und die
+    # Leistung erbracht.
+    assert _service(db).zugang_planen(_TENANT, buchung_id) is None
+    assert not db.rows.get("seam_zugang")
+
+
+def test_fremde_marke_bekommt_keine_codes() -> None:
+    """Ein Gerät eines NICHT gebuchten Herstellers bleibt außen vor.
+
+    Je Anbieter ein Modul (0577): wer nur igloohome gebucht hat, darf für ein
+    verbundenes Nuki-Schloss keine Codes erzeugen. Sonst genügte ein gebuchtes
+    Billigmodul, um alle Marken freizuschalten.
+    """
+    db = FakeDb()
+    buchung_id, _ = _grunddaten(db, kann_widerrufen=True)
+    db.rows["seam_connection"][0]["provider"] = "nuki"
+
+    assert _service(db).zugang_planen(_TENANT, buchung_id) is None
+    assert not db.rows.get("seam_zugang")
+
+    # Gegenprobe: mit gebuchtem Nuki-Modul entsteht der Zugang sehr wohl —
+    # das Gate sperrt die fehlende Buchung, nicht die Marke an sich.
+    db.rows["tenant_module_entitlement"][0]["module_key"] = "schloss_nuki"
+    assert _service(db).zugang_planen(_TENANT, buchung_id) is not None

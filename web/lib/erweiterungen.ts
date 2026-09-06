@@ -17,6 +17,12 @@
 import { formatCurrency } from "@/lib/currency";
 import type { ModuleKey, ModulePrice } from "@/lib/subscriptions";
 import { hilfeUrl } from "@/lib/marketing-url";
+import {
+  SCHLOSS_ANBIETER,
+  anbieterLogo,
+  anbieterModulKey,
+  type SchlossAnbieter,
+} from "@/lib/schloss-anbieter";
 
 export type Erweiterung = {
   /** URL-Segment unter /erweiterungen (sprechend, nicht der Modul-Schlüssel). */
@@ -26,6 +32,9 @@ export type Erweiterung = {
   name: string;
   untertitel: string;
   icon: string;
+  /** Pfad eines Marken-SVGs. Gesetzt bei Schloss-Anbietern; fehlt die Datei,
+   *  zeigt die Kachel den Namen (die Komponente prüft das per `onError`). */
+  logo?: string | null;
   kategorie: string;
   /** In welchen Ländern buchbar (Lodgify-Meta-Zeile „Regionen"). */
   verfuegbarkeit: string;
@@ -130,7 +139,124 @@ const DYNAMISCHE_PREISE: Erweiterung = {
   ],
 };
 
-export const ERWEITERUNGEN: readonly Erweiterung[] = [DYNAMISCHE_PREISE];
+/** Aus einem Schloss-Anbieter eine Erweiterung machen (0577).
+ *
+ *  GENERIERT statt 32-mal getippt: die Texte unterscheiden sich nur im
+ *  Markennamen und in zwei Sätzen zur Technik. 32 handgeschriebene Blöcke
+ *  wären 32 Stellen, an denen beim nächsten Umbau einer vergessen wird — und
+ *  die Marken-Kennung müsste dreimal stimmen (Katalog, Modul, Logo).
+ *
+ *  Was je Anbieter WIRKLICH verschieden ist, steht in `schloss-anbieter.ts`:
+ *  der Kurztext und ob die Codes ohne Netz entstehen. Genau diese zwei Dinge
+ *  entscheiden, was der Betrieb wissen muss.
+ */
+function ausAnbieter(a: SchlossAnbieter): Erweiterung {
+  const offlineHinweis = a.offline
+    ? "Die Codes entstehen rechnerisch und brauchen keine Verbindung zum " +
+      "Schloss — dafür lassen sie sich nach der Ausgabe nicht mehr vorzeitig " +
+      "entziehen. Bei einer Stornierung gilt der Code bis zum Ende seines " +
+      "Zeitraums weiter; das steht dann auch so an der Buchung."
+    : "Codes lassen sich jederzeit zurückziehen, solange das Schloss " +
+      "erreichbar ist. Bei einer Stornierung verliert der Gast den Zugang.";
+
+  return {
+    slug: a.slug,
+    moduleKey: anbieterModulKey(a.kennung) as Erweiterung["moduleKey"],
+    name: a.name,
+    untertitel: a.kurz,
+    icon: a.art === "keybox" ? "ph:key" : "ph:lock-key",
+    logo: anbieterLogo(a.kennung),
+    kategorie:
+      a.art === "acs"
+        ? "Zutritt · Gebäudesystem"
+        : a.art === "keybox"
+          ? "Zutritt · Schlüsselübergabe"
+          : "Zutritt · Türschloss",
+    verfuegbarkeit: "Alle Länder",
+    flaeche: { href: "/channels/schloesser", label: "Zu den Schlössern" },
+    ueber: [
+      `Jede Buchung bekommt einen eigenen Türcode für Ihre ${a.name}-Geräte — ` +
+        "gültig von der Anreise bis zur Abreise, mit einem Puffer, den Sie je " +
+        "Objekt festlegen. Der Gast erhält ihn über Ihre Nachricht; Sie sehen " +
+        "ihn an der Buchung.",
+      offlineHinweis,
+      "Sie verbinden Ihr eigenes " +
+        a.name +
+        "-Konto. Die Anmeldung läuft beim Hersteller selbst — Zugangsdaten " +
+        "werden bei myNextDays nicht eingegeben und nicht gespeichert.",
+    ],
+    soFunktioniert: [
+      "Der Code entsteht mit der Buchung und geht 72 Stunden vor der Anreise " +
+        "an das Schloss. So bleibt Zeit für einen zweiten Versuch, falls das " +
+        "Gerät gerade nicht erreichbar ist.",
+      "Jedes Schloss gehört zu einer Einheit (die Tür dieser Einheit) oder zu " +
+        "einem Gebäude (Gemeinschaftstür, etwa der Hauseingang).",
+      "Ein Gast bekommt EINEN Code für alle Türen, die er braucht.",
+      "Verschiebt sich die Buchung, zieht der Zeitraum mit. Wird sie " +
+        "storniert, wird der Zugang zurückgezogen — soweit das Gerät es " +
+        "zulässt.",
+      "Der Code steht als Platzhalter in Ihren Nachrichtenvorlagen und im " +
+        "Gastportal, mit denselben Freigaberegeln wie ein fest hinterlegter " +
+        "Code (erst ab Anreise, erst nach Zahlung).",
+    ],
+    einrichtung: [
+      "Auf „Aktivieren“ klicken — das Modul wird Ihrem laufenden Abo " +
+        "zugeordnet.",
+      `Unter „Channel Manager → Schlösser“ Ihr ${a.name}-Konto verbinden. ` +
+        "Die Anmeldung öffnet sich beim Hersteller.",
+      "Jedes Schloss seiner Einheit oder seinem Gebäude zuordnen. Ab dann " +
+        "bekommt jede neue Buchung ihren Code automatisch.",
+    ],
+    hinweis:
+      "Abgerechnet wird monatlich über Ihre hinterlegte Zahlungsmethode, " +
+      "solange das Modul aktiv ist. Beim Kündigen endet der Zugang zum " +
+      "Monatsende; bereits erzeugte Codes bleiben bis zu ihrem Ablauf gültig. " +
+      "Die Geräte und ein etwaiges Abo beim Hersteller bleiben Ihre Sache — " +
+      "myNextDays ist nicht Vertragspartner von " +
+      a.name +
+      ". Ein laufendes myNextDays-Abo ist Voraussetzung.",
+    vorteile: [
+      {
+        icon: "lucide:key-round",
+        titel: "Kein Schlüssel mehr übergeben",
+        text:
+          "Der Gast bekommt seinen Code vor der Anreise. Keine " +
+          "Schlüsselübergabe, keine Absprache zur Ankunftszeit.",
+      },
+      {
+        icon: "lucide:clock",
+        titel: "Automatisch mit der Buchung",
+        text:
+          "Der Code entsteht, verschiebt sich und endet mit der Buchung — " +
+          "ohne dass Sie daran denken müssen.",
+      },
+      {
+        icon: "lucide:shield-check",
+        titel: "Ehrlich über die Grenzen",
+        text: a.offline
+          ? "Wo ein Code nicht vorzeitig entziehbar ist, sagt myNextDays das " +
+            "an der Buchung — statt eine Sicherheit zu behaupten, die es " +
+            "nicht gibt."
+          : "Storniert der Gast, ist sein Code weg. Sie sehen an der " +
+            "Buchung, ob das Schloss die Änderung bestätigt hat.",
+      },
+    ],
+    links: [
+      {
+        href: hilfeUrl("konto-abo/abonnement-tarif"),
+        text: "Abonnement, Tarif und Zusatzmodule",
+      },
+    ],
+  };
+}
+
+export const SCHLOSS_ERWEITERUNGEN: readonly Erweiterung[] =
+  SCHLOSS_ANBIETER.map(ausAnbieter);
+
+export const ERWEITERUNGEN: readonly Erweiterung[] = [
+  DYNAMISCHE_PREISE,
+  ...SCHLOSS_ERWEITERUNGEN,
+];
 
 export function erweiterungFuerSlug(slug: string): Erweiterung | null {
   return ERWEITERUNGEN.find((e) => e.slug === slug) ?? null;
