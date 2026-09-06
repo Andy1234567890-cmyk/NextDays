@@ -73,7 +73,25 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1g
+          # 3g, nicht 1g (06.09.2026). Mit 1g wurde der Container vom Kernel
+          # abgeschossen — `docker inspect` meldete `OOMKilled=true` bei 783 MB
+          # von 1 GB und 140 % CPU. Nach aussen sah das aus wie ein Fehler der
+          # Anwendung: die Kanalseite meldete „Kanalkatalog nicht abrufbar
+          # (AirBNB): Fehler 502", waehrend die api selbst jeden Abruf mit 200
+          # protokollierte. Sie wurde mitten in der Antwort getoetet, und nur der
+          # Proxy sah davon etwas.
+          #
+          # Die Zahl ist gemessen, nicht geraten: derselbe `environment`-Block
+          # oben faehrt 4 Worker und beziffert sie mit ~0,6 GB je Instanz, also
+          # ~2,4 GB Bedarf — das Limit lag darunter. Der Server hat 15 GB, davon
+          # 7 GB verfuegbar; 3g deckt den dokumentierten Bedarf samt Spitze und
+          # laesst ueber 4 GB frei.
+          #
+          # Der eigentliche Missstand bleibt daneben bestehen: die Kanalseite
+          # feuert bis zu sieben identische `/AirBNB/detail`-Abrufe binnen zwei
+          # Sekunden, jeder mit vier Channex-Calls. Ein hoeheres Limit macht das
+          # ertraeglich, nicht richtig.
+          memory: 3g
 
 # coolify + default = Coolify-verwaltete App-Netze. supabase-internal = das
 # stabile externe Netz zum DB-Stack (kong/redis/auth/rest per Name). external +
