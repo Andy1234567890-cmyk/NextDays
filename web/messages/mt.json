@@ -10306,7 +10306,8 @@
       "breiteFuellen": "Imla l-wisa'",
       "umgeben": "Imqassam bil-marġni",
       "verteilenWaagerecht": "Qassam orizzontalment",
-      "verteilenSenkrecht": "Qassam vertikalment"
+      "verteilenSenkrecht": "Qassam vertikalment",
+      "innen": "Spazju intern"
     },
     "cms": {
       "spalten": "Kolonni",
@@ -10637,7 +10638,11 @@
           "waagerecht": "Orizzontali — linja waħda, wisa' skont il-kontenut",
           "senkrecht": "Vertikali — żomm il-wisa', għoli skont il-kontenut",
           "fest": "Fiss — iż-żewġ dimensjonijiet għall-pixels imkejla"
-        }
+        },
+        "spanX": "Kolonni",
+        "spanY": "Ringieli",
+        "spanEins": "Waħda",
+        "spanWert": "{n, plural, one {Wieħed} two {# Oqsma} few {# Oqsma} many {# Oqsma} other {# Oqsma}}"
       },
       "link": {
         "titel": "Link",

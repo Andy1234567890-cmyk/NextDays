@@ -10306,7 +10306,8 @@
       "breiteFuellen": "Aizpildīt platumu",
       "umgeben": "Izlīdzināt ar rezervi",
       "verteilenWaagerecht": "Izlīdzināt horizontāli",
-      "verteilenSenkrecht": "Izlīdzināt vertikāli"
+      "verteilenSenkrecht": "Izlīdzināt vertikāli",
+      "innen": "Iekšējā rezerve"
     },
     "cms": {
       "spalten": "Kolonnas",
@@ -10637,7 +10638,11 @@
           "waagerecht": "Horizontāli — viena rinda, platums atbilstoši saturam",
           "senkrecht": "Vertikāli — saglabāt platumu, augstums atbilstoši saturam",
           "fest": "Fiksēts — abi izmēri atbilstoši izmērītajiem pikseļiem"
-        }
+        },
+        "spanX": "Kolonnas",
+        "spanY": "Rindas",
+        "spanEins": "Viens",
+        "spanWert": "{n, plural, one {Viens} other {# Lauki}}"
       },
       "link": {
         "titel": "Saite",

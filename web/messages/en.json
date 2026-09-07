@@ -10327,7 +10327,8 @@
       "breiteFuellen": "Fill width",
       "umgeben": "Distributed with margin",
       "verteilenWaagerecht": "Distribute horizontally",
-      "verteilenSenkrecht": "Distribute vertically"
+      "verteilenSenkrecht": "Distribute vertically",
+      "innen": "Inner padding"
     },
     "cms": {
       "spalten": "Columns",
@@ -10639,12 +10640,12 @@
         "titel": "Size",
         "breite": "Width",
         "hoehe": "Height",
-        "min_breite": "Min. width",
-        "max_breite": "Max. width",
-        "min_hoehe": "Min. height",
-        "max_hoehe": "Max. height",
-        "seitenverhaeltnis": "Aspect ratio",
-        "ketteHinweis": "Lock measured ratio",
+        "min_breite": "Min. Width",
+        "max_breite": "Max. Width",
+        "min_hoehe": "Min. Height",
+        "max_hoehe": "Max. Height",
+        "seitenverhaeltnis": "Aspect Ratio",
+        "ketteHinweis": "Lock Measured Ratio",
         "spalte": "Column",
         "wachsen": "Grow",
         "modus": {
@@ -10658,7 +10659,11 @@
           "waagerecht": "Horizontal — one line, width to content",
           "senkrecht": "Vertical — keep width, height to content",
           "fest": "Fixed — both dimensions to measured pixels"
-        }
+        },
+        "spanX": "Columns",
+        "spanY": "Rows",
+        "spanEins": "A",
+        "spanWert": "{n, plural, one {One} other {# Fields}}"
       },
       "link": {
         "titel": "Link",

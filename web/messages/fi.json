@@ -10306,7 +10306,8 @@
       "breiteFuellen": "Täytä leveys",
       "umgeben": "Jaettu marginaalilla",
       "verteilenWaagerecht": "Tasaa vaakasuunnassa",
-      "verteilenSenkrecht": "Tasaa pystysuunnassa"
+      "verteilenSenkrecht": "Tasaa pystysuunnassa",
+      "innen": "Sisäetäisyys"
     },
     "cms": {
       "spalten": "Sarakkeet",
@@ -10637,7 +10638,11 @@
           "waagerecht": "Vaakasuora – yksi rivi, leveys sisällön mukaan",
           "senkrecht": "Pystysuora – säilytä leveys, korkeus sisällön mukaan",
           "fest": "Kiinteä – molemmat mitat mitattujen pikselien mukaan"
-        }
+        },
+        "spanX": "Sarakkeet",
+        "spanY": "Rivit",
+        "spanEins": "Yksi",
+        "spanWert": "{n, plural, one {Yksi} other {# Kentät}}"
       },
       "link": {
         "titel": "Linkki",

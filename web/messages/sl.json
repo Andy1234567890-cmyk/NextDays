@@ -10306,7 +10306,8 @@
       "breiteFuellen": "Izpolni širino",
       "umgeben": "Porazdeljeno z robom",
       "verteilenWaagerecht": "Porazdeli vodoravno",
-      "verteilenSenkrecht": "Porazdeli navpično"
+      "verteilenSenkrecht": "Porazdeli navpično",
+      "innen": "Notranji odmik"
     },
     "cms": {
       "spalten": "Stolpci",
@@ -10625,7 +10626,7 @@
         "seitenverhaeltnis": "Razmerje stranic",
         "ketteHinweis": "Ohrani izmerjeno razmerje",
         "spalte": "Stolpec",
-        "wachsen": "Rast",
+        "wachsen": "Povečaj",
         "modus": {
           "fest": "Fiksno",
           "relativ": "Relativno",
@@ -10637,7 +10638,11 @@
           "waagerecht": "Vodoravno — ena vrstica, širina po vsebini",
           "senkrecht": "Navpično — ohrani širino, višina po vsebini",
           "fest": "Fiksno — obe dimenziji na izmerjene slikovne pike"
-        }
+        },
+        "spanX": "Stolpci",
+        "spanY": "Vrstice",
+        "spanEins": "Ena",
+        "spanWert": "{n, plural, one {Ena} two {# Polja} few {# Polja} other {# Polja}}"
       },
       "link": {
         "titel": "Povezava",

@@ -10306,7 +10306,8 @@
       "breiteFuellen": "Kitöltés szélességre",
       "umgeben": "Margóval elosztva",
       "verteilenWaagerecht": "Vízszintes elosztás",
-      "verteilenSenkrecht": "Függőleges elosztás"
+      "verteilenSenkrecht": "Függőleges elosztás",
+      "innen": "Belső távolság"
     },
     "cms": {
       "spalten": "Oszlopok",
@@ -10637,7 +10638,11 @@
           "waagerecht": "Vízszintes – egy sor, szélesség a tartalomhoz igazítva",
           "senkrecht": "Függőleges – szélesség tartása, magasság a tartalomhoz igazítva",
           "fest": "Rögzített – mindkét méret a mért pixelhez igazítva"
-        }
+        },
+        "spanX": "Oszlopok",
+        "spanY": "Sorok",
+        "spanEins": "Egy",
+        "spanWert": "{n, plural, one {Egy} other {# Mezők}}"
       },
       "link": {
         "titel": "Link",

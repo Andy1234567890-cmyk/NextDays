@@ -10306,7 +10306,8 @@
       "breiteFuellen": "Wypełnij szerokość",
       "umgeben": "Rozłożone z marginesami",
       "verteilenWaagerecht": "Rozłóż w poziomie",
-      "verteilenSenkrecht": "Rozłóż w pionie"
+      "verteilenSenkrecht": "Rozłóż w pionie",
+      "innen": "Odstęp wewnętrzny"
     },
     "cms": {
       "spalten": "Kolumny",
@@ -10622,7 +10623,7 @@
         "max_breite": "Maks. szerokość",
         "min_hoehe": "Min. wysokość",
         "max_hoehe": "Maks. wysokość",
-        "seitenverhaeltnis": "Proporcje",
+        "seitenverhaeltnis": "Współczynnik proporcji",
         "ketteHinweis": "Zachowaj zmierzone proporcje",
         "spalte": "Kolumna",
         "wachsen": "Rozwiń",
@@ -10637,7 +10638,11 @@
           "waagerecht": "Poziomo — jeden wiersz, szerokość dopasowana do zawartości",
           "senkrecht": "Pionowo — zachowaj szerokość, wysokość dopasowana do zawartości",
           "fest": "Stałe — oba wymiary w pikselach"
-        }
+        },
+        "spanX": "Kolumny",
+        "spanY": "Wiersze",
+        "spanEins": "Jeden",
+        "spanWert": "{n, plural, one {Jeden} few {# Pola} many {# Pola} other {# Pola}}"
       },
       "link": {
         "titel": "Link",

@@ -10327,7 +10327,8 @@
       "breiteFuellen": "Breite füllen",
       "umgeben": "Mit Rand verteilt",
       "verteilenWaagerecht": "Waagerecht verteilen",
-      "verteilenSenkrecht": "Senkrecht verteilen"
+      "verteilenSenkrecht": "Senkrecht verteilen",
+      "innen": "Innenabstand"
     },
     "cms": {
       "filter": "Filter",

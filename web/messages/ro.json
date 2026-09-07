@@ -10306,7 +10306,8 @@
       "breiteFuellen": "Umpleți lățimea",
       "umgeben": "Distribuit cu margini",
       "verteilenWaagerecht": "Distribuiți orizontal",
-      "verteilenSenkrecht": "Distribuiți vertical"
+      "verteilenSenkrecht": "Distribuiți vertical",
+      "innen": "Distanță interioară"
     },
     "cms": {
       "spalten": "Coloane",
@@ -10637,7 +10638,11 @@
           "waagerecht": "Orizontal — un rând, lățime în funcție de conținut",
           "senkrecht": "Vertical — menține lățimea, înălțime în funcție de conținut",
           "fest": "Fix — ambele dimensiuni la pixelii măsurați"
-        }
+        },
+        "spanX": "Coloane",
+        "spanY": "Rânduri",
+        "spanEins": "Unul",
+        "spanWert": "{n, plural, one {Unu} few {# Câmpuri} other {# Câmpuri}}"
       },
       "link": {
         "titel": "Link",

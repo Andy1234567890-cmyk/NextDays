@@ -10306,7 +10306,8 @@
       "breiteFuellen": "Ispuni širinu",
       "umgeben": "Raspodijeljeno s marginom",
       "verteilenWaagerecht": "Raspodijeli vodoravno",
-      "verteilenSenkrecht": "Raspodijeli okomito"
+      "verteilenSenkrecht": "Raspodijeli okomito",
+      "innen": "Unutarnji razmak"
     },
     "cms": {
       "spalten": "Stupci",
@@ -10637,7 +10638,11 @@
           "waagerecht": "Vodoravno — jedan redak, širina prema sadržaju",
           "senkrecht": "Okomito — zadrži širinu, visina prema sadržaju",
           "fest": "Fiksno — obje dimenzije na izmjerene piksele"
-        }
+        },
+        "spanX": "Stupci",
+        "spanY": "Redovi",
+        "spanEins": "Jedan",
+        "spanWert": "{n, plural, one {Jedna} few {# Polja} other {# Polja}}"
       },
       "link": {
         "titel": "Poveznica",

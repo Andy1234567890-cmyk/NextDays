@@ -10306,7 +10306,8 @@
       "breiteFuellen": "Fyll bredd",
       "umgeben": "Fördela med marginal",
       "verteilenWaagerecht": "Fördela horisontellt",
-      "verteilenSenkrecht": "Fördela vertikalt"
+      "verteilenSenkrecht": "Fördela vertikalt",
+      "innen": "Inre marginal"
     },
     "cms": {
       "spalten": "Kolumner",
@@ -10637,7 +10638,11 @@
           "waagerecht": "Horisontell – en rad, bredd efter innehåll",
           "senkrecht": "Vertikal – behåll bredden, höjd efter innehåll",
           "fest": "Fast – båda måtten till uppmätta pixlar"
-        }
+        },
+        "spanX": "Kolumner",
+        "spanY": "Rader",
+        "spanEins": "En",
+        "spanWert": "{n, plural, one {En} other {# Fält}}"
       },
       "link": {
         "titel": "Länk",

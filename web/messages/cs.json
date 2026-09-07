@@ -10306,7 +10306,8 @@
       "breiteFuellen": "Vyplnit šířku",
       "umgeben": "Rozděleno s okrajem",
       "verteilenWaagerecht": "Distribuovat vodorovně",
-      "verteilenSenkrecht": "Distribuovat svisle"
+      "verteilenSenkrecht": "Distribuovat svisle",
+      "innen": "Vnitřní vzdálenost"
     },
     "cms": {
       "spalten": "Sloupce",
@@ -10637,7 +10638,11 @@
           "waagerecht": "Vodorovně – jeden řádek, šířka dle obsahu",
           "senkrecht": "Svisle – zachovat šířku, výška dle obsahu",
           "fest": "Pevně – oba rozměry na naměřené pixely"
-        }
+        },
+        "spanX": "Sloupce",
+        "spanY": "Řádky",
+        "spanEins": "Jedna",
+        "spanWert": "{n, plural, one {Jedna} few {# Pole} many {# Pole} other {# Pole}}"
       },
       "link": {
         "titel": "Odkaz",

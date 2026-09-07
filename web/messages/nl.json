@@ -10306,7 +10306,8 @@
       "breiteFuellen": "Opvullen",
       "umgeben": "Verdeeld met marge",
       "verteilenWaagerecht": "Horizontaal verdelen",
-      "verteilenSenkrecht": "Verticaal verdelen"
+      "verteilenSenkrecht": "Verticaal verdelen",
+      "innen": "Binnenafstand"
     },
     "cms": {
       "spalten": "Kolommen",
@@ -10623,7 +10624,7 @@
         "min_hoehe": "Min. hoogte",
         "max_hoehe": "Max. hoogte",
         "seitenverhaeltnis": "Beeldverhouding",
-        "ketteHinweis": "Vastgelegde verhouding behouden",
+        "ketteHinweis": "Gemeten verhouding behouden",
         "spalte": "Kolom",
         "wachsen": "Groeien",
         "modus": {
@@ -10637,7 +10638,11 @@
           "waagerecht": "Horizontaal — één regel, breedte naar inhoud",
           "senkrecht": "Verticaal — breedte behouden, hoogte naar inhoud",
           "fest": "Vast — beide afmetingen op de gemeten pixels"
-        }
+        },
+        "spanX": "Kolommen",
+        "spanY": "Rijen",
+        "spanEins": "Een",
+        "spanWert": "{n, plural, one {Een} other {# Velden}}"
       },
       "link": {
         "titel": "Link",

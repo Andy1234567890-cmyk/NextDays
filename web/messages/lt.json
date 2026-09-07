@@ -10306,7 +10306,8 @@
       "breiteFuellen": "Užpildyti plotį",
       "umgeben": "Paskirstyta su parašte",
       "verteilenWaagerecht": "Paskirstyti horizontaliai",
-      "verteilenSenkrecht": "Paskirstyti vertikaliai"
+      "verteilenSenkrecht": "Paskirstyti vertikaliai",
+      "innen": "Vidaus atstumas"
     },
     "cms": {
       "spalten": "Stulpeliai",
@@ -10637,7 +10638,11 @@
           "waagerecht": "Horizontalus – viena eilutė, plotis pagal turinį",
           "senkrecht": "Vertikalus – išlaikyti plotį, aukštis pagal turinį",
           "fest": "Fiksuotas – abu matmenys pagal nustatytus pikselius"
-        }
+        },
+        "spanX": "Stulpeliai",
+        "spanY": "Eilutės",
+        "spanEins": "Vienas",
+        "spanWert": "{n, plural, one {Vienas} few {# Laukai} other {# Laukai}}"
       },
       "link": {
         "titel": "Nuoroda",

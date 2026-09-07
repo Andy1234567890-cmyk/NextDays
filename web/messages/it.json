@@ -10306,7 +10306,8 @@
       "breiteFuellen": "Riempi larghezza",
       "umgeben": "Distribuito con margini",
       "verteilenWaagerecht": "Distribuisci orizzontalmente",
-      "verteilenSenkrecht": "Distribuisci verticalmente"
+      "verteilenSenkrecht": "Distribuisci verticalmente",
+      "innen": "Margine interno"
     },
     "cms": {
       "spalten": "Colonne",
@@ -10637,7 +10638,11 @@
           "waagerecht": "Orizzontale — una riga, larghezza in base al contenuto",
           "senkrecht": "Verticale — larghezza fissa, altezza in base al contenuto",
           "fest": "Fisso — entrambe le dimensioni in pixel misurati"
-        }
+        },
+        "spanX": "Colonne",
+        "spanY": "Righe",
+        "spanEins": "Un",
+        "spanWert": "{n, plural, one {Un} many {# Campi} other {# Campi}}"
       },
       "link": {
         "titel": "Link",

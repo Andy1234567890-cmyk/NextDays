@@ -10306,7 +10306,8 @@
       "breiteFuellen": "Ancho completo",
       "umgeben": "Distribuido con margen",
       "verteilenWaagerecht": "Distribuir horizontalmente",
-      "verteilenSenkrecht": "Distribuir verticalmente"
+      "verteilenSenkrecht": "Distribuir verticalmente",
+      "innen": "Margen interior"
     },
     "cms": {
       "spalten": "Columnas",
@@ -10637,7 +10638,11 @@
           "waagerecht": "Horizontal — una línea, ancho según el contenido",
           "senkrecht": "Vertical — mantener el ancho, alto según el contenido",
           "fest": "Fijo — ambas dimensiones a los píxeles medidos"
-        }
+        },
+        "spanX": "Columnas",
+        "spanY": "Filas",
+        "spanEins": "Uno",
+        "spanWert": "{n, plural, one {Un} other {# Campos}}"
       },
       "link": {
         "titel": "Enlace",

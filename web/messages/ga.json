@@ -10306,7 +10306,8 @@
       "breiteFuellen": "Líon an leithead",
       "umgeben": "Scaipthe le corrlach",
       "verteilenWaagerecht": "Dáil go cothrománach",
-      "verteilenSenkrecht": "Dáil go hingearach"
+      "verteilenSenkrecht": "Dáil go hingearach",
+      "innen": "Spás istigh"
     },
     "cms": {
       "spalten": "Colúin",
@@ -10618,12 +10619,12 @@
         "titel": "Méid",
         "breite": "Leithead",
         "hoehe": "Airde",
-        "min_breite": "Leithead Íosta",
-        "max_breite": "Leithead Uasta",
-        "min_hoehe": "Airde Íosta",
-        "max_hoehe": "Airde Uasta",
+        "min_breite": "Leithead íosta",
+        "max_breite": "Leithead uasta",
+        "min_hoehe": "Airde íosta",
+        "max_hoehe": "Airde uasta",
         "seitenverhaeltnis": "Cóimheas gné",
-        "ketteHinweis": "Coinnigh cóimheas tomhaiste",
+        "ketteHinweis": "Coinnigh an cóimheas tomhaiste",
         "spalte": "Colún",
         "wachsen": "Fás",
         "modus": {
@@ -10637,7 +10638,11 @@
           "waagerecht": "Cothrománach — líne amháin, leithead de réir an ábhair",
           "senkrecht": "Ingearach — coinnigh an leithead, airde de réir an ábhair",
           "fest": "Seasta — an dá thomhas de réir na bpicteilíní tomhaiste"
-        }
+        },
+        "spanX": "Colúin",
+        "spanY": "Sraitheanna",
+        "spanEins": "Aon",
+        "spanWert": "{n, plural, one {Aon} two {# Réimsí} few {# Réimsí} many {# Réimsí} other {# Réimsí}}"
       },
       "link": {
         "titel": "Nasc",

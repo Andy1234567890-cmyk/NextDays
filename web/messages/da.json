@@ -10306,7 +10306,8 @@
       "breiteFuellen": "Fyld bredde",
       "umgeben": "Fordelt med margen",
       "verteilenWaagerecht": "Fordel vandret",
-      "verteilenSenkrecht": "Fordel lodret"
+      "verteilenSenkrecht": "Fordel lodret",
+      "innen": "Indvendig afstand"
     },
     "cms": {
       "spalten": "Kolonner",
@@ -10623,7 +10624,7 @@
         "min_hoehe": "Min. højde",
         "max_hoehe": "Max. højde",
         "seitenverhaeltnis": "Billedformat",
-        "ketteHinweis": "Behold målt forhold",
+        "ketteHinweis": "Lås målt forhold",
         "spalte": "Kolonne",
         "wachsen": "Vokse",
         "modus": {
@@ -10637,7 +10638,11 @@
           "waagerecht": "Vandret – én linje, bredde efter indhold",
           "senkrecht": "Lodret – behold bredden, højde efter indhold",
           "fest": "Fast – begge mål til de målte pixels"
-        }
+        },
+        "spanX": "Kolonner",
+        "spanY": "Rækker",
+        "spanEins": "En",
+        "spanWert": "{n, plural, one {En} other {# Felter}}"
       },
       "link": {
         "titel": "Link",

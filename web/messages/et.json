@@ -10306,7 +10306,8 @@
       "breiteFuellen": "Täida laius",
       "umgeben": "Jaotatud veerisega",
       "verteilenWaagerecht": "Jaota horisontaalselt",
-      "verteilenSenkrecht": "Jaota vertikaalselt"
+      "verteilenSenkrecht": "Jaota vertikaalselt",
+      "innen": "Sisemine vahe"
     },
     "cms": {
       "spalten": "Veerud",
@@ -10637,7 +10638,11 @@
           "waagerecht": "Horisontaalne – üks rida, laius vastavalt sisule",
           "senkrecht": "Vertikaalne – laius fikseeritud, kõrgus vastavalt sisule",
           "fest": "Fikseeritud – mõlemad mõõtmed mõõdetud pikslites"
-        }
+        },
+        "spanX": "Veerud",
+        "spanY": "Read",
+        "spanEins": "Üks",
+        "spanWert": "{n, plural, one {Üks} other {# Väljad}}"
       },
       "link": {
         "titel": "Link",
