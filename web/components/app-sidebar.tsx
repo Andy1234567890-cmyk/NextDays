@@ -616,6 +616,13 @@ export function AppSidebar({
     // sondern des Formats. Stünde es darunter, sähe genau der Nutzer, der den
     // Betrieb führt, als Einziger den unbrauchbaren Punkt.
     if (!inLandVerfuegbar(item.key, country)) return false;
+    // Modul-Gate (0572) ebenfalls VOR dem Admin-Kurzschluss: ob ein Betrieb
+    // das Personal-Modul hat, ist keine Frage der Rechte, sondern der
+    // Freischaltung — der Server antwortet auf `/hr/*` mit 404, egal wer
+    // fragt. Stand es unter `role === "admin"`, sah GENAU der Betriebsinhaber
+    // als Einziger einen Menuepunkt, dessen Aufruf ins Leere laeuft (live am
+    // 07.09.2026: „Hotel Seeblick Warnemuende" mit `enabled_modules: []`).
+    if (modulFehlt(item.href, module)) return false;
     if (role === "admin") return true;
     if (item.req && !grantSet.has(item.req)) return false;
     // Eigentümer (§4.2) und Mitarbeiter/Dienstleister (§4.3) haben je ein
@@ -633,8 +640,6 @@ export function AppSidebar({
     if (role === "shift_lead" && !SHIFT_LEAD_ALLOWED_HREFS.includes(item.href)) {
       return false;
     }
-    // Nicht freigeschaltetes Modul (0572): der Punkt erscheint gar nicht.
-    if (modulFehlt(item.href, module)) return false;
     return true;
   };
 
