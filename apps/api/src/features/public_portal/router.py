@@ -13,6 +13,7 @@ from src.core.security import AuthContext
 from src.features.auth.dependencies import require_permission
 from src.features.auth.granular_permissions import Permission
 from src.features.auth.permissions import Capability
+from src.features.owner_statements.schemas import StatementResponse
 
 from .aufgaben import TaskError
 from .dependencies import (
@@ -35,10 +36,12 @@ from .schemas import (
     MeterReadingList,
     PortalCalendarResponse,
     PortalEarningsResponse,
+    PortalFinanzUebersicht,
     PortalImageList,
     PortalPhotoAlbum,
     PortalPropertyDetail,
     PortalPropertyList,
+    PortalSeasonList,
     PortalStatementList,
     PortalStatisticsResponse,
     SliceHealth,
@@ -106,6 +109,24 @@ def calendar(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.get("/seasons", response_model=PortalSeasonList)
+def seasons(
+    service: PublicPortalServiceDep,
+    ctx: Annotated[AuthContext, Depends(_VIEW)],
+    property_id: Annotated[str, Query()],
+) -> PortalSeasonList:
+    """Saisons eines eigenen Objekts (Name, Farbe, Zeiträume) für den Kalender.
+
+    Dasselbe Recht wie `/calendar` (VIEW_CALENDAR): wer den Kalender sehen darf,
+    darf auch wissen, wie seine Tage gefärbt sind. Den Objekt-Scope erzwingt
+    der Service (404 bei fremdem Objekt), nicht diese Route.
+    """
+    try:
+        return service.seasons(ctx, property_id)
+    except PortalError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.get("/earnings", response_model=PortalEarningsResponse)
 def earnings(
     service: PublicPortalServiceDep,
@@ -126,6 +147,47 @@ def my_statements(
 ) -> PortalStatementList:
     try:
         return service.my_statements(ctx)
+    except PortalError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/statements/{statement_id}", response_model=StatementResponse)
+def statement_detail(
+    statement_id: str,
+    service: PublicPortalServiceDep,
+    ctx: Annotated[AuthContext, Depends(_REPORTS)],
+) -> StatementResponse:
+    """Der vollständige Beleg EINER eigenen, finalisierten Abrechnung — für
+    die Beleg-Ansicht der Eigentümer-App. Scope und Maske kommen aus dem
+    Abrechnungs-Slice (siehe Service)."""
+    try:
+        return service.statement_detail(ctx, statement_id)
+    except PortalError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/finanzen", response_model=PortalFinanzUebersicht)
+def finanzen(  # noqa: PLR0913 — Query-Parameter der Finanzübersicht
+    service: PublicPortalServiceDep,
+    ctx: Annotated[AuthContext, Depends(_VIEW)],
+    date_from: Annotated[date, Query()],
+    date_to: Annotated[date, Query()],
+    property_id: Annotated[str | None, Query()] = None,
+    event: Annotated[str, Query(pattern="^(calendar|check_in)$")] = "calendar",
+    compare: Annotated[bool, Query()] = False,
+) -> PortalFinanzUebersicht:
+    """Zeitreihe der Startseite: Netto-Auszahlung, Nächte, Auslastung je Tag
+    oder Monat, optional mit dem Vorjahreszeitraum. Hängt wie der Kalender an
+    VIEW_CALENDAR; das Geld unterdrückt der Service ohne Finanzfreigabe."""
+    try:
+        return service.finanzen(
+            ctx,
+            date_from,
+            date_to,
+            property_id=property_id,
+            event=event,
+            compare=compare,
+        )
     except PortalError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

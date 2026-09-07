@@ -14,6 +14,8 @@ Verknüpfung zu einem Owner-Login-User spiegelt sich ins Portal-Scoping
 # wie in payments/service.py und calendar/service.py.
 from __future__ import annotations
 
+from typing import Any
+
 from postgrest.exceptions import APIError
 from supabase import Client
 
@@ -35,12 +37,18 @@ from .schemas import (
     OwnerListItem,
     OwnerListResponse,
     OwnerMiteigentuemer,
+    OwnerObjektKurz,
     OwnerPropertyAssign,
     OwnerPropertyLink,
     OwnerResponse,
     OwnerUpdate,
     SliceHealth,
 )
+
+# Blockgroesse fuer `in_`-Abfragen: PostgREST setzt den Filter in die URL, und
+# eine zu lange URL beantwortet der Server mit „414 URI too long" statt mit
+# Daten. Derselbe Wert wie im Auswertungs-Slice.
+_IN_BLOCK = 100
 
 log = get_logger("nextdays.owners")
 
@@ -258,16 +266,45 @@ class OwnersService:
         # erfundene 0), müssen aber sichtbar bleiben — sonst zeigte die Karte
         # eine saubere Spanne und verschwiege, dass ein Teil ungeklärt ist.
         offen_by_owner: dict[str, int] = {oid: 0 for oid in owner_ids}
+        objekte_by_owner: dict[str, list[OwnerObjektKurz]] = {}
         if owner_ids:
             links = (
                 self._db.table("owner_properties")
-                .select("owner_id, commission_override_pct")
+                .select("owner_id, property_id, commission_override_pct")
                 .in_("owner_id", owner_ids)
                 .execute()
             ).data or []
+            # Titel und Titelbild der zugeordneten Objekte — EIN Abruf für alle
+            # Eigentümer, kein N+1. `photos` ist der abgeleitete Spiegel mit dem
+            # Cover an erster Stelle (derselbe, den Kalender und Marktplatz
+            # lesen); fehlt er, bleibt das Bild `None` statt eines Ersatzbilds.
+            objekt_ids = sorted({str(link["property_id"]) for link in links})
+            objekt_info: dict[str, dict[str, Any]] = {}
+            for i in range(0, len(objekt_ids), _IN_BLOCK):
+                for zeile in (
+                    self._db.table("properties")
+                    .select("id, title, photos")
+                    .eq("tenant_id", tenant_id)
+                    .in_("id", objekt_ids[i : i + _IN_BLOCK])
+                    .execute()
+                ).data or []:
+                    fotos = zeile.get("photos") or []
+                    objekt_info[str(zeile["id"])] = {
+                        "title": str(zeile.get("title") or ""),
+                        "photo_url": str(fotos[0]) if fotos else None,
+                    }
             for link in links:
                 oid = str(link["owner_id"])
                 counts[oid] = counts.get(oid, 0) + 1
+                info = objekt_info.get(str(link["property_id"]))
+                if info is not None:
+                    objekte_by_owner.setdefault(oid, []).append(
+                        OwnerObjektKurz(
+                            property_id=str(link["property_id"]),
+                            title=info["title"],
+                            photo_url=info["photo_url"],
+                        )
+                    )
                 override = link.get("commission_override_pct")
                 eff = (
                     float(override)
@@ -293,6 +330,11 @@ class OwnersService:
                     else None
                 ),
                 commission_missing_count=offen_by_owner.get(str(r["id"]), 0),
+                # Nach Titel sortiert: die Reihenfolge einer Menge aus der DB
+                # ist sonst zufällig und die Karte sähe nach jedem Laden anders aus.
+                objekte=sorted(
+                    objekte_by_owner.get(str(r["id"]), []), key=lambda o: o.title
+                ),
             )
             for r in rows
         ]

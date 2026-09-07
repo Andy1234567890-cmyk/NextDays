@@ -110,6 +110,36 @@ class PortalCalendarResponse(BaseModel):
     days: list[PortalCalendarDay]
 
 
+class PortalSeasonAssignment(BaseModel):
+    """Ein Zeitraum, in dem eine Saison gilt (inklusiv, wie die DB speichert)."""
+
+    start_date: date_
+    end_date: date_
+
+
+class PortalSeason(BaseModel):
+    """Eine benannte Saison des Objekts — NUR Name, Farbe und Zeiträume.
+
+    Der Kalender des Eigentümers färbt damit die Tage (dieselbe Quelle wie
+    die Agentur-Ansicht: `property_seasons`). Was hier bewusst FEHLT: `mode`
+    und `amount`, also die Preisregel der Saison. Sie ist Vertriebswissen des
+    Betriebs, nicht Auskunft für den Eigentümer — er sieht seine Auszahlung,
+    nicht, wie der Betrieb seine Gastpreise bildet (§4.2).
+    """
+
+    id: str
+    name: str
+    # Hex #RRGGBB, von der Agentur gesetzt (CHECK in 0138). Ein Datenwert, den
+    # die Oberfläche unverändert als Farbe verwendet.
+    color: str
+    assignments: list[PortalSeasonAssignment] = Field(default_factory=list)
+
+
+class PortalSeasonList(BaseModel):
+    items: list[PortalSeason] = Field(default_factory=list)
+    total: int = 0
+
+
 class PortalEarningsItem(BaseModel):
     property_id: str
     title: str
@@ -186,6 +216,10 @@ class BlockRequestCreate(BaseModel):
     # Liste je Antrag beliebig viel Arbeit erzeugen (Wurzel 8). Ein Betrieb hat
     # eine Handvoll planmäßiger Regeln; live sind es vier.
     bestellte_leistungen: list[str] = Field(default_factory=list, max_length=50)
+    # Personenzahl des Aufenthalts (0606). None = nicht angegeben — die
+    # Verwaltung braucht sie für Wäsche und Reinigungsumfang; das Web-Portal
+    # führt das Feld noch nicht, darum optional.
+    guests: int | None = Field(default=None, ge=1, le=50)
 
     @model_validator(mode="after")
     def _check_order(self) -> "BlockRequestCreate":
@@ -223,6 +257,8 @@ class BlockRequestItem(BaseModel):
     end_date: date_
     status: str
     reason: str | None = None
+    # Personenzahl (0606); None = nicht angegeben.
+    guests: int | None = None
     # Entscheidung der Agentur — der Eigentümer sieht, WANN und mit welcher
     # Anmerkung entschieden wurde (nicht, WER es war: die interne Zuständigkeit
     # geht ihn nichts an).
@@ -533,3 +569,66 @@ class PortalStatisticsResponse(BaseModel):
     # Monatsreihe für die Diagramme, aufsteigend und lückenlos. Nächte und
     # Anreisen summieren sich exakt zu den Werten oben (je ein Test).
     months: list[PortalStatisticsMonth] = Field(default_factory=list)
+
+
+# --- Finanzübersicht der Startseite (07.09.2026, Vorlage Hostaway Owner App) --
+
+
+class PortalFinanzPunkt(BaseModel):
+    """Ein Punkt der Zeitreihe — ein Tag oder ein Monat.
+
+    `payout` ist die NETTO-Auszahlung des Eigentümers, dieselbe Zahl wie im
+    Kalender (`owner_payout_per_night`) und in der Abrechnung — kein
+    Gastpreis, kein Bruttoumsatz (§4.2). None heißt „nicht ausweisbar" oder
+    „keine Finanzfreigabe" (0389), nie 0 (Wurzel 4).
+    """
+
+    # YYYY-MM-DD bei Tages-, YYYY-MM bei Monatsauflösung.
+    label: str
+    payout: float | None = None
+    # Bezahlte Nächte (Vermietung) und Eigennutzung getrennt: die Auslastung
+    # zählt beide, die Auszahlung nur die erste.
+    nights: int = 0
+    owner_stay_nights: int = 0
+    capacity_unit_nights: int = 0
+    occupancy_rate: float | None = None
+    # Anreisen im Punkt (nur Vermietung).
+    reservations: int = 0
+
+
+class PortalFinanzReihe(BaseModel):
+    """Eine vollständige Reihe samt Summen — aktueller oder Vergleichszeitraum."""
+
+    date_from: date_
+    date_to: date_
+    points: list[PortalFinanzPunkt] = Field(default_factory=list)
+    payout_total: float | None = None
+    # WARUM kein Betrag: erster maschinenlesbarer Grund (provision, betrag …).
+    # Fehlt er bei `payout_total=None`, war es die fehlende Finanzfreigabe.
+    payout_unknown_reason: str | None = None
+    nights: int = 0
+    owner_stay_nights: int = 0
+    capacity_unit_nights: int = 0
+    occupancy_rate: float | None = None
+    reservations: int = 0
+    # Ø Netto-Auszahlung je bezahlter Nacht — None ohne Nächte oder Betrag.
+    avg_payout_per_night: float | None = None
+
+
+class PortalFinanzUebersicht(BaseModel):
+    """Antwort von `GET /public-portal/finanzen`.
+
+    `event` sagt, WANN eine Buchung zählt: `calendar` verteilt sie auf ihre
+    Nächte (eine Buchung über den Monatswechsel liegt in beiden Monaten),
+    `check_in` bucht sie ganz auf den Anreisetag. Beides sind übliche Sichten
+    (Vorlage: „Event: Calendar / Check-in").
+    """
+
+    granularity: str  # day | month
+    event: str  # calendar | check_in
+    # Anzeigewährung des Betriebs; None ohne Finanzfreigabe.
+    currency: str | None = None
+    property_ids: list[str] = Field(default_factory=list)
+    units_total: int = 0
+    current: PortalFinanzReihe
+    comparison: PortalFinanzReihe | None = None

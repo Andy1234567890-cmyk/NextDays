@@ -519,6 +519,88 @@ ALPENZEIT = Betrieb(
             foto_suche="loft apartment city alps view",
         ),
         Objekt(
+            schluessel="panoramasuite_soelden",
+            titel="Panoramasuite Sölden",
+            property_type="appartement",
+            category_slug="wohnung", subtype_slug="ferienwohnung", listing_type="entire_place",
+            strasse="Gletscherstraße", hausnummer="42", plz="6450", stadt="Sölden", land="AT",
+            lat=46.9668, lng=11.0075,
+            max_gaeste=4, grundpreis=225.0, wochenend_aufschlag=48.0, min_aufenthalt=4,
+            beschreibung=(
+                "Suite im obersten Stock mit Fensterfront nach Süden auf die "
+                "Ötztaler Gletscher. Infrarotkabine, Skiraum mit Schuhwärmer, "
+                "Talstation der Gaislachkoglbahn in fünf Gehminuten."
+            ),
+            ausstattung=["sauna", "balcony", "parking", "wifi", "ski_storage"],
+            foto_suche="alpine apartment panorama glacier view",
+        ),
+        Objekt(
+            schluessel="bauernhof_alpbach",
+            titel="Bauernhof Alpbachtal",
+            property_type="ferienhaus",
+            category_slug="haus", subtype_slug="cottage", listing_type="entire_place",
+            strasse="Inneralpbach", hausnummer="56", plz="6236", stadt="Alpbach", land="AT",
+            lat=47.3989, lng=11.9436,
+            max_gaeste=10, grundpreis=285.0, wochenend_aufschlag=52.0, min_aufenthalt=5,
+            beschreibung=(
+                "Ganzer Hof aus dem 18. Jahrhundert für große Gruppen, mit Stube, "
+                "Kachelofen und Wiese bis zum Waldrand. Die Tiere des Nachbarhofs "
+                "dürfen gefüttert werden — für Familien mit Kindern gedacht."
+            ),
+            ausstattung=["fireplace", "garden", "parking", "wifi", "barbecue",
+                         "washing_machine"],
+            foto_suche="alpine farmhouse tyrol wooden",
+        ),
+        Objekt(
+            schluessel="seeblick_hallstatt",
+            titel="Seeblick Hallstatt",
+            property_type="appartement",
+            category_slug="wohnung", subtype_slug="ferienwohnung", listing_type="entire_place",
+            strasse="Seestraße", hausnummer="9", plz="4830", stadt="Hallstatt", land="AT",
+            lat=47.5622, lng=13.6493,
+            max_gaeste=3, grundpreis=178.0, wochenend_aufschlag=35.0, min_aufenthalt=2,
+            beschreibung=(
+                "Wohnung direkt am Hallstätter See, Balkon über dem Wasser. "
+                "Der Ort ist ab dem späten Nachmittag wieder still — dann gehört "
+                "der Blick auf den Dachstein einem allein."
+            ),
+            ausstattung=["balcony", "wifi", "washing_machine", "non_smoking_rooms"],
+            foto_suche="lakeside apartment hallstatt austria",
+        ),
+        Objekt(
+            schluessel="skihuette_ischgl",
+            titel="Skihütte Ischgl",
+            property_type="ferienhaus",
+            category_slug="haus", subtype_slug="huette", listing_type="entire_place",
+            strasse="Paznauntal", hausnummer="88", plz="6561", stadt="Ischgl", land="AT",
+            lat=47.0114, lng=10.2917,
+            max_gaeste=6, grundpreis=310.0, wochenend_aufschlag=65.0, min_aufenthalt=7,
+            beschreibung=(
+                "Hütte direkt an der Piste, ski-in/ski-out. Große Wohnküche, "
+                "Sauna im Untergeschoss, Skidepot mit eigenem Eingang. In der "
+                "Wintersaison nur Samstag bis Samstag."
+            ),
+            ausstattung=["sauna", "fireplace", "ski_storage", "parking", "wifi",
+                         "hot_tub"],
+            foto_suche="ski chalet slope snow wooden",
+        ),
+        Objekt(
+            schluessel="weingut_wachau",
+            titel="Winzerhaus Wachau",
+            property_type="ferienhaus",
+            category_slug="haus", subtype_slug="cottage", listing_type="entire_place",
+            strasse="Kellergasse", hausnummer="14", plz="3601", stadt="Dürnstein", land="AT",
+            lat=48.3956, lng=15.5194,
+            max_gaeste=5, grundpreis=165.0, wochenend_aufschlag=28.0, min_aufenthalt=2,
+            beschreibung=(
+                "Altes Winzerhaus zwischen den Terrassen über der Donau. Innenhof "
+                "mit Nussbaum, Gewölbekeller als Weinstube. Die Ruine Dürnstein "
+                "liegt einen halbstündigen Aufstieg entfernt."
+            ),
+            ausstattung=["garden", "parking", "wifi", "barbecue", "fireplace"],
+            foto_suche="vineyard house wachau danube",
+        ),
+        Objekt(
             schluessel="gartenhaus_zell",
             titel="Gartenhaus Zell am See",
             property_type="ferienhaus",

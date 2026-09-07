@@ -371,6 +371,12 @@ class MeResponse(BaseModel):
     # weil die eigentliche Quelle (`tenant_billing_profile`) zu diesem
     # Zeitpunkt naturgemaess noch leer ist.
     tenant_name: str | None = None
+    # Firmenlogo des Betriebs (`tenant_billing_profile.company_logo_url`),
+    # hochgeladen unter Konto → Profil. Steht in einer ANDEREN Tabelle als der
+    # Rest dieser Antwort, wird also eigens nachgeladen. None = keins
+    # hinterlegt → die Oberflaeche zeigt ihr Ersatzzeichen, statt ein Bild zu
+    # raten (Wurzel 4).
+    tenant_logo_url: str | None = None
     # Standardsprache des Betriebs (0335), zweite Stufe der Mail-Sprachkette.
     # None = nicht erfasst (→ Englisch), kein erfundener Default (Wurzel 4).
     default_language: str | None = None

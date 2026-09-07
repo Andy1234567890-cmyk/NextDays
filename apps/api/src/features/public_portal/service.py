@@ -22,6 +22,7 @@ hochgesetzten Grenze in `pyproject.toml` (die würde für ALLE Module gelten).
 # pylint: disable=too-many-lines
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
@@ -56,6 +57,11 @@ from src.features.owner_statements.payloads import (
     csv_muster_je_objekt,
     payloads_laden,
 )
+from src.features.owner_statements.schemas import StatementResponse
+from src.features.owner_statements.service import (
+    OwnerStatementsService,
+    StatementError,
+)
 from src.features.tasks.regel_uebersetzung import (
     lesersprache,
     namen_in_sprache,
@@ -76,6 +82,9 @@ from .schemas import (
     PortalCalendarResponse,
     PortalEarningsItem,
     PortalEarningsResponse,
+    PortalFinanzPunkt,
+    PortalFinanzReihe,
+    PortalFinanzUebersicht,
     PortalImage,
     PortalImageList,
     PortalNightBooking,
@@ -83,6 +92,9 @@ from .schemas import (
     PortalProperty,
     PortalPropertyDetail,
     PortalPropertyList,
+    PortalSeason,
+    PortalSeasonAssignment,
+    PortalSeasonList,
     PortalStatementItem,
     PortalStatementList,
     PortalStatisticsResponse,
@@ -310,6 +322,53 @@ class PublicPortalService:
     def require_own_property(self, ctx: AuthContext, property_id: str) -> None:
         """404, wenn das Objekt nicht zu diesem Portal-Nutzer gehört."""
         self._require_own(ctx, property_id)
+
+    # --- Saisons -------------------------------------------------------------
+
+    def seasons(self, ctx: AuthContext, property_id: str) -> PortalSeasonList:
+        """Saisons EINES eigenen Objekts — Name, Farbe, Zeiträume.
+
+        WARUM EIN EIGENER ENDPUNKT (07.09.2026): Der Web-Kalender des Portals
+        holt die Saisons über `/calendar/seasons`, einen Endpunkt des
+        PMS-Slice. Die Eigentümer-App spricht laut ihrer Regel AUSSCHLIESSLICH
+        `/public-portal/*` — ohne diesen Weg konnte sie die Tage nicht wie das
+        Web nach Saison färben. Derselbe Objekt-Scope wie jeder andere Lesepfad
+        hier (`_require_own`, fail-closed, Wurzel 3/9): ein fremdes Objekt ist
+        404, nicht leer.
+
+        Es wird NUR gelesen, was der Eigentümer sehen darf: `mode`/`amount`
+        (die Preisregel) bleiben weg — siehe `PortalSeason`.
+        """
+        self._require_own(ctx, property_id)
+        saisons = (
+            self._db.table("property_seasons")
+            .select("id, name, color")
+            .eq("property_id", property_id)
+            .order("created_at")
+            .execute()
+        ).data or []
+        zeitraeume = (
+            self._db.table("property_season_assignments")
+            .select("season_id, start_date, end_date")
+            .eq("property_id", property_id)
+            .order("start_date")
+            .execute()
+        ).data or []
+        je_saison: dict[str, list[PortalSeasonAssignment]] = {}
+        for z in zeitraeume:
+            je_saison.setdefault(str(z["season_id"]), []).append(
+                PortalSeasonAssignment(start_date=z["start_date"], end_date=z["end_date"])
+            )
+        items = [
+            PortalSeason(
+                id=str(r["id"]),
+                name=str(r["name"]),
+                color=str(r["color"]),
+                assignments=je_saison.get(str(r["id"]), []),
+            )
+            for r in saisons
+        ]
+        return PortalSeasonList(items=items, total=len(items))
 
     def _darf_berichte(self, ctx: AuthContext) -> bool:
         """Finanzfreigabe dieses Zugangs (0389) — Regel in `familie.py`."""
@@ -1505,30 +1564,15 @@ class PublicPortalService:
             a["nights"] += self._nights(r.get("check_in"), r.get("check_out"))
             a["reservations"] += 1
             try:
-                regeln = vertraege_je_objekt.get(pid, {}).get(str(r["id"]))
-                if regeln is not None:
-                    a["payout"] += self._auszahlung_einer_buchung(
-                        r,
-                        regeln=regeln,
-                        addon_total=addons.get(str(r["id"])),
-                        kontext=kontext_je_objekt[pid],
-                        portal_saetze=portal_je_objekt.get(pid, {}),
-                    ).netto
-                else:
-                    a["payout"] += owner_payout(
-                        buchungs_payout(
-                            r.get("total_amount"),
-                            r.get("channel_fee"),
-                            addons.get(str(r["id"])),
-                        ),
-                        _provision_pflicht(
-                            provisionen,
-                            pid,
-                            hat_eigentuemer=hat_eigentuemer_je_objekt.get(
-                                pid, True
-                            ),
-                        ),
-                    )
+                a["payout"] += self._netto_einer_buchung(
+                    r,
+                    regeln=vertraege_je_objekt.get(pid, {}).get(str(r["id"])),
+                    provisionen=provisionen,
+                    addon_total=addons.get(str(r["id"])),
+                    kontext=kontext_je_objekt[pid],
+                    portal_saetze=portal_je_objekt.get(pid, {}),
+                    hat_eigentuemer=hat_eigentuemer_je_objekt.get(pid, True),
+                )
             except PayoutUnbekannt as exc:
                 # Kein Ersatzwert: `total_amount or 0` hätte eine Buchung ohne
                 # Betrag stillschweigend als 0-€-Buchung verbucht und die
@@ -1571,6 +1615,352 @@ class PublicPortalService:
             ),
             currency=currency,
         )
+
+    def _netto_einer_buchung(  # noqa: PLR0913 — eine Buchung mit ihren Bezugsdaten
+        self,
+        r: dict,
+        *,
+        regeln: Vertragsregeln | None,
+        provisionen: dict[str, Decimal] | None,
+        addon_total: Decimal | None,
+        kontext: _GebuehrenKontext,
+        portal_saetze: dict[str, dict[str, Any]],
+        hat_eigentuemer: bool,
+    ) -> Decimal:
+        """Netto-Auszahlung EINER Buchung als Ganzes — Vertrag vor Altweg.
+
+        Die Einnahmen-Übersicht und die Finanzübersicht der App (Ereignis
+        „Anreise") brauchen dieselbe Zahl; bis 07.09.2026 stand die
+        Verzweigung Vertrag/Altspalten nur in `earnings` inline. Eine zweite
+        Kopie für die Startseite wäre die dritte Zahl für dasselbe Geld.
+        Wirft `PayoutUnbekannt`, wenn eine Grundlage fehlt (Wurzel 4).
+        """
+        if regeln is not None:
+            return self._auszahlung_einer_buchung(
+                r,
+                regeln=regeln,
+                addon_total=addon_total,
+                kontext=kontext,
+                portal_saetze=portal_saetze,
+            ).netto
+        return owner_payout(
+            buchungs_payout(
+                r.get("total_amount"), r.get("channel_fee"), addon_total
+            ),
+            _provision_pflicht(
+                provisionen, str(r["property_id"]), hat_eigentuemer=hat_eigentuemer
+            ),
+        )
+
+    # --- Finanzübersicht der Startseite (07.09.2026) --------------------------
+
+    def finanzen(  # noqa: PLR0913 — vier Sichten auf dieselbe Reihe
+        self,
+        ctx: AuthContext,
+        date_from: date,
+        date_to: date,
+        *,
+        property_id: str | None = None,
+        event: str = "calendar",
+        compare: bool = False,
+    ) -> PortalFinanzUebersicht:
+        """Zeitreihe für die Startseite der Eigentümer-App.
+
+        Dieselbe Geldzahl wie Kalender und Abrechnung — die NETTO-Auszahlung
+        des Eigentümers, gerechnet über `_payout_je_nacht` (Ereignis
+        `calendar`) bzw. `_netto_einer_buchung` (Ereignis `check_in`). Kein
+        Gastpreis, kein Bruttoumsatz (§4.2).
+
+        FINANZFREIGABE (0389): wie im Kalender wird der Endpunkt für
+        Familienzugänge ohne Freigabe nicht gesperrt, sondern nur das Geld
+        unterdrückt — Auslastung und Nächte bleiben sichtbar, `payout` ist
+        überall None und `currency` fehlt.
+
+        Wurzel 8: der Zeitraum ist gedeckelt (731 Tage), sonst ließe sich mit
+        einem Jahrzehnt Spanne beliebig viel Rechenzeit anfordern.
+        """
+        tenant_id, _ = self._require(ctx)
+        if date_to < date_from:
+            raise PortalError("Enddatum vor Startdatum.", status_code=400)
+        if (date_to - date_from).days + 1 > FINANZ_MAX_TAGE:
+            raise PortalError(
+                f"Zeitraum zu groß (max. {FINANZ_MAX_TAGE} Tage).", status_code=422
+            )
+        if event not in ("calendar", "check_in"):
+            raise PortalError("Unbekanntes Ereignis.", status_code=422)
+        if property_id:
+            self._require_own(ctx, property_id)
+            ids = [property_id]
+        else:
+            ids = self._owned_property_ids(ctx)
+        zeigt_payout = self._darf_berichte(ctx)
+        mask = load_guest_mask(self._db, ctx.user_id)
+        einheiten = self._einheiten_je_objekt(ids)
+        units_total = sum(einheiten.values())
+        granularity = (
+            "day" if (date_to - date_from).days + 1 <= FINANZ_TAGESGRENZE else "month"
+        )
+        aktuell = self._finanz_reihe(
+            ctx,
+            ids,
+            date_from,
+            date_to,
+            event=event,
+            granularity=granularity,
+            mask=mask,
+            zeigt_payout=zeigt_payout,
+            units_total=units_total,
+        )
+        vergleich = None
+        if compare:
+            vergleich = self._finanz_reihe(
+                ctx,
+                ids,
+                _vorjahr(date_from),
+                _vorjahr(date_to),
+                event=event,
+                granularity=granularity,
+                mask=mask,
+                zeigt_payout=zeigt_payout,
+                units_total=units_total,
+            )
+        return PortalFinanzUebersicht(
+            granularity=granularity,
+            event=event,
+            currency=self._tenant_currency(tenant_id) if zeigt_payout else None,
+            property_ids=ids,
+            units_total=units_total,
+            current=aktuell,
+            comparison=vergleich,
+        )
+
+    def _finanz_reihe(  # noqa: PLR0913, PLR0914 — eine Reihe braucht ihre Bezüge
+        self,
+        ctx: AuthContext,
+        ids: list[str],
+        von: date,
+        bis: date,
+        *,
+        event: str,
+        granularity: str,
+        mask: GuestMask,
+        zeigt_payout: bool,
+        units_total: int,
+    ) -> PortalFinanzReihe:
+        """Eine Reihe über alle Objekte in `ids` — Punkte plus Summen."""
+        tenant_id, _ = self._require(ctx)
+        fenster = _finanz_fenster(von, bis, granularity)
+        # Je Fenster: Auszahlung (Decimal), Nächte, Eigennutzung, Anreisen und
+        # ob der Betrag bestimmbar ist. Sobald EINE Belegung im Fenster keinen
+        # Betrag hat, gibt es für dieses Fenster keine Summe (Wurzel 4).
+        acc: list[dict[str, Any]] = [
+            {
+                "payout": Decimal("0"),
+                "bestimmbar": True,
+                "grund": None,
+                "nights": 0,
+                "eigen": 0,
+                "anreisen": 0,
+                "tage": (f_bis - f_von).days + 1,
+            }
+            for _, f_von, f_bis in fenster
+        ]
+
+        def index(tag: date) -> int | None:
+            for i, (_, f_von, f_bis) in enumerate(fenster):
+                if f_von <= tag <= f_bis:
+                    return i
+            return None
+
+        for pid in ids:
+            if event == "calendar":
+                self._kalender_reihe(ctx, pid, von, bis, mask, acc, index)
+            else:
+                self._anreise_reihe(tenant_id, pid, von, bis, acc, index)
+
+        punkte: list[PortalFinanzPunkt] = []
+        gesamt = Decimal("0")
+        gesamt_bestimmbar = True
+        gesamt_grund: str | None = None
+        for (label, _, _), slot in zip(fenster, acc, strict=True):
+            kapazitaet = units_total * slot["tage"]
+            belegt = slot["nights"] + slot["eigen"]
+            quote = round(belegt / kapazitaet * 100, 2) if kapazitaet > 0 else None
+            if not slot["bestimmbar"]:
+                gesamt_bestimmbar = False
+                gesamt_grund = gesamt_grund or slot["grund"]
+            else:
+                gesamt += slot["payout"]
+            punkte.append(
+                PortalFinanzPunkt(
+                    label=label,
+                    payout=(
+                        _money(slot["payout"])
+                        if zeigt_payout and slot["bestimmbar"]
+                        else None
+                    ),
+                    nights=slot["nights"],
+                    owner_stay_nights=slot["eigen"],
+                    capacity_unit_nights=kapazitaet,
+                    occupancy_rate=quote,
+                    reservations=slot["anreisen"],
+                )
+            )
+        naechte = sum(p.nights for p in punkte)
+        eigen = sum(p.owner_stay_nights for p in punkte)
+        kapazitaet_gesamt = sum(p.capacity_unit_nights for p in punkte)
+        payout_total = _money(gesamt) if zeigt_payout and gesamt_bestimmbar else None
+        return PortalFinanzReihe(
+            date_from=von,
+            date_to=bis,
+            points=punkte,
+            payout_total=payout_total,
+            payout_unknown_reason=(
+                gesamt_grund if zeigt_payout and not gesamt_bestimmbar else None
+            ),
+            nights=naechte,
+            owner_stay_nights=eigen,
+            capacity_unit_nights=kapazitaet_gesamt,
+            occupancy_rate=(
+                round((naechte + eigen) / kapazitaet_gesamt * 100, 2)
+                if kapazitaet_gesamt > 0
+                else None
+            ),
+            reservations=sum(p.reservations for p in punkte),
+            avg_payout_per_night=(
+                _money(Decimal(str(payout_total)) / naechte)
+                if payout_total is not None and naechte > 0
+                else None
+            ),
+        )
+
+    def _kalender_reihe(  # noqa: PLR0913 — Akkumulator + Zuordnung
+        self,
+        ctx: AuthContext,
+        pid: str,
+        von: date,
+        bis: date,
+        mask: GuestMask,
+        acc: list[dict[str, Any]],
+        index: Callable[[date], int | None],
+    ) -> None:
+        """Ereignis „Kalender": jede Buchung auf ihre Nächte im Fenster."""
+        tenant_id, _ = self._require(ctx)
+        # Ende exklusiv wie im Kalender: der Tag NACH `bis`.
+        nacht_info = self._payout_je_nacht(ctx, pid, von, bis + timedelta(days=1), mask)
+        for iso, info in nacht_info.items():
+            i = index(date.fromisoformat(iso))
+            if i is None:
+                continue
+            slot = acc[i]
+            for b in info.belegungen:
+                if b.eigennutzung:
+                    slot["eigen"] += 1
+                    continue
+                slot["nights"] += 1
+                if b.betrag is None:
+                    slot["bestimmbar"] = False
+                    slot["grund"] = slot["grund"] or b.grund
+                else:
+                    slot["payout"] += Decimal(str(b.betrag))
+        # Anreisen zählen getrennt: die Nacht-Map kennt den Anreisetag einer
+        # Buchung nicht, die vor dem Fenster begann.
+        for r in self._anreisen(tenant_id, pid, von, bis):
+            i = index(date.fromisoformat(str(r["check_in"])[:10]))
+            if i is not None and not r.get("is_owner_stay"):
+                acc[i]["anreisen"] += 1
+
+    def _anreisen(
+        self, tenant_id: str, property_id: str, von: date, bis: date
+    ) -> list[dict]:
+        """Aktive Reservierungen mit Anreise im Zeitraum — mit allen Spalten
+        der Netto-Rechnung, damit Ereignis „Anreise" dieselbe Kette fahren
+        kann wie die Einnahmen-Übersicht."""
+        return fetch_all_rows(
+            self._db.table("reservations")
+            .select(
+                "id, property_id, unit_id, check_in, check_out, total_amount, "
+                "channel_fee, currency, channel, source_channex_booking_id, "
+                "external_ref, ota_commission, payment_collect, pets, "
+                "is_owner_stay"
+            )
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .gte("check_in", von.isoformat())
+            .lte("check_in", bis.isoformat())
+            .in_("status", ["confirmed", "completed"])
+            .order("id")
+        )
+
+    def _anreise_reihe(  # noqa: PLR0913 — Akkumulator + Zuordnung
+        self,
+        tenant_id: str,
+        pid: str,
+        von: date,
+        bis: date,
+        acc: list[dict[str, Any]],
+        index: Callable[[date], int | None],
+    ) -> None:
+        """Ereignis „Anreise": jede Buchung ganz auf ihren Anreisetag."""
+        rows = self._anreisen(tenant_id, pid, von, bis)
+        if not rows:
+            return
+        bezahlt = [r for r in rows if not r.get("is_owner_stay")]
+        vertraege = self._vertrag_je_buchung(tenant_id, pid, bezahlt)
+        kontext = self._gebuehren_kontext(tenant_id, pid, bezahlt)
+        portal_saetze = self._portal_saetze_je_buchung(tenant_id, pid, bezahlt)
+        addons = self._addon_summen([str(r["id"]) for r in bezahlt])
+        provisionen = self._provision_map(tenant_id, pid)
+        hat_eigentuemer = self._owner_id_von_objekt(pid) is not None
+        for r in rows:
+            i = index(date.fromisoformat(str(r["check_in"])[:10]))
+            if i is None:
+                continue
+            naechte = self._nights(r.get("check_in"), r.get("check_out"))
+            slot = acc[i]
+            if r.get("is_owner_stay"):
+                slot["eigen"] += naechte
+                continue
+            slot["nights"] += naechte
+            slot["anreisen"] += 1
+            try:
+                slot["payout"] += self._netto_einer_buchung(
+                    r,
+                    regeln=vertraege.get(str(r["id"])),
+                    provisionen=provisionen,
+                    addon_total=addons.get(str(r["id"])),
+                    kontext=kontext,
+                    portal_saetze=portal_saetze,
+                    hat_eigentuemer=hat_eigentuemer,
+                )
+            except PayoutUnbekannt as exc:
+                slot["bestimmbar"] = False
+                slot["grund"] = slot["grund"] or exc.grund
+                log.info(
+                    "portal_finanzen_unbestimmt",
+                    reservation_id=str(r.get("id")),
+                    grund=exc.grund,
+                )
+
+    # --- Abrechnung im Detail (07.09.2026) -------------------------------------
+
+    def statement_detail(self, ctx: AuthContext, statement_id: str) -> StatementResponse:
+        """Eine finalisierte Abrechnung vollständig — für den Beleg in der App.
+
+        DELEGIERT an den Abrechnungs-Slice statt die Zeilen hier neu zu bauen:
+        `OwnerStatementsService.get` maskiert für die Rolle `owner` bereits
+        Gastpreis und Verwaltungs-Ertrag (§4.2), scopt auf die EIGENEN Belege
+        (404 für fremde) und verbirgt Entwürfe wie die Liste (Wurzel 9). Das
+        Web-Portal holt sein PDF über genau diesen Pfad; die App darf laut
+        ADR-0022 aber nur `/public-portal/*` sprechen — darum dieser Durchgang.
+        """
+        self._require_berichte(ctx)
+        try:
+            return OwnerStatementsService(service_client=self._db).get(
+                ctx, statement_id
+            )
+        except StatementError as exc:
+            raise PortalError(exc.message, status_code=exc.status_code) from exc
 
     # --- Statements (eigene) -------------------------------------------------
 
@@ -1683,6 +2073,8 @@ class PublicPortalService:
                     # Begründung des Eigentümers (0332) — ohne sie muss die
                     # Agentur raten, warum gesperrt werden soll.
                     "reason": req.reason,
+                    # Personenzahl des Aufenthalts (0606); None = nicht angegeben.
+                    "gaeste": req.guests,
                     # Der Eigentümer erklärt damit, den Vermarktungsvertrag
                     # beenden zu wollen (0377). Es ist SEINE Erklärung — die
                     # Agentur entscheidet beim Genehmigen, ob und zu welchem
@@ -2087,7 +2479,7 @@ class PublicPortalService:
             self._db.table("block_requests")
             .select(
                 "id, property_id, unit_id, start_date, end_date, status, "
-                "reason, decided_at, decision_note, created_at, "
+                "reason, gaeste, decided_at, decision_note, created_at, "
                 # Vertragskündigung (0377) — der Eigentümer sieht, dass sein
                 # Antrag als Kündigung geführt wird und zu welchem Datum.
                 "ist_kuendigung, als_kuendigung_gewertet, "
@@ -2189,6 +2581,47 @@ class PublicPortalService:
                 "Keine Währung für den Mandanten hinterlegt.", status_code=422
             )
         return currency
+
+
+# Finanzübersicht: Spanne gedeckelt (Wurzel 8); bis 92 Tage je Tag, darüber
+# je Monat — ein Jahr in Tagespunkten sagt auf einem Telefon nichts mehr.
+FINANZ_MAX_TAGE = 731
+FINANZ_TAGESGRENZE = 92
+
+
+def _finanz_fenster(
+    von: date, bis: date, granularity: str
+) -> list[tuple[str, date, date]]:
+    """Lückenlose, angeschnittene Fenster über [von, bis].
+
+    Tagesauflösung: je Tag ein Fenster („YYYY-MM-DD"). Monatsauflösung: wie
+    `statistik._monats_fenster` — Randmonate nur so lang, wie der Zeitraum
+    sie anschneidet, damit die Kapazität im Nenner stimmt.
+    """
+    fenster: list[tuple[str, date, date]] = []
+    cur = von
+    while cur <= bis:
+        if granularity == "day":
+            fenster.append((cur.isoformat(), cur, cur))
+            cur += timedelta(days=1)
+            continue
+        naechster = (
+            date(cur.year + 1, 1, 1)
+            if cur.month == 12
+            else date(cur.year, cur.month + 1, 1)
+        )
+        ende = min(naechster - timedelta(days=1), bis)
+        fenster.append((f"{cur.year:04d}-{cur.month:02d}", cur, ende))
+        cur = naechster
+    return fenster
+
+
+def _vorjahr(tag: date) -> date:
+    """Derselbe Kalendertag ein Jahr früher; der 29.02. wird zum 28.02."""
+    try:
+        return tag.replace(year=tag.year - 1)
+    except ValueError:
+        return tag.replace(year=tag.year - 1, day=28)
 
 
 def _pflicht_betrag(r: dict, spalte: str) -> Decimal:
@@ -2305,6 +2738,7 @@ def _block(
         else r["end_date"],
         status=r.get("status") or "pending",
         reason=r.get("reason"),
+        guests=int(r["gaeste"]) if r.get("gaeste") is not None else None,
         decided_at=str(r["decided_at"]) if r.get("decided_at") else None,
         decision_note=r.get("decision_note"),
         created_at=str(r["created_at"]) if r.get("created_at") else None,

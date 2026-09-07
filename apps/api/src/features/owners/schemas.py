@@ -317,12 +317,31 @@ class OwnerResponse(OwnerBase):
     email_bestaetigung_an: str | None = None
 
 
+class OwnerObjektKurz(BaseModel):
+    """Ein zugeordnetes Objekt, so weit die KARTE es braucht.
+
+    Bewusst nur drei Felder: die Eigentümer-Liste zeigt Miniaturen, kein
+    Objekt-Detail. Wer mehr braucht, öffnet das Objekt.
+    """
+
+    property_id: str
+    title: str
+    # Titelbild, sonst `None` — die Oberfläche zeigt dann einen neutralen
+    # Platzhalter. NIE ein Ersatzbild eines anderen Objekts (Wurzel 4).
+    photo_url: str | None = None
+
+
 class OwnerListItem(OwnerBase):
     """Listen-Eintrag: Stammdaten + Anzahl zugeordneter Objekte (ohne Detail)."""
 
     id: str
     tenant_id: str
     property_count: int = 0
+    # Die zugeordneten Objekte als Miniatur (Titel + Titelbild). Bis 07.09.2026
+    # stand auf der Karte nur „1 Objekt" — eine Zahl, die nicht sagt, WELCHES
+    # Haus gemeint ist. Bei einem Eigentümer mit einem einzigen Objekt ist das
+    # die eigentliche Information.
+    objekte: list[OwnerObjektKurz] = Field(default_factory=list)
     # Effektive Provisions-Spanne über die Objekte: je Objekt der Override, sonst
     # der Owner-Default. Bei Gleichheit zeigt die UI einen Wert, sonst eine Spanne.
     # None, wenn (noch) keine Objekte zugeordnet sind.

@@ -6,7 +6,31 @@ Summen, Rental activity (per reservation/listing) und Expenses & Extras.
 from datetime import date as date_
 from enum import StrEnum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+from src.features.reservations.schemas import ReservationStatus
+
+
+def _status_werte_pruefen(werte: list[str] | None) -> list[str] | None:
+    """Nur Werte des DB-Enums `reservation_status` durchlassen.
+
+    Ein fremder Wert („checked_in") ist bis Postgres eine harmlose Zeichen-
+    kette und wird dort zum 22P02 — beim LESEN der Abrechnung, als 500, für
+    jeden, der den Beleg öffnet (live 07.09.2026: Demo-Abrechnung mit
+    `checked_in`/`checked_out`, Beleg im Portal und in der App tot). Hier
+    stirbt er als 422 mit Klartext, bevor er gespeichert ist (Wurzel 5/8).
+    """
+    if werte is None:
+        return None
+    gueltig = {s.value for s in ReservationStatus}
+    fremd = [w for w in werte if w not in gueltig]
+    if fremd:
+        msg = (
+            f"Unbekannter Reservierungsstatus: {', '.join(fremd)}. "
+            f"Erlaubt: {', '.join(sorted(gueltig))}."
+        )
+        raise ValueError(msg)
+    return werte
 
 
 class StatementBasis(StrEnum):
@@ -475,6 +499,12 @@ class StatementGenerateRequest(BaseModel):
     basis: StatementBasis = StatementBasis.check_in
     reservation_statuses: list[str] = Field(default_factory=list)
     commission_pct: float | None = Field(default=None, ge=0, le=100)
+
+    @field_validator("reservation_statuses")
+    @classmethod
+    def _statuses(cls, v: list[str]) -> list[str]:
+        return _status_werte_pruefen(v) or []
+
     # 0603: Teilmenge der Objekte des Eigentümers. None oder leer = ALLE.
     # Der Service weist jede ID ab, die nicht diesem Eigentümer gehört (422,
     # Wurzel 3/9) — eine Abrechnung über ein fremdes Objekt wäre sonst eine
@@ -502,6 +532,12 @@ class StatementUpdate(BaseModel):
     reservation_statuses: list[str] | None = None
     period_from: date_ | None = None
     period_to: date_ | None = None
+
+    @field_validator("reservation_statuses")
+    @classmethod
+    def _statuses(cls, v: list[str] | None) -> list[str] | None:
+        return _status_werte_pruefen(v)
+
     # 0603: None = unverändert; LEERE Liste = zurück auf „alle Objekte" (in
     # der DB NULL). Eine leere Liste kann nicht „keine Objekte" heißen — der
     # CHECK verbietet das, und eine leere Abrechnung ergäbe keinen Sinn.

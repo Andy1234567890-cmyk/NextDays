@@ -921,7 +921,27 @@ class AuthService:
             default_language=tenant_meta.get("default_language"),
             country=tenant_meta.get("country"),
             tenant_name=tenant_meta.get("name"),
+            tenant_logo_url=self._tenant_logo_url(ctx.tenant_id),
         )
+
+    def _tenant_logo_url(self, tenant_id: str | None) -> str | None:
+        """Firmenlogo des Betriebs (Konto → Profil).
+
+        Eigener Abruf, weil das Logo nicht an `tenants` haengt, sondern am
+        Rechnungsprofil (`tenant_billing_profile.company_logo_url`). Fehlt die
+        Zeile oder ist das Feld leer, ist das der Normalfall eines Betriebs
+        ohne hochgeladenes Logo — None, kein Ersatzbild (Wurzel 4).
+        """
+        if not tenant_id:
+            return None
+        row = (
+            self._service.table("tenant_billing_profile")
+            .select("company_logo_url")
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        return (row[0].get("company_logo_url") or None) if row else None
 
     def _tenant_meta(self, tenant_id: str | None) -> dict:
         # Mandanten-Metadaten in EINEM Abruf (0090 accommodation_type + 0180

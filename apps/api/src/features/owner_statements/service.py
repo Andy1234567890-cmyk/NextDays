@@ -39,6 +39,7 @@ from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.core.supabase import fetch_all_rows
 from src.features.auth.guest_masking import GuestMask, load_guest_mask
+from src.features.reservations.schemas import ReservationStatus
 
 from .common import PayoutUnbekannt, effektive_provision_pct
 from .currencies import currency_for_country
@@ -111,6 +112,23 @@ _BELEG_EXT_MIME = {
     "png": "image/png",
     "webp": "image/webp",
 }
+
+
+def gueltige_status(statuses: list[str]) -> list[str]:
+    """Status-Filter auf die Werte des DB-Enums `reservation_status` kürzen.
+
+    Fremde Werte werden entfernt und geloggt, nicht stillschweigend
+    durchgereicht (22P02 → 500) und nicht stillschweigend verschluckt.
+    """
+    gueltig = {s.value for s in ReservationStatus}
+    fremd = [s for s in statuses if s not in gueltig]
+    if fremd:
+        log.warning(
+            "abrechnung_status_filter_fremdwert",
+            fremd=fremd,
+            hinweis="Wert nicht im Enum reservation_status — ignoriert",
+        )
+    return [s for s in statuses if s in gueltig]
 
 
 def _sniff_beleg_ext(content: bytes) -> str | None:
@@ -824,6 +842,12 @@ class OwnerStatementsService(ZeilenMixin):
             # Stabile Sortierung für die Pagination (id ist eindeutig).
             .order("id")
         )
+        # Nur Werte des DB-Enums an Postgres geben. Ein gespeicherter
+        # Fremdwert (Altbestand vor dem 422-Validator in `schemas.py`) würde
+        # sonst als 22P02 den GANZEN Beleg mit 500 abbrechen — für den Betrieb
+        # wie für den Eigentümer im Portal. Aussieben und LAUT loggen (Wurzel
+        # 5): der Beleg zeigt die gültigen Status, das Log den Datenfehler.
+        statuses = gueltige_status(statuses)
         if statuses:
             query = query.in_("status", statuses)
         # VOLLSTÄNDIG paginiert: das finalisierte Owner-Statement summiert

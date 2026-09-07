@@ -356,7 +356,7 @@ def _regeln(db: Supabase, tenant_id: str, admin_id: str) -> None:
 
 def _bereiche(db: Supabase, tenant_id: str) -> dict[str, str]:
     zeilen = [{
-        "id": demo_id(f"personal:bereich:{b.schluessel}"),
+        "id": pid(f"personal:bereich:{b.schluessel}"),
         "tenant_id": tenant_id,
         "name": b.name,
         "kurz": b.kurz,
@@ -369,7 +369,7 @@ def _bereiche(db: Supabase, tenant_id: str) -> dict[str, str]:
 
 def _vorlagen(db: Supabase, tenant_id: str, bereich_ids: dict[str, str]) -> dict[str, str]:
     zeilen = [{
-        "id": demo_id(f"personal:vorlage:{v.schluessel}"),
+        "id": pid(f"personal:vorlage:{v.schluessel}"),
         "tenant_id": tenant_id,
         "name": v.name,
         "kurz": v.kurz,
@@ -386,13 +386,13 @@ def _vorlagen(db: Supabase, tenant_id: str, bereich_ids: dict[str, str]) -> dict
 
 def _pausen_und_firma(db: Supabase, tenant_id: str) -> str:
     db.upsert("personal_pausenmodelle", [{
-        "id": demo_id(f"personal:pause:{ab}"),
+        "id": pid(f"personal:pause:{ab}"),
         "tenant_id": tenant_id,
         "arbeitsbereich_id": None,
         "ab_minuten": ab,
         "pause_minuten": dauer,
     } for ab, dauer in PAUSENMODELLE])
-    firma_id = demo_id("personal:firma:nordclean")
+    firma_id = pid("personal:firma:nordclean")
     db.upsert("personal_fremdfirmen", [{"id": firma_id, "tenant_id": tenant_id, **FIRMA}])
     return firma_id
 
@@ -408,7 +408,7 @@ def _bedarf_und_ziele(
     Autoplanung hätte nichts zu verteilen.
     """
     db.upsert("personal_produktivitaet", [{
-        "id": demo_id(f"personal:prod:{bereich}"),
+        "id": pid(f"personal:prod:{bereich}"),
         "tenant_id": tenant_id,
         "arbeitsbereich_id": bereich_ids[bereich],
         "basis": basis,
@@ -427,7 +427,7 @@ def _bedarf_und_ziele(
     for bereich, tage, von, bis, anzahl in BEDARF_VORLAGEN:
         for tag in tage:
             zeilen.append({
-                "id": demo_id(f"personal:bedarf:{bereich}:{tag}:{von}"),
+                "id": pid(f"personal:bedarf:{bereich}:{tag}:{von}"),
                 "tenant_id": tenant_id,
                 "arbeitsbereich_id": bereich_ids[bereich],
                 "wochentag": tag,
@@ -507,7 +507,7 @@ def _akte(db: Supabase, tenant_id: str, person: Person, user_id: str,
     eintritt = heute - timedelta(days=person.eintritt_vor_tagen)
     extern = person.beschaeftigungsart == "extern"
     db.upsert("personal_akten", [{
-        "id": demo_id(f"personal:akte:{person.schluessel}"),
+        "id": pid(f"personal:akte:{person.schluessel}"),
         "tenant_id": tenant_id,
         "user_id": user_id,
         "employee_number": f"{1000 + nummer}",
@@ -575,7 +575,7 @@ def _kartei(db: Supabase, tenant_id: str, person: Person, user_id: str,
 
     if not extern:
         db.upsert("personal_vertraege", [{
-            "id": demo_id(f"personal:vertrag:{schl}"),
+            "id": pid(f"personal:vertrag:{schl}"),
             "tenant_id": tenant_id,
             "user_id": user_id,
             "art": "arbeitsvertrag",
@@ -598,9 +598,9 @@ def _kartei(db: Supabase, tenant_id: str, person: Person, user_id: str,
         }])
     if person.eintritt_vor_tagen > 700:
         db.upsert("personal_vertrag_nachtraege", [{
-            "id": demo_id(f"personal:nachtrag:{schl}"),
+            "id": pid(f"personal:nachtrag:{schl}"),
             "tenant_id": tenant_id,
-            "vertrag_id": demo_id(f"personal:vertrag:{schl}"),
+            "vertrag_id": pid(f"personal:vertrag:{schl}"),
             "datum": (heute - timedelta(days=200)).isoformat(),
             "beschreibung": "Lohnerhöhung zum Jahreswechsel",
             "grund": "Tarifanpassung",
@@ -614,17 +614,17 @@ def _kartei(db: Supabase, tenant_id: str, person: Person, user_id: str,
 
     # Nachweise: Sprachen für alle, Zertifikate wo fachlich passend.
     nachweise = [{
-        "id": demo_id(f"personal:nachweis:{schl}:sprache-de"),
+        "id": pid(f"personal:nachweis:{schl}:sprache-de"),
         "tenant_id": tenant_id, "user_id": user_id, "art": "sprache",
         "titel": "Deutsch", "stufe": person.deutsch,
     }, {
-        "id": demo_id(f"personal:nachweis:{schl}:sprache-en"),
+        "id": pid(f"personal:nachweis:{schl}:sprache-en"),
         "tenant_id": tenant_id, "user_id": user_id, "art": "sprache",
         "titel": "Englisch", "stufe": wuerfel.choice(["b1", "b2", "c1"]),
     }]
     if "rezeption" in person.bereiche:
         nachweise.append({
-            "id": demo_id(f"personal:nachweis:{schl}:ausbildung"),
+            "id": pid(f"personal:nachweis:{schl}:ausbildung"),
             "tenant_id": tenant_id, "user_id": user_id, "art": "ausbildung",
             "titel": "Hotelfachfrau/-mann (IHK)", "stelle": "IHK zu Rostock",
             "stufe": "gut", "von": (eintritt - timedelta(days=1200)).isoformat(),
@@ -632,7 +632,7 @@ def _kartei(db: Supabase, tenant_id: str, person: Person, user_id: str,
         })
     if "haustechnik" in person.bereiche and person.stufe == "anleitend":
         nachweise.append({
-            "id": demo_id(f"personal:nachweis:{schl}:zert"),
+            "id": pid(f"personal:nachweis:{schl}:zert"),
             "tenant_id": tenant_id, "user_id": user_id, "art": "zertifikat",
             "titel": "Elektrofachkraft für festgelegte Tätigkeiten",
             "stelle": "TÜV Nord", "von": (heute - timedelta(days=400)).isoformat(),
@@ -644,7 +644,7 @@ def _kartei(db: Supabase, tenant_id: str, person: Person, user_id: str,
 
     # Schulungen: Brandschutz für alle, Hygiene für Küche/Housekeeping.
     schulungen = [{
-        "id": demo_id(f"personal:schulung:{schl}:brand"),
+        "id": pid(f"personal:schulung:{schl}:brand"),
         "tenant_id": tenant_id, "user_id": user_id,
         "titel": "Brandschutzunterweisung",
         "trainer": "Brandschutz Nord GbR",
@@ -656,7 +656,7 @@ def _kartei(db: Supabase, tenant_id: str, person: Person, user_id: str,
         # einen echten Handlungsbedarf zeigen, keine grüne Wand.
         abgelaufen = schl in ("mensah", "ilic")
         schulungen.append({
-            "id": demo_id(f"personal:schulung:{schl}:hygiene"),
+            "id": pid(f"personal:schulung:{schl}:hygiene"),
             "tenant_id": tenant_id, "user_id": user_id,
             "titel": "Hygieneschulung nach § 43 IfSG",
             "trainer": "Gesundheitsamt Rostock",
@@ -669,7 +669,7 @@ def _kartei(db: Supabase, tenant_id: str, person: Person, user_id: str,
     # Dokumente: Vertrag als abgelegtes Dokument, Gesundheitszeugnis mit Ablauf,
     # ein angefordertes (noch offenes) Dokument bei den Neuen.
     dokumente = [{
-        "id": demo_id(f"personal:dok:{schl}:vertrag"),
+        "id": pid(f"personal:dok:{schl}:vertrag"),
         "tenant_id": tenant_id, "user_id": user_id, "art": "vertrag",
         "titel": "Arbeitsvertrag (unterschrieben)",
         # Kein storage_pfad: der Seed lädt keine Personaldateien hoch; der
@@ -679,7 +679,7 @@ def _kartei(db: Supabase, tenant_id: str, person: Person, user_id: str,
     }]
     if {"fruehstueck", "housekeeping"} & set(person.bereiche):
         dokumente.append({
-            "id": demo_id(f"personal:dok:{schl}:gesundheit"),
+            "id": pid(f"personal:dok:{schl}:gesundheit"),
             "tenant_id": tenant_id, "user_id": user_id, "art": "gesundheitszeugnis",
             "titel": "Belehrung nach § 43 IfSG",
             "dokument_nummer": f"IfSG-{2000 + len(schl)}-{schl[:3].upper()}",
@@ -690,7 +690,7 @@ def _kartei(db: Supabase, tenant_id: str, person: Person, user_id: str,
         })
     if person.eintritt_vor_tagen < 400:
         dokumente.append({
-            "id": demo_id(f"personal:dok:{schl}:ausweis"),
+            "id": pid(f"personal:dok:{schl}:ausweis"),
             "tenant_id": tenant_id, "user_id": user_id, "art": "ausweis",
             "titel": "Ausweiskopie",
             "angefragt_am": _ts(heute - timedelta(days=6), "10:15"),
@@ -701,7 +701,7 @@ def _kartei(db: Supabase, tenant_id: str, person: Person, user_id: str,
     # für die Neuen — mit Bewertung, Zielen und Erfolgen.
     if not extern and person.eintritt_vor_tagen > 200:
         db.upsert("personal_gespraeche", [{
-            "id": demo_id(f"personal:gespraech:{schl}"),
+            "id": pid(f"personal:gespraech:{schl}"),
             "tenant_id": tenant_id, "user_id": user_id,
             "datum": (heute - timedelta(days=95)).isoformat(),
             "art": "jahresgespraech",
@@ -726,7 +726,7 @@ def _massnahme_und_vorfall(db: Supabase, tenant_id: str, user_ids: dict[str, str
     """
     heute = _heute()
     db.upsert("personal_massnahmen", [{
-        "id": demo_id("personal:massnahme:nowak"),
+        "id": pid("personal:massnahme:nowak"),
         "tenant_id": tenant_id,
         "user_id": user_ids["nowak"],
         "art": "ermahnung",
@@ -743,7 +743,7 @@ def _massnahme_und_vorfall(db: Supabase, tenant_id: str, user_ids: dict[str, str
         "loesung": "Seither pünktlich. Vereinbarung gilt weiter.",
     }])
     db.upsert("personal_vorfaelle", [{
-        "id": demo_id("personal:vorfall:ilic"),
+        "id": pid("personal:vorfall:ilic"),
         "tenant_id": tenant_id,
         "user_id": user_ids["ilic"],
         "datum": (heute - timedelta(days=26)).isoformat(),
@@ -765,7 +765,7 @@ def _freigaben(db: Supabase, tenant_id: str, user_id: str, schluessel: str,
                objekt_ids: list[str]) -> None:
     """Objektfreigaben — ohne sie sieht die Schichtleitung niemanden (Wurzel 3)."""
     db.upsert("staff_property_assignments", [{
-        "id": demo_id(f"personal:freigabe:{schluessel}:{property_id}"),
+        "id": pid(f"personal:freigabe:{schluessel}:{property_id}"),
         "tenant_id": tenant_id,
         "user_id": user_id,
         "property_id": property_id,
@@ -775,7 +775,7 @@ def _freigaben(db: Supabase, tenant_id: str, user_id: str, schluessel: str,
 def _qualifikationen(db: Supabase, tenant_id: str, person: Person, user_id: str,
                      bereich_ids: dict[str, str]) -> None:
     db.upsert("personal_qualifikationen", [{
-        "id": demo_id(f"personal:quali:{person.schluessel}:{bereich}"),
+        "id": pid(f"personal:quali:{person.schluessel}:{bereich}"),
         "tenant_id": tenant_id,
         "user_id": user_id,
         "arbeitsbereich_id": bereich_ids[bereich],
@@ -790,7 +790,7 @@ def _verfuegbarkeiten(db: Supabase, tenant_id: str, user_ids: dict[str, str]) ->
     heute = _heute()
     zeilen = VERFUEGBARKEITEN
     db.upsert("personal_verfuegbarkeiten", [{
-        "id": demo_id(f"personal:verf:{z['schl']}:{z['wochentag']}"),
+        "id": pid(f"personal:verf:{z['schl']}:{z['wochentag']}"),
         "tenant_id": tenant_id,
         "user_id": user_ids[z["schl"]],
         "art": z["art"],
@@ -805,7 +805,7 @@ def _verfuegbarkeiten(db: Supabase, tenant_id: str, user_ids: dict[str, str]) ->
     # Eine Urlaubssperre in der Hochsaison — der Grund steht dabei.
     sommer_start = date(heute.year if heute.month <= 8 else heute.year + 1, 7, 1)
     db.upsert("personal_urlaubssperren", [{
-        "id": demo_id("personal:sperre:hochsaison"),
+        "id": pid("personal:sperre:hochsaison"),
         "tenant_id": tenant_id,
         "von": sommer_start.isoformat(),
         "bis": (sommer_start + timedelta(days=45)).isoformat(),
@@ -820,7 +820,7 @@ def _urlaubskonten(db: Supabase, tenant_id: str, personen: list[Person],
                    user_ids: dict[str, str]) -> None:
     jahr = _heute().year
     db.upsert("personal_urlaubskonten", [{
-        "id": demo_id(f"personal:urlaubskonto:{p.schluessel}:{jahr}"),
+        "id": pid(f"personal:urlaubskonto:{p.schluessel}:{jahr}"),
         "tenant_id": tenant_id,
         "user_id": user_ids[p.schluessel],
         "jahr": jahr,
@@ -856,7 +856,7 @@ def _abwesenheiten(db: Supabase, tenant_id: str, user_ids: dict[str, str],
         bis = von + timedelta(days=tage - 1)
         entschieden = status in ("genehmigt", "abgelehnt")
         zeilen.append({
-            "id": demo_id(f"personal:abw:{schl}:{art}:{versatz}"),
+            "id": pid(f"personal:abw:{schl}:{art}:{versatz}"),
             "tenant_id": tenant_id,
             "user_id": user_ids[schl],
             "art": art,
@@ -977,7 +977,7 @@ def _schichten_schreiben(db: Supabase, tenant_id: str, admin_id: str,
         else:
             status = "veroeffentlicht"
         zeilen.append({
-            "id": demo_id(kennung),
+            "id": pid(kennung),
             "tenant_id": tenant_id,
             "user_id": None if offen else user_ids[schluessel],
             "datum": tag.isoformat(),
@@ -1009,7 +1009,7 @@ def _veroeffentlichen(db: Supabase, tenant_id: str, admin_id: str,
     veroeffentlichungen, bestaetigungen = [], []
     for woche in range(-2, 4):
         start = montag + timedelta(weeks=woche)
-        veroeff_id = demo_id(f"personal:veroeff:{start.isoformat()}")
+        veroeff_id = pid(f"personal:veroeff:{start.isoformat()}")
         veroeffentlichungen.append({
             "id": veroeff_id,
             "tenant_id": tenant_id,
@@ -1022,7 +1022,7 @@ def _veroeffentlichen(db: Supabase, tenant_id: str, admin_id: str,
             if wuerfel.random() < 0.25:
                 continue
             bestaetigungen.append({
-                "id": demo_id(f"personal:gelesen:{start.isoformat()}:{schluessel}"),
+                "id": pid(f"personal:gelesen:{start.isoformat()}:{schluessel}"),
                 "veroeffentlichung_id": veroeff_id,
                 "tenant_id": tenant_id,
                 "user_id": user_id,
@@ -1050,7 +1050,7 @@ def _bewerbungen(db: Supabase, tenant_id: str, user_ids: dict[str, str]) -> int:
     for schicht in offene[:4]:
         for schluessel in wuerfel.sample(kandidaten, k=min(2, len(kandidaten))):
             zeilen.append({
-                "id": demo_id(f"personal:bewerbung:{schicht['id']}:{schluessel}"),
+                "id": pid(f"personal:bewerbung:{schicht['id']}:{schluessel}"),
                 "tenant_id": tenant_id,
                 "schicht_id": schicht["id"],
                 "user_id": user_ids[schluessel],
@@ -1092,7 +1092,7 @@ def _zeiten(db: Supabase, tenant_id: str, admin_id: str,
         # damit die Leitung im Demo etwas zu bestätigen hat.
         bestaetigt = datum < heute - timedelta(days=3)
         zeilen.append({
-            "id": demo_id(f"personal:zeit:{schicht['id']}"),
+            "id": pid(f"personal:zeit:{schicht['id']}"),
             "tenant_id": tenant_id,
             "user_id": schicht["user_id"],
             "start_at": ist_start.isoformat(),
@@ -1117,7 +1117,7 @@ def _zeiten(db: Supabase, tenant_id: str, admin_id: str,
     if zeilen:
         ziel = zeilen[len(zeilen) // 2]
         korrekturen.append({
-            "id": demo_id(f"personal:korrektur:{ziel['id']}"),
+            "id": pid(f"personal:korrektur:{ziel['id']}"),
             "tenant_id": tenant_id,
             "zeiterfassung_id": ziel["id"],
             "korrigiert_von": admin_id,
@@ -1138,7 +1138,7 @@ def _arbeitszeitkonten(db: Supabase, tenant_id: str, user_ids: dict[str, str]) -
         uebertrag = wuerfel.choice([-180, 0, 120, 240, 360, 480])
         if uebertrag:
             zeilen.append({
-                "id": demo_id(f"personal:azk:{schluessel}:uebertrag"),
+                "id": pid(f"personal:azk:{schluessel}:uebertrag"),
                 "tenant_id": tenant_id,
                 "user_id": user_id,
                 "datum": date(heute.year, 1, 1).isoformat(),
@@ -1148,7 +1148,7 @@ def _arbeitszeitkonten(db: Supabase, tenant_id: str, user_ids: dict[str, str]) -
             })
         if uebertrag > 300:
             zeilen.append({
-                "id": demo_id(f"personal:azk:{schluessel}:abbau"),
+                "id": pid(f"personal:azk:{schluessel}:abbau"),
                 "tenant_id": tenant_id,
                 "user_id": user_id,
                 "datum": (heute - timedelta(days=45)).isoformat(),
@@ -1182,9 +1182,31 @@ def _alten_plan_entfernen(db: Supabase, tenant_id: str) -> None:
 
 
 # ── Einstieg ─────────────────────────────────────────────────────────────────
+# Mandantenspezifische ID des laufenden Aufbaus.
+#
+# WARUM (07.09.2026): alle Personal-IDs entstanden aus `demo_id("personal:…")`
+# OHNE den Betrieb. Seeblick und Alpenzeit teilen aber dieselbe Personenliste,
+# erzeugten damit BYTEGLEICHE UUIDs — und der zweite Lauf brach mit
+# „duplicate key … personal_urlaubskonten_pkey" ab, weil der ON-CONFLICT auf
+# `(tenant_id, user_id, jahr)` zeigt und die kollidierende `id` gar nicht sieht
+# (Wurzel 2: der Idempotenz-Schlüssel muss derselbe sein wie der Konflikt-
+# Schlüssel). Alpenzeit blieb dadurch ohne Personal.
+#
+# Ein Modul-globaler Wert statt eines Parameters durch 31 Aufrufstellen: der
+# Aufbau läuft je Betrieb streng nacheinander, nie verschachtelt.
+_TENANT: str = ""
+
+
+def pid(schluessel: str) -> str:
+    """Deterministische ID, die den Mandanten einschließt."""
+    return demo_id(f"{_TENANT}:{schluessel}")
+
+
 def personal_anlegen(db: Supabase, tenant_id: str, admin_id: str,  # noqa: PLR0913
                      objekt_ids: list[str], passwort: str) -> None:
     """Den gesamten Personalbereich des Betriebs aufbauen."""
+    global _TENANT  # noqa: PLW0603  # siehe Kommentar an `_TENANT`
+    _TENANT = tenant_id
     heute = _heute()
     wuerfel = random.Random(KEIM + 3)
 

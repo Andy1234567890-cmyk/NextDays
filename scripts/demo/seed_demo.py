@@ -48,9 +48,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fotos import FOTO_ORDNER, MANIFEST  # noqa: E402
 from gaestemappe import type_attributes  # noqa: E402
 from posteingang import threads_anlegen  # noqa: E402
+from eigentuemer import eigentuemer_anlegen, portalzugang_anlegen  # noqa: E402
 from katalog import BETRIEBE, GAESTE, Betrieb, Objekt  # noqa: E402
 from konfig import Supabase, demo_id  # noqa: E402
 from personal import personal_anlegen  # noqa: E402
+# Die Modulliste des Abrechnungs-Slice: eine Kopie hier liefe bei jedem neuen
+# Modul aus dem Tritt.
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "apps" / "api"))
+from src.features.subscriptions.schemas import MODULE_KEYS  # noqa: E402
+from src.features.auth.modul_freischaltung import MODUL_PRAEFIXE  # noqa: E402
 # pylint: enable=wrong-import-position
 
 # Fester Zufallskeim: gleiche Belegung bei jedem Lauf. Ein Screenshot, der nach
@@ -80,6 +86,23 @@ KANAELE: list[tuple[str, float, str | None]] = [
 # Provision je Kanal (Anteil vom Buchungswert). Nur Anzeigewerte für die Demo —
 # die echte Abrechnung macht der commissions-Slice.
 PROVISION = {"booking": 0.15, "airbnb": 0.15, "vrbo": 0.08, "portal": 0.08, "direct": 0.0}
+
+# Zahlungsgebühr je Kanal — was das Portal ZUSÄTZLICH zur Provision einbehält,
+# wenn es das Geld selbst einzieht. Nur Booking weist sie getrennt aus; Airbnb
+# und Vrbo kennen keine (fehlender Eintrag = keine Gebühr).
+#
+# Sie steht hier neben `PROVISION`, weil BEIDE zusammen den Portal-Abzug
+# ergeben: `channel_fee` einer Buchung trägt die Summe, und
+# `portal_saetze_anlegen` schreibt dieselben zwei Zahlen als Satz. Getrennte
+# Quellen ergäben eine Abrechnung, die ihrer eigenen Buchungszeile
+# widerspricht — genau das war bis 07.09.2026 der Fall (Booking: 15 % in
+# `channel_fee`, 16,5 % in der Rechenkette).
+ZAHLUNGSGEBUEHR = {"booking": 0.015}
+
+
+def _portal_abzug_anteil(kanal: str) -> float:
+    """Was das Portal insgesamt einbehält: Provision + Zahlungsgebühr."""
+    return PROVISION[kanal] + ZAHLUNGSGEBUEHR.get(kanal, 0.0)
 
 SPERR_GRUENDE = [
     "Eigennutzung", "Handwerker: Bad", "Wartung Heizung", "Grundreinigung",
@@ -227,6 +250,50 @@ def abo_anlegen(db: Supabase, betrieb: Betrieb, tenant_id: str) -> None:
         "reported_property_count": len(betrieb.objekte),
         "cancel_at_period_end": False,
     }], konflikt="tenant_id")
+
+
+def module_freischalten(db: Supabase, tenant_id: str) -> None:
+    """ALLE Zusatzmodule freischalten (`tenant_module_entitlement`).
+
+    Die Demo-Betriebe sind ENTWICKLER-Konten: jeder Bereich muss ohne Kaufhürde
+    erreichbar sein — Personal, Buchhaltung, Jobmarkt, Hotel, Avatar,
+    Dynamische Preise und die Schloss-Anbieter. Bis 07.09.2026 stand hier NICHTS:
+    alle drei Demo-Tenants hatten null Einträge, womit Personalbereich und
+    Buchhaltung hinter der Modulsperre lagen und auf keinem Screenshot
+    auftauchen konnten (live gemessen).
+
+    Kein Stripe-Item dahinter (`stripe_subscription_item_id` bleibt leer) —
+    derselbe Grund wie beim Abo: der Zustand wird ABGEBILDET, es fließt kein
+    Geld. `active_until = None` heißt „läuft unbefristet".
+
+    Die Modulliste kommt aus `MODULE_KEYS` (subscriptions/schemas.py), nicht aus
+    einer Kopie hier: ein neues Modul soll im Demo-Bestand automatisch
+    mitkommen und nicht an einer vergessenen zweiten Liste hängen bleiben.
+    """
+    zeilen = [{
+        "id": demo_id(f"modul:{tenant_id}:{schluessel}"),
+        "tenant_id": tenant_id,
+        "module_key": schluessel,
+        "active": True,
+        "active_until": None,
+    } for schluessel in sorted(MODULE_KEYS)]
+    db.upsert("tenant_module_entitlement", zeilen, konflikt="tenant_id,module_key")
+
+    # ZWEITE, UNABHÄNGIGE Sperre: `tenants.enabled_modules`.
+    #
+    # Sie hat mit dem Abrechnungs-Entitlement oben NICHTS zu tun und wird von
+    # `modul_pruefen()` gelesen — fehlt der Präfix dort, antwortet die Route mit
+    # 404 („Dieser Bereich ist für diesen Betrieb nicht verfügbar") und die
+    # Navigation blendet den Punkt aus. Live am 07.09.2026 stand sie bei ALLEN
+    # drei Demo-Betrieben auf `[]`: Personalbereich und Website-Baukasten waren
+    # in der Sidebar unsichtbar, obwohl der Personalbestand vollständig da war.
+    #
+    # Wer nur die eine Tabelle füllt, hat das Modul halb freigeschaltet — genau
+    # deshalb stehen beide Schreibvorgänge in DERSELBEN Funktion.
+    db.update("tenants", {"enabled_modules": sorted(MODUL_PRAEFIXE)},
+              id=f"eq.{tenant_id}")
+    print(f"  {len(zeilen)} Module freigeschaltet, "
+          f"Bereiche: {', '.join(sorted(MODUL_PRAEFIXE))}")
 
 
 def objekte_anlegen(db: Supabase, betrieb: Betrieb, tenant_id: str) -> dict[str, str]:
@@ -444,7 +511,7 @@ def buchungen_anlegen(db: Supabase, betrieb: Betrieb, tenant_id: str,
             kanal, portal = _kanal_waehlen(wuerfel)
             gast = wuerfel.choice(gaeste)
             gesamt = _preis(objekt, zeiger, naechte)
-            provision = round(gesamt * PROVISION[kanal], 2)
+            provision = round(gesamt * _portal_abzug_anteil(kanal), 2)
 
             if abreise <= heute:
                 status, bezahlt, zahlstatus = "completed", gesamt, "paid"
@@ -660,6 +727,206 @@ def portale_verbinden(db: Supabase, betrieb: Betrieb, tenant_id: str,
     print(f"  {len(verbindungen)} Portal-Verbindungen")
 
 
+def portal_saetze_anlegen(db: Supabase, tenant_id: str) -> None:
+    """Portal-Abzugssätze (0364) — ohne sie bleibt die Abrechnung auf „—".
+
+    Der Portal-Abzug einer Buchung steht entweder als GEMELDETER Betrag in
+    `reservations.ota_commission`, oder er wird aus dem hier hinterlegten Satz
+    rekonstruiert. Demo-Buchungen melden nichts (kein echter Portal-Feed), also
+    ist dieser Satz die einzige Quelle. Fehlt er, ist der Abzug nicht
+    bestimmbar und die Kette zeigt korrekt „—" — Portal-Abzug, Provision UND
+    Eigentümer-Anteil, weil die Provision auf die Auszahlung NACH Portal-Abzug
+    rechnet (`common.portal_abzug`: kein Satz → kein 0 %, sonst zahlte man dem
+    Eigentümer den Portal-Anteil als Ertrag aus).
+
+    Die Sätze müssen `PROVISION` + `ZAHLUNGSGEBUEHR` spiegeln: dieselben zwei
+    Zahlen stecken als Betrag in `reservations.channel_fee`
+    (`_portal_abzug_anteil`). Zwei verschiedene Werte ergäben eine Abrechnung,
+    die ihrer eigenen Buchungszeile widerspricht.
+
+    `direct` bekommt bewusst KEINEN Satz: bei den eigenen Kanälen des Betriebs
+    steht kein Portal dazwischen, der Abzug ist dort bekannt 0
+    (`ohne_portal_abzug`). Ein 0-%-Satz wäre eine überflüssige Behauptung.
+    Der eigene Marktplatz (`portal`) zählt NICHT dazu — myBestDays nimmt
+    Provision wie Booking.
+
+    Die Zahlungsgebühr trägt nur, wer das Geld auch einzieht: Booking weist sie
+    getrennt aus, Airbnb und Vrbo kennen keine (NULL = erhebt keine).
+    `gueltig_ab` liegt weit vor jeder Demo-Buchung, damit der Satz für den
+    gesamten sichtbaren Zeitraum gilt; `gueltig_bis` bleibt offen.
+    """
+    saetze = [
+        {
+            "id": demo_id(f"{tenant_id}:portalsatz:{kanal}"),
+            "tenant_id": tenant_id,
+            "kanal": kanal,
+            "property_id": None,
+            "gueltig_ab": "2020-01-01",
+            "gueltig_bis": None,
+            "provision_pct": round(anteil * 100, 2),
+            "zahlungsgebuehr_pct": (
+                round(ZAHLUNGSGEBUEHR[kanal] * 100, 2)
+                if kanal in ZAHLUNGSGEBUEHR
+                else None
+            ),
+            "notiz": "Vorführdaten — dieselben Sätze stecken in channel_fee.",
+        }
+        for kanal, anteil in PROVISION.items()
+        if kanal != "direct"
+    ]
+    db.upsert("portal_abzugssaetze", saetze)
+    print(f"  {len(saetze)} Portal-Abzugssätze")
+
+
+def channel_fee_nachziehen(db: Supabase, tenant_id: str) -> None:
+    """`channel_fee` bestehender Buchungen auf den vollen Portal-Abzug bringen.
+
+    Nur für Bestandsdaten nötig: bis 07.09.2026 trug `channel_fee` allein die
+    Provision, während die Rechenkette zusätzlich die Zahlungsgebühr abzieht.
+    Dieselbe Buchung wies damit zwei verschiedene Portal-Abzüge aus. Neue
+    Läufe rechnen den vollen Anteil direkt (`_portal_abzug_anteil`).
+
+    Angefasst werden nur Buchungen, deren Wert vom erwarteten abweicht — ein
+    Lauf auf bereits korrigierten Daten schreibt nichts.
+    """
+    # Stornos bleiben unangetastet: dort steht `channel_fee` bewusst auf 0,
+    # weil die Provision mit der Stornierung entfällt. Sie „nachzuziehen"
+    # schriebe eine Gebühr auf eine Buchung, die nie stattgefunden hat.
+    zeilen = db.select(
+        "reservations", tenant_id=f"eq.{tenant_id}",
+        status="neq.cancelled",
+        select="id,channel,total_amount,channel_fee",
+    )
+    aenderungen = [
+        {"id": z["id"], "channel_fee": soll}
+        for z in zeilen
+        if z.get("channel") in PROVISION
+        and (soll := round(float(z["total_amount"] or 0)
+                           * _portal_abzug_anteil(z["channel"]), 2))
+        != round(float(z.get("channel_fee") or 0), 2)
+    ]
+    for zeile in aenderungen:
+        db.patch("reservations", {"channel_fee": zeile["channel_fee"]},
+                 id=f"eq.{zeile['id']}")
+    print(f"  {len(aenderungen)} Buchungen mit korrigierter Portal-Gebühr")
+
+
+def dynamische_preise_anlegen(db: Supabase, betrieb: Betrieb,
+                              objekt_ids: dict[str, str]) -> None:
+    """Regelsatz für Dynamische Preise je Objekt (`dp_settings`).
+
+    Das Modul `dynamische_preise` ist freigeschaltet, aber ohne Regelsatz zeigt
+    die Seite je Objekt nur den Einrichtungs-Dialog — kein Preisverlauf, keine
+    Empfehlung, nichts zum Fotografieren.
+
+    `autopilot_enabled = False` ist Absicht: der Demo-Bestand darf Preise
+    VORSCHLAGEN, aber nichts selbsttätig an die Portale schreiben. Aus
+    demselben Grund entsteht im Seed auch kein `ari_outbox`-Eintrag.
+
+    Preisgrenzen leiten sich vom Grundpreis des Objekts ab, nicht aus festen
+    Zahlen: ein Mindestpreis von 80 € wäre bei einem 310-€-Chalet unsinnig.
+    """
+    zeilen = []
+    for objekt in betrieb.objekte:
+        zeilen.append({
+            "property_id": objekt_ids[objekt.schluessel],
+            "enabled": True,
+            # Unter-/Obergrenze relativ zum Grundpreis: −30 % / +85 %. Die
+            # Spanne lässt Saison und Auslastung sichtbar arbeiten, ohne dass
+            # ein Vorschlag absurd wird.
+            "min_price": round(objekt.grundpreis * 0.7, 2),
+            "max_price": round(objekt.grundpreis * 1.85, 2),
+            "weekend_uplift_pct": 8.0,
+            "last_minute": [
+                {"days_before": 14, "discount_pct": 8.0},
+                {"days_before": 5, "discount_pct": 15.0},
+            ],
+            "orphan_gap_discount_pct": 15.0,
+            "occupancy_sensitivity": 30.0,
+            "occupancy_discount_cap_pct": 20.0,
+            "occupancy_premium_cap_pct": 25.0,
+            "min_stay_min": 1,
+            "min_stay_max": max(objekt.min_aufenthalt, 7),
+            "base_mode": "data_driven",
+            "base_rate_mode": "recommended",
+            "market_enabled": True,
+            "market_sensitivity": 20.0,
+            "market_max_adjust_pct": 25.0,
+            "weather_enabled": True,
+            "weather_max_adjust_pct": 10.0,
+            "feiertag_uplift_pct": 12.0,
+            "ferien_uplift_pct": 8.0,
+            # Der Saisonpreis ist UNTERGRENZE, nie Obergrenze (0565).
+            "saison_mindestpreis": True,
+            # Kein Selbstlauf an die Portale — siehe Docstring.
+            "autopilot_enabled": False,
+            "freigabe_noetig": True,
+            "freigabe_ab_tagen": 3,
+        })
+    db.upsert("dp_settings", zeilen, konflikt="property_id")
+    print(f"  {len(zeilen)} Regelsätze Dynamische Preise")
+
+
+def regeln_anlegen(db: Supabase, tenant_id: str) -> None:
+    """Planmäßige Aufgabenregeln (`task_rules`, kind='auto').
+
+    Ohne sie meldet die Aufgabenseite „X von X Objekten wird von keiner Regel
+    erreicht. Dort entsteht nie eine Anreise- oder Reinigungsaufgabe" — der
+    Deckungshinweis aus `regel_deckung()`. Bis 07.09.2026 legte der Seed nur
+    fertige Aufgaben an, aber keine REGEL, die sie erzeugt: der Betrieb sah aus,
+    als hätte ihn nie jemand eingerichtet.
+
+    Bewusst OHNE Objektzuordnung: eine Regel ohne Zuordnung gilt für ALLE
+    Objekte — auch für jedes künftige. Mit Zuordnung fiele jedes später
+    angelegte Objekt still heraus, und der Hinweis stünde wieder da.
+
+    Je eine Regel auf der Anreise- und der Abreise-Achse, denn `regel_deckung`
+    prüft beide getrennt: eine Reinigung nach Abreise deckt die Anreise nicht.
+    """
+    zeilen = [
+        {
+            "id": demo_id(f"regel:{tenant_id}:anreise"),
+            "tenant_id": tenant_id,
+            "name": "Anreise vorbereiten",
+            "description": "Schlüssel, Willkommensmappe, Heizung, Endkontrolle",
+            "kind": "auto",
+            "active": True,
+            "recurrence": {},
+            "start_trigger": "arrival_day",
+            "start_clock": "09:00",
+            "end_trigger": "arrival_day",
+            "end_clock": "14:00",
+            "duration_minutes": 45,
+            "priority": 1,
+            "needs_inspection": False,
+            # Wird die Buchung storniert, verschwindet die Aufgabe mit ihr
+            # (Gegenzustand, Wurzel 1) — sonst putzt jemand ein leeres Haus.
+            "remove_on_cancellation": True,
+            "quellsprache": "de",
+        },
+        {
+            "id": demo_id(f"regel:{tenant_id}:abreise"),
+            "tenant_id": tenant_id,
+            "name": "Endreinigung nach Abreise",
+            "description": "Komplette Reinigung, Wäschewechsel, Müll, Bestandsprüfung",
+            "kind": "auto",
+            "active": True,
+            "recurrence": {},
+            "start_trigger": "departure_day",
+            "start_clock": "11:00",
+            "end_trigger": "departure_day",
+            "end_clock": "15:00",
+            "duration_minutes": 120,
+            "priority": 2,
+            "needs_inspection": True,
+            "remove_on_cancellation": True,
+            "quellsprache": "de",
+        },
+    ]
+    db.upsert("task_rules", zeilen)
+    print(f"  {len(zeilen)} planmäßige Aufgabenregeln")
+
+
 def aufgaben_anlegen(db: Supabase, tenant_id: str,
                      buchungen: list[dict[str, Any]]) -> None:
     """Reinigung zum Abreisetag — die Aufgabenliste der App füllt sich daraus."""
@@ -702,6 +969,12 @@ def main() -> int:
     parser.add_argument("--nur-personal", action="store_true",
                         help="NUR den Personalbereich aufbauen — Objekte, Buchungen "
                              "und Fotos des Betriebs bleiben unangetastet")
+    parser.add_argument("--nur-portalsaetze", action="store_true",
+                        help="NUR die Portal-Abzugssätze nachtragen — alles andere "
+                             "bleibt unangetastet")
+    parser.add_argument("--nur-eigentuemer-zugang", action="store_true",
+                        help="NUR den Eigentümer-Login für die App anlegen — "
+                             "Objekte, Buchungen und Abrechnungen bleiben stehen")
     argumente = parser.parse_args()
 
     db = Supabase()
@@ -715,6 +988,30 @@ def main() -> int:
         # nicht auf und legt keine Objekte neu an. Ein Vollaufbau würde
         # Buchungen und Fotos neu würfeln — die Screenshots der Marketing-Seite
         # zeigten danach andere Zahlen (siehe Modulkopf).
+        # Wie `--nur-personal` ein Nachtrag auf den BESTEHENDEN Bestand: die
+        # Sätze sind reine Stammdaten, sie ändern keine Buchung. Damit lassen
+        # sich fertige Demo-Konten nachrüsten, ohne die Zahlen der schon
+        # gemachten Screenshots zu verwerfen.
+        # Wie die anderen Nachtrags-Schalter: setzt auf den BESTEHENDEN
+        # Bestand auf. Der Login ist eine Ergänzung, kein Neuaufbau — die
+        # Zahlen der schon gemachten Screenshots bleiben gültig.
+        if argumente.nur_eigentuemer_zugang:
+            tenant_id = demo_id(f"tenant:{betrieb.schluessel}")
+            if not db.select("tenants", id=f"eq.{tenant_id}", select="id"):
+                print("  übersprungen: Betrieb noch nicht aufgebaut")
+                continue
+            portalzugang_anlegen(db, betrieb, tenant_id, passwort)
+            continue
+
+        if argumente.nur_portalsaetze:
+            tenant_id = demo_id(f"tenant:{betrieb.schluessel}")
+            if not db.select("tenants", id=f"eq.{tenant_id}", select="id"):
+                print("  übersprungen: Betrieb noch nicht aufgebaut")
+                continue
+            portal_saetze_anlegen(db, tenant_id)
+            channel_fee_nachziehen(db, tenant_id)
+            continue
+
         if argumente.nur_personal:
             tenant_id = demo_id(f"tenant:{betrieb.schluessel}")
             vorhandene = db.select("properties", tenant_id=f"eq.{tenant_id}", select="id")
@@ -734,6 +1031,7 @@ def main() -> int:
         tenant_id = betrieb_anlegen(db, betrieb, passwort)
         firma_anlegen(db, betrieb, tenant_id)
         abo_anlegen(db, betrieb, tenant_id)
+        module_freischalten(db, tenant_id)
         objekt_ids = objekte_anlegen(db, betrieb, tenant_id)
         print(f"  {len(objekt_ids)} Objekte")
         fotos_hochladen(db, betrieb, tenant_id, objekt_ids)
@@ -742,6 +1040,16 @@ def main() -> int:
         stornos_anlegen(db, betrieb, tenant_id, objekt_ids, gaeste)
         sperrungen_anlegen(db, betrieb, tenant_id, objekt_ids)
         portale_verbinden(db, betrieb, tenant_id, objekt_ids)
+        # Portal-Sätze VOR den Eigentümern: ohne sie ist der Portal-Abzug
+        # unbestimmbar, und die Abrechnungen darunter blieben auf „—".
+        portal_saetze_anlegen(db, tenant_id)
+        # Eigentümer vor den Aufgaben: die Abrechnungen summieren die
+        # Buchungen, die oben schon stehen.
+        eigentuemer_anlegen(db, betrieb, tenant_id, objekt_ids)
+        # Der Eigentuemer-Login fuer die App (mobile-nextdays, OwnerTabs).
+        portalzugang_anlegen(db, betrieb, tenant_id, passwort)
+        dynamische_preise_anlegen(db, betrieb, objekt_ids)
+        regeln_anlegen(db, tenant_id)
         aufgaben_anlegen(db, tenant_id, buchungen)
         # Posteingang: ein Thread je PORTAL-Buchung samt Verlauf. Ohne ihn
         # zeigt die App Buchungen, aber ein leeres Postfach.

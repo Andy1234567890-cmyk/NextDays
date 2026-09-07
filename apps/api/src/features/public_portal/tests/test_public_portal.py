@@ -334,6 +334,59 @@ def test_owner_with_no_assignments_sees_nothing() -> None:
     assert res.total == 0
 
 
+# --- Saisons (Kalenderfarben, 07.09.2026) -----------------------------------
+
+def _tables_mit_saisons() -> dict[str, list[dict]]:
+    tables = _tables()
+    tables["property_seasons"] = [
+        {"id": "s-1", "property_id": "p-1", "name": "Hochsaison", "color": "#AA0000",
+         "mode": "percent", "amount": 30, "created_at": "2026-01-01"},
+        {"id": "s-9", "property_id": "p-2", "name": "Fremd", "color": "#000000",
+         "mode": "fixed", "amount": 99, "created_at": "2026-01-01"},
+    ]
+    tables["property_season_assignments"] = [
+        {"id": "a-1", "season_id": "s-1", "property_id": "p-1",
+         "start_date": "2026-07-01", "end_date": "2026-08-31"},
+        {"id": "a-2", "season_id": "s-1", "property_id": "p-1",
+         "start_date": "2026-12-20", "end_date": "2027-01-06"},
+        {"id": "a-9", "season_id": "s-9", "property_id": "p-2",
+         "start_date": "2026-01-01", "end_date": "2026-12-31"},
+    ]
+    return tables
+
+
+def test_seasons_only_own_property_with_assignments() -> None:
+    res = _svc(_tables_mit_saisons()).seasons(_ctx(), "p-1")
+    assert res.total == 1
+    saison = res.items[0]
+    assert (saison.id, saison.name, saison.color) == ("s-1", "Hochsaison", "#AA0000")
+    assert [(str(a.start_date), str(a.end_date)) for a in saison.assignments] == [
+        ("2026-07-01", "2026-08-31"),
+        ("2026-12-20", "2027-01-06"),
+    ]
+
+
+def test_seasons_hide_pricing_rule() -> None:
+    # Die Preisregel (mode/amount) ist Vertriebswissen des Betriebs, nicht
+    # Auskunft für den Eigentümer — sie darf im Contract gar nicht vorkommen.
+    res = _svc(_tables_mit_saisons()).seasons(_ctx(), "p-1")
+    felder = set(res.items[0].model_dump())
+    assert felder == {"id", "name", "color", "assignments"}
+
+
+def test_seasons_foreign_property_404() -> None:
+    # Fremdes Objekt: 404, NICHT eine leere Liste — sonst sähe „gehört dir
+    # nicht" aus wie „hat keine Saisons".
+    with pytest.raises(PortalError) as exc:
+        _svc(_tables_mit_saisons()).seasons(_ctx(), "p-2")
+    assert exc.value.status_code == 404
+
+
+def test_seasons_route_requires_auth() -> None:
+    resp = client.get("/api/v1/public-portal/seasons", params={"property_id": "p-1"})
+    assert resp.status_code in (401, 403)
+
+
 # --- Maskierung (Daten-Split) ------------------------------------------------
 
 def test_calendar_prices_masked_for_owner() -> None:
@@ -1114,3 +1167,264 @@ def test_leerer_grund_wird_nicht_als_text_gespeichert() -> None:
         _ctx(), "br-1", "   "
     )
     assert tables["block_requests"][0]["aufhebung_grund"] is None
+
+
+# --- Finanzübersicht der Startseite (07.09.2026) -----------------------------
+# Dieselbe Zahl wie im Kalender: r-1 (900 €, 20 %, 3 Nächte 05.–07.01.) ergibt
+# 720 € netto, 240 € je Nacht. Was hier abweicht, weicht auch vom Beleg ab.
+
+
+def test_finanzen_tagesreihe_summiert_naechte_und_payout() -> None:
+    res = _svc().finanzen(_ctx(), date(2026, 1, 1), date(2026, 1, 31))
+    assert res.granularity == "day"
+    assert res.event == "calendar"
+    assert res.currency == "EUR"
+    assert res.property_ids == ["p-1"]
+    assert res.units_total == 1
+    assert res.comparison is None
+    reihe = res.current
+    assert len(reihe.points) == 31
+    je_tag = {p.label: p for p in reihe.points}
+    # Die drei Nächte tragen je 240 €; der Abreisetag ist keine Nacht mehr.
+    assert je_tag["2026-01-05"].payout == 240.0
+    assert je_tag["2026-01-07"].payout == 240.0
+    assert je_tag["2026-01-08"].payout == 0.0
+    assert je_tag["2026-01-08"].nights == 0
+    # Anreise zählt genau einmal, am Anreisetag.
+    assert je_tag["2026-01-05"].reservations == 1
+    assert je_tag["2026-01-06"].reservations == 0
+    # Auslastung je Tag: eine Einheit, eine Nacht → 100 %.
+    assert je_tag["2026-01-05"].occupancy_rate == 100.0
+    assert je_tag["2026-01-05"].capacity_unit_nights == 1
+    assert reihe.payout_total == 720.0
+    assert reihe.payout_unknown_reason is None
+    assert reihe.nights == 3
+    assert reihe.reservations == 1
+    assert reihe.capacity_unit_nights == 31
+    assert reihe.occupancy_rate == 9.68
+    assert reihe.avg_payout_per_night == 240.0
+
+
+def test_finanzen_monatsreihe_bei_langer_spanne() -> None:
+    res = _svc().finanzen(_ctx(), date(2026, 1, 1), date(2026, 12, 31))
+    assert res.granularity == "month"
+    assert [p.label for p in res.current.points][:3] == ["2026-01", "2026-02", "2026-03"]
+    assert len(res.current.points) == 12
+    januar = res.current.points[0]
+    assert (januar.payout, januar.nights, januar.capacity_unit_nights) == (720.0, 3, 31)
+    assert res.current.payout_total == 720.0
+
+
+def test_finanzen_ereignis_anreise_bucht_ganz_auf_den_anreisetag() -> None:
+    res = _svc().finanzen(
+        _ctx(), date(2026, 1, 1), date(2026, 1, 31), event="check_in"
+    )
+    assert res.event == "check_in"
+    je_tag = {p.label: p for p in res.current.points}
+    assert je_tag["2026-01-05"].payout == 720.0
+    assert je_tag["2026-01-05"].nights == 3
+    assert je_tag["2026-01-05"].reservations == 1
+    assert je_tag["2026-01-06"].payout == 0.0
+    assert je_tag["2026-01-06"].nights == 0
+    assert res.current.payout_total == 720.0
+    assert res.current.avg_payout_per_night == 240.0
+
+
+def test_finanzen_vergleich_ist_der_vorjahreszeitraum() -> None:
+    res = _svc().finanzen(
+        _ctx(), date(2026, 1, 1), date(2026, 1, 31), compare=True
+    )
+    assert res.comparison is not None
+    assert (str(res.comparison.date_from), str(res.comparison.date_to)) == (
+        "2025-01-01",
+        "2025-01-31",
+    )
+    assert len(res.comparison.points) == 31
+    # Kein Umsatz im Vorjahr ist eine echte Null, kein fehlender Wert.
+    assert res.comparison.payout_total == 0.0
+    assert res.comparison.nights == 0
+
+
+def test_finanzen_eigennutzung_zaehlt_zur_auslastung_nicht_zum_geld() -> None:
+    tables = _tables()
+    tables["reservations"].append(
+        {
+            "id": "r-eigen",
+            "property_id": "p-1",
+            "tenant_id": "t-1",
+            "guest_id": None,
+            "channel": "direct",
+            "ota_name": None,
+            "check_in": "2026-01-10",
+            "check_out": "2026-01-12",
+            "status": "confirmed",
+            "total_amount": 0,
+            "channel_fee": 0,
+            "currency": "EUR",
+            "is_owner_stay": True,
+        }
+    )
+    res = _svc(tables).finanzen(_ctx(), date(2026, 1, 1), date(2026, 1, 31))
+    je_tag = {p.label: p for p in res.current.points}
+    assert je_tag["2026-01-10"].owner_stay_nights == 1
+    assert je_tag["2026-01-10"].nights == 0
+    assert je_tag["2026-01-10"].occupancy_rate == 100.0
+    # Die Eigennutzung ist keine Anreise im Sinn der Vermietung.
+    assert je_tag["2026-01-10"].reservations == 0
+    assert res.current.payout_total == 720.0
+    assert res.current.owner_stay_nights == 2
+    assert res.current.nights == 3
+
+
+def test_finanzen_unbestimmter_betrag_kippt_den_punkt_mit_grund() -> None:
+    # Ohne Provisionssatz gibt es keinen Betrag — der Punkt und die Summe
+    # werden None mit Grund, nie eine erfundene Null (Wurzel 4).
+    tables = _tables()
+    tables["owners"][0]["default_commission_pct"] = None
+    res = _svc(tables).finanzen(_ctx(), date(2026, 1, 1), date(2026, 1, 31))
+    je_tag = {p.label: p for p in res.current.points}
+    assert je_tag["2026-01-05"].payout is None
+    assert je_tag["2026-01-05"].nights == 1
+    assert je_tag["2026-01-20"].payout == 0.0
+    assert res.current.payout_total is None
+    assert res.current.payout_unknown_reason is not None
+    assert res.current.avg_payout_per_night is None
+
+
+def test_finanzen_ohne_finanzfreigabe_kein_geld_aber_auslastung() -> None:
+    svc = _svc()
+    # Familienzugang ohne Berichte-Freigabe (0389): der Endpunkt bleibt offen,
+    # jedes Geldfeld ist None, die Belegung sichtbar.
+    svc._darf_berichte = lambda _ctx: False  # noqa: SLF001
+    res = svc.finanzen(_ctx(), date(2026, 1, 1), date(2026, 1, 31))
+    assert res.currency is None
+    assert res.current.payout_total is None
+    assert res.current.payout_unknown_reason is None
+    assert res.current.avg_payout_per_night is None
+    assert all(p.payout is None for p in res.current.points)
+    assert res.current.nights == 3
+
+
+def test_finanzen_fremdes_objekt_404() -> None:
+    with pytest.raises(PortalError) as exc:
+        _svc().finanzen(_ctx(), date(2026, 1, 1), date(2026, 1, 31), property_id="p-2")
+    assert exc.value.status_code == 404
+
+
+def test_finanzen_spanne_gedeckelt_422() -> None:
+    with pytest.raises(PortalError) as exc:
+        _svc().finanzen(_ctx(), date(2024, 1, 1), date(2026, 12, 31))
+    assert exc.value.status_code == 422
+
+
+def test_finanzen_ende_vor_anfang_400() -> None:
+    with pytest.raises(PortalError) as exc:
+        _svc().finanzen(_ctx(), date(2026, 2, 1), date(2026, 1, 1))
+    assert exc.value.status_code == 400
+
+
+def test_finanzen_route_verlangt_anmeldung() -> None:
+    resp = client.get(
+        "/api/v1/public-portal/finanzen",
+        params={"date_from": "2026-01-01", "date_to": "2026-01-31"},
+    )
+    assert resp.status_code == 401
+
+
+def test_finanzen_kennt_nur_zwei_ereignisse() -> None:
+    # Ein unbekanntes Ereignis ist ein 422, kein stiller Rückfall auf
+    # „calendar" (Wurzel 4) und kein 500.
+    with pytest.raises(PortalError) as exc:
+        _svc().finanzen(_ctx(), date(2026, 1, 1), date(2026, 1, 31), event="umsatz")
+    assert exc.value.status_code == 422
+
+
+# --- Abrechnung im Detail (07.09.2026) --------------------------------------
+
+
+def test_statement_detail_delegiert_an_den_abrechnungs_slice(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from src.features.owner_statements import service as os_service
+
+    gesehen: dict[str, object] = {}
+
+    def fake_get(self: object, ctx: AuthContext, statement_id: str) -> str:  # noqa: ARG001
+        gesehen["ctx"] = ctx
+        gesehen["id"] = statement_id
+        return "beleg"
+
+    monkeypatch.setattr(os_service.OwnerStatementsService, "get", fake_get)
+    res = _svc().statement_detail(_ctx(), "s-1")
+    assert res == "beleg"
+    assert gesehen["id"] == "s-1"
+    assert getattr(gesehen["ctx"], "role", None) == "owner"
+
+
+def test_statement_detail_reicht_404_des_abrechnungs_slices_durch(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from src.features.owner_statements import service as os_service
+
+    def fake_get(self: object, ctx: AuthContext, statement_id: str) -> None:  # noqa: ARG001
+        raise os_service.StatementError("Statement nicht gefunden.", status_code=404)
+
+    monkeypatch.setattr(os_service.OwnerStatementsService, "get", fake_get)
+    with pytest.raises(PortalError) as exc:
+        _svc().statement_detail(_ctx(), "fremd")
+    assert exc.value.status_code == 404
+
+
+def test_statement_detail_ohne_finanzfreigabe_403() -> None:
+    svc = _svc()
+    svc._darf_berichte = lambda _ctx: False  # noqa: SLF001
+    with pytest.raises(PortalError) as exc:
+        svc.statement_detail(_ctx(), "s-1")
+    assert exc.value.status_code == 403
+
+
+def test_statement_detail_route_verlangt_anmeldung() -> None:
+    resp = client.get("/api/v1/public-portal/statements/s-1")
+    assert resp.status_code == 401
+
+
+# --- Gäste am Sperrantrag (0606) ---------------------------------------------
+
+
+def test_request_block_traegt_gaeste_und_liefert_sie_zurueck() -> None:
+    svc = _svc()
+    item = svc.request_block(
+        _ctx(),
+        BlockRequestCreate(
+            property_id="p-1",
+            start_date=date(2026, 3, 1),
+            end_date=date(2026, 3, 5),
+            guests=2,
+            reason="Spätes Check-out gewünscht",
+        ),
+    )
+    assert item.guests == 2
+    assert item.reason == "Spätes Check-out gewünscht"
+    liste = svc.my_block_requests(_ctx())
+    assert liste.items[0].guests == 2
+
+
+def test_request_block_ohne_gaeste_bleibt_none() -> None:
+    # Nicht angegeben ist nicht „eine Person" (Wurzel 4).
+    item = _svc().request_block(
+        _ctx(),
+        BlockRequestCreate(
+            property_id="p-1", start_date=date(2026, 3, 1), end_date=date(2026, 3, 5)
+        ),
+    )
+    assert item.guests is None
+
+
+def test_request_block_gaeste_ausser_bereich_422() -> None:
+    with pytest.raises(ValueError, match="guests"):
+        BlockRequestCreate(
+            property_id="p-1",
+            start_date=date(2026, 3, 1),
+            end_date=date(2026, 3, 5),
+            guests=0,
+        )
