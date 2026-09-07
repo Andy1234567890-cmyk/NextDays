@@ -272,6 +272,33 @@ export async function bulkEdit(
   });
 }
 
+/** Tagespreis-Überschreibung für [start, end) setzen (`price` Zahl) oder
+ *  ZURÜCKNEHMEN (`price: null`) — die Tage folgen danach wieder Saison-/
+ *  Grundpreis. Ein Aufruf je Objekt; der Server begrenzt den Bereich auf 366
+ *  Tage (422 darüber) und meldet den wieder geltenden Preis an die Portale.
+ *  Realtime (`price_overrides`) aktualisiert danach das Board — kein Reload. */
+export async function setPriceOverride(
+  propertyId: string,
+  start: string,
+  end: string,
+  price: number | null,
+): Promise<Result<{ status: string }>> {
+  return call("/calendar/price-override", {
+    method: "POST",
+    body: { property_id: propertyId, date: start, end, price },
+  });
+}
+
+/** Kurzform für den Bulk-Dialog: Tagespreise im Bereich auf den Saison-/
+ *  Grundpreis zurücksetzen. */
+export async function resetPriceOverride(
+  propertyId: string,
+  start: string,
+  end: string,
+): Promise<Result<{ status: string }>> {
+  return setPriceOverride(propertyId, start, end, null);
+}
+
 export type SeasonPriceDay = { date: string; price: number };
 
 /** Saison-/Tagespreise eines Objekts im Zeitraum [start, end). */
@@ -720,5 +747,154 @@ export async function rejectBlockLift(
   return call(`/calendar/block-requests/${id}/aufhebung-ablehnen`, {
     method: "POST",
     body: { note },
+  });
+}
+
+// -- Sonder-Events (0011/0583, Lastenheft §2.3) -----------------------------
+// Ein Name, ein Aufschlag in %, n auch unterbrochene Zeiträume, optionale
+// Objektzuweisung (leer = alle Objekte). Wirken als Faktor im Dynamic Pricing.
+export type EventPeriod = {
+  id?: string;
+  start_date: string; // YYYY-MM-DD
+  end_date: string; // inklusiv
+};
+
+export type KalenderEvent = {
+  id: string;
+  name: string;
+  percent: number;
+  color: string | null;
+  periods: EventPeriod[];
+  /** Leer = gilt für alle Objekte des Betriebs. */
+  property_ids: string[];
+};
+
+export type KalenderEventInput = {
+  name: string;
+  percent: number;
+  color: string | null;
+  periods: { start_date: string; end_date: string }[];
+  property_ids: string[];
+};
+
+export async function listEvents(): Promise<
+  Result<{ items: KalenderEvent[]; total: number }>
+> {
+  return call("/calendar/events");
+}
+
+export async function createEvent(
+  input: KalenderEventInput,
+): Promise<Result<KalenderEvent>> {
+  return call("/calendar/events", { method: "POST", body: input });
+}
+
+/** Zeiträume und Objektzuweisung werden — wenn gesendet — KOMPLETT ersetzt. */
+export async function updateEvent(
+  eventId: string,
+  patch: Partial<KalenderEventInput>,
+): Promise<Result<KalenderEvent>> {
+  return call(`/calendar/events/${eventId}`, { method: "PATCH", body: patch });
+}
+
+export async function deleteEvent(
+  eventId: string,
+): Promise<Result<{ deleted: boolean }>> {
+  return call(`/calendar/events/${eventId}`, { method: "DELETE" });
+}
+
+// -- Tenant-weite Saison-Vorlagen (0584, ADR-0024) --------------------------
+export type SeasonTemplateKategorie = {
+  name: string;
+  color: string;
+  mode: SeasonMode;
+  amount: number;
+  min_stay?: number | null;
+  max_stay?: number | null;
+  closed_arrival_weekdays?: number[];
+  closed_departure_weekdays?: number[];
+  min_stay_by_weekday?: Record<string, number>;
+};
+
+export type SeasonTemplateZeitraum = {
+  kategorie_index: number;
+  start_date: string;
+  end_date: string; // inklusiv
+};
+
+export type SeasonTemplate = {
+  id: string;
+  name: string;
+  farbe: string | null;
+  kategorien: SeasonTemplateKategorie[];
+  zeitraeume: SeasonTemplateZeitraum[];
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+export type SeasonTemplateInput = {
+  name: string;
+  farbe: string | null;
+  kategorien: SeasonTemplateKategorie[];
+  zeitraeume: SeasonTemplateZeitraum[];
+};
+
+export async function listSeasonTemplates(): Promise<
+  Result<{ items: SeasonTemplate[]; total: number }>
+> {
+  return call("/calendar/season-templates");
+}
+
+export async function createSeasonTemplate(
+  input: SeasonTemplateInput,
+): Promise<Result<SeasonTemplate>> {
+  return call("/calendar/season-templates", { method: "POST", body: input });
+}
+
+export async function updateSeasonTemplate(
+  templateId: string,
+  patch: Partial<SeasonTemplateInput>,
+): Promise<Result<SeasonTemplate>> {
+  return call(`/calendar/season-templates/${templateId}`, {
+    method: "PATCH",
+    body: patch,
+  });
+}
+
+export async function deleteSeasonTemplate(
+  templateId: string,
+): Promise<Result<{ deleted: boolean }>> {
+  return call(`/calendar/season-templates/${templateId}`, { method: "DELETE" });
+}
+
+/** „Als Vorlage speichern" aus einem Objekt heraus (Saisons + Zeiträume).
+ *  Gleicher Name → die Vorlage wird aktualisiert. */
+export async function saveSeasonTemplateFromProperty(input: {
+  property_id: string;
+  name: string;
+  farbe?: string | null;
+}): Promise<Result<SeasonTemplate>> {
+  return call("/calendar/season-templates/from-property", {
+    method: "POST",
+    body: input,
+  });
+}
+
+export type SeasonTemplateApplySkip = {
+  property_id: string;
+  kategorie: string;
+  grund: string;
+};
+
+export async function applySeasonTemplate(
+  templateId: string,
+  propertyIds: string[],
+  zeitraeumeMitnehmen: boolean,
+): Promise<
+  Result<{ uebertragen: number; uebersprungen: SeasonTemplateApplySkip[] }>
+> {
+  return call(`/calendar/season-templates/${templateId}/apply`, {
+    method: "POST",
+    body: { property_ids: propertyIds, zeitraeume_mitnehmen: zeitraeumeMitnehmen },
   });
 }

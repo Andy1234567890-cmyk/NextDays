@@ -25,6 +25,11 @@ export type PropertyType =
 
 export type PropertyStatus = "draft" | "active" | "inactive";
 
+// Spiegel von apps/api/.../properties/schemas.py:Boligtype (DB-Check 0581).
+// Die Werteliste als Konstante liegt in lib/property-meta.ts (BOLIGTYPEN):
+// ein "use server"-Modul darf AUSSCHLIESSLICH async functions exportieren.
+export type Boligtype = "flexbolig" | "helaarsbolig" | "fritidshus";
+
 export type Property = {
   id: string;
   tenant_id: string;
@@ -73,6 +78,9 @@ export type Property = {
   // echtes neues Kartei-Feld. Name/Typ/Adresse/Kapazität kommen aus dem Bestand
   // (title, property_type, house_number, max_guests, size_value).
   bfe_number: string | null;
+  /** DK-Wohnstatus (Kartei Stufe 1, 0581): flexbolig | helaarsbolig |
+   *  fritidshus. null = nicht erfasst. Labels: `dossier.boligtype.*`. */
+  boligtype: Boligtype | null;
   /** Kaution je Objekt (Spalte seit 0082). Speist `{{security_deposit}}` in
    *  Nachrichten-Vorlagen und die Stripe-Vorautorisierung. NICHT dasselbe wie
    *  `type_attributes.policies.depositAmount` (Richtlinien-Text für den Gast)

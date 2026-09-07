@@ -42,6 +42,8 @@ from .features.auswertung.router import router as auswertung_router
 from .features.auth.router import router as auth_router
 from .features.booking_conditions.router import router as booking_conditions_router
 from .features.booking_engine.router import router as booking_engine_router
+from .features.booking_offers.router import oeffentlich as booking_offers_public_router
+from .features.booking_offers.router import router as booking_offers_router
 from .features.buchhaltung.router import router as buchhaltung_router
 from .features.calendar.router import router as calendar_router
 from .features.channel_manager.router import router as channel_manager_router
@@ -188,6 +190,10 @@ _SLICE_ROUTERS = [
     channel_manager_router,
     sandbox_ota_router,
     booking_engine_router,
+    # Buchungsangebot (0586, Lastenheft §2.2): interne Verwaltung und die
+    # öffentliche Annahmeseite des Gastes (Token statt Anmeldung).
+    booking_offers_router,
+    booking_offers_public_router,
     booking_conditions_router,
     site_config_manage_router,
     site_config_public_router,

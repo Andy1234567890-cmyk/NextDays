@@ -23,6 +23,7 @@ import { CalendarActionMenu } from "@/components/kalender/calendar-action-menu";
 import { BulkEditDialog } from "@/components/kalender/bulk-edit-dialog";
 import { ReservationDetailSlider } from "@/components/kalender/reservation-detail-slider";
 import { PropertyLabel } from "@/components/kalender/property-label";
+import { AngebotsWizard } from "@/components/kalender/angebots-wizard";
 import { ReservationWizard } from "@/components/kalender/reservation-wizard";
 import {
   type AvailabilitySource,
@@ -717,6 +718,13 @@ export function CalendarBoard({
     checkIn: string;
     checkOut: string;
     ownerStay?: boolean;
+  } | null>(null);
+  // Angebots-Assistent (0586): eigener Zustand, weil ein Angebot KEINE Buchung
+  // ist — es belegt keine Nächte und läuft über einen anderen Endpunkt.
+  const [angebot, setAngebot] = useState<{
+    pid: string;
+    checkIn: string;
+    checkOut: string;
   } | null>(null);
   // Bulk-Edit-Dialog: Objekt + Zeitraum der aufgezogenen Selektion.
   const [bulk, setBulk] = useState<{ pid: string; checkIn: string; checkOut: string } | null>(null);
@@ -2175,6 +2183,11 @@ export function CalendarBoard({
               });
             } else if (action === "bulk") {
               setBulk({ pid: sel.pid, checkIn, checkOut });
+            } else if (action === "reservation_quote") {
+              // Angebot: eigener Assistent. Bis 07.09.2026 fiel diese Aktion in
+              // den `else`-Zweig und öffnete den Reservierungs-Assistenten —
+              // wer ein Angebot schicken wollte, legte eine feste Buchung an.
+              setAngebot({ pid: sel.pid, checkIn, checkOut });
             } else {
               // Reservierung/Eigennutzung: Wizard mit gezogenem Zeitraum öffnen.
               setWizard({
@@ -2954,6 +2967,19 @@ export function CalendarBoard({
           checkOut={wizard.checkOut}
           basePrice={0}
           initialOwnerStay={wizard.ownerStay ?? false}
+        />
+      )}
+
+      {/* Angebots-Assistent (0586): Mail mit Bestätigungslink + Zahlung */}
+      {angebot && (
+        <AngebotsWizard
+          open
+          onClose={() => setAngebot(null)}
+          onSaved={() => load()}
+          properties={properties.map((p) => ({ id: p.id, title: p.title }))}
+          initialPropertyId={angebot.pid}
+          checkIn={angebot.checkIn}
+          checkOut={angebot.checkOut}
         />
       )}
 

@@ -1,6 +1,6 @@
 # ADR-0006: Preismodell — All-Inclusive, 0% Buchungsgebühr, unit-basiert
 
-- Status: **akzeptiert**
+- Status: **ersetzt durch [ADR-0025](0025-preismodell-module-staffel-provisionen.md)** (07.09.2026)
 - Datum: 2026-06-15
 
 ## Kontext

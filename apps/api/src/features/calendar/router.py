@@ -15,6 +15,8 @@ from src.features.auth.dependencies import (
 from src.features.auth.granular_permissions import Permission
 from src.features.auth.permissions import Capability
 
+from .events import EventService
+from .saison_vorlagen import SeasonTemplateService
 from .schemas import (
     AvailabilityCheck,
     BlockRequest,
@@ -25,6 +27,10 @@ from .schemas import (
     DateRange,
     DayAvailability,
     EigentuemerVorgaenge,
+    EventCreate,
+    EventListResponse,
+    EventResponse,
+    EventUpdate,
     FreieEinheitenResponse,
     MultiRestrictionRowsRequest,
     PriceOverrideRequest,
@@ -38,6 +44,13 @@ from .schemas import (
     SeasonPriceListResponse,
     SeasonPriceRequest,
     SeasonResponse,
+    SeasonTemplateApplyRequest,
+    SeasonTemplateApplyResponse,
+    SeasonTemplateCreate,
+    SeasonTemplateFromPropertyRequest,
+    SeasonTemplateListResponse,
+    SeasonTemplateResponse,
+    SeasonTemplateUpdate,
     SeasonUpdate,
     SliceHealth,
     SperrantragItem,
@@ -69,6 +82,23 @@ def get_sperrantrag_service() -> SperrantragService:
 
 SperrantragServiceDep = Annotated[
     SperrantragService, Depends(get_sperrantrag_service)
+]
+
+
+def get_event_service() -> EventService:
+    return EventService(client=get_service_client())
+
+
+EventServiceDep = Annotated[EventService, Depends(get_event_service)]
+
+
+def get_season_template_service() -> SeasonTemplateService:
+    db = get_service_client()
+    return SeasonTemplateService(client=db, kalender=CalendarService(client=db))
+
+
+SeasonTemplateServiceDep = Annotated[
+    SeasonTemplateService, Depends(get_season_template_service)
 ]
 
 # Der Guard der Agentur-Seite: nur wer entscheiden darf, sieht die Anträge.
@@ -719,5 +749,197 @@ def revoke_block_request(
     den bestehenden Unblock-Weg wieder frei (Wurzel 1). Nur aus 'approved'."""
     try:
         return service.zuruecknehmen(ctx, request_id, req)
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# -- Sonder-Events (0011/0583, Lastenheft §2.3) ------------------------------
+# Dieselben Guards wie die Saison-Routen: Lesen VIEW_CALENDAR, Schreiben
+# MANAGE_CALENDAR + EDIT_CALENDAR_BOOKINGS. Liste und {id}-Routen prüfen
+# denselben Scope (Wurzel 9): tenant_id aus dem Kontext, im Service per
+# load_scoped erzwungen.
+@router.get("/events", response_model=EventListResponse)
+def list_events(
+    service: EventServiceDep,
+    ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
+) -> EventListResponse:
+    try:
+        items = service.list_events(ctx.tenant_id)
+        return EventListResponse(
+            items=[EventResponse(**e) for e in items], total=len(items)
+        )
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/events", response_model=EventResponse, dependencies=[
+    Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+])
+def create_event(
+    req: EventCreate,
+    service: EventServiceDep,
+    ctx: Annotated[
+        CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> EventResponse:
+    try:
+        return EventResponse(**service.create_event(ctx.tenant_id, req))
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.patch("/events/{event_id}", response_model=EventResponse, dependencies=[
+    Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+])
+def update_event(
+    event_id: str,
+    req: EventUpdate,
+    service: EventServiceDep,
+    ctx: Annotated[
+        CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> EventResponse:
+    """Zeiträume und Objektzuweisung werden — wenn gesendet — KOMPLETT ersetzt."""
+    try:
+        return EventResponse(**service.update_event(ctx.tenant_id, event_id, req))
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.delete("/events/{event_id}", dependencies=[
+    Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+])
+def delete_event(
+    event_id: str,
+    service: EventServiceDep,
+    ctx: Annotated[
+        CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> dict[str, bool]:
+    try:
+        service.delete_event(ctx.tenant_id, event_id)
+        return {"deleted": True}
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# -- Saison-Vorlagen (0584, ADR-0024) -----------------------------------------
+@router.get("/season-templates", response_model=SeasonTemplateListResponse)
+def list_season_templates(
+    service: SeasonTemplateServiceDep,
+    ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
+) -> SeasonTemplateListResponse:
+    try:
+        items = service.list_templates(ctx.tenant_id)
+        return SeasonTemplateListResponse(
+            items=[SeasonTemplateResponse(**t) for t in items], total=len(items)
+        )
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/season-templates", response_model=SeasonTemplateResponse, dependencies=[
+        Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+    ],
+)
+def create_season_template(
+    req: SeasonTemplateCreate,
+    service: SeasonTemplateServiceDep,
+    ctx: Annotated[
+        CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> SeasonTemplateResponse:
+    try:
+        return SeasonTemplateResponse(**service.create_template(ctx.tenant_id, req))
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/season-templates/from-property",
+    response_model=SeasonTemplateResponse,
+    dependencies=[
+        Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+    ],
+)
+def season_template_from_property(
+    req: SeasonTemplateFromPropertyRequest,
+    service: SeasonTemplateServiceDep,
+    ctx: Annotated[
+        CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> SeasonTemplateResponse:
+    """„Als Vorlage speichern": Saisons + Zeiträume eines Objekts werden zur
+    Vorlage. Gleicher Name → die Vorlage wird aktualisiert (Wurzel 2)."""
+    try:
+        return SeasonTemplateResponse(**service.from_property(ctx.tenant_id, req))
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.patch(
+    "/season-templates/{template_id}",
+    response_model=SeasonTemplateResponse,
+    dependencies=[
+        Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+    ],
+)
+def update_season_template(
+    template_id: str,
+    req: SeasonTemplateUpdate,
+    service: SeasonTemplateServiceDep,
+    ctx: Annotated[
+        CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> SeasonTemplateResponse:
+    try:
+        return SeasonTemplateResponse(
+            **service.update_template(ctx.tenant_id, template_id, req)
+        )
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.delete("/season-templates/{template_id}", dependencies=[
+    Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+])
+def delete_season_template(
+    template_id: str,
+    service: SeasonTemplateServiceDep,
+    ctx: Annotated[
+        CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> dict[str, bool]:
+    try:
+        service.delete_template(ctx.tenant_id, template_id)
+        return {"deleted": True}
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/season-templates/{template_id}/apply",
+    response_model=SeasonTemplateApplyResponse,
+    dependencies=[
+        Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+    ],
+)
+def apply_season_template(
+    template_id: str,
+    req: SeasonTemplateApplyRequest,
+    service: SeasonTemplateServiceDep,
+    ctx: Annotated[
+        CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> SeasonTemplateApplyResponse:
+    """Vorlage auf die gewählten Objekte anwenden — über den Übertragungspfad
+    der Saisons (Upsert je Kategorie, Zeiträume ersetzen, Preise materialisieren
+    und pushen). Wiederholtes Anwenden aktualisiert statt zu duplizieren."""
+    try:
+        return SeasonTemplateApplyResponse(**service.apply_template(
+            ctx.tenant_id, template_id, req.property_ids,
+            zeitraeume_mitnehmen=req.zeitraeume_mitnehmen,
+        ))
     except CalendarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

@@ -209,6 +209,19 @@ KATALOG: tuple[Kategorie, ...] = (
     # eigenen Preise-Bereich nachtragen koennen, ohne dass ein fremdes Wort
     # wie „Channex" je auftaucht (Wurzel: Kunde sieht nie den Aggregator).
     Kategorie("portal_rate_verwaist", Tab.KONTO, "aktivitaet", ()),
+    # Systemwarnung (§4.1): ein Hintergrundlauf ist gescheitert — Portal-
+    # Abgleich, Push an ein Portal, Zimmer-Rueckmeldung. Empfaenger ist, wer
+    # die Faehigkeit RECEIVE_SYSTEM_ALERTS traegt (admin UND co_admin), nicht
+    # eine fest verdrahtete Rolle (`ereignisse.system_warnungs_empfaenger`).
+    # Nur die Glocke, wie bei Zustellproblemen: eine Stoerung trifft viele
+    # Laeufe kurz hintereinander, eine Mail je Lauf waere eine Flut.
+    Kategorie("systemwarnung", Tab.KONTO, "aktivitaet", ()),
+    # Der Gast hat auf ein Buchungsangebot geantwortet (0586, Lastenheft §2.2).
+    # E-MAIL IST WAEHLBAR, nicht Pflicht: die Zusage fuehrt von selbst weiter
+    # (Zahlung → Buchung), es ist also keine Frist, die jemand verpassen kann.
+    # Die Glocke ist immer an, weil der Betrieb den Zeitraum bis zur Zahlung
+    # nicht anderweitig verkaufen sollte.
+    Kategorie("angebot_antwort", Tab.KONTO, "aktivitaet", _MAIL_SMS),
     # Eine offene Portal-Anfrage (Voranfrage, Buchungsanfrage,
     # Aenderungswunsch, 0398). E-MAIL IST PFLICHT und das ist keine Willkuer:
     # Anders als bei einer Gastnachricht ist Nichtstun hier eine ENTSCHEIDUNG —

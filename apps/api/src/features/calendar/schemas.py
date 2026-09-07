@@ -3,7 +3,7 @@
 Bildet die availability-Tabelle ab (Migration 0004): eine Zeile pro
 (property_id, date) = die eine Wahrheit gegen Double-Bookings.
 """
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from enum import StrEnum
 from typing import ClassVar
 
@@ -67,8 +67,6 @@ class DateRange(BaseModel):
 
     def nights(self) -> list[date]:
         """Alle Übernachtungstage (start inklusive, end exklusiv)."""
-        from datetime import timedelta
-
         days: list[date] = []
         cur = self.start
         while cur < self.end:
@@ -178,10 +176,43 @@ class BlockRequest(BaseModel):
     unit_id: str | None = None
 
 
+# Längster Zeitraum, den EIN Preis-Override-Aufruf setzen oder zurücknehmen
+# darf. Ein unbegrenzter Bereich wäre ein Schreib-Hebel (Wurzel 8) — 366 Tage
+# decken das Kalenderjahr samt Schalttag und liegen unter dem Push-Horizont.
+PRICE_OVERRIDE_MAX_TAGE = 366
+
+# Alias für den Typ `date` INNERHALB von PriceOverrideRequest: dort verdeckt
+# das Feld `date` den Typnamen, und ein zweites Feld `end: date` läse pylint
+# als Zugriff auf das Feld vor seiner Zuweisung (E0601).
+_Tag = date
+
+
 class PriceOverrideRequest(BaseModel):
     property_id: str
     date: date
+    # Optionales Bereichsende, EXKLUSIV wie `DateRange.end`. None = nur `date`.
+    # Bis 07.09.2026 nahm der Endpunkt genau einen Tag; der Bulk-Dialog musste
+    # „Auf Saison-/Grundpreis zurücksetzen" für einen markierten Bereich sonst
+    # als N Einzelaufrufe schicken — N Channex-Jobs statt einem je Preisspanne.
+    end: _Tag | None = None
     price: float | None  # None = Überschreibung zurücknehmen (Lastenheft §2.2)
+
+    @model_validator(mode="after")
+    def _bereich_pruefen(self) -> "PriceOverrideRequest":
+        if self.end is None:
+            return self
+        if self.end <= self.date:
+            raise ValueError("end muss nach date liegen (end ist exklusiv).")
+        if (self.end - self.date).days > PRICE_OVERRIDE_MAX_TAGE:
+            raise ValueError(
+                f"Höchstens {PRICE_OVERRIDE_MAX_TAGE} Tage je Aufruf."
+            )
+        return self
+
+    def tage(self) -> list[_Tag]:
+        """Alle betroffenen Kalendertage, [date, end)."""
+        ende = self.end or self.date + timedelta(days=1)
+        return [self.date + timedelta(days=i) for i in range((ende - self.date).days)]
 
 
 class StopSellSource(StrEnum):
@@ -796,3 +827,219 @@ class SperrantragKollisionen(BaseModel):
 class SliceHealth(BaseModel):
     slice: str
     status: str = "ok"
+
+
+# -- Sonder-Events (0011/0583, Lastenheft §2.3) ------------------------------
+# Ein Name, ein Aufschlag, n auch UNTERBROCHENE Zeiträume („DANA CUP" = zwei
+# Wochen im Juli + ein Finalwochenende im August). Wirken als Event-Faktor im
+# Dynamic Pricing (pricing/recompute.py), nicht in price_overrides.
+class EventPeriod(BaseModel):
+    """Ein Zeitraum eines Events. `end_date` INKLUSIV (wie event_periods)."""
+
+    start_date: date
+    end_date: date
+
+    # Obergrenze je Zeitraum (Wurzel 8): der Recompute verteilt jeden Zeitraum
+    # auf Tage; ein Zeitraum über Jahrzehnte wäre ein Selbst-DoS. Ein Event
+    # dauert Tage bis Wochen — 366 Tage decken auch „das ganze Schaltjahr".
+    MAX_TAGE: ClassVar[int] = 366
+
+    @model_validator(mode="after")
+    def _reihenfolge(self) -> "EventPeriod":
+        if self.end_date < self.start_date:
+            raise ValueError("end_date darf nicht vor start_date liegen.")
+        if (self.end_date - self.start_date).days + 1 > self.MAX_TAGE:
+            raise ValueError(
+                f"Ein Event-Zeitraum darf höchstens {self.MAX_TAGE} Tage umfassen."
+            )
+        return self
+
+
+class EventCreate(BaseModel):
+    """Neues Event. `periods` ist die VOLLSTÄNDIGE Liste (max. 50).
+
+    `property_ids` leer = gilt für ALLE Objekte des Mandanten (Muster
+    task_rules.property_ids, 0012). Jede genannte ID wird serverseitig auf den
+    Mandanten gescopt (Wurzel 3).
+    """
+
+    name: str = Field(min_length=1, max_length=80)
+    percent: float = Field(ge=-100, le=1000)
+    color: str | None = Field(default=None, pattern=r"^#[0-9a-fA-F]{6}$")
+    periods: list[EventPeriod] = Field(default_factory=list, max_length=50)
+    property_ids: list[str] = Field(default_factory=list, max_length=200)
+
+
+class EventUpdate(BaseModel):
+    """PATCH eines Events. `None` = nicht gesendet; eine LEERE Liste bei
+    `periods`/`property_ids` ist eine echte Angabe („keine Zeiträume mehr" bzw.
+    „wieder alle Objekte") und wird geschrieben — sonst ließe sich eine
+    Zuweisung nie wieder aufheben (Wurzel 1)."""
+
+    name: str | None = Field(default=None, min_length=1, max_length=80)
+    percent: float | None = Field(default=None, ge=-100, le=1000)
+    color: str | None = Field(default=None, pattern=r"^#[0-9a-fA-F]{6}$")
+    periods: list[EventPeriod] | None = Field(default=None, max_length=50)
+    property_ids: list[str] | None = Field(default=None, max_length=200)
+
+
+class EventPeriodOut(EventPeriod):
+    id: str
+
+
+class EventResponse(BaseModel):
+    id: str
+    name: str
+    percent: float
+    color: str | None = None
+    periods: list[EventPeriodOut] = []
+    # Leer = alle Objekte des Mandanten.
+    property_ids: list[str] = []
+
+
+class EventListResponse(BaseModel):
+    items: list[EventResponse] = []
+    total: int = 0
+
+
+# -- Tenant-weite Saison-Vorlagen (0584, ADR-0024) ---------------------------
+class SeasonTemplateKategorie(RegelsatzVerfuegbarkeit):
+    """Eine Kategorie der Vorlage = ein VOLLER Regelsatz (Preis + Aufenthalts-
+    regeln), so wie er beim Anwenden als property_seasons-Zeile entsteht."""
+
+    name: str = Field(min_length=1, max_length=80)
+    color: str = Field(pattern=r"^#[0-9a-fA-F]{6}$")
+    mode: SeasonMode
+    amount: float
+
+    @model_validator(mode="after")
+    def _check_amount(self) -> "SeasonTemplateKategorie":
+        if self.mode == SeasonMode.fixed and self.amount < 0:
+            raise ValueError("Fester Preis darf nicht negativ sein")
+        return self
+
+
+class SeasonTemplateZeitraum(BaseModel):
+    """Zeitraum einer Kategorie der Vorlage. `end_date` INKLUSIV (wie
+    property_season_assignments). `kategorie_index` zeigt in `kategorien`."""
+
+    kategorie_index: int = Field(ge=0)
+    start_date: date
+    end_date: date
+
+    MAX_TAGE: ClassVar[int] = 366
+
+    @model_validator(mode="after")
+    def _reihenfolge(self) -> "SeasonTemplateZeitraum":
+        if self.end_date < self.start_date:
+            raise ValueError("end_date darf nicht vor start_date liegen.")
+        if (self.end_date - self.start_date).days + 1 > self.MAX_TAGE:
+            raise ValueError(
+                f"Ein Zeitraum darf höchstens {self.MAX_TAGE} Tage umfassen."
+            )
+        return self
+
+
+def _zeitraeume_zeigen_auf_kategorien(
+    kategorien: list, zeitraeume: list[SeasonTemplateZeitraum],
+) -> None:
+    """Ein Zeitraum, der auf eine nicht vorhandene Kategorie zeigt, wäre beim
+    Anwenden ein KeyError im Server — hier 422 (Wurzel 5)."""
+    for z in zeitraeume:
+        if z.kategorie_index >= len(kategorien):
+            raise ValueError(
+                f"Zeitraum zeigt auf Kategorie {z.kategorie_index}, "
+                f"die Vorlage hat aber nur {len(kategorien)}."
+            )
+    namen = [k.name for k in kategorien]
+    if len(set(namen)) != len(namen):
+        # property_seasons trägt UNIQUE (property_id, name): zwei gleichnamige
+        # Kategorien liefen beim Anwenden auf DIESELBE Zeile und überschrieben
+        # sich gegenseitig — die zweite gewänne still.
+        raise ValueError("Kategorienamen müssen innerhalb der Vorlage eindeutig sein.")
+
+
+class SeasonTemplateCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+    farbe: str | None = Field(default=None, pattern=r"^#[0-9a-fA-F]{6}$")
+    kategorien: list[SeasonTemplateKategorie] = Field(
+        default_factory=list, max_length=50
+    )
+    zeitraeume: list[SeasonTemplateZeitraum] = Field(
+        default_factory=list, max_length=200
+    )
+
+    @model_validator(mode="after")
+    def _konsistent(self) -> "SeasonTemplateCreate":
+        _zeitraeume_zeigen_auf_kategorien(self.kategorien, self.zeitraeume)
+        return self
+
+
+class SeasonTemplateUpdate(BaseModel):
+    """PATCH einer Vorlage. Kategorien und Zeiträume werden — wenn gesendet —
+    KOMPLETT ersetzt; sie hängen zusammen (kategorie_index), ein Teil-Patch
+    wäre nicht widerspruchsfrei prüfbar. Werden nur die Kategorien gesendet,
+    prüft der Service die gespeicherten Zeiträume gegen die neue Liste."""
+
+    name: str | None = Field(default=None, min_length=1, max_length=80)
+    farbe: str | None = Field(default=None, pattern=r"^#[0-9a-fA-F]{6}$")
+    kategorien: list[SeasonTemplateKategorie] | None = Field(
+        default=None, max_length=50
+    )
+    zeitraeume: list[SeasonTemplateZeitraum] | None = Field(
+        default=None, max_length=200
+    )
+
+    @model_validator(mode="after")
+    def _konsistent(self) -> "SeasonTemplateUpdate":
+        if self.kategorien is not None and self.zeitraeume is not None:
+            _zeitraeume_zeigen_auf_kategorien(self.kategorien, self.zeitraeume)
+        return self
+
+
+class SeasonTemplateResponse(BaseModel):
+    id: str
+    name: str
+    farbe: str | None = None
+    kategorien: list[SeasonTemplateKategorie] = []
+    zeitraeume: list[SeasonTemplateZeitraum] = []
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+class SeasonTemplateListResponse(BaseModel):
+    items: list[SeasonTemplateResponse] = []
+    total: int = 0
+
+
+class SeasonTemplateFromPropertyRequest(BaseModel):
+    """„Als Vorlage speichern" aus einem Objekt heraus: seine Saisons +
+    Zeiträume werden zur Vorlage. Gleicher Name → die Vorlage wird
+    aktualisiert (Wurzel 2), nicht dupliziert."""
+
+    property_id: str
+    name: str = Field(min_length=1, max_length=80)
+    farbe: str | None = Field(default=None, pattern=r"^#[0-9a-fA-F]{6}$")
+
+
+class SeasonTemplateApplyRequest(BaseModel):
+    """Vorlage auf Objekte anwenden (Checkbox-Mehrfachauswahl). Deckel wie
+    SeasonApplyRequest (Wurzel 8)."""
+
+    property_ids: list[str] = Field(min_length=1, max_length=200)
+    zeitraeume_mitnehmen: bool = True
+
+
+class SeasonTemplateApplySkipped(BaseModel):
+    property_id: str
+    kategorie: str
+    grund: str
+
+
+class SeasonTemplateApplyResponse(BaseModel):
+    """`uebertragen` zählt OBJEKTE, bei denen jede Kategorie angekommen ist;
+    `uebersprungen` nennt jede (Objekt, Kategorie), die nicht ankam — nicht
+    still weglassen (Wurzel 5)."""
+
+    uebertragen: int = 0
+    uebersprungen: list[SeasonTemplateApplySkipped] = []

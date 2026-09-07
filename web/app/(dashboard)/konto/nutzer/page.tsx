@@ -5,14 +5,23 @@
 import { Icon } from "@iconify/react";
 import { getTranslations } from "next-intl/server";
 
+import { StartseitenStandard } from "@/components/konto/startseiten-standard";
 import { UserWizard } from "@/components/konto/user-wizard";
 import { UserList } from "@/components/konto/user-list";
 import { Button } from "@nextdays/ui/button";
 import { getAccount, listManagedUsers } from "@/lib/account";
+import { getMe } from "@/lib/auth";
 
 export default async function NutzerPage() {
   const t = await getTranslations("account");
-  const [res, konto] = await Promise.all([listManagedUsers(), getAccount()]);
+  const [res, konto, me] = await Promise.all([
+    listManagedUsers(),
+    getAccount(),
+    getMe(),
+  ]);
+  // Startseiten-Standards je Rolle setzt nur die Betriebsführung — derselbe
+  // Guard wie im Backend (MANAGE_TENANT). Hier nur Darstellung, Schutz dort.
+  const darfStandardSetzen = me?.capabilities.includes("manage_tenant") ?? false;
   const users = res.ok ? res.data : [];
   const forbidden = !res.ok && res.status === 403;
 
@@ -75,6 +84,10 @@ export default async function NutzerPage() {
       ) : (
         <UserList users={users} />
       )}
+
+      {/* Startseiten-Standard je Rolle (Lastenheft §2.1): unter der Nutzerliste,
+          weil hier über Rollen entschieden wird. */}
+      {darfStandardSetzen && <StartseitenStandard />}
     </div>
   );
 }

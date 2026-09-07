@@ -10,7 +10,11 @@
 // Dateien (property-overview, new-property-button) hängen an einer parallel
 // entstehenden Kanalfeld-Erweiterung und können erst danach mitziehen.
 // TODO(i18n): nach deren Merge diese vier Exporte entfernen.
-import type { PropertyStatus, PropertyType } from "@/lib/properties";
+import type { Boligtype, PropertyStatus, PropertyType } from "@/lib/properties";
+
+// DK-Wohnstatus (Kartei Stufe 1, 0581) — Spiegel des Backend-Enums
+// `properties/schemas.py:Boligtype`. Labels: i18n `dossier.boligtype.*`.
+export const BOLIGTYPEN: readonly Boligtype[] = ["flexbolig", "helaarsbolig", "fritidshus"];
 
 export const TYPE_LABELS: Record<PropertyType, string> = {
   ferienhaus: "Ferienhaus",

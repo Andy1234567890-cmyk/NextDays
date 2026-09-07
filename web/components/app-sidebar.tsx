@@ -82,6 +82,12 @@ const MAIN: readonly NavItem[] = [
   // nach zwei Klicks erreichbar. Der Punkt steht deshalb NICHT zusätzlich in
   // der Reservierungs-Gruppe.
   { key: "bookings", href: "/reservierungen", icon: "ph:bookmark-simple", req: "view_calendar", exact: true },
+  // Angebote (0586, Lastenheft §2.2): verschickte Buchungsangebote und ihr
+  // Zustand. Flach unter Buchungen, weil ein laufendes Angebot Nächte in
+  // Aussicht stellt, die noch frei verkäuflich sind — das ist Tagesgeschäft.
+  // `req` spiegelt den Guard am Endpunkt (MANAGE_CALENDAR): Eigentümer und
+  // Mitarbeiter haben mit dem Vertrieb nichts zu tun (§4.2/§4.3).
+  { key: "offers", href: "/reservierungen/angebote", icon: "ph:paper-plane-tilt", req: "manage_calendar" },
   // Aufgaben stehen flach unter dem Posteingang: sie sind Tagesgeschäft und
   // betreffen jede Rolle (auch Reinigung/Mitarbeiter, die die Buchhaltung nie
   // sehen). Der Punkt steht deshalb NICHT zusätzlich in der Reservierungs-
@@ -355,6 +361,10 @@ function buildGroups(
       items: [
         { key: "overview", href: "/gaeste", icon: "ph:users", req: "pm_guest_details" },
         { key: "travelAgencies", href: "/reisebueros", icon: "ph:handshake", req: "manage_partners" },
+        // CRM (§2.6, 0596–0598): Eigentümer-Akquise (Leads) und Partner &
+        // Deals. `req` spiegelt exakt den Guard am Endpunkt (Capability
+        // MANAGE_CRM, crm/router.py) — nur admin/co_admin sehen den Punkt.
+        { key: "crm", href: "/crm", icon: "ph:funnel", req: "manage_crm" },
       ],
     },
     {

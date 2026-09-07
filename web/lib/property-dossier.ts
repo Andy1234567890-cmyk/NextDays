@@ -38,6 +38,9 @@ export type LinkedOwner = {
   bic: string | null;
   bank_name: string | null;
   account_holder: string | null;
+  // Dänische Bankverbindung (0581) neben IBAN/BIC.
+  bank_reg_nr: string | null;
+  bank_konto_nr: string | null;
   tax_id: string | null;
   vat_id: string | null;
   cpr_number: string | null;
@@ -90,6 +93,8 @@ export type MarketingData = {
 export type HousebookData = {
   welcome_text_status: string | null;
   physical_folder_placed: boolean;
+  /** Geheimtipps des Eigentümers (0582), Freitext bis 5000 Zeichen. */
+  secret_tips: string | null;
 };
 
 export type PlatformLaunchInput = {

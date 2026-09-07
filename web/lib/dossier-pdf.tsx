@@ -257,6 +257,11 @@ function DossierDoc({
               <Field label={L.capacityPersons} value={property.max_guests} labels={L} />
               <Field label={L.capacitySqm} value={typeof sizeM2 === "number" ? sizeM2 : null} labels={L} />
               <Field label={L.bfeNumber} value={property.bfe_number} labels={L} />
+              <Field
+                label={L.boligtype}
+                value={property.boligtype ? (L[`boligtype.${property.boligtype}`] ?? property.boligtype) : null}
+                labels={L}
+              />
             </View>
           </Section>
 
@@ -272,6 +277,8 @@ function DossierDoc({
                   <Field label={L["owner.bic"]} value={o.bic} labels={L} />
                   <Field label={L["owner.bankName"]} value={o.bank_name} labels={L} />
                   <Field label={L["owner.accountHolder"]} value={o.account_holder} labels={L} />
+                  <Field label={L["owner.bankRegNr"]} value={o.bank_reg_nr} labels={L} />
+                  <Field label={L["owner.bankKontoNr"]} value={o.bank_konto_nr} labels={L} />
                   <Field label={L["owner.taxId"]} value={o.tax_id} labels={L} />
                   <Field label={L["owner.vatId"]} value={o.vat_id} labels={L} />
                   <Field label={L["owner.cprNumber"]} value={o.cpr_number} labels={L} />
@@ -370,6 +377,7 @@ function DossierDoc({
                 labels={L}
               />
               <Field label={L.physicalPlaced} value={hb.physical_folder_placed} labels={L} />
+              <Field label={L.secretTips} value={hb.secret_tips} labels={L} full />
             </View>
           </Section>
 

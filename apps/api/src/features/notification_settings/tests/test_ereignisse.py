@@ -723,3 +723,83 @@ def test_fehlende_gaestezahl_nimmt_die_fassung_ohne(dispatcher: _Dispatcher) -> 
     keys = dispatcher.aufrufe[0]["text_key"]
     assert keys[-1] == "benachrichtigung.buchung_zeitraum_ohne_gaeste"
     assert "2027-05-20" in _rumpf(dispatcher.aufrufe[0])
+
+
+# --- Systemwarnungen (§4.1 RECEIVE_SYSTEM_ALERTS, 07.09.2026) ---------------
+# Der Empfaengerkreis ist die FAEHIGKEIT, nicht eine Rollenliste im Code: wer
+# `RECEIVE_SYSTEM_ALERTS` traegt (admin UND co_admin), bekommt die Meldung —
+# Rolle frisch aus der DB (Wurzel 7).
+
+
+def test_systemwarnungs_rollen_folgen_der_faehigkeit() -> None:
+    from src.features.auth.permissions import Capability, has_capability
+    from src.features.auth.schemas import UserRole
+
+    erwartet = {
+        r.value for r in UserRole if has_capability(r, Capability.RECEIVE_SYSTEM_ALERTS)
+    }
+    assert set(ereignisse._ZUSTELL_ROLLEN) == erwartet
+    assert {"admin", "co_admin"} <= erwartet
+    assert not {"owner", "staff", "cleaner"} & erwartet
+
+
+def test_systemwarnung_erreicht_admin_und_co_admin(dispatcher: _Dispatcher) -> None:
+    ereignisse.melde_systemwarnung(
+        _DB(_zustell_tables()), tenant_id="t-1",
+        text_key="benachrichtigung.systemwarnung_portalabgleich",
+        werte={"objekt": "Haus Nord", "fehler": "timeout"},
+        dedup_key="systemwarnung:portalabgleich:p-1",
+        ziel_pfad="/objekte/p-1",
+        property_id="p-1",
+    )
+    empfaenger = {a["user_id"] for a in dispatcher.aufrufe}
+    assert empfaenger == {"chef", "vize"}
+    aufruf = dispatcher.aufrufe[0]
+    assert aufruf["schluessel"] == "systemwarnung"
+    assert aufruf["dedup_key"] == "systemwarnung:portalabgleich:p-1"
+    assert "Haus Nord" in aufruf["text"]
+    assert "timeout" in aufruf["text"]
+    assert aufruf["ziel_pfad"] == "/objekte/p-1"
+
+
+def test_systemwarnung_ergaenzt_objekttitel_aus_der_db(dispatcher: _Dispatcher) -> None:
+    tables = _zustell_tables()
+    tables["properties"] = [{"id": "p-1", "tenant_id": "t-1", "title": "Feriehus Kornblomst"}]
+    ereignisse.melde_systemwarnung(
+        _DB(tables), tenant_id="t-1",
+        text_key="benachrichtigung.systemwarnung_portalabgleich",
+        werte={"fehler": "429"},
+        dedup_key="systemwarnung:portalabgleich:p-1",
+        ziel_pfad="/objekte/p-1",
+        property_id="p-1",
+    )
+    assert "Feriehus Kornblomst" in dispatcher.aufrufe[0]["text"]
+    assert dispatcher.aufrufe[0]["text_werte"]["objekt"] == "Feriehus Kornblomst"
+
+
+def test_systemwarnung_ohne_empfaenger_sendet_nichts(dispatcher: _Dispatcher) -> None:
+    tables = {"users": [{"id": "putz", "tenant_id": "t-1", "role": "cleaner"}]}
+    ereignisse.melde_systemwarnung(
+        _DB(tables), tenant_id="t-1",
+        text_key="benachrichtigung.systemwarnung_portalabgleich",
+        werte={"objekt": "X", "fehler": "y"},
+        dedup_key="k", ziel_pfad="/",
+    )
+    assert dispatcher.aufrufe == []
+
+
+def test_systemwarnung_kippt_den_lauf_nicht(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(ereignisse, "_dispatcher", lambda _db: _Dispatcher(fehler=True))
+    ereignisse.melde_systemwarnung(
+        _DB(_zustell_tables()), tenant_id="t-1",
+        text_key="benachrichtigung.systemwarnung_portalabgleich",
+        werte={"objekt": "X", "fehler": "y"},
+        dedup_key="k", ziel_pfad="/",
+    )
+
+
+def test_systemwarnung_kategorie_ist_glocke_only() -> None:
+    from src.features.notification_settings.katalog import NACH_SCHLUESSEL, SPALTEN
+
+    assert NACH_SCHLUESSEL[ereignisse.SCHLUESSEL_SYSTEMWARNUNG].kanaele == ()
+    assert not [s for s in SPALTEN if s.startswith("systemwarnung")]

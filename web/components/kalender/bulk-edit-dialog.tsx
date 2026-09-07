@@ -22,6 +22,7 @@ import {
   bulkEdit,
   bulkRestrictions,
   bulkRestrictionsMulti,
+  resetPriceOverride,
 } from "@/lib/calendar";
 
 type BlockMode = "none" | "block" | "unblock";
@@ -67,7 +68,9 @@ export function BulkEditDialog({
   // weitere Objekte dazunehmen oder abwählen (Mehrfachauswahl statt „alle/eins").
   const [selectedIds, setSelectedIds] = useState<string[]>([primaryProperty.id]);
   const [setPrice, setSetPrice] = useState(false);
-  const [priceMode, setPriceMode] = useState<"fixed" | "pct">("fixed");
+  // „reset" = Tagespreise des Bereichs auf Saison-/Grundpreis zurücksetzen
+  // (Lastenheft §2.2) — bis 07.09.2026 aus der Oberfläche unerreichbar.
+  const [priceMode, setPriceMode] = useState<"fixed" | "pct" | "reset">("fixed");
   const [price, setPrice2] = useState("");
   const [pricePct, setPricePct] = useState("");
   const [setMinStay, setSetMinStay] = useState(false);
@@ -84,8 +87,11 @@ export function BulkEditDialog({
 
   const targetIds = selectedIds;
 
+  const priceReset = setPrice && priceMode === "reset";
   const priceFilled =
-    setPrice && (priceMode === "fixed" ? price !== "" : pricePct !== "");
+    setPrice &&
+    (priceMode === "reset" ||
+      (priceMode === "fixed" ? price !== "" : pricePct !== ""));
   const hasChange =
     priceFilled ||
     (setMinStay && minStay !== "") ||
@@ -179,6 +185,35 @@ export function BulkEditDialog({
       return;
     }
     setSaving(true);
+    // Zurücksetzen läuft je Objekt gegen /calendar/price-override mit
+    // price=null (Bereich in EINEM Aufruf; Obergrenze 366 Tage setzt der
+    // Server). Erst danach die übrigen Änderungen — ein fehlgeschlagener
+    // Reset bricht ab, statt still nur den Rest anzuwenden.
+    if (priceReset) {
+      const ergebnisse = await Promise.all(
+        targetIds.map((pid) => resetPriceOverride(pid, start, end)),
+      );
+      const fehler = ergebnisse.find((r) => !r.ok);
+      if (fehler && !fehler.ok) {
+        setSaving(false);
+        toast.error(fehler.error || t("bulk.errResetFailed"));
+        return;
+      }
+      const nurReset =
+        !(setMinStay && minStay !== "") &&
+        !(setMaxStay && maxStay !== "") &&
+        blockMode === "none" &&
+        stopMode === "none" &&
+        ctaMode === "none" &&
+        ctdMode === "none";
+      if (nurReset) {
+        setSaving(false);
+        toast.success(t("bulk.priceReset", { properties: targetIds.length }));
+        onApplied();
+        onClose();
+        return;
+      }
+    }
     const res = await bulkEdit({
       property_ids: targetIds,
       start,
@@ -293,10 +328,15 @@ export function BulkEditDialog({
                     options={[
                       { value: "fixed", label: t("bulk.priceFixed") },
                       { value: "pct", label: t("bulk.pricePercent") },
+                      { value: "reset", label: t("bulk.priceResetMode") },
                     ]}
-                    onChange={(v) => setPriceMode(v as "fixed" | "pct")}
+                    onChange={(v) => setPriceMode(v as "fixed" | "pct" | "reset")}
                   />
-                  {priceMode === "fixed" ? (
+                  {priceMode === "reset" ? (
+                    <p className="text-xs text-muted-foreground">
+                      {t("bulk.priceResetHint")}
+                    </p>
+                  ) : priceMode === "fixed" ? (
                     <div>
                       <Label htmlFor="bulk-price" className="sr-only">{t("bulk.price")}</Label>
                       <Input

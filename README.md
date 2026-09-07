@@ -317,7 +317,7 @@ Repo-Deploy-Dateien (Dev-Setup bleibt unberührt, alles getrennt unter `deploy/`
 - **[docs/LASTENHEFT.md](docs/LASTENHEFT.md)** — vollständiges Lastenheft (Anforderungen)
 - **[docs/REQUIREMENTS-GAP.md](docs/REQUIREMENTS-GAP.md)** — Soll/Ist-Abgleich & Roadmap
 - **[docs/FRAMER-FEATURES.md](docs/FRAMER-FEATURES.md)** — Spec/Bau-Vorlage des Website-Builders (Framer-Funktionsreferenz mit ✅/🟡/❌-Status)
-- **[docs/decisions/](docs/decisions/)** — 13 Architecture Decision Records (Channel Manager, Marketing-Entkopplung, Zahlungs-Gateway, i18n, Rundung, Preismodell, Ökosystem, Storybook, Taskilo-Integration, Production-Deployment, Stripe primär, OTA-Anbieter-Wahl, Page-Builder)
+- **[docs/decisions/](docs/decisions/)** — 27 Architecture Decision Records (u. a. Channel Manager, Zahlungs-Gateway, i18n, Preismodell mit Modulen und drei Provisionswegen (ADR-0025), Centgenaue Anzeige (ADR-0027), Ein Eigentümer je Objekt (ADR-0026), Zwei Mobile-Apps, myBestDays-Pflichtlistung)
 
 ---
 

@@ -89,6 +89,10 @@ class Capability(StrEnum):
     APPROVE_ABSENCE = "approve_absence"          # Abwesenheiten entscheiden
     CONFIRM_TIME = "confirm_time"                # Zeiten bestätigen/korrigieren
     EXPORT_LOHN = "export_lohn"                  # Lohnvorbereitung/DATEV (Geld, nur Leitung)
+    # CRM (0596–0598, Lastenheft §2.6): Eigentümer-Akquise (Leads, Notizen,
+    # Konvertierung) und Partner & Deals (B2B-Rabatte, QR). Vertriebsdaten mit
+    # Personenbezug — nur Verwaltung, nie staff/cleaner/owner (§4.3).
+    MANAGE_CRM = "manage_crm"
 
 
 # Volle Fähigkeiten (admin = alles).
@@ -132,6 +136,8 @@ _CO_ADMIN: frozenset[Capability] = frozenset({
     Capability.APPROVE_ABSENCE,
     Capability.CONFIRM_TIME,
     Capability.EXPORT_LOHN,
+    # CRM (§2.6): der Co-Admin akquiriert Eigentümer und pflegt Partner mit.
+    Capability.MANAGE_CRM,
 })
 
 # Eigentümer (§4.2): Daten-Split, Sperrung beantragen, Zählerstände, Services

@@ -41,7 +41,7 @@ log = get_logger("nextdays.property_dossier")
 
 _OWNER_COLS = (
     "id, name, company, email, phone, iban, bic, bank_name, account_holder, "
-    "tax_id, vat_id, cpr_number"
+    "bank_reg_nr, bank_konto_nr, tax_id, vat_id, cpr_number"
 )
 
 
@@ -200,6 +200,8 @@ class PropertyDossierService:
             bic=o.get("bic"),
             bank_name=o.get("bank_name"),
             account_holder=o.get("account_holder"),
+            bank_reg_nr=o.get("bank_reg_nr"),
+            bank_konto_nr=o.get("bank_konto_nr"),
             tax_id=o.get("tax_id"),
             vat_id=o.get("vat_id"),
             cpr_number=o.get("cpr_number"),

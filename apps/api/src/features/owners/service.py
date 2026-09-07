@@ -58,7 +58,8 @@ _UNIQUE_VERLETZUNG = "23505"
 _OWNER_COLUMNS = (
     "id, tenant_id, name, company, email, phone, street, house_number, "
     "postal_code, city, country, tax_id, vat_id, iban, bic, bank_name, "
-    "account_holder, default_commission_pct, default_payout_method, "
+    "account_holder, bank_reg_nr, bank_konto_nr, cpr_number, "
+    "default_commission_pct, default_payout_method, "
     "statement_frequency, notes, user_id, language, created_at, updated_at"
 )
 
@@ -1590,6 +1591,9 @@ def _owner_row(r: dict) -> dict:
         "bic": r.get("bic"),
         "bank_name": r.get("bank_name"),
         "account_holder": r.get("account_holder"),
+        "bank_reg_nr": r.get("bank_reg_nr"),
+        "bank_konto_nr": r.get("bank_konto_nr"),
+        "cpr_number": r.get("cpr_number"),
         # `or 0` stand hier bis 09.08.2026 und machte aus einem FEHLENDEN Satz
         # eine 0, die der Client nicht mehr von einer vereinbarten 0 %
         # unterscheiden konnte — die Maske zeigte „0 %", wo nichts vereinbart

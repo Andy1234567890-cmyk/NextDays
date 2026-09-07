@@ -207,3 +207,40 @@ def test_write_path_also_scoped() -> None:
     with pytest.raises(DossierError) as exc:
         svc.put_process(TID, PID, ProcessData(contract_signed_at=None))
     assert exc.value.status_code == 404
+
+
+# --- DK-Bank (0581) und Geheimtipps (0582) -----------------------------------
+def test_owner_liefert_dk_bankverbindung() -> None:
+    svc = _svc(
+        {
+            "owner_properties": [{"owner_id": OID, "ownership_share": 50}],
+            "owners": [
+                {"id": OID, "name": "Bea", "bank_reg_nr": "5479", "bank_konto_nr": "1234567"}
+            ],
+        }
+    )
+    out = svc.get_owner(TID, PID)
+    assert out is not None
+    assert out.bank_reg_nr == "5479"
+    assert out.bank_konto_nr == "1234567"
+
+
+def test_housebook_secret_tips_roundtrip() -> None:
+    from src.features.property_dossier.schemas import HousebookData
+
+    svc = _svc({"property_housebook": []})
+    out = svc.put_housebook(TID, PID, HousebookData(secret_tips="Fisch bei Ole am Hafen"))
+    assert out.secret_tips == "Fisch bei Ole am Hafen"
+    gelesen = _svc(
+        {"property_housebook": [{"welcome_text_status": "open", "secret_tips": "Strand Nord"}]}
+    ).get_housebook(TID, PID)
+    assert gelesen.secret_tips == "Strand Nord"
+
+
+def test_housebook_secret_tips_hat_obergrenze() -> None:
+    from pydantic import ValidationError
+
+    from src.features.property_dossier.schemas import HousebookData
+
+    with pytest.raises(ValidationError):
+        HousebookData(secret_tips="x" * 5001)

@@ -12,6 +12,8 @@ from typing import Any
 
 from supabase import Client
 
+from src.features.notification_settings.ereignisse import melde_systemwarnung
+
 from .ari_push import _iso_days
 from .channex_client import ChannexBudgetExhausted
 from .common import log
@@ -142,6 +144,17 @@ class FullSyncMixin:
             log.error(
                 "full_sync_restrictions_failed",
                 property_id=property_id, error=str(exc)[:200],
+            )
+            # Und der BETRIEB erfaehrt es (§4.1 System-Warnungen), nicht nur
+            # das Log: Glocke an alle mit RECEIVE_SYSTEM_ALERTS, entdoppelt je
+            # Objekt, damit der Wiederholungslauf nicht eine zweite Meldung
+            # neben die ungelesene erste legt.
+            melde_systemwarnung(
+                self._db, tenant_id=tenant_id, property_id=property_id,
+                text_key="benachrichtigung.systemwarnung_portalabgleich",
+                werte={"fehler": str(exc)[:200]},
+                dedup_key=f"systemwarnung:portalabgleich:{property_id}",
+                ziel_pfad=f"/objekte/{property_id}",
             )
             raise
 

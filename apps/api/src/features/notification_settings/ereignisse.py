@@ -41,6 +41,8 @@ from src.core.logging import get_logger
 from src.core.mail_sprache import FALLBACK
 from src.core.mail_texte import TEXTE as MAIL_TEXTE
 from src.core.mail_texte import text as mail_text
+from src.features.auth.permissions import Capability, has_capability
+from src.features.auth.schemas import UserRole
 
 if TYPE_CHECKING:  # nur fuer die Typannotation — zur Laufzeit waere es ein Zyklus
     from .dispatcher import NotificationDispatcher
@@ -916,11 +918,29 @@ SCHLUESSEL_ZUSTELLPROBLEM = "zustellproblem"
 # und eine Reinigungskraft erst recht nicht. Wer die Meldung nicht beheben
 # kann, soll sie auch nicht bekommen (Wurzel 9 — kein Datenausgang an Rollen,
 # die ihn nicht brauchen).
-_ZUSTELL_ROLLEN = ("admin", "co_admin")
+#
+# Bis 07.09.2026 stand hier `("admin", "co_admin")` als Literal. Die Wahrheit
+# darueber, WER System-Warnungen bekommt, ist aber die Faehigkeit
+# `RECEIVE_SYSTEM_ALERTS` (§4.1, permissions.py) — kommt eine Rolle dazu oder
+# verliert eine sie, muss diese Liste mitziehen, ohne dass jemand daran denkt.
+# Deshalb wird sie aus der Rollen-Matrix abgeleitet. Die Zuordnung
+# Nutzer → Rolle kommt weiterhin FRISCH aus der DB (Wurzel 7), nicht aus einem
+# JWT.
+_ZUSTELL_ROLLEN: tuple[str, ...] = tuple(
+    sorted(
+        rolle.value
+        for rolle in UserRole
+        if has_capability(rolle, Capability.RECEIVE_SYSTEM_ALERTS)
+    )
+)
 
 
 def _betriebsleitung(db: Client, tenant_id: str) -> set[str]:
-    """Login-Nutzer der Betriebsleitung. Leere Menge = niemand (fail-closed)."""
+    """Login-Nutzer mit `RECEIVE_SYSTEM_ALERTS` im Mandanten.
+
+    Leere Menge = niemand (fail-closed). Rolle aus `users.role`, nicht aus
+    einem Token — eine entzogene Rolle wirkt sofort.
+    """
     zeilen = (
         db.table("users")
         .select("id")
@@ -929,6 +949,80 @@ def _betriebsleitung(db: Client, tenant_id: str) -> set[str]:
         .execute()
     ).data or []
     return {str(z["id"]) for z in zeilen if z.get("id")}
+
+
+def system_warnungs_empfaenger(db: Client, tenant_id: str) -> set[str]:
+    """Oeffentlicher Name fuer Aufrufer ausserhalb dieses Moduls
+    (channel_manager): alle Nutzer des Mandanten, die System-Warnungen
+    erhalten (`RECEIVE_SYSTEM_ALERTS`)."""
+    return _betriebsleitung(db, tenant_id)
+
+
+# --- Systemwarnungen (§4.1, 07.09.2026) --------------------------------------
+SCHLUESSEL_SYSTEMWARNUNG = "systemwarnung"
+
+
+def melde_systemwarnung(  # noqa: PLR0913 — eine Meldung mit ihrem Kontext
+    db: Client,
+    *,
+    tenant_id: str,
+    text_key: str,
+    werte: dict[str, object],
+    dedup_key: str,
+    ziel_pfad: str,
+    property_id: str | None = None,
+) -> None:
+    """„Ein Hintergrundlauf des Betriebs ist gescheitert" — an alle mit
+    `RECEIVE_SYSTEM_ALERTS`.
+
+    WOZU: Sync-Fehler standen bisher nur im Server-Log (`log.error`) und im
+    Job-Status. Der Betrieb sah hoechstens einen veralteten Portal-Stand und
+    suchte den Fehler bei sich. Der Co-Admin, dem §4.1 die System-Warnungen
+    ausdruecklich zuspricht, bekam gar nichts — die einzige bestehende
+    Admin-Meldung (`airbnb_zimmer_push`) ging nur an `role = 'admin'`.
+
+    NUR GLOCKE (Kategorie ohne Kanaele): eine Stoerung trifft viele Laeufe
+    kurz hintereinander. ENTDOPPLUNG ueber `dedup_key` je Ursache (Objekt +
+    Lauf), damit der naechtliche Wiederholungslauf die ungelesene Meldung
+    nicht verdoppelt (Wurzel 2). Best-effort: kippt den Aufrufer nie.
+
+    `werte` fuellt `text_key` (Katalog `core.mail_texte`); ein `objekt`-
+    Platzhalter wird aus `property_id` ergaenzt, wenn der Aufrufer ihn nicht
+    selbst mitgibt.
+    """
+    try:
+        empfaenger = _betriebsleitung(db, tenant_id)
+        if not empfaenger:
+            log.info("systemwarnung_ohne_empfaenger", tenant_id=tenant_id)
+            return
+        werte = dict(werte)
+        if property_id and "objekt" not in werte:
+            werte["objekt"] = _objekt_titel(db, tenant_id, property_id)
+        dispatcher = _dispatcher(db)
+        for user_id in sorted(empfaenger):
+            dispatcher.sende(
+                user_id=user_id,
+                schluessel=SCHLUESSEL_SYSTEMWARNUNG,
+                betreff=mail_text("benachrichtigung.systemwarnung", _GLOCKEN_SPRACHE),
+                betreff_key="benachrichtigung.systemwarnung",
+                text=mail_text(text_key, _GLOCKEN_SPRACHE, **werte),
+                text_key=text_key,
+                text_werte=werte,
+                tenant_id=tenant_id,
+                property_id=property_id,
+                ziel_pfad=ziel_pfad,
+                dedup_key=dedup_key,
+            )
+        log.info(
+            "systemwarnung_gemeldet",
+            tenant_id=tenant_id, property_id=property_id,
+            empfaenger=len(empfaenger), dedup_key=dedup_key,
+        )
+    except Exception as exc:  # noqa: BLE001 — Meldung kippt den Lauf nie
+        log.warning(
+            "systemwarnung_meldung_fehlgeschlagen",
+            tenant_id=tenant_id, dedup_key=dedup_key, error=str(exc)[:200],
+        )
 
 
 def melde_zustellproblem(

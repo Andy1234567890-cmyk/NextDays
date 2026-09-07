@@ -11,7 +11,7 @@ Stufe 1 liefert den Eigentümer READ-ONLY aus dem verknüpften owners-Datensatz
 
 from datetime import date
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class SliceHealth(BaseModel):
@@ -33,6 +33,9 @@ class LinkedOwner(BaseModel):
     bic: str | None = None
     bank_name: str | None = None
     account_holder: str | None = None
+    # Dänische Bankverbindung (0581): Reg.-Nr. + Konto-Nr. neben IBAN/BIC.
+    bank_reg_nr: str | None = None
+    bank_konto_nr: str | None = None
     tax_id: str | None = None
     vat_id: str | None = None
     cpr_number: str | None = None
@@ -97,6 +100,10 @@ class MarketingData(BaseModel):
 class HousebookData(BaseModel):
     welcome_text_status: str | None = None  # Key: received | open
     physical_folder_placed: bool = False
+    # Geheimtipps des Eigentümers (0582) — Onboarding-Notiz der Agentur, aus
+    # der später der Gasttext im Nachrichten-Bereich entsteht. Harte Obergrenze
+    # statt unbegrenztem Freitext (Wurzel 8).
+    secret_tips: str | None = Field(default=None, max_length=5000)
 
 
 # --- Stufe 8: Annoncering — Plattform-Matrix (1:n) --------------------------

@@ -1661,3 +1661,55 @@ def test_assign_properties_batch_lehnt_archiviertes_objekt_mit_namen_ab() -> Non
     assert "Fewo-Mosbjerg-Sindal" in str(exc.value)
     # Nichts geschrieben: auch das gültige Objekt bleibt unzugeordnet.
     assert svc.get(_ctx(), a.id).properties == []
+
+
+# --- Dänische Kennungen: CPR (0127) und Reg.-/Konto-Nr. (0581) --------------
+# Format hier und im DB-CHECK identisch; ein Formatfehler ist 422, kein 500.
+
+
+def test_cpr_wird_mit_bindestrich_normalisiert() -> None:
+    assert OwnerUpdate(cpr_number="0101901234").cpr_number == "010190-1234"
+    assert OwnerUpdate(cpr_number="010190-1234").cpr_number == "010190-1234"
+
+
+@pytest.mark.parametrize("wert", ["12345-6789", "0101901234567", "abcdef-1234", "010190 1234"])
+def test_cpr_falsches_format_ist_422(wert: str) -> None:
+    with pytest.raises(ValidationError):
+        OwnerUpdate(cpr_number=wert)
+    with pytest.raises(ValidationError):
+        OwnerCreate(name="A", cpr_number=wert)
+
+
+def test_cpr_leer_ist_kein_wert() -> None:
+    assert OwnerUpdate(cpr_number="  ").cpr_number is None
+
+
+def test_bank_reg_nr_genau_vier_ziffern() -> None:
+    assert OwnerUpdate(bank_reg_nr="1234").bank_reg_nr == "1234"
+    for wert in ("123", "12345", "12a4"):
+        with pytest.raises(ValidationError):
+            OwnerUpdate(bank_reg_nr=wert)
+
+
+def test_bank_konto_nr_bis_zehn_ziffern() -> None:
+    assert OwnerUpdate(bank_konto_nr="12 3456 7890").bank_konto_nr == "1234567890"
+    for wert in ("12345678901", "12-34"):
+        with pytest.raises(ValidationError):
+            OwnerUpdate(bank_konto_nr=wert)
+
+
+def test_update_schreibt_cpr_und_dk_bank() -> None:
+    svc = _svc()
+    owner = svc.create(_ctx(), OwnerCreate(name="Jens", bank_reg_nr="5479", bank_konto_nr="123456"))
+    assert owner.bank_reg_nr == "5479"
+    upd = svc.update(_ctx(), owner.id, OwnerUpdate(cpr_number="0101901234"))
+    assert upd.cpr_number == "010190-1234"
+    assert upd.bank_konto_nr == "123456"
+
+
+def test_owner_kontakt_leitet_keine_kennungen_aus() -> None:
+    """Die Objekt-Route (`OwnerKontakt`) trägt weder CPR noch Bank (Wurzel 9)."""
+    from src.features.owners.schemas import OwnerKontakt
+
+    felder = set(OwnerKontakt.model_fields)
+    assert not felder & {"cpr_number", "bank_reg_nr", "bank_konto_nr", "iban"}

@@ -1,13 +1,15 @@
 // Dashboard-Übersicht (Startseite).
 // Solange das Onboarding des Tenants nicht abgeschlossen ist, zeigt das
 // Dashboard den Setup-Assistenten (ersetzt den Inhalt). Danach erscheint das
-// Reservierungs-Dashboard (echte Kennzahlen aus dem Backend).
+// personalisierbare Kachel-Raster (Lastenheft §2.1): echte Kennzahlen aus dem
+// Backend, Anordnung/Größe/Sichtbarkeit je Nutzer (dashboard_layout-Slice,
+// 0402), Katalog in `lib/dashboard-katalog.ts`.
 import { Icon } from "@iconify/react";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
-import { ReservationsDashboard } from "@/components/dashboard/reservations-dashboard";
+import { DashboardRaster } from "@/components/dashboard/dashboard-raster";
 import { Startbahn } from "@/components/onboarding/startbahn";
 import { PaymentsStatusBanner } from "@/components/zahlungen/payments-status-banner";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
@@ -16,6 +18,7 @@ import { getMe } from "@/lib/auth";
 import { getNachrichtenKennzahlen } from "@/lib/inbox";
 import { getOnboarding, type OnboardingStatus } from "@/lib/onboarding";
 import { getEigentuemerVorgaenge } from "@/lib/calendar";
+import { getDashboardLayout } from "@/lib/dashboard-layout";
 import { getDashboard } from "@/lib/reservations";
 
 export const dynamic = "force-dynamic";
@@ -64,10 +67,14 @@ export default async function DashboardPage() {
   // APPROVE_BLOCK antwortet der Endpunkt mit 403 (staff/cleaner, aber auch ein
   // Eigentuemer im eigenen Konto). Dann entfaellt die Kachel, statt die
   // Startseite mit einer Fehlerkarte zu ersetzen.
-  const [dashboard, kennzahlen, vorgaenge] = await Promise.all([
+  // Das Layout ist ebenfalls NICHT kritisch: schlägt der Aufruf fehl, rendert
+  // das Raster den Katalog-Standard und SAGT es (Toast + Statuszeile) — statt
+  // die Startseite wegen einer Anordnungs-Einstellung zu kippen.
+  const [dashboard, kennzahlen, vorgaenge, layout] = await Promise.all([
     getDashboard(),
     getNachrichtenKennzahlen(),
     getEigentuemerVorgaenge(),
+    getDashboardLayout(),
   ]);
   if (!dashboard.ok) {
     return (
@@ -124,10 +131,22 @@ export default async function DashboardPage() {
           Demo-Riegel (0407) lehnt jede schreibende Aktion ohnehin ab — die
           Liste böte also Aufgaben an, die der Besucher nicht ausführen kann. */}
       {status && !me?.is_demo && <StartbahnWennOffen status={status} />}
-      <ReservationsDashboard
-        data={dashboard.data}
-        nachrichten={kennzahlen.ok ? kennzahlen.data : null}
-        vorgaenge={vorgaenge.ok ? vorgaenge.data : null}
+      {/* Zugang je Kachel: Rolle/Berechtigung aus `me` (Katalog) UND gelieferte
+          Daten (Kachel-Inhalt). Ohne `me` fail-closed — nur Kacheln ohne
+          Anforderung. */}
+      <DashboardRaster
+        daten={{
+          dashboard: dashboard.data,
+          nachrichten: kennzahlen.ok ? kennzahlen.data : null,
+          vorgaenge: vorgaenge.ok ? vorgaenge.data : null,
+        }}
+        me={
+          me
+            ? { role: me.role, capabilities: me.capabilities, permissions: me.permissions }
+            : { role: null, capabilities: [], permissions: [] }
+        }
+        antwort={layout.ok ? layout.data : null}
+        ladefehler={layout.ok ? null : layout.error}
       />
     </>
   );

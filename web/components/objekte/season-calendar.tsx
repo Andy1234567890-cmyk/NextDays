@@ -22,8 +22,15 @@ import { Input } from "@nextdays/ui/input";
 import { Label } from "@nextdays/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@nextdays/ui/popover";
 import type { ObjektAuswahlEintrag } from "@/components/objekt-mehrfachauswahl";
+import { AlsVorlageSpeichern } from "@/components/objekte/als-vorlage-speichern";
+import {
+  EventMarkierung,
+  EventVerwaltung,
+  buildEventDayMap,
+} from "@/components/objekte/event-verwaltung";
 import { ZuAnderenObjekten } from "@/components/objekte/pricing/zu-anderen-objekten";
 import {
+  type KalenderEvent,
   type Season,
   type SeasonAssignment,
   type SeasonMode,
@@ -32,17 +39,17 @@ import {
   clearSeasonRange,
   createSeason,
   deleteSeason,
+  listEvents,
   listSeasons,
 } from "@/lib/calendar";
 import { formatCurrency } from "@/lib/currency";
 import type { Property } from "@/lib/properties";
+import { SEASON_PALETTE, isSeasonColor, seasonLetter } from "@/lib/season-palette";
 import { useRealtime } from "@/lib/use-realtime";
 
 // Vorschlagsfarben für neue Saisons (semantisch verteilt, gut unterscheidbar).
-const PALETTE = [
-  "#ef4444", "#f97316", "#eab308", "#22c55e",
-  "#06b6d4", "#3b82f6", "#8b5cf6", "#ec4899",
-];
+// Standardfarben A–G + freies Farbfeld: lib/season-palette.ts ist die eine
+// Quelle (Legende, Zelle und Auswahl zeigen denselben Buchstaben).
 
 function iso(d: Date): string {
   return d.toISOString().slice(0, 10);
@@ -139,6 +146,30 @@ export function SeasonCalendar({
     filter: `property_id=eq.${initial.id}`,
     onChange: () => void load(),
   });
+
+  // Sonder-Events (0583): tenant-weit geladen, je Tag als Punkt unter der
+  // Saisonfarbe gezeigt. Drei Tabellen speisen die Anzeige — jede ist ein
+  // eigenes Abo, sonst bliebe ein geänderter Zeitraum oder eine geänderte
+  // Objektzuweisung bis zum Reload unsichtbar.
+  const [events, setEvents] = useState<KalenderEvent[]>([]);
+  const loadEvents = useCallback(async () => {
+    const res = await listEvents();
+    if (res.ok) setEvents(res.data.items);
+    else toast.error(res.error);
+  }, []);
+  useEffect(() => {
+    void loadEvents();
+  }, [loadEvents]);
+  useRealtime({ table: "events", onChange: () => void loadEvents() });
+  useRealtime({ table: "event_periods", onChange: () => void loadEvents() });
+  useRealtime({
+    table: "event_property_assignments",
+    onChange: () => void loadEvents(),
+  });
+  const eventDayMap = useMemo(
+    () => buildEventDayMap(events, initial.id),
+    [events, initial.id],
+  );
 
   const dayMap = useMemo(() => {
     const map = buildDayMap(seasons);
@@ -314,6 +345,14 @@ export function SeasonCalendar({
                         className="size-3.5 shrink-0 rounded-full"
                         style={{ backgroundColor: s.color }}
                       />
+                      {/* Buchstabe der Standardpalette (A–G); eine freie
+                          Farbe trägt keinen — dann steht hier nichts statt
+                          eines erfundenen Kürzels. */}
+                      {seasonLetter(s.color) && (
+                        <span className="w-4 shrink-0 text-xs font-bold text-muted-foreground">
+                          {seasonLetter(s.color)}
+                        </span>
+                      )}
                       <span className="flex-1 truncate font-medium">{s.name}</span>
                       <span className="shrink-0 text-xs text-muted-foreground">
                         {priceLabel(s)}
@@ -361,6 +400,15 @@ export function SeasonCalendar({
               {t("seasonClearHint")}
             </p>
           )}
+          <AlsVorlageSpeichern
+            propertyId={initial.id}
+            disabled={seasons.length === 0}
+          />
+          <EventVerwaltung
+            propertyId={initial.id}
+            events={events}
+            onChanged={() => void loadEvents()}
+          />
         </aside>
 
         {/* 12-Monats-Gitter */}
@@ -373,6 +421,7 @@ export function SeasonCalendar({
               label={label}
               weekdays={weekdays}
               dayMap={dayMap}
+              eventDayMap={eventDayMap}
               inDragRange={inDragRange}
               onDayDown={onDayDown}
               onDayEnter={onDayEnter}
@@ -553,6 +602,7 @@ function MonthGrid({
   label,
   weekdays,
   dayMap,
+  eventDayMap,
   inDragRange,
   onDayDown,
   onDayEnter,
@@ -562,6 +612,8 @@ function MonthGrid({
   label: string;
   weekdays: string[];
   dayMap: Map<string, DayInfo>;
+  /** Sonder-Events je Tag (0583) — als Punkt, die Saisonfarbe bleibt. */
+  eventDayMap: Map<string, KalenderEvent[]>;
   inDragRange: (isoDate: string) => "assign" | "clear" | null;
   onDayDown: (isoDate: string, mode: "assign" | "clear") => void;
   onDayEnter: (isoDate: string) => void;
@@ -608,7 +660,7 @@ function MonthGrid({
                   ? t("seasonRemoveTitle", { name: info.season.name })
                   : undefined
               }
-              className={`flex aspect-square items-center justify-center rounded text-xs transition-[outline] ${
+              className={`relative flex aspect-square items-center justify-center rounded text-xs transition-[outline] ${
                 selecting === "clear"
                   ? "outline outline-2 outline-destructive"
                   : selecting === "assign"
@@ -618,6 +670,7 @@ function MonthGrid({
               style={info ? { backgroundColor: info.season.color } : undefined}
             >
               {day}
+              <EventMarkierung events={eventDayMap.get(isoDate)} />
             </button>
           );
         })}
@@ -643,13 +696,19 @@ function SeasonEditor({
   const [name, setName] = useState("");
   const [mode, setMode] = useState<SeasonMode>("percent");
   const [amount, setAmount] = useState("");
-  const [color, setColor] = useState(PALETTE[0]);
+  const [color, setColor] = useState(SEASON_PALETTE[0].hex);
   const [saving, setSaving] = useState(false);
 
   async function submit() {
     const amt = Number(amount);
     if (!name.trim()) {
       toast.error(t("seasonNameRequired"));
+      return;
+    }
+    // Dieselbe Regel wie der DB-Check (0138): ein Wert, den die DB ablehnt,
+    // wird hier klar gemeldet statt als 422 zurückzukommen.
+    if (!isSeasonColor(color)) {
+      toast.error(t("seasonColorInvalid"));
       return;
     }
     if (Number.isNaN(amt) || (mode === "fixed" && amt < 0)) {
@@ -744,19 +803,38 @@ function SeasonEditor({
           </div>
           <div className="flex flex-col gap-1.5">
             <Label>{t("seasonColor")}</Label>
-            <div className="flex flex-wrap gap-1.5">
-              {PALETTE.map((c) => (
+            {/* Standardpalette A–G: Punkt + Buchstabe. Dazu ein freies
+                Farbfeld — die DB nimmt jeden #RRGGBB (0138). */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              {SEASON_PALETTE.map((p) => (
                 <button
-                  key={c}
+                  key={p.hex}
                   type="button"
-                  aria-label={t("seasonColorAria", { color: c })}
-                  onClick={() => setColor(c)}
-                  className={`size-6 rounded-full transition-transform ${
-                    color === c ? "scale-110 ring-2 ring-foreground ring-offset-2" : ""
+                  aria-label={t("seasonColorLetterAria", { letter: p.letter })}
+                  onClick={() => setColor(p.hex)}
+                  className={`flex items-center gap-1 rounded-full py-0.5 pl-0.5 pr-1.5 text-xs font-bold transition-colors ${
+                    color.toLowerCase() === p.hex
+                      ? "bg-secondary ring-2 ring-foreground ring-offset-1"
+                      : "hover:bg-secondary/60"
                   }`}
-                  style={{ backgroundColor: c }}
-                />
+                >
+                  <span className="size-5 rounded-full" style={{ backgroundColor: p.hex }} />
+                  <span>{p.letter}</span>
+                </button>
               ))}
+              <label
+                className="flex cursor-pointer items-center gap-1 rounded-full border border-border py-0.5 pl-0.5 pr-1.5 text-xs text-muted-foreground"
+                title={t("seasonColorCustom")}
+              >
+                <input
+                  type="color"
+                  aria-label={t("seasonColorCustom")}
+                  value={isSeasonColor(color) ? color : SEASON_PALETTE[0].hex}
+                  onChange={(e) => setColor(e.target.value.toLowerCase())}
+                  className="size-5 cursor-pointer appearance-none rounded-full border-0 bg-transparent p-0"
+                />
+                <span>{seasonLetter(color) ? t("seasonColorCustom") : color}</span>
+              </label>
             </div>
           </div>
           <Button onClick={submit} disabled={saving} className="w-full">

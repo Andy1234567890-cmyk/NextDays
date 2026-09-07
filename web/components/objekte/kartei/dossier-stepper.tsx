@@ -17,8 +17,13 @@ import { FeldMitPlatzhaltern, Shortcode } from "@/components/shared/shortcode";
 import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
 import { Input } from "@nextdays/ui/input";
+import { Label } from "@nextdays/ui/label";
 import { OverflowTabs } from "@nextdays/ui/overflow-tabs";
 import { Switch } from "@nextdays/ui/switch";
+import { Textarea } from "@nextdays/ui/textarea";
+import { type Sperrantrag, getAvailability, listBlockRequests } from "@/lib/calendar";
+import { formatCurrency } from "@/lib/currency";
+import { isoPlus, todayIso } from "@/lib/dates";
 import { type Messaging, readMessaging } from "@/lib/messaging-meta";
 import type { LocalizedText } from "@/lib/policy-meta";
 import {
@@ -52,12 +57,15 @@ import {
   updateServiceAgreement,
   updateTradesperson,
 } from "@/lib/property-dossier";
+import { BOLIGTYPEN } from "@/lib/property-meta";
 import {
+  type Boligtype,
   type Property,
   type VertragsendeBuchung,
   getVertragsende,
   updateProperty,
 } from "@/lib/properties";
+import { listRatePlans } from "@/lib/rates";
 
 const STEP_KEYS = [
   "object_info", "process", "access", "service_agreements",
@@ -78,14 +86,43 @@ export function DossierStepper({ property, initial }: { property: Property; init
   const [step, setStep] = useState(0);
   const pid = property.id;
 
+  // Alle acht Stufen bleiben GEMOUNTET und werden per `hidden` gewechselt —
+  // aus zwei Gründen: (1) der Druck (`window.print`) gibt alle Stufen auf
+  // einmal aus, `@media print` hebt `hidden` für [data-kartei-stufe] wieder auf
+  // (globals.css); (2) ein Entwurf in Stufe 3 überlebt den Blick in Stufe 5.
+  // Vorher wurde nur die aktive Stufe gerendert; ein Wechsel verwarf die
+  // Eingaben, und Drucken hätte nur eine Stufe gezeigt.
+  const stufen = [
+    <Stufe1 key="s1" t={t} property={property} owner={initial.owner} />,
+    <Stufe2 key="s2" t={t} pid={pid} initial={initial.process} />,
+    <Stufe3 key="s3" t={t} pid={pid} initial={initial.access} property={property} />,
+    <Stufe4 key="s4" t={t} pid={pid} initial={initial.service_agreements} />,
+    <Stufe5 key="s5" t={t} pid={pid} initial={initial} />,
+    <Stufe6 key="s6" t={t} pid={pid} initial={initial.marketing} />,
+    <Stufe7 key="s7" t={t} pid={pid} initial={initial.housebook} />,
+    <Stufe8 key="s8" t={t} pid={pid} initial={initial.platform_launches} />,
+  ];
+
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4" data-kartei-druck>
       {/* Rotes Band wie die Gästekartei: Titel + Aktionen oben, darunter die
-          einzeilige Stufen-Leiste (Overflow hinter „⋯"). Farbe = Akzent-Token. */}
-      <div className="rounded-2xl bg-accent px-6 pb-3 pt-5 text-white">
+          einzeilige Stufen-Leiste (Overflow hinter „⋯"). Farbe = Akzent-Token.
+          Im Druck ausgeblendet (data-kartei-druck-aus) — dort steht statt
+          dessen die schlichte Druck-Kopfzeile darunter. */}
+      <div className="rounded-2xl bg-accent px-6 pb-3 pt-5 text-white" data-kartei-druck-aus>
         <div className="flex flex-wrap items-center justify-between gap-4 pb-4">
           <h1 className="font-display text-2xl font-extrabold">{t("title")}</h1>
-          <DossierPdfButton property={property} />
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              className="gap-2 bg-card text-foreground hover:bg-card/90"
+              onClick={() => window.print()}
+            >
+              <Icon icon="ph:printer" className="size-4" />
+              {t("print")}
+            </Button>
+            <DossierPdfButton property={property} />
+          </div>
         </div>
         <OverflowTabs
           tone="accent"
@@ -94,17 +131,19 @@ export function DossierStepper({ property, initial }: { property: Property; init
           tabs={STEP_KEYS.map((k) => ({ key: k, label: t(`step.${k}`) }))}
         />
       </div>
+      <div className="hidden" data-kartei-druck-kopf>
+        <h1 className="font-display text-2xl font-extrabold">{t("title")} — {property.title}</h1>
+      </div>
 
-      <Card className="p-6">
-        {step === 0 && <Stufe1 t={t} property={property} owner={initial.owner} />}
-        {step === 1 && <Stufe2 t={t} pid={pid} initial={initial.process} />}
-        {step === 2 && <Stufe3 t={t} pid={pid} initial={initial.access} property={property} />}
-        {step === 3 && <Stufe4 t={t} pid={pid} initial={initial.service_agreements} />}
-        {step === 4 && <Stufe5 t={t} pid={pid} initial={initial} />}
-        {step === 5 && <Stufe6 t={t} pid={pid} initial={initial.marketing} />}
-        {step === 6 && <Stufe7 t={t} pid={pid} initial={initial.housebook} />}
-        {step === 7 && <Stufe8 t={t} pid={pid} initial={initial.platform_launches} />}
-      </Card>
+      {STEP_KEYS.map((k, i) => (
+        <Card key={k} className="p-6" data-kartei-stufe hidden={step !== i}>
+          {/* Nur im Druck sichtbar: die Stufen-Nummer als Kapitelmarke. */}
+          <p className="hidden text-xs font-bold uppercase tracking-wide text-muted-foreground" data-kartei-druck-kopf>
+            {i + 1} · {t(`step.${k}`)}
+          </p>
+          {stufen[i]}
+        </Card>
+      ))}
     </div>
   );
 }
@@ -171,6 +210,10 @@ function Hint({ children }: { children: React.ReactNode }) {
 // --- Stufe 1: Objektinformation + Eigentümer (read-only) -------------------
 function Stufe1({ t, property, owner }: { t: T; property: Property; owner: LinkedOwner | null }) {
   const [bfe, setBfe] = useState(property.bfe_number);
+  // DK-Wohnstatus (0581): flexbolig | helaarsbolig | fritidshus. Leer = nicht
+  // erfasst — kein geratener Wert (Wurzel 4).
+  const [boligtype, setBoligtype] = useState<Boligtype | null>(property.boligtype);
+  const boligOpts = BOLIGTYPEN.map((k) => ({ value: k, label: t(`boligtype.${k}`) }));
   // Vertragsende (0355): der erste Tag OHNE Vermarktungsvertrag. Leer =
   // unbefristet — kein Ersatzdatum (Wurzel 4).
   const [vertragsende, setVertragsende] = useState(property.contract_end_date);
@@ -195,6 +238,7 @@ function Stufe1({ t, property, owner }: { t: T; property: Property; owner: Linke
   async function save(): Promise<true | string> {
     const r = await updateProperty(property.id, {
       bfe_number: bfe?.trim() || null,
+      boligtype,
       contract_end_date: vertragsende || null,
     });
     // In BEIDEN Fällen neu laden: nach dem Speichern hat sich die Liste
@@ -220,6 +264,12 @@ function Stufe1({ t, property, owner }: { t: T; property: Property; owner: Linke
 
       <Section title={t("step.object_info")}>
         <TextField label={t("objectInfo.bfeNumber")} value={bfe} onChange={setBfe} />
+        <SelectField
+          label={t("objectInfo.boligtype")}
+          value={boligtype}
+          onChange={(v) => setBoligtype((v as Boligtype | null) ?? null)}
+          options={boligOpts}
+        />
         <DateField
           label={t("objectInfo.contractEnd")}
           value={vertragsende}
@@ -269,6 +319,8 @@ function Stufe1({ t, property, owner }: { t: T; property: Property; owner: Linke
               <ReadTile label={t("owner.bic")} value={owner.bic} />
               <ReadTile label={t("owner.bankName")} value={owner.bank_name} />
               <ReadTile label={t("owner.accountHolder")} value={owner.account_holder} />
+              <ReadTile label={t("owner.bankRegNr")} value={owner.bank_reg_nr} />
+              <ReadTile label={t("owner.bankKontoNr")} value={owner.bank_konto_nr} />
               <ReadTile label={t("owner.taxId")} value={owner.tax_id} />
               <ReadTile label={t("owner.vatId")} value={owner.vat_id} />
               <ReadTile label={t("owner.cprNumber")} value={owner.cpr_number} />
@@ -640,6 +692,23 @@ function Stufe7({ t, pid, initial }: { t: T; pid: string; initial: HousebookData
         <SelectField label={t("housebook.welcomeStatus")} value={d.welcome_text_status} onChange={(v) => setD({ ...d, welcome_text_status: v })} options={statusOpts} />
         <CheckboxField label={t("housebook.physicalPlaced")} checked={d.physical_folder_placed} onChange={(v) => setD({ ...d, physical_folder_placed: v })} />
       </Section>
+      {/* Geheimtipps (0582): die Onboarding-Notiz der Agentur — was der
+          Eigentümer beim Rundgang erzählt. Der Gasttext entsteht daraus im
+          Nachrichten-Bereich; hier wird festgehalten, nicht versendet. */}
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="housebook-secret-tips">{t("housebook.secretTips")}</Label>
+        <Textarea
+          id="housebook-secret-tips"
+          rows={6}
+          maxLength={5000}
+          value={d.secret_tips ?? ""}
+          onChange={(e) => setD({ ...d, secret_tips: e.target.value })}
+          placeholder={t("housebook.secretTipsPlaceholder")}
+        />
+        <span className="text-xs text-muted-foreground">
+          {t("housebook.secretTipsHint", { count: (d.secret_tips ?? "").length })}
+        </span>
+      </div>
       <Hint>{t("housebook.textsHint")}</Hint>
       <SaveBar t={t} onSave={async () => (await saveHousebook(pid, nulled(d))).ok || t("saved")} />
     </div>
@@ -650,8 +719,88 @@ function Stufe7({ t, pid, initial }: { t: T; pid: string; initial: HousebookData
 function Stufe8({ t, pid, initial }: { t: T; pid: string; initial: DossierFull["platform_launches"] }) {
   const listLabels = { add: t("add"), save: t("save"), saving: t("saving"), cancel: t("cancel"), empty: t("empty") };
   const platOpts = ["native", "airbnb", "booking", "vrbo"].map((k) => ({ value: k, label: t(`platform.${k}`) }));
+  // Anzeige-Stand aus den Quellen, die die Wahrheit halten (0127: Grundpreis
+  // und Sperrungen liegen NICHT in der Kartei): erster Preisplan des Objekts,
+  // gesperrte Tage der nächsten 12 Monate, offene Sperranträge. Kein zweiter
+  // Schreibweg — geändert wird über die Links darunter.
+  const [stand, setStand] = useState<{
+    basePrice: number | null;
+    currency: string | null;
+    plans: number;
+    blockedDays: number | null;
+    openRequests: number | null;
+    fehler: string | null;
+  } | null>(null);
+
+  useEffect(() => {
+    let aktiv = true;
+    void (async () => {
+      const heute = todayIso();
+      const [plans, avail, requests] = await Promise.all([
+        listRatePlans(pid),
+        getAvailability(pid, heute, isoPlus(heute, 365)),
+        listBlockRequests("pending"),
+      ]);
+      if (!aktiv) return;
+      const erster = plans.ok ? plans.data.items[0] : undefined;
+      const fehler = [plans, avail, requests].find((r) => !r.ok);
+      setStand({
+        basePrice: erster ? erster.base_price : null,
+        currency: erster ? erster.currency : null,
+        plans: plans.ok ? plans.data.items.length : 0,
+        blockedDays: avail.ok ? avail.data.filter((d) => d.status === "blocked").length : null,
+        openRequests: requests.ok
+          ? requests.data.items.filter((r: Sperrantrag) => r.property_id === pid).length
+          : null,
+        fehler: fehler && !fehler.ok ? fehler.error : null,
+      });
+    })();
+    return () => {
+      aktiv = false;
+    };
+  }, [pid]);
+
   return (
     <div className="flex flex-col gap-8">
+      <section className="flex flex-col gap-4">
+        <h2 className="font-display text-lg font-extrabold">{t("listing.standHeading")}</h2>
+        {stand === null ? (
+          <p className="text-sm text-muted-foreground">{t("listing.standLoading")}</p>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <ReadTile
+                label={t("listing.basePrice")}
+                value={
+                  stand.basePrice == null
+                    ? null
+                    : formatCurrency(stand.basePrice, stand.currency) || String(stand.basePrice)
+                }
+              />
+              <ReadTile
+                label={t("listing.blockedDays12m")}
+                value={stand.blockedDays == null ? null : String(stand.blockedDays)}
+              />
+              <ReadTile
+                label={t("listing.openBlockRequests")}
+                value={stand.openRequests == null ? null : String(stand.openRequests)}
+              />
+            </div>
+            {stand.plans === 0 && <Hint>{t("listing.noRatePlan")}</Hint>}
+            {stand.fehler && <p className="text-sm text-destructive">{stand.fehler}</p>}
+            <div className="flex flex-wrap items-center gap-4" data-kartei-druck-aus>
+              <Link href={`/objekte/${pid}/preise`} className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline">
+                <Icon icon="ph:currency-circle-dollar" className="size-4" />
+                {t("listing.pricesLink")}
+              </Link>
+              <Link href="/kalender" className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline">
+                <Icon icon="ph:calendar-blank" className="size-4" />
+                {t("listing.calendarLink")}
+              </Link>
+            </div>
+          </>
+        )}
+      </section>
       <ListEditor
         heading={t("listing.heading")}
         labels={listLabels}

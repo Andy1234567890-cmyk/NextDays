@@ -12,9 +12,14 @@ Beides ohne Fehlermeldung, weil nie etwas an Airbnb gesendet wurde.
 """
 from __future__ import annotations
 
+from types import SimpleNamespace
+
+import pytest
+
 from src.features.channel_manager.airbnb_listing_import import AIRBNB_RAUM_AUF_SLUG
 from src.features.channel_manager.airbnb_zimmer_push import (
     SLUG_AUF_AIRBNB_RAUM,
+    AirbnbZimmerPushMixin,
     _ist_stand,
     zimmer_diff,
 )
@@ -388,3 +393,65 @@ def test_ohne_foto_stand_wird_nichts_gemeldet() -> None:
             ]
 
     assert _OhneToken()._airbnb_raeume_ohne_foto(None, "t-1", "p-1") == []  # noqa: SLF001
+
+
+# --- Empfaenger der Glocke = RECEIVE_SYSTEM_ALERTS (07.09.2026) --------------
+
+
+def test_glocke_erreicht_auch_den_co_admin(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Bis 07.09.2026 ging die Meldung nur an `role = 'admin'`. Der Co-Admin,
+    dem §4.1 die System-Warnungen zuspricht, erfuhr nichts."""
+    from src.features.notification_settings import dispatcher as disp_mod
+
+    gesendet: list[dict] = []
+
+    class _Dispatcher:
+        def __init__(self, _db: object) -> None:
+            pass
+
+        def sende(self, **kw: object) -> None:
+            gesendet.append(kw)
+
+    monkeypatch.setattr(disp_mod, "NotificationDispatcher", _Dispatcher)
+
+    class _Chain:
+        def __init__(self, rows: list[dict]) -> None:
+            self._rows = rows
+
+        def __getattr__(self, _n: str) -> _Chain:
+            return self
+
+        def __call__(self, *_a: object, **_k: object) -> _Chain:
+            return self
+
+        def execute(self) -> SimpleNamespace:
+            return SimpleNamespace(data=self._rows)
+
+    class _DB:
+        def table(self, name: str) -> _Chain:
+            if name == "users":
+                return _Chain([
+                    {"id": "chef", "role": "admin", "tenant_id": "t-1"},
+                    {"id": "vize", "role": "co_admin", "tenant_id": "t-1"},
+                    {"id": "putz", "role": "cleaner", "tenant_id": "t-1"},
+                ])
+            return _Chain([{"title": "Haus"}])
+
+    # Der Chain-Stub filtert nicht selbst — die Rollen-Eingrenzung passiert im
+    # `in_("role", …)` der echten DB. Hier wird nachgestellt, was diese Eingrenzung
+    # liefert, indem der Filter des Empfaenger-Helfers gegen die Zeilen laeuft.
+    from src.features.notification_settings import ereignisse
+
+    def _empfaenger(db: object, _tid: str) -> set[str]:
+        rows = db.table("users").execute().data
+        return {r["id"] for r in rows if r["role"] in ereignisse._ZUSTELL_ROLLEN}
+
+    monkeypatch.setattr(ereignisse, "system_warnungs_empfaenger", _empfaenger)
+
+    AirbnbZimmerPushMixin()._an_die_glocke(  # noqa: SLF001
+        _DB(), "t-1", "p-1",
+        betreff_key="airbnb.zimmer_ohne_foto", text_key="airbnb.rumpf_ohne_foto",
+        anzahl=1, raeume="balkon", ziel_pfad="/objekte/p-1/fotos",
+        dedup_key="airbnb_foto_fehlt:p-1",
+    )
+    assert {g["user_id"] for g in gesendet} == {"chef", "vize"}

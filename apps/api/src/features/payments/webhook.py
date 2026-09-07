@@ -146,6 +146,18 @@ def _dispatch_stripe_event(
                     db, obj, account=account
                 )
             if not verarbeitet:
+                # Angenommenes Buchungsangebot (0586): der Gast hat den
+                # Zahlungslink des Angebots bezahlt. Dieser Zweig LÖST DIE
+                # BUCHUNG AUS (über die Absicht aus 0409) — er ist damit der
+                # einzige der drei, der eine Reservierung entstehen lässt.
+                from src.features.booking_offers.webhook import (  # noqa: PLC0415
+                    verbuche_angebots_session,
+                )
+
+                verarbeitet = verbuche_angebots_session(
+                    db, obj, account=account
+                )
+            if not verarbeitet:
                 log.info("stripe_webhook_checkout_fremd", event_type=event_type)
         case "account.updated":
             _handle_account_updated(db, obj, now_iso)

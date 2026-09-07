@@ -1,6 +1,6 @@
 # ADR-0005: Währungs- & Rundungs-Policy — glatte Beträge
 
-- Status: **akzeptiert**
+- Status: **ersetzt durch [ADR-0027](0027-betraege-centgenau-anzeigen.md)** (07.09.2026)
 - Datum: 2026-06-15
 
 ## Kontext

@@ -32,7 +32,7 @@ Tragfähiger PMS-Kern + Vermieter-Seite (PMS, Objektpflege, Channel-Sync-Grundla
 | Datenbank/Auth/Storage | **Supabase** (Postgres, Auth, Storage), Multi-Tenant mit Row-Level-Security                                                                                                     |
 | Zahlungen              | **Stripe Connect Custom** (primäres Gateway: Mieten, Kautionen, Zusatzleistungen, white-label) · **Revolut** sekundär/konfigurierbar — Gateway-Adapter-Pattern (siehe ADR-0011) |
 | Sprachen (nativ)       | **DE / DK / EN** — UI + automatisierte Kommunikation (i18n, siehe ADR-0004)                                                                                                     |
-| Währungsdarstellung    | **Glatte Beträge** systemweit, keine Cent-/Øre-Anzeige (siehe ADR-0005)                                                                                                         |
+| Währungsdarstellung    | **Centgenau** (`formatCurrency`, 2 Nachkommastellen); glatte Zahlen nur in kompakten Rastern (Kalender-/DP-Zelle) — siehe ADR-0027                                            |
 | Mobile-App             | **React Native 0.86** (bare, pnpm) — gleiches FastAPI `/api/v1` + Supabase-JWT wie Web; Tokens in Keychain. Siehe `docs/mobile-integration-plan.md`                             |
 | Package Manager (Web)  | **Bun**                                                                                                                                                                         |
 | Deployment             | Web → Vercel; API → Hetzner (Coolify); DSGVO-konform, self-hosted bevorzugt                                                                                                     |
@@ -197,10 +197,14 @@ Jeder Slice in `apps/api/src/features/<name>/` mit `router.py`, `service.py`, `s
 
 ### Preisstruktur (Geschäftsmodell, Lastenheft-Ergänzung)
 
-- **All-Inclusive:** kein Feature-Gating, voller Funktionsumfang für alle.
-- **0% Buchungsgebühr** im eigenen System (Abgrenzung zu vOffice/..).
-- **Skalierung nur über Anzahl verwalteter Unterkünfte** (günstiger Festpreis-Staffel,
-  auch bei 10+ Einheiten bezahlbar). Siehe ADR-0006.
+- **Grundtarif skaliert über Objekte** (Staffel: bis 1 Objekt Festpreis, dann je
+  Objekt gestaffelt), Kern-PMS, Kalender, Kanalmanager, Posteingang, Aufgaben,
+  Eigentümer- und Gästeportal immer enthalten.
+- **Buchbare Module** (Buchhaltung, Mitarbeiter, Jobmarkt, Hotel, Avatar, Dynamische
+  Preise, Schlösser je Hersteller) mit fail-closed Gate `modul_aktiv()`; ein Gate
+  nur an einem Modul aus `MODULE_KEYS`.
+- **Drei Provisionswege nach Kanal:** eigene Website 0 % · OTA 0,5 % · myBestDays 8 %.
+  Siehe ADR-0025 (ersetzt ADR-0006).
 
 ### Universelles Unterkunfts-Ökosystem (Cross-Over-SaaS)
 

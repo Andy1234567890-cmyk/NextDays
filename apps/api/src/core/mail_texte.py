@@ -39,6 +39,7 @@ vorkommen — auch das prüft der Test, denn ein in der Übersetzung vergessenes
 from __future__ import annotations
 
 from src.core.mail_sprache import FALLBACK, SUPPORTED
+from src.core.mail_texte_angebote import TEXTE_ANGEBOTE
 from src.core.mail_texte_partner import TEXTE_PARTNER
 from src.core.mail_texte_partner_reichweite import TEXTE_PARTNER_REICHWEITE
 from src.core.mail_texte_personal import TEXTE_PERSONAL
@@ -1168,6 +1169,58 @@ TEXTE: dict[str, dict[str, str]] = {
         "sl": "Poglej v {marke}",
         "sv": "Visa i {marke}",
     },
+    "benachrichtigung.angebot_angenommen": {
+        "bg": "{gast} прие офертата за {objekt} и плаща",
+        "cs": "{gast} přijal nabídku pro {objekt} a zaplatí",
+        "da": "{gast} har accepteret tilbuddet for {objekt} og betaler",
+        "de": "{gast} hat das Angebot für {objekt} angenommen und zahlt",
+        "el": "Ο {gast} αποδέχτηκε την προσφορά για το {objekt} και θα πληρώσει",
+        "en": "{gast} accepted the offer for {objekt} and will pay",
+        "es": "{gast} ha aceptado la oferta para {objekt} y paga",
+        "et": "{gast} on pakkumise {objekt} vastu võtnud ja maksab",
+        "fi": "{gast} on hyväksynyt kohteen {objekt} tarjouksen ja maksaa",
+        "fr": "{gast} a accepté l'offre pour {objekt} et paie",
+        "ga": "Ghlac {gast} leis an tairiscint do {objekt} agus íocfaidh sé",
+        "hr": "{gast} je prihvatio ponudu za {objekt} i plaća",
+        "hu": "{gast} elfogadta az ajánlatot a következőhöz: {objekt}, és fizet",
+        "it": "{gast} ha accettato l'offerta per {objekt} e paga",
+        "lt": "{gast} priėmė pasiūlymą dėl {objekt} ir sumokės",
+        "lv": "{gast} pieņēma piedāvājumu par {objekt} un maksā",
+        "mt": "{gast} aċċetta l-offerta għal {objekt} u se jħallas",
+        "nl": "{gast} heeft het aanbod voor {objekt} geaccepteerd en betaalt",
+        "pl": "{gast} zaakceptował ofertę dla {objekt} i zapłaci",
+        "pt": "{gast} aceitou a oferta para {objekt} e paga",
+        "ro": "{gast} a acceptat oferta pentru {objekt} și plătește",
+        "sk": "{gast} prijal ponuku pre {objekt} a zaplatí",
+        "sl": "{gast} je sprejel ponudbo za {objekt} in plačal",
+        "sv": "{gast} har accepterat erbjudandet för {objekt} och betalar",
+    },
+    "benachrichtigung.angebot_abgelehnt": {
+        "bg": "{gast} отхвърли офертата за {objekt}",
+        "cs": "{gast} odmítl nabídku pro {objekt}",
+        "da": "{gast} har afvist tilbuddet for {objekt}",
+        "de": "{gast} hat das Angebot für {objekt} abgelehnt",
+        "el": "Ο {gast} απέρριψε την προσφορά για το {objekt}",
+        "en": "{gast} declined the offer for {objekt}",
+        "es": "{gast} ha rechazado la oferta para {objekt}",
+        "et": "{gast} on pakkumise {objekt} tagasi lükanud",
+        "fi": "{gast} on hylännyt kohteen {objekt} tarjouksen",
+        "fr": "{gast} a refusé l'offre pour {objekt}",
+        "ga": "Dhiúltaigh {gast} don tairiscint do {objekt}",
+        "hr": "{gast} je odbio ponudu za {objekt}",
+        "hu": "{gast} elutasította az ajánlatot a következőhöz: {objekt}",
+        "it": "{gast} ha rifiutato l'offerta per {objekt}",
+        "lt": "{gast} atmetė pasiūlymą dėl {objekt}",
+        "lv": "{gast} noraidīja piedāvājumu par {objekt}",
+        "mt": "{gast} irrifjuta l-offerta għal {objekt}",
+        "nl": "{gast} heeft het aanbod voor {objekt} afgewezen",
+        "pl": "{gast} odrzucił ofertę dla {objekt}",
+        "pt": "{gast} recusou a oferta para {objekt}",
+        "ro": "{gast} a refuzat oferta pentru {objekt}",
+        "sk": "{gast} odmietol ponuku pre {objekt}",
+        "sl": "{gast} je zavrnil ponudbo za {objekt}",
+        "sv": "{gast} har avböjt erbjudandet för {objekt}",
+    },
     "benachrichtigung.aufgabe_neu": {
         "bg": "Нова задача: {titel}",
         "cs": "Nový úkol: {titel}",
@@ -1433,6 +1486,141 @@ TEXTE: dict[str, dict[str, str]] = {
         "sk": "Správa sa zdržala",
         "sl": "Sporočilo je zakasnjeno",
         "sv": "Meddelandet är försenat",
+    },
+    # Systemwarnung (§4.1 RECEIVE_SYSTEM_ALERTS, 07.09.2026): Betreff der
+    # Glocken-Meldung, wenn ein Hintergrundlauf (Portal-Abgleich, Push)
+    # fehlschlaegt. Nur die Glocke — Kategorie `systemwarnung` ohne Kanaele.
+    "benachrichtigung.systemwarnung": {
+        "bg": "Системно предупреждение",
+        "cs": "Systémové varování",
+        "da": "Systemadvarsel",
+        "de": "Systemwarnung",
+        "el": "Προειδοποίηση συστήματος",
+        "en": "System alert",
+        "es": "Aviso del sistema",
+        "et": "Süsteemihoiatus",
+        "fi": "Järjestelmävaroitus",
+        "fr": "Alerte système",
+        "ga": "Rabhadh córais",
+        "hr": "Upozorenje sustava",
+        "hu": "Rendszerfigyelmeztetés",
+        "it": "Avviso di sistema",
+        "lt": "Sistemos įspėjimas",
+        "lv": "Sistēmas brīdinājums",
+        "mt": "Twissija tas-sistema",
+        "nl": "Systeemwaarschuwing",
+        "pl": "Ostrzeżenie systemowe",
+        "pt": "Alerta do sistema",
+        "ro": "Avertizare de sistem",
+        "sk": "Systémové varovanie",
+        "sl": "Sistemsko opozorilo",
+        "sv": "Systemvarning",
+    },
+    # Rumpf: der naechtliche Portal-Abgleich eines Objekts ist gescheitert.
+    # `fehler` ist der Wortlaut der Ausnahme (Wurzel 4: kein uebersetzter
+    # Ersatz fuer eine fremde Meldung), `objekt` der Objekttitel.
+    "benachrichtigung.systemwarnung_portalabgleich": {
+        "bg": (
+            "Синхронизацията с порталите за {objekt} се провали: {fehler}. "
+            "Цените и ограниченията не бяха прехвърлени напълно; опитът ще бъде повторен."
+        ),
+        "cs": (
+            "Synchronizace s portály pro {objekt} selhala: {fehler}. "
+            "Ceny a omezení nebyly přeneseny úplně; běh se zopakuje."
+        ),
+        "da": (
+            "Portalsynkroniseringen for {objekt} mislykkedes: {fehler}. "
+            "Priser og restriktioner blev ikke overført fuldt ud; kørslen gentages."
+        ),
+        "de": (
+            "Der Portal-Abgleich für {objekt} ist fehlgeschlagen: {fehler}. "
+            "Preise und Restriktionen wurden nicht vollständig übertragen; der "
+            "Lauf wird wiederholt."
+        ),
+        "el": (
+            "Ο συγχρονισμός με τις πύλες για {objekt} απέτυχε: {fehler}. "
+            "Οι τιμές και οι περιορισμοί δεν μεταφέρθηκαν πλήρως· η εκτέλεση θα επαναληφθεί."
+        ),
+        "en": (
+            "The channel sync for {objekt} failed: {fehler}. "
+            "Rates and restrictions were not fully transferred; the run will be retried."
+        ),
+        "es": (
+            "La sincronización con los portales de {objekt} ha fallado: {fehler}. "
+            "Los precios y las restricciones no se transfirieron por completo; se "
+            "repetirá la ejecución."
+        ),
+        "et": (
+            "Portaalide sünkroonimine objektile {objekt} ebaõnnestus: {fehler}. "
+            "Hindu ja piiranguid ei kantud täielikult üle; käivitust korratakse."
+        ),
+        "fi": (
+            "Portaalisynkronointi kohteelle {objekt} epäonnistui: {fehler}. "
+            "Hintoja ja rajoituksia ei siirretty kokonaan; ajo toistetaan."
+        ),
+        "fr": (
+            "La synchronisation des portails pour {objekt} a échoué : {fehler}. "
+            "Les tarifs et restrictions n'ont pas été transmis intégralement ; "
+            "l'exécution sera relancée."
+        ),
+        "ga": (
+            "Theip ar shioncrónú na dtairseach do {objekt}: {fehler}. "
+            "Níor aistríodh rátaí agus srianta go hiomlán; déanfar an rith arís."
+        ),
+        "hr": (
+            "Sinkronizacija s portalima za {objekt} nije uspjela: {fehler}. "
+            "Cijene i ograničenja nisu u potpunosti preneseni; postupak će se ponoviti."
+        ),
+        "hu": (
+            "A portálszinkronizálás sikertelen volt ({objekt}): {fehler}. "
+            "Az árak és korlátozások nem kerültek át teljesen; a futás megismétlődik."
+        ),
+        "it": (
+            "La sincronizzazione con i portali per {objekt} non è riuscita: {fehler}. "
+            "Prezzi e restrizioni non sono stati trasferiti completamente; "
+            "l'esecuzione verrà ripetuta."
+        ),
+        "lt": (
+            "Portalų sinchronizavimas objektui {objekt} nepavyko: {fehler}. "
+            "Kainos ir apribojimai perduoti ne visiškai; vykdymas bus pakartotas."
+        ),
+        "lv": (
+            "Portālu sinhronizācija objektam {objekt} neizdevās: {fehler}. "
+            "Cenas un ierobežojumi netika pilnībā pārsūtīti; izpilde tiks atkārtota."
+        ),
+        "mt": (
+            "Is-sinkronizzazzjoni tal-portali għal {objekt} falliet: {fehler}. "
+            "Il-prezzijiet u r-restrizzjonijiet ma ġewx trasferiti kompletament; "
+            "it-tħaddim jerġa' jsir."
+        ),
+        "nl": (
+            "De portaalsynchronisatie voor {objekt} is mislukt: {fehler}. "
+            "Prijzen en restricties zijn niet volledig overgedragen; de run wordt herhaald."
+        ),
+        "pl": (
+            "Synchronizacja z portalami dla {objekt} nie powiodła się: {fehler}. "
+            "Ceny i ograniczenia nie zostały w pełni przeniesione; przebieg zostanie powtórzony."
+        ),
+        "pt": (
+            "A sincronização com os portais de {objekt} falhou: {fehler}. "
+            "Preços e restrições não foram transferidos por completo; a execução será repetida."
+        ),
+        "ro": (
+            "Sincronizarea cu portalurile pentru {objekt} a eșuat: {fehler}. "
+            "Prețurile și restricțiile nu au fost transferate complet; rularea va fi repetată."
+        ),
+        "sk": (
+            "Synchronizácia s portálmi pre {objekt} zlyhala: {fehler}. "
+            "Ceny a obmedzenia neboli prenesené úplne; beh sa zopakuje."
+        ),
+        "sl": (
+            "Sinhronizacija s portali za {objekt} ni uspela: {fehler}. "
+            "Cene in omejitve niso bile v celoti prenesene; zagon se bo ponovil."
+        ),
+        "sv": (
+            "Portalsynkroniseringen för {objekt} misslyckades: {fehler}. "
+            "Priser och restriktioner överfördes inte helt; körningen upprepas."
+        ),
     },
     "benachrichtigung.portal_rate_verwaist": {
         "bg": "Незададена цена в портал",
@@ -3601,6 +3789,7 @@ def text(schluessel: str, sprache: str, **werte: object) -> str:
 # Fachgebiets-Teile des Katalogs (Regel aus dem Modul-Docstring: nach FACHGEBIET
 # teilen, nie nach Zeilen). Sie werden hier eingehängt, damit `text()` und der
 # Vollständigkeitstest sie wie jeden anderen Schlüssel sehen.
+TEXTE.update(TEXTE_ANGEBOTE)
 TEXTE.update(TEXTE_PARTNER)
 TEXTE.update(TEXTE_PARTNER_REICHWEITE)
 TEXTE.update(TEXTE_PERSONAL)

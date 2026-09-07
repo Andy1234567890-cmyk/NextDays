@@ -41,6 +41,11 @@ import {
 } from "@/lib/firmenprofil";
 import { getMe, setDefaultLanguage } from "@/lib/auth";
 
+// Die Logo-URL trägt den Pfad `{tenant}/logo.{ext}?v=…` (buchhaltung.upload_logo).
+function logoIstPdf(url: string): boolean {
+  return /\.pdf(\?|$)/i.test(url);
+}
+
 export default function ProfilPage() {
   const t = useTranslations("account");
   const tCountry = useTranslations("countries");
@@ -282,7 +287,14 @@ export default function ProfilPage() {
     }
     const url = res.data.companyLogo;
     if (typeof url === "string") setLogoUrl(url);
-    toast.success(t("company.logoSaved"));
+    // PDF ist als Datei hinterlegt, wird in Dokumenten/Gästeportal aber nicht
+    // als Bild gerendert — das muss der Betrieb beim Hochladen hören, nicht
+    // erst an einer leeren Stelle im Beleg erraten (Wurzel 4/5).
+    if (file.type === "application/pdf") {
+      toast.warning(t("company.logoPdfHint"));
+    } else {
+      toast.success(t("company.logoSaved"));
+    }
   }
 
   return (
@@ -318,7 +330,14 @@ export default function ProfilPage() {
             disabled={uploading}
             className="relative flex size-32 cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-(--radius) border border-dashed border-border text-muted-foreground transition-colors hover:bg-secondary/50 disabled:cursor-wait"
           >
-            {logoUrl ? (
+            {logoUrl && logoIstPdf(logoUrl) ? (
+              // Ein PDF-Logo (0580) kann kein <img> zeigen — Datei-Symbol
+              // statt eines leeren Kastens, der wie „kein Logo" aussähe.
+              <>
+                <Icon icon="ph:file-pdf" className="size-8" />
+                <span className="text-xs">{t("company.logoPdf")}</span>
+              </>
+            ) : logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={logoUrl}
@@ -350,7 +369,7 @@ export default function ProfilPage() {
           <input
             ref={fileRef}
             type="file"
-            accept="image/png,image/jpeg,image/webp,image/svg+xml"
+            accept="image/png,image/jpeg,image/webp,image/svg+xml,application/pdf"
             className="hidden"
             onChange={onPickLogo}
           />

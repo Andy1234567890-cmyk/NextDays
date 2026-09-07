@@ -5,6 +5,7 @@
 // Der aktive Reiter wird über usePathname bestimmt. Neue Einstellungs-Flächen
 // kommen als weiterer Reiter hierher, nicht als eigene Top-Level-Route.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -21,7 +22,7 @@ type NavItem = {
 type NavGroup = { title: string; items: NavItem[] };
 
 // requiresBilling: nur sichtbar mit manage_billing (der Endpunkt erzwingt es).
-function buildGroups(canBilling: boolean): NavGroup[] {
+function buildGroups(canBilling: boolean, saisonVorlagenLabel: string): NavGroup[] {
   const items: NavItem[] = [
     {
       key: "conditions",
@@ -35,6 +36,14 @@ function buildGroups(canBilling: boolean): NavGroup[] {
       label: "Kalender importieren/exportieren",
       href: "/einstellungen/kalender",
       icon: "ph:calendar-dots",
+    },
+    {
+      // Saison-Vorlagen (ADR-0024): tenant-weit, per Checkbox auf Objekte
+      // anwendbar — die Objekt-Saisons selbst bleiben unter /objekte/[id].
+      key: "season-templates",
+      label: saisonVorlagenLabel,
+      href: "/einstellungen/saison-vorlagen",
+      icon: "ph:calendar-heart",
     },
   ];
   if (canBilling) {
@@ -50,7 +59,8 @@ function buildGroups(canBilling: boolean): NavGroup[] {
 
 export function EinstellungenNav({ canBilling }: { canBilling: boolean }) {
   const pathname = usePathname();
-  const GROUPS = buildGroups(canBilling);
+  const tVorlagen = useTranslations("kalender.vorlagen");
+  const GROUPS = buildGroups(canBilling, tVorlagen("navTitel"));
 
   const isActive = (item: NavItem): boolean =>
     item.exact ? pathname === item.href : pathname.startsWith(item.href);

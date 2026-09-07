@@ -455,7 +455,9 @@ class DynamicPricingRecompute:
         + compute_day), OHNE zu speichern. Geteilt von recompute_property (schreibt)
         und suggest_range (nur lesen). EINE Rechenwahrheit."""
         tenant_id = self._tenant_for_property(property_id)
-        event_pct = self._event_pct_by_date(tenant_id, rng_start, rng_end)
+        event_pct = self._event_pct_by_date(
+            tenant_id, rng_start, rng_end, property_id=property_id
+        )
         booked = self._booked_dates(property_id, rng_start, rng_end)
         market = self._market_by_date(
             property_id, settings, tenant_id, rng_start, rng_end
@@ -908,9 +910,18 @@ class DynamicPricingRecompute:
         return res[0].get("tenant_id") if res else None
 
     def _event_pct_by_date(
-        self, tenant_id: str | None, start: date, end: date
+        self, tenant_id: str | None, start: date, end: date,
+        property_id: str | None = None,
     ) -> dict[str, float]:
-        """Event-Aufschlag je Tag (tenant-weit). events(tenant) → event_periods."""
+        """Event-Aufschlag je Tag. events(tenant) → event_periods.
+
+        Seit 0583 trägt ein Event eine Objektzuweisung
+        (`event_property_assignments`): OHNE Zeile gilt es für alle Objekte des
+        Mandanten, MIT Zeilen nur für die genannten. Ein Event ohne
+        Zuweisung und ein Event, das dieses Objekt nennt, zählen — ein Event,
+        das ANDERE Objekte nennt, nicht (die „DANA CUP" in Hjørring hob vorher
+        auch den Preis auf Bornholm).
+        """
         if not tenant_id:
             return {}
         events = (
@@ -921,6 +932,22 @@ class DynamicPricingRecompute:
             .execute()
         ).data or []
         pct_by_event = {e["id"]: float(e.get("percent") or 0) for e in events}
+        if not pct_by_event:
+            return {}
+        assigns = (
+            self._db()
+            .table("event_property_assignments")
+            .select("event_id, property_id")
+            .in_("event_id", list(pct_by_event.keys()))
+            .execute()
+        ).data or []
+        zugewiesen: dict[str, set[str]] = {}
+        for a in assigns:
+            zugewiesen.setdefault(a["event_id"], set()).add(a["property_id"])
+        pct_by_event = {
+            eid: pct for eid, pct in pct_by_event.items()
+            if eid not in zugewiesen or property_id in zugewiesen[eid]
+        }
         if not pct_by_event:
             return {}
         periods = (

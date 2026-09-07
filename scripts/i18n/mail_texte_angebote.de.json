@@ -1,0 +1,22 @@
+{
+  "angebot.neu.betreff": "Ihr Angebot für {objekt} vom {anreise} bis {abreise}",
+  "angebot.neu.absatz_1": "Guten Tag {name}, hier ist Ihr persönliches Angebot für {objekt}.",
+  "angebot.neu.absatz_2": "Anreise {anreise}, Abreise {abreise} — {naechte} Nächte für {betrag}.",
+  "angebot.neu.absatz_3": "Über den Link sehen Sie alle Positionen und können verbindlich buchen und bezahlen.",
+  "angebot.neu.aktion": "Angebot ansehen und buchen",
+  "angebot.neu.hinweis_frist": "Das Angebot gilt bis {frist}. Danach ist der Zeitraum wieder frei verkäuflich.",
+  "angebot.neu.hinweis_keine_reservierung": "Der Zeitraum ist noch nicht für Sie reserviert — erst Ihre Zahlung macht die Buchung verbindlich.",
+  "angebot.neu.hinweis_anzahlung": "Jetzt fällig: {anzahlung}. Den Restbetrag zahlen Sie später.",
+  "angebot.angenommen.betreff": "{name} hat Ihr Angebot für {objekt} angenommen",
+  "angebot.angenommen.absatz_1": "{name} hat das Angebot für {objekt} ({anreise} bis {abreise}) angenommen und zahlt gerade.",
+  "angebot.angenommen.absatz_2": "Sobald die Zahlung eingegangen ist, entsteht die Buchung automatisch.",
+  "angebot.abgelehnt.betreff": "{name} hat Ihr Angebot für {objekt} abgelehnt",
+  "angebot.abgelehnt.absatz_1": "{name} hat das Angebot für {objekt} ({anreise} bis {abreise}) abgelehnt.",
+  "angebot.abgelehnt.absatz_2": "Der Zeitraum bleibt frei verkäuflich.",
+  "angebot.bezahlt.betreff": "Buchung bestätigt: {objekt} vom {anreise} bis {abreise}",
+  "angebot.bezahlt.absatz_1": "Vielen Dank, {name} — Ihre Zahlung ist eingegangen und Ihre Buchung für {objekt} steht.",
+  "angebot.bezahlt.absatz_2": "Anreise {anreise}, Abreise {abreise}. Alle weiteren Angaben erhalten Sie vor der Anreise.",
+  "angebot.abgelaufen.betreff": "Ihr Angebot für {objekt} ist abgelaufen",
+  "angebot.abgelaufen.absatz_1": "Guten Tag {name}, das Angebot für {objekt} ({anreise} bis {abreise}) ist abgelaufen.",
+  "angebot.abgelaufen.absatz_2": "Wenn Sie weiterhin Interesse haben, melden Sie sich gern — wir prüfen die Verfügbarkeit erneut."
+}

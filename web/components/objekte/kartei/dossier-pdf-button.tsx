@@ -18,7 +18,7 @@ const FIELD_MAP: Record<string, string> = {
   title: "title", brand: "brand", empty: "empty", noOwner: "noOwner", yes: "yes", no: "no",
   name: "objectInfo.name", type: "objectInfo.type",
   capacityPersons: "objectInfo.capacityPersons", capacitySqm: "objectInfo.capacitySqm",
-  bfeNumber: "objectInfo.bfeNumber",
+  bfeNumber: "objectInfo.bfeNumber", boligtype: "objectInfo.boligtype",
   firstMeeting: "process.firstMeeting", contractSent: "process.contractSent",
   contractSigned: "process.contractSigned", invoiceSent: "process.invoiceSent",
   invoicePaid: "process.invoicePaid",
@@ -31,11 +31,13 @@ const FIELD_MAP: Record<string, string> = {
   photographerBooked: "marketing.photographerBooked", mediaReceived: "marketing.mediaReceived",
   siteWalkthrough: "marketing.siteWalkthrough", defectsListSent: "marketing.defectsListSent",
   welcomeStatus: "housebook.welcomeStatus", physicalPlaced: "housebook.physicalPlaced",
+  secretTips: "housebook.secretTips",
   platform: "listing.platform", launchAt: "listing.launchAt", status: "listing.status",
 };
 const NESTED: Record<string, readonly string[]> = {
   step: ["object_info", "process", "access", "service_agreements", "tradespeople", "marketing", "housebook", "listing"],
-  owner: ["heading", "name", "company", "email", "phone", "iban", "bic", "bankName", "accountHolder", "taxId", "vatId", "cprNumber", "ownershipShare"],
+  owner: ["heading", "name", "company", "email", "phone", "iban", "bic", "bankName", "accountHolder", "bankRegNr", "bankKontoNr", "taxId", "vatId", "cprNumber", "ownershipShare"],
+  boligtype: ["flexbolig", "helaarsbolig", "fritidshus"],
   keyStatus: ["agency_extra", "owner_only"],
   serviceType: ["caretaker", "window_cleaning", "lawn_mowing"],
   trade: ["electrician", "plumbing", "carpenter", "locksmith"],

@@ -1919,3 +1919,50 @@ def test_zuordnung_ueberschreibt_bestehende_entscheidung_nicht() -> None:
     )
     assert angelegt == []
     assert geschrieben == [], "bestehende Zuordnung wurde überschrieben"
+
+
+# --- boligtype (0581): Wertebereich, kein OTA-Sync -----------------------------
+
+
+def test_boligtype_nimmt_die_drei_dk_werte() -> None:
+    from src.features.properties.schemas import Boligtype, PropertyUpdate
+
+    for wert in ("flexbolig", "helaarsbolig", "fritidshus"):
+        assert PropertyUpdate(boligtype=wert).boligtype == Boligtype(wert)
+    assert PropertyUpdate(boligtype=None).model_dump(exclude_unset=True) == {"boligtype": None}
+
+
+def test_boligtype_fremder_wert_ist_422() -> None:
+    from pydantic import ValidationError
+
+    from src.features.properties.schemas import PropertyCreate, PropertyUpdate
+
+    with pytest.raises(ValidationError):
+        PropertyUpdate(boligtype="sommerhus")
+    with pytest.raises(ValidationError):
+        PropertyCreate(title="X", boligtype="holiday")
+
+
+def test_boligtype_loest_keinen_portal_sync_aus() -> None:
+    """Kartei-Felder gehen nicht an die Portale (0127) — auch boligtype nicht."""
+    from src.features.properties.service import _CONTENT_FIELDS
+
+    assert "boligtype" not in _CONTENT_FIELDS
+    assert "bfe_number" not in _CONTENT_FIELDS
+
+
+def test_boligtype_enum_deckt_migration_0581() -> None:
+    """DB-CHECK und Pydantic-Enum deckungsgleich (Memory: sonst 500 beim Lesen)."""
+    import re
+    from pathlib import Path
+
+    from src.features.properties.schemas import Boligtype
+
+    sql = (
+        Path(__file__).resolve().parents[6]
+        / "supabase" / "migrations" / "0581_owners_dk_bank_und_boligtype.sql"
+    ).read_text(encoding="utf-8")
+    treffer = re.search(r"boligtype in \(([^)]*)\)", sql)
+    assert treffer
+    werte = {w.strip().strip("'") for w in treffer.group(1).split(",")}
+    assert werte == {b.value for b in Boligtype}

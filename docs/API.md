@@ -59,6 +59,7 @@ Die Vertical Slices stellen jeweils mindestens einen Health-Endpoint bereit:
 | payments         | `GET /api/v1/payments/health` (Stripe Connect + Zahlungen, s.u.)             |
 | channel_manager  | `GET /api/v1/channel-manager/health` (Channex-Integration, s.u.)             |
 | booking_engine   | `GET /api/v1/booking-engine/health`                                          |
+| booking_offers   | `GET /api/v1/booking-offers/health` (Buchungsangebote §2.2, s.u.)            |
 | site_config      | `GET /api/v1/site-config/health` (Page-Builder, s.u.)                        |
 | addons           | `GET /api/v1/addons/health`                                                  |
 | owners           | `GET /api/v1/owners/health` (Eigentümer-Stammdaten + Objekt-Zuweisung, s.u.) |
@@ -66,7 +67,7 @@ Die Vertical Slices stellen jeweils mindestens einen Health-Endpoint bereit:
 | ocr              | `GET /api/v1/ocr/health`                                                     |
 | public_portal    | `GET /api/v1/public-portal/health`                                           |
 | tasks            | `GET /api/v1/tasks/health`                                                   |
-| crm              | `GET /api/v1/crm/health`                                                     |
+| crm              | `GET /api/v1/crm/health` (Eigentümer-Akquise + Partner & Deals, s.u.)        |
 | dashboard        | `GET /api/v1/dashboard/health`                                               |
 | content          | `GET /api/v1/content/health`                                                 |
 | announcements    | `GET /api/v1/announcements/health` (Neuerungen vom Backoffice, s.u.)         |
@@ -952,6 +953,16 @@ Capability `manage_calendar` (Stop-Sell-Schreibpfade außerdem die
 | `POST`  | `/api/v1/calendar/stop-sell`                          | Verkaufsstopp setzen: `{property_id, range, reason?, weekdays?, agency_id?}` → `{stopped_days}`. `weekdays` = ISO-Wochentagsmaske (0=Mo…6=So, nur passende Tage), `agency_id` = Adressat der Stop-Sale-Meldung (`travel_agencies`, `null` = alle Kanäle). Wird als `stop_sell`-Restriction an Channex gepusht |
 | `POST`  | `/api/v1/calendar/stop-sell/clear`                    | Verkaufsstopp aufheben: `{property_id, range, weekdays?}` → `{status:"ok"}`. Löscht **nur manuelle** Stopps (`source=manual`); Channex-Stopps spiegeln den OTA-Stand und bleiben unangetastet. `stop_sell=false` geht nur für Tage an Channex, die danach wirklich frei sind                                  |
 | `POST`  | `/api/v1/calendar/bulk-edit`                          | Preis/Min-Stay/Sperre/Stop-Sell über mehrere Objekte × Zeitraum — `404` (fremdes Objekt)                                                                                                                                                                                                                      |
+| `GET`   | `/api/v1/calendar/events`                             | Sonder-Events des Mandanten (0011/0583): `name`, `percent`, `color`, `periods[]` (n auch unterbrochene Zeiträume, `end_date` inklusiv), `property_ids[]` (leer = alle Objekte). Wirken als Event-Faktor im Dynamic Pricing. `view_calendar`                                                                     |
+| `POST`  | `/api/v1/calendar/events`                             | Event anlegen: `{name, percent, color?, periods[≤50, je ≤366 Tage], property_ids[≤200]}` → `422` bei Verstoß, `404` bei fremder Objekt-ID. Reiht `recompute_property` für die betroffenen DP-Objekte ein. `manage_calendar` + `edit_calendar_bookings`                                                       |
+| `PATCH` | `/api/v1/calendar/events/{id}`                        | Event ändern; `periods`/`property_ids` werden — wenn gesendet — KOMPLETT ersetzt (`[]` ist eine echte Angabe). Recompute für ALTE und NEUE Objekte (Wurzel 1). `manage_calendar` + `edit_calendar_bookings`                                                                                                   |
+| `DELETE`| `/api/v1/calendar/events/{id}`                        | Event löschen (Zeiträume/Zuweisung per FK), Recompute der betroffenen Objekte. `manage_calendar` + `edit_calendar_bookings`                                                                                                                                                                                    |
+| `GET`   | `/api/v1/calendar/season-templates`                   | Tenant-weite Saison-Vorlagen (0584, ADR-0024): `name`, `farbe`, `kategorien[]` (volle Regelsätze: name/color/mode/amount + Aufenthaltsregeln), `zeitraeume[]` (`kategorie_index`, start/end inklusiv). `view_calendar`                                                                                          |
+| `POST`  | `/api/v1/calendar/season-templates`                   | Vorlage anlegen (`409` bei gleichem Namen; Zeitraum auf fehlende Kategorie / doppelte Kategorienamen → `422`). `manage_calendar` + `edit_calendar_bookings`                                                                                                                                                    |
+| `POST`  | `/api/v1/calendar/season-templates/from-property`     | „Als Vorlage speichern": `{property_id, name, farbe?}` nimmt Saisons + Zeiträume des Objekts; gleicher Name → Update. `422` ohne Saisons, `404` fremdes Objekt                                                                                                                                                 |
+| `PATCH` | `/api/v1/calendar/season-templates/{id}`              | Vorlage ändern; `kategorien`/`zeitraeume` werden komplett ersetzt, gespeicherte Zeiträume werden gegen neue Kategorien geprüft (`422`)                                                                                                                                                                         |
+| `DELETE`| `/api/v1/calendar/season-templates/{id}`              | Vorlage löschen — angewendete Saisons an den Objekten bleiben (Kopie, ADR-0024)                                                                                                                                                                                                                                |
+| `POST`  | `/api/v1/calendar/season-templates/{id}/apply`        | `{property_ids[≤200], zeitraeume_mitnehmen}` → `{uebertragen, uebersprungen[{property_id, kategorie, grund}]}`. Läuft je (Objekt, Kategorie) über den Saison-Übertragungspfad (Upsert auf (property_id, name), Zeiträume ersetzen, materialisieren, pushen) — idempotent. `422` ohne Kategorien bzw. „mit Zeiträumen" ohne Zeiträume, `404` fremdes Ziel |
 
 ```json
 // GET /check → 200
@@ -2464,6 +2475,44 @@ manuelle Stopps werden als `stop_sell`-Restriction an Channex gepusht.
 
 ---
 
+## crm — Eigentümer-Akquise & Partner/Deals (§2.6, Migrationen `0596`–`0598`)
+
+Alle fachlichen Endpunkte hinter der Capability `manage_crm` (admin, co_admin;
+staff/cleaner/owner → `403`, auf DB-Ebene per restriktiver Rollen-Policy ohne
+Lesezugriff). Tenant-Scope aus dem JWT; per-ID-Zugriffe über `load_scoped`.
+Schreiben ausschließlich über die API (service_role); `leads`, `lead_notes`,
+`partners`, `deals` liegen in der Realtime-Publikation.
+
+### Leads
+
+| Methode  | Pfad                                                               | Zweck                                                                                                   |
+| -------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| `GET`    | `/api/v1/crm/leads?status&lead_source&assigned_user_id&q&offset&limit` | Liste mit Filter, Suche (Name/E-Mail/Ort), Paginierung (`limit` ≤ 200); Antwort `items,total,offset,limit` |
+| `POST`   | `/api/v1/crm/leads`                                                | Lead anlegen (Status immer `new`; `erste_notiz` landet im Verlauf)                                      |
+| `GET/PATCH/DELETE` | `/api/v1/crm/leads/{id}`                                 | Lesen/ändern/löschen. `status` folgt dem Zustandsgraphen (`422` mit `von/nach/erlaubt`), `lost` verlangt `lost_reason`, `won` nur über `convert` |
+| `GET/POST` | `/api/v1/crm/leads/{id}/notes`                                   | Notizen-Verlauf (append-only, `author_id` = Aufrufer)                                                   |
+| `POST`   | `/api/v1/crm/leads/{id}/convert`                                   | Lead → Eigentümer (owners-Slice) + optional Objekt-Gerüst (properties-Slice) und Zuordnung. Idempotent: zweiter Aufruf liefert dieselben IDs (`bereits_konvertiert=true`). Fehlende Pflichtangaben → `422` mit `fehlende_felder` (`property_title`, `property_type`, `object_max_guests`, `email` bei Portalzugang). `lost` → `409` |
+
+Status-Werte: `new | contacted | visit_scheduled | offer_sent | contract_sent | won | lost`;
+Quellen: `website | referral | portal | event | cold_call | social | other` (CHECKs in 0597).
+Adressen getrennt (`street/house_number/postal_code/city/country`, Objekt mit `object_`-Präfix;
+Land ISO-2, unbekannt → `422`).
+
+### Partner & Deals
+
+| Methode  | Pfad                                            | Zweck                                                                                            |
+| -------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `GET`    | `/api/v1/crm/partners?q`                        | Partner-Liste                                                                                    |
+| `POST`   | `/api/v1/crm/partners`                          | Partner anlegen (Name, Anschrift getrennt, `contact_name/contact_email/contact_phone`)           |
+| `GET/PATCH/DELETE` | `/api/v1/crm/partners/{id}`           | Kartei; Löschen räumt die QR-Dateien der Deals im Bucket mit ab                                  |
+| `GET/POST` | `/api/v1/crm/partners/{id}/deals`             | Deals des Partners; `discount_kind` `percent\|fixed`, `currency` Pflicht bei `fixed` (nie geraten → `422`), `discount_code` eindeutig je Tenant (`409`), `gueltig_von/bis`, `im_gastportal_sichtbar` (nur Feld, kein Rendering) |
+| `GET/PATCH/DELETE` | `/api/v1/crm/deals/{id}`              | Deal; PATCH prüft die Regeln auf dem gemergten Zustand                                          |
+| `POST`   | `/api/v1/crm/deals/{id}/qr`                     | QR-Bild hochladen (multipart `file`, PNG/JPEG/SVG/PDF, 5 MB, Magic Bytes, SVG per nh3 gesäubert) → privater Bucket `partner-deals` |
+| `GET`    | `/api/v1/crm/deals/{id}/qr-url`                 | Signierte URL des hochgeladenen QR-Bilds (TTL 600 s); ohne Bild `404`                            |
+| `GET`    | `/api/v1/crm/deals/{id}/qr.png`                 | Aus dem Rabattcode erzeugter QR (PNG); ohne Code `409`                                           |
+
+---
+
 ## site_config (Page-Builder — implementiert)
 
 Backend des Page-Builders (Architektur + Datenmodell:
@@ -3011,6 +3060,67 @@ aktualisiert nach jeder Aktion über `revalidatePath`.
 `/[id]`) mit `admin/lib/announcements.ts`; Empfang
 `web/app/(dashboard)/neuerungen` und das Popup über `web/lib/announcements.ts`
 (`listAnnouncements`, `popupAnnouncement`, `quittiereAnnouncement`).
+
+## booking_offers — Buchungsangebot (`/api/v1/booking-offers`, 0586/0587)
+
+Lastenheft §2.2: „Angebots-E-Mail an Gast mit Bestätigungs-Link + verschlüsseltem
+Zahlungs-Gateway."
+
+**Der Ablauf.** Der Betrieb zieht im Kalender einen Zeitraum und wählt „Angebot".
+Der Server rechnet den Preis über den zentralen Resolver und hält ihn als
+Snapshot fest — das Angebot gilt zu diesem Preis, auch wenn sich der
+Kalenderpreis danach ändert. Der Gast bekommt eine Mail mit einem Token-Link.
+Sagt er zu, entsteht KEINE Buchung, sondern eine Buchungsabsicht (0409) plus ein
+Stripe-Zahlungslink im Konto des Betriebs; erst die bezahlte Session lässt über
+denselben Webhook-Pfad wie die öffentliche Buchungsstrecke die Reservierung
+entstehen. Damit gilt auch hier: **keine Buchung ohne bezahlte Zahlung.**
+
+**Was ein Angebot NICHT tut:** Nächte belegen. Der Zeitraum bleibt bis zur
+Zahlung verkäuflich; ist er beim Annehmen vergeben, antwortet `/accept` mit
+`409`, BEVOR Geld fließt. Zahlt der Gast und der Zeitraum ist zwischen Zahlung
+und Webhook vergeben, wird voll erstattet (Direct Charge, `direct_acct`).
+
+**Der Token ist der ganze Zugang.** Gespeichert ist nur sein SHA-256-Hash; der
+Klartext steht ausschließlich im Mail-Link. Die öffentlichen Routen liegen im
+strengen Rate-Limit-Bucket (`public_support`).
+
+### Intern (Betrieb)
+
+| Methode | Pfad | Recht | Zweck |
+|---|---|---|---|
+| `GET`  | `/api/v1/booking-offers`               | `manage_calendar` | Liste, neueste zuerst; `status`/`property_id` filtern, `limit` ≤ 200 |
+| `POST` | `/api/v1/booking-offers`               | `manage_calendar` | Anlegen; Preis und Währung rechnet der Server (Client-Betrag wird nicht angenommen) |
+| `GET`  | `/api/v1/booking-offers/{id}`          | `manage_calendar` | Detail |
+| `POST` | `/api/v1/booking-offers/{id}/send`     | `manage_calendar` | Angebotsmail (auch erneut; derselbe Link bleibt gültig) |
+| `POST` | `/api/v1/booking-offers/{id}/cancel`   | `manage_calendar` | Zurückziehen; der Gast-Link wird unbrauchbar. Bezahlt → `409` |
+
+Eigentümer und Mitarbeiter haben keinen Zugriff (§4.2/§4.3) — zusätzlich in der
+RLS von 0586 verankert (restriktive Policy auf `admin`/`co_admin`, Schreiben nur
+`service_role`).
+
+### Öffentlich (Gast, ohne Anmeldung)
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| `GET`  | `/api/v1/public/offers/{token}`         | Angebot anzeigen; setzt beim ersten Aufruf `viewed`. Liefert `acceptable` + `blocked_reason` — die Seite rechnet Frist und Zustand NICHT selbst nach |
+| `POST` | `/api/v1/public/offers/{token}/accept`  | Zusage → Verfügbarkeit erneut prüfen → Buchungsabsicht + Zahlungslink. Zweiter Klick gibt denselben Link (idempotent) |
+| `POST` | `/api/v1/public/offers/{token}/decline` | Absage; der Zeitraum bleibt verkäuflich |
+
+Die öffentliche Sicht (`PublicOfferOut`) trägt bewusst KEINE IDs und keine
+interne Notiz: der Gast braucht sie nicht, und jede ausgelieferte ID wäre ein
+Ansatzpunkt, fremde Angebote zu erraten.
+
+### Zustände
+
+`draft` → `sent` → `viewed` → `accepted` → `paid`, daneben `declined`,
+`expired` (Ablaufjob) und `cancelled` (Betrieb). Nur `sent` und `viewed` sind
+annehmbar.
+
+### Benachrichtigung
+
+Antwortet der Gast, meldet es die Kategorie `angebot_antwort` (0587, Mail + SMS
++ Glocke) an alle mit `RECEIVE_SYSTEM_ALERTS` — das Fenster zwischen Zusage und
+Zahlung ist kurz, und in ihm soll der Zeitraum nicht anderweitig verkauft werden.
 
 ## contact — Kontaktformular der Marketing-Seite (`/api/v1/contact`)
 

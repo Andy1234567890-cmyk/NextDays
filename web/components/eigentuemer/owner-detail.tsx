@@ -210,6 +210,9 @@ export function OwnerDetail({
       bic: owner.bic,
       bank_name: owner.bank_name,
       account_holder: owner.account_holder,
+      bank_reg_nr: owner.bank_reg_nr,
+      bank_konto_nr: owner.bank_konto_nr,
+      cpr_number: owner.cpr_number,
       default_commission_pct: owner.default_commission_pct,
       default_payout_method: owner.default_payout_method,
       statement_frequency: owner.statement_frequency,
@@ -466,6 +469,18 @@ export function OwnerDetail({
               onChange={(e) => set("vat_id", e.target.value || null)}
             />
           </Field>
+          {/* CPR (dänische Personennummer, 0127). Bis 07.09.2026 nur lesbar
+              in der Kartei — hier ist der einzige Schreibweg. Format prüft der
+              Server (TTMMJJ-XXXX → 422), die Eingabe bleibt frei. */}
+          <Field label={t("fields.cprNumber")} info={t("info.cprNumber")} infoAria={t("info.aria", { feld: t("fields.cprNumber") })}>
+            <Input
+              value={owner.cpr_number ?? ""}
+              placeholder={t("fields.cprPlaceholder")}
+              inputMode="numeric"
+              autoComplete="off"
+              onChange={(e) => set("cpr_number", e.target.value || null)}
+            />
+          </Field>
         </div>
       </Card>
 
@@ -579,6 +594,26 @@ export function OwnerDetail({
             <Input
               value={owner.bank_name ?? ""}
               onChange={(e) => set("bank_name", e.target.value || null)}
+            />
+          </Field>
+          {/* Dänische Bankverbindung (0581) NEBEN IBAN/BIC: Reg.-Nr. (4
+              Ziffern) + Konto-Nr. (bis 10 Ziffern). Server prüft das Format. */}
+          <Field label={t("fields.bankRegNr")}>
+            <Input
+              value={owner.bank_reg_nr ?? ""}
+              placeholder={t("fields.bankRegNrPlaceholder")}
+              inputMode="numeric"
+              maxLength={4}
+              onChange={(e) => set("bank_reg_nr", e.target.value || null)}
+            />
+          </Field>
+          <Field label={t("fields.bankKontoNr")}>
+            <Input
+              value={owner.bank_konto_nr ?? ""}
+              placeholder={t("fields.bankKontoNrPlaceholder")}
+              inputMode="numeric"
+              maxLength={10}
+              onChange={(e) => set("bank_konto_nr", e.target.value || null)}
             />
           </Field>
           <Field

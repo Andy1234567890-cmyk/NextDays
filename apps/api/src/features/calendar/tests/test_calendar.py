@@ -707,6 +707,74 @@ def test_price_override_set_and_clear() -> None:
     assert len(overrides) == 2
 
 
+# --- price override über einen BEREICH (Bulk-Dialog „zurücksetzen") ---
+
+def test_price_override_range_clears_every_day(monkeypatch) -> None:  # noqa: ANN001
+    """Ein Aufruf mit `end` nimmt den Override für JEDEN Tag des Bereichs zurück
+    und meldet den wieder geltenden Preis als Spannen, nicht je Tag."""
+    jobs = _ari_jobs(monkeypatch)
+    svc, store = _service(
+        properties=[{"id": "p1", "tenant_id": "t1"}],
+        rate_plans=[{"base_price": 100.0}],
+    )
+    svc.set_price_override(
+        "t1",
+        PriceOverrideRequest(
+            property_id="p1", date=date(2026, 5, 1), end=date(2026, 5, 4), price=None
+        ),
+    )
+    zeilen = store.get("price_overrides", [])
+    assert sorted(z["date"] for z in zeilen) == ["2026-05-01", "2026-05-02", "2026-05-03"]
+    assert all(z["price"] is None for z in zeilen)
+    # Drei Tage gleicher Basispreis → EIN Rate-Job über den Bereich.
+    rate_jobs = [j for j in jobs if j["kind"] == "rate"]
+    assert len(rate_jobs) == 1
+    assert rate_jobs[0]["date_from"] == "2026-05-01"
+    assert rate_jobs[0]["date_to"] == "2026-05-03"
+    assert rate_jobs[0]["rate_cents"] == 10000
+
+
+def test_price_override_range_ueber_366_tage_ist_422() -> None:
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        PriceOverrideRequest(
+            property_id="p1", date=date(2026, 1, 1), end=date(2027, 1, 3), price=None
+        )
+    # Genau 366 Tage sind erlaubt (Schaltjahr-Kalenderjahr).
+    ok = PriceOverrideRequest(
+        property_id="p1", date=date(2028, 1, 1), end=date(2029, 1, 1), price=None
+    )
+    assert len(ok.tage()) == 366
+
+
+def test_price_override_end_vor_date_ist_422() -> None:
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        PriceOverrideRequest(
+            property_id="p1", date=date(2026, 5, 4), end=date(2026, 5, 4), price=None
+        )
+
+
+def test_preis_spannen_fasst_gleiche_preise_zusammen() -> None:
+    from src.features.calendar.service import _preis_spannen
+    from src.features.pricing.schemas import EffectivePriceDay
+
+    tage = [
+        EffectivePriceDay(date=date(2026, 5, 1), price=100.0),
+        EffectivePriceDay(date=date(2026, 5, 2), price=100.0),
+        EffectivePriceDay(date=date(2026, 5, 3), price=None),
+        EffectivePriceDay(date=date(2026, 5, 4), price=120.0),
+        EffectivePriceDay(date=date(2026, 5, 5), price=100.0),
+    ]
+    assert _preis_spannen(tage) == [
+        (date(2026, 5, 1), date(2026, 5, 3), 10000),
+        (date(2026, 5, 4), date(2026, 5, 5), 12000),
+        (date(2026, 5, 5), date(2026, 5, 6), 10000),
+    ]
+
+
 # --- bulk_edit: mehrere Objekte × Zeitraum ---
 
 def test_bulk_edit_applies_price_and_block_across_properties() -> None:

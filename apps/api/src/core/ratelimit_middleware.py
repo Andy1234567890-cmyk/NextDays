@@ -304,6 +304,13 @@ _MCP_AUTH_PATHS = ("/mcp/token", "/mcp/authorize", "/mcp/consent")
 # Anfrage abweisen als bei Redis-Ausfall die Schleusen öffnen.
 _PUBLIC_SUPPORT_PATHS = ("/support/public",)
 
+# Öffentliche Angebotsseite (0586): kein Login, der Token in der URL ist der
+# ganze Zugang. `/accept` erzeugt einen Zahlungslink bei Stripe und legt eine
+# Buchungsabsicht an — im Default-Bucket (300/60) wäre das ein bequemer Weg,
+# Token durchzuprobieren UND fremde Stripe-Aufrufe auszulösen. Derselbe strenge,
+# fail-closed-Bucket wie beim öffentlichen Support (Wurzel 8).
+_ANGEBOT_PUBLIC_PATHS = ("/public/offers/",)
+
 # Öffentliche Newsletter-Endpunkte der Marketing-Seite: jede Anfrage kann eine
 # Mail an eine FREMDE Adresse auslösen bzw. probiert einen Token durch — daher
 # derselbe strenge Bucket wie beim öffentlichen Support-Chat.
@@ -448,6 +455,7 @@ _BUCKET_REGELN: tuple[tuple[str, tuple[str, ...], str, bool], ...] = (
     ("nachberechnung", _NACHBERECHNUNG_PATHS, "nachberechnung", False),
     ("payments", ("/payments/",), "payments", True),
     ("public_support", _PUBLIC_SUPPORT_PATHS, "public_support", True),
+    ("public_support", _ANGEBOT_PUBLIC_PATHS, "public_support", True),
     ("public_support", _NEWSLETTER_PATHS, "public_support", True),
     ("public_support", _KONTO_LOESCHUNG_PATHS, "public_support", True),
     ("public_support", _KONTAKT_PATHS, "public_support", True),

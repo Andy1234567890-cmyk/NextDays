@@ -1,130 +1,257 @@
-# Anforderungs-Gap-Analyse & Roadmap
+# Anforderungs-Gap-Analyse — Lastenheft vs. Codebase
 
-> Abgleich des [Lastenhefts](LASTENHEFT.md) mit dem aktuell umgesetzten Stand
-> (12 Slices, auth voll, Migrationen 0001–0008). Zweck: Grundlage für
-> Datenmodell-Erweiterung und Stundenschätzung (Andy).
+> Abgleich von [LASTENHEFT.md](LASTENHEFT.md) (Stand 13.05.2026) mit dem
+> Code-Stand vom **07.09.2026** (Commit d3e36a3d, 579 Migrationen, 68 Slices).
+> Jede Zeile trägt einen Code-Beleg; ohne Beleg gibt es keinen Status.
+> Ersetzt die Fassung vom 13.07.2026, die i18n noch als „nicht umgesetzt“ führte.
+
+> **Umsetzungsstand 07.09.2026:** Etappen 1, 2, 3, 4, 7 und 12 des Plans
+> ([PLAN-LASTENHEFT-LUECKEN.md](PLAN-LASTENHEFT-LUECKEN.md)) sind gebaut und
+> ihre Migrationen live (0580–0587, 0596–0598). Damit sind unter anderem
+> geschlossen: Kachel-Dashboard (§2.1), Buchungsangebot und Tagespreis-Reset
+> (§2.2), Events und Saison-Vorlagen (§2.3), CRM und Partner/Deals (§2.6),
+> Boligtype/CPR/DK-Bank/Druck (§6) sowie die ADR-Lücken bei Preismodell,
+> Rundung und Eigentümer-Zuordnung (§1/§7.1). Die Tabellen unten beschreiben
+> den Befund VOR dieser Arbeit; offen bleiben Messaging (§2.4), Aufgaben-Reste
+> (§2.5), Standardtexte und Erst-Login (§5), Mitarbeiter-App (§4.3) und das
+> Typ-Ökosystem (§7.2).
 
 ## Legende
-✅ vorhanden · 🟡 teilweise / Struktur da · 🔴 neu · ⚠️ Widerspruch zur bisherigen Spec
+✅ vollständig · 🟡 teilweise (meist: Backend da, UI fehlt) · 🔴 fehlt ·
+⚪ bewusst anders entschieden (ADR vorhanden) · ⚠️ Abweichung OHNE ADR
+
+## Zusammenfassung
+
+| Abschnitt | ✅ | 🟡 | 🔴 | Kernbefund |
+|---|---|---|---|---|
+| §1 Übergreifend | 2 | 1 | 1 | Glatte Beträge (ADR-0005) im Kalender bewusst verworfen, ADR nicht nachgezogen |
+| §2.1 Dashboard | 1 | 3 | 0 | Kachel-Layout: Backend + Migration 0402 fertig, **null Frontend** |
+| §2.2 Kalender | 5 | 1 | 1 | Herzstück steht; „Buchungsangebot“ ist ein toter Menüpunkt |
+| §2.3 Saison/Event | 3 | 3 | 1 | Events nur DB + Lesepfad; Farbpalette entspricht nicht der Vorgabe |
+| §2.4 Messaging | 5 | 0 | 5 | Trigger/Übersetzung stark; **kein E-Mail/SMS-Versandkanal** für Gastnachrichten |
+| §2.5 Aufgaben | 7 | 2 | 1 | Regel-Engine bis Mobile; Saisonfenster + „vor nächstem Check-in“ fehlen |
+| §2.6 CRM/Partner | 0 | 6 | 2 | **Seit 0013 nur Tabellen** — `crm`-Slice hat nur `/health` |
+| §3 Schnittstellen | 5 | 2 | 4 | Airbnb live (18/38), Booking/Vrbo 0 verbundene Kanäle; Revolut nur Enum |
+| §4 Rollen | 24 | 5 | 0 | Reifster Teil; Mitarbeiter-Smartphone-Screens auf „P3“ zurückgestellt |
+| §5 Gäste-Portal | 4 | 2 | 3 | Widget fertig; `content_blocks` seit 0014 unangebunden; Erst-Login-Ereignis fehlt |
+| §6 Kartei | 14 | 8 | 2 | Stufen 2–8 vollständig; Boligtype tote Spalte, CPR ohne Schreibpfad |
+| §7.1 Preismodell | 0 | 2 | 2 | **Modul-Gates widersprechen ADR-0006** ohne Nachfolge-ADR |
+| §7.2 Ökosystem | 3 | 2 | 6 | Enum + Dropdown da; typspezifische Felder/Templates komplett offen |
 
 ---
 
-## A. Übergreifend (Lastenheft §1)
+## §1 Übergreifend
 
-| Anforderung | Status | Hinweis |
-|---|---|---|
-| Glatte Beträge, keine Cents/Øre | 🔴 | DB nutzt `numeric(12,2)`. Darstellung muss runden; Rundungs-/Format-Policy als Querschnitt definieren. |
-| 3 native Sprachen (DE/DK/EN), Dänisch-Bug | 🔴 | i18n bisher nicht umgesetzt. Frontend-i18n + serverseitige Übersetzungs-Persistenz nötig. |
-| Globale Mandantenfähigkeit | ✅ | RLS + `tenant_id` + JWT-Claim stehen. |
-
-## B. Module (Lastenheft §2)
-
-| Modul | Vorhandener Slice | Status | Lücke |
+| Anforderung | Status | Beleg | Was fehlt |
 |---|---|---|---|
-| 2.1 Custom Dashboard (Drag&Drop, White-Label) | — | 🔴 | Neuer Frontend-Bereich + `dashboard_layouts`-Tabelle, Logo-Storage. |
-| 2.2 Multi-/Einzelkalender (Click-and-Hold) | `calendar` | 🟡 | Slice + `availability` da; UI-Interaktion, manuelle Preisüberschreibung im Kalender, Popup-Logik fehlen. |
-| 2.3 Saison-/Event-Management | `rates` | 🟡 | `rate_plans.season_rules` jsonb da, aber: taggenaue Saisons, Templates, Farb-Legende, Events (unterbrochene Zeiträume) = neue Tabellen. |
-| 2.4 Unified Inbox + Messaging | `inbox` | 🟡 | Slice + `messages` da; Trigger-System, Multi-Channel (SMS/OTA), Übersetzungs-Gateway, Rich-Text, Shortcodes fehlen. |
-| 2.5 Aufgaben-/Checklisten | `tasks` | ✅ | Slice mit Logik: create/list/status, auto-Generierung bei Buchung (Anreise-Check + Endreinigung), Checklisten + Foto-Nachweise, Inventar (auch unterkunftslos), Vertretungs-Feature (§4.3). Datenmodell 0012+0019. Capability-geschützt. |
-| 2.6 CRM (Leads) + Partner/Deals | — | 🔴 | Neuer `crm`-Slice: `leads`, `partners`/`deals`. |
+| Glatte Beträge, kein Cent/Øre | ⚠️🔴 | ADR-0005 + `PROJECT.md:35` fordern es; `packages/currency/src/index.ts:21` Default 2 Nachkommastellen; `web/components/kalender/calendar-board.tsx:303` begründet Cent-Genauigkeit („wie Rate-Grid/Channex“); nur 11 von 235 `formatCurrency`-Stellen runden | Fachliche Entscheidung nötig: ADR-0005 umsetzen oder aufheben |
+| DE/DK/EN nativ | ✅ | `web/i18n/locales.ts` 24 Locales; `web/messages/{de,da,en}.json` je ~13.000 Schlüssel | Übererfüllt |
+| Dänisch-Bug | 🟡 | Cookie-Auflösung `web/i18n/aufloesung.ts`, Empfängersprache 0335/0363 | Der konkrete Alt-Bug ist nicht benannt, Abschluss nicht belegbar |
+| Mandantenfähig | ✅ | 0002 `tenants`, `current_tenant_id()` in RLS, 274 Migrationen mit `tenant_id` | — |
 
-## C. Schnittstellen (Lastenheft §3)
+## §2.1 Custom Dashboard
 
-| Anforderung | Status | Hinweis |
-|---|---|---|
-| Zwei-Wege-REST-APIs (Airbnb, Booking, Vrbo) | 🟡 | `channel_manager`-Slice + Adapter-Pattern vorbereitet; konkrete Adapter + Webhooks fehlen. |
-| Aggregator (Feondi) optional | 🟡 | Durch Adapter-Pattern offen (ADR-0001). |
-| **Revolut als primäres Gateway** | ⚠️🔴 | **Bisherige Spec/Code: Stripe.** Entscheidung: **Revolut primär, Stripe sekundär.** `payments`-Slice + Tech-Stack + ADR anpassen. |
-| Onboarding/Klonen (bidirektional) | 🔴 | Import/Export Unterkünfte via Channel-APIs — neue Funktion im `channel_manager`/`properties`. |
+| Anforderung | Status | Beleg | Was fehlt |
+|---|---|---|---|
+| Kacheln Drag&Drop / skalieren / ausblenden | 🟡 | Backend komplett: 0402 `dashboard_layouts`, Slice `dashboard_layout` (`GET/PUT/DELETE /dashboard-layout`), Schemas x/y/größe/ausgeblendet | **Frontend fehlt ganz**: 0 Aufrufe in `web`, referenzierte `web/lib/dashboard-katalog.ts` existiert nicht, keine DnD-Lib; `page.tsx` rendert statisch |
+| Logo-Upload PDF/JPG/PNG | 🟡 | 0067 Bucket, `POST /buchhaltung/companies/{id}/logo` (`buchhaltung/service.py:1213`, SVG-Sanitizing) | PDF wird mit 415 abgelehnt (`LOGO_MIME` ohne pdf, Bucket ohne pdf) |
+| Accordion-Seitenmenü | ✅ | `web/components/app-sidebar.tsx:712-788` Collapsible-Gruppen | — |
+| Doppelte Menüs entfernt | 🟡 | eine Sidebar-Datei | `hr/` und `components/personal/` existieren parallel, Personal-Dublette nicht positiv belegt |
 
-## D. Rollen (Lastenheft §4)
+## §2.2 Kalender
 
-| Anforderung | Status | Hinweis |
-|---|---|---|
-| Rollen owner/staff/cleaner + admin/co_admin | ✅ | Enum + granulare Capability-Matrix (auth/permissions.py) bildet §4 vollständig ab: Co-Admin System-Alerts + Staff-Zuweisung, Owner Notification-Prefs, Staff Verfügbarkeit + Vertretung. Tenant-Gründer = admin; invite legt weitere Rollen an (E2E gegen echte DB verifiziert). |
-| Eigentümer sieht nur SEINE Objekte | ✅ | `owner_property_assignments` (tenant_id,user_id,property_id; Migration 0058) ordnet einem Eigentümer-Login seine Objekte zu. RLS (0059): RESTRICTIVE SELECT-Policies via `owner_can_see_property()` auf `properties` + allen 23 property_id-Tabellen → owner sieht nur zugeordnete Zeilen, Agentur den ganzen Tenant. Pricing-API setzt den Scope zusätzlich durch (Service-Role umgeht RLS): `overview()` filtert, `update()` → 403 (read-only §4.2). Zuordnungs-API `GET/PUT /auth/owners/{id}/properties` (MANAGE_OWNERS) + UI in Konto → Benutzer. Sidebar reduziert (OWNER_ALLOWED_HREFS). E2E mit echtem owner-Login verifiziert (sieht 1 von 4 Objekten; update=403; owner-ohne-Zuordnung=0). Read-only-Stufe: Schreib-RLS-Policies bei Bedarf später. |
-| Eigentümer-Daten-Split (Vorname, Netto/Nacht) | 🟡 | Serverseitig erzwungen über die **feingranulare Permission-Matrix** (`users.permissions`, nicht rollengekoppelt): zentraler `auth/guest_masking.py` maskiert Gastname (nur Vorname ohne `view_guest_name`), Kontakt (`view_guest_contact`), Beträge (`pm_booking_total` & nicht `hide_prices`), Quelle (`view_booking_source`) — genutzt von `reservations.service` (list/get/create/dashboard) und `inbox.service` (list_threads/reservation_detail); fail-closed, admin = alle. Posteingang zusätzlich mit Enterprise-Achsen (Scope/Actions, `inbox/authz.py`). Offen: gleiche Maskierung in weiteren Slices (Finanzen/Reports) + DB-seitige RLS-Spaltenfilter. |
-| Sperrung beantragen → Admin-Freigabe | 🔴 | Workflow + `block_requests`-Tabelle. |
-| Zählerstände (append-only) | 🔴 | `meter_readings`-Tabelle, RLS verbietet Update/Delete für owner. |
-| Mitarbeiter-Smartphone-Portal | 🔴 | Eigene Ansicht, strikte Datentrennung, Vertretungs-Feature. |
+| Anforderung | Status | Beleg | Was fehlt |
+|---|---|---|---|
+| Einzeltag-Klick → Popup | ✅ | `calendar-action-menu.tsx`, `calendar-board.tsx:974/1125` — 6 Optionen | — |
+| Direktbuchung mit automatischen Aufschlägen | ✅ | `reservation-wizard.tsx` Quote; `pricing/resolver.py:1132-1205` Gebühren fest/Nacht/Gast, tierbedingt, Kanal-/Zeitraumgültigkeit | — |
+| Buchungsangebot per Mail + Zahlungslink | 🔴 | Menüeintrag `reservation_quote` (`calendar-action-menu.tsx:107`) wird in `calendar-board.tsx` **nicht behandelt** → fällt in Direktbuchung; kein Angebots-Modell/-Endpunkt; Payment-Links nur für Nachberechnung (0386/0469) | Toter Menüpunkt; ganzes Angebotsmodul |
+| Kalendersperrung | ✅ | `confirmBlock()`, Sperrantrags-Workflow `/kalender/sperrantraege` | — |
+| Click-and-Hold X→Y | ✅ | `calendar-board.tsx:707-1000` (Drag, Lückenprüfung, Auto-Scroll) | — |
+| Tagespreis im Kalender setzen/zurücksetzen | 🟡 | 0016 `price_overrides`; `POST /calendar/price-override` inkl. Reset + Channex-Gegenzustand (`calendar/service.py:848-884`); Bulk-Dialog setzt Preis | **Zurücksetzen aus UI unerreichbar**: keine Client-Funktion für `/price-override`, `setSeasonPrice` 0 Aufrufer, Bulk-Dialog kann nicht leeren |
+| Menüpunkt „Preisüberschreibungen“ entfernt | ✅ | 0 Treffer in Sidebar/Messages/Routen | — |
 
-## E. Gäste-Portal & Buchung (Lastenheft §5)
+## §2.3 Saison & Event
 
-| Anforderung | Status | Hinweis |
-|---|---|---|
-| Gästekarte (Enterprise-Gästeprofil) | ✅ | `guests`-Slice ausgebaut (Migration 0046): Stammdaten + Adressen/Kontakte/Ausweise/Präferenzen/Consents/Notizen/Dokumente + Joins (Reservierungen/Threads/Rechnungen). Zugriff `pm_guest_details`, Feld-Maskierung über zentralen `guest_masking` (inkl. `view_guest_id_docs`), DSGVO-Anonymisierung. Frontend Liste + Detail mit Tabs. Merge (Dubletten) implementiert: Sub-Ressourcen + Reservierungen/Buchungen/WhatsApp-Konvos source→target umhängen, `guest_preferences` (1:1) & `guest_external_ids` (DSGVO) gesondert, Quell-Gast anonymisieren. |
-| White-Label-Gäste-Portal | 🟡 | `public_portal`-Slice als Struktur da (Phase 2). |
-| Echtzeit-Admin-Push bei Erst-Login | 🔴 | Event/Notification-System. |
-| Zentralisierte dreisprachige Standardtexte | 🔴 | `content_blocks`-Tabelle + Zuweisung pro Unterkunft. |
-| Buchungs-Widget (einbettbar) | 🟡 | `booking_engine`-Slice da; Widget-Export + Marketing-Einbindung fehlen. |
+| Anforderung | Status | Beleg | Was fehlt |
+|---|---|---|---|
+| Taggenaue Saisons | ✅ | 0138 `property_season_assignments` start/end date; `season-calendar.tsx` Tag-Drag | — |
+| Globale Templates per Checkbox | ⚠️🟡 | Checkbox-Kopie auf andere Objekte (`zu-anderen-objekten.tsx`, `POST /calendar/seasons/{id}/apply`) | Saisons sind objektgebunden; Template-Modell aus 0011 per **0053 stillgelegt** — Abweichung ohne ADR |
+| Legende deckungsgleich, freie Farbe | 🟡 | DB erlaubt jeden Hex (0138), Legende + Zellen identisch | UI bietet nur 8 Palettenwerte, kein freies Farbfeld |
+| Standardfarben A–G (Pastell) | 🔴 | `season-calendar.tsx:42-45` PALETTE = 8 gesättigte Tailwind-Töne | Falsche Palette, keine Buchstaben-Zuordnung |
+| Sonder-Events mit unterbrochenen Zeiträumen | 🟡 | 0011 `events`/`event_periods`; gelesen von `pricing/recompute.py:918-928`, `engine.py` | **Kein Schreibpfad, keine UI, kein Endpunkt** — nur per DB anlegbar |
+| Saison-Kategorien %, anlegen/löschen | ✅ | `GET/POST/PATCH/DELETE /calendar/seasons`, UI percent/fixed | — |
 
-## F. Onboarding 8-stufig (Lastenheft §6)
+## §2.4 Messaging
 
-| Anforderung | Status | Hinweis |
-|---|---|---|
-| 8-stufige Objektkartei (BFE, CPR, Boligtype, Bank, Verträge, Technik, Serviceverträge, Handwerker, Marketing, Husmappe, Annoncering) | 🟢 | Slice `property_dossier` (Mig. 0127/0128). Baut auf Bestehendem auf statt zu duplizieren: Eigentümer/Bank read-only aus `owners`+`owner_properties` (CPR als `owners.cpr_number` ergänzt); Zugangscode/WLAN aus `property_guest_portal`/`messaging`; Grundpreis/Sperrungen aus pricing_config/availability/channex. NEU nur: process/access/service_agreements/tradespeople/emergency_authority/marketing/housebook(Status)/platform_launches. i18n: Enum-Werte = neutrale Keys, Labels über next-intl-Namespace `dossier`. Web `/objekte/[id]/kartei` (8-Stufen-Stepper) + PDF-Export. |
-| Adress-Split (Straße/Nr./PLZ/Ort/Land) | 🟢 | `properties.street/house_number/postal_code/city/country` (bereits umgesetzt). |
-| Miteigentümer | ⚪ | Entscheidung: ein Eigentümer je Objekt (`owner_properties.property_id` UNIQUE). Miteigentum bewusst nicht umgesetzt; `co_owners` ist DEPRECATED (0063). |
+| Anforderung | Status | Beleg | Was fehlt |
+|---|---|---|---|
+| Minutengenaue Trigger | ✅ | `inbox/schemas.py:536-540` offset minutes/hours/days + `send_time`; `inbox/scheduler.py` sekundengenau; 0303 | — |
+| Anker Anreise-/Abreisetag | ✅ | `inbox/ausloeser.py:23-46`, 0515 | — |
+| „3 Tage vor Anreise 19:00“ + Objektzeitzone | ✅ | `before_checkin`, `use_property_timezone`, 0258/0307 | — |
+| Multi-Channel E-Mail/SMS/OTA-In-App | 🔴 | `channels` ist Portal-**Filter** (`planung.py:610-637`); einziger Sendeweg = Channex-Portalchat (`inbox/service.py:627-641`, 1017-1030); SMS nur für OTP/Betriebsmeldungen | E-Mail- und SMS-Sendeweg für Gastnachrichten je Automation |
+| Ein-Klick-Übersetzung | ✅ | `inbox/fassung_uebersetzen.py` (Google v2, Platzhalter-Maskierung), `POST /inbox/languages/translate`, UI `sprach-fassungen.tsx`, 0363 | — |
+| Editor fett/kursiv/unterstrichen/Listen | ✅ | `composer-editor.tsx:534-571` TipTap | — |
+| Editor Trennlinien | 🔴 | `composer-editor.tsx:372-376` deaktiviert `horizontalRule` bewusst | — |
+| Editor Einrückung, Schriftart | 🔴 | keine FontFamily-Extension, keine Indent-Knöpfe | — |
+| Drag&Drop-Shortcodes | 🔴 | `feld-picker.tsx` Klick-Dialog an Cursor, kein `draggable` | Interaktion abweichend (funktional gleichwertig) |
+| Trigger „Check-in-Formular ausgefüllt“ | 🔴 | 0 Treffer `checkin_form/online_checkin/meldeschein`; `guest_stay` hat nur Status-Check-in | Digitales Check-in-Formular existiert nicht |
 
-## G. Ergänzungs-Modul: Ökosystem (Lastenheft §7)
+## §2.5 Aufgaben & Checklisten
 
-| Anforderung | Status | Hinweis |
-|---|---|---|
-| All-Inclusive, kein Feature-Gating | 🔴 | Geschäftsmodell-Policy; technisch: KEINE Feature-Flags zum Sperren von Funktionen. Als ADR-0006 festhalten. |
-| 0% Buchungsgebühr (eigenes System) | 🔴 | `commissions` gilt nur fürs Portal (Phase 2), NICHT für PMS-Direktbuchungen. Sicherstellen, dass Vermieter-Buchungen gebührenfrei sind. |
-| Preis skaliert über Anzahl Unterkünfte | 🔴 | `subscriptions`/`plans`-Tabelle (unit-basiert), `tenant`-Abrechnung. |
-| Beherbergungs-Typ-Dropdown | 🔴 | `properties.property_type` Enum (ferienhaus, glamping, tiny_house, stellplatz, hausboot, …) → steuert Checklisten/Shortcodes/Onboarding. ADR-0007. |
-| Typ-spezifische Felder & Templates | 🔴 | Glamping (Whirlpool/Sauna/Brennholz), Stellplatz (QR-Check-in, Stellplatznr., Schranken-Code), Hausboot (Fäkalientank, Liegeplatz) → typgebundene Felder (jsonb `type_attributes` oder Detailtabellen). |
-| QR-Check-in / Schranken-Code in SMS | 🔴 | Verknüpft mit Messaging-Trigger (§2.4) + tasks. |
+| Anforderung | Status | Beleg | Was fehlt |
+|---|---|---|---|
+| Auto-Aufgaben Endreinigung/Anreise-Check | ✅ | `tasks/engine.py sync_for_reservation`, `TaskTrigger arrival_day/departure_day`, 0272/0535, UI `/reservierungen/aufgaben/planmaessig` | Regelbasiert statt hart verdrahtet; `RegelDeckung` warnt |
+| Kopplung Channel-Manager | ✅ | `bookings_sync.py:1881`, Storno räumt auf (`engine.py:60-70`) | — |
+| Wiederkehrend X Tage/Wochen/Monate/jährlich | ✅ | `engine.py:279-325 _occurrences`, 0012 `task_rules`, UI `/regelmaessig` | — |
+| Saisonal eingegrenzt („Winter 01.10.–31.03.“) | 🔴 | nur absolutes `starts_on/ends_on` (`schemas.py:461`), 0 Treffer saison/season in tasks | Jährlich wiederkehrendes Fenster über Jahreswechsel |
+| Global oder Mehrfachauswahl Objekte | ✅ | `property_ids` leer = alle, `RegelDeckung` | — |
+| Foto-Checklisten unbegrenzt je Raum, mobil | ✅ | `service.py:611-623`, Routen `/tasks/checklist/photo`, Mobile `TaskDetail.tsx:546-610` | — |
+| Exakte Uhrzeiten | ✅ | `start_clock/end_clock`, Offsets, 0535 | — |
+| Start „nach Check-out“ → Ende „vor nächstem Check-in“ | 🟡 | Start vorhanden (`TaskTrigger.check_out`) | Endanker auf die **Folgebuchung** fehlt (0 Treffer next_arrival/folgebuchung) |
+| Büro-/Lagerinventar ohne Objekt | 🟡 | 0012 `inventory_items.property_id nullable`, `POST /tasks/inventory` | Nur ein POST; kein List/Update/Delete, keine Bestandsbuchung, keine UI — Stub |
+
+## §2.6 CRM & Partner
+
+| Anforderung | Status | Beleg | Was fehlt |
+|---|---|---|---|
+| Lead-DB Stammdaten | 🟡 | 0013 `leads` (name/address/phone/email), RLS 0015, Lockdown 0224 | `crm/router.py` hat **nur** `GET /health`; `table("leads")` 0 Treffer; keine UI |
+| Lead-Quelle | 🟡 | `leads.lead_source` | kein Endpunkt, keine Werteliste |
+| Objekt-Eckdaten Adresse/qm/Personen | 🟡 | `object_address/object_sqm/object_max_guests` | nur Schema |
+| Notizen/Status | 🟡 | `notes`, `status default 'new'` | kein Workflow, keine UI |
+| Partner Name/Anschrift/Ansprechpartner | 🟡 | 0013 `partners` | `table("partners")` 0 Treffer |
+| Rabattart %/Fix | 🟡 | `discount_kind` Enum, `deals` | nur DB-Typ |
+| Rabattcode | 🔴 | Spalte `deals.discount_code`; `property_discounts.promo_codes` sind Gast-Codes, nicht B2B | keine Einlösung/Validierung |
+| QR-Code-Upload | 🔴 | Spalte `qr_code_path`; QR im Backend nur 2FA + Affiliate-Generierung | kein Upload-Endpunkt |
+
+## §3 Schnittstellen
+
+| Anforderung | Status | Beleg | Was fehlt |
+|---|---|---|---|
+| Native Zwei-Wege-APIs | ⚪ | ADR-0001: Aggregator Channex statt Direktzertifizierung | dokumentierte Abweichung |
+| Airbnb | ✅ | OAuth (`airbnb_oauth.py`), ARI (`ari_push.py`), Content (`content_sync.py`, `airbnb_zimmer_push.py`), Gebühren-Import; live 18/38 Objekte (`veroeffentlichen.py:16-19`) | — |
+| Booking.com | 🟡 | Katalog, Chat/Reviews/Gebühren/Steuerregime im Code | **0/20 verbundene Kanäle** live — nie in Betrieb |
+| Vrbo/Expedia | 🟡 | Kanal-Enum, Provisionsmodell, iCal-Quelle | 0/20 live; kein `vrbo_*`-Modul |
+| Webhooks | ✅ | `router.py:1210-1301` register/empfangen mit `secrets_match` | — |
+| Revolut primär | ⚪🔴 | ADR-0011 kehrt ADR-0003 um (Stripe primär); Revolut nur Enum-Wert `payments/schemas.py:10`, `payments/README.md:288` „Adapter existiert NICHT“ | Revolut komplett unimplementiert |
+| Stripe sekundär | ✅ (primär) | `stripe_client.py`, `webhook.py`, `identity.py`, 0081; zusätzlich PayPal | — |
+| Import Objekte aus Airbnb | ✅ | `airbnb_uebernahme.py`, `airbnb_listing_import.py` (38 Felder), `airbnb_historie_import.py` | — |
+| Import Objekte aus Booking.com | 🔴 | `booking_gebuehren_import.py:19-22`: „kein Inserats-Abruf“; nur Buchungs-/CSV-Import | Booking-Inserate nicht übernehmbar |
+| Export/Neuanlage zu Airbnb/Booking | 🔴 | ADR-0012 Status „offen“: Channex kann nur verbinden; Airbnb Partner API geschlossen, Booking-Connectivity pausiert; NextPax-Anfrage offen | technisch beim aktuellen Aggregator versperrt |
+
+## §4 Rollen & Berechtigungen
+
+| Anforderung | Status | Beleg | Was fehlt |
+|---|---|---|---|
+| Toggle-Matrix je Konto | ✅ | `auth/permissions.py`, `granular_permissions.py`, UI `permission-groups.tsx`, `PATCH /account/users/{id}` | — |
+| Admin voll | ✅ | `ROLE_CAPABILITIES[admin] = _ALL` | — |
+| Co-Admin Eigentümer+Mitarbeiter, Aufgaben, Hausdaten, Inventar, Eigentümer-/Mitarbeiterdaten, Stamm-Zuweisung | ✅ | `_CO_ADMIN` (`permissions.py:108-152`), `staff_assignment_service.py`, 0019 | — |
+| Co-Admin System-Warnungen | 🟡 | `RECEIVE_SYSTEM_ALERTS` deklariert | nur in Tests referenziert — kein Dispatcher wertet sie aus |
+| Owner: Kalender + Legende | ✅ | `GET /portal/calendar`, `/portal/kalender`, Mobile `OwnerCalendar.tsx` | — |
+| Owner: nur Vorname + Quelle, kein Gastpreis, Netto/Nacht | ✅ | `auth/guest_masking.py`, `public_portal/service.py:700-712` `owner_payout_per_night` | — |
+| Sperrung beantragen → Admin-Push → Freigabe → Rückmeldung | ✅ | `POST /portal/block-requests`, `sperrantrag_meldung.py`, `/approve|/reject`, 0332/0333/0353/0377/0513 (Aufhebung) | übererfüllt |
+| Zählerstände append-only | ✅ | 0015 nur select+insert, 0229 revoke, 0337 | — |
+| Dienstleistungen direkt buchen → Aufgabe + Mitarbeiter-Meldung | ✅ | `public_portal/dienstleistungen.py`, 0330 Katalog (endreinigung/hauptreinigung/fenster/rasen/terrasse + Freitext), 0531/0538 | — |
+| Benachrichtigungsmenü SMS/E-Mail/aus | ✅ | `notification_settings/katalog.py`, `/portal/benachrichtigungen` | — |
+| Monats-/Jahresberichte + Abrechnungsstand | ✅ | `GET /portal/statements`, `/portal/earnings`, `/portal/berichte`, Mobile `OwnerEarnings.tsx` | — |
+| Staff: keine Bewertungen/Umsätze/Finanzen | ✅ | `_STAFF` ohne VIEW_REVIEWS/VIEW_FINANCES/VIEW_OWNER_REPORTS, RLS 0136/0425 | — |
+| Staff: persönlicher Aufgabenkalender | ✅ | `/tasks/mine`, Mobile `HostTaskCalendar.tsx`, `TaskDetail.tsx` | — |
+| Staff: Inventarlisten je Haus | 🟡 | Capability + RLS 0136 | kein Screen in `mobile-nextdays` |
+| Staff: Urlaub/Verfügbarkeit | 🟡 | `/personal/abwesenheiten`, `/verfuegbarkeiten`, 0541 | kein Screen in `mobile-nextdays` |
+| Staff: Vertretung per Knopf | 🟡 | `POST /tasks/substitutions` + accept/decline, 0019/0403/0404/0415 | kein Knopf/Screen in `mobile-nextdays` |
+| Staff: An-/Abreise ohne Namen/Beträge | ✅ | `VIEW_GUEST_LIMITED`, `mobile-nextdays/lib/tasks.ts:8` | — |
+| Stamm-Mitarbeiter je Haus | ✅ | `staff_property_assignments` 0019 | — |
+| Mitarbeiter-Smartphone-Oberfläche | 🟡 | `mobile-nextdays/lib/experience.ts:5` „Ausbau P3“ | staff/cleaner landen in Agentur-Tabs |
+
+## §5 Gäste-Portal & Buchungsstrecke
+
+| Anforderung | Status | Beleg | Was fehlt |
+|---|---|---|---|
+| White-Label-Gäste-Portal | 🟡 | Slices `guest_auth/guest_stay/guest_bookings/guest_messages/guest_reviews`, 0121 `property_guest_portal`, Renderer `builder/` | Gast-Portal-Fläche als eigene Route nicht belegbar (`gastgeber/` ist Host-App) |
+| Admin-Konfiguration | ✅ | 0121 RLS + Felder self_checkin/hide_code_until_checkin | — |
+| Erst-Login → Admin-Push | 🔴 | 0 Treffer; `ereignisse.py` (13 `melde_*`) ohne Erst-Login | kein Zustandsfeld, kein Ereignis |
+| Erst-Login → Willkommensnachricht | 🔴 | „willkommen“ nur Baukasten-Vorlagen | kein Versandpfad |
+| Zentrale dreisprachige Standardtexte | 🟡 | 0014 `content_blocks(kind, body_i18n)` + `content_assignments`, RLS/Realtime | **0 Python-Referenzen**; 0121:54-60 „noch nicht angebunden“; Check-out/Mietbedingungen als kind nirgends |
+| Zuweisung per Checkbox | 🔴 | Tabelle da | kein Endpunkt, keine UI |
+| Buchungs-Widget einbettbar | ✅ | `/website/widgets`, iframe-Generator `widgets-ansicht.tsx`, `builder/app/widget/[typ]`, CSP `builder/next.config.ts` | — |
+| Modulare Buchungsstrecke | ✅ | `builder/components/buchungs-widget.tsx`, `/inserat/[id]`, `/checkout`, 0450–0452/0471 | — |
+| An Kernsystem angebunden | ✅ | Slice `booking_engine`, `pricing/resolver.py` | — |
+
+## §6 Kartei & 8 Stufen
+
+| Anforderung | Status | Beleg | Was fehlt |
+|---|---|---|---|
+| Eigentümerdaten in Kartei | ✅ | `property_dossier/schemas.py LinkedOwner`, `GET /property-dossier/{id}/owner` | read-only aus `owners` (bewusst) |
+| Adress-Split | ✅ | 0009 street/house_number/postal_code/city/country | Alt-Freitext `address` parallel |
+| Miteigentümer | 🔴 | `co_owners` (0014) ohne jede Referenz; 0073 `unique(property_id)` verhindert Miteigentum | — (Entscheidung „ein Eigentümer je Objekt“, kein ADR) |
+| PDF-Export | ✅ | `web/lib/dossier-pdf.tsx`, `dossier-pdf-button.tsx` | — |
+| Druck | 🟡 | kein `window.print`/`@media print` in Kartei | nur über PDF |
+| 1 Interne Hausnummer / Hausname | 🟡 | 0130 entfernte eigene Felder → `properties.house_number`/`title` | kein separates internes Feld |
+| 1 Personen/qm | ✅ | 0129, read-only aus `max_guests/size_value` | — |
+| 1 BFE | ✅ | 0009, `properties/schemas.py:233`, Stepper | — |
+| 1 Boligtype | 🔴 | Spalte `properties.boligtype` (0009) mit **0 Treffern** in API/Web | tote Spalte |
+| 1 CPR | 🟡 | 0127 Spalte, gelesen/angezeigt/PDF | `owners/schemas.py` ohne `cpr_number` → **kein Schreibpfad** |
+| 1 Bank Reg.-Nr./Konto-Nr./Bankname | 🟡 | 0063 iban/bic/bank_name | DK-Format Reg.-Nr.+Konto-Nr. nicht modelliert |
+| 2 Proces & Kontrakt | ✅ | `property_process` 5 Daten, GET/PUT | — |
+| 3 Adgang & Teknik | ✅ | `property_access`, Türcode/WLAN in `property_guest_portal` (0296) | — |
+| 4 Serviceaftaler | ✅ | `property_service_agreements` CRUD | — |
+| 5 Håndværkere + Akut-Vollmacht | ✅ | `property_tradespeople`, `property_emergency_authority` | — |
+| 6 Markedsføring | ✅ | `property_marketing` | — |
+| 7 Husmappe | ✅/🟡 | Status + physische Mappe ✅; Geheimtipps nur Verweis auf Nachrichten | Geheimtipp-Feld in Kartei fehlt |
+| 8 Grundpreis / Sperrung / Eigenbelegungs-Import | 🟡 | bewusst in pricing/calendar (0127:110) | in Stufe 8 weder Anzeige noch Link |
+| 8 Plattform-Matrix + Launch-Termine | ✅ | `property_platform_launches` native/airbnb/booking/vrbo | — |
+
+## §7.1 Preisstruktur
+
+| Anforderung | Status | Beleg | Was fehlt |
+|---|---|---|---|
+| Kein Feature-Gating | ⚠️🔴 | ADR-0006 „keine Feature-Flags“ gilt formal; real `subscriptions/entitlements.py modul_aktiv()` in 5 Modulen (buchhaltung, pricing×2, dynpricing, schloesser), 0117 `tenant_module_entitlement`, Verkaufsfläche `/erweiterungen` | Nachfolge-ADR fehlt |
+| 0 % Buchungsgebühr | ⚠️🟡 | eigene Website 0 % (`payments/service.py:1166`); OTA 0,5 % (0310, `COMMISSION_RATE_STANDARD`), myBestDays 8 % (`MARKETPLACE_FEE_BPS_STANDARD`), DP 0,5 % | ADR-0006 sagt Provision nur Portal; real auch OTA |
+| Skalierung nur über Einheiten | 🟡 | `deploy/billing/seed_stripe_prices.py:185-188` graduated je Objekt | plus Modul-Festpreise, Schloss je Gerät, Provisionen |
+| ADR aktuell | 🔴 | ADR-0006 „akzeptiert“, nicht superseded | neuer ADR: Module, drei Provisionswege, Staffel |
+
+## §7.2 Unterkunfts-Ökosystem
+
+| Anforderung | Status | Beleg | Was fehlt |
+|---|---|---|---|
+| `property_type`-Enum | ✅ | 0009, `properties/schemas.py:43-50`, `web/lib/property-meta.ts` | — |
+| Dropdown beim Anlegen | ✅ | `new-property-button.tsx:143-157` | — |
+| Typ steuert Checklisten | 🔴 | 0 Treffer `property_type` in `features/tasks` | Template-Mapping fehlt |
+| Typ steuert Shortcodes | 🔴 | keine typabhängige Auswahl | — |
+| `type_attributes` je Typ (Pydantic) | 🟡 | Spalte genutzt für pricing/beds/availability/location/messaging | keines der ADR-0007-Attribute, keine Modelle je Typ |
+| Glamping: Whirlpool/Sauna/Brennholz | 🔴 | nur Amenity/Gebühr `hot_tub` | Wartungs-/Onboarding-Felder |
+| Glamping: Wetter-Sondersaison | 🔴 | — | — |
+| Stellplatz: QR-Check-in/Zuweisung/Schrankencode-SMS | 🔴 | 0 Treffer | — |
+| Hausboot: Liegeplatz/Fäkalientank/Strom | 🔴 | nur Gebühr `water_craft_mooring` | — |
+| Handwerker je Typ | 🟡 | `trade` Freitext | UI nur 4 Ferienhaus-Gewerke |
+| DK-Felder nullable | ✅ | 0009/0127 | — |
 
 ---
 
-## Abgeleitete Datenmodell-Erweiterungen (für die Migrationen)
+## Muster hinter den Lücken
 
-**Neue Tabellen (Vorschlag):**
-`seasons`, `season_templates`, `season_assignments`, `events`, `event_periods`,
-`tasks`, `task_rules`, `checklists`, `checklist_items`, `checklist_photos`,
-`inventory_items`, `leads`, `partners`, `deals`, `dashboard_layouts`,
-`content_blocks`, `content_assignments`, `block_requests`, `meter_readings`,
-`co_owners`, `message_templates`, `message_triggers`, `notifications`,
-`onboarding_steps` (oder Felder direkt an `properties`),
-`subscriptions`/`plans` (unit-basiertes Preismodell), `surcharges` (Reinigung,
-Hund, Wäsche, Nebenkosten).
+1. **Fertiges Backend ohne Oberfläche** (größte Klasse): Kachel-Dashboard (0402),
+   Tagespreis-Reset, Events (0011), Inventar (0012), Vertretung/Abwesenheit/
+   Inventar im Mitarbeiter-Client, Mitarbeiter-Erlebnis in `mobile-nextdays`.
+2. **Tabellen seit 0013/0014 ohne eine Codezeile**: `leads`, `partners`, `deals`,
+   `content_blocks`, `content_assignments`, `co_owners`; Spalten `boligtype`,
+   `deals.discount_code/qr_code_path`.
+3. **Bewusste Abweichungen ohne ADR**: glatte Beträge (ADR-0005 verworfen),
+   Saison-Templates (0053), Feature-Gates + Provisionen (ADR-0006), ein
+   Eigentümer je Objekt (0073).
+4. **Bewusste Abweichungen mit ADR** (in Ordnung): Channex statt Direkt-API
+   (0001), Stripe statt Revolut (0011), OTA-Neuanlage offen (0012).
+5. **Komplett offen**: Buchungsangebot, E-Mail/SMS-Gastversand, digitales
+   Check-in-Formular, Erst-Login-Ereignis, CRM/Partner-Funktion, §7.2-Typfelder.
 
-**Änderungen an Bestehendem:**
-- `user_role`-Enum: `+ admin, + co_admin`.
-- `properties`: Adresse strukturieren; DK-Onboarding-Felder (BFE, CPR-Verweis,
-  Boligtype, Bank) nullable ergänzen.
-- `payments`: Gateway-Feld (`revolut | stripe`), generisches `gateway_ref` statt
-  `stripe_ref`.
-- Preisaufschläge (Reinigung, Hund, Wäsche, Nebenkosten) als `surcharges`.
-- `properties`: `property_type`-Enum + typ-spezifische Attribute (`type_attributes`
-  jsonb), Adress-Split, DK-Onboarding-Felder.
+## Kurzfristig billig schließbar
+PDF in `LOGO_MIME` + Bucket 0067 · Saison-PALETTE auf A–G-Pastell + freies
+Hex-Feld · `cpr_number` in `owners/schemas.py` · `boligtype` ins Schema + Stepper
+· Tagespreis-Reset-Knopf gegen den vorhandenen Endpunkt · `reservation_quote`
+aus dem Menü nehmen oder bauen · `RECEIVE_SYSTEM_ALERTS` im Dispatcher auswerten.
 
----
-
-## Roadmap (Vorschlag, priorisiert)
-
-> Reihenfolge nach Wert × Fundament-Charakter. Stundenschätzung als Spanne pro
-> Block macht Andy auf dieser Basis (Lastenheft fordert Spannen, keine Gesamtzahl).
-
-1. **Scope-Sync** — PROJECT.md (Module, Rollen, Tech: Revolut), Datenmodell-Doku
-   und ADRs an Lastenheft angleichen. *(Doku, kein Code)*
-2. **Datenmodell-Erweiterung** — neue Migrationen für die o. g. Tabellen + Enum-
-   Änderungen, mit RLS. Fundament für alles Weitere.
-3. **Rollen & Berechtigungen** — `admin`/`co_admin`, Toggle-Matrix, Daten-Split.
-4. **Kalender-Kern** — Click-and-Hold, manuelle Preisüberschreibung, Saison/Event.
-5. **Aufgaben & Checklisten** (`tasks`-Slice) + Inventar.
-6. **Messaging** — Trigger-System, Multi-Channel, Übersetzung, Editor.
-7. **Channel-Adapter** (Airbnb/Booking/Vrbo) + Onboarding/Klonen.
-8. **Zahlungen** — Revolut-Adapter (primär), Stripe (sekundär).
-9. **CRM & Partner**, **Dashboard-Personalisierung & White-Label**.
-10. **Gäste-Portal & Widget**, **i18n DE/DK/EN**, **8-stufiges Onboarding + PDF**.
-
-## Offene Punkte für Andy / Abstimmung
-
-- **i18n-Strategie:** Frontend (next-intl o. ä.) + serverseitige Übersetzungs-
-  Persistenz (Google Translate gecacht) — ADR nötig.
-- **DK-Spezifika global halten:** BFE/CPR/Boligtype nullable, nicht erzwingen.
-- **Rundungs-/Währungs-Policy:** wo runden (DB vs. Darstellung), Banker's Rounding?
-- **Stundenschätzung:** pro Roadmap-Block als Spanne.
+## Entscheidungen, die der Nutzer treffen muss
+- ADR-0005 (glatte Beträge): umsetzen oder aufheben?
+- ADR-0006 (kein Gating, 0 %): durch neuen ADR mit Modul-/Provisionsmodell ersetzen?
+- CRM/Partner (§2.6) und Standardtexte (§5): bauen oder aus dem Lastenheft streichen?
+- §7.2 Typ-Ökosystem: Roadmap-Position?
+- OTA-Neuanlage (ADR-0012): Aggregator-Wechsel (NextPax/Beds24) oder streichen?

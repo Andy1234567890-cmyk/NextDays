@@ -119,6 +119,24 @@ class CalendarError(Exception):
         self.status_code = status_code
 
 
+def _preis_spannen(days: list) -> list[tuple[date, date, int]]:
+    """Aufeinanderfolgende Tage gleichen Preises zu (von, bis_exklusiv, cents).
+
+    Tage ohne Preis (None — kein Rate-Plan) werden übersprungen: es gibt
+    nichts zu pushen, und ein erfundener Wert wäre Wurzel 4.
+    """
+    spannen: list[tuple[date, date, int]] = []
+    for tag in days:
+        if tag.price is None:
+            continue
+        cents = round(tag.price * 100)
+        if spannen and spannen[-1][2] == cents and spannen[-1][1] == tag.date:
+            von, _, _ = spannen[-1]
+            spannen[-1] = (von, tag.date + timedelta(days=1), cents)
+        else:
+            spannen.append((tag.date, tag.date + timedelta(days=1), cents))
+    return spannen
+
 class CalendarService:
     slice_name = "calendar"
 
@@ -854,32 +872,39 @@ class CalendarService:
         (Gegenzustand, Wurzel 1) — sonst behielten die OTAs den alten Override.
         """
         self._require_tenant_property(tenant_id, req.property_id)
+        # Ein Tag oder ein Bereich [date, end) — die Obergrenze (366 Tage)
+        # erzwingt das Schema, hier kommt nie ein unbegrenzter Bereich an.
+        tage = req.tage()
         self._db().table("price_overrides").upsert(
-            {
-                "property_id": req.property_id,
-                "date": req.date.isoformat(),
-                "price": req.price,
-            },
+            [
+                {
+                    "property_id": req.property_id,
+                    "date": tag.isoformat(),
+                    "price": req.price,
+                }
+                for tag in tage
+            ],
             on_conflict="property_id,date",
         ).execute()
-        # Realtime an Channex: EIN Tag = [date, date+1). Beim Setzen der Override,
-        # beim Zurücknehmen der neu aufgelöste effektive Preis (dynamic/weekday/base).
-        end = req.date + timedelta(days=1)
+        # Realtime an Channex: beim Setzen EIN Push über den ganzen Bereich,
+        # beim Zurücknehmen der neu aufgelöste effektive Preis je Tag
+        # (dynamic/weekday/base) — zusammengefasst zu Spannen gleichen Preises,
+        # damit ein Jahr nicht 365 Jobs erzeugt, sondern einen je Saison.
+        end = tage[-1] + timedelta(days=1)
         if req.price is not None:
             self._push_channex_rate(
                 req.property_id, req.date, end, round(req.price * 100)
             )
         else:
             days = self._resolver().effective_prices(req.property_id, req.date, end)
-            eff = days[0].price if days and days[0].price is not None else None
-            if eff is not None:
-                self._push_channex_rate(
-                    req.property_id, req.date, end, round(eff * 100)
-                )
+            for von, bis, cents in _preis_spannen(days):
+                self._push_channex_rate(req.property_id, von, bis, cents)
         log.info(
             "calendar_price_override",
             property_id=req.property_id,
             date=req.date.isoformat(),
+            end=end.isoformat(),
+            tage=len(tage),
             cleared=req.price is None,
         )
 
@@ -2133,6 +2158,21 @@ class CalendarService:
         """Öffentliche Fassade für `_push_channex_rate` (end EXKLUSIV), damit der
         Pricing-Slice denselben Push-Weg nutzt statt eines zweiten."""
         self._push_channex_rate(property_id, start, end, rate_cents)
+
+    def saison_uebernehmen(
+        self, tenant_id: str, quelle: dict, ziel_id: str,
+        spans: list[tuple[date, date]], *, mit_zeitraeumen: bool,
+    ) -> str | None:
+        """Öffentliche Fassade für `_apply_season_to_one` — die Saison-Vorlagen
+        (saison_vorlagen.py, ADR-0024) materialisieren jede Kategorie über
+        GENAU diesen Pfad (Upsert auf (property_id, name), Zeiträume ersetzen,
+        Tagespreise + Portal-Push), statt eine zweite Übertragung zu bauen.
+        `quelle` braucht id, name, color, mode, amount und optional die
+        Regelsatz-Felder; `spans` ist (start, end_exklusiv). Der Aufrufer hat
+        `ziel_id` bereits auf den Mandanten gescopt (Wurzel 3)."""
+        return self._apply_season_to_one(
+            tenant_id, quelle, ziel_id, spans, mit_zeitraeumen=mit_zeitraeumen
+        )
 
     @staticmethod
     def _preisbloecke(

@@ -3,11 +3,64 @@
 Die verwaltete Eigentümer-PARTEI (Stammdaten, Bankverbindung, Default-Provision)
 getrennt vom Owner-Login-User. Objekt-Zuordnung mit Anteil + Provisions-Override.
 """
+import re
 from enum import StrEnum
 
 from pydantic import BaseModel, Field, field_validator
 
 from src.features.auth.schemas import pruefe_sprache
+
+# --- Dänische Kennungen (0127 CPR, 0581 Bank) ------------------------------
+# Die drei Formate stehen HIER und in den CHECKs der DB (0581); beide Stellen
+# müssen deckungsgleich bleiben, sonst nimmt die API an, was die DB ablehnt.
+_CPR = re.compile(r"^\d{6}-?\d{4}$")
+_BANK_REG_NR = re.compile(r"^\d{4}$")
+_BANK_KONTO_NR = re.compile(r"^\d{1,10}$")
+
+
+def _leer_zu_none(v: str | None) -> str | None:
+    """Leeres Eingabefeld = kein Wert. Sonst getrimmt zurück."""
+    if v is None:
+        return None
+    v = v.strip()
+    return v or None
+
+
+def pruefe_cpr(v: str | None) -> str | None:
+    """CPR-Nummer (dänische Personennummer): TTMMJJ-XXXX.
+
+    Angenommen wird die Form mit und ohne Bindestrich, GESPEICHERT wird immer
+    mit — das ist Normalisierung derselben Eingabe, kein Ersatzwert. Alles
+    andere ist ein Datenfehler → 422 (Wurzel 4/5).
+    """
+    v = _leer_zu_none(v)
+    if v is None:
+        return None
+    if not _CPR.match(v):
+        raise ValueError("CPR-Nummer im Format TTMMJJ-XXXX (6 Ziffern, Bindestrich, 4 Ziffern).")
+    ziffern = v.replace("-", "")
+    return f"{ziffern[:6]}-{ziffern[6:]}"
+
+
+def pruefe_bank_reg_nr(v: str | None) -> str | None:
+    """Dänische Bank-Registrierungsnummer: genau 4 Ziffern."""
+    v = _leer_zu_none(v)
+    if v is None:
+        return None
+    if not _BANK_REG_NR.match(v):
+        raise ValueError("Reg.-Nr. besteht aus genau 4 Ziffern.")
+    return v
+
+
+def pruefe_bank_konto_nr(v: str | None) -> str | None:
+    """Dänische Kontonummer: 1–10 Ziffern (ohne Leerzeichen/Punkte)."""
+    v = _leer_zu_none(v)
+    if v is None:
+        return None
+    v = v.replace(" ", "")
+    if not _BANK_KONTO_NR.match(v):
+        raise ValueError("Kontonummer besteht aus bis zu 10 Ziffern.")
+    return v
 
 
 class StatementFrequency(StrEnum):
@@ -42,6 +95,15 @@ class OwnerBase(BaseModel):
     bic: str | None = None
     bank_name: str | None = None
     account_holder: str | None = None
+    # Dänische Bankverbindung (0581): Reg.-Nr. (4 Ziffern, die Bank) + Konto-
+    # Nr. (bis 10 Ziffern). Ergänzt IBAN/BIC — ein Eigentümer führt je nach
+    # Bank das eine oder das andere. Formatfehler → 422.
+    bank_reg_nr: str | None = None
+    bank_konto_nr: str | None = None
+    # Dänische Personennummer (0127). Nur admin/co_admin sehen sie: sie läuft
+    # ausschließlich über MANAGE_OWNERS (dieser Slice) und MANAGE_PROPERTIES
+    # (Kartei Stufe 1); `OwnerKontakt` leitet sie bewusst nicht aus (Wurzel 9).
+    cpr_number: str | None = None
 
     # Provision + Auszahlungs-/Statement-Konfig.
     #
@@ -73,6 +135,21 @@ class OwnerBase(BaseModel):
     @classmethod
     def _sprache_pruefen(cls, v: str | None) -> str | None:
         return pruefe_sprache(v)
+
+    @field_validator("cpr_number")
+    @classmethod
+    def _cpr_pruefen(cls, v: str | None) -> str | None:
+        return pruefe_cpr(v)
+
+    @field_validator("bank_reg_nr")
+    @classmethod
+    def _reg_nr_pruefen(cls, v: str | None) -> str | None:
+        return pruefe_bank_reg_nr(v)
+
+    @field_validator("bank_konto_nr")
+    @classmethod
+    def _konto_nr_pruefen(cls, v: str | None) -> str | None:
+        return pruefe_bank_konto_nr(v)
 
 
 class OwnerCreate(OwnerBase):
@@ -151,6 +228,9 @@ class OwnerUpdate(BaseModel):
     bic: str | None = None
     bank_name: str | None = None
     account_holder: str | None = None
+    bank_reg_nr: str | None = None
+    bank_konto_nr: str | None = None
+    cpr_number: str | None = None
     default_commission_pct: float | None = Field(default=None, ge=0, le=100)
     default_payout_method: str | None = None
     statement_frequency: StatementFrequency | None = None
@@ -163,6 +243,21 @@ class OwnerUpdate(BaseModel):
     @classmethod
     def _sprache_pruefen(cls, v: str | None) -> str | None:
         return pruefe_sprache(v)
+
+    @field_validator("cpr_number")
+    @classmethod
+    def _cpr_pruefen(cls, v: str | None) -> str | None:
+        return pruefe_cpr(v)
+
+    @field_validator("bank_reg_nr")
+    @classmethod
+    def _reg_nr_pruefen(cls, v: str | None) -> str | None:
+        return pruefe_bank_reg_nr(v)
+
+    @field_validator("bank_konto_nr")
+    @classmethod
+    def _konto_nr_pruefen(cls, v: str | None) -> str | None:
+        return pruefe_bank_konto_nr(v)
 
 
 class OwnerPropertyLink(BaseModel):

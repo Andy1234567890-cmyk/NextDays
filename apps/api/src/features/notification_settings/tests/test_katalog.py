@@ -54,6 +54,10 @@ MIGRATIONEN = (
     "0542_personal_benachrichtigungen.sql",
     # Personal-Ausbau (0544–0547): Tausch, Ueberstunden, Verspaetung.
     "0548_personal_benachrichtigungen_ausbau.sql",
+    # Antwort auf ein Buchungsangebot (0586/0587): Mail + SMS, weil das Fenster
+    # zwischen Zusage und Zahlung kurz ist und der Zeitraum in ihm nicht
+    # anderweitig verkauft werden soll.
+    "0587_angebot_antwort_benachrichtigung.sql",
 )
 
 

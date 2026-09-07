@@ -76,6 +76,28 @@ def _sanitize_svg(content: bytes) -> bytes:
     )
     return cleaned.encode("utf-8")
 
+
+def _logo_bytes_passen(content: bytes, ext: str) -> bool:
+    """Stimmen die ersten Bytes mit der behaupteten Dateiart überein?
+
+    Der `content_type` kommt vom Client und ist frei wählbar — ein Schutz ist
+    er nicht (Wurzel 8). Geprüft wird deshalb die Signatur der Datei selbst:
+    PNG/JPEG/WebP über ihre Magic-Bytes (dieselben wie in
+    `properties._sniff_image_ext`), PDF über `%PDF-`. SVG ist Text ohne feste
+    Signatur und wird stattdessen durch `_sanitize_svg` auf reines Markup
+    gebracht — hier deshalb bewusst `True`.
+    """
+    if ext == "pdf":
+        return content.startswith(b"%PDF-")
+    if ext == "png":
+        return content.startswith(b"\x89PNG\r\n\x1a\n")
+    if ext == "jpg":
+        return content.startswith(b"\xff\xd8\xff")
+    if ext == "webp":
+        return content[:4] == b"RIFF" and content[8:12] == b"WEBP"
+    return ext == "svg"
+
+
 _CENT = Decimal("0.01")
 
 
@@ -1203,11 +1225,18 @@ class BuchhaltungService:
     # Firmenlogo: erlaubte Typen → Dateiendung (analog properties.upload_image).
     LOGO_BUCKET = "company-logos"
     LOGO_MAX_BYTES = 5 * 1024 * 1024
+    # Muss mit `allowed_mime_types` des Buckets deckungsgleich sein (0067, PDF
+    # nachgezogen in 0580): ein Typ, den nur eine der beiden Stellen kennt,
+    # scheitert entweder hier mit 415 oder erst im Storage mit 502.
     LOGO_MIME = {
         "image/png": "png",
         "image/jpeg": "jpg",
         "image/webp": "webp",
         "image/svg+xml": "svg",
+        # Lastenheft §2.1 nennt „PDF, JPG, PNG". Ein PDF-Logo wird als Datei
+        # hinterlegt; in Dokumenten (<img>/<Image>) ist es nicht darstellbar —
+        # das sagt die Konto-Seite dem Betrieb beim Hochladen.
+        "application/pdf": "pdf",
     }
 
     def upload_logo(
@@ -1225,10 +1254,20 @@ class BuchhaltungService:
         ext = self.LOGO_MIME.get(content_type)
         if not ext:
             raise BuchhaltungError(
-                "Nur PNG/JPEG/WebP/SVG erlaubt.", status_code=415
+                "Nur PNG/JPEG/WebP/SVG/PDF erlaubt.", status_code=415
             )
         if len(content) > self.LOGO_MAX_BYTES:
             raise BuchhaltungError("Logo ist zu groß (max. 5 MB).", status_code=413)
+        # Behaupteter Typ ≠ Inhalt → 415, nicht 500 und nicht stilles Ablegen
+        # einer Datei, die kein Browser als Logo rendert (Wurzel 5/8).
+        if not _logo_bytes_passen(content, ext):
+            log.warning(
+                "company_logo_signatur_falsch",
+                tenant_id=tenant_id, content_type=content_type, bytes=len(content),
+            )
+            raise BuchhaltungError(
+                "Der Dateiinhalt passt nicht zum angegebenen Typ.", status_code=415
+            )
 
         # SVG landet im PUBLIC Bucket und wird Gästen gezeigt → vor dem Speichern
         # sanitisieren (U-1, Stored XSS). Bitmaps sind unkritisch.

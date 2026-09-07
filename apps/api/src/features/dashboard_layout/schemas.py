@@ -40,6 +40,10 @@ KachelId = Literal[
     "objekt:gesamt",
     "objekt:inaktiv",
     "objekt:entwurf",
+    # Eigentuemer-Vorgaenge (Sperrantraege, Aufhebungswuensche, Vertragsenden):
+    # die Kachel stand schon vor dem Raster auf der Startseite (APPROVE_BLOCK),
+    # fehlte aber im Katalog — ohne den Eintrag haette das Raster sie verloren.
+    "vorgaenge:eigentuemer",
 ]
 
 KachelGroesse = Literal["s", "m", "l"]
@@ -50,7 +54,7 @@ KachelGroesse = Literal["s", "m", "l"]
 # ohne dass gespeicherte Standards ungueltig werden.
 RollenName = Literal["admin", "co_admin", "owner", "staff", "cleaner", "shift_lead"]
 
-# Obergrenzen. 19 Kacheln gibt es real; 40 laesst Luft fuer Wachstum, ohne dass
+# Obergrenzen. 20 Kacheln gibt es real; 40 laesst Luft fuer Wachstum, ohne dass
 # jemand ein 10-MB-Layout ablegen kann.
 MAX_KACHELN = 40
 MAX_KOORDINATE = 200
@@ -71,7 +75,7 @@ class KachelPosition(BaseModel):
 class DashboardLayout(BaseModel):
     """Ein vollstaendiges Layout: Positionen plus ausgeblendete Kacheln.
 
-    Kein `w`/`h` — die Breite folgt aus `groesse` (S=3, M=6, L=12 Spalten), die
+    Kein `w`/`h` — die Breite folgt aus `groesse` (S=4, M=6, L=12 Spalten), die
     Hoehe aus dem Bereich der Kachel. Kein Breakpoint-Array: unter `lg` faellt
     das Raster auf eine Spalte zurueck, Reihenfolge dann y, dann x.
     """

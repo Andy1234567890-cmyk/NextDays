@@ -50,6 +50,14 @@ export type Owner = {
   bic: string | null;
   bank_name: string | null;
   account_holder: string | null;
+  /** Dänische Bankverbindung (0581): Reg.-Nr. (4 Ziffern) + Konto-Nr. (bis 10
+   *  Ziffern) NEBEN IBAN/BIC — je nach Bank führt ein Eigentümer das eine
+   *  oder das andere. Formatfehler weist der Server mit 422 ab. */
+  bank_reg_nr: string | null;
+  bank_konto_nr: string | null;
+  /** Dänische Personennummer (TTMMJJ-XXXX, 0127). Nur admin/co_admin sehen
+   *  sie (MANAGE_OWNERS); die Objekt-Route liefert sie nicht aus. */
+  cpr_number: string | null;
   /** Standard-Provisionssatz. `null` = noch nicht vereinbart — NICHT 0 %.
    *  Ohne Satz weist die Abrechnung die Auszahlungen als „—" aus, statt dem
    *  Eigentümer stillschweigend 100 % zuzuschlagen (Wurzel 4). */

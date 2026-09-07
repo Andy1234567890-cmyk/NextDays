@@ -69,8 +69,11 @@ select = ["E", "F", "I", "B", "UP", "ANN", "S"]
 "**/site_config/templates.py" = ["E501"]
 # Mailkatalog des Partnerprogramms: 24 Sprachfassungen je Satz, maschinell
 # erzeugt — Umbrüche in Übersetzungen wären Wartungsrauschen, keine Lesbarkeit.
-"**/mail_texte_partner.py" = ["E501"]
-"**/mail_texte_personal.py" = ["E501"]
+# Ein MUSTER statt einer Zeile je Gebiet: die Teilkataloge werden von
+# scripts/i18n/mail-texte-erzeugen.py angelegt, und ein neues Fachgebiet soll
+# nicht an einer vergessenen Ausnahme hier scheitern (Angebote 0586 war das
+# dritte).
+"**/mail_texte_*.py" = ["E501"]
 
 [tool.pylint.main]
 # Ruff (oben) ist der primäre Linter (Stil, Imports, Bugbear, Security,

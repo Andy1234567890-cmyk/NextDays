@@ -643,3 +643,39 @@ h1, h2, h3 {
   border-radius: 9999px;
   background: var(--brand);
 }
+
+/* Druck der Objektkartei (Lastenheft §6): `window.print()` aus dem Stepper.
+   Alle acht Stufen sind gemountet und per `hidden` gewechselt — im Druck wird
+   `hidden` für die Stufen-Karten aufgehoben, Navigation/Band/Sidebar fallen
+   weg (visibility statt display, damit die Kartei ihre Position behält). Nur
+   Seiten mit einer Kartei betroffen (`body:has([data-kartei-druck])`). */
+@media print {
+  body:has([data-kartei-druck]) {
+    visibility: hidden;
+    background: #fff;
+  }
+  body:has([data-kartei-druck]) [data-kartei-druck],
+  body:has([data-kartei-druck]) [data-kartei-druck] * {
+    visibility: visible;
+  }
+  body:has([data-kartei-druck]) [data-kartei-druck] {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    padding: 0;
+  }
+  [data-kartei-druck] [data-kartei-druck-aus] {
+    display: none !important;
+  }
+  [data-kartei-druck] [data-kartei-druck-kopf] {
+    display: block !important;
+  }
+  [data-kartei-druck] [data-kartei-stufe][hidden] {
+    display: block !important;
+  }
+  [data-kartei-druck] [data-kartei-stufe] {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+}

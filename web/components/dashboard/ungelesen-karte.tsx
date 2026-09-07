@@ -4,14 +4,14 @@
 // betroffenen Gespräche. Trägt bewusst KEINEN Zeitraum-Selektor, sondern das
 // feste Abzeichen „Aktuell" — ein Ungelesen-Stand ist ein Ist-Wert, kein Verlauf.
 //
-// Bis zum Raster-Umbau war das Inline-JSX in reservations-dashboard.tsx. Sie
-// steht jetzt für sich, weil der Kachel-Katalog (`lib/dashboard-katalog.ts`)
-// jede Kachel einzeln adressieren muss.
+// Eigene Datei, weil der Kachel-Katalog (`lib/dashboard-katalog.ts`, gerendert
+// über `kachel-inhalt.tsx`) jede Kachel einzeln adressieren muss.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 import { Card, CardContent } from "@nextdays/ui/card";
+import { InfoHinweis } from "@nextdays/ui/info-hinweis";
 import {
   KachelKopf,
   PeriodBadge,
@@ -23,6 +23,9 @@ import { channelLabelLoose } from "@/lib/channel-logos";
 
 export function UngelesenKarte({ daten }: { daten: NachrichtenKennzahlen }) {
   const t = useTranslations("reservations");
+  // aria-Label der Info-Punkte: app-weit dieselbe Formulierung, deshalb aus
+  // `common` und nicht je Fläche neu erfunden.
+  const tGemein = useTranslations("common");
 
   return (
     <Card className="h-full">
@@ -31,14 +34,22 @@ export function UngelesenKarte({ daten }: { daten: NachrichtenKennzahlen }) {
           icon="ph:envelope-open"
           title={t("dashboard.unreadConversations")}
           gross
+          info={
+            /* Was die Zahl bedeutet („Konversationen warten auf Antwort"),
+               steckt hinter dem „i" statt als Zeile unter der Zahl. */
+            <InfoHinweis
+              titel={t("dashboard.unreadConversations")}
+              text={t("dashboard.unreadConversationsLabel")}
+              ariaLabel={tGemein("explain", {
+                label: t("dashboard.unreadConversations"),
+              })}
+            />
+          }
           rechts={<PeriodBadge label={t("dashboard.badgeCurrent")} />}
         />
         <div>
           <p className="font-display text-4xl font-extrabold leading-none">
             {daten.ungelesen}
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t("dashboard.unreadConversationsLabel")}
           </p>
         </div>
         {daten.ungelesen_threads.length ? (

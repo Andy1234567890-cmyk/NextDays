@@ -95,6 +95,20 @@ def types_for_accommodation(
     return None
 
 
+class Boligtype(StrEnum):
+    """DK-Wohnstatus des Objekts (Kartei Stufe 1, Lastenheft §6).
+
+    Spiegel des CHECK `properties_boligtype_check` (0581) — beide Listen
+    müssen deckungsgleich bleiben. Dänische Rechtsbegriffe als Schlüssel
+    (wie `bfe_number`), die Labels liegen im Frontend (`dossier.boligtype`).
+    Kein OTA-Sync: NICHT in `_CONTENT_FIELDS`.
+    """
+
+    flexbolig = "flexbolig"        # Wohnrecht ohne Wohnpflicht
+    helaarsbolig = "helaarsbolig"  # ganzjähriges Wohnen
+    fritidshus = "fritidshus"      # Ferienhaus
+
+
 class PropertyStatus(StrEnum):
     # public.property_status (Migration 0003)
     draft = "draft"
@@ -231,6 +245,8 @@ class PropertyBase(BaseModel):
     # Kapazität kommen aus dem Bestand (title, property_type, house_number,
     # max_guests, size_value/size_unit) — keine zweite Wahrheit.
     bfe_number: str | None = None
+    # DK-Wohnstatus (0009-Spalte, Wertebereich 0581). None = nicht erfasst.
+    boligtype: Boligtype | None = None
 
     # Listen. amenities = Objekt-Ausstattung, room_amenities = Zimmer-Ausstattung:
     # Channex führt dafür zwei Kataloge mit eigenen UUIDs (0243), nie mischen.
@@ -313,8 +329,10 @@ class PropertyUpdate(BaseModel):
     # wird wieder aufgehoben (Wurzel 1, Gegenzustand am selben Schalter). Nicht
     # gesendet = unangetastet (`exclude_unset` im Service unterscheidet beides).
     contract_end_date: date | None = None
-    # Objektkartei (Lastenheft §6) — nur bfe_number, kein OTA-Sync (nicht in _CONTENT_FIELDS).
+    # Objektkartei (Lastenheft §6) — bfe_number + boligtype, kein OTA-Sync
+    # (nicht in _CONTENT_FIELDS).
     bfe_number: str | None = None
+    boligtype: Boligtype | None = None
     # Kaution je Objekt (Spalte seit 0082). Sie war bis 14.08.2026 nur LESBAR:
     # die Stripe-Vorautorisierung und der Platzhalter `{{security_deposit}}`
     # lasen sie, aber kein Weg schrieb sie — der Platzhalter blieb deshalb immer

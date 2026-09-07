@@ -456,13 +456,15 @@ class AirbnbZimmerPushMixin:
         vorher standen hier deutsche Sätze, die jeden nicht-deutschen Betrieb
         auf Deutsch erreichten.
         """
-        empfaenger = (
-            db.table("users")
-            .select("id")
-            .eq("tenant_id", tenant_id)
-            .eq("role", "admin")
-            .execute()
-        ).data or []
+        # Empfaenger = wer System-Warnungen erhaelt (RECEIVE_SYSTEM_ALERTS,
+        # §4.1): admin UND co_admin, Rolle frisch aus der DB. Bis 07.09.2026
+        # stand hier `eq("role", "admin")` — der Co-Admin, dem das Lastenheft
+        # die System-Warnungen ausdruecklich zuspricht, erfuhr nichts.
+        from src.features.notification_settings.ereignisse import (  # noqa: PLC0415
+            system_warnungs_empfaenger,
+        )
+
+        empfaenger = sorted(system_warnungs_empfaenger(db, tenant_id))
         if not empfaenger:
             log.info("airbnb_meldung_ohne_empfaenger", tenant_id=tenant_id)
             return
@@ -485,9 +487,9 @@ class AirbnbZimmerPushMixin:
         )
 
         dispatcher = NotificationDispatcher(db)
-        for nutzer in empfaenger:
+        for user_id in empfaenger:
             dispatcher.sende(
-                user_id=str(nutzer["id"]),
+                user_id=user_id,
                 schluessel="listing_activity",
                 betreff=mail_text(betreff_key, FALLBACK, **werte),
                 text=mail_text(text_key, FALLBACK, **werte),
