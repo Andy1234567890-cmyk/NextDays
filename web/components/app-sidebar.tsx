@@ -526,6 +526,7 @@ export function AppSidebar({
   istDemo = false,
   istIntern = false,
   module = [],
+  logoUrl = null,
   einrichtungOffen = false,
 }: {
   email?: string;
@@ -547,6 +548,9 @@ export function AppSidebar({
   istIntern?: boolean;
   /** Freigeschaltete Module dieses Betriebs (0572), z. B. „personal". */
   module?: string[];
+  /** Firmenlogo aus Konto → Profil (`tenant_billing_profile.company_logo_url`).
+   *  null = keins hochgeladen → die Karte zeigt die Initialen. */
+  logoUrl?: string | null;
   // Firmendaten ODER Abo fehlen: die Oberflaeche ist dann eine SACKGASSE —
   // veroeffentlichen geht nicht (422), Geld kann nicht ankommen. Statt den
   // Betrieb das auf jeder Seite einzeln herausfinden zu lassen, bleibt die
@@ -651,6 +655,20 @@ export function AppSidebar({
   const displayName = email ? email.split("@")[0] : t("account.title");
   const initials = (email ? email.slice(0, 2) : "ND").toUpperCase();
   const roleLabel = role ? t(`roles.${ROLE_KEYS[role]}`) : "";
+
+  // Das Firmenlogo aus Konto → Profil. Kein `next/image`: die URL zeigt auf
+  // den Supabase-Bucket, der in `images.remotePatterns` nicht eingetragen ist —
+  // `next/image` bräche dort mit einem Laufzeitfehler ab.
+  // `object-contain`, weil Logos meist Wortmarken sind: in einen quadratischen
+  // Rahmen gequetscht (`object-cover`) wäre die Marke abgeschnitten.
+  const logoBild = logoUrl ? (
+    // eslint-disable-next-line @next/next/no-img-element -- Bucket-URL, s. o.
+    <img
+      src={logoUrl}
+      alt=""
+      className="size-8 shrink-0 rounded-full bg-secondary object-contain"
+    />
+  ) : null;
 
   return (
     <Sidebar collapsible="icon">
@@ -855,9 +873,11 @@ export function AppSidebar({
                   tooltip={t("account.title")}
                   className="data-[state=open]:bg-sidebar-accent"
                 >
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-medium text-secondary-foreground">
-                    {initials}
-                  </span>
+                  {logoBild ?? (
+                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-medium text-secondary-foreground">
+                      {initials}
+                    </span>
+                  )}
                   <div className="flex flex-col gap-0.5 overflow-hidden text-left leading-tight">
                     <span className="truncate text-sm font-medium">
                       {displayName}
@@ -877,9 +897,11 @@ export function AppSidebar({
                 sideOffset={8}
               >
                 <DropdownMenuLabel className="flex items-center gap-2 font-normal">
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-medium text-secondary-foreground">
-                    {initials}
-                  </span>
+                  {logoBild ?? (
+                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-medium text-secondary-foreground">
+                      {initials}
+                    </span>
+                  )}
                   <div className="flex flex-col leading-tight">
                     <span className="text-sm font-medium">{displayName}</span>
                     <span className="text-xs text-muted-foreground">

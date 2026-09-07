@@ -529,6 +529,12 @@ export function DashboardRaster({
         </p>
       ) : (
         <DndContext
+          // FESTE id, gleiche Begründung wie im Abrechnungs-Editor: ohne sie
+          // kommt die `aria-describedby`-Kennung aus einem modulglobalen
+          // Zähler, dessen Stand auf Server und Client auseinanderläuft
+          // (Hydration-Fehler). Der Zähler ist zudem GETEILT — dieser Kontext
+          // verschob die Nummern des anderen mit.
+          id="dashboard-kacheln"
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={onDragEnd}

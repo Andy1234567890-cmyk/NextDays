@@ -136,15 +136,64 @@ export function OwnersList({
                   </Button>
                 )}
               </div>
-              <p className="truncate text-sm text-muted-foreground">
-                {o.email ?? "—"}
-              </p>
+              {/* Kontakt: E-Mail, Telefon, Anschrift. Bis 07.09.2026 stand hier
+                  nur die E-Mail — wer anrufen oder etwas zuschicken wollte,
+                  musste dafür jede Karte einzeln öffnen. Gezeigt wird nur, was
+                  wirklich erfasst ist: eine leere Zeile mit Symbol behauptete
+                  einen Wert, den es nicht gibt (Wurzel 4). */}
+              <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+                <span className="flex min-w-0 items-center gap-1.5">
+                  <Icon icon="ph:envelope-simple" className="size-3.5 shrink-0" />
+                  <span className="truncate">{o.email ?? "—"}</span>
+                </span>
+                {o.phone && (
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    <Icon icon="ph:phone" className="size-3.5 shrink-0" />
+                    <span className="truncate">{o.phone}</span>
+                  </span>
+                )}
+                <Anschrift owner={o} />
+              </div>
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>
                   {t("commissionShort")}: {commissionLabel(o)}
                 </span>
                 <span>{t("propertyCount", { count: o.property_count })}</span>
               </div>
+              {/* Die zugeordneten Objekte als Miniatur. „1 Objekt" allein sagt
+                  nicht, WELCHES Haus gemeint ist — bei einem Eigentümer mit
+                  genau einem Objekt ist das die eigentliche Information. */}
+              {o.objekte.length > 0 && (
+                <ul className="flex flex-col gap-1.5 border-t border-border pt-2.5">
+                  {o.objekte.map((obj) => (
+                    <li
+                      key={obj.property_id}
+                      className="flex items-center gap-2"
+                    >
+                      {obj.photo_url ? (
+                        // `<img>`, nicht `next/image`: die Fotos liegen im
+                        // Supabase-Bucket, und `images.remotePatterns` ist in
+                        // next.config.ts nicht gesetzt — der Optimierer lehnte
+                        // die URL ab und das Bild bliebe leer. Dieselbe Wahl
+                        // wie in der Objektliste (objects-list.tsx).
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={obj.photo_url}
+                          alt=""
+                          className="size-8 shrink-0 rounded-md object-cover"
+                        />
+                      ) : (
+                        // Kein Bild hinterlegt: neutrales Zeichen statt eines
+                        // fremden Fotos (Wurzel 4).
+                        <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                          <Icon icon="ph:house" className="size-4" />
+                        </span>
+                      )}
+                      <span className="truncate text-sm">{obj.title}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </Card>
           ))}
         </div>
@@ -452,4 +501,29 @@ function commissionLabel(o: OwnerListItem): string {
       : `${o.default_commission_pct}%`;
   }
   return o.commission_missing_count > 0 ? `${spanne} · —` : spanne;
+}
+
+// Anschrift einzeilig für die Karte: „Straße 12, 24103 Kiel".
+//
+// Jeder Teil kann fehlen, ohne dass die Zeile zerfällt — ein Eigentümer mit nur
+// Ort ist ein normaler Datenstand, kein Fehler. Fehlt ALLES, gibt es keine
+// Adresse und die Zeile entfällt (null), statt ein leeres Symbol zu zeigen.
+// Das Land bleibt bewusst draußen: es steht als ISO-Kürzel in der Spalte und
+// wäre auf der Karte nur Rauschen; die volle Anschrift zeigt das Detail.
+function anschrift(o: OwnerListItem): string | null {
+  const strasse = [o.street, o.house_number].filter(Boolean).join(" ").trim();
+  const ort = [o.postal_code, o.city].filter(Boolean).join(" ").trim();
+  return [strasse, ort].filter(Boolean).join(", ") || null;
+}
+
+/** Die Anschrift-Zeile der Karte — nichts, wenn keine Adresse erfasst ist. */
+function Anschrift({ owner }: { owner: OwnerListItem }) {
+  const text = anschrift(owner);
+  if (!text) return null;
+  return (
+    <span className="flex min-w-0 items-center gap-1.5">
+      <Icon icon="ph:map-pin" className="size-3.5 shrink-0" />
+      <span className="truncate">{text}</span>
+    </span>
+  );
 }

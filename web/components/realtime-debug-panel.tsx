@@ -14,6 +14,7 @@
 // Nur Entwicklung/Staging: das Panel zeigt Tabellennamen und Filter im Klartext
 // (inkl. tenant_id/guest_id) — das Layout schaltet es in Produktion ab.
 import { Icon } from "@iconify/react";
+import { useDebugSichtbar } from "@/components/debug-schalter";
 import { useSyncExternalStore, useState } from "react";
 
 import {
@@ -65,9 +66,16 @@ function statusColor(status: string): string {
 export function RealtimeDebugPanel() {
   const subs = useRealtimeDebugState();
   const [open, setOpen] = useState(false);
+  // NACH allen anderen Hooks abfragen, aber VOR dem frühen Return: ein Hook
+  // hinter einem `return` verletzt die Hook-Regeln (ESLint fängt das).
+  const sichtbar = useDebugSichtbar();
   const tone = overallTone(subs);
   const subscribed = subs.filter((s) => s.status === "SUBSCRIBED").length;
   const totalEvents = subs.reduce((n, s) => n + s.events, 0);
+
+  // Ausgeblendet: der Schalter (debug-schalter.tsx) bleibt sichtbar und holt
+  // das Panel zurück.
+  if (!sichtbar) return null;
 
   return (
     // Unter der Topbar statt unten rechts: dort sitzen Andy und der Support-Chat,

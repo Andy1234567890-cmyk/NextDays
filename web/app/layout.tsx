@@ -6,6 +6,7 @@ import { getLocale } from "next-intl/server";
 import { Toaster } from "sonner";
 
 import { ThemeProvider } from "@/components/theme-provider";
+import { DebugSchalter } from "@/components/debug-schalter";
 import { SitzungDebugPanel } from "@/components/sitzung-debug-panel";
 
 import "./globals.css";
@@ -60,6 +61,16 @@ export default async function RootLayout({
             {(process.env.NODE_ENV !== "production" ||
               process.env.NEXT_PUBLIC_SITZUNG_DEBUG === "1") && (
               <SitzungDebugPanel />
+            )}
+            {/* Der Ein-/Ausschalter beider Debug-Overlays (Sitzung hier,
+                Realtime in den Bereichs-Layouts). Er steht NUR hier: das
+                Root-Layout umschließt alle anderen, ein zweiter Aufruf ergäbe
+                zwei Knöpfe übereinander. Dieselbe Bedingung wie die Panels —
+                ohne Panels braucht es keinen Schalter. */}
+            {(process.env.NODE_ENV !== "production" ||
+              process.env.NEXT_PUBLIC_SITZUNG_DEBUG === "1" ||
+              process.env.NEXT_PUBLIC_REALTIME_DEBUG === "1") && (
+              <DebugSchalter />
             )}
           </ThemeProvider>
         </NextIntlClientProvider>

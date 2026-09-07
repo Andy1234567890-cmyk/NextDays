@@ -20,6 +20,18 @@ const nextConfig: NextConfig = {
   // Monorepo hat mehrere Lockfiles → Repo-Root deterministisch als
   // File-Tracing-Root (relativ: lokal + Docker-Root-Kontext).
   outputFileTracingRoot: path.join(__dirname, ".."),
+  // Der Next.js-Dev-Indikator (das schwarze Logo unten links, das Build-Status
+  // und Route-Info zeigt). Er sitzt genau dort, wo auch unser Sitzungs-Panel
+  // steht, und verdeckt es teilweise.
+  //
+  // Abschaltbar statt fest entfernt: der Indikator meldet laufende Kompilierung
+  // und Build-Fehler — wer daran entwickelt, will ihn haben. `NEXT_PUBLIC_`
+  // wäre hier falsch, der Wert wird nur beim Start des Dev-Servers gelesen und
+  // gehört nicht ins Browser-Bundle.
+  //
+  // NEXT_DEV_INDICATOR=0 → aus. Ohne die Variable bleibt er an (Voreinstellung
+  // von Next), damit niemandem ein Werkzeug stillschweigend fehlt.
+  ...(process.env.NEXT_DEV_INDICATOR === "0" ? { devIndicators: false as const } : {}),
   // Kein x-powered-by:Next.js — verrät die Technologie (Version-Leak/Recon).
   poweredByHeader: false,
   // Geteiltes Workspace-Package (@nextdays/currency) liefert TS-Quellen → Next

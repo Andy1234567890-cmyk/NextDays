@@ -104,8 +104,19 @@ export type Owner = {
   updated_at: string | null;
 };
 
+/** Ein zugeordnetes Objekt, so weit die Eigentümer-KARTE es braucht. */
+export type OwnerObjektKurz = {
+  property_id: string;
+  title: string;
+  /** Titelbild oder `null` — dann zeigt die Karte einen neutralen Platzhalter,
+   *  nie das Bild eines anderen Objekts. */
+  photo_url: string | null;
+};
+
 export type OwnerListItem = Omit<Owner, "properties"> & {
   property_count: number;
+  /** Die zugeordneten Objekte als Miniatur. */
+  objekte: OwnerObjektKurz[];
   // Effektive Provisions-Spanne über die Objekte (Override je Objekt, sonst
   // Owner-Default). null = noch keine Objekte zugeordnet.
   commission_min: number | null;

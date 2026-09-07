@@ -34,6 +34,7 @@
 // Das Layout schaltet es in Produktion ab — dieselbe Regel wie beim
 // RealtimeDebugPanel nebenan.
 import { Icon } from "@iconify/react";
+import { useDebugSichtbar } from "@/components/debug-schalter";
 import { useCallback, useEffect, useState } from "react";
 
 interface Identitaet {
@@ -104,6 +105,7 @@ const FARBEN: Record<Ton, string> = {
 };
 
 export function SitzungDebugPanel() {
+  const sichtbar = useDebugSichtbar();
   const [lage, setLage] = useState<Lage | null>(null);
   const [offen, setOffen] = useState(false);
   const [, setLetzteKennung] = useState<string | null>(null);
@@ -161,6 +163,10 @@ export function SitzungDebugPanel() {
   const cookieTenant = lage?.cookie?.access.tenantId ?? null;
   const backendTenant = backendTenantLesen(lage?.backend?.antwort);
   const kurz = (v: string | null) => (v ? v.slice(0, 8) : "—");
+
+  // Ausgeblendet: der Schalter (debug-schalter.tsx) holt es zurück. Der Return
+  // steht NACH allen Hooks — sonst liefe die Abfrage bedingt (Hook-Regeln).
+  if (!sichtbar) return null;
 
   return (
     <div className="fixed bottom-3 left-3 z-[9999] font-mono text-[11px]">

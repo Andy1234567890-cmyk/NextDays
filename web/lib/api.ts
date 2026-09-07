@@ -206,4 +206,8 @@ export type MeResponse = {
    *  frisch registrierter Betrieb denselben Namen ein zweites Mal, weil die
    *  eigentliche Quelle (`tenant_billing_profile`) noch leer ist. */
   tenant_name: string | null;
+  /** Firmenlogo des Betriebs (`tenant_billing_profile.company_logo_url`),
+   *  hochgeladen unter Konto → Profil. null = keins hinterlegt; die Oberfläche
+   *  zeigt dann ihr Ersatzzeichen. */
+  tenant_logo_url: string | null;
 };

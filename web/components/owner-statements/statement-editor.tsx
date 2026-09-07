@@ -1582,6 +1582,13 @@ function RentalActivity({
       )}
       <div className="overflow-x-auto">
         <DndContext
+          // FESTE id, sonst Hydration-Fehler: ohne sie vergibt dnd-kit die
+          // `aria-describedby`-Kennung aus einem modulglobalen Zähler
+          // (`useUniqueId("DndDescribedBy", id)`). Der steht auf dem Server bei
+          // einem anderen Wert als im frisch geladenen Client-Modul — der
+          // Server lieferte `DndDescribedBy-1`, der Client erwartete `-0`, und
+          // React verwarf den Baum. Mit gesetzter id entfällt der Zähler.
+          id="abrechnung-spalten"
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragStart={onDragStart}
