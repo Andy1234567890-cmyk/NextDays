@@ -8,6 +8,19 @@ require Pod::Executable.execute_command('node', ['-p',
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
 
+# Firebase ueber CocoaPods aufloesen, NICHT ueber den Swift Package Manager.
+#
+# react-native-firebase 26 nimmt von sich aus SPM. Firebases SPM-Produkte sind
+# "automatic libraries" (nicht `type: .dynamic`), also bettet JEDER
+# react-native-firebase-Pod seine eigene Kopie ein. Bei statischer Verlinkung
+# — der Vorgabe dieses Projekts — kollidieren diese Kopien beim Linken als
+# doppelte Symbole, und `pod install` bricht ab.
+#
+# Der Gegenweg waere `use_frameworks! :linkage => :dynamic`. Das gilt aber fuer
+# ALLE Pods, nicht nur Firebase, und verlangsamt den App-Start. Diese Zeile
+# betrifft ausschliesslich die Firebase-Aufloesung.
+$RNFirebaseDisableSPM = true
+
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
   Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
@@ -16,6 +29,32 @@ end
 
 target 'MyNextDays' do
   config = use_native_modules!
+
+  # Firebase ist in Swift geschrieben und wird hier als statische Bibliothek
+  # gebaut. Swift kann eine Abhaengigkeit nur importieren, wenn sie eine
+  # Modul-Map hat — `GoogleUtilities` und `nanopb` bringen von sich aus keine
+  # mit. Ohne diese Zeilen bricht `pod install` ab:
+  # „The Swift pod `FirebaseCoreInternal` depends upon `GoogleUtilities`,
+  # which does not define modules."
+  #
+  # Gezielt diese zwei statt `use_modular_headers!` global: die globale Form
+  # zwingt JEDEM Pod eine Modul-Map auf, auch den React-Native-Pods, die ohne
+  # sie gebaut werden wollen.
+  pod 'GoogleUtilities', :modular_headers => true
+  pod 'nanopb', :modular_headers => true
+
+  # Firebase ist in Swift geschrieben und wird hier als statische Bibliothek
+  # gebaut. Swift kann eine Abhaengigkeit nur importieren, wenn sie eine
+  # Modul-Map hat — `GoogleUtilities` und `nanopb` bringen von sich aus keine
+  # mit. Ohne diese Zeilen bricht `pod install` ab:
+  # „The Swift pod `FirebaseCoreInternal` depends upon `GoogleUtilities`,
+  # which does not define modules."
+  #
+  # Gezielt diese zwei statt `use_modular_headers!` global: die globale Form
+  # zwingt JEDEM Pod eine Modul-Map auf, auch den React-Native-Pods, die ohne
+  # sie gebaut werden wollen.
+  pod 'GoogleUtilities', :modular_headers => true
+  pod 'nanopb', :modular_headers => true
 
   use_react_native!(
     :path => config[:reactNativePath],

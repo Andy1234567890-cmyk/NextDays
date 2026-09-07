@@ -6,18 +6,21 @@
 	<array>
 		<dict>
 			<key>NSPrivacyAccessedAPIType</key>
-			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
-			<key>NSPrivacyAccessedAPITypeReasons</key>
-			<array>
-				<string>C617.1</string>
-			</array>
-		</dict>
-		<dict>
-			<key>NSPrivacyAccessedAPIType</key>
 			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
 			<key>NSPrivacyAccessedAPITypeReasons</key>
 			<array>
 				<string>CA92.1</string>
+				<string>1C8F.1</string>
+				<string>C56D.1</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>C617.1</string>
+				<string>3B52.1</string>
 			</array>
 		</dict>
 		<dict>
@@ -31,134 +34,113 @@
 	</array>
 	<key>NSPrivacyCollectedDataTypes</key>
 	<array>
-		<!-- Kontaktdaten des Betriebs-Nutzers: bei Registrierung und im Konto.
-		     „Linked" ist richtig und nicht vermeidbar — ohne Zuordnung zum Konto
-		     gäbe es keine Anmeldung. NICHT für Tracking (es gibt kein Tracking-SDK
-		     in dieser App). -->
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>
 			<string>NSPrivacyCollectedDataTypeEmailAddress</string>
 			<key>NSPrivacyCollectedDataTypeLinked</key>
 			<true/>
-			<key>NSPrivacyCollectedDataTypeTracking</key>
-			<false/>
 			<key>NSPrivacyCollectedDataTypePurposes</key>
 			<array>
 				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
 			</array>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
 		</dict>
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>
 			<string>NSPrivacyCollectedDataTypeName</string>
 			<key>NSPrivacyCollectedDataTypeLinked</key>
 			<true/>
-			<key>NSPrivacyCollectedDataTypeTracking</key>
-			<false/>
 			<key>NSPrivacyCollectedDataTypePurposes</key>
 			<array>
 				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
 			</array>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
 		</dict>
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>
 			<string>NSPrivacyCollectedDataTypePhoneNumber</string>
 			<key>NSPrivacyCollectedDataTypeLinked</key>
 			<true/>
-			<key>NSPrivacyCollectedDataTypeTracking</key>
-			<false/>
 			<key>NSPrivacyCollectedDataTypePurposes</key>
 			<array>
 				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
 			</array>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
 		</dict>
-		<!-- Die Konto-Kennung. Ohne sie gäbe es keine Sitzung. -->
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>
 			<string>NSPrivacyCollectedDataTypeUserID</string>
 			<key>NSPrivacyCollectedDataTypeLinked</key>
 			<true/>
-			<key>NSPrivacyCollectedDataTypeTracking</key>
-			<false/>
 			<key>NSPrivacyCollectedDataTypePurposes</key>
 			<array>
 				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
 			</array>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
 		</dict>
-		<!-- Inhalte, die der Betrieb in der App EINGIBT und die an unseren Server
-		     gehen: Nachrichten an Gäste, Notizen, Storno-Begründungen. Auch wenn
-		     sie nicht das eigene Konto beschreiben, sind sie erhobene Daten. -->
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>
 			<string>NSPrivacyCollectedDataTypeOtherUserContent</string>
 			<key>NSPrivacyCollectedDataTypeLinked</key>
 			<true/>
-			<key>NSPrivacyCollectedDataTypeTracking</key>
-			<false/>
 			<key>NSPrivacyCollectedDataTypePurposes</key>
 			<array>
 				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
 			</array>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
 		</dict>
-		<!-- Kontaktdaten der GÄSTE, die der Betrieb in der App sieht und pflegt.
-		     Sie gehören dem Betrieb (wir sind dort Auftragsverarbeiter), werden
-		     aber über diese App übertragen — Apple fragt nach dem Datenfluss,
-		     nicht nach der Rolle. -->
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>
 			<string>NSPrivacyCollectedDataTypeOtherDataTypes</string>
 			<key>NSPrivacyCollectedDataTypeLinked</key>
 			<true/>
-			<key>NSPrivacyCollectedDataTypeTracking</key>
-			<false/>
 			<key>NSPrivacyCollectedDataTypePurposes</key>
 			<array>
 				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
 			</array>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
 		</dict>
-		<!-- Fotos: lib/foto.ts nimmt auf bzw. waehlt aus, lib/tasks.ts laedt als
-		     FormData hoch (Fotonachweis an Aufgaben, screens/TaskDetail.tsx).
-		     Das Foto haengt an einer Aufgabe eines Betriebs, also „Linked". -->
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>
 			<string>NSPrivacyCollectedDataTypePhotosorVideos</string>
 			<key>NSPrivacyCollectedDataTypeLinked</key>
 			<true/>
-			<key>NSPrivacyCollectedDataTypeTracking</key>
-			<false/>
 			<key>NSPrivacyCollectedDataTypePurposes</key>
 			<array>
 				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
 			</array>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
 		</dict>
-		<!-- Geraetetoken fuer Push: lib/push.ts meldet es im Auth-Kontext des
-		     angemeldeten Nutzers (PUT /notification-settings/push-geraet), also
-		     „Linked". Abgemeldet wird es beim Logout (pushAbmelden). -->
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>
 			<string>NSPrivacyCollectedDataTypeDeviceID</string>
 			<key>NSPrivacyCollectedDataTypeLinked</key>
 			<true/>
-			<key>NSPrivacyCollectedDataTypeTracking</key>
-			<false/>
 			<key>NSPrivacyCollectedDataTypePurposes</key>
 			<array>
 				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
 			</array>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
 		</dict>
-		<!-- Absturzprotokolle: lib/absturzmeldung.ts sendet Stacktrace und
-		     Plattformangaben bewusst OHNE Token an /diagnostics/startabsturz —
-		     deshalb NICHT „Linked". -->
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>
 			<string>NSPrivacyCollectedDataTypeCrashData</string>
 			<key>NSPrivacyCollectedDataTypeLinked</key>
 			<false/>
-			<key>NSPrivacyCollectedDataTypeTracking</key>
-			<false/>
 			<key>NSPrivacyCollectedDataTypePurposes</key>
 			<array>
 				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
 			</array>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
 		</dict>
 	</array>
 	<key>NSPrivacyTracking</key>
