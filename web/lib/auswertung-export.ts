@@ -25,6 +25,27 @@ export type ExportTabelle = {
 
 export type ExportFormat = "csv" | "xlsx" | "pdf";
 
+/** Antwort des PDF-Dienstes prüfen und seine Fehlermeldung durchreichen.
+ *
+ *  Die Route legt die Ursache in `error` ab (z. B. „Executable doesn't exist
+ *  at …/chrome-headless-shell" bei fehlendem Browser). Sie hinter einem
+ *  nackten „500" zu verstecken kostete am 07.09.2026 die Diagnose — der
+ *  Nutzer sah „PDF-Dienst antwortete 500" und niemand wusste, warum. */
+async function pdfAntwortPruefen(res: Response): Promise<string> {
+  let data: { success?: boolean; pdfBase64?: string; error?: string } = {};
+  try {
+    data = (await res.json()) as typeof data;
+  } catch {
+    /* kein JSON — Status reicht dann als Aussage */
+  }
+  if (!res.ok || !data.success) {
+    const ursache = data.error ? ` — ${data.error.split("\n")[0]}` : "";
+    throw new Error(`PDF-Dienst antwortete ${res.status}${ursache}`);
+  }
+  if (!data.pdfBase64) throw new Error("Leeres PDF.");
+  return data.pdfBase64;
+}
+
 function herunterladen(blob: Blob, dateiname: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -138,9 +159,7 @@ export async function exportPdf(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ htmlContent: html }),
   });
-  if (!res.ok) throw new Error(`PDF-Dienst antwortete ${res.status}.`);
-  const data = (await res.json()) as { success?: boolean; pdfBase64?: string };
-  if (!data.success || !data.pdfBase64) throw new Error("Leeres PDF.");
-  const bytes = Uint8Array.from(atob(data.pdfBase64), (c) => c.charCodeAt(0));
+  const pdfBase64 = await pdfAntwortPruefen(res);
+  const bytes = Uint8Array.from(atob(pdfBase64), (c) => c.charCodeAt(0));
   herunterladen(new Blob([bytes], { type: "application/pdf" }), `${dateiname}.pdf`);
 }

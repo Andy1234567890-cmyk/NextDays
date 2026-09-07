@@ -1503,7 +1503,13 @@
       "statusesSearch": "Buscar estado …",
       "statusesNoMatch": "No se ha encontrado ningún estado.",
       "statusesSelectAll": "Seleccionar todo",
-      "statusesCount": "{count} de {total} seleccionados"
+      "statusesCount": "{count} de {total} seleccionados",
+      "properties": "Alojamientos",
+      "propertiesAll": "Todos los alojamientos",
+      "propertiesCount": "{count} de {total} alojamientos",
+      "propertiesSearch": "Buscar alojamiento…",
+      "propertiesNoMatch": "No se encontró ningún alojamiento.",
+      "propertiesSelectAll": "Seleccionar todo"
     },
     "reservationStatus": {
       "pending": "Pendiente",
@@ -1640,7 +1646,16 @@
         "noContract": "No hay contrato de facturación ni tasa de comisión para esta propiedad en los datos maestros; cree un contrato con el propietario.",
         "addonsOutside": "Servicios adicionales — vendidos a través de myNextDays, no incluidos en el precio de huésped del portal"
       },
-      "ownershipShare": "Compartir"
+      "ownershipShare": "Compartir",
+      "dragColumn": "Mover columna {spalte}",
+      "columnsReset": "Restablecer orden de columnas",
+      "dndStart": "{spalte} recogido.",
+      "dndOver": "{spalte} sobre {ziel}.",
+      "dndOverNichts": "{spalte} fuera de la tabla.",
+      "dndEnd": "{spalte} soltado en la posición de {ziel}.",
+      "dndCancel": "Movimiento de {spalte} cancelado.",
+      "dndAnleitung": "Pulse espacio o intro para recoger una columna. Use las teclas de flecha para mover, espacio o intro para soltar, escape para cancelar.",
+      "dragHint": "Arrastre las columnas por el identificador para cambiar el orden — también con el teclado: enfoque el identificador, barra espaciadora, teclas de flecha."
     },
     "expenses": {
       "add": "Añadir",
@@ -1691,7 +1706,10 @@
       "status": "Estado",
       "open": "Abrir",
       "emptyTitle": "Sin liquidaciones",
-      "emptyHint": "Crea tu primera liquidación de propietario en «Crear y editar»."
+      "emptyHint": "Crea tu primera liquidación de propietario en «Crear y editar».",
+      "objects": "Alojamientos",
+      "allObjects": "todos los alojamientos",
+      "objectsCount": "{count} alojamientos"
     },
     "edit": "Editar",
     "attachments": {
@@ -1740,7 +1758,10 @@
       "commission": "La comisión del alojamiento por la gestión del inmueble. Se calcula sobre el importe restante después de la deducción del portal, y se aplica a CADA reserva, incluso a las realizadas a través de la propia web.",
       "flatFee": "Un importe fijo del contrato de gestión, por ejemplo, para gastos adicionales. Dependiendo del acuerdo, se deduce antes o después de la comisión.",
       "ownerShare": "Lo que finalmente queda para el propietario: precio del huésped menos deducción del portal, menos comisión, menos tarifa plana, más las tasas que le corresponden. En caso de copropiedad, además multiplicado por su participación.",
-      "ownershipShare": "La participación de este propietario en el inmueble. El 100 % significa propiedad única. Si una casa pertenece a varias personas, cada una recibe su propia liquidación por su participación; las participaciones suman el 100 %."
+      "ownershipShare": "La participación de este propietario en el inmueble. El 100 % significa propiedad única. Si una casa pertenece a varias personas, cada una recibe su propia liquidación por su participación; las participaciones suman el 100 %.",
+      "properties": "Qué propiedades incluye esta liquidación. Por defecto, todas las propiedades del propietario. Seleccione propiedades individuales para liquidar solo para ellas. Cada propiedad solo puede estar en una liquidación finalizada por período; una reserva nunca se pagará dos veces.",
+      "language": "En este idioma se crea el recibo: textos, números y fecha. Por defecto, el idioma del propietario, de lo contrario, el del negocio. Una vez finalizado, es fijo; el recibo permanece tal como fue emitido.",
+      "headerFromMaster": "Adopta el nombre, la dirección, el correo electrónico, el teléfono y el número de identificación fiscal del propietario y del negocio de los datos maestros. El número de factura y las notas de este recibo permanecen."
     },
     "finalizeConfirm": {
       "title": "Fijar factura",
@@ -1778,7 +1799,21 @@
       "title": "Copropietario",
       "hint": "Estas propiedades pertenecen a varias personas. Cada una recibe una factura separada por su parte.",
       "share": "{anteil} %"
-    }
+    },
+    "language": {
+      "label": "Idioma del recibo"
+    },
+    "sort": {
+      "aria": "Ordenar por {spalte}",
+      "ascending": "ascendente",
+      "descending": "descendente"
+    },
+    "belegIn": "Recibo en {sprache}",
+    "headerFromMaster": "Tomar de los datos maestros",
+    "headerFromMasterDone": "Datos de cabecera tomados de los datos maestros.",
+    "objectsLine": "Objetos: {liste}",
+    "objectsAll": "Objetos: todos",
+    "loading": "Cargando…"
   },
   "ownerBilling": {
     "title": "Contrato de liquidación",
@@ -13113,7 +13148,6 @@
     "mixedCurrency": "Múltiples monedas en el período ({list}) — los importes no se suman. Por favor, restrinja a un objeto o una moneda.",
     "occupancyFootnote": "Ocupado es ocupado, ya sea a través de un portal, el propio sitio web, creado por usted mismo o por el propietario. Solo los días en que la propiedad no estuvo a la venta se excluyen del denominador: días bloqueados y Stop-Sell.",
     "kpiFootnote": "El porcentaje de cada tarjeta se compara con el período anterior de la misma duración. Al hacer clic en una tarjeta, se abre la serie temporal.",
-    "commissionFootnote": "Los campos de comisión vacíos significan que el portal no transmite ninguna comisión (Booking.com generalmente no lo hace) — no se estima nada.",
     "tab": {
       "kennzahlen": "Indicadores clave",
       "analytics": "Resumen",
@@ -13331,7 +13365,7 @@
     },
     "expenses": {
       "empty": "No hay partidas de compensación en este período.",
-      "emptyHint": "Los gastos y extras se generan en la liquidación del propietario y de los servicios solicitados.",
+      "emptyHint": "Los gastos y extras se generan en la liquidación del propietario, a partir de los servicios solicitados y de los servicios adicionales reservados.",
       "expenses": "Gastos",
       "extras": "Extras",
       "balance": "Saldo",
@@ -13346,7 +13380,11 @@
         "ausgabe": "Gasto",
         "extra": "Extra"
       },
-      "footnote": "El período es la fecha de la partida. Los gastos corren a cargo del propietario, los extras a su favor, tal como figuran en la liquidación."
+      "footnote": "El período es la fecha del asiento; los servicios adicionales siguen la reserva. Los gastos corren a cargo del propietario, los extras a su favor, tal como figuran en la liquidación.",
+      "category": {
+        "service": "Servicio solicitado",
+        "addon": "Servicio adicional"
+      }
     },
     "pace": {
       "title": "Estado de reservas de los próximos 12 meses",
@@ -15549,5 +15587,59 @@
       "anzahlung": "El depósito debe ser superior a 0 y no puede ser superior al importe total.",
       "entwurfAngelegt": "La oferta se ha creado como borrador, el correo electrónico no se ha enviado: {grund}"
     }
+  },
+  "statementPdf": {
+    "invoice": "Factura del propietario",
+    "storno": "Factura de cancelación",
+    "invoiceNo": "N.º",
+    "issuer": "Emisor",
+    "owner": "Propietario",
+    "vatId": "N.º IVA",
+    "period": "Período",
+    "objects": "Alojamientos",
+    "allObjects": "Todos los alojamientos",
+    "bookings": "Reservas",
+    "listing": "Alojamiento",
+    "guest": "Huésped",
+    "arrival": "Llegada",
+    "departure": "Salida",
+    "nights": "Noches",
+    "channel": "Canal",
+    "commission": "Comisión",
+    "flatFee": "Tarifa plana",
+    "ownerShare": "Parte del propietario",
+    "noBookings": "No hay reservas en el período.",
+    "breakdownTitle": "Desglose por reserva",
+    "posAfterPortal": "Importe total después de la deducción del portal",
+    "posAfterPortalHint": "Precio del huésped menos la comisión del portal y la tarifa de pago del portal",
+    "posCommission": "Comisión de gestión",
+    "posMinCommission": "Comisión mínima (contrato) en lugar de",
+    "posContractFrom": "Contrato desde",
+    "posRateManual": "manual en esta factura",
+    "posRateLegacy": "Tarifa estándar de los datos maestros",
+    "posFlatFee": "Tarifa plana por reserva/noche (contrato)",
+    "posFeesBack": "Sus tarifas — sin reducir, sin comisión",
+    "posOwnerShare": "= Parte del propietario",
+    "posRate": "Tipo de cambio",
+    "commissionable": "sujeto a comisión",
+    "noFeesReported": "El portal no ha informado de ninguna tarifa para esta reserva; por lo tanto, no se han aplicado.",
+    "deductionsTitle": "Deducciones y créditos",
+    "deductions": "Deducciones (a cargo del propietario)",
+    "credits": "Créditos (a favor del propietario)",
+    "srcExpense": "Partidas de compensación",
+    "srcRecurring": "recurrente",
+    "receipt": "Recibo",
+    "perBooking": "por reserva",
+    "perNight": "por noche",
+    "perPeriod": "por período",
+    "sumShares": "Total de la parte del propietario de las reservas",
+    "sumFlatFees": "Tarifas planas del contrato",
+    "sumFlatFeesNote": "ya incluido en las participaciones — sin deducciones adicionales",
+    "sumDeductions": "Deducciones",
+    "sumCredits": "Créditos",
+    "sumOwnerPayout": "Pago al propietario",
+    "vat": "IVA",
+    "vatNet": "Comisión de gestión neta",
+    "vatGross": "Comisión de gestión bruta"
   }
 }

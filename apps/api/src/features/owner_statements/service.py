@@ -34,6 +34,7 @@ from decimal import ROUND_HALF_UP, Decimal
 
 from supabase import Client
 
+from src.core import mail_sprache
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.core.supabase import fetch_all_rows
@@ -44,6 +45,7 @@ from .currencies import currency_for_country
 from .fx import FxService
 from .schemas import (
     AutoStatementRunResponse,
+    ColumnKey,
     CurrencyAmount,
     ExpenseCreate,
     ExpenseDirection,
@@ -52,8 +54,11 @@ from .schemas import (
     ExpenseUpdate,
     ListingRow,
     Miteigentuemer,
+    ObjektKurz,
     RentalRow,
     SliceHealth,
+    SortDir,
+    SortKey,
     StatementFinalizeRequest,
     StatementGenerateRequest,
     StatementHeader,
@@ -448,6 +453,74 @@ class OwnerStatementsService(ZeilenMixin):
             .execute()
         ).data or []
         return [str(r["property_id"]) for r in rows]
+
+    def _scope_property_ids(
+        self, owner_id: str, requested: list[str] | None
+    ) -> tuple[list[str], list[str] | None]:
+        """Die Objekte, über die DIESE Abrechnung geht (0603) — EINE Funktion.
+
+        Gibt `(wirksame_ids, gespeicherter_wert)` zurück: die Liste, mit der
+        Reservierungen, Zeilen, wiederkehrende und Verrechnungsposten gefiltert
+        werden, und den Wert für die Spalte — `None`, wenn alle Objekte gemeint
+        sind (leer oder nicht angegeben), sonst die geprüfte Teilmenge.
+
+        Wurzel 3/9: jede angeforderte ID MUSS zu einem Objekt dieses
+        Eigentümers gehören. Eine fremde ID ist kein Filter, der „nichts
+        findet", sondern ein 422 — sonst rechnete eine Abrechnung still über
+        ein Objekt, das jemand anderem gehört, und der Beleg sähe richtig aus.
+
+        Wurzel 1: alle vier Verbraucher (Reservierungen, Listing-Zeilen,
+        wiederkehrende Posten, Verrechnungsposten) nehmen dieselbe Liste. Ein
+        zweiter Filter an einer der Stellen wäre die zweite Wahrheit darüber,
+        was zur Abrechnung gehört.
+        """
+        alle = self._owner_property_ids(owner_id)
+        gewuenscht = [str(pid) for pid in (requested or []) if str(pid).strip()]
+        if not gewuenscht:
+            return alle, None
+        fremd = sorted(set(gewuenscht) - set(alle))
+        if fremd:
+            raise StatementError(
+                "Mindestens ein ausgewähltes Objekt gehört nicht zu diesem "
+                "Eigentümer. Bitte die Auswahl neu laden.",
+                status_code=422,
+            )
+        # Reihenfolge der Stammdaten beibehalten, Dubletten raus.
+        wirksam = [pid for pid in alle if pid in set(gewuenscht)]
+        return wirksam, wirksam
+
+    @staticmethod
+    def _objekte_kurz(
+        property_ids: list[str], titles: dict[str, str]
+    ) -> list[ObjektKurz]:
+        """Objekte der Abrechnung mit Titel — für Beleg-Kopf und Liste."""
+        return [ObjektKurz(id=pid, title=titles.get(pid)) for pid in property_ids]
+
+    def _tenant_default_language(self, tenant_id: str) -> str | None:
+        rows = (
+            self._db.table("tenants")
+            .select("default_language")
+            .eq("id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        return rows[0].get("default_language") if rows else None
+
+    def _beleg_sprache(
+        self, owner: dict, tenant_id: str, gewuenscht: object = None
+    ) -> str:
+        """Sprache des Belegs (0604) — dieselbe Kette wie jede Mail.
+
+        Reihenfolge: ausdrücklich gewünscht (Entwurf/Snapshot) → Sprache des
+        Eigentümers → Sprache des Betriebs → Englisch. Alles über
+        `core.mail_sprache.aufloesen`, damit es GENAU EINE Regel gibt, wann
+        ein Eigentümer welche Sprache bekommt; eine zweite Kette hier hätte
+        früher oder später eine andere Antwort gegeben als die Mail, mit der
+        derselbe Beleg verschickt wird.
+        """
+        return mail_sprache.aufloesen(
+            gewuenscht, owner.get("language"), self._tenant_default_language(tenant_id)
+        )
 
     def _owner_property_links(self, owner_id: str) -> list[dict]:
         """Die Zuordnungszeilen dieses Eigentümers — EIN Abruf für beide Karten.
@@ -874,11 +947,22 @@ class OwnerStatementsService(ZeilenMixin):
             )
 
     def _owner_unbound_expenses(
-        self, tenant_id: str, owner_id: str, period_from: date, period_to: date
+        self,
+        tenant_id: str,
+        owner_id: str,
+        period_from: date,
+        period_to: date,
+        property_ids: list[str] | None = None,
     ) -> list[dict]:
         """Owner-Ausgaben im Zeitraum, die (noch) an KEINE Abrechnung gebunden
-        sind — für die Live-Vorschau der Owner-Seite."""
-        return (
+        sind — für die Live-Vorschau der Owner-Seite.
+
+        `property_ids` (0603): Posten mit Objektbezug zählen nur, wenn das
+        Objekt zur Abrechnung gehört. Posten OHNE Objekt betreffen den
+        Eigentümer als Ganzes und bleiben in jeder seiner Abrechnungen — sonst
+        fiele eine Jahrespauschale aus allen Teil-Abrechnungen heraus.
+        """
+        rows = (
             self._db.table("owner_expenses")
             .select("*")
             .eq("tenant_id", tenant_id)
@@ -889,6 +973,14 @@ class OwnerStatementsService(ZeilenMixin):
             .order("date")
             .execute()
         ).data or []
+        if property_ids is None:
+            return rows
+        erlaubt = set(property_ids)
+        return [
+            e
+            for e in rows
+            if not e.get("listing_id") or str(e["listing_id"]) in erlaubt
+        ]
 
     # --- Auszahlungsformel ---------------------------------------------------
 
@@ -1083,7 +1175,9 @@ class OwnerStatementsService(ZeilenMixin):
         owner_currency = self._owner_currency(owner, tenant_id)
         header = self._header_from_stammdaten(tenant_id, owner)
 
-        property_ids = self._owner_property_ids(req.owner_id)
+        property_ids, gespeichert = self._scope_property_ids(
+            req.owner_id, req.property_ids
+        )
         titles = self._property_titles(property_ids)
         reservations = self._reservations(
             tenant_id,
@@ -1104,11 +1198,13 @@ class OwnerStatementsService(ZeilenMixin):
         expenses = self._visible_expenses(
             ctx,
             self._owner_unbound_expenses(
-                tenant_id, req.owner_id, req.period_from, req.period_to
+                tenant_id, req.owner_id, req.period_from, req.period_to,
+                gespeichert,
             ),
         )
         recurring = self._wiederkehrende_posten(
-            tenant_id, req.owner_id, rental_rows, owner_currency
+            tenant_id, req.owner_id, rental_rows, owner_currency,
+            property_ids=gespeichert,
         )
         summary = self._compute_summary(
             rental_rows, expenses, req.owner_id, currency, owner_currency,
@@ -1133,6 +1229,10 @@ class OwnerStatementsService(ZeilenMixin):
             # ist nicht gespeichert, hier steht also nur die Anzeige-Zahl.
             "commission_pct": float(commission) if commission is not None else None,
             "currency": currency,
+            "property_ids": gespeichert,
+            "sort_key": req.sort_key.value,
+            "sort_dir": req.sort_dir.value,
+            "column_order": _spaltenfolge_speichern(req.column_order),
             **header.model_dump(),
         }
         return _to_response(
@@ -1141,6 +1241,8 @@ class OwnerStatementsService(ZeilenMixin):
             miteigentuemer=self._miteigentuemer(
                 req.owner_id, [lr.listing_id for lr in listing_rows], titles
             ),
+            objekte=self._objekte_kurz(property_ids, titles),
+            language=self._beleg_sprache(owner, tenant_id, req.language),
         )
 
     def generate(
@@ -1158,6 +1260,10 @@ class OwnerStatementsService(ZeilenMixin):
         )
         currency = self._tenant_currency(tenant_id)
         header = self._header_from_stammdaten(tenant_id, owner)
+        # 0603: Objektmenge prüfen, BEVOR eine Zeile entsteht.
+        _wirksam, property_ids = self._scope_property_ids(
+            req.owner_id, req.property_ids
+        )
 
         row = {
             "tenant_id": tenant_id,
@@ -1169,6 +1275,16 @@ class OwnerStatementsService(ZeilenMixin):
             "status": "draft",
             "commission_pct": commission,
             "currency": currency,
+            # NULL = alle Objekte (0603).
+            "property_ids": property_ids,
+            # Sprache EINFRIEREN (0604): der Beleg ist das Dokument des
+            # Eigentümers; wechselt er später die Sprache, bleibt ein
+            # ausgestellter Beleg, wie er ausgestellt wurde.
+            "language": self._beleg_sprache(owner, tenant_id, req.language),
+            "sort_key": req.sort_key.value,
+            "sort_dir": req.sort_dir.value,
+            # 0605: NULL = Standard.
+            "column_order": _spaltenfolge_speichern(req.column_order),
             # Miteigentumsanteile JE OBJEKT einfrieren (0601). Ohne diesen
             # Snapshot zeigte eine finalisierte Rechnung nach einem
             # Anteilsverkauf rückwirkend andere Beträge als die Summen, die in
@@ -1266,7 +1382,7 @@ class OwnerStatementsService(ZeilenMixin):
 
     def _build_activity(
         self, tenant_id: str, row: dict, mask: GuestMask
-    ) -> tuple[list[RentalRow], list[ListingRow], dict[str, str]]:
+    ) -> tuple[list[RentalRow], list[ListingRow], dict[str, str], list[str]]:
         """Aktivitätszeilen einer gespeicherten Abrechnung unter EINER Maske.
 
         Die Maske kommt vom Aufrufer, nicht aus einer `user_id` in dieser
@@ -1293,7 +1409,17 @@ class OwnerStatementsService(ZeilenMixin):
             if isinstance(gespeicherte_anteile, dict) and gespeicherte_anteile
             else self._anteil_map(owner)
         )
-        property_ids = self._owner_property_ids(str(row["owner_id"]))
+        # Objektmenge der ABRECHNUNG (0603), nicht die heutigen Stammdaten:
+        # ist `property_ids` gesetzt, gilt genau diese Teilmenge — auch wenn
+        # das Objekt inzwischen entzogen wurde. Ein Snapshot, der beim Lesen
+        # gegen die Stammdaten geschnitten wird, würde einen finalisierten
+        # Beleg nach einem Entzug leer zeigen.
+        gespeichert = row.get("property_ids")
+        property_ids = (
+            [str(pid) for pid in gespeichert]
+            if isinstance(gespeichert, list) and gespeichert
+            else self._owner_property_ids(str(row["owner_id"]))
+        )
         titles = self._property_titles(property_ids)
         reservations = self._reservations(
             tenant_id,
@@ -1308,7 +1434,7 @@ class OwnerStatementsService(ZeilenMixin):
             amap, mask,
         )
         listing_rows = self._listing_rows(rental_rows, titles)
-        return rental_rows, listing_rows, titles
+        return rental_rows, listing_rows, titles, property_ids
 
     def _commission_for_row(
         self, tenant_id: str, row: dict
@@ -1332,14 +1458,15 @@ class OwnerStatementsService(ZeilenMixin):
         # UNGEKÜRZT rechnen (siehe `_MASKE_INTERN`): der Snapshot ist der
         # Buchhaltungswert, nicht die Sicht des gerade Anfragenden. Gastnamen
         # bleiben trotzdem maskiert — sie fließen nicht in Summen.
-        rental_rows, _listings, _titles = self._build_activity(
+        rental_rows, _listings, _titles, _pids = self._build_activity(
             tenant_id, row, _MASKE_INTERN
         )
         expenses = self._expenses_for_statement(tenant_id, statement_id)
         owner = self._owner(tenant_id, str(row["owner_id"]))
         owner_currency = self._owner_currency(owner, tenant_id)
         recurring = self._wiederkehrende_posten(
-            tenant_id, str(row["owner_id"]), rental_rows, owner_currency
+            tenant_id, str(row["owner_id"]), rental_rows, owner_currency,
+            property_ids=_scope_aus_zeile(row),
         )
         summary = self._compute_summary(
             rental_rows,
@@ -1481,7 +1608,7 @@ class OwnerStatementsService(ZeilenMixin):
         tenant_id = self._require_tenant(ctx)
         row = self._statement_row(tenant_id, statement_id)
         self._require_statement_visible(ctx, tenant_id, row)
-        rental_rows, listing_rows, titles = self._build_activity(
+        rental_rows, listing_rows, titles, property_ids = self._build_activity(
             tenant_id, row, load_guest_mask(self._db, ctx.user_id)
         )
         # Owner sieht als hidden_from_owner markierte Ausgaben weder gelistet noch
@@ -1500,7 +1627,8 @@ class OwnerStatementsService(ZeilenMixin):
         )
         mask = load_guest_mask(self._db, ctx.user_id)
         recurring = self._wiederkehrende_posten(
-            tenant_id, str(row["owner_id"]), rental_rows, owner_currency
+            tenant_id, str(row["owner_id"]), rental_rows, owner_currency,
+            property_ids=_scope_aus_zeile(row),
         )
         if row.get("status") != "draft":
             # Eingefrorene Summen aus dem Snapshot (finalized, cancelled, Storno).
@@ -1533,6 +1661,9 @@ class OwnerStatementsService(ZeilenMixin):
                 [lr.listing_id for lr in listing_rows],
                 titles,
             ),
+            objekte=self._objekte_kurz(property_ids, titles),
+            # Sprache: der Snapshot, sonst die Kette (Belege von vor 0604).
+            language=self._beleg_sprache(owner, tenant_id, row.get("language")),
         )
 
     def list(self, ctx: AuthContext, owner_id: str | None = None) -> StatementListResponse:
@@ -1545,7 +1676,8 @@ class OwnerStatementsService(ZeilenMixin):
             self._db.table("owner_statements")
             .select(
                 "id, owner_id, period_from, period_to, status, kind, owner_payout, "
-                "pm_payout, currency, invoice_number, owner_name, created_at"
+                "pm_payout, currency, invoice_number, owner_name, created_at, "
+                "property_ids"
             )
             .eq("tenant_id", tenant_id)
         )
@@ -1589,6 +1721,7 @@ class OwnerStatementsService(ZeilenMixin):
                 ),
                 currency=r.get("currency") or self._tenant_currency(tenant_id),
                 invoice_number=r.get("invoice_number"),
+                property_ids=_scope_aus_zeile(r),
                 created_at=str(r["created_at"]) if r.get("created_at") else None,
             )
             for r in rows
@@ -1610,6 +1743,41 @@ class OwnerStatementsService(ZeilenMixin):
         changes: dict = {}
         if req.header is not None:
             changes.update(req.header.model_dump(exclude_unset=True))
+        if req.header_aus_stammdaten:
+            # 13.4: Kopf aus den Stammdaten NEU ziehen — Eigentümer und
+            # Betrieb. Rechnungsnummer und Notizen gehören zu DIESEM Beleg
+            # und bleiben; sie kommen aus keiner Stammdaten-Quelle. Läuft
+            # NACH `header`, damit ein gleichzeitig mitgeschicktes Feld die
+            # Stammdaten nicht überstimmt — der Knopf ist die Ansage.
+            owner = self._owner(tenant_id, str(row["owner_id"]))
+            frisch = self._header_from_stammdaten(tenant_id, owner).model_dump()
+            frisch.pop("invoice_number", None)
+            frisch.pop("notes", None)
+            changes.update(frisch)
+        if req.property_ids is not None:
+            # 0603: leere Liste = zurück auf „alle" (NULL); sonst geprüfte
+            # Teilmenge. Ein fremdes Objekt ist ein 422, kein stiller Filter.
+            _wirksam, gespeichert = self._scope_property_ids(
+                str(row["owner_id"]), req.property_ids
+            )
+            changes["property_ids"] = gespeichert
+        if req.language is not None:
+            # Nur unterstützte Codes: ein Tippfehler darf keinen Beleg ohne
+            # Katalog erzeugen (Wurzel 4/5).
+            code = mail_sprache.normalisieren(req.language)
+            if code is None:
+                raise StatementError(
+                    f"Sprache {req.language!r} wird nicht unterstützt.",
+                    status_code=422,
+                )
+            changes["language"] = code
+        if req.sort_key is not None:
+            changes["sort_key"] = req.sort_key.value
+        if req.sort_dir is not None:
+            changes["sort_dir"] = req.sort_dir.value
+        if req.column_order is not None:
+            # 0605: leere Liste = zurück auf Standard (NULL).
+            changes["column_order"] = _spaltenfolge_speichern(req.column_order)
         if req.commission_pct is not None:
             changes["commission_pct"] = req.commission_pct
         if req.basis is not None:
@@ -1711,6 +1879,12 @@ class OwnerStatementsService(ZeilenMixin):
             raise StatementError(
                 "Stornierter Beleg kann nicht finalisiert werden.", status_code=409
             )
+        # 0603: keine zweite finalisierte Rechnung über dieselben Buchungen.
+        # Vorher fehlte diese Prüfung ganz — zwei Abrechnungen desselben
+        # Monats hätten dieselbe Buchung zweimal ausgezahlt, beide mit
+        # fortlaufender Nummer.
+        self._pruefe_ueberschneidung(tenant_id, row)
+
         # Summen vor dem Einfrieren auf den letzten Stand bringen.
         summary = self._refresh_summary(tenant_id, statement_id)
 
@@ -1775,6 +1949,41 @@ class OwnerStatementsService(ZeilenMixin):
         )
         return self.get(ctx, statement_id)
 
+    def _pruefe_ueberschneidung(self, tenant_id: str, row: dict) -> None:
+        """409, wenn eine finalisierte Rechnung desselben Eigentümers Zeitraum
+        UND Objektmenge mit dieser überschneidet (0603, Wurzel 2).
+
+        Objektmenge: NULL heißt „alle Objekte" und überschneidet mit jeder
+        anderen; zwei Teilmengen überschneiden, wenn sie ein Objekt teilen.
+        Zeitraum: zwei Spannen überschneiden, wenn keine ganz vor der anderen
+        liegt. Nur `kind='invoice'` zählt — Storno-Belege sind Gegenbuchungen
+        und stornierte Rechnungen bereits aufgehoben.
+        """
+        andere = (
+            self._db.table("owner_statements")
+            .select("id, invoice_number, period_from, period_to, property_ids")
+            .eq("tenant_id", tenant_id)
+            .eq("owner_id", str(row["owner_id"]))
+            .eq("status", "finalized")
+            .eq("kind", "invoice")
+            .neq("id", str(row["id"]))
+            .lte("period_from", str(row["period_to"]))
+            .gte("period_to", str(row["period_from"]))
+            .execute()
+        ).data or []
+        eigene = _scope_aus_zeile(row)
+        for a in andere:
+            fremde = _scope_aus_zeile(a)
+            if eigene is None or fremde is None or set(eigene) & set(fremde):
+                raise StatementError(
+                    f"Für diesen Zeitraum gibt es bereits die finalisierte "
+                    f"Abrechnung {a.get('invoice_number') or a['id']} "
+                    f"({a['period_from']} – {a['period_to']}) über dieselben "
+                    "Objekte. Eine Buchung darf nicht zweimal abgerechnet "
+                    "werden — bitte Zeitraum oder Objektauswahl anpassen.",
+                    status_code=409,
+                )
+
     def cancel(self, ctx: AuthContext, statement_id: str) -> StatementResponse:
         """Storniert einen finalisierten Beleg GoBD-konform: erzeugt eine NEUE
         Stornorechnung (eigene Nummer, negierte Beträge, Verweis aufs Original)
@@ -1812,6 +2021,14 @@ class OwnerStatementsService(ZeilenMixin):
             "cancels_statement_id": statement_id,
             "commission_pct": row.get("commission_pct") or 0,
             "currency": row.get("currency") or self._tenant_currency(tenant_id),
+            # Objektmenge, Sprache und Sortierung des Originals (0603/0604):
+            # der Storno hebt GENAU diesen Beleg auf, in derselben Sprache und
+            # über dieselben Objekte.
+            "property_ids": row.get("property_ids"),
+            "language": row.get("language"),
+            "sort_key": row.get("sort_key") or "check_in",
+            "sort_dir": row.get("sort_dir") or "asc",
+            "column_order": row.get("column_order"),
             "invoice_number": number,
             "invoice_date": today.isoformat(),
             "supply_country": row.get("supply_country"),
@@ -1989,6 +2206,18 @@ class OwnerStatementsService(ZeilenMixin):
         if not owner_id:
             return
         erlaubt = set(self._owner_property_ids(owner_id))
+        # 0603: hängt der Posten an einer Abrechnung über eine TEILMENGE der
+        # Objekte, muss sein Objekt in dieser Teilmenge liegen — sonst stünde
+        # die Reinigung von Haus B auf der Rechnung für Haus A.
+        statement_id = data.get("statement_id")
+        if statement_id and listing_id:
+            zeile = self._statement_row(tenant_id, str(statement_id))
+            teilmenge = _scope_aus_zeile(zeile)
+            if teilmenge is not None and str(listing_id) not in set(teilmenge):
+                raise StatementError(
+                    "Das Objekt gehört nicht zu den Objekten dieser Abrechnung.",
+                    status_code=422,
+                )
         if listing_id and str(listing_id) not in erlaubt:
             raise StatementError("Objekt nicht gefunden.", status_code=404)
         if reservation_id:
@@ -2328,7 +2557,8 @@ class OwnerStatementsService(ZeilenMixin):
         owners = (
             self._db.table("owners")
             .select("id, tenant_id, default_commission_pct, name, email, phone, "
-                    "street, house_number, postal_code, city, country, tax_id")
+                    "street, house_number, postal_code, city, country, tax_id, "
+                    "language")
             .eq("statement_frequency", rhythmus)
             .execute()
         ).data or []
@@ -2370,6 +2600,10 @@ class OwnerStatementsService(ZeilenMixin):
                             else None
                         ),
                         "currency": currency,
+                        # Automatik = alle Objekte (NULL, 0603); Sprache aus
+                        # der Kette wie beim Erzeugen von Hand (0604).
+                        "property_ids": None,
+                        "language": self._beleg_sprache(owner, tenant_id),
                         **header.model_dump(),
                     }
                 )
@@ -2414,6 +2648,95 @@ class OwnerStatementsService(ZeilenMixin):
                 ).eq("id", e["id"]).execute()
 
 
+def _spaltenfolge_speichern(
+    werte: list[ColumnKey] | None,
+) -> list[str] | None:
+    """Spaltenreihenfolge für die Spalte (0605): None/leer → NULL (Standard).
+
+    Fehlende Spalten werden hinten ergänzt, Dubletten entfernt — gespeichert
+    wird IMMER die vollständige Liste, damit eine später sichtbare Spalte
+    (Pauschale, sobald ein Vertrag eine hat) einen definierten Platz hat.
+    """
+    if not werte:
+        return None
+    gesehen: list[str] = []
+    for w in werte:
+        if w.value not in gesehen:
+            gesehen.append(w.value)
+    for k in ColumnKey:
+        if k.value not in gesehen:
+            gesehen.append(k.value)
+    # Genau die Standardfolge? Dann NULL — kein Unterschied zum Nichts.
+    if gesehen == [k.value for k in ColumnKey]:
+        return None
+    return gesehen
+
+
+def _spaltenfolge_lesen(row: dict) -> list[ColumnKey]:
+    """Spaltenreihenfolge einer Zeile — tolerant gegen unbekannte Werte."""
+    wert = row.get("column_order")
+    bekannt = {k.value: k for k in ColumnKey}
+    out: list[ColumnKey] = []
+    if isinstance(wert, list):
+        for w in wert:
+            k = bekannt.get(str(w))
+            if k is not None and k not in out:
+                out.append(k)
+    for k in ColumnKey:
+        if k not in out:
+            out.append(k)
+    return out
+
+
+def _scope_aus_zeile(row: dict) -> list[str] | None:
+    """`property_ids` einer gespeicherten Zeile als Liste — oder None (alle)."""
+    wert = row.get("property_ids")
+    if isinstance(wert, list) and wert:
+        return [str(pid) for pid in wert]
+    return None
+
+
+# Sortierschlüssel je Spalte (0604). Fehlende Werte (None) IMMER ans Ende,
+# unabhängig von der Richtung — ein Eigentümer, dessen Gastpreis maskiert ist,
+# sähe sonst die Zeilen ohne Zahl bei „absteigend" ganz oben.
+_SORT_FELD = {
+    "check_in": lambda r: r.check_in,
+    "check_out": lambda r: r.check_out,
+    "property": lambda r: (r.listing or "").casefold(),
+    "guest": lambda r: (r.guest or "").casefold(),
+    "channel": lambda r: (r.ota_name or r.channel or "").casefold(),
+    "gross": lambda r: r.total_price,
+    "owner_payout": lambda r: (
+        r.owner_payout_converted
+        if r.owner_payout_converted is not None
+        else r.owner_payout
+    ),
+}
+
+
+def _sortiere_zeilen(
+    rows: list[RentalRow], sort_key: object, sort_dir: object
+) -> list[RentalRow]:
+    """Buchungszeilen nach der gespeicherten Sortierung (0604).
+
+    Serverseitig, damit Vorschau, Editor und Beleg dieselbe Reihenfolge
+    zeigen. Stabil (Python-`sorted`), zweiter Schlüssel ist die Anreise —
+    zwei Buchungen desselben Objekts stehen dann chronologisch.
+    """
+    feld = _SORT_FELD.get(str(sort_key or "check_in"), _SORT_FELD["check_in"])
+    absteigend = str(sort_dir or "asc") == "desc"
+
+    def schluessel(r: RentalRow) -> tuple:
+        wert = feld(r)
+        # (fehlt?, wert) — `fehlt` sortiert None ans Ende, in beide Richtungen.
+        return (wert is None, wert if wert is not None else "", r.check_in)
+
+    mit_wert = [r for r in rows if feld(r) is not None]
+    ohne_wert = [r for r in rows if feld(r) is None]
+    mit_wert = sorted(mit_wert, key=schluessel, reverse=absteigend)
+    return mit_wert + sorted(ohne_wert, key=lambda r: r.check_in)
+
+
 def _expense(r: dict) -> ExpenseResponse:
     return ExpenseResponse(
         id=str(r["id"]),
@@ -2455,8 +2778,13 @@ def _to_response(
     *,
     recurring: list[WiederkehrenderPosten] | None = None,
     miteigentuemer: list[Miteigentuemer] | None = None,
+    objekte: list[ObjektKurz] | None = None,
+    language: str = mail_sprache.FALLBACK,
 ) -> StatementResponse:
     kind = row.get("kind") or "invoice"
+    sort_key = str(row.get("sort_key") or "check_in")
+    sort_dir = str(row.get("sort_dir") or "asc")
+    rental_rows = _sortiere_zeilen(rental_rows, sort_key, sort_dir)
     # Im Storno-Beleg drehen die wiederkehrenden Posten ihr Vorzeichen wie
     # jeder andere Betrag der Gegenbuchung — dieselbe Regel wie für `expenses`.
     posten = list(recurring or [])
@@ -2522,6 +2850,12 @@ def _to_response(
         expenses=[_expense(e) for e in expenses],
         recurring=posten,
         miteigentuemer=list(miteigentuemer or []),
+        property_ids=_scope_aus_zeile(row),
+        objekte=list(objekte or []),
+        language=language,
+        sort_key=SortKey(sort_key) if sort_key in SortKey.__members__ else SortKey.check_in,
+        sort_dir=SortDir(sort_dir) if sort_dir in SortDir.__members__ else SortDir.asc,
+        column_order=_spaltenfolge_lesen(row),
         created_at=str(row["created_at"]) if row.get("created_at") else None,
         updated_at=str(row["updated_at"]) if row.get("updated_at") else None,
     )

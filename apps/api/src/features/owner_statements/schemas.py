@@ -20,6 +20,43 @@ class StatementStatus(StrEnum):
     cancelled = "cancelled"
 
 
+class SortKey(StrEnum):
+    """Sortierspalte der Buchungszeilen (0604) — deckungsgleich mit dem
+    DB-CHECK `owner_statements_sort_key_check`. Die Namen sind die Spalten der
+    Buchungstabelle, damit Vorschau und Beleg dieselbe Sprache sprechen."""
+
+    check_in = "check_in"
+    check_out = "check_out"
+    property = "property"
+    guest = "guest"
+    channel = "channel"
+    gross = "gross"
+    owner_payout = "owner_payout"
+
+
+class SortDir(StrEnum):
+    asc = "asc"
+    desc = "desc"
+
+
+class ColumnKey(StrEnum):
+    """Spalten der Buchungstabelle (0605) — deckungsgleich mit dem DB-CHECK
+    `owner_statements_column_order_check` und den Frontend-Schlüsseln. Die
+    Reihenfolge dieser Liste ist zugleich die STANDARD-Reihenfolge."""
+
+    guest = "guest"
+    listing = "listing"
+    check_in = "check_in"
+    check_out = "check_out"
+    nights = "nights"
+    channel = "channel"
+    gross = "gross"
+    portal = "portal"
+    commission = "commission"
+    flat_fee = "flat_fee"
+    owner_payout = "owner_payout"
+
+
 class StatementKind(StrEnum):
     invoice = "invoice"
     cancellation = "cancellation"
@@ -362,6 +399,20 @@ class WiederkehrenderPosten(BaseModel):
 # --- Statement-Kopf (Snapshot PM + Owner) ------------------------------------
 
 
+class ObjektKurz(BaseModel):
+    """Ein Objekt der Abrechnung — Kennung und Titel (0603).
+
+    Die Antwort trägt die Objekte MIT Namen, weil `property_ids` allein für
+    Beleg und Liste nichts sagt: „Objekte: FeWo Lille Vidstrup" ist eine
+    Auskunft, eine UUID keine. `listing_rows` reicht dafür nicht — dort stehen
+    nur Objekte MIT Buchungen im Zeitraum; ein bewusst ausgewähltes Objekt
+    ohne Buchung gehört trotzdem in den Kopf.
+    """
+
+    id: str
+    title: str | None = None
+
+
 class StatementHeader(BaseModel):
     pm_name: str | None = None
     pm_email: str | None = None
@@ -391,17 +442,43 @@ class StatementGenerateRequest(BaseModel):
     basis: StatementBasis = StatementBasis.check_in
     reservation_statuses: list[str] = Field(default_factory=list)
     commission_pct: float | None = Field(default=None, ge=0, le=100)
+    # 0603: Teilmenge der Objekte des Eigentümers. None oder leer = ALLE.
+    # Der Service weist jede ID ab, die nicht diesem Eigentümer gehört (422,
+    # Wurzel 3/9) — eine Abrechnung über ein fremdes Objekt wäre sonst eine
+    # Zahl, die niemandem auffällt.
+    property_ids: list[str] | None = None
+    # 0604: Sprache des Belegs. None = Kette aus Eigentümer → Betrieb → en.
+    language: str | None = Field(default=None, min_length=2, max_length=5)
+    sort_key: SortKey = SortKey.check_in
+    sort_dir: SortDir = SortDir.asc
+    # 0605: None/leer = Standardreihenfolge.
+    column_order: list[ColumnKey] | None = None
 
 
 class StatementUpdate(BaseModel):
     """Kopf-Daten + Provision (Deduct percentage) + Filter/Zeitraum aktualisieren."""
 
     header: StatementHeader | None = None
+    # 13.4: Kopf aus den Stammdaten NEU übernehmen (Eigentümer UND Betrieb).
+    # Rechnungsnummer und Notizen bleiben stehen — sie sind Teil DIESES
+    # Belegs, nicht der Stammdaten. Ein Knopf statt einer neuen Route: es ist
+    # eine Änderung am Entwurf wie jede andere.
+    header_aus_stammdaten: bool = False
     commission_pct: float | None = Field(default=None, ge=0, le=100)
     basis: StatementBasis | None = None
     reservation_statuses: list[str] | None = None
     period_from: date_ | None = None
     period_to: date_ | None = None
+    # 0603: None = unverändert; LEERE Liste = zurück auf „alle Objekte" (in
+    # der DB NULL). Eine leere Liste kann nicht „keine Objekte" heißen — der
+    # CHECK verbietet das, und eine leere Abrechnung ergäbe keinen Sinn.
+    property_ids: list[str] | None = None
+    # 0604: im Entwurf änderbar; finalisiert greift die bestehende 409-Regel.
+    language: str | None = Field(default=None, min_length=2, max_length=5)
+    sort_key: SortKey | None = None
+    sort_dir: SortDir | None = None
+    # 0605: None = unverändert; LEERE Liste = zurück auf Standard (NULL).
+    column_order: list[ColumnKey] | None = None
 
 
 class StatementFinalizeRequest(BaseModel):
@@ -532,6 +609,18 @@ class StatementResponse(BaseModel):
     # Die ANDEREN Eigentümer der abgerechneten Objekte (0601). Leer bei
     # Alleineigentum — dem Normalfall, der dadurch unverändert aussieht.
     miteigentuemer: list[Miteigentuemer] = Field(default_factory=list)
+    # 0603: None = alle Objekte des Eigentümers; gesetzt = genau diese.
+    property_ids: list[str] | None = None
+    # Die Objekte der Abrechnung MIT Titel — alle oder die ausgewählten —
+    # für Beleg-Kopf und Liste. Siehe `ObjektKurz`.
+    objekte: list[ObjektKurz] = Field(default_factory=list)
+    # 0604: immer gesetzt (Kette endet in `en`), auch für Belege von vor 0604.
+    language: str
+    sort_key: SortKey = SortKey.check_in
+    sort_dir: SortDir = SortDir.asc
+    # 0605: immer vollständig — Standard, wenn nichts gespeichert. Editor,
+    # Vorschau und PDF lesen dieselbe Liste.
+    column_order: list[ColumnKey] = Field(default_factory=lambda: list(ColumnKey))
     rental_rows: list[RentalRow] = Field(default_factory=list)
     listing_rows: list[ListingRow] = Field(default_factory=list)
     expenses: list[ExpenseResponse] = Field(default_factory=list)
@@ -556,6 +645,10 @@ class StatementListItem(BaseModel):
     pm_payout: float | None = None
     currency: str
     invoice_number: str | None = None
+    # 0603: None = alle Objekte. Die Liste zeigt „alle Objekte" oder die
+    # Anzahl — sonst sähen zwei Abrechnungen desselben Zeitraums (eine je
+    # Objekt) aus wie ein Duplikat.
+    property_ids: list[str] | None = None
     created_at: str | None = None
 
 

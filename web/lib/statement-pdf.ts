@@ -32,6 +32,18 @@
 // einzige Addition hier ist die Summe bereits gezeigter Beträge je Währung.
 // Kontrollsummen (gebuehren_betrieb, gebuehren_an_eigentuemer, addon_total)
 // werden vom Backend geliefert und dort per Test gegen die Liste gehalten.
+//
+// DIE SPRACHE IST DIE DES BELEGS, NICHT DES BETRACHTERS (0604, 07.09.2026).
+// Bis dahin standen die Texte hart deutsch in dieser Datei (`const txt`), und
+// Zahlen/Datum folgten `useLocale()` — der Oberflächensprache der Person, die
+// gerade klickt. René Dahl Nielsen (`owners.language = 'da'`) bekam so eine
+// deutsche „Eigentümer-Abrechnung", weil die Mitarbeiterin auf Deutsch
+// arbeitet. Jetzt: `statement.language` (Snapshot am Beleg) bestimmt Texte
+// (`texte`, aus `web/messages/<lang>.json` → `statementPdf.*`, geladen über
+// `lib/beleg-texte`), Zahlen- und Datumsformat. Der Aufrufer übergibt die
+// Texte; diese Datei kennt keine Sprache mehr selbst.
+import type { StatementPdfTexte } from "@/lib/beleg-texte";
+import { channelLabelLoose } from "@/lib/channel-logos";
 import type {
   Expense,
   RentalRow,
@@ -119,64 +131,13 @@ function line(value: string | null | undefined, strong = false): string {
 // (Titel, „Aussteller") — deutsch. Das PDF ist der Beleg zwischen Betrieb und
 // Eigentümer, kein Oberflächentext. Hier stehen sie gebündelt, damit eine
 // spätere Übersetzung EINE Stelle hat statt Dutzender Template-Literale.
-const txt = {
-  // Kopf
-  invoice: "Eigentümer-Abrechnung",
-  storno: "Stornorechnung",
-  issuer: "Aussteller",
-  owner: "Eigentümer",
-  vatId: "USt-IdNr.",
-  period: "Zeitraum",
-  // Buchungstabelle
-  bookings: "Buchungen",
-  listing: "Objekt",
-  guest: "Gast",
-  arrival: "Anreise",
-  departure: "Abreise",
-  nights: "Nächte",
-  channel: "Kanal",
-  commission: "Provision",
-  flatFee: "Pauschale",
-  ownerShare: "Eigentümer-Anteil",
-  noBookings: "Keine Reservierungen im Zeitraum.",
-  // Posten-Block
-  breakdownTitle: "Aufstellung je Buchung",
-  posAfterPortal: "Gesamtbetrag nach Portal-Abzug",
-  posAfterPortalHint: "Gastpreis abzüglich Portal-Provision und Portal-Zahlungsgebühr",
-  posCommission: "Verwaltungsprovision",
-  posMinCommission: "Mindestprovision (Vertrag) statt",
-  posContractFrom: "Vertrag ab",
-  posRateManual: "manuell in dieser Abrechnung",
-  posRateLegacy: "Standardsatz aus den Stammdaten",
-  posFlatFee: "Pauschale je Buchung/Nacht (Vertrag)",
-  posFeesBack: "Ihre Gebühren — ungekürzt, ohne Provision",
-  posOwnerShare: "= Eigentümer-Anteil",
-  posRate: "Kurs",
-  commissionable: "provisionspflichtig",
-  quantity: "×",
-  noFeesReported:
-    "Das Portal hat zu dieser Buchung keine Gebühren gemeldet; es wurden deshalb keine angesetzt.",
-  // Abzüge und Gutschriften
-  deductionsTitle: "Abzüge und Gutschriften",
-  deductions: "Abzüge (zulasten des Eigentümers)",
-  credits: "Gutschriften (zugunsten des Eigentümers)",
-  srcExpense: "Verrechnungsposten",
-  srcRecurring: "wiederkehrend",
-  receipt: "Beleg",
-  perBooking: "je Buchung",
-  perNight: "je Nacht",
-  perPeriod: "je Zeitraum",
-  // Summen
-  sumShares: "Summe Eigentümer-Anteile aus Buchungen",
-  sumFlatFees: "Pauschalen aus Vertrag",
-  sumFlatFeesNote: "bereits in den Anteilen berücksichtigt — kein weiterer Abzug",
-  sumDeductions: "Abzüge",
-  sumCredits: "Gutschriften",
-  sumOwnerPayout: "Eigentümer-Auszahlung",
-  vat: "Umsatzsteuer",
-  vatNet: "Verwaltungsprovision netto",
-  vatGross: "Verwaltungsprovision brutto",
-} as const;
+// Die Texte kommen vom Aufrufer (`StatementPdfTexte`, Namensraum
+// `statementPdf.*`). Fehlt ein Schlüssel, steht der Schlüsselname im Beleg —
+// sichtbar und damit auffindbar, statt eines stillen deutschen Rückfalls.
+type Tx = StatementPdfTexte;
+function t(tx: Tx, key: string): string {
+  return tx[key] ?? key;
+}
 
 export type StatementPdfOptionen = {
   /** Anzeigenamen je Kanalschlüssel (`calendar.channel.*`), vom Aufrufer
@@ -185,14 +146,22 @@ export type StatementPdfOptionen = {
   kanalLabels?: Record<string, string>;
 };
 
+/** Kanalname einer Zeile — EINE Schreibweise je Portal (13.7).
+ *
+ *  `ota_name` steht je Quelle verschieden in den Daten: der Feed schreibt
+ *  Channex' Katalogcode `BookingCom`, der CSV-Import `Booking.com`. Beides ist
+ *  dasselbe Portal und soll auf dem Beleg gleich heißen. `channelLabelLoose`
+ *  ist derselbe Normalisierer wie in der Buchungskarte — keine zweite Liste.
+ *  Ohne `ota_name` gilt das übersetzte Kanal-Label des Aufrufers. */
 function kanalText(r: RentalRow, opts: StatementPdfOptionen): string {
-  return r.ota_name ?? opts.kanalLabels?.[r.channel] ?? r.channel;
+  if (r.ota_name) return channelLabelLoose(r.ota_name);
+  return opts.kanalLabels?.[r.channel] ?? r.channel;
 }
 
-function modusText(modus: WiederkehrenderPosten["modus"]): string {
-  if (modus === "je_nacht") return txt.perNight;
-  if (modus === "je_zeitraum") return txt.perPeriod;
-  return txt.perBooking;
+function modusText(modus: WiederkehrenderPosten["modus"], tx: Tx): string {
+  if (modus === "je_nacht") return t(tx, "perNight");
+  if (modus === "je_zeitraum") return t(tx, "perPeriod");
+  return t(tx, "perBooking");
 }
 
 /** Eine Posten-Zeile im Block. `wert === null` → kein Betrag, nur Text (die
@@ -216,6 +185,7 @@ function buchungsBlock(
   r: RentalRow,
   ownerCur: string,
   locale: string,
+  tx: Tx,
   opts: StatementPdfOptionen,
 ): string {
   const rc = r.currency;
@@ -225,7 +195,7 @@ function buchungsBlock(
   if (r.auszahlungsbasis !== null) {
     zeilen.push(
       posten(
-        `${txt.posAfterPortal}<br><span class="muted">${txt.posAfterPortalHint}</span>`,
+        `${t(tx, "posAfterPortal")}<br><span class="muted">${t(tx, "posAfterPortalHint")}</span>`,
         fmt(r.auszahlungsbasis, rc, locale),
         "head-sum",
       ),
@@ -236,29 +206,29 @@ function buchungsBlock(
     let herkunft = "";
     if (r.provision_quelle === "vertrag") {
       herkunft = r.vertrag_gueltig_ab
-        ? ` (${txt.posContractFrom} ${fmtDatum(r.vertrag_gueltig_ab, locale)})`
+        ? ` (${t(tx, "posContractFrom")} ${fmtDatum(r.vertrag_gueltig_ab, locale)})`
         : "";
     } else if (r.provision_quelle === "override") {
-      herkunft = ` (${txt.posRateManual})`;
+      herkunft = ` (${t(tx, "posRateManual")})`;
     } else if (r.provision_quelle === "altspalten") {
-      herkunft = ` (${txt.posRateLegacy})`;
+      herkunft = ` (${t(tx, "posRateLegacy")})`;
     }
     const satz = r.provisions_pct !== null ? fmtPct(r.provisions_pct, locale) : "";
     const label = r.min_provision_angewandt
-      ? `− ${txt.posMinCommission} ${satz}${herkunft}`
-      : `− ${txt.posCommission} ${satz}${herkunft}`;
+      ? `− ${t(tx, "posMinCommission")} ${satz}${herkunft}`
+      : `− ${t(tx, "posCommission")} ${satz}${herkunft}`;
     zeilen.push(posten(label, fmtSigniert(r.verwaltungsprovision, rc, locale, "minus")));
   }
   if (r.pauschale !== null && r.pauschale !== 0) {
-    zeilen.push(posten(`− ${txt.posFlatFee}`, fmtSigniert(r.pauschale, rc, locale, "minus")));
+    zeilen.push(posten(`− ${t(tx, "posFlatFee")}`, fmtSigniert(r.pauschale, rc, locale, "minus")));
   }
 
   // Die Gebühren des EIGENTÜMERS — jede einzeln, ungekürzt durch Provision.
   const eigene = r.gebuehren.filter((g) => g.gehoert_zu === "eigentuemer");
   if (eigene.length) {
-    zeilen.push(posten(txt.posFeesBack, null, "head"));
+    zeilen.push(posten(t(tx, "posFeesBack"), null, "head"));
     for (const g of eigene) {
-      const zusatz = g.provisionspflichtig ? ` · ${txt.commissionable}` : "";
+      const zusatz = g.provisionspflichtig ? ` · ${t(tx, "commissionable")}` : "";
       zeilen.push(
         posten(
           `+ ${esc(g.label || g.art)}${zusatz}`,
@@ -271,13 +241,13 @@ function buchungsBlock(
   // Eigentümer-Anteil, bei Fremdwährung mit Umrechnung und Kurs.
   const anteil =
     rc !== ownerCur && r.owner_payout_converted !== null
-      ? `${fmtOderStrich(r.owner_payout_converted, ownerCur, locale)}<br><span class="muted">${fmtOderStrich(r.owner_payout, rc, locale)} · ${txt.posRate} ${r.fx_rate} (${esc(r.fx_date)})</span>`
+      ? `${fmtOderStrich(r.owner_payout_converted, ownerCur, locale)}<br><span class="muted">${fmtOderStrich(r.owner_payout, rc, locale)} · ${t(tx, "posRate")} ${r.fx_rate} (${esc(r.fx_date)})</span>`
       : fmtOderStrich(r.owner_payout, rc, locale);
-  zeilen.push(posten(txt.posOwnerShare, anteil, "sum"));
+  zeilen.push(posten(t(tx, "posOwnerShare"), anteil, "sum"));
 
   const fussnote =
     r.gebuehren_quelle === "ota_ohne_aufstellung"
-      ? `<p class="muted note">${txt.noFeesReported}</p>`
+      ? `<p class="muted note">${t(tx, "noFeesReported")}</p>`
       : "";
 
   const kopf = [
@@ -285,7 +255,7 @@ function buchungsBlock(
     esc(vorname(r.guest)) || "—",
     esc(kanalText(r, opts)),
   ].join(" · ");
-  const zeit = `${txt.arrival} ${fmtDatum(r.check_in, locale)} · ${txt.departure} ${fmtDatum(r.check_out, locale)} · ${r.nights} ${txt.nights}`;
+  const zeit = `${t(tx, "arrival")} ${fmtDatum(r.check_in, locale)} · ${t(tx, "departure")} ${fmtDatum(r.check_out, locale)} · ${r.nights} ${t(tx, "nights")}`;
 
   return `
     <div class="block">
@@ -297,14 +267,24 @@ function buchungsBlock(
 
 export function buildStatementHtml(
   st: Statement,
-  locale: string,
+  texte: StatementPdfTexte,
   opts: StatementPdfOptionen = {},
 ): string {
+  const tx = texte;
+  // Zahlen- und Datumsformat folgen der Sprache DES BELEGS (0604).
+  const locale = st.language;
   const h = st.header;
   const cur = st.summary.currency;
   const ownerCur = st.summary.owner_currency || cur;
   const isStorno = st.kind === "cancellation";
-  const title = isStorno ? txt.storno : txt.invoice;
+  const title = isStorno ? t(tx, "storno") : t(tx, "invoice");
+  // Objektmenge im Kopf (0603): welche Objekte dieser Beleg umfasst. Bei einer
+  // Teilmenge die Namen, sonst „alle Objekte" — ohne diese Zeile sähen zwei
+  // Belege desselben Monats (einer je Haus) identisch aus.
+  const objektZeile =
+    st.property_ids && st.property_ids.length
+      ? `${t(tx, "objects")}: ${st.objekte.map((o) => esc(o.title) || esc(o.id)).join(", ")}`
+      : `${t(tx, "objects")}: ${t(tx, "allObjects")}`;
 
   // DATEN-SPLIT (§4.2) im PDF: Der Server maskiert den Gast-Bruttopreis und den
   // Ertrag der Verwaltung für einen Eigentümer zu `null`. Betroffene Spalten
@@ -313,42 +293,58 @@ export function buildStatementHtml(
   const zeigtPauschale = rows.some((r) => (r.pauschale ?? 0) !== 0);
 
   // --- Buchungstabelle (Übersicht) -------------------------------------------
-  const kopfzellen = [
-    `<th>${txt.listing}</th>`,
-    `<th>${txt.guest}</th>`,
-    `<th>${txt.arrival}</th>`,
-    `<th>${txt.departure}</th>`,
-    `<th class="num">${txt.nights}</th>`,
-    `<th>${txt.channel}</th>`,
-    `<th class="num">${txt.commission}</th>`,
-    zeigtPauschale ? `<th class="num">${txt.flatFee}</th>` : "",
-    `<th class="num">${txt.ownerShare}</th>`,
+  // Spaltenreihenfolge vom BELEG (0605): dieselbe Liste wie im Editor —
+  // „wenn wir es verschieben wird es nicht an vorschau weitergeben". Die
+  // Betriebsspalten (`gross`, `portal`) kennt der Eigentümerbeleg nicht; sie
+  // werden übersprungen. Fehlende Schlüssel (Beleg von vor 0605) kommen in
+  // Standardfolge hinten dazu.
+  type PdfSpalte = { kopf: string; zelle: (r: RentalRow) => string };
+  const pdfSpalten: Partial<Record<string, PdfSpalte>> = {
+    listing: { kopf: `<th>${t(tx, "listing")}</th>`, zelle: (r) => `<td>${esc(r.listing) || "—"}</td>` },
+    guest: { kopf: `<th>${t(tx, "guest")}</th>`, zelle: (r) => `<td>${esc(vorname(r.guest)) || "—"}</td>` },
+    check_in: { kopf: `<th>${t(tx, "arrival")}</th>`, zelle: (r) => `<td>${fmtDatum(r.check_in, locale)}</td>` },
+    check_out: { kopf: `<th>${t(tx, "departure")}</th>`, zelle: (r) => `<td>${fmtDatum(r.check_out, locale)}</td>` },
+    nights: { kopf: `<th class="num">${t(tx, "nights")}</th>`, zelle: (r) => `<td class="num">${r.nights}</td>` },
+    channel: { kopf: `<th>${t(tx, "channel")}</th>`, zelle: (r) => `<td>${esc(kanalText(r, opts))}</td>` },
+    commission: {
+      kopf: `<th class="num">${t(tx, "commission")}</th>`,
+      zelle: (r) => `<td class="num">${fmtOderStrich(r.verwaltungsprovision, r.currency, locale)}</td>`,
+    },
+    ...(zeigtPauschale
+      ? {
+          flat_fee: {
+            kopf: `<th class="num">${t(tx, "flatFee")}</th>`,
+            zelle: (r: RentalRow) => `<td class="num">${fmtOderStrich(r.pauschale, r.currency, locale)}</td>`,
+          },
+        }
+      : {}),
+    owner_payout: {
+      kopf: `<th class="num">${t(tx, "ownerShare")}</th>`,
+      zelle: (r) => {
+        const rc = r.currency;
+        const anteil =
+          rc !== ownerCur && r.owner_payout_converted !== null
+            ? fmtOderStrich(r.owner_payout_converted, ownerCur, locale)
+            : fmtOderStrich(r.owner_payout, rc, locale);
+        return `<td class="num"><strong>${anteil}</strong></td>`;
+      },
+    },
+  };
+  const standardFolge = Object.keys(pdfSpalten);
+  const folge = [
+    ...st.column_order.filter((k) => k in pdfSpalten),
+    ...standardFolge.filter((k) => !st.column_order.includes(k as (typeof st.column_order)[number])),
   ];
-  const spalten = kopfzellen.filter(Boolean).length;
+  const aktive = folge.map((k) => pdfSpalten[k]).filter((sp): sp is PdfSpalte => Boolean(sp));
+  const kopfzellen = aktive.map((sp) => sp.kopf);
+  const spalten = kopfzellen.length;
   const tabelle = rows
-    .map((r) => {
-      const rc = r.currency;
-      const anteil =
-        rc !== ownerCur && r.owner_payout_converted !== null
-          ? fmtOderStrich(r.owner_payout_converted, ownerCur, locale)
-          : fmtOderStrich(r.owner_payout, rc, locale);
-      return `
-      <tr>
-        <td>${esc(r.listing) || "—"}</td>
-        <td>${esc(vorname(r.guest)) || "—"}</td>
-        <td>${fmtDatum(r.check_in, locale)}</td>
-        <td>${fmtDatum(r.check_out, locale)}</td>
-        <td class="num">${r.nights}</td>
-        <td>${esc(kanalText(r, opts))}</td>
-        <td class="num">${fmtOderStrich(r.verwaltungsprovision, rc, locale)}</td>
-        ${zeigtPauschale ? `<td class="num">${fmtOderStrich(r.pauschale, rc, locale)}</td>` : ""}
-        <td class="num"><strong>${anteil}</strong></td>
-      </tr>`;
-    })
+    .map((r) => `
+      <tr>${aktive.map((sp) => sp.zelle(r)).join("")}</tr>`)
     .join("");
 
   // --- Posten-Block je Buchung, IMMER (§2.0) ---------------------------------
-  const bloecke = rows.map((r) => buchungsBlock(r, ownerCur, locale, opts)).join("");
+  const bloecke = rows.map((r) => buchungsBlock(r, ownerCur, locale, tx, opts)).join("");
 
   // --- Abzüge und Gutschriften: Verrechnungsposten + wiederkehrende Posten ---
   const abzuege: string[] = [];
@@ -358,10 +354,10 @@ export function buildStatementHtml(
   for (const e of st.expenses as Expense[]) {
     const zulasten = e.direction === "from_owner";
     const quelle = [
-      txt.srcExpense,
+      t(tx, "srcExpense"),
       fmtDatum(e.date, locale),
       e.category ? esc(e.category) : "",
-      e.has_receipt ? `${txt.receipt} ✓` : "",
+      e.has_receipt ? `${t(tx, "receipt")} ✓` : "",
       e.created_by_name ? esc(e.created_by_name) : "",
     ]
       .filter(Boolean)
@@ -371,17 +367,17 @@ export function buildStatementHtml(
   }
   for (const p of st.recurring ?? []) {
     const zulasten = p.betrag < 0;
-    const quelle = `${txt.srcRecurring} · ${p.anzahl} ${txt.quantity} ${fmt(p.einzelbetrag, p.currency, locale)} ${modusText(p.modus)}`;
+    const quelle = `${t(tx, "srcRecurring")} · ${p.anzahl} ${t(tx, "quantity")} ${fmt(p.einzelbetrag, p.currency, locale)} ${modusText(p.modus, tx)}`;
     const wert = fmtSigniert(p.betrag, p.currency, locale, zulasten ? "minus" : "plus");
     (zulasten ? abzuege : gutschriften).push(postenZeile(esc(p.label), quelle, wert, zulasten));
   }
   const abzugBlock =
     abzuege.length || gutschriften.length
-      ? `<div class="section-title">${txt.deductionsTitle}</div>
+      ? `<div class="section-title">${t(tx, "deductionsTitle")}</div>
          <table>
            <tbody>
-             ${abzuege.length ? `<tr class="head"><td colspan="2">${txt.deductions}</td></tr>${abzuege.join("")}` : ""}
-             ${gutschriften.length ? `<tr class="head"><td colspan="2">${txt.credits}</td></tr>${gutschriften.join("")}` : ""}
+             ${abzuege.length ? `<tr class="head"><td colspan="2">${t(tx, "deductions")}</td></tr>${abzuege.join("")}` : ""}
+             ${gutschriften.length ? `<tr class="head"><td colspan="2">${t(tx, "credits")}</td></tr>${gutschriften.join("")}` : ""}
            </tbody>
          </table>`
       : "";
@@ -402,7 +398,7 @@ export function buildStatementHtml(
     const summeAnteile = rows.reduce((s, r) => s + (r.owner_payout_converted ?? 0), 0);
     summenZeilen.push(
       row(
-        `${txt.sumShares} (${rows.length})`,
+        `${t(tx, "sumShares")} (${rows.length})`,
         anteileBekannt ? fmt(summeAnteile, ownerCur, locale) : "—",
       ),
     );
@@ -411,7 +407,7 @@ export function buildStatementHtml(
     const n = rows.filter((r) => (r.pauschale ?? 0) !== 0).length;
     summenZeilen.push(
       row(
-        `${txt.sumFlatFees} (${n})<br><span class="muted">${txt.sumFlatFeesNote}</span>`,
+        `${t(tx, "sumFlatFees")} (${n})<br><span class="muted">${t(tx, "sumFlatFeesNote")}</span>`,
         `<span class="muted">${fmtSigniert(st.summary.pauschalen_gesamt, ownerCur, locale, "minus")}</span>`,
       ),
     );
@@ -424,22 +420,22 @@ export function buildStatementHtml(
       .filter((e) => (e.currency || cur) === wc && e.direction === "from_owner")
       .reduce((s, e) => s + Math.abs(e.amount), 0);
     const suffix = eineWaehrung ? "" : ` (${esc(wc)})`;
-    if (ab > 0) summenZeilen.push(row(`− ${txt.sumDeductions} · ${txt.srcExpense}${suffix}`, fmtSigniert(ab, wc, locale, "minus")));
-    if (zu > 0) summenZeilen.push(row(`+ ${txt.sumCredits} · ${txt.srcExpense}${suffix}`, fmtSigniert(zu, wc, locale, "plus")));
+    if (ab > 0) summenZeilen.push(row(`− ${t(tx, "sumDeductions")} · ${t(tx, "srcExpense")}${suffix}`, fmtSigniert(ab, wc, locale, "minus")));
+    if (zu > 0) summenZeilen.push(row(`+ ${t(tx, "sumCredits")} · ${t(tx, "srcExpense")}${suffix}`, fmtSigniert(zu, wc, locale, "plus")));
   }
   if (st.summary.recurring_from_owner !== 0) {
     summenZeilen.push(
-      row(`− ${txt.sumDeductions} · ${txt.srcRecurring}`, fmtSigniert(st.summary.recurring_from_owner, ownerCur, locale, "minus")),
+      row(`− ${t(tx, "sumDeductions")} · ${t(tx, "srcRecurring")}`, fmtSigniert(st.summary.recurring_from_owner, ownerCur, locale, "minus")),
     );
   }
   if (st.summary.recurring_to_owner !== 0) {
     summenZeilen.push(
-      row(`+ ${txt.sumCredits} · ${txt.srcRecurring}`, fmtSigniert(st.summary.recurring_to_owner, ownerCur, locale, "plus")),
+      row(`+ ${t(tx, "sumCredits")} · ${t(tx, "srcRecurring")}`, fmtSigniert(st.summary.recurring_to_owner, ownerCur, locale, "plus")),
     );
   }
   summenZeilen.push(
     row(
-      `${txt.sumOwnerPayout} (${esc(ownerCur)})`,
+      `${t(tx, "sumOwnerPayout")} (${esc(ownerCur)})`,
       fmtOderStrich(st.summary.owner_payout, ownerCur, locale),
       "grand",
     ),
@@ -450,16 +446,16 @@ export function buildStatementHtml(
   // dem Finalisieren gesetzt (`tax.gross`), sonst leer.
   const steuerZeilen: string[] = [];
   if (st.tax.gross) {
-    steuerZeilen.push(row(txt.vatNet, fmt(st.tax.net, cur, locale)));
+    steuerZeilen.push(row(t(tx, "vatNet"), fmt(st.tax.net, cur, locale)));
     steuerZeilen.push(
       st.tax.category === "S"
-        ? row(`${txt.vat} (${st.tax.rate}%)`, fmt(st.tax.tax, cur, locale))
-        : row(txt.vat, esc(st.tax.exemption_reason) || "0,00"),
+        ? row(`${t(tx, "vat")} (${st.tax.rate}%)`, fmt(st.tax.tax, cur, locale))
+        : row(t(tx, "vat"), esc(st.tax.exemption_reason) || "0,00"),
     );
-    steuerZeilen.push(row(txt.vatGross, fmt(st.tax.gross, cur, locale), "strong"));
+    steuerZeilen.push(row(t(tx, "vatGross"), fmt(st.tax.gross, cur, locale), "strong"));
   }
 
-  return `<!doctype html><html lang="de"><head><meta charset="utf-8"><style>
+  return `<!doctype html><html lang="${esc(locale)}"><head><meta charset="utf-8"><style>
     * { box-sizing: border-box; }
     body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; color: #1a1a1a; margin: 0; padding: 40px; font-size: 11px; }
     h1 { font-size: 22px; margin: 0 0 4px; }
@@ -498,40 +494,41 @@ export function buildStatementHtml(
       <div>
         <h1>${title}</h1>
         <div class="meta" style="margin-bottom:0">
-          ${h.invoice_number ? `Nr. ${esc(h.invoice_number)} · ` : ""}
-          ${txt.period} ${fmtDatum(st.period_from, locale)} – ${fmtDatum(st.period_to, locale)}
+          ${h.invoice_number ? `${t(tx, "invoiceNo")} ${esc(h.invoice_number)} · ` : ""}
+          ${t(tx, "period")} ${fmtDatum(st.period_from, locale)} – ${fmtDatum(st.period_to, locale)}
           ${st.invoice_date ? ` · ${fmtDatum(st.invoice_date, locale)}` : ""}
         </div>
+        <div class="meta" style="margin-bottom:0">${objektZeile}</div>
       </div>
       ${h.pm_logo_url ? `<img class="logo" src="${esc(h.pm_logo_url)}" alt="Logo" />` : ""}
     </div>
 
     <div class="parties">
       <div class="party">
-        <h3>${txt.issuer}</h3>
+        <h3>${t(tx, "issuer")}</h3>
         ${line(h.pm_name, true)}
         ${line(h.pm_address)}
         ${line(h.pm_email)}
         ${line(h.pm_phone)}
-        ${h.pm_tax_id ? `<p>${txt.vatId}: ${esc(h.pm_tax_id)}</p>` : ""}
+        ${h.pm_tax_id ? `<p>${t(tx, "vatId")}: ${esc(h.pm_tax_id)}</p>` : ""}
       </div>
       <div class="party">
-        <h3>${txt.owner}</h3>
+        <h3>${t(tx, "owner")}</h3>
         ${line(h.owner_name, true)}
         ${line(h.owner_address)}
         ${line(h.owner_email)}
         ${line(h.owner_phone)}
-        ${h.owner_tax_id ? `<p>${txt.vatId}: ${esc(h.owner_tax_id)}</p>` : ""}
+        ${h.owner_tax_id ? `<p>${t(tx, "vatId")}: ${esc(h.owner_tax_id)}</p>` : ""}
       </div>
     </div>
 
-    <div class="section-title">${txt.bookings}</div>
+    <div class="section-title">${t(tx, "bookings")}</div>
     <table>
       <thead><tr>${kopfzellen.join("")}</tr></thead>
-      <tbody>${tabelle || `<tr><td colspan="${spalten}" style="color:#888">${txt.noBookings}</td></tr>`}</tbody>
+      <tbody>${tabelle || `<tr><td colspan="${spalten}" style="color:#888">${t(tx, "noBookings")}</td></tr>`}</tbody>
     </table>
 
-    ${rows.length ? `<div class="section-title">${txt.breakdownTitle}</div>${bloecke}` : ""}
+    ${rows.length ? `<div class="section-title">${t(tx, "breakdownTitle")}</div>${bloecke}` : ""}
 
     ${abzugBlock}
 
@@ -546,17 +543,28 @@ export function buildStatementHtml(
 /** Erzeugt das PDF über den Render-Dienst und stößt den Download an. */
 export async function downloadStatementPdf(
   st: Statement,
-  locale: string,
+  texte: StatementPdfTexte,
   opts: StatementPdfOptionen = {},
 ): Promise<void> {
   const res = await fetch("/api/v1/generate-pdf-single", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ htmlContent: buildStatementHtml(st, locale, opts) }),
+    body: JSON.stringify({ htmlContent: buildStatementHtml(st, texte, opts) }),
   });
-  if (!res.ok) throw new Error("PDF-Generierung fehlgeschlagen.");
-  const data = await res.json();
-  if (!data.success || !data.pdfBase64) throw new Error("Leeres PDF.");
+  // Die Fehlermeldung des Dienstes DURCHREICHEN, nicht verschlucken: die Route
+  // legt die Ursache in `error` ab (fehlender Browser, zu großes HTML …). Ein
+  // pauschales „fehlgeschlagen" ließ am 07.09.2026 niemanden erkennen, warum.
+  let data: { success?: boolean; pdfBase64?: string; error?: string } = {};
+  try {
+    data = (await res.json()) as typeof data;
+  } catch {
+    /* kein JSON — Status reicht dann als Aussage */
+  }
+  if (!res.ok || !data.success) {
+    const ursache = data.error ? ` — ${data.error.split("\n")[0]}` : "";
+    throw new Error(`PDF-Dienst antwortete ${res.status}${ursache}`);
+  }
+  if (!data.pdfBase64) throw new Error("Leeres PDF.");
 
   const bytes = Uint8Array.from(atob(data.pdfBase64), (c) => c.charCodeAt(0));
   const blob = new Blob([bytes], { type: "application/pdf" });

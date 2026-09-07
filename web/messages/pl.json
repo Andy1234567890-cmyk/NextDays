@@ -1503,7 +1503,13 @@
       "statusesSearch": "Szukaj statusu …",
       "statusesNoMatch": "Nie znaleziono statusu.",
       "statusesSelectAll": "Zaznacz wszystko",
-      "statusesCount": "Wybrano {count} z {total}"
+      "statusesCount": "Wybrano {count} z {total}",
+      "properties": "Obiekty",
+      "propertiesAll": "Wszystkie obiekty",
+      "propertiesCount": "{count} z {total} obiektów",
+      "propertiesSearch": "Szukaj obiektu…",
+      "propertiesNoMatch": "Nie znaleziono obiektu.",
+      "propertiesSelectAll": "Zaznacz wszystko"
     },
     "reservationStatus": {
       "pending": "Oczekująca",
@@ -1640,7 +1646,16 @@
         "noContract": "Brak umowy rozliczeniowej i stawki prowizji dla tego obiektu w danych podstawowych — utwórz umowę u właściciela.",
         "addonsOutside": "Usługi dodatkowe — sprzedawane przez myNextDays, nieujęte w cenie dla gościa wg portalu"
       },
-      "ownershipShare": "Udział"
+      "ownershipShare": "Udział",
+      "dragColumn": "Przenieś kolumnę {spalte}",
+      "columnsReset": "Zresetuj kolejność kolumn",
+      "dndStart": "Kolumna {spalte} podniesiona.",
+      "dndOver": "Kolumna {spalte} nad {ziel}.",
+      "dndOverNichts": "Kolumna {spalte} poza tabelą.",
+      "dndEnd": "Kolumna {spalte} upuszczona w miejscu {ziel}.",
+      "dndCancel": "Przenoszenie kolumny {spalte} anulowane.",
+      "dndAnleitung": "Naciśnij spację lub enter, aby podnieść kolumnę. Użyj strzałek, aby przenieść, spacji lub enter, aby upuścić, escape, aby anulować.",
+      "dragHint": "Przeciągnij uchwyt, aby zmienić kolejność — również za pomocą klawiatury: zaznacz uchwyt, spacja, klawisze strzałek."
     },
     "expenses": {
       "add": "Dodaj",
@@ -1691,7 +1706,10 @@
       "status": "Status",
       "open": "Otwórz",
       "emptyTitle": "Brak rozliczeń",
-      "emptyHint": "Utwórz pierwsze rozliczenie właściciela w zakładce „Twórz i edytuj”."
+      "emptyHint": "Utwórz pierwsze rozliczenie właściciela w zakładce „Twórz i edytuj”.",
+      "objects": "Obiekty",
+      "allObjects": "wszystkie obiekty",
+      "objectsCount": "{count} obiektów"
     },
     "edit": "Edytuj",
     "attachments": {
@@ -1740,7 +1758,10 @@
       "commission": "Prowizja obiektu za zarządzanie nieruchomością. Jest ona obliczana od kwoty pozostałej po odliczeniu portalu i jest naliczana za KAŻDĄ rezerwację, również za rezerwację przez własną stronę internetową.",
       "flatFee": "Stała kwota z umowy o zarządzanie, na przykład za koszty dodatkowe. W zależności od umowy, jest ona odliczana przed lub po prowizji.",
       "ownerShare": "Co ostatecznie pozostaje dla właściciela: cena dla gościa minus odliczenie portalu, minus prowizja, minus ryczałt, plus należne mu opłaty. W przypadku współwłasności dodatkowo pomnożone przez jego udział.",
-      "ownershipShare": "Udział tego właściciela w nieruchomości. 100% oznacza wyłączną własność. Jeśli dom należy do kilku osób, każda otrzymuje własne rozliczenie dotyczące jej udziału — udziały sumują się do 100%."
+      "ownershipShare": "Udział tego właściciela w nieruchomości. 100% oznacza wyłączną własność. Jeśli dom należy do kilku osób, każda otrzymuje własne rozliczenie dotyczące jej udziału — udziały sumują się do 100%.",
+      "properties": "Jakie obiekty obejmuje to rozliczenie. Domyślnie są to wszystkie obiekty właściciela. Proszę wybrać pojedyncze, aby rozliczyć tylko dla nich. Każdy obiekt może znajdować się tylko w jednym sfinalizowanym rozliczeniu na dany okres — rezerwacja nigdy nie jest wypłacana dwukrotnie.",
+      "language": "W tym języku zostanie utworzony dokument — teksty, liczby i data. Domyślnie z języka właściciela, w przeciwnym razie z języka firmy. Po sfinalizowaniu jest stały; dokument pozostaje taki, jaki został wystawiony.",
+      "headerFromMaster": "Pobiera nazwę, adres, e-mail, telefon i numer identyfikacji podatkowej właściciela i firmy z danych podstawowych. Numer faktury i notatki tego dokumentu pozostają bez zmian."
     },
     "finalizeConfirm": {
       "title": "Zatwierdź rozliczenie",
@@ -1778,7 +1799,21 @@
       "title": "Współwłaściciel",
       "hint": "Te obiekty należą do kilku osób. Każda otrzymuje własne rozliczenie za swoją część.",
       "share": "{anteil} %"
-    }
+    },
+    "language": {
+      "label": "Język potwierdzenia"
+    },
+    "sort": {
+      "aria": "Sortuj według {spalte}",
+      "ascending": "rosnąco",
+      "descending": "malejąco"
+    },
+    "belegIn": "Dokument w {sprache}",
+    "headerFromMaster": "Przejmij z danych podstawowych",
+    "headerFromMasterDone": "Dane nagłówka przejęte z danych podstawowych.",
+    "objectsLine": "Obiekty: {liste}",
+    "objectsAll": "Obiekty: wszystkie",
+    "loading": "Ładowanie…"
   },
   "ownerBilling": {
     "title": "Umowa rozliczeniowa",
@@ -13113,7 +13148,6 @@
     "mixedCurrency": "Wiele walut w okresie ({list}) — kwoty nie są sumowane. Proszę ograniczyć do jednego obiektu lub waluty.",
     "occupancyFootnote": "Zajęte to zajęte — czy to przez portal, własną stronę internetową, utworzone samodzielnie, czy przez właściciela. Z mianownika wypadają tylko dni, w których obiekt nie był w sprzedaży: zablokowane dni i stop-sell.",
     "kpiFootnote": "Wartość procentowa na każdym kafelku porównuje się z poprzednim okresem o tej samej długości. Kliknięcie kafelka otwiera szereg czasowy.",
-    "commissionFootnote": "Puste pola prowizji oznaczają, że portal nie przekazuje prowizji (Booking.com zazwyczaj tego nie robi) — nic nie jest szacowane.",
     "tab": {
       "kennzahlen": "Kluczowe wskaźniki",
       "analytics": "Przegląd",
@@ -13331,7 +13365,7 @@
     },
     "expenses": {
       "empty": "Brak pozycji rozliczeniowych w tym okresie.",
-      "emptyHint": "Wydatki i dodatki pojawiają się w rozliczeniu właściciela oraz z zamówionych usług.",
+      "emptyHint": "Wydatki i dodatki są uwzględniane w rozliczeniu właściciela, na podstawie zamówionych usług i zarezerwowanych usług dodatkowych.",
       "expenses": "Wydatki",
       "extras": "Dodatki",
       "balance": "Saldo",
@@ -13346,7 +13380,11 @@
         "ausgabe": "Wydatek",
         "extra": "Dodatek"
       },
-      "footnote": "Okres to data pozycji. Wydatki obciążają właściciela, dodatki są na jego korzyść — tak, jak są w rozliczeniu."
+      "footnote": "Okres to data pozycji; usługi dodatkowe są zgodne z rezerwacją. Wydatki obciążają właściciela, dodatki są na jego korzyść — tak, jak są one przedstawione w rozliczeniu.",
+      "category": {
+        "service": "Zamówiona usługa",
+        "addon": "Usługa dodatkowa"
+      }
     },
     "pace": {
       "title": "Stan rezerwacji na najbliższe 12 miesięcy",
@@ -15549,5 +15587,59 @@
       "anzahlung": "Zaliczka musi być większa od 0 i nie może być wyższa niż całkowita kwota.",
       "entwurfAngelegt": "Oferta została utworzona jako szkic, mail nie został wysłany: {grund}"
     }
+  },
+  "statementPdf": {
+    "invoice": "Rozliczenie właściciela",
+    "storno": "Faktura anulowania",
+    "invoiceNo": "Nr",
+    "issuer": "Wystawca",
+    "owner": "Właściciel",
+    "vatId": "NIP",
+    "period": "Okres",
+    "objects": "Obiekty",
+    "allObjects": "Wszystkie obiekty",
+    "bookings": "Rezerwacje",
+    "listing": "Obiekt",
+    "guest": "Gość",
+    "arrival": "Przyjazd",
+    "departure": "Wyjazd",
+    "nights": "Noce",
+    "channel": "Kanał",
+    "commission": "Prowizja",
+    "flatFee": "Ryczałt",
+    "ownerShare": "Udział właściciela",
+    "noBookings": "Brak rezerwacji w wybranym okresie.",
+    "breakdownTitle": "Zestawienie dla każdej rezerwacji",
+    "posAfterPortal": "Całkowita kwota po odliczeniu portalu",
+    "posAfterPortalHint": "Cena dla gościa minus prowizja portalu i opłata za płatność portalu",
+    "posCommission": "Prowizja za zarządzanie",
+    "posMinCommission": "Minimalna prowizja (umowa) zamiast",
+    "posContractFrom": "Umowa od",
+    "posRateManual": "ręcznie w tym rozliczeniu",
+    "posRateLegacy": "Standardowa stawka z danych podstawowych",
+    "posFlatFee": "Ryczałt za rezerwację/noc (umowa)",
+    "posFeesBack": "Państwa opłaty — bez potrąceń, bez prowizji",
+    "posOwnerShare": "= Udział właściciela",
+    "posRate": "Kurs",
+    "commissionable": "podlegające prowizji",
+    "noFeesReported": "Portal nie zgłosił żadnych opłat za tę rezerwację; dlatego nie zostały one naliczone.",
+    "deductionsTitle": "Potrącenia i uznania",
+    "deductions": "Potrącenia (na koszt właściciela)",
+    "credits": "Uznania (na korzyść właściciela)",
+    "srcExpense": "Pozycje rozliczeniowe",
+    "srcRecurring": "cykliczne",
+    "receipt": "Dowód",
+    "perBooking": "za rezerwację",
+    "perNight": "za noc",
+    "perPeriod": "za okres",
+    "sumShares": "Suma udziałów właściciela z rezerwacji",
+    "sumFlatFees": "Opłaty ryczałtowe z umowy",
+    "sumFlatFeesNote": "już uwzględnione w udziałach — bez dalszych potrąceń",
+    "sumDeductions": "Potrącenia",
+    "sumCredits": "Kredyty",
+    "sumOwnerPayout": "Wypłata dla właściciela",
+    "vat": "Podatek VAT",
+    "vatNet": "Prowizja za zarządzanie netto",
+    "vatGross": "Prowizja za zarządzanie brutto"
   }
 }

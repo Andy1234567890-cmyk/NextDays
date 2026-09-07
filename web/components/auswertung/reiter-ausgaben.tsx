@@ -2,14 +2,17 @@
 
 // Reiter „Ausgaben & Extras" — Hostaways `Expenses & Extras`.
 //
-// Quelle sind die Verrechnungsposten der Eigentümer-Abrechnung
-// (`owner_expenses`): „Ausgaben" sind Posten zulasten des Eigentümers
-// (`from_owner`), „Extras" Posten zu seinen Gunsten (`to_owner`) — Hostaways
-// Aufteilung „Ausgaben = negative Werte, Extras = positive Werte", nur ohne
-// Vorzeichen-Raterei, weil unsere Posten die Richtung als Feld tragen.
+// Zwei Quellen: die Verrechnungsposten der Eigentümer-Abrechnung
+// (`owner_expenses`) — „Ausgaben" zulasten des Eigentümers (`from_owner`),
+// „Extras" zu seinen Gunsten (`to_owner`) — und die gebuchten
+// Zusatzleistungen der Buchungen im Zeitraum (`reservation_addons`, immer
+// „Extra", Kategorie `addon`). Hostaways Aufteilung „Ausgaben = negative
+// Werte, Extras = positive Werte", nur ohne Vorzeichen-Raterei.
 //
-// Zeitraum ist das DATUM DES POSTENS: eine Reinigungsrechnung vom 3. gehört
-// in den Monat des 3., egal wann die Buchung anreiste.
+// Zeitraum: bei Posten das DATUM DES POSTENS (eine Reinigungsrechnung vom 3.
+// gehört in den Monat des 3.), bei Zusatzleistungen der Bezug der Buchung.
+// Bis 07.09.2026 fehlte die zweite Quelle ganz — bei AirSmil stand der Reiter
+// trotz 1.050 DKK bezahlter Wäschepakete auf „Keine Posten".
 import { useLocale, useTranslations } from "next-intl";
 
 import { Card } from "@nextdays/ui/card";
@@ -32,6 +35,14 @@ export function ReiterAusgaben({ a }: { a: Auswertung }) {
 
   const geld = (v: number, w: string | null = x.currency) =>
     w ? formatCurrency(v, w) : String(v);
+  // Zusatzleistungen tragen ihren Namen je Sprache; die Sprache des Nutzers,
+  // sonst Englisch, sonst der Ersatzname des Servers. Kein erfundener Text.
+  const name = (p: { name: string; name_i18n?: Record<string, string> | null }) =>
+    p.name_i18n?.[locale] ?? p.name_i18n?.en ?? p.name;
+  // Kategorie: `service`/`addon` sind SCHLÜSSEL des Systems und werden
+  // übersetzt; alles andere ist freier Text aus der Abrechnung und bleibt.
+  const kategorie = (k: string | null) =>
+    k === null ? null : k === "service" || k === "addon" ? t(`expenses.category.${k}`) : k;
   const datum = (iso: string) =>
     iso ? new Date(`${iso}T00:00:00`).toLocaleDateString(locale) : "—";
 
@@ -58,7 +69,7 @@ export function ReiterAusgaben({ a }: { a: Auswertung }) {
           titel={t("expenses.byCategory")}
           zeilen={x.kategorien.map((k) => ({
             key: k.schluessel ?? "—",
-            label: k.schluessel ?? t("expenses.noCategory"),
+            label: kategorie(k.schluessel) ?? t("expenses.noCategory"),
             ...k,
           }))}
           geld={geld}
@@ -97,8 +108,8 @@ export function ReiterAusgaben({ a }: { a: Auswertung }) {
               {x.posten.map((p) => (
                 <tr key={p.id} className="border-b border-border last:border-0">
                   <td className="px-3 py-2.5 whitespace-nowrap">{datum(p.date)}</td>
-                  <td className="px-3 py-2.5">{p.name}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{p.kategorie ?? "—"}</td>
+                  <td className="px-3 py-2.5">{name(p)}</td>
+                  <td className="px-3 py-2.5 text-muted-foreground">{kategorie(p.kategorie) ?? "—"}</td>
                   <td className="px-3 py-2.5">{p.property_title ?? "—"}</td>
                   <td className="px-3 py-2.5">
                     <span

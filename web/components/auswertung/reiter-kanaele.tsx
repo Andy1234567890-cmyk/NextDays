@@ -9,10 +9,12 @@
 // Die Provisionsspalte bleibt LEER, wo das Portal nichts liefert (Booking.com
 // meist nicht). Hostaway empfiehlt dort einen Schätzwert (`Preis × 0,15`) —
 // eine erfundene Zahl in einer Finanzansicht (Wurzel 4). Der Strich sagt die
-// Wahrheit: wir wissen es nicht.
+// Wahrheit: wir wissen es nicht. Er steht ohne erklärende Fußnote unter der
+// Tabelle (07.09.2026 entfernt) — der Strich ist selbsterklärend genug.
 import { useTranslations } from "next-intl";
 
 import { Card } from "@nextdays/ui/card";
+import { KanalLogo, hatWortlogo } from "@/components/kanal-logo";
 import { formatCurrency } from "@/lib/currency";
 import type { Auswertung, KanalZeile } from "@/lib/auswertung-typen";
 import { zeilenVereinen } from "@/lib/auswertung-vergleich";
@@ -45,8 +47,6 @@ export function ReiterKanaele({ a }: { a: Auswertung }) {
     v === null || !a.vorher?.currency
       ? "—"
       : formatCurrency(v, a.vorher.currency);
-
-  const ohneProvision = a.kanaele.some((k) => k.provision === null);
 
   // Vereinigungsmenge beider Zeiträume: ein Kanal, über den nur FRÜHER
   // verkauft wurde, muss sichtbar bleiben — sein Wegfall ist genau das, was
@@ -136,7 +136,15 @@ export function ReiterKanaele({ a }: { a: Auswertung }) {
                       </span>
                     </span>
                   ) : (
-                    k.ota_name || tk(k.channel)
+                    <span className="flex items-center gap-2">
+                      <KanalLogo name={k.ota_name || k.channel} />
+                      {/* Der Schriftzug im Logo IST der Name — ihn daneben zu
+                          wiederholen schriebe „Booking.com" zweimal. Nur wo es
+                          KEIN Wortlogo gibt („Direkt": ein Haus-Symbol, das
+                          allein nichts benennt), steht der Name dazu. */}
+                      {!hatWortlogo(k.ota_name || k.channel) &&
+                        (k.ota_name || tk(k.channel))}
+                    </span>
                   )}
                 </td>
                 <td className="px-4 py-3 text-right tabular-nums">
@@ -192,11 +200,6 @@ export function ReiterKanaele({ a }: { a: Auswertung }) {
           </tbody>
         </table>
       </div>
-      {ohneProvision && (
-        <p className="border-t border-border px-4 py-3 text-xs text-muted-foreground">
-          {t("commissionFootnote")}
-        </p>
-      )}
     </Card>
     </div>
   );

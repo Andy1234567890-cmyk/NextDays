@@ -1503,7 +1503,13 @@
       "statusesSearch": "Sök status …",
       "statusesNoMatch": "Ingen status hittades.",
       "statusesSelectAll": "Välj alla",
-      "statusesCount": "{count} av {total} valda"
+      "statusesCount": "{count} av {total} valda",
+      "properties": "Objekt",
+      "propertiesAll": "Alla objekt",
+      "propertiesCount": "{count} av {total} objekt",
+      "propertiesSearch": "Sök objekt ...",
+      "propertiesNoMatch": "Inget objekt hittades.",
+      "propertiesSelectAll": "Välj alla"
     },
     "reservationStatus": {
       "pending": "Öppen",
@@ -1640,7 +1646,16 @@
         "noContract": "Det finns inget faktureringsavtal och ingen provisionssats för detta objekt i masterdata – skapa ett avtal hos ägaren.",
         "addonsOutside": "Tilläggstjänster – säljs via myNextDays, ingår ej i portalens gästpris"
       },
-      "ownershipShare": "Andel"
+      "ownershipShare": "Andel",
+      "dragColumn": "Flytta kolumn {spalte}",
+      "columnsReset": "Återställ kolumnordning",
+      "dndStart": "{spalte} plockades upp.",
+      "dndOver": "{spalte} över {ziel}.",
+      "dndOverNichts": "{spalte} utanför tabellen.",
+      "dndEnd": "{spalte} släpptes på {ziel}.",
+      "dndCancel": "Flytt av {spalte} avbröts.",
+      "dndAnleitung": "Tryck på mellanslag eller enter för att plocka upp en kolumn. Använd piltangenterna för att flytta, mellanslag eller enter för att släppa, escape för att avbryta.",
+      "dragHint": "Dra i handtaget för att ändra ordning – även med tangentbordet: fokusera handtaget, mellanslag, piltangenter."
     },
     "expenses": {
       "add": "Lägg till",
@@ -1691,7 +1706,10 @@
       "status": "Status",
       "open": "Öppna",
       "emptyTitle": "Inga avräkningar",
-      "emptyHint": "Skapa din första ägaravräkning under „Skapa & redigera”."
+      "emptyHint": "Skapa din första ägaravräkning under „Skapa & redigera”.",
+      "objects": "Objekt",
+      "allObjects": "alla objekt",
+      "objectsCount": "{count} objekt"
     },
     "edit": "Redigera",
     "attachments": {
@@ -1740,7 +1758,10 @@
       "commission": "Boendets provision för förvaltningen av objektet. Den beräknas på beloppet som återstår efter portalens avdrag – och tas ut vid ALLA bokningar, även de via egen webbplats.",
       "flatFee": "Ett fast belopp från förvaltningsavtalet, till exempel för driftskostnader. Beroende på överenskommelse dras det av före eller efter provisionen.",
       "ownerShare": "Vad som slutligen återstår för ägaren: gästpris minus portalavdrag, minus provision, minus schablonavgift, plus de avgifter som tillhör ägaren. Vid delägarskap multipliceras det dessutom med ägarens andel.",
-      "ownershipShare": "Denna ägares andel av objektet. 100 % betyder ensam ägare. Om ett hus ägs av flera personer får var och en sin egen redovisning för sin andel – andelarna utgör tillsammans 100 %."
+      "ownershipShare": "Denna ägares andel av objektet. 100 % betyder ensam ägare. Om ett hus ägs av flera personer får var och en sin egen redovisning för sin andel – andelarna utgör tillsammans 100 %.",
+      "properties": "Vilka objekt denna faktura omfattar. Standard är alla ägarens objekt. Välj enskilda för att endast fakturera för dessa. Varje objekt kan per period endast finnas i en slutförd faktura – en bokning betalas aldrig ut två gånger.",
+      "language": "På detta språk skapas kvittot – texter, siffror och datum. Förvalt från ägarens språk, annars från verksamhetens. Efter slutförande är det fast; kvittot förblir som det utfärdades.",
+      "headerFromMaster": "Övertar namn, adress, e-post, telefon och skattenummer från ägare och verksamhet från stamdata. Fakturanummer och anteckningar för detta kvitto kvarstår."
     },
     "finalizeConfirm": {
       "title": "Lås fakturering",
@@ -1778,7 +1799,21 @@
       "title": "Delägare",
       "hint": "Dessa boenden ägs av flera personer. Var och en får en egen faktura för sin andel.",
       "share": "{anteil} %"
-    }
+    },
+    "language": {
+      "label": "Språk för kvittot"
+    },
+    "sort": {
+      "aria": "Sortera efter {spalte}",
+      "ascending": "stigande",
+      "descending": "fallande"
+    },
+    "belegIn": "Kvittens på {sprache}",
+    "headerFromMaster": "Hämta från masterdata",
+    "headerFromMasterDone": "Rubrikdata har hämtats från masterdata.",
+    "objectsLine": "Objekt: {liste}",
+    "objectsAll": "Objekt: alla",
+    "loading": "Laddar …"
   },
   "ownerBilling": {
     "title": "Avräkningsavtal",
@@ -13113,7 +13148,6 @@
     "mixedCurrency": "Flera valutor under perioden ({list}) – beloppen summeras inte. Vänligen begränsa till ett objekt eller en valuta.",
     "occupancyFootnote": "Utsålt är utsålt – oavsett om det är via en portal, den egna webbplatsen, manuellt inlagt eller av ägaren. Endast dagar då objektet inte var till försäljning räknas inte med: blockerade dagar och stop-sell.",
     "kpiFootnote": "Procentvärdet på varje ruta jämförs med samma period före. Ett klick på en ruta öppnar tidsserien.",
-    "commissionFootnote": "Tomma provisionsfält betyder att portalen inte överför någon provision (Booking.com gör oftast inte det) – inget uppskattas.",
     "tab": {
       "kennzahlen": "Nyckeltal",
       "analytics": "Översikt",
@@ -13331,7 +13365,7 @@
     },
     "expenses": {
       "empty": "Inga transaktioner under denna period.",
-      "emptyHint": "Utgifter och tillägg uppstår i ägarens redovisning och från beställda tjänster.",
+      "emptyHint": "Utgifter och extrainter kommer att visas i ägarens faktura, från beställda tjänster och bokade tilläggstjänster.",
       "expenses": "Utgifter",
       "extras": "Tillägg",
       "balance": "Saldo",
@@ -13346,7 +13380,11 @@
         "ausgabe": "Utgift",
         "extra": "Tillägg"
       },
-      "footnote": "Perioden är postens datum. Utgifter belastar ägaren, tillägg gynnar ägaren – så som de står i redovisningen."
+      "footnote": "Perioden är postens datum; tilläggstjänster följer bokningen. Utgifter debiteras ägaren, extrainter krediteras honom – så som de står i fakturan.",
+      "category": {
+        "service": "Beställd tjänst",
+        "addon": "Tilläggstjänst"
+      }
     },
     "pace": {
       "title": "Bokningsstatus för de kommande 12 månaderna",
@@ -15549,5 +15587,59 @@
       "anzahlung": "Handpenningen måste vara över 0 och får inte vara högre än totalbeloppet.",
       "entwurfAngelegt": "Erbjudandet är skapat som ett utkast, mejlet skickades inte: {grund}"
     }
+  },
+  "statementPdf": {
+    "invoice": "Ägarredovisning",
+    "storno": "Avbokningsfaktura",
+    "invoiceNo": "Nr.",
+    "issuer": "Utfärdare",
+    "owner": "Ägare",
+    "vatId": "Momsreg.nr",
+    "period": "Period",
+    "objects": "Objekt",
+    "allObjects": "Alla objekt",
+    "bookings": "Bokningar",
+    "listing": "Objekt",
+    "guest": "Gäst",
+    "arrival": "Ankomst",
+    "departure": "Avresa",
+    "nights": "Nätter",
+    "channel": "Kanal",
+    "commission": "Provision",
+    "flatFee": "Fast avgift",
+    "ownerShare": "Ägarandel",
+    "noBookings": "Inga reservationer under perioden.",
+    "breakdownTitle": "Specifikation per bokning",
+    "posAfterPortal": "Totalt belopp efter portalavdrag",
+    "posAfterPortalHint": "Gästpris minus portalprovision och portalbetalningsavgift",
+    "posCommission": "Administrativ provision",
+    "posMinCommission": "Minsta provision (avtal) istället",
+    "posContractFrom": "Avtal från",
+    "posRateManual": "Manuellt i denna redovisning",
+    "posRateLegacy": "Standardtaxa från grunddata",
+    "posFlatFee": "Fast avgift per bokning/natt (avtal)",
+    "posFeesBack": "Dina avgifter – oförkortade, utan provision",
+    "posOwnerShare": "= Ägarandel",
+    "posRate": "Kurs",
+    "commissionable": "Provisionspliktig",
+    "noFeesReported": "Portalen har inte rapporterat några avgifter för denna bokning; därför har inga lagts till.",
+    "deductionsTitle": "Avdrag och krediteringar",
+    "deductions": "Avdrag (på ägarens bekostnad)",
+    "credits": "Krediteringar (till förmån för ägaren)",
+    "srcExpense": "Avräkningsposter",
+    "srcRecurring": "Återkommande",
+    "receipt": "Kvitto",
+    "perBooking": "per bokning",
+    "perNight": "per natt",
+    "perPeriod": "per period",
+    "sumShares": "Summa ägarandelar från bokningar",
+    "sumFlatFees": "Fast avgift enligt avtal",
+    "sumFlatFeesNote": "redan inkluderat i andelarna – inget ytterligare avdrag",
+    "sumDeductions": "Avdrag",
+    "sumCredits": "Krediteringar",
+    "sumOwnerPayout": "Utbetalning till ägare",
+    "vat": "Moms",
+    "vatNet": "Administrationsprovision netto",
+    "vatGross": "Administrationsprovision brutto"
   }
 }

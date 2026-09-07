@@ -1503,7 +1503,13 @@
       "statusesSearch": "Pretraži status …",
       "statusesNoMatch": "Nije pronađen status.",
       "statusesSelectAll": "Odaberi sve",
-      "statusesCount": "Odabrano {count} od {total}"
+      "statusesCount": "Odabrano {count} od {total}",
+      "properties": "Objekti",
+      "propertiesAll": "Svi objekti",
+      "propertiesCount": "{count} od {total} objekata",
+      "propertiesSearch": "Pretražite objekte…",
+      "propertiesNoMatch": "Nije pronađen nijedan objekt.",
+      "propertiesSelectAll": "Odaberi sve"
     },
     "reservationStatus": {
       "pending": "Na čekanju",
@@ -1640,7 +1646,16 @@
         "noContract": "Za ovaj objekt nema ugovora o naplati i stope provizije u glavnim podacima — kreirajte ugovor s vlasnikom.",
         "addonsOutside": "Dodatne usluge — prodaje myNextDays, nisu uključene u cijenu za goste na portalu"
       },
-      "ownershipShare": "Udio"
+      "ownershipShare": "Udio",
+      "dragColumn": "Premjesti stupac {spalte}",
+      "columnsReset": "Poništi redoslijed stupaca",
+      "dndStart": "{spalte} je preuzeto.",
+      "dndOver": "{spalte} iznad {ziel}.",
+      "dndOverNichts": "{spalte} izvan tablice.",
+      "dndEnd": "{spalte} je ispušteno na mjestu {ziel}.",
+      "dndCancel": "Premještanje stupca {spalte} je otkazano.",
+      "dndAnleitung": "Pritisnite razmaknicu ili Enter za preuzimanje stupca. Koristite tipke sa strelicama za pomicanje, razmaknicu ili Enter za ispuštanje, a Escape za otkazivanje.",
+      "dragHint": "Povucite ručke stupaca za promjenu redoslijeda — također putem tipkovnice: fokusirajte ručku, razmaknicu, tipke sa strelicama."
     },
     "expenses": {
       "add": "Dodaj",
@@ -1691,7 +1706,10 @@
       "status": "Status",
       "open": "Otvori",
       "emptyTitle": "Nema obračuna",
-      "emptyHint": "Izradi svoj prvi obračun vlasnika pod „Izradi i uredi”."
+      "emptyHint": "Izradi svoj prvi obračun vlasnika pod „Izradi i uredi”.",
+      "objects": "Objekti",
+      "allObjects": "svi objekti",
+      "objectsCount": "{count} objekt(a)"
     },
     "edit": "Uredi",
     "attachments": {
@@ -1740,7 +1758,10 @@
       "commission": "Provizija objekta za upravljanje imovinom. Izračunava se na iznos koji preostaje nakon odbitka portala – i naplaćuje se za SVAKU rezervaciju, uključujući i one putem vlastite web stranice.",
       "flatFee": "Fiksni iznos iz ugovora o upravljanju, na primjer za režije. Ovisno o dogovoru, odbija se prije ili poslije provizije.",
       "ownerShare": "Što na kraju ostaje vlasniku: cijena za gosta minus odbitak portala, minus provizija, minus paušal, plus naknade koje mu pripadaju. U slučaju suvlasništva, dodatno pomnoženo s njegovim udjelom.",
-      "ownershipShare": "Udio ovog vlasnika u objektu. 100% znači isključivo vlasništvo. Ako kuća pripada više osoba, svaka dobiva vlastiti obračun za svoj udio – udjeli zajedno čine 100%. "
+      "ownershipShare": "Udio ovog vlasnika u objektu. 100% znači isključivo vlasništvo. Ako kuća pripada više osoba, svaka dobiva vlastiti obračun za svoj udio – udjeli zajedno čine 100%. ",
+      "properties": "Koji su objekti uključeni u ovaj obračun. Zadano su svi objekti vlasnika. Odaberite pojedine kako biste obračunali samo za njih. Svaki objekt može biti uključen u samo jedan finalizirani obračun po razdoblju — rezervacija nikada neće biti isplaćena dvaput.",
+      "language": "Na ovom jeziku se kreira potvrda — tekstovi, brojevi i datum. Unaprijed popunjeno jezikom vlasnika, inače jezikom tvrtke. Nakon finalizacije je fiksno; potvrda ostaje onakva kakva je izdana.",
+      "headerFromMaster": "Preuzima ime, adresu, e-poštu, telefon i porezni broj vlasnika i tvrtke iz glavnih podataka. Broj računa i bilješke ove potvrde ostaju."
     },
     "finalizeConfirm": {
       "title": "Fiksiraj obračun",
@@ -1778,7 +1799,21 @@
       "title": "Suvlasnik",
       "hint": "Ove objekte posjeduje više osoba. Svaka dobiva vlastiti obračun za svoj udio.",
       "share": "{anteil} %"
-    }
+    },
+    "language": {
+      "label": "Jezik potvrde"
+    },
+    "sort": {
+      "aria": "Sortiraj po {spalte}",
+      "ascending": "uzlazno",
+      "descending": "silazno"
+    },
+    "belegIn": "Potvrda na {sprache}",
+    "headerFromMaster": "Preuzmi iz glavnih podataka",
+    "headerFromMasterDone": "Podaci zaglavlja preuzeti su iz glavnih podataka.",
+    "objectsLine": "Objekti: {liste}",
+    "objectsAll": "Objekti: svi",
+    "loading": "Učitavanje u tijeku…"
   },
   "ownerBilling": {
     "title": "Ugovor o obračunu",
@@ -13113,7 +13148,6 @@
     "mixedCurrency": "Više valuta u razdoblju ({list}) — iznosi se ne zbrajaju. Ograničite na jedan objekt ili valutu.",
     "occupancyFootnote": "Zauzeto je zauzeto — bilo putem portala, vlastite web stranice, samostalno kreirano ili od strane vlasnika. Iz nazivnika ispadaju samo dani kada objekt nije bio u prodaji: blokirani dani i stop-sell.",
     "kpiFootnote": "Postotak na svakoj pločici uspoređuje se s istim prethodnim razdobljem. Klikom na pločicu otvara se vremenska serija.",
-    "commissionFootnote": "Prazna polja provizije znače da portal ne prenosi proviziju (Booking.com to obično ne čini) — ništa se ne procjenjuje.",
     "tab": {
       "kennzahlen": "Ključni pokazatelji",
       "analytics": "Pregled",
@@ -13331,7 +13365,7 @@
     },
     "expenses": {
       "empty": "Nema stavki obračuna u ovom razdoblju.",
-      "emptyHint": "Troškovi i dodaci nastaju u obračunu vlasnika i iz naručenih usluga.",
+      "emptyHint": "Troškovi i dodaci nastaju u obračunu vlasnika, iz naručenih usluga i iz rezerviranih dodatnih usluga.",
       "expenses": "Troškovi",
       "extras": "Dodaci",
       "balance": "Stanje",
@@ -13346,7 +13380,11 @@
         "ausgabe": "Trošak",
         "extra": "Dodatak"
       },
-      "footnote": "Razdoblje je datum stavke. Troškovi idu na teret vlasnika, dodaci u njegovu korist — onako kako su navedeni u obračunu."
+      "footnote": "Razdoblje je datum stavke; dodatne usluge slijede rezervaciju. Troškovi idu na teret vlasnika, dodaci u njegovu korist — onako kako su navedeni u obračunu.",
+      "category": {
+        "service": "Naručena usluga",
+        "addon": "Dodatna usluga"
+      }
     },
     "pace": {
       "title": "Status rezervacija za sljedećih 12 mjeseci",
@@ -15549,5 +15587,59 @@
       "anzahlung": "Polog mora biti veći od 0 i ne smije biti veći od ukupnog iznosa.",
       "entwurfAngelegt": "Ponuda je kreirana kao nacrt, e-pošta nije poslana: {grund}"
     }
+  },
+  "statementPdf": {
+    "invoice": "Obračun za vlasnika",
+    "storno": "Račun otkazivanja",
+    "invoiceNo": "Br.",
+    "issuer": "Izdatel",
+    "owner": "Vlasnik",
+    "vatId": "PDV ID",
+    "period": "Razdoblje",
+    "objects": "Objekti",
+    "allObjects": "svi objekti",
+    "bookings": "Rezervacije",
+    "listing": "Objekt",
+    "guest": "Gost",
+    "arrival": "Dolazak",
+    "departure": "Odlazak",
+    "nights": "Noćenja",
+    "channel": "Kanal",
+    "commission": "Provizija",
+    "flatFee": "Fiksna naknada",
+    "ownerShare": "Udio vlasnika",
+    "noBookings": "Nema rezervacija u ovom razdoblju.",
+    "breakdownTitle": "Pregled po rezervaciji",
+    "posAfterPortal": "Ukupan iznos nakon odbitka portala",
+    "posAfterPortalHint": "Cijena za gosta umanjena za proviziju portala i naknadu za plaćanje portala",
+    "posCommission": "Administrativna provizija",
+    "posMinCommission": "Umjesto minimalne provizije (ugovor)",
+    "posContractFrom": "Ugovor od",
+    "posRateManual": "ručno u ovom obračunu",
+    "posRateLegacy": "Standardna stopa iz glavnih podataka",
+    "posFlatFee": "Fiksna naknada po rezervaciji/noćenju (ugovor)",
+    "posFeesBack": "Vaše naknade — neumanjene, bez provizije",
+    "posOwnerShare": "= Udio vlasnika",
+    "posRate": "Tečaj",
+    "commissionable": "podložno proviziji",
+    "noFeesReported": "Portal nije prijavio naknade za ovu rezervaciju; stoga nisu primijenjene.",
+    "deductionsTitle": "Odbici i krediti",
+    "deductions": "Odbici (na teret vlasnika)",
+    "credits": "Krediti (u korist vlasnika)",
+    "srcExpense": "Stavke obračuna",
+    "srcRecurring": "ponavljajuće",
+    "receipt": "Potvrda",
+    "perBooking": "po rezervaciji",
+    "perNight": "po noćenju",
+    "perPeriod": "po razdoblju",
+    "sumShares": "Ukupni udjeli vlasnika od rezervacija",
+    "sumFlatFees": "Fiksne naknade iz ugovora",
+    "sumFlatFeesNote": "već uključeno u udjele — nema daljnjeg odbitka",
+    "sumDeductions": "Odbici",
+    "sumCredits": "Kreditne bilješke",
+    "sumOwnerPayout": "Isplata vlasniku",
+    "vat": "PDV",
+    "vatNet": "Administrativna provizija neto",
+    "vatGross": "Administrativna provizija bruto"
   }
 }

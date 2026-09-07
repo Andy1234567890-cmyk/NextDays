@@ -20,6 +20,7 @@ import { useLocale, useTranslations } from "next-intl";
 
 import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
+import { KanalLogo, hatWortlogo } from "@/components/kanal-logo";
 import { Checkbox } from "@nextdays/ui/checkbox";
 import {
   DropdownMenu,
@@ -267,9 +268,15 @@ export function ReiterBuchungen({
                     {zeigt("guest") && <td className="px-3 py-2.5">{b.guest_name ?? "—"}</td>}
                     {zeigt("channel") && (
                       <td className="px-3 py-2.5 whitespace-nowrap">
-                        {b.ota_name
-                          ? channelLabelLoose(b.ota_name)
-                          : channelLabel(b.channel as AvailabilitySource)}
+                        <span className="inline-flex items-center gap-2 align-middle">
+                          <KanalLogo name={b.ota_name || b.channel} />
+                          {/* Wortlogo ersetzt den Namen; ohne Logo („Direkt")
+                              steht der Name dazu. */}
+                          {!hatWortlogo(b.ota_name || b.channel) &&
+                            (b.ota_name
+                              ? channelLabelLoose(b.ota_name)
+                              : channelLabel(b.channel as AvailabilitySource))}
+                        </span>
                         {b.is_owner_stay && (
                           <span className="ml-1.5 rounded-full bg-muted px-2 py-0.5 text-xs">
                             {t("ownerStay")}

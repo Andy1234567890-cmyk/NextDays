@@ -4,10 +4,28 @@
 // Aktionsleiste (New/Save/Download/Select/More) · Filters-Button + Chip-Reihe ·
 // flache, einklappbare Sektionen (Data / Summary / Rental activity / Expenses &
 // extras / Attachments / Grand total). Daten echt aus dem Backend.
+import {
+  DndContext,
+  DragOverlay,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  horizontalListSortingStrategy,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from "@dnd-kit/sortable";
 import { Icon } from "@iconify/react";
 import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@nextdays/ui/button";
@@ -19,7 +37,10 @@ import { Input } from "@nextdays/ui/input";
 import { MultiSelect } from "@nextdays/ui/multi-select";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import { Textarea } from "@nextdays/ui/textarea";
+import { belegTexte } from "@/lib/beleg-texte";
+import { channelLabelLoose } from "@/lib/channel-logos";
 import { formatCurrency } from "@/lib/currency";
+import { LOCALES, LOCALE_FLAG_EMOJI, LOCALE_LABELS } from "@/i18n/locales";
 
 /** Backend-Grund (`payout_unbekannt`) → i18n-Key mit dem passenden Handgriff.
  *
@@ -92,11 +113,14 @@ import {
   type ExpenseDirection,
   type GebuehrZeile,
   type RentalRow,
+  type SortDir,
+  type SortKey,
   type WiederkehrenderPosten,
   type Statement,
   type StatementHeader,
   type StatementListItem,
 } from "@/lib/owner-statements";
+import { COLUMN_ORDER_STANDARD, type ColumnKey } from "@/lib/owner-statements-spalten";
 
 export type PropOption = { id: string; title: string };
 
@@ -148,6 +172,13 @@ export function StatementEditor({
     basis?: Statement["basis"];
     reservation_statuses?: string[];
     commission_pct?: number;
+    /** 0603: leer = alle Objekte. */
+    property_ids?: string[];
+    /** 0604 */
+    language?: string;
+    sort_key?: SortKey;
+    sort_dir?: SortDir;
+    column_order?: ColumnKey[];
   }) => void;
 }) {
   const t = useTranslations("ownerStatements");
@@ -198,6 +229,11 @@ export function StatementEditor({
         commission_pct:
           patch.commission_pct ??
           (commissionTouched ? st.commission_pct ?? undefined : undefined),
+        property_ids: patch.property_ids,
+        language: patch.language,
+        sort_key: patch.sort_key,
+        sort_dir: patch.sort_dir,
+        column_order: patch.column_order,
       });
       return;
     }
@@ -229,6 +265,11 @@ export function StatementEditor({
           reservation_statuses: st.reservation_statuses,
           // Kein manueller Override → null, Backend rechnet je Objekt.
           commission_pct: commissionTouched ? st.commission_pct : null,
+          property_ids: st.property_ids,
+          language: st.language,
+          sort_key: st.sort_key,
+          sort_dir: st.sort_dir,
+          column_order: st.column_order,
         })
       : await updateStatement(st.id, {
           header: st.header,
@@ -237,6 +278,12 @@ export function StatementEditor({
           reservation_statuses: st.reservation_statuses,
           period_from: st.period_from,
           period_to: st.period_to,
+          // LEERE Liste = alle Objekte (0603).
+          property_ids: st.property_ids ?? [],
+          language: st.language,
+          sort_key: st.sort_key,
+          sort_dir: st.sort_dir,
+          column_order: st.column_order,
         });
     setBusy(false);
     if (res.ok) {
@@ -257,6 +304,7 @@ export function StatementEditor({
             pm_payout: d.summary.pm_payout,
             currency: d.summary.currency,
             invoice_number: d.header.invoice_number,
+            property_ids: d.property_ids,
             created_at: d.created_at,
           },
           ...prev,
@@ -324,11 +372,62 @@ export function StatementEditor({
 
   // Wie viele Filter weichen vom Ausgangszustand ab? Das ist die Zahl, die der
   // Knopf trägt — und die nach dem Zurücksetzen 0 sein MUSS.
+  // Objektauswahl (0603): `null` = alle. Für die Mehrfachauswahl heißt „alle"
+  // jede ID der Liste; für den Server heißt es LEERE Liste.
+  const alleObjektIds = properties.map((p) => p.id);
+  const objektAuswahl = st.property_ids ?? alleObjektIds;
+  const objekteEingeschraenkt =
+    st.property_ids !== null && st.property_ids.length < alleObjektIds.length;
   const aktiveFilter =
     (st.period_from !== monatsAnfang ? 1 : 0) +
     (st.period_to !== monatsEnde ? 1 : 0) +
     (st.basis !== STANDARD_BASIS ? 1 : 0) +
-    (gleicheMenge(st.reservation_statuses, STANDARD_STATUS) ? 0 : 1);
+    (gleicheMenge(st.reservation_statuses, STANDARD_STATUS) ? 0 : 1) +
+    (objekteEingeschraenkt ? 1 : 0);
+
+  /** Objektauswahl ändern. Alles oder nichts gewählt = alle Objekte (leere
+   *  Liste an den Server): eine Abrechnung über NULL Objekte gibt es nicht,
+   *  und wer alles abwählt, meint erkennbar „zurück auf Standard". */
+  function objekteWaehlen(next: string[]) {
+    const alle = next.length === 0 || next.length >= alleObjektIds.length;
+    const wert = alle ? null : next;
+    setSt((prev) => ({ ...prev, property_ids: wert }));
+    void persist({ property_ids: wert ?? [] });
+  }
+
+  /** Sortierung (0604): gleiche Spalte kippt die Richtung, neue Spalte
+   *  beginnt aufsteigend. Gespeichert je Abrechnung — Vorschau und Beleg
+   *  stehen danach gleich. */
+  function sortieren(key: SortKey) {
+    const dir: SortDir =
+      st.sort_key === key ? (st.sort_dir === "asc" ? "desc" : "asc") : "asc";
+    setSt((prev) => ({ ...prev, sort_key: key, sort_dir: dir }));
+    void persist({ sort_key: key, sort_dir: dir });
+  }
+
+  /** Spaltenreihenfolge (0605): am Beleg gespeichert, damit Vorschau und PDF
+   *  sie übernehmen. Leere Liste = Standard. */
+  function spaltenOrdnen(order: ColumnKey[]) {
+    setSt((prev) => ({
+      ...prev,
+      column_order: order.length ? order : COLUMN_ORDER_STANDARD,
+    }));
+    void persist({ column_order: order });
+  }
+
+  /** 13.4: Kopf aus den Stammdaten neu übernehmen. Nur für gespeicherte
+   *  Entwürfe — die Vorschau kommt ohnehin frisch aus den Stammdaten. */
+  async function kopfAusStammdaten() {
+    if (isNew) return;
+    setBusy(true);
+    const res = await updateStatement(st.id, { header_aus_stammdaten: true });
+    setBusy(false);
+    if (res.ok) {
+      setSt(res.data);
+      onChange(res.data);
+      toast.success(t("headerFromMasterDone"));
+    } else toast.error(res.error);
+  }
 
   /** Einen einzelnen Filter auf seinen Ausgangswert bringen. Der lokale Zustand
    *  wird sofort gesetzt (die Chips sollen ohne Verzögerung stimmen), das
@@ -389,7 +488,9 @@ export function StatementEditor({
             disabled={busy}
             onClick={() => {
               setBusy(true);
-              void downloadStatementPdf(st, locale, { kanalLabels })
+              // Texte in der Sprache DES BELEGS (0604), nicht des Betrachters.
+              void belegTexte(st.language)
+                .then((tx) => downloadStatementPdf(st, tx, { kanalLabels }))
                 .catch(() => toast.error(t("downloadFailed")))
                 .finally(() => setBusy(false));
             }}
@@ -497,6 +598,19 @@ export function StatementEditor({
             disabled={finalized}
           />
           <ChipEntfernbar
+            label={
+              objekteEingeschraenkt
+                ? t("filters.propertiesCount", {
+                    count: objektAuswahl.length,
+                    total: alleObjektIds.length,
+                  })
+                : t("filters.propertiesAll")
+            }
+            onRemove={objekteEingeschraenkt ? () => objekteWaehlen([]) : undefined}
+            entfernenLabel={t("filters.remove", { feld: t("filters.properties") })}
+            disabled={finalized}
+          />
+          <ChipEntfernbar
             label={t("filters.statusCount", { count: st.reservation_statuses.length })}
             onRemove={
               !gleicheMenge(st.reservation_statuses, STANDARD_STATUS)
@@ -527,7 +641,7 @@ export function StatementEditor({
       </div>
 
       {showFilters && !finalized && (
-        <div className="grid grid-cols-1 gap-4 rounded-(--radius) border border-border p-4 sm:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 rounded-(--radius) border border-border p-4 sm:grid-cols-5">
           <Labeled label={t("filters.from")}>
             <DatePicker
               value={st.period_from}
@@ -588,23 +702,95 @@ export function StatementEditor({
               countLabel={(n, m) => t("filters.statusesCount", { count: n, total: m })}
             />
           </Labeled>
+          {/* Objekte (0603): Standard alle. Dieselbe Mehrfachauswahl wie beim
+              Status — eine dritte Auswahl-Optik wäre eine Rateaufgabe. */}
+          <Labeled
+            label={t("filters.properties")}
+            info={t("info.properties")}
+            infoAria={t("info.aria", { feld: t("filters.properties") })}
+          >
+            <MultiSelect
+              options={properties.map((p) => ({ value: p.id, label: p.title }))}
+              selected={objektAuswahl}
+              onChange={objekteWaehlen}
+              placeholder={t("filters.propertiesAll")}
+              searchPlaceholder={t("filters.propertiesSearch")}
+              emptyHint={t("filters.propertiesNoMatch")}
+              selectAllLabel={t("filters.propertiesSelectAll")}
+              countLabel={(n, m) => t("filters.propertiesCount", { count: n, total: m })}
+            />
+          </Labeled>
         </div>
       )}
 
-      {/* Data */}
-      <Section title={t("sections.data")} defaultOpen>
+      {/* Data — 13.4: die Kopffelder sind im ENTWURF editierbar. Bis
+          07.09.2026 standen sie fest auf `disabled`, obwohl `PATCH header`
+          es längst konnte: ein Adressat, der nur für diesen Beleg anders
+          heißen soll (Erbengemeinschaft, c/o-Adresse), war nicht erreichbar.
+          Finalisiert bleibt alles fest (bestehende 409-Regel). Der Knopf holt
+          die Stammdaten NEU, wenn sie sich seit dem Anlegen geändert haben. */}
+      <Section
+        title={t("sections.data")}
+        defaultOpen
+        right={
+          !finalized && !isNew ? (
+            <span className="flex items-center gap-1.5">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void kopfAusStammdaten()}
+                className="flex items-center gap-1 text-sm text-accent disabled:opacity-50"
+              >
+                <Icon icon="ph:arrow-counter-clockwise" className="size-4" />
+                {t("headerFromMaster")}
+              </button>
+              <InfoHinweis
+                text={t("info.headerFromMaster")}
+                ariaLabel={t("info.aria", { feld: t("headerFromMaster") })}
+              />
+            </span>
+          ) : undefined
+        }
+      >
         <div className="grid grid-cols-1 gap-x-10 gap-y-3 lg:grid-cols-2">
-          <HeaderField label={t("pm.name")} value={st.header.pm_name} onChange={(v) => patchHeader("pm_name", v)} disabled emptyHint={t("pm.fromMaster")} />
-          <HeaderField label={t("owner.name")} value={st.header.owner_name} onChange={(v) => patchHeader("owner_name", v)} disabled emptyHint={t("owner.fromMaster")} />
-          <HeaderField label={t("pm.email")} value={st.header.pm_email} onChange={(v) => patchHeader("pm_email", v)} disabled emptyHint={t("pm.fromMaster")} />
-          <HeaderField label={t("owner.email")} value={st.header.owner_email} onChange={(v) => patchHeader("owner_email", v)} disabled emptyHint={t("owner.fromMaster")} />
-          <HeaderField label={t("pm.phone")} value={st.header.pm_phone} onChange={(v) => patchHeader("pm_phone", v)} disabled emptyHint={t("pm.fromMaster")} />
-          <HeaderField label={t("owner.phone")} value={st.header.owner_phone} onChange={(v) => patchHeader("owner_phone", v)} disabled emptyHint={t("owner.fromMaster")} />
-          <HeaderField label={t("pm.address")} value={st.header.pm_address} onChange={(v) => patchHeader("pm_address", v)} disabled emptyHint={t("pm.fromMaster")} />
-          <HeaderField label={t("owner.address")} value={st.header.owner_address} onChange={(v) => patchHeader("owner_address", v)} disabled emptyHint={t("owner.fromMaster")} />
-          <HeaderField label={t("pm.taxId")} value={st.header.pm_tax_id} onChange={(v) => patchHeader("pm_tax_id", v)} disabled emptyHint={t("pm.fromMaster")} />
-          <HeaderField label={t("owner.taxId")} value={st.header.owner_tax_id} onChange={(v) => patchHeader("owner_tax_id", v)} disabled emptyHint={t("owner.fromMaster")} />
+          <HeaderField label={t("pm.name")} value={st.header.pm_name} onChange={(v) => patchHeader("pm_name", v)} disabled={finalized} emptyHint={t("pm.fromMaster")} />
+          <HeaderField label={t("owner.name")} value={st.header.owner_name} onChange={(v) => patchHeader("owner_name", v)} disabled={finalized} emptyHint={t("owner.fromMaster")} />
+          <HeaderField label={t("pm.email")} value={st.header.pm_email} onChange={(v) => patchHeader("pm_email", v)} disabled={finalized} emptyHint={t("pm.fromMaster")} />
+          <HeaderField label={t("owner.email")} value={st.header.owner_email} onChange={(v) => patchHeader("owner_email", v)} disabled={finalized} emptyHint={t("owner.fromMaster")} />
+          <HeaderField label={t("pm.phone")} value={st.header.pm_phone} onChange={(v) => patchHeader("pm_phone", v)} disabled={finalized} emptyHint={t("pm.fromMaster")} />
+          <HeaderField label={t("owner.phone")} value={st.header.owner_phone} onChange={(v) => patchHeader("owner_phone", v)} disabled={finalized} emptyHint={t("owner.fromMaster")} />
+          <HeaderField label={t("pm.address")} value={st.header.pm_address} onChange={(v) => patchHeader("pm_address", v)} disabled={finalized} emptyHint={t("pm.fromMaster")} />
+          <HeaderField label={t("owner.address")} value={st.header.owner_address} onChange={(v) => patchHeader("owner_address", v)} disabled={finalized} emptyHint={t("owner.fromMaster")} />
+          <HeaderField label={t("pm.taxId")} value={st.header.pm_tax_id} onChange={(v) => patchHeader("pm_tax_id", v)} disabled={finalized} emptyHint={t("pm.fromMaster")} />
+          <HeaderField label={t("owner.taxId")} value={st.header.owner_tax_id} onChange={(v) => patchHeader("owner_tax_id", v)} disabled={finalized} emptyHint={t("owner.fromMaster")} />
           <HeaderField label={t("invoiceNumber")} value={st.header.invoice_number} onChange={(v) => patchHeader("invoice_number", v)} disabled={finalized} />
+          {/* Sprache des Belegs (0604): Snapshot am Beleg, im Entwurf
+              wechselbar. Flagge + Endonym wie in jedem Sprachumschalter des
+              Projekts (`sprache-auswahl.tsx`). */}
+          <div className="flex items-center gap-3">
+            <span className="flex w-40 shrink-0 items-center gap-1.5 text-sm text-muted-foreground">
+              <span className="min-w-0 truncate">{t("language.label")}</span>
+              <InfoHinweis
+                text={t("info.language")}
+                ariaLabel={t("info.aria", { feld: t("language.label") })}
+              />
+            </span>
+            <NativeSelect
+              value={st.language}
+              disabled={finalized}
+              onChange={(e) => {
+                const language = e.target.value;
+                setSt((prev) => ({ ...prev, language }));
+                void persist({ language });
+              }}
+            >
+              {LOCALES.map((code) => (
+                <option key={code} value={code}>
+                  {LOCALE_FLAG_EMOJI[code]} {LOCALE_LABELS[code]}
+                </option>
+              ))}
+            </NativeSelect>
+          </div>
         </div>
         <Labeled label={t("notes")} className="mt-3">
           <Textarea value={st.header.notes ?? ""} disabled={finalized} onChange={(e) => patchHeader("notes", e.target.value || null)} />
@@ -626,6 +812,10 @@ export function StatementEditor({
       >
         <p className="mb-3 text-sm text-muted-foreground">
           {t("summaryPeriod", { from: st.period_from, to: st.period_to, count: st.summary.booking_count })}
+          {" · "}
+          {st.property_ids && st.property_ids.length
+            ? t("objectsLine", { liste: st.objekte.map((o) => o.title ?? o.id).join(", ") })
+            : t("objectsAll")}
         </p>
         {/* Ein „—" allein sagt nur, DASS etwas fehlt. Diese Zeile sagt, WAS zu
             tun ist (Wurzel 5) — sonst sucht der Betreiber die Ursache einer
@@ -749,7 +939,15 @@ export function StatementEditor({
       )}
 
       {/* Rental activity */}
-      <RentalActivity statement={st} t={t} currency={cur} kanalLabels={kanalLabels} locale={locale} />
+      <RentalActivity
+        statement={st}
+        t={t}
+        currency={cur}
+        kanalLabels={kanalLabels}
+        locale={locale}
+        onSort={finalized ? undefined : sortieren}
+        onReorder={finalized ? undefined : spaltenOrdnen}
+      />
 
       {/* Expenses & extras */}
       {/* Verrechnungsposten hängen an einer gespeicherten Abrechnung
@@ -914,18 +1112,139 @@ export function StatementEditor({
 
 // --- Rental activity ---------------------------------------------------------
 
+// --- Spalten der Buchungstabelle -------------------------------------------
+//
+// Die Reservierungs-Ansicht ist eine SPALTENLISTE, keine fest verdrahtete
+// Zeile: Kopf, jede Buchungszeile und die Summenzeile laufen über dieselbe
+// Liste in derselben Reihenfolge. Nur so kann der Nutzer Spalten verschieben,
+// ohne dass Kopf und Zellen auseinanderlaufen. Ansage vom 07.09.2026: „ich
+// will das aber auch per drag and drop verschieben können".
+//
+// Die Reihenfolge steht AM BELEG (`statement.column_order`, 0605), nicht im
+// Browser: erst lag sie im localStorage wie die Panelbreiten des Website-
+// Editors — Ansage noch am selben Tag: „wenn wir es verschieben wird es nicht
+// an vorschau weitergeben". Editor, Vorschau und PDF lesen jetzt dieselbe
+// Liste, wie bei der Sortierung (0604).
+type Spalte = {
+  key: ColumnKey;
+  label: string;
+  right: boolean;
+  /** Schlüssel unter `info.*` — ℹ am Kopf. */
+  hilfe?: string;
+  /** Klickbar sortierbar (0604). */
+  sortKey?: SortKey;
+  sichtbar: boolean;
+  zellKlasse: string;
+  zelle: (r: RentalRow) => ReactNode;
+  summe: ReactNode;
+};
+
+/** Ein Spaltenkopf: sortierbar per Klick auf die Beschriftung, verschiebbar
+ *  am Griff. Zwei getrennte Bedienflächen, damit ein Klick zum Sortieren
+ *  nie als Ziehen beginnt und der Griff sichtbar sagt, wo man anfasst. */
+function SpaltenKopf({
+  spalte,
+  statement,
+  t,
+  onSort,
+  verschiebbar,
+}: {
+  spalte: Spalte;
+  statement: Statement;
+  t: ReturnType<typeof useTranslations>;
+  onSort?: (key: SortKey) => void;
+  /** false = finalisiert, Reihenfolge fest (wie die Sortierung). */
+  verschiebbar: boolean;
+}) {
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
+    useSortable({ id: spalte.key, disabled: !verschiebbar });
+  // Nur die X-Achse: Spaltenköpfe wandern waagerecht, ein Y-Versatz beim
+  // Ziehen ließe den Kopf aus der Kopfzeile fallen.
+  const style = {
+    transform: transform ? `translate3d(${Math.round(transform.x)}px, 0, 0)` : undefined,
+    transition,
+  };
+  const aktiv = spalte.sortKey !== undefined && statement.sort_key === spalte.sortKey;
+  const beschriftung =
+    spalte.sortKey && onSort ? (
+      <button
+        type="button"
+        onClick={() => onSort(spalte.sortKey as SortKey)}
+        aria-label={t("sort.aria", { spalte: spalte.label })}
+        aria-sort={aktiv ? (statement.sort_dir === "asc" ? "ascending" : "descending") : undefined}
+        className={`inline-flex items-center gap-1 uppercase hover:text-foreground ${aktiv ? "text-foreground" : ""}`}
+      >
+        {spalte.label}
+        <Icon
+          icon={
+            aktiv
+              ? statement.sort_dir === "asc"
+                ? "ph:caret-up"
+                : "ph:caret-down"
+              : "ph:caret-up-down"
+          }
+          className={`size-3 ${aktiv ? "" : "opacity-40"}`}
+        />
+      </button>
+    ) : (
+      spalte.label
+    );
+  return (
+    <th
+      ref={setNodeRef}
+      style={style}
+      className={`px-3 py-2 text-center font-medium ${
+        isDragging ? "z-20 rounded bg-accent/15 opacity-60 ring-2 ring-accent" : ""
+      }`}
+    >
+      {/* Alles mittig — Kopf, Zellen, Summen (Ansage 07.09.2026: „bitte auch
+          alles mittig zentrieren in der tabelle"). `spalte.right` bleibt
+          als Information erhalten, entscheidet aber nicht mehr die Lage. */}
+      <span className="flex items-center justify-center gap-1">
+        {/* Der Griff ist die sichtbare Aufforderung zum Ziehen — voll deckend
+            und groß genug, dass man ihn als Bedienfläche erkennt. Ansage vom
+            07.09.2026: „man erkennt das verschieben nicht" (vorher 12 px,
+            halbtransparent). */}
+        {verschiebbar && (
+          <button
+            ref={setActivatorNodeRef}
+            type="button"
+            {...attributes}
+            {...listeners}
+            aria-label={t("rental.dragColumn", { spalte: spalte.label })}
+            title={t("rental.dragColumn", { spalte: spalte.label })}
+            className="cursor-grab rounded border border-border bg-secondary p-0.5 text-muted-foreground hover:border-accent hover:bg-accent/10 hover:text-foreground active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Icon icon="ph:dots-six-vertical" className="size-4" />
+          </button>
+        )}
+        {beschriftung}
+        {spalte.hilfe && (
+          <InfoHinweis text={t(spalte.hilfe)} ariaLabel={t("info.aria", { feld: spalte.label })} />
+        )}
+      </span>
+    </th>
+  );
+}
+
 function RentalActivity({
   statement,
   t,
   currency,
   kanalLabels,
   locale,
+  onSort,
+  onReorder,
 }: {
   statement: Statement;
   t: ReturnType<typeof useTranslations>;
   currency: string;
   kanalLabels: Record<string, string>;
   locale: string;
+  /** Spaltenkopf geklickt (0604). `undefined` = finalisiert, Sortierung fest. */
+  onSort?: (key: SortKey) => void;
+  /** Spalte verschoben (0605); leere Liste = Standard. `undefined` = fest. */
+  onReorder?: (order: ColumnKey[]) => void;
 }) {
   const [view, setView] = useState<"reservation" | "listing">("reservation");
   // Aufgeklappte Posten-Blöcke je Buchung. Standard ZU: die Tabelle bleibt
@@ -950,31 +1269,163 @@ function RentalActivity({
   // und eine Spalte voller „—" wäre nur Rauschen.
   const zeigtBetrieb = rows.some((r) => r.total_price !== null);
   const zeigtPauschale = rows.some((r) => (r.pauschale ?? 0) !== 0);
-  const kanal = (r: RentalRow) => r.ota_name ?? kanalLabels[r.channel] ?? r.channel;
+  // EINE Schreibweise je Portal (13.7): der Feed schreibt `BookingCom`, der
+  // CSV-Import `Booking.com` — derselbe Normalisierer wie in der Buchungskarte
+  // und im Beleg (`channelLabelLoose`), damit alle drei gleich heißen.
+  const kanal = (r: RentalRow) =>
+    r.ota_name ? channelLabelLoose(r.ota_name) : (kanalLabels[r.channel] ?? r.channel);
+  const ownerCur = statement.summary.owner_currency || currency;
+
+  // --- Spaltenliste (Reservierungs-Ansicht) ---------------------------------
+  // Reihenfolge vom BELEG (0605); der Server liefert sie immer vollständig.
+  const reihenfolge: ColumnKey[] = statement.column_order;
+  const istStandard = reihenfolge.every((k, i) => COLUMN_ORDER_STANDARD[i] === k);
+  const zuruecksetzen = () => onReorder?.([]);
   // `hilfe` = Schlüssel unter `info.*`. Jede Spalte, deren Bedeutung nicht aus
   // dem Wort hervorgeht, bekommt ein ℹ-Symbol daneben — Ansage des Betriebs am
   // 07.09.2026: „Eigentümer- und Berechnungsseite brauchen einfache Hilfetexte,
-  // das versteht keiner." Ohne sie muss man die Rechenkette kennen, um zu
-  // wissen, ob „Provision" die des Portals oder die des Betriebs ist.
-  const th = (label: string, right = false, extra = "", hilfe?: string) => (
-    <th className={`py-2 pr-4 font-medium ${right ? "text-right" : ""} ${extra}`}>
-      {hilfe ? (
-        <span
-          className={`flex items-center gap-1.5 ${right ? "justify-end" : ""}`}
-        >
-          {label}
-          <InfoHinweis
-            text={t(hilfe)}
-            ariaLabel={t("info.aria", { feld: label })}
-          />
+  // das versteht keiner."
+  const definitionen: Record<ColumnKey, Spalte> = {
+    guest: {
+      key: "guest", label: t("rental.guest"), right: false, sortKey: "guest", sichtbar: true,
+      zellKlasse: "px-3 py-2 text-center text-accent",
+      zelle: (r) => r.guest ?? "—",
+      summe: t("rental.totals"),
+    },
+    listing: {
+      key: "listing", label: t("rental.listing"), right: false, sortKey: "property", sichtbar: true,
+      zellKlasse: "px-3 py-2 text-center text-accent",
+      zelle: (r) => r.listing ?? "—",
+      summe: null,
+    },
+    check_in: {
+      key: "check_in", label: t("rental.arrival"), right: false, sortKey: "check_in", sichtbar: true,
+      zellKlasse: "px-3 py-2 text-center whitespace-nowrap",
+      zelle: (r) => datumKurz(r.check_in, locale),
+      summe: null,
+    },
+    check_out: {
+      key: "check_out", label: t("rental.departure"), right: false, sortKey: "check_out", sichtbar: true,
+      zellKlasse: "px-3 py-2 text-center whitespace-nowrap",
+      zelle: (r) => datumKurz(r.check_out, locale),
+      summe: null,
+    },
+    nights: {
+      key: "nights", label: t("rental.nights"), right: true, sichtbar: true,
+      zellKlasse: "px-3 py-2 text-center",
+      zelle: (r) => r.nights,
+      summe: totalNights,
+    },
+    channel: {
+      key: "channel", label: t("rental.channel"), right: false, hilfe: "info.channel", sortKey: "channel", sichtbar: true,
+      zellKlasse: "px-3 py-2 text-center",
+      zelle: (r) => (
+        <span className="flex items-center justify-center gap-1.5">
+          <span className={`size-2 rounded-full ${CHANNEL_DOT[r.channel] ?? "bg-muted-foreground"}`} />
+          {kanal(r)}
         </span>
-      ) : (
-        label
-      )}
-    </th>
+      ),
+      summe: null,
+    },
+    gross: {
+      key: "gross", label: t("rental.totalPrice"), right: true, hilfe: "info.totalPrice", sortKey: "gross", sichtbar: zeigtBetrieb,
+      zellKlasse: "px-3 py-2 text-center",
+      zelle: (r) => (
+        <span className="inline-flex items-center justify-center gap-1.5">
+          {betragOderStrich(r.total_price, r.currency)}
+          <GebuehrenHerkunft zeile={r} />
+        </span>
+      ),
+      summe: betragOderStrich(statement.summary.total_price, currency),
+    },
+    portal: {
+      key: "portal", label: t("rental.portalDeduction"), right: true, hilfe: "info.portalDeduction", sichtbar: zeigtBetrieb,
+      zellKlasse: "px-3 py-2 text-center",
+      zelle: (r) => {
+        const portalAbzug =
+          r.portal_provision === null && r.portal_zahlungsgebuehr === null
+            ? null
+            : (r.portal_provision ?? 0) + (r.portal_zahlungsgebuehr ?? 0);
+        return portalAbzug === null || portalAbzug === 0 ? "—" : `−${formatCurrency(portalAbzug, r.currency)}`;
+      },
+      summe: null,
+    },
+    commission: {
+      key: "commission", label: t("rental.commission"), right: true, hilfe: "info.commission", sichtbar: true,
+      zellKlasse: "px-3 py-2 text-center",
+      zelle: (r) => (
+        // `whitespace-nowrap`: Betrag und Satz gehören in EINE Zeile — vorher
+        // brach „20 %" unter den Betrag um (Screenshot 07.09.2026).
+        <span className="whitespace-nowrap">
+          {r.verwaltungsprovision === null ? "—" : `−${formatCurrency(r.verwaltungsprovision, r.currency)}`}
+          {r.provisions_pct !== null && (
+            <span className="ml-1 text-xs text-muted-foreground">{prozent(r.provisions_pct)}</span>
+          )}
+        </span>
+      ),
+      summe: null,
+    },
+    flat_fee: {
+      key: "flat_fee", label: t("rental.flatFee"), right: true, hilfe: "info.flatFee", sichtbar: zeigtPauschale,
+      zellKlasse: "px-3 py-2 text-center",
+      zelle: (r) => ((r.pauschale ?? 0) === 0 ? "—" : `−${formatCurrency(r.pauschale ?? 0, r.currency)}`),
+      summe:
+        statement.summary.pauschalen_gesamt === null
+          ? "—"
+          : `−${formatCurrency(statement.summary.pauschalen_gesamt, ownerCur)}`,
+    },
+    owner_payout: {
+      key: "owner_payout", label: t("rental.ownerShare"), right: true, hilfe: "info.ownerShare", sortKey: "owner_payout", sichtbar: true,
+      zellKlasse: "px-3 py-2 text-center font-semibold",
+      zelle: (r) => (
+        <>
+          {betragOderStrich(r.owner_payout, r.currency)}
+          {/* Der Anteil NUR bei Miteigentum (0601): bei 100 % wäre „100 %" an
+              jeder Zeile Lärm, der die Ausnahme unsichtbar macht. Steht direkt
+              am Betrag, weil er ihn erklärt. */}
+          {r.ownership_share !== null && r.ownership_share < 100 && (
+            <span className="block text-xs font-normal text-muted-foreground">
+              {t("rental.ownershipShare")} {prozent(r.ownership_share)}
+            </span>
+          )}
+          {r.owner_payout_converted !== null && r.currency !== ownerCur && (
+            <span className="block text-xs font-normal text-muted-foreground">
+              {formatCurrency(r.owner_payout_converted, ownerCur)}
+            </span>
+          )}
+        </>
+      ),
+      summe: betragOderStrich(statement.summary.owner_payout, ownerCur),
+    },
+  };
+  const sichtbare = reihenfolge.map((k) => definitionen[k]).filter((sp) => sp.sichtbar);
+  // Aufklapp-Zeile spannt alle Spalten plus die Knopfspalte.
+  const spalten = sichtbare.length + 1;
+
+  // --- Drag-and-drop der Spaltenköpfe ---------------------------------------
+  const sensors = useSensors(
+    // Kleine Distanz, damit ein Klick auf den Griff (Fokus) kein Ziehen ist.
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
-  const spalten =
-    6 + (zeigtBetrieb ? 2 : 0) + 1 + (zeigtPauschale ? 1 : 0) + 1;
+  const labelVon = (id: unknown) => definitionen[id as ColumnKey]?.label ?? String(id);
+  // Die gerade gezogene Spalte — für das schwebende Schild (`DragOverlay`).
+  // Ohne es sieht man beim Ziehen nur ein leichtes Verrutschen der Köpfe;
+  // das Schild folgt dem Zeiger und sagt unmissverständlich, WAS man hält.
+  const [gezogen, setGezogen] = useState<ColumnKey | null>(null);
+  const onDragStart = (event: DragStartEvent) => setGezogen(event.active.id as ColumnKey);
+  const onDragEnd = (event: DragEndEvent) => {
+    setGezogen(null);
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    // In der VOLLEN Liste verschieben, nicht nur in den sichtbaren: eine
+    // gerade unsichtbare Spalte (z. B. Pauschale ohne Vertrag) behält ihren
+    // Platz und taucht dort wieder auf.
+    const von = reihenfolge.indexOf(active.id as ColumnKey);
+    const nach = reihenfolge.indexOf(over.id as ColumnKey);
+    if (von < 0 || nach < 0) return;
+    onReorder?.(arrayMove(reihenfolge, von, nach));
+  };
 
   return (
     <Section
@@ -982,6 +1433,12 @@ function RentalActivity({
       defaultOpen
       right={
         <div className="flex flex-wrap items-center gap-2">
+          {view === "reservation" && !istStandard && onReorder && (
+            <Button variant="ghost" size="sm" onClick={zuruecksetzen}>
+              <Icon icon="ph:arrow-counter-clockwise" className="size-4" />
+              {t("rental.columnsReset")}
+            </Button>
+          )}
           {view === "reservation" && rows.length > 0 && (
             <Button
               variant="ghost"
@@ -1013,180 +1470,141 @@ function RentalActivity({
         </div>
       }
     >
+      {view === "reservation" && rows.length > 0 && onReorder && (
+        <p className="mb-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Icon icon="ph:dots-six-vertical" className="size-4" />
+          {t("rental.dragHint")}
+        </p>
+      )}
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border text-left text-xs uppercase text-muted-foreground">
-              {view === "reservation" ? (
-                <>
-                  {th(t("rental.guest"))}
-                  {th(t("rental.listing"))}
-                  {th(t("rental.arrival"))}
-                  {th(t("rental.departure"))}
-                  {th(t("rental.nights"), true)}
-                  {th(t("rental.channel"), false, "", "info.channel")}
-                  {zeigtBetrieb && (
-                    <th className="py-2 pr-4 text-right font-medium">
-                      <span className="flex items-center justify-end gap-1.5">
-                        {t("rental.totalPrice")}
-                        <InfoHinweis
-                          text={t("info.totalPrice")}
-                          ariaLabel={t("info.aria", { feld: t("rental.totalPrice") })}
-                        />
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
+          onDragCancel={() => setGezogen(null)}
+          accessibility={{
+            // Deutsche Ansagen statt der englischen Vorgabe von dnd-kit.
+            announcements: {
+              onDragStart: ({ active }) => t("rental.dndStart", { spalte: labelVon(active.id) }),
+              onDragOver: ({ active, over }) =>
+                over
+                  ? t("rental.dndOver", { spalte: labelVon(active.id), ziel: labelVon(over.id) })
+                  : t("rental.dndOverNichts", { spalte: labelVon(active.id) }),
+              onDragEnd: ({ active, over }) =>
+                over
+                  ? t("rental.dndEnd", { spalte: labelVon(active.id), ziel: labelVon(over.id) })
+                  : t("rental.dndCancel", { spalte: labelVon(active.id) }),
+              onDragCancel: ({ active }) => t("rental.dndCancel", { spalte: labelVon(active.id) }),
+            },
+            screenReaderInstructions: { draggable: t("rental.dndAnleitung") },
+          }}
+        >
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border text-left text-xs uppercase text-muted-foreground">
+                {view === "reservation" ? (
+                  <SortableContext items={sichtbare.map((sp) => sp.key)} strategy={horizontalListSortingStrategy}>
+                    {sichtbare.map((sp) => (
+                      <SpaltenKopf
+                        key={sp.key}
+                        spalte={sp}
+                        statement={statement}
+                        t={t}
+                        onSort={onSort}
+                        verschiebbar={Boolean(onReorder)}
+                      />
+                    ))}
+                    <th className="py-2 pl-2" />
+                  </SortableContext>
+                ) : (
+                  <>
+                    <th className="px-3 py-2 text-center font-medium">{t("rental.listing")}</th>
+                    <th className="px-3 py-2 text-center font-medium">{t("rental.reservations")}</th>
+                    <th className="px-3 py-2 text-center font-medium">{t("rental.nights")}</th>
+                    <th className="px-3 py-2 text-center font-medium">{t("rental.totalPrice")}</th>
+                    <th className="px-3 py-2 text-center font-medium">
+                      <span className="flex items-center justify-center gap-1.5">
+                        {t("rental.totalPayout")}
+                        <InfoHinweis text={t("info.totalPayout")} ariaLabel={t("info.aria", { feld: t("rental.totalPayout") })} />
                       </span>
                     </th>
-                  )}
-                  {zeigtBetrieb && th(t("rental.portalDeduction"), true, "", "info.portalDeduction")}
-                  {th(t("rental.commission"), true, "", "info.commission")}
-                  {zeigtPauschale && th(t("rental.flatFee"), true, "", "info.flatFee")}
-                  {th(t("rental.ownerShare"), true, "pr-0", "info.ownerShare")}
-                  <th className="py-2 pl-2" />
-                </>
-              ) : (
-                <>
-                  {th(t("rental.listing"))}
-                  {th(t("rental.reservations"))}
-                  {th(t("rental.nights"))}
-                  {th(t("rental.totalPrice"), true)}
-                  {th(t("rental.totalPayout"), true, "pr-0", "info.totalPayout")}
-                </>
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {view === "reservation"
-              ? rows.map((r) => {
-                  const rc = r.currency;
-                  const istOffen = offen.has(r.reservation_id);
-                  const portalAbzug =
-                    r.portal_provision === null && r.portal_zahlungsgebuehr === null
-                      ? null
-                      : (r.portal_provision ?? 0) + (r.portal_zahlungsgebuehr ?? 0);
-                  return (
-                    <Fragment key={r.reservation_id}>
-                      <tr className="border-b border-border">
-                        <td className="py-2 pr-4 text-accent">{r.guest ?? "—"}</td>
-                        <td className="py-2 pr-4 text-accent">{r.listing ?? "—"}</td>
-                        <td className="py-2 pr-4 whitespace-nowrap">{datumKurz(r.check_in, locale)}</td>
-                        <td className="py-2 pr-4 whitespace-nowrap">{datumKurz(r.check_out, locale)}</td>
-                        <td className="py-2 pr-4 text-right">{r.nights}</td>
-                        <td className="py-2 pr-4">
-                          <span className="flex items-center gap-1.5">
-                            <span className={`size-2 rounded-full ${CHANNEL_DOT[r.channel] ?? "bg-muted-foreground"}`} />
-                            {kanal(r)}
-                          </span>
-                        </td>
-                        {zeigtBetrieb && (
-                          <td className="py-2 pr-4 text-right">
-                            <span className="inline-flex items-center justify-end gap-1.5">
-                              {betragOderStrich(r.total_price, rc)}
-                              <GebuehrenHerkunft zeile={r} />
-                            </span>
-                          </td>
-                        )}
-                        {zeigtBetrieb && (
-                          <td className="py-2 pr-4 text-right">
-                            {portalAbzug === null || portalAbzug === 0 ? "—" : `−${formatCurrency(portalAbzug, rc)}`}
-                          </td>
-                        )}
-                        <td className="py-2 pr-4 text-right">
-                          {r.verwaltungsprovision === null ? "—" : `−${formatCurrency(r.verwaltungsprovision, rc)}`}
-                          {r.provisions_pct !== null && (
-                            <span className="ml-1 text-xs text-muted-foreground">{prozent(r.provisions_pct)}</span>
-                          )}
-                        </td>
-                        {zeigtPauschale && (
-                          <td className="py-2 pr-4 text-right">
-                            {(r.pauschale ?? 0) === 0 ? "—" : `−${formatCurrency(r.pauschale ?? 0, rc)}`}
-                          </td>
-                        )}
-                        <td className="py-2 text-right font-semibold">
-                          {betragOderStrich(r.owner_payout, rc)}
-                          {/* Der Anteil NUR bei Miteigentum (0601): bei 100 %
-                              wäre „100 %" an jeder Zeile Lärm, der die
-                              Ausnahme unsichtbar macht. Steht direkt am
-                              Betrag, weil er ihn erklärt — sonst sähe die
-                              Zahl gegenüber den anderen Zeilen zu klein aus,
-                              ohne dass der Grund zu sehen ist. */}
-                          {r.ownership_share !== null && r.ownership_share < 100 && (
-                            <span className="block text-xs font-normal text-muted-foreground">
-                              {t("rental.ownershipShare")} {prozent(r.ownership_share)}
-                            </span>
-                          )}
-                          {r.owner_payout_converted !== null &&
-                            rc !== (statement.summary.owner_currency || currency) && (
-                              <span className="block text-xs font-normal text-muted-foreground">
-                                {formatCurrency(r.owner_payout_converted, statement.summary.owner_currency || currency)}
-                              </span>
-                            )}
-                        </td>
-                        <td className="py-2 pl-2 text-right">
-                          <button
-                            type="button"
-                            onClick={() => toggle(r.reservation_id)}
-                            aria-expanded={istOffen}
-                            aria-label={istOffen ? t("rental.collapse") : t("rental.expand")}
-                            className="rounded p-1 text-muted-foreground hover:bg-secondary"
-                          >
-                            <Icon icon={istOffen ? "ph:caret-up" : "ph:caret-down"} className="size-4" />
-                          </button>
-                        </td>
-                      </tr>
-                      {istOffen && (
-                        <tr className="border-b border-border bg-secondary/30">
-                          <td colSpan={spalten} className="px-3 py-3">
-                            <PostenBlock zeile={r} kanal={kanal(r)} />
+                  </>
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {view === "reservation"
+                ? rows.map((r) => {
+                    const istOffen = offen.has(r.reservation_id);
+                    return (
+                      <Fragment key={r.reservation_id}>
+                        <tr className="border-b border-border">
+                          {sichtbare.map((sp) => (
+                            <td key={sp.key} className={sp.zellKlasse}>
+                              {sp.zelle(r)}
+                            </td>
+                          ))}
+                          <td className="py-2 pl-2 text-right">
+                            <button
+                              type="button"
+                              onClick={() => toggle(r.reservation_id)}
+                              aria-expanded={istOffen}
+                              aria-label={istOffen ? t("rental.collapse") : t("rental.expand")}
+                              className="rounded p-1 text-muted-foreground hover:bg-secondary"
+                            >
+                              <Icon icon={istOffen ? "ph:caret-up" : "ph:caret-down"} className="size-4" />
+                            </button>
                           </td>
                         </tr>
-                      )}
-                    </Fragment>
-                  );
-                })
-              : statement.listing_rows.map((r) => (
-                  <tr key={r.listing_id} className="border-b border-border">
-                    <td className="py-2 pr-4 text-accent">{r.listing ?? "—"}</td>
-                    <td className="py-2 pr-4">{r.reservations}</td>
-                    <td className="py-2 pr-4">{r.nights}</td>
-                    <td className="py-2 pr-4 text-right">{betragOderStrich(r.total_price, currency)}</td>
-                    <td className="py-2 text-right">{formatCurrency(r.total_payout, currency)}</td>
-                  </tr>
-                ))}
-            {view === "reservation" ? (
-              <tr className="font-bold">
-                <td className="py-2 pr-4">{t("rental.totals")}</td>
-                <td className="py-2 pr-4" />
-                <td className="py-2 pr-4" />
-                <td className="py-2 pr-4" />
-                <td className="py-2 pr-4 text-right">{totalNights}</td>
-                <td className="py-2 pr-4" />
-                {zeigtBetrieb && (
-                  <td className="py-2 pr-4 text-right">{betragOderStrich(statement.summary.total_price, currency)}</td>
-                )}
-                {zeigtBetrieb && <td className="py-2 pr-4" />}
-                <td className="py-2 pr-4" />
-                {zeigtPauschale && (
-                  <td className="py-2 pr-4 text-right">
-                    {statement.summary.pauschalen_gesamt === null
-                      ? "—"
-                      : `−${formatCurrency(statement.summary.pauschalen_gesamt, statement.summary.owner_currency || currency)}`}
-                  </td>
-                )}
-                <td className="py-2 text-right">
-                  {betragOderStrich(statement.summary.owner_payout, statement.summary.owner_currency || currency)}
-                </td>
-                <td />
-              </tr>
-            ) : (
-              <tr className="font-bold">
-                <td className="py-2 pr-4">{t("rental.totals")}</td>
-                <td className="py-2 pr-4" />
-                <td className="py-2 pr-4">{totalNights}</td>
-                <td className="py-2 pr-4 text-right">{betragOderStrich(statement.summary.total_price, currency)}</td>
-                <td className="py-2 text-right">{formatCurrency(statement.summary.total_payout, currency)}</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+                        {istOffen && (
+                          <tr className="border-b border-border bg-secondary/30">
+                            <td colSpan={spalten} className="px-3 py-3">
+                              <PostenBlock zeile={r} kanal={kanal(r)} />
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    );
+                  })
+                : statement.listing_rows.map((r) => (
+                    <tr key={r.listing_id} className="border-b border-border">
+                      <td className="px-3 py-2 text-center text-accent">{r.listing ?? "—"}</td>
+                      <td className="px-3 py-2 text-center">{r.reservations}</td>
+                      <td className="px-3 py-2 text-center">{r.nights}</td>
+                      <td className="px-3 py-2 text-center">{betragOderStrich(r.total_price, currency)}</td>
+                      <td className="px-3 py-2 text-center">{formatCurrency(r.total_payout, currency)}</td>
+                    </tr>
+                  ))}
+              {view === "reservation" ? (
+                <tr className="font-bold">
+                  {sichtbare.map((sp) => (
+                    <td key={sp.key} className="px-3 py-2 text-center">
+                      {sp.summe}
+                    </td>
+                  ))}
+                  <td />
+                </tr>
+              ) : (
+                <tr className="font-bold">
+                  <td className="px-3 py-2 text-center">{t("rental.totals")}</td>
+                  <td className="px-3 py-2" />
+                  <td className="px-3 py-2 text-center">{totalNights}</td>
+                  <td className="px-3 py-2 text-center">{betragOderStrich(statement.summary.total_price, currency)}</td>
+                  <td className="px-3 py-2 text-center">{formatCurrency(statement.summary.total_payout, currency)}</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+          <DragOverlay dropAnimation={null}>
+            {gezogen ? (
+              <div className="pointer-events-none flex items-center gap-2 rounded-full border border-accent bg-background px-3 py-1.5 text-xs font-medium uppercase text-foreground shadow-lg">
+                <Icon icon="ph:dots-six-vertical" className="size-4 text-accent" />
+                {labelVon(gezogen)}
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
         {rows.length === 0 && (
           <p className="py-4 text-sm text-muted-foreground">{t("rental.empty")}</p>
         )}

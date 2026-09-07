@@ -125,6 +125,14 @@ export async function POST(req: Request) {
     const pdfBase64 = Buffer.from(pdf).toString("base64");
     return NextResponse.json({ success: true, pdfBase64 });
   } catch (err) {
+    // Ins Server-Log, nicht nur in die Antwort: der Client zeigt die erste
+    // Zeile, das Log den ganzen Stack (Playwright liefert beim fehlenden
+    // Browser einen mehrzeiligen Hinweis samt Install-Befehl).
+    console.error("[generate-pdf-single] Rendering fehlgeschlagen", {
+      htmlBytes: Buffer.byteLength(htmlContent, "utf8"),
+      browsersPath: process.env.PLAYWRIGHT_BROWSERS_PATH ?? "(Standard)",
+      fehler: err instanceof Error ? err.message : String(err),
+    });
     return NextResponse.json(
       {
         success: false,

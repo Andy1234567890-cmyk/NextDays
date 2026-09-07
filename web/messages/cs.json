@@ -1503,7 +1503,13 @@
       "statusesSearch": "Hledat stav …",
       "statusesNoMatch": "Žádný stav nenalezen.",
       "statusesSelectAll": "Vybrat vše",
-      "statusesCount": "Vybráno {count} z {total}"
+      "statusesCount": "Vybráno {count} z {total}",
+      "properties": "Objekty",
+      "propertiesAll": "Všechny objekty",
+      "propertiesCount": "{count} z {total} objektů",
+      "propertiesSearch": "Hledat objekt…",
+      "propertiesNoMatch": "Nenalezen žádný objekt.",
+      "propertiesSelectAll": "Vybrat vše"
     },
     "reservationStatus": {
       "pending": "Otevřeno",
@@ -1640,7 +1646,16 @@
         "noContract": "Pro tento objekt neexistuje žádná smlouva o vyúčtování ani sazba provize v kmenových datech – vytvořte smlouvu u majitele.",
         "addonsOutside": "Doplňkové služby – prodávané přes myNextDays, nejsou zahrnuty v ceně pro hosta na portálu"
       },
-      "ownershipShare": "Podíl"
+      "ownershipShare": "Podíl",
+      "dragColumn": "Přesunout sloupec {spalte}",
+      "columnsReset": "Obnovit pořadí sloupců",
+      "dndStart": "Sloupec {spalte} byl vybrán.",
+      "dndOver": "Sloupec {spalte} nad {ziel}.",
+      "dndOverNichts": "Sloupec {spalte} mimo tabulku.",
+      "dndEnd": "Sloupec {spalte} byl umístěn na pozici {ziel}.",
+      "dndCancel": "Přesun sloupce {spalte} byl zrušen.",
+      "dndAnleitung": "Stisknutím mezerníku nebo klávesy Enter vyberte sloupec. Pomocí kláves se šipkami jej přesuňte, mezerníkem nebo klávesou Enter jej umístěte, klávesou Escape zrušte akci.",
+      "dragHint": "Přetažením za úchyt změníte pořadí – také pomocí klávesnice: zaměřte úchyt, mezerník, šipky."
     },
     "expenses": {
       "add": "Přidat",
@@ -1691,7 +1706,10 @@
       "status": "Stav",
       "open": "Otevřít",
       "emptyTitle": "Žádná vyúčtování",
-      "emptyHint": "Vytvořte první vyúčtování vlastníka v sekci „Vytvořit a upravit“."
+      "emptyHint": "Vytvořte první vyúčtování vlastníka v sekci „Vytvořit a upravit“.",
+      "objects": "Objekty",
+      "allObjects": "všechny objekty",
+      "objectsCount": "{count} objektů"
     },
     "edit": "Upravit",
     "attachments": {
@@ -1740,7 +1758,10 @@
       "commission": "Provize provozovatele za správu objektu. Počítá se z částky, která zbude po odečtení portálu – a vzniká u KAŽDÉ rezervace, i u té přes vlastní web.",
       "flatFee": "Pevná částka ze smlouvy o správě, například za vedlejší náklady. Podle dohody se odečítá před nebo po provizi.",
       "ownerShare": "Co nakonec zbude pro majitele: cena hosta minus odečet portálu, minus provize, minus paušál, plus poplatky, které mu náleží. V případě spoluvlastnictví navíc vynásobeno jeho podílem.",
-      "ownershipShare": "Podíl tohoto majitele na objektu. 100 % znamená výhradní vlastnictví. Pokud dům patří více osobám, každá obdrží vlastní vyúčtování svého podílu – podíly dohromady tvoří 100 %."
+      "ownershipShare": "Podíl tohoto majitele na objektu. 100 % znamená výhradní vlastnictví. Pokud dům patří více osobám, každá obdrží vlastní vyúčtování svého podílu – podíly dohromady tvoří 100 %.",
+      "properties": "Které objekty tato fakturace zahrnuje. Standardně jsou to všechny objekty majitele. Vyberte jednotlivé, abyste fakturovali pouze pro ně. Každý objekt může být v daném období pouze v jedné finalizované faktuře – rezervace nebude nikdy vyplacena dvakrát.",
+      "language": "V tomto jazyce bude vytvořen doklad – texty, čísla a datum. Přednastaveno z jazyka majitele, jinak z jazyka provozovny. Po finalizaci je pevně daný; doklad zůstane tak, jak byl vystaven.",
+      "headerFromMaster": "Přebírá jméno, adresu, e-mail, telefon a daňové identifikační číslo majitele a provozovny nově z kmenových dat. Číslo faktury a poznámky tohoto dokladu zůstávají."
     },
     "finalizeConfirm": {
       "title": "Uzavřít vyúčtování",
@@ -1778,7 +1799,21 @@
       "title": "Spoluvlastník",
       "hint": "Tyto nemovitosti vlastní více osob. Každá obdrží vlastní vyúčtování svého podílu.",
       "share": "{anteil} %"
-    }
+    },
+    "language": {
+      "label": "Jazyk dokladu"
+    },
+    "sort": {
+      "aria": "Seřadit podle {spalte}",
+      "ascending": "vzestupně",
+      "descending": "sestupně"
+    },
+    "belegIn": "Doklad v {sprache}",
+    "headerFromMaster": "Převzít z kmenových dat",
+    "headerFromMasterDone": "Údaje záhlaví byly převzaty z kmenových dat.",
+    "objectsLine": "Objekty: {liste}",
+    "objectsAll": "Objekty: všechny",
+    "loading": "Načítání…"
   },
   "ownerBilling": {
     "title": "Smlouva o vyúčtování",
@@ -13113,7 +13148,6 @@
     "mixedCurrency": "Více měn v období ({list}) – částky se nesčítají. Omezte prosím na jeden objekt nebo jednu měnu.",
     "occupancyFootnote": "Obsazeno je obsazeno – ať už přes portál, vlastní webové stránky, vytvořené vámi nebo majitelem. Z jmenovatele vypadnou pouze dny, kdy objekt nebyl v prodeji: zablokované dny a stop-sell.",
     "kpiFootnote": "Procentuální hodnota na každé dlaždici porovnává se stejným předchozím obdobím. Kliknutím na dlaždici otevřete časovou řadu.",
-    "commissionFootnote": "Prázdná pole provizí znamenají, že portál neposkytuje provizi (Booking.com to většinou nedělá) – nic se neodhaduje.",
     "tab": {
       "kennzahlen": "Klíčové ukazatele",
       "analytics": "Přehled",
@@ -13331,7 +13365,7 @@
     },
     "expenses": {
       "empty": "V tomto období nejsou žádné transakční položky.",
-      "emptyHint": "Výdaje a doplňky vznikají ve vyúčtování majitele a z objednaných služeb.",
+      "emptyHint": "Náklady a doplňkové služby vznikají ve vyúčtování majitele, z objednaných služeb a z rezervovaných doplňkových služeb.",
       "expenses": "Výdaje",
       "extras": "Doplňky",
       "balance": "Zůstatek",
@@ -13346,7 +13380,11 @@
         "ausgabe": "Výdaj",
         "extra": "Doplněk"
       },
-      "footnote": "Období je datum položky. Výdaje jdou na vrub majitele, doplňky v jeho prospěch — tak, jak jsou uvedeny ve vyúčtování."
+      "footnote": "Obdobím je datum položky; doplňkové služby následují po rezervaci. Náklady jdou na vrub majitele, doplňkové služby v jeho prospěch – tak, jak jsou uvedeny ve vyúčtování.",
+      "category": {
+        "service": "Objednaná služba",
+        "addon": "Doplňková služba"
+      }
     },
     "pace": {
       "title": "Stav rezervací na příštích 12 měsíců",
@@ -15549,5 +15587,59 @@
       "anzahlung": "Záloha musí být vyšší než 0 a nesmí být vyšší než celková částka.",
       "entwurfAngelegt": "Nabídka je vytvořena jako návrh, e-mail nebyl odeslán: {grund}"
     }
+  },
+  "statementPdf": {
+    "invoice": "Vyúčtování pro majitele",
+    "storno": "Storno faktury",
+    "invoiceNo": "Č.",
+    "issuer": "Vystavil",
+    "owner": "Majitel",
+    "vatId": "DIČ",
+    "period": "Období",
+    "objects": "Objekty",
+    "allObjects": "všechny objekty",
+    "bookings": "Rezervace",
+    "listing": "Objekt",
+    "guest": "Host",
+    "arrival": "Příjezd",
+    "departure": "Odjezd",
+    "nights": "Nocí",
+    "channel": "Kanál",
+    "commission": "Provize",
+    "flatFee": "Paušál",
+    "ownerShare": "Podíl majitele",
+    "noBookings": "V daném období nejsou žádné rezervace.",
+    "breakdownTitle": "Rozpis dle rezervace",
+    "posAfterPortal": "Celková částka po odečtení portálu",
+    "posAfterPortalHint": "Cena pro hosta po odečtení provize portálu a poplatku za platbu portálu",
+    "posCommission": "Provize za správu",
+    "posMinCommission": "Místo minimální provize (smlouva)",
+    "posContractFrom": "Smlouva od",
+    "posRateManual": "manuálně v tomto vyúčtování",
+    "posRateLegacy": "Standardní sazba z kmenových dat",
+    "posFlatFee": "Paušál za rezervaci/noc (smlouva)",
+    "posFeesBack": "Vaše poplatky – nezkrácené, bez provize",
+    "posOwnerShare": "= Podíl majitele",
+    "posRate": "Kurz",
+    "commissionable": "podléhající provizi",
+    "noFeesReported": "Portál k této rezervaci nenahlásil žádné poplatky; proto nebyly žádné účtovány.",
+    "deductionsTitle": "Srážky a dobropisy",
+    "deductions": "Srážky (na úkor majitele)",
+    "credits": "Dobropisy (ve prospěch majitele)",
+    "srcExpense": "Položky zúčtování",
+    "srcRecurring": "opakující se",
+    "receipt": "Doklad",
+    "perBooking": "za rezervaci",
+    "perNight": "za noc",
+    "perPeriod": "za období",
+    "sumShares": "Celkový podíl vlastníka z rezervací",
+    "sumFlatFees": "Paušální poplatky dle smlouvy",
+    "sumFlatFeesNote": "již zahrnuto v podílech – žádné další srážky",
+    "sumDeductions": "Srážky",
+    "sumCredits": "Kredity",
+    "sumOwnerPayout": "Výplata vlastníkovi",
+    "vat": "DPH",
+    "vatNet": "Administrativní provize netto",
+    "vatGross": "Administrativní provize brutto"
   }
 }

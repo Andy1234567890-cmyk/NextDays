@@ -7,6 +7,26 @@ import { ApiError, api } from "@/lib/api";
 import { currentToken } from "@/lib/session-token";
 
 export type StatementBasis = "check_in" | "check_out";
+/** Sortierspalte der Buchungszeilen (0604) — deckungsgleich mit Pydantic
+ *  `SortKey` und dem DB-CHECK. Gespeichert je Abrechnung, damit Vorschau,
+ *  Editor und Beleg dieselbe Reihenfolge zeigen. */
+export type SortKey =
+  | "check_in"
+  | "check_out"
+  | "property"
+  | "guest"
+  | "channel"
+  | "gross"
+  | "owner_payout";
+export type SortDir = "asc" | "desc";
+// Spaltentyp aus der Nachbardatei — NUR der Typ (zur Laufzeit weg). Der
+// Wert COLUMN_ORDER_STANDARD liegt bewusst dort: ein Wert-Export in diesem
+// "use server"-Modul ist ein 500 auf jeder Seite, die es importiert (live am
+// 07.09.2026, MEMORY „use-server-nur-async-funktionen").
+import type { ColumnKey } from "@/lib/owner-statements-spalten";
+export type { ColumnKey } from "@/lib/owner-statements-spalten";
+/** Ein Objekt der Abrechnung mit Titel (0603). */
+export type ObjektKurz = { id: string; title: string | null };
 export type StatementStatus = "draft" | "finalized" | "cancelled";
 export type StatementKind = "invoice" | "cancellation";
 
@@ -325,6 +345,18 @@ export type Statement = {
    *  Alleineigentum. Reine Auskunft: steht auf der Abrechnung ein Anteil von
    *  60 %, muss sichtbar sein, wem die anderen 40 % gehören. */
   miteigentuemer: Miteigentuemer[];
+  /** 0603: `null` = alle Objekte des Eigentümers; gesetzt = genau diese. */
+  property_ids: string[] | null;
+  /** Die Objekte der Abrechnung MIT Titel — für Beleg-Kopf und Liste. */
+  objekte: ObjektKurz[];
+  /** 0604: Sprache des Belegs (ISO 639-1). Immer gesetzt — der Server löst
+   *  die Kette Eigentümer → Betrieb → en auf. Zahlen, Datum und Texte des
+   *  Belegs folgen DIESER Sprache, nicht der des Betrachters. */
+  language: string;
+  sort_key: SortKey;
+  sort_dir: SortDir;
+  /** 0605: immer vollständig; Standard, wenn nichts gespeichert. */
+  column_order: ColumnKey[];
   created_at: string | null;
   updated_at: string | null;
 };
@@ -343,6 +375,8 @@ export type StatementListItem = {
   pm_payout: number | null;
   currency: string;
   invoice_number: string | null;
+  /** 0603: `null` = alle Objekte. */
+  property_ids: string[] | null;
   created_at: string | null;
 };
 
@@ -381,6 +415,13 @@ export async function generateStatement(input: {
   period_to: string;
   basis?: StatementBasis;
   reservation_statuses?: string[];
+  /** 0603: leer/undefined = alle Objekte. */
+  property_ids?: string[] | null;
+  /** 0604: undefined = Kette Eigentümer → Betrieb → en. */
+  language?: string | null;
+  sort_key?: SortKey;
+  sort_dir?: SortDir;
+  column_order?: ColumnKey[];
   commission_pct?: number | null;
 }): Promise<Result<Statement>> {
   return call("/owner-statements", { method: "POST", body: input });
@@ -394,6 +435,11 @@ export async function previewStatement(input: {
   period_to: string;
   basis?: StatementBasis;
   reservation_statuses?: string[];
+  property_ids?: string[] | null;
+  language?: string | null;
+  sort_key?: SortKey;
+  sort_dir?: SortDir;
+  column_order?: ColumnKey[];
   commission_pct?: number | null;
 }): Promise<Result<Statement>> {
   return call("/owner-statements/preview", { method: "POST", body: input });
@@ -403,11 +449,20 @@ export async function updateStatement(
   id: string,
   input: {
     header?: Partial<StatementHeader>;
+    /** 13.4: Kopf aus den Stammdaten neu übernehmen (Nummer/Notizen bleiben). */
+    header_aus_stammdaten?: boolean;
     commission_pct?: number | null;
     basis?: StatementBasis;
     reservation_statuses?: string[];
     period_from?: string;
     period_to?: string;
+    /** 0603: LEERE Liste = zurück auf „alle Objekte". undefined = unverändert. */
+    property_ids?: string[];
+    language?: string;
+    sort_key?: SortKey;
+    sort_dir?: SortDir;
+    /** 0605: LEERE Liste = zurück auf Standard. */
+    column_order?: ColumnKey[];
   },
 ): Promise<Result<Statement>> {
   return call(`/owner-statements/${id}`, { method: "PATCH", body: input });

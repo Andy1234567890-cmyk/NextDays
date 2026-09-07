@@ -10,6 +10,7 @@
 import { useTranslations } from "next-intl";
 
 import { Card } from "@nextdays/ui/card";
+import { KanalLogo, hatWortlogo } from "@/components/kanal-logo";
 import { formatCurrency } from "@/lib/currency";
 import type { Auswertung } from "@/lib/auswertung-typen";
 import type { AvailabilitySource } from "@/lib/calendar";
@@ -38,6 +39,16 @@ export function ReiterStornos({ a }: { a: Auswertung }) {
   const pct = (val: number | null) => (val === null ? "—" : `${val} %`);
   const kanalName = (channel: string, ota: string | null) =>
     ota ? channelLabelLoose(ota) : channelLabel(channel as AvailabilitySource);
+  // Dieselbe Darstellung wie im Reiter „Kanäle": echtes Portal-Logo vor dem
+  // Namen, und wo es keines gibt („Direkt"), steht der Name allein.
+  // Wortlogo ersetzt den Namen (der Schriftzug sagt ihn bereits); wo es keines
+  // gibt („Direkt"), stehen Symbol UND Name.
+  const kanalZelle = (channel: string, ota: string | null) => (
+    <span className="flex items-center gap-2">
+      <KanalLogo name={ota || channel} />
+      {!hatWortlogo(ota || channel) && kanalName(channel, ota)}
+    </span>
+  );
   // Die Quote je Kanal braucht die gültigen Buchungen je Kanal aus der
   // Kanaltabelle — beide Tabellen liegen im selben Bericht.
   const gueltigJeKanal = new Map(a.kanaele.map((k) => [k.channel, k.buchungen]));
@@ -98,7 +109,7 @@ export function ReiterStornos({ a }: { a: Auswertung }) {
                   const quote = gueltig + k.stornos ? Math.round((k.stornos * 10000) / (gueltig + k.stornos)) / 100 : null;
                   return (
                     <tr key={k.channel} className="border-b border-border last:border-0">
-                      <td className="px-3 py-2">{kanalName(k.channel, k.ota_name)}</td>
+                      <td className="px-3 py-2">{kanalZelle(k.channel, k.ota_name)}</td>
                       <td className="px-3 py-2 text-right font-medium tabular-nums">{k.stornos}</td>
                       <td className="px-3 py-2 text-right tabular-nums">{pct(quote)}</td>
                       <td className="px-3 py-2 text-right tabular-nums">{k.naechte}</td>

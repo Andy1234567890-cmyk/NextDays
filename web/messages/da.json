@@ -1503,7 +1503,13 @@
       "statusesSearch": "Søg status …",
       "statusesNoMatch": "Ingen status fundet.",
       "statusesSelectAll": "Vælg alle",
-      "statusesCount": "{count} af {total} valgt"
+      "statusesCount": "{count} af {total} valgt",
+      "properties": "Ejendomme",
+      "propertiesAll": "Alle ejendomme",
+      "propertiesCount": "{count} af {total} ejendomme",
+      "propertiesSearch": "Søg ejendom …",
+      "propertiesNoMatch": "Ingen ejendom fundet.",
+      "propertiesSelectAll": "Vælg alle"
     },
     "reservationStatus": {
       "pending": "Åben",
@@ -1640,7 +1646,16 @@
         "noContract": "Der er ingen afregningsaftale og ingen provisionssats for denne ejendom i stamdataene – opret en aftale hos ejeren.",
         "addonsOutside": "Tillægsydelser — solgt via myNextDays, ikke inkluderet i portalens gæstepris"
       },
-      "ownershipShare": "Andel"
+      "ownershipShare": "Andel",
+      "dragColumn": "Flyt kolonne {spalte}",
+      "columnsReset": "Nulstil kolonne-rækkefølge",
+      "dndStart": "{spalte} valgt.",
+      "dndOver": "{spalte} over {ziel}.",
+      "dndOverNichts": "{spalte} uden for tabellen.",
+      "dndEnd": "{spalte} droppet i stedet for {ziel}.",
+      "dndCancel": "Flytning af {spalte} annulleret.",
+      "dndAnleitung": "Tryk på mellemrum eller enter for at vælge en kolonne. Brug piletasterne til at flytte, mellemrum eller enter for at slippe, og escape for at annullere.",
+      "dragHint": "Træk i håndtagene for at ændre rækkefølgen – også med tastaturet: fokusér på håndtaget, tryk på mellemrumstasten, brug piletasterne."
     },
     "expenses": {
       "add": "Tilføj",
@@ -1691,7 +1706,10 @@
       "status": "Status",
       "open": "Åbn",
       "emptyTitle": "Ingen afregninger",
-      "emptyHint": "Opret din første ejerafregning under „Opret & rediger“."
+      "emptyHint": "Opret din første ejerafregning under „Opret & rediger“.",
+      "objects": "Ejendomme",
+      "allObjects": "Alle ejendomme",
+      "objectsCount": "{count} ejendom(me)"
     },
     "edit": "Rediger",
     "attachments": {
@@ -1740,7 +1758,10 @@
       "commission": "Virksomhedens provision for administration af ejendommen. Den beregnes ud fra det beløb, der er tilbage efter portalens fradrag – og opkræves ved HVER booking, også ved en via egen hjemmeside.",
       "flatFee": "Et fast beløb fra administrationsaftalen, f.eks. for driftsomkostninger. Afhængigt af aftalen trækkes det fra før eller efter provisionen.",
       "ownerShare": "Hvad der i sidste ende er tilbage til ejeren: Gæstepris minus portalfradrag, minus provision, minus fast beløb, plus de gebyrer, der tilhører ham. Ved sameje multipliceres det desuden med hans andel.",
-      "ownershipShare": "Denne ejers andel af ejendommen. 100 % betyder eneejerskab. Hvis et hus tilhører flere personer, får hver sin egen afregning for sin andel – andelene udgør tilsammen 100 %."
+      "ownershipShare": "Denne ejers andel af ejendommen. 100 % betyder eneejerskab. Hvis et hus tilhører flere personer, får hver sin egen afregning for sin andel – andelene udgør tilsammen 100 %.",
+      "properties": "Hvilke objekter denne afregning omfatter. Standard er alle ejerens objekter. Vælg individuelle for kun at afregne for disse. Hvert objekt kan kun være i én afsluttet afregning pr. periode – en booking udbetales aldrig to gange.",
+      "language": "På dette sprog oprettes kvitteringen – tekster, tal og dato. Forudindstillet fra ejerens sprog, ellers fra virksomhedens. Efter færdiggørelse er den fast; kvitteringen forbliver som udstedt.",
+      "headerFromMaster": "Overtager navn, adresse, e-mail, telefon og skattenummer fra ejer og virksomhed fra stamdata. Fakturanummer og noter for denne kvittering forbliver."
     },
     "finalizeConfirm": {
       "title": "Lås afregning",
@@ -1778,7 +1799,21 @@
       "title": "Medejer",
       "hint": "Disse ejendomme ejes af flere personer. Hver person modtager en separat faktura for sin andel.",
       "share": "{anteil} %"
-    }
+    },
+    "language": {
+      "label": "Sprog for kvittering"
+    },
+    "sort": {
+      "aria": "Sorter efter {spalte}",
+      "ascending": "Stigende",
+      "descending": "Faldende"
+    },
+    "belegIn": "Kvittering på {sprache}",
+    "headerFromMaster": "Overfør fra stamdata",
+    "headerFromMasterDone": "Hoveddata overført fra stamdata.",
+    "objectsLine": "Objekter: {liste}",
+    "objectsAll": "Objekter: alle",
+    "loading": "Indlæser …"
   },
   "ownerBilling": {
     "title": "Afregningsaftale",
@@ -13113,7 +13148,6 @@
     "mixedCurrency": "Flere valutaer i perioden ({list}) – beløb lægges ikke sammen. Begræns venligst til ét objekt eller én valuta.",
     "occupancyFootnote": "Optaget er optaget – uanset om det er via en portal, din egen hjemmeside, manuelt oprettet eller af ejeren. Kun dage, hvor ejendommen ikke var til salg, falder ud af nævneren: blokerede dage og stop-sell.",
     "kpiFootnote": "Procentdelen på hvert kort sammenlignes med den tilsvarende periode før. Et klik på et kort åbner tidslinjen.",
-    "commissionFootnote": "Tomme provisionsfelter betyder, at portalen ikke overfører provision (Booking.com gør det som regel ikke) – intet estimeres.",
     "tab": {
       "kennzahlen": "Nøgletal",
       "analytics": "Oversigt",
@@ -13331,7 +13365,7 @@
     },
     "expenses": {
       "empty": "Ingen afregningsposter i denne periode.",
-      "emptyHint": "Udgifter og ekstraomkostninger opstår i ejerens afregning og fra bestilte ydelser.",
+      "emptyHint": "Udgifter og ekstraomkostninger opstår i ejerens afregning, fra bestilte ydelser og fra bookede tillægsydelser.",
       "expenses": "Udgifter",
       "extras": "Ekstraomkostninger",
       "balance": "Saldo",
@@ -13346,7 +13380,11 @@
         "ausgabe": "Udgift",
         "extra": "Ekstraomkostning"
       },
-      "footnote": "Perioden er postens dato. Udgifter belaster ejeren, ekstraomkostninger gavner ham — som de fremgår af regnskabet."
+      "footnote": "Perioden er datoen for posteringen; tillægsydelser følger bookingen. Udgifter er for ejerens regning, ekstraomkostninger til hans fordel – som de fremgår af afregningen.",
+      "category": {
+        "service": "Bestilt ydelse",
+        "addon": "Tillægsydelse"
+      }
     },
     "pace": {
       "title": "Bookingstatus for de næste 12 måneder",
@@ -15549,5 +15587,59 @@
       "anzahlung": "Depositum skal være over 0 og må ikke være højere end det samlede beløb.",
       "entwurfAngelegt": "Tilbuddet er oprettet som et udkast, mailen blev ikke sendt: {grund}"
     }
+  },
+  "statementPdf": {
+    "invoice": "Ejerafregning",
+    "storno": "Annulleringsfaktura",
+    "invoiceNo": "Nr.",
+    "issuer": "Udsteder",
+    "owner": "Ejer",
+    "vatId": "Moms-nr.",
+    "period": "Periode",
+    "objects": "Ejendomme",
+    "allObjects": "Alle ejendomme",
+    "bookings": "Bookinger",
+    "listing": "Ejendom",
+    "guest": "Gæst",
+    "arrival": "Ankomst",
+    "departure": "Afrejse",
+    "nights": "Nætter",
+    "channel": "Kanal",
+    "commission": "Provision",
+    "flatFee": "Fast pris",
+    "ownerShare": "Ejerandel",
+    "noBookings": "Ingen reservationer i perioden.",
+    "breakdownTitle": "Oversigt pr. booking",
+    "posAfterPortal": "Totalbeløb efter portalfradrag",
+    "posAfterPortalHint": "Gæstepris minus portalprovision og portalbetalingsgebyr",
+    "posCommission": "Administrationsprovision",
+    "posMinCommission": "Minimumsprovision (kontrakt) i stedet for",
+    "posContractFrom": "Kontrakt fra",
+    "posRateManual": "Manuelt i denne afregning",
+    "posRateLegacy": "Standard sats fra stamdata",
+    "posFlatFee": "Fast pris pr. booking/nat (kontrakt)",
+    "posFeesBack": "Dine gebyrer — uforkortet, uden provision",
+    "posOwnerShare": "= Ejerandel",
+    "posRate": "Kurs",
+    "commissionable": "Provisionspligtig",
+    "noFeesReported": "Portalen har ikke rapporteret gebyrer for denne booking; derfor er der ikke anvendt nogen.",
+    "deductionsTitle": "Fradrag og kreditter",
+    "deductions": "Fradrag (for ejerens regning)",
+    "credits": "Kreditter (til fordel for ejeren)",
+    "srcExpense": "Afregningsposter",
+    "srcRecurring": "Tilbagevendende",
+    "receipt": "Kvittering",
+    "perBooking": "pr. booking",
+    "perNight": "pr. nat",
+    "perPeriod": "pr. periode",
+    "sumShares": "Samlet ejerandel fra bookinger",
+    "sumFlatFees": "Faste gebyrer fra kontrakt",
+    "sumFlatFeesNote": "allerede inkluderet i andelene – intet yderligere fradrag",
+    "sumDeductions": "Fradrag",
+    "sumCredits": "Krediteringer",
+    "sumOwnerPayout": "Udbetaling til ejer",
+    "vat": "Moms",
+    "vatNet": "Administrationsprovision netto",
+    "vatGross": "Administrationsprovision brutto"
   }
 }

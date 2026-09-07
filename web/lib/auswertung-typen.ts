@@ -198,6 +198,9 @@ export type AusgabePosten = {
   id: string;
   date: string;
   name: string;
+  /** Zusatzleistungen: Name je Sprache (Snapshot zum Kaufzeitpunkt). */
+  name_i18n?: Record<string, string> | null;
+  /** Rohschlüssel: freier Text aus der Abrechnung ODER `service`/`addon`. */
   kategorie: string | null;
   property_id: string | null;
   property_title: string | null;

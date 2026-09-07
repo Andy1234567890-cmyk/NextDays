@@ -1503,7 +1503,13 @@
       "statusesSearch": "Otsi staatust …",
       "statusesNoMatch": "Staatust ei leitud.",
       "statusesSelectAll": "Vali kõik",
-      "statusesCount": "Valitud {count} / {total}"
+      "statusesCount": "Valitud {count} / {total}",
+      "properties": "Objektid",
+      "propertiesAll": "Kõik objektid",
+      "propertiesCount": "{count} objekti {total} hulgast",
+      "propertiesSearch": "Otsi objekti…",
+      "propertiesNoMatch": "Objekti ei leitud.",
+      "propertiesSelectAll": "Vali kõik"
     },
     "reservationStatus": {
       "pending": "Ootel",
@@ -1640,7 +1646,16 @@
         "noContract": "Selle objekti jaoks puudub arveldusleping ja põhiandmetes puudub vahendustasu määr – looge omanikule leping.",
         "addonsOutside": "Lisateenused – müüdud myNextDays kaudu, ei sisaldu portaali külalise hinnas"
       },
-      "ownershipShare": "Jaga"
+      "ownershipShare": "Jaga",
+      "dragColumn": "Veeru {spalte} teisaldamine",
+      "columnsReset": "Lähtesta veergude järjestus",
+      "dndStart": "{spalte} on valitud.",
+      "dndOver": "{spalte} asub kohal {ziel}.",
+      "dndOverNichts": "{spalte} on tabelist väljas.",
+      "dndEnd": "{spalte} on paigutatud asukohale {ziel}.",
+      "dndCancel": "Veeru {spalte} teisaldamine on tühistatud.",
+      "dndAnleitung": "Veeru valimiseks vajutage tühikut või sisestusklahvi. Teisaldamiseks kasutage nooleklahve, paigutamiseks tühikut või sisestusklahvi, tühistamiseks paoklahvi.",
+      "dragHint": "Veergude järjestuse muutmiseks lohistage käepidet – ka klaviatuuriga: fokuseerige käepide, tühikuklahv, nooleklahvid."
     },
     "expenses": {
       "add": "Lisa",
@@ -1691,7 +1706,10 @@
       "status": "Staatus",
       "open": "Ava",
       "emptyTitle": "Arveldusi pole",
-      "emptyHint": "Loo oma esimene omaniku arveldus alt „Loomine ja muutmine“."
+      "emptyHint": "Loo oma esimene omaniku arveldus alt „Loomine ja muutmine“.",
+      "objects": "Objektid",
+      "allObjects": "kõik objektid",
+      "objectsCount": "{count} objekti"
     },
     "edit": "Muuda",
     "attachments": {
@@ -1740,7 +1758,10 @@
       "commission": "Majutusasutuse vahendustasu objekti haldamise eest. See arvutatakse summast, mis jääb alles pärast portaali mahaarvamist – ja see rakendub IGA broneeringu puhul, ka siis, kui see tehakse majutusasutuse enda veebisaidi kaudu.",
       "flatFee": "Fikseeritud summa halduslepingust, näiteks kõrvalkulude eest. Sõltuvalt kokkuleppest arvatakse see maha enne või pärast vahendustasu.",
       "ownerShare": "Mis jääb lõpuks omanikule: külalise hind miinus portaali mahaarvamine, miinus vahendustasu, miinus fikseeritud summa, pluss tasud, mis talle kuuluvad. Kaasomandi puhul korrutatakse see lisaks tema osaga.",
-      "ownershipShare": "Selle omaniku osa objektist. 100% tähendab ainuomandit. Kui maja kuulub mitmele isikule, saab igaüks oma arve oma osa kohta – osad moodustavad kokku 100%."
+      "ownershipShare": "Selle omaniku osa objektist. 100% tähendab ainuomandit. Kui maja kuulub mitmele isikule, saab igaüks oma arve oma osa kohta – osad moodustavad kokku 100%.",
+      "properties": "Millised objektid see arveldus hõlmab. Vaikimisi on kõik omaniku objektid. Valige üksikud, et arveldada ainult nende eest. Iga objekt saab olla perioodi kohta ainult ühes lõpetatud arvelduses – broneeringut ei maksta kunagi kaks korda välja.",
+      "language": "Selles keeles koostatakse kviitung – tekstid, numbrid ja kuupäev. Eeltäidetud omaniku keelest, vastasel juhul ettevõtte keelest. Pärast lõpetamist on see fikseeritud; kviitung jääb selliseks, nagu see välja anti.",
+      "headerFromMaster": "Võtab uuesti üle omaniku ja ettevõtte nime, aadressi, e-posti, telefoni ja maksunumbri põhiandmetest. Arve number ja selle kviitungi märkused jäävad alles."
     },
     "finalizeConfirm": {
       "title": "Arvelduse kinnitamine",
@@ -1778,7 +1799,21 @@
       "title": "Kaasomanikud",
       "hint": "Need majutusasutused kuuluvad mitmele inimesele. Igaüks saab oma osa kohta eraldi arveldusarve.",
       "share": "{anteil} %"
-    }
+    },
+    "language": {
+      "label": "Kviitungi keel"
+    },
+    "sort": {
+      "aria": "Sorteeri veeru järgi {spalte}",
+      "ascending": "kasvavalt",
+      "descending": "kahanevalt"
+    },
+    "belegIn": "Dokument {sprache} keeles",
+    "headerFromMaster": "Kasuta põhiandmeid",
+    "headerFromMasterDone": "Päise andmed on põhiandmetest üle võetud.",
+    "objectsLine": "Objektid: {liste}",
+    "objectsAll": "Objektid: kõik",
+    "loading": "Laadimine …"
   },
   "ownerBilling": {
     "title": "Arveldusleping",
@@ -13113,7 +13148,6 @@
     "mixedCurrency": "Perioodil on mitu valuutat ({list}) – summasid kokku ei liideta. Palun piirake ühe objekti või valuutaga.",
     "occupancyFootnote": "Hõivatud on hõivatud – kas portaali, oma veebisaidi kaudu, ise sisestatud või omaniku poolt. Arvestusest langevad välja ainult päevad, mil objekt ei olnud müügis: blokeeritud päevad ja stop-sell.",
     "kpiFootnote": "Igal kaardil olev protsent võrdleb eelmise sama pika perioodiga. Kaardil klõpsamine avab ajasarja.",
-    "commissionFootnote": "Tühjad vahendustasu väljad tähendavad, et portaal ei edasta vahendustasu (Booking.com seda tavaliselt ei tee) – midagi ei hinnata.",
     "tab": {
       "kennzahlen": "Mõõdikud",
       "analytics": "Ülevaade",
@@ -13331,7 +13365,7 @@
     },
     "expenses": {
       "empty": "Sellel perioodil puuduvad arvelduskirjed.",
-      "emptyHint": "Kulud ja lisad tekivad omaniku arvelduses ja tellitud teenustest.",
+      "emptyHint": "Kulud ja lisad tekivad omaniku arvelduses, tellitud teenustest ja broneeritud lisateenustest.",
       "expenses": "Kulud",
       "extras": "Lisad",
       "balance": "Saldo",
@@ -13346,7 +13380,11 @@
         "ausgabe": "Kulu",
         "extra": "Lisa"
       },
-      "footnote": "Periood on kirje kuupäev. Kulud on omaniku kanda, lisad tema kasuks – nii nagu need arvelduses on."
+      "footnote": "Periood on kirje kuupäev; lisateenused järgnevad broneeringule. Kulud on omaniku kanda, lisad tema kasuks – nii, nagu need arvelduses on.",
+      "category": {
+        "service": "Tellitud teenus",
+        "addon": "Lisateenus"
+      }
     },
     "pace": {
       "title": "Järgmise 12 kuu broneeringute seis",
@@ -15549,5 +15587,59 @@
       "anzahlung": "Ettemaks peab olema suurem kui 0 ja mitte kõrgem kui kogusumma.",
       "entwurfAngelegt": "Pakkumine on loodud mustandina, e-kirja ei saadetud: {grund}"
     }
+  },
+  "statementPdf": {
+    "invoice": "Omaniku arveldus",
+    "storno": "Tühistamise arve",
+    "invoiceNo": "Nr.",
+    "issuer": "Väljaandja",
+    "owner": "Omanik",
+    "vatId": "KMKR-nr",
+    "period": "Periood",
+    "objects": "Objektid",
+    "allObjects": "kõik objektid",
+    "bookings": "Broneeringud",
+    "listing": "Objekt",
+    "guest": "Külaline",
+    "arrival": "Saabumine",
+    "departure": "Lahkumine",
+    "nights": "Ööd",
+    "channel": "Kanal",
+    "commission": "Vahendustasu",
+    "flatFee": "Fikseeritud tasu",
+    "ownerShare": "Omaniku osa",
+    "noBookings": "Perioodil broneeringuid ei ole.",
+    "breakdownTitle": "Ülevaade broneeringute kaupa",
+    "posAfterPortal": "Kogusumma pärast portaali mahaarvamist",
+    "posAfterPortalHint": "Külalise hind miinus portaali vahendustasu ja portaali maksetasu",
+    "posCommission": "Haldustasu",
+    "posMinCommission": "Minimaalne vahendustasu (leping) asemel",
+    "posContractFrom": "Leping alates",
+    "posRateManual": "käsitsi selles arvelduses",
+    "posRateLegacy": "Standardmäär põhiandmetest",
+    "posFlatFee": "Fikseeritud tasu broneeringu/öö kohta (leping)",
+    "posFeesBack": "Teie tasud – lühendamata, ilma vahendustasuta",
+    "posOwnerShare": "= Omaniku osa",
+    "posRate": "Kurss",
+    "commissionable": "vahendustasuga maksustatav",
+    "noFeesReported": "Portaal ei ole selle broneeringu kohta tasusid teatanud; seetõttu ei ole neid arvestatud.",
+    "deductionsTitle": "Mahaarvamised ja kreeditid",
+    "deductions": "Mahaarvamised (omaniku kulul)",
+    "credits": "Kreeditid (omaniku kasuks)",
+    "srcExpense": "Arveldusobjektid",
+    "srcRecurring": "korduv",
+    "receipt": "Kviitung",
+    "perBooking": "broneeringu kohta",
+    "perNight": "öö kohta",
+    "perPeriod": "perioodi kohta",
+    "sumShares": "omaniku osa broneeringutest kokku",
+    "sumFlatFees": "fikseeritud tasud lepingu alusel",
+    "sumFlatFeesNote": "juba arvestatud osades – täiendavat mahaarvamist ei toimu",
+    "sumDeductions": "mahaarvamised",
+    "sumCredits": "krediidid",
+    "sumOwnerPayout": "omanikule väljamakse",
+    "vat": "käibemaks",
+    "vatNet": "halduse vahendustasu neto",
+    "vatGross": "halduse vahendustasu bruto"
   }
 }

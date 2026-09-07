@@ -29,6 +29,10 @@ die Berichte, die SiteMinder führt und Hostaway nicht: Wochentag,
 Buchungsfenster, Aufenthaltsdauer, Stornos, Pace. Alles aus DENSELBEN
 geladenen Buchungen — kein Reiter rechnet mit eigenen Daten.
 """
+# pylint: disable=too-many-lines  # EIN Bericht, ein Rechenweg: Kennzahlen, Verlauf,
+# Kanaele, Finanzen, Ausgaben & Extras teilen dieselben gefilterten Buchungen.
+# Getrennt rechneten sie auseinander (Hostaways 'unterschiedliche Zahlen auf
+# verschiedenen Seiten').
 from __future__ import annotations
 
 from collections import defaultdict
@@ -105,12 +109,25 @@ MAX_TAGE = 1830          # 5 Jahre
 MAX_TAGE_VERGLEICH = 366 # 1 Jahr (Schaltjahr eingerechnet)
 MAX_BUCHUNGEN = 5_000    # Tabellenreiter
 MAX_POSTEN = 2_000       # Ausgaben & Extras
+# Kategorie-SCHLÜSSEL einer Zusatzleistung im Reiter „Ausgaben & Extras". Ein
+# Schlüssel, kein Klartext: die Oberfläche übersetzt ihn (`analysis.expenses.
+# category.addon`) — derselbe Weg wie `service` für bestellte Leistungen
+# (tasks/abrechnung.py).
+KATEGORIE_ZUSATZLEISTUNG = "addon"
 MAX_ANSICHTEN = 50       # gespeicherte Ansichten je Nutzer und Reiter
 # Pace blickt zwölf Monate voraus — weiter reicht kein Portal-Push (365 Tage).
 PACE_MONATE = 12
 
 # PostgREST-`in_` wandert in die URL; über ~100 UUIDs wird sie zu lang.
 _IN_BLOCK = 100
+# Welche Buchungsspalte den Zeitraum trägt — je Bezug. Übernachtung fällt auf
+# die Anreise zurück, weil eine Nacht kein eigenes Datumfeld der Buchung ist.
+_BEZUG_FELD: dict[Bezug, str] = {
+    Bezug.ANREISE: "check_in",
+    Bezug.ABREISE: "check_out",
+    Bezug.BUCHUNG: "booked_at",
+    Bezug.UEBERNACHTUNG: "check_in",
+}
 
 # Stornierte Buchungen zählen für die Quote, nicht für Umsatz/Nächte.
 _STORNO = {"cancelled", "canceled", "declined", "expired"}
@@ -374,7 +391,7 @@ class AuswertungService:
         antwort.verlauf_je_objekt = self._verlauf_gruppen(
             gueltig, von, bis, bezug, monatlich, lambda b: str(b.get("property_id"))
         )
-        antwort.ausgaben = self._ausgaben(tenant_id, von, bis, erlaubt, objekte)
+        antwort.ausgaben = self._ausgaben(tenant_id, von, bis, erlaubt, objekte, gueltig, bezug)
         return antwort
 
     # ------------------------------------------------------------------
@@ -713,12 +730,7 @@ class AuswertungService:
         """
         if monatlich is None:
             monatlich = (bis - von).days > 90
-        feld = {
-            Bezug.ANREISE: "check_in",
-            Bezug.ABREISE: "check_out",
-            Bezug.BUCHUNG: "booked_at",
-            Bezug.UEBERNACHTUNG: "check_in",
-        }[bezug]
+        feld = _BEZUG_FELD[bezug]
         # Erst das lückenlose Gerüst, dann die Buchungen hineinlegen.
         eimer: dict[str, Punkt] = {
             key: Punkt(period=key) for key in _perioden(von, bis, monatlich)
@@ -897,12 +909,7 @@ class AuswertungService:
         Verteilung des Betrags über Monate wäre eine zweite Rechnung, die
         sich nicht mehr zur Objektzeile summiert.
         """
-        feld = {
-            Bezug.ANREISE: "check_in",
-            Bezug.ABREISE: "check_out",
-            Bezug.BUCHUNG: "booked_at",
-            Bezug.UEBERNACHTUNG: "check_in",
-        }[bezug]
+        feld = _BEZUG_FELD[bezug]
         monate = _perioden(von, bis, True)
         # Tage je Monat innerhalb des Zeitraums (der erste und letzte Monat
         # können angeschnitten sein).
@@ -1153,14 +1160,51 @@ class AuswertungService:
         bis: date,
         erlaubt: set[str],
         objekte: dict[str, str],
+        buchungen: list[dict[str, Any]],
+        bezug: Bezug,
     ) -> AusgabenBericht:
-        """Hostaways „Expenses & Extras" aus den Verrechnungsposten.
+        """Hostaways „Expenses & Extras" aus ZWEI Quellen.
 
-        Zeitraum ist das DATUM DES POSTENS, nicht der Bezug der Buchungen —
-        eine Reinigungsrechnung vom 3. gehört in den Monat des 3., egal wann
-        die Buchung anreiste. Posten ohne Objekt (Konto-Posten) bleiben drin,
-        sofern die Auswertung nicht auf Objekte eingeschränkt ist.
+        1. Verrechnungsposten (`owner_expenses`). Zeitraum ist das DATUM DES
+           POSTENS, nicht der Bezug der Buchungen — eine Reinigungsrechnung
+           vom 3. gehört in den Monat des 3., egal wann die Buchung anreiste.
+           Posten ohne Objekt (Konto-Posten) bleiben drin, sofern die
+           Auswertung nicht auf Objekte eingeschränkt ist.
+        2. Gebuchte Zusatzleistungen (`reservation_addons`) der gültigen
+           Buchungen im Zeitraum — Hostaways „Extras": was der Gast obendrauf
+           gekauft hat (Wäschepaket, Endreinigung …). Sie hängen an der
+           Buchung und folgen deshalb deren Bezug (Anreise/Abreise/Buchung),
+           genau wie Umsatz und Kanäle. Bis 07.09.2026 las der Reiter nur
+           Quelle 1 — bei AirSmil fehlten so 1.050 DKK bezahlte Wäschepakete
+           an drei September-Anreisen, der Reiter stand auf „Keine Posten".
         """
+        posten: list[AusgabePosten] = []
+        kategorien: dict[str | None, AusgabeGruppe] = {}
+        je_objekt: dict[str | None, AusgabeGruppe] = {}
+        waehrungen: set[str] = set()
+        ausgaben = extras = 0.0
+
+        def aufnehmen(p: AusgabePosten, pid: str | None, kategorie: str | None) -> None:
+            nonlocal ausgaben, extras
+            if p.currency:
+                waehrungen.add(p.currency)
+            posten.append(p)
+            for gruppe, key, titel in (
+                (kategorien, kategorie, None),
+                (je_objekt, pid, objekte.get(pid) if pid else None),
+            ):
+                g = gruppe.setdefault(key, AusgabeGruppe(schluessel=key, title=titel))
+                g.anzahl += 1
+                if p.art == "ausgabe":
+                    g.ausgaben = round(g.ausgaben + p.betrag, 2)
+                else:
+                    g.extras = round(g.extras + p.betrag, 2)
+                g.saldo = round(g.extras - g.ausgaben, 2)
+            if p.art == "ausgabe":
+                ausgaben += p.betrag
+            else:
+                extras += p.betrag
+
         rows = fetch_all_rows(
             self._db.table("owner_expenses")
             .select(
@@ -1172,11 +1216,6 @@ class AuswertungService:
             .lte("date", bis.isoformat())
         )
         nur_objekte = len(erlaubt) < len(self._alle_objekt_ids(tenant_id, objekte))
-        posten: list[AusgabePosten] = []
-        kategorien: dict[str | None, AusgabeGruppe] = {}
-        je_objekt: dict[str | None, AusgabeGruppe] = {}
-        waehrungen: set[str] = set()
-        ausgaben = extras = 0.0
         for r in rows:
             pid = str(r["listing_id"]) if r.get("listing_id") else None
             if pid is not None and pid not in erlaubt:
@@ -1184,40 +1223,65 @@ class AuswertungService:
             if pid is None and nur_objekte:
                 continue
             art = "ausgabe" if str(r.get("direction") or "") == "from_owner" else "extra"
-            betrag = round(_f(r.get("amount")), 2)
-            cur = str(r["currency"]) if r.get("currency") else None
-            if cur:
-                waehrungen.add(cur)
-            posten.append(
+            kategorie = r.get("category") or None
+            aufnehmen(
                 AusgabePosten(
                     id=str(r["id"]),
                     date=str(r.get("date") or "")[:10],
                     name=str(r.get("concept") or ""),
-                    kategorie=r.get("category") or None,
+                    kategorie=kategorie,
                     property_id=pid,
                     property_title=objekte.get(pid) if pid else None,
                     reservation_id=str(r["reservation_id"]) if r.get("reservation_id") else None,
                     art=art,
-                    betrag=betrag,
-                    currency=cur,
+                    betrag=round(_f(r.get("amount")), 2),
+                    currency=str(r["currency"]) if r.get("currency") else None,
                     hat_beleg=bool(r.get("storage_path")),
-                )
+                ),
+                pid,
+                kategorie,
             )
-            for gruppe, key, titel in (
-                (kategorien, r.get("category") or None, None),
-                (je_objekt, pid, objekte.get(pid) if pid else None),
+
+        # Quelle 2: Zusatzleistungen. `buchungen` ist bereits nach Bezug,
+        # Zeitraum, Objekt-Scope und Status gefiltert — Datum, Objekt und
+        # WÄHRUNG kommen von der Buchung (die Addon-Zeile trägt keine Währung;
+        # ein Ersatzwert wäre Wurzel 4). Stornierte Zusatzleistungen (0397)
+        # sind kein Umsatz — dieselbe Regel wie in `_finanzen`.
+        je_buchung = {str(b["id"]): b for b in buchungen if b.get("id")}
+        ids = list(je_buchung)
+        for i in range(0, len(ids), _IN_BLOCK):
+            block = ids[i : i + _IN_BLOCK]
+            for r in fetch_all_rows(
+                self._db.table("reservation_addons")
+                .select("id, reservation_id, name, total, cancelled_at")
+                .eq("tenant_id", tenant_id)
+                .in_("reservation_id", block)
             ):
-                g = gruppe.setdefault(key, AusgabeGruppe(schluessel=key, title=titel))
-                g.anzahl += 1
-                if art == "ausgabe":
-                    g.ausgaben = round(g.ausgaben + betrag, 2)
-                else:
-                    g.extras = round(g.extras + betrag, 2)
-                g.saldo = round(g.extras - g.ausgaben, 2)
-            if art == "ausgabe":
-                ausgaben += betrag
-            else:
-                extras += betrag
+                b = je_buchung.get(str(r.get("reservation_id")))
+                if b is None or r.get("cancelled_at"):
+                    continue
+                pid = str(b["property_id"]) if b.get("property_id") else None
+                namen = r.get("name") if isinstance(r.get("name"), dict) else {}
+                namen = {str(k): str(v) for k, v in namen.items() if v}
+                aufnehmen(
+                    AusgabePosten(
+                        id=str(r["id"]),
+                        date=str(b.get(_BEZUG_FELD[bezug]) or "")[:10],
+                        # Ersatzname ohne Locale: der englische Snapshot, sonst der
+                        # erste vorhandene — beides echte Werte aus der Zeile.
+                        name=namen.get("en") or next(iter(namen.values()), ""),
+                        name_i18n=namen or None,
+                        kategorie=KATEGORIE_ZUSATZLEISTUNG,
+                        property_id=pid,
+                        property_title=objekte.get(pid) if pid else None,
+                        reservation_id=str(b["id"]),
+                        art="extra",
+                        betrag=round(_f(r.get("total")), 2),
+                        currency=str(b["currency"]) if b.get("currency") else None,
+                    ),
+                    pid,
+                    KATEGORIE_ZUSATZLEISTUNG,
+                )
         posten.sort(key=lambda p: p.date, reverse=True)
         return AusgabenBericht(
             currency=next(iter(waehrungen)) if len(waehrungen) == 1 else None,

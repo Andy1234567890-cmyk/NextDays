@@ -1503,7 +1503,13 @@
       "statusesSearch": "Meklēt statusu …",
       "statusesNoMatch": "Statuss nav atrasts.",
       "statusesSelectAll": "Atlasīt visus",
-      "statusesCount": "Atlasīti {count} no {total}"
+      "statusesCount": "Atlasīti {count} no {total}",
+      "properties": "Objekti",
+      "propertiesAll": "Visi objekti",
+      "propertiesCount": "{count} no {total} objektiem",
+      "propertiesSearch": "Meklēt objektu…",
+      "propertiesNoMatch": "Objekts nav atrasts.",
+      "propertiesSelectAll": "Atlasīt visus"
     },
     "reservationStatus": {
       "pending": "Gaida apstiprinājumu",
@@ -1640,7 +1646,16 @@
         "noContract": "Šim īpašumam nav norēķinu līguma un komisijas likmes pamatdatos — lūdzu, izveidojiet līgumu ar īpašnieku.",
         "addonsOutside": "Papildu pakalpojumi — pārdoti, izmantojot myNextDays, nav iekļauti portāla viesa cenā"
       },
-      "ownershipShare": "Daļa"
+      "ownershipShare": "Daļa",
+      "dragColumn": "Pārvietot kolonnu {spalte}",
+      "columnsReset": "Atiestatīt kolonnu secību",
+      "dndStart": "{spalte} paņemta.",
+      "dndOver": "{spalte} virs {ziel}.",
+      "dndOverNichts": "{spalte} ārpus tabulas.",
+      "dndEnd": "{spalte} nomesta {ziel} vietā.",
+      "dndCancel": "Kolonnas {spalte} pārvietošana atcelta.",
+      "dndAnleitung": "Nospiediet atstarpes taustiņu vai Enter, lai paņemtu kolonnu. Izmantojiet bulttaustiņus, lai pārvietotu, nospiediet atstarpes taustiņu vai Enter, lai nomestu, un Esc, lai atceltu.",
+      "dragHint": "Velciet kolonnas aiz roktura, lai mainītu secību — arī ar tastatūru: fokusējiet rokturi, atstarpes taustiņš, bulttaustiņi."
     },
     "expenses": {
       "add": "Pievienot",
@@ -1691,7 +1706,10 @@
       "status": "Statuss",
       "open": "Atvērt",
       "emptyTitle": "Nav norēķinu",
-      "emptyHint": "Izveido savu pirmo īpašnieka norēķinu sadaļā „Izveidot un rediģēt”."
+      "emptyHint": "Izveido savu pirmo īpašnieka norēķinu sadaļā „Izveidot un rediģēt”.",
+      "objects": "Objekti",
+      "allObjects": "visi objekti",
+      "objectsCount": "{count} objekti"
     },
     "edit": "Rediģēt",
     "attachments": {
@@ -1740,7 +1758,10 @@
       "commission": "Uzņēmuma komisijas maksa par īpašuma pārvaldību. Tā tiek aprēķināta no summas, kas paliek pāri pēc portāla atskaitījuma, un tiek piemērota KATRAM rezervējumam, pat tiem, kas veikti, izmantojot uzņēmuma paša tīmekļa vietni.",
       "flatFee": "Fiksēta summa no pārvaldības līguma, piemēram, par papildu izmaksām. Atkarībā no vienošanās tā tiek atskaitīta pirms vai pēc komisijas maksas.",
       "ownerShare": "Kas beigās paliek īpašniekam: viesa cena mīnus portāla atskaitījums, mīnus komisijas maksa, mīnus fiksētā maksa, plus maksas, kas viņam pienākas. Līdzīpašuma gadījumā papildus reizināts ar viņa daļu.",
-      "ownershipShare": "Šī īpašnieka daļa īpašumā. 100 % nozīmē vienīpašumu. Ja māja pieder vairākām personām, katra saņem savu norēķinu par savu daļu – daļas kopā veido 100 %."
+      "ownershipShare": "Šī īpašnieka daļa īpašumā. 100 % nozīmē vienīpašumu. Ja māja pieder vairākām personām, katra saņem savu norēķinu par savu daļu – daļas kopā veido 100 %.",
+      "properties": "Kuriem objektiem rēķins paredzēts. Standartā ir visi īpašnieka objekti. Izvēlieties atsevišķus, lai rēķinu sagatavotu tikai tiem. Katrs objekts katrā periodā var būt tikai vienā pabeigtā rēķinā — rezervācija nekad netiek izmaksāta divreiz.",
+      "language": "Šajā valodā tiks izveidots dokuments — teksti, skaitļi un datums. Aizpildīts no īpašnieka valodas, citādi no uzņēmuma valodas. Pēc pabeigšanas tas ir fiksēts; dokuments paliek tāds, kāds tas tika izsniegts.",
+      "headerFromMaster": "Pārņem vārdu, adresi, e-pastu, tālruni un nodokļu numuru no īpašnieka un uzņēmuma no pamatdatiem. Rēķina numurs un šī dokumenta piezīmes paliek nemainīgas."
     },
     "finalizeConfirm": {
       "title": "Apstiprināt norēķinu",
@@ -1778,7 +1799,21 @@
       "title": "Līdzīpašnieks",
       "hint": "Šie īpašumi pieder vairākām personām. Katra persona saņem savu rēķinu par savu daļu.",
       "share": "{anteil} %"
-    }
+    },
+    "language": {
+      "label": "Kvīts valoda"
+    },
+    "sort": {
+      "aria": "Kārtot pēc {spalte}",
+      "ascending": "augoši",
+      "descending": "dilstoši"
+    },
+    "belegIn": "Dokuments valodā {sprache}",
+    "headerFromMaster": "Pārņemt no pamatdatiem",
+    "headerFromMasterDone": "Galvenes dati pārņemti no pamatdatiem.",
+    "objectsLine": "Objekti: {liste}",
+    "objectsAll": "Objekti: visi",
+    "loading": "Notiek ielāde..."
   },
   "ownerBilling": {
     "title": "Norēķinu līgums",
@@ -13113,7 +13148,6 @@
     "mixedCurrency": "Vairākas valūtas periodā ({list}) — summas netiek saskaitītas. Lūdzu, ierobežojiet līdz vienam objektam vai valūtai.",
     "occupancyFootnote": "Aizņemts ir aizņemts — vai nu caur portālu, savu mājaslapu, pašu izveidotu vai īpašnieka. No skaitītāja izkrīt tikai dienas, kurās objekts nebija pārdošanā: bloķētās dienas un Stop-Sell.",
     "kpiFootnote": "Procentuālā vērtība katrā elementā salīdzina ar iepriekšējo tāda paša garuma periodu. Noklikšķinot uz elementa, tiek atvērta laika rinda.",
-    "commissionFootnote": "Tukši komisijas lauki nozīmē, ka portāls nesūta komisiju (Booking.com to parasti nedara) — nekas netiek lēsts.",
     "tab": {
       "kennzahlen": "Rādītāji",
       "analytics": "Pārskats",
@@ -13331,7 +13365,7 @@
     },
     "expenses": {
       "empty": "Šajā periodā nav norēķinu posteņu.",
-      "emptyHint": "Izdevumi un papildpakalpojumi rodas īpašnieka norēķinos un no pasūtītajiem pakalpojumiem.",
+      "emptyHint": "Izdevumi un papildpakalpojumi tiek iekļauti īpašnieka norēķinos, pamatojoties uz pasūtītajiem pakalpojumiem un rezervētajiem papildpakalpojumiem.",
       "expenses": "Izdevumi",
       "extras": "Papildpakalpojumi",
       "balance": "Bilance",
@@ -13346,7 +13380,11 @@
         "ausgabe": "Izdevums",
         "extra": "Papildpakalpojums"
       },
-      "footnote": "Periods ir posteņa datums. Izdevumi ir uz īpašnieka rēķina, papildpakalpojumi — viņa labā, kā norādīts rēķinā."
+      "footnote": "Periods ir ieraksta datums; papildpakalpojumi seko rezervācijai. Izdevumi ir uz īpašnieka rēķina, papildpakalpojumi — viņa labā, kā norādīts norēķinos.",
+      "category": {
+        "service": "Pasūtītais pakalpojums",
+        "addon": "Papildpakalpojums"
+      }
     },
     "pace": {
       "title": "Nākamo 12 mēnešu rezervāciju statuss",
@@ -15549,5 +15587,59 @@
       "anzahlung": "Avansa maksājumam jābūt virs 0 un nedrīkst pārsniegt kopējo summu.",
       "entwurfAngelegt": "Piedāvājums ir izveidots kā melnraksts, e-pasts netika nosūtīts: {grund}"
     }
+  },
+  "statementPdf": {
+    "invoice": "Īpašnieka norēķins",
+    "storno": "Atcelšanas rēķins",
+    "invoiceNo": "Nr.",
+    "issuer": "Izsniedzējs",
+    "owner": "Īpašnieks",
+    "vatId": "PVN reģ. Nr.",
+    "period": "Periods",
+    "objects": "Īpašumi",
+    "allObjects": "visi īpašumi",
+    "bookings": "Rezervācijas",
+    "listing": "Īpašums",
+    "guest": "Viesis",
+    "arrival": "Ierašanās",
+    "departure": "Izbraukšana",
+    "nights": "Naktis",
+    "channel": "Kanāls",
+    "commission": "Komisija",
+    "flatFee": "Fiksēta maksa",
+    "ownerShare": "Īpašnieka daļa",
+    "noBookings": "Šajā periodā nav rezervāciju.",
+    "breakdownTitle": "Pārskats par rezervācijām",
+    "posAfterPortal": "Kopsumma pēc portāla atskaitījumiem",
+    "posAfterPortalHint": "Viesa cena, atskaitot portāla komisiju un portāla maksājuma maksu",
+    "posCommission": "Pārvaldības komisija",
+    "posMinCommission": "Minimālā komisija (līgums) tā vietā",
+    "posContractFrom": "Līgums no",
+    "posRateManual": "manuāli šajā norēķinā",
+    "posRateLegacy": "Standarta likme no pamatdatiem",
+    "posFlatFee": "Fiksēta maksa par rezervāciju/nakti (līgums)",
+    "posFeesBack": "Jūsu maksas — neapgrieztas, bez komisijas",
+    "posOwnerShare": "= Īpašnieka daļa",
+    "posRate": "Kurss",
+    "commissionable": "jāmaksā komisija",
+    "noFeesReported": "Portāls nav ziņojis par maksām par šo rezervāciju; tāpēc tās nav piemērotas.",
+    "deductionsTitle": "Atskaitījumi un kredīti",
+    "deductions": "Atskaitījumi (uz īpašnieka rēķina)",
+    "credits": "Kredīti (par labu īpašniekam)",
+    "srcExpense": "Norēķinu pozīcijas",
+    "srcRecurring": "atkārtots",
+    "receipt": "Kvīts",
+    "perBooking": "par rezervāciju",
+    "perNight": "par nakti",
+    "perPeriod": "par periodu",
+    "sumShares": "Īpašnieka daļu kopsumma no rezervācijām",
+    "sumFlatFees": "Fiksētās maksas no līguma",
+    "sumFlatFeesNote": "jau ņemts vērā daļās — bez papildu atskaitījumiem",
+    "sumDeductions": "Atskaitījumi",
+    "sumCredits": "Kredīti",
+    "sumOwnerPayout": "Īpašnieka izmaksa",
+    "vat": "PVN",
+    "vatNet": "Administrēšanas komisija (neto)",
+    "vatGross": "Administrēšanas komisija (bruto)"
   }
 }

@@ -1503,7 +1503,13 @@
       "statusesSearch": "Státusz keresése …",
       "statusesNoMatch": "Nincs találat státuszra.",
       "statusesSelectAll": "Összes kijelölése",
-      "statusesCount": "{count} / {total} kiválasztva"
+      "statusesCount": "{count} / {total} kiválasztva",
+      "properties": "Objektumok",
+      "propertiesAll": "Összes objektum",
+      "propertiesCount": "{count} / {total} objektum",
+      "propertiesSearch": "Objektum keresése…",
+      "propertiesNoMatch": "Nincs találat.",
+      "propertiesSelectAll": "Mindet kiválaszt"
     },
     "reservationStatus": {
       "pending": "Függőben",
@@ -1640,7 +1646,16 @@
         "noContract": "Ehhez az ingatlanhoz nincs elszámolási szerződés és jutalékráta a törzsadatokban – hozzon létre egy szerződést a tulajdonosnál.",
         "addonsOutside": "Kiegészítő szolgáltatások – a myNextDays-en keresztül értékesítve, nem szerepel a portál vendégárában"
       },
-      "ownershipShare": "Részarány"
+      "ownershipShare": "Részarány",
+      "dragColumn": "Oszlop áthelyezése: {spalte}",
+      "columnsReset": "Oszloprend visszaállítása",
+      "dndStart": "{spalte} felvéve.",
+      "dndOver": "{spalte} a következő fölött: {ziel}.",
+      "dndOverNichts": "{spalte} a táblázaton kívül.",
+      "dndEnd": "{spalte} a következő helyére téve: {ziel}.",
+      "dndCancel": "{spalte} áthelyezése megszakítva.",
+      "dndAnleitung": "Oszlop felvételéhez nyomja meg a szóközt vagy az Entert. A nyílbillentyűkkel mozgathatja, szóközzel vagy Enterrel elhelyezheti, Esc-kel megszakíthatja.",
+      "dragHint": "Húzza a fogantyúkat az oszlopok átrendezéséhez – billentyűzettel is: fókuszáljon a fogantyúra, szóköz, nyílbillentyűk."
     },
     "expenses": {
       "add": "Hozzáadás",
@@ -1691,7 +1706,10 @@
       "status": "Státusz",
       "open": "Megnyitás",
       "emptyTitle": "Nincs elszámolás",
-      "emptyHint": "Hozd létre az első tulajdonosi elszámolást a „Létrehozás és szerkesztés” alatt."
+      "emptyHint": "Hozd létre az első tulajdonosi elszámolást a „Létrehozás és szerkesztés” alatt.",
+      "objects": "Objektumok",
+      "allObjects": "Összes objektum",
+      "objectsCount": "{count} objektum"
     },
     "edit": "Szerkesztés",
     "attachments": {
@@ -1740,7 +1758,10 @@
       "commission": "A szálláshely jutaléka az ingatlan kezeléséért. Ez a portál levonása után fennmaradó összegből kerül kiszámításra – és MINDEN foglalás esetén felszámításra kerül, még a saját weboldalon keresztül történő foglalás esetén is.",
       "flatFee": "Egy fix összeg a kezelési szerződésből, például a rezsiköltségekre. Megállapodás szerint a jutalék előtt vagy után kerül levonásra.",
       "ownerShare": "Ami végül a tulajdonosnak marad: vendégár mínusz portál levonás, mínusz jutalék, mínusz átalány, plusz a neki járó díjak. Tulajdonostársak esetén ezen felül a tulajdoni hányaddal megszorozva.",
-      "ownershipShare": "A tulajdonos tulajdoni hányada az ingatlanban. 100% az egyedüli tulajdonjogot jelenti. Ha egy ház több személy tulajdonában van, mindenki megkapja a saját elszámolását a tulajdoni hányadáról – a hányadok együtt 100%-ot tesznek ki."
+      "ownershipShare": "A tulajdonos tulajdoni hányada az ingatlanban. 100% az egyedüli tulajdonjogot jelenti. Ha egy ház több személy tulajdonában van, mindenki megkapja a saját elszámolását a tulajdoni hányadáról – a hányadok együtt 100%-ot tesznek ki.",
+      "properties": "Mely szálláshelyeket tartalmazza ez az elszámolás. Alapértelmezés szerint a tulajdonos összes szálláshelye. Válasszon ki egyeseket, hogy csak azokra számoljon el. Minden szálláshely időszakonként csak egy véglegesített elszámolásban szerepelhet – egy foglalás soha nem kerül kifizetésre kétszer.",
+      "language": "Ezen a nyelven készül a bizonylat – szövegek, számok és dátum. Alapértelmezés szerint a tulajdonos nyelve, egyébként a vállalkozás nyelve. A véglegesítés után rögzített; a bizonylat úgy marad, ahogy kiállították.",
+      "headerFromMaster": "Átveszi a tulajdonos és a vállalkozás nevét, címét, e-mail címét, telefonszámát és adószámát az alapadatokból. A bizonylat számlaszáma és megjegyzései változatlanok maradnak."
     },
     "finalizeConfirm": {
       "title": "Elszámolás rögzítése",
@@ -1778,7 +1799,21 @@
       "title": "Társtulajdonos",
       "hint": "Ezek az ingatlanok több személy tulajdonában vannak. Mindegyikük saját elszámolást kap a saját részéről.",
       "share": "{anteil} %"
-    }
+    },
+    "language": {
+      "label": "A nyugta nyelve"
+    },
+    "sort": {
+      "aria": "Rendezés {spalte} szerint",
+      "ascending": "növekvő",
+      "descending": "csökkenő"
+    },
+    "belegIn": "Bizonylat {sprache} nyelven",
+    "headerFromMaster": "Átvétel a törzsadatokból",
+    "headerFromMasterDone": "A fejlécek a törzsadatokból átvéve.",
+    "objectsLine": "Objektumok: {liste}",
+    "objectsAll": "Objektumok: mind",
+    "loading": "Betöltés…"
   },
   "ownerBilling": {
     "title": "Elszámolási szerződés",
@@ -13113,7 +13148,6 @@
     "mixedCurrency": "Több valuta az időszakban ({list}) – az összegek nincsenek összesítve. Kérjük, szűkítse egy objektumra vagy valutára.",
     "occupancyFootnote": "A foglalt az foglalt – akár egy portálon, a saját weboldalon keresztül, saját maga által létrehozva, vagy a tulajdonos által. A nevezőből csak azok a napok esnek ki, amikor az objektum nem volt eladó: zárolt napok és Stop-Sell.",
     "kpiFootnote": "Az egyes kártyákon lévő százalékos érték az előző azonos időszakhoz viszonyítva van megadva. Egy kártyára kattintva megnyílik az idősor.",
-    "commissionFootnote": "Az üres jutalékmezők azt jelentik, hogy a portál nem továbbít jutalékot (a Booking.com általában nem teszi meg) – semmi sem becsült.",
     "tab": {
       "kennzahlen": "Fő mutatók",
       "analytics": "Áttekintés",
@@ -13331,7 +13365,7 @@
     },
     "expenses": {
       "empty": "Ebben az időszakban nincsenek elszámolási tételek.",
-      "emptyHint": "A kiadások és extrák a tulajdonosi elszámolásban és a megrendelt szolgáltatásokból keletkeznek.",
+      "emptyHint": "A kiadások és extrák a tulajdonosi elszámolásban, a megrendelt szolgáltatásokból és a lefoglalt kiegészítő szolgáltatásokból keletkeznek.",
       "expenses": "Kiadások",
       "extras": "Extrák",
       "balance": "Egyenleg",
@@ -13346,7 +13380,11 @@
         "ausgabe": "Kiadás",
         "extra": "Extra"
       },
-      "footnote": "Az időszak a tétel dátuma. A kiadások a tulajdonost terhelik, az extrák az ő javára íródnak – ahogy az elszámolásban szerepelnek."
+      "footnote": "Az időszak a tétel dátuma; a kiegészítő szolgáltatások a foglalást követik. A kiadások a tulajdonost terhelik, az extrák az ő javára szolgálnak – ahogy az elszámolásban szerepelnek.",
+      "category": {
+        "service": "Megrendelt szolgáltatás",
+        "addon": "Kiegészítő szolgáltatás"
+      }
     },
     "pace": {
       "title": "A következő 12 hónap foglaltsági állapota",
@@ -15549,5 +15587,59 @@
       "anzahlung": "Az előlegnek 0-nál nagyobbnak és a teljes összegnél nem magasabbnak kell lennie.",
       "entwurfAngelegt": "Az ajánlat piszkozatként lett létrehozva, az e-mail nem került kiküldésre: {grund}"
     }
+  },
+  "statementPdf": {
+    "invoice": "Tulajdonosi elszámolás",
+    "storno": "Lemondási számla",
+    "invoiceNo": "Szám",
+    "issuer": "Kiállító",
+    "owner": "Tulajdonos",
+    "vatId": "Adószám",
+    "period": "Időszak",
+    "objects": "Objektumok",
+    "allObjects": "Összes objektum",
+    "bookings": "Foglalások",
+    "listing": "Objektum",
+    "guest": "Vendég",
+    "arrival": "Érkezés",
+    "departure": "Távozás",
+    "nights": "Éjszakák",
+    "channel": "Csatorna",
+    "commission": "Jutalék",
+    "flatFee": "Átalánydíj",
+    "ownerShare": "Tulajdonos részesedése",
+    "noBookings": "Nincs foglalás az időszakban.",
+    "breakdownTitle": "Részletezés foglalásonként",
+    "posAfterPortal": "Összeg a portál levonása után",
+    "posAfterPortalHint": "Vendégár mínusz portáljutalék és portál fizetési díj",
+    "posCommission": "Kezelési jutalék",
+    "posMinCommission": "Minimális jutalék (szerződés) helyett",
+    "posContractFrom": "Szerződés ettől",
+    "posRateManual": "manuálisan ebben az elszámolásban",
+    "posRateLegacy": "Standard díj a törzsadatokból",
+    "posFlatFee": "Átalánydíj foglalásonként/éjszakánként (szerződés)",
+    "posFeesBack": "Az Ön díjai – vágatlanul, jutalék nélkül",
+    "posOwnerShare": "= Tulajdonos részesedése",
+    "posRate": "Árfolyam",
+    "commissionable": "jutalékköteles",
+    "noFeesReported": "A portál nem jelentett díjat ehhez a foglaláshoz; ezért nem került felszámolásra.",
+    "deductionsTitle": "Levonások és jóváírások",
+    "deductions": "Levonások (a tulajdonos terhére)",
+    "credits": "Jóváírások (a tulajdonos javára)",
+    "srcExpense": "Elszámolási tételek",
+    "srcRecurring": "ismétlődő",
+    "receipt": "Bizonylat",
+    "perBooking": "foglalásonként",
+    "perNight": "éjszakánként",
+    "perPeriod": "időszakonként",
+    "sumShares": "Tulajdonosi részesedés a foglalásokból",
+    "sumFlatFees": "Átalánydíjak a szerződés szerint",
+    "sumFlatFeesNote": "már figyelembe véve a részesedésekben – nincs további levonás",
+    "sumDeductions": "Levonások",
+    "sumCredits": "Jóváírások",
+    "sumOwnerPayout": "Tulajdonosi kifizetés",
+    "vat": "ÁFA",
+    "vatNet": "Adminisztrációs jutalék nettó",
+    "vatGross": "Adminisztrációs jutalék bruttó"
   }
 }

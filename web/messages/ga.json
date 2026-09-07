@@ -1503,7 +1503,13 @@
       "statusesSearch": "Cuardaigh stádas …",
       "statusesNoMatch": "Níor aimsíodh stádas.",
       "statusesSelectAll": "Roghnaigh uile",
-      "statusesCount": "{count} as {total} roghnaithe"
+      "statusesCount": "{count} as {total} roghnaithe",
+      "properties": "Réadmhaoine",
+      "propertiesAll": "Gach Réadmhaoin",
+      "propertiesCount": "{count} as {total} réadmhaoin",
+      "propertiesSearch": "Cuardaigh réadmhaoin …",
+      "propertiesNoMatch": "Níor aimsíodh aon réadmhaoin.",
+      "propertiesSelectAll": "Roghnaigh uile"
     },
     "reservationStatus": {
       "pending": "Ar feitheamh",
@@ -1640,7 +1646,16 @@
         "noContract": "Níl aon chonradh billeála ná ráta coimisiúin do na sonraí seo — cruthaigh conradh leis an úinéir.",
         "addonsOutside": "Seirbhísí breise — díolta trí myNextDays, nach bhfuil san áireamh i bpraghas an aoi ar an tairseach"
       },
-      "ownershipShare": "Comhroinn"
+      "ownershipShare": "Comhroinn",
+      "dragColumn": "Bog {spalte}",
+      "columnsReset": "Athshocraigh ord na gcolún",
+      "dndStart": "Tógadh {spalte}.",
+      "dndOver": "{spalte} os cionn {ziel}.",
+      "dndOverNichts": "{spalte} lasmuigh den tábla.",
+      "dndEnd": "Scaoileadh {spalte} in áit {ziel}.",
+      "dndCancel": "Cuireadh ar ceal bogadh {spalte}.",
+      "dndAnleitung": "Brúigh spás nó iontráil chun colún a thógáil. Bain úsáid as na saigheadeochracha chun bogadh, spás nó iontráil chun scaoileadh, éalú chun cealú.",
+      "dragHint": "Tarraing na colúin leis an láimhseáil chun an t-ord a athrú — freisin leis an méarchlár: dírigh ar an láimhseáil, spásbharra, saigheadeochracha."
     },
     "expenses": {
       "add": "Cuir leis",
@@ -1691,7 +1706,10 @@
       "status": "Stádas",
       "open": "Oscail",
       "emptyTitle": "Níl aon ráiteas ann",
-      "emptyHint": "Cruthaigh do chéad ráiteas úinéara faoi „Cruthaigh & Cuir in eagar“."
+      "emptyHint": "Cruthaigh do chéad ráiteas úinéara faoi „Cruthaigh & Cuir in eagar“.",
+      "objects": "Réadmhaoine",
+      "allObjects": "Gach réadmhaoin",
+      "objectsCount": "{count} réadmhaoin"
     },
     "edit": "Cuir in eagar",
     "attachments": {
@@ -1740,7 +1758,10 @@
       "commission": "Coimisiún an ghnó as an réadmhaoin a bhainistiú. Ríomhtar é ar an méid a fhanann tar éis asbhaint na tairsí — agus tá sé dlite ar GACH áirithint, fiú ceann trí shuíomh Gréasáin an ghnó féin.",
       "flatFee": "Suim sheasta ón gconradh bainistíochta, mar shampla le haghaidh costais bhreise. Ag brath ar an gcomhaontú, déantar é a asbhaint roimh nó tar éis an choimisiúin.",
       "ownerShare": "Cad a fhanann don úinéir sa deireadh: praghas an aoi lúide asbhaint na tairsí, lúide coimisiún, lúide táille chomhréidh, móide na táillí atá dlite dó. I gcás comhúinéireachta, iolraítear é lena sciar freisin.",
-      "ownershipShare": "Scair an úinéara seo sa réadmhaoin. Ciallaíonn 100% úinéireacht aonair. Má tá teach ag roinnt daoine, faigheann gach duine a ráiteas féin faoina sciar — is ionann na scaireanna agus 100% le chéile."
+      "ownershipShare": "Scair an úinéara seo sa réadmhaoin. Ciallaíonn 100% úinéireacht aonair. Má tá teach ag roinnt daoine, faigheann gach duine a ráiteas féin faoina sciar — is ionann na scaireanna agus 100% le chéile.",
+      "properties": "Cé na réadmhaoine a chuimsíonn an tsocraíocht seo. Is iad réadmhaoine uile an úinéara an réamhshocrú. Roghnaigh cinn aonair chun socrú a dhéanamh dóibh siúd amháin. Ní féidir le gach réadmhaoin a bheith ach i socrú críochnaithe amháin in aghaidh na tréimhse - ní íoctar áirithint faoi dhó riamh.",
+      "language": "Sa teanga seo, cruthaítear an admháil - téacsanna, uimhreacha agus dáta. Réamhshocraithe ó theanga an úinéara, nó ó theanga an ghnó. Tar éis an críochnú, tá sé seasta; fanann an admháil mar a eisíodh é.",
+      "headerFromMaster": "Glacann sé ainm, seoladh, ríomhphost, teileafón agus uimhir chánach an úinéara agus an ghnó arís ó na sonraí máistir. Fanann uimhir an tsonraisc agus nótaí an admháil seo mar atá."
     },
     "finalizeConfirm": {
       "title": "Socraigh an Bille",
@@ -1778,7 +1799,21 @@
       "title": "Comhúinéirí",
       "hint": "Is le roinnt daoine na réadmhaoine seo. Faigheann gach duine bille ar leith dá sciar.",
       "share": "{anteil} %"
-    }
+    },
+    "language": {
+      "label": "Teanga an admhála"
+    },
+    "sort": {
+      "aria": "Sórtáil de réir {spalte}",
+      "ascending": "Ag ardú",
+      "descending": "Ag ísliú"
+    },
+    "belegIn": "Admháil i {sprache}",
+    "headerFromMaster": "Glac ó mháistirshonraí",
+    "headerFromMasterDone": "Sonraí ceanntásca tógtha ó mháistirshonraí.",
+    "objectsLine": "Réada: {liste}",
+    "objectsAll": "Réada: gach",
+    "loading": "Á lódáil …"
   },
   "ownerBilling": {
     "title": "Conradh socraíochta",
@@ -13113,7 +13148,6 @@
     "mixedCurrency": "Iolrachas airgeadraí sa tréimhse ({list}) — ní dhéantar suimeanna a chomhiomlánú. Teorannaigh le réad nó airgeadra amháin le do thoil.",
     "occupancyFootnote": "Tá áit áitithe áitithe — cibé acu trí thairseach, an suíomh Gréasáin féin, cruthaithe go neamhspleách nó ag an úinéir. Ní áirítear ach laethanta nach raibh an réadmhaoin ar díol: laethanta blocáilte agus Stop-Sell.",
     "kpiFootnote": "Déanann an céatadán ar gach tíl comparáid leis an tréimhse roimhe sin den fhad céanna. Osclaíonn cliceáil ar tíl an tsraith ama.",
-    "commissionFootnote": "Ciallaíonn réimsí coimisiúin fholmha nach gcuireann an tairseach coimisiún ar fáil (ní dhéanann Booking.com é seo de ghnáth) — ní dhéantar aon mheastachán.",
     "tab": {
       "kennzahlen": "Príomhtháscairí",
       "analytics": "Forbhreathnú",
@@ -13331,7 +13365,7 @@
     },
     "expenses": {
       "empty": "Níl aon earraí billeála sa tréimhse seo.",
-      "emptyHint": "Tagann caiteachas agus breiseanna chun cinn i ráiteas an úinéara agus ó sheirbhísí ordaithe.",
+      "emptyHint": "Tagann costais agus earraí breise chun cinn i ráiteas an úinéara, ó sheirbhísí ordaithe agus ó sheirbhísí breise a cuireadh in áirithe.",
       "expenses": "Caiteachas",
       "extras": "Breiseanna",
       "balance": "Iarmhéid",
@@ -13346,7 +13380,11 @@
         "ausgabe": "Caiteachas",
         "extra": "Breiseán"
       },
-      "footnote": "Is é dáta na míre an tréimhse. Is ar chostas an úinéara a thagann caiteachas, agus chun a leasa a thagann breiseanna — mar atá siad sa ráiteas."
+      "footnote": "Is é an tréimhse dáta an iontrála; leanann seirbhísí breise an áirithint. Is ar an úinéir a thiteann costais, agus is chun a leasa a thiteann earraí breise – mar atá siad sa ráiteas.",
+      "category": {
+        "service": "Seirbhís ordaithe",
+        "addon": "Seirbhís bhreise"
+      }
     },
     "pace": {
       "title": "Stádas áirithinte don chéad 12 mhí eile",
@@ -15549,5 +15587,59 @@
       "anzahlung": "Ní mór an éarlais a bheith níos mó ná 0 agus ní féidir léi a bheith níos airde ná an tsuim iomlán.",
       "entwurfAngelegt": "Cruthaíodh an tairiscint mar dhréacht, níor seoladh an ríomhphost: {grund}"
     }
+  },
+  "statementPdf": {
+    "invoice": "Sonraíocht Úinéara",
+    "storno": "Sonraíocht Cealaithe",
+    "invoiceNo": "Uimh.",
+    "issuer": "Eisitheoir",
+    "owner": "Úinéir",
+    "vatId": "Uimhir CBL",
+    "period": "Tréimhse",
+    "objects": "Aonaid",
+    "allObjects": "Gach Aonad",
+    "bookings": "Áirithintí",
+    "listing": "Aonad",
+    "guest": "Aoi",
+    "arrival": "Teacht",
+    "departure": "Imeacht",
+    "nights": "Oícheanta",
+    "channel": "Cainéal",
+    "commission": "Coimisiún",
+    "flatFee": "Táille Chomhréidh",
+    "ownerShare": "Scair an Úinéara",
+    "noBookings": "Gan áirithintí sa tréimhse.",
+    "breakdownTitle": "Miondealú de réir áirithinte",
+    "posAfterPortal": "Iomlán tar éis asbhaint tairsí",
+    "posAfterPortalHint": "Praghas an aoi lúide coimisiún tairsí agus táille íocaíochta tairsí",
+    "posCommission": "Coimisiún bainistíochta",
+    "posMinCommission": "Coimisiún íosta (conradh) in ionad",
+    "posContractFrom": "Conradh ó",
+    "posRateManual": "de láimh sa sonraíocht seo",
+    "posRateLegacy": "Ráta caighdeánach ó na sonraí máistir",
+    "posFlatFee": "Táille chomhréidh in aghaidh na háirithinte/oíche (conradh)",
+    "posFeesBack": "Do tháillí — gan laghdú, gan coimisiún",
+    "posOwnerShare": "= Scair an Úinéara",
+    "posRate": "Ráta Malairte",
+    "commissionable": "Coimisiún-inchurtha",
+    "noFeesReported": "Níor thuairiscigh an tairseach aon táillí don áirithint seo; mar sin níor cuireadh aon cheann i bhfeidhm.",
+    "deductionsTitle": "Asbhaintí agus Creidmheasanna",
+    "deductions": "Asbhaintí (ar chostas an úinéara)",
+    "credits": "Creidmheasanna (i bhfabhar an úinéara)",
+    "srcExpense": "Míreanna Imréitigh",
+    "srcRecurring": "Athfhillteach",
+    "receipt": "Admháil",
+    "perBooking": "in aghaidh an áirithinte",
+    "perNight": "in aghaidh na hoíche",
+    "perPeriod": "in aghaidh na tréimhse",
+    "sumShares": "Suim scaireanna an úinéara ó áirithintí",
+    "sumFlatFees": "Rátaí comhréidhe ón gconradh",
+    "sumFlatFeesNote": "san áireamh cheana féin sna scaireanna — gan aon asbhaint bhreise",
+    "sumDeductions": "Asbhaintí",
+    "sumCredits": "Creidmheasanna",
+    "sumOwnerPayout": "Íocaíocht amach don úinéir",
+    "vat": "Cáin Bhreisluacha",
+    "vatNet": "Coimisiún bainistíochta glan",
+    "vatGross": "Coimisiún bainistíochta comhlán"
   }
 }

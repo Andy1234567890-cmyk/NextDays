@@ -319,11 +319,16 @@ class StornoBericht(BaseModel):
 
 
 class AusgabePosten(BaseModel):
-    """Ein Verrechnungsposten (`owner_expenses`) im Zeitraum."""
+    """Ein Posten im Zeitraum — Verrechnungsposten (`owner_expenses`) ODER
+    gebuchte Zusatzleistung (`reservation_addons`, Kategorie `addon`)."""
 
     id: str
     date: str
     name: str
+    # Zusatzleistungen tragen ihren Namen als Sprach-Snapshot (jsonb je
+    # Locale). Die Oberfläche wählt daraus in der Sprache des Nutzers; `name`
+    # ist dann nur der Ersatz für Aufrufer ohne Locale (CSV/PDF-Export).
+    name_i18n: dict[str, str] | None = None
     kategorie: str | None = None
     property_id: str | None = None
     property_title: str | None = None
@@ -350,7 +355,9 @@ class AusgabeGruppe(BaseModel):
 
 class AusgabenBericht(BaseModel):
     """Hostaways „Expenses & Extras" — aus den Verrechnungsposten der
-    Eigentümer-Abrechnung, nach Datum des Postens im Zeitraum.
+    Eigentümer-Abrechnung (nach Datum des Postens) UND den gebuchten
+    Zusatzleistungen der Buchungen im Zeitraum (nach dem Bezug der Buchung,
+    wie der Rest der Auswertung).
 
     `currency` ist gesetzt, wenn ALLE Posten dieselbe Währung tragen; sonst
     `None`, und die Oberfläche addiert nicht (Wurzel 4).

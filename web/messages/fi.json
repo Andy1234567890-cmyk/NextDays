@@ -1503,7 +1503,13 @@
       "statusesSearch": "Hae tilaa …",
       "statusesNoMatch": "Tilaa ei löytynyt.",
       "statusesSelectAll": "Valitse kaikki",
-      "statusesCount": "{count} / {total} valittu"
+      "statusesCount": "{count} / {total} valittu",
+      "properties": "Kohteet",
+      "propertiesAll": "Kaikki kohteet",
+      "propertiesCount": "{count} / {total} kohdetta",
+      "propertiesSearch": "Etsi kohdetta…",
+      "propertiesNoMatch": "Kohdetta ei löytynyt.",
+      "propertiesSelectAll": "Valitse kaikki"
     },
     "reservationStatus": {
       "pending": "Avoin",
@@ -1640,7 +1646,16 @@
         "noContract": "Tällä kohteella ei ole laskutussopimusta eikä provisioprosenttia perustiedoissa – luo sopimus omistajalle.",
         "addonsOutside": "Lisäpalvelut – myNextDaysin kautta myyty, ei sisälly portaalin vierashintaan"
       },
-      "ownershipShare": "Jaa"
+      "ownershipShare": "Jaa",
+      "dragColumn": "Siirrä sarake {spalte}",
+      "columnsReset": "Palauta sarakkeiden järjestys",
+      "dndStart": "Sarake {spalte} poimittu.",
+      "dndOver": "Sarake {spalte} kohteen {ziel} yläpuolella.",
+      "dndOverNichts": "Sarake {spalte} taulukon ulkopuolella.",
+      "dndEnd": "Sarake {spalte} pudotettu kohteen {ziel} paikalle.",
+      "dndCancel": "Sarakkeen {spalte} siirto peruutettu.",
+      "dndAnleitung": "Poimi sarake painamalla välilyöntiä tai Enteriä. Siirrä nuolinäppäimillä, pudota välilyönnillä tai Enterillä, peruuta Escillä.",
+      "dragHint": "Vedä kahvasta muuttaaksesi järjestystä – myös näppäimistöllä: kohdista kahva, välilyönti, nuolinäppäimet."
     },
     "expenses": {
       "add": "Lisää",
@@ -1691,7 +1706,10 @@
       "status": "Tila",
       "open": "Avaa",
       "emptyTitle": "Ei tilityksiä",
-      "emptyHint": "Luo ensimmäinen omistajan tilitys kohdasta „Luo & muokkaa”."
+      "emptyHint": "Luo ensimmäinen omistajan tilitys kohdasta „Luo & muokkaa”.",
+      "objects": "Kohteet",
+      "allObjects": "Kaikki kohteet",
+      "objectsCount": "{count} kohdetta"
     },
     "edit": "Muokkaa",
     "attachments": {
@@ -1740,7 +1758,10 @@
       "commission": "Majoituspaikan provisio kohteen hallinnoinnista. Se lasketaan portaalin vähennyksen jälkeen jäljelle jäävästä summasta – ja se peritään JOKAISESTA varauksesta, myös omilta verkkosivuilta tehdystä varauksesta.",
       "flatFee": "Kiinteä summa hallinnointisopimuksesta, esimerkiksi lisäkustannuksista. Sopimuksen mukaan se vähennetään ennen tai jälkeen provision.",
       "ownerShare": "Mitä omistajalle jää lopulta: vierashinta miinus portaalin vähennys, miinus provisio, miinus kiinteä maksu, plus hänelle kuuluvat maksut. Yhteisomistuksessa kerrottuna hänen osuudellaan.",
-      "ownershipShare": "Tämän omistajan osuus kohteesta. 100 % tarkoittaa yksinomaista omistusta. Jos talo kuuluu useammalle henkilölle, jokainen saa oman laskun osuudestaan – osuudet muodostavat yhteensä 100 %."
+      "ownershipShare": "Tämän omistajan osuus kohteesta. 100 % tarkoittaa yksinomaista omistusta. Jos talo kuuluu useammalle henkilölle, jokainen saa oman laskun osuudestaan – osuudet muodostavat yhteensä 100 %.",
+      "properties": "Mitkä kohteet tämä tilitys kattaa. Oletuksena ovat kaikki omistajan kohteet. Valitse yksittäisiä kohteita tilitettäväksi. Jokainen kohde voi olla vain yhdessä lopullisessa tilityksessä per ajanjakso – varausta ei koskaan makseta kahdesti.",
+      "language": "Tällä kielellä kuitti luodaan – tekstit, numerot ja päivämäärä. Esitäytetty omistajan kielen mukaan, muuten yrityksen kielen mukaan. Lopullistamisen jälkeen se on kiinteä; kuitti pysyy sellaisena kuin se on myönnetty.",
+      "headerFromMaster": "Ottaa omistajan ja yrityksen nimen, osoitteen, sähköpostin, puhelinnumeron ja verotunnuksen uudelleen perustiedoista. Tämän kuitin laskunumero ja muistiinpanot säilyvät."
     },
     "finalizeConfirm": {
       "title": "Vahvista laskutus",
@@ -1778,7 +1799,21 @@
       "title": "Yhteisomistaja",
       "hint": "Nämä kohteet ovat usean henkilön omistuksessa. Jokainen saa oman laskun osuudestaan.",
       "share": "{anteil} %"
-    }
+    },
+    "language": {
+      "label": "Kuitin kieli"
+    },
+    "sort": {
+      "aria": "Lajitteluperuste {spalte}",
+      "ascending": "nouseva",
+      "descending": "laskeva"
+    },
+    "belegIn": "Kuitti kielellä {sprache}",
+    "headerFromMaster": "Käytä master-tietoja",
+    "headerFromMasterDone": "Otsikkotiedot on otettu master-tiedoista.",
+    "objectsLine": "Kohteet: {liste}",
+    "objectsAll": "Kohteet: kaikki",
+    "loading": "Ladataan…"
   },
   "ownerBilling": {
     "title": "Tilityssopimus",
@@ -13113,7 +13148,6 @@
     "mixedCurrency": "Useita valuuttoja ajanjaksolla ({list}) – määriä ei lasketa yhteen. Rajaa yhteen kohteeseen tai valuuttaan.",
     "occupancyFootnote": "Varattu on varattu – olipa varaus tehty portaalin, oman verkkosivuston kautta, itse luotu tai omistajan toimesta. Vain päivät, jolloin kohde ei ollut myynnissä, jätetään pois laskuista: estetyt päivät ja Stop-Sell.",
     "kpiFootnote": "Kunkin ruudun prosenttiarvo vertaa edelliseen vastaavaan ajanjaksoon. Ruudun napsauttaminen avaa aikasarjan.",
-    "commissionFootnote": "Tyhjät provisiokentät tarkoittavat, että portaali ei lähetä provisiota (Booking.com ei yleensä tee niin) – mitään ei arvioida.",
     "tab": {
       "kennzahlen": "Tunnusluvut",
       "analytics": "Yleiskatsaus",
@@ -13331,7 +13365,7 @@
     },
     "expenses": {
       "empty": "Ei tiliöintikohteita tällä ajanjaksolla.",
-      "emptyHint": "Kulut ja lisäpalvelut syntyvät omistajan tilityksessä ja tilatuista palveluista.",
+      "emptyHint": "Kulut ja lisäveloitukset syntyvät omistajan laskutuksesta, tilatuista palveluista ja varatuista lisäpalveluista.",
       "expenses": "Kulut",
       "extras": "Lisäpalvelut",
       "balance": "Saldo",
@@ -13346,7 +13380,11 @@
         "ausgabe": "Kulu",
         "extra": "Lisäpalvelu"
       },
-      "footnote": "Ajanjakso on kohteen päivämäärä. Kulut rasittavat omistajaa, lisäpalvelut hyödyttävät häntä – sellaisina kuin ne ovat tilityksessä."
+      "footnote": "Ajanjakso on kirjauksen päivämäärä; lisäpalvelut seuraavat varausta. Kulut ovat omistajan vastuulla, lisäveloitukset hänen hyväkseen – sellaisina kuin ne laskussa esiintyvät.",
+      "category": {
+        "service": "Tilattu palvelu",
+        "addon": "Lisäpalvelu"
+      }
     },
     "pace": {
       "title": "Varaustilanne seuraaville 12 kuukaudelle",
@@ -15549,5 +15587,59 @@
       "anzahlung": "Ennakkomaksun on oltava yli 0 eikä se saa olla suurempi kuin kokonaissumma.",
       "entwurfAngelegt": "Tarjous on luonnos, sähköpostia ei lähetetty: {grund}"
     }
+  },
+  "statementPdf": {
+    "invoice": "Omistajan tilitys",
+    "storno": "Peruutuksen lasku",
+    "invoiceNo": "Nro",
+    "issuer": "Laatija",
+    "owner": "Omistaja",
+    "vatId": "ALV-tunnus",
+    "period": "Ajanjakso",
+    "objects": "Kohteet",
+    "allObjects": "Kaikki kohteet",
+    "bookings": "Varaukset",
+    "listing": "Kohde",
+    "guest": "Asiakas",
+    "arrival": "Saapuminen",
+    "departure": "Lähtö",
+    "nights": "Yöt",
+    "channel": "Kanava",
+    "commission": "Palkkio",
+    "flatFee": "Kiinteä maksu",
+    "ownerShare": "Omistajan osuus",
+    "noBookings": "Ei varauksia tällä ajanjaksolla.",
+    "breakdownTitle": "Erittely varauksittain",
+    "posAfterPortal": "Kokonaissumma portaalin vähennyksen jälkeen",
+    "posAfterPortalHint": "Asiakashinta vähennettynä portaalin palkkiolla ja portaalin maksukululla",
+    "posCommission": "Hallinnointipalkkio",
+    "posMinCommission": "Minimipalkkio (sopimus) sijaan",
+    "posContractFrom": "Sopimus alkaen",
+    "posRateManual": "Manuaalisesti tässä tilityksessä",
+    "posRateLegacy": "Perusasetusten mukainen oletusarvo",
+    "posFlatFee": "Kiinteä maksu per varaus/yö (sopimus)",
+    "posFeesBack": "Maksunne – lyhentämättömänä, ilman palkkiota",
+    "posOwnerShare": "= Omistajan osuus",
+    "posRate": "Kurssi",
+    "commissionable": "Palkkion alainen",
+    "noFeesReported": "Portaali ei ilmoittanut maksuja tälle varaukselle; siksi niitä ei ole asetettu.",
+    "deductionsTitle": "Vähennykset ja hyvitykset",
+    "deductions": "Vähennykset (omistajan kustannuksella)",
+    "credits": "Hyvitykset (omistajan hyväksi)",
+    "srcExpense": "Tasauserät",
+    "srcRecurring": "Toistuva",
+    "receipt": "Kuitti",
+    "perBooking": "per varaus",
+    "perNight": "per yö",
+    "perPeriod": "per ajanjakso",
+    "sumShares": "Omistajan osuuksien summa varauksista",
+    "sumFlatFees": "Kiinteät maksut sopimuksen mukaan",
+    "sumFlatFeesNote": "jo huomioitu osuuksissa – ei lisävähennystä",
+    "sumDeductions": "Vähennykset",
+    "sumCredits": "Hyvitykset",
+    "sumOwnerPayout": "Omistajan maksu",
+    "vat": "ALV",
+    "vatNet": "Hallintoprovisio netto",
+    "vatGross": "Hallintoprovisio brutto"
   }
 }

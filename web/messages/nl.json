@@ -1503,7 +1503,13 @@
       "statusesSearch": "Status zoeken …",
       "statusesNoMatch": "Geen status gevonden.",
       "statusesSelectAll": "Alles selecteren",
-      "statusesCount": "{count} van {total} geselecteerd"
+      "statusesCount": "{count} van {total} geselecteerd",
+      "properties": "Objecten",
+      "propertiesAll": "Alle objecten",
+      "propertiesCount": "{count} van {total} objecten",
+      "propertiesSearch": "Object zoeken …",
+      "propertiesNoMatch": "Geen object gevonden.",
+      "propertiesSelectAll": "Alles selecteren"
     },
     "reservationStatus": {
       "pending": "Open",
@@ -1640,7 +1646,16 @@
         "noContract": "Voor dit object is er geen afrekenovereenkomst en geen provisiepercentage in de stamgegevens – leg een overeenkomst aan bij de eigenaar.",
         "addonsOutside": "Extra diensten — verkocht via myNextDays, niet inbegrepen in de gastprijs van het portaal"
       },
-      "ownershipShare": "Aandeel"
+      "ownershipShare": "Aandeel",
+      "dragColumn": "Kolom {spalte} verplaatsen",
+      "columnsReset": "Kolomvolgorde herstellen",
+      "dndStart": "{spalte} opgepakt.",
+      "dndOver": "{spalte} boven {ziel}.",
+      "dndOverNichts": "{spalte} buiten de tabel.",
+      "dndEnd": "{spalte} neergezet op de plaats van {ziel}.",
+      "dndCancel": "Verplaatsen van {spalte} geannuleerd.",
+      "dndAnleitung": "Druk op spatie of enter om een kolom op te pakken. Gebruik de pijltjestoetsen om te verplaatsen, spatie of enter om neer te zetten, en escape om te annuleren.",
+      "dragHint": "Sleep kolommen aan de hendel om de volgorde te wijzigen — ook via het toetsenbord: focus de hendel, spatiebalk, pijltjestoetsen."
     },
     "expenses": {
       "add": "Toevoegen",
@@ -1691,7 +1706,10 @@
       "status": "Status",
       "open": "Openen",
       "emptyTitle": "Geen afrekeningen",
-      "emptyHint": "Maak je eerste eigenaarsafrekening aan onder „Aanmaken & bewerken”."
+      "emptyHint": "Maak je eerste eigenaarsafrekening aan onder „Aanmaken & bewerken”.",
+      "objects": "Objecten",
+      "allObjects": "Alle objecten",
+      "objectsCount": "{count} object(en)"
     },
     "edit": "Bewerken",
     "attachments": {
@@ -1740,7 +1758,10 @@
       "commission": "De commissie van het bedrijf voor het beheer van de accommodatie. Deze wordt berekend over het bedrag dat overblijft na aftrek van het portaal – en is van toepassing op ELKE boeking, ook die via de eigen website.",
       "flatFee": "Een vast bedrag uit het beheercontract, bijvoorbeeld voor bijkomende kosten. Afhankelijk van de overeenkomst wordt dit voor of na de commissie afgetrokken.",
       "ownerShare": "Wat er uiteindelijk voor de eigenaar overblijft: gastprijs minus portaal-aftrek, minus commissie, minus forfait, plus de kosten die hem toekomen. Bij mede-eigendom bovendien vermenigvuldigd met zijn aandeel.",
-      "ownershipShare": "Het aandeel van deze eigenaar in de accommodatie. 100% betekent volledig eigendom. Als een huis eigendom is van meerdere personen, krijgt ieder zijn eigen afrekening over zijn aandeel – de aandelen vormen samen 100%."
+      "ownershipShare": "Het aandeel van deze eigenaar in de accommodatie. 100% betekent volledig eigendom. Als een huis eigendom is van meerdere personen, krijgt ieder zijn eigen afrekening over zijn aandeel – de aandelen vormen samen 100%.",
+      "properties": "Welke objecten deze afrekening omvat. Standaard zijn alle objecten van de eigenaar. Selecteer individuele objecten om alleen daarvoor af te rekenen. Elk object kan per periode slechts in één definitieve afrekening staan — een boeking wordt nooit tweemaal uitbetaald.",
+      "language": "In deze taal wordt de bon opgesteld — teksten, cijfers en datum. Vooraf ingevuld vanuit de taal van de eigenaar, anders die van het bedrijf. Na het finaliseren is deze vast; de bon blijft zoals deze is opgesteld.",
+      "headerFromMaster": "Neemt naam, adres, e-mail, telefoon en btw-nummer van eigenaar en bedrijf opnieuw over uit de stamgegevens. Factuurnummer en notities van deze bon blijven staan."
     },
     "finalizeConfirm": {
       "title": "Afwikkeling vastleggen",
@@ -1778,7 +1799,21 @@
       "title": "Mede-eigenaar",
       "hint": "Deze objecten zijn eigendom van meerdere personen. Iedereen ontvangt een eigen afrekening voor zijn aandeel.",
       "share": "{anteil} %"
-    }
+    },
+    "language": {
+      "label": "Taal van het ontvangstbewijs"
+    },
+    "sort": {
+      "aria": "Sorteren op {spalte}",
+      "ascending": "oplopend",
+      "descending": "aflopend"
+    },
+    "belegIn": "Document in {sprache}",
+    "headerFromMaster": "Overnemen uit stamgegevens",
+    "headerFromMasterDone": "Kopgegevens overgenomen uit stamgegevens.",
+    "objectsLine": "Objecten: {liste}",
+    "objectsAll": "Objecten: alle",
+    "loading": "Laden..."
   },
   "ownerBilling": {
     "title": "Afrekeningscontract",
@@ -13113,7 +13148,6 @@
     "mixedCurrency": "Meerdere valuta's in de periode ({list}) — bedragen worden niet opgeteld. Gelieve te beperken tot één object of één valuta.",
     "occupancyFootnote": "Bezet is bezet — of het nu via een portaal, de eigen website, zelf aangemaakt of door de eigenaar is. Alleen dagen waarop het object niet te koop was, vallen uit de noemer: geblokkeerde dagen en stop-sell.",
     "kpiFootnote": "Het percentage op elke tegel vergelijkt met dezelfde periode ervoor. Een klik op een tegel opent de tijdreeks.",
-    "commissionFootnote": "Lege provisievelden betekenen dat het portaal geen provisie doorgeeft (Booking.com doet dit meestal niet) — er wordt niets geschat.",
     "tab": {
       "kennzahlen": "Kerncijfers",
       "analytics": "Overzicht",
@@ -13331,7 +13365,7 @@
     },
     "expenses": {
       "empty": "Geen verrekeningsposten in deze periode.",
-      "emptyHint": "Uitgaven en extra's ontstaan in de eigenaarsafrekening en uit bestelde diensten.",
+      "emptyHint": "Kosten en extra's worden weergegeven in de afrekening van de eigenaar, op basis van bestelde diensten en geboekte extra diensten.",
       "expenses": "Uitgaven",
       "extras": "Extra's",
       "balance": "Saldo",
@@ -13346,7 +13380,11 @@
         "ausgabe": "Uitgave",
         "extra": "Extra"
       },
-      "footnote": "De periode is de datum van de post. Uitgaven zijn ten laste van de eigenaar, extra's ten gunste van hem — zoals vermeld in de afrekening."
+      "footnote": "De periode is de datum van de post; extra diensten volgen de boeking. Kosten zijn voor rekening van de eigenaar, extra's zijn in zijn voordeel — zoals vermeld in de afrekening.",
+      "category": {
+        "service": "Bestelde dienst",
+        "addon": "Extra dienst"
+      }
     },
     "pace": {
       "title": "Boekingsstatus van de komende 12 maanden",
@@ -15549,5 +15587,59 @@
       "anzahlung": "De aanbetaling moet hoger zijn dan 0 en mag niet hoger zijn dan het totaalbedrag.",
       "entwurfAngelegt": "De aanbieding is als concept opgeslagen, de e-mail is niet verzonden: {grund}"
     }
+  },
+  "statementPdf": {
+    "invoice": "Afschrift eigenaar",
+    "storno": "Annuleringsfactuur",
+    "invoiceNo": "Nr.",
+    "issuer": "Uitgever",
+    "owner": "Eigenaar",
+    "vatId": "Btw-nr.",
+    "period": "Periode",
+    "objects": "Objecten",
+    "allObjects": "Alle objecten",
+    "bookings": "Boekingen",
+    "listing": "Object",
+    "guest": "Gast",
+    "arrival": "Aankomst",
+    "departure": "Vertrek",
+    "nights": "Nachten",
+    "channel": "Kanaal",
+    "commission": "Commissie",
+    "flatFee": "Forfaitair",
+    "ownerShare": "Aandeel eigenaar",
+    "noBookings": "Geen reserveringen in deze periode.",
+    "breakdownTitle": "Overzicht per boeking",
+    "posAfterPortal": "Totaalbedrag na portaal-aftrek",
+    "posAfterPortalHint": "Gastprijs minus portaalcommissie en portaalbetalingskosten",
+    "posCommission": "Beheercommissie",
+    "posMinCommission": "Minimale commissie (contract) in plaats van",
+    "posContractFrom": "Contract vanaf",
+    "posRateManual": "Handmatig in dit afschrift",
+    "posRateLegacy": "Standaardtarief uit de stamgegevens",
+    "posFlatFee": "Forfaitair per boeking/nacht (contract)",
+    "posFeesBack": "Uw kosten — ongekort, zonder commissie",
+    "posOwnerShare": "= Aandeel eigenaar",
+    "posRate": "Koers",
+    "commissionable": "Commissieplichtig",
+    "noFeesReported": "Het portaal heeft geen kosten gemeld voor deze boeking; daarom zijn er geen kosten in rekening gebracht.",
+    "deductionsTitle": "Aftrekkingen en tegoeden",
+    "deductions": "Aftrekkingen (ten laste van de eigenaar)",
+    "credits": "Tegoeden (ten gunste van de eigenaar)",
+    "srcExpense": "Verrekenposten",
+    "srcRecurring": "Terugkerend",
+    "receipt": "Bon",
+    "perBooking": "uw boeking",
+    "perNight": "uw nacht",
+    "perPeriod": "uw periode",
+    "sumShares": "Totaal eigenaarsaandeel uit boekingen",
+    "sumFlatFees": "Forfaitaire bedragen uit contract",
+    "sumFlatFeesNote": "reeds in de aandelen verrekend — geen verdere aftrek",
+    "sumDeductions": "Aftrekkingen",
+    "sumCredits": "Tegoeden",
+    "sumOwnerPayout": "Uitbetaling aan eigenaar",
+    "vat": "Btw",
+    "vatNet": "Beheerprovisie netto",
+    "vatGross": "Beheerprovisie bruto"
   }
 }

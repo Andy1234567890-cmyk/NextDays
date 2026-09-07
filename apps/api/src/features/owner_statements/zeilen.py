@@ -596,6 +596,8 @@ class ZeilenMixin:
         owner_id: str,
         rental_rows: list[RentalRow],
         owner_currency: str,
+        *,
+        property_ids: list[str] | None = None,
     ) -> list[WiederkehrenderPosten]:
         """Die Dauervereinbarungen des Eigentümers, ausgerechnet für DIESE Zeilen.
 
@@ -620,6 +622,19 @@ class ZeilenMixin:
             .eq("aktiv", True)
             .order("id")
         )
+        # 0603: Abrechnung über eine TEILMENGE der Objekte. Ein Posten MIT
+        # Objektbezug zählt nur, wenn sein Objekt dazugehört; ein Posten OHNE
+        # Objekt gilt dem Eigentümer als Ganzem und bleibt. Ohne diesen
+        # Filter stünde die Jahrespauschale von Haus B auf der Rechnung für
+        # Haus A — „je Zeitraum" hängt nicht an den Buchungszeilen, die
+        # Bezugsmenge allein würde ihn also nicht heraushalten.
+        if property_ids is not None:
+            erlaubt = set(property_ids)
+            rows = [
+                r
+                for r in rows
+                if not r.get("property_id") or str(r["property_id"]) in erlaubt
+            ]
         if not rows:
             return []
         mengen = wiederkehrend.bezugsmenge(

@@ -119,7 +119,7 @@ class _Ctx:
     tenant_id = "t1"
 
 
-def _service(reservations=(), availability=(), properties=(), stop_sell=()):
+def _service(reservations=(), availability=(), properties=(), stop_sell=(), **weitere):
     return AuswertungService(
         _DB(
             {
@@ -127,6 +127,8 @@ def _service(reservations=(), availability=(), properties=(), stop_sell=()):
                 "availability": list(availability),
                 "properties": list(properties),
                 "stop_sell": list(stop_sell),
+                # z. B. reservation_addons=[…], owner_expenses=[…]
+                **{name: list(rows) for name, rows in weitere.items()},
             }
         )
     )
@@ -1009,8 +1011,10 @@ def test_finanzfelder_kommen_aus_der_zerlegung_nicht_aus_dem_gesamtpreis():
             {"reservation_id": "r1", "art": "linens_bed", "betrag": 200},
         ],
         reservation_addons=[
-            {"reservation_id": "r1", "price": 100, "qty": 2, "cancelled_at": None},
-            {"reservation_id": "r1", "price": 999, "qty": 1,
+            # `id` wie in der DB (Primaerschluessel): der Ausgaben-Reiter fuehrt
+            # jede Zusatzleistung als eigenen Posten mit ihrer Zeilen-ID.
+            {"id": "ad1", "reservation_id": "r1", "price": 100, "qty": 2, "cancelled_at": None},
+            {"id": "ad2", "reservation_id": "r1", "price": 999, "qty": 1,
              "cancelled_at": "2026-08-01T10:00:00Z"},
         ],
     ).auswerten(_Ctx(), von=date(2026, 8, 1), bis=date(2026, 8, 31))
@@ -1430,3 +1434,78 @@ def test_ansicht_anlegen_ist_idempotent_und_scopet_auf_den_nutzer():
     svc.ansicht_loeschen(_CtxUser(), a1.id)
     assert db.geloescht[0]["user_id"] == "u1", "Löschen nur im eigenen Scope"
     assert svc.ansichten(_CtxUser()) == []
+
+
+def test_zusatzleistungen_erscheinen_als_extras():
+    """Gebuchte Zusatzleistungen sind Hostaways „Extras" (07.09.2026).
+
+    Bis dahin las der Reiter nur `owner_expenses` — bei AirSmil fehlten drei
+    bezahlte Wäschepakete (1.050 DKK) an September-Anreisen, der Reiter stand
+    auf „Keine Posten". Währung und Datum kommen von der BUCHUNG (die
+    Addon-Zeile trägt keine Währung, Wurzel 4); stornierte Zusatzleistungen
+    (0397) sind kein Umsatz.
+    """
+    res = _service(
+        reservations=[
+            _buchung(id="a", check_in="2026-09-05", check_out="2026-09-09", currency="DKK"),
+            _buchung(id="b", check_in="2026-09-12", check_out="2026-09-14", currency="DKK"),
+            _buchung(id="s", check_in="2026-09-20", check_out="2026-09-22", status="cancelled"),
+        ],
+        properties=_OBJ,
+        reservation_addons=[
+            {"id": "x1", "reservation_id": "a", "name": {"de": "Wäschepaket", "en": "Linen"},
+             "total": "300.00", "cancelled_at": None},
+            {"id": "x2", "reservation_id": "b", "name": {"de": "Wäschepaket", "en": "Linen"},
+             "total": "150.00", "cancelled_at": None},
+            # Storniert → kein Umsatz.
+            {"id": "x3", "reservation_id": "b", "name": {"de": "Frühstück"},
+             "total": "999.00", "cancelled_at": "2026-09-01T10:00:00+00:00"},
+            # Hängt an einer stornierten Buchung → die Buchung ist nicht gültig.
+            {"id": "x4", "reservation_id": "s", "name": {"de": "Frühstück"},
+             "total": "888.00", "cancelled_at": None},
+        ],
+    ).auswerten(_Ctx(), von=date(2026, 9, 1), bis=date(2026, 9, 30))
+    x = res.ausgaben
+    assert x.anzahl == 2
+    assert x.extras == 450.0
+    assert x.ausgaben == 0.0
+    assert x.saldo == 450.0
+    assert x.currency == "DKK"
+    ids = {p.id: p for p in x.posten}
+    assert set(ids) == {"x1", "x2"}
+    assert ids["x1"].art == "extra"
+    assert ids["x1"].kategorie == "addon"
+    assert ids["x1"].currency == "DKK"
+    # Datum ist der Bezug der Buchung (Anreise), nicht unsere Uhr (Wurzel 5b).
+    assert ids["x1"].date == "2026-09-05"
+    assert ids["x1"].property_title == "Feriehus Line"
+    assert ids["x1"].name == "Linen"
+    assert ids["x1"].name_i18n == {"de": "Wäschepaket", "en": "Linen"}
+    # Gruppen führen die Zusatzleistungen unter ihrem Kategorie-Schlüssel.
+    assert [g.schluessel for g in x.kategorien] == ["addon"]
+    assert x.kategorien[0].extras == 450.0
+
+
+def test_zusatzleistungen_und_verrechnungsposten_zusammen():
+    """Beide Quellen in EINEM Bericht: Ausgabe zulasten, Extra zugunsten."""
+    res = _service(
+        reservations=[_buchung(id="a", check_in="2026-09-05", currency="DKK")],
+        properties=_OBJ,
+        owner_expenses=[
+            {"id": "e1", "date": "2026-09-03", "concept": "Indflytning-gebyr",
+             "category": "Goods", "listing_id": "p1", "reservation_id": None,
+             "direction": "from_owner", "amount": "50.00", "currency": "DKK",
+             "storage_path": None},
+        ],
+        reservation_addons=[
+            {"id": "x1", "reservation_id": "a", "name": {"en": "Linen"},
+             "total": "300.00", "cancelled_at": None},
+        ],
+    ).auswerten(_Ctx(), von=date(2026, 9, 1), bis=date(2026, 9, 30))
+    x = res.ausgaben
+    assert x.anzahl == 2
+    assert x.ausgaben == 50.0
+    assert x.extras == 300.0
+    assert x.saldo == 250.0
+    # Neueste zuerst — die Anreise (05.) vor dem Posten (03.).
+    assert [p.id for p in x.posten] == ["x1", "e1"]

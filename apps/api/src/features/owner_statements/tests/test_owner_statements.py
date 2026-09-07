@@ -13,11 +13,13 @@ from pydantic import ValidationError as PydanticValidationError
 
 from src.core.security import AuthContext
 from src.features.owner_statements.schemas import (
+    ColumnKey,
     ExpenseCreate,
     ExpenseDirection,
     ExpenseUpdate,
     StatementFinalizeRequest,
     StatementGenerateRequest,
+    StatementHeader,
     StatementUpdate,
 )
 from src.features.owner_statements.service import (
@@ -46,7 +48,12 @@ class _Query:
         self._payload: dict | list[dict] | None = None
         self._filters: list[tuple[str, object]] = []
         self._neq: list[tuple[str, object]] = []
-        self._in: tuple[str, list] | None = None
+        # MEHRERE `in_`-Filter, wie PostgREST sie kann. Bis 07.09.2026 war das
+        # ein einzelner Slot: `_reservations` filtert erst `property_id`, dann
+        # `status` — der zweite Aufruf überschrieb den ersten, und die Attrappe
+        # lieferte Buchungen ALLER Objekte. Es fiel nie auf, weil die
+        # Basistabellen nur ein Objekt hatten (0603 brachte das zweite).
+        self._in: list[tuple[str, list]] = []
         self._gte: tuple[str, str] | None = None
         self._lte: tuple[str, str] | None = None
         self._gt: tuple[str, str] | None = None
@@ -95,7 +102,7 @@ class _Query:
         return self
 
     def in_(self, col: str, vals: list) -> "_Query":
-        self._in = (col, vals)
+        self._in.append((col, vals))
         return self
 
     def gte(self, col: str, val: str) -> "_Query":
@@ -143,8 +150,10 @@ class _Query:
             str(row.get(c)) != str(v) for c, v in self._neq
         )
         if ok and self._in:
-            col, vals = self._in
-            ok = str(row.get(col)) in {str(v) for v in vals}
+            ok = all(
+                str(row.get(col)) in {str(v) for v in vals}
+                for col, vals in self._in
+            )
         if ok and self._gte:
             col, val = self._gte
             ok = str(row.get(col)) >= val
@@ -2478,3 +2487,377 @@ def test_ohne_snapshot_gelten_die_stammdaten() -> None:
     halb = svc.get(_ctx(), st.id).summary.owner_payout
     assert ganz is not None and halb is not None
     assert halb == pytest.approx(ganz / 2, abs=0.01)
+
+
+# --- 13.3 Abrechnung pro Objekt (0603) ----------------------------------------
+#
+# Bis 07.09.2026 galt jede Abrechnung für ALLE Objekte des Eigentümers. Die
+# Objektmenge steht jetzt an der Abrechnung (NULL = alle), und GENAU EINE
+# Funktion (`_scope_property_ids`) bestimmt, was dazugehört — für
+# Reservierungen, Listing-Zeilen, wiederkehrende und Verrechnungsposten.
+
+
+def _tables_zwei_objekte() -> dict[str, list[dict]]:
+    """Eigentümer mit zwei Objekten, je eine Buchung im Januar."""
+    tables = _base_tables()
+    tables["properties"].append({"id": "p-2", "tenant_id": "t-1", "title": "Hygge"})
+    tables["owner_properties"].append(
+        {"id": "op-2", "owner_id": "o-1", "property_id": "p-2"}
+    )
+    tables["reservations"].append(
+        {
+            "id": "r-3",
+            "tenant_id": "t-1",
+            "property_id": "p-2",
+            "guest_id": "g-1",
+            "channel": "direct",
+            "check_in": "2026-01-10",
+            "check_out": "2026-01-12",
+            "status": "confirmed",
+            "total_amount": 400,
+            "channel_fee": 0,
+            "currency": "EUR",
+            "is_owner_stay": False,
+        }
+    )
+    return tables
+
+
+def test_preview_mit_objektauswahl_rechnet_nur_diese_objekte() -> None:
+    svc = _svc(_tables_zwei_objekte())
+    req = StatementGenerateRequest(
+        owner_id="o-1",
+        period_from=date(2026, 1, 1),
+        period_to=date(2026, 1, 31),
+        reservation_statuses=["confirmed", "completed"],
+        property_ids=["p-2"],
+    )
+    st = svc.preview(_ctx(), req)
+    assert {r.listing_id for r in st.rental_rows} == {"p-2"}
+    assert st.property_ids == ["p-2"]
+    assert [(o.id, o.title) for o in st.objekte] == [("p-2", "Hygge")]
+    # Ohne Auswahl: alle — und `property_ids` bleibt None, nicht die Liste.
+    alle = svc.preview(_ctx(), req.model_copy(update={"property_ids": None}))
+    assert {r.listing_id for r in alle.rental_rows} == {"p-1", "p-2"}
+    assert alle.property_ids is None
+    assert {o.id for o in alle.objekte} == {"p-1", "p-2"}
+
+
+def test_objektauswahl_mit_fremdem_objekt_ist_422() -> None:
+    """Wurzel 3/9: eine fremde ID ist kein Filter, der nichts findet."""
+    svc = _svc(_tables_zwei_objekte())
+    svc._db.tables["properties"].append(
+        {"id": "p-fremd", "tenant_id": "t-1", "title": "Fremd"}
+    )
+    with pytest.raises(StatementError) as exc:
+        _gen(svc, property_ids=["p-1", "p-fremd"])
+    assert exc.value.status_code == 422
+    # Nichts angelegt.
+    assert svc._db.tables["owner_statements"] == []
+
+
+def test_generate_speichert_teilmenge_und_null_bei_allen() -> None:
+    svc = _svc(_tables_zwei_objekte())
+    teil = _gen(svc, property_ids=["p-1"])
+    alle = _gen(svc, property_ids=[])
+    zeilen = {r["id"]: r for r in svc._db.tables["owner_statements"]}
+    assert zeilen[teil.id]["property_ids"] == ["p-1"]
+    assert zeilen[alle.id]["property_ids"] is None
+    # Der gespeicherte Entwurf rechnet nur über seine Teilmenge.
+    assert {r.listing_id for r in svc.get(_ctx(), teil.id).rental_rows} == {"p-1"}
+
+
+def test_update_leere_liste_setzt_zurueck_auf_alle_objekte() -> None:
+    svc = _svc(_tables_zwei_objekte())
+    st = _gen(svc, property_ids=["p-1"])
+    assert st.property_ids == ["p-1"]
+    st = svc.update(_ctx(), st.id, StatementUpdate(property_ids=[]))
+    assert st.property_ids is None
+    assert {r.listing_id for r in st.rental_rows} == {"p-1", "p-2"}
+
+
+def test_finalize_lehnt_zweite_rechnung_ueber_dieselben_buchungen_ab() -> None:
+    """Wurzel 2: eine Buchung darf nicht zweimal abgerechnet werden.
+
+    Vorher fehlte diese Prüfung ganz — zwei Abrechnungen desselben Monats
+    hätten beide eine fortlaufende Nummer bekommen.
+    """
+    svc = _svc(_tables_zwei_objekte())
+    a = _gen(svc)
+    _finalize(svc, a.id)
+    b = _gen(svc)
+    with pytest.raises(StatementError) as exc:
+        _finalize(svc, b.id)
+    assert exc.value.status_code == 409
+    assert "RE-" in exc.value.message
+
+
+def test_finalize_disjunkte_objekte_im_selben_zeitraum_gehen_durch() -> None:
+    """Zwei Abrechnungen desselben Monats, je ein Objekt — kein Konflikt."""
+    svc = _svc(_tables_zwei_objekte())
+    a = _gen(svc, property_ids=["p-1"])
+    b = _gen(svc, property_ids=["p-2"])
+    assert _finalize(svc, a.id).status == "finalized"
+    assert _finalize(svc, b.id).status == "finalized"
+
+
+def test_finalize_teilmenge_kollidiert_mit_alle_objekte() -> None:
+    """NULL heißt „alle" und überschneidet mit jeder Teilmenge."""
+    svc = _svc(_tables_zwei_objekte())
+    alle = _gen(svc)
+    _finalize(svc, alle.id)
+    teil = _gen(svc, property_ids=["p-2"])
+    with pytest.raises(StatementError) as exc:
+        _finalize(svc, teil.id)
+    assert exc.value.status_code == 409
+
+
+def test_finalize_disjunkter_zeitraum_geht_durch() -> None:
+    tables = _tables_zwei_objekte()
+    # Eine Buchung im Februar — ohne Buchung ist eine Abrechnung nicht
+    # finalisierbar (bestehende Regel), und genau das soll hier NICHT der
+    # Grund für Erfolg oder Misserfolg sein.
+    tables["reservations"].append(
+        {
+            "id": "r-feb",
+            "tenant_id": "t-1",
+            "property_id": "p-1",
+            "guest_id": "g-2",
+            "channel": "direct",
+            "check_in": "2026-02-10",
+            "check_out": "2026-02-12",
+            "status": "confirmed",
+            "total_amount": 300,
+            "channel_fee": 0,
+            "currency": "EUR",
+            "is_owner_stay": False,
+        }
+    )
+    svc = _svc(tables)
+    jan = _gen(svc)
+    _finalize(svc, jan.id)
+    feb = svc.generate(
+        _ctx(),
+        StatementGenerateRequest(
+            owner_id="o-1",
+            period_from=date(2026, 2, 1),
+            period_to=date(2026, 2, 28),
+            reservation_statuses=["confirmed", "completed"],
+        ),
+    )
+    assert _finalize(svc, feb.id).status == "finalized"
+
+
+def test_wiederkehrender_posten_mit_objekt_ausserhalb_der_auswahl_faellt_weg() -> None:
+    """„je Zeitraum" hängt nicht an den Buchungszeilen — ohne den Filter stünde
+    die Jahrespauschale von Haus B auf der Rechnung für Haus A."""
+    tables = _tables_zwei_objekte()
+    tables["owner_recurring_items"] = [
+        {
+            "id": "rec-b",
+            "tenant_id": "t-1",
+            "owner_id": "o-1",
+            "label": "Gartenpflege Hygge",
+            "abschnitt": "ausgaben",
+            "modus": "je_zeitraum",
+            "betrag": 120,
+            "currency": "EUR",
+            "property_id": "p-2",
+            "aktiv": True,
+        },
+        {
+            "id": "rec-alle",
+            "tenant_id": "t-1",
+            "owner_id": "o-1",
+            "label": "Verwaltungspauschale",
+            "abschnitt": "ausgaben",
+            "modus": "je_zeitraum",
+            "betrag": 30,
+            "currency": "EUR",
+            "property_id": None,
+            "aktiv": True,
+        },
+    ]
+    svc = _svc(tables)
+    nur_a = _gen(svc, property_ids=["p-1"])
+    labels = {p.label for p in nur_a.recurring}
+    assert "Gartenpflege Hygge" not in labels
+    # Der Posten OHNE Objekt gilt dem Eigentümer als Ganzem und bleibt.
+    assert "Verwaltungspauschale" in labels
+
+
+def test_verrechnungsposten_mit_objekt_ausserhalb_der_abrechnung_ist_422() -> None:
+    svc = _svc(_tables_zwei_objekte())
+    st = _gen(svc, property_ids=["p-1"])
+    with pytest.raises(StatementError) as exc:
+        svc.add_expense(
+            _ctx(),
+            ExpenseCreate(
+                statement_id=st.id,
+                listing_id="p-2",
+                date=date(2026, 1, 15),
+                concept="Reinigung Hygge",
+                amount=80,
+                direction="from_owner",
+            ),
+        )
+    assert exc.value.status_code == 422
+
+
+def test_auto_run_legt_alle_objekte_und_sprache_an() -> None:
+    svc = _svc()
+    svc._db.tables["owners"][0]["language"] = "da"
+    svc.run_auto_statements(date(2026, 1, 1), date(2026, 1, 31))
+    zeile = svc._db.tables["owner_statements"][0]
+    assert zeile["property_ids"] is None
+    assert zeile["language"] == "da"
+
+
+# --- 13.4 Adressat anpassen ---------------------------------------------------
+
+
+def test_header_aus_stammdaten_ersetzt_kopf_und_behaelt_nummer_und_notizen() -> None:
+    svc = _svc()
+    st = _gen(svc)
+    st = svc.update(
+        _ctx(),
+        st.id,
+        StatementUpdate(
+            header=StatementHeader(
+                owner_name="Erbengemeinschaft Owner", notes="Bitte per Post."
+            )
+        ),
+    )
+    assert st.header.owner_name == "Erbengemeinschaft Owner"
+    # Stammdaten haben sich inzwischen geändert.
+    svc._db.tables["owners"][0]["name"] = "Max Owner jun."
+    st = svc.update(_ctx(), st.id, StatementUpdate(header_aus_stammdaten=True))
+    assert st.header.owner_name == "Max Owner jun."
+    # Was zu DIESEM Beleg gehört, bleibt.
+    assert st.header.notes == "Bitte per Post."
+
+
+# --- 13.5 Sprache des Belegs (0604) -------------------------------------------
+
+
+def test_generate_friert_sprache_des_eigentuemers_ein() -> None:
+    svc = _svc()
+    svc._db.tables["owners"][0]["language"] = "da"
+    st = _gen(svc)
+    assert st.language == "da"
+    # Der Eigentümer wechselt später — der Beleg bleibt, wie ausgestellt.
+    svc._db.tables["owners"][0]["language"] = "sv"
+    assert svc.get(_ctx(), st.id).language == "da"
+
+
+def test_sprache_kette_betrieb_dann_englisch() -> None:
+    svc = _svc()
+    svc._db.tables["tenants"][0]["default_language"] = "sv"
+    assert _gen(svc).language == "sv"
+    ohne = _svc()
+    assert _gen(ohne).language == "en"
+
+
+def test_sprache_im_entwurf_aenderbar_unbekannter_code_422() -> None:
+    svc = _svc()
+    st = _gen(svc)
+    st = svc.update(_ctx(), st.id, StatementUpdate(language="fr"))
+    assert st.language == "fr"
+    with pytest.raises(StatementError) as exc:
+        svc.update(_ctx(), st.id, StatementUpdate(language="zz"))
+    assert exc.value.status_code == 422
+
+
+def test_beleg_von_vor_0604_bekommt_sprache_aus_der_kette() -> None:
+    """NULL in der Spalte heißt „vor 0604", nicht „Deutsch" (Wurzel 4)."""
+    svc = _svc()
+    svc._db.tables["owners"][0]["language"] = "da"
+    st = _gen(svc)
+    for z in svc._db.tables["owner_statements"]:
+        z["language"] = None
+    assert svc.get(_ctx(), st.id).language == "da"
+
+
+def test_storno_uebernimmt_sprache_objekte_und_sortierung() -> None:
+    svc = _svc(_tables_zwei_objekte())
+    svc._db.tables["owners"][0]["language"] = "da"
+    st = _gen(svc, property_ids=["p-1"], sort_key="owner_payout", sort_dir="desc")
+    _finalize(svc, st.id)
+    storno = svc.cancel(_ctx(), st.id)
+    assert storno.kind == "cancellation"
+    assert storno.language == "da"
+    assert storno.property_ids == ["p-1"]
+    assert (storno.sort_key, storno.sort_dir) == ("owner_payout", "desc")
+
+
+# --- 13.6 Sortierung (0604) ---------------------------------------------------
+
+
+def test_sortierung_gilt_fuer_gespeicherte_abrechnung() -> None:
+    svc = _svc(_tables_zwei_objekte())
+    st = _gen(svc, sort_key="owner_payout", sort_dir="desc")
+    werte = [r.owner_payout for r in st.rental_rows]
+    assert werte == sorted(werte, reverse=True)
+    # Nur den Schlüssel wechseln: die Richtung bleibt `desc` — und absteigend
+    # nach Objekt heißt Villa vor Hygge.
+    st = svc.update(_ctx(), st.id, StatementUpdate(sort_key="property"))
+    titel = [r.listing for r in st.rental_rows]
+    assert titel == sorted(titel, key=str.casefold, reverse=True)
+    assert (st.sort_key, st.sort_dir) == ("property", "desc")
+    # Richtung wechseln: jetzt Hygge zuerst.
+    st = svc.update(_ctx(), st.id, StatementUpdate(sort_dir="asc"))
+    assert [r.listing for r in st.rental_rows] == sorted(titel, key=str.casefold)
+
+
+def test_sortierung_fehlende_werte_immer_am_ende() -> None:
+    """Ein Eigentümer sieht den Gastpreis maskiert — die Zeilen ohne Zahl
+    dürfen bei „absteigend" nicht nach oben rutschen."""
+    svc = _svc(_tables_zwei_objekte())
+    svc._db.tables["users"].append(
+        {"id": "u-owner", "role": "owner", "permissions": []}
+    )
+    svc._db.tables["owners"][0]["user_id"] = "u-owner"
+    st = _gen(svc, sort_key="gross", sort_dir="desc")
+    _finalize(svc, st.id)
+    ctx_owner = AuthContext(user_id="u-owner", tenant_id="t-1", role="owner")
+    sicht = svc.get(ctx_owner, st.id)
+    # Alle Gastpreise maskiert → Reihenfolge fällt auf Anreise zurück, nie
+    # eine Exception, nie None vor Zahlen.
+    assert [r.total_price for r in sicht.rental_rows] == [None] * len(sicht.rental_rows)
+    assert [r.check_in for r in sicht.rental_rows] == sorted(
+        r.check_in for r in sicht.rental_rows
+    )
+
+
+# --- 0605 Spaltenreihenfolge ---------------------------------------------------
+
+
+def test_spaltenreihenfolge_wird_je_abrechnung_gespeichert_und_vervollstaendigt() -> None:
+    """„wenn wir es verschieben wird es nicht an vorschau weitergeben"
+    (07.09.2026): die Reihenfolge steht am Beleg, nicht im Browser."""
+    svc = _svc()
+    st = _gen(svc)
+    # Standard: vollständig, in Enum-Reihenfolge, in der DB NULL.
+    assert [c.value for c in st.column_order][:3] == ["guest", "listing", "check_in"]
+    assert svc._db.tables["owner_statements"][0]["column_order"] is None
+
+    st = svc.update(
+        _ctx(), st.id, StatementUpdate(column_order=["owner_payout", "listing"])
+    )
+    werte = [c.value for c in st.column_order]
+    # Die genannten zuerst, der Rest in Standardfolge hinten — immer vollständig.
+    assert werte[:2] == ["owner_payout", "listing"]
+    assert set(werte) == {c.value for c in ColumnKey} and len(werte) == len(ColumnKey)
+
+    # Leere Liste = zurück auf Standard.
+    st = svc.update(_ctx(), st.id, StatementUpdate(column_order=[]))
+    assert [c.value for c in st.column_order] == [c.value for c in ColumnKey]
+    assert svc._db.tables["owner_statements"][0]["column_order"] is None
+
+
+def test_storno_uebernimmt_spaltenreihenfolge() -> None:
+    svc = _svc()
+    st = _gen(svc, column_order=["channel", "guest"])
+    _finalize(svc, st.id)
+    storno = svc.cancel(_ctx(), st.id)
+    assert [c.value for c in storno.column_order][:2] == ["channel", "guest"]

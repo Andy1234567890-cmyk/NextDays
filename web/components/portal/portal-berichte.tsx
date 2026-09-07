@@ -28,6 +28,7 @@ import { NativeSelect } from "@nextdays/ui/native-select";
 import { formatCurrency } from "@/lib/currency";
 import { getStatement } from "@/lib/owner-statements";
 import { type PortalEarnings, type PortalStatement, getOwnerEarnings } from "@/lib/portal";
+import { belegTexte } from "@/lib/beleg-texte";
 import { downloadStatementPdf } from "@/lib/statement-pdf";
 
 const STATUS_KEYS: Record<string, string> = {
@@ -122,7 +123,8 @@ export function PortalBerichte({
       return;
     }
     try {
-      await downloadStatementPdf(voll.data, locale);
+      // Texte in der Sprache DES BELEGS (0604), nicht des Betrachters.
+      await downloadStatementPdf(voll.data, await belegTexte(voll.data.language));
     } catch (e) {
       // Der Grund bleibt erhalten (kein verschluckter Fehler, Wurzel 5).
       toast.error(

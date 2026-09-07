@@ -94,7 +94,15 @@ export function StatementManage({
               <tr key={s.id} className="border-b border-border last:border-0">
                 <td className="px-5 py-3 font-medium">{s.owner_name ?? "—"}</td>
                 <td className="px-5 py-3">
-                  {s.period_from} – {s.period_to}
+                  <div>{s.period_from} – {s.period_to}</div>
+                  {/* 0603: „alle Objekte" oder Anzahl — zwei Abrechnungen
+                      desselben Monats (eine je Haus) sähen sonst aus wie ein
+                      Duplikat. */}
+                  <div className="text-xs text-muted-foreground">
+                    {s.property_ids && s.property_ids.length
+                      ? t("manage.objectsCount", { count: s.property_ids.length })
+                      : t("manage.allObjects")}
+                  </div>
                 </td>
                 <td className="px-5 py-3">
                   <span

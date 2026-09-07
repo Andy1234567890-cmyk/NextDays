@@ -5107,6 +5107,24 @@
       "sprachen": [
         "sv"
       ]
+    },
+    {
+      "schluessel": "statementPdf.posRate",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "pl",
+        "sv"
+      ],
+      "notiz": "Wechselkurs heißt in Dänisch, Schwedisch und Polnisch „kurs\" — je Sprache geprüft (da: valutakurs/kurs, sv: kurs, pl: kurs walutowy)."
+    },
+    {
+      "schluessel": "statementPdf.invoiceNo",
+      "grund": "kuerzel",
+      "sprachen": [
+        "et"
+      ],
+      "notiz": "Estnisch kürzt „number\" als „nr\" ab — dieselbe Abkürzung wie im Deutschen."
     }
   ]
 }

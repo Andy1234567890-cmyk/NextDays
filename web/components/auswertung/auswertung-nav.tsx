@@ -55,7 +55,12 @@ export function AuswertungNav({
             className={
               "flex shrink-0 items-center gap-2 border-b-2 px-3 py-2.5 text-sm whitespace-nowrap transition-colors " +
               (ist
-                ? "border-foreground font-medium text-foreground"
+                ? // Der offene Reiter traegt das Logo-Rot — Unterstrich UND
+                  // Schrift. `--accent` ist das Dashboard-Token dafuer, NICHT
+                  // `--brand`: letzteres gehoert dem Website-Baukasten und wird
+                  // dort spaeter mit der Farbe des BETRIEBS ueberschrieben; ein
+                  // Reiter im Dashboard duerfte davon nicht mitwandern.
+                  "border-accent font-medium text-accent"
                 : "border-transparent text-muted-foreground hover:border-border hover:text-foreground")
             }
           >

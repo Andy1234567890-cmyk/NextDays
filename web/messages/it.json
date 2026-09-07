@@ -1503,7 +1503,13 @@
       "statusesSearch": "Cerca stato …",
       "statusesNoMatch": "Nessuno stato trovato.",
       "statusesSelectAll": "Seleziona tutto",
-      "statusesCount": "{count} di {total} selezionati"
+      "statusesCount": "{count} di {total} selezionati",
+      "properties": "Alloggi",
+      "propertiesAll": "Tutti gli alloggi",
+      "propertiesCount": "{count} di {total} alloggi",
+      "propertiesSearch": "Cerca alloggio...",
+      "propertiesNoMatch": "Nessun alloggio trovato.",
+      "propertiesSelectAll": "Seleziona tutto"
     },
     "reservationStatus": {
       "pending": "In attesa",
@@ -1640,7 +1646,16 @@
         "noContract": "Per questa proprietà non esiste un contratto di fatturazione e nessuna percentuale di commissione nei dati anagrafici — creare un contratto con il proprietario.",
         "addonsOutside": "Servizi aggiuntivi — venduti tramite myNextDays, non inclusi nel prezzo ospite del portale"
       },
-      "ownershipShare": "Quota"
+      "ownershipShare": "Quota",
+      "dragColumn": "Sposta colonna {spalte}",
+      "columnsReset": "Reimposta ordine colonne",
+      "dndStart": "{spalte} selezionata.",
+      "dndOver": "{spalte} sopra {ziel}.",
+      "dndOverNichts": "{spalte} fuori dalla tabella.",
+      "dndEnd": "{spalte} rilasciata al posto di {ziel}.",
+      "dndCancel": "Spostamento di {spalte} annullato.",
+      "dndAnleitung": "Premere Spazio o Invio per selezionare una colonna. Usare i tasti freccia per spostare, Spazio o Invio per rilasciare, Esc per annullare.",
+      "dragHint": "Trascinare le colonne per riordinarle — anche con la tastiera: selezionare la maniglia, premere la barra spaziatrice, usare i tasti freccia."
     },
     "expenses": {
       "add": "Aggiungi",
@@ -1691,7 +1706,10 @@
       "status": "Stato",
       "open": "Apri",
       "emptyTitle": "Nessun rendiconto",
-      "emptyHint": "Crea il tuo primo rendiconto proprietari in «Crea e modifica»."
+      "emptyHint": "Crea il tuo primo rendiconto proprietari in «Crea e modifica».",
+      "objects": "Alloggi",
+      "allObjects": "tutti gli alloggi",
+      "objectsCount": "{count} alloggi"
     },
     "edit": "Modifica",
     "attachments": {
@@ -1740,7 +1758,10 @@
       "commission": "La commissione della struttura per la gestione dell'immobile. Viene calcolata sull'importo rimanente dopo la detrazione del portale e si applica a OGNI prenotazione, anche a quelle tramite il proprio sito web.",
       "flatFee": "Un importo fisso dal contratto di gestione, ad esempio per le spese accessorie. A seconda dell'accordo, viene detratto prima o dopo la commissione.",
       "ownerShare": "Cosa rimane al proprietario alla fine: prezzo ospite meno detrazione portale, meno commissione, meno forfettario, più le tasse che gli spettano. In caso di comproprietà, moltiplicato anche per la sua quota.",
-      "ownershipShare": "La quota di questo proprietario nell'immobile. 100% significa proprietà esclusiva. Se una casa appartiene a più persone, ognuno riceve il proprio rendiconto per la propria quota - le quote insieme fanno il 100%."
+      "ownershipShare": "La quota di questo proprietario nell'immobile. 100% significa proprietà esclusiva. Se una casa appartiene a più persone, ognuno riceve il proprio rendiconto per la propria quota - le quote insieme fanno il 100%.",
+      "properties": "Quali oggetti include questo estratto conto. Per impostazione predefinita, tutti gli oggetti del proprietario. Selezionare singoli oggetti per fatturarli. Ogni oggetto può essere incluso in un solo estratto conto finalizzato per periodo — una prenotazione non viene mai pagata due volte.",
+      "language": "In questa lingua viene creato il documento — testi, numeri e data. Predefinito dalla lingua del proprietario, altrimenti da quella dell'azienda. Dopo la finalizzazione è fisso; il documento rimane come è stato emesso.",
+      "headerFromMaster": "Aggiorna nome, indirizzo, e-mail, telefono e codice fiscale del proprietario e dell'azienda dai dati anagrafici. Il numero di fattura e le note di questo documento rimangono invariati."
     },
     "finalizeConfirm": {
       "title": "Fattura definitiva",
@@ -1778,7 +1799,21 @@
       "title": "Comproprietario",
       "hint": "Queste proprietà appartengono a più persone. Ognuno riceve una fattura separata per la propria quota.",
       "share": "{anteil} %"
-    }
+    },
+    "language": {
+      "label": "Lingua della ricevuta"
+    },
+    "sort": {
+      "aria": "Ordina per {spalte}",
+      "ascending": "crescente",
+      "descending": "decrescente"
+    },
+    "belegIn": "Ricevuta in {sprache}",
+    "headerFromMaster": "Prendi da anagrafica",
+    "headerFromMasterDone": "Dati anagrafici importati.",
+    "objectsLine": "Oggetti: {liste}",
+    "objectsAll": "Oggetti: tutti",
+    "loading": "Caricamento in corso…"
   },
   "ownerBilling": {
     "title": "Contratto di rendicontazione",
@@ -13113,7 +13148,6 @@
     "mixedCurrency": "Più valute nel periodo ({list}) — gli importi non vengono sommati. Si prega di limitare a un oggetto o a una valuta.",
     "occupancyFootnote": "Occupato è occupato — sia tramite un portale, il proprio sito web, creato autonomamente o dal proprietario. Dal denominatore vengono esclusi solo i giorni in cui l'immobile non era in vendita: giorni bloccati e stop-sell.",
     "kpiFootnote": "La percentuale su ogni riquadro si confronta con il periodo precedente di pari durata. Un clic su un riquadro apre la serie temporale.",
-    "commissionFootnote": "I campi provvigione vuoti indicano che il portale non trasmette provvigioni (Booking.com di solito non lo fa) — nulla viene stimato.",
     "tab": {
       "kennzahlen": "Indicatori chiave",
       "analytics": "Panoramica",
@@ -13331,7 +13365,7 @@
     },
     "expenses": {
       "empty": "Nessuna voce di addebito in questo periodo.",
-      "emptyHint": "Spese ed extra sono inclusi nel rendiconto del proprietario e nei servizi ordinati.",
+      "emptyHint": "Spese ed extra sono inclusi nel rendiconto del proprietario, derivanti da servizi ordinati e servizi aggiuntivi prenotati.",
       "expenses": "Spese",
       "extras": "Extra",
       "balance": "Saldo",
@@ -13346,7 +13380,11 @@
         "ausgabe": "Spesa",
         "extra": "Extra"
       },
-      "footnote": "Il periodo è la data della voce. Le spese sono a carico del proprietario, gli extra a suo favore — così come sono indicati nel rendiconto."
+      "footnote": "Il periodo è la data della voce; i servizi aggiuntivi seguono la prenotazione. Le spese sono a carico del proprietario, gli extra a suo favore, così come indicato nel rendiconto.",
+      "category": {
+        "service": "Servizio ordinato",
+        "addon": "Servizio aggiuntivo"
+      }
     },
     "pace": {
       "title": "Stato delle prenotazioni per i prossimi 12 mesi",
@@ -15549,5 +15587,59 @@
       "anzahlung": "L'acconto deve essere superiore a 0 e non può essere superiore all'importo totale.",
       "entwurfAngelegt": "L'offerta è stata creata come bozza, l'e-mail non è stata inviata: {grund}"
     }
+  },
+  "statementPdf": {
+    "invoice": "Rendiconto proprietario",
+    "storno": "Fattura di annullamento",
+    "invoiceNo": "N.",
+    "issuer": "Emittente",
+    "owner": "Proprietario",
+    "vatId": "Partita IVA",
+    "period": "Periodo",
+    "objects": "Immobili",
+    "allObjects": "Tutti gli immobili",
+    "bookings": "Prenotazioni",
+    "listing": "Immobile",
+    "guest": "Ospite",
+    "arrival": "Arrivo",
+    "departure": "Partenza",
+    "nights": "Notti",
+    "channel": "Canale",
+    "commission": "Commissione",
+    "flatFee": "Forfait",
+    "ownerShare": "Quota proprietario",
+    "noBookings": "Nessuna prenotazione nel periodo.",
+    "breakdownTitle": "Riepilogo per prenotazione",
+    "posAfterPortal": "Importo totale al netto della detrazione del portale",
+    "posAfterPortalHint": "Prezzo ospite meno commissione del portale e tassa di pagamento del portale",
+    "posCommission": "Commissione di gestione",
+    "posMinCommission": "Commissione minima (contratto) invece di",
+    "posContractFrom": "Contratto da",
+    "posRateManual": "Manualmente in questo rendiconto",
+    "posRateLegacy": "Tariffa standard dai dati anagrafici",
+    "posFlatFee": "Forfait per prenotazione/notte (contratto)",
+    "posFeesBack": "Le sue tariffe — intere, senza commissioni",
+    "posOwnerShare": "= Quota proprietario",
+    "posRate": "Corso",
+    "commissionable": "Soggetto a commissione",
+    "noFeesReported": "Il portale non ha segnalato alcuna tariffa per questa prenotazione; pertanto non ne sono state applicate.",
+    "deductionsTitle": "Detrazioni e crediti",
+    "deductions": "Detrazioni (a carico del proprietario)",
+    "credits": "Crediti (a favore del proprietario)",
+    "srcExpense": "Voci di compensazione",
+    "srcRecurring": "Ricorrente",
+    "receipt": "Ricevuta",
+    "perBooking": "per prenotazione",
+    "perNight": "per notte",
+    "perPeriod": "per periodo",
+    "sumShares": "Totale quote proprietario dalle prenotazioni",
+    "sumFlatFees": "Tariffe forfettarie da contratto",
+    "sumFlatFeesNote": "già incluse nelle quote – nessuna ulteriore detrazione",
+    "sumDeductions": "Detrazioni",
+    "sumCredits": "Crediti",
+    "sumOwnerPayout": "Pagamento al proprietario",
+    "vat": "IVA",
+    "vatNet": "Commissione di gestione netta",
+    "vatGross": "Commissione di gestione lorda"
   }
 }

@@ -1503,7 +1503,13 @@
       "statusesSearch": "Ieškoti būsenos …",
       "statusesNoMatch": "Būsenų nerasta.",
       "statusesSelectAll": "Pasirinkti visas",
-      "statusesCount": "Pasirinkta {count} iš {total}"
+      "statusesCount": "Pasirinkta {count} iš {total}",
+      "properties": "Objektai",
+      "propertiesAll": "Visi objektai",
+      "propertiesCount": "{count} iš {total} objektų",
+      "propertiesSearch": "Ieškoti objekto…",
+      "propertiesNoMatch": "Objektų nerasta.",
+      "propertiesSelectAll": "Pasirinkti visus"
     },
     "reservationStatus": {
       "pending": "Laukiama",
@@ -1640,7 +1646,16 @@
         "noContract": "Šiam objektui nėra atsiskaitymo sutarties ir komisinio mokesčio pagrindiniuose duomenyse – sukurkite sutartį su savininku.",
         "addonsOutside": "Papildomos paslaugos – parduodamos per „myNextDays“, neįskaičiuotos į portalo svečio kainą"
       },
-      "ownershipShare": "Dalis"
+      "ownershipShare": "Dalis",
+      "dragColumn": "Perkelti stulpelį {spalte}",
+      "columnsReset": "Atkurti stulpelių tvarką",
+      "dndStart": "{spalte} paimtas.",
+      "dndOver": "{spalte} virš {ziel}.",
+      "dndOverNichts": "{spalte} už lentelės ribų.",
+      "dndEnd": "{spalte} numestas į {ziel} vietą.",
+      "dndCancel": "{spalte} perkėlimas atšauktas.",
+      "dndAnleitung": "Norėdami paimti stulpelį, paspauskite tarpo klavišą arba „Enter“. Norėdami perkelti, naudokite rodyklių klavišus, norėdami numesti, paspauskite tarpo klavišą arba „Enter“, norėdami atšaukti, paspauskite „Escape“.",
+      "dragHint": "Norėdami pakeisti tvarką, vilkite stulpelius už rankenos – taip pat galite naudoti klaviatūrą: sufokusuokite rankeną, paspauskite tarpo klavišą, tada rodyklių klavišus."
     },
     "expenses": {
       "add": "Pridėti",
@@ -1691,7 +1706,10 @@
       "status": "Būsena",
       "open": "Atidaryti",
       "emptyTitle": "Ataskaitų nėra",
-      "emptyHint": "Sukurk pirmąją savininko ataskaitą skiltyje „Kurti ir redaguoti“."
+      "emptyHint": "Sukurk pirmąją savininko ataskaitą skiltyje „Kurti ir redaguoti“.",
+      "objects": "Objektai",
+      "allObjects": "visi objektai",
+      "objectsCount": "{count} objektas (-ai)"
     },
     "edit": "Redaguoti",
     "attachments": {
@@ -1740,7 +1758,10 @@
       "commission": "Objekto komisinis mokestis už objekto valdymą. Jis apskaičiuojamas nuo sumos, likusios po portalo atskaitymo, ir taikomas KIEKVIENAM užsakymui, net ir užsakymui per paties objekto svetainę.",
       "flatFee": "Fiksuota suma iš valdymo sutarties, pavyzdžiui, už papildomas išlaidas. Priklausomai nuo susitarimo, ji atskaitoma prieš arba po komisinio mokesčio.",
       "ownerShare": "Kas galiausiai lieka savininkui: svečio kaina minus portalo atskaitymas, minus komisinis mokestis, minus fiksuota suma, plius jam priklausantys mokesčiai. Bendros nuosavybės atveju papildomai padauginama iš jo dalies.",
-      "ownershipShare": "Šio savininko dalis objekte. 100 % reiškia vienintelę nuosavybę. Jei namas priklauso keliems asmenims, kiekvienas gauna savo ataskaitą apie savo dalį – dalys kartu sudaro 100 %."
+      "ownershipShare": "Šio savininko dalis objekte. 100 % reiškia vienintelę nuosavybę. Jei namas priklauso keliems asmenims, kiekvienas gauna savo ataskaitą apie savo dalį – dalys kartu sudaro 100 %.",
+      "properties": "Kuriems objektams taikomas šis atsiskaitymas. Pagal numatytuosius nustatymus, visi savininko objektai. Pasirinkite atskirus, kad atsiskaitytumėte tik už juos. Kiekvienas objektas per laikotarpį gali būti tik viename baigtiniame atsiskaityme – užsakymas niekada nebus apmokėtas du kartus.",
+      "language": "Šia kalba bus sugeneruotas kvitas – tekstai, skaičiai ir data. Numatytasis nustatymas yra savininko kalba, kitu atveju – įmonės kalba. Po finalizavimo ji yra fiksuota; kvitas lieka toks, koks buvo išduotas.",
+      "headerFromMaster": "Perima savininko ir įmonės pavadinimą, adresą, el. paštą, telefono numerį ir mokesčių mokėtojo kodą iš pagrindinių duomenų. Šio kvito sąskaitos numeris ir pastabos lieka nepakeisti."
     },
     "finalizeConfirm": {
       "title": "Patvirtinti atsiskaitymą",
@@ -1778,7 +1799,21 @@
       "title": "Bendrasavininkai",
       "hint": "Šie objektai priklauso keliems asmenims. Kiekvienas gauna atskirą sąskaitą už savo dalį.",
       "share": "{anteil} %"
-    }
+    },
+    "language": {
+      "label": "Kvito kalba"
+    },
+    "sort": {
+      "aria": "Rūšiuoti pagal {spalte}",
+      "ascending": "didėjančia tvarka",
+      "descending": "mažėjančia tvarka"
+    },
+    "belegIn": "Dokumentas {sprache} kalba",
+    "headerFromMaster": "Perkelti iš pagrindinių duomenų",
+    "headerFromMasterDone": "Antraštės duomenys perkelti iš pagrindinių duomenų.",
+    "objectsLine": "Objektai: {liste}",
+    "objectsAll": "Objektai: visi",
+    "loading": "Įkeliama…"
   },
   "ownerBilling": {
     "title": "Atsiskaitymo sutartis",
@@ -13113,7 +13148,6 @@
     "mixedCurrency": "Kelių valiutų laikotarpis ({list}) – sumos nesumuojamos. Apribokite iki vieno objekto arba valiutos.",
     "occupancyFootnote": "Užimta yra užimta – ar per portalą, ar per nuosavą svetainę, ar sukurta savarankiškai, ar savininko. Į skaičiavimą neįtraukiamos tik dienos, kuriomis objektas nebuvo parduodamas: užblokuotos dienos ir „Stop-Sell“.",
     "kpiFootnote": "Kiekvienos kortelės procentinė vertė lyginama su ankstesniu to paties ilgio laikotarpiu. Paspaudus kortelę atidaroma laiko eilutė.",
-    "commissionFootnote": "Tušti komisinių laukai reiškia, kad portalas neteikia komisinių (Booking.com dažniausiai to nedaro) – niekas neapskaičiuojama.",
     "tab": {
       "kennzahlen": "Pagrindiniai rodikliai",
       "analytics": "Apžvalga",
@@ -13331,7 +13365,7 @@
     },
     "expenses": {
       "empty": "Šiuo laikotarpiu nėra atsiskaitymo elementų.",
-      "emptyHint": "Išlaidos ir papildomos paslaugos atsiranda savininko atsiskaityme ir iš užsakytų paslaugų.",
+      "emptyHint": "Išlaidos ir papildomos paslaugos atsiranda savininko atsiskaityme, iš užsakytų paslaugų ir iš užsakytų papildomų paslaugų.",
       "expenses": "Išlaidos",
       "extras": "Papildomos paslaugos",
       "balance": "Balansas",
@@ -13346,7 +13380,11 @@
         "ausgabe": "Išlaidos",
         "extra": "Papildoma paslauga"
       },
-      "footnote": "Laikotarpis yra elemento data. Išlaidos tenka savininkui, papildomos paslaugos – jo naudai, kaip nurodyta atsiskaityme."
+      "footnote": "Laikotarpis yra įrašo data; papildomos paslaugos seka užsakymą. Išlaidos tenka savininkui, papildomos paslaugos – jo naudai – taip, kaip nurodyta atsiskaityme.",
+      "category": {
+        "service": "Užsakyta paslauga",
+        "addon": "Papildoma paslauga"
+      }
     },
     "pace": {
       "title": "Užsakymų būklė per ateinančius 12 mėnesių",
@@ -15549,5 +15587,59 @@
       "anzahlung": "Avansas turi būti didesnis nei 0 ir ne didesnis už bendrą sumą.",
       "entwurfAngelegt": "Pasiūlymas sukurtas kaip juodraštis, el. laiškas nebuvo išsiųstas: {grund}"
     }
+  },
+  "statementPdf": {
+    "invoice": "Savininko atsiskaitymas",
+    "storno": "Atšaukimo sąskaita",
+    "invoiceNo": "Nr.",
+    "issuer": "Išdavė",
+    "owner": "Savininkas",
+    "vatId": "PVM mokėtojo kodas",
+    "period": "Laikotarpis",
+    "objects": "Objektai",
+    "allObjects": "visi objektai",
+    "bookings": "Užsakymai",
+    "listing": "Objektas",
+    "guest": "Svečias",
+    "arrival": "Atvykimas",
+    "departure": "Išvykimas",
+    "nights": "Naktys",
+    "channel": "Kanalas",
+    "commission": "Komisinis",
+    "flatFee": "Fiksuotas mokestis",
+    "ownerShare": "Savininko dalis",
+    "noBookings": "Šiuo laikotarpiu rezervacijų nėra.",
+    "breakdownTitle": "Išklotinė pagal užsakymą",
+    "posAfterPortal": "Bendra suma po portalo atskaitymo",
+    "posAfterPortalHint": "Svečio kaina atėmus portalo komisinį ir portalo mokėjimo mokestį",
+    "posCommission": "Administravimo komisinis",
+    "posMinCommission": "Minimalus komisinis (sutartis) vietoj",
+    "posContractFrom": "Sutartis nuo",
+    "posRateManual": "rankiniu būdu šiame atsiskaityme",
+    "posRateLegacy": "Standartinis tarifas iš pagrindinių duomenų",
+    "posFlatFee": "Fiksuotas mokestis už užsakymą/naktį (sutartis)",
+    "posFeesBack": "Jūsų mokesčiai – neapkarpyti, be komisinio",
+    "posOwnerShare": "= Savininko dalis",
+    "posRate": "Kursas",
+    "commissionable": "apmokestinama komisiniu",
+    "noFeesReported": "Portalas nepranešė apie jokius mokesčius už šį užsakymą; todėl jokie mokesčiai nebuvo taikomi.",
+    "deductionsTitle": "Atskaitymai ir kreditai",
+    "deductions": "Atskaitymai (savininko sąskaita)",
+    "credits": "Kreditai (savininko naudai)",
+    "srcExpense": "Atsiskaitymo pozicijos",
+    "srcRecurring": "pasikartojantis",
+    "receipt": "Kvitas",
+    "perBooking": "už užsakymą",
+    "perNight": "už naktį",
+    "perPeriod": "už laikotarpį",
+    "sumShares": "Bendra savininko dalis iš užsakymų",
+    "sumFlatFees": "Fiksuoti mokesčiai pagal sutartį",
+    "sumFlatFeesNote": "jau įskaičiuota į dalis – jokių papildomų atskaitymų",
+    "sumDeductions": "Atskaitymai",
+    "sumCredits": "Kreditai",
+    "sumOwnerPayout": "Mokėjimas savininkui",
+    "vat": "PVM",
+    "vatNet": "Administravimo mokestis (neto)",
+    "vatGross": "Administravimo mokestis (bruto)"
   }
 }

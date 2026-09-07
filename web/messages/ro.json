@@ -1503,7 +1503,13 @@
       "statusesSearch": "Caută status …",
       "statusesNoMatch": "Niciun status găsit.",
       "statusesSelectAll": "Selectează tot",
-      "statusesCount": "{count} din {total} selectate"
+      "statusesCount": "{count} din {total} selectate",
+      "properties": "Proprietăți",
+      "propertiesAll": "Toate proprietățile",
+      "propertiesCount": "{count} din {total} proprietăți",
+      "propertiesSearch": "Căutați proprietatea...",
+      "propertiesNoMatch": "Nicio proprietate găsită.",
+      "propertiesSelectAll": "Selectați tot"
     },
     "reservationStatus": {
       "pending": "În așteptare",
@@ -1640,7 +1646,16 @@
         "noContract": "Pentru această proprietate nu există un contract de facturare și nicio rată de comision în datele de bază — creați un contract la proprietar.",
         "addonsOutside": "Servicii suplimentare — vândute prin myNextDays, neincluse în prețul pentru oaspete al portalului"
       },
-      "ownershipShare": "Distribuie"
+      "ownershipShare": "Distribuie",
+      "dragColumn": "Mutați coloana {spalte}",
+      "columnsReset": "Resetați ordinea coloanelor",
+      "dndStart": "{spalte} preluată.",
+      "dndOver": "{spalte} deasupra {ziel}.",
+      "dndOverNichts": "{spalte} în afara tabelului.",
+      "dndEnd": "{spalte} plasată în locul {ziel}.",
+      "dndCancel": "Mutarea coloanei {spalte} a fost anulată.",
+      "dndAnleitung": "Apăsați spațiu sau enter pentru a prelua o coloană. Folosiți tastele săgeți pentru a o muta, spațiu sau enter pentru a o plasa, și escape pentru a anula.",
+      "dragHint": "Trageți coloanele de mâner pentru a schimba ordinea — și de la tastatură: focalizați mânerul, spațiu, tastele săgeată."
     },
     "expenses": {
       "add": "Adaugă",
@@ -1691,7 +1706,10 @@
       "status": "Stare",
       "open": "Deschide",
       "emptyTitle": "Niciun decont",
-      "emptyHint": "Creează primul tău decont de proprietar la „Creare & editare”."
+      "emptyHint": "Creează primul tău decont de proprietar la „Creare & editare”.",
+      "objects": "Proprietăți",
+      "allObjects": "toate proprietățile",
+      "objectsCount": "{count} proprietate(ăți)"
     },
     "edit": "Editează",
     "attachments": {
@@ -1740,7 +1758,10 @@
       "commission": "Comisionul unității de cazare pentru administrarea proprietății. Acesta se calculează din suma rămasă după deducerea portalului – și se aplică la FIECARE rezervare, chiar și la cele făcute prin propriul site web.",
       "flatFee": "O sumă fixă din contractul de administrare, de exemplu pentru costurile suplimentare. În funcție de acord, aceasta se deduce înainte sau după comision.",
       "ownerShare": "Ce rămâne în cele din urmă pentru proprietar: prețul plătit de oaspete minus deducerea portalului, minus comisionul, minus suma forfetară, plus taxele care îi revin. În cazul coproprietății, se înmulțește suplimentar cu cota sa.",
-      "ownershipShare": "Cota de proprietate a acestui proprietar. 100% înseamnă proprietate unică. Dacă o casă aparține mai multor persoane, fiecare primește propria decontare pentru cota sa – cotele însumează 100%."
+      "ownershipShare": "Cota de proprietate a acestui proprietar. 100% înseamnă proprietate unică. Dacă o casă aparține mai multor persoane, fiecare primește propria decontare pentru cota sa – cotele însumează 100%.",
+      "properties": "Ce proprietăți include această decontare. Implicit sunt toate proprietățile proprietarului. Selectați individual pentru a deconta doar pentru acestea. Fiecare proprietate poate fi inclusă într-o singură decontare finalizată pe perioadă — o rezervare nu va fi niciodată plătită de două ori.",
+      "language": "În această limbă va fi creată chitanța — texte, numere și data. Presetat din limba proprietarului, altfel din cea a companiei. După finalizare este fixă; chitanța rămâne așa cum a fost emisă.",
+      "headerFromMaster": "Preia numele, adresa, e-mailul, telefonul și codul fiscal ale proprietarului și ale companiei din datele de bază. Numărul facturii și notele acestei chitanțe rămân neschimbate."
     },
     "finalizeConfirm": {
       "title": "Finalizați decontul",
@@ -1778,7 +1799,21 @@
       "title": "Coproprietar",
       "hint": "Aceste proprietăți sunt deținute de mai multe persoane. Fiecare primește o factură separată pentru partea sa.",
       "share": "{anteil} %"
-    }
+    },
+    "language": {
+      "label": "Limba bonului"
+    },
+    "sort": {
+      "aria": "Sortați după {spalte}",
+      "ascending": "crescător",
+      "descending": "descrescător"
+    },
+    "belegIn": "Chitanță în {sprache}",
+    "headerFromMaster": "Preluare din datele de bază",
+    "headerFromMasterDone": "Datele antetului au fost preluate din datele de bază.",
+    "objectsLine": "Obiecte: {liste}",
+    "objectsAll": "Toate obiectele",
+    "loading": "Se încarcă..."
   },
   "ownerBilling": {
     "title": "Contract de decontare",
@@ -13113,7 +13148,6 @@
     "mixedCurrency": "Mai multe valute în perioada ({list}) — sumele nu sunt totalizate. Vă rugăm să restrângeți la un singur obiect sau o singură valută.",
     "occupancyFootnote": "Ocupat înseamnă ocupat — fie printr-un portal, propriul site web, creat de dvs. sau de proprietar. Din numitor sunt excluse doar zilele în care proprietatea nu a fost la vânzare: zile blocate și stop-sell.",
     "kpiFootnote": "Procentul de pe fiecare casetă se compară cu perioada anterioară de aceeași durată. Un clic pe o casetă deschide seria de timp.",
-    "commissionFootnote": "Câmpurile goale pentru comision înseamnă că portalul nu transmite comision (Booking.com de obicei nu o face) — nu se estimează nimic.",
     "tab": {
       "kennzahlen": "Indicatori cheie",
       "analytics": "Prezentare generală",
@@ -13331,7 +13365,7 @@
     },
     "expenses": {
       "empty": "Nu există elemente de decontare în această perioadă.",
-      "emptyHint": "Cheltuielile și extra-urile apar în decontul proprietarului și din serviciile comandate.",
+      "emptyHint": "Cheltuielile și extra-urile apar în decontul proprietarului, din serviciile comandate și din serviciile suplimentare rezervate.",
       "expenses": "Cheltuieli",
       "extras": "Extra-uri",
       "balance": "Sold",
@@ -13346,7 +13380,11 @@
         "ausgabe": "Cheltuială",
         "extra": "Extra"
       },
-      "footnote": "Perioada este data articolului. Cheltuielile sunt în detrimentul proprietarului, extra-urile în favoarea sa — așa cum apar în decont."
+      "footnote": "Perioada este data înregistrării; serviciile suplimentare urmează rezervării. Cheltuielile sunt în sarcina proprietarului, extra-urile în favoarea sa — așa cum apar în decont.",
+      "category": {
+        "service": "Serviciu comandat",
+        "addon": "Serviciu suplimentar"
+      }
     },
     "pace": {
       "title": "Starea rezervărilor pentru următoarele 12 luni",
@@ -15549,5 +15587,59 @@
       "anzahlung": "Avansul trebuie să fie mai mare de 0 și nu poate depăși suma totală.",
       "entwurfAngelegt": "Oferta este creată ca un proiect, e-mailul nu a fost trimis: {grund}"
     }
+  },
+  "statementPdf": {
+    "invoice": "Decont proprietar",
+    "storno": "Factură de anulare",
+    "invoiceNo": "Nr.",
+    "issuer": "Emitent",
+    "owner": "Proprietar",
+    "vatId": "Cod TVA",
+    "period": "Perioadă",
+    "objects": "Obiecte",
+    "allObjects": "toate obiectele",
+    "bookings": "Rezervări",
+    "listing": "Obiect",
+    "guest": "Oaspete",
+    "arrival": "Sosire",
+    "departure": "Plecare",
+    "nights": "Nopți",
+    "channel": "Canal",
+    "commission": "Comision",
+    "flatFee": "Forfetar",
+    "ownerShare": "Cotă proprietar",
+    "noBookings": "Nicio rezervare în această perioadă.",
+    "breakdownTitle": "Defalcare pe rezervare",
+    "posAfterPortal": "Total după deducerea portalului",
+    "posAfterPortalHint": "Preț oaspete minus comision portal și taxă de plată portal",
+    "posCommission": "Comision de administrare",
+    "posMinCommission": "Comision minim (contract) în loc de",
+    "posContractFrom": "Contract de la",
+    "posRateManual": "manual în acest decont",
+    "posRateLegacy": "Tarif standard din datele de bază",
+    "posFlatFee": "Forfetar pe rezervare/noapte (contract)",
+    "posFeesBack": "Taxele dumneavoastră — neatinse, fără comision",
+    "posOwnerShare": "= Cotă proprietar",
+    "posRate": "Curs",
+    "commissionable": "supus comisionului",
+    "noFeesReported": "Portalul nu a raportat taxe pentru această rezervare; prin urmare, nu au fost aplicate.",
+    "deductionsTitle": "Deduceri și credite",
+    "deductions": "Deduceri (în sarcina proprietarului)",
+    "credits": "Credite (în favoarea proprietarului)",
+    "srcExpense": "Articole de compensare",
+    "srcRecurring": "recurent",
+    "receipt": "Chitanță",
+    "perBooking": "pe rezervare",
+    "perNight": "pe noapte",
+    "perPeriod": "pe perioadă",
+    "sumShares": "Total cote proprietar din rezervări",
+    "sumFlatFees": "Tarife fixe din contract",
+    "sumFlatFeesNote": "deja incluse în cote — fără deduceri suplimentare",
+    "sumDeductions": "Deduceri",
+    "sumCredits": "Credite",
+    "sumOwnerPayout": "Plată proprietar",
+    "vat": "TVA",
+    "vatNet": "Comision de administrare net",
+    "vatGross": "Comision de administrare brut"
   }
 }

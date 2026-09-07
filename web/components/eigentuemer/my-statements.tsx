@@ -28,6 +28,7 @@ import { Button } from "@nextdays/ui/button";
 import { Card, CardContent } from "@nextdays/ui/card";
 import { formatCurrency } from "@/lib/currency";
 import { type StatementListItem, getStatement } from "@/lib/owner-statements";
+import { belegTexte } from "@/lib/beleg-texte";
 import { downloadStatementPdf } from "@/lib/statement-pdf";
 import { useRealtime } from "@/lib/use-realtime";
 
@@ -71,7 +72,8 @@ export function MyStatements({
       return;
     }
     try {
-      await downloadStatementPdf(voll.data, locale);
+      // Texte in der Sprache DES BELEGS (0604), nicht des Betrachters.
+      await downloadStatementPdf(voll.data, await belegTexte(voll.data.language));
     } catch (e) {
       // Grund erhalten, nicht verschlucken (Wurzel 5).
       toast.error(e instanceof Error ? e.message : t("reports.downloadFailed"));

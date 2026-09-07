@@ -22,23 +22,35 @@ Eigentümer- und Verwaltungs-Auszahlung stehen auf „—“. Das ist der Punkt
 2. **Website ist kein Portal, aber eine Buchung wie jede andere:** Portal-Abzug
    0, Verwaltungsprovision (z. B. 20 %) und Pauschale laufen weiter.
 
-## Stand der Umsetzung (07.09.2026)
+## Stand der Umsetzung (07.09.2026, Ende des Tages)
 
 | Schritt | Stand | Beleg |
 |---|---|---|
-| 13.1 Website ohne Portal-Abzug | **fertig** | René live: `owner_payout` 24.594,29 DKK statt „—"; Erwin Kintop 3.736,00 DKK |
-| 13.2 Miteigentümer (0601, ADR-0028) | **fertig** | live 60/40 erzeugt und zurückgesetzt: 22.028,69 DKK, Karen Jacobsen 40 % ausgewiesen |
-| 13.8 Hilfetexte ℹ (neu, Ansage) | **fertig** | 6 Spalten-Hilfetexte, 24 Sprachen |
-| 13.3 Abrechnung pro Objekt (0602) | offen | |
-| 13.4 Adressat anpassen | offen | |
-| 13.5 Sprache des Belegs (0603) | offen | Renés Sprache ist `da`, Beleg noch hart deutsch |
-| 13.6 Sortierung | offen | |
-| 13.7 Kanalname vereinheitlichen | offen | „Booking.com" vs. „BookingCom" |
+| 13.1 Website ohne Portal-Abzug | **fertig** (`c36e5508`) | René live: `owner_payout` 24.594,29 DKK statt „—"; Erwin Kintop 3.736,00 DKK |
+| 13.2 Miteigentümer (0601 + 0602, ADR-0028) | **fertig** (`c36e5508`, `d0aadf2f`) | durch die Oberfläche: zuordnen → 50/50 → entfernen → 100 %; 70/30 → 30/70 → 50/50, Summe je Schritt 100 % |
+| 13.8 Hilfetexte ℹ (neu, Ansage) | **fertig** (`c36e5508`) | 6 Spalten + Stammdatenfelder + `sprache-auswahl.tsx`; „alle Informationstexte ins ℹ" projektweit (MEMORY) |
+| 13.3 Abrechnung pro Objekt (**0603**) | **fertig** | live: René nur „FeWo Lille Vidstrup" → 2 Buchungen, 2.358,66 DKK statt 13.394,24; Überschneidungs-409 beim Finalisieren |
+| 13.4 Adressat anpassen | **fertig** | Kopffelder im Entwurf editierbar, Knopf „Aus Stammdaten übernehmen" (`header_aus_stammdaten`) |
+| 13.5 Sprache des Belegs (**0604**) | **fertig** | René: `language = da` aus Stammdaten; `statementPdf.*` in 24 Sprachen; Zahlen/Datum nach Beleg-Sprache |
+| 13.6 Sortierung (0604) | **fertig** | live: `owner_payout desc` → 8.521,34 zuerst; klickbare Spaltenköpfe, je Abrechnung gespeichert |
+| 13.7 Kanalname vereinheitlichen | **fertig** | `channelLabelLoose` in Editor UND Beleg — kein zweiter Normalisierer |
 
-Migration 0601 ist live (`apply-migrations.sh`), Trigger per
-`db-trigger-pruefen.sh` als OK bestätigt. Alle 22 Anteile im Bestand stehen
-jetzt auf 100 (vorher 17× auf 80 — das war die Auszahlungsquote, nicht der
-Anteil; siehe ADR-0028). Code uncommitted.
+**Nummern verschoben:** Im Plan unten steht 13.3 = 0602 und 13.5/13.6 = 0603.
+Real ist **0602** der Trigger-Fix (Anteils-Ausschluss über `owner_id`, gefunden
+beim Ändern eines Anteils), **0603** = `property_ids`, **0604** = `language` +
+`sort_key`/`sort_dir`. Alle vier Migrationen sind live.
+
+**Zwei Befunde beim Bauen, die kein Test fand:**
+- Miteigentum war nach 0601 im Datenmodell möglich, aber in der Oberfläche
+  NICHT anlegbar — die Auswahlliste filterte fremd vergebene Objekte weiter
+  heraus, und der Default `ownership_share = 100` machte jeden Zweiten zu
+  100 + x (500 im Log). Gefunden vom Nutzer, nicht von 963 grünen Tests
+  (MEMORY „fertig-heisst-durch-die-oberflaeche-bedient").
+- Die Fake-DB der Tests hatte für `in_` nur EINEN Slot; `_reservations`
+  filtert erst `property_id`, dann `status` — der zweite Aufruf überschrieb
+  den ersten. Mit einem Objekt in den Basistabellen fiel es nie auf.
+
+Offen aus 13.8: Hilfetexte auf dem Beleg selbst (das PDF hat keine ℹ).
 
 ## Befund vor dem Bau (was heute ist)
 

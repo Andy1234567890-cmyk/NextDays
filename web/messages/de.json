@@ -1503,7 +1503,13 @@
       "statusesSearch": "Status suchen …",
       "statusesNoMatch": "Kein Status gefunden.",
       "statusesSelectAll": "Alle auswählen",
-      "statusesCount": "{count} von {total} ausgewählt"
+      "statusesCount": "{count} von {total} ausgewählt",
+      "properties": "Objekte",
+      "propertiesAll": "Alle Objekte",
+      "propertiesCount": "{count} von {total} Objekten",
+      "propertiesSearch": "Objekt suchen …",
+      "propertiesNoMatch": "Kein Objekt gefunden.",
+      "propertiesSelectAll": "Alle auswählen"
     },
     "reservationStatus": {
       "pending": "Offen",
@@ -1640,7 +1646,16 @@
         "noContract": "Für dieses Objekt gibt es keinen Abrechnungsvertrag und keinen Provisionssatz in den Stammdaten — beim Eigentümer einen Vertrag anlegen.",
         "addonsOutside": "Zusatzleistungen — über myNextDays verkauft, nicht im Portal-Gastpreis"
       },
-      "ownershipShare": "Anteil"
+      "ownershipShare": "Anteil",
+      "dragColumn": "Spalte {spalte} verschieben",
+      "columnsReset": "Spaltenreihenfolge zurücksetzen",
+      "dndStart": "{spalte} aufgenommen.",
+      "dndOver": "{spalte} über {ziel}.",
+      "dndOverNichts": "{spalte} außerhalb der Tabelle.",
+      "dndEnd": "{spalte} an der Stelle von {ziel} abgelegt.",
+      "dndCancel": "Verschieben von {spalte} abgebrochen.",
+      "dndAnleitung": "Zum Aufnehmen einer Spalte Leertaste oder Eingabe drücken. Mit den Pfeiltasten verschieben, mit Leertaste oder Eingabe ablegen, mit Escape abbrechen.",
+      "dragHint": "Spalten am Griff ziehen, um die Reihenfolge zu ändern — auch per Tastatur: Griff fokussieren, Leertaste, Pfeiltasten."
     },
     "expenses": {
       "add": "Hinzufügen",
@@ -1691,7 +1706,10 @@
       "status": "Status",
       "open": "Öffnen",
       "emptyTitle": "Keine Abrechnungen",
-      "emptyHint": "Erstelle deine erste Eigentümer-Abrechnung unter „Erstellen & Bearbeiten“."
+      "emptyHint": "Erstelle deine erste Eigentümer-Abrechnung unter „Erstellen & Bearbeiten“.",
+      "objects": "Objekte",
+      "allObjects": "alle Objekte",
+      "objectsCount": "{count} Objekt(e)"
     },
     "edit": "Bearbeiten",
     "attachments": {
@@ -1740,7 +1758,10 @@
       "commission": "Die Provision des Betriebs für die Verwaltung des Objekts. Sie wird auf den Betrag gerechnet, der nach dem Portal-Abzug übrig ist — und fällt bei JEDER Buchung an, auch bei einer über die eigene Website.",
       "flatFee": "Ein fester Betrag aus dem Verwaltungsvertrag, zum Beispiel für Nebenkosten. Je nach Vereinbarung wird er vor oder nach der Provision abgezogen.",
       "ownerShare": "Was am Ende für den Eigentümer übrig bleibt: Gastpreis minus Portal-Abzug, minus Provision, minus Pauschale, plus die Gebühren, die ihm gehören. Bei Miteigentum zusätzlich mit seinem Anteil multipliziert.",
-      "ownershipShare": "Der Anteil dieses Eigentümers am Objekt. 100 % heißt Alleineigentum. Gehört ein Haus mehreren Personen, bekommt jede ihre eigene Abrechnung über ihren Anteil — die Anteile ergeben zusammen 100 %."
+      "ownershipShare": "Der Anteil dieses Eigentümers am Objekt. 100 % heißt Alleineigentum. Gehört ein Haus mehreren Personen, bekommt jede ihre eigene Abrechnung über ihren Anteil — die Anteile ergeben zusammen 100 %.",
+      "properties": "Welche Objekte diese Abrechnung umfasst. Standard sind alle Objekte des Eigentümers. Wählen Sie einzelne aus, um nur für diese abzurechnen. Jedes Objekt kann je Zeitraum nur in einer finalisierten Abrechnung stehen — eine Buchung wird nie zweimal ausgezahlt.",
+      "language": "In dieser Sprache wird der Beleg erstellt — Texte, Zahlen und Datum. Vorbelegt aus der Sprache des Eigentümers, sonst der des Betriebs. Nach dem Finalisieren ist sie fest; der Beleg bleibt so, wie er ausgestellt wurde.",
+      "headerFromMaster": "Übernimmt Name, Adresse, E-Mail, Telefon und Steuernummer von Eigentümer und Betrieb neu aus den Stammdaten. Rechnungsnummer und Notizen dieses Belegs bleiben stehen."
     },
     "finalizeConfirm": {
       "title": "Abrechnung festschreiben",
@@ -1778,7 +1799,21 @@
       "title": "Miteigentümer",
       "hint": "Diese Objekte gehören mehreren Personen. Jede bekommt eine eigene Abrechnung über ihren Anteil.",
       "share": "{anteil} %"
-    }
+    },
+    "language": {
+      "label": "Sprache des Belegs"
+    },
+    "belegIn": "Beleg in {sprache}",
+    "headerFromMaster": "Aus Stammdaten übernehmen",
+    "headerFromMasterDone": "Kopfdaten aus den Stammdaten übernommen.",
+    "sort": {
+      "aria": "Sortieren nach {spalte}",
+      "ascending": "aufsteigend",
+      "descending": "absteigend"
+    },
+    "objectsLine": "Objekte: {liste}",
+    "objectsAll": "Objekte: alle",
+    "loading": "Wird geladen …"
   },
   "ownerBilling": {
     "title": "Abrechnungsvertrag",
@@ -13137,7 +13172,6 @@
     "mixedCurrency": "Mehrere Währungen im Zeitraum ({list}) — Beträge werden nicht zusammengezählt. Bitte auf ein Objekt oder eine Währung einschränken.",
     "occupancyFootnote": "Belegt ist belegt — ob über ein Portal, die eigene Website, selbst angelegt oder durch den Eigentümer. Aus dem Nenner fallen nur Tage, an denen das Objekt nicht im Verkauf war: gesperrte Tage und Stop-Sell.",
     "kpiFootnote": "Der Prozentwert an jeder Kachel vergleicht mit dem gleich langen Zeitraum davor. Ein Klick auf eine Kachel öffnet die Zeitreihe.",
-    "commissionFootnote": "Leere Provisionsfelder heißen, dass das Portal keine Provision übermittelt (Booking.com tut das meist nicht) — es wird nichts geschätzt.",
     "tab": {
       "kennzahlen": "Kennzahlen",
       "analytics": "Übersicht",
@@ -13352,7 +13386,7 @@
     },
     "expenses": {
       "empty": "Keine Verrechnungsposten in diesem Zeitraum.",
-      "emptyHint": "Ausgaben und Extras entstehen in der Eigentümer-Abrechnung und aus bestellten Leistungen.",
+      "emptyHint": "Ausgaben und Extras entstehen in der Eigentümer-Abrechnung, aus bestellten Leistungen und aus gebuchten Zusatzleistungen.",
       "expenses": "Ausgaben",
       "extras": "Extras",
       "balance": "Saldo",
@@ -13367,7 +13401,11 @@
         "ausgabe": "Ausgabe",
         "extra": "Extra"
       },
-      "footnote": "Zeitraum ist das Datum des Postens. Ausgaben gehen zulasten des Eigentümers, Extras zu seinen Gunsten — so, wie sie in der Abrechnung stehen."
+      "footnote": "Zeitraum ist das Datum des Postens; Zusatzleistungen folgen der Buchung. Ausgaben gehen zulasten des Eigentümers, Extras zu seinen Gunsten — so, wie sie in der Abrechnung stehen.",
+      "category": {
+        "service": "Bestellte Leistung",
+        "addon": "Zusatzleistung"
+      }
     },
     "pace": {
       "title": "Buchungsstand der nächsten 12 Monate",
@@ -15570,5 +15608,59 @@
       "anzahlung": "Die Anzahlung muss über 0 und darf nicht höher als der Gesamtbetrag sein.",
       "entwurfAngelegt": "Das Angebot ist als Entwurf angelegt, die Mail ging nicht raus: {grund}"
     }
+  },
+  "statementPdf": {
+    "invoice": "Eigentümer-Abrechnung",
+    "storno": "Stornorechnung",
+    "invoiceNo": "Nr.",
+    "issuer": "Aussteller",
+    "owner": "Eigentümer",
+    "vatId": "USt-IdNr.",
+    "period": "Zeitraum",
+    "objects": "Objekte",
+    "allObjects": "alle Objekte",
+    "bookings": "Buchungen",
+    "listing": "Objekt",
+    "guest": "Gast",
+    "arrival": "Anreise",
+    "departure": "Abreise",
+    "nights": "Nächte",
+    "channel": "Kanal",
+    "commission": "Provision",
+    "flatFee": "Pauschale",
+    "ownerShare": "Eigentümer-Anteil",
+    "noBookings": "Keine Reservierungen im Zeitraum.",
+    "breakdownTitle": "Aufstellung je Buchung",
+    "posAfterPortal": "Gesamtbetrag nach Portal-Abzug",
+    "posAfterPortalHint": "Gastpreis abzüglich Portal-Provision und Portal-Zahlungsgebühr",
+    "posCommission": "Verwaltungsprovision",
+    "posMinCommission": "Mindestprovision (Vertrag) statt",
+    "posContractFrom": "Vertrag ab",
+    "posRateManual": "manuell in dieser Abrechnung",
+    "posRateLegacy": "Standardsatz aus den Stammdaten",
+    "posFlatFee": "Pauschale je Buchung/Nacht (Vertrag)",
+    "posFeesBack": "Ihre Gebühren — ungekürzt, ohne Provision",
+    "posOwnerShare": "= Eigentümer-Anteil",
+    "posRate": "Kurs",
+    "commissionable": "provisionspflichtig",
+    "noFeesReported": "Das Portal hat zu dieser Buchung keine Gebühren gemeldet; es wurden deshalb keine angesetzt.",
+    "deductionsTitle": "Abzüge und Gutschriften",
+    "deductions": "Abzüge (zulasten des Eigentümers)",
+    "credits": "Gutschriften (zugunsten des Eigentümers)",
+    "srcExpense": "Verrechnungsposten",
+    "srcRecurring": "wiederkehrend",
+    "receipt": "Beleg",
+    "perBooking": "je Buchung",
+    "perNight": "je Nacht",
+    "perPeriod": "je Zeitraum",
+    "sumShares": "Summe Eigentümer-Anteile aus Buchungen",
+    "sumFlatFees": "Pauschalen aus Vertrag",
+    "sumFlatFeesNote": "bereits in den Anteilen berücksichtigt — kein weiterer Abzug",
+    "sumDeductions": "Abzüge",
+    "sumCredits": "Gutschriften",
+    "sumOwnerPayout": "Eigentümer-Auszahlung",
+    "vat": "Umsatzsteuer",
+    "vatNet": "Verwaltungsprovision netto",
+    "vatGross": "Verwaltungsprovision brutto"
   }
 }

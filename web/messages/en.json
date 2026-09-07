@@ -1503,7 +1503,13 @@
       "statusesSearch": "Search status …",
       "statusesNoMatch": "No status found.",
       "statusesSelectAll": "Select all",
-      "statusesCount": "{count} of {total} selected"
+      "statusesCount": "{count} of {total} selected",
+      "properties": "Properties",
+      "propertiesAll": "All properties",
+      "propertiesCount": "{count} of {total} properties",
+      "propertiesSearch": "Search property…",
+      "propertiesNoMatch": "No property found.",
+      "propertiesSelectAll": "Select all"
     },
     "reservationStatus": {
       "pending": "Pending",
@@ -1640,7 +1646,16 @@
         "noContract": "There is no billing agreement or commission rate in the master data for this property — please create an agreement with the owner.",
         "addonsOutside": "Additional services — sold via myNextDays, not included in the portal guest price"
       },
-      "ownershipShare": "Share"
+      "ownershipShare": "Share",
+      "dragColumn": "Move column {spalte}",
+      "columnsReset": "Reset column order",
+      "dndStart": "{spalte} picked up.",
+      "dndOver": "{spalte} over {ziel}.",
+      "dndOverNichts": "{spalte} out of table.",
+      "dndEnd": "{spalte} dropped in place of {ziel}.",
+      "dndCancel": "Moving {spalte} cancelled.",
+      "dndAnleitung": "Press space or enter to pick up a column. Use arrow keys to move, space or enter to drop, escape to cancel.",
+      "dragHint": "Drag column handles to reorder — also with keyboard: focus handle, spacebar, arrow keys."
     },
     "expenses": {
       "add": "Add",
@@ -1691,7 +1706,10 @@
       "status": "Status",
       "open": "Open",
       "emptyTitle": "No statements",
-      "emptyHint": "Create your first owner statement under “Create & Edit”."
+      "emptyHint": "Create your first owner statement under “Create & Edit”.",
+      "objects": "Properties",
+      "allObjects": "all properties",
+      "objectsCount": "{count} properties"
     },
     "edit": "Edit",
     "attachments": {
@@ -1740,7 +1758,10 @@
       "commission": "The property's commission for managing the accommodation. It is calculated on the amount remaining after the portal deduction – and applies to EVERY booking, even those made via the property's own website.",
       "flatFee": "A fixed amount from the management contract, for example, for utilities. Depending on the agreement, it is deducted before or after the commission.",
       "ownerShare": "What remains for the owner at the end: guest price minus portal deduction, minus commission, minus flat fee, plus the fees that belong to them. In the case of co-ownership, additionally multiplied by their share.",
-      "ownershipShare": "This owner's share of the property. 100% means sole ownership. If a house belongs to several people, each receives their own statement for their share – the shares together add up to 100%."
+      "ownershipShare": "This owner's share of the property. 100% means sole ownership. If a house belongs to several people, each receives their own statement for their share – the shares together add up to 100%.",
+      "properties": "Which properties this statement covers. Default are all properties of the owner. Select individual ones to bill only for these. Each property can only be in one finalized statement per period — a booking is never paid out twice.",
+      "language": "The receipt is created in this language — texts, numbers and date. Pre-filled from the owner's language, otherwise from the business's. After finalizing, it is fixed; the receipt remains as it was issued.",
+      "headerFromMaster": "Updates name, address, email, phone and tax number of owner and business from the master data. Invoice number and notes of this receipt remain."
     },
     "finalizeConfirm": {
       "title": "Finalize billing",
@@ -1778,7 +1799,21 @@
       "title": "Co-owner",
       "hint": "These properties are owned by multiple people. Each receives a separate invoice for their share.",
       "share": "{anteil}%"
-    }
+    },
+    "language": {
+      "label": "Receipt language"
+    },
+    "sort": {
+      "aria": "Sort by {spalte}",
+      "ascending": "ascending",
+      "descending": "descending"
+    },
+    "belegIn": "Receipt in {sprache}",
+    "headerFromMaster": "Adopt from master data",
+    "headerFromMasterDone": "Header data adopted from master data.",
+    "objectsLine": "Objects: {liste}",
+    "objectsAll": "Objects: all",
+    "loading": "Loading …"
   },
   "ownerBilling": {
     "title": "Billing agreement",
@@ -13134,7 +13169,6 @@
     "mixedCurrency": "Multiple currencies in the period ({list}) — amounts are not totaled. Please filter by one property or one currency.",
     "occupancyFootnote": "Occupied is occupied — whether through a portal, your own website, self-created, or by the owner. Only days when the property was not for sale are excluded from the denominator: blocked days and stop-sell.",
     "kpiFootnote": "The percentage on each tile compares with the same period before. A click on a tile opens the time series.",
-    "commissionFootnote": "Empty commission fields mean that the portal does not transmit commission (Booking.com usually does not) — nothing is estimated.",
     "tab": {
       "kennzahlen": "Key figures",
       "analytics": "Overview",
@@ -13352,7 +13386,7 @@
     },
     "expenses": {
       "empty": "No billing items in this period.",
-      "emptyHint": "Expenses and extras arise in the owner statement and from ordered services.",
+      "emptyHint": "Expenses and extras arise in the owner's statement, from ordered services and from booked additional services.",
       "expenses": "Expenses",
       "extras": "Extras",
       "balance": "Balance",
@@ -13367,7 +13401,11 @@
         "ausgabe": "Expense",
         "extra": "Extra"
       },
-      "footnote": "Period is the date of the item. Expenses are at the owner's charge, extras in their favor — as they appear in the statement."
+      "footnote": "The period is the date of the item; additional services follow the booking. Expenses are at the owner's charge, extras in his favor - as they appear in the statement.",
+      "category": {
+        "service": "Ordered service",
+        "addon": "Additional service"
+      }
     },
     "pace": {
       "title": "Booking status for the next 12 months",
@@ -15570,5 +15608,59 @@
       "anzahlung": "The down payment must be greater than 0 and not higher than the total amount.",
       "entwurfAngelegt": "The offer is saved as a draft, the email was not sent: {grund}"
     }
+  },
+  "statementPdf": {
+    "invoice": "Owner statement",
+    "storno": "Cancellation invoice",
+    "invoiceNo": "No.",
+    "issuer": "Issuer",
+    "owner": "Owner",
+    "vatId": "VAT ID",
+    "period": "Period",
+    "objects": "Properties",
+    "allObjects": "All properties",
+    "bookings": "Bookings",
+    "listing": "Property",
+    "guest": "Guest",
+    "arrival": "Arrival",
+    "departure": "Departure",
+    "nights": "Nights",
+    "channel": "Channel",
+    "commission": "Commission",
+    "flatFee": "Flat rate",
+    "ownerShare": "Owner's share",
+    "noBookings": "No reservations in the selected period.",
+    "breakdownTitle": "Breakdown per booking",
+    "posAfterPortal": "Total amount after portal deduction",
+    "posAfterPortalHint": "Guest price minus portal commission and portal payment fee",
+    "posCommission": "Management commission",
+    "posMinCommission": "Minimum commission (contract) instead",
+    "posContractFrom": "Contract from",
+    "posRateManual": "Manually in this statement",
+    "posRateLegacy": "Standard rate from master data",
+    "posFlatFee": "Flat rate per booking/night (contract)",
+    "posFeesBack": "Your fees — unadjusted, without commission",
+    "posOwnerShare": "= Owner's share",
+    "posRate": "Exchange rate",
+    "commissionable": "Commissionable",
+    "noFeesReported": "The portal did not report any fees for this booking; therefore, none were applied.",
+    "deductionsTitle": "Deductions and credits",
+    "deductions": "Deductions (at the owner's expense)",
+    "credits": "Credits (in favor of the owner)",
+    "srcExpense": "Clearing items",
+    "srcRecurring": "Recurring",
+    "receipt": "Receipt",
+    "perBooking": "per booking",
+    "perNight": "per night",
+    "perPeriod": "per period",
+    "sumShares": "Total owner's share from bookings",
+    "sumFlatFees": "Flat rates from contract",
+    "sumFlatFeesNote": "already included in shares — no further deduction",
+    "sumDeductions": "Deductions",
+    "sumCredits": "Credits",
+    "sumOwnerPayout": "Owner payout",
+    "vat": "VAT",
+    "vatNet": "Management fee net",
+    "vatGross": "Management fee gross"
   }
 }

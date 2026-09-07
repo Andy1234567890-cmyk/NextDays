@@ -24,6 +24,7 @@ import {
   type Statement,
   type StatementListItem,
 } from "@/lib/owner-statements";
+import { COLUMN_ORDER_STANDARD } from "@/lib/owner-statements-spalten";
 
 type PropOption = { id: string; title: string };
 
@@ -152,6 +153,15 @@ export function OwnerStatementsForOwner({
     // Vor dem ersten Abruf kennt der Entwurf keine Miteigentümer — der Server
     // liefert sie mit der Vorschau (0601).
     miteigentuemer: [],
+    // 0603: alle Objekte, bis der Nutzer auswählt.
+    property_ids: null,
+    objekte: [],
+    // 0604: Platzhalter bis zur ersten Vorschau — dieselbe erste Stufe wie die
+    // Server-Kette (Eigentümer), sonst deren Ende (`en`). Kein Deutsch.
+    language: owner.language ?? "en",
+    sort_key: "check_in",
+    sort_dir: "asc",
+    column_order: COLUMN_ORDER_STANDARD,
     created_at: null,
     updated_at: null,
   };
@@ -173,6 +183,11 @@ export function OwnerStatementsForOwner({
     basis?: Statement["basis"];
     reservation_statuses?: string[];
     commission_pct?: number;
+    property_ids?: string[];
+    language?: string;
+    sort_key?: Statement["sort_key"];
+    sort_dir?: Statement["sort_dir"];
+    column_order?: Statement["column_order"];
   }) {
     // Fallback ist der ZULETZT geladene Stand (current), nicht das statische
     // draft — sonst verwirft eine Zeitraum-Änderung den jeweils anderen Wert
@@ -188,6 +203,13 @@ export function OwnerStatementsForOwner({
       reservation_statuses:
         opts?.reservation_statuses ?? base.reservation_statuses,
       commission_pct: opts?.commission_pct ?? null,
+      // 0603/0604: Objektauswahl, Sprache und Sortierung der Vorschau bleiben
+      // über Neuberechnungen erhalten — wie Zeitraum und Filter.
+      property_ids: opts?.property_ids ?? base.property_ids ?? [],
+      language: opts?.language ?? base.language,
+      sort_key: opts?.sort_key ?? base.sort_key,
+      sort_dir: opts?.sort_dir ?? base.sort_dir,
+      column_order: opts?.column_order ?? base.column_order,
     });
     if (res.ok) setCurrent(res.data);
     else toast.error(res.error);
@@ -225,6 +247,7 @@ export function OwnerStatementsForOwner({
           pm_payout: res.data.summary.pm_payout,
           currency: res.data.summary.currency,
           invoice_number: res.data.header.invoice_number,
+          property_ids: res.data.property_ids,
           created_at: res.data.created_at,
         },
         ...prev,
