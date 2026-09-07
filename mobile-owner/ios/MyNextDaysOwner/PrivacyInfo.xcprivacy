@@ -1,16 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<!--
-  Privacy Manifest der Eigentuemer-App. ABSICHTLICH KUERZER als das der
-  PMS-App (mobile-nextdays): dort fehlt hier NSPrivacyCollectedDataTypePhotos-
-  orVideos, weil diese App keinen Upload-Pfad hat — kein Picker, keine Kamera-
-  oder Medienberechtigung, `lib/datei.ts` bewusst nicht vorhanden, und
-  screens/Fotoalbum.tsx ZEIGT nur Server-URLs an. Eine Angabe, die das Binary
-  nicht hergibt, ist bei Apple ein Ablehnungsgrund (das Label wird gegen das
-  Manifest geprueft), nicht die sichere Seite.
-  Diese Datei ist KEINE Schwesterdatei — nicht mit mobile-nextdays gleichziehen.
--->
 <dict>
 	<key>NSPrivacyAccessedAPITypes</key>
 	<array>

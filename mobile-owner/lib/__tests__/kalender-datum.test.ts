@@ -53,3 +53,53 @@ describe("monatsRaster", () => {
     expect(tage.length).toBe(30);
   });
 });
+
+import { monatsKennzahlen } from "@/screens/Kalender";
+import type { PortalCalendarDay } from "@/lib/ownerPortal";
+
+function tagK(date: string, bookings: { eigen?: boolean }[], payout: number | null, units = 1): PortalCalendarDay {
+  return {
+    date,
+    status: bookings.length ? "booked" : "open",
+    price: null,
+    owner_payout_per_night: payout,
+    currency: payout === null ? null : "EUR",
+    owner_payout_unknown_reason: null,
+    guest_first_name: null,
+    booking_source: null,
+    bookings: bookings.map((b, i) => ({
+      reservation_id: `r${i}`,
+      unit_id: null,
+      owner_payout_per_night: null,
+      currency: null,
+      payout_unknown_reason: null,
+      guest_first_name: null,
+      booking_source: null,
+      is_owner_stay: !!b.eigen,
+    })),
+    units_booked: bookings.length,
+    units_total: units,
+  };
+}
+
+describe("monatsKennzahlen", () => {
+  it("summiert Nächte, Eigennutzung, Auslastung und Auszahlung", () => {
+    const k = monatsKennzahlen([
+      tagK("2026-09-01", [{}], 100),
+      tagK("2026-09-02", [{}], 120),
+      tagK("2026-09-03", [{ eigen: true }], null),
+      tagK("2026-09-04", [], null),
+    ]);
+    expect(k).toEqual({ naechte: 2, eigen: 1, auslastung: 75, payout: 220, currency: "EUR" });
+  });
+  it("eine belegte Nacht ohne Betrag kippt die Summe auf null, nicht auf eine Teilsumme", () => {
+    const k = monatsKennzahlen([tagK("2026-09-01", [{}], 100), tagK("2026-09-02", [{}], null)]);
+    expect(k.payout).toBeNull();
+    expect(k.naechte).toBe(2);
+  });
+  it("leerer Monat: Auszahlung 0, Auslastung 0", () => {
+    const k = monatsKennzahlen([tagK("2026-09-01", [], null)]);
+    expect(k.payout).toBe(0);
+    expect(k.auslastung).toBe(0);
+  });
+});

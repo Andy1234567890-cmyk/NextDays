@@ -266,12 +266,75 @@ export async function getOwnerStatistics(input: {
 
 // --- Kalender (read-only, maskiert) ----------------------------------------
 
+/**
+ * EINE Buchung, die diese Nacht belegt — eine Zeile je EINHEIT (0265).
+ * Spiegelt `PortalNightBooking` (public_portal/schemas.py).
+ */
+export type PortalNightBooking = {
+  reservation_id: string;
+  // Welche Einheit belegt ist; null = die Buchung liegt noch nicht auf einer
+  // Einheit (Altbestand) oder das Objekt hat genau eine.
+  unit_id: string | null;
+  // Netto-Auszahlung des Eigentümers für DIESE Buchung in DIESER Nacht.
+  // null + `payout_unknown_reason` = nicht ausweisbar. Kein Ersatzwert.
+  owner_payout_per_night: number | null;
+  currency: string | null;
+  // provision | provision_ungueltig | provision_zeitraum | betrag | naechte |
+  // waehrung_vertrag — WARUM kein Betrag ausweisbar ist.
+  payout_unknown_reason: string | null;
+  // Nur der Vorname (§4.2) — der volle Name existiert in dieser Antwort nicht.
+  guest_first_name: string | null;
+  // `ota_name` (Klarname) oder `channel` (Code) — siehe `kanalAusQuelle`.
+  booking_source: string | null;
+  // Eigennutzung des Eigentümers (0241): belegt, aber kein Umsatz. Ohne dieses
+  // Feld wäre die eigene Sperre von einer Buchung ohne ausweisbaren Betrag
+  // nicht zu unterscheiden.
+  is_owner_stay: boolean;
+};
+
+/** Ein Tag des Belegungskalenders. Spiegelt `PortalCalendarDay`. */
 export type PortalCalendarDay = {
   date: string; // YYYY-MM-DD
   status: string; // open | booked | blocked
-  // Netto-Preis/Nacht; null ohne Beträge-Sicht (kein Fallback).
+  // Gast-Verkaufspreis/Nacht — für einen Eigentümer laut §4.2 IMMER null.
   price: number | null;
+  // Summe der Netto-Auszahlung über alle Einheiten dieser Nacht; null, sobald
+  // auch nur eine Buchung unbestimmt ist (eine Teilsumme sähe aus wie der
+  // volle Ertrag). Grund in `owner_payout_unknown_reason`.
+  owner_payout_per_night: number | null;
+  currency: string | null;
+  owner_payout_unknown_reason: string | null;
+  guest_first_name: string | null;
+  booking_source: string | null;
+  // Alle Buchungen dieser Nacht, eine je belegter Einheit. Leer = keine.
+  bookings: PortalNightBooking[];
+  // „3 von 5 belegt" — ohne `units_total` wäre `units_booked` nicht einzuordnen.
+  units_booked: number;
+  units_total: number;
 };
+
+// --- Saisons (Kalenderfarben) ----------------------------------------------
+
+/** Ein Zeitraum, in dem eine Saison gilt (inklusiv). */
+export type PortalSeasonAssignment = { start_date: string; end_date: string };
+
+/**
+ * Saison eines Objekts — NUR Name, Farbe, Zeiträume. Die Preisregel der Saison
+ * liefert der Portal-Contract bewusst nicht (§4.2, `PortalSeason`).
+ */
+export type PortalSeason = {
+  id: string;
+  name: string;
+  color: string; // #RRGGBB aus der DB
+  assignments: PortalSeasonAssignment[];
+};
+
+export async function getOwnerSeasons(
+  propertyId: string,
+): Promise<Result<{ items: PortalSeason[]; total: number }>> {
+  const p = new URLSearchParams({ property_id: propertyId });
+  return call(`/public-portal/seasons?${p.toString()}`);
+}
 
 export async function getOwnerCalendar(
   propertyId: string,
@@ -334,9 +397,18 @@ export async function getOwnerStatements(): Promise<
 export type BlockRequest = {
   id: string;
   property_id: string;
+  unit_id: string | null;
+  // INKLUSIV („vom 1. bis zum 5."). Der Check-out ist `end_date + 1`
+  // (`lib/aufenthalt.ts → checkoutAus`).
   start_date: string;
   end_date: string;
+  // pending | approved | rejected | withdrawn … — roh, Name in `antragStatusName`.
   status: string;
+  reason: string | null;
+  // Personenzahl (0606); null = nicht angegeben.
+  guests: number | null;
+  decided_at: string | null;
+  decision_note: string | null;
   created_at: string | null;
 };
 
@@ -371,6 +443,10 @@ export async function createBlockRequest(input: {
   /** Regel-IDs der Leistungen, die ich zu dieser Sperre bestelle (0510).
    *  Leer = keine Aufgabe. Die Agentur genehmigt jede einzeln (0538). */
   bestellte_leistungen?: string[];
+  /** Personenzahl des Aufenthalts (0606), 1–50. Weggelassen = nicht angegeben. */
+  guests?: number;
+  /** Notizen an die Verwaltung (max. 2000 Zeichen). */
+  reason?: string;
 }): Promise<Result<BlockRequest>> {
   return call("/public-portal/block-requests", { method: "POST", body: input });
 }
@@ -439,4 +515,182 @@ export async function completeOwnerTask(taskId: string): Promise<Result<PortalTa
   return call(`/public-portal/tasks/${encodeURIComponent(taskId)}/complete`, {
     method: "POST",
   });
+}
+
+// --- Finanzübersicht der Startseite (07.09.2026) -----------------------------
+// Spiegelt `PortalFinanzUebersicht` (public_portal/schemas.py). Geld ist die
+// NETTO-Auszahlung des Eigentümers — dieselbe Zahl wie Kalender/Abrechnung;
+// null = nicht ausweisbar oder keine Finanzfreigabe, nie 0 (Wurzel 4).
+
+export type PortalFinanzPunkt = {
+  label: string; // YYYY-MM-DD (Tag) | YYYY-MM (Monat)
+  payout: number | null;
+  nights: number;
+  owner_stay_nights: number;
+  capacity_unit_nights: number;
+  occupancy_rate: number | null;
+  reservations: number;
+};
+
+export type PortalFinanzReihe = {
+  date_from: string;
+  date_to: string;
+  points: PortalFinanzPunkt[];
+  payout_total: number | null;
+  payout_unknown_reason: string | null;
+  nights: number;
+  owner_stay_nights: number;
+  capacity_unit_nights: number;
+  occupancy_rate: number | null;
+  reservations: number;
+  avg_payout_per_night: number | null;
+};
+
+export type PortalFinanzUebersicht = {
+  granularity: "day" | "month";
+  event: "calendar" | "check_in";
+  currency: string | null;
+  property_ids: string[];
+  units_total: number;
+  current: PortalFinanzReihe;
+  comparison: PortalFinanzReihe | null;
+};
+
+export async function getOwnerFinanzen(input: {
+  von: string;
+  bis: string;
+  propertyId?: string | null;
+  event: "calendar" | "check_in";
+  vergleich: boolean;
+}): Promise<Result<PortalFinanzUebersicht>> {
+  const p = new URLSearchParams({
+    date_from: input.von,
+    date_to: input.bis,
+    event: input.event,
+    compare: input.vergleich ? "true" : "false",
+  });
+  if (input.propertyId) p.set("property_id", input.propertyId);
+  return call(`/public-portal/finanzen?${p.toString()}`);
+}
+
+// --- Beleg einer Abrechnung (07.09.2026) --------------------------------------
+// Spiegelt `StatementResponse` (owner_statements/schemas.py) in dem Umfang, den
+// die Beleg-Ansicht rendert. Der Server maskiert für die Rolle owner bereits
+// Gastpreis (`total_price`) und Verwaltungs-Ertrag (`pm_payout`) → null.
+
+export type BelegGebuehr = {
+  art: string;
+  label: string;
+  betrag: number | null;
+  gehoert_zu: string; // betrieb | eigentuemer | durchlauf
+  quelle: string;
+};
+
+export type BelegZeile = {
+  reservation_id: string;
+  guest: string | null;
+  nights: number;
+  listing_id: string;
+  listing: string | null;
+  channel: string;
+  ota_name: string | null;
+  check_in: string | null;
+  check_out: string | null;
+  currency: string;
+  total_price: number | null;
+  total_payout: number;
+  owner_payout: number | null;
+  owner_payout_converted: number | null;
+  portal_provision: number | null;
+  verwaltungsprovision: number | null;
+  pauschale: number | null;
+  gebuehren_an_eigentuemer: number | null;
+  payout_unbekannt: string | null;
+  gebuehren: BelegGebuehr[];
+};
+
+export type BelegObjektZeile = {
+  listing_id: string;
+  listing: string | null;
+  nights: number;
+  reservations: number;
+  owner_payout: number | null;
+  expenses_to_owner: number;
+  expenses_from_owner: number;
+  recurring_to_owner: number;
+  recurring_from_owner: number;
+  payout: number | null;
+};
+
+export type BelegPosten = {
+  id: string;
+  concept: string;
+  date: string;
+  direction: "to_owner" | "from_owner" | string;
+  category: string | null;
+  listing_id: string | null;
+  amount: number;
+  currency: string | null;
+  signed_amount: number;
+};
+
+export type BelegWiederkehrend = {
+  item_id: string;
+  label: string;
+  abschnitt: string;
+  modus: string;
+  einzelbetrag: number;
+  anzahl: number;
+  betrag: number;
+  currency: string;
+};
+
+export type BelegKopf = {
+  pm_name: string | null;
+  pm_email: string | null;
+  pm_phone: string | null;
+  pm_address: string | null;
+  pm_logo_url: string | null;
+  owner_name: string | null;
+  owner_email: string | null;
+  owner_address: string | null;
+  invoice_number: string | null;
+  notes: string | null;
+};
+
+export type BelegSumme = {
+  total_payout: number;
+  expenses_total: number;
+  expenses_to_owner: number;
+  expenses_from_owner: number;
+  recurring_to_owner: number;
+  recurring_from_owner: number;
+  pauschalen_gesamt: number | null;
+  owner_payout: number | null;
+  currency: string;
+  owner_currency: string;
+  booking_count: number;
+  payout_unbekannt: string | null;
+};
+
+export type Beleg = {
+  id: string;
+  period_from: string;
+  period_to: string;
+  status: string;
+  kind: string;
+  header: BelegKopf;
+  summary: BelegSumme;
+  invoice_date: string | null;
+  language: string;
+  rental_rows: BelegZeile[];
+  listing_rows: BelegObjektZeile[];
+  expenses: BelegPosten[];
+  recurring: BelegWiederkehrend[];
+  objekte: { id: string; title: string | null }[];
+  created_at: string | null;
+};
+
+export async function getOwnerStatement(id: string): Promise<Result<Beleg>> {
+  return call(`/public-portal/statements/${encodeURIComponent(id)}`);
 }

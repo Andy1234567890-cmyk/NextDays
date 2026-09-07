@@ -84,7 +84,7 @@ export default function Auszahlungen({ navigation }: { navigation: Nav }) {
         titel="Auszahlungen"
         name={me?.full_name}
         email={me?.email}
-        aufProfil={() => navigation.navigate("Profil")}
+        aufProfil={() => navigation.navigate("Mehr")}
       />
       <ScrollView
         contentContainerStyle={{
@@ -172,7 +172,7 @@ export default function Auszahlungen({ navigation }: { navigation: Nav }) {
               )}
             </Kachel>
 
-            <Pressable onPress={() => navigation.navigate("Abrechnungen")}>
+            <Pressable onPress={() => navigation.navigate("Tabs", { screen: "Abrechnungen" })}>
               <Kachel>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
                   <Icon n="doc" s={22} c={t.palette.accent} />

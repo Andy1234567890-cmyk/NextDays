@@ -4,11 +4,15 @@
 // sondern eine Erklärung samt Weg in die PMS-App (fail-closed, Wurzel 5).
 import type { NavigatorScreenParams } from "@react-navigation/native";
 
+// Fünf Tabs nach der Vorlage (Hostaway Owner App, 07.09.2026): Start ·
+// Abrechnungen · Aufenthalte · Kalender · Mehr. Objekte und Auszahlungen je
+// Objekt sind Stack-Routen (von Start bzw. „Mehr" erreichbar), die Statistik
+// („Auslastung & Kanäle") ebenso.
 export type OwnerTabParamList = {
-  Ueberblick: undefined;
-  Objekte: undefined;
+  Start: undefined;
+  Abrechnungen: undefined;
+  Aufenthalte: undefined;
   Kalender: undefined;
-  Auszahlungen: undefined;
   Mehr: undefined;
 };
 
@@ -16,11 +20,25 @@ export type RootStackParamList = {
   Anmelden: undefined;
   Tabs: NavigatorScreenParams<OwnerTabParamList>;
   ObjektDetail: { id: string; titel: string };
+  Objekte: undefined;
   Fotoalbum: undefined;
   Belegung: undefined;
+  // „Aufenthalt buchen" — Name bleibt für den Deep-Link `eigennutzung`.
   SperrAntrag: { propertyId?: string } | undefined;
+  AufenthaltBestaetigt: {
+    antrag: import("@/lib/ownerPortal").BlockRequest;
+    objekt: { title: string; photo: string | null; adresse: string | null };
+    checkIn: string;
+    checkOut: string;
+    gaeste: number;
+    notizen: string | null;
+  };
   Zaehlerstand: { propertyId: string; titel: string };
-  Abrechnungen: undefined;
+  // Beleg einer Abrechnung (Tab „Abrechnungen" → Karte).
+  AbrechnungDetail: { id: string; titel: string };
+  // Auszahlungen je Objekt und Statistik — aus „Mehr".
+  Auszahlungen: undefined;
+  Statistik: undefined;
   // Aufgaben, die die Verwaltung dem Eigentümer zugewiesen hat (03.09.2026).
   Aufgaben: undefined;
   Profil: undefined;

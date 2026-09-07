@@ -46,7 +46,7 @@ export default function Objekte({ navigation }: { navigation: Nav }) {
         titel="Meine Objekte"
         name={me?.full_name}
         email={me?.email}
-        aufProfil={() => navigation.navigate("Profil")}
+        aufProfil={() => navigation.navigate("Mehr")}
       />
       {me?.is_demo ? <DemoBand /> : null}
       <ScrollView

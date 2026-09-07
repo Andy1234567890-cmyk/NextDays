@@ -106,7 +106,7 @@ export default function Ueberblick({ navigation }: { navigation: { navigate: (n:
 
   return (
     <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
-      <Kopf name={me?.full_name} email={me?.email} aufProfil={() => navigation.navigate("Profil")} />
+      <Kopf name={me?.full_name} email={me?.email} aufProfil={() => navigation.navigate("Mehr")} />
       <ScrollView
         contentContainerStyle={{ padding: t.density.pad, paddingTop: 0, gap: KARTE_ABSTAND }}
         refreshControl={<RefreshControl refreshing={laedt} onRefresh={() => void laden()} />}

@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "MyNextDays.app"
-               BlueprintName = "MyNextDays"
-               ReferencedContainer = "container:MyNextDays.xcodeproj">
+               BuildableName = "MyNextDaysOwner.app"
+               BlueprintName = "MyNextDaysOwner"
+               ReferencedContainer = "container:MyNextDaysOwner.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -28,16 +28,6 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "MyNextDaysTests.xctest"
-               BlueprintName = "MyNextDaysTests"
-               ReferencedContainer = "container:MyNextDays.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction
@@ -55,9 +45,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "MyNextDays.app"
-            BlueprintName = "MyNextDays"
-            ReferencedContainer = "container:MyNextDays.xcodeproj">
+            BuildableName = "MyNextDaysOwner.app"
+            BlueprintName = "MyNextDaysOwner"
+            ReferencedContainer = "container:MyNextDaysOwner.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +62,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "MyNextDays.app"
-            BlueprintName = "MyNextDays"
-            ReferencedContainer = "container:MyNextDays.xcodeproj">
+            BuildableName = "MyNextDaysOwner.app"
+            BlueprintName = "MyNextDaysOwner"
+            ReferencedContainer = "container:MyNextDaysOwner.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

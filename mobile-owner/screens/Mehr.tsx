@@ -60,10 +60,24 @@ export default function Mehr({ navigation }: { navigation: Nav }) {
             auf={() => navigation.navigate("Aufgaben")}
           />
           <Reihe
-            icon="doc"
-            titel="Abrechnungen"
-            unter="Abgeschlossene Abrechnungen"
-            auf={() => navigation.navigate("Abrechnungen")}
+            icon="card"
+            titel="Auszahlungen je Objekt"
+            unter="Netto-Auszahlung nach Objekt und Zeitraum"
+            auf={() => navigation.navigate("Auszahlungen")}
+            erste={false}
+          />
+          <Reihe
+            icon="chart"
+            titel="Auslastung & Kanäle"
+            unter="Belegung, Buchungen je Portal, Aufenthaltsdauer"
+            auf={() => navigation.navigate("Statistik")}
+            erste={false}
+          />
+          <Reihe
+            icon="home"
+            titel="Meine Objekte"
+            unter="Stammdaten und Zählerstände"
+            auf={() => navigation.navigate("Objekte")}
             erste={false}
           />
           <Reihe
@@ -74,8 +88,8 @@ export default function Mehr({ navigation }: { navigation: Nav }) {
             erste={false}
           />
           <Reihe
-            icon="cal"
-            titel="Eigennutzung beantragen"
+            icon="bed"
+            titel="Aufenthalt buchen"
             unter="Zeitraum für sich freihalten"
             auf={() => navigation.navigate("SperrAntrag")}
             erste={false}

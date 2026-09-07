@@ -20,13 +20,17 @@ import { getToken, onTokenChange } from "@/lib/auth";
 import { realtimeTokenQuelleSetzen } from "@/lib/realtime";
 import { Tabs } from "@/navigation/Tabs";
 import type { RootStackParamList } from "@/navigation/types";
-import Abrechnungen from "@/screens/Abrechnungen";
+import AbrechnungDetail from "@/screens/AbrechnungDetail";
+import AufenthaltBestaetigt from "@/screens/AufenthaltBestaetigt";
+import AufenthaltBuchen from "@/screens/AufenthaltBuchen";
 import Aufgaben from "@/screens/Aufgaben";
 import Anmelden from "@/screens/Anmelden";
+import Auszahlungen from "@/screens/Auszahlungen";
 import FalscheRolle from "@/screens/FalscheRolle";
 import Fotoalbum from "@/screens/Fotoalbum";
+import Objekte from "@/screens/Objekte";
 import ObjektDetail from "@/screens/ObjektDetail";
-import Sperrantrag from "@/screens/Sperrantrag";
+import Ueberblick from "@/screens/Ueberblick";
 import Zaehlerstand from "@/screens/Zaehlerstand";
 import { marke } from "@/theme/marke";
 import { ThemeProvider } from "@/theme/ThemeProvider";
@@ -51,17 +55,20 @@ const linking: LinkingOptions<RootStackParamList> = {
   config: {
     screens: {
       Anmelden: "anmelden",
+      Objekte: "objekte",
       ObjektDetail: "objekte/:id",
       Zaehlerstand: "objekte/:propertyId/zaehler",
       Fotoalbum: "fotoalbum",
-      Abrechnungen: "abrechnungen",
+      AbrechnungDetail: "abrechnungen/:id",
+      Auszahlungen: "auszahlungen",
+      Statistik: "statistik",
       SperrAntrag: "eigennutzung",
       Tabs: {
         screens: {
-          Ueberblick: "ueberblick",
-          Objekte: "objekte",
+          Start: "start",
+          Abrechnungen: "abrechnungen",
+          Aufenthalte: "aufenthalte",
           Kalender: "kalender",
-          Auszahlungen: "auszahlungen",
           Mehr: "mehr",
         },
       },
@@ -127,9 +134,24 @@ function Root() {
               options={{ headerShown: true, title: "Fotoalbum" }}
             />
             <Stack.Screen
-              name="Abrechnungen"
-              component={Abrechnungen}
-              options={{ headerShown: true, title: "Abrechnungen" }}
+              name="Objekte"
+              component={Objekte}
+              options={{ headerShown: true, title: "Meine Objekte" }}
+            />
+            <Stack.Screen
+              name="AbrechnungDetail"
+              component={AbrechnungDetail}
+              options={({ route }) => ({ headerShown: true, title: route.params.titel })}
+            />
+            <Stack.Screen
+              name="Auszahlungen"
+              component={Auszahlungen}
+              options={{ headerShown: true, title: "Auszahlungen je Objekt" }}
+            />
+            <Stack.Screen
+              name="Statistik"
+              component={Ueberblick}
+              options={{ headerShown: true, title: "Auslastung & Kanäle" }}
             />
             <Stack.Screen
               name="Aufgaben"
@@ -138,8 +160,13 @@ function Root() {
             />
             <Stack.Screen
               name="SperrAntrag"
-              component={Sperrantrag}
-              options={{ headerShown: true, title: "Eigennutzung" }}
+              component={AufenthaltBuchen}
+              options={{ headerShown: true, title: "Aufenthalt buchen" }}
+            />
+            <Stack.Screen
+              name="AufenthaltBestaetigt"
+              component={AufenthaltBestaetigt}
+              options={{ headerShown: false, gestureEnabled: false }}
             />
           </>
         ) : angemeldet ? (
