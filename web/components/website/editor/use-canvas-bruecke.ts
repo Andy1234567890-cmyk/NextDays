@@ -55,6 +55,13 @@ export type CanvasMeldung = {
   containerId?: string;
   /** Die Art des Containers: `section` · `column` · `inner_column`. */
   containerKind?: string;
+  /** Der TEIL eines Bausteins unter dem Zeiger (06.09.2026): der Schlüssel im
+   *  `content`, den der Renderer als `data-feld` an die Stelle schreibt.
+   *
+   *  Er wandert bei `select`, `dblclick` und `text` mit. In Framer ist jede
+   *  Überschrift und jeder Absatz eine eigene Ebene mit eigenem Style-Panel;
+   *  bei uns ist es dieser Schlüssel, der aus einem Baustein mehrere
+   *  gestaltbare Stellen macht. */
   feld?: string;
   wert?: string;
   rechtecke?: Array<{
@@ -68,11 +75,57 @@ export type CanvasMeldung = {
     width: number;
     height: number;
   }>;
+  /** Die STRUKTUR der Bausteine (06.09.2026): jeder Knoten mit eigener Box,
+   *  dazu Bilder und Videos — Framers Frame · Stack · Grid · Masonry · Image ·
+   *  Video. `feld` ist der Schlüssel (Feldname oder Pfad `c1_3_2`), `eltern`
+   *  der Schlüssel des übergeordneten Knotens (`null` = direkt im Baustein). */
+  teile?: Array<{
+    id: string;
+    feld: string;
+    eltern?: string | null;
+    art?: string;
+    marke?: string | null;
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+  }>;
+  /** Kopf-/Fußzeile und ihre Teile (0570) — eigene Liste ohne Block-Index. */
+  regionen?: Array<{
+    region: string;
+    teil?: string;
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+  }>;
+  /** Bei `select`: ein Klick in die Kopf- oder Fußzeile (0570). `teil` ist
+   *  `null`, wenn die Region selbst getroffen wurde. */
+  region?: string | null;
+  teil?: string | null;
   /** Warum gemessen wurde. Nur `scroll` heißt, dass die Abschnitte unter einem
    *  offenen Menü weggewandert sind. */
   grund?: "hallo" | "layout" | "scroll";
+  /** Höhe der ganzen Seite in CSS-Pixeln (bei `rects`) — der Rahmen des
+   *  Breakpoints wird so hoch. */
+  seitenHoehe?: number;
   x?: number | null;
   y?: number | null;
+  /** `rad`: Mausrad/Pinch über dem iframe, für die Kamera der Fläche. */
+  dx?: number;
+  dy?: number;
+  modus?: number;
+  zoom?: boolean;
+  /** `zug`: ein Element wird auf der Fläche gezogen (06.09.2026). `start`
+   *  beginnt die Geste, `bewegt` meldet jede Bewegung, `ende` den Abwurf. */
+  phase?: "start" | "bewegt" | "ende";
+  /** `taste`: ein Kamera-Kürzel aus dem iframe (⌘+/−/0/1/2, Leertaste). */
+  key?: string;
+  code?: string;
+  meta?: boolean;
+  typ?: string;
+  alt?: boolean;
+  shift?: boolean;
 };
 
 /**
@@ -93,6 +146,12 @@ export function useCanvasBruecke(
   iframeBereit: () => void;
   /** Die Vorschau zu einem Baustein scrollen (D4). */
   scrolleZu: (id: string | null) => void;
+  /** Die Darstellung eines Bausteins SOFORT in der Vorschau zeigen — ohne
+   *  Neuladen (06.09.2026). Geschickt werden die SETTINGS, nicht fertiges CSS:
+   *  gerechnet wird drüben mit derselben Funktion, die auch die Live-Seite
+   *  baut (`stilCss`). Zwei Rechenwege wären zwei Wahrheiten, und die falsche
+   *  fiele erst dem Gast auf. */
+  sendeStil: (id: string | null, settings: Record<string, unknown>, span?: number | null) => void;
 } {
   const begruesst = useRef(false);
   const handschlag = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -176,5 +235,18 @@ export function useCanvasBruecke(
     [iframeRef],
   );
 
-  return { iframeBereit, scrolleZu };
+  const sendeStil = useCallback(
+    (id: string | null, settings: Record<string, unknown>, span: number | null = null) => {
+      // Ohne ID gibt es drüben nichts zu finden: ein Baustein, der noch nie
+      // gespeichert wurde, steht in der Vorschau ohnehin noch nicht.
+      if (!id) return;
+      iframeRef.current?.contentWindow?.postMessage(
+        { source: "builder-editor", type: "stil", id, settings, span },
+        ORIGIN ?? "*",
+      );
+    },
+    [iframeRef],
+  );
+
+  return { iframeBereit, scrolleZu, sendeStil };
 }

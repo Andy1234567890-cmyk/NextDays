@@ -116,7 +116,7 @@ export function BaukastenSchale({
   menueBeschriften,
   onMenue,
   breit = false,
-  imEditor = false,
+  panelBereiche,
 }: {
   /** Die Bereiche mit ihrer ROUTE. Kein `onReiter`-Rückruf: ein Bereich ist
    *  eine Adresse, kein Zustand. Vorher stand der aktive Bereich in
@@ -198,9 +198,19 @@ export function BaukastenSchale({
   onMenue?: (id: string) => void;
   /** true = keine Vorschau, Inhalt über die volle Breite (wie „Einstellungen"). */
   breit?: boolean;
-  /** true = die Schale steht IM Editor. Dann wechseln die Einträge der
-   *  Menüspalte nur das Panel statt zu navigieren (C4). */
-  imEditor?: boolean;
+  /** Die Schale steht IM Editor, und das sind die Bereiche, die er als PANEL
+   *  bedient (`onMenue` nimmt ihre Einträge an). NUR deren Einträge verlieren
+   *  ihr `href` und wechseln das Panel statt zu navigieren (C4). Alle anderen
+   *  — „Mehr" mit Objekte/Regeln/Anfragen/Widgets/Einstellungen — sind echte
+   *  Routen und bleiben Links.
+   *
+   *  Bis 05.09.2026 war das ein Schalter `imEditor`, der JEDES `href` strich;
+   *  der Editor-Handler kannte die „Mehr"-Ziele nicht, und der Klick fiel
+   *  stumm ins Protokoll („das lässt sich nicht klicken"). Ein Schalter plus
+   *  Liste mit Ersatzwert „alle" hätte denselben Fehler wieder zugelassen
+   *  (Wurzel 4) — deshalb ist die Liste selbst der Schalter: ohne Liste
+   *  navigiert jeder Eintrag. */
+  panelBereiche?: readonly string[];
 }) {
   const { ref, hoehe } = useSchalenHoehe();
   // Das Panel lässt sich zuklappen. Der Zustand lebt hier und nicht in der
@@ -236,7 +246,8 @@ export function BaukastenSchale({
    *  Außerhalb des Editors bleiben die `href` — dort IST der Unterpunkt eine
    *  eigene Seite, und ein verschickbarer Link ist der Grund, warum die
    *  Reiter überhaupt Pfade sind. */
-  const menueEintraege = imEditor
+  const alsPanel = panelBereiche?.includes(aktiverReiter) ?? false;
+  const menueEintraege = alsPanel
     ? roheEintraege.map((e) =>
         e.art === "gruppe"
           ? { ...e, kinder: e.kinder.map((k) => ({ ...k, href: undefined })) }
@@ -408,6 +419,7 @@ export function BaukastenSchale({
                   aktiv={menueAktiv ?? null}
                   beschriften={menueBeschriften!}
                   onWaehle={(id) => onMenue?.(id)}
+                  vorNavigation={vorNavigation}
                 />
               ) : null}
               {/* Das PANEL nur, wenn es eines gibt. Eine Route wie
@@ -620,7 +632,7 @@ export function BaukastenSchale({
  * selben Bild, wenn sie im selben Render stehen, und der Browser überspringt
  * den Übergang. Erst ein zweites Bild lässt ihn laufen.
  */
-function GrossPanel({
+export function GrossPanel({
   titel,
   onZu,
   texte,

@@ -408,7 +408,16 @@ class CalendarService:
                     wetter_temp_c=getattr(w, "temp_c", None),
                     wetter_niederschlag_mm=getattr(w, "niederschlag_mm", None),
                     wetter_bewoelkung_pct=getattr(w, "bewoelkung_pct", None),
-                    min_stay=min_stay,
+                    # Die Regel DIESER Nacht schlägt die des Rate-Plans: ein
+                    # Regelsatz („Hochsommer, mindestens 7 Nächte") gilt für
+                    # seine Tage, der Plan für den Rest (0572). Fehlt der
+                    # Tageswert, bleibt es beim objektweiten.
+                    min_stay=(
+                        row.get("min_stay")
+                        if row and row.get("min_stay") is not None
+                        else min_stay
+                    ),
+                    max_stay=row.get("max_stay") if row else None,
                     closed_to_arrival=bool(
                         row.get("closed_to_arrival") if row else False
                     ),
@@ -470,7 +479,10 @@ class CalendarService:
         avail_rows = fetch_all_rows(
             self._db()
             .table("availability")
-            .select("property_id,date,status,source,closed_to_arrival,closed_to_departure")
+            .select(
+                "property_id,date,status,source,min_stay,max_stay,"
+                "closed_to_arrival,closed_to_departure"
+            )
             .in_("property_id", pids)
             .gte("date", start_iso)
             .lt("date", end_iso)
@@ -875,7 +887,10 @@ class CalendarService:
         res = (
             self._db()
             .table("availability")
-            .select("date,status,source,closed_to_arrival,closed_to_departure")
+            .select(
+                "date,status,source,min_stay,max_stay,"
+                "closed_to_arrival,closed_to_departure"
+            )
             .eq("property_id", property_id)
             .gte("date", rng.start.isoformat())
             .lt("date", rng.end.isoformat())
@@ -1410,8 +1425,16 @@ class CalendarService:
     def create_season(
         self, tenant_id: str, property_id: str, *,
         name: str, color: str, mode: str, amount: float,
+        regeln: dict | None = None,
     ) -> dict:
-        """Neue benannte Saison anlegen (noch ohne Zeitraum)."""
+        """Neuen Regelsatz anlegen (noch ohne Zeitraum).
+
+        `regeln` trägt die Verfügbarkeits-Regeln des Satzes (min_stay,
+        max_stay, gesperrte An-/Abreise-Wochentage, 0572; Mindestaufenthalt je
+        Anreisetag, 0576). Sie wirken erst, wenn dem Satz ein Zeitraum
+        zugewiesen wird — vorher gibt es keine Tage, auf die sie sich beziehen
+        könnten.
+        """
         self._require_tenant_property(tenant_id, property_id)
         row = (
             self._db()
@@ -1419,6 +1442,7 @@ class CalendarService:
             .insert({
                 "property_id": property_id, "name": name,
                 "color": color, "mode": mode, "amount": amount,
+                **(regeln or {}),
             })
             .execute()
         ).data
@@ -1435,6 +1459,9 @@ class CalendarService:
         Zuweisungen neu materialisieren — sonst zeigte der Kalender die neue Farbe,
         aber Channex noch den alten Preis (Gegenzustand, Wurzel 1)."""
         season = self._own_season(tenant_id, season_id)
+        # `None` heißt „nicht gesendet"; eine LEERE Liste heißt dagegen „keine
+        # Sperre mehr" und muss geschrieben werden — sonst ließe sich eine
+        # einmal gesetzte Wochentag-Sperre nie wieder aufheben (Wurzel 1).
         clean = {k: v for k, v in patch.items() if v is not None}
         if clean:
             self._db().table("property_seasons").update(clean).eq(
@@ -1631,9 +1658,21 @@ class CalendarService:
         500. Deshalb der UNIQUE als Backstop im SELBEN Statement (Wurzel 2): der
         Konflikt wird von der DB entschieden, nicht von unserem Lesestand.
         """
+        # Ein Regelsatz ist EIN Ding: Farbe, Preisänderung UND Aufenthaltsregeln
+        # (0572/0576). Wurden hier nur die drei Preisfelder kopiert, hieß
+        # „übertragen" am Ziel etwas anderes als an der Quelle — der
+        # Mindestaufenthalt der Hochsaison fiel still weg, und die Portale
+        # bekamen für das Zielobjekt keine Restriktion.
         werte = {
             "color": quelle["color"], "mode": quelle["mode"],
             "amount": quelle["amount"],
+            "min_stay": quelle.get("min_stay"),
+            "max_stay": quelle.get("max_stay"),
+            "closed_arrival_weekdays": quelle.get("closed_arrival_weekdays") or [],
+            "closed_departure_weekdays": (
+                quelle.get("closed_departure_weekdays") or []
+            ),
+            "min_stay_by_weekday": quelle.get("min_stay_by_weekday") or {},
         }
         row = (
             self._db()
@@ -1934,12 +1973,128 @@ class CalendarService:
         und an Channex pushen. Bei percent bezieht sich der Aufschlag auf den
         Rate-Plan-Basispreis (vorhersehbar, kein Stapeln auf schon-Overrides)."""
         property_id = season["property_id"]
+        # Die Aufenthaltsregeln hängen NICHT am Preis: ein Regelsatz ohne
+        # Basispreis (percent ohne Rate-Plan) hat trotzdem einen
+        # Mindestaufenthalt zu setzen. Deshalb zuerst und unabhängig.
+        self._materialize_regeln(season, start, end)
         base, _min = self._fetch_rate_plan(property_id)
         price = self._season_price_for_day(season, base)
         if price is None:
-            return 0  # percent ohne Basispreis → nichts materialisieren
+            return 0  # percent ohne Basispreis → kein Preis zu materialisieren
         rng = DateRange(start=start, end=end)
         return self.set_season_price(tenant_id, property_id, rng, price)
+
+    def _materialize_regeln(self, season: dict, start: date, end: date) -> None:
+        """Aufenthaltsregeln des Regelsatzes je Tag nach `availability` schreiben.
+
+        Der Preis einer Saison landet in `price_overrides`, ihre Regeln hier —
+        beides materialisierte Ergebnisse derselben bearbeitbaren Quelle. Die
+        Wochentags-Sperren werden dabei je Tag AUSGERECHNET: `closed_to_arrival`
+        ist eine Tages-Eigenschaft, kein Wochentag.
+
+        Tage OHNE Regel bekommen ausdrücklich `None`/`False` — sonst bliebe die
+        Regel eines früheren Satzes stehen, obwohl der neue keine hat
+        (Gegenzustand, Wurzel 1).
+        """
+        property_id = season["property_id"]
+        min_stay = season.get("min_stay")
+        max_stay = season.get("max_stay")
+        an = set(season.get("closed_arrival_weekdays") or [])
+        ab = set(season.get("closed_departure_weekdays") or [])
+        # Mindestaufenthalt je ANREISETAG (0576). Der Wert des Wochentags
+        # schlägt den allgemeinen `min_stay`; fehlt er, gilt dieser weiter —
+        # ein fehlender Schlüssel ist keine 0 (Wurzel 4). Die Schlüssel kommen
+        # als JSON-Objekt aus der DB und sind dort Zeichenketten.
+        je_wochentag = {
+            int(k): int(v)
+            for k, v in (season.get("min_stay_by_weekday") or {}).items()
+        }
+        zeilen = []
+        tag = start
+        while tag < end:
+            zeilen.append({
+                "property_id": property_id,
+                "date": tag.isoformat(),
+                "min_stay": je_wochentag.get(tag.weekday(), min_stay),
+                "max_stay": max_stay,
+                "closed_to_arrival": tag.weekday() in an,
+                "closed_to_departure": tag.weekday() in ab,
+            })
+            tag += timedelta(days=1)
+        if not zeilen:
+            return
+        self._db().table("availability").upsert(
+            je_einheit(self._db(), property_id, zeilen),
+            on_conflict=AVAILABILITY_CONFLICT,
+        ).execute()
+        # Lokal geschrieben ist nicht bei den Portalen angekommen. Ohne diesen
+        # Push kennte Channex den Mindestaufenthalt der Saison nicht, und ein
+        # Gast könnte über ein Portal drei Nächte buchen, wo sieben gefordert
+        # sind — die stille Divergenz, gegen die Wurzel 1 steht.
+        self._push_regeln(property_id, zeilen)
+        log.info(
+            "saison_regeln_materialisiert",
+            property_id=property_id, season_id=season.get("id"), tage=len(zeilen),
+        )
+
+    def _push_regeln(self, property_id: str, zeilen: list[dict]) -> None:
+        """Aufenthaltsregeln als GEBÜNDELTE Restriktions-Zeilen an Channex.
+
+        Aufeinanderfolgende Tage mit identischer Regel werden zu einer Zeile
+        zusammengefasst — eine Woche mit gleichem Mindestaufenthalt ist EIN
+        Eintrag, nicht sieben (dieselbe Verdichtung wie bei den Preisen).
+        """
+        if not zeilen:
+            return
+        bloecke: list[tuple[tuple, str, str]] = []
+        for z in zeilen:
+            regel = (
+                z["min_stay"], z["max_stay"],
+                z["closed_to_arrival"], z["closed_to_departure"],
+            )
+            if bloecke and bloecke[-1][0] == regel:
+                bloecke[-1] = (regel, bloecke[-1][1], z["date"])
+            else:
+                bloecke.append((regel, z["date"], z["date"]))
+        nutzlast = [
+            {
+                "date_from": von,
+                "date_to": bis,  # inklusiv, wie der Channex-Payload
+                "rate_plan_id": None,
+                "min_stay": regel[0],
+                "max_stay": regel[1],
+                "closed_to_arrival": regel[2],
+                "closed_to_departure": regel[3],
+            }
+            for regel, von, bis in bloecke
+        ]
+        tenant_id = self._tenant_of_property(property_id)
+        if tenant_id:
+            try_enqueue_ari(
+                self._db(), tenant_id, property_id,
+                "restriction_rows", {"rows": nutzlast},
+            )
+
+    def _tenant_of_property(self, property_id: str) -> str | None:
+        """Mandant eines Objekts — für Jobs, die ihn brauchen, der Aufrufer ihn
+        aber nicht zur Hand hat. `None`, wenn es das Objekt nicht (mehr) gibt;
+        dann wird kein Job eingereiht statt einer mit geratenem Mandanten."""
+        rows = (
+            self._db().table("properties").select("tenant_id")
+            .eq("id", property_id).limit(1).execute()
+        ).data
+        return str(rows[0]["tenant_id"]) if rows else None
+
+    def _clear_regeln(self, property_id: str, start: date, end: date) -> None:
+        """Aufenthaltsregeln in [start, end) zurücknehmen (Gegenzustand zu
+        `_materialize_regeln`). Der Status der Nacht bleibt unberührt — gelöst
+        wird die REGEL, nicht die Buchung oder Sperre."""
+        self._db().table("availability").update({
+            "min_stay": None, "max_stay": None,
+            "closed_to_arrival": False, "closed_to_departure": False,
+        }).eq("property_id", property_id).gte(
+            "date", start.isoformat()
+        ).lt("date", end.isoformat()).execute()
 
     def _rematerialize_season(self, tenant_id: str, season: dict) -> None:
         """Alle Zeiträume einer Saison neu berechnen (nach Stammdaten-Änderung)."""
@@ -1954,6 +2109,9 @@ class CalendarService:
         self._db().table("price_overrides").delete().eq(
             "property_id", property_id
         ).gte("date", start.isoformat()).lt("date", end.isoformat()).execute()
+        # Mit dem Preis fällt auch die Aufenthaltsregel des Satzes weg — sonst
+        # bliebe ein Mindestaufenthalt stehen, dessen Saison es nicht mehr gibt.
+        self._clear_regeln(property_id, start, end)
         days = self._resolver().effective_prices(property_id, start, end)
         # Zusammenhängende Tage MIT GLEICHEM Preis in EINEN Job bündeln: der
         # Basispreis ist über den Zeitraum meist konstant, ein Job je Tag hätte
@@ -2099,6 +2257,17 @@ class CalendarService:
         ist v2 — hier gilt der Wert objektweit (so wie der Rate-Plan).
         `push_channex=False`, wenn der Wert in einer kombinierten Bulk-Aktion
         bereits mit CTA/CTD in EINEM Call gepusht wird (Test 7)."""
+        # Ohne Preisplan gibt es nichts zu aktualisieren: das `update` träfe
+        # null Zeilen und meldete trotzdem Erfolg. Der Kalender sagte dann
+        # „Gespeichert", und der Mindestaufenthalt stand nirgends (live am
+        # 06.09.2026 an einem Entwurfs-Objekt gesehen). Laut fehlschlagen mit
+        # einer Meldung, die den nächsten Schritt nennt (Wurzel 5).
+        if not self._own_rate_plan_ids(property_id):
+            raise CalendarError(
+                "Für dieses Objekt gibt es noch keinen Preis. Lege zuerst einen "
+                "Preis an — der Mindestaufenthalt hängt am Preisplan.",
+                status_code=422,
+            )
         self._db().table("rate_plans").update({"min_stay": min_stay}).eq(
             "property_id", property_id
         ).execute()

@@ -791,6 +791,49 @@ def test_update_derived_rejects_own_currency() -> None:
         assert exc.status_code == 422
 
 
+def test_update_lehnt_fremde_buchungsbedingung_ab() -> None:
+    # Wurzel 3: die ID kommt aus dem Request. Ohne Mandanten-Prüfung hinge die
+    # Bedingung eines FREMDEN Betriebs am eigenen Preisplan — und mit ihr dessen
+    # Storno- und Zahlungsregeln.
+    from src.features.rates.schemas import RatePlanUpdate
+
+    # Die Fake-DB wertet `.eq()` nicht aus — eine fremde Zeile käme hier trotz
+    # Mandanten-Filter zurück. Geprüft wird deshalb der Zustand, den der Filter
+    # in der echten DB ERZEUGT: kein Treffer. Dass der Filter selbst gesetzt
+    # ist, sieht nur ein Lauf gegen eine echte Datenbank.
+    svc = _svc({
+        "rate_plans": [{"id": "rp-1", "property_id": "p-1", "currency": "EUR",
+                        "properties": {"tenant_id": "t-1", "title": "Objekt"}}],
+        "booking_conditions": [],
+    })
+    try:
+        svc.update(_ctx(), "rp-1", RatePlanUpdate(booking_condition_id="bc-fremd"))
+        raise AssertionError("sollte 404 werfen")
+    except RateError as exc:
+        assert exc.status_code == 404
+
+
+def test_update_loest_die_buchungsbedingung_mit_null() -> None:
+    # `null` ist eine Angabe, kein fehlender Wert: ohne diesen Pfad ließe sich
+    # eine einmal gesetzte Bedingung nie wieder lösen (Gegenzustand, Wurzel 1).
+    from src.features.rates.schemas import RatePlanUpdate
+
+    svc = _svc({
+        "rate_plans": [{"id": "rp-1", "property_id": "p-1", "currency": "EUR",
+                        "booking_condition_id": "bc-1",
+                        "properties": {"tenant_id": "t-1", "title": "Objekt"}}],
+        "booking_conditions": [{"id": "bc-1", "tenant_id": "t-1"}],
+    })
+    svc.update(_ctx(), "rp-1", RatePlanUpdate(booking_condition_id=None))
+    geschrieben = svc._db().updated["rate_plans"]  # noqa: SLF001 — der Schreibvorgang ist der Prüfpunkt
+    assert any("booking_condition_id" in p for p in geschrieben)
+    assert all(
+        p["booking_condition_id"] is None
+        for p in geschrieben
+        if "booking_condition_id" in p
+    )
+
+
 def test_resolver_derived_cycle_fails_closed() -> None:
     # Fehldaten A→B→A (der DB-CHECK verbietet nur die Selbstreferenz): der
     # Resolver muss den Zyklus erkennen und fail-closed 422 werfen, statt endlos

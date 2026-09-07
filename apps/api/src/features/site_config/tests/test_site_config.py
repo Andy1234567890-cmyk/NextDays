@@ -4600,3 +4600,392 @@ def test_konfliktmeldung_nennt_den_betroffenen_raum() -> None:
     wo für einen Beitragskonflikt nichts steht."""
     assert "Beitrag" in seiten.slug_konflikt_text("post")
     assert "Seite" in seiten.slug_konflikt_text("normal")
+
+
+def test_startseite_laesst_sich_nicht_loeschen() -> None:
+    """Der Riegel sitzt im Backend, nicht nur im Menü (Wurzel 3).
+
+    Ohne Startseite antwortet die Domain nur noch „noch nicht eingerichtet";
+    der Weg ist: andere Seite zur Startseite machen, dann löschen.
+    """
+    tables = {
+        "site_pages": [
+            {"id": "p1", "tenant_id": "t-1", "slug": "", "title": "A",
+             "is_home": True, "is_published": True, "nav_order": 0},
+            {"id": "p2", "tenant_id": "t-1", "slug": "b", "title": "B",
+             "is_home": False, "is_published": False, "nav_order": 1},
+        ]
+    }
+    svc = _svc(tables)
+    with pytest.raises(SiteConfigError) as exc:
+        svc.delete_page(_ctx(), "p1")
+    assert exc.value.status_code == 422
+    assert len(tables["site_pages"]) == 2
+
+    svc.set_home_page(_ctx(), "p2")
+    svc.delete_page(_ctx(), "p1")
+    assert [p["id"] for p in tables["site_pages"]] == ["p2"]
+
+
+def test_gesperrte_ebene_laesst_sich_nicht_loeschen_oder_bewegen() -> None:
+    """``settings.locked`` gilt auch am API-Pfad (Wurzel 6), nicht nur im Menü."""
+    tables = {
+        "site_pages": [
+            {"id": "p1", "tenant_id": "t-1", "slug": "", "title": "A",
+             "is_home": True, "is_published": True, "nav_order": 0},
+        ],
+        "site_blocks": [
+            {"id": "s1", "tenant_id": "t-1", "page_id": "p1", "kind": "section",
+             "parent_id": None, "position": 0, "type": "container",
+             "content": {}, "settings": {"locked": True}},
+            {"id": "s2", "tenant_id": "t-1", "page_id": "p1", "kind": "section",
+             "parent_id": None, "position": 1, "type": "container",
+             "content": {}, "settings": {}},
+        ],
+    }
+    svc = _svc(tables)
+    with pytest.raises(SiteConfigError) as exc:
+        svc.remove_block(_ctx(), "s1")
+    assert exc.value.status_code == 422
+    with pytest.raises(SiteConfigError):
+        svc.move_container(_ctx(), "s1", 1)
+    with pytest.raises(SiteConfigError):
+        svc.duplicate_container(_ctx(), "s1")
+    assert len(tables["site_blocks"]) == 2
+    # Entsperren geht über die Einstellungen — danach darf gelöscht werden.
+    tables["site_blocks"][0]["settings"] = {}
+    svc.remove_block(_ctx(), "s1")
+    assert [b["id"] for b in tables["site_blocks"]] == ["s2"]
+
+
+# --- Framer-Inspektor: verschachtelte Darstellung (Etappe 2, 05.09.2026) -----
+def test_darstellung_unterobjekte_werden_gespeichert_und_normalisiert() -> None:
+    """Position/Größe/Stil/Transform/Scroll/A11y und die Geräte-Überschreibung
+    kommen als Unterobjekte in `settings` an und wieder heraus — mit den
+    Standardwerten der Teilfelder (Grenzart `solid`, Schatten-x `0`), damit der
+    Renderer nie raten muss."""
+    tables: dict[str, list[dict]] = {"site_pages": [], "site_blocks": []}
+    svc = _svc(tables)
+    page = svc.create_page(_ctx(), PageCreate(title="Start", slug=""))
+    abschnitt = svc.add_block(
+        _ctx(), page.id, BlockCreate(type=BlockType.container, kind="section")
+    )
+    gesetzt = svc.update_block(
+        _ctx(),
+        abschnitt.id,
+        BlockUpdate(
+            settings={
+                "position": {"typ": "klebend", "oben": "0px", "ebene": 5},
+                "groesse": {
+                    "breite": {"modus": "relativ", "wert": 100},
+                    "hoehe": {"modus": "inhalt"},
+                    "seitenverhaeltnis": "16/9",
+                },
+                "stil": {
+                    "opazitaet": 0.8,
+                    "mischmodus": "multiply",
+                    "filter": {"weichzeichnen": 4, "graustufen": 50},
+                    "ueberlauf_x": "scrollen",
+                    "zeiger_ereignisse": False,
+                    "text_auswahl": False,
+                    "tippfarbe": "#00000000",
+                    "fuellung": {"art": "farbe", "farbe": "rolle:primary"},
+                    "radius": {"alle": 24},
+                    "grenze": {"breite": 1, "farbe": "#e4e4e7"},
+                    "schatten": [{"y": 2, "weich": 8, "farbe": "#00000040"}],
+                },
+                "transform": {
+                    "rotation": -3.5,
+                    "skalierung": 1.05,
+                    "rotation_x": 15,
+                    "tiefe": -40,
+                    "rueckseite": "verborgen",
+                    "raum_3d": True,
+                },
+                "scroll": {"anker": "kontakt", "versatz_y": 80},
+                "a11y": {"tag": "section", "label": "Kontakt", "nosnippet": True},
+                "link": {
+                    "href": "/kontakt",
+                    "neuer_tab": True,
+                    "anker": "preise",
+                    "rel": ["nofollow"],
+                    "parameter": "utm_source=web",
+                },
+                "cursor": "pointer",
+                "effekte": {
+                    "erscheinen": {"art": "hochgleiten"},
+                    "hover": {"skalierung": 1.05},
+                    "schleife": {"art": "schweben", "dauer": 3000},
+                    "scroll_tempo": 120,
+                },
+                "layout_typ": "raster",
+                "raster_spalten": 3,
+                "raster_abstand_x": 24,
+                "text": {
+                    "schrift": "ueberschrift",
+                    "farbe": "rolle:foreground",
+                    "groesse": "3.5rem",
+                    "gewicht": 600,
+                    "laufweite": "-0.035em",
+                    "zeilenhoehe": "1.02em",
+                    "ausrichtung": "center",
+                    "balance": True,
+                    "kuerzen": 2,
+                    "opentype": ["tnum", "liga"],
+                },
+                "je_geraet": {
+                    "mobil": {
+                        "stil": {"opazitaet": 1},
+                        "layout_richtung": "spalte",
+                        "text": {"groesse": "2rem"},
+                    }
+                },
+            }
+        ),
+    )
+    s = gesetzt.settings
+    assert s["link"]["rel"] == ["nofollow"]
+    assert s["link"]["parameter"] == "utm_source=web"
+    assert s["cursor"] == "pointer"
+    # Effekte kommen mit ihren Standardwerten zurück (Dauer, Verzögerung).
+    assert s["effekte"]["erscheinen"] == {
+        "art": "hochgleiten", "dauer": 600, "verzoegerung": 0, "wiederholen": False,
+    }
+    assert s["effekte"]["hover"] == {"skalierung": 1.05, "dauer": 200}
+    assert s["effekte"]["schleife"] == {"art": "schweben", "dauer": 3000}
+    assert s["effekte"]["scroll_tempo"] == 120
+    assert s["layout_typ"] == "raster" and s["raster_spalten"] == 3
+    assert s["stil"]["mischmodus"] == "multiply"
+    assert s["stil"]["filter"] == {"weichzeichnen": 4, "graustufen": 50}
+    assert s["stil"]["zeiger_ereignisse"] is False
+    assert s["text"]["opentype"] == ["tnum", "liga"]
+    assert s["transform"]["rotation_x"] == 15
+    assert s["transform"]["tiefe"] == -40
+    assert s["transform"]["rueckseite"] == "verborgen"
+    assert s["transform"]["raum_3d"] is True
+    assert s["a11y"]["nosnippet"] is True
+    assert s["text"]["groesse"] == "3.5rem"
+    assert s["text"]["gewicht"] == 600
+    assert s["je_geraet"]["mobil"]["text"] == {"groesse": "2rem"}
+    assert s["position"] == {"typ": "klebend", "oben": "0px", "ebene": 5}
+    assert s["groesse"]["breite"] == {"modus": "relativ", "wert": 100.0}
+    assert s["groesse"]["hoehe"] == {"modus": "inhalt"}
+    assert s["stil"]["grenze"]["art"] == "solid"
+    assert s["stil"]["schatten"][0]["x"] == 0
+    assert s["stil"]["fuellung"]["farbe"] == "rolle:primary"
+    assert s["je_geraet"]["mobil"]["layout_richtung"] == "spalte"
+    assert s["a11y"]["tag"] == "section"
+
+
+# --- Style-Panel Etappe 5 (06.09.2026): Overlay, Code, Cursor-Bild, Effekte ---
+def test_darstellung_etappe5_wird_gespeichert_und_normalisiert() -> None:
+    """Overlay, Codeüberschreibung, eigener Cursor, die vier neuen Effekte,
+    Maske, Auswahlfarben, Verlaufsform, Textstil-Rolle, Schriftfamilie und
+    Link-Scrollen kommen mit ihren Vorgabewerten aus dem Modell zurück; das CSS
+    der Codeüberschreibung ist bereinigt (eine Zeile je Eigenschaft)."""
+    tables: dict[str, list[dict]] = {"site_pages": [], "site_blocks": []}
+    svc = _svc(tables)
+    page = svc.create_page(_ctx(), PageCreate(title="Start", slug=""))
+    abschnitt = svc.add_block(
+        _ctx(), page.id, BlockCreate(type=BlockType.container, kind="section")
+    )
+    gesetzt = svc.update_block(
+        _ctx(),
+        abschnitt.id,
+        BlockUpdate(
+            settings={
+                "link": {"href": "/kontakt", "anker": "form", "scrollen": "sanft"},
+                "stil": {
+                    "fuellung": {
+                        "art": "verlauf",
+                        "form": "konisch",
+                        "lage": "top left",
+                        "stufen": [
+                            {"farbe": "#ffffff", "position": 0},
+                            {"farbe": "#000000", "position": 100},
+                        ],
+                    },
+                    "maske": {"art": "linear", "ende": 60},
+                    "auswahl_farbe": "#ffffff",
+                    "auswahl_hintergrund": "rolle:primary",
+                },
+                "text": {"schrift": "h2", "schriftfamilie": "Lora"},
+                "cursor_bild": {"url": "/media/hand.png", "x": 4},
+                "overlay": {
+                    "ausloeser": "hover",
+                    "inhalt": {"de": " Mehr dazu ", "en": ""},
+                },
+                "code": {"css": "color: red;  margin-top:4px\nletter-spacing: .1em"},
+                "effekte": {
+                    "ziehen": {"frei": False, "achse": "x"},
+                    "lichtkasten": {},
+                    "ticker": {"tempo": 150, "hover": "stopp"},
+                    "scroll_transform": {"nach": {"opazitaet": 0.2}},
+                },
+            }
+        ),
+    )
+    s = gesetzt.settings
+    assert s["link"]["scrollen"] == "sanft"
+    assert s["stil"]["fuellung"]["form"] == "konisch"
+    assert s["stil"]["maske"] == {
+        "art": "linear", "winkel": 180, "start": 0, "ende": 60, "umkehren": False,
+    }
+    assert s["stil"]["auswahl_hintergrund"] == "rolle:primary"
+    assert s["text"] == {"schrift": "h2", "schriftfamilie": "Lora"}
+    assert s["cursor_bild"] == {"url": "/media/hand.png", "x": 4, "y": 0}
+    assert s["overlay"]["ausloeser"] == "hover"
+    assert s["overlay"]["typ"] == "relativ" and s["overlay"]["schliessen"] == "auto"
+    # Leere Sprachfassung fällt weg, Text wird getrimmt.
+    assert s["overlay"]["inhalt"] == {"de": "Mehr dazu"}
+    assert s["code"]["css"] == "color: red;\nmargin-top: 4px;\nletter-spacing: .1em;"
+    assert s["effekte"]["ziehen"] == {"frei": False, "achse": "x", "zurueck": False}
+    assert s["effekte"]["lichtkasten"] == {
+        "max_breite": 800, "innenabstand": 20, "ebene": 10, "hintergrund": "#000000",
+    }
+    assert s["effekte"]["ticker"]["hover"] == "stopp"
+    assert s["effekte"]["scroll_transform"]["ausloeser"] == "scroll"
+
+
+@pytest.mark.parametrize(
+    "settings",
+    [
+        # Etappe 5 (06.09.2026): jedes neue Feld weist Falsches ab.
+        {"link": {"href": "/a", "scrollen": "smooth"}},
+        {"stil": {"fuellung": {"art": "farbe", "farbe": "#000000", "form": "spiral"}}},
+        {"stil": {"maske": {"start": 60, "ende": 40}}},
+        {"stil": {"auswahl_farbe": "red"}},
+        {"text": {"schrift": "h7"}},
+        {"text": {"schriftfamilie": "Comic Sans MS"}},
+        {"cursor_bild": {"url": "javascript:alert(1)"}},
+        {"cursor_bild": {"url": "/c.png", "x": 200}},
+        {"overlay": {"inhalt": {"xx": "Hallo"}}},
+        {"overlay": {"typ": "modal"}},
+        {"overlay": {"breite": 50}},
+        # Code: unbekannte Eigenschaft, url(), zweite Regel, kein Doppelpunkt.
+        {"code": {"css": "behavior: x"}},
+        {"code": {"css": "background-image: url(https://x)"}},
+        {"code": {"css": "color: red } body { display:none"}},
+        {"code": {"css": "color red"}},
+        {"code": {"css": ""}},
+        {"effekte": {"ziehen": {"achse": "z"}}},
+        {"effekte": {"lichtkasten": {"max_breite": 100}}},
+        {"effekte": {"ticker": {"tempo": 0}}},
+        {"effekte": {"scroll_transform": {"ausloeser": "scroll"}}},
+        # Overlay, Code und Cursor-Bild gibt es nicht je Gerät.
+        {"je_geraet": {"mobil": {"overlay": {"typ": "fixiert"}}}},
+        {"je_geraet": {"mobil": {"code": {"css": "color: red"}}}},
+        {"text": {"groesse": "62"}},
+        {"text": {"gewicht": 450}},
+        {"text": {"farbe": "red"}},
+        {"link": {"neuer_tab": True}},
+        {"link": {"href": "javascript:alert(1)"}},
+        # Tippfehler im Unterobjekt: darf nicht still verschwinden (Wurzel 5).
+        {"stil": {"opazität": 1}},
+        # Desktop IST die Grundfassung — kein Eintrag in je_geraet.
+        {"je_geraet": {"desktop": {"stil": {"opazitaet": 1}}}},
+        # Modus mit Pflichtwert ohne Wert / Modus ohne Wert mit Wert.
+        {"groesse": {"breite": {"modus": "fest"}}},
+        {"groesse": {"hoehe": {"modus": "inhalt", "wert": 3}}},
+        # Farbe: kein CSS-Name, keine unbekannte Rolle.
+        {"stil": {"grenze": {"breite": 1, "farbe": "red"}}},
+        {"stil": {"fuellung": {"art": "farbe", "farbe": "rolle:pink"}}},
+        # Bild-Füllung trägt die href-Allowlist (Wurzel 8).
+        {"stil": {"fuellung": {"art": "bild", "url": "javascript:alert(1)"}}},
+        # Verlauf ohne Stufen, Füllung „farbe“ ohne Farbe.
+        {"stil": {"fuellung": {"art": "verlauf", "winkel": 90}}},
+        {"stil": {"fuellung": {"art": "farbe"}}},
+        # Grenzen (Wurzel 8).
+        {"position": {"ebene": 9999}},
+        {"stil": {"radius": {"alle": 501}}},
+        {"stil": {"schatten": [{"farbe": "#000000"}] * 7}},
+        {"transform": {"rotation": 361}},
+        # 3D / Cursor / Link-Abschnitt (06.09.2026).
+        {"transform": {"tiefe": 501}},
+        {"transform": {"rueckseite": "hidden"}},
+        {"cursor": "url(x)"},
+        # Stile+/OpenType/Link/Effekte/Raster (06.09.2026, Teil 2).
+        {"stil": {"mischmodus": "plus-lighter"}},
+        {"stil": {"filter": {"weichzeichnen": 101}}},
+        {"stil": {"tippfarbe": "red"}},
+        {"text": {"opentype": ["ligatures"]}},
+        {"link": {"href": "/a", "rel": ["me"]}},
+        {"link": {"href": "/a", "parameter": "?utm=1"}},
+        {"link": {"href": "/a", "parameter": "a=1&b=2&c=3&d=4&e=5&f=6&g=7&h=8&i=9&j=10&k=11"}},
+        {"effekte": {"erscheinen": {"art": "explodieren"}}},
+        {"effekte": {"scroll_tempo": 5}},
+        {"effekte": {"hover": {"skalierung": 11}}},
+        {"je_geraet": {"mobil": {"effekte": {"scroll_tempo": 120}}}},
+        {"layout_typ": "grid"},
+        {"raster_spalten": 13},
+        {"link": {"href": "/a", "anker": "Preise Oben"}},
+        # Cursor gibt es nicht je Gerät (Touch hat keinen Zeiger).
+        {"je_geraet": {"mobil": {"cursor": "pointer"}}},
+        {"scroll": {"anker": "Kontakt Bereich"}},
+        {"a11y": {"tag": "button"}},
+        {"a11y": {"tab_index": 5000}},
+        {"groesse": {"seitenverhaeltnis": "16:9"}},
+    ],
+)
+def test_darstellung_weist_ungueltige_unterobjekte_ab(settings: dict) -> None:
+    """Jeder Fehler in einem Unterobjekt ist ein 400 — nichts wird verworfen,
+    nichts erfunden."""
+    tables: dict[str, list[dict]] = {"site_pages": [], "site_blocks": []}
+    svc = _svc(tables)
+    page = svc.create_page(_ctx(), PageCreate(title="Start", slug=""))
+    abschnitt = svc.add_block(
+        _ctx(), page.id, BlockCreate(type=BlockType.container, kind="section")
+    )
+    with pytest.raises(SiteConfigError) as exc:
+        svc.update_block(_ctx(), abschnitt.id, BlockUpdate(settings=settings))
+    assert exc.value.status_code == 400
+
+
+# --- Kopf-/Fußzeile als Ebenen (0570, 05.09.2026) ----------------------------
+def test_kopf_und_fusszeile_teile_werden_gespeichert() -> None:
+    """Sichtbarkeit je Gerät, Sperre und Reihenfolge der Teile landen im
+    Branding und kommen normalisiert zurück (Geräte entdoppelt, sortiert)."""
+    tables: dict[str, list[dict]] = {"tenant_site_config": []}
+    svc = _svc(tables)
+    svc.set_branding(
+        _ctx(),
+        BrandingUpdate(
+            header_teile={
+                "reihenfolge": ["navigation", "buchen", "sprachwaehler"],
+                "teile": {"buchen": {"hidden_on": ["mobil", "mobil", "desktop"]}},
+            },
+            footer_teile={"hidden_on": ["mobil"], "teile": {"social": {"locked": True}}},
+        ),
+    )
+    got = svc.get_branding(_ctx())
+    assert got.header_teile is not None and got.footer_teile is not None
+    assert got.header_teile.reihenfolge == ["navigation", "buchen", "sprachwaehler"]
+    assert got.header_teile.teile["buchen"].hidden_on == ["desktop", "mobil"]
+    assert got.footer_teile.hidden_on == ["mobil"]
+    assert got.footer_teile.teile["social"].locked is True
+    # Die öffentliche Antwort trägt die Werte mit — der Renderer braucht sie.
+    oeffentlich = svc._public_branding("t-1")  # noqa: SLF001
+    assert oeffentlich.header_teile is not None
+    assert oeffentlich.header_teile.reihenfolge == ["navigation", "buchen", "sprachwaehler"]
+
+
+@pytest.mark.parametrize(
+    "feld,wert",
+    [
+        # Unbekannter Teil / Teil der anderen Region.
+        ("header_teile", {"teile": {"social": {"locked": True}}}),
+        ("footer_teile", {"teile": {"logo": {"locked": True}}}),
+        ("header_teile", {"reihenfolge": ["logo", "impressum"]}),
+        # Doppelt in der Reihenfolge.
+        ("footer_teile", {"reihenfolge": ["social", "social"]}),
+        # Unbekanntes Gerät, Tippfehler im Schlüssel.
+        ("header_teile", {"teile": {"logo": {"hidden_on": ["tv"]}}}),
+        ("header_teile", {"teile": {"logo": {"versteckt": True}}}),
+        ("footer_teile", {"reihe": ["social"]}),
+    ],
+)
+def test_teile_weisen_unbekanntes_ab(feld: str, wert: dict) -> None:
+    """Ein Teilname ohne Stelle im Renderer wäre eine Zeile, die nichts tut
+    (Wurzel 4) — und ein Tippfehler darf nicht still verschwinden (Wurzel 5)."""
+    with pytest.raises(ValidationError):
+        BrandingUpdate(**{feld: wert})

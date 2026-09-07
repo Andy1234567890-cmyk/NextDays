@@ -81,6 +81,11 @@ export type SiteBranding = {
   header_link_color: string | null;
   link_color: string | null;
   footer_background: string | null;
+  // --- Kopf-/Fußzeile als Ebenen (0570) -----------------------------------
+  // Sichtbarkeit je Gerät, Sperre und Reihenfolge der Teile. Roh, wie aus der
+  // API; gelesen wird ausschließlich über `regionLesen` (baukasten-stil).
+  header_teile?: unknown;
+  footer_teile?: unknown;
   // --- Typografie des Logo-Bereichs (0426) --------------------------------
   logo_name_font: string | null;
   logo_name_size: number | null;

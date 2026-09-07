@@ -6,13 +6,18 @@ import { currencyForCountry, LAENDER } from "@nextdays/laender";
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { Input } from "@nextdays/ui/input";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import { Textarea } from "@nextdays/ui/textarea";
 
+import { AdressSuche, type PlacesAddress } from "@/components/objekt-editor/adress-suche";
+import { AMENITY_KATALOG } from "@/components/objekt-editor/amenity-katalog";
+import { normalisiere } from "@/components/objekt-editor/amenity-panel";
+import { LageKarte } from "@/components/objekt-editor/lage-panel";
+import { WizardFotos, wizardRaeume } from "./wizard-fotos";
 import {
   createProperty,
   updateProperty,
@@ -29,6 +34,10 @@ interface WizardData {
   house_number: string;
   postal_code: string;
   city: string;
+  // Aus der Places-Auswahl. null = von Hand getippt, dann kennt nur der Server
+  // die Lage (Geocoding beim Speichern) — nie einen Ersatzwert erfinden (Wurzel 4).
+  lat: number | null;
+  lng: number | null;
   max_guests: number;
   bedrooms: number;
   beds: number;
@@ -67,23 +76,29 @@ const PRIVACY_ICON = {
   shared: "solar:users-group-rounded-bold-duotone",
 } as const;
 
-const AMENITIES = [
-  { key: "wifi", icon: "solar:wi-fi-router-bold-duotone", label: "WLAN" },
-  { key: "kitchen", icon: "solar:chef-hat-bold-duotone", label: "Küche" },
-  { key: "parking", icon: "ph:car-duotone", label: "Parkplatz" },
-  { key: "washer", icon: "solar:washing-machine-bold-duotone", label: "Waschmaschine" },
-  { key: "tv", icon: "solar:tv-bold-duotone", label: "TV" },
-  { key: "heating", icon: "solar:temperature-bold-duotone", label: "Heizung" },
-  { key: "ac", icon: "solar:snowflake-bold-duotone", label: "Klimaanlage" },
-  { key: "pool", icon: "solar:waterdrops-bold-duotone", label: "Pool" },
-] as const;
 
 const OCCUPANCY = [
-  { key: "me", icon: "solar:user-bold-duotone" },
+  // "ich", nicht "me": so heisst der Schluessel in allen 45 Sprachdateien
+  // (wizard.belegung.ich). Der Dreher warf MISSING_MESSAGE und liess die Kachel
+  // unbeschriftet — der Wert war dadurch nie waehlbar, steht also in keiner Zeile.
+  { key: "ich", icon: "solar:user-bold-duotone" },
   { key: "familie", icon: "solar:user-heart-bold-duotone" },
   { key: "andere", icon: "solar:users-group-two-rounded-bold-duotone" },
   { key: "mitbewohner", icon: "solar:user-hands-bold-duotone" },
 ] as const;
+
+// Dieselbe Ordnung wie im Objekt-Editor (ausstattung-panel.tsx) — der Gastgeber
+// soll den Katalog im Wizard und spaeter im Editor gleich sortiert wiederfinden.
+const AMENITY_KATEGORIEN = [
+  "Beliebt", "Küche & Essen", "Bad", "Schlafzimmer & Wäsche", "Unterhaltung",
+  "Familie", "Außenbereich", "Wellness & Sport", "Parken & Anreise",
+  "Sicherheit", "Barrierefreiheit", "Services", "Sonstiges",
+];
+
+// Airbnb verlangt 5 Fotos je Inserat; zusaetzlich fordern wir mindestens eins
+// JE RAUM — ein Inserat mit fuenf Bildern derselben Kueche zeigt dem Gast nicht,
+// was er bucht.
+const MIN_FOTOS = 5;
 
 const TOTAL = 15;
 
@@ -101,6 +116,8 @@ export function ObjektWizard() {
     house_number: "",
     postal_code: "",
     city: "",
+    lat: null,
+    lng: null,
     max_guests: 2,
     bedrooms: 1,
     beds: 1,
@@ -120,6 +137,69 @@ export function ObjektWizard() {
   const set = <K extends keyof WizardData>(k: K, v: WizardData[K]) =>
     setD((p) => ({ ...p, [k]: v }));
 
+  // Treffer aus der Places-Suche in die Einzelfelder uebernehmen. Ein Feld, das
+  // Google nicht liefert, wird NICHT geleert (Wurzel 1: der Gegenzustand zaehlt) —
+  // wer Strasse und Nr. schon getippt hat und dann die Stadt sucht, verliert sie
+  // sonst. `country` nur setzen, wenn Places ein ISO-2 liefert, sonst bliebe die
+  // Waehrung an einem leeren Land haengen.
+  function uebernehmeAdresse(a: PlacesAddress) {
+    setD((p) => ({
+      ...p,
+      street: a.street || p.street,
+      house_number: a.houseNumber || p.house_number,
+      postal_code: a.postalCode || p.postal_code,
+      city: a.city || p.city,
+      country: a.country || p.country,
+      lat: a.lat,
+      lng: a.lng,
+    }));
+  }
+
+  // Fotos (Schritt 9). `fotoAnzahl` ist die ECHTE Zahl aus property_photos —
+  // nicht die Laenge von d.photos, die nur den alten Spiegel hielt.
+  const [raumFotos, setRaumFotos] = useState<Record<string, string>>({});
+  // Sammelkachel „Weitere Fotos": mehrere URLs je Raum.
+  const [raumGalerie, setRaumGalerie] = useState<Record<string, string[]>>({});
+  const [fotoAnzahl, setFotoAnzahl] = useState(0);
+
+  // Ausstattungs-Suche (Schritt 8). 301 Merkmale sind ohne Suche unbenutzbar.
+  const [amenitySuche, setAmenitySuche] = useState("");
+  // Start auf „Beliebt" (15 Merkmale), nicht auf allen 301: der Wizard soll
+  // eine Auswahl zeigen, die man ueberblickt. Wer mehr will, tippt in die Suche
+  // oder waehlt eine Kategorie — beides steht direkt darueber.
+  const [amenityKategorie, setAmenityKategorie] = useState("Beliebt");
+
+  const amenityGruppen = useMemo(() => {
+    const q = normalisiere(amenitySuche.trim());
+    const map = new Map<string, typeof AMENITY_KATALOG>();
+    for (const a of AMENITY_KATALOG) {
+      // Sobald gesucht wird, gilt die Suche fuer den GANZEN Katalog. Sonst
+      // faende „Sauna" nichts, solange die Kachel „Beliebt" aktiv ist — der
+      // Nutzer haette den Eintrag fuer nicht vorhanden gehalten.
+      if (!q && amenityKategorie !== "alle" && a.kategorie !== amenityKategorie) continue;
+      if (q && !normalisiere(a.label).includes(q)) continue;
+      const liste = map.get(a.kategorie) ?? [];
+      liste.push(a);
+      map.set(a.kategorie, liste);
+    }
+    return AMENITY_KATEGORIEN.filter((k) => map.has(k)).map((k) => ({
+      kategorie: k,
+      eintraege: map.get(k) as typeof AMENITY_KATALOG,
+    }));
+  }, [amenitySuche, amenityKategorie]);
+
+  const fotoRaeume = useMemo(
+    () =>
+      wizardRaeume(d.bedrooms, d.bathrooms_private, d.bathrooms_shared, (k) => t(k)),
+    [d.bedrooms, d.bathrooms_private, d.bathrooms_shared, t],
+  );
+
+  // Jeder Raum belegt UND die Gesamtzahl erreicht.
+  const fotosVollstaendig =
+    fotoRaeume.every((r) =>
+      r.mehrere ? (raumGalerie[r.id]?.length ?? 0) > 0 : !!raumFotos[r.id],
+    ) && fotoAnzahl >= MIN_FOTOS;
+
   const currency = currencyForCountry(d.country);
 
   // Ob der aktuelle Schritt „Weiter" erlaubt (Pflichtfelder).
@@ -130,7 +210,15 @@ export function ObjektWizard() {
       case 2:
         return !!d.privacy_type;
       case 3:
-        return !!d.country;
+        // `country` allein reicht NICHT: es steht per Vorgabe auf "DE", also war
+        // „Weiter" auch bei komplett leerer Adresse aktiv. Verlangt werden die
+        // Felder, ohne die ein Objekt nicht auffindbar ist — Strasse, Ort, Land.
+        // Hausnummer und PLZ bleiben frei: laendliche Adressen haben oft keine.
+        return (
+          !!d.country && d.street.trim().length > 0 && d.city.trim().length > 0
+        );
+      case 9:
+        return fotosVollstaendig;
       case 10:
         return d.title.trim().length > 0;
       case 13:
@@ -152,6 +240,11 @@ export function ObjektWizard() {
       // Belegungs-Objekt type_attributes.occupancy {rooms,children,infants}
       // kollidieren, das der Channex-Content-Sync liest (content_sync.py).
       occupancyTags: d.occupancy,
+      // Dieselbe Ablage wie im Objekt-Editor: raumId → URL des Raum-Titelbilds.
+      // Ohne sie stuenden die Fotos zwar in property_photos, aber die Fototour
+      // im Editor waere leer — der Gastgeber muesste alles neu zuordnen.
+      roomPhotos: raumFotos,
+      roomGallery: raumGalerie,
     };
     const fields: Record<string, unknown> = {
       title: d.title || t("titel_step.titel"),
@@ -163,6 +256,8 @@ export function ObjektWizard() {
       street: d.street || undefined,
       house_number: d.house_number || undefined,
       postal_code: d.postal_code || undefined,
+      // Nur mitschicken, wenn sie aus einer echten Places-Auswahl stammen.
+      ...(d.lat != null && d.lng != null ? { lat: d.lat, lng: d.lng } : {}),
       platform_description: d.description || undefined,
       amenities: d.amenities,
       photos: d.photos,
@@ -227,6 +322,7 @@ export function ObjektWizard() {
 
   return (
     <WizardShell
+      breit={step === 8}
       step={step}
       total={TOTAL}
       canNext={canNext()}
@@ -288,7 +384,12 @@ export function ObjektWizard() {
             </Field>
             <div className="grid grid-cols-[1fr_6rem] gap-3">
               <Field label={t("adresse.strasse")}>
-                <Input value={d.street} onChange={(e) => set("street", e.target.value)} />
+                <AdressSuche
+                  value={d.street}
+                  onChange={(v) => set("street", v)}
+                  onPick={uebernehmeAdresse}
+                  placeholder={t("adresse.suchePlatzhalter")}
+                />
               </Field>
               <Field label={t("adresse.hausnummer")}>
                 <Input
@@ -312,20 +413,40 @@ export function ObjektWizard() {
         </Step>
       )}
 
-      {/* 4 — Karten-Pin (Platzhalter: Adresse ist gespeichert) */}
+      {/* 4 — Karten-Pin: echte Karte, Pin ziehbar. Ohne Koordinaten (Adresse von
+          Hand getippt statt aus der Places-Auswahl) gibt es nichts zu zeigen —
+          dann die Adresse nennen und sagen, WARUM keine Karte da ist, statt eine
+          Karte auf einen erfundenen Mittelpunkt zu setzen (Wurzel 4). */}
       {step === 4 && (
         <Step title={t("pin.titel")} subtitle={t("pin.untertitel")}>
-          <div className="flex aspect-video items-center justify-center rounded-2xl border border-border bg-muted text-center text-sm text-muted-foreground">
-            <div>
-              <Icon
-                icon="solar:map-point-bold-duotone"
-                className="mx-auto mb-2 size-10"
-              />
-              {[d.street, d.house_number].filter(Boolean).join(" ")},{" "}
-              {d.postal_code} {d.city}
-              <p className="mt-2 text-xs">{t("pin.hinweis")}</p>
+          {d.lat != null && d.lng != null ? (
+            <>
+              <div className="aspect-video overflow-hidden rounded-2xl border border-border">
+                <LageKarte
+                  lat={d.lat}
+                  lng={d.lng}
+                  onVerschoben={(lat, lng) => setD((p) => ({ ...p, lat, lng }))}
+                />
+              </div>
+              <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+                <Icon icon="solar:map-point-bold-duotone" className="size-5 shrink-0" />
+                {[d.street, d.house_number].filter(Boolean).join(" ")}
+                {d.postal_code || d.city ? `, ${d.postal_code} ${d.city}`.trim() : ""}
+              </p>
+            </>
+          ) : (
+            <div className="flex aspect-video items-center justify-center rounded-2xl border border-border bg-muted text-center text-sm text-muted-foreground">
+              <div className="px-6">
+                <Icon
+                  icon="solar:map-point-bold-duotone"
+                  className="mx-auto mb-2 size-10"
+                />
+                {[d.street, d.house_number].filter(Boolean).join(" ")},{" "}
+                {d.postal_code} {d.city}
+                <p className="mt-2 text-xs">{t("pin.ohneKoordinaten")}</p>
+              </div>
             </div>
-          </div>
+          )}
         </Step>
       )}
 
@@ -393,35 +514,164 @@ export function ObjektWizard() {
       {/* 8 — Ausstattung */}
       {step === 8 && (
         <Step title={t("ausstattung.titel")} subtitle={t("ausstattung.untertitel")}>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {AMENITIES.map((a) => (
-              <GridTile
-                key={a.key}
-                label={a.label}
-                icon={a.icon}
-                selected={d.amenities.includes(a.key)}
-                onClick={() => set("amenities", toggle(d.amenities, a.key))}
-              />
-            ))}
+          {/* Suche + Kategorie-Chips: derselbe Katalog wie im Objekt-Editor
+              (AMENITY_KATALOG, 301 Merkmale = Channex-Slugs). Ohne Suche waere
+              die Liste unbenutzbar, und eine eigene Kurzliste im Wizard hiesse,
+              dass ein Gastgeber hier weniger auswaehlen kann als spaeter im
+              Editor — dieselbe Quelle, dieselben Slugs. */}
+          {/* Suche oben, darunter zwei Spalten: Kategorien links als Liste,
+              Treffer rechts. Die 14 Kategorien als Chip-Wolke brauchten mehrere
+              Zeilen und sprangen beim Umschalten um — eine feste Spalte steht
+              still und macht die aktive Kategorie auf einen Blick sichtbar. */}
+          <div className="mb-4 flex items-center gap-2 rounded-full border border-border px-4 py-2.5 focus-within:border-foreground">
+            <Icon icon="ph:magnifying-glass" className="size-5 shrink-0 opacity-60" />
+            <input
+              type="search"
+              value={amenitySuche}
+              onChange={(e) => setAmenitySuche(e.target.value)}
+              placeholder={t("ausstattung.suchePlatzhalter")}
+              className="w-full bg-transparent outline-none"
+            />
           </div>
+
+          <div className="flex gap-5">
+            {/* Kategorien — bei aktiver Suche ausgegraut, weil dann der ganze
+                Katalog durchsucht wird und die Auswahl nichts einschraenkt. */}
+            <nav
+              className={`hidden w-44 shrink-0 sm:block ${
+                amenitySuche.trim() ? "pointer-events-none opacity-40" : ""
+              }`}
+            >
+              <ul className="max-h-[min(22rem,calc(100svh-27rem))] space-y-0.5 overflow-y-auto pr-1">
+                {["alle", ...AMENITY_KATEGORIEN].map((k) => (
+                  <li key={k}>
+                    <button
+                      type="button"
+                      onClick={() => setAmenityKategorie(k)}
+                      className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                        amenityKategorie === k
+                          ? "bg-muted font-medium"
+                          : "text-muted-foreground hover:bg-muted/50"
+                      }`}
+                    >
+                      {k === "alle" ? t("ausstattung.alle") : k}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+
+            <div className="min-w-0 flex-1">
+              {/* Auf schmalen Schirmen bleibt die Chip-Zeile: eine Spalte
+                  daneben passt dort nicht. */}
+              <div
+                className={`mb-3 flex gap-2 overflow-x-auto pb-1 sm:hidden ${
+                  amenitySuche.trim() ? "pointer-events-none opacity-40" : ""
+                }`}
+              >
+                {["alle", ...AMENITY_KATEGORIEN].map((k) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => setAmenityKategorie(k)}
+                    className={`shrink-0 rounded-full border px-3 py-1.5 text-sm transition-colors ${
+                      amenityKategorie === k
+                        ? "border-foreground bg-foreground text-background"
+                        : "border-border"
+                    }`}
+                  >
+                    {k === "alle" ? t("ausstattung.alle") : k}
+                  </button>
+                ))}
+              </div>
+
+              {amenityGruppen.length === 0 ? (
+                <p className="py-8 text-center text-sm text-muted-foreground">
+                  {t("ausstattung.keinTreffer", { suche: amenitySuche })}
+                </p>
+              ) : (
+                <div className="max-h-[min(22rem,calc(100svh-27rem))] space-y-6 overflow-y-auto pr-1">
+                  {amenityGruppen.map((g) => (
+                    <div key={g.kategorie}>
+                      {/* Gruppen-Titel nur, wenn mehrere Gruppen kommen (Suche
+                          oder „Alle") — sonst stuende er doppelt zur Spalte. */}
+                      {amenityGruppen.length > 1 && (
+                        <p className="mb-3 text-sm font-medium text-muted-foreground">
+                          {g.kategorie}
+                        </p>
+                      )}
+                      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+                        {g.eintraege.map((a) => (
+                          <GridTile
+                            key={a.key}
+                            label={a.label}
+                            icon={a.icon}
+                            selected={d.amenities.includes(a.key)}
+                            onClick={() => set("amenities", toggle(d.amenities, a.key))}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {d.amenities.length > 0 && (
+            <p className="mt-6 text-sm text-muted-foreground">
+              {t("ausstattung.gewaehlt", { n: d.amenities.length })}
+            </p>
+          )}
         </Step>
       )}
 
-      {/* 9 — Fotos (Platzhalter: URL-Eingabe; echter Upload folgt) */}
+      {/* 9 — Fotos: je Raum eine Kachel, jede braucht mindestens ein Bild. */}
       {step === 9 && (
         <Step title={t("fotos.titel")} subtitle={t("fotos.untertitel")}>
-          <div className="rounded-2xl border-2 border-dashed border-border p-10 text-center">
-            <Icon
-              icon="solar:gallery-add-bold-duotone"
-              className="mx-auto mb-3 size-12 text-muted-foreground"
-            />
-            <p className="text-sm text-muted-foreground">
-              {t("fotos.anzahl", { n: d.photos.length, min: 5 })}
+          <WizardFotos
+            propertyId={propertyId}
+            raeume={fotoRaeume}
+            zuordnung={raumFotos}
+            onZuordnung={(raumId, url) =>
+              setRaumFotos((p) => {
+                const next = { ...p };
+                if (url) next[raumId] = url;
+                // Gegenzustand mitpflegen (Wurzel 1): ohne das Loeschen bliebe
+                // der Raum als „fertig" markiert, obwohl sein Foto weg ist.
+                else delete next[raumId];
+                return next;
+              })
+            }
+            zuordnungMehrere={raumGalerie}
+            onMehrere={(raumId, urls) =>
+              setRaumGalerie((p) => ({
+                ...p,
+                [raumId]: [...(p[raumId] ?? []), ...urls],
+              }))
+            }
+            onMehrereEntfernen={(raumId, url) =>
+              setRaumGalerie((p) => ({
+                ...p,
+                [raumId]: (p[raumId] ?? []).filter((u) => u !== url),
+              }))
+            }
+            onAnzahl={setFotoAnzahl}
+          />
+          <p className="mt-4 text-sm text-muted-foreground">
+            {t("fotos.anzahl", { n: fotoAnzahl, min: MIN_FOTOS })}
+          </p>
+          {!fotosVollstaendig && (
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t("fotos.nochOffen", {
+                raeume: fotoRaeume.filter((r) =>
+                  r.mehrere
+                    ? (raumGalerie[r.id]?.length ?? 0) === 0
+                    : !raumFotos[r.id],
+                ).length,
+              })}
             </p>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Foto-Upload wird angebunden — dieser Schritt ist überspringbar.
-            </p>
-          </div>
+          )}
         </Step>
       )}
 

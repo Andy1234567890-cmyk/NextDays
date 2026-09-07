@@ -25,14 +25,15 @@ import { logout } from "@/lib/auth";
 
 // Haupt-Tabs (mittig). `dot` = roter Ungelesen-Punkt (Nachrichten).
 //
-// NUR ROUTEN, DIE ES GIBT: `/kalender` und `/buchungen` standen hier, ohne dass
-// unter `app/(dashboard)/` eine Seite dazu existiert — beide Tabs führten in
-// einen 404. Ein Menüpunkt ohne Ziel ist schlimmer als keiner: er sieht aus wie
-// eine Funktion, die es gibt, und der Gastgeber sucht den Fehler bei sich.
-// Die Übersetzungen (`nav.kalender`, `nav.buchungen`) bleiben in allen Sprachen
-// stehen — sobald die Seite da ist, gehört der Eintrag hier zurück.
+// NUR ROUTEN, DIE ES GIBT: `/buchungen` steht hier nicht, weil es unter
+// `app/(dashboard)/` keine Seite dazu gibt — der Tab führte in einen 404. Ein
+// Menüpunkt ohne Ziel ist schlimmer als keiner: er sieht aus wie eine
+// Funktion, die es gibt, und der Gastgeber sucht den Fehler bei sich. Die
+// Übersetzung `nav.buchungen` bleibt stehen — sobald die Seite da ist, gehört
+// der Eintrag zurück. `/kalender` ist seit dem 06.09.2026 da (Multi-Kalender).
 const PRIMARY = [
   { key: "dashboard", href: "/", dot: false },
+  { key: "kalender", href: "/kalender", dot: false },
   { key: "objekte", href: "/objekte", dot: false },
   { key: "nachrichten", href: "/nachrichten", dot: true },
 ] as const;
@@ -119,6 +120,9 @@ const MENU = [
   { key: "spracheWaehrung", href: "/konto?bereich=sprache", icon: "solar:global-line-duotone" },
   { key: "bewertungen", href: "/bewertungen", icon: "solar:star-line-duotone" },
   { key: "neuesObjekt", href: "/objekt-einstellen", icon: "solar:add-square-line-duotone" },
+  // `menu.hilfe` stand seit jeher im Sprachkatalog, hatte aber keinen Eintrag —
+  // die Hilfe war aus dem Menue gar nicht erreichbar.
+  { key: "hilfe", href: "/hilfe", icon: "solar:question-circle-line-duotone" },
   { key: "support", href: "/support", icon: "solar:chat-round-line-duotone" },
 ] as const;
 
@@ -171,13 +175,16 @@ function MenueSheet({ email }: { email: string | null }) {
       >
         {/* Kopf: Glocke + Schließen (rund) */}
         <div className="flex items-center justify-end gap-2 px-6 pt-6">
-          <button
-            type="button"
-            aria-label="Benachrichtigungen"
+          {/* Fuehrt zu den Benachrichtigungs-EINSTELLUNGEN — vorher ein Knopf
+              ohne Handler. Eine Meldungsliste gibt es (noch) nicht; die Glocke
+              soll nicht so tun, als koenne sie eine oeffnen. */}
+          <Link
+            href="/konto?bereich=benachrichtigungen"
+            aria-label={t("menu.benachrichtigungen")}
             className="flex size-10 items-center justify-center rounded-full bg-muted transition-colors hover:bg-muted/70"
           >
             <Icon icon="solar:bell-line-duotone" className="size-5" />
-          </button>
+          </Link>
           <SheetTrigger asChild>
             <button
               type="button"

@@ -11,6 +11,7 @@
 // versteckt — der Betrieb muss sehen, warum weniger ankommt.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -127,8 +128,12 @@ export function AuszahlungenTab({
     setLaeuft(true);
     const res = await aktiviereAuszahlungen(kontoId);
     setLaeuft(false);
-    if (res.ok) toast.success(t("azAktiviert"));
-    else toast.error(res.fehler);
+    if (!res.ok) toast.error(res.fehler);
+    // „Aktiviert" nur, wenn Stripe wirklich freigeschaltet hat — sonst wäre
+    // der Toast eine Falschaussage über ein weiterhin eingeschränktes Konto.
+    else if (res.data.charges_enabled) toast.success(t("azAktiviert"));
+    else if (res.syncFehler) toast.error(res.syncFehler);
+    else toast.info(t("seEingereicht"));
   }
 
   async function rhythmusWaehlen(interval: PayoutInterval) {
@@ -154,6 +159,12 @@ export function AuszahlungenTab({
             <p className="mt-1 text-[0.9375rem] text-muted-foreground">
               {t("azKontoFehltText")}
             </p>
+            <Link
+              href="/konto?bereich=unternehmen"
+              className="mt-3 inline-block text-[0.9375rem] font-medium underline underline-offset-4 hover:opacity-70"
+            >
+              {t("seZuDenDaten")}
+            </Link>
           </>
         ) : bereit ? (
           <div className="flex items-start gap-3">
@@ -186,9 +197,12 @@ export function AuszahlungenTab({
                     </li>
                   ))}
                 </ul>
-                <p className="mt-3 text-sm text-muted-foreground">
+                <Link
+                  href="/konto?bereich=unternehmen"
+                  className="mt-3 inline-block text-sm font-medium underline underline-offset-4 hover:opacity-70"
+                >
                   {t("azFehlendeAngabenHinweis")}
-                </p>
+                </Link>
               </>
             )}
             {kontoStatus && !kontoStatus.details_submitted && (

@@ -37,20 +37,31 @@ export function editierModusAus(
 }
 
 /**
- * Attribute für eine editierbare Textstelle.
+ * Attribute für eine Stelle des Bausteins — eine Überschrift, ein Absatz, ein
+ * Bild, ein Knopf.
  *
- * Im Live-Betrieb ein leeres Objekt — die veröffentlichte Seite trägt keine
- * Editor-Marker, weder als Attribut noch als Klasse. Genau deshalb steht das
- * hier zentral und nicht als `data-feld="…"` von Hand an jeder Stelle: sonst
- * vergisst ein neuer Abschnitt die Bedingung und liefert die Marker auch live.
+ * `data-feld` war bis zum 06.09.2026 ein reiner EDITOR-Marker (nur in der
+ * Entwurfs-Vorschau, damit man dort tippen kann). Seither ist es zusätzlich
+ * der ANKER DER GESTALTUNG: jeder Teil eines Bausteins lässt sich im
+ * Style-Panel einzeln einstellen (`settings.teile.<feld>`), und der Renderer
+ * schreibt dafür eine Regel mit genau diesem Selektor
+ * (`[data-block-index="3"] [data-feld="heading"]`, siehe `stilCss`).
  *
- * `index` ist der Abschnitts-Index auf der Seite (dieselbe Ordnung wie in der
- * Liste des Editors), `feld` der Schlüssel im `content` des Abschnitts.
+ * Deshalb steht das Attribut jetzt AUCH auf der veröffentlichten Seite. Es ist
+ * kein Editor-Werkzeug mehr, sondern die Stelle, an der die Einstellung
+ * greift — ohne es wäre jeder Teil-Stil im Editor sichtbar und beim Gast weg
+ * (Wurzel 4: die Vorschau darf nicht mehr zeigen, als die Seite kann).
+ *
+ * Es bleibt genau EIN Attribut, ohne Wert aus Nutzerhand: `feld` kommt aus dem
+ * Katalog des Bausteins, nicht aus den Daten.
  */
 export function editierbar(
   modus: EditierModus,
   feld: string,
 ): Record<string, string> {
-  if (!modus.aktiv) return {};
+  // `modus` bleibt im Aufruf stehen: er entscheidet weiterhin, ob die Stelle
+  // BEARBEITBAR ist (das setzt die Brücke im iframe), und die Signatur ist an
+  // über hundert Stellen im Renderer gesetzt.
+  void modus;
   return { "data-feld": feld };
 }

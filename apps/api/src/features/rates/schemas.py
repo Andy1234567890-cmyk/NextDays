@@ -62,6 +62,15 @@ class RatePlanUpdate(BaseModel):
     offset_amount: float | None = None
     offset_percent: float | None = None
     send_to_portals: bool | None = None
+    # Buchungsbedingung dieses Plans (0165: Zahlungsplan, Storno, Kaution).
+    # `null` ist hier eine ECHTE Angabe — „keine eigene Bedingung, es gilt der
+    # Tenant-Standard". Der Service unterscheidet das über `model_fields_set`
+    # von „nicht gesendet"; sonst ließe sich eine einmal gesetzte Bedingung nie
+    # wieder lösen (Gegenzustand, Wurzel 1).
+    booking_condition_id: str | None = None
+    # Stornobedingung für LANGE Aufenthalte (ab 28 Nächten, 0579). Dieselbe
+    # Regel wie oben: `null` heißt „keine eigene", nicht „nicht gesendet".
+    booking_condition_long_id: str | None = None
 
 
 class RatePlanResponse(BaseModel):
@@ -89,6 +98,13 @@ class RatePlanResponse(BaseModel):
     offset_percent: float | None = None
     # An die Buchungsportale senden (nur zusätzliche Preise; Grundpreis geht immer).
     send_to_portals: bool = False
+    # Buchungsbedingung dieses Plans (0165: Zahlungsplan, Storno, Kaution).
+    # None = keine eigene, es gilt der Standard des Betriebs. Ohne dieses Feld
+    # in der ANTWORT könnte die Oberfläche die geltende Bedingung nicht zeigen,
+    # obwohl die Buchungsstrecke längst danach rechnet.
+    booking_condition_id: str | None = None
+    # Stornobedingung für lange Aufenthalte (0579); None = die obige gilt auch dort.
+    booking_condition_long_id: str | None = None
     # Kanal-Plan (0272): dieser Plan ist die Preisänderung GENAU EINES Portals
     # (automatisch gepflegt) und wird nur dort gemappt. None = normaler Plan.
     portal_scope: str | None = None

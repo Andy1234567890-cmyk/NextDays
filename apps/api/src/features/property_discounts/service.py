@@ -24,7 +24,7 @@ from src.jobs.queue import try_enqueue_airbnb_aktionen, try_enqueue_recompute
 from .schemas import DiscountCreate, DiscountResponse, DiscountUpdate, StayRange
 
 _COLUMNS = (
-    "id, property_id, discount_type, discount_kind, discount_bps, "
+    "id, property_id, season_id, discount_type, discount_kind, discount_bps, "
     "discount_amount, active, min_nights, lead_min_days, lead_max_days, "
     "stay_ranges, booked_from, booked_to, promo_codes, portal_scope, name, "
     "description_html, photo_url, created_at, updated_at"
@@ -96,6 +96,7 @@ class PropertyDiscountsService:
         return DiscountResponse(
             id=r["id"],
             property_id=r["property_id"],
+            season_id=r.get("season_id"),
             discount_type=typ,
             discount_kind=str(r.get("discount_kind") or "percent"),
             discount_bps=int(r["discount_bps"]),
@@ -124,6 +125,31 @@ class PropertyDiscountsService:
             created_at=str(r["created_at"]) if r.get("created_at") else None,
             updated_at=str(r["updated_at"]) if r.get("updated_at") else None,
         )
+
+    def _eigene_saison(self, property_id: str, season_id: str | None) -> str | None:
+        """Die Saison MUSS zu diesem Objekt gehören (Wurzel 3).
+
+        Der Service läuft mit dem Service-Role-Key und umgeht RLS; eine
+        ungeprüft übernommene `season_id` aus dem Request hängte den Rabatt an
+        den Regelsatz eines FREMDEN Objekts. `None` bleibt `None` — „gehört zu
+        keinem Satz" ist eine Angabe, kein fehlender Wert (Wurzel 4).
+        """
+        if not season_id:
+            return None
+        rows = (
+            self._db()
+            .table("property_seasons")
+            .select("id")
+            .eq("id", season_id)
+            .eq("property_id", property_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not rows:
+            raise DiscountError(
+                "Regelsatz gehört nicht zu diesem Objekt.", status_code=422
+            )
+        return season_id
 
     @staticmethod
     def _stay_ranges_json(ranges: list[StayRange]) -> list[dict[str, str]]:
@@ -163,6 +189,10 @@ class PropertyDiscountsService:
                     {
                         "tenant_id": tenant_id,
                         "property_id": property_id,
+                        # Zugehörigkeit zum Regelsatz (0572). Die Prüfung, ob
+                        # die Saison zu DIESEM Objekt gehört, macht die
+                        # Fremdschlüssel-Beziehung nicht — deshalb hier.
+                        "season_id": self._eigene_saison(property_id, req.season_id),
                         "discount_type": req.discount_type,
                         "discount_kind": req.discount_kind,
                         "discount_bps": req.discount_bps,
@@ -227,6 +257,10 @@ class PropertyDiscountsService:
         # käme nicht an) und eine Aktion bliebe für immer eingeschränkt.
         gesetzt = req.model_fields_set
         patch: dict[str, Any] = {}
+        if "season_id" in gesetzt:
+            # Auch beim Umhängen gilt: der Regelsatz muss zu diesem Objekt
+            # gehören. `null` löst die Zugehörigkeit und ist erlaubt.
+            patch["season_id"] = self._eigene_saison(property_id, req.season_id)
         for feld in (
             "discount_kind", "discount_bps", "discount_amount", "active",
             "min_nights", "lead_min_days", "lead_max_days", "promo_codes",

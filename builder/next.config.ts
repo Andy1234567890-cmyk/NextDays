@@ -57,7 +57,7 @@ const nextConfig: NextConfig = {
   // Kein x-powered-by:Next.js — verrät die Technologie (Version-Leak/Recon).
   poweredByHeader: false,
   // Geteiltes Workspace-Paket liefert TS-Quellen → mit-transpilieren (ADR-0016).
-  transpilePackages: ["@nextdays/currency", "@nextdays/security-headers"],
+  transpilePackages: ["@nextdays/baukasten-stil", "@nextdays/currency", "@nextdays/security-headers"],
 
   async headers() {
     // Google-Fonts: die Kunden-Sites laden die im Baukasten gewählten Schriften

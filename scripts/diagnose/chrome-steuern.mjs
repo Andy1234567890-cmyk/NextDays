@@ -1303,10 +1303,19 @@ try {
       continue;
     }
     if (art === 'taste') {
-      const karte = { Enter: 13, Tab: 9, ArrowDown: 40, ArrowUp: 38, ArrowLeft: 37, ArrowRight: 39, Backspace: 8, Space: 32 };
-      const code = karte[arg] ?? 0;
-      await seite.senden('Input.dispatchKeyEvent', { type: 'rawKeyDown', windowsVirtualKeyCode: code, key: arg });
-      await seite.senden('Input.dispatchKeyEvent', { type: 'keyUp', windowsVirtualKeyCode: code, key: arg });
+      // Mit Modifiern: `taste:Meta+z` (Rückgängig), `taste:Shift+Alt+ArrowUp`.
+      // CDP-Bits: Alt 1, Ctrl 2, Meta 4, Shift 8. Gebraucht am 05.09.2026, um
+      // einen versehentlichen Klick auf Framers „Layout +" (löscht das Stack-
+      // Layout!) per ⌘Z zurückzunehmen — ohne Modifier gab es keinen Rückweg.
+      const teile = arg.split('+');
+      const taste = teile.pop();
+      const bits = { Alt: 1, Ctrl: 2, Control: 2, Meta: 4, Cmd: 4, Shift: 8 };
+      const modifiers = teile.reduce((m, t) => m | (bits[t] ?? 0), 0);
+      const karte = { Enter: 13, Tab: 9, ArrowDown: 40, ArrowUp: 38, ArrowLeft: 37, ArrowRight: 39, Backspace: 8, Space: 32, Delete: 46 };
+      const code = karte[taste] ?? (taste.length === 1 ? taste.toUpperCase().charCodeAt(0) : 0);
+      const codeName = taste.length === 1 ? 'Key' + taste.toUpperCase() : taste;
+      await seite.senden('Input.dispatchKeyEvent', { type: 'rawKeyDown', modifiers, windowsVirtualKeyCode: code, key: taste, code: codeName });
+      await seite.senden('Input.dispatchKeyEvent', { type: 'keyUp', modifiers, windowsVirtualKeyCode: code, key: taste, code: codeName });
       console.log('Taste ' + arg);
       continue;
     }

@@ -40,6 +40,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@iconify/react": "^6.0.2",
+        "@nextdays/baukasten-stil": "workspace:*",
         "@nextdays/currency": "workspace:*",
         "@nextdays/security-headers": "workspace:*",
         "@stripe/react-stripe-js": "^6.6.0",
@@ -127,6 +128,10 @@
       "peerDependencies": {
         "next": ">=15.5.0",
       },
+    },
+    "packages/baukasten-stil": {
+      "name": "@nextdays/baukasten-stil",
+      "version": "0.1.0",
     },
     "packages/currency": {
       "name": "@nextdays/currency",
@@ -351,6 +356,7 @@
         "@hookform/resolvers": "5.4.0",
         "@iconify/react": "6.0.2",
         "@nextdays/auth": "workspace:*",
+        "@nextdays/baukasten-stil": "workspace:*",
         "@nextdays/currency": "workspace:*",
         "@nextdays/diagnostics": "workspace:*",
         "@nextdays/icons": "workspace:*",
@@ -755,6 +761,8 @@
     "@nextdays/anbieter": ["@nextdays/anbieter@workspace:packages/anbieter"],
 
     "@nextdays/auth": ["@nextdays/auth@workspace:packages/auth"],
+
+    "@nextdays/baukasten-stil": ["@nextdays/baukasten-stil@workspace:packages/baukasten-stil"],
 
     "@nextdays/currency": ["@nextdays/currency@workspace:packages/currency"],
 

@@ -77,6 +77,7 @@ class ContainerMixin:
         """
         tenant_id = self._require_tenant(ctx)
         block = self._own_block(tenant_id, block_id)
+        self._sperre_pruefen(block)
         art = block.get("kind") or "widget"
         if art == "widget":
             raise SiteConfigError(
@@ -129,6 +130,7 @@ class ContainerMixin:
         """
         tenant_id = self._require_tenant(ctx)
         block = self._own_block(tenant_id, block_id)
+        self._sperre_pruefen(block)
         if (block.get("kind") or "widget") == "widget":
             raise SiteConfigError(
                 "Diesen Baustein duplizierst du in der Abschnittsliste.",

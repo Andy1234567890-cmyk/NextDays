@@ -15,6 +15,7 @@
     "@hookform/resolvers": "5.4.0",
     "@iconify/react": "6.0.2",
     "@nextdays/auth": "workspace:*",
+    "@nextdays/baukasten-stil": "workspace:*",
     "@nextdays/currency": "workspace:*",
     "@nextdays/diagnostics": "workspace:*",
     "@nextdays/icons": "workspace:*",

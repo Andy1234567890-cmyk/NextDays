@@ -66,6 +66,9 @@ export function SiteShell({
       nav={nav.header}
       aktiverSlug={aktiverSlug}
       sprache={sprache}
+      // Im Editor-iframe tragen Kopfzeile und ihre Teile Marker für den
+      // Ebenen-Baum (0570); live steht kein Editor-Attribut im Markup.
+      editor={vorschau}
     />
   );
   const fuss = (
@@ -74,6 +77,7 @@ export function SiteShell({
       nav={nav.footer}
       jahr={jahr}
       sprache={sprache}
+      editor={vorschau}
     />
   );
   // Der eigene Code und der Cookie-Hinweis hängen am RAHMEN und nicht an den

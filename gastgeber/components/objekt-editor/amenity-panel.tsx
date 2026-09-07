@@ -29,7 +29,7 @@ const KATEGORIE_REIHENFOLGE = [
 ];
 
 // Umlaut-toleranter Suchvergleich.
-function normalisiere(s: string): string {
+export function normalisiere(s: string): string {
   return s
     .toLowerCase()
     .replace(/ä/g, "a")

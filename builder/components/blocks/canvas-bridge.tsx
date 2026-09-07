@@ -15,6 +15,8 @@
 // einem markierten Element hängen — der iframe schickt keine beliebigen Daten.
 import { useEffect } from "react";
 
+import { stilCss } from "@nextdays/baukasten-stil";
+
 /** Was an einer Textstelle gemeldet wird. Die Zuordnung geschieht über den
  *  Abschnitts-INDEX (Reihenfolge auf der Seite) und den Feldschlüssel — nicht
  *  über eine DB-ID, denn ein noch nicht gespeicherter Abschnitt hat keine. */
@@ -216,8 +218,159 @@ export function CanvasBridge({
           height: r.height,
         });
       }
-      protokoll(`${rechtecke.length} Rechteck(e) gemessen`, grund);
-      senden("rects", { rechtecke, grund });
+      // Kopf-/Fußzeile und ihre Teile (0570): eigene Liste, weil sie keinen
+      // Block-Index haben. Schlüssel = `kopfzeile` bzw. `kopfzeile/logo`.
+      const regionen: Array<{
+        region: string;
+        teil?: string;
+        top: number;
+        left: number;
+        width: number;
+        height: number;
+      }> = [];
+      for (const el of document.querySelectorAll<HTMLElement>(
+        "[data-region], [data-teil]",
+      )) {
+        const teil = el.getAttribute("data-teil") ?? undefined;
+        const region =
+          el.getAttribute("data-region") ??
+          el.closest<HTMLElement>("[data-region]")?.getAttribute("data-region");
+        if (!region) continue;
+        const r = el.getBoundingClientRect();
+        if (r.width <= 0 || r.height <= 0) continue;
+        regionen.push({
+          region,
+          teil,
+          top: r.top,
+          left: r.left,
+          width: r.width,
+          height: r.height,
+        });
+      }
+      // DIE STRUKTUR EINES BAUSTEINS (06.09.2026).
+      //
+      // Auftrag: „jedes Dom, Eltern, Column, Frame, Stack, Grid, Masonry,
+      // Image, Video muss über Style anpassbar sein und auch im Baum von
+      // Anfang bis Ende erfasst" — nach dem Vergleich mit Framer, wo jede
+      // Kiste und jedes Bild eine eigene Ebene mit eigenem Panel ist.
+      //
+      // Gemeldet wird deshalb nicht mehr nur `data-feld`, sondern der ganze
+      // Teilbaum: jeder Knoten mit eigener Box, dazu Bilder und Videos. Sein
+      // SCHLÜSSEL ist entweder der Feldname (sprechend, stabil über Umbauten
+      // des Markups) oder ein Pfad aus Kind-Nummern (`c1_3_2`), aus dem der
+      // Renderer denselben Selektor baut — beides landet in
+      // `settings.teile.<schluessel>`.
+      //
+      // GRENZEN, damit aus einer Seite kein Baum mit tausend Ästen wird
+      // (Wurzel 8): höchstens 8 Ebenen tief und 80 Knoten je Baustein.
+      const teile: Array<{
+        id: string;
+        feld: string;
+        eltern: string | null;
+        art: string;
+        marke: string | null;
+        top: number;
+        left: number;
+        width: number;
+        height: number;
+      }> = [];
+      const TEILE_TIEFE = 8;
+      const TEILE_MAX = 80;
+
+      /** Was für eine Art Kiste ist das? Dieselben Namen wie in Framers
+       *  Einfügemenü (Frame · Stack · Grid · Masonry · Image · Video), damit
+       *  im Baum steht, was der Kunde dort kennt. */
+      function artVon(el: HTMLElement): string {
+        const tag = el.tagName.toLowerCase();
+        if (tag === "img" || tag === "picture" || tag === "svg") return "bild";
+        if (tag === "video") return "video";
+        if (tag === "a") return "link";
+        if (tag === "button") return "knopf";
+        if (/^(h1|h2|h3|h4|h5|h6)$/.test(tag)) return "ueberschrift";
+        if (/^(p|li|blockquote|figcaption|span|strong|em|small)$/.test(tag)) return "text";
+        const stil = getComputedStyle(el);
+        if (stil.display === "grid" || stil.display === "inline-grid") {
+          // Framers „Masonry" ist ein Raster mit ungleichen Zeilenhöhen.
+          return stil.gridAutoFlow.includes("dense") ? "masonry" : "grid";
+        }
+        if (stil.display === "flex" || stil.display === "inline-flex") return "stack";
+        return "frame";
+      }
+
+      /** Trägt dieses Element eine eigene Box — oder ist es nur Text im Fluss? */
+      function eigeneBox(el: HTMLElement): boolean {
+        if (el.hasAttribute("data-feld")) return true;
+        const tag = el.tagName.toLowerCase();
+        if (["img", "picture", "svg", "video", "iframe", "canvas"].includes(tag)) return true;
+        const stil = getComputedStyle(el);
+        if (stil.display === "inline" || stil.display === "contents") return false;
+        const r = el.getBoundingClientRect();
+        return r.width > 0 && r.height > 0;
+      }
+
+      for (const block of document.querySelectorAll<HTMLElement>("[data-block-id]")) {
+        const id = block.getAttribute("data-block-id");
+        // NUR Bausteine: ein Abschnitt und eine Spalte stehen als eigene
+        // Ebenen schon im Baum des Editors, ihre Kinder sind wieder Blöcke.
+        if (!id || (block.getAttribute("data-block-kind") ?? "widget") !== "widget") {
+          continue;
+        }
+        let gezaehlt = 0;
+        const lauf = (
+          el: HTMLElement,
+          pfad: readonly number[],
+          eltern: string | null,
+        ) => {
+          const kinder = [...el.children] as HTMLElement[];
+          for (const [i, kind] of kinder.entries()) {
+            if (gezaehlt >= TEILE_MAX || pfad.length >= TEILE_TIEFE) return;
+            // Ein Element ohne eigene Box überspringen, aber DURCHLAUFEN: der
+            // Inhalt darunter bleibt erreichbar (ein `<span>` um eine Kiste
+            // darf keine Ebene verschlucken).
+            const weiterPfad = [...pfad, i + 1];
+            if (!eigeneBox(kind)) {
+              lauf(kind, weiterPfad, eltern);
+              continue;
+            }
+            const feld =
+              kind.getAttribute("data-feld") ?? `c${weiterPfad.join("_")}`;
+            const r = kind.getBoundingClientRect();
+            if (r.width <= 0 || r.height <= 0) {
+              lauf(kind, weiterPfad, eltern);
+              continue;
+            }
+            gezaehlt += 1;
+            teile.push({
+              id,
+              feld,
+              eltern,
+              art: artVon(kind),
+              // Der sichtbare Text als Namenszusatz — im Baum steht dann
+              // „Text · Jetzt buchen" statt einer Nummer.
+              marke: (kind.textContent ?? "").trim().slice(0, 40) || null,
+              top: r.top,
+              left: r.left,
+              width: r.width,
+              height: r.height,
+            });
+            lauf(kind, weiterPfad, feld);
+          }
+        };
+        lauf(block, [], null);
+      }
+      protokoll(
+        `${rechtecke.length} Rechteck(e), ${regionen.length} Regionsteil(e), ` +
+          `${teile.length} Baustein-Teil(e) gemessen`,
+        grund,
+      );
+      // Die HÖHE der ganzen Seite geht mit: der Editor zeichnet den Rahmen
+      // eines Breakpoints so hoch wie die Seite (Framer: der Frame wächst mit
+      // dem Inhalt, es scrollt die Fläche, nicht der Frame).
+      const seitenHoehe = Math.max(
+        document.documentElement.scrollHeight,
+        document.body.scrollHeight,
+      );
+      senden("rects", { rechtecke, regionen, teile, grund, seitenHoehe });
     }
     /** Gedrosselte Messung. Der GRUND wandert mit: der Editor schließt ein
      *  offenes Kontextmenü nur beim Scrollen — dabei wandert der Abschnitt
@@ -272,6 +425,109 @@ export function CanvasBridge({
      *  Das Browsermenü wird dabei unterdrückt — es stünde sonst darüber und
      *  böte „Bild speichern"/„Frame neu laden" an, was in einer Entwurfsansicht
      *  nichts zu suchen hat. Außerhalb eines Abschnitts bleibt es erlaubt. */
+    /** DOPPELKLICK — im Vorbild die Abkürzung zur wichtigsten Bearbeitung
+     *  (gemessen 06.09.2026): auf einem Text setzt er den Cursor und markiert
+     *  das Wort, auf einem Bild öffnet er dessen Füllung. Bei uns öffnet er
+     *  den Inhalt des Bausteins; welcher gemeint ist, entscheidet dieselbe
+     *  Kette wie beim einfachen Klick.
+     *
+     *  Auf einer EDITIERBAREN Textstelle passiert hier NICHTS: dort gehört der
+     *  Doppelklick dem Browser (Wort markieren), und ein Dialog darüber wäre
+     *  genau der Griff, den man gerade nicht will. */
+    function aufDoppelklick(e: MouseEvent) {
+      const ziel = e.target as HTMLElement | null;
+      const treffer = editierbar ? feldVon(ziel) : null;
+      // AUF EINER TEXTSTELLE: der Doppelklick öffnet den Schreibcursor —
+      // Framers Verhalten (dort markiert er zugleich das Wort). Ab jetzt ist
+      // die Stelle beschreibbar; beim Verlassen wird sie es wieder los
+      // (`aufBlur`), damit der nächste Klick wieder AUSWÄHLT.
+      if (treffer) {
+        treffer.el.contentEditable = "true";
+        treffer.el.style.cursor = "text";
+        treffer.el.focus();
+        // Das Wort unter dem Zeiger markieren, wie im Vorbild.
+        const bereich = document.caretRangeFromPoint?.(e.clientX, e.clientY);
+        if (bereich) {
+          const auswahl = window.getSelection();
+          auswahl?.removeAllRanges();
+          auswahl?.addRange(bereich);
+          auswahl?.modify?.("move", "backward", "word");
+          auswahl?.modify?.("extend", "forward", "word");
+        }
+        senden("bearbeitet", { feld: treffer.feld, id: abschnittsId(ziel) });
+        return;
+      }
+      const idx = abschnittsIndex(ziel);
+      const id = abschnittsId(ziel);
+      const behaelter = containerVon(ziel);
+      if (idx === null && !id && !behaelter) return;
+      // SONST: eine Ebene TIEFER (Framer: Abschnitt → Raster → Karte → Text).
+      senden("dblclick", {
+        index: idx,
+        id,
+        containerId: behaelter?.id,
+        containerKind: behaelter?.kind,
+      });
+    }
+
+    // --- ZIEHEN AUF DER FLÄCHE (06.09.2026) --------------------------------
+    //
+    // Bei Framer nachgemessen: ein Element im Stapel lässt sich mit der Maus
+    // an eine andere Stelle ziehen — es wird UMSORTIERT, nicht frei abgelegt
+    // (das Bild wanderte nach links, der Text nach rechts). Genau das ist auch
+    // bei uns die einzige mögliche Antwort: eine Seite ist ein Stapel, ihre
+    // Reihenfolge IST die Position.
+    //
+    // Die Geste beginnt im iframe, also hört sie hier: gedrückte Maustaste
+    // plus Bewegung über eine Schwelle. Darunter bleibt es ein Klick — sonst
+    // würde jede zittrige Hand beim Auswählen etwas verschieben.
+    const ZUG_SCHWELLE = 5;
+    let zugStart: { x: number; y: number; id: string } | null = null;
+    let zugLaeuft = false;
+
+    function aufZeigerRunter(e: PointerEvent) {
+      if (e.button !== 0) return;
+      const ziel = e.target as HTMLElement | null;
+      // In einer Textstelle, die gerade beschrieben wird, gehört die Maus dem
+      // Cursor (Text markieren).
+      if (ziel?.closest<HTMLElement>("[data-feld]")?.isContentEditable) return;
+      const id = abschnittsId(ziel);
+      if (!id) return;
+      zugStart = { x: e.clientX, y: e.clientY, id };
+      zugLaeuft = false;
+    }
+
+    function aufZeigerBewegt(e: PointerEvent) {
+      if (!zugStart) return;
+      if (!zugLaeuft) {
+        const weit =
+          Math.abs(e.clientX - zugStart.x) > ZUG_SCHWELLE ||
+          Math.abs(e.clientY - zugStart.y) > ZUG_SCHWELLE;
+        if (!weit) return;
+        zugLaeuft = true;
+        // Ohne das markiert der Zug den Text unter der Maus — die halbe Seite
+        // wird blau, und danach sieht es aus, als sei etwas kaputt.
+        document.body.style.userSelect = "none";
+        window.getSelection()?.removeAllRanges();
+        senden("zug", { phase: "start", id: zugStart.id, x: e.clientX, y: e.clientY });
+        return;
+      }
+      senden("zug", { phase: "bewegt", id: zugStart.id, x: e.clientX, y: e.clientY });
+    }
+
+    function aufZeigerHoch(e: PointerEvent) {
+      if (!zugStart) return;
+      const lief = zugLaeuft;
+      const id = zugStart.id;
+      zugStart = null;
+      zugLaeuft = false;
+      document.body.style.userSelect = "";
+      if (lief) {
+        window.getSelection()?.removeAllRanges();
+        senden("zug", { phase: "ende", id, x: e.clientX, y: e.clientY });
+      }
+    }
+
     function aufKontextmenue(e: MouseEvent) {
       const idx = abschnittsIndex(e.target);
       const behaelter = containerVon(e.target);
@@ -291,13 +547,33 @@ export function CanvasBridge({
     }
 
     function aufKlick(e: MouseEvent) {
+      // Nach einem Zug ist der Klick nur sein Nachhall — er würde die Auswahl
+      // auf das Element unter dem LOSLASS-Punkt setzen, also auf ein anderes.
+      if (zugLaeuft) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
       const treffer = editierbar ? feldVon(e.target) : null;
-      // Klick auf eine editierbare Stelle: NICHT dem Editor melden und den
-      // Cursor dort landen lassen, wo geklickt wurde. Ist die Stelle selbst ein
-      // Link (die Knopf-Beschriftung im Titelbild), muss die Navigation
-      // trotzdem unterbleiben — sonst verlässt der iframe die Vorschau.
+      // Klick auf eine Stelle mit `data-feld`: sie wird als TEIL gemeldet —
+      // eine eigene Ebene mit eigenem Style-Panel, genau wie in Framer jede
+      // Überschrift und jeder Absatz eine eigene Ebene ist (Messung
+      // 06.09.2026). Schreiben kommt erst mit dem Doppelklick.
+      //
+      // Schreibt der Nutzer gerade in DIESER Stelle, bleibt der Klick beim
+      // Cursor: sonst könnte man mitten im Satz nicht mehr umsetzen.
       if (treffer) {
         if ((e.target as HTMLElement)?.closest?.("a")) e.preventDefault();
+        if (treffer.el.isContentEditable) return;
+        e.preventDefault();
+        const behaelter = containerVon(e.target);
+        senden("select", {
+          index: abschnittsIndex(e.target),
+          id: abschnittsId(e.target),
+          containerId: behaelter?.id,
+          containerKind: behaelter?.kind,
+          feld: treffer.feld,
+        });
         return;
       }
 
@@ -351,6 +627,22 @@ export function CanvasBridge({
           containerId: behaelter.id,
           containerKind: behaelter.kind,
         });
+        return;
+      }
+
+      // KOPF- ODER FUSSZEILE (0570): ein Teil (Logo, Navigation …) oder die
+      // Region selbst. Der Editor wählt die Ebene im Baum und zeigt ihre
+      // Einstellungen. Die Links darin sind oben schon angehalten.
+      const ziel = e.target as HTMLElement | null;
+      const teilEl = ziel?.closest?.<HTMLElement>("[data-teil]");
+      const regionEl = ziel?.closest?.<HTMLElement>("[data-region]");
+      if (regionEl) {
+        senden("select", {
+          index: null,
+          id: null,
+          region: regionEl.getAttribute("data-region"),
+          teil: teilEl?.getAttribute("data-teil") ?? null,
+        });
       }
     }
 
@@ -363,6 +655,11 @@ export function CanvasBridge({
     function aufBlur(e: FocusEvent) {
       const treffer = feldVon(e.target);
       if (!treffer) return;
+      // Die Stelle ist wieder eine EBENE, kein Schreibfeld: sonst führte der
+      // nächste Klick erneut in den Text statt in die Auswahl (Wurzel 1 —
+      // jede Aktion hat einen Gegenzustand).
+      treffer.el.contentEditable = "false";
+      treffer.el.style.cursor = "";
       const index = abschnittsIndex(treffer.el);
       if (index == null) return;
       const meldung: TextMeldung = {
@@ -393,6 +690,8 @@ export function CanvasBridge({
         type?: string;
         index?: number;
         id?: string;
+        settings?: unknown;
+        span?: number | null;
       } | null;
       if (data?.source === "builder-editor" && data.type === "scrollTo") {
         // Der Editor hat einen Abschnitt AUSSERHALB der Vorschau ausgewählt
@@ -450,6 +749,72 @@ export function CanvasBridge({
         window.scrollTo({ top: Math.max(0, ziel_y), behavior: "smooth" });
         return;
       }
+      if (data?.source === "builder-editor" && data.type === "stil") {
+        // LIVE-STIL (06.09.2026): der Editor schickt die geänderten Settings
+        // eines Blocks, und die Vorschau zeigt sie SOFORT — ohne Neuladen.
+        //
+        // Vorher lud der iframe nach jeder Stiländerung neu (`setNeuLaden`
+        // nach dem Autospeichern): rund eine Sekunde Verzögerung, die
+        // Scrollposition sprang, und wer an einem Schieberegler zog, sah das
+        // Ergebnis erst, wenn er losließ. Im Vorbild wächst der Abstand unter
+        // dem Zeiger mit — genau das ist der Unterschied zwischen „Formular
+        // mit Vorschau" und „Editor".
+        //
+        // Gerechnet wird mit DERSELBEN Funktion, die auch die Seite baut
+        // (`stilCss`), und nicht mit einer zweiten Fassung im Editor: eine
+        // Vorschau, die anders rechnet als der Renderer, lügt genau dann, wenn
+        // man sich auf sie verlässt. Der Editor schickt die Settings, nicht
+        // fertiges CSS — dann steht die Regel weiterhin an EINER Stelle.
+        //
+        // Die Regel landet in einem eigenen `<style>` am ENDE des Kopfes: bei
+        // gleicher Spezifität gewinnt die spätere, also schlägt sie die Regel,
+        // die der Server für diesen Block geschrieben hat. Beim nächsten
+        // Neuladen ist sie weg und der Serverstand steht — das ist richtig so,
+        // denn dann kommt er aus der Datenbank.
+        const id = typeof data.id === "string" ? data.id : null;
+        const settings =
+          data.settings && typeof data.settings === "object" ? data.settings : null;
+        if (!id || !settings) return;
+        const ziel = document.querySelector<HTMLElement>(`[data-block-id="${id}"]`);
+        const idx = ziel?.dataset.blockIndex;
+        if (!ziel || idx === undefined) return;
+        const kind = ziel.dataset.blockKind ?? "widget";
+        const css = stilCss(
+          settings as Record<string, unknown>,
+          {
+            rahmen: `[data-block-index="${idx}"]`,
+            layout: `[data-block-index="${idx}"]>[data-layout]`,
+            text:
+              kind === "widget"
+                ? `[data-block-index="${idx}"] :is(h1,h2,h3,h4,h5,h6,p,li,blockquote,figcaption,span,a,strong,em,small)`
+                : undefined,
+          },
+          {
+            editor: true,
+            span: typeof data.span === "number" ? data.span : null,
+          },
+        );
+        const schluessel = `live-${id}`;
+        let stil = document.querySelector<HTMLStyleElement>(
+          `style[data-live-stil="${schluessel}"]`,
+        );
+        if (!css) {
+          // Nichts eingestellt heißt: die Live-Regel muss WEG, sonst bliebe
+          // die letzte Fassung stehen und der Rückweg fehlte (Wurzel 1).
+          stil?.remove();
+          return;
+        }
+        if (!stil) {
+          stil = document.createElement("style");
+          stil.setAttribute("data-live-stil", schluessel);
+          document.head.appendChild(stil);
+        }
+        stil.textContent = css;
+        // Die Maße haben sich geändert — der Editor zeichnet seine Auswahl aus
+        // den gemeldeten Rechtecken, und die wären sonst von vorhin.
+        messenBald("layout");
+        return;
+      }
       if (data?.source === "builder-editor" && data.type === "hello") {
         // Der Editor stellt sich vor → ab jetzt kennen wir sein Ziel.
         elternOrigin = e.origin;
@@ -471,11 +836,17 @@ export function CanvasBridge({
       { editierbar },
     );
     for (const el of stellen) {
-      el.contentEditable = "true";
-      // Der Browser soll nur Text einfügen, kein Markup aus der Zwischenablage.
+      // NICHT sofort `contentEditable` (Änderung 06.09.2026, nach der Messung
+      // bei Framer): dort wählt ein einfacher Klick das Textstück als EBENE,
+      // und erst ein Doppelklick setzt den Schreibcursor.
+      //
+      // Vorher war jede Stelle dauerhaft beschreibbar. Die Folge war, dass man
+      // einen Text nur ANFASSEN konnte, um ihn zu ändern — nie, um ihn zu
+      // gestalten: der Klick landete im Text, die Auswahl blieb beim ganzen
+      // Baustein, und das Style-Panel zeigte nie die Schrift dieser einen
+      // Zeile. Genau das ist der Unterschied, den Framer ausmacht.
       el.setAttribute("data-editierbar", "1");
       el.style.outline = "none";
-      el.style.cursor = "text";
     }
 
     /** Absenden in der Vorschau: NICHT.
@@ -497,6 +868,47 @@ export function CanvasBridge({
       e.stopPropagation();
     }
 
+    /** Mausrad und Pinch gehen an den Editor — die Fläche dort ist eine
+     *  Kamera (Zoom/Pan), und ein Rad-Ereignis über dem iframe käme sonst nie
+     *  bei ihr an: es endet in diesem Dokument. Nur im Editor-Modus; der Gast
+     *  scrollt seine Seite wie immer. `passive: false`, weil das Scrollen
+     *  HIER unterbleiben muss — der Rahmen ist so hoch wie die Seite. */
+    function aufRad(e: WheelEvent) {
+      if (!editierbar) return;
+      e.preventDefault();
+      senden("rad", {
+        dx: e.deltaX,
+        dy: e.deltaY,
+        modus: e.deltaMode,
+        zoom: e.ctrlKey || e.metaKey,
+        x: e.clientX,
+        y: e.clientY,
+      });
+    }
+    /** Kamera-Kürzel, die im iframe gedrückt werden, gehen ebenfalls hinaus:
+     *  ⌘+/−/0/1/2 und die Leertaste (Hand). Nur diese — alles andere ist Text
+     *  oder gehört dem Renderer. */
+    function aufKameraTaste(e: KeyboardEvent) {
+      if (!editierbar) return;
+      const ziel = e.target as HTMLElement | null;
+      if (ziel?.isContentEditable || ziel?.tagName === "INPUT" || ziel?.tagName === "TEXTAREA") {
+        return;
+      }
+      const meta = e.metaKey || e.ctrlKey;
+      const kamera =
+        (meta && ["=", "+", "-", "0", "1", "2"].includes(e.key)) || e.code === "Space";
+      if (!kamera) return;
+      e.preventDefault();
+      senden("taste", { key: e.key, code: e.code, meta, typ: e.type, alt: e.altKey, shift: e.shiftKey });
+    }
+    function aufKameraTasteLos(e: KeyboardEvent) {
+      if (!editierbar || e.code !== "Space") return;
+      senden("taste", { key: e.key, code: e.code, meta: false, typ: e.type, alt: e.altKey, shift: e.shiftKey });
+    }
+
+    document.addEventListener("wheel", aufRad, { passive: false, capture: true });
+    document.addEventListener("keydown", aufKameraTaste, true);
+    document.addEventListener("keyup", aufKameraTasteLos, true);
     document.addEventListener("submit", aufAbsenden, true);
     document.addEventListener("click", aufKlick, true);
     document.addEventListener("blur", aufBlur, true);
@@ -504,6 +916,11 @@ export function CanvasBridge({
     document.addEventListener("mousemove", aufBewegung, true);
     document.addEventListener("mouseleave", aufVerlassen, true);
     document.addEventListener("contextmenu", aufKontextmenue, true);
+    document.addEventListener("dblclick", aufDoppelklick, true);
+    document.addEventListener("pointerdown", aufZeigerRunter, true);
+    document.addEventListener("pointermove", aufZeigerBewegt, true);
+    document.addEventListener("pointerup", aufZeigerHoch, true);
+    document.addEventListener("pointercancel", aufZeigerHoch, true);
     window.addEventListener("message", aufNachricht);
     // `scroll` mit `capture`, weil nicht das Fenster scrollen muss: liegt der
     // Inhalt in einem eigenen Scroll-Container, blubbert sein Ereignis nicht
@@ -545,6 +962,9 @@ export function CanvasBridge({
     void document.fonts?.ready?.then(beiLayout);
 
     return () => {
+      document.removeEventListener("wheel", aufRad, true);
+      document.removeEventListener("keydown", aufKameraTaste, true);
+      document.removeEventListener("keyup", aufKameraTasteLos, true);
       document.removeEventListener("submit", aufAbsenden, true);
       document.removeEventListener("click", aufKlick, true);
       document.removeEventListener("blur", aufBlur, true);
@@ -552,6 +972,11 @@ export function CanvasBridge({
       document.removeEventListener("mousemove", aufBewegung, true);
       document.removeEventListener("mouseleave", aufVerlassen, true);
       document.removeEventListener("contextmenu", aufKontextmenue, true);
+      document.removeEventListener("dblclick", aufDoppelklick, true);
+      document.removeEventListener("pointerdown", aufZeigerRunter, true);
+      document.removeEventListener("pointermove", aufZeigerBewegt, true);
+      document.removeEventListener("pointerup", aufZeigerHoch, true);
+      document.removeEventListener("pointercancel", aufZeigerHoch, true);
       window.removeEventListener("message", aufNachricht);
       window.removeEventListener("scroll", beiScroll, true);
       window.removeEventListener("resize", beiLayout);

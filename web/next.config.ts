@@ -25,7 +25,7 @@ const nextConfig: NextConfig = {
   // Geteiltes Workspace-Package (@nextdays/currency) liefert TS-Quellen → Next
   // muss es mit-transpilieren (ADR-0016, bun-Workspace).
   transpilePackages: [
-    "@nextdays/diagnostics","@nextdays/ui", "@nextdays/currency", "@nextdays/auth",
+    "@nextdays/baukasten-stil", "@nextdays/diagnostics","@nextdays/ui", "@nextdays/currency", "@nextdays/auth",
     "@nextdays/security-headers"],
   // Datei-Uploads (Avatar, Objekt-Bilder, Galerie-Fotos) laufen über Server
   // Actions in lib/*.ts. Next.js begrenzt Server-Action-Bodies sonst auf 1 MB —

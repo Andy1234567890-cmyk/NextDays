@@ -58,3 +58,9 @@ export function umgeschaltet(vorher: Geraet[], geraet: Geraet): Geraet[] {
     ? vorher.filter((g) => g !== geraet)
     : [...vorher, geraet];
 }
+
+/** Die Breitenbereiche der drei Geräte — EINE Quelle für Ebenen-Baum, Editor
+ *  und die Media-Queries des Renderers: `@nextdays/baukasten-stil`. Eine Zahl,
+ *  die hier vom Renderer abwiche, hieße: das Auge in der Zeile verspricht
+ *  etwas, das die Seite anders macht (Wurzel 4). */
+export { GERAETE_BEREICHE } from "@nextdays/baukasten-stil";

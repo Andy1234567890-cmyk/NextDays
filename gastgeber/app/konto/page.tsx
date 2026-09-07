@@ -10,6 +10,7 @@ import { BenachrichtigungenAbschnitt } from "@/components/konto/benachrichtigung
 import { SteuernAbschnitt } from "@/components/konto/steuern-abschnitt";
 import { DatenschutzAbschnitt } from "@/components/konto/datenschutz-abschnitt";
 import { KontoNav } from "@/components/konto/konto-nav";
+import { KontostandTab } from "@/components/konto/kontostand-tab";
 import { PersoenlichAbschnitt } from "@/components/konto/persoenlich-abschnitt";
 import { SicherheitAbschnitt } from "@/components/konto/sicherheit-abschnitt";
 import { SpendenTab } from "@/components/konto/spenden-tab";
@@ -19,7 +20,7 @@ import { UnternehmenTab } from "@/components/konto/unternehmen-tab";
 import { VorbereitungAbschnitt } from "@/components/konto/vorbereitung-abschnitt";
 import { ZahlungenAbschnitt } from "@/components/konto/zahlungen-abschnitt";
 import { ZahlungenTabs } from "@/components/konto/zahlungen-tabs";
-import { getAuszahlungsUebersicht } from "@/lib/auszahlungen";
+import { getAuszahlungsUebersicht, getStripeGuthaben } from "@/lib/auszahlungen";
 import { getNotificationOverview } from "@/lib/benachrichtigungen";
 import { getObjektangaben, getTaxpayerOverview } from "@/lib/steuern";
 import { getPrivacySettings } from "@/lib/datenschutz";
@@ -63,21 +64,26 @@ export default async function KontoPage({
       ? await getSpendenUebersicht()
       : null;
 
-  // Auszahlungen: Übersicht und Kontostand. Der Live-Status kostet einen
+  // Stripe-Konto: Kennung + Live-Status braucht der Zahlungen-Reiter (Schritte
+  // und offene Anforderungen), der Auszahlungs-Reiter (Bank) und die
+  // Vermieterdaten (persönliche Kennnummer). Der Live-Status kostet einen
   // Aufruf beim Zahlungsanbieter — nur holen, wenn ein Konto existiert.
   const auszahlungenOffen =
     aktiv === "zahlungen" && zahlungenTab === "auszahlungen";
-  const [auszahlungen, kontoId] = auszahlungenOffen
-    ? await Promise.all([getAuszahlungsUebersicht(), getAuszahlungsKontoId()])
-    : [null, null];
+  const stripeNoetig =
+    (aktiv === "zahlungen" && zahlungenTab !== "spenden") || aktiv === "unternehmen";
+  const kontostandOffen = aktiv === "zahlungen" && zahlungenTab === "kontostand";
+  const [auszahlungen, kontoId, guthaben] = await Promise.all([
+    auszahlungenOffen || kontostandOffen ? getAuszahlungsUebersicht() : null,
+    stripeNoetig ? getAuszahlungsKontoId() : null,
+    // Stripe-Saldo nur für den Kontostand — ein echter Stripe-Aufruf.
+    kontostandOffen ? getStripeGuthaben() : null,
+  ]);
   const kontoStatus = kontoId ? await getAuszahlungsStatus(kontoId) : null;
 
-  // Unternehmensdaten: eigener Bereich UND Quelle für Land/Kontoinhaber im
-  // Auszahlungs-Reiter (die Bankverbindung braucht das Land für die Währung).
-  const unternehmen =
-    aktiv === "unternehmen" || auszahlungenOffen
-      ? await getUnternehmensprofil()
-      : null;
+  // Vermieterdaten: eigener Bereich UND Quelle für Land/Kontoinhaber im
+  // Auszahlungs-Reiter und für die Schritte der Stripe-Einrichtung.
+  const unternehmen = stripeNoetig ? await getUnternehmensprofil() : null;
   const privacy = aktiv === "datenschutz" ? await getPrivacySettings() : null;
   // Diagnose-Freigaben gehören thematisch zum Datenschutz — der Kunde
   // steuert dort, wer wann Einblick in seine Fehlerdaten hat.
@@ -124,6 +130,8 @@ export default async function KontoPage({
                     erneut versuchen.
                   </p>
                 )
+              ) : zahlungenTab === "kontostand" ? (
+                <KontostandTab uebersicht={auszahlungen} guthaben={guthaben} />
               ) : zahlungenTab === "auszahlungen" ? (
                 <AuszahlungenTab
                   uebersicht={auszahlungen}
@@ -133,7 +141,12 @@ export default async function KontoPage({
                   kontoinhaber={unternehmen?.companyName ?? ""}
                 />
               ) : (
-                <ZahlungenAbschnitt settings={settings} />
+                <ZahlungenAbschnitt
+                  settings={settings}
+                  kontoId={kontoId}
+                  kontoStatus={kontoStatus}
+                  profil={unternehmen}
+                />
               )}
             </section>
           )}
@@ -153,7 +166,14 @@ export default async function KontoPage({
               objektangaben={objektangaben}
             />
           )}
-          {aktiv === "unternehmen" && <UnternehmenTab profil={unternehmen} />}
+          {aktiv === "unternehmen" && (
+            <UnternehmenTab
+              profil={unternehmen}
+              account={account}
+              kontoId={kontoId}
+              kontoStatus={kontoStatus}
+            />
+          )}
           {VORBEREITUNG[aktiv] && (
             <VorbereitungAbschnitt titelKey={VORBEREITUNG[aktiv]} />
           )}

@@ -100,6 +100,8 @@ _BRANDING_COLS = (
     # 0426: Farbrollen für Kopf-/Fußzeile, Links und Firmenname.
     "brand_name_color, header_background, header_link_color, link_color, "
     "footer_background, "
+    # 0570: Kopf-/Fußzeile als Ebenen (Sichtbarkeit, Sperre, Reihenfolge).
+    "header_teile, footer_teile, "
     # 0426: Typografie des Logo-Bereichs.
     "logo_name_font, logo_name_size, slogan_font, logo_link_url, "
     # 0426: Sprachen und Anzeigeverhalten der Website.
@@ -783,6 +785,16 @@ class SiteConfigService(
     def delete_page(self, ctx: AuthContext, page_id: str) -> None:
         tenant_id = self._require_tenant(ctx)
         zeile = self._own_page(tenant_id, page_id)
+        # Die Startseite ist nicht löschbar: ohne sie liefert die Domain nur
+        # „noch nicht eingerichtet". Erst eine andere Seite zur Startseite
+        # machen (`set_home_page`), dann diese löschen. Bis 05.09.2026 stand
+        # dieser Riegel nur im Frontend — der API-Pfad war offen (Wurzel 3).
+        if zeile.get("is_home"):
+            raise SiteConfigError(
+                "Die Startseite lässt sich nicht löschen — zuerst eine andere "
+                "Seite als Startseite festlegen.",
+                status_code=422,
+            )
         # Eine Systemseite kann man nicht löschen — ihre Route antwortet
         # weiterhin. Sie zu entfernen hieße nur, ihre SEO-Angaben zu verlieren
         # und sie beim nächsten Blick in die Liste neu und leer anzulegen.
@@ -1281,6 +1293,23 @@ class SiteConfigService(
                 "Seite gehört nicht zu diesem Konto.", status_code=404
             )
         return rows[0]
+
+    @staticmethod
+    def _sperre_pruefen(block: dict) -> None:
+        """Eine GESPERRTE Ebene (``settings.locked``) bewegt, kopiert und löscht
+        sich nicht — auch nicht per API.
+
+        Bis 05.09.2026 prüfte das Flag niemand: es stand nur in der
+        Oberfläche, und ein Aufruf an ``/blocks/{id}/move``, ``/duplicate``
+        oder ``DELETE`` ging ungehindert durch. Ein Schutz, der nur wirkt,
+        solange man die React-Oberfläche benutzt, ist keiner (Wurzel 6).
+        Entsperren geht weiterhin über ``update_block`` (``locked: false``).
+        """
+        settings = block.get("settings") or {}
+        if isinstance(settings, dict) and settings.get("locked") is True:
+            raise SiteConfigError(
+                "Diese Ebene ist gesperrt — zuerst entsperren.", status_code=422
+            )
 
     def _own_block(self, tenant_id: str, block_id: str) -> dict:
         rows = (

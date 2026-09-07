@@ -67,6 +67,7 @@ export function ObjektEditor({
   cohostEinladungen,
   plattformBps,
   objektSteuern,
+  zahlungenBereit,
 }: {
   property: Property;
   preisStand: PreisStand;
@@ -79,6 +80,8 @@ export function ObjektEditor({
   plattformBps: number;
   /** Steuern, die der Gastgeber dem Gast berechnet. null = Ladefehler. */
   objektSteuern: ObjektSteuer[] | null;
+  /** Stripe-Konto des Betriebs freigeschaltet? Ohne geht kein Objekt live. */
+  zahlungenBereit: boolean;
 }) {
   const t = useTranslations("objektEditor");
   const locale = useLocale();
@@ -619,21 +622,16 @@ export function ObjektEditor({
           </h1>
         </div>
 
-        {/* Tabs „Dein Objekt / Anreise-Guide" + Zahnrad (Airbnb-Muster) */}
+        {/* „Dein Objekt" ist derzeit die EINZIGE Ansicht: einen Anreise-Guide gibt
+            es weder im Editor noch im Backend. Beide Tabs waren Knoepfe ohne
+            Handler — der zweite versprach eine Ansicht, die nicht existiert.
+            Bis es sie gibt, steht hier der Titel der aktuellen Ansicht statt
+            einer Umschaltung, die nichts umschaltet. */}
         <div className="flex items-center gap-2 px-6 pt-5">
           <div className="flex flex-1 rounded-full bg-muted p-1">
-            <button
-              type="button"
-              className="flex-1 rounded-full bg-background py-2 text-sm font-semibold shadow-sm"
-            >
+            <span className="flex-1 rounded-full bg-background py-2 text-center text-sm font-semibold shadow-sm">
               {t("tabRaum")}
-            </button>
-            <button
-              type="button"
-              className="flex-1 rounded-full py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              {t("tabAnreise")}
-            </button>
+            </span>
           </div>
           <span
             aria-hidden
@@ -776,7 +774,11 @@ export function ObjektEditor({
             {t("ansehen")}
           </span>
           <span className="pointer-events-auto">
-            <ObjektPublish id={prop.id} status={prop.status} />
+            <ObjektPublish
+              id={prop.id}
+              status={prop.status}
+              zahlungenBereit={zahlungenBereit}
+            />
           </span>
         </div>
       </div>

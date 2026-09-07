@@ -159,6 +159,8 @@ class RatesService:
             date_price_count=date_price_count,
             sync_status=sync_status,
             rate_mode=r.get("rate_mode") or "manual",
+            booking_condition_id=r.get("booking_condition_id"),
+            booking_condition_long_id=r.get("booking_condition_long_id"),
             derived_from_rate_plan_id=r.get("derived_from_rate_plan_id"),
             derived_from_name=derived_from_name,
             offset_amount=(
@@ -468,6 +470,29 @@ class RatesService:
         if not existing or existing[0]["properties"]["tenant_id"] != tenant_id:
             raise RateError("Preisplan nicht gefunden.", status_code=404)
         patch = req.model_dump(exclude_none=True)
+        # Buchungsbedingung: `null` heißt „lösen" und muss geschrieben werden,
+        # `exclude_none` würde es verschlucken. Und die ID kommt aus dem
+        # Request — sie wird gegen den EIGENEN Mandanten geprüft, bevor sie an
+        # einem Preisplan landet (Service-Role umgeht RLS, Wurzel 3).
+        for feld in ("booking_condition_id", "booking_condition_long_id"):
+            if feld not in req.model_fields_set:
+                continue
+            wert = getattr(req, feld)
+            if wert is not None:
+                gehoert = (
+                    self._db()
+                    .table("booking_conditions")
+                    .select("id")
+                    .eq("id", wert)
+                    .eq("tenant_id", tenant_id)
+                    .limit(1)
+                    .execute()
+                ).data
+                if not gehoert:
+                    raise RateError(
+                        "Buchungsbedingung nicht gefunden.", status_code=404
+                    )
+            patch[feld] = wert
         # Zentrale Objektwährung erzwingen (0161): eine per PATCH gesetzte
         # abweichende Währung wird abgewiesen, damit ein einzelner Plan die
         # Objektwährung nicht aushebelt (Channex: 1 Objekt = 1 Währung). Nur

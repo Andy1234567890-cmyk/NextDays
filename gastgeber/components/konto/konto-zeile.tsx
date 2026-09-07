@@ -4,7 +4,11 @@
 // Wert + „Bearbeiten"/„Hinzufügen"-Link rechts. Beim Öffnen klappt das
 // Edit-Feld (children als Render-Prop) inline auf, Speichern/Abbrechen darunter.
 // Nur EINE Zeile im Abschnitt ist gleichzeitig offen (offen-State liegt beim
-// Abschnitt), andere Zeilen werden dann ausgegraut.
+// Abschnitt), andere Zeilen werden dann ausgegraut — aber ihr „Bearbeiten"/
+// „Hinzufügen" bleibt KLICKBAR und wechselt die offene Zeile. Vorher lag
+// `pointer-events-none` auf der ganzen Zeile: wer bei offener Währung die
+// Zeitzone anklickte, bekam nichts — kein Öffnen, keine Rückmeldung — und
+// meldete „die Zeitzone kann man nicht einstellen" (05.09.2026).
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
@@ -34,7 +38,7 @@ export function KontoZeile({
   return (
     <div
       className={`border-b border-border py-6 transition-opacity last:border-0 ${
-        dimmed ? "pointer-events-none opacity-40" : ""
+        dimmed ? "opacity-50" : ""
       }`}
     >
       <div className="flex items-start justify-between gap-4">
@@ -42,7 +46,7 @@ export function KontoZeile({
         <button
           type="button"
           onClick={open ? onClose : onOpen}
-          className="shrink-0 text-sm font-medium underline underline-offset-2 hover:opacity-70"
+          className="shrink-0 text-sm font-medium underline underline-offset-2 hover:opacity-70 focus-visible:ring-2 focus-visible:ring-foreground/20 outline-none"
         >
           {open ? t("abbrechen") : hasValue ? t("bearbeiten") : t("hinzufuegen")}
         </button>

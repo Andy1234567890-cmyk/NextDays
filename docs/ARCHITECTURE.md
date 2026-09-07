@@ -2348,6 +2348,47 @@ Datenkern an). Verbindliche Feature-Spezifikation und Bau-Vorlage des Editors is
    `GET /api/v1/site/page` **nur veröffentlichte** Blöcke und rendern sie mit
    `components/blocks/block-renderer.tsx`.
 
+   **Darstellung je Gerät (Etappe 2, 05.09.2026).** Alles Gerätabhängige aus
+   `settings` (Hintergrund, Abstände, Größe, Position, Stil, Transform, Layout
+   samt `je_geraet`-Überschreibungen) erzeugt das geteilte Paket
+   `packages/baukasten-stil` (`stilCss`): der Renderer schreibt je Block ein
+   `<style>` mit Grundregel (Desktop) und Media-Queries (Tablet ≤ 1023,
+   Mobil ≤ 767) — kein Inline-Stil, weil der jede Media-Query schlüge. Der
+   Editor in `web` liest dieselbe Funktion (`darstellungFuer`, `herkunft`) für
+   Anzeigewert und Override-Markierung. Eine zweite Kaskade meldet
+   `scripts/diagnose/baukasten-doppel-kopien-pruefen.mjs`.
+
+   **Editor-Schale und Fläche nach Framer (05.09.2026).**
+   `web/components/website/editor/framer-schale.tsx` (drei Spalten, dunkel,
+   Kopf mit Canvas-Menü) ersetzt im Seiten-Editor die Hostaway-Schale;
+   `editor/buehne.tsx` ist die Kamera (`translate() scale()`) um je einen
+   iframe pro Breakpoint. Nur der AKTIVE Rahmen trägt Brücke und
+   Auswahl-Schicht; `canvas-bridge.tsx` meldet dafür `seitenHoehe`, leitet
+- `builder/components/blocks/effekte.tsx` — Live-Skript der Effekte (Framer „Appear"/„Scroll Speed"): IntersectionObserver setzt `data-erschienen`, Parallax über `translate`; einmal im Layout eingebunden, im Editor-iframe ohne Marker wirkungslos. Keyframes aus `EFFEKTE_KEYFRAMES` (Paket `baukasten-stil`).
+   Rad/Pinch (`rad`) und Kamera-Kürzel (`taste`) an den Editor weiter. Die
+   rechte Spalte ist reines Style-Panel (Agent · Style); Inhalte werden auf
+   der Fläche getippt oder im `InhaltDialog` bearbeitet.
+
+   **Stil-Inspektor (Etappe 3, 05.09.2026).** `web/components/website/editor/
+   stil-inspektor.tsx` ist EIN Panel für Container und Baustein mit den Karten
+   Position · Größe · Stil · Transform · Scroll-Abschnitt · Zugänglichkeit.
+   Geschrieben wird ausschließlich über `mitWert()` aus dem Paket: auf Desktop
+   in die Grundfassung, auf Tablet/Mobil nach `settings.je_geraet.<gerät>`;
+   `null` löscht und räumt leere Unterobjekte weg, damit ein unveränderter
+   Block denselben Datensatz ergibt. `herkunft()` färbt eigene
+   Überschreibungen blau und zeigt geerbte Werte mit dem Quellgerät.
+   Scroll/Zugänglichkeit/`hidden_on` gibt es nur in der Grundfassung
+   (`jeGeraetMoeglich`). Die Feldmuster (`stil-felder.tsx`) prüfen dieselben
+   Regeln wie `schemas_darstellung.py`, bevor ein Wert den Editor verlässt.
+
+   **Kopf-/Fußzeile als Ebenen (0570).** `site-header.tsx`/`site-footer.tsx`
+   lesen `branding.header_teile`/`footer_teile` über `regionLesen` (dasselbe
+   Paket): Reihenfolge der Teile, Sichtbarkeit je Gerät (Tailwind-Klassen,
+   im Editor durchscheinend), im Editor-iframe zusätzlich `data-region`/
+   `data-teil`, die `canvas-bridge.tsx` misst und bei Klick meldet. Der Editor
+   (`ebenen-regionen.tsx`, `editor/region-inspektor.tsx`) speichert je Klick
+   über `PUT /site-config`.
+
    **Sprache (0426).** Der Renderer rendert in der Sprache der Website
    (`lib/sprache.ts`: `?lang=` → `default_language` → erste geführte Sprache).
    Vorher stand dort ein festes `de` — eine dänische Website, deren Texte in `da`

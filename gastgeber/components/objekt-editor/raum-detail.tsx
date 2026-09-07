@@ -359,13 +359,15 @@ export function RaumDetail({
               })}
             </div>
 
-            <button
-              type="button"
-              className="mt-6 flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-destructive"
-            >
-              <Icon icon="ph:trash" className="size-4" />
-              {t("raumLoeschen")}
-            </button>
+            {/* „Raum löschen" war ein Knopf ohne Handler — und wäre auch mit
+                einem falsch: Zimmer sind kein eigener Datensatz, sie leiten sich
+                aus der Schlafzimmerzahl ab. Ein Zimmer verschwindet, indem man
+                diese Zahl senkt; hier zu löschen würde die Angaben des Objekts
+                und die Raumliste auseinanderlaufen lassen (Wurzel 1). */}
+            <p className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
+              <Icon icon="ph:info" className="size-4 shrink-0" />
+              {t("raumLoeschenHinweis")}
+            </p>
           </>
         )}
       </div>

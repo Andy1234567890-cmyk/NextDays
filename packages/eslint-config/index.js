@@ -143,6 +143,18 @@ export function nextConfig(opts = {}) {
         parserOptions: { projectService: false, project: false },
       },
     },
+    {
+      // `bun test`-Dateien (05.09.2026, `web/components/website/ebenen-baum.test.ts`).
+      // Sie sind aus der tsconfig ausgenommen, weil `bun:test` dort keine Typen
+      // hat und `tsc --noEmit` sonst an ihnen bricht — also auch hier ohne
+      // Typwissen prüfen, statt am Project-Service zu scheitern.
+      files: ["**/*.test.{ts,tsx}"],
+      ...tseslint.configs.disableTypeChecked,
+      languageOptions: {
+        globals: globals.node,
+        parserOptions: { projectService: false, project: false },
+      },
+    },
   ];
 }
 

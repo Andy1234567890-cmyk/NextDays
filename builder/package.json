@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@iconify/react": "^6.0.2",
+    "@nextdays/baukasten-stil": "workspace:*",
     "@nextdays/currency": "workspace:*",
     "@nextdays/security-headers": "workspace:*",
     "@stripe/react-stripe-js": "^6.6.0",

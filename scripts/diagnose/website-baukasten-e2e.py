@@ -200,12 +200,36 @@ BLOECKE = [
               ]}),
 ]
 form_block_id = None
+faq_block_id = None
 for typ, inhalt in BLOECKE:
     st, r = ruf("POST", f"{API}/api/v1/site-config/pages/{normal['id']}/blocks",
                 {"type": typ, "content": inhalt})
     pruefe(f"Abschnitt {typ}", st in (200, 201), f"{st} {r}")
     if typ == "form" and st in (200, 201):
         form_block_id = r["id"]
+    if typ == "faq" and st in (200, 201):
+        faq_block_id = r["id"]
+
+# --- Stil-Roundtrip (Etappe 2, 05.09.2026) --------------------------------
+# Die Framer-Abschnitte als Unterobjekte in `settings`, mit einer Mobil-
+# Ueberschreibung. Gespeichert -> zurueckgelesen -> vom Renderer als <style>
+# mit Media-Query ausgegeben. pytest sieht davon nur die Pydantic-Seite; ob
+# der Renderer das CSS wirklich schreibt, zeigt erst diese Kette.
+STIL = {
+    "stil": {"opazitaet": 0.9, "radius": {"alle": 24},
+             "grenze": {"breite": 1, "farbe": "rolle:border"}},
+    "scroll": {"anker": "e2e-anker"},
+    "je_geraet": {"mobil": {"stil": {"radius": {"alle": 8}}}},
+}
+if faq_block_id:
+    st, r = ruf("PUT", f"{API}/api/v1/site-config/blocks/{faq_block_id}", {"settings": STIL})
+    pruefe("Stil-Unterobjekte gespeichert", st == 200 and (r.get("settings") or {}).get("scroll") == {"anker": "e2e-anker"}, f"{st} {str(r)[:200]}")
+    st, r = ruf("PUT", f"{API}/api/v1/site-config/blocks/{faq_block_id}",
+                {"settings": {"stil": {"opazität": 1}}})
+    pruefe("Tippfehler im Unterobjekt -> 400", st == 400, f"{st} {r}")
+    st, r = ruf("PUT", f"{API}/api/v1/site-config/blocks/{faq_block_id}",
+                {"settings": {"je_geraet": {"desktop": {}}}})
+    pruefe("je_geraet.desktop -> 400", st == 400, f"{st} {r}")
 
 st, r = ruf("POST", f"{API}/api/v1/site-config/pages/{normal['id']}/blocks",
             {"type": "form", "content": {"fields": [
@@ -338,6 +362,19 @@ for pfad, name, muss in (
 
 st, body = ruf("GET", REN + "/gibt-es-diese-seite-nicht", auth=False, roh=True)
 pruefe("Renderer 404-Seite", st == 404, f"HTTP {st}")
+
+# Der Stil-Roundtrip im gerenderten HTML: Grundregel, Mobil-Unterschied, Anker.
+st, body = ruf("GET", REN + f"/{PRAEFIX}seite", auth=False, roh=True)
+body = body or ""
+for name, muss in (
+    ("Renderer: Radius Desktop", "border-radius:24px"),
+    ("Renderer: Grenze aus Farbrolle", "border:1px solid var(--border)"),
+    ("Renderer: Mobil-Ueberschreibung als Media-Query", "@media (max-width:767px)"),
+    ("Renderer: Mobil-Radius", "border-radius:8px"),
+    ("Renderer: Scroll-Anker als id", 'id="e2e-anker"'),
+):
+    pruefe(name, st == 200 and muss in body, f"HTTP {st}; fehlt: {muss}")
+pruefe("Renderer: kein Tablet-Block ohne Tablet-Werte", "@media (max-width:1023px)" not in body)
 
 # === 10) Kein 500 auf irgendeinem Lesepfad des Slice ======================
 # Der Fund, der diesen Abschnitt ausgeloest hat: `seo/pruefung` warf 500, weil

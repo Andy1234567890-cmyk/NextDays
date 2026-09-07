@@ -8,7 +8,6 @@ import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
 
 // Obere Gruppe (persönlich/sicherheit) und untere Gruppe (geschäftlich) —
 // getrennt durch eine Linie, wie bei Airbnb. `badge` = „Neu"-Chip.
@@ -32,7 +31,6 @@ export function KontoNav() {
   const t = useTranslations("konto");
   const params = useSearchParams();
   const aktiv = params.get("bereich") ?? "persoenlich";
-  const [bannerZu, setBannerZu] = useState(false);
 
   function Eintrag(item: {
     key: string;
@@ -62,41 +60,17 @@ export function KontoNav() {
     );
   }
 
+  // Die „E-Mail bestätigen"-Karte stand hier OHNE Bedingung: sie behauptete
+  // jedem Nutzer gegenüber, seine Adresse sei unbestätigt — auch wenn sie
+  // es längst war —, und ihr Knopf hatte keinen Handler. Beides lässt sich
+  // derzeit nicht ehrlich bauen: `/auth/me` liefert keinen Bestätigungs-
+  // status, und einen Endpunkt zum erneuten Versand gibt es nur für
+  // Einladungen (/invite/USER-ID/resend), nicht für die eigene Adresse.
+  // Eine falsche Aussage plus toter Knopf ist schlechter als nichts —
+  // zurück kommt die Karte, sobald Status und Endpunkt stehen.
   return (
     <div className="space-y-5">
-      {/* „E-Mail bestätigen"-Karte */}
-      {!bannerZu && (
-        <div className="rounded-2xl bg-muted/50 p-4">
-          <div className="flex items-start gap-3">
-            <Icon
-              icon="solar:letter-line-duotone"
-              className="mt-0.5 size-5 shrink-0 text-foreground"
-            />
-            <div className="min-w-0 flex-1">
-              <p className="text-[0.9375rem] font-semibold leading-snug">
-                {t("emailBestaetigenTitel")}
-              </p>
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                {t("emailBestaetigenText")}
-              </p>
-            </div>
-            <button
-              type="button"
-              aria-label={t("abbrechen")}
-              onClick={() => setBannerZu(true)}
-              className="shrink-0 text-muted-foreground hover:text-foreground"
-            >
-              <Icon icon="ph:x" className="size-4" />
-            </button>
-          </div>
-          <button
-            type="button"
-            className="mt-3 w-full rounded-xl bg-background py-2.5 text-sm font-semibold shadow-sm ring-1 ring-border transition-colors hover:bg-muted"
-          >
-            {t("emailBestaetigen")}
-          </button>
-        </div>
-      )}
+
 
       <nav className="space-y-1">
         {OBEN.map(Eintrag)}

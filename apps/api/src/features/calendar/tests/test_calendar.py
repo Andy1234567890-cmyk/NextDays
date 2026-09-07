@@ -309,7 +309,12 @@ def test_block_rejects_when_booked() -> None:
 
 
 def test_block_open_days_upserts() -> None:
-    svc, store = _service(properties=[{"id": "p1"}])
+    # Ein Objekt OHNE Preisplan hat keinen Ort für den Mindestaufenthalt —
+    # der Service weist das seit dem 06.09.2026 mit 422 ab (Wurzel 5).
+    svc, store = _service(
+        properties=[{"id": "p1"}],
+        rate_plans=[{"id": "rp1", "property_id": "p1", "min_stay": 1}],
+    )
     req = BlockRequest(
         property_id="p1",
         range=DateRange(start=date(2026, 5, 1), end=date(2026, 5, 4)),
@@ -731,7 +736,12 @@ def test_bulk_edit_applies_price_and_block_across_properties() -> None:
 def test_bulk_edit_min_stay_updates_rate_plans() -> None:
     from src.features.calendar.schemas import BulkEditRequest
 
-    svc, store = _service(properties=[{"id": "p1"}])
+    # Mit Preisplan — ohne ihn weist der Service seit dem 06.09.2026 ab (422),
+    # weil `rate_plans.min_stay` sonst ins Leere liefe (Wurzel 5).
+    svc, store = _service(
+        properties=[{"id": "p1"}],
+        rate_plans=[{"id": "rp1", "property_id": "p1", "min_stay": 1}],
+    )
     svc.bulk_edit(
         "t1",
         BulkEditRequest(
@@ -755,7 +765,10 @@ def test_bulk_edit_combined_action_is_single_channex_push(monkeypatch) -> None:
         cal_service, "try_enqueue_ari",
         lambda _db, _tenant, _pid, kind, fields: calls.append((kind, fields)),
     )
-    svc, _ = _service(properties=[{"id": "p1", "tenant_id": "t1"}])
+    svc, _ = _service(
+        properties=[{"id": "p1", "tenant_id": "t1"}],
+        rate_plans=[{"id": "rp1", "property_id": "p1", "min_stay": 1}],
+    )
     svc.bulk_edit(
         "t1",
         BulkEditRequest(
@@ -786,7 +799,10 @@ def test_bulk_edit_price_plus_minstay_without_ctactd_single_push(
         cal_service, "try_enqueue_ari",
         lambda _db, _tenant, _pid, kind, fields: calls.append((kind, fields)),
     )
-    svc, _ = _service(properties=[{"id": "p1", "tenant_id": "t1"}])
+    svc, _ = _service(
+        properties=[{"id": "p1", "tenant_id": "t1"}],
+        rate_plans=[{"id": "rp1", "property_id": "p1", "min_stay": 1}],
+    )
     svc.bulk_edit(
         "t1",
         BulkEditRequest(
@@ -1495,3 +1511,118 @@ def test_bulk_restrictions_plan_cta_max_go_to_override_table() -> None:
     assert upserts["rate_plan_restriction_overrides"][0]["max_stay"] == 4
     # NICHT objekt-weit in availability gespiegelt.
     assert "availability" not in upserts
+
+
+def test_bulk_edit_min_stay_ohne_preisplan_ist_422() -> None:
+    """Ohne Preisplan hat der Mindestaufenthalt keinen Ort — das MUSS auffallen.
+
+    Vorher lief das `update` auf `rate_plans` ins Leere und der Kalender meldete
+    „Gespeichert", während nichts gespeichert war (live am 06.09.2026 an einem
+    Entwurfs-Objekt). Ein stiller No-Op ist derselbe Fehler wie ein
+    verschluckter Exception (Wurzel 5).
+    """
+    from src.features.calendar.schemas import BulkEditRequest
+
+    svc, _ = _service(properties=[{"id": "p1", "tenant_id": "t1"}])
+    with pytest.raises(CalendarError) as exc:
+        svc.bulk_edit(
+            "t1",
+            BulkEditRequest(
+                property_ids=["p1"],
+                range=DateRange(start=date(2026, 9, 8), end=date(2026, 9, 10)),
+                min_stay=3,
+            ),
+        )
+    assert exc.value.status_code == 422
+
+
+# --- Regelsatz (0572): Aufenthaltsregeln je Tag ----------------------------
+
+def test_regelsatz_materialisiert_wochentage_je_tag() -> None:
+    """Die Wochentag-Sperre wird zum TAG ausgerechnet, nicht als Wochentag abgelegt.
+
+    Der Regelsatz sagt „montags keine Anreise"; in der Tageszeile steht
+    `closed_to_arrival` genau an den Montagen. Ohne diese Umrechnung müsste
+    jeder Leser (Kalender, Channex-Push, Buchungsstrecke) sie selbst machen —
+    dreimal dieselbe Regel, dreimal eine Gelegenheit, sie anders zu machen.
+    """
+    svc, store = _service(properties=[{"id": "p1", "tenant_id": "t1"}])
+    saison = {
+        "id": "s1", "property_id": "p1", "min_stay": 7, "max_stay": 21,
+        "closed_arrival_weekdays": [0], "closed_departure_weekdays": [6],
+    }
+    svc._materialize_regeln(  # noqa: SLF001 — Materialisierung ist der Prüfpunkt
+        saison, date(2026, 10, 5), date(2026, 10, 12)
+    )
+    zeilen = store.get("availability", [])
+    assert zeilen, "es wurden keine Tageszeilen geschrieben"
+    je_datum = {z["date"]: z for z in zeilen}
+    # 5.10.2026 ist ein Montag, 11.10. ein Sonntag.
+    assert je_datum["2026-10-05"]["closed_to_arrival"] is True
+    assert je_datum["2026-10-06"]["closed_to_arrival"] is False
+    assert je_datum["2026-10-11"]["closed_to_departure"] is True
+    assert je_datum["2026-10-05"]["min_stay"] == 7
+    assert je_datum["2026-10-05"]["max_stay"] == 21
+
+
+def test_regelsatz_min_stay_je_anreisetag() -> None:
+    """Der Wochentagswert schlägt den allgemeinen Mindestaufenthalt (0576).
+
+    Ein Haus verlangt samstags sieben Nächte und sonst drei. Ohne die Regel je
+    Anreisetag musste einer der beiden Werte für alle Tage gelten — und die
+    Portale bekamen für fünf Tage der Woche eine Zahl, die der Betrieb nie
+    gesetzt hat (Wurzel 4).
+    """
+    svc, store = _service(properties=[{"id": "p1", "tenant_id": "t1"}])
+    saison = {
+        "id": "s1", "property_id": "p1", "min_stay": 3, "max_stay": None,
+        "closed_arrival_weekdays": [], "closed_departure_weekdays": [],
+        # Schlüssel kommen aus jsonb als Zeichenketten — genau so wie hier.
+        "min_stay_by_weekday": {"5": 7},
+    }
+    svc._materialize_regeln(  # noqa: SLF001 — Materialisierung ist der Prüfpunkt
+        saison, date(2026, 10, 5), date(2026, 10, 12)
+    )
+    je_datum = {z["date"]: z for z in store.get("availability", [])}
+    # 10.10.2026 ist ein Samstag.
+    assert je_datum["2026-10-10"]["min_stay"] == 7
+    # Alle anderen Tage behalten den allgemeinen Wert — nicht 0, nicht None.
+    assert je_datum["2026-10-05"]["min_stay"] == 3
+    assert je_datum["2026-10-11"]["min_stay"] == 3
+
+
+def test_regelsatz_ohne_wochentagsregel_bleibt_beim_allgemeinen_wert() -> None:
+    """Ein leeres `min_stay_by_weekday` ändert nichts (Bestand aus 0572)."""
+    svc, store = _service(properties=[{"id": "p1", "tenant_id": "t1"}])
+    svc._materialize_regeln(  # noqa: SLF001 — Materialisierung ist der Prüfpunkt
+        {
+            "id": "s1", "property_id": "p1", "min_stay": 4, "max_stay": None,
+            "closed_arrival_weekdays": [], "closed_departure_weekdays": [],
+        },
+        date(2026, 10, 5), date(2026, 10, 8),
+    )
+    assert all(
+        z["min_stay"] == 4 for z in store.get("availability", [])
+    )
+
+
+def test_tagesregel_schlaegt_objektregel() -> None:
+    """Der Mindestaufenthalt der Nacht gewinnt gegen den des Rate-Plans.
+
+    Ohne diesen Vorrang wäre die Saison-Regel unsichtbar: der Kalender zeigte
+    weiter den objektweiten Wert und behauptete damit etwas anderes, als für
+    die Buchung gilt.
+    """
+    tage = CalendarService._build_days(  # noqa: SLF001 — reine Abbildung
+        DateRange(start=date(2026, 10, 5), end=date(2026, 10, 7)),
+        [
+            {"date": "2026-10-05", "status": "open", "source": "manual",
+             "min_stay": 7, "max_stay": 21,
+             "closed_to_arrival": False, "closed_to_departure": False},
+        ],
+        {},
+        2,
+    )
+    assert tage[0].min_stay == 7   # Tageswert
+    assert tage[0].max_stay == 21
+    assert tage[1].min_stay == 2   # ohne Tageszeile der Objektwert

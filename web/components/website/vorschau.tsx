@@ -16,7 +16,7 @@
 // die häufigste Ursache für „sieht auf dem Handy kaputt aus".
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
-import type { ReactNode, RefObject } from "react";
+import type { CSSProperties, ReactNode, RefObject } from "react";
 
 export type Geraet = "desktop" | "tablet" | "mobil";
 
@@ -32,6 +32,21 @@ export const GERAET_BREITE: Record<Geraet, string> = {
   tablet: "51.25rem",
   mobil: "24.375rem",
 };
+
+/** Breite des iframe-Rahmens je Gerät.
+ *
+ *  Desktop bekommt eine MINDESTBREITE von 64 rem (1024 px, die `lg`-Grenze des
+ *  Renderers). Ohne sie rutschte die Bühne auf einem schmalen Fenster — Panel
+ *  links, Inspektor rechts — unter 1024 px, und der Renderer zeigte den
+ *  TABLET-Zustand, während der Umschalter „Desktop" sagte (Befund 25,
+ *  05.09.2026). Lieber ein waagerechter Scrollbalken als eine Vorschau, die
+ *  ein anderes Gerät zeigt als beschriftet. */
+export function buehnenStil(geraet: Geraet): CSSProperties {
+  return {
+    width: GERAET_BREITE[geraet],
+    minWidth: geraet === "desktop" ? "64rem" : undefined,
+  };
+}
 
 /** Symbol je Gerät — dieselbe Reihenfolge wie im Umschalter, von breit nach
  *  schmal. Als eigene Karte, damit „welches Symbol steht für Tablet" an EINER
@@ -158,7 +173,7 @@ export function VorschauFlaeche({
       ) : null}
 
       {/* Bühne */}
-      <div className="flex min-h-0 flex-1 justify-center overflow-hidden p-3">
+      <div className="flex min-h-0 flex-1 justify-center overflow-x-auto overflow-y-hidden p-3">
         <Inhalt
           geraet={geraet}
           pageId={pageId}
@@ -217,7 +232,7 @@ function Inhalt({
   // Entwurfs-Token, und die Prüfungen darunter würden sie fälschlich abweisen.
   if (fremdeUrl) {
     return (
-      <div className="relative h-full" style={{ width: GERAET_BREITE[geraet] }}>
+      <div className="relative h-full" style={buehnenStil(geraet)}>
         <iframe
           ref={iframeRef}
           src={fremdeUrl}
@@ -278,7 +293,7 @@ function Inhalt({
   // wäre sie in der Mobilansicht um den halben Rand daneben, weil die Bühne
   // zentriert und der iframe dann nur 390 px breit ist.
   return (
-    <div className="relative h-full" style={{ width: GERAET_BREITE[geraet] }}>
+    <div className="relative h-full" style={buehnenStil(geraet)}>
       <iframe
         ref={iframeRef}
         src={url}

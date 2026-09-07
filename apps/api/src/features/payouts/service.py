@@ -719,6 +719,7 @@ class PayoutsService:
                 eintrag["offen"] += betrag
             eintrag["anzahl"] += 1
 
+        angaben = self._buchungsangaben(tenant_id, zeilen)
         return PayoutOverview(
             settings=self.settings(ctx),
             summary=[
@@ -730,9 +731,64 @@ class PayoutsService:
                 )
                 for cur, v in sorted(je_waehrung.items())
             ],
-            recent=[PayoutRow(**z) for z in zeilen],
+            recent=[
+                PayoutRow(**z, **angaben.get(str(z["reservation_id"]), {}))
+                for z in zeilen
+            ],
             adjustments=[PayoutAdjustmentRow(**p) for p in posten],
         )
+
+    def _buchungsangaben(
+        self, tenant_id: str, zeilen: list[dict]
+    ) -> dict[str, dict]:
+        """reservation_id → Objekt, Gast, Zeitraum, Kanal — für lesbare Zeilen.
+
+        Drei gescopte Abfragen (Wurzel 3: tenant_id an jeder), keine Joins über
+        PostgREST-Embeds, damit die Fake-DB der Tests dieselbe Form sieht.
+        Einmal je Übersicht gerechnet, nicht je Zeile.
+        """
+        ids = sorted({str(z["reservation_id"]) for z in zeilen if z.get("reservation_id")})
+        ergebnis: dict[str, dict] = {}
+        if ids:
+            buchungen = (
+                self._db.table("reservations")
+                .select("id, property_id, guest_id, check_in, check_out, channel, ota_name")
+                .eq("tenant_id", tenant_id)
+                .in_("id", ids)
+                .execute()
+            ).data or []
+            prop_ids = sorted({str(b["property_id"]) for b in buchungen if b.get("property_id")})
+            gast_ids = sorted({str(b["guest_id"]) for b in buchungen if b.get("guest_id")})
+            titel = {
+                str(r["id"]): r.get("title")
+                for r in (
+                    self._db.table("properties")
+                    .select("id, title")
+                    .eq("tenant_id", tenant_id)
+                    .in_("id", prop_ids)
+                    .execute()
+                ).data or []
+            } if prop_ids else {}
+            namen = {
+                str(r["id"]): r.get("name")
+                for r in (
+                    self._db.table("guests")
+                    .select("id, name")
+                    .eq("tenant_id", tenant_id)
+                    .in_("id", gast_ids)
+                    .execute()
+                ).data or []
+            } if gast_ids else {}
+            for b in buchungen:
+                ergebnis[str(b["id"])] = {
+                    "property_title": titel.get(str(b.get("property_id"))),
+                    "guest_name": namen.get(str(b.get("guest_id"))),
+                    "check_in": b.get("check_in"),
+                    "check_out": b.get("check_out"),
+                    "channel": b.get("channel"),
+                    "ota_name": b.get("ota_name"),
+                }
+        return ergebnis
 
 
 class _Uebersprungen(Exception):

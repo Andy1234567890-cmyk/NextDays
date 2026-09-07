@@ -38,22 +38,17 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
 import {
-  istDynamisch,
   LAYOUT_BAUSTEINE,
   type LayoutBaustein,
 } from "../abschnitte";
 import type { Geraet } from "../vorschau";
 import {
-  AusblendenKnopf,
   type FlaechenZeile,
   Kontextmenue,
   type MenuOrt,
-  MenuKnopf,
-  MenuZeile,
-  SymbolKnopf,
-  TextKnopf,
-  useName,
 } from "./flaechen-teile";
+import { darstellungFuer } from "@nextdays/baukasten-stil";
+
 import { versteckteGeraete } from "./sichtbarkeit";
 
 /** Ein gemeldetes Rechteck, so wie die Brücke es schickt. */
@@ -81,6 +76,18 @@ export function FlaechenOverlay({
   zeilen,
   rechtecke,
   aktiv,
+  containerId = null,
+  regionRect = null,
+  elternRect = null,
+  teilRect = null,
+  auswahlSettings = null,
+  kinderRects = [],
+  onMass,
+  onAbstand,
+  onPadding,
+  onElternteil,
+  flaechenZug = null,
+  onFlaechenZug,
   ueberfahren,
   zeiger,
   menu,
@@ -93,7 +100,6 @@ export function FlaechenOverlay({
   onInhalt,
   onDesign,
   onDuplizieren,
-  onEinfuegenNach,
   onEinfuegenAn,
   onLayoutEinfuegen,
   onVerschiebe,
@@ -106,6 +112,49 @@ export function FlaechenOverlay({
    *  geratene Stellen zu legen (Wurzel 4). */
   rechtecke: Map<number, Rechteck>;
   aktiv: string | null;
+  /** Der gewählte CONTAINER (Abschnitt, Spalte). Er bekommt seit 05.09.2026
+   *  einen eigenen Rahmen — vorher blieb die Fläche bei Container-Auswahl
+   *  leer (Befund 6), obwohl die Brücke sein Rechteck mit meldete. */
+  containerId?: string | null;
+  /** Rechteck der gewählten Kopf-/Fußzeilen-Ebene (0570) — sie hat keinen
+   *  Block-Index, ihr Rahmen kommt deshalb fertig gemessen herein. */
+  regionRect?: Pick<Rechteck, "top" | "left" | "width" | "height"> | null;
+  /** Rechteck des gewählten TEILS eines Bausteins (Überschrift, Absatz, Bild —
+   *  06.09.2026). Ist eines gewählt, trägt ES die Kante und die Griffe: es ist
+   *  die Auswahl, der Baustein darum nur ihr Rahmen. */
+  teilRect?: Pick<Rechteck, "top" | "left" | "width" | "height"> | null;
+  /** Rechteck des ELTERNTEILS der Auswahl — Framer zeichnet ihn gestrichelt
+   *  daneben, damit man sieht, worin man arbeitet (gemessen 06.09.2026). */
+  elternRect?: Pick<Rechteck, "top" | "left" | "width" | "height"> | null;
+  /** Die Darstellung des gewählten Elements. Aus ihr entscheidet sich, WELCHE
+   *  Griffe es gibt: eine Achse auf „Inhalt" wird gemessen, nicht gesetzt —
+   *  ein Griff daran wäre ein Versprechen, das die Zeile im Panel nicht
+   *  einlöst (Wurzel 4). */
+  auswahlSettings?: Record<string, unknown> | null;
+  /** Die Rechtecke der direkten KINDER des gewählten Containers — für die
+   *  Abstandsmarker zwischen ihnen (Framers magenta Striche). */
+  kinderRects?: readonly Pick<Rechteck, "top" | "left" | "width" | "height">[];
+  /** Ein Griff wurde gezogen: die Achse bekommt ein festes Maß in Pixeln.
+   *  `fertig` = die Maus ist los (erst dann wird gespeichert; währenddessen
+   *  zeigt die Vorschau den Wert schon über den Live-Stil). */
+  onMass?: (achse: "breite" | "hoehe", px: number, fertig: boolean) => void;
+  /** Der Abstand zwischen den Kindern wurde gezogen (Framers Gap-Marker). */
+  onAbstand?: (px: number, fertig: boolean) => void;
+  /** Ein Innenabstand wurde an seiner Kante gezogen (Framers Padding-Marker). */
+  onPadding?: (
+    seite: "top" | "right" | "bottom" | "left",
+    px: number,
+    fertig: boolean,
+  ) => void;
+  /** ⎋: eine Ebene nach oben (Framers „Select Parent"). Liefert `true`, wenn
+   *  es einen Elternteil GAB — sonst hebt die Fläche die Auswahl auf. */
+  onElternteil?: () => boolean;
+  /** Ein laufender Ziehvorgang auf der Fläche (06.09.2026): welcher Baustein
+   *  und wo steht der Zeiger. `fertig` = die Maus ist los. */
+  flaechenZug?: { key: string; x: number; y: number; fertig?: boolean } | null;
+  /** Der Zug ist zu Ende: den Baustein an diese Stelle setzen (`null` = an
+   *  derselben Stelle lassen), und die Geste abräumen. */
+  onFlaechenZug?: (key: string, stelle: number | null) => void;
   /** Index des überfahrenen Abschnitts, oder `null`. */
   ueberfahren: number | null;
   /** Zeigerposition im iframe, oder `null`, wenn er die Fläche verlassen hat. */
@@ -132,7 +181,6 @@ export function FlaechenOverlay({
   onInhalt: (key: string) => void;
   onDesign: (key: string) => void;
   onDuplizieren: (key: string) => void;
-  onEinfuegenNach: (key: string) => void;
   /** Neuen Abschnitt an POSITION einfügen (0 = ganz oben). Getrennt von
    *  `onEinfuegenNach`, weil die Naht über dem ERSTEN Abschnitt keinen
    *  Vorgänger hat, den man „danach" nennen könnte. */
@@ -144,7 +192,6 @@ export function FlaechenOverlay({
   onEntferne: (key: string) => void;
   onVersteckt: (key: string, geraete: Geraet[]) => void;
 }) {
-  const [ausblendenOffen, setAusblendenOffen] = useState(false);
 
   // FLACKERN, und warum es entsteht.
   //
@@ -198,6 +245,14 @@ export function FlaechenOverlay({
     ueberfahren != null && ueberfahren !== aktivRendererIndex
       ? rechtecke.get(ueberfahren)
       : undefined;
+  // Rechteck des gewählten Containers — über die ID, nie über den Index.
+  const containerRect = containerId
+    ? [...rechtecke.values()].find((r) => r.id === containerId)
+    : undefined;
+  /** Das Rechteck der AUSWAHL, gleich welcher Art. Griffe und Maße hängen
+   *  daran; eine Regions-Ebene (Kopf-/Fußzeile) hat keine eigenen Settings und
+   *  bekommt deshalb keine. */
+  const auswahlRect = teilRect ?? aktivRect ?? containerRect ?? null;
   // WELCHE NAHT das „+" bekommt.
   //
   // Zwei Wege, und beide braucht man:
@@ -243,21 +298,42 @@ export function FlaechenOverlay({
     }
   }
 
-  // Escape schließt das Kontextmenü. Der Klick daneben und das Scrollen sind
-  // drüben abgedeckt: ein Klick ins iframe meldet `select`, ein Scrollen neue
-  // Rechtecke — beides räumt das Menü im Aufrufer ab.
+  // ESCAPE — im Vorbild „Select Parent" (gemessen 06.09.2026: Text → Stack →
+  // Abschnitt → Breakpoint, und das Panel folgt jedes Mal mit).
+  //
+  // Drei Stufen, in dieser Reihenfolge:
+  //   1. ein offenes Kontextmenü schließen (der Weg zurück aus einem
+  //      Fehlklick, ohne die Auswahl zu verlieren),
+  //   2. eine Ebene nach OBEN — das ist der Weg, den man auf der Fläche
+  //      braucht: klicken trifft immer das Innerste, und der Rahmen darum ist
+  //      genau eine Taste entfernt,
+  //   3. erst wenn es keinen Elternteil mehr gibt, die Auswahl aufheben.
+  //
+  // Vorher hob Escape sofort alles auf. Wer den Abschnitt um einen Text
+  // wählen wollte, musste ihn über den Ebenen-Baum suchen.
   useEffect(() => {
     function aufTaste(e: KeyboardEvent) {
       if (e.key !== "Escape") return;
-      // Erst das Menü, dann die Auswahl. Zwei Ebenen, zwei Druck auf Escape —
-      // beides auf einmal zu schließen nimmt den Weg zurück, wenn man das Menü
-      // nur versehentlich geöffnet hat.
-      if (menu) onMenu(null);
-      else onWaehle(null);
+      const ziel = e.target as HTMLElement | null;
+      // In einem Feld gehört Escape dem Feld.
+      if (
+        ziel &&
+        (ziel.tagName === "INPUT" ||
+          ziel.tagName === "TEXTAREA" ||
+          ziel.isContentEditable)
+      ) {
+        return;
+      }
+      if (menu) {
+        onMenu(null);
+        return;
+      }
+      if (onElternteil?.()) return;
+      onWaehle(null);
     }
     window.addEventListener("keydown", aufTaste);
     return () => window.removeEventListener("keydown", aufTaste);
-  }, [menu, onMenu, onWaehle]);
+  }, [menu, onMenu, onWaehle, onElternteil]);
 
   // --- Ziehen und Abwerfen ------------------------------------------------
   //
@@ -307,6 +383,22 @@ export function FlaechenOverlay({
     }
     return n;
   }
+
+  // ZIEHEN AUF DER FLÄCHE: die Einfügestelle unter dem Zeiger, und beim
+  // Loslassen die Umsortierung. Gerechnet wird geometrisch (`editorStelle`) —
+  // dieselbe Regel wie beim Abwurf aus dem Katalog, und aus demselben Grund:
+  // die Rechtecke des Renderers zählen anders als die Liste des Editors.
+  const zugStelle =
+    flaechenZug && !flaechenZug.fertig ? editorStelle(flaechenZug.y) : null;
+  useEffect(() => {
+    if (!flaechenZug?.fertig || !onFlaechenZug) return;
+    onFlaechenZug(flaechenZug.key, editorStelle(flaechenZug.y));
+    // `editorStelle` liest die Rechtecke des laufenden Renders; sie stehen
+    // beim Abwurf fest, und ein erneuter Lauf würde nur denselben Wert
+    // liefern.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flaechenZug?.fertig]);
+
 
   /** Die innerste SPALTE unter dem Zeiger — gleich ob leer oder gefüllt.
    *
@@ -427,6 +519,29 @@ export function FlaechenOverlay({
         />
       ) : null}
 
+      {/* Die Einfügelinie beim Ziehen AUF DER FLÄCHE (06.09.2026). Sie sitzt
+          an der Naht, an der der Baustein landen würde — dieselbe Rückmeldung
+          wie beim Abwurf aus dem Katalog, nur dass hier ein vorhandener
+          Baustein umzieht. */}
+      {zugStelle != null && flaechenZug
+        ? (() => {
+            const kante = bausteinRechtecke[zugStelle - 1];
+            const naechstes = bausteinRechtecke[zugStelle];
+            const y = kante
+              ? kante.top + kante.height
+              : (naechstes?.top ?? 0);
+            const links = kante?.left ?? naechstes?.left ?? 0;
+            const breite = kante?.width ?? naechstes?.width ?? 0;
+            return (
+              <div
+                aria-hidden
+                style={{ top: `${y}px`, left: `${links}px`, width: `${breite}px` }}
+                className="pointer-events-none absolute h-0.5 -translate-y-1/2 rounded-full bg-[#0099ff]"
+              />
+            );
+          })()
+        : null}
+
       {/* Der blaue Einfüge-Balken. Er ist die einzige Rückmeldung während des
           Ziehens — ohne ihn wirft man ins Ungewisse und sieht erst danach, wo
           der Abschnitt gelandet ist. */}
@@ -439,36 +554,95 @@ export function FlaechenOverlay({
           <div className="h-1 w-full rounded-full bg-blue-500" />
         </div>
       ) : null}
-      {/* Rahmen unter dem Zeiger — ORANGE und durchgezogen.
-          Im Vorbild sind Überfahren und Auswahl zwei verschiedene FARBEN, nicht
-          zwei Stärken derselben: orange heißt „das würdest du treffen", blau
-          heißt „das hast du". Vorher waren beide blau und unterschieden sich
-          nur durch gestrichelt/durchgezogen — beim Überfahren einer Liste sieht
-          das aus wie ein Flackern desselben Zustands. */}
+      {/* Rahmen unter dem Zeiger — 1 px in der Akzentfarbe, ohne Füllung.
+          Am 06.09.2026 im Vorbild nachgemessen: Framer benutzt für Überfahren
+          UND Auswahl dieselbe Farbe und unterscheidet sie über die Kante —
+          hauchdünn beim Überfahren, voll bei der Auswahl (dort kommen die
+          Griffe dazu). Vorher stand hier ein oranger 2-px-Rahmen mit Füllung;
+          das war gut gemeint („zwei Zustände, zwei Farben"), sah beim Fahren
+          über eine Liste aber aus wie eine Warnung an jedem Abschnitt. */}
       {hoverRect ? (
         <div
           aria-hidden
           style={rahmenStil(hoverRect)}
-          className="absolute border-2 border-orange-500 bg-orange-500/5"
+          className="pointer-events-none absolute outline outline-1 outline-[#0099ff]/60"
         />
       ) : null}
 
-      {aktivRect && aktivIndex >= 0 ? (
+      {/* Der ELTERNTEIL der Auswahl — gestrichelt, ohne Füllung. Framer zeigt
+          ihn mit, sobald ein Kind gewählt ist: man sieht, worin man steckt,
+          bevor man ⎋ drückt (gemessen 06.09.2026). */}
+      {elternRect ? (
+        <div
+          aria-hidden
+          style={rahmenStil(elternRect)}
+          className="pointer-events-none absolute border border-dashed border-[#0099ff]/50"
+        />
+      ) : null}
+
+      {/* Der gewählte CONTAINER. Durchgezogen, 1 px, Akzentfarbe — dieselbe
+          Kante wie bei einem Baustein: „ausgewählt" ist EIN Zustand, und zwei
+          Stricharten dafür sähen aus wie zwei verschiedene Dinge. */}
+      {containerRect ? (
+        <div
+          aria-hidden
+          style={rahmenStil(containerRect)}
+          className="pointer-events-none absolute outline outline-1 outline-[#0099ff]"
+        />
+      ) : null}
+      {regionRect ? (
+        <div
+          aria-hidden
+          style={rahmenStil(regionRect)}
+          className="pointer-events-none absolute outline outline-1 outline-[#0099ff]"
+        />
+      ) : null}
+
+      {/* Ist ein TEIL gewählt, trägt der Baustein darum nur noch die
+          gestrichelte Elternkontur — wie in Framer, wo der Stack um den
+          gewählten Text gestrichelt erscheint. */}
+      {teilRect && aktivRect ? (
+        <div
+          aria-hidden
+          style={rahmenStil(aktivRect)}
+          className="pointer-events-none absolute border border-dashed border-[#0099ff]/50"
+        />
+      ) : null}
+      {teilRect ? (
+        <div
+          aria-hidden
+          style={rahmenStil(teilRect)}
+          className="pointer-events-none absolute outline outline-1 outline-[#0099ff]"
+        />
+      ) : null}
+
+      {aktivRect && aktivIndex >= 0 && !teilRect ? (
         <AktiverRahmen
           rect={aktivRect}
           zeile={zeilen[aktivIndex]!}
-          index={aktivIndex}
-          gesamt={zeilen.length}
           geraet={geraet}
-          ausblendenOffen={ausblendenOffen}
-          onAusblendenOffen={setAusblendenOffen}
-          onInhalt={onInhalt}
-          onDesign={onDesign}
-          onDuplizieren={onDuplizieren}
-          onEinfuegenNach={onEinfuegenNach}
-          onVerschiebe={onVerschiebe}
-          onEntferne={onEntferne}
           onVersteckt={onVersteckt}
+        />
+      ) : null}
+
+      {/* GRIFFE und ABSTANDSMARKER an der Auswahl — gleich, ob Baustein oder
+          Container. Sie stehen NACH den Rahmen, damit sie darüber liegen. */}
+      {auswahlRect && auswahlSettings ? (
+        <Griffe
+          rect={auswahlRect}
+          settings={auswahlSettings}
+          geraet={geraet}
+          onMass={onMass}
+        />
+      ) : null}
+      {containerRect && auswahlSettings ? (
+        <AbstandsMarker
+          rect={containerRect}
+          kinder={kinderRects}
+          settings={auswahlSettings}
+          geraet={geraet}
+          onAbstand={onAbstand}
+          onPadding={onPadding}
         />
       ) : null}
 
@@ -526,125 +700,70 @@ export function FlaechenOverlay({
       {/* Nichts ausgewählt und nichts gemeldet: ein Hinweis, dass die Fläche
           bedienbar IST. Ohne ihn sieht eine frisch geöffnete Seite aus wie eine
           reine Vorschau, und niemand probiert den Klick. */}
-      {rechtecke.size === 0 || aktivRect || hoverRect ? null : <Anstupser />}
+      {rechtecke.size === 0 || aktivRect || hoverRect || containerRect ? null : (
+        <Anstupser />
+      )}
     </div>
   );
 }
 
-/** Der ausgewählte Abschnitt: Rahmen, Etikett und die schwebende Leiste. */
+/**
+ * Der ausgewählte Baustein auf der Fläche — und zwar NUR das.
+ *
+ * WAS HIER AM 06.09.2026 VERSCHWUNDEN IST, UND WARUM
+ * Hier standen ein Namensetikett („› Titelbild") und eine schwebende Leiste
+ * mit sechs Knöpfen (Verschieben, Inhalt, Design, Einfügen, Duplizieren,
+ * Ausblenden, Löschen). Das war aus Hostaway übernommen und hat die Fläche
+ * beherrscht: die Leiste lag über der Kopfzeile der Kundenseite, das Etikett
+ * über deren erstem Abschnitt, und beides bewegte sich bei jeder Auswahl.
+ *
+ * Framers Fläche ist RUHIG (heute live nachgesehen): eine Kante, die Griffe,
+ * beim Ziehen ein Maß — mehr nicht. Jede Aktion hat dort ihren eigenen Ort,
+ * und zwar denselben wie bei uns:
+ *   · Inhalt bearbeiten → Doppelklick auf den Baustein (wie im Vorbild) oder
+ *     „Inhalt" im Kontextmenü,
+ *   · Design → das Panel rechts, das ohnehin offen ist,
+ *   · Duplizieren · Löschen · Ausblenden · Verschieben → Rechtsklick und der
+ *     Ebenen-Baum, beide mit denselben Kürzeln wie im Vorbild,
+ *   · darunter einfügen → das „+" an der Naht.
+ * Es geht also nichts verloren; es steht nur nicht mehr alles gleichzeitig
+ * auf der Seite des Kunden.
+ *
+ * Geblieben ist der orange Hinweis „auf diesem Gerät ausgeblendet". Er ist
+ * keine Zierde, sondern die einzige Stelle, an der ein Zustand sichtbar wird,
+ * den man auf der Fläche sonst nicht sieht — und er trägt den Weg zurück.
+ */
 function AktiverRahmen({
   rect,
   zeile,
-  index,
-  gesamt,
   geraet,
-  ausblendenOffen,
-  onAusblendenOffen,
-  onInhalt,
-  onDesign,
-  onDuplizieren,
-  onEinfuegenNach,
-  onVerschiebe,
-  onEntferne,
   onVersteckt,
 }: {
   rect: Rechteck;
   zeile: FlaechenZeile;
-  index: number;
-  gesamt: number;
   geraet: Geraet;
-  ausblendenOffen: boolean;
-  onAusblendenOffen: (offen: boolean) => void;
-  onInhalt: (key: string) => void;
-  onDesign: (key: string) => void;
-  onDuplizieren: (key: string) => void;
-  onEinfuegenNach: (key: string) => void;
-  onVerschiebe: (key: string, richtung: -1 | 1) => void;
-  onEntferne: (key: string) => void;
   onVersteckt: (key: string, geraete: Geraet[]) => void;
 }) {
   const t = useTranslations("website");
-  const name = useName();
-  const [verschiebenOffen, setVerschiebenOffen] = useState(false);
   const versteckt = versteckteGeraete(zeile.settings);
-  // Zieht dieser Baustein seinen Inhalt aus den DATEN? Dann trägt seine Pille
-  // Violett statt Blau — im Vorbild derselbe Unterschied (`docs/UI`, Foto
-  // 19.05.26: die Pille am Suchformular ist violett).
-  const dynamisch = istDynamisch(zeile.typ);
-
-  // Die Leiste sitzt normalerweise ÜBER der Oberkante. Steht der Abschnitt am
-  // oberen Rand des sichtbaren Bereichs, wäre sie dort abgeschnitten.
-  //
-  // Sie rutschte dann NACH INNEN — und lag damit über der Kopfzeile der
-  // Website: „Kontakt" und „Jetzt buchen" waren verdeckt, reproduzierbar bei
-  // jedem Abschnitt am oberen Rand (Prüfbericht D2). Genau der erste
-  // Abschnitt ist aber der häufigste Fall.
-  //
-  // Sie rutscht jetzt UNTER die Kopfzeile der Vorschau statt über sie: 44 px
-  // ist deren Höhe im Overlay-Maßstab, und darunter beginnt der Abschnitt
-  // selbst. Ein Abschnitt, der höher ist als das Sichtfeld (Hero), behält die
-  // Leiste damit im Bild — sie an seine UNTERKANTE zu setzen hätte sie bei
-  // einem hohen Abschnitt aus dem Fenster geschoben.
-  const obenEng = rect.top < 44;
-  const leisteOben = obenEng ? 52 : rect.top - 38;
-  // Schmaler als die Leiste breit ist. Die Zahl ist die gemessene Breite der
-  // Leiste in der schmalsten Sprache; darunter wird links angeschlagen.
-  const schmal = rect.width < 420;
-
   return (
     <>
-      {/* Die Auswahl: GESTRICHELTER blauer Rahmen mit ACHT quadratischen
-          Griffen — vier Ecken, vier Kantenmitten. Genau so im Vorbild
-          (`docs/UI`, Foto 19.05.26).
-          Die Griffe zeigen an, dass hier etwas AUSGEWÄHLT ist; sie sind
-          bewusst nicht anziehbar: unsere Seite ist eine Abfolge von
-          Abschnitten, deren Breite dem Theme gehört. Ein Griff, an dem man
-          ziehen kann und der nichts bewirkt, wäre schlechter als keiner —
-          deshalb `pointer-events-none`. */}
+      {/* Die Auswahl: 1 px DURCHGEZOGEN in Framers Akzent (#0099ff, aus dem
+          DOM gelesen). Die Griffe stehen in `Griffe` — sie hängen an der
+          Größe des Elements und ziehen wirklich. */}
       <div
         aria-hidden
         style={rahmenStil(rect)}
-        className="absolute border-2 border-dashed border-blue-500 bg-blue-500/5"
+        className="pointer-events-none absolute outline outline-1 outline-[#0099ff]"
       />
-      <Griffe rect={rect} />
 
-      {/* Etikett mit dem Namen des Abschnitts, an der Oberkante links. Es sagt,
-          WAS man gerade anfasst — ohne es ist ein blauer Rahmen um ein Bild
-          nicht von einem um den ganzen Abschnitt zu unterscheiden. */}
-      <span
-        style={{
-          top: `${obenEng ? rect.top + 8 : rect.top - 24}px`,
-          left: `${rect.left}px`,
-        }}
-        className={
-          "absolute flex items-center gap-0.5 rounded-t-sm px-2 py-1 text-xs font-semibold shadow-sm " +
-          // ZWEI Farben, wie im Vorbild: ein gewöhnlicher Baustein trägt eine
-          // helle BLAUE Pille, ein dynamischer eine VIOLETTE. Der Unterschied
-          // ist keine Zierde — bei einem dynamischen Baustein (Objektliste,
-          // Buchungsstrecke) kommt der Inhalt aus den Daten, und wer dort eine
-          // Überschrift sucht, sucht sie vergeblich. Die Farbe sagt das, bevor
-          // man klickt.
-          (dynamisch
-            ? "bg-violet-500 text-white"
-            : "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-200")
-        }
-      >
-        <Icon icon="ph:caret-right" className="size-3" />
-        {name(zeile.typ)}
-      </span>
-
-      {/* Der orange Hinweis sagt, WO der Abschnitt fehlt. Ist er auf dem gerade
-          gezeigten Gerät versteckt, trägt er zusätzlich den Weg zurück — als
-          echten Knopf, deshalb `pointer-events-auto`. Einblenden wirkt NUR für
-          diesen Breakpoint (Hostaway macht es genauso): sonst holt der Klick
-          etwas zurück, das der Kunde gerade gar nicht sieht. */}
       {versteckt.length > 0 ? (
         <span
           style={{
-            top: `${leisteOben}px`,
-            left: `${rect.left + 8}px`,
+            top: `${Math.max(4, rect.top + 6)}px`,
+            left: `${rect.left + 6}px`,
           }}
-          className="absolute flex translate-y-8 items-center gap-1 rounded-full bg-orange-500 px-2 py-1 text-xs font-semibold text-white shadow-sm"
+          className="absolute flex items-center gap-1 rounded-full bg-orange-500 px-2 py-0.5 text-[0.6875rem] font-semibold text-white shadow-sm"
         >
           {t("arbeitsflaeche.verstecktAuf", {
             geraete: versteckt.map((g) => t(`arbeitsflaeche.${g}`)).join(", "),
@@ -671,90 +790,6 @@ function AktiverRahmen({
           ) : null}
         </span>
       ) : null}
-
-      {/* Die schwebende Leiste. `pointer-events-auto` hebt die Durchlässigkeit
-          der Schicht für genau dieses Element auf — sie ist das einzige, das
-          Klicks annehmen soll. */}
-      {/* Die Leiste hängt mit ihrer RECHTEN Kante an der rechten Kante des
-          Abschnitts — über `translateX(-100%)`, nicht über eine geschätzte
-          Breite. Vorher stand hier `rect.left + rect.width - 320`, und 320 war
-          geraten: die Leiste ist breiter, also ragte sie rechts aus dem Bild
-          und der Löschen-Knopf lag halb im Abgeschnittenen.
-          Bei einem schmalen Abschnitt (Mobilansicht) ist die Leiste breiter als
-          er selbst — dann links anschlagen statt rechts, sonst rutscht sie über
-          die linke Kante hinaus. */}
-      <div
-        style={{
-          top: `${leisteOben}px`,
-          left: `${schmal ? rect.left : rect.left + rect.width}px`,
-        }}
-        className={
-          "pointer-events-auto absolute flex items-center gap-0.5 rounded-full border-2 border-blue-500 bg-background px-1 py-0.5 shadow-lg " +
-          (schmal ? "" : "-translate-x-full")
-        }
-      >
-        <MenuKnopf
-          icon="ph:dots-three-vertical"
-          label={t("arbeitsflaeche.verschieben")}
-          offen={verschiebenOffen}
-          onOffen={setVerschiebenOffen}
-        >
-          <MenuZeile
-            label={t("editor.nachOben")}
-            icon="ph:arrow-up"
-            deaktiviert={index === 0}
-            onKlick={() => {
-              setVerschiebenOffen(false);
-              onVerschiebe(zeile.key, -1);
-            }}
-          />
-          <MenuZeile
-            label={t("editor.nachUnten")}
-            icon="ph:arrow-down"
-            deaktiviert={index === gesamt - 1}
-            onKlick={() => {
-              setVerschiebenOffen(false);
-              onVerschiebe(zeile.key, 1);
-            }}
-          />
-        </MenuKnopf>
-
-        <TextKnopf
-          label={t("arbeitsflaeche.inhaltBearbeiten", {
-            abschnitt: name(zeile.typ),
-          })}
-          onKlick={() => onInhalt(zeile.key)}
-        />
-        <TextKnopf
-          label={t("arbeitsflaeche.designBearbeiten")}
-          onKlick={() => onDesign(zeile.key)}
-        />
-
-        <span aria-hidden className="mx-0.5 h-4 w-px bg-border" />
-
-        <SymbolKnopf
-          icon="ph:plus"
-          label={t("arbeitsflaeche.einfuegenDanach")}
-          onKlick={() => onEinfuegenNach(zeile.key)}
-        />
-        <SymbolKnopf
-          icon="ph:copy"
-          label={t("editor.duplizieren")}
-          onKlick={() => onDuplizieren(zeile.key)}
-        />
-        <AusblendenKnopf
-          versteckt={versteckt}
-          offen={ausblendenOffen}
-          onOffen={onAusblendenOffen}
-          onVersteckt={(g) => onVersteckt(zeile.key, g)}
-        />
-        <SymbolKnopf
-          icon="ph:trash"
-          label={t("editor.entfernen")}
-          gefahr
-          onKlick={() => onEntferne(zeile.key)}
-        />
-      </div>
     </>
   );
 }
@@ -940,51 +975,328 @@ function Naht({
 }
 
 /**
- * Die ACHT Griffe der Auswahl — vier Ecken, vier Kantenmitten.
+ * Die Griffe der Auswahl — und zwar NUR die, die etwas bewirken.
  *
- * Sie sagen „das hier ist ausgewählt", und zwar in derselben Sprache, die jedes
- * Gestaltungswerkzeug spricht. Ziehen kann man daran NICHT: unsere Seite ist
- * eine Abfolge von Abschnitten, deren Breite dem Theme gehört, und ein Griff,
- * an dem man zieht und der nichts bewirkt, wäre schlechter als keiner
- * (Wurzel 4). Deshalb `pointer-events-none` und `aria-hidden` — sie sind eine
- * Anzeige, kein Bedienelement.
+ * Am 06.09.2026 im Vorbild nachgemessen (Bild mit `Höhe 560 Fixed`, Abschnitt
+ * mit `Breite 100 % Rel`): Framer zeigt Griffe genau an den Achsen, die im
+ * Panel eine Zahl tragen. Steht die Höhe auf `Fit`, wird sie GEMESSEN — dann
+ * gibt es keinen Höhengriff, weil Ziehen dort nichts zu setzen hätte. Beim
+ * Abschnitt waren es deshalb zwei runde Griffe links und rechts, beim frisch
+ * aufgezogenen Text (`Fixed`/`Fixed`) alle acht.
  *
- * Sie sitzen AUF der Rahmenkante, nicht daneben: `-translate-*-1/2` zieht jeden
- * Griff um seine halbe Kantenlänge zurück, sodass die Kante durch seine Mitte
- * läuft. Ohne das lägen sie alle innen und die untere Reihe verdeckte den
- * Inhalt.
+ * Vorher standen hier immer acht QUADRATISCHE Griffe mit `pointer-events-none`
+ * — eine Anzeige, die aussah wie ein Bedienelement. Genau das ist die Attrappe,
+ * gegen die Wurzel 4 steht: ein Griff ist das Versprechen, dass Ziehen wirkt.
+ *
+ * Gezogen wird gegen die LIVE-Vorschau: `onMass(..., false)` schickt den Wert
+ * sofort in den iframe (kein Speichern), `onMass(..., true)` beim Loslassen
+ * schreibt ihn. Ein Ziehvorgang ist damit EIN Schritt im Verlauf — wie im
+ * Vorbild, wo ⌘Z den ganzen Zug zurücknimmt.
  */
-function Griffe({ rect }: { rect: Rechteck }) {
-  // Position je Griff als Anteil der Kante: 0 = Anfang, 0.5 = Mitte, 1 = Ende.
-  const punkte: ReadonlyArray<[number, number]> = [
-    [0, 0],
-    [0.5, 0],
-    [1, 0],
-    [0, 0.5],
-    [1, 0.5],
-    [0, 1],
-    [0.5, 1],
-    [1, 1],
+function Griffe({
+  rect,
+  settings,
+  geraet,
+  onMass,
+}: {
+  rect: Pick<Rechteck, "top" | "left" | "width" | "height">;
+  settings: Record<string, unknown>;
+  geraet: Geraet;
+  onMass?: (achse: "breite" | "hoehe", px: number, fertig: boolean) => void;
+}) {
+  const t = useTranslations("website.stil.groesse");
+  const [zug, setZug] = useState<{
+    achse: "breite" | "hoehe";
+    px: number;
+  } | null>(null);
+
+  const d = darstellungFuer(settings, geraet);
+  /** Trägt diese Achse eine Zahl — oder wird sie gemessen? */
+  const ziehbar = (achse: "breite" | "hoehe") => {
+    const modus = (achse === "breite" ? d.groesse?.breite : d.groesse?.hoehe)?.modus;
+    // `inhalt` (Framers „Fit") ist eine MESSUNG. Ohne gesetzten Modus gilt
+    // dasselbe: der Baustein bringt seine eigene Höhe mit, und ein Griff
+    // daran wäre eine Einstellung, die es noch gar nicht gibt — Ziehen legt
+    // sie an, deshalb ist genau das erlaubt.
+    return modus !== "inhalt";
+  };
+
+  // Ohne Rückruf gibt es nichts zu ziehen — dann auch keine Griffe. Eine
+  // Region (Kopf-/Fußzeile) kommt so hierher.
+  if (!onMass) return null;
+
+  const punkte: ReadonlyArray<{
+    x: number;
+    y: number;
+    achse: "breite" | "hoehe";
+    richtung: 1 | -1;
+    cursor: string;
+  }> = [
+    { x: 0, y: 0.5, achse: "breite", richtung: -1, cursor: "ew-resize" },
+    { x: 1, y: 0.5, achse: "breite", richtung: 1, cursor: "ew-resize" },
+    { x: 0.5, y: 0, achse: "hoehe", richtung: -1, cursor: "ns-resize" },
+    { x: 0.5, y: 1, achse: "hoehe", richtung: 1, cursor: "ns-resize" },
   ];
+
+  function zieheAn(
+    e: React.PointerEvent,
+    achse: "breite" | "hoehe",
+    richtung: 1 | -1,
+  ) {
+    e.preventDefault();
+    e.stopPropagation();
+    const start = achse === "breite" ? e.clientX : e.clientY;
+    const anfang = achse === "breite" ? rect.width : rect.height;
+    const ziel = e.currentTarget as HTMLElement;
+    ziel.setPointerCapture(e.pointerId);
+    // Der Faktor der Kamera: die Fläche ist skaliert, ein Pixel auf dem
+    // Bildschirm ist also nicht ein Pixel der Seite. Ohne ihn zöge man bei
+    // 50 % Zoom doppelt so schnell wie man sieht.
+    const flaeche = ziel.closest("[data-buehne]") as HTMLElement | null;
+    const zoom = flaeche
+      ? (flaeche.getBoundingClientRect().width || 1) / (flaeche.offsetWidth || 1)
+      : 1;
+    const bewege = (ev: PointerEvent) => {
+      const jetzt = achse === "breite" ? ev.clientX : ev.clientY;
+      const px = Math.max(
+        8,
+        Math.round(anfang + ((jetzt - start) * richtung) / (zoom || 1)),
+      );
+      setZug({ achse, px });
+      onMass?.(achse, px, false);
+    };
+    const los = (ev: PointerEvent) => {
+      window.removeEventListener("pointermove", bewege);
+      window.removeEventListener("pointerup", los);
+      const jetzt = achse === "breite" ? ev.clientX : ev.clientY;
+      const px = Math.max(
+        8,
+        Math.round(anfang + ((jetzt - start) * richtung) / (zoom || 1)),
+      );
+      setZug(null);
+      onMass?.(achse, px, true);
+    };
+    window.addEventListener("pointermove", bewege);
+    window.addEventListener("pointerup", los);
+  }
+
   return (
     <>
-      {punkte.map(([x, y]) => (
+      {punkte
+        .filter((p) => ziehbar(p.achse))
+        .map((p) => (
+          <button
+            key={`${p.x}-${p.y}`}
+            type="button"
+            aria-label={t(p.achse)}
+            title={t(p.achse)}
+            onPointerDown={(e) => zieheAn(e, p.achse, p.richtung)}
+            style={{
+              left: `${rect.left + rect.width * p.x}px`,
+              top: `${rect.top + rect.height * p.y}px`,
+              cursor: p.cursor,
+            }}
+            className="pointer-events-auto absolute size-[9px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white bg-[#0099ff] shadow-sm"
+          />
+        ))}
+      {/* Das Maß, solange gezogen wird — im Vorbild steht es an der Kante und
+          sagt, was gerade entsteht. Ohne es zieht man auf gut Glück und liest
+          die Zahl erst hinterher im Panel. */}
+      {zug ? (
         <span
-          key={`${x}-${y}`}
-          aria-hidden
           style={{
-            left: `${rect.left + rect.width * x}px`,
-            top: `${rect.top + rect.height * y}px`,
+            left: `${rect.left + rect.width / 2}px`,
+            top: `${rect.top + rect.height + 8}px`,
           }}
-          className="pointer-events-none absolute size-2 -translate-x-1/2 -translate-y-1/2 border border-blue-600 bg-background"
-        />
-      ))}
+          className="pointer-events-none absolute -translate-x-1/2 rounded-full bg-[#0099ff] px-2 py-0.5 text-[0.6875rem] font-semibold text-white shadow"
+        >
+          {zug.px} px
+        </span>
+      ) : null}
+    </>
+  );
+}
+
+/**
+ * Die ABSTANDSMARKER: Lücken zwischen den Kindern und die Innenabstände.
+ *
+ * Am 06.09.2026 bei Framer nachgemessen (Navigation mit `Padding 24/32`, bei
+ * 119 % herangezoomt): es sind KURZE Striche in der Akzentfarbe `#0099ff` —
+ * einer mittig in jeder Lücke, einer an jeder Innenkante. Kein durchgehender
+ * Balken, keine Füllung, kein Magenta (das hatte ich aus den kleinen
+ * Bildschirmfotos falsch gelesen; der Zoom zeigt Blau).
+ *
+ * Sie sind mehr als Zierde: Abstand und Innenabstand sind die einzigen Maße,
+ * die man auf der Fläche NICHT sieht, solange sie stimmen — und deshalb die,
+ * die man im Panel sucht. Ziehen an einem Strich ändert genau die Zeile, die
+ * dort steht.
+ */
+function AbstandsMarker({
+  rect,
+  kinder,
+  settings,
+  geraet,
+  onAbstand,
+  onPadding,
+}: {
+  /** Der Container selbst — für die Innenabstände. */
+  rect: Pick<Rechteck, "top" | "left" | "width" | "height">;
+  kinder: readonly Pick<Rechteck, "top" | "left" | "width" | "height">[];
+  settings: Record<string, unknown>;
+  geraet: Geraet;
+  onAbstand?: (px: number, fertig: boolean) => void;
+  onPadding?: (seite: "top" | "right" | "bottom" | "left", px: number, fertig: boolean) => void;
+}) {
+  const t = useTranslations("website.container");
+  const d = darstellungFuer(settings, geraet);
+  const abstand = d.layout_abstand;
+  const reihe = d.layout_richtung === "zeile";
+
+  /** Ein Strich, an dem man ziehen kann. `achse` sagt, welche Zeigerachse
+   *  zählt; `richtung` dreht sie um (rechts/unten wachsen nach innen). */
+  function Strich({
+    stil,
+    achse,
+    richtung,
+    start,
+    grenze,
+    titel,
+    onWert,
+  }: {
+    stil: React.CSSProperties;
+    achse: "x" | "y";
+    richtung: 1 | -1;
+    start: number;
+    grenze: number;
+    titel: string;
+    onWert?: (px: number, fertig: boolean) => void;
+  }) {
+    if (!onWert) return null;
+    function zieheAn(e: React.PointerEvent) {
+      e.preventDefault();
+      e.stopPropagation();
+      const anfang = achse === "x" ? e.clientX : e.clientY;
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      const wert = (ev: PointerEvent) =>
+        Math.min(
+          grenze,
+          Math.max(
+            0,
+            Math.round(start + ((achse === "x" ? ev.clientX : ev.clientY) - anfang) * richtung),
+          ),
+        );
+      const bewege = (ev: PointerEvent) => onWert?.(wert(ev), false);
+      const los = (ev: PointerEvent) => {
+        window.removeEventListener("pointermove", bewege);
+        window.removeEventListener("pointerup", los);
+        onWert?.(wert(ev), true);
+      };
+      window.addEventListener("pointermove", bewege);
+      window.addEventListener("pointerup", los);
+    }
+    return (
+      <button
+        type="button"
+        aria-label={titel}
+        title={titel}
+        onPointerDown={zieheAn}
+        style={{ ...stil, cursor: achse === "x" ? "ew-resize" : "ns-resize" }}
+        className="pointer-events-auto absolute rounded-full bg-[#0099ff]"
+      />
+    );
+  }
+
+  /** Zahl aus einem Maß wie `104px` — ohne Einheit gibt es nichts zu ziehen. */
+  function px(wert: string | null | undefined): number | null {
+    if (!wert) return null;
+    const m = /^(\d{1,4})px$/.exec(wert);
+    return m ? Number(m[1]) : null;
+  }
+
+  const sortiert = [...kinder].sort((a, b) =>
+    reihe ? a.left - b.left : a.top - b.top,
+  );
+
+  return (
+    <>
+      {/* LÜCKEN zwischen den Kindern (Framer „Gap"). */}
+      {abstand != null && sortiert.length >= 2
+        ? sortiert.slice(0, -1).map((k, i) => {
+            const naechstes = sortiert[i + 1]!;
+            const mitte = reihe
+              ? {
+                  left: `${(k.left + k.width + naechstes.left) / 2}px`,
+                  top: `${k.top + k.height / 2}px`,
+                  width: "2px",
+                  height: "14px",
+                }
+              : {
+                  left: `${k.left + k.width / 2}px`,
+                  top: `${(k.top + k.height + naechstes.top) / 2}px`,
+                  width: "14px",
+                  height: "2px",
+                };
+            return (
+              <Strich
+                key={`gap-${i}`}
+                stil={{ ...mitte, transform: "translate(-50%,-50%)" }}
+                achse={reihe ? "x" : "y"}
+                richtung={1}
+                start={abstand}
+                grenze={160}
+                titel={`${t("abstand")} ${abstand} px`}
+                onWert={onAbstand}
+              />
+            );
+          })
+        : null}
+
+      {/* INNENABSTÄNDE an den vier Kanten (Framer „Padding"). Gezeigt wird nur,
+          was gesetzt ist: ein Strich an einer Kante ohne Wert wäre ein Griff
+          für eine Zeile, die es nicht gibt (Wurzel 4). */}
+      {(
+        [
+          ["top", px(d.padding_top), "y", 1] as const,
+          ["bottom", px(d.padding_bottom), "y", -1] as const,
+          ["left", px(d.padding_left), "x", 1] as const,
+          ["right", px(d.padding_right), "x", -1] as const,
+        ] satisfies ReadonlyArray<
+          readonly ["top" | "bottom" | "left" | "right", number | null, "x" | "y", 1 | -1]
+        >
+      ).map(([seite, wert, achse, richtung]) => {
+        if (wert == null) return null;
+        const quer = achse === "y"
+          ? { left: `${rect.left + rect.width / 2}px`, width: "14px", height: "2px" }
+          : { top: `${rect.top + rect.height / 2}px`, width: "2px", height: "14px" };
+        const laengs =
+          seite === "top"
+            ? { top: `${rect.top + wert}px` }
+            : seite === "bottom"
+              ? { top: `${rect.top + rect.height - wert}px` }
+              : seite === "left"
+                ? { left: `${rect.left + wert}px` }
+                : { left: `${rect.left + rect.width - wert}px` };
+        return (
+          <Strich
+            key={`pad-${seite}`}
+            stil={{ ...quer, ...laengs, transform: "translate(-50%,-50%)" }}
+            achse={achse}
+            richtung={richtung}
+            start={wert}
+            grenze={400}
+            titel={`${t("innen")} ${seite} ${wert} px`}
+            onWert={
+              onPadding ? (v, fertig) => onPadding(seite, v, fertig) : undefined
+            }
+          />
+        );
+      })}
     </>
   );
 }
 
 /** Absolute Position eines Rahmens aus einem gemeldeten Rechteck. */
-function rahmenStil(r: Rechteck) {
+function rahmenStil(r: Pick<Rechteck, "top" | "left" | "width" | "height">) {
   return {
     top: `${r.top}px`,
     left: `${r.left}px`,

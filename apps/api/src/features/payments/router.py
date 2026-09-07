@@ -15,6 +15,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 
 from src.core.config import get_settings
+from src.core.countries import is_iso2_country
 from src.core.logging import get_logger
 from src.core.security import AuthContext, get_current_user
 from src.core.supabase import get_service_client
@@ -164,6 +165,26 @@ def get_own_connect_account(
     Server, da tenant_billing_profile am anon-Direktpfad gesperrt ist (0169)."""
     try:
         return {"stripe_account_id": service.get_own_connect_account_id(ctx)}
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/connect/country-requirements/{country}")
+def get_country_requirements(
+    country: str, service: PaymentsServiceDep, ctx: _billing  # noqa: ARG001
+) -> dict:
+    """Welche KYC-Felder Stripe fuer dieses Land verlangt — getrennt nach
+    Einzelperson und Firma, LIVE aus den country_specs (kein Hardcode).
+
+    Die Gastgeber-Oberflaeche zeigt daraus, ob eine persoenliche Kennnummer
+    (individual.id_number) noetig ist: in ES/IT/PT/SE u. a. bleibt der Account
+    ohne sie fuer immer „restricted", und in den Stammdaten gibt es dafuer
+    kein Feld. Ein Land, das keine ISO-Kennung ist, ist ein Datenfehler (422),
+    kein Anlass, stillschweigend ein anderes zu nehmen (Wurzel 4)."""
+    if not is_iso2_country(country):
+        raise HTTPException(status_code=422, detail="Land wird nicht unterstützt.")
+    try:
+        return service.country_requirements(country)
     except PaymentsError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

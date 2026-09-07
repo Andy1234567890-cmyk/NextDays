@@ -47,6 +47,46 @@ const REGLER: { id: ReglerId; min: number; max: number }[] = [
   { id: "graustufen", min: 0, max: 100 },
 ];
 
+/** Ein Medium NUR aus einer Adresse — für Aufrufer, die kein Bestandsobjekt
+ *  haben (die Füllung im Style-Panel kennt bloß die URL des Bildes).
+ *
+ *  Der Editor braucht von einem Medium genau vier Dinge: die Adresse zum
+ *  Laden, den Typ zum Kodieren, den Dateinamen für den Namen der Kopie und den
+ *  Ordner für die Ablage. Alles andere steht hier auf einem ehrlichen Nullwert
+ *  — es wird nichts erfunden, und gespeichert wird ohnehin ein NEUES Medium
+ *  (das Original bleibt unangetastet, siehe Kopf dieser Datei). */
+export function mediumAusUrl(url: string): Medium {
+  const name = url.split("?")[0]?.split("/").pop() || "bild";
+  const endung = name.slice(name.lastIndexOf(".") + 1).toLowerCase();
+  const mime =
+    endung === "png"
+      ? "image/png"
+      : endung === "webp"
+        ? "image/webp"
+        : endung === "avif"
+          ? "image/avif"
+          : "image/jpeg";
+  return {
+    id: "",
+    url,
+    filename: name,
+    mime,
+    bytes: null,
+    created_at: null,
+    folder_id: null,
+    alt_text: null,
+    width: null,
+    height: null,
+    kind: "image",
+    // `upload` und nicht geraten: liegt das Bild woanders, scheitert der
+    // CORS-Abruf und der Editor sagt genau das (`ladefehler`) — bei
+    // „nurEigene" stünde eine Erklärung da, die nicht stimmen muss.
+    source: "upload",
+    credit_name: null,
+    credit_url: null,
+  };
+}
+
 export function BildEditor({
   medium,
   onFertig,

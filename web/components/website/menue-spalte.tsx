@@ -38,6 +38,7 @@ export function MenueSpalte({
   aktiv,
   beschriften,
   onWaehle,
+  vorNavigation,
 }: {
   /** Überschrift der Spalte — der Name des Leisten-Bereichs. */
   titel: string;
@@ -53,6 +54,11 @@ export function MenueSpalte({
    *  Beschwerde „alles lädt neu statt realtime": ein Bereichswechsel darf
    *  keinen Seitenwechsel bedeuten. */
   onWaehle: (id: string) => void;
+  /** Vor einem Eintrag MIT `href` — dasselbe wie in der Leiste: den offenen
+   *  Stand wegschreiben, bevor die Route wechselt. Die „Mehr"-Ziele im Editor
+   *  sind solche Links (05.09.2026); ohne den Aufruf ginge der ungespeicherte
+   *  Abschnitt beim Sprung nach „Objekte" verloren. */
+  vorNavigation?: () => void;
 }) {
   // Welche Gruppen zugeklappt sind. Offen ist der Normalfall: eine Gruppe, die
   // man erst aufklappen muss, versteckt genau das, was diese Spalte zeigen soll.
@@ -97,7 +103,12 @@ export function MenueSpalte({
     // Mit Adresse ein Link (Mittelklick, „in neuem Tab öffnen", Zurück-Knopf),
     // ohne Adresse ein Knopf. Ein Link auf `#` wäre eine Lüge über das Ziel.
     return href ? (
-      <Link key={id} href={href} className={klasse}>
+      <Link
+        key={id}
+        href={href}
+        onClick={() => vorNavigation?.()}
+        className={klasse}
+      >
         {inhalt}
       </Link>
     ) : (

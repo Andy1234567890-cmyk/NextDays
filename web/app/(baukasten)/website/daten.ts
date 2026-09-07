@@ -90,6 +90,9 @@ export const LEERES_BRANDING: Branding = {
   theme_colors: [],
   theme_color_links: {},
   text_styles: {},
+  // 0570: Kopf-/Fußzeile als Ebenen — leer = Standard.
+  header_teile: null,
+  footer_teile: null,
 };
 
 export type BaukastenDaten = Awaited<ReturnType<typeof ladeBaukasten>>;

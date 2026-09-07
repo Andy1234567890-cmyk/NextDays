@@ -16,6 +16,10 @@ interface RatePlan {
   currency: string;
   min_stay: number;
   derived_from_rate_plan_id?: string | null;
+  /** Buchungsbedingung des Plans (0165); null = Betriebs-Standard gilt. */
+  booking_condition_id?: string | null;
+  /** Bedingung für lange Aufenthalte (0579). */
+  booking_condition_long_id?: string | null;
 }
 interface RatePlanList {
   items: RatePlan[];
@@ -48,6 +52,10 @@ export interface PreisStand {
   currency: string | null;
   // Der Rate-Plan, an den base_price/currency hängen (für spätere Patches).
   ratePlanId: string | null;
+  /** Buchungsbedingung dieses Plans (0165); null = es gilt der Betriebs-Standard. */
+  bookingConditionId: string | null;
+  /** Bedingung für LANGE Aufenthalte (0579); null = die obige gilt auch dort. */
+  bookingConditionLongId: string | null;
   // Objektweiter Mindestaufenthalt (rate_plans.min_stay) — für das Verfügbarkeits-Tab.
   minStay: number;
   smart: DpSettings;
@@ -229,6 +237,8 @@ export async function getPreisStand(propertyId: string): Promise<PreisStand> {
     basePrice: plan?.base_price ?? null,
     currency: plan?.currency ?? null,
     ratePlanId: plan?.id ?? null,
+    bookingConditionId: plan?.booking_condition_id ?? null,
+    bookingConditionLongId: plan?.booking_condition_long_id ?? null,
     minStay: plan?.min_stay ?? 1,
     smart:
       smart ?? {

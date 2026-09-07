@@ -46,6 +46,7 @@
   ],
   "exclude": [
     "node_modules",
+    "**/*.test.ts",
     // Ein Prüf-Build mit RELATIVEM `--distDir` legt sein Verzeichnis unter der
     // App an, nicht am absoluten Pfad: aus `--distDir private/tmp/…` wurde
     // `web/private/tmp/…` — 1,6 GB fremder Build-Ausgabe MITTEN im Quellcode,

@@ -280,7 +280,7 @@ export function Segment<T extends string>({
   onWahl: (wert: T | null) => void;
 }) {
   return (
-    <div className="flex min-w-0 flex-1 gap-0.5 rounded-(--radius) bg-secondary p-0.5">
+    <div className="flex min-w-0 flex-1 gap-0.5 rounded-lg bg-secondary p-0.5">
       {optionen.map(([v, icon, titel]) => (
         <button
           key={v}
@@ -310,6 +310,8 @@ export function Zahlfeld({
   min,
   max,
   einheit,
+  schritt,
+  platzhalter,
   laeuft = false,
   onWert,
 }: {
@@ -318,20 +320,28 @@ export function Zahlfeld({
   max: number;
   /** Steht rechts im Feld („px"). Ohne Einheit ist eine Zahl keine Größe. */
   einheit?: string;
+  /** Schrittweite — ohne Angabe ganze Zahlen. */
+  schritt?: number;
+  /** Der BERECHNETE Wert als grauer Platzhalter, solange nichts gesetzt ist
+   *  (Framer: die gemessene Höhe bei „Fit Content"). Er wird angezeigt, nie
+   *  gespeichert — sonst wäre eine Messung plötzlich eine Einstellung
+   *  (Wurzel 4). */
+  platzhalter?: string;
   laeuft?: boolean;
   onWert: (wert: number | null) => void;
 }) {
   return (
-    <div className="flex min-w-0 flex-1 items-center rounded-(--radius) bg-secondary px-2">
+    <div className="flex h-[30px] min-w-0 flex-1 items-center rounded-lg bg-secondary px-2">
       <input
         type="number"
-        inputMode="numeric"
+        inputMode={schritt && schritt < 1 ? "decimal" : "numeric"}
         min={min}
         max={max}
+        step={schritt ?? 1}
         disabled={laeuft}
         key={wert ?? ""}
         defaultValue={wert ?? ""}
-        placeholder="—"
+        placeholder={platzhalter ?? "—"}
         onBlur={(e) => {
           const roh = e.target.value.trim();
           if (roh === "") {
@@ -345,7 +355,7 @@ export function Zahlfeld({
         onKeyDown={(e) => {
           if (e.key === "Enter") e.currentTarget.blur();
         }}
-        className="min-w-0 flex-1 bg-transparent py-1.5 text-[0.8125rem] outline-none disabled:opacity-50 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+        className="h-full min-w-0 flex-1 bg-transparent text-[0.8125rem] outline-none disabled:opacity-50 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
       />
       {einheit ? (
         <span className="shrink-0 pl-1 text-[0.6875rem] text-muted-foreground">
@@ -364,6 +374,8 @@ export function Schieber({
   min,
   max,
   standard,
+  einheit = "px",
+  schritt,
   laeuft = false,
   onWert,
 }: {
@@ -373,6 +385,8 @@ export function Schieber({
   /** Wo der Regler steht, solange nichts gesetzt ist. Er zeigt damit den
    *  Ausgangspunkt, ohne ihn zu speichern (Wurzel 4). */
   standard: number;
+  einheit?: string;
+  schritt?: number;
   laeuft?: boolean;
   onWert: (wert: number | null) => void;
 }) {
@@ -382,7 +396,8 @@ export function Schieber({
         wert={wert}
         min={min}
         max={max}
-        einheit="px"
+        einheit={einheit}
+        schritt={schritt}
         laeuft={laeuft}
         onWert={onWert}
       />
@@ -390,6 +405,7 @@ export function Schieber({
         type="range"
         min={min}
         max={max}
+        step={schritt ?? 1}
         value={wert ?? standard}
         disabled={laeuft}
         onChange={(e) => onWert(Number(e.target.value))}

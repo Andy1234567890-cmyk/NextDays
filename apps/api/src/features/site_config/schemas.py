@@ -91,6 +91,7 @@ from .schemas_mediathek import (  # noqa: F401  — Re-Export
     MediumResponse,
     PublicBildnachweis,
 )
+from .schemas_regionen import FusszeileTeile, KopfzeileTeile
 
 # Mediathek (0460/0461): Bilder, Ordner, Verwendungsnachweis, Stock-Anbieter.
 # Ausgelagert aus demselben Grund wie `basis.py` und `block_inhalte.py` — diese
@@ -251,6 +252,14 @@ class BrandingBase(ThemeFelder):
     # Default true, weil der Renderer seine Schriften schon immer mit
     # `display=swap` lädt — siehe Begründung in Migration 0430.
     system_fonts_first: bool = True
+
+    # --- Kopf-/Fußzeile als Ebenen (0570, 05.09.2026) -----------------------
+    # Sichtbarkeit je Gerät, Sperre und Reihenfolge der Teile (Logo, Navigation,
+    # Buchen-Knopf …). `None` = nichts eingestellt = alles sichtbar in
+    # Standardreihenfolge — der Zustand jeder bestehenden Site (Wurzel 1).
+    # Felder und Regeln: `schemas_regionen.py`.
+    header_teile: KopfzeileTeile | None = None
+    footer_teile: FusszeileTeile | None = None
 
     _v_logo_url = field_validator("logo_url")(_validate_href)
     _v_hero_image_url = field_validator("hero_image_url")(_validate_href)
@@ -418,6 +427,9 @@ class PublicSiteResponse(ThemeOeffentlich):
     header_link_color: str | None = None
     link_color: str | None = None
     footer_background: str | None = None
+    # 0570: Kopf-/Fußzeile als Ebenen — Sichtbarkeit, Sperre, Reihenfolge der Teile.
+    header_teile: KopfzeileTeile | None = None
+    footer_teile: FusszeileTeile | None = None
     logo_name_font: str | None = None
     logo_name_size: int | None = None
     slogan_font: str | None = None

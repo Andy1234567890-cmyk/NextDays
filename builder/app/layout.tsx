@@ -8,6 +8,7 @@
 //
 // Ohne Branding bleiben die Defaults aus globals.css stehen: „nicht gesetzt" ist
 // ein gültiger Zustand, kein erfundener Ersatzwert (Wurzel 4).
+import { Effekte } from "@/components/blocks/effekte";
 import type { ReactNode } from "react";
 
 import type { Metadata } from "next";
@@ -95,7 +96,10 @@ export default async function RootLayout({
             sind; System-Fonts brauchen keinen Request. */}
         {fontsHref ? <link rel="stylesheet" href={fontsHref} /> : null}
       </head>
-      <body className="font-sans antialiased">{children}</body>
+      <body className="font-sans antialiased">{/* Effekte-Skript (Erscheinen, Parallax) EINMAL je Seite — im
+            Editor-iframe fehlen die Marker, dort tut es nichts. */}
+        <Effekte />
+        {children}</body>
     </html>
   );
 }

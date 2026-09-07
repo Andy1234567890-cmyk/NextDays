@@ -17,6 +17,7 @@ export function WizardShell({
   onNext,
   nextLabel,
   saving,
+  breit,
   children,
 }: {
   step: number; // 1-basiert
@@ -26,6 +27,9 @@ export function WizardShell({
   onNext: () => void;
   nextLabel?: string;
   saving?: boolean;
+  // Breiterer Inhalt fuer Schritte mit Seitenspalte (Ausstattung). Die uebrigen
+  // Schritte bleiben schmal — ein Wizard lebt vom einen Fokus je Seite.
+  breit?: boolean;
   children: React.ReactNode;
 }) {
   const t = useTranslations("wizard");
@@ -40,12 +44,17 @@ export function WizardShell({
           <Logo heightRem={1.75} />
         </Link>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className="rounded-full border border-border px-4 py-2 text-sm font-medium"
+          {/* Fuehrt in die Hilfe. Vorher war das ein Knopf ganz ohne Handler —
+              er sah bedienbar aus und tat nichts. Neuer Tab, damit ein
+              angefangener Entwurf im Assistenten stehen bleibt. */}
+          <a
+            href="/hilfe"
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-full border border-border px-4 py-2 text-sm font-medium transition-colors hover:border-foreground"
           >
             {t("hilfe")}
-          </button>
+          </a>
           <button
             type="button"
             onClick={() => router.push("/objekte")}
@@ -57,7 +66,11 @@ export function WizardShell({
       </header>
 
       {/* Schritt-Inhalt (ein Fokus, großzügiger Weißraum) */}
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center px-6 py-8">
+      <main
+        className={`mx-auto flex w-full flex-1 flex-col justify-center px-6 py-8 ${
+          breit ? "max-w-4xl" : "max-w-2xl"
+        }`}
+      >
         {children}
       </main>
 

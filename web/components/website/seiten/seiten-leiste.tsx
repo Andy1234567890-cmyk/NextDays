@@ -10,11 +10,23 @@
 // Jede Gruppe hat ein „+" in der Kopfzeile; jede Zeile ein „…"-Menü mit
 // Bearbeiten · Einstellungen · Duplizieren · Löschen. Die Startseite trägt ein
 // Haus-Symbol und lässt sich nicht löschen.
+//
+// Aussehen seit 05.09.2026 nach Framers „Pages"-Panel (DOM-Lesung,
+// `docs/FRAMER-STYLE-PANEL-LIVE-2026-09-05.md` §9): oben ein Suchfeld mit
+// 10 px Rand, darunter Abschnittsköpfe im SELBEN Stil wie die rechte Leiste
+// (40 px, 13 px/600, „+" rechts), Zeilen 30 px mit 12-px-Symbol, Name, drei
+// Punkte beim Überfahren; die geöffnete Seite steht markiert. Der gefüllte
+// „Neue Seite"-Knopf von Hostaway ist weg — das „+" am Kopf ist der Weg.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useTransition } from "react";
+import {
+  type MouseEvent as ReactMouseEvent,
+  useEffect,
+  useState,
+  useTransition,
+} from "react";
 import { toast } from "sonner";
 
 import {
@@ -49,7 +61,8 @@ import { StreckenWahl } from "./strecken-wahl";
  *  Der leere Ordner ist hier nur mit den Seiten entscheidbar, die die Liste
  *  ohnehin hat — deshalb nimmt der Helfer sie als zweiten Wert. */
 function imMenue(seite: Page, alle: Page[] = []): boolean {
-  if (seite.page_type === "error404" || seite.page_type === "popup") return false;
+  if (seite.page_type === "error404" || seite.page_type === "popup")
+    return false;
   if (seite.page_type === "folder") {
     return alle.some((k) => k.parent_id === seite.id && k.is_published);
   }
@@ -60,11 +73,14 @@ const BEREICHE: NavArea[] = ["header", "footer", "none"];
 
 export function SeitenLeiste({
   pages,
+  aktiveId = null,
   websiteSprachen = [],
   websiteSprache,
   domain = null,
 }: {
   pages: Page[];
+  /** Die im Editor geöffnete Seite — ihre Zeile steht markiert. */
+  aktiveId?: string | null;
   /** Sprachen, die die Website führt — für den Sprachen-Reiter des Dialogs. */
   websiteSprachen?: string[];
   /** Standardsprache der WEBSITE (0474). Sie bestimmt, in welcher Sprache die
@@ -82,12 +98,22 @@ export function SeitenLeiste({
   // nie gelesen. Ein zweiter Halter für denselben Wert ist keine Vorsicht,
   // sondern die Stelle, an der beide auseinanderlaufen.
   const [neuIn, setNeuIn] = useState<NavArea | null>(null);
+  // Framers „Pages +"-Menü (Vollerfassung §14): Neue Seite · Alphabetisch
+  // sortieren. Welcher Bereich sein Menü offen hat.
+  const [plusMenue, setPlusMenue] = useState<NavArea | null>(null);
   // Die Wahl der Buchungsstrecke (0474). Die Liste wird erst beim ÖFFNEN geholt:
   // sie ist ein fester Katalog von drei Einträgen, und ihn bei jedem Aufbau der
   // Seitenleiste mitzuladen wäre eine Anfrage für einen Knopf, den die meisten
   // nie drücken.
   const [streckenWahl, setStreckenWahl] = useState(false);
   const [strecken, setStrecken] = useState<Strecke[]>([]);
+  // Framers Suchfeld: filtert die Liste nach Titel oder Pfad, ohne Anfrage.
+  const [suche, setSuche] = useState("");
+  const treffer = (p: Page) => {
+    const q = suche.trim().toLowerCase();
+    if (!q) return true;
+    return p.title.toLowerCase().includes(q) || `/${p.slug}`.toLowerCase().includes(q);
+  };
 
   // Die Strecken holen, sobald das Fenster zum ersten Mal geöffnet wird.
   // Danach bleiben sie: der Katalog ändert sich nur mit einer neuen Fassung der
@@ -112,8 +138,7 @@ export function SeitenLeiste({
   // einem `router.refresh()` ist das Page-Objekt ein neues, und ein
   // festgehaltenes wäre der Stand von vorher.
   const [einstellungenVon, setEinstellungenVon] = useState<string | null>(null);
-  const offeneSeite =
-    pages.find((p) => p.id === einstellungenVon) ?? null;
+  const offeneSeite = pages.find((p) => p.id === einstellungenVon) ?? null;
 
   function fuehreAus(aktion: () => Promise<{ ok: boolean; error?: string }>) {
     start(async () => {
@@ -145,6 +170,18 @@ export function SeitenLeiste({
         template,
       ),
     );
+  }
+
+  /** Framer „Sort Alphabetically": die Reihenfolge des Bereichs nach Titel
+   *  (Sprache des Bedieners), gespeichert über denselben Weg wie das
+   *  Verschieben — EIN Request mit allen IDs. */
+  function sortiereAlphabetisch(bereich: NavArea) {
+    const ids = pages
+      .filter((p) => p.nav_area === bereich && !p.system_key && !p.dynamic_source)
+      .sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: "base" }))
+      .map((p) => p.id);
+    if (ids.length < 2) return;
+    fuehreAus(() => reorderPages(bereich, ids));
   }
 
   function verschiebe(seite: Page, richtung: -1 | 1) {
@@ -203,19 +240,19 @@ export function SeitenLeiste({
 
   return (
     <div className="flex flex-col pb-8">
-      {/* Der primäre Weg, oben und gefüllt — wie Hostaways „+ Add Page".
-          Die kleinen „+" an den Gruppen bleiben für den Fall, dass jemand
-          gezielt in die Fußzeile anlegt. */}
-      <div className="border-b border-border p-3">
-        <button
-          type="button"
-          onClick={() => setNeuIn(neuIn === "header" ? null : "header")}
-          aria-expanded={neuIn === "header"}
-          className="flex w-full items-center justify-center gap-1.5 rounded-full bg-foreground px-3 py-2 text-sm font-medium text-background transition hover:opacity-90"
-        >
-          <Icon icon="ph:plus" className="size-4" />
-          {t("seiten.neueSeite")}
-        </button>
+      {/* Suchfeld (Framer: `content-panel-search-bar`, Lupe 12 px, Rand 10 px). */}
+      <div className="px-2.5 pb-2.5">
+        <label className="flex h-[30px] items-center gap-2 rounded-md bg-secondary px-2 text-xs">
+          <Icon icon="ph:magnifying-glass" className="size-3 shrink-0 text-muted-foreground" aria-hidden />
+          <input
+            type="search"
+            value={suche}
+            onChange={(e) => setSuche(e.target.value)}
+            placeholder={t("stil.suchen")}
+            aria-label={t("stil.suchen")}
+            className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
+          />
+        </label>
       </div>
       {BEREICHE.map((bereich) => {
         const imBereich = pages
@@ -225,22 +262,59 @@ export function SeitenLeiste({
           .filter(
             (p) => p.nav_area === bereich && !p.system_key && !p.dynamic_source,
           )
+          .filter(treffer)
           .sort((a, b) => a.nav_order - b.nav_order);
+        if (suche && imBereich.length === 0) return null;
         return (
-          <section key={bereich} className="border-b border-border pb-2 last:border-0">
-            <div className="flex items-center justify-between gap-2 px-4 pb-1 pt-4">
-              <h3 className="font-display text-sm font-extrabold">
+          <section
+            key={bereich}
+            className="border-b border-border pb-1.5 last:border-0"
+          >
+            {/* Kopf wie rechts: 40 px, 13 px/600, „+" rechts (Framer `.h10l6u5c`). */}
+            <div className="flex h-10 items-center gap-2 px-2.5">
+              <h3 className="min-w-0 flex-1 truncate font-sans text-[0.8125rem] font-semibold">
                 {t(`seiten.bereichTitel.${bereich}`)}
               </h3>
-              <button
-                type="button"
-                aria-label={t("seiten.neueSeite")}
-                title={t("seiten.neueSeite")}
-                onClick={() => setNeuIn(bereich)}
-                className="text-muted-foreground transition hover:text-foreground"
-              >
-                <Icon icon="ph:plus" className="size-4" />
-              </button>
+              <div className="relative shrink-0">
+                <button
+                  type="button"
+                  aria-label={t("seiten.neueSeite")}
+                  title={t("seiten.neueSeite")}
+                  aria-haspopup="menu"
+                  aria-expanded={plusMenue === bereich}
+                  onClick={() => setPlusMenue((m) => (m === bereich ? null : bereich))}
+                  className="rounded p-1 text-muted-foreground transition hover:bg-secondary hover:text-foreground"
+                >
+                  <Icon icon="ph:plus" className="size-3.5" />
+                </button>
+                {plusMenue === bereich ? (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setPlusMenue(null)} />
+                    <div
+                      role="menu"
+                      className="absolute right-0 top-7 z-50 flex w-48 flex-col rounded-(--radius) border border-border bg-popover py-1 text-xs shadow-lg"
+                    >
+                      <MenuePunkt
+                        icon="ph:file-plus"
+                        label={t("seiten.neueSeite")}
+                        onClick={() => {
+                          setPlusMenue(null);
+                          setNeuIn(bereich);
+                        }}
+                      />
+                      <MenuePunkt
+                        icon="ph:sort-ascending"
+                        label={t("seiten.sortierenAlphabetisch")}
+                        disabled={pending || imBereich.length < 2}
+                        onClick={() => {
+                          setPlusMenue(null);
+                          sortiereAlphabetisch(bereich);
+                        }}
+                      />
+                    </div>
+                  </>
+                ) : null}
+              </div>
             </div>
 
             {neuIn === bereich ? (
@@ -256,7 +330,7 @@ export function SeitenLeiste({
             ) : null}
 
             {imBereich.length === 0 ? (
-              <p className="px-4 pb-2 text-xs text-muted-foreground">
+              <p className="px-2.5 pb-2 text-xs text-muted-foreground">
                 {t(`seiten.bereichLeer.${bereich}`)}
               </p>
             ) : (
@@ -265,6 +339,7 @@ export function SeitenLeiste({
                   <SeitenZeile
                     key={p.id}
                     seite={p}
+                    aktiv={p.id === aktiveId}
                     alleSeiten={pages}
                     erste={i === 0}
                     letzte={i === imBereich.length - 1}
@@ -295,7 +370,8 @@ export function SeitenLeiste({
         seiten={[
           ...pages.filter((p) => p.dynamic_source),
           ...pages.filter((p) => p.system_key && p.system_key !== "blog"),
-        ]}
+        ].filter(treffer)}
+        aktiveId={aktiveId}
         onEinstellungen={(id) => setEinstellungenVon(id)}
         onVorlagen={() => setStreckenWahl(true)}
       />
@@ -339,10 +415,12 @@ export function SeitenLeiste({
  *  dieselben Einstellungen wie bei jeder Seite, nur mit gesperrten Feldern. */
 function Systemgruppe({
   seiten,
+  aktiveId,
   onEinstellungen,
   onVorlagen,
 }: {
   seiten: Page[];
+  aktiveId: string | null;
   onEinstellungen: (id: string) => void;
   /** Öffnet die Wahl der Buchungsstrecke (0474). */
   onVorlagen: () => void;
@@ -351,10 +429,10 @@ function Systemgruppe({
   const router = useRouter();
   if (seiten.length === 0) return null;
   return (
-    <section className="border-b border-border pb-2 last:border-0">
-      <div className="px-4 pb-1 pt-4">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="font-display text-sm font-extrabold">
+    <section className="border-b border-border pb-1.5 last:border-0">
+      <div className="px-2.5">
+        <div className="flex h-10 items-center gap-2">
+          <h3 className="min-w-0 flex-1 truncate font-sans text-[0.8125rem] font-semibold">
             {t("seiten.systemgruppe")}
           </h3>
           {/* Der Weg zu den drei Formen (0474). Er steht an der GRUPPE und nicht
@@ -369,7 +447,7 @@ function Systemgruppe({
             {t("strecke.waehlen")}
           </button>
         </div>
-        <p className="pt-0.5 text-xs text-muted-foreground">
+        <p className="pb-1 text-[0.6875rem] leading-snug text-muted-foreground">
           {t("seiten.systemgruppeHinweis")}
         </p>
       </div>
@@ -387,14 +465,18 @@ function Systemgruppe({
                   ? router.push(`/website/seiten/${p.id}`)
                   : onEinstellungen(p.id)
               }
-              className="flex w-full items-center gap-2 px-4 py-1.5 text-left text-sm transition hover:bg-secondary"
+              aria-selected={p.id === aktiveId}
+              className={
+                "flex h-[30px] w-full items-center gap-2 px-2.5 text-left text-xs transition hover:bg-secondary " +
+                (p.id === aktiveId ? "bg-secondary" : "")
+              }
             >
               {/* Die dynamische Seite trägt ein anderes Symbol: sie ist nicht
                   gesperrt, sondern eine VORLAGE — man kann sie gestalten, nur
                   nicht umbenennen oder löschen. */}
               <Icon
                 icon={p.dynamic_source ? "ph:stack-simple" : "ph:lock-simple"}
-                className="size-4 shrink-0 text-muted-foreground"
+                className="size-3 shrink-0 text-muted-foreground"
               />
               <span className="min-w-0 flex-1 truncate">
                 {/* Der Titel steht NICHT in der DB — er stünde dort in einer
@@ -414,8 +496,12 @@ function Systemgruppe({
   );
 }
 
+/** Höchste Menühöhe (alle Punkte sichtbar) — für das Hochklappen am Fensterrand. */
+const MENUE_HOEHE = 360;
+
 function SeitenZeile({
   seite,
+  aktiv,
   alleSeiten,
   erste,
   letzte,
@@ -425,6 +511,8 @@ function SeitenZeile({
   onEinstellungen,
 }: {
   seite: Page;
+  /** Die im Editor geöffnete Seite (Framer: `aria-selected`). */
+  aktiv: boolean;
   /** Alle Seiten — nötig, um einen LEEREN Ordner zu erkennen (`imMenue`). */
   alleSeiten: Page[];
   erste: boolean;
@@ -436,23 +524,47 @@ function SeitenZeile({
 }) {
   const t = useTranslations("website");
   const router = useRouter();
-  const [menue, setMenue] = useState(false);
+  /**
+   * Das Menü steht als `fixed` im Fenster, nicht `absolute` in der Zeile.
+   * Die Seitenliste liegt in einem Scroll-Panel (`schale.tsx`,
+   * `overflow-y-auto`); ein absolut positioniertes Menü wurde darin am
+   * unteren Rand abgeschnitten — und der LETZTE Punkt ist „Löschen". Gemeldet
+   * am 05.09.2026: „hier müssen wir auch seiten löschen können", obwohl der
+   * Punkt im Code stand. Dasselbe Muster wie in `ebenen-liste.tsx`.
+   */
+  const [menue, setMenue] = useState<{ x: number; y: number } | null>(null);
   /** Erscheint diese Seite in der gerenderten Navigation? */
   const steht = imMenue(seite, alleSeiten);
-  const huelle = useRef<HTMLLIElement>(null);
 
   useEffect(() => {
     if (!menue) return;
-    function aufKlick(e: MouseEvent) {
-      if (!huelle.current?.contains(e.target as Node)) setMenue(false);
-    }
-    document.addEventListener("mousedown", aufKlick);
-    return () => document.removeEventListener("mousedown", aufKlick);
+    // Beim Scrollen des Panels würde das Menü von seiner Zeile weglaufen.
+    const zu = () => setMenue(null);
+    window.addEventListener("scroll", zu, true);
+    window.addEventListener("resize", zu);
+    return () => {
+      window.removeEventListener("scroll", zu, true);
+      window.removeEventListener("resize", zu);
+    };
   }, [menue]);
 
+  function menueOeffnen(e: ReactMouseEvent<HTMLButtonElement>) {
+    if (menue) {
+      setMenue(null);
+      return;
+    }
+    const r = e.currentTarget.getBoundingClientRect();
+    setMenue({ x: r.right, y: r.bottom + 4 });
+  }
+
   return (
-    <li ref={huelle} className="relative">
-      <div className="group flex items-center gap-1.5 px-4 py-1.5 transition hover:bg-secondary/60">
+    <li className="relative" aria-selected={aktiv}>
+      <div
+        className={
+          "group flex h-[30px] items-center gap-2 px-2.5 transition hover:bg-secondary/60 " +
+          (aktiv ? "bg-secondary" : "")
+        }
+      >
         {/* Das Symbol NACH TYP, aus derselben Tabelle wie die Auswahl beim
             Anlegen. Vorher war jede Seite außer der Startseite ein Blatt —
             Ordner, Pop-up, externer Link und 404 sahen gleich aus, obwohl die
@@ -467,9 +579,9 @@ function SeitenZeile({
             icon={
               seite.is_home
                 ? "ph:house-fill"
-                : TYP_SYMBOL[seite.page_type] ?? "ph:file"
+                : (TYP_SYMBOL[seite.page_type] ?? "ph:file")
             }
-            className={`size-4 ${
+            className={`size-3 ${
               steht ? "text-muted-foreground" : "text-muted-foreground/50"
             }`}
           />
@@ -477,7 +589,7 @@ function SeitenZeile({
         <button
           type="button"
           onClick={() => router.push(`/website/seiten/${seite.id}`)}
-          className="min-w-0 flex-1 truncate text-left text-sm"
+          className="min-w-0 flex-1 truncate text-left text-xs"
           title={seite.title}
         >
           {seite.title}
@@ -487,11 +599,11 @@ function SeitenZeile({
               übersprungen. Beides gleich zu beschriften hieße, dem Kunden zu
               verschweigen, warum eine Seite nicht mitkommt. */}
           {seite.is_draft ? (
-            <span className="ml-1 text-xs font-medium text-muted-foreground">
+            <span className="ml-1 text-[0.6875rem] font-medium text-muted-foreground">
               · {t("seiten.entwurfGehalten")}
             </span>
           ) : !seite.is_published ? (
-            <span className="ml-1 text-xs text-muted-foreground">
+            <span className="ml-1 text-[0.6875rem] text-muted-foreground">
               · {t("seiten.entwurf")}
             </span>
           ) : null}
@@ -499,159 +611,189 @@ function SeitenZeile({
         <button
           type="button"
           aria-label={t("seiten.menue")}
-          aria-expanded={menue}
-          onClick={() => setMenue((m) => !m)}
-          className="shrink-0 text-muted-foreground opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100 aria-expanded:opacity-100"
+          aria-expanded={menue !== null}
+          onClick={menueOeffnen}
+          className="shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100 aria-expanded:opacity-100"
         >
-          <Icon icon="ph:dots-three" className="size-4" />
+          <Icon icon="ph:dots-three" className="size-3.5" />
         </button>
       </div>
 
       {menue ? (
-        <div className="absolute right-2 top-8 z-30 flex w-44 flex-col rounded-(--radius) border border-border bg-background py-1 text-sm shadow-lg">
-          <MenuePunkt
-            icon="ph:pencil-simple"
-            label={t("seiten.bearbeiten")}
-            onClick={() => router.push(`/website/seiten/${seite.id}`)}
-          />
-          <MenuePunkt
-            icon="ph:gear"
-            label={t("seiten.einstellungen")}
-            onClick={() => {
-              onEinstellungen(seite);
-              setMenue(false);
+        <>
+          {/* Fangfläche: Klick daneben schließt. */}
+          <div className="fixed inset-0 z-40" onClick={() => setMenue(null)} />
+          <div
+            role="menu"
+            className="fixed z-50 flex w-44 flex-col rounded-(--radius) border border-border bg-background py-1 text-sm shadow-lg"
+            style={{
+              left: Math.max(
+                8,
+                Math.min(menue.x - 176, window.innerWidth - 184),
+              ),
+              // Unten am Fenster nach oben klappen, damit „Löschen" nie
+              // außerhalb steht.
+              top: Math.min(menue.y, window.innerHeight - MENUE_HOEHE),
             }}
-          />
-          {!erste ? (
+          >
             <MenuePunkt
-              icon="ph:arrow-up"
-              label={t("seiten.nachOben")}
-              disabled={pending}
+              icon="ph:pencil-simple"
+              label={t("seiten.bearbeiten")}
+              onClick={() => router.push(`/website/seiten/${seite.id}`)}
+            />
+            <MenuePunkt
+              icon="ph:gear"
+              label={t("seiten.einstellungen")}
               onClick={() => {
-                onVerschiebe(seite, -1);
-                setMenue(false);
+                onEinstellungen(seite);
+                setMenue(null);
               }}
             />
-          ) : null}
-          {!letzte ? (
-            <MenuePunkt
-              icon="ph:arrow-down"
-              label={t("seiten.nachUnten")}
-              disabled={pending}
-              onClick={() => {
-                onVerschiebe(seite, 1);
-                setMenue(false);
-              }}
-            />
-          ) : null}
+            {!erste ? (
+              <MenuePunkt
+                icon="ph:arrow-up"
+                label={t("seiten.nachOben")}
+                disabled={pending}
+                onClick={() => {
+                  onVerschiebe(seite, -1);
+                  setMenue(null);
+                }}
+              />
+            ) : null}
+            {!letzte ? (
+              <MenuePunkt
+                icon="ph:arrow-down"
+                label={t("seiten.nachUnten")}
+                disabled={pending}
+                onClick={() => {
+                  onVerschiebe(seite, 1);
+                  setMenue(null);
+                }}
+              />
+            ) : null}
 
-          <div className="my-1 border-t border-border" />
+            <div className="my-1 border-t border-border" />
 
-          {/* Bereich wechseln. Die Positionsnummer im Zielbereich setzt das
+            {/* Bereich wechseln. Die Positionsnummer im Zielbereich setzt das
               Backend selbst neu (Gegenzustand, Wurzel 1). */}
-          {BEREICHE.filter((b) => b !== seite.nav_area).map((b) => (
-            <MenuePunkt
-              key={b}
-              icon="ph:arrows-left-right"
-              label={t(`seiten.verschiebeNach.${b}`)}
-              disabled={pending}
-              onClick={() => {
-                onAktion(() => updatePage(seite.id, { nav_area: b }));
-                setMenue(false);
-              }}
-            />
-          ))}
+            {BEREICHE.filter((b) => b !== seite.nav_area).map((b) => (
+              <MenuePunkt
+                key={b}
+                icon="ph:arrows-left-right"
+                label={t(`seiten.verschiebeNach.${b}`)}
+                disabled={pending}
+                onClick={() => {
+                  onAktion(() => updatePage(seite.id, { nav_area: b }));
+                  setMenue(null);
+                }}
+              />
+            ))}
 
-          {!seite.is_home ? (
-            <MenuePunkt
-              icon="ph:house"
-              label={t("seiten.alsStartseite")}
-              disabled={pending}
-              onClick={() => {
-                onAktion(() => setHomePage(seite.id));
-                setMenue(false);
-              }}
-            />
-          ) : null}
+            {!seite.is_home ? (
+              <MenuePunkt
+                icon="ph:house"
+                label={t("seiten.alsStartseite")}
+                disabled={pending}
+                onClick={() => {
+                  onAktion(() => setHomePage(seite.id));
+                  setMenue(null);
+                }}
+              />
+            ) : null}
 
-          <div className="my-1 border-t border-border" />
+            <div className="my-1 border-t border-border" />
 
-          {/* Als Entwurf halten gibt es nur für Seiten mit Inhalt und nicht
+            {/* Als Entwurf halten gibt es nur für Seiten mit Inhalt und nicht
               für die Startseite — eine Website ohne Eingang wäre keine. Die
               Datenbank lehnt es ohnehin ab (CHECK aus 0443); der Punkt hier
               gar nicht erst zu zeigen ist die freundlichere Fassung
               derselben Regel. */}
-          {!seite.is_home &&
-          seite.page_type !== "external" &&
-          seite.page_type !== "folder" ? (
+            {!seite.is_home &&
+            seite.page_type !== "external" &&
+            seite.page_type !== "folder" ? (
+              <MenuePunkt
+                icon={
+                  seite.is_draft
+                    ? "ph:arrow-counter-clockwise"
+                    : "ph:pencil-simple-slash"
+                }
+                label={
+                  seite.is_draft
+                    ? t("seiten.entwurfFreigeben")
+                    : t("seiten.entwurfHalten")
+                }
+                disabled={pending}
+                onClick={() => {
+                  onAktion(() => setPageDraft(seite.id, !seite.is_draft));
+                  setMenue(null);
+                }}
+              />
+            ) : null}
+
             <MenuePunkt
-              icon={seite.is_draft ? "ph:arrow-counter-clockwise" : "ph:pencil-simple-slash"}
+              icon={seite.is_published ? "ph:eye-slash" : "ph:globe"}
               label={
-                seite.is_draft
-                  ? t("seiten.entwurfFreigeben")
-                  : t("seiten.entwurfHalten")
+                seite.is_published
+                  ? t("seiten.zurueckziehen")
+                  : t("seiten.veroeffentlichen")
               }
               disabled={pending}
               onClick={() => {
-                onAktion(() => setPageDraft(seite.id, !seite.is_draft));
-                setMenue(false);
+                onAktion(() =>
+                  seite.is_published
+                    ? unpublishPage(seite.id)
+                    : publishPage(seite.id),
+                );
+                setMenue(null);
               }}
             />
-          ) : null}
 
-          <MenuePunkt
-            icon={seite.is_published ? "ph:eye-slash" : "ph:globe"}
-            label={
-              seite.is_published
-                ? t("seiten.zurueckziehen")
-                : t("seiten.veroeffentlichen")
-            }
-            disabled={pending}
-            onClick={() => {
-              onAktion(() =>
-                seite.is_published
-                  ? unpublishPage(seite.id)
-                  : publishPage(seite.id),
-              );
-              setMenue(false);
-            }}
-          />
-
-          {/* Duplizieren gibt es nur für Seiten mit Inhalt (0433): einen Ordner
+            {/* Duplizieren gibt es nur für Seiten mit Inhalt (0433): einen Ordner
               zu kopieren hieße eine leere Gruppe zu erzeugen, und einen externen
               Menüpunkt einen zweiten Link auf dasselbe Ziel.
 
               Die Kopie ist immer ein ENTWURF und ohne die SEO-Felder des
               Originals — sonst stünden zwei Seiten mit demselben Meta-Titel
               live, also genau der Befund, den die SEO-Prüfung meldet. */}
-          {seite.page_type === "normal" ? (
-            <MenuePunkt
-              icon="ph:copy"
-              label={t("seiten.duplizieren")}
-              disabled={pending}
-              onClick={() => {
-                onAktion(() => duplicatePage(seite.id));
-                setMenue(false);
-              }}
-            />
-          ) : null}
-
-          {/* Die Startseite ist nicht löschbar: ohne sie liefert die Domain
-              nichts. Das Backend hat dafür einen eigenen Riegel (genau eine Home
-              pro Konto), hier wird der Punkt gar nicht angeboten. */}
-          {!seite.is_home ? (
+            {seite.page_type === "normal" ? (
+              <MenuePunkt
+                icon="ph:copy"
+                label={t("seiten.duplizieren")}
+                disabled={pending}
+                onClick={() => {
+                  onAktion(() => duplicatePage(seite.id));
+                  setMenue(null);
+                }}
+              />
+            ) : null}
+            {/* Auf der Startseite steht der Punkt DEAKTIVIERT mit Hinweis,
+                statt zu fehlen: ein fehlender Punkt liest sich als „geht
+                nicht" ohne Warum (gemeldet 05.09.2026: „immer noch kein
+                löschen button"). Der Weg: andere Seite zur Startseite machen,
+                dann löschen. Den Riegel setzt das Backend (422). */}
             <MenuePunkt
               icon="ph:trash"
               label={t("seiten.loeschen")}
-              disabled={pending}
+              disabled={pending || seite.is_home}
+              title={
+                seite.is_home ? t("seiten.startseiteNichtLoeschbar") : undefined
+              }
               gefahr
               onClick={() => {
+                setMenue(null);
+                // Rückfrage: eine Seite samt Abschnitten ist nach dem Klick
+                // weg, einen Rückweg gibt es nicht.
+                if (
+                  !window.confirm(
+                    t("seiten.loeschenFrage", { titel: seite.title }),
+                  )
+                )
+                  return;
                 onAktion(() => deletePage(seite.id));
-                setMenue(false);
               }}
             />
-          ) : null}
-        </div>
+          </div>
+        </>
       ) : null}
     </li>
   );
@@ -663,17 +805,20 @@ function MenuePunkt({
   onClick,
   disabled,
   gefahr,
+  title,
 }: {
   icon: string;
   label: string;
   onClick: () => void;
   disabled?: boolean;
   gefahr?: boolean;
+  title?: string;
 }) {
   return (
     <button
       type="button"
       disabled={disabled}
+      title={title}
       onClick={onClick}
       className={
         "flex items-center gap-2 px-3 py-1.5 text-left transition disabled:opacity-40 " +

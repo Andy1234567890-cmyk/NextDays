@@ -17,6 +17,16 @@
 // Bewusst KEINE Marktplatz-Elemente (keine globale Suchpille, kein „myBestDays
 // für Gastgeber") — die Seite gehört dem Betrieb, nicht dem Marktplatz.
 import Link from "next/link";
+import type { ReactNode } from "react";
+
+import {
+  KOPF_GRUPPE,
+  type RegionStand,
+  regionLesen,
+  sichtbarkeitKlassen,
+  teilStand,
+  teileReihenfolge,
+} from "@nextdays/baukasten-stil";
 
 import type { NavItem, SiteBranding } from "@/lib/site-context";
 import { mitSprache } from "@/lib/sprache";
@@ -129,7 +139,71 @@ export type SiteHeaderProps = {
   aktiverSlug?: string;
   /** Sprache, in der gerendert wird. */
   sprache: string;
+  /** Im Editor-iframe (0570): Kopfzeile und Teile tragen `data-region`/
+   *  `data-teil`, ausgeblendete Teile stehen durchscheinend statt weg. */
+  editor?: boolean;
 };
+
+/** Ein TEIL der Kopfzeile (Logo, Navigation, Buchen-Knopf …) als Ebene (0570).
+ *
+ *  Der Rahmen trägt im Editor den Marker für den Ebenen-Baum und immer die
+ *  Sichtbarkeitsklassen aus `header_teile` — dieselbe Regel wie bei Blöcken:
+ *  live weg, im Editor durchscheinend, damit der Rückweg sichtbar bleibt.
+ *  Ein `div` und kein `display: contents`, weil die Brücke sein Rechteck
+ *  misst und ein Element ohne Box 0×0 meldet. */
+function Teil({
+  name,
+  stand,
+  editor,
+  className,
+  children,
+}: {
+  name: string;
+  stand: RegionStand;
+  editor: boolean;
+  className?: string;
+  children: ReactNode;
+}) {
+  const t = teilStand(stand, name);
+  return (
+    <div
+      data-teil={editor ? name : undefined}
+      className={[className ?? "", sichtbarkeitKlassen(t.hidden_on, editor)]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** Die rechte Gruppe der Kopfzeile in der eingestellten Reihenfolge
+ *  (`header_teile.reihenfolge`): Navigation · Sprachwähler · Buchen-Knopf.
+ *  Logo und Slogan stehen im Theme fest und sind nicht Teil der Gruppe. */
+function RechteGruppe({
+  stand,
+  editor,
+  navigation,
+  sprachwaehler,
+  buchen,
+}: {
+  stand: RegionStand;
+  editor: boolean;
+  navigation: ReactNode;
+  sprachwaehler: ReactNode;
+  buchen: ReactNode;
+}) {
+  const inhalt: Record<string, ReactNode> = { navigation, sprachwaehler, buchen };
+  return (
+    <>
+      {teileReihenfolge(stand, KOPF_GRUPPE).map((name) => (
+        <Teil key={name} name={name} stand={stand} editor={editor}>
+          {inhalt[name]}
+        </Teil>
+      ))}
+    </>
+  );
+}
 
 /** Eigene Kopfzeilen-Farben, wenn der Kunde sie gesetzt hat (0426).
  *
@@ -366,9 +440,28 @@ export function SiteHeader({
   nav,
   aktiverSlug,
   sprache,
+  editor = false,
 }: SiteHeaderProps) {
   const theme = themeOf(branding);
   const stil = kopfStil(branding);
+  // Kopfzeile als Ebene (0570): Sichtbarkeit, Sperre, Reihenfolge der Teile.
+  const teile = regionLesen("kopfzeile", branding?.header_teile);
+  const region = {
+    "data-region": editor ? "kopfzeile" : undefined,
+  } as const;
+  const regionKlasse = sichtbarkeitKlassen(teile.hidden_on, editor);
+  const logo = (
+    <Teil name="logo" stand={teile} editor={editor} className="shrink-0">
+      <LogoBlock
+        branding={branding}
+        hoehe={theme === "mitte" ? 2.5 : 2.25}
+        sprache={sprache}
+      />
+    </Teil>
+  );
+  const buchen = (
+    <BuchenKnopf sprache={sprache} standard={branding?.default_language} />
+  );
   // Die Hintergrundklasse fällt weg, sobald der Kunde eine eigene Farbe gesetzt
   // hat: `bg-background/90` und ein Inline-`backgroundColor` würden sonst um
   // dieselbe Eigenschaft streiten, und wer gewinnt, hängt an der Reihenfolge im
@@ -394,45 +487,54 @@ export function SiteHeader({
   if (theme === "mitte") {
     return (
       <header
+        {...region}
         style={stil}
-        className={`sticky top-0 z-50 border-b border-border ${grund}backdrop-blur`}
+        className={`sticky top-0 z-50 border-b border-border ${grund}backdrop-blur ${regionKlasse}`}
       >
         <div className="mx-auto flex max-w-7xl flex-col items-center gap-3 px-6 py-4">
-          <LogoBlock branding={branding} hoehe={2.5} sprache={sprache} />
+          {logo}
           {branding?.tagline ? (
-            <p
-              className="text-center text-sm text-muted-foreground"
-              // Eigene Schrift für den Slogan, falls gewählt (0426).
-              style={{ fontFamily: "var(--font-slogan, inherit)" }}
-            >
-              {branding.tagline}
-            </p>
+            <Teil name="slogan" stand={teile} editor={editor}>
+              <p
+                className="text-center text-sm text-muted-foreground"
+                // Eigene Schrift für den Slogan, falls gewählt (0426).
+                style={{ fontFamily: "var(--font-slogan, inherit)" }}
+              >
+                {branding.tagline}
+              </p>
+            </Teil>
           ) : null}
           <div className="flex w-full items-center justify-center gap-6 border-t border-border pt-3">
-            {/* Ab `md` die waagerechte Liste, darunter der Burger — die
-                Liste lief auf dem Handy aus der Kopfzeile heraus (B9). */}
-            <NavLinks
-              nav={nav}
-              aktiverSlug={aktiverSlug}
-              sprache={sprache}
-              standard={branding?.default_language}
-              nurAbMd
-            />
-            <BurgerMenue
-              nav={nav}
-              aktiverSlug={aktiverSlug}
-              sprache={sprache}
-              standard={branding?.default_language}
-              beschriftung={texte(sprache ?? "de").menueOeffnen}
-              // Hier steht der Burger MITTIG (`justify-center`), nicht rechts.
-              // Eine rechtsbündige Klappe lief von dort nach links aus dem
-              // Bild und war bei 390 px eine leere weiße Fläche (B9).
-              mittig
-            />
-            {waehler}
-            <BuchenKnopf
-              sprache={sprache}
-              standard={branding?.default_language}
+            <RechteGruppe
+              stand={teile}
+              editor={editor}
+              navigation={
+                <>
+                  {/* Ab `md` die waagerechte Liste, darunter der Burger — die
+                      Liste lief auf dem Handy aus der Kopfzeile heraus (B9). */}
+                  <NavLinks
+                    nav={nav}
+                    aktiverSlug={aktiverSlug}
+                    sprache={sprache}
+                    standard={branding?.default_language}
+                    nurAbMd
+                  />
+                  <BurgerMenue
+                    nav={nav}
+                    aktiverSlug={aktiverSlug}
+                    sprache={sprache}
+                    standard={branding?.default_language}
+                    beschriftung={texte(sprache ?? "de").menueOeffnen}
+                    // Hier steht der Burger MITTIG (`justify-center`), nicht
+                    // rechts. Eine rechtsbündige Klappe lief von dort nach
+                    // links aus dem Bild und war bei 390 px eine leere weiße
+                    // Fläche (B9).
+                    mittig
+                  />
+                </>
+              }
+              sprachwaehler={waehler}
+              buchen={buchen}
             />
           </div>
         </div>
@@ -442,33 +544,37 @@ export function SiteHeader({
 
   if (theme === "karte") {
     return (
-      <header className="sticky top-0 z-50 px-4 pt-4">
+      <header {...region} className={`sticky top-0 z-50 px-4 pt-4 ${regionKlasse}`}>
         <div
           style={stil}
           className={`mx-auto flex max-w-7xl items-center justify-between gap-4 rounded-3xl border border-border ${eigenerKopfGrund(branding) ? "" : "bg-background/95 "}px-6 py-3 shadow-sm backdrop-blur`}
         >
-          <LogoBlock branding={branding} hoehe={2.25} sprache={sprache} />
+          {logo}
           <div className="flex items-center gap-6">
-            {/* Ab `md` die waagerechte Liste, darunter der Burger — die
-                Liste lief auf dem Handy aus der Kopfzeile heraus (B9). */}
-            <NavLinks
-              nav={nav}
-              aktiverSlug={aktiverSlug}
-              sprache={sprache}
-              standard={branding?.default_language}
-              nurAbMd
-            />
-            <BurgerMenue
-              nav={nav}
-              aktiverSlug={aktiverSlug}
-              sprache={sprache}
-              standard={branding?.default_language}
-              beschriftung={texte(sprache ?? "de").menueOeffnen}
-            />
-            {waehler}
-            <BuchenKnopf
-              sprache={sprache}
-              standard={branding?.default_language}
+            <RechteGruppe
+              stand={teile}
+              editor={editor}
+              navigation={
+                <>
+                  {/* Ab `md` die waagerechte Liste, darunter der Burger (B9). */}
+                  <NavLinks
+                    nav={nav}
+                    aktiverSlug={aktiverSlug}
+                    sprache={sprache}
+                    standard={branding?.default_language}
+                    nurAbMd
+                  />
+                  <BurgerMenue
+                    nav={nav}
+                    aktiverSlug={aktiverSlug}
+                    sprache={sprache}
+                    standard={branding?.default_language}
+                    beschriftung={texte(sprache ?? "de").menueOeffnen}
+                  />
+                </>
+              }
+              sprachwaehler={waehler}
+              buchen={buchen}
             />
           </div>
         </div>
@@ -488,35 +594,42 @@ export function SiteHeader({
     // Seitenleisten-Layout (live abgelesen, 0468) — keine erfundene Zahl.
     return (
       <header
+        {...region}
         style={stil}
-        className={`border-b border-border ${eigenerKopfGrund(branding) ? "" : "bg-background "}min-[68.125rem]:sticky min-[68.125rem]:top-0 min-[68.125rem]:z-50 min-[68.125rem]:h-screen min-[68.125rem]:w-64 min-[68.125rem]:shrink-0 min-[68.125rem]:border-b-0 min-[68.125rem]:border-r`}
+        className={`border-b border-border ${eigenerKopfGrund(branding) ? "" : "bg-background "}min-[68.125rem]:sticky min-[68.125rem]:top-0 min-[68.125rem]:z-50 min-[68.125rem]:h-screen min-[68.125rem]:w-64 min-[68.125rem]:shrink-0 min-[68.125rem]:border-b-0 min-[68.125rem]:border-r ${regionKlasse}`}
       >
         <div className="flex items-center justify-between gap-4 px-6 py-4 min-[68.125rem]:h-full min-[68.125rem]:flex-col min-[68.125rem]:items-start min-[68.125rem]:justify-start min-[68.125rem]:gap-8 min-[68.125rem]:py-8">
-          <LogoBlock branding={branding} hoehe={2.25} sprache={sprache} />
+          {logo}
           <div className="flex items-center gap-6 min-[68.125rem]:flex-1 min-[68.125rem]:flex-col min-[68.125rem]:items-start min-[68.125rem]:gap-8">
-            {/* Ab 1090 px die senkrechte Leiste, darunter der Burger: bis
-                dahin ist die Kopfzeile waagerecht, und eine senkrechte Liste
-                darin schob Menüpunkte übereinander (B9). */}
-            <NavLinks
-              nav={nav}
-              aktiverSlug={aktiverSlug}
-              senkrecht
-              nurAbBreit
-              sprache={sprache}
-              standard={branding?.default_language}
-            />
-            <BurgerMenue
-              nav={nav}
-              aktiverSlug={aktiverSlug}
-              sprache={sprache}
-              standard={branding?.default_language}
-              beschriftung={texte(sprache ?? "de").menueOeffnen}
-              breiteSchwelle
-            />
-            {waehler}
-            <BuchenKnopf
-              sprache={sprache}
-              standard={branding?.default_language}
+            <RechteGruppe
+              stand={teile}
+              editor={editor}
+              navigation={
+                <>
+                  {/* Ab 1090 px die senkrechte Leiste, darunter der Burger:
+                      bis dahin ist die Kopfzeile waagerecht, und eine
+                      senkrechte Liste darin schob Menüpunkte übereinander
+                      (B9). */}
+                  <NavLinks
+                    nav={nav}
+                    aktiverSlug={aktiverSlug}
+                    senkrecht
+                    nurAbBreit
+                    sprache={sprache}
+                    standard={branding?.default_language}
+                  />
+                  <BurgerMenue
+                    nav={nav}
+                    aktiverSlug={aktiverSlug}
+                    sprache={sprache}
+                    standard={branding?.default_language}
+                    beschriftung={texte(sprache ?? "de").menueOeffnen}
+                    breiteSchwelle
+                  />
+                </>
+              }
+              sprachwaehler={waehler}
+              buchen={buchen}
             />
           </div>
         </div>
@@ -527,32 +640,38 @@ export function SiteHeader({
   // klar (Standard)
   return (
     <header
+      {...region}
       style={stil}
-      className={`sticky top-0 z-50 border-b border-border ${grund}backdrop-blur`}
+      className={`sticky top-0 z-50 border-b border-border ${grund}backdrop-blur ${regionKlasse}`}
     >
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-6">
-        <LogoBlock branding={branding} hoehe={2.25} sprache={sprache} />
+        {logo}
         <div className="flex items-center gap-6">
-          {/* Ab `md` die waagerechte Liste, darunter der Burger (B9). */}
-          <NavLinks
-            nav={nav}
-            aktiverSlug={aktiverSlug}
-            sprache={sprache}
-            standard={branding?.default_language}
-            nurAbMd
+          <RechteGruppe
+            stand={teile}
+            editor={editor}
+            navigation={
+              <>
+                {/* Ab `md` die waagerechte Liste, darunter der Burger (B9). */}
+                <NavLinks
+                  nav={nav}
+                  aktiverSlug={aktiverSlug}
+                  sprache={sprache}
+                  standard={branding?.default_language}
+                  nurAbMd
+                />
+                <BurgerMenue
+                  nav={nav}
+                  aktiverSlug={aktiverSlug}
+                  sprache={sprache}
+                  standard={branding?.default_language}
+                  beschriftung={texte(sprache ?? "de").menueOeffnen}
+                />
+              </>
+            }
+            sprachwaehler={waehler}
+            buchen={buchen}
           />
-          <BurgerMenue
-            nav={nav}
-            aktiverSlug={aktiverSlug}
-            sprache={sprache}
-            standard={branding?.default_language}
-            beschriftung={texte(sprache ?? "de").menueOeffnen}
-          />
-          {waehler}
-          <BuchenKnopf
-              sprache={sprache}
-              standard={branding?.default_language}
-            />
         </div>
       </div>
     </header>

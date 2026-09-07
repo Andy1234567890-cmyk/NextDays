@@ -123,6 +123,10 @@ export type Branding = {
   header_link_color: string | null;
   link_color: string | null;
   footer_background: string | null;
+  // --- Kopf-/Fußzeile als Ebenen (0570) -----------------------------------
+  // `{}`/`null` = Standard. Form und Lesen: `regionLesen` in baukasten-stil.
+  header_teile: Record<string, unknown> | null;
+  footer_teile: Record<string, unknown> | null;
   // --- Typografie des Logo-Bereichs (0426) -------------------------------
   logo_name_font: string | null;
   /** Schriftgröße des Firmennamens in Punkt (8–48). */

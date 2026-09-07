@@ -8484,7 +8484,10 @@
       "dynamischeSeiten": {
         "property": "Objektseite"
       },
-      "nichtImMenue": "Diese Seite erscheint nicht im Menü der Website."
+      "nichtImMenue": "Diese Seite erscheint nicht im Menü der Website.",
+      "loeschenFrage": "„{titel}“ wirklich löschen? Die Seite und ihre Abschnitte sind danach weg.",
+      "startseiteNichtLoeschbar": "Die Startseite lässt sich nicht löschen — zuerst eine andere Seite als Startseite festlegen.",
+      "sortierenAlphabetisch": "Alphabetisch sortieren"
     },
     "vorlagen": {
       "angewendet": "Vorlage angewendet.",
@@ -9716,7 +9719,86 @@
       "sperren": "Sperren",
       "entsperren": "Entsperren",
       "verstecken": "Verstecken",
-      "entfernen": "Löschen"
+      "entfernen": "Löschen",
+      "seiteWaehlen": "Seite wählen",
+      "primaer": "Primär",
+      "abBreite": "ab {min} px",
+      "breite": "{von} — {bis}",
+      "elternteil": "Elternteil auswählen",
+      "aufklappen": "Aufklappen",
+      "zuklappen": "Zuklappen",
+      "leerContainer": "leer",
+      "verwaist": "ohne Elternteil",
+      "neu": "neu",
+      "einblenden": "Einblenden",
+      "verstecktAufGeraet": "Auf {geraet} ausblenden",
+      "mehrfach": "{n} Ebenen gewählt",
+      "zugAbgelehnt": {
+        "selbst": "Nicht auf sich selbst",
+        "unbekannt": "Unbekannte Ebene",
+        "quelleGesperrt": "Gesperrte Ebene bewegt sich nicht",
+        "zielGesperrt": "Ziel ist gesperrt",
+        "zyklus": "Nicht in einen eigenen Nachkommen",
+        "nurInSpalte": "Bausteine nur in eine Spalte",
+        "nebenBaustein": "Bausteine nur neben einen Baustein",
+        "containerNichtUmhaengen": "Abschnitte und Spalten bleiben bei ihrem Elternteil",
+        "andereArt": "Nur unter Gleichartigen",
+        "andererElternteil": "Nur unter Geschwistern"
+      },
+      "containerLoeschenFrage": "Diese Ebene samt Inhalt löschen?",
+      "teile": {
+        "logo": "Logo",
+        "slogan": "Slogan",
+        "navigation": "Navigation",
+        "sprachwaehler": "Sprachwähler",
+        "buchen": "Buchen-Knopf",
+        "social": "Social-Links",
+        "bildnachweise": "Bildnachweise",
+        "copyright": "Copyright-Zeile"
+      },
+      "region": {
+        "anordnung": "Anordnung",
+        "sperrenHinweis": "Gesperrt heißt: kein Klick auf der Fläche, kein Ziehen im Baum.",
+        "festImTheme": "Dieser Teil steht im Theme an fester Stelle und lässt sich nicht verschieben.",
+        "einstellungen": "Einstellungen",
+        "ziel": {
+          "farben": "Farben der Kopf- und Fußzeile",
+          "layout": "Site-Layout",
+          "logo": "Logo, Firmenname und Slogan",
+          "seiten": "Seiten und Menü verwalten",
+          "sprachen": "Sprachen der Website",
+          "buttons": "Buttons",
+          "kontakt": "Kontakt und Social-Links",
+          "mediathek": "Mediathek"
+        }
+      },
+      "geschwisterWaehlen": "Alle Geschwister wählen",
+      "stilKopieren": "Stil kopieren",
+      "stilEinfuegen": "Stil einfügen",
+      "stilKopiert": "Stil kopiert — ⌥⌘V fügt ihn an einer anderen Ebene ein.",
+      "stilLeer": "Noch kein Stil kopiert.",
+      "ueberlaufAbschneiden": "Überlauf: Abschneiden",
+      "ueberlaufSichtbar": "Überlauf: Sichtbar",
+      "ueberlaufVerborgen": "Überlauf: Verborgen",
+      "ueberlaufScrollen": "Überlauf: Scrollen",
+      "scrollAbschnitt": "Scroll-Abschnitt",
+      "hatLink": "Verlinkt",
+      "hatEffekte": "Hat Effekte",
+      "rueckgaengig": "Rückgängig",
+      "wiederholen": "Wiederholen",
+      "nichtsRueckgaengig": "Nichts rückgängig zu machen.",
+      "art": {
+        "frame": "Rahmen",
+        "stack": "Stapel",
+        "grid": "Raster",
+        "masonry": "Mauerwerk",
+        "bild": "Bild",
+        "video": "Video",
+        "link": "Link",
+        "knopf": "Knopf",
+        "ueberschrift": "Überschrift",
+        "text": "Text"
+      }
     },
     "hinzufuegen": {
       "widgets": "Bausteine",
@@ -10208,7 +10290,9 @@
       "waagerecht": "Waagerecht",
       "senkrecht": "Senkrecht",
       "breiteFuellen": "Breite füllen",
-      "umgeben": "Mit Rand verteilt"
+      "umgeben": "Mit Rand verteilt",
+      "verteilenWaagerecht": "Waagerecht verteilen",
+      "verteilenSenkrecht": "Senkrecht verteilen"
     },
     "cms": {
       "filter": "Filter",
@@ -10242,6 +10326,522 @@
       "sortierungHinzufuegen": "Sortierung hinzufügen",
       "spalten": "Spalten",
       "spaltenSuchen": "Spalten suchen …"
+    },
+    "stil": {
+      "bearbeitenFuer": "Bearbeiten für",
+      "hatUeberschreibungen": "hat eigene Werte",
+      "geraet": {
+        "desktop": "Desktop",
+        "tablet": "Tablet",
+        "mobil": "Mobil"
+      },
+      "ueberschreibung": "Eigener Wert für {geraet} — Zurücksetzen zeigt wieder den geerbten Wert",
+      "geerbtVon": "Geerbt von {geraet}",
+      "zuruecksetzen": "Überschreibung zurücksetzen",
+      "entfernen": "Entfernen",
+      "hinzufuegen": "{karte}: Eigenschaft hinzufügen",
+      "suchen": "Suchen …",
+      "keinTreffer": "Keine Eigenschaft passt.",
+      "aufklappen": "Aufklappen",
+      "zuklappen": "Zuklappen",
+      "automatisch": "Automatisch",
+      "farbeWaehlen": "Farbe wählen",
+      "farbe": {
+        "hex": "Farbwert",
+        "rolle": "Farbrolle",
+        "deckung": "Deckung"
+      },
+      "lage": {
+        "center": "Mitte",
+        "top": "Oben",
+        "bottom": "Unten",
+        "left": "Links",
+        "right": "Rechts",
+        "top_left": "Oben links",
+        "top_right": "Oben rechts",
+        "bottom_left": "Unten links",
+        "bottom_right": "Unten rechts"
+      },
+      "position": {
+        "titel": "Position",
+        "typ": "Art",
+        "relativ": "Im Fluss",
+        "absolut": "Absolut",
+        "fixiert": "Fixiert",
+        "klebend": "Klebend",
+        "oben": "Oben",
+        "rechts": "Rechts",
+        "unten": "Unten",
+        "links": "Links",
+        "ebene": "Ebene",
+        "kanten": "Kanten",
+        "kantenHinweis": "Klick auf eine Kante setzt sie auf 0 px, ein zweiter löscht sie."
+      },
+      "groesse": {
+        "titel": "Größe",
+        "breite": "Breite",
+        "hoehe": "Höhe",
+        "min_breite": "Min. Breite",
+        "max_breite": "Max. Breite",
+        "min_hoehe": "Min. Höhe",
+        "max_hoehe": "Max. Höhe",
+        "seitenverhaeltnis": "Seitenverhältnis",
+        "ketteHinweis": "Gemessenes Verhältnis festhalten",
+        "modus": {
+          "fest": "Fest",
+          "relativ": "Relativ",
+          "viewport": "Fenster",
+          "fuellen": "Füllen",
+          "inhalt": "Inhalt"
+        },
+        "spalte": "Spalte",
+        "wachsen": "Wachsen",
+        "wachsenWert": {
+          "waagerecht": "Waagerecht — eine Zeile, Breite nach Inhalt",
+          "senkrecht": "Senkrecht — Breite halten, Höhe nach Inhalt",
+          "fest": "Fest — beide Maße auf die gemessenen Pixel"
+        },
+        "spanX": "Spalten",
+        "spanY": "Zeilen",
+        "spanEins": "Eine",
+        "spanWert": "{n, plural, one {Eine} other {# Felder}}"
+      },
+      "stil": {
+        "titel": "Stil",
+        "opazitaet": "Deckkraft",
+        "sichtbar": "Sichtbar",
+        "fuellung": "Füllung",
+        "ueberlauf": "Überlauf",
+        "radius": "Radius",
+        "radiusJeEcke": "Radius je Ecke",
+        "grenze": "Rahmen",
+        "schatten": "Schatten",
+        "schattenNeu": "Schatten",
+        "schattenAussen": "Außen",
+        "schattenInnen": "Innen",
+        "ueberlaufWert": {
+          "sichtbar": "Sichtbar",
+          "verborgen": "Verborgen",
+          "abschneiden": "Abschneiden",
+          "scrollen": "Scrollen"
+        },
+        "grenzeArt": {
+          "solid": "Durchgezogen",
+          "dashed": "Gestrichelt",
+          "dotted": "Gepunktet",
+          "double": "Doppelt"
+        },
+        "schattenFeld": {
+          "x": "Versatz X",
+          "y": "Versatz Y",
+          "weich": "Weichzeichnen",
+          "ausbreitung": "Ausbreitung",
+          "farbe": "Farbe",
+          "lage": "Lage"
+        },
+        "sichtbarHinweis": "Auf {geraet} ausgeblendet",
+        "mischmodus": "Mischmodus",
+        "filter": "Filter",
+        "ueberlauf_x": "Überlauf X",
+        "ueberlauf_y": "Überlauf Y",
+        "zeiger_ereignisse": "Zeiger-Ereignisse",
+        "text_auswahl": "Textauswahl",
+        "tippfarbe": "Tippfarbe",
+        "mischmodusWert": {
+          "normal": "Normal",
+          "multiply": "Multiplizieren",
+          "screen": "Negativ multiplizieren",
+          "overlay": "Überlagern",
+          "darken": "Abdunkeln",
+          "lighten": "Aufhellen",
+          "difference": "Differenz",
+          "exclusion": "Ausschluss",
+          "hue": "Farbton",
+          "saturation": "Sättigung",
+          "color": "Farbe",
+          "luminosity": "Luminanz"
+        },
+        "filterWert": {
+          "weichzeichnen": "Weichzeichnen",
+          "helligkeit": "Helligkeit",
+          "kontrast": "Kontrast",
+          "saettigung": "Sättigung",
+          "graustufen": "Graustufen"
+        },
+        "maske": "Maske",
+        "auswahl": "Textmarkierung",
+        "maskeArt": "Maske",
+        "maskeWert": {
+          "linear": "Linear",
+          "radial": "Radial"
+        },
+        "maskeWinkel": "Winkel",
+        "maskeBereich": "Von · Bis",
+        "maskeUmkehren": "Umkehren",
+        "auswahl_farbe": "Markierung: Text",
+        "auswahl_hintergrund": "Markierung: Fläche"
+      },
+      "fuellung": {
+        "farbe": "Farbe",
+        "verlauf": "Verlauf",
+        "bild": "Bild",
+        "winkel": "Winkel",
+        "stufe": "Stufe",
+        "position": "Position",
+        "zweiStufen": "Ein Verlauf braucht mindestens zwei Stufen.",
+        "ersetztHinweis": "Gesetzt ist: {art}. Was du hier ausfüllst, ersetzt es.",
+        "groesse": "Größe",
+        "lage": "Lage",
+        "wiederholen": "Kacheln",
+        "auflage": "Abdunkeln",
+        "cover": "Ausfüllen",
+        "contain": "Einpassen",
+        "auto": "Originalgröße",
+        "linear": "Linearer Verlauf",
+        "radial": "Radialer Verlauf",
+        "konisch": "Konischer Verlauf",
+        "mitte": "Mittelpunkt",
+        "zuschneiden": "Zuschneiden"
+      },
+      "transform": {
+        "titel": "Transform",
+        "rotation": "Drehung",
+        "skalierung": "Skalierung",
+        "versatz_x": "Versatz X",
+        "versatz_y": "Versatz Y",
+        "neigung_x": "Neigung X",
+        "neigung_y": "Neigung Y",
+        "ursprung": "Ursprung",
+        "perspektive": "Perspektive",
+        "rotation_x": "Drehung X",
+        "rotation_y": "Drehung Y",
+        "tiefe": "Tiefe",
+        "rueckseite": "Rückseite",
+        "raum_3d": "3D-Raum",
+        "rueckseiteWert": {
+          "sichtbar": "Sichtbar",
+          "verborgen": "Verborgen"
+        }
+      },
+      "scroll": {
+        "titel": "Scroll-Abschnitt",
+        "anker": "Anker",
+        "versatz_y": "Versatz oben",
+        "hinweis": "Kleinbuchstaben, Ziffern und Bindestrich; Links springen mit #anker hierher."
+      },
+      "a11y": {
+        "titel": "Zugänglichkeit",
+        "tag": "HTML-Element",
+        "label": "Beschriftung",
+        "tab_index": "Tab-Reihenfolge",
+        "fuer_leser_verborgen": "Für Vorlesehilfen verborgen",
+        "nosnippet": "Google Bot",
+        "nosnippetWert": {
+          "einbeziehen": "Einbeziehen",
+          "ueberspringen": "Überspringen (kein Auszug in Suchergebnissen)"
+        }
+      },
+      "hinzufuegenChip": "Hinzufügen …",
+      "link": {
+        "titel": "Link",
+        "zu": "Link zu",
+        "platzhalter": "Seite oder Adresse …",
+        "neuerTab": "Neuer Tab",
+        "hinweis": "Bausteine mit eigenen Knöpfen oder Formularen werden nicht als Ganzes verlinkt.",
+        "abschnitt": "Abschnitt",
+        "abschnittLeer": "Kein Abschnitt",
+        "rel": "Verhältnis (rel)",
+        "parameter": "Parameter",
+        "parameterPlatzhalter": "utm_source=newsletter&utm_medium=mail",
+        "relWert": {
+          "nofollow": "Nicht folgen",
+          "sponsored": "Gesponsert",
+          "noopener": "Kein Opener",
+          "noreferrer": "Kein Referrer"
+        },
+        "scrollen": "Scrollen",
+        "scrollenWert": {
+          "sanft": "Sanft",
+          "sofort": "Sofort"
+        },
+        "tracking": "Ereignis (Tracking)",
+        "trackingPlatzhalter": "angebot_angesehen",
+        "trackingHinweis": "Wird beim Klick an das Google-Tag der Website gemeldet. Kleinbuchstaben, Ziffern und Unterstrich. Ohne Google-Kennung in den Einstellungen passiert nichts."
+      },
+      "layout": {
+        "titel": "Layout",
+        "innen": "Innen",
+        "aussen": "Außen",
+        "jeSeite": "Je Seite",
+        "spalten": "Spalten",
+        "elternHinweis": "Richtet dieses Element und seine Nachbarn im übergeordneten Rahmen aus.",
+        "typ": "Art",
+        "stapel": "Stapel",
+        "raster": "Raster",
+        "rasterSpalten": "Spalten",
+        "rasterZeilen": "Zeilen",
+        "rasterAbstandX": "Abstand X",
+        "rasterAbstandY": "Abstand Y",
+        "ausrichtenWert": {
+          "start": "Anfang",
+          "mitte": "Mitte",
+          "ende": "Ende"
+        }
+      },
+      "text": {
+        "titel": "Text",
+        "schrift": "Schrift",
+        "ueberschrift": "Überschrift",
+        "fliesstext": "Fließtext",
+        "farbe": "Farbe",
+        "groesse": "Größe",
+        "gewicht": "Gewicht",
+        "laufweite": "Laufweite",
+        "zeilenhoehe": "Zeilenhöhe",
+        "ausrichtung": "Ausrichten",
+        "transformation": "Transformation",
+        "dekoration": "Dekoration",
+        "balance": "Balance",
+        "kuerzen": "Kürzen",
+        "zeilen": "Zeilen",
+        "gewichtWert": {
+          "100": "Thin",
+          "200": "Extra Light",
+          "300": "Light",
+          "400": "Regular",
+          "500": "Medium",
+          "600": "Semibold",
+          "700": "Bold",
+          "800": "Extra Bold",
+          "900": "Black"
+        },
+        "transformationWert": {
+          "none": "Keine",
+          "uppercase": "Großbuchstaben",
+          "lowercase": "Kleinbuchstaben",
+          "capitalize": "Wortanfänge groß"
+        },
+        "dekorationWert": {
+          "none": "Keine",
+          "underline": "Unterstrichen",
+          "line-through": "Durchgestrichen"
+        },
+        "ausrichtungWert": {
+          "start": "Anfang",
+          "center": "Mitte",
+          "end": "Ende",
+          "justify": "Blocksatz"
+        },
+        "opentype": "OpenType",
+        "opentypeWert": {
+          "liga": "Ligaturen",
+          "dlig": "Zierligaturen",
+          "smcp": "Kapitälchen",
+          "c2sc": "Versalien zu Kapitälchen",
+          "onum": "Mediävalziffern",
+          "lnum": "Versalziffern",
+          "tnum": "Tabellenziffern",
+          "pnum": "Proportionalziffern",
+          "frac": "Brüche",
+          "sups": "Hochgestellt",
+          "subs": "Tiefgestellt",
+          "kern": "Unterschneidung",
+          "zero": "Null mit Schrägstrich"
+        },
+        "stil": "Textstil",
+        "ausDemStil": "Aus dem Textstil",
+        "schriftWert": {
+          "ueberschrift": "Überschrift-Schrift",
+          "fliesstext": "Fließtext-Schrift",
+          "dflt": "Standard",
+          "par": "Absatz",
+          "h1": "Überschrift 1",
+          "h2": "Überschrift 2",
+          "h3": "Überschrift 3",
+          "h4": "Überschrift 4",
+          "h5": "Überschrift 5",
+          "h6": "Überschrift 6"
+        }
+      },
+      "spaeter": {
+        "effekte": "Auswirkungen",
+        "overlays": "Overlays",
+        "cursor": "Cursor",
+        "code": "Codeüberschreibungen",
+        "hinweis": "Kommt mit einer späteren Etappe — noch nicht im Modell."
+      },
+      "cursor": {
+        "titel": "Cursor",
+        "web": "Web-Cursor",
+        "wert": {
+          "auto": "Automatisch",
+          "pointer": "Zeiger (Hand)",
+          "grab": "Greifen",
+          "text": "Text",
+          "crosshair": "Fadenkreuz",
+          "move": "Verschieben",
+          "zoom-in": "Vergrößern",
+          "zoom-out": "Verkleinern",
+          "not-allowed": "Nicht erlaubt",
+          "help": "Hilfe",
+          "wait": "Warten"
+        },
+        "bild": "Eigener Zeiger",
+        "hotspot": "Spitze",
+        "bildHinweis": "Höchstens 128 × 128 px. Die Spitze ist der Punkt im Bild, der klickt."
+      },
+      "effekte": {
+        "titel": "Effekte",
+        "erscheinen": "Erscheinen",
+        "hover": "Überfahren",
+        "druck": "Drücken",
+        "schleife": "Schleife",
+        "scroll_tempo": "Scroll-Tempo",
+        "dauer": "Dauer",
+        "verzoegerung": "Verzögerung",
+        "wiederholen": "Wiederholen",
+        "opazitaet": "Deckkraft",
+        "skalierung": "Skalierung",
+        "rotation": "Drehung",
+        "versatz": "Versatz X · Y",
+        "zielzustand": "Zielzustand beim Überfahren bzw. Drücken",
+        "hinweisLive": "Erscheinen und Scroll-Tempo laufen nur auf der Live-Seite — im Editor bleibt alles sichtbar.",
+        "erscheinenArt": {
+          "einblenden": "Einblenden",
+          "hochgleiten": "Hochgleiten",
+          "vergroessern": "Vergrößern",
+          "von_links": "Von links",
+          "von_rechts": "Von rechts"
+        },
+        "schleifeArt": {
+          "pulsieren": "Pulsieren",
+          "schweben": "Schweben",
+          "drehen": "Drehen",
+          "wippen": "Wippen"
+        },
+        "ziehen": "Ziehen",
+        "lichtkasten": "Lichtkasten",
+        "ticker": "Ticker",
+        "scroll_transform": "Scroll-Transform",
+        "ziehenFrei": "Frei beweglich",
+        "ziehenAchse": "Achse",
+        "ziehenZurueck": "Zurückfedern",
+        "achseX": "Nur waagerecht",
+        "achseY": "Nur senkrecht",
+        "lichtkastenBreite": "Größte Breite",
+        "lichtkastenAbstand": "Innenabstand",
+        "lichtkastenGrund": "Hintergrund",
+        "lichtkastenHinweis": "Ein Klick auf ein Bild in diesem Baustein zeigt es groß über der Seite.",
+        "tickerTempo": "Tempo",
+        "tickerRichtung": "Richtung",
+        "tickerRichtungWert": {
+          "links": "Nach links",
+          "rechts": "Nach rechts",
+          "oben": "Nach oben",
+          "unten": "Nach unten"
+        },
+        "tickerHover": "Beim Überfahren",
+        "tickerHoverWert": {
+          "weiter": "Weiterlaufen",
+          "langsamer": "Langsamer",
+          "stopp": "Anhalten"
+        },
+        "tickerZiehbar": "Ziehbar",
+        "ausloeser": "Auslöser",
+        "ausloeserWert": {
+          "scroll": "Beim Scrollen",
+          "ebene_sichtbar": "Solange die Ebene im Bild ist",
+          "abschnitt_sichtbar": "Solange der Abschnitt im Bild ist"
+        },
+        "von": "Von",
+        "nach": "Nach"
+      },
+      "overlay": {
+        "titel": "Overlays",
+        "anlegen": "Overlay",
+        "typ": "Art",
+        "typWert": {
+          "relativ": "Am Element (Dropdown, Popover)",
+          "fixiert": "Über der Seite (Modal, Hinweis)"
+        },
+        "inhalt": "Text",
+        "inhaltPlatzhalter": "Was im Kasten steht …",
+        "ausloeser": "Öffnet bei",
+        "ausloeserWert": {
+          "klick": "Klick",
+          "hover": "Überfahren"
+        },
+        "position": "Seite",
+        "ausrichten": "Ausrichten",
+        "versatz": "Versatz X · Y",
+        "schliessen": "Schließt",
+        "schliessenWert": {
+          "auto": "Beim Klick daneben",
+          "klick": "Beim Klick hinein"
+        },
+        "breite": "Breite",
+        "hinweis": "Im Editor steht der Kasten immer offen, damit du ihn gestalten kannst. Beim Gast erscheint er erst beim Auslöser."
+      },
+      "code": {
+        "titel": "Codeüberschreibungen",
+        "css": "Eigenes CSS",
+        "platzhalter": "border-radius: 24px;\nletter-spacing: .02em;",
+        "hinweis": "Eine Eigenschaft je Zeile. Sie gilt zuletzt und schlägt damit die Zeilen darüber.",
+        "abgewiesen": "Nicht übernommen: {zeilen}"
+      }
+    },
+    "canvas": {
+      "menue": "Canvas",
+      "zumDashboard": "Zum Dashboard",
+      "einfuegen": "Einfügen",
+      "layout": "Layout einfügen",
+      "text": "Text einfügen",
+      "bild": "Bild einfügen",
+      "assets": "Medien",
+      "style": "Style",
+      "geraet": {
+        "desktop": "Desktop",
+        "tablet": "Tablet",
+        "mobil": "Mobil"
+      },
+      "primaer": "Primär",
+      "abspielen": "Entwurf in dieser Breite öffnen",
+      "rahmenHinzu": "Breakpoint hinzufügen",
+      "rahmenWeg": "Breakpoint ausblenden",
+      "werkzeug": {
+        "auswahl": "Auswahl",
+        "hand": "Hand"
+      },
+      "hell": "Helles Thema",
+      "dunkel": "Dunkles Thema",
+      "zoom": {
+        "groesser": "Vergrößern",
+        "kleiner": "Verkleinern",
+        "einpassen": "Alles einpassen",
+        "auswahl": "Auf Auswahl zoomen"
+      },
+      "seite": "Seite",
+      "adresse": "Adresse",
+      "sprachen": "Sprachen",
+      "status": "Status",
+      "veroeffentlicht": "Veröffentlicht",
+      "entwurf": "Entwurf",
+      "breakpoints": "Breakpoints",
+      "breakpointsHinweis": "Ein Wert gilt ab seinem Breakpoint für alle schmaleren, bis ein schmalerer ihn neu setzt.",
+      "agent": {
+        "titel": "Agent",
+        "neuerChat": "Neuer Chat",
+        "nichtEingerichtet": "Agent noch nicht eingerichtet",
+        "nichtEingerichtetHinweis": "Der Agent arbeitet mit OpenAI. Sobald der Schlüssel in der Umgebung steht, erscheint hier der Chat zur gewählten Ebene."
+      },
+      "vorlage": "Vorlage",
+      "haltepunkt": "Haltepunkt",
+      "typografie": "Typografie",
+      "basis": "Basis",
+      "layoutHinweis": "Die Abschnitte der Seite bilden ihren Stapel — Richtung, Abstand und Innenabstand stehen am Abschnitt.",
+      "imDesign": "Im Design ändern",
+      "zurVorlage": "Vorlage wählen",
+      "hoeheGemessen": "Gemessene Höhe des Inhalts"
     }
   },
   "dynamicPricing": {

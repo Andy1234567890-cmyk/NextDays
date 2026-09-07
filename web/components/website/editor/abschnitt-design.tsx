@@ -11,19 +11,62 @@
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 
+import { darstellungFuer, mitWert } from "@nextdays/baukasten-stil";
+
 import { GERAET_SYMBOL, type Geraet } from "../vorschau";
 import { AbstandsFeld } from "./abstands-feld";
+import { protokoll } from "./protokoll";
 import { GERAETE, mitVersteckt, umgeschaltet, versteckteGeraete } from "./sichtbarkeit";
+
+/** Die Felder, die das Abstandsfeld schreibt — je Gerät überschreibbar. */
+const ABSTAND_FELDER = [
+  "margin_top",
+  "margin_right",
+  "margin_bottom",
+  "margin_left",
+  "padding_top",
+  "padding_right",
+  "padding_bottom",
+  "padding_left",
+] as const;
 
 export function AbschnittDesign({
   settings,
+  geraet = "desktop",
   onSettings,
 }: {
   settings: Record<string, unknown>;
+  /** Das Gerät der Vorschau. Die ABSTÄNDE schreiben dafür (Etappe 3): auf
+   *  Tablet/Mobil als Überschreibung. Die Sichtbarkeit nicht — `hidden_on`
+   *  IST bereits die Geräteliste. */
+  geraet?: Geraet;
   onSettings: (settings: Record<string, unknown>) => void;
 }) {
   const t = useTranslations("website");
   const versteckt = versteckteGeraete(settings);
+
+  // Das Abstandsfeld kennt keine Geräte: es liest acht flache Schlüssel und
+  // gibt die ganzen Settings zurück. Hier bekommt es die WIRKSAMEN Werte des
+  // Geräts zu lesen, und was es zurückgibt, wird feldweise in die richtige
+  // Fassung geschrieben — statt das Feld ein zweites Mal zu bauen.
+  const wirksam = darstellungFuer(settings, geraet) as Record<string, unknown>;
+  const sicht: Record<string, unknown> = { ...settings };
+  for (const k of ABSTAND_FELDER) {
+    if (wirksam[k] === undefined) delete sicht[k];
+    else sicht[k] = wirksam[k];
+  }
+  function abstaendeSetzen(neu: Record<string, unknown>) {
+    let ergebnis = settings;
+    for (const k of ABSTAND_FELDER) {
+      if (neu[k] === sicht[k]) continue;
+      ergebnis = mitWert(ergebnis, geraet, [k], neu[k] ?? null);
+      protokoll("klick", "Abstand setzen", { pfad: k, geraet, wert: neu[k] ?? null });
+    }
+    if (neu.spacing_x_gekoppelt !== settings.spacing_x_gekoppelt) {
+      ergebnis = mitWert(ergebnis, "desktop", ["spacing_x_gekoppelt"], neu.spacing_x_gekoppelt);
+    }
+    onSettings(ergebnis);
+  }
 
   return (
     <div className="flex flex-col pb-8">
@@ -79,7 +122,7 @@ export function AbschnittDesign({
 
       <span aria-hidden className="mx-4 block h-px bg-border" />
 
-      <AbstandsFeld settings={settings} onSettings={onSettings} />
+      <AbstandsFeld settings={sicht} onSettings={abstaendeSetzen} />
     </div>
   );
 }

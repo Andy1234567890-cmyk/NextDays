@@ -43,6 +43,7 @@ export function FotoTour({
         <div className="flex shrink-0 items-center gap-2">
           <button
             type="button"
+            onClick={() => onOeffneRaum("weitere")}
             className="flex items-center gap-2 rounded-full border border-border px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-muted"
           >
             <Icon icon="ph:squares-four" className="size-4" />
@@ -51,6 +52,7 @@ export function FotoTour({
           <button
             type="button"
             aria-label={t("fotosHinzufuegen")}
+            onClick={() => onOeffneRaum("weitere")}
             className="flex size-10 items-center justify-center rounded-full bg-muted text-foreground transition-colors hover:bg-muted/70"
           >
             <Icon icon="ph:plus" className="size-5" />
@@ -59,14 +61,10 @@ export function FotoTour({
       </div>
 
       {!aktiv && (
-        <button
-          type="button"
-          className="mb-8 flex w-full items-center gap-3 rounded-2xl bg-muted/50 px-5 py-4 text-start transition-colors hover:bg-muted/70"
-        >
+        <div className="mb-8 flex w-full items-center gap-3 rounded-2xl bg-muted/50 px-5 py-4 text-start">
           <span className="size-1.5 rounded-full bg-accent" />
           <span className="flex-1 text-sm font-medium">{t("aufgabenOffen")}</span>
-          <Icon icon="ph:caret-right" className="size-4 text-muted-foreground" />
-        </button>
+        </div>
       )}
 
       <div className="flex flex-wrap gap-6">

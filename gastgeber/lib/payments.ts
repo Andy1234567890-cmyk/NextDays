@@ -22,15 +22,63 @@ export async function getPaymentSettings(): Promise<PaymentSettings | null> {
   }
 }
 
-/** Live-Status des Auszahlungskontos inkl. offener Pflichtangaben. */
+/** Ein einzelner, von Stripe zurückgewiesener Wert (requirements.errors). */
+export interface StripeAnforderungsFehler {
+  requirement: string;
+  code: string;
+  reason: string;
+}
+
+/**
+ * Live-Status des Auszahlungskontos inkl. offener Pflichtangaben.
+ *
+ * ALLE Requirement-Listen einzeln (wie das Backend sie liefert): „jetzt
+ * fällig", „überfällig", „später fällig" und „in Prüfung" verlangen
+ * unterschiedliche Reaktionen — eine verschmolzene Liste behauptet
+ * Handlungsbedarf, wo keiner ist.
+ */
 export interface AuszahlungsStatus {
   stripe_account_id: string;
   charges_enabled: boolean;
   payouts_enabled: boolean;
   details_submitted: boolean;
-  /** Offene Stripe-Requirements als rohe Feldpfade (UI übersetzt sie). */
+  /** currently_due — offene Stripe-Requirements als rohe Feldpfade. */
   requirements: string[];
+  /** Überfällig — der Account ist deshalb bereits eingeschränkt. */
+  past_due: string[];
+  /** Später fällig (noch ohne Frist). */
+  eventually_due: string[];
+  /** Eingereicht, Stripe prüft. */
+  pending_verification: string[];
+  errors: StripeAnforderungsFehler[];
+  /** Unix-Sekunden, ab wann Stripe sperrt — null ohne Frist. */
+  current_deadline: number | null;
   disabled_reason: string | null;
+}
+
+/**
+ * Welche KYC-Felder Stripe für ein Land verlangt — live aus den country_specs,
+ * getrennt nach Einzelperson und Firma. Daraus weiß die Oberfläche, ob eine
+ * persönliche Kennnummer (individual.id_number) nötig ist.
+ */
+export interface LandAnforderungen {
+  country: string;
+  individual: { minimum: string[]; additional: string[] };
+  company: { minimum: string[]; additional: string[] };
+}
+
+export async function getLandAnforderungen(
+  land: string,
+): Promise<LandAnforderungen | null> {
+  try {
+    return await api<LandAnforderungen>(
+      `/payments/connect/country-requirements/${encodeURIComponent(land)}`,
+      { cache: "no-store" },
+    );
+  } catch (exc) {
+    if (exc instanceof ApiError) return null;
+    throw exc;
+  }
 }
 
 /**

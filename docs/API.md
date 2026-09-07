@@ -2499,6 +2499,18 @@ den `builder/`-Renderer der myNextDays-Websites.
 | `DELETE` | `/api/v1/site-config/pages/{page_id}`             | Seite löschen → `204` (Blöcke per FK-Cascade)                                                                                                                                |
 | `POST`   | `/api/v1/site-config/pages/{page_id}/draft-token` | Kurzlebigen Vorschau-Token erzeugen → `{token}` (s. u.)                                                                                                                      |
 
+**Kopf-/Fußzeile als Ebenen (0570, `PUT /api/v1/site-config`).** Zwei
+Branding-Felder `header_teile` / `footer_teile`, Form
+`{hidden_on?: [desktop|tablet|mobil], locked?: bool, reihenfolge?: [teil…],
+teile?: {<teil>: {hidden_on?, locked?}}}`. Teile Kopfzeile: `logo`, `slogan`,
+`navigation`, `sprachwaehler`, `buchen`; Fußzeile: `navigation`, `social`,
+`bildnachweise`, `copyright`. Unbekannter Teil, doppelte Reihenfolge, fremdes
+Gerät oder Tippfehler im Schlüssel → `422` (`extra="forbid"`,
+`schemas_regionen.py`). `{}` = Standard (alles sichtbar, Standardreihenfolge).
+Beide Felder stehen auch in `PublicSiteResponse`; der Renderer liest sie über
+`regionLesen` (`packages/baukasten-stil`). Der Inhalt der Teile bleibt
+Theme-Code — einstellbar sind Sichtbarkeit, Sperre und Reihenfolge.
+
 ### Blöcke (`/api/v1/site-config/…/blocks`)
 
 | Methode  | Pfad                                                 | Beschreibung                                                                                                         |
@@ -2513,6 +2525,39 @@ den `builder/`-Renderer der myNextDays-Websites.
 | `POST`   | `/api/v1/site-config/templates/apply`                | Vorlage anwenden: `{template_id}` (`agentur`\|`ferienhaus`\|`hotel_klassisch`\|`hotel_boutique`\|`bergchalet`\|`kueste`\|`stadt`) → Seitenliste; `404` unbekanntes Template. Vorhandene Slugs werden übersprungen, gesetzte Branding-Felder nicht überschrieben |
 | `POST`   | `/api/v1/site-config/templates/{template_id}/preview-token` | HMAC-Token (1 h) für die Vorschau einer Vorlage, BEVOR sie angewendet wird |
 | `GET`    | `/api/v1/site/template/draft`                        | **Öffentlich, kein JWT.** `?template_id&token&slug` → gerenderte Vorlagenseite für den builder-iframe. Fail-closed: Müll/abgelaufen → `403`, unbekannt → `404` |
+
+**`settings` eines Blocks (Darstellung, `BlockSettings`).** Geprüft mit
+`extra="allow"` auf der obersten Ebene (unbekannte Schlüssel bleiben erhalten),
+aber `extra="forbid"` in jedem Unterobjekt — ein Tippfehler dort ist `400`, kein
+stilles Verschwinden. Flache Felder seit 0432/28.08.2026: `name`, `locked`,
+`hidden_on[]`, `background_*`, `padding`, `layout_*`, `min_hoehe`, `max_breite`,
+`margin_*`, `padding_*`. Framer-Abschnitte seit Etappe 2 (05.09.2026,
+`schemas_darstellung.py`), jedes optional:
+
+| Schlüssel | Inhalt |
+| --- | --- |
+| `position` | `typ` relativ\|absolut\|fixiert\|klebend · `oben/rechts/unten/links` (`-?\d{1,4}(px\|%\|vh\|vw)`) · `ebene` −10…100 |
+| `groesse` | `breite`/`hoehe` = `{modus: fest\|relativ\|viewport\|fuellen\|inhalt, wert?}` (Wert Pflicht bei fest/relativ/viewport, verboten sonst) · `min_/max_breite`, `min_/max_hoehe` · `seitenverhaeltnis` `16/9` |
+| `stil` | `opazitaet` 0…1 · `sichtbar` · `fuellung` `{art: farbe\|verlauf\|bild, …}` (Bild-URL mit href-Allowlist) · `ueberlauf` · `radius` `{alle}` oder vier Ecken · `grenze` `{breite ≤40, farbe, art, seiten?}` · `schatten[]` ≤6 · `mischmodus` (12 CSS-Blend-Modi) · `filter` {weichzeichnen ≤100 px · helligkeit/kontrast/saettigung ≤200 % · graustufen ≤100 %} · `ueberlauf_x`/`ueberlauf_y` · `zeiger_ereignisse` (false = pointer-events none, live) · `text_auswahl` (false = user-select none) · `tippfarbe` |
+| `transform` | `rotation` ±360 · `skalierung` 0…10 · `versatz_x/y` · `neigung_x/y` ±89 · `ursprung` · `perspektive` ≤5000 · 3D (06.09.2026): `rotation_x/y` ±360 · `tiefe` ±500 (translateZ) · `rueckseite` sichtbar\|verborgen · `raum_3d` (preserve-3d) |
+| `scroll` | `anker` (`^[a-z][a-z0-9-]{0,49}$`, wird `id`) · `versatz_y` ±500 |
+| `a11y` | `tag` div\|section\|article\|aside\|header\|footer\|nav\|main · `label` ≤120 · `tab_index` −1…100 · `fuer_leser_verborgen` · `nosnippet` (Framer „Google Bot: Skip" → `data-nosnippet`) |
+| `text` | `schrift` ueberschrift\|fliesstext · `farbe` · `groesse` px/rem · `gewicht` 100…900 · `laufweite` em/px · `zeilenhoehe` em/px/% · `ausrichtung` start\|center\|end\|justify · `transformation` · `dekoration` · `balance` · `kuerzen` 1…20 · `opentype` [liga dlig smcp c2sc onum lnum tnum pnum frac sups subs kern zero] — gilt für alle Textknoten des Bausteins, je Gerät überschreibbar |
+| `link` | `href` (http(s)/mailto/tel/relativ, wie jedes Linkfeld) · `neuer_tab` · `anker` (Scroll-Abschnitt der Zielseite, wird als `#anker` angehängt) · `rel` nofollow\|sponsored\|noopener\|noreferrer · `parameter` (Abfrageteil ohne `?`, ≤10 Paare) — das Element wird zum `<a>`; Bausteine mit eigenen Links/Formularen bleiben unverlinkt |
+| `effekte` | `erscheinen` {art einblenden\|hochgleiten\|vergroessern\|von_links\|von_rechts · dauer 100…3000 · verzoegerung 0…3000 · wiederholen} · `hover`/`druck` {opazitaet · skalierung 0…10 · rotation · versatz_x/y · dauer 0…3000} · `schleife` {art pulsieren\|schweben\|drehen\|wippen · dauer 300…20000} · `scroll_tempo` 10…300 % — nur Grundfassung; Erscheinen/Tempo laufen live per Skript, im Editor nicht |
+| `cursor` | auto\|pointer\|grab\|text\|crosshair\|move\|zoom-in\|zoom-out\|not-allowed\|help\|wait — Framer „Web Cursor"; nur Grundfassung (Touch hat keinen Zeiger), im Editor nicht angewandt |
+| `layout_typ` / `raster_*` | `layout_typ` stapel\|raster · `raster_spalten`/`raster_zeilen` 1…12 · `raster_abstand_x/y` 0…160 — Framer „Layout › Grid" (flach, je Gerät überschreibbar); `raster` setzt die Kinderreihe auf `display:grid` |
+| `je_geraet` | `{tablet?: …, mobil?: …}` — Überschreibungen derselben Felder (plus der flachen Layout-/Abstandsfelder). **Kein `desktop`-Schlüssel**: Desktop ist die Grundfassung → `400`. |
+
+Farben sind `#rrggbb`, `#rrggbbaa` oder `rolle:<name>` (Farbrollen des Themes:
+`primary`, `background`, `border`, … — Liste `FARBROLLEN`). Kein Wert hat einen
+Standard: fehlt er, erbt das Element vom Theme (Wurzel 4). Die Kaskade
+Desktop → Tablet → Mobil und das CSS daraus erzeugt ausschließlich
+`packages/baukasten-stil` (`stilCss`), das Renderer und Editor gemeinsam
+verwenden; der Renderer schreibt es als `<style>` je Block. Eine Reihe
+(`layout_richtung: "zeile"`) stapelt auf dem Telefon, sofern `je_geraet.mobil`
+sie nicht ausdrücklich setzt (Bestand seit 28.08.2026). Live-Kette:
+`scripts/diagnose/website-baukasten-e2e.py` (Abschnitt „Stil-Roundtrip").
 
 ### Öffentlicher Resolver (`/api/v1/site`, KEIN JWT)
 

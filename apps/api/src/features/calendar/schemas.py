@@ -7,7 +7,7 @@ from datetime import date, datetime
 from enum import StrEnum
 from typing import ClassVar
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class AvailabilityStatus(StrEnum):
@@ -110,6 +110,8 @@ class DayAvailability(BaseModel):
     preis_wartet_auf_freigabe: bool = False
     # Mindestaufenthalt aus dem Rate-Plan des Objekts (per-Tag-Restriktionen v2).
     min_stay: int | None = None
+    # Höchstaufenthalt DIESER Nacht (0572). None = keine Grenze.
+    max_stay: int | None = None
     # CTA/CTD-Restriktionen je Tag (Default false bei fehlender availability-Zeile).
     closed_to_arrival: bool = False
     closed_to_departure: bool = False
@@ -288,8 +290,83 @@ class SeasonMode(StrEnum):
     fixed = "fixed"      # amount = fester Nachtpreis
 
 
-class SeasonCreate(BaseModel):
-    """Benannte Saison-Kategorie eines Objekts (Hochsaison, Event …)."""
+class RegelsatzVerfuegbarkeit(BaseModel):
+    """Die Verfügbarkeits-Regeln eines Regelsatzes (0572).
+
+    Sie gelten für die Tage, die der Saison ZUGEWIESEN sind — nicht für das
+    ganze Objekt. Genau das unterscheidet den Regelsatz vom objektweiten
+    `rate_plans.min_stay`, der bis hierher die einzige Aufenthaltsregel war.
+
+    Wochentage sind 0 = Montag … 6 = Sonntag (Reihenfolge wie im Vorbild, das
+    die Liste mit „Montage" beginnt). Leere Liste heißt „keine Sperre" und ist
+    kein fehlender Wert (Wurzel 4).
+    """
+
+    min_stay: int | None = Field(default=None, ge=1)
+    max_stay: int | None = Field(default=None, ge=1)
+    closed_arrival_weekdays: list[int] = Field(default_factory=list, max_length=7)
+    closed_departure_weekdays: list[int] = Field(default_factory=list, max_length=7)
+    # Mindestaufenthalt je ANREISETAG (0576). Ein fehlender Wochentag heißt „es
+    # gilt `min_stay`" — nicht „0" (Wurzel 4). Vorbild: Airbnbs Schalter „Passe
+    # den Mindestaufenthalt an den Tag des Check-in an".
+    min_stay_by_weekday: dict[int, int] = Field(default_factory=dict, max_length=7)
+
+    @field_validator("closed_arrival_weekdays", "closed_departure_weekdays")
+    @classmethod
+    def _wochentage(cls, v: list[int]) -> list[int]:
+        if any(t < 0 or t > 6 for t in v):
+            raise ValueError(
+                "Wochentag muss zwischen 0 (Montag) und 6 (Sonntag) liegen."
+            )
+        return sorted(set(v))
+
+    @field_validator("min_stay_by_weekday")
+    @classmethod
+    def _min_stay_je_wochentag(cls, v: dict[int, int]) -> dict[int, int]:
+        for tag, naechte in v.items():
+            if tag < 0 or tag > 6:
+                raise ValueError(
+                    "Wochentag muss zwischen 0 (Montag) und 6 (Sonntag) liegen."
+                )
+            if naechte < 1:
+                raise ValueError("Mindestaufenthalt muss mindestens 1 Nacht sein.")
+        return dict(sorted(v.items()))
+
+    @model_validator(mode="after")
+    def _stay_reihenfolge(self) -> "RegelsatzVerfuegbarkeit":
+        if (
+            self.min_stay is not None
+            and self.max_stay is not None
+            and self.max_stay < self.min_stay
+        ):
+            raise ValueError(
+                "Höchstaufenthalt darf nicht unter dem Mindestaufenthalt liegen."
+            )
+        if self.max_stay is not None:
+            # pylint sieht hier das FieldInfo der Klassendefinition, nicht das
+            # dict der Instanz — dieselbe Pydantic-Blindheit wie in
+            # site_config/schemas.py.
+            # pylint: disable=no-member
+            zu_lang = [
+                tag
+                for tag, naechte in self.min_stay_by_weekday.items()
+                if naechte > self.max_stay
+            ]
+            if zu_lang:
+                raise ValueError(
+                    "Mindestaufenthalt am Anreisetag darf den Höchstaufenthalt "
+                    "nicht überschreiten."
+                )
+        return self
+
+
+class SeasonCreate(RegelsatzVerfuegbarkeit):
+    """Ein REGELSATZ des Objekts (Vorbild: Airbnbs „Regeln").
+
+    Er bündelt, was einen Tagespreis und seine Buchbarkeit bestimmt: Name und
+    Farbe für den Kalender, die Preisänderung (Prozent oder fester Nachtpreis)
+    und die Aufenthaltsregeln aus `RegelsatzVerfuegbarkeit`.
+    """
     property_id: str
     name: str = Field(min_length=1, max_length=80)
     color: str = Field(pattern=r"^#[0-9a-fA-F]{6}$")
@@ -303,7 +380,14 @@ class SeasonCreate(BaseModel):
         return self
 
 
-class SeasonUpdate(BaseModel):
+class SeasonUpdate(RegelsatzVerfuegbarkeit):
+    """PATCH eines Regelsatzes — nur gesendete Felder werden gesetzt.
+
+    Bei den Wochentag-Listen ist `[]` eine ECHTE Angabe („keine Sperre mehr")
+    und wird geschrieben; wer sie nicht ändern will, lässt sie weg. Der Service
+    unterscheidet beides über `model_fields_set`.
+    """
+
     name: str | None = Field(default=None, min_length=1, max_length=80)
     color: str | None = Field(default=None, pattern=r"^#[0-9a-fA-F]{6}$")
     mode: SeasonMode | None = None
@@ -332,7 +416,7 @@ class SeasonAssignment(BaseModel):
     end_date: date  # inklusiv (DB speichert inklusiv)
 
 
-class SeasonResponse(BaseModel):
+class SeasonResponse(RegelsatzVerfuegbarkeit):
     id: str
     property_id: str
     name: str

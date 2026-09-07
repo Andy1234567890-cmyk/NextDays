@@ -364,8 +364,8 @@ class PropertiesService(
         if not ready:
             raise PropertyError(
                 "Bitte schließe zuerst die Zahlungs-Einrichtung ab (Stripe). "
-                "Objekte können erst angelegt werden, wenn dein Konto für "
-                "Zahlungen freigeschaltet ist.",
+                "Ein Objekt kann erst veröffentlicht werden, wenn dein Konto "
+                "für Zahlungen freigeschaltet ist — Konto → Zahlungen.",
                 status_code=409,
             )
 

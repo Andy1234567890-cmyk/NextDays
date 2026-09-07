@@ -1,7 +1,7 @@
 """Schemas des Auszahlungs-Slices."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -50,6 +50,17 @@ class PayoutRow(BaseModel):
     status: str
     due_at: datetime
     paid_at: datetime | None = None
+    # Woher das Geld stammt — damit der Gastgeber die Zeile einer Buchung
+    # zuordnen kann, ohne eine UUID zu vergleichen („damit man die Auszahlung
+    # nachvollziehen kann", 05.09.2026). Aus reservations/properties/guests
+    # des EIGENEN Betriebs; fehlt die Buchung, bleiben die Felder leer statt
+    # erfunden (Wurzel 4).
+    property_title: str | None = None
+    guest_name: str | None = None
+    check_in: date | None = None
+    check_out: date | None = None
+    channel: str | None = None
+    ota_name: str | None = None
     # Wie die Zahlung dieser Buchung geflossen ist (0220). `destination` heisst:
     # der Betrag ging beim Kassieren DIREKT auf das Verbundkonto des Betriebs —
     # es gibt keine Auszahlung durch uns, und diese Zeile wird nie ausgezahlt

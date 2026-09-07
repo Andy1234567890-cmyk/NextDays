@@ -1,0 +1,10 @@
+{
+  "name": "@nextdays/baukasten-stil",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Website-Baukasten: die EINE Stil-Kaskade (Desktop → Tablet → Mobil) aus `settings` eines Blocks zu CSS. Renderer (builder) und Editor (web) lesen dieselbe Funktion — eine Wahrheit, kein Abschreiben. Etappe 2 der Framer-Parität (05.09.2026).",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

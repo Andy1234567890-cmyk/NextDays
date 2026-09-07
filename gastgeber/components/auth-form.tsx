@@ -2,6 +2,7 @@
 // lib/auth.ts — kein direkter Backend-Zugriff, kein Token im Client.
 "use client";
 
+import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -264,6 +265,8 @@ export function AuthForm({ weiter }: { weiter: string }) {
         onChange={setPassword}
         autoComplete={modus === "login" ? "current-password" : "new-password"}
         required
+        anzeigenLabel={t("passwortAnzeigen")}
+        verbergenLabel={t("passwortVerbergen")}
       />
 
       {fehler ? <p className="text-sm text-red-600">{fehler}</p> : null}
@@ -296,6 +299,8 @@ function Feld({
   type = "text",
   autoComplete,
   required,
+  anzeigenLabel,
+  verbergenLabel,
 }: {
   label: string;
   value: string;
@@ -303,18 +308,38 @@ function Feld({
   type?: string;
   autoComplete?: string;
   required?: boolean;
+  // Nur gesetzt, wenn das Feld eine Sichtbar-Umschaltung tragen soll.
+  anzeigenLabel?: string;
+  verbergenLabel?: string;
 }) {
+  const [sichtbar, setSichtbar] = useState(false);
+  const umschaltbar = type === "password" && anzeigenLabel && verbergenLabel;
+
   return (
     <div className="space-y-1">
       <label className="text-sm font-medium">{label}</label>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        autoComplete={autoComplete}
-        required={required}
-        className="w-full rounded-full border border-border bg-background px-4 py-3"
-      />
+      <div className="relative">
+        <input
+          type={umschaltbar && sichtbar ? "text" : type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          autoComplete={autoComplete}
+          required={required}
+          className={`w-full rounded-full border border-border bg-background px-4 py-3 ${
+            umschaltbar ? "pr-14" : ""
+          }`}
+        />
+        {umschaltbar ? (
+          <button
+            type="button"
+            onClick={() => setSichtbar((v) => !v)}
+            aria-label={sichtbar ? verbergenLabel : anzeigenLabel}
+            className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground transition hover:text-foreground"
+          >
+            <Icon icon={sichtbar ? "ph:eye-slash" : "ph:eye"} className="size-5" />
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }

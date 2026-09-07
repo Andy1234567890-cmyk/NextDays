@@ -65,6 +65,8 @@ export interface PropertyAttributes {
   // Quelle, geteilt zwischen Fototour und Schlafmöglichkeiten (Airbnb: ein Foto
   // pro Zimmer). Reine Editor-Zuordnung; die Foto-Wahrheit bleibt properties.photos.
   roomPhotos?: Record<string, string>;
+  // Sammelkachel „Weitere Fotos": mehrere URLs je Raum (Wizard-Fototour).
+  roomGallery?: Record<string, string[]>;
   // Standort-Zusatzangaben (Airbnb „Location"), objektweit. Die eigentliche
   // Adresse + lat/lng liegen in den Top-Level-Property-Spalten; hier nur die
   // Editor-Zusätze. features/views = Slug-Listen (lage-katalog.ts).

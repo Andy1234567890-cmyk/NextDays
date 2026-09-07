@@ -34,7 +34,14 @@ export type UnternehmensFeld =
   | "vatId"
   | "taxNumber"
   | "firstName"
-  | "lastName";
+  | "lastName"
+  // Kontotyp beim Zahlungsanbieter ("individual" | "company") — der Gastgeber
+  // legt ihn SELBST fest (Airbnb: „Vermietest du als Unternehmen?"), wir
+  // dürfen ihn nicht für ihn bestimmen.
+  | "accountType"
+  // Geburtsdatum (ISO yyyy-mm-dd) — KYC-Pflicht für die Person, bei Firmen
+  // für die vertretungsberechtigte Person.
+  | "ownerDob";
 
 export async function speichereUnternehmensdaten(
   bestand: Unternehmensprofil,

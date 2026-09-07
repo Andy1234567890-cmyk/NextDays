@@ -404,6 +404,13 @@ def create_season(
         return SeasonResponse(**service.create_season(
             ctx.tenant_id, req.property_id,
             name=req.name, color=req.color, mode=req.mode, amount=req.amount,
+            regeln={
+                "min_stay": req.min_stay,
+                "max_stay": req.max_stay,
+                "closed_arrival_weekdays": req.closed_arrival_weekdays,
+                "closed_departure_weekdays": req.closed_departure_weekdays,
+                "min_stay_by_weekday": req.min_stay_by_weekday,
+            },
         ))
     except CalendarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

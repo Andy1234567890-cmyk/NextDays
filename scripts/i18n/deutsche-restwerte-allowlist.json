@@ -4953,6 +4953,160 @@
       "grund": "maske",
       "sprachen": "alle",
       "notiz": "Ø + Platzhalter, kein Wort"
+    },
+    {
+      "schluessel": "website.canvas.typografie",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "nl"
+      ]
+    },
+    {
+      "schluessel": "website.canvas.basis",
+      "grund": "international",
+      "sprachen": [
+        "da"
+      ]
+    },
+    {
+      "schluessel": "website.stil.a11y.nosnippet",
+      "grund": "marke",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.stil.cursor.titel",
+      "grund": "international",
+      "sprachen": [
+        "en",
+        "es",
+        "nl",
+        "pt",
+        "ro"
+      ]
+    },
+    {
+      "schluessel": "website.stil.transform.titel",
+      "grund": "international",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "schluessel": "website.stil.link.titel",
+      "grund": "international",
+      "sprachen": [
+        "hu"
+      ]
+    },
+    {
+      "schluessel": "website.stil.position.titel",
+      "grund": "international",
+      "sprachen": [
+        "da"
+      ]
+    },
+    {
+      "schluessel": "website.stil.position.absolut",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "ro",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "website.stil.position.links",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "schluessel": "website.stil.position.rechts",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "schluessel": "website.stil.groesse.modus.relativ",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "ro",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "website.stil.transform.ursprung",
+      "grund": "international",
+      "sprachen": [
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "website.stil.transform.rueckseiteWert.verborgen",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "schluessel": "website.stil.text.opentype",
+      "grund": "marke",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.stil.link.parameterPlatzhalter",
+      "grund": "maske",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.stil.link.parameter",
+      "grund": "international",
+      "sprachen": [
+        "en",
+        "nl",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "website.stil.effekte.schleifeArt.wippen",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "schluessel": "website.stil.layout.raster",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "schluessel": "website.stil.layout.stapel",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "schluessel": "website.stil.text.opentypeWert.liga",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "schluessel": "website.stil.stil.mischmodusWert.normal",
+      "grund": "international",
+      "sprachen": [
+        "sv"
+      ]
     }
   ]
 }

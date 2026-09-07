@@ -9,11 +9,19 @@
 //
 // Die Nutzer-IP für den Nachweis ermittelt das Backend selbst aus dem Request
 // (kein Body) — käme sie vom Client, wäre der Nachweis wertlos.
+import { revalidatePath } from "next/cache";
+
 import { ApiError } from "@nextdays/auth/errors";
 
 import { api } from "./api-server";
 import type { AuszahlungsEinstellung, PayoutInterval } from "./auszahlungen";
-import type { AuszahlungsStatus } from "./payments";
+import {
+  getAuszahlungsStatus,
+  getLandAnforderungen,
+  type AuszahlungsStatus,
+  type LandAnforderungen,
+} from "./payments";
+import type { Unternehmensprofil } from "./unternehmen";
 
 type Ergebnis<T> = { ok: true; data: T } | { ok: false; fehler: string };
 
@@ -26,18 +34,96 @@ function fehlerAus(exc: unknown, standard: string): { ok: false; fehler: string 
   };
 }
 
-/** Nutzungsbedingungen annehmen — schließt die Freischaltung ab. */
+/**
+ * Die GESPEICHERTEN Stammdaten erneut an den Zahlungsanbieter übertragen.
+ *
+ * Der Sync läuft sonst nur beim Speichern des Formulars. Scheitert er dort
+ * (abgelehntes Feld, Anbieter kurz weg), stünden die Angaben bei uns, beim
+ * Anbieter aber nicht — und die Karte verlangte Felder, die längst ausgefüllt
+ * sind. Liefert das Profil samt `stripeSyncError` (null = alles angekommen).
+ */
+export async function synceStammdaten(): Promise<Ergebnis<Unternehmensprofil>> {
+  try {
+    const data = await api<Unternehmensprofil>(
+      "/buchhaltung/companies/self/stripe-sync",
+      { method: "POST" },
+    );
+    revalidatePath("/konto");
+    return { ok: true, data };
+  } catch (exc) {
+    return fehlerAus(exc, "Übertragung an den Zahlungsanbieter fehlgeschlagen.");
+  }
+}
+
+/**
+ * Nutzungsbedingungen annehmen — schließt die Freischaltung ab.
+ *
+ * ERST die gespeicherten Stammdaten übertragen, DANN zustimmen: sonst ist die
+ * Zustimmung da, aber die Angaben fehlen beim Anbieter, und der Account bleibt
+ * eingeschränkt, obwohl der Nutzer alles ausgefüllt hat.
+ */
 export async function aktiviereAuszahlungen(
   kontoId: string,
-): Promise<Ergebnis<AuszahlungsStatus>> {
+): Promise<Ergebnis<AuszahlungsStatus> & { syncFehler?: string | null }> {
+  const sync = await synceStammdaten();
+  if (!sync.ok) return sync;
   try {
     const data = await api<AuszahlungsStatus>(
       `/payments/connect/accounts/${encodeURIComponent(kontoId)}/accept-tos`,
       { method: "POST" },
     );
-    return { ok: true, data };
+    revalidatePath("/konto");
+    return { ok: true, data, syncFehler: sync.data.stripeSyncError };
   } catch (exc) {
     return fehlerAus(exc, "Aktivierung fehlgeschlagen.");
+  }
+}
+
+/** Live-Status neu laden (Polling der Karte, solange nicht freigeschaltet). */
+export async function ladeAuszahlungsStatus(
+  kontoId: string,
+): Promise<Ergebnis<AuszahlungsStatus>> {
+  const data = await getAuszahlungsStatus(kontoId);
+  if (!data) {
+    return { ok: false, fehler: "Status beim Zahlungsanbieter nicht abrufbar." };
+  }
+  return { ok: true, data };
+}
+
+/** Pflichtfelder des Zahlungsanbieters für ein Land (live, kein Hardcode). */
+export async function ladeLandAnforderungen(
+  land: string,
+): Promise<Ergebnis<LandAnforderungen>> {
+  const data = await getLandAnforderungen(land);
+  if (!data) {
+    return { ok: false, fehler: "Länderregeln des Zahlungsanbieters nicht abrufbar." };
+  }
+  return { ok: true, data };
+}
+
+/**
+ * Eine Angabe DIREKT an den Zahlungsanbieter geben, ohne sie bei uns zu
+ * speichern — für die persönliche Kennnummer (individual.id_number), die in
+ * einigen Ländern Pflicht ist. Sie ist ein Ausweisdatum: der Anbieter liefert
+ * sie nie zurück, und in tenant_billing_profile hat sie nichts verloren.
+ */
+export async function setzeKennnummer(
+  kontoId: string,
+  kennnummer: string,
+): Promise<Ergebnis<AuszahlungsStatus>> {
+  const wert = kennnummer.replace(/\s+/g, "");
+  if (wert.length < 4) {
+    return { ok: false, fehler: "Bitte die vollständige Kennnummer eingeben." };
+  }
+  try {
+    const data = await api<AuszahlungsStatus>(
+      `/payments/connect/accounts/${encodeURIComponent(kontoId)}`,
+      { method: "PATCH", body: { fields: { individual: { id_number: wert } } } },
+    );
+    revalidatePath("/konto");
+    return { ok: true, data };
+  } catch (exc) {
+    return fehlerAus(exc, "Kennnummer konnte nicht übermittelt werden.");
   }
 }
 

@@ -1,26 +1,31 @@
 "use client";
 
 // Reiter-Leiste des Zahlungsbereichs (Airbnb-Vorbild: Zahlungen · Auszahlungen ·
-// Spenden). Der aktive Reiter steckt im ?tab=-Query-Param, damit die Seite eine
+// Spenden, dazu „Kontostand" — Saldo und jede Buchung mit ihrem Auszahlungs-
+// stand, damit der Gastgeber nachvollziehen kann, wo sein Geld steht). Der
+// aktive Reiter steckt im ?tab=-Query-Param, damit die Seite eine
 // Server-Component bleiben kann — wie ?bereich= in der linken Navigation.
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-export type ZahlungenTab = "zahlungen" | "auszahlungen" | "spenden";
+export type ZahlungenTab = "zahlungen" | "kontostand" | "auszahlungen" | "spenden";
 
 const TABS: { key: ZahlungenTab; label: string }[] = [
-  { key: "zahlungen", label: "Zahlungen" },
-  { key: "auszahlungen", label: "Auszahlungen" },
-  { key: "spenden", label: "Spenden" },
+  { key: "zahlungen", label: "tabZahlungen" },
+  { key: "kontostand", label: "tabKontostand" },
+  { key: "auszahlungen", label: "tabAuszahlungen" },
+  { key: "spenden", label: "tabSpenden" },
 ];
 
 export function ZahlungenTabs() {
+  const t = useTranslations("konto");
   const params = useSearchParams();
   const aktiv = (params.get("tab") as ZahlungenTab) ?? "zahlungen";
 
   return (
     <nav
-      aria-label="Zahlungsbereiche"
+      aria-label={t("zahlungenTitel")}
       className="mb-8 flex gap-8 border-b border-border"
     >
       {TABS.map((tab) => {
@@ -36,7 +41,7 @@ export function ZahlungenTabs() {
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            {tab.label}
+            {t(tab.label)}
           </Link>
         );
       })}

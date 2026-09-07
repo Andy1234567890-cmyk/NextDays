@@ -22,12 +22,31 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
-const WURZELN = ["web/components/website", "builder/components"];
+const WURZELN = ["web/components/website", "builder/components", "builder/lib", "packages/baukasten-stil/src"];
 
 /** Muster, die je Bereich nur EINMAL vorkommen dürfen, mit dem Ort der
  *  Wahrheit. `muster` ist ein RegExp, `erlaubt` die Dateien, in denen es stehen
  *  DARF (die zentrale Definition und ihre Aufrufer). */
 const REGELN = [
+  {
+    name: "Geräte-Breitenbereiche (Media-Query-Grenzen)",
+    // Die drei Bereiche gehören in die Stil-Kaskade; Editor und Renderer lesen
+    // sie dort. Eine zweite Tabelle liefe beim nächsten Breakpoint auseinander.
+    muster: /GERAETE_BEREICHE\s*[:=]/,
+    erlaubt: ["packages/baukasten-stil/src/index.ts"],
+    hinweis:
+      "Die Bereiche stehen in `@nextdays/baukasten-stil` (GERAETE_BEREICHE). Importieren, nicht abschreiben (Etappe 2, 05.09.2026).",
+  },
+  {
+    name: "Stil-Kaskade (Layout-/Abstands-CSS aus settings)",
+    // Wer `layout_richtung` selbst in `flex-direction` übersetzt, baut die
+    // zweite Kaskade — ohne Tablet/Mobil. Werte LESEN darf der Editor
+    // (Ausrichtungsleiste, Inspektor); CSS daraus macht nur das Paket.
+    muster: /(flexDirection|\["flex-direction"\]|"flex-direction")\s*[:=]\s*"(row|column)"/,
+    erlaubt: ["packages/baukasten-stil/src/index.ts"],
+    hinweis:
+      "CSS aus `settings` erzeugt ausschließlich `@nextdays/baukasten-stil` (rahmenStil/layoutStil/stilCss). Der Editor liest Werte über darstellungFuer/herkunft.",
+  },
   {
     name: "Menü-Beschriftung (Namensraum-Kette)",
     // Die Kette selbst — sie gehört ausschließlich in `menueBeschriftung`.

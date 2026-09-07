@@ -207,6 +207,7 @@ export function LageKarte({
   lat,
   lng,
   statisch,
+  onVerschoben,
 }: {
   lat: number;
   lng: number;
@@ -214,6 +215,10 @@ export function LageKarte({
   // Gesten aus, damit ein Klick sauber den umgebenden Button auslöst statt in
   // die Karte zu greifen.
   statisch?: boolean;
+  // Gesetzt = der Pin lässt sich ziehen und meldet seine neue Lage (Wizard-
+  // Schritt „Stimmt die Position?"). Ohne diesen Rückruf bleibt der Pin fest —
+  // die bestehenden Aufrufer zeigen nur an und sollen nichts verschieben können.
+  onVerschoben?: (lat: number, lng: number) => void;
 }) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   if (!apiKey) {
@@ -237,7 +242,17 @@ export function LageKarte({
           disableDefaultUI
           className="size-full"
         >
-          <Marker position={{ lat, lng }} />
+          <Marker
+            position={{ lat, lng }}
+            draggable={!statisch && !!onVerschoben}
+            onDragEnd={(e) => {
+              // e.latLng ist bei einem echten Drag immer gesetzt; ohne Wert
+              // NICHTS melden statt auf 0/0 zurückzufallen (Wurzel 4) — sonst
+              // läge das Objekt im Atlantik.
+              const pos = e.latLng;
+              if (pos && onVerschoben) onVerschoben(pos.lat(), pos.lng());
+            }}
+          />
         </Map>
       </APIProvider>
     </div>

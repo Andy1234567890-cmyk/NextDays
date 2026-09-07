@@ -22,6 +22,20 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import type { Branding, CustomDomain } from "@/lib/site-config";
+import { setBranding } from "@/lib/site-config";
+import {
+  mitTeil,
+  mitTeilGesperrt,
+  mitTeilVersteckt,
+  mitWert,
+  teilSettings,
+  type Region,
+  type RegionStand,
+  regionLesen,
+  regionZumSpeichern,
+  teilVerschoben,
+  teilVerschobenVor,
+} from "@nextdays/baukasten-stil";
 import { Logo } from "@/components/logo";
 import { setLocale } from "@/i18n/actions";
 import { LOCALES, type Locale } from "@/i18n/locales";
@@ -40,6 +54,7 @@ import {
   createDraftToken,
   createTemplatePreviewToken,
   duplicateContainer,
+  listBlocks,
   moveContainer,
   removeBlock,
   speichereAbschnitte,
@@ -51,32 +66,28 @@ import {
   MAX_ABSCHNITTE,
   abschnittFuer,
 } from "../abschnitte";
-import { bausteinReihenfolge } from "../ebenen-baum";
 import {
-  type BrotKrume,
-  InspektorKarte,
-  InspektorKopf,
-} from "../inspektor-rahmen";
+  anzeigeBloecke,
+  bausteinReihenfolge,
+  elternKette,
+} from "../ebenen-baum";
 import {
-  LEISTE_GRUPPEN,
   menueBeschriftung,
   REITER_HREF,
+  REITER_MENUE,
   REITER_SYMBOL,
   ZULETZT_ID,
 } from "../reiter";
-import {
-  BaukastenSchale,
-  type SpeicherStand,
-} from "../schale";
+import { MenueSpalte } from "../menue-spalte";
+import { GrossPanel, type SpeicherStand } from "../schale";
 import { useVerlauf } from "../use-verlauf";
 import { useVorschauToken } from "../use-vorschau-token";
 import { useZuletzt } from "../use-zuletzt";
-import { BLOG_PUNKTE, type BlogPunkt, BlogPanel } from "../blog/blog-panel";
+import { type BlogPunkt, BlogPanel } from "../blog/blog-panel";
 import { BeitragsTeile } from "../blog/beitrags-teile";
 import type { FeldKonfig } from "../blog/felder";
 import { protokoll, protokollFehler } from "./protokoll";
 import {
-  KopfSymbol,
   SpeicherHaken,
   SprachWahl,
   VeroeffentlichenKnopf,
@@ -84,10 +95,15 @@ import {
   WebsiteAnsehen,
 } from "../kopfleiste";
 import { SeitenWahl } from "../seiten-wahl";
-import { type Geraet, GeraeteUmschalter, VorschauFlaeche } from "../vorschau";
-import { AbschnittDesign } from "./abschnitt-design";
+import type { Geraet } from "../vorschau";
+import { Buehne, RAHMEN_BREITE, rahmenUrsprung, useKamera } from "./buehne";
+import { FramerSchale, KopfKnopf } from "./framer-schale";
+import { SeitenInspektor } from "./seiten-inspektor";
+import { AgentReiter } from "./agent-reiter";
+import { Mediathek } from "../mediathek";
+import { type Gemessen, StilInspektor } from "./stil-inspektor";
 import { ContainerInspektor } from "./container-inspektor";
-import { AbschnittInspektor } from "./abschnitt-inspektor";
+import { InhaltDialog } from "./inhalt-dialog";
 import {
   HinzufuegenPanel,
   type KatalogKategorie,
@@ -95,6 +111,7 @@ import {
 import { MedienPanel } from "../medien-panel";
 import {
   type EbenenAktion,
+  UEBERLAUF_AKTION,
   EbenenListe,
   type EbenenZug,
 } from "../ebenen-liste";
@@ -106,6 +123,8 @@ import { VorlagenPanel } from "../vorlagen-panel";
 import { FlaechenOverlay, type Rechteck } from "./flaechen-overlay";
 import type { MenuOrt } from "./flaechen-teile";
 import { type CanvasMeldung, useCanvasBruecke } from "./use-canvas-bruecke";
+import { RegionInspektor } from "./region-inspektor";
+import { beweglicheTeile, type RegionAuswahl } from "../ebenen-regionen";
 import { mitVersteckt, versteckteGeraete } from "./sichtbarkeit";
 import {
   eigenesEchoMerken,
@@ -170,6 +189,7 @@ const ALS_PANEL = [
   "ebenen",
   "design",
   "blog",
+  "mediathek",
 ] as const;
 
 /** Das gerade gezeigte Panel. `null` = die Abschnittsliste. */
@@ -185,7 +205,17 @@ type PanelId =
   // neu geladenem iframe und verworfener Auswahl. Genau das war die
   // Beschwerde („warum ist blog eine unterseite").
   | "blog"
+  // Framers dritter Reiter links („Assets"): die Mediathek im Panel.
+  | "mediathek"
   | null;
+
+/** Die Reiter des linken Panels (Framer: Pages · Layers · Assets). */
+type LinkerReiter = "seiten" | "ebenen" | "mediathek";
+/** Die Reiter des rechten Panels (Framer: Agent · Style). */
+type RechterReiter = "agent" | "style";
+/** Sichtbare Breakpoint-Rahmen je Browser — Sichtzustand, keine Einstellung. */
+const RAHMEN_SCHLUESSEL = "editor-rahmen";
+const DUNKEL_SCHLUESSEL = "editor-dunkel";
 
 /** Ein Container samt allem, was darunter hängt — für die sofortige Anzeige.
  *
@@ -193,6 +223,34 @@ type PanelId =
  *  (0472). Hier wird es nachgezeichnet, damit die Ebenen-Liste nicht eine
  *  Sekunde lang Spalten und Bausteine eines Abschnitts zeigt, den es nicht
  *  mehr gibt. */
+/** Ist der geklickte Baustein oder einer seiner Container gesperrt? Liefert
+ *  die Kennung der gesperrten Ebene — die ÄUSSERSTE, denn ein gesperrter
+ *  Abschnitt sperrt alles darin. */
+function gesperrteEbene(
+  blocks: Block[],
+  bausteinId: string | null,
+  containerId: string | null,
+): string | null {
+  const start = bausteinId ?? containerId;
+  if (!start) return null;
+  const kette = [start, ...elternKette(blocks, start)];
+  const nachId = new Map(blocks.map((b) => [b.id, b]));
+  let gesperrt: string | null = null;
+  for (const id of kette) {
+    if (nachId.get(id)?.settings?.locked === true) gesperrt = id;
+  }
+  return gesperrt;
+}
+
+/** Der erste NICHT gesperrte Container über einer Ebene, oder `null`. */
+function ersterFreierElternteil(blocks: Block[], id: string): string | null {
+  const nachId = new Map(blocks.map((b) => [b.id, b]));
+  for (const eltern of elternKette(blocks, id)) {
+    if (nachId.get(eltern)?.settings?.locked !== true) return eltern;
+  }
+  return null;
+}
+
 function ohneTeilbaum(blocks: Block[], wurzelId: string): Block[] {
   const weg = new Set([wurzelId]);
   // Mehrfach durchlaufen: die Liste ist nicht nach Tiefe sortiert, ein Kind
@@ -250,6 +308,9 @@ function mitGetauschtemRang(
 const ENTPRELLUNG_MS = 900;
 const QUITTUNG_MS = 2500;
 
+/** Welche gemeldeten Arten einen RAHMEN bilden — sie tragen Layout und
+ *  Innenabstand, ein Text- oder Bild-Layer nicht (Framer, 06.09.2026). */
+const RAHMEN_ARTEN = new Set(["frame", "stack", "grid", "masonry", "link", "knopf"]);
 export function AbschnittsEditor({
   page,
   pages,
@@ -392,7 +453,6 @@ export function AbschnittsEditor({
   // dieser Vorschau. „Mehr" öffnet deshalb NUR seine Menüspalte; das Panel
   // daneben bleibt, was es war. Zwei `true` können sich hier nicht
   // widersprechen, weil die beiden Zustände verschiedene Spalten steuern.
-  const [mehrOffen, setMehrOffen] = useState(false);
   /** Welcher Theme-Unterpunkt im Design-Panel offen ist.
    *
    *  Er lebt HIER, weil die Menüspalte ihn setzt und das Panel ihn zeigt —
@@ -429,9 +489,6 @@ export function AbschnittsEditor({
   // Beides untereinander wäre in dieser Breite eine Bildlaufstrecke, an
   // deren Ende niemand sucht — Hostaway trennt es aus demselben Grund in
   // `Manage …` und `Edit Design`.
-  const [panelModus, setPanelModus] = useState<"inhalt" | "design">(
-    "inhalt",
-  );
   // An welcher Stelle der Katalog einfügt. `null` = ans Ende (der Knopf
   // unter der Liste); eine Zahl = genau dort (das `+` an einer Karte).
   const [einfuegenVor, setEinfuegenVor] = useState<number | null>(null);
@@ -440,6 +497,64 @@ export function AbschnittsEditor({
    *  doppelt anlegen. */
   const [legtLayoutAn, setLegtLayoutAn] = useState(false);
   const [geraet, setGeraet] = useState<Geraet>("desktop");
+  const geraetRef = useRef<Geraet>("desktop");
+  geraetRef.current = geraet;
+  // Welche Breakpoints als RAHMEN auf der Fläche stehen (Framer: Desktop
+  // zuerst, „+" holt Tablet/Phone dazu). Gemerkt je Browser — eine Sicht,
+  // keine Einstellung der Seite.
+  const [sichtbareRahmen, setSichtbareRahmen] = useState<Geraet[]>(() => {
+    try {
+      const roh = window.localStorage.getItem(RAHMEN_SCHLUESSEL);
+      const liste = roh ? (JSON.parse(roh) as unknown) : null;
+      if (Array.isArray(liste)) {
+        const ok = liste.filter(
+          (g): g is Geraet => g === "desktop" || g === "tablet" || g === "mobil",
+        );
+        if (ok.includes("desktop")) return ok;
+      }
+    } catch {
+      // kein Speicher — Standard
+    }
+    return ["desktop"];
+  });
+  function rahmenSetzen(g: Geraet, drin: boolean) {
+    setSichtbareRahmen((alt) => {
+      const neu = drin ? [...new Set([...alt, g])] : alt.filter((x) => x !== g);
+      if (!neu.includes("desktop")) neu.unshift("desktop");
+      try {
+        window.localStorage.setItem(RAHMEN_SCHLUESSEL, JSON.stringify(neu));
+      } catch {
+        // kein Speicher — egal
+      }
+      return neu;
+    });
+    if (!drin && geraet === g) setGeraet("desktop");
+    protokoll("klick", drin ? "Rahmen hinzu" : "Rahmen weg", { geraet: g });
+  }
+  const kamera = useKamera(sichtbareRahmen);
+  const sichtbareRahmenRef = useRef<Geraet[]>(sichtbareRahmen);
+  sichtbareRahmenRef.current = sichtbareRahmen;
+  const { hoeheSetzen: kameraHoehe, rad: kameraRad, taste: kameraTaste } = kamera;
+  // Dunkles Editor-Thema (Framers Standard); der Mond unten schaltet um.
+  const [dunkel, setDunkel] = useState<boolean>(() => {
+    try {
+      return window.localStorage.getItem(DUNKEL_SCHLUESSEL) !== "0";
+    } catch {
+      return true;
+    }
+  });
+  function dunkelSetzen(d: boolean) {
+    setDunkel(d);
+    try {
+      window.localStorage.setItem(DUNKEL_SCHLUESSEL, d ? "1" : "0");
+    } catch {
+      // kein Speicher — egal
+    }
+  }
+  const [rechterReiter, setRechterReiter] = useState<RechterReiter>("style");
+  /** Der Baustein, dessen INHALT im Dialog offen ist (Schlüssel der Zeile). */
+  const [inhaltOffen, setInhaltOffen] = useState<string | null>(null);
+  const [canvasMenue, setCanvasMenue] = useState(false);
   const [stand, setStand] = useState<SpeicherStand>("ruht");
   // Welche Kategorie der Katalog zeigt. Sie kommt aus der MENÜSPALTE und ist
   // deshalb ein Zustand DES EDITORS, nicht des Panels: die Spalte steht
@@ -472,6 +587,104 @@ export function AbschnittsEditor({
    *  `zuZeilen`). Beides in einen Zustand zu pressen hieße, an jeder Stelle
    *  erst wieder auseinanderzusortieren, was gemeint ist. */
   const [containerId, setContainerId] = useState<string | null>(null);
+  /** Ein Knoten in der Struktur eines Bausteins — die Ebene unterhalb des
+   *  Bausteins, wie Framer sie führt. */
+  type TeilKnoten = {
+    feld: string;
+    eltern: string | null;
+    art: string;
+    marke: string | null;
+  };
+
+  /** Ein laufender Ziehvorgang AUF DER FLÄCHE (06.09.2026): welcher Baustein,
+   *  wo steht der Zeiger, und ist die Maus schon los? Der Zustand lebt hier,
+   *  weil die Geste im iframe beginnt und im Overlay endet. */
+  const [flaechenZug, setFlaechenZug] = useState<{
+    key: string;
+    x: number;
+    y: number;
+    fertig?: boolean;
+  } | null>(null);
+
+  /** Der gewählte TEIL eines Bausteins (06.09.2026).
+   *
+   *  „jeder text und bild und alles ist eine einzelne Funktion, die individuell
+   *  einzeln gestaltbar ist durch das Style-Panel" (Auftrag), nach der Messung
+   *  bei Framer: dort ist jede Überschrift und jeder Absatz eine eigene Ebene.
+   *  Unser Baustein ist gröber — seine Teile stehen deshalb unter dem
+   *  Feldschlüssel in `settings.teile.<feld>` und tragen dieselbe Darstellung
+   *  wie ein ganzer Block.
+   *
+   *  NEBEN `aktiv` und nicht darin: `aktiv` ist der Baustein, `teil` die
+   *  Stelle darin. Beides zusammen ist die Auswahl. */
+  const [teilAuswahl, setTeilAuswahl] = useState<{
+    key: string;
+    feld: string;
+  } | null>(null);
+  /** Die Rechtecke der Teile, gemeldet von der Brücke — Schlüssel
+   *  `<blockId>/<feld>`. */
+  const [teilRechtecke, setTeilRechtecke] = useState<
+    Map<
+      string,
+      {
+        top: number;
+        left: number;
+        width: number;
+        height: number;
+        /** Schlüssel des übergeordneten Knotens im Baustein, `null` = oberste
+         *  Ebene darin. */
+        eltern: string | null;
+        /** `frame` · `stack` · `grid` · `masonry` · `bild` · `video` · `text` … */
+        art: string;
+        /** Der sichtbare Text als Namenszusatz im Baum. */
+        marke: string | null;
+      }
+    >
+  >(new Map());
+
+  /** Welche TEILE ein Baustein zeigt — aus den gemeldeten Rechtecken. Die
+   *  Reihenfolge ist die Lesereihenfolge auf der Seite (oben nach unten, links
+   *  nach rechts), nicht die des Katalogs: im Baum soll dieselbe Ordnung
+   *  stehen wie auf der Fläche. */
+  const teileJeBlock = useMemo(() => {
+    const karte = new Map<string, TeilKnoten[]>();
+    const sortiert = [...teilRechtecke.entries()].sort(
+      ([, a], [, b]) => a.top - b.top || a.left - b.left,
+    );
+    for (const [schluessel, r] of sortiert) {
+      const trenner = schluessel.indexOf("/");
+      const id = schluessel.slice(0, trenner);
+      const feld = schluessel.slice(trenner + 1);
+      if (!id || !feld) continue;
+      const liste = karte.get(id) ?? [];
+      liste.push({ feld, eltern: r.eltern, art: r.art, marke: r.marke });
+      karte.set(id, liste);
+    }
+    return karte;
+  }, [teilRechtecke]);
+
+  // --- Kopf-/Fußzeile als Ebenen (0570) -----------------------------------
+  // Die gewählte Regions-Ebene (Region selbst oder ein Teil), ihre Rechtecke
+  // aus der Brücke und der Stand aus dem Branding. Der Stand lebt HIER und
+  // nicht im Design-Panel, weil Baum, Fläche und Inspektor ihn zugleich
+  // brauchen — gespeichert wird sofort je Klick über `setBranding`, es gibt
+  // keinen Entwurf: ein Auge ist eine Absicht, kein Tippen.
+  const [regionAuswahl, setRegionAuswahl] = useState<RegionAuswahl | null>(null);
+  const [regionRechtecke, setRegionRechtecke] = useState<
+    Map<string, { top: number; left: number; width: number; height: number }>
+  >(new Map());
+  const [teileStand, setTeileStand] = useState<Record<Region, RegionStand>>(() => ({
+    kopfzeile: regionLesen("kopfzeile", branding.header_teile),
+    fusszeile: regionLesen("fusszeile", branding.footer_teile),
+  }));
+  // Eine Regions-Ebene und ein Block schließen sich aus — wie im Baum.
+  useEffect(() => {
+    if (aktiv || containerId) setRegionAuswahl(null);
+  }, [aktiv, containerId]);
+  // Ein TEIL gehört zu genau einem Baustein: wechselt der, ist die Stelle weg.
+  useEffect(() => {
+    setTeilAuswahl((t) => (t && t.key === aktiv ? t : null));
+  }, [aktiv]);
 
   /** Der Baum, wie ihn die Oberfläche ZEIGT — mit sofortiger Wirkung (0479).
    *
@@ -494,6 +707,17 @@ export function AbschnittsEditor({
   useEffect(() => {
     setBaumBlocks(baumVomServer);
   }, [baumVomServer]);
+  /** Der Baum, wie die EBENEN ihn zeigen: Container aus `baumBlocks`, Bausteine
+   *  aus `zeilen` (05.09.2026, Befund 1/2/12). Vorher las der Baum nur den
+   *  Server-Stand und sah keine Bausteinänderung, bis die Seite neu lud. */
+  const baumAnzeige = useMemo(
+    () => anzeigeBloecke(baumBlocks, zeilen, page.id),
+    [baumBlocks, zeilen, page.id],
+  );
+  // Für die Meldungs-Handler der Brücke, die über eine Ref laufen und den
+  // aktuellen Baum sonst nicht sähen.
+  const baumBlocksRef = useRef(baumAnzeige);
+  baumBlocksRef.current = baumAnzeige;
 
   const { token, tokenFehler } = useVorschauToken(page.id, createDraftToken);
 
@@ -546,7 +770,6 @@ export function AbschnittsEditor({
     setPanel(ziel);
     // „Mehr" ist eine eigene Achse (siehe oben) und steht nie in `?panel=`.
     // Wer über die Adresse ein Panel wählt, verlässt damit die Mehr-Spalte.
-    if (ziel) setMehrOffen(false);
   }, [panelWunsch]);
 
   /** Ein Panel öffnen/schließen UND die Adresse mitführen.
@@ -590,6 +813,14 @@ export function AbschnittsEditor({
   /** Läuft ein Speichervorgang, während sich etwas ändert? Dann NACHHOLEN,
    *  nicht verwerfen. */
   const nachholen = useRef(false);
+
+  /** Waren seit dem letzten Speichern NUR Darstellungs-Werte dran?
+   *
+   *  Dann braucht die Vorschau kein Neuladen: sie zeigt die Änderung längst
+   *  (`sendeStil` schickt sie sofort in den iframe). Inhalt und Struktur
+   *  brauchen es weiterhin — ein neuer Baustein, ein anderer Text oder ein
+   *  anderes HTML-Element entsteht nicht aus einer CSS-Regel. */
+  const nurStilRef = useRef(true);
 
   const schreibe = useCallback(async () => {
     // Ein zweiter Lauf während des ersten würde denselben Stand doppelt
@@ -717,10 +948,38 @@ export function AbschnittsEditor({
     setBestaetigt(JSON.stringify(vomServer));
     setAktiv(index >= 0 ? (verschmolzen[index]?.key ?? null) : null);
     setStand("gespeichert");
-    protokoll("vorschau", "Vorschau wird neu geladen", {
-      abschnitte: verschmolzen.length,
-    });
-    setNeuLaden((n) => n + 1);
+    // NUR neu laden, wenn es etwas zu holen gibt: neue Bausteine (Struktur)
+    // oder geänderter Inhalt. Eine reine Stiländerung steht in der Vorschau
+    // schon — sie noch einmal zu laden hieße, sie eine Sekunde später gegen
+    // dasselbe Bild zu tauschen, mit Sprung an den Seitenanfang.
+    const strukturNeu = gesendet.some((r) => !r.id);
+    if (!nurStilRef.current || strukturNeu) {
+      protokoll("vorschau", "Vorschau wird neu geladen", {
+        abschnitte: verschmolzen.length,
+        grund: strukturNeu ? "struktur" : "inhalt",
+      });
+      setNeuLaden((n) => n + 1);
+    } else {
+      protokoll("vorschau", "Neuladen übersprungen — nur Darstellung", {
+        abschnitte: verschmolzen.length,
+      });
+    }
+    nurStilRef.current = true;
+    // Die CONTAINER nachladen (05.09.2026): der Server legt für einen neuen
+    // Baustein Abschnitt und Spalte an, und der Baum kannte sie bis zum
+    // nächsten `router.refresh()` nicht — der Baustein stand als Wurzel mit
+    // dem Abzeichen „ohne Elternteil" da, obwohl er längst seine Hülle hatte.
+    // Nur bei Strukturänderung (mindestens ein Baustein war neu), nicht bei
+    // jedem Tastendruck.
+    if (strukturNeu) {
+      const baum = await listBlocks(page.id, true);
+      if (baum.ok) setBaumBlocks(baum.data.items);
+      else {
+        protokollFehler("antwort", "Baum nach dem Speichern nicht geladen", {
+          fehler: baum.error,
+        });
+      }
+    }
     // Ab hier kommt das EIGENE Schreiben als Realtime-Ereignis zurück. Es
     // darf nicht als fremde Änderung gelten — sonst meldete der Editor nach
     // jedem Tastendruck „jemand anderes hat diese Seite geändert".
@@ -893,14 +1152,237 @@ export function AbschnittsEditor({
       : undefined;
   }, []);
 
+  /** Die AUSWAHLKETTE unter dem Zeiger, von außen nach innen.
+   *
+   *  Framers Regel, am 06.09.2026 gemessen: ein Klick bei leerer Auswahl
+   *  trifft den ÄUSSERSTEN Rahmen (bei uns den Abschnitt). Jeder Doppelklick
+   *  geht eine Ebene tiefer — Abschnitt → Spalte → Baustein → Teil. Steht die
+   *  Auswahl schon in der Kette, bleibt ein Klick auf DERSELBEN Ebene und
+   *  wählt das Geschwister unter dem Zeiger.
+   *
+   *  Vorher traf jeder Klick sofort das Innerste. Das ist bequem, solange man
+   *  einen Baustein sucht, und unbrauchbar, sobald man den Abschnitt darum
+   *  gestalten will: man kam nur über den Ebenen-Baum an ihn heran. */
+  type KettenGlied =
+    | { art: "container"; id: string }
+    | { art: "baustein"; key: string }
+    | { art: "teil"; key: string; feld: string };
+
+  // Die Struktur-Rechtecke als Ref: `ketteAus` läuft in einem Callback, der
+  // die Meldungen der Brücke bedient — er darf nicht bei jeder Messung neu
+  // entstehen.
+  const teilRechteckeRef = useRef(teilRechtecke);
+  teilRechteckeRef.current = teilRechtecke;
+
+  const ketteAus = useCallback(
+    (data: CanvasMeldung): KettenGlied[] => {
+      const zeile = zeilenRef.current.find(
+        (r) => (data.id && r.id === data.id) || (data.index != null && r.id == null && false),
+      );
+      const kette: KettenGlied[] = [];
+      // Die Container von AUSSEN nach innen: `elternKette` liefert sie
+      // umgekehrt (innerstes zuerst), also drehen.
+      const start = zeile?.id ?? data.containerId ?? null;
+      if (start) {
+        const eltern = elternKette(baumBlocksRef.current, start).reverse();
+        for (const id of eltern) kette.push({ art: "container", id });
+      }
+      if (!zeile && data.containerId) {
+        // Der Container selbst ist das Innerste (leere Spalte, leerer Abschnitt).
+        if (!kette.some((g) => g.art === "container" && g.id === data.containerId)) {
+          kette.push({ art: "container", id: data.containerId });
+        }
+      }
+      if (zeile) {
+        kette.push({ art: "baustein", key: zeile.key });
+        if (typeof data.feld === "string" && zeile.id) {
+          // Die STRUKTUR zwischen Baustein und getroffener Stelle: Stapel,
+          // Rahmen, Bild — sie stehen im Baum und gehören deshalb auch in die
+          // Kette, sonst spränge ⎋ vom Text direkt zum Baustein und
+          // übersprünge alles dazwischen.
+          const kn: string[] = [];
+          let lauf: string | null = data.feld;
+          const gesehen = new Set<string>();
+          while (lauf && !gesehen.has(lauf)) {
+            gesehen.add(lauf);
+            kn.unshift(lauf);
+            lauf = teilRechteckeRef.current.get(`${zeile.id}/${lauf}`)?.eltern ?? null;
+          }
+          for (const feld of kn) kette.push({ art: "teil", key: zeile.key, feld });
+        }
+      }
+      return kette;
+    },
+    [],
+  );
+
+  /** Wie tief die AKTUELLE Auswahl in einer Kette steht — `-1`, wenn sie gar
+   *  nicht darin vorkommt (dann fängt der Klick wieder außen an). */
+  const tiefeInKette = useCallback(
+    (kette: KettenGlied[]): number => {
+      for (let i = kette.length - 1; i >= 0; i--) {
+        const g = kette[i]!;
+        if (g.art === "teil" && teilAuswahl?.key === g.key && teilAuswahl.feld === g.feld) {
+          return i;
+        }
+        if (g.art === "baustein" && !teilAuswahl && aktiv === g.key) return i;
+        if (g.art === "container" && containerId === g.id) return i;
+      }
+      return -1;
+    },
+    [aktiv, containerId, teilAuswahl],
+  );
+
+  /** Ein Glied der Kette auswählen. */
+  const waehleGlied = useCallback((g: KettenGlied | undefined) => {
+    if (!g) return;
+    setMenu(null);
+    setRegionAuswahl(null);
+    if (g.art === "container") {
+      setContainerId(g.id);
+      setAktiv(null);
+      setTeilAuswahl(null);
+      return;
+    }
+    if (g.art === "baustein") {
+      setAktiv(g.key);
+      setContainerId(null);
+      setTeilAuswahl(null);
+      return;
+    }
+    setAktiv(g.key);
+    setContainerId(null);
+    setTeilAuswahl({ key: g.key, feld: g.feld });
+  }, []);
+
+  const teileStandRef = useRef(teileStand);
+  teileStandRef.current = teileStand;
+
+  /** Den Stand einer Region schreiben: sofort in die Anzeige, dann ins
+   *  Branding; scheitert das Speichern, kommt der alte Stand zurück und der
+   *  Fehler steht im Protokoll — kein stilles „gespeichert" (Wurzel 5). */
+  const regionSpeichern = useCallback(
+    async (region: Region, neu: RegionStand) => {
+      const vorher = teileStandRef.current[region];
+      setTeileStand((s) => ({ ...s, [region]: neu }));
+      const feld = region === "kopfzeile" ? "header_teile" : "footer_teile";
+      const wert = regionZumSpeichern(region, neu);
+      protokoll("speichern", "Regions-Ebene speichern", { region, wert });
+      const res = await setBranding({ [feld]: wert });
+      if (!res.ok) {
+        protokollFehler("speichern", "Regions-Ebene nicht gespeichert", {
+          region,
+          fehler: res.error,
+        });
+        setTeileStand((s) => ({ ...s, [region]: vorher }));
+        return;
+      }
+      // Die Vorschau zeigt den neuen Stand erst nach dem Neuladen — der
+      // Renderer liest ihn aus dem Branding, nicht aus dem Block-Baum.
+      setNeuLaden((n) => n + 1);
+    },
+    [],
+  );
+  const regionVersteckt = useCallback(
+    (a: RegionAuswahl, geraete: Geraet[]) =>
+      void regionSpeichern(
+        a.region,
+        mitTeilVersteckt(teileStandRef.current[a.region], a.teil, geraete),
+      ),
+    [regionSpeichern],
+  );
+  const regionSperren = useCallback(
+    (a: RegionAuswahl, locked: boolean) =>
+      void regionSpeichern(
+        a.region,
+        mitTeilGesperrt(teileStandRef.current[a.region], a.teil, locked),
+      ),
+    [regionSpeichern],
+  );
+  const regionZiehen = useCallback(
+    (region: Region, teil: string, vorTeil: string) =>
+      void regionSpeichern(
+        region,
+        teilVerschobenVor(teileStandRef.current[region], teil, vorTeil, beweglicheTeile(region)),
+      ),
+    [regionSpeichern],
+  );
+  const regionVerschiebe = useCallback(
+    (region: Region, teil: string, richtung: -1 | 1) =>
+      void regionSpeichern(
+        region,
+        teilVerschoben(teileStandRef.current[region], teil, richtung, beweglicheTeile(region)),
+      ),
+    [regionSpeichern],
+  );
+
   const aufNachricht = useCallback(
     (data: CanvasMeldung) => {
       // Neue Geometrie. Sie kommt bei jedem Scrollen und jeder Größenänderung
       // im iframe — deshalb NUR den Zustand ersetzen und sonst nichts tun.
+      // Kamera: Rad/Pinch und Kürzel, die im iframe landen (Bühne).
+      if (data.type === "rad") {
+        kameraRad(data.dx ?? 0, data.dy ?? 0, data.zoom === true, null);
+        return;
+      }
+      if (data.type === "taste" && typeof data.key === "string") {
+        if (data.meta === true && data.key.toLowerCase() === "z" && data.typ !== "keyup") {
+          verlaufSchrittRef.current(data.shift === true ? "wiederholen" : "rueckgaengig");
+          return;
+        }
+        kameraTaste(
+          {
+            key: data.key,
+            code: data.code ?? "",
+            meta: data.meta === true,
+            typ: data.typ ?? "keydown",
+            alt: data.alt === true,
+          },
+          geraetRef.current,
+        );
+        return;
+      }
       if (data.type === "rects" && Array.isArray(data.rechtecke)) {
+        if (typeof data.seitenHoehe === "number") {
+          kameraHoehe(geraetRef.current, data.seitenHoehe);
+        }
         const karte = new Map<number, Rechteck>();
         for (const r of data.rechtecke) karte.set(r.index, r);
         setRechtecke(karte);
+        // Kopf-/Fußzeile und Teile (0570): Schlüssel `kopfzeile` bzw.
+        // `kopfzeile/logo`, genau wie `regionRect` sie unten nachschlägt.
+        const regionen = new Map<
+          string,
+          { top: number; left: number; width: number; height: number }
+        >();
+        for (const r of data.regionen ?? []) {
+          regionen.set(r.teil ? `${r.region}/${r.teil}` : r.region, r);
+        }
+        setRegionRechtecke(regionen);
+        const teileKarte = new Map<
+          string,
+          {
+            top: number;
+            left: number;
+            width: number;
+            height: number;
+            eltern: string | null;
+            art: string;
+            marke: string | null;
+          }
+        >();
+        for (const t of data.teile ?? []) {
+          teileKarte.set(`${t.id}/${t.feld}`, {
+            top: t.top,
+            left: t.left,
+            width: t.width,
+            height: t.height,
+            eltern: t.eltern ?? null,
+            art: t.art ?? "frame",
+            marke: t.marke ?? null,
+          });
+        }
+        setTeilRechtecke(teileKarte);
         // NUR beim Scrollen das offene Kontextmenü schließen: dabei wandert der
         // Abschnitt darunter weg, und ein Menü, das an seiner
         // Bildschirmposition stehen bleibt, zeigt danach auf einen anderen.
@@ -914,12 +1396,68 @@ export function AbschnittsEditor({
         return;
       }
 
+      // ZIEHEN AUF DER FLÄCHE (06.09.2026): ein Baustein wird an eine andere
+      // Stelle gezogen. Bei Framer wird dabei UMSORTIERT — bei uns ebenso,
+      // denn die Reihenfolge der Bausteine IST ihre Position auf der Seite.
+      //
+      // Die STELLE kommt aus der Geometrie (`onFlaechenZug` im Overlay rechnet
+      // sie aus den gemeldeten Rechtecken), nicht aus einem Index: der
+      // Renderer zählt anders als der Editor, und genau daran landete früher
+      // jeder gezogene Abschnitt unten.
+      if (data.type === "zug" && typeof data.x === "number" && typeof data.y === "number") {
+        if (data.phase === "start") {
+          const zeile = zeilenRef.current.find((r) => r.id === data.id);
+          if (zeile) setFlaechenZug({ key: zeile.key, x: data.x, y: data.y });
+          return;
+        }
+        if (data.phase === "bewegt") {
+          setFlaechenZug((z) => (z ? { ...z, x: data.x!, y: data.y! } : z));
+          return;
+        }
+        // ENDE: die Umsortierung führt das Overlay aus (es kennt die
+        // Rechtecke); hier wird nur die Geste beendet.
+        setFlaechenZug((z) => (z ? { ...z, x: data.x!, y: data.y!, fertig: true } : z));
+        return;
+      }
+
       if (data.type === "zeiger") {
         setZeiger(
           typeof data.x === "number" && typeof data.y === "number"
             ? { x: data.x, y: data.y }
             : null,
         );
+        return;
+      }
+
+      // DOPPELKLICK = EINE EBENE TIEFER (Framer-Messung 06.09.2026:
+      // Abschnitt → Raster → Karte → Text). Auf einer Textstelle meldet die
+      // Brücke stattdessen `bearbeitet` — dort öffnet der Doppelklick den
+      // Schreibcursor, wie im Vorbild.
+      if (data.type === "dblclick") {
+        // DOPPELKLICK GEHT GANZ NACH INNEN — zum kleinsten Element unter dem
+        // Zeiger (06.09.2026, gemeldet als „der Button lässt sich nicht in der
+        // Fläche anpassen").
+        //
+        // Vorher ging er EINE Ebene tiefer, wie bei Framer gemessen. Das passt
+        // dort, weil eine Framer-Seite flach gebaut ist. Bei uns liegen über
+        // jedem Baustein noch Abschnitt UND Spalte (0472) — bis zum Knopf
+        // waren es vier Doppelklicks, und nach zweien stand man bei „Inhalt"
+        // und hielt es für kaputt. Der Weg nach innen ist jetzt einer, der
+        // Weg zurück bleibt ⎋ Schritt für Schritt.
+        const kette = ketteAus(data);
+        if (kette.length === 0) return;
+        waehleGlied(kette[kette.length - 1]);
+        return;
+      }
+
+      // Der Kunde schreibt gerade IN einer Textstelle: sie ist zugleich die
+      // Auswahl, damit das Panel ihre Schrift zeigt, während getippt wird.
+      if (data.type === "bearbeitet" && typeof data.feld === "string") {
+        const zeile = zeileAusMeldung(data);
+        if (!zeile) return;
+        setAktiv(zeile.key);
+        setContainerId(null);
+        setTeilAuswahl({ key: zeile.key, feld: data.feld });
         return;
       }
 
@@ -934,6 +1472,19 @@ export function AbschnittsEditor({
         typeof data.y === "number"
       ) {
         const zeile = zeileAusMeldung(data);
+        // Gesperrt heißt gesperrt — auch für den Rechtsklick (Befund 19).
+        if (
+          gesperrteEbene(
+            baumBlocksRef.current,
+            zeile?.id ?? null,
+            typeof data.containerId === "string" ? data.containerId : null,
+          )
+        ) {
+          protokoll("klick", "Rechtsklick auf gesperrte Ebene abgefangen", {
+            id: zeile?.id ?? data.containerId ?? null,
+          });
+          return;
+        }
         if (!zeile) {
           // Rechtsklick auf einen CONTAINER: er wird ausgewählt, das Menü
           // bleibt aus. Seine Handgriffe (Rang, duplizieren, löschen) stehen
@@ -952,32 +1503,67 @@ export function AbschnittsEditor({
         // Kontextmenü hängt aber am Dashboard-Fenster — ohne den Versatz des
         // iframe-Elements stünde es um dessen linke obere Ecke daneben, und bei
         // schmaler Mobilansicht wären das mehrere hundert Pixel.
-        const kasten = iframeRef.current?.getBoundingClientRect();
+        const ursprung = rahmenUrsprung(sichtbareRahmenRef.current, geraetRef.current);
         setMenu({
-          x: data.x + (kasten?.left ?? 0),
-          y: data.y + (kasten?.top ?? 0),
+          x: data.x + ursprung.x,
+          y: data.y + ursprung.y,
           key: zeile.key,
         });
         return;
       }
 
+      if (data.type === "select" && typeof data.region === "string") {
+        // Klick in die Kopf- oder Fußzeile (0570). Ein GESPERRTER Teil gibt
+        // den Klick an seine Region weiter, wie ein gesperrter Block an den
+        // nächsten freien Container.
+        const region = data.region === "fusszeile" ? "fusszeile" : "kopfzeile";
+        const stand = teileStandRef.current[region];
+        let teil = typeof data.teil === "string" ? data.teil : null;
+        if (teil && stand.teile[teil]?.locked) teil = null;
+        if (stand.locked) {
+          protokoll("klick", "Klick auf gesperrte Region abgefangen", { region });
+          return;
+        }
+        protokoll("klick", "Regions-Ebene aus der Fläche gewählt", { region, teil });
+        setAktiv(null);
+        setContainerId(null);
+        setMenu(null);
+        setRegionAuswahl({ region, teil });
+        return;
+      }
+
       if (data.type === "select") {
         const zeile = zeileAusMeldung(data);
-        if (zeile) {
-          // Ein Baustein gewinnt: er ist das Innerste unter dem Zeiger, und
-          // wer auf einen Text klickt, meint den Text — nicht die Spalte
-          // darum. Der Container bleibt über den Krümelweg im Inspektor
-          // erreichbar.
-          setAktiv(zeile.key);
-          setContainerId(null);
-        } else if (data.containerId) {
-          // Kein Baustein, aber ein Container: der leere Abschnitt, die leere
-          // Spalte. Das war vorher ein Klick ins Nichts.
-          setContainerId(data.containerId);
+        // Eine GESPERRTE Ebene lässt sich auf der Fläche nicht anklicken — das
+        // war bis 05.09.2026 nur ein Kommentar (Befund 19). Der Klick geht an
+        // den nächsten nicht gesperrten Container darüber, wie in Framer.
+        const gesperrtId = gesperrteEbene(
+          baumBlocksRef.current,
+          zeile?.id ?? null,
+          typeof data.containerId === "string" ? data.containerId : null,
+        );
+        if (gesperrtId) {
+          protokoll("klick", "Klick auf gesperrte Ebene abgefangen", {
+            id: gesperrtId,
+          });
+          const frei = ersterFreierElternteil(baumBlocksRef.current, gesperrtId);
           setAktiv(null);
-          setPanelModus("inhalt");
+          setContainerId(frei);
+          setMenu(null);
+          return;
         }
-        setMenu(null);
+        // FRAMERS AUSWAHLKETTE (06.09.2026 gemessen): außen anfangen, mit
+        // Doppelklick tiefer, auf derselben Ebene bleiben, solange man dort
+        // schon ist.
+        const kette = ketteAus(data);
+        if (kette.length === 0) {
+          setMenu(null);
+          return;
+        }
+        const tiefe = tiefeInKette(kette);
+        // Nicht in der Kette (frische Auswahl) → der äußerste Rahmen.
+        // Schon darin → dieselbe Ebene, also das Geschwister unter dem Zeiger.
+        waehleGlied(kette[tiefe < 0 ? 0 : Math.min(tiefe, kette.length - 1)]);
         return;
       }
 
@@ -1011,10 +1597,31 @@ export function AbschnittsEditor({
         );
       }
     },
-    [locale, zeileAusMeldung],
+    [
+      kameraHoehe,
+      kameraRad,
+      kameraTaste,
+      ketteAus,
+      locale,
+      tiefeInKette,
+      waehleGlied,
+      zeileAusMeldung,
+    ],
   );
 
-  const { iframeBereit, scrolleZu } = useCanvasBruecke(iframeRef, aufNachricht);
+  const { iframeBereit, scrolleZu, sendeStil } = useCanvasBruecke(
+    iframeRef,
+    aufNachricht,
+  );
+
+  // Wechselt der aktive Rahmen, hängt `iframeRef` am NEUEN iframe — der hat
+  // sein `load` längst gemeldet. Also neu grüßen und die Rechtecke des alten
+  // Rahmens verwerfen: sie gehören zu einer anderen Breite.
+  useEffect(() => {
+    setRechtecke(new Map());
+    setRegionRechtecke(new Map());
+    iframeBereit();
+  }, [geraet, iframeBereit]);
 
   // Wird ein Abschnitt AUSSERHALB der Vorschau gewählt (Ebenen-Baum,
   // Abschnittsliste), soll die Vorschau ihn zeigen. Vorher markierte sie ihn
@@ -1029,6 +1636,12 @@ export function AbschnittsEditor({
     const zeile = zeilenRef.current.find((z) => z.key === aktiv);
     scrolleZu(zeile?.id ?? null);
   }, [aktiv, scrolleZu]);
+  // Dasselbe für einen gewählten CONTAINER (Befund 6): der Renderer trägt an
+  // Abschnitten und Spalten dieselbe `data-block-id`, der Sprung läuft also
+  // über denselben Befehl.
+  useEffect(() => {
+    if (containerId) scrolleZu(containerId);
+  }, [containerId, scrolleZu]);
 
 
   // --- Bearbeiten ---------------------------------------------------------
@@ -1078,7 +1691,6 @@ export function AbschnittsEditor({
       return kopie;
     });
     setAktiv(key);
-    setPanelModus("inhalt");
     setEinfuegenVor(null);
     // Für die Sicht „Zuletzt" im Katalog.
     merken(typ);
@@ -1170,7 +1782,9 @@ export function AbschnittsEditor({
   }
 
   function aendere(key: string, content: Record<string, unknown>) {
+    verlaufMerken(key, "content");
     setZeilen((z) => z.map((r) => (r.key === key ? { ...r, content } : r)));
+    nurStilRef.current = false;
   }
 
   /** Die Darstellungs-Einstellungen eines Abschnitts (0432).
@@ -1180,10 +1794,130 @@ export function AbschnittsEditor({
    *  Datenbank, aber es gab keine Oberfläche, sie zu setzen. Damit waren sie
    *  eine Attrappe — der Renderer liest sie, niemand konnte sie füllen. */
   function aendereSettings(key: string, settings: Record<string, unknown>) {
+    verlaufMerken(key, "settings");
     setZeilen((z) => z.map((r) => (r.key === key ? { ...r, settings } : r)));
+    // SOFORT in die Vorschau (06.09.2026, „schau dir an, wie der Canvas mit
+    // dem Style-Panel arbeitet"): der Wert steht drüben, bevor überhaupt
+    // gespeichert wird. Vorher sah man ihn erst nach dem Autospeichern und
+    // einem Neuladen des iframe — gut eine Sekunde später, mit Sprung nach
+    // oben. Wer an einem Schieberegler zieht, braucht die Wirkung UNTER dem
+    // Zeiger, sonst regelt er blind.
+    const zeile = zeilenRef.current.find((r) => r.key === key);
+    if (zeile?.id) sendeStil(zeile.id, settings);
+    nurStilRef.current = true;
   }
 
+  // --- Rückgängig / Wiederholen (Framer ⌘Z / ⌘⇧Z, Vollerfassung §11) --------
+  //
+  // Der Verlauf führt Stil- und Inhaltsänderungen an Bausteinen (das, was der
+  // Editor lokal hält und mit dem Autospeichern schreibt). Strukturänderungen
+  // (Abschnitt anlegen/löschen/verschieben) laufen über die Struktur-Endpunkte
+  // und haben serverseitig keinen Rückweg — sie stehen NICHT im Verlauf, statt
+  // eines Rückgängig, das nur so aussieht (Wurzel 4). Ein Eintrag = ein Feld
+  // einer Zeile VOR der Änderung; Rückgängig legt den heutigen Stand in die
+  // Zukunft, Wiederholen umgekehrt.
+  type VerlaufEintrag = { key: string; feld: "settings" | "content"; wert: Record<string, unknown> };
+  const verlaufRef = useRef<{ vergangen: VerlaufEintrag[]; zukunft: VerlaufEintrag[] }>({
+    vergangen: [],
+    zukunft: [],
+  });
+  function verlaufMerken(key: string, feld: "settings" | "content") {
+    const zeile = zeilenRef.current.find((r) => r.key === key);
+    if (!zeile) return;
+    const v = verlaufRef.current;
+    v.vergangen.push({ key, feld, wert: zeile[feld] });
+    if (v.vergangen.length > 200) v.vergangen.shift();
+    v.zukunft = [];
+  }
+  function verlaufSchritt(richtung: "rueckgaengig" | "wiederholen") {
+    const v = verlaufRef.current;
+    const von = richtung === "rueckgaengig" ? v.vergangen : v.zukunft;
+    const nach = richtung === "rueckgaengig" ? v.zukunft : v.vergangen;
+    const eintrag = von.pop();
+    if (!eintrag) {
+      toast.message(t("ebenen.nichtsRueckgaengig"));
+      return;
+    }
+    const zeile = zeilenRef.current.find((r) => r.key === eintrag.key);
+    if (!zeile) {
+      // Die Zeile gibt es nicht mehr (gelöscht) — der Eintrag ist wertlos, weiter.
+      verlaufSchritt(richtung);
+      return;
+    }
+    nach.push({ key: eintrag.key, feld: eintrag.feld, wert: zeile[eintrag.feld] });
+    protokoll("klick", richtung === "rueckgaengig" ? "Rückgängig" : "Wiederholen", {
+      key: eintrag.key,
+      feld: eintrag.feld,
+    });
+    setZeilen((z) => z.map((r) => (r.key === eintrag.key ? { ...r, [eintrag.feld]: eintrag.wert } : r)));
+    setAktiv(eintrag.key);
+  }
+  const verlaufSchrittRef = useRef(verlaufSchritt);
+  verlaufSchrittRef.current = verlaufSchritt;
+  useEffect(() => {
+    function drauf(e: KeyboardEvent) {
+      if (!(e.metaKey || e.ctrlKey) || e.altKey || e.key.toLowerCase() !== "z") return;
+      const ziel = e.target as HTMLElement | null;
+      if (
+        ziel &&
+        (ziel.tagName === "INPUT" ||
+          ziel.tagName === "TEXTAREA" ||
+          ziel.tagName === "SELECT" ||
+          ziel.isContentEditable)
+      ) {
+        return; // dort gilt das Rückgängig des Feldes
+      }
+      e.preventDefault();
+      verlaufSchrittRef.current(e.shiftKey ? "wiederholen" : "rueckgaengig");
+    }
+    window.addEventListener("keydown", drauf);
+    return () => window.removeEventListener("keydown", drauf);
+  }, []);
+
+  // --- Stil kopieren / einfügen (Framer ⌥⌘C / ⌥⌘V) ----------------------------
+  //
+  // Kopiert wird die DARSTELLUNG: Stil, Transform, Text, Effekte, Cursor,
+  // Position, Größe, Layout, Abstände samt Geräte-Fassungen. NICHT kopiert:
+  // Name, Sperre, Sichtbarkeit, Scroll-Anker, Link, Zugänglichkeit — das sind
+  // Eigenschaften genau dieses Elements (ein zweiter gleicher Anker wäre ein
+  // ungültiges Dokument, ein kopierter Link ein falsches Ziel).
+  const stilZwischenablage = useRef<Record<string, unknown> | null>(null);
+  const NICHT_KOPIEREN = new Set(["name", "locked", "hidden_on", "scroll", "link", "a11y"]);
+  function stilAuszug(settings: Record<string, unknown>): Record<string, unknown> {
+    return Object.fromEntries(Object.entries(settings).filter(([k]) => !NICHT_KOPIEREN.has(k)));
+  }
+  /** Die Settings nach einem Stil-Handgriff — oder `null`, wenn nichts zu tun ist. */
+  function settingsNachStilAktion(
+    vorher: Record<string, unknown>,
+    aktion: EbenenAktion,
+  ): Record<string, unknown> | null {
+    if (aktion === "stilKopieren") {
+      stilZwischenablage.current = stilAuszug(vorher);
+      toast.message(t("ebenen.stilKopiert"));
+      return null;
+    }
+    if (aktion === "stilEinfuegen") {
+      if (!stilZwischenablage.current) {
+        toast.message(t("ebenen.stilLeer"));
+        return null;
+      }
+      const eigen = Object.fromEntries(Object.entries(vorher).filter(([k]) => NICHT_KOPIEREN.has(k)));
+      return { ...eigen, ...stilZwischenablage.current };
+    }
+    if (aktion in UEBERLAUF_AKTION) {
+      const wert = UEBERLAUF_AKTION[aktion as keyof typeof UEBERLAUF_AKTION];
+      const stil = (vorher.stil ?? {}) as Record<string, unknown>;
+      return { ...vorher, stil: { ...stil, ueberlauf: wert } };
+    }
+    return null;
+  }
+  // Als Ref in `containerAktion` (useCallback): die Funktion liest nur Refs
+  // und `t`, ein neuer Verweis je Render würde den Callback sonst ständig kippen.
+  const stilAktionRef = useRef(settingsNachStilAktion);
+  stilAktionRef.current = settingsNachStilAktion;
+
   function entferne(key: string) {
+    nurStilRef.current = false;
     setZeilen((z) => {
       const weg = z.find((r) => r.key === key);
       protokoll("klick", "Abschnitt entfernen", {
@@ -1204,10 +1938,24 @@ export function AbschnittsEditor({
   }
 
   function verschiebe(key: string, richtung: -1 | 1) {
+    // Eine Umsortierung ist KEINE Stiländerung: die Vorschau zeigt die neue
+    // Reihenfolge erst nach dem Neuladen. Ohne diese Zeile blieb sie stehen —
+    // der Baum zeigte die neue Ordnung, die Seite die alte (live gefunden am
+    // 06.09.2026 beim Ziehen auf der Fläche).
+    nurStilRef.current = false;
     setZeilen((z) => {
       const i = z.findIndex((r) => r.key === key);
-      const j = i + richtung;
-      if (i < 0 || j < 0 || j >= z.length) return z;
+      if (i < 0) return z;
+      // Getauscht wird mit dem Nachbarn in DERSELBEN Spalte. Die Liste ist
+      // flach über alle Spalten; ein Tausch mit dem Listen-Nachbarn traf am
+      // Spaltenrand einen Baustein einer anderen Spalte — im Baum bewegte
+      // sich dann nichts (Prüfbefund A14, 05.09.2026).
+      const eltern = z[i]!.parentId ?? null;
+      let j = i + richtung;
+      while (j >= 0 && j < z.length && (z[j]!.parentId ?? null) !== eltern) {
+        j += richtung;
+      }
+      if (j < 0 || j >= z.length) return z;
       const kopie = [...z];
       [kopie[i], kopie[j]] = [kopie[j]!, kopie[i]!];
       return kopie;
@@ -1215,6 +1963,7 @@ export function AbschnittsEditor({
   }
 
   function dupliziere(key: string) {
+    nurStilRef.current = false;
     if (zeilen.length >= MAX_ABSCHNITTE) {
       toast.error(t("editor.maxAbschnitte", { max: MAX_ABSCHNITTE }));
       return;
@@ -1277,6 +2026,23 @@ export function AbschnittsEditor({
   }, [vorlageAnsehen, t]);
 
   const aktiveZeile = zeilen.find((r) => r.key === aktiv) ?? null;
+  // Die Scroll-Anker der Seite (Framers „Abschnitt"-Auswahl am Link):
+  // aus den Bausteinen UND den Containern, je Seite eindeutig.
+  const ankerListe = useMemo(() => {
+    const menge = new Set<string>();
+    const lese = (st: unknown) => {
+      const sc = (st as { scroll?: { anker?: unknown } } | null)?.scroll;
+      if (sc && typeof sc.anker === "string" && sc.anker) menge.add(sc.anker);
+    };
+    for (const z of zeilen) lese(z.settings);
+    for (const b of baumVomServer) lese(b.settings);
+    return [...menge].sort();
+  }, [zeilen, baumVomServer]);
+  /** Ein Beitrag ohne jeden Block zeigt seine Felder statt eines leeren Baums.
+   *  EINE Bedingung für Ebenen UND Abschnittsliste — vorher prüfte die eine
+   *  `baumBlocks`, die andere `zeilen`, und beide konnten verschieden
+   *  ausfallen (Befund 22). */
+  const beitragOhneBloecke = istBeitrag && baumAnzeige.length === 0;
 
   // ---------------------------------------------------------------- PANEL
   //
@@ -1315,13 +2081,16 @@ export function AbschnittsEditor({
       // einzige Stelle, an der hier noch navigiert wird — und das ist
       // unvermeidbar: eine andere Seite hat andere Abschnitte, die der Server
       // liefern muss. Ein Klick statt fünf.
-      <SeitenLeiste pages={pages} />
-    ) : panel === "ebenen" ? (
+      <SeitenLeiste pages={pages} aktiveId={page.id} />
+    ) : panel === "ebenen" || panel === null ? (
+      // Ohne `?panel=` steht der Editor auf den EBENEN — Framers „Layers" ist
+      // der Normalzustand, die flache Abschnittsliste darunter nur noch der
+      // Rückfall für Beiträge ohne Blöcke.
       // Ein BEITRAG hat keinen Baum: sein Inhalt sind Felder, keine Bloecke.
       // Ohne diese Abzweigung stand hier eine leere Ebenenliste, waehrend die
       // Vorschau daneben Titelbild, Einleitung, Galerien und Text zeichnete
       // (gemeldet am 28.08.2026: „auch in layer nicht").
-      istBeitrag && baumBlocks.length === 0 ? (
+      beitragOhneBloecke ? (
         <BeitragsTeile
           page={page}
           eigeneFelder={blogEigeneFelder}
@@ -1338,46 +2107,69 @@ export function AbschnittsEditor({
       // Abschnitte und 6 Spalten in der DB, 6 wurzellose Zeilen in der
       // Anzeige — die Ebenen sahen aus wie die Abschnittsliste daneben.
       <EbenenListe
-        blocks={baumBlocks}
-        aktiv={aktiveZeile?.id ?? null}
+        blocks={baumAnzeige}
+        // EINE Auswahl für Baustein und Container (Befund 7/16/17): der Baum
+        // bekommt die Kennung der gewählten Ebene, egal welcher Art.
+        aktiv={
+          aktiveZeile ? (aktiveZeile.id ?? aktiveZeile.key) : containerId
+        }
         geraet={geraet}
+        onGeraet={setGeraet}
+        seiten={pages}
+        seiteId={page.id}
+        onSeite={(id) => {
+          if (id === page.id) return;
+          protokoll("klick", "Seitenwechsel aus den Ebenen", { id });
+          if (offen) void schreibeRef.current?.();
+          router.push(`/website/seiten/${id}`);
+        }}
         onWaehle={(id) => {
-          const zeile = zeilen.find((z) => z.id === id);
-          if (!zeile) return;
-          setAktiv(zeile.key);
-          setContainerId(null);
-          setPanelModus("inhalt");
-        }}
-        // Container haben seit 0479 ihren eigenen Inspektor (Breite, Spalten,
-        // Rang, Hintergrund). Vorher war ein Klick auf einen Abschnitt oder
-        // eine Spalte hier eine Sackgasse: „es gibt nichts zu bearbeiten".
-        onWaehleContainer={(id) => {
-          setContainerId(id);
-          setAktiv(null);
-          setPanelModus("inhalt");
-        }}
-        onContainerAktion={(id, aktion) => {
-          void containerAktion(id, aktion);
+          if (!id) {
+            setAktiv(null);
+            setContainerId(null);
+            return;
+          }
+          const zeile = zeilen.find((z) => z.id === id || z.key === id);
+          if (zeile) {
+            setAktiv(zeile.key);
+            setContainerId(null);
+          } else {
+            setContainerId(id);
+            setAktiv(null);
+          }
         }}
         onZiehen={(zug) => void ebenenZiehen(zug)}
-        onUmbenennen={(id, name) => void containerUmbenennen(id, name)}
-        onVersteckt={(id, g) => {
-          const zeile = zeilen.find((z) => z.id === id);
-          if (zeile) aendereVersteckt(zeile.key, g);
+        onUmbenennen={(id, name) => {
+          const zeile = zeilen.find((z) => z.id === id || z.key === id);
+          if (zeile) {
+            // Bausteine heißen jetzt auch selbst (Framer benennt jede Ebene).
+            // Der Name geht mit `settings` über den normalen Speicherweg.
+            const settings = { ...zeile.settings };
+            if (name) settings.name = name;
+            else delete settings.name;
+            aendereSettings(zeile.key, settings);
+            return;
+          }
+          void containerUmbenennen(id, name);
         }}
-        // Die Handgriffe der Ebenen-Zeile laufen in DIESELBEN Funktionen wie
-        // die der Abschnittsliste. Ein zweiter Schreibweg auf dieselben Zeilen
-        // wäre die Doppelung, gegen die Wurzel 2 steht — und er würde beim
-        // nächsten Feld an einer der beiden Stellen vergessen.
+        onVersteckt={(id, g) => {
+          const zeile = zeilen.find((z) => z.id === id || z.key === id);
+          if (zeile) aendereVersteckt(zeile.key, g);
+          else void containerVersteckt(id, g);
+        }}
+        // Die Handgriffe laufen in DIESELBEN Funktionen wie die der
+        // Abschnittsliste bzw. des Container-Inspektors — ein zweiter
+        // Schreibweg wäre die Doppelung, gegen die Wurzel 2 steht.
         onAktion={(id, aktion) => {
-          const zeile = zeilen.find((z) => z.id === id);
-          if (!zeile) return;
+          const zeile = zeilen.find((z) => z.id === id || z.key === id);
+          if (!zeile) {
+            void containerAktion(id, aktion);
+            return;
+          }
           if (aktion === "hoch") verschiebe(zeile.key, -1);
           else if (aktion === "runter") verschiebe(zeile.key, 1);
           else if (aktion === "duplizieren") dupliziere(zeile.key);
           else if (aktion === "verstecken") {
-            // Auf ALLEN Geräten aus- bzw. wieder einblenden. Dasselbe Feld,
-            // das das Auge in der Zeile geräteweise schaltet.
             aendereVersteckt(
               zeile.key,
               versteckteGeraete(zeile.settings).length > 0
@@ -1389,12 +2181,39 @@ export function AbschnittsEditor({
               ...zeile.settings,
               locked: zeile.settings?.locked !== true,
             });
-          } else if (aktion === "umbenennen") {
-            // Bausteine heißen nach ihrem Typ — hier gibt es nichts zu tun.
-            // Die Liste bietet den Eintrag an ihnen gar nicht erst an.
-          } else entferne(zeile.key);
+          } else if (aktion === "entfernen") entferne(zeile.key);
+          else {
+            const neu = settingsNachStilAktion(zeile.settings, aktion);
+            if (neu) aendereSettings(zeile.key, neu);
+          }
+        }}
+        // Die TEILE je Baustein — aus der MESSUNG der Brücke, nicht aus dem
+        // Katalog: im Baum steht, was auf dieser Seite wirklich gerendert ist.
+        teileVonBlock={teileJeBlock}
+        teilAktiv={
+          aktiveZeile && teilAuswahl
+            ? `${aktiveZeile.id}#${teilAuswahl.feld}`
+            : null
+        }
+        onTeilWaehle={(blockId, feld) => {
+          const zeile = zeilen.find((z) => z.id === blockId);
+          if (!zeile) return;
+          setAktiv(zeile.key);
+          setContainerId(null);
+          setTeilAuswahl({ key: zeile.key, feld });
         }}
         onSiteLayout={() => panelSetzen("design")}
+        kopfzeile={teileStand.kopfzeile}
+        fusszeile={teileStand.fusszeile}
+        regionAuswahl={regionAuswahl}
+        onRegionWaehle={(a) => {
+          setAktiv(null);
+          setContainerId(null);
+          setRegionAuswahl(a);
+        }}
+        onRegionVersteckt={regionVersteckt}
+        onRegionSperren={regionSperren}
+        onRegionZiehen={regionZiehen}
       />
       )
     ) : panel === "hinzufuegen" ? (
@@ -1427,7 +2246,7 @@ export function AbschnittsEditor({
       // eine zweite Überschrift, um überhaupt benannt zu sein; jetzt stünde
       // „Abschnitte" zweimal untereinander.
       <div className="flex flex-col pb-8">
-        {istBeitrag && zeilen.length === 0 ? (
+        {beitragOhneBloecke ? (
           // Ein BEITRAG hat keine Abschnitte — er hat Felder. „Noch keine
           // Abschnitte" war hier keine Auskunft, sondern eine Sackgasse.
           <BeitragsTeile
@@ -1648,12 +2467,32 @@ export function AbschnittsEditor({
         .sort((a, b) => a.position - b.position);
       const rang = geschwister.findIndex((g) => g.id === id);
 
+      // UMBENENNEN öffnet das Feld in der Ebenenliste selbst; hier gibt es
+      // nichts zu tun. Ohne diesen Zweig fiel die Aktion in den `else` unten
+      // — und der heißt `removeBlock` (Prüfbefund A2, 05.09.2026).
+      if (aktion === "umbenennen") return;
+      // Ein Container MIT Inhalt verschwindet samt Inhalt (`on delete
+      // cascade`) und ohne Verlauf — deshalb einmal fragen.
+      if (
+        aktion === "entfernen" &&
+        baumBlocks.some((b) => b.parent_id === id) &&
+        !window.confirm(t("ebenen.containerLoeschenFrage"))
+      ) {
+        return;
+      }
+
       // SPERREN und VERSTECKEN sind Einstellungen, keine Strukturänderung —
       // sie laufen über `updateBlock` und nicht über die Struktur-Endpunkte.
-      if (aktion === "sperren" || aktion === "verstecken") {
+      const stilNeu =
+        aktion !== "sperren" && aktion !== "verstecken"
+          ? stilAktionRef.current((knoten.settings ?? {}) as Record<string, unknown>, aktion)
+          : null;
+      if (aktion === "stilKopieren" || (aktion === "stilEinfuegen" && !stilNeu)) return;
+      if (aktion === "sperren" || aktion === "verstecken" || stilNeu) {
         const vorher = (knoten.settings ?? {}) as Record<string, unknown>;
-        const neu =
-          aktion === "sperren"
+        const neu = stilNeu
+          ? stilNeu
+          : aktion === "sperren"
             ? { ...vorher, locked: vorher.locked !== true }
             : {
                 ...vorher,
@@ -1728,7 +2567,38 @@ export function AbschnittsEditor({
       // Bestand, den niemand einlöst (Wurzel 4).
       await containerGeaendert();
     },
-    [baumBlocks, containerId, containerGeaendert, router],
+    [baumBlocks, containerId, containerGeaendert, router, t],
+  );
+
+  /** Einen CONTAINER auf bestimmten Geräten ausblenden (Befund 3: das Auge an
+   *  einem Abschnitt war ein stiller No-Op, weil es in `zeilen` suchte).
+   *  Dieselbe Sofort-Anzeige und dieselbe Rücknahme bei Fehler wie beim
+   *  Umbenennen. */
+  const containerVersteckt = useCallback(
+    async (id: string, geraete: Geraet[]) => {
+      const knoten = baumBlocks.find((b) => b.id === id);
+      if (!knoten) return;
+      const vorher = knoten.settings ?? {};
+      const neu = mitVersteckt(vorher, geraete);
+      // Unverändert heißt: nicht schreiben (Wurzel 2).
+      if (versteckteGeraete(vorher).join() === versteckteGeraete(neu).join()) {
+        return;
+      }
+      protokoll("klick", "Container je Gerät verstecken", { id, geraete });
+      setBaumBlocks((alt) =>
+        alt.map((b) => (b.id === id ? { ...b, settings: neu } : b)),
+      );
+      const res = await updateBlock(id, { settings: neu });
+      if (!res.ok) {
+        toast.error(res.error);
+        setBaumBlocks((alt) =>
+          alt.map((b) => (b.id === id ? { ...b, settings: vorher } : b)),
+        );
+        return;
+      }
+      router.refresh();
+    },
+    [baumBlocks, router],
   );
 
   /** Einer Ebene einen eigenen Namen geben (28.08.2026).
@@ -1782,8 +2652,9 @@ export function AbschnittsEditor({
    */
   const ebenenZiehen = useCallback(
     async (zug: EbenenZug) => {
+      // Im ANZEIGE-Baum suchen: dort stehen auch die ungespeicherten Bausteine.
       const quelleArt =
-        baumBlocks.find((b) => b.id === zug.quelleId)?.kind ?? "widget";
+        baumAnzeige.find((b) => b.id === zug.quelleId)?.kind ?? "widget";
 
       if (quelleArt !== "widget") {
         // Container: nur der Rang unter den Geschwistern, die Liste erlaubt
@@ -1812,8 +2683,14 @@ export function AbschnittsEditor({
         return;
       }
 
+      nurStilRef.current = false;
       setZeilen((z) => {
-        const von = z.findIndex((r) => r.id === zug.quelleId);
+        // Über ID ODER Key: ein noch ungespeicherter Baustein steht im Baum
+        // unter seinem Editor-Schlüssel (`anzeigeBloecke`), nicht unter einer
+        // DB-ID — sonst wäre er im Baum ziehbar und die Liste fände ihn nicht.
+        const passt = (r: Zeile, kennung: string) =>
+          r.id === kennung || r.key === kennung;
+        const von = z.findIndex((r) => passt(r, zug.quelleId));
         if (von < 0) return z;
         const kopie = [...z];
         const [bewegt] = kopie.splice(von, 1);
@@ -1832,7 +2709,7 @@ export function AbschnittsEditor({
           return kopie;
         }
 
-        const zielIndex = kopie.findIndex((r) => r.id === zug.zielId);
+        const zielIndex = kopie.findIndex((r) => passt(r, zug.zielId));
         if (zielIndex < 0) return z;
         const zielZeile = kopie[zielIndex]!;
         kopie.splice(zug.wohin === "vor" ? zielIndex : zielIndex + 1, 0, {
@@ -1844,254 +2721,417 @@ export function AbschnittsEditor({
         return kopie;
       });
     },
-    [baumBlocks, containerGeaendert],
+    [baumAnzeige, baumBlocks, containerGeaendert],
   );
 
-  const inspektorMeta = aktiveZeile ? abschnittFuer(aktiveZeile.typ) : null;
-  const inspektor = aktiverContainer ? (
+  /** Gemessene Größe eines Blocks in der Vorschau — für die Platzhalter der
+   *  Karte „Größe" (Framer zeigt bei „Fit Content" die berechnete Höhe grau). */
+  function gemessenFuer(id: string | null | undefined): Gemessen | null {
+    if (!id) return null;
+    for (const r of rechtecke.values()) {
+      if (r.id === id) return { breite: r.width, hoehe: r.height };
+    }
+    return null;
+  }
+  /** Die gemessene Größe EINES TEILS — der graue Platzhalter im Panel. */
+  /** Hat dieser TEIL eigene Kinder? Dann zeigt das Panel seine Layout-Karte
+   *  und keine Text-Karte — Framers Regel, am 06.09.2026 am Knopf „Kontakt"
+   *  gemessen (Rahmen mit Kind: Layout, ohne Text; Text-Layer: umgekehrt). */
+  /** Liegt dieser TEIL in einem Raster? Sein Elternteil steht im gemeldeten
+   *  Teilbaum, nicht im Block-Baum — deshalb rechnet das Panel es nicht selbst
+   *  aus. Nur dann zeigt die Größe-Karte Spalten- und Zeilen-Span (Framer). */
+  function teilImRaster(id: string | null | undefined, feld: string): boolean {
+    if (!id) return false;
+    const eltern = teilRechtecke.get(`${id}/${feld}`)?.eltern;
+    if (!eltern) return false;
+    const art = teilRechtecke.get(`${id}/${eltern}`)?.art;
+    return art === "grid" || art === "masonry";
+  }
+
+  function teilIstRahmen(id: string | null | undefined, feld: string): boolean {
+    const art = id ? teilRechtecke.get(`${id}/${feld}`)?.art : null;
+    return art != null && RAHMEN_ARTEN.has(art);
+  }
+
+  /** Trägt dieser TEIL eigenen Text? Ein Rahmen mit Kindern trägt ihn nicht
+   *  (er sitzt im Kind), ein Bild oder Video gar nicht — Framers Regel,
+   *  06.09.2026 gemessen. */
+  function teilHatText(id: string | null | undefined, feld: string): boolean {
+    if (!id) return false;
+    const art = teilRechtecke.get(`${id}/${feld}`)?.art;
+    if (art === "bild" || art === "video") return false;
+    return !(teileJeBlock.get(id) ?? []).some((k) => k.eltern === feld);
+  }
+
+  function gemessenFuerTeil(id: string | null | undefined, feld: string): Gemessen | null {
+    if (!id) return null;
+    const r = teilRechtecke.get(`${id}/${feld}`);
+    return r ? { breite: r.width, hoehe: r.height } : null;
+  }
+
+  /** Der Rahmen (Spalte) eines Bausteins — für die Ausrichtungsreihe, die
+   *  am Baustein in seinen Rahmen schreibt. Optimistisch, mit Rücknahme. */
+  function elternFuer(id: string | null | undefined) {
+    if (!id) return undefined;
+    const knoten = baumBlocks.find((b) => b.id === id);
+    if (!knoten) return undefined;
+    const vorher = (knoten.settings ?? {}) as Record<string, unknown>;
+    return {
+      settings: vorher,
+      onSettings: (neu: Record<string, unknown>) => {
+        setBaumBlocks((liste) => liste.map((b) => (b.id === id ? { ...b, settings: neu } : b)));
+        void updateBlock(id, { settings: neu }).then((antwort) => {
+          if (antwort.ok) {
+            setNeuLaden((n) => n + 1);
+            return;
+          }
+          toast.error(antwort.error);
+          setBaumBlocks((liste) => liste.map((b) => (b.id === id ? { ...b, settings: vorher } : b)));
+        });
+      },
+    };
+  }
+  // --- Fläche und Panel als EIN Werkzeug (Canvas 3/4, 06.09.2026) ---------
+  //
+  // Im Vorbild nachgemessen: die Griffe auf der Fläche sind die Zeilen des
+  // Panels. Wer an einem zieht, schreibt `groesse.<achse>` — dieselbe Zeile,
+  // die rechts steht, und live sichtbar, bevor gespeichert wird.
+  //
+  // Ein Ziehvorgang ist EIN Schritt: währenddessen geht nur die Vorschau mit
+  // (`sendeStil`), erst beim Loslassen wird der Wert in den Stand geschrieben.
+  // Sonst stünden hundert Zwischenstände im Verlauf, und ⌘Z bräuchte hundert
+  // Anschläge für einen Zug.
+  const auswahlSettings = useMemo<Record<string, unknown> | null>(() => {
+    if (aktiveZeile) return aktiveZeile.settings;
+    if (aktiverContainer) {
+      return (aktiverContainer.settings ?? {}) as Record<string, unknown>;
+    }
+    return null;
+  }, [aktiveZeile, aktiverContainer]);
+
+  /** Das Rechteck einer Block-ID aus der Meldung der Brücke. */
+  const rechteckVon = useCallback(
+    (id: string | null | undefined) =>
+      id ? ([...rechtecke.values()].find((r) => r.id === id) ?? null) : null,
+    [rechtecke],
+  );
+
+  /** Der ELTERNTEIL der Auswahl — Framer zeichnet ihn gestrichelt mit. */
+  const elternRect = useMemo(() => {
+    const id = aktiveZeile?.parentId ?? aktiverContainer?.parent_id ?? null;
+    return rechteckVon(id);
+  }, [aktiveZeile, aktiverContainer, rechteckVon]);
+
+  /** Die direkten Kinder des gewählten Containers — für die Abstandsmarker. */
+  const kinderRects = useMemo(() => {
+    if (!aktiverContainer) return [];
+    return baumBlocks
+      .filter((b) => b.parent_id === aktiverContainer.id)
+      .map((b) => rechteckVon(b.id))
+      .filter((r): r is NonNullable<typeof r> => r !== null);
+  }, [aktiverContainer, baumBlocks, rechteckVon]);
+
+  // `aendereSettings` und `elternFuer` entstehen bei jedem Render neu (sie
+  // lesen den laufenden Zustand). Als Abhängigkeit gelesen, kippten die beiden
+  // Callbacks unten deshalb bei jedem Tastendruck — und ein Ziehvorgang hinge
+  // an einem Rückruf, der sich unter der Hand austauscht. Über eine Ref bleibt
+  // die Funktion stabil und der Inhalt trotzdem aktuell (dasselbe Muster wie
+  // `stilAktionRef` und `schreibeRef`).
+  const aendereSettingsRef = useRef(aendereSettings);
+  aendereSettingsRef.current = aendereSettings;
+  const elternFuerRef = useRef(elternFuer);
+  elternFuerRef.current = elternFuer;
+
+  /** Ein Maß aus einem Griff — live in die Vorschau, beim Loslassen in den
+   *  Stand. `fest` ist die einzige ehrliche Antwort auf „gezogen": eine Zahl
+   *  in Pixeln, genau die, die danach im Panel steht. */
+  const massSetzen = useCallback(
+    (achse: "breite" | "hoehe", px: number, fertig: boolean) => {
+      const ziel = aktiveZeile ?? aktiverContainer;
+      if (!ziel) return;
+      const vorher = (aktiveZeile?.settings ??
+        aktiverContainer?.settings ??
+        {}) as Record<string, unknown>;
+      const neu = mitWert(vorher, geraet, ["groesse", achse], {
+        modus: "fest",
+        wert: px,
+      });
+      const id = aktiveZeile?.id ?? aktiverContainer?.id ?? null;
+      if (!fertig) {
+        sendeStil(id, neu, aktiverContainer?.span ?? null);
+        return;
+      }
+      if (aktiveZeile) aendereSettingsRef.current(aktiveZeile.key, neu);
+      else if (aktiverContainer) {
+        elternFuerRef.current(aktiverContainer.id)?.onSettings(neu);
+      }
+    },
+    [aktiveZeile, aktiverContainer, geraet, sendeStil],
+  );
+
+  /** ⎋ auf der Fläche: eine Ebene nach oben (Framers „Select Parent").
+   *
+   *  Der Weg ist derselbe wie im Ebenen-Baum, nur ohne ihn zu öffnen: vom
+   *  Baustein in seine Spalte, von dort in den Abschnitt, von dort ins Nichts
+   *  (dann steht der Seiten-Inspektor mit den Breakpoints da — genau wie im
+   *  Vorbild, wo das letzte ⎋ auf dem Breakpoint landet). */
+  const elternteilWaehlen = useCallback((): boolean => {
+    const id = aktiveZeile?.parentId ?? aktiverContainer?.parent_id ?? null;
+    if (!id) return false;
+    setAktiv(null);
+    setContainerId(id);
+    setRegionAuswahl(null);
+    return true;
+  }, [aktiveZeile, aktiverContainer]);
+
+  /** Der Abstand zwischen den Kindern (Framers magenta Gap-Marker). */
+  const abstandSetzen = useCallback(
+    (px: number, fertig: boolean) => {
+      if (!aktiverContainer) return;
+      const vorher = (aktiverContainer.settings ?? {}) as Record<string, unknown>;
+      const neu = mitWert(vorher, geraet, ["layout_abstand"], px);
+      if (!fertig) {
+        sendeStil(aktiverContainer.id, neu, aktiverContainer.span ?? null);
+        return;
+      }
+      elternFuerRef.current(aktiverContainer.id)?.onSettings(neu);
+    },
+    [aktiverContainer, geraet, sendeStil],
+  );
+
+  /** Ein Innenabstand aus einem Padding-Marker (Framer: der Strich an der
+   *  Innenkante). Er schreibt dieselbe Zeile, die die Layout-Karte zeigt. */
+  const paddingSetzen = useCallback(
+    (
+      seite: "top" | "right" | "bottom" | "left",
+      px: number,
+      fertig: boolean,
+    ) => {
+      if (!aktiverContainer) return;
+      const vorher = (aktiverContainer.settings ?? {}) as Record<string, unknown>;
+      const neu = mitWert(vorher, geraet, [`padding_${seite}`], `${px}px`);
+      if (!fertig) {
+        sendeStil(aktiverContainer.id, neu, aktiverContainer.span ?? null);
+        return;
+      }
+      elternFuerRef.current(aktiverContainer.id)?.onSettings(neu);
+    },
+    [aktiverContainer, geraet, sendeStil],
+  );
+
+  const regionRect = regionAuswahl
+    ? regionRechtecke.get(
+        regionAuswahl.teil
+          ? `${regionAuswahl.region}/${regionAuswahl.teil}`
+          : regionAuswahl.region,
+      ) ?? null
+    : null;
+  const inspektor = regionAuswahl ? (
+    <RegionInspektor
+      auswahl={regionAuswahl}
+      stand={teileStand[regionAuswahl.region]}
+      geraet={geraet}
+      onWaehle={setRegionAuswahl}
+      onVersteckt={regionVersteckt}
+      onSperren={regionSperren}
+      onVerschiebe={regionVerschiebe}
+      onDesign={(u) => {
+        setDesignUnterpunkt(u);
+        panelSetzen("design");
+      }}
+      onPfad={(pfad) => {
+        if (offen) void schreibeRef.current?.();
+        router.push(pfad);
+      }}
+    />
+  ) : aktiverContainer ? (
     <ContainerInspektor
       container={aktiverContainer}
       geschwister={containerGeschwister}
       kinder={containerKinder}
+      geraet={geraet}
+      sprache={locale}
+      gemessen={gemessenFuer(aktiverContainer.id)}
+      ankerListe={ankerListe}
+      onLiveStil={(neu) => sendeStil(aktiverContainer.id, neu, aktiverContainer.span ?? null)}
       onGeaendert={() => void containerGeaendert()}
-      onWaehleContainer={setContainerId}
+    />
+  ) : aktiveZeile && teilAuswahl ? (
+    // EIN TEIL des Bausteins — die Überschrift, der Absatz, das Bild
+    // (06.09.2026). Dasselbe Panel wie für alles andere: ein Teil ist ein
+    // Element wie jedes andere, es steht nur in `settings.teile.<feld>`.
+    //
+    // Kein `eltern` und kein `container`: die Ausrichtungsreihe würde in den
+    // RAHMEN schreiben, und der Rahmen eines Teils ist der Baustein selbst —
+    // seine Kinder ordnet der Baustein, nicht der Kunde (Wurzel 4).
+    <StilInspektor
+      settings={teilSettings(aktiveZeile.settings, teilAuswahl.feld)}
+      geraet={geraet}
+      sprache={locale}
+      gemessen={gemessenFuerTeil(aktiveZeile.id, teilAuswahl.feld)}
+      textKarte={teilHatText(aktiveZeile.id, teilAuswahl.feld)}
+      layout={teilIstRahmen(aktiveZeile.id, teilAuswahl.feld)}
+      imRaster={teilImRaster(aktiveZeile.id, teilAuswahl.feld)}
+      onSettings={(st) =>
+        aendereSettings(
+          aktiveZeile.key,
+          mitTeil(aktiveZeile.settings, teilAuswahl.feld, st),
+        )
+      }
+      ankerListe={ankerListe}
     />
   ) : aktiveZeile ? (
-    <div className="flex flex-col pb-8">
-      <InspektorKopf
-        krumen={krumenFuer(initialBlocks, aktiveZeile.id, t)}
-        titel={
-          inspektorMeta
-            ? t(`abschnitte.${inspektorMeta.label}`)
-            : t("editor.unbekannterAbschnitt")
-        }
-        unterzeile={
-          inspektorMeta ? t(`editor.gruppe.${inspektorMeta.gruppe}`) : undefined
-        }
-      />
-      {/* INHALT ist offen, DESIGN zugeklappt. Wer einen Baustein anklickt,
-          will in neun von zehn Fällen einen Text ändern — und das soll ohne
-          einen weiteren Klick gehen. */}
-      <InspektorKarte titel={t("arbeitsflaeche.inhalt")} offenAnfangs>
-        <AbschnittInspektor
-          typ={aktiveZeile.typ}
-          content={aktiveZeile.content}
-          settings={aktiveZeile.settings}
-          onChange={(c) => aendere(aktiveZeile.key, c)}
-          onSettings={(st) => aendereSettings(aktiveZeile.key, st)}
-          // DIESELBE Sprache wie die Vorschau. Der Inspektor führte sie
-          // vorher selbst und lief damit auseinander (Prüfbericht A2).
-          inhaltsSprache={locale}
-          onInhaltsSprache={(l) => spracheWechseln(l as Locale)}
-        />
-      </InspektorKarte>
-      <InspektorKarte
-        titel={t("arbeitsflaeche.design")}
-        // Der Punkt sagt, dass hier etwas anderes steht als der Standard —
-        // berechnet aus dem, was wirklich in `settings` liegt, nicht gemerkt.
-        geaendert={Object.keys(aktiveZeile.settings).length > 0}
-        offenAnfangs={panelModus === "design"}
-      >
-        <AbschnittDesign
-          settings={aktiveZeile.settings}
-          onSettings={(st) => aendereSettings(aktiveZeile.key, st)}
-        />
-      </InspektorKarte>
-    </div>
+    // NUR STIL — Framers Style-Panel (Auftrag 05.09.2026). Kein Kopf mit
+    // Namen (der steht in den Ebenen), kein Inhaltsformular: Texte werden
+    // auf der Fläche getippt, alles andere im Inhalt-Dialog (`InhaltDialog`,
+    // über den „Inhalt"-Knopf an der Auswahl und das Kontextmenü).
+    <StilInspektor
+      settings={aktiveZeile.settings}
+      geraet={geraet}
+      sprache={locale}
+      gemessen={gemessenFuer(aktiveZeile.id)}
+      onSettings={(st) => aendereSettings(aktiveZeile.key, st)}
+      eltern={elternFuer(aktiveZeile.parentId)}
+      ankerListe={ankerListe}
+    />
   ) : null;
 
   return (
     <>
-      <BaukastenSchale
-        // Die Menüspalte wechselt hier nur das PANEL, sie navigiert nicht:
-        // ein Bereichswechsel im Editor darf kein Seitenwechsel sein (C4).
-        imEditor
-        texte={{
-          panelEinklappen: t("kopf.panelEinklappen"),
-          panelAusklappen: t("kopf.panelAusklappen"),
-          panelBreite: t("kopf.panelBreite"),
-          panelHilfe: t("kopf.panelHilfe"),
-          panelZurueck: t("kopf.panelZurueck"),
-        }}
-        // Dieselbe Beschriftung wie außerhalb des Editors — aus EINER
-        // Stelle (`reiter.ts`). Hier stand die Kette abgeschrieben ein zweites
-        // Mal, und der Nachschlag für die Theme-Unterpunkte fehlte darin: die
-        // Spalte zeigte im Editor weiterhin „site-layout · farben · text …"
-        // (Nachprüfung B1). Zwei Kopien derselben Zuordnung sind zwei
-        // Wahrheiten (Wurzel 2).
-        menueBeschriften={(id) => menueBeschriftung(t, id)}
-        // Die Bereichsleiste bleibt stehen, „Seiten" ist der aktive Bereich.
-        // Vorher standen hier die SEITEN als Reiter — das trug drei Stück, aber
-        // eine Vorlage bringt acht bis elf mit, und eine waagerechte Leiste
-        // schiebt sie dann in den Bildlauf. Der Seitenwechsel läuft jetzt über
-        // dasselbe Auswahlfeld wie im Seiten-Reiter (`SeitenWahl` oben).
-        reiter={LEISTE_GRUPPEN.flat().map((id) => ({
-          id,
-          label: t(`reiter.${id}`),
-          href: REITER_HREF[id],
-          icon: REITER_SYMBOL[id],
-        }))}
-        // „Mehr" ist der einzige Bereich, der KEIN Panel hat — nur eine
-        // Menüspalte mit seinen sechs Unterpunkten. Er kann deshalb nicht in
-        // `panel` stehen (dort steht, WAS das Panel zeigt) und braucht sein
-        // eigenes Kennzeichen. Ohne diese Trennung war „Mehr" nie aktiv, der
-        // Klick fiel auf die Navigation zurück und sprang aus dem Editor nach
-        // `/website/objekte` — die anderen fünf Unterpunkte sah man nie.
-        aktiverReiter={mehrOffen ? "mehr" : (panel ?? "seiten")}
-        // Alle Bereiche der BEARBEITUNGSFLÄCHE wechseln hier nur das Panel.
-        //
-        // Vorher waren es reine Links: jeder Klick lud die Seite neu, damit den
-        // iframe, holte einen neuen Entwurfs-Token und verwarf die Auswahl.
-        // Bei Hostaway gibt es EINEN Editor — die Leiste wechselt das Panel,
-        // nicht die Seite.
-        //
-        // Was NICHT abgefangen wird, navigiert weiter: SEO, Regeln, Anfragen,
-        // Objekte, Widgets und Einstellungen sind eigene Arbeitsbereiche mit
-        // eigenen Daten, keine Panels über derselben Vorschau.
-        onReiter={(id) => {
-          // „Mehr" klappt nur seine Menüspalte auf und bleibt im Editor. Die
-          // sechs Ziele darin sind echte Routen — der Sprung passiert erst,
-          // wenn man einen davon wählt, nicht schon beim Öffnen der Liste.
-          if (id === "mehr") {
-            setMehrOffen((o) => !o);
-            return true;
-          }
-          if (!ALS_PANEL.includes(id as NonNullable<PanelId>)) return false;
-          // Ein anderer Bereich schließt „Mehr" — sonst bliebe seine
-          // Menüspalte neben einem fremden Panel stehen.
-          setMehrOffen(false);
-          setAktiv(null);
-          panelSetzen(id as PanelId);
-          return true;
-        }}
-        // Erst den offenen Stand wegschreiben, dann wechseln — der Request
-        // läuft über die Soft-Navigation hinweg weiter.
-        vorNavigation={() => {
-          if (offen) void schreibeRef.current?.();
-        }}
-        // Der Panel-Titel ist der Name des BEREICHS, nicht der der Seite.
-        //
-        // Vorher stand dort `page.title` — über einem Panel, das je nach
-        // Bereich Bausteine, Vorlagen, Seiten, Ebenen oder das Theme zeigte.
-        // Die Überschrift beantwortete also nie die Frage, die eine Überschrift
-        // beantwortet: was steht hier. Welche Seite offen ist, sagt die
-        // Seitenwahl oben — und zwar an genau einer Stelle.
-        // `panel === null` ist die Abschnittsliste. Sie hat KEINEN Reiter in der
-        // Leiste, weil sie der Normalzustand ist — deshalb stand hier ein
-        // Rückfall auf „ebenen", und über der Abschnittsliste prangte
-        // „EBENEN". Die Überschrift benannte damit einen Bereich, in dem man
-        // gar nicht war (Wurzel 4: kein plausibler Ersatzwert). Sie heißt
-        // jetzt nach ihrem Inhalt, mit demselben Schlüssel, den ihr eigener
-        // Titel im Panel benutzt.
-        //
-        // Im Design-Panel benennt der Titel die OFFENE Unterseite — dasselbe
-        // Wort, das `/website/design/farben` außerhalb des Editors zeigt.
-        // Vorher stand hier auch dann „DESIGN", wenn darunter der
-        // Farben-Editor lief (Nachprüfung C4, Nebenbefund).
-        panelTitel={
-          mehrOffen
-            ? t("reiter.mehr")
-            : panel === "design" && designUnterpunkt
-              ? menueBeschriftung(t, designUnterpunkt)
-              : panel
-                ? t(`reiter.${panel}`)
-                : t("editor.abschnitte")
-        }
-        // Aus einer Design-Unterseite zurück in die Übersicht — ohne
-        // Seitenwechsel, weil sie hier ein Zustand ist und keine Route.
-        onPanelZurueck={
-          panel === "design" && designUnterpunkt
-            ? () => setDesignUnterpunkt(null)
-            : undefined
-        }
-        // Die Menüspalte des Katalogs. Sie steht ZWISCHEN Leiste und Panel und
-        // ersetzt die zweite Spalte, die das Panel früher selbst mitbrachte —
-        // zwei Spalten mit derselben Aufgabe nebeneinander.
-        menueAktiv={
-          panel === "hinzufuegen"
-            ? kategorie
-            : panel === "design"
-              ? designUnterpunkt
-              : null
-        }
-        onMenue={(id) => {
-          // Im Editor tragen die Einträge kein `href` (siehe `imEditor` in
-          // der Schale), also kommen sie ALLE hier an — jeder Bereich nimmt
-          // nur seine eigenen.
-          //
-          // JEDER Bereich mit Menüspalte MUSS hier stehen. `blog` fehlte, und
-          // damit war das komplette Blog-CMS unerreichbar: die Einträge
-          // „Beiträge" und „Einstellungen" verloren durch `imEditor` ihr
-          // `href`, landeten hier, und hier nahm sie niemand an — der Klick
-          // fiel stumm ins Nichts. Genau die Klasse Fehler, die `imEditor`
-          // vermeiden sollte, nur an einem Bereich, an den ich nicht gedacht
-          // habe.
-          if (panel === "hinzufuegen") {
-            setKategorie(id as KatalogKategorie);
-            return;
-          }
-          if (panel === "design") {
-            setDesignUnterpunkt(id as DesignUnterseite);
-            return;
-          }
-          if (panel === "blog") {
-            if ((BLOG_PUNKTE as readonly string[]).includes(id)) {
-              setBlogPunkt(id as BlogPunkt);
-            }
-            return;
-          }
-          // Ein Klick, den kein Bereich annimmt, ist ein Loch in dieser Kette
-          // — und zwar ein stummes. Deshalb LAUT im Protokoll, statt es beim
-          // nächsten Mal wieder wochenlang niemandem auffallen zu lassen
-          // (Wurzel 5).
-          protokollFehler("klick", "Menü-Klick ohne Empfänger", {
-            panel,
-            eintrag: id,
-          });
-        }}
-        // Die Kopfzeile folgt dem Vorbild (docs/UI, Foto Hostaway-Kopfleiste):
-        //
-        //   Logo │ Seite ⌄ │ Sprache ⌄ │ 🖥 ▭ ▯    …    ↺ ↻ ✓ Vorschau [Publish] ? ⌂
-        //
-        // Alles Kontextbezogene links gruppiert, alle Aktionen rechts, die Mitte
-        // frei. Vorher stand der Geräte-Umschalter MITTIG — er sprang dort nicht
-        // (das war der Grund für den Umzug in die Mitte), aber er stand allein
-        // in einer Zone, während links viel Platz frei blieb und rechts der
-        // Veröffentlichen-Knopf ganz fehlte.
+      <FramerSchale<LinkerReiter, RechterReiter>
+        dunkel={dunkel}
+        // KOPF LINKS — Framer: „Canvas ▾", dann Einfügen, Frame, Text, Bild.
+        // Das Canvas-Menü trägt alle Bereiche, die vorher in der
+        // Bereichsleiste standen: die Panels wechseln hier, die eigenen
+        // Arbeitsbereiche (SEO, Objekte, Regeln …) bleiben Routen.
         kopfLinks={
           <>
-            {/* Das Logo. Es fehlte hier ganz — im Vorbild ist es der Anker
-                links, und es öffnet die SEITENLISTE (das Haus-Symbol rechts tut
-                dasselbe, was der Redundanz des Vorbilds entspricht: man greift
-                zum einen ODER zum anderen).
-
-                Es ist ein KNOPF und kein Link auf `/website/seiten`. Genau das
-                war es zuerst, und es war falsch: der Baukasten ist EIN Bereich,
-                und `/website/seiten` ist eine zweite Oberfläche für dieselbe
-                Aufgabe, die der Editor als Panel schon enthält
-                (`panel === "seiten"`, `SeitenLeiste`). Ein Klick aufs Logo warf
-                den Kunden also aus dem Builder heraus, um ihm die Liste zu
-                zeigen, die er darin mit einem Klick hätte — samt Verlust des
-                Bearbeitungsstands.
-
-                `Logo` und NICHT `/Logo_transparent.png`: das PNG ist die
-                ausgemusterte Fassung (1600x1600 mit breitem transparenten
-                Rand). Bei fester Höhe schrumpft der Schriftzug darin auf einen
-                Bruchteil der Fläche, weil der Rand mitskaliert — es sah nicht
-                nur klein aus, es WAR das falsche Bild. Die freigegebene
-                Wortmarke ist das exakt beschnittene Figma-Lockup in
-                `components/logo.tsx` (245x44), dieselbe, die Sidebar, Login und
-                Marketing tragen. */}
-            <button
-              type="button"
-              onClick={() => panelSetzen(panel === "seiten" ? null : "seiten")}
-              aria-label={t("kopf.zurUebersicht")}
-              title={t("kopf.zurUebersicht")}
-              className="shrink-0 transition-opacity hover:opacity-80"
-            >
-              <Logo heightRem={1.5} />
-            </button>
-            <span aria-hidden className="h-6 w-px shrink-0 bg-border" />
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setCanvasMenue((m) => !m)}
+                aria-haspopup="menu"
+                aria-expanded={canvasMenue}
+                className="flex h-8 items-center gap-1.5 rounded-lg bg-secondary/60 pl-2 pr-2.5 text-[13px] font-semibold transition hover:bg-secondary"
+              >
+                <Logo heightRem={1} />
+                <span>{t("canvas.menue")}</span>
+                <Icon icon="ph:caret-down" className="size-3 text-muted-foreground" />
+              </button>
+              {canvasMenue ? (
+                <>
+                  <button
+                    type="button"
+                    aria-label={t("editor.closeMenu")}
+                    onClick={() => setCanvasMenue(false)}
+                    className="fixed inset-0 z-30 cursor-default"
+                  />
+                  <ul
+                    role="menu"
+                    className="absolute left-0 top-9 z-40 w-60 rounded-lg border border-border bg-popover p-1 shadow-xl"
+                  >
+                    {(
+                      [
+                        ["hinzufuegen", "panel"],
+                        ["vorlagen", "panel"],
+                        ["design", "panel"],
+                        ["blog", "panel"],
+                        ["mediathek", "panel"],
+                        ["seo", "route"],
+                        ["objekte", "route"],
+                        ["regeln", "route"],
+                        ["anfragen", "route"],
+                        ["widgets", "route"],
+                        ["einstellungen", "route"],
+                      ] as const
+                    ).map(([id, art]) => (
+                      <li key={id}>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() => {
+                            setCanvasMenue(false);
+                            if (art === "panel") {
+                              panelSetzen(id);
+                              return;
+                            }
+                            if (offen) void schreibeRef.current?.();
+                            router.push(REITER_HREF[id]);
+                          }}
+                          className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition hover:bg-secondary"
+                        >
+                          <Icon icon={REITER_SYMBOL[id]} className="size-4 text-muted-foreground" />
+                          <span className="min-w-0 flex-1 truncate">{t(`reiter.${id}`)}</span>
+                          {art === "route" ? (
+                            <Icon icon="ph:arrow-square-out" className="size-3.5 text-muted-foreground" />
+                          ) : null}
+                        </button>
+                      </li>
+                    ))}
+                    <li className="my-1 border-t border-border" />
+                    <li>
+                      <a
+                        href={hilfeUrl("website-baukasten")}
+                        target="_blank"
+                        rel="noreferrer"
+                        role="menuitem"
+                        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition hover:bg-secondary"
+                      >
+                        <Icon icon="ph:question" className="size-4 text-muted-foreground" />
+                        {t("kopf.hilfe")}
+                      </a>
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          if (offen) void schreibeRef.current?.();
+                          router.push("/");
+                        }}
+                        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition hover:bg-secondary"
+                      >
+                        <Icon icon="ph:house" className="size-4 text-muted-foreground" />
+                        {t("canvas.zumDashboard")}
+                      </button>
+                    </li>
+                  </ul>
+                </>
+              ) : null}
+            </div>
+            <span aria-hidden className="mx-1 h-5 w-px bg-border" />
+            <KopfKnopf
+              icon="ph:plus"
+              label={t("canvas.einfuegen")}
+              aktiv={panel === "hinzufuegen"}
+              onClick={() => panelSetzen(panel === "hinzufuegen" ? "ebenen" : "hinzufuegen")}
+            />
+            <KopfKnopf
+              icon="ph:frame-corners"
+              label={t("canvas.layout")}
+              onClick={() => {
+                setKategorie("layout");
+                panelSetzen("hinzufuegen");
+              }}
+            />
+            <KopfKnopf
+              icon="ph:text-t"
+              label={t("canvas.text")}
+              onClick={() => hinzufuegen("rich_text")}
+            />
+            <KopfKnopf
+              icon="ph:image"
+              label={t("canvas.bild")}
+              onClick={() => {
+                setKategorie("medien");
+                panelSetzen("hinzufuegen");
+              }}
+            />
+          </>
+        }
+        // KOPF MITTE — Seite · Sprache · Stand („main"-Chip im Vorbild).
+        kopfMitte={
+          <>
             <SeitenWahl
               seiten={pages}
               aktiveId={page.id}
@@ -2101,54 +3141,22 @@ export function AbschnittsEditor({
                 router.push(`/website/seiten/${id}`);
               }}
             />
-            {/* Die Sprachwahl — wie im Vorbild direkt neben der Seitenwahl.
-                Sie schaltet die INHALTS-Sprache (`locale`), also was die
-                Vorschau zeigt und der Inspektor bearbeitet; die Oberfläche
-                bleibt in `dashboardLocale`. Beide Stellen hängen an derselben
-                Variablen, deshalb können sie nicht auseinanderlaufen.
-                Führt die Website nur eine Sprache, blendet sich das Bauteil
-                selbst aus — ein Menü mit einem Eintrag ist ein Klick ohne
-                Wirkung. */}
             <SprachWahl
               sprachen={websiteSprachen}
               gefuehrt={gefuehrteSprachen}
               aktiv={locale}
               standard={standardSprache}
-              onWahl={(l) => {
-                // Eine Funktion für BEIDE Umschalter (Kopfzeile hier,
-                // Inspektor rechts) — sie sollen dasselbe tun, und getrennte
-                // Kopien liefen genau deshalb auseinander (A2).
-                //
-                // Was sie tut, und warum die Oberfläche mitgeht:
-                //
-                // Der Baukasten hat bewusst keine Dashboard-Topbar
-                // (`(baukasten)/layout.tsx`) — und damit fehlte ihm der
-                // Sprachumschalter, den jede andere Seite oben rechts hat. Ein
-                // dänischer Betrieb bediente also einen deutschen Editor, ohne
-                // jeden Weg, das zu ändern, solange er im Baukasten war.
-                //
-                // Diese EINE Wahl schaltet deshalb beides: den Inhalt, den man
-                // bearbeitet, und die Sprache, in der die Werkzeuge dastehen.
-                // Zwei getrennte Umschalter wären die naheliegende Lösung und
-                // die falsche — niemand will seine Oberfläche und seinen Inhalt
-                // getrennt umstellen, und wer es doch will, stellt das Konto um.
-                //
-                // `setLocale` schreibt das Cookie, `router.refresh()` holt die
-                // Server-Komponenten in der neuen Sprache. Kein `reload()`: der
-                // Refresh behält den Bearbeitungsstand im Speicher.
-                spracheWechseln(l);
-              }}
+              onWahl={(l) => spracheWechseln(l)}
               verwaltenHref="/website/einstellungen/sprachen"
             />
-            <GeraeteUmschalter geraet={geraet} onGeraet={setGeraet} />
+            <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] text-muted-foreground">
+              <SpeicherHaken stand={stand} />
+            </span>
           </>
         }
-        kopfAktionen={
+        // KOPF RECHTS — Verlauf · Übersetzen · ▷ Vorschau · Veröffentlichen.
+        kopfRechts={
           <>
-            {/* Fremde Änderung, während hier etwas Ungespeichertes offen ist.
-                Kein automatisches Neuladen: das würde die Eingabe verschlucken,
-                an der gerade jemand sitzt. Der Knopf lädt auf Zuruf — und
-                verwirft dabei ausdrücklich, was offen ist. */}
             {fremdeAenderung ? (
               <button
                 type="button"
@@ -2162,221 +3170,343 @@ export function AbschnittsEditor({
                 {t("editor.fremdeAenderung")}
               </button>
             ) : null}
-            {/* Reihenfolge wie im Foto: ↺ ↻ ✓ … Vorher gab es beides gar
-                nicht — bei einem Editor mit Autospeichern ist das kein
-                Komfortmangel, sondern eine Lücke: es gibt keinen
-                Speichern-Knopf, den man NICHT drückt. */}
             <VerlaufKnoepfe
               kannZurueck={verlauf.kannZurueck}
               kannVor={verlauf.kannVor}
               onZurueck={() => springe("zurueck")}
               onVor={() => springe("vor")}
             />
-            {/* Suche und Seiteninformation — im Vorbild stehen sie links vom
-                Häkchen.
-
-                Beide greifen auf das, was der Editor SCHON hat, statt eine
-                zweite Fassung danebenzustellen: die Lupe öffnet die
-                Bausteinsuche des Hinzufügen-Panels (`hinzufuegen-panel.tsx`,
-                sie sucht über alle Kategorien), das ⓘ die Einstellungen der
-                offenen Seite (`SeitenEinstellungen` — Titel, Adresse, SEO,
-                Sprachen). Eine eigene Suche in der Kopfzeile wäre die
-                Doppelung, gegen die Wurzel 2 steht. */}
-            <KopfSymbol
-              icon="ph:magnifying-glass"
-              label={t("hinzufuegen.suchen")}
-              onClick={() => panelSetzen("hinzufuegen")}
-            />
-            <KopfSymbol
-              icon="ph:info"
-              label={t("seiten.einstellungen")}
-              onClick={() => setInfoOffen(true)}
-            />
-            {/* Übersetzen (0476). Steht NEBEN der Sprachwahl-Gruppe und nicht
-                in ihr: die Wahl schaltet um, dieser Knopf verändert Daten.
-                Zwei Handlungen an einem Bauteil wären der Klick, bei dem
-                niemand weiß, was passiert.
-
-                Nur sichtbar, wenn die Website mehr als eine Sprache führt —
-                ohne zweite Sprache gibt es nichts zu übersetzen, und ein Knopf
-                ohne Wirkung ist eine Attrappe (Wurzel 4). */}
             {gefuehrteSprachen.length > 1 ? (
-              <KopfSymbol
-                icon={
-                  uebersetztLaeuft ? "ph:circle-notch" : "ph:translate"
-                }
+              <KopfKnopf
+                icon={uebersetztLaeuft ? "ph:circle-notch" : "ph:translate"}
                 label={t("uebersetzung.starten")}
                 onClick={() => void seiteUebersetzen()}
                 disabled={uebersetztLaeuft}
               />
             ) : null}
-            <SpeicherHaken stand={stand} />
+            <KopfKnopf
+              icon="ph:info"
+              label={t("seiten.einstellungen")}
+              onClick={() => setInfoOffen(true)}
+            />
             <WebsiteAnsehen pages={pages} liveDomain={liveDomain} />
-            {/* Veröffentlichen im EDITOR. Der Knopf gab es nur in der
-                Übersicht: wer hier fertig wurde, musste erst zurücknavigieren,
-                um seine Arbeit live zu bringen. Es ist derselbe Knopf, nicht
-                eine zweite Fassung (`kopfleiste.tsx`). */}
             <VeroeffentlichenKnopf pages={pages} />
-            <KopfSymbol
-              icon="ph:question"
-              label={t("kopf.hilfe")}
-              href={hilfeUrl("website-baukasten")}
-            />
-            {/* Das Haus-Symbol ersetzt den Text „Zur Übersicht" — dieselbe
-                Wirkung, und rechts ist der Platz für den Veröffentlichen-Knopf
-                gebraucht. Es öffnet dasselbe Seiten-Panel wie das Logo und
-                verlässt den Baukasten NICHT (siehe dort). */}
-            <KopfSymbol
-              icon="ph:house"
-              label={t("kopf.zurUebersicht")}
-              onClick={() => panelSetzen(panel === "seiten" ? null : "seiten")}
-            />
           </>
         }
-        seitenleiste={seitenleiste}
-        inspektor={inspektor}
-        // Das BLOG-CMS fährt von links über die Arbeitsfläche und bedeckt drei
-        // Viertel — die Seite dahinter bleibt stehen, samt Vorschau. Es ist
-        // deshalb ein Großpanel und keine Seitenleiste: eine Beitragsliste mit
-        // Vorschaubild, Titel, Autor, Status und Datum nebeneinander passt
-        // nicht in 20 rem.
-        grossPanelTitel={t("reiter.blog")}
-        onGrossPanelZu={
-          panel === "blog" ? () => panelSetzen(null) : undefined
+        // LINKS — Pages · Layers · Assets. Ein anderes Panel (Einfügen,
+        // Vorlagen, Design) steht ÜBER den Reitern mit eigenem Kopf und ✕.
+        linkeReiter={[
+          { id: "seiten", label: t("reiter.seiten") },
+          { id: "ebenen", label: t("reiter.ebenen") },
+          { id: "mediathek", label: t("canvas.assets") },
+        ]}
+        linkerReiter={
+          panel === "seiten" ? "seiten" : panel === "mediathek" ? "mediathek" : "ebenen"
         }
-        grossPanel={
-          panel === "blog" ? (
-            <BlogPanel
-              punkt={blogPunkt}
-              onPunkt={setBlogPunkt}
-              beitraege={pages.filter((p) => p.page_type === "post")}
-              seiten={pages}
-              einstellungen={blogEinstellungen}
-              feldKonfig={blogFeldKonfig}
-              eigeneFelder={blogEigeneFelder}
-              liveDomain={liveDomain}
-              // Der Beitrag, der beim Ankommen geöffnet wird (`?beitrag=`).
-              oeffneBeitragId={beitragWunsch}
-              // Der Beitrag wird IM PANEL bearbeitet (Dialog über der
-              // Tabelle) — kein Sprung mehr in den Seiten-Editor. Was der
-              // Editor hier noch tun muss, ist die Seitenliste nachzuladen.
-              onNeuLaden={() => router.refresh()}
-            />
-          ) : null
+        onLinkerReiter={(id) => {
+          setVorlageAnsehen(null);
+          panelSetzen(id);
+        }}
+        linkesPanel={
+          panel === "hinzufuegen" || panel === "vorlagen" || panel === "design" ? (
+            <div className="flex min-h-full flex-col">
+              <div className="flex items-center gap-1 border-b border-border px-3 py-2">
+                {panel === "design" && designUnterpunkt ? (
+                  <button
+                    type="button"
+                    onClick={() => setDesignUnterpunkt(null)}
+                    aria-label={t("kopf.panelZurueck")}
+                    className="rounded p-1 text-muted-foreground transition hover:text-foreground"
+                  >
+                    <Icon icon="ph:caret-left" className="size-4" />
+                  </button>
+                ) : null}
+                <span className="min-w-0 flex-1 truncate text-[13px] font-semibold">
+                  {panel === "design" && designUnterpunkt
+                    ? menueBeschriftung(t, designUnterpunkt)
+                    : t(`reiter.${panel}`)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVorlageAnsehen(null);
+                    panelSetzen("ebenen");
+                  }}
+                  aria-label={t("editor.schliessen")}
+                  className="rounded p-1 text-muted-foreground transition hover:text-foreground"
+                >
+                  <Icon icon="ph:x" className="size-4" />
+                </button>
+              </div>
+              {panel === "design" && !designUnterpunkt ? (
+                // Die sieben Design-Unterpunkte als Liste — ohne `href`, damit
+                // sie das Panel wechseln statt zu navigieren (wie vorher in
+                // der Menüspalte der alten Schale).
+                <MenueSpalte
+                  titel={t("reiter.design")}
+                  eintraege={(REITER_MENUE.design ?? []).map((e) =>
+                    e.art === "ziel" ? { art: "ziel" as const, id: e.id } : e,
+                  )}
+                  aktiv={null}
+                  beschriften={(id) => menueBeschriftung(t, id)}
+                  onWaehle={(id) => setDesignUnterpunkt(id as DesignUnterseite)}
+                />
+              ) : null}
+              <div className="min-h-0 flex-1">{seitenleiste}</div>
+            </div>
+          ) : panel === "mediathek" ? (
+            <Mediathek modus="verwaltung" onSchliesse={() => panelSetzen("ebenen")} />
+          ) : (
+            seitenleiste
+          )
         }
-        inhalt={
-          // Die ARBEITSFLÄCHE ist die gerenderte Seite selbst — Rahmen,
-          // Etikett, Leiste und Kontextmenü liegen ÜBER dem iframe, an den
-          // Koordinaten, die der Renderer meldet. Vorher stand hier eine dritte
-          // Spalte mit Karten neben der Vorschau; sie zeigte nichts und ließ
-          // die Wirkung wieder erst nebenan sehen.
-          <VorschauFlaeche
-            // Solange eine Vorlage angesehen wird, zeigt die Fläche SIE.
-            // Der Rückweg ist das Schließen des Panels — deshalb wird
-            // `vorlageAnsehen` dort zurückgesetzt.
-            fremdeUrl={
-              vorlageAnsehen && vorlageToken
-                ? `${process.env.NEXT_PUBLIC_BUILDER_URL}/render/vorlage/` +
-                  `${encodeURIComponent(vorlageAnsehen)}?` +
-                  new URLSearchParams({
-                    token: vorlageToken,
-                    slug: "",
-                    locale,
-                  }).toString()
-                : null
+        // DIE FLÄCHE — Kamera, Rahmen je Breakpoint, untere Leiste.
+        flaeche={
+          <Buehne
+            steuerung={kamera}
+            sichtbar={sichtbareRahmen}
+            aktiv={geraet}
+            onAktiv={setGeraet}
+            onRahmenHinzu={(g) => rahmenSetzen(g, true)}
+            onRahmenWeg={(g) => rahmenSetzen(g, false)}
+            dunkel={dunkel}
+            onDunkel={dunkelSetzen}
+            onPlay={() => {
+              if (!token) return;
+              const url =
+                `${process.env.NEXT_PUBLIC_BUILDER_URL}/render/${encodeURIComponent(page.id)}?` +
+                new URLSearchParams({ token, locale }).toString();
+              window.open(url, "_blank", "noopener");
+            }}
+            hinweis={
+              !aktiv && !containerId && !regionAuswahl ? t("arbeitsflaeche.anstupser") : null
             }
-            geraet={geraet}
-            pageId={page.id}
-            token={token}
-            tokenFehler={tokenFehler}
-            neuLaden={neuLaden}
-            iframeRef={iframeRef}
-            onLoad={iframeBereit}
-            editierbar
-            locale={locale}
-            overlay={
-              <FlaechenOverlay
-                zeilen={zeilen}
-                rechtecke={rechtecke}
-                aktiv={aktiv}
-                ueberfahren={ueberfahren}
-                zeiger={zeiger}
-                menu={menu}
-                geraet={geraet}
-                zieht={zieht}
-                // Abwurf in eine LEERE Spalte: der Baustein entsteht DARIN,
-                // nicht in einer eigenen Reihe daneben. Das ist der Handgriff,
-                // für den das Spaltenlayout überhaupt existiert.
-                onAbwurfInSpalte={(spalteId, stelle) => {
-                  if (!zieht) return;
-                  // `stelle` steht, wenn die Spalte schon Bausteine hat: dann
-                  // landet der neue GENAU zwischen ihnen, nicht am Ende.
-                  hinzufuegen(
-                    zieht,
-                    zieht === "image" && ziehtBild ? { url: ziehtBild } : {},
-                    spalteId,
-                    stelle,
-                  );
-                  setZieht(null);
-                  setZiehtBild(null);
-                  panelSetzen(null);
-                }}
-                onAbwurf={(position) => {
-                  if (!zieht) return;
-                  // Die Stelle kommt aus dem blauen Balken und geht DIREKT
-                  // mit — nicht über `setEinfuegenVor`. Der State wäre in
-                  // diesem Aufruf noch der alte (siehe `hinzufuegen`).
-                  hinzufuegen(
-                    zieht,
-                    zieht === "image" && ziehtBild ? { url: ziehtBild } : {},
-                    null,
-                    position,
-                  );
-                  setZieht(null);
-                  setZiehtBild(null);
-                  // Nach dem Abwurf zeigt die Leiste den neuen Abschnitt, nicht
-                  // weiter die Baustein-Liste: der nächste Handgriff ist immer
-                  // „jetzt füllen".
-                  panelSetzen(null);
-                }}
-                onMenu={setMenu}
-                onWaehle={setAktiv}
-                onInhalt={(key) => {
-                  setAktiv(key);
-                  setPanelModus("inhalt");
-                }}
-                onDesign={(key) => {
-                  setAktiv(key);
-                  setPanelModus("design");
-                }}
-                onDuplizieren={dupliziere}
-                // Beide Wege öffnen das HINZUFÜGEN-PANEL an der gemerkten
-                // Stelle — nicht mehr einen eigenen Dialog. Es gab den Katalog
-                // zweimal: als Panel in der Leiste und als Vollbild-Dialog von
-                // der Fläche aus, mit verschiedener Darstellung derselben
-                // sechzig Bausteine. Wer den einen kannte, fand den anderen
-                // nicht wieder.
-                onEinfuegenNach={(key) => {
-                  setEinfuegenVor(zeilen.findIndex((r) => r.key === key) + 1);
-                  panelSetzen("hinzufuegen");
-                }}
-                onEinfuegenAn={(position) => {
-                  setEinfuegenVor(position);
-                  panelSetzen("hinzufuegen");
-                }}
-                // Das Layout entsteht DIREKT an der Naht, ohne Umweg über den
-                // Katalog: der Rahmen kommt vor dem Inhalt.
-                onLayoutEinfuegen={(bs, position) => {
-                  void layoutEinfuegen(bs, position);
-                }}
-                onVerschiebe={verschiebe}
-                onEntferne={entferne}
-                onVersteckt={aendereVersteckt}
-              />
-            }
+            rahmenInhalt={(g, istAktiv) => {
+              const basis = process.env.NEXT_PUBLIC_BUILDER_URL;
+              if (!basis || !token) {
+                return (
+                  <div className="flex h-full items-center justify-center text-sm text-neutral-500">
+                    {tokenFehler ? t("vorschau.fehler") : t("vorschau.laedt")}
+                  </div>
+                );
+              }
+              const params = new URLSearchParams({ token, locale, v: String(neuLaden) });
+              if (istAktiv) params.set("edit", "1");
+              const url =
+                vorlageAnsehen && vorlageToken && istAktiv
+                  ? `${basis}/render/vorlage/${encodeURIComponent(vorlageAnsehen)}?` +
+                    new URLSearchParams({ token: vorlageToken, slug: "", locale }).toString()
+                  : `${basis}/render/${encodeURIComponent(page.id)}?${params.toString()}`;
+              return (
+                <>
+                  <iframe
+                    ref={istAktiv ? iframeRef : undefined}
+                    src={url}
+                    title={`${t("vorschau.titel")} · ${t(`canvas.geraet.${g}`)}`}
+                    onLoad={istAktiv ? iframeBereit : undefined}
+                    className="absolute inset-0 h-full w-full border-0 bg-white"
+                    style={{ width: RAHMEN_BREITE[g] }}
+                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                  />
+                  {istAktiv ? (
+                    <FlaechenOverlay
+                      zeilen={zeilen}
+                      rechtecke={rechtecke}
+                      aktiv={aktiv}
+                      containerId={containerId}
+                      regionRect={regionRect}
+                      elternRect={elternRect}
+                      teilRect={
+                        aktiveZeile && teilAuswahl
+                          ? (teilRechtecke.get(
+                              `${aktiveZeile.id}/${teilAuswahl.feld}`,
+                            ) ?? null)
+                          : null
+                      }
+                      auswahlSettings={auswahlSettings}
+                      kinderRects={kinderRects}
+                      onMass={massSetzen}
+                      onAbstand={abstandSetzen}
+                      onPadding={paddingSetzen}
+                      onElternteil={elternteilWaehlen}
+                      flaechenZug={flaechenZug}
+                      onFlaechenZug={(key, stelle) => {
+                        setFlaechenZug(null);
+                        if (stelle == null) return;
+                        nurStilRef.current = false;
+                        setZeilen((z) => {
+                          const von = z.findIndex((r) => r.key === key);
+                          if (von < 0) return z;
+                          const kopie = [...z];
+                          const [bewegt] = kopie.splice(von, 1);
+                          if (!bewegt) return z;
+                          // Nach dem Herausnehmen rutscht alles dahinter eine
+                          // Stelle vor — sonst landet der Baustein eine Position
+                          // zu weit unten (derselbe Fehler wie beim Baum-Zug).
+                          const ziel = von < stelle ? stelle - 1 : stelle;
+                          const nachbar = kopie[Math.min(ziel, kopie.length - 1)];
+                          kopie.splice(Math.max(0, Math.min(ziel, kopie.length)), 0, {
+                            ...bewegt,
+                            // In die Spalte des neuen Nachbarn: sonst stünde er
+                            // in der Liste an der richtigen Stelle und auf der
+                            // Seite in der alten Spalte (Wurzel 1).
+                            parentId: nachbar?.parentId ?? bewegt.parentId,
+                          });
+                          return kopie;
+                        });
+                        protokoll("klick", "Baustein auf der Fläche verschoben", {
+                          key,
+                          stelle,
+                        });
+                      }}
+                      ueberfahren={ueberfahren}
+                      zeiger={zeiger}
+                      menu={menu}
+                      geraet={geraet}
+                      zieht={zieht}
+                      onAbwurfInSpalte={(spalteId, stelle) => {
+                        if (!zieht) return;
+                        hinzufuegen(
+                          zieht,
+                          zieht === "image" && ziehtBild ? { url: ziehtBild } : {},
+                          spalteId,
+                          stelle,
+                        );
+                        setZieht(null);
+                        setZiehtBild(null);
+                        panelSetzen("ebenen");
+                      }}
+                      onAbwurf={(position) => {
+                        if (!zieht) return;
+                        hinzufuegen(
+                          zieht,
+                          zieht === "image" && ziehtBild ? { url: ziehtBild } : {},
+                          null,
+                          position,
+                        );
+                        setZieht(null);
+                        setZiehtBild(null);
+                        panelSetzen("ebenen");
+                      }}
+                      onMenu={setMenu}
+                      onWaehle={setAktiv}
+                      onInhalt={(key) => {
+                        setAktiv(key);
+                        setInhaltOffen(key);
+                      }}
+                      onDesign={(key) => {
+                        setAktiv(key);
+                        setRechterReiter("style");
+                      }}
+                      onDuplizieren={dupliziere}
+                      onEinfuegenAn={(position) => {
+                        setEinfuegenVor(position);
+                        panelSetzen("hinzufuegen");
+                      }}
+                      onLayoutEinfuegen={(bs, position) => {
+                        void layoutEinfuegen(bs, position);
+                      }}
+                      onVerschiebe={verschiebe}
+                      onEntferne={entferne}
+                      onVersteckt={aendereVersteckt}
+                    />
+                  ) : (
+                    // Ein nicht aktiver Rahmen zeigt die Seite in seiner
+                    // Breite; ein Klick macht ihn zum aktiven — dann kommen
+                    // Auswahl-Schicht und Brücke dorthin.
+                    <button
+                      type="button"
+                      aria-label={t(`canvas.geraet.${g}`)}
+                      onClick={() => setGeraet(g)}
+                      className="absolute inset-0 cursor-default bg-transparent"
+                    />
+                  )}
+                </>
+              );
+            }}
           />
         }
+        // RECHTS — Agent · Style. Style zeigt die Auswahl oder, ohne Auswahl,
+        // die Seite mit ihren Breakpoints (Framer §0.12).
+        rechteReiter={[
+          { id: "agent", label: t("canvas.agent.titel") },
+          { id: "style", label: t("canvas.style") },
+        ]}
+        rechterReiter={rechterReiter}
+        onRechterReiter={setRechterReiter}
+        rechtesPanel={
+          rechterReiter === "agent" ? (
+            <AgentReiter />
+          ) : (
+            inspektor ?? (
+              <SeitenInspektor
+                seite={page}
+                sprachen={page.languages ?? gefuehrteSprachen}
+                sichtbar={sichtbareRahmen}
+                aktiv={geraet}
+                hoehen={kamera.hoehen}
+                branding={branding}
+                onAktiv={setGeraet}
+                onRahmen={rahmenSetzen}
+                onEinstellungen={() => setInfoOffen(true)}
+                onDesign={(u) => {
+                  setDesignUnterpunkt(u);
+                  panelSetzen("design");
+                }}
+                onVorlagen={() => panelSetzen("vorlagen")}
+              />
+            )
+          )
+        }
+        ueberlagerung={
+          panel === "blog" ? (
+            <GrossPanel
+              titel={t("reiter.blog")}
+              onZu={() => panelSetzen("ebenen")}
+              texte={{
+                panelEinklappen: t("kopf.panelEinklappen"),
+                panelAusklappen: t("kopf.panelAusklappen"),
+                panelBreite: t("kopf.panelBreite"),
+                panelHilfe: t("kopf.panelHilfe"),
+                panelZurueck: t("kopf.panelZurueck"),
+              }}
+            >
+              <BlogPanel
+                punkt={blogPunkt}
+                onPunkt={setBlogPunkt}
+                beitraege={pages.filter((p) => p.page_type === "post")}
+                seiten={pages}
+                einstellungen={blogEinstellungen}
+                feldKonfig={blogFeldKonfig}
+                eigeneFelder={blogEigeneFelder}
+                liveDomain={liveDomain}
+                oeffneBeitragId={beitragWunsch}
+                onNeuLaden={() => router.refresh()}
+              />
+            </GrossPanel>
+          ) : null
+        }
       />
+      {inhaltOffen
+        ? (() => {
+            const zeile = zeilen.find((z) => z.key === inhaltOffen);
+            if (!zeile) return null;
+            const meta = abschnittFuer(zeile.typ);
+            return (
+              <InhaltDialog
+                typ={zeile.typ}
+                titel={meta ? t(`abschnitte.${meta.label}`) : t("editor.unbekannterAbschnitt")}
+                content={zeile.content}
+                settings={zeile.settings}
+                sprache={locale}
+                onChange={(c) => aendere(zeile.key, c)}
+                onSettings={(st) => aendereSettings(zeile.key, st)}
+                onSprache={(l) => spracheWechseln(l as Locale)}
+                onZu={() => setInhaltOffen(null)}
+              />
+            );
+          })()
+        : null}
       {/* Die Seiteninformation zur OFFENEN Seite. Dieselbe Komponente, die die
           Seitenliste benutzt — nicht eine zweite Fassung für den Editor.
           Nach dem Schließen wird neu geladen: der Dialog kann Titel, Adresse
@@ -2397,42 +3527,6 @@ export function AbschnittsEditor({
       ) : null}
     </>
   );
-}
-
-/**
- * Der Breadcrumb des Inspektors: die Kette vom Abschnitt bis zum Baustein.
- *
- * Gelesen aus dem ECHTEN Baum (`parent_id`), nicht geraten. Findet sich die
- * Zeile dort nicht — ein eben angelegter Baustein hat noch keine DB-Zeile —,
- * kommt eine LEERE Kette zurück und der Inspektor zeigt nur den Titel. Eine
- * erfundene Kette („Abschnitt › Spalte") wäre eine Aussage über eine Struktur,
- * die es noch gar nicht gibt (Wurzel 4).
- *
- * Die Kette endet VOR dem Baustein selbst: sein Name steht direkt darunter als
- * Überschrift, und zweimal dasselbe Wort untereinander ist keine Navigation.
- */
-function krumenFuer(
-  blocks: Block[],
-  id: string | null,
-  t: (schluessel: string) => string,
-): BrotKrume[] {
-  if (!id) return [];
-  const nachId = new Map(blocks.map((b) => [b.id, b]));
-  const kette: BrotKrume[] = [];
-  // Vom Baustein nach OBEN laufen und dabei einsammeln. Die Tiefe ist durch
-  // das Datenmodell begrenzt (Abschnitt → Spalte → Innenspalte → Baustein),
-  // aber die Schleife bekommt trotzdem eine harte Grenze: eine Zeile, die sich
-  // durch einen Datenfehler selbst als Elternteil trägt, würde den Editor sonst
-  // einfrieren (Wurzel 8: jeder unbegrenzte Lauf bekommt eine Obergrenze).
-  let aktuell = nachId.get(id)?.parent_id ?? null;
-  for (let tiefe = 0; aktuell && tiefe < 8; tiefe += 1) {
-    const eltern = nachId.get(aktuell);
-    if (!eltern) break;
-    const art = eltern.kind ?? "widget";
-    kette.unshift({ id: eltern.id, label: t(`ebenen.${art}`) });
-    aktuell = eltern.parent_id ?? null;
-  }
-  return kette;
 }
 
 function IconKnopf({

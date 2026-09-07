@@ -61,6 +61,9 @@ class DiscountBase(BaseModel):
     discount_bps: int = Field(default=1, ge=1, le=10000)  # 100 = 1,00 %
     discount_amount: float | None = Field(default=None, gt=0)
     active: bool = True
+    # Regelsatz, zu dem diese Aktion gehört (0572). None = objektweit, also
+    # unabhängig von einer Saison — der Bestand und weiterhin der Normalfall.
+    season_id: str | None = None
     # --- Bedingungen (alle optional, alle UND-verknüpft) --------------------
     min_nights: int | None = Field(default=None, ge=1)
     lead_min_days: int | None = Field(default=None, ge=0)
@@ -177,6 +180,7 @@ class DiscountUpdate(BaseModel):
     """
 
     discount_kind: str | None = None
+    season_id: str | None = None
     discount_bps: int | None = Field(default=None, ge=1, le=10000)
     discount_amount: float | None = Field(default=None, gt=0)
     active: bool | None = None
@@ -210,6 +214,8 @@ class DiscountResponse(BaseModel):
 
     id: str
     property_id: str
+    # Regelsatz, zu dem die Aktion gehört (0572). None = objektweit.
+    season_id: str | None = None
     discount_type: str
     discount_kind: str = "percent"
     discount_bps: int

@@ -2,10 +2,50 @@
 // jeweiligen Render-Komponenten. DER einzige Renderer der white-label Sites —
 // der Editor-Canvas in apps/web bettet diese Ausgabe per iframe ein (kein
 // Doppel-Renderer).
+import { Fragment } from "react";
+
 import { type BildLaden, bildLaden } from "@/lib/bilder";
 import { alleBildnachweise, bildnachweisAusListe } from "@/lib/bildnachweis";
 import { type Block, type PageMeta, versteckteGeraete } from "@/lib/site";
+// Die EINE Stil-Kaskade (Desktop → Tablet → Mobil) — dieselbe Funktion, mit der
+// der Editor zeigt, welcher Wert auf welchem Gerät gilt (Etappe 2, 05.09.2026).
+import {
+  brauchtBezug,
+  hatLayout,
+  overlayLesen,
+  rahmenAttribute,
+  schriftfamilienVon,
+  sichtbarkeitKlassen,
+  stilCss,
+} from "@nextdays/baukasten-stil";
+import { pickText } from "@/lib/i18n";
+import { googleFontsHref } from "@/lib/fonts-catalog";
 import { type EditierModus, NICHT_EDITIERBAR } from "@/lib/editier-kontext";
+
+/** Bausteine mit eigenen Links, Knöpfen oder Formularen — sie werden nicht
+ *  als Ganzes verlinkt (siehe `rahmenAttribute`). Container schon. */
+const MIT_EIGENEN_LINKS: ReadonlySet<string> = new Set([
+  "hero",
+  "button",
+  "contact",
+  "form",
+  "search",
+  "search_posts",
+  "property_book_form",
+  "properties_grid",
+  "featured_properties",
+  "posts",
+  "gallery",
+  "media_slider",
+  "accordion",
+  "tabs",
+  "breadcrumbs",
+  "file",
+  "map",
+  "property_map",
+  "video",
+  "audio",
+]);
 import type { SuchParams } from "@/lib/inserate";
 import type { Listing } from "@/lib/listings";
 
@@ -68,38 +108,12 @@ import { type SiteBranding, getSiteContext } from "@/lib/site-context";
 import { BildNachweis, BildnachweisBereich } from "./bildnachweis";
 import { SearchBlock } from "./search-block";
 
-/** Hintergrund eines Abschnitts: Farbe, Bild und dunkle Auflage (0432).
- *
- *  Die Auflage ist ein `linear-gradient` über dem Bild und keine zweite Ebene
- *  mit `::before`: als Teil derselben `background-image`-Angabe braucht sie kein
- *  zusätzliches Element und kann den Inhalt nicht verdecken.
- *
- *  Ein Bild ohne Auflage bleibt möglich (`background_overlay = 0`) — der Kunde
- *  entscheidet. Aber der Regler existiert, weil ein Hintergrundbild ohne ihn in
- *  der Praxis unbenutzbar ist: heller Text auf hellem Himmel. */
-function bgStyle(settings: Record<string, unknown>): React.CSSProperties {
-  const stil: React.CSSProperties = {};
-  const bg = settings.background_color;
-  if (typeof bg === "string") stil.backgroundColor = bg;
-
-  const bild = settings.background_image_url;
-  if (typeof bild === "string" && bild) {
-    const roh = settings.background_overlay;
-    const deckung =
-      typeof roh === "number" && roh > 0 && roh <= 0.9 ? roh : 0;
-    // `CSS.escape` gibt es serverseitig nicht; die Adresse ist beim Speichern
-    // gegen die href-Allowlist geprüft (nur http(s)/relativ). Ein `"` darin
-    // wäre trotzdem ein Ausbruch aus dem url() — deshalb wird es entfernt.
-    const sicher = bild.replace(/["'\\()]/g, "");
-    const auflage = deckung
-      ? `linear-gradient(rgba(0,0,0,${deckung}), rgba(0,0,0,${deckung})), `
-      : "";
-    stil.backgroundImage = `${auflage}url("${sicher}")`;
-    stil.backgroundSize = "cover";
-    stil.backgroundPosition = "center";
-  }
-  return stil;
-}
+// Hintergrund, Abstände, Größe und Layout eines Blocks kommen seit Etappe 2
+// (05.09.2026) NICHT mehr als Inline-Stil, sondern als `<style>` je Block aus
+// `@nextdays/baukasten-stil` — weil ein Inline-Wert jede Media-Query schlägt
+// und damit keine Tablet-/Mobil-Überschreibung möglich wäre. Die Regeln der
+// früheren `bgStyle`/`abstandStil`/`groessenStil`/`layoutStil` leben dort
+// unverändert weiter (Tests: `packages/baukasten-stil/test`).
 
 /** ZUSÄTZLICHER vertikaler Abstand eines Abschnitts (0432).
  *
@@ -162,142 +176,9 @@ function sichtbarkeitKlasse(
   settings: Record<string, unknown>,
   editierbar: boolean,
 ): string {
-  const aus = versteckteGeraete(settings);
-  if (aus.length === 0) return "";
-  // Von schmal nach breit — genau die Richtung, in der Tailwind stapelt.
-  const an = {
-    mobil: !aus.includes("mobil"),
-    tablet: !aus.includes("tablet"),
-    desktop: !aus.includes("desktop"),
-  };
-  const klassen: string[] = [];
-  if (editierbar) {
-    klassen.push(an.mobil ? "opacity-100" : "opacity-40");
-    if (an.tablet !== an.mobil) {
-      klassen.push(an.tablet ? "md:opacity-100" : "md:opacity-40");
-    }
-    if (an.desktop !== an.tablet) {
-      klassen.push(an.desktop ? "lg:opacity-100" : "lg:opacity-40");
-    }
-    return klassen.join(" ");
-  }
-  klassen.push(an.mobil ? "block" : "hidden");
-  if (an.tablet !== an.mobil) klassen.push(an.tablet ? "md:block" : "md:hidden");
-  if (an.desktop !== an.tablet) {
-    klassen.push(an.desktop ? "lg:block" : "lg:hidden");
-  }
-  return klassen.join(" ");
-}
-
-/** Ein einzelner Abstandswert: Zahl + Einheit (`24px`, `5%`, `10vh`, `4vw`).
- *  Der Außenabstand darf negativ sein (überlappende Abschnitte), der
- *  Innenabstand nicht — negatives Padding gibt es in CSS nicht. */
-const AUSSEN_RE = /^-?\d{1,4}(px|%|vh|vw)$/;
-const INNEN_RE = /^\d{1,4}(px|%|vh|vw)$/;
-
-/** Die acht Abstandsfelder in CSS-Schreibweise, mit ihrem erlaubten Muster. */
-const ABSTAENDE = [
-  ["margin_top", "marginTop", AUSSEN_RE],
-  ["margin_right", "marginRight", AUSSEN_RE],
-  ["margin_bottom", "marginBottom", AUSSEN_RE],
-  ["margin_left", "marginLeft", AUSSEN_RE],
-  ["padding_top", "paddingTop", INNEN_RE],
-  ["padding_right", "paddingRight", INNEN_RE],
-  ["padding_bottom", "paddingBottom", INNEN_RE],
-  ["padding_left", "paddingLeft", INNEN_RE],
-] as const;
-
-/** Äußere und innere Abstände eines Abschnitts.
- *
- *  Nur GESETZTE Werte wandern in den Stil. Ein fehlender Wert ist nicht `0`,
- *  sondern „der Abschnitt behält seinen eigenen": ein pauschales 0 würde jede
- *  bestehende Kundenseite flach ziehen (Wurzel 1).
- *
- *  Die Werte werden hier erneut gegen das Muster geprüft, obwohl das Backend
- *  sie beim Speichern prüft. In der Datenbank stehen Zeilen, die älter sind als
- *  diese Prüfung, und `settings` ist ein offenes jsonb — was von dort kommt,
- *  landet ungefiltert in einem `style`-Attribut (Wurzel 8). */
-function abstandStil(settings: Record<string, unknown>): React.CSSProperties {
-  const stil: Record<string, string> = {};
-  for (const [feld, css, muster] of ABSTAENDE) {
-    const wert = settings[feld];
-    if (typeof wert === "string" && muster.test(wert)) stil[css] = wert;
-  }
-  return stil as React.CSSProperties;
-}
-
-/** Größe eines Containers: Mindesthöhe und größte Breite (28.08.2026).
- *
- *  Beides als Inline-Stil und nicht als Klasse: die Werte sind frei wählbar
- *  (`min_hoehe: 420`), und eine zur Laufzeit zusammengesetzte Tailwind-Klasse
- *  findet der Scanner im Build nicht — sie fehlte dann in der Ausgabe. */
-function groessenStil(settings: Record<string, unknown>): React.CSSProperties {
-  const stil: React.CSSProperties = {};
-  const hoehe = settings.min_hoehe;
-  if (typeof hoehe === "number" && hoehe > 0) stil.minHeight = `${hoehe}px`;
-  const breite = settings.max_breite;
-  if (typeof breite === "number" && breite > 0) {
-    stil.maxWidth = `${breite}px`;
-    // Ohne die Zentrierung klebte eine begrenzte Spur am linken Rand — in
-    // jedem Baukasten meint „max. Breite" die mittige Spur.
-    stil.marginInline = "auto";
-  }
-  return stil;
-}
-
-/** Das Flex-Layout eines Containers aus seinen Einstellungen.
- *
- *  Gibt es keine Angaben, kommt ein leeres Objekt zurück und der Renderer
- *  bleibt bei seinem bisherigen Verhalten — eine bestehende Kundenseite darf
- *  sich durch ein neues Feld nicht verändern (Wurzel 1). */
-function layoutStil(settings: Record<string, unknown>): React.CSSProperties {
-  const stil: React.CSSProperties = {};
-  const richtung = settings.layout_richtung;
-  if (richtung === "zeile") stil.flexDirection = "row";
-  else if (richtung === "spalte") stil.flexDirection = "column";
-
-  const verteilen = settings.layout_verteilen;
-  const JUSTIFY: Record<string, string> = {
-    start: "flex-start",
-    mitte: "center",
-    ende: "flex-end",
-    zwischen: "space-between",
-    umgeben: "space-around",
-  };
-  if (typeof verteilen === "string" && JUSTIFY[verteilen]) {
-    stil.justifyContent = JUSTIFY[verteilen];
-  }
-
-  const ausrichten = settings.layout_ausrichten;
-  const ALIGN: Record<string, string> = {
-    start: "flex-start",
-    mitte: "center",
-    ende: "flex-end",
-    strecken: "stretch",
-  };
-  if (typeof ausrichten === "string" && ALIGN[ausrichten]) {
-    stil.alignItems = ALIGN[ausrichten];
-  }
-
-  if (settings.layout_umbruch === true) stil.flexWrap = "wrap";
-  else if (settings.layout_umbruch === false) stil.flexWrap = "nowrap";
-
-  const abstand = settings.layout_abstand;
-  if (typeof abstand === "number" && abstand >= 0) stil.gap = `${abstand}px`;
-  return stil;
-}
-
-/** Hat der Container überhaupt eine Layout-Angabe? Nur dann wird aus seiner
- *  Kinderreihe ein Flex-Container — sonst bliebe eine einspaltige Reihe eine
- *  Reihe, und genau das ist der bisherige (richtige) Zustand. */
-function hatLayout(settings: Record<string, unknown>): boolean {
-  return (
-    settings.layout_richtung != null ||
-    settings.layout_verteilen != null ||
-    settings.layout_ausrichten != null ||
-    settings.layout_umbruch != null ||
-    settings.layout_abstand != null
-  );
+  // Die Klassen baut das geteilte Paket — dieselbe Regel gilt seit 0570 auch
+  // für die Teile von Kopf- und Fußzeile.
+  return sichtbarkeitKlassen(versteckteGeraete(settings), editierbar);
 }
 
 async function renderBlock(
@@ -675,69 +556,124 @@ export async function BlockRenderer({
             objekt,
           );
 
+    // Das CSS dieses Blocks — Grundregel plus Tablet/Mobil-Unterschiede. Die
+    // Selektoren hängen am Index, der über den ganzen Baum eindeutig ist; die
+    // Kinderreihe (`[data-layout]`) bekommt ihre Layout-Regeln denselben Weg.
+    // Leer, wenn der Block nichts einstellt — dann steht kein `<style>` da.
+    const css = stilCss(
+      block.settings,
+      {
+        rahmen: `[data-block-index="${i}"]`,
+        layout: `[data-block-index="${i}"]>[data-layout]`,
+        // Framer „Text": nur an Bausteinen, für alle Textknoten darin. Ein
+        // Container gibt die Schrift nicht an seine Bausteine weiter — dort
+        // steht sie an jedem einzeln, wie im Vorbild.
+        text:
+          (block.kind ?? "widget") === "widget"
+            ? `[data-block-index="${i}"] :is(h1,h2,h3,h4,h5,h6,p,li,blockquote,figcaption,span,a,strong,em,small)`
+            : undefined,
+      },
+      {
+        editor: modus.aktiv,
+        span: block.span != null && block.kind !== "section" ? block.span : null,
+      },
+    );
+    // Element, Anker und Aria aus den Settings (Framer „Accessibility",
+    // „Scroll Section"). Ein absolut liegendes Kind braucht seinen Bezug.
+    // Ein Link am Element (Framer „Link") macht es zum `<a>` — außer bei
+    // Bausteinen, die selbst Links oder Formulare tragen: ein `<a>` um ein
+    // `<form>` oder um Buttons ist ungültiges HTML und stiehlt deren Klicks.
+    const { tag: Tag, ...attribute } = rahmenAttribute(block.settings, {
+      linkErlaubt: !MIT_EIGENEN_LINKS.has(block.type),
+      // Im Editor keine Erscheinen-/Parallax-Marker: der Kunde sieht alles.
+      editor: modus.aktiv,
+    });
+    // Die Schriften DIESES Blocks nachladen (Framer „Font"). React 19 hebt das
+    // `<link rel="stylesheet">` in den `<head>` und entdoppelt es über
+    // `precedence` — dieselbe Schrift an zehn Blöcken ist ein Request.
+    const blockFontsHref = googleFontsHref(schriftfamilienVon(block.settings));
+    const overlay = overlayLesen(block.settings);
+    const overlayText = overlay ? pickText(overlay.inhalt, modus.locale) : "";
+    const bezug =
+      (block.kind === "section" ||
+        block.kind === "column" ||
+        block.kind === "inner_column") &&
+      brauchtBezug(kinder.map((k) => k.settings));
+
     return (
-      <div
-        key={block.id ?? i}
-        data-block-index={i}
-        // Die DB-ID des Blocks — die EINDEUTIGE Zuordnung zum Editor.
-        //
-        // `data-block-index` allein reicht dafür nicht: der Zähler läuft über
-        // den ganzen Baum (Abschnitt, Spalte, Baustein), der Editor bekommt
-        // über `list_blocks` aber NUR die Bausteine. Bei sechs Bausteinen
-        // meldet der Renderer die Indizes 0,1,2 / 3,4,5 / … und der Editor
-        // erwartet 0,1,2 — jeder Klick trifft daneben. Live zu sehen am
-        // 26.08.2026: Klick auf „Bild" markierte „Kontakt".
-        //
-        // Der Index bleibt daneben stehen, weil die Brücke ihn für die
-        // Reihenfolge der Rechtecke braucht; die ZUORDNUNG läuft über die ID.
-        data-block-id={block.id ?? undefined}
-        // Die ART des Knotens — nur im Editor.
-        //
-        // Die Brücke sucht zu einem Klick die ID des BAUSTEINS, denn nur
-        // Bausteine kennt der Editor (`list_blocks` filtert Container). Ohne
-        // dieses Attribut nahm sie die erste ID, die sie beim Hochlaufen fand
-        // — und das ist bei einem Klick auf einen Inhalt die Spalte oder der
-        // Abschnitt darüber. Der Editor fand diese ID in seiner Liste nicht,
-        // fiel auf den Index zurück, und der zählt im Renderer-Raum (0..17)
-        // statt im Editor-Raum (0..5): die Auswahl landete auf einem fremden
-        // Abschnitt (live 26.08.2026, Inspektor „Kontakt" bei markiertem Bild).
-        data-block-kind={modus.aktiv ? (block.kind ?? "widget") : undefined}
-        // Im Editor steht hier, auf welchen Geräten der Abschnitt fehlt.
-        // Live steht das Attribut NICHT da: eine Gast-Seite trägt keine
-        // Editor-Marker (dieselbe Regel wie bei `data-feld`).
-        data-versteckt={
-          modus.aktiv && versteckt.length > 0 ? versteckt.join(" ") : undefined
-        }
-        // Die Breite einer Spalte in Zwölfteln. Sie steht als Inline-Stil und
-        // nicht als Tailwind-Klasse: `w-5/12` müsste für jede der zwölf
-        // Möglichkeiten im Build vorkommen, und eine zur Laufzeit
-        // zusammengesetzte Klasse findet der Tailwind-Scanner nicht.
-        style={{
-          ...bgStyle(block.settings),
-          ...abstandStil(block.settings),
-          ...groessenStil(block.settings),
-          ...(block.span != null && block.kind !== "section"
-            ? { flexBasis: `${(block.span / 12) * 100}%` }
-            : {}),
-        }}
-        className={[
-          bgNachweis ? "relative" : "",
-          abstandKlasse(block.settings),
-          sichtbarkeitKlasse(block.settings, modus.aktiv),
-          // Eine Spalte ist ein Flex-Kind mit fester Grundbreite und darf
-          // schrumpfen; `min-w-0` verhindert, dass ein langes Wort sie
-          // aufbläht (der klassische Flex-Überlauf).
-          block.kind === "column" || block.kind === "inner_column"
-            ? "min-w-0 grow-0"
-            : "",
-        ]
-          .filter(Boolean)
-          .join(" ")}
-      >
-        {inhalt}
-        {/* Der Nachweis des Hintergrundbildes. */}
-        <BildNachweis src={bgBild} nachweise={nachweise} />
-      </div>
+      <Fragment key={block.id ?? i}>
+        {blockFontsHref ? (
+          <link rel="stylesheet" href={blockFontsHref} precedence="default" />
+        ) : null}
+        {css ? <style>{css}</style> : null}
+        <Tag
+          {...attribute}
+          data-block-index={i}
+          // Die DB-ID des Blocks — die EINDEUTIGE Zuordnung zum Editor.
+          //
+          // `data-block-index` allein reicht dafür nicht: der Zähler läuft über
+          // den ganzen Baum (Abschnitt, Spalte, Baustein), der Editor bekommt
+          // über `list_blocks` aber NUR die Bausteine. Bei sechs Bausteinen
+          // meldet der Renderer die Indizes 0,1,2 / 3,4,5 / … und der Editor
+          // erwartet 0,1,2 — jeder Klick trifft daneben. Live zu sehen am
+          // 26.08.2026: Klick auf „Bild" markierte „Kontakt".
+          //
+          // Der Index bleibt daneben stehen, weil die Brücke ihn für die
+          // Reihenfolge der Rechtecke braucht; die ZUORDNUNG läuft über die ID.
+          data-block-id={block.id ?? undefined}
+          // Die ART des Knotens — nur im Editor.
+          //
+          // Die Brücke sucht zu einem Klick die ID des BAUSTEINS, denn nur
+          // Bausteine kennt der Editor (`list_blocks` filtert Container). Ohne
+          // dieses Attribut nahm sie die erste ID, die sie beim Hochlaufen fand
+          // — und das ist bei einem Klick auf einen Inhalt die Spalte oder der
+          // Abschnitt darüber. Der Editor fand diese ID in seiner Liste nicht,
+          // fiel auf den Index zurück, und der zählt im Renderer-Raum (0..17)
+          // statt im Editor-Raum (0..5): die Auswahl landete auf einem fremden
+          // Abschnitt (live 26.08.2026, Inspektor „Kontakt" bei markiertem Bild).
+          data-block-kind={modus.aktiv ? (block.kind ?? "widget") : undefined}
+          // Im Editor steht hier, auf welchen Geräten der Abschnitt fehlt.
+          // Live steht das Attribut NICHT da: eine Gast-Seite trägt keine
+          // Editor-Marker (dieselbe Regel wie bei `data-feld`).
+          data-versteckt={
+            modus.aktiv && versteckt.length > 0 ? versteckt.join(" ") : undefined
+          }
+          // Kein Inline-Stil mehr: alles Gerätabhängige steht im `<style>` oben
+          // (auch die Spaltenbreite in Zwölfteln, `span`).
+          className={[
+            bgNachweis || bezug ? "relative" : "",
+            abstandKlasse(block.settings),
+            sichtbarkeitKlasse(block.settings, modus.aktiv),
+            // Eine Spalte ist ein Flex-Kind mit fester Grundbreite und darf
+            // schrumpfen; `min-w-0` verhindert, dass ein langes Wort sie
+            // aufbläht (der klassische Flex-Überlauf).
+            block.kind === "column" || block.kind === "inner_column"
+              ? "min-w-0 grow-0"
+              : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          {inhalt}
+          {/* Framer „Overlays" (Vollerfassung §9): der Kasten steht IM
+              Element und ist per CSS ausgeblendet, bis ihn Klick oder Hover
+              öffnet. Sein Text ist mehrsprachig wie jedes Textfeld; die Lage
+              kommt aus dem `<style>` oben, nicht aus Klassen — sonst stünden
+              die Einstellungen an zwei Stellen. */}
+          {overlay ? (
+            <div
+              data-overlay=""
+              role="dialog"
+              aria-label={overlayText}
+              className="rounded-(--radius) border border-black/10 bg-white p-4 text-sm shadow-xl"
+            >
+              {overlayText}
+            </div>
+          ) : null}
+          {/* Der Nachweis des Hintergrundbildes. */}
+          <BildNachweis src={bgBild} nachweise={nachweise} />
+        </Tag>
+      </Fragment>
     );
   }
 
@@ -811,7 +747,9 @@ export async function BlockRenderer({
               : "flex-col ") +
             (art === "section" ? "mx-auto max-w-6xl px-6" : "")
           }
-          style={layoutStil(eigeneSettings)}
+          // Richtung, Verteilung, Abstand kommen aus dem `<style>` des Blocks
+          // (Selektor `[data-block-index]>[data-layout]`), je Gerät.
+          data-layout=""
         >
           {gerendert}
         </div>

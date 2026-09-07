@@ -1232,6 +1232,7 @@ class BloeckeMixin:
     def remove_block(self, ctx: AuthContext, block_id: str) -> None:
         tenant_id = self._require_tenant(ctx)
         block = self._own_block(tenant_id, block_id)
+        self._sperre_pruefen(block)
         # Der Pflicht-Baustein (0474). Geprüft wird mit dem Stand NACH dem
         # Löschen: alle Typen der Seite außer diesem einen. Wäre der letzte
         # `checkout_form` darunter, bricht es hier ab — vor dem Löschen, nicht

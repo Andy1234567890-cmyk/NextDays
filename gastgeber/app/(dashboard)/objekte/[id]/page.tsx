@@ -12,6 +12,7 @@ import {
 } from "@/lib/cohosts";
 import { getHostProfile, LEERES_PROFIL } from "@/lib/host-profil";
 import { getObjektSteuern } from "@/lib/objekt-steuern";
+import { getPaymentSettings } from "@/lib/payments";
 import { getPreisStand } from "@/lib/preise";
 import { getProperty } from "@/lib/properties";
 
@@ -48,6 +49,7 @@ export default async function ObjektEditorPage({
     cohostEinladungen,
     plattformBps,
     objektSteuern,
+    zahlungen,
   ] = await Promise.all([
     getPreisStand(id),
     getHostProfile().catch(() => LEERES_PROFIL),
@@ -60,6 +62,9 @@ export default async function ObjektEditorPage({
     // null bei Ladefehler — das Panel zeigt dann einen Hinweis statt einer
     // leeren Liste, die „keine Steuern" behaupten würde (Wurzel 5).
     getObjektSteuern(id),
+    // Stripe-Freischaltung des Betriebs: entscheidet, ob „Veröffentlichen"
+    // überhaupt angeboten wird. null (kein Profil) = nicht freigeschaltet.
+    getPaymentSettings(),
   ]);
 
   return (
@@ -71,6 +76,7 @@ export default async function ObjektEditorPage({
       cohostEinladungen={cohostEinladungen}
       plattformBps={plattformBps}
       objektSteuern={objektSteuern}
+      zahlungenBereit={!!zahlungen?.stripe_charges_enabled}
     />
   );
 }

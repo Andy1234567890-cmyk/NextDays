@@ -30,6 +30,12 @@
 }
 
 @theme {
+  /* Multi-Kalender: die Buchungsfarbe steht als Token da, damit sie nicht als
+     arbitraerer Hex-Wert in jeder Klasse klebt. Der zweite Ton ist die
+     Eigennutzung (Aufenthalt des Eigentuemers) — sie ist keine Buchung und
+     darf nicht so aussehen. */
+  --color-buchung: #008489;
+  --color-buchung-fahl: #4a8b8d;
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-display: var(--font-fraunces), Georgia, serif;
 }

@@ -48,6 +48,11 @@ AUFRUF
     uv run python scripts/i18n/uebersetzen.py quelle.json \
         --app marketing --ziel partnerBewerbung.kanaele
 
+    # Marktplatz-Apps: ALLE 45 Sprachdateien der App und die Du-Anrede der
+    # deutschen Vorlage (sonst bricht `--ziel` an der fehlenden pt.json ab)
+    uv run python scripts/i18n/uebersetzen.py quelle.json \
+        --app gastgeber --sprachen app --du --ziel konto
+
 Das Ergebnis ist ``{"keys": [...], "texte": {"de": [...], "bg": [...], ...}}`` —
 dieselbe Form, die ``renderer-texte-erzeugen.py`` erwartet.
 """
@@ -87,6 +92,68 @@ ZIELSPRACHEN: dict[str, str] = {
     "sv": "Schwedisch",
 }
 
+# Sprachen AUSSERHALB der EU-Amtssprachen, die `gastgeber`, `plattform` und die
+# Apps tragen (45 Sprachdateien). Sie werden nur mit `--sprachen app` bedient:
+# der Lauf liest dann die Codes aus `<app>/messages/` und schlägt hier den
+# Namen für den Prompt nach. Ein Code ohne Namen bricht LAUT ab — ein Kürzel
+# allein trifft die Sprache nicht zuverlässig (05.09.2026, myBestDays-Konto).
+WEITERE_SPRACHEN: dict[str, str] = {
+    "ar": "Arabisch",
+    "ca": "Katalanisch",
+    "en-GB": "Britisches Englisch",
+    "he": "Hebräisch",
+    "hi": "Hindi",
+    "id": "Indonesisch",
+    "is": "Isländisch",
+    "ja": "Japanisch",
+    "ko": "Koreanisch",
+    "ms": "Malaiisch",
+    "no": "Norwegisch (Bokmål)",
+    "pt-BR": "Brasilianisches Portugiesisch",
+    "pt-PT": "Europäisches Portugiesisch",
+    "ru": "Russisch",
+    "sr": "Serbisch (lateinische Schrift)",
+    "th": "Thailändisch",
+    "tl": "Filipino (Tagalog)",
+    "tr": "Türkisch",
+    "uk": "Ukrainisch",
+    "vi": "Vietnamesisch",
+    "zh-Hans": "Chinesisch (vereinfacht)",
+    "zh-Hant": "Chinesisch (traditionell)",
+}
+
+
+def sprachname(code: str) -> str:
+    """Deutscher Name einer Zielsprache für den Prompt — aus beiden Tabellen."""
+    name = ZIELSPRACHEN.get(code) or WEITERE_SPRACHEN.get(code)
+    if not name:
+        raise SystemExit(
+            f"Sprache {code!r} hat keinen Namen in ZIELSPRACHEN/WEITERE_SPRACHEN "
+            "— bitte dort eintragen, sonst rät das Modell die Sprache."
+        )
+    return name
+
+
+def app_sprachen(app: str) -> list[str]:
+    """Alle Sprachcodes einer App aus ihrem `messages/`-Verzeichnis (ohne de)."""
+    wurzel = Path(__file__).resolve().parents[2] / app / "messages"
+    if not wurzel.is_dir():
+        raise SystemExit(f"{wurzel} gibt es nicht.")
+    codes = sorted(d.stem for d in wurzel.glob("*.json") if d.stem != "de")
+    for code in codes:
+        sprachname(code)  # fehlender Name → lauter Abbruch VOR dem ersten Aufruf
+    return codes
+
+
+# Die deutschen Vorlagen der Marktplatz-Apps (gastgeber, plattform) duzen —
+# wie Airbnb. Eine Übersetzung, die daraus siezt, wechselt das Register
+# mitten im Produkt. `--du` schaltet die Anrede-Regel entsprechend um.
+ANREDE_SIE = "· Höflichkeitsform (Siezen), sachlicher Ton, keine Ausrufezeichen.\n"
+ANREDE_DU = (
+    "· Vertraute Anrede (Duzen, wie die deutsche Vorlage), freundlicher "
+    "sachlicher Ton, keine Ausrufezeichen.\n"
+)
+
 SYSTEM = (
     "Du übersetzt Oberflächentexte einer Buchungswebsite für Ferienunterkünfte. "
     "Antworte AUSSCHLIESSLICH mit einem JSON-Array von Zeichenketten — gleiche "
@@ -97,9 +164,14 @@ SYSTEM = (
     "unverändert stehen — auch ihre Schreibweise.\n"
     "· Markennamen bleiben unverändert (myNextDays, myBestDays, WhatsApp, "
     "Facebook, Google).\n"
-    "· Höflichkeitsform (Siezen), sachlicher Ton, keine Ausrufezeichen.\n"
-    "· Beschriftungen kurz halten: sie stehen in schmalen Feldern."
+    + ANREDE_SIE
+    + "· Beschriftungen kurz halten: sie stehen in schmalen Feldern."
 )
+
+
+def system_prompt(du: bool) -> str:
+    """Der Systemprompt mit der gewünschten Anrede."""
+    return SYSTEM.replace(ANREDE_SIE, ANREDE_DU) if du else SYSTEM
 
 #: Wie viele Schlüssel je Aufruf. Mehr wäre billiger, aber ein Aufruf, der
 #: mitten in einer langen Liste abbricht, kostet die ganze Liste — und das
@@ -218,7 +290,7 @@ def _auswerten(roh: str, teil: list[str], sprache: str, client):  # noqa: ANN001
                     "AUSSCHLIESSLICH das Array zurück."
                 ),
                 user=(
-                    f"Zielsprache: {ZIELSPRACHEN[sprache]}.\n"
+                    f"Zielsprache: {sprachname(sprache)}.\n"
                     f"Eingabe:\n{json.dumps(teil, ensure_ascii=False)}"
                 ),
                 temperature=0.0,
@@ -232,7 +304,7 @@ def _auswerten(roh: str, teil: list[str], sprache: str, client):  # noqa: ANN001
     raise SystemExit(f"{sprache}: unerreichbar")
 
 
-def uebersetze(de: list[str], sprache: str, client) -> list[str]:  # noqa: ANN001
+def uebersetze(de: list[str], sprache: str, client, *, du: bool = False) -> list[str]:  # noqa: ANN001
     """Eine Liste deutscher Texte in EINE Sprache übersetzen.
 
     Die Zuordnung läuft über die POSITION, nicht über Namen — deshalb wird die
@@ -242,9 +314,9 @@ def uebersetze(de: list[str], sprache: str, client) -> list[str]:  # noqa: ANN00
     ergebnis: list[str] = []
     for teil in _stapel(de):
         antwort = client.erzeuge(
-            system=SYSTEM,
+            system=system_prompt(du),
             user=(
-                f"Zielsprache: {ZIELSPRACHEN[sprache]}.\n"
+                f"Zielsprache: {sprachname(sprache)}.\n"
                 f"Eingabe:\n{json.dumps(teil, ensure_ascii=False)}"
             ),
             temperature=0.1,
@@ -357,6 +429,20 @@ def main() -> None:
             "schreiben wir in eine Datei."
         ),
     )
+    p.add_argument(
+        "--sprachen",
+        choices=("eu", "app"),
+        default="eu",
+        help=(
+            "eu = die 23 EU-Amtssprachen (Standard); app = alle Sprachdateien "
+            "der Ziel-App (gastgeber/plattform tragen 45)"
+        ),
+    )
+    p.add_argument(
+        "--du",
+        action="store_true",
+        help="Duzen statt Siezen (Marktplatz-Apps, deren deutsche Vorlage duzt)",
+    )
     args = p.parse_args()
 
     quelle = json.loads(Path(args.quelle).read_text(encoding="utf-8"))
@@ -367,8 +453,9 @@ def main() -> None:
 
     client = _client()
     texte = {"de": de}
-    for code in ZIELSPRACHEN:
-        texte[code] = uebersetze(de, code, client)
+    codes = app_sprachen(args.app) if args.sprachen == "app" else list(ZIELSPRACHEN)
+    for code in codes:
+        texte[code] = uebersetze(de, code, client, du=args.du)
         print(f"  {code} ✓", file=sys.stderr)
 
     if args.ziel:

@@ -4,7 +4,7 @@
   "private": true,
   "description": "myBestDays — Gastgeber-Dashboard (Supply-Seite, eigene Subdomain host.). Eigenständiges Projekt, getrennt von der Gast-App plattform/ (ADR-0015).",
   "scripts": {
-    "dev": "next dev --port 3200",
+    "dev": "next dev --port 3300",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",

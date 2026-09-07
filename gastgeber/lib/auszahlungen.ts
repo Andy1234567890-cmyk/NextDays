@@ -3,7 +3,7 @@
 // Die Plattform hält das Geld bis zur ABREISE — nicht bis zum Zahlungseingang.
 // Ein Storno vor der Auszahlung fließt gar nicht erst; einer danach wird als
 // Verrechnungsposten von der nächsten Auszahlung einbehalten.
-import { api } from "./api-server";
+import { api, ApiError } from "./api-server";
 
 export type PayoutInterval = "daily" | "weekly" | "monthly";
 
@@ -44,6 +44,14 @@ export interface AuszahlungsZeile {
   status: PayoutStatus;
   due_at: string;
   paid_at: string | null;
+  /** Buchung dahinter — damit die Zeile ohne UUID-Vergleich zuzuordnen ist.
+   *  Leer, wenn die Buchung nicht (mehr) gefunden wird (nichts erfunden). */
+  property_title: string | null;
+  guest_name: string | null;
+  check_in: string | null;
+  check_out: string | null;
+  channel: string | null;
+  ota_name: string | null;
   /**
    * Wie die Zahlung geflossen ist. `destination` = der Betrag ging beim
    * Kassieren direkt auf das Verbundkonto des Betriebs; eine solche Zeile wird
@@ -90,5 +98,63 @@ export async function getAuszahlungsUebersicht(): Promise<AuszahlungsUebersicht 
     return await api<AuszahlungsUebersicht>("/payouts", { cache: "no-store" });
   } catch {
     return null;
+  }
+}
+
+// --- Guthaben auf dem verbundenen Stripe-Konto ------------------------------
+
+export interface StripeSaldoPosten {
+  currency: string;
+  amount_cents: number;
+}
+
+export interface StripeAuszahlung {
+  id: string;
+  amount_cents: number;
+  currency: string;
+  status: string;
+  /** true = von Stripe nach Rhythmus ausgelöst, false = vom Betrieb beantragt. */
+  automatic: boolean;
+  created: string | null;
+  arrival_date: string | null;
+  failure_message: string | null;
+}
+
+/**
+ * Was auf dem Stripe-Konto des Gastgebers liegt: verfügbar, ausstehend
+ * (Abwicklungsfrist), zurückgehalten (Sicherheitseinlage) und die letzten
+ * Überweisungen auf die Bank. Zweiter Topf neben dem Plattform-Ledger
+ * (`AuszahlungsUebersicht`): dort steht, was myBestDays je Buchung noch
+ * verwahrt; hier, was davon schon beim Gastgeber angekommen ist.
+ */
+export interface StripeGuthaben {
+  konto_verbunden: boolean;
+  stripe_account_id: string | null;
+  payouts_enabled: boolean;
+  interval: string;
+  verfuegbar: StripeSaldoPosten[];
+  ausstehend: StripeSaldoPosten[];
+  einlage: StripeSaldoPosten[];
+  auszahlbar: StripeSaldoPosten[];
+  einlage_frei_ab: string | null;
+  letzte_auszahlungen: StripeAuszahlung[];
+}
+
+export type GuthabenErgebnis =
+  | { ok: true; data: StripeGuthaben }
+  | { ok: false; fehler: string };
+
+/**
+ * Stripe-Guthaben. Ein Abruffehler kommt als Text zurück, nicht als „0" —
+ * ein leerer Saldo wäre eine Falschaussage über das Geld des Gastgebers
+ * (Wurzel 4/5).
+ */
+export async function getStripeGuthaben(): Promise<GuthabenErgebnis> {
+  try {
+    const data = await api<StripeGuthaben>("/payouts/guthaben", { cache: "no-store" });
+    return { ok: true, data };
+  } catch (exc) {
+    if (exc instanceof ApiError) return { ok: false, fehler: exc.message };
+    throw exc;
   }
 }
