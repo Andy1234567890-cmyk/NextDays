@@ -626,6 +626,48 @@ def test_unassign_property() -> None:
 
 # --- Exklusivität: ein Objekt gehört genau einem Eigentümer ------------------
 
+def test_anteil_aendern_haelt_die_summe_bei_100_in_beide_richtungen() -> None:
+    """Der Kuchen bleibt ein Kuchen — auch beim VERKLEINERN.
+
+    Live gemessen am 07.09.2026: 70/30, dann Britt auf 30 → 30/30 = 60 %, und
+    40 % gehörten niemandem. Die Abrechnung hätte 40 % des Ertrags nicht
+    ausgezahlt, ohne dass irgendwo etwas fehlt.
+    """
+    svc = _svc()
+    a = svc.create(_ctx(), OwnerCreate(name="A"))
+    b = svc.create(_ctx(), OwnerCreate(name="B"))
+    svc.assign_property(_ctx(), a.id, OwnerPropertyAssign(property_id="p-1"))
+
+    def summe() -> float:
+        return round(
+            svc.get(_ctx(), a.id).properties[0].ownership_share
+            + svc.get(_ctx(), b.id).properties[0].ownership_share,
+            2,
+        )
+
+    # Vergrößern, verkleinern, wieder vergrößern — die Summe bleibt 100.
+    for wert in (70, 30, 50, 90, 10):
+        svc.assign_property(
+            _ctx(),
+            b.id,
+            OwnerPropertyAssign(property_id="p-1", ownership_share=wert),
+        )
+        assert svc.get(_ctx(), b.id).properties[0].ownership_share == float(wert)
+        assert svc.get(_ctx(), a.id).properties[0].ownership_share == float(
+            100 - wert
+        )
+        assert summe() == 100.0
+
+
+def test_anteil_ueber_100_wird_abgewiesen() -> None:
+    """Mehr als das ganze Objekt gibt es nicht — 422, nicht stilles Kürzen."""
+    svc = _svc()
+    a = svc.create(_ctx(), OwnerCreate(name="A"))
+    svc.assign_property(_ctx(), a.id, OwnerPropertyAssign(property_id="p-1"))
+    with pytest.raises(ValidationError):
+        OwnerPropertyAssign(property_id="p-1", ownership_share=120)
+
+
 def test_entfernen_gibt_dem_letzten_eigentuemer_das_ganze_objekt() -> None:
     """Gegenzustand (Wurzel 1): 50/50 minus einer = 100 %, nicht 50 %.
 
@@ -653,12 +695,22 @@ def test_entfernen_verteilt_bei_zwei_verbliebenen_nichts_um() -> None:
     a = svc.create(_ctx(), OwnerCreate(name="A"))
     b = svc.create(_ctx(), OwnerCreate(name="B"))
     c = svc.create(_ctx(), OwnerCreate(name="C"))
-    for owner, anteil in ((a, 50), (b, 30), (c, 20)):
-        svc.assign_property(
-            _ctx(),
-            owner.id,
-            OwnerPropertyAssign(property_id="p-1", ownership_share=anteil),
-        )
+    # 50/50 aufbauen (dabei wird ausgeglichen), dann C aus dem Rest von B
+    # dazunehmen: 50/30/20. Der letzte Schritt läuft über zwei Beteiligte und
+    # verteilt daher nichts um.
+    svc.assign_property(
+        _ctx(), a.id, OwnerPropertyAssign(property_id="p-1", ownership_share=50)
+    )
+    svc.assign_property(
+        _ctx(), b.id, OwnerPropertyAssign(property_id="p-1", ownership_share=50)
+    )
+    svc._db.table("owner_properties").update({"ownership_share": 30}).eq(
+        "owner_id", b.id
+    ).eq("property_id", "p-1").execute()
+    svc.assign_property(
+        _ctx(), c.id, OwnerPropertyAssign(property_id="p-1", ownership_share=20)
+    )
+    assert svc.get(_ctx(), a.id).properties[0].ownership_share == 50.0
 
     svc.unassign_property(_ctx(), c.id, "p-1")
     # Die frei gewordenen 20 % bleiben unvergeben — sichtbar, nicht still

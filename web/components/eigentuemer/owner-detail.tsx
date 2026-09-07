@@ -358,8 +358,16 @@ export function OwnerDetail({
       ownership_share: share,
       commission_override_pct: commission,
     });
-    if (res.ok) setOwner(res.data);
-    else {
+    if (res.ok) {
+      setOwner(res.data);
+      // Der Server hält die Summe je Objekt bei 100 % und passt dazu den
+      // Anteil des ANDEREN Eigentümers an (60 eingetragen → der andere 40).
+      // `res.data` beschreibt nur DIESEN Eigentümer; die Miteigentümer-Zeile
+      // darunter und die Auswahlliste kommen aus der Server-Komponente und
+      // zeigten sonst weiter den alten Fremdanteil — zwei Zahlen, die
+      // zusammen nicht mehr 100 ergeben, obwohl in der DB alles stimmt.
+      router.refresh();
+    } else {
       toast.error(res.error);
       // Der Server hat NICHT gespeichert — die Felder sind unkontrolliert und
       // zeigen sonst weiter den eingetippten Wert, der nirgends steht. Ein

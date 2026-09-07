@@ -1638,33 +1638,53 @@ class OwnersService:
         # Gekürzt wird NUR bei genau einem bisherigen Eigentümer. Bei zwei
         # oder mehr wäre nicht bestimmbar, wem die Differenz abgeht — dort
         # bleibt die Abweisung mit Namen und Anteilen die richtige Antwort.
-        kuerzen: dict | None = None
-        if belegt + anteil > _ANTEIL_VOLL:
-            if len(andere) != 1:
-                raise OwnerError(
-                    f"Die Anteile dieses Objekts ergäben zusammen "
-                    f"{belegt + anteil:g} % (höchstens 100 %). Bereits "
-                    f"vergeben: {_beteiligten_text(andere)}. Bitte die "
-                    "Anteile der Beteiligten zuerst anpassen.",
-                    status_code=409,
-                )
-            rest = round(_ANTEIL_VOLL - anteil, 2)
-            if rest < 0:
-                raise OwnerError(
-                    f"Ein Anteil von {anteil:g} % ist mehr als das ganze "
-                    "Objekt (höchstens 100 %).",
-                    status_code=422,
-                )
-            kuerzen = {"id": str(andere[0]["id"]), "rest": rest}
+        if anteil > _ANTEIL_VOLL:
+            raise OwnerError(
+                f"Ein Anteil von {anteil:g} % ist mehr als das ganze Objekt "
+                "(höchstens 100 %).",
+                status_code=422,
+            )
+
+        # Der Kuchen bleibt ein Kuchen: die Summe je Objekt ist IMMER 100 %.
+        #
+        # Bei genau EINEM anderen Eigentümer wird sein Anteil auf den Rest
+        # gesetzt — in BEIDE Richtungen. Nur zu kürzen hinterließ beim
+        # Verkleinern eine Lücke: 70/30 → Britt auf 30 ergab 30/30 = 60 %, und
+        # 40 % gehörten niemandem. Live gemessen am 07.09.2026; die Abrechnung
+        # hätte 40 % des Ertrags nicht ausgezahlt, ohne dass etwas auffällt.
+        #
+        # Bei ZWEI oder mehr Beteiligten bleibt es beim Abweisen: dort ist
+        # nicht bestimmbar, wem die Differenz zu- oder abgeht, und eine
+        # Verteilung wäre eine erfundene Vereinbarung (Wurzel 4).
+        anpassen: dict | None = None
+        rest_fuer_andere = round(_ANTEIL_VOLL - anteil, 2)
+        if len(andere) == 1:
+            if float(andere[0].get("ownership_share") or 0) != rest_fuer_andere:
+                anpassen = {
+                    "id": str(andere[0]["id"]),
+                    "rest": rest_fuer_andere,
+                    "kleiner": rest_fuer_andere
+                    < float(andere[0].get("ownership_share") or 0),
+                }
+        elif belegt + anteil > _ANTEIL_VOLL:
+            raise OwnerError(
+                f"Die Anteile dieses Objekts ergäben zusammen "
+                f"{belegt + anteil:g} % (höchstens 100 %). Bereits "
+                f"vergeben: {_beteiligten_text(andere)}. Bitte die "
+                "Anteile der Beteiligten zuerst anpassen.",
+                status_code=409,
+            )
 
         try:
-            # Zuerst kürzen, dann schreiben: in der anderen Reihenfolge stünde
-            # zwischen den beiden Aufrufen kurz eine Summe über 100 %, und der
-            # Trigger aus 0601 würde genau dort zuschlagen.
-            if kuerzen is not None:
+            # Wer VERKLEINERT wird, geht zuerst: in der anderen Reihenfolge
+            # stünde zwischen den beiden Aufrufen eine Summe über 100 %, und
+            # der Trigger würde genau dort zuschlagen. Wird der andere
+            # VERGRÖSSERT, muss umgekehrt der eigene (kleinere) Wert zuerst
+            # stehen — sonst überschreitet dessen Erhöhung die Grenze.
+            if anpassen is not None and anpassen["kleiner"]:
                 self._db.table("owner_properties").update(
-                    {"ownership_share": kuerzen["rest"]}
-                ).eq("id", kuerzen["id"]).execute()
+                    {"ownership_share": anpassen["rest"]}
+                ).eq("id", anpassen["id"]).execute()
             self._db.table("owner_properties").upsert(
                 {
                     "owner_id": owner_id,
@@ -1674,6 +1694,13 @@ class OwnersService:
                 },
                 on_conflict="owner_id,property_id",
             ).execute()
+            # Wird der andere VERGRÖSSERT, geht das erst jetzt: vorher hätte
+            # seine Erhöhung zusammen mit dem noch alten eigenen Wert die
+            # 100 % überschritten.
+            if anpassen is not None and not anpassen["kleiner"]:
+                self._db.table("owner_properties").update(
+                    {"ownership_share": anpassen["rest"]}
+                ).eq("id", anpassen["id"]).execute()
         except APIError as exc:
             # Der Trigger aus 0601 ist der zweite Riegel (Wurzel 6). Läuft er
             # an, weil zwischen Prüfung und Schreiben jemand anders einen
