@@ -1655,7 +1655,8 @@
       "dndEnd": "{spalte} neergezet op de plaats van {ziel}.",
       "dndCancel": "Verplaatsen van {spalte} geannuleerd.",
       "dndAnleitung": "Druk op spatie of enter om een kolom op te pakken. Gebruik de pijltjestoetsen om te verplaatsen, spatie of enter om neer te zetten, en escape om te annuleren.",
-      "dragHint": "Sleep kolommen aan de hendel om de volgorde te wijzigen — ook via het toetsenbord: focus de hendel, spatiebalk, pijltjestoetsen."
+      "dragHint": "Sleep kolommen aan de hendel om de volgorde te wijzigen — ook via het toetsenbord: focus de hendel, spatiebalk, pijltjestoetsen.",
+      "listingPayout": "Uitbetaling eigenaar"
     },
     "expenses": {
       "add": "Toevoegen",
@@ -1759,9 +1760,10 @@
       "flatFee": "Een vast bedrag uit het beheercontract, bijvoorbeeld voor bijkomende kosten. Afhankelijk van de overeenkomst wordt dit voor of na de commissie afgetrokken.",
       "ownerShare": "Wat er uiteindelijk voor de eigenaar overblijft: gastprijs minus portaal-aftrek, minus commissie, minus forfait, plus de kosten die hem toekomen. Bij mede-eigendom bovendien vermenigvuldigd met zijn aandeel.",
       "ownershipShare": "Het aandeel van deze eigenaar in de accommodatie. 100% betekent volledig eigendom. Als een huis eigendom is van meerdere personen, krijgt ieder zijn eigen afrekening over zijn aandeel – de aandelen vormen samen 100%.",
-      "properties": "Welke objecten deze afrekening omvat. Standaard zijn alle objecten van de eigenaar. Selecteer individuele objecten om alleen daarvoor af te rekenen. Elk object kan per periode slechts in één definitieve afrekening staan — een boeking wordt nooit tweemaal uitbetaald.",
+      "properties": "Welke objecten deze afrekening omvat. Standaard zijn alle objecten van de eigenaar – dan toont het bewijs per object wat hem toekomt, en de preview en download leveren bovendien een uittreksel per object. Kies een enkel object om alleen daarvoor af te rekenen. Elk object kan per periode slechts in één gefinaliseerde afrekening staan – een boeking wordt nooit tweemaal uitbetaald.",
       "language": "In deze taal wordt de bon opgesteld — teksten, cijfers en datum. Vooraf ingevuld vanuit de taal van de eigenaar, anders die van het bedrijf. Na het finaliseren is deze vast; de bon blijft zoals deze is opgesteld.",
-      "headerFromMaster": "Neemt naam, adres, e-mail, telefoon en btw-nummer van eigenaar en bedrijf opnieuw over uit de stamgegevens. Factuurnummer en notities van deze bon blijven staan."
+      "headerFromMaster": "Neemt naam, adres, e-mail, telefoon en btw-nummer van eigenaar en bedrijf opnieuw over uit de stamgegevens. Factuurnummer en notities van deze bon blijven staan.",
+      "listingPayout": "Wat dit object in de periode toekomt: de eigenaarsaandelen van zijn boekingen plus de verrekenings- en terugkerende posten die aan dit object gekoppeld zijn. Posten zonder objectreferentie tellen alleen mee in het totaalbedrag."
     },
     "finalizeConfirm": {
       "title": "Afwikkeling vastleggen",
@@ -1813,7 +1815,21 @@
     "headerFromMasterDone": "Kopgegevens overgenomen uit stamgegevens.",
     "objectsLine": "Objecten: {liste}",
     "objectsAll": "Objecten: alle",
-    "loading": "Laden..."
+    "loading": "Laden...",
+    "scope": {
+      "label": "Facturering voor",
+      "all": "Alle objecten ({count})",
+      "several": "{count} objecten geselecteerd"
+    },
+    "downloadMenu": {
+      "full": "Totale afrekening (PDF)",
+      "excerpt": "Uittreksel: {objekt}",
+      "allExcerpts": "Alle {count} uittreksels per object",
+      "excerptsDone": "{count} uittreksels gedownload."
+    },
+    "previewScope": {
+      "full": "Totaal"
+    }
   },
   "ownerBilling": {
     "title": "Afrekeningscontract",
@@ -15640,6 +15656,19 @@
     "sumOwnerPayout": "Uitbetaling aan eigenaar",
     "vat": "Btw",
     "vatNet": "Beheerprovisie netto",
-    "vatGross": "Beheerprovisie bruto"
+    "vatGross": "Beheerprovisie bruto",
+    "excerpt": "Uittreksel per object",
+    "excerptOf": "Uittreksel van",
+    "object": "Object",
+    "excerptNote": "Dit uittreksel toont alleen de boekingen en posten van dit object. Posten zonder objectreferentie en de btw staan in de totale afrekening.",
+    "excerptPayout": "Uitbetaling voor dit object",
+    "perObjectTitle": "Overzicht per object",
+    "bookingsCount": "Boekingen",
+    "ownerShares": "Eigenaarsdelen",
+    "deductionsShort": "Aftrekkingen",
+    "creditsShort": "Tegoeden",
+    "payout": "Uitbetaling",
+    "noObjectRef": "zonder objectreferentie",
+    "total": "Totaal"
   }
 }

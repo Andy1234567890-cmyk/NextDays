@@ -1655,7 +1655,8 @@
       "dndEnd": "{spalte} nomesta {ziel} vietā.",
       "dndCancel": "Kolonnas {spalte} pārvietošana atcelta.",
       "dndAnleitung": "Nospiediet atstarpes taustiņu vai Enter, lai paņemtu kolonnu. Izmantojiet bulttaustiņus, lai pārvietotu, nospiediet atstarpes taustiņu vai Enter, lai nomestu, un Esc, lai atceltu.",
-      "dragHint": "Velciet kolonnas aiz roktura, lai mainītu secību — arī ar tastatūru: fokusējiet rokturi, atstarpes taustiņš, bulttaustiņi."
+      "dragHint": "Velciet kolonnas aiz roktura, lai mainītu secību — arī ar tastatūru: fokusējiet rokturi, atstarpes taustiņš, bulttaustiņi.",
+      "listingPayout": "Īpašnieka izmaksa"
     },
     "expenses": {
       "add": "Pievienot",
@@ -1759,9 +1760,10 @@
       "flatFee": "Fiksēta summa no pārvaldības līguma, piemēram, par papildu izmaksām. Atkarībā no vienošanās tā tiek atskaitīta pirms vai pēc komisijas maksas.",
       "ownerShare": "Kas beigās paliek īpašniekam: viesa cena mīnus portāla atskaitījums, mīnus komisijas maksa, mīnus fiksētā maksa, plus maksas, kas viņam pienākas. Līdzīpašuma gadījumā papildus reizināts ar viņa daļu.",
       "ownershipShare": "Šī īpašnieka daļa īpašumā. 100 % nozīmē vienīpašumu. Ja māja pieder vairākām personām, katra saņem savu norēķinu par savu daļu – daļas kopā veido 100 %.",
-      "properties": "Kuriem objektiem rēķins paredzēts. Standartā ir visi īpašnieka objekti. Izvēlieties atsevišķus, lai rēķinu sagatavotu tikai tiem. Katrs objekts katrā periodā var būt tikai vienā pabeigtā rēķinā — rezervācija nekad netiek izmaksāta divreiz.",
+      "properties": "Kuri īpašumi ir iekļauti šajā norēķinā. Standartā tiek iekļauti visi īpašnieka īpašumi — tad kvītī par katru īpašumu tiek norādīts, kas tam pienākas, un priekšskatījums un lejupielāde papildus nodrošina izrakstu par katru īpašumu. Izvēlieties vienu īpašumu, lai veiktu norēķinus tikai par to. Katrs īpašums katrā periodā var būt tikai vienā pabeigtā norēķinā — rezervācija nekad netiek izmaksāta divreiz.",
       "language": "Šajā valodā tiks izveidots dokuments — teksti, skaitļi un datums. Aizpildīts no īpašnieka valodas, citādi no uzņēmuma valodas. Pēc pabeigšanas tas ir fiksēts; dokuments paliek tāds, kāds tas tika izsniegts.",
-      "headerFromMaster": "Pārņem vārdu, adresi, e-pastu, tālruni un nodokļu numuru no īpašnieka un uzņēmuma no pamatdatiem. Rēķina numurs un šī dokumenta piezīmes paliek nemainīgas."
+      "headerFromMaster": "Pārņem vārdu, adresi, e-pastu, tālruni un nodokļu numuru no īpašnieka un uzņēmuma no pamatdatiem. Rēķina numurs un šī dokumenta piezīmes paliek nemainīgas.",
+      "listingPayout": "Kas pienākas šim īpašumam periodā: īpašnieka daļas no tā rezervācijām, kā arī norēķinu un periodiskās pozīcijas, kas saistītas ar šo īpašumu. Pozīcijas bez īpašuma piesaistes tiek ņemtas vērā tikai kopsummā."
     },
     "finalizeConfirm": {
       "title": "Apstiprināt norēķinu",
@@ -1813,7 +1815,21 @@
     "headerFromMasterDone": "Galvenes dati pārņemti no pamatdatiem.",
     "objectsLine": "Objekti: {liste}",
     "objectsAll": "Objekti: visi",
-    "loading": "Notiek ielāde..."
+    "loading": "Notiek ielāde...",
+    "scope": {
+      "label": "Norēķini par",
+      "all": "Visi īpašumi ({count})",
+      "several": "Atlasīti {count} īpašumi"
+    },
+    "downloadMenu": {
+      "full": "Kopējais norēķins (PDF)",
+      "excerpt": "Izraksts: {objekt}",
+      "allExcerpts": "Visi {count} izraksti par katru objektu",
+      "excerptsDone": "Lejupielādēti {count} izraksti."
+    },
+    "previewScope": {
+      "full": "Kopā"
+    }
   },
   "ownerBilling": {
     "title": "Norēķinu līgums",
@@ -15640,6 +15656,19 @@
     "sumOwnerPayout": "Īpašnieka izmaksa",
     "vat": "PVN",
     "vatNet": "Administrēšanas komisija (neto)",
-    "vatGross": "Administrēšanas komisija (bruto)"
+    "vatGross": "Administrēšanas komisija (bruto)",
+    "excerpt": "Izraksts par objektu",
+    "excerptOf": "Izraksts no",
+    "object": "Objekts",
+    "excerptNote": "Šajā izrakstā ir redzamas tikai šī objekta rezervācijas un pozīcijas. Pozīcijas bez objekta piesaistes un PVN ir iekļautas kopējā norēķinā.",
+    "excerptPayout": "Izmaksa par šo objektu",
+    "perObjectTitle": "Pārskats par objektu",
+    "bookingsCount": "Rezervācijas",
+    "ownerShares": "Īpašnieka daļas",
+    "deductionsShort": "Atskaitījumi",
+    "creditsShort": "Kredīti",
+    "payout": "Izmaksa",
+    "noObjectRef": "bez objekta piesaistes",
+    "total": "Kopā"
   }
 }

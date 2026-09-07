@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@nextdays/ui/button";
+import { Segmented } from "@nextdays/ui/segmented";
 import { LOCALE_LABELS, type Locale } from "@/i18n/locales";
 import { belegTexte, type StatementPdfTexte } from "@/lib/beleg-texte";
 import type { Statement } from "@/lib/owner-statements";
@@ -50,7 +51,13 @@ export function StatementPreviewModal({
       aktiv = false;
     };
   }, [statement.language]);
-  const html = texte ? buildStatementHtml(statement, texte, { kanalLabels }) : null;
+  // Auszug je Objekt (13.3): „Gesamt" oder EIN Objekt der Abrechnung — die
+  // Vorschau zeigt genau das, was der gleichnamige Download liefert.
+  const GESAMT = "__gesamt";
+  const [ansicht, setAnsicht] = useState<string>(GESAMT);
+  const mehrereObjekte = statement.listing_rows.length > 1;
+  const objektId = ansicht === GESAMT ? undefined : ansicht;
+  const html = texte ? buildStatementHtml(statement, texte, { kanalLabels, objektId }) : null;
   const sprachName =
     LOCALE_LABELS[statement.language as Locale] ?? statement.language;
 
@@ -79,7 +86,7 @@ export function StatementPreviewModal({
                 onClick={() => {
                   if (!texte) return;
                   setBusy(true);
-                  void downloadStatementPdf(statement, texte, { kanalLabels })
+                  void downloadStatementPdf(statement, texte, { kanalLabels, objektId })
                     .catch(() => toast.error(t("downloadFailed")))
                     .finally(() => setBusy(false));
                 }}
@@ -94,6 +101,22 @@ export function StatementPreviewModal({
               </DialogPrimitive.Close>
             </div>
           </div>
+          {mehrereObjekte && (
+            <div className="flex flex-wrap items-center gap-2 border-b border-border px-5 py-2">
+              <Segmented
+                value={ansicht}
+                variant="solid"
+                onChange={setAnsicht}
+                options={[
+                  { value: GESAMT, label: t("previewScope.full") },
+                  ...statement.listing_rows.map((l) => ({
+                    value: l.listing_id,
+                    label: l.listing ?? l.listing_id,
+                  })),
+                ]}
+              />
+            </div>
+          )}
           {/* A4-Beleg in der grauen Bühne — identisch zur späteren PDF-Ausgabe. */}
           <div className="flex-1 overflow-auto bg-secondary/40 p-6">
             {texteFehler ? (

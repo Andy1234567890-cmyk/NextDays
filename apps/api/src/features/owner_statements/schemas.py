@@ -367,6 +367,39 @@ class ListingRow(BaseModel):
     # die die Zeilen-Maske gerade verbirgt.
     total_price: float | None = None
     total_payout: float
+    # --- Je-Objekt-Summen (13.3, 07.09.2026) ------------------------------------
+    # Anlass: „Der René ist Eigentümer von 3 Objekten … so dass er einmal für
+    # alle Objekte die Abrechnung hat und nach Objekten für jedes einzelne."
+    # Die Gesamtabrechnung weist deshalb je Objekt aus, was ihm zusteht, und der
+    # Beleg kann daraus einen AUSZUG je Objekt rendern — ohne zweite Rechnung
+    # (dieselbe Buchung würde sonst zweimal abgerechnet, siehe
+    # `_pruefe_ueberschneidung`). Alle Beträge in Owner-Währung.
+    # Σ Eigentümer-Anteile der Buchungen dieses Objekts; None, sobald EINE
+    # Zeile keinen Satz hat (Wurzel 4 — dieselbe Regel wie in der Summary).
+    owner_payout: float | None = None
+    # Verrechnungs- und wiederkehrende Posten, die an DIESEM Objekt hängen
+    # (`listing_id`/`property_id`). Posten ohne Objektbezug stehen in
+    # `StatementResponse.ohne_objekt`, damit die Zeilen zur Gesamtsumme aufgehen.
+    expenses_to_owner: float = 0.0
+    expenses_from_owner: float = 0.0
+    recurring_to_owner: float = 0.0
+    recurring_from_owner: float = 0.0
+    # owner_payout + Posten dieses Objekts. None wie `owner_payout`.
+    payout: float | None = None
+
+
+class PostenOhneObjekt(BaseModel):
+    """Posten der Abrechnung, die an KEINEM Objekt hängen (Eigentümer-Ebene).
+
+    Der Rest zwischen Σ `ListingRow.payout` und `summary.owner_payout`. Steht
+    in der Gesamtabrechnung als eigene Zeile „ohne Objektbezug"; ein Auszug je
+    Objekt nennt ihn nur als Hinweis — er gehört keinem Objekt.
+    """
+
+    expenses_to_owner: float = 0.0
+    expenses_from_owner: float = 0.0
+    recurring_to_owner: float = 0.0
+    recurring_from_owner: float = 0.0
 
 
 # --- Wiederkehrende Posten (Dauervereinbarung, 0365) -------------------------
@@ -622,7 +655,10 @@ class StatementResponse(BaseModel):
     # Vorschau und PDF lesen dieselbe Liste.
     column_order: list[ColumnKey] = Field(default_factory=lambda: list(ColumnKey))
     rental_rows: list[RentalRow] = Field(default_factory=list)
+    # Je Objekt der Abrechnung EINE Zeile — auch ohne Buchung im Zeitraum, damit
+    # der Auszug je Objekt für jedes Objekt existiert (13.3).
     listing_rows: list[ListingRow] = Field(default_factory=list)
+    ohne_objekt: PostenOhneObjekt = Field(default_factory=PostenOhneObjekt)
     expenses: list[ExpenseResponse] = Field(default_factory=list)
     # Wiederkehrende Posten des Eigentümers, ausgerechnet für diesen Zeitraum.
     # Im Storno-Beleg mit negierten Beträgen — dieselbe Regel wie `expenses`.

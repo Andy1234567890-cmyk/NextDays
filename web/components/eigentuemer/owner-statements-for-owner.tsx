@@ -25,6 +25,7 @@ import {
   type StatementListItem,
 } from "@/lib/owner-statements";
 import { COLUMN_ORDER_STANDARD } from "@/lib/owner-statements-spalten";
+import { monatsAnfangIso, monatsEndeIso } from "@/lib/dates";
 
 type PropOption = { id: string; title: string };
 
@@ -148,6 +149,12 @@ export function OwnerStatementsForOwner({
     },
     rental_rows: [],
     listing_rows: [],
+    ohne_objekt: {
+      expenses_to_owner: 0,
+      expenses_from_owner: 0,
+      recurring_to_owner: 0,
+      recurring_from_owner: 0,
+    },
     expenses: [],
     recurring: [],
     // Vor dem ersten Abruf kennt der Entwurf keine Miteigentümer — der Server
@@ -166,13 +173,13 @@ export function OwnerStatementsForOwner({
     updated_at: null,
   };
 
+  // Lokaler Monat, nicht UTC (`lib/dates.lokalIso`): `toISOString()` machte
+  // aus dem 1. September in Kopenhagen den 31. August (live 07.09.2026).
   function firstOfMonth(): string {
-    const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+    return monatsAnfangIso();
   }
   function lastOfMonth(): string {
-    const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
+    return monatsEndeIso();
   }
 
   // Live-Auswertung (Umsatz/Aktivität) laden — ohne zu speichern. Der Editor

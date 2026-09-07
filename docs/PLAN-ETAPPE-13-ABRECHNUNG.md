@@ -24,16 +24,16 @@ Eigentümer- und Verwaltungs-Auszahlung stehen auf „—“. Das ist der Punkt
 
 ## Stand der Umsetzung (07.09.2026, Ende des Tages)
 
-| Schritt | Stand | Beleg |
-|---|---|---|
-| 13.1 Website ohne Portal-Abzug | **fertig** (`c36e5508`) | René live: `owner_payout` 24.594,29 DKK statt „—"; Erwin Kintop 3.736,00 DKK |
-| 13.2 Miteigentümer (0601 + 0602, ADR-0028) | **fertig** (`c36e5508`, `d0aadf2f`) | durch die Oberfläche: zuordnen → 50/50 → entfernen → 100 %; 70/30 → 30/70 → 50/50, Summe je Schritt 100 % |
-| 13.8 Hilfetexte ℹ (neu, Ansage) | **fertig** (`c36e5508`) | 6 Spalten + Stammdatenfelder + `sprache-auswahl.tsx`; „alle Informationstexte ins ℹ" projektweit (MEMORY) |
-| 13.3 Abrechnung pro Objekt (**0603**) | **fertig** | live: René nur „FeWo Lille Vidstrup" → 2 Buchungen, 2.358,66 DKK statt 13.394,24; Überschneidungs-409 beim Finalisieren |
-| 13.4 Adressat anpassen | **fertig** | Kopffelder im Entwurf editierbar, Knopf „Aus Stammdaten übernehmen" (`header_aus_stammdaten`) |
-| 13.5 Sprache des Belegs (**0604**) | **fertig** | René: `language = da` aus Stammdaten; `statementPdf.*` in 24 Sprachen; Zahlen/Datum nach Beleg-Sprache |
-| 13.6 Sortierung (0604) | **fertig** | live: `owner_payout desc` → 8.521,34 zuerst; klickbare Spaltenköpfe, je Abrechnung gespeichert |
-| 13.7 Kanalname vereinheitlichen | **fertig** | `channelLabelLoose` in Editor UND Beleg — kein zweiter Normalisierer |
+| Schritt                                    | Stand                               | Beleg                                                                                                                   |
+| ------------------------------------------ | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 13.1 Website ohne Portal-Abzug             | **fertig** (`c36e5508`)             | René live: `owner_payout` 24.594,29 DKK statt „—"; Erwin Kintop 3.736,00 DKK                                            |
+| 13.2 Miteigentümer (0601 + 0602, ADR-0028) | **fertig** (`c36e5508`, `d0aadf2f`) | durch die Oberfläche: zuordnen → 50/50 → entfernen → 100 %; 70/30 → 30/70 → 50/50, Summe je Schritt 100 %               |
+| 13.8 Hilfetexte ℹ (neu, Ansage)            | **fertig** (`c36e5508`)             | 6 Spalten + Stammdatenfelder + `sprache-auswahl.tsx`; „alle Informationstexte ins ℹ" projektweit (MEMORY)               |
+| 13.3 Abrechnung pro Objekt (**0603**)      | **fertig**                          | live: René nur „FeWo Lille Vidstrup" → 2 Buchungen, 2.358,66 DKK statt 13.394,24; Überschneidungs-409 beim Finalisieren |
+| 13.4 Adressat anpassen                     | **fertig**                          | Kopffelder im Entwurf editierbar, Knopf „Aus Stammdaten übernehmen" (`header_aus_stammdaten`)                           |
+| 13.5 Sprache des Belegs (**0604**)         | **fertig**                          | René: `language = da` aus Stammdaten; `statementPdf.*` in 24 Sprachen; Zahlen/Datum nach Beleg-Sprache                  |
+| 13.6 Sortierung (0604)                     | **fertig**                          | live: `owner_payout desc` → 8.521,34 zuerst; klickbare Spaltenköpfe, je Abrechnung gespeichert                          |
+| 13.7 Kanalname vereinheitlichen            | **fertig**                          | `channelLabelLoose` in Editor UND Beleg — kein zweiter Normalisierer                                                    |
 
 **Nummern verschoben:** Im Plan unten steht 13.3 = 0602 und 13.5/13.6 = 0603.
 Real ist **0602** der Trigger-Fix (Anteils-Ausschluss über `owner_id`, gefunden
@@ -41,6 +41,7 @@ beim Ändern eines Anteils), **0603** = `property_ids`, **0604** = `language` +
 `sort_key`/`sort_dir`. Alle vier Migrationen sind live.
 
 **Zwei Befunde beim Bauen, die kein Test fand:**
+
 - Miteigentum war nach 0601 im Datenmodell möglich, aber in der Oberfläche
   NICHT anlegbar — die Auswahlliste filterte fremd vergebene Objekte weiter
   heraus, und der Default `ownership_share = 100` machte jeden Zweiten zu
@@ -52,17 +53,39 @@ beim Ändern eines Anteils), **0603** = `property_ids`, **0604** = `language` +
 
 Offen aus 13.8: Hilfetexte auf dem Beleg selbst (das PDF hat keine ℹ).
 
+**Nachtrag 07.09.2026 (abends) — 0605 + Je-Objekt-Sicht:**
+
+- **0605** `column_order text[]`: Spaltenreihenfolge der Buchungstabelle per
+  Drag-and-drop im Editor, am Beleg gespeichert → Vorschau und PDF gleich.
+- **13.3 ergänzt — „einmal für alle Objekte … und nach Objekten für jedes
+  einzelne" (René, 3 Objekte):** Umfang-Dropdown VOR „Speichern" (Alle
+  Objekte | je Objekt). Die Gesamtabrechnung trägt je Objekt eine Zeile
+  (`listing_rows` jetzt für JEDES Objekt des Umfangs, auch ohne Buchung, mit
+  `owner_payout`/Posten/`payout`; Rest `ohne_objekt`), der Beleg eine
+  „Übersicht je Objekt", und Vorschau/Herunterladen liefern einen **Auszug je
+  Objekt** (Objektsicht der EINEN Abrechnung, ohne eigene Nummer — dieselbe
+  Buchung darf nicht zweimal abgerechnet werden, 409 bleibt). Alle Zahlen vom
+  Server; das PDF rechnet weiterhin nicht.
+- **Zwei Befunde durch die Oberfläche („alles leer", „ich finde keine einzige
+  buchung mehr"):** (1) Die Monatsvorbelegung lief über `toISOString()` und
+  stand auf 31.08.–29.09. statt 01.09.–30.09. (UTC-Verschiebung, Kopenhagen
+  UTC+2) → `lib/dates.lokalIso`/`monatsAnfangIso`/`monatsEndeIso`. (2) Renés
+  Objekte haben im September real keine Anreise (letzte 15.08./28.08., nächste
+  02.10./23.10.) — keine Lücke im Code. Die zur Klärung eingebaute
+  Leer-Diagnose in der Maske wurde auf Ansage wieder entfernt; geblieben ist
+  das Server-Log `abrechnung_reservierungen_geladen` (Filter + Treffer).
+
 ## Befund vor dem Bau (was heute ist)
 
-| Wunsch | Bestand | Lücke |
-|---|---|---|
-| Website-Buchung („René“) | `portal_abzug()` verlangt für JEDEN Kanal Satz oder gemeldete Provision; `website` bietet die Abrechnungsregeln-UI gar nicht an (`KANAELE`, `portal-abzugssaetze.tsx:53`) → `PayoutUnbekannt` → die Zeile UND die Summen stehen auf „—“ | Direktkanäle müssen mit Abzug 0 durch die Kette |
-| Abrechnung pro Objekt | `owner_statements` kennt nur `owner_id` + Zeitraum; `_reservations` lädt ALLE Objekte des Eigentümers | kein Objektfilter in Schema, UI, Beleg |
-| Miteigentümer | `owner_properties.ownership_share` (0063, Default 100) + `unique(owner_id, property_id)` **sind da**, Eingabe in `owner-detail.tsx:326/786` **ist da**; 0073 legte `unique(property_id)` darüber und `assign_property` weist einen zweiten Eigentümer mit 409 ab; die Rechenkette liest `ownership_share` **nie** (nur Kartei/PDF zeigen ihn) | Sperre lösen, Anteil rechnen, Miteigentümer auf Vorschau/Beleg |
-| Eigentümer anpassen | Kopf-Snapshot (`owner_name/…`) aus Stammdaten; im Editor `disabled` (`statement-editor.tsx:598–606`), obwohl `PATCH header` es könnte | Adressat im Entwurf nicht änderbar |
-| Sprache des Belegs | `statement-pdf.ts:122` `const txt = {…}` **hart deutsch**; `locale` = UI-Sprache des BETRACHTERS (`useLocale()`); `owners.language` (0335, René = `da`) wird nicht gelesen | René lädt einen deutschen Beleg |
-| Sortierung | Ladereihenfolge (`.order("id")`), keine Option | keine, weder Vorschau noch Beleg |
-| Kanalname „Booking.com“/„BookingCom“ | `kanalText()` nimmt `ota_name` der Buchung vor dem Label | CSV-Import und Feed schreiben es verschieden |
+| Wunsch                               | Bestand                                                                                                                                                                                                                                                                                                                                       | Lücke                                                          |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Website-Buchung („René“)             | `portal_abzug()` verlangt für JEDEN Kanal Satz oder gemeldete Provision; `website` bietet die Abrechnungsregeln-UI gar nicht an (`KANAELE`, `portal-abzugssaetze.tsx:53`) → `PayoutUnbekannt` → die Zeile UND die Summen stehen auf „—“                                                                                                       | Direktkanäle müssen mit Abzug 0 durch die Kette                |
+| Abrechnung pro Objekt                | `owner_statements` kennt nur `owner_id` + Zeitraum; `_reservations` lädt ALLE Objekte des Eigentümers                                                                                                                                                                                                                                         | kein Objektfilter in Schema, UI, Beleg                         |
+| Miteigentümer                        | `owner_properties.ownership_share` (0063, Default 100) + `unique(owner_id, property_id)` **sind da**, Eingabe in `owner-detail.tsx:326/786` **ist da**; 0073 legte `unique(property_id)` darüber und `assign_property` weist einen zweiten Eigentümer mit 409 ab; die Rechenkette liest `ownership_share` **nie** (nur Kartei/PDF zeigen ihn) | Sperre lösen, Anteil rechnen, Miteigentümer auf Vorschau/Beleg |
+| Eigentümer anpassen                  | Kopf-Snapshot (`owner_name/…`) aus Stammdaten; im Editor `disabled` (`statement-editor.tsx:598–606`), obwohl `PATCH header` es könnte                                                                                                                                                                                                         | Adressat im Entwurf nicht änderbar                             |
+| Sprache des Belegs                   | `statement-pdf.ts:122` `const txt = {…}` **hart deutsch**; `locale` = UI-Sprache des BETRACHTERS (`useLocale()`); `owners.language` (0335, René = `da`) wird nicht gelesen                                                                                                                                                                    | René lädt einen deutschen Beleg                                |
+| Sortierung                           | Ladereihenfolge (`.order("id")`), keine Option                                                                                                                                                                                                                                                                                                | keine, weder Vorschau noch Beleg                               |
+| Kanalname „Booking.com“/„BookingCom“ | `kanalText()` nimmt `ota_name` der Buchung vor dem Label                                                                                                                                                                                                                                                                                      | CSV-Import und Feed schreiben es verschieden                   |
 
 Portal-Login ist von all dem unabhängig: `owner_property_assignments` ist
 `unique(user_id, property_id)` — mehrere Eigentümer-Logins je Objekt gehen
@@ -132,7 +155,7 @@ Backend, keine Migration. Zuerst — blockiert reale Abrechnungen.
   Stammdaten, die er sowieso kennt.
 - `auto-run`: je Eigentümer, unverändert — jeder Miteigentümer bekommt seine.
 - **ADR-0028** „Miteigentümer über `owner_properties.ownership_share`“ ersetzt
-  ADR-0026 (Status dort: *ersetzt durch 0028*). Lastenheft §6 wird damit
+  ADR-0026 (Status dort: _ersetzt durch 0028_). Lastenheft §6 wird damit
   umgesetzt, `REQUIREMENTS-GAP.md` nachziehen.
 
 ## 13.3 Abrechnung pro Objekt (0602)
@@ -195,8 +218,8 @@ Anzeige-Regel, kein Datenumbau.
 
 ## 13.8 Hilfetexte am ℹ-Symbol (Ansage 07.09.2026)
 
-*„wichtig auch das die Eigentümer und berechnungsseite einfache hilfe texte
-bekommt ℹ icon das versteht keiner"* — **fertig für die Tabellenspalten.**
+_„wichtig auch das die Eigentümer und berechnungsseite einfache hilfe texte
+bekommt ℹ icon das versteht keiner"_ — **fertig für die Tabellenspalten.**
 
 Die Seite hatte 12 Hilfetexte, aber keinen an den Spalten, die die Rechenkette
 zeigen. Genau dort entsteht die Frage: „Provision" konnte die des Portals oder
@@ -235,7 +258,6 @@ erraten, Kette endet in `en`), 5 (`PayoutUnbekannt` bleibt 422 mit Grund),
 
 ## Nicht in dieser Etappe
 
-- Versand der Abrechnung per Mail (README: sobald Versand existiert, muss das
-  Storno-Paar für zugestellte Belege sichtbar werden — eigener Schritt).
+-
 - Sammelbeleg für alle Miteigentümer eines Objekts (jede Abrechnung bleibt je
   Eigentümer).

@@ -1655,7 +1655,8 @@
       "dndEnd": "{spalte} descartada na posição de {ziel}.",
       "dndCancel": "Movimento de {spalte} cancelado.",
       "dndAnleitung": "Pressione espaço ou enter para pegar uma coluna. Use as setas para mover, espaço ou enter para soltar, escape para cancelar.",
-      "dragHint": "Arraste as colunas pela alça para reordenar — também via teclado: foque na alça, barra de espaço, teclas de seta."
+      "dragHint": "Arraste as colunas pela alça para reordenar — também via teclado: foque na alça, barra de espaço, teclas de seta.",
+      "listingPayout": "Pagamento ao proprietário"
     },
     "expenses": {
       "add": "Adicionar",
@@ -1759,9 +1760,10 @@
       "flatFee": "Um valor fixo do contrato de gestão, por exemplo, para despesas adicionais. Dependendo do acordo, ele é deduzido antes ou depois da comissão.",
       "ownerShare": "O que resta para o proprietário no final: preço do hóspede menos dedução do portal, menos comissão, menos taxa fixa, mais as taxas que lhe pertencem. Em caso de copropriedade, adicionalmente multiplicado pela sua quota.",
       "ownershipShare": "A quota deste proprietário na propriedade. 100% significa propriedade exclusiva. Se uma casa pertence a várias pessoas, cada uma recebe seu próprio extrato de conta sobre sua quota — as quotas somam 100%.",
-      "properties": "Quais objetos esta fatura inclui. Por padrão, todos os objetos do proprietário. Selecione objetos individuais para faturar apenas para eles. Cada objeto pode estar em apenas uma fatura finalizada por período — uma reserva nunca é paga duas vezes.",
+      "properties": "Quais imóveis esta fatura abrange. Por padrão, todos os imóveis do proprietário — então o recibo mostra o que cada imóvel tem direito, e a pré-visualização e o download fornecem um extrato adicional para cada imóvel. Selecione um único imóvel para faturar apenas para ele. Cada imóvel pode estar em apenas uma fatura finalizada por período — uma reserva nunca será paga duas vezes.",
       "language": "Neste idioma, o recibo é gerado — textos, números e data. Preenchido a partir do idioma do proprietário, caso contrário, o do estabelecimento. Após a finalização, ele é fixo; o recibo permanece como foi emitido.",
-      "headerFromMaster": "Assume novamente nome, endereço, e-mail, telefone e número de identificação fiscal do proprietário e do estabelecimento a partir dos dados mestre. O número da fatura e as notas deste recibo permanecem."
+      "headerFromMaster": "Assume novamente nome, endereço, e-mail, telefone e número de identificação fiscal do proprietário e do estabelecimento a partir dos dados mestre. O número da fatura e as notas deste recibo permanecem.",
+      "listingPayout": "O que este imóvel tem direito no período: as partes do proprietário de suas reservas, mais os itens de faturamento e recorrentes associados a este imóvel. Itens sem referência a um imóvel são contados apenas no total geral."
     },
     "finalizeConfirm": {
       "title": "Finalizar fatura",
@@ -1813,7 +1815,21 @@
     "headerFromMasterDone": "Dados de cabeçalho assumidos a partir dos dados mestre.",
     "objectsLine": "Objetos: {liste}",
     "objectsAll": "Objetos: todos",
-    "loading": "A carregar..."
+    "loading": "A carregar...",
+    "scope": {
+      "label": "Faturação para",
+      "all": "Todas as propriedades ({count})",
+      "several": "{count} propriedades selecionadas"
+    },
+    "downloadMenu": {
+      "full": "Fatura completa (PDF)",
+      "excerpt": "Extrato: {objekt}",
+      "allExcerpts": "Todos os {count} extratos por propriedade",
+      "excerptsDone": "{count} extratos baixados."
+    },
+    "previewScope": {
+      "full": "Total"
+    }
   },
   "ownerBilling": {
     "title": "Contrato de faturação",
@@ -15640,6 +15656,19 @@
     "sumOwnerPayout": "Pagamento ao proprietário",
     "vat": "IVA",
     "vatNet": "Comissão de gestão líquida",
-    "vatGross": "Comissão de gestão bruta"
+    "vatGross": "Comissão de gestão bruta",
+    "excerpt": "Extrato por propriedade",
+    "excerptOf": "Extrato de",
+    "object": "Propriedade",
+    "excerptNote": "Este extrato mostra apenas as reservas e itens desta propriedade. Itens sem referência de propriedade e o IVA estão incluídos no extrato geral.",
+    "excerptPayout": "Pagamento para esta propriedade",
+    "perObjectTitle": "Visão geral por propriedade",
+    "bookingsCount": "Reservas",
+    "ownerShares": "Partes do proprietário",
+    "deductionsShort": "Deduções",
+    "creditsShort": "Créditos",
+    "payout": "Pagamento",
+    "noObjectRef": "sem referência de propriedade",
+    "total": "Total"
   }
 }

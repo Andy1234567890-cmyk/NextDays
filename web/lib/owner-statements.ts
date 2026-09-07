@@ -266,6 +266,24 @@ export type ListingRow = {
   /** Gast-Bruttopreis je Objekt. `null` = maskiert (§4.2). */
   total_price: number | null;
   total_payout: number;
+  // --- Je-Objekt-Summen (13.3): Owner-Währung. `owner_payout`/`payout` sind
+  // `null`, sobald eine Buchung des Objekts ohne Satz ist — als „—" rendern.
+  owner_payout: number | null;
+  expenses_to_owner: number;
+  expenses_from_owner: number;
+  recurring_to_owner: number;
+  recurring_from_owner: number;
+  /** owner_payout + Posten dieses Objekts = was diesem Objekt zusteht. */
+  payout: number | null;
+};
+
+/** Posten ohne Objektbezug (Eigentümer-Ebene) — der Rest zwischen
+ *  Σ `ListingRow.payout` und `summary.owner_payout`. */
+export type PostenOhneObjekt = {
+  expenses_to_owner: number;
+  expenses_from_owner: number;
+  recurring_to_owner: number;
+  recurring_from_owner: number;
 };
 
 /** Richtung eines Verrechnungspostens — die Fachfrage, nicht ein Vorzeichen.
@@ -337,7 +355,9 @@ export type Statement = {
   cancels_statement_id: string | null;
   cancelled_by_statement_id: string | null;
   rental_rows: RentalRow[];
+  /** Je Objekt der Abrechnung EINE Zeile — auch ohne Buchung (13.3). */
   listing_rows: ListingRow[];
+  ohne_objekt: PostenOhneObjekt;
   expenses: Expense[];
   /** Wiederkehrende Posten, ausgerechnet; im Storno negiert wie `expenses`. */
   recurring: WiederkehrenderPosten[];

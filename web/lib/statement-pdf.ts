@@ -144,7 +144,23 @@ export type StatementPdfOptionen = {
    *  übergeben — das PDF hat keinen Hook-Zugriff und soll die Liste nicht
    *  duplizieren. `ota_name` der Buchung geht immer vor. */
   kanalLabels?: Record<string, string>;
+  /** AUSZUG JE OBJEKT (13.3, 07.09.2026): nur die Buchungen und Posten dieses
+   *  Objekts, Summen aus `listing_rows` des Servers. Anlass: „Der René ist
+   *  Eigentümer von 3 Objekten … so dass er einmal für alle Objekte die
+   *  Abrechnung hat und nach Objekten für jedes einzelne." Der Auszug ist KEIN
+   *  eigener Beleg mit Nummer — dieselbe Buchung darf nicht zweimal
+   *  abgerechnet werden (409 beim Finalisieren); er ist die Objektsicht der
+   *  EINEN Abrechnung. Umsatzsteuer und Posten ohne Objektbezug stehen nur in
+   *  der Gesamtabrechnung, der Auszug sagt das. */
+  objektId?: string;
 };
+
+/** Dateiname-tauglicher Objekttitel (ASCII, Bindestriche). */
+function dateiTeil(titel: string | null | undefined, ersatz: string): string {
+  const roh = (titel ?? "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
+  const teil = roh.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return teil || ersatz;
+}
 
 /** Kanalname einer Zeile — EINE Schreibweise je Portal (13.7).
  *
@@ -277,19 +293,44 @@ export function buildStatementHtml(
   const cur = st.summary.currency;
   const ownerCur = st.summary.owner_currency || cur;
   const isStorno = st.kind === "cancellation";
-  const title = isStorno ? t(tx, "storno") : t(tx, "invoice");
+  const belegTitel = isStorno ? t(tx, "storno") : t(tx, "invoice");
+  // Auszug je Objekt: die Objektzeile des Servers ist die Quelle der Summen.
+  // Ein unbekanntes Objekt ist ein Aufruffehler — laut, nicht als leerer
+  // Auszug mit 0,00 (Wurzel 4/5).
+  const auszug = opts.objektId
+    ? st.listing_rows.find((l) => l.listing_id === opts.objektId)
+    : undefined;
+  if (opts.objektId && !auszug) {
+    throw new Error(`Objekt ${opts.objektId} gehört nicht zu dieser Abrechnung.`);
+  }
+  const auszugTitel = auszug
+    ? esc(auszug.listing || st.objekte.find((o) => o.id === auszug.listing_id)?.title) ||
+      esc(auszug.listing_id)
+    : "";
+  const title = auszug ? t(tx, "excerpt") : belegTitel;
   // Objektmenge im Kopf (0603): welche Objekte dieser Beleg umfasst. Bei einer
   // Teilmenge die Namen, sonst „alle Objekte" — ohne diese Zeile sähen zwei
-  // Belege desselben Monats (einer je Haus) identisch aus.
-  const objektZeile =
-    st.property_ids && st.property_ids.length
+  // Belege desselben Monats (einer je Haus) identisch aus. Im Auszug: DAS Objekt.
+  const objektZeile = auszug
+    ? `${t(tx, "object")}: ${auszugTitel}`
+    : st.property_ids && st.property_ids.length
       ? `${t(tx, "objects")}: ${st.objekte.map((o) => esc(o.title) || esc(o.id)).join(", ")}`
       : `${t(tx, "objects")}: ${t(tx, "allObjects")}`;
 
   // DATEN-SPLIT (§4.2) im PDF: Der Server maskiert den Gast-Bruttopreis und den
   // Ertrag der Verwaltung für einen Eigentümer zu `null`. Betroffene Spalten
   // und Zeilen werden dann GAR NICHT gerendert — nicht als „—", nicht als 0,00.
-  const rows = st.rental_rows;
+  // Im Auszug nur die Zeilen und Posten DIESES Objekts (Posten ohne Objektbezug
+  // gehören keinem Haus und bleiben der Gesamtabrechnung).
+  const rows = auszug
+    ? st.rental_rows.filter((r) => r.listing_id === auszug.listing_id)
+    : st.rental_rows;
+  const expenses = auszug
+    ? st.expenses.filter((e) => e.listing_id === auszug.listing_id)
+    : st.expenses;
+  const recurring = auszug
+    ? (st.recurring ?? []).filter((p) => p.property_id === auszug.listing_id)
+    : (st.recurring ?? []);
   const zeigtPauschale = rows.some((r) => (r.pauschale ?? 0) !== 0);
 
   // --- Buchungstabelle (Übersicht) -------------------------------------------
@@ -351,7 +392,7 @@ export function buildStatementHtml(
   const gutschriften: string[] = [];
   const postenZeile = (label: string, quelle: string, wert: string, zulasten: boolean) =>
     `<tr><td>${label}<br><span class="muted">${quelle}</span></td><td class="num"${zulasten ? ' style="color:#b42318"' : ""}>${wert}</td></tr>`;
-  for (const e of st.expenses as Expense[]) {
+  for (const e of expenses as Expense[]) {
     const zulasten = e.direction === "from_owner";
     const quelle = [
       t(tx, "srcExpense"),
@@ -365,7 +406,7 @@ export function buildStatementHtml(
     const wert = fmtSigniert(e.signed_amount, e.currency || cur, locale, e.signed_amount < 0 ? "minus" : "plus");
     (zulasten ? abzuege : gutschriften).push(postenZeile(esc(e.concept), quelle, wert, zulasten));
   }
-  for (const p of st.recurring ?? []) {
+  for (const p of recurring) {
     const zulasten = p.betrag < 0;
     const quelle = `${t(tx, "srcRecurring")} · ${p.anzahl} ${t(tx, "quantity")} ${fmt(p.einzelbetrag, p.currency, locale)} ${modusText(p.modus, tx)}`;
     const wert = fmtSigniert(p.betrag, p.currency, locale, zulasten ? "minus" : "plus");
@@ -386,24 +427,29 @@ export function buildStatementHtml(
   // Die Richtungssummen der Verrechnungsposten werden aus den POSTEN gebildet,
   // je WÄHRUNG getrennt (quer darüber addiert man sonst DKK auf EUR). Die
   // wiederkehrenden Posten stehen bereits in der Summary in Owner-Währung.
-  const postenWaehrungen = new Set(st.expenses.map((e) => e.currency || cur));
+  const postenWaehrungen = new Set(expenses.map((e) => e.currency || cur));
   const eineWaehrung = postenWaehrungen.size <= 1;
   const summenZeilen: string[] = [];
   const row = (label: string, wert: string, klasse = "") =>
     `<div class="row${klasse ? ` ${klasse}` : ""}"><span>${label}</span><span>${wert}</span></div>`;
 
-  // Σ Eigentümer-Anteile: Summe der GEZEIGTEN Zeilenwerte in Owner-Währung.
+  // Σ Eigentümer-Anteile: im Auszug die Objektsumme des Servers, sonst die
+  // Summe der GEZEIGTEN Zeilenwerte in Owner-Währung.
   const anteileBekannt = rows.every((r) => r.owner_payout_converted !== null);
   if (rows.length) {
-    const summeAnteile = rows.reduce((s, r) => s + (r.owner_payout_converted ?? 0), 0);
+    const summeAnteile = auszug
+      ? auszug.owner_payout
+      : rows.reduce((s, r) => s + (r.owner_payout_converted ?? 0), 0);
     summenZeilen.push(
       row(
         `${t(tx, "sumShares")} (${rows.length})`,
-        anteileBekannt ? fmt(summeAnteile, ownerCur, locale) : "—",
+        anteileBekannt && summeAnteile !== null ? fmt(summeAnteile, ownerCur, locale) : "—",
       ),
     );
   }
-  if (st.summary.pauschalen_gesamt !== null && st.summary.pauschalen_gesamt !== 0) {
+  // Pauschalen-Ausweis nur in der Gesamtabrechnung — die Summary trägt ihn für
+  // alle Objekte, eine Aufteilung je Objekt hat der Server nicht.
+  if (!auszug && st.summary.pauschalen_gesamt !== null && st.summary.pauschalen_gesamt !== 0) {
     const n = rows.filter((r) => (r.pauschale ?? 0) !== 0).length;
     summenZeilen.push(
       row(
@@ -413,39 +459,102 @@ export function buildStatementHtml(
     );
   }
   for (const wc of postenWaehrungen) {
-    const zu = st.expenses
+    const zu = expenses
       .filter((e) => (e.currency || cur) === wc && e.direction !== "from_owner")
       .reduce((s, e) => s + Math.abs(e.amount), 0);
-    const ab = st.expenses
+    const ab = expenses
       .filter((e) => (e.currency || cur) === wc && e.direction === "from_owner")
       .reduce((s, e) => s + Math.abs(e.amount), 0);
     const suffix = eineWaehrung ? "" : ` (${esc(wc)})`;
     if (ab > 0) summenZeilen.push(row(`− ${t(tx, "sumDeductions")} · ${t(tx, "srcExpense")}${suffix}`, fmtSigniert(ab, wc, locale, "minus")));
     if (zu > 0) summenZeilen.push(row(`+ ${t(tx, "sumCredits")} · ${t(tx, "srcExpense")}${suffix}`, fmtSigniert(zu, wc, locale, "plus")));
   }
-  if (st.summary.recurring_from_owner !== 0) {
+  // Wiederkehrende Posten und Endsumme: aus der Objektzeile (Auszug) oder der
+  // Summary (Gesamt) — beides Zahlen des Servers, hier wird nicht gerechnet.
+  const quelle = auszug ?? st.summary;
+  if (quelle.recurring_from_owner !== 0) {
     summenZeilen.push(
-      row(`− ${t(tx, "sumDeductions")} · ${t(tx, "srcRecurring")}`, fmtSigniert(st.summary.recurring_from_owner, ownerCur, locale, "minus")),
+      row(`− ${t(tx, "sumDeductions")} · ${t(tx, "srcRecurring")}`, fmtSigniert(quelle.recurring_from_owner, ownerCur, locale, "minus")),
     );
   }
-  if (st.summary.recurring_to_owner !== 0) {
+  if (quelle.recurring_to_owner !== 0) {
     summenZeilen.push(
-      row(`+ ${t(tx, "sumCredits")} · ${t(tx, "srcRecurring")}`, fmtSigniert(st.summary.recurring_to_owner, ownerCur, locale, "plus")),
+      row(`+ ${t(tx, "sumCredits")} · ${t(tx, "srcRecurring")}`, fmtSigniert(quelle.recurring_to_owner, ownerCur, locale, "plus")),
     );
   }
   summenZeilen.push(
     row(
-      `${t(tx, "sumOwnerPayout")} (${esc(ownerCur)})`,
-      fmtOderStrich(st.summary.owner_payout, ownerCur, locale),
+      `${auszug ? t(tx, "excerptPayout") : t(tx, "sumOwnerPayout")} (${esc(ownerCur)})`,
+      fmtOderStrich(auszug ? auszug.payout : st.summary.owner_payout, ownerCur, locale),
       "grand",
     ),
   );
+
+  // --- Übersicht je Objekt (nur Gesamtabrechnung über mehrere Objekte) -------
+  // „einmal für alle Objekte … und nach Objekten für jedes einzelne": die
+  // Gesamtabrechnung weist je Objekt aus, was ihm zusteht; die Zeile „ohne
+  // Objektbezug" hält die Spalte zur Endsumme geschlossen. Alle Zahlen vom
+  // Server (`listing_rows`, `ohne_objekt`, `summary`).
+  let objektTabelle = "";
+  if (!auszug && st.listing_rows.length > 1) {
+    const rest = st.ohne_objekt;
+    const restAb = rest.expenses_from_owner + rest.recurring_from_owner;
+    const restZu = rest.expenses_to_owner + rest.recurring_to_owner;
+    const zeile = (
+      name: string,
+      buchungen: string,
+      naechte: string,
+      anteile: string,
+      ab: number,
+      zu: number,
+      payout: string,
+      klasse = "",
+    ) =>
+      `<tr${klasse ? ` class="${klasse}"` : ""}><td>${name}</td><td class="num">${buchungen}</td><td class="num">${naechte}</td><td class="num">${anteile}</td><td class="num">${ab ? fmtSigniert(ab, ownerCur, locale, "minus") : "—"}</td><td class="num">${zu ? fmtSigniert(zu, ownerCur, locale, "plus") : "—"}</td><td class="num"><strong>${payout}</strong></td></tr>`;
+    const zeilen = st.listing_rows.map((l) =>
+      zeile(
+        esc(l.listing) || esc(l.listing_id),
+        String(l.reservations),
+        String(l.nights),
+        fmtOderStrich(l.owner_payout, ownerCur, locale),
+        l.expenses_from_owner + l.recurring_from_owner,
+        l.expenses_to_owner + l.recurring_to_owner,
+        fmtOderStrich(l.payout, ownerCur, locale),
+      ),
+    );
+    if (restAb || restZu) {
+      zeilen.push(
+        zeile(`<span class="muted">${t(tx, "noObjectRef")}</span>`, "", "", "", restAb, restZu, fmtSigniert(restZu - restAb, ownerCur, locale, restZu - restAb < 0 ? "minus" : "plus")),
+      );
+    }
+    const alleAnteile = st.listing_rows.every((l) => l.owner_payout !== null);
+    zeilen.push(
+      zeile(
+        `<strong>${t(tx, "total")}</strong>`,
+        String(st.summary.booking_count),
+        String(st.listing_rows.reduce((n, l) => n + l.nights, 0)),
+        alleAnteile
+          ? fmt(st.listing_rows.reduce((n, l) => n + (l.owner_payout ?? 0), 0), ownerCur, locale)
+          : "—",
+        st.summary.expenses_from_owner + st.summary.recurring_from_owner,
+        st.summary.expenses_to_owner + st.summary.recurring_to_owner,
+        fmtOderStrich(st.summary.owner_payout, ownerCur, locale),
+        "total",
+      ),
+    );
+    objektTabelle = `
+    <div class="section-title">${t(tx, "perObjectTitle")}</div>
+    <table>
+      <thead><tr><th>${t(tx, "object")}</th><th class="num">${t(tx, "bookingsCount")}</th><th class="num">${t(tx, "nights")}</th><th class="num">${t(tx, "ownerShares")}</th><th class="num">${t(tx, "deductionsShort")}</th><th class="num">${t(tx, "creditsShort")}</th><th class="num">${t(tx, "payout")}</th></tr></thead>
+      <tbody>${zeilen.join("")}</tbody>
+    </table>`;
+  }
 
   // Steuer: die Verwaltungsprovision ist die Leistung des Betriebs an den
   // Eigentümer — die Umsatzsteuer darauf gehört auf SEINEN Beleg. Erst nach
   // dem Finalisieren gesetzt (`tax.gross`), sonst leer.
   const steuerZeilen: string[] = [];
-  if (st.tax.gross) {
+  if (!auszug && st.tax.gross) {
     steuerZeilen.push(row(t(tx, "vatNet"), fmt(st.tax.net, cur, locale)));
     steuerZeilen.push(
       st.tax.category === "S"
@@ -470,6 +579,7 @@ export function buildStatementHtml(
     th { text-align: left; font-size: 9px; text-transform: uppercase; color: #888; border-bottom: 1px solid #ddd; padding: 5px 6px; }
     td { padding: 5px 6px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
     tr.head td { font-weight: 700; font-size: 9px; text-transform: uppercase; color: #888; border-bottom: none; padding-top: 10px; }
+    tr.total td { border-top: 2px solid #1a1a1a; border-bottom: none; font-weight: 700; }
     .num { text-align: right; white-space: nowrap; }
     .section-title { font-size: 13px; font-weight: 700; margin: 18px 0 8px; }
     .block { break-inside: avoid; border: 1px solid #e5e5e5; border-radius: 6px; padding: 10px 12px; margin-bottom: 10px; }
@@ -493,8 +603,9 @@ export function buildStatementHtml(
     <div class="head">
       <div>
         <h1>${title}</h1>
+        ${auszug ? `<div class="meta" style="margin-bottom:0">${t(tx, "excerptOf")} ${belegTitel}${h.invoice_number ? ` ${t(tx, "invoiceNo")} ${esc(h.invoice_number)}` : ""}</div>` : ""}
         <div class="meta" style="margin-bottom:0">
-          ${h.invoice_number ? `${t(tx, "invoiceNo")} ${esc(h.invoice_number)} · ` : ""}
+          ${!auszug && h.invoice_number ? `${t(tx, "invoiceNo")} ${esc(h.invoice_number)} · ` : ""}
           ${t(tx, "period")} ${fmtDatum(st.period_from, locale)} – ${fmtDatum(st.period_to, locale)}
           ${st.invoice_date ? ` · ${fmtDatum(st.invoice_date, locale)}` : ""}
         </div>
@@ -528,12 +639,15 @@ export function buildStatementHtml(
       <tbody>${tabelle || `<tr><td colspan="${spalten}" style="color:#888">${t(tx, "noBookings")}</td></tr>`}</tbody>
     </table>
 
+    ${objektTabelle}
+
     ${rows.length ? `<div class="section-title">${t(tx, "breakdownTitle")}</div>${bloecke}` : ""}
 
     ${abzugBlock}
 
     <div class="totals">${summenZeilen.join("")}</div>
     ${steuerZeilen.length ? `<div class="betrieb">${steuerZeilen.join("")}</div>` : ""}
+    ${auszug ? `<p class="meta" style="margin-top:24px">${t(tx, "excerptNote")}</p>` : ""}
 
     ${st.tax.exemption_reason ? `<p class="meta" style="margin-top:24px">${esc(st.tax.exemption_reason)}</p>` : ""}
     ${h.notes ? `<p class="meta">${esc(h.notes)}</p>` : ""}
@@ -572,7 +686,12 @@ export async function downloadStatementPdf(
   const a = document.createElement("a");
   a.href = url;
   const name = st.header.invoice_number || `abrechnung-${st.period_from}`;
-  a.download = `${name}.pdf`;
+  // Auszug je Objekt: Objektname im Dateinamen, sonst hießen drei Auszüge gleich.
+  const objekt = opts.objektId
+    ? st.listing_rows.find((l) => l.listing_id === opts.objektId)
+    : undefined;
+  const zusatz = objekt ? `-${dateiTeil(objekt.listing, objekt.listing_id.slice(0, 8))}` : "";
+  a.download = `${name}${zusatz}.pdf`;
   a.click();
   URL.revokeObjectURL(url);
 }

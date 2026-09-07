@@ -1655,7 +1655,8 @@
       "dndEnd": "Sarake {spalte} pudotettu kohteen {ziel} paikalle.",
       "dndCancel": "Sarakkeen {spalte} siirto peruutettu.",
       "dndAnleitung": "Poimi sarake painamalla välilyöntiä tai Enteriä. Siirrä nuolinäppäimillä, pudota välilyönnillä tai Enterillä, peruuta Escillä.",
-      "dragHint": "Vedä kahvasta muuttaaksesi järjestystä – myös näppäimistöllä: kohdista kahva, välilyönti, nuolinäppäimet."
+      "dragHint": "Vedä kahvasta muuttaaksesi järjestystä – myös näppäimistöllä: kohdista kahva, välilyönti, nuolinäppäimet.",
+      "listingPayout": "Omistajan maksu"
     },
     "expenses": {
       "add": "Lisää",
@@ -1759,9 +1760,10 @@
       "flatFee": "Kiinteä summa hallinnointisopimuksesta, esimerkiksi lisäkustannuksista. Sopimuksen mukaan se vähennetään ennen tai jälkeen provision.",
       "ownerShare": "Mitä omistajalle jää lopulta: vierashinta miinus portaalin vähennys, miinus provisio, miinus kiinteä maksu, plus hänelle kuuluvat maksut. Yhteisomistuksessa kerrottuna hänen osuudellaan.",
       "ownershipShare": "Tämän omistajan osuus kohteesta. 100 % tarkoittaa yksinomaista omistusta. Jos talo kuuluu useammalle henkilölle, jokainen saa oman laskun osuudestaan – osuudet muodostavat yhteensä 100 %.",
-      "properties": "Mitkä kohteet tämä tilitys kattaa. Oletuksena ovat kaikki omistajan kohteet. Valitse yksittäisiä kohteita tilitettäväksi. Jokainen kohde voi olla vain yhdessä lopullisessa tilityksessä per ajanjakso – varausta ei koskaan makseta kahdesti.",
+      "properties": "Mitä kohteita tämä tilitys sisältää. Oletuksena ovat kaikki omistajan kohteet – tällöin kuitti osoittaa kohteen oikeutuksen, ja esikatselu sekä lataus tarjoavat lisäksi otteen kustakin kohteesta. Valitse yksittäinen kohde tilitystä varten. Jokainen kohde voi olla vain yhdessä lopullisessa tilityksessä ajanjaksoa kohden – varausta ei koskaan makseta kahdesti.",
       "language": "Tällä kielellä kuitti luodaan – tekstit, numerot ja päivämäärä. Esitäytetty omistajan kielen mukaan, muuten yrityksen kielen mukaan. Lopullistamisen jälkeen se on kiinteä; kuitti pysyy sellaisena kuin se on myönnetty.",
-      "headerFromMaster": "Ottaa omistajan ja yrityksen nimen, osoitteen, sähköpostin, puhelinnumeron ja verotunnuksen uudelleen perustiedoista. Tämän kuitin laskunumero ja muistiinpanot säilyvät."
+      "headerFromMaster": "Ottaa omistajan ja yrityksen nimen, osoitteen, sähköpostin, puhelinnumeron ja verotunnuksen uudelleen perustiedoista. Tämän kuitin laskunumero ja muistiinpanot säilyvät.",
+      "listingPayout": "Mitä tämä kohde on oikeutettu saamaan ajanjaksolla: omistajan osuudet sen varauksista sekä tähän kohteeseen liittyvät laskutus- ja toistuvat erät. Kohteeseen liittymättömät erät lasketaan vain kokonaissummaan."
     },
     "finalizeConfirm": {
       "title": "Vahvista laskutus",
@@ -1813,7 +1815,21 @@
     "headerFromMasterDone": "Otsikkotiedot on otettu master-tiedoista.",
     "objectsLine": "Kohteet: {liste}",
     "objectsAll": "Kohteet: kaikki",
-    "loading": "Ladataan…"
+    "loading": "Ladataan…",
+    "scope": {
+      "label": "Laskutus kohteelle",
+      "all": "Kaikki kohteet ({count})",
+      "several": "{count} kohdetta valittu"
+    },
+    "downloadMenu": {
+      "full": "Koko lasku (PDF)",
+      "excerpt": "Ote: {objekt}",
+      "allExcerpts": "Kaikki {count} otetta per kohde",
+      "excerptsDone": "{count} otetta ladattu."
+    },
+    "previewScope": {
+      "full": "Yhteensä"
+    }
   },
   "ownerBilling": {
     "title": "Tilityssopimus",
@@ -15640,6 +15656,19 @@
     "sumOwnerPayout": "Omistajan maksu",
     "vat": "ALV",
     "vatNet": "Hallintoprovisio netto",
-    "vatGross": "Hallintoprovisio brutto"
+    "vatGross": "Hallintoprovisio brutto",
+    "excerpt": "Ote per kohde",
+    "excerptOf": "Ote kohteesta",
+    "object": "Kohde",
+    "excerptNote": "Tämä ote näyttää vain tämän kohteen varaukset ja tapahtumat. Kohteeseen liittymättömät tapahtumat ja arvonlisävero ovat kokonaislaskelmassa.",
+    "excerptPayout": "Maksu tälle kohteelle",
+    "perObjectTitle": "Yleiskatsaus kohteen mukaan",
+    "bookingsCount": "Varaukset",
+    "ownerShares": "Omistajan osuudet",
+    "deductionsShort": "Vähennykset",
+    "creditsShort": "Hyvitykset",
+    "payout": "Maksu",
+    "noObjectRef": "ilman kohdeviittausta",
+    "total": "Yhteensä"
   }
 }

@@ -1655,7 +1655,8 @@
       "dndEnd": "{spalte} soltado en la posición de {ziel}.",
       "dndCancel": "Movimiento de {spalte} cancelado.",
       "dndAnleitung": "Pulse espacio o intro para recoger una columna. Use las teclas de flecha para mover, espacio o intro para soltar, escape para cancelar.",
-      "dragHint": "Arrastre las columnas por el identificador para cambiar el orden — también con el teclado: enfoque el identificador, barra espaciadora, teclas de flecha."
+      "dragHint": "Arrastre las columnas por el identificador para cambiar el orden — también con el teclado: enfoque el identificador, barra espaciadora, teclas de flecha.",
+      "listingPayout": "Pago al propietario"
     },
     "expenses": {
       "add": "Añadir",
@@ -1759,9 +1760,10 @@
       "flatFee": "Un importe fijo del contrato de gestión, por ejemplo, para gastos adicionales. Dependiendo del acuerdo, se deduce antes o después de la comisión.",
       "ownerShare": "Lo que finalmente queda para el propietario: precio del huésped menos deducción del portal, menos comisión, menos tarifa plana, más las tasas que le corresponden. En caso de copropiedad, además multiplicado por su participación.",
       "ownershipShare": "La participación de este propietario en el inmueble. El 100 % significa propiedad única. Si una casa pertenece a varias personas, cada una recibe su propia liquidación por su participación; las participaciones suman el 100 %.",
-      "properties": "Qué propiedades incluye esta liquidación. Por defecto, todas las propiedades del propietario. Seleccione propiedades individuales para liquidar solo para ellas. Cada propiedad solo puede estar en una liquidación finalizada por período; una reserva nunca se pagará dos veces.",
+      "properties": "Qué propiedades incluye esta liquidación. Por defecto, se incluyen todas las propiedades del propietario; el recibo mostrará lo que corresponde a cada propiedad, y la vista previa y la descarga proporcionarán un extracto por propiedad. Seleccione una sola propiedad para liquidar solo para ella. Cada propiedad solo puede figurar en una liquidación finalizada por período; una reserva nunca se pagará dos veces.",
       "language": "En este idioma se crea el recibo: textos, números y fecha. Por defecto, el idioma del propietario, de lo contrario, el del negocio. Una vez finalizado, es fijo; el recibo permanece tal como fue emitido.",
-      "headerFromMaster": "Adopta el nombre, la dirección, el correo electrónico, el teléfono y el número de identificación fiscal del propietario y del negocio de los datos maestros. El número de factura y las notas de este recibo permanecen."
+      "headerFromMaster": "Adopta el nombre, la dirección, el correo electrónico, el teléfono y el número de identificación fiscal del propietario y del negocio de los datos maestros. El número de factura y las notas de este recibo permanecen.",
+      "listingPayout": "Lo que corresponde a esta propiedad en el período: las participaciones del propietario en sus reservas más los elementos de compensación y recurrentes asociados a esta propiedad. Los elementos sin referencia a la propiedad solo se incluyen en el total general."
     },
     "finalizeConfirm": {
       "title": "Fijar factura",
@@ -1813,7 +1815,21 @@
     "headerFromMasterDone": "Datos de cabecera tomados de los datos maestros.",
     "objectsLine": "Objetos: {liste}",
     "objectsAll": "Objetos: todos",
-    "loading": "Cargando…"
+    "loading": "Cargando…",
+    "scope": {
+      "label": "Facturación para",
+      "all": "Todas las propiedades ({count})",
+      "several": "{count} propiedades seleccionadas"
+    },
+    "downloadMenu": {
+      "full": "Factura total (PDF)",
+      "excerpt": "Extracto: {objekt}",
+      "allExcerpts": "Todos los {count} extractos por propiedad",
+      "excerptsDone": "{count} extractos descargados."
+    },
+    "previewScope": {
+      "full": "Total"
+    }
   },
   "ownerBilling": {
     "title": "Contrato de liquidación",
@@ -15640,6 +15656,19 @@
     "sumOwnerPayout": "Pago al propietario",
     "vat": "IVA",
     "vatNet": "Comisión de gestión neta",
-    "vatGross": "Comisión de gestión bruta"
+    "vatGross": "Comisión de gestión bruta",
+    "excerpt": "Extracto por propiedad",
+    "excerptOf": "Extracto de",
+    "object": "Propiedad",
+    "excerptNote": "Este extracto muestra solo las reservas y partidas de esta propiedad. Las partidas sin referencia a la propiedad y el IVA se encuentran en el extracto general.",
+    "excerptPayout": "Pago para esta propiedad",
+    "perObjectTitle": "Resumen por propiedad",
+    "bookingsCount": "Reservas",
+    "ownerShares": "Participaciones del propietario",
+    "deductionsShort": "Deducciones",
+    "creditsShort": "Créditos",
+    "payout": "Pago",
+    "noObjectRef": "sin referencia a la propiedad",
+    "total": "Total"
   }
 }

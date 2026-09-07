@@ -1655,7 +1655,8 @@
       "dndEnd": "{spalte} je ispušteno na mjestu {ziel}.",
       "dndCancel": "Premještanje stupca {spalte} je otkazano.",
       "dndAnleitung": "Pritisnite razmaknicu ili Enter za preuzimanje stupca. Koristite tipke sa strelicama za pomicanje, razmaknicu ili Enter za ispuštanje, a Escape za otkazivanje.",
-      "dragHint": "Povucite ručke stupaca za promjenu redoslijeda — također putem tipkovnice: fokusirajte ručku, razmaknicu, tipke sa strelicama."
+      "dragHint": "Povucite ručke stupaca za promjenu redoslijeda — također putem tipkovnice: fokusirajte ručku, razmaknicu, tipke sa strelicama.",
+      "listingPayout": "Isplata vlasniku"
     },
     "expenses": {
       "add": "Dodaj",
@@ -1759,9 +1760,10 @@
       "flatFee": "Fiksni iznos iz ugovora o upravljanju, na primjer za režije. Ovisno o dogovoru, odbija se prije ili poslije provizije.",
       "ownerShare": "Što na kraju ostaje vlasniku: cijena za gosta minus odbitak portala, minus provizija, minus paušal, plus naknade koje mu pripadaju. U slučaju suvlasništva, dodatno pomnoženo s njegovim udjelom.",
       "ownershipShare": "Udio ovog vlasnika u objektu. 100% znači isključivo vlasništvo. Ako kuća pripada više osoba, svaka dobiva vlastiti obračun za svoj udio – udjeli zajedno čine 100%. ",
-      "properties": "Koji su objekti uključeni u ovaj obračun. Zadano su svi objekti vlasnika. Odaberite pojedine kako biste obračunali samo za njih. Svaki objekt može biti uključen u samo jedan finalizirani obračun po razdoblju — rezervacija nikada neće biti isplaćena dvaput.",
+      "properties": "Koje objekte obuhvaća ovaj obračun. Standardno su to svi objekti vlasnika — tada potvrda prikazuje što svakom objektu pripada, a pregled i preuzimanje dodatno pružaju izvadak za svaki objekt. Odaberite pojedinačni objekt za obračun samo za njega. Svaki objekt može biti uključen u samo jedan finalizirani obračun po razdoblju — rezervacija se nikada neće isplatiti dvaput.",
       "language": "Na ovom jeziku se kreira potvrda — tekstovi, brojevi i datum. Unaprijed popunjeno jezikom vlasnika, inače jezikom tvrtke. Nakon finalizacije je fiksno; potvrda ostaje onakva kakva je izdana.",
-      "headerFromMaster": "Preuzima ime, adresu, e-poštu, telefon i porezni broj vlasnika i tvrtke iz glavnih podataka. Broj računa i bilješke ove potvrde ostaju."
+      "headerFromMaster": "Preuzima ime, adresu, e-poštu, telefon i porezni broj vlasnika i tvrtke iz glavnih podataka. Broj računa i bilješke ove potvrde ostaju.",
+      "listingPayout": "Što ovom objektu pripada u tom razdoblju: udjeli vlasnika od njegovih rezervacija plus stavke obračuna i ponavljajuće stavke vezane uz ovaj objekt. Stavke bez veze s objektom računaju se samo u ukupnom iznosu."
     },
     "finalizeConfirm": {
       "title": "Fiksiraj obračun",
@@ -1813,7 +1815,21 @@
     "headerFromMasterDone": "Podaci zaglavlja preuzeti su iz glavnih podataka.",
     "objectsLine": "Objekti: {liste}",
     "objectsAll": "Objekti: svi",
-    "loading": "Učitavanje u tijeku…"
+    "loading": "Učitavanje u tijeku…",
+    "scope": {
+      "label": "Naplata za",
+      "all": "Svi objekti ({count})",
+      "several": "Odabrano je {count} objekata"
+    },
+    "downloadMenu": {
+      "full": "Ukupni obračun (PDF)",
+      "excerpt": "Izvadak: {objekt}",
+      "allExcerpts": "Svi {count} izvadci po objektu",
+      "excerptsDone": "{count} izvadaka preuzeto."
+    },
+    "previewScope": {
+      "full": "Ukupno"
+    }
   },
   "ownerBilling": {
     "title": "Ugovor o obračunu",
@@ -15640,6 +15656,19 @@
     "sumOwnerPayout": "Isplata vlasniku",
     "vat": "PDV",
     "vatNet": "Administrativna provizija neto",
-    "vatGross": "Administrativna provizija bruto"
+    "vatGross": "Administrativna provizija bruto",
+    "excerpt": "Izvod po objektu",
+    "excerptOf": "Izvod od",
+    "object": "Objekt",
+    "excerptNote": "Ovaj izvod prikazuje samo rezervacije i stavke ovog objekta. Stavke bez veze s objektom i PDV nalaze se u ukupnom obračunu.",
+    "excerptPayout": "Isplata za ovaj objekt",
+    "perObjectTitle": "Pregled po objektu",
+    "bookingsCount": "Rezervacije",
+    "ownerShares": "Udjeli vlasnika",
+    "deductionsShort": "Odbici",
+    "creditsShort": "Krediti",
+    "payout": "Isplata",
+    "noObjectRef": "bez veze s objektom",
+    "total": "Ukupno"
   }
 }

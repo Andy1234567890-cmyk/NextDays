@@ -1655,7 +1655,8 @@
       "dndEnd": "{spalte} släpptes på {ziel}.",
       "dndCancel": "Flytt av {spalte} avbröts.",
       "dndAnleitung": "Tryck på mellanslag eller enter för att plocka upp en kolumn. Använd piltangenterna för att flytta, mellanslag eller enter för att släppa, escape för att avbryta.",
-      "dragHint": "Dra i handtaget för att ändra ordning – även med tangentbordet: fokusera handtaget, mellanslag, piltangenter."
+      "dragHint": "Dra i handtaget för att ändra ordning – även med tangentbordet: fokusera handtaget, mellanslag, piltangenter.",
+      "listingPayout": "Utbetalning till ägare"
     },
     "expenses": {
       "add": "Lägg till",
@@ -1759,9 +1760,10 @@
       "flatFee": "Ett fast belopp från förvaltningsavtalet, till exempel för driftskostnader. Beroende på överenskommelse dras det av före eller efter provisionen.",
       "ownerShare": "Vad som slutligen återstår för ägaren: gästpris minus portalavdrag, minus provision, minus schablonavgift, plus de avgifter som tillhör ägaren. Vid delägarskap multipliceras det dessutom med ägarens andel.",
       "ownershipShare": "Denna ägares andel av objektet. 100 % betyder ensam ägare. Om ett hus ägs av flera personer får var och en sin egen redovisning för sin andel – andelarna utgör tillsammans 100 %.",
-      "properties": "Vilka objekt denna faktura omfattar. Standard är alla ägarens objekt. Välj enskilda för att endast fakturera för dessa. Varje objekt kan per period endast finnas i en slutförd faktura – en bokning betalas aldrig ut två gånger.",
+      "properties": "Vilka fastigheter denna avräkning omfattar. Standard är alla ägarens fastigheter – då visar kvittot per fastighet vad den har rätt till, och förhandsgranskning och nedladdning ger dessutom ett utdrag per fastighet. Välj en enskild fastighet för att endast avräkna för den. Varje fastighet kan endast ingå i en slutförd avräkning per period – en bokning betalas aldrig ut två gånger.",
       "language": "På detta språk skapas kvittot – texter, siffror och datum. Förvalt från ägarens språk, annars från verksamhetens. Efter slutförande är det fast; kvittot förblir som det utfärdades.",
-      "headerFromMaster": "Övertar namn, adress, e-post, telefon och skattenummer från ägare och verksamhet från stamdata. Fakturanummer och anteckningar för detta kvitto kvarstår."
+      "headerFromMaster": "Övertar namn, adress, e-post, telefon och skattenummer från ägare och verksamhet från stamdata. Fakturanummer och anteckningar för detta kvitto kvarstår.",
+      "listingPayout": "Vad denna fastighet har rätt till under perioden: ägarens andel av bokningarna plus avräknings- och återkommande poster som är kopplade till denna fastighet. Poster utan fastighetskoppling räknas endast med i totalsumman."
     },
     "finalizeConfirm": {
       "title": "Lås fakturering",
@@ -1813,7 +1815,21 @@
     "headerFromMasterDone": "Rubrikdata har hämtats från masterdata.",
     "objectsLine": "Objekt: {liste}",
     "objectsAll": "Objekt: alla",
-    "loading": "Laddar …"
+    "loading": "Laddar …",
+    "scope": {
+      "label": "Fakturering för",
+      "all": "Alla objekt ({count})",
+      "several": "{count} objekt valda"
+    },
+    "downloadMenu": {
+      "full": "Totalfaktura (PDF)",
+      "excerpt": "Utdrag: {objekt}",
+      "allExcerpts": "Alla {count} utdrag per objekt",
+      "excerptsDone": "{count} utdrag nedladdade."
+    },
+    "previewScope": {
+      "full": "Totalt"
+    }
   },
   "ownerBilling": {
     "title": "Avräkningsavtal",
@@ -15640,6 +15656,19 @@
     "sumOwnerPayout": "Utbetalning till ägare",
     "vat": "Moms",
     "vatNet": "Administrationsprovision netto",
-    "vatGross": "Administrationsprovision brutto"
+    "vatGross": "Administrationsprovision brutto",
+    "excerpt": "Utdrag per objekt",
+    "excerptOf": "Utdrag från",
+    "object": "Objekt",
+    "excerptNote": "Detta utdrag visar endast bokningar och poster för detta objekt. Poster utan objektkoppling och moms finns i den totala redovisningen.",
+    "excerptPayout": "Utbetalning för detta objekt",
+    "perObjectTitle": "Översikt per objekt",
+    "bookingsCount": "Bokningar",
+    "ownerShares": "Ägarandelar",
+    "deductionsShort": "Avdrag",
+    "creditsShort": "Krediteringar",
+    "payout": "Utbetalning",
+    "noObjectRef": "utan objektkoppling",
+    "total": "Totalt"
   }
 }

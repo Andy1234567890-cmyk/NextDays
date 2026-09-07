@@ -1655,7 +1655,8 @@
       "dndEnd": "{spalte} rilasciata al posto di {ziel}.",
       "dndCancel": "Spostamento di {spalte} annullato.",
       "dndAnleitung": "Premere Spazio o Invio per selezionare una colonna. Usare i tasti freccia per spostare, Spazio o Invio per rilasciare, Esc per annullare.",
-      "dragHint": "Trascinare le colonne per riordinarle — anche con la tastiera: selezionare la maniglia, premere la barra spaziatrice, usare i tasti freccia."
+      "dragHint": "Trascinare le colonne per riordinarle — anche con la tastiera: selezionare la maniglia, premere la barra spaziatrice, usare i tasti freccia.",
+      "listingPayout": "Pagamento al proprietario"
     },
     "expenses": {
       "add": "Aggiungi",
@@ -1759,9 +1760,10 @@
       "flatFee": "Un importo fisso dal contratto di gestione, ad esempio per le spese accessorie. A seconda dell'accordo, viene detratto prima o dopo la commissione.",
       "ownerShare": "Cosa rimane al proprietario alla fine: prezzo ospite meno detrazione portale, meno commissione, meno forfettario, più le tasse che gli spettano. In caso di comproprietà, moltiplicato anche per la sua quota.",
       "ownershipShare": "La quota di questo proprietario nell'immobile. 100% significa proprietà esclusiva. Se una casa appartiene a più persone, ognuno riceve il proprio rendiconto per la propria quota - le quote insieme fanno il 100%.",
-      "properties": "Quali oggetti include questo estratto conto. Per impostazione predefinita, tutti gli oggetti del proprietario. Selezionare singoli oggetti per fatturarli. Ogni oggetto può essere incluso in un solo estratto conto finalizzato per periodo — una prenotazione non viene mai pagata due volte.",
+      "properties": "Quali proprietà include questo rendiconto. Per impostazione predefinita, sono incluse tutte le proprietà del proprietario — il documento mostrerà quindi per ogni proprietà ciò che le spetta, e l'anteprima e il download forniranno inoltre un estratto per ogni proprietà. Selezionare una singola proprietà per rendicontare solo per essa. Ogni proprietà può essere inclusa in un solo rendiconto finalizzato per periodo — una prenotazione non verrà mai pagata due volte.",
       "language": "In questa lingua viene creato il documento — testi, numeri e data. Predefinito dalla lingua del proprietario, altrimenti da quella dell'azienda. Dopo la finalizzazione è fisso; il documento rimane come è stato emesso.",
-      "headerFromMaster": "Aggiorna nome, indirizzo, e-mail, telefono e codice fiscale del proprietario e dell'azienda dai dati anagrafici. Il numero di fattura e le note di questo documento rimangono invariati."
+      "headerFromMaster": "Aggiorna nome, indirizzo, e-mail, telefono e codice fiscale del proprietario e dell'azienda dai dati anagrafici. Il numero di fattura e le note di questo documento rimangono invariati.",
+      "listingPayout": "Cosa spetta a questa proprietà nel periodo: le quote del proprietario delle sue prenotazioni più le voci di fatturazione e ricorrenti associate a questa proprietà. Le voci senza riferimento alla proprietà contano solo nel totale complessivo."
     },
     "finalizeConfirm": {
       "title": "Fattura definitiva",
@@ -1813,7 +1815,21 @@
     "headerFromMasterDone": "Dati anagrafici importati.",
     "objectsLine": "Oggetti: {liste}",
     "objectsAll": "Oggetti: tutti",
-    "loading": "Caricamento in corso…"
+    "loading": "Caricamento in corso…",
+    "scope": {
+      "label": "Fatturazione per",
+      "all": "Tutti gli alloggi ({count})",
+      "several": "{count} alloggi selezionati"
+    },
+    "downloadMenu": {
+      "full": "Fattura totale (PDF)",
+      "excerpt": "Estratto conto: {objekt}",
+      "allExcerpts": "Tutti i {count} estratti conto per oggetto",
+      "excerptsDone": "{count} estratti conto scaricati."
+    },
+    "previewScope": {
+      "full": "Totale"
+    }
   },
   "ownerBilling": {
     "title": "Contratto di rendicontazione",
@@ -15640,6 +15656,19 @@
     "sumOwnerPayout": "Pagamento al proprietario",
     "vat": "IVA",
     "vatNet": "Commissione di gestione netta",
-    "vatGross": "Commissione di gestione lorda"
+    "vatGross": "Commissione di gestione lorda",
+    "excerpt": "Estratto per alloggio",
+    "excerptOf": "Estratto da",
+    "object": "Alloggio",
+    "excerptNote": "Questo estratto mostra solo le prenotazioni e le voci relative a questo alloggio. Le voci senza riferimento all'alloggio e l'IVA sono incluse nel rendiconto generale.",
+    "excerptPayout": "Pagamento per questo alloggio",
+    "perObjectTitle": "Riepilogo per alloggio",
+    "bookingsCount": "Prenotazioni",
+    "ownerShares": "Quote proprietario",
+    "deductionsShort": "Deduzioni",
+    "creditsShort": "Crediti",
+    "payout": "Pagamento",
+    "noObjectRef": "senza riferimento all'alloggio",
+    "total": "Totale"
   }
 }

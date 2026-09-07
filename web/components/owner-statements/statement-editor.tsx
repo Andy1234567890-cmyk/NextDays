@@ -29,6 +29,13 @@ import { Fragment, useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@nextdays/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@nextdays/ui/dropdown-menu";
 import { StatementFinalizeDialog } from "@/components/owner-statements/statement-finalize-dialog";
 import { StatementPreviewModal } from "@/components/owner-statements/statement-preview-modal";
 import { DatePicker } from "@nextdays/ui/date-picker";
@@ -40,6 +47,7 @@ import { Textarea } from "@nextdays/ui/textarea";
 import { belegTexte } from "@/lib/beleg-texte";
 import { channelLabelLoose } from "@/lib/channel-logos";
 import { formatCurrency } from "@/lib/currency";
+import { lokalIso, monatsAnfangIso, monatsEndeIso } from "@/lib/dates";
 import { LOCALES, LOCALE_FLAG_EMOJI, LOCALE_LABELS } from "@/i18n/locales";
 
 /** Backend-Grund (`payout_unbekannt`) → i18n-Key mit dem passenden Handgriff.
@@ -363,12 +371,9 @@ export function StatementEditor({
   // Seite. Bewusst aus dem heutigen Datum abgeleitet und nicht aus dem
   // Statement: „zurücksetzen" soll dorthin führen, wo man ohne Zutun landet.
   const heute = new Date();
-  const monatsAnfang = new Date(heute.getFullYear(), heute.getMonth(), 1)
-    .toISOString()
-    .slice(0, 10);
-  const monatsEnde = new Date(heute.getFullYear(), heute.getMonth() + 1, 0)
-    .toISOString()
-    .slice(0, 10);
+  // Lokaler Monat, nicht UTC (`lib/dates.lokalIso`, Befund 07.09.2026).
+  const monatsAnfang = monatsAnfangIso(heute);
+  const monatsEnde = monatsEndeIso(heute);
 
   // Wie viele Filter weichen vom Ausgangszustand ab? Das ist die Zahl, die der
   // Knopf trägt — und die nach dem Zurücksetzen 0 sein MUSS.
@@ -463,6 +468,55 @@ export function StatementEditor({
     ]),
   ) as Record<string, string>;
   const recurringNetto = st.summary.recurring_to_owner - st.summary.recurring_from_owner;
+
+  /** PDF laden — Gesamtabrechnung oder Auszug je Objekt (13.3). Texte in der
+   *  Sprache DES BELEGS (0604), nicht des Betrachters. */
+  async function herunterladen(objektId?: string) {
+    setBusy(true);
+    try {
+      const tx = await belegTexte(st.language);
+      await downloadStatementPdf(st, tx, { kanalLabels, objektId });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : t("downloadFailed"));
+    } finally {
+      setBusy(false);
+    }
+  }
+  /** Alle Auszüge nacheinander — ein Klick, drei Dateien. */
+  async function alleAuszuege() {
+    setBusy(true);
+    try {
+      const tx = await belegTexte(st.language);
+      for (const l of st.listing_rows) {
+        await downloadStatementPdf(st, tx, { kanalLabels, objektId: l.listing_id });
+      }
+      toast.success(t("downloadMenu.excerptsDone", { count: st.listing_rows.length }));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : t("downloadFailed"));
+    } finally {
+      setBusy(false);
+    }
+  }
+  // Mehrere Objekte in der Abrechnung → Herunterladen bietet Gesamt + Auszüge.
+  const mehrereObjekte = st.listing_rows.length > 1;
+  // Umfang-Umschalter (13.3): „Alle Objekte" | je ein Objekt. Eine Teilmenge
+  // aus mehreren Objekten (nur über die Mehrfachauswahl im Filter erreichbar)
+  // bekommt einen eigenen, nicht wählbaren Stand.
+  const UMFANG_ALLE = "__alle";
+  const UMFANG_MEHRERE = "__mehrere";
+  const umfangWert =
+    st.property_ids === null || st.property_ids.length >= alleObjektIds.length
+      ? UMFANG_ALLE
+      : st.property_ids.length === 1
+        ? st.property_ids[0]
+        : UMFANG_MEHRERE;
+  const umfangOptionen = [
+    { value: UMFANG_ALLE, label: t("scope.all", { count: alleObjektIds.length }) },
+    ...properties.map((p) => ({ value: p.id, label: p.title })),
+    ...(umfangWert === UMFANG_MEHRERE
+      ? [{ value: UMFANG_MEHRERE, label: t("scope.several", { count: st.property_ids?.length ?? 0 }) }]
+      : []),
+  ];
   // Ohne sichtbaren Gastpreis gibt es keine Gesamtsumme — sie waere sonst
   // „0 + Ausgaben" und damit erfunden.
   const grandTotal =
@@ -474,6 +528,37 @@ export function StatementEditor({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-2xl font-extrabold">{t("title")}</h1>
         <div className="flex flex-wrap items-center gap-2">
+          {/* Umfang (13.3) als Dropdown VOR „Speichern" — Ansage 07.09.2026:
+              „können wir nicht das als dropdown vor speichern machen". „Der
+              René ist Eigentümer von 3 Objekten — einmal für alle Objekte die
+              Abrechnung und nach Objekten für jedes einzelne." Ein Wechsel
+              stellt die Abrechnung auf EIN Objekt; „Alle" weist je Objekt aus
+              und liefert über Vorschau/Herunterladen einen Auszug je Objekt.
+              Finalisiert: fest. Ein Objekt: nichts zu wählen. */}
+          {properties.length > 1 && (
+            <span className="flex items-center gap-1.5">
+              <NativeSelect
+                value={umfangWert}
+                disabled={finalized}
+                aria-label={t("scope.label")}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === UMFANG_MEHRERE) return;
+                  objekteWaehlen(v === UMFANG_ALLE ? [] : [v]);
+                }}
+              >
+                {umfangOptionen.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </NativeSelect>
+              <InfoHinweis
+                text={t("info.properties")}
+                ariaLabel={t("info.aria", { feld: t("scope.label") })}
+              />
+            </span>
+          )}
           {!finalized && (
             <Button onClick={() => void save()} disabled={busy}>
               {busy ? t("saving") : t("save")}
@@ -483,21 +568,40 @@ export function StatementEditor({
             <Icon icon="ph:eye" className="size-4" />
             {t("preview")}
           </Button>
-          <Button
-            variant="outline"
-            disabled={busy}
-            onClick={() => {
-              setBusy(true);
-              // Texte in der Sprache DES BELEGS (0604), nicht des Betrachters.
-              void belegTexte(st.language)
-                .then((tx) => downloadStatementPdf(st, tx, { kanalLabels }))
-                .catch(() => toast.error(t("downloadFailed")))
-                .finally(() => setBusy(false));
-            }}
-          >
-            <Icon icon="ph:download-simple" className="size-4" />
-            {t("download")}
-          </Button>
+          {mehrereObjekte ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" disabled={busy}>
+                  <Icon icon="ph:download-simple" className="size-4" />
+                  {t("download")}
+                  <Icon icon="ph:caret-down" className="size-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-56">
+                <DropdownMenuItem onSelect={() => void herunterladen()}>
+                  <Icon icon="ph:file-pdf" className="size-4" />
+                  {t("downloadMenu.full")}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {st.listing_rows.map((l) => (
+                  <DropdownMenuItem key={l.listing_id} onSelect={() => void herunterladen(l.listing_id)}>
+                    <Icon icon="ph:house-line" className="size-4" />
+                    {t("downloadMenu.excerpt", { objekt: l.listing ?? l.listing_id })}
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => void alleAuszuege()}>
+                  <Icon icon="ph:files" className="size-4" />
+                  {t("downloadMenu.allExcerpts", { count: st.listing_rows.length })}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button variant="outline" disabled={busy} onClick={() => void herunterladen()}>
+              <Icon icon="ph:download-simple" className="size-4" />
+              {t("download")}
+            </Button>
+          )}
           {!finalized && !isNew && (
             <span className="flex items-center gap-1.5">
               <Button variant="outline" onClick={() => setFinalizeOffen(true)}>
@@ -1529,6 +1633,12 @@ function RentalActivity({
                         <InfoHinweis text={t("info.totalPayout")} ariaLabel={t("info.aria", { feld: t("rental.totalPayout") })} />
                       </span>
                     </th>
+                    <th className="px-3 py-2 text-center font-medium">
+                      <span className="flex items-center justify-center gap-1.5">
+                        {t("rental.listingPayout")}
+                        <InfoHinweis text={t("info.listingPayout")} ariaLabel={t("info.aria", { feld: t("rental.listingPayout") })} />
+                      </span>
+                    </th>
                   </>
                 )}
               </tr>
@@ -1574,6 +1684,7 @@ function RentalActivity({
                       <td className="px-3 py-2 text-center">{r.nights}</td>
                       <td className="px-3 py-2 text-center">{betragOderStrich(r.total_price, currency)}</td>
                       <td className="px-3 py-2 text-center">{formatCurrency(r.total_payout, currency)}</td>
+                      <td className="px-3 py-2 text-center font-medium">{betragOderStrich(r.payout, ownerCur)}</td>
                     </tr>
                   ))}
               {view === "reservation" ? (
@@ -1592,6 +1703,7 @@ function RentalActivity({
                   <td className="px-3 py-2 text-center">{totalNights}</td>
                   <td className="px-3 py-2 text-center">{betragOderStrich(statement.summary.total_price, currency)}</td>
                   <td className="px-3 py-2 text-center">{formatCurrency(statement.summary.total_payout, currency)}</td>
+                  <td className="px-3 py-2 text-center">{betragOderStrich(statement.summary.owner_payout, ownerCur)}</td>
                 </tr>
               )}
             </tbody>
@@ -2233,7 +2345,7 @@ function AddExpenseForm({
   t: ReturnType<typeof useTranslations>;
 }) {
   const [concept, setConcept] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(lokalIso(new Date()));
   // Kein vorbelegter Standard: der Nutzer soll die Richtung BEWUSST wählen.
   // Eine Vorauswahl wäre der Nachfolger des alten „-0" im Betragsfeld — man
   // übersieht sie und bucht in die falsche Richtung.

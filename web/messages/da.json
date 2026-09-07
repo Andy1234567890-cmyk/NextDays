@@ -1655,7 +1655,8 @@
       "dndEnd": "{spalte} droppet i stedet for {ziel}.",
       "dndCancel": "Flytning af {spalte} annulleret.",
       "dndAnleitung": "Tryk på mellemrum eller enter for at vælge en kolonne. Brug piletasterne til at flytte, mellemrum eller enter for at slippe, og escape for at annullere.",
-      "dragHint": "Træk i håndtagene for at ændre rækkefølgen – også med tastaturet: fokusér på håndtaget, tryk på mellemrumstasten, brug piletasterne."
+      "dragHint": "Træk i håndtagene for at ændre rækkefølgen – også med tastaturet: fokusér på håndtaget, tryk på mellemrumstasten, brug piletasterne.",
+      "listingPayout": "Udbetaling til ejer"
     },
     "expenses": {
       "add": "Tilføj",
@@ -1759,9 +1760,10 @@
       "flatFee": "Et fast beløb fra administrationsaftalen, f.eks. for driftsomkostninger. Afhængigt af aftalen trækkes det fra før eller efter provisionen.",
       "ownerShare": "Hvad der i sidste ende er tilbage til ejeren: Gæstepris minus portalfradrag, minus provision, minus fast beløb, plus de gebyrer, der tilhører ham. Ved sameje multipliceres det desuden med hans andel.",
       "ownershipShare": "Denne ejers andel af ejendommen. 100 % betyder eneejerskab. Hvis et hus tilhører flere personer, får hver sin egen afregning for sin andel – andelene udgør tilsammen 100 %.",
-      "properties": "Hvilke objekter denne afregning omfatter. Standard er alle ejerens objekter. Vælg individuelle for kun at afregne for disse. Hvert objekt kan kun være i én afsluttet afregning pr. periode – en booking udbetales aldrig to gange.",
+      "properties": "Hvilke ejendomme denne afregning omfatter. Standard er alle ejerens ejendomme – så viser kvitteringen, hvad hver ejendom er berettiget til, og forhåndsvisning og download giver desuden et uddrag pr. ejendom. Vælg en enkelt ejendom for kun at afregne for denne. Hver ejendom kan kun indgå i én afsluttet afregning pr. periode – en booking udbetales aldrig to gange.",
       "language": "På dette sprog oprettes kvitteringen – tekster, tal og dato. Forudindstillet fra ejerens sprog, ellers fra virksomhedens. Efter færdiggørelse er den fast; kvitteringen forbliver som udstedt.",
-      "headerFromMaster": "Overtager navn, adresse, e-mail, telefon og skattenummer fra ejer og virksomhed fra stamdata. Fakturanummer og noter for denne kvittering forbliver."
+      "headerFromMaster": "Overtager navn, adresse, e-mail, telefon og skattenummer fra ejer og virksomhed fra stamdata. Fakturanummer og noter for denne kvittering forbliver.",
+      "listingPayout": "Hvad denne ejendom er berettiget til i perioden: ejerens andele af dens bookinger plus afregnings- og tilbagevendende poster, der er knyttet til denne ejendom. Poster uden ejendomsreference tæller kun med i det samlede beløb."
     },
     "finalizeConfirm": {
       "title": "Lås afregning",
@@ -1813,7 +1815,21 @@
     "headerFromMasterDone": "Hoveddata overført fra stamdata.",
     "objectsLine": "Objekter: {liste}",
     "objectsAll": "Objekter: alle",
-    "loading": "Indlæser …"
+    "loading": "Indlæser …",
+    "scope": {
+      "label": "Fakturering for",
+      "all": "Alle ejendomme ({count})",
+      "several": "{count} ejendomme valgt"
+    },
+    "downloadMenu": {
+      "full": "Fuld faktura (PDF)",
+      "excerpt": "Uddrag: {objekt}",
+      "allExcerpts": "Alle {count} uddrag pr. ejendom",
+      "excerptsDone": "{count} uddrag downloadet."
+    },
+    "previewScope": {
+      "full": "Total"
+    }
   },
   "ownerBilling": {
     "title": "Afregningsaftale",
@@ -15640,6 +15656,19 @@
     "sumOwnerPayout": "Udbetaling til ejer",
     "vat": "Moms",
     "vatNet": "Administrationsprovision netto",
-    "vatGross": "Administrationsprovision brutto"
+    "vatGross": "Administrationsprovision brutto",
+    "excerpt": "Uddrag pr. ejendom",
+    "excerptOf": "Uddrag fra",
+    "object": "Ejendom",
+    "excerptNote": "Dette uddrag viser kun bookinger og poster for denne ejendom. Poster uden ejendomsreference og moms er inkluderet i den samlede opgørelse.",
+    "excerptPayout": "Udbetaling for denne ejendom",
+    "perObjectTitle": "Oversigt pr. ejendom",
+    "bookingsCount": "Bookinger",
+    "ownerShares": "Ejers andele",
+    "deductionsShort": "Fradrag",
+    "creditsShort": "Krediteringer",
+    "payout": "Udbetaling",
+    "noObjectRef": "uden ejendomsreference",
+    "total": "Total"
   }
 }

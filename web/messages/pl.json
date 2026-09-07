@@ -1655,7 +1655,8 @@
       "dndEnd": "Kolumna {spalte} upuszczona w miejscu {ziel}.",
       "dndCancel": "Przenoszenie kolumny {spalte} anulowane.",
       "dndAnleitung": "Naciśnij spację lub enter, aby podnieść kolumnę. Użyj strzałek, aby przenieść, spacji lub enter, aby upuścić, escape, aby anulować.",
-      "dragHint": "Przeciągnij uchwyt, aby zmienić kolejność — również za pomocą klawiatury: zaznacz uchwyt, spacja, klawisze strzałek."
+      "dragHint": "Przeciągnij uchwyt, aby zmienić kolejność — również za pomocą klawiatury: zaznacz uchwyt, spacja, klawisze strzałek.",
+      "listingPayout": "Wypłata dla właściciela"
     },
     "expenses": {
       "add": "Dodaj",
@@ -1759,9 +1760,10 @@
       "flatFee": "Stała kwota z umowy o zarządzanie, na przykład za koszty dodatkowe. W zależności od umowy, jest ona odliczana przed lub po prowizji.",
       "ownerShare": "Co ostatecznie pozostaje dla właściciela: cena dla gościa minus odliczenie portalu, minus prowizja, minus ryczałt, plus należne mu opłaty. W przypadku współwłasności dodatkowo pomnożone przez jego udział.",
       "ownershipShare": "Udział tego właściciela w nieruchomości. 100% oznacza wyłączną własność. Jeśli dom należy do kilku osób, każda otrzymuje własne rozliczenie dotyczące jej udziału — udziały sumują się do 100%.",
-      "properties": "Jakie obiekty obejmuje to rozliczenie. Domyślnie są to wszystkie obiekty właściciela. Proszę wybrać pojedyncze, aby rozliczyć tylko dla nich. Każdy obiekt może znajdować się tylko w jednym sfinalizowanym rozliczeniu na dany okres — rezerwacja nigdy nie jest wypłacana dwukrotnie.",
+      "properties": "Jakie obiekty obejmuje to rozliczenie. Standardowo są to wszystkie obiekty właściciela — wtedy dokument wyszczególnia, co przysługuje każdemu obiektowi, a podgląd i pobieranie dodatkowo dostarczają wyciąg dla każdego obiektu. Wybierz pojedynczy obiekt, aby rozliczyć tylko dla niego. Każdy obiekt może znajdować się tylko w jednym sfinalizowanym rozliczeniu na dany okres — rezerwacja nigdy nie zostanie wypłacona dwukrotnie.",
       "language": "W tym języku zostanie utworzony dokument — teksty, liczby i data. Domyślnie z języka właściciela, w przeciwnym razie z języka firmy. Po sfinalizowaniu jest stały; dokument pozostaje taki, jaki został wystawiony.",
-      "headerFromMaster": "Pobiera nazwę, adres, e-mail, telefon i numer identyfikacji podatkowej właściciela i firmy z danych podstawowych. Numer faktury i notatki tego dokumentu pozostają bez zmian."
+      "headerFromMaster": "Pobiera nazwę, adres, e-mail, telefon i numer identyfikacji podatkowej właściciela i firmy z danych podstawowych. Numer faktury i notatki tego dokumentu pozostają bez zmian.",
+      "listingPayout": "Co przysługuje temu obiektowi w danym okresie: udziały właściciela w jego rezerwacjach oraz pozycje rozliczeniowe i cykliczne związane z tym obiektem. Pozycje niezwiązane z obiektem liczą się tylko w sumie ogólnej."
     },
     "finalizeConfirm": {
       "title": "Zatwierdź rozliczenie",
@@ -1813,7 +1815,21 @@
     "headerFromMasterDone": "Dane nagłówka przejęte z danych podstawowych.",
     "objectsLine": "Obiekty: {liste}",
     "objectsAll": "Obiekty: wszystkie",
-    "loading": "Ładowanie…"
+    "loading": "Ładowanie…",
+    "scope": {
+      "label": "Rozliczenie dla",
+      "all": "Wszystkie obiekty ({count})",
+      "several": "Wybrano {count} obiektów"
+    },
+    "downloadMenu": {
+      "full": "Pełne rozliczenie (PDF)",
+      "excerpt": "Wyciąg: {objekt}",
+      "allExcerpts": "Wszystkie {count} wyciągi dla obiektu",
+      "excerptsDone": "Pobrano {count} wyciągów."
+    },
+    "previewScope": {
+      "full": "Suma"
+    }
   },
   "ownerBilling": {
     "title": "Umowa rozliczeniowa",
@@ -15640,6 +15656,19 @@
     "sumOwnerPayout": "Wypłata dla właściciela",
     "vat": "Podatek VAT",
     "vatNet": "Prowizja za zarządzanie netto",
-    "vatGross": "Prowizja za zarządzanie brutto"
+    "vatGross": "Prowizja za zarządzanie brutto",
+    "excerpt": "Wyciąg dla obiektu",
+    "excerptOf": "Wyciąg z",
+    "object": "Obiekt",
+    "excerptNote": "Ten wyciąg przedstawia wyłącznie rezerwacje i pozycje dotyczące tego obiektu. Pozycje niezwiązane z obiektem oraz podatek VAT znajdują się w rozliczeniu ogólnym.",
+    "excerptPayout": "Wypłata dla tego obiektu",
+    "perObjectTitle": "Przegląd dla obiektu",
+    "bookingsCount": "Rezerwacje",
+    "ownerShares": "Udziały właściciela",
+    "deductionsShort": "Potrącenia",
+    "creditsShort": "Uznania",
+    "payout": "Wypłata",
+    "noObjectRef": "bez związku z obiektem",
+    "total": "Ogółem"
   }
 }

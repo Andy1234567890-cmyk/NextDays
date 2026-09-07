@@ -1655,7 +1655,8 @@
       "dndEnd": "{spalte} déposée à la place de {ziel}.",
       "dndCancel": "Déplacement de {spalte} annulé.",
       "dndAnleitung": "Appuyez sur Espace ou Entrée pour sélectionner une colonne. Utilisez les flèches pour la déplacer, Espace ou Entrée pour la déposer, Échap pour annuler.",
-      "dragHint": "Faites glisser les poignées pour modifier l'ordre — également au clavier : sélectionnez la poignée, appuyez sur la barre d'espace, puis utilisez les flèches."
+      "dragHint": "Faites glisser les poignées pour modifier l'ordre — également au clavier : sélectionnez la poignée, appuyez sur la barre d'espace, puis utilisez les flèches.",
+      "listingPayout": "Paiement au propriétaire"
     },
     "expenses": {
       "add": "Ajouter",
@@ -1759,9 +1760,10 @@
       "flatFee": "Un montant fixe du contrat de gestion, par exemple pour les charges. Selon l'accord, il est déduit avant ou après la commission.",
       "ownerShare": "Ce qui reste finalement au propriétaire : prix invité moins déduction du portail, moins commission, moins forfait, plus les frais qui lui reviennent. En cas de copropriété, multiplié par sa part.",
       "ownershipShare": "La part de ce propriétaire dans la propriété. 100 % signifie propriété exclusive. Si une maison appartient à plusieurs personnes, chacune reçoit son propre décompte pour sa part — les parts totalisent 100 %.",
-      "properties": "Quels objets cette facturation comprend. Par défaut, tous les objets du propriétaire. Sélectionnez des objets individuels pour ne facturer que ceux-ci. Chaque objet ne peut figurer que dans une seule facturation finalisée par période — une réservation n'est jamais payée deux fois.",
+      "properties": "Quelles propriétés sont incluses dans ce relevé. Par défaut, toutes les propriétés du propriétaire sont incluses — le reçu indique alors ce qui revient à chaque propriété, et l'aperçu et le téléchargement fournissent en outre un extrait pour chaque propriété. Sélectionnez une seule propriété pour ne facturer que celle-ci. Chaque propriété ne peut figurer que dans un seul relevé finalisé par période — une réservation n'est jamais payée deux fois.",
       "language": "La quittance est créée dans cette langue — textes, chiffres et date. Pré-remplie à partir de la langue du propriétaire, sinon celle de l'entreprise. Une fois finalisée, elle est fixe ; la quittance reste telle qu'elle a été émise.",
-      "headerFromMaster": "Reprend le nom, l'adresse, l'e-mail, le téléphone et le numéro fiscal du propriétaire et de l'entreprise à partir des données de base. Le numéro de facture et les notes de cette quittance restent inchangés."
+      "headerFromMaster": "Reprend le nom, l'adresse, l'e-mail, le téléphone et le numéro fiscal du propriétaire et de l'entreprise à partir des données de base. Le numéro de facture et les notes de cette quittance restent inchangés.",
+      "listingPayout": "Ce qui revient à cette propriété au cours de la période : les parts du propriétaire de ses réservations, plus les éléments de compensation et récurrents liés à cette propriété. Les éléments sans référence de propriété ne sont pris en compte que dans le total."
     },
     "finalizeConfirm": {
       "title": "Finaliser la facturation",
@@ -1813,7 +1815,21 @@
     "headerFromMasterDone": "Données d'en-tête reprises des données de base.",
     "objectsLine": "Objets : {liste}",
     "objectsAll": "Objets : tous",
-    "loading": "Chargement en cours…"
+    "loading": "Chargement en cours…",
+    "scope": {
+      "label": "Facturation pour",
+      "all": "Toutes les propriétés ({count})",
+      "several": "{count} propriétés sélectionnées"
+    },
+    "downloadMenu": {
+      "full": "Facture totale (PDF)",
+      "excerpt": "Extrait : {objekt}",
+      "allExcerpts": "Tous les {count} extraits par objet",
+      "excerptsDone": "{count} extraits téléchargés."
+    },
+    "previewScope": {
+      "full": "Total"
+    }
   },
   "ownerBilling": {
     "title": "Contrat de gestion",
@@ -15640,6 +15656,19 @@
     "sumOwnerPayout": "Paiement au propriétaire",
     "vat": "TVA",
     "vatNet": "Commission de gestion nette",
-    "vatGross": "Commission de gestion brute"
+    "vatGross": "Commission de gestion brute",
+    "excerpt": "Extrait par objet",
+    "excerptOf": "Extrait de",
+    "object": "Objet",
+    "excerptNote": "Cet extrait n'affiche que les réservations et les postes de cet objet. Les postes sans référence d'objet et la TVA figurent dans le décompte général.",
+    "excerptPayout": "Paiement pour cet objet",
+    "perObjectTitle": "Aperçu par objet",
+    "bookingsCount": "Réservations",
+    "ownerShares": "Parts du propriétaire",
+    "deductionsShort": "Déductions",
+    "creditsShort": "Crédits",
+    "payout": "Paiement",
+    "noObjectRef": "sans référence d'objet",
+    "total": "Total"
   }
 }

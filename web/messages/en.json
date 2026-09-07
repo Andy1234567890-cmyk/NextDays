@@ -1655,7 +1655,8 @@
       "dndEnd": "{spalte} dropped in place of {ziel}.",
       "dndCancel": "Moving {spalte} cancelled.",
       "dndAnleitung": "Press space or enter to pick up a column. Use arrow keys to move, space or enter to drop, escape to cancel.",
-      "dragHint": "Drag column handles to reorder — also with keyboard: focus handle, spacebar, arrow keys."
+      "dragHint": "Drag column handles to reorder — also with keyboard: focus handle, spacebar, arrow keys.",
+      "listingPayout": "Owner payout"
     },
     "expenses": {
       "add": "Add",
@@ -1759,9 +1760,10 @@
       "flatFee": "A fixed amount from the management contract, for example, for utilities. Depending on the agreement, it is deducted before or after the commission.",
       "ownerShare": "What remains for the owner at the end: guest price minus portal deduction, minus commission, minus flat fee, plus the fees that belong to them. In the case of co-ownership, additionally multiplied by their share.",
       "ownershipShare": "This owner's share of the property. 100% means sole ownership. If a house belongs to several people, each receives their own statement for their share – the shares together add up to 100%.",
-      "properties": "Which properties this statement covers. Default are all properties of the owner. Select individual ones to bill only for these. Each property can only be in one finalized statement per period — a booking is never paid out twice.",
+      "properties": "Which properties this statement covers. By default, all properties of the owner are included — the statement then shows what each property is entitled to, and the preview and download additionally provide an extract for each property. Select a single property to settle only for that one. Each property can only be in one finalized statement per period — a booking is never paid out twice.",
       "language": "The receipt is created in this language — texts, numbers and date. Pre-filled from the owner's language, otherwise from the business's. After finalizing, it is fixed; the receipt remains as it was issued.",
-      "headerFromMaster": "Updates name, address, email, phone and tax number of owner and business from the master data. Invoice number and notes of this receipt remain."
+      "headerFromMaster": "Updates name, address, email, phone and tax number of owner and business from the master data. Invoice number and notes of this receipt remain.",
+      "listingPayout": "What this property is entitled to in the period: the owner's shares of its bookings plus the billing and recurring items associated with this property. Items not related to a property are only included in the total."
     },
     "finalizeConfirm": {
       "title": "Finalize billing",
@@ -1813,7 +1815,21 @@
     "headerFromMasterDone": "Header data adopted from master data.",
     "objectsLine": "Objects: {liste}",
     "objectsAll": "Objects: all",
-    "loading": "Loading …"
+    "loading": "Loading …",
+    "scope": {
+      "label": "Billing for",
+      "all": "All properties ({count})",
+      "several": "{count} properties selected"
+    },
+    "downloadMenu": {
+      "full": "Total billing (PDF)",
+      "excerpt": "Extract: {objekt}",
+      "allExcerpts": "All {count} extracts per object",
+      "excerptsDone": "{count} extracts downloaded."
+    },
+    "previewScope": {
+      "full": "Total"
+    }
   },
   "ownerBilling": {
     "title": "Billing agreement",
@@ -15661,6 +15677,19 @@
     "sumOwnerPayout": "Owner payout",
     "vat": "VAT",
     "vatNet": "Management fee net",
-    "vatGross": "Management fee gross"
+    "vatGross": "Management fee gross",
+    "excerpt": "Extract per property",
+    "excerptOf": "Extract from",
+    "object": "Property",
+    "excerptNote": "This extract only shows bookings and items for this property. Items without property reference and VAT are included in the overall statement.",
+    "excerptPayout": "Payout for this property",
+    "perObjectTitle": "Overview per property",
+    "bookingsCount": "Bookings",
+    "ownerShares": "Owner shares",
+    "deductionsShort": "Deductions",
+    "creditsShort": "Credits",
+    "payout": "Payout",
+    "noObjectRef": "without property reference",
+    "total": "Total"
   }
 }

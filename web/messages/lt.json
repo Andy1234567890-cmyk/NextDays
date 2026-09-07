@@ -1655,7 +1655,8 @@
       "dndEnd": "{spalte} numestas į {ziel} vietą.",
       "dndCancel": "{spalte} perkėlimas atšauktas.",
       "dndAnleitung": "Norėdami paimti stulpelį, paspauskite tarpo klavišą arba „Enter“. Norėdami perkelti, naudokite rodyklių klavišus, norėdami numesti, paspauskite tarpo klavišą arba „Enter“, norėdami atšaukti, paspauskite „Escape“.",
-      "dragHint": "Norėdami pakeisti tvarką, vilkite stulpelius už rankenos – taip pat galite naudoti klaviatūrą: sufokusuokite rankeną, paspauskite tarpo klavišą, tada rodyklių klavišus."
+      "dragHint": "Norėdami pakeisti tvarką, vilkite stulpelius už rankenos – taip pat galite naudoti klaviatūrą: sufokusuokite rankeną, paspauskite tarpo klavišą, tada rodyklių klavišus.",
+      "listingPayout": "Mokėjimas savininkui"
     },
     "expenses": {
       "add": "Pridėti",
@@ -1759,9 +1760,10 @@
       "flatFee": "Fiksuota suma iš valdymo sutarties, pavyzdžiui, už papildomas išlaidas. Priklausomai nuo susitarimo, ji atskaitoma prieš arba po komisinio mokesčio.",
       "ownerShare": "Kas galiausiai lieka savininkui: svečio kaina minus portalo atskaitymas, minus komisinis mokestis, minus fiksuota suma, plius jam priklausantys mokesčiai. Bendros nuosavybės atveju papildomai padauginama iš jo dalies.",
       "ownershipShare": "Šio savininko dalis objekte. 100 % reiškia vienintelę nuosavybę. Jei namas priklauso keliems asmenims, kiekvienas gauna savo ataskaitą apie savo dalį – dalys kartu sudaro 100 %.",
-      "properties": "Kuriems objektams taikomas šis atsiskaitymas. Pagal numatytuosius nustatymus, visi savininko objektai. Pasirinkite atskirus, kad atsiskaitytumėte tik už juos. Kiekvienas objektas per laikotarpį gali būti tik viename baigtiniame atsiskaityme – užsakymas niekada nebus apmokėtas du kartus.",
+      "properties": "Kokie objektai įtraukti į šį atsiskaitymą. Standartiškai įtraukiami visi savininko objektai – tada kvite nurodoma, kas priklauso kiekvienam objektui, o peržiūra ir atsisiuntimas papildomai pateikia išrašą kiekvienam objektui. Pasirinkite vieną objektą, kad atsiskaitytumėte tik už jį. Kiekvienas objektas per laikotarpį gali būti tik viename galutiniame atsiskaityme – užsakymas niekada nebus apmokėtas du kartus.",
       "language": "Šia kalba bus sugeneruotas kvitas – tekstai, skaičiai ir data. Numatytasis nustatymas yra savininko kalba, kitu atveju – įmonės kalba. Po finalizavimo ji yra fiksuota; kvitas lieka toks, koks buvo išduotas.",
-      "headerFromMaster": "Perima savininko ir įmonės pavadinimą, adresą, el. paštą, telefono numerį ir mokesčių mokėtojo kodą iš pagrindinių duomenų. Šio kvito sąskaitos numeris ir pastabos lieka nepakeisti."
+      "headerFromMaster": "Perima savininko ir įmonės pavadinimą, adresą, el. paštą, telefono numerį ir mokesčių mokėtojo kodą iš pagrindinių duomenų. Šio kvito sąskaitos numeris ir pastabos lieka nepakeisti.",
+      "listingPayout": "Kas priklauso šiam objektui per laikotarpį: savininko dalis nuo jo užsakymų, taip pat atsiskaitymo ir pasikartojantys elementai, susiję su šiuo objektu. Elementai be objekto nuorodos įskaičiuojami tik į bendrą sumą."
     },
     "finalizeConfirm": {
       "title": "Patvirtinti atsiskaitymą",
@@ -1813,7 +1815,21 @@
     "headerFromMasterDone": "Antraštės duomenys perkelti iš pagrindinių duomenų.",
     "objectsLine": "Objektai: {liste}",
     "objectsAll": "Objektai: visi",
-    "loading": "Įkeliama…"
+    "loading": "Įkeliama…",
+    "scope": {
+      "label": "Atsiskaitymas už",
+      "all": "Visi objektai ({count})",
+      "several": "Pasirinkta objektų: {count}"
+    },
+    "downloadMenu": {
+      "full": "Bendra ataskaita (PDF)",
+      "excerpt": "Išrašas: {objekt}",
+      "allExcerpts": "Visi {count} išrašai pagal objektą",
+      "excerptsDone": "Atsisiųsta {count} išrašų."
+    },
+    "previewScope": {
+      "full": "Iš viso"
+    }
   },
   "ownerBilling": {
     "title": "Atsiskaitymo sutartis",
@@ -15640,6 +15656,19 @@
     "sumOwnerPayout": "Mokėjimas savininkui",
     "vat": "PVM",
     "vatNet": "Administravimo mokestis (neto)",
-    "vatGross": "Administravimo mokestis (bruto)"
+    "vatGross": "Administravimo mokestis (bruto)",
+    "excerpt": "Išrašas pagal objektą",
+    "excerptOf": "Išrašas iš",
+    "object": "Objektas",
+    "excerptNote": "Šiame išraše rodomi tik šio objekto užsakymai ir prekės. Prekės be objekto nuorodos ir PVM pateikiami bendroje ataskaitoje.",
+    "excerptPayout": "Išmokėjimas už šį objektą",
+    "perObjectTitle": "Apžvalga pagal objektą",
+    "bookingsCount": "Užsakymai",
+    "ownerShares": "Savininko dalys",
+    "deductionsShort": "Atskaitos",
+    "creditsShort": "Kreditai",
+    "payout": "Išmokėjimas",
+    "noObjectRef": "be objekto nuorodos",
+    "total": "Iš viso"
   }
 }

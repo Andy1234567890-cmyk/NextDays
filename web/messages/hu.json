@@ -1655,7 +1655,8 @@
       "dndEnd": "{spalte} a következő helyére téve: {ziel}.",
       "dndCancel": "{spalte} áthelyezése megszakítva.",
       "dndAnleitung": "Oszlop felvételéhez nyomja meg a szóközt vagy az Entert. A nyílbillentyűkkel mozgathatja, szóközzel vagy Enterrel elhelyezheti, Esc-kel megszakíthatja.",
-      "dragHint": "Húzza a fogantyúkat az oszlopok átrendezéséhez – billentyűzettel is: fókuszáljon a fogantyúra, szóköz, nyílbillentyűk."
+      "dragHint": "Húzza a fogantyúkat az oszlopok átrendezéséhez – billentyűzettel is: fókuszáljon a fogantyúra, szóköz, nyílbillentyűk.",
+      "listingPayout": "Tulajdonosi kifizetés"
     },
     "expenses": {
       "add": "Hozzáadás",
@@ -1759,9 +1760,10 @@
       "flatFee": "Egy fix összeg a kezelési szerződésből, például a rezsiköltségekre. Megállapodás szerint a jutalék előtt vagy után kerül levonásra.",
       "ownerShare": "Ami végül a tulajdonosnak marad: vendégár mínusz portál levonás, mínusz jutalék, mínusz átalány, plusz a neki járó díjak. Tulajdonostársak esetén ezen felül a tulajdoni hányaddal megszorozva.",
       "ownershipShare": "A tulajdonos tulajdoni hányada az ingatlanban. 100% az egyedüli tulajdonjogot jelenti. Ha egy ház több személy tulajdonában van, mindenki megkapja a saját elszámolását a tulajdoni hányadáról – a hányadok együtt 100%-ot tesznek ki.",
-      "properties": "Mely szálláshelyeket tartalmazza ez az elszámolás. Alapértelmezés szerint a tulajdonos összes szálláshelye. Válasszon ki egyeseket, hogy csak azokra számoljon el. Minden szálláshely időszakonként csak egy véglegesített elszámolásban szerepelhet – egy foglalás soha nem kerül kifizetésre kétszer.",
+      "properties": "Mely ingatlanokra vonatkozik ez az elszámolás. Alapértelmezés szerint a tulajdonos összes ingatlana – ekkor a bizonylat ingatlanonként mutatja, mi jár neki, az előnézet és a letöltés pedig ingatlanonkénti kivonatot is biztosít. Válasszon ki egyetlen ingatlant, ha csak arra szeretne elszámolást készíteni. Minden ingatlan csak egy véglegesített elszámolásban szerepelhet időszakonként – egy foglalás soha nem kerül kifizetésre kétszer.",
       "language": "Ezen a nyelven készül a bizonylat – szövegek, számok és dátum. Alapértelmezés szerint a tulajdonos nyelve, egyébként a vállalkozás nyelve. A véglegesítés után rögzített; a bizonylat úgy marad, ahogy kiállították.",
-      "headerFromMaster": "Átveszi a tulajdonos és a vállalkozás nevét, címét, e-mail címét, telefonszámát és adószámát az alapadatokból. A bizonylat számlaszáma és megjegyzései változatlanok maradnak."
+      "headerFromMaster": "Átveszi a tulajdonos és a vállalkozás nevét, címét, e-mail címét, telefonszámát és adószámát az alapadatokból. A bizonylat számlaszáma és megjegyzései változatlanok maradnak.",
+      "listingPayout": "Ami ezt az ingatlant az időszakban megilleti: a foglalások tulajdonosi részesedése, valamint az ingatlanhoz kapcsolódó elszámolási és ismétlődő tételek. Az ingatlanhoz nem kapcsolódó tételek csak az összegben számítanak."
     },
     "finalizeConfirm": {
       "title": "Elszámolás rögzítése",
@@ -1813,7 +1815,21 @@
     "headerFromMasterDone": "A fejlécek a törzsadatokból átvéve.",
     "objectsLine": "Objektumok: {liste}",
     "objectsAll": "Objektumok: mind",
-    "loading": "Betöltés…"
+    "loading": "Betöltés…",
+    "scope": {
+      "label": "Számlázás",
+      "all": "Összes ingatlan ({count})",
+      "several": "{count} ingatlan kiválasztva"
+    },
+    "downloadMenu": {
+      "full": "Teljes elszámolás (PDF)",
+      "excerpt": "Kivonat: {objekt}",
+      "allExcerpts": "Összesen {count} kivonat objektumonként",
+      "excerptsDone": "{count} kivonat letöltve."
+    },
+    "previewScope": {
+      "full": "Összesen"
+    }
   },
   "ownerBilling": {
     "title": "Elszámolási szerződés",
@@ -15640,6 +15656,19 @@
     "sumOwnerPayout": "Tulajdonosi kifizetés",
     "vat": "ÁFA",
     "vatNet": "Adminisztrációs jutalék nettó",
-    "vatGross": "Adminisztrációs jutalék bruttó"
+    "vatGross": "Adminisztrációs jutalék bruttó",
+    "excerpt": "Kivonat objektumonként",
+    "excerptOf": "Kivonat innen",
+    "object": "Objektum",
+    "excerptNote": "Ez a kivonat csak az adott objektum foglalásait és tételeit mutatja. Az objektumhoz nem kapcsolódó tételek és az áfa az összesített elszámolásban találhatók.",
+    "excerptPayout": "Kifizetés ehhez az objektumhoz",
+    "perObjectTitle": "Áttekintés objektumonként",
+    "bookingsCount": "Foglalások",
+    "ownerShares": "Tulajdonosi részesedések",
+    "deductionsShort": "Levonások",
+    "creditsShort": "Jóváírások",
+    "payout": "Kifizetés",
+    "noObjectRef": "objektumhoz nem kapcsolódó",
+    "total": "Összesen"
   }
 }

@@ -2861,3 +2861,61 @@ def test_storno_uebernimmt_spaltenreihenfolge() -> None:
     _finalize(svc, st.id)
     storno = svc.cancel(_ctx(), st.id)
     assert [c.value for c in storno.column_order][:2] == ["channel", "guest"]
+
+
+# --- 13.3: Je-Objekt-Summen für Gesamtabrechnung und Auszug je Objekt ---------
+
+def test_listing_rows_tragen_auszahlung_je_objekt_und_rest_ohne_objekt() -> None:
+    """Σ je Objekt + Posten ohne Objektbezug = Gesamtsumme — sonst „fehlt" im
+    Beleg Geld, das nur an keinem Haus hängt."""
+    svc = _svc(_tables_zwei_objekte())
+    st = _gen(svc)
+    svc.add_expense(
+        _ctx(),
+        ExpenseCreate(
+            concept="Reparatur Hygge",
+            date=date(2026, 1, 10),
+            direction=ExpenseDirection.from_owner,
+            owner_id="o-1",
+            listing_id="p-2",
+            amount=50,
+            statement_id=st.id,
+        ),
+    )
+    svc.add_expense(
+        _ctx(),
+        ExpenseCreate(
+            concept="Kompensation ohne Objekt",
+            date=date(2026, 1, 11),
+            direction=ExpenseDirection.to_owner,
+            owner_id="o-1",
+            amount=30,
+            statement_id=st.id,
+        ),
+    )
+    voll = svc.get(_ctx(), st.id)
+    je = {lr.listing_id: lr for lr in voll.listing_rows}
+    assert set(je) == {"p-1", "p-2"}
+    assert je["p-2"].expenses_from_owner == 50.0
+    assert je["p-2"].expenses_to_owner == 0.0
+    assert je["p-1"].expenses_from_owner == 0.0
+    assert je["p-2"].owner_payout is not None and je["p-1"].owner_payout is not None
+    assert je["p-2"].payout == round(je["p-2"].owner_payout - 50.0, 2)
+    assert je["p-1"].payout == je["p-1"].owner_payout
+    assert voll.ohne_objekt.expenses_to_owner == 30.0
+    assert voll.ohne_objekt.expenses_from_owner == 0.0
+    summe = sum(lr.payout for lr in voll.listing_rows) + 30.0
+    assert round(summe, 2) == voll.summary.owner_payout
+
+
+def test_listing_rows_haben_zeile_fuer_objekt_ohne_buchung() -> None:
+    """Auszug je Objekt existiert auch für ein Objekt ohne Buchung im Zeitraum."""
+    tables = _tables_zwei_objekte()
+    tables["reservations"] = [r for r in tables["reservations"] if r["property_id"] != "p-2"]
+    st = _gen(_svc(tables))
+    je = {lr.listing_id: lr for lr in st.listing_rows}
+    assert "p-2" in je
+    assert je["p-2"].reservations == 0
+    assert je["p-2"].owner_payout == 0.0
+    assert je["p-2"].payout == 0.0
+

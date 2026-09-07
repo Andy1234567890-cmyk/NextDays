@@ -1655,7 +1655,8 @@
       "dndEnd": "{spalte} on paigutatud asukohale {ziel}.",
       "dndCancel": "Veeru {spalte} teisaldamine on tühistatud.",
       "dndAnleitung": "Veeru valimiseks vajutage tühikut või sisestusklahvi. Teisaldamiseks kasutage nooleklahve, paigutamiseks tühikut või sisestusklahvi, tühistamiseks paoklahvi.",
-      "dragHint": "Veergude järjestuse muutmiseks lohistage käepidet – ka klaviatuuriga: fokuseerige käepide, tühikuklahv, nooleklahvid."
+      "dragHint": "Veergude järjestuse muutmiseks lohistage käepidet – ka klaviatuuriga: fokuseerige käepide, tühikuklahv, nooleklahvid.",
+      "listingPayout": "Omaniku väljamakse"
     },
     "expenses": {
       "add": "Lisa",
@@ -1759,9 +1760,10 @@
       "flatFee": "Fikseeritud summa halduslepingust, näiteks kõrvalkulude eest. Sõltuvalt kokkuleppest arvatakse see maha enne või pärast vahendustasu.",
       "ownerShare": "Mis jääb lõpuks omanikule: külalise hind miinus portaali mahaarvamine, miinus vahendustasu, miinus fikseeritud summa, pluss tasud, mis talle kuuluvad. Kaasomandi puhul korrutatakse see lisaks tema osaga.",
       "ownershipShare": "Selle omaniku osa objektist. 100% tähendab ainuomandit. Kui maja kuulub mitmele isikule, saab igaüks oma arve oma osa kohta – osad moodustavad kokku 100%.",
-      "properties": "Millised objektid see arveldus hõlmab. Vaikimisi on kõik omaniku objektid. Valige üksikud, et arveldada ainult nende eest. Iga objekt saab olla perioodi kohta ainult ühes lõpetatud arvelduses – broneeringut ei maksta kunagi kaks korda välja.",
+      "properties": "Millised objektid see arveldus hõlmab. Standardina on kõik omaniku objektid – siis näitab kviitung iga objekti kohta, mis talle kuulub, ja eelvaade ning allalaadimine pakuvad lisaks väljavõtet iga objekti kohta. Valige üksik objekt, et arveldada ainult selle jaoks. Iga objekt saab igas perioodis olla ainult ühes lõpetatud arvelduses – broneeringut ei maksta kunagi kaks korda välja.",
       "language": "Selles keeles koostatakse kviitung – tekstid, numbrid ja kuupäev. Eeltäidetud omaniku keelest, vastasel juhul ettevõtte keelest. Pärast lõpetamist on see fikseeritud; kviitung jääb selliseks, nagu see välja anti.",
-      "headerFromMaster": "Võtab uuesti üle omaniku ja ettevõtte nime, aadressi, e-posti, telefoni ja maksunumbri põhiandmetest. Arve number ja selle kviitungi märkused jäävad alles."
+      "headerFromMaster": "Võtab uuesti üle omaniku ja ettevõtte nime, aadressi, e-posti, telefoni ja maksunumbri põhiandmetest. Arve number ja selle kviitungi märkused jäävad alles.",
+      "listingPayout": "Mis sellele objektile antud perioodil kuulub: omaniku osa broneeringutest pluss arveldus- ja korduvad kirjed, mis on seotud selle objektiga. Kirjed ilma objekti seoseta arvestatakse ainult kogusummas."
     },
     "finalizeConfirm": {
       "title": "Arvelduse kinnitamine",
@@ -1813,7 +1815,21 @@
     "headerFromMasterDone": "Päise andmed on põhiandmetest üle võetud.",
     "objectsLine": "Objektid: {liste}",
     "objectsAll": "Objektid: kõik",
-    "loading": "Laadimine …"
+    "loading": "Laadimine …",
+    "scope": {
+      "label": "Arveldamine",
+      "all": "Kõik majutuskohad ({count})",
+      "several": "{count} majutuskohta valitud"
+    },
+    "downloadMenu": {
+      "full": "Kogu arveldus (PDF)",
+      "excerpt": "Väljavõte: {objekt}",
+      "allExcerpts": "Kõik {count} väljavõtet objekti kohta",
+      "excerptsDone": "{count} väljavõtet alla laaditud."
+    },
+    "previewScope": {
+      "full": "Kokku"
+    }
   },
   "ownerBilling": {
     "title": "Arveldusleping",
@@ -15640,6 +15656,19 @@
     "sumOwnerPayout": "omanikule väljamakse",
     "vat": "käibemaks",
     "vatNet": "halduse vahendustasu neto",
-    "vatGross": "halduse vahendustasu bruto"
+    "vatGross": "halduse vahendustasu bruto",
+    "excerpt": "Väljavõte objekti kohta",
+    "excerptOf": "Väljavõte alates",
+    "object": "Objekt",
+    "excerptNote": "See väljavõte näitab ainult selle objekti broneeringuid ja kirjeid. Objektiga mitteseotud kirjed ja käibemaks on koondaruandes.",
+    "excerptPayout": "Väljamakse selle objekti eest",
+    "perObjectTitle": "Ülevaade objekti kohta",
+    "bookingsCount": "Broneeringud",
+    "ownerShares": "Omaniku osad",
+    "deductionsShort": "Mahaarvamised",
+    "creditsShort": "Krediidid",
+    "payout": "Väljamakse",
+    "noObjectRef": "ilma objekti seoseta",
+    "total": "Kokku"
   }
 }

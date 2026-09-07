@@ -1655,7 +1655,8 @@
       "dndEnd": "{spalte} an der Stelle von {ziel} abgelegt.",
       "dndCancel": "Verschieben von {spalte} abgebrochen.",
       "dndAnleitung": "Zum Aufnehmen einer Spalte Leertaste oder Eingabe drücken. Mit den Pfeiltasten verschieben, mit Leertaste oder Eingabe ablegen, mit Escape abbrechen.",
-      "dragHint": "Spalten am Griff ziehen, um die Reihenfolge zu ändern — auch per Tastatur: Griff fokussieren, Leertaste, Pfeiltasten."
+      "dragHint": "Spalten am Griff ziehen, um die Reihenfolge zu ändern — auch per Tastatur: Griff fokussieren, Leertaste, Pfeiltasten.",
+      "listingPayout": "Eigentümer-Auszahlung"
     },
     "expenses": {
       "add": "Hinzufügen",
@@ -1759,9 +1760,10 @@
       "flatFee": "Ein fester Betrag aus dem Verwaltungsvertrag, zum Beispiel für Nebenkosten. Je nach Vereinbarung wird er vor oder nach der Provision abgezogen.",
       "ownerShare": "Was am Ende für den Eigentümer übrig bleibt: Gastpreis minus Portal-Abzug, minus Provision, minus Pauschale, plus die Gebühren, die ihm gehören. Bei Miteigentum zusätzlich mit seinem Anteil multipliziert.",
       "ownershipShare": "Der Anteil dieses Eigentümers am Objekt. 100 % heißt Alleineigentum. Gehört ein Haus mehreren Personen, bekommt jede ihre eigene Abrechnung über ihren Anteil — die Anteile ergeben zusammen 100 %.",
-      "properties": "Welche Objekte diese Abrechnung umfasst. Standard sind alle Objekte des Eigentümers. Wählen Sie einzelne aus, um nur für diese abzurechnen. Jedes Objekt kann je Zeitraum nur in einer finalisierten Abrechnung stehen — eine Buchung wird nie zweimal ausgezahlt.",
+      "properties": "Welche Objekte diese Abrechnung umfasst. Standard sind alle Objekte des Eigentümers — dann weist der Beleg je Objekt aus, was ihm zusteht, und Vorschau und Herunterladen liefern zusätzlich einen Auszug je Objekt. Wählen Sie ein einzelnes Objekt, um nur für dieses abzurechnen. Jedes Objekt kann je Zeitraum nur in einer finalisierten Abrechnung stehen — eine Buchung wird nie zweimal ausgezahlt.",
       "language": "In dieser Sprache wird der Beleg erstellt — Texte, Zahlen und Datum. Vorbelegt aus der Sprache des Eigentümers, sonst der des Betriebs. Nach dem Finalisieren ist sie fest; der Beleg bleibt so, wie er ausgestellt wurde.",
-      "headerFromMaster": "Übernimmt Name, Adresse, E-Mail, Telefon und Steuernummer von Eigentümer und Betrieb neu aus den Stammdaten. Rechnungsnummer und Notizen dieses Belegs bleiben stehen."
+      "headerFromMaster": "Übernimmt Name, Adresse, E-Mail, Telefon und Steuernummer von Eigentümer und Betrieb neu aus den Stammdaten. Rechnungsnummer und Notizen dieses Belegs bleiben stehen.",
+      "listingPayout": "Was diesem Objekt im Zeitraum zusteht: die Eigentümer-Anteile seiner Buchungen plus die Verrechnungs- und wiederkehrenden Posten, die an diesem Objekt hängen. Posten ohne Objektbezug zählen nur in der Gesamtsumme."
     },
     "finalizeConfirm": {
       "title": "Abrechnung festschreiben",
@@ -1813,7 +1815,21 @@
     },
     "objectsLine": "Objekte: {liste}",
     "objectsAll": "Objekte: alle",
-    "loading": "Wird geladen …"
+    "loading": "Wird geladen …",
+    "scope": {
+      "label": "Abrechnung für",
+      "all": "Alle Objekte ({count})",
+      "several": "{count} Objekte ausgewählt"
+    },
+    "downloadMenu": {
+      "full": "Gesamtabrechnung (PDF)",
+      "excerpt": "Auszug: {objekt}",
+      "allExcerpts": "Alle {count} Auszüge je Objekt",
+      "excerptsDone": "{count} Auszüge heruntergeladen."
+    },
+    "previewScope": {
+      "full": "Gesamt"
+    }
   },
   "ownerBilling": {
     "title": "Abrechnungsvertrag",
@@ -15661,6 +15677,19 @@
     "sumOwnerPayout": "Eigentümer-Auszahlung",
     "vat": "Umsatzsteuer",
     "vatNet": "Verwaltungsprovision netto",
-    "vatGross": "Verwaltungsprovision brutto"
+    "vatGross": "Verwaltungsprovision brutto",
+    "excerpt": "Auszug je Objekt",
+    "excerptOf": "Auszug aus",
+    "object": "Objekt",
+    "excerptNote": "Dieser Auszug zeigt nur die Buchungen und Posten dieses Objekts. Posten ohne Objektbezug und die Umsatzsteuer stehen in der Gesamtabrechnung.",
+    "excerptPayout": "Auszahlung für dieses Objekt",
+    "perObjectTitle": "Übersicht je Objekt",
+    "bookingsCount": "Buchungen",
+    "ownerShares": "Eigentümer-Anteile",
+    "deductionsShort": "Abzüge",
+    "creditsShort": "Gutschriften",
+    "payout": "Auszahlung",
+    "noObjectRef": "ohne Objektbezug",
+    "total": "Gesamt"
   }
 }

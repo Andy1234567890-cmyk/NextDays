@@ -1655,7 +1655,8 @@
       "dndEnd": "Scaoileadh {spalte} in áit {ziel}.",
       "dndCancel": "Cuireadh ar ceal bogadh {spalte}.",
       "dndAnleitung": "Brúigh spás nó iontráil chun colún a thógáil. Bain úsáid as na saigheadeochracha chun bogadh, spás nó iontráil chun scaoileadh, éalú chun cealú.",
-      "dragHint": "Tarraing na colúin leis an láimhseáil chun an t-ord a athrú — freisin leis an méarchlár: dírigh ar an láimhseáil, spásbharra, saigheadeochracha."
+      "dragHint": "Tarraing na colúin leis an láimhseáil chun an t-ord a athrú — freisin leis an méarchlár: dírigh ar an láimhseáil, spásbharra, saigheadeochracha.",
+      "listingPayout": "Íocaíocht Úinéara"
     },
     "expenses": {
       "add": "Cuir leis",
@@ -1759,9 +1760,10 @@
       "flatFee": "Suim sheasta ón gconradh bainistíochta, mar shampla le haghaidh costais bhreise. Ag brath ar an gcomhaontú, déantar é a asbhaint roimh nó tar éis an choimisiúin.",
       "ownerShare": "Cad a fhanann don úinéir sa deireadh: praghas an aoi lúide asbhaint na tairsí, lúide coimisiún, lúide táille chomhréidh, móide na táillí atá dlite dó. I gcás comhúinéireachta, iolraítear é lena sciar freisin.",
       "ownershipShare": "Scair an úinéara seo sa réadmhaoin. Ciallaíonn 100% úinéireacht aonair. Má tá teach ag roinnt daoine, faigheann gach duine a ráiteas féin faoina sciar — is ionann na scaireanna agus 100% le chéile.",
-      "properties": "Cé na réadmhaoine a chuimsíonn an tsocraíocht seo. Is iad réadmhaoine uile an úinéara an réamhshocrú. Roghnaigh cinn aonair chun socrú a dhéanamh dóibh siúd amháin. Ní féidir le gach réadmhaoin a bheith ach i socrú críochnaithe amháin in aghaidh na tréimhse - ní íoctar áirithint faoi dhó riamh.",
+      "properties": "Cé na réadmhaoine a chuimsíonn an ráiteas seo. De réir réamhshocraithe, cuimsítear gach réadmhaoin de chuid an úinéara — ansin taispeánann an admháil cad atá dlite do gach réadmhaoin, agus soláthraíonn an réamhamharc agus an íoslódáil sliocht do gach réadmhaoin. Roghnaigh réadmhaoin aonair chun billeáil a dhéanamh don réadmhaoin sin amháin. Ní féidir le gach réadmhaoin a bheith ach i ráiteas críochnaithe amháin in aghaidh na tréimhse — ní íoctar áirithint faoi dhó riamh.",
       "language": "Sa teanga seo, cruthaítear an admháil - téacsanna, uimhreacha agus dáta. Réamhshocraithe ó theanga an úinéara, nó ó theanga an ghnó. Tar éis an críochnú, tá sé seasta; fanann an admháil mar a eisíodh é.",
-      "headerFromMaster": "Glacann sé ainm, seoladh, ríomhphost, teileafón agus uimhir chánach an úinéara agus an ghnó arís ó na sonraí máistir. Fanann uimhir an tsonraisc agus nótaí an admháil seo mar atá."
+      "headerFromMaster": "Glacann sé ainm, seoladh, ríomhphost, teileafón agus uimhir chánach an úinéara agus an ghnó arís ó na sonraí máistir. Fanann uimhir an tsonraisc agus nótaí an admháil seo mar atá.",
+      "listingPayout": "Cad é atá dlite don réadmhaoin seo sa tréimhse: scaireanna an úinéara dá áirithintí móide na míreanna billeála agus athfhillteacha a bhaineann leis an réadmhaoin seo. Ní áirítear míreanna nach mbaineann le réadmhaoin ach sa tsuim iomlán."
     },
     "finalizeConfirm": {
       "title": "Socraigh an Bille",
@@ -1813,7 +1815,21 @@
     "headerFromMasterDone": "Sonraí ceanntásca tógtha ó mháistirshonraí.",
     "objectsLine": "Réada: {liste}",
     "objectsAll": "Réada: gach",
-    "loading": "Á lódáil …"
+    "loading": "Á lódáil …",
+    "scope": {
+      "label": "Billeáil le haghaidh",
+      "all": "Gach réadmhaoin ({count})",
+      "several": "{count} réadmhaoin roghnaithe"
+    },
+    "downloadMenu": {
+      "full": "Billeáil Iomlán (PDF)",
+      "excerpt": "Sliocht: {objekt}",
+      "allExcerpts": "Gach {count} Sliocht in aghaidh an Réada",
+      "excerptsDone": "Íoslódáladh {count} Sliocht."
+    },
+    "previewScope": {
+      "full": "Iomlán"
+    }
   },
   "ownerBilling": {
     "title": "Conradh socraíochta",
@@ -15640,6 +15656,19 @@
     "sumOwnerPayout": "Íocaíocht amach don úinéir",
     "vat": "Cáin Bhreisluacha",
     "vatNet": "Coimisiún bainistíochta glan",
-    "vatGross": "Coimisiún bainistíochta comhlán"
+    "vatGross": "Coimisiún bainistíochta comhlán",
+    "excerpt": "Sliocht in aghaidh an réadmhaoine",
+    "excerptOf": "Sliocht as",
+    "object": "Réadmhaoin",
+    "excerptNote": "Ní thaispeánann an sliocht seo ach áirithintí agus míreanna an réadmhaoine seo. Tá míreanna gan tagairt réadmhaoine agus CBL sa ráiteas iomlán.",
+    "excerptPayout": "Íocaíocht don réadmhaoin seo",
+    "perObjectTitle": "Forbhreathnú in aghaidh an réadmhaoine",
+    "bookingsCount": "Áirithintí",
+    "ownerShares": "Scair an úinéara",
+    "deductionsShort": "Asbhaintí",
+    "creditsShort": "Creidmheasanna",
+    "payout": "Íocaíocht",
+    "noObjectRef": "gan tagairt réadmhaoine",
+    "total": "Iomlán"
   }
 }

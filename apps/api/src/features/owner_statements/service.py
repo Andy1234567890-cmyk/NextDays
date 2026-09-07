@@ -55,6 +55,7 @@ from .schemas import (
     ListingRow,
     Miteigentuemer,
     ObjektKurz,
+    PostenOhneObjekt,
     RentalRow,
     SliceHealth,
     SortDir,
@@ -829,7 +830,21 @@ class OwnerStatementsService(ZeilenMixin):
         # total_amount/Payout über ALLE Reservierungen des Zeitraums. Ein stiller
         # 1000-Zeilen-Cap (PGRST_DB_MAX_ROWS) würde bei vielen kurzen OTA-Aufenthalten
         # zu einem dauerhaft zu niedrigen, aber nummerierten Abrechnungsbetrag führen.
-        return fetch_all_rows(query)
+        rows = fetch_all_rows(query)
+        # Debugging (Ansage 07.09.2026): „zeilen=0" allein sagt nicht, WAS
+        # gesucht wurde. Diese Zeile nennt Filter und Treffer — im Log steht
+        # damit, ob Zeitraum, Basis, Status oder Objektmenge die Ursache sind.
+        log.info(
+            "abrechnung_reservierungen_geladen",
+            tenant_id=tenant_id,
+            objekte=len(property_ids),
+            basis=basis_col,
+            von=period_from.isoformat(),
+            bis=period_to.isoformat(),
+            status=list(statuses),
+            gefunden=len(rows),
+        )
+        return rows
 
     @staticmethod
     def _listing_rows(
@@ -843,18 +858,22 @@ class OwnerStatementsService(ZeilenMixin):
         maskierten Blick eine zu kleine Summe (Wurzel 4). Die Maskierung an der
         Zeile darf nicht durch die Summenzeile umgangen werden.
         """
-        agg: dict[str, dict] = {}
+        # Jedes Objekt des Umfangs bekommt eine Zeile — auch ohne Buchung im
+        # Zeitraum (13.3): der Auszug je Objekt und die Je-Objekt-Tabelle des
+        # Belegs sollen für jedes Objekt existieren, „0 Buchungen" ist eine
+        # Auskunft. Vorher standen hier nur Objekte MIT Buchungen.
+        def leer() -> dict:
+            return {
+                "nights": 0,
+                "reservations": 0,
+                "price": Decimal("0"),
+                "price_sichtbar": True,
+                "payout": Decimal("0"),
+            }
+
+        agg: dict[str, dict] = {lid: leer() for lid in titles}
         for row in rental_rows:
-            a = agg.setdefault(
-                row.listing_id,
-                {
-                    "nights": 0,
-                    "reservations": 0,
-                    "price": Decimal("0"),
-                    "price_sichtbar": True,
-                    "payout": Decimal("0"),
-                },
-            )
+            a = agg.setdefault(row.listing_id, leer())
             a["nights"] += row.nights
             a["reservations"] += 1
             if row.total_price is None:
@@ -2768,6 +2787,71 @@ def _expense(r: dict) -> ExpenseResponse:
     )
 
 
+def _objekt_summen(
+    listing_rows: list[ListingRow],
+    rental_rows: list[RentalRow],
+    expenses: list[dict],
+    posten: list[WiederkehrenderPosten],
+) -> tuple[list[ListingRow], PostenOhneObjekt]:
+    """Je Objekt: Σ Eigentümer-Anteile + seine Posten = seine Auszahlung (13.3).
+
+    Dieselben Ableitungen wie `_compute_summary` (`_richtungssummen`,
+    `_wiederkehrend_summen`, `owner_payout_converted`), nur je `listing_id`
+    gruppiert — keine zweite Rechenregel. Posten ohne Objektbezug
+    (`listing_id`/`property_id` leer) landen in `PostenOhneObjekt`, damit
+    Σ Zeilen + Rest = Gesamtsumme; sonst „fehlte" im Beleg Geld, das nur an
+    keinem Haus hängt.
+
+    `owner_payout` ist None, sobald eine Zeile des Objekts offen ist — eine
+    Teilsumme, die wie eine ganze aussieht, ist die Wurzel-4-Falschaussage.
+    """
+    anteile: dict[str, Decimal | None] = {}
+    for r in rental_rows:
+        if r.listing_id not in anteile:
+            anteile[r.listing_id] = Decimal("0")
+        if r.owner_payout_converted is None or anteile[r.listing_id] is None:
+            anteile[r.listing_id] = None
+        else:
+            anteile[r.listing_id] = anteile[r.listing_id] + _d(r.owner_payout_converted)
+
+    def _posten_fuer(lid: str | None) -> tuple[Decimal, Decimal, Decimal, Decimal]:
+        exp = [
+            e
+            for e in expenses
+            if (str(e["listing_id"]) if e.get("listing_id") else None) == lid
+        ]
+        rec = [p for p in posten if p.property_id == lid]
+        _, e_zu, e_ab = _richtungssummen(exp)
+        _, r_zu, r_ab = _wiederkehrend_summen(rec)
+        return e_zu, e_ab, r_zu, r_ab
+
+    zeilen: list[ListingRow] = []
+    for lr in listing_rows:
+        e_zu, e_ab, r_zu, r_ab = _posten_fuer(lr.listing_id)
+        anteil = anteile.get(lr.listing_id, Decimal("0"))
+        payout = None if anteil is None else anteil + e_zu - e_ab + r_zu - r_ab
+        zeilen.append(
+            lr.model_copy(
+                update={
+                    "owner_payout": None if anteil is None else _money(anteil),
+                    "expenses_to_owner": _money(e_zu),
+                    "expenses_from_owner": _money(e_ab),
+                    "recurring_to_owner": _money(r_zu),
+                    "recurring_from_owner": _money(r_ab),
+                    "payout": None if payout is None else _money(payout),
+                }
+            )
+        )
+    e_zu, e_ab, r_zu, r_ab = _posten_fuer(None)
+    rest = PostenOhneObjekt(
+        expenses_to_owner=_money(e_zu),
+        expenses_from_owner=_money(e_ab),
+        recurring_to_owner=_money(r_zu),
+        recurring_from_owner=_money(r_ab),
+    )
+    return zeilen, rest
+
+
 def _to_response(
     row: dict,
     summary: StatementSummary,
@@ -2790,6 +2874,9 @@ def _to_response(
     posten = list(recurring or [])
     if kind == "cancellation":
         posten = [p.model_copy(update={"betrag": -p.betrag}) for p in posten]
+    listing_rows, ohne_objekt = _objekt_summen(
+        listing_rows, rental_rows, expenses, posten
+    )
     header = StatementHeader(
         pm_name=row.get("pm_name"),
         pm_email=row.get("pm_email"),
@@ -2847,6 +2934,7 @@ def _to_response(
         ),
         rental_rows=rental_rows,
         listing_rows=listing_rows,
+        ohne_objekt=ohne_objekt,
         expenses=[_expense(e) for e in expenses],
         recurring=posten,
         miteigentuemer=list(miteigentuemer or []),

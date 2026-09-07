@@ -1655,7 +1655,8 @@
       "dndEnd": "{spalte} imwaqqa' fil-post ta' {ziel}.",
       "dndCancel": "Il-moviment ta' {spalte} ġie kkanċellat.",
       "dndAnleitung": "Agħfas space jew enter biex taqbad kolonna. Uża l-vleġeġ biex iċċaqlaq, space jew enter biex twaqqa', u escape biex tikkanċella.",
-      "dragHint": "Iġbed il-kolonni mill-manku biex tibdel l-ordni — anke bit-tastiera: iffoka l-manku, spacebar, vleġeġ."
+      "dragHint": "Iġbed il-kolonni mill-manku biex tibdel l-ordni — anke bit-tastiera: iffoka l-manku, spacebar, vleġeġ.",
+      "listingPayout": "Ħlas lis-sid"
     },
     "expenses": {
       "add": "Żid",
@@ -1759,9 +1760,10 @@
       "flatFee": "Ammont fiss mill-kuntratt ta' ġestjoni, pereżempju għall-ispejjeż anċillari. Skont il-ftehim, dan jitnaqqas qabel jew wara l-kummissjoni.",
       "ownerShare": "Dak li jibqa' fl-aħħar għas-sid: prezz tal-mistieden nieqes it-tnaqqis tal-portal, nieqes il-kummissjoni, nieqes il-flat rate, flimkien mal-miżati li jappartjenu lilu. F'każ ta' sjieda konġunta, immultiplikat ukoll bil-parti tiegħu.",
       "ownershipShare": "Il-parti ta' dan is-sid fil-proprjetà. 100% tfisser sjieda unika. Jekk dar hija proprjetà ta' diversi persuni, kull wieħed jirċievi l-kont tiegħu stess għall-parti tiegħu – il-partijiet flimkien jagħmlu 100%.",
-      "properties": "Liema proprjetajiet tkopri din il-kontabilità. B'mod awtomatiku, il-proprjetajiet kollha tas-sid huma inklużi. Agħżel proprjetajiet individwali biex tikkalkula biss għalihom. Kull proprjetà tista' tkun biss f'kontabilità finalizzata waħda għal kull perjodu – prenotazzjoni qatt ma titħallas darbtejn.",
+      "properties": "Liema oġġetti tkopri din is-saldu. B'mod awtomatiku, l-oġġetti kollha tas-sid huma inklużi — allura l-irċevuta turi x'għandu kull oġġett, u l-preview u t-tniżżil jipprovdu wkoll rendikont għal kull oġġett. Agħżel oġġett wieħed biex issaldja biss għalih. Kull oġġett jista' jkun biss f'saldu finalizzat wieħed għal kull perjodu — prenotazzjoni qatt ma titħallas darbtejn.",
       "language": "Il-fattura tinħoloq f'din il-lingwa – testi, numri u data. Issettjata minn qabel mil-lingwa tas-sid, inkella dik tal-operatur. Ladarba tkun finalizzata, hija fissa; il-fattura tibqa' kif inħarġet.",
-      "headerFromMaster": "Jieħu l-isem, l-indirizz, l-email, it-telefon u n-numru tat-taxxa tas-sid u tal-operatur mill-informazzjoni ewlenija. In-numru tal-fattura u n-noti ta' din il-fattura jibqgħu kif inhuma."
+      "headerFromMaster": "Jieħu l-isem, l-indirizz, l-email, it-telefon u n-numru tat-taxxa tas-sid u tal-operatur mill-informazzjoni ewlenija. In-numru tal-fattura u n-noti ta' din il-fattura jibqgħu kif inhuma.",
+      "listingPayout": "X'għandu dan l-oġġett fil-perjodu: is-sehem tas-sid mill-prenotazzjonijiet tiegħu flimkien mal-oġġetti ta' kontabilità u rikorrenti marbuta ma' dan l-oġġett. Oġġetti mingħajr referenza għall-oġġett jgħoddu biss fit-total ġenerali."
     },
     "finalizeConfirm": {
       "title": "Iffissa l-kont",
@@ -1813,7 +1815,21 @@
     "headerFromMasterDone": "Dettalji tal-intestazzjoni meħuda mid-data ewlenija.",
     "objectsLine": "Oġġetti: {liste}",
     "objectsAll": "Oġġetti: kollha",
-    "loading": "Qed jitgħabba …"
+    "loading": "Qed jitgħabba …",
+    "scope": {
+      "label": "Fattura għal",
+      "all": "Il-proprjetajiet kollha ({count})",
+      "several": "{count} proprjetajiet magħżula"
+    },
+    "downloadMenu": {
+      "full": "Rendikont sħiħ (PDF)",
+      "excerpt": "Rendikont: {objekt}",
+      "allExcerpts": "It-total ta' {count} rendikonti għal kull proprjetà",
+      "excerptsDone": "{count} rendikonti tniżżlu."
+    },
+    "previewScope": {
+      "full": "Total"
+    }
   },
   "ownerBilling": {
     "title": "Kuntratt tar-rendikont",
@@ -15640,6 +15656,19 @@
     "sumOwnerPayout": "Ħlas lis-sid",
     "vat": "VAT",
     "vatNet": "Kummissjoni amministrattiva netta",
-    "vatGross": "Kummissjoni amministrattiva grossa"
+    "vatGross": "Kummissjoni amministrattiva grossa",
+    "excerpt": "Estratt għal kull proprjetà",
+    "excerptOf": "Estratt minn",
+    "object": "Proprjetà",
+    "excerptNote": "Dan l-estratt juri biss il-bookings u l-oġġetti ta' din il-proprjetà. Oġġetti mingħajr referenza għall-proprjetà u l-VAT jinsabu fil-kont ġenerali.",
+    "excerptPayout": "Ħlas għal din il-proprjetà",
+    "perObjectTitle": "Ħarsa ġenerali għal kull proprjetà",
+    "bookingsCount": "Bookings",
+    "ownerShares": "Is-sehem tas-sid",
+    "deductionsShort": "Tnaqqis",
+    "creditsShort": "Krediti",
+    "payout": "Ħlas",
+    "noObjectRef": "mingħajr referenza għall-proprjetà",
+    "total": "Total"
   }
 }

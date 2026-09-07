@@ -1655,7 +1655,8 @@
       "dndEnd": "{spalte} plasată în locul {ziel}.",
       "dndCancel": "Mutarea coloanei {spalte} a fost anulată.",
       "dndAnleitung": "Apăsați spațiu sau enter pentru a prelua o coloană. Folosiți tastele săgeți pentru a o muta, spațiu sau enter pentru a o plasa, și escape pentru a anula.",
-      "dragHint": "Trageți coloanele de mâner pentru a schimba ordinea — și de la tastatură: focalizați mânerul, spațiu, tastele săgeată."
+      "dragHint": "Trageți coloanele de mâner pentru a schimba ordinea — și de la tastatură: focalizați mânerul, spațiu, tastele săgeată.",
+      "listingPayout": "Plată proprietar"
     },
     "expenses": {
       "add": "Adaugă",
@@ -1759,9 +1760,10 @@
       "flatFee": "O sumă fixă din contractul de administrare, de exemplu pentru costurile suplimentare. În funcție de acord, aceasta se deduce înainte sau după comision.",
       "ownerShare": "Ce rămâne în cele din urmă pentru proprietar: prețul plătit de oaspete minus deducerea portalului, minus comisionul, minus suma forfetară, plus taxele care îi revin. În cazul coproprietății, se înmulțește suplimentar cu cota sa.",
       "ownershipShare": "Cota de proprietate a acestui proprietar. 100% înseamnă proprietate unică. Dacă o casă aparține mai multor persoane, fiecare primește propria decontare pentru cota sa – cotele însumează 100%.",
-      "properties": "Ce proprietăți include această decontare. Implicit sunt toate proprietățile proprietarului. Selectați individual pentru a deconta doar pentru acestea. Fiecare proprietate poate fi inclusă într-o singură decontare finalizată pe perioadă — o rezervare nu va fi niciodată plătită de două ori.",
+      "properties": "Ce proprietăți include această decontare. În mod implicit, sunt incluse toate proprietățile proprietarului – în acest caz, chitanța va indica ce se datorează fiecărei proprietăți, iar previzualizarea și descărcarea vor oferi, în plus, un extras pentru fiecare proprietate. Selectați o singură proprietate pentru a deconta doar pentru aceasta. Fiecare proprietate poate fi inclusă într-o singură decontare finalizată pe perioadă – o rezervare nu va fi niciodată plătită de două ori.",
       "language": "În această limbă va fi creată chitanța — texte, numere și data. Presetat din limba proprietarului, altfel din cea a companiei. După finalizare este fixă; chitanța rămâne așa cum a fost emisă.",
-      "headerFromMaster": "Preia numele, adresa, e-mailul, telefonul și codul fiscal ale proprietarului și ale companiei din datele de bază. Numărul facturii și notele acestei chitanțe rămân neschimbate."
+      "headerFromMaster": "Preia numele, adresa, e-mailul, telefonul și codul fiscal ale proprietarului și ale companiei din datele de bază. Numărul facturii și notele acestei chitanțe rămân neschimbate.",
+      "listingPayout": "Ce se datorează acestei proprietăți în perioada respectivă: cotele proprietarului din rezervările sale, plus elementele de decontare și recurente asociate acestei proprietăți. Elementele fără legătură cu proprietatea sunt incluse doar în suma totală."
     },
     "finalizeConfirm": {
       "title": "Finalizați decontul",
@@ -1813,7 +1815,21 @@
     "headerFromMasterDone": "Datele antetului au fost preluate din datele de bază.",
     "objectsLine": "Obiecte: {liste}",
     "objectsAll": "Toate obiectele",
-    "loading": "Se încarcă..."
+    "loading": "Se încarcă...",
+    "scope": {
+      "label": "Facturare pentru",
+      "all": "Toate proprietățile ({count})",
+      "several": "{count} proprietăți selectate"
+    },
+    "downloadMenu": {
+      "full": "Factură totală (PDF)",
+      "excerpt": "Extras: {objekt}",
+      "allExcerpts": "Toate cele {count} extrase pe proprietate",
+      "excerptsDone": "Au fost descărcate {count} extrase."
+    },
+    "previewScope": {
+      "full": "Total"
+    }
   },
   "ownerBilling": {
     "title": "Contract de decontare",
@@ -15640,6 +15656,19 @@
     "sumOwnerPayout": "Plată proprietar",
     "vat": "TVA",
     "vatNet": "Comision de administrare net",
-    "vatGross": "Comision de administrare brut"
+    "vatGross": "Comision de administrare brut",
+    "excerpt": "Extras per proprietate",
+    "excerptOf": "Extras din",
+    "object": "Proprietate",
+    "excerptNote": "Acest extras afișează doar rezervările și elementele acestei proprietăți. Elementele fără legătură cu proprietatea și TVA-ul sunt incluse în decontul general.",
+    "excerptPayout": "Plată pentru această proprietate",
+    "perObjectTitle": "Prezentare generală per proprietate",
+    "bookingsCount": "Rezervări",
+    "ownerShares": "Cote proprietar",
+    "deductionsShort": "Deduceri",
+    "creditsShort": "Credite",
+    "payout": "Plată",
+    "noObjectRef": "fără legătură cu proprietatea",
+    "total": "Total"
   }
 }

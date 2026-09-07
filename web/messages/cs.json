@@ -1655,7 +1655,8 @@
       "dndEnd": "Sloupec {spalte} byl umístěn na pozici {ziel}.",
       "dndCancel": "Přesun sloupce {spalte} byl zrušen.",
       "dndAnleitung": "Stisknutím mezerníku nebo klávesy Enter vyberte sloupec. Pomocí kláves se šipkami jej přesuňte, mezerníkem nebo klávesou Enter jej umístěte, klávesou Escape zrušte akci.",
-      "dragHint": "Přetažením za úchyt změníte pořadí – také pomocí klávesnice: zaměřte úchyt, mezerník, šipky."
+      "dragHint": "Přetažením za úchyt změníte pořadí – také pomocí klávesnice: zaměřte úchyt, mezerník, šipky.",
+      "listingPayout": "Výplata majiteli"
     },
     "expenses": {
       "add": "Přidat",
@@ -1759,9 +1760,10 @@
       "flatFee": "Pevná částka ze smlouvy o správě, například za vedlejší náklady. Podle dohody se odečítá před nebo po provizi.",
       "ownerShare": "Co nakonec zbude pro majitele: cena hosta minus odečet portálu, minus provize, minus paušál, plus poplatky, které mu náleží. V případě spoluvlastnictví navíc vynásobeno jeho podílem.",
       "ownershipShare": "Podíl tohoto majitele na objektu. 100 % znamená výhradní vlastnictví. Pokud dům patří více osobám, každá obdrží vlastní vyúčtování svého podílu – podíly dohromady tvoří 100 %.",
-      "properties": "Které objekty tato fakturace zahrnuje. Standardně jsou to všechny objekty majitele. Vyberte jednotlivé, abyste fakturovali pouze pro ně. Každý objekt může být v daném období pouze v jedné finalizované faktuře – rezervace nebude nikdy vyplacena dvakrát.",
+      "properties": "Které objekty toto vyúčtování zahrnuje. Standardně jsou to všechny objekty vlastníka – pak doklad pro každý objekt uvádí, co mu náleží, a náhled a stažení navíc poskytují výpis pro každý objekt. Vyberte jeden objekt, chcete-li vyúčtovat pouze pro něj. Každý objekt může být v daném období pouze v jednom finalizovaném vyúčtování – rezervace nebude nikdy vyplacena dvakrát.",
       "language": "V tomto jazyce bude vytvořen doklad – texty, čísla a datum. Přednastaveno z jazyka majitele, jinak z jazyka provozovny. Po finalizaci je pevně daný; doklad zůstane tak, jak byl vystaven.",
-      "headerFromMaster": "Přebírá jméno, adresu, e-mail, telefon a daňové identifikační číslo majitele a provozovny nově z kmenových dat. Číslo faktury a poznámky tohoto dokladu zůstávají."
+      "headerFromMaster": "Přebírá jméno, adresu, e-mail, telefon a daňové identifikační číslo majitele a provozovny nově z kmenových dat. Číslo faktury a poznámky tohoto dokladu zůstávají.",
+      "listingPayout": "Co náleží tomuto objektu v daném období: podíly vlastníka z jeho rezervací plus zúčtovací a opakující se položky, které se k tomuto objektu vážou. Položky bez vztahu k objektu se započítávají pouze do celkové sumy."
     },
     "finalizeConfirm": {
       "title": "Uzavřít vyúčtování",
@@ -1813,7 +1815,21 @@
     "headerFromMasterDone": "Údaje záhlaví byly převzaty z kmenových dat.",
     "objectsLine": "Objekty: {liste}",
     "objectsAll": "Objekty: všechny",
-    "loading": "Načítání…"
+    "loading": "Načítání…",
+    "scope": {
+      "label": "Fakturace pro",
+      "all": "Všechny objekty ({count})",
+      "several": "Vybráno {count} objektů"
+    },
+    "downloadMenu": {
+      "full": "Celkové vyúčtování (PDF)",
+      "excerpt": "Výpis: {objekt}",
+      "allExcerpts": "Všech {count} výpisů podle objektu",
+      "excerptsDone": "{count} výpisů staženo."
+    },
+    "previewScope": {
+      "full": "Celkem"
+    }
   },
   "ownerBilling": {
     "title": "Smlouva o vyúčtování",
@@ -15640,6 +15656,19 @@
     "sumOwnerPayout": "Výplata vlastníkovi",
     "vat": "DPH",
     "vatNet": "Administrativní provize netto",
-    "vatGross": "Administrativní provize brutto"
+    "vatGross": "Administrativní provize brutto",
+    "excerpt": "Výpis dle objektu",
+    "excerptOf": "Výpis z",
+    "object": "Objekt",
+    "excerptNote": "Tento výpis zobrazuje pouze rezervace a položky tohoto objektu. Položky bez vztahu k objektu a DPH jsou uvedeny v celkovém vyúčtování.",
+    "excerptPayout": "Výplata za tento objekt",
+    "perObjectTitle": "Přehled dle objektu",
+    "bookingsCount": "Rezervace",
+    "ownerShares": "Podíly vlastníka",
+    "deductionsShort": "Srážky",
+    "creditsShort": "Dobropisy",
+    "payout": "Výplata",
+    "noObjectRef": "bez vztahu k objektu",
+    "total": "Celkem"
   }
 }
