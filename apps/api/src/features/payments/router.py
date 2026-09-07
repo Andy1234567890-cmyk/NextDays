@@ -103,8 +103,14 @@ _kalender_schreiben = Depends(
 
 
 @router.get("/health", response_model=SliceHealth)
-def health(service: PaymentsServiceDep) -> SliceHealth:
-    return service.health()
+def health() -> SliceHealth:
+    # OHNE `PaymentsServiceDep`: die Dependency baute einen echten
+    # Supabase-Client, den diese Antwort nie anfasst (`slice_name` ist ein
+    # Klassenattribut). Damit meldete der Health-Check eines fehlenden
+    # Datenbank-Keys statt des Slice-Zustands — und genau daran scheiterte
+    # `test_payments_health` ohne lokale Supabase-Umgebung. Alle anderen Slices
+    # halten es schon so (inbox, crm, booking_offers).
+    return PaymentsService().health()
 
 
 @router.get("/diagnostics", response_model=PaymentsDiagnostics)

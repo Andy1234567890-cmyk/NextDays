@@ -22,6 +22,9 @@ import pytest
 from fastapi.testclient import TestClient
 
 from src.core.security import AuthContext, get_current_user
+from src.features.auth.dependencies import get_account_service
+from src.features.auth.granular_permissions import default_permissions_for
+from src.features.auth.schemas import UserRole
 from src.features.booking_offers.common import BookingOfferError, token_hash
 from src.features.booking_offers.dependencies import get_booking_offers_service
 from src.features.booking_offers.schemas import BookingOfferCreate
@@ -804,24 +807,77 @@ def test_webhook_fremdes_konto_wird_abgelehnt(
 # --- Rollen-Gate am Router ---------------------------------------------------
 
 
+class _FakeAccountService:
+    """Liefert Rolle und Rechte, ohne die DB zu fragen.
+
+    WARUM DAS NÖTIG IST: `MANAGE_CALENDAR` ist eine PM-Capability, und deren
+    Guard liest die Rolle FRISCH aus `users` (Wurzel 7 — eine entzogene Rolle
+    soll sofort wirken, nicht erst mit dem Token-Ablauf). Ein Test, der das
+    nicht ersetzt, prüft die Erreichbarkeit einer Datenbank mit: lokal steht
+    Supabase, im GitHub-Runner nicht, dort antwortet die Route mit 503 statt
+    403. Genau daran ist dieser Test in CI-Lauf #817 gescheitert — der Code war
+    richtig, der Test umgebungsabhängig (siehe MEMORY
+    „tests-nie-umgebungsabhaengig").
+    """
+
+    def __init__(self, rolle: str, rechte: list | None = None) -> None:
+        self._rolle = rolle
+        self._rechte = rechte if rechte is not None else []
+
+    def role_and_permissions(self, _ctx: object) -> tuple[UserRole, list]:
+        return UserRole(self._rolle), list(self._rechte)
+
+
 @pytest.mark.parametrize("rolle", ["owner", "staff", "cleaner", "shift_lead"])
 def test_ohne_kalenderrecht_kein_zugriff(rolle: str) -> None:
     """§4.2/§4.3: Eigentümer und Mitarbeiter sehen keine Angebote."""
     app = create_app()
-    # Echte UUIDs: `require_permission` prüft die Rolle FRISCH in der DB
-    # (Wurzel 7), und PostgREST lehnt eine Nicht-UUID mit 422 ab.
     app.dependency_overrides[get_current_user] = lambda: AuthContext(
-        user_id="00000000-0000-4000-8000-000000000002",
-        tenant_id="00000000-0000-4000-8000-000000000001",
-        role=rolle,
+        user_id="u-2", tenant_id="t1", role=rolle
     )
+    app.dependency_overrides[get_account_service] = lambda: _FakeAccountService(rolle)
     app.dependency_overrides[get_booking_offers_service] = lambda: _service(_store())[0]
     with TestClient(app) as c:
         assert c.get("/api/v1/booking-offers").status_code == 403
         assert c.post("/api/v1/booking-offers", json={}).status_code == 403
 
 
+@pytest.mark.parametrize("rolle", ["admin", "co_admin"])
+def test_leitung_darf_zugreifen(rolle: str) -> None:
+    """Die Gegenprobe: ohne sie wäre ein Gate, das ALLE ablehnt, auch „grün".
+
+    Der Co-Admin braucht das PM-Dach als GESPEICHERTES Recht
+    (`access_pm_features`) — bei ihm ist es Teil der Standardrechte, nur der
+    Admin kommt ohne aus. Genau diese Verdrahtung prüft der Test mit: ein
+    Double mit leerer Rechteliste liefert für `co_admin` korrekt 403.
+    """
+    app = create_app()
+    app.dependency_overrides[get_current_user] = lambda: AuthContext(
+        user_id="u-1", tenant_id="t1", role=rolle
+    )
+    app.dependency_overrides[get_account_service] = lambda: _FakeAccountService(
+        rolle, default_permissions_for(UserRole(rolle))
+    )
+    app.dependency_overrides[get_booking_offers_service] = lambda: _service(_store())[0]
+    with TestClient(app) as c:
+        antwort = c.get("/api/v1/booking-offers")
+        assert antwort.status_code == 200
+        assert antwort.json()["total"] == 0
+
+
 def test_oeffentliche_route_prueft_das_tokenmuster() -> None:
-    """Unsinn im Pfad gibt 422, nie einen 500 (Wurzel 8)."""
-    assert client.get("/api/v1/public/offers/kurz").status_code == 422
-    assert client.post("/api/v1/public/offers/kurz/accept").status_code == 422
+    """Unsinn im Pfad gibt 422, nie einen 500 (Wurzel 8).
+
+    Der Service wird ersetzt, obwohl er hier nie aufgerufen wird: FastAPI löst
+    die Dependencies AUF, bevor es das Path-Pattern prüft, und
+    `get_booking_offers_service` baut dabei einen echten Supabase-Client. Ohne
+    Override entscheidet damit die Umgebung über das Ergebnis — mit gesetztem
+    Key 422, ohne ihn ein Fehler aus dem Client (siehe MEMORY
+    „tests-nie-umgebungsabhaengig"). Geprüft werden soll das Muster, nicht die
+    Erreichbarkeit einer Datenbank.
+    """
+    app = create_app()
+    app.dependency_overrides[get_booking_offers_service] = lambda: _service(_store())[0]
+    with TestClient(app) as c:
+        assert c.get("/api/v1/public/offers/kurz").status_code == 422
+        assert c.post("/api/v1/public/offers/kurz/accept").status_code == 422
