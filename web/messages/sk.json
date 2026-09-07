@@ -1434,6 +1434,18 @@
       "commission": "Záložná sadzba, ak pre objekt neplatí zúčtovacia zmluva. Zmluva nižšie má prednosť — je to skutočná dohoda a zahŕňa aj obdobie, paušál a minimálnu províziu. Ak zostanú obe prázdne, výplata sa nepočíta a zobrazí sa pomlčka.",
       "commissionOverride": "Záložná sadzba len pre tento objekt; prepisuje štandardnú sadzbu vlastníka. Zúčtovacia zmluva má prednosť aj tu. Ak zostane pole prázdne, platí štandardná sadzba.",
       "cprNumber": "Dánske osobné číslo majiteľa (formát DDMMRR-XXXX). Vyžaduje sa len pre fakturáciu dánskych rekreačných domov; viditeľné len pre administrátorov."
+    },
+    "coOwners": {
+      "label": "Spoluvlastník",
+      "entry": "{name} — {pct} %",
+      "unassigned": "{pct} % zatiaľ nepriradených žiadnemu vlastníkovi",
+      "tabHint": "Tieto osoby sú spoluvlastníkmi nehnuteľností tohto vlastníka. Každý dostane vlastné vyúčtovanie svojho podielu; jeho kmeňové údaje sú spravované na jeho vlastnej stránke.",
+      "entryObject": "{objekt} — {pct} %",
+      "open": "Otvoriť kmeňové údaje"
+    },
+    "tabs": {
+      "mainOwner": "Hlavný vlastník",
+      "coOwners": "Spoluvlastník ({count})"
     }
   },
   "ownerStatements": {
@@ -1627,7 +1639,8 @@
         "contractStartsLater": "Žiadna zmluva o vyúčtovaní v deň odhlásenia {abreise}: zmluva začína až {beginn}. Dátum začiatku zmluvy u majiteľa posuňte dozadu, potom sa táto rezervácia započíta.",
         "noContract": "Pre tento objekt neexistuje žiadna zmluva o vyúčtovaní a žiadna provízna sadzba v kmeňových dátach – vytvorte zmluvu u majiteľa.",
         "addonsOutside": "Doplnkové služby – predávané cez myNextDays, nie sú zahrnuté v cene pre hostí na portáli"
-      }
+      },
+      "ownershipShare": "Podiel"
     },
     "expenses": {
       "add": "Pridať",
@@ -1721,7 +1734,13 @@
         "irreversible": "Tento krok sa nedá vrátiť späť. Finalizovanú faktúru možno zrušiť už len dobropisom."
       },
       "basis": "Určuje, kedy rezervácia spadá do daného obdobia: pri voľbe Príchod rozhoduje deň príchodu, pri voľbe Odchod deň odchodu. Rezervácia cez prelom mesiaca spadne podľa voľby do jedného alebo druhého mesiaca.",
-      "statuses": "Zúčtované sú len rezervácie s niektorým z vybraných stavov. Predvolené sú potvrdené a dokončené rezervácie — stornované do výplaty zvyčajne nepatria."
+      "statuses": "Zúčtované sú len rezervácie s niektorým z vybraných stavov. Predvolené sú potvrdené a dokončené rezervácie — stornované do výplaty zvyčajne nepatria.",
+      "channel": "Spôsob, akým bola táto rezervácia vykonaná: portál ako Booking.com alebo Airbnb, náš trh myBestDays, vlastná webová stránka prevádzky alebo priamo (telefón, e-mail, osobne).",
+      "portalDeduction": "Čo si portál ponechá predtým, ako peniaze dorazia k prevádzke – jeho provízia a, ak vyberá peniaze, jeho poplatok za platbu. Pri rezerváciách cez vlastnú webovú stránku alebo priamo je tu 0, pretože tam nie je žiadny portál.",
+      "commission": "Provízia prevádzky za správu objektu. Vypočítava sa z čiastky, ktorá zostane po odpočítaní portálu – a vzniká pri KAŽDEJ rezervácii, aj pri rezervácii cez vlastnú webovú stránku.",
+      "flatFee": "Pevná suma zo zmluvy o správe, napríklad za vedľajšie náklady. V závislosti od dohody sa odpočíta pred alebo po provízii.",
+      "ownerShare": "Čo nakoniec zostane pre majiteľa: cena pre hostí mínus odpočet portálu, mínus provízia, mínus paušál, plus poplatky, ktoré mu patria. V prípade spoluvlastníctva sa navyše vynásobí jeho podielom.",
+      "ownershipShare": "Podiel tohto majiteľa na objekte. 100 % znamená výhradné vlastníctvo. Ak dom patrí viacerým osobám, každá dostane vlastné vyúčtovanie svojho podielu – podiely spolu tvoria 100 %."
     },
     "finalizeConfirm": {
       "title": "Potvrdiť vyúčtovanie",
@@ -1754,6 +1773,11 @@
       "manageContract": "Spravovať zmluvu o vyúčtovaní",
       "receipt": "Doklad",
       "bookingsCount": "{n} rezervácií"
+    },
+    "coOwners": {
+      "title": "Spoluvlastník",
+      "hint": "Tieto nehnuteľnosti patria viacerým osobám. Každá dostane vlastné vyúčtovanie svojho podielu.",
+      "share": "{anteil} %"
     }
   },
   "ownerBilling": {
@@ -6487,7 +6511,8 @@
       "bookingFeesPerStay": "Za pobyt",
       "bookingFeesAssignTitle": "Chýba priradenie",
       "bookingFeesAssignHint": "Tieto poplatky sú zadané pri objekte, ale nie je určené, komu suma patrí. Bez toho nemožno vyúčtovanie pre vlastníka vypočítať.",
-      "bookingFeesAssign": "Vytvoriť priradenie"
+      "bookingFeesAssign": "Vytvoriť priradenie",
+      "miteigentum": "Spoluvlastníctvo: {wer} — {rest} % voľné"
     },
     "policiesForm": {
       "title": "Zásady",
@@ -12340,7 +12365,8 @@
   "sprache": {
     "label": "Jazyk e-mailov",
     "hint": "V tomto jazyku posielame e-maily tejto osobe.",
-    "none": "— neuvedené"
+    "none": "— neuvedené",
+    "infoAria": "Vysvetlenie k {feld}"
   },
   "neuerungen": {
     "eyebrow": "Novinky v produkte",

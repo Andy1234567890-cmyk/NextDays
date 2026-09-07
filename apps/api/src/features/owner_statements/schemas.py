@@ -296,6 +296,26 @@ class RentalRow(BaseModel):
     # `verwaltungsprovision` NICHT `bemessungsgrundlage × Satz`, und der
     # Beleg muss das sagen, sonst sieht der Posten wie ein Rechenfehler aus.
     min_provision_angewandt: bool = False
+    # Miteigentumsanteil dieses Eigentümers am Objekt (0601). 100 = allein.
+    # Steht in der Zeile und nicht nur im Kopf, weil er je OBJEKT gilt: bei
+    # drei Häusern kann er dreimal verschieden sein, und dann wäre eine Zahl
+    # im Kopf für zwei davon falsch.
+    ownership_share: float | None = None
+
+
+class Miteigentuemer(BaseModel):
+    """Ein weiterer Eigentümer desselben Objekts (0601, ADR-0028).
+
+    Reine AUSKUNFT für Vorschau und Beleg: „dieses Haus teilst du mit …".
+    Ohne diese Angabe steht auf der Abrechnung ein Anteil von 60 %, und
+    niemand kann sehen, wem die anderen 40 % gehören — die Zahl wäre dann
+    nachvollziehbar falsch, aber nicht überprüfbar.
+    """
+
+    listing_id: str
+    listing: str | None = None
+    name: str
+    anteil: float
 
 
 class ListingRow(BaseModel):
@@ -509,6 +529,9 @@ class StatementResponse(BaseModel):
     # Storno-Verknüpfung.
     cancels_statement_id: str | None = None
     cancelled_by_statement_id: str | None = None
+    # Die ANDEREN Eigentümer der abgerechneten Objekte (0601). Leer bei
+    # Alleineigentum — dem Normalfall, der dadurch unverändert aussieht.
+    miteigentuemer: list[Miteigentuemer] = Field(default_factory=list)
     rental_rows: list[RentalRow] = Field(default_factory=list)
     listing_rows: list[ListingRow] = Field(default_factory=list)
     expenses: list[ExpenseResponse] = Field(default_factory=list)

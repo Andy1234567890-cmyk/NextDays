@@ -1434,6 +1434,18 @@
       "commission": "Taxa alternativa se nenhum contrato de acerto se aplicar a um imóvel. O contrato abaixo tem prioridade — é o acordo efetivo e abrange também período, taxa fixa e comissão mínima. Se ambos ficarem vazios, não é calculado nenhum pagamento e é mostrado um travessão.",
       "commissionOverride": "Taxa alternativa apenas para este imóvel; substitui a taxa padrão do proprietário. Um contrato de acerto também tem prioridade aqui. Se o campo ficar vazio, aplica-se a taxa padrão.",
       "cprNumber": "Número de identificação pessoal dinamarquês do proprietário (formato DDMMYY-XXXX). Necessário apenas para a faturação de casas de férias dinamarquesas; visível apenas para administradores."
+    },
+    "coOwners": {
+      "label": "Coproprietário",
+      "entry": "{name} — {pct} %",
+      "unassigned": "{pct} % ainda não atribuído a um proprietário",
+      "tabHint": "Estas pessoas são coproprietárias de propriedades deste proprietário. Cada uma recebe a sua própria fatura pela sua quota; os seus dados mestre são mantidos na sua própria página.",
+      "entryObject": "{objekt} — {pct} %",
+      "open": "Abrir dados mestre"
+    },
+    "tabs": {
+      "mainOwner": "Proprietário principal",
+      "coOwners": "Coproprietário ({count})"
     }
   },
   "ownerStatements": {
@@ -1627,7 +1639,8 @@
         "contractStartsLater": "Não há contrato de faturamento na data de partida {abreise}: o contrato só começa em {beginn}. Retroceda o início do contrato com o proprietário, então esta reserva será faturada.",
         "noContract": "Não há contrato de faturamento nem taxa de comissão para este objeto nos dados mestre — crie um contrato com o proprietário.",
         "addonsOutside": "Serviços adicionais — vendidos via myNextDays, não incluídos no preço do portal para o hóspede"
-      }
+      },
+      "ownershipShare": "Compartilhar"
     },
     "expenses": {
       "add": "Adicionar",
@@ -1721,7 +1734,13 @@
         "irreversible": "Isto não pode ser anulado. Uma fatura finalizada só pode ser anulada através de uma fatura de anulação."
       },
       "basis": "Define quando uma reserva entra no período: com Check-in pelo dia de chegada, com Check-out pelo dia de partida. Uma reserva que atravessa a mudança de mês fica num mês ou no outro consoante a escolha.",
-      "statuses": "Só as reservas com um dos estados selecionados são liquidadas. Por predefinição são as reservas confirmadas e concluídas — as canceladas normalmente não pertencem a um pagamento."
+      "statuses": "Só as reservas com um dos estados selecionados são liquidadas. Por predefinição são as reservas confirmadas e concluídas — as canceladas normalmente não pertencem a um pagamento.",
+      "channel": "Por qual canal esta reserva foi feita: um portal como Booking.com ou Airbnb, nosso marketplace myBestDays, o próprio site da propriedade ou diretamente (telefone, e-mail, no local).",
+      "portalDeduction": "O que o portal retém antes que o dinheiro chegue à propriedade — sua comissão e, se ele cobrar o dinheiro, sua taxa de pagamento. Para reservas feitas através do próprio site ou diretamente, este valor é 0, pois não há portal envolvido.",
+      "commission": "A comissão da propriedade pela gestão do imóvel. Ela é calculada sobre o valor que resta após a dedução do portal — e é aplicada a CADA reserva, mesmo as feitas através do próprio site.",
+      "flatFee": "Um valor fixo do contrato de gestão, por exemplo, para despesas adicionais. Dependendo do acordo, ele é deduzido antes ou depois da comissão.",
+      "ownerShare": "O que resta para o proprietário no final: preço do hóspede menos dedução do portal, menos comissão, menos taxa fixa, mais as taxas que lhe pertencem. Em caso de copropriedade, adicionalmente multiplicado pela sua quota.",
+      "ownershipShare": "A quota deste proprietário na propriedade. 100% significa propriedade exclusiva. Se uma casa pertence a várias pessoas, cada uma recebe seu próprio extrato de conta sobre sua quota — as quotas somam 100%."
     },
     "finalizeConfirm": {
       "title": "Finalizar fatura",
@@ -1754,6 +1773,11 @@
       "manageContract": "Manter contrato de faturação",
       "receipt": "Recibo",
       "bookingsCount": "{n} reservas"
+    },
+    "coOwners": {
+      "title": "Coproprietário",
+      "hint": "Estas propriedades pertencem a várias pessoas. Cada uma recebe uma fatura separada pela sua parte.",
+      "share": "{anteil} %"
     }
   },
   "ownerBilling": {
@@ -6487,7 +6511,8 @@
       "bookingFeesPerStay": "Por estadia",
       "bookingFeesAssignTitle": "Falta a atribuição",
       "bookingFeesAssignHint": "Estas taxas estão registadas no alojamento, mas não está definido a quem pertence o valor. Sem isso, o acerto de contas do proprietário não pode ser calculado.",
-      "bookingFeesAssign": "Criar atribuição"
+      "bookingFeesAssign": "Criar atribuição",
+      "miteigentum": "Copropriedade: {wer} — {rest} % livre"
     },
     "policiesForm": {
       "title": "Políticas",
@@ -12340,7 +12365,8 @@
   "sprache": {
     "label": "Idioma dos e-mails",
     "hint": "Enviamos e-mails a esta pessoa neste idioma.",
-    "none": "— não indicado"
+    "none": "— não indicado",
+    "infoAria": "Explicação de {feld}"
   },
   "neuerungen": {
     "eyebrow": "Atualizações do produto",

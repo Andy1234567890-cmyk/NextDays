@@ -29,6 +29,7 @@ from supabase import Client
 
 from src.core.config import get_settings
 from src.core.logging import get_logger
+from src.core.sales_channels import FREMDE_PORTALE
 from src.core.security import AuthContext
 from src.features.booking_conditions.plan import (
     erste_zahlung,
@@ -1048,9 +1049,10 @@ class PaymentsService:
     # OTA zahlt den Vermieter selbst aus. Für solche Buchungen darf KEINE Stripe-
     # Zahlung erzeugt werden (sonst doppelte Belastung). Eigene Kanäle (direct =
     # manuell erfasst, portal = eigene Buchungsstrecke) laufen über Stripe.
-    _OTA_CHANNELS = frozenset(
-        {"booking", "airbnb", "vrbo", "ota_other"}
-    )
+    # Die zentrale Menge (`core.sales_channels.FREMDE_PORTALE`), nicht eine
+    # eigene Kopie: sie stand hier und in `subscriptions.EXTERNAL_CHANNELS`
+    # wortgleich doppelt (Wurzel 1, zusammengelegt am 07.09.2026).
+    _OTA_CHANNELS = FREMDE_PORTALE
 
     def _require_own_channel(self, res: dict) -> None:
         """Stellt sicher, dass die Reservierung über einen EIGENEN Kanal kam —

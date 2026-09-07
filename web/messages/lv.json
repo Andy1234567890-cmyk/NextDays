@@ -1434,6 +1434,18 @@
       "commission": "Rezerves likme, ja objektam nav spēkā norēķinu līgums. Zemāk esošajam līgumam ir prioritāte — tā ir faktiskā vienošanās, kas ietver arī periodu, fiksēto maksu un minimālo komisiju. Ja abi paliek tukši, izmaksa netiek aprēķināta, bet tiek parādīta domuzīme.",
       "commissionOverride": "Rezerves likme tikai šim objektam; aizstāj īpašnieka standarta likmi. Norēķinu līgumam arī šeit ir prioritāte. Ja lauks paliek tukšs, ir spēkā standarta likme.",
       "cprNumber": "Īpašnieka Dānijas personas kods (formā DDMMGG-XXXX). Nepieciešams tikai Dānijas brīvdienu māju norēķiniem; redzams tikai administratoriem."
+    },
+    "coOwners": {
+      "label": "Līdzīpašnieks",
+      "entry": "{name} — {pct} %",
+      "unassigned": "{pct} % vēl nav piešķirts nevienam īpašniekam",
+      "tabHint": "Šīs personas ir līdzīpašnieki šī īpašnieka objektos. Katrs saņem savu norēķinu par savu daļu; viņu pamatdati tiek uzturēti viņu pašu lapā.",
+      "entryObject": "{objekt} — {pct} %",
+      "open": "Atvērt pamatdatus"
+    },
+    "tabs": {
+      "mainOwner": "Galvenais īpašnieks",
+      "coOwners": "Līdzīpašnieks ({count})"
     }
   },
   "ownerStatements": {
@@ -1627,7 +1639,8 @@
         "contractStartsLater": "Nav norēķinu līguma izrakstīšanās dienā {abreise}: līgums sākas tikai {beginn}. Pārbaudiet līguma sākuma datumu pie īpašnieka, tad šī rezervācija tiks iekļauta norēķinos.",
         "noContract": "Šim īpašumam nav norēķinu līguma un komisijas likmes pamatdatos — lūdzu, izveidojiet līgumu ar īpašnieku.",
         "addonsOutside": "Papildu pakalpojumi — pārdoti, izmantojot myNextDays, nav iekļauti portāla viesa cenā"
-      }
+      },
+      "ownershipShare": "Daļa"
     },
     "expenses": {
       "add": "Pievienot",
@@ -1721,7 +1734,13 @@
         "irreversible": "To nevar atsaukt. Finalizētu rēķinu var atcelt tikai ar anulēšanas rēķinu."
       },
       "basis": "Nosaka, kad rezervācija iekrīt periodā: pēc reģistrēšanās — pēc ierašanās dienas, pēc izrakstīšanās — pēc izbraukšanas dienas. Rezervācija, kas pāriet no viena mēneša otrā, atkarībā no izvēles nonāk vienā vai otrā mēnesī.",
-      "statuses": "Tiek norēķinātas tikai rezervācijas ar kādu no izvēlētajiem statusiem. Pēc noklusējuma tās ir apstiprinātas un pabeigtas rezervācijas — atceltās parasti neietilpst izmaksā."
+      "statuses": "Tiek norēķinātas tikai rezervācijas ar kādu no izvēlētajiem statusiem. Pēc noklusējuma tās ir apstiprinātas un pabeigtas rezervācijas — atceltās parasti neietilpst izmaksā.",
+      "channel": "Kā šis rezervējums tika veikts: portālā, piemēram, Booking.com vai Airbnb, mūsu myBestDays tirgū, uzņēmuma paša tīmekļa vietnē vai tieši (pa tālruni, e-pastu, uz vietas).",
+      "portalDeduction": "Ko portāls patur, pirms nauda nonāk uzņēmumā – tā komisijas maksa un, ja tas iekasē naudu, tā maksājuma maksa. Rezervējumiem, kas veikti, izmantojot uzņēmuma paša tīmekļa vietni vai tieši, šeit ir 0, jo nav iesaistīts neviens portāls.",
+      "commission": "Uzņēmuma komisijas maksa par īpašuma pārvaldību. Tā tiek aprēķināta no summas, kas paliek pāri pēc portāla atskaitījuma, un tiek piemērota KATRAM rezervējumam, pat tiem, kas veikti, izmantojot uzņēmuma paša tīmekļa vietni.",
+      "flatFee": "Fiksēta summa no pārvaldības līguma, piemēram, par papildu izmaksām. Atkarībā no vienošanās tā tiek atskaitīta pirms vai pēc komisijas maksas.",
+      "ownerShare": "Kas beigās paliek īpašniekam: viesa cena mīnus portāla atskaitījums, mīnus komisijas maksa, mīnus fiksētā maksa, plus maksas, kas viņam pienākas. Līdzīpašuma gadījumā papildus reizināts ar viņa daļu.",
+      "ownershipShare": "Šī īpašnieka daļa īpašumā. 100 % nozīmē vienīpašumu. Ja māja pieder vairākām personām, katra saņem savu norēķinu par savu daļu – daļas kopā veido 100 %."
     },
     "finalizeConfirm": {
       "title": "Apstiprināt norēķinu",
@@ -1754,6 +1773,11 @@
       "manageContract": "Pārvaldīt norēķinu līgumu",
       "receipt": "Kvīts",
       "bookingsCount": "{n} rezervācijas"
+    },
+    "coOwners": {
+      "title": "Līdzīpašnieks",
+      "hint": "Šie īpašumi pieder vairākām personām. Katra persona saņem savu rēķinu par savu daļu.",
+      "share": "{anteil} %"
     }
   },
   "ownerBilling": {
@@ -6487,7 +6511,8 @@
       "bookingFeesPerStay": "Par uzturēšanos",
       "bookingFeesAssignTitle": "Trūkst piesaistes",
       "bookingFeesAssignHint": "Šīs maksas ir ievadītas objektam, taču nav noteikts, kam summa pieder. Bez tā īpašnieka norēķinu nevar aprēķināt.",
-      "bookingFeesAssign": "Izveidot piesaisti"
+      "bookingFeesAssign": "Izveidot piesaisti",
+      "miteigentum": "Līdzīpašums: {wer} — {rest} % brīvs"
     },
     "policiesForm": {
       "title": "Noteikumi",
@@ -12340,7 +12365,8 @@
   "sprache": {
     "label": "E-pastu valoda",
     "hint": "Šajā valodā mēs sūtām e-pastus šai personai.",
-    "none": "— nav norādīts"
+    "none": "— nav norādīts",
+    "infoAria": "Paskaidrojums par {feld}"
   },
   "neuerungen": {
     "eyebrow": "Produkta jaunumi",

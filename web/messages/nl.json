@@ -1434,6 +1434,18 @@
       "commission": "Terugvaltarief als voor een object geen afrekeningsovereenkomst geldt. De overeenkomst hieronder heeft voorrang — dat is de eigenlijke afspraak en omvat ook periode, vast bedrag en minimumcommissie. Blijven beide leeg, wordt geen uitbetaling berekend maar een streepje getoond.",
       "commissionOverride": "Terugvaltarief alleen voor dit object; overschrijft het standaardtarief van de eigenaar. Een afrekeningsovereenkomst heeft ook hier voorrang. Blijft het veld leeg, geldt het standaardtarief.",
       "cprNumber": "Deens persoonsnummer van de eigenaar (formaat DDMMJJ-XXXX). Alleen nodig voor de facturatie van Deense vakantiehuizen; alleen zichtbaar voor beheerders."
+    },
+    "coOwners": {
+      "label": "Mede-eigenaar",
+      "entry": "{name} — {pct} %",
+      "unassigned": "{pct} % nog niet toegewezen aan een eigenaar",
+      "tabHint": "Deze personen zijn mede-eigenaar van objecten van deze eigenaar. Iedereen ontvangt een eigen afrekening voor zijn aandeel; zijn stamgegevens worden op zijn eigen pagina beheerd.",
+      "entryObject": "{objekt} — {pct} %",
+      "open": "Stamgegevens openen"
+    },
+    "tabs": {
+      "mainOwner": "Hoofdeigenaar",
+      "coOwners": "Mede-eigenaar ({count})"
     }
   },
   "ownerStatements": {
@@ -1627,7 +1639,8 @@
         "contractStartsLater": "Geen afrekenovereenkomst op vertrekdatum {abreise}: de overeenkomst begint pas op {beginn}. Datum van begin overeenkomst bij eigenaar terugzetten, dan wordt deze boeking meegerekend.",
         "noContract": "Voor dit object is er geen afrekenovereenkomst en geen provisiepercentage in de stamgegevens – leg een overeenkomst aan bij de eigenaar.",
         "addonsOutside": "Extra diensten — verkocht via myNextDays, niet inbegrepen in de gastprijs van het portaal"
-      }
+      },
+      "ownershipShare": "Aandeel"
     },
     "expenses": {
       "add": "Toevoegen",
@@ -1721,7 +1734,13 @@
         "irreversible": "Dit kan niet ongedaan worden gemaakt. Een gefinaliseerde factuur kan alleen nog door een creditfactuur worden opgeheven."
       },
       "basis": "Bepaalt wanneer een boeking binnen de periode valt: bij Check-in op de aankomstdag, bij Check-out op de vertrekdag. Een boeking over de maandwisseling heen valt afhankelijk van je keuze in de ene of de andere maand.",
-      "statuses": "Alleen boekingen met een van de geselecteerde statussen worden afgerekend. Standaard zijn dat bevestigde en afgeronde boekingen — geannuleerde horen normaal gesproken niet in een uitbetaling."
+      "statuses": "Alleen boekingen met een van de geselecteerde statussen worden afgerekend. Standaard zijn dat bevestigde en afgeronde boekingen — geannuleerde horen normaal gesproken niet in een uitbetaling.",
+      "channel": "Via welk kanaal deze boeking tot stand kwam: een portaal zoals Booking.com of Airbnb, onze marktplaats myBestDays, de eigen website van het bedrijf of rechtstreeks (telefoon, e-mail, ter plaatse).",
+      "portalDeduction": "Wat het portaal zelf inhoudt voordat het geld bij het bedrijf aankomt – zijn commissie en, indien het geld wordt geïnd, zijn betalingskosten. Bij boekingen via de eigen website of rechtstreeks staat hier 0, omdat er dan geen portaal tussen zit.",
+      "commission": "De commissie van het bedrijf voor het beheer van de accommodatie. Deze wordt berekend over het bedrag dat overblijft na aftrek van het portaal – en is van toepassing op ELKE boeking, ook die via de eigen website.",
+      "flatFee": "Een vast bedrag uit het beheercontract, bijvoorbeeld voor bijkomende kosten. Afhankelijk van de overeenkomst wordt dit voor of na de commissie afgetrokken.",
+      "ownerShare": "Wat er uiteindelijk voor de eigenaar overblijft: gastprijs minus portaal-aftrek, minus commissie, minus forfait, plus de kosten die hem toekomen. Bij mede-eigendom bovendien vermenigvuldigd met zijn aandeel.",
+      "ownershipShare": "Het aandeel van deze eigenaar in de accommodatie. 100% betekent volledig eigendom. Als een huis eigendom is van meerdere personen, krijgt ieder zijn eigen afrekening over zijn aandeel – de aandelen vormen samen 100%."
     },
     "finalizeConfirm": {
       "title": "Afwikkeling vastleggen",
@@ -1754,6 +1773,11 @@
       "manageContract": "Facturatiecontract bewerken",
       "receipt": "Bon",
       "bookingsCount": "{n} boekingen"
+    },
+    "coOwners": {
+      "title": "Mede-eigenaar",
+      "hint": "Deze objecten zijn eigendom van meerdere personen. Iedereen ontvangt een eigen afrekening voor zijn aandeel.",
+      "share": "{anteil} %"
     }
   },
   "ownerBilling": {
@@ -6487,7 +6511,8 @@
       "bookingFeesPerStay": "Per verblijf",
       "bookingFeesAssignTitle": "Toewijzing ontbreekt",
       "bookingFeesAssignHint": "Deze kosten zijn bij het object vastgelegd, maar er is niet bepaald aan wie het bedrag toekomt. Zonder dat kan de eigenaarsafrekening niet worden berekend.",
-      "bookingFeesAssign": "Toewijzing aanmaken"
+      "bookingFeesAssign": "Toewijzing aanmaken",
+      "miteigentum": "Mede-eigendom: {wer} — {rest} % vrij"
     },
     "policiesForm": {
       "title": "Beleid",
@@ -12340,7 +12365,8 @@
   "sprache": {
     "label": "Taal voor e-mails",
     "hint": "In deze taal sturen we e-mails naar deze persoon.",
-    "none": "— niet opgegeven"
+    "none": "— niet opgegeven",
+    "infoAria": "Uitleg over {feld}"
   },
   "neuerungen": {
     "eyebrow": "Productupdates",

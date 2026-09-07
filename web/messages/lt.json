@@ -1434,6 +1434,18 @@
       "commission": "Atsarginis tarifas, jei objektui netaikoma atsiskaitymo sutartis. Toliau esanti sutartis turi viršenybę — tai tikrasis susitarimas, apimantis ir laikotarpį, fiksuotą mokestį bei minimalų komisinį. Jei abu lieka tušti, išmoka neskaičiuojama, o rodomas brūkšnys.",
       "commissionOverride": "Atsarginis tarifas tik šiam objektui; pakeičia savininko standartinį tarifą. Atsiskaitymo sutartis turi viršenybę ir čia. Jei laukas lieka tuščias, taikomas standartinis tarifas.",
       "cprNumber": "Savininko Danijos asmens kodas (formatas DDMMJJ-XXXX). Reikalingas tik Danijos atostogų namelių atsiskaitymams; matomas tik administratoriams."
+    },
+    "coOwners": {
+      "label": "Bendrasavininkis",
+      "entry": "{name} – {pct} %",
+      "unassigned": "{pct} % dar nepriskirta savininkui",
+      "tabHint": "Šie asmenys yra bendrasavininkiai su šio savininko objektais. Kiekvienas gauna savo atsiskaitymą už savo dalį; jo pagrindiniai duomenys tvarkomi jo paties puslapyje.",
+      "entryObject": "{objekt} – {pct} %",
+      "open": "Atidaryti pagrindinius duomenis"
+    },
+    "tabs": {
+      "mainOwner": "Pagrindinis savininkas",
+      "coOwners": "Bendrasavininkas ({count})"
     }
   },
   "ownerStatements": {
@@ -1627,7 +1639,8 @@
         "contractStartsLater": "Atsiskaitymo sutarties išvykimo dieną {abreise} nėra: sutartis prasideda tik {beginn}. Atnaujinkite sutarties pradžios datą pas savininką, tada šis užsakymas bus įskaičiuotas.",
         "noContract": "Šiam objektui nėra atsiskaitymo sutarties ir komisinio mokesčio pagrindiniuose duomenyse – sukurkite sutartį su savininku.",
         "addonsOutside": "Papildomos paslaugos – parduodamos per „myNextDays“, neįskaičiuotos į portalo svečio kainą"
-      }
+      },
+      "ownershipShare": "Dalis"
     },
     "expenses": {
       "add": "Pridėti",
@@ -1721,7 +1734,13 @@
         "irreversible": "To atšaukti nebegalima. Finalizuotą sąskaitą galima panaikinti tik stornavimo sąskaita."
       },
       "basis": "Nustato, kada rezervacija patenka į laikotarpį: pagal įsiregistravimą — pagal atvykimo dieną, pagal išsiregistravimą — pagal išvykimo dieną. Rezervacija per mėnesių sandūrą, priklausomai nuo pasirinkimo, patenka į vieną arba kitą mėnesį.",
-      "statuses": "Apskaitomos tik rezervacijos, turinčios vieną iš pasirinktų būsenų. Pagal numatytuosius nustatymus tai patvirtintos ir baigtos rezervacijos — atšauktos paprastai į išmoką neįtraukiamos."
+      "statuses": "Apskaitomos tik rezervacijos, turinčios vieną iš pasirinktų būsenų. Pagal numatytuosius nustatymus tai patvirtintos ir baigtos rezervacijos — atšauktos paprastai į išmoką neįtraukiamos.",
+      "channel": "Kuriuo kanalu gautas šis užsakymas: portalas, pvz., Booking.com arba Airbnb, mūsų prekyvietė „myBestDays“, paties objekto svetainė arba tiesiogiai (telefonu, el. paštu, vietoje).",
+      "portalDeduction": "Ką portalas pasilieka sau, kol pinigai pasiekia objektą – jo komisinį mokestį ir, jei jis renka pinigus, jo mokėjimo mokestį. Užsakymams per paties objekto svetainę arba tiesiogiai čia nurodoma 0, nes tarpininkų nėra.",
+      "commission": "Objekto komisinis mokestis už objekto valdymą. Jis apskaičiuojamas nuo sumos, likusios po portalo atskaitymo, ir taikomas KIEKVIENAM užsakymui, net ir užsakymui per paties objekto svetainę.",
+      "flatFee": "Fiksuota suma iš valdymo sutarties, pavyzdžiui, už papildomas išlaidas. Priklausomai nuo susitarimo, ji atskaitoma prieš arba po komisinio mokesčio.",
+      "ownerShare": "Kas galiausiai lieka savininkui: svečio kaina minus portalo atskaitymas, minus komisinis mokestis, minus fiksuota suma, plius jam priklausantys mokesčiai. Bendros nuosavybės atveju papildomai padauginama iš jo dalies.",
+      "ownershipShare": "Šio savininko dalis objekte. 100 % reiškia vienintelę nuosavybę. Jei namas priklauso keliems asmenims, kiekvienas gauna savo ataskaitą apie savo dalį – dalys kartu sudaro 100 %."
     },
     "finalizeConfirm": {
       "title": "Patvirtinti atsiskaitymą",
@@ -1754,6 +1773,11 @@
       "manageContract": "Tvarkyti atsiskaitymo sutartį",
       "receipt": "Kvitas",
       "bookingsCount": "{n} užsakymai"
+    },
+    "coOwners": {
+      "title": "Bendrasavininkai",
+      "hint": "Šie objektai priklauso keliems asmenims. Kiekvienas gauna atskirą sąskaitą už savo dalį.",
+      "share": "{anteil} %"
     }
   },
   "ownerBilling": {
@@ -6487,7 +6511,8 @@
       "bookingFeesPerStay": "Už apsistojimą",
       "bookingFeesAssignTitle": "Nėra priskyrimo",
       "bookingFeesAssignHint": "Šie mokesčiai įvesti objektui, bet nenurodyta, kam suma priklauso. Be to savininko atsiskaitymo apskaičiuoti negalima.",
-      "bookingFeesAssign": "Sukurti priskyrimą"
+      "bookingFeesAssign": "Sukurti priskyrimą",
+      "miteigentum": "Bendrasavininkystė: {wer} – {rest} % laisva"
     },
     "policiesForm": {
       "title": "Taisyklės",
@@ -12340,7 +12365,8 @@
   "sprache": {
     "label": "El. laiškų kalba",
     "hint": "Šia kalba siunčiame el. laiškus šiam asmeniui.",
-    "none": "— nenurodyta"
+    "none": "— nenurodyta",
+    "infoAria": "Paaiškinimas apie {feld}"
   },
   "neuerungen": {
     "eyebrow": "Produkto naujienos",

@@ -1434,6 +1434,18 @@
       "commission": "Varumäär, kui objektile ei kehti arveldusleping. Allpool olev leping on ülimuslik — see on tegelik kokkulepe ja hõlmab ka perioodi, püsitasu ja miinimumkomisjoni. Kui mõlemad jäävad tühjaks, väljamakset ei arvutata, vaid näidatakse mõttekriipsu.",
       "commissionOverride": "Varumäär ainult selle objekti kohta; asendab omaniku standardmäära. Arveldusleping on ka siin ülimuslik. Kui väli jääb tühjaks, kehtib standardmäär.",
       "cprNumber": "Omaniku Taani isikukood (vorming PPKKAA-XXXX). Vajalik ainult Taani puhkemajade arveldamiseks; nähtav ainult administraatoritele."
+    },
+    "coOwners": {
+      "label": "Kaasomanik",
+      "entry": "{name} — {pct} %",
+      "unassigned": "{pct} % pole veel ühelegi omanikule määratud",
+      "tabHint": "Need isikud on selle omaniku objektides kaasomanikud. Igaüks saab oma osa kohta oma arve; tema põhiandmeid hallatakse tema enda lehel.",
+      "entryObject": "{objekt} — {pct} %",
+      "open": "Ava põhiandmed"
+    },
+    "tabs": {
+      "mainOwner": "Peaomanik",
+      "coOwners": "Kaasomanik ({count})"
     }
   },
   "ownerStatements": {
@@ -1627,7 +1639,8 @@
         "contractStartsLater": "Väljumispäeval {abreise} puudub arveldusleping: leping algab alles {beginn}. Kuupäevastage lepingu algus omaniku juures tagasi, siis arvestatakse see broneering sisse.",
         "noContract": "Selle objekti jaoks puudub arveldusleping ja põhiandmetes puudub vahendustasu määr – looge omanikule leping.",
         "addonsOutside": "Lisateenused – müüdud myNextDays kaudu, ei sisaldu portaali külalise hinnas"
-      }
+      },
+      "ownershipShare": "Jaga"
     },
     "expenses": {
       "add": "Lisa",
@@ -1721,7 +1734,13 @@
         "irreversible": "Seda ei saa tagasi võtta. Finaliseeritud arvet saab kehtetuks tunnistada üksnes tühistusarvega."
       },
       "basis": "Määrab, millal broneering langeb perioodi: sisseregistreerimise puhul saabumispäeva järgi, väljaregistreerimise puhul lahkumispäeva järgi. Kuuvahetust ületav broneering satub valikust olenevalt ühte või teise kuusse.",
-      "statuses": "Arvestatakse ainult broneeringuid, millel on üks valitud staatustest. Vaikimisi on need kinnitatud ja lõpetatud broneeringud — tühistatud ei kuulu tavaliselt väljamaksesse."
+      "statuses": "Arvestatakse ainult broneeringuid, millel on üks valitud staatustest. Vaikimisi on need kinnitatud ja lõpetatud broneeringud — tühistatud ei kuulu tavaliselt väljamaksesse.",
+      "channel": "Kuidas see broneering tehti: portaali (nt Booking.com või Airbnb), meie turuplatsi myBestDays, majutusasutuse enda veebisaidi kaudu või otse (telefon, e-post, kohapeal).",
+      "portalDeduction": "Mida portaal endale jätab, enne kui raha majutusasutusse jõuab – portaali vahendustasu ja, kui portaal raha kogub, ka maksetasu. Broneeringute puhul, mis tehakse majutusasutuse enda veebisaidi kaudu või otse, on see 0, sest seal ei ole portaali vahel.",
+      "commission": "Majutusasutuse vahendustasu objekti haldamise eest. See arvutatakse summast, mis jääb alles pärast portaali mahaarvamist – ja see rakendub IGA broneeringu puhul, ka siis, kui see tehakse majutusasutuse enda veebisaidi kaudu.",
+      "flatFee": "Fikseeritud summa halduslepingust, näiteks kõrvalkulude eest. Sõltuvalt kokkuleppest arvatakse see maha enne või pärast vahendustasu.",
+      "ownerShare": "Mis jääb lõpuks omanikule: külalise hind miinus portaali mahaarvamine, miinus vahendustasu, miinus fikseeritud summa, pluss tasud, mis talle kuuluvad. Kaasomandi puhul korrutatakse see lisaks tema osaga.",
+      "ownershipShare": "Selle omaniku osa objektist. 100% tähendab ainuomandit. Kui maja kuulub mitmele isikule, saab igaüks oma arve oma osa kohta – osad moodustavad kokku 100%."
     },
     "finalizeConfirm": {
       "title": "Arvelduse kinnitamine",
@@ -1754,6 +1773,11 @@
       "manageContract": "Arvelduslepingu haldamine",
       "receipt": "Kviitung",
       "bookingsCount": "{n} broneeringut"
+    },
+    "coOwners": {
+      "title": "Kaasomanikud",
+      "hint": "Need majutusasutused kuuluvad mitmele inimesele. Igaüks saab oma osa kohta eraldi arveldusarve.",
+      "share": "{anteil} %"
     }
   },
   "ownerBilling": {
@@ -6487,7 +6511,8 @@
       "bookingFeesPerStay": "Peatumise kohta",
       "bookingFeesAssignTitle": "Määrang puudub",
       "bookingFeesAssignHint": "Need tasud on objektil sisestatud, kuid pole määratud, kellele summa kuulub. Ilma selleta ei saa omaniku arvestust arvutada.",
-      "bookingFeesAssign": "Loo määrang"
+      "bookingFeesAssign": "Loo määrang",
+      "miteigentum": "Kaasomand: {wer} – {rest} % vaba"
     },
     "policiesForm": {
       "title": "Reeglid",
@@ -12340,7 +12365,8 @@
   "sprache": {
     "label": "E-kirjade keel",
     "hint": "Selles keeles saadame sellele isikule e-kirju.",
-    "none": "— määramata"
+    "none": "— määramata",
+    "infoAria": "Selgitus: {feld}"
   },
   "neuerungen": {
     "eyebrow": "Tooteuuendused",

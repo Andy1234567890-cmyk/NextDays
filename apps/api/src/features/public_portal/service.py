@@ -1039,6 +1039,7 @@ class PublicPortalService:
         basis = befund.basisbetrag(r.get("total_amount"))
         satz = portal_saetze.get(str(r["id"])) or {}
         abzug = portal_abzug(
+            kanal=r.get("channel"),
             # OHNE Zusatzleistungen: die kennt das Portal nicht (`portal_brutto`).
             brutto=portal_brutto(
                 uebernachtung=basis,

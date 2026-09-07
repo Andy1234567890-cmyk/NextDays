@@ -1434,6 +1434,18 @@
       "commission": "Reservsats om inget avräkningsavtal gäller för ett objekt. Avtalet nedan har företräde — det är den egentliga överenskommelsen och omfattar även period, avgift och minimiprovision. Om båda är tomma beräknas ingen utbetalning utan ett tankstreck visas.",
       "commissionOverride": "Reservsats endast för detta objekt; ersätter ägarens standardsats. Ett avräkningsavtal har företräde även här. Om fältet är tomt gäller standardsatsen.",
       "cprNumber": "Ägarens danska personnummer (format DDMMÅÅ-XXXX). Endast nödvändigt för fakturering av danska fritidshus; endast synligt för administratörer."
+    },
+    "coOwners": {
+      "label": "Delägare",
+      "entry": "{name} — {pct} %",
+      "unassigned": "{pct} % ännu inte tilldelad någon ägare",
+      "tabHint": "Dessa personer är delägare i objekt som tillhör denna ägare. Var och en får sin egen faktura för sin andel; deras grundläggande uppgifter hanteras på deras egen sida.",
+      "entryObject": "{objekt} — {pct} %",
+      "open": "Öppna grunddata"
+    },
+    "tabs": {
+      "mainOwner": "Huvudägare",
+      "coOwners": "Delägare ({count})"
     }
   },
   "ownerStatements": {
@@ -1627,7 +1639,8 @@
         "contractStartsLater": "Inget faktureringsavtal på avresedagen {abreise}: avtalet börjar först den {beginn}. Backdatera avtalsstarten hos ägaren, så räknas denna bokning med.",
         "noContract": "Det finns inget faktureringsavtal och ingen provisionssats för detta objekt i masterdata – skapa ett avtal hos ägaren.",
         "addonsOutside": "Tilläggstjänster – säljs via myNextDays, ingår ej i portalens gästpris"
-      }
+      },
+      "ownershipShare": "Andel"
     },
     "expenses": {
       "add": "Lägg till",
@@ -1721,7 +1734,13 @@
         "irreversible": "Detta går inte att ångra. En finaliserad faktura kan endast upphävas genom en kreditfaktura."
       },
       "basis": "Avgör när en bokning hamnar inom perioden: vid Incheckning efter ankomstdagen, vid Utcheckning efter avresedagen. En bokning över månadsskiftet hamnar i den ena eller den andra månaden beroende på valet.",
-      "statuses": "Endast bokningar med någon av de valda statusarna avräknas. Standard är bekräftade och avslutade bokningar — avbokade hör normalt inte hemma i en utbetalning."
+      "statuses": "Endast bokningar med någon av de valda statusarna avräknas. Standard är bekräftade och avslutade bokningar — avbokade hör normalt inte hemma i en utbetalning.",
+      "channel": "Hur bokningen kom in: en portal som Booking.com eller Airbnb, vår marknadsplats myBestDays, boendets egen webbplats eller direkt (telefon, e-post, på plats).",
+      "portalDeduction": "Vad portalen behåller innan pengarna når boendet – dess provision och, om den tar emot betalningen, dess betalningsavgift. För bokningar via egen webbplats eller direkt står här 0, eftersom ingen portal är inblandad.",
+      "commission": "Boendets provision för förvaltningen av objektet. Den beräknas på beloppet som återstår efter portalens avdrag – och tas ut vid ALLA bokningar, även de via egen webbplats.",
+      "flatFee": "Ett fast belopp från förvaltningsavtalet, till exempel för driftskostnader. Beroende på överenskommelse dras det av före eller efter provisionen.",
+      "ownerShare": "Vad som slutligen återstår för ägaren: gästpris minus portalavdrag, minus provision, minus schablonavgift, plus de avgifter som tillhör ägaren. Vid delägarskap multipliceras det dessutom med ägarens andel.",
+      "ownershipShare": "Denna ägares andel av objektet. 100 % betyder ensam ägare. Om ett hus ägs av flera personer får var och en sin egen redovisning för sin andel – andelarna utgör tillsammans 100 %."
     },
     "finalizeConfirm": {
       "title": "Lås fakturering",
@@ -1754,6 +1773,11 @@
       "manageContract": "Hantera faktureringsavtal",
       "receipt": "Kvitto",
       "bookingsCount": "{n} bokningar"
+    },
+    "coOwners": {
+      "title": "Delägare",
+      "hint": "Dessa boenden ägs av flera personer. Var och en får en egen faktura för sin andel.",
+      "share": "{anteil} %"
     }
   },
   "ownerBilling": {
@@ -6487,7 +6511,8 @@
       "bookingFeesPerStay": "Per vistelse",
       "bookingFeesAssignTitle": "Tilldelning saknas",
       "bookingFeesAssignHint": "Dessa avgifter är upplagda på objektet, men det är inte fastställt vem beloppet tillhör. Utan det kan ägaravräkningen inte beräknas.",
-      "bookingFeesAssign": "Skapa tilldelning"
+      "bookingFeesAssign": "Skapa tilldelning",
+      "miteigentum": "Delat ägande: {wer} – {rest} % ledigt"
     },
     "policiesForm": {
       "title": "Villkor",
@@ -12340,7 +12365,8 @@
   "sprache": {
     "label": "Språk för e-post",
     "hint": "På det här språket skickar vi e-post till den här personen.",
-    "none": "— ej angivet"
+    "none": "— ej angivet",
+    "infoAria": "Förklaring till {feld}"
   },
   "neuerungen": {
     "eyebrow": "Produktnyheter",

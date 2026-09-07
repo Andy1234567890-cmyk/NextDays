@@ -1434,6 +1434,18 @@
       "commission": "Fallback rate if no billing agreement applies to a property. The agreement below takes precedence — it is the actual arrangement and also covers period, flat fee and minimum commission. If both stay empty, no payout is calculated and a dash is shown instead.",
       "commissionOverride": "Fallback rate for this property only; overrides the owner's standard rate. A billing agreement takes precedence here too. If left empty, the standard rate applies.",
       "cprNumber": "Owner's Danish social security number (format DDMMYY-XXXX). Only required for billing Danish holiday homes; visible only to administrators."
+    },
+    "coOwners": {
+      "label": "Co-owner",
+      "entry": "{name} — {pct} %",
+      "unassigned": "{pct} % not yet assigned to an owner",
+      "tabHint": "These individuals are co-owners of properties belonging to this owner. Each receives their own billing for their share; their master data is maintained on their own page.",
+      "entryObject": "{objekt} — {pct} %",
+      "open": "Open master data"
+    },
+    "tabs": {
+      "mainOwner": "Main owner",
+      "coOwners": "Co-owners ({count})"
     }
   },
   "ownerStatements": {
@@ -1627,7 +1639,8 @@
         "contractStartsLater": "No billing agreement on departure day {abreise}: the agreement only starts on {beginn}. Backdate the agreement start date with the owner, then this booking will be billed.",
         "noContract": "There is no billing agreement or commission rate in the master data for this property — please create an agreement with the owner.",
         "addonsOutside": "Additional services — sold via myNextDays, not included in the portal guest price"
-      }
+      },
+      "ownershipShare": "Share"
     },
     "expenses": {
       "add": "Add",
@@ -1721,7 +1734,13 @@
         "irreversible": "This cannot be undone. A finalized invoice can only be reversed by a cancellation invoice."
       },
       "basis": "Determines when a booking falls within the period: with Check-in by the arrival day, with Check-out by the departure day. A booking spanning the turn of the month lands in one month or the other depending on your choice.",
-      "statuses": "Only bookings with one of the selected statuses are settled. The default is confirmed and completed bookings — cancelled ones normally do not belong in a payout."
+      "statuses": "Only bookings with one of the selected statuses are settled. The default is confirmed and completed bookings — cancelled ones normally do not belong in a payout.",
+      "channel": "How this booking was made: via a portal like Booking.com or Airbnb, our myBestDays marketplace, the property's own website, or directly (phone, email, on-site).",
+      "portalDeduction": "What the portal retains before the money reaches the property – its commission and, if it collects the money, its payment fee. For bookings made via the property's own website or directly, this is 0, as there is no portal involved.",
+      "commission": "The property's commission for managing the accommodation. It is calculated on the amount remaining after the portal deduction – and applies to EVERY booking, even those made via the property's own website.",
+      "flatFee": "A fixed amount from the management contract, for example, for utilities. Depending on the agreement, it is deducted before or after the commission.",
+      "ownerShare": "What remains for the owner at the end: guest price minus portal deduction, minus commission, minus flat fee, plus the fees that belong to them. In the case of co-ownership, additionally multiplied by their share.",
+      "ownershipShare": "This owner's share of the property. 100% means sole ownership. If a house belongs to several people, each receives their own statement for their share – the shares together add up to 100%."
     },
     "finalizeConfirm": {
       "title": "Finalize billing",
@@ -1754,6 +1773,11 @@
       "manageContract": "Manage billing agreement",
       "receipt": "Receipt",
       "bookingsCount": "{n} bookings"
+    },
+    "coOwners": {
+      "title": "Co-owner",
+      "hint": "These properties are owned by multiple people. Each receives a separate invoice for their share.",
+      "share": "{anteil}%"
     }
   },
   "ownerBilling": {
@@ -6508,7 +6532,8 @@
       "bookingFeesPerStay": "Per stay",
       "bookingFeesAssignTitle": "Assignment missing",
       "bookingFeesAssignHint": "These fees are set up on the property, but it is not defined who the amount belongs to. Without that the owner statement cannot be calculated.",
-      "bookingFeesAssign": "Create assignment"
+      "bookingFeesAssign": "Create assignment",
+      "miteigentum": "Co-ownership: {wer} — {rest}% free"
     },
     "policiesForm": {
       "title": "Policies",
@@ -12361,7 +12386,8 @@
   "sprache": {
     "label": "Email language",
     "hint": "We send emails to this person in this language.",
-    "none": "— not specified"
+    "none": "— not specified",
+    "infoAria": "Explanation of {feld}"
   },
   "neuerungen": {
     "eyebrow": "Product updates",

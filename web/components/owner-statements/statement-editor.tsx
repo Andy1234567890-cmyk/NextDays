@@ -727,6 +727,27 @@ export function StatementEditor({
         )}
       </Section>
 
+      {/* Miteigentümer (0601): nur bei geteilten Objekten. Steht VOR der
+          Aktivität, weil die Anteile in den Zeilen sonst unerklärt auftauchen —
+          zuerst „das Haus teilst du mit X", dann die Zahlen. */}
+      {st.miteigentuemer.length > 0 && (
+        <Section title={t("coOwners.title")} defaultOpen>
+          <p className="mb-3 text-sm text-muted-foreground">{t("coOwners.hint")}</p>
+          <ul className="space-y-1 text-sm">
+            {st.miteigentuemer.map((m) => (
+              <li key={`${m.listing_id}-${m.name}`} className="flex items-baseline gap-2">
+                <span className="font-medium">{m.listing ?? m.listing_id}</span>
+                <span className="text-muted-foreground">·</span>
+                <span>{m.name}</span>
+                <span className="text-muted-foreground">
+                  {t("coOwners.share", { anteil: prozent(m.anteil) })}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
+
       {/* Rental activity */}
       <RentalActivity statement={st} t={t} currency={cur} kanalLabels={kanalLabels} locale={locale} />
 
@@ -930,8 +951,27 @@ function RentalActivity({
   const zeigtBetrieb = rows.some((r) => r.total_price !== null);
   const zeigtPauschale = rows.some((r) => (r.pauschale ?? 0) !== 0);
   const kanal = (r: RentalRow) => r.ota_name ?? kanalLabels[r.channel] ?? r.channel;
-  const th = (label: string, right = false, extra = "") => (
-    <th className={`py-2 pr-4 font-medium ${right ? "text-right" : ""} ${extra}`}>{label}</th>
+  // `hilfe` = Schlüssel unter `info.*`. Jede Spalte, deren Bedeutung nicht aus
+  // dem Wort hervorgeht, bekommt ein ℹ-Symbol daneben — Ansage des Betriebs am
+  // 07.09.2026: „Eigentümer- und Berechnungsseite brauchen einfache Hilfetexte,
+  // das versteht keiner." Ohne sie muss man die Rechenkette kennen, um zu
+  // wissen, ob „Provision" die des Portals oder die des Betriebs ist.
+  const th = (label: string, right = false, extra = "", hilfe?: string) => (
+    <th className={`py-2 pr-4 font-medium ${right ? "text-right" : ""} ${extra}`}>
+      {hilfe ? (
+        <span
+          className={`flex items-center gap-1.5 ${right ? "justify-end" : ""}`}
+        >
+          {label}
+          <InfoHinweis
+            text={t(hilfe)}
+            ariaLabel={t("info.aria", { feld: label })}
+          />
+        </span>
+      ) : (
+        label
+      )}
+    </th>
   );
   const spalten =
     6 + (zeigtBetrieb ? 2 : 0) + 1 + (zeigtPauschale ? 1 : 0) + 1;
@@ -984,7 +1024,7 @@ function RentalActivity({
                   {th(t("rental.arrival"))}
                   {th(t("rental.departure"))}
                   {th(t("rental.nights"), true)}
-                  {th(t("rental.channel"))}
+                  {th(t("rental.channel"), false, "", "info.channel")}
                   {zeigtBetrieb && (
                     <th className="py-2 pr-4 text-right font-medium">
                       <span className="flex items-center justify-end gap-1.5">
@@ -996,10 +1036,10 @@ function RentalActivity({
                       </span>
                     </th>
                   )}
-                  {zeigtBetrieb && th(t("rental.portalDeduction"), true)}
-                  {th(t("rental.commission"), true)}
-                  {zeigtPauschale && th(t("rental.flatFee"), true)}
-                  {th(t("rental.ownerShare"), true, "pr-0")}
+                  {zeigtBetrieb && th(t("rental.portalDeduction"), true, "", "info.portalDeduction")}
+                  {th(t("rental.commission"), true, "", "info.commission")}
+                  {zeigtPauschale && th(t("rental.flatFee"), true, "", "info.flatFee")}
+                  {th(t("rental.ownerShare"), true, "pr-0", "info.ownerShare")}
                   <th className="py-2 pl-2" />
                 </>
               ) : (
@@ -1008,7 +1048,7 @@ function RentalActivity({
                   {th(t("rental.reservations"))}
                   {th(t("rental.nights"))}
                   {th(t("rental.totalPrice"), true)}
-                  {th(t("rental.totalPayout"), true, "pr-0")}
+                  {th(t("rental.totalPayout"), true, "pr-0", "info.totalPayout")}
                 </>
               )}
             </tr>
@@ -1062,6 +1102,17 @@ function RentalActivity({
                         )}
                         <td className="py-2 text-right font-semibold">
                           {betragOderStrich(r.owner_payout, rc)}
+                          {/* Der Anteil NUR bei Miteigentum (0601): bei 100 %
+                              wäre „100 %" an jeder Zeile Lärm, der die
+                              Ausnahme unsichtbar macht. Steht direkt am
+                              Betrag, weil er ihn erklärt — sonst sähe die
+                              Zahl gegenüber den anderen Zeilen zu klein aus,
+                              ohne dass der Grund zu sehen ist. */}
+                          {r.ownership_share !== null && r.ownership_share < 100 && (
+                            <span className="block text-xs font-normal text-muted-foreground">
+                              {t("rental.ownershipShare")} {prozent(r.ownership_share)}
+                            </span>
+                          )}
                           {r.owner_payout_converted !== null &&
                             rc !== (statement.summary.owner_currency || currency) && (
                               <span className="block text-xs font-normal text-muted-foreground">

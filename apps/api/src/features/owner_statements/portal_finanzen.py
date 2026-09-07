@@ -132,6 +132,7 @@ def zerlegung_ermitteln(
 
     gemeldet = zu_decimal(reservation.get("ota_commission"))
     abzug = portal_abzug(
+        kanal=reservation.get("channel"),
         brutto=brutto,
         gemeldete_provision=gemeldet,
         provision_pct=(satz or {}).get("provision_pct"),

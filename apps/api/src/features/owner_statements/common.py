@@ -40,6 +40,8 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 
+from src.core.sales_channels import ohne_portal_abzug
+
 _CENT = Decimal("0.01")
 _HUNDERT = Decimal("100")
 
@@ -381,6 +383,7 @@ def portal_zieht_ein(kanal: object, payment_collect: object) -> bool:
 
 def portal_abzug(
     *,
+    kanal: object,
     brutto: Decimal,
     gemeldete_provision: object,
     provision_pct: object,
@@ -403,7 +406,28 @@ def portal_abzug(
 
     Zieht das Portal nicht ein (``zieht_portal_ein=False``), entfällt die
     Zahlungsgebühr; die Provision bleibt, sie wird nur separat fakturiert.
+
+    Für die EIGENEN Kanäle des Betriebs (``core.sales_channels.EIGENE_KANAELE``:
+    Website, Direkt) ist der Abzug bekannt 0 — dort gibt es kein Portal, das
+    etwas einbehält. Unser eigener Marktplatz zählt NICHT dazu: myBestDays
+    nimmt Provision wie Booking, dort bleibt Meldung oder Satz Pflicht.
     """
+    # Eigene Wege des Betriebs (Website, Telefon, vor Ort): es steht kein
+    # Portal zwischen Gast und Betrieb, also ist NICHTS einzubehalten. Der
+    # Abzug ist damit bekannt NULL — kein fehlender Wert, für den ein Satz
+    # gepflegt werden müsste (die Abrechnungsregeln bieten diese Kanäle
+    # folgerichtig gar nicht an).
+    #
+    # Live am 07.09.2026: eine Website-Buchung über 4.513,75 DKK ließ die
+    # GANZE Abrechnung eines Eigentümers auf „—" stehen (Eigentümer- UND
+    # Verwaltungs-Auszahlung), weil hier ein Portal-Satz verlangt wurde, den es
+    # für die eigene Website nie geben wird. Die Verwaltungsprovision des
+    # Betriebs (im Fall 20 %) und die Pauschale fallen unverändert an — sie
+    # hängen am Verwaltungsvertrag, nicht am Kanal, und werden weiter unten in
+    # `auszahlung_berechnen` gerechnet.
+    if ohne_portal_abzug(kanal):
+        return PortalAbzug(provision=Decimal("0"), zahlungsgebuehr=Decimal("0"))
+
     gemeldet = zu_decimal(gemeldete_provision)
     if gemeldet is not None:
         provision = gemeldet

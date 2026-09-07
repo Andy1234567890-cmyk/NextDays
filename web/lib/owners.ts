@@ -9,10 +9,19 @@ import { currentToken } from "@/lib/session-token";
 
 export type StatementFrequency = "none" | "monthly";
 
+/** Ein ANDERER Eigentümer am selben Objekt (0601, ADR-0028). */
+export type OwnerMiteigentuemer = {
+  owner_id: string;
+  name: string;
+  ownership_share: number;
+};
+
 export type OwnerPropertyLink = {
   property_id: string;
   ownership_share: number;
   commission_override_pct: number | null;
+  /** Die anderen Eigentümer dieses Objekts; leer = Alleineigentum. */
+  miteigentuemer: OwnerMiteigentuemer[];
 };
 
 export type Owner = {
@@ -224,6 +233,16 @@ export type FreieObjektOption = {
   title: string;
   subtitle?: string;
   photo?: string;
+  /** Wie viel Anteil an diesem Objekt noch frei ist (0601). 100 = unberührt,
+   *  darunter ist nur noch Miteigentum über den Rest möglich.
+   *
+   *  Optional, weil nicht jede Aufrufstelle eine Auswahlliste vom Server hat:
+   *  das Stammdaten-Sheet baut sich seine Liste aus den bereits zugeordneten
+   *  Objekten selbst. Ein Pflichtfeld zwänge es, einen Anteil zu erfinden
+   *  (Wurzel 4); fehlt der Wert, zeigt die Zeile schlicht keinen Hinweis. */
+  freier_anteil?: number;
+  /** Wem das Objekt schon zum Teil gehört; leer bei einem freien Objekt. */
+  beteiligte?: OwnerMiteigentuemer[];
 };
 
 /**
@@ -319,9 +338,10 @@ export async function deleteOwner(
 }
 
 /**
- * Objekte, die diesem Eigentümer zugeordnet werden dürfen: frei (keinem Owner
- * zugeordnet) oder bereits dieser Owner. Objekte anderer Eigentümer fehlen —
- * ein Objekt gehört genau einem Eigentümer.
+ * Objekte, die diesem Eigentümer zugeordnet werden dürfen: frei, bereits
+ * seines, oder TEILWEISE vergeben — dann als Miteigentum über den freien
+ * Restanteil (0601/ADR-0028). Voll vergebene Objekte fehlen: dort ist kein
+ * Anteil mehr zu holen.
  */
 export async function getAvailableProperties(
   ownerId: string,

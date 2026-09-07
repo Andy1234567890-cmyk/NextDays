@@ -1434,6 +1434,18 @@
       "commission": "Taux de repli si aucun contrat de décompte ne s'applique à un bien. Le contrat ci-dessous prime — c'est l'accord réel, qui couvre aussi la période, le forfait et la commission minimale. Si les deux restent vides, aucun versement n'est calculé : un tiret est affiché.",
       "commissionOverride": "Taux de repli pour ce bien uniquement ; remplace le taux standard du propriétaire. Un contrat de décompte prime également ici. Si le champ reste vide, le taux standard s'applique.",
       "cprNumber": "Numéro d'identification personnel danois du propriétaire (format JJMMAA-XXXX). Uniquement nécessaire pour la facturation des maisons de vacances danoises ; visible uniquement par les administrateurs."
+    },
+    "coOwners": {
+      "label": "Copropriétaire",
+      "entry": "{name} — {pct} %",
+      "unassigned": "{pct} % pas encore attribué à un propriétaire",
+      "tabHint": "Ces personnes sont copropriétaires des biens de ce propriétaire. Chacun reçoit sa propre facture pour sa part ; ses données de base sont gérées sur sa propre page.",
+      "entryObject": "{objekt} — {pct} %",
+      "open": "Ouvrir les données de base"
+    },
+    "tabs": {
+      "mainOwner": "Propriétaire principal",
+      "coOwners": "Copropriétaire ({count})"
     }
   },
   "ownerStatements": {
@@ -1627,7 +1639,8 @@
         "contractStartsLater": "Pas de contrat de facturation le jour du départ {abreise} : le contrat ne commence qu'à partir du {beginn}. Veuillez antidater le début du contrat chez le propriétaire, puis cette réservation sera facturée.",
         "noContract": "Il n'y a pas de contrat de facturation ni de taux de commission pour cet objet dans les données de base — veuillez créer un contrat pour le propriétaire.",
         "addonsOutside": "Services supplémentaires — vendus via myNextDays, non inclus dans le prix invité du portail"
-      }
+      },
+      "ownershipShare": "Partager"
     },
     "expenses": {
       "add": "Ajouter",
@@ -1721,7 +1734,13 @@
         "irreversible": "Cette opération est irréversible. Une facture finalisée ne peut plus être annulée que par une facture d'annulation."
       },
       "basis": "Détermine à quel moment une réservation entre dans la période : avec Check-in selon le jour d'arrivée, avec Check-out selon le jour de départ. Une réservation à cheval sur deux mois tombe dans l'un ou l'autre mois selon votre choix.",
-      "statuses": "Seules les réservations ayant l'un des statuts sélectionnés sont décomptées. Par défaut : les réservations confirmées et terminées — les réservations annulées n'ont normalement pas leur place dans un versement."
+      "statuses": "Seules les réservations ayant l'un des statuts sélectionnés sont décomptées. Par défaut : les réservations confirmées et terminées — les réservations annulées n'ont normalement pas leur place dans un versement.",
+      "channel": "Par quel canal cette réservation a été effectuée : un portail comme Booking.com ou Airbnb, notre place de marché myBestDays, le site web de l'établissement ou directement (téléphone, e-mail, sur place).",
+      "portalDeduction": "Ce que le portail conserve avant que l'argent n'arrive à l'établissement — sa commission et, s'il encaisse l'argent, ses frais de paiement. Pour les réservations via le site web de l'établissement ou directement, ce montant est de 0, car aucun portail n'intervient.",
+      "commission": "La commission de l'établissement pour la gestion de la propriété. Elle est calculée sur le montant restant après la déduction du portail — et s'applique à CHAQUE réservation, même celles effectuées via le site web de l'établissement.",
+      "flatFee": "Un montant fixe du contrat de gestion, par exemple pour les charges. Selon l'accord, il est déduit avant ou après la commission.",
+      "ownerShare": "Ce qui reste finalement au propriétaire : prix invité moins déduction du portail, moins commission, moins forfait, plus les frais qui lui reviennent. En cas de copropriété, multiplié par sa part.",
+      "ownershipShare": "La part de ce propriétaire dans la propriété. 100 % signifie propriété exclusive. Si une maison appartient à plusieurs personnes, chacune reçoit son propre décompte pour sa part — les parts totalisent 100 %."
     },
     "finalizeConfirm": {
       "title": "Finaliser la facturation",
@@ -1754,6 +1773,11 @@
       "manageContract": "Gérer le contrat de facturation",
       "receipt": "Reçu",
       "bookingsCount": "{n} réservations"
+    },
+    "coOwners": {
+      "title": "Copropriétaire",
+      "hint": "Ces propriétés appartiennent à plusieurs personnes. Chacun reçoit sa propre facture pour sa part.",
+      "share": "{anteil} %"
     }
   },
   "ownerBilling": {
@@ -6487,7 +6511,8 @@
       "bookingFeesPerStay": "Par séjour",
       "bookingFeesAssignTitle": "Affectation manquante",
       "bookingFeesAssignHint": "Ces frais sont enregistrés sur l'hébergement, mais il n'est pas défini à qui appartient le montant. Sans cela, le décompte propriétaire ne peut pas être calculé.",
-      "bookingFeesAssign": "Créer l'affectation"
+      "bookingFeesAssign": "Créer l'affectation",
+      "miteigentum": "Copropriété : {wer} — {rest} % libre"
     },
     "policiesForm": {
       "title": "Règlements",
@@ -12340,7 +12365,8 @@
   "sprache": {
     "label": "Langue des e-mails",
     "hint": "Nous envoyons les e-mails à cette personne dans cette langue.",
-    "none": "— non renseigné"
+    "none": "— non renseigné",
+    "infoAria": "Explication de {feld}"
   },
   "neuerungen": {
     "eyebrow": "Nouveautés produit",

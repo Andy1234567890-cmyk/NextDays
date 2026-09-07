@@ -231,6 +231,11 @@ export type RentalRow = {
   vertrag_beginnt_am: string | null;
   /** Mindestprovision hat gegriffen — die Provision ist dann NICHT Satz × Bemessung. */
   min_provision_angewandt: boolean;
+  /** Miteigentumsanteil dieses Eigentümers am Objekt in Prozent (0601).
+   *  100 = Alleineigentum. Steht je ZEILE, weil er je Objekt verschieden sein
+   *  kann — ein Eigentümer kann an einem Haus 60 % und am nächsten 100 %
+   *  halten. `null` = nicht bestimmbar (dann ist auch `owner_payout` null). */
+  ownership_share: number | null;
 };
 
 export type ListingRow = {
@@ -282,6 +287,13 @@ export type Expense = {
   updated_at: string | null;
 };
 
+export type Miteigentuemer = {
+  listing_id: string;
+  listing: string | null;
+  name: string;
+  anteil: number;
+};
+
 export type Statement = {
   id: string;
   tenant_id: string;
@@ -309,6 +321,10 @@ export type Statement = {
   expenses: Expense[];
   /** Wiederkehrende Posten, ausgerechnet; im Storno negiert wie `expenses`. */
   recurring: WiederkehrenderPosten[];
+  /** Die ANDEREN Eigentümer der abgerechneten Objekte (0601). Leer bei
+   *  Alleineigentum. Reine Auskunft: steht auf der Abrechnung ein Anteil von
+   *  60 %, muss sichtbar sein, wem die anderen 40 % gehören. */
+  miteigentuemer: Miteigentuemer[];
   created_at: string | null;
   updated_at: string | null;
 };

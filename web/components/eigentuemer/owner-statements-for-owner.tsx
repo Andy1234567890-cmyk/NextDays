@@ -149,6 +149,9 @@ export function OwnerStatementsForOwner({
     listing_rows: [],
     expenses: [],
     recurring: [],
+    // Vor dem ersten Abruf kennt der Entwurf keine Miteigentümer — der Server
+    // liefert sie mit der Vorschau (0601).
+    miteigentuemer: [],
     created_at: null,
     updated_at: null,
   };

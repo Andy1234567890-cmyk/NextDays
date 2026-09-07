@@ -1434,6 +1434,18 @@
       "commission": "Rezervna stopnja, če za objekt ne velja pogodba o obračunu. Pogodba spodaj ima prednost — je dejanski dogovor in zajema tudi obdobje, pavšal in najnižjo provizijo. Če ostaneta oba prazna, se izplačilo ne izračuna, prikaže se pomišljaj.",
       "commissionOverride": "Rezervna stopnja samo za ta objekt; nadomesti standardno stopnjo lastnika. Pogodba o obračunu ima prednost tudi tu. Če polje ostane prazno, velja standardna stopnja.",
       "cprNumber": "Danska osebna številka lastnika (format DDMMLL-XXXX). Potrebna samo za obračunavanje danskih počitniških hiš; vidna samo skrbnikom."
+    },
+    "coOwners": {
+      "label": "Solastnik",
+      "entry": "{name} — {pct} %",
+      "unassigned": "{pct} % še ni dodeljen nobenemu lastniku",
+      "tabHint": "Te osebe so solastniki nepremičnin tega lastnika. Vsak prejme svoj obračun za svoj delež; njegovi osnovni podatki se vzdržujejo na njegovi lastni strani.",
+      "entryObject": "{objekt} — {pct} %",
+      "open": "Odpri osnovne podatke"
+    },
+    "tabs": {
+      "mainOwner": "Glavni lastnik",
+      "coOwners": "Solastnik ({count})"
     }
   },
   "ownerStatements": {
@@ -1627,7 +1639,8 @@
         "contractStartsLater": "Na dan odjave {abreise} ni pogodbe o obračunu: pogodba se začne šele {beginn}. Datum začetka pogodbe pri lastniku prestavite nazaj, nato se bo ta rezervacija obračunala.",
         "noContract": "Za ta objekt v matičnih podatkih ni pogodbe o obračunu in ni provizije – pri lastniku ustvarite pogodbo.",
         "addonsOutside": "Dodatne storitve – prodaja prek myNextDays, niso vključene v ceno za gosta po portalu"
-      }
+      },
+      "ownershipShare": "Delež"
     },
     "expenses": {
       "add": "Dodaj",
@@ -1721,7 +1734,13 @@
         "irreversible": "Tega ni mogoče razveljaviti. Finaliziran račun je mogoče odpraviti le še s storno računom."
       },
       "basis": "Določa, kdaj rezervacija pade v obdobje: pri prihodu po dnevu prihoda, pri odhodu po dnevu odhoda. Rezervacija čez prehod meseca pristane glede na izbiro v enem ali drugem mesecu.",
-      "statuses": "Obračunajo se samo rezervacije z enim od izbranih statusov. Privzeto so to potrjene in zaključene rezervacije — stornirane praviloma ne sodijo v izplačilo."
+      "statuses": "Obračunajo se samo rezervacije z enim od izbranih statusov. Privzeto so to potrjene in zaključene rezervacije — stornirane praviloma ne sodijo v izplačilo.",
+      "channel": "Preko katere poti je prišla ta rezervacija: portal kot Booking.com ali Airbnb, naša tržnica myBestDays, lastna spletna stran podjetja ali neposredno (telefon, e-pošta, na kraju samem).",
+      "portalDeduction": "Kaj portal sam zadrži, preden denar prispe do podjetja – njegova provizija in, če portal pobira denar, njegova provizija za plačilo. Pri rezervacijah preko lastne spletne strani ali neposredno je tukaj 0, saj ni vmes nobenega portala.",
+      "commission": "Provizija podjetja za upravljanje objekta. Izračuna se na znesek, ki ostane po odbitku portala – in se zaračuna pri VSAKI rezervaciji, tudi pri tisti preko lastne spletne strani.",
+      "flatFee": "Fiksni znesek iz pogodbe o upravljanju, na primer za stroške. Odvisno od dogovora se odšteje pred ali po proviziji.",
+      "ownerShare": "Kaj na koncu ostane lastniku: cena za gosta minus odbitek portala, minus provizija, minus pavšal, plus pristojbine, ki mu pripadajo. Pri solastništvu se dodatno pomnoži z njegovim deležem.",
+      "ownershipShare": "Delež tega lastnika v objektu. 100 % pomeni izključno lastništvo. Če je hiša v lasti več oseb, vsak prejme svoj obračun za svoj delež – deleži skupaj znašajo 100 %."
     },
     "finalizeConfirm": {
       "title": "Potrdi obračun",
@@ -1754,6 +1773,11 @@
       "manageContract": "Urejanje pogodbe o obračunu",
       "receipt": "Potrdilo",
       "bookingsCount": "{n} rezervacij"
+    },
+    "coOwners": {
+      "title": "Solastnik",
+      "hint": "Te nepremičnine so v lasti več oseb. Vsak prejme ločen obračun za svoj delež.",
+      "share": "{anteil} %"
     }
   },
   "ownerBilling": {
@@ -6487,7 +6511,8 @@
       "bookingFeesPerStay": "Na bivanje",
       "bookingFeesAssignTitle": "Manjka razporeditev",
       "bookingFeesAssignHint": "Te pristojbine so vnesene pri objektu, vendar ni določeno, komu znesek pripada. Brez tega obračuna za lastnika ni mogoče izračunati.",
-      "bookingFeesAssign": "Ustvari razporeditev"
+      "bookingFeesAssign": "Ustvari razporeditev",
+      "miteigentum": "Solastništvo: {wer} — {rest} % prosto"
     },
     "policiesForm": {
       "title": "Pravilniki",
@@ -12340,7 +12365,8 @@
   "sprache": {
     "label": "Jezik e-pošte",
     "hint": "V tem jeziku pošiljamo e-pošto tej osebi.",
-    "none": "— ni navedeno"
+    "none": "— ni navedeno",
+    "infoAria": "Pojasnilo za {feld}"
   },
   "neuerungen": {
     "eyebrow": "Novosti izdelka",

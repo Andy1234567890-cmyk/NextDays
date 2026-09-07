@@ -44,6 +44,13 @@ export type ObjektAuswahlEintrag = {
   subtitle?: string;
   /** Vorschaubild; fehlt es, steht dort das Haus-Symbol. */
   photo?: string;
+  /** Freier Miteigentumsanteil in Prozent (0601). Fehlt oder 100 = unberührt.
+   *  Darunter zeigt die Zeile, wer schon beteiligt ist und wie viel bleibt —
+   *  sonst hakt man ein Objekt an und bekommt erst danach heraus, dass davon
+   *  nur 40 % zu haben sind. */
+  freier_anteil?: number;
+  /** Wer schon beteiligt ist; leer/fehlend bei einem freien Objekt. */
+  beteiligte?: { owner_id: string; name: string; ownership_share: number }[];
 };
 
 export function ObjektMehrfachauswahl({
@@ -172,6 +179,18 @@ export function ObjektMehrfachauswahl({
                 {p.subtitle && (
                   <span className="block truncate text-xs text-muted-foreground">
                     {p.subtitle}
+                  </span>
+                )}
+                {/* Teilbelegt = Miteigentum. Die Zeile sagt VOR dem Anhaken,
+                    wer schon beteiligt ist und welcher Anteil bleibt. */}
+                {p.freier_anteil != null && p.freier_anteil < 100 && (
+                  <span className="block truncate text-xs text-amber-600 dark:text-amber-500">
+                    {t("miteigentum", {
+                      rest: p.freier_anteil,
+                      wer: (p.beteiligte ?? [])
+                        .map((b) => `${b.name} ${b.ownership_share} %`)
+                        .join(", "),
+                    })}
                   </span>
                 )}
               </span>

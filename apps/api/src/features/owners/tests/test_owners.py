@@ -527,6 +527,74 @@ def test_assign_property_with_share_and_commission() -> None:
     assert link.commission_override_pct == 12
 
 
+def test_links_zeigen_die_anderen_eigentuemer_des_objekts() -> None:
+    """0601/ADR-0028: die Stammdatenseite muss sagen, WER sonst am Objekt hängt.
+
+    Ohne diese Auskunft war ein Anteil von 60 % eine Zahl ohne Gegenüber: man
+    sah, dass 40 % fehlen, aber nicht bei wem.
+    """
+    svc = _svc()
+    rene = svc.create(_ctx(), OwnerCreate(name="René"))
+    karen = svc.create(_ctx(), OwnerCreate(name="Karen"))
+    svc.assign_property(
+        _ctx(), rene.id, OwnerPropertyAssign(property_id="p-1", ownership_share=60)
+    )
+    res = svc.assign_property(
+        _ctx(), karen.id, OwnerPropertyAssign(property_id="p-1", ownership_share=40)
+    )
+
+    # In Karens Sicht steht René mit SEINEM Anteil — nicht Karen selbst.
+    assert [(m.name, m.ownership_share) for m in res.properties[0].miteigentuemer] == [
+        ("René", 60.0)
+    ]
+    # Und umgekehrt, damit die Sicht nicht einseitig ist.
+    rene_neu = svc.get(_ctx(), rene.id)
+    assert [
+        (m.name, m.ownership_share) for m in rene_neu.properties[0].miteigentuemer
+    ] == [("Karen", 40.0)]
+
+
+def test_links_ohne_miteigentuemer_bleiben_leer() -> None:
+    """Alleineigentum darf keine Liste mit dem Eigentümer selbst erzeugen."""
+    svc = _svc()
+    owner = svc.create(_ctx(), OwnerCreate(name="A"))
+    res = svc.assign_property(_ctx(), owner.id, OwnerPropertyAssign(property_id="p-1"))
+    assert res.properties[0].miteigentuemer == []
+
+
+def test_miteigentuemer_werden_dem_richtigen_objekt_zugeordnet() -> None:
+    """Bei mehreren Objekten darf die Zuordnung nicht verrutschen.
+
+    Der Abruf holt alle Objekte in EINER Anfrage; ein Gruppierungsfehler dort
+    schriebe den Miteigentümer des einen Hauses an das andere — und sähe auf
+    einer Seite mit einem Objekt völlig richtig aus.
+    """
+    svc = _svc(
+        {
+            "properties": [
+                {"id": "p-1", "tenant_id": "t-1", "title": "Villa"},
+                {"id": "p-2", "tenant_id": "t-1", "title": "Hygge"},
+            ]
+        }
+    )
+    rene = svc.create(_ctx(), OwnerCreate(name="René"))
+    karen = svc.create(_ctx(), OwnerCreate(name="Karen"))
+    svc.assign_property(
+        _ctx(), rene.id, OwnerPropertyAssign(property_id="p-1", ownership_share=60)
+    )
+    svc.assign_property(_ctx(), rene.id, OwnerPropertyAssign(property_id="p-2"))
+    svc.assign_property(
+        _ctx(), karen.id, OwnerPropertyAssign(property_id="p-1", ownership_share=40)
+    )
+
+    res = svc.get(_ctx(), rene.id)
+    je_objekt = {
+        link.property_id: [m.name for m in link.miteigentuemer]
+        for link in res.properties
+    }
+    assert je_objekt == {"p-1": ["Karen"], "p-2": []}
+
+
 def test_assign_foreign_property_rejected() -> None:
     svc = _svc()
     owner = svc.create(_ctx(), OwnerCreate(name="A"))
@@ -558,19 +626,116 @@ def test_unassign_property() -> None:
 
 # --- Exklusivität: ein Objekt gehört genau einem Eigentümer ------------------
 
-def test_assign_property_owned_by_other_rejected() -> None:
-    """p-1 gehört Owner A — Owner B darf es nicht zusätzlich bekommen (409)."""
+def test_entfernen_gibt_dem_letzten_eigentuemer_das_ganze_objekt() -> None:
+    """Gegenzustand (Wurzel 1): 50/50 minus einer = 100 %, nicht 50 %.
+
+    Live gefunden am 07.09.2026 an „Bedstefars lille skovhus": nach dem
+    Entfernen des Miteigentümers blieb Niels Højer auf 50 % stehen. Die
+    Abrechnung hätte ihm dauerhaft die Hälfte seines eigenen Objekts
+    ausgezahlt — ein Fehler, der wie ein plausibler Wert aussieht.
+    """
     svc = _svc()
     a = svc.create(_ctx(), OwnerCreate(name="A"))
     b = svc.create(_ctx(), OwnerCreate(name="B"))
     svc.assign_property(_ctx(), a.id, OwnerPropertyAssign(property_id="p-1"))
+    svc.assign_property(
+        _ctx(), b.id, OwnerPropertyAssign(property_id="p-1", ownership_share=50)
+    )
+    assert svc.get(_ctx(), a.id).properties[0].ownership_share == 50.0
+
+    svc.unassign_property(_ctx(), b.id, "p-1")
+    assert svc.get(_ctx(), a.id).properties[0].ownership_share == 100.0
+
+
+def test_entfernen_verteilt_bei_zwei_verbliebenen_nichts_um() -> None:
+    """Bei zwei Rest-Eigentümern wäre jede Verteilung eine Erfindung."""
+    svc = _svc()
+    a = svc.create(_ctx(), OwnerCreate(name="A"))
+    b = svc.create(_ctx(), OwnerCreate(name="B"))
+    c = svc.create(_ctx(), OwnerCreate(name="C"))
+    for owner, anteil in ((a, 50), (b, 30), (c, 20)):
+        svc.assign_property(
+            _ctx(),
+            owner.id,
+            OwnerPropertyAssign(property_id="p-1", ownership_share=anteil),
+        )
+
+    svc.unassign_property(_ctx(), c.id, "p-1")
+    # Die frei gewordenen 20 % bleiben unvergeben — sichtbar, nicht still
+    # jemandem zugeschlagen.
+    assert svc.get(_ctx(), a.id).properties[0].ownership_share == 50.0
+    assert svc.get(_ctx(), b.id).properties[0].ownership_share == 30.0
+
+
+def test_zweiter_eigentuemer_mit_50_kuerzt_den_ersten_auf_50() -> None:
+    """100 − 50 = 50: der Anteil gilt für das GANZE Objekt (Ansage 07.09.2026).
+
+    Wer beim zweiten Eigentümer 50 % eintragt, sagt „dieser bekommt die
+    Hälfte" — nicht „50 zusätzlich zu den 100 des ersten". Vorher ergab das
+    150 % und einen Fehler; da im Bestand JEDES Objekt auf 100 % steht, war
+    Miteigentum damit über die Oberfläche nicht anlegbar.
+    """
+    svc = _svc()
+    a = svc.create(_ctx(), OwnerCreate(name="A"))
+    b = svc.create(_ctx(), OwnerCreate(name="B"))
+    svc.assign_property(_ctx(), a.id, OwnerPropertyAssign(property_id="p-1"))
+
+    res = svc.assign_property(
+        _ctx(), b.id, OwnerPropertyAssign(property_id="p-1", ownership_share=50)
+    )
+    assert res.properties[0].ownership_share == 50.0
+    # Und A hält jetzt die anderen 50 % — nicht mehr 100.
+    assert svc.get(_ctx(), a.id).properties[0].ownership_share == 50.0
+
+
+def test_zweiter_eigentuemer_ohne_angabe_teilt_zu_gleichen_teilen() -> None:
+    """Ohne Angabe wird der Kuchen gleichmäßig geteilt: 100 → 50/50.
+
+    Ansage vom 07.09.2026: „teile ich einen kuchen bekommt jeder 50 % nicht
+    150 %". Ein zweiter Eigentümer an einem Objekt heißt zwingend, dass der
+    erste weniger hält. Wer keinen Anteil nennt, meint die gleichmäßige
+    Teilung — nicht einen Fehler.
+    """
+    svc = _svc()
+    a = svc.create(_ctx(), OwnerCreate(name="A"))
+    b = svc.create(_ctx(), OwnerCreate(name="B"))
+    svc.assign_property(_ctx(), a.id, OwnerPropertyAssign(property_id="p-1"))
+
+    res = svc.assign_property(_ctx(), b.id, OwnerPropertyAssign(property_id="p-1"))
+    assert res.properties[0].ownership_share == 50.0
+    assert svc.get(_ctx(), a.id).properties[0].ownership_share == 50.0
+
+
+def test_dritter_eigentuemer_wird_nicht_still_umverteilt() -> None:
+    """Bei ZWEI Beteiligten ist nicht bestimmbar, wem die Differenz abgeht."""
+    svc = _svc()
+    a = svc.create(_ctx(), OwnerCreate(name="A"))
+    b = svc.create(_ctx(), OwnerCreate(name="B"))
+    c = svc.create(_ctx(), OwnerCreate(name="C"))
+    svc.assign_property(
+        _ctx(), a.id, OwnerPropertyAssign(property_id="p-1", ownership_share=50)
+    )
+    svc.assign_property(
+        _ctx(), b.id, OwnerPropertyAssign(property_id="p-1", ownership_share=50)
+    )
     with pytest.raises(OwnerError) as exc:
-        svc.assign_property(_ctx(), b.id, OwnerPropertyAssign(property_id="p-1"))
+        svc.assign_property(
+            _ctx(), c.id, OwnerPropertyAssign(property_id="p-1", ownership_share=30)
+        )
     assert exc.value.status_code == 409
+    # Beide Bestandsanteile unangetastet.
+    assert svc.get(_ctx(), a.id).properties[0].ownership_share == 50.0
+    assert svc.get(_ctx(), b.id).properties[0].ownership_share == 50.0
 
 
-def test_available_properties_excludes_other_owners_property() -> None:
-    """Frei + eigenes Objekt erscheinen; Objekt eines anderen Owners nicht."""
+def test_available_properties_kennzeichnet_fremdes_objekt_als_miteigentum() -> None:
+    """Alle drei Fälle in EINER Liste, jeder mit seiner Auskunft (0601).
+
+    Bis 07.09.2026 fiel das fremde Objekt hier heraus (ADR-0026: ein Objekt =
+    ein Eigentümer). Seit ADR-0028 steht es drin — aber sichtbar als
+    Miteigentum: `freier_anteil` 0 und B mit 100 % als Beteiligter. Ohne diese
+    Unterscheidung wäre die Liste nicht besser, sondern nur ungenauer.
+    """
     svc = _svc(
         {
             "properties": [
@@ -584,9 +749,24 @@ def test_available_properties_excludes_other_owners_property() -> None:
     b = svc.create(_ctx(), OwnerCreate(name="B"))
     svc.assign_property(_ctx(), a.id, OwnerPropertyAssign(property_id="p-1"))
     svc.assign_property(_ctx(), b.id, OwnerPropertyAssign(property_id="p-2"))
-    # Für A: das eigene p-1 + das freie p-3, aber NICHT B's p-2.
-    avail = {p.id for p in svc.available_properties(_ctx(), a.id).items}
-    assert avail == {"p-1", "p-3"}
+
+    je_objekt = {p.id: p for p in svc.available_properties(_ctx(), a.id).items}
+    assert set(je_objekt) == {"p-1", "p-2", "p-3"}
+    # Eigenes Objekt: voller Anteil, niemand sonst beteiligt.
+    assert (je_objekt["p-1"].freier_anteil, je_objekt["p-1"].beteiligte) == (
+        100.0,
+        [],
+    )
+    # Freies Objekt: nichts vergeben.
+    assert (je_objekt["p-3"].freier_anteil, je_objekt["p-3"].beteiligte) == (
+        100.0,
+        [],
+    )
+    # Fremdes Objekt: nichts frei, und es steht dabei, WEM es gehört.
+    assert je_objekt["p-2"].freier_anteil == 0.0
+    assert [
+        (m.name, m.ownership_share) for m in je_objekt["p-2"].beteiligte
+    ] == [("B", 100.0)]
 
 
 def test_available_properties_scoped_by_accommodation_type() -> None:
@@ -1166,16 +1346,101 @@ def test_assign_properties_fremder_tenant_404() -> None:
     assert exc.value.status_code == 404
 
 
-def test_assign_properties_ueberspringt_belegtes_objekt_nicht_still() -> None:
+def test_assign_properties_teilt_belegtes_objekt_haelftig() -> None:
+    """Detailseite: ein voll vergebenes Objekt wird geteilt, nicht abgewiesen.
+
+    „teile ich einen kuchen bekommt jeder 50 %" (07.09.2026). A hält p-1 mit
+    100 %; ordnet man es B zu, halten beide 50 %. p-2 ist frei und geht mit
+    100 % an B.
+    """
     svc = _svc_drei()
     a = svc.create(_ctx(), OwnerCreate(name="A", property_ids=["p-1"]))
     b = svc.create(_ctx(), OwnerCreate(name="B"))
-    with pytest.raises(OwnerError) as exc:
-        svc.assign_properties(_ctx(), b.id, ["p-1", "p-2"])
-    assert exc.value.status_code == 409
-    # Nichts halb geschrieben: p-2 hängt NICHT an B.
-    assert svc.get(_ctx(), b.id).properties == []
-    assert {link.property_id for link in svc.get(_ctx(), a.id).properties} == {"p-1"}
+    svc.assign_properties(_ctx(), b.id, ["p-1", "p-2"])
+
+    assert {
+        link.property_id: link.ownership_share
+        for link in svc.get(_ctx(), b.id).properties
+    } == {"p-1": 50.0, "p-2": 100.0}
+    assert {
+        link.property_id: link.ownership_share
+        for link in svc.get(_ctx(), a.id).properties
+    } == {"p-1": 50.0}
+
+
+def test_assign_properties_legt_bei_teilbelegtem_objekt_den_rest_an() -> None:
+    """0601/ADR-0028: Miteigentum muss über die Mehrfachauswahl erreichbar sein.
+
+    A hält 60 % an p-1. B bekommt beim Zuordnen die freien 40 % — nicht den
+    Spalten-Default 100 (den der Trigger abweisen würde) und nicht einen 409
+    (der Miteigentum in der Oberfläche unmöglich machte).
+    """
+    svc = _svc_drei()
+    a = svc.create(_ctx(), OwnerCreate(name="A"))
+    svc.assign_property(
+        _ctx(), a.id, OwnerPropertyAssign(property_id="p-1", ownership_share=60)
+    )
+    b = svc.create(_ctx(), OwnerCreate(name="B"))
+    svc.assign_properties(_ctx(), b.id, ["p-1", "p-2"])
+
+    links = {
+        link.property_id: link.ownership_share
+        for link in svc.get(_ctx(), b.id).properties
+    }
+    assert links == {"p-1": 40.0, "p-2": 100.0}
+    # A bleibt unberührt: eine Zuordnung an B verschiebt keine fremden Anteile.
+    assert {
+        link.property_id: link.ownership_share
+        for link in svc.get(_ctx(), a.id).properties
+    } == {"p-1": 60.0}
+
+
+def test_available_properties_zeigt_teilbelegtes_objekt_mit_restanteil() -> None:
+    """Die Auswahl muss teilbelegte Objekte ANBIETEN — vorher fielen sie raus.
+
+    Genau daran war Miteigentum in der Oberfläche nicht erreichbar: das
+    Datenmodell konnte es seit 0601, die Auswahlliste zeigte das Objekt nicht.
+    """
+    svc = _svc_drei()
+    a = svc.create(_ctx(), OwnerCreate(name="A"))
+    svc.assign_property(
+        _ctx(), a.id, OwnerPropertyAssign(property_id="p-1", ownership_share=60)
+    )
+    b = svc.create(_ctx(), OwnerCreate(name="B"))
+
+    je_objekt = {
+        i.id: (i.freier_anteil, [(m.name, m.ownership_share) for m in i.beteiligte])
+        for i in svc.available_properties(_ctx(), b.id).items
+    }
+    assert je_objekt["p-1"] == (40.0, [("A", 60.0)])
+    assert je_objekt["p-2"][0] == 100.0
+
+
+def test_available_properties_bietet_voll_vergebenes_objekt_an() -> None:
+    """Auch ein zu 100 % vergebenes Objekt steht zur Auswahl (Befund 07.09.2026).
+
+    Miteigentum entsteht im Regelfall dadurch, dass ein Alleineigentümer seinen
+    100-%-Anteil TEILT — nicht dadurch, dass Prozente brachliegen. Live standen
+    alle 20 aktiven Objekte auf 100 %; ein Filter „nur mit Restanteil" bot
+    deshalb NICHTS an und machte Miteigentum in der Oberfläche unerreichbar.
+
+    `freier_anteil` bleibt die ehrliche Auskunft: 0 heißt, dass der bestehende
+    Anteil verringert werden muss.
+    """
+    svc = _svc_drei()
+    a = svc.create(_ctx(), OwnerCreate(name="A"))
+    svc.assign_property(_ctx(), a.id, OwnerPropertyAssign(property_id="p-1"))
+    b = svc.create(_ctx(), OwnerCreate(name="B"))
+
+    je_objekt = {i.id: i for i in svc.available_properties(_ctx(), b.id).items}
+    assert "p-1" in je_objekt
+    assert je_objekt["p-1"].freier_anteil == 0.0
+    assert [(m.name, m.ownership_share) for m in je_objekt["p-1"].beteiligte] == [
+        ("A", 100.0)
+    ]
+    # Aus A's Sicht ist es SEIN Objekt: voller Anteil, keine Fremdbeteiligung.
+    eigen = {i.id: i for i in svc.available_properties(_ctx(), a.id).items}["p-1"]
+    assert (eigen.freier_anteil, eigen.beteiligte) == (100.0, [])
 
 
 def test_assign_properties_leere_liste_abgewiesen() -> None:

@@ -45,6 +45,7 @@ class _Query:
         self._op = "select"
         self._payload: dict | list[dict] | None = None
         self._filters: list[tuple[str, object]] = []
+        self._neq: list[tuple[str, object]] = []
         self._in: tuple[str, list] | None = None
         self._gte: tuple[str, str] | None = None
         self._lte: tuple[str, str] | None = None
@@ -78,6 +79,19 @@ class _Query:
 
     def eq(self, col: str, val: object) -> "_Query":
         self._filters.append((col, val))
+        return self
+
+    def neq(self, col: str, val: object) -> "_Query":
+        """PostgREST `neq` — „alles AUSSER diesem Wert".
+
+        Nachgezogen am 07.09.2026: die Miteigentümer-Abfrage (0601) sucht die
+        ANDEREN Eigentümer eines Objekts und braucht dafür `neq`. Ohne diese
+        Methode wirft die Fake-DB `AttributeError` — was hier der glückliche
+        Fall ist, denn eine Fake-DB, die unbekannte Aufrufe stillschweigend
+        durchlässt, bestätigt jeden Tippfehler (MEMORY
+        „live-e2e-findet-was-pytest-nicht").
+        """
+        self._neq.append((col, val))
         return self
 
     def in_(self, col: str, vals: list) -> "_Query":
@@ -125,7 +139,9 @@ class _Query:
                 str(row.get(like_col) or ""), like_pat.replace("%", "*")
             ):
                 return False
-        ok = all(str(row.get(c)) == str(v) for c, v in self._filters)
+        ok = all(str(row.get(c)) == str(v) for c, v in self._filters) and all(
+            str(row.get(c)) != str(v) for c, v in self._neq
+        )
         if ok and self._in:
             col, vals = self._in
             ok = str(row.get(col)) in {str(v) for v in vals}
@@ -2314,3 +2330,151 @@ def test_eigentuemer_sieht_betriebsgebuehren_und_extras_ohne_betrag() -> None:
     assert z.verwaltungsprovision == 100.0
     assert z.owner_payout == 450.0
     assert z.check_in == date(2026, 1, 20)
+
+
+# ----------------------------------------------------------------------
+# Miteigentum (0601, ADR-0028) — ein Objekt, mehrere Eigentümer
+# ----------------------------------------------------------------------
+#
+# Ansage des Betriebs am 07.09.2026: „Ja es muss ein miteigentümer geben."
+# Damit fiel ADR-0026 („ein Eigentümer je Objekt"). Der Anteil steht seit 0063
+# in `owner_properties.ownership_share`; 0601 löst die Exklusiv-Sperre aus
+# 0073, riegelt die Summe bei 100 % ab und lässt die Rechenkette den Anteil
+# endlich anwenden.
+
+
+def test_alleineigentum_rechnet_unveraendert() -> None:
+    """100 % ist ein No-Op — der Bestand darf sich nicht um einen Cent ändern.
+
+    Die Gegenprobe zu allem Folgenden: wäre die Multiplikation fehlerhaft (etwa
+    mit `/100` an der falschen Stelle), fiele sie hier zuerst auf, und zwar für
+    JEDE bestehende Abrechnung.
+    """
+    svc = _svc()
+    for link in svc._db.tables["owner_properties"]:  # noqa: SLF001
+        link["ownership_share"] = 100
+    st = _gen(svc)
+    assert st.summary.owner_payout is not None
+
+    ohne_feld = _svc()  # Zeile OHNE `ownership_share` (Spalten-Default 100)
+    st2 = _gen(ohne_feld)
+    assert st2.summary.owner_payout == st.summary.owner_payout
+
+
+def test_halber_anteil_halbiert_die_auszahlung() -> None:
+    """50 % → der Eigentümer bekommt die Hälfte, der Betrieb behält seine Provision.
+
+    Die Reihenfolge ist der Kern: geteilt wird das ERGEBNIS der Kette, nicht der
+    Gastpreis. Würde der Anteil vor der Provision greifen, bekäme der Betrieb
+    seine 20 % nur auf die Hälfte — bei zwei Miteigentümern also zweimal 20 %
+    von der Hälfte, was zufällig gleich aussieht, aber bei drei Anteilen oder
+    einer Mindestprovision auseinanderläuft.
+    """
+    voll = _svc()
+    for link in voll._db.tables["owner_properties"]:  # noqa: SLF001
+        link["ownership_share"] = 100
+    ganz = _gen(voll).summary.owner_payout
+
+    halb_svc = _svc()
+    for link in halb_svc._db.tables["owner_properties"]:  # noqa: SLF001
+        link["ownership_share"] = 50
+    halb = _gen(halb_svc).summary.owner_payout
+
+    assert ganz is not None and halb is not None
+    assert halb == pytest.approx(ganz / 2, abs=0.01)
+
+
+def test_zwei_miteigentuemer_teilen_genau_den_ganzen_betrag() -> None:
+    """60/40 auf dasselbe Objekt: die Summe beider Abrechnungen = der ganze Betrag.
+
+    Kein Cent entsteht und keiner verschwindet. Genau das wäre der teure
+    Fehler: zwei Abrechnungen, die zusammen 101 % auszahlen, sehen einzeln
+    plausibel aus.
+    """
+    tables = _base_tables()
+    tables["owners"].append({**tables["owners"][0], "id": "o-2", "name": "Zweiter"})
+    tables["owner_properties"] = [
+        {"id": "op-1", "owner_id": "o-1", "property_id": "p-1", "ownership_share": 60},
+        {"id": "op-2", "owner_id": "o-2", "property_id": "p-1", "ownership_share": 40},
+    ]
+    svc = _svc(tables)
+
+    erster = _gen(svc).summary.owner_payout
+    zweiter = svc.generate(
+        _ctx(),
+        StatementGenerateRequest(
+            owner_id="o-2",
+            period_from=date(2026, 1, 1),
+            period_to=date(2026, 1, 31),
+            reservation_statuses=["confirmed", "completed"],
+        ),
+    ).summary.owner_payout
+
+    voll = _svc()
+    for link in voll._db.tables["owner_properties"]:  # noqa: SLF001
+        link["ownership_share"] = 100
+    ganz = _gen(voll).summary.owner_payout
+
+    assert erster is not None and zweiter is not None and ganz is not None
+    assert erster + zweiter == pytest.approx(ganz, abs=0.01)
+
+
+def test_ungueltiger_anteil_ist_ein_422_kein_stiller_wert() -> None:
+    """120 % ist ein Eingabefehler und muss laut scheitern (Wurzel 4/5).
+
+    Der Trigger aus 0601 verhindert solche Zeilen künftig; Altbestand von davor
+    könnte sie tragen. Ihn stillschweigend auf 100 zu klemmen zahlte dem
+    Eigentümer mehr aus, als das Objekt hergibt.
+    """
+    svc = _svc()
+    for link in svc._db.tables["owner_properties"]:  # noqa: SLF001
+        link["ownership_share"] = 120
+    with pytest.raises(StatementError) as fehler:
+        _gen(svc)
+    assert fehler.value.status_code == 422
+    assert "120" in str(fehler.value)
+
+
+def test_anteil_wird_beim_erzeugen_eingefroren() -> None:
+    """Der Snapshot je Objekt — ein späterer Anteilsverkauf ändert keinen Beleg.
+
+    Ohne ihn zeigte eine finalisierte Rechnung nach der Änderung andere
+    Beträge als die in ihr eingefrorenen Summen; bei fortlaufender Nummer nach
+    §14 UStG ist das eine Falschaussage, kein Anzeigefehler.
+    """
+    svc = _svc()
+    for link in svc._db.tables["owner_properties"]:  # noqa: SLF001
+        link["ownership_share"] = 100
+    st = _gen(svc)
+    vorher = st.summary.owner_payout
+
+    gespeichert = svc._db.tables["owner_statements"][0]  # noqa: SLF001
+    assert gespeichert["ownership_shares"] == {"p-1": 100.0}
+
+    # Der Betrieb verkauft die Hälfte weiter …
+    for link in svc._db.tables["owner_properties"]:  # noqa: SLF001
+        link["ownership_share"] = 50
+    # … die bestehende Abrechnung zeigt weiter den Stand ihrer Erzeugung.
+    assert svc.get(_ctx(), st.id).summary.owner_payout == vorher
+
+
+def test_ohne_snapshot_gelten_die_stammdaten() -> None:
+    """Abrechnungen von VOR 0601 haben keinen Snapshot — dann zählen die Stammdaten.
+
+    Damals gab es nur Alleineigentum (0073 erzwang es), der Stammdaten-Anteil
+    ist also derselbe Wert. Ein erfundener Default 100 wäre hier zwar richtig,
+    aber aus dem falschen Grund — die Regel ist „lies die Quelle", nicht „nimm
+    an, es sei voll" (Wurzel 4).
+    """
+    svc = _svc()
+    st = _gen(svc)
+    svc._db.tables["owner_statements"][0]["ownership_shares"] = None  # noqa: SLF001
+    for link in svc._db.tables["owner_properties"]:  # noqa: SLF001
+        link["ownership_share"] = 50
+    voll = _svc()
+    for link in voll._db.tables["owner_properties"]:  # noqa: SLF001
+        link["ownership_share"] = 100
+    ganz = _gen(voll).summary.owner_payout
+    halb = svc.get(_ctx(), st.id).summary.owner_payout
+    assert ganz is not None and halb is not None
+    assert halb == pytest.approx(ganz / 2, abs=0.01)

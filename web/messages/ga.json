@@ -1434,6 +1434,18 @@
       "commission": "Ráta cúltaca mura bhfuil conradh socraíochta i bhfeidhm do mhaoin. Tá tosaíocht ag an gconradh thíos — is é an socrú iarbhír é agus clúdaíonn sé tréimhse, táille sheasta agus coimisiún íosta freisin. Má fhanann an dá cheann folamh, ní ríomhtar aon íocaíocht ach taispeántar dais.",
       "commissionOverride": "Ráta cúltaca don mhaoin seo amháin; sáraíonn sé ráta caighdeánach an úinéara. Tá tosaíocht ag conradh socraíochta anseo freisin. Má fhanann an réimse folamh, feidhmíonn an ráta caighdeánach.",
       "cprNumber": "Uimhir Phearsanta na Danmhairge den úinéir (formáid DDMMSS-XXXX). Ní gá ach amháin le haghaidh billeála tithe saoire na Danmhairge; níl sé le feiceáil ach ag riarthóirí."
+    },
+    "coOwners": {
+      "label": "Comhúinéir",
+      "entry": "{name} — {pct} %",
+      "unassigned": "{pct} % gan sannadh d'úinéir fós",
+      "tabHint": "Tá na daoine seo ina gcomhúinéirí ar réadmhaoine an úinéara seo. Faigheann gach duine a shonrasc féin dá sciar; coimeádtar a shonraí máistir ar a leathanach féin.",
+      "entryObject": "{objekt} — {pct} %",
+      "open": "Oscail sonraí máistir"
+    },
+    "tabs": {
+      "mainOwner": "Príomhúinéir",
+      "coOwners": "Comhúinéir ({count})"
     }
   },
   "ownerStatements": {
@@ -1627,7 +1639,8 @@
         "contractStartsLater": "Níl aon chonradh billeála ar an lá imeachta {abreise}: ní thosaíonn an conradh ach ar {beginn}. Déan dáta an chonartha a athrú siar leis an úinéir, ansin cuirfear an áirithint seo san áireamh.",
         "noContract": "Níl aon chonradh billeála ná ráta coimisiúin do na sonraí seo — cruthaigh conradh leis an úinéir.",
         "addonsOutside": "Seirbhísí breise — díolta trí myNextDays, nach bhfuil san áireamh i bpraghas an aoi ar an tairseach"
-      }
+      },
+      "ownershipShare": "Comhroinn"
     },
     "expenses": {
       "add": "Cuir leis",
@@ -1721,7 +1734,13 @@
         "irreversible": "Ní féidir é seo a chur ar ais. Ní féidir sonrasc atá curtha i gcrích a chur ar neamhní ach le sonrasc cealaithe."
       },
       "basis": "Socraíonn sé cathain a thiteann áirithint isteach sa tréimhse: le seiceáil isteach de réir lá an teachta, le seiceáil amach de réir lá an imeachta. Áirithint a leanann thar dheireadh na míosa, tagann sí i mí amháin nó sa mhí eile de réir do rogha.",
-      "statuses": "Ní shocraítear ach áirithintí a bhfuil ceann de na stádais roghnaithe orthu. Is iad áirithintí deimhnithe agus críochnaithe an réamhshocrú — de ghnáth ní bhaineann áirithintí cealaithe le híocaíocht."
+      "statuses": "Ní shocraítear ach áirithintí a bhfuil ceann de na stádais roghnaithe orthu. Is iad áirithintí deimhnithe agus críochnaithe an réamhshocrú — de ghnáth ní bhaineann áirithintí cealaithe le híocaíocht.",
+      "channel": "Cén bealach ar tháinig an áirithint seo: tairseach mar Booking.com nó Airbnb, ár margadh myBestDays, suíomh Gréasáin an ghnó féin nó go díreach (fón, ríomhphost, ar an láthair).",
+      "portalDeduction": "Cad a choinníonn an tairseach féin sula dtagann airgead chuig an ngnó — a choimisiún agus, má bhailíonn sé an t-airgead, a tháille íocaíochta. I gcás áirithintí tríd an suíomh Gréasáin féin nó go díreach, tá sé seo 0, mar níl aon tairseach idir eatarthu.",
+      "commission": "Coimisiún an ghnó as an réadmhaoin a bhainistiú. Ríomhtar é ar an méid a fhanann tar éis asbhaint na tairsí — agus tá sé dlite ar GACH áirithint, fiú ceann trí shuíomh Gréasáin an ghnó féin.",
+      "flatFee": "Suim sheasta ón gconradh bainistíochta, mar shampla le haghaidh costais bhreise. Ag brath ar an gcomhaontú, déantar é a asbhaint roimh nó tar éis an choimisiúin.",
+      "ownerShare": "Cad a fhanann don úinéir sa deireadh: praghas an aoi lúide asbhaint na tairsí, lúide coimisiún, lúide táille chomhréidh, móide na táillí atá dlite dó. I gcás comhúinéireachta, iolraítear é lena sciar freisin.",
+      "ownershipShare": "Scair an úinéara seo sa réadmhaoin. Ciallaíonn 100% úinéireacht aonair. Má tá teach ag roinnt daoine, faigheann gach duine a ráiteas féin faoina sciar — is ionann na scaireanna agus 100% le chéile."
     },
     "finalizeConfirm": {
       "title": "Socraigh an Bille",
@@ -1754,6 +1773,11 @@
       "manageContract": "Conradh socraíochta a bhainistiú",
       "receipt": "Admháil",
       "bookingsCount": "{n} áirithint"
+    },
+    "coOwners": {
+      "title": "Comhúinéirí",
+      "hint": "Is le roinnt daoine na réadmhaoine seo. Faigheann gach duine bille ar leith dá sciar.",
+      "share": "{anteil} %"
     }
   },
   "ownerBilling": {
@@ -6487,7 +6511,8 @@
       "bookingFeesPerStay": "In aghaidh na fanachta",
       "bookingFeesAssignTitle": "Sannachán ar iarraidh",
       "bookingFeesAssignHint": "Tá na táillí seo curtha isteach ar an maoin, ach níl sé sainithe cé leis an méid. Gan sin ní féidir ráiteas an úinéara a ríomh.",
-      "bookingFeesAssign": "Cruthaigh sannachán"
+      "bookingFeesAssign": "Cruthaigh sannachán",
+      "miteigentum": "Comhúinéireacht: {wer} — {rest} % saor"
     },
     "policiesForm": {
       "title": "Polasaithe",
@@ -12340,7 +12365,8 @@
   "sprache": {
     "label": "Teanga na ríomhphost",
     "hint": "Sa teanga seo a sheolaimid ríomhphoist chuig an duine seo.",
-    "none": "— gan sonrú"
+    "none": "— gan sonrú",
+    "infoAria": "Míniú ar {feld}"
   },
   "neuerungen": {
     "eyebrow": "Nuashonruithe táirge",

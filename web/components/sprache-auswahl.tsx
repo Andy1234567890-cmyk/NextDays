@@ -36,6 +36,7 @@ import {
   LOCALE_LABELS,
   type Locale,
 } from "@/i18n/locales";
+import { InfoHinweis } from "@nextdays/ui/info-hinweis";
 import { Label } from "@nextdays/ui/label";
 import { NativeSelect } from "@nextdays/ui/native-select";
 
@@ -63,7 +64,9 @@ type SprachAuswahlProps = {
   id: string;
   /** Eigene Beschriftung; Standard ist „Sprache für E-Mails". */
   label?: string;
-  /** Erklärtext unter dem Feld. `null` blendet ihn aus. */
+  /** Erklärtext — steht im ℹ-Symbol am Label, NICHT als Absatz unter dem
+   *  Feld (Ansage 07.09.2026: alle Informationstexte kommen ins ℹ).
+   *  `null` blendet ihn aus. */
   hint?: string | null;
   /** Leerauswahl („— nicht gesetzt") erlauben. */
   allowEmpty?: boolean;
@@ -97,21 +100,32 @@ export function SprachAuswahl({
 }: SprachAuswahlProps) {
   const t = useTranslations("sprache");
   const optionen = useSprachOptionen();
-  const hintId = `${id}-hint`;
   const hinweis = hint === null ? null : (hint ?? t("hint"));
+  const beschriftung = label ?? t("label");
 
   return (
     <div className={`flex flex-col gap-1.5 ${className ?? ""}`}>
-      <Label htmlFor={id}>
-        {label ?? t("label")}
-        {required && <span className="text-destructive"> *</span>}
-      </Label>
+      {/* Der Hinweis hängt im ℹ am Label und nicht mehr in einem
+          `aria-describedby`-Absatz unter dem Feld: `InfoHinweis` legt den Text
+          als echten Popover-Inhalt ab, den Screenreader über den Knopf
+          erreichen. */}
+      <span className="flex items-center gap-1.5">
+        <Label htmlFor={id}>
+          {beschriftung}
+          {required && <span className="text-destructive"> *</span>}
+        </Label>
+        {hinweis && (
+          <InfoHinweis
+            text={hinweis}
+            ariaLabel={t("infoAria", { feld: beschriftung })}
+          />
+        )}
+      </span>
       <NativeSelect
         id={id}
         value={value}
         disabled={disabled}
         required={required}
-        aria-describedby={hinweis ? hintId : undefined}
         onChange={(e) => onChange(e.target.value)}
       >
         {allowEmpty && <option value="">{emptyLabel ?? t("none")}</option>}
@@ -121,11 +135,6 @@ export function SprachAuswahl({
           </option>
         ))}
       </NativeSelect>
-      {hinweis && (
-        <p id={hintId} className="text-xs text-muted-foreground">
-          {hinweis}
-        </p>
-      )}
     </div>
   );
 }

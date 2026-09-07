@@ -1434,6 +1434,18 @@
       "commission": "Rata ta' riżerva jekk għal proprjetà ma japplikax kuntratt ta' saldu. Il-kuntratt hawn taħt għandu prijorità — huwa l-ftehim attwali u jkopri wkoll il-perjodu, it-tariffa fissa u l-kommissjoni minima. Jekk it-tnejn jibqgħu vojta, ma jiġi kkalkulat l-ebda ħlas imma tintwera sing.",
       "commissionOverride": "Rata ta' riżerva għal din il-proprjetà biss; tissupera r-rata standard tas-sid. Kuntratt ta' saldu għandu prijorità hawn ukoll. Jekk il-qasam jibqa' vojt, tapplika r-rata standard.",
       "cprNumber": "Numru personali Daniż tas-sid (format DDMMYY-XXXX). Meħtieġ biss għall-kontabilità ta' djar tal-vaganzi Daniżi; viżibbli biss għall-amministraturi."
+    },
+    "coOwners": {
+      "label": "Koproprjetarju",
+      "entry": "{name} — {pct} %",
+      "unassigned": "{pct} % għadu mhux assenjat lil sid",
+      "tabHint": "Dawn il-persuni huma koproprjetarji ta' proprjetajiet ta' dan is-sid. Kull wieħed jirċievi l-kont tiegħu stess għall-parti tiegħu; id-data ewlenija tiegħu tinżamm fil-paġna tiegħu stess.",
+      "entryObject": "{objekt} — {pct} %",
+      "open": "Iftaħ id-data ewlenija"
+    },
+    "tabs": {
+      "mainOwner": "Sid ewlieni",
+      "coOwners": "Ko-sid ({count})"
     }
   },
   "ownerStatements": {
@@ -1627,7 +1639,8 @@
         "contractStartsLater": "L-ebda ftehim ta' kontijiet fid-data tat-tluq {abreise}: il-ftehim jibda biss fi {beginn}. Iddata l-bidu tal-ftehim lura mas-sid, imbagħad din il-prenotazzjoni tiġi kkunsidrata.",
         "noContract": "Għal din il-proprjetà, m'hemm l-ebda ftehim ta' kontijiet u l-ebda rata ta' kummissjoni fid-dejta ewlenija — oħloq ftehim mas-sid.",
         "addonsOutside": "Servizzi addizzjonali — mibjugħa permezz ta' myNextDays, mhux inklużi fil-prezz tal-klijent tal-portal"
-      }
+      },
+      "ownershipShare": "Aqsam"
     },
     "expenses": {
       "add": "Żid",
@@ -1721,7 +1734,13 @@
         "irreversible": "Dan ma jistax jiġi rtirat. Fattura ffinalizzata tista' titħassar biss permezz ta' fattura ta' kanċellazzjoni."
       },
       "basis": "Jiddetermina meta riżervazzjoni taqa' fil-perjodu: bic-check-in skont il-jum tal-wasla, bic-check-out skont il-jum tat-tluq. Riżervazzjoni li taqsam minn xahar għall-ieħor tispiċċa, skont l-għażla, f'xahar jew fl-ieħor.",
-      "statuses": "Jiġu kkalkulati biss ir-riżervazzjonijiet b'wieħed mill-istatus magħżula. B'mod awtomatiku dawn huma r-riżervazzjonijiet ikkonfermati u kompluti — dawk ikkanċellati normalment ma jidħlux fi ħlas."
+      "statuses": "Jiġu kkalkulati biss ir-riżervazzjonijiet b'wieħed mill-istatus magħżula. B'mod awtomatiku dawn huma r-riżervazzjonijiet ikkonfermati u kompluti — dawk ikkanċellati normalment ma jidħlux fi ħlas.",
+      "channel": "Kif saret din il-booking: permezz ta' portal bħal Booking.com jew Airbnb, il-marketplace tagħna myBestDays, il-websajt tal-proprjetà stess, jew direttament (telefon, email, fuq il-post).",
+      "portalDeduction": "Dak li l-portal iżomm qabel ma l-flus jaslu għand il-proprjetà – il-kummissjoni tiegħu u, jekk jiġbor il-flus, il-ħlas tal-pagament tiegħu. Għal bookings permezz tal-websajt tal-proprjetà stess jew direttament, dan huwa 0, peress li m'hemm l-ebda portal involut.",
+      "commission": "Il-kummissjoni tal-proprjetà għall-ġestjoni tal-proprjetà. Din tiġi kkalkulata fuq l-ammont li jibqa' wara t-tnaqqis tal-portal – u tapplika għal KULL booking, anke dawk permezz tal-websajt tal-proprjetà stess.",
+      "flatFee": "Ammont fiss mill-kuntratt ta' ġestjoni, pereżempju għall-ispejjeż anċillari. Skont il-ftehim, dan jitnaqqas qabel jew wara l-kummissjoni.",
+      "ownerShare": "Dak li jibqa' fl-aħħar għas-sid: prezz tal-mistieden nieqes it-tnaqqis tal-portal, nieqes il-kummissjoni, nieqes il-flat rate, flimkien mal-miżati li jappartjenu lilu. F'każ ta' sjieda konġunta, immultiplikat ukoll bil-parti tiegħu.",
+      "ownershipShare": "Il-parti ta' dan is-sid fil-proprjetà. 100% tfisser sjieda unika. Jekk dar hija proprjetà ta' diversi persuni, kull wieħed jirċievi l-kont tiegħu stess għall-parti tiegħu – il-partijiet flimkien jagħmlu 100%."
     },
     "finalizeConfirm": {
       "title": "Iffissa l-kont",
@@ -1754,6 +1773,11 @@
       "manageContract": "Żomm il-kuntratt tal-kontijiet",
       "receipt": "Irċevuta",
       "bookingsCount": "{n} prenotazzjonijiet"
+    },
+    "coOwners": {
+      "title": "Koproprjetarji",
+      "hint": "Dawn il-proprjetajiet huma proprjetà ta' diversi persuni. Kull wieħed jirċievi kont separat għas-sehem tiegħu.",
+      "share": "{anteil} %"
     }
   },
   "ownerBilling": {
@@ -6487,7 +6511,8 @@
       "bookingFeesPerStay": "Kull żjara",
       "bookingFeesAssignTitle": "Nieqes l-assenjament",
       "bookingFeesAssignHint": "Dawn it-tariffi huma mdaħħla fil-proprjetà, imma mhux definit ta' min hu l-ammont. Mingħajr dan ir-rendikont tas-sid ma jistax jiġi kkalkulat.",
-      "bookingFeesAssign": "Oħloq assenjament"
+      "bookingFeesAssign": "Oħloq assenjament",
+      "miteigentum": "Sjieda konġunta: {wer} — {rest} % ħielsa"
     },
     "policiesForm": {
       "title": "Politiki",
@@ -12340,7 +12365,8 @@
   "sprache": {
     "label": "Lingwa tal-e-mails",
     "hint": "F'din il-lingwa nibagħtu e-mails lil din il-persuna.",
-    "none": "— mhux speċifikat"
+    "none": "— mhux speċifikat",
+    "infoAria": "Spjegazzjoni għal {feld}"
   },
   "neuerungen": {
     "eyebrow": "Aġġornamenti tal-prodott",

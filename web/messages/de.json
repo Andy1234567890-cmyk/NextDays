@@ -1434,6 +1434,18 @@
       "commission": "Rückfall-Satz, falls für ein Objekt kein Abrechnungsvertrag gilt. Der Vertrag weiter unten hat Vorrang — er ist die eigentliche Vereinbarung und kennt zusätzlich Zeitraum, Pauschale und Mindestprovision. Bleibt beides leer, wird keine Auszahlung berechnet, sondern ein Gedankenstrich ausgewiesen.",
       "commissionOverride": "Rückfall-Satz nur für dieses Objekt; überschreibt den Standardsatz des Eigentümers. Ein Abrechnungsvertrag hat auch hier Vorrang. Bleibt das Feld leer, gilt der Standardsatz.",
       "cprNumber": "Dänische Personennummer des Eigentümers (Format TTMMJJ-XXXX). Nur für die Abrechnung dänischer Ferienhäuser nötig; sichtbar nur für Administratoren."
+    },
+    "coOwners": {
+      "label": "Miteigentümer",
+      "entry": "{name} — {pct} %",
+      "unassigned": "{pct} % noch keinem Eigentümer zugeordnet",
+      "tabHint": "Diese Personen sind an Objekten dieses Eigentümers mitbeteiligt. Jeder bekommt seine eigene Abrechnung über seinen Anteil; seine Stammdaten werden auf seiner eigenen Seite gepflegt.",
+      "entryObject": "{objekt} — {pct} %",
+      "open": "Stammdaten öffnen"
+    },
+    "tabs": {
+      "mainOwner": "Haupteigentümer",
+      "coOwners": "Miteigentümer ({count})"
     }
   },
   "ownerStatements": {
@@ -1627,7 +1639,8 @@
         "contractStartsLater": "Kein Abrechnungsvertrag am Abreisetag {abreise}: der Vertrag beginnt erst am {beginn}. Vertragsbeginn beim Eigentümer zurückdatieren, dann rechnet diese Buchung mit.",
         "noContract": "Für dieses Objekt gibt es keinen Abrechnungsvertrag und keinen Provisionssatz in den Stammdaten — beim Eigentümer einen Vertrag anlegen.",
         "addonsOutside": "Zusatzleistungen — über myNextDays verkauft, nicht im Portal-Gastpreis"
-      }
+      },
+      "ownershipShare": "Anteil"
     },
     "expenses": {
       "add": "Hinzufügen",
@@ -1721,7 +1734,13 @@
         "irreversible": "Das lässt sich nicht rückgängig machen. Eine finalisierte Rechnung kann nur noch durch eine Stornorechnung aufgehoben werden."
       },
       "basis": "Legt fest, wann eine Buchung in den Zeitraum fällt: bei Check-in nach dem Anreisetag, bei Check-out nach dem Abreisetag. Eine Buchung über den Monatswechsel landet je nach Wahl im einen oder anderen Monat.",
-      "statuses": "Nur Buchungen mit einem der gewählten Status werden abgerechnet. Standard sind bestätigte und abgeschlossene Buchungen — stornierte gehören normalerweise nicht in eine Auszahlung."
+      "statuses": "Nur Buchungen mit einem der gewählten Status werden abgerechnet. Standard sind bestätigte und abgeschlossene Buchungen — stornierte gehören normalerweise nicht in eine Auszahlung.",
+      "channel": "Über welchen Weg diese Buchung kam: ein Portal wie Booking.com oder Airbnb, unser Marktplatz myBestDays, die eigene Website des Betriebs oder direkt (Telefon, E-Mail, vor Ort).",
+      "portalDeduction": "Was das Portal selbst einbehält, bevor Geld beim Betrieb ankommt — seine Provision und, wenn es das Geld einzieht, seine Zahlungsgebühr. Bei Buchungen über die eigene Website oder direkt steht hier 0, denn dort steht kein Portal dazwischen.",
+      "commission": "Die Provision des Betriebs für die Verwaltung des Objekts. Sie wird auf den Betrag gerechnet, der nach dem Portal-Abzug übrig ist — und fällt bei JEDER Buchung an, auch bei einer über die eigene Website.",
+      "flatFee": "Ein fester Betrag aus dem Verwaltungsvertrag, zum Beispiel für Nebenkosten. Je nach Vereinbarung wird er vor oder nach der Provision abgezogen.",
+      "ownerShare": "Was am Ende für den Eigentümer übrig bleibt: Gastpreis minus Portal-Abzug, minus Provision, minus Pauschale, plus die Gebühren, die ihm gehören. Bei Miteigentum zusätzlich mit seinem Anteil multipliziert.",
+      "ownershipShare": "Der Anteil dieses Eigentümers am Objekt. 100 % heißt Alleineigentum. Gehört ein Haus mehreren Personen, bekommt jede ihre eigene Abrechnung über ihren Anteil — die Anteile ergeben zusammen 100 %."
     },
     "finalizeConfirm": {
       "title": "Abrechnung festschreiben",
@@ -1754,6 +1773,11 @@
       "manageContract": "Abrechnungsvertrag pflegen",
       "receipt": "Beleg",
       "bookingsCount": "{n} Buchungen"
+    },
+    "coOwners": {
+      "title": "Miteigentümer",
+      "hint": "Diese Objekte gehören mehreren Personen. Jede bekommt eine eigene Abrechnung über ihren Anteil.",
+      "share": "{anteil} %"
     }
   },
   "ownerBilling": {
@@ -6508,7 +6532,8 @@
       "bookingFeesPerStay": "Pro Aufenthalt",
       "bookingFeesAssignTitle": "Zuordnung fehlt",
       "bookingFeesAssignHint": "Diese Gebühren stehen am Objekt, aber es ist nicht festgelegt, wem der Betrag gehört. Ohne diese Angabe kann die Eigentümer-Abrechnung nicht rechnen.",
-      "bookingFeesAssign": "Zuordnung anlegen"
+      "bookingFeesAssign": "Zuordnung anlegen",
+      "miteigentum": "Miteigentum: {wer} — {rest} % frei"
     },
     "policiesForm": {
       "title": "Buchungskonditionen",
@@ -12361,7 +12386,8 @@
   "sprache": {
     "label": "Sprache für E-Mails",
     "hint": "In dieser Sprache verschicken wir E-Mails an diese Person.",
-    "none": "— keine Angabe"
+    "none": "— keine Angabe",
+    "infoAria": "Erklärung zu {feld}"
   },
   "neuerungen": {
     "eyebrow": "Produkt-Updates",

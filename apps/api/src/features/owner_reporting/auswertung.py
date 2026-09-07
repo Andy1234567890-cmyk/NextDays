@@ -402,6 +402,7 @@ class Auswerter:
                 abzug: common.PortalAbzug | None = None
                 try:
                     abzug = common.portal_abzug(
+                        kanal=r.get("channel"),
                         # OHNE Zusatzleistungen (`portal_brutto`).
                         brutto=common.portal_brutto(
                             uebernachtung=basis,

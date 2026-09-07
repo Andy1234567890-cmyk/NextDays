@@ -1434,6 +1434,18 @@
       "commission": "Tartalékkulcs, ha egy ingatlanra nem érvényes elszámolási szerződés. Az alábbi szerződés elsőbbséget élvez — az a tényleges megállapodás, és kiterjed az időszakra, a díjra és a minimális jutalékra is. Ha mindkettő üres marad, nem számolunk kifizetést, hanem gondolatjel jelenik meg.",
       "commissionOverride": "Tartalékkulcs csak erre az ingatlanra; felülírja a tulajdonos alapkulcsát. Az elszámolási szerződés itt is elsőbbséget élvez. Ha a mező üres marad, az alapkulcs érvényes.",
       "cprNumber": "A tulajdonos dán személyi azonosítója (formátum: ÉÉHHNN-XXXX). Csak dán nyaralók elszámolásához szükséges; csak adminisztrátorok számára látható."
+    },
+    "coOwners": {
+      "label": "Társtulajdonos",
+      "entry": "{name} — {pct} %",
+      "unassigned": "{pct} % még nincs tulajdonoshoz rendelve",
+      "tabHint": "Ezek a személyek résztulajdonosai az adott tulajdonos ingatlanainak. Mindegyikük saját elszámolást kap a saját részéről; törzsadatainak kezelése a saját oldalán történik.",
+      "entryObject": "{objekt} — {pct} %",
+      "open": "Törzsadatok megnyitása"
+    },
+    "tabs": {
+      "mainOwner": "Fő tulajdonos",
+      "coOwners": "Társtulajdonos ({count})"
     }
   },
   "ownerStatements": {
@@ -1627,7 +1639,8 @@
         "contractStartsLater": "Nincs elszámolási szerződés a(z) {abreise} kijelentkezési napon: a szerződés csak ekkor kezdődik: {beginn}. Dátumozza vissza a szerződés kezdetét a tulajdonosnál, majd számolja el ezt a foglalást.",
         "noContract": "Ehhez az ingatlanhoz nincs elszámolási szerződés és jutalékráta a törzsadatokban – hozzon létre egy szerződést a tulajdonosnál.",
         "addonsOutside": "Kiegészítő szolgáltatások – a myNextDays-en keresztül értékesítve, nem szerepel a portál vendégárában"
-      }
+      },
+      "ownershipShare": "Részarány"
     },
     "expenses": {
       "add": "Hozzáadás",
@@ -1721,7 +1734,13 @@
         "irreversible": "Ez nem vonható vissza. Egy véglegesített számla már csak sztornószámlával érvényteleníthető."
       },
       "basis": "Meghatározza, hogy egy foglalás mikor esik az időszakba: check-in esetén az érkezés napja szerint, check-out esetén a távozás napja szerint. A hónapfordulón átnyúló foglalás a választástól függően az egyik vagy a másik hónapba kerül.",
-      "statuses": "Csak a kiválasztott státuszok valamelyikével rendelkező foglalások kerülnek elszámolásra. Alapértelmezés a visszaigazolt és a lezárt foglalás — a lemondottak rendszerint nem tartoznak a kifizetésbe."
+      "statuses": "Csak a kiválasztott státuszok valamelyikével rendelkező foglalások kerülnek elszámolásra. Alapértelmezés a visszaigazolt és a lezárt foglalás — a lemondottak rendszerint nem tartoznak a kifizetésbe.",
+      "channel": "A foglalás forrása: egy portál (pl. Booking.com vagy Airbnb), a myBestDays piactér, a szálláshely saját weboldala, vagy közvetlen foglalás (telefon, e-mail, helyszínen).",
+      "portalDeduction": "Amit a portál megtart magának, mielőtt a pénz megérkezik a szálláshelyre – jutalék és, ha a portál szedi be a pénzt, a fizetési díj. Saját weboldalon vagy közvetlen foglalás esetén ez 0.",
+      "commission": "A szálláshely jutaléka az ingatlan kezeléséért. Ez a portál levonása után fennmaradó összegből kerül kiszámításra – és MINDEN foglalás esetén felszámításra kerül, még a saját weboldalon keresztül történő foglalás esetén is.",
+      "flatFee": "Egy fix összeg a kezelési szerződésből, például a rezsiköltségekre. Megállapodás szerint a jutalék előtt vagy után kerül levonásra.",
+      "ownerShare": "Ami végül a tulajdonosnak marad: vendégár mínusz portál levonás, mínusz jutalék, mínusz átalány, plusz a neki járó díjak. Tulajdonostársak esetén ezen felül a tulajdoni hányaddal megszorozva.",
+      "ownershipShare": "A tulajdonos tulajdoni hányada az ingatlanban. 100% az egyedüli tulajdonjogot jelenti. Ha egy ház több személy tulajdonában van, mindenki megkapja a saját elszámolását a tulajdoni hányadáról – a hányadok együtt 100%-ot tesznek ki."
     },
     "finalizeConfirm": {
       "title": "Elszámolás rögzítése",
@@ -1754,6 +1773,11 @@
       "manageContract": "Elszámolási szerződés kezelése",
       "receipt": "Bizonylat",
       "bookingsCount": "{n} foglalás"
+    },
+    "coOwners": {
+      "title": "Társtulajdonos",
+      "hint": "Ezek az ingatlanok több személy tulajdonában vannak. Mindegyikük saját elszámolást kap a saját részéről.",
+      "share": "{anteil} %"
     }
   },
   "ownerBilling": {
@@ -6487,7 +6511,8 @@
       "bookingFeesPerStay": "Tartózkodásonként",
       "bookingFeesAssignTitle": "Hiányzik a hozzárendelés",
       "bookingFeesAssignHint": "Ezek a díjak rögzítve vannak az ingatlanon, de nincs meghatározva, kihez tartozik az összeg. Enélkül a tulajdonosi elszámolás nem számolható ki.",
-      "bookingFeesAssign": "Hozzárendelés létrehozása"
+      "bookingFeesAssign": "Hozzárendelés létrehozása",
+      "miteigentum": "Társtulajdon: {wer} – {rest} % szabad"
     },
     "policiesForm": {
       "title": "Irányelvek",
@@ -12340,7 +12365,8 @@
   "sprache": {
     "label": "E-mailek nyelve",
     "hint": "Ezen a nyelven küldünk e-mailt ennek a személynek.",
-    "none": "— nincs megadva"
+    "none": "— nincs megadva",
+    "infoAria": "Magyarázat: {feld}"
   },
   "neuerungen": {
     "eyebrow": "Termékfrissítések",

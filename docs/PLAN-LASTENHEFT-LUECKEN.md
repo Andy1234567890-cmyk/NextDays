@@ -141,6 +141,9 @@ ESLint, Migration per `apply-migrations.sh`, Realtime-Prüfung, Wurzel-1–9-Che
 
 ## Etappe 13 Abrechnung
 
+Umsetzungsplan mit Befund, Migrationen 0601–0603 und offener Miteigentümer-Entscheidung (ADR-0026): [PLAN-ETAPPE-13-ABRECHNUNG.md](PLAN-ETAPPE-13-ABRECHNUNG.md).
+Wunschliste (Original):
+
 - Abrechnung pro Objekt für Eigentümer mit mehrern Objketen
 - Eigntümer anpassung / Miteigentümer / Co eigentümer auswählen können und auf Vorschau und Faktuierter anzeigen
 - mehr sprachig einstellbar ( in welcher Sprache es erstellt werden muss, für ausländische Eigentümer )
@@ -196,4 +199,4 @@ Eigentümer-Anteil
 - Booking.com-Inseratsimport (Channex bietet keinen Abruf).
 - OTA-Neuanlage/Export (ADR-0012 offen, Anbieterentscheidung).
 - Booking.com/Vrbo live verbinden (Betriebsvorgang im Kanalmanager, kein Code).
-- Miteigentümer (bleibt bei 0073; siehe ADR-0024).
+- Miteigentümer (bleibt bei 0073; siehe ADR-0026).

@@ -1434,6 +1434,18 @@
       "commission": "Aliquota di ripiego se per un immobile non vale alcun contratto di rendiconto. Il contratto qui sotto ha la precedenza: è l'accordo effettivo e comprende anche periodo, forfait e commissione minima. Se entrambi restano vuoti, non viene calcolato alcun pagamento e si mostra un trattino.",
       "commissionOverride": "Aliquota di ripiego solo per questo immobile; sostituisce l'aliquota standard del proprietario. Anche qui un contratto di rendiconto ha la precedenza. Se il campo resta vuoto, vale l'aliquota standard.",
       "cprNumber": "Numero di identificazione personale danese del proprietario (formato GGMMSS-XXXX). Necessario solo per la fatturazione di case vacanze danesi; visibile solo agli amministratori."
+    },
+    "coOwners": {
+      "label": "Comproprietario",
+      "entry": "{name} — {pct} %",
+      "unassigned": "{pct} % non ancora assegnato a un proprietario",
+      "tabHint": "Queste persone sono comproprietarie di immobili di questo proprietario. Ognuno riceve la propria fattura per la propria quota; i dati anagrafici sono gestiti sulla propria pagina.",
+      "entryObject": "{objekt} — {pct} %",
+      "open": "Apri dati anagrafici"
+    },
+    "tabs": {
+      "mainOwner": "Proprietario principale",
+      "coOwners": "Comproprietario ({count})"
     }
   },
   "ownerStatements": {
@@ -1627,7 +1639,8 @@
         "contractStartsLater": "Nessun contratto di fatturazione il giorno di partenza {abreise}: il contratto inizia solo il {beginn}. Retrodatare l'inizio del contratto con il proprietario, quindi questa prenotazione verrà fatturata.",
         "noContract": "Per questa proprietà non esiste un contratto di fatturazione e nessuna percentuale di commissione nei dati anagrafici — creare un contratto con il proprietario.",
         "addonsOutside": "Servizi aggiuntivi — venduti tramite myNextDays, non inclusi nel prezzo ospite del portale"
-      }
+      },
+      "ownershipShare": "Quota"
     },
     "expenses": {
       "add": "Aggiungi",
@@ -1721,7 +1734,13 @@
         "irreversible": "L'operazione non può essere annullata. Una fattura finalizzata può essere revocata solo tramite una fattura di storno."
       },
       "basis": "Stabilisce quando una prenotazione rientra nel periodo: con Check-in in base al giorno di arrivo, con Check-out in base al giorno di partenza. Una prenotazione a cavallo tra due mesi finisce nell'uno o nell'altro mese a seconda della scelta.",
-      "statuses": "Vengono conteggiate solo le prenotazioni con uno degli stati selezionati. Per impostazione predefinita sono quelle confermate e concluse — quelle annullate di norma non rientrano in un pagamento."
+      "statuses": "Vengono conteggiate solo le prenotazioni con uno degli stati selezionati. Per impostazione predefinita sono quelle confermate e concluse — quelle annullate di norma non rientrano in un pagamento.",
+      "channel": "Come è arrivata questa prenotazione: un portale come Booking.com o Airbnb, il nostro marketplace myBestDays, il sito web della struttura o direttamente (telefono, e-mail, in loco).",
+      "portalDeduction": "Quanto il portale trattiene prima che il denaro arrivi alla struttura: la sua commissione e, se riscuote il denaro, la sua commissione di pagamento. Per le prenotazioni tramite il proprio sito web o direttamente, qui è 0, perché non c'è nessun portale intermediario.",
+      "commission": "La commissione della struttura per la gestione dell'immobile. Viene calcolata sull'importo rimanente dopo la detrazione del portale e si applica a OGNI prenotazione, anche a quelle tramite il proprio sito web.",
+      "flatFee": "Un importo fisso dal contratto di gestione, ad esempio per le spese accessorie. A seconda dell'accordo, viene detratto prima o dopo la commissione.",
+      "ownerShare": "Cosa rimane al proprietario alla fine: prezzo ospite meno detrazione portale, meno commissione, meno forfettario, più le tasse che gli spettano. In caso di comproprietà, moltiplicato anche per la sua quota.",
+      "ownershipShare": "La quota di questo proprietario nell'immobile. 100% significa proprietà esclusiva. Se una casa appartiene a più persone, ognuno riceve il proprio rendiconto per la propria quota - le quote insieme fanno il 100%."
     },
     "finalizeConfirm": {
       "title": "Fattura definitiva",
@@ -1754,6 +1773,11 @@
       "manageContract": "Gestisci contratto di fatturazione",
       "receipt": "Ricevuta",
       "bookingsCount": "{n} prenotazioni"
+    },
+    "coOwners": {
+      "title": "Comproprietario",
+      "hint": "Queste proprietà appartengono a più persone. Ognuno riceve una fattura separata per la propria quota.",
+      "share": "{anteil} %"
     }
   },
   "ownerBilling": {
@@ -6487,7 +6511,8 @@
       "bookingFeesPerStay": "Per soggiorno",
       "bookingFeesAssignTitle": "Assegnazione mancante",
       "bookingFeesAssignHint": "Queste tariffe sono registrate sulla struttura, ma non è definito a chi appartiene l'importo. Senza questo il rendiconto del proprietario non può essere calcolato.",
-      "bookingFeesAssign": "Crea assegnazione"
+      "bookingFeesAssign": "Crea assegnazione",
+      "miteigentum": "Comproprietà: {wer} — {rest} % libero"
     },
     "policiesForm": {
       "title": "Policy",
@@ -12340,7 +12365,8 @@
   "sprache": {
     "label": "Lingua delle e-mail",
     "hint": "In questa lingua inviamo le e-mail a questa persona.",
-    "none": "— non specificato"
+    "none": "— non specificato",
+    "infoAria": "Spiegazione di {feld}"
   },
   "neuerungen": {
     "eyebrow": "Novità di prodotto",

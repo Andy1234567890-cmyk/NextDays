@@ -1434,6 +1434,18 @@
       "commission": "Stawka rezerwowa, jeśli dla obiektu nie obowiązuje umowa rozliczeniowa. Umowa poniżej ma pierwszeństwo — to właściwe ustalenie, obejmujące także okres, opłatę stałą i prowizję minimalną. Jeśli oba pozostaną puste, wypłata nie jest obliczana, a wyświetla się kreska.",
       "commissionOverride": "Stawka rezerwowa tylko dla tego obiektu; nadpisuje stawkę standardową właściciela. Umowa rozliczeniowa ma pierwszeństwo również tutaj. Jeśli pole pozostanie puste, obowiązuje stawka standardowa.",
       "cprNumber": "Duński numer identyfikacyjny właściciela (format DDMMRR-XXXX). Wymagany tylko do rozliczania duńskich domów wakacyjnych; widoczny tylko dla administratorów."
+    },
+    "coOwners": {
+      "label": "Współwłaściciel",
+      "entry": "{name} — {pct} %",
+      "unassigned": "{pct} % nieprzypisane do właściciela",
+      "tabHint": "Te osoby są współwłaścicielami obiektów tego właściciela. Każdy otrzymuje własne rozliczenie swojej części; jego dane podstawowe są zarządzane na jego własnej stronie.",
+      "entryObject": "{objekt} — {pct} %",
+      "open": "Otwórz dane podstawowe"
+    },
+    "tabs": {
+      "mainOwner": "Główny właściciel",
+      "coOwners": "Współwłaściciel ({count})"
     }
   },
   "ownerStatements": {
@@ -1627,7 +1639,8 @@
         "contractStartsLater": "Brak umowy rozliczeniowej w dniu wyjazdu {abreise}: umowa rozpoczyna się dopiero {beginn}. Zmień datę rozpoczęcia umowy u właściciela, wtedy ta rezerwacja zostanie rozliczona.",
         "noContract": "Brak umowy rozliczeniowej i stawki prowizji dla tego obiektu w danych podstawowych — utwórz umowę u właściciela.",
         "addonsOutside": "Usługi dodatkowe — sprzedawane przez myNextDays, nieujęte w cenie dla gościa wg portalu"
-      }
+      },
+      "ownershipShare": "Udział"
     },
     "expenses": {
       "add": "Dodaj",
@@ -1721,7 +1734,13 @@
         "irreversible": "Tego nie można cofnąć. Sfinalizowaną fakturę można uchylić już tylko fakturą korygującą."
       },
       "basis": "Określa, kiedy rezerwacja wpada w dany okres: przy opcji Zameldowanie decyduje dzień przyjazdu, przy opcji Wymeldowanie — dzień wyjazdu. Rezerwacja na przełomie miesiąca trafia do jednego lub drugiego miesiąca zależnie od wyboru.",
-      "statuses": "Rozliczane są tylko rezerwacje o jednym z wybranych statusów. Domyślnie są to rezerwacje potwierdzone i zakończone — anulowane zwykle nie należą do wypłaty."
+      "statuses": "Rozliczane są tylko rezerwacje o jednym z wybranych statusów. Domyślnie są to rezerwacje potwierdzone i zakończone — anulowane zwykle nie należą do wypłaty.",
+      "channel": "Kanał rezerwacji: portal taki jak Booking.com lub Airbnb, nasz rynek myBestDays, własna strona internetowa obiektu lub rezerwacja bezpośrednia (telefon, e-mail, na miejscu).",
+      "portalDeduction": "Co portal zatrzymuje, zanim pieniądze trafią do obiektu — prowizja portalu i, jeśli portal pobiera płatność, opłata za płatność. W przypadku rezerwacji przez własną stronę internetową lub bezpośrednich rezerwacji, wartość ta wynosi 0, ponieważ nie ma pośrednictwa portalu.",
+      "commission": "Prowizja obiektu za zarządzanie nieruchomością. Jest ona obliczana od kwoty pozostałej po odliczeniu portalu i jest naliczana za KAŻDĄ rezerwację, również za rezerwację przez własną stronę internetową.",
+      "flatFee": "Stała kwota z umowy o zarządzanie, na przykład za koszty dodatkowe. W zależności od umowy, jest ona odliczana przed lub po prowizji.",
+      "ownerShare": "Co ostatecznie pozostaje dla właściciela: cena dla gościa minus odliczenie portalu, minus prowizja, minus ryczałt, plus należne mu opłaty. W przypadku współwłasności dodatkowo pomnożone przez jego udział.",
+      "ownershipShare": "Udział tego właściciela w nieruchomości. 100% oznacza wyłączną własność. Jeśli dom należy do kilku osób, każda otrzymuje własne rozliczenie dotyczące jej udziału — udziały sumują się do 100%."
     },
     "finalizeConfirm": {
       "title": "Zatwierdź rozliczenie",
@@ -1754,6 +1773,11 @@
       "manageContract": "Zarządzaj umową rozliczeniową",
       "receipt": "Dowód",
       "bookingsCount": "{n} rezerwacji"
+    },
+    "coOwners": {
+      "title": "Współwłaściciel",
+      "hint": "Te obiekty należą do kilku osób. Każda otrzymuje własne rozliczenie za swoją część.",
+      "share": "{anteil} %"
     }
   },
   "ownerBilling": {
@@ -6487,7 +6511,8 @@
       "bookingFeesPerStay": "Za pobyt",
       "bookingFeesAssignTitle": "Brak przypisania",
       "bookingFeesAssignHint": "Te opłaty są zapisane przy obiekcie, ale nie określono, do kogo należy kwota. Bez tego nie można obliczyć rozliczenia dla właściciela.",
-      "bookingFeesAssign": "Utwórz przypisanie"
+      "bookingFeesAssign": "Utwórz przypisanie",
+      "miteigentum": "Współwłasność: {wer} — {rest} % wolne"
     },
     "policiesForm": {
       "title": "Zasady",
@@ -12340,7 +12365,8 @@
   "sprache": {
     "label": "Język wiadomości e-mail",
     "hint": "W tym języku wysyłamy e-maile do tej osoby.",
-    "none": "— nie podano"
+    "none": "— nie podano",
+    "infoAria": "Wyjaśnienie dla {feld}"
   },
   "neuerungen": {
     "eyebrow": "Aktualizacje produktu",

@@ -34,6 +34,7 @@ from .schemas import (
     OwnerKontakt,
     OwnerListItem,
     OwnerListResponse,
+    OwnerMiteigentuemer,
     OwnerPropertyAssign,
     OwnerPropertyLink,
     OwnerResponse,
@@ -54,6 +55,14 @@ _FK_VERLETZUNG = "23503"
 # Vorab-Prüfung in `_objekte_zuordnen` und fängt das Rennen zwischen zwei
 # gleichzeitigen Zuordnungen ab (Wurzel 2).
 _UNIQUE_VERLETZUNG = "23505"
+# Volle Eigentumssumme je Objekt. Ein Anteil ist `numeric(5,2)`; die
+# Toleranz liegt im DB-Trigger (0601), hier genügt der glatte Wert.
+_ANTEIL_VOLL = 100.0
+# `raise exception` im Trigger `owner_properties_anteile_pruefen` (0601).
+# Postgres meldet jeden benutzerdefinierten Abbruch als P0001; nur der Text
+# unterscheidet sie. Gefangen wird er, damit ein Rennen zwischen zwei
+# Zuordnungen ein 409 gibt und keinen 500 (live am 07.09.2026 passiert).
+_ANTEIL_TRIGGER = "P0001"
 
 _OWNER_COLUMNS = (
     "id, tenant_id, name, company, email, phone, street, house_number, "
@@ -139,6 +148,9 @@ class OwnersService:
             .eq("owner_id", owner_id)
             .execute()
         ).data or []
+        mit = self._miteigentuemer_je_objekt(
+            owner_id, [str(r["property_id"]) for r in rows]
+        )
         return [
             OwnerPropertyLink(
                 property_id=str(r["property_id"]),
@@ -148,9 +160,62 @@ class OwnersService:
                     if r.get("commission_override_pct") is not None
                     else None
                 ),
+                miteigentuemer=mit.get(str(r["property_id"]), []),
             )
             for r in rows
         ]
+
+    def _miteigentuemer_je_objekt(
+        self, owner_id: str, property_ids: list[str]
+    ) -> dict[str, list[OwnerMiteigentuemer]]:
+        """Die ANDEREN Eigentümer der übergebenen Objekte (0601, ADR-0028).
+
+        ZWEI Abrufe für die ganze Liste, nicht zwei je Objekt: bei einem
+        Eigentümer mit dreißig Objekten wären das sechzig Rundreisen, und die
+        Stammdatenseite lädt bei jedem Öffnen.
+
+        Kein Tenant-Filter nötig: `property_ids` stammt aus den Zuordnungen
+        DIESES Eigentümers, und der wurde in `get()` bereits auf den Mandanten
+        gescoped (Wurzel 3). Ein Objekt kann nicht Eigentümern zweier Betriebe
+        gehören — `properties.tenant_id` ist eindeutig.
+        """
+        if not property_ids:
+            return {}
+        fremde = (
+            self._db.table("owner_properties")
+            .select("owner_id, property_id, ownership_share")
+            .in_("property_id", property_ids)
+            .neq("owner_id", owner_id)
+            .execute()
+        ).data or []
+        if not fremde:
+            return {}
+        namen = {
+            str(r["id"]): str(r.get("name") or "")
+            for r in (
+                self._db.table("owners")
+                .select("id, name")
+                .in_("id", sorted({str(r["owner_id"]) for r in fremde}))
+                .execute()
+            ).data
+            or []
+        }
+        out: dict[str, list[OwnerMiteigentuemer]] = {}
+        for r in fremde:
+            oid = str(r["owner_id"])
+            out.setdefault(str(r["property_id"]), []).append(
+                OwnerMiteigentuemer(
+                    owner_id=oid,
+                    # Fehlt der Name, steht die Kennung da — nicht „Unbekannt".
+                    # Ein erfundenes Wort verdeckte einen Datenfehler
+                    # (Wurzel 4), die Kennung führt zum Datensatz.
+                    name=namen.get(oid) or oid,
+                    ownership_share=float(r.get("ownership_share") or 0),
+                )
+            )
+        for eintraege in out.values():
+            eintraege.sort(key=lambda m: (-m.ownership_share, m.name))
+        return out
 
     def _get_row(self, tenant_id: str, owner_id: str) -> dict:
         res = (
@@ -377,9 +442,22 @@ class OwnersService:
             )
 
     def _objekte_zuordnen(
-        self, tenant_id: str, owner_id: str, property_ids: list[str]
+        self,
+        tenant_id: str,
+        owner_id: str,
+        property_ids: list[str],
+        *,
+        teilen_erlaubt: bool = False,
     ) -> None:
         """Mehrere Objekte in EINEM Zug zuordnen.
+
+        `teilen_erlaubt` entscheidet, was bei einem voll vergebenen Objekt
+        passiert. Auf der Detailseite (True) wird der bisherige Alleineigentümer
+        auf die Hälfte gesetzt und der Rest dem neuen zugeschrieben — dort sieht
+        man die Anteile und kann sie danach korrigieren. Beim ANLEGEN (False)
+        wird abgewiesen: dieser Dialog zeigt keine Anteile, ein stilles Kürzen
+        eines fremden Eigentümers wäre dort eine unsichtbare Änderung an
+        bestehenden Daten.
 
         Wurzel 3: JEDE übergebene ID wird gegen die Objekte DIESES Mandanten
         geprüft, bevor irgendetwas geschrieben wird. Eine untergemischte fremde
@@ -431,38 +509,90 @@ class OwnersService:
                 status_code=422,
             )
 
-        # Schon vergeben? Vor dem Schreiben prüfen, damit der Betreiber eine
-        # Meldung MIT Objektnamen bekommt statt eines nackten DB-Konflikts.
-        belegt = (
+        # Miteigentum ist erlaubt (0601/ADR-0028): ein fremder Eigentümer am
+        # Objekt ist kein Konflikt, sondern ein Mitanteil. Dieser Pfad kennt
+        # aber keinen ausdrücklichen Anteil je Objekt (die Mehrfachauswahl
+        # ordnet n Objekte in einem Zug zu), deshalb bekommt jedes Objekt den
+        # FREIEN REST — bei einem unberührten Objekt sind das die volle 100 %,
+        # bei einem Objekt mit 60 % Fremdanteil die restlichen 40 %.
+        #
+        # Warum der Rest und nicht der Default 100: mit 100 würde jede
+        # Zuordnung an ein teilbelegtes Objekt am Trigger scheitern, und der
+        # Bediener sähe einen technischen Fehler statt eines Ergebnisses. Der
+        # Rest ist zugleich der einzige Wert, der ohne Rückfrage richtig sein
+        # KANN — und er ist auf der Detailseite jederzeit korrigierbar.
+        vergeben = (
             self._db.table("owner_properties")
-            .select("property_id, owners(name)")
+            .select("id, property_id, ownership_share, owners(name)")
             .in_("property_id", property_ids)
             .neq("owner_id", owner_id)
             .execute()
         ).data or []
-        if belegt:
+        fremd_pct: dict[str, float] = {}
+        fremd_zeilen: dict[str, list[dict]] = {}
+        for r in vergeben:
+            pid = str(r["property_id"])
+            fremd_pct[pid] = fremd_pct.get(pid, 0.0) + float(
+                r.get("ownership_share") or 0
+            )
+            fremd_zeilen.setdefault(pid, []).append(r)
+
+        # Der Anteil je Objekt — dieselbe Regel wie in `assign_property`:
+        # freier Rest, wenn es einen gibt, sonst GLEICHMÄSSIG teilen
+        # („teile ich einen kuchen bekommt jeder 50 %", 07.09.2026).
+        #
+        # Geteilt wird nur bei genau EINEM bisherigen Eigentümer: bei zwei
+        # oder mehr ist nicht bestimmbar, wem die Differenz abgeht, und eine
+        # Gleichverteilung würde eine bestehende Aufteilung überschreiben.
+        anteil_je: dict[str, float] = {}
+        kuerzen: list[dict] = []
+        nicht_teilbar: list[dict] = []
+        for pid in property_ids:
+            belegt = round(fremd_pct.get(pid, 0.0), 2)
+            zeilen_pid = fremd_zeilen.get(pid, [])
+            if belegt < _ANTEIL_VOLL:
+                anteil_je[pid] = round(_ANTEIL_VOLL - belegt, 2)
+                continue
+            if not teilen_erlaubt or len(zeilen_pid) != 1:
+                nicht_teilbar.extend(zeilen_pid)
+                continue
+            haelfte = round(_ANTEIL_VOLL / 2, 2)
+            anteil_je[pid] = haelfte
+            kuerzen.append({"id": str(zeilen_pid[0]["id"]), "rest": haelfte})
+        if nicht_teilbar:
             raise OwnerError(
-                _belegt_meldung(belegt, eigene), status_code=409
+                _miteigentum_meldung(nicht_teilbar, eigene), status_code=409
             )
 
         try:
+            # Erst kürzen, dann schreiben: andernfalls stünde zwischen beiden
+            # Aufrufen eine Summe über 100 % und der Trigger (0601) würde dort
+            # zuschlagen.
+            for k in kuerzen:
+                self._db.table("owner_properties").update(
+                    {"ownership_share": k["rest"]}
+                ).eq("id", k["id"]).execute()
             self._db.table("owner_properties").upsert(
                 [
-                    {"owner_id": owner_id, "property_id": pid}
+                    {
+                        "owner_id": owner_id,
+                        "property_id": pid,
+                        "ownership_share": anteil_je[pid],
+                    }
                     for pid in property_ids
                 ],
                 on_conflict="owner_id,property_id",
             ).execute()
         except APIError as exc:
-            # 23505 kann hier nur `unique (property_id)` sein (0073): zwischen
-            # der Prüfung oben und diesem Insert hat ein anderer Vorgang eines
-            # der Objekte belegt. Spezifisch fangen und als Konflikt melden —
-            # ein breites `except` würde dieses Signal verschlucken und die
+            # 23505 kann hier nur noch `unique (owner_id, property_id)` sein
+            # (0063) — die Exklusiv-Sperre `unique (property_id)` aus 0073 ist
+            # mit 0601 gefallen. Spezifisch fangen und als Konflikt melden; ein
+            # breites `except` würde dieses Signal verschlucken und die
             # Zuordnung als erledigt ausgeben (Wurzel 5).
             if getattr(exc, "code", None) == _UNIQUE_VERLETZUNG:
                 raise OwnerError(
-                    "Mindestens eines der Objekte wurde soeben einem anderen "
-                    "Eigentümer zugeordnet. Bitte die Auswahl neu laden.",
+                    "Mindestens eines der Objekte wurde soeben zugeordnet. "
+                    "Bitte die Auswahl neu laden.",
                     status_code=409,
                 ) from exc
             raise
@@ -1235,8 +1365,10 @@ class OwnersService:
         """
         tenant_id = self._require_tenant(ctx)
         # `owner_id=None` heißt: kein Eigentümer, dem schon etwas gehören
-        # könnte — es bleiben genau die freien Objekte übrig.
-        return self._zuordenbare_objekte(tenant_id, None)
+        # könnte. `nur_freie` schließt zusätzlich die fremd vergebenen aus —
+        # Miteigentum setzt einen bestehenden Eigentümer voraus, den es hier
+        # noch nicht gibt.
+        return self._zuordenbare_objekte(tenant_id, None, nur_freie=True)
 
     def by_property(
         self, ctx: AuthContext, property_id: str
@@ -1325,12 +1457,14 @@ class OwnersService:
         )
 
     def _zuordenbare_objekte(
-        self, tenant_id: str, owner_id: str | None
+        self, tenant_id: str, owner_id: str | None, *, nur_freie: bool = False
     ) -> AvailablePropertiesResponse:
         """Objekte des Mandanten, die `owner_id` zugeordnet werden dürfen.
 
-        Zuordenbar = keinem Eigentümer zugeordnet ODER bereits diesem. Mit
-        `owner_id=None` (neuer Eigentümer) bleiben nur die freien übrig.
+        Mit `nur_freie=True` (Anlege-Dialog) bleiben ausschließlich Objekte
+        ohne jeden Eigentümer übrig. Sonst kommt ALLES mit, was dem Betrieb
+        gehört — ein bereits vergebenes Objekt als Miteigentum, mit
+        `freier_anteil` und `beteiligte` als Auskunft dazu.
 
         Adresse und erstes Foto kommen mit, weil die Mehrfachauswahl sie zeigt:
         bei 18 ähnlich benannten Objekten ist die Adresse das
@@ -1353,25 +1487,76 @@ class OwnersService:
         props = query.order("title").execute().data or []
         taken = (
             self._db.table("owner_properties")
-            .select("property_id, owner_id")
+            .select("property_id, owner_id, ownership_share, owners(name)")
             .execute()
         ).data or []
-        # property_id → owner_id (alle Zuordnungen im Tenant via property scope).
-        owner_by_prop = {str(t["property_id"]): str(t["owner_id"]) for t in taken}
-        items = [
-            AvailableProperty(
-                id=str(p["id"]),
-                title=p["title"],
-                subtitle=_objekt_referenz(p),
-                photo=_erstes_foto(p),
+
+        # Je Objekt: wie viel Anteil schon vergeben ist und an WEN — die
+        # eigene Zuordnung ausgenommen, denn der eigene Anteil ist kein
+        # Hindernis, sondern der Wert, der bearbeitet wird.
+        vergeben_pct: dict[str, float] = {}
+        fremde: dict[str, list[OwnerMiteigentuemer]] = {}
+        eigene_objekte: set[str] = set()
+        for t in taken:
+            pid = str(t["property_id"])
+            oid = str(t["owner_id"])
+            anteil = float(t.get("ownership_share") or 0)
+            if owner_id is not None and oid == owner_id:
+                eigene_objekte.add(pid)
+                continue
+            vergeben_pct[pid] = vergeben_pct.get(pid, 0.0) + anteil
+            bezug = t.get("owners")
+            name = ""
+            if isinstance(bezug, dict):
+                name = str(bezug.get("name") or "")
+            elif isinstance(bezug, list) and bezug:
+                name = str((bezug[0] or {}).get("name") or "")
+            fremde.setdefault(pid, []).append(
+                OwnerMiteigentuemer(
+                    owner_id=oid, name=name or oid, ownership_share=anteil
+                )
             )
-            for p in props
-            # `.get(id, owner_id)` heißt „nicht vergeben zählt als passend".
-            # Bei owner_id=None ist der Vergleich None == None für alle freien
-            # Objekte wahr und für jedes vergebene falsch — genau der Filter,
-            # den der Anlege-Dialog braucht.
-            if owner_by_prop.get(str(p["id"]), owner_id) == owner_id
-        ]
+
+        items: list[AvailableProperty] = []
+        for p in props:
+            pid = str(p["id"])
+            # Auf zwei Stellen runden: `numeric(5,2)` in der DB, und 100 −
+            # (33,33 × 3) darf nicht als 0,01 % „freier Anteil" erscheinen.
+            frei = round(100.0 - vergeben_pct.get(pid, 0.0), 2)
+            beteiligte = sorted(
+                fremde.get(pid, []), key=lambda m: (-m.ownership_share, m.name)
+            )
+            # ALLES anbieten, was dem Betrieb gehört — auch ein Objekt, das
+            # bereits vollständig einem anderen Eigentümer zugeordnet ist.
+            #
+            # WARUM (Befund 07.09.2026): Miteigentum entsteht im Regelfall
+            # dadurch, dass ein bestehender Alleineigentümer seinen 100-%-
+            # Anteil TEILT — nicht dadurch, dass irgendwo Prozente brachliegen.
+            # Live standen alle 20 aktiven Objekte auf 100 %, also bot die
+            # Auswahl NICHTS an, und Miteigentum war in der Oberfläche
+            # unerreichbar. Ein Filter „nur mit Restanteil" beschreibt einen
+            # Zustand, den es in echten Daten praktisch nie gibt.
+            #
+            # `freier_anteil` bleibt die ehrliche Auskunft (0 = nichts frei,
+            # der bestehende Anteil muss also verringert werden). Die
+            # Oberfläche sagt das VOR dem Anhaken; der Trigger bleibt der
+            # Riegel gegen eine Summe über 100.
+            #
+            # Der Anlege-Dialog ist die Ausnahme: dort gibt es noch keinen
+            # Eigentümer, dessen Anteil sich teilen ließe, also wäre ein
+            # fremdes Objekt in der Auswahl nur eine Fehlerquelle.
+            if nur_freie and beteiligte:
+                continue
+            items.append(
+                AvailableProperty(
+                    id=pid,
+                    title=p["title"],
+                    subtitle=_objekt_referenz(p),
+                    photo=_erstes_foto(p),
+                    freier_anteil=100.0 if pid in eigene_objekte else frei,
+                    beteiligte=beteiligte,
+                )
+            )
         return AvailablePropertiesResponse(items=items)
 
     def assign_property(
@@ -1394,35 +1579,116 @@ class OwnersService:
                 "zugeordnet werden.",
                 status_code=422,
             )
-        # Exklusivität: ein Objekt darf nur EINEM Eigentümer gehören. Ist es
-        # bereits einem ANDEREN Owner zugeordnet, klar abweisen (kein stilles
-        # Umhängen). Aktualisieren des eigenen Links (Anteil/Provision) bleibt ok.
-        existing = (
+        # Miteigentum (0601/ADR-0028): mehrere Eigentümer je Objekt sind
+        # erlaubt, ihre Anteile müssen aber zusammen bei 100 % bleiben. Bis
+        # 07.09.2026 stand hier ein pauschales 409 („Erst dort entfernen") —
+        # das war die eigentliche Sperre, nicht der DB-Constraint aus 0073.
+        #
+        # Die Prüfung läuft hier UND als Trigger in der DB (Wurzel 6: der
+        # Server schreibt mit service_role und umgeht jede Policy). Hier, weil
+        # nur die Anwendung eine Meldung mit Namen und Anteilen bilden kann;
+        # dort, weil ein Skript oder ein zweiter Schreibpfad diese Zeile nicht
+        # durchläuft.
+        andere = (
             self._db.table("owner_properties")
-            .select("owner_id, owners(name)")
+            .select("id, owner_id, ownership_share, owners(name)")
             .eq("property_id", req.property_id)
             .neq("owner_id", owner_id)
-            .limit(1)
             .execute()
         ).data or []
-        if existing:
-            other = existing[0].get("owners") or {}
-            other_name = other.get("name") if isinstance(other, dict) else None
-            raise OwnerError(
-                "Objekt ist bereits einem anderen Eigentümer zugeordnet"
-                + (f" ({other_name})" if other_name else "")
-                + ". Erst dort entfernen.",
-                status_code=409,
-            )
-        self._db.table("owner_properties").upsert(
-            {
-                "owner_id": owner_id,
-                "property_id": req.property_id,
-                "ownership_share": req.ownership_share,
-                "commission_override_pct": req.commission_override_pct,
-            },
-            on_conflict="owner_id,property_id",
-        ).execute()
+        belegt = round(
+            sum(float(r.get("ownership_share") or 0) for r in andere), 2
+        )
+        # Kein Anteil angegeben:
+        #   * niemand sonst am Objekt → 100 % (Alleineigentum, der Normalfall)
+        #   * ist noch etwas frei     → der freie Rest (60 % vergeben → 40 %)
+        #   * nichts frei             → GLEICHMÄSSIG teilen
+        #
+        # Der dritte Fall ist die Ansage vom 07.09.2026: „teile ich einen
+        # kuchen bekommt jeder 50 % nicht 150 %". Bei einem Alleineigentümer
+        # mit 100 % und einem Hinzukommenden sind das 50/50; bei zwei
+        # Beteiligten wären es je 33,33 — dort wird stattdessen abgewiesen
+        # (siehe unten), weil eine gleichmäßige Teilung dann eine Behauptung
+        # über eine bestehende Aufteilung wäre.
+        if req.ownership_share is not None:
+            anteil = round(float(req.ownership_share), 2)
+        elif not andere:
+            anteil = _ANTEIL_VOLL
+        elif belegt < _ANTEIL_VOLL:
+            anteil = round(_ANTEIL_VOLL - belegt, 2)
+        else:
+            anteil = round(_ANTEIL_VOLL / (len(andere) + 1), 2)
+
+        # ═══ Der Anteil ist eine ANGABE ÜBER DAS GANZE OBJEKT ═══
+        #
+        # Ansage des Betriebs am 07.09.2026: „was soll ein eigentümer mit
+        # 150 ?? wenn ich auf 100 -50= 50 % anteil". Wer bei einem zweiten
+        # Eigentümer 50 % einträgt, sagt damit: DIESER bekommt 50 %, der
+        # bisherige die anderen 50 % — nicht „50 zusätzlich zu dessen 100".
+        #
+        # Vorher wurde in diesem Fall abgewiesen (der Trigger meldete
+        # „ergäben 150 %", in der Oberfläche als 500 sichtbar). Das war
+        # formal richtig und praktisch unbrauchbar: da JEDES Objekt im
+        # Bestand auf 100 % steht, war Miteigentum über die Oberfläche
+        # überhaupt nicht anlegbar. Ein zweiter Eigentümer heißt zwingend,
+        # dass der erste weniger hält — also wird sein Anteil hier
+        # mitgeführt, statt eine Fehlermeldung zu erzeugen, die der Bediener
+        # nur durch einen Umweg über eine zweite Seite auflösen kann.
+        #
+        # Gekürzt wird NUR bei genau einem bisherigen Eigentümer. Bei zwei
+        # oder mehr wäre nicht bestimmbar, wem die Differenz abgeht — dort
+        # bleibt die Abweisung mit Namen und Anteilen die richtige Antwort.
+        kuerzen: dict | None = None
+        if belegt + anteil > _ANTEIL_VOLL:
+            if len(andere) != 1:
+                raise OwnerError(
+                    f"Die Anteile dieses Objekts ergäben zusammen "
+                    f"{belegt + anteil:g} % (höchstens 100 %). Bereits "
+                    f"vergeben: {_beteiligten_text(andere)}. Bitte die "
+                    "Anteile der Beteiligten zuerst anpassen.",
+                    status_code=409,
+                )
+            rest = round(_ANTEIL_VOLL - anteil, 2)
+            if rest < 0:
+                raise OwnerError(
+                    f"Ein Anteil von {anteil:g} % ist mehr als das ganze "
+                    "Objekt (höchstens 100 %).",
+                    status_code=422,
+                )
+            kuerzen = {"id": str(andere[0]["id"]), "rest": rest}
+
+        try:
+            # Zuerst kürzen, dann schreiben: in der anderen Reihenfolge stünde
+            # zwischen den beiden Aufrufen kurz eine Summe über 100 %, und der
+            # Trigger aus 0601 würde genau dort zuschlagen.
+            if kuerzen is not None:
+                self._db.table("owner_properties").update(
+                    {"ownership_share": kuerzen["rest"]}
+                ).eq("id", kuerzen["id"]).execute()
+            self._db.table("owner_properties").upsert(
+                {
+                    "owner_id": owner_id,
+                    "property_id": req.property_id,
+                    "ownership_share": anteil,
+                    "commission_override_pct": req.commission_override_pct,
+                },
+                on_conflict="owner_id,property_id",
+            ).execute()
+        except APIError as exc:
+            # Der Trigger aus 0601 ist der zweite Riegel (Wurzel 6). Läuft er
+            # an, weil zwischen Prüfung und Schreiben jemand anders einen
+            # Anteil vergeben hat, ist das ein Konflikt — kein 500.
+            # Live am 07.09.2026 als „Internal Server Error" in der Oberfläche
+            # sichtbar geworden: `P0001` blieb ungefangen, und die Meldung des
+            # Triggers (die den Namen nennt) erreichte niemanden.
+            if getattr(exc, "code", None) == _ANTEIL_TRIGGER:
+                raise OwnerError(
+                    "Die Anteile dieses Objekts wurden soeben geändert und "
+                    "ergäben zusammen mehr als 100 %. Bitte die Seite neu "
+                    "laden und den Anteil erneut eintragen.",
+                    status_code=409,
+                ) from exc
+            raise
         log.info(
             "owner_property_assigned",
             tenant_id=tenant_id,
@@ -1447,7 +1713,9 @@ class OwnersService:
         """
         tenant_id = self._require_tenant(ctx)
         row = self._get_row(tenant_id, owner_id)
-        self._objekte_zuordnen(tenant_id, owner_id, property_ids)
+        self._objekte_zuordnen(
+            tenant_id, owner_id, property_ids, teilen_erlaubt=True
+        )
         if row.get("user_id"):
             self._portalsicht_nachziehen(tenant_id, owner_id, str(row["user_id"]))
         return self.get(ctx, owner_id)
@@ -1460,6 +1728,31 @@ class OwnersService:
         self._db.table("owner_properties").delete().eq("owner_id", owner_id).eq(
             "property_id", property_id
         ).execute()
+
+        # Gegenzustand des Anteils (Wurzel 1): bleibt nach dem Entfernen GENAU
+        # EIN Eigentümer übrig, gehört ihm das Objekt wieder ganz.
+        #
+        # Warum das nötig ist: beim Zuordnen wird der bisherige Alleineigentümer
+        # gekürzt (100 → 50). Ohne diese Zeile bliebe er nach dem Entfernen des
+        # Miteigentümers auf 50 % stehen, und die Abrechnung zahlte ihm die
+        # Hälfte seines eigenen Objekts aus — ein Fehler, der wie ein
+        # plausibler Wert aussieht. Live gefunden am 07.09.2026 an „Bedstefars
+        # lille skovhus": Niels Højer blieb mit 50 % zurück.
+        #
+        # NUR bei genau einem Rest-Eigentümer: bei zwei verbliebenen (60/30)
+        # wäre jede Verteilung der frei gewordenen 10 % eine Behauptung über
+        # eine Vereinbarung, die der Server nicht kennt (Wurzel 4).
+        rest = (
+            self._db.table("owner_properties")
+            .select("id, ownership_share")
+            .eq("property_id", property_id)
+            .execute()
+        ).data or []
+        if len(rest) == 1 and float(rest[0].get("ownership_share") or 0) < _ANTEIL_VOLL:
+            self._db.table("owner_properties").update(
+                {"ownership_share": _ANTEIL_VOLL}
+            ).eq("id", str(rest[0]["id"])).execute()
+
         # Gegenzustand (Wurzel 1): mit dem Eigentum endet auch die Portal-Sicht.
         # Bliebe der Eintrag in `owner_property_assignments` stehen, sähe ein
         # Eigentümer Kalender und Daten eines Objekts weiter, das ihm nicht mehr
@@ -1547,27 +1840,59 @@ def _erstes_foto(p: dict) -> str | None:
     return None
 
 
-def _belegt_meldung(belegt: list[dict], titel: dict[str, str]) -> str:
-    """Fehlertext für Objekte, die schon einem anderen Eigentümer gehören.
+def _beteiligten_text(zeilen: list[dict]) -> str:
+    """„Karen Jacobsen 40 %, Torsten Ågaard 20 %" — für Fehlermeldungen.
 
-    Nennt die OBJEKTE beim Namen. Ein „mindestens eines der Objekte ist
-    vergeben" zwingt den Betreiber, bei 18 Objekten selbst zu suchen, welches
-    gemeint ist — und genau dieses Suchen soll die Mehrfachauswahl ersparen.
+    Der Name kommt aus dem eingebetteten `owners`-Bezug; PostgREST liefert ihn
+    je nach Beziehung als Objekt ODER als einelementige Liste, deshalb beide
+    Formen. Fehlt er, steht „unbekannt" — die Meldung bleibt lesbar, statt an
+    einem None zu scheitern (Wurzel 5).
+    """
+    teile: list[str] = []
+    for r in zeilen:
+        bezug = r.get("owners")
+        name = ""
+        if isinstance(bezug, dict):
+            name = str(bezug.get("name") or "")
+        elif isinstance(bezug, list) and bezug:
+            name = str((bezug[0] or {}).get("name") or "")
+        teile.append(f"{name or 'unbekannt'} {r.get('ownership_share')} %")
+    return ", ".join(teile)
+
+
+def _miteigentum_meldung(vergeben: list[dict], titel: dict[str, str]) -> str:
+    """Fehlertext, wenn die Mehrfachauswahl auf ein schon vergebenes Objekt trifft.
+
+    Seit 0601 ist Miteigentum erlaubt, aber DIESER Pfad legt immer 100 % an
+    (kein Anteilsfeld in der Mehrfachauswahl) — das ergäbe zusammen mehr als
+    100. Der Text sagt deshalb nicht mehr „erst dort entfernen", sondern nennt
+    den Weg zum Miteigentum: die Detailseite des Eigentümers, wo der Anteil
+    eingegeben wird.
+
+    Nennt die OBJEKTE beim Namen mit dem bestehenden Anteil. Ein „mindestens
+    eines der Objekte ist vergeben" zwingt den Betreiber, bei 18 Objekten
+    selbst zu suchen, welches gemeint ist — und genau dieses Suchen soll die
+    Mehrfachauswahl ersparen.
     """
     namen = []
-    for row in belegt:
+    for row in vergeben:
         pid = str(row["property_id"])
         anderer = row.get("owners")
         anderer_name = anderer.get("name") if isinstance(anderer, dict) else None
+        anteil = row.get("ownership_share")
         # Der Objekttitel steht in `titel` — die IDs kamen ja gerade von dort.
         # Fehlt er dennoch, steht die ID da: eine ID ist unschön, aber wahr,
         # ein erfundener Platzhalter wäre es nicht (Wurzel 4).
         eintrag = titel.get(pid, pid)
-        namen.append(f"{eintrag} ({anderer_name})" if anderer_name else eintrag)
+        if anderer_name:
+            wer = f"{anderer_name} {anteil} %" if anteil is not None else anderer_name
+            eintrag = f"{eintrag} ({wer})"
+        namen.append(eintrag)
     return (
-        "Diese Objekte sind bereits einem anderen Eigentümer zugeordnet: "
+        "Diese Objekte gehören bereits: "
         + ", ".join(namen)
-        + ". Erst dort entfernen."
+        + ". Für Miteigentum den Anteil auf der Detailseite des Eigentümers "
+        "eintragen — die Summe je Objekt darf 100 % nicht überschreiten."
     )
 
 

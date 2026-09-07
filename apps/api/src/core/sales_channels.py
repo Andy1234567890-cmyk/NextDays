@@ -59,3 +59,54 @@ def availability_block_hits_channel(source: str | None, channel: str) -> bool:
     if source == "portal":
         return is_ota_token(channel)
     return True
+
+
+# ── Wer nimmt bei einer Buchung eine Provision? (`reservations.channel`) ──────
+#
+# Diese Frage stellen vier Slices, und sie stand bisher dreimal getrennt im
+# Code: `subscriptions.EXTERNAL_CHANNELS`, `payments._OTA_CHANNELS` (beide
+# wortgleich) und `payments._PORTAL_CHANNELS`. Drei Kopien derselben Fachregel
+# driften bei der ersten Änderung auseinander — und dann rechnet die
+# Eigentümer-Abrechnung mit einer anderen Kanalmenge als die Fakturierung
+# (CLAUDE.md Wurzel 1/4).
+#
+# Die Werte sind genau die von `ReservationChannel` (reservations/schemas.py),
+# durchgesetzt vom DB-Enum `reservation_channel`. Schreibvarianten wie
+# „BookingCom" stehen in `reservations.ota_name` (Anzeigename des Portals),
+# NICHT im Kanal — live geprüft am 07.09.2026: 1000 Buchungen, ausschließlich
+# booking/airbnb/vrbo/portal/direct/website. Hier deshalb keine Varianten
+# aufnehmen: eine Menge, die Werte behauptet, die die Spalte nicht annehmen
+# kann, verschleiert nur, wo normalisiert werden müsste.
+
+# Fremde Portale: der Gast zahlt dort, das Portal behält seinen Abzug ein und
+# zahlt den Betrieb aus. Für sie MUSS ein Abzug bekannt sein — gemeldet oder
+# als Satz hinterlegt.
+FREMDE_PORTALE = frozenset({"booking", "airbnb", "vrbo", "ota_other"})
+
+# Unser eigener Marktplatz myBestDays: gleichrangiger Buchungskanal MIT
+# Provision (Preisliste §2: 8 % all-in) — gehört deshalb NICHT zu den
+# abzugsfreien Kanälen, auch wenn er uns gehört.
+EIGENER_MARKTPLATZ = frozenset({"portal"})
+
+# Eigene Wege des Betriebs: seine Website, Telefon, E-Mail, vor Ort, manuell
+# erfasst. Hier steht KEIN Portal zwischen Gast und Betrieb, es gibt also
+# nichts einzubehalten — der Portal-Abzug ist bekannt 0, kein fehlender Wert.
+# Die Provision des BETRIEBS gegenüber dem Eigentümer fällt trotzdem an; die
+# hängt am Verwaltungsvertrag, nicht am Kanal.
+EIGENE_KANAELE = frozenset({"direct", "website"})
+
+
+def normalisiere_kanal(kanal: object) -> str:
+    """Kanalwert einer Buchung auf die Vergleichsform bringen (klein, getrimmt)."""
+    return str(kanal or "").strip().lower()
+
+
+def ohne_portal_abzug(kanal: object) -> bool:
+    """Bucht dieser Kanal OHNE fremden Portal-Abzug?
+
+    True nur für die eigenen Wege des Betriebs (`EIGENE_KANAELE`). Fail-closed
+    (Wurzel 5): ein unbekannter oder fehlender Kanal gilt als portalbehaftet,
+    damit ein Tippfehler im Kanal nicht stillschweigend den Portal-Anteil als
+    Ertrag an den Eigentümer auszahlt.
+    """
+    return normalisiere_kanal(kanal) in EIGENE_KANAELE

@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING, Any
 from postgrest.exceptions import APIError
 
 from src.core.logging import get_logger
+from src.core.sales_channels import normalisiere_kanal, ohne_portal_abzug
 from src.core.supabase import fetch_all_rows
 from src.features.properties.gebuehren import FEE_TYPE_LABEL
 
@@ -45,6 +46,11 @@ if TYPE_CHECKING:
     from .service import StatementError
 
 log = get_logger("nextdays.owner_statements.zeilen")
+
+# Voller Miteigentumsanteil in Prozent (0601). Ein Anteil von 100 heißt
+# Alleineigentum — dann ist die Multiplikation ein No-Op und wird übersprungen,
+# damit der Bestand exakt dieselben Beträge behält wie vor der Änderung.
+_ANTEIL_VOLL = Decimal("100")
 
 _CENT = Decimal("0.01")
 
@@ -235,10 +241,16 @@ class ZeilenMixin:
         gecacht: dict[tuple[str, str, str], dict[str, Any] | None] = {}
         out: dict[str, dict[str, Any]] = {}
         for r in reservations:
-            kanal = str(r.get("channel") or "").strip().lower()
+            kanal = normalisiere_kanal(r.get("channel"))
             pid = str(r.get("property_id") or "")
             checkout = str(r.get("check_out") or "")
             if not (kanal and pid and checkout):
+                continue
+            # Für die eigenen Wege des Betriebs gibt es keinen Portal-Satz und
+            # kann keinen geben — die Abrechnungsregeln führen diese Kanäle
+            # nicht. Die Abfrage würde je Buchung eine Zeile suchen, die es
+            # nicht gibt; `portal_abzug` entscheidet sie ohnehin mit 0.
+            if ohne_portal_abzug(kanal):
                 continue
             schluessel = (kanal, pid, checkout)
             if schluessel not in gecacht:
@@ -327,6 +339,7 @@ class ZeilenMixin:
         )
         satz = portal_saetze.get(str(r["id"])) or {}
         abzug = common.portal_abzug(
+            kanal=r.get("channel"),
             brutto=gast_brutto,
             gemeldete_provision=r.get("ota_commission"),
             provision_pct=satz.get("provision_pct"),
@@ -654,6 +667,7 @@ class ZeilenMixin:
         owner_currency: str,
         override: Decimal | None,
         commission_map: dict[str, Decimal] | None,
+        anteil_map: dict[str, Decimal] | None,
         mask: GuestMask,
     ) -> list[RentalRow]:
         """Rental-Activity-Zeilen inkl. Buchungssatz und Währungsumrechnung.
@@ -671,12 +685,20 @@ class ZeilenMixin:
         Seit 02.09.2026 trägt jede Zeile ihre Gebühren und Zusatzleistungen
         EINZELN (`gebuehren`), den Satz und Vertragsstichtag, mit dem sie
         gerechnet wurde, sowie An-/Abreise und den echten Portalnamen.
+
+        Seit 07.09.2026 (0601, Miteigentum) wird der fertige Betrag zuletzt mit
+        dem MITEIGENTUMSANTEIL dieses Eigentümers am jeweiligen Objekt
+        multipliziert (`anteil_map`). Er greift ganz am Ende der Kette: der
+        Betrieb rechnet Provision und Pauschale auf die ganze Buchung, geteilt
+        wird erst der Rest — sonst bekäme er seine Provision je Miteigentümer
+        einmal.
         """
         guest_names = self._guest_names(
             [str(r["guest_id"]) for r in reservations if r.get("guest_id")]
         )
         addons_je_buchung = self._addon_zeilen([str(r["id"]) for r in reservations])
         cmap = commission_map or {}
+        amap = anteil_map or {}
         # Abrechnungsvertrag (0343) je Buchung, Stichtag = Check-out. Er schlägt
         # die Altspalten, aber NICHT den manuellen Editor-Override: wer in der
         # Maske einen Satz einträgt, korrigiert bewusst diese eine Abrechnung.
@@ -883,6 +905,38 @@ class ZeilenMixin:
                 if owner_payout is None:
                     grund = "provision"
 
+            # Miteigentum (0601): der Anteil DIESES Eigentümers an DIESEM
+            # Objekt. Er greift hier — nach allen drei Wegen, auf denen
+            # `owner_payout` oben entstehen kann (volle Kette, Altspalte,
+            # reiner Provisionssatz), und VOR der Währungsumrechnung, damit
+            # `owner_payout` und `owner_payout_converted` denselben Betrag
+            # beschreiben.
+            #
+            # Fehlt der Anteil in der Map, wird NICHT auf 100 % geraten: das
+            # Objekt gehört diesem Eigentümer dann laut Stammdaten nicht, und
+            # ein erfundener Vollanteil zahlte ihm fremden Ertrag aus
+            # (Wurzel 4). Die Zeile bleibt stehen und trägt ihren Grund.
+            anteil = amap.get(listing_id)
+            if owner_payout is not None:
+                if anteil is None:
+                    owner_payout = None
+                    if grund is None:
+                        grund = "anteil"
+                        detail = (
+                            f"Objekt {listing_id}: kein Miteigentumsanteil "
+                            "hinterlegt."
+                        )
+                    log.warning(
+                        "abrechnung_zeile_ohne_anteil",
+                        reservation_id=rid,
+                        property_id=listing_id,
+                    )
+                elif anteil != _ANTEIL_VOLL:
+                    # UNGERUNDET wie die ganze Kette (`common.owner_payout`):
+                    # gerundet wird erst an der API-Grenze, damit die
+                    # Nachtverteilung ohne Rundungsverlust aufgeht.
+                    owner_payout = owner_payout * anteil / _ANTEIL_VOLL
+
             # Buchungssatz in Owner-Währung umrechnen (Stichtag = Check-out).
             checkout = r.get("check_out")
             rate = Decimal("1")
@@ -1071,6 +1125,12 @@ class ZeilenMixin:
                     vertrag_beginnt_am=vertrag_beginnt_am,
                     min_provision_angewandt=(
                         kette.min_provision_angewandt if kette is not None else False
+                    ),
+                    # Der Anteil, mit dem GERECHNET wurde (0601) — nicht der
+                    # aktuelle Stammdatenwert. Bei einer gespeicherten
+                    # Abrechnung kommt er aus deren Snapshot.
+                    ownership_share=(
+                        float(anteil) if anteil is not None else None
                     ),
                 )
             )

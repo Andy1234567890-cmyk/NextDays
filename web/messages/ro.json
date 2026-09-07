@@ -1434,6 +1434,18 @@
       "commission": "Procent de rezervă dacă pentru o proprietate nu se aplică un contract de decontare. Contractul de mai jos are prioritate — este acordul efectiv și acoperă și perioada, tariful fix și comisionul minim. Dacă ambele rămân necompletate, nu se calculează nicio plată, ci se afișează o liniuță.",
       "commissionOverride": "Procent de rezervă doar pentru această proprietate; înlocuiește procentul standard al proprietarului. Un contract de decontare are prioritate și aici. Dacă câmpul rămâne necompletat, se aplică procentul standard.",
       "cprNumber": "Numărul personal danez al proprietarului (format ZZLLAA-XXXX). Necesar doar pentru facturarea caselor de vacanță daneze; vizibil doar pentru administratori."
+    },
+    "coOwners": {
+      "label": "Coproprietar",
+      "entry": "{name} — {pct} %",
+      "unassigned": "{pct} % încă nu este alocat unui proprietar",
+      "tabHint": "Aceste persoane sunt coproprietari ai proprietăților acestui proprietar. Fiecare primește propria factură pentru partea sa; datele sale de bază sunt gestionate pe propria pagină.",
+      "entryObject": "{objekt} — {pct} %",
+      "open": "Deschideți datele de bază"
+    },
+    "tabs": {
+      "mainOwner": "Proprietar principal",
+      "coOwners": "Coproprietar ({count})"
     }
   },
   "ownerStatements": {
@@ -1627,7 +1639,8 @@
         "contractStartsLater": "Nu există un contract de facturare în ziua plecării {abreise}: contractul începe abia la {beginn}. Data de începere a contractului la proprietar trebuie modificată retroactiv, apoi această rezervare va fi facturată.",
         "noContract": "Pentru această proprietate nu există un contract de facturare și nicio rată de comision în datele de bază — creați un contract la proprietar.",
         "addonsOutside": "Servicii suplimentare — vândute prin myNextDays, neincluse în prețul pentru oaspete al portalului"
-      }
+      },
+      "ownershipShare": "Distribuie"
     },
     "expenses": {
       "add": "Adaugă",
@@ -1721,7 +1734,13 @@
         "irreversible": "Acest lucru nu poate fi anulat. O factură finalizată mai poate fi desființată doar printr-o factură de stornare."
       },
       "basis": "Stabilește când o rezervare intră în perioadă: la check-in după ziua sosirii, la check-out după ziua plecării. O rezervare care trece dintr-o lună în alta ajunge, în funcție de alegere, într-una sau în cealaltă lună.",
-      "statuses": "Se decontează doar rezervările cu unul dintre statusurile selectate. Implicit sunt rezervările confirmate și finalizate — cele anulate nu intră în mod normal într-o plată."
+      "statuses": "Se decontează doar rezervările cu unul dintre statusurile selectate. Implicit sunt rezervările confirmate și finalizate — cele anulate nu intră în mod normal într-o plată.",
+      "channel": "Prin ce canal a venit această rezervare: un portal precum Booking.com sau Airbnb, piața noastră myBestDays, propriul site web al unității de cazare sau direct (telefon, e-mail, la fața locului).",
+      "portalDeduction": "Ceea ce reține portalul însuși înainte ca banii să ajungă la unitatea de cazare – comisionul său și, dacă încasează banii, taxa sa de plată. Pentru rezervările făcute prin propriul site web sau direct, aici este 0, deoarece nu există niciun portal implicat.",
+      "commission": "Comisionul unității de cazare pentru administrarea proprietății. Acesta se calculează din suma rămasă după deducerea portalului – și se aplică la FIECARE rezervare, chiar și la cele făcute prin propriul site web.",
+      "flatFee": "O sumă fixă din contractul de administrare, de exemplu pentru costurile suplimentare. În funcție de acord, aceasta se deduce înainte sau după comision.",
+      "ownerShare": "Ce rămâne în cele din urmă pentru proprietar: prețul plătit de oaspete minus deducerea portalului, minus comisionul, minus suma forfetară, plus taxele care îi revin. În cazul coproprietății, se înmulțește suplimentar cu cota sa.",
+      "ownershipShare": "Cota de proprietate a acestui proprietar. 100% înseamnă proprietate unică. Dacă o casă aparține mai multor persoane, fiecare primește propria decontare pentru cota sa – cotele însumează 100%."
     },
     "finalizeConfirm": {
       "title": "Finalizați decontul",
@@ -1754,6 +1773,11 @@
       "manageContract": "Gestionați contractul de decontare",
       "receipt": "Chitanță",
       "bookingsCount": "{n} rezervări"
+    },
+    "coOwners": {
+      "title": "Coproprietar",
+      "hint": "Aceste proprietăți sunt deținute de mai multe persoane. Fiecare primește o factură separată pentru partea sa.",
+      "share": "{anteil} %"
     }
   },
   "ownerBilling": {
@@ -6487,7 +6511,8 @@
       "bookingFeesPerStay": "Pe sejur",
       "bookingFeesAssignTitle": "Lipsește alocarea",
       "bookingFeesAssignHint": "Aceste taxe sunt înregistrate la proprietate, dar nu este stabilit cui aparține suma. Fără aceasta, decontul proprietarului nu poate fi calculat.",
-      "bookingFeesAssign": "Creează alocarea"
+      "bookingFeesAssign": "Creează alocarea",
+      "miteigentum": "Coproprietate: {wer} — {rest}% liber"
     },
     "policiesForm": {
       "title": "Politici",
@@ -12340,7 +12365,8 @@
   "sprache": {
     "label": "Limba e-mailurilor",
     "hint": "În această limbă trimitem e-mailuri acestei persoane.",
-    "none": "— nespecificat"
+    "none": "— nespecificat",
+    "infoAria": "Explicație pentru {feld}"
   },
   "neuerungen": {
     "eyebrow": "Noutăți despre produs",

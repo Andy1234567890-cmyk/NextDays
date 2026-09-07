@@ -1434,6 +1434,18 @@
       "commission": "Reservesats, hvis der ikke gælder en afregningsaftale for en bolig. Aftalen nedenfor har forrang — den er den egentlige aftale og omfatter også periode, gebyr og minimumsprovision. Er begge tomme, beregnes ingen udbetaling; der vises en tankestreg.",
       "commissionOverride": "Reservesats kun for denne bolig; overskriver ejerens standardsats. En afregningsaftale har også her forrang. Er feltet tomt, gælder standardsatsen.",
       "cprNumber": "Ejerens danske CPR-nummer (format DDMMÅÅ-XXXX). Kun nødvendigt for afregning af danske sommerhuse; kun synligt for administratorer."
+    },
+    "coOwners": {
+      "label": "Medejer",
+      "entry": "{name} — {pct} %",
+      "unassigned": "{pct} % endnu ikke tildelt en ejer",
+      "tabHint": "Disse personer er medejere af denne ejers ejendomme. Hver får sin egen faktura for sin andel; deres stamdata vedligeholdes på deres egen side.",
+      "entryObject": "{objekt} — {pct} %",
+      "open": "Åbn stamdata"
+    },
+    "tabs": {
+      "mainOwner": "Hovedejer",
+      "coOwners": "Medejer ({count})"
     }
   },
   "ownerStatements": {
@@ -1627,7 +1639,8 @@
         "contractStartsLater": "Ingen afregningsaftale på afrejsedatoen {abreise}: aftalen starter først den {beginn}. Tilbagedater aftalestart hos ejeren, så medregnes denne booking.",
         "noContract": "Der er ingen afregningsaftale og ingen provisionssats for denne ejendom i stamdataene – opret en aftale hos ejeren.",
         "addonsOutside": "Tillægsydelser — solgt via myNextDays, ikke inkluderet i portalens gæstepris"
-      }
+      },
+      "ownershipShare": "Andel"
     },
     "expenses": {
       "add": "Tilføj",
@@ -1721,7 +1734,13 @@
         "irreversible": "Det kan ikke fortrydes. En finaliseret faktura kan kun ophæves ved en kreditnota."
       },
       "basis": "Bestemmer, hvornår en booking falder i perioden: ved Check-in efter ankomstdagen, ved Check-ud efter afrejsedagen. En booking hen over månedsskiftet lander i den ene eller den anden måned alt efter valget.",
-      "statuses": "Kun bookinger med en af de valgte statusser bliver afregnet. Standard er bekræftede og afsluttede bookinger — annullerede hører normalt ikke til i en udbetaling."
+      "statuses": "Kun bookinger med en af de valgte statusser bliver afregnet. Standard er bekræftede og afsluttede bookinger — annullerede hører normalt ikke til i en udbetaling.",
+      "channel": "Hvordan denne booking kom: en portal som Booking.com eller Airbnb, vores markedsplads myBestDays, virksomhedens egen hjemmeside eller direkte (telefon, e-mail, på stedet).",
+      "portalDeduction": "Hvad portalen selv beholder, før pengene når frem til virksomheden – dens provision og, hvis den opkræver pengene, dens betalingsgebyr. Ved bookinger via egen hjemmeside eller direkte står der 0, da der ikke er nogen portal imellem.",
+      "commission": "Virksomhedens provision for administration af ejendommen. Den beregnes ud fra det beløb, der er tilbage efter portalens fradrag – og opkræves ved HVER booking, også ved en via egen hjemmeside.",
+      "flatFee": "Et fast beløb fra administrationsaftalen, f.eks. for driftsomkostninger. Afhængigt af aftalen trækkes det fra før eller efter provisionen.",
+      "ownerShare": "Hvad der i sidste ende er tilbage til ejeren: Gæstepris minus portalfradrag, minus provision, minus fast beløb, plus de gebyrer, der tilhører ham. Ved sameje multipliceres det desuden med hans andel.",
+      "ownershipShare": "Denne ejers andel af ejendommen. 100 % betyder eneejerskab. Hvis et hus tilhører flere personer, får hver sin egen afregning for sin andel – andelene udgør tilsammen 100 %."
     },
     "finalizeConfirm": {
       "title": "Lås afregning",
@@ -1754,6 +1773,11 @@
       "manageContract": "Vedligehold afregningskontrakt",
       "receipt": "Kvittering",
       "bookingsCount": "{n} bookinger"
+    },
+    "coOwners": {
+      "title": "Medejer",
+      "hint": "Disse ejendomme ejes af flere personer. Hver person modtager en separat faktura for sin andel.",
+      "share": "{anteil} %"
     }
   },
   "ownerBilling": {
@@ -6487,7 +6511,8 @@
       "bookingFeesPerStay": "Pr. ophold",
       "bookingFeesAssignTitle": "Tilknytning mangler",
       "bookingFeesAssignHint": "Disse gebyrer er oprettet på objektet, men det er ikke fastlagt, hvem beløbet tilhører. Uden det kan ejerafregningen ikke beregnes.",
-      "bookingFeesAssign": "Opret tilknytning"
+      "bookingFeesAssign": "Opret tilknytning",
+      "miteigentum": "Ejerskab: {wer} — {rest} % fri"
     },
     "policiesForm": {
       "title": "Retningslinjer",
@@ -12340,7 +12365,8 @@
   "sprache": {
     "label": "Sprog til e-mails",
     "hint": "Vi sender e-mails til denne person på dette sprog.",
-    "none": "— ikke angivet"
+    "none": "— ikke angivet",
+    "infoAria": "Forklaring til {feld}"
   },
   "neuerungen": {
     "eyebrow": "Produktnyheder",

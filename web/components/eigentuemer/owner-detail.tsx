@@ -4,6 +4,7 @@
 // Einstellungen und Objekt-Zuordnung (Anteil + Provisions-Override je Objekt).
 // useState-Formular + Server-Actions (Muster wie objekte/location-form).
 import { Icon } from "@iconify/react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -132,6 +133,9 @@ export function OwnerDetail({
   );
   // Mehrfachauswahl der nachträglichen Objektzuordnung. Eigener Busy-Zustand,
   // damit sie weder das Speichern der Stammdaten noch die Einladung blockiert.
+  /* Welcher Reiter der Stammdaten-Karte offen ist. Startet auf dem
+     Haupteigentümer: DESSEN Daten bearbeitet diese Seite. */
+  const [stammTab, setStammTab] = useState<"haupt" | "mit">("haupt");
   const [auswahl, setAuswahl] = useState<string[]>([]);
   const [objektSuche, setObjektSuche] = useState("");
   const [zuordnend, setZuordnend] = useState(false);
@@ -186,6 +190,34 @@ export function OwnerDetail({
   const unassigned = properties.filter(
     (p) => !owner.properties.some((l) => l.property_id === p.id),
   );
+
+  /* Alle Miteigentümer über ALLE Objekte dieses Eigentümers, je Person EIN
+     Eintrag mit seinen Objekten. Derselbe Miteigentümer kann an mehreren
+     Häusern beteiligt sein — dreimal „Karen Jacobsen" untereinander wäre eine
+     Liste, in der man die Objekte nicht als zusammengehörig erkennt. */
+  const miteigentuemerAlle = (() => {
+    const je = new Map<
+      string,
+      { name: string; objekte: { titel: string; anteil: number }[] }
+    >();
+    for (const link of owner.properties) {
+      for (const m of link.miteigentuemer) {
+        const eintrag = je.get(m.owner_id) ?? { name: m.name, objekte: [] };
+        eintrag.objekte.push({
+          titel: titleById.get(link.property_id) ?? link.property_id,
+          anteil: m.ownership_share,
+        });
+        je.set(m.owner_id, eintrag);
+      }
+    }
+    return [...je.entries()]
+      .map(([owner_id, v]) => ({
+        owner_id,
+        name: v.name,
+        objekte: [...v.objekte].sort((a, b) => a.titel.localeCompare(b.titel)),
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  })();
 
   function set<K extends keyof Owner>(key: K, value: Owner[K]) {
     setOwner((o) => ({ ...o, [key]: value }));
@@ -374,9 +406,52 @@ export function OwnerDetail({
         </div>
       </div>
 
-      {/* Stammdaten */}
+      {/* Stammdaten — zwei Reiter: DIESER Eigentümer und, falls es welche gibt,
+          die Miteigentümer seiner Objekte (0601, ADR-0028).
+
+          Warum Reiter und nicht eine zweite Karte: beide Seiten beantworten
+          dieselbe Frage („wem gehört das hier"), nur für verschiedene
+          Personen. Nebeneinander gestellt liest man sie als eine Liste, in der
+          der Haupteigentümer nur ein Eintrag unter vielen ist — er ist aber
+          der, dessen Stammdaten diese Seite BEARBEITET.
+
+          Der Reiter erscheint nur, wenn Miteigentümer existieren: ein leerer
+          Reiter „Miteigentümer" auf jeder der 22 Eigentümerseiten wäre ein
+          Klick, der nie etwas zeigt. */}
       <Card className="flex flex-col gap-4 p-6">
-        <h2 className="font-display text-lg font-extrabold">{t("sections.master")}</h2>
+        {miteigentuemerAlle.length > 0 ? (
+          <div className="flex items-center gap-6 border-b border-border">
+            <button
+              type="button"
+              onClick={() => setStammTab("haupt")}
+              className={`-mb-px border-b-2 pb-3 text-sm font-medium transition-colors ${
+                stammTab === "haupt"
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t("tabs.mainOwner")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setStammTab("mit")}
+              className={`-mb-px border-b-2 pb-3 text-sm font-medium transition-colors ${
+                stammTab === "mit"
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t("tabs.coOwners", { count: miteigentuemerAlle.length })}
+            </button>
+          </div>
+        ) : (
+          <h2 className="font-display text-lg font-extrabold">
+            {t("sections.master")}
+          </h2>
+        )}
+        {stammTab === "mit" && miteigentuemerAlle.length > 0 ? (
+          <MiteigentuemerTab eintraege={miteigentuemerAlle} />
+        ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label={t("fields.name")}>
             <Input value={owner.name} onChange={(e) => set("name", e.target.value)} />
@@ -392,7 +467,11 @@ export function OwnerDetail({
               ausdrücklich, weil man es einem E-Mail-Feld in den Stammdaten
               sonst nicht ansieht — und weil ein Wechsel hier eine
               Bestätigungsmail an das neue Postfach auslöst. */}
-          <Field label={t("fields.email")} hint={t("emailHint")}>
+          <Field
+            label={t("fields.email")}
+            hint={t("emailHint")}
+            infoAria={t("info.aria", { feld: t("fields.email") })}
+          >
             <Input
               type="email"
               value={owner.email ?? ""}
@@ -482,6 +561,7 @@ export function OwnerDetail({
             />
           </Field>
         </div>
+        )}
       </Card>
 
       {/* Portalzugang — der Login, mit dem dieser Eigentümer seine
@@ -620,6 +700,24 @@ export function OwnerDetail({
             label={t("fields.commission")}
             info={t("info.commission")}
             infoAria={t("info.aria", { feld: t("fields.commission") })}
+            /* Gibt es einen geltenden Vertrag, sagt die Erklärung, dass gerade
+               ER zählt — mit dem Satz, der wirklich abgerechnet wird. Ohne das
+               las die Agentur ein leeres Feld als „nichts vereinbart", während
+               die Abrechnung mit 20 % aus dem Vertrag rechnete. */
+            hint={
+              ownerVertrag ? (
+                <span>
+                  {t("commissionContractWins", {
+                    pct: ownerVertrag.provisions_pct,
+                    // `gueltig_ab` ist in der DB `not null` — der
+                    // „heute"-Rückfall von `formatDate` greift hier nicht.
+                    ab: formatDate(ownerVertrag.gueltig_ab, locale),
+                  })}
+                </span>
+              ) : owner.default_commission_pct == null ? (
+                <span>{t("commissionNoneAnywhere")}</span>
+              ) : null
+            }
           >
             {/* Leeres Feld = KEIN Satz vereinbart (null), nicht 0 %. Vorher
                 stand hier zwangsläufig eine Zahl, und ein nie ausgefüllter
@@ -642,27 +740,6 @@ export function OwnerDetail({
                 )
               }
             />
-            {/* Der Kern der Verständnis-Korrektur: gibt es einen geltenden
-                Vertrag, sagt das Feld SELBST, dass gerade er zählt — mit dem
-                Satz, der wirklich abgerechnet wird. Ohne diesen Satz las die
-                Agentur ein leeres Feld als „nichts vereinbart", während die
-                Abrechnung mit 20 % aus dem Vertrag rechnete. */}
-            {ownerVertrag ? (
-              <p className="text-xs text-muted-foreground">
-                {t("commissionContractWins", {
-                  pct: ownerVertrag.provisions_pct,
-                  // `gueltig_ab` ist in der DB `not null` — der
-                  // „heute"-Rückfall von `formatDate` kann hier nicht greifen.
-                  ab: formatDate(ownerVertrag.gueltig_ab, locale),
-                })}
-              </p>
-            ) : (
-              owner.default_commission_pct == null && (
-                <p className="text-xs text-muted-foreground">
-                  {t("commissionNoneAnywhere")}
-                </p>
-              )
-            )}
           </Field>
           <Field label={t("fields.payoutMethod")}>
             <Input
@@ -765,6 +842,52 @@ export function OwnerDetail({
                   <p className="font-medium">
                     {titleById.get(link.property_id) ?? link.property_id}
                   </p>
+                  {/* WER sonst an diesem Objekt hängt (0601, ADR-0028). Das
+                      ist Sachauskunft, kein Erklärtext — sie steht deshalb
+                      sichtbar da und nicht im „i": ohne sie war ein Anteil von
+                      60 % eine Zahl ohne Gegenüber (man sah, dass 40 % fehlen,
+                      aber nicht bei wem), und ein fremder Miteigentümer, der
+                      erst beim Speichern als Fehlermeldung auftaucht, ist eine
+                      Überraschung statt einer Information.
+                      Anteilssumme mit ausgewiesen: bei 60 + 30 sind 10 % nicht
+                      vergeben, und genau das ist der Fall, den man sehen
+                      muss — er sieht sonst aus wie ein vollständiges Objekt. */}
+                  {link.miteigentuemer.length > 0 && (
+                    <div className="mt-1 flex flex-col gap-0.5">
+                      <p className="text-xs font-medium text-muted-foreground">
+                        {t("coOwners.label")}
+                      </p>
+                      {link.miteigentuemer.map((m) => (
+                        <p
+                          key={m.owner_id}
+                          className="text-xs text-muted-foreground"
+                        >
+                          {t("coOwners.entry", {
+                            name: m.name,
+                            pct: m.ownership_share,
+                          })}
+                        </p>
+                      ))}
+                      {(() => {
+                        const summe =
+                          link.ownership_share +
+                          link.miteigentuemer.reduce(
+                            (a, m) => a + m.ownership_share,
+                            0,
+                          );
+                        // Auf zwei Stellen: `numeric(5,2)` in der DB, und
+                        // 33,33 × 3 = 99,99 soll nicht als „0,01 % offen"
+                        // dauerhaft mahnen — gerundet ist es 100.
+                        const offen = Math.round((100 - summe) * 100) / 100;
+                        if (offen <= 0) return null;
+                        return (
+                          <p className="text-xs text-amber-600 dark:text-amber-500">
+                            {t("coOwners.unassigned", { pct: offen })}
+                          </p>
+                        );
+                      })()}
+                    </div>
+                  )}
                 </div>
                 {/* Breite auf den LÄNGSTEN Übersetzungstext ausgelegt, nicht
                     auf den deutschen: „Anteil (%)" ist kurz, estnisch/maltesisch
@@ -805,6 +928,31 @@ export function OwnerDetail({
                   infoAria={t("info.aria", {
                     feld: t("fields.commissionOverride"),
                   })}
+                  /* Auch je Objekt: welcher Satz WIRKLICH abgerechnet wird.
+                     Ein Objekt-Vertrag schlägt den Eigentümer-Vertrag, und
+                     beide schlagen diesen Override — ohne den Hinweis war das
+                     Feld eine Zahl ohne erkennbare Wirkung. Steht im ℹ und
+                     nicht unter dem Feld (MEMORY hilfetexte-immer-ins-i-icon). */
+                  hint={(() => {
+                    const v = vertragFuerObjekt(
+                      geltendeVertraege,
+                      link.property_id,
+                    );
+                    if (!v) return null;
+                    return (
+                      <span>
+                        {t(
+                          v.property_id
+                            ? "commissionContractObject"
+                            : "commissionContractOwnerWide",
+                          {
+                            pct: v.provisions_pct,
+                            ab: formatDate(v.gueltig_ab, locale),
+                          },
+                        )}
+                      </span>
+                    );
+                  })()}
                 >
                   {/* Leeres Feld = KEIN Override (null), nicht 0: dann gilt der
                       Owner-Standard, den der Platzhalter anzeigt. `Number("")`
@@ -834,30 +982,6 @@ export function OwnerDetail({
                       )
                     }
                   />
-                  {/* Auch je Objekt: welcher Satz WIRKLICH abgerechnet wird.
-                      Ein Objekt-Vertrag schlägt den Eigentümer-Vertrag, und
-                      beide schlagen diesen Override — ohne den Hinweis war das
-                      Feld eine Zahl ohne erkennbare Wirkung. */}
-                  {(() => {
-                    const v = vertragFuerObjekt(
-                      geltendeVertraege,
-                      link.property_id,
-                    );
-                    if (!v) return null;
-                    return (
-                      <p className="text-xs text-muted-foreground">
-                        {t(
-                          v.property_id
-                            ? "commissionContractObject"
-                            : "commissionContractOwnerWide",
-                          {
-                            pct: v.provisions_pct,
-                            ab: formatDate(v.gueltig_ab, locale),
-                          },
-                        )}
-                      </p>
-                    );
-                  })()}
                 </Field>
                 <Button
                   variant="ghost"
@@ -876,6 +1000,65 @@ export function OwnerDetail({
   );
 }
 
+/**
+ * Der Reiter „Miteigentümer": WER sonst an den Objekten dieses Eigentümers
+ * beteiligt ist, mit Objekt und Anteil.
+ *
+ * Nur Name, Objekt und Anteil — kein Stammdatenformular. Ein Miteigentümer ist
+ * ein eigener `owners`-Datensatz mit eigener Bankverbindung und eigener
+ * Abrechnung; er wird auf SEINER Seite gepflegt, nicht hier. Ein
+ * Bearbeitungsformular an dieser Stelle hätte zwei Wege zum selben Datensatz
+ * geöffnet und wäre zugleich Einblick in fremde Zahlungsdaten (Wurzel 9).
+ * Der Link führt deshalb dorthin.
+ */
+function MiteigentuemerTab({
+  eintraege,
+}: {
+  eintraege: {
+    owner_id: string;
+    name: string;
+    objekte: { titel: string; anteil: number }[];
+  }[];
+}) {
+  const t = useTranslations("owners");
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-sm text-muted-foreground">{t("coOwners.tabHint")}</p>
+      {eintraege.map((m) => (
+        <div
+          key={m.owner_id}
+          className="flex flex-wrap items-start justify-between gap-4 rounded-(--radius) border border-border p-4"
+        >
+          <div className="min-w-40 flex-1">
+            <p className="font-medium">{m.name}</p>
+            <div className="mt-1 flex flex-col gap-0.5">
+              {m.objekte.map((o) => (
+                <p
+                  key={o.titel}
+                  className="text-xs text-muted-foreground"
+                >
+                  {t("coOwners.entryObject", {
+                    objekt: o.titel,
+                    pct: o.anteil,
+                  })}
+                </p>
+              ))}
+            </div>
+          </div>
+          {/* Zu SEINEN Stammdaten — dort steht seine Bank, seine Sprache,
+              seine Abrechnung. */}
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/eigentuemer/${m.owner_id}`}>
+              <Icon icon="ph:arrow-square-out" className="size-4" />
+              {t("coOwners.open")}
+            </Link>
+          </Button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function Field({
   label,
   className,
@@ -886,17 +1069,20 @@ function Field({
 }: {
   label: string;
   className?: string;
-  /** Erklärtext hinter einem „i" — für Felder, deren Wirkung man nicht rät
-   *  (Provisions-Override, Eigentumsanteil). */
+  /** Erklärtext hinter dem „i". */
   info?: string;
   infoAria?: string;
-  /** Dauerhaft sichtbarer Hilfetext UNTER dem Feld — anders als `info` nicht
-   *  hinter einem Symbol versteckt. Für Felder, deren Tragweite man kennen
-   *  muss, BEVOR man tippt (die E-Mail-Adresse ist zugleich die
-   *  Anmeldeadresse). */
-  hint?: string;
+  /** Zweiter Erklärabsatz — landet im SELBEN „i" unter `info`, nicht als Text
+   *  unter dem Feld. Ansage vom 07.09.2026: „alle informations texte kommen
+   *  ins I ICON". Für Sätze, die vom Zustand abhängen (welcher Vertrag gerade
+   *  gilt), weshalb sie nicht in `info` stehen können. */
+  hint?: React.ReactNode;
   children: React.ReactNode;
 }) {
+  // Beide Quellen speisen EIN Symbol: zwei „i" am selben Feld wären eine
+  // Rateaufgabe, und ein zweites Symbol nur für den Zustandssatz stünde je
+  // nach Vertragslage da oder nicht.
+  const hatHinweis = Boolean(info) || Boolean(hint);
   return (
     <label className={`flex flex-col gap-1 ${className ?? ""}`}>
       {/* `min-w-0` + `truncate` am TEXT, nicht `nowrap` an der Zeile: bei einer
@@ -909,10 +1095,16 @@ function Field({
         <span className="min-w-0 truncate" title={label}>
           {label}
         </span>
-        {info && infoAria && <InfoHinweis text={info} ariaLabel={infoAria} />}
+        {hatHinweis && infoAria && (
+          <InfoHinweis ariaLabel={infoAria}>
+            <span className="flex flex-col gap-2">
+              {info && <span>{info}</span>}
+              {hint}
+            </span>
+          </InfoHinweis>
+        )}
       </span>
       {children}
-      {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
     </label>
   );
 }

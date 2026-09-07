@@ -69,6 +69,7 @@ def _reinigung() -> list[Gebuehr]:
 
 def _abzug() -> object:
     return portal_abzug(
+        kanal="booking",
         brutto=BRUTTO,
         gemeldete_provision=None,  # Booking meldet sie nur bei ota-collect
         provision_pct=D("15.0"),
@@ -482,3 +483,119 @@ def test_die_ganze_zeile_des_betriebs_geht_auf_mit_wiederkehrenden_posten() -> N
         assert anzahl == 1
         summe += -wert if wiederkehrend.ist_abzug(str(zeile["abschnitt"])) else wert
     assert (a.netto + summe).quantize(D("0.01")) == D("3135.10")
+
+
+# --- Eigene Kanäle: kein Portal, also kein Portal-Abzug ----------------------
+# Live am 07.09.2026, Abrechnung René Dahl Nielsen (drei FeWo Vidstrup, DKK,
+# 28.07.–31.08.2026, 8 Buchungen): sieben Booking-/Airbnb-Buchungen rechneten,
+# die achte kam über die WEBSITE des Betriebs — und riss die ganze Abrechnung.
+#
+#   Erwin Kintop · FeWo Lille Vidstrup · 08.08.–15.08.2026 · 7 Nächte
+#   Gastpreis 4.513,75 DKK · Portal-Abzug „—" · Provision „— 20 %" · Anteil „—"
+#   Summen der Abrechnung: Eigentümer-Auszahlung „—", Verwaltung „—"
+#
+# Ursache: `portal_abzug` verlangte für JEDEN Kanal einen hinterlegten Satz
+# oder eine gemeldete Provision. Für die eigene Website kann es beides nie
+# geben — die Abrechnungsregeln führen diesen Kanal folgerichtig gar nicht.
+# Ein einziger fehlender Wert machte damit acht Buchungen unauszahlbar.
+
+
+WEBSITE_BRUTTO = D("4513.75")
+
+
+def test_website_buchung_hat_keinen_portal_abzug() -> None:
+    """Kein Portal zwischen Gast und Betrieb → Abzug bekannt 0, nicht unbekannt.
+
+    Der Unterschied ist nicht kosmetisch: `None` bedeutet in dieser Kette
+    „nicht berechenbar" und färbt jede Summe darüber auf „—" (Wurzel 4). 0
+    bedeutet „hier behält niemand etwas ein" — eine Tatsache, keine Lücke.
+    """
+    abzug = portal_abzug(
+        kanal="website",
+        brutto=WEBSITE_BRUTTO,
+        gemeldete_provision=None,
+        provision_pct=None,  # gibt es für die eigene Website nicht
+        zahlungsgebuehr_pct=None,
+        zieht_portal_ein=False,
+    )
+    assert abzug.provision == D("0")
+    assert abzug.zahlungsgebuehr == D("0")
+
+
+def test_website_buchung_rechnet_die_volle_kette_durch() -> None:
+    """Die Provision des BETRIEBS fällt trotzdem an — sie hängt am Vertrag.
+
+    Genau der Punkt des Betriebs: *„webseiten haben auch die 20 % und alles, es
+    ist zwar keine OTA aber der betrieb bekommt trotzdem 20 %"*. Ohne Portal-
+    Abzug ist die Auszahlungsbasis der ganze Gastpreis; darauf 20 % Provision
+    und die Pauschale wie bei jeder anderen Buchung.
+    """
+    abzug = portal_abzug(
+        kanal="website",
+        brutto=WEBSITE_BRUTTO,
+        gemeldete_provision=None,
+        provision_pct=None,
+        zahlungsgebuehr_pct=None,
+        zieht_portal_ein=False,
+    )
+    a = auszahlung_berechnen(
+        uebernachtung=WEBSITE_BRUTTO,
+        gebuehren=[],  # „Keine Gebühren oder Zusatzleistungen an dieser Buchung."
+        abzug=abzug,
+        regeln=Vertragsregeln(
+            provisions_pct=D("20"),
+            pauschale_betrag=D("50.00"),
+            pauschale_currency="DKK",
+            pauschale_basis="je_buchung",
+            pauschale_zeitpunkt="nach_provision",
+        ),
+        naechte=7,
+        currency="DKK",
+    )
+    # Ohne Portal geht der ganze Gastpreis in die Basis.
+    assert a.auszahlungsbasis == WEBSITE_BRUTTO
+    assert a.verwaltungsprovision == D("902.75")  # 20 % von 4.513,75
+    # 4.513,75 − 902,75 − 50,00 = 3.561,00 — die Zahl, die vorher „—" war.
+    assert a.netto == D("3561.00")
+
+
+def test_marktplatz_bleibt_provisionspflichtig() -> None:
+    """myBestDays ist unser eigener Kanal, aber KEIN abzugsfreier.
+
+    Der Marktplatz nimmt Provision wie Booking (Preisliste §2: 8 % all-in).
+    Fiele er unter die eigenen Kanäle, zahlte die Abrechnung dem Eigentümer
+    unseren eigenen Anteil als Ertrag aus. Fehlt der Satz, muss es weiterhin
+    laut scheitern (Wurzel 5), nicht still 0 werden.
+    """
+    from src.features.owner_statements.common import PayoutUnbekannt
+
+    with pytest.raises(PayoutUnbekannt) as fehler:
+        portal_abzug(
+            kanal="portal",
+            brutto=WEBSITE_BRUTTO,
+            gemeldete_provision=None,
+            provision_pct=None,
+            zahlungsgebuehr_pct=None,
+            zieht_portal_ein=True,
+        )
+    assert fehler.value.grund == "portal_abzug"
+
+
+def test_unbekannter_kanal_gilt_als_portalbehaftet() -> None:
+    """Fail-closed: ein Tippfehler im Kanal darf keinen Gratis-Ertrag erzeugen.
+
+    Wäre die Prüfung eine Negativliste („alles außer Booking/Airbnb ist
+    eigen"), machte ein künftiger Kanalwert — oder ein Schreibfehler — den
+    Portal-Anteil stillschweigend zum Eigentümer-Ertrag.
+    """
+    from src.features.owner_statements.common import PayoutUnbekannt
+
+    with pytest.raises(PayoutUnbekannt):
+        portal_abzug(
+            kanal="webseite",  # gibt es nicht (der Enum-Wert heißt `website`)
+            brutto=WEBSITE_BRUTTO,
+            gemeldete_provision=None,
+            provision_pct=None,
+            zahlungsgebuehr_pct=None,
+            zieht_portal_ein=False,
+        )

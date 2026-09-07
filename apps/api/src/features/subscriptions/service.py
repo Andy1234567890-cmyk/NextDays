@@ -23,6 +23,7 @@ from stripe import StripeError as _StripeError
 from supabase import Client
 
 from src.core.logging import get_logger
+from src.core.sales_channels import FREMDE_PORTALE
 from src.core.security import AuthContext
 from src.core.supabase import fetch_all_rows
 
@@ -56,12 +57,14 @@ log = get_logger("nextdays.subscriptions")
 
 _ISO_LAND_LAENGE = 2  # ISO-3166-1 alpha-2
 _DEZEMBER = 12  # Jahreswechsel beim Einzugstag
-# OTA-Kanäle, für die die externe Provision anfällt (dieselbe Menge wie im
-# payments-Slice; eigene/portal-Buchungen sind hier NICHT provisionspflichtig —
-# die tragen die 8 % Portal-Fee direkt am Charge).
-EXTERNAL_CHANNELS = frozenset(
-    {"booking", "airbnb", "vrbo", "ota_other"}
-)
+# OTA-Kanäle, für die die externe Provision anfällt: die zentrale Menge aus
+# `core.sales_channels`. Eigene/portal-Buchungen sind hier NICHT
+# provisionspflichtig — die tragen die 8 % Portal-Fee direkt am Charge.
+# Bis 07.09.2026 stand diese Menge hier UND in `payments._OTA_CHANNELS`
+# wortgleich als eigene Kopie; als die Eigentümer-Abrechnung dieselbe Frage
+# stellte, wäre sie die dritte geworden (Wurzel 1). Der Name bleibt als Alias,
+# damit Router und Tests ihn weiter von hier importieren können.
+EXTERNAL_CHANNELS = FREMDE_PORTALE
 
 # `_f` und `SubscriptionsError` leben in errors.py, damit die ausgelagerten
 # Abrechnungs-Mixins sie ohne Zirkelbezug importieren können. Hier nur als

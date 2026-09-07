@@ -1434,6 +1434,18 @@
       "commission": "Tasa alternativa si ningún contrato de liquidación rige para un alojamiento. El contrato de abajo tiene prioridad: es el acuerdo real e incluye además periodo, tarifa fija y comisión mínima. Si ambos quedan vacíos, no se calcula ningún pago y se muestra un guion.",
       "commissionOverride": "Tasa alternativa solo para este alojamiento; sustituye la tasa estándar del propietario. Un contrato de liquidación también tiene prioridad aquí. Si el campo queda vacío, rige la tasa estándar.",
       "cprNumber": "Número de identificación personal danés del propietario (formato DDMMYY-XXXX). Solo es necesario para la facturación de casas de vacaciones danesas; visible solo para administradores."
+    },
+    "coOwners": {
+      "label": "Copropietario",
+      "entry": "{name} — {pct} %",
+      "unassigned": "{pct} % aún no asignado a ningún propietario",
+      "tabHint": "Estas personas son copropietarias de las propiedades de este propietario. Cada uno recibe su propia factura por su parte; sus datos maestros se mantienen en su propia página.",
+      "entryObject": "{objekt} — {pct} %",
+      "open": "Abrir datos maestros"
+    },
+    "tabs": {
+      "mainOwner": "Propietario principal",
+      "coOwners": "Copropietario ({count})"
     }
   },
   "ownerStatements": {
@@ -1627,7 +1639,8 @@
         "contractStartsLater": "No hay contrato de facturación el día de salida {abreise}: el contrato comienza el {beginn}. Retroceda la fecha de inicio del contrato con el propietario para que esta reserva se facture.",
         "noContract": "No hay contrato de facturación ni tasa de comisión para esta propiedad en los datos maestros; cree un contrato con el propietario.",
         "addonsOutside": "Servicios adicionales — vendidos a través de myNextDays, no incluidos en el precio de huésped del portal"
-      }
+      },
+      "ownershipShare": "Compartir"
     },
     "expenses": {
       "add": "Añadir",
@@ -1721,7 +1734,13 @@
         "irreversible": "Esto no se puede deshacer. Una factura finalizada solo puede anularse mediante una factura de anulación."
       },
       "basis": "Determina cuándo una reserva entra en el periodo: con Check-in según el día de llegada, con Check-out según el día de salida. Una reserva que abarca el cambio de mes cae en un mes o en otro según la opción elegida.",
-      "statuses": "Solo se liquidan las reservas con uno de los estados seleccionados. Por defecto son las reservas confirmadas y completadas — las canceladas normalmente no forman parte de una liquidación."
+      "statuses": "Solo se liquidan las reservas con uno de los estados seleccionados. Por defecto son las reservas confirmadas y completadas — las canceladas normalmente no forman parte de una liquidación.",
+      "channel": "Cómo llegó esta reserva: un portal como Booking.com o Airbnb, nuestro marketplace myBestDays, la propia web del alojamiento o directamente (teléfono, correo electrónico, in situ).",
+      "portalDeduction": "Lo que el portal retiene antes de que el dinero llegue al alojamiento: su comisión y, si cobra el dinero, su tarifa de pago. Para reservas a través de la propia web o directamente, aquí figura 0, ya que no hay ningún portal intermedio.",
+      "commission": "La comisión del alojamiento por la gestión del inmueble. Se calcula sobre el importe restante después de la deducción del portal, y se aplica a CADA reserva, incluso a las realizadas a través de la propia web.",
+      "flatFee": "Un importe fijo del contrato de gestión, por ejemplo, para gastos adicionales. Dependiendo del acuerdo, se deduce antes o después de la comisión.",
+      "ownerShare": "Lo que finalmente queda para el propietario: precio del huésped menos deducción del portal, menos comisión, menos tarifa plana, más las tasas que le corresponden. En caso de copropiedad, además multiplicado por su participación.",
+      "ownershipShare": "La participación de este propietario en el inmueble. El 100 % significa propiedad única. Si una casa pertenece a varias personas, cada una recibe su propia liquidación por su participación; las participaciones suman el 100 %."
     },
     "finalizeConfirm": {
       "title": "Fijar factura",
@@ -1754,6 +1773,11 @@
       "manageContract": "Gestionar contrato de facturación",
       "receipt": "Recibo",
       "bookingsCount": "{n} reservas"
+    },
+    "coOwners": {
+      "title": "Copropietario",
+      "hint": "Estas propiedades pertenecen a varias personas. Cada una recibe una factura separada por su parte.",
+      "share": "{anteil} %"
     }
   },
   "ownerBilling": {
@@ -6487,7 +6511,8 @@
       "bookingFeesPerStay": "Por estancia",
       "bookingFeesAssignTitle": "Falta la asignación",
       "bookingFeesAssignHint": "Estas tarifas están registradas en el alojamiento, pero no se ha definido a quién pertenece el importe. Sin ello no se puede calcular la liquidación del propietario.",
-      "bookingFeesAssign": "Crear asignación"
+      "bookingFeesAssign": "Crear asignación",
+      "miteigentum": "Copropiedad: {wer} — {rest} % libre"
     },
     "policiesForm": {
       "title": "Políticas",
@@ -12340,7 +12365,8 @@
   "sprache": {
     "label": "Idioma de los correos",
     "hint": "Enviamos los correos a esta persona en este idioma.",
-    "none": "— sin especificar"
+    "none": "— sin especificar",
+    "infoAria": "Explicación de {feld}"
   },
   "neuerungen": {
     "eyebrow": "Novedades del producto",

@@ -1434,6 +1434,18 @@
       "commission": "Varaprosentti, jos kohteelle ei päde tilityssopimus. Alla oleva sopimus on etusijalla — se on varsinainen sopimus ja kattaa myös kauden, kiinteän maksun ja vähimmäispalkkion. Jos molemmat jäävät tyhjiksi, maksua ei lasketa vaan näytetään viiva.",
       "commissionOverride": "Varaprosentti vain tälle kohteelle; ohittaa omistajan vakioprosentin. Tilityssopimus on etusijalla myös tässä. Jos kenttä jää tyhjäksi, käytetään vakioprosenttia.",
       "cprNumber": "Omistajan tanskalainen henkilötunnus (muoto PPKKVV-XXXX). Tarvitaan vain tanskalaisten loma-asuntojen laskutukseen; näkyy vain ylläpitäjille."
+    },
+    "coOwners": {
+      "label": "Yhteisomistaja",
+      "entry": "{name} – {pct} %",
+      "unassigned": "{pct} % ei vielä liitetty omistajaan",
+      "tabHint": "Nämä henkilöt ovat mukana tämän omistajan kohteissa. Jokainen saa oman laskun osuudestaan; heidän perustietojaan ylläpidetään heidän omalla sivullaan.",
+      "entryObject": "{objekt} – {pct} %",
+      "open": "Avaa perustiedot"
+    },
+    "tabs": {
+      "mainOwner": "Pääomistaja",
+      "coOwners": "Yhteisomistaja ({count})"
     }
   },
   "ownerStatements": {
@@ -1627,7 +1639,8 @@
         "contractStartsLater": "Ei laskutussopimusta lähtöpäivänä {abreise}: sopimus alkaa vasta {beginn}. Päivitä sopimuksen alkamispäivä omistajan tietoihin, jotta tämä varaus voidaan laskuttaa.",
         "noContract": "Tällä kohteella ei ole laskutussopimusta eikä provisioprosenttia perustiedoissa – luo sopimus omistajalle.",
         "addonsOutside": "Lisäpalvelut – myNextDaysin kautta myyty, ei sisälly portaalin vierashintaan"
-      }
+      },
+      "ownershipShare": "Jaa"
     },
     "expenses": {
       "add": "Lisää",
@@ -1721,7 +1734,13 @@
         "irreversible": "Tätä ei voi perua. Vahvistetun laskun voi kumota enää vain hyvityslaskulla."
       },
       "basis": "Määrittää, milloin varaus osuu jaksoon: valinnalla Sisäänkirjautuminen ratkaisee saapumispäivä, valinnalla Uloskirjautuminen lähtöpäivä. Kuukauden vaihteen yli menevä varaus osuu valinnan mukaan joko edelliseen tai seuraavaan kuukauteen.",
-      "statuses": "Vain varaukset, joilla on jokin valituista tiloista, tilitetään. Oletuksena ovat vahvistetut ja päättyneet varaukset — perutut eivät yleensä kuulu maksuun."
+      "statuses": "Vain varaukset, joilla on jokin valituista tiloista, tilitetään. Oletuksena ovat vahvistetut ja päättyneet varaukset — perutut eivät yleensä kuulu maksuun.",
+      "channel": "Mistä kanavasta varaus tuli: portaali kuten Booking.com tai Airbnb, oma myBestDays-kauppapaikkamme, majoituspaikan omat verkkosivut tai suoraan (puhelin, sähköposti, paikan päällä).",
+      "portalDeduction": "Mitä portaali itse pidättää ennen kuin rahat saapuvat majoituspaikkaan – sen provisio ja, jos se kerää rahat, sen maksukulu. Omien verkkosivujen tai suorien varausten kohdalla tämä on 0, koska portaalia ei ole välissä.",
+      "commission": "Majoituspaikan provisio kohteen hallinnoinnista. Se lasketaan portaalin vähennyksen jälkeen jäljelle jäävästä summasta – ja se peritään JOKAISESTA varauksesta, myös omilta verkkosivuilta tehdystä varauksesta.",
+      "flatFee": "Kiinteä summa hallinnointisopimuksesta, esimerkiksi lisäkustannuksista. Sopimuksen mukaan se vähennetään ennen tai jälkeen provision.",
+      "ownerShare": "Mitä omistajalle jää lopulta: vierashinta miinus portaalin vähennys, miinus provisio, miinus kiinteä maksu, plus hänelle kuuluvat maksut. Yhteisomistuksessa kerrottuna hänen osuudellaan.",
+      "ownershipShare": "Tämän omistajan osuus kohteesta. 100 % tarkoittaa yksinomaista omistusta. Jos talo kuuluu useammalle henkilölle, jokainen saa oman laskun osuudestaan – osuudet muodostavat yhteensä 100 %."
     },
     "finalizeConfirm": {
       "title": "Vahvista laskutus",
@@ -1754,6 +1773,11 @@
       "manageContract": "Hallinnoi laskutussopimusta",
       "receipt": "Kuitti",
       "bookingsCount": "{n} varausta"
+    },
+    "coOwners": {
+      "title": "Yhteisomistaja",
+      "hint": "Nämä kohteet ovat usean henkilön omistuksessa. Jokainen saa oman laskun osuudestaan.",
+      "share": "{anteil} %"
     }
   },
   "ownerBilling": {
@@ -6487,7 +6511,8 @@
       "bookingFeesPerStay": "Oleskelua kohden",
       "bookingFeesAssignTitle": "Kohdistus puuttuu",
       "bookingFeesAssignHint": "Nämä maksut on tallennettu kohteelle, mutta ei ole määritetty, kenelle summa kuuluu. Ilman sitä omistajan tilitystä ei voi laskea.",
-      "bookingFeesAssign": "Luo kohdistus"
+      "bookingFeesAssign": "Luo kohdistus",
+      "miteigentum": "Yhteisomistus: {wer} – {rest} % vapaana"
     },
     "policiesForm": {
       "title": "Käytännöt",
@@ -12340,7 +12365,8 @@
   "sprache": {
     "label": "Sähköpostien kieli",
     "hint": "Lähetämme sähköpostit tälle henkilölle tällä kielellä.",
-    "none": "— ei määritetty"
+    "none": "— ei määritetty",
+    "infoAria": "Selitys kohteelle {feld}"
   },
   "neuerungen": {
     "eyebrow": "Tuotepäivitykset",

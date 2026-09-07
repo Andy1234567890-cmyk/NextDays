@@ -260,12 +260,30 @@ class OwnerUpdate(BaseModel):
         return pruefe_bank_konto_nr(v)
 
 
+class OwnerMiteigentuemer(BaseModel):
+    """Ein ANDERER Eigentümer am selben Objekt (0601, ADR-0028).
+
+    Nur Name und Anteil: die Stammdatenseite soll zeigen, WER sonst an dem
+    Objekt haengt und mit WELCHEM Anteil — mehr braucht sie nicht, und ein
+    vollstaendiger Eigentuemer-Datensatz an dieser Stelle waere Recon ueber
+    fremde Bankverbindungen (Wurzel 9).
+    """
+
+    owner_id: str
+    name: str
+    ownership_share: float = Field(ge=0, le=100)
+
+
 class OwnerPropertyLink(BaseModel):
     """Ein Objekt-Zuordnungs-Eintrag eines Eigentümers."""
 
     property_id: str
     ownership_share: float = Field(default=100, ge=0, le=100)
     commission_override_pct: float | None = Field(default=None, ge=0, le=100)
+    # Die ANDEREN Eigentuemer dieses Objekts. Leer = Alleineigentum.
+    # Ohne diese Angabe war ein Anteil von 60 % auf der Stammdatenseite eine
+    # Zahl ohne Gegenueber: man sah, dass 40 % fehlen, aber nicht bei wem.
+    miteigentuemer: list[OwnerMiteigentuemer] = Field(default_factory=list)
 
 
 class OwnerResponse(OwnerBase):
@@ -331,7 +349,15 @@ class OwnerPropertyAssign(BaseModel):
     """Objekt einem Eigentümer zuordnen (mit Anteil + Provisions-Override)."""
 
     property_id: str
-    ownership_share: float = Field(default=100, ge=0, le=100)
+    # KEIN Default 100 mehr (Befund 07.09.2026): bei einem Objekt, an dem schon
+    # jemand mit 100 % haengt, ergab der Default zwangslaeufig 200 % — die
+    # Zuordnung war also nur an unberuehrten Objekten moeglich, und genau das
+    # machte Miteigentum ueber die Oberflaeche unerreichbar.
+    #
+    # `None` heisst jetzt „den freien Rest nehmen" und wird im Service
+    # aufgeloest (er kennt die schon vergebenen Anteile). Ein fester Wert hier
+    # waere ein erfundener Anteil (Wurzel 4).
+    ownership_share: float | None = Field(default=None, ge=0, le=100)
     commission_override_pct: float | None = Field(default=None, ge=0, le=100)
 
 
@@ -367,9 +393,14 @@ class EmailBestaetigungResponse(BaseModel):
 
 
 class AvailableProperty(BaseModel):
-    """Objekt, das einem Eigentümer zugeordnet werden darf: entweder frei (keinem
-    Owner zugeordnet) oder bereits diesem Owner. So bleibt ein Objekt exklusiv
-    bei einem Eigentümer (kein Mehrfach-Owner)."""
+    """Objekt, das einem Eigentümer zugeordnet werden darf.
+
+    Drei Fälle seit 0601/ADR-0028: frei (keinem Eigentümer zugeordnet), bereits
+    diesem Eigentümer, ODER teilweise vergeben — dann ist eine MITEIGENTUMS-
+    Zuordnung über den freien Restanteil möglich. Vorher fiel der dritte Fall
+    aus der Liste, und Miteigentum war in der Oberfläche nicht erreichbar,
+    obwohl das Datenmodell es konnte.
+    """
 
     id: str
     title: str
@@ -379,6 +410,15 @@ class AvailableProperty(BaseModel):
     # erfundenen Platzhalters (Wurzel 4).
     subtitle: str | None = None
     photo: str | None = None
+    # Wie viel Anteil an diesem Objekt noch NICHT vergeben ist (0601).
+    # 100 = frei, < 100 = Miteigentum moeglich, 0 kommt nicht in die Liste.
+    # Die Oberflaeche braucht die Zahl, um den Anteil vorzubelegen und zu
+    # begrenzen; ohne sie waere „Miteigentum" ein Feld, dessen Obergrenze der
+    # Bediener raten muss und das der Trigger dann abweist.
+    freier_anteil: float = Field(default=100, ge=0, le=100)
+    # Die bereits Beteiligten — Name und Anteil, damit in der Auswahl steht,
+    # WEM das Objekt schon zum Teil gehoert. Leer bei einem freien Objekt.
+    beteiligte: list[OwnerMiteigentuemer] = Field(default_factory=list)
 
 
 class AvailablePropertiesResponse(BaseModel):

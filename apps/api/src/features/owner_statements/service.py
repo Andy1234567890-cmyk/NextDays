@@ -51,6 +51,7 @@ from .schemas import (
     ExpenseResponse,
     ExpenseUpdate,
     ListingRow,
+    Miteigentuemer,
     RentalRow,
     SliceHealth,
     StatementFinalizeRequest,
@@ -448,6 +449,91 @@ class OwnerStatementsService(ZeilenMixin):
         ).data or []
         return [str(r["property_id"]) for r in rows]
 
+    def _owner_property_links(self, owner_id: str) -> list[dict]:
+        """Die Zuordnungszeilen dieses Eigentümers — EIN Abruf für beide Karten.
+
+        Provision (`_commission_map`) und Miteigentumsanteil (`_anteil_map`)
+        stehen in derselben Zeile; zwei Abrufe würden bei einer gleichzeitigen
+        Änderung zwei verschiedene Stände sehen und eine Abrechnung erzeugen,
+        die es so nie gab.
+        """
+        return (
+            self._db.table("owner_properties")
+            .select("property_id, commission_override_pct, ownership_share")
+            .eq("owner_id", owner_id)
+            .execute()
+        ).data or []
+
+    def _anteil_map(self, owner: dict) -> dict[str, Decimal]:
+        """Miteigentumsanteil je Objekt (0601, ADR-0028).
+
+        Ein Objekt kann mehreren Eigentümern gehören; die Summe der Anteile
+        bleibt bei 100 % (Trigger `owner_properties_anteile_pruefen`). Der Wert
+        hier ist der Anteil DIESES Eigentümers — die Rechenkette multipliziert
+        ihn ganz am Ende auf die fertige Auszahlung.
+
+        Anders als bei der Provision ist ein FEHLENDER Wert hier kein Mangel:
+        die Spalte hat seit 0063 den Default 100 und ist NOT NULL — steht in
+        einer Zeile nichts, ist das Objekt in Alleineigentum. Ein `None` als
+        „unbekannt" zu deuten hieße, jede Abrechnung des Bestands auf „—" zu
+        setzen, weil dort schlicht kein Sonderfall vorliegt.
+        Ein Anteil außerhalb 0–100 ist dagegen ein echter Eingabefehler und ein
+        harter 422 — der Trigger aus 0601 lässt ihn nicht entstehen, Altbestand
+        von davor könnte ihn tragen.
+        """
+        out: dict[str, Decimal] = {}
+        for r in self._owner_property_links(str(owner["id"])):
+            rohwert = r.get("ownership_share")
+            anteil = _d(rohwert) if rohwert is not None else Decimal("100")
+            if anteil <= 0 or anteil > Decimal("100"):
+                raise StatementError(
+                    f"Ungültiger Miteigentumsanteil am Objekt "
+                    f"{r['property_id']}: {anteil} % (erlaubt 0–100).",
+                    status_code=422,
+                )
+            out[str(r["property_id"])] = anteil
+        return out
+
+    def _miteigentuemer(
+        self, owner_id: str, listing_ids: list[str], titles: dict[str, str]
+    ) -> list[Miteigentuemer]:
+        """Die ANDEREN Eigentümer der abgerechneten Objekte (0601).
+
+        Nur Auskunft für Vorschau und Beleg. Steht auf einer Abrechnung ein
+        Anteil von 60 %, muss auch zu sehen sein, wem die anderen 40 % gehören
+        — sonst ist die Zahl nachvollziehbar, aber nicht überprüfbar.
+
+        Leer bei Alleineigentum, also im Normalfall: die Ansicht bleibt für
+        alle bestehenden Betriebe unverändert.
+        """
+        if not listing_ids:
+            return []
+        rows = (
+            self._db.table("owner_properties")
+            .select("property_id, ownership_share, owners(name)")
+            .in_("property_id", listing_ids)
+            .neq("owner_id", owner_id)
+            .execute()
+        ).data or []
+        out: list[Miteigentuemer] = []
+        for r in rows:
+            person = r.get("owners")
+            name = person.get("name") if isinstance(person, dict) else None
+            if not name:
+                # Ohne Namen ist die Zeile keine Auskunft — dann lieber nichts
+                # zeigen als „unbekannt 40 %" (Wurzel 4).
+                continue
+            pid = str(r["property_id"])
+            out.append(
+                Miteigentuemer(
+                    listing_id=pid,
+                    listing=titles.get(pid),
+                    name=str(name),
+                    anteil=float(_d(r.get("ownership_share") or 0)),
+                )
+            )
+        return sorted(out, key=lambda m: (m.listing or "", m.name))
+
     def _commission_map(self, owner: dict) -> dict[str, Decimal]:
         """Effektive Provision je Objekt aus den Stammdaten.
 
@@ -476,12 +562,7 @@ class OwnerStatementsService(ZeilenMixin):
         erfunden. So sieht der Betreiber genau, welches Objekt ihm fehlt.
         """
         default = owner.get("default_commission_pct")
-        rows = (
-            self._db.table("owner_properties")
-            .select("property_id, commission_override_pct")
-            .eq("owner_id", str(owner["id"]))
-            .execute()
-        ).data or []
+        rows = self._owner_property_links(str(owner["id"]))
         out: dict[str, Decimal] = {}
         for r in rows:
             try:
@@ -1014,7 +1095,8 @@ class OwnerStatementsService(ZeilenMixin):
         )
         rental_rows = self._rental_rows(
             tenant_id, reservations, titles, owner_currency, override,
-            commission_map, load_guest_mask(self._db, ctx.user_id),
+            commission_map, self._anteil_map(owner),
+            load_guest_mask(self._db, ctx.user_id),
         )
         listing_rows = self._listing_rows(rental_rows, titles)
         # Nicht an eine Abrechnung gebundene Owner-Ausgaben im Zeitraum einbeziehen.
@@ -1056,6 +1138,9 @@ class OwnerStatementsService(ZeilenMixin):
         return _to_response(
             row, summary, rental_rows, listing_rows, expenses, commission,
             recurring=recurring,
+            miteigentuemer=self._miteigentuemer(
+                req.owner_id, [lr.listing_id for lr in listing_rows], titles
+            ),
         )
 
     def generate(
@@ -1084,6 +1169,15 @@ class OwnerStatementsService(ZeilenMixin):
             "status": "draft",
             "commission_pct": commission,
             "currency": currency,
+            # Miteigentumsanteile JE OBJEKT einfrieren (0601). Ohne diesen
+            # Snapshot zeigte eine finalisierte Rechnung nach einem
+            # Anteilsverkauf rückwirkend andere Beträge als die Summen, die in
+            # ihr eingefroren sind — bei fortlaufender Nummer nach §14 UStG
+            # eine Falschaussage, kein Anzeigefehler.
+            "ownership_shares": {
+                pid: float(anteil)
+                for pid, anteil in self._anteil_map(owner).items()
+            },
             **header.model_dump(),
         }
         res = self._db.table("owner_statements").insert(row).execute()
@@ -1187,6 +1281,18 @@ class OwnerStatementsService(ZeilenMixin):
         owner = self._owner(tenant_id, str(row["owner_id"]))
         owner_currency = self._owner_currency(owner, tenant_id)
         override, cmap = self._commission_for_row(tenant_id, row)
+        # Der Anteil, mit dem DIESE Abrechnung entstanden ist (0601). Ein
+        # später geänderter Anteil (Verkauf, Erbfall) darf einen bestehenden
+        # Beleg nicht rückwirkend umschreiben — genauso wie der Kopf-Snapshot
+        # und die eingefrorenen Summen. Fehlt der Snapshot (Abrechnung von vor
+        # 0601), gelten die Stammdaten: damals GAB es nur Alleineigentum, der
+        # Stammdaten-Anteil ist also derselbe Wert.
+        gespeicherte_anteile = row.get("ownership_shares")
+        amap = (
+            {str(pid): _d(wert) for pid, wert in gespeicherte_anteile.items()}
+            if isinstance(gespeicherte_anteile, dict) and gespeicherte_anteile
+            else self._anteil_map(owner)
+        )
         property_ids = self._owner_property_ids(str(row["owner_id"]))
         titles = self._property_titles(property_ids)
         reservations = self._reservations(
@@ -1198,7 +1304,8 @@ class OwnerStatementsService(ZeilenMixin):
             list(row.get("reservation_statuses") or []),
         )
         rental_rows = self._rental_rows(
-            tenant_id, reservations, titles, owner_currency, override, cmap, mask
+            tenant_id, reservations, titles, owner_currency, override, cmap,
+            amap, mask,
         )
         listing_rows = self._listing_rows(rental_rows, titles)
         return rental_rows, listing_rows, titles
@@ -1374,7 +1481,7 @@ class OwnerStatementsService(ZeilenMixin):
         tenant_id = self._require_tenant(ctx)
         row = self._statement_row(tenant_id, statement_id)
         self._require_statement_visible(ctx, tenant_id, row)
-        rental_rows, listing_rows, _titles = self._build_activity(
+        rental_rows, listing_rows, titles = self._build_activity(
             tenant_id, row, load_guest_mask(self._db, ctx.user_id)
         )
         # Owner sieht als hidden_from_owner markierte Ausgaben weder gelistet noch
@@ -1421,6 +1528,11 @@ class OwnerStatementsService(ZeilenMixin):
         return _to_response(
             row, summary, rental_rows, listing_rows, expenses, commission_display,
             recurring=recurring,
+            miteigentuemer=self._miteigentuemer(
+                str(row["owner_id"]),
+                [lr.listing_id for lr in listing_rows],
+                titles,
+            ),
         )
 
     def list(self, ctx: AuthContext, owner_id: str | None = None) -> StatementListResponse:
@@ -2342,6 +2454,7 @@ def _to_response(
     commission_display: Decimal | None = None,
     *,
     recurring: list[WiederkehrenderPosten] | None = None,
+    miteigentuemer: list[Miteigentuemer] | None = None,
 ) -> StatementResponse:
     kind = row.get("kind") or "invoice"
     # Im Storno-Beleg drehen die wiederkehrenden Posten ihr Vorzeichen wie
@@ -2408,6 +2521,7 @@ def _to_response(
         listing_rows=listing_rows,
         expenses=[_expense(e) for e in expenses],
         recurring=posten,
+        miteigentuemer=list(miteigentuemer or []),
         created_at=str(row["created_at"]) if row.get("created_at") else None,
         updated_at=str(row["updated_at"]) if row.get("updated_at") else None,
     )
