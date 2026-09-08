@@ -157,24 +157,8 @@ export function MarketingFooter() {
         <div className="grid gap-10 lg:grid-cols-[1.5fr_repeat(4,1fr)]">
           <div>
             <Logo heightRem={2.25} dark />
-            <p className="mt-4 max-w-xs text-sm text-primary-foreground/70">
-              {t("claim")}
-            </p>
-            {/* Newsletter — der einzige Handlungsaufruf im Footer, deshalb
-                als gefuellter Knopf in der Akzentfarbe. `#voranmeldung` oeffnet
-                das Popup, das die Adresse aufnimmt (Brevo, Double-Opt-in);
-                bleibt das JavaScript aus, passiert nichts Schlimmeres als ein
-                Anker, der auf der Seite bleibt. */}
-            <Link
-              href={VORANMELDUNG_ZIEL}
-              data-cta="newsletter"
-              className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90"
-            >
-              <Icon icon="ph:envelope-simple" className="size-4" />
-              {t("newsletterKnopf")}
-            </Link>
 
-            <div className="mt-6 flex flex-col gap-3">
+            <div className="mt-5 flex flex-col gap-3">
               <p className="text-sm font-medium">{t("appLaden")}</p>
               {/* Verlinkt nur, was wirklich im Store steht: ein Knopf ohne
                   Adresse bleibt ein `<span>`, statt auf eine leere Seite zu
@@ -208,6 +192,22 @@ export function MarketingFooter() {
                 })}
               </div>
             </div>
+            <p className="mt-4 max-w-xs text-sm text-primary-foreground/70">
+              {t("claim")}
+            </p>
+            {/* Newsletter — der einzige Handlungsaufruf im Footer, deshalb
+                als gefuellter Knopf in der Akzentfarbe. `#voranmeldung` oeffnet
+                das Popup, das die Adresse aufnimmt (Brevo, Double-Opt-in);
+                bleibt das JavaScript aus, passiert nichts Schlimmeres als ein
+                Anker, der auf der Seite bleibt. */}
+            <Link
+              href={VORANMELDUNG_ZIEL}
+              data-cta="newsletter"
+              className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90"
+            >
+              <Icon icon="ph:envelope-simple" className="size-4" />
+              {t("newsletterKnopf")}
+            </Link>
           </div>
 
           {FOOTER_COLUMNS.map((col) => (
