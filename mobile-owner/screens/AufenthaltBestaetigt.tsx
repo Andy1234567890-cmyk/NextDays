@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/ui/Icon";
 import { Btn, Kachel, Photo, Txt } from "@/components/ui/kit";
+import { useT } from "@/contexts/SprachContext";
 import { aufenthaltNaechte, gaesteText } from "@/lib/aufenthalt";
 import type { BlockRequest } from "@/lib/ownerPortal";
 import { datumKurz } from "@/lib/zeitraum";
@@ -23,14 +24,17 @@ export type BestaetigtParams = {
   checkIn: string;
   checkOut: string;
   gaeste: number;
+  kinder: number;
+  haustiere: number;
   notizen: string | null;
 };
 type Route = { params: BestaetigtParams };
 
 export default function AufenthaltBestaetigt({ navigation, route }: { navigation: Nav; route: Route }) {
+  const txt = useT();
   const t = useTheme();
   const insets = useSafeAreaInsets();
-  const { objekt, checkIn, checkOut, gaeste, notizen } = route.params;
+  const { objekt, checkIn, checkOut, gaeste, kinder, haustiere, notizen } = route.params;
   const n = aufenthaltNaechte(checkIn, checkOut);
 
   return (
@@ -50,10 +54,10 @@ export default function AufenthaltBestaetigt({ navigation, route }: { navigation
             <Icon n="check" s={32} sw={2.6} c={t.palette.accentInk} />
           </View>
           <Txt v="h1" style={{ textAlign: "center" }}>
-            Aufenthalt über {n} {n === 1 ? "Nacht" : "Nächte"} beantragt
+            {txt("best.beantragt", { anzahl: n, einheit: txt(n === 1 ? "allg.nacht" : "allg.naechte") })}
           </Txt>
           <Txt v="sm" soft style={{ textAlign: "center" }}>
-            Ihre Verwaltung entscheidet über den Antrag. Bis zur Zusage bleibt der Zeitraum buchbar.
+            {txt("best.hinweis")}
           </Txt>
         </View>
 
@@ -77,19 +81,19 @@ export default function AufenthaltBestaetigt({ navigation, route }: { navigation
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <View style={{ flex: 1 }}>
               <Txt v="eyebrow" soft>
-                Check-in
+                {txt("best.checkIn")}
               </Txt>
               <Txt v="h2" style={{ marginTop: 4 }}>
-                {datumKurz(checkIn)}
+                {datumKurz(txt, checkIn)}
               </Txt>
             </View>
             <Icon n="fwd" s={20} c={t.palette.soft} />
             <View style={{ flex: 1, alignItems: "flex-end" }}>
               <Txt v="eyebrow" soft>
-                Check-out
+                {txt("best.checkOut")}
               </Txt>
               <Txt v="h2" style={{ marginTop: 4 }}>
-                {datumKurz(checkOut)}
+                {datumKurz(txt, checkOut)}
               </Txt>
             </View>
           </View>
@@ -98,14 +102,31 @@ export default function AufenthaltBestaetigt({ navigation, route }: { navigation
         <Kachel>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
             <Icon n="users" s={20} c={t.palette.ink} />
-            <Txt v="title">{gaesteText(gaeste)}</Txt>
+            <Txt v="title">{gaesteText(txt, gaeste)}</Txt>
           </View>
+          {/* Nur zeigen, was angegeben wurde: „0 Kinder" auf der Bestätigung
+              wäre eine Angabe, die niemand gemacht hat. */}
+          {kinder > 0 ? (
+            <Txt v="sm" soft style={{ marginTop: 4, marginLeft: 30 }}>
+              {txt("buchen.kinderHinweis", { anzahl: kinder })}
+            </Txt>
+          ) : null}
+          {haustiere > 0 ? (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginTop: 8 }}>
+              <Icon n="pet" s={20} c={t.palette.ink} />
+              <Txt v="title">
+                {haustiere === 1
+                  ? txt("buchen.einHaustier")
+                  : txt("buchen.anzahlHaustiere", { anzahl: haustiere })}
+              </Txt>
+            </View>
+          ) : null}
         </Kachel>
 
         {notizen ? (
           <Kachel>
             <Txt v="eyebrow" soft>
-              Notizen
+              {txt("buchen.notizen")}
             </Txt>
             <Txt v="sm" style={{ marginTop: 6 }}>
               {notizen}
@@ -124,10 +145,10 @@ export default function AufenthaltBestaetigt({ navigation, route }: { navigation
         }}
       >
         <Btn variant="ghost" block onPress={() => navigation.navigate("Tabs", { screen: "Start" })}>
-          Zur Startseite
+          {txt("best.zurStartseite")}
         </Btn>
         <Btn variant="dark" block onPress={() => navigation.navigate("Tabs", { screen: "Aufenthalte" })}>
-          Meine Aufenthalte
+          {txt("best.zuAufenthalten")}
         </Btn>
       </View>
     </View>

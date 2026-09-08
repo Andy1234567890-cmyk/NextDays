@@ -174,6 +174,32 @@ class PortalStatementList(BaseModel):
     total: int
 
 
+class ReservationMoveRequest(BaseModel):
+    """Eine Buchung des Eigentümers auf andere Tage ziehen (08.09.2026).
+
+    NUR der Zeitraum, NICHT das Objekt: Drag-and-Drop im Kalender der
+    Eigentümer-App bewegt einen Chip innerhalb SEINES Objekts. Ein
+    Objektwechsel wäre eine Umbuchung mit Gastkommunikation und
+    Portal-Folgen — das bleibt bei der Verwaltung (`/reservations/{id}/move`).
+
+    `check_out` ist EXKLUSIV wie überall im Buchungsmodell: der Abreisetag ist
+    keine belegte Nacht, dort reist der nächste Gast an.
+    """
+
+    check_in: date_
+    check_out: date_
+
+    @model_validator(mode="after")
+    def _zeitraum_pruefen(self) -> "ReservationMoveRequest":
+        if self.check_out <= self.check_in:
+            raise ValueError("Abreise muss nach der Anreise liegen.")
+        # Harte Obergrenze (Wurzel 8): ein Zeitraum über Jahre hinweg würde
+        # beim Belegen der Nächte eine unbegrenzte Schleife auslösen.
+        if (self.check_out - self.check_in).days > 365:
+            raise ValueError("Zeitraum länger als ein Jahr.")
+        return self
+
+
 class BlockRequestCreate(BaseModel):
     """Sperrwunsch des Eigentümers. `start_date`/`end_date` sind INKLUSIV
     („vom 1. bis zum 5."); die Umrechnung auf den exklusiven Kalender-Range
@@ -220,6 +246,12 @@ class BlockRequestCreate(BaseModel):
     # Verwaltung braucht sie für Wäsche und Reinigungsumfang; das Web-Portal
     # führt das Feld noch nicht, darum optional.
     guests: int | None = Field(default=None, ge=1, le=50)
+    # Kinder sind eine TEILMENGE von `guests`, kein Zuschlag (0608) — sie
+    # entscheiden über Gitterbett und zulässige Belegung. `pets` ist die ANZAHL
+    # der Tiere: davon hängen Reinigung und die Haustiergebühr ab, die bei der
+    # Zusage nur mit `reservations.pets > 0` entsteht.
+    children: int | None = Field(default=None, ge=0, le=20)
+    pets: int | None = Field(default=None, ge=0, le=10)
 
     @model_validator(mode="after")
     def _check_order(self) -> "BlockRequestCreate":
@@ -259,6 +291,8 @@ class BlockRequestItem(BaseModel):
     reason: str | None = None
     # Personenzahl (0606); None = nicht angegeben.
     guests: int | None = None
+    children: int | None = None
+    pets: int | None = None
     # Entscheidung der Agentur — der Eigentümer sieht, WANN und mit welcher
     # Anmerkung entschieden wurde (nicht, WER es war: die interne Zuständigkeit
     # geht ihn nichts an).

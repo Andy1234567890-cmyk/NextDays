@@ -37,6 +37,12 @@ class Capability(StrEnum):
     VIEW_CALENDAR = "view_calendar"
     REQUEST_BLOCK = "request_block"
     APPROVE_BLOCK = "approve_block"
+    # Eine BESTEHENDE Buchung an seinem Objekt auf andere Tage ziehen
+    # (Drag-and-Drop im Kalender der Eigentümer-App, 08.09.2026). Bewusst NICHT
+    # an `REQUEST_BLOCK`: das tragen auch Familienmitglieder, und wer sich
+    # Ferien wünschen darf, darf deshalb noch lange keinen fremden Gast
+    # umlegen. Der Objekt-Scope kommt zusätzlich aus dem Service (Wurzel 9).
+    MOVE_OWN_RESERVATION = "move_own_reservation"
     # Bewertungen (Portale + myBestDays)
     VIEW_REVIEWS = "view_reviews"
     MANAGE_REVIEWS = "manage_reviews"   # antworten, Gast bewerten, Automatik
@@ -145,6 +151,7 @@ _CO_ADMIN: frozenset[Capability] = frozenset({
 _OWNER: frozenset[Capability] = frozenset({
     Capability.VIEW_CALENDAR,
     Capability.REQUEST_BLOCK,
+    Capability.MOVE_OWN_RESERVATION,
     Capability.ADD_METER_READING,
     Capability.BOOK_SERVICES,
     Capability.VIEW_OWNER_REPORTS,

@@ -62,6 +62,7 @@ from src.features.owner_statements.service import (
     OwnerStatementsService,
     StatementError,
 )
+from src.features.reservations._base import ReservationError, _require_uuid
 from src.features.tasks.regel_uebersetzung import (
     lesersprache,
     namen_in_sprache,
@@ -98,6 +99,7 @@ from .schemas import (
     PortalStatementItem,
     PortalStatementList,
     PortalStatisticsResponse,
+    ReservationMoveRequest,
     SliceHealth,
 )
 from .statistik import berechne_statistik
@@ -1444,7 +1446,18 @@ class PublicPortalService:
         # freigeschaltet hat (0389). Die Capability am Endpunkt genügt nicht:
         # ein Familienmitglied trägt die Rolle `owner` und bekommt sie darüber.
         self._require_berichte(ctx)
-        mask = load_guest_mask(self._db, user_id)
+        # NICHT `mask.amounts`: die Auszahlung ist SEIN Geld, kein Gastdatum —
+        # dieselbe Begründung wie im Kalender (siehe `calendar`). `mask.amounts`
+        # verlangt PM_BOOKING_TOTAL, das ein Eigentümer per Default nicht hat;
+        # die Einnahmen-Übersicht zeigte ihm darum durchgehend „—" samt dem
+        # irreführenden Hinweis „Beträge sind für Ihren Zugang nicht
+        # freigegeben", während derselbe Betrag im Kalender und auf jedem Beleg
+        # stand (gemeldet 08.09.2026). Der Zugriff ist bereits doppelt
+        # geschützt: VIEW_OWNER_REPORTS am Endpunkt und `_require_berichte`
+        # für Familienzugänge (0389).
+        #
+        # Die Maske bleibt für GASTDATEN in Kraft — sie wird hier schlicht
+        # nicht mehr gelesen, weil diese Antwort keine trägt.
         ids = self._owned_property_ids(ctx)
         currency = self._tenant_currency(tenant_id)
         if not ids:
@@ -1452,7 +1465,7 @@ class PublicPortalService:
                 period_from=period_from,
                 period_to=period_to,
                 items=[],
-                total_payout=0.0 if mask.amounts else None,
+                total_payout=0.0,
                 currency=currency,
             )
         titles = {
@@ -1597,7 +1610,7 @@ class PublicPortalService:
                     reservations=a["reservations"],
                     payout=(
                         _money(a["payout"])
-                        if mask.amounts and a["bestimmbar"]
+                        if a["bestimmbar"]
                         else None
                     ),
                     currency=currency,
@@ -1611,7 +1624,7 @@ class PublicPortalService:
             # Die Gesamtsumme fällt weg, sobald IRGENDEIN Objekt unbestimmbar
             # ist — sonst wäre sie die Summe über eine Lücke.
             total_payout=(
-                _money(total) if mask.amounts and gesamt_bestimmbar else None
+                _money(total) if gesamt_bestimmbar else None
             ),
             currency=currency,
         )
@@ -2034,6 +2047,82 @@ class PublicPortalService:
             created_at=str(r["created_at"]) if r.get("created_at") else None,
         )
 
+    # --- Buchung verschieben (Drag-and-Drop im Kalender) ---------------------
+
+    def move_reservation(
+        self, ctx: AuthContext, reservation_id: str, req: ReservationMoveRequest
+    ) -> None:
+        """Eine Buchung an SEINEM Objekt auf andere Tage ziehen (08.09.2026).
+
+        WARUM DAS HIER STEHT und nicht im Reservations-Slice: der Eigentümer
+        spricht ausschliesslich `/public-portal/*`. Gerechnet wird trotzdem mit
+        `ReservationsService.move()` — dort haengt die ganze Gegenzustands-Kette
+        (Wurzel 1): alte Naechte freigeben, neue belegen, Channex/OTA nachziehen,
+        ARI schreiben. Eine zweite Umsetzung hier waere eine Kopie, die
+        auseinanderlaeuft und beim naechsten Portal-Sync eine Nacht doppelt
+        verkauft.
+
+        SCOPE (Wurzel 3/9): die Reservierung muss an einem Objekt DIESES
+        Eigentuemers haengen. Geprueft wird nicht der Tenant — den teilt er sich
+        mit allen anderen Eigentuemern desselben Betriebs — sondern die
+        Objekt-Zuordnung, dieselbe Wahrheit wie ueberall in diesem Service.
+
+        Das ZIELOBJEKT bleibt das Quellobjekt: `ReservationMoveRequest` hat gar
+        kein `property_id`. Ein Objektwechsel ist eine Umbuchung mit
+        Gastkommunikation — das entscheidet die Verwaltung.
+        """
+        tenant_id, _user_id = self._require(ctx)
+        # Nicht-UUID → 404, kein 500 aus Postgres (Wurzel 5). Dieselbe Prüfung
+        # wie im Reservations-Slice, nicht neu geschrieben — aber ihr Fehlertyp
+        # wird UMGESETZT: der Router hier fängt `PortalError`, ein
+        # durchgereichter `ReservationError` wäre ein 500 (gefunden vom Test
+        # `test_nicht_uuid_wirft_keinen_500`).
+        try:
+            _require_uuid(reservation_id)
+        except ReservationError as fehler:
+            raise PortalError("Buchung nicht gefunden.", status_code=404) from fehler
+
+        res = (
+            self._db.table("reservations")
+            .select("id, property_id, status")
+            .eq("id", reservation_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        )
+        if not res.data:
+            raise PortalError("Buchung nicht gefunden.", status_code=404)
+        zeile = res.data[0]
+        property_id = str(zeile["property_id"])
+        # Fremdes Objekt = 404, nicht 403: die Existenz einer fremden Buchung
+        # ist selbst schon eine Auskunft (fail-closed).
+        self._require_own(ctx, property_id)
+
+        from src.features.reservations.schemas import ReservationMove
+        from src.features.reservations.writes import ReservationsService
+
+        dienst = ReservationsService(self._db)
+        try:
+            dienst.move(
+                ctx,
+                reservation_id,
+                ReservationMove(
+                    property_id=property_id,
+                    check_in=req.check_in,
+                    check_out=req.check_out,
+                ),
+            )
+        except ReservationError as fehler:
+            # NUR den fachlichen Fehler des Reservations-Slices umsetzen, mit
+            # SEINEM Status: 409 bei Kollision, 404 unbekannt, 422 bei
+            # fehlendem Preis. Ein breites `except Exception` verschlänge
+            # dagegen auch echte Programmierfehler und meldete sie als 409 —
+            # der Nutzer sähe „Zeitraum belegt", obwohl der Code kaputt ist
+            # (Wurzel 5).
+            raise PortalError(
+                str(fehler), status_code=getattr(fehler, "status_code", 409)
+            ) from fehler
+
     # --- Sperrung beantragen -------------------------------------------------
 
     def request_block(
@@ -2075,6 +2164,9 @@ class PublicPortalService:
                     "reason": req.reason,
                     # Personenzahl des Aufenthalts (0606); None = nicht angegeben.
                     "gaeste": req.guests,
+                    # Kinder als Teilmenge, Tiere als Anzahl (0608).
+                    "kinder": req.children,
+                    "haustiere": req.pets,
                     # Der Eigentümer erklärt damit, den Vermarktungsvertrag
                     # beenden zu wollen (0377). Es ist SEINE Erklärung — die
                     # Agentur entscheidet beim Genehmigen, ob und zu welchem
@@ -2479,7 +2571,7 @@ class PublicPortalService:
             self._db.table("block_requests")
             .select(
                 "id, property_id, unit_id, start_date, end_date, status, "
-                "reason, gaeste, decided_at, decision_note, created_at, "
+                "reason, gaeste, kinder, haustiere, decided_at, decision_note, created_at, "
                 # Vertragskündigung (0377) — der Eigentümer sieht, dass sein
                 # Antrag als Kündigung geführt wird und zu welchem Datum.
                 "ist_kuendigung, als_kuendigung_gewertet, "
@@ -2739,6 +2831,8 @@ def _block(
         status=r.get("status") or "pending",
         reason=r.get("reason"),
         guests=int(r["gaeste"]) if r.get("gaeste") is not None else None,
+        children=int(r["kinder"]) if r.get("kinder") is not None else None,
+        pets=int(r["haustiere"]) if r.get("haustiere") is not None else None,
         decided_at=str(r["decided_at"]) if r.get("decided_at") else None,
         decision_note=r.get("decision_note"),
         created_at=str(r["created_at"]) if r.get("created_at") else None,

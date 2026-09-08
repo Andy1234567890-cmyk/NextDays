@@ -11,9 +11,11 @@
 //
 // DATUM: Oberfläche = Check-in/Check-out (Abreisetag frei), Antrag = inklusiv.
 // Die Umrechnung steht EINMAL in `lib/aufenthalt.ts` (`alsSperrantrag`).
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, TextInput, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useT } from "@/contexts/SprachContext";
 import { Blatt, BlattGruppe, BlattOption } from "@/components/ui/Blatt";
 import { Icon } from "@/components/ui/Icon";
 import { Btn, Kachel, Photo, Spinner, Txt } from "@/components/ui/kit";
@@ -37,18 +39,29 @@ import {
   type PortalProperty,
   type PortalPropertyDetail,
 } from "@/lib/ownerPortal";
-import { MONATE, isoLokal, monatsEnde, spanneLesbar } from "@/lib/zeitraum";
+import {
+  type Uebersetzer,
+  ausIso,
+  isoLokal,
+  monatName,
+  monatsEnde,
+  spanneLesbar,
+  wochentagKurz,
+} from "@/lib/zeitraum";
 import { KARTE_ABSTAND } from "@/theme/flaechen";
 import { useTheme } from "@/theme/ThemeProvider";
 
 type Nav = {
   goBack: () => void;
-  replace: (name: string, params?: Record<string, unknown>) => void;
+  navigate: (name: string, params?: Record<string, unknown>) => void;
+  // Nur im Stack vorhanden; als Tab wird stattdessen navigiert.
+  replace?: (name: string, params?: Record<string, unknown>) => void;
 };
-type Route = { params?: { propertyId?: string } };
+type Route = { params?: { propertyId?: string; alsTab?: boolean; von?: string; bis?: string } };
 
-// Montag zuerst (Vorlage: M T W T F S S).
-const KOPF = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+// Montag zuerst (Vorlage: M T W T F S S). Die Zahlen sind die Schlüssel in
+// `wtagKurz.*`; Sonntag ist dort 7, nicht 0.
+const KOPF = [1, 2, 3, 4, 5, 6, 7];
 
 /** Zellen eines Monatsblatts, montagsbeginnend; `null` = Vorlauf. */
 export function monatsZellen(jahr: number, monat: number): (string | null)[] {
@@ -70,18 +83,48 @@ export function adresse(d: PortalPropertyDetail | null): string | null {
   return teile.length ? teile.join(", ") : null;
 }
 
+/** „2 Kinder" / „1 Kind" / „Keine Kinder". */
+function kinderText(txt: Uebersetzer, n: number): string {
+  if (n === 0) return txt("buchen.keineKinder");
+  return n === 1 ? txt("buchen.einKind") : txt("buchen.anzahlKinder", { anzahl: n });
+}
+
+/** „2 Haustiere" / „1 Haustier" / „Keine Haustiere". */
+function haustierText(txt: Uebersetzer, n: number): string {
+  if (n === 0) return txt("buchen.keineHaustiere");
+  return n === 1 ? txt("buchen.einHaustier") : txt("buchen.anzahlHaustiere", { anzahl: n });
+}
+
 export default function AufenthaltBuchen({ navigation, route }: { navigation: Nav; route: Route }) {
+  const txt = useT();
   const t = useTheme();
+  const insets = useSafeAreaInsets();
+  const alsTab = route.params?.alsTab === true;
   const [objekte, setObjekte] = useState<PortalProperty[] | null>(null);
   const [objektId, setObjektId] = useState<string | null>(route.params?.propertyId ?? null);
   const [detail, setDetail] = useState<PortalPropertyDetail | null>(null);
   const [objektBlatt, setObjektBlatt] = useState(false);
   const heute = new Date();
-  const [monat, setMonat] = useState({ jahr: heute.getFullYear(), monat: heute.getMonth() });
+  // Vorbelegung aus dem Kalender (Zieh-Auswahl): Anreise/Abreise stehen fest,
+  // das Blatt öffnet im Monat der Anreise. Einmal verbraucht — der
+  // Objektwechsel-Effekt darunter leert die Auswahl sonst sofort wieder.
+  const vorbelegt = useRef<Bereich | null>(
+    route.params?.von && route.params?.bis ? { von: route.params.von, bis: route.params.bis } : null,
+  );
+  const startMonat = vorbelegt.current ? ausIso(vorbelegt.current.von) : heute;
+  const [monat, setMonat] = useState({ jahr: startMonat.getFullYear(), monat: startMonat.getMonth() });
   const [tage, setTage] = useState<Map<string, PortalCalendarDay>>(new Map());
   const [geladeneMonate, setGeladeneMonate] = useState<Set<string>>(new Set());
   const [bereich, setBereich] = useState<Bereich | null>(null);
   const [gaeste, setGaeste] = useState(2);
+  // Kinder sind eine TEILMENGE der Gästezahl (0608), keine Zugabe: wer 4 Gäste
+  // mit 2 Kindern meldet, reist zu viert. Deshalb wird `kinder` mitgesenkt,
+  // sobald die Gästezahl darunter fiele — sonst stünde im Antrag „3 Gäste,
+  // davon 4 Kinder", und die Verwaltung müsste raten, was gemeint war.
+  const [kinder, setKinder] = useState(0);
+  // Anzahl, nicht Ja/Nein: die Haustiergebühr fällt je Tier an, und für die
+  // Reinigung ist „2 Hunde" eine andere Ansage als „1 Hund".
+  const [haustiere, setHaustiere] = useState(0);
   const [notizen, setNotizen] = useState("");
   const [notizenOffen, setNotizenOffen] = useState(false);
   const [leistungen, setLeistungen] = useState<BestellteLeistung[]>([]);
@@ -108,7 +151,8 @@ export default function AufenthaltBuchen({ navigation, route }: { navigation: Na
   // Auswahl leeren — sonst stünde ein Zeitraum im Formular, der für DIESES
   // Objekt belegt sein kann.
   useEffect(() => {
-    setBereich(null);
+    setBereich(vorbelegt.current);
+    vorbelegt.current = null;
     setTage(new Map());
     setGeladeneMonate(new Set());
     setBestellt([]);
@@ -193,6 +237,8 @@ export default function AufenthaltBuchen({ navigation, route }: { navigation: Na
       property_id: objektId,
       ...zeitraum,
       guests: gaeste,
+      children: kinder,
+      pets: haustiere,
       reason: notizen.trim() ? notizen.trim() : undefined,
       bestellte_leistungen: bestellt,
     });
@@ -201,18 +247,31 @@ export default function AufenthaltBuchen({ navigation, route }: { navigation: Na
       setFehler(res.error);
       return;
     }
-    navigation.replace("AufenthaltBestaetigt", {
+    const ziel = {
       antrag: res.data,
       objekt: { title: objekt?.title ?? "Objekt", photo: objekt?.photo ?? null, adresse: adresse(detail) },
       checkIn: bereich.von,
       checkOut: bereich.bis,
       gaeste,
+      kinder,
+      haustiere,
       notizen: notizen.trim() || null,
-    });
+    };
+    // Im Stack ersetzt die Bestätigung das Formular; als Tab liegt sie darüber
+    // im Root-Stack (ein Tab kennt kein `replace`).
+    if (navigation.replace) navigation.replace("AufenthaltBestaetigt", ziel);
+    else navigation.navigate("AufenthaltBestaetigt", ziel);
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: t.palette.bg }}>
+    <View style={{ flex: 1, backgroundColor: t.palette.surface2, paddingTop: alsTab ? insets.top : 0 }}>
+      {alsTab ? (
+        <View style={{ alignItems: "center", paddingVertical: 12 }}>
+          <Txt v="title" style={{ fontSize: 17 }}>
+            {txt("buchen.titel")}
+          </Txt>
+        </View>
+      ) : null}
       <ScrollView
         contentContainerStyle={{ padding: t.density.pad, gap: KARTE_ABSTAND, paddingBottom: 110 }}
         keyboardShouldPersistTaps="handled"
@@ -222,12 +281,12 @@ export default function AufenthaltBuchen({ navigation, route }: { navigation: Na
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
             <Icon n="home" s={18} c={t.palette.soft} />
             <Txt v="sm" soft style={{ flex: 1, marginLeft: 8 }}>
-              Objekt
+              {txt("allg.objekt")}
             </Txt>
             {objekte && objekte.length > 1 ? (
               <Pressable onPress={() => setObjektBlatt(true)} accessibilityRole="button" hitSlop={8}>
                 <Txt v="sm" accent style={{ fontFamily: t.fonts.semibold }}>
-                  Ändern
+                  {txt("allg.aendern")}
                 </Txt>
               </Pressable>
             ) : null}
@@ -258,7 +317,7 @@ export default function AufenthaltBuchen({ navigation, route }: { navigation: Na
             </View>
           ) : (
             <Txt v="sm" soft>
-              Noch kein Objekt zugeordnet.
+              {txt("buchen.keinObjekt")}
             </Txt>
           )}
         </Kachel>
@@ -268,28 +327,23 @@ export default function AufenthaltBuchen({ navigation, route }: { navigation: Na
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
             <Icon n="cal" s={18} c={t.palette.soft} />
             <Txt v="sm" soft style={{ flex: 1, marginLeft: 8 }}>
-              Zeitraum
+              {txt("allg.zeitraum")}
             </Txt>
             {fertigGewaehlt ? (
               <Txt v="sm" style={{ fontFamily: t.fonts.semibold }} numberOfLines={1}>
-                {spanneLesbar(bereich.von, bereich.bis as string)}{" "}
+                {spanneLesbar(txt, bereich.von, bereich.bis as string)}{" "}
                 <Txt v="sm" soft>
-                  ({naechte} {naechte === 1 ? "Nacht" : "Nächte"})
+                  {txt("buchen.naechteKlammer", {
+                    anzahl: naechte,
+                    einheit: txt(naechte === 1 ? "allg.nacht" : "allg.naechte"),
+                  })}
                 </Txt>
               </Txt>
             ) : bereich ? (
               <Txt v="xs" soft>
-                Abreise wählen
+                {txt("buchen.abreiseWaehlen")}
               </Txt>
             ) : null}
-          </View>
-
-          <View style={{ flexDirection: "row", marginBottom: 6 }}>
-            {KOPF.map((k) => (
-              <Txt key={k} v="xs" soft style={{ width: `${100 / 7}%`, textAlign: "center" }}>
-                {k}
-              </Txt>
-            ))}
           </View>
 
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
@@ -297,7 +351,7 @@ export default function AufenthaltBuchen({ navigation, route }: { navigation: Na
               onPress={() => setMonat(({ jahr, monat: m }) => (m === 0 ? { jahr: jahr - 1, monat: 11 } : { jahr, monat: m - 1 }))}
               hitSlop={10}
               accessibilityRole="button"
-              accessibilityLabel="Vormonat"
+              accessibilityLabel={txt("buchen.vormonat")}
               disabled={monat.jahr === heute.getFullYear() && monat.monat === heute.getMonth()}
               style={{ opacity: monat.jahr === heute.getFullYear() && monat.monat === heute.getMonth() ? 0.3 : 1 }}
             >
@@ -305,7 +359,7 @@ export default function AufenthaltBuchen({ navigation, route }: { navigation: Na
             </Pressable>
             <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 8, marginLeft: 8 }}>
               <Txt v="title">
-                {MONATE[monat.monat]} {monat.jahr}
+                {monatName(txt, monat.monat)} {monat.jahr}
               </Txt>
               {!monatGeladen ? <Spinner /> : null}
             </View>
@@ -313,10 +367,18 @@ export default function AufenthaltBuchen({ navigation, route }: { navigation: Na
               onPress={() => setMonat(({ jahr, monat: m }) => (m === 11 ? { jahr: jahr + 1, monat: 0 } : { jahr, monat: m + 1 }))}
               hitSlop={10}
               accessibilityRole="button"
-              accessibilityLabel="Nächster Monat"
+              accessibilityLabel={txt("kal.naechsterMonat")}
             >
               <Icon n="fwd" s={18} c={t.palette.ink} />
             </Pressable>
+          </View>
+
+          <View style={{ flexDirection: "row", marginBottom: 6 }}>
+            {KOPF.map((k) => (
+              <Txt key={k} v="xs" soft style={{ width: `${100 / 7}%`, textAlign: "center" }}>
+                {wochentagKurz(txt, k === 7 ? 0 : k)}
+              </Txt>
+            ))}
           </View>
 
           <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
@@ -332,7 +394,7 @@ export default function AufenthaltBuchen({ navigation, route }: { navigation: Na
             ))}
           </View>
           <Txt v="xs" faint style={{ marginTop: 8 }}>
-            Durchgestrichene Tage sind belegt. Der Abreisetag bleibt für die nächste Anreise frei.
+            {txt("buchen.belegtHinweis")}
           </Txt>
         </Kachel>
 
@@ -341,22 +403,90 @@ export default function AufenthaltBuchen({ navigation, route }: { navigation: Na
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Icon n="users" s={18} c={t.palette.soft} />
             <Txt v="sm" soft style={{ flex: 1, marginLeft: 8 }}>
-              Gäste
+              {txt("buchen.gaeste")}
             </Txt>
             <Schritt
-              label="Weniger Gäste"
+              label={txt("buchen.wenigerGaeste")}
               icon="minus"
               disabled={gaeste <= 1}
-              auf={() => setGaeste((g) => Math.max(1, g - 1))}
+              auf={() =>
+                setGaeste((g) => {
+                  const neu = Math.max(1, g - 1);
+                  setKinder((k) => Math.min(k, neu));
+                  return neu;
+                })
+              }
             />
             <Txt v="sm" style={{ fontFamily: t.fonts.semibold, minWidth: 110, textAlign: "center" }}>
-              {gaesteText(gaeste)}
+              {gaesteText(txt, gaeste)}
             </Txt>
             <Schritt
-              label="Mehr Gäste"
+              label={txt("buchen.mehrGaeste")}
               icon="plus"
               disabled={gaeste >= maxGaeste}
               auf={() => setGaeste((g) => Math.min(maxGaeste, g + 1))}
+            />
+          </View>
+
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginTop: 12,
+              paddingTop: 12,
+              borderTopWidth: 1,
+              borderTopColor: t.palette.line,
+            }}
+          >
+            <Icon n="users" s={18} c={t.palette.soft} />
+            <Txt v="sm" soft style={{ flex: 1, marginLeft: 8 }}>
+              {txt("buchen.kinder")}
+            </Txt>
+            <Schritt
+              label={txt("buchen.wenigerKinder")}
+              icon="minus"
+              disabled={kinder <= 0}
+              auf={() => setKinder((k) => Math.max(0, k - 1))}
+            />
+            <Txt v="sm" style={{ fontFamily: t.fonts.semibold, minWidth: 110, textAlign: "center" }}>
+              {kinderText(txt, kinder)}
+            </Txt>
+            <Schritt
+              label={txt("buchen.mehrKinder")}
+              icon="plus"
+              disabled={kinder >= gaeste}
+              auf={() => setKinder((k) => Math.min(gaeste, k + 1))}
+            />
+          </View>
+
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginTop: 12,
+              paddingTop: 12,
+              borderTopWidth: 1,
+              borderTopColor: t.palette.line,
+            }}
+          >
+            <Icon n="pet" s={18} c={t.palette.soft} />
+            <Txt v="sm" soft style={{ flex: 1, marginLeft: 8 }}>
+              {txt("buchen.haustiere")}
+            </Txt>
+            <Schritt
+              label={txt("buchen.wenigerHaustiere")}
+              icon="minus"
+              disabled={haustiere <= 0}
+              auf={() => setHaustiere((h) => Math.max(0, h - 1))}
+            />
+            <Txt v="sm" style={{ fontFamily: t.fonts.semibold, minWidth: 110, textAlign: "center" }}>
+              {haustierText(txt, haustiere)}
+            </Txt>
+            <Schritt
+              label={txt("buchen.mehrHaustiere")}
+              icon="plus"
+              disabled={haustiere >= 10}
+              auf={() => setHaustiere((h) => Math.min(10, h + 1))}
             />
           </View>
         </Kachel>
@@ -374,7 +504,7 @@ export default function AufenthaltBuchen({ navigation, route }: { navigation: Na
             <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
               <Icon n="check" s={18} c={t.palette.soft} />
               <Txt v="sm" soft style={{ flex: 1, marginLeft: 8 }}>
-                Leistungen bestellen
+                {txt("buchen.leistungen")}
               </Txt>
             </View>
             <Txt v="xs" faint style={{ marginBottom: 4 }}>
@@ -425,7 +555,7 @@ export default function AufenthaltBuchen({ navigation, route }: { navigation: Na
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Icon n="doc" s={18} c={t.palette.soft} />
             <Txt v="sm" soft style={{ flex: 1, marginLeft: 8 }}>
-              Notizen
+              {txt("buchen.notizen")}
             </Txt>
             {!notizenOffen ? (
               <Pressable onPress={() => setNotizenOffen(true)} accessibilityRole="button" hitSlop={8}>
@@ -438,7 +568,7 @@ export default function AufenthaltBuchen({ navigation, route }: { navigation: Na
           {notizenOffen ? (
             <>
               <Txt v="xs" faint style={{ marginTop: 6 }}>
-                Wünsche oder Hinweise zu Ihrem Aufenthalt an die Verwaltung
+                {txt("buchen.notizenHinweis")}
               </Txt>
               <TextInput
                 value={notizen}
@@ -446,7 +576,7 @@ export default function AufenthaltBuchen({ navigation, route }: { navigation: Na
                 multiline
                 maxLength={2000}
                 autoFocus
-                placeholder="z. B. Späterer Check-out gewünscht"
+                placeholder={txt("buchen.notizenPlatzhalter2")}
                 placeholderTextColor={t.palette.faint}
                 style={{
                   marginTop: 8,
@@ -470,14 +600,25 @@ export default function AufenthaltBuchen({ navigation, route }: { navigation: Na
         ) : null}
       </ScrollView>
 
-      <View style={{ position: "absolute", left: t.density.pad, right: t.density.pad, bottom: 24 }}>
+      <View
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          paddingHorizontal: t.density.pad,
+          paddingTop: 10,
+          paddingBottom: alsTab ? 10 : insets.bottom + 10,
+          backgroundColor: t.palette.surface2,
+        }}
+      >
         <Btn variant="dark" block iconR="fwd" disabled={!fertigGewaehlt || !objektId || laeuft} onPress={() => void senden()}>
-          {laeuft ? "Wird gesendet …" : "Aufenthalt beantragen"}
+          {txt(laeuft ? "allg.wirdGesendet" : "buchen.bestaetigen")}
         </Btn>
       </View>
 
-      <Blatt offen={objektBlatt} titel="Objekt wählen" schliessen={() => setObjektBlatt(false)}>
-        <BlattGruppe titel="Ihre Objekte">
+      <Blatt offen={objektBlatt} titel={txt("buchen.objektWaehlen")} schliessen={() => setObjektBlatt(false)}>
+        <BlattGruppe titel={txt("finanz.objekte")}>
           {(objekte ?? []).map((o, i) => (
             <BlattOption
               key={o.id}
@@ -569,6 +710,23 @@ function Zelle({
           }}
         />
       ) : null}
+      {/* Der ABREISETAG ist ein halber Tag: der Gast reist vormittags ab, die
+          Nacht davor war die letzte. Der volle Kreis ließ ihn wie eine
+          gebuchte Nacht aussehen (gemeldet 08.09.2026) — deshalb liegt hier
+          ein Halbkreis, dessen gefüllte Hälfte zum Zeitraum zeigt. Dieselbe
+          Halbtags-Logik wie die Chips im Kalender (`HALBER_TAG`). */}
+      {istBis && bereich?.bis ? (
+        <View
+          style={{
+            position: "absolute",
+            top: 4,
+            bottom: 4,
+            left: 0,
+            right: "50%",
+            backgroundColor: t.palette.surface2,
+          }}
+        />
+      ) : null}
       <View
         style={{
           width: 32,
@@ -576,18 +734,22 @@ function Zelle({
           borderRadius: 16,
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: gewaehlt ? t.palette.ink : "transparent",
+          // Der Abreisetag bleibt UNGEFÜLLT und wird nur umrandet: er ist
+          // keine gebuchte Nacht. Die Anreise ist gefüllt.
+          backgroundColor: istVon ? t.palette.ink : "transparent",
+          borderWidth: istBis && bereich?.bis ? 2 : 0,
+          borderColor: t.palette.ink,
         }}
       >
         <Txt
           v="sm"
-          color={gewaehlt ? t.palette.bg : inaktiv ? t.palette.faint : t.palette.ink}
+          color={istVon ? t.palette.bg : inaktiv ? t.palette.faint : t.palette.ink}
           style={{
             fontFamily: gewaehlt ? t.fonts.semibold : t.fonts.regular,
-            textDecorationLine: belegt && !gewaehlt ? "line-through" : "none",
+            textDecorationLine: belegt && !vergangen && !gewaehlt ? "line-through" : "none",
           }}
         >
-          {String(Number(tag.slice(8, 10)))}
+          {tag.slice(8, 10)}
         </Txt>
       </View>
     </Pressable>

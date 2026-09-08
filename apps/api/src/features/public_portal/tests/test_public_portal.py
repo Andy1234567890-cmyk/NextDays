@@ -761,12 +761,24 @@ def test_earnings_ohne_provision_keine_erfundene_summe() -> None:
     assert item.nights == 3
 
 
-def test_earnings_payout_masked_for_owner() -> None:
+def test_earnings_zeigt_dem_eigentuemer_seine_auszahlung() -> None:
+    """Die eigene Auszahlung hängt NICHT an der Gastpreis-Maske.
+
+    Bis 08.09.2026 stand hier das Gegenteil: `total_payout is None`, weil
+    `earnings` `mask.amounts` abfragte. Das verlangt PM_BOOKING_TOTAL — ein
+    Recht, das ein Eigentümer per Default nicht hat. Die Einnahmen-Übersicht
+    zeigte ihm deshalb durchgehend „—" samt dem Hinweis „Beträge sind für Ihren
+    Zugang nicht freigegeben", während derselbe Betrag im Kalender und auf
+    jedem Beleg stand. Der Kalender begründet es im Docstring von `calendar`:
+    die Auszahlung ist SEIN Geld, kein Gastdatum. Der Zugriff ist über
+    VIEW_OWNER_REPORTS und `_require_berichte` (0389) geschützt, nicht über
+    diese Maske.
+    """
     res = _svc().earnings(_ctx(), date(2026, 1, 1), date(2026, 1, 31))
-    assert res.total_payout is None  # maskiert
+    assert res.total_payout is not None
     item = next(i for i in res.items if i.property_id == "p-1")
-    assert item.payout is None
-    assert item.nights == 3  # Nächte sind sichtbar (kein Betrag)
+    assert item.payout is not None
+    assert item.nights == 3
     assert item.reservations == 1
 
 

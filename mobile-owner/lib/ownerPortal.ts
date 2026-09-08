@@ -407,6 +407,11 @@ export type BlockRequest = {
   reason: string | null;
   // Personenzahl (0606); null = nicht angegeben.
   guests: number | null;
+  // Kinder als TEILMENGE von `guests`, nicht zusätzlich (0608). Haustiere als
+  // ANZAHL, weil die Gebühr je Tier anfällt. null = nicht gefragt worden —
+  // das ist etwas anderes als 0 (Wurzel 4).
+  children: number | null;
+  pets: number | null;
   decided_at: string | null;
   decision_note: string | null;
   created_at: string | null;
@@ -436,6 +441,28 @@ export async function getBestellbareLeistungen(
   );
 }
 
+/**
+ * Eine Buchung an einem eigenen Objekt auf andere Tage ziehen (08.09.2026).
+ *
+ * `bis` ist der ABREISETAG und exklusiv — die letzte belegte Nacht ist der Tag
+ * davor. Dieselbe Zählung wie im Buchungsblatt; wer den Abreisetag mitbelegt,
+ * nimmt der nächsten Buchung die Anreise weg.
+ *
+ * Das Objekt wechselt NICHT: der Server nimmt es aus der Buchung selbst. Ein
+ * Objektwechsel ist eine Umbuchung mit Gastkommunikation und bleibt bei der
+ * Verwaltung.
+ */
+export async function moveReservation(
+  reservationId: string,
+  von: string,
+  bis: string,
+): Promise<Result<null>> {
+  return call(`/public-portal/reservations/${reservationId}/move`, {
+    method: "POST",
+    body: { check_in: von, check_out: bis },
+  });
+}
+
 export async function createBlockRequest(input: {
   property_id: string;
   start_date: string;
@@ -445,6 +472,10 @@ export async function createBlockRequest(input: {
   bestellte_leistungen?: string[];
   /** Personenzahl des Aufenthalts (0606), 1–50. Weggelassen = nicht angegeben. */
   guests?: number;
+  /** Kinder, Teilmenge von `guests` (0608), 0–20. */
+  children?: number;
+  /** Anzahl mitgebrachter Tiere (0608), 0–10 — steuert Reinigung und `pet_fee`. */
+  pets?: number;
   /** Notizen an die Verwaltung (max. 2000 Zeichen). */
   reason?: string;
 }): Promise<Result<BlockRequest>> {
@@ -601,6 +632,12 @@ export type BelegZeile = {
   total_payout: number;
   owner_payout: number | null;
   owner_payout_converted: number | null;
+  /** Gastpreis MINUS Portal-Abzug — der Ausgangspunkt der Kette (§4.2: der
+   *  Eigentümer sieht nicht den Gastpreis, aber seinen ersten Summanden). */
+  auszahlungsbasis: number | null;
+  /** Basis der Verwaltungsprovision, nach provisionsfreien Gebühren. Für den
+   *  Eigentümer maskiert (Betriebssicht), darum oft null. */
+  bemessungsgrundlage: number | null;
   portal_provision: number | null;
   verwaltungsprovision: number | null;
   pauschale: number | null;

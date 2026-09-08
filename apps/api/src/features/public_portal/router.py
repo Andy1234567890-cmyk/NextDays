@@ -44,6 +44,7 @@ from .schemas import (
     PortalSeasonList,
     PortalStatementList,
     PortalStatisticsResponse,
+    ReservationMoveRequest,
     SliceHealth,
 )
 from .schemas_aufgaben import PortalTaskItem, PortalTaskList
@@ -72,6 +73,10 @@ router = APIRouter(prefix="/public-portal", tags=["public_portal"])
 _VIEW = require_permission(Capability.VIEW_CALENDAR)  # noqa: N816  pylint: disable=invalid-name
 _REPORTS = require_permission(Capability.VIEW_OWNER_REPORTS)  # noqa: N816  pylint: disable=invalid-name
 _BLOCK = require_permission(Capability.REQUEST_BLOCK)  # noqa: N816  pylint: disable=invalid-name
+# Eigenes Recht, NICHT `_BLOCK`: eine fremde Gastbuchung umzulegen ist etwas
+# anderes, als sich selbst Tage zu wünschen — und `REQUEST_BLOCK` tragen auch
+# Familienmitglieder.
+_MOVE = require_permission(Capability.MOVE_OWN_RESERVATION)  # noqa: N816  pylint: disable=invalid-name
 _METER = require_permission(Capability.ADD_METER_READING)  # noqa: N816  pylint: disable=invalid-name
 # Eigene Aufgaben (03.09.2026): dasselbe Recht wie im Tasks-Slice. Der
 # Eigentümer trägt es seit heute; den Objekt-/Zuweisungs-Scope erzwingt der
@@ -188,6 +193,29 @@ def finanzen(  # noqa: PLR0913 — Query-Parameter der Finanzübersicht
             event=event,
             compare=compare,
         )
+    except PortalError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/reservations/{reservation_id}/move",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def move_reservation(
+    reservation_id: str,
+    req: ReservationMoveRequest,
+    service: PublicPortalServiceDep,
+    ctx: Annotated[AuthContext, Depends(_MOVE)],
+) -> None:
+    """Eine Buchung an SEINEM Objekt auf andere Tage ziehen (08.09.2026).
+
+    Drag-and-Drop im Kalender der Eigentümer-App. Gerechnet wird mit der Kette
+    des Reservations-Slices (alte Nächte freigeben, neue belegen, Portale
+    nachziehen); den Objekt-Scope erzwingt der Service, nicht diese Route
+    (Wurzel 9).
+    """
+    try:
+        service.move_reservation(ctx, reservation_id, req)
     except PortalError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
