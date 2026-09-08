@@ -2919,3 +2919,85 @@ def test_listing_rows_haben_zeile_fuer_objekt_ohne_buchung() -> None:
     assert je["p-2"].owner_payout == 0.0
     assert je["p-2"].payout == 0.0
 
+
+
+# ----------------------------------------------------------------------
+# Der Override ersetzt den SATZ, nicht die Rechnung (08.09.2026)
+# ----------------------------------------------------------------------
+# Anlass: eine echte Abrechnung des Betriebs (René Dahl Nielsen, FeWo Vidstrup
+# Hygge, 28.07.–31.08.2026). Der Editor hatte den nur ANGEZEIGTEN Stammdaten-
+# satz beim Speichern als `commission_pct` mitgeschickt; damit galt er als
+# statement-weiter Override. Der Override zweigte VOR der Kette ab und rechnete
+# `payout × (100−pct)/100`. Folgen im Beleg, alle drei zugleich:
+#   * 7.237,82 DKK statt 4.020,58 DKK Auszahlung — 3.197,24 DKK zu viel, weil
+#     80 % des GASTPREISES ausgezahlt wurden: auch 80 % der Reinigungsgebühr,
+#     die dem Betrieb gehört, und ohne die 16,5 %, die Booking.com einbehält;
+#   * in der Provisionsspalte stand „—", der Posten fehlte ganz. Eine Zahl ohne
+#     Herleitung, die niemand nachrechnen kann;
+#   * dazu der Satz „Das Portal hat keine Gebühren gemeldet" — eine Falsch-
+#     aussage: Reinigung und Resort standen in den Stammdaten.
+# Zum Override gab es KEINEN Test; deshalb fiel es erst am Beleg auf.
+
+
+def test_override_ersetzt_nur_den_satz_nicht_die_kette() -> None:
+    """Mit Override läuft dieselbe Kette — nur mit einem anderen Prozentsatz."""
+    ohne = _zeile(_gen(_svc(_tables_volle_kette())), "r-2")
+    mit = _zeile(_gen(_svc(_tables_volle_kette()), commission_pct=10), "r-2")
+
+    # Jeder Posten der Kette ist da, nicht None: das ist der Kern.
+    assert mit.auszahlungsbasis == ohne.auszahlungsbasis
+    assert mit.bemessungsgrundlage == ohne.bemessungsgrundlage
+    assert mit.verwaltungsprovision is not None
+    # Halber Satz → halbe Provision, alles andere unverändert.
+    assert mit.verwaltungsprovision == ohne.verwaltungsprovision / 2
+    assert mit.provisions_pct == 10.0
+    assert mit.provision_quelle == "override"
+    # Die Gebühren-Aufteilung bleibt: Reinigung beim Betrieb, Resort beim
+    # Eigentümer — vorher fehlte die Aufstellung mit dem Override komplett.
+    assert {(g.art, g.gehoert_zu) for g in mit.gebuehren} == {
+        (g.art, g.gehoert_zu) for g in ohne.gebuehren
+    }
+    # Und der Eigentümer bekommt MEHR, weil die Provision kleiner ist — aber
+    # nicht den Portal-Anteil und nicht die Gebühren des Betriebs.
+    assert mit.owner_payout > ohne.owner_payout
+    assert mit.owner_payout < mit.auszahlungsbasis
+
+
+def test_override_zahlt_nicht_den_gastpreis_aus() -> None:
+    """Die Flachformel `payout × 0,8` darf NIE wieder das Ergebnis sein."""
+    z = _zeile(_gen(_svc(_tables_volle_kette()), commission_pct=20), "r-2")
+    assert z.total_payout is not None
+    assert z.owner_payout != pytest.approx(z.total_payout * 0.8), (
+        "Der Override rechnet wieder die Flachformel statt der Vertragskette"
+    )
+    # Gegenprobe, dass die Kette wirklich lief: die Reinigung des Betriebs
+    # bleibt draußen, also liegt die Bemessung unter dem Gastpreis.
+    assert z.bemessungsgrundlage is not None
+    assert z.total_price is not None
+    assert z.bemessungsgrundlage < z.total_price
+
+
+def test_firmenname_des_eigentuemers_steht_im_kopf() -> None:
+    """Ist der Eigentümer eine Gesellschaft, gehört SIE auf den Beleg (0610).
+
+    Anlass (Betrieb, 08.09.2026): *„wenn eine Firmenadresse hinterlegt ist,
+    warum wird sie nicht angezeigt"*. `owners.company` war gefüllt
+    („Intentia ApS"), der Beleg zeigte aber nur `owners.name` — die
+    Privatperson. Adresse, Moms-Nr. und E-Mail waren die der Firma, nur der
+    Name nicht. Auf einem Dokument mit Moms-Nummer ist der Leistungsempfänger
+    die Gesellschaft. Beim AUSSTELLER las der Code `legal_name` längst
+    richtig; beim Eigentümer fehlte das Gegenstück.
+    """
+    svc = _svc()
+    svc._db.tables["owners"][0]["company"] = "Intentia ApS"  # noqa: SLF001
+    st = _gen(svc)
+    assert st.header.owner_company == "Intentia ApS"
+    # Der Name bleibt daneben stehen: die Person ist der Ansprechpartner.
+    assert st.header.owner_name == "Max Owner"
+
+
+def test_privatperson_hat_keinen_firmennamen() -> None:
+    """Ohne `company` bleibt das Feld leer — kein Rückfall auf den Namen."""
+    st = _gen(_svc())
+    assert st.header.owner_company is None
+    assert st.header.owner_name == "Max Owner"

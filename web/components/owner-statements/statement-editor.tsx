@@ -281,7 +281,19 @@ export function StatementEditor({
         })
       : await updateStatement(st.id, {
           header: st.header,
-          commission_pct: st.commission_pct,
+          // Wie oben beim Erzeugen (Zeile 275): NUR ein vom Nutzer manuell
+          // gesetzter Satz darf als statement-weiter Override gehen.
+          // `st.commission_pct` ist sonst bloß der ANGEZEIGTE Wert aus den
+          // Stammdaten (`_effective_pct`) — ihn ungeprüft mitzusenden hat ihn
+          // beim Speichern zum harten Override gemacht, und der Override-Zweig
+          // (zeilen.py:800) überspringt die GANZE Vertragskette: kein
+          // Portal-Abzug, keine Gebühren-Aufteilung, keine Pauschale, kein
+          // Provisionsausweis. Live bei einem Eigentümer mit drei Objekten:
+          // 7.237,82 DKK statt 4.020,58 DKK — 3.197,24 DKK zu viel, weil der
+          // Beleg 80 % vom Gastpreis auszahlte, inklusive der Reinigungs-
+          // gebühren des Betriebs und ohne die 16,5 %, die Booking.com
+          // einbehalten hatte. Im Beleg stand dabei GAR KEINE Provision.
+          commission_pct: commissionTouched ? st.commission_pct : null,
           basis: st.basis,
           reservation_statuses: st.reservation_statuses,
           period_from: st.period_from,

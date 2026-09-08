@@ -14,7 +14,7 @@ Zeile nur Summen heraus; „Gebühren +725,00" war eine Zahl ohne Herkunft.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 from typing import TYPE_CHECKING, Any
@@ -797,128 +797,136 @@ class ZeilenMixin:
             rechenregeln: common.Vertragsregeln | None = regeln
             if rechenregeln is None and pct is not None:
                 rechenregeln = common.Vertragsregeln(provisions_pct=_d(pct))
-            if override is None:
-                # VOLLE Kette wie im Eigentümer-Portal (0364): Gebühren in den
-                # Gastpreis, Portal-Abzug, provisionsfreie Gebühren aus der
-                # Bemessung, die des Eigentümers zu 100 % zurück. Rechnete die
-                # Abrechnung hier anders als der Kalender, stritten sich zwei
-                # Zahlen über dasselbe Geld — genau was `common` verhindert.
-                #
-                # OHNE Vertrag (und ohne Altspalte) läuft die Zerlegung
-                # trotzdem: Gastpreis, Gebühren und Portal-Abzug hängen nicht
-                # am Vertrag. Bis 02.09.2026 zeigte eine solche Zeile den
-                # nackten Übernachtungsbetrag als Gastpreis und „Keine
-                # Gebühren an dieser Buchung" — obwohl Reinigung und Resort in
-                # den Stammdaten standen. Nur der Eigentümer-Anteil ist ohne
-                # Vertrag unbestimmt, und die Zeile sagt, WARUM: Vertrag fehlt
-                # ganz („provision") oder beginnt erst nach der Abreise
-                # („provision_zeitraum" + Datum).
-                #
-                # EINE UNBERECHENBARE ZEILE DARF DIE ABRECHNUNG NICHT KIPPEN
-                # (Wurzel 5): fehlt der Portal-Satz für einen Kanal oder ist eine
-                # Gebührenart nicht zugeordnet, warf die Kette bis hierher durch
-                # bis in den Router — `POST /owner-statements/preview` antwortete
-                # mit 500, und der Betrieb sah eine kaputte Seite statt der
-                # Auskunft, welche Einstellung fehlt. Live am 11.08.2026
-                # ausgelöst, weil `portal_abzugssaetze` noch leer ist.
-                #
-                # Die Zeile bleibt deshalb mit allem drin, was FESTSTEHT (Nächte,
-                # Gastpreis, Kanal); nur die abhängige Auszahlung wird `None` und
-                # trägt ihren Grund. Dasselbe Verhalten wie im Bericht
-                # (`owner_reporting.auswertung`), damit nicht zwei Ansichten
-                # denselben Datenmangel verschieden behandeln. Eine 0 stünde für
-                # „der Eigentümer bekommt nichts", die Zeile weglassen ergäbe
-                # eine zu niedrige, aber unverdächtige Summe (Wurzel 4).
-                owner_payout = None
-                if rechenregeln is None:
-                    # Der Vertrag fehlt — das ist der ERSTE Handgriff, egal ob
-                    # die Zerlegung darunter noch an etwas anderem scheitert.
-                    # Ein „Portal-Satz fehlt" statt „Vertrag fehlt" schickte
-                    # den Betrieb erst in die Abrechnungsregeln und dann doch
-                    # zum Vertrag.
-                    vertrag_beginnt_am = vertragslage.naechster_beginn.get(rid)
-                    grund = (
-                        "provision_zeitraum"
-                        if vertrag_beginnt_am is not None
-                        else "provision"
-                    )
-                    detail = (
-                        f"Objekt {listing_id}: Abrechnungsvertrag beginnt erst am "
-                        f"{vertrag_beginnt_am.isoformat()}."
-                        if vertrag_beginnt_am is not None
-                        else f"Objekt {listing_id}: kein Abrechnungsvertrag "
-                        "und kein Provisionssatz hinterlegt."
-                    )
-                    log.warning(
-                        "abrechnung_zeile_ohne_vertrag",
-                        reservation_id=rid,
-                        property_id=listing_id,
-                        stichtag=r.get("check_out"),
-                        naechster_vertragsbeginn=(
-                            vertrag_beginnt_am.isoformat()
-                            if vertrag_beginnt_am
-                            else None
-                        ),
-                        grund=grund,
-                    )
-                try:
-                    zerlegung = self._zerlegung_einer_buchung(
-                        r,
-                        kontext=kontext,
-                        portal_saetze=portal_saetze,
-                    )
-                    # Der GASTPREIS ist der Bruttoumsatz inkl. Gebühren —
-                    # vorher stand hier nur Übernachtung + Extras, also weniger
-                    # als der Gast gezahlt hat.
-                    price = zerlegung.brutto
-                    if rechenregeln is not None:
-                        kette = self._kette_aus_zerlegung(
-                            zerlegung,
-                            regeln=rechenregeln,
-                            addon_total=addon_total,
-                            currency=src_currency,
-                        )
-                except PayoutUnbekannt as exc:
-                    if regeln is None and pct is not None:
-                        # ALTSPALTE, Kette nicht rechenbar (kein Portal-Satz,
-                        # Gebührenart nicht zugeordnet): Bestandsschutz — der
-                        # Satz gilt wie vor 02.09.2026 auf den Payout, statt
-                        # dass eine bis dahin berechenbare Zeile plötzlich leer
-                        # steht. Ohne Portal-Satz gibt es auch keine Gebühren-
-                        # Zerlegung; die Zeile zeigt dann, was sie zeigen kann.
-                        owner_payout = common.owner_payout(payout, pct)
-                        log.info(
-                            "abrechnung_altspalte_ohne_kette",
-                            reservation_id=rid,
-                            grund=exc.grund,
-                            detail=exc.message,
-                        )
-                    else:
-                        # Ohne Vertrag bleibt der Vertrags-Grund stehen (erster
-                        # Handgriff); der zweite Mangel steht im Log.
-                        if grund is None:
-                            grund = exc.grund
-                            detail = exc.message
-                        log.warning(
-                            "abrechnung_zeile_unbestimmt",
-                            reservation_id=rid,
-                            grund=exc.grund,
-                            detail=exc.message,
-                            vertrag_fehlt=rechenregeln is None,
-                        )
-                else:
-                    if kette is not None and rechenregeln is not None:
-                        owner_payout = kette.netto
-                        # Für die ANZEIGE (`commission_pct`) bleibt der Satz
-                        # maßgeblich, mit dem GERECHNET wurde — Vertrag oder
-                        # Altspalte; nie ein Satz aus einer anderen Spalte.
-                        pct = rechenregeln.provisions_pct
-            else:
-                owner_payout = (
-                    common.owner_payout(payout, pct) if pct is not None else None
+            # Ein Override ersetzt den SATZ, nicht die Rechnung. Bis 08.09.2026
+            # zweigte er vor der Kette ab und rechnete `payout × (100−pct)/100`
+            # — ohne Portal-Abzug, ohne Gebühren-Aufteilung, ohne Pauschale und
+            # ohne Provisionsausweis. Live bei einem Eigentümer: 7.237,82 DKK
+            # statt 4.020,58 DKK. Der Beleg zahlte 80 % des GASTPREISES aus,
+            # also auch 80 % der Reinigungsgebühr, die dem Betrieb gehört, und
+            # verschenkte die 16,5 %, die Booking.com längst einbehalten hatte.
+            # In der Provisionsspalte stand dabei „—": eine Zahl ohne
+            # Herleitung, die niemand nachrechnen kann.
+            if rechenregeln is not None and override is not None:
+                rechenregeln = replace(
+                    rechenregeln, provisions_pct=_d(override), gueltig_ab=None
                 )
-                if owner_payout is None:
-                    grund = "provision"
+            # VOLLE Kette wie im Eigentümer-Portal (0364): Gebühren in den
+            # Gastpreis, Portal-Abzug, provisionsfreie Gebühren aus der
+            # Bemessung, die des Eigentümers zu 100 % zurück. Rechnete die
+            # Abrechnung hier anders als der Kalender, stritten sich zwei
+            # Zahlen über dasselbe Geld — genau was `common` verhindert.
+            #
+            # OHNE Vertrag (und ohne Altspalte) läuft die Zerlegung
+            # trotzdem: Gastpreis, Gebühren und Portal-Abzug hängen nicht
+            # am Vertrag. Bis 02.09.2026 zeigte eine solche Zeile den
+            # nackten Übernachtungsbetrag als Gastpreis und „Keine
+            # Gebühren an dieser Buchung" — obwohl Reinigung und Resort in
+            # den Stammdaten standen. Nur der Eigentümer-Anteil ist ohne
+            # Vertrag unbestimmt, und die Zeile sagt, WARUM: Vertrag fehlt
+            # ganz („provision") oder beginnt erst nach der Abreise
+            # („provision_zeitraum" + Datum).
+            #
+            # EINE UNBERECHENBARE ZEILE DARF DIE ABRECHNUNG NICHT KIPPEN
+            # (Wurzel 5): fehlt der Portal-Satz für einen Kanal oder ist eine
+            # Gebührenart nicht zugeordnet, warf die Kette bis hierher durch
+            # bis in den Router — `POST /owner-statements/preview` antwortete
+            # mit 500, und der Betrieb sah eine kaputte Seite statt der
+            # Auskunft, welche Einstellung fehlt. Live am 11.08.2026
+            # ausgelöst, weil `portal_abzugssaetze` noch leer ist.
+            #
+            # Die Zeile bleibt deshalb mit allem drin, was FESTSTEHT (Nächte,
+            # Gastpreis, Kanal); nur die abhängige Auszahlung wird `None` und
+            # trägt ihren Grund. Dasselbe Verhalten wie im Bericht
+            # (`owner_reporting.auswertung`), damit nicht zwei Ansichten
+            # denselben Datenmangel verschieden behandeln. Eine 0 stünde für
+            # „der Eigentümer bekommt nichts", die Zeile weglassen ergäbe
+            # eine zu niedrige, aber unverdächtige Summe (Wurzel 4).
+            owner_payout = None
+            if rechenregeln is None:
+                # Der Vertrag fehlt — das ist der ERSTE Handgriff, egal ob
+                # die Zerlegung darunter noch an etwas anderem scheitert.
+                # Ein „Portal-Satz fehlt" statt „Vertrag fehlt" schickte
+                # den Betrieb erst in die Abrechnungsregeln und dann doch
+                # zum Vertrag.
+                vertrag_beginnt_am = vertragslage.naechster_beginn.get(rid)
+                grund = (
+                    "provision_zeitraum"
+                    if vertrag_beginnt_am is not None
+                    else "provision"
+                )
+                detail = (
+                    f"Objekt {listing_id}: Abrechnungsvertrag beginnt erst am "
+                    f"{vertrag_beginnt_am.isoformat()}."
+                    if vertrag_beginnt_am is not None
+                    else f"Objekt {listing_id}: kein Abrechnungsvertrag "
+                    "und kein Provisionssatz hinterlegt."
+                )
+                log.warning(
+                    "abrechnung_zeile_ohne_vertrag",
+                    reservation_id=rid,
+                    property_id=listing_id,
+                    stichtag=r.get("check_out"),
+                    naechster_vertragsbeginn=(
+                        vertrag_beginnt_am.isoformat()
+                        if vertrag_beginnt_am
+                        else None
+                    ),
+                    grund=grund,
+                )
+            try:
+                zerlegung = self._zerlegung_einer_buchung(
+                    r,
+                    kontext=kontext,
+                    portal_saetze=portal_saetze,
+                )
+                # Der GASTPREIS ist der Bruttoumsatz inkl. Gebühren —
+                # vorher stand hier nur Übernachtung + Extras, also weniger
+                # als der Gast gezahlt hat.
+                price = zerlegung.brutto
+                if rechenregeln is not None:
+                    kette = self._kette_aus_zerlegung(
+                        zerlegung,
+                        regeln=rechenregeln,
+                        addon_total=addon_total,
+                        currency=src_currency,
+                    )
+            except PayoutUnbekannt as exc:
+                if regeln is None and pct is not None:
+                    # ALTSPALTE, Kette nicht rechenbar (kein Portal-Satz,
+                    # Gebührenart nicht zugeordnet): Bestandsschutz — der
+                    # Satz gilt wie vor 02.09.2026 auf den Payout, statt
+                    # dass eine bis dahin berechenbare Zeile plötzlich leer
+                    # steht. Ohne Portal-Satz gibt es auch keine Gebühren-
+                    # Zerlegung; die Zeile zeigt dann, was sie zeigen kann.
+                    owner_payout = common.owner_payout(payout, pct)
+                    log.info(
+                        "abrechnung_altspalte_ohne_kette",
+                        reservation_id=rid,
+                        grund=exc.grund,
+                        detail=exc.message,
+                    )
+                else:
+                    # Ohne Vertrag bleibt der Vertrags-Grund stehen (erster
+                    # Handgriff); der zweite Mangel steht im Log.
+                    if grund is None:
+                        grund = exc.grund
+                        detail = exc.message
+                    log.warning(
+                        "abrechnung_zeile_unbestimmt",
+                        reservation_id=rid,
+                        grund=exc.grund,
+                        detail=exc.message,
+                        vertrag_fehlt=rechenregeln is None,
+                    )
+            else:
+                if kette is not None and rechenregeln is not None:
+                    owner_payout = kette.netto
+                    # Für die ANZEIGE (`commission_pct`) bleibt der Satz
+                    # maßgeblich, mit dem GERECHNET wurde — Override, Vertrag
+                    # oder Altspalte; nie ein Satz aus einer anderen Spalte.
+                    # `rechenregeln` trägt oben schon den Override, falls einer
+                    # gesetzt ist, also stimmt beides zwangsläufig überein.
+                    pct = rechenregeln.provisions_pct
 
             # Miteigentum (0601): der Anteil DIESES Eigentümers an DIESEM
             # Objekt. Er greift hier — nach allen drei Wegen, auf denen
