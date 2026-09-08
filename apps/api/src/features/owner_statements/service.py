@@ -1967,7 +1967,14 @@ class OwnerStatementsService(ZeilenMixin):
         )
 
         today = date.today()
-        number = self._next_invoice_number(tenant_id, "owner_statement", "RE-")
+        # Präfix "EA-" (Eigentümer-Abrechnung), NICHT "RE-": dies ist keine
+        # Rechnung, sondern Rechenschaft über fremdes Geld. Der Kreis
+        # `owner_statement` teilte sich das Präfix mit dem Kreis `invoice`,
+        # kannte dessen Stand aber nicht — live waren RE-0003/0004/0005 dadurch
+        # doppelt belegt: je einmal Gastrechnung, je einmal Eigentümer-
+        # Abrechnung. Die Nummer bleibt für Storno-Kette und Dateiname, sie
+        # bezeichnet jetzt aber nur noch EIN Dokument.
+        number = self._next_invoice_number(tenant_id, "owner_statement", "EA-")
         self._db.table("owner_statements").update(
             {
                 "status": "finalized",

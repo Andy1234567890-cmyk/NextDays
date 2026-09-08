@@ -550,19 +550,16 @@ export function buildStatementHtml(
     </table>`;
   }
 
-  // Steuer: die Verwaltungsprovision ist die Leistung des Betriebs an den
-  // Eigentümer — die Umsatzsteuer darauf gehört auf SEINEN Beleg. Erst nach
-  // dem Finalisieren gesetzt (`tax.gross`), sonst leer.
-  const steuerZeilen: string[] = [];
-  if (!auszug && st.tax.gross) {
-    steuerZeilen.push(row(t(tx, "vatNet"), fmt(st.tax.net, cur, locale)));
-    steuerZeilen.push(
-      st.tax.category === "S"
-        ? row(`${t(tx, "vat")} (${st.tax.rate}%)`, fmt(st.tax.tax, cur, locale))
-        : row(t(tx, "vat"), esc(st.tax.exemption_reason) || "0,00"),
-    );
-    steuerZeilen.push(row(t(tx, "vatGross"), fmt(st.tax.gross, cur, locale), "strong"));
-  }
+  // KEIN Steuerausweis und KEINE Rechnungsnummer: dies ist eine
+  // Eigentümer-Abrechnung, keine Provisionsabrechnung (Ansage des Betriebs,
+  // 08.09.2026). Der Betrieb legt hier Rechenschaft über fremdes Geld ab — der
+  // Eigentümer erbringt ihm keine Leistung, es gibt also nichts zu berechnen.
+  // Bis hierher trug der Beleg beides: unten stand die Verwaltungsprovision mit
+  // Umsatzsteuer, und der Kopf trug eine Nummer aus dem Kreis `owner_statement`
+  // — der mit dem Kreis `invoice` dasselbe Präfix `RE-` teilte. Live waren
+  // dadurch RE-0003/0004/0005 doppelt belegt: je einmal Gastrechnung, je einmal
+  // Eigentümer-Abrechnung. Eine Nummer, die zwei verschiedene Dokumente
+  // bezeichnet, identifiziert keines von beiden (momsbekendtgørelsen § 58).
 
   return `<!doctype html><html lang="${esc(locale)}"><head><meta charset="utf-8"><style>
     * { box-sizing: border-box; }
@@ -603,9 +600,8 @@ export function buildStatementHtml(
     <div class="head">
       <div>
         <h1>${title}</h1>
-        ${auszug ? `<div class="meta" style="margin-bottom:0">${t(tx, "excerptOf")} ${belegTitel}${h.invoice_number ? ` ${t(tx, "invoiceNo")} ${esc(h.invoice_number)}` : ""}</div>` : ""}
+        ${auszug ? `<div class="meta" style="margin-bottom:0">${t(tx, "excerptOf")} ${belegTitel}</div>` : ""}
         <div class="meta" style="margin-bottom:0">
-          ${!auszug && h.invoice_number ? `${t(tx, "invoiceNo")} ${esc(h.invoice_number)} · ` : ""}
           ${t(tx, "period")} ${fmtDatum(st.period_from, locale)} – ${fmtDatum(st.period_to, locale)}
           ${st.invoice_date ? ` · ${fmtDatum(st.invoice_date, locale)}` : ""}
         </div>
@@ -646,10 +642,8 @@ export function buildStatementHtml(
     ${abzugBlock}
 
     <div class="totals">${summenZeilen.join("")}</div>
-    ${steuerZeilen.length ? `<div class="betrieb">${steuerZeilen.join("")}</div>` : ""}
     ${auszug ? `<p class="meta" style="margin-top:24px">${t(tx, "excerptNote")}</p>` : ""}
 
-    ${st.tax.exemption_reason ? `<p class="meta" style="margin-top:24px">${esc(st.tax.exemption_reason)}</p>` : ""}
     ${h.notes ? `<p class="meta">${esc(h.notes)}</p>` : ""}
   </body></html>`;
 }

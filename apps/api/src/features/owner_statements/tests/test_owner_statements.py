@@ -846,7 +846,7 @@ def test_finalize_assigns_invoice_number_and_tax() -> None:
     st = _gen(svc)
     fin = _finalize(svc, st.id)
     # Fortlaufende Nummer vergeben + Datum gesetzt.
-    assert fin.header.invoice_number == "RE-0001"
+    assert fin.header.invoice_number == "EA-0001"
     assert fin.invoice_date is not None
     # USt-pflichtig (kein Kleinunternehmer, gleiches Land) → Kategorie S, 19 %.
     assert fin.tax.category == "S"
@@ -1560,7 +1560,7 @@ def _statement_zeile(tables: dict[str, list[dict]], **over: object) -> dict:
         "tenant_id": "t-1", "owner_id": "o-1", "owner_name": "Anna Owner",
         "period_from": "2026-01-01", "period_to": "2026-01-31",
         "status": "finalized", "kind": "invoice", "owner_payout": 500,
-        "pm_payout": 100, "currency": "EUR", "invoice_number": "RE-0009",
+        "pm_payout": 100, "currency": "EUR", "invoice_number": "EA-0009",
         "created_at": "2026-02-01T00:00:00Z", "basis": "check_in",
         "reservation_statuses": ["confirmed"], "commission_pct": 20,
     }
@@ -1670,7 +1670,7 @@ def test_finalize_mit_richtiger_bestaetigung_geht_durch() -> None:
     st = _gen(svc)
     fin = _finalize(svc, st.id)
     assert fin.status == "finalized"
-    assert fin.header.invoice_number == "RE-0001"
+    assert fin.header.invoice_number == "EA-0001"
 
 
 def test_finalize_bereits_festgeschrieben_bleibt_idempotent() -> None:
@@ -2589,7 +2589,7 @@ def test_finalize_lehnt_zweite_rechnung_ueber_dieselben_buchungen_ab() -> None:
     with pytest.raises(StatementError) as exc:
         _finalize(svc, b.id)
     assert exc.value.status_code == 409
-    assert "RE-" in exc.value.message
+    assert "EA-" in exc.value.message
 
 
 def test_finalize_disjunkte_objekte_im_selben_zeitraum_gehen_durch() -> None:
