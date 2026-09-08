@@ -117,14 +117,13 @@ class WhatsAppClient:
         settings = get_settings()
         self._token = access_token or settings.whatsapp_access_token.get_secret_value()
         self._phone_number_id = phone_number_id or settings.whatsapp_phone_number_id
-        self._waba_id = waba_id or settings.whatsapp_waba_id
-        # Trägt dieser Client die WABA EINES Betriebs oder die global
-        # konfigurierte? Der Unterschied entscheidet, ob zwischengespeichert
-        # werden darf: der Fallback oben ist für zwei Betriebe ohne eigene
-        # `waba_id` derselbe Wert, und ein Cache-Schlüssel daraus wäre für
-        # beide identisch — der zweite bekäme die Vorlagen des ersten
-        # (Wurzel 3: Scope nie aus einem Ersatzwert ableiten).
-        self._waba_ist_eigen = bool(waba_id)
+        # KEIN Fallback auf `settings.whatsapp_waba_id` (Wurzel 4): die WABA
+        # bestimmt, GEGEN WELCHEN BETRIEB `list/create/delete_template` läuft.
+        # Ein Betrieb ohne eigene WABA hätte sonst die Vorlagen eines fremden
+        # gelesen, angelegt und gelöscht. Fehlt sie, schlägt die
+        # Template-Verwaltung fehl (`_require_waba`, 503) — das ist die
+        # richtige Antwort, kein Ersatzwert.
+        self._waba_id = waba_id
         self._version = graph_version or settings.whatsapp_graph_version
         self._timeout = timeout
         # Nutzungsstand des letzten Graph-Aufrufs, für den Warn-Log und die
@@ -318,15 +317,13 @@ class WhatsAppClient:
         return vorlagen
 
     def _cache_schluessel(self) -> str | None:
-        """Der Cache-Schlüssel dieses Clients — oder ``None``, wenn nicht gecacht
-        werden darf.
+        """Der Cache-Schlüssel dieses Clients — die WABA des Betriebs.
 
-        Nur eine AUSDRÜCKLICH übergebene WABA taugt als Schlüssel. Steht hier
-        die global konfigurierte (weil dem Konto die `waba_id` fehlt), teilen
-        sich alle solchen Betriebe einen Schlüssel — dann lieber jedes Mal
-        fragen als fremde Vorlagen ausliefern.
+        Seit die WABA keinen Fallback mehr hat, ist jede vorhandene die eigene:
+        der Schlüssel trennt die Betriebe damit von selbst. Ohne WABA wird gar
+        nicht erst abgefragt (`_require_waba`).
         """
-        if not self._waba_ist_eigen:
+        if not self._waba_id:
             return None
         return str(self._waba_id)
 

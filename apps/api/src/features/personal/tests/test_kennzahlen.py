@@ -15,7 +15,16 @@ from src.features.personal.kennzahlen import KennzahlenService
 
 from ._fake import FakeDB, basis_tabellen, ctx
 
-MONTAG = date(2026, 9, 7)
+# Der Anker liegt bewusst in der ZUKUNFT und wandert mit der Uhr mit.
+# `_tag_bauen` rechnet Vergangenheit gegen Ist und Zukunft gegen Plan
+# (Gastromatic-Regel). Ein fest verdrahtetes Datum kippt darum still in den
+# anderen Zweig, sobald es verstreicht: dieselben Tests waren mit
+# `date(2026, 9, 7)` bis zum 07.09.2026 grün und prüften ab dem 08.09. eine
+# andere Rechnung als ihr Name sagt. Diese Suite stellt Plan-Werte auf
+# (veröffentlichte Schichten, niemand hat gestempelt) — sie gehört in die
+# Zukunft.
+_HEUTE = datetime.now(UTC).date()
+MONTAG = _HEUTE + timedelta(days=7 - _HEUTE.weekday())
 SONNTAG = MONTAG + timedelta(days=6)
 
 

@@ -1064,14 +1064,39 @@ def test_unveraenderter_zustand_schreibt_nur_den_stempel(monkeypatch) -> None:  
     assert datetime.now(UTC) - geprueft < timedelta(minutes=1)
 
 
+def test_ohne_eigene_waba_keine_template_verwaltung() -> None:
+    """Ohne eigene WABA gibt es keine Vorlagen — auch nicht die eines fremden.
+
+    Die WABA bestimmt, GEGEN WELCHEN BETRIEB `list/create/delete_template`
+    laeuft. Frueher fiel der Client auf `settings.whatsapp_waba_id` zurueck:
+    ein Betrieb ohne eigene WABA las, legte an und LOESCHTE damit die Vorlagen
+    des global konfigurierten Betriebs. Fehlt die WABA, ist 503 die richtige
+    Antwort, kein Ersatzwert (Wurzel 4 + Wurzel 3).
+
+    Der Test nennt die Zugangsdaten vollstaendig selbst und haengt an keiner
+    Umgebungsvariablen — genau daran ist er zuvor in der CI zerbrochen, waehrend
+    er lokal aus der `.env` gespeist wurde.
+    """
+    ohne = WhatsAppClient(access_token="token_a", phone_number_id="p_a", waba_id=None)
+    assert ohne.can_manage_templates is False
+    for aufruf in (
+        ohne.list_templates,
+        lambda: ohne.create_template({"name": "x"}),
+        lambda: ohne.delete_template("x"),
+    ):
+        with pytest.raises(WhatsAppError) as fehler:
+            aufruf()
+        assert fehler.value.status_code == 503
+
+
 def test_cache_trennt_die_mandanten(monkeypatch) -> None:  # noqa: ANN001
     """Der Zwischenstand darf NIE Vorlagen eines fremden Betriebs ausliefern.
 
-    Der Fehler, den dieser Test festhaelt: `WhatsAppClient` faellt bei fehlender
-    `waba_id` auf die global konfigurierte zurueck. Der Cache-Schluessel erbte
-    diesen Fallback, und zwei Betriebe ohne eigene `waba_id` landeten unter
-    DEMSELBEN Schluessel — der zweite bekam die Vorlagen des ersten (Wurzel 3:
-    Scope serverseitig erzwingen, nicht aus einem Ersatzwert ableiten).
+    Zwei Betriebe, jeder mit EIGENER WABA: der Cache-Schluessel muss sie
+    trennen. Vor dem Fix trugen beide Clients dieselbe WABA aus den Settings
+    und landeten unter demselben Schluessel — der zweite bekam die Vorlagen des
+    ersten (Wurzel 3: Scope serverseitig erzwingen, nie aus einem Ersatzwert
+    ableiten).
     """
     ausgeliefert: list[str] = []
 
@@ -1084,9 +1109,8 @@ def test_cache_trennt_die_mandanten(monkeypatch) -> None:  # noqa: ANN001
 
     monkeypatch.setattr(wa_client_modul.httpx, "request", _je_token)
 
-    # Beide Betriebe OHNE eigene waba_id — genau der Fall, der kollidierte.
-    a = WhatsAppClient(access_token="token_a", phone_number_id="p_a", waba_id=None)
-    b = WhatsAppClient(access_token="token_b", phone_number_id="p_b", waba_id=None)
+    a = WhatsAppClient(access_token="token_a", phone_number_id="p_a", waba_id="waba_a")
+    b = WhatsAppClient(access_token="token_b", phone_number_id="p_b", waba_id="waba_b")
 
     liste_a = a.list_templates()
     liste_b = b.list_templates()
