@@ -7,38 +7,51 @@
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 
+import { useT } from "@/contexts/SprachContext";
 import { Blatt, BlattGruppe, BlattOption, BlattZeile } from "@/components/ui/Blatt";
 import { Btn } from "@/components/ui/kit";
 import {
-  DIAGRAMMTYP_LABEL,
-  EREIGNIS_HINWEIS,
-  EREIGNIS_LABEL,
+  DIAGRAMMTYP_SCHLUESSEL,
+  EREIGNIS_HINWEIS_SCHLUESSEL,
+  EREIGNIS_SCHLUESSEL,
   type FinanzEinstellungen as Einstellungen,
   type Diagrammtyp,
   type Ereignis,
   KENNZAHLEN,
-  KENNZAHL_HINWEIS,
-  KENNZAHL_LABEL,
+  KENNZAHL_HINWEIS_SCHLUESSEL,
+  KENNZAHL_SCHLUESSEL,
   type Kennzahl,
   STANDARD,
   type Vergleich,
-  VERGLEICH_LABEL,
+  VERGLEICH_SCHLUESSEL,
   istStandard,
   nebenkennzahlSetzen,
 } from "@/lib/finanz-einstellungen";
 import type { PortalProperty } from "@/lib/ownerPortal";
-import { ZEITRAUM_LABEL, type ZeitraumWahl } from "@/lib/zeitraum";
+import type { TextSchluessel } from "@/lib/sprache";
+import { ZEITRAUM_SCHLUESSEL, type ZeitraumWahl } from "@/lib/zeitraum";
 
 type Seite = null | "objekt" | "zeitraum" | "ereignis" | "vergleich" | "diagramm" | "typ" | "neben";
 
-const SEITEN_TITEL: Record<Exclude<Seite, null>, string> = {
-  objekt: "Objekte wählen",
-  zeitraum: "Zeitraum wählen",
-  ereignis: "Ereignis wählen",
-  vergleich: "Vergleichszeitraum wählen",
-  diagramm: "Diagramm-Kennzahl wählen",
-  typ: "Diagrammtyp wählen",
-  neben: "Weitere Kennzahlen",
+const SEITEN_TITEL: Record<Exclude<Seite, null>, TextSchluessel> = {
+  objekt: "finanz.objekteWaehlen",
+  zeitraum: "finanz.zeitraumWaehlen",
+  ereignis: "finanz.ereignisWaehlen",
+  vergleich: "finanz.vergleichWaehlen",
+  diagramm: "finanz.diagrammKennzahlWaehlen",
+  typ: "finanz.diagrammtypWaehlen",
+  neben: "finanz.nebenkennzahlen",
+};
+
+/** Der Gruppentitel je Auswahlseite — kürzer als der Seitentitel. */
+const GRUPPEN_TITEL: Record<Exclude<Seite, null>, TextSchluessel> = {
+  objekt: "finanz.objekte",
+  zeitraum: "finanz.zeitraum",
+  ereignis: "finanz.ereignis",
+  vergleich: "finanz.vergleich",
+  diagramm: "finanz.diagrammKennzahl",
+  typ: "finanz.diagrammtyp",
+  neben: "finanz.nebenkennzahlen",
 };
 
 export function FinanzEinstellungenBlatt({
@@ -54,6 +67,7 @@ export function FinanzEinstellungenBlatt({
   schliessen: () => void;
   uebernehmen: (e: Einstellungen) => void;
 }) {
+  const txt = useT();
   const [entwurf, setEntwurf] = useState<Einstellungen>(wert);
   const [seite, setSeite] = useState<Seite>(null);
 
@@ -67,9 +81,9 @@ export function FinanzEinstellungenBlatt({
   }, [offen, wert]);
 
   const objektName = (id: string | null) =>
-    id === null ? "Alle Objekte" : (objekte.find((o) => o.id === id)?.title ?? "Objekt");
+    id === null ? txt("finanz.alleObjekte") : (objekte.find((o) => o.id === id)?.title ?? "Objekt");
 
-  const titel = seite ? SEITEN_TITEL[seite] : "Finanz-Einstellungen";
+  const titel = txt(seite ? SEITEN_TITEL[seite] : "finanz.titel");
 
   return (
     <Blatt
@@ -81,40 +95,40 @@ export function FinanzEinstellungenBlatt({
       fuss={
         seite ? undefined : (
           <Btn variant="outline" block disabled={istStandard(entwurf)} onPress={() => setEntwurf(STANDARD)}>
-            Alles zurücksetzen
+            {txt("finanz.zuruecksetzen")}
           </Btn>
         )
       }
     >
       {seite === null ? (
         <View style={{ gap: 12, paddingBottom: 4 }}>
-          <BlattGruppe titel="Berichtseinstellungen">
-            <BlattZeile label="Objekte" wert={objektName(entwurf.propertyId)} auf={() => setSeite("objekt")} erste />
-            <BlattZeile label="Zeitraum" wert={ZEITRAUM_LABEL[entwurf.zeitraum]} auf={() => setSeite("zeitraum")} />
-            <BlattZeile label="Ereignis" wert={EREIGNIS_LABEL[entwurf.ereignis]} auf={() => setSeite("ereignis")} />
+          <BlattGruppe titel={txt("finanz.berichtseinstellungen")}>
+            <BlattZeile label={txt("finanz.objekte")} wert={objektName(entwurf.propertyId)} auf={() => setSeite("objekt")} erste />
+            <BlattZeile label={txt("finanz.zeitraum")} wert={txt(ZEITRAUM_SCHLUESSEL[entwurf.zeitraum])} auf={() => setSeite("zeitraum")} />
+            <BlattZeile label={txt("finanz.ereignis")} wert={txt(EREIGNIS_SCHLUESSEL[entwurf.ereignis])} auf={() => setSeite("ereignis")} />
             <BlattZeile
-              label="Vergleichszeitraum"
-              wert={entwurf.vergleich === "keiner" ? "Keiner" : "Vorjahr"}
+              label={txt("finanz.vergleich")}
+              wert={txt(entwurf.vergleich === "keiner" ? "finanz.vergleichKeiner" : "finanz.vorjahr")}
               auf={() => setSeite("vergleich")}
             />
           </BlattGruppe>
-          <BlattGruppe titel="Kennzahlen">
+          <BlattGruppe titel={txt("finanz.kennzahlen")}>
             <BlattZeile
-              label="Diagramm-Kennzahl"
-              wert={KENNZAHL_LABEL[entwurf.diagramm]}
+              label={txt("finanz.diagrammKennzahl")}
+              wert={txt(KENNZAHL_SCHLUESSEL[entwurf.diagramm])}
               auf={() => setSeite("diagramm")}
               erste
             />
-            <BlattZeile label="Diagrammtyp" wert={DIAGRAMMTYP_LABEL[entwurf.diagrammtyp]} auf={() => setSeite("typ")} />
-            <BlattZeile label="Weitere Kennzahlen" wert="2" auf={() => setSeite("neben")} />
+            <BlattZeile label={txt("finanz.diagrammtyp")} wert={txt(DIAGRAMMTYP_SCHLUESSEL[entwurf.diagrammtyp])} auf={() => setSeite("typ")} />
+            <BlattZeile label={txt("finanz.nebenkennzahlen")} wert="2" auf={() => setSeite("neben")} />
           </BlattGruppe>
         </View>
       ) : null}
 
       {seite === "objekt" ? (
-        <BlattGruppe titel="Objekte">
+        <BlattGruppe titel={txt(GRUPPEN_TITEL.objekt)}>
           <BlattOption
-            label="Alle Objekte"
+            label={txt("finanz.alleObjekte")}
             aktiv={entwurf.propertyId === null}
             auf={() => setEntwurf({ ...entwurf, propertyId: null })}
             erste
@@ -132,11 +146,11 @@ export function FinanzEinstellungenBlatt({
       ) : null}
 
       {seite === "zeitraum" ? (
-        <BlattGruppe titel="Zeitraum">
-          {(Object.keys(ZEITRAUM_LABEL) as ZeitraumWahl[]).map((z, i) => (
+        <BlattGruppe titel={txt(GRUPPEN_TITEL.zeitraum)}>
+          {(Object.keys(ZEITRAUM_SCHLUESSEL) as ZeitraumWahl[]).map((z, i) => (
             <BlattOption
               key={z}
-              label={ZEITRAUM_LABEL[z]}
+              label={txt(ZEITRAUM_SCHLUESSEL[z])}
               aktiv={entwurf.zeitraum === z}
               auf={() => setEntwurf({ ...entwurf, zeitraum: z })}
               erste={i === 0}
@@ -146,12 +160,12 @@ export function FinanzEinstellungenBlatt({
       ) : null}
 
       {seite === "ereignis" ? (
-        <BlattGruppe titel="Ereignis">
-          {(Object.keys(EREIGNIS_LABEL) as Ereignis[]).map((e, i) => (
+        <BlattGruppe titel={txt(GRUPPEN_TITEL.ereignis)}>
+          {(Object.keys(EREIGNIS_SCHLUESSEL) as Ereignis[]).map((e, i) => (
             <BlattOption
               key={e}
-              label={EREIGNIS_LABEL[e]}
-              hinweis={EREIGNIS_HINWEIS[e]}
+              label={txt(EREIGNIS_SCHLUESSEL[e])}
+              hinweis={txt(EREIGNIS_HINWEIS_SCHLUESSEL[e])}
               aktiv={entwurf.ereignis === e}
               auf={() => setEntwurf({ ...entwurf, ereignis: e })}
               erste={i === 0}
@@ -161,12 +175,19 @@ export function FinanzEinstellungenBlatt({
       ) : null}
 
       {seite === "vergleich" ? (
-        <BlattGruppe titel="Vergleichszeitraum">
-          {(Object.keys(VERGLEICH_LABEL) as Vergleich[]).map((v, i) => (
+        <BlattGruppe titel={txt(GRUPPEN_TITEL.vergleich)}>
+          {(Object.keys(VERGLEICH_SCHLUESSEL) as Vergleich[]).map((v, i) => (
             <BlattOption
               key={v}
-              label={VERGLEICH_LABEL[v]}
-              hinweis={v === "vorjahr" ? "z. B. 2026 gegen 2025" : undefined}
+              label={txt(VERGLEICH_SCHLUESSEL[v])}
+              hinweis={
+                v === "vorjahr"
+                  ? txt("finanz.vergleichBeispiel", {
+                      jahrA: new Date().getFullYear(),
+                      jahrB: new Date().getFullYear() - 1,
+                    })
+                  : undefined
+              }
               aktiv={entwurf.vergleich === v}
               auf={() => setEntwurf({ ...entwurf, vergleich: v })}
               erste={i === 0}
@@ -176,12 +197,12 @@ export function FinanzEinstellungenBlatt({
       ) : null}
 
       {seite === "diagramm" ? (
-        <BlattGruppe titel="Diagramm-Kennzahl">
+        <BlattGruppe titel={txt(GRUPPEN_TITEL.diagramm)}>
           {KENNZAHLEN.map((k, i) => (
             <BlattOption
               key={k}
-              label={KENNZAHL_LABEL[k]}
-              hinweis={KENNZAHL_HINWEIS[k]}
+              label={txt(KENNZAHL_SCHLUESSEL[k])}
+              hinweis={txt(KENNZAHL_HINWEIS_SCHLUESSEL[k])}
               aktiv={entwurf.diagramm === k}
               auf={() => setEntwurf({ ...entwurf, diagramm: k })}
               erste={i === 0}
@@ -191,11 +212,11 @@ export function FinanzEinstellungenBlatt({
       ) : null}
 
       {seite === "typ" ? (
-        <BlattGruppe titel="Diagrammtyp">
-          {(Object.keys(DIAGRAMMTYP_LABEL) as Diagrammtyp[]).map((d, i) => (
+        <BlattGruppe titel={txt(GRUPPEN_TITEL.typ)}>
+          {(Object.keys(DIAGRAMMTYP_SCHLUESSEL) as Diagrammtyp[]).map((d, i) => (
             <BlattOption
               key={d}
-              label={DIAGRAMMTYP_LABEL[d]}
+              label={txt(DIAGRAMMTYP_SCHLUESSEL[d])}
               aktiv={entwurf.diagrammtyp === d}
               auf={() => setEntwurf({ ...entwurf, diagrammtyp: d })}
               erste={i === 0}
@@ -207,11 +228,11 @@ export function FinanzEinstellungenBlatt({
       {seite === "neben" ? (
         <View style={{ gap: 12 }}>
           {([0, 1] as const).map((pos) => (
-            <BlattGruppe key={pos} titel={`Kennzahl ${pos + 1}`}>
+            <BlattGruppe key={pos} titel={txt("finanz.kennzahlNr", { nr: pos + 1 })}>
               {KENNZAHLEN.map((k: Kennzahl, i) => (
                 <BlattOption
                   key={k}
-                  label={KENNZAHL_LABEL[k]}
+                  label={txt(KENNZAHL_SCHLUESSEL[k])}
                   aktiv={entwurf.nebenkennzahlen[pos] === k}
                   auf={() =>
                     setEntwurf({

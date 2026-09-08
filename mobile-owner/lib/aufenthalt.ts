@@ -9,7 +9,8 @@
 // vor der Abreise. Wer den Abreisetag mitsperrt, nimmt der nächsten Buchung
 // die Anreise weg — die Nacht davor ist frei, der Tag selbst aber gesperrt.
 import type { PortalCalendarDay } from "@/lib/ownerPortal";
-import { naechte, tagPlus } from "@/lib/zeitraum";
+import type { TextSchluessel } from "@/lib/sprache";
+import { type Uebersetzer, naechte, tagPlus } from "@/lib/zeitraum";
 
 export type Bereich = { von: string; bis: string | null };
 
@@ -79,21 +80,23 @@ export function aufenthaltNaechte(von: string, bis: string): number {
 }
 
 /** „2 Erwachsene" / „1 Erwachsener" — null → nicht angegeben. */
-export function gaesteText(n: number | null): string {
-  if (n === null) return "Nicht angegeben";
-  return n === 1 ? "1 Erwachsener" : `${n} Erwachsene`;
+export function gaesteText(txt: Uebersetzer, n: number | null): string {
+  if (n === null) return txt("auf.nichtAngegeben");
+  return n === 1 ? txt("buchen.einErwachsener") : txt("buchen.erwachsene", { anzahl: n });
 }
 
 /** Statusname eines Sperrantrags. Unbekannter Status bleibt der rohe Wert (Wurzel 4). */
-export function antragStatusName(status: string): string {
-  const NAMEN: Record<string, string> = {
-    pending: "Angefragt",
-    approved: "Bestätigt",
-    rejected: "Abgelehnt",
-    withdrawn: "Zurückgezogen",
-    cancelled: "Storniert",
-  };
-  return NAMEN[status] ?? status;
+const STATUS_SCHLUESSEL: Record<string, TextSchluessel> = {
+  pending: "auf.statusOffen",
+  approved: "auf.statusZugesagt",
+  rejected: "auf.statusAbgelehnt",
+  withdrawn: "auf.statusZurueckgezogen",
+  cancelled: "auf.statusStorniert",
+};
+
+export function antragStatusName(txt: Uebersetzer, status: string): string {
+  const schluessel = STATUS_SCHLUESSEL[status];
+  return schluessel ? txt(schluessel) : status;
 }
 
 /** Bevorstehend = Check-out liegt noch nicht hinter heute. */

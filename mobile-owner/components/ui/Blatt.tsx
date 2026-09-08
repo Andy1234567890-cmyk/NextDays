@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/ui/Icon";
 import { Txt } from "@/components/ui/kit";
+import { useT } from "@/contexts/SprachContext";
 import { useTheme } from "@/theme/ThemeProvider";
 
 export function Blatt({
@@ -32,6 +33,7 @@ export function Blatt({
   /** Fest unten, außerhalb des Scrollbereichs (z. B. „Alles zurücksetzen"). */
   fuss?: React.ReactNode;
 }) {
+  const txt = useT();
   const t = useTheme();
   const insets = useSafeAreaInsets();
   return (
@@ -40,7 +42,7 @@ export function Blatt({
       <Pressable
         onPress={schliessen}
         style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.35)" }}
-        accessibilityLabel="Blatt schließen"
+        accessibilityLabel={txt("blatt.schliessen")}
       />
       <View
         style={{
@@ -65,7 +67,7 @@ export function Blatt({
             onPress={zurueck ?? schliessen}
             hitSlop={8}
             accessibilityRole="button"
-            accessibilityLabel={zurueck ? "Zurück" : "Schließen"}
+            accessibilityLabel={txt(zurueck ? "allg.zurueck" : "allg.schliessen")}
             style={{
               width: 36,
               height: 36,
@@ -85,7 +87,7 @@ export function Blatt({
               onPress={bestaetigen}
               hitSlop={8}
               accessibilityRole="button"
-              accessibilityLabel="Übernehmen"
+              accessibilityLabel={txt("blatt.uebernehmen")}
               style={{
                 width: 36,
                 height: 36,

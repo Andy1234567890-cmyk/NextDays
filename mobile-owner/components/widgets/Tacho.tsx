@@ -14,6 +14,8 @@ import { View } from "react-native";
 import Svg, { Circle, G, Path } from "react-native-svg";
 
 import { Txt } from "@/components/ui/kit";
+import { useSprache } from "@/contexts/SprachContext";
+import { prozent } from "@/lib/zeitraum";
 import { useTheme } from "@/theme/ThemeProvider";
 
 type Props = {
@@ -42,6 +44,7 @@ function bogen(cx: number, cy: number, r: number, vonGrad: number, bisGrad: numb
 }
 
 export function Tacho({ wert, groesse = 200, label }: Props) {
+  const { sprache } = useSprache();
   const t = useTheme();
   const cx = groesse / 2;
   const r = (groesse - STRICH) / 2;
@@ -89,7 +92,7 @@ export function Tacho({ wert, groesse = 200, label }: Props) {
       </Svg>
       <View style={{ alignItems: "center", marginTop: -groesse * 0.22 }}>
         <Txt v="display">
-          {wert === null ? "—" : `${wert.toFixed(2).replace(".", ",")} %`}
+          {prozent(sprache, wert, 2)}
         </Txt>
         {label ? (
           <Txt v="xs" soft style={{ marginTop: 2 }}>

@@ -11,6 +11,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Image, Pressable, RefreshControl, ScrollView, View } from "react-native";
 
+import { useT } from "@/contexts/SprachContext";
 import { Icon } from "@/components/ui/Icon";
 import { Kachel, KachelKopf, Spinner, Txt } from "@/components/ui/kit";
 import { ausstattungLabel } from "@/lib/ausstattung";
@@ -33,6 +34,7 @@ export default function ObjektDetail({
   navigation: Nav;
   route: Route;
 }) {
+  const txt = useT();
   const t = useTheme();
   const { id, titel } = route.params;
   const [objekt, setObjekt] = useState<PortalPropertyDetail | null>(null);
@@ -76,7 +78,7 @@ export default function ObjektDetail({
     >
       {fehler ? (
         <Kachel>
-          <Txt v="title">Objekt nicht gefunden</Txt>
+          <Txt v="title">{txt("obj.nichtGefunden")}</Txt>
           <Txt v="sm" soft style={{ marginTop: 4 }}>
             {fehler}
           </Txt>
@@ -131,25 +133,25 @@ export default function ObjektDetail({
 
           <Kachel>
             <KachelKopf titel="Eckdaten" />
-            <Zeile label="Einheiten" wert={String(objekt.units_total)} />
-            <Zeile label="Gäste maximal" wert={objekt.max_guests} />
-            <Zeile label="Zimmer" wert={objekt.total_rooms} />
+            <Zeile label={txt("obj.einheiten")} wert={String(objekt.units_total)} />
+            <Zeile label={txt("obj.gaesteMaximal")} wert={objekt.max_guests} />
+            <Zeile label={txt("obj.zimmer")} wert={objekt.total_rooms} />
             <Zeile
-              label="Wohnfläche"
+              label={txt("obj.wohnflaeche")}
               wert={
                 objekt.size_value === null
                   ? null
                   : `${objekt.size_value}${objekt.size_unit ? ` ${objekt.size_unit}` : ""}`
               }
             />
-            <Zeile label="Baujahr" wert={objekt.year_built} />
-            <Zeile label="Etage" wert={objekt.floor_number} />
-            <Zeile label="BFE-Nummer" wert={objekt.bfe_number} />
+            <Zeile label={txt("obj.baujahr")} wert={objekt.year_built} />
+            <Zeile label={txt("obj.etage")} wert={objekt.floor_number} />
+            <Zeile label={txt("obj.bfeNummer")} wert={objekt.bfe_number} />
           </Kachel>
 
           {objekt.amenities.length > 0 ? (
             <Kachel>
-              <KachelKopf titel="Ausstattung" />
+              <KachelKopf titel={txt("obj.ausstattung")} />
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
                 {objekt.amenities.map((slug) => (
                   <View
@@ -179,7 +181,7 @@ export default function ObjektDetail({
               <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
                 <Icon n="sliders" s={22} c={t.palette.accent} />
                 <View style={{ flex: 1 }}>
-                  <Txt v="title">Zählerstände</Txt>
+                  <Txt v="title">{txt("zaehler.titel")}</Txt>
                   <Txt v="xs" soft>
                     Ablesungen ansehen und erfassen
                   </Txt>

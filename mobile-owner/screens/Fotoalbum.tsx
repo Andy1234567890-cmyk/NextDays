@@ -7,6 +7,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Image, RefreshControl, ScrollView, View } from "react-native";
 
+import { useT } from "@/contexts/SprachContext";
 import { Kachel, KachelKopf, Spinner, Txt } from "@/components/ui/kit";
 import { getOwnerPhotoAlbum, type PortalPhotoAlbum } from "@/lib/ownerPortal";
 import { KARTE_ABSTAND } from "@/theme/flaechen";
@@ -16,6 +17,7 @@ const SPALTEN = 3;
 const LUECKE = 4;
 
 export default function Fotoalbum() {
+  const txt = useT();
   const t = useTheme();
   const [album, setAlbum] = useState<PortalPhotoAlbum | null>(null);
   const [laedt, setLaedt] = useState(true);
@@ -56,7 +58,7 @@ export default function Fotoalbum() {
 
       {album && album.total === 0 ? (
         <Kachel>
-          <Txt v="title">Noch keine Bilder</Txt>
+          <Txt v="title">{txt("foto.keine")}</Txt>
           <Txt v="sm" soft style={{ marginTop: 4 }}>
             Sobald Ihre Verwaltung Bilder hinterlegt, erscheinen sie hier.
           </Txt>

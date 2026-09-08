@@ -16,6 +16,7 @@ import { Icon } from "@/components/ui/Icon";
 import { Kachel, KachelKopf, Segmented, Spinner, Txt } from "@/components/ui/kit";
 import { Kopf } from "@/components/ui/Kopf";
 import { useAuth } from "@/contexts/AuthContext";
+import { useT } from "@/contexts/SprachContext";
 import { formatCurrency } from "@/lib/currency";
 import { getOwnerEarnings, type PortalEarnings } from "@/lib/ownerPortal";
 import { useUnterkante } from "@/lib/unterkante";
@@ -25,11 +26,20 @@ import { useTheme } from "@/theme/ThemeProvider";
 // Zeiträume als ganze Monate/Jahre — kein freier Datumswähler: die Abrechnung
 // läuft in Perioden, und ein krummer Zeitraum ergäbe eine Zahl, die zu keinem
 // Beleg passt.
-const ZEITRAEUME = ["Dieses Jahr", "Letztes Jahr", "Letzte 12 Monate"] as const;
+// Der Wert ist ein CODE, nicht die Beschriftung: sonst hinge die Rechnung an
+// der Sprache der Oberfläche und `zeitraumGrenzen` liefe in einer anderen
+// Sprache ins Leere.
+const ZEITRAEUME = [
+  { wert: "diesesJahr", schluessel: "zeitraum.diesesJahr" },
+  { wert: "letztesJahr", schluessel: "zeitraum.letztesJahr" },
+  { wert: "zwoelfMonate", schluessel: "zeitraum.zwoelfMonate" },
+] as const;
+
+export type Zeitraum = (typeof ZEITRAEUME)[number]["wert"];
 
 /** Zeitraum-Grenzen (lokal gebildet, kein `toISOString()`). */
 export function zeitraumGrenzen(
-  wahl: (typeof ZEITRAEUME)[number],
+  wahl: Zeitraum,
   heute: Date,
 ): { von: string; bis: string } {
   const tag = (d: Date) => {
@@ -37,10 +47,10 @@ export function zeitraumGrenzen(
     const t2 = String(d.getDate()).padStart(2, "0");
     return `${d.getFullYear()}-${m}-${t2}`;
   };
-  if (wahl === "Dieses Jahr") {
+  if (wahl === "diesesJahr") {
     return { von: `${heute.getFullYear()}-01-01`, bis: tag(heute) };
   }
-  if (wahl === "Letztes Jahr") {
+  if (wahl === "letztesJahr") {
     const j = heute.getFullYear() - 1;
     return { von: `${j}-01-01`, bis: `${j}-12-31` };
   }
@@ -51,11 +61,12 @@ export function zeitraumGrenzen(
 type Nav = { navigate: (name: string, params?: Record<string, unknown>) => void };
 
 export default function Auszahlungen({ navigation }: { navigation: Nav }) {
+  const txt = useT();
   const t = useTheme();
   const { me } = useAuth();
   const insets = useSafeAreaInsets();
   const unterkante = useUnterkante();
-  const [wahl, setWahl] = useState<(typeof ZEITRAEUME)[number]>("Dieses Jahr");
+  const [wahl, setWahl] = useState<Zeitraum>("diesesJahr");
   const [daten, setDaten] = useState<PortalEarnings | null>(null);
   const [laedt, setLaedt] = useState(true);
   const [fehler, setFehler] = useState<string | null>(null);
@@ -81,7 +92,7 @@ export default function Auszahlungen({ navigation }: { navigation: Nav }) {
   return (
     <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
       <Kopf
-        titel="Auszahlungen"
+        titel={txt("auszahlung.titel")}
         name={me?.full_name}
         email={me?.email}
         aufProfil={() => navigation.navigate("Mehr")}
@@ -96,14 +107,14 @@ export default function Auszahlungen({ navigation }: { navigation: Nav }) {
         refreshControl={<RefreshControl refreshing={laedt} onRefresh={() => void laden()} />}
       >
         <Segmented
-          options={[...ZEITRAEUME]}
-          value={ZEITRAEUME.indexOf(wahl)}
-          onChange={(i) => setWahl(ZEITRAEUME[i] ?? "Dieses Jahr")}
+          options={ZEITRAEUME.map((z) => txt(z.schluessel))}
+          value={ZEITRAEUME.findIndex((z) => z.wert === wahl)}
+          onChange={(i) => setWahl(ZEITRAEUME[i]?.wert ?? "diesesJahr")}
         />
 
         {fehler ? (
           <Kachel>
-            <Txt v="title">Auszahlungen nicht geladen</Txt>
+            <Txt v="title">{txt("auszahlung.nichtGeladen")}</Txt>
             <Txt v="sm" soft style={{ marginTop: 4 }}>
               {fehler}
             </Txt>
@@ -119,7 +130,7 @@ export default function Auszahlungen({ navigation }: { navigation: Nav }) {
         {daten ? (
           <>
             <Kachel>
-              <KachelKopf titel="Summe im Zeitraum" />
+              <KachelKopf titel={txt("auszahlung.summeZeitraum")} />
               <Txt v="display">
                 {daten.total_payout === null
                   ? "—"
@@ -137,10 +148,10 @@ export default function Auszahlungen({ navigation }: { navigation: Nav }) {
             </Kachel>
 
             <Kachel>
-              <KachelKopf titel="Je Objekt" />
+              <KachelKopf titel={txt("auszahlung.jeObjekt")} />
               {daten.items.length === 0 ? (
                 <Txt v="sm" soft>
-                  Im Zeitraum keine Buchungen.
+                  {txt("auszahlung.keineBuchungen")}
                 </Txt>
               ) : (
                 daten.items.map((zeile, i) => (
@@ -177,9 +188,9 @@ export default function Auszahlungen({ navigation }: { navigation: Nav }) {
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
                   <Icon n="doc" s={22} c={t.palette.accent} />
                   <View style={{ flex: 1 }}>
-                    <Txt v="title">Abrechnungen</Txt>
+                    <Txt v="title">{txt("auszahlung.abrechnungen")}</Txt>
                     <Txt v="xs" soft>
-                      Ihre abgeschlossenen Abrechnungen und Belege
+                      {txt("auszahlung.abrechnungenText")}
                     </Txt>
                   </View>
                   <Icon n="fwd" s={18} c={t.palette.faint} />

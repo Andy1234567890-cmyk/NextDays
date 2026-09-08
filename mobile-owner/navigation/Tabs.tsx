@@ -14,28 +14,30 @@ import Aufenthalte from "@/screens/Aufenthalte";
 import Kalender from "@/screens/Kalender";
 import Mehr from "@/screens/Mehr";
 import Start from "@/screens/Start";
+import { useT } from "@/contexts/SprachContext";
 import { useTheme } from "@/theme/ThemeProvider";
 
 const Tab = createBottomTabNavigator<OwnerTabParamList>();
 
 export function Tabs() {
   const t = useTheme();
+  const txt = useT();
   const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator screenOptions={tabScreenOptions(t, insets.bottom)}>
-      <Tab.Screen name="Start" component={Start} options={{ title: "Start", tabBarIcon: icon("home") }} />
+      <Tab.Screen name="Start" component={Start} options={{ title: txt("tab.start"), tabBarIcon: icon("home") }} />
       <Tab.Screen
         name="Abrechnungen"
         component={Abrechnungen}
-        options={{ title: "Abrechnung", tabBarIcon: icon("chart") }}
+        options={{ title: txt("tab.abrechnung"), tabBarIcon: icon("chart") }}
       />
       <Tab.Screen
         name="Aufenthalte"
         component={Aufenthalte}
-        options={{ title: "Aufenthalte", tabBarIcon: icon("bed") }}
+        options={{ title: txt("tab.aufenthalte"), tabBarIcon: icon("bed") }}
       />
-      <Tab.Screen name="Kalender" component={Kalender} options={{ title: "Kalender", tabBarIcon: icon("cal") }} />
-      <Tab.Screen name="Mehr" component={Mehr} options={{ title: "Menü", tabBarIcon: icon("list") }} />
+      <Tab.Screen name="Kalender" component={Kalender} options={{ title: txt("tab.kalender"), tabBarIcon: icon("cal") }} />
+      <Tab.Screen name="Mehr" component={Mehr} options={{ title: txt("tab.mehr"), tabBarIcon: icon("list") }} />
     </Tab.Navigator>
   );
 }

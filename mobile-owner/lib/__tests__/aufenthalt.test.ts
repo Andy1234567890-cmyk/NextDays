@@ -9,6 +9,7 @@ import {
   gaesteText,
   istBevorstehend,
 } from "@/lib/aufenthalt";
+import { txt } from "@/lib/test-uebersetzer";
 import type { PortalCalendarDay } from "@/lib/ownerPortal";
 
 function tag(date: string, status: string, belegt = 0, gesamt = 1): PortalCalendarDay {
@@ -86,13 +87,13 @@ describe("Umrechnung auf den Sperrantrag", () => {
 
 describe("Texte", () => {
   it("gaesteText", () => {
-    expect(gaesteText(1)).toBe("1 Erwachsener");
-    expect(gaesteText(3)).toBe("3 Erwachsene");
-    expect(gaesteText(null)).toBe("Nicht angegeben");
+    expect(gaesteText(txt, 1)).toBe("1 Erwachsener");
+    expect(gaesteText(txt, 3)).toBe("3 Erwachsene");
+    expect(gaesteText(txt, null)).toBe("Nicht angegeben");
   });
   it("antragStatusName kennt die Stati und lässt Fremdes roh", () => {
-    expect(antragStatusName("pending")).toBe("Angefragt");
-    expect(antragStatusName("approved")).toBe("Bestätigt");
-    expect(antragStatusName("xyz")).toBe("xyz");
+    expect(antragStatusName(txt, "pending")).toBe("Wird geprüft");
+    expect(antragStatusName(txt, "approved")).toBe("Bestätigt");
+    expect(antragStatusName(txt, "xyz")).toBe("xyz");
   });
 });

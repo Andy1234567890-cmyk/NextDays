@@ -86,6 +86,8 @@ export const NIC: Record<string, string> = {
   info: "M12 21a9 9 0 100-18 9 9 0 000 18M12 11v5.5M12 7.6h.01",
   doc: "M6 3.5h8l4 4V20.5H6zM14 3.5V8h4M9 12.5h6M9 16h4",
   hand: "M8.5 12V5.5a1.5 1.5 0 013 0V11m0-.5V4.5a1.5 1.5 0 113 0V11m0-.5v-2a1.5 1.5 0 113 0V15a6 6 0 01-6 6h-1a5 5 0 01-5-5v-3.5a1.5 1.5 0 013 0",
+  // Pfote: Ballen plus vier Zehen — für Haustiere am Aufenthalts-Antrag (0608).
+  pet: "M12 13.5c2.4 0 4.3 1.8 4.3 3.7 0 1.5-1.2 2.3-2.6 2.3h-3.4c-1.4 0-2.6-.8-2.6-2.3 0-1.9 1.9-3.7 4.3-3.7M7.2 8.4a1.7 2.1 0 102 2.6 1.7 2.1 0 10-2-2.6M16.8 8.4a1.7 2.1 0 112 2.6 1.7 2.1 0 11-2-2.6M10.4 4.5a1.6 2 0 100 4 1.6 2 0 000-4M13.6 4.5a1.6 2 0 110 4 1.6 2 0 010-4",
 };
 
 export type IconName = keyof typeof NIC | string;

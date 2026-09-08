@@ -17,6 +17,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { RefreshControl, ScrollView, View } from "react-native";
 
+import type { TextSchluessel } from "@/lib/sprache";
+import { useT } from "@/contexts/SprachContext";
 import { Icon } from "@/components/ui/Icon";
 import { Btn, Kachel, KachelKopf, Spinner, Txt } from "@/components/ui/kit";
 import {
@@ -32,16 +34,21 @@ const ABGESCHLOSSEN = new Set(["done", "cancelled"]);
 
 // Die Arbeitszustände des Servers. Ein neuer Code gehört HIER dazu, sonst
 // steht er roh in der Liste.
-const STATUS: Record<string, string> = {
-  open: "Offen",
-  accepted: "Angenommen",
-  in_progress: "In Arbeit",
-  done: "Erledigt",
-  cancelled: "Storniert",
+const STATUS: Record<string, TextSchluessel> = {
+  open: "aufg.statusOffen",
+  accepted: "aufg.statusAngenommen",
+  in_progress: "aufg.statusInArbeit",
+  done: "aufg.statusErledigt",
+  cancelled: "aufg.statusStorniert",
 };
 
-export function statusName(code: string): string {
-  return STATUS[code] ?? code;
+export function statusName(
+  code: string,
+  txt: (s: TextSchluessel) => string,
+): string {
+  // Unbekannter Code bleibt roh stehen — raten wäre eine Behauptung (Wurzel 4).
+  const schluessel = STATUS[code];
+  return schluessel ? txt(schluessel) : code;
 }
 
 function zwei(n: number): string {
@@ -50,8 +57,8 @@ function zwei(n: number): string {
 
 /** „13.09., 10:00 – 14:00" in der Zeit des Geräts; über Mitternacht mit
  *  zweitem Datum. Kein `toLocaleString`: das liefert je Gerät andere Formen. */
-export function zeitfensterText(start: string | null, ende: string | null): string {
-  if (!start) return "Kein Zeitfenster";
+export function zeitfensterText(start: string | null, ende: string | null): string | null {
+  if (!start) return null;
   const a = new Date(start);
   const tag = (d: Date) => `${zwei(d.getDate())}.${zwei(d.getMonth() + 1)}.`;
   const uhr = (d: Date) => `${zwei(d.getHours())}:${zwei(d.getMinutes())}`;
@@ -77,6 +84,7 @@ export function aufteilen(items: PortalTask[]): {
 }
 
 export default function Aufgaben() {
+  const txt = useT();
   const t = useTheme();
   const [items, setItems] = useState<PortalTask[]>([]);
   const [laedt, setLaedt] = useState(true);
@@ -131,7 +139,7 @@ export default function Aufgaben() {
           {a.title}
         </Txt>
         <Txt v="xs" soft>
-          {statusName(a.status)}
+          {statusName(a.status, txt)}
         </Txt>
       </View>
       <View style={{ marginTop: 6, gap: 4 }}>
@@ -144,7 +152,7 @@ export default function Aufgaben() {
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
           <Icon n="clock" s={14} c={t.palette.faint} />
           <Txt v="xs" soft>
-            {zeitfensterText(a.start_at, a.end_at)}
+            {zeitfensterText(a.start_at, a.end_at) ?? txt("aufg.keinZeitfenster")}
           </Txt>
         </View>
         {a.checklist_total > 0 ? (

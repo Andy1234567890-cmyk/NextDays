@@ -26,19 +26,23 @@ import type { Palette } from "@/theme/tokens";
  * im Dark Mode mitgeht.
  */
 export function karte(p: Palette): ViewStyle {
+  // Vorlage Hostaway Owner App (Ansage 08.09.2026): weiße Karte mit sehr
+  // weichem Schatten, Radius 16, KEIN Rahmen — auf hellgrauem Seitengrund
+  // (`SEITE`). Der Smoobu-Rahmen und dessen kräftiger Schatten sind Geschichte.
   return {
     backgroundColor: p.surface,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: p.line,
-    // Der gemessene Smoobu-Schatten. `shadowColor` ist dessen Grundton
-    // (#343A3F) — nicht Schwarz, das wirkt auf Weiß härter.
-    shadowColor: "#343A3F",
-    shadowOpacity: 0.13,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 2,
+    borderRadius: 16,
+    shadowColor: "#000000",
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
   };
+}
+
+/** Seitengrund hinter den Karten (Vorlage: sehr helles Grau). */
+export function seite(p: Palette): ViewStyle {
+  return { backgroundColor: p.surface2 };
 }
 
 /** Innenabstand einer Karte — 16 px, wie in der Vorlage. */

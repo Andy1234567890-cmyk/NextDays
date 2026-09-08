@@ -18,18 +18,19 @@ import { Kachel, Photo, Spinner, Txt } from "@/components/ui/kit";
 import { Kopf } from "@/components/ui/Kopf";
 import { Verlauf, type VerlaufPunkt } from "@/components/widgets/Verlauf";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSprache } from "@/contexts/SprachContext";
 import { formatCurrency } from "@/lib/currency";
 import {
   type FinanzEinstellungen as Einstellungen,
-  KENNZAHL_HINWEIS,
-  KENNZAHL_LABEL,
+  KENNZAHL_HINWEIS_SCHLUESSEL,
+  KENNZAHL_SCHLUESSEL,
   type Kennzahl,
   STANDARD,
   istGeld,
   punktWert,
   reihenWert,
 } from "@/lib/finanz-einstellungen";
-import { BETRAG_KURZ, grundText } from "@/lib/kalender-aufenthalte";
+import { betragKurz, grundText } from "@/lib/kalender-aufenthalte";
 import {
   getOwnerFinanzen,
   getOwnerProperties,
@@ -39,10 +40,11 @@ import {
 import { useRealtime } from "@/lib/realtime";
 import { useUnterkante } from "@/lib/unterkante";
 import {
-  MONATE_KURZ,
+  type Uebersetzer,
   ZEITRAUM_CHIPS,
-  ZEITRAUM_LABEL,
+  ZEITRAUM_SCHLUESSEL,
   datumLang,
+  monatKurz,
   prozent,
   veraenderungPct,
   zeitraumGrenzen,
@@ -55,10 +57,16 @@ import { useTheme } from "@/theme/ThemeProvider";
 type Nav = { navigate: (name: string, params?: Record<string, unknown>) => void };
 
 /** Wert einer Kennzahl formatiert; null → „k. A." (nie 0). */
-export function kennzahlText(wert: number | null, k: Kennzahl, currency: string | null): string {
-  if (wert === null) return BETRAG_KURZ;
+export function kennzahlText(
+  txt: Uebersetzer,
+  sprache: string,
+  wert: number | null,
+  k: Kennzahl,
+  currency: string | null,
+): string {
+  if (wert === null) return betragKurz(txt);
   if (istGeld(k)) return formatCurrency(wert, currency, 2);
-  if (k === "auslastung") return prozent(wert);
+  if (k === "auslastung") return prozent(sprache, wert);
   return String(Math.round(wert));
 }
 
@@ -70,12 +78,13 @@ export function achsenText(wert: number, k: Kennzahl, currency: string | null): 
 }
 
 /** X-Beschriftung: Tag des Monats bei Tagen, Monatskürzel bei Monaten. */
-export function xText(label: string): string {
+export function xText(txt: Uebersetzer, label: string): string {
   if (label.length === 10) return String(Number(label.slice(8, 10)));
-  return MONATE_KURZ[Number(label.slice(5, 7)) - 1] ?? label;
+  return monatKurz(txt, Number(label.slice(5, 7)) - 1);
 }
 
 export default function Start({ navigation }: { navigation: Nav }) {
+  const { t: txt, sprache } = useSprache();
   const t = useTheme();
   const { me } = useAuth();
   const insets = useSafeAreaInsets();
@@ -130,7 +139,7 @@ export default function Start({ navigation }: { navigation: Nav }) {
     [vergleich, einst.diagramm],
   );
 
-  const info = (k: Kennzahl) => Alert.alert(KENNZAHL_LABEL[k], KENNZAHL_HINWEIS[k]);
+  const info = (k: Kennzahl) => Alert.alert(txt(KENNZAHL_SCHLUESSEL[k]), txt(KENNZAHL_HINWEIS_SCHLUESSEL[k]));
 
   return (
     <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
@@ -146,16 +155,16 @@ export default function Start({ navigation }: { navigation: Nav }) {
         refreshControl={<RefreshControl refreshing={laedt} onRefresh={() => void laden()} />}
       >
         <Txt v="sm" soft>
-          {datumLang(new Date())}
+          {datumLang(txt, new Date())}
         </Txt>
 
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <Txt v="h2">Finanzübersicht</Txt>
+          <Txt v="h2">{txt("start.titel")}</Txt>
           <Pressable
             onPress={() => setBlatt(true)}
             hitSlop={10}
             accessibilityRole="button"
-            accessibilityLabel="Finanz-Einstellungen"
+            accessibilityLabel={txt("start.einstellungen")}
           >
             <Icon n="morev" s={22} sw={2.2} c={t.palette.ink} />
           </Pressable>
@@ -182,7 +191,7 @@ export default function Start({ navigation }: { navigation: Nav }) {
                 }}
               >
                 <Txt v="xs" color={aktiv ? t.palette.bg : t.palette.ink} style={{ fontFamily: t.fonts.medium }}>
-                  {ZEITRAUM_LABEL[z]}
+                  {txt(ZEITRAUM_SCHLUESSEL[z])}
                 </Txt>
               </Pressable>
             );
@@ -191,12 +200,12 @@ export default function Start({ navigation }: { navigation: Nav }) {
 
         {fehler ? (
           <Kachel>
-            <Txt v="title">Finanzübersicht nicht geladen</Txt>
+            <Txt v="title">{txt("start.nichtGeladen")}</Txt>
             <Txt v="sm" soft style={{ marginTop: 4 }}>
               {/* 404 heißt hier: der Server kennt die Finanzübersicht noch nicht
                   (Deploy steht aus) — das sagt „Not Found" niemandem. */}
               {fehler === "Not Found"
-                ? "Die Finanzübersicht ist auf dem Server noch nicht verfügbar. Das Update wird gerade ausgerollt."
+                ? txt("start.nichtVerfuegbar")
                 : fehler}
             </Txt>
           </Kachel>
@@ -215,15 +224,15 @@ export default function Start({ navigation }: { navigation: Nav }) {
                 onPress={() => info(einst.diagramm)}
                 style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
                 accessibilityRole="button"
-                accessibilityLabel={`Erklärung: ${KENNZAHL_LABEL[einst.diagramm]}`}
+                accessibilityLabel={txt("kennzahl.erklaerung", { name: txt(KENNZAHL_SCHLUESSEL[einst.diagramm]) })}
               >
                 <Txt v="sm" soft>
-                  {KENNZAHL_LABEL[einst.diagramm]}
+                  {txt(KENNZAHL_SCHLUESSEL[einst.diagramm])}
                 </Txt>
                 <Icon n="info" s={15} c={t.palette.faint} />
               </Pressable>
               <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 10, marginTop: 4 }}>
-                <Txt v="display">{kennzahlText(reihenWert(aktuell, einst.diagramm), einst.diagramm, currency)}</Txt>
+                <Txt v="display">{kennzahlText(txt, sprache, reihenWert(aktuell, einst.diagramm), einst.diagramm, currency)}</Txt>
                 <Trend
                   aktuell={reihenWert(aktuell, einst.diagramm)}
                   vergleich={vergleich ? reihenWert(vergleich, einst.diagramm) : null}
@@ -232,16 +241,16 @@ export default function Start({ navigation }: { navigation: Nav }) {
               {istGeld(einst.diagramm) && aktuell.payout_total === null ? (
                 <Txt v="xs" faint style={{ marginTop: 4 }}>
                   {aktuell.payout_unknown_reason
-                    ? grundText(aktuell.payout_unknown_reason)
-                    : "Beträge sind für Ihren Zugang nicht freigegeben. Ihre Verwaltung kann das ändern."}
+                    ? grundText(txt, aktuell.payout_unknown_reason)
+                    : txt("auszahlung.nichtFreigegeben")}
                 </Txt>
               ) : null}
               <View style={{ flexDirection: "row", gap: 14, marginTop: 8, marginBottom: 6 }}>
-                <LegendePunkt farbe={t.palette.accent} text={zeitraumLegende(aktuell.date_from, aktuell.date_to)} />
+                <LegendePunkt farbe={t.palette.accent} text={zeitraumLegende(txt, aktuell.date_from, aktuell.date_to)} />
                 {vergleich ? (
                   <LegendePunkt
                     farbe={t.palette.soft}
-                    text={zeitraumLegende(vergleich.date_from, vergleich.date_to)}
+                    text={zeitraumLegende(txt, vergleich.date_from, vergleich.date_to)}
                   />
                 ) : null}
               </View>
@@ -250,7 +259,7 @@ export default function Start({ navigation }: { navigation: Nav }) {
                 vergleich={vergleichPunkte}
                 typ={einst.diagrammtyp}
                 formatY={(w) => achsenText(w, einst.diagramm, currency)}
-                formatX={xText}
+                formatX={(label) => xText(txt, label)}
               />
             </Kachel>
 
@@ -261,16 +270,16 @@ export default function Start({ navigation }: { navigation: Nav }) {
                     onPress={() => info(k)}
                     style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
                     accessibilityRole="button"
-                    accessibilityLabel={`Erklärung: ${KENNZAHL_LABEL[k]}`}
+                    accessibilityLabel={txt("kennzahl.erklaerung", { name: txt(KENNZAHL_SCHLUESSEL[k]) })}
                   >
                     <Txt v="xs" soft numberOfLines={1} style={{ flexShrink: 1 }}>
-                      {KENNZAHL_LABEL[k]}
+                      {txt(KENNZAHL_SCHLUESSEL[k])}
                     </Txt>
                     <Icon n="info" s={13} c={t.palette.faint} />
                   </Pressable>
                   <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 8, marginTop: 6 }}>
                     <Txt v="h2" numberOfLines={1} style={{ flexShrink: 1 }}>
-                      {kennzahlText(reihenWert(aktuell, k), k, currency)}
+                      {kennzahlText(txt, sprache, reihenWert(aktuell, k), k, currency)}
                     </Txt>
                     <Trend aktuell={reihenWert(aktuell, k)} vergleich={vergleich ? reihenWert(vergleich, k) : null} />
                   </View>
@@ -291,7 +300,7 @@ export default function Start({ navigation }: { navigation: Nav }) {
         </Pressable>
         {objekte?.length === 0 ? (
           <Kachel>
-            <Txt v="title">Noch kein Objekt zugeordnet</Txt>
+            <Txt v="title">{txt("start.keinObjekt")}</Txt>
             <Txt v="sm" soft style={{ marginTop: 4 }}>
               Sobald Ihre Verwaltung Ihnen ein Objekt zuordnet, erscheint es hier.
             </Txt>

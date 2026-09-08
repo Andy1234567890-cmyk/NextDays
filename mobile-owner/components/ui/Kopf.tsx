@@ -8,9 +8,13 @@
 // fünf Objekte — die Liste ist kürzer als der Weg über ein Suchfeld. Sobald
 // jemand mit vielen Objekten das braucht, gehört sie in die Objektliste, nicht
 // in jede Kopfzeile.
-import { Image, Pressable, View } from "react-native";
+import { useState } from "react";
+import { Image, Pressable, ScrollView, View } from "react-native";
 
+import { Blatt, BlattGruppe, BlattOption } from "@/components/ui/Blatt";
 import { Avatar, Txt } from "@/components/ui/kit";
+import { useSprache } from "@/contexts/SprachContext";
+import { SPRACHEN, SPRACH_FLAGGEN, SPRACH_NAMEN } from "@/lib/sprache";
 import { initialenAus } from "@/lib/initialen";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -31,6 +35,13 @@ export function Kopf({
   aufProfil?: () => void;
 }) {
   const t = useTheme();
+  // Die Sprachwahl steht OBEN in jeder Kopfzeile, nicht im Menü (Ansage
+  // 08.09.2026): sie ist eine Einstellung, die man sofort sieht und sofort
+  // wechselt — wie im Web-Dashboard, wo die Flagge ebenfalls in der Topbar
+  // sitzt. Vorbelegt ist sie mit dem, was die Agentur am Eigentümer hinterlegt
+  // hat (`owners.language` → `users.preferred_language`).
+  const { sprache, spracheSetzen, t: txt } = useSprache();
+  const [sprachBlatt, setSprachBlatt] = useState(false);
   return (
     <View
       style={{
@@ -55,18 +66,66 @@ export function Kopf({
           accessibilityLabel={t.marke.name}
         />
       )}
-      {aufProfil ? (
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+        {/* Nur die Flagge: neben Wortmarke und Avatar ist für das Endonym kein
+            Platz. In der Auswahl darunter steht beides (die Flagge allein ist
+            mehrdeutig — Deutsch ist DE/AT/CH). */}
         <Pressable
-          onPress={aufProfil}
+          onPress={() => setSprachBlatt(true)}
           accessibilityRole="button"
-          accessibilityLabel="Profil und Einstellungen"
+          accessibilityLabel={`${txt("mehr.sprache")}: ${SPRACH_NAMEN[sprache]}`}
           hitSlop={8}
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 16,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: t.palette.surface2,
+          }}
         >
-          {/* Ohne Name UND ohne E-Mail bleibt es beim Symbol — kein erfundener
-              Platzhalter-Buchstabe (lib/initialen.ts). */}
-          <Avatar initialen={initialenAus(name, email)} s={32} />
+          <Txt v="sm" style={{ fontSize: 17, lineHeight: 21 }}>
+            {SPRACH_FLAGGEN[sprache]}
+          </Txt>
         </Pressable>
-      ) : null}
+
+        {aufProfil ? (
+          <Pressable
+            onPress={aufProfil}
+            accessibilityRole="button"
+            accessibilityLabel={txt("mehr.profilEinstellungen")}
+            hitSlop={8}
+          >
+            {/* Ohne Name UND ohne E-Mail bleibt es beim Symbol — kein erfundener
+                Platzhalter-Buchstabe (lib/initialen.ts). */}
+            <Avatar initialen={initialenAus(name, email)} s={32} />
+          </Pressable>
+        ) : null}
+      </View>
+
+      <Blatt
+        offen={sprachBlatt}
+        titel={txt("mehr.spracheWaehlen")}
+        schliessen={() => setSprachBlatt(false)}
+      >
+        {/* 24 Sprachen passen nicht auf ein Blatt — die Liste rollt. */}
+        <ScrollView style={{ maxHeight: 420 }}>
+          <BlattGruppe titel={txt("mehr.sprache")}>
+            {SPRACHEN.map((sp, i) => (
+              <BlattOption
+                key={sp}
+                label={`${SPRACH_FLAGGEN[sp]}  ${SPRACH_NAMEN[sp]}`}
+                aktiv={sp === sprache}
+                auf={() => {
+                  spracheSetzen(sp);
+                  setSprachBlatt(false);
+                }}
+                erste={i === 0}
+              />
+            ))}
+          </BlattGruppe>
+        </ScrollView>
+      </Blatt>
     </View>
   );
 }

@@ -60,6 +60,15 @@ export type Me = {
    */
   full_name?: string | null;
   avatar_url?: string | null;
+  /**
+   * Sprache des Eigentümers aus `/auth/account` (`users.preferred_language`).
+   * Sie steuert die Oberfläche (`contexts/SprachContext.tsx`) und ist dieselbe
+   * Quelle, aus der Beleg und E-Mails ihre Sprache ziehen — die App war bis
+   * 08.09.2026 als einzige Fläche hart deutsch.
+   *
+   * `null` heißt „nicht hinterlegt": dann entscheidet die Gerätesprache.
+   */
+  preferred_language?: string | null;
 };
 
 type Status = "loading" | "signedOut" | "signedIn";
@@ -107,15 +116,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Name und Bild nachladen — best effort. Scheitert es, bleibt die Sitzung
       // gültig: der Zugang hängt an `/auth/me`, nicht an einem Anzeigenamen.
       try {
-        const konto = await api<{ full_name: string | null; avatar_url: string | null }>(
-          "/auth/account",
-        );
+        const konto = await api<{
+          full_name: string | null;
+          avatar_url: string | null;
+          preferred_language: string | null;
+        }>("/auth/account");
         setMe((prev) =>
           prev
             ? {
                 ...prev,
                 full_name: konto.full_name,
                 avatar_url: konto.avatar_url,
+                preferred_language: konto.preferred_language,
               }
             : prev,
         );

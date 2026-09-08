@@ -23,10 +23,12 @@ import { Feld } from "@/components/ui/Feld";
 import { Btn, Kachel, Txt } from "@/components/ui/kit";
 import { LogoWortmarke } from "@/components/ui/LogoVektor";
 import { useAuth } from "@/contexts/AuthContext";
+import { useT } from "@/contexts/SprachContext";
 import { KARTE_ABSTAND } from "@/theme/flaechen";
 import { useTheme } from "@/theme/ThemeProvider";
 
 export default function Anmelden() {
+  const txt = useT();
   const t = useTheme();
   const { login, mfaLoesen, mfaFaktoren, mfaSmsAnfordern } = useAuth();
   const [email, setEmail] = useState("");
@@ -41,7 +43,7 @@ export default function Anmelden() {
 
   const anmelden = async () => {
     if (!email.trim() || !passwort) {
-      setFehler("Bitte E-Mail und Passwort eingeben.");
+      setFehler(txt("login.fehlerLeer"));
       return;
     }
     setLaeuft(true);
@@ -58,7 +60,7 @@ export default function Anmelden() {
       const phone = f.data.phone;
       const gewaehlt = totp ?? phone ?? null;
       if (!gewaehlt) {
-        setFehler("Kein verifizierter zweiter Faktor gefunden.");
+        setFehler(txt("login.zweiterFaktorFehlt"));
         return;
       }
       setFaktorId(gewaehlt);
@@ -114,7 +116,7 @@ export default function Anmelden() {
         <View style={{ alignItems: "center", marginBottom: 8 }}>
           <LogoWortmarke hoehe={30} negativ={t.dark} />
           <Txt v="sm" soft style={{ marginTop: 10 }}>
-            Eigentümer-Zugang
+            {txt("app.eigentuemerZugang")}
           </Txt>
         </View>
 
@@ -124,8 +126,8 @@ export default function Anmelden() {
               <Txt v="title">Bestätigungscode</Txt>
               <Txt v="xs" soft style={{ marginTop: 2, marginBottom: 12 }}>
                 {istSms
-                  ? `Wir haben einen Code an ${telefon ?? "Ihre Telefonnummer"} geschickt.`
-                  : "Geben Sie den sechsstelligen Code aus Ihrer Authenticator-App ein."}
+                  ? `Wir haben einen Code an ${telefon ?? txt("login.telefon")} geschickt.`
+                  : txt("login.codeHinweis")}
               </Txt>
               <Feld
                 label="Code"
@@ -141,13 +143,13 @@ export default function Anmelden() {
                 block
                 style={{ marginTop: 14 }}
               >
-                {laeuft ? "Wird geprüft …" : "Bestätigen"}
+                {laeuft ? txt("login.wirdGeprueft") : txt("login.bestaetigen")}
               </Btn>
             </>
           ) : (
             <>
               <Feld
-                label="E-Mail"
+                label={txt("login.email")}
                 wert={email}
                 aendern={setEmail}
                 keyboardType="email-address"
@@ -156,7 +158,7 @@ export default function Anmelden() {
               />
               <View style={{ height: 10 }} />
               <Feld
-                label="Passwort"
+                label={txt("login.passwort")}
                 wert={passwort}
                 aendern={setPasswort}
                 geheim
@@ -168,7 +170,7 @@ export default function Anmelden() {
                 block
                 style={{ marginTop: 14 }}
               >
-                {laeuft ? "Anmeldung läuft …" : "Anmelden"}
+                {laeuft ? txt("login.wirdAngemeldet") : txt("login.anmelden")}
               </Btn>
             </>
           )}
@@ -181,7 +183,7 @@ export default function Anmelden() {
         </Kachel>
 
         <Txt v="xs" faint style={{ textAlign: "center" }}>
-          Ihren Zugang richtet Ihre Verwaltung ein.
+          {txt("login.hinweis")}
         </Txt>
       </ScrollView>
     </KeyboardAvoidingView>

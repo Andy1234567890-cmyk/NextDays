@@ -14,6 +14,7 @@ import { Icon } from "@/components/ui/Icon";
 import { Kachel, Photo, Spinner, Txt } from "@/components/ui/kit";
 import { Kopf } from "@/components/ui/Kopf";
 import { useAuth } from "@/contexts/AuthContext";
+import { useT } from "@/contexts/SprachContext";
 import { getOwnerProperties, type PortalProperty } from "@/lib/ownerPortal";
 import { KARTE_ABSTAND } from "@/theme/flaechen";
 import { useTheme } from "@/theme/ThemeProvider";
@@ -21,6 +22,7 @@ import { useTheme } from "@/theme/ThemeProvider";
 type Nav = { navigate: (name: string, params?: Record<string, unknown>) => void };
 
 export default function Objekte({ navigation }: { navigation: Nav }) {
+  const txt = useT();
   const t = useTheme();
   const { me } = useAuth();
   const insets = useSafeAreaInsets();
@@ -43,7 +45,7 @@ export default function Objekte({ navigation }: { navigation: Nav }) {
   return (
     <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
       <Kopf
-        titel="Meine Objekte"
+        titel={txt("obj.titel")}
         name={me?.full_name}
         email={me?.email}
         aufProfil={() => navigation.navigate("Mehr")}
@@ -58,9 +60,9 @@ export default function Objekte({ navigation }: { navigation: Nav }) {
             <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
               <Icon n="cam" s={22} c={t.palette.accent} />
               <View style={{ flex: 1 }}>
-                <Txt v="title">Fotoalbum</Txt>
+                <Txt v="title">{txt("obj.fotoalbum")}</Txt>
                 <Txt v="xs" soft>
-                  Alle Bilder Ihrer Objekte
+                  {txt("obj.fotoalbumText")}
                 </Txt>
               </View>
               <Icon n="fwd" s={18} c={t.palette.faint} />
@@ -70,7 +72,7 @@ export default function Objekte({ navigation }: { navigation: Nav }) {
 
         {fehler ? (
           <Kachel>
-            <Txt v="title">Objekte nicht geladen</Txt>
+            <Txt v="title">{txt("obj.nichtGeladen")}</Txt>
             <Txt v="sm" soft style={{ marginTop: 4 }}>
               {fehler}
             </Txt>
@@ -85,7 +87,7 @@ export default function Objekte({ navigation }: { navigation: Nav }) {
 
         {items?.length === 0 ? (
           <Kachel>
-            <Txt v="title">Noch kein Objekt zugeordnet</Txt>
+            <Txt v="title">{txt("start.keinObjekt")}</Txt>
             <Txt v="sm" soft style={{ marginTop: 4 }}>
               Sobald Ihre Verwaltung Ihnen ein Objekt zuordnet, erscheint es hier.
             </Txt>

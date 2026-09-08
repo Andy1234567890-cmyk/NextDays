@@ -10,6 +10,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { RefreshControl, ScrollView, View } from "react-native";
 
+import { useT } from "@/contexts/SprachContext";
 import { Feld } from "@/components/ui/Feld";
 import { Btn, Kachel, KachelKopf, Segmented, Spinner, Txt } from "@/components/ui/kit";
 import {
@@ -54,6 +55,7 @@ export function zahlAus(eingabe: string): number | null {
 type Route = { params: { propertyId: string; titel: string } };
 
 export default function Zaehlerstand({ route }: { route: Route }) {
+  const txt = useT();
   const t = useTheme();
   const { propertyId } = route.params;
   const [items, setItems] = useState<MeterReading[] | null>(null);
@@ -79,11 +81,11 @@ export default function Zaehlerstand({ route }: { route: Route }) {
   const speichern = async () => {
     const zahl = zahlAus(wert);
     if (zahl === null) {
-      setFehler("Bitte einen Zählerstand als Zahl eingeben.");
+      setFehler(txt("zaehler.fehlerZahl"));
       return;
     }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(datum)) {
-      setFehler("Bitte das Ablesedatum als JJJJ-MM-TT angeben.");
+      setFehler(txt("zaehler.fehlerDatum"));
       return;
     }
     setSendet(true);
@@ -111,7 +113,7 @@ export default function Zaehlerstand({ route }: { route: Route }) {
       keyboardShouldPersistTaps="handled"
     >
       <Kachel>
-        <KachelKopf titel="Ablesung erfassen" />
+        <KachelKopf titel={txt("zaehler.erfassenTitel")} />
         <Segmented
           options={ARTEN.map((a) => a.label)}
           value={artIndex}
@@ -119,21 +121,21 @@ export default function Zaehlerstand({ route }: { route: Route }) {
         />
         <View style={{ height: 12 }} />
         <Feld
-          label="Zählerstand"
+          label={txt("zaehler.stand")}
           wert={wert}
           aendern={setWert}
           keyboardType="decimal-pad"
         />
         <View style={{ height: 10 }} />
         <Feld
-          label="Abgelesen am (JJJJ-MM-TT)"
+          label={txt("zaehler.datumFormat")}
           wert={datum}
           aendern={setDatum}
           keyboardType="numbers-and-punctuation"
           maxLength={10}
         />
         <Btn onPress={() => void speichern()} disabled={sendet} block style={{ marginTop: 14 }}>
-          {sendet ? "Wird gespeichert …" : "Ablesung speichern"}
+          {sendet ? txt("zaehler.wirdGespeichert") : txt("zaehler.speichern")}
         </Btn>
         {fehler ? (
           <Txt v="xs" color={t.palette.accent} style={{ marginTop: 10 }}>
@@ -143,7 +145,7 @@ export default function Zaehlerstand({ route }: { route: Route }) {
       </Kachel>
 
       <Kachel>
-        <KachelKopf titel="Bisherige Ablesungen" />
+        <KachelKopf titel={txt("zaehler.bisherige")} />
         {laedt && !items ? <Spinner /> : null}
         {items?.length === 0 ? (
           <Txt v="sm" soft>

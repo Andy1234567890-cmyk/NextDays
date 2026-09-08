@@ -9,6 +9,7 @@ import {
   zeitraumGrenzen,
   zeitraumLegende,
 } from "@/lib/zeitraum";
+import { txt } from "@/lib/test-uebersetzer";
 
 // Gleiche Erwartungen in UTC und Europe/Copenhagen — die CI läuft in UTC.
 const heute = new Date(2026, 6, 8, 12); // Mi, 8. Juli 2026
@@ -34,22 +35,24 @@ describe("zeitraumGrenzen", () => {
 
 describe("Formate", () => {
   it("datumLang / datumKurz", () => {
-    expect(datumLang(heute)).toBe("Mittwoch, 8. Juli");
-    expect(datumKurz("2026-08-22")).toBe("Sa, 22. Aug");
+    expect(datumLang(txt, heute)).toBe("Mittwoch, 8. Juli");
+    expect(datumKurz(txt, "2026-08-22")).toBe("Sa, 22. Aug");
   });
   it("spanneLesbar im Monat, über Monat und über Jahr", () => {
-    expect(spanneLesbar("2026-08-22", "2026-08-26")).toBe("22.–26. August 2026");
-    expect(spanneLesbar("2026-08-28", "2026-09-03")).toBe("28. Aug – 3. Sep 2026");
-    expect(spanneLesbar("2025-12-28", "2026-01-03")).toBe("28. Dez 2025 – 3. Jan 2026");
-    expect(spanneLesbar("2026-05-01", "2026-05-01")).toBe("1. Mai 2026");
+    expect(spanneLesbar(txt, "2026-08-22", "2026-08-26")).toBe("22.–26. August 2026");
+    expect(spanneLesbar(txt, "2026-08-28", "2026-09-03")).toBe("28. Aug – 3. Sep 2026");
+    expect(spanneLesbar(txt, "2025-12-28", "2026-01-03")).toBe("28. Dez 2025 – 3. Jan 2026");
+    expect(spanneLesbar(txt, "2026-05-01", "2026-05-01")).toBe("1. Mai 2026");
   });
   it("zeitraumLegende", () => {
-    expect(zeitraumLegende("2026-07-01", "2026-07-31")).toBe("Jul 2026");
-    expect(zeitraumLegende("2025-08-01", "2026-07-31")).toBe("Aug 2025 – Jul 2026");
+    expect(zeitraumLegende(txt, "2026-07-01", "2026-07-31")).toBe("Jul 2026");
+    expect(zeitraumLegende(txt, "2025-08-01", "2026-07-31")).toBe("Aug 2025 – Jul 2026");
   });
   it("prozent mit Komma, null als Strich", () => {
-    expect(prozent(46.77)).toBe("46,8 %");
-    expect(prozent(null)).toBe("—");
+    expect(prozent("de", 46.77)).toBe("46,8 %");
+    expect(prozent("de", null)).toBe("—");
+    // Englisch, Irisch und Maltesisch rechnen mit dem Punkt.
+    expect(prozent("en", 46.77)).toBe("46.8 %");
   });
 });
 

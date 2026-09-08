@@ -18,6 +18,7 @@ import {
 
 import { Icon } from "@/components/ui/Icon";
 import { Txt } from "@/components/ui/kit";
+import { useT } from "@/contexts/SprachContext";
 import { useTheme } from "@/theme/ThemeProvider";
 
 export function Feld({
@@ -44,6 +45,7 @@ export function Feld({
   maxLength?: number;
   editierbar?: boolean;
 }) {
+  const txt = useT();
   const t = useTheme();
   const [sichtbar, setSichtbar] = useState(false);
   const verborgen = Boolean(geheim) && !sichtbar;
@@ -87,7 +89,7 @@ export function Feld({
             onPress={() => setSichtbar((v) => !v)}
             hitSlop={10}
             accessibilityRole="button"
-            accessibilityLabel={sichtbar ? "Passwort verbergen" : "Passwort anzeigen"}
+            accessibilityLabel={sichtbar ? txt("login.passwortVerbergen") : txt("login.passwortAnzeigen")}
           >
             <Icon n={sichtbar ? "eyeoff" : "eye"} s={20} c={t.palette.soft} />
           </Pressable>

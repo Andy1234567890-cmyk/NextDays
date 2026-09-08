@@ -54,7 +54,7 @@ describe("monatsRaster", () => {
   });
 });
 
-import { monatsKennzahlen } from "@/screens/Kalender";
+import { monatsKennzahlen, rasterVolleWochen } from "@/screens/Kalender";
 import type { PortalCalendarDay } from "@/lib/ownerPortal";
 
 function tagK(date: string, bookings: { eigen?: boolean }[], payout: number | null, units = 1): PortalCalendarDay {
@@ -101,5 +101,17 @@ describe("monatsKennzahlen", () => {
     const k = monatsKennzahlen([tagK("2026-09-01", [], null)]);
     expect(k.payout).toBe(0);
     expect(k.auslastung).toBe(0);
+  });
+});
+
+
+describe("rasterVolleWochen", () => {
+  it("füllt Vor- und Nachlauf mit den Nachbarmonaten, immer ganze Wochen", () => {
+    const z = rasterVolleWochen(2026, 9); // Oktober 2026 beginnt an einem Donnerstag
+    expect(z.length % 7).toBe(0);
+    expect(z[0].getDate()).toBe(28); // Mo 28.09.
+    expect(z[0].getMonth()).toBe(8);
+    expect(z[z.length - 1].getDate()).toBe(1); // So 01.11.
+    expect(z[z.length - 1].getMonth()).toBe(10);
   });
 });

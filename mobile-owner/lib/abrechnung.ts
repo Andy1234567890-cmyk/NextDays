@@ -8,10 +8,13 @@
 // gebildet, und die Oberfläche zeigt je Währung eine Zahl (Wurzel 4: kein
 // stilles Zusammenwerfen).
 import type { PortalStatement } from "@/lib/ownerPortal";
-import { MONATE, ausIso, monatsEnde, isoLokal, spanneLesbar } from "@/lib/zeitraum";
+import { type Uebersetzer, ausIso, monatName, monatsEnde, isoLokal, spanneLesbar } from "@/lib/zeitraum";
 
 /** „Abrechnung September 2026", wenn der Zeitraum genau ein Monat ist; sonst die Spanne. */
-export function abrechnungTitel(s: Pick<PortalStatement, "period_from" | "period_to">): string {
+export function abrechnungTitel(
+  txt: Uebersetzer,
+  s: Pick<PortalStatement, "period_from" | "period_to">,
+): string {
   const a = ausIso(s.period_from);
   const b = ausIso(s.period_to);
   const ganzerMonat =
@@ -19,8 +22,10 @@ export function abrechnungTitel(s: Pick<PortalStatement, "period_from" | "period
     a.getMonth() === b.getMonth() &&
     a.getFullYear() === b.getFullYear() &&
     isoLokal(monatsEnde(b.getFullYear(), b.getMonth())) === s.period_to;
-  if (ganzerMonat) return `Abrechnung ${MONATE[a.getMonth()]} ${a.getFullYear()}`;
-  return `Abrechnung ${spanneLesbar(s.period_from, s.period_to)}`;
+  if (ganzerMonat) {
+    return txt("abr.abrechnungMonat", { monat: monatName(txt, a.getMonth()), jahr: a.getFullYear() });
+  }
+  return txt("abr.abrechnungSpanne", { spanne: spanneLesbar(txt, s.period_from, s.period_to) });
 }
 
 /** Jahr einer Abrechnung = Jahr des Zeitraum-Endes. */

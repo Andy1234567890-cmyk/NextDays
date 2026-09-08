@@ -9,6 +9,8 @@
 // Der Betrag stimmte, die Zuordnung war falsch. Ein Chip je Aufenthalt und
 // Einheit beantwortet beides eindeutig: wer, woher, was bringt die Nacht.
 import type { PortalCalendarDay, PortalSeason } from "@/lib/ownerPortal";
+import type { TextSchluessel } from "@/lib/sprache";
+import type { Uebersetzer } from "@/lib/zeitraum";
 
 /** EIN Aufenthalt EINER Einheit, über seine Nächte im geladenen Fenster. */
 export type Aufenthalt = {
@@ -134,13 +136,29 @@ export function wochenBilden(felder: (string | null)[]): (string | null)[][] {
  * Segment ungerundet, damit ein durchlaufender Aufenthalt nicht wie zwei
  * getrennte Buchungen aussieht.
  */
+/** Kalendertag um n Tage verschoben — rein über die ISO-Zeichenkette, ohne
+ *  `Date` und damit ohne Zeitzonen-Versatz. */
+function tagPlus(iso: string, n: number): string {
+  const [j, m, t] = iso.split("-").map(Number);
+  const d = new Date(j, (m || 1) - 1, (t || 1) + n, 12);
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const tt = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${mm}-${tt}`;
+}
+
 export function segmenteBilden(woche: (string | null)[], aufenthalte: Aufenthalt[]): Segment[] {
   const segmente: Segment[] = [];
   for (const a of aufenthalte) {
+    // Der Chip läuft bis zum ABREISETAG, nicht bis zur letzten Nacht: dort
+    // endet er zur Tagesmitte (`HALBER_TAG`), weil vormittags abgereist und
+    // nachmittags neu angereist wird. Endete er an der letzten Nacht, sähe
+    // eine Buchung mit Abreise am 28. so aus, als ende sie am 27. — gemeldet
+    // am 08.09.2026. Am Wechseltag teilen sich beide Aufenthalte den Tag.
+    const abreise = tagPlus(a.bis, 1);
     const treffer: number[] = [];
     for (let i = 0; i < woche.length; i += 1) {
       const d = woche[i];
-      if (d && d >= a.von && d <= a.bis) treffer.push(i);
+      if (d && d >= a.von && d <= abreise) treffer.push(i);
     }
     if (treffer.length === 0) continue;
     const start = treffer[0];
@@ -151,7 +169,7 @@ export function segmenteBilden(woche: (string | null)[], aufenthalte: Aufenthalt
       spalte: start,
       breite: ende - start + 1,
       echterAnfang: woche[start] === a.von,
-      echtesEnde: woche[ende] === a.bis,
+      echtesEnde: woche[ende] === abreise,
     });
   }
   return segmente;
@@ -242,23 +260,27 @@ export function saisonProTag(seasons: PortalSeason[]): Map<string, PortalSeason>
   return map;
 }
 
-// Dieselben Texte wie das Web (web/messages/de.json, portal.calendar). Diese
-// App ist einsprachig deutsch; ein unbekannter Grund fällt auf die allgemeine
-// Aussage zurück — nie auf den rohen Slug.
-export const GRUND_TEXT: Record<string, string> = {
-  provision:
-    "Für dieses Objekt ist kein Provisionssatz hinterlegt — die Verwaltung muss ihn ergänzen.",
-  provision_ungueltig: "Der hinterlegte Provisionssatz liegt außerhalb von 0–100 %.",
-  provision_zeitraum:
-    "Für den Zeitraum dieses Aufenthalts gilt kein Eigentümer-Vertrag — maßgeblich ist das Abreisedatum.",
-  betrag: "Zu dieser Buchung fehlt der Gesamtbetrag.",
-  naechte: "Die Zeitraumangabe dieser Buchung ist fehlerhaft.",
-  waehrung_vertrag:
-    "Die vereinbarte Pauschale lautet auf eine andere Währung als diese Buchung — Beträge werden nicht umgerechnet.",
+// Dieselben Texte wie das Web (web/messages/de.json, portal.calendar). Ein
+// unbekannter Grund fällt auf die allgemeine Aussage zurück — nie auf den
+// rohen Slug.
+//
+// Hier stehen SCHLÜSSEL, nicht Texte: der Grund kommt vom Server als Slug und
+// wird in der Sprache der Oberfläche ausgegeben.
+export const GRUND_SCHLUESSEL: Record<string, TextSchluessel> = {
+  provision: "grund.provisionLang",
+  provision_ungueltig: "grund.provisionUngueltigLang",
+  provision_zeitraum: "grund.provisionZeitraumLang",
+  betrag: "grund.betragLang",
+  naechte: "grund.naechteLang",
+  waehrung_vertrag: "grund.waehrungVertragLang",
 };
-export const GRUND_ALLGEMEIN = "Nicht ausweisbar";
-export const BETRAG_KURZ = "k. A.";
 
-export function grundText(grund: string | null): string {
-  return (grund && GRUND_TEXT[grund]) || GRUND_ALLGEMEIN;
+export function grundText(txt: Uebersetzer, grund: string | null): string {
+  const schluessel = grund ? GRUND_SCHLUESSEL[grund] : undefined;
+  return txt(schluessel ?? "grund.allgemein");
+}
+
+/** „k. A." — steht für einen Betrag, den der Server nicht ausweist. */
+export function betragKurz(txt: Uebersetzer): string {
+  return txt("grund.betragKurz");
 }

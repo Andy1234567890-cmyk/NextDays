@@ -10,6 +10,7 @@ import {
   wochenBilden,
 } from "@/lib/kalender-aufenthalte";
 import type { PortalCalendarDay, PortalNightBooking } from "@/lib/ownerPortal";
+import { txt } from "@/lib/test-uebersetzer";
 
 function buchung(teil: Partial<PortalNightBooking> & { reservation_id: string }): PortalNightBooking {
   return {
@@ -128,6 +129,9 @@ describe("wochenBilden / segmenteBilden", () => {
     expect(w[0][6]).toBeNull();
   });
 
+  // Nächte 05.–08.09., ABREISE also am 09.09. Der Chip läuft bis dorthin und
+  // endet in der Tagesmitte — sonst sähe ein Aufenthalt mit Abreise am 28. so
+  // aus, als ende er am 27. (gemeldet 08.09.2026).
   it("schneidet einen Aufenthalt an der Wochengrenze — nur ECHTE Kanten sind rund", () => {
     const [a] = aufenthalteBilden(
       ["2026-09-05", "2026-09-06", "2026-09-07", "2026-09-08"].map((d) =>
@@ -137,7 +141,7 @@ describe("wochenBilden / segmenteBilden", () => {
     const s1 = segmenteBilden(woche1, [a]);
     const s2 = segmenteBilden(woche2, [a]);
     expect(s1[0]).toMatchObject({ spalte: 5, breite: 2, echterAnfang: true, echtesEnde: false });
-    expect(s2[0]).toMatchObject({ spalte: 0, breite: 2, echterAnfang: false, echtesEnde: true });
+    expect(s2[0]).toMatchObject({ spalte: 0, breite: 3, echterAnfang: false, echtesEnde: true });
   });
 
   it("liefert kein Segment für Wochen ohne Nacht des Aufenthalts", () => {
@@ -162,7 +166,9 @@ describe("bahnenVerteilen", () => {
     expect(sichtbar).toHaveLength(2);
     expect(new Set(sichtbar.map((b) => b.bahn))).toEqual(new Set([0, 1]));
     // „+1" je Spalte, mit dem Nachtwert der zusammengefassten Einheit.
-    expect([...ueberlauf.keys()].sort()).toEqual([1, 2]);
+    // Nächte 08.+09.09., Abreise am 10.09. — die Chips reichen bis dorthin,
+    // der Überlauf deckt deshalb die Spalten 1 bis 3 der Woche ab.
+    expect([...ueberlauf.keys()].sort()).toEqual([1, 2, 3]);
     expect(ueberlauf.get(1)).toMatchObject({ anzahl: 1, summe: 25, currency: "EUR" });
   });
 
@@ -204,8 +210,8 @@ describe("saisonProTag", () => {
 
 describe("grundText", () => {
   it("fällt bei unbekanntem Grund auf die allgemeine Aussage zurück, nie auf den Slug", () => {
-    expect(grundText("irgendwas_neues")).toBe("Nicht ausweisbar");
-    expect(grundText(null)).toBe("Nicht ausweisbar");
-    expect(grundText("betrag")).toBe("Zu dieser Buchung fehlt der Gesamtbetrag.");
+    expect(grundText(txt, "irgendwas_neues")).toBe("Nicht ausweisbar");
+    expect(grundText(txt, null)).toBe("Nicht ausweisbar");
+    expect(grundText(txt, "betrag")).toBe("Zu dieser Buchung fehlt der Gesamtbetrag.");
   });
 });

@@ -8,6 +8,7 @@
 // Vorlage zeigt „Rental Revenue", unser Contract liefert es dem Eigentümer
 // nicht, und eine Kennzahl, die der Server nicht kennt, wäre eine Erfindung.
 import type { PortalFinanzPunkt, PortalFinanzReihe } from "@/lib/ownerPortal";
+import type { TextSchluessel } from "@/lib/sprache";
 import type { ZeitraumWahl } from "@/lib/zeitraum";
 
 export type Ereignis = "calendar" | "check_in";
@@ -37,43 +38,43 @@ export const STANDARD: FinanzEinstellungen = {
   nebenkennzahlen: ["auslastung", "je_nacht"],
 };
 
-export const EREIGNIS_LABEL: Record<Ereignis, string> = {
-  calendar: "Kalender",
-  check_in: "Anreise",
+// Textschlüssel statt Texte: die Wahl wird gespeichert und der Bericht in der
+// Sprache der Oberfläche beschriftet.
+export const EREIGNIS_SCHLUESSEL: Record<Ereignis, TextSchluessel> = {
+  calendar: "finanz.ereignisKalender",
+  check_in: "finanz.ereignisAnreise",
 };
 
-export const EREIGNIS_HINWEIS: Record<Ereignis, string> = {
-  calendar: "Jede Nacht zählt an ihrem Tag — eine Buchung über den Monatswechsel liegt in beiden Monaten.",
-  check_in: "Die ganze Buchung zählt am Anreisetag.",
+export const EREIGNIS_HINWEIS_SCHLUESSEL: Record<Ereignis, TextSchluessel> = {
+  calendar: "finanz.ereignisKalenderHinweis",
+  check_in: "finanz.ereignisAnreiseHinweis",
 };
 
-export const VERGLEICH_LABEL: Record<Vergleich, string> = {
-  keiner: "Keiner",
-  vorjahr: "Gleicher Zeitraum im Vorjahr",
+export const VERGLEICH_SCHLUESSEL: Record<Vergleich, TextSchluessel> = {
+  keiner: "finanz.vergleichKeiner",
+  vorjahr: "finanz.vergleichVorjahr",
 };
 
-export const KENNZAHL_LABEL: Record<Kennzahl, string> = {
-  auszahlung: "Auszahlung",
-  naechte: "Belegte Nächte",
-  auslastung: "Auslastung",
-  buchungen: "Buchungen",
-  je_nacht: "Ø Auszahlung je Nacht",
+export const KENNZAHL_SCHLUESSEL: Record<Kennzahl, TextSchluessel> = {
+  auszahlung: "kennzahl.auszahlung",
+  naechte: "kennzahl.belegteNaechte",
+  auslastung: "kennzahl.auslastung",
+  buchungen: "kennzahl.buchungen",
+  je_nacht: "kennzahl.jeNacht",
 };
 
 /** Der ⓘ-Text zur Kennzahl — sagt, WAS die Zahl ist und was sie nicht ist. */
-export const KENNZAHL_HINWEIS: Record<Kennzahl, string> = {
-  auszahlung:
-    "Ihre Netto-Auszahlung: Buchungsbetrag abzüglich Portal-Abzug und Verwaltungsprovision, zuzüglich Ihrer Gebühren. Dieselbe Zahl wie in Kalender und Abrechnung. Ohne Gastpreis.",
-  naechte: "Nächte mit zahlendem Gast im Zeitraum. Eigennutzung zählt hier nicht.",
-  auslastung:
-    "Belegte Nächte (Vermietung und Eigennutzung) geteilt durch die verfügbaren Einheiten-Nächte.",
-  buchungen: "Anreisen zahlender Gäste im Zeitraum.",
-  je_nacht: "Netto-Auszahlung geteilt durch die belegten Nächte des Zeitraums.",
+export const KENNZAHL_HINWEIS_SCHLUESSEL: Record<Kennzahl, TextSchluessel> = {
+  auszahlung: "kennzahl.auszahlungHilfeLang",
+  naechte: "kennzahl.naechteHilfe",
+  auslastung: "kennzahl.auslastungHilfeLang",
+  buchungen: "kennzahl.buchungenHilfe",
+  je_nacht: "kennzahl.jeNachtHilfeLang",
 };
 
-export const DIAGRAMMTYP_LABEL: Record<Diagrammtyp, string> = {
-  linie: "Liniendiagramm",
-  balken: "Balkendiagramm",
+export const DIAGRAMMTYP_SCHLUESSEL: Record<Diagrammtyp, TextSchluessel> = {
+  linie: "finanz.linienDiagramm",
+  balken: "finanz.balkenDiagramm",
 };
 
 export const KENNZAHLEN: Kennzahl[] = ["auszahlung", "naechte", "auslastung", "buchungen", "je_nacht"];

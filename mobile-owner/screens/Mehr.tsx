@@ -14,6 +14,7 @@ import { Icon, type IconName } from "@/components/ui/Icon";
 import { Btn, Kachel, Txt } from "@/components/ui/kit";
 import { Kopf } from "@/components/ui/Kopf";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSprache } from "@/contexts/SprachContext";
 import { zurAnderenApp } from "@/lib/appwechsel";
 import { useUnterkante } from "@/lib/unterkante";
 import { KARTE_ABSTAND } from "@/theme/flaechen";
@@ -27,10 +28,11 @@ export default function Mehr({ navigation }: { navigation: Nav }) {
   const insets = useSafeAreaInsets();
   const unterkante = useUnterkante();
   const [meldet, setMeldet] = useState(false);
+  const { t: txt } = useSprache();
 
   return (
     <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
-      <Kopf titel="Mehr" />
+      <Kopf titel={txt("mehr.titel")} />
       {me?.is_demo ? <DemoBand /> : null}
       <ScrollView
         contentContainerStyle={{
@@ -41,56 +43,56 @@ export default function Mehr({ navigation }: { navigation: Nav }) {
         }}
       >
         <Kachel>
-          <Txt v="title">{me?.full_name ?? me?.email ?? "Ihr Zugang"}</Txt>
+          <Txt v="title">{me?.full_name ?? me?.email ?? txt("mehr.ihrZugang")}</Txt>
           {me?.full_name && me?.email ? (
             <Txt v="xs" soft style={{ marginTop: 2 }}>
               {me.email}
             </Txt>
           ) : null}
           <Txt v="xs" faint style={{ marginTop: 6 }}>
-            Eigentümer-Zugang
+            {txt("mehr.eigentuemerZugang")}
           </Txt>
         </Kachel>
 
         <Kachel pad={0}>
           <Reihe
             icon="check"
-            titel="Meine Aufgaben"
-            unter="Was die Verwaltung Ihnen zugewiesen hat"
+            titel={txt("mehr.aufgaben")}
+            unter={txt("mehr.aufgabenText")}
             auf={() => navigation.navigate("Aufgaben")}
           />
           <Reihe
             icon="card"
-            titel="Auszahlungen je Objekt"
-            unter="Netto-Auszahlung nach Objekt und Zeitraum"
+            titel={txt("auszahlung.titel")}
+            unter={txt("auszahlung.jeObjekt")}
             auf={() => navigation.navigate("Auszahlungen")}
             erste={false}
           />
           <Reihe
             icon="chart"
-            titel="Auslastung & Kanäle"
-            unter="Belegung, Buchungen je Portal, Aufenthaltsdauer"
+            titel={txt("mehr.auslastung")}
+            unter={txt("mehr.auslastungText")}
             auf={() => navigation.navigate("Statistik")}
             erste={false}
           />
           <Reihe
             icon="home"
-            titel="Meine Objekte"
-            unter="Stammdaten und Zählerstände"
+            titel={txt("obj.titel")}
+            unter={txt("obj.zaehlerstaende")}
             auf={() => navigation.navigate("Objekte")}
             erste={false}
           />
           <Reihe
             icon="cam"
-            titel="Fotoalbum"
-            unter="Bilder aller Objekte"
+            titel={txt("foto.titel")}
+            unter={txt("obj.fotoalbumText")}
             auf={() => navigation.navigate("Fotoalbum")}
             erste={false}
           />
           <Reihe
             icon="bed"
-            titel="Aufenthalt buchen"
-            unter="Zeitraum für sich freihalten"
+            titel={txt("kal.aufenthaltBuchen")}
+            unter={txt("obj.eigennutzungText")}
             auf={() => navigation.navigate("SperrAntrag")}
             erste={false}
           />
@@ -103,7 +105,7 @@ export default function Mehr({ navigation }: { navigation: Nav }) {
               <View style={{ flex: 1 }}>
                 <Txt v="title">{t.marke.andereApp.name} öffnen</Txt>
                 <Txt v="xs" soft>
-                  Die App für die Verwaltung — falls Sie selbst vermieten
+                  {txt("mehr.andereAppText")}
                 </Txt>
               </View>
               <Icon n="fwd" s={18} c={t.palette.faint} />
@@ -122,9 +124,10 @@ export default function Mehr({ navigation }: { navigation: Nav }) {
           disabled={meldet}
           block
         >
-          {meldet ? "Wird abgemeldet …" : "Abmelden"}
+          {meldet ? txt("mehr.wirdAbgemeldet") : txt("mehr.abmelden")}
         </Btn>
       </ScrollView>
+
     </View>
   );
 }

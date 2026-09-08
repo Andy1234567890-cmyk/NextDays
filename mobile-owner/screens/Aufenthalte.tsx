@@ -16,6 +16,7 @@ import { Icon } from "@/components/ui/Icon";
 import { Btn, Kachel, Photo, Segmented, Spinner, Txt } from "@/components/ui/kit";
 import { Kopf } from "@/components/ui/Kopf";
 import { useAuth } from "@/contexts/AuthContext";
+import { useT } from "@/contexts/SprachContext";
 import {
   antragStatusName,
   aufenthaltNaechte,
@@ -30,20 +31,17 @@ import {
   type PortalProperty,
 } from "@/lib/ownerPortal";
 import { useRealtime } from "@/lib/realtime";
-import { useUnterkante } from "@/lib/unterkante";
 import { datumKurz, isoLokal } from "@/lib/zeitraum";
 import { KARTE_ABSTAND } from "@/theme/flaechen";
 import { useTheme } from "@/theme/ThemeProvider";
 
 type Nav = { navigate: (name: string, params?: Record<string, unknown>) => void };
 
-const REITER = ["Bevorstehend", "Vergangen"] as const;
-
 export default function Aufenthalte({ navigation }: { navigation: Nav }) {
+  const txt = useT();
   const t = useTheme();
   const { me } = useAuth();
   const insets = useSafeAreaInsets();
-  const unterkante = useUnterkante();
   const [reiter, setReiter] = useState(0);
   const [antraege, setAntraege] = useState<BlockRequest[] | null>(null);
   const [objekte, setObjekte] = useState<Map<string, PortalProperty>>(new Map());
@@ -95,16 +93,20 @@ export default function Aufenthalte({ navigation }: { navigation: Nav }) {
         contentContainerStyle={{
           padding: t.density.pad,
           paddingTop: 0,
-          paddingBottom: unterkante + 96,
+          paddingBottom: 90,
           gap: KARTE_ABSTAND,
         }}
         refreshControl={<RefreshControl refreshing={laedt} onRefresh={() => void laden()} />}
       >
-        <Segmented options={[...REITER]} value={reiter} onChange={setReiter} />
+        <Segmented
+          options={[txt("auf.bevorstehend"), txt("auf.vergangen")]}
+          value={reiter}
+          onChange={setReiter}
+        />
 
         {fehler ? (
           <Kachel>
-            <Txt v="title">Aufenthalte nicht geladen</Txt>
+            <Txt v="title">{txt("auf.nichtGeladen")}</Txt>
             <Txt v="sm" soft style={{ marginTop: 4 }}>
               {fehler}
             </Txt>
@@ -118,11 +120,11 @@ export default function Aufenthalte({ navigation }: { navigation: Nav }) {
 
         {antraege && liste.length === 0 ? (
           <Kachel>
-            <Txt v="title">{reiter === 0 ? "Kein bevorstehender Aufenthalt" : "Noch kein vergangener Aufenthalt"}</Txt>
+            <Txt v="title">{txt(reiter === 0 ? "auf.keinBevorstehender" : "auf.keinVergangener")}</Txt>
             <Txt v="sm" soft style={{ marginTop: 4 }}>
               {reiter === 0
-                ? "Buchen Sie Ihren nächsten Aufenthalt — Ihre Verwaltung bestätigt den Zeitraum."
-                : "Abgeschlossene Aufenthalte erscheinen hier."}
+                ? txt("auf.keinBevorstehenderText")
+                : txt("auf.keinVergangenerText")}
             </Txt>
           </Kachel>
         ) : null}
@@ -143,17 +145,28 @@ export default function Aufenthalte({ navigation }: { navigation: Nav }) {
                     <StatusPille status={a.status} />
                   </View>
                   <Txt v="sm" style={{ marginTop: 4 }}>
-                    {datumKurz(a.start_date)} → {datumKurz(checkout)}
+                    {datumKurz(txt, a.start_date)} → {datumKurz(txt, checkout)}
                   </Txt>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginTop: 4 }}>
                     <Txt v="xs" soft>
-                      {n} {n === 1 ? "Nacht" : "Nächte"}
+                      {n} {txt(n === 1 ? "allg.nacht" : "allg.naechte")}
                     </Txt>
                     {a.guests != null ? (
                       <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                         <Icon n="users" s={13} c={t.palette.soft} />
                         <Txt v="xs" soft>
-                          {gaesteText(a.guests)}
+                          {gaesteText(txt, a.guests)}
+                          {a.children ? ` · ${txt("buchen.kinderHinweis", { anzahl: a.children })}` : ""}
+                        </Txt>
+                      </View>
+                    ) : null}
+                    {a.pets ? (
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                        <Icon n="pet" s={13} c={t.palette.soft} />
+                        <Txt v="xs" soft>
+                          {a.pets === 1
+                            ? txt("buchen.einHaustier")
+                            : txt("buchen.anzahlHaustiere", { anzahl: a.pets })}
                         </Txt>
                       </View>
                     ) : null}
@@ -177,8 +190,16 @@ export default function Aufenthalte({ navigation }: { navigation: Nav }) {
 
       {/* Fest unten über der Tab-Leiste (Vorlage: schwarzer Vollbreiten-Knopf). */}
       <View
-        pointerEvents="box-none"
-        style={{ position: "absolute", left: t.density.pad, right: t.density.pad, bottom: unterkante + 14 }}
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          paddingHorizontal: t.density.pad,
+          paddingTop: 10,
+          paddingBottom: 10,
+          backgroundColor: t.palette.bg,
+        }}
       >
         <Btn variant="dark" block iconR="fwd" onPress={() => navigation.navigate("SperrAntrag")}>
           Aufenthalt buchen
@@ -189,6 +210,7 @@ export default function Aufenthalte({ navigation }: { navigation: Nav }) {
 }
 
 function StatusPille({ status }: { status: string }) {
+  const txt = useT();
   const t = useTheme();
   const bestaetigt = status === "approved";
   const abgelehnt = status === "rejected" || status === "cancelled";
@@ -206,7 +228,7 @@ function StatusPille({ status }: { status: string }) {
         color={bestaetigt ? t.palette.bg : abgelehnt ? t.palette.accent : t.palette.soft}
         style={{ fontFamily: t.fonts.medium, fontSize: 11 }}
       >
-        {antragStatusName(status)}
+        {antragStatusName(txt, status)}
       </Txt>
     </View>
   );

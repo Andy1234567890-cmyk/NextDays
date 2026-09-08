@@ -16,6 +16,7 @@ import { Icon } from "@/components/ui/Icon";
 import { Kachel, Spinner, Txt } from "@/components/ui/kit";
 import { Kopf } from "@/components/ui/Kopf";
 import { useAuth } from "@/contexts/AuthContext";
+import { useT } from "@/contexts/SprachContext";
 import { abrechnungTitel, imJahr, jahreAus, summenJeWaehrung, type Summe } from "@/lib/abrechnung";
 import { formatCurrency } from "@/lib/currency";
 import { getOwnerStatements, type PortalStatement } from "@/lib/ownerPortal";
@@ -38,6 +39,7 @@ export function statusName(status: string): string {
 type Nav = { navigate: (name: string, params?: Record<string, unknown>) => void };
 
 export default function Abrechnungen({ navigation }: { navigation: Nav }) {
+  const txt = useT();
   const t = useTheme();
   const { me } = useAuth();
   const insets = useSafeAreaInsets();
@@ -108,7 +110,7 @@ export default function Abrechnungen({ navigation }: { navigation: Nav }) {
 
         {fehler ? (
           <Kachel>
-            <Txt v="title">Abrechnungen nicht geladen</Txt>
+            <Txt v="title">{txt("abr.nichtGeladen")}</Txt>
             <Txt v="sm" soft style={{ marginTop: 4 }}>
               {fehler}
             </Txt>
@@ -123,7 +125,7 @@ export default function Abrechnungen({ navigation }: { navigation: Nav }) {
 
         {items?.length === 0 ? (
           <Kachel>
-            <Txt v="title">Noch keine Abrechnung</Txt>
+            <Txt v="title">{txt("abr.keine")}</Txt>
             <Txt v="sm" soft style={{ marginTop: 4 }}>
               Sobald Ihre Verwaltung eine Abrechnung abgeschlossen hat, steht sie hier.
             </Txt>
@@ -133,20 +135,22 @@ export default function Abrechnungen({ navigation }: { navigation: Nav }) {
         {items && items.length > 0 && jahr !== null ? (
           <>
             <View style={{ flexDirection: "row", gap: KARTE_ABSTAND }}>
-              <SummenKachel titel={`Summe ${jahr}`} summen={summenJeWaehrung(imGewaehltenJahr)} />
-              <SummenKachel titel="Gesamt" summen={summenJeWaehrung(items)} />
+              <SummenKachel titel={txt("abr.summeJahr", { jahr })} summen={summenJeWaehrung(imGewaehltenJahr)} />
+              <SummenKachel titel={txt("abr.gesamt")} summen={summenJeWaehrung(items)} />
             </View>
             <Txt v="xs" soft>
-              {imGewaehltenJahr.length === 1 ? "1 Abrechnung" : `${imGewaehltenJahr.length} Abrechnungen`}
+              {imGewaehltenJahr.length === 1
+                ? txt("abr.eineAbrechnung")
+                : txt("abr.anzahlAbrechnungen", { anzahl: imGewaehltenJahr.length })}
             </Txt>
           </>
         ) : null}
 
         {imGewaehltenJahr.map((z) => (
           <Kachel key={z.id}>
-            <Txt v="title">{abrechnungTitel(z)}</Txt>
+            <Txt v="title">{abrechnungTitel(txt, z)}</Txt>
             <Txt v="eyebrow" soft style={{ marginTop: 8 }}>
-              Auszahlung
+              {txt("kennzahl.auszahlung")}
             </Txt>
             <Txt v="h1" style={{ marginTop: 2 }}>
               {formatCurrency(z.owner_payout, z.currency, 2)}
@@ -155,13 +159,13 @@ export default function Abrechnungen({ navigation }: { navigation: Nav }) {
               <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 6 }}>
                 <Icon n="cal" s={14} c={t.palette.soft} />
                 <Txt v="xs" soft numberOfLines={1} style={{ flexShrink: 1 }}>
-                  {spanneLesbar(z.period_from, z.period_to)}
+                  {spanneLesbar(txt, z.period_from, z.period_to)}
                 </Txt>
               </View>
               <Pressable
-                onPress={() => navigation.navigate("AbrechnungDetail", { id: z.id, titel: abrechnungTitel(z) })}
+                onPress={() => navigation.navigate("AbrechnungDetail", { id: z.id, titel: abrechnungTitel(txt, z) })}
                 accessibilityRole="button"
-                accessibilityLabel={`Beleg ansehen: ${abrechnungTitel(z)}`}
+                accessibilityLabel={`Beleg ansehen: ${abrechnungTitel(txt, z)}`}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",

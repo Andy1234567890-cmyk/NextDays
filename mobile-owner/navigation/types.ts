@@ -12,7 +12,7 @@ export type OwnerTabParamList = {
   Start: undefined;
   Abrechnungen: undefined;
   Aufenthalte: undefined;
-  Kalender: undefined;
+  Kalender: { alsTab?: boolean; propertyId?: string } | undefined;
   Mehr: undefined;
 };
 
@@ -24,13 +24,16 @@ export type RootStackParamList = {
   Fotoalbum: undefined;
   Belegung: undefined;
   // „Aufenthalt buchen" — Name bleibt für den Deep-Link `eigennutzung`.
-  SperrAntrag: { propertyId?: string } | undefined;
+  // `von`/`bis` (Anreise/Abreise) aus der Zieh-Auswahl im Kalender.
+  SperrAntrag: { propertyId?: string; von?: string; bis?: string } | undefined;
   AufenthaltBestaetigt: {
     antrag: import("@/lib/ownerPortal").BlockRequest;
     objekt: { title: string; photo: string | null; adresse: string | null };
     checkIn: string;
     checkOut: string;
     gaeste: number;
+    kinder: number;
+    haustiere: number;
     notizen: string | null;
   };
   Zaehlerstand: { propertyId: string; titel: string };

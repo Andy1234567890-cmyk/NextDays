@@ -10,6 +10,7 @@ import {
 import { zeitraumGrenzen } from "@/screens/Auszahlungen";
 import { zeitraumPlausibel } from "@/screens/Sperrantrag";
 import { kanalName, kanalTeile } from "@/screens/Ueberblick";
+import { txt } from "@/lib/test-uebersetzer";
 import { artName, heuteIso, zahlAus } from "@/screens/Zaehlerstand";
 
 describe("deckkraft", () => {
@@ -38,20 +39,20 @@ describe("kanalName", () => {
   it("nennt den eigenen Marktplatz beim Markennamen", () => {
     // CLAUDE.md: der eigene Marktplatz ist ein gleichrangiger Kanal und heißt
     // myBestDays — nicht „Portal" und nicht „Direkt".
-    expect(kanalName("portal", null)).toBe("myBestDays");
+    expect(kanalName(txt, "portal", null)).toBe("myBestDays");
   });
 
   it("bevorzugt den echten Portalnamen aus den Daten", () => {
-    expect(kanalName("ota_other", "BookingCom")).toBe("Booking.com");
+    expect(kanalName(txt, "ota_other", "BookingCom")).toBe("Booking.com");
   });
 
   it("gibt einen unbekannten Code unverändert zurück, statt zu raten", () => {
-    expect(kanalName("nagelneuer_kanal", null)).toBe("nagelneuer_kanal");
+    expect(kanalName(txt, "nagelneuer_kanal", null)).toBe("nagelneuer_kanal");
   });
 
   it("unterscheidet Website von Direkt", () => {
-    expect(kanalName("website", null)).toBe("Eigene Website");
-    expect(kanalName("direct", null)).toBe("Direkt");
+    expect(kanalName(txt, "website", null)).toBe("Eigene Website");
+    expect(kanalName(txt, "direct", null)).toBe("Direkt");
   });
 });
 
@@ -59,21 +60,21 @@ describe("zeitraumGrenzen", () => {
   const heute = new Date(2026, 8, 2); // 02.09.2026
 
   it("Dieses Jahr beginnt am 1. Januar", () => {
-    expect(zeitraumGrenzen("Dieses Jahr", heute)).toEqual({
+    expect(zeitraumGrenzen("diesesJahr", heute)).toEqual({
       von: "2026-01-01",
       bis: "2026-09-02",
     });
   });
 
   it("Letztes Jahr umfasst das ganze Vorjahr", () => {
-    expect(zeitraumGrenzen("Letztes Jahr", heute)).toEqual({
+    expect(zeitraumGrenzen("letztesJahr", heute)).toEqual({
       von: "2025-01-01",
       bis: "2025-12-31",
     });
   });
 
   it("Letzte 12 Monate startet am Monatsersten vor elf Monaten", () => {
-    expect(zeitraumGrenzen("Letzte 12 Monate", heute)).toEqual({
+    expect(zeitraumGrenzen("zwoelfMonate", heute)).toEqual({
       von: "2025-10-01",
       bis: "2026-09-02",
     });
@@ -81,7 +82,7 @@ describe("zeitraumGrenzen", () => {
 
   it("rechnet über den Jahreswechsel", () => {
     const januar = new Date(2026, 0, 15);
-    expect(zeitraumGrenzen("Letzte 12 Monate", januar).von).toBe("2025-02-01");
+    expect(zeitraumGrenzen("zwoelfMonate", januar).von).toBe("2025-02-01");
   });
 });
 
@@ -150,7 +151,7 @@ describe("heuteIso", () => {
 describe("kanalTeile", () => {
   // Der reale Fall: AirSmil fuehrt Booking in zwei Schreibweisen.
   it("faltet mehrere Schreibweisen desselben Portals zu EINEM Teil", () => {
-    const teile = kanalTeile([
+    const teile = kanalTeile(txt, [
       { channel: "booking", ota_name: "Booking.com", reservations: 206 },
       { channel: "booking", ota_name: "BookingCom", reservations: 88 },
     ]);
@@ -158,7 +159,7 @@ describe("kanalTeile", () => {
   });
 
   it("vergibt eindeutige Namen — sonst kollidieren die React-Keys im Ring", () => {
-    const teile = kanalTeile([
+    const teile = kanalTeile(txt, [
       { channel: "booking", ota_name: "BookingCom", reservations: 5 },
       { channel: "booking", ota_name: "Booking.com", reservations: 5 },
       { channel: "airbnb", ota_name: null, reservations: 3 },
@@ -169,7 +170,7 @@ describe("kanalTeile", () => {
   });
 
   it("sortiert absteigend, damit der groesste Kanal zuerst steht", () => {
-    const teile = kanalTeile([
+    const teile = kanalTeile(txt, [
       { channel: "portal", ota_name: null, reservations: 2 },
       { channel: "airbnb", ota_name: null, reservations: 9 },
       { channel: "website", ota_name: null, reservations: 5 },
@@ -178,7 +179,7 @@ describe("kanalTeile", () => {
   });
 
   it("gibt bei leerer Eingabe eine leere Liste — der Ring zeigt dann Strich", () => {
-    expect(kanalTeile([])).toEqual([]);
+    expect(kanalTeile(txt, [])).toEqual([]);
   });
 });
 
@@ -199,7 +200,9 @@ describe("zeitfensterText", () => {
   });
 
   it("erfindet ohne Start kein Fenster", () => {
-    expect(zeitfensterText(null, null)).toBe("Kein Zeitfenster");
+    // `null` statt eines deutschen Satzes: den Text setzt der Aufrufer aus dem
+    // Katalog (`aufg.keinZeitfenster`), sonst stünde er in 24 Sprachen deutsch.
+    expect(zeitfensterText(null, null)).toBeNull();
   });
 });
 
@@ -224,7 +227,11 @@ describe("aufteilen", () => {
 
 describe("aufgabenStatus", () => {
   it("übersetzt die bekannten Codes und lässt Unbekanntes roh stehen", () => {
-    expect(aufgabenStatus("in_progress")).toBe("In Arbeit");
-    expect(aufgabenStatus("wasauchimmer")).toBe("wasauchimmer");
+    // Der Übersetzer wird hier gestellt: die Funktion liefert einen
+    // Katalog-SCHLÜSSEL, kein deutsches Wort — sonst wäre sie in 24 Sprachen
+    // dieselbe deutsche Zeichenkette (08.09.2026).
+    const txt = (k: string) => `[${k}]`;
+    expect(aufgabenStatus("in_progress", txt as never)).toBe("[aufg.statusInArbeit]");
+    expect(aufgabenStatus("wasauchimmer", txt as never)).toBe("wasauchimmer");
   });
 });

@@ -1,4 +1,5 @@
 import { abrechnungJahr, abrechnungTitel, imJahr, jahreAus, summenJeWaehrung } from "@/lib/abrechnung";
+import { txt } from "@/lib/test-uebersetzer";
 import type { PortalStatement } from "@/lib/ownerPortal";
 
 function st(p: Partial<PortalStatement>): PortalStatement {
@@ -16,16 +17,16 @@ function st(p: Partial<PortalStatement>): PortalStatement {
 
 describe("abrechnungTitel", () => {
   it("ganzer Monat → Monatsname", () => {
-    expect(abrechnungTitel(st({}))).toBe("Abrechnung Mai 2026");
-    expect(abrechnungTitel(st({ period_from: "2026-02-01", period_to: "2026-02-28" }))).toBe(
+    expect(abrechnungTitel(txt, st({}))).toBe("Abrechnung Mai 2026");
+    expect(abrechnungTitel(txt, st({ period_from: "2026-02-01", period_to: "2026-02-28" }))).toBe(
       "Abrechnung Februar 2026",
     );
   });
   it("krummer Zeitraum → Spanne", () => {
-    expect(abrechnungTitel(st({ period_from: "2026-05-01", period_to: "2026-05-15" }))).toBe(
+    expect(abrechnungTitel(txt, st({ period_from: "2026-05-01", period_to: "2026-05-15" }))).toBe(
       "Abrechnung 1.–15. Mai 2026",
     );
-    expect(abrechnungTitel(st({ period_from: "2026-04-01", period_to: "2026-06-30" }))).toBe(
+    expect(abrechnungTitel(txt, st({ period_from: "2026-04-01", period_to: "2026-06-30" }))).toBe(
       "Abrechnung 1. Apr – 30. Jun 2026",
     );
   });

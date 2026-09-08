@@ -16,6 +16,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Fehlergrenze } from "@/components/Fehlergrenze";
 import { Splash } from "@/components/Splash";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { SprachProvider } from "@/contexts/SprachContext";
 import { getToken, onTokenChange } from "@/lib/auth";
 import { realtimeTokenQuelleSetzen } from "@/lib/realtime";
 import { Tabs } from "@/navigation/Tabs";
@@ -113,7 +114,7 @@ function Root() {
 
   return (
     <NavigationContainer ref={navRef} linking={linking} fallback={<Splash />}>
-      <Stack.Navigator initialRouteName={initial} screenOptions={{ headerShown: false }}>
+      <Stack.Navigator initialRouteName={initial} screenOptions={{ headerShown: false, headerBackButtonDisplayMode: "minimal" }}>
         {istEigentuemer ? (
           <>
             {/* Geschützt: nur mit Eigentümer-Session registriert. */}
@@ -191,7 +192,11 @@ export default function App() {
               Stacktrace (components/Fehlergrenze.tsx). */}
           <Fehlergrenze>
             <AuthProvider>
-              <Root />
+              {/* Die Sprache hängt am Profil (`preferred_language`), also
+                  INNERHALB von AuthProvider. */}
+              <SprachProvider>
+                <Root />
+              </SprachProvider>
             </AuthProvider>
           </Fehlergrenze>
         </ThemeProvider>
