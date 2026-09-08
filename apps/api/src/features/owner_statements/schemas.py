@@ -478,6 +478,10 @@ class StatementHeader(BaseModel):
     pm_tax_id: str | None = None
     pm_logo_url: str | None = None
     owner_name: str | None = None
+    # Firmenname, wenn der Eigentümer eine Gesellschaft ist (0610). Steht auf
+    # dem Beleg ÜBER dem Namen: Leistungsempfänger ist dann die Gesellschaft,
+    # die Person ist der Ansprechpartner. NULL = Privatperson.
+    owner_company: str | None = None
     owner_email: str | None = None
     owner_phone: str | None = None
     owner_address: str | None = None

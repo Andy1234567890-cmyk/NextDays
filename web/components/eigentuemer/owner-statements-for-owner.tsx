@@ -112,6 +112,7 @@ export function OwnerStatementsForOwner({
       pm_tax_id: null,
       pm_logo_url: null,
       owner_name: owner.name,
+      owner_company: owner.company,
       owner_email: owner.email,
       owner_phone: owner.phone,
       owner_address: ownerAddress,

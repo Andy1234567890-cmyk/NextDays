@@ -621,7 +621,12 @@ export function buildStatementHtml(
       </div>
       <div class="party">
         <h3>${t(tx, "owner")}</h3>
-        ${line(h.owner_name, true)}
+        ${/* Ist der Eigentümer eine Gesellschaft, ist SIE der Empfänger und
+              steht fett zuerst; die Person darunter ist der Ansprechpartner.
+              Adresse, Moms-Nr. und E-Mail waren schon immer die der Firma —
+              nur der Name fehlte (0610). */ ""}
+        ${h.owner_company ? line(h.owner_company, true) : ""}
+        ${line(h.owner_name, !h.owner_company)}
         ${line(h.owner_address)}
         ${line(h.owner_email)}
         ${line(h.owner_phone)}

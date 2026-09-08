@@ -47,6 +47,10 @@ export type StatementHeader = {
   pm_tax_id: string | null;
   pm_logo_url: string | null;
   owner_name: string | null;
+  /** Firmenname, wenn der Eigentümer eine Gesellschaft ist (0610). Steht auf
+   *  dem Beleg über dem Namen: die Gesellschaft ist der Empfänger, die Person
+   *  der Ansprechpartner. `null` = Privatperson oder Beleg vor 0610. */
+  owner_company: string | null;
   owner_email: string | null;
   owner_phone: string | null;
   owner_address: string | null;

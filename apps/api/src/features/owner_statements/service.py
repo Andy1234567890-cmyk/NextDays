@@ -1404,6 +1404,10 @@ class OwnerStatementsService(ZeilenMixin):
             pm_tax_id=b.get("vat_id") or b.get("tax_number"),
             pm_logo_url=b.get("company_logo_url"),
             owner_name=owner.get("name"),
+            # Wie `pm_name` beim Aussteller: die Firma gehört auf den Beleg,
+            # wenn es eine gibt. Sie ERSETZT den Namen nicht — beide stehen
+            # da, Gesellschaft als Empfänger, Person als Ansprechpartner.
+            owner_company=owner.get("company"),
             owner_email=owner.get("email"),
             owner_phone=owner.get("phone"),
             owner_address=owner_addr,
@@ -2916,6 +2920,7 @@ def _to_response(
         pm_tax_id=row.get("pm_tax_id"),
         pm_logo_url=row.get("pm_logo_url"),
         owner_name=row.get("owner_name"),
+        owner_company=row.get("owner_company"),
         owner_email=row.get("owner_email"),
         owner_phone=row.get("owner_phone"),
         owner_address=row.get("owner_address"),
