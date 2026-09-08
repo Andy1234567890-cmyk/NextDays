@@ -1441,7 +1441,7 @@ class PublicPortalService:
     def earnings(
         self, ctx: AuthContext, period_from: date, period_to: date
     ) -> PortalEarningsResponse:
-        tenant_id, user_id = self._require(ctx)
+        tenant_id, _user_id = self._require(ctx)
         # Familienzugänge sehen Finanzen nur, wenn der Eigentümer sie
         # freigeschaltet hat (0389). Die Capability am Endpunkt genügt nicht:
         # ein Familienmitglied trägt die Rolle `owner` und bekommt sie darüber.
@@ -2099,7 +2099,7 @@ class PublicPortalService:
         self._require_own(ctx, property_id)
 
         from src.features.reservations.schemas import ReservationMove
-        from src.features.reservations.writes import ReservationsService
+        from src.features.reservations.service import ReservationsService
 
         dienst = ReservationsService(self._db)
         try:
