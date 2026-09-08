@@ -25,13 +25,20 @@ WAS HIER ENTSTEHT
   (Handwerker, Verbrauch) und `to_owner` (Gutschrift). Sie füllen zugleich den
   Auswertungs-Reiter „Ausgaben & Extras".
 
-WAS ES NICHT TUT
-----------------
-Es rechnet die Beträge NICHT aus den Buchungen nach. Der Abrechnungs-Service
-ist die Wahrheit dafür; ihn hier nachzubauen hieße, zwei Rechenwege zu pflegen
-(genau der Fehler, den `auswertung-export` vermeidet). Die Zahlen sind aus dem
-tatsächlichen Buchungsbestand des Zeitraums SUMMIERT — also echt, nur ohne die
-Feinheiten von Gebühren und Staffeln.
+WIE DIE BETRÄGE ENTSTEHEN (korrigiert 08.09.2026)
+------------------------------------------------
+NICHT hier. Der Abrechnungs-Service ist die einzige Wahrheit: die Zeilen
+werden als ENTWURF angelegt, dann rechnet `_refresh_summary` je Beleg die
+echte Kette (Portal-Abzug, Gebühren, Vertrags-Pauschale, Verrechnungsposten)
+und schreibt sie in die Zeile; erst danach setzt `summen_nachrechnen` den
+Status auf `finalized`.
+
+Warum das sein muss: vorher trug der Seed `Umsatz − Provision` ein. Der Beleg
+zeigte damit ZWEI verschiedene Zahlen für dasselbe Geld — die Summenzeile aus
+dem Snapshot (10.558,00 €) und die Summe der Buchungszeilen darunter
+(9.591,24 €), die Web und App beide aus `rental_rows` bilden. Gemeldet vom
+Nutzer („Eigentümer-Abrechnung stimmt nicht mit der Web-Version überein"), und
+genau der Fehler, vor dem der Kopf dieser Datei gewarnt hatte.
 """
 from __future__ import annotations
 
@@ -157,6 +164,7 @@ def eigentuemer_anlegen(  # pylint: disable=too-many-locals
     firma = betrieb.firma
 
     owners: list[dict[str, Any]] = []
+    vertraege: list[dict[str, Any]] = []
     zuordnung: list[dict[str, Any]] = []
     posten: list[dict[str, Any]] = []
     statements: list[dict[str, Any]] = []
@@ -186,6 +194,35 @@ def eigentuemer_anlegen(  # pylint: disable=too-many-locals
             "default_commission_pct": provision,
             "default_payout_method": "bank_transfer",
             "statement_frequency": "monthly",
+        })
+        # ABRECHNUNGSVERTRAG (0343). Ohne ihn rechnet der Abrechnungs-Service
+        # die Kette NICHT: `verwaltungsprovision`, `pauschale` und
+        # `gebuehren_an_eigentuemer` bleiben leer, und der Beleg zeigt nur
+        # einen Endbetrag ohne Herleitung — gemeldet 08.09.2026
+        # („OTA-Gebühren, alles fehlt"). Der Altweg über
+        # `default_commission_pct` kann das nicht: er kennt weder Portal-Abzug
+        # noch Gebührenzuordnung.
+        #
+        # Reinigungspauschale je Buchung, VOR der Provision: so, wie ein
+        # Betrieb sie üblich vereinbart — sie mindert die Bemessungsgrundlage.
+        vertraege.append({
+            "id": demo_id(f"billterms:{betrieb.schluessel}:{nummer}"),
+            "tenant_id": tenant_id,
+            "owner_id": owner_id,
+            # Für ALLE Objekte dieses Eigentümers.
+            "property_id": None,
+            # Weit genug zurück, dass jede Buchung der Historie erfasst ist
+            # (seed_demo.TAGE_ZURUECK = 760); Stichtag ist die Abreise.
+            "gueltig_ab": (heute - timedelta(days=1100)).isoformat(),
+            "gueltig_bis": None,
+            "provisions_pct": provision,
+            "min_provision_betrag": "25.00",
+            "min_provision_currency": betrieb.waehrung,
+            "pauschale_betrag": str(wuerfel.choice([35.0, 45.0, 60.0])),
+            "pauschale_currency": betrieb.waehrung,
+            "pauschale_basis": "je_buchung",
+            "pauschale_zeitpunkt": "vor_provision",
+            "notiz": "Rahmenvereinbarung Verwaltung",
         })
         for schluessel in gruppe:
             zuordnung.append({
@@ -218,13 +255,18 @@ def eigentuemer_anlegen(  # pylint: disable=too-many-locals
                 "created_by_name": "myNextDays",
             })
 
-        # Zwei Abrechnungen: Vormonat finalisiert, laufender Monat als Entwurf.
-        for versatz, status in ((1, "finalized"), (0, "draft")):
+        # Zwölf abgeschlossene Monatsabrechnungen plus der laufende Monat als
+        # Entwurf (08.09.2026): die Eigentümer-App zeigt eine Abrechnungsliste
+        # je Jahr mit Jahressumme — mit einem einzigen Beleg war sie leer.
+        #
+        # ALLE entstehen als `draft`; `summen_nachrechnen` lässt den Service
+        # rechnen und finalisiert danach die zwölf abgeschlossenen (siehe Kopf).
+        for versatz, status in [(v, "finalized") for v in range(12, 0, -1)] + [(0, "draft")]:
             von, bis = _monat_grenzen(heute, versatz)
             umsatz, anzahl = _summen(db, tenant_id, property_ids, von, bis)
-            if not anzahl and status == "draft":
-                # Ein leerer Entwurf ist eine ehrliche Anzeige, aber kein gutes
-                # Bild — nur der finalisierte Beleg bleibt dann stehen.
+            if not anzahl:
+                # Ein leerer Beleg ist eine ehrliche Anzeige, aber kein gutes
+                # Bild — Monate ohne Buchung bekommen keine Abrechnung.
                 continue
             eigene_posten = [
                 p for p in posten
@@ -247,9 +289,19 @@ def eigentuemer_anlegen(  # pylint: disable=too-many-locals
                 # `checked_out` gab es dort nie, der Beleg starb damit beim
                 # Lesen mit 500 (07.09.2026).
                 "reservation_statuses": ["confirmed", "completed"],
-                "status": status,
+                # IMMER als Entwurf schreiben — sonst rührt `_refresh_summary`
+                # die Zeile nicht an und die erfundenen Summen blieben stehen.
+                "status": "draft",
+                # Merker für `summen_nachrechnen`; keine DB-Spalte.
+                "_zielstatus": status,
                 "kind": "invoice",
-                "commission_pct": provision,
+                # KEIN `commission_pct` am Beleg: das ist der OVERRIDE, und
+                # er schaltet die Rechenkette ab (`zeilen.py`: „`None` bleibt
+                # bestehen, wenn die Kette nicht lief (Override, Altspalten)").
+                # Der Beleg zeigte damit je Zeile nur den Endbetrag, ohne
+                # Portal-Abzug, Gebühren, Pauschale und Verwaltungsprovision —
+                # gemeldet 08.09.2026 („OTA-Gebühren, alles fehlt"). Den Satz
+                # trägt der Abrechnungsvertrag oben; er ist die Quelle.
                 "currency": betrieb.waehrung,
                 "total_price": str(umsatz),
                 "total_payout": str(auszahlung),
@@ -260,8 +312,9 @@ def eigentuemer_anlegen(  # pylint: disable=too-many-locals
                 "pm_payout": str(pm_anteil),
                 # Rechnungsnummer NUR am finalisierten Beleg: ein Entwurf hat
                 # noch keine, und eine erfundene stünde später in der Buchhaltung.
+                # Eindeutig je Betrieb: Jahr, Monat, Eigentümer-Nummer.
                 "invoice_number": (
-                    f"{von.year}-{nummer + 1:04d}" if status == "finalized" else None
+                    f"{von.year}-{von.month:02d}{nummer + 1:02d}" if status == "finalized" else None
                 ),
                 "invoice_date": bis.isoformat() if status == "finalized" else None,
                 "due_date": (bis + timedelta(days=14)).isoformat()
@@ -284,12 +337,53 @@ def eigentuemer_anlegen(  # pylint: disable=too-many-locals
                 "language": person["sprache"],
             })
 
+    ziele = {z["id"]: z.pop("_zielstatus") for z in statements}
     db.upsert("owners", owners)
+    db.upsert("owner_billing_terms", vertraege)
     db.upsert("owner_properties", zuordnung, konflikt="owner_id,property_id")
     db.upsert("owner_expenses", posten)
     db.upsert("owner_statements", statements)
-    print(f"  {len(owners)} Eigentümer, {len(zuordnung)} Objektzuordnungen, "
+    summen_nachrechnen(db, tenant_id, ziele)
+    print(f"  {len(owners)} Eigentümer, {len(vertraege)} Abrechnungsverträge, "
+          f"{len(zuordnung)} Objektzuordnungen, "
           f"{len(posten)} Verrechnungsposten, {len(statements)} Abrechnungen")
+
+
+def summen_nachrechnen(
+    db: Supabase, tenant_id: str, ziele: dict[str, str]
+) -> None:
+    """Jede Abrechnung vom Abrechnungs-Service rechnen lassen, dann Status setzen.
+
+    EINE Rechenquelle (siehe Modulkopf): `_refresh_summary` durchläuft
+    dieselbe Kette wie Vorschau, Web-Beleg und App — Portal-Abzug je Kanal,
+    Gebühren aus der Quelle, Vertrags-Pauschale, Verrechnungsposten. Es
+    schreibt nur in ENTWÜRFE, deshalb wird erst gerechnet und danach
+    finalisiert.
+
+    Der Service wird direkt benutzt, nicht die HTTP-Route: der Seed läuft ohne
+    laufenden Server, und ein zweiter Rechenweg über die API hätte dieselbe
+    Zahl nur umständlicher geholt.
+    """
+    # Erst hier importiert: `scripts/demo/seed_demo.py` legt den Pfad auf
+    # `apps/api/src` erst zur Laufzeit, ein Import am Dateikopf schlüge fehl.
+    from src.features.owner_statements.service import (  # noqa: PLC0415
+        OwnerStatementsService,
+    )
+
+    # Der Seed-Helfer spricht rohes PostgREST (siehe `konfig.Supabase`); der
+    # Service erwartet einen supabase-py-Client. Beide reden mit derselben
+    # Datenbank unter demselben Service-Role-Key.
+    from supabase import create_client  # noqa: PLC0415
+
+    dienst = OwnerStatementsService(create_client(db.url, db.service_key))
+    fertig = 0
+    for statement_id, zielstatus in ziele.items():
+        dienst._refresh_summary(tenant_id, statement_id)  # noqa: SLF001
+        if zielstatus != "draft":
+            db.patch("owner_statements", {"status": zielstatus},
+                     id=f"eq.{statement_id}", tenant_id=f"eq.{tenant_id}")
+        fertig += 1
+    print(f"  {fertig} Abrechnungen vom Abrechnungs-Service nachgerechnet")
 
 
 def portalzugang_anlegen(
@@ -347,6 +441,18 @@ def portalzugang_anlegen(
         "full_name": eigentuemer["name"],
         "preferred_language": eigentuemer.get("language") or "de",
         "preferred_currency": betrieb.waehrung,
+        # Die granularen Portal-Rechte (Rechte-Dialog der Verwaltung). Ohne
+        # sie antwortet /public-portal/statistics mit 403 und die App zeigt
+        # „nicht freigegeben" — dieselbe Auswahl wie bei den echten
+        # Eigentümern des Beta-Betriebs (Stand 08.09.2026).
+        "permissions": [
+            "owner_reporting",
+            "pm_nonrevenue_charts",
+            "pm_photo_album",
+            "pm_property_area",
+            "pm_view_property_images",
+            "view_booking_source",
+        ],
     }])
     db.patch("owners", {"user_id": auth_id}, id=f"eq.{owner_id}")
 

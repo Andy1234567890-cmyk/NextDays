@@ -188,4 +188,51 @@ def type_attributes(betrieb: Betrieb, objekt: Objekt) -> dict[str, Any]:
         "occupancy": objekt.max_gaeste,
         "messaging": _messaging(betrieb, objekt),
         "policies": _policies(betrieb, objekt),
+        "pricing": {"fees": _gebuehren(betrieb, objekt)},
     }
+
+
+def _gebuehren(betrieb: Betrieb, objekt: Objekt) -> list[dict[str, Any]]:
+    """Die gepflegten Objekt-Gebühren (`type_attributes.pricing.fees`).
+
+    WARUM (08.09.2026): ohne sie hat jede Buchung des Belegs „keine Gebühren".
+    Der Eigentümer-Beleg zeigte darum nur einen Endbetrag ohne Herleitung, und
+    die ganze Gebühren-Kette des Produkts (Reinigung dem Betrieb, Kurtaxe
+    durchlaufend, Haustier dem Eigentümer) war auf keinem Screenshot zu sehen.
+
+    Die Struktur ist die des echten Bestands (`gebuehren_quelle.objekt_gebuehren`):
+    `feeType` bestimmt die Zuordnung, `basis` je Aufenthalt oder je Nacht,
+    `mode='amount'` ein fester Betrag. Die Haustiergebühr ist anlassgebunden —
+    sie greift nur bei `reservations.pets > 0` und steht deshalb hier ohne
+    Wirkung auf die übrigen Buchungen.
+
+    Beträge nach Objektgröße gestaffelt, damit die Belege nicht überall
+    dieselbe Zahl zeigen.
+    """
+    reinigung = 60.0 + 10.0 * max(0, objekt.max_gaeste - 2)
+    return [
+        {
+            "name": "Endreinigung",
+            "feeType": "cleaning_fee",
+            "mode": "amount",
+            "amount": round(reinigung, 2),
+            "basis": "per_stay",
+            "currency": betrieb.waehrung,
+        },
+        {
+            "name": "Ortstaxe",
+            "feeType": "city_tax",
+            "mode": "amount",
+            "amount": 2.5,
+            "basis": "per_night",
+            "currency": betrieb.waehrung,
+        },
+        {
+            "name": "Haustier",
+            "feeType": "pet_fee",
+            "mode": "amount",
+            "amount": 25.0,
+            "basis": "per_stay",
+            "currency": betrieb.waehrung,
+        },
+    ]

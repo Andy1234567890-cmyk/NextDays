@@ -66,7 +66,12 @@ KEIM = 20260731
 # Zeitfenster des Bestands, relativ zu heute — der Belegungsplan zeigt damit
 # Vergangenheit (abgereist), Gegenwart (im Haus) und Zukunft (bestätigt/Option)
 # gleichzeitig, also jede Farbe der Legende.
-TAGE_ZURUECK = 45
+#
+# 25 Monate zurück (08.09.2026): die Finanzübersicht der Eigentümer-App
+# zeigt „12 Monate" MIT Vorjahresvergleich, die Auswertung bis 24 Monate.
+# Mit 45 Tagen Historie waren neun von zwölf Monaten Null — das Diagramm
+# eine flache Linie mit einer Spitze am Ende, kein Bild für die Marketing-Seite.
+TAGE_ZURUECK = 760
 TAGE_VORAUS = 150
 
 # Zielauslastung. Bewusst nicht 100 %: ein voll belegter Plan wirkt unecht und
@@ -727,6 +732,61 @@ def portale_verbinden(db: Supabase, betrieb: Betrieb, tenant_id: str,
     print(f"  {len(verbindungen)} Portal-Verbindungen")
 
 
+def gebuehren_zuordnen_anlegen(db: Supabase, tenant_id: str) -> None:
+    """Wem gehört welche Gebührenart (`fee_classification`, 0343)?
+
+    OHNE diese Zuordnung wirft die Abrechnungskette `gebuehr_nicht_zugeordnet`
+    und die ganze Zeile bleibt ohne Betrag — „wem gehört die Reinigung?" ist
+    eine Frage, die der Server nicht raten darf (Wurzel 4). Die Demo beantwortet
+    sie so, wie ein Betrieb sie üblich beantwortet:
+
+    * `cleaning_fee` → BETRIEB, nicht provisionspflichtig. Der Betrieb erbringt
+      die Reinigung und behält sie; sie erhöht seine Provision nicht.
+    * `pet_fee` → EIGENTÜMER, nicht provisionspflichtig. Mehrverschleiß am
+      Objekt, geht ungekürzt an ihn.
+
+    * `city_tax` → DURCHLAUF, nicht provisionspflichtig. Die Ortstaxe gehört
+      der Gemeinde; sie läuft an Betrieb und Eigentümer vorbei.
+
+    Auch die Ortstaxe BRAUCHT den Eintrag: `_STEUER_ARTEN` gilt nur für
+    Portal-Aufstellungen (dort erkennt Booking sie am `type`-Feld). Als
+    gepflegte Objekt-Gebühr verlangt `gebuehren_zuordnen` für JEDE Art einen
+    Eintrag und wirft sonst `gebuehr_nicht_zugeordnet` — gemessen am
+    08.09.2026: 635-mal, und alle 104 Belege standen ohne Auszahlungsbetrag.
+    """
+    zeilen = [
+        {
+            "id": demo_id(f"feeclass:{tenant_id}:cleaning_fee"),
+            "tenant_id": tenant_id,
+            "fee_type": "cleaning_fee",
+            "property_id": None,
+            "gehoert_zu": "betrieb",
+            "provisionspflichtig": False,
+            "notiz": "Reinigung erbringt die Verwaltung",
+        },
+        {
+            "id": demo_id(f"feeclass:{tenant_id}:pet_fee"),
+            "tenant_id": tenant_id,
+            "fee_type": "pet_fee",
+            "property_id": None,
+            "gehoert_zu": "eigentuemer",
+            "provisionspflichtig": False,
+            "notiz": "Mehrverschleiß am Objekt",
+        },
+        {
+            "id": demo_id(f"feeclass:{tenant_id}:city_tax"),
+            "tenant_id": tenant_id,
+            "fee_type": "city_tax",
+            "property_id": None,
+            "gehoert_zu": "durchlauf",
+            "provisionspflichtig": False,
+            "notiz": "Ortstaxe der Gemeinde",
+        },
+    ]
+    db.upsert("fee_classification", zeilen)
+    print(f"  {len(zeilen)} Gebühren-Zuordnungen")
+
+
 def portal_saetze_anlegen(db: Supabase, tenant_id: str) -> None:
     """Portal-Abzugssätze (0364) — ohne sie bleibt die Abrechnung auf „—".
 
@@ -1043,6 +1103,9 @@ def main() -> int:
         # Portal-Sätze VOR den Eigentümern: ohne sie ist der Portal-Abzug
         # unbestimmbar, und die Abrechnungen darunter blieben auf „—".
         portal_saetze_anlegen(db, tenant_id)
+        # Wem welche Gebühr gehört — ohne das bleibt jede Belegzeile ohne
+        # Betrag (`gebuehr_nicht_zugeordnet`).
+        gebuehren_zuordnen_anlegen(db, tenant_id)
         # Eigentümer vor den Aufgaben: die Abrechnungen summieren die
         # Buchungen, die oben schon stehen.
         eigentuemer_anlegen(db, betrieb, tenant_id, objekt_ids)

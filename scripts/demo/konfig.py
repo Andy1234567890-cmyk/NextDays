@@ -51,6 +51,9 @@ class Supabase:
             )
         self.url = url.rstrip("/")
         self._key = key
+        # Für Aufrufer, die einen echten supabase-py-Client brauchen (der
+        # Abrechnungs-Service rechnet die Demo-Belege damit nach).
+        self.service_key = key
         self._client = httpx.Client(timeout=60.0)
 
     # ── PostgREST ────────────────────────────────────────────────────────────

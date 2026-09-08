@@ -29,7 +29,7 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
 from konfig import Supabase, demo_id
@@ -216,7 +216,13 @@ def threads_anlegen(db: Supabase, tenant_id: str,
     nachrichten: list[dict[str, Any]] = []
     verknuepfungen: list[tuple[str, str]] = []
 
+    # Nur die jüngeren Buchungen bekommen einen Thread: bei 25 Monaten
+    # Historie (seed_demo.TAGE_ZURUECK) wären es sonst mehrere hundert, und
+    # ein Posteingang mit Gesprächen von vor zwei Jahren ist kein Vorführbild.
+    grenze = (date.today() - timedelta(days=90)).isoformat()
     for reservierung in buchungen:
+        if str(reservierung.get("check_in") or "") < grenze:
+            continue
         ota_name = PORTAL_NAMEN.get(reservierung.get("channel") or "")
         if not ota_name:
             continue  # kein Portal → konstruktiv kein Thread
