@@ -20,7 +20,7 @@ from typing import Any
 
 from src.core.logging import get_logger
 
-from .client import WhatsAppClient, WhatsAppError
+from .client import WhatsAppClient, WhatsAppError, WhatsAppRateLimitError
 from .vorlagen_felder import nach_meta
 
 log = get_logger("nextdays.whatsapp.templates")
@@ -140,9 +140,17 @@ def rollout(client: WhatsAppClient) -> dict[str, object]:
     wird pro Vorlage gesammelt und zurückgegeben, statt die ganze Schleife
     abzubrechen. Verbindungs-/Auth-Fehler (503) sind kein Vorlagenproblem und
     werden weitergeworfen.
+
+    Eine Drosselung bricht dagegen SOFORT ab: weiterzusenden verlängert nach
+    Metas eigener Ansage die Sperre, und die zehn identischen Fehlermeldungen
+    sähen für den Betrieb aus wie zehn inhaltlich abgelehnte Texte.
     """
+    # `frisch=True`: an dieser Liste hängt die Idempotenz (Wurzel 2). Ein
+    # Zwischenstand von vor einer Minute könnte eine gerade gelöschte Vorlage
+    # noch führen — sie würde übersprungen und fehlte danach dauerhaft.
     vorhanden = {
-        (t.get("name"), t.get("language")) for t in client.list_templates()
+        (t.get("name"), t.get("language"))
+        for t in client.list_templates(frisch=True)
     }
     angelegt: list[str] = []
     uebersprungen: list[str] = []
@@ -168,6 +176,14 @@ def rollout(client: WhatsAppClient) -> dict[str, object]:
                         "components": _body(meta_text, beispiele),
                     }
                 )
+            except WhatsAppRateLimitError:
+                # Metas Best Practice: bei erreichtem Limit KEINE weiteren
+                # Aufrufe — jeder zusätzliche verlängert die Sperre. Die
+                # Schleife bricht deshalb ab, statt neun weitere Vorlagen
+                # hinterherzuschicken. Ohne dieses eigene `except` fängt das
+                # `WhatsAppError` unten die Drosselung mit und meldet sie als
+                # abgelehnten Vorlagentext (Wurzel 5).
+                raise
             except WhatsAppError as exc:
                 if exc.status_code == 503:  # nicht konfiguriert → hart durchlassen
                     raise

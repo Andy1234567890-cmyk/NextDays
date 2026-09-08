@@ -18,6 +18,7 @@ from src.core.supabase import get_service_client
 from src.features.auth.dependencies import require_permission
 from src.features.auth.permissions import Capability
 
+from .fehler import WhatsAppRateLimitServiceError, WhatsAppServiceError
 from .schemas import (
     OnboardingRequest,
     OnboardingResult,
@@ -34,7 +35,7 @@ from .schemas import (
     WhatsAppMessageList,
     WhatsAppStatus,
 )
-from .service import WhatsAppService, WhatsAppServiceError
+from .service import WhatsAppService
 
 log = get_logger("nextdays.whatsapp.router")
 
@@ -47,6 +48,27 @@ WhatsAppServiceDep = Annotated[WhatsAppService, Depends(get_whatsapp_service)]
 _guest = Annotated[AuthContext, Depends(require_permission(Capability.VIEW_GUEST_FULL))]
 
 router = APIRouter(prefix="/whatsapp", tags=["whatsapp"])
+
+
+def _http(exc: WhatsAppServiceError) -> HTTPException:
+    """Service-Fehler in die HTTP-Antwort übersetzen.
+
+    Bei Metas Drosselung kommt ein ``Retry-After`` mit, wenn Meta eine Dauer
+    genannt hat. Der Header ist der standardisierte Weg, dem Aufrufer zu sagen,
+    wann es wieder geht — ohne ihn müsste jeder Client die Wartezeit aus dem
+    Fließtext lesen. Nennt Meta keine, bleibt der Header weg statt eine Dauer
+    zu erfinden (Wurzel 4).
+
+    Metas Wert ist in MINUTEN, ``Retry-After`` erwartet SEKUNDEN — daher die
+    Umrechnung. Eine gemeldete ``0`` bedeutet „keine Sperrzeit mehr" und
+    ergäbe ein sinnloses ``Retry-After: 0``; sie bleibt deshalb ohne Header.
+    """
+    headers: dict[str, str] | None = None
+    if isinstance(exc, WhatsAppRateLimitServiceError) and exc.sperrdauer_min:
+        headers = {"Retry-After": str(exc.sperrdauer_min * 60)}
+    return HTTPException(
+        status_code=exc.status_code, detail=exc.message, headers=headers
+    )
 
 
 @router.get("/health", response_model=SliceHealth)
@@ -66,7 +88,7 @@ def list_conversations(
     try:
         return service.list_conversations(ctx)
     except WhatsAppServiceError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+        raise _http(exc) from exc
 
 
 @router.get("/conversations/{conversation_id}/messages", response_model=WhatsAppMessageList)
@@ -76,7 +98,7 @@ def list_messages(
     try:
         return service.list_messages(ctx, conversation_id)
     except WhatsAppServiceError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+        raise _http(exc) from exc
 
 
 @router.post("/send", response_model=WhatsAppMessage)
@@ -91,7 +113,7 @@ def send(
             body=req.body,
         )
     except WhatsAppServiceError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+        raise _http(exc) from exc
 
 
 @router.post("/send-template", response_model=WhatsAppMessage)
@@ -109,7 +131,7 @@ def send_template(
             variables=req.variables,
         )
     except WhatsAppServiceError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+        raise _http(exc) from exc
 
 
 @router.get("/onboarding/startlink", response_model=OnboardingStartLink)
@@ -133,7 +155,7 @@ def onboarding_verbinden(
     try:
         return service.onboarding_verbinden(ctx, code=req.code)
     except WhatsAppServiceError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+        raise _http(exc) from exc
 
 
 @router.get("/onboarding/status", response_model=OnboardingStatus)
@@ -145,7 +167,7 @@ def onboarding_status(service: WhatsAppServiceDep, ctx: _guest) -> OnboardingSta
     try:
         return service.onboarding_status(ctx)
     except WhatsAppServiceError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+        raise _http(exc) from exc
 
 
 @router.post("/conversations/{conversation_id}/ai-reply")
@@ -160,26 +182,34 @@ def ai_reply(
     try:
         return service.ai_reply(ctx, conversation_id)
     except WhatsAppServiceError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+        raise _http(exc) from exc
 
 
 @router.get("/templates")
 def list_templates(
-    service: WhatsAppServiceDep, ctx: _guest, mit_ausgeblendeten: bool = False
+    service: WhatsAppServiceDep,
+    ctx: _guest,
+    mit_ausgeblendeten: bool = False,
+    frisch: bool = False,
 ) -> dict:
     """Vorlagen der WABA DIESES Betriebs mit Prüfstatus (PENDING/APPROVED/REJECTED).
 
     Metas mitgelieferte Beispielvorlagen sind nie dabei; in myNextDays
     ausgeblendete nur auf ausdrücklichen Wunsch.
+
+    ``frisch=true`` überspringt den kurzen Zwischenstand — die Oberfläche nutzt
+    es direkt nach einer Änderung. Sonst gilt der Zwischenstand, weil Metas
+    Management-API nur 200 Aufrufe je Stunde und WABA erlaubt und diese Liste an
+    jedem Öffnen des Vorlagen-Menüs hängt.
     """
     try:
         return {
             "items": service.list_templates(
-                ctx, mit_ausgeblendeten=mit_ausgeblendeten
+                ctx, mit_ausgeblendeten=mit_ausgeblendeten, frisch=frisch
             )
         }
     except WhatsAppServiceError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+        raise _http(exc) from exc
 
 
 @router.post("/templates/neu")
@@ -197,7 +227,7 @@ def create_template(
             footer=payload.footer,
         )
     except WhatsAppServiceError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+        raise _http(exc) from exc
 
 
 @router.post("/templates/{template_id}")
@@ -218,7 +248,7 @@ def update_template(
             footer=payload.footer,
         )
     except WhatsAppServiceError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+        raise _http(exc) from exc
 
 
 @router.post("/templates/{name}/ausblenden")
@@ -231,7 +261,7 @@ def hide_template(
             ctx, name=name, language=payload.language, hidden=payload.hidden
         )
     except WhatsAppServiceError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+        raise _http(exc) from exc
 
 
 @router.delete("/templates")
@@ -245,7 +275,7 @@ def delete_template(
     try:
         return service.delete_template(ctx, name=name, template_id=template_id)
     except WhatsAppServiceError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+        raise _http(exc) from exc
 
 
 @router.post("/templates/rollout")
@@ -260,7 +290,7 @@ def rollout_templates(service: WhatsAppServiceDep, ctx: _guest) -> dict:
     try:
         return service.rollout_templates(ctx)
     except WhatsAppServiceError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+        raise _http(exc) from exc
 
 
 # --- Meta-Webhook (kein JWT) -----------------------------------------------

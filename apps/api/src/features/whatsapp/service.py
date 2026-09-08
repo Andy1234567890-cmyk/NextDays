@@ -40,7 +40,10 @@ from src.features.inbox.schemas import InboxMessage, ReservationDetail
 from src.features.inbox.service import InboxService
 from src.features.site_config.ki_nutzung import buchen, deckel_pruefen
 
+from . import sendezustand
 from .client import WhatsAppClient, WhatsAppError
+from .fehler import WhatsAppServiceError
+from .fehler import als_service_fehler as _als_service_fehler
 from .onboarding import OnboardingError, WhatsAppOnboarding
 from .reservierungs_kontext import kontext_aus_reservierung
 from .schemas import (
@@ -79,13 +82,6 @@ _SIGNUP_HOST = "https://business.facebook.com"
 # `ki_antwort.MAX_VERLAUF`; die Fakten-Obergrenze steht in
 # `ki_kontext.MAX_FAKTEN` — beides jetzt an EINER Stelle statt hier zweitgepflegt.
 _KI_VERLAUF_MAX = 40
-
-
-class WhatsAppServiceError(Exception):
-    def __init__(self, message: str, *, status_code: int = 400) -> None:
-        super().__init__(message)
-        self.message = message
-        self.status_code = status_code
 
 
 def _meta_zeit(roh: object) -> str | None:
@@ -208,6 +204,16 @@ class WhatsAppService:
         if not rows:
             return OnboardingStatus(connected=False)
         row = rows[0]
+        if row.get("status") == "connected":
+            # `_client_fuer` wirft, wenn kein Konto hängt — auf DIESER Seite ist
+            # das kein Fehler, sondern der Zustand, den sie gerade anzeigen
+            # soll. Der Abruf entfällt dann, der gespeicherte Stand bleibt.
+            try:
+                client = self._client_fuer(db, tenant_id)
+            except WhatsAppServiceError:
+                client = None
+            if client is not None:
+                row = sendezustand.auffrischen(db, tenant_id, row, client)
         return OnboardingStatus(
             connected=row.get("status") == "connected",
             waba_id=row.get("waba_id"),
@@ -221,6 +227,7 @@ class WhatsAppService:
             status=row.get("status"),
         )
 
+
     # --- Vorlagen (WABA-Ebene, kein Tenant-Bezug bei EINER eigenen Nummer) ---
     # Metas mitgelieferte Beispielvorlagen. Sie gehören keinem Betrieb, lassen
     # sich weder ändern noch löschen und interessieren niemanden hier — sie
@@ -233,20 +240,33 @@ class WhatsAppService:
     def _ist_meta_beispiel(cls, name: str) -> bool:
         return name.startswith(cls._META_BEISPIELE)
 
-    def list_templates(self, ctx: AuthContext, *, mit_ausgeblendeten: bool = False) -> list[dict]:
+    def list_templates(
+        self,
+        ctx: AuthContext,
+        *,
+        mit_ausgeblendeten: bool = False,
+        frisch: bool = False,
+    ) -> list[dict]:
         """Vorlagen der WABA DIESES Betriebs mit Prüfstatus.
 
         Meta ist die Quelle der Wahrheit — wir spiegeln den Status nicht in die
         DB, sonst driftet er. Abgefragt wird die WABA des Betriebs, nicht die
         zentrale: sonst sähe jeder Kunde fremde Vorlagen.
+
+        ``frisch=True`` umgeht den Zwischenstand des Clients. Die Oberfläche
+        setzt es nach einer eigenen Änderung: die API läuft mit vier
+        uvicorn-Workern, und der Worker, der die Liste ausliefert, ist nicht
+        zwingend der, der die Änderung geschrieben und dabei seinen eigenen
+        Zwischenstand verworfen hat (Wurzel 1 — der Gegenzustand liegt hier in
+        einem anderen Prozess).
         """
         db, tenant_id = self._require(ctx)
         try:
-            vorlagen = self._client_fuer(db, tenant_id).list_templates()
+            vorlagen = self._client_fuer(db, tenant_id).list_templates(
+                frisch=frisch
+            )
         except WhatsAppError as exc:
-            raise WhatsAppServiceError(
-                exc.message, status_code=exc.status_code
-            ) from exc
+            raise _als_service_fehler(exc) from exc
         vorlagen = [
             v for v in vorlagen if not self._ist_meta_beispiel(v.get("name", ""))
         ]
@@ -426,9 +446,7 @@ class WhatsAppService:
                 }
             )
         except WhatsAppError as exc:
-            raise WhatsAppServiceError(
-                exc.message, status_code=exc.status_code
-            ) from exc
+            raise _als_service_fehler(exc) from exc
         # Erst nach Metas Zusage speichern: eine Zuordnung zu einer Vorlage,
         # die es dort nicht gibt, wäre eine Karteileiche.
         self._felder_speichern(db, tenant_id, schluessel, language, reihenfolge)
@@ -458,9 +476,7 @@ class WhatsAppService:
                 template_id, komponenten
             )
         except WhatsAppError as exc:
-            raise WhatsAppServiceError(
-                exc.message, status_code=exc.status_code
-            ) from exc
+            raise _als_service_fehler(exc) from exc
         self._felder_speichern(db, tenant_id, name, language, reihenfolge)
         return ergebnis
 
@@ -507,9 +523,7 @@ class WhatsAppService:
                 gestutzt, template_id=template_id
             )
         except WhatsAppError as exc:
-            raise WhatsAppServiceError(
-                exc.message, status_code=exc.status_code
-            ) from exc
+            raise _als_service_fehler(exc) from exc
         # Gegenzustand: die Feld-Zuordnung der gelöschten Vorlage mitnehmen,
         # sonst bleibt sie liegen und trifft später eine gleichnamige neue
         # Vorlage mit einer falschen Reihenfolge (Wurzel 1).
@@ -529,9 +543,7 @@ class WhatsAppService:
         try:
             ergebnis = rollout(self._client_fuer(db, tenant_id))
         except WhatsAppError as exc:
-            raise WhatsAppServiceError(
-                exc.message, status_code=exc.status_code
-            ) from exc
+            raise _als_service_fehler(exc) from exc
         # Die Feldreihenfolge auch fuer uebersprungene Vorlagen sichern: sie
         # koennen aus einem Rollout stammen, der aelter ist als die
         # Zuordnungstabelle (0489). Ohne diesen Nachtrag zeigte der Editor bei
@@ -951,7 +963,7 @@ class WhatsAppService:
             try:
                 res = self._client_fuer(db, tenant_id).send_text(conv["wa_phone"], text)
             except WhatsAppError as exc:
-                raise WhatsAppServiceError(exc.message, status_code=exc.status_code) from exc
+                raise _als_service_fehler(exc) from exc
             msgs = res.get("messages") or []
             wa_message_id = msgs[0].get("id") if msgs else None
 
@@ -1040,7 +1052,7 @@ class WhatsAppService:
                     conv["wa_phone"], name, language_code, components
                 )
             except WhatsAppError as exc:
-                raise WhatsAppServiceError(exc.message, status_code=exc.status_code) from exc
+                raise _als_service_fehler(exc) from exc
             msgs = res.get("messages") or []
             wa_message_id = msgs[0].get("id") if msgs else None
 

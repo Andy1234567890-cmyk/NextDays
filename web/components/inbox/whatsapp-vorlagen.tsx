@@ -94,8 +94,12 @@ export function WhatsAppVorlagen() {
   const [editing, setEditing] = useState<WhatsAppTemplate | null>(null);
   const [form, setForm] = useState<VorlagenForm>(LEER);
   const [fehler, setFehler] = useState<string | null>(null);
-  const laden = useCallback(async () => {
-    const res = await listWhatsAppTemplates(zeigeAusgeblendete);
+  // `frisch` nur nach einer eigenen Änderung: der Server hält die Liste kurz
+  // zwischen, weil Metas Management-API nur 200 Aufrufe je Stunde und WABA
+  // erlaubt. Beim reinen Ansehen ist der Zwischenstand richtig; nach dem
+  // eigenen Speichern wäre er der Stand von vorher.
+  const laden = useCallback(async (frisch = false) => {
+    const res = await listWhatsAppTemplates(zeigeAusgeblendete, frisch);
     if (res.ok) {
       setItems(res.data.items);
       setLadefehler("");
@@ -146,7 +150,7 @@ export function WhatsAppVorlagen() {
     if (res.ok) {
       toast.success(t("waTemplateSaved"));
       reset();
-      await laden();
+      await laden(true);
     } else {
       // Metas Ablehnungsgrund steht im Fehlertext und ist genauer als jede
       // eigene Formulierung — deshalb unverändert anzeigen, nicht ersetzen.
@@ -164,6 +168,11 @@ export function WhatsAppVorlagen() {
     if (res.ok) {
       toast.success(hidden ? t("waTemplateHidden") : t("waTemplateShown"));
       if (hidden && editing?.id === tpl.id) reset();
+      // Bewusst OHNE `frisch`: Ausblenden ist eine reine DB-Operation, bei
+      // Meta ändert sich nichts. Der `hidden`-Merker kommt bei jedem Laden
+      // frisch aus `whatsapp_template_hidden`, der Zwischenstand hält ihn gar
+      // nicht. Ein erzwungener Graph-Aufruf verbrennt hier nur Budget — wer
+      // 30 Vorlagen durchsortiert, machte sonst 30 überflüssige Aufrufe.
       await laden();
     } else {
       toast.error(res.error);
@@ -185,7 +194,7 @@ export function WhatsAppVorlagen() {
       // Ablehnungen einzeln zeigen: sie verschwinden sonst spurlos, und später
       // fehlt eine Vorlage ohne ersichtlichen Grund.
       for (const zeile of abgelehnt) toast.error(zeile);
-      await laden();
+      await laden(true);
     } else {
       toast.error(res.error);
     }

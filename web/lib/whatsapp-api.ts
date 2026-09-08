@@ -166,9 +166,17 @@ export type WhatsAppTemplate = {
  *  nicht unsere DB — ein gespiegelter Status driftet. */
 export async function listWhatsAppTemplates(
   mitAusgeblendeten = false,
+  frisch = false,
 ): Promise<Result<{ items: WhatsAppTemplate[] }>> {
+  const q = new URLSearchParams();
+  if (mitAusgeblendeten) q.set("mit_ausgeblendeten", "true");
+  // Nach einer eigenen Änderung den Zwischenstand des Servers überspringen:
+  // die API läuft mit mehreren Workern, und der Worker, der die Liste liefert,
+  // muss nicht der sein, der die Änderung geschrieben hat.
+  if (frisch) q.set("frisch", "true");
+  const query = q.toString();
   return call<{ items: WhatsAppTemplate[] }>(
-    `/templates${mitAusgeblendeten ? "?mit_ausgeblendeten=true" : ""}`,
+    `/templates${query ? `?${query}` : ""}`,
   );
 }
 

@@ -1,13 +1,37 @@
 """Tests für den whatsapp-Slice (Sandbox-Versand, Webhook, Verify)."""
+from datetime import UTC, datetime, timedelta
+
 import pytest
 from fastapi.testclient import TestClient
 
 from src.core.security import AuthContext
-from src.features.whatsapp.service import WhatsAppService, WhatsAppServiceError
+from src.features.whatsapp import client as wa_client_modul
+from src.features.whatsapp.client import (
+    WhatsAppClient,
+    WhatsAppError,
+    WhatsAppRateLimitError,
+)
+from src.features.whatsapp.fehler import WhatsAppServiceError
+from src.features.whatsapp.ratelimit import ist_drosselung, nutzung_lesen
+from src.features.whatsapp.service import WhatsAppService
+from src.features.whatsapp.templates import rollout
 from src.main import create_app
 
 client = TestClient(create_app())
 _CTX = AuthContext(user_id="u", tenant_id="t1")
+
+
+@pytest.fixture(autouse=True)
+def _vorlagen_cache_leeren():  # noqa: ANN202
+    """Der Vorlagen-Zwischenstand ist MODUL-State und ueberlebt sonst den Test.
+
+    Ohne diese Fixture haengen die Cache-Tests an ihrer Reihenfolge: wer den
+    Schluessel eines anderen Tests vorbelegt, macht dessen Netzaufruf-Zaehlung
+    falsch. Strukturelle Isolation statt Disziplin an sechs Stellen.
+    """
+    wa_client_modul._VORLAGEN_CACHE.clear()  # noqa: SLF001
+    yield
+    wa_client_modul._VORLAGEN_CACHE.clear()  # noqa: SLF001
 
 
 def test_whatsapp_health() -> None:
@@ -695,3 +719,428 @@ def test_leerer_profilname_ueberschreibt_keinen_vorhandenen() -> None:
     svc = WhatsAppService(service_client=db, client=_FakeClient())
     conv = svc._upsert_conversation(db, "t1", "4915251939026", guest_name=None)  # noqa: SLF001
     assert conv["guest_name"] == "Christophe"
+
+
+# =========================================================================
+# Ratenbegrenzungen (Meta Graph API)
+#
+# Meta drosselt die WhatsApp Business Management API bei 200 Aufrufen pro
+# Stunde je App und WABA (5000 bei aktiver WABA mit registrierter Nummer).
+# Vorher lief jeder dieser Aufrufe ungezaehlt, und eine Drosselung war von
+# einem abgelehnten Vorlagentext nicht zu unterscheiden — beides kam als 502.
+# =========================================================================
+def test_nutzung_liest_den_app_header() -> None:
+    stand = nutzung_lesen(
+        {"x-app-usage": '{"call_count":28,"total_time":25,"total_cputime":25}'}
+    )
+    assert stand is not None
+    assert stand.call_count == 28
+    assert stand.hoechstwert == 28
+    assert not stand.kritisch
+
+
+def test_nutzung_buc_schlaegt_app_header() -> None:
+    """Metas Doku: bei Ueberschneidung gilt die BUC-Grenze, nicht die Plattform."""
+    stand = nutzung_lesen(
+        {
+            "x-app-usage": '{"call_count":10}',
+            "x-business-use-case-usage": (
+                '{"123":[{"type":"whatsapp","call_count":95,'
+                '"estimated_time_to_regain_access":19}]}'
+            ),
+        }
+    )
+    assert stand is not None
+    assert stand.call_count == 95
+    assert stand.estimated_time_to_regain_access == 19
+    assert stand.kritisch
+
+
+def test_nutzung_nimmt_den_kritischsten_wert() -> None:
+    """Meta drosselt, sobald EINER der drei Werte 100 erreicht — nicht ihr Mittel."""
+    stand = nutzung_lesen(
+        {"x-app-usage": '{"call_count":5,"total_time":97,"total_cputime":3}'}
+    )
+    assert stand is not None
+    assert stand.hoechstwert == 97
+    assert stand.kritisch
+
+
+def test_nutzung_ohne_header_ist_none() -> None:
+    """Fehlende Header sind der Normalfall, kein Fehler — und keine 0 Prozent."""
+    assert nutzung_lesen({}) is None
+
+
+def test_nutzung_bei_kaputtem_header_ist_none() -> None:
+    """Ein unlesbarer Header darf einen erfolgreichen Aufruf nicht kippen."""
+    assert nutzung_lesen({"x-app-usage": "kein json"}) is None
+    assert nutzung_lesen({"x-business-use-case-usage": "{{"}) is None
+
+
+def test_drosselcodes_werden_erkannt() -> None:
+    assert ist_drosselung(80008)  # WhatsApp Business Management API
+    assert ist_drosselung(4)  # App-Ratenbegrenzung
+    assert ist_drosselung(17)  # Nutzer-Ratenbegrenzung
+    assert ist_drosselung(32)  # Seiten-Ratenbegrenzung
+    assert ist_drosselung(613)  # selbstdefinierte Begrenzung
+    assert ist_drosselung(131056)  # Cloud API: Paarlimit
+    assert ist_drosselung(17, 2446079)  # Ads-API-Unterkode
+
+
+def test_kein_drosselcode_bei_fachlichem_fehler() -> None:
+    """Der wichtigste Fall: eine abgelehnte Vorlage ist KEINE Drosselung.
+
+    Wuerde sie als solche gelten, bekaeme der Betrieb „bitte warten" zu sehen
+    und wartete auf etwas, das von allein nie besser wird.
+    """
+    assert not ist_drosselung(132000)  # Vorlagentext abgelehnt
+    assert not ist_drosselung(100)  # ungueltiger Parameter
+    assert not ist_drosselung(None)
+    assert not ist_drosselung("nonsense")
+
+
+class _FakeResponse:
+    """Minimale httpx-Antwort fuer den Client-Pfad."""
+
+    def __init__(
+        self,
+        status_code: int = 200,
+        payload: dict | None = None,
+        headers: dict | None = None,
+    ) -> None:
+        self.status_code = status_code
+        self._payload = payload if payload is not None else {"data": []}
+        self.headers = headers or {}
+        self.text = str(self._payload)
+
+    def json(self) -> dict:
+        return self._payload
+
+
+def _client_mit_antwort(monkeypatch, antwort: _FakeResponse) -> WhatsAppClient:  # noqa: ANN001
+    client = WhatsAppClient(
+        access_token="t", phone_number_id="p", waba_id="w", graph_version="v25.0"
+    )
+    monkeypatch.setattr(
+        wa_client_modul.httpx, "request", lambda *a, **k: antwort  # noqa: ARG005
+    )
+    return client
+
+
+def test_drosselung_wird_zu_429_mit_wartezeit(monkeypatch) -> None:  # noqa: ANN001
+    """Metas Code 80008 muss als eigener Fehler ankommen, nicht als 502.
+
+    Sonst kann der Aufrufer nicht unterscheiden, ob Warten hilft.
+    """
+    antwort = _FakeResponse(
+        status_code=400,
+        payload={
+            "error": {
+                "message": "There have been too many calls.",
+                "code": 80008,
+            }
+        },
+        headers={
+            "x-business-use-case-usage": (
+                '{"1":[{"type":"whatsapp","call_count":100,'
+                '"estimated_time_to_regain_access":19}]}'
+            )
+        },
+    )
+    client = _client_mit_antwort(monkeypatch, antwort)
+    with pytest.raises(WhatsAppRateLimitError) as fehler:
+        client.list_templates(frisch=True)
+    assert fehler.value.status_code == 429
+    assert fehler.value.meta_code == 80008
+    assert fehler.value.sperrdauer_min == 19
+    assert "19 Minuten" in fehler.value.message
+
+
+def test_fachlicher_fehler_bleibt_502(monkeypatch) -> None:  # noqa: ANN001
+    """Gegenprobe: ein abgelehnter Vorlagentext ist keine Drosselung."""
+    antwort = _FakeResponse(
+        status_code=400,
+        payload={"error": {"message": "Template abgelehnt.", "code": 132000}},
+    )
+    client = _client_mit_antwort(monkeypatch, antwort)
+    with pytest.raises(WhatsAppError) as fehler:
+        client.list_templates(frisch=True)
+    assert not isinstance(fehler.value, WhatsAppRateLimitError)
+    assert fehler.value.status_code == 502
+
+
+def test_vorlagen_cache_spart_den_zweiten_aufruf(monkeypatch) -> None:  # noqa: ANN001
+    """Der Grund fuer den Cache: diese Liste haengt an jedem Menue-Oeffnen."""
+    aufrufe: list[str] = []
+
+    def _zaehlend(*_a, **_k) -> _FakeResponse:  # noqa: ANN002, ANN003
+        aufrufe.append("x")
+        return _FakeResponse(payload={"data": [{"name": "a", "language": "de"}]})
+
+    client = WhatsAppClient(
+        access_token="t", phone_number_id="p", waba_id="cache_test_waba"
+    )
+    monkeypatch.setattr(wa_client_modul.httpx, "request", _zaehlend)
+    assert len(client.list_templates()) == 1
+    assert len(client.list_templates()) == 1
+    assert len(aufrufe) == 1, "zweiter Aufruf haette aus dem Zwischenstand kommen muessen"
+
+    # `frisch=True` muss ihn umgehen — sonst saehe niemand seine eigene Aenderung.
+    client.list_templates(frisch=True)
+    assert len(aufrufe) == 2
+
+def test_cache_gibt_eine_kopie_heraus(monkeypatch) -> None:  # noqa: ANN001
+    """Der Aufrufer schreibt Metas {{1}} in die Komponenten zurueck.
+
+    Ohne Kopie landet diese Umschrift im Zwischenstand und der zweite Leser
+    bekaeme bereits umgeschriebenen Text zum zweiten Mal umgeschrieben.
+    """
+    monkeypatch.setattr(
+        wa_client_modul.httpx,
+        "request",
+        lambda *a, **k: _FakeResponse(  # noqa: ARG005
+            payload={"data": [{"name": "a", "components": [{"text": "original"}]}]}
+        ),
+    )
+    client = WhatsAppClient(
+        access_token="t", phone_number_id="p", waba_id="kopie_test_waba"
+    )
+    erste = client.list_templates()
+    erste[0]["components"][0]["text"] = "veraendert"
+    zweite = client.list_templates()
+    assert zweite[0]["components"][0]["text"] == "original"
+
+def test_schreiben_verwirft_den_zwischenstand(monkeypatch) -> None:  # noqa: ANN001
+    """Wurzel 1: der Cache ist der Gegenzustand jeder Schreiboperation."""
+    aufrufe: list[str] = []
+
+    def _zaehlend(method: str, *_a, **_k) -> _FakeResponse:  # noqa: ANN002, ANN003
+        aufrufe.append(method)
+        return _FakeResponse(payload={"data": [{"name": "a"}]})
+
+    client = WhatsAppClient(
+        access_token="t", phone_number_id="p", waba_id="verwerf_test_waba"
+    )
+    monkeypatch.setattr(wa_client_modul.httpx, "request", _zaehlend)
+    client.list_templates()
+    client.create_template({"name": "neu"})
+    client.list_templates()
+    # GET, POST, GET — der zweite GET darf NICHT aus dem Zwischenstand kommen.
+    assert aufrufe.count("GET") == 2
+
+# =========================================================================
+# Sendezustand auffrischen (quality_rating / messaging_limit_tier)
+#
+# Beide standen bisher so in der Zeile, wie sie beim Verbinden waren, und
+# blieben dort. Ein Betrieb, den Meta spaeter heruntergestuft hat, sah
+# weiterhin den Zustand vom ersten Tag — plausibel und falsch.
+# =========================================================================
+class _NummernClient(_FakeClient):
+    """Client, der Metas `phone_numbers` beantwortet und die Aufrufe zaehlt."""
+
+    token_fuer_abfrage = "t"
+
+    def __init__(self, tier: str = "TIER_1K", quality: str = "GREEN") -> None:
+        super().__init__()
+        self.abrufe = 0
+        self._tier = tier
+        self._quality = quality
+
+    def phone_numbers(self, _waba_id, *, token):  # noqa: ANN001, ANN201, ARG002
+        self.abrufe += 1
+        return [
+            {
+                "id": "p1",
+                "quality_rating": self._quality,
+                "messaging_limit_tier": self._tier,
+            }
+        ]
+
+
+def _db_mit_konto(**felder) -> _DB:  # noqa: ANN003
+    db = _DB()
+    db.store["whatsapp_account"] = [
+        {
+            "tenant_id": "t1",
+            "waba_id": "w1",
+            "phone_number_id": "p1",
+            "status": "connected",
+            "quality_rating": "GREEN",
+            "messaging_limit_tier": "TIER_250",
+            **felder,
+        }
+    ]
+    return db
+
+
+def _ctx() -> AuthContext:
+    return AuthContext(user_id="u1", tenant_id="t1", role="admin")
+
+
+def test_zustand_wird_bei_meta_nachgezogen(monkeypatch) -> None:  # noqa: ANN001
+    """Metas Wert gewinnt gegen den gespeicherten Stand von damals."""
+    db = _db_mit_konto()
+    client = _NummernClient(tier="TIER_10K", quality="YELLOW")
+    svc = WhatsAppService(service_client=db, client=client)
+    monkeypatch.setattr(
+        WhatsAppService, "_client_fuer", lambda *_a, **_k: client  # noqa: ARG005
+    )
+
+    status = svc.onboarding_status(_ctx())
+    assert status.messaging_limit_tier == "TIER_10K"
+    assert status.quality_rating == "YELLOW"
+    # Und in der DB gelandet, damit der naechste Leser ihn ohne Aufruf hat.
+    assert db.store["whatsapp_account"][0]["messaging_limit_tier"] == "TIER_10K"
+    assert db.store["whatsapp_account"][0]["zustand_geprueft_at"]
+
+
+def test_frischer_zustand_fragt_meta_nicht(monkeypatch) -> None:  # noqa: ANN001
+    """Der Grund fuer die TTL: 200 Aufrufe je Stunde und WABA sind schnell weg,
+    wenn jeder Seitenaufruf einen verbraucht."""
+    db = _db_mit_konto(zustand_geprueft_at=datetime.now(UTC).isoformat())
+    client = _NummernClient()
+    svc = WhatsAppService(service_client=db, client=client)
+    monkeypatch.setattr(
+        WhatsAppService, "_client_fuer", lambda *_a, **_k: client  # noqa: ARG005
+    )
+
+    svc.onboarding_status(_ctx())
+    assert client.abrufe == 0
+
+
+def test_veralteter_zustand_fragt_meta(monkeypatch) -> None:  # noqa: ANN001
+    db = _db_mit_konto(
+        zustand_geprueft_at=(datetime.now(UTC) - timedelta(hours=2)).isoformat()
+    )
+    client = _NummernClient()
+    svc = WhatsAppService(service_client=db, client=client)
+    monkeypatch.setattr(
+        WhatsAppService, "_client_fuer", lambda *_a, **_k: client  # noqa: ARG005
+    )
+
+    svc.onboarding_status(_ctx())
+    assert client.abrufe == 1
+
+
+def test_drosselung_kippt_die_statusseite_nicht(monkeypatch) -> None:  # noqa: ANN001
+    """Wurzel 5: der Zustand ist eine Anzeige, kein Sendepfad.
+
+    Ist Meta gerade gedrosselt, muss der Kanal-Status trotzdem herauskommen —
+    mit dem gespeicherten Stand, nicht mit einem Fehler.
+    """
+    db = _db_mit_konto()
+
+    class _GedrosselterClient(_NummernClient):
+        def phone_numbers(self, _waba_id, *, token):  # noqa: ANN001, ANN201, ARG002
+            raise WhatsAppRateLimitError("gedrosselt", meta_code=80008)
+
+    client = _GedrosselterClient()
+    svc = WhatsAppService(service_client=db, client=client)
+    monkeypatch.setattr(
+        WhatsAppService, "_client_fuer", lambda *_a, **_k: client  # noqa: ARG005
+    )
+
+    status = svc.onboarding_status(_ctx())
+    assert status.connected is True
+    assert status.messaging_limit_tier == "TIER_250"  # der gespeicherte Stand
+
+
+def test_unveraenderter_zustand_schreibt_nur_den_stempel(monkeypatch) -> None:  # noqa: ANN001
+    """Sonst wandert `updated_at` bei jedem Seitenaufruf grundlos."""
+    db = _db_mit_konto(
+        zustand_geprueft_at=(datetime.now(UTC) - timedelta(hours=2)).isoformat()
+    )
+    client = _NummernClient(tier="TIER_250", quality="GREEN")
+    svc = WhatsAppService(service_client=db, client=client)
+    monkeypatch.setattr(
+        WhatsAppService, "_client_fuer", lambda *_a, **_k: client  # noqa: ARG005
+    )
+
+    svc.onboarding_status(_ctx())
+    zeile = db.store["whatsapp_account"][0]
+    assert zeile["messaging_limit_tier"] == "TIER_250"
+    # Der Stempel muss trotzdem neu sein, sonst fragt der naechste Aufruf wieder.
+    geprueft = datetime.fromisoformat(zeile["zustand_geprueft_at"])
+    assert datetime.now(UTC) - geprueft < timedelta(minutes=1)
+
+
+def test_cache_trennt_die_mandanten(monkeypatch) -> None:  # noqa: ANN001
+    """Der Zwischenstand darf NIE Vorlagen eines fremden Betriebs ausliefern.
+
+    Der Fehler, den dieser Test festhaelt: `WhatsAppClient` faellt bei fehlender
+    `waba_id` auf die global konfigurierte zurueck. Der Cache-Schluessel erbte
+    diesen Fallback, und zwei Betriebe ohne eigene `waba_id` landeten unter
+    DEMSELBEN Schluessel — der zweite bekam die Vorlagen des ersten (Wurzel 3:
+    Scope serverseitig erzwingen, nicht aus einem Ersatzwert ableiten).
+    """
+    ausgeliefert: list[str] = []
+
+    def _je_token(*_a, **k) -> _FakeResponse:  # noqa: ANN002, ANN003
+        # Meta antwortet je Token mit den Vorlagen DIESES Betriebs.
+        token = k.get("headers", {}).get("Authorization", "")
+        name = "vorlage_a" if "token_a" in token else "vorlage_b"
+        ausgeliefert.append(name)
+        return _FakeResponse(payload={"data": [{"name": name, "language": "de"}]})
+
+    monkeypatch.setattr(wa_client_modul.httpx, "request", _je_token)
+
+    # Beide Betriebe OHNE eigene waba_id — genau der Fall, der kollidierte.
+    a = WhatsAppClient(access_token="token_a", phone_number_id="p_a", waba_id=None)
+    b = WhatsAppClient(access_token="token_b", phone_number_id="p_b", waba_id=None)
+
+    liste_a = a.list_templates()
+    liste_b = b.list_templates()
+    assert liste_a[0]["name"] == "vorlage_a"
+    assert liste_b[0]["name"] == "vorlage_b", (
+        "Betrieb B hat die Vorlagen von Betrieb A aus dem Zwischenstand bekommen"
+    )
+
+
+def test_sperrdauer_ueberlebt_einen_hoeheren_anderen_eintrag() -> None:
+    """Die Wartezeit darf nicht am Prozentwert eines ANDEREN Eintrags haengen.
+
+    Metas BUC-Header traegt bis zu 32 Objekte. Der Eintrag mit dem hoechsten
+    Prozentwert muss nicht der sein, der die Sperrdauer nennt. Wer nur EINEN
+    Eintrag durchreicht, verliert die Wartezeit — und `Retry-After` fehlt,
+    obwohl Meta sie geliefert hat.
+    """
+    stand = nutzung_lesen(
+        {
+            "x-business-use-case-usage": (
+                '{"1":[{"type":"whatsapp","call_count":100,'
+                '"estimated_time_to_regain_access":0},'
+                '{"type":"whatsapp","call_count":30,'
+                '"estimated_time_to_regain_access":19}]}'
+            )
+        }
+    )
+    assert stand is not None
+    assert stand.hoechstwert == 100  # der kritischste Prozentwert
+    assert stand.estimated_time_to_regain_access == 19  # die laengste Wartezeit
+
+
+def test_rollout_bricht_bei_drosselung_ab() -> None:
+    """Metas Best Practice: bei erreichtem Limit KEINE weiteren Aufrufe.
+
+    Der Rollout legt bis zu zehn Vorlagen nacheinander an. Fing die Schleife
+    die Drosselung wie eine fachliche Ablehnung ab, feuerte sie neun weitere
+    Aufrufe in die aktive Sperre — und verlaengerte sie damit. Zusaetzlich sah
+    der Betrieb zehn „abgelehnte" Vorlagen und glaubte, seine Texte seien
+    inhaltlich zurueckgewiesen worden (Wurzel 5: Kontroll-Signal nicht
+    verschlucken).
+    """
+    versuche: list[str] = []
+
+    class _GedrosselteWABA:
+        def list_templates(self, *, frisch: bool = False):  # noqa: ANN201, ARG002
+            return []
+
+        def create_template(self, payload):  # noqa: ANN001, ANN201
+            versuche.append(payload["name"])
+            raise WhatsAppRateLimitError("gedrosselt", meta_code=80008)
+
+    with pytest.raises(WhatsAppRateLimitError):
+        rollout(_GedrosselteWABA())
+    assert len(versuche) == 1, (
+        f"nach der Drosselung wurde weitergesendet: {len(versuche)} Versuche"
+    )
