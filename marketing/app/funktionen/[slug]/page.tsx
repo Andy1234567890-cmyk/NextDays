@@ -53,6 +53,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { FUNKTIONEN, funktionNachSlug } from "@/content/funktionen";
 import { DEMO_URL, SIGNUP_URL } from "@/lib/app-url";
+import { APP_STORE_LINKS, STORE_KNOEPFE } from "@/lib/app-mobil";
 import { gruppenStichworte } from "@/lib/gruppen-stichworte";
 import { holeProvisionssaetze } from "@/lib/provisionstexte";
 
@@ -181,23 +182,41 @@ export default async function FunktionsSeite({
               </div>
 
               {/* Nur auf App-Seiten: wer eine App sucht, will als erstes
-                  wissen, ob sie sein Telefon trifft. Dieselbe Darstellung wie
-                  im Footer — und wie dort OHNE Link, weil die Apps noch nicht
-                  in den Stores stehen (ein toter Store-Link wäre ein
-                  Versprechen, das die Seite nicht hält). */}
+                  wissen, ob sie sein Telefon trifft. Dieselbe Darstellung und
+                  dieselbe Quelle wie im Footer (`lib/app-mobil.ts`) — verlinkt
+                  wird nur der Store, in dem die App wirklich steht; ein toter
+                  Store-Link wäre ein Versprechen, das die Seite nicht hält. */}
               {funktion.telefonHero ? (
                 <div className="mt-8 flex flex-wrap items-center gap-3">
                   <span className="text-sm font-medium text-muted-foreground">
                     {tFooter("appLaden")}
                   </span>
-                  <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 text-sm font-medium shadow-card">
-                    <Icon icon="ph:apple-logo-fill" className="size-4" />
-                    App Store
-                  </span>
-                  <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 text-sm font-medium shadow-card">
-                    <Icon icon="ph:google-play-logo-fill" className="size-4" />
-                    Google Play
-                  </span>
+                  {STORE_KNOEPFE.map(({ store, icon, label }) => {
+                    const ziel = APP_STORE_LINKS[store];
+                    const klasse =
+                      "inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 text-sm font-medium shadow-card";
+                    const inhalt = (
+                      <>
+                        <Icon icon={icon} className="size-4" />
+                        {label}
+                      </>
+                    );
+                    return ziel ? (
+                      <Link
+                        key={store}
+                        href={ziel}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`${klasse} transition-opacity hover:opacity-80`}
+                      >
+                        {inhalt}
+                      </Link>
+                    ) : (
+                      <span key={store} className={klasse}>
+                        {inhalt}
+                      </span>
+                    );
+                  })}
                 </div>
               ) : null}
             </div>

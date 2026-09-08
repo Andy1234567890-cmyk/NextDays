@@ -11,6 +11,7 @@ import { Logo } from "@/components/logo";
 import { ANBIETER } from "@/content/legal/anbieter";
 import { RECHTSDOKUMENTE } from "@/content/legal";
 import { AGB_URL, STATUS_URL, VORANMELDUNG_ZIEL } from "@/lib/app-url";
+import { APP_STORE_LINKS, STORE_KNOEPFE } from "@/lib/app-mobil";
 import { SystemStatus } from "./system-status";
 
 // Spalten: Übersetzungsschlüssel, keine fertigen Texte. `href` gibt es nur,
@@ -175,15 +176,36 @@ export function MarketingFooter() {
 
             <div className="mt-6 flex flex-col gap-3">
               <p className="text-sm font-medium">{t("appLaden")}</p>
+              {/* Verlinkt nur, was wirklich im Store steht: ein Knopf ohne
+                  Adresse bleibt ein `<span>`, statt auf eine leere Seite zu
+                  führen. Die Adressen stehen in `lib/app-mobil.ts`. */}
               <div className="flex flex-wrap gap-3">
-                <span className="flex items-center gap-2 rounded-lg border border-primary-foreground/20 px-3 py-2 text-xs">
-                  <Icon icon="ph:apple-logo-fill" className="size-5" />
-                  App Store
-                </span>
-                <span className="flex items-center gap-2 rounded-lg border border-primary-foreground/20 px-3 py-2 text-xs">
-                  <Icon icon="ph:google-play-logo-fill" className="size-5" />
-                  Google Play
-                </span>
+                {STORE_KNOEPFE.map(({ store, icon, label }) => {
+                  const ziel = APP_STORE_LINKS[store];
+                  const klasse =
+                    "flex items-center gap-2 rounded-lg border border-primary-foreground/20 px-3 py-2 text-xs";
+                  const inhalt = (
+                    <>
+                      <Icon icon={icon} className="size-5" />
+                      {label}
+                    </>
+                  );
+                  return ziel ? (
+                    <Link
+                      key={store}
+                      href={ziel}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`${klasse} transition-opacity hover:opacity-80`}
+                    >
+                      {inhalt}
+                    </Link>
+                  ) : (
+                    <span key={store} className={klasse}>
+                      {inhalt}
+                    </span>
+                  );
+                })}
               </div>
             </div>
           </div>
