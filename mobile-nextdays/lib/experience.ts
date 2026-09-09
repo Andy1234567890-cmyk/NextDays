@@ -1,7 +1,8 @@
 // Erlebnis-Routing (eine zentrale Stelle, NICHT in Screens verstreut). Leitet
 // aus der Server-Rolle (me.role aus /auth/me) das Ziel-Erlebnis der App ab:
 //   admin | co_admin → Agentur (HostTabs)
-//   owner            → Eigentümer (OwnerTabs, Ausbau P6)
+//   owner            → Hinweis auf die eigene Eigentümer-App (kein Erlebnis
+//                      mehr in DIESER App, das Portal ist ausgezogen)
 //   staff | cleaner  → Mitarbeiter (HostTabs mit Tasks-Fokus, Ausbau P3)
 // Kein clientseitiges „Aufmachen" — die Rolle kommt ausschließlich vom Server.
 import type { Me, Role } from "@/contexts/AuthContext";
@@ -18,7 +19,12 @@ export type ExperienceTarget = {
 const BY_ROLE: Record<Role, ExperienceTarget> = {
   admin: { route: "HostTabs", params: { screen: "Dashboard" } },
   co_admin: { route: "HostTabs", params: { screen: "Dashboard" } },
-  owner: { route: "OwnerTabs", params: { screen: "OwnerProperties" } },
+  // Kein Eigentümer-Erlebnis in dieser App mehr: Objekte, Kalender,
+  // Auszahlungen und Anfragen liegen in der eigenen Eigentümer-App. Der
+  // Hinweis-Screen ist bewusst ein Ziel und kein `null` — `null` ist der
+  // fail-closed-Fall „unbekannte Rolle" und würde die Anmeldung ohne jede
+  // Erklärung beenden (nicht unterscheidbar von „Passwort falsch").
+  owner: { route: "OwnerAppHinweis" },
   // Mitarbeiter starten im Aufgaben-Fokus (Tabs-Ausbau folgt in P3).
   staff: { route: "HostTabs", params: { screen: "Dashboard" } },
   cleaner: { route: "HostTabs", params: { screen: "Dashboard" } },

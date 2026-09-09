@@ -32,6 +32,10 @@
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>mybestdays</string>
+		<!-- Die Eigentümer-App (ADR-0022). Ohne diesen Eintrag liefert
+		     canOpenURL IMMER false, und der Verweis in OwnerAppHinweis
+		     ginge auch bei installierter App in den Store. -->
+		<string>mynextdaysowner</string>
 	</array>
 	<key>CFBundleShortVersionString</key>
 	<string>$(MARKETING_VERSION)</string>

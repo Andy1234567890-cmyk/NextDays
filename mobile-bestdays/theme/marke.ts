@@ -15,9 +15,12 @@ export const marke: Marke = {
   akzent: "#C42B3A",
   logo: require("@/assets/img/mybestdays-logo.png"),
   logoHell: require("@/assets/img/mybestdays-logo-light.png"),
-  // Seitenverhältnis der beiden Logo-Dateien (1461×578). Wer das Logo rendert,
-  // rechnet die Breite hieraus statt sie zu schätzen.
-  logoRatio: 1461 / 578,
+  // Seitenverhältnis der beiden Logo-Dateien. GEMESSEN (sips), nicht geschätzt:
+  // beide sind 1461×403. Hier stand 1461/578 — das Logo wäre um 43 % gestaucht
+  // erschienen, sobald jemand die Breite hieraus rechnet. Bis zum animierten
+  // Splash (09.09.2026) las den Wert in dieser App niemand, der Fehler blieb
+  // deshalb unsichtbar.
+  logoRatio: 1461 / 403,
   // Der Marktplatz im Web.
   webUrl: "https://mybestdays.dk",
   andereApp: {

@@ -23,6 +23,13 @@
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="mybestdays" />
         </intent>
+        <!-- Die Eigentuemer-App (ADR-0022). Ohne diesen Eintrag liefert
+             canOpenURL IMMER false, und der Verweis in OwnerAppHinweis ginge
+             auch bei installierter App in den Store. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="mynextdaysowner" />
+        </intent>
     </queries>
 
     <application

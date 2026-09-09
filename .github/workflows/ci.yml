@@ -830,11 +830,18 @@ jobs:
           # mobile-nextdays; sobald myBestDays sie ebenfalls bekommt, gehört sie
           # hierher — hinter beiden Apps steht EIN Anbieter, und eine driftende
           # Anbieterkennzeichnung ist ein Rechtsmangel, kein Schönheitsfehler.
-          # components/Splash.tsx stand hier, bis myNextDays seinen Start-Bildschirm
-          # animiert bekam (Chevrons und Wortmarke fliegen getrennt ein, aus dem
-          # Vektor-Lockup statt aus einem PNG). Das ist UI und darf nach ADR-0016
-          # divergieren — myBestDays behält sein ruhiges Einblenden. Zusammen-
-          # gehalten bleibt, was Zahlen, Ziele und Zustände bestimmt.
+          # components/Splash.tsx ist am 09.09.2026 ZURUECK auf die Liste
+          # gekommen. Es stand hier, wurde ausgetragen, als myNextDays seinen
+          # animierten Start-Bildschirm bekam ("das ist UI, darf divergieren"),
+          # und genau daraus wurde der Fehler: drei Apps derselben Plattform
+          # zeigten zwei verschiedene Startbilder mit zwei Laufzeiten (1490 ms
+          # Einflug vs. 1320 ms Standbild). Gemeldet vom Nutzer, nicht vom
+          # System — "laeuft zu schnell und ist nicht gleichmaessig in allen
+          # mobil apps". Eine Startanimation ist das erste, was der Kunde von
+          # der Marke sieht; ihre Zeitachse ist damit ein Zustand, kein
+          # Geschmack. Was je Marke WIRKLICH verschieden ist (Vektor-Zweiteilung
+          # vs. einteiliges PNG), steckt in components/ui/SplashLogo.tsx und
+          # steht bewusst NICHT auf dieser Liste.
           # lib/absturzmeldung.ts + components/Fehlergrenze.tsx (28.08.2026):
           # Beide entscheiden, WAS der Kunde bei einem Absturz sieht — im
           # Release eine ruhige Meldung, KEIN Stacktrace. Driftet eine der
@@ -854,7 +861,7 @@ jobs:
           for f in lib/currency.ts lib/realtime.ts lib/config.ts \
                    lib/config.secrets.example.ts lib/appwechsel.ts \
                    lib/ausstattung.ts lib/absturzmeldung.ts \
-                   components/Fehlergrenze.tsx \
+                   components/Fehlergrenze.tsx components/Splash.tsx \
                    theme/tokens.ts theme/ThemeProvider.tsx \
                    navigation/tab-style.tsx; do
             for app in mobile-nextdays mobile-owner; do

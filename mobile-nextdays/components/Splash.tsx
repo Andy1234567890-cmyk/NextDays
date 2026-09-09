@@ -1,39 +1,47 @@
-// Splash-Overlay: das Logo fliegt von links in die Mitte, dann blendet sich das
-// Overlay aus (über dem nativen LaunchScreen, damit der Übergang ins App-UI ohne
-// Flackern wirkt).
+// Splash-Overlay: das Logo fliegt von links in die Mitte, steht kurz still und
+// blendet sich aus (über dem nativen LaunchScreen, damit der Übergang ins
+// App-UI ohne Flackern wirkt).
 //
-// Die Bewegung ist der Grund, warum hier ein VEKTOR-Lockup steht und kein PNG:
-// Chevrons und Wortmarke sollen getrennt einfliegen, und in einem PNG sitzen
-// beide in denselben Pixeln. `LogoVektor` liefert sie als zwei Komponenten aus
-// denselben Figma-Pfaden.
+// SCHWESTERDATEI: die gleichnamige Datei der Schwester-Apps — identisch halten.
+// Sie stand bis zum 09.09.2026 NICHT unter CI-Aufsicht, und genau das ist
+// schiefgegangen: myNextDays und die Eigentümer-App bekamen den Einflug aus dem
+// Vektor-Lockup (1490 ms), myBestDays behielt ein Standbild aus einem PNG
+// (1320 ms). Zwei verschiedene Startbilder in drei Apps derselben Plattform —
+// gemeldet als „läuft zu schnell und ist nicht gleichmäßig in allen Apps".
+// Die Bewegung ist deshalb JETZT geteilte Logik, kein UI-Geschmack mehr
+// (ADR-0016 gilt weiter für kit/patterns/Icon, nicht für diese Datei).
 //
-// KEINE SCHWESTERDATEI mehr: myBestDays behält sein ruhiges Einblenden. Der
-// CI-Job `mobile-konsistenz` hat den Eintrag deshalb verloren — die Animation
-// ist UI und darf nach ADR-0016 divergieren („Mut zur Duplikation"), anders als
-// alles, was Zahlen, Ziele oder Zustände bestimmt.
+// Was die Apps unterscheiden DÜRFEN, liefert `components/ui/SplashLogo.tsx`:
+// myNextDays und die Eigentümer-App trennen Chevron und Wortmarke (dafür gibt
+// es eine Vektor-Vorlage), myBestDays hat nur PNGs und fliegt als ein Stück
+// ein. Die Zeitachse hier ist in allen drei Fällen dieselbe.
 import { useEffect, useRef, useState } from "react";
 import { Animated, Easing, StyleSheet, useWindowDimensions, View } from "react-native";
 
-import { LOCKUP_HOEHE, LogoChevron, LogoWortmarke } from "@/components/ui/LogoVektor";
+import { SplashLogoTeile } from "@/components/ui/SplashLogo";
 import { useTheme } from "@/theme/ThemeProvider";
 
-// Höhe des Lockups auf dem Splash. Die Breiten rechnet `LogoVektor` daraus.
-const HOEHE = 44;
-// Die Wortmarke startet später als die Chevrons — sie folgt ihnen, statt
-// gemeinsam mit ihnen anzukommen. Ohne diesen Versatz wäre die Trennung in zwei
-// Teile nicht sichtbar und der ganze Vektor-Aufwand ohne Wirkung.
-const VERSATZ_MS = 130;
-const FLUG_MS = 620;
+// ── Zeitachse (gemeinsam, Summe ~2200 ms) ───────────────────────────────────
+// Vorher lag sie bei ~1500 ms und wirkte gehetzt. Die Werte hängen zusammen:
+// wer FLUG_MS ändert, ohne HALTEN_MS mitzuziehen, bekommt eine Bewegung, die
+// ankommt und sofort verschwindet.
+const FLUG_MS = 900;
+// Das zweite Teil startet später als das erste — es FOLGT ihm, statt gemeinsam
+// anzukommen. Ohne den Versatz ist die Zweiteilung nicht zu sehen und der
+// Vektor-Aufwand ohne Wirkung. Bei einteiligen Logos (myBestDays) bleibt er
+// wirkungslos, weil es kein zweites Teil gibt.
+const VERSATZ_MS = 200;
 // Standzeit NACH dem Flug, damit das fertige Logo einen Moment ruhig steht.
-const HALTEN_MS = 420;
-const AUSBLENDEN_MS = 320;
+const HALTEN_MS = 650;
+const AUSBLENDEN_MS = 450;
 
 export function Splash() {
   const t = useTheme();
   const { width } = useWindowDimensions();
-  // Ein Wert je Teil: 0 = am Startpunkt links, 1 = an seinem Platz.
-  const chevron = useRef(new Animated.Value(0)).current;
-  const wort = useRef(new Animated.Value(0)).current;
+  // Ein Wert je Teil: 0 = am Startpunkt links, 1 = an seinem Platz. Auch eine
+  // einteilige Marke nutzt `erst`; `zweit` läuft dann leer mit.
+  const erst = useRef(new Animated.Value(0)).current;
+  const zweit = useRef(new Animated.Value(0)).current;
   const opacity = useRef(new Animated.Value(1)).current;
   const [done, setDone] = useState(false);
 
@@ -50,7 +58,7 @@ export function Splash() {
       });
 
     const lauf = Animated.sequence([
-      Animated.parallel([flug(chevron, 0), flug(wort, VERSATZ_MS)]),
+      Animated.parallel([flug(erst, 0), flug(zweit, VERSATZ_MS)]),
       Animated.delay(HALTEN_MS),
       Animated.timing(opacity, {
         toValue: 0,
@@ -64,12 +72,12 @@ export function Splash() {
       if (finished) setDone(true);
     });
     return () => lauf.stop();
-  }, [chevron, wort, opacity]);
+  }, [erst, zweit, opacity]);
 
   if (done) return null;
 
   // Startpunkt: eine halbe Bildschirmbreite links vom Ziel — weit genug, dass
-  // beide Teile außerhalb beginnen, ohne dass die Strecke auf einem Tablet
+  // die Teile außerhalb beginnen, ohne dass die Strecke auf einem Tablet
   // lächerlich lang wird.
   const weg = -(width / 2 + 120);
   const schieben = (wert: Animated.Value) => ({
@@ -78,20 +86,25 @@ export function Splash() {
     opacity: wert,
   });
 
+  // `marke` kommt aus dem Theme und wird durchgereicht, statt dass der Adapter
+  // sie selbst importiert: Markenwerte fliessen ueber den ThemeProvider, und
+  // so bleibt der Adapter frei von einem zweiten Bezugsweg auf theme/marke.ts.
+  const teile = SplashLogoTeile({ negativ: t.dark, marke: t.marke });
+
   return (
     <Animated.View
       pointerEvents="none"
       style={[StyleSheet.absoluteFill, styles.wrap, { backgroundColor: t.palette.bg, opacity }]}
     >
       <View style={styles.center}>
-        {/* Eine Zeile, beide Teile in ihrer Lockup-Reihenfolge. Der Abstand ist
-            der Zwischenraum der Vorlage (x 34 → 55.9, auf HOEHE skaliert). */}
-        <Animated.View style={schieben(chevron)}>
-          <LogoChevron hoehe={HOEHE} negativ={t.dark} />
-        </Animated.View>
-        <Animated.View style={[schieben(wort), { marginLeft: (HOEHE / LOCKUP_HOEHE) * 18 }]}>
-          <LogoWortmarke hoehe={HOEHE} negativ={t.dark} />
-        </Animated.View>
+        {teile.map((teil, i) => (
+          <Animated.View
+            key={teil.key}
+            style={[schieben(i === 0 ? erst : zweit), i > 0 && { marginLeft: teil.abstand ?? 0 }]}
+          >
+            {teil.knoten}
+          </Animated.View>
+        ))}
       </View>
     </Animated.View>
   );

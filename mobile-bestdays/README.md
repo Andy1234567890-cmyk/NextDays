@@ -42,7 +42,8 @@ navigation/           types.ts, GuestTabs.tsx, tab-style.tsx
 screens/              GuestHome/Discover/Wishlist/Trips/Profile/Account/Login,
                       ListingDetail, Checkout, Checkin, TripDetail, WishlistDetail
 components/           SearchSheet, ListingCard, DateRangePicker, GuestGate, Splash
-components/ui/        Design-System: Icon, kit, patterns, PlaceIllustration
+components/ui/        Design-System: Icon, kit, patterns, PlaceIllustration,
+                      SplashLogo (Logo-Teile des Splash, markenabhängig)
 theme/                tokens.ts (Struktur) + marke.ts (Markenwerte) + ThemeProvider
 lib/                  guestApi/guestAuth/guestBookings/guestStay/guestWishlist,
                       listings, standort, datum, config, realtime, currency, appwechsel

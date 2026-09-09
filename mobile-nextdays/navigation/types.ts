@@ -35,27 +35,16 @@ export type StaffTabParamList = {
   HostProfile: undefined;
 };
 
-// Eigentümer (Rolle owner): eigenes hermetisches Erlebnis über /public-portal.
-// KEINE Agentur-Screens erreichbar (Navigation getrennt, nicht nur versteckt).
-export type OwnerTabParamList = {
-  OwnerProperties: undefined;
-  OwnerCalendar: undefined;
-  OwnerEarnings: undefined;
-  // Sperr-Anfragen + Zählerstände + Konto/Logout gebündelt (kein Tab-Zoo).
-  OwnerRequests: undefined;
-  // Nicht-Umsatz-Auswertung (Belegung/Auslastung). Der Tab existiert NUR mit
-  // dem Recht `pm_nonrevenue_charts` — ohne das Recht wird er gar nicht erst
-  // registriert (OwnerTabs.tsx), nicht bloß ausgeblendet.
-  OwnerStatistics: undefined;
-};
-
 export type RootStackParamList = {
   HostLogin: undefined;
   // „Passwort vergessen": Reset-Link anfordern. Ohne Session, deshalb im
   // ungeschuetzten Zweig neben HostLogin.
   HostPasswortVergessen: undefined;
   HostTabs: NavigatorScreenParams<HostTabParamList>;
-  OwnerTabs: NavigatorScreenParams<OwnerTabParamList>;
+  // Eigentümer-Konten haben in dieser App kein Erlebnis mehr — das
+  // Eigentümer-Portal ist eine eigene App. Statt eines stummen Logouts
+  // (experienceFor wäre null) landet die Rolle `owner` hier.
+  OwnerAppHinweis: undefined;
   ReservationDetail: { id: string };
   TaskDetail: { id: string };
   // Objekt-Detail (Foto/Adresse/Ausstattung/Kanäle) und der eigene
@@ -68,10 +57,4 @@ export type RootStackParamList = {
   // Dieselben Daten wie im Web (`type_attributes.messaging`).
   PropertyGuestGuide: { id: string };
   PropertyGuestGuideText: { id: string; feld: MappenFeld };
-  // Eigentümer-Zweig (nur mit Owner-Erlebnis registriert, App.tsx): das
-  // LESENDE Objekt-Detail über /public-portal und das Fotoalbum. Bewusst
-  // getrennt von `PropertyDetail` oben — das liegt auf /properties und würde
-  // einem Eigentümer 403 liefern.
-  OwnerPropertyDetail: { id: string };
-  OwnerPhotoAlbum: undefined;
 };

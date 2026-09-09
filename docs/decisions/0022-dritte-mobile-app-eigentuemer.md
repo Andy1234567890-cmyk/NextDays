@@ -47,6 +47,11 @@ nicht gelöscht und nicht stillgelegt — dafür gibt es keinen Auftrag, und ein
 Eigentümer, der die PMS-App schon installiert hat, verliert nichts. Die
 Ablösung ist eine eigene Entscheidung zu einem eigenen Zeitpunkt.
 
+> **Abgelöst am 09.09.2026** — siehe „Nachtrag: Ausbau aus `mobile-nextdays`"
+> am Ende dieses Dokuments. Die oben angekündigte eigene Entscheidung ist
+> gefallen; das Eigentümer-Erlebnis liegt jetzt ausschließlich in
+> `mobile-owner`.
+
 **Die App wurde von Grund auf neu gebaut** (Auswahl des Auftraggebers), nicht
 aus den sieben Screens kopiert. Übernommen wurde nur, was geprüft ist und nicht
 neu erfunden werden darf: die Datenschicht (`lib/ownerPortal.ts`), Auth
@@ -177,3 +182,50 @@ Privacy Label gegen das Manifest im jeweiligen Binary).
   technische.
 - `ios/Pods` ist nicht installiert (`pod install` läuft auf dem Mac des
   Entwicklers, nicht hier).
+
+## Nachtrag: Ausbau aus `mobile-nextdays` (09.09.2026)
+
+Anlass: Auftrag vom 09.09.2026, vor dem Deploy der Eigentümer-App alles
+Eigentümer-Bezogene aus `mobile-nextdays` auszubauen. Damit endet die oben
+festgehaltene Doppelung — das Erlebnis lag seit dem 02.09.2026 in beiden Apps,
+und zwei Fassungen desselben Portals driften, sobald eine davon gepflegt wird.
+
+**Entfernt** (`mobile-nextdays`): die sieben Screens (`OwnerProperties`,
+`OwnerCalendar`, `OwnerEarnings`, `OwnerStatistics`, `OwnerRequests`,
+`OwnerPropertyDetail`, `OwnerPhotoAlbum`), der Tab-Navigator
+`navigation/OwnerTabs.tsx`, die Datenschicht `lib/ownerPortal.ts`, das
+Flächen-Gating `lib/owner-flaechen.ts` und die beiden zugehörigen Testdateien.
+Aus `navigation/types.ts` fällt `OwnerTabParamList` samt der beiden
+Root-Einträge; die Deep-Links `eigentuemer/objekte` und
+`eigentuemer/auszahlungen` gibt es nicht mehr.
+
+**Geblieben ist genau ein Screen**, `screens/OwnerAppHinweis.tsx`. Ein Konto
+der Rolle `owner` kann sich weiterhin anmelden — der Zugang ist gültig, nur das
+Erlebnis liegt woanders — und bekommt die Erklärung plus den Absprung nach
+`mynextdaysowner://`. Der naheliegendere Weg, `owner` einfach aus `BY_ROLE`
+(`lib/experience.ts`) zu streichen, wurde VERWORFEN: `experienceFor` gäbe dann
+`null`, und der bestehende fail-closed-Pfad loggt wortlos aus — für den Nutzer
+nicht von „Passwort falsch" zu unterscheiden. Ein stummer Rauswurf ist derselbe
+Fehler wie ein verschluckter Exception (Wurzel 5).
+
+Das Gegenstück in der anderen Richtung existierte bereits:
+`mobile-owner/screens/FalscheRolle.tsx` fängt ein Verwaltungs-Konto ab, das die
+Eigentümer-App öffnet. Beide Apps halten damit keinen Fremdzustand mehr stumm.
+
+Mitgezogen, weil `canOpenURL` sonst IMMER `false` liefert und der Verweis auch
+bei installierter App in den Store liefe: `mynextdaysowner` steht jetzt in
+`mobile-nextdays/ios/MyNextDays/Info.plist`
+(`LSApplicationQueriesSchemes`) und in dessen `AndroidManifest.xml`
+(`<queries>`).
+
+Die Zieladresse der Eigentümer-App steht im Screen und NICHT in
+`theme/marke.ts`: `marke.andereApp` zeigt auf myBestDays, und `theme/tokens.ts`
+— wo der Typ `Marke` liegt — hält die CI über alle drei Apps byte-identisch;
+ein zweites Feld dort änderte den Typ in `mobile-bestdays` und `mobile-owner`
+mit. Die Eigentümer-App ist zudem keine eigene Marke (siehe oben), also kein
+Markenwert.
+
+Nicht berührt: `is_owner_stay` (Eigennutzung in Buchungen), die Rollen-Bezeichnung
+„Eigentümer" in `screens/HostProfile.tsx` und die `pm_owner_*`-Einträge in
+`lib/rechte-texte.ts`. Das sind Betriebs-Sichten AUF den Eigentümer, kein
+Eigentümer-Erlebnis — sie gehören der Agentur und bleiben.

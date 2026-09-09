@@ -1,8 +1,9 @@
 // myNextDays — Einstiegspunkt der PMS-/Channel-Manager-App (bare React Native).
 // EINE Auth-Welt: das Betriebskonto (Tenant). Welches Erlebnis ein Nutzer sieht,
-// kommt aus seiner Rolle (experienceFor(me)) — Agentur, Eigentümer oder
-// Mitarbeiter —, nicht aus einer manuellen Auswahl. Der Marktplatz lebt seit
-// ADR-0019 in einer eigenen App (myBestDays).
+// kommt aus seiner Rolle (experienceFor(me)) — Agentur oder Mitarbeiter —,
+// nicht aus einer manuellen Auswahl. Der Marktplatz lebt seit ADR-0019 in einer
+// eigenen App (myBestDays); das Eigentümer-Portal ebenso in seiner eigenen App
+// — die Rolle `owner` landet hier nur noch auf einem Hinweis-Screen.
 // GestureHandler → SafeArea → Theme → AuthProvider → NavigationContainer.
 import {
   NavigationContainer,
@@ -22,12 +23,10 @@ import { getToken, onTokenChange } from "@/lib/auth";
 import { experienceFor } from "@/lib/experience";
 import { realtimeTokenQuelleSetzen } from "@/lib/realtime";
 import { HostTabs } from "@/navigation/HostTabs";
-import { OwnerTabs } from "@/navigation/OwnerTabs";
 import type { RootStackParamList } from "@/navigation/types";
 import HostLogin from "@/screens/HostLogin";
 import HostPasswortVergessen from "@/screens/HostPasswortVergessen";
-import OwnerPhotoAlbum from "@/screens/OwnerPhotoAlbum";
-import OwnerPropertyDetail from "@/screens/OwnerPropertyDetail";
+import OwnerAppHinweis from "@/screens/OwnerAppHinweis";
 import PropertyCustomFields from "@/screens/PropertyCustomFields";
 import PropertyGuestGuide from "@/screens/PropertyGuestGuide";
 import PropertyGuestGuideText from "@/screens/PropertyGuestGuideText";
@@ -47,7 +46,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 // Deep-Links mynextdays:// — React Navigation deckt Kalt- UND Warmstart ab
 // (getInitialURL beim Kaltstart, Linking-'url'-Event im Warmstart).
 // Auth-Guard über BEDINGTE Screen-Registrierung (React-Navigation-Auth-Flow):
-// geschützte Screens (HostTabs/OwnerTabs/ReservationDetail/TaskDetail) existieren
+// geschützte Screens (HostTabs/ReservationDetail/TaskDetail) existieren
 // im Navigator NUR mit Session — ein Deep-Link darauf wird ausgeloggt ignoriert
 // statt einen leeren geschützten Screen zu öffnen. Login/Signup existieren
 // umgekehrt nur OHNE Session. Die Pfade sind so geschnitten, dass sie später
@@ -78,12 +77,6 @@ const linking: LinkingOptions<RootStackParamList> = {
           Listings: "inserate",
           HostInbox: "inbox/:threadId?",
           HostProfile: "profil",
-        },
-      },
-      OwnerTabs: {
-        screens: {
-          OwnerProperties: "eigentuemer/objekte",
-          OwnerEarnings: "eigentuemer/auszahlungen",
         },
       },
     },
@@ -142,7 +135,10 @@ function Root() {
             {/* Geschützt: nur mit Tenant-Session registriert (Auth-Guard für
                 Deep-Links — ausgeloggt existieren diese Routen nicht). */}
             <Stack.Screen name="HostTabs" component={HostTabs} />
-            <Stack.Screen name="OwnerTabs" component={OwnerTabs} />
+            {/* Eigentümer-Konten: das Portal ist in eine eigene App gezogen.
+                Bewusst OHNE Deep-Link — der Screen ist kein Ziel, das man
+                ansteuert, sondern die Antwort auf eine Anmeldung. */}
+            <Stack.Screen name="OwnerAppHinweis" component={OwnerAppHinweis} />
             <Stack.Screen name="ReservationDetail" component={ReservationDetail} />
             <Stack.Screen name="TaskDetail" component={TaskDetail} />
             <Stack.Screen name="PropertyDetail" component={PropertyDetail} />
@@ -150,18 +146,6 @@ function Root() {
             <Stack.Screen name="PropertyCustomFields" component={PropertyCustomFields} />
             <Stack.Screen name="PropertyGuestGuide" component={PropertyGuestGuide} />
             <Stack.Screen name="PropertyGuestGuideText" component={PropertyGuestGuideText} />
-            {/* Eigentümer-Zweig: die beiden lesenden Portal-Screens existieren
-                NUR im Eigentümer-Erlebnis. Getrennt statt versteckt — dieselbe
-                Linie, mit der OwnerTabs keine Agentur-Screens verlinkt. Sie
-                tragen bewusst KEINEN Deep-Link: erreichbar sind sie über die
-                Objektliste, nicht über eine URL, die auch in der Agentur-Welt
-                gälte. */}
-            {target?.route === "OwnerTabs" && (
-              <>
-                <Stack.Screen name="OwnerPropertyDetail" component={OwnerPropertyDetail} />
-                <Stack.Screen name="OwnerPhotoAlbum" component={OwnerPhotoAlbum} />
-              </>
-            )}
           </>
         ) : (
           <>

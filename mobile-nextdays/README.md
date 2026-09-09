@@ -1,12 +1,20 @@
 # myNextDays — PMS-App (bare React Native)
 
 Native App des **Betriebs**: Dashboard, Belegungsplan, Reservierungen,
-Posteingang, Objekte, Aufgaben — plus das Eigentümer-Portal. Teilt sich das
-FastAPI-Backend (`apps/api`) mit allen anderen Frontends.
+Posteingang, Objekte, Aufgaben. Teilt sich das FastAPI-Backend (`apps/api`) mit
+allen anderen Frontends.
 
 Der Marktplatz für Gäste ist eine **eigene App**:
 [`mobile-bestdays`](../mobile-bestdays) — siehe
 [ADR-0019](../docs/decisions/0019-zwei-mobile-apps.md).
+
+Das **Eigentümer-Portal** ist ebenfalls ausgezogen und liegt in
+[`mobile-owner`](../mobile-owner) — siehe
+[ADR-0022](../docs/decisions/0022-dritte-mobile-app-eigentuemer.md). Hier bleibt
+davon nur `screens/OwnerAppHinweis.tsx`: meldet sich ein Konto der Rolle `owner`
+an, sieht es den Verweis auf die Eigentümer-App (Absprung per
+`mynextdaysowner://`) und einen Abmelden-Knopf — kein stummer Rauswurf. Das
+Gegenstück ist `mobile-owner/screens/FalscheRolle.tsx`.
 
 ## Identität
 
@@ -26,7 +34,7 @@ passen — sonst startet die App mit „Application has not been registered".
 ## Stack
 
 - **React Native 0.86** (CLI, **kein Expo**), New Architecture, React 19
-- **React Navigation 7** — Root-Stack + Bottom-Tabs (Betrieb / Eigentümer)
+- **React Navigation 7** — Root-Stack + Bottom-Tabs (Betrieb)
 - **react-native-svg** für das Icon-Set, **react-native-keychain** für die Tokens
 - **react-native-gesture-handler** / **safe-area-context** / **screens**
 - Schibsted-Grotesk-TTFs unter `assets/fonts` (nativ via `react-native.config.js`)
@@ -40,14 +48,16 @@ Marktplatz, diese App fragt keine Standortberechtigung ab.
 App.tsx               GestureHandler → SafeArea → Theme → AuthProvider → Navigation
 index.js              RN-Entry (AppRegistry)
 ios/ · android/       native Projekte (Xcode / Gradle)
-navigation/           types.ts, HostTabs.tsx, OwnerTabs.tsx, tab-style.tsx
+navigation/           types.ts, HostTabs.tsx, tab-style.tsx
 screens/              HostDashboard/Calendar/Reservations/Inbox/Listings/Tasks/More/
-                      Profile/Login/Signup, ReservationDetail, TaskDetail, Owner*
+                      Profile/Login/Signup, ReservationDetail, TaskDetail,
+                      OwnerAppHinweis (Verweis auf die Eigentümer-App)
 components/           Splash
-components/ui/        Design-System: Icon, kit, patterns
+components/ui/        Design-System: Icon, kit, patterns, LogoVektor,
+                      SplashLogo (Logo-Teile des Splash, markenabhängig)
 theme/                tokens.ts (Struktur) + marke.ts (Markenwerte) + ThemeProvider
 lib/                  api, auth, permissions, experience, properties, reservations,
-                      dashboard, tasks, inbox, calendar*, ownerPortal,
+                      dashboard, tasks, inbox, calendar*,
                       config, realtime, currency, appwechsel
 assets/fonts/         Schibsted-Grotesk TTFs (PostScript-Namen: SchibstedGrotesk-Regular …)
 ```
@@ -57,10 +67,10 @@ assets/fonts/         Schibsted-Grotesk TTFs (PostScript-Namen: SchibstedGrotesk
 Realtime-Tokenquelle (`realtimeTokenQuelleSetzen`); ohne sie wirft `useRealtime`
 fail-closed.
 
-**Drei Erlebnisse aus der Rolle** (`lib/experience.ts`, fail-closed): admin /
-co_admin / staff / cleaner → `HostTabs` (Mitarbeiter sehen einen reduzierten
-Tab-Satz ohne Finanz-/Vertriebseinblick), owner → `OwnerTabs`. Unbekannte Rolle
-→ kein Erlebnis, Session wird beendet.
+**Erlebnis aus der Rolle** (`lib/experience.ts`, fail-closed): admin / co_admin
+/ staff / cleaner → `HostTabs` (Mitarbeiter sehen einen reduzierten Tab-Satz
+ohne Finanz-/Vertriebseinblick), owner → `OwnerAppHinweis` (Verweis auf die
+Eigentümer-App). Unbekannte Rolle → kein Erlebnis, Session wird beendet.
 
 **Geteilter Code mit `mobile-bestdays`** liegt als bewusste Kopie vor (ADR-0019,
 Stufe 1). Dateien mit `SCHWESTERDATEI`-Kopf müssen byte-identisch bleiben — die
