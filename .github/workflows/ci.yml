@@ -1035,8 +1035,19 @@ jobs:
                    react-native-quick-base64 @craftzdog/react-native-buffer; do
             a=$(jq -r --arg p "$p" '.dependencies[$p]' mobile-owner/package.json)
             b=$(jq -r --arg p "$p" '.dependencies[$p]' mobile-nextdays/package.json)
-            [ "$a" = "$b" ] || { echo "$p: $a (owner) != $b (nextdays)"; exit 1; }
-            [ "$a" = "null" ] && { echo "$p fehlt in beiden Apps — der Chat braucht es."; exit 1; }
+            # `if`, nicht `[ … ] && { … }`: Unter `bash -e` ist ein FALSCHER
+            # Test als LETZTER Befehl der Schleife ein Fehlschlag und beendet
+            # den Schritt — die Pruefung waere also genau dann rot, wenn alles
+            # stimmt (Lauf 834). `if` liefert immer 0, wenn die Bedingung nicht
+            # greift.
+            if [ "$a" != "$b" ]; then
+              echo "$p: $a (owner) != $b (nextdays)"
+              exit 1
+            fi
+            if [ "$a" = "null" ]; then
+              echo "$p fehlt in beiden Apps — der Chat braucht es."
+              exit 1
+            fi
           done
 
   marketing-konsistenz:

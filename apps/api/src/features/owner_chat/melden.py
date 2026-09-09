@@ -56,11 +56,21 @@ def neue_nachricht_melden(  # noqa: PLR0913 — Ereignis, Ziel und Absender
     if seite == "owner":
         empfaenger = kern.agentur_nutzer(db, tenant_id)
         schluessel = "betrieb_chat"
-        ziel_pfad = f"/posteingang?thread=eig:{thread_id}"
+        # Das Muster des Projekts: `/posteingang/{thread_id}` als eigene
+        # Route (`web/app/(dashboard)/posteingang/[threadId]`), NICHT als
+        # Query-Parameter. Meine erste Fassung erzeugte ein Sprungziel ohne
+        # Seite — also einen 404 in einer bereits verschickten Mail, genau das,
+        # wofür `melde-ziele-pruefen.mjs` existiert.
+        ziel_pfad = f"/posteingang/eig:{thread_id}"
     else:
         empfaenger = kern.eigentuemer_nutzer(db, tenant_id, property_id)
         schluessel = "owner_chat"
-        ziel_pfad = "/portal/nachrichten"
+        # Das Eigentümer-PORTAL im Web hat keinen Chat — er lebt in der App
+        # (`mobile-owner`), weil der Schlüssel in der Keychain liegt und ein
+        # Browser dafür keinen gleichwertigen Ort hat (ADR-0029). Der Link
+        # führt deshalb auf die Portal-Startseite; ein Ziel `/portal/nachrichten`
+        # wäre ein 404 in einer verschickten Mail.
+        ziel_pfad = "/portal"
 
     # Lokaler Import wie bei den übrigen Aufrufern (`public_portal/familie.py`):
     # der Dispatcher zieht Mail- und Einstellungs-Dienste nach, und ein
