@@ -693,11 +693,10 @@ jobs:
   mobile-android-release:
     name: Mobile (Android-Release-Build ${{ matrix.app }})
     needs: [betroffen]
-    # Hier ist ein Job-`if` RICHTIG und nicht das Muster der anderen Pruefjobs:
-    # dieser Job steht NICHT in `deploy.needs`, ein skipped kann den Deploy also
-    # nicht mit-ueberspringen. Und er ist der teuerste im ganzen Workflow
-    # (JDK + Android-SDK + Gradle, ~10 Minuten je App) — er soll wirklich
-    # uebersprungen werden, nicht bloss leer durchlaufen.
+    # Dieser Job ist der teuerste im ganzen Workflow (JDK + Android-SDK +
+    # Gradle, ~10 Minuten je App). Er soll deshalb wirklich uebersprungen
+    # werden — jeder Schritt haengt an der Betroffenheitspruefung, und ohne
+    # Aenderung an der App laeuft nur der erste Schritt (~10 s).
     #
     # ZWEI APPS seit dem 09.09.2026 (vorher nur mobile-nextdays). Der Anlass:
     # `mobile-owner` bekam mit dem Eigentuemer-Chat (0611) eine
@@ -710,7 +709,11 @@ jobs:
     # `mobile-bestdays` fehlt hier bewusst: die App hat noch keinen
     # Release-Workflow-Lauf hinter sich und keinen eigenen Bereich; sie kommt
     # dazu, sobald sie ausgeliefert wird (Reihenfolge nach ADR-0022).
-    if: needs.betroffen.outputs[format('mobile-android-{0}', matrix.kuerzel)] == 'true'
+    # KEIN Job-`if` mit `matrix`: GitHub wertet Job-Bedingungen aus, BEVOR die
+    # Matrix existiert — `matrix.kuerzel` ist dort schlicht unbekannt und der
+    # ganze Workflow gilt als ungueltig ("Unrecognized named-value: 'matrix'",
+    # Lauf 833). Der erste Schritt entscheidet stattdessen, wie in den
+    # uebrigen Jobs dieser Datei; jeder weitere haengt daran.
     runs-on: ubuntu-latest
     strategy:
       # Eine gebrochene App darf die Pruefung der anderen nicht verdecken.
@@ -725,14 +728,36 @@ jobs:
       run:
         working-directory: ${{ matrix.app }}
     steps:
+      - name: Betroffen?
+        if: steps.pruefen.outputs.laufen == 'true'
+        id: pruefen
+        # Vor dem Checkout gibt es das working-directory dieses Jobs noch
+        # nicht. Ohne diese Zeile stirbt der Schritt mit "No such file or
+        # directory", bevor er etwas tut.
+        working-directory: ${{ github.workspace }}
+        env:
+          BEREICHE: ${{ toJSON(needs.betroffen.outputs) }}
+        run: |
+          set -euo pipefail
+          wert=$(printf '%s' "$BEREICHE" \
+            | jq -r --arg a "mobile-android-${{ matrix.kuerzel }}" '.[$a] // empty')
+          if [ -z "$wert" ]; then
+            echo "::error::Kein Bereichs-Output fuer mobile-android-${{ matrix.kuerzel }} — scripts/ci/bereiche.txt und die outputs-Deklaration des Jobs betroffen pruefen."
+            exit 1
+          fi
+          echo "laufen=$wert" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.pruefen.outputs.laufen == 'true'
 
       - name: bun installieren
+        if: steps.pruefen.outputs.laufen == 'true'
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: "1.3.9"
 
       - name: JDK 17 einrichten
+        if: steps.pruefen.outputs.laufen == 'true'
         # Dieselbe Festlegung wie im Verteil-Workflow: AGP 8.x/Gradle verlangt
         # 17, und das Standard-JDK des Runners ist über Generationen nicht
         # stabil. Weicht es hier ab, prüft der Job eine andere Toolchain als die,
@@ -743,9 +768,11 @@ jobs:
           java-version: "17"
 
       - name: Android SDK einrichten
+        if: steps.pruefen.outputs.laufen == 'true'
         uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4.0.1
 
       - name: Gradle-Cache
+        if: steps.pruefen.outputs.laufen == 'true'
         # Ohne Cache dauert der Job mehrere Minuten pro Lauf. Der Schlüssel
         # hängt an den Gradle-Dateien; ändert sich keine, wird derselbe Cache
         # wiederverwendet.
@@ -758,15 +785,18 @@ jobs:
           restore-keys: gradle-${{ matrix.kuerzel }}-
 
       - name: Abhängigkeiten installieren
+        if: steps.pruefen.outputs.laufen == 'true'
         run: bun install --frozen-lockfile
 
       - name: Platzhalter-Secrets anlegen
+        if: steps.pruefen.outputs.laufen == 'true'
         # Der PLATZHALTER genügt: geprüft wird der Build, nicht die Laufzeit.
         # Der echte anon-Key gehört in den Verteil-Workflow (dort hätte die App
         # bei den Testern sonst kein Realtime) — nicht in einen Job, der auch
         # für Pull Requests aus Forks läuft.
         run: cp lib/config.secrets.example.ts lib/config.secrets.ts
       - name: google-services.json bereitstellen
+        if: steps.pruefen.outputs.laufen == 'true'
         # Die Datei ist gitignoriert („pro Arbeitsplatz", siehe
         # android/app/build.gradle) und liegt auf dem Runner nicht vor. Seit Push
         # dazukam, verlangt `apply plugin: "com.google.gms.google-services"` sie
@@ -806,6 +836,7 @@ jobs:
           python3 -c "import json; d=json.load(open('android/app/google-services.json')); print('ok, Projekt:', d['project_info']['project_id'], 'Pakete:', [c['client_info']['android_client_info']['package_name'] for c in d.get('client', [])])"
 
       - name: Release bauen (unsigniert)
+        if: steps.pruefen.outputs.laufen == 'true'
         working-directory: ${{ matrix.app }}/android
         # Feste Platzhalter-Version: `versionCode`/`versionName` leitet der
         # Verteil-Workflow aus der Lauf-Nummer ab. Hier zählt nur, dass der
@@ -817,6 +848,7 @@ jobs:
             -PversionName="ci-pruefbuild"
 
       - name: Ergebnis belegen
+        if: steps.pruefen.outputs.laufen == 'true'
         # Ein grüner Gradle-Lauf ist kein Beweis, dass ein APK entstanden ist
         # (eine Variante kann übersprungen werden). Also nachsehen — und
         # ausdrücklich festhalten, dass es UNSIGNIERT ist, damit niemand dieses
