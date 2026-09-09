@@ -26,6 +26,7 @@ from src.features.auth.granular_permissions import (
 from src.features.auth.schemas import UserRole
 
 from . import bilder as bilder_modul
+from . import serverkrypto
 from .fehler import OwnerChatError
 
 log = get_logger(__name__)
@@ -320,19 +321,31 @@ def nachricht_ablegen(
         bilder_modul.pfad_pruefen(pfad, tenant_id)
     if not chiffre and not bilder:
         raise OwnerChatError("Nachricht ist leer.", status_code=422)
-    if not sender_key:
-        # Ohne den öffentlichen Schlüssel des Absenders kann KEIN Empfänger das
-        # gemeinsame Geheimnis bilden — die Nachricht wäre für alle unlesbar,
-        # ohne dass irgendetwas fehlschlägt. Genau der stille Fehler aus
-        # Wurzel 5, deshalb hier hart abgewiesen statt mit leerem Feld abgelegt
-        # (Wurzel 4: kein Ersatzwert).
-        raise OwnerChatError(
-            "Absender-Schlüssel fehlt — bitte den Chat neu einrichten.",
-            status_code=422,
-        )
-    _absender_schluessel_pruefen(db, tenant_id, user_id, sender_key)
+    # Zwei Verfahren liegen nebeneinander (09.09.2026): serverseitig
+    # verschlüsselte Nachrichten tragen die Marke `sv1:`, der E2E-Bestand
+    # nicht. Entschieden wird am INHALT, den der Server selbst erzeugt hat —
+    # nicht an einem Flag des Clients, das ein Angreifer setzen könnte, um die
+    # Geräteprüfung zu umgehen (Wurzel 3).
+    serverseitig = serverkrypto.ist_serverseitig(chiffre)
 
-    zeilen = _schluessel_pruefen(geraete, schluessel)
+    if serverseitig:
+        # Es gibt kein Absendergerät und keine Empfängerschlüssel: der Server
+        # hält den einen Schlüssel. Beide Prüfungen unten sind hier nicht
+        # „übersprungen", sondern gegenstandslos.
+        zeilen: list[dict] = []
+    else:
+        if not sender_key:
+            # Ohne den öffentlichen Schlüssel des Absenders kann KEIN Empfänger
+            # das gemeinsame Geheimnis bilden — die Nachricht wäre für alle
+            # unlesbar, ohne dass irgendetwas fehlschlägt. Genau der stille
+            # Fehler aus Wurzel 5, deshalb hier hart abgewiesen statt mit
+            # leerem Feld abgelegt (Wurzel 4: kein Ersatzwert).
+            raise OwnerChatError(
+                "Absender-Schlüssel fehlt — bitte den Chat neu einrichten.",
+                status_code=422,
+            )
+        _absender_schluessel_pruefen(db, tenant_id, user_id, sender_key)
+        zeilen = _schluessel_pruefen(geraete, schluessel)
 
     nachricht = (
         db.table("owner_messages")

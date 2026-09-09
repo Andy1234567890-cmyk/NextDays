@@ -22,7 +22,13 @@ from datetime import UTC, datetime
 import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from src.features.owner_chat import freigabe, geraete, kern, moderation
+from src.features.owner_chat import (
+    freigabe,
+    geraete,
+    kern,
+    moderation,
+    serverkrypto,
+)
 from src.features.owner_chat.fehler import OwnerChatError
 
 
@@ -1257,3 +1263,58 @@ def test_zweimal_stoppen_ist_ein_stopp() -> None:
             db, tenant_id=T, user_id="user-owner", thread_id="faden-1", grund=None
         )
     assert len(db.tables["owner_chat_stopps"]) == 1
+
+
+# --- Serverseitige Verschlüsselung (09.09.2026) ------------------------------
+# Der Umstieg von E2E hat einen stillen Blocker hinterlassen: `nachricht_ablegen`
+# verlangte weiterhin `sender_key` und einen Schlüssel je Empfängergerät. Die
+# Apps schicken seit dem Umstieg Klartext und KEIN Gerätematerial mehr — jedes
+# Senden endete mit 422 „Absender-Schlüssel fehlt", live gemessen in der
+# Eigentümer-App. Der Kern ist der gemeinsame Weg aller drei Oberflächen
+# (Owner-App, PMS-App, Dashboard), diese Tests decken ihn deshalb hier ab.
+
+
+def test_serverseitig_ohne_geraeteschluessel_senden(monkeypatch) -> None:
+    """Eine `sv1:`-Nachricht braucht weder sender_key noch Empfängerschlüssel."""
+    monkeypatch.setenv("OWNER_CHAT_SCHLUESSEL", base64.b64encode(b"k" * 32).decode())
+    db = _DB(_basis())
+    zeile = kern.nachricht_ablegen(
+        db,
+        T,
+        "faden-1",
+        seite="owner",
+        user_id="user-owner",
+        sender_name="Rene",
+        chiffre=serverkrypto.verschluesseln("Hallo Jeanine"),
+        schluessel={},
+        geraete=kern.empfaenger_geraete(db, T, P),
+        bilder=[],
+        sender_key="",
+    )
+    assert serverkrypto.entschluesseln(str(zeile["body"])) == "Hallo Jeanine"
+    # Kein Schlüsselmaterial abgelegt: es gibt keins.
+    assert db.tables["owner_message_keys"] == []
+
+
+def test_e2e_bestand_verlangt_weiterhin_sender_key() -> None:
+    """Die alte Prüfung bleibt für unmarkierte Chiffre scharf (Wurzel 3).
+
+    Sonst umginge ein Client die Geräteprüfung, indem er einfach nichts
+    mitschickt.
+    """
+    db = _DB(_basis())
+    with pytest.raises(OwnerChatError) as exc:
+        kern.nachricht_ablegen(
+            db,
+            T,
+            "faden-1",
+            seite="owner",
+            user_id="user-owner",
+            sender_name="Rene",
+            chiffre="Y2hpZmZyZQ==",
+            schluessel={},
+            geraete=kern.empfaenger_geraete(db, T, P),
+            bilder=[],
+            sender_key="",
+        )
+    assert exc.value.status_code == 422

@@ -40,7 +40,6 @@ import { EmptyState } from "@/components/ui/patterns";
 import { useAuth } from "@/contexts/AuthContext";
 import { channelMeta } from "@/lib/calendar-channels";
 import {
-  chatEinrichten,
   eigentuemerAntworten,
   empfaengerHolen,
   getEigentuemerVerlauf,
@@ -578,10 +577,8 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
   const [eskalation, setEskalation] = useState<KiEskalation | null>(null);
   // Eigentümer-Chat ohne eingerichtetes Gerät (0611): der Verlauf bleibt leer,
   // und der Grund gehört benannt — sonst sieht es aus wie ein leeres Gespräch.
-  const [chatOhneGeraet, setChatOhneGeraet] = useState(false);
   // Wurzel 2: der Knopf sperrt, solange die Einrichtung läuft — ein zweiter
   // Druck legte sonst ein zweites Gerät für dasselbe Telefon an.
-  const [richtetEin, setRichtetEin] = useState(false);
   // Wie viele Nachrichten dieses Gerät nicht öffnen kann (0611). Sichtbar
   // gemacht statt verschwiegen — eine Lücke, die niemand sieht, ist der
   // schlimmere Fehler (Wurzel 5).
@@ -601,16 +598,14 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
     // normale Endpunkt liefert für `eig:` zwar Zeilen, aber nur Chiffretext
     // ohne die verpackten Schlüssel — angezeigt würde Buchstabensalat.
     if (istEigentuemerThread(thread.id)) {
+      // Kein Gerät nötig (09.09.2026): Der Server entschlüsselt selbst und
+      // liefert `text`. Bis hierher sperrte ein fehlendes Gerät den ganzen
+      // Verlauf — dieselbe Sperre, die im Dashboard dazu führte, dass die
+      // Agentur zugestellte Nachrichten nie zu sehen bekam. Die `device_id`
+      // geht weiterhin mit, wenn es eine gibt: nur damit öffnet sich der
+      // E2E-Bestand aus der Zeit davor.
       const geraet = await geraeteIdLesen();
-      if (!geraet) {
-        // Ohne registriertes Gerät ist der Verlauf nicht zu öffnen. Leere
-        // Liste plus Hinweis (unten), statt Chiffretext anzuzeigen.
-        setMessages([]);
-        setChatOhneGeraet(true);
-        return;
-      }
-      setChatOhneGeraet(false);
-      const res = await getEigentuemerVerlauf(thread.id, geraet);
+      const res = await getEigentuemerVerlauf(thread.id, geraet ?? "");
       if (!res.ok) {
         // Den Zähler MIT zurücksetzen: sonst stünde neben einem leeren
         // Verlauf weiter „3 ältere Nachrichten nicht lesbar" — eine Aussage
@@ -736,20 +731,6 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
       ],
     );
   }, [gibtFrei, thread.id]);
-
-  const chatEinrichtenHier = useCallback(async () => {
-    if (richtetEin) return;
-    setRichtetEin(true);
-    const name = `${Platform.OS === "ios" ? "iPhone" : "Android"} · ${new Date().toLocaleDateString()}`;
-    const res = await chatEinrichten(name);
-    setRichtetEin(false);
-    if (!res.ok) {
-      Alert.alert("Nicht eingerichtet", res.error);
-      return;
-    }
-    setChatOhneGeraet(false);
-    await load();
-  }, [richtetEin, load]);
 
 
   /** Zurücknehmen darf nur ein MENSCH — der Takt nicht, sonst erledigt sich
@@ -953,7 +934,7 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
             einem Gerät aus freigeben, das den Verlauf kennt. Ohne diesen Knopf
             wäre der Hinweis „bitten Sie die Verwaltung" ein Verweis auf einen
             Weg, den es nicht gibt (Attrappe). */}
-        {nichtLesbar > 0 && !chatOhneGeraet && (
+        {nichtLesbar > 0 && (
           <Col
             gap={6}
             style={{
@@ -977,9 +958,7 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
         {/* Wer den Verlauf LESEN kann, kann ihn freigeben — der Knopf steht
             deshalb hier und nicht im Hinweis oben (dort geht es um Nachrichten,
             die genau dieses Gerät nicht öffnen kann). */}
-        {istEigentuemerThread(thread.id) &&
-          !chatOhneGeraet &&
-          nichtLesbar === 0 && (
+        {istEigentuemerThread(thread.id) && nichtLesbar === 0 && (
             <Btn
               variant="ghost"
               onPress={() => void freigabeAnbieten()}
@@ -988,36 +967,6 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
               {gibtFrei ? "Wird freigegeben …" : "Verlauf für ein Gerät freigeben"}
             </Btn>
           )}
-
-        {/* Eigentümer-Chat ohne eingerichtetes Gerät (0611): der Verlauf ist
-            verschlüsselt und bleibt leer. Ohne diesen Hinweis sähe der
-            Mitarbeiter ein leeres Gespräch und hielte es für unbeantwortet —
-            ein stiller Zustand, der wie eine Tatsache aussieht (Wurzel 5). */}
-        {chatOhneGeraet && (
-          <Col
-            gap={6}
-            style={{
-              borderWidth: 1,
-              borderColor: t.palette.line,
-              borderRadius: 14,
-              padding: 12,
-            }}
-          >
-            <Txt v="klein">
-              Dieses Gespräch ist Ende-zu-Ende verschlüsselt.
-            </Txt>
-            <Txt v="klein" soft>
-              Richten Sie den verschlüsselten Chat auf diesem Gerät ein, um
-              mitzulesen und zu antworten.
-            </Txt>
-            <Btn
-              onPress={() => void chatEinrichtenHier()}
-              disabled={richtetEin}
-            >
-              {richtetEin ? "Wird eingerichtet …" : "Chat einrichten"}
-            </Btn>
-          </Col>
-        )}
 
         {/* Die Eskalation steht GANZ oben: sie ist der Grund, warum jemand
             diesen Verlauf gerade öffnet (sie kommt per Push). Weiter unten

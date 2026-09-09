@@ -29,7 +29,7 @@ import {
 } from "react-native";
 
 import { Icon } from "@/components/ui/Icon";
-import { Btn, Kachel, Spinner, Txt } from "@/components/ui/kit";
+import { Btn, Kachel, Txt } from "@/components/ui/kit";
 import { useT } from "@/contexts/SprachContext";
 import {
   bilderOeffnen,
@@ -46,11 +46,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { istLesbar, seiteIstEigene } from "@/lib/chat-anzeige";
 import { bildWaehlen, fotoAufnehmen } from "@/lib/chat-bild";
-import { geraeteIdLesen, identitaetLesen } from "@/lib/chat-krypto";
+import { geraeteIdLesen } from "@/lib/chat-krypto";
 import { KARTE_ABSTAND } from "@/theme/flaechen";
 import { useTheme } from "@/theme/ThemeProvider";
 
-import { ChatEinrichten } from "./ChatEinrichten";
 
 type Props = {
   route: { params: { propertyId: string; threadId: string } };
@@ -78,7 +77,6 @@ export function Chat({ route }: Props) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
 
-  const [geraetBereit, setGeraetBereit] = useState<boolean | null>(null);
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [blasen, setBlasen] = useState<Blase[]>([]);
   const [nichtLesbar, setNichtLesbar] = useState(0);
@@ -93,15 +91,13 @@ export function Chat({ route }: Props) {
   const [gestoppt, setGestoppt] = useState(false);
   const rollen = useRef<ScrollView>(null);
 
-  // Hat dieses Gerät einen Schlüssel UND eine registrierte ID? Ohne beides
-  // ist der Screen sinnlos — deshalb VOR dem ersten Laden geprüft. Ein
-  // Schlüssel ohne Registrierung (abgebrochene Einrichtung) zählt als „nicht
-  // bereit": der Verlauf käme sonst ohne Schlüssel zurück.
+  // Die Geräte-ID, falls dieses Gerät je eingerichtet wurde. Sie sperrt den
+  // Chat NICHT mehr (09.09.2026): der Server entschlüsselt selbst, und wer
+  // kein Gerät hat, liest trotzdem mit. Gebraucht wird sie allein, um den
+  // E2E-Bestand aus der Zeit davor zu öffnen — deshalb `null` statt eines
+  // Fehlers, wenn es keine gibt.
   const geraetPruefen = useCallback(async () => {
-    const identitaet = await identitaetLesen();
-    const id = await geraeteIdLesen();
-    setDeviceId(id);
-    setGeraetBereit(identitaet !== null && id !== null);
+    setDeviceId(await geraeteIdLesen());
   }, []);
 
   useEffect(() => {
@@ -115,12 +111,15 @@ export function Chat({ route }: Props) {
   const laden = useCallback(
     async (faden?: string) => {
     const id = faden ?? threadId;
-    if (!id || !deviceId) {
+    if (!id) {
       setLaedt(false);
       return;
     }
     setLaedt(true);
-    const res = await getChatVerlauf(id, deviceId);
+    // Die Geräte-ID geht nur noch MIT, wenn es eine gibt: Der Server
+    // entschlüsselt selbst (09.09.2026), und ohne Gerät blieb der Verlauf
+    // bisher komplett leer. Gebraucht wird sie allein für den E2E-Bestand.
+    const res = await getChatVerlauf(id, deviceId ?? "");
     if (!res.ok) {
       setFehler(t("chat.fehlerLaden"));
       setLaedt(false);
@@ -157,8 +156,8 @@ export function Chat({ route }: Props) {
   );
 
   useEffect(() => {
-    if (geraetBereit) void laden();
-  }, [geraetBereit, laden]);
+    void laden();
+  }, [laden]);
 
   const senden = useCallback(async () => {
     const inhalt = text.trim();
@@ -307,26 +306,6 @@ export function Chat({ route }: Props) {
       { text: t("chat.abbrechen"), style: "cancel" },
     ]);
   }, [meldeMenue, beenden, t]);
-
-  if (geraetBereit === null) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center" }}>
-        <Spinner />
-      </View>
-    );
-  }
-
-  if (!geraetBereit) {
-    return (
-      <ChatEinrichten
-        onFertig={() => {
-          // Neu prüfen statt blind auf `true` setzen: die Geräte-ID entsteht
-          // erst bei der Registrierung, und ohne sie lädt nichts.
-          void geraetPruefen();
-        }}
-      />
-    );
-  }
 
   return (
     <KeyboardAvoidingView
