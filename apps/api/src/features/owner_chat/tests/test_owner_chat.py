@@ -115,7 +115,7 @@ class _Query:
                     ]
                     if treffer:
                         for k, v in zeile.items():
-                            treffer[0][k] = _JETZT if v == "now()" else v
+                            treffer[0][k] = _jetzt() if v == "now()" else v
                         neu.append(treffer[0])
                         continue
                 if self._db.kollision and self._table == "owner_threads":
@@ -130,12 +130,12 @@ class _Query:
                     )
                     raise RuntimeError('duplicate key value violates "23505"')
                 zeile.setdefault("id", f"{self._table}-{self._db.next_id()}")
-                zeile.setdefault("sent_at", _JETZT)
+                zeile.setdefault("sent_at", _jetzt())
                 # PostgREST löst `now()` in der DB auf; die Fake-DB legte den
                 # String ab, worauf jeder Zeitvergleich fehlschlug.
                 for k, v in list(zeile.items()):
                     if v == "now()":
-                        zeile[k] = _JETZT
+                        zeile[k] = _jetzt()
                 rows.append(zeile)
                 neu.append(zeile)
             return _Result(neu)
@@ -167,11 +167,19 @@ class _DB:
 
 T = "tenant-1"
 P = "prop-1"
-# Fester „Jetzt"-Wert der Fake-DB. Relativ zur Uhr gebildet, damit die
-# Gültigkeitsprüfung der Registrierungs-Aufgabe (300 s) auch in einem Jahr
-# noch greift — ein festverdrahtetes Datum wäre irgendwann abgelaufen und
-# der Test würde grundlos rot.
-_JETZT = datetime.now(UTC).isoformat()
+
+
+def _jetzt() -> str:
+    """Was die DB für `now()` einsetzen würde — bei JEDEM Schreibvorgang neu.
+
+    Als Konstante zur Importzeit gebildet war das ein Zeitzünder: die
+    Registrierungs-Aufgabe gilt 300 s, der volle Testlauf dauert über 600 s.
+    Kam `owner_chat` später als fünf Minuten nach dem Import an die Reihe,
+    galt jede Aufgabe als abgelaufen und drei Tests wurden rot — im CI
+    reproduzierbar, lokal nie, weil der Slice allein in Sekunden durchläuft
+    (CLAUDE.md: Tests nie umgebungsabhängig; hier: nie zeitabhängig).
+    """
+    return datetime.now(UTC).isoformat()
 
 
 def _basis() -> dict[str, list[dict]]:
