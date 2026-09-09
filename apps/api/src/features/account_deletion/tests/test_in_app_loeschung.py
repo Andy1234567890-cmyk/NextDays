@@ -52,6 +52,17 @@ class _Query:
         self._filter[spalte] = werte
         return self
 
+    def gte(self, spalte: str, wert: Any) -> _Query:
+        # Nur gemerkt, nicht ausgewertet: die Testzeilen sind so gewaehlt, dass
+        # der Zeitfilter sie ohnehin durchlaesst. Was hier geprueft wird, ist
+        # die WEICHE, nicht der Datumsvergleich der Datenbank.
+        self._filter[f"{spalte}__gte"] = wert
+        return self
+
+    def neq(self, spalte: str, wert: Any) -> _Query:
+        self._filter[f"{spalte}__neq"] = wert
+        return self
+
     def limit(self, *_a: Any, **_k: Any) -> _Query:
         return self
 
@@ -80,6 +91,21 @@ class _Query:
         rows = self._store["rows"].get(self._tabelle, [])
         if "id" in self._filter:
             rows = [r for r in rows if r.get("id") == self._filter["id"]]
+        for spalte in ("requested_by", "owner_user_id", "user_id"):
+            if spalte in self._filter:
+                rows = [r for r in rows if r.get(spalte) == self._filter[spalte]]
+        if "owner_user_id__neq" in self._filter:
+            rows = [
+                r
+                for r in rows
+                if r.get("owner_user_id") != self._filter["owner_user_id__neq"]
+            ]
+        if "property_id" in self._filter:
+            rows = [
+                r for r in rows if r.get("property_id") == self._filter["property_id"]
+            ]
+        if isinstance(self._filter.get("status"), str):
+            rows = [r for r in rows if r.get("status") == self._filter["status"]]
         if "matched_user_id" in self._filter:
             rows = [
                 r
@@ -141,8 +167,9 @@ class _Konto:
 
 
 class _Ctx:
-    def __init__(self, user_id: str) -> None:
+    def __init__(self, user_id: str, tenant_id: str = _TENANT) -> None:
         self.user_id = user_id
+        self.tenant_id = tenant_id
 
 
 def _dienst(
@@ -356,3 +383,214 @@ def test_ohne_nutzerzeile_kein_blindes_loeschen() -> None:
 
     assert exc.value.status_code == 404
     assert db.admin.geloescht == []
+
+
+# -- Der Gegenzustand des Eigentümers (Wurzel 1) ------------------------------
+# Die zwei Kaskaden, die beim Löschen eines Eigentümer-Logins das Falsche tun.
+# Beide sind in der Datenbank nachgemessen, nicht vermutet:
+#   * block_requests.requested_by ist `cascade`, availability/reservations
+#     tragen `block_request_id` mit `set null` — der Antrag verschwindet, die
+#     gesperrten Nächte bleiben, und der Anker für den Widerruf ist weg.
+#   * owner_family_members kaskadiert über owner_user_id, die
+#     owner_property_assignments der Mitglieder NICHT — die Familie behält die
+#     Objekt-Sicht.
+
+_OWNER = "44444444-4444-4444-8444-444444444444"
+_MITGLIED = "55555555-5555-4555-8555-555555555555"
+_ANDERER_OWNER = "66666666-6666-4666-8666-666666666666"
+_OBJEKT = "77777777-7777-4777-8777-777777777777"
+
+
+class _SperrantragStub:
+    """Nimmt die Widerrufe entgegen, statt den halben Kalender-Slice zu fahren."""
+
+    aufrufe: list[str] = []
+    fehler: Exception | None = None
+
+    def __init__(self, _db: Any) -> None:
+        pass
+
+    def zuruecknehmen(self, _ctx: Any, antrag_id: str, _req: Any) -> None:
+        if _SperrantragStub.fehler is not None:
+            raise _SperrantragStub.fehler
+        _SperrantragStub.aufrufe.append(antrag_id)
+
+
+@pytest.fixture(autouse=True)
+def _sperrantrag_stub(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Den Kalender-Dienst gegen den Stub tauschen.
+
+    Der Import steht in der Methode (`from …sperrantraege import
+    SperrantragService`), also wird das MODUL-Attribut ersetzt — ein Patch auf
+    `in_app.SperrantragService` liefe ins Leere, weil der Name dort nicht
+    existiert.
+    """
+    import src.features.calendar.sperrantraege as modul
+
+    _SperrantragStub.aufrufe = []
+    _SperrantragStub.fehler = None
+    monkeypatch.setattr(modul, "SperrantragService", _SperrantragStub)
+
+
+def _owner_dienst(
+    antraege: list[dict[str, Any]] | None = None,
+    familie: list[dict[str, Any]] | None = None,
+) -> tuple[InAppLoeschung, _Db]:
+    rows = {
+        "users": [
+            {
+                "id": _OWNER,
+                "tenant_id": _TENANT,
+                "email": "eigentuemer@example.at",
+                "role": "owner",
+            }
+        ],
+        _TABELLE: [],
+        "block_requests": antraege or [],
+        "owner_family_members": familie or [],
+    }
+    db = _Db(rows)
+    return InAppLoeschung(db=db, account_service=_Konto()), db
+
+
+def test_owner_genehmigte_sperre_wird_vor_dem_loeschen_freigegeben() -> None:
+    """Sonst bleibt das Objekt gesperrt, ohne dass noch ein Antrag darauf zeigt.
+
+    Freigegeben wird über den EINEN bestehenden Weg — die Prüfung greift
+    deshalb den Aufruf ab, nicht ein selbstgebautes `availability`-Delete.
+    """
+    dienst, db = _owner_dienst(
+        antraege=[
+            {
+                "id": "a1",
+                "tenant_id": _TENANT,
+                "requested_by": _OWNER,
+                "status": "approved",
+                "property_id": _OBJEKT,
+                "start_date": "2099-07-01",
+                "end_date": "2099-07-14",
+            }
+        ]
+    )
+
+    antwort = dienst.loeschen(_Ctx(_OWNER), passwort=SecretStr("geheim"))
+
+    assert antwort["geloescht"] is True
+    assert _SperrantragStub.aufrufe == ["a1"]
+    assert db.admin.geloescht == [_OWNER]
+
+
+def test_owner_sperre_scheitert_kein_konto_geloescht() -> None:
+    """Fail-closed: geht die Freigabe schief, bleibt das Konto stehen.
+
+    Der umgekehrte Ausgang wäre der schlimmere — das Konto weg, die Nächte
+    gesperrt und der Anker dazu unwiederbringlich (Wurzel 5).
+    """
+    from src.features.calendar.service import CalendarError
+
+    _SperrantragStub.fehler = CalendarError("Portal antwortet nicht", status_code=502)
+    dienst, db = _owner_dienst(
+        antraege=[
+            {
+                "id": "a1",
+                "tenant_id": _TENANT,
+                "requested_by": _OWNER,
+                "status": "approved",
+                "property_id": _OBJEKT,
+                "start_date": "2099-07-01",
+                "end_date": "2099-07-14",
+            }
+        ]
+    )
+
+    with pytest.raises(CalendarError):
+        dienst.loeschen(_Ctx(_OWNER), passwort=SecretStr("geheim"))
+
+    assert db.admin.geloescht == []
+    assert db.store["deletes"] == []
+
+
+def test_owner_sperre_schon_entschieden_blockiert_nicht() -> None:
+    """409 heißt „war jemand schneller" — dann gibt es nichts freizugeben, und
+    die Löschung darf daran nicht scheitern."""
+    from src.features.calendar.service import CalendarError
+
+    _SperrantragStub.fehler = CalendarError("nicht mehr genehmigt", status_code=409)
+    dienst, db = _owner_dienst(
+        antraege=[
+            {
+                "id": "a1",
+                "tenant_id": _TENANT,
+                "requested_by": _OWNER,
+                "status": "approved",
+                "property_id": _OBJEKT,
+                "start_date": "2099-07-01",
+                "end_date": "2099-07-14",
+            }
+        ]
+    )
+
+    antwort = dienst.loeschen(_Ctx(_OWNER), passwort=SecretStr("geheim"))
+
+    assert antwort["geloescht"] is True
+    assert db.admin.geloescht == [_OWNER]
+
+
+def test_owner_familienzugang_verliert_die_objektsicht() -> None:
+    """Sonst sieht die Familie das Objekt weiter — und `darf()` liest die
+    fehlende Familienzeile als „ist selbst Eigentümer" (Rechte-Ausweitung)."""
+    dienst, db = _owner_dienst(
+        familie=[
+            {
+                "id": "f1",
+                "user_id": _MITGLIED,
+                "owner_user_id": _OWNER,
+                "property_id": _OBJEKT,
+            }
+        ]
+    )
+
+    dienst.loeschen(_Ctx(_OWNER), passwort=SecretStr("geheim"))
+
+    assert (
+        "owner_property_assignments",
+        {"user_id": _MITGLIED, "property_id": _OBJEKT, "tenant_id": _TENANT},
+    ) in db.store["deletes"]
+
+
+def test_familienzugang_eines_zweiten_eigentuemers_bleibt() -> None:
+    """Ein Mensch kann von zwei Eigentümern eingeladen sein. Pauschal alle
+    Zuordnungen zu löschen nähme ihm den Zugang zum Haus der anderen Familie."""
+    dienst, db = _owner_dienst(
+        familie=[
+            {
+                "id": "f1",
+                "user_id": _MITGLIED,
+                "owner_user_id": _OWNER,
+                "property_id": _OBJEKT,
+            },
+            {
+                "id": "f2",
+                "user_id": _MITGLIED,
+                "owner_user_id": _ANDERER_OWNER,
+                "property_id": _OBJEKT,
+            },
+        ]
+    )
+
+    dienst.loeschen(_Ctx(_OWNER), passwort=SecretStr("geheim"))
+
+    assert [
+        f for (t, f) in db.store["deletes"] if t == "owner_property_assignments"
+    ] == []
+
+
+def test_mitarbeiter_loest_keinen_eigentuemer_gegenzustand_aus() -> None:
+    """Der Gegenzustand hängt an der ROLLE, nicht am Zufall: eine
+    Reinigungskraft hat weder Sperranträge noch Familienzugänge, und ein
+    unnötiger Lauf über den Kalender-Slice wäre eine stille Nebenwirkung."""
+    dienst, _, _ = _dienst(rolle="cleaner", user_id=_STAFF)
+
+    dienst.loeschen(_Ctx(_STAFF), passwort=SecretStr("geheim"))
+
+    assert _SperrantragStub.aufrufe == []

@@ -115,7 +115,7 @@ class InAppLoeschung:
                 email=email,
                 grund=grund,
             )
-        return self._zugang_loeschen(user_id=ctx.user_id, tenant_id=tenant_id)
+        return self._zugang_loeschen(ctx, tenant_id=tenant_id, rolle=rolle)
 
     def antrag_zuruecknehmen(self, ctx: AuthContext) -> dict[str, Any]:
         """Einen eigenen, noch nicht ausgeführten Antrag zurückziehen.
@@ -143,13 +143,56 @@ class InAppLoeschung:
 
     # --- Innereien -----------------------------------------------------------
 
-    def _zugang_loeschen(self, *, user_id: str, tenant_id: str | None) -> dict[str, Any]:
+    def _zugang_loeschen(
+        self, ctx: AuthContext, *, tenant_id: str | None, rolle: str
+    ) -> dict[str, Any]:
         """Login und Nutzerzeile entfernen — Reihenfolge wie bei
         `AccountService.delete_managed_user`: erst der Auth-Login (danach ist
         keine Anmeldung mehr möglich), dann die Zeile. Scheitert der zweite
         Schritt, bleibt der Nutzer sichtbar und der Aufruf ist wiederholbar; es
         entsteht KEIN Halbzustand mit funktionierendem Login.
+
+        DAVOR läuft der Gegenzustand des EIGENTÜMERS (Wurzel 1). Er ist nötig,
+        weil die Fremdschlüssel der Datenbank an zwei Stellen genau das Falsche
+        tun, wenn die `users`-Zeile verschwindet — beide am 09.09.2026
+        nachgemessen, keine Vermutung:
+
+        * `block_requests.requested_by` ist `on delete cascade`, aber
+          `availability.block_request_id` (0337) und
+          `reservations.block_request_id` (0353) sind `on delete set null`. Der
+          Antrag verschwindet also, die von ihm GESPERRTEN NÄCHTE bleiben — und
+          mit dem Antrag verschwindet der einzige Anker, über den der Widerruf
+          genau diese Nächte wieder freigeben könnte. Das Objekt bliebe für
+          einen Zeitraum gesperrt, den niemand mehr erklären kann.
+        * `owner_family_members` kaskadiert über `owner_user_id`, die
+          `owner_property_assignments` der Familienmitglieder aber NICHT. Die
+          Familie behielte die Objekt-Sicht, und `darf()` läse den fehlenden
+          Familieneintrag als „ist selbst Eigentümer" — eine Rechte-AUSWEITUNG
+          durch Löschen. `FamilieService.entfernen` beschreibt genau diesen
+          Fall und macht es für den Einzelfall richtig; hier fehlte er.
+
+        Was der Gegenzustand NICHT anfasst, und warum:
+        * `owners` (Stammdaten, Bankverbindung, Provision) hängt über
+          `owners.user_id` mit `on delete set null` — die verwaltete
+          Eigentümer-PARTEI und ihre Abrechnungshistorie überleben. Das ist
+          richtig: gelöscht wird ein LOGIN, nicht der Vertragspartner des
+          Betriebs. `owner_statements`, `owner_properties` und der Anteil
+          bleiben unberührt.
+        * Vergangene Sperren bleiben stehen. Der Aufenthalt hat stattgefunden;
+          seine Nächte nachträglich freizugeben wäre eine Verfälschung der
+          Belegungshistorie.
+
+        Reihenfolge bewusst: erst freigeben, dann löschen. Bricht der zweite
+        Schritt ab, sind Nächte eines noch existierenden Kontos freigegeben —
+        sichtbar im Portal als zurückgenommener Antrag und wiederholbar.
+        Umgekehrt wäre der Zustand nicht mehr reparierbar, weil der Anker weg
+        wäre.
         """
+        user_id = ctx.user_id
+        if rolle == "owner":
+            self._sperren_freigeben(ctx)
+            self._familienzugaenge_entziehen(user_id, tenant_id)
+
         try:
             # Derselbe service_role-Client, der auch die Antragstabelle bedient —
             # kein Griff in die Innereien des AccountService.
@@ -179,6 +222,129 @@ class InAppLoeschung:
             ),
             "hinweis": AUFBEWAHRUNG_HINWEIS,
         }
+
+    def _sperren_freigeben(self, ctx: AuthContext) -> None:
+        """Genehmigte, noch nicht abgelaufene Sperren dieses Eigentümers lösen.
+
+        Über den EINEN bestehenden Weg (`SperrantragService.zuruecknehmen`),
+        nicht über eine eigene Freigabe: dort hängt die ganze Kette dran —
+        Storno der Eigennutzungs-Reservierung samt `_release_nights`, der
+        Unblock über die Antrags-ID für den Altbestand, die bestellten
+        Leistungen und der Stand an die Portale. Eine zweite Umsetzung hier
+        würde davon Teile vergessen, und man sähe es erst am Portal.
+
+        Der Filter ist `end_date >= heute`: `block_requests.end_date` ist
+        INKLUSIV (siehe `lib/aufenthalt.ts`), ein heute endender Aufenthalt
+        gehört also noch dazu.
+        """
+        # Erst hier importiert: `calendar` zieht den halben Reservierungs-Slice
+        # nach, und `account_deletion` wird auch aus dem öffentlichen Web-Weg
+        # geladen, der davon nichts braucht.
+        from src.features.calendar.schemas import (  # noqa: PLC0415
+            BlockRequestDecision,
+        )
+        from src.features.calendar.service import CalendarError  # noqa: PLC0415
+        from src.features.calendar.sperrantraege import (  # noqa: PLC0415
+            SperrantragService,
+        )
+
+        heute = datetime.now(UTC).date().isoformat()
+        res = (
+            self._db.table("block_requests")
+            .select("id, property_id, start_date, end_date")
+            .eq("tenant_id", ctx.tenant_id)
+            .eq("requested_by", ctx.user_id)
+            .eq("status", "approved")
+            .gte("end_date", heute)
+            .execute()
+        )
+        offen = res.data or []
+        if not offen:
+            return
+
+        dienst = SperrantragService(self._db)
+        entscheidung = BlockRequestDecision(
+            note="Der Eigentümer hat sein Konto gelöscht; die Nächte sind frei."
+        )
+        for zeile in offen:
+            antrag_id = str(zeile["id"])
+            try:
+                dienst.zuruecknehmen(ctx, antrag_id, entscheidung)
+            except CalendarError as exc:
+                if exc.status_code != 409:
+                    # Alles andere ist ein echter Fehler und darf die Löschung
+                    # NICHT still passieren lassen (Wurzel 5): sonst stünde das
+                    # Objekt gesperrt und das Konto wäre weg.
+                    raise
+                # 409 heißt: der Antrag ist nicht mehr 'approved' — jemand war
+                # schneller. Dann gibt es nichts freizugeben.
+                log.info(
+                    "konto_selbst_sperre_bereits_entschieden",
+                    user_id=ctx.user_id,
+                    antrag_id=antrag_id,
+                )
+                continue
+            log.info(
+                "konto_selbst_sperre_freigegeben",
+                user_id=ctx.user_id,
+                antrag_id=antrag_id,
+                property_id=str(zeile["property_id"]),
+                von=zeile.get("start_date"),
+                bis=zeile.get("end_date"),
+            )
+
+    def _familienzugaenge_entziehen(
+        self, user_id: str, tenant_id: str | None
+    ) -> None:
+        """Die Objekt-Sicht der Familienmitglieder dieses Eigentümers entziehen.
+
+        Die `owner_family_members`-Zeilen selbst kaskadieren gleich mit dem
+        Login weg; entzogen werden muss die `owner_property_assignments`-Zeile,
+        die der Einladeweg zusätzlich anlegt (`FamilieService._sicht_geben`).
+
+        Entzogen wird NUR die Sicht auf das Objekt DIESER Familienzeile. Ein
+        Mensch kann von zwei Eigentümern eingeladen sein — wer pauschal alle
+        Zuordnungen dieses Nutzers löschte, nähme ihm den Zugang zum Haus einer
+        anderen Familie. Deshalb der zusätzliche Filter auf `property_id`, und
+        deshalb erst die Prüfung, ob eine ANDERE Familienzeile dieselbe Sicht
+        noch trägt.
+        """
+        res = (
+            self._db.table("owner_family_members")
+            .select("id, user_id, property_id")
+            .eq("owner_user_id", user_id)
+            .execute()
+        )
+        zeilen = res.data or []
+        for zeile in zeilen:
+            mitglied = str(zeile["user_id"])
+            property_id = str(zeile["property_id"])
+            weitere = (
+                self._db.table("owner_family_members")
+                .select("id")
+                .eq("user_id", mitglied)
+                .eq("property_id", property_id)
+                .neq("owner_user_id", user_id)
+                .limit(1)
+                .execute()
+            ).data or []
+            if weitere:
+                continue
+            loeschen = (
+                self._db.table("owner_property_assignments")
+                .delete()
+                .eq("user_id", mitglied)
+                .eq("property_id", property_id)
+            )
+            if tenant_id:
+                loeschen = loeschen.eq("tenant_id", tenant_id)
+            loeschen.execute()
+            log.info(
+                "konto_selbst_familienzugang_entzogen",
+                user_id=user_id,
+                mitglied_id=mitglied,
+                property_id=property_id,
+            )
 
     def _antrag_anlegen(
         self,

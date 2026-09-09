@@ -9,6 +9,7 @@ import { Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { DemoBand } from "@/components/DemoBand";
+import { KontoLoeschenBlock } from "@/components/KontoLoeschenBlock";
 import { RechtlichesBlock } from "@/components/RechtlichesBlock";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { Btn, Kachel, Txt } from "@/components/ui/kit";
@@ -28,7 +29,7 @@ export default function Mehr({ navigation }: { navigation: Nav }) {
   const insets = useSafeAreaInsets();
   const unterkante = useUnterkante();
   const [meldet, setMeldet] = useState(false);
-  const { t: txt } = useSprache();
+  const { t: txt, sprache } = useSprache();
 
   return (
     <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
@@ -135,6 +136,14 @@ export default function Mehr({ navigation }: { navigation: Nav }) {
         >
           {meldet ? txt("mehr.wirdAbgemeldet") : txt("mehr.abmelden")}
         </Btn>
+
+        {/* Ganz unten und hinter „Abmelden": Google verlangt den Löschweg IN
+            der App, wenn sie Konto-Anlage anbietet — das tut diese nicht, der
+            Weg steht trotzdem hier (siehe `lib/konto.ts`). Die Stelle ist
+            bewusst die letzte: eine Löschung gehört nicht neben die täglichen
+            Wege. Nach dem Vollzug meldet die App ab, sonst hielte sie ein
+            Token, hinter dem kein Konto mehr steht. */}
+        <KontoLoeschenBlock sprache={sprache} onGeloescht={() => void logout()} />
       </ScrollView>
 
     </View>
