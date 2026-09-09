@@ -201,18 +201,27 @@ Rollen ausliefern, die es nicht brauchen (Recon für Priv-Esc).
 
 ---
 
-## Mobile — ZWEI Apps (ADR-0019)
-Es gibt zwei eigenständige React-Native-Projekte, eines je Marke:
+## Mobile — DREI Apps (ADR-0019, erweitert um ADR-0022)
+Es gibt drei eigenständige React-Native-Projekte:
 - `mobile-bestdays` (myBestDays, `com.mybestdays.app`, `mybestdays://`) — der
   Marktplatz: Gast, eine Auth-Welt (`portal_guests`).
 - `mobile-nextdays` (myNextDays, `com.mynextdays.app`, `mynextdays://`) — das
   PMS: Betrieb, eine Auth-Welt (Tenant), Erlebnis aus der Rolle.
-Regeln je App: `mobile-bestdays/CLAUDE.md` bzw. `mobile-nextdays/CLAUDE.md` —
-sie laden automatisch, sobald im jeweiligen Ordner gearbeitet wird.
+- `mobile-owner` (myNextDays Eigentümer, `com.mynextdays.owner`,
+  `mynextdaysowner://`) — die Eigentümer-Sicht (ADR-0022): dieselbe Marke wie
+  das PMS, aber eine eigene App, weil sie eine ANDERE Rolle bedient und
+  ausschließlich `/api/v1/public-portal/*` spricht.
+Hier stand bis zum 09.09.2026 „ZWEI Apps"; die dritte existiert seit ADR-0022
+und war damit in der Regel nicht abgebildet — unter anderem deshalb prüfte
+`scripts/diagnose/app-icons-pruefen.py` sie nicht mit, und sie trug monatelang
+byte-identisch die Symbole der PMS-App.
+Regeln je App: `mobile-<name>/CLAUDE.md` — sie laden automatisch, sobald im
+jeweiligen Ordner gearbeitet wird.
 Geteilter Code liegt als bewusste KOPIE vor (kein Paket, ADR-0019 Stufe 1):
 Dateien mit `SCHWESTERDATEI`-Kopf müssen byte-identisch bleiben, der CI-Job
-`mobile-konsistenz` prüft das. Der Wechsel zwischen beiden Welten ist ein
-App-Wechsel (`lib/appwechsel.ts`), keine Navigation.
+`mobile-konsistenz` vergleicht alle drei gegen `mobile-bestdays` als Referenz.
+Der Wechsel zwischen den Welten ist ein App-Wechsel (`lib/appwechsel.ts`),
+keine Navigation.
 
 ## Wissensgraph zuerst (vor jeder Suche/Änderung)
 Es gibt einen lokalen Code-Wissensgraphen (`graphify-out/graph.json`, MCP-Server

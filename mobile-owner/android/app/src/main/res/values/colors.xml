@@ -6,5 +6,5 @@
          geschaetzt: Foreground und Background muessen exakt zusammenpassen,
          sonst sitzt das Chevron auf einer anderen Schwarzstufe als das
          Legacy-Icon daneben. -->
-    <color name="ic_launcher_background">#0A0A0A</color>
+    <color name="ic_launcher_background">#B82028</color>
 </resources>

@@ -15,11 +15,14 @@
          braucht, fragt sie auch nicht ab. -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
-    <!-- KEINE Kamera- und KEINE Medien-Berechtigung: diese App zeigt Bilder
-         nur an, sie nimmt keine auf und laedt keine hoch (kein image-picker,
-         kein documents/picker in package.json). Was die App nicht braucht,
-         deklariert sie nicht — sonst steht in der Play-Data-Safety-Angabe
-         etwas, das der Code nicht tut. -->
+    <!-- KEIN documents/picker und kein Dateiwaehler: die App laedt ausser dem
+         Chat-Bild nichts hoch, `lib/datei.ts` fehlt bewusst und die CI prueft
+         das. Was die App nicht braucht, deklariert sie nicht — sonst steht in
+         der Play-Data-Safety-Angabe etwas, das der Code nicht tut.
+         (Bis zum 09.09.2026 stand hier „KEINE Kamera-Berechtigung" — direkt
+         unter der CAMERA-Zeile darueber. Ein Kommentar, der seinem eigenen
+         Code widerspricht, ist schlimmer als keiner: er laesst den naechsten
+         Leser die Zeile fuer einen Fehler halten.) -->
     <!-- Ab Android 11 sieht eine App fremde Pakete nur, wenn sie sie hier
          deklariert. Ohne diesen Block liefert Linking.canOpenURL IMMER false
          und der Absprung nach myNextDays landet still im Store (ADR-0019). -->

@@ -38,11 +38,17 @@ from __future__ import annotations
 import subprocess
 import sys
 from collections import Counter
+from hashlib import md5
 from pathlib import Path
 
-# Die beiden Apps. Bewusst BEIDE: derselbe Export-Fehler traf myBestDays
-# genauso, nur ist er dort nicht sichtbar (weisses Icon auf weissem Grund).
-APPS = ("mobile-nextdays", "mobile-bestdays")
+# Alle DREI Apps. Bewusst alle: derselbe Export-Fehler traf myBestDays genauso,
+# nur ist er dort nicht sichtbar (weisses Icon auf weissem Grund). `mobile-owner`
+# kam am 09.09.2026 dazu — es fehlte hier, seit es die App gibt (ADR-0022), und
+# genau deshalb blieb unbemerkt, dass ihre Symbole byte-identisch die von
+# `mobile-nextdays` waren: geprueft wurde die Farbe der Ecken, nicht die Frage,
+# ob zwei Apps dasselbe Bild tragen. Die stellt `pruefe_doppelt` seit demselben
+# Tag.
+APPS = ("mobile-nextdays", "mobile-bestdays", "mobile-owner")
 DICHTEN = ("mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi")
 
 # Ab dieser Helligkeitsdifferenz gilt ein Eckpixel als FREMDE Farbe (0..255 je
@@ -170,9 +176,46 @@ def pruefe_android(app: Path) -> list[str]:
     return befunde
 
 
+def pruefe_doppelt(wurzel: Path) -> list[str]:
+    """Tragen zwei Apps dasselbe Symbol?
+
+    Der Befund vom 09.09.2026: `mobile-owner` und `mobile-nextdays` hatten in
+    allen fuenf Android-Dichten UND allen neun iOS-Groessen byte-identische
+    Dateien (md5 `beae8ce4…` bei xxxhdpi/ic_launcher.png). Im Launcher waren die
+    beiden Apps damit nicht auseinanderzuhalten, und im Play Store stehen sie
+    nebeneinander. Kein bestehender Test sah das: jedes Icon war fuer sich
+    korrekt.
+
+    Verglichen wird der INHALT, nicht der Pfad — eine Kopie unter anderem Namen
+    waere derselbe Fehler.
+    """
+    befunde: list[str] = []
+    gesehen: dict[str, list[Path]] = {}
+    for app_name in APPS:
+        app = wurzel / app_name
+        if not app.is_dir():
+            continue
+        for datei in sorted([
+            *(app / "android/app/src/main/res").glob("mipmap-*/ic_launcher.png"),
+            *(app / "ios").glob("*/Images.xcassets/AppIcon.appiconset/*.png"),
+        ]):
+            gesehen.setdefault(md5(datei.read_bytes()).hexdigest(), []).append(datei)
+
+    for summe, dateien in gesehen.items():
+        apps = {d.relative_to(wurzel).parts[0] for d in dateien}
+        if len(apps) > 1:
+            befunde.append(
+                f"{sorted(apps)} tragen dasselbe Symbol (md5 {summe[:8]}…): "
+                + ", ".join(str(d.relative_to(wurzel)) for d in dateien)
+                + " — zwei Apps desselben Herstellers sind so nicht "
+                "unterscheidbar."
+            )
+    return befunde
+
+
 def main() -> int:
     wurzel = Path(__file__).resolve().parents[2]
-    alle: list[str] = []
+    alle: list[str] = pruefe_doppelt(wurzel)
     for app_name in APPS:
         app = wurzel / app_name
         if not app.is_dir():

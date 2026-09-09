@@ -17,7 +17,7 @@ gibt.
 | # | App | Bundle | Stand |
 |---|-----|--------|-------|
 | 1 | myNextDays | `com.mynextdays.app` | bei Google Play **in Prüfung** (seit 31.08.2026) |
-| 2 | myNextDays Eigentümer | `com.mynextdays.owner` | **als nächstes** — Abschnitt 2 |
+| 2 | myNextDays Eigentümer | `com.mynextdays.owner` | **als nächstes** — Abschnitt 2; Symbol, Texte, Löschweg und UGC-Wege stehen seit 09.09.2026, offen sind nur die Screenshots |
 | 3 | myBestDays | `com.mybestdays.app` | danach — Abschnitt 3 (Vorarbeit) |
 
 Das Play-Konto ist mit dem Firebase-Projekt verbunden (03.09.2026). Das gilt auf
@@ -99,9 +99,12 @@ möglich (siehe unten) — plus Web-Weg.
 - Datenschutz: `https://www.mynextdays.com/datenschutz`
 - Nutzungsbedingungen: `https://www.mynextdays.com/agb`
 - Support: `https://www.mynextdays.com/hilfe`
-- Konto-Löschung (Google-Pflichtfeld): die öffentliche Löschseite auf der
-  Marketing-Domain — **wird separat gebaut**, URL hier eintragen, sobald sie
-  steht. Bis dahin ist das Google-Formular nicht abschließbar.
+- Konto-Löschung (Google-Pflichtfeld): `https://mynextdays.com/konto-loeschen`
+  — **gebaut und live** (Commit 7a785ee5, Slice `account_deletion`, Migration
+  0413). Zuletzt gegengeprüft am 09.09.2026: 200, und die Seite trägt wirklich
+  das Formular (Überschrift „Konto löschen" + E-Mail-Feld), ist also kein 200
+  auf einer Fehlerseite. Hier stand bis dahin „wird separat gebaut" — schon
+  seit Abschnitt 4 dasselbe Dokument das Gegenteil sagte.
 
 ### Konto-Löschung: was der Reviewer sieht
 In der App: **Konto → ganz unten → „Konto löschen"** (Abschnitt „KONTO LÖSCHEN").
@@ -188,26 +191,70 @@ gibt.
 
 ### Kategorie und Einordnung
 - Primär: Wirtschaft (Business) · Sekundär: Finanzen
-- Altersfreigabe: 4+ / Alle Altersgruppen — kein nutzergenerierter öffentlicher
-  Inhalt, kein Chat
+- Altersfreigabe: niedrigste Stufe (Google „Alle Altersgruppen" / IARC 3+),
+  **aber mit dem interaktiven Element „Nutzer interagieren"**.
 - Zielgruppe (Google): Nein, nicht für Kinder
 - Anmeldung erforderlich: ja (Eigentümer-Rolle; eine andere Rolle bekommt den
   Hinweis-Screen `FalscheRolle`, keinen Zugang)
 
+**Korrektur vom 09.09.2026 — hier stand „kein Chat", und das stimmt seit 0611
+nicht mehr.** Die App hat einen Eins-zu-eins-Chat zwischen Eigentümer und
+Verwaltung (ADR-0029). Was das für die Einstufung heißt, gegen die Quelle
+geprüft und nicht angenommen:
+
+- Die **Alterskategorie selbst ändert sich nicht.** Sie ergibt sich aus dem
+  INHALT (Gewalt, Sexualität, Glücksspiel, Drogen, Schimpfwörter) — nichts
+  davon kommt vor. Ein Chat ist im IARC-Fragebogen kein Inhalt, sondern ein
+  *interaktives Element*; er wird gesondert abgefragt und als Zusatz
+  ausgewiesen, nicht in die Alterszahl eingerechnet. Zum Vergleich nennt die
+  ESRB für Nicht-Spiele soziale Netze mit Nutzeraustausch „Teen" — dort trägt
+  aber der öffentliche, ungefilterte Inhalt Fremder die Einstufung, den es hier
+  nicht gibt (geschlossener Kreis, zwei bekannte Parteien, keine Nutzersuche).
+- Die Frage „Können Nutzer miteinander kommunizieren oder Inhalte
+  austauschen?" ist mit **JA** zu beantworten. Ergebnis: das Element
+  „Nutzer interagieren" erscheint am Eintrag. Sie mit „nein" zu beantworten,
+  weil die Kommunikation geschäftlich ist, wäre eine Falschangabe — die
+  Richtlinie kennt dafür keine Ausnahme.
+- **Das teurere Ergebnis derselben Prüfung** steht nicht in der
+  Alterseinstufung, sondern in der UGC-Richtlinie — siehe den eigenen Abschnitt
+  „Nutzergenerierte Inhalte" weiter unten.
+
 ### Datenschutz-Angaben
 Deckungsgleich mit `ios/MyNextDaysOwner/PrivacyInfo.xcprivacy`:
 
-| Datenart | erhoben | mit Identität verknüpft | für Tracking | Zweck |
-|---|---|---|---|---|
-| E-Mail-Adresse | ja | ja | nein | App-Funktionalität |
-| Name | ja | ja | nein | App-Funktionalität |
-| Telefonnummer | ja | ja | nein | App-Funktionalität |
-| Nutzer-ID | ja | ja | nein | App-Funktionalität |
-| Andere Nutzerinhalte (Sperrantrag-Begründung, Zählerstand) | ja | ja | nein | App-Funktionalität |
-| Andere Daten (Objekt-/Buchungsdaten des Eigentümers) | ja | ja | nein | App-Funktionalität |
-| Geräte- oder andere IDs | ja | ja | nein | App-Funktionalität (Push-Zustellung) |
-| Absturzprotokolle | ja | **nein** | nein | Fehlerbehebung |
-| Fotos oder Videos (Bild im Chat) | ja | ja | nein | App-Funktionalität |
+Die Zeilen tragen Googles eigene Datenart-Namen (Play Console Help
+„Data types and purposes", geprüft am 09.09.2026), nicht selbst gewählte —
+das Formular kennt keine anderen.
+
+| Google-Kategorie → Datenart | erhoben | mit Identität verknüpft | für Tracking | Zweck | Beleg im Binary |
+|---|---|---|---|---|---|
+| Personal info → **Email address** | ja | ja | nein | App-Funktionalität | `lib/auth.ts` (Anmeldung) |
+| Personal info → **Name** | ja | ja | nein | App-Funktionalität | `sender_name` an jeder Chat-Nachricht |
+| Personal info → **User IDs** | ja | ja | nein | App-Funktionalität | jeder Aufruf über `lib/api.ts` im Auth-Kontext |
+| **Messages → Other in-app messages** | ja | ja | nein | App-Funktionalität | `lib/chat.ts` → `POST /public-portal/chat/objekt/{id}` |
+| Photos and videos → **Photos** | ja | ja | nein | App-Funktionalität | `lib/chat-bild.ts` + `POST /owner-chat/bilder` |
+| App activity → **Other user-generated content** | ja | ja | nein | App-Funktionalität | Notiz am Sperrantrag, Zählerstand, Meldegrund |
+| App info and performance → **Crash logs** | ja | **nein** | nein | Fehlerbehebung | `lib/absturzmeldung.ts` (bewusst ohne Token) |
+| **Device or other IDs** | ja | ja | nein | App-Funktionalität | `lib/push.ts` → `PUT /notification-settings/push-geraet` |
+
+**Zwei Änderungen am 09.09.2026, beide gegen das Binary geprüft:**
+
+1. **„Messages → Other in-app messages" ist NEU und war die gefährlichere
+   Lücke.** Googles Datenart-Liste führt Chat-Inhalte als eigene Kategorie
+   („Any other types of messages. For example, instant messages or chat
+   content"). Sie unter „Andere Nutzerinhalte" laufen zu lassen, wie es hier
+   stand, ist eine Falschangabe — und zwar die Sorte, die niemandem auffällt.
+   Dass der Inhalt Ende-zu-Ende verschlüsselt ist, ändert daran nichts: er
+   verlässt das Gerät, und genau das ist Googles Kriterium.
+2. **„Telefonnummer" ist RAUS.** Sie stand hier als „erhoben", das Binary gibt
+   sie aber nicht her: `mobile-owner` sendet nirgends eine Telefonnummer.
+   Gegengeprüft wurden alle schreibenden Aufrufe der App (`lib/auth.ts`,
+   `lib/push.ts`, `lib/ownerPortal.ts`, `lib/chat.ts`,
+   `lib/absturzmeldung.ts`). Was es gibt, ist eine MASKIERTE Nummer, die der
+   Server für die SMS-Zweitfaktor-Anzeige zurückschickt (`mfa_phone_masked`) —
+   empfangen ist nicht erhoben, und `lib/mfa-login.ts` schickt eine `factor_id`,
+   keine Nummer. Über-Deklaration ist derselbe Fehler wie Unter-Deklaration:
+   das Formular soll beschreiben, was die App TUT.
 
 **Fotos: seit dem 09.09.2026 JA** — im Store-Formular „Fotos oder Videos:
 erhoben, mit dem Konto verknüpft, kein Tracking, Zweck App-Funktionalität".
@@ -257,31 +304,152 @@ Aus `lib/rechtliches.ts` (Basis `https://www.mynextdays.com`), in der App unter
   `/cookie-richtlinie` · Impressum: `/impressum`
 - Kontakt: `info@mynextdays.dk`, `+4593903991`
 
-### OFFEN vor der Einreichung — Konto-Löschung
-**Die App hat keinen Löschweg.** `mobile-nextdays` hat
-`lib/konto.ts → kontoLoeschen()`; in `mobile-owner` existiert weder die
-Funktion noch ein Konto-Screen (`screens/Mehr.tsx` bietet Konto, App-Wechsel,
-Rechtliches, Abmelden — kein Löschen). Google verlangt für Apps mit
-Konto-Anmeldung einen Löschweg IN der App oder eine öffentlich erreichbare
-Löschseite.
+### Nutzergenerierte Inhalte (Googles UGC-Richtlinie) — das schärfere Gate
+Nicht die Alterseinstufung ist hier das Risiko, sondern die UGC-Richtlinie.
+Sie sagt wörtlich (Play Console Help „User Generated Content", 09.09.2026):
 
-Der Web-Weg ist vorhanden und live geprüft:
-`https://mynextdays.com/konto-loeschen` (200, trägt das Formular). Damit ist die
-Einreichung formal möglich. Zu entscheiden ist, ob das reicht oder ob der
-In-App-Weg nachgezogen wird — beim Eigentümer ist die Frage nicht rein
-formal: sein Konto hängt an Objekten eines Betriebs, „Konto löschen" darf also
-nicht die Objektzuordnung mitreißen (Wurzel 1). Der Löschpfad der PMS-App ist
-deshalb nicht ungeprüft übernehmbar.
+> „Apps featuring UGC that identify a specified set of users through means such
+> as user verification or offline registration (for example, apps exclusively
+> used within a specific school or company, etc.) must provide in-app
+> functionality to **report content and users**."
 
-### Weiter offen (aus ADR-0022)
-- Firebase-App für `com.mynextdays.owner` (Android + iOS) — die Play↔Firebase-
-  Verbindung besteht auf Projektebene, die App-Registrierung je
-  `applicationId` fehlt noch.
-- Release-Keystore + die drei `MYNEXTDAYSOWNER_RELEASE_*`-Secrets.
-- Screenshots (eigener Satz; die der PMS-App zeigen andere Oberflächen).
-- Store-Beschreibung: Zielgruppe ist der Eigentümer, nicht der Betrieb.
-- Eigenes App-Icon (derzeit die myNextDays-Assets, im Launcher nicht
-  unterscheidbar).
+> „UGC features that enable 1:1 user interaction with specific users (for
+> example, direct messaging, tagging, mentioning, etc.) must provide an in-app
+> functionality for **blocking users**."
+
+Beide Sätze treffen diese App: geschlossener, eingeladener Nutzerkreis UND
+Direktnachricht zwischen genau zwei Seiten. Eine Ausnahme für geschäftliche
+Kommunikation nennt die Richtlinie nicht — wer sich darauf beruft, riskiert
+eine Prüfrunde.
+
+**Gebaut am 09.09.2026 (Migration 0615):**
+- **Melden** — im Chat über „Optionen" oder langen Druck auf eine Nachricht.
+  Vier Gründe, Freitext optional. Die Meldung geht an UNS, nicht an die
+  Verwaltung; sie erfährt nichts davon.
+- **Gespräch beenden** — das Gegenstück zum „Blockieren". Die Verwaltung der
+  eigenen Objekte wegzublocken wäre fachlich unmöglich (sie ist der einzige
+  Draht zu dem Betrieb, dem das Haus anvertraut ist); der Ausstieg aus dem
+  Gespräch ist es nicht. Danach nimmt der Server nichts mehr an (409), das
+  Eingabefeld verschwindet, und der Weg zurück steht daneben.
+
+**Formularantwort zur Moderation, falls gefragt:** Der Inhalt ist Ende-zu-Ende
+verschlüsselt (ADR-0029); der Server hat Chiffretext und kann eine gemeldete
+Nachricht nicht lesen. Moderiert wird über die Metadaten — wer meldet wen, wie
+oft, in welchem Gespräch — und über die Beschreibung des Melders. Das ist die
+„moderation … as is reasonable and consistent with the type of UGC hosted",
+die die Richtlinie verlangt. Diese Antwort gehört in die Review-Notes; sie
+nicht zu geben, wäre die schlechtere Wahl als sie zu erklären.
+
+### Konto-Löschung — seit dem 09.09.2026 IN der App
+Hier stand „Die App hat keinen Löschweg". Das stimmt nicht mehr.
+
+**Was der Reviewer sieht:** Menü → ganz unten → Abschnitt „KONTO LÖSCHEN" →
+„Konto löschen". Zweistufig: erst die Erklärung samt Folgen, dann das aktuelle
+Passwort (`components/KontoLoeschenBlock.tsx`, `lib/konto.ts`). Für einen
+Eigentümer wird SOFORT gelöscht — er ist nie Kontoinhaber; wäre er es, hätte
+ihn `screens/FalscheRolle.tsx` gar nicht hereingelassen.
+
+**Zur Formalie:** Googles Anforderung greift, wenn eine App Konto-Anlage
+anbietet oder dorthin führt („or if the app directs the user to an app account
+creation flow outside of the app"). Diese App tut beides nicht — Eigentümer
+werden von ihrem Betrieb eingeladen, `screens/Anmelden.tsx` hat keinen
+Registrierweg und keinen Verweis darauf. Der Web-Weg
+`https://mynextdays.com/konto-loeschen` (live geprüft am 09.09.2026: 200, trägt
+das Formular mit Überschrift und E-Mail-Feld) hätte also genügt. Gebaut wurde
+der In-App-Weg trotzdem, aus zwei Gründen, die beide nichts mit dem Formular zu
+tun haben: Die Löschseite behauptet wörtlich „In der App findest du die
+Löschung unter Profil → Konto" — für DIESE App war das falsch. Und der
+Gegenzustand (siehe unten) fehlte auch dem Web-Weg.
+
+**Der Gegenzustand, gegen die Datenbank gemessen (Wurzel 1):** Wird die
+`users`-Zeile eines Eigentümers gelöscht, tun zwei Fremdschlüssel das Falsche.
+`block_requests.requested_by` kaskadiert, `availability.block_request_id` (0337)
+und `reservations.block_request_id` (0353) stehen dagegen auf `set null` — der
+Antrag verschwindet, die von ihm GESPERRTEN NÄCHTE bleiben, und der einzige
+Anker für ihre Freigabe ist weg. Und `owner_family_members` kaskadiert über
+`owner_user_id`, die `owner_property_assignments` der Familienmitglieder aber
+nicht — die Familie behielte die Objekt-Sicht. Beides schließt
+`account_deletion/in_app.py` seit dem 09.09.2026, VOR dem Löschen des Logins.
+
+**Was ausdrücklich NICHT mitgelöscht wird** (und die Antwort auf eine
+Reviewer-Rückfrage nach „Vertragsdaten"): `owners.user_id` steht auf
+`on delete set null`. Die verwaltete Eigentümer-PARTEI, ihre Bankverbindung,
+`owner_properties` samt Anteil und die gesamte Abrechnungshistorie überleben.
+Gelöscht wird ein LOGIN, nicht der Vertragspartner des Betriebs.
+
+### Weiter offen
+- ~~Firebase-App für `com.mynextdays.owner`~~ — **erledigt am 03.09.2026**,
+  Secret `MYNEXTDAYSOWNER_GOOGLE_SERVICES_JSON_BASE64` und
+  `MYNEXTDAYSOWNER_FIREBASE_APP_ID` sind gesetzt (`gh secret list`, 09.09.2026).
+- ~~Release-Keystore + Secrets~~ — **erledigt am 03.09.2026**: alle vier
+  `MYNEXTDAYSOWNER_RELEASE_*` gesetzt.
+- ~~Store-Beschreibung~~ — **fertig**, `docs/PLAY-STORE-LISTING-EIGENTUEMER.md`
+  (de-DE und en-US).
+- ~~Eigenes App-Icon~~ — **erledigt am 09.09.2026**: rote Fläche `#B82028`,
+  erzeugt von `scripts/mobile/icon-eigentuemer-erzeugen.py`, Store-Symbol und
+  Feature-Grafik unter `docs/store-assets/eigentuemer/`.
+- **Screenshots** — Aufnahmeplan, Vorführzugang und Befehle stehen in
+  `docs/PLAY-STORE-LISTING-EIGENTUEMER.md`; die Bilder selbst fehlen noch
+  (Simulator und Metro startet der Nutzer).
+- **Passwort des Vorführzugangs** `k.moser@example.at` — steht bewusst nicht im
+  Repo, beim Einreichen direkt ins Store-Formular.
+
+### Review-Notes (Text zum Einfügen)
+
+**Welcher Mandant** (live gegengeprüft am 09.09.2026):
+
+| Mandant | `is_demo` | Eigentümer-Logins | `owners` | Abrechnungen | für die Prüfung |
+|---|---|---|---|---|---|
+| Alpenzeit Chalets | false | 1 (`k.moser@example.at`) | 8 | 104 (13 für sie) | **ja** |
+| Nordlicht Ferienvermietung | **true** | **0** | **0** | **0** | nein |
+
+Nordlicht ist der Vorführ-Mandant der PMS-App und hier NICHT brauchbar: es gibt
+dort keinen Eigentümer-Login, keine Eigentümer-Partei und keine Abrechnung —
+Startseite, Kalender-Auszahlung und der Abrechnungs-Tab wären leer, und eine
+leere App ist ein Ablehnungsgrund. Alpenzeit trägt 2 zugeordnete Objekte,
+13 Abrechnungen, 243 künftige Buchungen und ausschließlich erfundene Namen.
+
+Preis dafür, offen benannt: Alpenzeit ist **nicht** schreibgeschützt
+(`tenants.is_demo = false`), der Demo-Riegel aus 0407 greift dort also nicht.
+Auf einem synthetischen Mandanten ohne echte Gäste ist das folgenlos — und der
+Prüfer kann Sperrantrag, Zählerstand und Chat wirklich ausprobieren, was bei
+einem gesperrten Zugang nicht ginge.
+
+```
+Demo-Zugang:
+  E-Mail:   k.moser@example.at
+  Passwort: <beim Einreichen eintragen>
+
+Diese App ist die Eigentümer-Sicht des Verwaltungssystems myNextDays. Sie
+richtet sich an Menschen, die ein Ferienobjekt besitzen und es von einem
+Betrieb vermieten lassen. Der Zugang wird vom Betrieb vergeben; in der App
+kann man kein Konto anlegen. Wer sich mit einem Verwaltungs- oder
+Mitarbeiter-Konto anmeldet, sieht einen Hinweis-Bildschirm mit dem Weg in die
+Schwester-App myNextDays.
+
+Nachrichten:
+Der Chat zwischen Eigentümer und Verwaltung ist Ende-zu-Ende verschluesselt.
+Wir koennen die Inhalte nicht lesen. Melden und "Gespraech beenden" stehen in
+der App unter "Optionen" bzw. langem Druck auf eine Nachricht zur Verfuegung;
+Meldungen erreichen uns als Metadaten (wer meldet wen, wie oft, mit welcher
+Begruendung), nicht als Text.
+
+Zahlungen / In-App-Kauf:
+Diese App verkauft nichts und enthaelt keinen Kauf-Link. Angezeigte Betraege
+sind die Netto-Auszahlung des Eigentuemers aus seinem Vertrag mit dem Betrieb.
+Es fliesst kein Geld ueber diese App.
+
+Konto-Löschung:
+Menue -> ganz unten -> "Konto löschen". Nach Eingabe des aktuellen Passworts
+wird der Zugang sofort geloescht. Bereits zugesagte, noch bevorstehende
+Aufenthalte werden dabei zurueckgenommen und die Naechte freigegeben;
+Abrechnungen und Bankverbindung bleiben beim Betrieb, weil sie zum Vertrag
+gehoeren und Buchungsbelege nach daenischem Recht 5 Jahre aufzubewahren sind.
+
+Zielgruppe:
+Private und gewerbliche Eigentuemer von Ferienobjekten. Kein oeffentlicher
+nutzergenerierter Inhalt, kein Tracking, keine Werbung.
+```
 
 ---
 
