@@ -12,6 +12,9 @@ was über Channex lief. Konversationen anderer Herkunft haben eigene Tabellen:
   Buchungsanfrage, Änderungswunsch). Sie sind KEINE Buchung und haben deshalb
   keine `channex_booking`-Zeile, verlangen aber innerhalb von 24 Stunden eine
   Entscheidung.
+* `owner_threads`/`owner_messages` (0611) — der Chat mit dem EIGENTÜMER. Kein
+  Gast und kein Portal: die Gegenseite ist der Hausbesitzer. Ende-zu-Ende
+  verschlüsselt (ADR-0029), der Server reicht Chiffretext durch.
 
 Sie werden GELESEN und in die `InboxThread`-Form gebracht; es wandert nichts
 (`channex_booking.channex_booking_id` ist NOT NULL + unique — dort hineinzu-
@@ -28,7 +31,7 @@ from __future__ import annotations
 
 from supabase import Client
 
-from . import anfragen, marktplatz, uebernahme
+from . import anfragen, eigentuemer, marktplatz, uebernahme
 from .errors import InboxError
 from .schemas import InboxMessagesResponse, InboxThread
 
@@ -72,6 +75,11 @@ class NebenquellenMixin:
             if scope != "all":
                 raise InboxError("Thread nicht gefunden.", status_code=404)
             return marktplatz.verlauf_antwort(db, tenant_id, thread_id)
+        if eigentuemer.ist_eigentuemer_thread(thread_id):
+            # Derselbe Scope wie in der Liste (Wurzel 9).
+            if scope != "all":
+                raise InboxError("Thread nicht gefunden.", status_code=404)
+            return eigentuemer.verlauf_antwort(db, tenant_id, thread_id)
         return None
 
     @staticmethod
@@ -87,6 +95,17 @@ class NebenquellenMixin:
             # nicht mehr.
             raise InboxError(
                 "Übernommener Verlauf — hier kann nicht geantwortet werden.",
+                status_code=422,
+            )
+        if eigentuemer.ist_eigentuemer_thread(thread_id):
+            # Der Eigentümer-Chat ist Ende-zu-Ende verschlüsselt (ADR-0029):
+            # eine Antwort braucht den Chiffretext PLUS einen für jedes
+            # Empfängergerät verpackten Schlüssel. Der Text-Endpunkt kann das
+            # nicht liefern — er kennt nur einen String, und ein serverseitig
+            # verschlüsselter Text wäre genau die Hintertür, die ADR-0029
+            # ausschließt. Gesendet wird über `POST /inbox/{id}/chat`.
+            raise InboxError(
+                "Verschlüsselter Eigentümer-Chat — bitte im Gespräch antworten.",
                 status_code=422,
             )
         if marktplatz.ist_marktplatz(thread_id):
@@ -137,5 +156,10 @@ class NebenquellenMixin:
         # abgelehnt.
         if status == "active":
             out.extend(anfragen.threads_lesen(db, tenant_id))
+
+        # Eigentümer-Chat (0611): kennt weder Archiv noch Papierkorb — ein
+        # laufendes Gespräch mit dem Hausbesitzer wird nicht weggelegt.
+        if status == "active":
+            out.extend(eigentuemer.threads_lesen(db, tenant_id))
 
         return out

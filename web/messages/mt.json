@@ -1157,7 +1157,13 @@
     "kiTestNoProperty": "Mingħajr proprjetà (fatti dwar l-operat biss)",
     "kiTestNoPropertyHint": "Mingħajr proprjetà magħżula, l-AI ma tafx il-ktejjeb tal-mistiedna jew il-kalendarju — agħżel proprjetà biex tara x'taf fil-każ.",
     "autoTrigger_on_checkin": "Fil-jum tal-wasla",
-    "autoTrigger_on_checkout": "Fil-jum tat-tluq"
+    "autoTrigger_on_checkout": "Fil-jum tat-tluq",
+    "eigentuemerChatHint": "Chat tal-proprjetarju kriptat — wieġeb fl-app myNextDays.",
+    "eigentuemerChatTitel": "Kriptat minn tarf sa tarf",
+    "eigentuemerChatText": "Dawn il-messaġġi jistgħu jinqraw biss fuq l-apparat fejn ġiet stabbilita ċ-chat. Iftaħ l-istorja fl-app myNextDays.",
+    "eigentuemerKanal": "Sid",
+    "e2eVorschau": "Messaġġ ġdid",
+    "e2eVorschauBild": "Stampa"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp għadu mhux imqabbad. Daħħal il-kredenzjali (Meta Cloud API) fis-settings tas-server, imbagħad il-konsenja tkun attiva.",

@@ -1157,7 +1157,13 @@
     "kiTestNoProperty": "Bez objekta (tikai fakti par uzņēmumu)",
     "kiTestNoPropertyHint": "Bez izvēlēta objekta AI nepārzina ne viesu mapi, ne kalendāru — izvēlieties objektu, lai redzētu, ko tā zina reālā situācijā.",
     "autoTrigger_on_checkin": "Ierašanās dienā",
-    "autoTrigger_on_checkout": "Izbraukšanas dienā"
+    "autoTrigger_on_checkout": "Izbraukšanas dienā",
+    "eigentuemerChatHint": "Šifrēta īpašnieka tērzēšana — atbildiet lietotnē myNextDays.",
+    "eigentuemerChatTitel": "Pilnībā šifrēts",
+    "eigentuemerChatText": "Šīs ziņas var nolasīt tikai ierīcē, kurā tērzēšana ir iestatīta. Atveriet vēsturi lietotnē myNextDays.",
+    "eigentuemerKanal": "Īpašnieks",
+    "e2eVorschau": "Jauns ziņojums",
+    "e2eVorschauBild": "Attēls"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp vēl nav savienots. Ievadiet piekļuves datus (Meta Cloud API) servera iestatījumos, tad sūtīšana būs aktīva.",

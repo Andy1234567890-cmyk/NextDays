@@ -84,7 +84,17 @@ _URZEIT: Final = datetime.min.replace(tzinfo=UTC)
 # regulären Pfades sind zwar UUIDs, aber das ist eine Eigenschaft der Daten,
 # nicht des Vertrags — eine `_ist_uuid`-Schranke hätte jede Nicht-UUID
 # abgewiesen und damit auch legitime Aufrufe, deren Zeile einfach fehlt.
-_NEBENQUELLEN_PRAEFIXE: tuple[str, ...] = ("anfrage:", "mb:", "ue:", "wa:")
+# `eig:` seit 09.09.2026 (0611): Ohne den Eintrag lief jeder Flag-Zugriff auf
+# einen Eigentümer-Thread in einen UUID-Cast auf „eig:…" — der Fehler wurde im
+# Frontend per `void` verworfen, der Thread nie als gelesen markiert und zählte
+# dauerhaft im Ungelesen-Zähler mit. Ein stiller Dauerfehler (Wurzel 5).
+_NEBENQUELLEN_PRAEFIXE: tuple[str, ...] = (
+    "anfrage:",
+    "eig:",
+    "mb:",
+    "ue:",
+    "wa:",
+)
 
 
 def _als_zeitpunkt(wert: str | None) -> datetime:

@@ -18,7 +18,18 @@ from src.core.languages import alle_sprachen, basis_sprache
 from src.core.security import AuthContext, get_current_user, require_internal_cron_secret
 from src.core.supabase import get_service_client
 from src.core.uploads import read_upload
+from src.features.owner_chat import kern as owner_chat_kern
+from src.features.owner_chat import melden as owner_chat_melden
+from src.features.owner_chat.fehler import OwnerChatError
+from src.features.owner_chat.schemas import (
+    ChatNachricht,
+    ChatVerlauf,
+    EmpfaengerGeraet,
+    EmpfaengerListe,
+    NachrichtSenden,
+)
 
+from . import eigentuemer
 from .authz import InboxAccess
 from .fassung_uebersetzen import fassung_uebersetzen
 from .felder import FELDER, FeldFehlt
@@ -1022,3 +1033,187 @@ def list_ki_protokoll(
         return service.list_ki_protokoll(ctx, thread_id=thread_id, limit=limit)
     except InboxError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Eigentümer-Chat: verschlüsselter Sendeweg (0611, ADR-0029) ---------------
+#
+# EIGENE Endpunkte statt `POST /{thread_id}/messages`: Eine Ende-zu-Ende
+# verschlüsselte Nachricht besteht aus Chiffretext PLUS einem für JEDES
+# Empfängergerät verpackten Schlüssel. Der Text-Endpunkt nimmt einen String
+# entgegen — ihn hier zu verwenden hieße, serverseitig zu verschlüsseln, also
+# genau die Hintertür zu bauen, die ADR-0029 ausschließt.
+
+
+@router.get("/{thread_id}/chat/empfaenger", response_model=EmpfaengerListe)
+def chat_empfaenger(
+    thread_id: str, bundle: _AccessDep
+) -> EmpfaengerListe:
+    """Geräte, für die die Agentur verschlüsseln muss.
+
+    Der SERVER bestimmt den Kreis (Wurzel 3) — käme er vom Client, schriebe
+    der sich ein fremdes Gerät in den Verteiler.
+    """
+    ctx, access = bundle
+    if access.scope != "all":
+        # Wurzel 9: derselbe Scope wie in der Liste, die diesen Thread bei
+        # „assigned" gar nicht zeigt.
+        raise HTTPException(status_code=404, detail="Thread nicht gefunden.")
+    db = get_service_client()
+    try:
+        faden = _eig_faden(db, ctx, thread_id)
+        zeilen = owner_chat_kern.empfaenger_geraete(
+            db, str(ctx.tenant_id), str(faden["property_id"])
+        )
+    except OwnerChatError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    return EmpfaengerListe(
+        items=[
+            EmpfaengerGeraet(
+                device_id=str(z["id"]),
+                public_key=str(z["public_key"]),
+                seite=str(z["seite"]),
+            )
+            for z in zeilen
+        ]
+    )
+
+
+@router.get("/{thread_id}/chat", response_model=ChatVerlauf)
+def chat_verlauf(
+    thread_id: str,
+    bundle: _AccessDep,
+    device_id: Annotated[str | None, Query()] = None,
+) -> ChatVerlauf:
+    """Verlauf samt den für DIESES Gerät verpackten Schlüsseln."""
+    ctx, access = bundle
+    if access.scope != "all":
+        raise HTTPException(status_code=404, detail="Thread nicht gefunden.")
+    db = get_service_client()
+    tenant_id = str(ctx.tenant_id)
+    try:
+        faden = _eig_faden(db, ctx, thread_id)
+        roh_id = str(faden["id"])
+        zeilen, nicht_lesbar = owner_chat_kern.verlauf_lesen(
+            db,
+            tenant_id,
+            roh_id,
+            # Nur das EIGENE Gerät (Wurzel 9).
+            device_id=owner_chat_kern.eigenes_geraet(
+                db, tenant_id, str(ctx.user_id), device_id
+            ),
+        )
+        owner_chat_kern.gelesen_setzen(db, tenant_id, roh_id, seite="agency")
+    except OwnerChatError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    return ChatVerlauf(
+        thread_id=thread_id,
+        property_id=str(faden["property_id"]),
+        items=[_eig_nachricht(z) for z in zeilen],
+        nicht_lesbar=nicht_lesbar,
+    )
+
+
+@router.post("/{thread_id}/chat", response_model=ChatNachricht, status_code=201)
+def chat_senden(
+    thread_id: str, req: NachrichtSenden, bundle: _AccessDep
+) -> ChatNachricht:
+    """Antwort der Agentur im verschlüsselten Eigentümer-Chat."""
+    ctx, access = bundle
+    if not access.can_reply:
+        raise HTTPException(status_code=403, detail="Keine Berechtigung zum Senden.")
+    if access.scope != "all":
+        raise HTTPException(status_code=404, detail="Thread nicht gefunden.")
+    db = get_service_client()
+    tenant_id = str(ctx.tenant_id)
+    try:
+        faden = _eig_faden(db, ctx, thread_id)
+        property_id = str(faden["property_id"])
+        absender = _eig_absender(db, tenant_id, str(ctx.user_id))
+        zeile = owner_chat_kern.nachricht_ablegen(
+            db,
+            tenant_id,
+            str(faden["id"]),
+            seite="agency",
+            user_id=str(ctx.user_id),
+            sender_name=absender,
+            chiffre=req.chiffre,
+            schluessel=req.schluessel,
+            # Der Kreis wird HIER neu bestimmt, nicht vom Client übernommen:
+            # kam zwischen Abholen und Senden ein Gerät dazu, fehlt sein
+            # Schlüssel und `nachricht_ablegen` antwortet mit 409, statt eine
+            # für ihn unlesbare Nachricht abzulegen (Wurzel 5).
+            geraete=owner_chat_kern.empfaenger_geraete(db, tenant_id, property_id),
+            bilder=req.bilder,
+            sender_key=req.sender_key,
+        )
+    except OwnerChatError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    # NACH dem Ablegen (Wurzel 5): best effort, kippt das Senden nicht.
+    owner_chat_melden.neue_nachricht_melden(
+        db,
+        tenant_id,
+        property_id=property_id,
+        thread_id=str(faden["id"]),
+        message_id=str(zeile["id"]),
+        seite="agency",
+        absender_name=absender,
+        absender_user_id=str(ctx.user_id),
+    )
+    return _eig_nachricht(zeile)
+
+
+def _eig_faden(db: object, ctx: AuthContext, thread_id: str) -> dict:
+    """`owner_threads`-Zeile zu einer `eig:`-Thread-ID — geladen UND gescopt."""
+    if not eigentuemer.ist_eigentuemer_thread(thread_id):
+        raise OwnerChatError("Kein Eigentümer-Gespräch.", status_code=404)
+    if not ctx.tenant_id:
+        raise OwnerChatError("Kein Tenant im Token.", status_code=403)
+    roh_id = eigentuemer.thread_aus_id(thread_id)
+    zeilen = (
+        db.table("owner_threads")  # type: ignore[attr-defined]
+        .select("id, property_id")
+        .eq("id", roh_id)
+        .eq("tenant_id", ctx.tenant_id)
+        .limit(1)
+        .execute()
+    ).data or []
+    if not zeilen:
+        raise OwnerChatError("Gespräch nicht gefunden.", status_code=404)
+    return zeilen[0]
+
+
+def _eig_absender(db: object, tenant_id: str, user_id: str) -> str:
+    """Name des antwortenden Mitarbeiters, eingefroren an der Nachricht.
+
+    Der Eigentümer soll sehen, MIT WEM er spricht — „die Verwaltung" wäre bei
+    einem Team aus vier Leuten keine Auskunft.
+    """
+    zeilen = (
+        db.table("users")  # type: ignore[attr-defined]
+        .select("full_name, email")
+        .eq("id", user_id)
+        .eq("tenant_id", tenant_id)
+        .limit(1)
+        .execute()
+    ).data or []
+    if not zeilen:
+        raise OwnerChatError("Konto nicht gefunden.", status_code=403)
+    # KEIN Rückfall auf die E-Mail (Wurzel 9: kein `email` an Rollen, die es
+    # nicht brauchen). Sonst stünde die dienstliche Adresse des Mitarbeiters
+    # beim Eigentümer im Verlauf — eingefroren, für immer. Umgekehrt sähe die
+    # Agentur die private Adresse eines Familienmitglieds.
+    return str(zeilen[0].get("full_name") or "").strip() or "—"
+
+
+def _eig_nachricht(zeile: dict) -> ChatNachricht:
+    return ChatNachricht(
+        id=str(zeile["id"]),
+        sender=str(zeile.get("sender") or ""),
+        sender_name=str(zeile.get("sender_name") or ""),
+        chiffre=str(zeile.get("body") or ""),
+        sender_key=zeile.get("sender_key") or None,
+        wrapped_key=zeile.get("wrapped_key"),
+        wrapper_key=zeile.get("wrapper_key") or None,
+        bilder=[b for b in (zeile.get("attachments") or []) if isinstance(b, str)],
+        sent_at=zeile.get("sent_at"),
+    )

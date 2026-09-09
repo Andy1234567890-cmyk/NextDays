@@ -37,3 +37,35 @@ global.fetch = jest.fn(async () => ({
   json: async () => ({ items: [], total: 0 }),
   text: async () => JSON.stringify({ items: [], total: 0 }),
 }));
+
+// react-native-quick-crypto hat eine native Seite (Nitro/TurboModule) und ist
+// im Node-Testlauf nicht ladbar — ohne diesen Mock scheitert JEDE Suite, die
+// die App rendert, an `TurboModuleRegistry.getEnforcing('QuickBase64')`.
+//
+// Der Mock rechnet BEWUSST NICHT: er wirft bei jedem Krypto-Aufruf. Ein Mock,
+// der plausible Bytes zurückgibt, würde Tests grün färben, die in Wahrheit
+// nichts über die Verschlüsselung aussagen — genau die Art Test, die grün ist,
+// während die Sache kaputt ist. Die Krypto-Kette wird auf dem GERÄT geprüft
+// (ADR-0029), nicht hier.
+jest.mock('react-native-quick-crypto', () => {
+  const nichtImTest = () => {
+    throw new Error(
+      'Krypto im Jest-Lauf nicht verfügbar — auf dem Gerät prüfen (ADR-0029).',
+    );
+  };
+  return {
+    __esModule: true,
+    default: {
+      randomBytes: nichtImTest,
+      createCipheriv: nichtImTest,
+      createDecipheriv: nichtImTest,
+      hkdfSync: nichtImTest,
+      argon2Sync: nichtImTest,
+      Ed: function Ed() {
+        nichtImTest();
+      },
+      KFormatType: { DER: 0 },
+      KeyEncoding: { SPKI: 0, PKCS8: 1 },
+    },
+  };
+});

@@ -1157,7 +1157,13 @@
     "kiTestNoProperty": "Fără proprietate (doar informații generale)",
     "kiTestNoPropertyHint": "Fără o proprietate selectată, AI-ul nu cunoaște nici ghidul pentru oaspeți, nici calendarul — selectați o proprietate pentru a vedea ce știe în caz de urgență.",
     "autoTrigger_on_checkin": "La data sosirii",
-    "autoTrigger_on_checkout": "La data plecării"
+    "autoTrigger_on_checkout": "La data plecării",
+    "eigentuemerChatHint": "Chat criptat cu proprietarul — răspundeți în aplicația myNextDays.",
+    "eigentuemerChatTitel": "Criptare end-to-end",
+    "eigentuemerChatText": "Aceste mesaje pot fi citite doar pe dispozitivul pe care a fost inițiat chat-ul. Deschideți istoricul în aplicația myNextDays.",
+    "eigentuemerKanal": "Proprietar",
+    "e2eVorschau": "Mesaj nou",
+    "e2eVorschauBild": "Imagine"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp nu este încă conectat. Introduceți datele de acces (Meta Cloud API) în setările serverului, apoi trimiterea este activă.",

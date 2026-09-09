@@ -1157,7 +1157,13 @@
     "kiTestNoProperty": "Ilma objektita (ainult ettevõtteülesed faktid)",
     "kiTestNoPropertyHint": "Ilma valitud objektita ei tea tehisintellekt külaliste kausta ega kalendrit – valige objekt, et näha, mida ta hädaolukorras teab.",
     "autoTrigger_on_checkin": "Saabumiskuupäeval",
-    "autoTrigger_on_checkout": "Lahkumiskuupäeval"
+    "autoTrigger_on_checkout": "Lahkumiskuupäeval",
+    "eigentuemerChatHint": "Krüpteeritud omanikuvestlus – vastake rakenduses myNextDays.",
+    "eigentuemerChatTitel": "Täielikult krüpteeritud",
+    "eigentuemerChatText": "Neid sõnumeid saab lugeda ainult seadmes, kus vestlus on loodud. Avage ajalugu rakenduses myNextDays.",
+    "eigentuemerKanal": "Omanik",
+    "e2eVorschau": "Uus sõnum",
+    "e2eVorschauBild": "Pilt"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp pole veel ühendatud. Sisesta juurdepääsuandmed (Meta Cloud API) serveri seadetesse, siis on saatmine aktiivne.",

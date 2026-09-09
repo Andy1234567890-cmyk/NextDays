@@ -1157,7 +1157,13 @@
     "kiTestNoProperty": "No property selected (only company-wide facts)",
     "kiTestNoPropertyHint": "Without a selected property, the AI knows neither the guest directory nor the calendar — select a property to see what it knows in an emergency.",
     "autoTrigger_on_checkin": "On arrival day",
-    "autoTrigger_on_checkout": "On departure day"
+    "autoTrigger_on_checkout": "On departure day",
+    "eigentuemerChatHint": "Encrypted owner chat — reply in the myNextDays app.",
+    "eigentuemerChatTitel": "End-to-end encrypted",
+    "eigentuemerChatText": "These messages can only be read on the device where the chat was set up. Open the history in the myNextDays app.",
+    "eigentuemerKanal": "Owner",
+    "e2eVorschau": "New message",
+    "e2eVorschauBild": "Image"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp is not connected yet. Add the credentials (Meta Cloud API) in the server settings to activate sending.",

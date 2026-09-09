@@ -6,6 +6,15 @@
          FCM meldet trotzdem "zugestellt". Deklaration allein genuegt
          nicht, sie wird zur Laufzeit erfragt (lib/push.ts). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Foto im Chat mit der Verwaltung (0611). Die KAMERA wird zur Laufzeit
+         erfragt (react-native-image-picker), die Deklaration allein genuegt
+         nicht. Kein READ_MEDIA_IMAGES: der System-Bildwaehler (Photo Picker)
+         liefert die Auswahl ueber einen temporaeren URI, dafuer braucht die
+         App kein Lese-Recht auf den ganzen Bildspeicher — und was sie nicht
+         braucht, fragt sie auch nicht ab. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
     <!-- KEINE Kamera- und KEINE Medien-Berechtigung: diese App zeigt Bilder
          nur an, sie nimmt keine auf und laedt keine hoch (kein image-picker,
          kein documents/picker in package.json). Was die App nicht braucht,

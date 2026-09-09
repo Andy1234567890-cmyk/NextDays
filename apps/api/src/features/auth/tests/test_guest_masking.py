@@ -155,20 +155,26 @@ def test_pm_dach_unbekannte_rolle_fail_closed() -> None:
     assert effective_capabilities("hausmeister", has_pm_access=True) == frozenset()
 
 
-def test_owner_standard_zaehlt_sechs_und_behaelt_sie_alle() -> None:
-    """Regression zur Zahl: gespeichert 6 → wirksam 6.
+def test_owner_standard_bleibt_vollstaendig_wirksam() -> None:
+    """Regression: gespeichert == wirksam, egal wie viele es sind.
 
     Ergänzt `test_owner_standard_wirkt_vollstaendig` weiter unten (dieselbe
     Regel, dort namentlich geprüft) um genau das, was live gemessen wurde:
     „gespeichert 6 -> wirksam 2". Fiele je ein Recht aus dem Standard, ohne
     dass jemand es merkt, sagt es dieser Test.
 
+    KEINE feste Anzahl mehr (09.09.2026, beim Zufügen von OWNER_CHAT): Die
+    Zahl 6 war eine Momentaufnahme, kein Schutz — sie brach bei jedem neuen
+    Eigentümer-Recht, ohne je den Fehler zu finden, um den es geht. Geprüft
+    wird die REGEL: was im Standard steht, muss auch wirken, und der Standard
+    darf nicht leer laufen.
+
     Die Gegenprobe für staff/co_admin/cleaner steht ebenfalls unten
     (`test_permission_dach_bleibt_fuer_pms_rollen_wirksam`) — der Entzug des
     PM-Zugriffs bleibt für die PMS-Rollen voll wirksam.
     """
     gespeichert = ROLE_DEFAULT_PERMISSIONS[UserRole.owner]
-    assert len(gespeichert) == 6
+    assert gespeichert, "Eigentümer ohne Standardrechte wäre ein leeres Portal"
     assert effective_permissions(UserRole.owner, list(gespeichert)) == gespeichert
 
 

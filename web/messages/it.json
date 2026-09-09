@@ -1157,7 +1157,13 @@
     "kiTestNoProperty": "Senza proprietà (solo dati a livello aziendale)",
     "kiTestNoPropertyHint": "Senza una proprietà selezionata, l'IA non conosce né la cartella degli ospiti né il calendario. Selezioni una proprietà per vedere cosa sa in un caso reale.",
     "autoTrigger_on_checkin": "Al check-in",
-    "autoTrigger_on_checkout": "Al check-out"
+    "autoTrigger_on_checkout": "Al check-out",
+    "eigentuemerChatHint": "Chat proprietario crittografato — risponda nell'app myNextDays.",
+    "eigentuemerChatTitel": "Crittografia end-to-end",
+    "eigentuemerChatText": "Questi messaggi possono essere letti solo sul dispositivo su cui è stata impostata la chat. Apra la cronologia nell'app myNextDays.",
+    "eigentuemerKanal": "Proprietario",
+    "e2eVorschau": "Nuovo messaggio",
+    "e2eVorschauBild": "Immagine"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp non è ancora collegato. Inserisci le credenziali (Meta Cloud API) nelle impostazioni del server per attivare l'invio.",

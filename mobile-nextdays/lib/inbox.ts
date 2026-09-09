@@ -56,6 +56,35 @@ export type InboxMessage = {
    * bekannten Host geprüft (`inbox.spiegel.sichere_anhaenge`).
    */
   attachments?: string[];
+  /**
+   * Nur im Eigentümer-Chat (0611, ADR-0029): Diese Nachricht ist auf DIESEM
+   * Gerät nicht zu öffnen — sie entstand, bevor das Gerät registriert wurde.
+   *
+   * Sie wird trotzdem angezeigt, mit Hinweis statt Text: eine Lücke, die
+   * niemand sieht, ist der schlimmere Fehler (Wurzel 5). Freigeben kann sie
+   * nur die Betriebsleitung (admin/co_admin).
+   */
+  nicht_lesbar?: boolean;
+  /**
+   * Nur im Eigentümer-Chat (0611): Die Entschlüsselung ist FEHLGESCHLAGEN,
+   * obwohl der Schlüssel vorlag — der GCM-Tag passt nicht, am Chiffretext
+   * wurde also manipuliert.
+   *
+   * Getrennt von `nicht_lesbar` (Wurzel 5): Das eine heißt „älter als dieses
+   * Gerät", das andere „verändert". Beides als Alterszustand auszugeben wäre
+   * eine beruhigende Falschaussage über eine angegriffene Nachricht.
+   */
+  manipuliert?: boolean;
+  /**
+   * Nur im Eigentümer-Chat (0611): Bucket-PFADE zu verschlüsselten Bildern.
+   *
+   * BEWUSST getrennt von `attachments`: Das sind keine URLs. `attachments`
+   * trägt vom Server geprüfte https-Adressen, die direkt in ein `<Image>`
+   * gehen; diese Pfade zeigen auf AES-verschlüsselte Bytes und ergeben in
+   * einem Bildfeld nichts als einen grauen Kasten. Ein Feld, zwei
+   * Bedeutungen, wäre der Fehler.
+   */
+  e2e_bilder?: string[];
 };
 
 /**
@@ -160,14 +189,25 @@ export async function getInboxReservation(
 // --- Portal-Anfragen (0398) -------------------------------------------------
 
 /**
- * Thread-Präfixe des Servers. Ein Posteingang führt VIER Arten, die nicht alle
+ * Thread-Präfixe des Servers. Ein Posteingang führt FÜNF Arten, die nicht alle
  * an einer Buchung hängen:
  *   `anfrage:` Portal-Anfrage (noch keine Buchung, `inbox/anfragen.py`)
  *   `mb:`      myBestDays-Marktplatz (`inbox/marktplatz.py`)
  *   `ue:`      übernommener Verlauf aus einem fremden PMS (`inbox/uebernahme.py`)
  *   `wa:`      WhatsApp-Konversation
+ *   `eig:`     Chat mit dem EIGENTÜMER (`inbox/eigentuemer.py`, 0611) —
+ *              Ende-zu-Ende verschlüsselt: der Text kommt als Chiffretext und
+ *              wird auf dem Gerät geöffnet (`lib/chat-krypto.ts`, ADR-0029).
+ *              Deshalb hat dieser Thread einen EIGENEN Sendeweg; der normale
+ *              Textendpunkt weist ihn mit 422 ab.
  * Ohne Präfix: eine echte OTA-Buchung (UUID von `channex_booking`).
  */
+export const EIGENTUEMER_PREFIX = "eig:";
+
+export function istEigentuemerThread(threadId: string): boolean {
+  return threadId.startsWith(EIGENTUEMER_PREFIX);
+}
+
 /**
  * ISO-Zeichenkette → Millisekunden zum VERGLEICHEN (nie zum Anzeigen).
  *

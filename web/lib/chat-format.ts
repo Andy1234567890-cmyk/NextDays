@@ -19,6 +19,47 @@
  */
 export const NUR_ANHANG_TEXT = "[attachment]";
 
+/**
+ * Vorschau-Kürzel des Ende-zu-Ende-verschlüsselten Eigentümer-Chats (0611).
+ *
+ * Hier ist der Grund ein anderer als bei `NUR_ANHANG_TEXT`: Der Server kennt
+ * den Inhalt NICHT — er hat nur Chiffretext (ADR-0029). Eine echte Vorschau
+ * ist also unmöglich, nicht bloß sprachlich unpassend.
+ *
+ * Müssen mit `inbox/eigentuemer.py` übereinstimmen.
+ */
+export const E2E_VORSCHAU = "[e2e]";
+export const E2E_VORSCHAU_BILD = "[e2e_bild]";
+
+/** Der Kanalname des Eigentümer-Chats — kein Vertriebskanal, eigenes Kürzel. */
+export const EIGENTUEMER_KANAL = "[eigentuemer]";
+
+/**
+ * Kanalname einer Threadzeile → i18n-Schlüssel, oder `null` für „unverändert".
+ *
+ * Wie `vorschauSchluessel` eine EINE Stelle: Der Kanalname steht an mehreren
+ * Orten (Listenabzeichen, Gesprächskopf), und ohne gemeinsame Auflösung kennt
+ * die eine ihn und die andere zeigt das rohe Kürzel.
+ */
+export function kanalSchluessel(name: string | null): string | null {
+  return name === EIGENTUEMER_KANAL ? "eigentuemerKanal" : null;
+}
+
+/**
+ * Vorschautext einer Threadzeile → i18n-Schlüssel, oder `null` für „unverändert
+ * anzeigen".
+ *
+ * EINE Stelle für alle Kürzel: Sonst prüft jede Liste ihre eigene Teilmenge,
+ * und ein neues Kürzel steht in der einen Oberfläche als Wort, in der anderen
+ * roh — genau so stand „None" in der Glocke.
+ */
+export function vorschauSchluessel(text: string | null): string | null {
+  if (text === NUR_ANHANG_TEXT) return "attachmentPreview";
+  if (text === E2E_VORSCHAU) return "e2eVorschau";
+  if (text === E2E_VORSCHAU_BILD) return "e2eVorschauBild";
+  return null;
+}
+
 /** Nur die Uhrzeit unter der Blase — das Datum steht im Tages-Trenner. */
 export function uhrzeit(iso: string, locale: string): string {
   const d = new Date(iso);

@@ -60,6 +60,10 @@ class Capability(StrEnum):
     # Eigentümer für die Umsatzsicht braucht und die hier bewusst fehlen.
     VIEW_OCCUPANCY_STATS = "view_occupancy_stats"
     ADD_METER_READING = "add_meter_reading"
+    # Mit der Verwaltung schreiben (0611). Familienmitglieder tragen sie
+    # ebenfalls — Festlegung vom 09.09.2026: wer Portalzugang hat, darf im
+    # Namen des Hauses schreiben, und jede Nachricht trägt seinen Namen.
+    OWNER_CHAT = "owner_chat"
     BOOK_SERVICES = "book_services"
     MANAGE_NOTIFICATION_PREFS = "manage_notification_prefs"  # §4.2 SMS/E-Mail/aus
     # Mitarbeiter-spezifisch (§4.3)
@@ -154,6 +158,8 @@ _OWNER: frozenset[Capability] = frozenset({
     Capability.MOVE_OWN_RESERVATION,
     Capability.ADD_METER_READING,
     Capability.BOOK_SERVICES,
+    # Der Chat mit der Verwaltung (0611).
+    Capability.OWNER_CHAT,
     Capability.VIEW_OWNER_REPORTS,
     Capability.MANAGE_NOTIFICATION_PREFS,
     # Der Objektbereich seiner eigenen Objekte (Stammdaten/Bilder/Fotoalbum)
@@ -292,6 +298,11 @@ _FAMILIE_NUTZUNG: frozenset[Capability] = frozenset({
     # keine Freigabe des Vaters, und die Angabe verrät nichts über das
     # Geschäft.
     Capability.VIEW_PROPERTY_AREA,
+    # Mit der Verwaltung schreiben (0611, Festlegung vom 09.09.2026). Wer das
+    # Haus nutzt, muss den Handwerkertermin absprechen können — dafür braucht
+    # er keine Freigabe für Umsatzzahlen. Jede Nachricht trägt seinen Namen
+    # (`owner_messages.sender_name`), die Zurechnung bleibt also eindeutig.
+    Capability.OWNER_CHAT,
 })
 
 # Nutzung + Berichte: zusätzlich Umsatz, Abrechnung, Auszahlung.

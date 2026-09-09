@@ -432,4 +432,51 @@ export const de = {
   "kal.nichtVerschoben": "Buchung nicht verschoben",
   "kal.verschiebeHinweis": "Buchung gedrückt halten und auf andere Tage ziehen.",
   "kal.wirdVerschoben": "Buchung wird verschoben …",
+  // --- Chat mit der Verwaltung (0611, ADR-0029) ------------------------------
+  // Die Texte zur Verschlüsselung sind bewusst konkret: „Ende-zu-Ende
+  // verschlüsselt" allein sagt dem Eigentümer nichts über die FOLGEN (Verlauf
+  // weg ohne Sicherungscode). Wer die Folgen erst im Ernstfall erfährt, hält
+  // sie für einen Fehler.
+  "chat.titel": "Nachrichten",
+  "chat.leer": "Noch keine Nachrichten. Schreiben Sie der Verwaltung.",
+  "chat.eingabe": "Nachricht schreiben …",
+  "chat.senden": "Senden",
+  "chat.sendet": "Wird gesendet …",
+  "chat.heute": "Heute",
+  "chat.gestern": "Gestern",
+  "chat.bildSenden": "Bild senden",
+  "chat.bildWaehlen": "Aus der Galerie",
+  "chat.bildAufnehmen": "Foto aufnehmen",
+  "chat.abbrechen": "Abbrechen",
+  "chat.nichtLesbar": "Diese Nachricht entstand vor diesem Gerät und ist hier nicht lesbar.",
+  // BEWUSST anders als `nichtLesbar`: Das eine ist ein harmloser
+  // Alterszustand, das hier ein Angriff. Beides gleich zu benennen wäre eine
+  // beruhigende Falschaussage.
+  "chat.manipuliert": "Diese Nachricht wurde nach dem Senden verändert und kann nicht angezeigt werden.",
+  "chat.nichtLesbarAnzahl": "{anzahl} ältere Nachrichten sind auf diesem Gerät nicht lesbar.",
+  "chat.freigabeBitten": "Bitten Sie die Verwaltung, den Verlauf für dieses Gerät freizugeben.",
+  "chat.verschluesselt": "Ende-zu-Ende verschlüsselt",
+  "chat.verschluesseltErklaerung": "Nur Sie und Ihre Verwaltung können diese Nachrichten lesen. Auch wir können es nicht.",
+  "chat.einrichten": "Chat einrichten",
+  "chat.einrichtenText": "Für verschlüsselte Nachrichten legt dieses Gerät einen Schlüssel an. Er bleibt auf dem Gerät.",
+  "chat.einrichtenKnopf": "Jetzt einrichten",
+  "chat.richtetEin": "Wird eingerichtet …",
+  "chat.einrichtenFehler": "Der Chat konnte nicht eingerichtet werden.",
+  "chat.sicherungTitel": "Sicherungscode",
+  "chat.sicherungText": "Schreiben Sie diesen Code auf und bewahren Sie ihn sicher auf. Ohne ihn sind Ihre Nachrichten nach einem Gerätewechsel verloren — auch wir können sie dann nicht wiederherstellen.",
+  "chat.sicherungKopiert": "Code kopiert",
+  "chat.sicherungVerstanden": "Ich habe den Code notiert",
+  "chat.sicherungEinspielen": "Verlauf wiederherstellen",
+  "chat.sicherungEingabe": "Sicherungscode eingeben",
+  "chat.sicherungFalsch": "Der Sicherungscode passt nicht.",
+  "chat.sicherungKeine": "Für dieses Konto ist keine Sicherung hinterlegt.",
+  "chat.geraete": "Meine Geräte",
+  "chat.geraeteText": "Diese Geräte können Ihre Nachrichten lesen. Kommt Ihnen eines fremd vor, entfernen Sie es.",
+  "chat.geraetEntfernen": "Entfernen",
+  "chat.geraetGesperrt": "Entfernt",
+  "chat.geraetDiesesGeraet": "Dieses Gerät",
+  "chat.geraetSeitdem": "Seit {datum}",
+  "chat.geraetEntfernenFrage": "Dieses Gerät entfernt? Es kann danach keine neuen Nachrichten mehr lesen.",
+  "chat.fehlerSenden": "Die Nachricht konnte nicht gesendet werden.",
+  "chat.fehlerLaden": "Die Nachrichten konnten nicht geladen werden.",
 } as const;

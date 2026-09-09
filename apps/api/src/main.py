@@ -82,6 +82,7 @@ from .features.notification_settings.router import (
 )
 from .features.ocr.router import router as ocr_router
 from .features.owner_billing.router import router as owner_billing_router
+from .features.owner_chat.router import router as owner_chat_router
 from .features.owner_reporting.router import router as owner_reporting_router
 from .features.owner_statements.router import router as owner_statements_router
 from .features.owners.router import router as owners_router
@@ -199,6 +200,7 @@ _SLICE_ROUTERS = [
     site_config_public_router,
     site_config_ki_router,
     ocr_router,
+    owner_chat_router,
     public_portal_router,
     tasks_router,
     # Personal & Dienstplan (0540/0541, ADR-0023): Akte, Dienstplan,

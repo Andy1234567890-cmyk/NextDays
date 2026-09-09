@@ -58,6 +58,11 @@ MIGRATIONEN = (
     # zwischen Zusage und Zahlung kurz ist und der Zeitraum in ihm nicht
     # anderweitig verkauft werden soll.
     "0587_angebot_antwort_benachrichtigung.sql",
+    # Eigentuemer-Chat (0611/0612): zwei Kategorien, weil die beiden Richtungen
+    # an verschiedene APPS gehen. Mail + Push ohne SMS — der Inhalt ist
+    # Ende-zu-Ende verschluesselt, eine Meldung kann nur sagen, DASS jemand
+    # geschrieben hat.
+    "0612_eigentuemer_chat_benachrichtigung.sql",
 )
 
 

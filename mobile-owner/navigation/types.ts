@@ -37,6 +37,14 @@ export type RootStackParamList = {
     notizen: string | null;
   };
   Zaehlerstand: { propertyId: string; titel: string };
+  // Chat mit der Verwaltung (0611). `threadId` ist leer, solange über dieses
+  // Objekt noch nie gesprochen wurde — der Faden entsteht serverseitig mit
+  // der ersten Nachricht.
+  Nachrichten: undefined;
+  Chat: { propertyId: string; threadId: string };
+  // Die eigenen Chat-Geräte — bei E2E der einzige Schutz gegen einen
+  // untergeschobenen Mitleser (ADR-0029).
+  ChatGeraete: undefined;
   // Beleg einer Abrechnung (Tab „Abrechnungen" → Karte).
   AbrechnungDetail: { id: string; titel: string };
   // Auszahlungen je Objekt und Statistik — aus „Mehr".

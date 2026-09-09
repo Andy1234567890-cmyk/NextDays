@@ -8,6 +8,8 @@
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 
+import { kanalSchluessel } from "@/lib/chat-format";
+
 import { channelLabelLoose, channelLogoLoose } from "@/lib/channel-logos";
 import { kanalAbzeichen, otaIcon } from "@/lib/kanal-marke";
 
@@ -38,6 +40,20 @@ export { kanalAbzeichen, otaIcon } from "@/lib/kanal-marke";
  * Marken-Logo (Regel „Portal-Logos nur echt").
  */
 export function ChannelTag({ channel }: { channel: string | null }) {
+  const t = useTranslations("inbox");
+  // Der Eigentümer-Chat ist KEIN Vertriebskanal und steht deshalb nicht im
+  // Kanal-Enum (`inbox/eigentuemer.py`). Der Server schickt ein
+  // sprachneutrales Kürzel — er kennt die Sprache des Betrachters nicht —,
+  // und hier wird daraus das Wort. Ohne diesen Zweig stünde „[eigentuemer]"
+  // in der Liste.
+  if (kanalSchluessel(channel)) {
+    return (
+      <span className="flex shrink-0 items-center gap-1 text-[0.7rem] text-muted-foreground">
+        <Icon icon="ph:house-line" className="size-3" />
+        {t(kanalSchluessel(channel)!)}
+      </span>
+    );
+  }
   const logo = channelLogoLoose(channel);
   const marke = kanalAbzeichen(channel);
   // `channel` ist der rohe `ota_name` (Channex-Code „BookingCom") — angezeigt

@@ -26,6 +26,9 @@ import AufenthaltBestaetigt from "@/screens/AufenthaltBestaetigt";
 import AufenthaltBuchen from "@/screens/AufenthaltBuchen";
 import Aufgaben from "@/screens/Aufgaben";
 import Anmelden from "@/screens/Anmelden";
+import Chat from "@/screens/Chat";
+import ChatGeraete from "@/screens/ChatGeraete";
+import Nachrichten from "@/screens/Nachrichten";
 import Auszahlungen from "@/screens/Auszahlungen";
 import FalscheRolle from "@/screens/FalscheRolle";
 import Fotoalbum from "@/screens/Fotoalbum";
@@ -158,6 +161,21 @@ function Root() {
               name="Aufgaben"
               component={Aufgaben}
               options={{ headerShown: true, title: "Meine Aufgaben" }}
+            />
+            <Stack.Screen
+              name="Nachrichten"
+              component={Nachrichten}
+              options={{ headerShown: true, title: "Nachrichten" }}
+            />
+            <Stack.Screen
+              name="Chat"
+              component={Chat}
+              options={{ headerShown: true, title: "Nachrichten" }}
+            />
+            <Stack.Screen
+              name="ChatGeraete"
+              component={ChatGeraete}
+              options={{ headerShown: true, title: "Meine Geräte" }}
             />
             <Stack.Screen
               name="SperrAntrag"

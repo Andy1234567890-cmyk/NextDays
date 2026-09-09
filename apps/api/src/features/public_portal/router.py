@@ -13,6 +13,16 @@ from src.core.security import AuthContext
 from src.features.auth.dependencies import require_permission
 from src.features.auth.granular_permissions import Permission
 from src.features.auth.permissions import Capability
+from src.features.owner_chat.fehler import OwnerChatError
+from src.features.owner_chat.schemas import (
+    ChatFaden,
+    ChatFadenListe,
+    ChatNachricht,
+    ChatVerlauf,
+    EmpfaengerGeraet,
+    EmpfaengerListe,
+    NachrichtSenden,
+)
 from src.features.owner_statements.schemas import StatementResponse
 
 from .aufgaben import TaskError
@@ -20,6 +30,7 @@ from .dependencies import (
     DienstleistungsServiceDep,
     OwnerFamilyServiceDep,
     PortalAufgabenServiceDep,
+    PortalChatServiceDep,
     PublicPortalServiceDep,
     require_portal_recht,
 )
@@ -722,3 +733,112 @@ def familie_entfernen(
         service.entfernen(ctx, mitglied_id)
     except FamilieError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Chat mit der Verwaltung (0611, ADR-0029) ---------------------------------
+#
+# Ende-zu-Ende verschlüsselt: Diese Endpunkte transportieren Chiffretext und
+# verpackte Schlüssel. Kein Feld hier enthält lesbaren Text, auch nicht die
+# Vorschau — es gibt keine.
+
+_CHAT = require_portal_recht(  # noqa: N816  pylint: disable=invalid-name
+    Permission.OWNER_CHAT, Capability.OWNER_CHAT
+)
+
+
+@router.get("/chat", response_model=ChatFadenListe)
+def chat_faeden(
+    service: PortalChatServiceDep,
+    ctx: Annotated[AuthContext, Depends(_CHAT)],
+) -> ChatFadenListe:
+    """Ein Gesprächsfaden je Objekt — auch für Objekte ohne bisherige Nachricht."""
+    try:
+        return ChatFadenListe(items=[ChatFaden(**z) for z in service.faeden(ctx)])
+    except OwnerChatError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/chat/empfaenger/{property_id}", response_model=EmpfaengerListe)
+def chat_empfaenger(
+    property_id: str,
+    service: PortalChatServiceDep,
+    ctx: Annotated[AuthContext, Depends(_CHAT)],
+) -> EmpfaengerListe:
+    """Geräte, für die verschlüsselt werden muss. Der SERVER bestimmt den Kreis."""
+    try:
+        zeilen = service.empfaenger(ctx, property_id)
+    except OwnerChatError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    return EmpfaengerListe(
+        items=[
+            EmpfaengerGeraet(
+                device_id=str(z["id"]),
+                public_key=str(z["public_key"]),
+                seite=str(z["seite"]),
+            )
+            for z in zeilen
+        ]
+    )
+
+
+@router.get("/chat/faden/{thread_id}", response_model=ChatVerlauf)
+def chat_verlauf(
+    thread_id: str,
+    service: PortalChatServiceDep,
+    ctx: Annotated[AuthContext, Depends(_CHAT)],
+    device_id: Annotated[str | None, Query()] = None,
+) -> ChatVerlauf:
+    """Verlauf samt den für DIESES Gerät verpackten Schlüsseln."""
+    try:
+        roh = service.verlauf(ctx, thread_id, device_id=device_id)
+    except OwnerChatError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    return _verlauf_antwort(roh)
+
+
+@router.post(
+    "/chat/objekt/{property_id}", response_model=ChatNachricht, status_code=201
+)
+def chat_senden(
+    property_id: str,
+    req: NachrichtSenden,
+    service: PortalChatServiceDep,
+    ctx: Annotated[AuthContext, Depends(_CHAT)],
+) -> ChatNachricht:
+    """Nachricht des Eigentümers. Legt den Faden an, falls es der erste ist."""
+    try:
+        zeile = service.senden(
+            ctx,
+            property_id,
+            chiffre=req.chiffre,
+            schluessel=req.schluessel,
+            bilder=req.bilder,
+            sender_key=req.sender_key,
+        )
+    except OwnerChatError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    return _zu_nachricht(zeile)
+
+
+def _zu_nachricht(zeile: dict) -> ChatNachricht:
+    return ChatNachricht(
+        id=str(zeile["id"]),
+        sender=str(zeile.get("sender") or ""),
+        sender_name=str(zeile.get("sender_name") or ""),
+        chiffre=str(zeile.get("body") or ""),
+        sender_key=zeile.get("sender_key") or None,
+        wrapped_key=zeile.get("wrapped_key"),
+        wrapper_key=zeile.get("wrapper_key") or None,
+        bilder=[b for b in (zeile.get("attachments") or []) if isinstance(b, str)],
+        sent_at=zeile.get("sent_at"),
+    )
+
+
+def _verlauf_antwort(roh: dict) -> ChatVerlauf:
+    return ChatVerlauf(
+        thread_id=str(roh["thread_id"]),
+        property_id=str(roh["property_id"]),
+        property_title=roh.get("property_title"),
+        items=[_zu_nachricht(z) for z in roh["items"]],
+        nicht_lesbar=int(roh.get("nicht_lesbar") or 0),
+    )

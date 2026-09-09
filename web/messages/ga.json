@@ -1157,7 +1157,13 @@
     "kiTestNoProperty": "Gan réad (fíricí ar fud an ghnó amháin)",
     "kiTestNoPropertyHint": "Gan réad roghnaithe, níl a fhios ag an AI an fillteán aoi ná an féilire — roghnaigh réad chun a fheiceáil cad atá ar eolas aici i gcás éigeandála.",
     "autoTrigger_on_checkin": "Ar lá teachta",
-    "autoTrigger_on_checkout": "Ar lá imeachta"
+    "autoTrigger_on_checkout": "Ar lá imeachta",
+    "eigentuemerChatHint": "Comhrá criptithe le húinéir — freagair san aip myNextDays.",
+    "eigentuemerChatTitel": "Criptiú ó cheann ceann",
+    "eigentuemerChatText": "Ní féidir na teachtaireachtaí seo a léamh ach ar an ngléas ar a bhfuil an comhrá socraithe. Oscail an stair san aip myNextDays.",
+    "eigentuemerKanal": "Úinéir",
+    "e2eVorschau": "Teachtaireacht Nua",
+    "e2eVorschauBild": "Íomhá"
   },
   "whatsapp": {
     "notConfigured": "Níl WhatsApp nasctha fós. Cuir na dintiúir (Meta Cloud API) i socruithe an fhreastalaí, ansin beidh an seoladh gníomhach.",

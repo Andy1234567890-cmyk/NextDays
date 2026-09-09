@@ -39,6 +39,16 @@ import { Btn, Chip, Col, Row, Spinner, Txt } from "@/components/ui/kit";
 import { EmptyState } from "@/components/ui/patterns";
 import { useAuth } from "@/contexts/AuthContext";
 import { channelMeta } from "@/lib/calendar-channels";
+import {
+  chatEinrichten,
+  eigentuemerAntworten,
+  empfaengerHolen,
+  getEigentuemerVerlauf,
+  nachrichtOeffnen,
+  verlaufFreigeben,
+} from "@/lib/chat";
+import { istLesbar } from "@/lib/chat-anzeige";
+import { geraeteIdLesen } from "@/lib/chat-krypto";
 import { inboxAccessFor } from "@/lib/inbox-access";
 import { heuteIso } from "@/lib/kalendertag";
 import { portalLabel } from "@/lib/portal-logos";
@@ -50,6 +60,7 @@ import {
   markInboxThreadRead,
   nachAktivitaet,
   NUR_ANHANG_TEXT,
+  istEigentuemerThread,
   sendInboxMessage,
   type AnfrageDetail,
   eskalationErledigen,
@@ -127,7 +138,6 @@ function ThreadList({
   useEffect(() => {
     load();
   }, [load]);
-
   // Verlinkten Thread öffnen, sobald die Liste geladen ist.
   useEffect(() => {
     if (autoOpened || !autoOpenId || !threads) return;
@@ -358,9 +368,29 @@ function fmtShortDate(iso: string | null): string {
 // des Backends (channel_manager/bookings_sync.py:_channel_of): ein Portal ohne
 // eigenen Kanalwert — Expedia, Agoda und alles Unbekannte — ist `ota_other`,
 // NICHT „Direkt". Ohne ota_name ist es eine echte Direktbuchung.
+/**
+ * Vorschautext einer Threadzeile — löst die Kürzel des Servers auf.
+ *
+ * `[e2e]`/`[e2e_bild]` kommen aus dem verschlüsselten Eigentümer-Chat (0611):
+ * der Server kennt den Inhalt NICHT und kann deshalb keine echte Vorschau
+ * liefern. Ohne diesen Zweig stünde in der Liste wörtlich „[e2e]" — derselbe
+ * Fehler wie das Wort „None" in der Glocke.
+ *
+ * Die App führt noch kein i18n, deshalb wie überall hier fester deutscher Text.
+ */
+function vorschauText(letzte: string | null): string {
+  if (letzte === NUR_ANHANG_TEXT) return "Foto";
+  if (letzte === "[e2e]") return "Neue Nachricht";
+  if (letzte === "[e2e_bild]") return "Bild";
+  return letzte ?? "—";
+}
+
 function channelKeyOf(ota: string | null): ReservationChannel {
   const s = (ota ?? "").trim().toLowerCase();
   if (!s) return "direct";
+  // Der Eigentümer-Chat ist KEIN Vertriebskanal (0611) — neutrale Farbe statt
+  // eines Portal-Abzeichens, das eine Buchungsquelle vortäuschte.
+  if (s === "[eigentuemer]") return "ota_other";
   if (s.includes("booking")) return "booking";
   if (s.includes("airbnb")) return "airbnb";
   if (s.includes("vrbo")) return "vrbo";
@@ -471,9 +501,7 @@ function ThreadRow({ thread, onPress }: { thread: InboxThread; onPress: () => vo
                   Kürzel ab (er kennt die Sprache des Betrachters nicht) — roh
                   stünde hier wörtlich „[attachment]". Die App führt noch kein
                   i18n, deshalb wie überall hier fester deutscher Text. */}
-              {thread.last_message === NUR_ANHANG_TEXT
-                ? "Foto"
-                : (thread.last_message ?? "—")}
+              {vorschauText(thread.last_message)}
             </Txt>
             {!thread.is_read && (
               <View style={{ width: 9, height: 9, borderRadius: 999, marginTop: 5, backgroundColor: t.palette.accent }} />
@@ -548,12 +576,90 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
   // erkannt oder eine Regel des Betriebs verlangt es. Sie steht ÜBER dem
   // Verlauf, nicht darin — sie ist der Grund, warum jemand hier gerade ist.
   const [eskalation, setEskalation] = useState<KiEskalation | null>(null);
+  // Eigentümer-Chat ohne eingerichtetes Gerät (0611): der Verlauf bleibt leer,
+  // und der Grund gehört benannt — sonst sieht es aus wie ein leeres Gespräch.
+  const [chatOhneGeraet, setChatOhneGeraet] = useState(false);
+  // Wurzel 2: der Knopf sperrt, solange die Einrichtung läuft — ein zweiter
+  // Druck legte sonst ein zweites Gerät für dasselbe Telefon an.
+  const [richtetEin, setRichtetEin] = useState(false);
+  // Wie viele Nachrichten dieses Gerät nicht öffnen kann (0611). Sichtbar
+  // gemacht statt verschwiegen — eine Lücke, die niemand sieht, ist der
+  // schlimmere Fehler (Wurzel 5).
+  const [nichtLesbar, setNichtLesbar] = useState(0);
+  // Wurzel 2: die Freigabe schreibt Schlüssel — ein zweiter Druck während des
+  // Laufs täte es doppelt.
+  const [gibtFrei, setGibtFrei] = useState(false);
+
   const verlauf = useRef<ScrollView>(null);
   // Steht der Verlauf am unteren Rand? Startet auf `true`, damit der erste
   // Aufbau eines frisch geöffneten Threads immer unten landet.
   const amEnde = useRef(true);
 
   const load = useCallback(async () => {
+    // Eigentümer-Chat (0611): eigener Lesepfad, weil der Inhalt Ende-zu-Ende
+    // verschlüsselt ist und auf DIESEM Gerät geöffnet werden muss. Der
+    // normale Endpunkt liefert für `eig:` zwar Zeilen, aber nur Chiffretext
+    // ohne die verpackten Schlüssel — angezeigt würde Buchstabensalat.
+    if (istEigentuemerThread(thread.id)) {
+      const geraet = await geraeteIdLesen();
+      if (!geraet) {
+        // Ohne registriertes Gerät ist der Verlauf nicht zu öffnen. Leere
+        // Liste plus Hinweis (unten), statt Chiffretext anzuzeigen.
+        setMessages([]);
+        setChatOhneGeraet(true);
+        return;
+      }
+      setChatOhneGeraet(false);
+      const res = await getEigentuemerVerlauf(thread.id, geraet);
+      if (!res.ok) {
+        // Den Zähler MIT zurücksetzen: sonst stünde neben einem leeren
+        // Verlauf weiter „3 ältere Nachrichten nicht lesbar" — eine Aussage
+        // über Daten, die gerade nicht geladen werden konnten (Wurzel 5).
+        setMessages([]);
+        setNichtLesbar(0);
+        return;
+      }
+      const offen: InboxMessage[] = [];
+      for (const n of res.data.items) {
+        // ZWEI verschiedene Gründe, warum hier nichts steht — und sie dürfen
+        // NICHT zusammenfallen (Wurzel 5): Fehlt der Schlüssel, ist die
+        // Nachricht älter als das Gerät. Schlägt die Entschlüsselung mit
+        // vorhandenem Schlüssel fehl, wurde am Chiffretext manipuliert (der
+        // GCM-Tag passt nicht). Das Zweite als „vor diesem Gerät geschrieben"
+        // auszugeben wäre eine beruhigende Falschaussage.
+        let klartext: string | null = null;
+        let manipuliert = false;
+        if (istLesbar(n)) {
+          try {
+            klartext = await nachrichtOeffnen(n);
+          } catch {
+            manipuliert = true;
+          }
+        }
+        offen.push({
+          id: n.id,
+          // Der Eigentümer nimmt im Posteingang die Gegenseite ein ("guest"),
+          // die Agentur unsere ("property") — so richtet die vorhandene
+          // Darstellung die Blasen ohne Sonderfall aus.
+          sender: n.sender === "owner" ? "guest" : "property",
+          message: klartext ?? "",
+          sent_at: n.sent_at,
+          author_name: n.sender_name,
+          // EIGENES Feld, nicht `attachments`: Das sind Bucket-PFADE zu
+          // verschlüsselten Bytes, keine URLs. In `attachments` gelegt,
+          // versucht der Bild-Block weiter unten sie als `source={{uri}}` zu
+          // laden — und zeigt ein kaputtes Bildfeld, dessen Kommentar
+          // ausdrücklich „vom Server geprüfte URL" behauptet.
+          e2e_bilder: n.bilder,
+          nicht_lesbar: klartext === null && !manipuliert,
+          manipuliert,
+        });
+      }
+      setMessages(offen);
+      setNichtLesbar(res.data.nicht_lesbar);
+      return;
+    }
+    setNichtLesbar(0);
     const res = await getInboxMessages(thread.id);
     setMessages(res.ok ? res.data.items : []);
   }, [thread.id]);
@@ -576,6 +682,75 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
   useEffect(() => {
     eskalationLaden();
   }, [eskalationLaden]);
+  /**
+   * Den Verlauf für ein ANDERES Gerät freigeben.
+   *
+   * DIESES Gerät kann den Verlauf lesen und packt die Inhaltsschlüssel für
+   * das gewählte Zielgerät neu ein. Der umgekehrte Fall — „gib ihn MIR frei" —
+   * ist unmöglich: Wer den Verlauf nicht lesen kann, kann ihn auch nicht
+   * weitergeben. Genau so war dieser Knopf bis zum 09.09.2026 gebaut, und er
+   * schlug deshalb immer fehl.
+   *
+   * Der Server prüft die Rolle (`admin`/`co_admin`) und dass das Zielgerät
+   * zum Empfängerkreis dieses Gesprächs gehört. Beides wird hier NICHT
+   * vorweggenommen: eine Client-Prüfung wäre eine Anzeige, keine Sperre.
+   */
+  const freigabeAnbieten = useCallback(async () => {
+    if (gibtFrei) return;
+    const empfaenger = await empfaengerHolen(thread.id).catch(() => null);
+    if (!empfaenger) {
+      Alert.alert("Nicht möglich", "Die Geräteliste konnte nicht geladen werden.");
+      return;
+    }
+    const eigenes = await geraeteIdLesen();
+    // Nur FREMDE Geräte: das eigene braucht keine Freigabe, und es anzubieten
+    // wäre der Fehler, den wir gerade behoben haben.
+    const andere = empfaenger.filter((e) => e.device_id !== eigenes);
+    if (andere.length === 0) {
+      Alert.alert("Nicht möglich", "Es gibt kein anderes Gerät in diesem Gespräch.");
+      return;
+    }
+    Alert.alert(
+      "Verlauf freigeben",
+      "Für welches Gerät soll der bisherige Verlauf lesbar werden?",
+      [
+        ...andere.slice(0, 3).map((e) => ({
+          text: e.seite === "owner" ? "Gerät des Eigentümers" : "Gerät im Team",
+          onPress: () => {
+            void (async () => {
+              setGibtFrei(true);
+              const res = await verlaufFreigeben(thread.id, e);
+              setGibtFrei(false);
+              if (!res.ok) {
+                Alert.alert("Nicht freigegeben", res.error);
+                return;
+              }
+              Alert.alert(
+                "Freigegeben",
+                `${res.data.nachgetragen} Nachrichten sind jetzt lesbar.`,
+              );
+            })();
+          },
+        })),
+        { text: "Abbrechen", style: "cancel" as const },
+      ],
+    );
+  }, [gibtFrei, thread.id]);
+
+  const chatEinrichtenHier = useCallback(async () => {
+    if (richtetEin) return;
+    setRichtetEin(true);
+    const name = `${Platform.OS === "ios" ? "iPhone" : "Android"} · ${new Date().toLocaleDateString()}`;
+    const res = await chatEinrichten(name);
+    setRichtetEin(false);
+    if (!res.ok) {
+      Alert.alert("Nicht eingerichtet", res.error);
+      return;
+    }
+    setChatOhneGeraet(false);
+    await load();
+  }, [richtetEin, load]);
+
 
   /** Zurücknehmen darf nur ein MENSCH — der Takt nicht, sonst erledigt sich
    *  der Hinweis von selbst und niemand hat hingesehen. */
@@ -690,6 +865,24 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
     setMessages((prev) => [...(prev ?? []), optimistic]);
     setDraft("");
 
+    // Eigentümer-Chat (0611): eigener Sendeweg. Der Textendpunkt weist einen
+    // `eig:`-Thread mit 422 ab — er kennt nur einen String, und serverseitig
+    // zu verschlüsseln wäre die Hintertür, die ADR-0029 ausschließt.
+    if (istEigentuemerThread(thread.id)) {
+      const antwort = await eigentuemerAntworten(thread.id, text);
+      setSending(false);
+      if (antwort.ok) {
+        // Nachladen statt Ersetzen: die Antwort trägt Chiffretext, kein
+        // Klartext — die Blase entsteht erst beim Entschlüsseln in `load`.
+        setMessages((prev) => (prev ?? []).filter((m) => m.id !== tempId));
+        await load();
+      } else {
+        setMessages((prev) => (prev ?? []).filter((m) => m.id !== tempId));
+        setDraft(text);
+        Alert.alert("Nicht gesendet", antwort.error);
+      }
+      return;
+    }
     const res = await sendInboxMessage(thread.id, text);
     setSending(false);
     if (res.ok) {
@@ -755,6 +948,77 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
           amEnde.current = rest < 80; // Toleranz: „praktisch unten"
         }}
       >
+        {/* Ältere Nachrichten sind auf diesem Gerät nicht lesbar — für sie
+            wurde nie ein Schlüssel verpackt. Die Betriebsleitung kann sie von
+            einem Gerät aus freigeben, das den Verlauf kennt. Ohne diesen Knopf
+            wäre der Hinweis „bitten Sie die Verwaltung" ein Verweis auf einen
+            Weg, den es nicht gibt (Attrappe). */}
+        {nichtLesbar > 0 && !chatOhneGeraet && (
+          <Col
+            gap={6}
+            style={{
+              borderWidth: 1,
+              borderColor: t.palette.line,
+              borderRadius: 14,
+              padding: 12,
+            }}
+          >
+            <Txt v="klein">
+              {nichtLesbar} ältere Nachrichten sind auf diesem Gerät nicht
+              lesbar.
+            </Txt>
+            <Txt v="klein" soft>
+              Ein Gerät, das den Verlauf bereits kennt, muss ihn freigeben —
+              dieses hier kann es nicht. Nur die Betriebsleitung darf das.
+            </Txt>
+          </Col>
+        )}
+
+        {/* Wer den Verlauf LESEN kann, kann ihn freigeben — der Knopf steht
+            deshalb hier und nicht im Hinweis oben (dort geht es um Nachrichten,
+            die genau dieses Gerät nicht öffnen kann). */}
+        {istEigentuemerThread(thread.id) &&
+          !chatOhneGeraet &&
+          nichtLesbar === 0 && (
+            <Btn
+              variant="ghost"
+              onPress={() => void freigabeAnbieten()}
+              disabled={gibtFrei}
+            >
+              {gibtFrei ? "Wird freigegeben …" : "Verlauf für ein Gerät freigeben"}
+            </Btn>
+          )}
+
+        {/* Eigentümer-Chat ohne eingerichtetes Gerät (0611): der Verlauf ist
+            verschlüsselt und bleibt leer. Ohne diesen Hinweis sähe der
+            Mitarbeiter ein leeres Gespräch und hielte es für unbeantwortet —
+            ein stiller Zustand, der wie eine Tatsache aussieht (Wurzel 5). */}
+        {chatOhneGeraet && (
+          <Col
+            gap={6}
+            style={{
+              borderWidth: 1,
+              borderColor: t.palette.line,
+              borderRadius: 14,
+              padding: 12,
+            }}
+          >
+            <Txt v="klein">
+              Dieses Gespräch ist Ende-zu-Ende verschlüsselt.
+            </Txt>
+            <Txt v="klein" soft>
+              Richten Sie den verschlüsselten Chat auf diesem Gerät ein, um
+              mitzulesen und zu antworten.
+            </Txt>
+            <Btn
+              onPress={() => void chatEinrichtenHier()}
+              disabled={richtetEin}
+            >
+              {richtetEin ? "Wird eingerichtet …" : "Chat einrichten"}
+            </Btn>
+          </Col>
+        )}
+
         {/* Die Eskalation steht GANZ oben: sie ist der Grund, warum jemand
             diesen Verlauf gerade öffnet (sie kommt per Push). Weiter unten
             wäre sie hinter dem Verlauf verborgen — und der springt beim Öffnen
@@ -826,10 +1090,58 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
                 maxWidth: "82%",
               }}
             >
+              {/* Eigentümer-Chat (0611): auf diesem Gerät nicht zu öffnen.
+                  Der Hinweis MUSS erscheinen — ohne ihn fiele die Nachricht
+                  durch die Leer-Prüfung unten aus dem Verlauf, und der
+                  Mitarbeiter sähe ein Gespräch mit Lücken, die er für
+                  vollständig hält (Wurzel 5). */}
+              {m.manipuliert && (
+                <View
+                  style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 10,
+                    borderRadius: 18,
+                    borderWidth: 1,
+                    borderColor: t.palette.star,
+                  }}
+                >
+                  <Txt v="klein" style={{ color: t.palette.star }}>
+                    Diese Nachricht konnte nicht geprüft werden — der Inhalt
+                    wurde nach dem Senden verändert.
+                  </Txt>
+                </View>
+              )}
+              {m.nicht_lesbar && (
+                <View
+                  style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 10,
+                    borderRadius: 18,
+                    borderWidth: 1,
+                    borderStyle: "dashed",
+                    borderColor: t.palette.line,
+                  }}
+                >
+                  <Txt v="klein" soft style={{ fontStyle: "italic" }}>
+                    Vor diesem Gerät geschrieben — hier nicht lesbar.
+                  </Txt>
+                </View>
+              )}
               {/* Die Blase entfällt, wenn der Gast NUR ein Foto geschickt hat
                   (Channex liefert die Nachricht dann ohne Text) — sonst stünde
                   hier ein leerer Kasten. */}
-              {!!m.message.trim() && (
+              {/* Bilder der Nachricht. Ohne diesen Block wäre eine reine
+                  Bildnachricht unsichtbar — die Leer-Prüfung unten greift bei
+                  leerem Text. */}
+              {!m.nicht_lesbar &&
+                !m.manipuliert &&
+                (m.e2e_bilder ?? []).length > 0 && (
+                  <Txt v="klein" soft>
+                    {(m.e2e_bilder ?? []).length} Bild(er) — in der
+                    Eigentümer-App ansehen.
+                  </Txt>
+                )}
+              {!m.nicht_lesbar && !m.manipuliert && !!m.message.trim() && (
                 <View
                   style={{
                     paddingHorizontal: 16,

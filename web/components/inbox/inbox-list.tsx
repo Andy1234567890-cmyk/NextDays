@@ -50,7 +50,7 @@ import {
   whatsAppDraftThread,
   whatsAppToThread,
 } from "@/components/inbox/inbox-whatsapp-threads";
-import { istUebernahme } from "@/components/inbox/inbox-uebernahme-threads";
+import { hatBuchungszeile } from "@/components/inbox/inbox-eigentuemer";
 import { istAnfrageThread } from "@/lib/inbox-anfrage-typen";
 import { WhatsAppChat } from "@/components/inbox/whatsapp-panel";
 import { Button } from "@nextdays/ui/button";
@@ -66,7 +66,7 @@ import {
   setInboxStatus,
   updateThreadFlags,
 } from "@/lib/inbox";
-import { NUR_ANHANG_TEXT } from "@/lib/chat-format";
+import { vorschauSchluessel } from "@/lib/chat-format";
 import { type InboxAccess } from "@/lib/inbox-access";
 import { channelLabelLoose } from "@/lib/channel-logos";
 import { useHydriert } from "@/lib/use-hydriert";
@@ -197,11 +197,13 @@ export function InboxList({
     setRows((prev) =>
       prev.map((r) => (r.id === current.id ? { ...r, is_read: true } : r)),
     );
-    // WhatsApp-Threads laufen nicht über den inbox-Slice — nur lokal spiegeln.
-    // Übernommene Verläufe (`ue:`) ebenso wenig: sie haben keine Zeile in
-    // `channex_booking`, gegen die die Flags geschrieben würden — der Aufruf
-    // liefe ins Leere (404). Ein eingefrorenes Archiv gilt ohnehin als gelesen.
-    if (!isWhatsApp(current.id) && !istUebernahme(current.id)) {
+    // Nur Threads MIT Buchungszeile kennen die Flag-Endpunkte. Alle
+    // Nebenquellen (WhatsApp, Übernahme, Eigentümer-Chat) haben dort keine
+    // Zeile — der Aufruf liefe in einen 404, und weil sein Ergebnis per `void`
+    // verworfen wird, bliebe der Fehler stumm: der Thread würde nie als
+    // gelesen markiert (Wurzel 5). Die Prüfung steht an EINER Stelle, damit
+    // nicht die eine Aufrufstelle `eig:` kennt und die nächste nicht.
+    if (hatBuchungszeile(current.id)) {
       void updateThreadFlags(current.id, { is_read: true });
     }
   }, [current]);
@@ -315,16 +317,29 @@ export function InboxList({
     id: string,
     status: "active" | "archived" | "trashed" | "deleted",
   ) {
+    // Ohne Buchungszeile gibt es serverseitig nichts zu setzen (404) — dann
+    // lieber gar nichts tun, als die Zeile lokal verschwinden zu lassen.
+    if (!hatBuchungszeile(id)) return;
+    const vorher = rows;
     const rest = filtered.filter((r) => r.id !== id);
     setRows((prev) => prev.filter((r) => r.id !== id));
     setActive(rest[0]?.id ?? null);
-    await setInboxStatus(id, status);
+    const res = await setInboxStatus(id, status);
+    if (!res?.ok) {
+      // ZURÜCKNEHMEN. Bisher wurde das Ergebnis nicht einmal angesehen: die
+      // Zeile war weg, nach F5 stand sie wieder da, und niemand erfuhr warum
+      // (Wurzel 5). Betrifft jeden Serverfehler, nicht nur Nebenquellen.
+      setRows(vorher);
+      setActive(id);
+    }
   }
 
   // Aktion: als ungelesen markieren. Der Wunsch wird gemerkt, damit „offen =
   // gelesen" ihn nicht sofort überschreibt; beim nächsten bewussten Öffnen des
   // Threads gilt wieder die Regel.
   async function markUnread(id: string) {
+    // Siehe oben: ohne Buchungszeile gibt es nichts zu schreiben.
+    if (!hatBuchungszeile(id)) return;
     ungelesenGewollt.current.add(id);
     await updateThreadFlags(id, { is_read: false });
     patchThread(id, { is_read: false });
@@ -893,8 +908,8 @@ export function InboxList({
                                   des Betrachters nicht) — die Worte macht erst
                                   die Oberfläche. */}
                               <span className="truncate">
-                                {th.last_message === NUR_ANHANG_TEXT
-                                  ? t("attachmentPreview")
+                                {vorschauSchluessel(th.last_message)
+                                  ? t(vorschauSchluessel(th.last_message)!)
                                   : th.last_message}
                               </span>
                             </span>

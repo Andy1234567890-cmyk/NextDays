@@ -207,23 +207,39 @@ Deckungsgleich mit `ios/MyNextDaysOwner/PrivacyInfo.xcprivacy`:
 | Andere Daten (Objekt-/Buchungsdaten des Eigentümers) | ja | ja | nein | App-Funktionalität |
 | Geräte- oder andere IDs | ja | ja | nein | App-Funktionalität (Push-Zustellung) |
 | Absturzprotokolle | ja | **nein** | nein | Fehlerbehebung |
+| Fotos oder Videos (Bild im Chat) | ja | ja | nein | App-Funktionalität |
 
-**Der Unterschied zu myNextDays: KEINE Fotos.** Im Store-Formular gehört hier
-„nicht erhoben", und das ist belegt, nicht angenommen:
-`android/app/src/main/AndroidManifest.xml` deklariert ausschließlich `INTERNET`
-und `POST_NOTIFICATIONS` — kein `CAMERA`, kein `READ_MEDIA_*`; es gibt keinen
-Picker und kein `lib/datei.ts` (die Datei fehlt absichtlich, die CI prüft das);
-kein Aufrufer erzeugt ein `FormData` (`lib/api.ts` KANN es, niemand nutzt es);
-und `screens/Fotoalbum.tsx` zeigt mit `<Image source={{uri}}>` nur Server-URLs
-an. Anzeigen ist kein Erheben. Das Privacy Manifest trug die Foto-Zeile
-zunächst aus der Kopiervorlage und wurde am 03.09.2026 korrigiert — eine
-Angabe, die das Binary nicht hergibt, ist bei Apple ein Sperrgrund, nicht die
-sichere Seite.
+**Fotos: seit dem 09.09.2026 JA** — im Store-Formular „Fotos oder Videos:
+erhoben, mit dem Konto verknüpft, kein Tracking, Zweck App-Funktionalität".
+
+Was sich geändert hat: Der Chat mit der Verwaltung (0611, ADR-0029) hat einen
+Bild-Anhang. Damit trägt die App `CAMERA` im `AndroidManifest.xml`,
+`NSCameraUsageDescription` + `NSPhotoLibraryUsageDescription` in der
+`Info.plist`, `NSPrivacyCollectedDataTypePhotosorVideos` im Privacy Manifest
+und `react-native-image-picker` als Abhängigkeit — `lib/chat-bild.ts` ist der
+eine Ort, an dem der Bildwähler angesprochen wird.
+
+KEIN `READ_MEDIA_IMAGES`: der System-Bildwähler liefert die Auswahl über einen
+temporären URI, ein Lese-Recht auf den gesamten Bildspeicher braucht die App
+dafür nicht — und was sie nicht braucht, fragt sie nicht ab.
+
+Erwähnenswert für die Formularantwort, aber KEINE andere Datenart: das Bild
+verlässt das Gerät **Ende-zu-Ende verschlüsselt**. Der Server lagert
+Chiffretext in einem privaten Bucket und kann ihn zu keinem Zeitpunkt ansehen.
+Für Apples und Googles Zwecke bleibt es trotzdem „erhoben" — es verlässt das
+Gerät, und das ist das Kriterium.
+
+Die Vorgeschichte, damit sie nicht als Widerspruch gelesen wird: Bis zum
+08.09.2026 stand hier „keine Fotos", und das war korrekt — es gab keinen
+Picker, keinen Upload-Pfad und keine Berechtigung. Das Privacy Manifest trug
+die Foto-Zeile fälschlich aus der Kopiervorlage und wurde am 03.09.2026
+entfernt. Eine Angabe, die das Binary nicht hergibt, ist bei Apple ein
+Sperrgrund, nicht die sichere Seite — jetzt gibt das Binary sie her.
 
 Nicht erhoben (Abhängigkeiten geprüft: React Navigation, supabase-js, Keychain,
 Gesture Handler, Safe Area, Screens, SVG, URL-Polyfill; Firebase nur `app` +
 `messaging` — kein Analytics-, Werbe- oder Crash-SDK):
-- kein Standort, keine Kontakte, keine Gesundheitsdaten, keine Fotos
+- kein Standort, keine Kontakte, keine Gesundheitsdaten
 - keine Nutzungs-/Verhaltensdaten
 - **kein Tracking** → kein ATT-Dialog
 

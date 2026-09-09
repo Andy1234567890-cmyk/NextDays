@@ -1157,7 +1157,13 @@
     "kiTestNoProperty": "Sem propriedade (apenas fatos de toda a empresa)",
     "kiTestNoPropertyHint": "Sem uma propriedade selecionada, a IA não conhece o guia do hóspede nem o calendário — selecione uma propriedade para ver o que ela realmente sabe.",
     "autoTrigger_on_checkin": "No dia da chegada",
-    "autoTrigger_on_checkout": "No dia da partida"
+    "autoTrigger_on_checkout": "No dia da partida",
+    "eigentuemerChatHint": "Chat criptografado do proprietário — responda no aplicativo myNextDays.",
+    "eigentuemerChatTitel": "Criptografia de ponta a ponta",
+    "eigentuemerChatText": "Estas mensagens só podem ser lidas no dispositivo onde o chat foi configurado. Abra o histórico no aplicativo myNextDays.",
+    "eigentuemerKanal": "Proprietário",
+    "e2eVorschau": "Nova mensagem",
+    "e2eVorschauBild": "Imagem"
   },
   "whatsapp": {
     "notConfigured": "O WhatsApp ainda não está ligado. Introduza as credenciais (Meta Cloud API) nas definições do servidor para ativar o envio.",

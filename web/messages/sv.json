@@ -1157,7 +1157,13 @@
     "kiTestNoProperty": "Utan objekt (endast företagsövergripande fakta)",
     "kiTestNoPropertyHint": "Utan valt objekt känner AI:n varken till gästmappen eller kalendern – välj ett objekt för att se vad den vet i ett nödfall.",
     "autoTrigger_on_checkin": "På ankomstdagen",
-    "autoTrigger_on_checkout": "På avresedagen"
+    "autoTrigger_on_checkout": "På avresedagen",
+    "eigentuemerChatHint": "Krypterad ägarchatt – svara i myNextDays-appen.",
+    "eigentuemerChatTitel": "End-to-end-krypterad",
+    "eigentuemerChatText": "Dessa meddelanden kan endast läsas på den enhet där chatten skapades. Öppna historiken i myNextDays-appen.",
+    "eigentuemerKanal": "Ägare",
+    "e2eVorschau": "Nytt meddelande",
+    "e2eVorschauBild": "Bild"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp är ännu inte anslutet. Ange inloggningsuppgifterna (Meta Cloud API) i serverinställningarna, då är utskicket aktivt.",

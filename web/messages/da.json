@@ -1157,7 +1157,13 @@
     "kiTestNoProperty": "Uden ejendom (kun fakta for hele virksomheden)",
     "kiTestNoPropertyHint": "Uden en valgt ejendom kender AI'en hverken gæstemappen eller kalenderen – vælg en ejendom for at se, hvad den ved i en nødsituation.",
     "autoTrigger_on_checkin": "På ankomstdagen",
-    "autoTrigger_on_checkout": "På afrejsedagen"
+    "autoTrigger_on_checkout": "På afrejsedagen",
+    "eigentuemerChatHint": "Krypteret ejersamtale – svar i myNextDays-appen.",
+    "eigentuemerChatTitel": "Ende-til-ende-krypteret",
+    "eigentuemerChatText": "Disse beskeder kan kun læses på den enhed, hvor chatten er oprettet. Åbn historikken i myNextDays-appen.",
+    "eigentuemerKanal": "Ejer",
+    "e2eVorschau": "Ny besked",
+    "e2eVorschauBild": "Billede"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp er endnu ikke forbundet. Angiv adgangsoplysningerne (Meta Cloud API) i serverindstillingerne, så er afsendelse aktiv.",

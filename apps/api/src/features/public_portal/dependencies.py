@@ -19,6 +19,7 @@ from src.features.tasks.service import TasksService
 from .aufgaben import PortalAufgabenService
 from .dienstleistungen import DienstleistungsService
 from .familie import FamilieError, OwnerFamilyService
+from .nachrichten import PortalChatService
 from .service import PublicPortalService
 
 log = get_logger("nextdays.public_portal.guard")
@@ -55,6 +56,15 @@ def get_owner_family_service() -> OwnerFamilyService:
 
 OwnerFamilyServiceDep = Annotated[
     OwnerFamilyService, Depends(get_owner_family_service)
+]
+
+
+def get_portal_chat_service() -> PortalChatService:
+    return PortalChatService(service_client=get_service_client())
+
+
+PortalChatServiceDep = Annotated[
+    PortalChatService, Depends(get_portal_chat_service)
 ]
 
 

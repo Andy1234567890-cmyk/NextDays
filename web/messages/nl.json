@@ -1157,7 +1157,13 @@
     "kiTestNoProperty": "Zonder object (alleen bedrijfsbrede feiten)",
     "kiTestNoPropertyHint": "Zonder geselecteerd object kent de AI geen gastenmap of kalender — selecteer een object om te zien wat het in een noodgeval weet.",
     "autoTrigger_on_checkin": "Op de aankomstdag",
-    "autoTrigger_on_checkout": "Op de vertrekdag"
+    "autoTrigger_on_checkout": "Op de vertrekdag",
+    "eigentuemerChatHint": "Versleutelde chat met eigenaar — antwoorden in de myNextDays-app.",
+    "eigentuemerChatTitel": "End-to-end versleuteld",
+    "eigentuemerChatText": "Deze berichten kunnen alleen worden gelezen op het apparaat waarop de chat is ingesteld. Open de geschiedenis in de myNextDays-app.",
+    "eigentuemerKanal": "Eigenaar",
+    "e2eVorschau": "Nieuw bericht",
+    "e2eVorschauBild": "Afbeelding"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp is nog niet verbonden. Voer de inloggegevens (Meta Cloud API) in de serverinstellingen in, dan is verzending actief.",

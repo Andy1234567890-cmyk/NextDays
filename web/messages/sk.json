@@ -1157,7 +1157,13 @@
     "kiTestNoProperty": "Bez objektu (len fakty pre celú prevádzku)",
     "kiTestNoPropertyHint": "Bez vybraného objektu AI nepozná ani informačnú zložku pre hostí, ani kalendár – vyberte objekt, aby ste videli, čo vie v prípade núdze.",
     "autoTrigger_on_checkin": "V deň príchodu",
-    "autoTrigger_on_checkout": "V deň odchodu"
+    "autoTrigger_on_checkout": "V deň odchodu",
+    "eigentuemerChatHint": "Šifrovaný chat s majiteľom — odpovedajte v aplikácii myNextDays.",
+    "eigentuemerChatTitel": "Šifrované end-to-end",
+    "eigentuemerChatText": "Tieto správy je možné čítať iba na zariadení, na ktorom bol chat nastavený. Otvorte históriu v aplikácii myNextDays.",
+    "eigentuemerKanal": "Majiteľ",
+    "e2eVorschau": "Nová správa",
+    "e2eVorschauBild": "Obrázok"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp zatiaľ nie je prepojený. Zadajte prístupové údaje (Meta Cloud API) v nastaveniach servera, potom bude odosielanie aktívne.",

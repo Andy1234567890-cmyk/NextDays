@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@craftzdog/react-native-buffer": "6.1.2",
     "@react-native-firebase/app": "26.3.1",
     "@react-native-firebase/messaging": "26.3.1",
     "@react-navigation/bottom-tabs": "^7.3.0",
@@ -20,7 +21,11 @@
     "react": "19.2.3",
     "react-native": "0.86.0",
     "react-native-gesture-handler": "^2.20.0",
+    "react-native-image-picker": "8.2.1",
     "react-native-keychain": "^10.0.0",
+    "react-native-nitro-modules": "0.37.1",
+    "react-native-quick-base64": "3.0.1",
+    "react-native-quick-crypto": "1.1.7",
     "react-native-safe-area-context": "^5.5.2",
     "react-native-screens": "^4.25.0",
     "react-native-svg": "^15.15.0",

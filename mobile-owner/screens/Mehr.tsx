@@ -55,11 +55,20 @@ export default function Mehr({ navigation }: { navigation: Nav }) {
         </Kachel>
 
         <Kachel pad={0}>
+          {/* Ganz oben: der Chat ist der einzige Weg, die Verwaltung ZU
+              ERREICHEN — alles andere in dieser Liste ist Nachschlagen. */}
+          <Reihe
+            icon="chat"
+            titel={txt("chat.titel")}
+            unter={txt("chat.verschluesselt")}
+            auf={() => navigation.navigate("Nachrichten")}
+          />
           <Reihe
             icon="check"
             titel={txt("mehr.aufgaben")}
             unter={txt("mehr.aufgabenText")}
             auf={() => navigation.navigate("Aufgaben")}
+            erste={false}
           />
           <Reihe
             icon="card"

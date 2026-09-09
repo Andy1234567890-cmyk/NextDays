@@ -1157,7 +1157,13 @@
     "kiTestNoProperty": "Objekt nélkül (csak az egész vállalatra vonatkozó tények)",
     "kiTestNoPropertyHint": "Kiválasztott objektum nélkül az AI nem ismeri sem a vendégkönyvet, sem a naptárat – válasszon egy objektumot, hogy lássa, mit tudna valós esetben.",
     "autoTrigger_on_checkin": "Érkezés napján",
-    "autoTrigger_on_checkout": "Távozás napján"
+    "autoTrigger_on_checkout": "Távozás napján",
+    "eigentuemerChatHint": "Titkosított tulajdonosi csevegés – válaszoljon a myNextDays alkalmazásban.",
+    "eigentuemerChatTitel": "Végpontok közötti titkosítás",
+    "eigentuemerChatText": "Ezek az üzenetek csak azon az eszközön olvashatók, amelyen a csevegés be van állítva. Nyissa meg az előzményeket a myNextDays alkalmazásban.",
+    "eigentuemerKanal": "Tulajdonos",
+    "e2eVorschau": "Új üzenet",
+    "e2eVorschauBild": "Kép"
   },
   "whatsapp": {
     "notConfigured": "A WhatsApp még nincs csatlakoztatva. Adja meg a hozzáférési adatokat (Meta Cloud API) a kiszolgáló beállításaiban, ezután a küldés aktív.",

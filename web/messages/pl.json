@@ -1157,7 +1157,13 @@
     "kiTestNoProperty": "Bez obiektu (tylko fakty dotyczące całej działalności)",
     "kiTestNoPropertyHint": "Bez wybranego obiektu sztuczna inteligencja nie zna ani informatora dla gości, ani kalendarza — proszę wybrać obiekt, aby zobaczyć, co wie w nagłych wypadkach.",
     "autoTrigger_on_checkin": "W dniu przyjazdu",
-    "autoTrigger_on_checkout": "W dniu wyjazdu"
+    "autoTrigger_on_checkout": "W dniu wyjazdu",
+    "eigentuemerChatHint": "Szyfrowany czat z właścicielem — odpowiedz w aplikacji myNextDays.",
+    "eigentuemerChatTitel": "Szyfrowanie end-to-end",
+    "eigentuemerChatText": "Te wiadomości można odczytać tylko na urządzeniu, na którym skonfigurowano czat. Otwórz historię w aplikacji myNextDays.",
+    "eigentuemerKanal": "Właściciel",
+    "e2eVorschau": "Nowa wiadomość",
+    "e2eVorschauBild": "Obraz"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp nie jest jeszcze połączony. Wprowadź dane dostępowe (Meta Cloud API) w ustawieniach serwera, aby aktywować wysyłkę.",

@@ -418,6 +418,15 @@ jobs:
       - name: Enums und Labels deckungsgleich
         if: steps.pruefen.outputs.laufen == 'true'
         run: node scripts/i18n/kanal-enums-pruefen.mjs
+      - name: Nebenquellen-Praefixe deckungsgleich
+        if: steps.pruefen.outputs.laufen == 'true'
+        # Ein Thread ohne Zeile in `channex_booking` kennt die Flag-Endpunkte
+        # nicht. Fehlt sein Praefix an einer der drei Stellen, laeuft der
+        # Aufruf in einen 404 — und weil die Oberflaeche das Ergebnis
+        # verwirft, gilt der Thread fuer IMMER als ungelesen. Genau so fehlte
+        # `eig:` (0611) im Frontend, und dort stand ein `wa-neu:`, das es nie
+        # gab.
+        run: node scripts/i18n/nebenquellen-praefixe-pruefen.mjs
       - name: Rollen-Kette (DB → Pydantic → Unions → Labels)
         if: steps.pruefen.outputs.laufen == 'true'
         run: node scripts/i18n/rollen-pruefen.mjs
@@ -682,19 +691,39 @@ jobs:
   # eingerichtet. Ein Lauf hier würde einen Fehler melden, der keiner ist.
   # Bekommt die Schwester-App ihren Release-Weg, gehört sie hier ergänzt.
   mobile-android-release:
-    name: Mobile (Android-Release-Build myNextDays)
+    name: Mobile (Android-Release-Build ${{ matrix.app }})
     needs: [betroffen]
     # Hier ist ein Job-`if` RICHTIG und nicht das Muster der anderen Pruefjobs:
     # dieser Job steht NICHT in `deploy.needs`, ein skipped kann den Deploy also
     # nicht mit-ueberspringen. Und er ist der teuerste im ganzen Workflow
-    # (JDK + Android-SDK + Gradle, ~10 Minuten) — er soll wirklich uebersprungen
-    # werden, nicht bloss leer durchlaufen. Bereich `mobile-android` haengt
-    # allein an mobile-nextdays/ (bereiche.txt).
-    if: needs.betroffen.outputs.mobile-android == 'true'
+    # (JDK + Android-SDK + Gradle, ~10 Minuten je App) — er soll wirklich
+    # uebersprungen werden, nicht bloss leer durchlaufen.
+    #
+    # ZWEI APPS seit dem 09.09.2026 (vorher nur mobile-nextdays). Der Anlass:
+    # `mobile-owner` bekam mit dem Eigentuemer-Chat (0611) eine
+    # CAMERA-Berechtigung und ein natives Modul (react-native-quick-crypto mit
+    # Nitro). Beides kann den Release-Build brechen, ohne dass ein einziger
+    # Test rot wird — Jest und tsc sehen die Gradle-Seite nicht. Ohne diesen
+    # Job faellt so ein Bruch erst beim VERTEILEN auf, also dann, wenn man
+    # ausliefern will.
+    #
+    # `mobile-bestdays` fehlt hier bewusst: die App hat noch keinen
+    # Release-Workflow-Lauf hinter sich und keinen eigenen Bereich; sie kommt
+    # dazu, sobald sie ausgeliefert wird (Reihenfolge nach ADR-0022).
+    if: needs.betroffen.outputs[format('mobile-android-{0}', matrix.kuerzel)] == 'true'
     runs-on: ubuntu-latest
+    strategy:
+      # Eine gebrochene App darf die Pruefung der anderen nicht verdecken.
+      fail-fast: false
+      matrix:
+        include:
+          - app: mobile-nextdays
+            kuerzel: nextdays
+          - app: mobile-owner
+            kuerzel: owner
     defaults:
       run:
-        working-directory: mobile-nextdays
+        working-directory: ${{ matrix.app }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -725,8 +754,8 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-mynextdays-${{ hashFiles('mobile-nextdays/android/**/*.gradle*', 'mobile-nextdays/android/gradle/wrapper/gradle-wrapper.properties') }}
-          restore-keys: gradle-mynextdays-
+          key: gradle-${{ matrix.kuerzel }}-${{ hashFiles(format('{0}/android/**/*.gradle*', matrix.app), format('{0}/android/gradle/wrapper/gradle-wrapper.properties', matrix.app)) }}
+          restore-keys: gradle-${{ matrix.kuerzel }}-
 
       - name: Abhängigkeiten installieren
         run: bun install --frozen-lockfile
@@ -752,21 +781,32 @@ jobs:
         #
         # Der Schritt spricht NICHT mit Google: er dekodiert ein Secret in eine
         # Datei. Kein API-Aufruf, keine Aenderung am Firebase-Projekt.
+        #
+        # JE APP EIN EIGENES SECRET, und das ist keine Kosmetik: die Datei
+        # traegt den PAKETNAMEN (`com.mynextdays` bzw. `com.mynextdays.owner`).
+        # Nimmt der Build die falsche, bricht `processReleaseGoogleServices`
+        # mit „No matching client found for package name" ab. Der Praefix ist
+        # derselbe wie im jeweiligen Verteil-Workflow und in
+        # `scripts/mobile/release-kette-pruefen.sh`.
         env:
-          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.MYNEXTDAYS_GOOGLE_SERVICES_JSON_BASE64 }}
+          GOOGLE_SERVICES_JSON_BASE64: ${{ matrix.kuerzel == 'owner' && secrets.MYNEXTDAYSOWNER_GOOGLE_SERVICES_JSON_BASE64 || secrets.MYNEXTDAYS_GOOGLE_SERVICES_JSON_BASE64 }}
+          SECRET_NAME: ${{ matrix.kuerzel == 'owner' && 'MYNEXTDAYSOWNER_GOOGLE_SERVICES_JSON_BASE64' || 'MYNEXTDAYS_GOOGLE_SERVICES_JSON_BASE64' }}
         run: |
           set -euo pipefail
           if [ -z "${GOOGLE_SERVICES_JSON_BASE64:-}" ]; then
-            echo "::error::Secret MYNEXTDAYS_GOOGLE_SERVICES_JSON_BASE64 fehlt."
+            echo "::error::Secret $SECRET_NAME fehlt."
             exit 1
           fi
           printf '%s' "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > android/app/google-services.json
           # Zurueckpruefen statt vertrauen: ein abgeschnittenes Secret gaebe
           # sonst erst im Gradle-Lauf einen unverstaendlichen Fehler.
-          python3 -c "import json; d=json.load(open('android/app/google-services.json')); print('ok, Projekt:', d['project_info']['project_id'])"
+          # Projekt UND Paketname zurueckpruefen: ein gueltiges JSON der
+          # FALSCHEN App wuerde sonst erst im Gradle-Lauf auffallen, mit
+          # „No matching client found for package name".
+          python3 -c "import json; d=json.load(open('android/app/google-services.json')); print('ok, Projekt:', d['project_info']['project_id'], 'Pakete:', [c['client_info']['android_client_info']['package_name'] for c in d.get('client', [])])"
 
       - name: Release bauen (unsigniert)
-        working-directory: mobile-nextdays/android
+        working-directory: ${{ matrix.app }}/android
         # Feste Platzhalter-Version: `versionCode`/`versionName` leitet der
         # Verteil-Workflow aus der Lauf-Nummer ab. Hier zählt nur, dass der
         # Build durchläuft; eine erfundene „echte" Version wäre irreführend.
@@ -781,7 +821,7 @@ jobs:
         # (eine Variante kann übersprungen werden). Also nachsehen — und
         # ausdrücklich festhalten, dass es UNSIGNIERT ist, damit niemand dieses
         # Artefakt für verteilbar hält.
-        working-directory: mobile-nextdays/android
+        working-directory: ${{ matrix.app }}/android
         run: |
           set -euo pipefail
           apk=$(find app/build/outputs/apk/release -name '*.apk' | head -1)
@@ -880,6 +920,31 @@ jobs:
             exit 1
           fi
 
+          # PAARWEISE, ohne mobile-bestdays: Der Eigentuemer-Chat (0611) hat
+          # zwei Schwesterdateien, die es im Marktplatz NICHT gibt und geben
+          # soll — dort schreibt kein Eigentuemer mit seiner Verwaltung. Die
+          # Referenzliste oben kann sie deshalb nicht pruefen.
+          #
+          # Warum sie trotzdem gleich bleiben MUESSEN: `chat-krypto.ts` ist
+          # beide Haelften einer Verschluesselung. Driftet eine App, chiffriert
+          # sie anders, als die andere dechiffriert — und das zeigt sich nicht
+          # als Absturz, sondern als Nachricht, die beim Empfaenger nicht
+          # aufgeht. `chat-anzeige.ts` entscheidet, WANN etwas als unlesbar
+          # gilt; zwei Fassungen hiessen, dieselbe Nachricht waere in der einen
+          # App lesbar und in der anderen nicht.
+          for f in lib/chat-krypto.ts lib/chat-anzeige.ts; do
+            diff -u "mobile-owner/$f" "mobile-nextdays/$f"
+          done
+
+      - name: Chat-Krypto-Kette schluessig
+        if: steps.pruefen.outputs.laufen == 'true'
+        # Prueft, dass Verschluesseln und Entschluesseln des Eigentuemer-Chats
+        # ZUSAMMENPASSEN (0611-0614). Jest kann das nicht: quick-crypto ist ein
+        # natives Modul. Genau in dieser Luecke steckten die drei schwersten
+        # Fehler — u. a. eine Freigabe, die vollstaendig gebaut war und
+        # kryptografisch nie funktionieren konnte.
+        run: node scripts/diagnose/chat-krypto-kette-pruefen.mjs
+
       - name: Ausstattungs-Labels aus web/messages erzeugt
         if: steps.pruefen.outputs.laufen == 'true'
         # `lib/ausstattung.ts` ist GENERIERT. Ohne diesen Schritt fällt eine
@@ -895,6 +960,12 @@ jobs:
         # reproduziert sich dann nur in einer der beiden Apps.
         run: |
           set -e
+          # react-native-quick-crypto + nitro-modules + quick-base64 +
+          # @craftzdog/react-native-buffer (09.09.2026, 0611): die
+          # Verschluesselung des Eigentuemer-Chats. Zwei Fassungen hiessen zwei
+          # verschiedene native Krypto-Module bei gleichem JS — und der Fehler
+          # zeigte sich als Nachricht, die beim Empfaenger nicht aufgeht.
+          #
           # @react-native-documents/picker (28.08.2026): liefert den
           # System-Dateiwaehler fuer Anhaenge. Zwei Fassungen hiessen zwei
           # verschiedene native Module bei gleichem JS — ein Fehler, der sich
@@ -915,6 +986,25 @@ jobs:
               [ "$b" = "null" ] && continue
               [ "$a" = "$b" ] || { echo "$p: $a (bestdays) != $b ($app)"; exit 1; }
             done
+          done
+
+          # PAARWEISE, ohne mobile-bestdays: Die Krypto-Pakete des
+          # Eigentuemer-Chats (0611) gibt es im Marktplatz nicht — dort
+          # schreibt kein Eigentuemer mit seiner Verwaltung. Die Schleife oben
+          # koennte sie deshalb nur ueberspringen.
+          #
+          # Gleichstand ist hier besonders wichtig: `chat-krypto.ts` ist eine
+          # byte-identische Schwesterdatei, laeuft aber gegen NATIVE Module.
+          # Zwei Fassungen von quick-crypto heissen zwei verschiedene
+          # Implementierungen bei identischem JS — und der Fehler zeigt sich
+          # als Nachricht, die beim Empfaenger nicht aufgeht, nicht als
+          # Absturz.
+          for p in react-native-quick-crypto react-native-nitro-modules \
+                   react-native-quick-base64 @craftzdog/react-native-buffer; do
+            a=$(jq -r --arg p "$p" '.dependencies[$p]' mobile-owner/package.json)
+            b=$(jq -r --arg p "$p" '.dependencies[$p]' mobile-nextdays/package.json)
+            [ "$a" = "$b" ] || { echo "$p: $a (owner) != $b (nextdays)"; exit 1; }
+            [ "$a" = "null" ] && { echo "$p fehlt in beiden Apps — der Chat braucht es."; exit 1; }
           done
 
   marketing-konsistenz:
@@ -999,7 +1089,8 @@ jobs:
       mobile-bestdays: ${{ steps.bereiche.outputs.mobile-bestdays }}
       mobile-nextdays: ${{ steps.bereiche.outputs.mobile-nextdays }}
       mobile-owner: ${{ steps.bereiche.outputs.mobile-owner }}
-      mobile-android: ${{ steps.bereiche.outputs.mobile-android }}
+      mobile-android-nextdays: ${{ steps.bereiche.outputs.mobile-android-nextdays }}
+      mobile-android-owner: ${{ steps.bereiche.outputs.mobile-android-owner }}
       mobile-konsistenz: ${{ steps.bereiche.outputs.mobile-konsistenz }}
       marketing-konsistenz: ${{ steps.bereiche.outputs.marketing-konsistenz }}
     steps:

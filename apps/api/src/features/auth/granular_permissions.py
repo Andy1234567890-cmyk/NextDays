@@ -58,6 +58,11 @@ class Permission(StrEnum):
     PM_VIEW_BOOKING_IMAGES = "pm_view_booking_images"
     PM_DETAILED_PAYMENTS = "pm_detailed_payments"
     PM_OWNER_DETAILS = "pm_owner_details"
+    # Chat des EIGENTÜMERS mit der Verwaltung (0611). Eigenes Recht statt
+    # PM_CHAT: das liegt unter dem PM-Dach (ACCESS_PM_FEATURES), das für die
+    # Rolle `owner` bewusst NICHT gilt — es beschreibt Flächen im PMS. Der
+    # Eigentümer-Chat ist seine eigene Fläche im Portal.
+    OWNER_CHAT = "owner_chat"
     PM_VIEW_PROPERTY_IMAGES = "pm_view_property_images"
     PM_WEBSITE_ACCESS = "pm_website_access"
     # --- Posteingang (Enterprise-Achsen: Scope/Actions) ---
@@ -122,6 +127,10 @@ _OWNER: frozenset[Permission] = frozenset({
     Permission.PM_PHOTO_ALBUM,
     Permission.PM_VIEW_PROPERTY_IMAGES,
     Permission.PM_NONREVENUE_CHARTS,
+    # Der Chat mit der Verwaltung gehört zur Grundausstattung: ein Eigentümer
+    # ohne Weg, seine Agentur zu erreichen, hat kein Portal, sondern eine
+    # Anzeigetafel.
+    Permission.OWNER_CHAT,
 })
 
 _STAFF: frozenset[Permission] = frozenset({

@@ -1157,7 +1157,13 @@
     "kiTestNoProperty": "Bez objekta (samo činjenice o cijelom poslovanju)",
     "kiTestNoPropertyHint": "Bez odabranog objekta, AI ne poznaje ni mapu za goste ni kalendar – odaberite objekt da biste vidjeli što zna u hitnim slučajevima.",
     "autoTrigger_on_checkin": "Na dan dolaska",
-    "autoTrigger_on_checkout": "Na dan odlaska"
+    "autoTrigger_on_checkout": "Na dan odlaska",
+    "eigentuemerChatHint": "Šifrirani razgovor s vlasnikom — odgovorite u aplikaciji myNextDays.",
+    "eigentuemerChatTitel": "End-to-end šifrirano",
+    "eigentuemerChatText": "Ove se poruke mogu čitati samo na uređaju na kojem je chat postavljen. Otvorite povijest u aplikaciji myNextDays.",
+    "eigentuemerKanal": "Vlasnik",
+    "e2eVorschau": "Nova poruka",
+    "e2eVorschauBild": "Slika"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp još nije povezan. Unesite pristupne podatke (Meta Cloud API) u postavkama poslužitelja, nakon toga je slanje aktivno.",

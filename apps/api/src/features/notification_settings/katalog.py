@@ -138,6 +138,27 @@ KATALOG: tuple[Kategorie, ...] = (
         "owner_service", Tab.KONTO, "aufgaben", _MAIL_SMS_PUSH,
         push_app=_OWNER_APP,
     ),
+    # --- Eigentuemer-Chat (0611, ADR-0029) --------------------------------
+    # ZWEI Kategorien, weil sie an verschiedene APPS gehen — dieselbe
+    # Begruendung wie bei block_request/block_decision: `owner_chat` meldet dem
+    # EIGENTUEMER, dass die Verwaltung geschrieben hat (Eigentuemer-App),
+    # `betrieb_chat` meldet dem BETRIEB die Nachricht des Eigentuemers
+    # (Verwaltungs-App). Eine gemeinsame Kategorie liesse sich nur fuer beide
+    # Richtungen zugleich abschalten.
+    #
+    # KEINE SMS: der Inhalt ist Ende-zu-Ende verschluesselt (ADR-0029), eine
+    # SMS koennte also nur „neue Nachricht" sagen — dafuer ist sie zu teuer und
+    # zu aufdringlich. Aus demselben Grund `email_pflicht=False`: eine Mail
+    # ohne Inhalt ist ein Klick-Anreiz, keine Information.
+    #
+    # Der TEXT der Meldung nennt NIE den Nachrichteninhalt — der Server kennt
+    # ihn nicht. Wer hier je einen Auszug einbaut, hat entweder Chiffretext
+    # verschickt oder die Verschluesselung aufgehoben.
+    Kategorie(
+        "owner_chat", Tab.KONTO, "aktivitaet", _MAIL_PUSH,
+        push_app=_OWNER_APP,
+    ),
+    Kategorie("betrieb_chat", Tab.KONTO, "aktivitaet", _MAIL_PUSH),
     # --- Betrieb: Buchungseingang (16.08.2026) ----------------------------
     # Wieder eine eigene Kategorie und kein Mitbenutzen von `owner_booking` —
     # aus demselben Grund wie oben, dem EMPFAENGER: `owner_booking` geht an den

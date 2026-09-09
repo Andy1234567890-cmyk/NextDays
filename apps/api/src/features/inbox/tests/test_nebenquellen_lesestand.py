@@ -92,8 +92,34 @@ def test_tabelle_ist_gegen_direktzugriff_gesperrt() -> None:
     assert "read_at    timestamptz not null" in sql
 
 
-def test_alle_vier_praefixe_sind_abgedeckt() -> None:
-    """Nicht nur Anfragen: dieselbe Luecke haben mb:/ue:/wa:."""
+def test_jede_nebenquelle_ist_abgedeckt() -> None:
+    """JEDE Quelle mit eigenem Präfix gehört in die Liste.
+
+    Nicht nur Anfragen — dieselbe Lücke haben alle Quellen ohne Zeile in
+    `channex_booking`: ein Flag-Zugriff läuft dort in einen UUID-Cast auf
+    „<praefix>…", der Fehler wird im Frontend verworfen, und der Thread gilt
+    nie als gelesen.
+
+    KEINE feste Menge mehr (09.09.2026, beim Zufügen von `eig:`): Die
+    Aufzählung war eine Momentaufnahme und brach bei jeder neuen Quelle, ohne
+    je den Fehler zu finden, um den es geht. Geprüft wird die REGEL — die
+    Präfixe der Module sind die Quelle der Wahrheit, die Liste im Service
+    muss sie enthalten.
+    """
+    from src.features.inbox import anfragen, eigentuemer, marktplatz, uebernahme
     from src.features.inbox.service import _NEBENQUELLEN_PRAEFIXE
 
-    assert set(_NEBENQUELLEN_PRAEFIXE) == {"anfrage:", "mb:", "ue:", "wa:"}
+    aus_den_modulen = {
+        anfragen.PREFIX,
+        eigentuemer.PREFIX,
+        marktplatz.PREFIX,
+        uebernahme.PREFIX,
+    }
+    fehlend = aus_den_modulen - set(_NEBENQUELLEN_PRAEFIXE)
+    assert not fehlend, (
+        f"Diese Präfixe fehlen in _NEBENQUELLEN_PRAEFIXE: {sorted(fehlend)} — "
+        "ohne sie läuft jeder Flag-Zugriff auf einen solchen Thread in einen "
+        "stillen Fehler."
+    )
+    # WhatsApp hat kein Modul mit `PREFIX`, gehört aber dazu (0509).
+    assert "wa:" in _NEBENQUELLEN_PRAEFIXE

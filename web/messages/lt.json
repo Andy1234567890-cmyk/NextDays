@@ -1157,7 +1157,13 @@
     "kiTestNoProperty": "Be objekto (tik faktai apie visą įmonę)",
     "kiTestNoPropertyHint": "Nepasirinkus objekto, dirbtinis intelektas nežino nei svečių aplanko, nei kalendoriaus – pasirinkite objektą, kad pamatytumėte, ką jis žino iš tikrųjų.",
     "autoTrigger_on_checkin": "Atvykimo dieną",
-    "autoTrigger_on_checkout": "Išvykimo dieną"
+    "autoTrigger_on_checkout": "Išvykimo dieną",
+    "eigentuemerChatHint": "Šifruotas savininko pokalbis – atsakykite programėlėje „myNextDays“.",
+    "eigentuemerChatTitel": "Šifravimas nuo galo iki galo",
+    "eigentuemerChatText": "Šias žinutes galima perskaityti tik įrenginyje, kuriame nustatytas pokalbis. Atidarykite istoriją programėlėje „myNextDays“.",
+    "eigentuemerKanal": "Savininkas",
+    "e2eVorschau": "Naujas pranešimas",
+    "e2eVorschauBild": "Paveikslėlis"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp dar neprijungtas. Įveskite prisijungimo duomenis (Meta Cloud API) serverio nustatymuose, tada siuntimas bus aktyvus.",

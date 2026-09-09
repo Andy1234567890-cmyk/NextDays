@@ -74,9 +74,22 @@ kanal-enums|supabase/migrations/ apps/api/src/features/subscriptions/ apps/api/s
 mobile-bestdays|mobile-bestdays/
 mobile-nextdays|mobile-nextdays/
 mobile-owner|mobile-owner/
-# Der teure Job. NUR myNextDays hat Keystore und Firebase-App, deshalb hängt er
-# allein an diesem Baum.
-!mobile-android|mobile-nextdays/
+# Der teure Job (JDK + Android-SDK + Gradle, ~10 Min je App). JE APP ein
+# eigener Bereich, damit eine Änderung an myNextDays nicht auch den Build der
+# Eigentümer-App auslöst und umgekehrt.
+#
+# Seit dem 09.09.2026 auch mobile-owner: die App hat mit dem Eigentümer-Chat
+# (0611) eine CAMERA-Berechtigung und ein natives Modul bekommen
+# (react-native-quick-crypto/Nitro). Beides kann den Release-Build brechen,
+# ohne dass ein Test rot wird — Jest und tsc sehen die Gradle-Seite nicht.
+# Der frühere Kommentar „NUR myNextDays hat Keystore und Firebase-App" gilt
+# nicht mehr: `scripts/mobile/release-kette-pruefen.sh` führt für mobile-owner
+# Workflow, Tester-Gruppe und Keystore-Präfix (MYNEXTDAYSOWNER).
+#
+# mobile-bestdays fehlt bewusst — sie wird als letzte ausgeliefert (ADR-0022)
+# und bekommt ihren Bereich, sobald das ansteht.
+!mobile-android-nextdays|mobile-nextdays/
+!mobile-android-owner|mobile-owner/
 # Diffed die 10 Schwesterdateien BEIDER Apps und ruft
 # `ausstattung-labels-sync.mjs --pruefen`, das `lib/ausstattung.ts` aus
 # web/messages/de.json erzeugt — web/messages MUSS hier stehen.

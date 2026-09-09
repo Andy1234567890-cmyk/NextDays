@@ -19,6 +19,11 @@ import {
 import { ComposerEditor } from "@/components/inbox/composer-editor";
 import { AnfrageKarte } from "@/components/inbox/inbox-anfrage";
 import { istAnfrageThread } from "@/lib/inbox-anfrage-typen";
+import {
+  hatBuchungszeile,
+  istEigentuemerThread,
+} from "@/components/inbox/inbox-eigentuemer";
+import { kanalSchluessel } from "@/lib/chat-format";
 import { istUebernahme } from "@/components/inbox/inbox-uebernahme-threads";
 import { WissenFaktPanel } from "@/components/inbox/wissen-fakt-panel";
 import {
@@ -451,7 +456,11 @@ export function Conversation({
             {/* Objekt zuerst: es beantwortet die häufigste Rückfrage beim Lesen
                 eines Threads („welche Unterkunft?"). */}
             {thread.property_title ? `${thread.property_title} · ` : ""}
-            {thread.ota_name ? channelLabelLoose(thread.ota_name) : t("directChannel")}
+            {kanalSchluessel(thread.ota_name)
+              ? t(kanalSchluessel(thread.ota_name)!)
+              : thread.ota_name
+                ? channelLabelLoose(thread.ota_name)
+                : t("directChannel")}
             {thread.ota_reservation_code ? ` · ${thread.ota_reservation_code}` : ""}
           </span>
         </div>
@@ -646,7 +655,22 @@ export function Conversation({
 
       {/* Verlauf */}
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
-        {loading ? (
+        {istEigentuemerThread(thread.id) ? (
+          // Kein Verlauf im Browser: die Nachrichten kämen als Chiffretext an
+          // (ADR-0029). Buchstabensalat anzuzeigen wäre schlimmer als der
+          // ehrliche Hinweis — und eine leere Liste sähe aus wie ein
+          // unbeantwortetes, leeres Gespräch (Wurzel 5).
+          <div className="m-auto flex max-w-sm flex-col items-center gap-2 text-center">
+            <Icon
+              icon="ph:lock-key"
+              className="size-8 text-muted-foreground"
+            />
+            <p className="text-sm font-medium">{t("eigentuemerChatTitel")}</p>
+            <p className="text-sm text-muted-foreground">
+              {t("eigentuemerChatText")}
+            </p>
+          </div>
+        ) : loading ? (
           <p className="text-sm text-muted-foreground">…</p>
         ) : messages.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("noMessages")}</p>
@@ -1049,11 +1073,17 @@ export function Conversation({
         </p>
       )}
 
-      {/* Übernommener Verlauf: eingefrorenes Archiv aus einem fremden PMS. Der
-          Kanal, über den er lief, gehört uns nicht mehr — es gibt keinen Weg,
-          auf dem eine Antwort den Gast erreichen würde. Deshalb gar kein
-          Eingabefeld statt eines Sendeknopfes, der 422 zurückgibt. */}
-      {istUebernahme(thread.id) ? (
+      {/* Eigentümer-Chat (0611, ADR-0029): Ende-zu-Ende verschlüsselt. Der
+          private Schlüssel liegt in der Keychain des Telefons; im Browser gibt
+          es keinen gleichwertigen Ort, und ihn in localStorage zu legen wäre
+          genau die Hintertür, die die Verschlüsselung aufhöbe. Deshalb hier
+          weder Verlauf noch Eingabefeld, sondern der Grund und der Weg. */}
+      {istEigentuemerThread(thread.id) ? (
+        <div className="flex items-center gap-2 border-t border-border p-4 text-sm text-muted-foreground">
+          <Icon icon="ph:lock-key" className="size-4" />
+          {t("eigentuemerChatHint")}
+        </div>
+      ) : istUebernahme(thread.id) ? (
         <div className="flex items-center gap-2 border-t border-border p-4 text-sm text-muted-foreground">
           <Icon icon="ph:archive" className="size-4" />
           {t("uebernahmeHint")}

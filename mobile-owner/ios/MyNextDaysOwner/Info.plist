@@ -89,5 +89,9 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>Damit Sie ein Foto aufnehmen und Ihrer Verwaltung im Chat schicken koennen.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Damit Sie ein vorhandenes Foto Ihrer Verwaltung im Chat schicken koennen.</string>
 </dict>
 </plist>
