@@ -359,6 +359,11 @@ export function Conversation({
   // Konversation zuweisen.
   function assign(member: TeamMember | null) {
     setShowAssign(false);
+    // Ohne Buchungszeile gibt es serverseitig nichts zuzuweisen (404) —
+    // Nebenquellen wie der Eigentümer-Chat haben keine Zeile in
+    // `channex_booking`. Der Aufruf liefe ins Leere, und weil sein Ergebnis
+    // hier nur den Fehlertext setzt, sähe der Nutzer eine Meldung ohne Grund.
+    if (!hatBuchungszeile(thread.id)) return;
     startSend(async () => {
       const res = await assignThread(thread.id, member?.id ?? null);
       if (res.ok) onAssigned(member?.id ?? null, member?.name ?? null);
@@ -369,8 +374,9 @@ export function Conversation({
   // Snooze: Erinnerung relativ zu jetzt (Minuten) setzen.
   function snooze(minutes: number) {
     setShowSnooze(false);
+    if (!hatBuchungszeile(thread.id)) return;
     const at = new Date(Date.now() + minutes * 60_000).toISOString();
-    updateThreadFlags(thread.id, { remind_at: at });
+    void updateThreadFlags(thread.id, { remind_at: at });
   }
 
   // Nachricht zeitversetzt planen.
@@ -480,9 +486,18 @@ export function Conversation({
             title={t("favorite")}
             active={starred}
             onClick={() => {
+              if (!hatBuchungszeile(thread.id)) return;
               const next = !starred;
               setStarred(next);
-              updateThreadFlags(thread.id, { is_starred: next });
+              // ZURÜCKNEHMEN, wenn der Server ablehnt: Bisher wurde das
+              // Ergebnis nicht angesehen — der Stern blieb an, und nach dem
+              // Neuladen war er wieder aus, ohne dass jemand erfuhr warum
+              // (Wurzel 5).
+              void updateThreadFlags(thread.id, { is_starred: next }).then(
+                (res) => {
+                  if (!res.ok) setStarred(!next);
+                },
+              );
             }}
           />
           {/* Zuweisen an Team-Benutzer — nur mit INBOX_ASSIGN */}
