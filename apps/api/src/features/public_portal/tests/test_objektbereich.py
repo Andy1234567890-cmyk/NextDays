@@ -893,3 +893,26 @@ def test_kein_schreibpfad(pfad: str, methode: str) -> None:
     """Schreiben gibt es schlicht nicht → 405, noch vor jeder Rechteprüfung."""
     antwort = getattr(_client, methode)(pfad)
     assert antwort.status_code == 405
+
+
+# --- Melden und Ausstieg: die Pfade gibt es, und sie sind fail-closed --------
+# Beweis am echten Router, nicht am Service (Wurzel 3). Ein 404 hiesse: die
+# Route ist gar nicht registriert — genau der Fehler, den man an der App als
+# „geht nicht" sieht und im Backend nirgends. Google verlangt beide Wege
+# (UGC-Richtlinie); ein Weg, den es nur im Code gibt, erfuellt das nicht.
+
+_UGC_PFADE = (
+    ("post", f"{_BASIS}/chat/faden/faden-1/meldung"),
+    ("put", f"{_BASIS}/chat/faden/faden-1/stopp"),
+    ("delete", f"{_BASIS}/chat/faden/faden-1/stopp"),
+)
+
+
+@pytest.mark.parametrize(("methode", "pfad"), _UGC_PFADE)
+def test_ugc_pfade_existieren_und_sind_fail_closed(methode: str, pfad: str) -> None:
+    # `TestClient.delete()` kennt kein `json=` — DELETE hat hier auch keinen
+    # Rumpf (das Zuruecknehmen braucht keinen).
+    zusatz = {} if methode == "delete" else {"json": {"grund": "anderes"}}
+    antwort = getattr(_client, methode)(pfad, **zusatz)
+    assert antwort.status_code != 404, f"{methode.upper()} {pfad} ist nicht registriert"
+    assert antwort.status_code in (401, 403), antwort.status_code

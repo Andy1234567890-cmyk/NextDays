@@ -18,9 +18,12 @@ from src.features.owner_chat.schemas import (
     ChatFaden,
     ChatFadenListe,
     ChatNachricht,
+    ChatStopp,
     ChatVerlauf,
     EmpfaengerGeraet,
     EmpfaengerListe,
+    MeldungAngelegt,
+    MeldungAnlegen,
     NachrichtSenden,
 )
 from src.features.owner_statements.schemas import StatementResponse
@@ -820,6 +823,72 @@ def chat_senden(
     return _zu_nachricht(zeile)
 
 
+@router.post(
+    "/chat/faden/{thread_id}/meldung",
+    response_model=MeldungAngelegt,
+    status_code=201,
+)
+def chat_melden(
+    thread_id: str,
+    req: MeldungAnlegen,
+    service: PortalChatServiceDep,
+    ctx: Annotated[AuthContext, Depends(_CHAT)],
+) -> MeldungAngelegt:
+    """Eine Nachricht oder das Gespräch melden.
+
+    Googles UGC-Richtlinie verlangt für einen geschlossenen Nutzerkreis
+    ausdrücklich „in-app functionality to report content and users" — beides,
+    deshalb ist `message_id` optional. Der Meldetext geht an UNS, nicht an die
+    Gegenseite: eine Beschwerde, die beim Beschwerdegegner landet, ist keine.
+    """
+    try:
+        zeile = service.melden(
+            ctx,
+            thread_id,
+            message_id=req.message_id,
+            grund=req.grund,
+            freitext=req.freitext,
+        )
+    except OwnerChatError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    return MeldungAngelegt(
+        id=str(zeile["id"]),
+        grund=str(zeile.get("grund") or req.grund),
+        status=str(zeile.get("status") or "offen"),
+    )
+
+
+@router.put("/chat/faden/{thread_id}/stopp", status_code=204)
+def chat_stoppen(
+    thread_id: str,
+    req: ChatStopp,
+    service: PortalChatServiceDep,
+    ctx: Annotated[AuthContext, Depends(_CHAT)],
+) -> None:
+    """Das Gespräch für sich beenden — der Ausstieg, den Google fordert.
+
+    PUT und nicht POST: der Zustand danach ist derselbe, egal wie oft man
+    drückt (Wurzel 2).
+    """
+    try:
+        service.stopp_setzen(ctx, thread_id, req.grund)
+    except OwnerChatError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.delete("/chat/faden/{thread_id}/stopp", status_code=204)
+def chat_wieder_aufnehmen(
+    thread_id: str,
+    service: PortalChatServiceDep,
+    ctx: Annotated[AuthContext, Depends(_CHAT)],
+) -> None:
+    """Der Gegenzustand (Wurzel 1): ein beendetes Gespräch wieder aufnehmen."""
+    try:
+        service.stopp_aufheben(ctx, thread_id)
+    except OwnerChatError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 def _zu_nachricht(zeile: dict) -> ChatNachricht:
     return ChatNachricht(
         id=str(zeile["id"]),
@@ -831,6 +900,7 @@ def _zu_nachricht(zeile: dict) -> ChatNachricht:
         wrapper_key=zeile.get("wrapper_key") or None,
         bilder=[b for b in (zeile.get("attachments") or []) if isinstance(b, str)],
         sent_at=zeile.get("sent_at"),
+        thread_id=str(zeile["thread_id"]) if zeile.get("thread_id") else None,
     )
 
 
@@ -841,4 +911,5 @@ def _verlauf_antwort(roh: dict) -> ChatVerlauf:
         property_title=roh.get("property_title"),
         items=[_zu_nachricht(z) for z in roh["items"]],
         nicht_lesbar=int(roh.get("nicht_lesbar") or 0),
+        gestoppt=bool(roh.get("gestoppt")),
     )

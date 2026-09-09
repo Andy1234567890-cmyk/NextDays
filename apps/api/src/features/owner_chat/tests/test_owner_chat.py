@@ -22,7 +22,7 @@ from datetime import UTC, datetime
 import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from src.features.owner_chat import freigabe, geraete, kern
+from src.features.owner_chat import freigabe, geraete, kern, moderation
 from src.features.owner_chat.fehler import OwnerChatError
 
 
@@ -1105,3 +1105,155 @@ def test_gesperrtes_geraet_bekommt_keine_schluessel_mehr() -> None:
     daten["owner_chat_devices"][1]["gesperrt_am"] = "2026-09-01T00:00:00Z"
     db = _DB(daten)
     assert kern.eigenes_geraet(db, T, "user-owner", "dev-owner") is None
+
+
+# --- Melden und Ausstieg (Google UGC-Policy, 0615) ---------------------------
+# Was hier schiefgehen kann, sieht man einer Chat-Oberfläche nicht an:
+#   * „Beendet" ohne Riegel — man kann weiterschreiben, die Anzeige lügt.
+#   * Zwei Meldungen aus einem Doppeldruck (Wurzel 2).
+#   * Eine Meldung auf eine Nachricht aus einem FREMDEN Faden über eine
+#     geratene ID (Wurzel 9).
+#   * Kein Weg zurück — ein Streit wäre für immer (Wurzel 1).
+
+
+def _mod_basis() -> dict[str, list[dict]]:
+    tabellen = _basis()
+    tabellen["owner_chat_meldungen"] = []
+    tabellen["owner_chat_stopps"] = []
+    tabellen["owner_messages"] = [
+        {"id": "msg-1", "tenant_id": T, "thread_id": "faden-1"},
+        {"id": "msg-fremd", "tenant_id": T, "thread_id": "faden-2"},
+    ]
+    return tabellen
+
+
+def test_meldung_wird_abgelegt_und_nicht_verdoppelt() -> None:
+    """Zweimal auf „Melden" tippen ist eine Meldung, nicht zwei."""
+    db = _DB(_mod_basis())
+    erste = moderation.melden(
+        db,
+        tenant_id=T,
+        user_id="user-owner",
+        seite="owner",
+        thread_id="faden-1",
+        message_id="msg-1",
+        grund="beleidigung",
+        freitext="Unangemessener Ton",
+    )
+    zweite = moderation.melden(
+        db,
+        tenant_id=T,
+        user_id="user-owner",
+        seite="owner",
+        thread_id="faden-1",
+        message_id="msg-1",
+        grund="beleidigung",
+        freitext=None,
+    )
+
+    assert erste["id"] == zweite["id"]
+    assert len(db.tables["owner_chat_meldungen"]) == 1
+
+
+def test_meldung_auf_fremde_nachricht_wird_abgewiesen() -> None:
+    """Die gemeldete Nachricht muss IN diesem Faden liegen — sonst zöge jemand
+    über eine geratene ID eine fremde Nachricht in sein eigenes Gespräch."""
+    db = _DB(_mod_basis())
+    with pytest.raises(OwnerChatError) as exc:
+        moderation.melden(
+            db,
+            tenant_id=T,
+            user_id="user-owner",
+            seite="owner",
+            thread_id="faden-1",
+            message_id="msg-fremd",
+            grund="anderes",
+            freitext=None,
+        )
+    assert exc.value.status_code == 404
+    assert db.tables["owner_chat_meldungen"] == []
+
+
+def test_meldung_ohne_nachricht_gilt_dem_gespraech() -> None:
+    """Google verlangt „report content AND users" — die Meldung ohne
+    `message_id` ist die zweite Hälfte davon."""
+    db = _DB(_mod_basis())
+    zeile = moderation.melden(
+        db,
+        tenant_id=T,
+        user_id="user-owner",
+        seite="owner",
+        thread_id="faden-1",
+        message_id=None,
+        grund="unerwuenscht",
+        freitext=None,
+    )
+    assert zeile["message_id"] is None
+
+
+def test_unbekannter_grund_wird_abgewiesen() -> None:
+    """Ein freier Grund wäre nicht auswertbar — und die DB wirft sonst ein
+    CHECK-Constraint, dessen Meldung niemand versteht."""
+    db = _DB(_mod_basis())
+    with pytest.raises(OwnerChatError) as exc:
+        moderation.melden(
+            db,
+            tenant_id=T,
+            user_id="user-owner",
+            seite="owner",
+            thread_id="faden-1",
+            message_id=None,
+            grund="weil-ich-kann",
+            freitext=None,
+        )
+    assert exc.value.status_code == 422
+
+
+def test_meldung_traegt_keinen_nachrichtentext() -> None:
+    """Der Server KANN ihn nicht kennen (E2E). Wer hier je ein Feld ergänzt,
+    hat vorher die Verschlüsselung aufgehoben."""
+    db = _DB(_mod_basis())
+    zeile = moderation.melden(
+        db,
+        tenant_id=T,
+        user_id="user-owner",
+        seite="owner",
+        thread_id="faden-1",
+        message_id="msg-1",
+        grund="anderes",
+        freitext="siehe Nachricht",
+    )
+    assert "body" not in zeile
+    assert "chiffre" not in zeile
+
+
+def test_stopp_ist_umkehrbar() -> None:
+    """Der Gegenzustand (Wurzel 1): ohne ihn wäre ein Streit für immer."""
+    db = _DB(_mod_basis())
+    moderation.stopp_setzen(
+        db, tenant_id=T, user_id="user-owner", thread_id="faden-1", grund=None
+    )
+    assert moderation.ist_gestoppt(db, thread_id="faden-1", user_id="user-owner")
+
+    moderation.stopp_aufheben(db, tenant_id=T, user_id="user-owner", thread_id="faden-1")
+    assert not moderation.ist_gestoppt(db, thread_id="faden-1", user_id="user-owner")
+
+
+def test_stopp_gilt_nur_fuer_den_der_ihn_gesetzt_hat() -> None:
+    """An einem Objekt hängen seit 0389 auch Familienzugänge. Beendet die
+    Tochter das Gespräch, darf der Vater nicht abgeschnitten sein."""
+    db = _DB(_mod_basis())
+    moderation.stopp_setzen(
+        db, tenant_id=T, user_id="user-owner", thread_id="faden-1", grund=None
+    )
+    assert not moderation.ist_gestoppt(db, thread_id="faden-1", user_id="user-familie")
+
+
+def test_zweimal_stoppen_ist_ein_stopp() -> None:
+    """Wurzel 2: der zweite Druck darf kein 23505 werfen."""
+    db = _DB(_mod_basis())
+    for _ in range(2):
+        moderation.stopp_setzen(
+            db, tenant_id=T, user_id="user-owner", thread_id="faden-1", grund=None
+        )
+    assert len(db.tables["owner_chat_stopps"]) == 1

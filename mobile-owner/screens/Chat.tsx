@@ -33,11 +33,17 @@ import { Btn, Kachel, Spinner, Txt } from "@/components/ui/kit";
 import { useT } from "@/contexts/SprachContext";
 import {
   bilderOeffnen,
+  chatBeenden,
   chatSenden,
+  chatWiederAufnehmen,
   getChatVerlauf,
+  nachrichtMelden,
   nachrichtOeffnen,
   type ChatNachricht,
+  type Meldegrund,
 } from "@/lib/chat";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 import { istLesbar, seiteIstEigene } from "@/lib/chat-anzeige";
 import { bildWaehlen, fotoAufnehmen } from "@/lib/chat-bild";
 import { geraeteIdLesen, identitaetLesen } from "@/lib/chat-krypto";
@@ -60,9 +66,17 @@ type Blase = ChatNachricht & {
 };
 
 export function Chat({ route }: Props) {
-  const { propertyId, threadId } = route.params;
+  const { propertyId } = route.params;
+  // VERAENDERLICH, nicht nur Navigationsparameter: Zu einem Objekt ohne
+  // bisheriges Gespraech liefert die Fadenliste `thread_id: ""`. Der Faden
+  // entsteht erst serverseitig beim ersten Senden — seine ID kommt mit der
+  // Antwort zurueck und muss hier ankommen, sonst laedt der Verlauf weiter
+  // gegen den leeren String und bleibt leer (Wurzel 1: der Gegenzustand zum
+  // Senden ist der nun existierende Faden).
+  const [threadId, setThreadId] = useState(route.params.threadId);
   const t = useT();
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
 
   const [geraetBereit, setGeraetBereit] = useState<boolean | null>(null);
   const [deviceId, setDeviceId] = useState<string | null>(null);
@@ -73,6 +87,10 @@ export function Chat({ route }: Props) {
   const [text, setText] = useState("");
   const [fehler, setFehler] = useState<string | null>(null);
   const [bildLaeuft, setBildLaeuft] = useState(false);
+  // Habe ICH dieses Gespräch beendet (0615)? Der Server führt den Zustand;
+  // die Oberfläche zeigt ihn nur an und tauscht das Eingabefeld gegen den
+  // Weg zurück. Ein lokales Merken wäre eine zweite Wahrheit (Wurzel 4).
+  const [gestoppt, setGestoppt] = useState(false);
   const rollen = useRef<ScrollView>(null);
 
   // Hat dieses Gerät einen Schlüssel UND eine registrierte ID? Ohne beides
@@ -90,13 +108,19 @@ export function Chat({ route }: Props) {
     void geraetPruefen();
   }, [geraetPruefen]);
 
-  const laden = useCallback(async () => {
-    if (!threadId || !deviceId) {
+  // Die Faden-ID als ARGUMENT, nicht nur aus dem Zustand: Direkt nach dem
+  // ersten Senden hat React `setThreadId` noch nicht angewandt, und ein
+  // `laden()` ohne Argument liefe gegen den alten, leeren Wert — genau der
+  // Grund, aus dem der Verlauf nach der ersten Nachricht leer blieb.
+  const laden = useCallback(
+    async (faden?: string) => {
+    const id = faden ?? threadId;
+    if (!id || !deviceId) {
       setLaedt(false);
       return;
     }
     setLaedt(true);
-    const res = await getChatVerlauf(threadId, deviceId);
+    const res = await getChatVerlauf(id, deviceId);
     if (!res.ok) {
       setFehler(t("chat.fehlerLaden"));
       setLaedt(false);
@@ -125,9 +149,12 @@ export function Chat({ route }: Props) {
     }
     setBlasen(offen);
     setNichtLesbar(res.data.nicht_lesbar);
+    setGestoppt(res.data.gestoppt);
     setFehler(null);
     setLaedt(false);
-  }, [threadId, deviceId, t]);
+    },
+    [threadId, deviceId, t],
+  );
 
   useEffect(() => {
     if (geraetBereit) void laden();
@@ -145,11 +172,13 @@ export function Chat({ route }: Props) {
       setFehler(res.error || t("chat.fehlerSenden"));
       return;
     }
+    const faden = res.data.thread_id || threadId;
+    if (res.data.thread_id) setThreadId(res.data.thread_id);
     setText("");
     setFehler(null);
-    await laden();
+    await laden(faden);
     rollen.current?.scrollToEnd({ animated: true });
-  }, [text, sendet, propertyId, laden, t]);
+  }, [text, sendet, propertyId, threadId, laden, t]);
 
   const bildSenden = useCallback(
     async (quelle: "kamera" | "galerie") => {
@@ -173,11 +202,13 @@ export function Chat({ route }: Props) {
         setFehler(res.error || t("chat.fehlerSenden"));
         return;
       }
+      const faden = res.data.thread_id || threadId;
+      if (res.data.thread_id) setThreadId(res.data.thread_id);
       setText("");
       setFehler(null);
-      await laden();
+      await laden(faden);
     },
-    [bildLaeuft, propertyId, text, laden, t],
+    [bildLaeuft, propertyId, text, threadId, laden, t],
   );
 
   const bildMenue = useCallback(() => {
@@ -187,6 +218,95 @@ export function Chat({ route }: Props) {
       { text: t("chat.abbrechen"), style: "cancel" },
     ]);
   }, [bildSenden, t]);
+
+  // --- Melden und Ausstieg (Google UGC-Policy, 0615) ----------------------
+  // Google verlangt für Direktnachrichten in einem geschlossenen Nutzerkreis
+  // BEIDES: einen Meldeweg für Inhalte UND Menschen, und einen Weg heraus.
+  // Der Wortlaut steht in `apps/api/.../owner_chat/moderation.py`.
+  //
+  // `Alert` statt eines eigenen Blattes: die Auswahl ist vier Zeilen lang und
+  // muss aus JEDER Nachricht heraus erreichbar sein. Ein Bottom-Sheet dafür
+  // wäre mehr Bauteil als Nutzen — und der Meldeweg muss vor allem GEFUNDEN
+  // werden, nicht schön sein.
+
+  const meldenAusfuehren = useCallback(
+    async (grund: Meldegrund, messageId?: string) => {
+      const res = await nachrichtMelden(threadId, { grund, messageId });
+      // Ehrlich melden, was passiert ist: ein stilles „ok" auf eine Beschwerde
+      // ist genau die Stelle, an der jemand denkt, es sei nichts passiert.
+      Alert.alert(
+        res.ok ? t("chat.meldungGesendet") : t("chat.meldungFehler"),
+        res.ok ? t("chat.meldungDanke") : undefined,
+      );
+    },
+    [threadId, t],
+  );
+
+  const meldeMenue = useCallback(
+    (messageId?: string) => {
+      Alert.alert(t("chat.melden"), t("chat.meldenGrund"), [
+        {
+          text: t("chat.grundBeleidigung"),
+          onPress: () => void meldenAusfuehren("beleidigung", messageId),
+        },
+        {
+          text: t("chat.grundBetrug"),
+          onPress: () => void meldenAusfuehren("betrug", messageId),
+        },
+        {
+          text: t("chat.grundUnerwuenscht"),
+          onPress: () => void meldenAusfuehren("unerwuenscht", messageId),
+        },
+        {
+          text: t("chat.grundAnderes"),
+          onPress: () => void meldenAusfuehren("anderes", messageId),
+        },
+        { text: t("chat.abbrechen"), style: "cancel" },
+      ]);
+    },
+    [meldenAusfuehren, t],
+  );
+
+  const beenden = useCallback(() => {
+    Alert.alert(t("chat.beenden"), t("chat.beendenErklaerung"), [
+      {
+        text: t("chat.beendenBestaetigen"),
+        style: "destructive",
+        onPress: () => {
+          const lauf = async () => {
+            const res = await chatBeenden(threadId);
+            if (!res.ok) {
+              setFehler(res.error);
+              return;
+            }
+            setGestoppt(true);
+          };
+          void lauf();
+        },
+      },
+      { text: t("chat.abbrechen"), style: "cancel" },
+    ]);
+  }, [threadId, t]);
+
+  const wiederAufnehmen = useCallback(() => {
+    const lauf = async () => {
+      const res = await chatWiederAufnehmen(threadId);
+      if (!res.ok) {
+        setFehler(res.error);
+        return;
+      }
+      setGestoppt(false);
+    };
+    void lauf();
+  }, [threadId]);
+
+  const gespraechsMenue = useCallback(() => {
+    Alert.alert(t("chat.optionen"), undefined, [
+      { text: t("chat.melden"), onPress: () => meldeMenue() },
+      { text: t("chat.beenden"), style: "destructive", onPress: beenden },
+      { text: t("chat.abbrechen"), style: "cancel" },
+    ]);
+  }, [meldeMenue, beenden, t]);
 
   if (geraetBereit === null) {
     return (
@@ -225,6 +345,20 @@ export function Chat({ route }: Props) {
       >
         <Hinweis text={t("chat.verschluesseltErklaerung")} />
 
+        {/* Der Meldeweg muss GEFUNDEN werden — ein Menü, das nur hinter einem
+            langen Druck liegt, findet niemand. Deshalb steht der Zugang auch
+            sichtbar über dem Verlauf. */}
+        <TouchableOpacity
+          onPress={gespraechsMenue}
+          accessibilityRole="button"
+          accessibilityLabel={t("chat.optionen")}
+          style={{ alignSelf: "center", padding: 6 }}
+        >
+          <Txt v="klein" soft>
+            {t("chat.optionen")}
+          </Txt>
+        </TouchableOpacity>
+
         {nichtLesbar > 0 ? (
           <Kachel>
             <Txt v="klein">
@@ -243,7 +377,14 @@ export function Chat({ route }: Props) {
         ) : null}
 
         {blasen.map((b) => (
-          <Nachricht key={b.id} blase={b} />
+          <Nachricht
+            key={b.id}
+            blase={b}
+            // Langer Druck auf die Blase = diese Nachricht melden. Das ist die
+            // Geste, die Nutzer aus jedem Messenger kennen; der sichtbare
+            // Zugang oben bleibt trotzdem, weil man eine Geste nicht sieht.
+            melden={() => meldeMenue(b.id)}
+          />
         ))}
       </ScrollView>
 
@@ -255,12 +396,40 @@ export function Chat({ route }: Props) {
         </View>
       ) : null}
 
+      {gestoppt ? (
+        /* Kein Eingabefeld mehr: der Server nimmt nichts an (409), und ein
+           Feld, dessen Senden immer scheitert, wäre die Attrappe, die Googles
+           Anforderung an einen Ausstieg gerade nicht erfüllt. Der Weg zurück
+           steht daneben — ein Streit endet (Wurzel 1). */
+        <View
+          style={{
+            gap: 8,
+            padding: KARTE_ABSTAND,
+            paddingBottom: KARTE_ABSTAND + insets.bottom,
+            borderTopWidth: 1,
+            borderTopColor: theme.palette.line,
+          }}
+        >
+          <Txt v="klein" soft style={{ textAlign: "center" }}>
+            {t("chat.beendetHinweis")}
+          </Txt>
+          <Btn variant="outline" block onPress={wiederAufnehmen}>
+            {t("chat.wiederAufnehmen")}
+          </Btn>
+        </View>
+      ) : (
       <View
         style={{
           flexDirection: "row",
           alignItems: "flex-end",
           gap: 8,
           padding: KARTE_ABSTAND,
+          // Der Home-Indikator liegt UEBER der App. Ohne diesen Zuschlag
+          // klebt die Eingabezeile darauf und der Sendeknopf ist am unteren
+          // Rand kaum zu treffen. Bei geoeffneter Tastatur schiebt
+          // KeyboardAvoidingView den Block hoch und der Indikator ist weg —
+          // deshalb nur der Grundabstand, nicht zusaetzlich zur Tastaturhoehe.
+          paddingBottom: KARTE_ABSTAND + insets.bottom,
           borderTopWidth: 1,
           borderTopColor: theme.palette.line,
         }}
@@ -304,16 +473,23 @@ export function Chat({ route }: Props) {
           {sendet ? t("chat.sendet") : t("chat.senden")}
         </Btn>
       </View>
+      )}
     </KeyboardAvoidingView>
   );
 }
 
-function Nachricht({ blase }: { blase: Blase }) {
+function Nachricht({ blase, melden }: { blase: Blase; melden: () => void }) {
   const t = useT();
   const theme = useTheme();
   const eigene = seiteIstEigene(blase.sender);
   return (
-    <View
+    <TouchableOpacity
+      onLongPress={melden}
+      // Kein Kurzdruck: eine Blase ist kein Knopf, und ein versehentliches
+      // Melden wäre eine Beschwerde, die niemand gemeint hat.
+      activeOpacity={1}
+      accessibilityRole="button"
+      accessibilityHint={t("chat.melden")}
       style={{
         alignSelf: eigene ? "flex-end" : "flex-start",
         maxWidth: "85%",
@@ -357,7 +533,7 @@ function Nachricht({ blase }: { blase: Blase }) {
           {blase.klartext}
         </Txt>
       ) : null}
-    </View>
+    </TouchableOpacity>
   );
 }
 

@@ -6,6 +6,8 @@ erwartet, ist trotzdem nichts lesbar.
 """
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -97,6 +99,16 @@ class ChatNachricht(BaseModel):
     wrapper_key: str | None = None
     bilder: list[str] = []
     sent_at: str | None = None
+    # Der Faden, in dem die Nachricht liegt.
+    #
+    # WOZU an der einzelnen Nachricht: Beim ERSTEN Senden zu einem Objekt gibt
+    # es noch keinen Faden — die Fadenliste liefert dafür `thread_id: ""`, und
+    # der Server legt ihn erst beim Senden an. Ohne diese Angabe erfährt die
+    # App seine ID nie: sie lädt weiter gegen den leeren String, und der
+    # Verlauf bleibt leer, obwohl die Nachricht angekommen ist (live gemessen
+    # am 09.09.2026 — zwei Nachrichten in der DB, die App zeigte „Noch keine
+    # Nachrichten").
+    thread_id: str | None = None
 
 
 class ChatVerlauf(BaseModel):
@@ -108,6 +120,10 @@ class ChatVerlauf(BaseModel):
     # stumm weggelassen — sonst wirkte der Verlauf lückenlos, obwohl er es
     # nicht ist (Wurzel 5).
     nicht_lesbar: int = 0
+    # Hat der Anfragende dieses Gespräch beendet (0615)? Dann zeigt die
+    # Oberfläche statt des Eingabefelds den Weg zurück — und der Server weist
+    # ein Senden ohnehin mit 409 ab.
+    gestoppt: bool = False
 
 
 class ChatFaden(BaseModel):
@@ -116,6 +132,7 @@ class ChatFaden(BaseModel):
     property_title: str | None = None
     last_message_at: str | None = None
     ungelesen: bool = False
+    gestoppt: bool = False
 
 
 class ChatFadenListe(BaseModel):
@@ -165,3 +182,32 @@ class WiederherstellungAblegen(BaseModel):
 class WiederherstellungInfo(BaseModel):
     wrapped_identity: str
     kdf_params: dict
+
+
+# --- Melden und Ausstieg (Google UGC-Policy, 0615) ---------------------------
+# Google verlangt für 1:1-Nachrichten in einem geschlossenen Nutzerkreis BEIDES:
+# einen Meldeweg für Inhalte und Menschen und einen Weg, die Gegenseite
+# loszuwerden. Die Begründung und der Wortlaut stehen in `moderation.py`.
+
+
+class MeldungAnlegen(BaseModel):
+    """Was der Melder angibt. Den TEXT der Nachricht kann er nicht mitschicken —
+    der Server könnte ihn nicht lesen (Ende-zu-Ende, ADR-0029)."""
+
+    # Leer = die Meldung gilt dem Gespräch bzw. der Gegenseite, nicht einer
+    # einzelnen Blase. Google verlangt „report content AND users".
+    message_id: str | None = None
+    grund: Literal["beleidigung", "betrug", "unerwuenscht", "anderes"]
+    freitext: str | None = Field(default=None, max_length=2000)
+
+
+class MeldungAngelegt(BaseModel):
+    id: str
+    grund: str
+    status: str
+
+
+class ChatStopp(BaseModel):
+    """Das Gespräch für sich beenden. Umkehrbar (DELETE auf denselben Pfad)."""
+
+    grund: str | None = Field(default=None, max_length=2000)

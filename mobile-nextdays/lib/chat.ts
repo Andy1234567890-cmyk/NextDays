@@ -104,7 +104,7 @@ export async function eigentuemerAntworten(
   }
   return call(`/inbox/${encodeURIComponent(threadId)}/chat`, {
     method: "POST",
-    body: JSON.stringify({ ...nutzlast, bilder, sender_key: senderKey }),
+    body: { ...nutzlast, bilder, sender_key: senderKey },
   });
 }
 
@@ -154,7 +154,7 @@ export async function geraetRegistrieren(payload: {
 }): Promise<Result<GeraetInfo>> {
   return call("/owner-chat/geraete", {
     method: "POST",
-    body: JSON.stringify(payload),
+    body: payload,
   });
 }
 
@@ -227,13 +227,13 @@ export async function freigabeSenden(
 ): Promise<Result<{ nachgetragen: number }>> {
   return call(`/owner-chat/freigabe/${encodeURIComponent(threadId)}`, {
     method: "POST",
-    body: JSON.stringify({
+    body: {
       device_id: deviceId,
       schluessel,
       // Gegen WEN das Zielgerät entpacken muss (0614): hier verpackt nicht
       // der Absender, sondern DIESES Gerät.
       wrapper_key: wrapperKey,
-    }),
+    },
   });
 }
 

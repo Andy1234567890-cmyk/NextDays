@@ -34,6 +34,8 @@ export type ChatFaden = {
   property_title: string | null;
   last_message_at: string | null;
   ungelesen: boolean;
+  /** Ich habe dieses Gespräch beendet (0615). */
+  gestoppt: boolean;
 };
 
 export type ChatNachricht = {
@@ -67,6 +69,16 @@ export type ChatNachricht = {
   wrapper_key: string | null;
   bilder: string[];
   sent_at: string | null;
+  /**
+   * Der Faden, in dem die Nachricht liegt.
+   *
+   * Wichtig beim ERSTEN Senden zu einem Objekt: Dort gibt es noch keinen
+   * Faden, die Fadenliste liefert `thread_id: ""`, und der Server legt ihn
+   * erst beim Senden an. Ohne diesen Rueckgabewert kennt der Screen die ID
+   * nie und laedt weiter gegen den leeren String — der Verlauf bliebe leer,
+   * obwohl die Nachricht angekommen ist.
+   */
+  thread_id: string | null;
 };
 
 export type ChatVerlauf = {
@@ -76,6 +88,8 @@ export type ChatVerlauf = {
   items: ChatNachricht[];
   /** Wie viele Nachrichten dieses Gerät nicht öffnen kann. */
   nicht_lesbar: number;
+  /** Ich habe dieses Gespräch beendet — dann nimmt der Server nichts mehr an. */
+  gestoppt: boolean;
 };
 
 export type EmpfaengerListe = { items: Empfaenger[] };
@@ -152,14 +166,21 @@ export async function chatSenden(
     pfade.push(hoch.data.pfad);
   }
 
+  // `body` bekommt das OBJEKT, nicht dessen JSON-Text: `lib/api.ts`
+  // serialisiert selbst. Bis zum 09.09.2026 stand hier `JSON.stringify(...)` —
+  // damit ging eine JSON-ZEICHENKETTE als Rumpf hinaus, und FastAPI antwortete
+  // 422 („Input should be a valid dictionary"). Der Chat konnte in dieser App
+  // keine einzige Nachricht senden; sichtbar war nur „Senden fehlgeschlagen".
+  // Dieselbe Doppelkodierung steckte in `geraetRegistrieren` und
+  // `wiederherstellungSetzen` — also im ganzen Einrichtungsweg.
   return call(`/public-portal/chat/objekt/${encodeURIComponent(propertyId)}`, {
     method: "POST",
-    body: JSON.stringify({
+    body: {
       chiffre: nutzlast.chiffre,
       schluessel: nutzlast.schluessel,
       bilder: pfade,
       sender_key: senderKey,
-    }),
+    },
   });
 }
 
@@ -255,10 +276,7 @@ export async function geraetRegistrieren(payload: {
   signatur: string;
   geraet_name: string;
 }): Promise<Result<GeraetInfo>> {
-  return call("/owner-chat/geraete", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+  return call("/owner-chat/geraete", { method: "POST", body: payload });
 }
 
 export async function geraetSperren(deviceId: string): Promise<Result<null>> {
@@ -281,10 +299,7 @@ export async function sicherungAblegen(payload: {
   wrapped_identity: string;
   kdf_params: KdfParamsContract;
 }): Promise<Result<null>> {
-  return call("/owner-chat/wiederherstellung", {
-    method: "PUT",
-    body: JSON.stringify(payload),
-  });
+  return call("/owner-chat/wiederherstellung", { method: "PUT", body: payload });
 }
 
 export async function sicherungHolen(): Promise<
@@ -315,4 +330,65 @@ export async function bildHochladen(
     name: "anhang.bin",
   } as unknown as Blob);
   return call("/owner-chat/bilder", { method: "POST", body: form });
+}
+
+// --- Melden und Ausstieg (Google UGC-Policy, 0615) ---------------------------
+//
+// Google verlangt für Direktnachrichten in einem geschlossenen Nutzerkreis
+// BEIDES: einen Meldeweg für Inhalte und Menschen und einen Weg, aus dem
+// Gespräch herauszukommen. Der Wortlaut steht in
+// `apps/api/src/features/owner_chat/moderation.py`.
+//
+// Was hier NICHT mitgeht: der Text der Nachricht. Der Server könnte ihn nicht
+// lesen (Ende-zu-Ende, ADR-0029), und ihn zu entschlüsseln, um ihn zu melden,
+// hübe die Zusage auf. Gemeldet wird die ID plus die Beschreibung des Melders.
+
+export type Meldegrund =
+  | "beleidigung"
+  | "betrug"
+  | "unerwuenscht"
+  | "anderes";
+
+/**
+ * Eine Nachricht melden — oder, ohne `messageId`, das Gespräch bzw. die
+ * Gegenseite. Google verlangt „report content AND users", also beides.
+ *
+ * Die Meldung geht an UNS, nicht an die Verwaltung: eine Beschwerde, die beim
+ * Beschwerdegegner landet, ist keine.
+ */
+export async function nachrichtMelden(
+  threadId: string,
+  eingabe: { messageId?: string; grund: Meldegrund; freitext?: string },
+): Promise<Result<{ id: string; grund: string; status: string }>> {
+  return call(
+    `/public-portal/chat/faden/${encodeURIComponent(threadId)}/meldung`,
+    {
+      method: "POST",
+      body: {
+        message_id: eingabe.messageId ?? null,
+        grund: eingabe.grund,
+        freitext: eingabe.freitext ?? null,
+      },
+    },
+  );
+}
+
+/** Das Gespräch für mich beenden. Der Server nimmt danach nichts mehr an. */
+export async function chatBeenden(
+  threadId: string,
+  grund?: string,
+): Promise<Result<null>> {
+  return call(`/public-portal/chat/faden/${encodeURIComponent(threadId)}/stopp`, {
+    method: "PUT",
+    body: { grund: grund ?? null },
+  });
+}
+
+/** Der Gegenzustand (Wurzel 1): wieder aufnehmen. */
+export async function chatWiederAufnehmen(
+  threadId: string,
+): Promise<Result<null>> {
+  return call(`/public-portal/chat/faden/${encodeURIComponent(threadId)}/stopp`, {
+    method: "DELETE",
+  });
 }

@@ -14,7 +14,7 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
-from src.features.owner_chat import kern, melden
+from src.features.owner_chat import kern, melden, moderation
 from src.features.owner_chat.fehler import OwnerChatError
 
 log = get_logger(__name__)
@@ -86,6 +86,14 @@ class PortalChatService:
         zeilen = kern.faeden_zu_objekten(self._db, tenant_id, objekte)
 
         titel = self._objekt_titel(objekte)
+        # In EINER Abfrage für die ganze Liste, nicht je Zeile: die Fadenliste
+        # ist der Einstieg, und eine Abfrage je Objekt wäre bei acht Häusern
+        # acht Runden für ein Häkchen.
+        gestoppt = moderation.gestoppte_faeden(
+            self._db,
+            user_id=self._require(ctx)[1],
+            thread_ids=[str(z["id"]) for z in zeilen],
+        )
         # Objekte OHNE Faden gehören in die Liste: sonst gäbe es für ein Haus,
         # über das noch nie gesprochen wurde, keinen Weg, ein Gespräch zu
         # beginnen — der Eigentümer sähe eine leere Seite ohne Knopf.
@@ -97,6 +105,7 @@ class PortalChatService:
                 "property_title": titel.get(str(z["property_id"])),
                 "last_message_at": z.get("last_message_at"),
                 "ungelesen": self._ungelesen(z),
+                "gestoppt": str(z["id"]) in gestoppt,
             }
             for z in zeilen
         ]
@@ -107,6 +116,8 @@ class PortalChatService:
                 "property_title": titel.get(pid),
                 "last_message_at": None,
                 "ungelesen": False,
+                # Ein Faden, den es noch nicht gibt, kann nicht beendet sein.
+                "gestoppt": False,
             }
             for pid in objekte
             if pid not in mit_faden
@@ -154,6 +165,9 @@ class PortalChatService:
             "property_title": self._objekt_titel([pid]).get(pid),
             "items": zeilen,
             "nicht_lesbar": nicht_lesbar,
+            "gestoppt": moderation.ist_gestoppt(
+                self._db, thread_id=thread_id, user_id=user_id
+            ),
         }
 
     def empfaenger(self, ctx: AuthContext, property_id: str) -> list[dict]:
@@ -185,6 +199,16 @@ class PortalChatService:
         self._objekt_pruefen(ctx, property_id)
         geraete = kern.empfaenger_geraete(self._db, tenant_id, property_id)
         thread_id = kern.thread_holen_oder_anlegen(self._db, tenant_id, property_id)
+        # Wer das Gespräch beendet hat, schreibt nicht mehr hinein. Ohne diesen
+        # Riegel wäre „beendet" eine Anzeige ohne Wirkung — genau die Attrappe,
+        # die Googles Anforderung an einen Ausstieg nicht erfüllt. 409, weil der
+        # Zustand des Fadens dem Wunsch widerspricht, nicht die Berechtigung.
+        if moderation.ist_gestoppt(self._db, thread_id=thread_id, user_id=user_id):
+            raise OwnerChatError(
+                "Sie haben dieses Gespräch beendet. Nehmen Sie es wieder auf, "
+                "um zu schreiben.",
+                status_code=409,
+            )
         name = self._eigener_name(tenant_id, user_id)
         zeile = kern.nachricht_ablegen(
             self._db,
@@ -212,6 +236,54 @@ class PortalChatService:
             absender_user_id=user_id,
         )
         return zeile
+
+    # --- Melden und Ausstieg (Google UGC-Policy, 0615) -----------------------
+    # Beides läuft über denselben Scope wie Lesen und Senden (Wurzel 9): erst
+    # `_thread_pruefen`, dann handeln. Ohne das meldete jemand über eine
+    # geratene Faden-ID ein fremdes Gespräch — oder beendete es.
+
+    def melden(
+        self,
+        ctx: AuthContext,
+        thread_id: str,
+        *,
+        message_id: str | None,
+        grund: str,
+        freitext: str | None,
+    ) -> dict:
+        """Eine Nachricht oder das Gespräch melden."""
+        tenant_id, user_id = self._require(ctx)
+        self._thread_pruefen(ctx, thread_id)
+        return moderation.melden(
+            self._db,
+            tenant_id=tenant_id,
+            user_id=user_id,
+            seite="owner",
+            thread_id=thread_id,
+            message_id=message_id,
+            grund=grund,
+            freitext=freitext,
+        )
+
+    def stopp_setzen(self, ctx: AuthContext, thread_id: str, grund: str | None) -> None:
+        """Das Gespräch für diesen Eigentümer beenden."""
+        tenant_id, user_id = self._require(ctx)
+        self._thread_pruefen(ctx, thread_id)
+        moderation.stopp_setzen(
+            self._db,
+            tenant_id=tenant_id,
+            user_id=user_id,
+            thread_id=thread_id,
+            grund=grund,
+        )
+
+    def stopp_aufheben(self, ctx: AuthContext, thread_id: str) -> None:
+        """Das Gespräch wieder aufnehmen (Wurzel 1)."""
+        tenant_id, user_id = self._require(ctx)
+        self._thread_pruefen(ctx, thread_id)
+        moderation.stopp_aufheben(
+            self._db, tenant_id=tenant_id, user_id=user_id, thread_id=thread_id
+        )
 
     def _eigener_name(self, tenant_id: str, user_id: str) -> str:
         """Anzeigename des Absenders, eingefroren an der Nachricht.
