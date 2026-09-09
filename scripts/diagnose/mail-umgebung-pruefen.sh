@@ -64,6 +64,10 @@ PFLICHT=(
   # Schlüssel tut keiner davon etwas, und der Provisionslauf kommt erst in
   # einem Monat wieder vorbei.
   STRIPE_SECRET_KEY
+  # Ohne ihn nimmt der Server KEINE Chat-Nachricht an (503) und zeigt keine
+  # an. Fail-closed gebaut, damit nichts still im Klartext landet — aber genau
+  # deshalb muss sein Fehlen HIER auffallen und nicht erst am toten Chat.
+  OWNER_CHAT_SCHLUESSEL
 )
 
 # Ein Befehl, zwei Wege: lokal direkt, sonst über SSH. Das Kommando wird als

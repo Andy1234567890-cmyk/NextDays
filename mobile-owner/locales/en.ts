@@ -481,7 +481,7 @@ export const en: Katalog = {
   "chat.nichtLesbarAnzahl": "{anzahl} older messages cannot be read on this device.",
   "chat.freigabeBitten": "Ask your property management to release the message history for this device.",
   "chat.verschluesselt": "End-to-end encrypted",
-  "chat.verschluesseltErklaerung": "Only you and your property management can read these messages. Not even we can.",
+  "chat.verschluesseltErklaerung": "Your messages are stored encrypted. Only you and your property management can read them.",
   "chat.einrichten": "Set up chat",
   "chat.einrichtenText": "For encrypted messages, this device creates a key. It stays on the device.",
   "chat.einrichtenKnopf": "Set up now",

@@ -66,6 +66,14 @@ class EmpfaengerListe(BaseModel):
 
 
 class NachrichtSenden(BaseModel):
+    # Klartext. DER NEUE WEG (09.09.2026): Der Server verschlüsselt selbst,
+    # damit das Dashboard im Browser lesen kann — dort gibt es keinen Ort für
+    # einen privaten Geräteschlüssel.
+    #
+    # `chiffre` bleibt daneben bestehen, damit App-Versionen aus der
+    # E2E-Zeit weiter senden können. Genau EINES von beiden ist zu setzen;
+    # der Server entscheidet am Feld, nicht an einer Fassung im User-Agent.
+    text: str = Field(default="", max_length=20_000)
     # Chiffretext, base64. Leer erlaubt, wenn Bilder dabei sind.
     chiffre: str = Field(default="", max_length=100_000)
     # device_id → verpackter Inhaltsschlüssel (base64). Für JEDES Gerät des
@@ -82,7 +90,14 @@ class ChatNachricht(BaseModel):
     id: str
     sender: str            # 'owner' | 'agency'
     sender_name: str
-    # Chiffretext — die Oberfläche entschlüsselt ihn auf dem Gerät.
+    # Klartext, vom Server entschlüsselt (09.09.2026).
+    #
+    # `None` bei Nachrichten aus der E2E-Zeit: Sie sind mit einem
+    # GERÄTESCHLÜSSEL verpackt, den der Server nicht hat. Nicht kaputt,
+    # sondern einem anderen Verfahren zugehörig — die Oberfläche sagt das,
+    # statt eine leere Blase zu zeigen (Wurzel 5).
+    text: str | None = None
+    # Chiffretext — für App-Versionen aus der E2E-Zeit, die selbst öffnen.
     chiffre: str
     # Öffentlicher Schlüssel des SENDENDEN Geräts. Ohne ihn kann der Empfänger
     # das gemeinsame Geheimnis nicht bilden und die Nachricht NICHT öffnen —

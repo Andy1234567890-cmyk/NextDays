@@ -428,7 +428,7 @@ export const ro: Katalog = {
   "chat.nichtLesbarAnzahl": "{anzahl} mesaje mai vechi nu pot fi citite pe acest dispozitiv.",
   "chat.freigabeBitten": "Rugați administrația să deblocheze istoricul mesajelor pentru acest dispozitiv.",
   "chat.verschluesselt": "Criptat integral (end-to-end)",
-  "chat.verschluesseltErklaerung": "Doar dumneavoastră și administrația dumneavoastră puteți citi aceste mesaje. Nici noi nu putem.",
+  "chat.verschluesseltErklaerung": "Mesajele dumneavoastră sunt stocate criptat. Le pot citi doar dumneavoastră și administrația.",
   "chat.einrichten": "Configurați chatul",
   "chat.einrichtenText": "Pentru mesajele criptate, acest dispozitiv creează o cheie. Ea rămâne pe dispozitiv.",
   "chat.einrichtenKnopf": "Configurați acum",

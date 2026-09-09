@@ -428,7 +428,7 @@ export const lt: Katalog = {
   "chat.nichtLesbarAnzahl": "{anzahl} senesnių žinučių šiame įrenginyje perskaityti negalima.",
   "chat.freigabeBitten": "Paprašykite administracijos suteikti šiam įrenginiui prieigą prie susirašinėjimo istorijos.",
   "chat.verschluesselt": "Ištisinis šifravimas",
-  "chat.verschluesseltErklaerung": "Šias žinutes galite skaityti tik jūs ir jūsų administracija. Net ir mes negalime jų perskaityti.",
+  "chat.verschluesseltErklaerung": "Jūsų žinutės saugomos užšifruotos. Jas skaityti galite tik jūs ir jūsų administracija.",
   "chat.einrichten": "Nustatyti pokalbius",
   "chat.einrichtenText": "Šifruotoms žinutėms šis įrenginys sukuria raktą. Jis lieka įrenginyje.",
   "chat.einrichtenKnopf": "Nustatyti dabar",

@@ -20,6 +20,7 @@ from src.core.supabase import get_service_client
 from src.core.uploads import read_upload
 from src.features.owner_chat import kern as owner_chat_kern
 from src.features.owner_chat import melden as owner_chat_melden
+from src.features.owner_chat import serverkrypto
 from src.features.owner_chat.fehler import OwnerChatError
 from src.features.owner_chat.schemas import (
     ChatNachricht,
@@ -1136,7 +1137,7 @@ def chat_senden(
             seite="agency",
             user_id=str(ctx.user_id),
             sender_name=absender,
-            chiffre=req.chiffre,
+            chiffre=serverkrypto.ablage_inhalt(req.text, req.chiffre),
             schluessel=req.schluessel,
             # Der Kreis wird HIER neu bestimmt, nicht vom Client übernommen:
             # kam zwischen Abholen und Senden ein Gerät dazu, fehlt sein
@@ -1211,6 +1212,8 @@ def _eig_nachricht(zeile: dict) -> ChatNachricht:
         sender=str(zeile.get("sender") or ""),
         sender_name=str(zeile.get("sender_name") or ""),
         chiffre=str(zeile.get("body") or ""),
+        # `None` bei E2E-Bestand — den öffnet der Serverschlüssel nicht.
+        text=serverkrypto.entschluesseln(str(zeile.get("body") or "")),
         sender_key=zeile.get("sender_key") or None,
         wrapped_key=zeile.get("wrapped_key"),
         wrapper_key=zeile.get("wrapper_key") or None,

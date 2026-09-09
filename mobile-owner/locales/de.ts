@@ -456,7 +456,7 @@ export const de = {
   "chat.nichtLesbarAnzahl": "{anzahl} ältere Nachrichten sind auf diesem Gerät nicht lesbar.",
   "chat.freigabeBitten": "Bitten Sie die Verwaltung, den Verlauf für dieses Gerät freizugeben.",
   "chat.verschluesselt": "Ende-zu-Ende verschlüsselt",
-  "chat.verschluesseltErklaerung": "Nur Sie und Ihre Verwaltung können diese Nachrichten lesen. Auch wir können es nicht.",
+  "chat.verschluesseltErklaerung": "Ihre Nachrichten sind verschlüsselt gespeichert. Lesen können sie nur Sie und Ihre Verwaltung.",
   "chat.einrichten": "Chat einrichten",
   "chat.einrichtenText": "Für verschlüsselte Nachrichten legt dieses Gerät einen Schlüssel an. Er bleibt auf dem Gerät.",
   "chat.einrichtenKnopf": "Jetzt einrichten",

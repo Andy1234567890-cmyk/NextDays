@@ -428,7 +428,7 @@ export const cs: Katalog = {
   "chat.nichtLesbarAnzahl": "{anzahl} starších zpráv nelze na tomto zařízení přečíst.",
   "chat.freigabeBitten": "Požádejte správu, aby pro toto zařízení uvolnila historii zpráv.",
   "chat.verschluesselt": "Koncové šifrování",
-  "chat.verschluesseltErklaerung": "Tyto zprávy si můžete přečíst pouze vy a vaše správa. Ani my to nedokážeme.",
+  "chat.verschluesseltErklaerung": "Vaše zprávy jsou uloženy šifrovaně. Číst je můžete pouze vy a vaše správa.",
   "chat.einrichten": "Nastavit chat",
   "chat.einrichtenText": "Pro šifrované zprávy vytvoří toto zařízení klíč. Zůstane na zařízení.",
   "chat.einrichtenKnopf": "Nastavit nyní",

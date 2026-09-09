@@ -13,7 +13,7 @@
 //   2. lokal verschlüsseln, je Gerät einen Schlüssel verpacken
 //   3. Chiffretext + Schlüssel senden
 import { call, type Result } from "@/lib/api";
-import { gegenueberVon, hatText, istLesbar } from "@/lib/chat-anzeige";
+import { gegenueberVon, istLesbar } from "@/lib/chat-anzeige";
 import {
   aufgabeSignieren,
   geraeteIdLesen,
@@ -23,7 +23,6 @@ import {
   geraeteIdMerken,
   identitaetAnlegen,
   identitaetLesen,
-  nachrichtVerschluesseln,
 } from "@/lib/chat-krypto";
 
 export type ChatNachricht = {
@@ -31,6 +30,8 @@ export type ChatNachricht = {
   /** 'owner' (der Eigentümer) | 'agency' (wir). */
   sender: string;
   sender_name: string;
+  /** Klartext, vom Server entschlüsselt (09.09.2026). */
+  text: string | null;
   chiffre: string;
   /** Öffentlicher Schlüssel des sendenden Geräts. */
   sender_key: string | null;
@@ -89,22 +90,13 @@ export async function eigentuemerAntworten(
   text: string,
   bilder: string[] = [],
 ): Promise<Result<ChatNachricht>> {
-  let nutzlast: { chiffre: string; schluessel: Record<string, string> };
-  let senderKey: string;
-  try {
-    const eigene = await identitaetLesen();
-    if (!eigene) throw new Error("Kein Schlüssel auf diesem Gerät.");
-    senderKey = eigene.publicKey;
-    const empfaenger = await empfaengerHolen(threadId);
-    nutzlast = await nachrichtVerschluesseln(text, [], empfaenger);
-  } catch (e) {
-    // Verschlüsselungsfehler sind KEINE Netzwerkfehler: „Senden fehlgeschlagen"
-    // ließe den Mitarbeiter erneut drücken, obwohl der Schlüssel fehlt.
-    return { ok: false, error: e instanceof Error ? e.message : String(e) };
-  }
+  // KLARTEXT an den Server (09.09.2026): Er verschlüsselt selbst, damit
+  // dieselbe Nachricht auch im Dashboard lesbar ist. Vorher verschlüsselte
+  // dieses Gerät für die registrierten Geräte — und war kein Agenturgerät
+  // dabei, ging die Nachricht ins Leere.
   return call(`/inbox/${encodeURIComponent(threadId)}/chat`, {
     method: "POST",
-    body: { ...nutzlast, bilder, sender_key: senderKey },
+    body: { text, bilder },
   });
 }
 
@@ -117,11 +109,11 @@ export async function eigentuemerAntworten(
 export async function nachrichtOeffnen(
   n: ChatNachricht,
 ): Promise<string | null> {
+  // Der Server hat entschlüsselt — nichts mehr zu tun.
+  if (n.text !== null && n.text !== undefined) return n.text;
+  // Sonst E2E-Bestand: nur dieses Gerät kann ihn öffnen.
   if (!istLesbar(n)) return null;
-  // Kein Text = kein Fehler (siehe `hatText`): eine reine Bildnachricht hat
-  // bewusst leeren `chiffre`, und ihn zu entschlüsseln sähe aus wie
-  // Manipulation.
-  if (!hatText(n)) return "";
+  if (!n.chiffre) return "";
   return entschluesseln(n.chiffre, n.wrapped_key!, gegenueberVon(n)!);
 }
 

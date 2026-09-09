@@ -428,7 +428,7 @@ export const hr: Katalog = {
   "chat.nichtLesbarAnzahl": "{anzahl} starijih poruka nije moguće pročitati na ovom uređaju.",
   "chat.freigabeBitten": "Zamolite upravu da odobri povijest poruka za ovaj uređaj.",
   "chat.verschluesselt": "Šifrirano s kraja na kraj",
-  "chat.verschluesseltErklaerung": "Samo vi i vaša uprava možete čitati ove poruke. Ni mi to ne možemo.",
+  "chat.verschluesseltErklaerung": "Vaše poruke pohranjene su šifrirano. Čitati ih možete samo vi i vaša uprava.",
   "chat.einrichten": "Postavi razgovor",
   "chat.einrichtenText": "Za šifrirane poruke ovaj uređaj izrađuje ključ. On ostaje na uređaju.",
   "chat.einrichtenKnopf": "Postavi sada",

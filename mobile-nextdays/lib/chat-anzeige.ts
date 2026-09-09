@@ -27,8 +27,13 @@ import type { ChatNachricht } from "@/lib/chat";
  * nicht besitzt.
  */
 export function istLesbar(
-  n: Pick<ChatNachricht, "wrapped_key" | "sender_key" | "wrapper_key">,
+  n: Pick<ChatNachricht, "text" | "wrapped_key" | "sender_key" | "wrapper_key">,
 ): boolean {
+  // Hat der Server entschlüsselt (09.09.2026), braucht es kein Gerät mehr.
+  // Diese Prüfung MUSS zuerst kommen: eine serverseitig verschlüsselte
+  // Nachricht trägt keine verpackten Geräteschlüssel und gälte sonst als
+  // unlesbar — die Oberfläche zeigte einen Hinweis statt des Textes.
+  if (n.text !== null && n.text !== undefined) return true;
   return Boolean(n.wrapped_key) && Boolean(gegenueberVon(n));
 }
 

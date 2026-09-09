@@ -428,7 +428,7 @@ export const lv: Katalog = {
   "chat.nichtLesbarAnzahl": "{anzahl} vecāki ziņojumi šajā ierīcē nav lasāmi.",
   "chat.freigabeBitten": "Lūdziet administrācijai atļaut šai ierīcei piekļuvi sarakstes vēsturei.",
   "chat.verschluesselt": "Pilnīga šifrēšana",
-  "chat.verschluesseltErklaerung": "Šos ziņojumus varat lasīt tikai jūs un jūsu administrācija. Arī mēs tos nevaram izlasīt.",
+  "chat.verschluesseltErklaerung": "Jūsu ziņojumi tiek glabāti šifrēti. Tos var lasīt tikai jūs un jūsu pārvalde.",
   "chat.einrichten": "Iestatīt tērzēšanu",
   "chat.einrichtenText": "Šifrētiem ziņojumiem šī ierīce izveido atslēgu. Tā paliek ierīcē.",
   "chat.einrichtenKnopf": "Iestatīt tagad",

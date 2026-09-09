@@ -428,7 +428,7 @@ export const sv: Katalog = {
   "chat.nichtLesbarAnzahl": "{anzahl} äldre meddelanden kan inte läsas på den här enheten.",
   "chat.freigabeBitten": "Be förvaltningen att frige meddelandehistoriken för den här enheten.",
   "chat.verschluesselt": "Totalsträckskrypterat",
-  "chat.verschluesseltErklaerung": "Bara du och din förvaltning kan läsa de här meddelandena. Inte heller vi kan det.",
+  "chat.verschluesseltErklaerung": "Dina meddelanden lagras krypterade. Bara du och din förvaltning kan läsa dem.",
   "chat.einrichten": "Konfigurera chatten",
   "chat.einrichtenText": "För krypterade meddelanden skapar den här enheten en nyckel. Den stannar på enheten.",
   "chat.einrichtenKnopf": "Konfigurera nu",

@@ -428,7 +428,7 @@ export const nl: Katalog = {
   "chat.nichtLesbarAnzahl": "{anzahl} oudere berichten kunnen op dit apparaat niet worden gelezen.",
   "chat.freigabeBitten": "Vraag de beheerder om het gespreksverloop voor dit apparaat vrij te geven.",
   "chat.verschluesselt": "End-to-end versleuteld",
-  "chat.verschluesseltErklaerung": "Alleen u en uw beheerder kunnen deze berichten lezen. Ook wij kunnen dat niet.",
+  "chat.verschluesseltErklaerung": "Uw berichten worden versleuteld opgeslagen. Alleen u en uw beheer kunnen ze lezen.",
   "chat.einrichten": "Chat instellen",
   "chat.einrichtenText": "Voor versleutelde berichten maakt dit apparaat een sleutel aan. Die blijft op het apparaat.",
   "chat.einrichtenKnopf": "Nu instellen",

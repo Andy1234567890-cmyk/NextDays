@@ -13,6 +13,7 @@ from src.core.security import AuthContext
 from src.features.auth.dependencies import require_permission
 from src.features.auth.granular_permissions import Permission
 from src.features.auth.permissions import Capability
+from src.features.owner_chat import serverkrypto
 from src.features.owner_chat.fehler import OwnerChatError
 from src.features.owner_chat.schemas import (
     ChatFaden,
@@ -813,7 +814,7 @@ def chat_senden(
         zeile = service.senden(
             ctx,
             property_id,
-            chiffre=req.chiffre,
+            chiffre=serverkrypto.ablage_inhalt(req.text, req.chiffre),
             schluessel=req.schluessel,
             bilder=req.bilder,
             sender_key=req.sender_key,
@@ -895,6 +896,9 @@ def _zu_nachricht(zeile: dict) -> ChatNachricht:
         sender=str(zeile.get("sender") or ""),
         sender_name=str(zeile.get("sender_name") or ""),
         chiffre=str(zeile.get("body") or ""),
+        # `None` bei E2E-Bestand: den öffnet der Serverschlüssel nicht, und
+        # ein leerer String sähe aus wie eine leere Nachricht (Wurzel 5).
+        text=serverkrypto.entschluesseln(str(zeile.get("body") or "")),
         sender_key=zeile.get("sender_key") or None,
         wrapped_key=zeile.get("wrapped_key"),
         wrapper_key=zeile.get("wrapper_key") or None,

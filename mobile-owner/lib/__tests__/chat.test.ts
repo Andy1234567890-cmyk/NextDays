@@ -18,20 +18,34 @@ describe("Lesbarkeit einer Nachricht", () => {
   // Blase zu zeigen (Wurzel 5).
   it("braucht beide Schlüssel", () => {
     const w = null; // kein Freigabe-Schlüssel — der Normalfall
-    expect(istLesbar({ wrapped_key: "k", sender_key: "s", wrapper_key: w })).toBe(true);
-    expect(istLesbar({ wrapped_key: null, sender_key: "s", wrapper_key: w })).toBe(false);
-    expect(istLesbar({ wrapped_key: "k", sender_key: null, wrapper_key: w })).toBe(false);
-    expect(istLesbar({ wrapped_key: null, sender_key: null, wrapper_key: w })).toBe(false);
+    expect(istLesbar({ text: null, wrapped_key: "k", sender_key: "s", wrapper_key: w })).toBe(true);
+    expect(istLesbar({ text: null, wrapped_key: null, sender_key: "s", wrapper_key: w })).toBe(false);
+    expect(istLesbar({ text: null, wrapped_key: "k", sender_key: null, wrapper_key: w })).toBe(false);
+    expect(istLesbar({ text: null, wrapped_key: null, sender_key: null, wrapper_key: w })).toBe(false);
+  });
+
+  it("ist lesbar, sobald der Server entschlüsselt hat", () => {
+    // Seit dem 09.09.2026 verschlüsselt der Server. Solche Nachrichten tragen
+    // KEINE verpackten Geräteschlüssel — ohne diesen Vorrang gälten sie als
+    // unlesbar, und die Oberfläche zeigte einen Hinweis statt des Textes.
+    expect(
+      istLesbar({
+        text: "Der Zähler steht auf 4711.",
+        wrapped_key: null,
+        sender_key: null,
+        wrapper_key: null,
+      }),
+    ).toBe(true);
   });
 
   it("behandelt leere Zeichenketten wie fehlende Schlüssel", () => {
     // Ein leerer String ist kein Schlüssel. Ohne diese Prüfung liefe die
     // Entschlüsselung an und schlüge mit einem Krypto-Fehler fehl, statt die
     // Nachricht sauber als unlesbar zu kennzeichnen.
-    expect(istLesbar({ wrapped_key: "", sender_key: "s", wrapper_key: null })).toBe(
+    expect(istLesbar({ text: null, wrapped_key: "", sender_key: "s", wrapper_key: null })).toBe(
       false,
     );
-    expect(istLesbar({ wrapped_key: "k", sender_key: "", wrapper_key: null })).toBe(
+    expect(istLesbar({ text: null, wrapped_key: "k", sender_key: "", wrapper_key: null })).toBe(
       false,
     );
   });

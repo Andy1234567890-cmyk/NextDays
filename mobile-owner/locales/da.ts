@@ -428,7 +428,7 @@ export const da: Katalog = {
   "chat.nichtLesbarAnzahl": "{anzahl} ældre beskeder kan ikke læses på denne enhed.",
   "chat.freigabeBitten": "Bed administrationen om at frigive beskedhistorikken til denne enhed.",
   "chat.verschluesselt": "Ende-til-ende-krypteret",
-  "chat.verschluesseltErklaerung": "Kun du og din administration kan læse disse beskeder. Heller ikke vi kan.",
+  "chat.verschluesseltErklaerung": "Dine beskeder gemmes krypteret. Kun du og din administration kan læse dem.",
   "chat.einrichten": "Opsæt chat",
   "chat.einrichtenText": "Til krypterede beskeder opretter denne enhed en nøgle. Den bliver på enheden.",
   "chat.einrichtenKnopf": "Opsæt nu",

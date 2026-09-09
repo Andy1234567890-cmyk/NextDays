@@ -428,7 +428,7 @@ export const es: Katalog = {
   "chat.nichtLesbarAnzahl": "{anzahl} mensajes antiguos no se pueden leer en este dispositivo.",
   "chat.freigabeBitten": "Pida a la administración que habilite el historial de mensajes para este dispositivo.",
   "chat.verschluesselt": "Cifrado de extremo a extremo",
-  "chat.verschluesseltErklaerung": "Solo usted y su administración pueden leer estos mensajes. Nosotros tampoco podemos.",
+  "chat.verschluesseltErklaerung": "Tus mensajes se guardan cifrados. Solo tú y tu administración podéis leerlos.",
   "chat.einrichten": "Configurar el chat",
   "chat.einrichtenText": "Para los mensajes cifrados, este dispositivo crea una clave. Permanece en el dispositivo.",
   "chat.einrichtenKnopf": "Configurar ahora",

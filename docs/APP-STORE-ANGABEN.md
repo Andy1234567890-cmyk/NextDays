@@ -270,11 +270,16 @@ KEIN `READ_MEDIA_IMAGES`: der System-Bildwähler liefert die Auswahl über einen
 temporären URI, ein Lese-Recht auf den gesamten Bildspeicher braucht die App
 dafür nicht — und was sie nicht braucht, fragt sie nicht ab.
 
-Erwähnenswert für die Formularantwort, aber KEINE andere Datenart: das Bild
-verlässt das Gerät **Ende-zu-Ende verschlüsselt**. Der Server lagert
-Chiffretext in einem privaten Bucket und kann ihn zu keinem Zeitpunkt ansehen.
-Für Apples und Googles Zwecke bleibt es trotzdem „erhoben" — es verlässt das
-Gerät, und das ist das Kriterium.
+Erwähnenswert für die Formularantwort, aber KEINE andere Datenart: Text und
+Bild werden **verschlüsselt gespeichert** (AES-256-GCM, Schlüssel in der
+Dienst-Umgebung). Seit dem 09.09.2026 verschlüsselt der SERVER, nicht mehr das
+Gerät — die Verwaltung muss im Dashboard mitlesen können, und im Browser gibt
+es keinen sicheren Ort für einen privaten Geräteschlüssel (ADR-0029, ersetzt).
+
+Für das Formular heißt das: „erhoben, mit dem Konto verknüpft, kein Tracking,
+Zweck App-Funktionalität". Die frühere Angabe „Ende-zu-Ende verschlüsselt" darf
+NICHT mehr verwendet werden — sie wäre eine Falschaussage gegenüber Apple und
+Google.
 
 Die Vorgeschichte, damit sie nicht als Widerspruch gelesen wird: Bis zum
 08.09.2026 stand hier „keine Fotos", und das war korrekt — es gab keinen

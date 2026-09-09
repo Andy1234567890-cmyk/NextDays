@@ -64,6 +64,7 @@ import {
   listTemplates,
   renderForThread,
   scheduleMessage,
+  sendEigentuemerNachricht,
   sendInboxMessage,
   updateThreadFlags,
   uploadAttachment,
@@ -405,7 +406,12 @@ export function Conversation({
     if (!msg) return;
     setError(null);
     startSend(async () => {
-      const res = await sendInboxMessage(thread.id, msg);
+      // Eigentümer-Threads haben keine Zeile in `channex_booking` und einen
+      // eigenen Nachrichtenweg (`owner_messages`) — `/messages` liefe dort in
+      // einen 404.
+      const res = istEigentuemerThread(thread.id)
+        ? await sendEigentuemerNachricht(thread.id, msg)
+        : await sendInboxMessage(thread.id, msg);
       if (res.ok) {
         setMessages((m) => [...m, res.data]);
         setText("");
@@ -670,22 +676,7 @@ export function Conversation({
 
       {/* Verlauf */}
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
-        {istEigentuemerThread(thread.id) ? (
-          // Kein Verlauf im Browser: die Nachrichten kämen als Chiffretext an
-          // (ADR-0029). Buchstabensalat anzuzeigen wäre schlimmer als der
-          // ehrliche Hinweis — und eine leere Liste sähe aus wie ein
-          // unbeantwortetes, leeres Gespräch (Wurzel 5).
-          <div className="m-auto flex max-w-sm flex-col items-center gap-2 text-center">
-            <Icon
-              icon="ph:lock-key"
-              className="size-8 text-muted-foreground"
-            />
-            <p className="text-sm font-medium">{t("eigentuemerChatTitel")}</p>
-            <p className="text-sm text-muted-foreground">
-              {t("eigentuemerChatText")}
-            </p>
-          </div>
-        ) : loading ? (
+        {loading ? (
           <p className="text-sm text-muted-foreground">…</p>
         ) : messages.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("noMessages")}</p>
@@ -1093,12 +1084,7 @@ export function Conversation({
           es keinen gleichwertigen Ort, und ihn in localStorage zu legen wäre
           genau die Hintertür, die die Verschlüsselung aufhöbe. Deshalb hier
           weder Verlauf noch Eingabefeld, sondern der Grund und der Weg. */}
-      {istEigentuemerThread(thread.id) ? (
-        <div className="flex items-center gap-2 border-t border-border p-4 text-sm text-muted-foreground">
-          <Icon icon="ph:lock-key" className="size-4" />
-          {t("eigentuemerChatHint")}
-        </div>
-      ) : istUebernahme(thread.id) ? (
+      {istUebernahme(thread.id) ? (
         <div className="flex items-center gap-2 border-t border-border p-4 text-sm text-muted-foreground">
           <Icon icon="ph:archive" className="size-4" />
           {t("uebernahmeHint")}

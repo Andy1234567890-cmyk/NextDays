@@ -31,6 +31,7 @@ from typing import Final
 from supabase import Client
 
 from src.core.logging import get_logger
+from src.features.owner_chat import serverkrypto
 
 from .errors import InboxError
 from .schemas import InboxMessage, InboxMessagesResponse, InboxThread
@@ -178,6 +179,23 @@ def _eigentuemer_namen(db: Client, property_ids: list[str]) -> dict[str, str]:
     return {pid: ", ".join(sorted(namen)) for pid, namen in je_objekt.items()}
 
 
+
+def _klartext(body: str) -> str:
+    """Entschlüsselter Text — oder ein Hinweis, wenn dieser Schlüssel nicht passt.
+
+    Nachrichten aus der E2E-Zeit sind mit einem GERÄTESCHLÜSSEL verpackt, den
+    der Server nicht hat. Sie sind nicht kaputt; sie gehören einem anderen
+    Verfahren. Den Chiffretext anzuzeigen wäre Buchstabensalat, ein leerer
+    String sähe aus wie eine leere Nachricht — beides verschweigt den Grund.
+    """
+    if not body:
+        return ""
+    klar = serverkrypto.entschluesseln(body)
+    if klar is not None:
+        return klar
+    return "[Ältere Nachricht — nur in der App lesbar]"
+
+
 def verlauf_antwort(
     db: Client, tenant_id: str, thread_id: str
 ) -> InboxMessagesResponse:
@@ -208,13 +226,15 @@ def verlauf_antwort(
         .execute()
     ).data or []
 
-    # `message` trägt den CHIFFRETEXT unverändert weiter — die Entschlüsselung
-    # passiert im Client, nicht hier (ADR-0029). Der Server reicht durch, was
-    # er nicht lesen kann.
+    # `message` trägt den KLARTEXT (09.09.2026): Der Server entschlüsselt
+    # selbst, damit der Posteingang im Browser lesbar ist. Nachrichten aus der
+    # E2E-Zeit öffnet dieser Schlüssel nicht — dort steht ein Hinweis statt
+    # Buchstabensalat, weil eine unlesbare Nachricht als solche benannt gehört
+    # (Wurzel 5).
     nachrichten = [
         InboxMessage(
             id=str(z["id"]),
-            message=str(z.get("body") or ""),
+            message=_klartext(str(z.get("body") or "")),
             # Der Posteingang kennt "guest" und "property" als Seiten. Der
             # Eigentümer nimmt hier die Gegenseite ein ("guest"), die Agentur
             # unsere ("property") — so richtet die vorhandene Oberfläche die
@@ -226,7 +246,11 @@ def verlauf_antwort(
         )
         for z in zeilen
     ]
-    return InboxMessagesResponse(messages=nachrichten)
+    # `items`, NICHT `messages`: Pydantic verwirft ein unbekanntes Feld
+    # stillschweigend, und die Antwort war leer — der Posteingang zeigte „Noch
+    # keine Nachrichten", obwohl zwei in der DB lagen (live gemessen
+    # 09.09.2026). Unsichtbar, solange das Web den Verlauf gar nicht anzeigte.
+    return InboxMessagesResponse(items=nachrichten, total=len(nachrichten))
 
 
 def _anhang_pfade(roh: object) -> list[str]:
@@ -239,6 +263,25 @@ def _anhang_pfade(roh: object) -> list[str]:
     if not isinstance(roh, list):
         return []
     return [p for p in roh if isinstance(p, str) and p]
+
+
+
+# Wie viel der Nachricht in der Liste steht. Genug, um den Faden zu erkennen,
+# ohne die Zeile zu sprengen.
+VORSCHAU_ZEICHEN: Final = 120
+
+
+def _vorschau(letzte: dict, anhaenge: bool) -> str:
+    """Anfang der letzten Nachricht — oder ein Kürzel, wenn nicht lesbar."""
+    klar = serverkrypto.entschluesseln(str(letzte.get("body") or ""))
+    if klar is None:
+        # E2E-Bestand: der Server hat den Schlüssel nicht. Die Oberfläche
+        # schreibt das Kürzel in ihrer Sprache aus.
+        return "[e2e_bild]" if anhaenge else "[e2e]"
+    text = klar.strip().replace("\n", " ")
+    if not text:
+        return "[e2e_bild]" if anhaenge else "[e2e]"
+    return text[:VORSCHAU_ZEICHEN]
 
 
 def threads_lesen(db: Client, tenant_id: str) -> list[InboxThread]:
@@ -292,12 +335,11 @@ def threads_lesen(db: Client, tenant_id: str) -> list[InboxThread]:
                 # Im Namensfeld steht, mit WEM die Agentur spricht. Bei einem
                 # geteilten Haus sind das mehrere Menschen.
                 guest_name=besitzer.get(pid) or None,
-                # Der Server kann den Inhalt nicht lesen (ADR-0029). Statt
-                # eines Textes steht hier ein Kürzel, das die Oberfläche in
-                # ihrer Sprache ausschreibt — nie der Chiffretext.
-                last_message=("[e2e_bild]" if anhaenge else "[e2e]")
-                if letzte
-                else None,
+                # Echte Vorschau (09.09.2026): Der Server entschlüsselt selbst,
+                # die Liste zeigt den Anfang der Nachricht wie bei jedem
+                # anderen Kanal. Nur bei E2E-Bestand bleibt das Kürzel — dort
+                # KANN er nicht lesen, und das ist keine Anzeigefrage.
+                last_message=_vorschau(letzte, anhaenge) if letzte else None,
                 last_sender=(
                     "guest" if letzte.get("sender") == "owner" else "property"
                 )

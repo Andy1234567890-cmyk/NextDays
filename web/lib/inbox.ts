@@ -337,6 +337,24 @@ export async function sendInboxMessage(
   });
 }
 
+/**
+ * Antwort im Eigentümer-Chat.
+ *
+ * EIGENER Endpunkt, nicht `/messages`: Diese Threads haben keine Zeile in
+ * `channex_booking`, und der Nachrichtenweg ist ein anderer (`owner_messages`).
+ * Der Server verschlüsselt den Text selbst (09.09.2026) — er liegt nicht im
+ * Klartext in der Datenbank, ist aber im Browser lesbar.
+ */
+export async function sendEigentuemerNachricht(
+  threadId: string,
+  text: string,
+): Promise<Result<InboxMessage>> {
+  return call<InboxMessage>(`/${threadId}/chat`, {
+    method: "POST",
+    body: { text },
+  });
+}
+
 /** Reservierungs-Kontext rechts neben dem Chat. */
 export async function getInboxReservation(
   threadId: string,

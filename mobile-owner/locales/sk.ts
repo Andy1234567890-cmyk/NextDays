@@ -428,7 +428,7 @@ export const sk: Katalog = {
   "chat.nichtLesbarAnzahl": "{anzahl} starších správ nie je možné na tomto zariadení prečítať.",
   "chat.freigabeBitten": "Požiadajte správu objektu o sprístupnenie histórie správ pre toto zariadenie.",
   "chat.verschluesselt": "Šifrované end-to-end",
-  "chat.verschluesseltErklaerung": "Tieto správy môžete čítať iba vy a vaša správa objektu. Ani my to nedokážeme.",
+  "chat.verschluesseltErklaerung": "Vaše správy sú uložené šifrovane. Čítať ich môžete iba vy a vaša správa.",
   "chat.einrichten": "Nastaviť chat",
   "chat.einrichtenText": "Pre šifrované správy vytvorí toto zariadenie kľúč. Zostane v zariadení.",
   "chat.einrichtenKnopf": "Nastaviť teraz",

@@ -428,7 +428,7 @@ export const fi: Katalog = {
   "chat.nichtLesbarAnzahl": "{anzahl} vanhempaa viestiä ei voi lukea tällä laitteella.",
   "chat.freigabeBitten": "Pyydä isännöintiä vapauttamaan viestihistoria tälle laitteelle.",
   "chat.verschluesselt": "Päästä päähän salattu",
-  "chat.verschluesseltErklaerung": "Vain sinä ja isännöintisi voitte lukea nämä viestit. Emme mekään pysty siihen.",
+  "chat.verschluesseltErklaerung": "Viestisi tallennetaan salattuina. Vain sinä ja isännöintisi voitte lukea ne.",
   "chat.einrichten": "Ota chat käyttöön",
   "chat.einrichtenText": "Salattuja viestejä varten tämä laite luo avaimen. Se pysyy laitteessa.",
   "chat.einrichtenKnopf": "Ota käyttöön nyt",

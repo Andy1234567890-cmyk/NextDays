@@ -428,7 +428,7 @@ export const mt: Katalog = {
   "chat.nichtLesbarAnzahl": "{anzahl} messaġġi eqdem ma jistgħux jinqraw fuq dan l-apparat.",
   "chat.freigabeBitten": "Itlob lill-amministrazzjoni biex tagħti aċċess għall-istorja tal-messaġġi lil dan l-apparat.",
   "chat.verschluesselt": "Ikkriptat minn tarf sa tarf",
-  "chat.verschluesseltErklaerung": "Dawn il-messaġġi jistgħu jinqraw biss minnek u mill-amministrazzjoni tiegħek. Lanqas aħna ma nistgħu naqrawhom.",
+  "chat.verschluesseltErklaerung": "Il-messaġġi tiegħek jinħażnu kriptati. Huma biss int u l-amministrazzjoni tiegħek li tistgħu taqrawhom.",
   "chat.einrichten": "Issettja ċ-chat",
   "chat.einrichtenText": "Għall-messaġġi kkriptati dan l-apparat joħloq ċavetta. Din tibqa' fuq l-apparat.",
   "chat.einrichtenKnopf": "Issettja issa",

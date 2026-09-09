@@ -1,6 +1,44 @@
-# ADR-0029 — Eigentümer-Chat mit Ende-zu-Ende-Verschlüsselung
+# ADR-0029 — Eigentümer-Chat: Verschlüsselung
 
-**Status:** angenommen · **Datum:** 09.09.2026 · **Migration:** 0611
+**Status:** ERSETZT am 09.09.2026 · **Datum:** 09.09.2026 · **Migration:** 0611–0616
+
+> ## Diese Entscheidung wurde umgekehrt
+>
+> Der Chat war Ende-zu-Ende verschlüsselt (der Text unten beschreibt das
+> Verfahren). Seit dem 09.09.2026 verschlüsselt der **Server**.
+>
+> **Warum:** Die Verwaltung arbeitet im Dashboard, im Browser. Dort gibt es
+> keinen Ort für einen privaten Geräteschlüssel — `localStorage` wäre genau
+> die Hintertür, die E2E ausschließen soll. Die Folge war nicht theoretisch:
+> Am 09.09.2026 schrieb ein Eigentümer zwei Nachrichten, und **niemand auf der
+> Agenturseite konnte sie öffnen**, weil kein Agenturgerät registriert war.
+> Die Nachrichten waren zugestellt, gespeichert und dauerhaft unlesbar.
+>
+> **Was das kostet — offen benannt:** Wer diesen Server übernimmt und an
+> `OWNER_CHAT_SCHLUESSEL` kommt, liest jeden Chat mit. Die Zusicherung „Auch
+> wir können es nicht lesen" gilt nicht mehr und wurde aus der Oberfläche
+> entfernt (alle 24 Sprachen) — eine Zusicherung, die nicht mehr stimmt, ist
+> schlimmer als keine.
+>
+> **Was bleibt:** Der Chat liegt NICHT im Klartext in der Datenbank. Ein
+> Angreifer mit reinem DB-Zugriff (gestohlenes Backup, offener Direktpfad,
+> Wurzel 6) sieht weiterhin nichts. Der Schlüssel liegt in der Umgebung des
+> Dienstes, nicht in der Datenbank — es braucht beides.
+>
+> **Verfahren:** AES-256-GCM, 12-Byte-Nonce je Nachricht, Schlüssel 32 Byte
+> base64 aus `OWNER_CHAT_SCHLUESSEL`. Umgesetzt in
+> `apps/api/src/features/owner_chat/serverkrypto.py`, gemessen in
+> `tests/test_serverkrypto.py` (10 Prüfungen: Manipulationserkennung,
+> fremder Schlüssel, Nonce-Einmaligkeit, fail-closed ohne Schlüssel).
+>
+> **Der Bestand bleibt unlesbar.** Nachrichten aus der E2E-Zeit sind mit
+> Geräteschlüsseln verpackt; kein Serverschlüssel öffnet sie rückwirkend. Sie
+> tragen keine Marke `sv1:` und werden als „nur in der App lesbar"
+> gekennzeichnet, statt als Buchstabensalat oder leer zu erscheinen.
+
+---
+
+## Der ursprüngliche Beschluss (überholt, zur Nachvollziehbarkeit)
 
 ## Kontext
 

@@ -428,7 +428,7 @@ export const pl: Katalog = {
   "chat.nichtLesbarAnzahl": "{anzahl} starszych wiadomości nie można odczytać na tym urządzeniu.",
   "chat.freigabeBitten": "Poproś zarządcę o udostępnienie historii wiadomości dla tego urządzenia.",
   "chat.verschluesselt": "Szyfrowanie end-to-end",
-  "chat.verschluesseltErklaerung": "Tylko Ty i Twój zarządca możecie czytać te wiadomości. My również nie mamy do nich dostępu.",
+  "chat.verschluesseltErklaerung": "Twoje wiadomości są przechowywane w postaci zaszyfrowanej. Mogą je odczytać tylko Ty i Twój zarządca.",
   "chat.einrichten": "Skonfiguruj czat",
   "chat.einrichtenText": "Na potrzeby szyfrowanych wiadomości to urządzenie tworzy klucz. Pozostaje on na urządzeniu.",
   "chat.einrichtenKnopf": "Skonfiguruj teraz",

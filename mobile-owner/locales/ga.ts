@@ -428,7 +428,7 @@ export const ga: Katalog = {
   "chat.nichtLesbarAnzahl": "Ní féidir {anzahl} teachtaireacht níos sine a léamh ar an ngléas seo.",
   "chat.freigabeBitten": "Iarr ar an mbainistíocht an stair teachtaireachtaí a scaoileadh don ghléas seo.",
   "chat.verschluesselt": "Criptithe ó cheann go ceann",
-  "chat.verschluesseltErklaerung": "Ní féidir ach leatsa agus le do bhainistíocht na teachtaireachtaí seo a léamh. Ní féidir linne é a dhéanamh ach oiread.",
+  "chat.verschluesseltErklaerung": "Stóráiltear do theachtaireachtaí criptithe. Ní féidir ach leatsa agus le do bhainistíocht iad a léamh.",
   "chat.einrichten": "Socraigh an comhrá",
   "chat.einrichtenText": "Le haghaidh teachtaireachtaí criptithe cruthaíonn an gléas seo eochair. Fanann sí ar an ngléas.",
   "chat.einrichtenKnopf": "Socraigh anois",

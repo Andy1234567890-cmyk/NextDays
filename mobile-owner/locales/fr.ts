@@ -428,7 +428,7 @@ export const fr: Katalog = {
   "chat.nichtLesbarAnzahl": "{anzahl} anciens messages ne peuvent pas être lus sur cet appareil.",
   "chat.freigabeBitten": "Demandez à la gestion de débloquer l'historique pour cet appareil.",
   "chat.verschluesselt": "Chiffré de bout en bout",
-  "chat.verschluesseltErklaerung": "Seuls vous et votre gestion pouvez lire ces messages. Nous non plus, nous ne le pouvons pas.",
+  "chat.verschluesseltErklaerung": "Vos messages sont stockés chiffrés. Seuls vous et votre gestion pouvez les lire.",
   "chat.einrichten": "Configurer la messagerie",
   "chat.einrichtenText": "Pour les messages chiffrés, cet appareil crée une clé. Elle reste sur l'appareil.",
   "chat.einrichtenKnopf": "Configurer maintenant",

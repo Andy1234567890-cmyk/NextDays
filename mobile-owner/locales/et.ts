@@ -428,7 +428,7 @@ export const et: Katalog = {
   "chat.nichtLesbarAnzahl": "{anzahl} vanemat sõnumit ei ole selles seadmes loetavad.",
   "chat.freigabeBitten": "Paluge haldusettevõttel sõnumite ajalugu selle seadme jaoks vabastada.",
   "chat.verschluesselt": "Läbivalt krüpteeritud",
-  "chat.verschluesseltErklaerung": "Neid sõnumeid saate lugeda ainult teie ja teie haldusettevõte. Ka meie ei saa.",
+  "chat.verschluesseltErklaerung": "Teie sõnumid salvestatakse krüpteeritult. Neid saate lugeda ainult teie ja teie haldus.",
   "chat.einrichten": "Seadista vestlus",
   "chat.einrichtenText": "Krüpteeritud sõnumite jaoks loob see seade võtme. See jääb seadmesse.",
   "chat.einrichtenKnopf": "Seadista kohe",

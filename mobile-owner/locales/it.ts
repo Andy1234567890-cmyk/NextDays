@@ -428,7 +428,7 @@ export const it: Katalog = {
   "chat.nichtLesbarAnzahl": "{anzahl} messaggi meno recenti non sono leggibili su questo dispositivo.",
   "chat.freigabeBitten": "Chieda all'amministrazione di abilitare la cronologia per questo dispositivo.",
   "chat.verschluesselt": "Crittografia end-to-end",
-  "chat.verschluesseltErklaerung": "Solo lei e la sua amministrazione potete leggere questi messaggi. Nemmeno noi possiamo farlo.",
+  "chat.verschluesseltErklaerung": "I tuoi messaggi sono archiviati in forma cifrata. Solo tu e la tua gestione potete leggerli.",
   "chat.einrichten": "Configura la chat",
   "chat.einrichtenText": "Per i messaggi crittografati questo dispositivo crea una chiave. Rimane sul dispositivo.",
   "chat.einrichtenKnopf": "Configura ora",

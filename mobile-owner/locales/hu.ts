@@ -428,7 +428,7 @@ export const hu: Katalog = {
   "chat.nichtLesbarAnzahl": "{anzahl} régebbi üzenet nem olvasható ezen az eszközön.",
   "chat.freigabeBitten": "Kérje meg a kezelőt, hogy engedélyezze az előzményeket ehhez az eszközhöz.",
   "chat.verschluesselt": "Végponttól végpontig titkosítva",
-  "chat.verschluesseltErklaerung": "Ezeket az üzeneteket csak Ön és a kezelője olvashatja. Még mi sem tudjuk elolvasni.",
+  "chat.verschluesseltErklaerung": "Üzeneteit titkosítva tároljuk. Csak Ön és a kezelője olvashatja őket.",
   "chat.einrichten": "Csevegés beállítása",
   "chat.einrichtenText": "A titkosított üzenetekhez ez az eszköz kulcsot hoz létre. A kulcs az eszközön marad.",
   "chat.einrichtenKnopf": "Beállítás most",

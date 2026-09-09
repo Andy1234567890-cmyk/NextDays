@@ -21,8 +21,6 @@ import {
   bildEntschluesseln,
   type Empfaenger,
   entschluesseln,
-  identitaetLesen,
-  nachrichtVerschluesseln,
 } from "@/lib/chat-krypto";
 
 // --- Contract ---------------------------------------------------------------
@@ -44,6 +42,11 @@ export type ChatNachricht = {
   sender: string;
   sender_name: string;
   /** Chiffretext. Zum Anzeigen durch `nachrichtOeffnen` schicken. */
+  /**
+   * Klartext, vom Server entschlüsselt (09.09.2026). `null` bei Nachrichten
+   * aus der E2E-Zeit — die öffnet nur dieses Gerät über `chiffre`.
+   */
+  text: string | null;
   chiffre: string;
   /**
    * Öffentlicher Schlüssel des sendenden GERÄTS. Ohne ihn lässt sich der
@@ -110,6 +113,11 @@ export async function getChatVerlauf(
 
 // --- Senden -----------------------------------------------------------------
 
+// VERWAIST seit der Umstellung auf serverseitige Verschlüsselung
+// (09.09.2026): Der Client muss den Empfängerkreis nicht mehr kennen, weil er
+// nicht mehr selbst für jedes Gerät verpackt. Bewusst STEHEN GELASSEN statt
+// gelöscht — die Freigabe alter E2E-Verläufe braucht diesen Weg noch.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function empfaengerHolen(propertyId: string): Promise<Empfaenger[]> {
   const res = await call<EmpfaengerListe>(
     `/public-portal/chat/empfaenger/${encodeURIComponent(propertyId)}`,
@@ -136,69 +144,52 @@ export async function chatSenden(
   text: string,
   bilder: Uint8Array[] = [],
 ): Promise<Result<ChatNachricht>> {
-  let nutzlast: {
-    chiffre: string;
-    schluessel: Record<string, string>;
-    bilderChiffre: string[];
-  };
-  let senderKey: string;
-  try {
-    const eigene = await identitaetLesen();
-    if (!eigene) throw new Error("Kein Schlüssel auf diesem Gerät.");
-    senderKey = eigene.publicKey;
-    const empfaenger = await empfaengerHolen(propertyId);
-    nutzlast = await nachrichtVerschluesseln(text, bilder, empfaenger);
-  } catch (e) {
-    // Verschlüsselungsfehler sind KEINE Netzwerkfehler und dürfen nicht als
-    // solche aussehen: „Senden fehlgeschlagen" ließe den Nutzer erneut
-    // drücken, obwohl das Problem der fehlende Schlüssel ist.
-    return { ok: false, error: e instanceof Error ? e.message : String(e) };
-  }
-
   // Bilder VOR der Nachricht hochladen: schlägt einer fehl, entsteht gar keine
   // Nachricht — besser als eine mit einem Anhang, der nicht existiert.
   const pfade: string[] = [];
-  for (const chiffre of nutzlast.bilderChiffre) {
-    const hoch = await bildHochladen(
-      new Uint8Array(Buffer.from(chiffre, "base64")),
-    );
+  for (const bild of bilder) {
+    const hoch = await bildHochladen(bild);
     if (!hoch.ok) return hoch;
     pfade.push(hoch.data.pfad);
   }
 
+  // KLARTEXT an den Server (09.09.2026). Er verschlüsselt selbst, damit die
+  // Verwaltung im Dashboard mitlesen kann — im Browser gibt es keinen Ort für
+  // einen privaten Geräteschlüssel, und ohne Mitlesen war der Chat für die
+  // Agentur unbenutzbar (zwei zugestellte, dauerhaft unlesbare Nachrichten am
+  // 09.09.2026).
+  //
   // `body` bekommt das OBJEKT, nicht dessen JSON-Text: `lib/api.ts`
-  // serialisiert selbst. Bis zum 09.09.2026 stand hier `JSON.stringify(...)` —
-  // damit ging eine JSON-ZEICHENKETTE als Rumpf hinaus, und FastAPI antwortete
-  // 422 („Input should be a valid dictionary"). Der Chat konnte in dieser App
-  // keine einzige Nachricht senden; sichtbar war nur „Senden fehlgeschlagen".
-  // Dieselbe Doppelkodierung steckte in `geraetRegistrieren` und
-  // `wiederherstellungSetzen` — also im ganzen Einrichtungsweg.
+  // serialisiert selbst. Ein `JSON.stringify(...)` hier schickte eine
+  // ZEICHENKETTE als Rumpf, und FastAPI antwortete 422.
   return call(`/public-portal/chat/objekt/${encodeURIComponent(propertyId)}`, {
     method: "POST",
-    body: {
-      chiffre: nutzlast.chiffre,
-      schluessel: nutzlast.schluessel,
-      bilder: pfade,
-      sender_key: senderKey,
-    },
+    body: { text, bilder: pfade },
   });
 }
 
 // --- Anzeigen ---------------------------------------------------------------
 
 /**
- * Entschlüsselt eine Nachricht für die Anzeige.
+ * Den Text einer Nachricht für die Anzeige holen.
  *
- * Gibt `null` zurück, wenn kein Schlüssel für dieses Gerät vorliegt — die
- * Oberfläche zeigt dann „Diese Nachricht wurde vor diesem Gerät geschrieben",
- * nicht eine leere Blase.
+ * ZWEI QUELLEN, in dieser Reihenfolge:
+ *
+ * 1. `text` — vom Server entschlüsselt (der Weg seit dem 09.09.2026). Damit
+ *    sieht die Verwaltung dieselbe Nachricht im Dashboard.
+ * 2. `chiffre` — E2E-Bestand aus der Zeit davor. Den öffnet nur dieses Gerät,
+ *    mit seinem privaten Schlüssel.
+ *
+ * `null` heißt „auf diesem Gerät nicht zu öffnen" — die Oberfläche sagt das,
+ * statt eine leere Blase zu zeigen.
  */
 export async function nachrichtOeffnen(
   n: ChatNachricht,
 ): Promise<string | null> {
-  // Beides muss da sein: der verpackte Schlüssel FÜR uns und der öffentliche
-  // Schlüssel des Absenders. Fehlt eines, ist die Nachricht auf diesem Gerät
-  // nicht zu öffnen — `null`, und die Oberfläche sagt es.
+  // Der Server hat entschlüsselt: nichts mehr zu tun.
+  if (n.text !== null && n.text !== undefined) return n.text;
+  // Sonst der alte Weg. Beides muss da sein: der verpackte Schlüssel FÜR uns
+  // und der öffentliche Schlüssel des Absenders.
   if (!istLesbar(n)) return null;
   // Kein Text = kein Fehler: eine reine Bildnachricht hat bewusst leeren
   // `chiffre`. Ihn zu entschlüsseln wirft (0 Byte Nonce) und sähe aus wie
