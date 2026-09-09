@@ -115,6 +115,10 @@ class _Q:
         self._payload = payload
         return self
 
+    def delete(self):  # noqa: ANN201
+        self._op = "delete"
+        return self
+
     def eq(self, c, v):  # noqa: ANN001, ANN201
         self._eq[c] = v
         return self
@@ -153,6 +157,12 @@ class _Q:
         if self._op == "update":
             for r in match:
                 r.update(self._payload)
+            return _Res(match)
+        if self._op == "delete":
+            # In der Liste ERSETZEN statt neu binden: `self._store[name]` und
+            # `rows` zeigen auf dasselbe Objekt, ein `rows = [...]` würde die
+            # Ablage des Fakes nicht ändern und der Test wäre blind.
+            rows[:] = [r for r in rows if r not in match]
             return _Res(match)
         if self._op == "upsert":
             payload = dict(self._payload)
@@ -1168,3 +1178,111 @@ def test_rollout_bricht_bei_drosselung_ab() -> None:
     assert len(versuche) == 1, (
         f"nach der Drosselung wurde weitergesendet: {len(versuche)} Versuche"
     )
+
+
+# ----------------------------------------------------------------------
+# Trennen: der Weg zurueck (08.09.2026)
+# ----------------------------------------------------------------------
+# Anlass: eine einmal verbundene Nummer war endgueltig. Der Verbinden-Knopf
+# erscheint nur bei `!verbunden`, und es gab weder Endpunkt noch Schalter zum
+# Loesen — wer beim Aufsetzen Metas Testnummer erwischte (was der Normalfall
+# ist, sie entsteht mit jedem neuen Business-Portfolio), kam nicht mehr davon
+# los und sah dauerhaft „+1 555…" statt seiner eigenen Nummer.
+
+
+class _AbmeldeClient(_FakeClient):
+    """Client, der Metas Webhook-Abmeldung mitschreibt."""
+
+    token_fuer_abfrage = "t"
+
+    def __init__(self, wirft: Exception | None = None) -> None:
+        super().__init__()
+        self.abgemeldet: list[str] = []
+        self._wirft = wirft
+
+    def unsubscribe_app_from_waba(self, waba_id, *, token):  # noqa: ANN001, ANN201, ARG002
+        if self._wirft is not None:
+            raise self._wirft
+        self.abgemeldet.append(waba_id)
+        return {"success": True}
+
+
+def test_trennen_loest_den_kanal_und_meldet_webhooks_ab(monkeypatch) -> None:  # noqa: ANN001
+    """Zeile weg UND Metas Abo weg — beides gehoert zusammen (Wurzel 1)."""
+    db = _db_mit_konto(access_token="geheim")
+    client = _AbmeldeClient()
+    svc = WhatsAppService(service_client=db, client=client)
+    monkeypatch.setattr(
+        WhatsAppService, "_client_fuer", lambda *_a, **_k: client  # noqa: ARG005
+    )
+
+    status = svc.onboarding_trennen(_ctx())
+    assert status.connected is False
+    # Metas Abo dieser WABA ist abgemeldet: sonst liefert Meta weiter
+    # Nachrichten eines Kontos, zu dem wir kein Token mehr haben.
+    assert client.abgemeldet == ["w1"]
+    # Die Zeile ist GELOESCHT, nicht bloss umgestellt: sie traegt das Token.
+    assert db.store["whatsapp_account"] == []
+
+
+def test_trennen_geht_auch_wenn_meta_nicht_mehr_antwortet(monkeypatch) -> None:  # noqa: ANN001
+    """Widerrufenes Token, geloeschte WABA: der Betrieb muss trotzdem loskommen.
+
+    Sonst bliebe er an einem Kanal haengen, den er gar nicht mehr besitzt —
+    genau der Zustand, den das Trennen aufloest.
+    """
+    db = _db_mit_konto()
+    client = _AbmeldeClient(wirft=WhatsAppError("Token ungültig", status_code=401))
+    svc = WhatsAppService(service_client=db, client=client)
+    monkeypatch.setattr(
+        WhatsAppService, "_client_fuer", lambda *_a, **_k: client  # noqa: ARG005
+    )
+
+    assert svc.onboarding_trennen(_ctx()).connected is False
+    assert db.store["whatsapp_account"] == []
+
+
+def test_trennen_geht_auch_ohne_nutzbaren_client(monkeypatch) -> None:  # noqa: ANN001
+    """Kein Client mehr (Konto getrennt, Modul abbestellt) — trotzdem loskommen.
+
+    `_client_fuer` wirft dann WhatsAppServiceError, nicht WhatsAppError; ein
+    `except WhatsAppError` allein hätte den Betrieb an seinem Kanal hängen
+    lassen.
+    """
+    db = _db_mit_konto()
+
+    def _wirft(*_a, **_k):  # noqa: ANN002, ANN003, ANN202
+        raise WhatsAppServiceError("Kein Konto verbunden.", status_code=409)
+
+    svc = WhatsAppService(service_client=db, client=_FakeClient())
+    monkeypatch.setattr(WhatsAppService, "_client_fuer", _wirft)
+
+    assert svc.onboarding_trennen(_ctx()).connected is False
+    assert db.store["whatsapp_account"] == []
+
+
+def test_trennen_ohne_verbundene_nummer_ist_409() -> None:
+    """Nichts zu trennen ist kein stiller Erfolg."""
+    svc = WhatsAppService(service_client=_DB(), client=_FakeClient())
+    with pytest.raises(WhatsAppServiceError) as exc:
+        svc.onboarding_trennen(_ctx())
+    assert exc.value.status_code == 409
+
+
+def test_trennen_wirkt_nur_auf_den_eigenen_betrieb(monkeypatch) -> None:  # noqa: ANN001
+    """Der Kanal des NACHBARN bleibt stehen (Wurzel 3: Scope erzwingen)."""
+    db = _db_mit_konto()
+    db.store["whatsapp_account"].append(
+        {"tenant_id": "t2", "waba_id": "w2", "phone_number_id": "p2",
+         "status": "connected"}
+    )
+    client = _AbmeldeClient()
+    svc = WhatsAppService(service_client=db, client=client)
+    monkeypatch.setattr(
+        WhatsAppService, "_client_fuer", lambda *_a, **_k: client  # noqa: ARG005
+    )
+
+    svc.onboarding_trennen(_ctx())
+    verbleibend = db.store["whatsapp_account"]
+    assert [r["tenant_id"] for r in verbleibend] == ["t2"]
+    assert client.abgemeldet == ["w1"]

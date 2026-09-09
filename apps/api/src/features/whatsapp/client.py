@@ -245,6 +245,19 @@ class WhatsAppClient:
             "POST", f"{waba_id}/subscribed_apps", token=token
         )
 
+    def unsubscribe_app_from_waba(self, waba_id: str, *, token: str) -> dict[str, Any]:
+        """Gegenstück zu ``subscribe_app_to_waba`` — beim Trennen (Wurzel 1).
+
+        Ohne diesen Schritt liefert Meta weiter Webhooks dieser WABA an uns,
+        obwohl der Betrieb den Kanal getrennt hat: Nachrichten eines Kontos,
+        zu dem wir kein Token mehr haben, laufen dann ins Leere und erzeugen
+        Fehler im Empfang. Das Abmelden gehört deshalb in denselben Vorgang
+        wie das Löschen der Zeile, nicht in einen späteren Aufräumlauf.
+        """
+        return self._graph(
+            "DELETE", f"{waba_id}/subscribed_apps", token=token
+        )
+
     def phone_numbers(self, waba_id: str, *, token: str) -> list[dict[str, Any]]:
         """Nummern der WABA mit Status, Quality und Sendelimit."""
         data = self._graph(

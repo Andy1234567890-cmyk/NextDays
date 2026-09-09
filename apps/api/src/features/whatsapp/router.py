@@ -158,6 +158,21 @@ def onboarding_verbinden(
         raise _http(exc) from exc
 
 
+@router.post("/onboarding/trennen", response_model=OnboardingStatus)
+def onboarding_trennen(service: WhatsAppServiceDep, ctx: _guest) -> OnboardingStatus:
+    """Den verbundenen WhatsApp-Kanal des Betriebs lösen.
+
+    POST, nicht DELETE: der Vorgang meldet zusätzlich das Webhook-Abo bei Meta
+    ab und ist damit mehr als das Entfernen einer Zeile. Der Tenant kommt aus
+    dem JWT, nie aus dem Body — sonst könnte ein Betrieb den Kanal eines
+    anderen trennen (Wurzel 3).
+    """
+    try:
+        return service.onboarding_trennen(ctx)
+    except WhatsAppServiceError as exc:
+        raise _http(exc) from exc
+
+
 @router.get("/onboarding/status", response_model=OnboardingStatus)
 def onboarding_status(service: WhatsAppServiceDep, ctx: _guest) -> OnboardingStatus:
     """Kanal-Zustand des Betriebs: verbundene Nummer, Sendebereitschaft, Sperrgrund.

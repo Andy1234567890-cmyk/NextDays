@@ -97,6 +97,14 @@ export async function connectWhatsApp(
   });
 }
 
+/** Den verbundenen Kanal lösen — der Weg zurück zu einer anderen Nummer.
+ *  Meldet serverseitig zusätzlich Metas Webhook-Abo dieser WABA ab und
+ *  entfernt die Zeile samt Zugangstoken. Danach zeigt die Seite wieder
+ *  „Nummer verbinden". */
+export async function disconnectWhatsApp(): Promise<Result<WhatsAppOnboardingStatus>> {
+  return call<WhatsAppOnboardingStatus>("/onboarding/trennen", { method: "POST" });
+}
+
 export type WhatsAppOnboardingResult = {
   waba_id: string;
   phone_number_id: string;

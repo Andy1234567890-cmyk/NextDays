@@ -40,7 +40,7 @@ from src.features.inbox.schemas import InboxMessage, ReservationDetail
 from src.features.inbox.service import InboxService
 from src.features.site_config.ki_nutzung import buchen, deckel_pruefen
 
-from . import sendezustand
+from . import sendezustand, trennen
 from .client import WhatsAppClient, WhatsAppError
 from .fehler import WhatsAppServiceError
 from .fehler import als_service_fehler as _als_service_fehler
@@ -183,6 +183,17 @@ class WhatsAppService:
             can_send_message=ergebnis.get("can_send_message"),
             send_block_reason=ergebnis.get("send_block_reason"),
             templates=TemplateRolloutResult(**(ergebnis.get("templates") or {})),
+        )
+
+    def onboarding_trennen(self, ctx: AuthContext) -> OnboardingStatus:
+        """Den WhatsApp-Kanal des Betriebs trennen — der Weg zurück.
+
+        Die Arbeit steht in `trennen.py` (eigenes Modul wie `sendezustand.py`,
+        siehe dort: `service.py` sonst über der 1500-Zeilen-Grenze).
+        """
+        db, tenant_id = self._require(ctx)
+        return trennen.kanal_trennen(
+            db, tenant_id, client_holen=lambda: self._client_fuer(db, tenant_id)
         )
 
     def onboarding_status(self, ctx: AuthContext) -> OnboardingStatus:

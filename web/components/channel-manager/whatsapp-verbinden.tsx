@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { Button } from "@nextdays/ui/button";
 import {
   connectWhatsApp,
+  disconnectWhatsApp,
   getWhatsAppOnboardingStatus,
   getWhatsAppStartLink,
   type WhatsAppOnboardingResult,
@@ -47,6 +48,10 @@ export function WhatsAppVerbinden() {
   const [status, setStatus] = useState<WhatsAppOnboardingStatus | null>(null);
   const [start, setStart] = useState<Start | null>(null);
   const [tausche, setTausche] = useState(false);
+  // Trennen ist ohne erneuten Meta-Durchlauf nicht umkehrbar, deshalb erst
+  // fragen. Zwei Zustände statt eines Dialogs: der Knopf wird zur Rückfrage.
+  const [trennFrage, setTrennFrage] = useState(false);
+  const [trennt, setTrennt] = useState(false);
   const [ergebnis, setErgebnis] = useState<WhatsAppOnboardingResult | null>(null);
   // Gegen den doppelten Aufruf im React-Strict-Mode und gegen Doppelklick: ein
   // verbrauchter Code darf nicht zweimal eingetauscht werden (Wurzel 2).
@@ -152,6 +157,55 @@ export function WhatsAppVerbinden() {
               </a>
             </Button>
           )}
+          {/* Der Weg ZURÜCK. Ohne ihn war eine einmal verbundene Nummer
+              endgültig: der Verbinden-Knopf oben erscheint nur bei
+              `!verbunden`. Wer beim Aufsetzen Metas Testnummer erwischt hat
+              — sie entsteht mit jedem neuen Business-Portfolio —, sah
+              dauerhaft „+1 555…" statt der eigenen Nummer. */}
+          {verbunden && !trennFrage && (
+            <Button
+              variant="outline"
+              onClick={() => setTrennFrage(true)}
+              disabled={trennt}
+            >
+              Nummer trennen
+            </Button>
+          )}
+          {verbunden && trennFrage && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                Wirklich trennen?
+              </span>
+              <Button
+                variant="destructive"
+                disabled={trennt}
+                onClick={() => {
+                  setTrennt(true);
+                  void (async () => {
+                    const res = await disconnectWhatsApp();
+                    if (res.ok) {
+                      toast.success("WhatsApp-Nummer getrennt.");
+                      setErgebnis(null);
+                      await laden();
+                    } else {
+                      toast.error(res.error);
+                    }
+                    setTrennt(false);
+                    setTrennFrage(false);
+                  })();
+                }}
+              >
+                {trennt ? "Trennt…" : "Ja, trennen"}
+              </Button>
+              <Button
+                variant="ghost"
+                disabled={trennt}
+                onClick={() => setTrennFrage(false)}
+              >
+                Abbrechen
+              </Button>
+            </div>
+          )}
         </div>
 
         {!verbunden && start && !start.available && (
@@ -166,9 +220,14 @@ export function WhatsAppVerbinden() {
         {verbunden && status?.can_send_message === false && (
           <p className="mt-4 rounded-2xl bg-amber-500/10 px-4 py-3 text-sm text-amber-700">
             <strong>Versand gesperrt.</strong>{" "}
-            {status.send_block_reason ||
-              "Meta hat den Versand für dieses Konto gesperrt."}{" "}
-            Meist fehlt im Meta-Konto des Betriebs eine Zahlungsmethode.
+            {/* Metas Grund endet nicht mit Punkt; der Zusatz hing bis
+                08.09.2026 unmittelbar daran und ergab „…im Meta-Konto Meist
+                fehlt im Meta-Konto…". Der Zusatz kommt nur noch, wenn Meta
+                gar keinen Grund geliefert hat — sonst sagt er dasselbe
+                zweimal. */}
+            {status.send_block_reason
+              ? `${status.send_block_reason.replace(/[.\s]+$/, "")}.`
+              : "Meta hat den Versand gesperrt. Meist fehlt im Meta-Konto des Betriebs eine Zahlungsmethode."}
           </p>
         )}
 
