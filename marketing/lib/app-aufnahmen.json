@@ -1,37 +1,142 @@
-[
-  "belegungsplan-dark-de@2x.webp",
-  "belegungsplan-dark-en@2x.webp",
-  "belegungsplan-hotel-dark-de@2x.webp",
-  "belegungsplan-hotel-dark-en@2x.webp",
-  "belegungsplan-hotel-light-de@2x.webp",
-  "belegungsplan-hotel-light-en@2x.webp",
-  "belegungsplan-light-de@2x.webp",
-  "belegungsplan-light-en@2x.webp",
-  "dashboard-dark-de@2x.webp",
-  "dashboard-dark-en@2x.webp",
-  "dashboard-light-de@2x.webp",
-  "dashboard-light-en@2x.webp",
-  "dynamic-pricing-dark-de@2x.webp",
-  "dynamic-pricing-dark-en@2x.webp",
-  "dynamic-pricing-light-de@2x.webp",
-  "dynamic-pricing-light-en@2x.webp",
-  "eigentuemer-abrechnung-light-de@2x.webp",
-  "eigentuemer-liste-light-de@2x.webp",
-  "eigentuemer-zusammenfassung-light-de@2x.webp",
-  "kanaele-dark-de@2x.webp",
-  "kanaele-dark-en@2x.webp",
-  "kanaele-light-de@2x.webp",
-  "kanaele-light-en@2x.webp",
-  "mobil-kalender-dark-de@2x.webp",
-  "mobil-kalender-dark-en@2x.webp",
-  "mobil-kalender-light-de@2x.webp",
-  "mobil-kalender-light-en@2x.webp",
-  "objekte-dark-de@2x.webp",
-  "objekte-dark-en@2x.webp",
-  "objekte-light-de@2x.webp",
-  "objekte-light-en@2x.webp",
-  "reservierungen-dark-de@2x.webp",
-  "reservierungen-dark-en@2x.webp",
-  "reservierungen-light-de@2x.webp",
-  "reservierungen-light-en@2x.webp"
-]
+{
+  "belegungsplan-dark-de@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "belegungsplan-dark-en@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "belegungsplan-hotel-dark-de@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "belegungsplan-hotel-dark-en@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "belegungsplan-hotel-light-de@2x.webp": {
+    "breite": 3200,
+    "hoehe": 1683
+  },
+  "belegungsplan-hotel-light-en@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "belegungsplan-light-de@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "belegungsplan-light-en@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "dashboard-dark-de@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "dashboard-dark-en@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "dashboard-light-de@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "dashboard-light-en@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "dynamic-pricing-dark-de@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "dynamic-pricing-dark-en@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "dynamic-pricing-light-de@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "dynamic-pricing-light-en@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "eigentuemer-abrechnung-light-de@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "eigentuemer-liste-light-de@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "eigentuemer-zusammenfassung-light-de@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "kanaele-dark-de@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "kanaele-dark-en@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "kanaele-light-de@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "kanaele-light-en@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "mobil-kalender-dark-de@2x.webp": {
+    "breite": 860,
+    "hoehe": 1864
+  },
+  "mobil-kalender-dark-en@2x.webp": {
+    "breite": 860,
+    "hoehe": 1864
+  },
+  "mobil-kalender-light-de@2x.webp": {
+    "breite": 860,
+    "hoehe": 1864
+  },
+  "mobil-kalender-light-en@2x.webp": {
+    "breite": 860,
+    "hoehe": 1864
+  },
+  "objekte-dark-de@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "objekte-dark-en@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "objekte-light-de@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "objekte-light-en@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "reservierungen-dark-de@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "reservierungen-dark-en@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "reservierungen-light-de@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  },
+  "reservierungen-light-en@2x.webp": {
+    "breite": 3200,
+    "hoehe": 2000
+  }
+}

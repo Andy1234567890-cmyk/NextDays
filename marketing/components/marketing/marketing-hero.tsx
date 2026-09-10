@@ -101,9 +101,20 @@ export function MarketingHero() {
 
         {/* Rechts: Produkt — echter Belegungsplan aus dem Demo-Betrieb.
             Der frühere DOM-Nachbau (ProductMockup) zeigte nur farbige Balken;
-            hier sehen Interessenten die Software, die sie kaufen sollen. */}
+            hier sehen Interessenten die Software, die sie kaufen sollen.
+
+            Gezeigt wird der HOTEL-Belegungsplan, nicht der mit acht
+            Ferienobjekten. Grund ist gemessen, nicht Geschmack: die frühere
+            Hero-Aufnahme (`belegungsplan`) zeigt den Vorführungs-Dialog
+            („Willkommen in der Vorführung … 1/9") quer über dem Raster, dazu
+            das Vorführungs-Banner oben und unten links den Debug-Streifen
+            „Betrieb 69d24767 · 8 Objekte / Realtime 14/14" — das stand so auf
+            der Startseite.
+            Dasselbe Motiv steht auch im Einblicke-Block weiter unten. Das ist
+            Absicht und geprüft: zwischen beiden liegen 12 716 px, also gut
+            14 Bildschirmhöhen — sie sind nie zusammen im Bild. */}
         <div className="pb-12 lg:pb-0">
-          <AppAufnahme name="belegungsplan" alt={t("aufnahmeBelegungsplan")} priority />
+          <AppAufnahme name="belegungsplan-hotel" alt={t("aufnahmeHotel")} priority />
         </div>
       </div>
 

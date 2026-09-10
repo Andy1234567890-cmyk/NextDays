@@ -19,9 +19,13 @@ import VORHANDEN from "@/lib/app-aufnahmen.json";
 // fehlendes Bild ist ein Loch in der Seite.
 const ERSATZSPRACHEN = ["en", "de"];
 
-// Aufnahmemaß aus dem Skript (1600 × 1000 bei Faktor 2).
-const BREITE = 3200;
-const HOEHE = 2000;
+// Die echten Pixelmaße stehen JE DATEI im Katalog — nicht als zwei
+// Konstanten hier. Der Grund ist gemessen: `mobil-kalender` ist 860 × 1864,
+// und eine nachträglich beschnittene Aufnahme (Rollbalken entfernt) ist
+// niedriger als 2000. Mit einem festen Maß reserviert Next den falschen Platz,
+// und die Seite springt beim Laden.
+type Aufnahme = { breite: number; hoehe: number };
+const KATALOG = VORHANDEN as Record<string, Aufnahme>;
 
 /** Beste tatsächlich vorhandene Datei für Motiv/Thema/Sprache, sonst null.
  *
@@ -29,7 +33,11 @@ const HOEHE = 2000;
  * (`web/scripts/marketing-aufnahmen.mjs`). Fehlt eine Kombination — etwa weil
  * ein Lauf abgebrochen ist —, weicht die Seite auf eine vorhandene aus, statt
  * ein 404-Bild zu rendern. */
-function datei(name: string, thema: "light" | "dark", sprache: string): string | null {
+function datei(
+  name: string,
+  thema: "light" | "dark",
+  sprache: string,
+): { pfad: string; breite: number; hoehe: number } | null {
   const gegenthema = thema === "light" ? "dark" : "light";
   const kandidaten = [
     ...[sprache, ...ERSATZSPRACHEN].map((s) => `${name}-${thema}-${s}@2x.webp`),
@@ -37,8 +45,10 @@ function datei(name: string, thema: "light" | "dark", sprache: string): string |
     // andere Thema nehmen — lieber die falsche Helligkeit als kein Bild.
     ...[sprache, ...ERSATZSPRACHEN].map((s) => `${name}-${gegenthema}-${s}@2x.webp`),
   ];
-  const treffer = kandidaten.find((k) => (VORHANDEN as string[]).includes(k));
-  return treffer ? `/marketing/app/${treffer}` : null;
+  const treffer = kandidaten.find((k) => k in KATALOG);
+  if (!treffer) return null;
+  const { breite, hoehe } = KATALOG[treffer];
+  return { pfad: `/marketing/app/${treffer}`, breite, hoehe };
 }
 
 export function AppAufnahme({
@@ -46,11 +56,24 @@ export function AppAufnahme({
   alt,
   priority = false,
   className = "",
+  // Wie breit das Bild TATSÄCHLICH steht. Der Wert entscheidet, welche
+  // Auflösung Next ausliefert — zu klein heißt sichtbar weich auf jedem
+  // Retina-Schirm.
+  //
+  // Gemessen am 10.09.2026: der Standard `55vw` war für jede Aufnahme falsch,
+  // die in einer gedeckelten Spalte steht. Im Hero ist die Bildspalte ab
+  // 1280 px Fensterbreite konstant 620 px breit (max-w-7xl 1280 − 48 Rand −
+  // 48 Spalt = 1184, davon 1.1/2.1), `55vw` verlangte bei 2560 px aber 1408 px
+  // — der Browser wählte daraufhin eine Stufe, die für die echten 620 px × 2
+  // nicht reichte. Ergebnis auf ALLEN geprüften Breiten (1280–2560): geliefert
+  // 704–1173 px statt der nötigen 1236.
+  sizes = "(min-width: 1280px) 620px, (min-width: 1024px) 48vw, 100vw",
 }: {
   name: string;
   alt: string;
   priority?: boolean;
   className?: string;
+  sizes?: string;
 }) {
   const locale = useLocale();
   const hell = datei(name, "light", locale);
@@ -77,23 +100,23 @@ export function AppAufnahme({
           dunklen Seite sticht wie ein Fehler heraus. */}
       {hell ? (
         <Image
-          src={hell}
+          src={hell.pfad}
           alt={alt}
-          width={BREITE}
-          height={HOEHE}
+          width={hell.breite}
+          height={hell.hoehe}
           priority={priority}
-          sizes="(min-width: 1024px) 55vw, 100vw"
+          sizes={sizes}
           className={dunkel ? "block h-auto w-full dark:hidden" : "block h-auto w-full"}
         />
       ) : null}
       {dunkel ? (
         <Image
-          src={dunkel}
+          src={dunkel.pfad}
           alt={alt}
-          width={BREITE}
-          height={HOEHE}
+          width={dunkel.breite}
+          height={dunkel.hoehe}
           priority={priority}
-          sizes="(min-width: 1024px) 55vw, 100vw"
+          sizes={sizes}
           className={hell ? "hidden h-auto w-full dark:block" : "block h-auto w-full"}
         />
       ) : null}

@@ -350,9 +350,20 @@ async function main() {
   // liegt, nicht was dieser Lauf vorhatte. Die Komponente wählt daraus die
   // beste vorhandene Variante — so bleibt die Seite heil, auch wenn eine
   // Sprach-/Theme-Kombination (noch) fehlt, statt ein 404-Bild zu zeigen.
-  const vorhanden = (await readdir(ZIEL))
+  // Zu jeder Datei ihr ECHTES Pixelmaß. Vorher stand hier nur die Dateiliste
+  // und die Komponente rechnete mit zwei Konstanten (3200 x 2000) fuer alle
+  // Motive — falsch, sobald eine Aufnahme anders geschnitten ist: das
+  // Telefon-Motiv `mobil-kalender` ist 860 x 1864, und eine nachtraeglich
+  // beschnittene Aufnahme (Rollbalken weg) ist niedriger als 2000. Next
+  // reserviert dann den falschen Platz und die Seite springt beim Laden.
+  const dateien = (await readdir(ZIEL))
     .filter((datei) => datei.endsWith("@2x.webp"))
     .sort();
+  const vorhanden = {};
+  for (const datei of dateien) {
+    const { width, height } = await sharp(path.join(ZIEL, datei)).metadata();
+    vorhanden[datei] = { breite: width, hoehe: height };
+  }
   await writeFile(
     path.join(REPO, "marketing", "lib", "app-aufnahmen.json"),
     `${JSON.stringify(vorhanden, null, 2)}\n`,
