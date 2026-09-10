@@ -7,6 +7,7 @@ mit dem inhaltsfreien Signal, an dem die UI den Eingang merkt.
 Die Payload-Form stammt aus echten Ereignissen des Produktivkontos
 (`channex_webhook_event`, siehe Modul-Docstring von `nachrichten_eingang`).
 """
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
@@ -200,16 +201,90 @@ def test_nachzuegler_markiert_trotzdem_ungelesen() -> None:
     Lägen beide im selben Patch, hätte eine nachgereichte ältere Gastnachricht
     (das Journal garantiert keine Reihenfolge) den Thread gelesen aussehen
     lassen, obwohl der Gast geschrieben hat.
+
+    Der Zeitstempel ist BEWUSST relativ zu jetzt: geprüft wird der Nachzügler
+    innerhalb des Frischefensters (`_frische_nachricht`). Mit dem festen Datum
+    der Fixture prüfte dieser Test ab dem 08.08.2026 klammheimlich etwas
+    anderes — eine Nachricht, die schlicht zu alt zum Läuten ist. Ein Test mit
+    festem Datum wechselt sein Thema, wenn die Zeit vergeht.
     """
+    frisch = datetime.now(UTC).replace(microsecond=0).isoformat()
     db = _FakeDB()
-    _Dienst(db).nachricht_spiegeln(TENANT, payload())
+    _Dienst(db).nachricht_spiegeln(TENANT, payload(inserted_at=frisch))
 
     patches = [p for p, _ in signale(db)]
-    assert {"last_message_at": "2026-08-07T07:53:44.000000Z"} in patches
     assert {"is_read": False} in patches
+    assert any("last_message_at" in p for p in patches)
     # Nur der Zeitstempel trägt den Monotonie-Guard.
     guards = [f.get("or") for _, f in signale(db)]
     assert sum(1 for g in guards if g) == 1
+
+
+def test_alte_nachricht_laeutet_nicht() -> None:
+    """Wurzel 5b: „neu für unsere DB" ist nicht „gerade passiert".
+
+    ANLASS (live gemeldet 09.09.2026): Nach einem Voll-Abgleich läuteten
+    Gespräche von vor Wochen als neue Gastnachrichten — darunter
+    Abreise-Dankesnachrichten („wir sind gerade abgereist").
+    `nachrichten_nachholen` spiegelt den KOMPLETTEN Verlauf jedes Threads, und
+    für jede noch nie gespiegelte Nachricht daraus war `neu` korrekt `True`.
+    Nur war keine davon ein Ereignis.
+
+    Die Nachricht wird weiterhin GESPIEGELT (sie ist echt und gehört in den
+    Posteingang) — sie setzt den Thread nur nicht auf ungelesen und läutet
+    nicht.
+    """
+    db = _FakeDB()
+    _Dienst(db).nachricht_spiegeln(
+        TENANT, payload(inserted_at="2020-01-01T10:00:00.000000")
+    )
+
+    assert any(e[0] == "upsert" for e in db.protokoll), "Nachricht muss gespiegelt sein"
+    patches = [p for p, _ in signale(db)]
+    assert {"is_read": False} not in patches
+    # Der Zeitstempel des Threads wird trotzdem nachgezogen: er beschreibt,
+    # wann zuletzt etwas gesagt wurde, nicht ob es ein Ereignis war.
+    assert any("last_message_at" in p for p in patches)
+
+
+def test_frische_nachricht_prueft_die_grenze_beidseitig() -> None:
+    """Die 24-Stunden-Grenze selbst — aus der Konstante abgeleitet.
+
+    Die beiden Tests darueber arbeiten mit „jetzt" und mit 2020: beide bleiben
+    gruen, egal ob das Fenster 1 Stunde oder 500 Stunden breit ist. Sie pruefen,
+    DASS am Portal-Zeitstempel entschieden wird — nicht, WO die Grenze liegt.
+    Bei 500 Stunden laeutete der Nachhol-Lauf wieder Gespraeche von vor Wochen,
+    also genau der gemeldete Fehler.
+    """
+    from src.features.channel_manager.nachrichten_eingang import (
+        NACHRICHT_FRISCH_STUNDEN,
+        _frische_nachricht,
+    )
+
+    fenster = timedelta(hours=NACHRICHT_FRISCH_STUNDEN)
+    jetzt = datetime.now(UTC)
+
+    assert _frische_nachricht((jetzt - fenster + timedelta(minutes=5)).isoformat())
+    assert not _frische_nachricht(
+        (jetzt - fenster - timedelta(minutes=5)).isoformat()
+    )
+
+
+def test_frische_nachricht_laeutet_nicht_bei_unklarem_zeitstempel() -> None:
+    """Kein klares „frisch" → keine Glocke (Wurzel 5).
+
+    Der Zukunftswert ist der interessante Fall: einseitig verglichen
+    (`jetzt - zeitpunkt <= fenster`) galt eine Nachricht mit falsch gestellter
+    Portal-Uhr DAUERHAFT als frisch und setzte den Thread bei jedem Journal-Tick
+    wieder auf ungelesen — Lesen waere damit wirkungslos.
+    """
+    from src.features.channel_manager.nachrichten_eingang import _frische_nachricht
+
+    voraus = (datetime.now(UTC) + timedelta(days=30)).isoformat()
+
+    assert _frische_nachricht("kaputt") is False
+    assert _frische_nachricht("") is False
+    assert _frische_nachricht(voraus) is False
 
 
 @pytest.mark.parametrize(

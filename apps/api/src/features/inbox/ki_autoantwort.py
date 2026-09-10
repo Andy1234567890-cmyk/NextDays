@@ -27,6 +27,7 @@ hat einen Gegenzustand).
 
 from __future__ import annotations
 
+import os
 from datetime import UTC, datetime, timedelta
 
 from postgrest.exceptions import APIError
@@ -375,6 +376,51 @@ class KiAutoantwortMixin:
             return {"gesendet": 0, "abgebrochen": 0, "fehler": 0}
         db = self._db
         jetzt = datetime.now(UTC)
+        # Verwaiste 'sendet'-Zeilen abraeumen — dieselbe Pflicht wie bei den
+        # Zwillingen (`dispatch_due_automations`). Ohne sie blockierte ein
+        # Abbruch zwischen Claim und Abschluss (Deploy, OOM, Kill) die Zeile
+        # FUER IMMER: 'sendet' waehlt kein Pfad mehr aus, und der partielle
+        # Unique-Index auf 'wartend' laesst keine Neuplanung zu.
+        #
+        # WARUM 'fehler' UND NICHT 'wartend' (anders als beim Zwilling): Der
+        # Index `ki_warteschlange_ein_wartender_je_thread` (0494) erlaubt nur
+        # EINE 'wartend'-Zeile je Thread. Ein Zuruecksetzen auf 'wartend' liefe
+        # deshalb in einen 23505, sobald der Gast in der Zwischenzeit erneut
+        # geschrieben und `autoantwort_planen` eine neue Zeile angelegt hat —
+        # was er darf, weil die alte auf 'sendet' stand. Der Zwilling hat das
+        # Problem nicht: `automation_scheduled_unique` (0072) ist NICHT partiell
+        # auf den Status. Der ungefangene 23505 haette hier jede Minute den
+        # ganzen Tick gekippt, ueber alle Betriebe, mit nur einer Logzeile.
+        #
+        # Fachlich ist 'fehler' ohnehin richtig: die Reap-Frist (10 Min) liegt
+        # weit ueber `MAX_VERSPAETUNG_STUNDEN`, die Zeile waere als
+        # „Zu spaet (Rueckstau)" sofort verworfen worden. Sie bleibt als Spur
+        # stehen, statt eine Antwort auf eine veraltete Frage zu senden.
+        from . import scheduler  # noqa: PLC0415 — Zirkularität (scheduler↔service)
+
+        reap_cutoff = (
+            jetzt - timedelta(minutes=scheduler.SENDING_REAP_MINUTES)
+        ).isoformat()
+        try:
+            reaped = (
+                db.table("ki_autoantwort_warteschlange")
+                .update({
+                    "status": "fehler",
+                    "letzter_fehler": "Versand abgebrochen (verwaiste Zeile)",
+                    "updated_at": jetzt.isoformat(),
+                })
+                .eq("status", "sendet")
+                .lt("updated_at", reap_cutoff)
+                .execute()
+            ).data or []
+        except Exception as exc:  # noqa: BLE001 — das Abraeumen kippt den Tick nie
+            # LAUT, aber weiterlaufen: der Tick hat eine eigene Aufgabe, und ein
+            # Problem beim Aufraeumen darf den Versand aller Betriebe nicht
+            # verhindern (Wurzel 5).
+            log.error("ki_autoantwort_reap_fehlgeschlagen", error=str(exc)[:300])
+            reaped = []
+        if reaped:
+            log.warning("ki_autoantwort_reaped_stuck_sendet", anzahl=len(reaped))
         zeilen = (
             db.table("ki_autoantwort_warteschlange")
             .select("*")
@@ -385,13 +431,18 @@ class KiAutoantwortMixin:
             .execute()
         ).data or []
 
-        gesendet = abgebrochen = fehler = 0
+        gesendet = abgebrochen = fehler = uebersprungen = 0
         for z in zeilen:
             ergebnis = self._eine_senden(db, z, jetzt)
             if ergebnis == "gesendet":
                 gesendet += 1
             elif ergebnis == "abgebrochen":
                 abgebrochen += 1
+            elif ergebnis == "uebersprungen":
+                # Ein anderer Takt hatte die Zeile schon geclaimt. Das ist der
+                # Zielzustand des Claims, kein Fehler — aber sichtbar, weil die
+                # Zahl verraet, wie viele Takte parallel laufen (Diagnose).
+                uebersprungen += 1
             else:
                 fehler += 1
         if zeilen:
@@ -401,8 +452,18 @@ class KiAutoantwortMixin:
                 gesendet=gesendet,
                 abgebrochen=abgebrochen,
                 fehler=fehler,
+                uebersprungen=uebersprungen,
+                # WELCHER Prozess hier taktet. Ohne diese Zahl ist „vier Loops"
+                # nur erschliessbar, nicht ablesbar — genau daran hing der
+                # Doppelversand vom 09.09.2026.
+                pid=os.getpid(),
             )
-        return {"gesendet": gesendet, "abgebrochen": abgebrochen, "fehler": fehler}
+        return {
+            "gesendet": gesendet,
+            "abgebrochen": abgebrochen,
+            "fehler": fehler,
+            "uebersprungen": uebersprungen,
+        }
 
     def _eine_senden(self, db: Client, zeile: dict, jetzt: datetime) -> str:
         tenant_id = str(zeile["tenant_id"])
@@ -429,6 +490,36 @@ class KiAutoantwortMixin:
                 abbruch_grund="Thread hat sich seit der Planung geändert",
             )
             return "abgebrochen"
+
+        # Atomares Claim gegen ueberlappende Takte (kein Doppelversand) —
+        # dasselbe Muster wie `dispatch_due_automations`. Es MUSS vor dem
+        # Senden stehen: der Statuswechsel danach kam Sekunden zu spaet, und
+        # jeder Takt, der die Zeile im Zwischenfenster sah, sendete sie erneut.
+        # Bei `UVICORN_WORKERS=4` sind das vier Loops im Minutentakt (der
+        # Guard in `ki_takt.py` ist prozesslokal), plus ein moeglicher externer
+        # Cron auf den internen Endpunkt.
+        #
+        # Zusaetzlich an `send_at` gebunden: hat die Neuplanung die Zeile
+        # inzwischen verschoben, gehoert der alte Text nicht mehr hinaus.
+        claimed = (
+            db.table("ki_autoantwort_warteschlange")
+            # `updated_at` MUSS mit: die Tabelle hat keinen Trigger dafuer
+            # (0494 setzt nur einen Spalten-Default), und der Reaper oben misst
+            # genau an diesem Wert. Ohne ihn traegt die geclaimte Zeile den
+            # Zeitstempel ihrer Planung und der Reaper gaebe sie nach zehn
+            # Minuten frei, waehrend der Versand noch laeuft — aus dem Riegel
+            # gegen Doppelversand wuerde dessen Ursache.
+            .update({
+                "status": "sendet",
+                "updated_at": jetzt.isoformat(),
+            })
+            .eq("id", zeilen_id)
+            .eq("status", "wartend")
+            .eq("send_at", zeile["send_at"])
+            .execute()
+        ).data
+        if not claimed:
+            return "uebersprungen"
 
         try:
             self._autoantwort_senden(

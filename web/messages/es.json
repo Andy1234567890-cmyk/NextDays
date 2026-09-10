@@ -2747,7 +2747,8 @@
       "tradespeople": "Profesionales",
       "marketing": "Marketing",
       "housebook": "Manual de la casa",
-      "listing": "Comercialización"
+      "listing": "Comercialización",
+      "inventory": "Inventario"
     },
     "objectInfo": {
       "capacityPersons": "Capacidad (personas)",
@@ -2898,7 +2899,130 @@
       "helaarsbolig": "Helårsbolig",
       "fritidshus": "Fritidshus"
     },
-    "print": "Imprimir"
+    "print": "Imprimir",
+    "mappe": {
+      "gastTitel": "Carpeta de huésped — Documentos",
+      "hausTitel": "Carpeta de la casa — Documentos (internos)",
+      "titel": "Carpeta digital",
+      "erklaerung": "Subir PDF — la información que contiene se leerá y se sugerirá para su confirmación. El documento permanecerá aquí para su consulta.",
+      "hochladen": "Subir PDF",
+      "liest": "Leyendo…",
+      "laedt": "Cargando…",
+      "leer": "Todavía no hay ningún documento en esta carpeta.",
+      "zuGross": "El archivo es demasiado grande (máx. {mb} MB).",
+      "seiten": "{count, plural, one {# página} other {# páginas}}",
+      "ansehen": "Ver {name} en grande",
+      "loeschen": "Eliminar {name}",
+      "loeschenFrage": "¿Eliminar „{name}“ de la carpeta? La información ya adoptada se conservará.",
+      "gefunden": "{count, plural, one {# dato encontrado} other {# datos encontrados}}",
+      "gefundenHinweis": "Nada de esto está guardado. Revise, modifique si es necesario y luego acepte — el código de la puerta y las contraseñas no se seleccionan intencionadamente por defecto.",
+      "nichtsGefunden": "Este documento no contenía nada que encajara en un campo de la carpeta. No obstante, permanecerá en la carpeta.",
+      "heikel": "Por favor, revise cuidadosamente",
+      "fundstelle": "En el documento: {ort}",
+      "sprachfassung": "Versión lingüística",
+      "ueberschreiben": "También reemplazar campos ya rellenados",
+      "ausgewaehlt": "{count} de {gesamt} seleccionados",
+      "verwerfen": "Descartar",
+      "uebernehmen": "Adoptar",
+      "uebernimmt": "Adoptando…",
+      "schliessen": "Cerrar",
+      "gesetzt": "{count, plural, =0 {Nada adoptado} one {# campo adoptado} other {# campos adoptados}}",
+      "uebersprungen": "Ya rellenado y por lo tanto sin cambios: {felder}",
+      "stand": {
+        "offen": "no leído",
+        "gelesen": "leído",
+        "uebernommen": "adoptado",
+        "ohne_treffer": "no se encontró nada",
+        "fehler": "error de lectura"
+      },
+      "sicher": {
+        "hoch": "bien legible",
+        "mittel": "legibilidad limitada",
+        "niedrig": "difícil de leer"
+      },
+      "sprache": {
+        "de": "Alemán",
+        "en": "Inglés",
+        "da": "Danés"
+      }
+    },
+    "inventar": {
+      "abschnitt": "Inventario",
+      "titel": "Lista de inventario",
+      "erklaerung": "Lo que hay en la casa, por habitaciones. El objetivo y el estado actual se separan; la diferencia es el resultado del inventario. Siempre ampliable.",
+      "laedt": "Cargando...",
+      "leer": "Todavía no se ha registrado nada. Añada líneas manualmente o desde un PDF de la carpeta.",
+      "neuName": "Artículo",
+      "neuSoll": "Objetivo",
+      "hinzufuegen": "Añadir",
+      "raeume": "Habitaciones",
+      "keineRaeume": "ninguna todavía",
+      "raumName": "Nombre de la habitación",
+      "raumHinzufuegen": "Añadir habitación",
+      "ohneRaum": "Sin habitación",
+      "speichern": "Guardar",
+      "istMenge": "Cantidad disponible",
+      "vonSoll": "de {soll}",
+      "geprueft": "Marcar como verificado",
+      "loeschen": "Eliminar",
+      "loeschenFrage": "¿Eliminar \"{name}\" de la lista? Los daños reportados se conservan.",
+      "ausDokument": "desde PDF",
+      "ausDokumentHint": "Esta línea proviene de un documento de la carpeta digital.",
+      "schadenMelden": "Reportar daño",
+      "schadenAn": "Daño en \"{name}\"",
+      "art": "¿Qué ocurre?",
+      "traeger": "¿Quién asume los costes?",
+      "werZahlt": "¿Quién paga?",
+      "beschreibung": "Descripción",
+      "fotoWaehlen": "Tomar o elegir foto",
+      "fotoPflicht": "Sin foto no hay informe; en caso de disputa, la imagen suele ser lo único que cuenta.",
+      "fotosGewaehlt": "{count, plural, one {# imagen seleccionada} other {# imágenes seleccionadas}}",
+      "melden": "Reportar daño",
+      "meldet": "Reportando...",
+      "abbrechen": "Cancelar",
+      "offeneSchaeden": "{count, plural, one {# daño} other {# daños}}",
+      "offeneSchaedenTitel": "{count, plural, one {# daño abierto} other {# daños abiertos}}",
+      "bild": "Imagen {nr}",
+      "betrag": "Importe",
+      "bestaetigen": "Confirmar",
+      "verwerfen": "Descartar",
+      "verwerfenFrage": "¿Descartar daño en \"{name}\"? Esto no fue un daño.",
+      "artWert": {
+        "beschaedigt": "Dañado",
+        "fehlt": "Falta",
+        "entsorgt": "Desechado"
+      },
+      "traegerWert": {
+        "offen": "Pendiente",
+        "eigentuemer": "Propietario",
+        "gast": "Huésped",
+        "betrieb": "Operación"
+      },
+      "pdfImport": "Lista desde PDF",
+      "pdfLiest": "Leyendo…",
+      "pdfLeer": "No se detectó ninguna lista de inventario en este PDF.",
+      "pdfGefunden": "{count, plural, one {# línea encontrada} other {# líneas encontradas}}",
+      "pdfHinweis": "Nada de esto está guardado. Revise, modifique si es necesario y luego aplique. Las habitaciones solo se asignarán si ya existen.",
+      "uebernimmt": "Aplicando…",
+      "uebernehmen": "Aplicar",
+      "zustand": "Estado",
+      "rhythmus": "Ritmo de conteo",
+      "meldebestandKurz": "Stock de notificación {n}",
+      "referenzSetzen": "Subir imagen de estado intacto",
+      "referenzAnsehen": "Ver imagen de estado intacto",
+      "zustandWert": {
+        "neu": "nuevo",
+        "gut": "bueno",
+        "abgenutzt": "desgastado",
+        "ersatz_faellig": "requiere reemplazo"
+      },
+      "rhythmusWert": {
+        "jede_abreise": "en cada salida",
+        "quartal": "trimestral",
+        "jaehrlich": "anual",
+        "nie": "no contar"
+      }
+    }
   },
   "finance": {
     "cancelInvoice": {
@@ -5285,7 +5409,23 @@
       "ownerRequestsLift": "Solicitudes de cancelación",
       "ownerRequestsTermination": "Finalizaciones de contrato anunciadas",
       "ownerRequestsNone": "No hay operaciones abiertas.",
-      "ownerRequestsOldest": "Solicitud abierta más antigua: {count, plural, =0 {hoy} one {desde hace un día} other {desde hace # días}}"
+      "ownerRequestsOldest": "Solicitud abierta más antigua: {count, plural, =0 {hoy} one {desde hace un día} other {desde hace # días}}",
+      "teamTasks": "Tareas del equipo",
+      "teamTasksExplain": "Lo que el equipo tiene que procesar actualmente: tareas vencidas y con vencimiento hoy, tareas sin asignar y tareas pendientes de aprobación. Un estado actual, no un período de tiempo: abierto es abierto, y más antiguo significa más urgente.",
+      "teamTasksLabel": "Vencidas o con vencimiento hoy",
+      "teamTasksOldest": "Tarea vencida más antigua: desde hace {count} días",
+      "teamTasksOverdue": "Vencidas",
+      "teamTasksToday": "Con vencimiento hoy",
+      "teamTasksUnassigned": "Sin asignar",
+      "teamTasksToReview": "Pendiente de aprobación",
+      "teamTasksOpen": "Total de tareas abiertas",
+      "wechsel": "Cambio",
+      "wechselHint": "Salida y llegada el mismo día en la misma unidad: la limpieza debe realizarse entre dos ocupaciones.",
+      "wechselUnklar": "Cambio incierto",
+      "wechselUnklarHint": "El mismo día llega alguien a la misma propiedad, pero la unidad de una de las dos reservas no está registrada; no se puede determinar si realmente se debe realizar un cambio.",
+      "teamTasksUrgencyUnknown": "vencido o con vencimiento hoy — no disponible en este momento",
+      "listingsActive": "Activo",
+      "listingsActiveLabel": "En venta"
     },
     "mobileAppHint": "La vista de tareas para el día a día ya está disponible de forma responsive en la web (Mis tareas + detalle con subida de fotos). Una app móvil independiente llegará como proyecto propio.",
     "aufgabenFilter": {
@@ -15280,7 +15420,8 @@
         "reservierungen": "Reservas",
         "kennzahlen": "Estadísticas",
         "nachrichten": "Mensajes",
-        "objekte": "Alojamientos"
+        "objekte": "Alojamientos",
+        "aufgaben": "Tareas"
       }
     }
   },

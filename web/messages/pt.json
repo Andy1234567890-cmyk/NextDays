@@ -2747,7 +2747,8 @@
       "tradespeople": "Prestadores de serviços",
       "marketing": "Marketing",
       "housebook": "Manual da casa",
-      "listing": "Divulgação"
+      "listing": "Divulgação",
+      "inventory": "Inventário"
     },
     "objectInfo": {
       "capacityPersons": "Capacidade (pessoas)",
@@ -2898,7 +2899,130 @@
       "helaarsbolig": "Helårsbolig",
       "fritidshus": "Fritidshus"
     },
-    "print": "Imprimir"
+    "print": "Imprimir",
+    "mappe": {
+      "gastTitel": "Pasta de hóspedes — Documentos",
+      "hausTitel": "Pasta da casa — Documentos (interno)",
+      "titel": "Pasta digital",
+      "erklaerung": "Carregar PDF — os dados nele serão lidos e propostos para confirmação. O documento permanecerá aqui para consulta.",
+      "hochladen": "Carregar PDF",
+      "liest": "A ler …",
+      "laedt": "A carregar …",
+      "leer": "Ainda não há documentos nesta pasta.",
+      "zuGross": "O ficheiro é muito grande (máx. {mb} MB).",
+      "seiten": "{count, plural, one {# página} other {# páginas}}",
+      "ansehen": "Ver {name} em tamanho grande",
+      "loeschen": "Remover {name}",
+      "loeschenFrage": "Remover „{name}“ da pasta? Os dados já importados serão mantidos.",
+      "gefunden": "{count, plural, one {# dado encontrado} other {# dados encontrados}}",
+      "gefundenHinweis": "Nada disto foi guardado. Verifique, altere se necessário e depois importe — o código da porta e as palavras-passe não são pré-selecionados intencionalmente.",
+      "nichtsGefunden": "Este documento não continha nada que coubesse num campo da pasta. No entanto, permanece na pasta.",
+      "heikel": "Por favor, verifique cuidadosamente",
+      "fundstelle": "No documento: {ort}",
+      "sprachfassung": "Versão do idioma",
+      "ueberschreiben": "Substituir também os campos já preenchidos",
+      "ausgewaehlt": "{count} de {gesamt} selecionados",
+      "verwerfen": "Descartar",
+      "uebernehmen": "Importar",
+      "uebernimmt": "A importar …",
+      "schliessen": "Fechar",
+      "gesetzt": "{count, plural, =0 {Nada importado} one {# campo importado} other {# campos importados}}",
+      "uebersprungen": "Já preenchido e, portanto, inalterado: {felder}",
+      "stand": {
+        "offen": "não lido",
+        "gelesen": "lido",
+        "uebernommen": "assumido",
+        "ohne_treffer": "nada encontrado",
+        "fehler": "falha na leitura"
+      },
+      "sicher": {
+        "hoch": "legível",
+        "mittel": "leitura limitada",
+        "niedrig": "difícil de ler"
+      },
+      "sprache": {
+        "de": "Alemão",
+        "en": "Inglês",
+        "da": "Dinamarquês"
+      }
+    },
+    "inventar": {
+      "abschnitt": "Inventário",
+      "titel": "Lista de inventário",
+      "erklaerung": "O que está na casa, por cômodo. O planejado e o real são separados — a diferença é o resultado do inventário. Sempre expansível.",
+      "laedt": "Carregando…",
+      "leer": "Nada registrado ainda. Adicione linhas manualmente ou importe de um PDF da pasta.",
+      "neuName": "Item",
+      "neuSoll": "Planejado",
+      "hinzufuegen": "Adicionar",
+      "raeume": "Cômodos",
+      "keineRaeume": "ainda nenhum",
+      "raumName": "Nome do cômodo",
+      "raumHinzufuegen": "Adicionar cômodo",
+      "ohneRaum": "Sem cômodo",
+      "speichern": "Salvar",
+      "istMenge": "Quantidade existente",
+      "vonSoll": "de {soll}",
+      "geprueft": "Marcar como verificado",
+      "loeschen": "Remover",
+      "loeschenFrage": "Remover \"{name}\" da lista? Danos relatados serão mantidos.",
+      "ausDokument": "do PDF",
+      "ausDokumentHint": "Esta linha é de um documento da pasta digital.",
+      "schadenMelden": "Relatar dano",
+      "schadenAn": "Dano em \"{name}\"",
+      "art": "O que aconteceu?",
+      "traeger": "Quem arca com os custos?",
+      "werZahlt": "Quem paga?",
+      "beschreibung": "Descrição",
+      "fotoWaehlen": "Tirar ou escolher foto",
+      "fotoPflicht": "Sem foto, sem relatório — em caso de disputa, a imagem é muitas vezes a única coisa que importa.",
+      "fotosGewaehlt": "{count, plural, one {# imagem selecionada} other {# imagens selecionadas}}",
+      "melden": "Relatar dano",
+      "meldet": "Reportando…",
+      "abbrechen": "Cancelar",
+      "offeneSchaeden": "{count, plural, one {# dano} other {# danos}}",
+      "offeneSchaedenTitel": "{count, plural, one {# dano em aberto} other {# danos em aberto}}",
+      "bild": "Imagem {nr}",
+      "betrag": "Valor",
+      "bestaetigen": "Confirmar",
+      "verwerfen": "Descartar",
+      "verwerfenFrage": "Descartar dano em \"{name}\"? Isso não foi um dano.",
+      "artWert": {
+        "beschaedigt": "Danificado",
+        "fehlt": "Ausente",
+        "entsorgt": "Descartado"
+      },
+      "traegerWert": {
+        "offen": "Em aberto",
+        "eigentuemer": "Proprietário",
+        "gast": "Hóspede",
+        "betrieb": "Operação"
+      },
+      "pdfImport": "Lista de PDF",
+      "pdfLiest": "A ler…",
+      "pdfLeer": "Não foi detetada nenhuma lista de inventário neste PDF.",
+      "pdfGefunden": "{count, plural, one {# linha encontrada} other {# linhas encontradas}}",
+      "pdfHinweis": "Nada disto foi guardado. Verifique, altere se necessário e, em seguida, aplique. Os quartos só são atribuídos se já existirem.",
+      "uebernimmt": "A aplicar…",
+      "uebernehmen": "Aplicar",
+      "zustand": "Estado",
+      "rhythmus": "Ritmo de contagem",
+      "meldebestandKurz": "Estoque de notificação {n}",
+      "referenzSetzen": "Carregar imagem do estado intacto",
+      "referenzAnsehen": "Ver imagem do estado intacto",
+      "zustandWert": {
+        "neu": "novo",
+        "gut": "bom",
+        "abgenutzt": "desgastado",
+        "ersatz_faellig": "substituição necessária"
+      },
+      "rhythmusWert": {
+        "jede_abreise": "a cada partida",
+        "quartal": "trimestralmente",
+        "jaehrlich": "anualmente",
+        "nie": "não contar"
+      }
+    }
   },
   "finance": {
     "cancelInvoice": {
@@ -5285,7 +5409,23 @@
       "ownerRequestsLift": "Pedidos de desbloqueio",
       "ownerRequestsTermination": "Rescisões de contrato anunciadas",
       "ownerRequestsNone": "Nenhuma ação em aberto.",
-      "ownerRequestsOldest": "Pedido em aberto mais antigo: {count, plural, =0 {hoje} one {há um dia} other {há # dias}}"
+      "ownerRequestsOldest": "Pedido em aberto mais antigo: {count, plural, =0 {hoje} one {há um dia} other {há # dias}}",
+      "teamTasks": "Tarefas da equipe",
+      "teamTasksExplain": "O que a equipe precisa fazer agora: tarefas vencidas e com vencimento hoje, tarefas sem responsável e tarefas aguardando aprovação. Um status atual, não um período — em aberto é em aberto, e mais antigo significa mais urgente.",
+      "teamTasksLabel": "Vencido ou com vencimento hoje",
+      "teamTasksOldest": "Tarefa vencida mais antiga: há {count} dias",
+      "teamTasksOverdue": "Vencido",
+      "teamTasksToday": "Com vencimento hoje",
+      "teamTasksUnassigned": "Sem responsável",
+      "teamTasksToReview": "Aguardando aprovação",
+      "teamTasksOpen": "Total em aberto",
+      "wechsel": "Troca",
+      "wechselHint": "Partida e chegada no mesmo dia na mesma unidade — a limpeza deve ser feita entre duas ocupações.",
+      "wechselUnklar": "Troca incerta",
+      "wechselUnklarHint": "No mesmo dia, alguém chega na mesma propriedade, mas a unidade de uma das duas reservas não está registrada — não é possível dizer se realmente é necessário fazer a troca.",
+      "teamTasksUrgencyUnknown": "vencido ou a vencer hoje — atualmente indisponível",
+      "listingsActive": "Ativo",
+      "listingsActiveLabel": "À venda"
     },
     "mobileAppHint": "A vista de tarefas para o dia a dia já está disponível de forma responsiva na web (As minhas tarefas + detalhe com carregamento de fotos). Uma aplicação móvel separada seguirá como projeto próprio.",
     "aufgabenFilter": {
@@ -15280,7 +15420,8 @@
         "reservierungen": "Reservas",
         "kennzahlen": "Métricas",
         "nachrichten": "Mensagens",
-        "objekte": "Propriedades"
+        "objekte": "Propriedades",
+        "aufgaben": "Tarefas"
       }
     }
   },

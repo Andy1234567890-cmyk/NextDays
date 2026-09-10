@@ -1,9 +1,38 @@
-"""Der Takt, in dem wartende KI-Antworten hinausgehen.
+"""AUSSER BETRIEB (09.09.2026) — der Takt läuft im Worker, nicht mehr hier.
 
-OHNE IHN WIRD GEPLANT UND NIE GESENDET. `autoantwort_planen` legt eine Zeile in
-die Warteschlange mit einem `send_at`; `dispatch_ki_autoantworten` holt die
-fälligen ab. Zwischen beidem muss jemand ticken — sonst liegt die Antwort für
-immer da, und der Betrieb sieht nur, dass die KI „nicht funktioniert".
+DIESES MODUL HAT KEINEN AUFRUFER MEHR. Wer `start()` wieder anwirft, stellt
+einen behobenen Fehler wieder her — bitte NICHT tun, ohne das Folgende gelesen
+zu haben.
+
+WAS PASSIERT IST: `start()` wurde im FastAPI-Lifespan (`main.py`) gerufen, und
+der Lifespan läuft JE UVICORN-WORKER. Bei `UVICORN_WORKERS=4` (Compose-Vorgabe)
+liefen vier unabhängige Loops im Minutentakt auf derselben Warteschlange. Der
+Überlappungs-Guard unten (`if _task and not _task.done()`) ist ein
+Modul-Global und damit prozesslokal — er sieht die drei anderen Prozesse nicht.
+Zusammen mit dem damals fehlenden Claim in `dispatch_ki_autoantworten` gingen
+KI-Antworten mehrfach hinaus; gemeldet wurde es als „die e-mails gehen auch
+doppelt raus".
+
+WO DER TAKT JETZT LIEGT: `src/worker.py`, `_ki_autoantwort_tick`
+(`KI_AUTOANTWORT_TICK_SECONDS`). Der Worker ist ein EINZELNER Prozess
+(`command: python -m src.worker`) — derselbe Grund, aus dem die Automails dort
+liegen und nicht in der API. Zusätzlich claimt der Versand seit 0617 atomar,
+sodass auch ein zweiter Aufrufer (interner Cron-Endpunkt) nichts doppelt
+sendet.
+
+Die Datei bleibt vorerst stehen, weil zwei Kommentare (`worker.py`,
+`ki_autoantwort.py`) auf sie als Beleg verweisen. Sie ist Dokumentation eines
+Fehlers, kein Bauteil.
+
+DIE ENTSCHEIDUNG STEHT IN
+`docs/decisions/0030-takte-im-worker-nicht-in-der-api.md` — welcher Prozess
+welche Takte ausfuehrt, die gemessenen Belege (vier uvicorn-Kindprozesse, vier
+`ki_takt_gestartet`-Zeilen in derselben Sekunde) und die Absicherung fuer den
+Fall, dass der Worker doch mehrfach laeuft. Ein Kommentar in einer Datei, die
+niemand mehr oeffnet, war der falsche Ort fuer eine Architektur-Entscheidung.
+
+ZUR URSPRÜNGLICHEN BEGRÜNDUNG DES LOOPS (weiterhin fachlich richtig, nur am
+falschen Ort ausgeführt):
 
 WARUM EIN EIGENER LOOP und nicht der Timer-Weg des Nachrichten-Schedulers: Der
 setzt je Nachricht einen asyncio-Timer auf die Sekunde genau. Das ist dort
@@ -12,9 +41,10 @@ Wartezeit vor einer KI-Antwort ist bewusst ungenau, sie soll ja menschlich
 wirken. Ein Poll im Minutentakt ist der einfachere Weg mit demselben Ergebnis,
 und er übersteht einen Neustart ohne Wiederherstellungslogik.
 
-DER INTERNE ENDPUNKT BLEIBT. Er ist das Sicherheitsnetz für den Fall, dass
-dieser Loop stirbt, und der Weg für einen externen Cron — dieselbe Rolle wie
-beim Nachrichten-Scheduler.
+DER INTERNE ENDPUNKT BLEIBT. Er ist der Weg für einen externen Cron und das
+Sicherheitsnetz, falls der Worker-Tick ausfällt — dieselbe Rolle wie beim
+Nachrichten-Scheduler. Er ist gegen Doppelversand abgesichert, seit der Versand
+atomar claimt; vorher war er ein zusätzlicher Mitspieler im Rennen.
 """
 from __future__ import annotations
 

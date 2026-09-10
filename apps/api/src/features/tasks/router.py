@@ -55,6 +55,8 @@ from .schemas import (
     TaskRuleKind,
     TaskStatusUpdate,
     TaskZeitfensterUpdate,
+    TeamaufgabenStand,
+    ZaehlungRequest,
 )
 from .service import TaskError, TasksService
 
@@ -91,8 +93,13 @@ def create_task(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
-def _tagesgrenze(wert: str | None) -> datetime | None:
+def _tagesgrenze(wert: str | None, feld: str = "tagesende") -> datetime | None:
     """Der vom Client gemeldete Beginn seines NÄCHSTEN Tages (ISO-8601).
+
+    `feld` benennt den Parameter in der Fehlermeldung. Ohne ihn hieße es bei
+    jedem Zeitwert „tagesende ist ungültig", auch wenn der Aufrufer
+    `tagesbeginn` geschickt hat — eine Fehlermeldung, die auf das falsche Feld
+    zeigt, kostet den Integrator eine Stunde.
 
     Der Client liefert die Grenze, weil nur er weiß, welcher Tag beim Nutzer
     läuft: die Zeitzone hängt am Objekt (`properties.timezone`) und eine Liste
@@ -112,14 +119,14 @@ def _tagesgrenze(wert: str | None) -> datetime | None:
         grenze = datetime.fromisoformat(wert)
     except ValueError as exc:
         raise TaskError(
-            "tagesende muss ein ISO-8601-Zeitstempel sein.", status_code=422
+            f"{feld} muss ein ISO-8601-Zeitstempel sein.", status_code=422
         ) from exc
     if grenze.tzinfo is None:
         # Ohne Zonenangabe ließe sich der Wert nicht mit `start_at`/`due_at`
         # (beide zonenbewusst) vergleichen — Python wirft dabei einen
         # TypeError, also ein 500 auf eine Client-Eingabe.
         raise TaskError(
-            "tagesende braucht eine Zeitzonenangabe (z. B. +02:00).",
+            f"{feld} braucht eine Zeitzonenangabe (z. B. +02:00).",
             status_code=422,
         )
     return grenze
@@ -150,7 +157,7 @@ def _zeitraum(
     unter einem Filter auszugeben, der etwas anderes sagt als gemeint, ist die
     stille Falschaussage aus Wurzel 5.
     """
-    ab, bis_zu = _tagesgrenze(von), _tagesgrenze(bis)
+    ab, bis_zu = _tagesgrenze(von, "von"), _tagesgrenze(bis, "bis")
     if ab is not None and bis_zu is not None:
         if bis_zu <= ab:
             raise TaskError(
@@ -356,6 +363,28 @@ def checklist_item(
 ) -> dict[str, str]:
     try:
         return {"id": service.add_checklist_item(_tenant(ctx), req, ctx).id}
+    except TaskError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.patch("/checklist/item/{item_id}/zaehlung", response_model=TaskDetail)
+def zaehle_item(
+    item_id: str,
+    req: ZaehlungRequest,
+    service: TasksServiceDep,
+    ctx: Annotated[
+        AuthContext, Depends(require_permission(Capability.VIEW_OWN_TASKS))
+    ],
+) -> TaskDetail:
+    """Eine gezaehlte Menge an einem Zaehlpunkt eintragen (0623).
+
+    `VIEW_OWN_TASKS` wie die uebrigen Checklisten-Endpunkte: die
+    Reinigungskraft zaehlt in ihrer eigenen Aufgabe. Der Objekt-Scope wird im
+    Service ueber `get_detail` re-geprueft (Wurzel 9) — der Guard allein
+    genuegt nicht, weil `item_id` sonst der einzige Schluessel waere.
+    """
+    try:
+        return service.zaehle_checklist_item(_tenant(ctx), item_id, req.menge, ctx)
     except TaskError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -594,6 +623,49 @@ def team_tasks(
         tagesende=grenze,
         ctx=ctx,
     )
+
+
+@router.get("/startseite", response_model=TeamaufgabenStand)
+def teamaufgaben_startseite(
+    service: TasksServiceDep,
+    ctx: Annotated[AuthContext, Depends(_manage())],
+    tagesbeginn: str | None = None,
+    tagesende: str | None = None,
+) -> TeamaufgabenStand:
+    """Die Bestände der Teamaufgaben für die Kachel auf der Startseite.
+
+    DERSELBE GUARD WIE DIE LISTE (`MANAGE_TASKS`, `_manage()`): die Zahlen sind
+    eine Zusammenfassung von genau dem, was `/tasks/team` zeilenweise ausgibt.
+    Ein schwächerer Guard hier wäre eine Auskunft über fremde Aufgaben an eine
+    Rolle, die die Liste selbst nicht öffnen darf (Wurzel 9). Für die eigene
+    Sicht gibt es `/tasks/mine` — sie hat einen anderen Scope und braucht
+    deshalb eine eigene Zahl, keine aufgeweichte hier.
+
+    `tagesbeginn`/`tagesende` sind die Grenzen des laufenden Tages BEIM NUTZER
+    (ISO-8601 mit Zone), wie schon bei `/tasks/mine` und `/tasks/team`. Nur der
+    Client weiß, welcher Tag beim Leser läuft; hier eine Zone zu unterstellen
+    wäre ein erfundener Wert (Wurzel 4).
+    """
+    # `_tagesgrenze` meldet unlesbaren oder zonenlosen Input als 422 statt als
+    # 500 — angreiferkontrollierter Input darf keinen Serverfehler erzeugen
+    # (Wurzel 5). Derselbe Fang wie in `/tasks/mine` und `/tasks/team`.
+    try:
+        ab = _tagesgrenze(tagesbeginn, "tagesbeginn")
+        bis_zu = _tagesgrenze(tagesende)
+    except TaskError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    if ab is not None and bis_zu is not None and ab >= bis_zu:
+        # Vertauschte Grenzen ergäben „alles überfällig UND nichts heute" —
+        # eine Zahl, die plausibel aussieht und falsch ist. Lieber laut (422).
+        raise HTTPException(
+            status_code=422, detail="tagesbeginn muss vor tagesende liegen."
+        )
+    try:
+        return service.teamaufgaben_stand(
+            _tenant(ctx), tagesbeginn=ab, tagesende=bis_zu
+        )
+    except TaskError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
 @router.post("/bulk/complete")

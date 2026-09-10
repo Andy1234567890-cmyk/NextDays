@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import re
+from datetime import UTC, datetime, timedelta
 from typing import Any, Final
 
 from src.core.logging import get_logger
@@ -945,6 +946,13 @@ _ISO_ZEITSTEMPEL = re.compile(
     r"(Z|[+-]\d{2}:?\d{2})?$"
 )
 
+# Wie weit darf ein fremder Zeitstempel VOR unserer Uhr liegen, ohne als
+# Datenfehler zu gelten? Zwei Rechenzentren driften um Sekunden, und ein Portal
+# darf einen Vorgang auf die Sekunde stempeln, in der unsere Uhr noch nicht ist.
+# Eine Minute deckt das ab, ohne eine echte Falschangabe (Stunden bis Tage
+# Vorsprung durch falschen Offset) zu verdecken.
+_UHR_KULANZ = timedelta(seconds=60)
+
 
 # Platzhalter-Text einer Nachricht, die NUR aus Anhängen besteht (der Gast hat
 # bloß ein Foto geschickt — Channex setzt `message: ""` und füllt
@@ -972,6 +980,65 @@ def ota_zeitstempel_utc(wert: object) -> str | None:
     if not text or not _ISO_ZEITSTEMPEL.match(text):
         return None
     return text if _HAT_ZONE.search(text) else text + "Z"
+
+
+def ist_frisch(iso_zeitstempel: str | None, *, stunden: int) -> bool | None:
+    """Liegt dieser FREMDE Zeitpunkt innerhalb der letzten `stunden`?
+
+    `True` innerhalb des Fensters, `False` ausserhalb — und `None`, wenn es
+    keinen brauchbaren Zeitpunkt gibt (fehlt, unlesbar, oder in der ZUKUNFT).
+
+    WARUM DIESE FUNKTION EXISTIERT (09.09.2026): Dieselbe Zeit-Arithmetik stand
+    dreimal im Slice — `_frisch_gebucht` (Recovery-Lauf), `_bestand`
+    (Feed-Abgleich) und `_frische_nachricht` (Gastnachricht). Alle drei lasen
+    einen Portal-Zeitstempel, parsten ISO, setzten bei naivem Wert `UTC` und
+    verglichen gegen ein Stundenfenster. Zwei davon gaben `True` fuer
+    „frisch" zurueck, eine fuer „Bestand" — mit jeweils passend INVERTIERTEM
+    fail-Wert. Drei Kopien einer Ja/Nein-Frage, deren Vorzeichen sich zwischen
+    den Kopien dreht, sind kein Duplikat-Geruch, sondern eine Falle: wer die
+    eine liest und die andere aendert, kehrt die Bedeutung um.
+
+    WARUM `None` UND NICHT EIN FAIL-WERT IM HELFER: Der fail-Wert ist an jeder
+    der drei Stellen ein ANDERER, und zwar aus fachlichen Gruenden (der
+    Recovery-Lauf meldet lieber nichts, die Nachricht laeutet lieber nicht, der
+    Abgleich gilt lieber als Bestand). Ihn hier zu waehlen heisst, ihn zu
+    verstecken. Deshalb gibt es ihn hier NICHT: die Aufrufstelle schreibt
+    `if ist_frisch(...) is not True` bzw. `is not False` und macht damit
+    sichtbar, wohin sie im Zweifel faellt. Genau das war vorher unsichtbar.
+    Die drei Fenster-Konstanten bleiben ebenfalls an den Aufrufstellen — je
+    Domaene eine eigene Begruendung, hier waere eine gemeinsame Zahl geraten.
+
+    ZUKUNFTSWERTE SIND EIN DATENFEHLER, kein Normalfall (Wurzel 4/5). Alle drei
+    Vorgaenger verglichen nur `jetzt - zeitpunkt <= fenster`. Fuer einen
+    Zeitstempel in der Zukunft — Portal mit falsch gestellter Uhr, falsches
+    Vorzeichen im Offset, vertauschtes Tag/Monat — ist das DAUERHAFT wahr: der
+    Wert gilt fuer immer als frisch, und die Meldung wiederholt sich bei jedem
+    Lauf, ohne dass irgendwo etwas auffaellt. Die Schranke ist deshalb
+    BEIDSEITIG (`0 <= differenz <= fenster`), und ein Zukunftswert wird LAUT
+    geloggt statt still hingenommen. Die Kulanz von 60 Sekunden deckt die
+    normale Uhr-Drift zwischen zwei Rechenzentren ab; alles darueber ist ein
+    echter Befund.
+    """
+    if not iso_zeitstempel:
+        return None
+    try:
+        zeitpunkt = datetime.fromisoformat(iso_zeitstempel)
+    except (TypeError, ValueError):
+        return None
+    if zeitpunkt.tzinfo is None:
+        # Channex liefert `inserted_at` ohne Zone, gemeint ist UTC — dieselbe
+        # Annahme wie in `ota_zeitstempel_utc` (Begruendung dort).
+        zeitpunkt = zeitpunkt.replace(tzinfo=UTC)
+    differenz = datetime.now(UTC) - zeitpunkt
+    if differenz < -_UHR_KULANZ:
+        log.warning(
+            "ota_zeitstempel_in_der_zukunft",
+            zeitstempel=iso_zeitstempel,
+            vorsprung_sekunden=round(-differenz.total_seconds()),
+            fenster_stunden=stunden,
+        )
+        return None
+    return differenz <= timedelta(hours=stunden)
 
 
 def ota_uhrzeit(wert: object) -> str | None:

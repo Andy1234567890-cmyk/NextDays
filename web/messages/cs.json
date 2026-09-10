@@ -2747,7 +2747,8 @@
       "tradespeople": "Řemeslníci",
       "marketing": "Marketing",
       "housebook": "Domovní kniha",
-      "listing": "Vystavení nabídky"
+      "listing": "Vystavení nabídky",
+      "inventory": "Inventář"
     },
     "objectInfo": {
       "capacityPersons": "Kapacita (osob)",
@@ -2898,7 +2899,130 @@
       "helaarsbolig": "Celoroční bydlení",
       "fritidshus": "Rekreační dům"
     },
-    "print": "Tisk"
+    "print": "Tisk",
+    "mappe": {
+      "gastTitel": "Dokumenty pro hosty",
+      "hausTitel": "Dokumenty k objektu (interní)",
+      "titel": "Digitální složka",
+      "erklaerung": "Nahrát PDF – údaje v něm budou přečteny a navrženy k potvrzení. Dokument zde zůstane k nahlédnutí.",
+      "hochladen": "Nahrát PDF",
+      "liest": "Čte se…",
+      "laedt": "Načítá se…",
+      "leer": "V této složce zatím nejsou žádné dokumenty.",
+      "zuGross": "Soubor je příliš velký (max. {mb} MB).",
+      "seiten": "{count, plural, one {# stránka} few {# stránky} other {# stránek}}",
+      "ansehen": "Zobrazit {name} ve velkém",
+      "loeschen": "Odstranit {name}",
+      "loeschenFrage": "Odstranit „{name}“ ze složky? Již převzaté údaje zůstanou zachovány.",
+      "gefunden": "{count, plural, one {# údaj nalezen} few {# údaje nalezeny} other {# údajů nalezeno}}",
+      "gefundenHinweis": "Nic z toho není uloženo. Zkontrolujte, v případě potřeby změňte a poté převezměte – kód dveří a hesla nejsou záměrně předvybrány.",
+      "nichtsGefunden": "V tomto dokumentu nebylo nic, co by se hodilo do pole složky. Přesto zůstane ve složce.",
+      "heikel": "Zkontrolujte prosím pečlivě",
+      "fundstelle": "V dokumentu: {ort}",
+      "sprachfassung": "Jazyková verze",
+      "ueberschreiben": "Nahradit i již vyplněná pole",
+      "ausgewaehlt": "{count} z {gesamt} vybráno",
+      "verwerfen": "Zrušit",
+      "uebernehmen": "Převzít",
+      "uebernimmt": "Převádí se…",
+      "schliessen": "Zavřít",
+      "gesetzt": "{count, plural, =0 {Nic nebylo převzato} one {# pole převzato} few {# pole převzata} other {# polí převzato}}",
+      "uebersprungen": "Již vyplněno a proto nezměněno: {felder}",
+      "stand": {
+        "offen": "nepřečteno",
+        "gelesen": "přečteno",
+        "uebernommen": "převzato",
+        "ohne_treffer": "nic nebylo nalezeno",
+        "fehler": "čtení se nezdařilo"
+      },
+      "sicher": {
+        "hoch": "dobře čitelné",
+        "mittel": "omezeně čitelné",
+        "niedrig": "špatně čitelné"
+      },
+      "sprache": {
+        "de": "Němčina",
+        "en": "Angličtina",
+        "da": "Dánština"
+      }
+    },
+    "inventar": {
+      "abschnitt": "Inventář",
+      "titel": "Seznam inventáře",
+      "erklaerung": "Co je v domě, podle místností. Odděleno požadované a skutečné – rozdíl je výsledek inventury. Kdykoli rozšiřitelné.",
+      "laedt": "Načítání…",
+      "leer": "Zatím nic nezaznamenáno. Doplňte řádky ručně nebo je přeneste z PDF složky.",
+      "neuName": "Předmět",
+      "neuSoll": "Požadováno",
+      "hinzufuegen": "Přidat",
+      "raeume": "Místnosti",
+      "keineRaeume": "žádné",
+      "raumName": "Název místnosti",
+      "raumHinzufuegen": "Přidat místnost",
+      "ohneRaum": "Bez místnosti",
+      "speichern": "Uložit",
+      "istMenge": "Dostupné množství",
+      "vonSoll": "z {soll}",
+      "geprueft": "Označit jako zkontrolované",
+      "loeschen": "Odstranit",
+      "loeschenFrage": "Odstranit „{name}“ ze seznamu? Nahlášené škody zůstanou zachovány.",
+      "ausDokument": "z PDF",
+      "ausDokumentHint": "Tento řádek pochází z dokumentu digitální složky.",
+      "schadenMelden": "Nahlásit škodu",
+      "schadenAn": "Poškození „{name}“",
+      "art": "Co se děje?",
+      "traeger": "Kdo nese náklady?",
+      "werZahlt": "Kdo platí?",
+      "beschreibung": "Popis",
+      "fotoWaehlen": "Vyfotit nebo vybrat",
+      "fotoPflicht": "Bez fotografie žádné hlášení – v případě sporu je obrázek často jedinou věcí, která se počítá.",
+      "fotosGewaehlt": "{count, plural, one {# vybraný obrázek} other {# vybrané obrázky}}",
+      "melden": "Nahlásit škodu",
+      "meldet": "Hlášení probíhá…",
+      "abbrechen": "Zrušit",
+      "offeneSchaeden": "{count, plural, one {# škoda} other {# škody}}",
+      "offeneSchaedenTitel": "{count, plural, one {# otevřená škoda} other {# otevřené škody}}",
+      "bild": "Obrázek {nr}",
+      "betrag": "Částka",
+      "bestaetigen": "Potvrdit",
+      "verwerfen": "Zrušit",
+      "verwerfenFrage": "Zrušit poškození „{name}“? Toto nebyla škoda.",
+      "artWert": {
+        "beschaedigt": "Poškozeno",
+        "fehlt": "Chybí",
+        "entsorgt": "Zlikvidováno"
+      },
+      "traegerWert": {
+        "offen": "Nezpracováno",
+        "eigentuemer": "Majitel",
+        "gast": "Host",
+        "betrieb": "Provoz"
+      },
+      "pdfImport": "Seznam z PDF",
+      "pdfLiest": "Načítání…",
+      "pdfLeer": "V tomto PDF nebyl rozpoznán žádný seznam inventáře.",
+      "pdfGefunden": "{count, plural, one {# nalezený řádek} other {# nalezených řádků}}",
+      "pdfHinweis": "Nic z toho není uloženo. Zkontrolujte, v případě potřeby změňte a poté potvrďte. Místnosti jsou přiřazeny pouze v případě, že již existují.",
+      "uebernimmt": "Převzetí…",
+      "uebernehmen": "Převzít",
+      "zustand": "Stav",
+      "rhythmus": "Rytmus počítání",
+      "meldebestandKurz": "Hlásit zásobu {n}",
+      "referenzSetzen": "Uložit obrázek neporušeného stavu",
+      "referenzAnsehen": "Zobrazit obrázek neporušeného stavu",
+      "zustandWert": {
+        "neu": "nový",
+        "gut": "dobrý",
+        "abgenutzt": "opotřebovaný",
+        "ersatz_faellig": "nutná výměna"
+      },
+      "rhythmusWert": {
+        "jede_abreise": "při každém odjezdu",
+        "quartal": "čtvrtletně",
+        "jaehrlich": "ročně",
+        "nie": "nepočítat"
+      }
+    }
   },
   "finance": {
     "cancelInvoice": {
@@ -5285,7 +5409,23 @@
       "ownerRequestsLift": "Žádosti o zrušení",
       "ownerRequestsTermination": "Oznámené konce smluv",
       "ownerRequestsNone": "Žádné otevřené operace.",
-      "ownerRequestsOldest": "Nejstarší otevřená žádost: {count, plural, =0 {dnes} one {jeden den} few {před # dny} many {před # dny} other {před # dny}}"
+      "ownerRequestsOldest": "Nejstarší otevřená žádost: {count, plural, =0 {dnes} one {jeden den} few {před # dny} many {před # dny} other {před # dny}}",
+      "teamTasks": "Týmové úkoly",
+      "teamTasksExplain": "Co tým právě zpracovává: úkoly po termínu a splatné dnes, úkoly bez přiřazených osob a ty, které čekají na schválení. Aktuální stav, ne časové období – otevřené je otevřené a starší znamená naléhavější.",
+      "teamTasksLabel": "Po termínu nebo splatné dnes",
+      "teamTasksOldest": "Nejstarší úkol po termínu: před {count} dny",
+      "teamTasksOverdue": "Po termínu",
+      "teamTasksToday": "Splatné dnes",
+      "teamTasksUnassigned": "Bez přiřazených osob",
+      "teamTasksToReview": "Čeká na schválení",
+      "teamTasksOpen": "Celkem otevřených",
+      "wechsel": "Změna",
+      "wechselHint": "Odjezd a příjezd ve stejný den ve stejné jednotce – úklid musí proběhnout mezi dvěma obsazeními.",
+      "wechselUnklar": "Změna nejasná",
+      "wechselUnklarHint": "Ve stejný den přijíždí někdo do stejného objektu, ale jednotka jedné z rezervací není uvedena – nelze z toho říci, zda je skutečně nutné provést změnu.",
+      "teamTasksUrgencyUnknown": "po splatnosti nebo splatné dnes – momentálně nedostupné",
+      "listingsActive": "Aktivní",
+      "listingsActiveLabel": "V prodeji"
     },
     "mobileAppHint": "Zobrazení úkolů na cestách je již responzivně dostupné na webu (Moje úkoly + detail s nahráním fotek). Samostatná mobilní aplikace přijde jako vlastní projekt.",
     "aufgabenFilter": {
@@ -15280,7 +15420,8 @@
         "reservierungen": "Rezervace",
         "kennzahlen": "Klíčové ukazatele",
         "nachrichten": "Zprávy",
-        "objekte": "Objekty"
+        "objekte": "Objekty",
+        "aufgaben": "Úkoly"
       }
     }
   },

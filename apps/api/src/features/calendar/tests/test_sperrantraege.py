@@ -359,7 +359,12 @@ def _tables(*, einheiten: int = 1, mit_eigentuemer: bool = True) -> dict[str, li
             },
         ],
         "properties": [
-            {"id": OBJEKT, "tenant_id": "t-1", "title": "Villa"},
+            {
+                "id": OBJEKT,
+                "tenant_id": "t-1",
+                "title": "Villa",
+                "photos": ["https://bilder.example/villa-1.jpg", "…2.jpg"],
+            },
             {"id": OBJEKT_FREMD, "tenant_id": "t-9", "title": "Fremd"},
         ],
         "property_units": [
@@ -482,6 +487,25 @@ def test_liste_nur_eigener_mandant() -> None:
     assert [i.id for i in res.items] == [ANTRAG]  # der fremde fehlt
     assert res.items[0].property_title == "Villa"
     assert res.items[0].requested_by_name == "Herr Ohm"
+
+
+def test_liste_liefert_erstes_objektfoto() -> None:
+    """Die Entscheidungsliste zeigt das Objekt, nicht nur seinen Namen.
+
+    Vorher stand dort ein Hand-Symbol je Antrag — bei gleichlautenden Titeln
+    („Feriehus Britt" I und II) war das Objekt daran nicht zu erkennen.
+    """
+    res = _svc().liste(_ctx())
+    assert res.items[0].property_photo == "https://bilder.example/villa-1.jpg"
+
+
+def test_objekt_ohne_foto_bleibt_none() -> None:
+    """Kein Foto → `None`, nie ein erfundener Platzhalter (Wurzel 4)."""
+    tables = _tables()
+    for zeile in tables["properties"]:
+        zeile.pop("photos", None)
+    res = _svc(tables).liste(_ctx())
+    assert res.items[0].property_photo is None
 
 
 def test_liste_filtert_status() -> None:

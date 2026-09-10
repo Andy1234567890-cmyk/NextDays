@@ -18,7 +18,7 @@ import pytest
 from src.core.mail_sprache import FALLBACK
 from src.core.mail_texte import TEXTE
 from src.core.mail_texte import text as mail_text
-from src.features.notification_settings import ereignisse
+from src.features.notification_settings import betriebsmeldungen, ereignisse
 from src.features.notification_settings.dispatcher import Katalogwert
 
 
@@ -87,7 +87,14 @@ class _Dispatcher:
 @pytest.fixture
 def dispatcher(monkeypatch: pytest.MonkeyPatch) -> _Dispatcher:
     doppel = _Dispatcher()
+    # BEIDE Module, nicht nur eines: `betriebsmeldungen` importiert
+    # `_dispatcher` per `from .ereignisse import …`, hat also eine EIGENE
+    # Namensbindung. Ein Patch nur auf `ereignisse` erreicht die
+    # Betriebsmeldungen nicht — ihr Test liefe dann gegen den echten
+    # Dispatcher, und `aufrufe` bliebe leer statt zu scheitern. Die Falle des
+    # Modul-Splits vom 09.09.2026: die Zusicherung wird still wahr.
     monkeypatch.setattr(ereignisse, "_dispatcher", lambda _db: doppel)
+    monkeypatch.setattr(betriebsmeldungen, "_dispatcher", lambda _db: doppel)
     return doppel
 
 
@@ -590,7 +597,7 @@ def test_zustellproblem_geht_nur_an_die_betriebsleitung(
     nichts angehen (Wurzel 9). Ein Chef eines FREMDEN Mandanten schon gar nicht
     (Wurzel 3).
     """
-    ereignisse.melde_zustellproblem(
+    betriebsmeldungen.melde_zustellproblem(
         _DB(_zustell_tables()), tenant_id="t-1", quelle_id="msg-1",
         grund="Diese Felder haben keinen Wert: door_code", endgueltig=True,
     )
@@ -606,7 +613,7 @@ def test_zustellproblem_nennt_den_grund_und_fuehrt_zum_posteingang(
     Eine Glocke, die nur „etwas ging schief" sagt, verlagert die Sucharbeit auf
     den Betrieb — genau das war der Zustand vorher.
     """
-    ereignisse.melde_zustellproblem(
+    betriebsmeldungen.melde_zustellproblem(
         _DB(_zustell_tables()), tenant_id="t-1", quelle_id="msg-1",
         grund="Diese Felder haben keinen Wert: door_code", endgueltig=True,
     )
@@ -635,8 +642,8 @@ def test_zustellproblem_kippt_den_versand_nicht(
 ) -> None:
     """Wurzel 5: die Meldung ist Nebenpfad. Ein toter Dispatcher darf den
     Versand-Tick nicht mitreissen."""
-    monkeypatch.setattr(ereignisse, "_dispatcher", lambda _db: _Dispatcher(fehler=True))
-    ereignisse.melde_zustellproblem(
+    monkeypatch.setattr(betriebsmeldungen, "_dispatcher", lambda _db: _Dispatcher(fehler=True))
+    betriebsmeldungen.melde_zustellproblem(
         _DB(_zustell_tables()), tenant_id="t-1", quelle_id="msg-1",
         grund="egal", endgueltig=True,
     )  # darf nicht werfen
@@ -744,7 +751,7 @@ def test_systemwarnungs_rollen_folgen_der_faehigkeit() -> None:
 
 
 def test_systemwarnung_erreicht_admin_und_co_admin(dispatcher: _Dispatcher) -> None:
-    ereignisse.melde_systemwarnung(
+    betriebsmeldungen.melde_systemwarnung(
         _DB(_zustell_tables()), tenant_id="t-1",
         text_key="benachrichtigung.systemwarnung_portalabgleich",
         werte={"objekt": "Haus Nord", "fehler": "timeout"},
@@ -765,7 +772,7 @@ def test_systemwarnung_erreicht_admin_und_co_admin(dispatcher: _Dispatcher) -> N
 def test_systemwarnung_ergaenzt_objekttitel_aus_der_db(dispatcher: _Dispatcher) -> None:
     tables = _zustell_tables()
     tables["properties"] = [{"id": "p-1", "tenant_id": "t-1", "title": "Feriehus Kornblomst"}]
-    ereignisse.melde_systemwarnung(
+    betriebsmeldungen.melde_systemwarnung(
         _DB(tables), tenant_id="t-1",
         text_key="benachrichtigung.systemwarnung_portalabgleich",
         werte={"fehler": "429"},
@@ -779,7 +786,7 @@ def test_systemwarnung_ergaenzt_objekttitel_aus_der_db(dispatcher: _Dispatcher) 
 
 def test_systemwarnung_ohne_empfaenger_sendet_nichts(dispatcher: _Dispatcher) -> None:
     tables = {"users": [{"id": "putz", "tenant_id": "t-1", "role": "cleaner"}]}
-    ereignisse.melde_systemwarnung(
+    betriebsmeldungen.melde_systemwarnung(
         _DB(tables), tenant_id="t-1",
         text_key="benachrichtigung.systemwarnung_portalabgleich",
         werte={"objekt": "X", "fehler": "y"},
@@ -789,8 +796,8 @@ def test_systemwarnung_ohne_empfaenger_sendet_nichts(dispatcher: _Dispatcher) ->
 
 
 def test_systemwarnung_kippt_den_lauf_nicht(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(ereignisse, "_dispatcher", lambda _db: _Dispatcher(fehler=True))
-    ereignisse.melde_systemwarnung(
+    monkeypatch.setattr(betriebsmeldungen, "_dispatcher", lambda _db: _Dispatcher(fehler=True))
+    betriebsmeldungen.melde_systemwarnung(
         _DB(_zustell_tables()), tenant_id="t-1",
         text_key="benachrichtigung.systemwarnung_portalabgleich",
         werte={"objekt": "X", "fehler": "y"},
@@ -801,5 +808,5 @@ def test_systemwarnung_kippt_den_lauf_nicht(monkeypatch: pytest.MonkeyPatch) -> 
 def test_systemwarnung_kategorie_ist_glocke_only() -> None:
     from src.features.notification_settings.katalog import NACH_SCHLUESSEL, SPALTEN
 
-    assert NACH_SCHLUESSEL[ereignisse.SCHLUESSEL_SYSTEMWARNUNG].kanaele == ()
+    assert NACH_SCHLUESSEL[betriebsmeldungen.SCHLUESSEL_SYSTEMWARNUNG].kanaele == ()
     assert not [s for s in SPALTEN if s.startswith("systemwarnung")]

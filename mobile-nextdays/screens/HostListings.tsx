@@ -12,9 +12,12 @@ import { useCallback, useEffect, useState } from "react";
 import { Pressable, RefreshControl, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { ObjektAnlegen } from "@/components/objekte/ObjektAnlegen";
 import { Icon } from "@/components/ui/Icon";
 import { Btn, Col, Photo, Row, Spinner, Txt } from "@/components/ui/kit";
 import { EmptyState } from "@/components/ui/patterns";
+import { useAuth } from "@/contexts/AuthContext";
+import { can } from "@/lib/permissions";
 import {
   listProperties,
   propertyTypeLabel,
@@ -36,11 +39,20 @@ const CHANNEL_LABEL: Record<ChannelKey, string> = {
 
 export default function Listings({ navigation }: { navigation: any }) {
   const t = useTheme();
+  const { me } = useAuth();
   // Unten frei bleiben MUSS die Tab-Leiste (lib/unterkante).
   const unterkante = useUnterkante();
   const insets = useSafeAreaInsets();
   const [items, setItems] = useState<Property[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [anlegenOffen, setAnlegenOffen] = useState(false);
+
+  // Objekte anlegen ist Objektverwaltung: der Server verlangt
+  // MANAGE_PROPERTY_SETTINGS, das owner/staff/cleaner NICHT haben. Ohne diese
+  // Prüfung stünde der Knopf für jede Rolle da und liefe in ein 403 — ein
+  // Knopf, dessen Ergebnis der Server wegwirft. Die echte Kontrolle bleibt
+  // beim Server (Wurzel 6).
+  const darfAnlegen = can(me, "manage_properties");
 
   const load = useCallback(async () => {
     const res = await listProperties();
@@ -84,14 +96,17 @@ export default function Listings({ navigation }: { navigation: any }) {
             {untertitel}
           </Txt>
         </Col>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Neues Objekt"
-          hitSlop={10}
-          style={({ pressed }) => ({ padding: 6, opacity: pressed ? 0.6 : 1 })}
-        >
-          <Icon n="plus" s={24} sw={2} c={t.palette.ink} />
-        </Pressable>
+        {darfAnlegen && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Neues Objekt"
+            hitSlop={10}
+            onPress={() => setAnlegenOffen(true)}
+            style={({ pressed }) => ({ padding: 6, opacity: pressed ? 0.6 : 1 })}
+          >
+            <Icon n="plus" s={24} sw={2} c={t.palette.ink} />
+          </Pressable>
+        )}
       </Row>
 
       <ScrollView
@@ -113,7 +128,13 @@ export default function Listings({ navigation }: { navigation: any }) {
             icon="home"
             titel="Noch kein Objekt"
             text="Lege dein erstes Objekt an — eine buchbare Einheit, also ein Zimmer oder ein Ferienobjekt."
-          />
+          >
+            {darfAnlegen && (
+              <Btn variant="primary" onPress={() => setAnlegenOffen(true)} style={{ marginTop: 6 }}>
+                Objekt anlegen
+              </Btn>
+            )}
+          </EmptyState>
         )}
 
         {items?.map((p) => (
@@ -162,6 +183,21 @@ export default function Listings({ navigation }: { navigation: any }) {
           </Pressable>
         ))}
       </ScrollView>
+
+      {/* Nach dem Anlegen direkt ins Objekt: die Agentur steht noch beim
+          Kunden und ergänzt dort weiter. Die Liste wird dabei neu geladen,
+          damit das neue Objekt beim Zurückgehen schon darin steht — das
+          `properties`-Realtime-Abo deckt zwar den Fremd-Fall ab, aber auf die
+          eigene Aktion wartet niemand gern auf ein Ereignis. */}
+      <ObjektAnlegen
+        offen={anlegenOffen}
+        onSchliessen={() => setAnlegenOffen(false)}
+        onAngelegt={(p) => {
+          setAnlegenOffen(false);
+          void load();
+          navigation.navigate("PropertyDetail", { id: p.id });
+        }}
+      />
     </View>
   );
 }

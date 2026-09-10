@@ -499,6 +499,9 @@ export type Sperrantrag = {
   id: string;
   property_id: string;
   property_title: string | null;
+  /** Erstes Objektfoto. null = keins hinterlegt → die Karte zeigt ihr
+   *  Symbol, kein erfundenes Platzhalterbild (Wurzel 4). */
+  property_photo: string | null;
   /** Die beantragte Einheit (0353). null = der ganze Einheiten-TYP. Die
    *  Agentur MUSS das sehen: „Studio 3 vom 1.–5." ist eine andere
    *  Entscheidung als „alle fünf Studios vom 1.–5.". */

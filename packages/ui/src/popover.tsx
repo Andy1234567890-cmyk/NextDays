@@ -15,14 +15,28 @@ const PopoverAnchor = PopoverPrimitive.Anchor;
 function PopoverContent({
   className,
   align = "start",
+  side = "bottom",
   sideOffset = 8,
+  collisionPadding = 8,
   ...props
 }: ComponentProps<typeof PopoverPrimitive.Content>) {
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
+        // Bevorzugte Seite explizit: ohne `side` nimmt Radix zwar ebenfalls
+        // "bottom", aber der Wert steht dann nirgends und ein Aufrufer, der
+        // ihn ändern will, muss raten. Die Kollisionserkennung bleibt AN
+        // (Radix-Vorgabe) — ein Popover, das am Seitenende nicht mehr nach
+        // unten passt, soll weiterhin nach oben klappen statt aus dem
+        // Sichtfeld zu ragen. Was das Umklappen früher zum Flackern machte,
+        // war die wechselnde Inhaltshöhe des Kalenders; die ist in
+        // `calendar.tsx` per `fixedWeeks` festgenagelt.
+        side={side}
         align={align}
         sideOffset={sideOffset}
+        // Abstand zum Fensterrand, damit der Inhalt nicht bündig an der Kante
+        // klebt und ein Popover nicht schon bei einem Pixel Überhang umklappt.
+        collisionPadding={collisionPadding}
         className={cn(
           "z-50 w-80 rounded-(--radius) border border-border bg-background p-4 text-sm shadow-lg outline-none",
           "animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",

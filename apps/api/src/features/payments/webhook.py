@@ -38,7 +38,7 @@ from src.core.logging import get_logger
 from src.features.addons.zahlung import verbuche_checkout_session
 from src.features.affiliates import provision as partner_provision
 from src.features.donations.service import DonationsService
-from src.features.notification_settings.ereignisse import melde_testphase_endet
+from src.features.notification_settings.betriebsmeldungen import melde_testphase_endet
 from src.features.payments import stripe_client as sc
 from src.features.payments.nachberechnung import (
     verbuche_checkout_session as verbuche_nachberechnung_session,

@@ -69,7 +69,6 @@ from .features.guest_wishlist.router import router as guest_wishlist_router
 from .features.guests.router import router as guests_router
 from .features.host_messages.router import router as host_messages_router
 from .features.host_profiles.router import router as host_profiles_router
-from .features.inbox import ki_takt as inbox_ki_takt
 from .features.inbox import scheduler as inbox_scheduler
 from .features.inbox.router import router as inbox_router
 from .features.login_devices.router import router as login_devices_router
@@ -82,6 +81,7 @@ from .features.notification_settings.router import (
 )
 from .features.ocr.router import router as ocr_router
 from .features.owner_billing.router import router as owner_billing_router
+from .features.owner_chat.fehler import OwnerChatError
 from .features.owner_chat.router import router as owner_chat_router
 from .features.owner_reporting.router import router as owner_reporting_router
 from .features.owner_statements.router import router as owner_statements_router
@@ -227,14 +227,24 @@ _SLICE_ROUTERS = [
 async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Sekundengenauer Scheduler für geplante Posteingang-Nachrichten:
     # beim Start offene pending-Nachrichten (neu) timern, beim Stop abbrechen.
+    #
+    # Er darf hier bleiben, der KI-Takt nicht: dieser Scheduler timert nur, was
+    # im EIGENEN Prozess über `schedule()` aus dem Request-Pfad hereinkam, und
+    # `dispatch_due_scheduled` claimt atomar.
     await inbox_scheduler.start()
-    # Der Takt der KI-Autoantworten. Ohne ihn wird geplant und nie gesendet.
-    await inbox_ki_takt.start()
+    # DER KI-TAKT LÄUFT IM WORKER, NICHT HIER (`worker.py`,
+    # `_ki_autoantwort_tick`). Er stand bis zum 09.09.2026 an dieser Stelle —
+    # und dieser Lifespan läuft JE UVICORN-WORKER. Bei `UVICORN_WORKERS=4`
+    # (Compose-Vorgabe) taktete er vierfach auf derselben Warteschlange, der
+    # Guard im Takt-Modul ist prozesslokal und sah die anderen drei nicht.
+    # Zusammen mit dem damals fehlenden Claim im Versand gingen KI-Antworten
+    # mehrfach hinaus. Wer den Takt hier wieder anwirft, stellt genau das
+    # wieder her (ADR-0030,
+    # `docs/decisions/0030-takte-im-worker-nicht-in-der-api.md`).
     try:
         yield
     finally:
         await inbox_scheduler.stop()
-        await inbox_ki_takt.stop()
         limiter_mw = getattr(app.state, "rate_limit_middleware", None)
         if limiter_mw is not None:
             await limiter_mw.aclose()
@@ -482,6 +492,22 @@ def create_app() -> FastAPI:
     # In BEIDEN Fällen wandert die Postgres-Meldung ins Log (serverseitig, nie
     # in die Antwort): ohne sie ist ein 22P02 nicht zu unterscheiden von jedem
     # anderen und die Ursache bleibt unsichtbar.
+    # `OwnerChatError` trägt seinen Statuscode selbst (503 fehlender
+    # Chat-Schlüssel, 415 falscher Anhangstyp, 422 leere Nachricht). Die
+    # Router fangen ihn dort, wo sie ihn erwarten — aber nicht überall: die
+    # Antwort-Erzeugung (`_verlauf_antwort`, `_zu_nachricht`) läuft NACH dem
+    # try-Block und entschlüsselt dabei. Fehlt `OWNER_CHAT_SCHLUESSEL`, warf
+    # der Verlaufsabruf dort einen 503, der als 500 beim Nutzer ankam — ein
+    # Konfigurationsmangel, der wie ein Serverfehler aussieht (Wurzel 5).
+    # Dieser Handler ist der Rückhalt für jeden Pfad, der ihn nicht selbst
+    # fängt.
+    @app.exception_handler(OwnerChatError)
+    async def _owner_chat(request: Request, exc: OwnerChatError):  # noqa: ANN202
+        del request
+        return JSONResponse(
+            status_code=exc.status_code, content={"detail": exc.message}
+        )
+
     @app.exception_handler(PostgrestAPIError)
     async def _postgrest(request: Request, exc: PostgrestAPIError):  # noqa: ANN202
         if getattr(exc, "code", None) != "22P02":

@@ -68,6 +68,22 @@ FUNKTIONEN = frozenset(
         # hier UND im DB-Check. Fehlte beim ersten Live-Lauf am 04.09.2026 —
         # der laute `ki_nutzung_unbekannte_funktion`-Log hat es sofort gezeigt.
         "dp_regel_berater",
+        # Eine Inventarliste als PDF lesen (0622). Derselbe Zwang wie oben:
+        # hier UND im DB-Check.
+        #
+        # Getrennt von 'mappe_dokument', obwohl beide ein PDF durch Gemini
+        # schicken: das eine sucht Mappenfelder, das andere eine Tabelle mit
+        # bis zu 300 Zeilen. In einem Topf liesse sich nicht sagen, welcher
+        # den Deckel gesprengt hat.
+        "inventar_import",
+        # Ein PDF der Gaeste-/Hausmappe lesen (0619). Derselbe Zwang wie oben:
+        # hier UND im DB-Check.
+        #
+        # Getrennt von 'wissen_import', obwohl beide ein PDF durch Gemini
+        # schicken: der Import fuellt die Wissensdatenbank, dieser hier die
+        # Mappenfelder eines Objekts. In einem Topf liesse sich nicht sagen,
+        # welcher den Deckel gesprengt hat.
+        "mappe_dokument",
         # Bewertungs-Auswertung (0501). Getrennt aus demselben Grund wie
         # oben: 'bewertung_deuten' ist ein kleiner Aufruf je neuer Bewertung
         # und läuft im Tick, 'bewertung_bilanz' ein großer über sechzig Texte

@@ -2747,7 +2747,8 @@
       "tradespeople": "Vakmensen",
       "marketing": "Marketing",
       "housebook": "Huismap",
-      "listing": "Vermarkting"
+      "listing": "Vermarkting",
+      "inventory": "Inventaris"
     },
     "objectInfo": {
       "capacityPersons": "Capaciteit (personen)",
@@ -2898,7 +2899,130 @@
       "helaarsbolig": "Jaarwoning",
       "fritidshus": "Vakantiewoning"
     },
-    "print": "Afdrukken"
+    "print": "Afdrukken",
+    "mappe": {
+      "gastTitel": "Gastenmap — Documenten",
+      "hausTitel": "Huisinformatie — Documenten (intern)",
+      "titel": "Digitale map",
+      "erklaerung": "PDF uploaden — de gegevens hierin worden gelezen en ter bevestiging voorgesteld. Het document blijft hier, ter referentie.",
+      "hochladen": "PDF uploaden",
+      "liest": "Wordt gelezen …",
+      "laedt": "Wordt geladen …",
+      "leer": "Nog geen document in deze map.",
+      "zuGross": "Het bestand is te groot (max. {mb} MB).",
+      "seiten": "{count, plural, one {# pagina} other {# pagina's}}",
+      "ansehen": "{name} groot bekijken",
+      "loeschen": "{name} verwijderen",
+      "loeschenFrage": "„{name}“ uit de map verwijderen? Reeds overgenomen gegevens blijven behouden.",
+      "gefunden": "{count, plural, one {# gegeven gevonden} other {# gegevens gevonden}}",
+      "gefundenHinweis": "Niets hiervan is opgeslagen. Controleren, indien nodig wijzigen, dan overnemen — deurcode en wachtwoorden zijn bewust niet vooraf geselecteerd.",
+      "nichtsGefunden": "In dit document stond niets dat in een mapveld past. Het blijft toch in de map.",
+      "heikel": "Graag zorgvuldig controleren",
+      "fundstelle": "In het document: {ort}",
+      "sprachfassung": "Taalversie",
+      "ueberschreiben": "Ook reeds ingevulde velden vervangen",
+      "ausgewaehlt": "{count} van {gesamt} geselecteerd",
+      "verwerfen": "Annuleren",
+      "uebernehmen": "Overnemen",
+      "uebernimmt": "Wordt overgenomen …",
+      "schliessen": "Sluiten",
+      "gesetzt": "{count, plural, =0 {Niets overgenomen} one {# veld overgenomen} other {# velden overgenomen}}",
+      "uebersprungen": "Reeds ingevuld en daarom ongewijzigd: {felder}",
+      "stand": {
+        "offen": "nog niet gelezen",
+        "gelesen": "gelezen",
+        "uebernommen": "overgenomen",
+        "ohne_treffer": "niets gevonden",
+        "fehler": "Lezen mislukt"
+      },
+      "sicher": {
+        "hoch": "goed leesbaar",
+        "mittel": "beperkt leesbaar",
+        "niedrig": "moeilijk leesbaar"
+      },
+      "sprache": {
+        "de": "Duits",
+        "en": "Engels",
+        "da": "Deens"
+      }
+    },
+    "inventar": {
+      "abschnitt": "Inventaris",
+      "titel": "Inventarislijst",
+      "erklaerung": "Wat er in huis is, per kamer. Gewenst en werkelijk gescheiden – het verschil is de inventarisverklaring. Altijd uitbreidbaar.",
+      "laedt": "Laden…",
+      "leer": "Nog niets vastgelegd. Voeg handmatig regels toe of importeer ze uit een PDF van de map.",
+      "neuName": "Object",
+      "neuSoll": "Gewenst",
+      "hinzufuegen": "Toevoegen",
+      "raeume": "Kamers",
+      "keineRaeume": "nog geen",
+      "raumName": "Kamernaam",
+      "raumHinzufuegen": "Kamer toevoegen",
+      "ohneRaum": "Zonder kamer",
+      "speichern": "Opslaan",
+      "istMenge": "Huidige hoeveelheid",
+      "vonSoll": "van {soll}",
+      "geprueft": "Markeren als gecontroleerd",
+      "loeschen": "Verwijderen",
+      "loeschenFrage": "„{name}“ van de lijst verwijderen? Gemelde schades blijven behouden.",
+      "ausDokument": "uit PDF",
+      "ausDokumentHint": "Deze regel komt uit een document van de digitale map.",
+      "schadenMelden": "Schade melden",
+      "schadenAn": "Schade aan „{name}“",
+      "art": "Wat is er aan de hand?",
+      "traeger": "Wie draagt de kosten?",
+      "werZahlt": "Wie betaalt?",
+      "beschreibung": "Beschrijving",
+      "fotoWaehlen": "Foto maken of kiezen",
+      "fotoPflicht": "Geen melding zonder foto – in geval van een geschil is de foto vaak het enige dat telt.",
+      "fotosGewaehlt": "{count, plural, one {# afbeelding geselecteerd} other {# afbeeldingen geselecteerd}}",
+      "melden": "Schade melden",
+      "meldet": "Wordt gemeld…",
+      "abbrechen": "Annuleren",
+      "offeneSchaeden": "{count, plural, one {# schade} other {# schades}}",
+      "offeneSchaedenTitel": "{count, plural, one {# openstaande schade} other {# openstaande schades}}",
+      "bild": "Afbeelding {nr}",
+      "betrag": "Bedrag",
+      "bestaetigen": "Bevestigen",
+      "verwerfen": "Verwerpen",
+      "verwerfenFrage": "Schade aan „{name}“ verwerpen? Dit was geen schade.",
+      "artWert": {
+        "beschaedigt": "Beschadigd",
+        "fehlt": "Ontbreekt",
+        "entsorgt": "Afgevoerd"
+      },
+      "traegerWert": {
+        "offen": "Nog open",
+        "eigentuemer": "Eigenaar",
+        "gast": "Gast",
+        "betrieb": "Bedrijf"
+      },
+      "pdfImport": "Lijst uit PDF",
+      "pdfLiest": "Wordt gelezen …",
+      "pdfLeer": "Geen inventarislijst gevonden in deze PDF.",
+      "pdfGefunden": "{count, plural, one {# regel gevonden} other {# regels gevonden}}",
+      "pdfHinweis": "Niets hiervan is opgeslagen. Controleren, indien nodig aanpassen, dan overnemen. Ruimtes worden alleen toegewezen als ze al bestaan.",
+      "uebernimmt": "Wordt overgenomen …",
+      "uebernehmen": "Overnemen",
+      "zustand": "Conditie",
+      "rhythmus": "Telritme",
+      "meldebestandKurz": "Meldingsvoorraad {n}",
+      "referenzSetzen": "Afbeelding van intacte conditie uploaden",
+      "referenzAnsehen": "Afbeelding van intacte conditie bekijken",
+      "zustandWert": {
+        "neu": "nieuw",
+        "gut": "goed",
+        "abgenutzt": "versleten",
+        "ersatz_faellig": "aan vervanging toe"
+      },
+      "rhythmusWert": {
+        "jede_abreise": "bij elk vertrek",
+        "quartal": "per kwartaal",
+        "jaehrlich": "jaarlijks",
+        "nie": "niet tellen"
+      }
+    }
   },
   "finance": {
     "cancelInvoice": {
@@ -5285,7 +5409,23 @@
       "ownerRequestsLift": "Annuleringsverzoeken",
       "ownerRequestsTermination": "Aangekondigde contracteinden",
       "ownerRequestsNone": "Geen openstaande acties.",
-      "ownerRequestsOldest": "Oudste openstaande verzoek: {count, plural, =0 {vandaag} one {één dag geleden} other {# dagen geleden}}"
+      "ownerRequestsOldest": "Oudste openstaande verzoek: {count, plural, =0 {vandaag} one {één dag geleden} other {# dagen geleden}}",
+      "teamTasks": "Teamtaken",
+      "teamTasksExplain": "Wat het team momenteel moet afhandelen: achterstallige en vandaag verschuldigde taken, taken zonder verantwoordelijke en taken die wachten op goedkeuring. Een momentopname, geen periode — open is open, en ouder betekent urgenter.",
+      "teamTasksLabel": "Achterstallig of vandaag verschuldigd",
+      "teamTasksOldest": "Oudste achterstallige taak: sinds {count} dagen",
+      "teamTasksOverdue": "Achterstallig",
+      "teamTasksToday": "Vandaag verschuldigd",
+      "teamTasksUnassigned": "Zonder verantwoordelijke",
+      "teamTasksToReview": "Wacht op goedkeuring",
+      "teamTasksOpen": "Totaal open",
+      "wechsel": "Wissels",
+      "wechselHint": "Vertrek en aankomst op dezelfde dag in dezelfde eenheid — de schoonmaak moet tussen twee bezettingen door.",
+      "wechselUnklar": "Wissel onduidelijk",
+      "wechselUnklarHint": "Op dezelfde dag arriveert er iemand in hetzelfde object, maar de eenheid van een van de twee boekingen is niet ingevuld — of er echt gewisseld moet worden, kan hieruit niet worden afgeleid.",
+      "teamTasksUrgencyUnknown": "vervallen of vandaag verschuldigd — momenteel niet beschikbaar",
+      "listingsActive": "Actief",
+      "listingsActiveLabel": "Te koop"
     },
     "mobileAppHint": "De takenweergave voor onderweg is al responsive beschikbaar op het web (Mijn taken + detail met foto-upload). Een aparte mobiele app volgt als eigen project.",
     "aufgabenFilter": {
@@ -15280,7 +15420,8 @@
         "reservierungen": "Reserveringen",
         "kennzahlen": "Statistieken",
         "nachrichten": "Berichten",
-        "objekte": "Objecten"
+        "objekte": "Objecten",
+        "aufgaben": "Taken"
       }
     }
   },

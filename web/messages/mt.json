@@ -2747,7 +2747,8 @@
       "tradespeople": "Ħaddiema tas-sengħa",
       "marketing": "Marketing",
       "housebook": "Fuljett tad-dar",
-      "listing": "Kummerċjalizzazzjoni"
+      "listing": "Kummerċjalizzazzjoni",
+      "inventory": "Inventarju"
     },
     "objectInfo": {
       "capacityPersons": "Kapaċità (persuni)",
@@ -2898,7 +2899,130 @@
       "helaarsbolig": "Helårsbolig",
       "fritidshus": "Fritidshus"
     },
-    "print": "Stampa"
+    "print": "Stampa",
+    "mappe": {
+      "gastTitel": "Dokumenti tal-Klijent",
+      "hausTitel": "Dokumenti tad-Dar (interni)",
+      "titel": "Dokumenti Diġitali",
+      "erklaerung": "Tella' PDF — id-dettalji fih jinqraw u jiġu ssuġġeriti għall-konferma. Id-dokument jibqa' hawn għal referenza.",
+      "hochladen": "Tella' PDF",
+      "liest": "Qed jinqara...",
+      "laedt": "Qed jitgħabba...",
+      "leer": "Għad m'hemm l-ebda dokument f'din il-folder.",
+      "zuGross": "Il-fajl huwa kbir wisq (mass. {mb} MB).",
+      "seiten": "{count, plural, one {# paġna} other {# paġni}}",
+      "ansehen": "Ara {name} kbir",
+      "loeschen": "Neħħi {name}",
+      "loeschenFrage": "Neħħi \"{name}\" mill-folder? Id-dettalji diġà aċċettati jibqgħu.",
+      "gefunden": "{count, plural, one {# dettall misjub} other {# dettalji misjuba}}",
+      "gefundenHinweis": "Xejn minn dan ma ġie ssejvjat. Iċċekkja, immodifika jekk meħtieġ, imbagħad aċċetta — il-kodiċi tal-bieb u l-passwords mhumiex magħżula minn qabel apposta.",
+      "nichtsGefunden": "Dan id-dokument ma kienx fih xejn li jaqbel ma' qasam tal-folder. Madankollu, jibqa' fil-folder.",
+      "heikel": "Jekk jogħġbok iċċekkja bir-reqqa",
+      "fundstelle": "Fid-dokument: {ort}",
+      "sprachfassung": "Verżjoni lingwistika",
+      "ueberschreiben": "Ibdel ukoll l-oqsma diġà mimlija",
+      "ausgewaehlt": "{count} minn {gesamt} magħżula",
+      "verwerfen": "Armi",
+      "uebernehmen": "Aċċetta",
+      "uebernimmt": "Qed jiġi aċċettat...",
+      "schliessen": "Agħlaq",
+      "gesetzt": "{count, plural, =0 {Xejn aċċettat} one {# qasam aċċettat} other {# oqsma aċċettati}}",
+      "uebersprungen": "Diġà mimli u għalhekk mhux mibdul: {felder}",
+      "stand": {
+        "offen": "għadu ma nqarax",
+        "gelesen": "maqra",
+        "uebernommen": "aċċettat",
+        "ohne_treffer": "xejn ma nstab",
+        "fehler": "il-qari falla"
+      },
+      "sicher": {
+        "hoch": "jinqara faċilment",
+        "mittel": "jinqara b'diffikultà",
+        "niedrig": "jinqara b'diffikultà kbira"
+      },
+      "sprache": {
+        "de": "Ġermaniż",
+        "en": "Ingliż",
+        "da": "Daniż"
+      }
+    },
+    "inventar": {
+      "abschnitt": "Inventarju",
+      "titel": "Lista tal-Inventarju",
+      "erklaerung": "X'hemm fid-dar, skont il-kmamar. Is-suppost u l-attwali huma separati — id-differenza hija r-riżultat tal-inventarju. Jista' jiġi estiż fi kwalunkwe ħin.",
+      "laedt": "Qed jitgħabba …",
+      "leer": "Għadu ma ġie rreġistrat xejn. Żid ringieli manwalment jew ikkopja minn PDF tal-folder.",
+      "neuName": "Oġġett",
+      "neuSoll": "Suppost",
+      "hinzufuegen": "Żid",
+      "raeume": "Kmamar",
+      "keineRaeume": "għad m'hemmx",
+      "raumName": "Isem tal-Kamra",
+      "raumHinzufuegen": "Żid Kamra",
+      "ohneRaum": "Mingħajr Kamra",
+      "speichern": "Ħlief",
+      "istMenge": "Kwantità Eżistenti",
+      "vonSoll": "minn {soll}",
+      "geprueft": "Immarka bħala Verifikat",
+      "loeschen": "Neħħi",
+      "loeschenFrage": "Neħħi \"{name}\" mil-lista? Il-ħsarat irrappurtati jibqgħu.",
+      "ausDokument": "minn PDF",
+      "ausDokumentHint": "Din ir-ringiela ġejja minn dokument fil-folder diġitali.",
+      "schadenMelden": "Irrapporta Ħsara",
+      "schadenAn": "Ħsara lil \"{name}\"",
+      "art": "X'ġara?",
+      "traeger": "Min iħallas l-ispejjeż?",
+      "werZahlt": "Min iħallas?",
+      "beschreibung": "Deskrizzjoni",
+      "fotoWaehlen": "Ħu jew Agħżel Ritratt",
+      "fotoPflicht": "Mingħajr ritratt, l-ebda rapport — f'każ ta' tilwima, l-istampa spiss hija l-unika ħaġa li tgħodd.",
+      "fotosGewaehlt": "{count, plural, one {# ritratt magħżul} other {# ritratti magħżula}}",
+      "melden": "Irrapporta Ħsara",
+      "meldet": "Qed jiġi rrappurtat …",
+      "abbrechen": "Ikkanċella",
+      "offeneSchaeden": "{count, plural, one {# ħsara} other {# ħsarat}}",
+      "offeneSchaedenTitel": "{count, plural, one {# ħsara miftuħa} other {# ħsarat miftuħa}}",
+      "bild": "Ritratt {nr}",
+      "betrag": "Ammont",
+      "bestaetigen": "Ikkonferma",
+      "verwerfen": "Armi",
+      "verwerfenFrage": "Armi l-ħsara lil \"{name}\"? Din ma kinitx ħsara.",
+      "artWert": {
+        "beschaedigt": "Bil-ħsara",
+        "fehlt": "Nieqes",
+        "entsorgt": "Rimi"
+      },
+      "traegerWert": {
+        "offen": "Mhux solvut",
+        "eigentuemer": "Sid",
+        "gast": "Klijent",
+        "betrieb": "Operazzjoni"
+      },
+      "pdfImport": "Lista minn PDF",
+      "pdfLiest": "Qed jinqara …",
+      "pdfLeer": "L-ebda lista ta' inventarju ma nstabet f'dan il-PDF.",
+      "pdfGefunden": "{count, plural, one {# linja nstabet} other {# linji nstabu}}",
+      "pdfHinweis": "Xejn minn dan ma ġie ssejvjat. Iċċekkja, immodifika jekk meħtieġ, imbagħad applika. Il-kmamar jiġu assenjati biss jekk diġà jeżistu.",
+      "uebernimmt": "Qed jiġi applikat …",
+      "uebernehmen": "Applika",
+      "zustand": "Kundizzjoni",
+      "rhythmus": "Rata ta' għadd",
+      "meldebestandKurz": "Stokk ta' rapport {n}",
+      "referenzSetzen": "Żid stampa tal-kundizzjoni intatta",
+      "referenzAnsehen": "Ara l-istampa tal-kundizzjoni intatta",
+      "zustandWert": {
+        "neu": "ġdid",
+        "gut": "tajjeb",
+        "abgenutzt": "milbus",
+        "ersatz_faellig": "jeħtieġ sostituzzjoni"
+      },
+      "rhythmusWert": {
+        "jede_abreise": "ma' kull tluq",
+        "quartal": "kull tliet xhur",
+        "jaehrlich": "kull sena",
+        "nie": "ma tgħoddx"
+      }
+    }
   },
   "finance": {
     "cancelInvoice": {
@@ -5285,7 +5409,23 @@
       "ownerRequestsLift": "Talbiet ta' unblocking",
       "ownerRequestsTermination": "Tmiem ta' kuntratti mħabbra",
       "ownerRequestsNone": "L-ebda operazzjoni miftuħa.",
-      "ownerRequestsOldest": "L-eqdem talba miftuħa: {count, plural, =0 {illum} one {minn jum ilu} other {minn # ijiem ilu}}"
+      "ownerRequestsOldest": "L-eqdem talba miftuħa: {count, plural, =0 {illum} one {minn jum ilu} other {minn # ijiem ilu}}",
+      "teamTasks": "Ħidmiet tat-Tim",
+      "teamTasksExplain": "X'għandu jagħmel it-tim bħalissa: ħidmiet li ilhom li kellhom isiru u dawk li jridu jsiru llum, ħidmiet mingħajr persuna assenjata u dawk li qed jistennew l-approvazzjoni. Dan huwa l-istat attwali, mhux perjodu ta' żmien — dak li hu miftuħ jibqa' miftuħ, u dak li hu eqdem huwa aktar urġenti.",
+      "teamTasksLabel": "skaduti jew dovuti llum",
+      "teamTasksOldest": "L-eqdem ħidma skaduta: minn {count} jum",
+      "teamTasksOverdue": "Skaduti",
+      "teamTasksToday": "Dovuti llum",
+      "teamTasksUnassigned": "Mingħajr persuna assenjata",
+      "teamTasksToReview": "Qed jistennew l-approvazzjoni",
+      "teamTasksOpen": "Miftuħa b'kollox",
+      "wechsel": "Bidla",
+      "wechselHint": "Tluq u wasla fl-istess jum fl-istess unità — it-tindif irid isir bejn żewġ okkupazzjonijiet.",
+      "wechselUnklar": "Bidla mhux ċara",
+      "wechselUnklarHint": "Fl-istess jum, xi ħadd jasal fl-istess proprjetà, iżda l-unità ta' waħda miż-żewġ prenotazzjonijiet mhix irreġistrata — ma jistax jingħad jekk verament hemmx bżonn ta' bidla.",
+      "teamTasksUrgencyUnknown": "skadut jew dovut illum — bħalissa mhux disponibbli",
+      "listingsActive": "Attiv",
+      "listingsActiveLabel": "Għall-bejgħ"
     },
     "mobileAppHint": "Il-veduta tal-kompiti waqt li tkun barra diġà hija disponibbli b'mod responsiv fuq il-web (Il-kompiti tiegħi + dettalji bit-tlugħ ta' ritratti). App mobbli separata se ssegwi bħala proġett għalih.",
     "aufgabenFilter": {
@@ -15280,7 +15420,8 @@
         "reservierungen": "Riservazzjonijiet",
         "kennzahlen": "Metriċi",
         "nachrichten": "Messaġġi",
-        "objekte": "Propjetajiet"
+        "objekte": "Propjetajiet",
+        "aufgaben": "Ħidmiet"
       }
     }
   },

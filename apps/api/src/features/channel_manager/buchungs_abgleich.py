@@ -25,16 +25,21 @@ Gate, das 0 zeigen muss.
 """
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
 from typing import Any
 
 from supabase import Client
 
-from .common import log
+from .common import ist_frisch, log, ota_buchungszeitpunkt
 
 # Staging-Status, die eine Reservierung erwarten. `cancelled` ohne Reservierung
 # ist kein Mangel: eine vor dem Anschluss stornierte Buchung braucht keine Zeile.
 _AKTIVE_STATUS = ("new", "modified")
+
+# Ab wann gilt eine Buchung als Bestand? Dieser Job laeuft TAEGLICH; eine
+# Buchung, die er findet, lag also hoechstens 24 Stunden unprojiziert. 48
+# Stunden lassen einen ausgefallenen Tageslauf zu, ohne dass eine Buchung von
+# vor Wochen je als „neu" durchkommt.
+BESTAND_AB_STUNDEN = 48
 
 
 class BuchungsAbgleichMixin:
@@ -100,9 +105,11 @@ class BuchungsAbgleichMixin:
                     tenant_id,
                     raw,
                     zeile.get("guest_id"),
-                    # Eine Buchung, deren Anreise vorbei ist, ist Bestand — keine
-                    # Glocke, keine Reinigungsaufgabe fuer einen abgereisten Gast.
-                    bestandsimport=_anreise_vorbei(raw),
+                    # Dieser Job HEILT Altlasten: was er findet, fehlte in
+                    # `reservations` und ist damit per Definition Bestand, den
+                    # der Betrieb kennt. Gemessen am Buchungszeitpunkt der
+                    # Quelle, nicht an der Anreise (siehe `_bestand`).
+                    bestandsimport=_bestand(raw),
                 )
             except Exception as exc:  # noqa: BLE001 — eine Zeile kippt den Lauf nicht
                 ergebnis["fehler"].append(f"{code or cbid}: {str(exc)[:160]}")
@@ -156,15 +163,34 @@ class BuchungsAbgleichMixin:
         return summe
 
 
-def _anreise_vorbei(raw: dict[str, Any]) -> bool:
-    """Liegt die Anreise dieser Buchung vor heute (UTC)?
+def _bestand(raw: dict[str, Any]) -> bool:
+    """Ist diese Buchung Bestand, den der Betrieb schon kennt?
 
-    Fehlt das Datum oder ist es unlesbar, gilt `False`: dann laeuft der volle
-    Nachlauf — lieber eine Meldung zu viel als eine verpasste Buchung.
+    Gemessen am BUCHUNGSZEITPUNKT der Quelle (`ota_buchungszeitpunkt`), nicht
+    an der Anreise (Wurzel 5b).
+
+    DER FEHLER, DEN DAS ERSETZT (live gemeldet 09.09.2026): Die Vorgaenger-
+    Fassung fragte `arrival_date < heute`. Eine im Maerz gebuchte Reise mit
+    Anreise im Juli 2027 galt damit als „nicht Bestand" und loeste den vollen
+    Nachlauf aus — „Neue Buchung" an Eigentuemer und Betriebsleitung, plus
+    Mail, und das bei JEDEM Tageslauf dieses Jobs. In der Glocke standen
+    dutzende Buchungen mit Anreisen von 2026-08 bis 2027-07; dass darin keine
+    einzige vergangene Anreise vorkam, war der Fingerabdruck dieser Zeile.
+
+    FAIL-CLOSED (Wurzel 5): Nur ein klares „ja, frisch" macht daraus ein
+    Ereignis. Fehlt der Buchungszeitpunkt, ist er unlesbar oder liegt er in der
+    Zukunft (`ist_frisch` gibt dann `None`), gilt `True` — Bestand, keine
+    Meldung. Die alte Vorgabe war die umgekehrte („lieber eine Meldung zu viel
+    als eine verpasste Buchung") und genau darin lag der Fehler: dieser Job
+    laeuft ausschliesslich auf Zeilen, die schon im Staging stehen und nur in
+    `reservations` fehlten. Eine verpasste Meldung ist hier folgenlos (der
+    Kalender wird korrekt), eine falsche Meldung ist fuer den Empfaenger nicht
+    als falsch erkennbar.
+
+    Die Fail-Richtung steht bewusst HIER und nicht im Helfer: sie ist an den
+    drei Aufrufstellen des Frische-Fensters eine andere, und im Helfer versteckt
+    war sie die eigentliche Falle (siehe `common.ist_frisch`).
     """
-    wert = raw.get("arrival_date")
-    try:
-        anreise = date.fromisoformat(str(wert))
-    except (TypeError, ValueError):
-        return False
-    return anreise < datetime.now(UTC).date()
+    return ist_frisch(
+        ota_buchungszeitpunkt(raw), stunden=BESTAND_AB_STUNDEN
+    ) is not True

@@ -2747,7 +2747,8 @@
       "tradespeople": "Kézművesek",
       "marketing": "Marketing",
       "housebook": "Házikönyv",
-      "listing": "Hirdetés"
+      "listing": "Hirdetés",
+      "inventory": "Készlet"
     },
     "objectInfo": {
       "capacityPersons": "Kapacitás (fő)",
@@ -2898,7 +2899,130 @@
       "helaarsbolig": "Helårsbolig",
       "fritidshus": "Fritidshus"
     },
-    "print": "Nyomtatás"
+    "print": "Nyomtatás",
+    "mappe": {
+      "gastTitel": "Vendégkönyv – Dokumentumok",
+      "hausTitel": "Házirend – Dokumentumok (belső)",
+      "titel": "Digitális mappa",
+      "erklaerung": "PDF feltöltése – az abban szereplő adatok beolvasásra kerülnek, és megerősítésre javasoljuk. A dokumentum itt marad, referenciaként.",
+      "hochladen": "PDF feltöltése",
+      "liest": "Olvasás folyamatban…",
+      "laedt": "Betöltés folyamatban…",
+      "leer": "Még nincs dokumentum ebben a mappában.",
+      "zuGross": "A fájl túl nagy (max. {mb} MB).",
+      "seiten": "{count, plural, one {# oldal} other {# oldal}}",
+      "ansehen": "{name} megtekintése nagyban",
+      "loeschen": "{name} eltávolítása",
+      "loeschenFrage": "Eltávolítja a(z) „{name}” elemet a mappából? A már átvett adatok megmaradnak.",
+      "gefunden": "{count, plural, one {# adat található} other {# adat található}}",
+      "gefundenHinweis": "Ezek közül semmi sincs elmentve. Ellenőrizze, szükség esetén módosítsa, majd fogadja el – az ajtókód és a jelszavak szándékosan nincsenek előre kiválasztva.",
+      "nichtsGefunden": "Ebben a dokumentumban nem volt olyan adat, amely illeszkedne egy mappa mezőjébe. Ennek ellenére a mappában marad.",
+      "heikel": "Kérjük, alaposan ellenőrizze",
+      "fundstelle": "A dokumentumban: {ort}",
+      "sprachfassung": "Nyelvi változat",
+      "ueberschreiben": "A már kitöltött mezők felülírása is",
+      "ausgewaehlt": "{count} kiválasztva {gesamt} közül",
+      "verwerfen": "Elvetés",
+      "uebernehmen": "Elfogadás",
+      "uebernimmt": "Elfogadás folyamatban…",
+      "schliessen": "Bezárás",
+      "gesetzt": "{count, plural, =0 {Semmi sem lett elfogadva} one {# mező elfogadva} other {# mező elfogadva}}",
+      "uebersprungen": "Már kitöltve, ezért változatlan: {felder}",
+      "stand": {
+        "offen": "még nem olvasott",
+        "gelesen": "olvasott",
+        "uebernommen": "elfogadott",
+        "ohne_treffer": "nem található",
+        "fehler": "olvasás sikertelen"
+      },
+      "sicher": {
+        "hoch": "jól olvasható",
+        "mittel": "korlátozottan olvasható",
+        "niedrig": "nehezen olvasható"
+      },
+      "sprache": {
+        "de": "Német",
+        "en": "Angol",
+        "da": "Dán"
+      }
+    },
+    "inventar": {
+      "abschnitt": "Leltár",
+      "titel": "Leltárlista",
+      "erklaerung": "A házban található tárgyak szobánként. A tervezett és a tényleges mennyiség külön van feltüntetve – a különbség a leltár eredménye. Bármikor bővíthető.",
+      "laedt": "Betöltés…",
+      "leer": "Még nincs rögzítve. Sorok manuális hozzáadása vagy PDF-ből történő importálás.",
+      "neuName": "Tárgy",
+      "neuSoll": "Tervezett",
+      "hinzufuegen": "Hozzáadás",
+      "raeume": "Szobák",
+      "keineRaeume": "még nincs",
+      "raumName": "Szoba neve",
+      "raumHinzufuegen": "Szoba hozzáadása",
+      "ohneRaum": "Szoba nélkül",
+      "speichern": "Mentés",
+      "istMenge": "Rendelkezésre álló mennyiség",
+      "vonSoll": "a {soll} darabból",
+      "geprueft": "Ellenőrzöttként jelölés",
+      "loeschen": "Eltávolítás",
+      "loeschenFrage": "Eltávolítja a(z) „{name}” elemet a listáról? A bejelentett károk megmaradnak.",
+      "ausDokument": "PDF-ből",
+      "ausDokumentHint": "Ez a sor a digitális mappa egyik dokumentumából származik.",
+      "schadenMelden": "Kár bejelentése",
+      "schadenAn": "Kár a(z) „{name}” tárgyon",
+      "art": "Mi a probléma?",
+      "traeger": "Ki viseli a költségeket?",
+      "werZahlt": "Ki fizet?",
+      "beschreibung": "Leírás",
+      "fotoWaehlen": "Fénykép készítése vagy kiválasztása",
+      "fotoPflicht": "Fénykép nélkül nincs bejelentés – vita esetén gyakran a kép az egyetlen, ami számít.",
+      "fotosGewaehlt": "{count, plural, one {# kép kiválasztva} other {# kép kiválasztva}}",
+      "melden": "Kár bejelentése",
+      "meldet": "Jelentés küldése…",
+      "abbrechen": "Mégse",
+      "offeneSchaeden": "{count, plural, one {# kár} other {# károk}}",
+      "offeneSchaedenTitel": "{count, plural, one {# nyitott kár} other {# nyitott károk}}",
+      "bild": "Kép {nr}",
+      "betrag": "Összeg",
+      "bestaetigen": "Megerősítés",
+      "verwerfen": "Elvetés",
+      "verwerfenFrage": "Elveti a(z) „{name}” káreseményt? Ez nem volt kár.",
+      "artWert": {
+        "beschaedigt": "Sérült",
+        "fehlt": "Hiányzik",
+        "entsorgt": "Selejtezett"
+      },
+      "traegerWert": {
+        "offen": "Függőben",
+        "eigentuemer": "Tulajdonos",
+        "gast": "Vendég",
+        "betrieb": "Üzemeltetés"
+      },
+      "pdfImport": "Lista PDF-ből",
+      "pdfLiest": "Olvasás folyamatban…",
+      "pdfLeer": "Nem található leltárlista ebben a PDF-ben.",
+      "pdfGefunden": "{count, plural, one {# sor található} other {# sor található}}",
+      "pdfHinweis": "Ezek közül semmi sincs elmentve. Ellenőrizze, szükség esetén módosítsa, majd fogadja el. A szobák csak akkor kerülnek hozzárendelésre, ha már léteznek.",
+      "uebernimmt": "Elfogadás folyamatban…",
+      "uebernehmen": "Elfogadás",
+      "zustand": "Állapot",
+      "rhythmus": "Számlálási ritmus",
+      "meldebestandKurz": "Jelentési készlet {n}",
+      "referenzSetzen": "A sértetlen állapot képének feltöltése",
+      "referenzAnsehen": "A sértetlen állapot képének megtekintése",
+      "zustandWert": {
+        "neu": "új",
+        "gut": "jó",
+        "abgenutzt": "elhasznált",
+        "ersatz_faellig": "cserére szorul"
+      },
+      "rhythmusWert": {
+        "jede_abreise": "minden távozáskor",
+        "quartal": "negyedévente",
+        "jaehrlich": "évente",
+        "nie": "nem számít"
+      }
+    }
   },
   "finance": {
     "cancelInvoice": {
@@ -5285,7 +5409,23 @@
       "ownerRequestsLift": "Feloldási kérelmek",
       "ownerRequestsTermination": "Bejelentett szerződéslejáratok",
       "ownerRequestsNone": "Nincsenek nyitott műveletek.",
-      "ownerRequestsOldest": "Legrégebbi nyitott kérelem: {count, plural, =0 {ma} one {egy napja} other {# napja}}"
+      "ownerRequestsOldest": "Legrégebbi nyitott kérelem: {count, plural, =0 {ma} one {egy napja} other {# napja}}",
+      "teamTasks": "Csoportfeladatok",
+      "teamTasksExplain": "A csoport aktuális feladatai: lejárt és ma esedékes feladatok, felelős nélküli feladatok és jóváhagyásra váró feladatok. Aktuális állapot, nem időszak – ami nyitott, az nyitott, és ami régebbi, az sürgősebb.",
+      "teamTasksLabel": "Lejárt vagy ma esedékes",
+      "teamTasksOldest": "Legrégebbi lejárt feladat: {count} napja",
+      "teamTasksOverdue": "Lejárt",
+      "teamTasksToday": "Ma esedékes",
+      "teamTasksUnassigned": "Felelős nélküli",
+      "teamTasksToReview": "Jóváhagyásra vár",
+      "teamTasksOpen": "Összesen nyitott",
+      "wechsel": "Váltás",
+      "wechselHint": "Elutazás és érkezés ugyanazon a napon ugyanabban az egységben – a takarításnak két foglalás között meg kell fordulnia.",
+      "wechselUnklar": "Váltás tisztázatlan",
+      "wechselUnklarHint": "Ugyanazon a napon érkezik valaki ugyanabba az objektumba, de az egyik foglalás egysége nincs megadva – ebből nem lehet megmondani, hogy valóban meg kell-e fordulni.",
+      "teamTasksUrgencyUnknown": "lejárt vagy ma esedékes – jelenleg nem elérhető",
+      "listingsActive": "Aktív",
+      "listingsActiveLabel": "Eladó"
     },
     "mobileAppHint": "A feladatnézet útközbeni használatra már reszponzívan elérhető a weben (Feladataim + részletek fotófeltöltéssel). Külön mobilalkalmazás önálló projektként következik.",
     "aufgabenFilter": {
@@ -15280,7 +15420,8 @@
         "reservierungen": "Foglalások",
         "kennzahlen": "Mutatók",
         "nachrichten": "Üzenetek",
-        "objekte": "Objektumok"
+        "objekte": "Objektumok",
+        "aufgaben": "Feladatok"
       }
     }
   },

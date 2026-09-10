@@ -2747,7 +2747,8 @@
       "tradespeople": "Hantverkare",
       "marketing": "Marknadsföring",
       "housebook": "Husmapp",
-      "listing": "Marknadsföring på portaler"
+      "listing": "Marknadsföring på portaler",
+      "inventory": "Inventarier"
     },
     "objectInfo": {
       "capacityPersons": "Kapacitet (personer)",
@@ -2898,7 +2899,130 @@
       "helaarsbolig": "Åretruntbostad",
       "fritidshus": "Fritidshus"
     },
-    "print": "Skriv ut"
+    "print": "Skriv ut",
+    "mappe": {
+      "gastTitel": "Gästmapp – Dokument",
+      "hausTitel": "Husmapp – Dokument (internt)",
+      "titel": "Digital mapp",
+      "erklaerung": "Ladda upp PDF – informationen i den läses och föreslås för bekräftelse. Dokumentet finns kvar här för referens.",
+      "hochladen": "Ladda upp PDF",
+      "liest": "Läser in...",
+      "laedt": "Laddar...",
+      "leer": "Inget dokument i denna mapp än.",
+      "zuGross": "Filen är för stor (max. {mb} MB).",
+      "seiten": "{count, plural, one {# sida} other {# sidor}}",
+      "ansehen": "Visa {name} i stor storlek",
+      "loeschen": "Ta bort {name}",
+      "loeschenFrage": "Ta bort ”{name}” från mappen? Redan överförd information behålls.",
+      "gefunden": "{count, plural, one {# uppgift hittad} other {# uppgifter hittade}}",
+      "gefundenHinweis": "Inget av detta är sparat. Granska, ändra vid behov, och bekräfta sedan – dörrkoder och lösenord är medvetet inte förvalda.",
+      "nichtsGefunden": "Det fanns inget i detta dokument som passar i ett mappfält. Det ligger ändå kvar i mappen.",
+      "heikel": "Vänligen granska noggrant",
+      "fundstelle": "I dokumentet: {ort}",
+      "sprachfassung": "Språkversion",
+      "ueberschreiben": "Ersätt även redan ifyllda fält",
+      "ausgewaehlt": "{count} av {gesamt} valt",
+      "verwerfen": "Kassera",
+      "uebernehmen": "Bekräfta",
+      "uebernimmt": "Bekräftar...",
+      "schliessen": "Stäng",
+      "gesetzt": "{count, plural, =0 {Inget bekräftat} one {# fält bekräftat} other {# fält bekräftade}}",
+      "uebersprungen": "Redan ifyllt och därför oförändrat: {felder}",
+      "stand": {
+        "offen": "ej läst",
+        "gelesen": "läst",
+        "uebernommen": "övertagen",
+        "ohne_treffer": "inget hittat",
+        "fehler": "läsning misslyckades"
+      },
+      "sicher": {
+        "hoch": "lättläst",
+        "mittel": "begränsat läsbar",
+        "niedrig": "svårläst"
+      },
+      "sprache": {
+        "de": "Tyska",
+        "en": "Engelska",
+        "da": "Danska"
+      }
+    },
+    "inventar": {
+      "abschnitt": "Inventarier",
+      "titel": "Inventarielista",
+      "erklaerung": "Vad som finns i huset, per rum. Bör och är separeras – skillnaden är resultatet av inventeringen. Kan utökas när som helst.",
+      "laedt": "Laddar ...",
+      "leer": "Inget har registrerats än. Lägg till rader manuellt eller överför från en PDF i mappen.",
+      "neuName": "Föremål",
+      "neuSoll": "Bör",
+      "hinzufuegen": "Lägg till",
+      "raeume": "Rum",
+      "keineRaeume": "inga än",
+      "raumName": "Rumsnamn",
+      "raumHinzufuegen": "Lägg till rum",
+      "ohneRaum": "Utan rum",
+      "speichern": "Spara",
+      "istMenge": "Tillgänglig kvantitet",
+      "vonSoll": "av {soll}",
+      "geprueft": "Markera som kontrollerad",
+      "loeschen": "Ta bort",
+      "loeschenFrage": "Ta bort ”{name}” från listan? Rapporterade skador behålls.",
+      "ausDokument": "från PDF",
+      "ausDokumentHint": "Denna rad kommer från ett dokument i den digitala mappen.",
+      "schadenMelden": "Rapportera skada",
+      "schadenAn": "Skada på ”{name}”",
+      "art": "Vad är problemet?",
+      "traeger": "Vem står för kostnaderna?",
+      "werZahlt": "Vem betalar?",
+      "beschreibung": "Beskrivning",
+      "fotoWaehlen": "Ta eller välj foto",
+      "fotoPflicht": "Ingen rapport utan foto – vid en tvist är bilden ofta det enda som räknas.",
+      "fotosGewaehlt": "{count, plural, one {# bild vald} other {# bilder valda}}",
+      "melden": "Rapportera skada",
+      "meldet": "Rapporteras ...",
+      "abbrechen": "Avbryt",
+      "offeneSchaeden": "{count, plural, one {# skada} other {# skador}}",
+      "offeneSchaedenTitel": "{count, plural, one {# öppen skada} other {# öppna skador}}",
+      "bild": "Bild {nr}",
+      "betrag": "Belopp",
+      "bestaetigen": "Bekräfta",
+      "verwerfen": "Kassera",
+      "verwerfenFrage": "Kassera skada på ”{name}”? Detta var ingen skada.",
+      "artWert": {
+        "beschaedigt": "Skadad",
+        "fehlt": "Saknas",
+        "entsorgt": "Kasserad"
+      },
+      "traegerWert": {
+        "offen": "Ej slutfört",
+        "eigentuemer": "Ägare",
+        "gast": "Gäst",
+        "betrieb": "Verksamhet"
+      },
+      "pdfImport": "Lista från PDF",
+      "pdfLiest": "Läser in …",
+      "pdfLeer": "Ingen inventarielista hittades i denna PDF.",
+      "pdfGefunden": "{count, plural, one {# rad hittades} other {# rader hittades}}",
+      "pdfHinweis": "Inget av detta har sparats. Kontrollera, ändra vid behov och bekräfta sedan. Rum tilldelas endast om de redan finns.",
+      "uebernimmt": "Bekräftar …",
+      "uebernehmen": "Bekräfta",
+      "zustand": "Skick",
+      "rhythmus": "Räknefrekvens",
+      "meldebestandKurz": "Lägsta lagernivå {n}",
+      "referenzSetzen": "Ladda upp bild på intakt skick",
+      "referenzAnsehen": "Visa bild på intakt skick",
+      "zustandWert": {
+        "neu": "ny",
+        "gut": "bra",
+        "abgenutzt": "sliten",
+        "ersatz_faellig": "bör bytas ut"
+      },
+      "rhythmusWert": {
+        "jede_abreise": "vid varje avresa",
+        "quartal": "kvartalsvis",
+        "jaehrlich": "årligen",
+        "nie": "räkna inte"
+      }
+    }
   },
   "finance": {
     "cancelInvoice": {
@@ -5285,7 +5409,23 @@
       "ownerRequestsLift": "Avbokningsförfrågningar",
       "ownerRequestsTermination": "Aviserade avtalsslut",
       "ownerRequestsNone": "Inga öppna processer.",
-      "ownerRequestsOldest": "Äldsta öppna förfrågan: {count, plural, =0 {idag} one {sedan en dag} other {sedan # dagar}}"
+      "ownerRequestsOldest": "Äldsta öppna förfrågan: {count, plural, =0 {idag} one {sedan en dag} other {sedan # dagar}}",
+      "teamTasks": "Teamuppgifter",
+      "teamTasksExplain": "Vad teamet arbetar med just nu: förfallna och dagens uppgifter, uppgifter utan ansvarig och de som väntar på godkännande. En ögonblicksbild, inte en tidsperiod – öppet är öppet, och äldre betyder mer brådskande.",
+      "teamTasksLabel": "Förfallen eller förfaller idag",
+      "teamTasksOldest": "Äldsta förfallna uppgift: sedan {count} dagar",
+      "teamTasksOverdue": "Förfallen",
+      "teamTasksToday": "Förfaller idag",
+      "teamTasksUnassigned": "Utan ansvarig",
+      "teamTasksToReview": "Väntar på godkännande",
+      "teamTasksOpen": "Totalt öppet",
+      "wechsel": "Växling",
+      "wechselHint": "Ankomst och avresa samma dag i samma enhet – städningen måste ske mellan två bokningar.",
+      "wechselUnklar": "Växling oklar",
+      "wechselUnklarHint": "Samma dag anländer någon till samma objekt, men enheten för en av bokningarna saknas – det går inte att säga om en växling verkligen behövs.",
+      "teamTasksUrgencyUnknown": "förfallen eller förfaller idag — otillgänglig just nu",
+      "listingsActive": "Aktiv",
+      "listingsActiveLabel": "Till salu"
     },
     "mobileAppHint": "Uppgiftsvyn för på språng finns redan responsivt på webben (Mina uppgifter + detaljer med fotouppladdning). En separat mobilapp kommer som ett eget projekt.",
     "aufgabenFilter": {
@@ -15280,7 +15420,8 @@
         "reservierungen": "Bokningar",
         "kennzahlen": "Nyckeltal",
         "nachrichten": "Meddelanden",
-        "objekte": "Objekt"
+        "objekte": "Objekt",
+        "aufgaben": "Uppgifter"
       }
     }
   },

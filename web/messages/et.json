@@ -2747,7 +2747,8 @@
       "tradespeople": "Käsitöölised",
       "marketing": "Turundus",
       "housebook": "Majamapp",
-      "listing": "Turustamine"
+      "listing": "Turustamine",
+      "inventory": "Inventar"
     },
     "objectInfo": {
       "capacityPersons": "Mahutavus (isikud)",
@@ -2898,7 +2899,130 @@
       "helaarsbolig": "Aastaringne elukoht",
       "fritidshus": "Suvila"
     },
-    "print": "Prindi"
+    "print": "Prindi",
+    "mappe": {
+      "gastTitel": "Külaliste kaust – dokumendid",
+      "hausTitel": "Maja kaust – dokumendid (sisemine)",
+      "titel": "Digitaalne kaust",
+      "erklaerung": "Laadi üles PDF – selles olevad andmed loetakse ja pakutakse kinnitamiseks. Dokument jääb siia lugemiseks.",
+      "hochladen": "Laadi üles PDF",
+      "liest": "Lugemine pooleli …",
+      "laedt": "Laadimine pooleli …",
+      "leer": "Selles kaustas pole veel dokumenti.",
+      "zuGross": "Fail on liiga suur (max {mb} MB).",
+      "seiten": "{count, plural, one {# leht} other {# lehte}}",
+      "ansehen": "Vaata {name} suurelt",
+      "loeschen": "Eemalda {name}",
+      "loeschenFrage": "Kas eemaldada „{name}“ kaustast? Juba üle võetud andmed jäävad alles.",
+      "gefunden": "{count, plural, one {# andmed leitud} other {# andmed leitud}}",
+      "gefundenHinweis": "Midagi sellest pole salvestatud. Kontrollige, vajadusel muutke, seejärel võtke üle – uksekood ja paroolid pole teadlikult eelvalitud.",
+      "nichtsGefunden": "Selles dokumendis polnud midagi, mis sobiks kausta väljale. See jääb siiski kausta.",
+      "heikel": "Palun kontrollige hoolikalt",
+      "fundstelle": "Dokumendis: {ort}",
+      "sprachfassung": "Keeleversioon",
+      "ueberschreiben": "Asenda ka juba täidetud väljad",
+      "ausgewaehlt": "{count} {gesamt}st valitud",
+      "verwerfen": "Loobu",
+      "uebernehmen": "Võta üle",
+      "uebernimmt": "Ülevõtmine pooleli …",
+      "schliessen": "Sulge",
+      "gesetzt": "{count, plural, =0 {Midagi pole üle võetud} one {# väli üle võetud} other {# välja üle võetud}}",
+      "uebersprungen": "Juba täidetud ja seetõttu muutmata: {felder}",
+      "stand": {
+        "offen": "lugemata",
+        "gelesen": "loetud",
+        "uebernommen": "üle võetud",
+        "ohne_treffer": "midagi ei leitud",
+        "fehler": "lugemine ebaõnnestus"
+      },
+      "sicher": {
+        "hoch": "hästi loetav",
+        "mittel": "piiratud loetavus",
+        "niedrig": "raskesti loetav"
+      },
+      "sprache": {
+        "de": "Saksa",
+        "en": "Inglise",
+        "da": "Taani"
+      }
+    },
+    "inventar": {
+      "abschnitt": "Inventar",
+      "titel": "Inventari nimekiri",
+      "erklaerung": "Mis majas on, ruumide kaupa. Nõutav ja tegelik eraldi – erinevus on inventuuri tulemus. Igal ajal laiendatav.",
+      "laedt": "Laadimine …",
+      "leer": "Midagi pole veel sisestatud. Lisage read käsitsi või võtke need kaustast PDF-ist.",
+      "neuName": "Ese",
+      "neuSoll": "Nõutav",
+      "hinzufuegen": "Lisa",
+      "raeume": "Ruumid",
+      "keineRaeume": "veel puudub",
+      "raumName": "Ruumi nimi",
+      "raumHinzufuegen": "Lisa ruum",
+      "ohneRaum": "Ilma ruumita",
+      "speichern": "Salvesta",
+      "istMenge": "Olemasolev kogus",
+      "vonSoll": "kokku {soll}",
+      "geprueft": "Märgi kontrollituks",
+      "loeschen": "Eemalda",
+      "loeschenFrage": "Kas eemaldada „{name}“ nimekirjast? Teatatud kahjustused jäävad alles.",
+      "ausDokument": "PDF-ist",
+      "ausDokumentHint": "See rida pärineb digitaalse kausta dokumendist.",
+      "schadenMelden": "Teata kahjustusest",
+      "schadenAn": "Kahjustus esemel „{name}“",
+      "art": "Mis on lahti?",
+      "traeger": "Kes kannab kulud?",
+      "werZahlt": "Kes maksab?",
+      "beschreibung": "Kirjeldus",
+      "fotoWaehlen": "Tee või vali foto",
+      "fotoPflicht": "Ilma fotota teadet ei saa – vaidluse korral on pilt sageli ainus, mis loeb.",
+      "fotosGewaehlt": "{count, plural, one {# pilt valitud} other {# pilti valitud}}",
+      "melden": "Teata kahjustusest",
+      "meldet": "Teatamine käib …",
+      "abbrechen": "Tühista",
+      "offeneSchaeden": "{count, plural, one {# kahjustus} other {# kahjustust}}",
+      "offeneSchaedenTitel": "{count, plural, one {# avatud kahjustus} other {# avatud kahjustust}}",
+      "bild": "Pilt {nr}",
+      "betrag": "Summa",
+      "bestaetigen": "Kinnita",
+      "verwerfen": "Loobu",
+      "verwerfenFrage": "Kas loobuda kahjustusest esemel „{name}“? See ei olnud kahjustus.",
+      "artWert": {
+        "beschaedigt": "Kahjustatud",
+        "fehlt": "Puudub",
+        "entsorgt": "Kõrvaldatud"
+      },
+      "traegerWert": {
+        "offen": "Lahtine",
+        "eigentuemer": "Omanik",
+        "gast": "Külaline",
+        "betrieb": "Operatsioon"
+      },
+      "pdfImport": "Loend PDF-ist",
+      "pdfLiest": "Loen …",
+      "pdfLeer": "Selles PDF-is ei tuvastatud ühtegi inventarinimekirja.",
+      "pdfGefunden": "{count, plural, one {# rida leitud} other {# rida leitud}}",
+      "pdfHinweis": "Midagi ei salvestatud. Kontrollige, muutke vajadusel ja seejärel rakendage. Ruumid määratakse ainult siis, kui need on juba olemas.",
+      "uebernimmt": "Rakendan …",
+      "uebernehmen": "Rakenda",
+      "zustand": "Seisukord",
+      "rhythmus": "Lugemissagedus",
+      "meldebestandKurz": "Märguanne {n}",
+      "referenzSetzen": "Lisa terve oleku pilt",
+      "referenzAnsehen": "Vaata terve oleku pilti",
+      "zustandWert": {
+        "neu": "uus",
+        "gut": "hea",
+        "abgenutzt": "kulunud",
+        "ersatz_faellig": "vajab asendamist"
+      },
+      "rhythmusWert": {
+        "jede_abreise": "igal lahkumisel",
+        "quartal": "kord kvartalis",
+        "jaehrlich": "aastas",
+        "nie": "ära loe"
+      }
+    }
   },
   "finance": {
     "cancelInvoice": {
@@ -5285,7 +5409,23 @@
       "ownerRequestsLift": "Tühistamissoovid",
       "ownerRequestsTermination": "Teatatud lepingu lõppemised",
       "ownerRequestsNone": "Avatud toiminguid ei ole.",
-      "ownerRequestsOldest": "Vanim avatud taotlus: {count, plural, =0 {täna} one {eile} other {# päeva tagasi}}"
+      "ownerRequestsOldest": "Vanim avatud taotlus: {count, plural, =0 {täna} one {eile} other {# päeva tagasi}}",
+      "teamTasks": "Meeskonnatöö",
+      "teamTasksExplain": "Millega meeskond praegu tegeleb: tähtajaks möödunud ja täna tähtaegsed ülesanded, vastutajateta ülesanded ja need, mis ootavad heakskiitu. See on hetkeseis, mitte ajaperiood – avatud on avatud ja vanem tähendab kiireloomulisemat.",
+      "teamTasksLabel": "Tähtaeg möödunud või täna tähtaegne",
+      "teamTasksOldest": "Vanim tähtajaks möödunud ülesanne: {count} päeva tagasi",
+      "teamTasksOverdue": "Tähtaeg möödunud",
+      "teamTasksToday": "Täna tähtaegne",
+      "teamTasksUnassigned": "Vastutajateta",
+      "teamTasksToReview": "Ootab heakskiitu",
+      "teamTasksOpen": "Kokku avatud",
+      "wechsel": "Vahetus",
+      "wechselHint": "Välja- ja sisseregistreerimine samal päeval samas majutusüksuses – koristus peab toimuma kahe broneeringu vahel.",
+      "wechselUnklar": "Vahetus ebaselge",
+      "wechselUnklarHint": "Samal päeval registreerib keegi samas objektis sisse, kuid ühe broneeringu majutusüksus puudub – seega ei saa öelda, kas vahetus on tõesti vajalik.",
+      "teamTasksUrgencyUnknown": "tähtajaks ületatud või täna tasumisele kuuluv – praegu pole saadaval",
+      "listingsActive": "Aktiivne",
+      "listingsActiveLabel": "Müügis"
     },
     "mobileAppHint": "Ülesannete vaade liikvel olles on juba veebis reageeriv (Minu ülesanded + detailid fotode üleslaadimisega). Eraldi mobiilirakendus tuleb omaette projektina.",
     "aufgabenFilter": {
@@ -15280,7 +15420,8 @@
         "reservierungen": "Broneeringud",
         "kennzahlen": "Mõõdikud",
         "nachrichten": "Sõnumid",
-        "objekte": "Objektid"
+        "objekte": "Objektid",
+        "aufgaben": "Ülesanded"
       }
     }
   },

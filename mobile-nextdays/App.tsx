@@ -32,6 +32,7 @@ import PropertyGuestGuide from "@/screens/PropertyGuestGuide";
 import PropertyGuestGuideText from "@/screens/PropertyGuestGuideText";
 import PropertyDescription from "@/screens/PropertyDescription";
 import PropertyDetail from "@/screens/PropertyDetail";
+import PropertyKartei from "@/screens/PropertyKartei";
 import ReservationDetail from "@/screens/ReservationDetail";
 import TaskDetail from "@/screens/TaskDetail";
 import { marke } from "@/theme/marke";
@@ -62,6 +63,7 @@ const linking: LinkingOptions<RootStackParamList> = {
       PropertyDetail: "objekte/:id",
       PropertyDescription: "objekte/:id/beschreibung",
       PropertyCustomFields: "objekte/:id/zusatzfelder",
+      PropertyKartei: "objekte/:id/kartei",
       PropertyGuestGuide: "objekte/:id/gaestemappe",
       PropertyGuestGuideText: "objekte/:id/gaestemappe/:feld",
       HostTabs: {
@@ -144,6 +146,7 @@ function Root() {
             <Stack.Screen name="PropertyDetail" component={PropertyDetail} />
             <Stack.Screen name="PropertyDescription" component={PropertyDescription} />
             <Stack.Screen name="PropertyCustomFields" component={PropertyCustomFields} />
+            <Stack.Screen name="PropertyKartei" component={PropertyKartei} />
             <Stack.Screen name="PropertyGuestGuide" component={PropertyGuestGuide} />
             <Stack.Screen name="PropertyGuestGuideText" component={PropertyGuestGuideText} />
           </>

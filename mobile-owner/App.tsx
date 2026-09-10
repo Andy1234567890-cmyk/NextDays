@@ -67,6 +67,7 @@ const linking: LinkingOptions<RootStackParamList> = {
       Auszahlungen: "auszahlungen",
       Statistik: "statistik",
       SperrAntrag: "eigennutzung",
+      Aufgaben: "aufgaben",
       Tabs: {
         screens: {
           Start: "start",

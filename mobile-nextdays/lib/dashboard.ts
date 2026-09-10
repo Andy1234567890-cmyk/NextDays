@@ -59,6 +59,16 @@ export type DashboardEntry = {
   booked_at: string | null;
   // Thread im Posteingang; null = keine Korrespondenz → kein Nachrichten-Weg.
   message_thread_id: string | null;
+  // Wechseltag: in DERSELBEN Einheit reist an diesem Tag ein Gast ab und ein
+  // anderer an — der teuerste Reinigungstag, weil zwischen zwei Belegungen
+  // gedreht werden muss. Für die Person mit dem Telefon in der Hand ist das
+  // die wichtigste Angabe des Tages.
+  //
+  // Drei Zustände, kein bool: `unbekannt` heißt, dass eine der beiden Zeilen
+  // keine Einheit trägt (nullable seit 0265) und damit nicht entscheidbar
+  // ist, ob es dieselbe ist. Als „nein" anzuzeigen wäre eine erfundene
+  // Aussage (Wurzel 4).
+  wechsel: "ja" | "nein" | "unbekannt";
 };
 
 // Eine KPI-Kachel mit Vergleich zur Vorperiode. change_pct null = keine
@@ -98,6 +108,7 @@ export type Dashboard = {
   confirmed_30d: DashboardKpi;
   currency: string;
   objekte_gesamt: number;
+  objekte_aktiv: number;
   objekte_inaktiv: number;
   objekte_entwurf: number;
 };

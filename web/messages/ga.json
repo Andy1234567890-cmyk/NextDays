@@ -2747,7 +2747,8 @@
       "tradespeople": "Ceardaithe",
       "marketing": "Margaíocht",
       "housebook": "Mapa tí",
-      "listing": "Margú"
+      "listing": "Margú",
+      "inventory": "Fardal"
     },
     "objectInfo": {
       "capacityPersons": "Toilleadh (daoine)",
@@ -2898,7 +2899,130 @@
       "helaarsbolig": "Helårsbolig",
       "fritidshus": "Fritidshus"
     },
-    "print": "Priontáil"
+    "print": "Priontáil",
+    "mappe": {
+      "gastTitel": "Leabhar Aoi — Doiciméid",
+      "hausTitel": "Leabhar Tí — Doiciméid (inmheánach)",
+      "titel": "Leabhar Digiteach",
+      "erklaerung": "Uaslódáil PDF — léifear an fhaisnéis ann agus moltar í lena deimhniú. Fanfaidh an doiciméad anseo le haghaidh tagartha.",
+      "hochladen": "Uaslódáil PDF",
+      "liest": "Á léamh …",
+      "laedt": "Á luchtú …",
+      "leer": "Níl aon doiciméad sa leabhar seo fós.",
+      "zuGross": "Tá an comhad ró-mhór (uasmhéid {mb} MB).",
+      "seiten": "{count, plural, one {# leathanach} other {# leathanach}}",
+      "ansehen": "Féach {name} mór",
+      "loeschen": "Bain {name}",
+      "loeschenFrage": "Bain „{name}“ as an leabhar? Fanfaidh faisnéis a glacadh cheana féin.",
+      "gefunden": "{count, plural, one {# sonraí aimsithe} other {# sonraí aimsithe}}",
+      "gefundenHinweis": "Níl aon cheann de seo sábháilte. Seiceáil, athraigh más gá, ansin glac leis — ní roghnaítear cód dorais agus pasfhocail d'aon ghnó.",
+      "nichtsGefunden": "Ní raibh aon rud sa doiciméad seo a d'oirfeadh i réimse leabhair. Fanann sé sa leabhar, áfach.",
+      "heikel": "Seiceáil go cúramach le do thoil",
+      "fundstelle": "Sa doiciméad: {ort}",
+      "sprachfassung": "Leagan teanga",
+      "ueberschreiben": "Cuir réimsí atá cothrom le dáta cheana féin in ionad",
+      "ausgewaehlt": "{count} de {gesamt} roghnaithe",
+      "verwerfen": "Caith amach",
+      "uebernehmen": "Glac leis",
+      "uebernimmt": "Á ghlacadh …",
+      "schliessen": "Dún",
+      "gesetzt": "{count, plural, =0 {Níor glacadh le haon rud} one {# réimse glactha} other {# réimse glactha}}",
+      "uebersprungen": "Cothrom le dáta cheana féin agus mar sin gan athrú: {felder}",
+      "stand": {
+        "offen": "gan nach léite",
+        "gelesen": "léite",
+        "uebernommen": "glactha",
+        "ohne_treffer": "gan aon rud aimsithe",
+        "fehler": "theip ar an léamh"
+      },
+      "sicher": {
+        "hoch": "inléite go maith",
+        "mittel": "inléite go páirteach",
+        "niedrig": "deacair a léamh"
+      },
+      "sprache": {
+        "de": "Gearmáinis",
+        "en": "Béarla",
+        "da": "Danmhairgis"
+      }
+    },
+    "inventar": {
+      "abschnitt": "Fardal",
+      "titel": "Liosta Fardail",
+      "erklaerung": "Cad atá sa teach, de réir seomraí. Ba cheart agus iarbhír a scaradh — is é an difríocht an ráiteas fardail. Is féidir é a leathnú am ar bith.",
+      "laedt": "Á lódáil …",
+      "leer": "Níor taifeadadh aon rud fós. Cuir línte leis de láimh nó tóg ó PDF an fhillteáin.",
+      "neuName": "Mír",
+      "neuSoll": "Ba cheart",
+      "hinzufuegen": "Cuir leis",
+      "raeume": "Seomraí",
+      "keineRaeume": "níl aon cheann fós",
+      "raumName": "Ainm an tSeomra",
+      "raumHinzufuegen": "Cuir Seomra leis",
+      "ohneRaum": "Gan Seomra",
+      "speichern": "Sábháil",
+      "istMenge": "Cainníocht Reatha",
+      "vonSoll": "de {soll}",
+      "geprueft": "Marcáil mar Sheiceáilte",
+      "loeschen": "Bain",
+      "loeschenFrage": "Bain „{name}“ den liosta? Fanann damáistí tuairiscithe.",
+      "ausDokument": "ó PDF",
+      "ausDokumentHint": "Tagann an líne seo ó dhoiciméad san fhillteán digiteach.",
+      "schadenMelden": "Tuairiscigh Damáiste",
+      "schadenAn": "Damáiste do „{name}“",
+      "art": "Cad atá ar siúl?",
+      "traeger": "Cé a íocann na costais?",
+      "werZahlt": "Cé a íocann?",
+      "beschreibung": "Cur síos",
+      "fotoWaehlen": "Tóg nó Roghnaigh Grianghraf",
+      "fotoPflicht": "Gan grianghraf, gan tuairisc — i gcás díospóide, is minic gurb é an pictiúr an t-aon rud a bhfuil tábhacht leis.",
+      "fotosGewaehlt": "{count, plural, one {# Íomhá roghnaithe} other {# Íomhánna roghnaithe}}",
+      "melden": "Tuairiscigh Damáiste",
+      "meldet": "Á thuairisciú …",
+      "abbrechen": "Cealaigh",
+      "offeneSchaeden": "{count, plural, one {# Damáiste} other {# Damáistí}}",
+      "offeneSchaedenTitel": "{count, plural, one {# damáiste oscailte} other {# damáistí oscailte}}",
+      "bild": "Íomhá {nr}",
+      "betrag": "Méid",
+      "bestaetigen": "Deimhnigh",
+      "verwerfen": "Caith amach",
+      "verwerfenFrage": "Caith damáiste do „{name}“ amach? Ní damáiste a bhí anseo.",
+      "artWert": {
+        "beschaedigt": "Millte",
+        "fehlt": "Ar iarraidh",
+        "entsorgt": "Diúscartha"
+      },
+      "traegerWert": {
+        "offen": "Ar oscailt fós",
+        "eigentuemer": "Úinéir",
+        "gast": "Aoi",
+        "betrieb": "Oibriúchán"
+      },
+      "pdfImport": "Liosta ó PDF",
+      "pdfLiest": "Á léamh …",
+      "pdfLeer": "Níor aimsíodh aon liosta fardail sa PDF seo.",
+      "pdfGefunden": "{count, plural, one {# líne aimsithe} other {# línte aimsithe}}",
+      "pdfHinweis": "Níl aon cheann de seo sábháilte. Athbhreithnigh, athraigh más gá, ansin glac leis. Ní shanntar seomraí ach amháin má tá siad ann cheana féin.",
+      "uebernimmt": "Á ghlacadh …",
+      "uebernehmen": "Glac leis",
+      "zustand": "Staid",
+      "rhythmus": "Minicíocht chomhairimh",
+      "meldebestandKurz": "Fardal tuairiscithe {n}",
+      "referenzSetzen": "Uaslódáil íomhá den staid slán",
+      "referenzAnsehen": "Féach ar íomhá den staid slán",
+      "zustandWert": {
+        "neu": "nua",
+        "gut": "go maith",
+        "abgenutzt": "caite",
+        "ersatz_faellig": "athsholáthar dlite"
+      },
+      "rhythmusWert": {
+        "jede_abreise": "le gach imeacht",
+        "quartal": "gach ráithe",
+        "jaehrlich": "go bliantúil",
+        "nie": "gan a chomhaireamh"
+      }
+    }
   },
   "finance": {
     "cancelInvoice": {
@@ -5285,7 +5409,23 @@
       "ownerRequestsLift": "Iarratais ar dhíbhlocáil",
       "ownerRequestsTermination": "Foirceannadh conarthaí fógartha",
       "ownerRequestsNone": "Gan aon oibríochtaí oscailte.",
-      "ownerRequestsOldest": "An t-iarratas oscailte is sine: {count, plural, =0 {inniu} one {ó inné} other {ó # lá anuas}}"
+      "ownerRequestsOldest": "An t-iarratas oscailte is sine: {count, plural, =0 {inniu} one {ó inné} other {ó # lá anuas}}",
+      "teamTasks": "Tascanna foirne",
+      "teamTasksExplain": "An méid atá le déanamh ag an bhfoireann faoi láthair: tascanna atá thar téarma agus atá dlite inniu, tascanna gan sannadh agus tascanna atá ag fanacht le ceadú. Stádas reatha, ní tréimhse ama é – tá oscailte oscailte, agus ciallaíonn níos sine níos práinní.",
+      "teamTasksLabel": "thar téarma nó dlite inniu",
+      "teamTasksOldest": "An tasc is sine atá thar téarma: ó {count} lá anuas",
+      "teamTasksOverdue": "Thar téarma",
+      "teamTasksToday": "Dlite inniu",
+      "teamTasksUnassigned": "Gan sannadh",
+      "teamTasksToReview": "Ag fanacht le ceadú",
+      "teamTasksOpen": "Oscailte san iomlán",
+      "wechsel": "Athrú",
+      "wechselHint": "Seiceáil isteach agus seiceáil amach ar an lá céanna san aonad céanna – caithfear an glanadh a dhéanamh idir dhá áirithint.",
+      "wechselUnklar": "Athrú neamhchinnte",
+      "wechselUnklarHint": "Ar an lá céanna, tagann duine éigin isteach san áitreabh céanna, ach níl aonad ceann de na háirithintí taifeadta – ní féidir a rá an gá athrú a dhéanamh i ndáiríre.",
+      "teamTasksUrgencyUnknown": "thar téarma nó dlite inniu — nach bhfuil ar fáil faoi láthair",
+      "listingsActive": "Gníomhach",
+      "listingsActiveLabel": "Ar Díol"
     },
     "mobileAppHint": "Tá an t-amharc tascanna don bhóthar ar fáil cheana go freagrúil ar an ngréasán (Mo thascanna + sonraí le huaslódáil grianghraf). Leanfaidh aip mhóibíleach ar leith mar thionscadal dá cuid féin.",
     "aufgabenFilter": {
@@ -15280,7 +15420,8 @@
         "reservierungen": "Áirithintí",
         "kennzahlen": "Príomhtháscairí Feidhmíochta",
         "nachrichten": "Teachtaireachtaí",
-        "objekte": "Eastáit"
+        "objekte": "Eastáit",
+        "aufgaben": "Tascanna"
       }
     }
   },

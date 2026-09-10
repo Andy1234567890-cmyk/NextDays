@@ -82,6 +82,14 @@ def melde_dienstplan(
                 if geaendert
                 else f"dienstplan:{woche}:{user_id}"
             ),
+            # EINMALIG (0617): Beide Zweige beschreiben ein Ereignis. Die
+            # Veroeffentlichung einer Woche passiert genau einmal, und eine
+            # AENDERUNG traegt den Zeitpunkt im Schluessel — sie bekommt also
+            # ohnehin ihren eigenen Riegel. Was allein der partielle Index
+            # nicht verhinderte: derselbe Veroeffentlichungslauf nach dem Lesen
+            # erneut, also „Dein Dienstplan ist da" zweimal per Mail fuer
+            # dieselbe unveraenderte Woche.
+            einmalig=True,
         )
     except Exception as exc:  # noqa: BLE001 — Nebenpfad
         log.warning(
@@ -144,6 +152,12 @@ def melde_schicht_offen(db: Client, *, tenant_id: str, schicht: dict[str, Any]) 
                 ziel_pfad=None,
                 property_id=str(property_id),
                 dedup_key=f"schicht_offen:{schicht.get('id')}:{u['id']}",
+                # WIEDERHOLBAR (0617): „diese Schicht ist unbesetzt" ist ein
+                # ZUSTAND. Wird sie besetzt und spaeter wieder frei (Krankheit,
+                # zuruecknahme), ist derselbe Ruf an dieselben Kandidaten ein
+                # neuer Bedarf — und eine unbesetzte Schicht ist genau die
+                # Meldung, die nicht verstummen darf.
+                einmalig=False,
             )
     except Exception as exc:  # noqa: BLE001 — Nebenpfad
         log.warning(
@@ -187,6 +201,13 @@ def melde_abwesenheit_antrag(
                 tenant_id=tenant_id,
                 ziel_pfad="/hr/abwesenheit",
                 dedup_key=f"abwesenheit_antrag:{antrag['id']}:{uid}",
+                # EINMALIG (0617): Ein Antrag wird genau einmal gestellt; der
+                # Schluessel traegt Antrags-ID UND Empfaenger, beschreibt also
+                # das Ereignis vollstaendig. Ein zweiter Speichervorgang
+                # derselben Zeile (Doppelklick, Retry) ist eine Wiederholung,
+                # kein neuer Antrag — bisher aber nur, solange die Leitung die
+                # erste Meldung nicht gelesen hatte.
+                einmalig=True,
             )
     except Exception as exc:  # noqa: BLE001 — Nebenpfad
         log.warning(
@@ -228,6 +249,13 @@ def melde_abwesenheit_entschieden(
             tenant_id=tenant_id,
             ziel_pfad=None,
             dedup_key=f"abwesenheit_entscheidung:{antrag['id']}:{antrag.get('status')}",
+            # EINMALIG (0617): Der Schluessel traegt den STATUS, also die
+            # Entscheidung selbst. „Antrag 42 ist genehmigt" ist ein Ereignis;
+            # eine spaetere Korrektur hat einen anderen Status und damit einen
+            # eigenen Riegel. Ohne dieses Kennzeichen verschickte ein zweiter
+            # Aufruf derselben Genehmigung nach dem Lesen eine zweite Mail an
+            # den Mitarbeitenden.
+            einmalig=True,
         )
     except Exception as exc:  # noqa: BLE001 — Nebenpfad
         log.warning(
@@ -265,6 +293,13 @@ def melde_zeit_hinweis(  # noqa: PLR0913 — Hinweis mit allen Bezügen
                 tenant_id=tenant_id,
                 ziel_pfad="/hr/zeiterfassung",
                 dedup_key=f"zeit_{art}:{dedup}:{uid}",
+                # WIEDERHOLBAR (0617): Das sind laufende ZUSTAENDE — eine
+                # offene Stempelung, ein ablaufendes Dokument. Der `dedup`
+                # kommt vom Aufrufer und traegt bei `offen` bereits das Datum
+                # (`tick.py`), daempft also den stuendlichen Tick innerhalb des
+                # Tages; am naechsten Tag MUSS derselbe Fall wieder melden,
+                # solange er besteht.
+                einmalig=False,
             )
     except Exception as exc:  # noqa: BLE001 — Nebenpfad
         log.warning("personal_meldung_zeit_fehlgeschlagen", art=art, error=str(exc)[:200])

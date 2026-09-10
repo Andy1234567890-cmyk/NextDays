@@ -2747,7 +2747,8 @@
       "tradespeople": "Amatnieki",
       "marketing": "Mārketings",
       "housebook": "Mājas mape",
-      "listing": "Izvietošana"
+      "listing": "Izvietošana",
+      "inventory": "Inventārs"
     },
     "objectInfo": {
       "capacityPersons": "Ietilpība (personas)",
@@ -2898,7 +2899,130 @@
       "helaarsbolig": "Mājvieta visam gadam",
       "fritidshus": "Brīvdienu māja"
     },
-    "print": "Drukāt"
+    "print": "Drukāt",
+    "mappe": {
+      "gastTitel": "Viesu mape — dokumenti",
+      "hausTitel": "Mājas mape — dokumenti (iekšējie)",
+      "titel": "Digitālā mape",
+      "erklaerung": "Augšupielādēt PDF — tajā esošā informācija tiks nolasīta un piedāvāta apstiprināšanai. Dokuments paliks šeit, lai to varētu pārskatīt.",
+      "hochladen": "Augšupielādēt PDF",
+      "liest": "Tiek lasīts …",
+      "laedt": "Tiek ielādēts …",
+      "leer": "Šajā mapē vēl nav dokumentu.",
+      "zuGross": "Fails ir pārāk liels (maks. {mb} MB).",
+      "seiten": "{count, plural, one {# lapa} other {# lapas}}",
+      "ansehen": "Skatīt {name} lielā izmērā",
+      "loeschen": "Noņemt {name}",
+      "loeschenFrage": "Noņemt „{name}” no mapes? Jau pārņemtā informācija paliks saglabāta.",
+      "gefunden": "{count, plural, one {# informācija atrasta} other {# informācijas atrastas}}",
+      "gefundenHinweis": "Nekas no tā nav saglabāts. Pārbaudiet, ja nepieciešams, mainiet, tad pārņemiet — durvju kods un paroles apzināti nav iepriekš atlasītas.",
+      "nichtsGefunden": "Šajā dokumentā nebija nekā, kas atbilstu mapes laukam. Tas tomēr paliks mapē.",
+      "heikel": "Lūdzu, rūpīgi pārbaudiet",
+      "fundstelle": "Dokumentā: {ort}",
+      "sprachfassung": "Valodas versija",
+      "ueberschreiben": "Aizstāt arī jau aizpildītos laukus",
+      "ausgewaehlt": "{count} no {gesamt} atlasīti",
+      "verwerfen": "Atmest",
+      "uebernehmen": "Pārņemt",
+      "uebernimmt": "Tiek pārņemts …",
+      "schliessen": "Aizvērt",
+      "gesetzt": "{count, plural, =0 {Nekas nav pārņemts} one {# lauks pārņemts} other {# lauki pārņemti}}",
+      "uebersprungen": "Jau aizpildīts un tāpēc nemainīts: {felder}",
+      "stand": {
+        "offen": "nav lasīts",
+        "gelesen": "lasīts",
+        "uebernommen": "pārņemts",
+        "ohne_treffer": "neko neatradu",
+        "fehler": "lasīšana neizdevās"
+      },
+      "sicher": {
+        "hoch": "labi salasāms",
+        "mittel": "daļēji salasāms",
+        "niedrig": "grūti salasāms"
+      },
+      "sprache": {
+        "de": "Vācu",
+        "en": "Angļu",
+        "da": "Dāņu"
+      }
+    },
+    "inventar": {
+      "abschnitt": "Inventārs",
+      "titel": "Inventāra saraksts",
+      "erklaerung": "Kas atrodas mājā, pa telpām. Plānotais un faktiskais atsevišķi — starpība ir inventarizācijas rezultāts. Jebkurā laikā paplašināms.",
+      "laedt": "Notiek ielāde…",
+      "leer": "Vēl nekas nav ierakstīts. Pievienojiet rindas manuāli vai importējiet no mapes PDF.",
+      "neuName": "Priekšmets",
+      "neuSoll": "Plānotais",
+      "hinzufuegen": "Pievienot",
+      "raeume": "Telpas",
+      "keineRaeume": "vēl nav",
+      "raumName": "Telpas nosaukums",
+      "raumHinzufuegen": "Pievienot telpu",
+      "ohneRaum": "Bez telpas",
+      "speichern": "Saglabāt",
+      "istMenge": "Pieejamais daudzums",
+      "vonSoll": "no {soll}",
+      "geprueft": "Atzīmēt kā pārbaudītu",
+      "loeschen": "Noņemt",
+      "loeschenFrage": "Noņemt „{name}” no saraksta? Ziņotie bojājumi paliks saglabāti.",
+      "ausDokument": "no PDF",
+      "ausDokumentHint": "Šī rinda ir no digitālās mapes dokumenta.",
+      "schadenMelden": "Ziņot par bojājumu",
+      "schadenAn": "Bojājums „{name}”",
+      "art": "Kas notiek?",
+      "traeger": "Kurš sedz izmaksas?",
+      "werZahlt": "Kurš maksā?",
+      "beschreibung": "Apraksts",
+      "fotoWaehlen": "Uzņemt vai izvēlēties fotoattēlu",
+      "fotoPflicht": "Bez fotoattēla nav ziņojuma — strīda gadījumā attēls bieži vien ir vienīgais, kas ir svarīgs.",
+      "fotosGewaehlt": "{count, plural, one {# attēls izvēlēts} other {# attēli izvēlēti}}",
+      "melden": "Ziņot par bojājumu",
+      "meldet": "Tiek ziņots…",
+      "abbrechen": "Atcelt",
+      "offeneSchaeden": "{count, plural, one {# bojājums} other {# bojājumi}}",
+      "offeneSchaedenTitel": "{count, plural, one {# atvērts bojājums} other {# atvērti bojājumi}}",
+      "bild": "Attēls {nr}",
+      "betrag": "Summa",
+      "bestaetigen": "Apstiprināt",
+      "verwerfen": "Atmest",
+      "verwerfenFrage": "Atmest bojājumu „{name}”? Tas nebija bojājums.",
+      "artWert": {
+        "beschaedigt": "Bojāts",
+        "fehlt": "Trūkst",
+        "entsorgt": "Utilizēts"
+      },
+      "traegerWert": {
+        "offen": "Vēl nav atvērts",
+        "eigentuemer": "Īpašnieks",
+        "gast": "Viesis",
+        "betrieb": "Darbība"
+      },
+      "pdfImport": "Saraksts no PDF",
+      "pdfLiest": "Tiek lasīts…",
+      "pdfLeer": "Šajā PDF netika atrasts inventāra saraksts.",
+      "pdfGefunden": "{count, plural, one {# rinda atrasta} other {# rindas atrastas}}",
+      "pdfHinweis": "Nekas no tā netiek saglabāts. Pārbaudiet, ja nepieciešams, mainiet un pēc tam apstipriniet. Telpas tiek piešķirtas tikai tad, ja tās jau pastāv.",
+      "uebernimmt": "Tiek pieņemts…",
+      "uebernehmen": "Pieņemt",
+      "zustand": "Stāvoklis",
+      "rhythmus": "Skaitīšanas ritms",
+      "meldebestandKurz": "Paziņojuma krājums {n}",
+      "referenzSetzen": "Pievienot neskartā stāvokļa attēlu",
+      "referenzAnsehen": "Skatīt neskartā stāvokļa attēlu",
+      "zustandWert": {
+        "neu": "jauns",
+        "gut": "labs",
+        "abgenutzt": "nolietots",
+        "ersatz_faellig": "nepieciešama nomaiņa"
+      },
+      "rhythmusWert": {
+        "jede_abreise": "katrā izbraukšanā",
+        "quartal": "reizi ceturksnī",
+        "jaehrlich": "katru gadu",
+        "nie": "neskaitīt"
+      }
+    }
   },
   "finance": {
     "cancelInvoice": {
@@ -5285,7 +5409,23 @@
       "ownerRequestsLift": "Atcelšanas pieprasījumi",
       "ownerRequestsTermination": "Paziņotie līgumu termiņi beidzas",
       "ownerRequestsNone": "Nav atvērtu darbību.",
-      "ownerRequestsOldest": "Vecākais atvērtais pieprasījums: {count, plural, =0 {šodien} one {pirms vienas dienas} other {pirms # dienām}}"
+      "ownerRequestsOldest": "Vecākais atvērtais pieprasījums: {count, plural, =0 {šodien} one {pirms vienas dienas} other {pirms # dienām}}",
+      "teamTasks": "Komandas uzdevumi",
+      "teamTasksExplain": "Kas komandai pašlaik jāapstrādā: nokavētie un šodien izpildāmie uzdevumi, uzdevumi bez atbildīgajām personām un tie, kas gaida apstiprinājumu. Pašreizējais stāvoklis, nevis laika posms — atvērts ir atvērts, un vecāks nozīmē steidzamāks.",
+      "teamTasksLabel": "Nokavēts vai šodien izpildāms",
+      "teamTasksOldest": "Vecākais nokavētais uzdevums: pirms {count} dienām",
+      "teamTasksOverdue": "Nokavēts",
+      "teamTasksToday": "Šodien izpildāms",
+      "teamTasksUnassigned": "Bez atbildīgajām personām",
+      "teamTasksToReview": "Gaida apstiprinājumu",
+      "teamTasksOpen": "Kopā atvērti",
+      "wechsel": "Maiņa",
+      "wechselHint": "Izbraukšana un iebraukšana tajā pašā dienā tajā pašā vienībā — tīrīšanai jānotiek starp divām rezervācijām.",
+      "wechselUnklar": "Maiņa neskaidra",
+      "wechselUnklarHint": "Tajā pašā dienā tajā pašā objektā kāds iebrauc, bet vienība vienai no abām rezervācijām nav norādīta — nav iespējams pateikt, vai tiešām ir jāmaina.",
+      "teamTasksUrgencyUnknown": "kavēts vai šodien maksājams — pašlaik nav pieejams",
+      "listingsActive": "Aktīvs",
+      "listingsActiveLabel": "Pārdošanā"
     },
     "mobileAppHint": "Uzdevumu skats ceļā jau ir pieejams responsīvi tīmeklī (Mani uzdevumi + detaļas ar fotoattēlu augšupielādi). Atsevišķa mobilā lietotne sekos kā atsevišķs projekts.",
     "aufgabenFilter": {
@@ -15280,7 +15420,8 @@
         "reservierungen": "Rezervācijas",
         "kennzahlen": "Rādītāji",
         "nachrichten": "Ziņojumi",
-        "objekte": "Īpašumi"
+        "objekte": "Īpašumi",
+        "aufgaben": "Uzdevumi"
       }
     }
   },

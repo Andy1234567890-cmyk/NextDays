@@ -2747,7 +2747,8 @@
       "tradespeople": "Artigiani",
       "marketing": "Marketing",
       "housebook": "Manuale della casa",
-      "listing": "Vendita"
+      "listing": "Vendita",
+      "inventory": "Inventario"
     },
     "objectInfo": {
       "capacityPersons": "Capacità (persone)",
@@ -2898,7 +2899,130 @@
       "helaarsbolig": "Helårsbolig",
       "fritidshus": "Fritidshus"
     },
-    "print": "Stampa"
+    "print": "Stampa",
+    "mappe": {
+      "gastTitel": "Cartella ospiti — Documenti",
+      "hausTitel": "Cartella della casa — Documenti (interna)",
+      "titel": "Cartella digitale",
+      "erklaerung": "Carica PDF — i dati in esso contenuti verranno letti e proposti per la conferma. Il documento rimane qui per la consultazione.",
+      "hochladen": "Carica PDF",
+      "liest": "Lettura in corso...",
+      "laedt": "Caricamento in corso...",
+      "leer": "Nessun documento in questa cartella.",
+      "zuGross": "Il file è troppo grande (max. {mb} MB).",
+      "seiten": "{count, plural, one {# pagina} other {# pagine}}",
+      "ansehen": "Visualizza {name} in grande",
+      "loeschen": "Rimuovi {name}",
+      "loeschenFrage": "Rimuovere „{name}“ dalla cartella? I dati già acquisiti rimangono invariati.",
+      "gefunden": "{count, plural, one {# dato trovato} other {# dati trovati}}",
+      "gefundenHinweis": "Nessuno di questi è stato salvato. Verificare, modificare se necessario, quindi acquisire — il codice della porta e le password non sono stati preselezionati intenzionalmente.",
+      "nichtsGefunden": "In questo documento non c'era nulla che potesse essere inserito in un campo della cartella. Rimane comunque nella cartella.",
+      "heikel": "Si prega di controllare attentamente",
+      "fundstelle": "Nel documento: {ort}",
+      "sprachfassung": "Versione linguistica",
+      "ueberschreiben": "Sostituisci anche i campi già compilati",
+      "ausgewaehlt": "{count} di {gesamt} selezionati",
+      "verwerfen": "Annulla",
+      "uebernehmen": "Acquisisci",
+      "uebernimmt": "Acquisizione in corso...",
+      "schliessen": "Chiudi",
+      "gesetzt": "{count, plural, =0 {Nessuno acquisito} one {# campo acquisito} other {# campi acquisiti}}",
+      "uebersprungen": "Già compilato e quindi invariato: {felder}",
+      "stand": {
+        "offen": "non ancora letto",
+        "gelesen": "letto",
+        "uebernommen": "accettato",
+        "ohne_treffer": "niente trovato",
+        "fehler": "lettura fallita"
+      },
+      "sicher": {
+        "hoch": "leggibile",
+        "mittel": "leggibilità limitata",
+        "niedrig": "difficile da leggere"
+      },
+      "sprache": {
+        "de": "Tedesco",
+        "en": "Inglese",
+        "da": "Danese"
+      }
+    },
+    "inventar": {
+      "abschnitt": "Inventario",
+      "titel": "Lista inventario",
+      "erklaerung": "Cosa c'è in casa, per stanze. Separare il previsto dall'effettivo — la differenza è il risultato dell'inventario. Espandibile in qualsiasi momento.",
+      "laedt": "Caricamento in corso…",
+      "leer": "Ancora nulla di registrato. Aggiungere righe manualmente o importare da un PDF della cartella.",
+      "neuName": "Oggetto",
+      "neuSoll": "Previsto",
+      "hinzufuegen": "Aggiungi",
+      "raeume": "Stanze",
+      "keineRaeume": "nessuna",
+      "raumName": "Nome stanza",
+      "raumHinzufuegen": "Aggiungi stanza",
+      "ohneRaum": "Senza stanza",
+      "speichern": "Salva",
+      "istMenge": "Quantità disponibile",
+      "vonSoll": "di {soll}",
+      "geprueft": "Segna come verificato",
+      "loeschen": "Rimuovi",
+      "loeschenFrage": "Rimuovere „{name}“ dalla lista? I danni segnalati rimangono.",
+      "ausDokument": "da PDF",
+      "ausDokumentHint": "Questa riga proviene da un documento della cartella digitale.",
+      "schadenMelden": "Segnala danno",
+      "schadenAn": "Danno a „{name}“",
+      "art": "Cosa succede?",
+      "traeger": "Chi sostiene i costi?",
+      "werZahlt": "Chi paga?",
+      "beschreibung": "Descrizione",
+      "fotoWaehlen": "Scatta o scegli una foto",
+      "fotoPflicht": "Nessuna segnalazione senza foto — in caso di controversia, l'immagine è spesso l'unica cosa che conta.",
+      "fotosGewaehlt": "{count, plural, one {# immagine selezionata} other {# immagini selezionate}}",
+      "melden": "Segnala danno",
+      "meldet": "Segnalazione in corso…",
+      "abbrechen": "Annulla",
+      "offeneSchaeden": "{count, plural, one {# danno} other {# danni}}",
+      "offeneSchaedenTitel": "{count, plural, one {# danno aperto} other {# danni aperti}}",
+      "bild": "Immagine {nr}",
+      "betrag": "Importo",
+      "bestaetigen": "Conferma",
+      "verwerfen": "Annulla",
+      "verwerfenFrage": "Annullare il danno a „{name}“? Non era un danno.",
+      "artWert": {
+        "beschaedigt": "Danneggiato",
+        "fehlt": "Mancante",
+        "entsorgt": "Smaltito"
+      },
+      "traegerWert": {
+        "offen": "Ancora da saldare",
+        "eigentuemer": "Proprietario",
+        "gast": "Ospite",
+        "betrieb": "Struttura"
+      },
+      "pdfImport": "Elenco da PDF",
+      "pdfLiest": "Lettura in corso…",
+      "pdfLeer": "Nessun elenco di inventario è stato trovato in questo PDF.",
+      "pdfGefunden": "{count, plural, one {# riga trovata} other {# righe trovate}}",
+      "pdfHinweis": "Nessuno di questi è salvato. Controllare, modificare se necessario, quindi applicare. Le stanze vengono assegnate solo se esistono già.",
+      "uebernimmt": "Applicazione in corso…",
+      "uebernehmen": "Applica",
+      "zustand": "Stato",
+      "rhythmus": "Frequenza di conteggio",
+      "meldebestandKurz": "Scorta minima {n}",
+      "referenzSetzen": "Carica immagine stato intatto",
+      "referenzAnsehen": "Visualizza immagine stato intatto",
+      "zustandWert": {
+        "neu": "nuovo",
+        "gut": "buono",
+        "abgenutzt": "usurato",
+        "ersatz_faellig": "da sostituire"
+      },
+      "rhythmusWert": {
+        "jede_abreise": "ad ogni partenza",
+        "quartal": "trimestrale",
+        "jaehrlich": "annuale",
+        "nie": "non contare"
+      }
+    }
   },
   "finance": {
     "cancelInvoice": {
@@ -5285,7 +5409,23 @@
       "ownerRequestsLift": "Richieste di sblocco",
       "ownerRequestsTermination": "Termini di contratto annunciati",
       "ownerRequestsNone": "Nessuna operazione aperta.",
-      "ownerRequestsOldest": "Richiesta aperta più vecchia: {count, plural, =0 {oggi} one {da un giorno} other {da # giorni}}"
+      "ownerRequestsOldest": "Richiesta aperta più vecchia: {count, plural, =0 {oggi} one {da un giorno} other {da # giorni}}",
+      "teamTasks": "Compiti del team",
+      "teamTasksExplain": "Cosa deve fare il team: compiti scaduti e in scadenza oggi, compiti senza responsabile e quelli in attesa di approvazione. Uno stato attuale, non un periodo di tempo — aperto è aperto, e più vecchio significa più urgente.",
+      "teamTasksLabel": "Scaduti o in scadenza oggi",
+      "teamTasksOldest": "Compito scaduto più vecchio: da {count} giorni",
+      "teamTasksOverdue": "Scaduto",
+      "teamTasksToday": "In scadenza oggi",
+      "teamTasksUnassigned": "Senza responsabile",
+      "teamTasksToReview": "In attesa di approvazione",
+      "teamTasksOpen": "Totale aperti",
+      "wechsel": "Cambio",
+      "wechselHint": "Partenza e arrivo lo stesso giorno nella stessa unità — la pulizia deve essere effettuata tra due occupazioni.",
+      "wechselUnklar": "Cambio non chiaro",
+      "wechselUnklarHint": "Lo stesso giorno qualcuno arriva nella stessa proprietà, ma l'unità di una delle due prenotazioni non è specificata — non è possibile stabilire se sia necessario un cambio.",
+      "teamTasksUrgencyUnknown": "in scadenza o in scadenza oggi — al momento non disponibile",
+      "listingsActive": "Attivo",
+      "listingsActiveLabel": "In vendita"
     },
     "mobileAppHint": "La vista attività per gli spostamenti è già disponibile in modo responsive sul web (Le mie attività + dettaglio con caricamento foto). Un'app mobile separata seguirà come progetto a sé.",
     "aufgabenFilter": {
@@ -15280,7 +15420,8 @@
         "reservierungen": "Prenotazioni",
         "kennzahlen": "Metriche",
         "nachrichten": "Messaggi",
-        "objekte": "Strutture"
+        "objekte": "Strutture",
+        "aufgaben": "Compiti"
       }
     }
   },

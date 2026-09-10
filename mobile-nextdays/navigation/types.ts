@@ -53,6 +53,9 @@ export type RootStackParamList = {
   PropertyDescription: { id: string };
   // Betriebs-eigene Zusatzfelder eines Objekts (Migration 0242).
   PropertyCustomFields: { id: string };
+  // Objektkartei (Dossier): die Onboarding-Angaben, die beim Kunden vor Ort
+  // fallen. Bewusst eine Teilmenge des Web-Steppers — Begründung im Screen.
+  PropertyKartei: { id: string };
   // Gästemappe: Liste der acht Blöcke und der einzelne Text je Sprache.
   // Dieselben Daten wie im Web (`type_attributes.messaging`).
   PropertyGuestGuide: { id: string };

@@ -102,6 +102,13 @@ def melde_tausch(  # noqa: PLR0913 — Ereignis, Bezug und Empfängerkreis
                 tenant_id=tenant_id,
                 ziel_pfad=ziel,
                 dedup_key=f"tausch:{tausch.get('id')}:{ereignis}:{uid}",
+                # EINMALIG (0617): Der Schluessel traegt Tausch, EREIGNIS und
+                # Empfaenger — er beschreibt damit genau einen Schritt des
+                # Vorgangs (angeboten / angenommen / abgelehnt / zurueckgezogen)
+                # an genau eine Person. Jeder Schritt passiert je Tausch
+                # einmal; die vier Ereignisse haben eigene Schluessel und
+                # blockieren sich nicht.
+                einmalig=True,
             )
     except Exception as exc:  # noqa: BLE001 — Nebenpfad
         log.warning(

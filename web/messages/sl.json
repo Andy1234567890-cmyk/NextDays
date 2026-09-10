@@ -2747,7 +2747,8 @@
       "tradespeople": "Obrtniki",
       "marketing": "Trženje",
       "housebook": "Hišna mapa",
-      "listing": "Trženje objave"
+      "listing": "Trženje objave",
+      "inventory": "Inventar"
     },
     "objectInfo": {
       "capacityPersons": "Kapaciteta (osebe)",
@@ -2898,7 +2899,130 @@
       "helaarsbolig": "Celodnevno bivališče",
       "fritidshus": "Počitniška hiša"
     },
-    "print": "Natisni"
+    "print": "Natisni",
+    "mappe": {
+      "gastTitel": "Mapa za goste — Dokumenti",
+      "hausTitel": "Mapa hiše — Dokumenti (interno)",
+      "titel": "Digitalna mapa",
+      "erklaerung": "Naložite PDF — podatki v njem bodo prebrani in predlagani za potrditev. Dokument ostane tukaj za referenco.",
+      "hochladen": "Naložite PDF",
+      "liest": "Berem …",
+      "laedt": "Nalagam …",
+      "leer": "V tej mapi še ni dokumentov.",
+      "zuGross": "Datoteka je prevelika (največ {mb} MB).",
+      "seiten": "{count, plural, one {# stran} other {# strani}}",
+      "ansehen": "Ogled {name} v veliki velikosti",
+      "loeschen": "Odstrani {name}",
+      "loeschenFrage": "Odstranim »{name}« iz mape? Že sprejeti podatki ostanejo.",
+      "gefunden": "{count, plural, one {# podatek najden} other {# podatkov najdenih}}",
+      "gefundenHinweis": "Nič od tega ni shranjeno. Preverite, po potrebi spremenite, nato sprejmite — koda vrat in gesla namerno niso vnaprej izbrana.",
+      "nichtsGefunden": "V tem dokumentu ni bilo ničesar, kar bi ustrezalo polju mape. Kljub temu ostane v mapi.",
+      "heikel": "Prosimo, natančno preverite",
+      "fundstelle": "V dokumentu: {ort}",
+      "sprachfassung": "Jezikovna različica",
+      "ueberschreiben": "Zamenjaj tudi že urejena polja",
+      "ausgewaehlt": "{count} od {gesamt} izbranih",
+      "verwerfen": "Zavrzi",
+      "uebernehmen": "Sprejmi",
+      "uebernimmt": "Sprejemam …",
+      "schliessen": "Zapri",
+      "gesetzt": "{count, plural, =0 {Nič ni sprejeto} one {# polje sprejeto} other {# polja sprejeta}}",
+      "uebersprungen": "Že urejeno in zato nespremenjeno: {felder}",
+      "stand": {
+        "offen": "še ni prebrano",
+        "gelesen": "prebrano",
+        "uebernommen": "sprejeto",
+        "ohne_treffer": "ni najdeno",
+        "fehler": "branje ni uspelo"
+      },
+      "sicher": {
+        "hoch": "dobro berljivo",
+        "mittel": "omejeno berljivo",
+        "niedrig": "težko berljivo"
+      },
+      "sprache": {
+        "de": "Nemščina",
+        "en": "Angleščina",
+        "da": "Danščina"
+      }
+    },
+    "inventar": {
+      "abschnitt": "Inventar",
+      "titel": "Inventar",
+      "erklaerung": "Kaj je v hiši, po sobah. Ločeno dejansko in ciljno stanje – razlika je rezultat inventure. Kadar koli razširljivo.",
+      "laedt": "Nalaganje …",
+      "leer": "Še nič ni zabeleženo. Vrstice dodajte ročno ali jih uvozite iz PDF-ja mape.",
+      "neuName": "Predmet",
+      "neuSoll": "Cilj",
+      "hinzufuegen": "Dodaj",
+      "raeume": "Sobe",
+      "keineRaeume": "še ni",
+      "raumName": "Ime sobe",
+      "raumHinzufuegen": "Dodaj sobo",
+      "ohneRaum": "Brez sobe",
+      "speichern": "Shrani",
+      "istMenge": "Razpoložljiva količina",
+      "vonSoll": "od {soll}",
+      "geprueft": "Označi kot preverjeno",
+      "loeschen": "Odstrani",
+      "loeschenFrage": "Odstranim „{name}“ s seznama? Prijavljene poškodbe ostanejo.",
+      "ausDokument": "iz PDF-ja",
+      "ausDokumentHint": "Ta vrstica je iz dokumenta digitalne mape.",
+      "schadenMelden": "Prijavi škodo",
+      "schadenAn": "Škoda na „{name}“",
+      "art": "Kaj se dogaja?",
+      "traeger": "Kdo krije stroške?",
+      "werZahlt": "Kdo plača?",
+      "beschreibung": "Opis",
+      "fotoWaehlen": "Posnemite ali izberite fotografijo",
+      "fotoPflicht": "Brez fotografije ni prijave – v primeru spora je slika pogosto edina, ki šteje.",
+      "fotosGewaehlt": "{count, plural, one {# izbrana slika} other {# izbranih slik}}",
+      "melden": "Prijavi škodo",
+      "meldet": "Poročanje …",
+      "abbrechen": "Prekliči",
+      "offeneSchaeden": "{count, plural, one {# škoda} other {# škode}}",
+      "offeneSchaedenTitel": "{count, plural, one {# odprta škoda} other {# odprtih škod}}",
+      "bild": "Slika {nr}",
+      "betrag": "Znesek",
+      "bestaetigen": "Potrdi",
+      "verwerfen": "Zavrzi",
+      "verwerfenFrage": "Zavržem škodo na „{name}“? To ni bila škoda.",
+      "artWert": {
+        "beschaedigt": "Poškodovano",
+        "fehlt": "Manjka",
+        "entsorgt": "Odstranjeno"
+      },
+      "traegerWert": {
+        "offen": "Še odprto",
+        "eigentuemer": "Lastnik",
+        "gast": "Gost",
+        "betrieb": "Poslovanje"
+      },
+      "pdfImport": "Seznam iz PDF-ja",
+      "pdfLiest": "Branje v teku …",
+      "pdfLeer": "V tem PDF-ju ni bilo mogoče prepoznati seznama inventarja.",
+      "pdfGefunden": "{count, plural, one {# vrstica najdena} other {# vrstic najdenih}}",
+      "pdfHinweis": "Nič od tega ni shranjeno. Preverite, po potrebi spremenite in nato sprejmite. Sobe so dodeljene le, če že obstajajo.",
+      "uebernimmt": "Sprejemanje v teku …",
+      "uebernehmen": "Sprejmi",
+      "zustand": "Stanje",
+      "rhythmus": "Ritem štetja",
+      "meldebestandKurz": "Stanje zaloge {n}",
+      "referenzSetzen": "Naložite sliko nepoškodovanega stanja",
+      "referenzAnsehen": "Oglejte si sliko nepoškodovanega stanja",
+      "zustandWert": {
+        "neu": "novo",
+        "gut": "dobro",
+        "abgenutzt": "obrabljeno",
+        "ersatz_faellig": "potrebna zamenjava"
+      },
+      "rhythmusWert": {
+        "jede_abreise": "ob vsakem odhodu",
+        "quartal": "četrtletno",
+        "jaehrlich": "letno",
+        "nie": "ne šteje"
+      }
+    }
   },
   "finance": {
     "cancelInvoice": {
@@ -5285,7 +5409,23 @@
       "ownerRequestsLift": "Zahteve za preklic",
       "ownerRequestsTermination": "Napovedani konci pogodb",
       "ownerRequestsNone": "Ni odprtih dejanj.",
-      "ownerRequestsOldest": "Najstarejša odprta zahteva: {count, plural, =0 {danes} one {od enega dne} other {od # dni}}"
+      "ownerRequestsOldest": "Najstarejša odprta zahteva: {count, plural, =0 {danes} one {od enega dne} other {od # dni}}",
+      "teamTasks": "Opravila ekipe",
+      "teamTasksExplain": "Kaj mora ekipa trenutno obdelati: zapadle in danes zapadle naloge, naloge brez odgovornih oseb in tiste, ki čakajo na sprejem. To je trenutno stanje, ne časovno obdobje – odprto je odprto, in starejše pomeni nujnejše.",
+      "teamTasksLabel": "Zapadlo ali zapade danes",
+      "teamTasksOldest": "Najstarejše zapadlo opravilo: pred {count} dnevi",
+      "teamTasksOverdue": "Zapadlo",
+      "teamTasksToday": "Zapade danes",
+      "teamTasksUnassigned": "Brez odgovornega",
+      "teamTasksToReview": "Čaka na sprejem",
+      "teamTasksOpen": "Skupno odprto",
+      "wechsel": "Menjava",
+      "wechselHint": "Odhod in prihod na isti dan v isti enoti – čiščenje mora potekati med dvema zasedenostma.",
+      "wechselUnklar": "Menjava nejasna",
+      "wechselUnklarHint": "Na isti dan se v istem objektu nekdo prijavi, vendar enota ene od obeh rezervacij ni shranjena – ali je res potrebna menjava, ni mogoče ugotoviti.",
+      "teamTasksUrgencyUnknown": "zapadlo ali zapade danes — trenutno ni na voljo",
+      "listingsActive": "Aktivno",
+      "listingsActiveLabel": "V prodaji"
     },
     "mobileAppHint": "Pogled opravil za na pot je že odziven na spletu (Moja opravila + podrobnosti z nalaganjem fotografij). Ločena mobilna aplikacija bo sledila kot samostojen projekt.",
     "aufgabenFilter": {
@@ -15280,7 +15420,8 @@
         "reservierungen": "Rezervacije",
         "kennzahlen": "Analitika",
         "nachrichten": "Sporočila",
-        "objekte": "Objekti"
+        "objekte": "Objekti",
+        "aufgaben": "Naloge"
       }
     }
   },

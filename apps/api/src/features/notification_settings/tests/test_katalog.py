@@ -6,6 +6,7 @@ hier gegen die tatsächlichen Spalten aus 0225 geprüft.
 """
 from __future__ import annotations
 
+import pathlib
 import re
 from pathlib import Path
 
@@ -162,6 +163,49 @@ def test_defaults_entsprechen_airbnb() -> None:
     assert s.insights_tips_sms is False
     assert s.listing_activity_sms is True
     assert s.marketing_unsubscribed_all is False
+
+
+def test_push_defaults_stimmen_mit_den_migrationen_ueberein() -> None:
+    """Der Code-Default JEDER Push-Spalte muss dem DB-Default entsprechen.
+
+    Bis zum 09.09.2026 standen alle 17 `*_push`-Felder im Schema auf `False`,
+    waehrend die Migrationen sie als `not null default true` anlegen — zwei
+    Wahrheiten fuer denselben Wert (Wurzel 4).
+
+    Scharf wurde der Widerspruch, weil `notification_settings` live NULL
+    Zeilen hat: `soll_senden` faellt dann auf den Code-Default zurueck, und
+    der Dispatcher verwarf JEDEN Push als abgewaehlt, ohne den Versandpfad zu
+    betreten. Acht registrierte Geraete, kein einziger Versuch, im Protokoll
+    nur „uebersprungen: push" — nicht von einem Fehler zu unterscheiden, den
+    ein Nutzer selbst eingestellt hat (Wurzel 5).
+
+    Dieser Test liest die MIGRATIONEN, nicht eine zweite Liste: eine neue
+    Push-Spalte mit abweichendem Default faellt hier auf, statt still zu
+    wirken.
+    """
+    muster = re.compile(
+        r"add column if not exists\s+([a-z_]+_push)\s+boolean[^,;]*?"
+        r"default\s+(true|false)",
+        re.IGNORECASE,
+    )
+    migrationen = (
+        pathlib.Path(__file__).resolve().parents[6] / "supabase" / "migrations"
+    )
+    assert migrationen.is_dir(), f"Migrationsordner nicht gefunden: {migrationen}"
+    db_default: dict[str, bool] = {}
+    for datei in sorted(migrationen.glob("*.sql")):
+        for spalte, wert in muster.findall(datei.read_text(encoding="utf-8")):
+            db_default[spalte] = wert.lower() == "true"
+
+    assert db_default, "Keine Push-Spalte in den Migrationen gefunden"
+    schema = NotificationSettings()
+    for spalte, erwartet in sorted(db_default.items()):
+        if spalte not in NotificationSettings.model_fields:
+            continue
+        assert getattr(schema, spalte) is erwartet, (
+            f"{spalte}: Code sagt {getattr(schema, spalte)}, "
+            f"die Migration sagt {erwartet}"
+        )
 
 
 def test_schema_hat_genau_die_katalog_felder() -> None:

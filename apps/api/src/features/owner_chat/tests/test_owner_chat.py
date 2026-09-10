@@ -926,13 +926,18 @@ def test_bildpfad_traversal_wird_abgewiesen() -> None:
 
     eigen = "11111111-1111-1111-1111-111111111111"
     fremd = "22222222-2222-2222-2222-222222222222"
-    bilder.pfad_pruefen(f"{eigen}/{fremd}/abcDEF_-123.bin", eigen)  # gültig
+    bilder.pfad_pruefen(f"{eigen}/{fremd}/abcDEF_-123.bin", eigen)  # Bestand
+    # Seit dem 09.09.2026 gültig: der Anhang ist wieder ein echtes Bild und
+    # trägt die Endung seines geprüften Typs. `.bin` bleibt daneben stehen —
+    # so liegt der E2E-Bestand im Bucket (Wurzel 1).
+    bilder.pfad_pruefen(f"{eigen}/{fremd}/abcDEF_-123.jpg", eigen)
 
     for boese in (
         f"{eigen}/%2e%2e/{fremd}/u/x.bin",
         f"{eigen}/../{fremd}/x.bin",
         f"{fremd}/{fremd}/x.bin",
-        f"{eigen}/{fremd}/x.jpg",
+        # Nicht erlaubte Endung: SVG ist aktives Markup und im Chat gesperrt.
+        f"{eigen}/{fremd}/x.svg",
         f"{eigen}/{fremd}/../x.bin",
     ):
         with pytest.raises(OwnerChatError) as exc:

@@ -11,6 +11,7 @@
 // Kachel ohne Renderer nicht als leere Fläche durchgeht.
 import { useTranslations } from "next-intl";
 
+import { AufgabenKachel } from "@/components/dashboard/aufgaben-kachel";
 import { EigentuemerKachel } from "@/components/dashboard/eigentuemer-kachel";
 import { KpiKachel, NachrichtenKachel } from "@/components/dashboard/kpi-kachel";
 import { ListenKarte } from "@/components/dashboard/listen-karte";
@@ -20,6 +21,7 @@ import type { EigentuemerVorgaenge } from "@/lib/calendar";
 import type { KachelId } from "@/lib/dashboard-katalog";
 import type { NachrichtenKennzahlen } from "@/lib/inbox";
 import type { Dashboard } from "@/lib/reservations";
+import type { TeamaufgabenStand } from "@/lib/tasks";
 
 export type KachelDaten = {
   dashboard: Dashboard;
@@ -27,6 +29,9 @@ export type KachelDaten = {
   nachrichten: NachrichtenKennzahlen | null;
   /** null = keine APPROVE_BLOCK-Fähigkeit (403). */
   vorgaenge: EigentuemerVorgaenge | null;
+  /** null = keine MANAGE_TASKS-Fähigkeit (403) — derselbe Guard wie die
+   *  Team-Liste, deren Zahlen die Kachel zusammenfasst (Wurzel 9). */
+  aufgaben: TeamaufgabenStand | null;
 };
 
 /**
@@ -51,6 +56,10 @@ export function kachelHatDaten(id: KachelId, daten: KachelDaten): boolean {
       return daten.nachrichten !== null;
     case "vorgaenge:eigentuemer":
       return daten.vorgaenge !== null;
+    case "aufgaben:team":
+      // Ohne Zugang KEINE Kachel: „0 offene Aufgaben" wäre die Behauptung, es
+      // liege nichts an — richtig ist, dass es keinen Einblick gibt (Wurzel 4).
+      return daten.aufgaben !== null;
     default:
       return true;
   }
@@ -267,6 +276,15 @@ export function KachelInhalt({ id, daten }: { id: KachelId; daten: KachelDaten }
           label={t("dashboard.listingsTotalLabel")}
         />
       );
+    case "objekt:aktiv":
+      return (
+        <ObjektKachel
+          icon="ph:storefront"
+          title={t("dashboard.listingsActive")}
+          value={d.objekte_aktiv}
+          label={t("dashboard.listingsActiveLabel")}
+        />
+      );
     case "objekt:inaktiv":
       return (
         <ObjektKachel
@@ -285,6 +303,8 @@ export function KachelInhalt({ id, daten }: { id: KachelId; daten: KachelDaten }
           label={t("dashboard.listingsDraftLabel")}
         />
       );
+    case "aufgaben:team":
+      return daten.aufgaben ? <AufgabenKachel daten={daten.aufgaben} /> : null;
     default: {
       // Erschöpfend: eine neue ID ohne `case` ist ein Typfehler, kein
       // stilles Loch.

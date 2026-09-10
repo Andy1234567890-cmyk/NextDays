@@ -663,6 +663,10 @@ class SperrantragItem(BaseModel):
     id: str
     property_id: str
     property_title: str | None = None
+    # Erstes Objektfoto (dieselbe Quelle wie im Eigentuemer-Portal). `None` =
+    # das Objekt hat keins; die Oberflaeche zeigt dann ihr Symbol, statt ein
+    # Platzhalterbild zu erfinden (Wurzel 4).
+    property_photo: str | None = None
     # Die beantragte Einheit (0353). None = der ganze Einheiten-TYP. Die Agentur
     # MUSS das sehen: „Studio 3 vom 1.–5." ist eine andere Entscheidung als
     # „alle fünf Studios vom 1.–5.".

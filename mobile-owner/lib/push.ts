@@ -155,6 +155,26 @@ export async function pushEinrichten(): Promise<boolean> {
     if (!erlaubt) return false;
     const m = fcm();
     const messaging = m.getMessaging();
+    // iOS meldet das Geraet bei Apple an, BEVOR ein Token abrufbar ist. Fehlt
+    // dem Ziel das Push-Entitlement (`aps-environment`), schlaegt diese
+    // Anmeldung still fehl, und `getToken` wirft `[messaging/unregistered]`
+    // — eine Meldung, die im generischen Catch unten als „Einrichtung
+    // fehlgeschlagen" verschwand. Hier steht sie beim Namen (Wurzel 5).
+    //
+    // Auf dem ARM64-Simulator ueberspringt react-native-firebase die
+    // Anmeldung absichtlich; dort ist der Zustand erwartbar und kein Fehler.
+    if (
+        Platform.OS === "ios" &&
+        !m.isDeviceRegisteredForRemoteMessages(messaging)
+    ) {
+      pushFehlerMelden(
+        "Geraet ist nicht fuer Push angemeldet",
+        new Error(
+          "Kein aps-environment-Entitlement im iOS-Ziel (oder Simulator).",
+        ),
+      );
+      return false;
+    }
     const token = await m.getToken(messaging);
     await tokenMelden(token);
     // Rueckgabewert (Abmeldefunktion) bewusst verworfen: der Listener lebt so
@@ -229,13 +249,29 @@ export async function pushAbmelden(): Promise<void> {
 export function zielAlsDeepLink(ziel: string | undefined): string | null {
   if (!ziel) return null;
   const pfad = ziel.startsWith("/") ? ziel.slice(1) : ziel;
-  const [kopf, id] = pfad.split("/");
-  // `reservierungen/:id` heisst in der App genauso — 1:1 durchreichen.
-  if (kopf === "reservierungen" && id) return `mynextdays://reservierungen/${id}`;
-  if (kopf === "aufgaben" && id) return `mynextdays://aufgaben/${id}`;
-  // Der Posteingang heisst im Web `posteingang`, in der App `inbox`.
-  if (kopf === "posteingang") {
-    return id ? `mynextdays://inbox/${id}` : "mynextdays://inbox";
+  const teile = pfad.split("/").filter(Boolean);
+  // Der Server schickt dem Eigentuemer AUSSCHLIESSLICH `/portal/...`-Ziele
+  // (owner_chat, owner_booking, owner_service, block_decision). Bis zum
+  // 09.09.2026 stand hier die kopierte Tabelle der PMS-App: Schema
+  // `mynextdays://` (das diese App gar nicht registriert — sie hoert auf
+  // `mynextdaysowner://`, siehe Info.plist) und die Routen `reservierungen`,
+  // `aufgaben`, `inbox`, die es hier nicht gibt. Es traf also KEIN Ziel, und
+  // jeder Tap lief in die Rejection von `openURL`.
+  if (teile[0] !== "portal") return null;
+  const [, bereich, id] = teile;
+  // `/portal` ohne Bereich: die Chat-Meldung. Der Verlauf haengt am Objekt,
+  // das die Meldung mitliefert — ohne es ist die Objektliste der ehrlichste
+  // Sprung (Wurzel 4: kein geratener Screen).
+  if (!bereich) return "mynextdaysowner://objekte";
+  if (bereich === "sperrungen") return "mynextdaysowner://aufenthalte";
+  if (bereich === "buchungen") return "mynextdaysowner://aufenthalte";
+  if (bereich === "dienstleistungen") return "mynextdaysowner://objekte";
+  // Aufgaben an den Eigentuemer als Zustaendigen (ereignisse.py:185).
+  if (bereich === "aufgaben") return "mynextdaysowner://aufgaben";
+  if (bereich === "abrechnungen") {
+    return id
+      ? `mynextdaysowner://abrechnungen/${id}`
+      : "mynextdaysowner://abrechnungen";
   }
   return null;
 }

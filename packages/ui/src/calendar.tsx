@@ -16,12 +16,25 @@ export function Calendar({
   className,
   classNames,
   showOutsideDays = true,
+  fixedWeeks = true,
   ...props
 }: CalendarProps) {
   return (
     <DayPicker
       locale={de}
       showOutsideDays={showOutsideDays}
+      // Immer 6 Wochenzeilen (42 Tage), auch wenn der Monat mit 4 oder 5
+      // auskäme. OHNE das ändert jeder Monatswechsel die Höhe des Kalenders:
+      // gemessen für 2026 schwankt das Gitter zwischen 4 Zeilen (Februar 2027)
+      // und 6 (März, August, November 2026) — bei `day: size-9` sind das bis
+      // zu 4,5rem Unterschied. Steht der Kalender in einem Popover, rechnet
+      // Radix bei jeder Höhenänderung die Position neu und klappt dabei je
+      // nach Platz zwischen `side=top` und `side=bottom` um; das ist das
+      // sichtbare Hoch-und-Runter-Springen der Datumsauswahl in der
+      // Objektkartei. Die Zeilenzahl konstant zu halten nimmt dem Umklappen
+      // die Ursache, statt die Kollisionserkennung abzuschalten (die den
+      // Kalender am Seitenende aus dem Sichtfeld schieben würde).
+      fixedWeeks={fixedWeeks}
       className={cn("p-3", className)}
       classNames={{
         months: "flex flex-col gap-4",

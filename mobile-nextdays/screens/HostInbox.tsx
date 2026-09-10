@@ -40,6 +40,7 @@ import { EmptyState } from "@/components/ui/patterns";
 import { useAuth } from "@/contexts/AuthContext";
 import { channelMeta } from "@/lib/calendar-channels";
 import {
+  bildAdressen,
   eigentuemerAntworten,
   empfaengerHolen,
   getEigentuemerVerlauf,
@@ -640,11 +641,12 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
           message: klartext ?? "",
           sent_at: n.sent_at,
           author_name: n.sender_name,
-          // EIGENES Feld, nicht `attachments`: Das sind Bucket-PFADE zu
-          // verschlüsselten Bytes, keine URLs. In `attachments` gelegt,
-          // versucht der Bild-Block weiter unten sie als `source={{uri}}` zu
-          // laden — und zeigt ein kaputtes Bildfeld, dessen Kommentar
-          // ausdrücklich „vom Server geprüfte URL" behauptet.
+          // Bucket-PFADE, keine URLs. Seit dem 09.09.2026 liegt dort ein
+          // echtes Bild, also lassen sie sich signieren und anzeigen — das
+          // geschieht unten in einem zweiten Durchgang, weil es je Bild einen
+          // Serveraufruf braucht. Bis dahin bleiben sie in einem EIGENEN Feld:
+          // in `attachments` gelegt, versuchte der Bild-Block sie roh als
+          // `source={{uri}}` zu laden und zeigte ein kaputtes Bildfeld.
           e2e_bilder: n.bilder,
           nicht_lesbar: klartext === null && !manipuliert,
           manipuliert,
@@ -652,6 +654,25 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
       }
       setMessages(offen);
       setNichtLesbar(res.data.nicht_lesbar);
+      // Adressen NACH der ersten Anzeige (Wurzel 5): der Verlauf steht sofort,
+      // die Bilder kommen nach. Ein fehlgeschlagener Aufruf lässt das Bild
+      // weg, statt den ganzen Verlauf zu kippen.
+      const mitBildern = offen.filter(
+        (m) => m.id && (m.e2e_bilder ?? []).length > 0,
+      );
+      if (mitBildern.length > 0) {
+        const aufgeloest = new Map<string, string[]>();
+        for (const m of mitBildern) {
+          aufgeloest.set(String(m.id), await bildAdressen(m.e2e_bilder ?? []));
+        }
+        setMessages((vorher) =>
+          (vorher ?? []).map((m) =>
+            m.id && aufgeloest.has(String(m.id))
+              ? { ...m, attachments: aufgeloest.get(String(m.id)) ?? [] }
+              : m,
+          ),
+        );
+      }
       return;
     }
     setNichtLesbar(0);
@@ -1082,9 +1103,13 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
               {/* Bilder der Nachricht. Ohne diesen Block wäre eine reine
                   Bildnachricht unsichtbar — die Leer-Prüfung unten greift bei
                   leerem Text. */}
+              {/* Nur noch der E2E-Bestand: dort sind die Bytes verschlüsselt
+                  und brauchen den Geräteschlüssel, den es im PMS nie gab.
+                  Neue Bilder stehen aufgelöst in `attachments` weiter unten. */}
               {!m.nicht_lesbar &&
                 !m.manipuliert &&
-                (m.e2e_bilder ?? []).length > 0 && (
+                (m.e2e_bilder ?? []).length > 0 &&
+                (m.attachments ?? []).length === 0 && (
                   <Txt v="klein" soft>
                     {(m.e2e_bilder ?? []).length} Bild(er) — in der
                     Eigentümer-App ansehen.

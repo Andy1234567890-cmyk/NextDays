@@ -17,7 +17,7 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
-from src.features.notification_settings.ereignisse import melde_zustellproblem
+from src.features.notification_settings.betriebsmeldungen import melde_zustellproblem
 from src.jobs import worker_verlauf
 
 from .ausloeser import DATUMS_TRIGGER, anker_von, versatz_normieren

@@ -501,6 +501,14 @@ class AirbnbZimmerPushMixin:
                 property_id=property_id,
                 ziel_pfad=ziel_pfad,
                 dedup_key=dedup_key,
+                # WIEDERHOLBAR (0617) — der Musterfall dafuer: „Balkon hat kein
+                # Foto" und „Zimmer steht bei Airbnb noch" sind ZUSTAENDE. Hat
+                # der Betrieb die Meldung gelesen und fehlt spaeter wieder ein
+                # Foto, MUSS es erneut melden, sonst bleibt die Fototour
+                # dauerhaft ausgeblendet, ohne dass es jemand erfaehrt. Live
+                # gemessen (09.09.2026): `airbnb_foto_fehlt` hatte bei einer
+                # Meldung keinen Ueberschuss — der partielle Index reicht hier.
+                einmalig=False,
                 inapp=True,
             )
 

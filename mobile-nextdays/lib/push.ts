@@ -63,6 +63,27 @@ async function berechtigungHolen(): Promise<boolean> {
   );
 }
 
+/**
+ * Push-Fehler protokollieren — bekannten Konfigurationsmangel ruhig, alles
+ * andere laut samt Stacktrace.
+ *
+ * Uebernommen aus `mobile-owner/lib/push.ts` (09.09.2026): dort stand er
+ * schon, hier wurde roh mit `console.warn` geloggt. Eine fehlende
+ * Firebase-Konfiguration ist ein EINMALIGER Einrichtungsmangel, kein
+ * Laufzeitfehler — als Stacktrace bei jedem Start begraebt er die echten
+ * Fehler daneben.
+ */
+function pushFehlerMelden(wo: string, e: unknown): void {
+  if (e instanceof Error && e.message.includes("No Firebase App '[DEFAULT]'")) {
+    console.info(
+      `[push] ${wo}: keine Firebase-App fuer diese App konfiguriert — Push ist aus.`,
+    );
+    return;
+  }
+  console.warn(`[push] ${wo}:`, e);
+}
+
+
 /** Token beim Server anmelden. Fehler bleiben still — Push ist eine Zugabe,
  *  kein Grund, die Anmeldung des Nutzers scheitern zu lassen. */
 async function tokenMelden(token: string): Promise<void> {
@@ -106,6 +127,26 @@ export async function pushEinrichten(): Promise<boolean> {
     if (!erlaubt) return false;
     const m = fcm();
     const messaging = m.getMessaging();
+    // iOS meldet das Geraet bei Apple an, BEVOR ein Token abrufbar ist. Fehlt
+    // dem Ziel das Push-Entitlement (`aps-environment`), schlaegt diese
+    // Anmeldung still fehl, und `getToken` wirft `[messaging/unregistered]`
+    // — eine Meldung, die im generischen Catch unten als „Einrichtung
+    // fehlgeschlagen" verschwand. Hier steht sie beim Namen (Wurzel 5).
+    //
+    // Auf dem ARM64-Simulator ueberspringt react-native-firebase die
+    // Anmeldung absichtlich; dort ist der Zustand erwartbar und kein Fehler.
+    if (
+        Platform.OS === "ios" &&
+        !m.isDeviceRegisteredForRemoteMessages(messaging)
+    ) {
+      pushFehlerMelden(
+        "Geraet ist nicht fuer Push angemeldet",
+        new Error(
+          "Kein aps-environment-Entitlement im iOS-Ziel (oder Simulator).",
+        ),
+      );
+      return false;
+    }
     const token = await m.getToken(messaging);
     await tokenMelden(token);
     // Rueckgabewert (Abmeldefunktion) bewusst verworfen: der Listener lebt so
@@ -120,7 +161,7 @@ export async function pushEinrichten(): Promise<boolean> {
   } catch (e) {
     // Laut protokolliert, aber nicht toedlich: ohne Push laesst sich arbeiten,
     // ohne App nicht.
-    console.warn("[push] Einrichtung fehlgeschlagen:", e);
+    pushFehlerMelden("Einrichtung fehlgeschlagen", e);
     return false;
   }
 }

@@ -23,7 +23,7 @@ from supabase import Client
 from src.core.logging import get_logger
 from src.features.auth.schemas import UserRole
 
-from . import kern
+from . import kern, serverkrypto
 from .fehler import OwnerChatError
 
 log = get_logger(__name__)
@@ -164,7 +164,16 @@ def offene_nachrichten(  # noqa: PLR0913 — Scope-Prüfung braucht den Anrufer
         .execute()
     ).data or []
     schon = {str(z["message_id"]) for z in vorhanden}
-    return [z for z in alle if str(z["id"]) not in schon]
+    # Serverseitig verschlüsselte Nachrichten brauchen KEINE Freigabe: der
+    # Server öffnet sie für jedes Gerät. Sie hier aufzulisten böte eine
+    # Nachverpackung für Nachrichten an, die längst lesbar sind — und die
+    # Freigabe-Oberfläche zählte sie als offen (09.09.2026).
+    return [
+        z
+        for z in alle
+        if str(z["id"]) not in schon
+        and not serverkrypto.ist_serverseitig(str(z.get("body") or ""))
+    ]
 
 
 def schluessel_nachtragen(

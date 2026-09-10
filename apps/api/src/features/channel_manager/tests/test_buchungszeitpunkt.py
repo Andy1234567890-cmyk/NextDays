@@ -16,6 +16,7 @@ plausiblen falschen Zeitpunkt zu behaupten (Wurzel 4).
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime, timedelta
 
 from src.features.channel_manager.common import ota_buchungszeitpunkt
 
@@ -194,3 +195,105 @@ def test_booking_ohne_zeit_bleibt_leer() -> None:
         },
     }
     assert ota_an_abreisezeit(attrs) == (None, None)
+
+
+# ── Das Frische-Fenster (`ist_frisch`) ────────────────────────────────────────
+#
+# Die Arithmetik „liegt dieser fremde Zeitpunkt in den letzten n Stunden" stand
+# bis zum 09.09.2026 DREIMAL im Slice (`_frisch_gebucht`, `_bestand`,
+# `_frische_nachricht`) — mit je invertierter Rueckgabe und je invertiertem
+# fail-Wert. Hier steht sie einmal, und hier wird sie einmal geprueft; die
+# Aufrufstellen pruefen nur noch ihre eigene Fail-Richtung.
+
+
+def test_ist_frisch_prueft_die_grenze_beidseitig() -> None:
+    """Innerhalb des Fensters `True`, ausserhalb `False` — an der Grenze selbst.
+
+    Die Stuetzwerte liegen fuenf Minuten neben der Grenze, nicht Jahre davon
+    entfernt: ein Test mit `now()` gegen ein Datum von 2020 bleibt gruen, egal
+    ob das Fenster 1 Stunde oder 500 Stunden breit ist. Er prueft dann den
+    Codepfad, nicht die Grenze.
+    """
+    from src.features.channel_manager.common import ist_frisch
+
+    jetzt = datetime.now(UTC)
+    drinnen = (jetzt - timedelta(hours=24) + timedelta(minutes=5)).isoformat()
+    draussen = (jetzt - timedelta(hours=24) - timedelta(minutes=5)).isoformat()
+
+    assert ist_frisch(drinnen, stunden=24) is True
+    assert ist_frisch(draussen, stunden=24) is False
+
+
+def test_ist_frisch_ohne_zone_gilt_als_utc() -> None:
+    """Channex liefert `inserted_at` ohne Zonen-Suffix; gemeint ist UTC.
+
+    Ohne diese Annahme deutete Python den Wert als naive Ortszeit und der
+    Vergleich wuerde je Serverzone um Stunden springen (Begruendung bei
+    `ota_zeitstempel_utc`).
+    """
+    from src.features.channel_manager.common import ist_frisch
+
+    ohne_zone = datetime.now(UTC).replace(tzinfo=None).isoformat()
+    assert ist_frisch(ohne_zone, stunden=1) is True
+
+
+def test_ist_frisch_gibt_none_statt_eines_fail_werts() -> None:
+    """Fehlt/unlesbar → `None`, NICHT `True` und nicht `False`.
+
+    Der fail-Wert ist an den drei Aufrufstellen ein ANDERER (Recovery meldet
+    lieber nichts, die Glocke laeutet lieber nicht, der Abgleich gilt lieber als
+    Bestand). Ihn hier zu waehlen hiesse, ihn zu verstecken — und genau das
+    versteckte Vorzeichen war die Falle der drei Vorgaenger-Kopien.
+    """
+    from src.features.channel_manager.common import ist_frisch
+
+    assert ist_frisch(None, stunden=24) is None
+    assert ist_frisch("", stunden=24) is None
+    assert ist_frisch("kaputt", stunden=24) is None
+
+
+def test_ist_frisch_meldet_zukunftswerte_als_datenfehler(monkeypatch) -> None:
+    """Ein Zeitstempel in der ZUKUNFT ist kein Normalfall — `None` plus Log.
+
+    Alle drei Vorgaenger verglichen einseitig (`jetzt - zeitpunkt <= fenster`).
+    Fuer einen Zukunftswert — Portal mit falsch gestellter Uhr, falsches
+    Vorzeichen im Offset, vertauschtes Tag/Monat — ist das DAUERHAFT wahr: der
+    Wert gilt fuer immer als frisch, und die Meldung wiederholt sich bei jedem
+    Lauf, ohne dass etwas auffaellt. Ein solcher Wert ist ein Datenfehler und
+    wird LAUT gemeldet (Wurzel 4/5), statt still als frisch durchzugehen.
+
+    Die Warnung wird am `log`-Objekt des Moduls abgefangen, nicht ueber
+    capsys/caplog: structlog schreibt weder in den stdlib-Logger noch
+    verlaesslich nach stdout, sobald pytest die Ausgabe umleitet (dieselbe
+    Begruendung wie in `test_uebrige_portal_raten_paarung`).
+    """
+    from src.features.channel_manager import common as common_modul
+
+    warnungen: list[tuple[str, dict]] = []
+    monkeypatch.setattr(
+        common_modul.log, "warning",
+        lambda ereignis, **felder: warnungen.append((ereignis, felder)),
+    )
+    voraus = (datetime.now(UTC) + timedelta(days=30)).isoformat()
+
+    assert common_modul.ist_frisch(voraus, stunden=24) is None
+
+    gemeldet = [f for e, f in warnungen if e == "ota_zeitstempel_in_der_zukunft"]
+    assert len(gemeldet) == 1, warnungen
+    # Der Vorsprung steht in der Meldung: an ihm erkennt der Leser den
+    # Unterschied zwischen Uhr-Drift und vertauschtem Tag/Monat.
+    assert gemeldet[0]["vorsprung_sekunden"] > 0
+
+
+def test_ist_frisch_vertraegt_sekunden_uhr_drift() -> None:
+    """Wenige Sekunden Vorsprung sind Uhr-Drift, kein Datenfehler.
+
+    Zwei Rechenzentren driften um Sekunden, und ein Portal darf einen Vorgang
+    auf die Sekunde stempeln, in der unsere Uhr noch nicht ist. Wuerde die
+    Zukunftspruefung schon hier greifen, verloere der Live-Feed genau die
+    frischesten Buchungen — die, um die es geht.
+    """
+    from src.features.channel_manager.common import ist_frisch
+
+    knapp_voraus = (datetime.now(UTC) + timedelta(seconds=5)).isoformat()
+    assert ist_frisch(knapp_voraus, stunden=24) is True

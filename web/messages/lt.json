@@ -2747,7 +2747,8 @@
       "tradespeople": "Amatininkai",
       "marketing": "Rinkodara",
       "housebook": "Namų aplankas",
-      "listing": "Vieta rinkoje"
+      "listing": "Vieta rinkoje",
+      "inventory": "Inventorius"
     },
     "objectInfo": {
       "capacityPersons": "Talpa (asmenys)",
@@ -2898,7 +2899,130 @@
       "helaarsbolig": "Helårsbolig",
       "fritidshus": "Fritidshus"
     },
-    "print": "Spausdinti"
+    "print": "Spausdinti",
+    "mappe": {
+      "gastTitel": "Svečių aplankas – dokumentai",
+      "hausTitel": "Namo aplankas – dokumentai (vidinis)",
+      "titel": "Skaitmeninis aplankas",
+      "erklaerung": "Įkelti PDF – jame esanti informacija bus perskaityta ir pasiūlyta patvirtinti. Dokumentas liks čia peržiūrai.",
+      "hochladen": "Įkelti PDF",
+      "liest": "Skaitoma…",
+      "laedt": "Įkeliama…",
+      "leer": "Šiame aplanke dar nėra dokumentų.",
+      "zuGross": "Failas per didelis (maks. {mb} MB).",
+      "seiten": "{count, plural, one {# puslapis} other {# puslapiai}}",
+      "ansehen": "Peržiūrėti „{name}“ dideliu formatu",
+      "loeschen": "Pašalinti „{name}“",
+      "loeschenFrage": "Pašalinti „{name}“ iš aplanko? Jau perkelta informacija liks.",
+      "gefunden": "{count, plural, one {# duomenys rasti} other {# duomenys rasti}}",
+      "gefundenHinweis": "Niekas iš to nėra išsaugota. Patikrinkite, pakeiskite, jei reikia, tada patvirtinkite – durų kodas ir slaptažodžiai sąmoningai nepasirinkti iš anksto.",
+      "nichtsGefunden": "Šiame dokumente nebuvo nieko, kas tiktų į aplanko laukelį. Jis vis tiek liks aplanke.",
+      "heikel": "Atidžiai patikrinkite",
+      "fundstelle": "Dokumente: {ort}",
+      "sprachfassung": "Kalbos versija",
+      "ueberschreiben": "Pakeisti ir jau užpildytus laukelius",
+      "ausgewaehlt": "Pasirinkta {count} iš {gesamt}",
+      "verwerfen": "Atmesti",
+      "uebernehmen": "Patvirtinti",
+      "uebernimmt": "Patvirtinama…",
+      "schliessen": "Uždaryti",
+      "gesetzt": "{count, plural, =0 {Niekas nepatvirtinta} one {# laukelis patvirtintas} other {# laukeliai patvirtinti}}",
+      "uebersprungen": "Jau užpildyta ir todėl nepakeista: {felder}",
+      "stand": {
+        "offen": "neskaityta",
+        "gelesen": "skaityta",
+        "uebernommen": "pritaikyta",
+        "ohne_treffer": "nieko nerasta",
+        "fehler": "skaitymas nepavyko"
+      },
+      "sicher": {
+        "hoch": "gerai įskaitomas",
+        "mittel": "ribotai įskaitomas",
+        "niedrig": "sunkiai įskaitomas"
+      },
+      "sprache": {
+        "de": "Vokiečių",
+        "en": "Anglų",
+        "da": "Danų"
+      }
+    },
+    "inventar": {
+      "abschnitt": "Inventorius",
+      "titel": "Inventoriaus sąrašas",
+      "erklaerung": "Kas yra name, pagal kambarius. Atskirai – numatomas ir esamas kiekis – skirtumas yra inventorizacijos rezultatas. Bet kada galima papildyti.",
+      "laedt": "Įkeliama…",
+      "leer": "Dar nieko neįrašyta. Eilutes pridėkite rankiniu būdu arba importuokite iš aplanko PDF.",
+      "neuName": "Prekė",
+      "neuSoll": "Numatomas",
+      "hinzufuegen": "Pridėti",
+      "raeume": "Kambariai",
+      "keineRaeume": "dar nėra",
+      "raumName": "Kambario pavadinimas",
+      "raumHinzufuegen": "Pridėti kambarį",
+      "ohneRaum": "Be kambario",
+      "speichern": "Išsaugoti",
+      "istMenge": "Esamas kiekis",
+      "vonSoll": "iš {soll}",
+      "geprueft": "Pažymėti kaip patikrinta",
+      "loeschen": "Pašalinti",
+      "loeschenFrage": "Pašalinti „{name}“ iš sąrašo? Pranešta žala išlieka.",
+      "ausDokument": "iš PDF",
+      "ausDokumentHint": "Ši eilutė yra iš skaitmeninio aplanko dokumento.",
+      "schadenMelden": "Pranešti apie žalą",
+      "schadenAn": "Žala „{name}“",
+      "art": "Kas atsitiko?",
+      "traeger": "Kas padengia išlaidas?",
+      "werZahlt": "Kas moka?",
+      "beschreibung": "Aprašymas",
+      "fotoWaehlen": "Nufotografuoti arba pasirinkti nuotrauką",
+      "fotoPflicht": "Be nuotraukos pranešimo nėra – ginčo atveju nuotrauka dažnai yra vienintelis dalykas, kuris svarbus.",
+      "fotosGewaehlt": "{count, plural, one {# nuotrauka pasirinkta} other {# nuotraukos pasirinktos}}",
+      "melden": "Pranešti apie žalą",
+      "meldet": "Pranešama…",
+      "abbrechen": "Atšaukti",
+      "offeneSchaeden": "{count, plural, one {# žala} other {# žalos}}",
+      "offeneSchaedenTitel": "{count, plural, one {# atvira žala} other {# atviros žalos}}",
+      "bild": "Nuotrauka {nr}",
+      "betrag": "Suma",
+      "bestaetigen": "Patvirtinti",
+      "verwerfen": "Atmesti",
+      "verwerfenFrage": "Atmesti žalą „{name}“? Tai nebuvo žala.",
+      "artWert": {
+        "beschaedigt": "Sugadinta",
+        "fehlt": "Trūksta",
+        "entsorgt": "Išmesta"
+      },
+      "traegerWert": {
+        "offen": "Laukiama",
+        "eigentuemer": "Savininkas",
+        "gast": "Svečias",
+        "betrieb": "Operacija"
+      },
+      "pdfImport": "Sąrašas iš PDF",
+      "pdfLiest": "Skaitoma…",
+      "pdfLeer": "Šiame PDF nerasta jokių atsargų sąrašų.",
+      "pdfGefunden": "{count, plural, one {# eilutė rasta} other {# eilutės rastos}}",
+      "pdfHinweis": "Niekas neišsaugota. Patikrinkite, prireikus pakeiskite, tada patvirtinkite. Kambariai priskiriami tik tuo atveju, jei jie jau egzistuoja.",
+      "uebernimmt": "Pritaikoma…",
+      "uebernehmen": "Pritaikyti",
+      "zustand": "Būklė",
+      "rhythmus": "Skaičiavimo ritmas",
+      "meldebestandKurz": "Pranešimų atsargos {n}",
+      "referenzSetzen": "Įkelti nepažeistos būklės nuotrauką",
+      "referenzAnsehen": "Peržiūrėti nepažeistos būklės nuotrauką",
+      "zustandWert": {
+        "neu": "naujas",
+        "gut": "geras",
+        "abgenutzt": "susidėvėjęs",
+        "ersatz_faellig": "reikia pakeisti"
+      },
+      "rhythmusWert": {
+        "jede_abreise": "kiekvieną kartą išsiregistruojant",
+        "quartal": "kas ketvirtį",
+        "jaehrlich": "kasmet",
+        "nie": "neskaičiuoti"
+      }
+    }
   },
   "finance": {
     "cancelInvoice": {
@@ -5285,7 +5409,23 @@
       "ownerRequestsLift": "Atšaukimo prašymai",
       "ownerRequestsTermination": "Paskelbtos sutarties pabaigos",
       "ownerRequestsNone": "Nėra atvirų veiksmų.",
-      "ownerRequestsOldest": "Seniausias atviras prašymas: {count, plural, =0 {šiandien} one {nuo vienos dienos} other {nuo # dienų}}"
+      "ownerRequestsOldest": "Seniausias atviras prašymas: {count, plural, =0 {šiandien} one {nuo vienos dienos} other {nuo # dienų}}",
+      "teamTasks": "Komandos užduotys",
+      "teamTasksExplain": "Ką komanda šiuo metu turi atlikti: pradelstos ir šiandien atliktinos užduotys, užduotys be atsakingų asmenų ir tos, kurios laukia patvirtinimo. Tai yra dabartinė būklė, o ne laikotarpis – atvira yra atvira, o senesnė reiškia skubesnė.",
+      "teamTasksLabel": "pradelsta arba šiandien atliktina",
+      "teamTasksOldest": "Seniausia pradelsta užduotis: prieš {count} dienas",
+      "teamTasksOverdue": "Pradelsta",
+      "teamTasksToday": "Šiandien atliktina",
+      "teamTasksUnassigned": "Be atsakingų asmenų",
+      "teamTasksToReview": "Laukia patvirtinimo",
+      "teamTasksOpen": "Iš viso atvirų",
+      "wechsel": "Kaita",
+      "wechselHint": "Išvykimas ir atvykimas tą pačią dieną tame pačiame objekte – valymas turi būti atliktas tarp dviejų užsakymų.",
+      "wechselUnklar": "Kaita neaiški",
+      "wechselUnklarHint": "Tą pačią dieną tame pačiame objekte atvyksta asmuo, tačiau vieno iš dviejų užsakymų vienetas nėra nurodytas – negalima pasakyti, ar tikrai reikia atlikti kaitą.",
+      "teamTasksUrgencyUnknown": "pradelsta arba mokėtina šiandien – šiuo metu nepasiekiama",
+      "listingsActive": "Aktyvus",
+      "listingsActiveLabel": "Parduodama"
     },
     "mobileAppHint": "Užduočių rodinys kelyje jau prieinamas adaptyviai internete (Mano užduotys + detalės su nuotraukų įkėlimu). Atskira mobilioji programėlė bus atskiras projektas.",
     "aufgabenFilter": {
@@ -15280,7 +15420,8 @@
         "reservierungen": "Rezervacijos",
         "kennzahlen": "Pagrindiniai rodikliai",
         "nachrichten": "Pranešimai",
-        "objekte": "Objektai"
+        "objekte": "Objektai",
+        "aufgaben": "Užduotys"
       }
     }
   },

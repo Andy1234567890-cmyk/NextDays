@@ -37,6 +37,7 @@ from src.features.tasks.regel_uebersetzung import (
     namen_in_sprache,
 )
 
+from . import sperrantrag_anzeige as anzeige
 from .schemas import (
     BestellteLeistungItem,
     BlockRequestDecision,
@@ -46,6 +47,10 @@ from .schemas import (
     SperrantragListe,
 )
 from .service import CalendarError, CalendarService
+
+# `_item` (Zeile → Antwortmodell) und `_als_datum` liegen im Nachbarmodul und
+# werden hier benutzt. Kein Re-Export: ausserhalb importiert sie niemand.
+from .sperrantrag_anzeige import _als_datum, _item
 from .sperrantrag_kollisionen import (
     kollisionen_pruefen,
     konflikt_text,
@@ -228,8 +233,10 @@ class SperrantragService(VorgaengeMixin):
         # 0510: einmal für die ganze Liste. Die Agentur entscheidet mit der
         # Sperre auch über die Arbeit, die daraus entsteht — sie muss sie sehen.
         bestellt = self._bestellungen(rows, self._sprache(ctx))
+        objekte = {str(r["property_id"]) for r in rows}
+        fotos = anzeige.objekt_fotos(self._db, tenant_id, objekte)
         items = [
-            _item(r, titel, namen, einheiten, bestellt.get(str(r["id"])))
+            _item(r, titel, namen, einheiten, bestellt.get(str(r["id"])), fotos)
             for r in rows
         ]
         return SperrantragListe(items=items, total=len(items))
@@ -282,9 +289,10 @@ class SperrantragService(VorgaengeMixin):
         ein weiterer users-Lookup je Klick trüge nichts bei.
         """
         tenant_id = str(antrag["tenant_id"])
+        pid = str(antrag["property_id"])
         return _item(
             antrag,
-            self._titel(tenant_id, {str(antrag["property_id"])}),
+            self._titel(tenant_id, {pid}),
             {},
             self._einheiten_namen(
                 tenant_id,
@@ -293,6 +301,7 @@ class SperrantragService(VorgaengeMixin):
             self._bestellungen([antrag], self._sprache(ctx)).get(
                 str(antrag["id"])
             ),
+            anzeige.objekt_fotos(self._db, tenant_id, {pid}),
         )
 
     def _sprache(self, ctx: AuthContext | None) -> str | None:
@@ -1437,7 +1446,8 @@ class SperrantragService(VorgaengeMixin):
 
 
 # Die Benachrichtigungen (melde_neuen_antrag, melde_aufhebungswunsch) liegen
-# in `sperrantrag_meldung.py` — sie beantworten eine andere Frage als dieser
+# in `sperrantrag_meldung.py`, die Anzeige-Anreicherung in
+# `sperrantrag_anzeige.py` — sie beantworten eine andere Frage als dieser
 # Zustandsautomat und liessen das Modul ueber 1500 Zeilen wachsen. Der
 # Re-Export haelt die bestehenden Importwege gueltig.
 
@@ -1447,54 +1457,3 @@ def _status_text(status: str | None) -> str:
         "approved": "genehmigt",
         "rejected": "abgelehnt",
     }.get(status or "", status or "unbekannt")
-
-
-def _als_datum(wert: object) -> date:
-    if isinstance(wert, date):
-        return wert
-    return date.fromisoformat(str(wert))
-
-
-def _item(
-    r: dict,
-    titel: dict[str, str],
-    namen: dict[str, str],
-    einheiten: dict[str, str] | None = None,
-    bestellt: list[BestellteLeistungItem] | None = None,
-) -> SperrantragItem:
-    pid = str(r["property_id"])
-    uid = str(r["unit_id"]) if r.get("unit_id") else None
-    requested_by = str(r["requested_by"]) if r.get("requested_by") else None
-    return SperrantragItem(
-        id=str(r["id"]),
-        property_id=pid,
-        property_title=titel.get(pid),
-        unit_id=uid,
-        unit_name=(einheiten or {}).get(uid or ""),
-        requested_by=requested_by,
-        requested_by_name=namen.get(requested_by or ""),
-        start_date=_als_datum(r["start_date"]),
-        end_date=_als_datum(r["end_date"]),
-        status=r.get("status") or "pending",
-        reason=r.get("reason"),
-        decided_by=str(r["decided_by"]) if r.get("decided_by") else None,
-        decided_at=str(r["decided_at"]) if r.get("decided_at") else None,
-        decision_note=r.get("decision_note"),
-        created_at=str(r["created_at"]) if r.get("created_at") else None,
-        ist_kuendigung=bool(r.get("ist_kuendigung")),
-        als_kuendigung_gewertet=bool(r.get("als_kuendigung_gewertet")),
-        vertragsende_gesetzt_auf=(
-            _als_datum(r["vertragsende_gesetzt_auf"])
-            if r.get("vertragsende_gesetzt_auf")
-            else None
-        ),
-        bestellte_leistungen=bestellt or [],
-        aufhebung=str(r.get("aufhebung") or "keine"),
-        aufhebung_grund=r.get("aufhebung_grund"),
-        aufhebung_beantragt_am=(
-            str(r["aufhebung_beantragt_am"])
-            if r.get("aufhebung_beantragt_am")
-            else None
-        ),
-        aufhebung_entscheidungsnotiz=r.get("aufhebung_entscheidungsnotiz"),
-    )

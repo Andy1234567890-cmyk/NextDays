@@ -49,6 +49,7 @@ if TYPE_CHECKING:
 # Re-Exporte (von reads/writes/service + Tests genutzt) — hält ruff davon ab,
 # den nur weitergereichten load_guest_mask-Import zu entfernen.
 __all__ = [
+    "_NICHT_BELEGEND",
     "GuestMask",
     "ReservationError",
     "ReservationsBase",

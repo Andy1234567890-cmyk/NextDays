@@ -231,6 +231,21 @@ _AI_PATHS = (
     "/reviews/ki/test",
     # Von Hand angestossener KI-Lauf (bis 15 Modellaufrufe je Klick).
     "/reviews/ki/lauf",
+    # PDF-Upload in die Gaeste-/Hausmappe (0619): ein ganzes Dokument geht als
+    # base64 durch Gemini, bis 20 MB je Aufruf. Der teuerste Einzelaufruf im
+    # System — er gehoert in den strengen Eimer, nicht in den default (300/60).
+    #
+    # NUR der Lese-Pfad, bewusst NICHT `/mappe/`: das Auflisten der
+    # Dokumente, der Katalog und die signierte Adresse kosten nichts und
+    # laufen beim Oeffnen der Kartei mehrfach. Sie in denselben 20/60-Eimer zu
+    # legen hiesse, dass ein Betrieb sich beim blossen Blaettern aussperrt.
+    # Der Upload hat deshalb einen EIGENEN Pfad (`.../dokumente/lesen`) —
+    # die Bucket-Wahl kennt nur den Pfad, nicht die HTTP-Methode.
+    "/mappe/gast/dokumente/lesen",
+    "/mappe/haus/dokumente/lesen",
+    # Inventarliste als PDF (0622): bis 300 Zeilen Antwort, ein Dokument als
+    # base64 durch Gemini. Derselbe Grund wie eine Zeile darueber.
+    "/inventar/import",
 )
 
 # Stock-Foto-Suche des Website-Baukastens (0461). Jeder Aufruf geht an Pexels

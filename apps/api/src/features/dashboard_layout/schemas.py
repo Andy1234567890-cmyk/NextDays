@@ -38,12 +38,19 @@ KachelId = Literal[
     "nachricht:automation:schnitt",
     "nachricht:ungelesen",
     "objekt:gesamt",
+    "objekt:aktiv",
     "objekt:inaktiv",
     "objekt:entwurf",
     # Eigentuemer-Vorgaenge (Sperrantraege, Aufhebungswuensche, Vertragsenden):
     # die Kachel stand schon vor dem Raster auf der Startseite (APPROVE_BLOCK),
     # fehlte aber im Katalog — ohne den Eintrag haette das Raster sie verloren.
     "vorgaenge:eigentuemer",
+    # Teamaufgaben (Bestand: offen, ueberfaellig, heute, ohne Zustaendige, zur
+    # Abnahme). Dieselbe Luecke wie bei den Eigentuemer-Vorgaengen: das
+    # Aufgaben-Modul war vollstaendig gebaut, aber auf der Startseite stand
+    # nichts davon — wer nicht weiss, dass eine Reinigung ueberfaellig ist,
+    # ruft die Liste nicht auf.
+    "aufgaben:team",
 ]
 
 KachelGroesse = Literal["s", "m", "l"]
@@ -54,7 +61,7 @@ KachelGroesse = Literal["s", "m", "l"]
 # ohne dass gespeicherte Standards ungueltig werden.
 RollenName = Literal["admin", "co_admin", "owner", "staff", "cleaner", "shift_lead"]
 
-# Obergrenzen. 20 Kacheln gibt es real; 40 laesst Luft fuer Wachstum, ohne dass
+# Obergrenzen. 21 Kacheln gibt es real; 40 laesst Luft fuer Wachstum, ohne dass
 # jemand ein 10-MB-Layout ablegen kann.
 MAX_KACHELN = 40
 MAX_KOORDINATE = 200

@@ -53,6 +53,7 @@ from .engine import (
     nachziehen_planmaessig,
     sync_for_reservation,
 )
+from .inventur import zaehle_menge
 from .kosten_rueckmeldung import (
     kosten_einfuegen,
     kosten_entfernen,
@@ -105,8 +106,10 @@ from .schemas import (
     TaskSource,
     TaskStatus,
     TaskTrigger,
+    TeamaufgabenStand,
     UngedecktesObjekt,
 )
+from .startseite import teamaufgaben_stand
 
 log = get_logger("nextdays.tasks")
 
@@ -1213,6 +1216,24 @@ class TasksService:
             tenant_id, self._filter_bucket(rows, status_bucket, tagesende)
         )
 
+    def teamaufgaben_stand(
+        self,
+        tenant_id: str,
+        *,
+        tagesbeginn: datetime | None = None,
+        tagesende: datetime | None = None,
+    ) -> TeamaufgabenStand:
+        """Die Bestaende der Teamaufgaben fuer die Startseiten-Kachel.
+
+        Reine Delegation nach `startseite.py` — dieselbe Trennung wie bei
+        `abrechnung`: der Zaehlpfad ist ein eigenes Thema und braucht nichts
+        vom Aufgaben-Lebenszyklus. Die Autorisierung liegt am Router
+        (`_manage()`), derselbe Guard wie `/tasks/team` (Wurzel 9).
+        """
+        return teamaufgaben_stand(
+            self._db(), tenant_id, tagesbeginn=tagesbeginn, tagesende=tagesende
+        )
+
     def list_own_tasks(
         self,
         tenant_id: str,
@@ -2001,6 +2022,50 @@ class TasksService:
         self._db().table("checklist_items").update(patch).eq(
             "id", item_id
         ).execute()
+        return self.get_detail(tenant_id, task_id, ctx)
+
+    def zaehle_checklist_item(
+        self,
+        tenant_id: str,
+        item_id: str,
+        menge: int,
+        ctx: AuthContext | None = None,
+    ) -> TaskDetail:
+        """Eine gezaehlte Menge an einem Zaehlpunkt eintragen (0623).
+
+        Der Weg der Reinigungskraft: sie steht nach der Abreise im Haus, sieht
+        „Weinglaeser (6)" auf ihrer Liste und traegt ein, was sie zaehlt. Kein
+        Umweg ueber die Kartei — die darf sie gar nicht sehen.
+
+        DERSELBE SCOPE wie `toggle_checklist_item`: erst die Aufgabe ueber
+        `get_detail` laden (Tenant + Objekt-Freigabe, Wurzel 9), dann
+        schreiben. Ohne den Umweg waere die item_id allein der Schluessel.
+        """
+        rows = (
+            self._db()
+            .table("checklist_items")
+            .select("id, task_id, inventory_item_id")
+            .eq("id", item_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            raise TaskError("Punkt nicht gefunden.", status_code=404)
+        if not rows[0].get("inventory_item_id"):
+            # Ein gewoehnlicher Checklistenpunkt hat nichts zu zaehlen. Eine
+            # Menge dort anzunehmen waere eine Zahl ohne Bezug.
+            raise TaskError("Dieser Punkt ist kein Zählpunkt.", status_code=422)
+        task_id = rows[0]["task_id"]
+        detail = self.get_detail(tenant_id, task_id, ctx)
+        zaehle_menge(
+            self._db(),
+            tenant_id,
+            item_id=item_id,
+            inventory_item_id=str(rows[0]["inventory_item_id"]),
+            property_id=detail.property_id,
+            menge=menge,
+            user_id=ctx.user_id if ctx else None,
+        )
         return self.get_detail(tenant_id, task_id, ctx)
 
     # --- Kosten (0360) ----------------------------------------------------

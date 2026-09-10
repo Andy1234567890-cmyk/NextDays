@@ -104,6 +104,21 @@ export function tagesendeIso(): string {
   return d.toISOString();
 }
 
+/**
+ * Der BEGINN des laufenden Tages beim Nutzer, als ISO-Zeitpunkt.
+ *
+ * Nur im BROWSER aufrufen — dieselbe Begründung wie bei `tagesendeIso`.
+ * Gegenstück dazu: mit beiden Grenzen lässt sich „überfällig" (vor dem Beginn)
+ * von „heute fällig" (dazwischen) trennen. Mit nur einer Grenze landete eine
+ * drei Wochen alte Aufgabe unter „heute" — deshalb verlangt
+ * `/tasks/startseite` beide oder keine.
+ */
+export function tagesbeginnIso(): string {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+}
+
 /** Ein Datum im Datumsfilter, als `YYYY-MM-DD` (die Form von `<input
  *  type="date">`). Leer = diese Grenze ist offen. */
 export type Zeitraum = { von: string; bis: string };

@@ -216,8 +216,11 @@ export async function nachrichtOeffnen(
  * übrigen erscheinen (Wurzel 5).
  */
 export async function bilderOeffnen(n: ChatNachricht): Promise<string[]> {
+  if (n.bilder.length === 0) return [];
   const gegenueber = n.wrapper_key || n.sender_key;
-  if (!n.wrapped_key || !gegenueber || n.bilder.length === 0) return [];
+  // Bestand aus der E2E-Zeit: nur MIT Geräteschlüssel zu öffnen. Fehlt er,
+  // bleibt das Bild verborgen — es gibt keinen zweiten Weg dorthin.
+  const e2e = Boolean(n.wrapped_key && gegenueber);
   const out: string[] = [];
   for (const pfad of n.bilder) {
     try {
@@ -225,9 +228,15 @@ export async function bilderOeffnen(n: ChatNachricht): Promise<string[]> {
         `/owner-chat/bilder/adresse?pfad=${encodeURIComponent(pfad)}`,
       );
       if (!adresse.ok) continue;
+      if (!e2e) {
+        // Seit dem 09.09.2026 liegt das Bild als Bild im privaten Bucket.
+        // Die signierte Adresse zeigt direkt darauf — nichts zu entschlüsseln.
+        out.push(adresse.data.url);
+        continue;
+      }
       const roh = await fetch(adresse.data.url);
       const chiffre = Buffer.from(await roh.arrayBuffer()).toString("base64");
-      const bytes = await bildEntschluesseln(chiffre, n.wrapped_key, gegenueber);
+      const bytes = await bildEntschluesseln(chiffre, n.wrapped_key!, gegenueber!);
       out.push(
         `data:image/jpeg;base64,${Buffer.from(bytes).toString("base64")}`,
       );
@@ -313,12 +322,13 @@ export async function bildHochladen(
   daten: Uint8Array,
 ): Promise<Result<BildHochgeladen>> {
   const form = new FormData();
-  // Der Name ist bewusst neutral und ohne Bildendung: der Inhalt IST kein Bild
-  // mehr, sondern Chiffretext (Wurzel 4 — nichts behaupten, was nicht stimmt).
+  // Seit dem 09.09.2026 geht das BILD hinauf, nicht Chiffretext: der Server
+  // hält den Schlüssel, und die Verwaltung liest im Browser mit. Name und Typ
+  // benennen darum wieder den echten Inhalt (Wurzel 4).
   form.append("datei", {
-    uri: `data:application/octet-stream;base64,${Buffer.from(daten).toString("base64")}`,
-    type: "application/octet-stream",
-    name: "anhang.bin",
+    uri: `data:image/jpeg;base64,${Buffer.from(daten).toString("base64")}`,
+    type: "image/jpeg",
+    name: "anhang.jpg",
   } as unknown as Blob);
   return call("/owner-chat/bilder", { method: "POST", body: form });
 }

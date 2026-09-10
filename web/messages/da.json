@@ -2747,7 +2747,8 @@
       "tradespeople": "Håndværkere",
       "marketing": "Markedsføring",
       "housebook": "Husmappe",
-      "listing": "Markedsføring"
+      "listing": "Markedsføring",
+      "inventory": "Inventar"
     },
     "objectInfo": {
       "capacityPersons": "Kapacitet (personer)",
@@ -2898,7 +2899,130 @@
       "helaarsbolig": "Helårsbolig",
       "fritidshus": "Fritidshus"
     },
-    "print": "Udskriv"
+    "print": "Udskriv",
+    "mappe": {
+      "gastTitel": "Gæstemappe – dokumenter",
+      "hausTitel": "Husmappe – dokumenter (internt)",
+      "titel": "Digital mappe",
+      "erklaerung": "Upload PDF – oplysningerne i den læses og foreslås til bekræftelse. Dokumentet forbliver her til reference.",
+      "hochladen": "Upload PDF",
+      "liest": "Læser …",
+      "laedt": "Indlæser …",
+      "leer": "Intet dokument i denne mappe endnu.",
+      "zuGross": "Filen er for stor (maks. {mb} MB).",
+      "seiten": "{count, plural, one {# side} other {# sider}}",
+      "ansehen": "Se {name} i stor størrelse",
+      "loeschen": "Fjern {name}",
+      "loeschenFrage": "Fjern „{name}“ fra mappen? Allerede overtagne oplysninger bevares.",
+      "gefunden": "{count, plural, one {# oplysning fundet} other {# oplysninger fundet}}",
+      "gefundenHinweis": "Intet af dette er gemt. Kontroller, ændr om nødvendigt, og overtag derefter – dørkode og adgangskoder er bevidst ikke forudvalgt.",
+      "nichtsGefunden": "Dette dokument indeholdt intet, der passer til et mappefelt. Det forbliver dog i mappen.",
+      "heikel": "Kontroller venligst omhyggeligt",
+      "fundstelle": "I dokumentet: {ort}",
+      "sprachfassung": "Sprogversion",
+      "ueberschreiben": "Erstat også allerede udfyldte felter",
+      "ausgewaehlt": "{count} af {gesamt} valgt",
+      "verwerfen": "Kassér",
+      "uebernehmen": "Overtag",
+      "uebernimmt": "Overtager …",
+      "schliessen": "Luk",
+      "gesetzt": "{count, plural, =0 {Intet overtaget} one {# felt overtaget} other {# felter overtaget}}",
+      "uebersprungen": "Allerede udfyldt og derfor uændret: {felder}",
+      "stand": {
+        "offen": "ikke læst endnu",
+        "gelesen": "læst",
+        "uebernommen": "overtaget",
+        "ohne_treffer": "intet fundet",
+        "fehler": "læsning mislykkedes"
+      },
+      "sicher": {
+        "hoch": "let at læse",
+        "mittel": "begrænset læsbarhed",
+        "niedrig": "svært at læse"
+      },
+      "sprache": {
+        "de": "Tysk",
+        "en": "Engelsk",
+        "da": "Dansk"
+      }
+    },
+    "inventar": {
+      "abschnitt": "Inventar",
+      "titel": "Inventarliste",
+      "erklaerung": "Hvad der er i huset, opdelt efter rum. Bør og er adskilt – forskellen er resultatet af inventaroptællingen. Kan udvides til enhver tid.",
+      "laedt": "Indlæser …",
+      "leer": "Intet registreret endnu. Tilføj linjer manuelt eller overfør fra en PDF i mappen.",
+      "neuName": "Genstand",
+      "neuSoll": "Bør",
+      "hinzufuegen": "Tilføj",
+      "raeume": "Rum",
+      "keineRaeume": "ingen endnu",
+      "raumName": "Navn på rum",
+      "raumHinzufuegen": "Tilføj rum",
+      "ohneRaum": "Uden rum",
+      "speichern": "Gem",
+      "istMenge": "Tilgængelig mængde",
+      "vonSoll": "af {soll}",
+      "geprueft": "Marker som kontrolleret",
+      "loeschen": "Fjern",
+      "loeschenFrage": "Fjern „{name}“ fra listen? Rapporterede skader bevares.",
+      "ausDokument": "fra PDF",
+      "ausDokumentHint": "Denne linje stammer fra et dokument i den digitale mappe.",
+      "schadenMelden": "Rapportér skade",
+      "schadenAn": "Skade på „{name}“",
+      "art": "Hvad er der galt?",
+      "traeger": "Hvem betaler omkostningerne?",
+      "werZahlt": "Hvem betaler?",
+      "beschreibung": "Beskrivelse",
+      "fotoWaehlen": "Tag eller vælg et foto",
+      "fotoPflicht": "Ingen rapport uden foto – i tilfælde af tvist er billedet ofte det eneste, der tæller.",
+      "fotosGewaehlt": "{count, plural, one {# billede valgt} other {# billeder valgt}}",
+      "melden": "Rapportér skade",
+      "meldet": "Rapporteres …",
+      "abbrechen": "Annuller",
+      "offeneSchaeden": "{count, plural, one {# skade} other {# skader}}",
+      "offeneSchaedenTitel": "{count, plural, one {# åben skade} other {# åbne skader}}",
+      "bild": "Billede {nr}",
+      "betrag": "Beløb",
+      "bestaetigen": "Bekræft",
+      "verwerfen": "Kassér",
+      "verwerfenFrage": "Kassér skade på „{name}“? Dette var ikke en skade.",
+      "artWert": {
+        "beschaedigt": "Beskadiget",
+        "fehlt": "Mangler",
+        "entsorgt": "Bortskaffet"
+      },
+      "traegerWert": {
+        "offen": "Afventer",
+        "eigentuemer": "Ejer",
+        "gast": "Gæst",
+        "betrieb": "Drift"
+      },
+      "pdfImport": "Liste fra PDF",
+      "pdfLiest": "Indlæser ...",
+      "pdfLeer": "Ingen inventarliste fundet i denne PDF.",
+      "pdfGefunden": "{count, plural, one {# række fundet} other {# rækker fundet}}",
+      "pdfHinweis": "Intet er gemt. Gennemgå, rediger om nødvendigt, og anvend derefter. Værelser tildeles kun, hvis de allerede eksisterer.",
+      "uebernimmt": "Anvender ...",
+      "uebernehmen": "Anvend",
+      "zustand": "Tilstand",
+      "rhythmus": "Tælletakt",
+      "meldebestandKurz": "Rapporteringsbeholdning {n}",
+      "referenzSetzen": "Upload billede af intakt tilstand",
+      "referenzAnsehen": "Se billede af intakt tilstand",
+      "zustandWert": {
+        "neu": "ny",
+        "gut": "god",
+        "abgenutzt": "slidt",
+        "ersatz_faellig": "skal udskiftes"
+      },
+      "rhythmusWert": {
+        "jede_abreise": "ved hver afrejse",
+        "quartal": "kvartalsvis",
+        "jaehrlich": "årligt",
+        "nie": "tæl ikke med"
+      }
+    }
   },
   "finance": {
     "cancelInvoice": {
@@ -5285,7 +5409,23 @@
       "ownerRequestsLift": "Anmodninger om ophævelse",
       "ownerRequestsTermination": "Varslede kontraktudløb",
       "ownerRequestsNone": "Ingen åbne sager.",
-      "ownerRequestsOldest": "Ældste åbne anmodning: {count, plural, =0 {i dag} one {siden én dag} other {siden # dage}}"
+      "ownerRequestsOldest": "Ældste åbne anmodning: {count, plural, =0 {i dag} one {siden én dag} other {siden # dage}}",
+      "teamTasks": "Teamopgaver",
+      "teamTasksExplain": "Hvad teamet skal arbejde med lige nu: forfaldne og dags dato forfaldne opgaver, opgaver uden ansvarlige og opgaver, der venter på godkendelse. En status, ikke en periode – åben er åben, og ældre betyder mere presserende.",
+      "teamTasksLabel": "Forfalden eller forfalder i dag",
+      "teamTasksOldest": "Ældste forfaldne opgave: siden {count} dage",
+      "teamTasksOverdue": "Forfalden",
+      "teamTasksToday": "Forfalder i dag",
+      "teamTasksUnassigned": "Uden ansvarlige",
+      "teamTasksToReview": "Venter på godkendelse",
+      "teamTasksOpen": "I alt åbne",
+      "wechsel": "Skift",
+      "wechselHint": "Afrejse og ankomst samme dag i samme enhed – rengøringen skal nås mellem to bookinger.",
+      "wechselUnklar": "Skift uklart",
+      "wechselUnklarHint": "Samme dag ankommer nogen til samme ejendom, men enheden for en af de to bookinger er ikke angivet – det er ikke muligt at sige, om der virkelig skal skiftes.",
+      "teamTasksUrgencyUnknown": "forfalden eller forfalder i dag — utilgængelig lige nu",
+      "listingsActive": "Aktiv",
+      "listingsActiveLabel": "Til salg"
     },
     "mobileAppHint": "Opgavevisningen til farten er allerede tilgængelig responsivt på nettet (Mine opgaver + detaljer med foto-upload). En separat mobilapp følger som et selvstændigt projekt.",
     "aufgabenFilter": {
@@ -15280,7 +15420,8 @@
         "reservierungen": "Reservationer",
         "kennzahlen": "Nøgletal",
         "nachrichten": "Beskeder",
-        "objekte": "Ejendomme"
+        "objekte": "Ejendomme",
+        "aufgaben": "Opgaver"
       }
     }
   },

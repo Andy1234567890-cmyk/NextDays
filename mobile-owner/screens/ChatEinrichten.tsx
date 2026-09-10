@@ -1,5 +1,14 @@
 // Chat auf diesem Gerät einrichten (0611, ADR-0029).
 //
+// VERWAIST SEIT DEM 09.09.2026 — niemand importiert diesen Screen mehr.
+// Mit dem Umstieg auf serverseitige Verschlüsselung braucht der Chat kein
+// registriertes Gerät mehr, und die Sperre in `Chat.tsx`, die hierher führte,
+// ist entfallen. Die Datei bleibt bewusst stehen statt gelöscht zu werden:
+// die Geräteverwaltung (`ChatGeraete.tsx`) ist weiterhin erreichbar, und der
+// E2E-Bestand aus der Zeit davor lässt sich NUR mit einem eingerichteten
+// Gerät öffnen. Ob dieser Weg wieder gebraucht wird, entscheidet der Betrieb,
+// nicht der Aufräumdrang.
+//
 // DREI SCHRITTE, die zusammengehören und deshalb in EINEM Screen stehen:
 //   1. Schlüsselpaar erzeugen (bleibt in der Keychain)
 //   2. Gerät beim Server registrieren — mit Besitznachweis, sonst könnte

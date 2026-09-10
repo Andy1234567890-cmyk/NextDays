@@ -20,6 +20,7 @@ import { getOnboarding, type OnboardingStatus } from "@/lib/onboarding";
 import { getEigentuemerVorgaenge } from "@/lib/calendar";
 import { getDashboardLayout } from "@/lib/dashboard-layout";
 import { getDashboard } from "@/lib/reservations";
+import { getTeamaufgabenStand } from "@/lib/tasks";
 
 export const dynamic = "force-dynamic";
 
@@ -70,10 +71,17 @@ export default async function DashboardPage() {
   // Das Layout ist ebenfalls NICHT kritisch: schlägt der Aufruf fehl, rendert
   // das Raster den Katalog-Standard und SAGT es (Toast + Statuszeile) — statt
   // die Startseite wegen einer Anordnungs-Einstellung zu kippen.
-  const [dashboard, kennzahlen, vorgaenge, layout] = await Promise.all([
+  // Teamaufgaben sind wie die Nachrichten NICHT kritisch: ohne MANAGE_TASKS
+  // antwortet der Endpunkt mit 403 — dann entfaellt die Kachel.
+  // BEWUSST OHNE Tagesgrenzen: hier laeuft die Uhr des Rechenzentrums, nicht
+  // die des Lesers. Der Server liefert deshalb nur den Bestand; „ueberfaellig"
+  // und „heute" holt die Kachel im Browser nach, wo die Zone feststeht
+  // (Wurzel 4: lieber 0 als eine Zahl aus der falschen Zeitzone).
+  const [dashboard, kennzahlen, vorgaenge, aufgaben, layout] = await Promise.all([
     getDashboard(),
     getNachrichtenKennzahlen(),
     getEigentuemerVorgaenge(),
+    getTeamaufgabenStand(),
     getDashboardLayout(),
   ]);
   if (!dashboard.ok) {
@@ -139,10 +147,16 @@ export default async function DashboardPage() {
           dashboard: dashboard.data,
           nachrichten: kennzahlen.ok ? kennzahlen.data : null,
           vorgaenge: vorgaenge.ok ? vorgaenge.data : null,
+          aufgaben: aufgaben.ok ? aufgaben.data : null,
         }}
         me={
           me
-            ? { role: me.role, capabilities: me.capabilities, permissions: me.permissions }
+            ? {
+                role: me.role,
+                capabilities: me.capabilities,
+                permissions: me.permissions,
+                is_demo: me.is_demo,
+              }
             : { role: null, capabilities: [], permissions: [] }
         }
         antwort={layout.ok ? layout.data : null}

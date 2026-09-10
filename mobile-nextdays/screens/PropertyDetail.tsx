@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { Btn, Card, Col, Divider, Photo, Row, Spinner, Txt } from "@/components/ui/kit";
 import { EmptyState } from "@/components/ui/patterns";
+import { useAuth } from "@/contexts/AuthContext";
 import { ausstattungLabel } from "@/lib/ausstattung";
 import {
   MAPPEN_FELDER,
@@ -25,6 +26,7 @@ import {
   type ChannelState,
   type Property,
 } from "@/lib/properties";
+import { can } from "@/lib/permissions";
 import { useRealtime } from "@/lib/realtime";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -56,6 +58,8 @@ function adresse(p: Property): string {
 
 export default function PropertyDetail({ route, navigation }: { route: any; navigation: any }) {
   const t = useTheme();
+  const { me } = useAuth();
+  const darfKartei = can(me, "manage_properties");
   const insets = useSafeAreaInsets();
   const id: string = route.params.id;
   const [p, setP] = useState<Property | null>(null);
@@ -175,6 +179,21 @@ export default function PropertyDetail({ route, navigation }: { route: any; navi
             hinweis="Eigene Angaben deines Betriebs zu diesem Objekt."
             onPress={() => navigation.navigate("PropertyCustomFields", { id: p.id })}
           />
+
+          {/* Kartei: nur mit manage_properties. Der Slice gibt Vertrags- und
+              Zugangsdaten aus (Schlüssellage, Onboarding-Stand) — ohne die
+              Berechtigung liefert er 403, der Abschnitt wäre also eine Tür
+              ohne Raum dahinter. */}
+          {darfKartei && (
+            <>
+              <Divider />
+              <Abschnitt
+                titel="Kartei"
+                hinweis="Zugang, Handwerker, Vertragsstand — die Onboarding-Angaben."
+                onPress={() => navigation.navigate("PropertyKartei", { id: p.id })}
+              />
+            </>
+          )}
 
           <Divider />
 

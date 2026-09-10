@@ -2747,7 +2747,8 @@
       "tradespeople": "Ammattilaiset",
       "marketing": "Markkinointi",
       "housebook": "Talokansio",
-      "listing": "Markkinointi julkaisu"
+      "listing": "Markkinointi julkaisu",
+      "inventory": "Varasto"
     },
     "objectInfo": {
       "capacityPersons": "Kapasiteetti (henkilöä)",
@@ -2898,7 +2899,130 @@
       "helaarsbolig": "Vakituinen asunto",
       "fritidshus": "Loma-asunto"
     },
-    "print": "Tulosta"
+    "print": "Tulosta",
+    "mappe": {
+      "gastTitel": "Vieraskansio – Asiakirjat",
+      "hausTitel": "Talokansio – Asiakirjat (sisäinen)",
+      "titel": "Digitaalinen kansio",
+      "erklaerung": "Lataa PDF – tiedot luetaan ja ehdotetaan vahvistettavaksi. Asiakirja jää tähän luettavaksi.",
+      "hochladen": "Lataa PDF",
+      "liest": "Luetaan…",
+      "laedt": "Ladataan…",
+      "leer": "Tässä kansiossa ei ole vielä asiakirjaa.",
+      "zuGross": "Tiedosto on liian suuri (enintään {mb} Mt).",
+      "seiten": "{count, plural, one {# sivu} other {# sivua}}",
+      "ansehen": "Näytä {name} suurena",
+      "loeschen": "Poista {name}",
+      "loeschenFrage": "Poistetaanko ”{name}” kansiosta? Jo hyväksytyt tiedot säilyvät.",
+      "gefunden": "{count, plural, one {# tieto löydetty} other {# tietoa löydetty}}",
+      "gefundenHinweis": "Mitään näistä ei ole tallennettu. Tarkista, muuta tarvittaessa ja hyväksy sitten – ovikoodia ja salasanoja ei ole tarkoituksella esivalittu.",
+      "nichtsGefunden": "Tässä asiakirjassa ei ollut mitään, mikä sopisi kansion kenttään. Se jää silti kansioon.",
+      "heikel": "Tarkista huolellisesti",
+      "fundstelle": "Asiakirjassa: {ort}",
+      "sprachfassung": "Kieliversio",
+      "ueberschreiben": "Korvaa myös jo täytetyt kentät",
+      "ausgewaehlt": "{count} / {gesamt} valittu",
+      "verwerfen": "Hylkää",
+      "uebernehmen": "Hyväksy",
+      "uebernimmt": "Hyväksytään…",
+      "schliessen": "Sulje",
+      "gesetzt": "{count, plural, =0 {Mitään ei hyväksytty} one {# kenttä hyväksytty} other {# kenttää hyväksytty}}",
+      "uebersprungen": "Jo täytetty ja siksi muuttumaton: {felder}",
+      "stand": {
+        "offen": "lukematon",
+        "gelesen": "luettu",
+        "uebernommen": "hyväksytty",
+        "ohne_treffer": "ei löytynyt",
+        "fehler": "lukeminen epäonnistui"
+      },
+      "sicher": {
+        "hoch": "helposti luettava",
+        "mittel": "rajallisesti luettava",
+        "niedrig": "vaikeasti luettava"
+      },
+      "sprache": {
+        "de": "Saksa",
+        "en": "Englanti",
+        "da": "Tanska"
+      }
+    },
+    "inventar": {
+      "abschnitt": "Inventaari",
+      "titel": "Inventaarilista",
+      "erklaerung": "Mitä talossa on, huoneittain. Tavoite ja todellinen eroteltuna – ero on inventaarion tulos. Aina laajennettavissa.",
+      "laedt": "Ladataan…",
+      "leer": "Ei vielä mitään tallennettua. Lisää rivejä käsin tai tuo kansion PDF-tiedostosta.",
+      "neuName": "Kohde",
+      "neuSoll": "Tavoite",
+      "hinzufuegen": "Lisää",
+      "raeume": "Huoneet",
+      "keineRaeume": "ei vielä",
+      "raumName": "Huoneen nimi",
+      "raumHinzufuegen": "Lisää huone",
+      "ohneRaum": "Ilman huonetta",
+      "speichern": "Tallenna",
+      "istMenge": "Olemassa oleva määrä",
+      "vonSoll": "kohteesta {soll}",
+      "geprueft": "Merkitse tarkistetuksi",
+      "loeschen": "Poista",
+      "loeschenFrage": "Poistetaanko ”{name}” listalta? Ilmoitetut vahingot säilyvät.",
+      "ausDokument": "PDF:stä",
+      "ausDokumentHint": "Tämä rivi on peräisin digitaalisen kansion asiakirjasta.",
+      "schadenMelden": "Ilmoita vahingosta",
+      "schadenAn": "Vahinko kohteessa ”{name}”",
+      "art": "Mitä tapahtui?",
+      "traeger": "Kuka vastaa kustannuksista?",
+      "werZahlt": "Kuka maksaa?",
+      "beschreibung": "Kuvaus",
+      "fotoWaehlen": "Ota tai valitse kuva",
+      "fotoPflicht": "Ei ilmoitusta ilman kuvaa – riitatapauksissa kuva on usein ainoa, mikä merkitsee.",
+      "fotosGewaehlt": "{count, plural, one {# kuva valittu} other {# kuvaa valittu}}",
+      "melden": "Ilmoita vahingosta",
+      "meldet": "Ilmoitetaan…",
+      "abbrechen": "Peruuta",
+      "offeneSchaeden": "{count, plural, one {# vahinko} other {# vahinkoa}}",
+      "offeneSchaedenTitel": "{count, plural, one {# avoin vahinko} other {# avointa vahinkoa}}",
+      "bild": "Kuva {nr}",
+      "betrag": "Määrä",
+      "bestaetigen": "Vahvista",
+      "verwerfen": "Hylkää",
+      "verwerfenFrage": "Hylätäänkö vahinko kohteessa ”{name}”? Tämä ei ollut vahinko.",
+      "artWert": {
+        "beschaedigt": "Vaurioitunut",
+        "fehlt": "Puuttuu",
+        "entsorgt": "Hävitettiin"
+      },
+      "traegerWert": {
+        "offen": "Vielä avoinna",
+        "eigentuemer": "Omistaja",
+        "gast": "Vieras",
+        "betrieb": "Toiminta"
+      },
+      "pdfImport": "Luettelo PDF:stä",
+      "pdfLiest": "Luetaan…",
+      "pdfLeer": "Tästä PDF:stä ei löytynyt inventaarioluetteloa.",
+      "pdfGefunden": "{count, plural, one {# rivi löydetty} other {# riviä löydetty}}",
+      "pdfHinweis": "Mitään näistä ei ole tallennettu. Tarkista, muuta tarvittaessa ja hyväksy sitten. Huoneet liitetään vain, jos ne ovat jo olemassa.",
+      "uebernimmt": "Hyväksytään…",
+      "uebernehmen": "Hyväksy",
+      "zustand": "Kunto",
+      "rhythmus": "Laskentarytmi",
+      "meldebestandKurz": "Ilmoitusmäärä {n}",
+      "referenzSetzen": "Tallenna kuva ehjästä kunnosta",
+      "referenzAnsehen": "Katso kuva ehjästä kunnosta",
+      "zustandWert": {
+        "neu": "uusi",
+        "gut": "hyvä",
+        "abgenutzt": "kulunut",
+        "ersatz_faellig": "vaihto tarpeen"
+      },
+      "rhythmusWert": {
+        "jede_abreise": "jokaisen lähdön yhteydessä",
+        "quartal": "neljännesvuosittain",
+        "jaehrlich": "vuosittain",
+        "nie": "älä laske"
+      }
+    }
   },
   "finance": {
     "cancelInvoice": {
@@ -5285,7 +5409,23 @@
       "ownerRequestsLift": "Peruutukset",
       "ownerRequestsTermination": "Ilmoitetut sopimusten päättymiset",
       "ownerRequestsNone": "Ei avoimia toimintoja.",
-      "ownerRequestsOldest": "Vanhin avoin pyyntö: {count, plural, =0 {tänään} one {yhden päivän ajan} other {# päivän ajan}}"
+      "ownerRequestsOldest": "Vanhin avoin pyyntö: {count, plural, =0 {tänään} one {yhden päivän ajan} other {# päivän ajan}}",
+      "teamTasks": "Tiimitehtävät",
+      "teamTasksExplain": "Mitä tiimin on parhaillaan käsiteltävä: myöhässä olevat ja tänään erääntyvät tehtävät, tehtävät ilman vastuuhenkilöä ja hyväksyntää odottavat tehtävät. Tämä on nykytilanne, ei aikaväli – avoin on avoin, ja vanhempi tarkoittaa kiireellisempää.",
+      "teamTasksLabel": "Myöhässä tai erääntyy tänään",
+      "teamTasksOldest": "Vanhin myöhässä oleva tehtävä: {count} päivää sitten",
+      "teamTasksOverdue": "Myöhässä",
+      "teamTasksToday": "Erääntyy tänään",
+      "teamTasksUnassigned": "Ilman vastuuhenkilöä",
+      "teamTasksToReview": "Odottaa hyväksyntää",
+      "teamTasksOpen": "Avoimia yhteensä",
+      "wechsel": "Vaihto",
+      "wechselHint": "Lähtö ja saapuminen samana päivänä samassa yksikössä – siivouksen on tapahduttava kahden varauksen välillä.",
+      "wechselUnklar": "Vaihto epäselvä",
+      "wechselUnklarHint": "Samana päivänä samaan kohteeseen saapuu joku, mutta toisen varauksen yksikköä ei ole määritetty – ei voida sanoa, onko todellinen vaihto tarpeen.",
+      "teamTasksUrgencyUnknown": "erääntynyt tai erääntyy tänään – ei saatavilla juuri nyt",
+      "listingsActive": "Aktiivinen",
+      "listingsActiveLabel": "Myynnissä"
     },
     "mobileAppHint": "Tehtävänäkymä liikkeellä ollessa on jo saatavilla responsiivisesti verkossa (Omat tehtävät + tiedot kuvien lataamisella). Erillinen mobiilisovellus tulee omana projektinaan.",
     "aufgabenFilter": {
@@ -15280,7 +15420,8 @@
         "reservierungen": "Varaukset",
         "kennzahlen": "Mittarit",
         "nachrichten": "Viestit",
-        "objekte": "Kohteet"
+        "objekte": "Kohteet",
+        "aufgaben": "Tehtävät"
       }
     }
   },

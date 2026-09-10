@@ -83,3 +83,47 @@ def test_leerer_text_wird_abgewiesen() -> None:
 def test_muell_gibt_none() -> None:
     assert serverkrypto.entschluesseln("kein base64 !!!") is None
     assert serverkrypto.entschluesseln("") is None
+
+
+def test_gefaelschte_marke_gilt_nicht_als_serverseitig(monkeypatch) -> None:
+    """Die Marke `sv1:` allein beweist nichts — nur der Auth-Tag zählt.
+
+    Die erste Fassung prüfte das base64-Präfix. Ein Absender konnte damit
+    `b64encode(b"sv1:" + irgendwas)` schicken, und `nachricht_ablegen`
+    übersprang die Geräteprüfung: beliebiges `sender_key`-Material liess sich
+    unter fremdem Namen ablegen (nachgestellt 09.09.2026). Fälschen muss
+    heissen, den Serverschlüssel zu kennen.
+    """
+    monkeypatch.setenv("OWNER_CHAT_SCHLUESSEL", base64.b64encode(b"k" * 32).decode())
+    gefaelscht = base64.b64encode(b"sv1:" + b"beliebige bytes").decode()
+    assert serverkrypto.ist_serverseitig(gefaelscht) is False
+    # Die echte Nachricht wird weiterhin erkannt.
+    assert serverkrypto.ist_serverseitig(serverkrypto.verschluesseln("echt")) is True
+
+
+# --- Rueckhalt fuer OwnerChatError (09.09.2026) ------------------------------
+
+
+def test_owner_chat_fehler_wird_nicht_zum_500() -> None:
+    """Ein `OwnerChatError` ausserhalb eines try-Blocks behaelt seinen Code.
+
+    Der Verlaufsabruf entschluesselt in `_verlauf_antwort` — also NACH dem
+    try. Fehlte `OWNER_CHAT_SCHLUESSEL`, kam der 503 als 500 beim Nutzer an:
+    ein Konfigurationsmangel, der wie ein Serverfehler aussieht (Wurzel 5).
+    """
+    from fastapi.testclient import TestClient as _TC
+
+    from src.features.owner_chat.fehler import OwnerChatError
+    from src.main import create_app
+
+    app = create_app()
+
+    @app.get("/api/v1/__pruefung_owner_chat_fehler")
+    def _werfen() -> None:  # noqa: ANN202
+        raise OwnerChatError("Chat ist nicht eingerichtet.", status_code=503)
+
+    antwort = _TC(app, raise_server_exceptions=False).get(
+        "/api/v1/__pruefung_owner_chat_fehler"
+    )
+    assert antwort.status_code == 503
+    assert antwort.json()["detail"] == "Chat ist nicht eingerichtet."

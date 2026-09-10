@@ -45,7 +45,13 @@ from typing import Any
 
 from supabase import Client
 
-from .common import NUR_ANHANG_TEXT, log, ota_zeitstempel_utc
+from .common import NUR_ANHANG_TEXT, ist_frisch, log, ota_zeitstempel_utc
+
+# Wie alt darf eine Gastnachricht sein und noch läuten? Der Webhook ist in
+# Sekunden da, der Journal-Tick binnen fünf Minuten. 24 Stunden lassen einen
+# Worker-Ausfall über Nacht zu und halten den Nachhol-Lauf still, der
+# Gespräche von vor Wochen spiegelt.
+NACHRICHT_FRISCH_STUNDEN = 24
 
 # Maximale Länge des gespiegelten Textes. Dieselbe Grenze wie im Posteingang
 # (`inbox.service._spiegel_schreiben`), damit ein Text nicht je nach Eingangsweg
@@ -499,6 +505,17 @@ class NachrichtenEingangMixin:
         markiert sich ein Thread beim Antworten selbst als ungelesen (Wurzel 1:
         der Gegenzustand gehört zum Eingang, nicht zum Senden).
 
+        ZWEITE Bedingung neben `neu` ist das ALTER der Nachricht
+        (`_frische_nachricht`). `neu` heißt nur „noch nicht in unserer DB" —
+        das ist etwas anderes als „gerade passiert" (Wurzel 5b). Live gemeldet
+        am 09.09.2026: nach einem Voll-Abgleich läuteten Gespräche von vor
+        Wochen als neue Nachrichten, darunter Abreise-Dankesnachrichten
+        („wir sind gerade abgereist"). `nachrichten_nachholen` holt den
+        KOMPLETTEN Verlauf jedes Threads, und für jede noch nie gespiegelte
+        Nachricht daraus war `neu` korrekt `True` — nur war keine davon ein
+        Ereignis. Beide Bedingungen zusammen trennen „neu für uns" von „neu
+        für den Gast".
+
         `neu=False` heißt: DIESE Nachricht lag schon im Spiegel, wir sehen sie
         nur wieder. Dann bleibt `is_read` unberührt — und das ist der Kern des
         Ganzen (Wurzel 2): der Journal-Tick spiegelt bewusst bei JEDEM Lauf alle
@@ -524,7 +541,7 @@ class NachrichtenEingangMixin:
                 .or_(f"last_message_at.is.null,last_message_at.lt.{sent_at}")
                 .execute()
             )
-            if sender == "guest" and neu:
+            if sender == "guest" and neu and _frische_nachricht(sent_at):
                 (
                     self._db.table("channex_booking")
                     .update({"is_read": False})
@@ -609,3 +626,31 @@ class NachrichtenEingangMixin:
                 thread_id=thread_id, error=str(exc)[:200],
             )
             return (None, None)
+
+
+def _frische_nachricht(sent_at: str) -> bool:
+    """Ist diese Gastnachricht gerade eingetroffen — oder Altbestand?
+
+    Gemessen am Zeitstempel DES PORTALS (`sent_at`, aus `inserted_at`; siehe
+    Modul-Docstring: der Wert beschreibt belegt den Zeitpunkt beim Portal, nicht
+    unseren Eingang). Nie an unserer Uhr (Wurzel 5b).
+
+    WARUM ES DIESE PRUEFUNG BRAUCHT: `nachrichten_nachholen` holt bei jedem
+    Voll-Abgleich den KOMPLETTEN Verlauf jedes Threads. Jede darin noch nie
+    gespiegelte Nachricht ist „neu" im Sinne der DB — auch die drei Wochen alte
+    Abreise-Nachricht. Ohne diese zweite Bedingung laeutete sie als neue
+    Gastnachricht und setzte den Thread auf ungelesen, mit `created_at = jetzt`
+    in der Glocke. Live gemeldet am 09.09.2026.
+
+    FAIL-CLOSED (Wurzel 5): Nur ein klares „ja, frisch" laeutet. Ist der
+    Zeitstempel unlesbar, fehlt er oder liegt er in der Zukunft (`ist_frisch`
+    gibt dann `None`), gilt `False` — keine Glocke. Die Nachricht wird trotzdem
+    gespiegelt und ist im Posteingang sichtbar; nur das Laeuten entfaellt. Ein
+    nicht gesetzter Ungelesen-Zustand ist der harmlosere Ausgang (dieselbe
+    Vorgabe wie in `_nachricht_unbekannt`).
+
+    Die Fail-Richtung steht bewusst HIER und nicht im Helfer — sie ist an den
+    drei Aufrufstellen des Frische-Fensters eine andere (siehe
+    `common.ist_frisch`).
+    """
+    return ist_frisch(sent_at, stunden=NACHRICHT_FRISCH_STUNDEN) is True

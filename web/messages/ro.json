@@ -2747,7 +2747,8 @@
       "tradespeople": "Meșteșugari",
       "marketing": "Marketing",
       "housebook": "Ghid al casei",
-      "listing": "Comercializare"
+      "listing": "Comercializare",
+      "inventory": "Inventar"
     },
     "objectInfo": {
       "capacityPersons": "Capacitate (persoane)",
@@ -2898,7 +2899,130 @@
       "helaarsbolig": "Reședință permanentă",
       "fritidshus": "Casă de vacanță"
     },
-    "print": "Imprimare"
+    "print": "Imprimare",
+    "mappe": {
+      "gastTitel": "Dosar oaspeți — Documente",
+      "hausTitel": "Dosar casă — Documente (intern)",
+      "titel": "Dosar digital",
+      "erklaerung": "Încărcați PDF — informațiile din acesta vor fi citite și propuse spre confirmare. Documentul rămâne aici, pentru consultare.",
+      "hochladen": "Încărcați PDF",
+      "liest": "Se citește …",
+      "laedt": "Se încarcă …",
+      "leer": "Încă nu există niciun document în acest dosar.",
+      "zuGross": "Fișierul este prea mare (max. {mb} MB).",
+      "seiten": "{count, plural, one {# pagină} other {# pagini}}",
+      "ansehen": "Vizualizați {name} mare",
+      "loeschen": "Eliminați {name}",
+      "loeschenFrage": "Eliminați „{name}” din dosar? Informațiile deja preluate vor fi păstrate.",
+      "gefunden": "{count, plural, one {# informație găsită} other {# informații găsite}}",
+      "gefundenHinweis": "Nimic din acestea nu este salvat. Verificați, modificați dacă este necesar, apoi preluați — codul de acces și parolele nu sunt preselectate în mod intenționat.",
+      "nichtsGefunden": "Acest document nu conținea nimic care să se potrivească într-un câmp al dosarului. Cu toate acestea, rămâne în dosar.",
+      "heikel": "Vă rugăm să verificați cu atenție",
+      "fundstelle": "În document: {ort}",
+      "sprachfassung": "Versiune lingvistică",
+      "ueberschreiben": "Înlocuiți și câmpurile deja completate",
+      "ausgewaehlt": "{count} din {gesamt} selectate",
+      "verwerfen": "Renunțați",
+      "uebernehmen": "Preluare",
+      "uebernimmt": "Se preia …",
+      "schliessen": "Închideți",
+      "gesetzt": "{count, plural, =0 {Nimic preluat} one {# câmp preluat} other {# câmpuri preluate}}",
+      "uebersprungen": "Deja completat și, prin urmare, neschimbat: {felder}",
+      "stand": {
+        "offen": "necitit",
+        "gelesen": "citit",
+        "uebernommen": "preluat",
+        "ohne_treffer": "nimic găsit",
+        "fehler": "citire eșuată"
+      },
+      "sicher": {
+        "hoch": "lizibil",
+        "mittel": "lizibilitate limitată",
+        "niedrig": "greu de citit"
+      },
+      "sprache": {
+        "de": "Germană",
+        "en": "Engleză",
+        "da": "Daneză"
+      }
+    },
+    "inventar": {
+      "abschnitt": "Inventar",
+      "titel": "Listă de inventar",
+      "erklaerung": "Ce se află în casă, pe camere. Separat stocul teoretic de cel real — diferența reprezintă rezultatul inventarului. Poate fi extins oricând.",
+      "laedt": "Se încarcă …",
+      "leer": "Încă nu a fost înregistrat nimic. Adăugați rânduri manual sau preluați-le dintr-un PDF al dosarului.",
+      "neuName": "Obiect",
+      "neuSoll": "Stoc teoretic",
+      "hinzufuegen": "Adăugați",
+      "raeume": "Camere",
+      "keineRaeume": "încă niciuna",
+      "raumName": "Numele camerei",
+      "raumHinzufuegen": "Adăugați cameră",
+      "ohneRaum": "Fără cameră",
+      "speichern": "Salvați",
+      "istMenge": "Cantitate existentă",
+      "vonSoll": "din {soll}",
+      "geprueft": "Marcați ca verificat",
+      "loeschen": "Eliminați",
+      "loeschenFrage": "Eliminați „{name}” din listă? Daunele raportate rămân.",
+      "ausDokument": "din PDF",
+      "ausDokumentHint": "Acest rând provine dintr-un document al dosarului digital.",
+      "schadenMelden": "Raportați o daună",
+      "schadenAn": "Daună la „{name}”",
+      "art": "Ce s-a întâmplat?",
+      "traeger": "Cine suportă costurile?",
+      "werZahlt": "Cine plătește?",
+      "beschreibung": "Descriere",
+      "fotoWaehlen": "Faceți sau alegeți o fotografie",
+      "fotoPflicht": "Fără fotografie nu există raport — în caz de litigiu, imaginea este adesea singurul lucru care contează.",
+      "fotosGewaehlt": "{count, plural, one {# imagine selectată} other {# imagini selectate}}",
+      "melden": "Raportați o daună",
+      "meldet": "Se raportează …",
+      "abbrechen": "Anulați",
+      "offeneSchaeden": "{count, plural, one {# daună} other {# daune}}",
+      "offeneSchaedenTitel": "{count, plural, one {# daună deschisă} other {# daune deschise}}",
+      "bild": "Imagine {nr}",
+      "betrag": "Sumă",
+      "bestaetigen": "Confirmați",
+      "verwerfen": "Renunțați",
+      "verwerfenFrage": "Renunțați la dauna la „{name}”? Aceasta nu a fost o daună.",
+      "artWert": {
+        "beschaedigt": "Deteriorat",
+        "fehlt": "Lipsă",
+        "entsorgt": "Aruncat"
+      },
+      "traegerWert": {
+        "offen": "În așteptare",
+        "eigentuemer": "Proprietar",
+        "gast": "Oaspete",
+        "betrieb": "Operațiune"
+      },
+      "pdfImport": "Listă din PDF",
+      "pdfLiest": "Se citește …",
+      "pdfLeer": "Nu a fost detectată nicio listă de inventar în acest PDF.",
+      "pdfGefunden": "{count, plural, one {# rând găsit} other {# rânduri găsite}}",
+      "pdfHinweis": "Niciuna dintre acestea nu este salvată. Verificați, modificați dacă este necesar, apoi preluați. Camerele sunt alocate doar dacă există deja.",
+      "uebernimmt": "Se preia …",
+      "uebernehmen": "Preluare",
+      "zustand": "Stare",
+      "rhythmus": "Ritm de numărare",
+      "meldebestandKurz": "Stoc de raportare {n}",
+      "referenzSetzen": "Încărcați imaginea stării intacte",
+      "referenzAnsehen": "Vizualizați imaginea stării intacte",
+      "zustandWert": {
+        "neu": "nou",
+        "gut": "bună",
+        "abgenutzt": "uzată",
+        "ersatz_faellig": "necesită înlocuire"
+      },
+      "rhythmusWert": {
+        "jede_abreise": "la fiecare plecare",
+        "quartal": "trimestrial",
+        "jaehrlich": "anual",
+        "nie": "nu se numără"
+      }
+    }
   },
   "finance": {
     "cancelInvoice": {
@@ -5285,7 +5409,23 @@
       "ownerRequestsLift": "Solicitări de deblocare",
       "ownerRequestsTermination": "Încetări de contract anunțate",
       "ownerRequestsNone": "Nicio acțiune deschisă.",
-      "ownerRequestsOldest": "Cea mai veche solicitare deschisă: {count, plural, =0 {astăzi} one {de o zi} other {de # zile}}"
+      "ownerRequestsOldest": "Cea mai veche solicitare deschisă: {count, plural, =0 {astăzi} one {de o zi} other {de # zile}}",
+      "teamTasks": "Sarcini de echipă",
+      "teamTasksExplain": "Ce are echipa de rezolvat în prezent: sarcini restante și scadente astăzi, sarcini fără responsabili și cele care așteaptă aprobarea. O situație actuală, nu o perioadă de timp – deschis înseamnă deschis, iar mai vechi înseamnă mai urgent.",
+      "teamTasksLabel": "restant sau scadent astăzi",
+      "teamTasksOldest": "Cea mai veche sarcină restantă: de {count} zile",
+      "teamTasksOverdue": "Restant",
+      "teamTasksToday": "Scadent astăzi",
+      "teamTasksUnassigned": "Fără responsabil",
+      "teamTasksToReview": "Așteaptă aprobare",
+      "teamTasksOpen": "Total deschise",
+      "wechsel": "Schimbare",
+      "wechselHint": "Plecarea și sosirea în aceeași zi în aceeași unitate – curățenia trebuie făcută între două ocupări.",
+      "wechselUnklar": "Schimbare neclară",
+      "wechselUnklarHint": "În aceeași zi, cineva sosește în aceeași proprietate, dar unitatea uneia dintre cele două rezervări nu este specificată – nu se poate spune dacă este necesară o schimbare.",
+      "teamTasksUrgencyUnknown": "scadent sau scadent astăzi — momentan indisponibil",
+      "listingsActive": "Activ",
+      "listingsActiveLabel": "De vânzare"
     },
     "mobileAppHint": "Vizualizarea sarcinilor pentru deplasări este deja disponibilă responsiv pe web (Sarcinile mele + detalii cu încărcare de fotografii). O aplicație mobilă separată va urma ca proiect propriu.",
     "aufgabenFilter": {
@@ -15280,7 +15420,8 @@
         "reservierungen": "Rezervări",
         "kennzahlen": "Indicatori cheie",
         "nachrichten": "Mesaje",
-        "objekte": "Proprietăți"
+        "objekte": "Proprietăți",
+        "aufgaben": "Sarcini"
       }
     }
   },

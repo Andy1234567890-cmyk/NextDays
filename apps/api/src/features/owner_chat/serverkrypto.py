@@ -118,11 +118,21 @@ def entschluesseln(gespeichert: str) -> str | None:
 
 
 def ist_serverseitig(gespeichert: str) -> bool:
-    """Trägt dieser Eintrag die Marke des Serververfahrens?"""
-    try:
-        return base64.b64decode(gespeichert, validate=True).startswith(MARKE)
-    except (ValueError, TypeError):
-        return False
+    """Hat DIESER Server diesen Eintrag erzeugt? Authentifiziert geprüft.
+
+    Die Marke `sv1:` allein beweist NICHTS: sie steht im base64, das der
+    Client schickt, und lässt sich in einer Zeile fälschen
+    (`b64encode(b"sv1:" + irgendwas)`). Die erste Fassung prüfte genau das —
+    ein Absender konnte damit die Geräteprüfung in `nachricht_ablegen`
+    überspringen und beliebiges `sender_key`-Material unter fremdem Namen
+    ablegen. Genau die Fälschungs-Hintertür, die `_absender_schluessel_pruefen`
+    verhindern soll (nachgestellt 09.09.2026).
+
+    Beweiskräftig ist allein der GCM-Auth-Tag: entschlüsselt der Serverschlüssel
+    den Eintrag, dann hat dieser Server ihn geschrieben. Fälschen hiesse den
+    Schlüssel zu kennen.
+    """
+    return entschluesseln(gespeichert) is not None
 
 
 def ablage_inhalt(text: str, chiffre: str) -> str:

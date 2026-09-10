@@ -101,6 +101,15 @@ def melde_angebots_antwort(
                 property_id=property_id,
                 ziel_pfad="/reservierungen/angebote",
                 dedup_key=f"angebot:{antwort}:{offer_id}",
+                # EINMALIG (0617): Ein Gast antwortet auf ein Angebot genau
+                # einmal — angenommen oder abgelehnt, danach ist das Angebot
+                # verbraucht. Der Schluessel traegt Angebot UND Antwort, eine
+                # SPAETERE andere Antwort hat also ihren eigenen Riegel.
+                # Vorher hielt der Riegel nur bis zum Lesen: eine
+                # Webhook-Wiederholung derselben Zusage legte danach eine
+                # zweite Glockenzeile an und schickte die Mail erneut an die
+                # ganze Leitung.
+                einmalig=True,
             )
         log.info(
             "angebot_antwort_gemeldet",

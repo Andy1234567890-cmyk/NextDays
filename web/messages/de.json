@@ -2747,6 +2747,7 @@
       "tradespeople": "Handwerker",
       "marketing": "Marketing",
       "housebook": "Hausmappe",
+      "inventory": "Inventar",
       "listing": "Vermarktung"
     },
     "objectInfo": {
@@ -2898,7 +2899,130 @@
       "helaarsbolig": "Helårsbolig (Ganzjahreswohnung)",
       "fritidshus": "Fritidshus (Ferienhaus)"
     },
-    "print": "Drucken"
+    "print": "Drucken",
+    "mappe": {
+      "gastTitel": "Gästemappe — Dokumente",
+      "hausTitel": "Hausmappe — Dokumente (intern)",
+      "titel": "Digitale Mappe",
+      "erklaerung": "PDF hochladen — die Angaben darin werden gelesen und zur Bestätigung vorgeschlagen. Das Dokument bleibt hier liegen, zum Nachlesen.",
+      "hochladen": "PDF hochladen",
+      "liest": "Wird gelesen …",
+      "laedt": "Wird geladen …",
+      "leer": "Noch kein Dokument in dieser Mappe.",
+      "zuGross": "Die Datei ist zu groß (max. {mb} MB).",
+      "seiten": "{count, plural, one {# Seite} other {# Seiten}}",
+      "ansehen": "{name} groß ansehen",
+      "loeschen": "{name} entfernen",
+      "loeschenFrage": "„{name}“ aus der Mappe entfernen? Bereits übernommene Angaben bleiben erhalten.",
+      "gefunden": "{count, plural, one {# Angabe gefunden} other {# Angaben gefunden}}",
+      "gefundenHinweis": "Nichts davon ist gespeichert. Prüfen, bei Bedarf ändern, dann übernehmen — Türcode und Passwörter sind bewusst nicht vorausgewählt.",
+      "nichtsGefunden": "In diesem Dokument stand nichts, was in ein Mappenfeld passt. Es bleibt trotzdem in der Mappe liegen.",
+      "heikel": "Bitte genau prüfen",
+      "fundstelle": "Im Dokument: {ort}",
+      "sprachfassung": "Sprachfassung",
+      "ueberschreiben": "Auch bereits gepflegte Felder ersetzen",
+      "ausgewaehlt": "{count} von {gesamt} ausgewählt",
+      "verwerfen": "Verwerfen",
+      "uebernehmen": "Übernehmen",
+      "uebernimmt": "Wird übernommen …",
+      "schliessen": "Schließen",
+      "gesetzt": "{count, plural, =0 {Nichts übernommen} one {# Feld übernommen} other {# Felder übernommen}}",
+      "uebersprungen": "Schon gepflegt und deshalb unverändert: {felder}",
+      "stand": {
+        "offen": "noch nicht gelesen",
+        "gelesen": "gelesen",
+        "uebernommen": "übernommen",
+        "ohne_treffer": "nichts gefunden",
+        "fehler": "Lesen fehlgeschlagen"
+      },
+      "sicher": {
+        "hoch": "gut lesbar",
+        "mittel": "eingeschränkt lesbar",
+        "niedrig": "schwer lesbar"
+      },
+      "sprache": {
+        "de": "Deutsch",
+        "en": "Englisch",
+        "da": "Dänisch"
+      }
+    },
+    "inventar": {
+      "abschnitt": "Inventar",
+      "titel": "Inventarliste",
+      "erklaerung": "Was im Haus steht, nach Räumen. Soll und Ist getrennt — die Differenz ist die Aussage der Inventur. Jederzeit erweiterbar.",
+      "laedt": "Wird geladen …",
+      "leer": "Noch nichts erfasst. Zeilen von Hand ergänzen oder aus einem PDF der Mappe übernehmen.",
+      "neuName": "Gegenstand",
+      "neuSoll": "Soll",
+      "hinzufuegen": "Hinzufügen",
+      "raeume": "Räume",
+      "keineRaeume": "noch keine",
+      "raumName": "Raumname",
+      "raumHinzufuegen": "Raum hinzufügen",
+      "ohneRaum": "Ohne Raum",
+      "speichern": "Speichern",
+      "istMenge": "Vorhandene Menge",
+      "vonSoll": "von {soll}",
+      "geprueft": "Als geprüft markieren",
+      "loeschen": "Entfernen",
+      "loeschenFrage": "„{name}“ aus der Liste entfernen? Gemeldete Schäden bleiben erhalten.",
+      "ausDokument": "aus PDF",
+      "ausDokumentHint": "Diese Zeile stammt aus einem Dokument der digitalen Mappe.",
+      "schadenMelden": "Schaden melden",
+      "schadenAn": "Schaden an „{name}“",
+      "art": "Was ist los?",
+      "traeger": "Wer trägt die Kosten?",
+      "werZahlt": "Wer zahlt?",
+      "beschreibung": "Beschreibung",
+      "fotoWaehlen": "Foto aufnehmen oder wählen",
+      "fotoPflicht": "Ohne Foto keine Meldung — im Streitfall ist das Bild oft das Einzige, was zählt.",
+      "fotosGewaehlt": "{count, plural, one {# Bild ausgewählt} other {# Bilder ausgewählt}}",
+      "melden": "Schaden melden",
+      "meldet": "Wird gemeldet …",
+      "abbrechen": "Abbrechen",
+      "offeneSchaeden": "{count, plural, one {# Schaden} other {# Schäden}}",
+      "offeneSchaedenTitel": "{count, plural, one {# offener Schaden} other {# offene Schäden}}",
+      "bild": "Bild {nr}",
+      "betrag": "Betrag",
+      "bestaetigen": "Bestätigen",
+      "verwerfen": "Verwerfen",
+      "verwerfenFrage": "Schaden an „{name}“ verwerfen? Das ist kein Schaden gewesen.",
+      "pdfImport": "Liste aus PDF",
+      "pdfLiest": "Wird gelesen …",
+      "pdfLeer": "In diesem PDF war keine Inventarliste zu erkennen.",
+      "pdfGefunden": "{count, plural, one {# Zeile gefunden} other {# Zeilen gefunden}}",
+      "pdfHinweis": "Nichts davon ist gespeichert. Prüfen, bei Bedarf ändern, dann übernehmen. Räume werden nur zugeordnet, wenn es sie schon gibt.",
+      "uebernimmt": "Wird übernommen …",
+      "uebernehmen": "Übernehmen",
+      "artWert": {
+        "beschaedigt": "Beschädigt",
+        "fehlt": "Fehlt",
+        "entsorgt": "Entsorgt"
+      },
+      "traegerWert": {
+        "offen": "Noch offen",
+        "eigentuemer": "Eigentümer",
+        "gast": "Gast",
+        "betrieb": "Betrieb"
+      },
+      "zustand": "Zustand",
+      "rhythmus": "Zählrhythmus",
+      "meldebestandKurz": "Meldebestand {n}",
+      "referenzSetzen": "Bild des intakten Zustands hinterlegen",
+      "referenzAnsehen": "Bild des intakten Zustands ansehen",
+      "zustandWert": {
+        "neu": "neu",
+        "gut": "gut",
+        "abgenutzt": "abgenutzt",
+        "ersatz_faellig": "Ersatz fällig"
+      },
+      "rhythmusWert": {
+        "jede_abreise": "bei jeder Abreise",
+        "quartal": "vierteljährlich",
+        "jaehrlich": "jährlich",
+        "nie": "nicht zählen"
+      }
+    }
   },
   "finance": {
     "cancelInvoice": {
@@ -5306,7 +5430,23 @@
       },
       "rowOpenCalendar": "Im Kalender öffnen",
       "rowOpenBooking": "Buchung öffnen",
-      "rowOpenInbox": "Verlauf im Posteingang öffnen"
+      "rowOpenInbox": "Verlauf im Posteingang öffnen",
+      "teamTasks": "Teamaufgaben",
+      "teamTasksExplain": "Was das Team gerade abzuarbeiten hat: überfällige und heute fällige Aufgaben, Aufgaben ohne Zuständige und solche, die auf die Abnahme warten. Ein Ist-Stand, kein Zeitraum — offen ist offen, und älter heißt dringender.",
+      "teamTasksLabel": "überfällig oder heute fällig",
+      "teamTasksUrgencyUnknown": "überfällig oder heute fällig — gerade nicht abrufbar",
+      "teamTasksOldest": "Älteste überfällige Aufgabe: seit {count} Tagen",
+      "teamTasksOverdue": "Überfällig",
+      "teamTasksToday": "Heute fällig",
+      "teamTasksUnassigned": "Ohne Zuständige",
+      "teamTasksToReview": "Wartet auf Abnahme",
+      "teamTasksOpen": "Offen insgesamt",
+      "wechsel": "Wechsel",
+      "wechselHint": "Abreise und Anreise am selben Tag in derselben Einheit — die Reinigung muss zwischen zwei Belegungen drehen.",
+      "wechselUnklar": "Wechsel unklar",
+      "wechselUnklarHint": "Am selben Tag reist im selben Objekt jemand an, aber die Einheit einer der beiden Buchungen ist nicht hinterlegt — ob wirklich gedreht werden muss, lässt sich daraus nicht sagen.",
+      "listingsActive": "Aktiv",
+      "listingsActiveLabel": "Im Verkauf"
     },
     "mobileAppHint": "Die Aufgaben-Sicht für unterwegs ist bereits responsiv im Web verfügbar (Meine Aufgaben + Detail mit Foto-Upload). Eine separate mobile App folgt als eigener Auftrag.",
     "aufgabenFilter": {
@@ -15299,6 +15439,7 @@
       "rollenStandardEntfernt": "Standard für {rolle} entfernt.",
       "bereich": {
         "reservierungen": "Reservierungen",
+        "aufgaben": "Aufgaben",
         "kennzahlen": "Kennzahlen",
         "nachrichten": "Nachrichten",
         "objekte": "Objekte"

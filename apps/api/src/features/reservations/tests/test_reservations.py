@@ -1,5 +1,6 @@
 """Tests für den reservations-Slice (Anlegen + Double-Booking-Schutz)."""
 from datetime import UTC, date, datetime, timedelta
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
@@ -712,38 +713,145 @@ def test_dashboard_umsatz_je_buchung_folgt_der_betrags_maskierung() -> None:
     assert out.revenue_per_booking_30d is None
 
 
-def test_dashboard_objekte_zaehlt_je_status_und_im_owner_scope() -> None:
-    """Die Objekt-Zahlen entstehen als drei gefilterte Zählungen, nicht als
-    eine Gesamtzahl, aus der die Oberfläche schätzt — und der Owner-Scope
-    (§4.2) hängt an jeder von ihnen, sonst zeigte die Karte einem Eigentümer
-    den Bestand des ganzen Betriebs.
+class _FilterQuery:
+    """Fake-DB, die WIRKLICH filtert — damit der Test Zahlen prüfen kann.
+
+    Der Vorgänger spionierte nur die Filternamen (`== ["inactive", "draft"]`)
+    und lief gegen eine leere Zeilenliste. Er prüfte damit KEINE einzige Zahl
+    und hätte den Fehler vom 09.09.2026 nicht gesehen: ein archiviertes Objekt
+    zählte als „Entwurf" mit, das Dashboard zeigte 21 und die Objektliste 20.
+    Zusätzlich schrieb er die drei Kacheln fest — eine vierte Zahl machte ihn
+    rot, obwohl genau sie fehlte.
     """
-    status_filter: list[tuple] = []
-    scopes: list[tuple] = []
 
-    class _Spion(_KettenQuery):
-        def eq(self, feld: str, wert: str) -> "_Spion":
-            if feld == "status":
-                status_filter.append((feld, wert))
-            return self
+    def __init__(self, rows: list[dict]) -> None:
+        self._rows = rows
+        self._count = False
 
-        def in_(self, feld: str, werte: list) -> "_Spion":  # noqa: ANN001
-            scopes.append((feld, list(werte)))
-            return self
+    def select(self, *_a, **kw) -> "_FilterQuery":  # noqa: ANN002, ANN003
+        self._count = kw.get("count") == "exact"
+        return self
 
+    def eq(self, feld: str, wert: object) -> "_FilterQuery":
+        naechste = _FilterQuery([r for r in self._rows if r.get(feld) == wert])
+        naechste._count = self._count  # noqa: SLF001
+        return naechste
+
+    def is_(self, feld: str, wert: str) -> "_FilterQuery":
+        if wert != "null":
+            raise AssertionError(f"unerwartetes is_({feld}, {wert})")
+        naechste = _FilterQuery([r for r in self._rows if r.get(feld) is None])
+        naechste._count = self._count  # noqa: SLF001
+        return naechste
+
+    def in_(self, feld: str, werte: list) -> "_FilterQuery":  # noqa: ANN001
+        naechste = _FilterQuery([r for r in self._rows if r.get(feld) in werte])
+        naechste._count = self._count  # noqa: SLF001
+        return naechste
+
+    def limit(self, _n: int) -> "_FilterQuery":
+        return self
+
+    def execute(self):  # noqa: ANN201
+        return SimpleNamespace(
+            data=self._rows, count=len(self._rows) if self._count else None
+        )
+
+
+def _objekt_db(objekte: list[dict], pausen: list[dict] | None = None) -> MagicMock:
     db = MagicMock(name="supabase")
-    db.table.side_effect = lambda name: MagicMock(
-        **{"select.return_value": _Spion([]) if name == "properties"
-           else _KettenQuery([])}
+    db.table.side_effect = lambda name: (
+        _FilterQuery(objekte)
+        if name == "properties"
+        else _FilterQuery(pausen or [])
+        if name == "property_sales_pause"
+        else _KettenQuery([])
     )
-    svc = ReservationsService(service_client=db)
-    zahlen = svc._dashboard_objekte("t1", ["p1", "p2"])  # noqa: SLF001
+    return db
 
-    # Gesamt ohne Status-Filter, dazu genau die zwei Status-Zählungen.
-    assert [wert for _, wert in status_filter] == ["inactive", "draft"]
-    # Owner-Scope auf ALLEN drei Zählungen, nicht nur auf der ersten.
-    assert scopes == [("id", ["p1", "p2"])] * 3
-    assert set(zahlen) == {"objekte_gesamt", "objekte_inaktiv", "objekte_entwurf"}
+
+def _obj(pid: str, status: str, archiviert: bool = False) -> dict:
+    return {
+        "id": pid,
+        "tenant_id": "t1",
+        "status": status,
+        "archived_at": "2026-08-21T14:11:12Z" if archiviert else None,
+    }
+
+
+def test_dashboard_objekte_zaehlt_echte_zahlen() -> None:
+    """Vier Zahlen, und jede muss stimmen — nicht nur der Filtername."""
+    zahlen = ReservationsService(
+        service_client=_objekt_db(
+            [_obj("p1", "active"), _obj("p2", "active"), _obj("p3", "draft"),
+             _obj("p4", "inactive")]
+        )
+    )._dashboard_objekte("t1", None)  # noqa: SLF001
+    assert zahlen == {
+        "objekte_gesamt": 4,
+        "objekte_aktiv": 2,
+        "objekte_inaktiv": 1,
+        "objekte_entwurf": 1,
+    }
+
+
+def test_dashboard_objekte_ohne_archivierte() -> None:
+    """Der Fehler, den der Nutzer live sah (09.09.2026).
+
+    „Fewo-Mosbjerg-Sindal" war nach Kündigung archiviert und stand als
+    `status='draft'` in der Tabelle. Das Dashboard zählte sie mit: „Gesamt 21,
+    Entwurf 1", während die Objektliste daneben 20 zeigte und es keinen
+    einzigen echten Entwurf gab.
+    """
+    zahlen = ReservationsService(
+        service_client=_objekt_db(
+            [_obj("p1", "active"), _obj("p2", "active"),
+             _obj("p3", "draft", archiviert=True)]
+        )
+    )._dashboard_objekte("t1", None)  # noqa: SLF001
+    assert zahlen["objekte_gesamt"] == 2, "archiviertes Objekt mitgezählt"
+    assert zahlen["objekte_entwurf"] == 0, "archiviertes Objekt als Entwurf"
+    assert zahlen["objekte_aktiv"] == 2
+
+
+def test_dashboard_objekte_zieht_offene_verkaufspause_ab() -> None:
+    """`status='active'` heißt nicht „verkauft gerade".
+
+    „Verkauf pausieren" (0375) setzt den Status nur dann mit auf `inactive`,
+    wenn KEIN Portal fehlgeschlagen ist (`objekt_verkauf.py:131`). Bleibt eins
+    hängen, steht das Objekt auf `active` und verkauft trotzdem nichts.
+    """
+    zahlen = ReservationsService(
+        service_client=_objekt_db(
+            [_obj("p1", "active"), _obj("p2", "active")],
+            # Zwei Zeilen für DASSELBE Objekt: die Tabelle trägt eine je Portal.
+            pausen=[
+                {"property_id": "p2", "tenant_id": "t1", "beendet_at": None},
+                {"property_id": "p2", "tenant_id": "t1", "beendet_at": None},
+            ],
+        )
+    )._dashboard_objekte("t1", None)  # noqa: SLF001
+    assert zahlen["objekte_aktiv"] == 1
+    # Beendete Pausen zählen nicht.
+    zahlen2 = ReservationsService(
+        service_client=_objekt_db(
+            [_obj("p1", "active")],
+            pausen=[{"property_id": "p1", "tenant_id": "t1",
+                     "beendet_at": "2026-09-06T00:00:00Z"}],
+        )
+    )._dashboard_objekte("t1", None)  # noqa: SLF001
+    assert zahlen2["objekte_aktiv"] == 1
+
+
+def test_dashboard_objekte_im_owner_scope() -> None:
+    """§4.2: Ein Eigentümer sieht die Zahl SEINER Objekte, nie die des Betriebs."""
+    zahlen = ReservationsService(
+        service_client=_objekt_db(
+            [_obj("p1", "active"), _obj("p2", "active"), _obj("p3", "active")]
+        )
+    )._dashboard_objekte("t1", ["p1"])  # noqa: SLF001
+    assert zahlen["objekte_gesamt"] == 1
+    assert zahlen["objekte_aktiv"] == 1
 
 
 def test_dashboard_kpi_gleiche_zahl_wie_die_startseite() -> None:

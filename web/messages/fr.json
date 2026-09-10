@@ -2747,7 +2747,8 @@
       "tradespeople": "Artisans",
       "marketing": "Marketing",
       "housebook": "Livret d'accueil",
-      "listing": "Mise en marché"
+      "listing": "Mise en marché",
+      "inventory": "Inventaire"
     },
     "objectInfo": {
       "capacityPersons": "Capacité (personnes)",
@@ -2898,7 +2899,130 @@
       "helaarsbolig": "Résidence principale",
       "fritidshus": "Maison de vacances"
     },
-    "print": "Imprimer"
+    "print": "Imprimer",
+    "mappe": {
+      "gastTitel": "Dossier invité — Documents",
+      "hausTitel": "Dossier maison — Documents (interne)",
+      "titel": "Dossier numérique",
+      "erklaerung": "Télécharger un PDF — les informations qu'il contient seront lues et proposées pour confirmation. Le document restera ici pour consultation.",
+      "hochladen": "Télécharger un PDF",
+      "liest": "Lecture en cours…",
+      "laedt": "Chargement en cours…",
+      "leer": "Aucun document dans ce dossier.",
+      "zuGross": "Le fichier est trop volumineux (max. {mb} Mo).",
+      "seiten": "{count, plural, one {# page} other {# pages}}",
+      "ansehen": "Afficher {name} en grand",
+      "loeschen": "Supprimer {name}",
+      "loeschenFrage": "Supprimer « {name} » du dossier ? Les informations déjà reprises seront conservées.",
+      "gefunden": "{count, plural, one {# information trouvée} other {# informations trouvées}}",
+      "gefundenHinweis": "Rien de tout cela n'est enregistré. Vérifiez, modifiez si nécessaire, puis reprenez — le code de la porte et les mots de passe ne sont délibérément pas présélectionnés.",
+      "nichtsGefunden": "Ce document ne contenait aucune information pouvant être insérée dans un champ du dossier. Il reste néanmoins dans le dossier.",
+      "heikel": "Veuillez vérifier attentivement",
+      "fundstelle": "Dans le document : {ort}",
+      "sprachfassung": "Version linguistique",
+      "ueberschreiben": "Remplacer également les champs déjà renseignés",
+      "ausgewaehlt": "{count} sur {gesamt} sélectionnés",
+      "verwerfen": "Annuler",
+      "uebernehmen": "Reprendre",
+      "uebernimmt": "Reprise en cours…",
+      "schliessen": "Fermer",
+      "gesetzt": "{count, plural, =0 {Rien de repris} one {# champ repris} other {# champs repris}}",
+      "uebersprungen": "Déjà renseigné et donc inchangé : {felder}",
+      "stand": {
+        "offen": "non lu",
+        "gelesen": "lu",
+        "uebernommen": "accepté",
+        "ohne_treffer": "rien trouvé",
+        "fehler": "échec de la lecture"
+      },
+      "sicher": {
+        "hoch": "lisible",
+        "mittel": "lisibilité limitée",
+        "niedrig": "difficile à lire"
+      },
+      "sprache": {
+        "de": "Allemand",
+        "en": "Anglais",
+        "da": "Danois"
+      }
+    },
+    "inventar": {
+      "abschnitt": "Inventaire",
+      "titel": "Liste d'inventaire",
+      "erklaerung": "Ce qui se trouve dans la maison, par pièce. Les valeurs théoriques et réelles sont séparées — la différence est le résultat de l'inventaire. Extensible à tout moment.",
+      "laedt": "Chargement en cours…",
+      "leer": "Rien n'a encore été enregistré. Ajoutez des lignes manuellement ou importez-les depuis un PDF du dossier.",
+      "neuName": "Objet",
+      "neuSoll": "Théorique",
+      "hinzufuegen": "Ajouter",
+      "raeume": "Pièces",
+      "keineRaeume": "aucune",
+      "raumName": "Nom de la pièce",
+      "raumHinzufuegen": "Ajouter une pièce",
+      "ohneRaum": "Sans pièce",
+      "speichern": "Enregistrer",
+      "istMenge": "Quantité disponible",
+      "vonSoll": "sur {soll}",
+      "geprueft": "Marquer comme vérifié",
+      "loeschen": "Supprimer",
+      "loeschenFrage": "Supprimer « {name} » de la liste ? Les dommages signalés seront conservés.",
+      "ausDokument": "depuis PDF",
+      "ausDokumentHint": "Cette ligne provient d'un document du dossier numérique.",
+      "schadenMelden": "Signaler un dommage",
+      "schadenAn": "Dommage sur « {name} »",
+      "art": "Que se passe-t-il ?",
+      "traeger": "Qui prend en charge les coûts ?",
+      "werZahlt": "Qui paie ?",
+      "beschreibung": "Description",
+      "fotoWaehlen": "Prendre ou choisir une photo",
+      "fotoPflicht": "Pas de signalement sans photo — en cas de litige, l'image est souvent la seule chose qui compte.",
+      "fotosGewaehlt": "{count, plural, one {# image sélectionnée} other {# images sélectionnées}}",
+      "melden": "Signaler un dommage",
+      "meldet": "Signalement en cours…",
+      "abbrechen": "Annuler",
+      "offeneSchaeden": "{count, plural, one {# dommage} other {# dommages}}",
+      "offeneSchaedenTitel": "{count, plural, one {# dommage ouvert} other {# dommages ouverts}}",
+      "bild": "Image {nr}",
+      "betrag": "Montant",
+      "bestaetigen": "Confirmer",
+      "verwerfen": "Rejeter",
+      "verwerfenFrage": "Rejeter le dommage sur « {name} » ? Ce n'était pas un dommage.",
+      "artWert": {
+        "beschaedigt": "Endommagé",
+        "fehlt": "Manquant",
+        "entsorgt": "Éliminé"
+      },
+      "traegerWert": {
+        "offen": "En attente",
+        "eigentuemer": "Propriétaire",
+        "gast": "Client",
+        "betrieb": "Exploitation"
+      },
+      "pdfImport": "Liste depuis PDF",
+      "pdfLiest": "Lecture en cours…",
+      "pdfLeer": "Aucune liste d'inventaire n'a été trouvée dans ce PDF.",
+      "pdfGefunden": "{count, plural, one {# ligne trouvée} other {# lignes trouvées}}",
+      "pdfHinweis": "Rien n'a été enregistré. Vérifiez, modifiez si nécessaire, puis appliquez. Les chambres ne sont attribuées que si elles existent déjà.",
+      "uebernimmt": "Application en cours…",
+      "uebernehmen": "Appliquer",
+      "zustand": "État",
+      "rhythmus": "Rythme de comptage",
+      "meldebestandKurz": "Stock de signalement {n}",
+      "referenzSetzen": "Déposer une image de l'état intact",
+      "referenzAnsehen": "Voir l'image de l'état intact",
+      "zustandWert": {
+        "neu": "neuf",
+        "gut": "bon",
+        "abgenutzt": "usé",
+        "ersatz_faellig": "à remplacer"
+      },
+      "rhythmusWert": {
+        "jede_abreise": "à chaque départ",
+        "quartal": "trimestriel",
+        "jaehrlich": "annuel",
+        "nie": "ne pas compter"
+      }
+    }
   },
   "finance": {
     "cancelInvoice": {
@@ -5285,7 +5409,23 @@
       "ownerRequestsLift": "Demandes d'annulation",
       "ownerRequestsTermination": "Fins de contrat annoncées",
       "ownerRequestsNone": "Aucune opération en attente.",
-      "ownerRequestsOldest": "Demande en attente la plus ancienne : {count, plural, =0 {aujourd'hui} one {depuis un jour} other {depuis # jours}}"
+      "ownerRequestsOldest": "Demande en attente la plus ancienne : {count, plural, =0 {aujourd'hui} one {depuis un jour} other {depuis # jours}}",
+      "teamTasks": "Tâches d'équipe",
+      "teamTasksExplain": "Ce que l'équipe doit traiter actuellement : tâches en retard et dues aujourd'hui, tâches sans responsable et celles en attente d'approbation. Un état des lieux, pas une période – ce qui est ouvert est ouvert, et plus ancien signifie plus urgent.",
+      "teamTasksLabel": "En retard ou dû aujourd'hui",
+      "teamTasksOldest": "Tâche la plus ancienne en retard : depuis {count} jours",
+      "teamTasksOverdue": "En retard",
+      "teamTasksToday": "Dû aujourd'hui",
+      "teamTasksUnassigned": "Sans responsable",
+      "teamTasksToReview": "En attente d'approbation",
+      "teamTasksOpen": "Total ouvert",
+      "wechsel": "Changement",
+      "wechselHint": "Départ et arrivée le même jour dans la même unité – le nettoyage doit être effectué entre deux occupations.",
+      "wechselUnklar": "Changement incertain",
+      "wechselUnklarHint": "Le même jour, quelqu'un arrive dans le même logement, mais l'unité d'une des deux réservations n'est pas enregistrée – il n'est pas possible de dire si un changement est réellement nécessaire.",
+      "teamTasksUrgencyUnknown": "en retard ou dû aujourd'hui — actuellement indisponible",
+      "listingsActive": "Actif",
+      "listingsActiveLabel": "En vente"
     },
     "mobileAppHint": "La vue des tâches en déplacement est déjà disponible de façon responsive sur le web (Mes tâches + détail avec téléversement de photos). Une application mobile distincte suivra dans un projet dédié.",
     "aufgabenFilter": {
@@ -15280,7 +15420,8 @@
         "reservierungen": "Réservations",
         "kennzahlen": "Indicateurs clés",
         "nachrichten": "Messages",
-        "objekte": "Objets"
+        "objekte": "Objets",
+        "aufgaben": "Tâches"
       }
     }
   },

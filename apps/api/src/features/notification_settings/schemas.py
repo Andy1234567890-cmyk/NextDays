@@ -13,15 +13,29 @@ from .katalog import KATALOG, Kanal, Kategorie
 
 # --- dynamisch erzeugte Modelle -------------------------------------------
 # Pro Kategorie×Kanal ein bool-Feld, benannt wie die Spalte. Die Defaults
-# spiegeln die Migration: E-Mail an, SMS/Telefon aus — Ausnahme
+# spiegeln die Migration: E-Mail an, PUSH an, SMS/Telefon aus — Ausnahme
 # listing_activity_sms (Airbnb-Default an, siehe Screenshot „Listing activity:
 # On: Email and SMS").
+#
+# PUSH stand hier bis zum 09.09.2026 auf `False` und widersprach damit ALLEN
+# 17 `*_push`-Spalten, die in den Migrationen `not null default true` tragen
+# (0414, 0532 u. a.). Zwei Wahrheiten für denselben Wert — Wurzel 4.
+#
+# Warum das flächendeckend Push abschaltete, statt nur neue Konten zu
+# betreffen: `notification_settings` hat live NULL Zeilen (gemessen
+# 09.09.2026). `soll_senden` fällt dann auf `getattr(NotificationSettings(),
+# spalte)` zurück, also genau auf diesen Code-Default — es gab keinen
+# einzigen Nutzer, dessen gespeichertes `true` ihn hätte überstimmen können.
+# Der Dispatcher verwarf JEDEN Push als abgewählt, ohne den Versandpfad auch
+# nur zu betreten: acht registrierte Geräte, kein einziger Versuch, und im
+# Protokoll stand lediglich „uebersprungen: push" — der stille Fehler aus
+# Wurzel 5, der wie eine Nutzerentscheidung aussieht.
 
 _SMS_DEFAULT_AN = frozenset({"listing_activity_sms"})
 
 
 def _default(kategorie: Kategorie, kanal: Kanal) -> bool:
-    if kanal is Kanal.EMAIL:
+    if kanal in (Kanal.EMAIL, Kanal.PUSH):
         return True
     return kategorie.spalte(kanal) in _SMS_DEFAULT_AN
 

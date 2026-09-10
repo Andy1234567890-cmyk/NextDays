@@ -99,6 +99,36 @@ services:
       retries: 3
       start_period: 30s
     deploy:
+      # GENAU EIN WORKER — das ist keine Kosmetik, sondern die Annahme, auf der
+      # die Takte in `src/worker.py` beruhen. Der Run-Loop reiht seine Ticks
+      # (Automails, KI-Autoantworten, Tagesjobs) ueber prozesslokale Zeitmarken
+      # ein (`self._last_*_tick`); zwei Worker teilen die nicht und takten
+      # unabhaengig auf derselben Warteschlange.
+      #
+      # WARUM ES HIER STEHT UND NICHT NUR IM KOPF: Bis zum 09.09.2026 war „der
+      # Worker ist ein einzelner Prozess" der Compose-DEFAULT, also eine
+      # Beobachtung, keine Zusage — nichts im Repo haette widersprochen, wenn
+      # jemand hochskaliert. Genau diese Annahme ist am selben Tag auf der
+      # API-Seite gebrochen: der KI-Takt lag im FastAPI-Lifespan, und der laeuft
+      # JE UVICORN-WORKER — bei `UVICORN_WORKERS=4` taktete er vierfach
+      # (gemessen: vier Kindprozesse unter dem uvicorn-Master, vier
+      # `ki_takt_gestartet`-Zeilen in derselben Sekunde). Deshalb liegt der Takt
+      # jetzt hier, und deshalb steht die Stueckzahl geschrieben.
+      #
+      # Der Schutz haengt nicht allein daran: geldbewegende und versendende
+      # Operationen claimen atomar (Wurzel 2, Migration 0617). Ein zweiter
+      # Worker verdoppelt also keine Mails — er verdoppelt die Last und die
+      # vergeblichen Claim-Versuche. Wer skalieren will, verteilt die Ticks
+      # vorher ueber eine gemeinsame Sperre, statt diese Zahl zu erhoehen.
+      #
+      # GRENZE, ehrlich benannt: `deploy.replicas` wertet nur Swarm bzw.
+      # `docker compose up --scale` aus; Coolify fuehrt diesen Stack als
+      # Compose-Anwendung und setzt die Stueckzahl in seiner eigenen
+      # Oberflaeche. Der Eintrag ist damit die pruefbare ABSICHT im Repo, keine
+      # technische Sperre — die Live-Lage ist am 09.09.2026 gegengeprueft:
+      # genau ein Worker-Container (`worker-ly4w6vw4ffxk2987nyg5z5kt`), keine
+      # zweite Replica.
+      replicas: 1
       resources:
         limits:
           memory: 1g

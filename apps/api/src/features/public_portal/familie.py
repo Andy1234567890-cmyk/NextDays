@@ -754,6 +754,13 @@ def melde_freigabe_noetig(
             ziel_pfad="/portal/sperrungen",
             # Ein Antrag, eine Meldung — auch bei wiederholtem Aufruf (Wurzel 2).
             dedup_key=f"block_freigabe:{antrag['id']}",
+            # WIEDERHOLBAR (0617): Die Meldung ist eine AUFFORDERUNG an den
+            # Eigentuemer („dieser Antrag wartet auf deine Freigabe") und damit
+            # ein offener Zustand, kein abgeschlossenes Ereignis. Hat er sie
+            # gelesen, ohne zu entscheiden, muss eine Erinnerung zum selben
+            # Antrag durchkommen — ein Riegel ohne Lesestand wuerde den Antrag
+            # nach einem einzigen Wegklicken lautlos liegen lassen.
+            einmalig=False,
         )
     except Exception as exc:  # noqa: BLE001 - Versand darf den Antrag nicht kippen
         log.warning("portal_freigabe_meldung_fehler", error=str(exc)[:200])

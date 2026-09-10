@@ -120,7 +120,7 @@ def handle(
     # sich, und dieses Modul wird beim Worker-Start importiert (Tick).
     from src.features.channel_manager.channex_client import ChannexClient
     from src.features.channel_manager.service import ChannelManagerService
-    from src.features.notification_settings.ereignisse import (
+    from src.features.notification_settings.betriebsmeldungen import (
         melde_portal_rate_verwaist,
     )
 

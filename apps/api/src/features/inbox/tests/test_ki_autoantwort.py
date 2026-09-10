@@ -30,6 +30,7 @@ class _Query:
         self._db = db
         self._tabelle = tabelle
         self._rows = list(db.tabellen.get(tabelle, []))
+        self._patch: dict | None = None
 
     def select(self, *_a, **_k) -> _Query:
         return self
@@ -46,6 +47,12 @@ class _Query:
     def lte(self, *_a, **_k) -> _Query:
         return self
 
+    def lt(self, *_a, **_k) -> _Query:
+        # Der Reaper grenzt verwaiste 'sendet'-Zeilen ueber `updated_at` ab.
+        # Das Double filtert nicht — geprueft wird, DASS er laeuft, nicht seine
+        # Zeitarithmetik (die gehoert zum Client).
+        return self
+
     def order(self, *_a, **_k) -> _Query:
         return self
 
@@ -54,16 +61,29 @@ class _Query:
 
     def update(self, werte: dict) -> _Query:
         self._db.updates.append((self._tabelle, werte))
+        self._patch = werte
         return self
 
     def execute(self) -> _Res:
+        # Ein `update` quittiert die betroffenen Zeilen — daran haengt das
+        # atomare Claim (`if not claimed: return`). Gaebe das Double hier eine
+        # leere Liste zurueck, kaeme kein Versand mehr zustande; gaebe es
+        # unbesehen Zeilen zurueck, waere ein fehlendes Claim nicht bemerkbar.
+        # Es antwortet daher mit den Zeilen, die es hat: der glueckliche Fall
+        # claimt erfolgreich, und `_FakeDb(claim_leer=True)` erzwingt den
+        # Gegenfall.
+        if self._patch is not None and self._db.claim_leer:
+            return _Res([])
         return _Res(self._rows)
 
 
 class _FakeDb:
-    def __init__(self, **tabellen: list) -> None:
+    def __init__(self, *, claim_leer: bool = False, **tabellen: list) -> None:
         self.tabellen = tabellen
         self.updates: list[tuple[str, dict]] = []
+        # `claim_leer=True` spielt den Fall „ein anderer Takt war schneller":
+        # das bedingte UPDATE trifft keine Zeile mehr.
+        self.claim_leer = claim_leer
 
     def table(self, name: str) -> _Query:
         return _Query(self, name)
@@ -108,6 +128,43 @@ def test_faellige_antwort_geht_hinaus() -> None:
     assert dienst.gesendet == [("th1", "Das WLAN heißt Gast2024.")]
 
 
+def test_claim_steht_vor_dem_senden_und_verhindert_doppelversand() -> None:
+    """Wurzel 2: Wer die Zeile nicht claimen konnte, sendet NICHT.
+
+    ANLASS (live gemeldet 09.09.2026, „die e-mails gehen auch doppelt raus"):
+    Der Versand waehlte `status='wartend'` aus, sendete, und setzte den Status
+    ERST DANACH. Zwischen Auswahl und Statuswechsel liegt ein vollstaendiger
+    Netzwerk-Roundtrip zum Portal — jeder Takt, der die Zeile in diesem Fenster
+    sah, sendete sie erneut. Und Takte gab es mehrere: der Takt lief im
+    FastAPI-Lifespan, also je uvicorn-Worker (Vorgabe: vier).
+
+    Hier wird der verlorene Wettlauf gespielt: das bedingte UPDATE trifft keine
+    Zeile mehr, weil ein anderer Takt sie bereits auf 'sendet' gesetzt hat.
+    Dann darf NICHTS hinausgehen.
+    """
+    db = _FakeDb(
+        claim_leer=True,
+        ki_autoantwort_warteschlange=[_wartend()],
+        portal_messages=[],
+    )
+    dienst = _Dienst(db)
+
+    ergebnis = dienst.dispatch_ki_autoantworten()
+
+    assert dienst.gesendet == [], "verlorener Claim darf nicht senden"
+    assert ergebnis["gesendet"] == 0
+    assert ergebnis["uebersprungen"] == 1
+    # Und der Claim ist ein Zustandswechsel VOR dem Versand, kein Nachtrag.
+    assert ("ki_autoantwort_warteschlange", {
+        "status": "sendet",
+    }) not in db.updates, "Claim muss `updated_at` mitschreiben (Reaper)"
+    claims = [
+        w for t, w in db.updates
+        if t == "ki_autoantwort_warteschlange" and w.get("status") == "sendet"
+    ]
+    assert len(claims) == 1 and "updated_at" in claims[0]
+
+
 # --- Die Gegenzustände ------------------------------------------------------
 def test_neue_nachricht_im_thread_verhindert_den_versand() -> None:
     """Der Kern von Wurzel 1: hat sich der Thread bewegt, passt die Antwort nicht.
@@ -125,8 +182,11 @@ def test_neue_nachricht_im_thread_verhindert_den_versand() -> None:
     ergebnis = dienst.dispatch_ki_autoantworten()
     assert ergebnis["abgebrochen"] == 1
     assert dienst.gesendet == []
+    # Nach Inhalt suchen, nicht nach Position: der erste Schreibvorgang des
+    # Ticks ist der Reaper (verwaiste 'sendet'-Zeilen → 'wartend'), und diese
+    # Reihenfolge ist kein Vertrag.
     status = [w for tab, w in db.updates if tab == "ki_autoantwort_warteschlange"]
-    assert status and status[0]["status"] == "abgebrochen"
+    assert any(w.get("status") == "abgebrochen" for w in status)
 
 
 def test_zu_spaete_antwort_wird_verworfen() -> None:
@@ -180,6 +240,9 @@ def test_leere_warteschlange_ist_kein_fehler() -> None:
         "gesendet": 0,
         "abgebrochen": 0,
         "fehler": 0,
+        # Zaehler der verlorenen Claims (0617): sichtbar, weil er verraet, wie
+        # viele Takte parallel auf derselben Warteschlange arbeiten.
+        "uebersprungen": 0,
     }
 
 

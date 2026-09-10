@@ -24,7 +24,7 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
-from src.features.notification_settings.ereignisse import melde_ki_eskalation
+from src.features.notification_settings.betriebsmeldungen import melde_ki_eskalation
 
 from .errors import InboxError
 from .schemas import KiEskalation, KiEskalationList

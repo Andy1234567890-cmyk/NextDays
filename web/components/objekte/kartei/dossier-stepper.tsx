@@ -10,6 +10,8 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 
 import { DossierPdfButton } from "@/components/objekte/kartei/dossier-pdf-button";
+import { InventarListe } from "@/components/objekte/kartei/inventar-liste";
+import { MappeDokumente } from "@/components/objekte/kartei/mappe-dokumente";
 import { CheckboxField, DateField, NumberField, SelectField, TextField, nulled } from "@/components/objekte/kartei/fields";
 import { ListEditor } from "@/components/objekte/kartei/list-editor";
 import { LocalizedTextEditor } from "@/components/objekte/localized-text-editor";
@@ -67,9 +69,12 @@ import {
 } from "@/lib/properties";
 import { listRatePlans } from "@/lib/rates";
 
+// Das Inventar steht NACH der Hausmappe und VOR der Vermarktung: beim
+// Rundgang durchs Haus gehoert beides zusammen (was auf Papier existiert, und
+// was wirklich dasteht), die Vermarktung ist der Schritt danach.
 const STEP_KEYS = [
   "object_info", "process", "access", "service_agreements",
-  "tradespeople", "marketing", "housebook", "listing",
+  "tradespeople", "marketing", "housebook", "inventory", "listing",
 ] as const;
 
 // Uhrzeit-Auswahl für „Code sichtbar ab" (Viertelstunden-Raster).
@@ -100,6 +105,11 @@ export function DossierStepper({ property, initial }: { property: Property; init
     <Stufe5 key="s5" t={t} pid={pid} initial={initial} />,
     <Stufe6 key="s6" t={t} pid={pid} initial={initial.marketing} />,
     <Stufe7 key="s7" t={t} pid={pid} initial={initial.housebook} />,
+    // Eigene Stufe, kein Abschnitt in der Hausmappe: die Inventarliste ist
+    // ein eigenstaendiger Arbeitsbereich mit Raeumen, Mengen und Schaeden —
+    // in der Hausmappe verschwaende sie unter drei Statusfeldern.
+    // Sie laedt selbst und braucht deshalb kein `initial`.
+    <InventarListe key="s9" pid={pid} />,
     <Stufe8 key="s8" t={t} pid={pid} initial={initial.platform_launches} />,
   ];
 
@@ -711,6 +721,22 @@ function Stufe7({ t, pid, initial }: { t: T; pid: string; initial: HousebookData
       </div>
       <Hint>{t("housebook.textsHint")}</Hint>
       <SaveBar t={t} onSave={async () => (await saveHousebook(pid, nulled(d))).ok || t("saved")} />
+
+      {/* Die digitale Mappe (0619). Zwei getrennte Ablagen im selben Schritt:
+          was der GAST sehen darf und was intern bleibt. Das PDF wird gelesen,
+          die erkannten Angaben werden VORGESCHLAGEN — geschrieben wird erst
+          nach einem Klick. */}
+      <Section title={t("mappe.gastTitel")}>
+        <div className="col-span-full">
+          <MappeDokumente pid={pid} mappe="gast" />
+        </div>
+      </Section>
+      <Section title={t("mappe.hausTitel")}>
+        <div className="col-span-full">
+          <MappeDokumente pid={pid} mappe="haus" />
+        </div>
+      </Section>
+
     </div>
   );
 }

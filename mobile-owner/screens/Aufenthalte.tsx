@@ -8,10 +8,11 @@
 // kein bestätigter Aufenthalt, und die Nacht bleibt bis zur Zusage buchbar.
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { RefreshControl, ScrollView, View } from "react-native";
+import { Alert, RefreshControl, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { DemoBand } from "@/components/DemoBand";
+import { Feld } from "@/components/ui/Feld";
 import { Icon } from "@/components/ui/Icon";
 import { Btn, Kachel, Photo, Segmented, Spinner, Txt } from "@/components/ui/kit";
 import { Kopf } from "@/components/ui/Kopf";
@@ -25,6 +26,7 @@ import {
   istBevorstehend,
 } from "@/lib/aufenthalt";
 import {
+  aufhebungBeantragen,
   type BlockRequest,
   getBlockRequests,
   getOwnerProperties,
@@ -47,6 +49,12 @@ export default function Aufenthalte({ navigation }: { navigation: Nav }) {
   const [objekte, setObjekte] = useState<Map<string, PortalProperty>>(new Map());
   const [laedt, setLaedt] = useState(true);
   const [fehler, setFehler] = useState<string | null>(null);
+  // Welcher Aufenthalt gerade sein Aufhebungsformular offen hat (`null` = keiner).
+  // Aufklappbar statt dauerhaft sichtbar: der Knopf steht sonst unter JEDEM
+  // bestätigten Aufenthalt und drängt sich auf, obwohl er der seltene Fall ist.
+  const [aufhebungFuer, setAufhebungFuer] = useState<string | null>(null);
+  const [aufhebungGrund, setAufhebungGrund] = useState("");
+  const [sendet, setSendet] = useState(false);
 
   const laden = useCallback(async () => {
     setFehler(null);
@@ -56,6 +64,31 @@ export default function Aufenthalte({ navigation }: { navigation: Nav }) {
     if (o.ok) setObjekte(new Map(o.data.items.map((p) => [p.id, p])));
     setLaedt(false);
   }, []);
+
+  // Aufhebung eines GENEHMIGTEN Aufenthalts beantragen. Kein Storno: die
+  // Verwaltung entscheidet, der Aufenthalt bleibt bis dahin bestehen (§4.2).
+  const aufhebungSenden = useCallback(
+    async (antragId: string) => {
+      if (sendet) return;
+      setSendet(true);
+      const res = await aufhebungBeantragen(
+        antragId,
+        aufhebungGrund.trim() || null,
+      );
+      setSendet(false);
+      if (!res.ok) {
+        Alert.alert(txt("auf.aufhebungFehler"), res.error);
+        return;
+      }
+      setAufhebungFuer(null);
+      setAufhebungGrund("");
+      // Neu laden statt die Zeile lokal zu verbiegen: der Server führt den
+      // Zustand, und nur so stimmt die Karte mit ihm überein.
+      await laden();
+      Alert.alert(txt("auf.aufhebungGesendet"), txt("auf.aufhebungGesendetText"));
+    },
+    [sendet, aufhebungGrund, laden, txt],
+  );
 
   useEffect(() => {
     void laden();
@@ -182,6 +215,73 @@ export default function Aufenthalte({ navigation }: { navigation: Nav }) {
                 <Txt v="xs" faint style={{ marginTop: 6 }} numberOfLines={2}>
                   Verwaltung: {a.decision_note}
                 </Txt>
+              ) : null}
+
+              {/* Aufhebung eines bestätigten Aufenthalts (0513). Drei Zustände,
+                  die NICHT zusammenfallen dürfen (Wurzel 5): noch keine Bitte,
+                  Bitte liegt vor, Verwaltung hat entschieden. „Beantragt" ist
+                  ausdrücklich nicht „erledigt" — der Aufenthalt besteht weiter,
+                  und wer das nicht liest, plant falsch. */}
+              {a.aufhebung === "beantragt" ? (
+                <Txt v="xs" soft style={{ marginTop: 10 }}>
+                  {txt("auf.aufhebungLaeuft")}
+                </Txt>
+              ) : a.aufhebung === "abgelehnt" ? (
+                <Txt v="xs" soft style={{ marginTop: 10 }}>
+                  {txt("auf.aufhebungAbgelehnt")}
+                  {a.aufhebung_entscheidungsnotiz
+                    ? ` — ${a.aufhebung_entscheidungsnotiz}`
+                    : ""}
+                </Txt>
+              ) : a.aufhebung === "aufgehoben" ? (
+                <Txt v="xs" soft style={{ marginTop: 10 }}>
+                  {txt("auf.aufhebungErledigt")}
+                </Txt>
+              ) : a.status === "approved" && istBevorstehend(a.end_date, heute) ? (
+                aufhebungFuer === a.id ? (
+                  <View style={{ marginTop: 12, gap: 8 }}>
+                    <Txt v="xs" soft>
+                      {txt("auf.aufhebungHinweis")}
+                    </Txt>
+                    <Feld
+                      label={txt("auf.aufhebungGrund")}
+                      wert={aufhebungGrund}
+                      aendern={setAufhebungGrund}
+                      maxLength={2000}
+                    />
+                    <View style={{ flexDirection: "row", gap: 8 }}>
+                      <Btn
+                        variant="dark"
+                        style={{ flex: 1 }}
+                        disabled={sendet}
+                        onPress={() => void aufhebungSenden(a.id)}
+                      >
+                        {sendet ? txt("auf.aufhebungSendet") : txt("auf.aufhebungSenden")}
+                      </Btn>
+                      <Btn
+                        variant="ghost"
+                        disabled={sendet}
+                        onPress={() => {
+                          setAufhebungFuer(null);
+                          setAufhebungGrund("");
+                        }}
+                      >
+                        {txt("allg.abbrechen")}
+                      </Btn>
+                    </View>
+                  </View>
+                ) : (
+                  <Btn
+                    variant="ghost"
+                    style={{ marginTop: 10 }}
+                    onPress={() => {
+                      setAufhebungFuer(a.id);
+                      setAufhebungGrund("");
+                    }}
+                  >
+                    {txt("auf.aufhebungAnfragen")}
+                  </Btn>
+                )
               ) : null}
             </Kachel>
           );

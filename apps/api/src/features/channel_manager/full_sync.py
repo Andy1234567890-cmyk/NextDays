@@ -12,9 +12,12 @@ from typing import Any
 
 from supabase import Client
 
-from src.features.notification_settings.ereignisse import melde_systemwarnung
+from src.features.notification_settings.betriebsmeldungen import (
+    melde_systemwarnung,
+)
 
 from .ari_push import _iso_days
+from .bookings_sync import RECOVERY_FENSTER_TAGE
 from .channex_client import ChannexBudgetExhausted
 from .common import log
 from .verfuegbarkeit_regeln import Wochentagsregel
@@ -51,8 +54,11 @@ class FullSyncMixin:
         engen Rückholpfad benutzten:
 
         * ``False`` (nächtlicher Lauf): der Rückhol-Teil dient allein der
-          Feed-Retention (~30 Min) und schaut deshalb nur 3 Tage zurück. Jede
-          Nacht die ganze Historie zu ziehen wäre eine Dauerlast ohne Ertrag.
+          Feed-Retention (~30 Min) und schaut deshalb nur
+          ``RECOVERY_FENSTER_TAGE`` (derzeit 3) zurück. Jede Nacht die ganze
+          Historie zu ziehen wäre eine Dauerlast ohne Ertrag. Dieselbe Zahl
+          entscheidet, welche Buchung noch als Ereignis gemeldet wird — eine
+          Quelle, nicht zwei (Begründung an der Konstante).
         * ``True`` (Knopf „Voll-Abgleich"): der Betrieb erwartet dort ALLE
           Buchungen und die Gespräche — nicht die letzten drei Tage. Genau das
           fehlte: der Knopf hieß „Voll-Abgleich" und holte ein 3-Tage-Fenster,
@@ -166,9 +172,18 @@ class FullSyncMixin:
         # channex_booking_id (kein Doppel-Insert), EINMAL je Channex-Property
         # (deckt alle Zimmer ab).
         #
-        # Nachts reichen 3 Tage (nur die Retention-Lücke heilen). Beim manuellen
-        # Voll-Abgleich wird KEIN Fenster gesetzt: dort ist die Erwartung „hole
-        # alles", auch die Buchung von vor einem halben Jahr.
+        # Nachts reicht `RECOVERY_FENSTER_TAGE` (nur die Retention-Lücke
+        # heilen). Beim manuellen Voll-Abgleich wird KEIN Fenster gesetzt: dort
+        # ist die Erwartung „hole alles", auch die Buchung von vor einem halben
+        # Jahr.
+        #
+        # DIE ZAHL KOMMT AUS `bookings_sync`, nicht aus einer eigenen `days=3`
+        # hier. Vorher standen sie getrennt: geholt wurden 3 Tage, gemeldet
+        # wurden (`RECOVERY_FRISCH_STUNDEN`) nur 48 Stunden. Eine echte
+        # Feed-Lücken-Buchung aus Stunde 48–72 kam damit durch den Abruf,
+        # landete korrekt im Kalender — und wurde stillschweigend NICHT
+        # gemeldet, obwohl sie genau der Fall ist, für den dieser Lauf
+        # existiert. Eine Änderung der einen Zahl zieht die andere jetzt mit.
         #
         # EHRLICHE GRENZE (Channex-Doku, belegt in import_existing_bookings):
         # Channex liefert nur, was es selbst als Revision gesehen hat. Buchungen
@@ -178,12 +193,20 @@ class FullSyncMixin:
         try:
             recovery_from = (
                 None if vollstaendig
-                else (datetime.now(UTC) - timedelta(days=3)).strftime(
-                    "%Y-%m-%dT%H:%M:%S"
-                )
+                else (
+                    datetime.now(UTC) - timedelta(days=RECOVERY_FENSTER_TAGE)
+                ).strftime("%Y-%m-%dT%H:%M:%S")
             )
             rec = self.import_bookings_for_property(
                 tenant_id, channex_property_id, inserted_after=recovery_from,
+                # Der EINZIGE Weg, der melden darf: hier werden echte
+                # Feed-Lücken geheilt (Retention), die Buchung hat der Betrieb
+                # also noch nie gesehen. Entschieden wird je Buchung am
+                # Quell-Zeitstempel — beim manuellen Voll-Abgleich
+                # (`vollstaendig`, kein Fenster) kommt derselbe Aufruf über den
+                # GESAMTEN Bestand, und der darf nicht die halbe Historie als
+                # „Neue Buchung" melden.
+                melde_frische=True,
             )
             if rec.get("saved"):
                 log.info(

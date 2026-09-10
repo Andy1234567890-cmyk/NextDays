@@ -95,6 +95,14 @@ export type MeFuerKacheln = {
   role: string | null;
   capabilities: readonly string[];
   permissions: readonly string[];
+  /** Schaufenster-Mandant (0407). Dort lehnt der serverseitige `demo_gate`
+   *  JEDEN Schreibzugriff mit 405 ab. Ohne dieses Flag bot das Raster das
+   *  Anpassen trotzdem an: der Besucher zog eine Kachel, der PUT scheiterte,
+   *  und die Anordnung sprang zurueck — ein Knopf, dessen Ergebnis der Server
+   *  wegwirft. Die Startbahn auf derselben Seite blendet sich aus demselben
+   *  Grund schon aus. Die echte Kontrolle bleibt der Server (Wurzel 6/7);
+   *  das hier verhindert nur die Sackgasse in der Oberflaeche. */
+  is_demo?: boolean;
 };
 
 function SortableKachel({
@@ -206,6 +214,7 @@ function SortableKachel({
  *  fehlendes Symbol in der Oberfläche. */
 const BEREICH_ICON: Record<KachelBereich, string> = {
   reservierungen: "ph:bookmark-simple",
+  aufgaben: "ph:list-checks",
   kennzahlen: "ph:chart-line-up",
   nachrichten: "ph:chat-circle",
   objekte: "ph:house-line",
@@ -443,6 +452,12 @@ export function DashboardRaster({
   }, [anordnung.sichtbar]);
   const zeigeZuruecksetzen = quelle === "benutzer";
 
+  // Im Schaufenster gibt es das Anpassen nicht. Jeder Schreibweg des Rasters
+  // (Ziehen, Groesse, Ausblenden, Zuruecksetzen) haengt an `bearbeiten` — den
+  // Knopf wegzulassen schliesst sie damit alle auf einmal, statt vier Stellen
+  // einzeln zu pruefen.
+  const nurAnsehen = me.is_demo === true;
+
   return (
     <div className="flex flex-col gap-4">
       {/* Kopfleiste: Anpassen / Fertig / Zurücksetzen */}
@@ -451,7 +466,7 @@ export function DashboardRaster({
           {bearbeiten ? t("hinweisBearbeiten") : ""}
         </p>
         <div className="flex items-center gap-2">
-          {bearbeiten && zeigeZuruecksetzen && (
+          {!nurAnsehen && bearbeiten && zeigeZuruecksetzen && (
             <Button
               variant="ghost"
               size="sm"
@@ -466,6 +481,7 @@ export function DashboardRaster({
               {t("zuruecksetzen")}
             </Button>
           )}
+          {!nurAnsehen && (
           <Button
             variant={bearbeiten ? "default" : "outline"}
             size="sm"
@@ -488,6 +504,7 @@ export function DashboardRaster({
             />
             {bearbeiten ? t("fertig") : t("anpassen")}
           </Button>
+          )}
         </div>
       </div>
 

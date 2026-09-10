@@ -573,3 +573,53 @@ class DienstleistungPreisListe(BaseModel):
 
     preise: list[DienstleistungPreis] = Field(default_factory=list)
     typen: list[dict[str, object]] = Field(default_factory=list)
+
+
+# --- Startseiten-Kachel: die Bestände der Teamaufgaben ----------------------
+
+class TeamaufgabenStand(BaseModel):
+    """Was an Teamaufgaben ANLIEGT — die Zahlen der Startseiten-Kachel.
+
+    WARUM ES DIESE ZAHLEN BRAUCHT: Das Aufgaben-Modul ist vollständig gebaut
+    (Regeln, Kalender, Team-Liste, Inspektion, Vertretung) und hat seine Seiten
+    unter /reservierungen/aufgaben. Auf der Startseite stand davon NICHTS — wie
+    zuvor beim Sperrantrags-Workflow (`EigentuemerVorgaenge`). Wer nicht weiß,
+    dass eine Aufgabe überfällig ist, ruft die Liste nicht auf; die Reinigung
+    fällt aus, und der nächste Gast steht im ungemachten Objekt.
+
+    Bewusst KEIN Zeitraum-Selektor: das ist ein Ist-Stand, kein Verlauf. Und
+    bewusst KEINE Beträge — die Kachel trägt dieselben Felder wie die
+    Team-Liste (Objekt, Zuständige, Fälligkeit), also nichts aus §4.3.
+    """
+
+    # Alles, was offen ist (`open`/`accepted`/`in_progress`) — der Bestand.
+    offen: int = 0
+    # Davon ÜBERFÄLLIG: die Tagesgrenze des Nutzers ist überschritten und die
+    # Aufgabe steht immer noch offen. Die Grenze kommt vom CLIENT (`tagesende`),
+    # aus demselben Grund wie in `_filter_bucket`: der Kalendertag hängt an der
+    # Zone des Objekts, und live haben 24 von 43 Objekten keine gepflegte Zone
+    # — hier eine zu unterstellen wäre ein erfundener Wert (Wurzel 4).
+    ueberfaellig: int = 0
+    # Offene Aufgaben, die HEUTE fällig sind (zwischen Tagesbeginn und
+    # Tagesgrenze des Nutzers).
+    heute: int = 0
+    # Offene Aufgaben OHNE Zuständige:n. Sie sind der stille Ausfall: niemand
+    # bekommt eine Benachrichtigung, niemand fühlt sich zuständig.
+    ohne_zustaendige: int = 0
+    # Aufgaben, die auf die Abnahme warten (`inspection_state='to_review'`).
+    zur_abnahme: int = 0
+    # Die früheste Fälligkeit unter den überfälligen Aufgaben — das Alter ist
+    # die Dringlichkeit. `None`, wenn nichts überfällig ist (kein erfundenes
+    # Datum, Wurzel 4).
+    aeltester_faellig_am: datetime | None = None
+
+
+class ZaehlungRequest(BaseModel):
+    """Die gezaehlte Menge an einem Zaehlpunkt (0623).
+
+    Eine Obergrenze, weil jede unbegrenzte Zahl eine Grenze braucht (Wurzel 8)
+    — und weil ein Tippfehler („1000" statt „10") sonst als Bestand in der
+    Inventur stuende.
+    """
+
+    menge: int = Field(ge=0, le=10_000)

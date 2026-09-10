@@ -75,6 +75,44 @@ function AddonBadges({ addons }: { addons?: DashboardAddon[] }) {
   );
 }
 
+/**
+ * Wechseltag: in DERSELBEN Einheit reist heute ein Gast ab und ein anderer an.
+ *
+ * Warum ein eigenes Abzeichen und nicht nur eine Randfarbe: der Tag ist für die
+ * Reinigung der teuerste des Jahres (drehen statt leer stehen lassen), und in
+ * den Listen steht die Buchung sonst zweimal unauffällig da — einmal bei den
+ * Abreisen, einmal bei den Anreisen, ohne dass etwas den Zusammenhang zeigt.
+ *
+ * Icon UND Text UND Farbe, nicht Farbe allein: eine Rotgrünsehschwäche trifft
+ * rund 8 % der Männer, und ein reines Farbsignal ist für sie kein Signal.
+ *
+ * `unbekannt` bekommt eine eigene, zurückhaltende Form. Es als Wechsel zu
+ * zeigen behauptete eine Reinigung, die vielleicht nicht ansteht; es
+ * wegzulassen verschwiege die Lücke (Wurzel 4).
+ */
+function WechselAbzeichen({ wechsel }: { wechsel: DashboardEntry["wechsel"] }) {
+  const tr = useTranslations("reservations");
+  if (wechsel === "nein") return null;
+  const sicher = wechsel === "ja";
+  return (
+    <span
+      className={
+        sicher
+          ? "inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900 dark:bg-amber-950 dark:text-amber-200"
+          : "inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground"
+      }
+      title={sicher ? tr("dashboard.wechselHint") : tr("dashboard.wechselUnklarHint")}
+    >
+      <Icon
+        icon={sicher ? "ph:arrows-clockwise-bold" : "ph:question"}
+        className="size-3"
+        aria-hidden
+      />
+      {sicher ? tr("dashboard.wechsel") : tr("dashboard.wechselUnklar")}
+    </span>
+  );
+}
+
 function EntryRow({ entry }: { entry: DashboardEntry }) {
   const t = useTranslations("calendar");
   const tr = useTranslations("reservations");
@@ -112,7 +150,10 @@ function EntryRow({ entry }: { entry: DashboardEntry }) {
           <p className="truncate text-xs text-muted-foreground">
             {channel} · {fmtDate(entry.check_in)} – {fmtDate(entry.check_out)}
           </p>
-          <AddonBadges addons={entry.addons} />
+          <div className="flex flex-wrap items-center gap-1">
+            <WechselAbzeichen wechsel={entry.wechsel} />
+            <AddonBadges addons={entry.addons} />
+          </div>
         </div>
       </Link>
       {/* Die drei Wege, die man von einer Zeile aus wirklich geht: in den

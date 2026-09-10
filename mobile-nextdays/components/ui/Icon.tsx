@@ -56,6 +56,13 @@ export const NIC: Record<string, string> = {
   arrowup: "M12 19V6M6 11l6-6 6 6",
   caretdown: "M6 9l6 6 6-6",
   dot: "M12 12h.01",
+  // Wechseltag: zwei gegenlaeufige Pfeile — einer geht, einer kommt. Genau das
+  // passiert an diesem Tag in derselben Einheit.
+  wechsel: "M4 9h13l-3.5-3.5M20 15H7l3.5 3.5",
+  // Wechsel UNKLAR: die Einheit einer der beiden Buchungen fehlt, die Frage
+  // ist offen. Ein eigenes Motiv, weil „unklar" und „kein Wechsel" zwei
+  // verschiedene Aussagen sind (Wurzel 4).
+  frage: "M9.2 9a2.9 2.9 0 115.6 1c0 1.9-2.8 2.3-2.8 4M12 18.5h.01",
   globe:
     "M12 3a9 9 0 100 18 9 9 0 000-18M3 12h18M12 3c2.5 2.4 3.8 5.6 3.8 9s-1.3 6.6-3.8 9c-2.5-2.4-3.8-5.6-3.8-9S9.5 5.4 12 3",
   coffee:

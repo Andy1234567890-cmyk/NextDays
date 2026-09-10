@@ -326,12 +326,21 @@ export function ReservationsDashboard({
       )}
 
       <SectionHeader icon="ph:buildings" title={t("dashboard.sectionListings")} />
-      <div className="grid gap-6 md:grid-cols-3">
+      {/* Vier statt drei Spalten: „Aktiv" fehlte, und damit die Zahl, nach der
+          ein Betrieb zuerst sieht. Aus Gesamt/Inaktiv/Entwurf liess sie sich
+          nicht verlaesslich erraten (09.09.2026). */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <ObjektKachel
           icon="ph:buildings"
           title={t("dashboard.listingsTotal")}
           value={data.objekte_gesamt}
           label={t("dashboard.listingsTotalLabel")}
+        />
+        <ObjektKachel
+          icon="ph:storefront"
+          title={t("dashboard.listingsActive")}
+          value={data.objekte_aktiv}
+          label={t("dashboard.listingsActiveLabel")}
         />
         <ObjektKachel
           icon="ph:pause-circle"

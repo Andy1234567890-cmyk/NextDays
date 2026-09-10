@@ -298,6 +298,15 @@ export function TemplatesTab() {
             setSprachen(liste);
             setAktiv(code);
           }}
+          // Geleert, nicht aus `fassungen` entfernt: `texteFuerApi` baut die
+          // Liste ohnehin aus `sprachen` und siebt leere Fassungen aus, und der
+          // Server entfernt beim Speichern, was in der Liste fehlt
+          // (`_sprachfassungen_schreiben`, Wurzel 1). Ein `delete` am Objekt
+          // ergäbe denselben Sollzustand, hinterließe den Reiter aber ohne
+          // Eintrag — `FassungFelder` bekäme `undefined` statt LEER.
+          onFassungLeeren={(code) =>
+            setFassungen((prev) => ({ ...prev, [code]: LEER }))
+          }
         />
         {aktiv === GRUNDFASSUNG && sprachen.length > 0 && (
           <p className="text-xs text-muted-foreground">{t("langBaseHint")}</p>

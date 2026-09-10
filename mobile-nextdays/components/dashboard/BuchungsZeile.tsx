@@ -59,6 +59,50 @@ function Addons({ addons }: { addons?: DashboardAddon[] }) {
 }
 
 /**
+ * Wechseltag: in DERSELBEN Einheit reist heute ein Gast ab und ein anderer an.
+ *
+ * Fuer die Person mit dem Telefon in der Hand ist das die wichtigste Angabe des
+ * Tages — zwischen zwei Belegungen muss das Objekt gedreht werden, statt ueber
+ * Nacht leer zu stehen. In den Listen steht die Buchung sonst zweimal
+ * unauffaellig da (einmal bei den Anreisen, einmal bei den Abreisen), ohne dass
+ * etwas den Zusammenhang zeigt.
+ *
+ * Symbol UND Text, nicht Farbe allein: ein reines Farbsignal ist fuer eine
+ * Rotgruensehschwaeche kein Signal.
+ *
+ * `unbekannt` bekommt eine eigene, ruhigere Form. Es als Wechsel zu zeigen
+ * behauptete eine Reinigung, die vielleicht nicht ansteht; es wegzulassen
+ * verschwiege die Luecke (Wurzel 4).
+ */
+function WechselAbzeichen({ wechsel }: { wechsel?: DashboardEntry["wechsel"] }) {
+  const t = useTheme();
+  // Optional wie `addons`: eine noch im Speicher liegende Antwort von vor
+  // dieser Aenderung kennt das Feld nicht.
+  if (!wechsel || wechsel === "nein") return null;
+  const sicher = wechsel === "ja";
+  const farbe = sicher ? t.palette.accent : t.palette.soft;
+  return (
+    <Row
+      gap={4}
+      style={{
+        alignItems: "center",
+        alignSelf: "flex-start",
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: t.radius.pill,
+        backgroundColor: sicher ? t.palette.accentSoft : t.palette.surface2,
+        marginTop: 2,
+      }}
+    >
+      <Icon n={sicher ? "wechsel" : "frage"} s={11} sw={2} c={farbe} />
+      <Txt v="xs" color={farbe} style={{ fontSize: 11 }}>
+        {sicher ? "Wechsel" : "Wechsel unklar"}
+      </Txt>
+    </Row>
+  );
+}
+
+/**
  * Eine Buchungszeile. Zeigt alles, was der Endpoint je Eintrag liefert: Gast,
  * Objekt, Zeitraum + Nächte, Herkunft (ota_name vor Kanal-Label), Status und
  * gebuchte Zusatzleistungen. Tippen führt ins Buchungsdetail.
@@ -146,6 +190,7 @@ export function BuchungsZeile({
             <Txt v="xs" soft numberOfLines={1}>
               {tagKurz(eintrag[datumsfeld])} · {n} {n === 1 ? "Nacht" : "Nächte"} · {herkunft}
             </Txt>
+            <WechselAbzeichen wechsel={eintrag.wechsel} />
             <Addons addons={eintrag.addons} />
           </Col>
         </Row>

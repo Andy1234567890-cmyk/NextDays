@@ -38,6 +38,7 @@ from .common import (
     ChannelManagerError,
     gastfelder_uebernehmen,
     ist_bestandsimport,
+    ist_frisch,
     kanal_plan_id,
     log,
     ota_an_abreisezeit,
@@ -1450,26 +1451,36 @@ class BookingsSyncMixin:
                 # Best-effort wie bei `created`: die Funktion faengt intern
                 # breit, ein Meldungsfehler darf den Storno nicht kippen
                 # (Wurzel 5 — der Kalender ist zu diesem Zeitpunkt schon frei).
-                melde_buchungs_ereignis(
-                    db,
-                    tenant_id=tenant_id,
-                    reservation_id=str(reservation_id),
-                    kind="cancelled",
-                    property_id=free_property_id,
-                    gast_vorname=self._gast_name(
-                        db, tenant_id, existing[0].get("guest_id")
-                    ),
-                    quelle=ota_name,
-                    kanal=channel,
-                    # Der STORNIERTE Zeitraum, also der aus der bestehenden
-                    # Zeile — nicht der aus der eingehenden Payload. Wer die
-                    # Meldung liest, muss wissen, welche Nächte gerade wieder
-                    # frei geworden sind.
-                    check_in=old_check_in,
-                    check_out=old_check_out,
-                    erwachsene=existing[0].get("adults"),
-                    kinder=existing[0].get("children"),
-                )
+                #
+                # AM SCHALTER WIE `created` (nachgezogen 09.09.2026): Dieser
+                # Aufruf war ungegated, waehrend die `created`-Meldung schon
+                # hinter `if not bestandsimport` stand. Damit meldete ein
+                # Bestandsimport jeden Storno erneut — dasselbe Symptom wie bei
+                # den Neubuchungen, nur fuer die andere Ereignisart, und in der
+                # Glocke des Nutzers stand genau das („Buchung storniert"
+                # zwischen den Altbuchungen). Aufgefallen ist es erst, weil der
+                # Voll-Abgleich seit heute ueber den GESAMTEN Bestand meldet.
+                if not bestandsimport:
+                    melde_buchungs_ereignis(
+                        db,
+                        tenant_id=tenant_id,
+                        reservation_id=str(reservation_id),
+                        kind="cancelled",
+                        property_id=free_property_id,
+                        gast_vorname=self._gast_name(
+                            db, tenant_id, existing[0].get("guest_id")
+                        ),
+                        quelle=ota_name,
+                        kanal=channel,
+                        # Der STORNIERTE Zeitraum, also der aus der bestehenden
+                        # Zeile — nicht der aus der eingehenden Payload. Wer die
+                        # Meldung liest, muss wissen, welche Nächte gerade wieder
+                        # frei geworden sind.
+                        check_in=old_check_in,
+                        check_out=old_check_out,
+                        erwachsene=existing[0].get("adults"),
+                        kinder=existing[0].get("children"),
+                    )
             return True
 
         if guest_id is None:
@@ -2402,12 +2413,28 @@ class BookingsSyncMixin:
         *,
         inserted_after: str | None = None,
         arrival_from: str | None = None,
+        melde_frische: bool = False,
     ) -> dict[str, int]:
         """EINMALIGER Initial-/Recovery-Import via GET /bookings (paginiert).
         Pro Buchung: Staging (_upsert_booking) + Projektion in reservations.
         KEIN ack (das macht nur der Feed). Pro Buchung isoliert (eine kaputte
         blockiert den Rest nicht). ``arrival_from`` grenzt auf Anreisedatum ab
-        (Bestandsimport „alle künftigen Buchungen ab heute")."""
+        (Bestandsimport „alle künftigen Buchungen ab heute").
+
+        MELDUNGEN (Wurzel 5b): Dieser Weg holt BESTAND — Buchungen, die der
+        Betrieb längst kennt. Er lief bisher ohne `bestandsimport=True` und
+        löste damit für jede nachgetragene Altbuchung „Neue Buchung" an
+        Eigentümer UND Betriebsleitung aus. Live gemeldet am 09.09.2026: die
+        Glocke stand voll mit Buchungen von 2026-08 bis 2027-07, jede als
+        frisches Ereignis, dazu die Mails.
+
+        ``melde_frische`` ist die EINZIGE Ausnahme: der nächtliche
+        Recovery-Lauf (`full_sync`) heilt echte Feed-Lücken aus Channex'
+        30-Minuten-Retention — eine dort gefundene Buchung ist neu und der
+        Betrieb hat sie noch nie gesehen. Entschieden wird das dann NICHT
+        pauschal, sondern je Buchung am QUELL-Zeitstempel (`booked_at`), nie an
+        unserer Uhr und nie an der Anreise.
+        """
         result = {"fetched": 0, "saved": 0, "skipped": 0}
         if not self._channex.is_configured or self._db is None:
             return result
@@ -2443,8 +2470,15 @@ class BookingsSyncMixin:
                     guest_id = self._upsert_booking(
                         db, tenant_id, attrs, attrs.get("revision_id")
                     )
+                    # Bestand meldet nicht (siehe Docstring). Nur der
+                    # Recovery-Lauf darf melden, und auch er nur für eine
+                    # Buchung, die der Gast WIRKLICH gerade gebucht hat.
+                    bestand = not (
+                        melde_frische and _frisch_gebucht(attrs)
+                    )
                     if self._project_booking_to_reservation(
-                        db, tenant_id, attrs, guest_id
+                        db, tenant_id, attrs, guest_id,
+                        bestandsimport=bestand,
                     ):
                         result["saved"] += 1
                     else:
@@ -3009,3 +3043,57 @@ class BookingsSyncMixin:
             return round(float(amount) * 100)  # type: ignore[arg-type]
         except (TypeError, ValueError):
             return None
+
+
+# Wie viele TAGE holt der nächtliche Recovery-Lauf nach? Das Retention-Fenster
+# von Channex sind ~30 Minuten: eine un-geackte Revision ist danach permanent
+# aus dem Feed. Drei Tage decken einen Worker-/Redis-Ausfall über ein
+# Wochenende ab und bleiben beim Abruf günstig.
+#
+# DIESE ZAHL IST DIE EINE QUELLE für beide Enden des Recovery-Wegs — das
+# Abruf-Fenster (`full_sync`, `inserted_after`) und das Melde-Fenster
+# (`RECOVERY_FRISCH_STUNDEN` darunter). Vorher waren es zwei Zahlen: geholt
+# wurden 3 Tage, gemeldet nur 48 Stunden. Eine echte Feed-Lücken-Buchung aus
+# Stunde 48–72 wurde damit stillschweigend NICHT gemeldet, obwohl sie genau der
+# Fall ist, für den dieser Lauf existiert — der Kalender wurde richtig, der
+# Betrieb erfuhr es nie. Wer das Fenster künftig ändert, zieht das Melden mit.
+RECOVERY_FENSTER_TAGE = 3
+
+# Wie frisch muss eine Buchung sein, damit der Recovery-Lauf sie noch als
+# Ereignis meldet? Genau so frisch, wie der Lauf überhaupt holt — abgeleitet,
+# nicht daneben gesetzt (Begründung oben).
+#
+# WARUM ES TROTZDEM EINE ZWEITE PRÜFUNG BRAUCHT und das Abruf-Fenster nicht
+# reicht: `inserted_after` filtert auf Channex' EIGENEN Eingang, nicht auf den
+# Zeitpunkt des Gastes. Eine Buchung, die der Gast vor einem halben Jahr
+# getätigt hat, kann heute erstmals als Revision auftauchen (spät aktiviertes
+# Mapping, Nachlieferung des Portals) und käme damit durch das Fenster. Der
+# Quell-Zeitstempel ist die Frage „hat der Gast gerade gebucht", das Fenster
+# nur „hat Channex es gerade gesehen" (Wurzel 5b). Beim manuellen Voll-Abgleich
+# gibt es überhaupt kein Fenster — dort ist diese Prüfung die einzige Bremse.
+RECOVERY_FRISCH_STUNDEN = RECOVERY_FENSTER_TAGE * 24
+
+
+def _frisch_gebucht(attrs: dict[str, Any]) -> bool:
+    """Hat der Gast diese Buchung GERADE erst getätigt?
+
+    Gemessen am Quell-Zeitstempel des Portals (`ota_buchungszeitpunkt`), nie an
+    unserer Uhr und nie an der Anreise (Wurzel 5b). Der Vorgänger dieser
+    Prüfung fragte `arrival_date < heute` — damit galt eine im März gebuchte
+    Reise mit Anreise Juli 2027 als „nicht Bestand" und löste eine
+    Neu-Buchungs-Meldung aus. Genau dieses Muster stand live in der Glocke:
+    ausschließlich künftige Anreisen, weil abgereiste korrekt unterdrückt
+    wurden.
+
+    FAIL-CLOSED (Wurzel 5): Gibt `ist_frisch` kein klares `True` — Zeitpunkt
+    fehlt, ist unlesbar oder liegt in der Zukunft —, ist die Antwort `False`:
+    die Buchung gilt als Bestand und meldet NICHT. Die umgekehrte Vorgabe
+    („lieber eine Meldung zu viel") war die Ursache des Fehlers: eine falsche
+    Meldung ist für den Empfänger nicht als falsch erkennbar, eine fehlende
+    Meldung über eine Buchung, die im Kalender korrekt steht, ist dagegen
+    folgenlos. Die Richtung steht bewusst HIER und nicht im Helfer — sie ist an
+    jeder der drei Aufrufstellen eine andere (siehe `common.ist_frisch`).
+    """
+    return ist_frisch(
+        ota_buchungszeitpunkt(attrs), stunden=RECOVERY_FRISCH_STUNDEN
+    ) is True

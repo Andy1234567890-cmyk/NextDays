@@ -20,6 +20,8 @@ from src.core.security import AuthContext
 from src.features.auth.owner_scope import is_owner, owner_property_ids
 from src.features.auth.staff_scope import is_staff, staff_property_ids
 
+from .inventar import InventarMixin
+from .mappe_dokumente import MappeDokumenteMixin
 from .schemas import (
     AccessData,
     DossierFull,
@@ -52,7 +54,7 @@ class DossierError(Exception):
         self.status_code = status_code
 
 
-class PropertyDossierService:
+class PropertyDossierService(MappeDokumenteMixin, InventarMixin):
     slice_name = "property_dossier"
 
     def __init__(

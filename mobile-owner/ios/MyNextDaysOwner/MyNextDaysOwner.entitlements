@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Ohne diesen Eintrag scheitert `registerForRemoteNotifications` still:
+	     iOS meldet "no valid aps-environment entitlement string found",
+	     `isRegisteredForRemoteNotifications` bleibt NO, und getToken() wirft
+	     [messaging/unregistered]. Genau das war der Push-Ausfall vom
+	     09.09.2026 — kein JavaScript-Fehler, ein fehlendes Entitlement.
+
+	     `development` gilt fuer Debug-Builds und TestFlight-Sideloads; beim
+	     Archivieren fuer den App Store ersetzt Xcode den Wert automatisch
+	     durch `production`. Ein fest eingetragenes `production` liesse Push
+	     in der Entwicklung scheitern. -->
+	<key>aps-environment</key>
+	<string>development</string>
+</dict>
+</plist>

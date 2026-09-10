@@ -5,11 +5,13 @@ er in Ruhe laesst — nicht die Projektion selbst (die hat ihre eigenen Tests).
 """
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from src.features.channel_manager.buchungs_abgleich import (
+    BESTAND_AB_STUNDEN,
     BuchungsAbgleichMixin,
-    _anreise_vorbei,
+    _bestand,
 )
 
 _TENANT = "a25577cf-c941-45c4-8d23-008887e631aa"
@@ -56,13 +58,30 @@ class _Dienst(BuchungsAbgleichMixin):
         return True
 
 
-def _staging(code: str, cbid: str, status: str = "new", anreise: str = "2030-01-01") -> dict:
+def _staging(
+    code: str,
+    cbid: str,
+    status: str = "new",
+    anreise: str = "2030-01-01",
+    booked_at: str | None = None,
+) -> dict:
+    """Eine Staging-Zeile. `booked_at` ist der QUELL-Buchungszeitpunkt.
+
+    Vorgabe ist ein alter Wert: dieser Job findet per Definition Altbestand,
+    und ohne echten Buchungszeitpunkt gilt eine Zeile ohnehin als Bestand
+    (fail-closed, siehe `_bestand`).
+    """
     return {
         "channex_booking_id": cbid,
         "ota_reservation_code": code,
         "status": status,
         "guest_id": f"g-{code}",
-        "raw": {"booking_id": cbid, "ota_reservation_code": code, "arrival_date": anreise},
+        "raw": {
+            "booking_id": cbid,
+            "ota_reservation_code": code,
+            "arrival_date": anreise,
+            "booked_at": booked_at or "2020-01-01T10:00:00Z",
+        },
     }
 
 
@@ -111,12 +130,29 @@ def test_eine_kaputte_zeile_kippt_den_lauf_nicht() -> None:
     assert len(res["fehler"]) == 1 and res["fehler"][0].startswith("B:")
 
 
-def test_vergangene_anreise_ist_bestand_kuenftige_ein_ereignis() -> None:
-    """Nur fuer kuenftige Aufenthalte laeuft der volle Nachlauf (Glocke, Aufgaben)."""
+def test_bestand_haengt_am_buchungszeitpunkt_nicht_an_der_anreise() -> None:
+    """Was der Gast LANGE gebucht hat, ist Bestand — auch bei kuenftiger Anreise.
+
+    DER FEHLER, DEN DAS ABSICHERT (live gemeldet 09.09.2026): Die
+    Vorgaenger-Fassung fragte `arrival_date < heute`. Eine im Vorjahr gebuchte
+    Reise mit Anreise 2030 galt damit als frisches Ereignis und meldete bei
+    JEDEM Tageslauf „Neue Buchung" an Eigentuemer und Betriebsleitung, plus
+    Mail. Genau dieses Muster stand in der Glocke: ausschliesslich kuenftige
+    Anreisen, weil vergangene korrekt unterdrueckt wurden.
+    """
     db = _Db({
         "channex_booking": [
-            _staging("ALT", "chx-alt", anreise="2020-01-01"),
-            _staging("NEU", "chx-neu", anreise="2030-01-01"),
+            # Kuenftige Anreise, aber vor Jahren gebucht → Bestand.
+            _staging(
+                "ALTGEBUCHT", "chx-alt",
+                anreise="2030-01-01", booked_at="2020-01-01T10:00:00Z",
+            ),
+            # Vergangene Anreise, aber gerade gebucht → Ereignis.
+            _staging(
+                "FRISCH", "chx-neu",
+                anreise="2020-01-01",
+                booked_at=datetime.now(UTC).isoformat(),
+            ),
         ],
         "reservations": [],
     })
@@ -124,9 +160,66 @@ def test_vergangene_anreise_ist_bestand_kuenftige_ein_ereignis() -> None:
 
     dienst.feed_buchungen_abgleichen(_TENANT)
 
-    assert dict((p[0], p[2]) for p in dienst.projiziert) == {"ALT": True, "NEU": False}
-    assert _anreise_vorbei({"arrival_date": "kaputt"}) is False
-    assert _anreise_vorbei({}) is False
+    assert dict((p[0], p[2]) for p in dienst.projiziert) == {
+        "ALTGEBUCHT": True, "FRISCH": False,
+    }
+
+
+def test_bestand_prueft_die_grenze_beidseitig() -> None:
+    """Die 48-Stunden-Grenze selbst — nicht nur der Codepfad daneben.
+
+    WARUM DIESER TEST NOETIG WURDE: Der Test oben arbeitet mit
+    `datetime.now(UTC)` und einem Datum von 2020. Beide Werte liegen so weit
+    von der Grenze entfernt, dass er gruen bleibt, wenn jemand
+    `BESTAND_AB_STUNDEN` auf 1 oder auf 500 setzt. Er prueft, DASS am
+    Buchungszeitpunkt entschieden wird — nicht, WO die Grenze liegt. Eine
+    verschobene Grenze ist aber genau der stille Rueckfall: bei 500 Stunden
+    meldet der Tageslauf wieder Wochen alte Buchungen als neu.
+
+    Die Stuetzwerte sind aus der Konstante ABGELEITET, nicht hartkodiert —
+    sonst prueft der Test nach der naechsten Aenderung wieder etwas anderes als
+    die geltende Grenze.
+    """
+    fenster = timedelta(hours=BESTAND_AB_STUNDEN)
+    knapp_drinnen = _jetzt() - (fenster - timedelta(minutes=5))
+    knapp_draussen = _jetzt() - (fenster + timedelta(minutes=5))
+
+    # Innerhalb des Fensters gebucht → frisches Ereignis, KEIN Bestand.
+    assert _bestand({"booked_at": knapp_drinnen.isoformat()}) is False
+    # Fuenf Minuten aelter → Bestand, keine Meldung.
+    assert _bestand({"booked_at": knapp_draussen.isoformat()}) is True
+
+
+def test_zukunftszeitpunkt_gilt_als_bestand_nicht_als_ewig_frisch() -> None:
+    """Ein Portal mit falsch gestellter Uhr darf nicht dauerhaft melden.
+
+    Die Vorgaenger-Fassung verglich einseitig (`jetzt - zeitpunkt <= fenster`).
+    Fuer einen Zeitstempel in der ZUKUNFT — falscher Offset, vertauschtes
+    Tag/Monat, falsch gestellte Uhr beim Portal — ist das DAUERHAFT wahr: die
+    Buchung galt fuer immer als frisch und meldete bei jedem Tageslauf erneut.
+    `ist_frisch` gibt fuer solche Werte `None` und loggt sie laut; hier faellt
+    das fail-closed auf Bestand.
+    """
+    weit_voraus = _jetzt() + timedelta(days=30)
+    assert _bestand({"booked_at": weit_voraus.isoformat()}) is True
+
+
+def _jetzt() -> datetime:
+    """Jetzt in UTC — eine Stelle, damit die Grenzwerte oben vergleichbar sind."""
+    return datetime.now(UTC)
+
+
+def test_ohne_buchungszeitpunkt_gilt_bestand_fail_closed() -> None:
+    """Fehlt der Quell-Zeitstempel, wird NICHT gemeldet (Wurzel 5).
+
+    Die alte Vorgabe war die umgekehrte („lieber eine Meldung zu viel") und
+    genau darin lag der Fehler: eine falsche Meldung ist fuer den Empfaenger
+    nicht als falsch erkennbar, eine fehlende ueber eine korrekt im Kalender
+    stehende Buchung ist folgenlos.
+    """
+    assert _bestand({}) is True
+    assert _bestand({"booked_at": "kaputt"}) is True
+    assert _bestand({"arrival_date": "2030-01-01"}) is True
 
 
 def test_worker_kennt_den_job_und_reiht_ihn_am_tagestick_ein() -> None:

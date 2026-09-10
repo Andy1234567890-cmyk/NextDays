@@ -6,6 +6,7 @@ Double-Booking-Schutz aus dem calendar-Slice greift.
 """
 from datetime import date, datetime
 from enum import StrEnum
+from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -553,6 +554,16 @@ class DashboardEntry(BaseModel):
     # zeigt dann keinen Nachrichten-Knopf, statt auf eine leere Ansicht zu
     # verlinken (Wurzel 4: kein Element ohne Wirkung).
     message_thread_id: str | None = None
+    # Wechseltag: in DERSELBEN Einheit reist am Tag dieser Buchung ein Gast ab
+    # und ein anderer an. Der teuerste Reinigungstag — das Team muss zwischen
+    # zwei Belegungen drehen, statt eine leere Nacht zu haben.
+    #
+    # Drei Zustände, kein bool: „nein" und „lässt sich nicht sagen" sind
+    # verschiedene Aussagen. `unbekannt` heißt, dass eine der beiden Buchungen
+    # keine `unit_id` trägt (nullable seit 0265) — dann ist nicht entscheidbar,
+    # ob es dieselbe Einheit ist, und ein geratenes „ja"/„nein" wäre eine
+    # erfundene Aussage (Wurzel 4).
+    wechsel: Literal["ja", "nein", "unbekannt"] = "nein"
 
 
 class DashboardKpi(BaseModel):
@@ -603,7 +614,14 @@ class DashboardResponse(BaseModel):
     currency: str = ""
     # Objektbestand des Betriebs (Owner: nur seine). „Entwurf" ist bei uns das,
     # was Hostaway „incomplete" nennt: angelegt, aber nicht verkaufsfertig.
+    # ARCHIVIERTE sind in keiner dieser Zahlen enthalten — sie sind eine eigene
+    # Achse neben `status` (0416), und mitgezählt widersprach `gesamt` der
+    # Objektliste daneben (live 09.09.2026: 21 gegen 20).
     objekte_gesamt: int = 0
+    # „So viele Objekte verkaufe ich" — die Zahl, nach der ein Betrieb zuerst
+    # sieht. Sie fehlte, und aus `gesamt − inaktiv − entwurf` war sie nicht
+    # verlässlich zu erraten.
+    objekte_aktiv: int = 0
     objekte_inaktiv: int = 0
     objekte_entwurf: int = 0
 

@@ -32,9 +32,11 @@ export const KACHEL_IDS = [
   "nachricht:automation:schnitt",
   "nachricht:ungelesen",
   "objekt:gesamt",
+  "objekt:aktiv",
   "objekt:inaktiv",
   "objekt:entwurf",
   "vorgaenge:eigentuemer",
+  "aufgaben:team",
 ] as const;
 
 export type KachelId = (typeof KACHEL_IDS)[number];
@@ -51,6 +53,7 @@ export const BREITE: Record<KachelGroesse, number> = { s: 4, m: 6, l: 12 };
  *  des alten, starren Dashboards. */
 export type KachelBereich =
   | "reservierungen"
+  | "aufgaben"
   | "kennzahlen"
   | "nachrichten"
   | "objekte";
@@ -92,6 +95,13 @@ export type KachelDefinition = {
 const VIEW_CALENDAR: KachelZugang = { art: "capability", capability: "view_calendar" };
 const NACHRICHTEN: KachelZugang = { art: "permission", permission: "pm_chat" };
 const BETRAEGE: KachelZugang = { art: "betraege" };
+/** Teamaufgaben: dieselbe Fähigkeit wie `/tasks/team` und `/tasks/startseite`
+ *  (MANAGE_TASKS). Bewusst NICHT `view_own_tasks`: die Kachel zählt FREMDE
+ *  Aufgaben, und wer die Liste nicht öffnen darf, darf auch ihre Summe nicht
+ *  sehen (Wurzel 9 — gleicher Scope wie der List-Pfad). Für staff/cleaner ist
+ *  das kein Verlust: ohne `view_calendar` leitet die Startseite sie ohnehin auf
+ *  ihre operative Liste /reservierungen/aufgaben weiter (page.tsx). */
+const AUFGABEN: KachelZugang = { art: "capability", capability: "manage_tasks" };
 
 /** Der Katalog in STANDARD-Reihenfolge — sie ist zugleich das Layout, das ein
  *  Nutzer ohne eigenes Layout und ohne Rollen-Standard bekommt (der Server
@@ -151,6 +161,19 @@ export const KATALOG: readonly KachelDefinition[] = [
     groessen: ["s", "m", "l"],
     standardGroesse: "m",
     zugang: { art: "capability", capability: "approve_block" },
+  },
+  // --- Aufgaben (Ist-Stand des Teams, kein Zeitraum) -------------------------
+  {
+    id: "aufgaben:team",
+    bereich: "aufgaben",
+    titelKey: "dashboard.teamTasks",
+    icon: "ph:list-checks",
+    // Kein "s": die Karte trägt vier Zeilen (überfällig, heute, ohne
+    // Zuständige, zur Abnahme) plus die große Zahl — in 4 Spalten bräche jede
+    // Zeile um, wie bei den Listen-Karten.
+    groessen: ["m", "l"],
+    standardGroesse: "m",
+    zugang: AUFGABEN,
   },
   // --- Kennzahlen (30 Tage, umschaltbar) ------------------------------------
   {
@@ -264,6 +287,19 @@ export const KATALOG: readonly KachelDefinition[] = [
     zugang: { art: "alle" },
   },
   {
+    // Die Zahl, nach der ein Betrieb zuerst sieht: „so viele Objekte
+    // verkaufe ich". Sie fehlte, und aus Gesamt/Inaktiv/Entwurf war sie nicht
+    // verlaesslich zu erraten — bei einem archivierten Objekt im Gesamt ergab
+    // die Rechnung sogar das Falsche (09.09.2026).
+    id: "objekt:aktiv",
+    bereich: "objekte",
+    titelKey: "dashboard.listingsActive",
+    icon: "ph:storefront",
+    groessen: ["s", "m"],
+    standardGroesse: "s",
+    zugang: { art: "alle" },
+  },
+  {
     id: "objekt:inaktiv",
     bereich: "objekte",
     titelKey: "dashboard.listingsInactive",
@@ -304,6 +340,7 @@ export function istKachelId(wert: unknown): wert is KachelId {
 /** Reihenfolge der Bereiche für Gruppierungen in der UI. */
 export const BEREICHE: readonly KachelBereich[] = [
   "reservierungen",
+  "aufgaben",
   "kennzahlen",
   "nachrichten",
   "objekte",

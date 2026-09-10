@@ -24,6 +24,29 @@
 // Solange der Betrieb KEINE Sprachen verwaltet, zeigt diese Komponente gar keine
 // Reiter — dann ist die Grundfassung schlicht „der Text", genau wie vorher.
 //
+// ZWEI VERSCHIEDENE „LÖSCHEN", DIE MAN NICHT VERWECHSELN DARF:
+//   1. HIER, am Reiter (das X): löscht die Fassung DIESER EINEN Vorlage/Regel.
+//      Die Sprache bleibt beim Betrieb geführt, der Reiter bleibt stehen (nur
+//      leer, mit grauem Punkt), alle anderen Vorlagen bleiben unberührt.
+//   2. In „Sprachen verwalten" (`sprachen-panel.tsx`, der Papierkorb): entfernt
+//      die Sprache beim BETRIEB — samt ihren Texten in ALLEN Vorlagen und
+//      Regeln, und der Reiter verschwindet überall.
+// Beide Dialoge benennen genau diesen Unterschied (`langClearConfirm` gegen
+// `langRemoveHint`), sonst löscht jemand 17 Vorlagen, weil er eine meinte.
+//
+// WARUM DAS X NICHT SOFORT SPEICHERT, anders als der Papierkorb in „Sprachen
+// verwalten": dort ist jede Zeile eine für sich stehende Entscheidung, hier ist
+// die Fassung Teil eines Formulars, das noch ungespeicherte Änderungen an
+// Titel, Grundfassung und den anderen Sprachen hält. Ein sofortiger Server-
+// Aufruf würde vom nächsten „Speichern" ohnehin wieder überschrieben — der
+// Speichern-Pfad schickt IMMER den vollständigen Sollzustand
+// (`_sprachfassungen_schreiben`, Wurzel 1: was fehlt, wird entfernt). Das X
+// leert die Fassung deshalb im Editor und sagt dazu, dass es mit dem Speichern
+// wirkt; ein zweiter, entgegengesetzt laufender Löschweg entfällt.
+// Nebeneffekt derselben Entscheidung: das X wirkt auch in einer NOCH NICHT
+// gespeicherten Vorlage, die gar keine ID hat, an der ein DELETE-Endpunkt also
+// nichts löschen könnte.
+//
 // ZWEI FORMATE, weil die zwei Ziele verschieden sind (`format`):
 //   `"html"` — VORLAGEN. Autorenformat ist HTML (`body_html`), den Klartext für
 //     den Versand leitet der SERVER ab.
@@ -73,6 +96,7 @@ export function SprachReiter({
   fassungen,
   namen,
   onSpracheHinzugefuegt,
+  onFassungLeeren,
 }: {
   sprachen: MessageLanguage[];
   aktiv: string;
@@ -89,11 +113,26 @@ export function SprachReiter({
     sprachen: MessageLanguage[],
     neuerCode: string,
   ) => void;
+  /** Diese Sprachfassung soll weg (das X am Reiter). Der Aufrufer leert sie in
+   *  seinem `fassungen`-Zustand; entfernt wird sie beim Speichern, weil der
+   *  Speichern-Pfad den vollständigen Sollzustand schickt. Fehlt der Handler,
+   *  gibt es kein X — dann ist die Leiste reine Anzeige.
+   *
+   *  NIE für die Grundfassung: sie ist der letzte Rang. Ohne sie hätte ein
+   *  Gast, dessen Sprache und dessen Standardsprache keine Fassung haben, gar
+   *  keinen Text — die Vorlage verschickte nichts. Der Aufrufer bekommt sie
+   *  deshalb nie übergeben. */
+  onFassungLeeren?: (sprachcode: string) => void;
 }) {
   const t = useTranslations("inbox");
   const [waehlen, setWaehlen] = useState(false);
   const [pending, setPending] = useState(false);
   const [fehler, setFehler] = useState<string | null>(null);
+  /** Zuletzt geleerte Sprache (Anzeigename) — für den Hinweis „wirkt beim
+   *  Speichern". Ohne ihn sieht der Betreiber nach dem X nur einen grauen Punkt
+   *  und hält die Fassung für schon gelöscht; verlässt er die Maske ohne zu
+   *  speichern, steht sie unverändert in der DB und geht weiter an Gäste raus. */
+  const [geleert, setGeleert] = useState<string | null>(null);
 
   // Die Auswahl hinter dem Plus kommt aus `namen` — der Katalog des Servers,
   // den jeder Editor ohnehin lädt (`listAvailableLanguages`). Bewusst kein
@@ -134,34 +173,81 @@ export function SprachReiter({
     })),
   ];
 
+  /** Das X am Reiter. Fragt vorher — und benennt im Dialog, dass es NUR diese
+   *  eine Vorlage/Regel trifft. Ohne diesen Satz ist es von „Sprache entfernen"
+   *  in „Sprachen verwalten" nicht zu unterscheiden, das die Texte in ALLEN
+   *  Vorlagen löscht. */
+  function leeren(code: string, label: string) {
+    if (!window.confirm(t("langClearConfirm", { sprache: label }))) return;
+    // Diagnose (Nutzerregel „Debugging immer einbauen"): das Leeren wirkt erst
+    // beim Speichern, also liegen Klick und Wirkung auseinander. Bleibt die
+    // Fassung nach dem Speichern stehen, beantwortet diese Zeile die erste
+    // Frage — kam der Klick überhaupt an, und mit welchem Sprachcode?
+    console.warn("[inbox] Sprachfassung geleert (wirkt beim Speichern)", {
+      sprache: code,
+    });
+    setGeleert(label);
+    onFassungLeeren?.(code);
+  }
+
   return (
     <div className="flex flex-wrap items-center gap-1 border-b border-border">
-      {reiter.map((r) => (
-        <button
-          key={r.schluessel}
-          type="button"
-          onClick={() => onAktiv(r.schluessel)}
-          aria-current={aktiv === r.schluessel}
-          className={
-            "-mb-px flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm transition-colors " +
-            (aktiv === r.schluessel
-              ? "border-accent font-medium text-foreground"
-              : "border-transparent text-muted-foreground hover:text-foreground")
-          }
-        >
-          {r.label}
-          {/* Der Punkt beantwortet die Frage, die man beim Pflegen von fünf
-              Sprachen dauernd hat: welcher Reiter ist noch leer? Ohne ihn muss
-              man jeden einzeln anklicken. */}
+      {reiter.map((r) => {
+        const gefuellt = fassungGefuellt(fassungen[r.schluessel]);
+        // Das X nur, wo es etwas zu leeren GIBT: nie an der Grundfassung (der
+        // letzte Rang, s. Prop-Kommentar) und nie an einem schon leeren Reiter
+        // — ein Knopf, der nichts tut, ist eine Attrappe.
+        const mitLeeren =
+          Boolean(onFassungLeeren) && r.schluessel !== GRUNDFASSUNG && gefuellt;
+        return (
           <span
-            aria-hidden="true"
+            key={r.schluessel}
             className={
-              "size-1.5 rounded-full " +
-              (fassungGefuellt(fassungen[r.schluessel]) ? "bg-emerald-500" : "bg-border")
+              "-mb-px flex items-center border-b-2 transition-colors " +
+              (aktiv === r.schluessel ? "border-accent" : "border-transparent")
             }
-          />
-        </button>
-      ))}
+          >
+            <button
+              type="button"
+              onClick={() => onAktiv(r.schluessel)}
+              aria-current={aktiv === r.schluessel}
+              className={
+                "flex items-center gap-1.5 py-2 text-sm transition-colors " +
+                (mitLeeren ? "pl-3 pr-1.5 " : "px-3 ") +
+                (aktiv === r.schluessel
+                  ? "font-medium text-foreground"
+                  : "text-muted-foreground hover:text-foreground")
+              }
+            >
+              {r.label}
+              {/* Der Punkt beantwortet die Frage, die man beim Pflegen von fünf
+                  Sprachen dauernd hat: welcher Reiter ist noch leer? Ohne ihn muss
+                  man jeden einzeln anklicken. */}
+              <span
+                aria-hidden="true"
+                className={
+                  "size-1.5 rounded-full " +
+                  (gefuellt ? "bg-emerald-500" : "bg-border")
+                }
+              />
+            </button>
+            {/* Eigener Knopf NEBEN dem Reiter, nicht darin: ein Knopf im Knopf
+                ist ungültiges HTML, und der Screenreader läse eine einzige,
+                mehrdeutige Schaltfläche vor. */}
+            {mitLeeren && (
+              <button
+                type="button"
+                onClick={() => leeren(r.schluessel, r.label)}
+                title={t("langClear", { sprache: r.label })}
+                aria-label={t("langClear", { sprache: r.label })}
+                className="mr-1.5 rounded-full p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"
+              >
+                <Icon icon="ph:x" className="size-3.5" />
+              </button>
+            )}
+          </span>
+        );
+      })}
 
       {/* Der Weg zur nächsten Sprache steht DA, wo die Sprachen stehen. Vorher
           lag er nur im Automatisieren-Panel unter „Sprachen verwalten" — wer
@@ -199,6 +285,16 @@ export function SprachReiter({
 
       {fehler && (
         <span className="px-2 text-sm text-destructive">{fehler}</span>
+      )}
+
+      {/* Der Hinweis steht NEBEN den Reitern, nicht in einem Toast: er gilt so
+          lange, bis gespeichert ist, und ein Toast wäre genau dann weg, wenn
+          man ihn braucht. Er nennt die Sprache beim Namen, damit nach zwei
+          geleerten Reitern klar ist, worauf er sich bezieht. */}
+      {geleert && (
+        <span className="basis-full px-1 pb-1.5 text-xs text-muted-foreground">
+          {t("langClearedPendingSave", { sprache: geleert })}
+        </span>
       )}
     </div>
   );

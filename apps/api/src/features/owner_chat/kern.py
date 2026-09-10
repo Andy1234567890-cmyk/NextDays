@@ -321,11 +321,12 @@ def nachricht_ablegen(
         bilder_modul.pfad_pruefen(pfad, tenant_id)
     if not chiffre and not bilder:
         raise OwnerChatError("Nachricht ist leer.", status_code=422)
-    # Zwei Verfahren liegen nebeneinander (09.09.2026): serverseitig
-    # verschlüsselte Nachrichten tragen die Marke `sv1:`, der E2E-Bestand
-    # nicht. Entschieden wird am INHALT, den der Server selbst erzeugt hat —
-    # nicht an einem Flag des Clients, das ein Angreifer setzen könnte, um die
-    # Geräteprüfung zu umgehen (Wurzel 3).
+    # Zwei Verfahren liegen nebeneinander (09.09.2026). Entschieden wird
+    # nicht an der Marke `sv1:` — die steht im base64 des Clients und ist in
+    # einer Zeile gefälscht —, sondern daran, ob der SERVERSCHLÜSSEL den
+    # Eintrag öffnet. Nur dann hat dieser Server ihn erzeugt, und nur dann
+    # sind die Geräteprüfungen unten gegenstandslos statt übersprungen
+    # (Wurzel 3).
     serverseitig = serverkrypto.ist_serverseitig(chiffre)
 
     if serverseitig:
@@ -496,7 +497,17 @@ def verlauf_lesen(
     if device_id:
         geraet_gesehen(db, tenant_id, device_id)
 
-    nicht_lesbar = sum(1 for z in zeilen if str(z["id"]) not in passend)
+    # NUR der E2E-Bestand kann „nicht lesbar" sein. Serverseitig
+    # verschlüsselte Nachrichten haben nie eine Zeile in `owner_message_keys`
+    # (sie brauchen keine) — sie hier mitzuzählen meldete dem Nutzer „N
+    # Nachrichten nicht lesbar" für einen Verlauf, in dem jede Nachricht offen
+    # vor ihm steht, und der Zähler wüchse mit jeder neuen Nachricht.
+    nicht_lesbar = sum(
+        1
+        for z in zeilen
+        if str(z["id"]) not in passend
+        and not serverkrypto.ist_serverseitig(str(z.get("body") or ""))
+    )
     for z in zeilen:
         eintrag = passend.get(str(z["id"])) or {}
         z["wrapped_key"] = eintrag.get("wrapped_key")

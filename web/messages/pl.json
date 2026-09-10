@@ -2747,7 +2747,8 @@
       "tradespeople": "Rzemieślnicy",
       "marketing": "Marketing",
       "housebook": "Księga domu",
-      "listing": "Wprowadzenie na rynek"
+      "listing": "Wprowadzenie na rynek",
+      "inventory": "Inwentarz"
     },
     "objectInfo": {
       "capacityPersons": "Pojemność (osoby)",
@@ -2898,7 +2899,130 @@
       "helaarsbolig": "Mieszkanie całoroczne",
       "fritidshus": "Dom letniskowy"
     },
-    "print": "Drukuj"
+    "print": "Drukuj",
+    "mappe": {
+      "gastTitel": "Teczka gościa — dokumenty",
+      "hausTitel": "Teczka domu — dokumenty (wewnętrzne)",
+      "titel": "Teczka cyfrowa",
+      "erklaerung": "Prześlij plik PDF — zawarte w nim dane zostaną odczytane i zaproponowane do potwierdzenia. Dokument pozostaje tutaj do wglądu.",
+      "hochladen": "Prześlij plik PDF",
+      "liest": "Odczytywanie…",
+      "laedt": "Ładowanie…",
+      "leer": "Brak dokumentów w tej teczce.",
+      "zuGross": "Plik jest za duży (maks. {mb} MB).",
+      "seiten": "{count, plural, one {# strona} few {# strony} many {# stron} other {# strony}}",
+      "ansehen": "Wyświetl {name} w dużym rozmiarze",
+      "loeschen": "Usuń {name}",
+      "loeschenFrage": "Usunąć „{name}” z teczki? Już przyjęte dane zostaną zachowane.",
+      "gefunden": "{count, plural, one {# dana znaleziona} few {# dane znalezione} many {# danych znalezionych} other {# dane znalezione}}",
+      "gefundenHinweis": "Żadne z nich nie są zapisane. Proszę sprawdzić, w razie potrzeby zmienić, a następnie zaakceptować — kod drzwi i hasła celowo nie są wstępnie wybrane.",
+      "nichtsGefunden": "W tym dokumencie nie było nic, co pasowałoby do pola teczki. Mimo to pozostaje on w teczce.",
+      "heikel": "Proszę dokładnie sprawdzić",
+      "fundstelle": "W dokumencie: {ort}",
+      "sprachfassung": "Wersja językowa",
+      "ueberschreiben": "Zastąp również już wypełnione pola",
+      "ausgewaehlt": "{count} z {gesamt} wybranych",
+      "verwerfen": "Odrzuć",
+      "uebernehmen": "Akceptuj",
+      "uebernimmt": "Przyjmowanie…",
+      "schliessen": "Zamknij",
+      "gesetzt": "{count, plural, =0 {Nic nie przyjęto} one {# pole przyjęto} few {# pola przyjęto} many {# pól przyjęto} other {# pola przyjęto}}",
+      "uebersprungen": "Już wypełnione i dlatego niezmienione: {felder}",
+      "stand": {
+        "offen": "nieprzeczytane",
+        "gelesen": "przeczytane",
+        "uebernommen": "przejęte",
+        "ohne_treffer": "nic nie znaleziono",
+        "fehler": "nie udało się odczytać"
+      },
+      "sicher": {
+        "hoch": "dobrze czytelne",
+        "mittel": "ograniczona czytelność",
+        "niedrig": "trudne do odczytania"
+      },
+      "sprache": {
+        "de": "Niemiecki",
+        "en": "Angielski",
+        "da": "Duński"
+      }
+    },
+    "inventar": {
+      "abschnitt": "Inwentarz",
+      "titel": "Lista inwentarzowa",
+      "erklaerung": "Co znajduje się w domu, według pomieszczeń. Oddzielenie stanu rzeczywistego od docelowego — różnica stanowi wynik inwentaryzacji. Zawsze można rozszerzyć.",
+      "laedt": "Ładowanie…",
+      "leer": "Jeszcze nic nie zarejestrowano. Dodaj wiersze ręcznie lub zaimportuj z pliku PDF.",
+      "neuName": "Przedmiot",
+      "neuSoll": "Docelowo",
+      "hinzufuegen": "Dodaj",
+      "raeume": "Pomieszczenia",
+      "keineRaeume": "jeszcze brak",
+      "raumName": "Nazwa pomieszczenia",
+      "raumHinzufuegen": "Dodaj pomieszczenie",
+      "ohneRaum": "Bez pomieszczenia",
+      "speichern": "Zapisz",
+      "istMenge": "Dostępna ilość",
+      "vonSoll": "z {soll}",
+      "geprueft": "Oznacz jako sprawdzone",
+      "loeschen": "Usuń",
+      "loeschenFrage": "Usunąć „{name}” z listy? Zgłoszone szkody zostaną zachowane.",
+      "ausDokument": "z PDF",
+      "ausDokumentHint": "Ten wiersz pochodzi z dokumentu cyfrowego folderu.",
+      "schadenMelden": "Zgłoś szkodę",
+      "schadenAn": "Szkoda w „{name}”",
+      "art": "Co się stało?",
+      "traeger": "Kto ponosi koszty?",
+      "werZahlt": "Kto płaci?",
+      "beschreibung": "Opis",
+      "fotoWaehlen": "Zrób lub wybierz zdjęcie",
+      "fotoPflicht": "Bez zdjęcia brak zgłoszenia — w przypadku sporu zdjęcie często jest jedynym, co się liczy.",
+      "fotosGewaehlt": "{count, plural, one {# wybrane zdjęcie} other {# wybrane zdjęcia}}",
+      "melden": "Zgłoś szkodę",
+      "meldet": "Zgłaszanie…",
+      "abbrechen": "Anuluj",
+      "offeneSchaeden": "{count, plural, one {# szkoda} other {# szkody}}",
+      "offeneSchaedenTitel": "{count, plural, one {# otwarta szkoda} other {# otwarte szkody}}",
+      "bild": "Zdjęcie {nr}",
+      "betrag": "Kwota",
+      "bestaetigen": "Potwierdź",
+      "verwerfen": "Odrzuć",
+      "verwerfenFrage": "Odrzucić szkodę w „{name}”? To nie była szkoda.",
+      "artWert": {
+        "beschaedigt": "Uszkodzone",
+        "fehlt": "Brak",
+        "entsorgt": "Wyrzucone"
+      },
+      "traegerWert": {
+        "offen": "Oczekujące",
+        "eigentuemer": "Właściciel",
+        "gast": "Gość",
+        "betrieb": "Działanie"
+      },
+      "pdfImport": "Lista z PDF",
+      "pdfLiest": "Odczytywanie…",
+      "pdfLeer": "W tym pliku PDF nie znaleziono listy inwentarza.",
+      "pdfGefunden": "{count, plural, one {# wiersz znaleziony} other {# wierszy znalezionych}}",
+      "pdfHinweis": "Nic z tego nie zostało zapisane. Sprawdź, zmień w razie potrzeby, a następnie zastosuj. Pokoje są przypisywane tylko wtedy, gdy już istnieją.",
+      "uebernimmt": "Zastosowanie…",
+      "uebernehmen": "Zastosuj",
+      "zustand": "Stan",
+      "rhythmus": "Częstotliwość zliczania",
+      "meldebestandKurz": "Poziom zapasów {n}",
+      "referenzSetzen": "Prześlij zdjęcie nienaruszonego stanu",
+      "referenzAnsehen": "Wyświetl zdjęcie nienaruszonego stanu",
+      "zustandWert": {
+        "neu": "nowy",
+        "gut": "dobry",
+        "abgenutzt": "zużyty",
+        "ersatz_faellig": "wymaga wymiany"
+      },
+      "rhythmusWert": {
+        "jede_abreise": "przy każdym wyjeździe",
+        "quartal": "kwartalnie",
+        "jaehrlich": "rocznie",
+        "nie": "nie wliczaj"
+      }
+    }
   },
   "finance": {
     "cancelInvoice": {
@@ -5285,7 +5409,23 @@
       "ownerRequestsLift": "Wnioski o anulowanie",
       "ownerRequestsTermination": "Zapowiedziane zakończenia umów",
       "ownerRequestsNone": "Brak otwartych operacji.",
-      "ownerRequestsOldest": "Najstarszy otwarty wniosek: {count, plural, =0 {dzisiaj} one {od jednego dnia} few {od # dni} many {od # dni} other {od # dni}}"
+      "ownerRequestsOldest": "Najstarszy otwarty wniosek: {count, plural, =0 {dzisiaj} one {od jednego dnia} few {od # dni} many {od # dni} other {od # dni}}",
+      "teamTasks": "Zadania zespołu",
+      "teamTasksExplain": "Co zespół ma do zrobienia: zadania zaległe i te, których termin przypada na dziś, zadania bez przypisanych osób oraz te, które czekają na akceptację. Jest to stan bieżący, a nie okres – otwarte jest otwarte, a starsze oznacza pilniejsze.",
+      "teamTasksLabel": "Zaległe lub na dziś",
+      "teamTasksOldest": "Najstarsze zaległe zadanie: od {count} dni",
+      "teamTasksOverdue": "Zaległe",
+      "teamTasksToday": "Na dziś",
+      "teamTasksUnassigned": "Bez przypisanych",
+      "teamTasksToReview": "Czeka na akceptację",
+      "teamTasksOpen": "Wszystkie otwarte",
+      "wechsel": "Zmiana",
+      "wechselHint": "Wymeldowanie i zameldowanie tego samego dnia w tej samej jednostce – sprzątanie musi odbyć się między dwoma rezerwacjami.",
+      "wechselUnklar": "Zmiana niejasna",
+      "wechselUnklarHint": "Tego samego dnia ktoś przyjeżdża do tego samego obiektu, ale jednostka jednej z rezerwacji nie jest przypisana – nie można stwierdzić, czy faktycznie trzeba dokonać zmiany.",
+      "teamTasksUrgencyUnknown": "zaległe lub płatne dzisiaj — obecnie niedostępne",
+      "listingsActive": "Aktywny",
+      "listingsActiveLabel": "W sprzedaży"
     },
     "mobileAppHint": "Widok zadań w terenie jest już dostępny responsywnie w sieci (Moje zadania + szczegóły z przesyłaniem zdjęć). Osobna aplikacja mobilna powstanie jako oddzielny projekt.",
     "aufgabenFilter": {
@@ -15280,7 +15420,8 @@
         "reservierungen": "Rezerwacje",
         "kennzahlen": "Kluczowe dane",
         "nachrichten": "Wiadomości",
-        "objekte": "Obiekty"
+        "objekte": "Obiekty",
+        "aufgaben": "Zadania"
       }
     }
   },

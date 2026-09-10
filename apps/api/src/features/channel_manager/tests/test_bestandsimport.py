@@ -10,13 +10,18 @@ Geprueft wird die WIRKUNG (was der Import ausloest), nicht die Verdrahtung.
 """
 from __future__ import annotations
 
+import ast
 import contextlib
 import inspect
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
 
 _SLICE = Path(__file__).resolve().parent.parent
+# Die Wurzel ALLER Slices: der Aufrufer-Test unten darf nicht am eigenen
+# Ordner enden (die Projektion ist ueber die Service-Fassade erreichbar).
+_FEATURES = _SLICE.parent
 
 
 def _quelle(modul: str) -> str:
@@ -37,6 +42,76 @@ def test_bestandsimport_setzt_das_kennzeichen(modul: str) -> None:
         f"{modul} projiziert ohne `bestandsimport=True` — jede nachgetragene "
         "Buchung loest Mails und Aufgaben aus (live am 31.08.2026 passiert)."
     )
+
+
+# Der EINZIGE Aufrufer, der `bestandsimport` weglassen darf: der Live-Feed
+# (`_sync_feed`, der Rumpf von `sync_bookings_all`). Dort ist jede Revision per
+# Definition ein frisches Ereignis, und die Vorgabe `False` ist genau richtig.
+_LIVE_FEED = "_sync_feed"
+
+
+def test_jeder_aufrufer_der_projektion_entscheidet_bewusst() -> None:
+    """Jede Projektions-Aufrufstelle setzt `bestandsimport` — ausser dem Feed.
+
+    WARUM DIESER TEST DEN VORGAENGER ERSETZT: Der zaehlte eine BEKANNTE Liste
+    von Modulen auf (`csv_import`, `lodgify_import`). Damit prueft er die
+    Stellen, an die man beim Schreiben gedacht hat — und genau daran lief der
+    Fehler vom 09.09.2026 vorbei: `import_bookings_for_property`
+    (Bestandsimport!) und `feed_buchungen_abgleichen` riefen die Projektion
+    ohne bewusste Entscheidung auf, und in der Glocke standen dutzende
+    Altbuchungen als frische Ereignisse, mitsamt Mails.
+
+    Ein Test, der eine Liste aufzaehlt, findet nur, was schon bekannt ist.
+    Dieser hier geht ueber den AST ALLER Slices und findet JEDE Aufrufstelle,
+    auch die von morgen.
+
+    WARUM `src/features` UND NICHT NUR `channel_manager`: Die Projektion ist
+    ueber die Service-Fassade nach aussen erreichbar (`service.py` reicht sie
+    per Mixin heraus). Ein flacher Glob auf den eigenen Ordner haette also
+    genau das nicht gesehen, was der Docstring verspricht — ein Aufruf aus
+    einem anderen Slice oder einem Unterordner waere unsichtbar geblieben.
+    """
+    fehlend: list[str] = []
+    for pfad in sorted(_FEATURES.rglob("*.py")):
+        if "tests" in pfad.parts:
+            continue  # Tests rufen die Projektion absichtlich direkt auf.
+        baum = ast.parse(pfad.read_text(encoding="utf-8"))
+        # Welche Funktion umschliesst den Aufruf? Ueber die Elternkette, damit
+        # der Feed-Pfad ausgenommen werden kann, ohne die Datei auszunehmen.
+        for eltern in ast.walk(baum):
+            for kind in ast.iter_child_nodes(eltern):
+                kind.parent = eltern  # type: ignore[attr-defined]
+        for knoten in ast.walk(baum):
+            if not isinstance(knoten, ast.Call):
+                continue
+            ziel = knoten.func
+            if not isinstance(ziel, ast.Attribute):
+                continue
+            if ziel.attr != "_project_booking_to_reservation":
+                continue
+            if any(k.arg == "bestandsimport" for k in knoten.keywords):
+                continue
+            umgebung = _umgebende_funktion(knoten)
+            if umgebung == _LIVE_FEED:
+                continue
+            ort = pfad.relative_to(_FEATURES)
+            fehlend.append(f"{ort}:{knoten.lineno} (in {umgebung})")
+
+    assert not fehlend, (
+        "Diese Aufrufe der Projektion entscheiden nicht ueber "
+        "`bestandsimport` und melden damit stumm jede Altbuchung als neu:\n  "
+        + "\n  ".join(fehlend)
+    )
+
+
+def _umgebende_funktion(knoten: ast.AST) -> str:
+    """Name der Funktion, in der dieser Knoten steht (oder '?')."""
+    aktuell = getattr(knoten, "parent", None)
+    while aktuell is not None:
+        if isinstance(aktuell, ast.FunctionDef | ast.AsyncFunctionDef):
+            return aktuell.name
+        aktuell = getattr(aktuell, "parent", None)
+    return "?"
 
 
 def test_projektion_kennt_den_schalter() -> None:
@@ -564,3 +639,70 @@ def test_channex_import_laesst_csv_gesamtpreis_stehen(monkeypatch) -> None:
     assert "total_amount" not in zeile and "paid_amount" not in zeile, (
         "der Zimmerpreis des Imports darf den Gesamtpreis der CSV nicht ersetzen"
     )
+
+
+# ── Das Melde-Fenster des Recovery-Laufs ──────────────────────────────────────
+
+
+def test_recovery_meldet_nur_innerhalb_des_fensters() -> None:
+    """Die Grenze von `_frisch_gebucht` selbst — beidseitig, aus der Konstante.
+
+    Fuenf Minuten neben der Grenze, nicht Jahre davon entfernt: ein Test mit
+    `now()` gegen ein Datum von 2020 bleibt gruen, egal wie breit das Fenster
+    ist. Er prueft dann den Codepfad, nicht die Grenze — und eine verschobene
+    Grenze ist genau der stille Rueckfall, um den es hier geht.
+    """
+    from src.features.channel_manager.bookings_sync import (
+        RECOVERY_FRISCH_STUNDEN,
+        _frisch_gebucht,
+    )
+
+    fenster = timedelta(hours=RECOVERY_FRISCH_STUNDEN)
+    jetzt = datetime.now(UTC)
+    drinnen = (jetzt - fenster + timedelta(minutes=5)).isoformat()
+    draussen = (jetzt - fenster - timedelta(minutes=5)).isoformat()
+
+    assert _frisch_gebucht({"booked_at": drinnen}) is True
+    assert _frisch_gebucht({"booked_at": draussen}) is False
+
+
+def test_recovery_faellt_fail_closed_auf_bestand() -> None:
+    """Kein klares „frisch" → keine Meldung (Wurzel 5).
+
+    Deckt alle drei Faelle ab, in denen `ist_frisch` `None` gibt: kein
+    Zeitstempel, unlesbarer Zeitstempel, Zeitstempel in der Zukunft. Der
+    letzte ist der interessante — einseitig verglichen galt er DAUERHAFT als
+    frisch und meldete bei jedem Lauf erneut.
+    """
+    from src.features.channel_manager.bookings_sync import _frisch_gebucht
+
+    voraus = (datetime.now(UTC) + timedelta(days=30)).isoformat()
+
+    assert _frisch_gebucht({}) is False
+    assert _frisch_gebucht({"booked_at": "kaputt"}) is False
+    assert _frisch_gebucht({"booked_at": voraus}) is False
+
+
+def test_recovery_holt_und_meldet_dasselbe_fenster() -> None:
+    """Abruf-Fenster und Melde-Fenster sind EINE Zahl, nicht zwei.
+
+    DIE STILLE LUECKE, DIE DAS SCHLIESST: `full_sync` holte
+    `timedelta(days=3)` = 72 Stunden nach, gemeldet wurden aber nur 48. Eine
+    echte Feed-Luecken-Buchung aus Stunde 48–72 kam damit durch den Abruf,
+    landete korrekt im Kalender — und wurde stillschweigend NICHT gemeldet,
+    obwohl sie genau der Fall ist, fuer den dieser Lauf existiert.
+
+    Geprueft wird die ABLEITUNG, nicht der Wert: wer das Fenster kuenftig auf
+    fuenf Tage stellt, soll das Melden mitziehen, ohne diesen Test anzufassen.
+    Zusaetzlich steht in `full_sync` keine eigene Tageszahl mehr — sonst waere
+    die Kopplung hier gruen und dort wirkungslos.
+    """
+    from src.features.channel_manager.bookings_sync import (
+        RECOVERY_FENSTER_TAGE,
+        RECOVERY_FRISCH_STUNDEN,
+    )
+
+    assert RECOVERY_FRISCH_STUNDEN == RECOVERY_FENSTER_TAGE * 24
+    quelle = _quelle("full_sync.py")
+    assert "timedelta(days=RECOVERY_FENSTER_TAGE)" in quelle
+    assert "timedelta(days=3)" not in quelle

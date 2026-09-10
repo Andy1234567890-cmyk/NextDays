@@ -23,7 +23,7 @@ from datetime import UTC, datetime, timedelta
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.core.supabase import get_service_client
-from src.features.notification_settings.ereignisse import melde_zustellproblem
+from src.features.notification_settings.betriebsmeldungen import melde_zustellproblem
 from src.jobs import worker_verlauf
 
 log = get_logger("nextdays.inbox.scheduler")

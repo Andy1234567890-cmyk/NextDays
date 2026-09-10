@@ -82,6 +82,29 @@ export async function empfaengerHolen(threadId: string): Promise<Empfaenger[]> {
   return res.data.items;
 }
 
+/**
+ * Bucket-Pfade eines Chatbildes in anzeigbare Adressen auflösen.
+ *
+ * Seit dem 09.09.2026 liegt der Anhang als echtes BILD im privaten Bucket
+ * (vorher Chiffretext, den nur das Gerät des Eigentümers öffnen konnte).
+ * Die signierte Adresse zeigt direkt darauf — hier ist nichts mehr zu
+ * entschlüsseln.
+ *
+ * Ein Bild, das sich nicht auflösen lässt, wird ausgelassen statt den
+ * Verlauf zu kippen (Wurzel 5). Bestand aus der E2E-Zeit bleibt unlesbar:
+ * dafür braucht es den Geräteschlüssel, den es im PMS nie gab.
+ */
+export async function bildAdressen(pfade: string[]): Promise<string[]> {
+  const out: string[] = [];
+  for (const pfad of pfade) {
+    const res = await call<{ url: string }>(
+      `/owner-chat/bilder/adresse?pfad=${encodeURIComponent(pfad)}`,
+    );
+    if (res.ok) out.push(res.data.url);
+  }
+  return out;
+}
+
 // --- Senden -----------------------------------------------------------------
 
 /** Verschlüsselt und sendet. Holt den Empfängerkreis IMMER frisch. */

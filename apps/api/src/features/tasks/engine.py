@@ -37,6 +37,7 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.features.notification_settings.ereignisse import melde_aufgaben_zuweisung
+from src.features.tasks.inventur import zaehlpunkte_fuer_abreise
 
 from .eigennutzung import bestellte_regeln, regel_erlaubt
 from .schemas import TaskSource, TaskStatus
@@ -372,6 +373,19 @@ def _rule_properties(db: Client, rule_ids: list[str]) -> dict[str, set[str]]:
     return out
 
 
+_ABREISE_ANKER = frozenset({"check_out", "departure_day", "days_after_check_out"})
+
+
+def _ist_abreise(rule: dict[str, object]) -> bool:
+    """Haengt diese Regel an der Abreise?
+
+    Geprueft wird der START-Anker: `end_trigger` steht bei vielen Regeln auf
+    demselben Wert, aber der Start sagt, WANN die Arbeit beginnt. Eine
+    Anreise-Aufgabe, die zufaellig bis zur Abreise laeuft, ist keine Zaehlung.
+    """
+    return str(rule.get("start_trigger") or "") in _ABREISE_ANKER
+
+
 def _checklist_source(rule: dict[str, object]) -> str:
     """Woher die Punkte kommen: aus der verknüpften Vorlage, sonst aus der Regel
     selbst."""
@@ -421,6 +435,10 @@ def _copy_checklist(
                 "room": item.get("room"),
                 "requires_photo": bool(item.get("requires_photo")),
                 "sort_order": index,
+                # Zaehlpunkt (0623): worauf sich dieser Punkt bezieht. Nur
+                # gesetzt, wenn die Zeile aus dem Inventar stammt — bei einer
+                # gewoehnlichen Vorlagenzeile bleibt es None.
+                "inventory_item_id": item.get("inventory_item_id"),
             }
             for index, item in enumerate(items)
         ]
@@ -692,6 +710,20 @@ def _regel_anwenden(
         return False
 
     property_id = reservation.get("property_id")
+
+    # ZAEHLPUNKTE (0623): Eine Abreise-Aufgabe traegt zusaetzlich die faelligen
+    # Inventarzeilen. Das ist der Kern — die Inventur haengt am Turnover, nicht
+    # in einem eigenen Bereich, den niemand oeffnet.
+    #
+    # Nur bei `check_out`/`departure_day`: bei der ANREISE zaehlt niemand, da
+    # wird vorbereitet. Und nur bei einer NEUEN Aufgabe, nicht beim Nachziehen
+    # einer bestehenden — sonst waechst deren Checkliste bei jedem Lauf.
+    if _ist_abreise(rule) and not known:
+        items = [
+            *items,
+            *zaehlpunkte_fuer_abreise(db, tenant_id, str(property_id or "") or None),
+        ]
+
     if known:
         return _vorhandene_nachziehen(
             db,

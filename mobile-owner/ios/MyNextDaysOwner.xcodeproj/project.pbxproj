@@ -25,6 +25,7 @@
 		13B07F961A680F5B00A75B9A /* MyNextDaysOwner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyNextDaysOwner.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = MyNextDaysOwner/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = MyNextDaysOwner/Info.plist; sourceTree = "<group>"; };
+		7761FAE56AC08A2AC5C555C1 /* MyNextDaysOwner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "MyNextDaysOwner/MyNextDaysOwner.entitlements"; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = MyNextDaysOwner/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		3B4392A12AC88292D35C810B /* Pods-MyNextDaysOwner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MyNextDaysOwner.debug.xcconfig"; path = "Target Support Files/Pods-MyNextDaysOwner/Pods-MyNextDaysOwner.debug.xcconfig"; sourceTree = "<group>"; };
 		5709B34CF0A7D63546082F79 /* Pods-MyNextDaysOwner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MyNextDaysOwner.release.xcconfig"; path = "Target Support Files/Pods-MyNextDaysOwner/Pods-MyNextDaysOwner.release.xcconfig"; sourceTree = "<group>"; };
@@ -57,6 +58,7 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				761780EC2CA45674006654EE /* AppDelegate.swift */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
+				7761FAE56AC08A2AC5C555C1 /* MyNextDaysOwner.entitlements */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
 				BCD49FD99FD7865F403703A9 /* GoogleService-Info.plist */,
@@ -308,6 +310,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_BITCODE = NO;
+				CODE_SIGN_ENTITLEMENTS = MyNextDaysOwner/MyNextDaysOwner.entitlements;
 				INFOPLIST_FILE = MyNextDaysOwner/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -337,6 +340,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				CODE_SIGN_ENTITLEMENTS = MyNextDaysOwner/MyNextDaysOwner.entitlements;
 				INFOPLIST_FILE = MyNextDaysOwner/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (

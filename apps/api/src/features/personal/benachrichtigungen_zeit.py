@@ -91,6 +91,10 @@ def melde_ueberstunden_antrag(
                 tenant_id=tenant_id,
                 ziel_pfad="/hr/zeiterfassung",
                 dedup_key=f"ueberstunden_antrag:{antrag['id']}:{uid}",
+                # EINMALIG (0617): wie beim Abwesenheitsantrag — ein Antrag
+                # wird einmal gestellt, der Schluessel traegt Antrag und
+                # Empfaenger. Eine Wiederholung ist ein Retry, kein Vorgang.
+                einmalig=True,
             )
     except Exception as exc:  # noqa: BLE001 — Nebenpfad
         log.warning(
@@ -137,6 +141,10 @@ def melde_ueberstunden_entscheidung(
             tenant_id=tenant_id,
             ziel_pfad=None,
             dedup_key=f"ueberstunden_entscheidung:{antrag['id']}:{antrag.get('status')}",
+            # EINMALIG (0617): Der Schluessel traegt den STATUS (siehe
+            # Docstring) — eine Korrektur nach der Genehmigung hat ihren
+            # eigenen Riegel, dieselbe Entscheidung dagegen nie zweimal.
+            einmalig=True,
         )
     except Exception as exc:  # noqa: BLE001 — Nebenpfad
         log.warning(
@@ -177,6 +185,13 @@ def melde_verspaetung(
                 property_id=(
                     str(schicht["property_id"]) if schicht.get("property_id") else None
                 ),
+                # WIEDERHOLBAR (0617): Eine Verspaetung ist ein ZUSTAND, der
+                # sofort jemanden braucht (0548, Push). Der `dedup` je Schicht
+                # daempft den stuendlichen Tick; verspaetet sich dieselbe
+                # Person bei der naechsten Schicht erneut, MUSS es wieder
+                # klingeln — hier stumm zu werden hiesse, eine leere Rezeption
+                # nicht zu melden.
+                einmalig=False,
                 dedup_key=f"{dedup}:{uid}",
             )
     except Exception as exc:  # noqa: BLE001 — Nebenpfad

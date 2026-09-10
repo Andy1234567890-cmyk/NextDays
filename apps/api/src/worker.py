@@ -189,6 +189,21 @@ PERSONAL_TICK_SECONDS = 60 * 60
 # lagen seit dem 25.07. unversendet). Der Worker ist der Ausführende, damit ein
 # geplanter Versand nicht von einem Eintrag abhängt, den niemand angelegt hat.
 AUTOMAILS_TICK_SECONDS = 60
+# Versand der KI-Autoantworten (0494). Er lief bis zum 09.09.2026 im
+# FastAPI-Lifespan (`main.py` → `inbox_ki_takt`) — und der Lifespan laeuft JE
+# UVICORN-WORKER. Bei `UVICORN_WORKERS=4` waren das vier unabhaengige Loops im
+# Minutentakt auf derselben Warteschlange; der Ueberlappungs-Guard im Takt-Modul
+# ist ein Modul-Global und damit prozesslokal, sieht die anderen drei also nicht.
+# Zusammen mit dem fehlenden Claim im Versand ergab das den gemeldeten
+# Doppelversand.
+#
+# Hier ist der Takt genau EINMAL vorhanden: der Worker ist ein einzelner Prozess
+# (`command: python -m src.worker`, `replicas: 1`). Derselbe Grund, aus dem die
+# Automails hier liegen und nicht in der API. Die Regel dahinter und die
+# Prueffrage fuer jeden NEUEN Takt („arbeitet er auf Zustand, den alle Prozesse
+# sehen?") stehen in
+# `docs/decisions/0030-takte-im-worker-nicht-in-der-api.md`.
+KI_AUTOANTWORT_TICK_SECONDS = 60
 # Neuplanung der Automails (0307). Der Versand-Tick oben kennt nur fertig
 # geplante Zeilen; geplant wurde bislang ausschließlich beim Import einer
 # Buchung. Damit erreichte eine NEUE Regel keine bestehende Buchung und eine
@@ -751,6 +766,7 @@ class Worker:
         self._last_tasks_tick = 0.0
         self._last_personal_tick = 0.0
         self._last_automails_tick = 0.0
+        self._last_ki_autoantwort_tick = 0.0
         self._last_automail_planung_tick = 0.0
         self._last_content_heal_tick = 0.0
         self._last_vertragsende_tick = 0.0
@@ -1148,6 +1164,43 @@ class Worker:
 
         return InboxService(service_client=self._db).dispatch_due_automations()
 
+    async def _ki_autoantwort_tick(self, loop_time: float) -> None:
+        """Fällige KI-Autoantworten versenden — minütlich, über alle Tenants.
+
+        Hier und NICHT in der API (siehe `KI_AUTOANTWORT_TICK_SECONDS`): der
+        Worker ist ein einzelner Prozess, die API sind vier. `_eine_senden`
+        claimt zusätzlich atomar, sodass auch ein zweiter Aufrufer (interner
+        Cron-Endpunkt) nichts doppelt sendet.
+        """
+        if loop_time - self._last_ki_autoantwort_tick < KI_AUTOANTWORT_TICK_SECONDS:
+            return
+        self._last_ki_autoantwort_tick = loop_time
+        try:
+            ergebnis = await asyncio.to_thread(self._dispatch_ki_autoantworten)
+        except Exception as exc:  # noqa: BLE001 — ein Fehler stoppt den Worker nicht
+            log.warning("ki_autoantwort_tick_failed", error=str(exc)[:200])
+            return
+        # Wie beim Automail-Tick: nur schreiben, wenn etwas passiert ist.
+        # `uebersprungen` gehört mit ins Log — es ist die Zahl, an der ein
+        # zweiter Takt sichtbar wird, statt sich still als Doppelmail zu zeigen.
+        if (
+            ergebnis.get("gesendet")
+            or ergebnis.get("abgebrochen")
+            or ergebnis.get("uebersprungen")
+        ):
+            log.info(
+                "ki_autoantwort_tick",
+                gesendet=ergebnis.get("gesendet", 0),
+                abgebrochen=ergebnis.get("abgebrochen", 0),
+                fehler=ergebnis.get("fehler", 0),
+                uebersprungen=ergebnis.get("uebersprungen", 0),
+            )
+
+    def _dispatch_ki_autoantworten(self) -> dict:
+        from src.features.inbox.service import InboxService
+
+        return InboxService(service_client=self._db).dispatch_ki_autoantworten()
+
     async def _automail_planung_tick(self, loop_time: float) -> None:
         """Automails neu planen — stündlich, über alle Tenants (0307).
 
@@ -1521,6 +1574,7 @@ class Worker:
             await self._tasks_tick(loop_time)
             await self._personal_tick(loop_time)
             await self._automails_tick(loop_time)
+            await self._ki_autoantwort_tick(loop_time)
             await self._automail_planung_tick(loop_time)
             await self._content_heal_tick(loop_time)
             await self._vertragsende_tick(loop_time)

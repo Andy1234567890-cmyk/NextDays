@@ -15,12 +15,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 
+from src.core.bestand import nur_im_bestand
 from src.core.security import AuthContext
 from src.core.supabase import fetch_all_rows
 from src.core.zeitraum import STANDARD_ZEITRAUM, UnbekannterZeitraum
 from src.core.zeitraum import tage_fuer as _tage_fuer
 
 from ._base import (
+    _NICHT_BELEGEND,
     GuestMask,
     ReservationError,
     ReservationsBase,
@@ -231,12 +233,138 @@ def _liste_filtern(
     )
 
 
+# ── Wechseltag ("Wechsel") ────────────────────────────────────────────────────
+# Ein Wechsel ist ein Tag, an dem in DERSELBEN Einheit ein Gast abreist und ein
+# anderer anreist (`a.check_out == b.check_in`). Für die Reinigung ist das der
+# teuerste Tag des Jahres: das Objekt muss zwischen zwei Belegungen komplett
+# gedreht werden, statt über Nacht leer zu stehen.
+#
+# WARUM JE EINHEIT UND NICHT JE OBJEKT (Datenmodell, CLAUDE.md): eine
+# `properties`-Zeile ist ein Einheiten-TYP mit n >= 1 Einheiten. Bei fünf
+# gleichen Studios ist „Abreise in Studio A + Anreise in Studio B" KEIN Wechsel
+# — dort wird nichts gedreht, es sind zwei unabhängige Einheiten. Objektweit
+# gerechnet meldete der Betrieb Wechseltage, die es nicht gibt, und die
+# Reinigungsplanung liefe auf eine erfundene Zahl.
+#
+# `check_in`/`check_out` sind DATE-Spalten (0004), kein Zeitstempel. Der
+# Vergleich ist damit ein reiner Datumsvergleich und in jeder Zeitzone gleich —
+# hier wird bewusst NICHT `.date()` auf einen Zeitstempel gerechnet, das war der
+# reale Zeitzonen-Bug der Aufgaben-Engine. Die Zeitzone entscheidet allein, was
+# „heute" ist, nicht, ob zwei Buchungen aneinanderstoßen.
+#
+# Zeilen OHNE `unit_id` (nullable seit 0265, `on delete set null`) sind KEIN
+# Wechsel-Partner: welche Einheit sie meinen, ist unbekannt. Sie als Wechsel zu
+# melden hieße, eine Reinigung zu behaupten, die vielleicht gar nicht ansteht
+# (Wurzel 4: kein plausibler Ersatzwert). Sie werden gezählt, aber unter
+# `wechsel_unbekannt` — der Betrieb sieht die Lücke, statt sie geschenkt zu
+# bekommen. `scripts/diagnose/buchung-einheit-pruefen.sh` findet solche Zeilen.
+def _wechsel_partner(rows: list[dict]) -> tuple[set[str], set[str]]:
+    """Reservierungs-IDs, die auf einem Wechseltag liegen.
+
+    Rückgabe: (`sicher`, `unbekannt`).
+    `sicher` = Abreise und Anreise treffen sich in DERSELBEN bekannten Einheit.
+    `unbekannt` = die Datumskante trifft sich im selben OBJEKT, aber mindestens
+    eine der beiden Zeilen trägt keine `unit_id` — dann ist nicht entscheidbar,
+    ob es dieselbe Einheit ist.
+
+    Gerechnet wird über die volle geladene Menge, nicht über die angezeigte
+    Liste: der Wechselpartner steht in der jeweils ANDEREN Karte (die Abreise
+    bei den Check-outs, die Anreise bei den Check-ins) und bei gedeckelten
+    Listen womöglich in gar keiner. Aus der Anzeige gerechnet wäre der Wechsel
+    genau dann unsichtbar, wenn die Liste voll ist.
+
+    „Voll geladen" heißt: was der Aufrufer aus der DB geholt hat, samt dem
+    Zusatztag über das Zeitfenster hinaus (`dashboard_liste`) bzw. beiden
+    Abfragen (`dashboard`). Ein Partner AUSSERHALB dieser Menge kann nicht
+    gefunden werden — deshalb weiten die Aufrufer ihren Vorfilter, statt sich
+    hier auf eine Vollständigkeit zu verlassen, die die Funktion nicht prüfen
+    kann.
+
+    Statuswerte aus `_NICHT_BELEGEND` fallen hier heraus, unabhängig davon, ob
+    der Aufrufer schon vorgefiltert hat: eine stornierte Anreise macht aus
+    einer Abreise keinen Wechseltag.
+    """
+    belegend = [
+        r for r in rows
+        if str(r.get("status") or "") not in _NICHT_BELEGEND
+        and r.get("property_id")
+    ]
+    # Zwei Indizes je Richtung: Anreisen und Abreisen, jeweils nach (Objekt,
+    # Einheit, Tag) und nach (Objekt, Tag). Der Index OHNE Einheit macht die
+    # Zeilen ohne `unit_id` ueberhaupt erst sichtbar — ohne ihn fielen sie
+    # stillschweigend unter „kein Wechsel", also unter eine Aussage, die die
+    # Daten nicht hergeben.
+    #
+    # WARUM BEIDE RICHTUNGEN: geprueft wird jede Zeile an BEIDEN Kanten — ihre
+    # Abreise gegen fremde Anreisen und ihre Anreise gegen fremde Abreisen. Mit
+    # nur einem Anreise-Index und einer Schleife ueber `check_out` blieb eine
+    # ANREISENDE Zeile ohne Einheit ungeprueft: ob sie „unbekannt" bekam, hing
+    # davon ab, ob zufaellig eine dritte Zeile daneben lag. Dasselbe Datum, mal
+    # „nein", mal „unbekannt".
+    an_einheit: dict[tuple[str, str, date], set[str]] = {}
+    an_objekt: dict[tuple[str, date], set[str]] = {}
+    ab_einheit: dict[tuple[str, str, date], set[str]] = {}
+    ab_objekt: dict[tuple[str, date], set[str]] = {}
+    # Einheit je Reservierungs-ID; fehlt sie, steht hier None.
+    einheit_von: dict[str, str | None] = {}
+    for r in belegend:
+        rid = str(r["id"])
+        pid = str(r["property_id"])
+        uid = str(r["unit_id"]) if r.get("unit_id") else None
+        einheit_von[rid] = uid
+        an_tag = _as_date(r["check_in"])
+        ab_tag = _as_date(r["check_out"])
+        an_objekt.setdefault((pid, an_tag), set()).add(rid)
+        ab_objekt.setdefault((pid, ab_tag), set()).add(rid)
+        if uid:
+            an_einheit.setdefault((pid, uid, an_tag), set()).add(rid)
+            ab_einheit.setdefault((pid, uid, ab_tag), set()).add(rid)
+
+    sicher: set[str] = set()
+    offen: set[str] = set()
+    for r in belegend:
+        pid = str(r["property_id"])
+        rid = str(r["id"])
+        uid = einheit_von[rid]
+        # Kante 1: meine Abreise trifft eine fremde Anreise.
+        # Kante 2: meine Anreise trifft eine fremde Abreise.
+        kanten = (
+            (_as_date(r["check_out"]), an_einheit, an_objekt),
+            (_as_date(r["check_in"]), ab_einheit, ab_objekt),
+        )
+        for tag, idx_einheit, idx_objekt in kanten:
+            if uid and idx_einheit.get((pid, uid, tag), set()) - {rid}:
+                # Dieselbe Einheit, Abreise trifft Anreise: echter Wechsel.
+                sicher.add(rid)
+                continue
+            # Keine Gewissheit ueber die eigene Einheit. Steht am selben Tag im
+            # selben Objekt ein Gegenueber, dessen Einheit (oder die eigene)
+            # fehlt, bleibt die Frage offen — weder sicher ein Wechsel noch
+            # sicher keiner.
+            gegenueber = idx_objekt.get((pid, tag), set()) - {rid}
+            if any(
+                einheit_von[x] is None or uid is None for x in gegenueber
+            ):
+                offen.add(rid)
+
+    # Gewissheit schlaegt Zweifel: eine Zeile, die ueber IHRE EIGENE Einheit
+    # schon sicher wechselt, braucht kein „unbekannt" mehr.
+    #
+    # Der Zustand des Partners bleibt dabei aussen vor. Dass mein Gegenueber an
+    # einem anderen Tag oder in einer anderen Paarung sicher wechselt, sagt
+    # nichts darueber, ob es an DIESEM Tag mein Partner war — sonst stuende
+    # eine Zeile ohne `unit_id` auf „nein", also auf einer Aussage, welche die
+    # Daten nicht hergeben (Wurzel 4). Die Luecke gehoert sichtbar.
+    return sicher, offen - sicher
+
+
 def _eintrag(
     r: dict,
     titles: dict[str, str],
     addons: dict[str, list[DashboardAddon]],
     mask: GuestMask,
     threads: dict[str, str] | None = None,
+    wechsel: tuple[set[str], set[str]] | None = None,
 ) -> DashboardEntry:
     """Eine Reservierungszeile zur Listenzeile der Startseite.
 
@@ -244,7 +372,20 @@ def _eintrag(
     speist die Startseite UND das Nachladen einer einzelnen Liste beim
     Umschalten des Zeitfensters. Zwei Kopien hießen, dass eine davon die
     Maskierung (§4) irgendwann anders anwendet als die andere.
+
+    `wechsel` ist das Ergebnis von `_wechsel_partner` über die VOLLE aktive
+    Menge — (sichere IDs, unbekannte IDs). Ohne den Parameter bleibt das Feld
+    auf „nein": nicht gerechnet ist nicht dasselbe wie nicht vorhanden, aber
+    jeder Aufrufer hier reicht es durch.
     """
+    sicher, unbekannt = wechsel or (set(), set())
+    rid = str(r["id"])
+    if rid in sicher:
+        wechsel_wert = "ja"
+    elif rid in unbekannt:
+        wechsel_wert = "unbekannt"
+    else:
+        wechsel_wert = "nein"
     return DashboardEntry(
         reservation_id=r["id"],
         guest_name=mask.name(anzeigename(r)) or "",
@@ -258,6 +399,7 @@ def _eintrag(
         addons=addons.get(r["id"], []),
         booked_at=r.get("booked_at"),
         message_thread_id=(threads or {}).get(r["id"]),
+        wechsel=wechsel_wert,
     )
 
 
@@ -352,9 +494,22 @@ class DashboardMixin(ReservationsBase):
         threads = self._dashboard_threads(tenant_id, [*rows, *neu_rows])
 
         def entry(r: dict) -> DashboardEntry:
-            return _eintrag(r, titles, addons, mask, threads)
+            return _eintrag(r, titles, addons, mask, threads, wechsel)
 
         active = [r for r in rows if r.get("status") != "cancelled"]
+
+        # Über die VOLLE Menge BEIDER Abfragen, nicht je Liste und nicht nur
+        # über `rows`: der Partner einer Abreise steht in den Check-ins, nicht
+        # bei den Check-outs — und `neu_rows` ist eine EIGENE Abfrage (über
+        # `booked_at`, nicht über den Aufenthalt). Eine nur dort stehende
+        # Anreise fehlte sonst als Partner, und die Zeilen der Karte „Neu
+        # eingegangen" trügen selbst zwangsläufig „nein", weil sie in `active`
+        # gar nicht vorkommen. Beides wäre eine Falschaussage, die niemand als
+        # Bug erkennt. Der Umweg über die ID hält jede Zeile genau einmal — die
+        # Schnittmenge beider Abfragen ist im Normalfall groß.
+        wechsel = _wechsel_partner(
+            list({str(r["id"]): r for r in (*rows, *neu_rows)}.values())
+        )
 
         checkouts_today = sorted(
             (entry(r) for r in active if _as_date(r["check_out"]) == today),
@@ -472,7 +627,14 @@ class DashboardMixin(ReservationsBase):
         # Ohne ihn zöge „alle" den gesamten Bestand samt Vergangenheit.
         query = query.gte("check_out", today.isoformat())
         if ende is not None:
-            query = query.lte("check_in", ende.isoformat())
+            # EIN TAG ÜBER das Fenster hinaus. Der Wechselpartner einer Abreise
+            # am letzten Fenstertag reist genau an diesem Tag AN — er liegt in
+            # `check_in <= ende` noch drin. Die Abreise, die am Tag danach eine
+            # Anreise trifft, fiele dagegen weg, und die im Fenster sichtbare
+            # Zeile stünde fälschlich auf „kein Wechsel". Angezeigt wird
+            # weiterhin nur das Fenster: `_liste_filtern` bekommt `ende`
+            # unverändert und schneidet den Zusatztag wieder ab.
+            query = query.lte("check_in", (ende + timedelta(days=1)).isoformat())
         rows = fetch_all_rows(query.order("check_in"))
 
         treffer = _liste_filtern(liste, rows, today, ende)
@@ -483,14 +645,25 @@ class DashboardMixin(ReservationsBase):
             fenster=fenster,
             # Die echte Anzahl, nicht die der gelieferten Zeilen.
             gesamt=len(treffer),
-            items=self._eintraege(sichtbar, tenant_id, mask),
+            items=self._eintraege(
+                sichtbar, tenant_id, mask, _wechsel_partner(rows)
+            ),
         )
 
     def _eintraege(
-        self, rows: list[dict], tenant_id: str, mask: GuestMask
+        self,
+        rows: list[dict],
+        tenant_id: str,
+        mask: GuestMask,
+        wechsel: tuple[set[str], set[str]] | None = None,
     ) -> list[DashboardEntry]:
         """Zeilen zu Listenzeilen: Objekttitel und Zusatzleistungen in EINEM
-        Zug nachladen, nicht je Zeile — sonst wären es 50 Server-Runden."""
+        Zug nachladen, nicht je Zeile — sonst wären es 50 Server-Runden.
+
+        `wechsel` wird vom Aufrufer über die UNGEDECKELTE Menge gerechnet und
+        durchgereicht; aus `rows` (der angezeigten Seite) gerechnet fiele der
+        Partner genau dann weg, wenn die Liste voll ist.
+        """
         if not rows:
             return []
         titles: dict[str, str] = {}
@@ -508,7 +681,9 @@ class DashboardMixin(ReservationsBase):
                 titles[p["id"]] = p.get("title") or ""
         addons = self._dashboard_addons([r["id"] for r in rows])
         threads = self._dashboard_threads(tenant_id, rows)
-        return [_eintrag(r, titles, addons, mask, threads) for r in rows]
+        return [
+            _eintrag(r, titles, addons, mask, threads, wechsel) for r in rows
+        ]
 
     def dashboard_kpi(
         self, ctx: AuthContext, metrik: DashboardKpiMetrik, zeitraum: str
@@ -689,16 +864,39 @@ class DashboardMixin(ReservationsBase):
     def _dashboard_objekte(
         self, tenant_id: str, owner_pids: list[str] | None
     ) -> dict[str, int]:
-        """Objektbestand für die Sektion „Objekte": gesamt / inaktiv / Entwurf.
+        """Objektbestand für die Sektion „Objekte".
 
         Gezählt wird in der DB (`count="exact"`), nicht über geladene Zeilen —
-        die Karte braucht drei Zahlen, nicht den Bestand. Der Owner-Scope
-        (§4.2) gilt hier genauso wie für die Listen darüber: ein Eigentümer
-        sieht die Zahl SEINER Objekte, nie die des Betriebs.
+        die Karte braucht Zahlen, nicht den Bestand. Der Owner-Scope (§4.2)
+        gilt hier genauso wie für die Listen darüber: ein Eigentümer sieht die
+        Zahl SEINER Objekte, nie die des Betriebs.
+
+        ARCHIVIERTE ZÄHLEN NICHT MIT (`core.bestand.nur_im_bestand`). Hier
+        fehlte der Filter, und das Ergebnis war live beim Nutzer zu sehen
+        (09.09.2026): „Gesamt 21, Entwurf 1" — die Objektliste daneben zeigte
+        20, und der eine „Entwurf" war „Fewo-Mosbjerg-Sindal", am 21.08.2026
+        nach Kündigung archiviert. Zwei Zahlen für denselben Bestand, und eine
+        Kachel, die eine gekündigte Fewo als unfertigen Entwurf ausgab. Genau
+        der Fall, für den 0416 den Filter eingeführt hat — dasselbe Objekt
+        stand damals im Aufgabenkalender.
+
+        `objekte_aktiv` kam mit dazu: ohne diese Zahl musste der Betrieb sich
+        „so viele Objekte verkaufe ich" aus `gesamt − inaktiv − entwurf`
+        selbst ableiten, und mit einem archivierten Objekt im `gesamt` ergab
+        diese Rechnung sogar das Falsche.
+
+        „Aktiv" heißt hier VERKAUFT GERADE, und das ist mehr als
+        `status='active'`: Eine offene „Verkauf pausieren"-Pause
+        (`property_sales_pause`, 0375) nimmt das Objekt bei allen Kanälen aus
+        dem Verkauf. Sie setzt den Status normalerweise mit auf `inactive` —
+        aber ausdrücklich NUR, wenn kein Portal fehlgeschlagen ist
+        (`objekt_verkauf.py:131`). Bleibt ein Portal hängen, steht das Objekt
+        auf `active` und verkauft trotzdem nichts. Ohne diesen Abzug zählte
+        die Kachel es mit, und niemand sähe den Unterschied (Wurzel 5).
         """
 
         def zaehle(status: str | None) -> int:
-            query = (
+            query = nur_im_bestand(
                 self._db()
                 .table("properties")
                 .select("id", count="exact")
@@ -712,8 +910,42 @@ class DashboardMixin(ReservationsBase):
             anzahl = getattr(antwort, "count", None)
             return int(anzahl) if anzahl is not None else len(antwort.data or [])
 
+        erlaubt = set(owner_pids) if owner_pids is not None else None
+        # Objekte mit mindestens EINER offenen Pause. Die Tabelle trägt eine
+        # Zeile je Portal, deshalb über die Objekt-IDs eindeutig machen.
+        pausiert = {
+            str(z["property_id"])
+            for z in (
+                self._db()
+                .table("property_sales_pause")
+                .select("property_id")
+                .eq("tenant_id", tenant_id)
+                .is_("beendet_at", "null")
+                .limit(_DASHBOARD_OBJEKT_ZAEHL_MAX)
+                .execute()
+            ).data
+            or []
+            if erlaubt is None or str(z["property_id"]) in erlaubt
+        }
+        aktiv_ids = {
+            str(z["id"])
+            for z in (
+                nur_im_bestand(
+                    self._db()
+                    .table("properties")
+                    .select("id")
+                    .eq("tenant_id", tenant_id)
+                    .eq("status", "active")
+                )
+                .limit(_DASHBOARD_OBJEKT_ZAEHL_MAX)
+                .execute()
+            ).data
+            or []
+            if erlaubt is None or str(z["id"]) in erlaubt
+        }
         return {
             "objekte_gesamt": zaehle(None),
+            "objekte_aktiv": len(aktiv_ids - pausiert),
             "objekte_inaktiv": zaehle("inactive"),
             "objekte_entwurf": zaehle("draft"),
         }

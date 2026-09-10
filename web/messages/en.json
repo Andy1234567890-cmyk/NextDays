@@ -2747,7 +2747,8 @@
       "tradespeople": "Tradespeople",
       "marketing": "Marketing",
       "housebook": "House manual",
-      "listing": "Listing"
+      "listing": "Listing",
+      "inventory": "Inventory"
     },
     "objectInfo": {
       "capacityPersons": "Capacity (persons)",
@@ -2898,7 +2899,130 @@
       "helaarsbolig": "All-year residence",
       "fritidshus": "Holiday home"
     },
-    "print": "Print"
+    "print": "Print",
+    "mappe": {
+      "gastTitel": "Guest folder — Documents",
+      "hausTitel": "House folder — Documents (internal)",
+      "titel": "Digital folder",
+      "erklaerung": "Upload PDF — the information within will be read and suggested for confirmation. The document will remain here for reference.",
+      "hochladen": "Upload PDF",
+      "liest": "Reading...",
+      "laedt": "Loading...",
+      "leer": "No document in this folder yet.",
+      "zuGross": "The file is too large (max. {mb} MB).",
+      "seiten": "{count, plural, one {# page} other {# pages}}",
+      "ansehen": "View {name} large",
+      "loeschen": "Remove {name}",
+      "loeschenFrage": "Remove \"{name}\" from the folder? Already adopted information will remain.",
+      "gefunden": "{count, plural, one {# entry found} other {# entries found}}",
+      "gefundenHinweis": "None of this is saved. Review, change if necessary, then adopt — door codes and passwords are intentionally not pre-selected.",
+      "nichtsGefunden": "This document contained nothing that fits into a folder field. It will still remain in the folder.",
+      "heikel": "Please check carefully",
+      "fundstelle": "In the document: {ort}",
+      "sprachfassung": "Language version",
+      "ueberschreiben": "Also replace already maintained fields",
+      "ausgewaehlt": "{count} of {gesamt} selected",
+      "verwerfen": "Discard",
+      "uebernehmen": "Adopt",
+      "uebernimmt": "Adopting...",
+      "schliessen": "Close",
+      "gesetzt": "{count, plural, =0 {Nothing adopted} one {# field adopted} other {# fields adopted}}",
+      "uebersprungen": "Already maintained and therefore unchanged: {felder}",
+      "stand": {
+        "offen": "not yet read",
+        "gelesen": "read",
+        "uebernommen": "adopted",
+        "ohne_treffer": "nothing found",
+        "fehler": "read failed"
+      },
+      "sicher": {
+        "hoch": "legible",
+        "mittel": "partially legible",
+        "niedrig": "hard to read"
+      },
+      "sprache": {
+        "de": "German",
+        "en": "English",
+        "da": "Danish"
+      }
+    },
+    "inventar": {
+      "abschnitt": "Inventory",
+      "titel": "Inventory list",
+      "erklaerung": "What is in the house, by room. Target and actual separated — the difference is the statement of the inventory. Expandable at any time.",
+      "laedt": "Loading …",
+      "leer": "Nothing recorded yet. Add lines manually or import from a PDF in the folder.",
+      "neuName": "Item",
+      "neuSoll": "Target",
+      "hinzufuegen": "Add",
+      "raeume": "Rooms",
+      "keineRaeume": "none yet",
+      "raumName": "Room name",
+      "raumHinzufuegen": "Add room",
+      "ohneRaum": "Without room",
+      "speichern": "Save",
+      "istMenge": "Existing quantity",
+      "vonSoll": "of {soll}",
+      "geprueft": "Mark as checked",
+      "loeschen": "Remove",
+      "loeschenFrage": "Remove “{name}” from the list? Reported damages will be retained.",
+      "ausDokument": "from PDF",
+      "ausDokumentHint": "This line comes from a document in the digital folder.",
+      "schadenMelden": "Report damage",
+      "schadenAn": "Damage to “{name}”",
+      "art": "What is wrong?",
+      "traeger": "Who bears the costs?",
+      "werZahlt": "Who pays?",
+      "beschreibung": "Description",
+      "fotoWaehlen": "Take or choose photo",
+      "fotoPflicht": "No report without a photo — in case of dispute, the image is often the only thing that matters.",
+      "fotosGewaehlt": "{count, plural, one {# image selected} other {# images selected}}",
+      "melden": "Report damage",
+      "meldet": "Reporting …",
+      "abbrechen": "Cancel",
+      "offeneSchaeden": "{count, plural, one {# damage} other {# damages}}",
+      "offeneSchaedenTitel": "{count, plural, one {# open damage} other {# open damages}}",
+      "bild": "Image {nr}",
+      "betrag": "Amount",
+      "bestaetigen": "Confirm",
+      "verwerfen": "Discard",
+      "verwerfenFrage": "Discard damage to “{name}”? This was not a damage.",
+      "artWert": {
+        "beschaedigt": "Damaged",
+        "fehlt": "Missing",
+        "entsorgt": "Disposed"
+      },
+      "traegerWert": {
+        "offen": "Pending",
+        "eigentuemer": "Owner",
+        "gast": "Guest",
+        "betrieb": "Operation"
+      },
+      "pdfImport": "List from PDF",
+      "pdfLiest": "Reading …",
+      "pdfLeer": "No inventory list was found in this PDF.",
+      "pdfGefunden": "{count, plural, one {# line found} other {# lines found}}",
+      "pdfHinweis": "None of this is saved. Check, modify if necessary, then apply. Rooms are only assigned if they already exist.",
+      "uebernimmt": "Applying …",
+      "uebernehmen": "Apply",
+      "zustand": "Condition",
+      "rhythmus": "Count rhythm",
+      "meldebestandKurz": "Reporting stock {n}",
+      "referenzSetzen": "Deposit image of intact condition",
+      "referenzAnsehen": "View image of intact condition",
+      "zustandWert": {
+        "neu": "new",
+        "gut": "good",
+        "abgenutzt": "worn",
+        "ersatz_faellig": "replacement due"
+      },
+      "rhythmusWert": {
+        "jede_abreise": "on each departure",
+        "quartal": "quarterly",
+        "jaehrlich": "annually",
+        "nie": "do not count"
+      }
+    }
   },
   "finance": {
     "cancelInvoice": {
@@ -5306,7 +5430,23 @@
       "ownerRequestsLift": "Cancellation requests",
       "ownerRequestsTermination": "Announced contract endings",
       "ownerRequestsNone": "No open processes.",
-      "ownerRequestsOldest": "Oldest open request: {count, plural, =0 {today} one {1 day ago} other {# days ago}}"
+      "ownerRequestsOldest": "Oldest open request: {count, plural, =0 {today} one {1 day ago} other {# days ago}}",
+      "teamTasks": "Team tasks",
+      "teamTasksExplain": "What the team currently has to work on: overdue and due today tasks, tasks without assignees and those waiting for approval. A current status, not a period — open is open, and older means more urgent.",
+      "teamTasksLabel": "Overdue or due today",
+      "teamTasksOldest": "Oldest overdue task: {count} days ago",
+      "teamTasksOverdue": "Overdue",
+      "teamTasksToday": "Due today",
+      "teamTasksUnassigned": "Without assignees",
+      "teamTasksToReview": "Waiting for approval",
+      "teamTasksOpen": "Total open",
+      "wechsel": "Changeover",
+      "wechselHint": "Departure and arrival on the same day in the same unit — cleaning must turn between two bookings.",
+      "wechselUnklar": "Changeover unclear",
+      "wechselUnklarHint": "On the same day, someone arrives in the same property, but the unit of one of the two bookings is not specified — it is not possible to say whether a changeover is really necessary.",
+      "teamTasksUrgencyUnknown": "overdue or due today — currently unavailable",
+      "listingsActive": "Active",
+      "listingsActiveLabel": "For sale"
     },
     "mobileAppHint": "The task view for on the go is already available responsively on the web (My tasks + detail with photo upload). A separate mobile app will follow as its own project.",
     "aufgabenFilter": {
@@ -15301,7 +15441,8 @@
         "reservierungen": "Reservations",
         "kennzahlen": "Key figures",
         "nachrichten": "Messages",
-        "objekte": "Properties"
+        "objekte": "Properties",
+        "aufgaben": "Tasks"
       }
     }
   },

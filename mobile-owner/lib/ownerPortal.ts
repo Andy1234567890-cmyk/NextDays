@@ -415,12 +415,38 @@ export type BlockRequest = {
   decided_at: string | null;
   decision_note: string | null;
   created_at: string | null;
+  // Aufhebung einer bereits GENEHMIGTEN Sperrung (0513):
+  // 'keine' | 'beantragt' | 'aufgehoben' | 'abgelehnt'.
+  // Der Zustand muss sichtbar sein, sonst klickt der Eigentümer erneut, weil
+  // sich nichts ändert — und „beantragt" heißt ausdrücklich NICHT „erledigt":
+  // der Aufenthalt bleibt bestehen, bis die Verwaltung entschieden hat.
+  aufhebung: string;
+  aufhebung_grund: string | null;
+  aufhebung_entscheidungsnotiz: string | null;
 };
 
 export async function getBlockRequests(): Promise<
   Result<{ items: BlockRequest[]; total: number }>
 > {
   return call("/public-portal/block-requests");
+}
+
+/**
+ * Die Aufhebung eines genehmigten Aufenthalts BEANTRAGEN (0513).
+ *
+ * Kein Storno: Am genehmigten Aufenthalt hängen eine Reservierung, die
+ * Kalenderbelegung und der Push an die Portale — auflösen darf das nur die
+ * Verwaltung (§4.2, der Eigentümer beantragt und entscheidet nicht). Bis
+ * dahin bleibt der Aufenthalt bestehen.
+ */
+export async function aufhebungBeantragen(
+  antragId: string,
+  grund: string | null,
+): Promise<Result<BlockRequest>> {
+  return call(
+    `/public-portal/block-requests/${encodeURIComponent(antragId)}/aufhebung`,
+    { method: "POST", body: { grund } },
+  );
 }
 
 /** Eine bestellbare Leistung zu einer Sperre (0510). Der Name kommt vom

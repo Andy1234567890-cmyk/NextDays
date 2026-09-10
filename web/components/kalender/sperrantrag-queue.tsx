@@ -69,15 +69,21 @@ function aktionenFuer(status: string, aufhebung: string): Aktion[] {
 export function SperrantragQueue({
   initial,
   loadError,
+  startFilter,
 }: {
   initial: Sperrantrag[];
   loadError: string | null;
+  /** Wonach die Serverkomponente `initial` geholt hat. Als Prop und nicht als
+   *  eigene Konstante, damit Liste und Auswahlbox nicht auseinanderlaufen
+   *  koennen: genau das war der Fehler, bei dem die Box "Offen" zeigte und
+   *  darunter genehmigte Antraege standen. */
+  startFilter: string;
 }) {
   const t = useTranslations("calendar");
 
   const [liste, setListe] = useState<Sperrantrag[]>(initial);
   const [fehler, setFehler] = useState<string | null>(loadError);
-  const [filter, setFilter] = useState<string>("pending");
+  const [filter, setFilter] = useState<string>(startFilter);
   const [laeuft, setLaeuft] = useState<string | null>(null);
   // Entscheidungs-Notiz je Antrag. Sie geht an den Eigentümer und ist der
   // einzige Weg, ihm ein „warum" mitzugeben.
@@ -253,9 +259,26 @@ export function SperrantragQueue({
                 <Card>
                   <CardContent className="flex flex-col gap-4 py-5">
                     <div className="flex flex-wrap items-start gap-4">
-                      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground">
-                        <Icon icon="ph:hand-palm" className="size-5" />
-                      </span>
+                      {/* Das Objektfoto statt eines Hand-Symbols: wer über
+                          eine Sperre entscheidet, erkennt das Haus schneller
+                          am Bild als am Namen — erst recht bei gleichlautenden
+                          Titeln. Ohne Foto bleibt das Symbol. */}
+                      {a.property_photo ? (
+                        /* Fremd-CDN (a0.muscache.com): next/image bräuchte dafür
+                           einen konfigurierten Remote-Host und würde jedes
+                           Objektfoto über unseren Optimizer leiten. */
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={a.property_photo}
+                          alt=""
+                          loading="lazy"
+                          className="size-10 shrink-0 rounded-full object-cover"
+                        />
+                      ) : (
+                        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+                          <Icon icon="ph:hand-palm" className="size-5" />
+                        </span>
+                      )}
                       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                         <span className="truncate font-medium">
                           {a.property_title ?? a.property_id}

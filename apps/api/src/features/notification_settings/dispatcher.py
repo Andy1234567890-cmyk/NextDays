@@ -155,6 +155,7 @@ class NotificationDispatcher:
         property_id: str | None = None,
         thread_ref: str | None = None,
         dedup_key: str | None = None,
+        einmalig: bool = False,
         inapp: bool = True,
         betreff_key: str | None = None,
         betreff_werte: dict[str, object] | None = None,
@@ -258,6 +259,7 @@ class NotificationDispatcher:
                 ziel_pfad=ziel_pfad,
                 property_id=property_id, thread_ref=thread_ref,
                 dedup_key=dedup_key, ergebnis=ergebnis,
+                einmalig=einmalig,
             )
             if _glocke_entdoppelt(ergebnis):
                 # DIE ENTDOPPLUNG GILT FUER ALLE KANAELE, nicht nur die Glocke.
@@ -322,17 +324,32 @@ class NotificationDispatcher:
         thread_ref: str | None,
         dedup_key: str | None,
         ergebnis: Zustellung,
+        einmalig: bool = False,
     ) -> None:
         """Eine Zeile in `notifications` — die In-App-Meldung.
 
         Anders als E-Mail/SMS wird hier nichts versendet, sondern gespeichert:
         die Meldung bleibt, bis der Nutzer sie gesehen hat.
 
-        Doppelmeldungen faengt der partielle UNIQUE-Index
-        `notifications_dedup_offen_uq` ab (Wurzel 2): steht dieselbe Meldung
-        ungelesen schon da, ist der 23505 der ZIELZUSTAND, kein Fehler. Der
-        Index greift bewusst nur fuer UNGELESENE — nach dem Lesen darf derselbe
-        Zustand erneut melden.
+        Doppelmeldungen faengt ein partieller UNIQUE-Index ab (Wurzel 2): steht
+        dieselbe Meldung schon da, ist der 23505 der ZIELZUSTAND, kein Fehler.
+        WELCHER der zwei Indizes greift, entscheidet `einmalig`:
+
+        * `False` (Vorgabe) — `notifications_dedup_offen_uq`, partiell auf
+          `gelesen_am is null`. Fuer ZUSTANDS-Meldungen: „Balkon hat kein Foto"
+          darf nach dem Lesen erneut melden, sonst bliebe ein zweites Auftreten
+          fuer immer stumm.
+        * `True` — `notifications_dedup_einmalig_uq` (0617), OHNE Lesestand.
+          Fuer EREIGNIS-Meldungen: eine Buchung wird genau einmal angelegt.
+
+        WARUM DER ZWEITE INDEX NOETIG WAR (live 09.09.2026): Mit nur dem
+        partiellen Index war der Riegel weg, sobald der Nutzer die Meldung
+        gelesen oder „Alle gelesen" gedrueckt hatte. Ein erneuter Lauf desselben
+        Ereignisses legte dann eine zweite Glockenzeile an — und weil `sende()`
+        den MAILVERSAND an genau diesem 23505 entdoppelt (siehe
+        `_glocke_entdoppelt`), ging die Mail mit hinaus. Dieselbe Buchung stand
+        wortgleich zweimal in der Glocke, und der Betrieb bekam sie zweimal per
+        Mail.
         """
         zeile = {
             "tenant_id": tenant_id,
@@ -346,6 +363,7 @@ class NotificationDispatcher:
             # Lesen des Threads stillzulegen, ohne `ziel_pfad` zu zerlegen.
             "thread_ref": thread_ref,
             "dedup_key": dedup_key,
+            "einmalig": einmalig,
         }
         try:
             self._db.table("notifications").insert(zeile).execute()
