@@ -892,7 +892,15 @@
     "oeffnen": "Oscail an comhrá",
     "schliessen": "Dún an comhrá",
     "hinweis": "Ní úsáidimid do chuid sonraí ach chun freagra a thabhairt ar an bhfiosrúchán seo.",
-    "fehler": "Níor éirigh leis sin. Bain triail eile as níos déanaí."
+    "fehler": "Níor éirigh leis sin. Bain triail eile as níos déanaí.",
+    "beraterTitel": "Comhairleoir Táirgí myNextDays",
+    "beraterUnter": "Cúntóir AI · freagra láithreach",
+    "beraterBegruessung": "Dia duit! Freagraím ceisteanna faoi myNextDays — gnéithe, tairseacha, praghsanna, socrú. Cad ba mhaith leat a fháil amach?",
+    "beraterPlatzhalter": "Cuir ceist …",
+    "beraterDenkt": "Táim ag féachaint ar …",
+    "beraterQuellen": "Le léamh arís:",
+    "beraterUebergabe": "Ní féidir liom é seo a fhreagairt go cinnte ón gcabhair. Cuirfidh mé do cheist ar aghaidh chuig comhghleacaí — cuir isteach do shonraí teagmhála go hachomair le do thoil.",
+    "beraterFormularHinweis": "Freagróidh comhghleacaí tú trí ríomhphost, de ghnáth laistigh de chúpla uair an chloig."
   },
   "einblicke": {
     "eyebrow": "Taobh istigh",

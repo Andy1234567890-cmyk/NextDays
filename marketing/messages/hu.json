@@ -892,7 +892,15 @@
     "oeffnen": "Csevegés megnyitása",
     "schliessen": "Csevegés bezárása",
     "hinweis": "Adatait kizárólag arra használjuk, hogy válaszoljunk erre a megkeresésre.",
-    "fehler": "Ez nem sikerült. Kérjük, próbálja meg később újra."
+    "fehler": "Ez nem sikerült. Kérjük, próbálja meg később újra.",
+    "beraterTitel": "myNextDays terméktanácsadó",
+    "beraterUnter": "AI asszisztens · azonnali válasz",
+    "beraterBegruessung": "Szia! Válaszolok a myNextDays-szel kapcsolatos kérdésekre – funkciók, portálok, árak, beállítás. Mit szeretnél tudni?",
+    "beraterPlatzhalter": "Kérdés feltevése…",
+    "beraterDenkt": "Utánanézek…",
+    "beraterQuellen": "További információk:",
+    "beraterUebergabe": "Ezt nem tudom biztosan megválaszolni a súgó alapján. Továbbítom a kérdésedet egy kollégának – kérjük, add meg elérhetőségeidet.",
+    "beraterFormularHinweis": "Egy kolléga e-mailben válaszol neked, általában néhány órán belül."
   },
   "einblicke": {
     "eyebrow": "Belülről",

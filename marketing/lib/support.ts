@@ -92,3 +92,39 @@ export async function chatAntworten(
     }),
   );
 }
+
+// --- Produktberater (RAG) ----------------------------------------------------
+//
+// Der Bot beantwortet Produktfragen aus den Hilfe-Artikeln, BEVOR ein Ticket
+// entsteht. Er braucht kein Token und legt nichts an — die Anfrage ist
+// zustandslos. Erst wenn er übergibt, beginnt der Ticket-Weg oben.
+
+export type BeraterQuelle = {
+  titel: string;
+  pfad: string | null;
+};
+
+export type BeraterAntwort = {
+  antwort: string;
+  quellen: BeraterQuelle[];
+  /** true = der Bot konnte es nicht belegt beantworten → Support anbieten. */
+  uebergeben: boolean;
+};
+
+export async function beraterFragen(
+  frage: string,
+  sprache: string,
+): Promise<BeraterAntwort> {
+  const res = await fetch(`${API_BASE}/support/public/frage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ frage, sprache }),
+  });
+  // 503 heißt „nicht eingerichtet" — das ist keine Störung, sondern ein
+  // Betriebszustand. Der Aufrufer behandelt es wie eine Übergabe, statt dem
+  // Besucher einen Fehler zu zeigen.
+  if (res.status === 503) {
+    return { antwort: "", quellen: [], uebergeben: true };
+  }
+  return json<BeraterAntwort>(res);
+}

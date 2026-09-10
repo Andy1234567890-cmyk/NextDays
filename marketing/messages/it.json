@@ -892,7 +892,15 @@
     "oeffnen": "Apri la chat",
     "schliessen": "Chiudi la chat",
     "hinweis": "Usiamo i tuoi dati solo per rispondere a questa richiesta.",
-    "fehler": "Non ha funzionato. Riprova più tardi."
+    "fehler": "Non ha funzionato. Riprova più tardi.",
+    "beraterTitel": "Consulente di prodotto myNextDays",
+    "beraterUnter": "Assistente AI · risponde subito",
+    "beraterBegruessung": "Ciao! Rispondo a domande su myNextDays — funzioni, portali, prezzi, configurazione. Cosa vorresti sapere?",
+    "beraterPlatzhalter": "Fai una domanda...",
+    "beraterDenkt": "Controllo...",
+    "beraterQuellen": "Per saperne di più:",
+    "beraterUebergabe": "Non posso rispondere con certezza a questa domanda usando l'aiuto. Passo la tua domanda a un collega — inserisci brevemente i tuoi dati di contatto.",
+    "beraterFormularHinweis": "Un collega ti risponderà via e-mail, di solito entro poche ore."
   },
   "einblicke": {
     "eyebrow": "Dentro il prodotto",

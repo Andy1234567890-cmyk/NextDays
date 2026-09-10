@@ -892,7 +892,15 @@
     "oeffnen": "Deschide chatul",
     "schliessen": "Închide chatul",
     "hinweis": "Folosim datele tale doar pentru a răspunde la această solicitare.",
-    "fehler": "Nu a funcționat. Te rugăm să încerci din nou mai târziu."
+    "fehler": "Nu a funcționat. Te rugăm să încerci din nou mai târziu.",
+    "beraterTitel": "Consultant de produs myNextDays",
+    "beraterUnter": "Asistent AI · răspunde instantaneu",
+    "beraterBegruessung": "Salut! Răspund la întrebări despre myNextDays — funcții, portaluri, prețuri, configurare. Ce ai vrea să știi?",
+    "beraterPlatzhalter": "Pune o întrebare…",
+    "beraterDenkt": "Verific…",
+    "beraterQuellen": "Pentru referință:",
+    "beraterUebergabe": "Nu pot răspunde cu certitudine la asta din ajutor. Voi transmite întrebarea ta unui coleg — te rog să introduci scurt datele tale de contact.",
+    "beraterFormularHinweis": "Un coleg îți va răspunde prin e-mail, de obicei în câteva ore."
   },
   "einblicke": {
     "eyebrow": "Din interior",

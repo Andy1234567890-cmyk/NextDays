@@ -319,6 +319,11 @@ export type Ga4Ereignis =
   // Support-Chat geöffnet. Zählt den Bedarf an Rückfragen je Seite; die
   // Seite steht im `page_view` davor, nicht als Parameter hier.
   | "chat_geoeffnet"
+  // Der Produktberater (0626): eine beantwortete Frage ist ein Ticket, das
+  // nie entstand — und eine Übergabe zeigt, wo das Wissen fehlt. Beide
+  // getrennt zählen, sonst lässt sich die Wirkung nicht messen.
+  | "chat_berater_antwort"
+  | "chat_uebergabe"
   // Das Voranmelde-Popup ging auf. Parameter: `quelle` (was es ausgelöst hat).
   // Erst zusammen mit `voranmeldung` ergibt das eine Quote — ein Popup ohne
   // Öffnungszahl lässt nicht erkennen, ob es nicht gezeigt wird oder nicht

@@ -892,7 +892,15 @@
     "oeffnen": "Otvoriť chat",
     "schliessen": "Zavrieť chat",
     "hinweis": "Vaše údaje použijeme iba na zodpovedanie tejto požiadavky.",
-    "fehler": "Toto sa nepodarilo. Skúste to prosím neskôr znova."
+    "fehler": "Toto sa nepodarilo. Skúste to prosím neskôr znova.",
+    "beraterTitel": "Produktový poradca myNextDays",
+    "beraterUnter": "Asistent AI · okamžitá odpoveď",
+    "beraterBegruessung": "Ahoj! Odpoviem na otázky o myNextDays – funkcie, portály, ceny, nastavenie. Čo by si chcel vedieť?",
+    "beraterPlatzhalter": "Položiť otázku …",
+    "beraterDenkt": "Hľadám …",
+    "beraterQuellen": "Prečítaj si:",
+    "beraterUebergabe": "Na túto otázku ti neviem s istotou odpovedať z pomoci. Tvoju otázku posuniem kolegovi – zadaj prosím svoje kontaktné údaje.",
+    "beraterFormularHinweis": "Kolega ti odpovie e-mailom, zvyčajne do niekoľkých hodín."
   },
   "einblicke": {
     "eyebrow": "Pohľad dovnútra",

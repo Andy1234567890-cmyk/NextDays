@@ -892,7 +892,15 @@
     "oeffnen": "Ouvrir le chat",
     "schliessen": "Fermer le chat",
     "hinweis": "Nous utilisons vos informations uniquement pour répondre à cette demande.",
-    "fehler": "Cela n'a pas fonctionné. Merci de réessayer plus tard."
+    "fehler": "Cela n'a pas fonctionné. Merci de réessayer plus tard.",
+    "beraterTitel": "Assistant IA myNextDays",
+    "beraterUnter": "Assistant IA · réponse immédiate",
+    "beraterBegruessung": "Bonjour ! Je réponds aux questions sur myNextDays — fonctionnalités, portails, tarifs, configuration. Que souhaitez-vous savoir ?",
+    "beraterPlatzhalter": "Poser une question…",
+    "beraterDenkt": "Je vérifie…",
+    "beraterQuellen": "Pour en savoir plus :",
+    "beraterUebergabe": "Je ne peux pas répondre à cette question avec certitude à partir de l'aide. Je transmets votre question à un collègue — veuillez saisir brièvement vos coordonnées.",
+    "beraterFormularHinweis": "Un collègue vous répondra par e-mail, généralement dans un délai de quelques heures."
   },
   "einblicke": {
     "eyebrow": "Aperçus",

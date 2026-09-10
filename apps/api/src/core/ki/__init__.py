@@ -13,10 +13,20 @@ from .client import (
     KiError,
     VertexClient,
 )
+from .einbettung import (
+    EINBETTUNG_DIMENSION,
+    EINBETTUNG_MODELL,
+    MAX_EINBETTUNG_ZEICHEN,
+    EinbettungClient,
+)
 
 __all__ = [
+    "EINBETTUNG_DIMENSION",
+    "EINBETTUNG_MODELL",
     "MAX_ANTWORT_TOKENS",
+    "MAX_EINBETTUNG_ZEICHEN",
     "MAX_PROMPT_ZEICHEN",
+    "EinbettungClient",
     "KiAntwort",
     "KiError",
     "VertexClient",

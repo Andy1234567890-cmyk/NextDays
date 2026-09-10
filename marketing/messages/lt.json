@@ -892,7 +892,15 @@
     "oeffnen": "Atidaryti pokalbį",
     "schliessen": "Uždaryti pokalbį",
     "hinweis": "Jūsų duomenis naudojame tik tam, kad atsakytume į šią užklausą.",
-    "fehler": "Nepavyko. Bandykite dar kartą vėliau."
+    "fehler": "Nepavyko. Bandykite dar kartą vėliau.",
+    "beraterTitel": "myNextDays produktų konsultantas",
+    "beraterUnter": "AI asistentas · atsako iškart",
+    "beraterBegruessung": "Sveiki! Atsakysiu į klausimus apie myNextDays — funkcijas, portalus, kainas, nustatymus. Ką norėtumėte sužinoti?",
+    "beraterPlatzhalter": "Užduoti klausimą…",
+    "beraterDenkt": "Ieškau…",
+    "beraterQuellen": "Skaityti toliau:",
+    "beraterUebergabe": "Negaliu tiksliai atsakyti į tai iš pagalbos. Perduosiu jūsų klausimą kolegai — prašome trumpai įvesti savo kontaktinius duomenis.",
+    "beraterFormularHinweis": "Kolega atsakys jums el. paštu, dažniausiai per kelias valandas."
   },
   "einblicke": {
     "eyebrow": "Žvilgsnis iš vidaus",

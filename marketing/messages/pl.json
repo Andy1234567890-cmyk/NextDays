@@ -892,7 +892,15 @@
     "oeffnen": "Otwórz czat",
     "schliessen": "Zamknij czat",
     "hinweis": "Twoich danych używamy wyłącznie po to, by odpowiedzieć na to zapytanie.",
-    "fehler": "Coś poszło nie tak. Spróbuj ponownie później."
+    "fehler": "Coś poszło nie tak. Spróbuj ponownie później.",
+    "beraterTitel": "Doradca produktowy myNextDays",
+    "beraterUnter": "Asystent AI · odpowiada natychmiast",
+    "beraterBegruessung": "Cześć! Odpowiadam na pytania dotyczące myNextDays — funkcji, portali, cen, konfiguracji. Co chcesz wiedzieć?",
+    "beraterPlatzhalter": "Zadaj pytanie …",
+    "beraterDenkt": "Szukam …",
+    "beraterQuellen": "Do poczytania:",
+    "beraterUebergabe": "Nie mogę odpowiedzieć na to pytanie z pewnością na podstawie dostępnych informacji. Przekazuję Twoje pytanie koledze — proszę, podaj swoje dane kontaktowe.",
+    "beraterFormularHinweis": "Kolega odpowie Ci e-mailem, zazwyczaj w ciągu kilku godzin."
   },
   "einblicke": {
     "eyebrow": "Od środka",

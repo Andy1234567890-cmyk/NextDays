@@ -892,7 +892,15 @@
     "oeffnen": "Avaa chat",
     "schliessen": "Sulje chat",
     "hinweis": "Käytämme tietojasi vain vastataksemme tähän yhteydenottoon.",
-    "fehler": "Tämä ei onnistunut. Yritä myöhemmin uudelleen."
+    "fehler": "Tämä ei onnistunut. Yritä myöhemmin uudelleen.",
+    "beraterTitel": "myNextDays-tuoteneuvoja",
+    "beraterUnter": "Tekoälyavustaja · vastaa heti",
+    "beraterBegruessung": "Hei! Vastaan myNextDaysiin liittyviin kysymyksiin – toiminnot, portaalit, hinnat, asennus. Mitä haluaisit tietää?",
+    "beraterPlatzhalter": "Esitä kysymys…",
+    "beraterDenkt": "Tarkistan…",
+    "beraterQuellen": "Lisätietoja:",
+    "beraterUebergabe": "En osaa vastata tähän kysymykseen varmasti ohjeiden perusteella. Välitän kysymyksesi kollegalle – täytäthän yhteystietosi lyhyesti.",
+    "beraterFormularHinweis": "Kollegamme vastaa sinulle sähköpostitse, yleensä muutaman tunnin kuluessa."
   },
   "einblicke": {
     "eyebrow": "Sisältä katsottuna",

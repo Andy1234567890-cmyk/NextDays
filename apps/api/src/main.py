@@ -92,6 +92,7 @@ from .features.personal.router import router as personal_router
 from .features.platform_admin.router import router as platform_admin_router
 from .features.pricing.router import router as pricing_router
 from .features.privacy_settings.router import router as privacy_settings_router
+from .features.produktwissen.router import router as produktwissen_router
 from .features.properties.router import router as properties_router
 from .features.property_custom_fields.router import (
     router as property_custom_fields_router,
@@ -112,6 +113,7 @@ from .features.site_config.router import public_router as site_config_public_rou
 from .features.subscriptions.router import router as subscriptions_router
 from .features.support.router import router as support_router
 from .features.tasks.router import router as tasks_router
+from .features.taxpayer.dac7.router import router as dac7_router
 from .features.taxpayer.router import router as taxpayer_router
 from .features.travel_agencies.router import router as travel_agencies_router
 from .features.whatsapp.router import router as whatsapp_router
@@ -179,8 +181,14 @@ _SLICE_ROUTERS = [
     # `public_support`, reCAPTCHA-geprüft.
     contact_router,
     support_router,
+    # Produktberater der Marketing-Seite (0626): beantwortet Fragen zur
+    # Software aus den Hilfe-Artikeln, bevor ein Ticket entsteht. Liegt im
+    # Support-Praefix, damit der strenge Bucket `public_support` greift.
+    produktwissen_router,
     property_taxes_router,
     taxpayer_router,
+    # DAC7-Meldung: erzeugt aus den Buchungen die Datei fuer die Behoerde.
+    dac7_router,
     external_calendar_router,
     schloesser_router,
     schloesser_webhook_router,

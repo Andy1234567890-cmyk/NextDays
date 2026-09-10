@@ -892,7 +892,15 @@
     "oeffnen": "Öppna chatten",
     "schliessen": "Stäng chatten",
     "hinweis": "Vi använder dina uppgifter enbart för att svara på den här förfrågan.",
-    "fehler": "Det gick inte. Försök igen senare."
+    "fehler": "Det gick inte. Försök igen senare.",
+    "beraterTitel": "myNextDays produktkonsult",
+    "beraterUnter": "AI-assistent · svarar direkt",
+    "beraterBegruessung": "Hej! Jag svarar på frågor om myNextDays – funktioner, portaler, priser, installation. Vad vill du veta?",
+    "beraterPlatzhalter": "Ställ en fråga …",
+    "beraterDenkt": "Jag söker …",
+    "beraterQuellen": "För referens:",
+    "beraterUebergabe": "Jag kan inte svara säkert på detta utifrån hjälpen. Jag vidarebefordrar din fråga till en kollega – vänligen fyll i dina kontaktuppgifter kort.",
+    "beraterFormularHinweis": "En kollega svarar dig via e-post, vanligtvis inom några timmar."
   },
   "einblicke": {
     "eyebrow": "Inblick",

@@ -892,7 +892,15 @@
     "oeffnen": "Iftaħ iċ-chat",
     "schliessen": "Agħlaq iċ-chat",
     "hinweis": "Nużaw id-dettalji tiegħek biss biex inwieġbu din it-talba.",
-    "fehler": "Dan ma rnexxiex. Erġa' pprova aktar tard."
+    "fehler": "Dan ma rnexxiex. Erġa' pprova aktar tard.",
+    "beraterTitel": "myNextDays Konsulent tal-Prodott",
+    "beraterUnter": "Assistent tal-AI · iwieġeb istantanjament",
+    "beraterBegruessung": "Hello! Nista' nwieġeb mistoqsijiet dwar myNextDays — funzjonijiet, portali, prezzijiet, setup. X'tixtieq tkun taf?",
+    "beraterPlatzhalter": "Staqsi mistoqsija …",
+    "beraterDenkt": "Qed infittex …",
+    "beraterQuellen": "Għal referenza:",
+    "beraterUebergabe": "Ma nistax inwieġeb dan b'ċertezza mill-għajnuna. Se ngħaddi l-mistoqsija tiegħek lil kollega — jekk jogħġbok daħħal id-dettalji tal-kuntatt tiegħek fil-qosor.",
+    "beraterFormularHinweis": "Kollega se jwieġbek bl-email, ġeneralment fi ftit sigħat."
   },
   "einblicke": {
     "eyebrow": "Minn ġewwa",

@@ -892,7 +892,15 @@
     "oeffnen": "Ava vestlus",
     "schliessen": "Sulge vestlus",
     "hinweis": "Kasutame sinu andmeid ainult sellele päringule vastamiseks.",
-    "fehler": "See ei õnnestunud. Palun proovi hiljem uuesti."
+    "fehler": "See ei õnnestunud. Palun proovi hiljem uuesti.",
+    "beraterTitel": "myNextDays tootenõustaja",
+    "beraterUnter": "AI-assistent · vastab kohe",
+    "beraterBegruessung": "Tere! Vastan myNextDaysi puudutavatele küsimustele – funktsioonid, portaalid, hinnad, seadistamine. Mida soovid teada?",
+    "beraterPlatzhalter": "Esita küsimus ...",
+    "beraterDenkt": "Otsin ...",
+    "beraterQuellen": "Lisalugemiseks:",
+    "beraterUebergabe": "Ma ei saa sellele abist kindlalt vastata. Edastan sinu küsimuse kolleegile – palun sisesta oma kontaktandmed.",
+    "beraterFormularHinweis": "Kolleeg vastab sulle e-posti teel, tavaliselt mõne tunni jooksul."
   },
   "einblicke": {
     "eyebrow": "Sissevaade",

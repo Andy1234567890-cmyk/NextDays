@@ -892,7 +892,15 @@
     "oeffnen": "Chat openen",
     "schliessen": "Chat sluiten",
     "hinweis": "We gebruiken je gegevens alleen om op deze vraag te antwoorden.",
-    "fehler": "Dat is niet gelukt. Probeer het later opnieuw."
+    "fehler": "Dat is niet gelukt. Probeer het later opnieuw.",
+    "beraterTitel": "myNextDays Productadviseur",
+    "beraterUnter": "AI-assistent · antwoordt direct",
+    "beraterBegruessung": "Hallo! Ik beantwoord vragen over myNextDays — functies, portals, prijzen, installatie. Wat wil je weten?",
+    "beraterPlatzhalter": "Stel een vraag …",
+    "beraterDenkt": "Ik zoek het op …",
+    "beraterQuellen": "Ter referentie:",
+    "beraterUebergabe": "Ik kan dit niet met zekerheid beantwoorden vanuit de help. Ik stuur je vraag door naar een collega — vul hiervoor je contactgegevens in.",
+    "beraterFormularHinweis": "Een collega antwoordt je per e-mail, meestal binnen enkele uren."
   },
   "einblicke": {
     "eyebrow": "Inkijk",

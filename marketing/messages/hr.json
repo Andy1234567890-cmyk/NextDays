@@ -892,7 +892,15 @@
     "oeffnen": "Otvori chat",
     "schliessen": "Zatvori chat",
     "hinweis": "Vaše podatke koristimo isključivo za odgovor na ovaj upit.",
-    "fehler": "Nešto je pošlo po zlu. Pokušajte ponovno kasnije."
+    "fehler": "Nešto je pošlo po zlu. Pokušajte ponovno kasnije.",
+    "beraterTitel": "myNextDays savjetnik za proizvode",
+    "beraterUnter": "AI asistent · odgovara odmah",
+    "beraterBegruessung": "Zdravo! Odgovaram na pitanja o myNextDays — funkcijama, portalima, cijenama, postavljanju. Što želite znati?",
+    "beraterPlatzhalter": "Postavi pitanje …",
+    "beraterDenkt": "Provjeravam …",
+    "beraterQuellen": "Za čitanje:",
+    "beraterUebergabe": "Ne mogu sa sigurnošću odgovoriti na ovo iz pomoći. Proslijedit ću vaše pitanje kolegi — molimo vas da ukratko unesete svoje kontakt podatke.",
+    "beraterFormularHinweis": "Kolega će vam odgovoriti e-poštom, obično u roku od nekoliko sati."
   },
   "einblicke": {
     "eyebrow": "Pogled iznutra",

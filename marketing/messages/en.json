@@ -892,7 +892,15 @@
     "oeffnen": "Open chat",
     "schliessen": "Close chat",
     "hinweis": "We use your details only to reply to this enquiry.",
-    "fehler": "That did not work. Please try again later."
+    "fehler": "That did not work. Please try again later.",
+    "beraterTitel": "myNextDays Product Advisor",
+    "beraterUnter": "AI assistant · instant replies",
+    "beraterBegruessung": "Hello! I can answer questions about myNextDays — features, portals, prices, setup. What would you like to know?",
+    "beraterPlatzhalter": "Ask a question...",
+    "beraterDenkt": "Looking it up...",
+    "beraterQuellen": "For reference:",
+    "beraterUebergabe": "I can't answer that definitively from the help. I'll forward your question to a colleague — please enter your contact details briefly.",
+    "beraterFormularHinweis": "A colleague will reply to you by email, usually within a few hours."
   },
   "einblicke": {
     "eyebrow": "Inside the product",

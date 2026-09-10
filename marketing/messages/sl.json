@@ -892,7 +892,15 @@
     "oeffnen": "Odpri klepet",
     "schliessen": "Zapri klepet",
     "hinweis": "Vaše podatke uporabljamo izključno za odgovor na to povpraševanje.",
-    "fehler": "To ni uspelo. Poskusite znova pozneje."
+    "fehler": "To ni uspelo. Poskusite znova pozneje.",
+    "beraterTitel": "myNextDays svetovalec za izdelke",
+    "beraterUnter": "AI pomočnik · takoj odgovori",
+    "beraterBegruessung": "Živjo! Odgovarjam na vprašanja o myNextDays — funkcije, portali, cene, namestitev. Kaj želiš vedeti?",
+    "beraterPlatzhalter": "Postavi vprašanje …",
+    "beraterDenkt": "Preverjam …",
+    "beraterQuellen": "Za branje:",
+    "beraterUebergabe": "Na to ne morem z gotovostjo odgovoriti iz pomoči. Tvoje vprašanje bom posredoval sodelavcu — prosim, vpiši svoje kontaktne podatke.",
+    "beraterFormularHinweis": "Sodelavec ti bo odgovoril po e-pošti, običajno v nekaj urah."
   },
   "einblicke": {
     "eyebrow": "Pogled od znotraj",

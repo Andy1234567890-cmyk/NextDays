@@ -892,7 +892,15 @@
     "oeffnen": "Atvērt tērzēšanu",
     "schliessen": "Aizvērt tērzēšanu",
     "hinweis": "Jūsu datus izmantojam tikai, lai atbildētu uz šo pieprasījumu.",
-    "fehler": "Neizdevās. Lūdzu, mēģiniet vēlreiz vēlāk."
+    "fehler": "Neizdevās. Lūdzu, mēģiniet vēlreiz vēlāk.",
+    "beraterTitel": "myNextDays produktu konsultants",
+    "beraterUnter": "AI asistents · atbild nekavējoties",
+    "beraterBegruessung": "Sveiki! Es atbildu uz jautājumiem par myNextDays — funkcijām, portāliem, cenām, iestatīšanu. Ko vēlaties uzzināt?",
+    "beraterPlatzhalter": "Uzdodiet jautājumu…",
+    "beraterDenkt": "Meklēju…",
+    "beraterQuellen": "Lasīt tālāk:",
+    "beraterUebergabe": "Es nevaru droši atbildēt uz šo jautājumu no palīdzības. Es pārsūtīšu jūsu jautājumu kolēģim — lūdzu, īsi ievadiet savus kontaktinformāciju.",
+    "beraterFormularHinweis": "Kolēģis jums atbildēs pa e-pastu, parasti dažu stundu laikā."
   },
   "einblicke": {
     "eyebrow": "Ieskats",
