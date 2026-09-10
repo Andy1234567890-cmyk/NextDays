@@ -3027,7 +3027,10 @@
         "jaehrlich": "anualmente",
         "nie": "não contar"
       },
-      "ausgewaehlt": "{count} de {gesamt} selecionados"
+      "ausgewaehlt": "{count} de {gesamt} selecionados",
+      "ziehenHinweis": "Arraste um item para uma sala para atribuí-lo.",
+      "raumLeer": "Esta sala ainda não tem nada.",
+      "raumWaehlen": "Sala"
     }
   },
   "finance": {

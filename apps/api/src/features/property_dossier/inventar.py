@@ -356,6 +356,35 @@ class InventarMixin:
             raise _db_fehler(exc, "raeume") from exc
         return [InventarRaum(**_raum(z)) for z in zeilen]
 
+    def _pruefe_raum(
+        self, tid: str, property_id: str, room_id: str | None
+    ) -> str | None:
+        """Ein Raum muss zu DIESEM Objekt gehören.
+
+        Die Kennung kommt aus der Anfrage: ohne diese Prüfung liesse sich eine
+        Zeile dem Raum eines fremden Objekts — auch eines fremden Mandanten —
+        zuordnen (Wurzel 3/9). Der Fremdschlüssel allein fängt das nicht: er
+        prüft nur, dass die Zeile existiert, nicht WEM sie gehört.
+        """
+        if not room_id:
+            return None
+        try:
+            treffer = (
+                self._db()
+                .table("inventory_room")
+                .select("id")
+                .eq("id", room_id)
+                .eq("tenant_id", tid)
+                .eq("property_id", property_id)
+                .limit(1)
+                .execute()
+            ).data or []
+        except APIError as exc:
+            raise _db_fehler(exc, "raum_pruefen") from exc
+        if not treffer:
+            raise _fehler("Diesen Raum gibt es an diesem Objekt nicht.", 422)
+        return room_id
+
     def inventar_raum_anlegen(
         self, tenant_id: str | None, property_id: str, *, name: str,
         sortierung: int = 0,
@@ -462,11 +491,17 @@ class InventarMixin:
                 f"Höchstens {MAX_GEGENSTAENDE_JE_OBJEKT} Gegenstände je Objekt.",
                 422,
             )
+        # Die erlaubten Raeume EINMAL holen: ein PDF-Import legt hunderte
+        # Zeilen an, eine Abfrage je Zeile waere derselbe Fehler in schnell.
+        erlaubt = {r.id for r in self.inventar_raeume(tid, property_id)}
         zeilen = []
         for e in eintraege:
             name = str(e.get("name") or "").strip()
             if not name:
                 continue
+            raum = e.get("room_id") or None
+            if raum and raum not in erlaubt:
+                raise _fehler("Diesen Raum gibt es an diesem Objekt nicht.", 422)
             soll = e.get("soll_menge")
             ist = e.get("ist_menge")
             zeilen.append(
@@ -474,7 +509,7 @@ class InventarMixin:
                     "tenant_id": tid,
                     "property_id": property_id,
                     "name": name[:300],
-                    "room_id": e.get("room_id") or None,
+                    "room_id": raum,
                     # Ohne Angabe gilt das Soll auch als Ist: beim Anlegen aus
                     # einer Liste ist alles da, sonst stuende die frische
                     # Zeile sofort als Fehlbestand da (Wurzel 4).
@@ -521,7 +556,9 @@ class InventarMixin:
                 raise _fehler("Der Gegenstand braucht einen Namen.", 422)
             werte["name"] = name[:300]
         if "room_id" in felder:
-            werte["room_id"] = felder["room_id"] or None
+            werte["room_id"] = self._pruefe_raum(
+                tid, property_id, felder["room_id"] or None
+            )
         if "ist_menge" in felder:
             werte["quantity"] = max(0, int(felder["ist_menge"] or 0))
         if "soll_menge" in felder:

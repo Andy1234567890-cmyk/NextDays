@@ -3027,7 +3027,10 @@
         "jaehrlich": "évente",
         "nie": "nem számít"
       },
-      "ausgewaehlt": "{count} / {gesamt} kiválasztva"
+      "ausgewaehlt": "{count} / {gesamt} kiválasztva",
+      "ziehenHinweis": "Húzza az elemet egy szobába a hozzárendeléshez.",
+      "raumLeer": "Ebben a szobában még nincs semmi.",
+      "raumWaehlen": "Szoba"
     }
   },
   "finance": {

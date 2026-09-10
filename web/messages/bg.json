@@ -3027,7 +3027,10 @@
         "jaehrlich": "всяка година",
         "nie": "без преброяване"
       },
-      "ausgewaehlt": "{count} от {gesamt} избрани"
+      "ausgewaehlt": "{count} от {gesamt} избрани",
+      "ziehenHinweis": "Плъзнете елемент в стая, за да го зададете.",
+      "raumLeer": "В тази стая все още няма нищо.",
+      "raumWaehlen": "Стая"
     }
   },
   "finance": {

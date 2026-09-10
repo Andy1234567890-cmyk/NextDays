@@ -626,3 +626,64 @@ def test_fehlende_tabelle_bleibt_503_mit_migrationshinweis() -> None:
     fehler = _db_fehler(_FakeApiError("PGRST205"), "liste")
     assert fehler.status_code == 503
     assert "0620" in fehler.message
+
+
+# --- Raum-Zugehoerigkeit (Wurzel 3/9) ---------------------------------------
+# Die `room_id` kommt aus der Anfrage. Ohne Pruefung liesse sich eine Zeile
+# dem Raum eines FREMDEN Objekts zuordnen — der Fremdschluessel prueft nur,
+# dass die Zeile existiert, nicht wem sie gehoert. Seit die Zuweisung per
+# Ziehen der Hauptweg ist, laeuft jede Bedienung durch diesen Pfad.
+#
+# Die FakeDb filtert `.eq()` nicht, deshalb steuern diese Tests ueber den
+# Tabelleninhalt: leere `inventory_room` = die gescopte Abfrage findet nichts,
+# also ist der Raum fremd.
+def test_anlegen_mit_fremdem_raum_wird_abgewiesen() -> None:
+    svc, prot = _svc({"inventory_room": []})
+    with pytest.raises(DossierError) as exc:
+        svc.inventar_anlegen(
+            TID, PID,
+            eintraege=[{"name": "Weinglas", "room_id": "fremd-1"}],
+            user_id="u1",
+        )
+    assert exc.value.status_code == 422
+    # Entscheidend: es entsteht KEINE Zeile.
+    assert not [e for e in prot if e[0] == "insert" and e[1] == "inventory_items"]
+
+
+def test_aendern_auf_fremden_raum_wird_abgewiesen() -> None:
+    svc, prot = _svc({
+        "inventory_items": [_gegenstandzeile()],
+        "inventory_room": [],
+    })
+    with pytest.raises(DossierError) as exc:
+        svc.inventar_aendern(
+            TID, PID, IID, felder={"room_id": "fremd-1"}, user_id="u1",
+        )
+    assert exc.value.status_code == 422
+    assert not [e for e in prot if e[0] == "update" and e[1] == "inventory_items"]
+
+
+def test_eigener_raum_wird_zugewiesen() -> None:
+    """Der Normalfall des Ziehens: Raum gehoert zum Objekt, Zuweisung laeuft."""
+    svc, prot = _svc({
+        "inventory_items": [_gegenstandzeile()],
+        "inventory_room": [
+            {"id": "r1", "tenant_id": TID, "property_id": PID,
+             "name": "Kueche", "sortierung": 0},
+        ],
+    })
+    svc.inventar_aendern(TID, PID, IID, felder={"room_id": "r1"}, user_id="u1")
+    aend = [e for e in prot if e[0] == "update" and e[1] == "inventory_items"]
+    assert aend[0][2]["room_id"] == "r1"
+
+
+def test_raum_entfernen_bleibt_erlaubt() -> None:
+    """`null` ist kein Raum und braucht keine Pruefung — sonst liesse sich eine
+    Zeile nicht mehr aus einem Raum herausziehen."""
+    svc, prot = _svc({
+        "inventory_items": [_gegenstandzeile(room_id="r1")],
+        "inventory_room": [],
+    })
+    svc.inventar_aendern(TID, PID, IID, felder={"room_id": None}, user_id="u1")
+    aend = [e for e in prot if e[0] == "update" and e[1] == "inventory_items"]
+    assert aend[0][2]["room_id"] is None

@@ -131,8 +131,6 @@ export function InventarListe({ pid }: { pid: string }) {
         </p>
       )}
 
-      <RaumVerwaltung pid={pid} raeume={raeume} t={t} onFertig={laden} onFehler={setFehler} />
-
       {vorschlaege && (
         <VorschlagsListe
           pid={pid}
@@ -161,12 +159,8 @@ export function InventarListe({ pid }: { pid: string }) {
 
       {laedt ? (
         <p className="text-sm text-muted-foreground">{t("inventar.laedt")}</p>
-      ) : liste.length === 0 ? (
-        <p className="rounded-xl border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
-          {t("inventar.leer")}
-        </p>
       ) : (
-        <Raumgruppen
+        <RaumBereich
           pid={pid}
           t={t}
           raeume={raeume}
@@ -273,7 +267,7 @@ function NeueZeile({
         <select
           value={raum}
           onChange={(e) => setRaum(e.target.value)}
-          className="rounded-lg border border-border bg-background px-2 py-2 text-sm"
+          className="rounded-lg border border-border bg-background py-2 pl-3 pr-9 text-sm"
         >
           <option value="">{t("inventar.ohneRaum")}</option>
           {raeume.map((r) => (
@@ -292,64 +286,124 @@ function NeueZeile({
 }
 
 /** Räume anlegen — die Gliederung des Rundgangs. */
-function RaumVerwaltung({
-  pid,
-  raeume,
+/** Die Reiterleiste: Navigation UND Ablageziel in einem.
+ *
+ *  Steht getrennt von der Liste darunter, weil sie eine eigene Aufgabe hat —
+ *  und weil beides zusammen eine Komponente ergaebe, die niemand mehr am
+ *  Stueck liest. */
+function Reiterleiste({
   t,
-  onFertig,
-  onFehler,
+  reiter,
+  aktiv,
+  ueber,
+  zaehler,
+  neuerRaum,
+  offen,
+  onAktiv,
+  onUeber,
+  onAblegen,
+  onNeuerRaum,
+  onOffen,
+  onAnlegen,
 }: {
-  pid: string;
-  raeume: InventarRaum[];
   t: TFn;
-  onFertig: () => Promise<void>;
-  onFehler: Melder;
+  reiter: { id: string | null; name: string }[];
+  aktiv: string | null;
+  ueber: string | null | undefined;
+  zaehler: (id: string | null) => number;
+  neuerRaum: string;
+  offen: boolean;
+  onAktiv: (id: string | null) => void;
+  onUeber: (v: string | null | undefined) => void;
+  onAblegen: (e: React.DragEvent, ziel: string | null) => void;
+  onNeuerRaum: (v: string) => void;
+  onOffen: (v: boolean) => void;
+  onAnlegen: () => Promise<void>;
 }) {
-  const [name, setName] = useState("");
-  const [offen, setOffen] = useState(false);
-
-  async function anlegen() {
-    const sauber = name.trim();
-    if (!sauber) return;
-    const r = await createInventarRaum(pid, { name: sauber, sortierung: raeume.length });
-    if (!r.ok) {
-      onFehler(r.error);
-      return;
-    }
-    setName("");
-    await onFertig();
-  }
-
   return (
-    <div className="flex flex-wrap items-center gap-2 text-sm">
-      <span className="text-muted-foreground">{t("inventar.raeume")}:</span>
-      {raeume.length === 0 ? (
-        <span className="text-muted-foreground">{t("inventar.keineRaeume")}</span>
-      ) : (
-        raeume.map((r) => (
-          <span key={r.id} className="rounded-full bg-secondary px-2.5 py-0.5 text-xs">
-            {r.name}
-          </span>
-        ))
-      )}
+    // Reiterleiste mit Unterstrich wie in `reisebueros/agency-detail` — nicht
+    // als Pill-Reihe. Raeume sind Ansichten DERSELBEN Liste, und dafuer ist der
+    // Reiter die eingefuehrte Form; runde Vollflaechen lesen sich als Filter-
+    // Chips, die man mehrfach setzen koennte. Kein `overflow-auto`: die
+    // -mb-px-Ueberlappung des Unterstrichs machte den Container sonst
+    // scrollbar.
+    <div
+      className="flex flex-wrap items-center gap-1 border-b border-border"
+      role="tablist"
+    >
+      {reiter.map(({ id, name }) => {
+        const an = aktiv === id;
+        const zielt = ueber === id;
+        return (
+          <button
+            key={id ?? "ohne"}
+            type="button"
+            role="tab"
+            aria-selected={an}
+            onClick={() => onAktiv(id)}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = "move";
+              onUeber(id);
+            }}
+            onDragLeave={() => onUeber(undefined)}
+            onDrop={(e) => onAblegen(e, id)}
+            className={
+              "-mb-px inline-flex shrink-0 items-center gap-2 rounded-t-(--radius) border-b-2 px-3 py-2.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " +
+              // Ziehen: der Reiter, ueber dem der Gegenstand schwebt, hebt sich
+              // FLAECHIG ab. Nur den Unterstrich zu faerben wuerde beim Ablegen
+              // nicht auffallen — das Ziel muss waehrend des Ziehens eindeutig
+              // sein, auch wenn es nicht der aktive Reiter ist.
+              (zielt
+                ? "border-primary bg-primary/10 text-foreground"
+                : an
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground")
+            }
+          >
+            {name}
+            <span
+              className={
+                "rounded-full px-2 py-0.5 text-xs tabular-nums " +
+                (an
+                  ? "bg-primary/10 text-primary"
+                  : "bg-secondary text-muted-foreground")
+              }
+            >
+              {zaehler(id)}
+            </span>
+          </button>
+        );
+      })}
+      {/* „Raum hinzufuegen" ist KEIN Reiter (kein role=tab): es waehlt keine
+          Ansicht, es legt eine an. Deshalb steht es neben der Leiste und
+          traegt bewusst keinen Unterstrich. */}
       {offen ? (
-        <span className="flex items-center gap-2">
+        <span className="-mb-px flex items-center gap-1.5 py-1.5 ps-1">
           <Input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            autoFocus
+            value={neuerRaum}
+            onChange={(e) => onNeuerRaum(e.target.value)}
             placeholder={t("inventar.raumName")}
-            className="h-8 w-40"
+            className="h-8 w-36"
             onKeyDown={(e) => {
-              if (e.key === "Enter") void anlegen();
+              if (e.key === "Enter") void onAnlegen();
+              if (e.key === "Escape") onOffen(false);
             }}
           />
-          <Button type="button" size="sm" onClick={() => void anlegen()}>
+          <Button type="button" size="sm" onClick={() => void onAnlegen()}>
             {t("inventar.speichern")}
           </Button>
         </span>
       ) : (
-        <Button type="button" variant="ghost" size="sm" onClick={() => setOffen(true)}>
-          <Icon icon="ph:plus" className="size-3.5" />
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="-mb-px h-auto px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+          onClick={() => onOffen(true)}
+        >
+          <Icon icon="ph:plus" className="size-4" />
           {t("inventar.raumHinzufuegen")}
         </Button>
       )}
@@ -357,8 +411,17 @@ function RaumVerwaltung({
   );
 }
 
-/** Die Liste, nach Räumen gegliedert — die Reihenfolge des Rundgangs. */
-function Raumgruppen({
+/** Räume als Reiter, Zuweisung per Ziehen.
+ *
+ *  Warum Reiter statt einer langen Gliederung: die Liste eines Ferienhauses
+ *  hat schnell 200 Zeilen. Wer die Küche zählt, will die Küche sehen — nicht
+ *  an neunzehn Gartenposten vorbeirollen. Der Reiter ist zugleich das
+ *  Ablageziel: einen Gegenstand auf „Küche" ziehen weist ihn zu.
+ *
+ *  Ziehen ist NICHT der einzige Weg. Ein Auswahlfeld je Zeile macht dasselbe
+ *  — mit Tastatur, auf dem Handy und für alle, die keine Maus führen können.
+ *  Eine Bedienung, die nur zieht, schliesst sie aus. */
+function RaumBereich({
   pid,
   t,
   raeume,
@@ -377,39 +440,114 @@ function Raumgruppen({
   onFehler: Melder;
   onMelden: (g: InventarGegenstand) => void;
 }) {
-  // Gegenstände ohne Raum kommen ans ENDE, nicht an den Anfang: sie sind der
-  // Rest, den noch niemand zugeordnet hat.
-  const gruppen: { raum: InventarRaum | null; posten: InventarGegenstand[] }[] = [
-    ...raeume.map((r) => ({
-      raum: r,
-      posten: liste.filter((g) => g.room_id === r.id),
-    })),
-    { raum: null, posten: liste.filter((g) => !g.room_id) },
-  ].filter((g) => g.posten.length > 0);
+  // `null` = „Ohne Raum". Bewusst ein eigener Reiter und kein Sonderfall:
+  // der Rest, den noch niemand zugeordnet hat, ist die Arbeitsliste.
+  const [aktiv, setAktiv] = useState<string | null>(null);
+  const [ueber, setUeber] = useState<string | null | undefined>(undefined);
+  const [neuerRaum, setNeuerRaum] = useState("");
+  const [offen, setOffen] = useState(false);
+  const [schiebt, setSchiebt] = useState(false);
+
+  const zaehler = (id: string | null) =>
+    liste.filter((g) => (g.room_id ?? null) === id).length;
+
+  const ohneRaum = zaehler(null);
+  // Der erste Reiter mit Inhalt gewinnt, wenn der aktive leer wird — sonst
+  // starrt der Nutzer nach dem letzten Verschieben auf eine leere Fläche.
+  const aktivGueltig =
+    aktiv === null || raeume.some((r) => r.id === aktiv) ? aktiv : null;
+  const posten = liste.filter((g) => (g.room_id ?? null) === aktivGueltig);
+
+  async function raumAnlegen() {
+    const sauber = neuerRaum.trim();
+    if (!sauber) return;
+    const r = await createInventarRaum(pid, {
+      name: sauber,
+      sortierung: raeume.length,
+    });
+    if (!r.ok) {
+      onFehler(r.error);
+      return;
+    }
+    setNeuerRaum("");
+    setOffen(false);
+    await onFertig();
+  }
+
+  async function zuweisen(itemId: string, ziel: string | null) {
+    if (schiebt) return;
+    const g = liste.find((x) => x.id === itemId);
+    // Derselbe Raum: kein Aufruf. Ein PATCH, der nichts ändert, ist trotzdem
+    // eine Schreiblast und ein Eintrag in der Änderungsspur.
+    if (!g || (g.room_id ?? null) === ziel) return;
+    setSchiebt(true);
+    const r = await updateInventar(pid, itemId, { room_id: ziel });
+    setSchiebt(false);
+    if (!r.ok) {
+      onFehler(r.error);
+      return;
+    }
+    await onFertig();
+  }
+
+  function ablegen(e: React.DragEvent, ziel: string | null) {
+    e.preventDefault();
+    setUeber(undefined);
+    const id = e.dataTransfer.getData("text/plain");
+    if (id) void zuweisen(id, ziel);
+  }
+
+  const reiter: { id: string | null; name: string }[] = [
+    ...raeume.map((r) => ({ id: r.id as string | null, name: r.name })),
+    ...(ohneRaum > 0 || raeume.length === 0
+      ? [{ id: null, name: t("inventar.ohneRaum") }]
+      : []),
+  ];
 
   return (
-    <div className="flex flex-col gap-4">
-      {gruppen.map(({ raum, posten }) => (
-        <div key={raum?.id ?? "ohne"}>
-          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            {raum?.name ?? t("inventar.ohneRaum")}
-          </p>
-          <ul className="divide-y divide-border rounded-xl border border-border">
-            {posten.map((g) => (
-              <Zeile
-                key={g.id}
-                pid={pid}
-                t={t}
-                g={g}
-                schaeden={schadenJeItem.get(g.id) ?? 0}
-                onFertig={onFertig}
-                onFehler={onFehler}
-                onMelden={onMelden}
-              />
-            ))}
-          </ul>
-        </div>
-      ))}
+    <div className="flex flex-col gap-3">
+      <Reiterleiste
+        t={t}
+        reiter={reiter}
+        aktiv={aktivGueltig}
+        ueber={ueber}
+        zaehler={zaehler}
+        neuerRaum={neuerRaum}
+        offen={offen}
+        onAktiv={setAktiv}
+        onUeber={setUeber}
+        onAblegen={ablegen}
+        onNeuerRaum={setNeuerRaum}
+        onOffen={setOffen}
+        onAnlegen={raumAnlegen}
+      />
+
+      {raeume.length > 0 && (
+        <p className="text-xs text-muted-foreground">{t("inventar.ziehenHinweis")}</p>
+      )}
+
+      {posten.length === 0 ? (
+        <p className="rounded-xl border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
+          {t("inventar.raumLeer")}
+        </p>
+      ) : (
+        <ul className="divide-y divide-border rounded-xl border border-border">
+          {posten.map((g) => (
+            <Zeile
+              key={g.id}
+              pid={pid}
+              t={t}
+              g={g}
+              raeume={raeume}
+              schaeden={schadenJeItem.get(g.id) ?? 0}
+              onFertig={onFertig}
+              onFehler={onFehler}
+              onMelden={onMelden}
+              onRaum={(ziel) => zuweisen(g.id, ziel)}
+            />
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
@@ -502,18 +640,22 @@ function Zeile({
   pid,
   t,
   g,
+  raeume,
   schaeden,
   onFertig,
   onFehler,
   onMelden,
+  onRaum,
 }: {
   pid: string;
   t: TFn;
   g: InventarGegenstand;
+  raeume: InventarRaum[];
   schaeden: number;
   onFertig: () => Promise<void>;
   onFehler: Melder;
   onMelden: (g: InventarGegenstand) => void;
+  onRaum: (ziel: string | null) => void;
 }) {
   const [ist, setIst] = useState(String(g.ist_menge));
   const [laeuft, setLaeuft] = useState(false);
@@ -543,7 +685,19 @@ function Zeile({
   }
 
   return (
-    <li className="flex flex-wrap items-center gap-3 px-3 py-2.5">
+    <li
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData("text/plain", g.id);
+        e.dataTransfer.effectAllowed = "move";
+      }}
+      className="flex flex-wrap items-center gap-3 px-3 py-2.5 hover:bg-muted/40"
+    >
+      <Icon
+        icon="ph:dots-six-vertical"
+        className="size-4 shrink-0 cursor-grab text-muted-foreground active:cursor-grabbing"
+        aria-hidden
+      />
       <div className="min-w-0 flex-1">
         <p className="flex flex-wrap items-center gap-2 truncate text-sm font-medium">
           {g.name}
@@ -610,6 +764,23 @@ function Zeile({
               </span>
             </>
           )}
+          {/* Derselbe Vorgang wie das Ziehen, nur mit Tastatur und auf dem
+              Handy bedienbar. Ohne dieses Feld waere die Zuweisung an eine
+              Maus gebunden. */}
+          <span className="text-muted-foreground">·</span>
+          <select
+            value={g.room_id ?? ""}
+            onChange={(e) => onRaum(e.target.value || null)}
+            aria-label={t("inventar.raumWaehlen")}
+            className="rounded-full border-0 bg-transparent py-0 pl-0 pr-5 text-xs text-muted-foreground"
+          >
+            <option value="">{t("inventar.ohneRaum")}</option>
+            {raeume.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.name}
+              </option>
+            ))}
+          </select>
           <ReferenzFoto pid={pid} g={g} t={t} onFehler={onFehler} />
         </p>
       </div>
@@ -724,7 +895,7 @@ function SchadenMelden({
           <select
             value={art}
             onChange={(e) => setArt(e.target.value)}
-            className="rounded-lg border border-border bg-background px-2 py-2"
+            className="rounded-lg border border-border bg-background py-2 pl-2 pr-7"
           >
             {ARTEN.map((a) => (
               <option key={a} value={a}>
@@ -739,7 +910,7 @@ function SchadenMelden({
           <select
             value={traeger}
             onChange={(e) => setTraeger(e.target.value)}
-            className="rounded-lg border border-border bg-background px-2 py-2"
+            className="rounded-lg border border-border bg-background py-2 pl-2 pr-7"
           >
             {/* `offen` ist erlaubt: wer den Schaden entdeckt, weiss oft noch
                 nicht, wer ihn zu tragen hat. Die Entscheidung faellt beim
@@ -916,7 +1087,7 @@ function SchadenZeile({
         <select
           value={traeger}
           onChange={(e) => setTraeger(e.target.value)}
-          className="h-8 rounded-lg border border-border bg-background px-2 text-sm"
+          className="h-8 rounded-lg border border-border bg-background pl-2 pr-7 text-sm"
         >
           <option value="">{t("inventar.werZahlt")}</option>
           {TRAEGER.map((x) => (

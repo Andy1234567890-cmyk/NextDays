@@ -3027,7 +3027,10 @@
         "jaehrlich": "årligt",
         "nie": "tæl ikke med"
       },
-      "ausgewaehlt": "{count} af {gesamt} valgt"
+      "ausgewaehlt": "{count} af {gesamt} valgt",
+      "ziehenHinweis": "Træk element til et rum for at tildele det.",
+      "raumLeer": "Dette rum er tomt.",
+      "raumWaehlen": "Rum"
     }
   },
   "finance": {

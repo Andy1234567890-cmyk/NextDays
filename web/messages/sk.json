@@ -3027,7 +3027,10 @@
         "jaehrlich": "ročne",
         "nie": "nezapočítavať"
       },
-      "ausgewaehlt": "Vybraných {count} z {gesamt}"
+      "ausgewaehlt": "Vybraných {count} z {gesamt}",
+      "ziehenHinweis": "Presuňte položku do priestoru a priraďte ju.",
+      "raumLeer": "V tomto priestore zatiaľ nič nie je.",
+      "raumWaehlen": "Priestor"
     }
   },
   "finance": {

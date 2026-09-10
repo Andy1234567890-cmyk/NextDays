@@ -3027,7 +3027,10 @@
         "jaehrlich": "annuel",
         "nie": "ne pas compter"
       },
-      "ausgewaehlt": "{count} sur {gesamt} sélectionné"
+      "ausgewaehlt": "{count} sur {gesamt} sélectionné",
+      "ziehenHinweis": "Faites glisser l'objet vers un espace pour l'attribuer.",
+      "raumLeer": "Rien n'est encore dans cet espace.",
+      "raumWaehlen": "Espace"
     }
   },
   "finance": {

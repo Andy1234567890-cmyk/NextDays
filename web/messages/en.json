@@ -3027,7 +3027,10 @@
         "jaehrlich": "annually",
         "nie": "do not count"
       },
-      "ausgewaehlt": "{count} of {gesamt} selected"
+      "ausgewaehlt": "{count} of {gesamt} selected",
+      "ziehenHinweis": "Drag item to a room to assign it.",
+      "raumLeer": "This room is still empty.",
+      "raumWaehlen": "Room"
     }
   },
   "finance": {

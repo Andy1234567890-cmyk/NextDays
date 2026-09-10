@@ -3027,7 +3027,10 @@
         "jaehrlich": "vuosittain",
         "nie": "älä laske"
       },
-      "ausgewaehlt": "{count} / {gesamt} valittu"
+      "ausgewaehlt": "{count} / {gesamt} valittu",
+      "ziehenHinweis": "Vedä kohde huoneeseen määrittääksesi sen.",
+      "raumLeer": "Tässä huoneessa ei ole vielä mitään.",
+      "raumWaehlen": "Huone"
     }
   },
   "finance": {

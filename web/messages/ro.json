@@ -3027,7 +3027,10 @@
         "jaehrlich": "anual",
         "nie": "nu se numără"
       },
-      "ausgewaehlt": "{count} din {gesamt} selectate"
+      "ausgewaehlt": "{count} din {gesamt} selectate",
+      "ziehenHinweis": "Trageți elementul într-o cameră pentru a-l aloca.",
+      "raumLeer": "Această cameră este încă goală.",
+      "raumWaehlen": "Cameră"
     }
   },
   "finance": {

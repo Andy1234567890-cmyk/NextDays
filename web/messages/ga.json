@@ -3027,7 +3027,10 @@
         "jaehrlich": "go bliantúil",
         "nie": "gan a chomhaireamh"
       },
-      "ausgewaehlt": "{count} as {gesamt} roghnaithe"
+      "ausgewaehlt": "{count} as {gesamt} roghnaithe",
+      "ziehenHinweis": "Tarraing mír chuig seomra chun é a shannadh.",
+      "raumLeer": "Níl aon rud sa seomra seo fós.",
+      "raumWaehlen": "Seomra"
     }
   },
   "finance": {

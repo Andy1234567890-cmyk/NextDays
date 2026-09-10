@@ -3027,7 +3027,10 @@
         "jaehrlich": "godišnje",
         "nie": "ne broji se"
       },
-      "ausgewaehlt": "Odabrano {count} od {gesamt}"
+      "ausgewaehlt": "Odabrano {count} od {gesamt}",
+      "ziehenHinweis": "Povucite stavku u prostoriju da biste je dodijelili.",
+      "raumLeer": "U ovoj prostoriji još nema ničega.",
+      "raumWaehlen": "Prostorija"
     }
   },
   "finance": {

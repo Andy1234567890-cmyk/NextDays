@@ -3027,7 +3027,10 @@
         "jaehrlich": "anual",
         "nie": "no contar"
       },
-      "ausgewaehlt": "{count} de {gesamt} seleccionados"
+      "ausgewaehlt": "{count} de {gesamt} seleccionados",
+      "ziehenHinweis": "Arrastre un elemento a una habitación para asignarlo.",
+      "raumLeer": "Esta habitación aún no tiene nada.",
+      "raumWaehlen": "Habitación"
     }
   },
   "finance": {

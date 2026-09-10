@@ -3027,7 +3027,10 @@
         "jaehrlich": "aastas",
         "nie": "ära loe"
       },
-      "ausgewaehlt": "{count} {gesamt} valitud"
+      "ausgewaehlt": "{count} {gesamt} valitud",
+      "ziehenHinweis": "Lohista objekt ruumi, et see määrata.",
+      "raumLeer": "Selles ruumis pole veel midagi.",
+      "raumWaehlen": "Ruum"
     }
   },
   "finance": {

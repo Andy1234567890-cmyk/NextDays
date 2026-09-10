@@ -3027,7 +3027,10 @@
         "jaehrlich": "kull sena",
         "nie": "ma tgħoddx"
       },
-      "ausgewaehlt": "{count} minn {gesamt} magħżula"
+      "ausgewaehlt": "{count} minn {gesamt} magħżula",
+      "ziehenHinweis": "Drag oġġett għal kamra biex tassenjah.",
+      "raumLeer": "Din il-kamra għadha vojta.",
+      "raumWaehlen": "Kamra"
     }
   },
   "finance": {

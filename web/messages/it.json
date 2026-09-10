@@ -3027,7 +3027,10 @@
         "jaehrlich": "annuale",
         "nie": "non contare"
       },
-      "ausgewaehlt": "{count} di {gesamt} selezionati"
+      "ausgewaehlt": "{count} di {gesamt} selezionati",
+      "ziehenHinweis": "Trascinare un elemento su una stanza per assegnarlo.",
+      "raumLeer": "Questa stanza è vuota.",
+      "raumWaehlen": "Stanza"
     }
   },
   "finance": {

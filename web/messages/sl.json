@@ -3027,7 +3027,10 @@
         "jaehrlich": "letno",
         "nie": "ne šteje"
       },
-      "ausgewaehlt": "Izbranih je {count} od {gesamt}"
+      "ausgewaehlt": "Izbranih je {count} od {gesamt}",
+      "ziehenHinweis": "Povlecite predmet v sobo, da ga dodelite.",
+      "raumLeer": "V tej sobi še ni ničesar.",
+      "raumWaehlen": "Soba"
     }
   },
   "finance": {
