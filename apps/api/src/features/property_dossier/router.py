@@ -15,8 +15,10 @@ Agentur (§4.2 read-only-Portal, kein Finanz-/Vertriebseinblick).
 """
 
 from typing import Annotated
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, status
+from fastapi.responses import Response
 
 from src.core.security import CurrentUser
 from src.core.uploads import MAX_UPLOAD_BYTES, read_upload_named
@@ -387,6 +389,39 @@ def get_mappe_dokument_url(
         return {"url": service.mappe_dokument_url(ctx.tenant_id, property_id, dokument_id)}
     except DossierError as exc:
         raise _handle(exc) from exc
+
+
+@router.get("/{property_id}/mappe/dokument/{dokument_id}/datei")
+def get_mappe_dokument_datei(
+    property_id: str, dokument_id: str, service: DossierServiceDep, ctx: ManageCtx
+) -> Response:
+    """Das PDF direkt ausliefern — der Weg, den die Vorschau nimmt.
+
+    `inline`, nicht `attachment`: der Betrachter soll es ANZEIGEN, nicht
+    herunterladen. Ueber die signierte Storage-Adresse ging genau das nicht
+    (Begruendung in `mappe_dokument_datei`).
+
+    `no-store`: das Dokument kann Tuercodes enthalten und hat im
+    Platten-Cache des Browsers nichts verloren.
+    """
+    try:
+        inhalt, name = service.mappe_dokument_datei(
+            ctx.tenant_id, property_id, dokument_id
+        )
+    except DossierError as exc:
+        raise _handle(exc) from exc
+    # Der Dateiname geht als RFC-5987-Parameter hinaus: er stammt aus einem
+    # Upload und darf keine Steuerzeichen in den Header schmuggeln (Wurzel 8).
+    sicher = quote(name.replace("\r", " ").replace("\n", " ")[:200])
+    return Response(
+        content=inhalt,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"inline; filename*=UTF-8''{sicher}",
+            "Cache-Control": "no-store",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
 
 
 # EIGENER Pfad fuer den Upload, nicht POST auf den Listenpfad: der

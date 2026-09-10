@@ -429,6 +429,21 @@ ist, nicht was dort steht — verifiziert wird weiterhin am Code.
   Kanal (so sah eine Expedia-Buchung aus wie myBestDays).
 - Mobile berührt? `tsc --noEmit` + Jest grün in JEDER betroffenen App
   (`mobile-bestdays`, `mobile-nextdays`); geteilte Dateien in beiden gleich.
+- **DB-Zugriff berührt? `python3 scripts/diagnose/db-spalten-pruefen.py`** —
+  vergleicht JEDE `select(...)`- und Filter-Spalte (`eq`/`order`/`in_` …) im
+  Backend mit der Live-Datenbank. Ein falscher Spaltenname ist für Python eine
+  Zeichenkette, für `ruff`/`pylint` unsichtbar und für `pytest` harmlos: die
+  Fake-DB der Tests nimmt JEDE erfundene Spalte an. Sichtbar wird er erst beim
+  echten Aufruf — als roher 500 beim Kunden.
+  Live am 10.09.2026: `property_guest_portal` hat keine `tenant_id` (der
+  Mandant hängt über `property_id` an `properties`), das `.eq("tenant_id", …)`
+  warf `42703` und das Übernehmen aus dem PDF starb mit 500. Der erste Lauf
+  über das ganze Backend fand SIEBEN weitere derselben Sorte — darunter eine
+  in der Verdienstrechnung (`personal_zeiterfassung` hat weder `datum` noch
+  `netto_minuten`) und eine im Gebührenlauf (`tenant_billing_profile` hat
+  keine `currency`, sie steht in `tenants`). Das Skript prüfte Filterspalten
+  bis dahin NICHT — die Lücke stand in seinem eigenen Kopf und war nie
+  geschlossen worden. 11.663 Angaben in 357 Dateien sind jetzt grün.
 - DB-Änderung? Migration schreiben und via `supabase/apply-migrations.sh` live
   einspielen (nie automatisch), JEDE neue public-Tabelle bekommt RLS.
 - Trigger angefasst (neu, geändert, `create or replace`)? Danach

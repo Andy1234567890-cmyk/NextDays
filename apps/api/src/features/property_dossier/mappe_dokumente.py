@@ -36,7 +36,7 @@ import json
 import re
 from collections.abc import Callable
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, NoReturn
 from uuid import uuid4
 
 import nh3
@@ -144,18 +144,47 @@ def _json_objekt(roh: str) -> dict:
     dagegen schon, und zwar laut (Wurzel 5).
     """
     text = roh.strip()
-    if text.startswith("```"):
-        text = re.sub(r"^```[a-z]*\n?", "", text)
-        text = re.sub(r"\n?```$", "", text).strip()
+    # Zaun ueberall, nicht nur am Anfang: ein einleitender Satz („Hier sind
+    # die Angaben:") liess die alte `startswith`-Pruefung ins Leere laufen,
+    # obwohl das JSON zwei Zeilen tiefer sauber dastand.
+    zaun = re.search(r"```[a-z]*\s*\n?(.*?)```", text, re.DOTALL)
+    if zaun:
+        text = zaun.group(1).strip()
     try:
         daten = json.loads(text)
     except json.JSONDecodeError as exc:
-        raise _fehler(
-            "Das Dokument konnte nicht ausgewertet werden.", 502
-        ) from exc
+        # Letzter Versuch: das aeusserste Objekt aus dem Rahmentext schneiden.
+        klammer = re.search(r"\{.*\}", text, re.DOTALL)
+        if not klammer:
+            _dokument_unlesbar(roh, f"kein JSON-Objekt: {exc}")
+        try:
+            daten = json.loads(klammer.group(0))
+        except json.JSONDecodeError as exc2:
+            _dokument_unlesbar(roh, f"JSON kaputt: {exc2}")
     if not isinstance(daten, dict):
-        raise _fehler("Das Dokument konnte nicht ausgewertet werden.", 502)
+        _dokument_unlesbar(roh, f"erwartet Objekt, bekam {type(daten).__name__}")
     return daten
+
+
+def _dokument_unlesbar(roh: str, grund: str) -> NoReturn:
+    """Laut scheitern — MIT dem Rohtext im Log.
+
+    Ohne ihn ist der Fall nicht nachvollziehbar: der Nutzer sieht eine
+    Meldung, das Log eine Zeile ohne Inhalt, und die Ursache liegt in einer
+    Antwort, die niemand mehr sehen kann. 422 statt 502: unser Dienst ist
+    nicht ausgefallen, diese eine Antwort war unbrauchbar.
+    """
+    log.error(
+        "mappe_antwort_unlesbar",
+        grund=grund,
+        laenge=len(roh),
+        rohtext=roh[:1500],
+    )
+    raise _fehler(
+        "Das Dokument konnte nicht ausgewertet werden. Bitte noch einmal "
+        "versuchen — bleibt es dabei, passt das Format nicht.",
+        422,
+    )
 
 
 # PostgREST meldet eine fehlende Tabelle mit diesem Code. Das ist KEIN
@@ -301,6 +330,40 @@ class MappeDokumenteMixin:
             # führt, ist schlimmer als eine ehrliche Fehlermeldung (Wurzel 4).
             raise _fehler("Das Dokument ist gerade nicht abrufbar.", 502)
         return str(url)
+
+    def mappe_dokument_datei(
+        self, tenant_id: str | None, property_id: str, dokument_id: str
+    ) -> tuple[bytes, str]:
+        """Das PDF SELBST — Inhalt und Dateiname.
+
+        WARUM NICHT DIE SIGNIERTE ADRESSE (10.09.2026): Die Vorschau blieb im
+        Browser grau. Gemessen mit dem Debug-Chrome: bei der signierten
+        Storage-Adresse (`…/x.pdf?token=…`, fremde Domain) startet Chromes
+        PDF-Viewer NICHT — auch beim direkten Aufruf im eigenen Tab, ganz ohne
+        iframe (`document.contentType` war `application/pdf`, aber kein
+        Plugin-Element und kein Titel). Und `&download=` setzt
+        `Content-Disposition: attachment`, was die Datei erst recht nur
+        herunterlaedt.
+
+        Ueber unseren eigenen Endpunkt gibt es keine fremde Herkunft, keinen
+        Token in der Adresse und keinen Zweifel am Content-Type. Der Preis
+        sind die Bytes durch unseren Prozess; bei einer Hausmappe (hier
+        7,7 MB) ist das vertretbar und passiert nur beim Ansehen.
+
+        Der Scope ist derselbe wie ueberall (Wurzel 3/9): Tenant UND Objekt,
+        geprueft ueber `_eigenes_dokument`.
+        """
+        tid = self._require_tenant(tenant_id)
+        self._require_own_property(tid, property_id)
+        zeile = self._eigenes_dokument(tid, property_id, dokument_id)
+        try:
+            inhalt = self._db().storage.from_(BUCKET).download(zeile["datei_pfad"])
+        except Exception as exc:  # noqa: BLE001 — Storage-SDK wirft untypisiert
+            log.error("mappe_datei_laden_fehlgeschlagen", error=str(exc)[:300])
+            raise _fehler("Das Dokument ist gerade nicht abrufbar.", 502) from exc
+        if not inhalt:
+            raise _fehler("Das Dokument ist gerade nicht abrufbar.", 502)
+        return bytes(inhalt), str(zeile.get("datei_name") or "Dokument.pdf")
 
     def _eigenes_dokument(
         self, tenant_id: str, property_id: str, dokument_id: str
@@ -451,6 +514,10 @@ class MappeDokumenteMixin:
                 ],
                 temperature=0.1,
                 max_tokens=MAX_ANTWORT_TOKENS,
+                # Wie beim Inventar-Import: ein mitten im JSON abgeschnittener
+                # Text ist unbrauchbar und darf nicht als „Dokument unlesbar"
+                # beim Nutzer landen.
+                abbruch_ist_fehler=True,
             )
         except KiError as exc:
             # Die Datei BLEIBT liegen und wird als Fehlschlag markiert: sie ist
@@ -586,7 +653,7 @@ class MappeDokumenteMixin:
         attrs: dict[str, Any] = dict(prop.get("type_attributes") or {})
         messaging: dict[str, Any] = dict(attrs.get("messaging") or {})
         policies: dict[str, Any] = dict(attrs.get("policies") or {})
-        portal = self._gastportal(tid, property_id)
+        portal = self._gastportal(property_id)
         portal_neu: dict[str, Any] = {}
 
         gesetzt: list[str] = []
@@ -672,7 +739,7 @@ class MappeDokumenteMixin:
             .execute()
         )
         if portal_neu:
-            self._gastportal_schreiben(tid, property_id, portal_neu)
+            self._gastportal_schreiben(property_id, portal_neu)
 
         # Die Spur, WOHER der Wert kam. `upsert` statt `insert`: dieselbe
         # Bestätigung zweimal abgeschickt (Doppelklick, Retry) darf nicht an
@@ -753,31 +820,45 @@ class MappeDokumenteMixin:
             raise _fehler("Objekt nicht gefunden.", 404)
         return zeilen[0]
 
-    def _gastportal(self, tid: str, property_id: str) -> dict:
+    def _gastportal(self, property_id: str) -> dict:
+        """Die Portalzeile des Objekts.
+
+        KEIN `tenant_id`-Filter: die Tabelle hat die Spalte NICHT (0121). Der
+        Mandant haengt ueber `property_id` an `properties` — genau deshalb
+        heisst die RLS-Policy dort `property_guest_portal_via_property`.
+        Ein `.eq("tenant_id", …)` warf `42703 column does not exist` und damit
+        einen rohen 500 (live am 10.09.2026 beim Uebernehmen aus dem PDF).
+
+        Der Scope geht dadurch NICHT verloren (Wurzel 3): der einzige
+        Aufrufer prueft eine Zeile vorher `_objekt_attribute(tid,
+        property_id)`, das bei fremdem Objekt 404 wirft. Das Objekt ist also
+        bereits als eigenes belegt, bevor diese Zeile geholt wird.
+        """
         zeilen = (
             self._db()
             .table("property_guest_portal")
             .select("*")
             .eq("property_id", property_id)
-            .eq("tenant_id", tid)
             .limit(1)
             .execute()
         ).data or []
         return zeilen[0] if zeilen else {}
 
-    def _gastportal_schreiben(
-        self, tid: str, property_id: str, werte: dict[str, Any]
-    ) -> None:
+    def _gastportal_schreiben(self, property_id: str, werte: dict[str, Any]) -> None:
         """Die strukturierten Felder setzen — Zeile anlegen, falls es keine gibt.
 
         `upsert` auf `property_id`: ein Objekt hat genau eine Portalzeile, und
         ein zweiter Aufruf darf keine zweite anlegen (Wurzel 2).
+
+        Ohne `tenant_id` — die Spalte gibt es in dieser Tabelle nicht (0121),
+        siehe `_gastportal`. Sie mitzuschreiben haette denselben 42703
+        geworfen wie das Lesen, nur einen Schritt spaeter.
         """
         (
             self._db()
             .table("property_guest_portal")
             .upsert(
-                {"tenant_id": tid, "property_id": property_id, **werte},
+                {"property_id": property_id, **werte},
                 on_conflict="property_id",
             )
             .execute()

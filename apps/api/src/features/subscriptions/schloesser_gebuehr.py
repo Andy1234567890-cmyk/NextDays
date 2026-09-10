@@ -153,14 +153,24 @@ class SchloesserGebuehrMixin:
     def _abrechnungswaehrung(db: Client, tenant_id: str) -> str | None:
         """Die Währung, in der dieser Betrieb abgerechnet wird.
 
-        Aus dem Abrechnungsprofil, nicht aus dem Objekt: die Gebühr ist eine
-        Forderung gegen den BETRIEB, keine Position einer Buchung. Fehlt sie,
-        gibt es keinen Ersatzwert.
+        Vom BETRIEB, nicht vom Objekt: die Gebühr ist eine Forderung gegen den
+        Betrieb, keine Position einer Buchung. Fehlt sie, gibt es keinen
+        Ersatzwert (Wurzel 4) — der Lauf meldet das laut und bucht nichts.
+
+        Aus `tenants.currency`, NICHT aus `tenant_billing_profile`: dort gibt
+        es die Spalte gar nicht, die Abfrage warf 42703 und riss den ganzen
+        Gebührenlauf mit (gefunden 10.09.2026 per db-spalten-pruefen.py).
+
+        Nicht zu verwechseln mit `abrechnungswaehrung.kunden_waehrung`: die
+        beschreibt, in welcher Währung STRIPE fakturieren kann, und gehört
+        dem Stripe-Kunden. Hier wird nur die Ledger-Zeile angelegt; welche
+        Währung die spätere Rechnung trägt, entscheidet der Fakturierungslauf
+        mit genau jenem Modul.
         """
         zeilen = (
-            db.table("tenant_billing_profile")
+            db.table("tenants")
             .select("currency")
-            .eq("tenant_id", tenant_id)
+            .eq("id", tenant_id)
             .limit(1)
             .execute()
         ).data or []

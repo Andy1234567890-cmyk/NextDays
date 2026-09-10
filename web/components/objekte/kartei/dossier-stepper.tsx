@@ -722,18 +722,21 @@ function Stufe7({ t, pid, initial }: { t: T; pid: string; initial: HousebookData
       <Hint>{t("housebook.textsHint")}</Hint>
       <SaveBar t={t} onSave={async () => (await saveHousebook(pid, nulled(d))).ok || t("saved")} />
 
-      {/* Die digitale Mappe (0619). Zwei getrennte Ablagen im selben Schritt:
-          was der GAST sehen darf und was intern bleibt. Das PDF wird gelesen,
-          die erkannten Angaben werden VORGESCHLAGEN — geschrieben wird erst
-          nach einem Klick. */}
+      {/* Die digitale Mappe (0619). Das PDF wird gelesen, die erkannten
+          Angaben werden VORGESCHLAGEN — geschrieben wird erst nach einem
+          Klick.
+
+          NUR die Gästemappe: die zweite Ablage „Hausmappe (intern)" ist am
+          10.09.2026 auf Wunsch entfernt worden. Sie stand leer neben der
+          ersten und stellte im Alltag vor allem die Frage, in welche der
+          beiden ein Dokument gehört. Die Ablage selbst bleibt bestehen
+          (`mappe='haus'` in Migration 0619, Endpunkte und Service
+          unverändert) — sie hat nur keine Oberfläche mehr. Wer sie
+          zurückholt, braucht hier einen zweiten `<Section>`-Block, sonst
+          nichts. */}
       <Section title={t("mappe.gastTitel")}>
         <div className="col-span-full">
           <MappeDokumente pid={pid} mappe="gast" />
-        </div>
-      </Section>
-      <Section title={t("mappe.hausTitel")}>
-        <div className="col-span-full">
-          <MappeDokumente pid={pid} mappe="haus" />
         </div>
       </Section>
 

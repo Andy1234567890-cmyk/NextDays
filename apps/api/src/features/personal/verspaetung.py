@@ -70,7 +70,10 @@ def _fuer_tenant(db: Client, *, tenant_id: str, schwelle: int, jetzt: datetime) 
     frueh = jetzt - timedelta(hours=_RUECKBLICK_STUNDEN)
     schichten = (
         db.table("personal_schichten")
-        .select("id, user_id, datum, start_at, end_at, property_id, verspaetung_min")
+        # KEIN `verspaetung_min`: die Spalte steht in `personal_zeiterfassung`,
+        # nicht an der Schicht. Sie wurde hier ohnehin nirgends gelesen — der
+        # Name allein liess die ganze Abfrage mit 42703 auflaufen.
+        .select("id, user_id, datum, start_at, end_at, property_id")
         .eq("tenant_id", tenant_id)
         .in_("status", list(_ZU_MELDEN))
         .not_.is_("user_id", "null")

@@ -32,6 +32,22 @@ export interface CspOptions {
    *  Code ein Fehler war. Wer einen fremden iframe einbettet, MUSS seinen Origin
    *  hier eintragen. */
   frameSrc?: string[];
+  /** Eigene `blob:`-Objekte im iframe anzeigen duerfen (frame-src blob:).
+   *
+   *  Gebraucht fuer Dateien, die AUTHENTIFIZIERT geholt werden muessen: ein
+   *  PDF aus einem privaten Bucket laesst sich nicht als Adresse ins iframe
+   *  geben, weil das Sitzungs-Cookie `sameSite: lax` bei einer
+   *  Sub-Ressourcen-Anfrage nicht mitgeht. Der richtige Weg ist `fetch`
+   *  (Cookie geht mit, gleiche Herkunft) und Anzeige als `blob:` — nur
+   *  blockiert der `default-src 'self'`-Fallback genau das, und Chrome
+   *  meldet lapidar „Dieser Inhalt ist blockiert" (live am 10.09.2026 bei
+   *  der Hausmappen-Vorschau).
+   *
+   *  Eng: `blob:` bezeichnet AUSSCHLIESSLICH Objekte, die diese Seite selbst
+   *  im Speicher angelegt hat. Es oeffnet keine fremde Herkunft, ist nicht
+   *  adressierbar und stirbt mit dem Tab. Die Alternative — das Cookie auf
+   *  `sameSite: none` zu stellen — waere die echte Schwaechung gewesen. */
+  frameBlob?: boolean;
   /** Dev-Modus braucht 'unsafe-eval' (React-Debugging). In Prod NIE. */
   dev?: boolean;
   /** Google-Maps-JS-API freigeben (nur Apps, die eine Karte rendern). Fügt die
@@ -173,10 +189,11 @@ export function buildCsp(opts: CspOptions = {}): string {
     // engere Zustand und soll der Standard bleiben.
     // `Set` gegen Dubletten: `builder` traegt `https://www.google.com` schon
     // fuer die Maps-Einbettung ein, und reCAPTCHA braucht denselben Host.
-    ...(frameSrc.length > 0 || recaptcha
+    ...(frameSrc.length > 0 || recaptcha || opts.frameBlob
       ? [
           `frame-src ${[
             "'self'",
+            ...(opts.frameBlob ? ["blob:"] : []),
             ...new Set([...frameSrc, ...(recaptcha ? RECAPTCHA_FRAME : [])]),
           ].join(" ")}`,
         ]

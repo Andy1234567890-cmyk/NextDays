@@ -257,3 +257,73 @@ def test_jeder_gesperrte_praefix_greift() -> None:
             with pytest.raises(HTTPException) as exc:
                 demo_bereich_pruefen(f"/api/v1{praefix}/irgendwas", _ctx())
             assert exc.value.status_code == 403, praefix
+
+
+# --- POSTs, die nichts speichern -------------------------------------------
+# Der Riegel urteilt nach der METHODE. Bei drei Endpunkten ist das falsch:
+# sie lesen ein hochgeladenes PDF und geben Vorschlaege zurueck, die erst ein
+# zweiter, echter Schreibaufruf uebernimmt. Ohne die Ausnahme ist die
+# Vorfuehrung genau dort stumm, wo sie am meisten zeigt.
+
+LESENDE_POSTS = (
+    "/api/v1/property-dossier/p-1/inventar/import",
+    "/api/v1/property-dossier/p-1/mappe/gast/dokumente/lesen",
+    "/api/v1/property-dossier/p-1/mappe/haus/dokumente/lesen",
+)
+
+
+@pytest.mark.parametrize("pfad", LESENDE_POSTS)
+def test_demo_darf_pdf_lesen_obwohl_post(pfad: str) -> None:
+    """Ein POST, der nichts speichert, kommt durch — ohne DB-Abfrage.
+
+    Die Ausnahme greift VOR dem Tenant-Blick: waere es andersherum, kostete
+    jeder dieser Aufrufe eine Runde, um am Ende doch durchzulassen.
+    """
+    client = _client([{"is_demo": True}])
+    with patch(
+        "src.features.auth.demo_gate.get_service_client", return_value=client
+    ):
+        demo_schreibzugriff_pruefen("POST", _ctx(), pfad)
+    client.table.assert_not_called()
+
+
+def test_ausnahme_gilt_nur_fuer_das_genaue_endstueck() -> None:
+    """Kein Praefix-Freibrief: was UNTER dem Pfad haengt, bleibt gesperrt.
+
+    Sonst oeffnete ein spaeter ergaenzter echter Schreib-Endpunkt unter
+    demselben Praefix die Demo still mit.
+    """
+    with patch(
+        "src.features.auth.demo_gate.get_service_client",
+        return_value=_client([{"is_demo": True}]),
+    ):
+        with pytest.raises(HTTPException) as exc:
+            demo_schreibzugriff_pruefen(
+                "POST", _ctx(), "/api/v1/property-dossier/p-1/inventar/import/uebernehmen"
+            )
+    assert exc.value.status_code == 405
+
+
+def test_ohne_pfad_bleibt_jeder_post_gesperrt() -> None:
+    """Der Vorgabewert ist die sichere Seite: kein Pfad → kein Freibrief."""
+    with patch(
+        "src.features.auth.demo_gate.get_service_client",
+        return_value=_client([{"is_demo": True}]),
+    ):
+        with pytest.raises(HTTPException) as exc:
+            demo_schreibzugriff_pruefen("POST", _ctx())
+    assert exc.value.status_code == 405
+
+
+def test_echter_schreib_endpunkt_im_selben_slice_bleibt_gesperrt() -> None:
+    """Die Ausnahme darf den Nachbarn nicht mitnehmen: `POST /inventar` legt
+    an und muss in der Vorfuehrung weiterhin scheitern."""
+    with patch(
+        "src.features.auth.demo_gate.get_service_client",
+        return_value=_client([{"is_demo": True}]),
+    ):
+        with pytest.raises(HTTPException) as exc:
+            demo_schreibzugriff_pruefen(
+                "POST", _ctx(), "/api/v1/property-dossier/p-1/inventar"
+            )
+    assert exc.value.status_code == 405

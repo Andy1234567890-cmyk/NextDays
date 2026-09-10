@@ -18,10 +18,24 @@ Dieses Skript schliesst genau diese Luecke: es liest die Spaltennamen aus dem
 Quelltext (per AST, nicht per Regex) und vergleicht sie mit dem, was die
 Datenbank wirklich hat.
 
+SEIT DEM 10.09.2026 AUCH FILTER
+------------------------------
+`eq()`/`order()` & Co. wurden urspruenglich NICHT geprueft -- mit der
+Begruendung, die `select`-Liste sei die haeufigste Fehlerquelle. Dann fiel
+genau dort einer an:
+
+    db.table("property_guest_portal").select("*").eq("tenant_id", tid)
+
+`property_guest_portal` hat keine `tenant_id` (0121): der Mandant haengt ueber
+`property_id` an `properties`. Der `select("*")` war korrekt, der Filter nicht
+-- Postgres warf `42703`, der Nutzer bekam einen rohen 500 beim Uebernehmen
+aus dem PDF. Das Skript lief an derselben Datei gruen vorbei. Eine Luecke, die
+man kennt und nicht schliesst, ist eine Zusage, die nicht gilt.
+
 WAS ES NICHT PRUEFT
 -------------------
-* Spalten in `eq()/order()/insert()` -- die liessen sich ergaenzen, aber die
-  `select`-Liste ist die haeufigste und teuerste Fehlerquelle.
+* Spalten in `insert()`/`update()`-Dictionaries -- dort steht der Name als
+  Schluessel und meist neben berechneten Werten; das ist eine eigene Runde.
 * Eingebettete PostgREST-Ausdruecke (`kunde:users(name)`) und `*` -- sie werden
   uebersprungen, weil ihr Bezugspunkt eine andere Tabelle ist.
 * Ob die Tabelle selbst existiert -- ein Tippfehler dort faellt sofort auf.
@@ -131,8 +145,16 @@ def _spalten(text: str) -> list[str]:
     return raus
 
 
+# Methoden, deren ERSTES Argument ein Spaltenname ist. `in_` und `is_` tragen
+# den Unterstrich, weil `in`/`is` in Python belegt sind.
+FILTER_METHODEN = frozenset({
+    "eq", "neq", "gt", "gte", "lt", "lte", "like", "ilike",
+    "is_", "in_", "contains", "order",
+})
+
+
 def sammle(pfade: list[Path]) -> list[tuple[str, str, Path, int]]:
-    """(tabelle, spalte, datei, zeile) fuer jede select-Kette im Quelltext."""
+    """(tabelle, spalte, datei, zeile) fuer jede select- und Filter-Kette."""
     treffer: list[tuple[str, str, Path, int]] = []
     for pfad in pfade:
         dateien = sorted(pfad.rglob("*.py")) if pfad.is_dir() else [pfad]
@@ -146,7 +168,11 @@ def sammle(pfade: list[Path]) -> list[tuple[str, str, Path, int]]:
                 if not isinstance(knoten, ast.Call):
                     continue
                 f = knoten.func
-                if not (isinstance(f, ast.Attribute) and f.attr == "select"):
+                if not isinstance(f, ast.Attribute):
+                    continue
+                ist_select = f.attr == "select"
+                ist_filter = f.attr in FILTER_METHODEN
+                if not (ist_select or ist_filter):
                     continue
                 if not (
                     knoten.args
@@ -157,8 +183,16 @@ def sammle(pfade: list[Path]) -> list[tuple[str, str, Path, int]]:
                 tabelle = _tabelle_der_kette(f.value)
                 if not tabelle:
                     continue
-                for spalte in _spalten(knoten.args[0].value):
-                    treffer.append((tabelle, spalte, datei, knoten.lineno))
+                if ist_select:
+                    for spalte in _spalten(knoten.args[0].value):
+                        treffer.append((tabelle, spalte, datei, knoten.lineno))
+                    continue
+                # Filter: genau EIN Spaltenname, keine Liste. Eingebettete
+                # Pfade (`objekt.feld`) und PostgREST-Ausdruecke gehoeren einer
+                # anderen Tabelle und werden uebersprungen.
+                name = knoten.args[0].value.strip()
+                if name and "." not in name and "(" not in name:
+                    treffer.append((tabelle, name, datei, knoten.lineno))
     return treffer
 
 

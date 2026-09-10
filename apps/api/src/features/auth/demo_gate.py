@@ -60,13 +60,34 @@ log = get_logger("nextdays.auth.demo_gate")
 # schützen.
 LESENDE_METHODEN = frozenset({"GET", "HEAD", "OPTIONS"})
 
+# POST-Endpunkte, die NICHTS speichern. Die Sperre urteilt sonst allein nach
+# der Methode, und das ist bei diesen dreien falsch: sie lesen ein
+# hochgeladenes PDF und geben VORSCHLAEGE zurueck, die erst ein Mensch mit
+# einem zweiten, echten Schreibaufruf uebernimmt. Sie sind POST, weil eine
+# Datei im Koerper mitkommt, nicht weil sie etwas aendern.
+#
+# Ohne diese Ausnahme ist die Vorfuehrung an genau der Stelle stumm, an der
+# sie am meisten zeigt — und der Besucher liest „Aenderungen sind
+# abgeschaltet" bei einer Funktion, die nichts aendert.
+#
+# Bewusst eine Endstueck-Liste und kein Praefix: sie soll NICHT mitwachsen,
+# wenn jemand spaeter einen echten Schreib-Endpunkt darunter haengt. Wer hier
+# etwas eintraegt, muss belegen, dass der Endpunkt nichts schreibt.
+_LESENDE_POSTS = (
+    "/inventar/import",
+    "/mappe/gast/dokumente/lesen",
+    "/mappe/haus/dokumente/lesen",
+)
+
 _ABGELEHNT = (
     "In der Vorführung sind Änderungen abgeschaltet. "
     "Alles lässt sich ansehen, nichts speichern."
 )
 
 
-def demo_schreibzugriff_pruefen(methode: str, ctx: AuthContext) -> None:
+def demo_schreibzugriff_pruefen(
+    methode: str, ctx: AuthContext, pfad: str = ""
+) -> None:
     """Wirft 405, wenn ein Demo-Mandant etwas zu ändern versucht.
 
     Die Prüfung kostet eine DB-Runde je SCHREIBENDER Anfrage — lesende gehen
@@ -82,8 +103,14 @@ def demo_schreibzugriff_pruefen(methode: str, ctx: AuthContext) -> None:
     Ein API-Client-Token (Client-Credentials) wird übersprungen: dahinter steht
     kein Demo-Besucher, sondern eine Integration mit eigenem Secret und
     eigenen Scopes.
+
+    `pfad` erlaubt die Ausnahme für die wenigen POSTs, die nichts speichern
+    (`_LESENDE_POSTS`). Ohne ihn urteilt die Sperre allein nach der Methode
+    und weist auch das reine Lesen eines hochgeladenen PDF ab.
     """
     if methode.upper() in LESENDE_METHODEN:
+        return
+    if pfad and pfad.endswith(_LESENDE_POSTS):
         return
     if ctx.api_scopes is not None:
         return

@@ -277,12 +277,14 @@ def melde_portal_rate_verwaist(
             return
         zeile = (
             db.table("properties")
-            .select("name")
+            # `title`, nicht `name` — `properties` hat keine Spalte `name`.
+            # Derselbe Fehler wie am 24.08.2026 in der SEO-Pruefung.
+            .select("title")
             .eq("id", property_id)
             .limit(1)
             .execute()
         ).data or []
-        objekt = str(zeile[0]["name"]) if zeile and zeile[0].get("name") else ""
+        objekt = str(zeile[0]["title"]) if zeile and zeile[0].get("title") else ""
         dispatcher = _dispatcher(db)
         text_key = "benachrichtigung.portal_rate_verwaist_text"
         for user_id in sorted(empfaenger):

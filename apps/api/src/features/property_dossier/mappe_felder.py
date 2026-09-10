@@ -89,7 +89,10 @@ KATALOG: tuple[MappeFeld, ...] = (
             "Der zusammenhängende Text zum WLAN, wie er dem Gast angezeigt "
             "wird."
         ),
-        ziele=(Ziel("messaging", "wifi"), Ziel("guest_portal", "wifi_text")),
+        # Auch hier nur messaging: der WLAN-TEXT ist mehrsprachig und liegt
+        # in `messaging.wifi` (0121: „NICHT hier"). In der Portal-Tabelle
+        # stehen ausschliesslich SSID und Passwort als strukturierte Werte.
+        ziele=(Ziel("messaging", "wifi"),),
     ),
     MappeFeld(
         key="door_code",
@@ -104,28 +107,23 @@ KATALOG: tuple[MappeFeld, ...] = (
         titel="Türzugang (Text)",
         hinweis="Wie der Gast hineinkommt: Schlüsselsafe, Codeschloss, Übergabe.",
         heikel=True,
-        ziele=(
-            Ziel("messaging", "doorInstructions"),
-            Ziel("guest_portal", "door_instructions"),
-        ),
+        # NUR messaging: den Türzugangs-TEXT hält `property_guest_portal`
+        # bewusst NICHT (0121 sagt es woertlich) — dort stehen allein der
+        # strukturierte Code und die Anzeige-Regeln. Die Spalte existiert
+        # nicht; das Ziel warf PGRST204 und riss das Uebernehmen mit.
+        ziele=(Ziel("messaging", "doorInstructions"),),
     ),
     MappeFeld(
         key="checkIn",
         titel="Check-in-Anweisungen",
         hinweis="Was der Gast bei der Anreise tun soll.",
-        ziele=(
-            Ziel("messaging", "checkIn"),
-            Ziel("guest_portal", "checkin_instructions"),
-        ),
+        ziele=(Ziel("messaging", "checkIn"),),
     ),
     MappeFeld(
         key="checkOut",
         titel="Check-out-Anweisungen",
         hinweis="Was der Gast bei der Abreise tun soll.",
-        ziele=(
-            Ziel("messaging", "checkOut"),
-            Ziel("guest_portal", "checkout_instructions"),
-        ),
+        ziele=(Ziel("messaging", "checkOut"),),
     ),
     MappeFeld(
         key="checkInTime",
@@ -145,16 +143,13 @@ KATALOG: tuple[MappeFeld, ...] = (
         key="directions",
         titel="Anfahrt",
         hinweis="Anfahrtsbeschreibung, Parken, öffentliche Verkehrsmittel.",
-        ziele=(
-            Ziel("messaging", "directions"),
-            Ziel("guest_portal", "directions"),
-        ),
+        ziele=(Ziel("messaging", "directions"),),
     ),
     MappeFeld(
         key="rules",
         titel="Hausordnung",
         hinweis="Regeln im Haus: Ruhezeiten, Rauchen, Haustiere, Müll.",
-        ziele=(Ziel("messaging", "rules"), Ziel("guest_portal", "house_rules")),
+        ziele=(Ziel("messaging", "rules"),),
     ),
     MappeFeld(
         key="emergency",
@@ -180,10 +175,7 @@ KATALOG: tuple[MappeFeld, ...] = (
         key="localGuide",
         titel="Reiseführer / Tipps",
         hinweis="Empfehlungen in der Umgebung: Essen, Einkaufen, Ausflüge.",
-        ziele=(
-            Ziel("messaging", "localGuide"),
-            Ziel("guest_portal", "local_guide"),
-        ),
+        ziele=(Ziel("messaging", "localGuide"),),
     ),
 )
 

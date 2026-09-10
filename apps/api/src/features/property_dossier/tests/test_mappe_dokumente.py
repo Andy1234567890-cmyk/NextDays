@@ -332,7 +332,11 @@ def test_kaputte_antwort_wirft_laut() -> None:
             user_id="u1",
             client=_KiStub("Ich habe leider kein JSON dabei."),  # type: ignore[arg-type]
         )
-    assert exc.value.status_code == 502
+    # 422, NICHT 502: unser Dienst ist nicht ausgefallen — diese eine
+    # Modellantwort war unbrauchbar. Ein 502 schickte den Nutzer zum Support
+    # und sah in der Ueberwachung aus wie ein Ausfall (geaendert 10.09.2026,
+    # nachdem ein zu kleines Token-Budget live als 502 erschien).
+    assert exc.value.status_code == 422
 
 
 def test_markdown_zaun_kippt_den_lauf_nicht() -> None:
@@ -466,9 +470,19 @@ def test_ueberschreiben_nur_auf_ausdrueckliche_ansage() -> None:
 def test_eine_angabe_fuellt_BEIDE_heimaten() -> None:
     """Der Fehler vom 11.08.2026 darf sich nicht wiederholen.
 
-    `wifi` steht als Freitext in der Gaestemappe UND als `wifi_text` im
-    Gastportal. Eine Vorlage spricht mal die eine, mal die andere an; wer nur
-    eine fuellt, verschickt Mails mit leerem Platzhalter.
+    `wifi` speist den Platzhalter `{{WifiInformation}}`; wer ihn nicht fuellt,
+    verschickt Mails mit leerer Zeile.
+
+    KORRIGIERT AM 10.09.2026: Dieser Test verlangte frueher zusaetzlich eine
+    Spalte `property_guest_portal.wifi_text`. Die gibt es NICHT — und zwar
+    absichtlich: 0121 haelt fest, dass die mehrsprachigen TEXTE in
+    `messaging` liegen und die Portal-Tabelle nur strukturierte Werte traegt
+    (SSID, Passwort, Tuercode). `wifi_text` ist ein PLATZHALTER-Name aus
+    `inbox/feld_kontext.MESSAGING_FELDER`, kein Spaltenname; der Aufloeser
+    `felder.py` fuellt ihn genau aus diesem messaging-Block.
+    Der Katalog schrieb den Namen als Spalte — PostgREST antwortete mit
+    PGRST204 und das Uebernehmen starb mit 500. Die zweite Heimat bleibt
+    damit gefuellt, sie ist nur `messaging`, keine Tabelle.
     """
     svc, prot = _svc({"mappe_dokument": [_dokumentzeile()]})
     out = _uebernehmen(svc, {"wifi": "Netz Ferienhaus, Passwort am Kuehlschrank."})
@@ -477,10 +491,6 @@ def test_eine_angabe_fuellt_BEIDE_heimaten() -> None:
     props = [e for e in prot if e[0] == "update" and e[1] == "properties"]
     assert props, "die Gaestemappe muss geschrieben werden"
     assert "Netz Ferienhaus" in props[0][2]["type_attributes"]["messaging"]["wifi"]["de"]
-
-    portal = [e for e in prot if e[0] == "upsert" and e[1] == "property_guest_portal"]
-    assert portal, "das Gastportal muss MIT geschrieben werden"
-    assert "Netz Ferienhaus" in portal[0][2]["wifi_text"]
 
 
 def test_sprachfassung_wird_beachtet() -> None:
@@ -546,3 +556,53 @@ def test_signierte_url_wird_geliefert() -> None:
     url = svc.mappe_dokument_url(TID, PID, DID)
     assert url.startswith("https://")
     assert "sig=" in url
+
+
+# --- Der Feldkatalog muss zur echten Tabelle passen -------------------------
+# DER ANLASS (10.09.2026, live): Der Katalog wollte in SIEBEN Spalten von
+# `property_guest_portal` schreiben, die es nie gab — `checkout_instructions`,
+# `door_instructions`, `house_rules`, `directions`, `local_guide`,
+# `checkin_instructions`, `wifi_text`. Beim Uebernehmen aus dem PDF warf
+# PostgREST `PGRST204` und der Nutzer bekam einen rohen 500.
+#
+# Die Spalten fehlten nicht aus Versehen: 0121 haelt woertlich fest, dass die
+# TEXTE mehrsprachig in `messaging` liegen und diese Tabelle nur strukturierte
+# Schalter traegt. Der Katalog widersprach also einer dokumentierten
+# Entscheidung — und kein Test sah es, weil die Fake-DB jede Spalte annimmt.
+#
+# Dieser Test prueft nicht gegen die DB (das tut
+# `scripts/diagnose/db-spalten-pruefen.py` gegen die LIVE-Datenbank), sondern
+# haelt die Liste der erlaubten Ziele fest. Wer ein neues `guest_portal`-Ziel
+# ergaenzt, muss hier vorbeikommen — und dabei nachsehen, ob die Spalte
+# wirklich existiert.
+def test_guest_portal_ziele_sind_nur_strukturierte_spalten() -> None:
+    from src.features.property_dossier.mappe_felder import KATALOG
+
+    ziele = {
+        z.feld
+        for f in KATALOG
+        for z in f.ziele
+        if z.art == "guest_portal"
+    }
+    # Genau die Spalten, die `property_guest_portal` laut 0121 hat und die
+    # ein strukturierter Wert sind (kein mehrsprachiger Text).
+    assert ziele == {
+        "wifi_ssid",
+        "wifi_password",
+        "door_code",
+        "contact_phone",
+        "maintenance_phone",
+    }
+
+
+def test_jeder_text_hat_ein_messaging_ziel() -> None:
+    """Kein Feld darf durch das Entfernen der Portal-Ziele heimatlos werden.
+
+    Die sieben gestrichenen Ziele waren Dopplungen — der Text ging ohnehin
+    nach `messaging`. Faellt bei einem Feld beides weg, verschwaende das
+    Uebernehmen den Wert stillschweigend.
+    """
+    from src.features.property_dossier.mappe_felder import KATALOG
+
+    ohne_ziel = [f.key for f in KATALOG if not f.ziele]
+    assert not ohne_ziel, f"Felder ohne jedes Ziel: {ohne_ziel}"

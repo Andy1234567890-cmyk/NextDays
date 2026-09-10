@@ -70,7 +70,13 @@ _TOKEN_PUFFER_SEKUNDEN = 300
 # nicht vom Client kommen, aber ein Betrieb mit 300 Objekten und langen
 # Beschreibungen könnte ihn ungewollt aufblähen.
 MAX_PROMPT_ZEICHEN = 24_000
-MAX_ANTWORT_TOKENS = 2_048
+# 2048 war zu niedrig und hat still gekappt: der Inventar-Import bat um 8000,
+# bekam 2048, das Modell brach mitten im JSON ab (`abschlussgrund=MAX_TOKENS`)
+# und der Aufrufer bekam einen 502 „Liste nicht lesbar" — ohne Hinweis, dass
+# nicht die Antwort kaputt, sondern das Budget zu klein war (10.09.2026, live).
+# Gemini 2.5 Flash kann 65.536 Ausgabe-Tokens; 16.384 bleibt ein echter Deckel
+# (Wurzel 8) und traegt eine Inventarliste ueber mehrere Seiten.
+MAX_ANTWORT_TOKENS = 16_384
 
 # Timeout je Aufruf. Gemini 2.5 Flash antwortet auf die Textlängen dieses
 # Baukastens in wenigen Sekunden; 45 s sind großzügig und trotzdem ein Deckel.
@@ -273,6 +279,7 @@ class VertexClient:
         teile: list[dict],
         temperature: float = 0.2,
         max_tokens: int = 200,
+        abbruch_ist_fehler: bool = False,
     ) -> KiAntwort:
         """Wie :meth:`erzeuge`, aber mit gemischten Teilen (Bild + Text).
 
@@ -295,6 +302,7 @@ class VertexClient:
             teile=teile,
             temperature=temperature,
             max_tokens=max_tokens,
+            abbruch_ist_fehler=abbruch_ist_fehler,
         )
 
     def _senden(
@@ -304,11 +312,22 @@ class VertexClient:
         teile: list[dict],
         temperature: float,
         max_tokens: int,
+        abbruch_ist_fehler: bool = False,
     ) -> KiAntwort:
         """Der eine Weg nach draußen. Beide öffentlichen Methoden laufen hier
         zusammen, damit Logging, Fehlerbehandlung und Auswertung nicht zweimal
         existieren und auseinanderlaufen können."""
         tokens = max(1, min(int(max_tokens), MAX_ANTWORT_TOKENS))
+        if int(max_tokens) > MAX_ANTWORT_TOKENS:
+            # Stilles Kappen ist die schlimmere Variante: der Aufrufer denkt,
+            # er habe sein Budget, und bekommt eine abgeschnittene Antwort,
+            # die wie eine kaputte aussieht. Genau so entstand der 502 vom
+            # 10.09.2026.
+            log.warning(
+                "vertex_budget_gekappt",
+                angefordert=int(max_tokens),
+                gewaehrt=tokens,
+            )
         payload = {
             "systemInstruction": {"parts": [{"text": system}]},
             "contents": [{"role": "user", "parts": teile}],
@@ -366,9 +385,21 @@ class VertexClient:
                 else f"Der KI-Dienst antwortete mit Fehler ({resp.status_code}).",
                 status_code=429 if resp.status_code == 429 else 502,
             )
-        return self._auswerten(resp.json(), dauer_ms=dauer_ms)
+        return self._auswerten(
+            resp.json(),
+            dauer_ms=dauer_ms,
+            grenze=tokens,
+            abbruch_ist_fehler=abbruch_ist_fehler,
+        )
 
-    def _auswerten(self, daten: dict, *, dauer_ms: int) -> KiAntwort:
+    def _auswerten(
+        self,
+        daten: dict,
+        *,
+        dauer_ms: int,
+        grenze: int = 0,
+        abbruch_ist_fehler: bool = False,
+    ) -> KiAntwort:
         """Antwort-JSON → :class:`KiAntwort`. Leer bleibt leer, nichts erfunden."""
         kandidaten = daten.get("candidates") or []
         nutzung = daten.get("usageMetadata") or {}
@@ -407,6 +438,27 @@ class VertexClient:
             raise KiError(
                 "Der KI-Dienst lieferte eine leere Antwort "
                 f"(Abschlussgrund: {abschluss or 'unbekannt'})."
+            )
+        if abschluss == "MAX_TOKENS" and abbruch_ist_fehler:
+            # EIGENER Fehler statt einer stillen Rueckgabe. Ein mitten im Satz
+            # abgeschnittener Text sieht aus wie ein fertiger, und der
+            # Aufrufer verarbeitet ihn arglos weiter: beim Inventar-Import
+            # scheiterte danach `json.loads` und meldete „Die Liste konnte
+            # nicht gelesen werden" — eine Falschaussage, denn die Liste war
+            # in Ordnung, nur unser Budget war zu klein (10.09.2026, live).
+            # Die Meldung nennt die ZAHLEN, sonst ist sie so blind wie vorher.
+            log.error(
+                "vertex_abgeschnitten",
+                modell=self._model,
+                tokens_aus=tokens_aus,
+                grenze=grenze,
+                zeichen=len(text),
+            )
+            raise KiError(
+                "Die Antwort wurde abgeschnitten: das Modell hat die Grenze "
+                f"von {grenze} Tokens erreicht ({tokens_aus} erzeugt). "
+                "Für dieses Dokument reicht das Budget nicht.",
+                status_code=422,
             )
         return KiAntwort(
             text=text,

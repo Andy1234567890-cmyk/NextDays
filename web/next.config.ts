@@ -71,6 +71,16 @@ const nextConfig: NextConfig = {
           dev: process.env.NODE_ENV !== "production",
           googleMaps: true,
           wasm: true,
+          // PDFs aus der digitalen Mappe liegen in einem PRIVATEN Bucket. Sie
+          // werden deshalb per `fetch` mit dem Sitzungs-Cookie geholt (eine
+          // Adresse im iframe bekaeme es nicht mit: `sameSite: lax` gilt
+          // nicht fuer Sub-Ressourcen) und als `blob:` angezeigt. Ohne diese
+          // Freigabe blockiert der `default-src 'self'`-Fallback genau das —
+          // Chrome zeigte „Dieser Inhalt ist blockiert" (10.09.2026).
+          //
+          // `blob:` meint nur, was diese Seite selbst im Speicher anlegt:
+          // keine fremde Herkunft, nicht adressierbar, stirbt mit dem Tab.
+          frameBlob: true,
           // Der Website-Baukasten bettet die Live-Vorschau der Kunden-Site per
           // iframe ein — den ECHTEN Renderer, nicht eine zweite Nachbildung der
           // Abschnitte. Ohne diesen Eintrag greift `default-src 'self'` und der

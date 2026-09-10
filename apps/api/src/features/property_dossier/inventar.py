@@ -36,7 +36,7 @@ import re
 import secrets
 from collections.abc import Callable
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, NoReturn
 
 from postgrest.exceptions import APIError
 from supabase import Client
@@ -117,6 +117,24 @@ def _fehler(nachricht: str, status: int) -> DossierError:
 
 _PGRST_TABELLE_FEHLT = "PGRST205"
 
+# PostgreSQL-Codes, die eine UNGUELTIGE EINGABE beschreiben, keinen Ausfall.
+# Sie muessen 422 werden, nicht 502: ein 502 sagt „unser Dienst ist kaputt",
+# schickt den Nutzer zum Support und verdeckt, dass schlicht eine ID nicht
+# stimmte. Angreiferkontrollierter Input darf ohnehin keinen 5xx ausloesen
+# (Wurzel 5) — eine krumme UUID in der Adresszeile genuegte hier.
+#   22P02 invalid_text_representation — z. B. „abc" als uuid
+#   22003 numeric_value_out_of_range
+#   23503 foreign_key_violation      — verwiesene Zeile gibt es nicht
+#   23505 unique_violation           — Zeile existiert schon
+#   23514 check_violation            — Wert ausserhalb des erlaubten Bereichs
+_EINGABE_CODES = {
+    "22P02": "Die Angabe ist ungültig.",
+    "22003": "Der Wert liegt außerhalb des erlaubten Bereichs.",
+    "23503": "Der verwiesene Eintrag existiert nicht.",
+    "23505": "Diesen Eintrag gibt es bereits.",
+    "23514": "Der Wert ist für dieses Feld nicht erlaubt.",
+}
+
 
 def _db_fehler(exc: APIError, was: str) -> DossierError:
     """Ein DB-Fehler als saubere Antwort statt als 500 (Wurzel 5)."""
@@ -128,25 +146,57 @@ def _db_fehler(exc: APIError, was: str) -> DossierError:
             "nicht eingespielt.",
             503,
         )
+    if code in _EINGABE_CODES:
+        # Kein `log.error`: das ist kein Stoerfall, sondern eine abgewiesene
+        # Eingabe. Als Fehler geloggt verstopft es die Ueberwachung und
+        # verdeckt echte Ausfaelle.
+        log.info("inventar_eingabe_abgewiesen", was=was, code=code)
+        return _fehler(_EINGABE_CODES[code], 422)
     log.error("inventar_db_fehler", was=was, code=code, meldung=str(exc)[:300])
     return _fehler("Das Inventar ist gerade nicht abrufbar.", 502)
 
 
 def _json_liste(roh: str) -> list[dict]:
-    """Die Antwort als Liste lesen — auch mit Markdown-Zaun drumherum.
+    """Die Antwort als Liste lesen — auch mit Rahmentext oder Markdown-Zaun.
 
-    Das Modell haelt sich meistens an „nur JSON", aber nicht immer. Ein
-    Zaun-Rest darf den Import nicht kippen; ein wirklich kaputtes Ergebnis
-    dagegen schon, und zwar laut (Wurzel 5).
+    Das Modell haelt sich meistens an „nur JSON", aber nicht immer. Was es
+    real liefert, variiert: mal ein blanker Zaun, mal ein Satz davor („Hier
+    ist die Liste:"), mal ein Objekt mit der Liste als Feld.
+
+    DREI DINGE, DIE HIER FRUEHER FEHLTEN (10.09.2026, Anlass: ein 502 beim
+    Kunden, der lokal nicht nachvollziehbar war):
+      1. Der Rohtext wurde bei einem Parse-Fehler NICHT geloggt. Damit war
+         nicht feststellbar, WAS das Modell geantwortet hatte — die Meldung
+         „Die Liste konnte nicht gelesen werden." stand ohne jeden Hinweis da,
+         und niemand konnte sie diagnostizieren. Debugging ist hier Pflicht,
+         nicht Kür.
+      2. Der Zaun wurde nur am Textanfang erkannt (`startswith`). Ein
+         einleitender Satz davor liess die Regex ins Leere laufen, obwohl das
+         JSON zwei Zeilen weiter unten sauber dastand.
+      3. Der Fehler war 502. Eine unlesbare Modellantwort ist aber kein
+         Gateway-Ausfall — 502 schickt den Nutzer zum Support, obwohl ein
+         zweiter Versuch mit hoher Wahrscheinlichkeit klappt.
     """
     text = roh.strip()
-    if text.startswith("```"):
-        text = re.sub(r"^```[a-z]*\n?", "", text)
-        text = re.sub(r"\n?```$", "", text).strip()
+    # Zaun ueberall im Text, nicht nur am Anfang: der Inhalt des ERSTEN
+    # ```-Blocks gewinnt, sonst bleibt der Text, wie er ist.
+    zaun = re.search(r"```[a-z]*\s*\n?(.*?)```", text, re.DOTALL)
+    if zaun:
+        text = zaun.group(1).strip()
+    daten: object
     try:
         daten = json.loads(text)
-    except json.JSONDecodeError as exc:
-        raise _fehler("Die Liste konnte nicht gelesen werden.", 502) from exc
+    except json.JSONDecodeError:
+        # Letzter Versuch: das aeusserste Array aus dem Rahmentext schneiden.
+        # Ein Modell, das „Hier ist die Liste:" voranstellt, hat trotzdem
+        # brauchbar geantwortet — das wegzuwerfen waere Verschwendung.
+        klammer = re.search(r"\[.*\]", text, re.DOTALL)
+        if not klammer:
+            _liste_unlesbar(roh, "kein JSON-Array in der Antwort")
+        try:
+            daten = json.loads(klammer.group(0))
+        except json.JSONDecodeError as exc:
+            _liste_unlesbar(roh, f"JSON kaputt: {exc}")
     if isinstance(daten, dict):
         # Manche Antworten packen die Liste in ein Objekt.
         for wert in daten.values():
@@ -154,8 +204,30 @@ def _json_liste(roh: str) -> list[dict]:
                 daten = wert
                 break
     if not isinstance(daten, list):
-        raise _fehler("Die Liste konnte nicht gelesen werden.", 502)
+        _liste_unlesbar(roh, f"erwartet Liste, bekam {type(daten).__name__}")
     return [d for d in daten if isinstance(d, dict)]
+
+
+def _liste_unlesbar(roh: str, grund: str) -> NoReturn:
+    """Laut scheitern — MIT dem Rohtext im Log.
+
+    Ohne ihn ist der Fall nicht nachvollziehbar: der Nutzer sieht eine
+    Meldung, das Log eine Zeile ohne Inhalt, und die Ursache liegt in einer
+    Antwort, die niemand mehr sehen kann. 502 waere hier falsch (kein
+    Gateway-Ausfall); 422 sagt „mit dieser Datei ging es nicht".
+    """
+    log.error(
+        "inventar_antwort_unlesbar",
+        grund=grund,
+        laenge=len(roh),
+        # Genug, um den Fall zu erkennen, ohne das Log zu fluten.
+        rohtext=roh[:1500],
+    )
+    raise _fehler(
+        "Die Liste aus dem PDF konnte nicht gelesen werden. "
+        "Bitte noch einmal versuchen — bleibt es dabei, passt das Format nicht.",
+        422,
+    )
 
 
 def _dateityp(inhalt: bytes) -> tuple[str, str]:
@@ -1099,6 +1171,11 @@ class InventarMixin:
                 ],
                 temperature=0.1,
                 max_tokens=8_000,
+                # Ein abgeschnittenes JSON ist hier IMMER unbrauchbar — es
+                # als „Liste nicht lesbar" zu melden, verschiebt die Schuld
+                # auf das Dokument. Lieber der ehrliche Satz: das Budget hat
+                # nicht gereicht (10.09.2026).
+                abbruch_ist_fehler=True,
             )
         except KiError as exc:
             raise _fehler(exc.message, exc.status_code) from exc

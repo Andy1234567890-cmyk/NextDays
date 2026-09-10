@@ -2915,6 +2915,8 @@
       "zuGross": "Die Datei ist zu groß (max. {mb} MB).",
       "seiten": "{count, plural, one {# Seite} other {# Seiten}}",
       "ansehen": "{name} groß ansehen",
+      "vorschauFehler": "Die Vorschau konnte nicht geladen werden (Fehler {status}).",
+      "imNeuenTab": "In neuem Tab öffnen",
       "loeschen": "{name} entfernen",
       "loeschenFrage": "„{name}“ aus der Mappe entfernen? Bereits übernommene Angaben bleiben erhalten.",
       "gefunden": "{count, plural, one {# Angabe gefunden} other {# Angaben gefunden}}",

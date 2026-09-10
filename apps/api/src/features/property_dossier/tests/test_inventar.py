@@ -460,7 +460,11 @@ def test_kaputte_antwort_wirft_laut() -> None:
             TID, PID, inhalt=PDF, dateiname="x.pdf", user_id="u1",
             client=_KiStub("Ich habe kein JSON dabei."),
         )
-    assert exc.value.status_code == 502
+    # 422, NICHT 502: unser Dienst ist nicht ausgefallen — diese eine
+    # Modellantwort war unbrauchbar. Ein 502 schickte den Nutzer zum Support
+    # und sah in der Ueberwachung aus wie ein Ausfall (geaendert 10.09.2026,
+    # nachdem ein zu kleines Token-Budget live als 502 erschien).
+    assert exc.value.status_code == 422
 
 
 # --- 0623: was eine Inventur ausmacht ----------------------------------------
@@ -573,3 +577,52 @@ def test_buchung_kommt_aus_der_aufgabe() -> None:
 def test_ohne_aufgabe_keine_geratene_buchung() -> None:
     svc, _ = _svc()
     assert svc.buchung_zum_zeitpunkt(TID, PID, task_id=None) is None
+
+
+# --- DB-Fehler: Eingabefehler sind kein Ausfall ----------------------------
+# DER ANLASS (10.09.2026): eine krumme UUID in der Adresszeile
+# (`/inventar/raeume/abc`) erzeugte PostgreSQL 22P02, und der Slice machte
+# daraus 502 „Das Inventar ist gerade nicht abrufbar." Das ist eine
+# Falschaussage ueber den eigenen Dienst: nichts war ausgefallen, die Eingabe
+# war ungueltig. Ein 5xx auf angreiferkontrollierten Input ist zudem genau das,
+# was Wurzel 5 verbietet — und er verdeckt in der Ueberwachung die echten
+# Ausfaelle, weil beide gleich aussehen.
+
+class _FakeApiError(Exception):
+    """APIError-Ersatz: der Slice liest nur `.code` und `str(exc)`."""
+
+    def __init__(self, code: str) -> None:
+        super().__init__(f"db sagt {code}")
+        self.code = code
+
+
+@pytest.mark.parametrize(
+    "code",
+    ["22P02", "22003", "23503", "23505", "23514"],
+)
+def test_eingabefehler_wird_422_nicht_502(code: str) -> None:
+    from src.features.property_dossier.inventar import _db_fehler
+
+    fehler = _db_fehler(_FakeApiError(code), "raum_loeschen")
+    assert fehler.status_code == 422
+    # Die Meldung darf NICHT nach Serverausfall klingen.
+    assert "nicht abrufbar" not in fehler.message
+
+
+def test_echter_ausfall_bleibt_502() -> None:
+    """Ein Verbindungs-/Serverfehler ist weiterhin ein Ausfall — sonst haette
+    die Trennung nichts gewonnen, sondern nur alles auf 422 gedreht."""
+    from src.features.property_dossier.inventar import _db_fehler
+
+    fehler = _db_fehler(_FakeApiError("08006"), "liste")
+    assert fehler.status_code == 502
+
+
+def test_fehlende_tabelle_bleibt_503_mit_migrationshinweis() -> None:
+    """Der Bestandsfall aus 0620 darf durch die neue Verzweigung nicht
+    verloren gehen."""
+    from src.features.property_dossier.inventar import _db_fehler
+
+    fehler = _db_fehler(_FakeApiError("PGRST205"), "liste")
+    assert fehler.status_code == 503
+    assert "0620" in fehler.message

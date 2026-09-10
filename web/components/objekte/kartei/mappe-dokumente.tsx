@@ -31,7 +31,6 @@ import {
   deleteMappeDokument,
   listMappeDokumente,
   mappeDokumentLesen,
-  mappeDokumentUrl,
   mappeUebernehmen,
   type MappeDokument,
   type MappeVorschlag,
@@ -93,6 +92,9 @@ export function MappeDokumente({
 
   // Der Betrachter.
   const [ansicht, setAnsicht] = useState<{ name: string; url: string } | null>(null);
+  // Welches Dokument gerade geholt wird — der Knopf zeigt es an, sonst
+  // passiert nach dem Klick sekundenlang sichtbar nichts (8 MB dauern).
+  const [laedtVorschau, setLaedtVorschau] = useState<string | null>(null);
 
   const dateiFeld = useRef<HTMLInputElement>(null);
 
@@ -185,12 +187,47 @@ export function MappeDokumente({
   }
 
   async function ansehen(dok: MappeDokument) {
-    const r = await mappeDokumentUrl(pid, dok.id);
-    if (!r.ok) {
-      setFehler(r.error);
-      return;
+    // Das PDF wird GEHOLT und als Blob angezeigt — nicht als Adresse ins
+    // iframe gegeben. Zwei Gruende, beide live gemessen (10.09.2026):
+    //
+    //  1. Das Sitzungs-Cookie `nd_access` ist `sameSite: lax`. Ein <iframe>
+    //     ist eine Sub-Ressourcen-Anfrage, und dabei sendet der Browser ein
+    //     lax-Cookie NICHT mit. Der Proxy fand kein Token und antwortete
+    //     korrekt mit 401 — im Rahmen stand „Verbindung abgelehnt". `fetch`
+    //     mit gleicher Herkunft schickt es dagegen mit.
+    //     Das Cookie deshalb auf `none` zu stellen, waere die falsche
+    //     Richtung: es wuerde den Loginschutz aller Nutzer schwaechen, um
+    //     eine Vorschau zu retten.
+    //
+    //  2. Die signierte Storage-Adresse (`…/x.pdf?token=…`, fremde Domain)
+    //     brachte Chromes PDF-Viewer gar nicht erst zum Starten — gemessen
+    //     auch beim direkten Aufruf im eigenen Tab, ganz ohne iframe.
+    //
+    // Ein `blob:`-Objekt hat weder Herkunftsproblem noch Query-Parameter.
+    setFehler(null);
+    setLaedtVorschau(dok.id);
+    try {
+      const res = await fetch(
+        `/api/v1/property-dossier/${pid}/mappe/dokument/${dok.id}/datei`,
+        { credentials: "same-origin", cache: "no-store" },
+      );
+      if (!res.ok) {
+        setFehler(t("mappe.vorschauFehler", { status: res.status }));
+        return;
+      }
+      const blob = await res.blob();
+      // Der Typ MUSS stimmen, sonst zeigt der Browser den Viewer nicht. Kommt
+      // er nicht mit, wird er gesetzt statt geraten.
+      const pdf =
+        blob.type === "application/pdf"
+          ? blob
+          : new Blob([blob], { type: "application/pdf" });
+      setAnsicht({ name: dok.datei_name, url: URL.createObjectURL(pdf) });
+    } catch {
+      setFehler(t("mappe.vorschauFehler", { status: 0 }));
+    } finally {
+      setLaedtVorschau(null);
     }
-    setAnsicht({ name: dok.datei_name, url: r.data.url });
   }
 
   async function entfernen(dok: MappeDokument) {
@@ -307,9 +344,21 @@ export function MappeDokumente({
                   aria-label={t("mappe.ansehen", { name: dok.datei_name })}
                   title={t("mappe.ansehen", { name: dok.datei_name })}
                   onClick={() => void ansehen(dok)}
+                  disabled={laedtVorschau !== null}
                   className="flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 >
-                  <Icon icon="ph:magnifying-glass-plus" className="size-4" />
+                  <Icon
+                    icon={
+                      laedtVorschau === dok.id
+                        ? "ph:circle-notch"
+                        : "ph:magnifying-glass-plus"
+                    }
+                    className={
+                      laedtVorschau === dok.id
+                        ? "size-4 animate-spin"
+                        : "size-4"
+                    }
+                  />
                 </button>
                 <button
                   type="button"
@@ -328,17 +377,46 @@ export function MappeDokumente({
 
       {/* Der Betrachter. Ein <iframe> mit der signierten Adresse: der Bucket
           ist privat, es gibt keinen öffentlichen Pfad, und die Adresse gilt
-          zehn Minuten. */}
+          zehn Minuten.
+
+          Der Link „In neuem Tab öffnen" steht IMMER daneben, nicht erst wenn
+          die Vorschau scheitert: eine eingebettete Ansicht ist zum
+          Überfliegen: wer zwölf Seiten Hausmappe wirklich liest, braucht
+          Zoom, Suche und Drucken — also den Viewer des Browsers. */}
       <Dialog
         open={ansicht !== null}
         onOpenChange={(o) => {
-          if (!o) setAnsicht(null);
+          if (o) return;
+          // Die Blob-Adresse SOFORT ungueltig machen. Sie lebt sonst bis zum
+          // Neuladen der Seite weiter und haelt bei einer Hausmappe 8 MB im
+          // Speicher fest — bei mehreren Dokumenten summiert sich das. Und
+          // ein Dokument, das Tuercodes enthaelt, soll nach dem Schliessen
+          // nicht abrufbar bleiben.
+          if (ansicht) URL.revokeObjectURL(ansicht.url);
+          setAnsicht(null);
         }}
       >
         <DialogContent className="max-w-5xl gap-3">
-          <DialogTitle className="pr-8 text-base font-semibold">
-            {ansicht?.name}
-          </DialogTitle>
+          <div className="flex items-center justify-between gap-3 pr-8">
+            <DialogTitle className="min-w-0 truncate text-base font-semibold">
+              {ansicht?.name}
+            </DialogTitle>
+            {/* Immer sichtbar, nicht erst wenn die Vorschau scheitert: eine
+                eingebettete PDF-Ansicht ist zum Ueberfliegen da: wer wirklich
+                LESEN will (12 Seiten Hausmappe), braucht Zoom, Suche und
+                Drucken — also den Viewer des Browsers. */}
+            {ansicht && (
+              <a
+                href={ansicht.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              >
+                <Icon icon="ph:arrow-square-out" className="size-4" />
+                {t("mappe.imNeuenTab")}
+              </a>
+            )}
+          </div>
           {ansicht && (
             <iframe
               src={ansicht.url}

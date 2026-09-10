@@ -183,18 +183,35 @@ class PlanZusatzMixin(PersonalBase):
         `verbraucht` sind BESTÄTIGTE Stempelungen (die Wahrheit für die
         Abrechnung), `geplant` die noch offenen Schichten obendrauf.
         """
+        # `personal_zeiterfassung` hat WEDER `datum` NOCH `netto_minuten`
+        # (Live-Schema): eine Stempelung traegt `start_at`/`end_at` und ihre
+        # `pausen`. Die alten Namen warfen 42703 — und weil das hier die
+        # VERDIENST-Rechnung ist, war der Ausfall teuer.
+        #
+        # Gefiltert wird ueber `start_at`: der Tag ist der Tag des Beginns.
+        # `bis` wird exklusiv um einen Tag erweitert, sonst fiele eine
+        # Stempelung am letzten Tag heraus (Zeitstempel > Mitternacht).
         zeiten = (
             self._db.table("personal_zeiterfassung")
-            .select("netto_minuten, status, datum")
+            .select("start_at, end_at, pausen, status")
             .eq("tenant_id", tenant_id)
             .eq("user_id", user_id)
-            .gte("datum", von.isoformat())
-            .lte("datum", bis.isoformat())
+            .gte("start_at", von.isoformat())
+            .lt("start_at", (bis + timedelta(days=1)).isoformat())
             .execute()
         ).data or []
-        verbraucht_min = sum(
-            int(z.get("netto_minuten") or 0) for z in zeiten if z.get("status") == "bestaetigt"
-        )
+        verbraucht_min = 0
+        for z in zeiten:
+            if z.get("status") != "bestaetigt":
+                continue
+            start, ende = als_dt(z.get("start_at")), als_dt(z.get("end_at"))
+            if not (start and ende):
+                # Laufende Stempelung ohne Ende: sie ist noch nicht
+                # abgerechnet und wird NICHT geschaetzt (Wurzel 4).
+                continue
+            verbraucht_min += rw.netto_minuten(
+                start, ende, rw.pausen_minuten(list(z.get("pausen") or []))
+            )
         schichten = (
             self._db.table("personal_schichten")
             .select("start_at, end_at, pause_min, status")

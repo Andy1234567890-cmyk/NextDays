@@ -758,7 +758,10 @@ class KiAutoantwortMixin:
                     db.table("portal_messages")
                     .select("id")
                     .eq("tenant_id", tenant_id)
-                    .eq("thread_id", str(zeile["thread_id"]))
+                    # `thread_ref`, nicht `thread_id`: so heisst die Spalte
+                    # in `portal_messages` (Live-Schema). Der falsche Name
+                    # warf 42703 und damit einen rohen 500.
+                    .eq("thread_ref", str(zeile["thread_id"]))
                     .gt("sent_at", seit)
                     .limit(1)
                     .execute()

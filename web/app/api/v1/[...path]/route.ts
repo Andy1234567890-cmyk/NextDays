@@ -38,7 +38,13 @@ async function forward(req: NextRequest, path: string[]): Promise<NextResponse> 
   }
 
   const respContentType = res.headers.get("content-type") ?? "";
-  const text = await res.text();
+  // BINÄR durchreichen, nicht als Text. `res.text()` dekodiert die Bytes als
+  // UTF-8 und ersetzt jede ungültige Sequenz durch U+FFFD — ein PDF, ein Bild
+  // oder ein ZIP kommt danach beschädigt beim Browser an, und zwar OHNE
+  // Fehlermeldung: Länge und Content-Type stimmen noch, nur der Inhalt ist
+  // Müll. Live am 10.09.2026: die PDF-Vorschau der Hausmappe blieb grau, weil
+  // aus 8 MB PDF hier 8 MB Ersatzzeichen wurden.
+  const rumpf = await res.arrayBuffer();
   // 204/205/304 tragen KEINEN Rumpf. Ihn trotzdem an `new NextResponse` zu
   // geben ist ein Fehler in der Laufzeit ("Response with null body status
   // cannot have body"), und der kommt beim Aufrufer als 500 an — obwohl das
@@ -47,9 +53,30 @@ async function forward(req: NextRequest, path: string[]): Promise<NextResponse> 
   // Fehler, die Zeile war weg (Wurzel 5 — ein Erfolg, der wie ein Fehler
   // aussieht, ist so schlimm wie umgekehrt).
   const ohneRumpf = res.status === 204 || res.status === 205 || res.status === 304;
-  const antwort = new NextResponse(ohneRumpf ? null : text, {
+  // Header, die der Browser für eine Datei braucht, gehen mit — ohne
+  // `content-disposition` zeigt Chrome ein `inline`-PDF nicht an.
+  //
+  // AUSDRÜCKLICH NICHT `content-length`: die Länge gehört der Verbindung, die
+  // sie sendet, nicht der, die wir weiterreichen. Next.js baut die Antwort
+  // neu auf (und komprimiert sie unter Umständen), die angekündigte Zahl
+  // passte dann nicht mehr zu den gesendeten Bytes — der Browser bricht ab
+  // und meldet „localhost hat die Verbindung abgelehnt". Genau so sah es am
+  // 10.09.2026 aus, während das Backend im Log sauber 200 lieferte. Die
+  // Laufzeit setzt die korrekte Länge selbst.
+  const durchreichen: Record<string, string> = {
+    "content-type": respContentType || "application/json",
+  };
+  for (const name of [
+    "content-disposition",
+    "cache-control",
+    "x-content-type-options",
+  ]) {
+    const wert = res.headers.get(name);
+    if (wert) durchreichen[name] = wert;
+  }
+  const antwort = new NextResponse(ohneRumpf ? null : rumpf, {
     status: res.status,
-    headers: { "content-type": respContentType || "application/json" },
+    headers: durchreichen,
   });
   // Hat currentToken() oben die Session erneuert, hat persistSession die neuen
   // Cookies ins Jar geschrieben — Next hängt sie aber nur an eine Response, die

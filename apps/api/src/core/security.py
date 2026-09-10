@@ -284,7 +284,7 @@ def _demo_gate(request: Request, ctx: AuthContext) -> None:
     # Bereichs-Sperre VOR der Methodenprüfung: ein gesperrter Bereich nennt
     # denselben Grund, egal ob gelesen oder geschrieben wird (0408).
     demo_bereich_pruefen(request.url.path, ctx)
-    demo_schreibzugriff_pruefen(request.method, ctx)
+    demo_schreibzugriff_pruefen(request.method, ctx, request.url.path)
 
 
 def _modul_gate(request: Request, ctx: AuthContext) -> None:
