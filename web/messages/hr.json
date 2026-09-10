@@ -3031,7 +3031,9 @@
       "ziehenHinweis": "Povucite stavku u prostoriju da biste je dodijelili.",
       "raumLeer": "U ovoj prostoriji još nema ničega.",
       "raumWaehlen": "Prostorija",
-      "pruefungZuruecknehmen": "Poništi recenziju"
+      "pruefungZuruecknehmen": "Poništi recenziju",
+      "behoben": "Popravljeno",
+      "behobenZuruecknehmen": "Nije popravljeno"
     }
   },
   "finance": {

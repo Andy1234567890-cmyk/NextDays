@@ -3031,7 +3031,9 @@
       "ziehenHinweis": "Arrastre un elemento a una habitación para asignarlo.",
       "raumLeer": "Esta habitación aún no tiene nada.",
       "raumWaehlen": "Habitación",
-      "pruefungZuruecknehmen": "Retirar revisión"
+      "pruefungZuruecknehmen": "Retirar revisión",
+      "behoben": "Solucionado",
+      "behobenZuruecknehmen": "No solucionado"
     }
   },
   "finance": {

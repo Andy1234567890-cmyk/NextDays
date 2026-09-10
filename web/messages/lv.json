@@ -3031,7 +3031,9 @@
       "ziehenHinweis": "Velciet objektu uz telpu, lai to piešķirtu.",
       "raumLeer": "Šajā telpā vēl nekas neatrodas.",
       "raumWaehlen": "Telpa",
-      "pruefungZuruecknehmen": "Atsaukt pārskatīšanu"
+      "pruefungZuruecknehmen": "Atsaukt pārskatīšanu",
+      "behoben": "Fiksēts",
+      "behobenZuruecknehmen": "Nav fiksēts"
     }
   },
   "finance": {

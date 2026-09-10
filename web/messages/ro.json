@@ -3031,7 +3031,9 @@
       "ziehenHinweis": "Trageți elementul într-o cameră pentru a-l aloca.",
       "raumLeer": "Această cameră este încă goală.",
       "raumWaehlen": "Cameră",
-      "pruefungZuruecknehmen": "Anulați verificarea"
+      "pruefungZuruecknehmen": "Anulați verificarea",
+      "behoben": "Remediat",
+      "behobenZuruecknehmen": "Nerezolvat"
     }
   },
   "finance": {

@@ -3031,7 +3031,9 @@
       "ziehenHinweis": "Σύρετε ένα αντικείμενο σε ένα δωμάτιο για να το εκχωρήσετε.",
       "raumLeer": "Δεν υπάρχει τίποτα σε αυτό το δωμάτιο ακόμα.",
       "raumWaehlen": "Δωμάτιο",
-      "pruefungZuruecknehmen": "Αναίρεση ελέγχου"
+      "pruefungZuruecknehmen": "Αναίρεση ελέγχου",
+      "behoben": "Διορθώθηκε",
+      "behobenZuruecknehmen": "Δεν διορθώθηκε"
     }
   },
   "finance": {

@@ -3031,7 +3031,9 @@
       "ziehenHinweis": "Faites glisser l'objet vers un espace pour l'attribuer.",
       "raumLeer": "Rien n'est encore dans cet espace.",
       "raumWaehlen": "Espace",
-      "pruefungZuruecknehmen": "Annuler la vérification"
+      "pruefungZuruecknehmen": "Annuler la vérification",
+      "behoben": "Corrigé",
+      "behobenZuruecknehmen": "Non corrigé"
     }
   },
   "finance": {

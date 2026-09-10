@@ -3031,7 +3031,9 @@
       "ziehenHinweis": "Tarraing mír chuig seomra chun é a shannadh.",
       "raumLeer": "Níl aon rud sa seomra seo fós.",
       "raumWaehlen": "Seomra",
-      "pruefungZuruecknehmen": "Bain an athbhreithnithe"
+      "pruefungZuruecknehmen": "Bain an athbhreithnithe",
+      "behoben": "Ceartaithe",
+      "behobenZuruecknehmen": "Gan a bheith ceartaithe"
     }
   },
   "finance": {

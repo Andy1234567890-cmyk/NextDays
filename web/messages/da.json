@@ -3031,7 +3031,9 @@
       "ziehenHinweis": "Træk element til et rum for at tildele det.",
       "raumLeer": "Dette rum er tomt.",
       "raumWaehlen": "Rum",
-      "pruefungZuruecknehmen": "Fortryd anmeldelse"
+      "pruefungZuruecknehmen": "Fortryd anmeldelse",
+      "behoben": "Løst",
+      "behobenZuruecknehmen": "Ikke løst"
     }
   },
   "finance": {

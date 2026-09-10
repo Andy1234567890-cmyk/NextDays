@@ -3031,7 +3031,9 @@
       "ziehenHinweis": "Nuvilkite elementą į kambarį, kad jį priskirtumėte.",
       "raumLeer": "Šiame kambaryje dar nieko nėra.",
       "raumWaehlen": "Kambarys",
-      "pruefungZuruecknehmen": "Anuliuoti peržiūrą"
+      "pruefungZuruecknehmen": "Anuliuoti peržiūrą",
+      "behoben": "Ištaisyta",
+      "behobenZuruecknehmen": "Nepataisyta"
     }
   },
   "finance": {

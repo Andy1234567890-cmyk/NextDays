@@ -3031,7 +3031,9 @@
       "ziehenHinweis": "Arraste um item para uma sala para atribuí-lo.",
       "raumLeer": "Esta sala ainda não tem nada.",
       "raumWaehlen": "Sala",
-      "pruefungZuruecknehmen": "Retirar avaliação"
+      "pruefungZuruecknehmen": "Retirar avaliação",
+      "behoben": "Corrigido",
+      "behobenZuruecknehmen": "Não corrigido"
     }
   },
   "finance": {

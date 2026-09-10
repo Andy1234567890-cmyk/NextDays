@@ -36,6 +36,7 @@ import {
   setzeReferenzfoto,
   schadenFotoUrl,
   updateInventar,
+  setzeSchadenBehoben,
   verwerfeSchaden,
   type InventarGegenstand,
   type InventarRaum,
@@ -92,12 +93,17 @@ export function InventarListe({ pid }: { pid: string }) {
     void laden();
   }, [laden]);
 
+  // Kaufmaennisch offen: der Posten ist noch nicht durch. Ein BEHOBENER
+  // Schaden bleibt hier drin, solange er nicht abgerechnet ist — sonst
+  // verschwaende die Reparatur den Posten, den noch jemand verantworten muss.
   const offeneSchaeden = schaeden.filter(
     (s) => s.status === "gemeldet" || s.status === "bestaetigt",
   );
-  // Schaeden je Gegenstand, damit die Zeile zeigt, was an ihr haengt.
+  // Die Warnung an der Inventarzeile zaehlt nur, was WIRKLICH noch kaputt
+  // ist. Ein repariertes Sofa als „offener Schaden" zu markieren waere eine
+  // Falschaussage ueber den Zustand des Hauses.
   const schadenJeItem = new Map<string, number>();
-  for (const s of offeneSchaeden) {
+  for (const s of offeneSchaeden.filter((x) => !x.behoben_am)) {
     if (s.item_id) {
       schadenJeItem.set(s.item_id, (schadenJeItem.get(s.item_id) ?? 0) + 1);
     }
@@ -1055,6 +1061,15 @@ function SchadenZeile({
     await onFertig();
   }
 
+  async function behobenUmschalten() {
+    const r = await setzeSchadenBehoben(pid, s.id, !s.behoben_am);
+    if (!r.ok) {
+      onFehler(r.error);
+      return;
+    }
+    await onFertig();
+  }
+
   async function verwerfen() {
     if (!window.confirm(t("inventar.verwerfenFrage", { name: s.item_name }))) return;
     const r = await verwerfeSchaden(pid, s.id);
@@ -1095,18 +1110,25 @@ function SchadenZeile({
           inputMode="decimal"
           className="h-8 w-28"
         />
-        <select
-          value={traeger}
-          onChange={(e) => setTraeger(e.target.value)}
-          className="h-8 rounded-lg border border-border bg-background pl-2 pr-7 text-sm"
-        >
-          <option value="">{t("inventar.werZahlt")}</option>
-          {TRAEGER.map((x) => (
-            <option key={x} value={x}>
-              {t(`inventar.traegerWert.${x}`)}
-            </option>
-          ))}
-        </select>
+        <span className="relative inline-flex">
+          <select
+            value={traeger}
+            onChange={(e) => setTraeger(e.target.value)}
+            className="h-8 cursor-pointer appearance-none rounded-lg border border-border bg-background pl-3 pr-9 text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          >
+            <option value="">{t("inventar.werZahlt")}</option>
+            {TRAEGER.map((x) => (
+              <option key={x} value={x}>
+                {t(`inventar.traegerWert.${x}`)}
+              </option>
+            ))}
+          </select>
+          <Icon
+            icon="ph:caret-down"
+            className="pointer-events-none absolute right-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
+            aria-hidden
+          />
+        </span>
         <Button
           type="button"
           size="sm"
@@ -1114,6 +1136,22 @@ function SchadenZeile({
           onClick={() => void bestaetigen()}
         >
           {t("inventar.bestaetigen")}
+        </Button>
+        {/* Unabhaengig von Betrag und Traeger: ein Sessel kann repariert
+            sein, lange bevor jemand entschieden hat, wer ihn zahlt. */}
+        <Button
+          type="button"
+          size="sm"
+          variant={s.behoben_am ? "accent" : "outline"}
+          aria-pressed={s.behoben_am !== null}
+          onClick={() => void behobenUmschalten()}
+        >
+          <Icon
+            icon={s.behoben_am ? "ph:arrow-counter-clockwise" : "ph:wrench"}
+            className="size-3.5"
+            aria-hidden
+          />
+          {s.behoben_am ? t("inventar.behobenZuruecknehmen") : t("inventar.behoben")}
         </Button>
         <Button type="button" size="sm" variant="ghost" onClick={() => void verwerfen()}>
           {t("inventar.verwerfen")}

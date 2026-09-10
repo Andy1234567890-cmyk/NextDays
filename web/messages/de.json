@@ -3031,7 +3031,9 @@
       "ziehenHinweis": "Gegenstand auf einen Raum ziehen, um ihn zuzuweisen.",
       "raumLeer": "In diesem Raum steht noch nichts.",
       "raumWaehlen": "Raum",
-      "pruefungZuruecknehmen": "Prüfung zurücknehmen"
+      "pruefungZuruecknehmen": "Prüfung zurücknehmen",
+      "behoben": "Behoben",
+      "behobenZuruecknehmen": "Doch nicht behoben"
     }
   },
   "finance": {

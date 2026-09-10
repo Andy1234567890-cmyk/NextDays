@@ -3031,7 +3031,9 @@
       "ziehenHinweis": "Vedä kohde huoneeseen määrittääksesi sen.",
       "raumLeer": "Tässä huoneessa ei ole vielä mitään.",
       "raumWaehlen": "Huone",
-      "pruefungZuruecknehmen": "Peruuta tarkistus"
+      "pruefungZuruecknehmen": "Peruuta tarkistus",
+      "behoben": "Korjattu",
+      "behobenZuruecknehmen": "Ei korjattu"
     }
   },
   "finance": {

@@ -3031,7 +3031,9 @@
       "ziehenHinweis": "Drag item to a room to assign it.",
       "raumLeer": "This room is still empty.",
       "raumWaehlen": "Room",
-      "pruefungZuruecknehmen": "Undo review"
+      "pruefungZuruecknehmen": "Undo review",
+      "behoben": "Fixed",
+      "behobenZuruecknehmen": "Not fixed"
     }
   },
   "finance": {

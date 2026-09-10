@@ -316,6 +316,7 @@ def _schaden(z: dict, fotos: list[str] | None = None) -> dict:
         "currency": z.get("currency"),
         "gemeldet_am": z["gemeldet_am"],
         "bestaetigt_am": z.get("bestaetigt_am"),
+        "behoben_am": z.get("behoben_am"),
         "owner_expense_id": (
             str(z["owner_expense_id"]) if z.get("owner_expense_id") else None
         ),
@@ -1138,6 +1139,63 @@ class InventarMixin:
             )
         except APIError as exc:
             raise _db_fehler(exc, "schaden_verwerfen") from exc
+
+    def schaden_behoben_setzen(
+        self,
+        tenant_id: str | None,
+        property_id: str,
+        schaden_id: str,
+        *,
+        behoben: bool,
+        user_id: str | None,
+    ) -> None:
+        """Der Schaden ist repariert oder ersetzt — oder eben doch nicht.
+
+        Eigene Achse neben `status` (0625): ein Sessel kann bezahlt und
+        weiterhin kaputt sein, oder repariert und nie abgerechnet. Der
+        Abrechnungsstand bleibt davon unberuehrt, in beide Richtungen.
+
+        Umschaltbar, weil ein Fehlklick sonst eine Falschaussage ueber den
+        Zustand des Hauses waere — dieselbe Ueberlegung wie bei der
+        Sichtpruefung der Inventarzeile.
+        """
+        tid = self._require_tenant(tenant_id)
+        self._require_own_property(tid, property_id)
+        zeile = self._eigener_schaden(tid, property_id, schaden_id)
+        # Ein verworfener Schaden hat nie existiert; ihn zu „beheben" waere
+        # ein Widerspruch, den die DB ohnehin abweist (0625).
+        if behoben and zeile.get("status") == "verworfen":
+            raise _fehler(
+                "Dieser Schaden wurde verworfen — es gibt nichts zu beheben.",
+                409,
+            )
+        werte: dict[str, Any] = (
+            {
+                "behoben_am": datetime.now(UTC).isoformat(),
+                "behoben_von": user_id,
+            }
+            if behoben
+            else {"behoben_am": None, "behoben_von": None}
+        )
+        try:
+            (
+                self._db()
+                .table("inventory_damage")
+                .update(werte)
+                .eq("id", schaden_id)
+                .eq("tenant_id", tid)
+                .eq("property_id", property_id)
+                .execute()
+            )
+        except APIError as exc:
+            raise _db_fehler(exc, "schaden_behoben") from exc
+        log.info(
+            "schaden_behoben",
+            tenant_id=tid,
+            property_id=property_id,
+            schaden_id=schaden_id,
+            behoben=behoben,
+        )
 
     def _eigener_schaden(
         self, tid: str, property_id: str, schaden_id: str

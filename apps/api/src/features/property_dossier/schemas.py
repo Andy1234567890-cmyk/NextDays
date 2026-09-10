@@ -347,9 +347,22 @@ class InventarSchaden(BaseModel):
     currency: str | None = None
     gemeldet_am: datetime
     bestaetigt_am: datetime | None = None
+    # Eigene Achse, nicht Teil von `status`: bezahlt und behoben sind zwei
+    # verschiedene Aussagen (0625). None = noch offen.
+    behoben_am: datetime | None = None
     owner_expense_id: str | None = None
     task_id: str | None = None
     foto_ids: list[str] = Field(default_factory=list)
+
+
+class SchadenBehoben(BaseModel):
+    """Repariert/ersetzt — oder zurückgenommen.
+
+    Eigene Achse neben `status` (0625). Umschaltbar, weil ein Fehlklick sonst
+    eine Falschaussage über den Zustand des Hauses wäre.
+    """
+
+    behoben: bool = True
 
 
 class SchadenBestaetigung(BaseModel):

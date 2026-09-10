@@ -3031,7 +3031,9 @@
       "ziehenHinweis": "Presuňte položku do priestoru a priraďte ju.",
       "raumLeer": "V tomto priestore zatiaľ nič nie je.",
       "raumWaehlen": "Priestor",
-      "pruefungZuruecknehmen": "Zrušiť kontrolu"
+      "pruefungZuruecknehmen": "Zrušiť kontrolu",
+      "behoben": "Opravené",
+      "behobenZuruecknehmen": "Neopravené"
     }
   },
   "finance": {

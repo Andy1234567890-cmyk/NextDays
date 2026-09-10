@@ -3031,7 +3031,9 @@
       "ziehenHinweis": "Dra och släpp objekt till ett rum för att tilldela det.",
       "raumLeer": "Inget finns i detta rum än.",
       "raumWaehlen": "Rum",
-      "pruefungZuruecknehmen": "Återkalla recension"
+      "pruefungZuruecknehmen": "Återkalla recension",
+      "behoben": "Åtgärdad",
+      "behobenZuruecknehmen": "Inte åtgärdad"
     }
   },
   "finance": {

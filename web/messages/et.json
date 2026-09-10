@@ -3031,7 +3031,9 @@
       "ziehenHinweis": "Lohista objekt ruumi, et see määrata.",
       "raumLeer": "Selles ruumis pole veel midagi.",
       "raumWaehlen": "Ruum",
-      "pruefungZuruecknehmen": "Tühista ülevaatus"
+      "pruefungZuruecknehmen": "Tühista ülevaatus",
+      "behoben": "Parandatud",
+      "behobenZuruecknehmen": "Pole parandatud"
     }
   },
   "finance": {

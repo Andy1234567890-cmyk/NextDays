@@ -3031,7 +3031,9 @@
       "ziehenHinweis": "Плъзнете елемент в стая, за да го зададете.",
       "raumLeer": "В тази стая все още няма нищо.",
       "raumWaehlen": "Стая",
-      "pruefungZuruecknehmen": "Отмяна на прегледа"
+      "pruefungZuruecknehmen": "Отмяна на прегледа",
+      "behoben": "Поправено",
+      "behobenZuruecknehmen": "Не е поправено"
     }
   },
   "finance": {

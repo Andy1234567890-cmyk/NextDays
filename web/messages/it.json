@@ -3031,7 +3031,9 @@
       "ziehenHinweis": "Trascinare un elemento su una stanza per assegnarlo.",
       "raumLeer": "Questa stanza è vuota.",
       "raumWaehlen": "Stanza",
-      "pruefungZuruecknehmen": "Annulla revisione"
+      "pruefungZuruecknehmen": "Annulla revisione",
+      "behoben": "Risolto",
+      "behobenZuruecknehmen": "Non risolto"
     }
   },
   "finance": {

@@ -721,3 +721,53 @@ def test_ohne_feld_bleibt_die_pruefung_stehen() -> None:
     werte = [e for e in prot if e[0] == "update"][0][2]
     assert "geprueft_am" not in werte
     assert "geprueft_von" not in werte
+
+
+# --- Schaden behoben (0625) --------------------------------------------------
+# Eigene Achse neben `status`: die kaufmaennische Kette (gemeldet →
+# bestaetigt → abgerechnet) sagt NICHT, ob der Sessel wieder heil ist. Beides
+# in eine Spalte zu pressen verlöre eine der beiden Aussagen.
+def test_schaden_behoben_setzen() -> None:
+    svc, prot = _svc({"inventory_damage": [_schadenzeile()]})
+    svc.schaden_behoben_setzen(
+        TID, PID, SID, behoben=True, user_id="u1",
+    )
+    werte = [e for e in prot if e[0] == "update"][0][2]
+    assert werte["behoben_am"] is not None
+    assert werte["behoben_von"] == "u1"
+
+
+def test_schaden_behoben_zuruecknehmen() -> None:
+    """Ein Fehlklick darf keine Falschaussage ueber den Zustand des Hauses
+    hinterlassen — dieselbe Ueberlegung wie bei der Sichtpruefung."""
+    svc, prot = _svc({
+        "inventory_damage": [_schadenzeile(behoben_am="2026-09-01T10:00:00+00:00")],
+    })
+    svc.schaden_behoben_setzen(
+        TID, PID, SID, behoben=False, user_id="u1",
+    )
+    werte = [e for e in prot if e[0] == "update"][0][2]
+    assert werte["behoben_am"] is None
+    assert werte["behoben_von"] is None
+
+
+def test_verworfener_schaden_kann_nicht_behoben_werden() -> None:
+    """`verworfen` heisst „war doch kein Schaden" — dann gibt es nichts zu
+    beheben. Die DB weist das ebenfalls ab (0625), hier kommt die
+    verstaendliche Auskunft davor."""
+    svc, prot = _svc({"inventory_damage": [_schadenzeile(status="verworfen")]})
+    with pytest.raises(DossierError) as exc:
+        svc.schaden_behoben_setzen(TID, PID, SID, behoben=True, user_id="u1")
+    assert exc.value.status_code == 409
+    assert not [e for e in prot if e[0] == "update"]
+
+
+def test_behoben_laesst_den_abrechnungsstand_in_ruhe() -> None:
+    """Bezahlt und behoben sind zwei Aussagen: die Reparatur darf den Posten
+    nicht anfassen, sonst verschwaende sie eine offene Forderung."""
+    svc, prot = _svc({
+        "inventory_damage": [_schadenzeile(status="bestaetigt", betrag=120.0)],
+    })
+    svc.schaden_behoben_setzen(TID, PID, SID, behoben=True, user_id="u1")
+    werte = [e for e in prot if e[0] == "update"][0][2]
+    assert set(werte) == {"behoben_am", "behoben_von"}

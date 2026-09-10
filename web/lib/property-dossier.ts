@@ -362,6 +362,9 @@ export type InventarSchaden = {
   currency: string | null;
   gemeldet_am: string;
   bestaetigt_am: string | null;
+  /** Repariert/ersetzt. Eigene Achse neben `status` (0625): bezahlt und
+   *  behoben sind zwei verschiedene Aussagen. `null` = noch offen. */
+  behoben_am: string | null;
   owner_expense_id: string | null;
   task_id: string | null;
   foto_ids: string[];
@@ -468,6 +471,19 @@ export async function verwerfeSchaden(
 ): Promise<Result<null>> {
   return call(`${BASE}/${pid}/inventar/schaeden/${schadenId}/verwerfen`, {
     method: "POST",
+  });
+}
+
+/** Repariert oder ersetzt — oder zurückgenommen. Unabhängig vom
+ *  Abrechnungsstand: ein Sessel kann bezahlt und weiterhin kaputt sein. */
+export async function setzeSchadenBehoben(
+  pid: string,
+  schadenId: string,
+  behoben: boolean,
+): Promise<Result<null>> {
+  return call(`${BASE}/${pid}/inventar/schaeden/${schadenId}/behoben`, {
+    method: "POST",
+    body: { behoben },
   });
 }
 

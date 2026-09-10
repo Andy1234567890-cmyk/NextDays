@@ -3031,7 +3031,9 @@
       "ziehenHinweis": "Povlecite predmet v sobo, da ga dodelite.",
       "raumLeer": "V tej sobi še ni ničesar.",
       "raumWaehlen": "Soba",
-      "pruefungZuruecknehmen": "Prekliči pregled"
+      "pruefungZuruecknehmen": "Prekliči pregled",
+      "behoben": "Odpravljeno",
+      "behobenZuruecknehmen": "Ni odpravljeno"
     }
   },
   "finance": {

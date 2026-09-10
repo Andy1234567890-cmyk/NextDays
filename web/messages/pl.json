@@ -3031,7 +3031,9 @@
       "ziehenHinweis": "Przeciągnij element do pokoju, aby go przypisać.",
       "raumLeer": "W tym pokoju nic jeszcze nie ma.",
       "raumWaehlen": "Pokój",
-      "pruefungZuruecknehmen": "Cofnij recenzję"
+      "pruefungZuruecknehmen": "Cofnij recenzję",
+      "behoben": "Naprawiono",
+      "behobenZuruecknehmen": "Nie naprawiono"
     }
   },
   "finance": {

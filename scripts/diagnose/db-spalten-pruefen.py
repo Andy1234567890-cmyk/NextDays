@@ -34,8 +34,11 @@ man kennt und nicht schliesst, ist eine Zusage, die nicht gilt.
 
 WAS ES NICHT PRUEFT
 -------------------
-* Spalten in `insert()`/`update()`-Dictionaries -- dort steht der Name als
-  Schluessel und meist neben berechneten Werten; das ist eine eigene Runde.
+* Schreib-Dictionaries, die keine Literale sind (eine Variable, ein Aufruf,
+  `**rest`) -- ihr Inhalt steht zur Bauzeit nicht fest. Literale Schluessel in
+  `insert()`/`update()`/`upsert()` WERDEN geprueft (seit 10.09.2026; vorher
+  war das eine offene Luecke im Kopf dieser Datei, genau wie zuvor die
+  Filterspalten).
 * Eingebettete PostgREST-Ausdruecke (`kunde:users(name)`) und `*` -- sie werden
   uebersprungen, weil ihr Bezugspunkt eine andere Tabelle ist.
 * Ob die Tabelle selbst existiert -- ein Tippfehler dort faellt sofort auf.
@@ -153,6 +156,35 @@ FILTER_METHODEN = frozenset({
 })
 
 
+# `insert()`/`update()` bekommen ein Dictionary: die SCHLUESSEL sind die
+# Spaltennamen. Ein Tippfehler dort ist genauso unsichtbar wie im Filter --
+# ruff und pylint sehen eine Zeichenkette, die Fake-DB der Tests nimmt sie an,
+# und Postgres wirft erst beim echten Aufruf `PGRST204`/`42703`.
+SCHREIB_METHODEN = frozenset({"insert", "update", "upsert"})
+
+
+def _schreib_spalten(knoten: ast.expr) -> list[tuple[str, int]]:
+    """Die Spaltennamen aus einem insert/update-Argument.
+
+    Ein Dictionary-Literal, oder eine Liste davon (`insert([{...}, {...}])`).
+    Alles andere -- eine Variable, ein Aufruf, `**rest` -- ist zur Bauzeit
+    nicht bekannt und wird uebersprungen: lieber eine Luecke, die man kennt,
+    als ein Fehlalarm, der das Gate unglaubwuerdig macht.
+    """
+    if isinstance(knoten, (ast.List, ast.Tuple)):
+        return [s for e in knoten.elts for s in _schreib_spalten(e)]
+    if not isinstance(knoten, ast.Dict):
+        return []
+    namen = []
+    for schluessel in knoten.keys:
+        if (
+            isinstance(schluessel, ast.Constant)
+            and isinstance(schluessel.value, str)
+        ):
+            namen.append((schluessel.value, schluessel.lineno))
+    return namen
+
+
 def sammle(pfade: list[Path]) -> list[tuple[str, str, Path, int]]:
     """(tabelle, spalte, datei, zeile) fuer jede select- und Filter-Kette."""
     treffer: list[tuple[str, str, Path, int]] = []
@@ -172,11 +204,19 @@ def sammle(pfade: list[Path]) -> list[tuple[str, str, Path, int]]:
                     continue
                 ist_select = f.attr == "select"
                 ist_filter = f.attr in FILTER_METHODEN
-                if not (ist_select or ist_filter):
+                ist_schreiben = f.attr in SCHREIB_METHODEN
+                if not (ist_select or ist_filter or ist_schreiben):
+                    continue
+                if not knoten.args:
+                    continue
+                if ist_schreiben:
+                    tabelle = _tabelle_der_kette(f.value)
+                    if tabelle:
+                        for spalte, zeile in _schreib_spalten(knoten.args[0]):
+                            treffer.append((tabelle, spalte, datei, zeile))
                     continue
                 if not (
-                    knoten.args
-                    and isinstance(knoten.args[0], ast.Constant)
+                    isinstance(knoten.args[0], ast.Constant)
                     and isinstance(knoten.args[0].value, str)
                 ):
                     continue

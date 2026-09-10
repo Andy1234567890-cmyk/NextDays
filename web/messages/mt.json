@@ -3031,7 +3031,9 @@
       "ziehenHinweis": "Drag oġġett għal kamra biex tassenjah.",
       "raumLeer": "Din il-kamra għadha vojta.",
       "raumWaehlen": "Kamra",
-      "pruefungZuruecknehmen": "Neħħi r-reviżjoni"
+      "pruefungZuruecknehmen": "Neħħi r-reviżjoni",
+      "behoben": "Irranġat",
+      "behobenZuruecknehmen": "Mhux irranġat"
     }
   },
   "finance": {

@@ -48,6 +48,7 @@ from .schemas import (
     PlatformLaunchBase,
     PlatformLaunchResponse,
     ProcessData,
+    SchadenBehoben,
     SchadenBestaetigung,
     ServiceAgreementBase,
     ServiceAgreementResponse,
@@ -649,6 +650,31 @@ def verwerfe_schaden(
 ) -> None:
     try:
         service.schaden_verwerfen(ctx.tenant_id, property_id, schaden_id)
+    except DossierError as exc:
+        raise _handle(exc) from exc
+
+
+@router.post(
+    "/{property_id}/inventar/schaeden/{schaden_id}/behoben",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def setze_schaden_behoben(
+    property_id: str,
+    schaden_id: str,
+    req: SchadenBehoben,
+    service: DossierServiceDep,
+    ctx: ManageCtx,
+) -> None:
+    """Repariert/ersetzt — oder zurueckgenommen. Unabhaengig vom
+    Abrechnungsstand (0625)."""
+    try:
+        service.schaden_behoben_setzen(
+            ctx.tenant_id,
+            property_id,
+            schaden_id,
+            behoben=req.behoben,
+            user_id=ctx.user_id,
+        )
     except DossierError as exc:
         raise _handle(exc) from exc
 
