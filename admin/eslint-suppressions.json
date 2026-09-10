@@ -1,0 +1,129 @@
+{
+  "app/(backoffice)/buchungen/[id]/page.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "app/(backoffice)/buchungen/page.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "app/(backoffice)/deploy/[uuid]/page.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "app/(backoffice)/deploy/page.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "app/(backoffice)/partner/[id]/page.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "app/(backoffice)/partner/page.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "app/(backoffice)/steuern/page.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/ankuendigungen/ankuendigung-formular.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/ankuendigungen/uebersetzungen-panel.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/betrieb-sperre.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/deploy-tabelle.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/freigabe-karte.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/partner-leads.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/partner-material.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/partner-reichweite.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/partner-tracking.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/partner/partner-auszahlungen.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/support-konsole.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/webhook-tabelle.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/worker-tabelle.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  }
+}

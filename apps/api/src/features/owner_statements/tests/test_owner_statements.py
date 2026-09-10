@@ -3001,3 +3001,51 @@ def test_privatperson_hat_keinen_firmennamen() -> None:
     st = _gen(_svc())
     assert st.header.owner_company is None
     assert st.header.owner_name == "Max Owner"
+
+
+# --- Satzwahl (aus _rental_rows herausgezogen, 10.09.2026) -------------------
+
+
+def test_satz_waehlen_vorrang_und_regelsatz() -> None:
+    """Vorrang Override → Vertrag → Altspalte, und JEDER Weg ergibt Regeln.
+
+    Beim Herausziehen aus `_rental_rows` ging genau eine Bedingung verloren:
+    der Regelsatz entstand nur noch aus der Altspalte, nicht mehr aus einem
+    reinen Override. Drei Bestandstests fielen sofort um — die Zeile haette
+    sonst „kein Provisionssatz hinterlegt" gemeldet, obwohl die Agentur einen
+    Satz eingetragen hatte. Dieser Test haelt alle vier Faelle einzeln fest.
+    """
+    from decimal import Decimal
+
+    from src.features.owner_statements import common
+    from src.features.owner_statements.zeilen import _satz_waehlen
+
+    vertrag = common.Vertragsregeln(provisions_pct=Decimal("20"))
+
+    # 1) Nur Altspalte
+    w = _satz_waehlen(None, None, Decimal("15"))
+    assert (w.quelle, w.pct) == ("altspalten", Decimal("15"))
+    assert w.regeln is not None and w.regeln.provisions_pct == Decimal("15")
+
+    # 2) Vertrag schlaegt Altspalte
+    w = _satz_waehlen(None, vertrag, Decimal("15"))
+    assert w.quelle == "vertrag"
+    assert w.regeln is vertrag
+
+    # 3) Override schlaegt alles — und setzt gueltig_ab zurueck, weil er eine
+    #    Einzelfall-Korrektur ist und nicht an einen Zeitraum gebunden.
+    w = _satz_waehlen(Decimal("30"), vertrag, Decimal("15"))
+    assert (w.quelle, w.pct) == ("override", Decimal("30"))
+    assert w.regeln is not None
+    assert w.regeln.provisions_pct == Decimal("30")
+    assert w.regeln.gueltig_ab is None
+
+    # 4) Override OHNE Vertrag und OHNE Altspalte — der verlorene Fall.
+    w = _satz_waehlen(Decimal("25"), None, None)
+    assert w.quelle == "override"
+    assert w.regeln is not None, "Override allein muss Regeln ergeben"
+    assert w.regeln.provisions_pct == Decimal("25")
+
+    # 5) Gar nichts steht fest — kein erfundener Satz (Wurzel 4).
+    w = _satz_waehlen(None, None, None)
+    assert (w.quelle, w.pct, w.regeln) == (None, None, None)

@@ -1313,6 +1313,12 @@ class PaymentsService:
                 transfer_group=_transfer_group(reservation_id),
                 direct=not self._traegt_haftung(res),
                 metadata={"reservation_id": reservation_id, "tenant_id": tenant_id},
+                # Wurzel 2: `_reuse_pending_intent` oben ist read-then-write —
+                # zwei nebenlaeufige Anfragen lesen beide „kein pending" und
+                # legen beide einen Intent an. Der Key macht daraus bei Stripe
+                # EINEN Intent. Der Betrag gehoert hinein: aendert sich die
+                # Summe, ist es ein anderer Vorgang (sonst HTTP 400).
+                idempotency_key=f"full:{reservation_id}:{amount_cents}",
                 client=self._stripe,
             )
         payment = self._insert_payment(
@@ -1423,6 +1429,11 @@ class PaymentsService:
                 # Haftung: dieselbe Regel wie bei einer Portal-Buchung —
                 # `_traegt_haftung` liest denselben Kanal.
                 direct=not self._traegt_haftung(kanal_kontext),
+                # Wurzel 2: dieser Pfad hatte WEDER Reuse-Pruefung NOCH Key —
+                # ein Doppelklick auf „Jetzt buchen" erzeugte zwei Intents und
+                # zwei `platform_fees`/`donations`-Zeilen. Die Absicht-ID ist
+                # hier die Klammer (es gibt noch keine reservation_id).
+                idempotency_key=f"absicht:{absicht_id}:{amount_cents}",
                 client=self._stripe,
             )
         return {
@@ -1523,6 +1534,9 @@ class PaymentsService:
                     "tenant_id": tenant_id,
                     "type": "down_payment",
                 },
+                # Wurzel 2 wie bei der Vollzahlung — der Reuse-Guard allein ist
+                # nicht rennsicher.
+                idempotency_key=f"down:{reservation_id}:{down_cents}",
                 client=self._stripe,
             )
         payment = self._insert_payment(
@@ -1774,6 +1788,9 @@ class PaymentsService:
                 transfer_group=_transfer_group(reservation_id),
                 direct=not self._traegt_haftung(res),
                 metadata={"reservation_id": reservation_id, "type": "deposit"},
+                # Wurzel 2: eine doppelt angelegte Kaution blockiert echtes
+                # Guthaben auf der Karte des Gastes (capture_method="manual").
+                idempotency_key=f"deposit:{reservation_id}:{amount_cents}",
                 client=self._stripe,
             )
         payment = self._insert_payment(

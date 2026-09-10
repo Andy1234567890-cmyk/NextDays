@@ -1558,3 +1558,55 @@ def test_ohne_buchstaben_kein_suffix() -> None:
     params = _intent_params("12345")
     assert "statement_descriptor_suffix" not in params
     assert "statement_descriptor" not in params
+
+
+def test_jeder_intent_pfad_traegt_idempotency_key() -> None:
+    """Wurzel 2: JEDER Intent-erzeugende Pfad gibt Stripe einen Key mit.
+
+    `_reuse_pending_intent` ist read-then-write ohne Sperre: zwei nebenlaeufige
+    Anfragen lesen beide „kein pending" und legen beide einen Intent an. Nur
+    Stripes `idempotency_key` macht daraus einen. `create_intent_for_absicht`
+    hatte bis 10.09.2026 WEDER Reuse-Pruefung NOCH Key — ein Doppelklick auf
+    „Jetzt buchen" erzeugte zwei Intents samt zweier Gebuehren-/Spendenzeilen.
+
+    Der Test liest den Quelltext, weil die vier Pfade sehr verschiedene
+    Vorbedingungen haben (Kunde, Zahlungsmittel, Absicht-ID) — ein Aufruf je
+    Pfad waere mehr Attrappe als Pruefung. Was hier zaehlt, ist die
+    Vollstaendigkeit: kein Aufruf ohne Key.
+    """
+    import re
+    from pathlib import Path
+
+    quelle = (
+        Path(__file__).resolve().parents[1] / "service.py"
+    ).read_text(encoding="utf-8")
+
+    # Argumentliste je Aufruf ueber Klammertiefe schneiden — ein Regex bricht
+    # am ersten ")" einer VERSCHACHTELTEN Funktion ab (self._fee_cents(...))
+    # und wuerde den Key hinter ihr uebersehen.
+    aufrufe: list[str] = []
+    marke = "sc.create_payment_intent("
+    pos = quelle.find(marke)
+    while pos != -1:
+        i = pos + len(marke)
+        tiefe = 1
+        while tiefe:
+            if quelle[i] == "(":
+                tiefe += 1
+            elif quelle[i] == ")":
+                tiefe -= 1
+            i += 1
+        aufrufe.append(quelle[pos + len(marke) : i - 1])
+        pos = quelle.find(marke, i)
+
+    assert len(aufrufe) == 5, f"Pfade veraendert: {len(aufrufe)} statt 5"
+    ohne_key = [a for a in aufrufe if "idempotency_key" not in a]
+    assert not ohne_key, (
+        f"{len(ohne_key)} Intent-Pfad(e) ohne idempotency_key — Wurzel 2"
+    )
+    # Der Betrag gehoert in den Schluessel: bei geaenderter Summe ist es ein
+    # anderer Vorgang, und Stripe quittiert denselben Key mit HTTP 400.
+    for a in aufrufe:
+        wert = re.search(r'idempotency_key=f?"([^"]+)"', a)
+        if wert:
+            assert "cents" in wert.group(1), f"Key ohne Betrag: {wert.group(1)}"

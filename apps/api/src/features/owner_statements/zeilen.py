@@ -166,6 +166,73 @@ def gebuehr_label(art: str, bezeichnungen: dict[str, str]) -> str:
     return FEE_TYPE_LABEL.get(art, art)
 
 
+@dataclass(frozen=True, slots=True)
+class _Satzwahl:
+    """Welcher Provisionssatz fuer eine Zeile gilt — und woher er stammt.
+
+    Herausgezogen aus `_rental_rows` (10.09.2026): dort standen `pct`,
+    `provision_quelle` und `rechenregeln` als drei lose Variablen, die an
+    verschiedenen Stellen der 490-Zeilen-Schleife gesetzt und spaeter wieder
+    ueberschrieben wurden. Wer die Vorrangregel nachlesen wollte, musste sie
+    aus der Reihenfolge der Zuweisungen erschliessen. Als eigene Funktion ist
+    sie rein (kein DB-Zugriff, keine Mutation) und damit einzeln testbar.
+    """
+
+    pct: Decimal | None
+    quelle: str | None
+    regeln: common.Vertragsregeln | None
+
+
+def _satz_waehlen(
+    override: Decimal | None,
+    vertrag: common.Vertragsregeln | None,
+    altspalte: Decimal | None,
+) -> _Satzwahl:
+    """Vorrang: Editor-Override → Vertrag → Altspalten.
+
+    Der Override steht ganz vorn, weil er eine bewusste Einzelfall-Korrektur
+    der Agentur ist; der Vertrag ist die Regel, die Altspalte der Rest.
+
+    Auch die ALTSPALTE laeuft durch die Zerlegung: sie ist ein Provisionssatz
+    ohne Mindestprovision und Pauschale, rechnerisch also ein Vertrag mit nur
+    einem Feld. Bis 02.09.2026 nahm sie den alten Pfad
+    (`common.owner_payout`), und die Zeile zeigte fuer eine Live-Portalbuchung
+    mit vollstaendiger Aufstellung „Keine Gebuehren an dieser Buchung" —
+    Raevlingehuset 09.–13.09.: 4.415 DKK, davon 100 Resort (Eigentuemer) und
+    955 Reinigung (Betrieb) im Payload, der Eigentuemer bekam 80 % von allem,
+    auch von der Reinigung.
+
+    Ein Override ersetzt den SATZ, nicht die Rechnung. Bis 08.09.2026 zweigte
+    er vor der Kette ab und rechnete `payout × (100−pct)/100` — ohne
+    Portal-Abzug, ohne Gebuehren-Aufteilung, ohne Pauschale und ohne
+    Provisionsausweis. Live bei einem Eigentuemer: 7.237,82 DKK statt
+    4.020,58 DKK. Der Beleg zahlte 80 % des GASTPREISES aus, also auch 80 %
+    der Reinigungsgebuehr, die dem Betrieb gehoert, und verschenkte die
+    16,5 %, die Booking.com laengst einbehalten hatte. In der
+    Provisionsspalte stand dabei „—": eine Zahl ohne Herleitung, die niemand
+    nachrechnen kann.
+    """
+    pct = override if override is not None else altspalte
+    if override is not None:
+        quelle = "override"
+    elif vertrag is not None:
+        quelle = "vertrag"
+    elif altspalte is not None:
+        quelle = "altspalten"
+    else:
+        quelle = None
+
+    regeln = vertrag
+    # `pct`, nicht `altspalte`: ein Override OHNE Vertrag und ohne Altspalte
+    # muss ebenfalls einen Regelsatz erzeugen, sonst faellt die Zeile auf
+    # „kein Provisionssatz hinterlegt" zurueck und weist gar nichts aus.
+    if regeln is None and pct is not None:
+        regeln = common.Vertragsregeln(provisions_pct=_d(pct))
+    if regeln is not None and override is not None:
+        regeln = replace(regeln, provisions_pct=_d(override), gueltig_ab=None)
+    return _Satzwahl(pct=pct, quelle=quelle, regeln=regeln)
+
+
 class ZeilenMixin:
     """Zeilen-Teil des ``OwnerStatementsService``: Reservierung → ``RentalRow``."""
 
@@ -756,16 +823,13 @@ class ZeilenMixin:
             # steht ganz vorn, weil er eine bewusste Einzelfall-Korrektur der
             # Agentur ist; der Vertrag ist die Regel, die Altspalte der Rest.
             regeln = vertraege.get(rid)
-            pct = override if override is not None else cmap.get(listing_id)
-            provision_quelle: str | None
-            if override is not None:
-                provision_quelle = "override"
-            elif regeln is not None:
-                provision_quelle = "vertrag"
-            elif pct is not None:
-                provision_quelle = "altspalten"
-            else:
-                provision_quelle = None
+            # Vorrang Override → Vertrag → Altspalte, als reine Funktion:
+            # die Regel steht an EINER Stelle statt verstreut ueber die
+            # Schleife (Begruendung und Live-Belege dort im Docstring).
+            wahl = _satz_waehlen(override, regeln, cmap.get(listing_id))
+            pct = wahl.pct
+            provision_quelle = wahl.quelle
+            rechenregeln = wahl.regeln
             # Warum eine Zeile ihre Auszahlung nicht ausweisen kann — als
             # maschinenlesbarer Grund, den die UI benennt.
             grund: str | None = None
@@ -785,31 +849,6 @@ class ZeilenMixin:
             # Beginn des nächsten Vertrags, wenn am Stichtag keiner gilt — der
             # Handgriff heißt dann „Vertragsbeginn zurückdatieren".
             vertrag_beginnt_am: date | None = None
-            # Auch die ALTSPALTE (Prozentsatz am Eigentümer/Objekt, kein
-            # Vertrag) läuft durch die Zerlegung: sie ist ein Provisionssatz
-            # ohne Mindestprovision und Pauschale, rechnerisch also ein
-            # Vertrag mit nur einem Feld. Bis 02.09.2026 nahm sie den alten
-            # Pfad (`common.owner_payout`), und die Zeile zeigte für eine
-            # Live-Portalbuchung mit vollständiger Aufstellung „Keine Gebühren
-            # an dieser Buchung" — Rævlingehuset 09.–13.09.: 4.415 DKK, davon
-            # 100 Resort (Eigentümer) und 955 Reinigung (Betrieb) im Payload,
-            # der Eigentümer bekam 80 % von allem, auch von der Reinigung.
-            rechenregeln: common.Vertragsregeln | None = regeln
-            if rechenregeln is None and pct is not None:
-                rechenregeln = common.Vertragsregeln(provisions_pct=_d(pct))
-            # Ein Override ersetzt den SATZ, nicht die Rechnung. Bis 08.09.2026
-            # zweigte er vor der Kette ab und rechnete `payout × (100−pct)/100`
-            # — ohne Portal-Abzug, ohne Gebühren-Aufteilung, ohne Pauschale und
-            # ohne Provisionsausweis. Live bei einem Eigentümer: 7.237,82 DKK
-            # statt 4.020,58 DKK. Der Beleg zahlte 80 % des GASTPREISES aus,
-            # also auch 80 % der Reinigungsgebühr, die dem Betrieb gehört, und
-            # verschenkte die 16,5 %, die Booking.com längst einbehalten hatte.
-            # In der Provisionsspalte stand dabei „—": eine Zahl ohne
-            # Herleitung, die niemand nachrechnen kann.
-            if rechenregeln is not None and override is not None:
-                rechenregeln = replace(
-                    rechenregeln, provisions_pct=_d(override), gueltig_ab=None
-                )
             # VOLLE Kette wie im Eigentümer-Portal (0364): Gebühren in den
             # Gastpreis, Portal-Abzug, provisionsfreie Gebühren aus der
             # Bemessung, die des Eigentümers zu 100 % zurück. Rechnete die

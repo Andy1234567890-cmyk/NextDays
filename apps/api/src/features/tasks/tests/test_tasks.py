@@ -330,6 +330,30 @@ def test_inspect_reject_reopens_task() -> None:
     assert update_payload["status"] == "open"
 
 
+def test_inspect_prueft_objekt_scope_vor_dem_schreiben() -> None:
+    """Wurzel 9: `inspect` prueft denselben Scope wie der Listen-Pfad.
+
+    Vorher war hier NUR der Tenant gescopt — ein Mitarbeiter mit
+    `MANAGE_TASKS` konnte eine Aufgabe an einem Objekt freigeben oder
+    zurueckweisen, das er nicht einmal sehen darf. Der Scope-Load muss
+    VOR dem Schreiben laufen, sonst ist der Zustand schon geaendert.
+    """
+    from src.features.tasks.schemas import InspectionDecision
+
+    svc, m = _svc()
+    ctx = MagicMock()
+    svc.get_detail = MagicMock(  # type: ignore[method-assign]
+        side_effect=TaskError("Aufgabe nicht gefunden.", status_code=404)
+    )
+    with pytest.raises(TaskError) as exc:
+        svc.inspect("T", "fremd", InspectionDecision(approved=True), ctx)
+    assert exc.value.status_code == 404
+    # Der Scope-Load bekommt den ctx, sonst prueft er nur den Tenant.
+    assert svc.get_detail.call_args.args[2] is ctx
+    # Nichts geschrieben, weil der Scope vorher gegriffen hat.
+    m.table.return_value.update.assert_not_called()
+
+
 # --- PM-Modul: Status-Bucket-Filter (Meine/Team-Tabs) ---
 
 def test_filter_bucket_teilt_zeitlich_nicht_nach_status() -> None:

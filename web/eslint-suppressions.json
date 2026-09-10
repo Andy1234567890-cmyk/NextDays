@@ -1,0 +1,2200 @@
+{
+  "app/(auth)/login/page.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "app/(dashboard)/auswertung/page.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "app/(dashboard)/dynamic-pricing/[id]/page.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "app/(dashboard)/hr/berichte/[name]/page.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "app/(dashboard)/hr/mitarbeiter/[userId]/page.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "app/(dashboard)/hr/schichtplan/page.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "app/(dashboard)/hr/stempeluhr/page.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "app/(dashboard)/hr/zeiterfassung/page.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "app/(dashboard)/konto/nutzer/[userId]/page.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "app/(dashboard)/konto/page.tsx": {
+    "complexity": {
+      "count": 3
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "app/(dashboard)/konto/sicherheit/page.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "app/(dashboard)/layout.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "app/(dashboard)/objekte/page.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "app/(dashboard)/page.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "app/api/v1/[...path]/route.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/app-sidebar.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/auswertung/auswertung-seite.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/auswertung/filterleiste.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/auswertung/kennzahl-kacheln.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/auswertung/preis-markt-bericht.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/auswertung/reiter-analytics.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/auswertung/reiter-auslastung.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/auswertung/reiter-buchungen.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/auswertung/reiter-gaeste.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/auswertung/reiter-kanaele.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/auswertung/reiter-pace.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/auth/passwort-setzen-formular.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/auth/zweiter-faktor-schritt.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/bewertungen/auto-bewertungen.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/bewertungen/bewertungs-tabelle.tsx": {
+    "complexity": {
+      "count": 3
+    },
+    "max-lines-per-function": {
+      "count": 3
+    }
+  },
+  "components/bewertungen/ki-test-panel.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/bewertungen/warteschlange.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/buchhaltung/portal-abzugssaetze.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/channel-manager/channel-connect-button.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/channel-manager/channel-detail.tsx": {
+    "complexity": {
+      "count": 3
+    },
+    "max-lines-per-function": {
+      "count": 4
+    }
+  },
+  "components/channel-manager/channel-sidebar.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/channel-manager/import-fortschritt.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/channel-manager/kanal-ereignisse.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/channel-manager/portal-konten.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/channel-manager/whatsapp-verbinden.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/crm/lead-sheet.tsx": {
+    "complexity": {
+      "count": 3
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/crm/leads-board.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/dashboard/dashboard-raster.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/dashboard/kachel-inhalt.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/dashboard/voice-assistant.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 3
+    }
+  },
+  "components/demo-fuehrung.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/dynamic-pricing/dp-edit-sheet.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/dynamic-pricing/dp-forecast-karte.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/dynamic-pricing/dp-preisgrenzen.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/dynamic-pricing/dp-preview-grid.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/dynamic-pricing/dp-tagesmodus-dialog.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/dynamic-pricing/dynamic-pricing-table.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/dynamic-pricing/ki-berater-karte.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/dynamic-pricing/markt-karte.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/eigentuemer/abrechnungsvertrag.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/eigentuemer/owner-detail.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/eigentuemer/owner-statements-for-owner.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/eigentuemer/owners-list.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/eigentuemer/reporting/bericht-detail.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/eigentuemer/reporting/bericht-formular.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/eigentuemer/reporting/buchungs-aufschluesselung.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/eigentuemer/reporting/empfaenger-detail.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/eigentuemer/reporting/plan-formular.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/eigentuemer/reporting/statistik-ansicht.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/eigentuemer/reporting/zahlung-detail.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/eigentuemer/reporting/zahlungen-liste.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/einstellungen/booking-conditions.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/einstellungen/calendar-sync.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/einstellungen/payments-manager.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/einstellungen/saison-vorlagen.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/erweiterungen/erweiterung-detail.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/AddCustomerModal.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/BookingAccountSelectionModal.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/EmailSendModal.tsx": {
+    "complexity": {
+      "count": 4
+    },
+    "max-depth": {
+      "count": 9
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/FooterTextEditor.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/HeaderTextEditor.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/ImportXRechnungDialog.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/InvoiceListView.tsx": {
+    "complexity": {
+      "count": 5
+    },
+    "max-depth": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/InvoiceTemplates.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/finance/LivePreviewModal.tsx": {
+    "complexity": {
+      "count": 3
+    },
+    "max-depth": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/NewCustomerModal.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-depth": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/SelectBankingTransactionModal.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/SendDocumentModal.tsx": {
+    "complexity": {
+      "count": 5
+    },
+    "max-depth": {
+      "count": 5
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/finance/SimplePDFViewer.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/StornoInvoice.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/TaxRuleSelector.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/create-invoice/container.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/create-invoice/general-info-card.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/create-invoice/invoice-modals.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/create-invoice/items-card.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/finance/create-invoice/preview-data.ts": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/create-invoice/secondary-cards.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/create-invoice/use-invoice-actions.ts": {
+    "complexity": {
+      "count": 3
+    },
+    "max-depth": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 3
+    }
+  },
+  "components/finance/create-invoice/use-invoice-loaders.ts": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/gobd/AutoLockSettings.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/gobd/ComplianceDashboard.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/gobd/GoBDActionWarning.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/gobd/ManualLockManager.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/gobd/SevDeskLockManager.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/gobd/StornoManager.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/pdf-templates/DynamicTemplate.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/pdf-templates/ElegantTemplate.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/pdf-templates/GeometricTemplate.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/pdf-templates/NeutralTemplate.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/pdf-templates/StandardTemplate.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/pdf-templates/TechnicalTemplate.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/pdf-templates/common/InvoiceFooter.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/finance/pdf-templates/common/ItemsTable.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/pdf-templates/common/PageFooter.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/finance/pdf-templates/common/SimpleFooter.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/finance/pdf-templates/common/TotalsDisplay.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/gaeste/guest-detail.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/gaeste/guests-list.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/inbox/automations-tab.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/inbox/automatisieren-panel.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/inbox/composer-editor.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/inbox/inbox-anfrage.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/inbox/inbox-konversation.tsx": {
+    "complexity": {
+      "count": 3
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/inbox/inbox-list.tsx": {
+    "complexity": {
+      "count": 3
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/inbox/inbox-reservierung.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/inbox/ki-regel-panel.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/inbox/ki-regeln-tab.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/inbox/ki-seite.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/inbox/ki-test-panel.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/inbox/sprach-fassungen.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/inbox/templates-tab.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/inbox/whatsapp-panel.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/inbox/whatsapp-vorlagen-editor.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/inbox/whatsapp-vorlagen.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/inbox/wissen-fakten.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/inbox/wissen-import-panel.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/inbox/wissen-objektliste.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/inventory/NewProductModal.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/kalender/angebots-wizard.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/kalender/bulk-edit-dialog.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 3
+    }
+  },
+  "components/kalender/calendar-board.tsx": {
+    "complexity": {
+      "count": 5
+    },
+    "max-lines-per-function": {
+      "count": 3
+    }
+  },
+  "components/kalender/calendar-header.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/kalender/reservation-addons-section.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/kalender/reservation-detail-slider.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/kalender/reservation-wizard.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/kalender/sperrantrag-pruefung-dialog.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/kalender/sperrantrag-queue.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/kalender/views/bookings-view.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/kalender/views/month-grid-view.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/kalender/views/occupancy-view.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/kalender/views/rates-view.tsx": {
+    "complexity": {
+      "count": 3
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/konto/api-access-section.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/konto/benutzer-detail.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/konto/konto-abo-section.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/konto/provisions-verlauf.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/konto/rechnungsadresse-dialog.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/konto/sms-einrichtung.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/konto/tarif-rechner.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/konto/user-wizard.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/objekte/addons-manager.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/objekte/airbnb-historie-dialog.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/objekte/availability-form.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/objekte/contact-profile-editor.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/objekte/event-verwaltung.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/objekte/kartei/dossier-stepper.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/objekte/kartei/inventar-liste.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/objekte/kartei/mappe-dokumente.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/objekte/location-form.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/objekte/new-property-button.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/objekte/objects-list.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/objekte/photos-manager.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/objekte/policies-form.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/objekte/pricing-form.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/objekte/pricing/extra-editor.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/objekte/pricing/gebuehren-editor.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/objekte/pricing/gebuehren-zuordnung.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/objekte/pricing/promotion-editor.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/objekte/pricing/steuern-editoren.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/objekte/property-channel-detail.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/objekte/property-channels.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/objekte/property-overview.tsx": {
+    "max-lines-per-function": {
+      "count": 3
+    }
+  },
+  "components/objekte/rate-plan-wizard.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/objekte/season-calendar.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/objekte/verkauf-pause-dialog.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/objekte/veroeffentlichen-dialog.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/onboarding/onboarding-wizard.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/onboarding/switcher-import.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/owner-statements/statement-editor.tsx": {
+    "complexity": {
+      "count": 5
+    },
+    "max-lines-per-function": {
+      "count": 5
+    }
+  },
+  "components/personal/abwesenheiten-kalender.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/personal/abwesenheiten.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/personal/akte-aenderungen.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/personal/akte-compliance.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/personal/akte-disziplin.tsx": {
+    "complexity": {
+      "count": 2
+    }
+  },
+  "components/personal/akte-gespraeche.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/personal/akte-kopf.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/personal/akte-nachweise.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/personal/akte-vertraege.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/personal/akte-zugang.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/personal/bedarf-editor.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/personal/berichte/bericht-druck.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/personal/berichte/bericht-filter.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/personal/berichte/bericht-seite.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/personal/berichte/bericht-tabelle.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/personal/dienstplan-bereich.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/personal/dienstplan-debug.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/personal/dienstplan-grid.tsx": {
+    "complexity": {
+      "count": 3
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/personal/dienstplan-kopf.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/personal/dienstplan-leiste.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/personal/dienstplan-liste.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/personal/dienstplan-tag.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/personal/dienstplan.tsx": {
+    "complexity": {
+      "count": 3
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/personal/ki-panel.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/personal/lohn/lohnlauf.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/personal/mitarbeiter-akte.tsx": {
+    "complexity": {
+      "count": 5
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/personal/mitarbeiter-liste.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/personal/personal-einstellungen.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/personal/stempeluhr.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/personal/terminal.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/personal/wochenvorlagen-dialog.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/personal/zeiterfassung.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/portal/portal-aufgaben.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/portal/portal-berichte.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/portal/portal-dienstleistungen.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/portal/portal-familie.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/portal/portal-kalender.tsx": {
+    "complexity": {
+      "count": 4
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/portal/portal-objekt-detail.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/portal/portal-sperrungen.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/portal/portal-statistiken.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/portal/portal-uebersicht.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/portal/portal-zaehlerstaende.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/quotes/InventorySelector.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/reisebueros/agency-detail.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/reisebueros/contacts-section.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/reisebueros/contracts-section.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/reservierungen/angebote-liste.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/reservierungen/aufgaben-kalender-debug.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/reservierungen/aufgaben-tabelle.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/reservierungen/booking-conditions-card.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/reservierungen/booking-detail.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/reservierungen/booking-ota-terms-card.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/reservierungen/booking-timeline.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/reservierungen/bookings-board.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/reservierungen/dienstleistung-preise.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/reservierungen/kpi-detail.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/reservierungen/nachberechnung-abschnitt.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/reservierungen/reservation-inbox-sidebar.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/reservierungen/rule-editor-page.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/reservierungen/rule-list.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/reservierungen/task-create-popup.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/reservierungen/task-detail-inhalt.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/reservierungen/task-popover.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/reservierungen/tasks-calendar.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/reservierungen/tasks-inspection.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/reservierungen/team-tasks.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/reservierungen/template-editor-page.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/schloesser/geraet-zuordnen.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/schloesser/schloesser-verwaltung.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/settings/TextTemplateModal.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/signup/signup-form.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/sitzung-debug-panel.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/stop-sell/stop-sell-calendar.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/stop-sell/stop-sell-panel.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/support/support-chat.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/texteditor/PlaceholderModal.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/blog/beitraege-manager.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 3
+    }
+  },
+  "components/website/blog/beitrag-dialog.tsx": {
+    "complexity": {
+      "count": 4
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/blog/beitrag-vorschau.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/website/blog/feld-konfig-popover.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/blog/felder-panel.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/blog/tiptap-editor.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/design/breite-abstand.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/design/design-leiste.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/design/designfarben.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/design/farbwaehler.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/design/text-rollen.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/website/ebenen-baum.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/website/ebenen-liste.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/website/ebenen-regionen.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/website/editor/abschnitt-inspektor.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/website/editor/abschnitts-editor.tsx": {
+    "complexity": {
+      "count": 5
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/website/editor/ausrichtungs-leiste.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/editor/bild-feld.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/editor/buehne.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/editor/flaechen-overlay.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/website/editor/fuellung-feld.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/editor/seiten-inspektor.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/editor/stil-felder.tsx": {
+    "complexity": {
+      "count": 2
+    }
+  },
+  "components/website/editor/stil-inspektor.tsx": {
+    "complexity": {
+      "count": 4
+    },
+    "max-lines-per-function": {
+      "count": 7
+    }
+  },
+  "components/website/einstellungen/blog-leiste.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/einstellungen/erweitert-leiste.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/hinzufuegen-panel.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/mediathek.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/mediathek/bild-editor.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/mediathek/details-leiste.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/mediathek/kachel-wand.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/mediathek/medien-vorschau.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/website/mediathek/ordner-baum.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/website/mediathek/stock-suche.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/rahmen.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/website/regeln/regel-dialog.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/regeln/regel-zusammenfassung.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/regeln/schritte.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/website/schale.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/seiten/neue-seite.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/seiten/seiten-einstellungen.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/seiten/seiten-leiste.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 2
+    },
+    "max-params": {
+      "count": 1
+    }
+  },
+  "components/website/seiten/strecken-wahl.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/seo/ki-alle-seiten.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/seo/ki-profil-leiste.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/seo/seiten-liste.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/seo/uebersicht-leiste.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/seo/weiterleitungen-liste.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/vorlagen-ansicht.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/vorlagen-panel.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/website/widgets-ansicht.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/zahlungen/payments-activation.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "hooks/pdf/usePDFTemplateData.ts": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "hooks/useCompanySettings.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/api.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/calendar-views.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/dashboard-layout-normalisierung.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/document-utils.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/dossier-pdf.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "lib/inbox.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/invoice-document.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/mfa-client.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/personal-terminal.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/policy-meta.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/portal-export.ts": {
+    "complexity": {
+      "count": 2
+    }
+  },
+  "lib/site-pages.ts": {
+    "complexity": {
+      "count": 1
+    },
+    "max-params": {
+      "count": 1
+    }
+  },
+  "lib/statement-pdf.ts": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 1
+    },
+    "max-params": {
+      "count": 1
+    }
+  },
+  "lib/tasks.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/voice-commands.ts": {
+    "complexity": {
+      "count": 3
+    }
+  },
+  "middleware.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "scripts/marketing-aufnahmen.mjs": {
+    "max-depth": {
+      "count": 3
+    }
+  },
+  "services/TextTemplateService.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "services/autoEInvoiceService.ts": {
+    "complexity": {
+      "count": 2
+    }
+  },
+  "services/eInvoiceService.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "services/inventoryService.ts": {
+    "max-params": {
+      "count": 1
+    }
+  },
+  "services/quoteService.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "services/transaction-link.service.ts": {
+    "complexity": {
+      "count": 1
+    },
+    "max-params": {
+      "count": 1
+    }
+  },
+  "services/whatsapp-notifications.service.ts": {
+    "max-params": {
+      "count": 3
+    }
+  },
+  "services/xrechnungParserService.ts": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "types/invoiceTypes.ts": {
+    "complexity": {
+      "count": 2
+    }
+  },
+  "utils/placeholderSystem.ts": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  }
+}

@@ -238,7 +238,12 @@ class RentalRow(BaseModel):
     # der Wert ungefiltert durch und stand im Abrechnungs-PDF des Eigentümers.
     total_price: float | None = None
     total_payout: float
-    currency: str = "EUR"
+    # PFLICHT ohne Default: ein stilles "EUR" wuerde DKK-Betraege als Euro
+    # ausweisen — eine Falschaussage ueber Geld, die plausibel aussieht
+    # (Wurzel 4). Alle Konstruktionsstellen setzen den Wert ohnehin; fehlt er
+    # je, ist ein lauter ValidationError richtig. Vgl. `ExpenseBase.currency`
+    # weiter oben, wo derselbe Fall bereits so geloest ist.
+    currency: str
     # None = für dieses Objekt steht KEIN Provisionssatz fest (weder
     # `owner_properties.commission_override_pct` noch
     # `owners.default_commission_pct`). Bis 09.08.2026 stand hier eine 0.0, die
@@ -628,7 +633,8 @@ class StatementSummary(BaseModel):
     booking_count: int
     # Owner-Zielwährung (aus Herkunftsland). owner_payout ist in DIESER Währung
     # (Summe der umgerechneten Buchungssätze).
-    owner_currency: str = "EUR"
+    # Kein Default (Wurzel 4) — siehe `RentalRow.currency`.
+    owner_currency: str
     # Verwaltungs-Auszahlung bleibt in der jeweiligen Quellwährung — je Währung
     # getrennt, da Beträge verschiedener Währungen nicht addiert werden dürfen.
     # Für den Eigentümer LEER (siehe `pm_payout`): sonst stünde derselbe

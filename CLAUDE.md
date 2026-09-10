@@ -250,6 +250,35 @@ ist, nicht was dort steht — verifiziert wird weiterhin am Code.
 
 ## Qualitätsgate (vor „fertig")
 - `pytest` grün; `ruff check` sauber; `pylint` 10.00/10 auf geänderten Modulen.
+- **Keine NEUE Komplexität: `bun run spaghetti`** (Ratchet, Altbestand
+  eingefroren). Zwei Hälften unter einem Aufruf: Backend über
+  `scripts/qualitaet/komplexitaet-ratchet.py` (ruff `C901`/`PLR09xx`, Baseline
+  je Datei+Regel in `komplexitaet-basis.json`), Frontend über ESLints native
+  Bulk Suppressions je App (`eslint-suppressions.json`). Der CI-Job
+  `spaghetti` läuft repo-weit ohne `betroffen`-Filter — Komplexität wächst
+  quer über App-Grenzen.
+  Warum es das braucht: die ruff-Auswahl enthielt bis zum 10.09.2026 **kein
+  `C90` und kein `PLR`** — die Komplexitätsregeln waren nie scharf geschaltet.
+  So wuchsen unbemerkt 536 Verstöße, darunter eine Funktion mit **797 Zeilen**
+  (`bookings_sync._project_booking_to_reservation`) und eine React-Komponente
+  mit 39 `useState`. Gefunden wurden dabei auch eine aktive
+  Render-Endlosschleife und zwei tote `useEffect`, die einen PDF-Cache nie
+  invalidierten.
+  Bricht das Gate: **entwirren, nicht einfrieren.** `--neu` überschreibt die
+  Baseline und macht den Befund nur unsichtbar; erlaubt ist das erst, wenn der
+  Zuwachs begründet ist und die Stelle ein `# noqa: <code> — <Grund>` trägt.
+  Nach einer Entwirrung `bun run spaghetti:neu`, damit die Verbesserung
+  festgeschrieben wird. `bun run spaghetti:bericht` listet die schlimmsten
+  Stellen.
+  **Metrik ist nicht Urteil.** Hoher CC heißt nicht Spaghetti: der höchste Wert
+  im Repo (CC 96, `personal/autoplan_solver.planen`) ist ein deklaratives
+  CP-SAT-Modell und die sauberste Datei weit und breit; `site_config/
+  templates.py` mit der tiefsten Einrückung ist ein reiner Datenblock (null
+  `if`, null `for`); `finance/NewCustomerModal.tsx` hat 280 JSX- gegen 3
+  Kontrollfluss-Zeilen. Der Maintainability Index taugt hier gar nicht — er
+  bestraft Kommentarvolumen, und gut begründete Dateien fallen dadurch auf
+  Rang C. Entscheidend ist die **Verschachtelungstiefe** samt Zahl quer
+  mutierter Zustandsvariablen, nicht die Länge.
 - **NIE den vollen `pytest` wiederholt laufen lassen.** Geprüft wird der
   BERÜHRTE Slice (`uv run pytest src/features/<slice> -q`) — der volle Lauf
   über 3300 Tests EINMAL vor dem Commit, sonst nie. Kein Testlauf im

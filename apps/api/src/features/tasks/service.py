@@ -2400,10 +2400,24 @@ class TasksService:
         return True
 
     def inspect(
-        self, tenant_id: str, task_id: str, decision: InspectionDecision
+        self,
+        tenant_id: str,
+        task_id: str,
+        decision: InspectionDecision,
+        ctx: AuthContext | None = None,
     ) -> TaskDetail:
         """Freigeben (reviewed) oder zurückweisen (zurück auf to_review +
-        Status offen zur Nachbearbeitung)."""
+        Status offen zur Nachbearbeitung).
+
+        Der Item-Pfad prüft denselben Scope wie der Listen-Pfad (Wurzel 9):
+        vorher war hier NUR der Tenant gescopt, während `delete_task` jede
+        Aufgabe über `get_detail` prüft. Damit konnte ein Mitarbeiter mit
+        `MANAGE_TASKS` eine Aufgabe an einem Objekt freigeben oder
+        zurückweisen, das er nicht einmal sehen darf — dieselbe Lücke, die
+        `delete_task` bereits geschlossen hat.
+        """
+        # Lädt im Objekt-Scope und wirft 404, wenn die Aufgabe außerhalb liegt.
+        self.get_detail(tenant_id, task_id, ctx)
         if decision.approved:
             update: dict[str, object] = {
                 "inspection_state": InspectionState.reviewed.value
@@ -2423,7 +2437,7 @@ class TasksService:
         )
         if not res.data:
             raise TaskError("Aufgabe nicht gefunden.", status_code=404)
-        return self.get_detail(tenant_id, task_id)
+        return self.get_detail(tenant_id, task_id, ctx)
 
     # --- Regeln / Vorlagen (task_rules kind=template|auto|recurring) ---
 

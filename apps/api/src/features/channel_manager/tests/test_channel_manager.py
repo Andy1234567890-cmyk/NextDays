@@ -1683,3 +1683,48 @@ def test_facility_katalog_ist_eindeutig_und_vollstaendig() -> None:
     assert kaputt == []
     doppelt = len(_CHANNEX_FACILITY) - len(set(_CHANNEX_FACILITY.values()))
     assert doppelt == 0
+
+
+# --- Alt-Zustand (aus _project_booking_to_reservation gezogen, 10.09.2026) ---
+
+
+def test_altzustand_hat_eine_einheit_nicht_zwei_namen() -> None:
+    """Wurzel 1: der Stand VOR der Meldung, aus EINER Quelle.
+
+    In `_project_booking_to_reservation` gab es die alte Einheit zweimal unter
+    verschiedenen Namen — `alte_einheit` (fuer die Freigabe) und `alte_unit`
+    (fuer `freie_einheit`), beide aus demselben `existing[0]`, 200 Zeilen
+    auseinander. `_AltZustand` fuehrt sie als ein Feld.
+
+    `eigene_unit_fuer` traegt dabei die Fallunterscheidung, die vorher in einer
+    dreiteiligen `if`-Bedingung mitten in der Schleife stand: bei GLEICHEM
+    Objekt ist die bisherige Einheit die eigene (und darf nicht als belegt
+    gelten), bei einem Objektwechsel ist sie eine fremde.
+    """
+    from src.features.channel_manager.bookings_sync import _AltZustand
+
+    zeile = {
+        "check_in": "2026-03-01",
+        "check_out": "2026-03-05",
+        "property_id": "p-1",
+        "unit_id": "u-7",
+    }
+    alt = _AltZustand.aus([zeile])
+    assert (alt.check_in, alt.check_out) == ("2026-03-01", "2026-03-05")
+    assert alt.property_id == "p-1"
+    assert alt.unit_id == "u-7"
+
+    # Gleiches Objekt: die eigene Einheit zaehlt nicht als fremde Belegung,
+    # sonst faende eine blosse Datumsverschiebung keine Einheit mehr.
+    assert alt.eigene_unit_fuer("p-1") == "u-7"
+    # Objektwechsel: dort ist sie eine fremde Einheit.
+    assert alt.eigene_unit_fuer("p-2") is None
+
+    # Neue Buchung — kein Bestand, also nichts freizugeben.
+    leer = _AltZustand.aus(None)
+    assert leer.unit_id is None
+    assert leer.eigene_unit_fuer("p-1") is None
+    # Bestandszeile ohne Einheit (Altdaten vor 0265) darf nicht als Einheit
+    # "" durchgehen.
+    ohne = _AltZustand.aus([{"property_id": "p-1", "unit_id": None}])
+    assert ohne.eigene_unit_fuer("p-1") is None

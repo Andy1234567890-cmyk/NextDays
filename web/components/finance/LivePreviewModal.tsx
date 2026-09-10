@@ -29,6 +29,7 @@ import type { InvoiceData } from '@/types/invoiceTypes';
 import { A4_DIMENSIONS } from '@/utils/a4-page-utils';
 import PDFTemplate from './PDFTemplates';
 import { SimplePDFViewer } from './SimplePDFViewer';
+import { MARKETING_START } from '@/lib/marketing-url';
 
 interface LivePreviewModalProps {
   isOpen: boolean;
@@ -231,14 +232,18 @@ export function LivePreviewModal({
   // Generate QR Code for Document (Quote/Invoice)
   const generateQRCode = useCallback(async () => {
     try {
-      let qrContent: string;
-      if (documentType === 'quote') {
-        qrContent = 'https://nextdays.de';
-      } else if (documentType === 'invoice') {
-        qrContent = 'https://nextdays.de/kontakt';
-      } else {
-        qrContent = 'https://nextdays.de';
-      }
+      // Domain aus lib/marketing-url (respektiert NEXT_PUBLIC_MARKETING_URL).
+      // Hier stand bis zum 10.09.2026 dreimal `https://nextdays.de` — eine
+      // Domain, die uns NICHT gehoert und in keiner Weiterleitung steht
+      // (deploy/DOMAIN-CUTOVER.md kennt nur mynextdays.de/.net/.org). Der
+      // QR-Code auf einer Kundenrechnung zeigte damit ins Leere; zusaetzlich
+      // trug er die Marke „NextDays" statt „myNextDays".
+      // Ein Angebot fuehrt zur Kontaktaufnahme, eine Rechnung zur Startseite
+      // — vorher war genau das vertauscht.
+      const qrContent =
+        documentType === 'quote'
+          ? `${MARKETING_START}/kontakt`
+          : MARKETING_START;
       const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrContent)}`;
       setQrCodeUrl(qrUrl);
     } catch (error) {
@@ -667,20 +672,34 @@ export function LivePreviewModal({
     };
   }, [logoUrl]);
 
+  // Zuruecksetzen beim OEFFNEN — an der isOpen-Flanke, nicht an `document`.
+  //
+  // Vorher standen hier `document` und `logoUrl` in den Dependencies. Das war
+  // eine echte Endlosschleife: der Aufrufer (invoice-modals.tsx) uebergibt
+  // `document={buildInvoiceDataForPreview()}`, ein bei JEDEM Render neu
+  // erzeugtes Objektliteral — die Referenz aendert sich also immer. Der Effekt
+  // setzte daraufhin State (u. a. `new Set(...)`, ebenfalls immer neu), was den
+  // naechsten Render ausloeste. Zusaetzlich schrieb er `logoUrl`, das in seinen
+  // EIGENEN Dependencies stand, waehrend der Effekt darueber es wieder setzte.
+  // `logoUrl` wird als Ref gelesen, damit die Freigabe des Object-URL erhalten
+  // bleibt, ohne den Effekt erneut auszuloesen.
+  const logoUrlRef = useRef<string | null>(null);
   useEffect(() => {
-    if (isOpen && document) {
-      // Reset to download option when opening (like SevDesk)
-      setActiveOption('download');
-      setExpandedSections(new Set(['download']));
-      setZoomLevel(4); // Start at 100% zoom
-      setLogoFile(null);
-      if (logoUrl) {
-        URL.revokeObjectURL(logoUrl);
-      }
-      setLogoUrl(null);
-      setLogoSize(50);
+    logoUrlRef.current = logoUrl;
+  }, [logoUrl]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setActiveOption('download');
+    setExpandedSections(new Set(['download']));
+    setZoomLevel(4); // Start at 100% zoom
+    setLogoFile(null);
+    if (logoUrlRef.current) {
+      URL.revokeObjectURL(logoUrlRef.current);
     }
-  }, [isOpen, document, logoUrl]);
+    setLogoUrl(null);
+    setLogoSize(50);
+  }, [isOpen]);
 
   const handleSend = async (method: 'email' | 'download' | 'print') => {
     if (sending) return;

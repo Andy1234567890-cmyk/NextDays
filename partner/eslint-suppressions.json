@@ -1,0 +1,15 @@
+{
+  "components/beitrag-karte.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/verbundkonto.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  }
+}

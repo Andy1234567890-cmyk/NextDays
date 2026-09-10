@@ -9,6 +9,7 @@ von der Fassade; Patch-Ziel für Modul-Helfer ist channel_manager.common.
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 from uuid import uuid4
@@ -54,6 +55,53 @@ from .schemas import (
     BookingResponse,
     BookingSyncResponse,
 )
+
+
+@dataclass(frozen=True, slots=True)
+class _AltZustand:
+    """Der Stand der Reservierung VOR dieser Feed-Meldung.
+
+    Wurzel 1: wer Naechte/Einheiten neu setzt, muss die frei gewordenen ALTEN
+    pflegen. Dafuer muessen die Alt-Werte gesichert sein, BEVOR die Zeile
+    ueberschrieben wird — danach weiss niemand mehr, was freizugeben ist.
+
+    Herausgezogen am 10.09.2026: die Werte standen als sechs lose Variablen in
+    `_project_booking_to_reservation` und wurden ueber 500 Zeilen hinweg an
+    acht verstreuten Stellen gelesen. Schlimmer noch: die alte Einheit gab es
+    ZWEIMAL unter verschiedenen Namen — `alte_einheit` (fuer die Freigabe) und
+    `alte_unit` (fuer `freie_einheit`), beide aus demselben `existing[0]`, nur
+    unterschiedlich gefiltert. Zwei Namen fuer dieselbe Sache, 200 Zeilen
+    auseinander, sind genau die Konstellation, in der jemand die falsche
+    greift.
+    """
+
+    check_in: str | None
+    check_out: str | None
+    property_id: str | None
+    unit_id: str | None
+
+    @classmethod
+    def aus(cls, existing: list[dict[str, Any]] | None) -> _AltZustand:
+        """Aus der geladenen Bestandszeile — oder leer, wenn es keine gibt."""
+        zeile = existing[0] if existing else {}
+        return cls(
+            check_in=zeile.get("check_in"),
+            check_out=zeile.get("check_out"),
+            property_id=zeile.get("property_id"),
+            unit_id=zeile.get("unit_id"),
+        )
+
+    def eigene_unit_fuer(self, property_id: str) -> str | None:
+        """Die alte Einheit, wenn das Objekt DASSELBE geblieben ist.
+
+        `freie_einheit` darf die eigene bisherige Einheit nicht als belegt
+        werten — sonst faende eine blosse Datumsverschiebung keine Einheit
+        mehr. Bei einem Objektwechsel gilt das aber nicht: dort ist die alte
+        Einheit eine fremde.
+        """
+        if self.property_id == property_id and self.unit_id:
+            return str(self.unit_id)
+        return None
 
 
 class BookingsSyncMixin:
@@ -1302,14 +1350,15 @@ class BookingsSyncMixin:
         # — für den Alt-/Neu-Diff bei Verkürzung/Verschiebung UND für den
         # Objektwechsel. Nach dem Update ist existing[0] überschrieben, dann wäre
         # der Diff leer und Alt-Nächte blieben als Phantom-Belegung gesperrt.
-        old_check_in = existing[0].get("check_in") if existing else None
-        old_check_out = existing[0].get("check_out") if existing else None
-        old_property_id = existing[0].get("property_id") if existing else None
-        # Die Einheit VOR der Änderung. Muss hier gesichert werden, zusammen mit
-        # den übrigen Alt-Werten: weiter unten wird die Reservierung auf die neue
-        # Einheit umgeschrieben, und danach wüsste niemand mehr, welche Einheit
-        # freizugeben ist (Wurzel 1 — der alte Zustand gehört mitgepflegt).
-        alte_einheit = existing[0].get("unit_id") if existing else None
+        # Der Stand VOR dieser Meldung — gesichert, bevor irgendetwas
+        # ueberschrieben wird (Wurzel 1: der alte Zustand gehoert mitgepflegt,
+        # sonst weiss danach niemand mehr, welche Naechte und welche Einheit
+        # freizugeben sind). Begruendung und Historie: siehe `_AltZustand`.
+        alt = _AltZustand.aus(existing)
+        old_check_in = alt.check_in
+        old_check_out = alt.check_out
+        old_property_id = alt.property_id
+        alte_einheit = alt.unit_id
 
         # Storno: reservation stornieren + Nächte dieser OTA-Quelle wieder frei.
         if status_in == "cancelled":
@@ -1518,18 +1567,15 @@ class BookingsSyncMixin:
         # fremde Belegung, und die bisherige Einheit wird behalten — sonst sähe
         # die Buchung ihre eigene Sperre, verlöre die Zuweisung (unit_id=None)
         # und der ganze Typ würde fälschlich als überbucht gesperrt.
-        alte_unit = None
+        # Dieselbe Quelle wie oben statt eines zweiten Griffs in `existing[0]`:
+        # bis 10.09.2026 stand hier `alte_unit` neben dem gleichbedeutenden
+        # `alte_einheit`, beide aus derselben Zeile.
         eigene_naechte: list[str] = []
-        if (
-            existing
-            and old_property_id == property_id
-            and existing[0].get("unit_id")
-        ):
-            alte_unit = str(existing[0]["unit_id"])
-            if old_check_in and old_check_out:
-                eigene_naechte = self._date_range_nights(
-                    str(old_check_in), str(old_check_out)
-                )
+        alte_unit = alt.eigene_unit_fuer(property_id)
+        if alte_unit and old_check_in and old_check_out:
+            eigene_naechte = self._date_range_nights(
+                str(old_check_in), str(old_check_out)
+            )
         einheit = freie_einheit(
             db, property_id, arrival, departure, tenant_id=tenant_id,
             eigene_unit=alte_unit, eigene_naechte=eigene_naechte,

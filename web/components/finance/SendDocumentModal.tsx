@@ -156,6 +156,7 @@ import PDFTemplate from './PDFTemplates';
 import type { PDFTemplateProps } from './pdf-templates';
 import { SimplePDFViewer } from './SimplePDFViewer';
 import { NativeSelect } from '@nextdays/ui/native-select';
+import { MARKETING_START } from '@/lib/marketing-url';
 
 interface SendDocumentModalProps {
   isOpen: boolean;
@@ -346,17 +347,19 @@ export function SendDocumentModal({
     }
   }, [document?.items?.length, manualOverride]);
 
-  // 🚨 CRITICAL: Clear cached HTML when pageMode changes OR template updates
+  // HTML-Cache verwerfen, wenn sich der Seitenmodus oder die Vorlage aendert.
+  //
+  // Hier standen bis zum 10.09.2026 ZWEI byte-identische Effekte mit LEEREM
+  // Dependency-Array. Ihre Kommentare versprachen „clear when pageMode
+  // changes" — sie liefen aber nur einmal beim Mount, wo beide States ohnehin
+  // schon `null` sind. Der Cache wurde damit NIE invalidiert: `getDocumentHtml`
+  // lieferte nach einem Moduswechsel den alten Stand, und genau der ging in
+  // PDF und Versand. Die Anzeige taeuschte Korrektheit vor, weil das
+  // `key`-Attribut auf `PDFTemplate` den pageMode enthaelt.
   useEffect(() => {
     setCachedHtml(null);
     setPreExtractedHtml(null);
-  }, []);
-
-  // 🔥 FORCE CACHE CLEAR: Clear HTML cache when component updates (force fresh render)
-  useEffect(() => {
-    setCachedHtml(null);
-    setPreExtractedHtml(null);
-  }, []);
+  }, [pageMode, selectedLayout]);
 
   // 💰 KRITISCH: Skonto-States aktualisieren wenn sich Document ändert
   useEffect(() => {
@@ -388,14 +391,18 @@ export function SendDocumentModal({
   const generateQRCode = useCallback(
     async (_guid: string, _invoiceData: DocumentWithGoBD) => {
       try {
-        let qrContent: string;
-        if (documentType === 'quote') {
-          qrContent = 'https://nextdays.de';
-        } else if (documentType === 'invoice') {
-          qrContent = 'https://nextdays.de/kontakt';
-        } else {
-          qrContent = 'https://nextdays.de';
-        }
+        // Domain aus lib/marketing-url (respektiert NEXT_PUBLIC_MARKETING_URL).
+        // Hier stand bis zum 10.09.2026 dreimal `https://nextdays.de` — eine
+        // Domain, die uns NICHT gehoert und in keiner Weiterleitung steht
+        // (deploy/DOMAIN-CUTOVER.md kennt nur mynextdays.de/.net/.org). Der
+        // QR-Code auf einer Kundenrechnung zeigte damit ins Leere; zusaetzlich
+        // trug er die Marke „NextDays" statt „myNextDays".
+        // Ein Angebot fuehrt zur Kontaktaufnahme, eine Rechnung zur Startseite
+        // — vorher war genau das vertauscht.
+        const qrContent =
+          documentType === 'quote'
+            ? `${MARKETING_START}/kontakt`
+            : MARKETING_START;
         const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrContent)}`;
         setQrCodeUrl(qrUrl);
         setDocumentSettings(prev => ({

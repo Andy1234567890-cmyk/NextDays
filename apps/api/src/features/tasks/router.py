@@ -852,7 +852,7 @@ def inspect_task(
     ctx: Annotated[AuthContext, Depends(_manage())],
 ) -> TaskDetail:
     try:
-        return service.inspect(_tenant(ctx), task_id, req)
+        return service.inspect(_tenant(ctx), task_id, req, ctx)
     except TaskError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

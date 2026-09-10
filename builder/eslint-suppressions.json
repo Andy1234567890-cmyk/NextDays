@@ -1,0 +1,164 @@
+{
+  "app/blog/[slug]/page.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "app/blog/page.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "app/blog/rss.xml/route.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "app/inserat/[id]/page.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "app/llms.txt/route.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "app/sitemap.xml/route.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/blocks/beitraege.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/blocks/block-renderer.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 2
+    },
+    "max-params": {
+      "count": 1
+    }
+  },
+  "components/blocks/business-blocks.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/blocks/canvas-bridge.tsx": {
+    "complexity": {
+      "count": 4
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/blocks/checkout-blocks.tsx": {
+    "complexity": {
+      "count": 3
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/blocks/effekte.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/blocks/formular.tsx": {
+    "complexity": {
+      "count": 3
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "components/blocks/hero.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/blocks/karte.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/blocks/medien-blocks.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/blocks/objekt-blocks.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/blocks/slider.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/blog/karussell.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/buchungs-widget.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/site-header.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "lib/metadaten.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/regeln.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/theme.ts": {
+    "complexity": {
+      "count": 2
+    }
+  }
+}

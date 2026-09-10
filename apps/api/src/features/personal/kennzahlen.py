@@ -43,6 +43,12 @@ from ._base import (
     als_float,
     als_time,
 )
+
+# EINE Wahrheit fuer den Stundensatz (Vertrag §0). Hier stand bis zum
+# 10.09.2026 eine zweite Kopie (`kosten_satz_lokal`), die ihr eigener
+# Docstring bereits als Provisorium auswies: „die Formel darf nicht
+# zweimal leben, sonst laufen Auswertung und Kennzahlen auseinander".
+from .auswertung import kosten_satz
 from .bedarf_schemas import (
     MAX_KENNZAHLEN_TAGE,
     BereichTag,
@@ -58,41 +64,6 @@ _BUCHUNG_GUELTIG = ("confirmed", "completed")
 _AKTIVE_SCHICHT = ("entwurf", "veroeffentlicht", "bestaetigt")
 # Nur bestätigte Zeiten sind „Ist" — eine offene Stempelung hat kein Ende.
 _ZEIT_GUELTIG = ("abgeschlossen", "bestaetigt")
-
-
-def kosten_satz_lokal(
-    akte: dict[str, Any], firma: dict[str, Any] | None
-) -> tuple[int | None, str | None]:
-    """Stundensatz (Minor) und Währung einer Person — oder (None, None).
-
-    Diese Funktion ist ein PROVISORIUM: Paket B4 zieht dieselbe Logik als
-    öffentliche `auswertung.kosten_satz(akte, firma)` heraus (Vertrag §0/§4).
-    Sobald sie dort steht, wird hier ersetzt und diese Funktion entfernt — die
-    Formel darf nicht zweimal leben, sonst laufen Auswertung und Kennzahlen
-    auseinander (dieselbe Wurzel wie die Währungs-Fallbacks: eine zweite Kopie
-    mit eigenem Verhalten).
-
-    Fehlt der Satz, ist das ein Datenfehler und keine 0 (Wurzel 4): der
-    Aufrufer benennt die Person im Hinweis, statt Kosten von null zu melden.
-    """
-    if akte.get("beschaeftigungsart") == "extern":
-        if (
-            firma
-            and firma.get("abrechnung") == "je_stunde"
-            and firma.get("satz_minor") is not None
-        ):
-            return int(firma["satz_minor"]), firma.get("currency")
-        return None, None
-    if akte.get("stundenlohn_minor") is not None and akte.get("currency"):
-        return int(akte["stundenlohn_minor"]), str(akte["currency"])
-    gehalt = akte.get("gehalt_minor")
-    wochenstunden = als_float(akte.get("wochenstunden"))
-    if gehalt is not None and akte.get("currency") and wochenstunden:
-        # Monatsgehalt auf den Stundensatz: Wochenstunden × 52/12 Monatsstunden.
-        monatsstunden = wochenstunden * 52 / 12
-        if monatsstunden > 0:
-            return round(int(gehalt) / monatsstunden), str(akte["currency"])
-    return None, None
 
 
 class _Waehrung:
@@ -371,7 +342,7 @@ class KennzahlenService(PersonalBase):
                     eintrag["personen"].add(uid)
             if finanzen and uid:
                 firma = self._firma(akten, firmen, uid)
-                satz, code = kosten_satz_lokal(akten.get(uid) or {}, firma)
+                satz, code = kosten_satz(akten.get(uid) or {}, firma)
                 if satz is None:
                     ohne_lohn.add(str(users[uid].get("full_name") or uid))
                 elif waehrung.melde(code):
@@ -400,7 +371,7 @@ class KennzahlenService(PersonalBase):
                 eintrag["personen"].add(uid)
             if finanzen:
                 firma = self._firma(akten, firmen, uid)
-                satz, code = kosten_satz_lokal(akten.get(uid) or {}, firma)
+                satz, code = kosten_satz(akten.get(uid) or {}, firma)
                 if satz is None:
                     ohne_lohn.add(str(users.get(uid, {}).get("full_name") or uid))
                 elif waehrung.melde(code):

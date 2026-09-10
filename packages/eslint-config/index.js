@@ -129,6 +129,37 @@ export function nextConfig(opts = {}) {
         // aber der Bestand trägt es an vielen Stellen. Warnung statt Fehler:
         // sichtbar, ohne die Einführung des Gates zu blockieren.
         "@typescript-eslint/no-explicit-any": "warn",
+
+        // --- Komplexität: gegen Spaghetti-Code ---------------------------
+        // Gemessen am 10.09.2026: 30 Komponenten über 1000 Zeilen, eine mit
+        // 39 useState, eine mit 3562 Zeilen. Verworrene useEffect-Ketten
+        // haben real eine Render-Endlosschleife erzeugt (LivePreviewModal)
+        // und zwei tote Effekte, die einen PDF-Cache nie invalidierten.
+        //
+        // Als FEHLER, aber mit eingefrorenem Altbestand: der Ratchet läuft
+        // über ESLints eigene Bulk Suppressions (ab ESLint 9.24, hier 10.8) —
+        // `bun run lint:ratchet-neu` schreibt `eslint-suppressions.json`,
+        // danach bricht nur NEUE Komplexität. Kein betterer nötig (letzter
+        // stabiler Release 08/2022), kein SonarQube (Branch-Analyse ist dort
+        // kostenpflichtig, dazu 4 GB RAM auf einem 8-GB-Rechner).
+        //
+        // Schwellen nach SonarSource/McCabe-Praxis, NICHT am Bestand
+        // ausgerichtet — sonst schriebe der Ist-Zustand die Regel.
+        // `variant: "modified"` zählt ein ganzes `switch` als +1: bei einem
+        // Enum-Dispatcher ist das die ehrlichere Zahl.
+        complexity: ["error", { max: 15, variant: "modified" }],
+        "max-depth": ["error", 4],
+        "max-params": ["error", 6],
+        "max-nested-callbacks": ["error", 4],
+        // Funktionslänge, nicht Dateilänge: eine lange Datei mit kurzen
+        // Funktionen ist Ordnung, eine 500-Zeilen-Funktion ist es nie. Ein
+        // grosser flacher JSX-Baum (Formular mit 60 Feldern) ist ausdrücklich
+        // KEIN Befund — deshalb wird nur die Funktion gemessen, und die
+        // gemessene Verschachtelungstiefe (max-depth) trennt beides.
+        "max-lines-per-function": [
+          "error",
+          { max: 150, skipBlankLines: true, skipComments: true, IIFEs: true },
+        ],
       },
     },
     {

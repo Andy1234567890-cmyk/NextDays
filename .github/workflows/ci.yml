@@ -297,6 +297,52 @@ jobs:
       - name: Geheimnisse im Frontend?
         run: node scripts/security/frontend-geheimnisse-pruefen.mjs
 
+  # ---------------------------------------------------------------------------
+  # Komplexitaets-Gate: keine NEUE Verwicklung.
+  #
+  # Ebenfalls ohne `betroffen`-Filter, aus demselben Grund wie oben: geprueft
+  # wird der ZUSTAND DES REPOS. Komplexitaet waechst quer ueber App-Grenzen,
+  # und ein uebersprungenes Ratchet ist kein Ratchet.
+  #
+  # HINTERGRUND (Messung 10.09.2026): die ruff-Auswahl in apps/api enthielt
+  # kein `C90` und kein `PLR` — die Komplexitaetsregeln waren nie scharf
+  # geschaltet, und so wuchsen 536 Verstoesse unbemerkt, darunter eine Funktion
+  # mit 797 Zeilen und eine React-Komponente mit 39 useState. Der Altbestand
+  # ist eingefroren (Baselines), es bricht ausschliesslich NEUES.
+  #
+  # Kein bun-Install noetig fuer den Backend-Teil (ruff + Python-Stdlib); der
+  # Frontend-Teil braucht die App-Abhaengigkeiten fuer ESLint.
+  spaghetti:
+    name: Qualitaet (keine neue Komplexitaet)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: uv installieren
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+
+      - name: bun installieren
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: "1.3.9"
+
+      - name: Frontend-Abhängigkeiten installieren
+        run: bun install --frozen-lockfile
+
+      # ruff aus apps/api/pyproject.toml statt per fester Version: die Baseline
+      # ist gegen GENAU diese ruff-Version gemessen. Eine hier hartkodierte
+      # Nummer liefe irgendwann auseinander, und eine neue ruff-Fassung mit
+      # anderer Zaehlweise liesse das Gate grundlos brechen (oder schweigen).
+      - name: ruff bereitstellen
+        working-directory: apps/api
+        run: |
+          uv venv --python 3.12 .venv
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+          uv pip install --python .venv/bin/python -e ".[dev]"
+
+      - name: Neue Komplexität?
+        run: bash scripts/qualitaet/spaghetti-gate.sh
+
   # Typprüfung je Frontend — schnelles, präzises Signal VOR den langsamen
   # Image-Builds. Der Produktions-Build läuft für die deployten Apps im
   # images-Job (dort exakt wie Coolify baut), nicht doppelt hier.

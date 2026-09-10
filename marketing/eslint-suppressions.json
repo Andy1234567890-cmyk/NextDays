@@ -1,0 +1,63 @@
+{
+  "app/funktionen/[slug]/page.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "app/p/[code]/route.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/entwickler/ref-konsole.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/kontakt/kontakt-formular.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/language-switcher.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/marketing/marketing-nav.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/partner/partner-bewerbung-formular.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/preise/preis-rechner.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/support-chat.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/voranmeldung-popup.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "lib/api-codebeispiele.ts": {
+    "complexity": {
+      "count": 1
+    }
+  }
+}

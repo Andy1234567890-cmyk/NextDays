@@ -1,0 +1,230 @@
+{
+  "apps/api/src/features/addons/service.py": {
+    "PLR0913": 1
+  },
+  "apps/api/src/features/auswertung/tests/test_auswertung.py": {
+    "C901": 2
+  },
+  "apps/api/src/features/booking_engine/router.py": {
+    "PLR0913": 1
+  },
+  "apps/api/src/features/booking_engine/schaufenster.py": {
+    "C901": 1,
+    "PLR0913": 1
+  },
+  "apps/api/src/features/booking_engine/service.py": {
+    "C901": 1,
+    "PLR0912": 1,
+    "PLR0915": 1
+  },
+  "apps/api/src/features/buchhaltung/reservation_invoice.py": {
+    "C901": 1,
+    "PLR0912": 1
+  },
+  "apps/api/src/features/buchhaltung/service.py": {
+    "C901": 1,
+    "PLR0912": 1,
+    "PLR0915": 1
+  },
+  "apps/api/src/features/calendar/service.py": {
+    "C901": 1,
+    "PLR0912": 1
+  },
+  "apps/api/src/features/channel_manager/airbnb_historie_import.py": {
+    "PLR0913": 1
+  },
+  "apps/api/src/features/channel_manager/airbnb_oauth.py": {
+    "PLR0913": 1
+  },
+  "apps/api/src/features/channel_manager/ari_push.py": {
+    "PLR0913": 2
+  },
+  "apps/api/src/features/channel_manager/bookings_sync.py": {
+    "C901": 2,
+    "PLR0912": 1,
+    "PLR0915": 2
+  },
+  "apps/api/src/features/channel_manager/channels.py": {
+    "PLR0913": 2,
+    "PLR0915": 1
+  },
+  "apps/api/src/features/channel_manager/content_sync.py": {
+    "PLR0913": 1
+  },
+  "apps/api/src/features/channel_manager/csv_import.py": {
+    "C901": 1,
+    "PLR0912": 1,
+    "PLR0915": 1
+  },
+  "apps/api/src/features/channel_manager/full_sync.py": {
+    "C901": 2,
+    "PLR0912": 2
+  },
+  "apps/api/src/features/channel_manager/oauth_channels.py": {
+    "C901": 1,
+    "PLR0912": 1,
+    "PLR0913": 1,
+    "PLR0915": 1
+  },
+  "apps/api/src/features/channel_manager/objekt_verkauf.py": {
+    "PLR0913": 2
+  },
+  "apps/api/src/features/channel_manager/ota_abgaben.py": {
+    "C901": 1,
+    "PLR0912": 1
+  },
+  "apps/api/src/features/channel_manager/property_mapping.py": {
+    "C901": 1,
+    "PLR0912": 1,
+    "PLR0915": 1
+  },
+  "apps/api/src/features/channel_manager/tax_sync.py": {
+    "PLR0913": 1
+  },
+  "apps/api/src/features/channel_manager/tests/test_ari_import_vertragsende.py": {
+    "PLR0911": 1
+  },
+  "apps/api/src/features/guests/identity.py": {
+    "PLR0913": 1
+  },
+  "apps/api/src/features/guests/router.py": {
+    "PLR0913": 1
+  },
+  "apps/api/src/features/inbox/ki_antwort.py": {
+    "PLR0913": 1
+  },
+  "apps/api/src/features/inbox/ki_eskalation.py": {
+    "PLR0913": 1
+  },
+  "apps/api/src/features/inbox/ki_regeln.py": {
+    "PLR0913": 1
+  },
+  "apps/api/src/features/inbox/ki_wissen.py": {
+    "PLR0913": 1
+  },
+  "apps/api/src/features/inbox/router.py": {
+    "PLR0913": 1
+  },
+  "apps/api/src/features/mcp/router.py": {
+    "PLR0913": 1
+  },
+  "apps/api/src/features/owner_chat/kern.py": {
+    "PLR0913": 1
+  },
+  "apps/api/src/features/owner_statements/service.py": {
+    "C901": 1,
+    "PLR0913": 1
+  },
+  "apps/api/src/features/owner_statements/zeilen.py": {
+    "C901": 1
+  },
+  "apps/api/src/features/payments/service.py": {
+    "PLR0913": 1
+  },
+  "apps/api/src/features/payments/stripe_client.py": {
+    "PLR0913": 1
+  },
+  "apps/api/src/features/payments/webhook.py": {
+    "C901": 1,
+    "PLR0912": 1,
+    "PLR0915": 1
+  },
+  "apps/api/src/features/payouts/service.py": {
+    "PLR0913": 1
+  },
+  "apps/api/src/features/personal/auswertung.py": {
+    "C901": 1
+  },
+  "apps/api/src/features/personal/autoplan_solver.py": {
+    "C901": 1
+  },
+  "apps/api/src/features/personal/kennzahlen.py": {
+    "C901": 1
+  },
+  "apps/api/src/features/personal/tests/_fake.py": {
+    "C901": 1
+  },
+  "apps/api/src/features/platform_admin/router.py": {
+    "PLR0913": 2
+  },
+  "apps/api/src/features/pricing/resolver.py": {
+    "C901": 1,
+    "PLR0912": 1,
+    "PLR0915": 1
+  },
+  "apps/api/src/features/pricing/tests/test_pricing.py": {
+    "C901": 1
+  },
+  "apps/api/src/features/properties/gebuehren.py": {
+    "C901": 1,
+    "PLR0912": 1
+  },
+  "apps/api/src/features/properties/service.py": {
+    "C901": 1,
+    "PLR0912": 1
+  },
+  "apps/api/src/features/properties/steuern.py": {
+    "C901": 1,
+    "PLR0912": 1
+  },
+  "apps/api/src/features/properties/tests/test_properties.py": {
+    "C901": 1
+  },
+  "apps/api/src/features/properties/tests/test_vertragsende.py": {
+    "PLR0911": 1
+  },
+  "apps/api/src/features/property_dossier/inventar.py": {
+    "C901": 1,
+    "PLR0912": 1,
+    "PLR0913": 1
+  },
+  "apps/api/src/features/property_dossier/mappe_dokumente.py": {
+    "C901": 1,
+    "PLR0912": 1
+  },
+  "apps/api/src/features/rates/service.py": {
+    "PLR0912": 1
+  },
+  "apps/api/src/features/reservations/tests/test_reservations.py": {
+    "PLR0911": 1
+  },
+  "apps/api/src/features/reservations/writes.py": {
+    "C901": 1,
+    "PLR0912": 1,
+    "PLR0915": 2
+  },
+  "apps/api/src/features/reviews/tests/fake_db.py": {
+    "PLR0911": 1
+  },
+  "apps/api/src/features/site_config/bloecke.py": {
+    "C901": 1,
+    "PLR0912": 1,
+    "PLR0915": 1
+  },
+  "apps/api/src/features/site_config/container.py": {
+    "C901": 1
+  },
+  "apps/api/src/features/site_config/ki_nutzung.py": {
+    "PLR0913": 1
+  },
+  "apps/api/src/features/site_config/ki_profil.py": {
+    "C901": 1
+  },
+  "apps/api/src/features/site_config/router_mediathek.py": {
+    "PLR0913": 1
+  },
+  "apps/api/src/features/site_config/tests/test_site_config.py": {
+    "C901": 1,
+    "PLR0911": 1,
+    "PLR0912": 1
+  },
+  "apps/api/src/features/tasks/engine.py": {
+    "PLR0913": 4
+  },
+  "apps/api/src/features/tasks/router.py": {
+    "PLR0913": 1
+  },
+  "apps/api/src/features/tasks/service.py": {
+    "PLR0913": 1
+  }
+}

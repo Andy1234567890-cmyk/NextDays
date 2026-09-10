@@ -16,7 +16,10 @@
   ],
   "packageManager": "bun@1.3.9",
   "scripts": {
-    "lint:packages": "eslint packages"
+    "lint:packages": "eslint packages",
+    "spaghetti": "bash scripts/qualitaet/spaghetti-gate.sh",
+    "spaghetti:neu": "bash scripts/qualitaet/spaghetti-gate.sh --neu",
+    "spaghetti:bericht": "python3 scripts/qualitaet/komplexitaet-ratchet.py --bericht"
   },
   "devDependencies": {
     "@iconify/json": "2.2.517",

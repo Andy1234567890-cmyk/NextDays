@@ -9,7 +9,7 @@
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Script from 'next/script';
 import { useTranslations } from 'next-intl';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import type { Customer as CustomerType } from '@/components/finance/AddCustomerModal';
 import { useNewAuth } from '@/contexts/NewAuthContext';
@@ -443,8 +443,23 @@ export default function CreateQuotePage() {
   });
 
   // Formulardaten für LivePreviewModal konvertieren (gleiche Daten wie SendDocumentModal)
-  const buildInvoiceDataForPreview = (): InvoiceData =>
-    buildInvoiceDataForPreviewPure(previewArgs());
+  //
+  // useCallback ist hier PFLICHT, nicht Feinschliff: `invoice-modals.tsx` ruft
+  // die Funktion direkt im JSX auf (`document={buildInvoiceDataForPreview()}`).
+  // Ohne stabile Referenz entstand bei jedem Render ein neues Objekt, und die
+  // `document`-Dependencies in LivePreviewModal feuerten endlos.
+  const buildInvoiceDataForPreview = useCallback(
+    (): InvoiceData => buildInvoiceDataForPreviewPure(previewArgs()),
+    // previewArgs liest diese Werte aus dem Component-Scope; fehlte einer,
+    // zeigte die Vorschau einen veralteten Stand.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      uid, company, settings, user, formData, customers, items, taxRate,
+      showNet, paymentDays, subtotal, vat, grandTotal, skontoEnabled,
+      skontoDays, skontoPercentage, skontoText, deliveryDateType,
+      deliveryDateRange, selectedTemplate,
+    ],
+  );
 
   // Guard
   const isOwner = user?.uid === uid;
