@@ -10,6 +10,15 @@ from pydantic import BaseModel, Field
 
 from .service import MAX_FRAGE_ZEICHEN
 
+#: Die Quellen, aus denen Wissen stammt — deckungsgleich mit dem CHECK in
+#: Migration 0628 und den Sammelfunktionen in
+#: `marketing/scripts/produktwissen-sammeln.mjs`. Als Liste, damit eine neue
+#: Quelle an allen drei Stellen auffällt statt nur an einer.
+#:
+#: KEIN 'preise': Beträge kommen live aus Stripe in den Prompt, nie als
+#: eingebettete Kopie (siehe `preiskontext.py`).
+QUELLEN = ("hilfe", "funktion", "faq", "legal")
+
 #: Die Sprachen, in denen Wissen abgelegt ist — dieselbe Liste wie die
 #: Sprachordner unter `marketing/content/help/`. Als feste Menge statt
 #: Freitext, weil ein Tippfehler sonst still eine leere Trefferliste ergibt

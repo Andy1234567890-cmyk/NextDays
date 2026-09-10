@@ -201,28 +201,170 @@ function feld(objekt, ...namen) {
   return null;
 }
 
-/** Häufige Fragen der Startseite — sie sind wörtlich das, was Besucher fragen. */
+/** Alle Frage-Antwort-Blöcke der Seite, nicht nur der auf der Startseite.
+ *
+ *  Gemessen am 10.09.2026: es gibt VIER Blöcke — `faq` (Startseite, 12),
+ *  `preise.faq` (12), `kontakt.faq` (12) und `partner.faq` (20). Die ersten
+ *  Fassung dieses Sammlers las nur `faq` und suchte dort nach `q`/`a`; die
+ *  echten Feldnamen sind `frage`/`antwort`. Ergebnis: 44 von 56
+ *  Frage-Antwort-Paaren fehlten im Wissen — ausgerechnet die zu Preisen,
+ *  Kontakt und Partnerprogramm, also genau das, was Interessenten fragen.
+ *
+ *  Der Pfad je Block ist wichtig: eine Antwort ohne Sprungziel kann der
+ *  Besucher nicht nachlesen. */
+const FAQ_BLOECKE = [
+  { pfad_key: "faq", pfad: "/#faq" },
+  { pfad_key: "preise.faq", pfad: "/preise#faq" },
+  { pfad_key: "kontakt.faq", pfad: "/kontakt#faq" },
+  { pfad_key: "partner.faq", pfad: "/partner#faq" },
+];
+
+/** Wert eines Punktpfads („preise.faq") aus einem verschachtelten Objekt. */
+function unterObjekt(objekt, punktpfad) {
+  return punktpfad.split(".").reduce((o, k) => o?.[k], objekt);
+}
+
 async function faqStuecke(sprache) {
   const texte = await sprachdatei(sprache);
   if (!texte) return [];
-  const faq = texte?.faq?.items ?? texte?.faq;
-  if (!faq || typeof faq !== "object") return [];
 
   const stuecke = [];
-  for (const [key, eintrag] of Object.entries(faq)) {
-    const frage = feld(eintrag, "q", "frage", "question");
-    const antwort = feld(eintrag, "a", "antwort", "answer");
-    if (!frage || !antwort) continue;
-    const inhalt = `${frage}\n\n${antwort}`.trim();
+  for (const block of FAQ_BLOECKE) {
+    const roh = unterObjekt(texte, block.pfad_key);
+    const faq = roh?.items ?? roh;
+    if (!faq || typeof faq !== "object") continue;
+
+    for (const [key, eintrag] of Object.entries(faq)) {
+      const frage = feld(eintrag, "q", "frage", "question");
+      const antwort = feld(eintrag, "a", "antwort", "answer");
+      if (!frage || !antwort) continue;
+      const inhalt = `${frage}\n\n${antwort}`.trim();
+      stuecke.push({
+        quelle: "faq",
+        // Der Block gehört in die Kennung: `preis` gibt es in `faq` UND in
+        // `preise.faq`, sonst überschreibt der zweite den ersten.
+        quelle_id: `${block.pfad_key}.${key}`,
+        abschnitt: 0,
+        sprache,
+        titel: frage,
+        inhalt,
+        pfad: block.pfad,
+        inhalt_hash: hash(inhalt),
+      });
+    }
+  }
+  return stuecke;
+}
+
+/** Die Entwickler-Dokumentation: Open API, Webhooks, Scopes.
+ *
+ *  Eigene Quelle, weil sie weder Hilfe-Artikel noch Funktionsseite ist. Ohne
+ *  sie antwortete der Bot auf „Gibt es eine API?" mit „weiß ich nicht" —
+ *  während die Seite /entwickler eine vollständige Referenz trägt. */
+async function entwicklerStuecke(sprache) {
+  const texte = await sprachdatei(sprache);
+  const entwickler = texte?.entwickler;
+  if (!entwickler || typeof entwickler !== "object") return [];
+
+  const stuecke = [];
+  for (const [key, block] of Object.entries(entwickler)) {
+    if (!block || typeof block !== "object") continue;
+    // Jeder Abschnitt der Doku wird ein Stück: Titel plus alle Textfelder
+    // darunter. Die Endpunktliste selbst bleibt draußen — sie ist
+    // sprachneutraler Vertrag (siehe `content/api/referenz.ts`) und in einer
+    // Bedeutungssuche wertlos.
+    const werte = Object.values(block).filter((v) => typeof v === "string");
+    if (werte.length < 2) continue;
+    const inhalt = werte.join("\n\n").trim();
+    if (inhalt.length < 80) continue;
     stuecke.push({
-      quelle: "faq",
-      quelle_id: key,
+      quelle: "funktion",
+      quelle_id: `entwickler.${key}`,
       abschnitt: 0,
       sprache,
-      titel: frage,
+      titel: `Entwickler — ${feld(block, "heading", "titel", "title") ?? key}`,
       inhalt,
-      pfad: "/#faq",
+      pfad: "/entwickler",
       inhalt_hash: hash(inhalt),
+    });
+  }
+  return stuecke;
+}
+
+/** Die Rechtsdokumente: Datenschutz, Impressum, AGB, AVV, Cookies.
+ *
+ *  WARUM SIE INS WISSEN GEHÖREN: „Ist die Software DSGVO-konform?", „Wo
+ *  stehen die Server?", „Gibt es einen AV-Vertrag?" sind Fragen, die vor dem
+ *  Kauf kommen und heute im Support landen. Die Antwort steht bereits
+ *  geschrieben — in 24 Sprachen, juristisch geprüft.
+ *
+ *  EIN ABSCHNITT = EIN STÜCK, nicht ein Dokument: die Datenschutzerklärung
+ *  hat über 20 Abschnitte und wäre als Ganzes weit über der Einbettungsgrenze
+ *  von 8000 Zeichen. Der Abschnitt ist auch die Einheit, auf die der
+ *  Ankerlink zeigt.
+ *
+ *  Gelesen wird aus den ORDNERN, nicht über `content/legal/laden.ts`: dessen
+ *  Loader ist auf `Record<Locale, …>` getippt und für den Browser gebaut. Ein
+ *  fehlendes Dokument fällt hier still durch — das ist richtig, denn nicht
+ *  jede Sprache hat jedes Dokument, und ein Abbruch würde den ganzen Lauf
+ *  kosten. */
+const RECHTSDOKUMENTE = [
+  { ordner: "datenschutz", pfad: "/datenschutz" },
+  { ordner: "impressum", pfad: "/impressum" },
+  { ordner: "cookies", pfad: "/cookie-richtlinie" },
+  { ordner: "avv", pfad: "/auftragsverarbeitung" },
+  { ordner: "agb", pfad: "/agb" },
+];
+
+/** Text eines Rechtsabschnitts — Absätze, Listen, Unterpunkte, Angabenblöcke. */
+function abschnittText(abschnitt) {
+  const teile = [abschnitt.heading];
+  teile.push(...(abschnitt.paragraphs ?? []));
+  teile.push(...(abschnitt.list ?? []));
+  for (const z of abschnitt.zeilen ?? []) {
+    teile.push(`${z.label}: ${(z.werte ?? []).join(", ")}`);
+  }
+  for (const u of abschnitt.unterpunkte ?? []) {
+    if (u.titel) teile.push(u.titel);
+    teile.push(...(u.paragraphs ?? []));
+    teile.push(...(u.list ?? []));
+  }
+  return teile.filter(Boolean).join("\n\n").trim();
+}
+
+async function rechtsStuecke(sprache) {
+  const stuecke = [];
+  for (const dok of RECHTSDOKUMENTE) {
+    let modul;
+    try {
+      modul = await import(
+        path.join(WURZEL, "content", "legal", dok.ordner, `${sprache}.ts`)
+      );
+    } catch {
+      continue;
+    }
+    const inhalt = Object.values(modul).find(
+      (v) => v && typeof v === "object" && Array.isArray(v.sections),
+    );
+    if (!inhalt) continue;
+
+    inhalt.sections.forEach((abschnitt, i) => {
+      const text = abschnittText(abschnitt);
+      // Sehr kurze Abschnitte (eine Überschrift, ein Halbsatz) tragen keine
+      // Bedeutung und verwässern nur die Suche.
+      if (text.length < 120) return;
+      stuecke.push({
+        quelle: "legal",
+        quelle_id: dok.ordner,
+        abschnitt: i,
+        sprache,
+        titel: `${inhalt.title ?? dok.ordner} — ${abschnitt.heading}`,
+        // Der Deckel schützt vor stiller Kürzung durch das Modell; ein
+        // Abschnitt über 8000 Zeichen ist ohnehin ein Gliederungsfehler.
+        inhalt: text.slice(0, 7900),
+        pfad: dok.pfad,
+        inhalt_hash: hash(text.slice(0, 7900)),
+      });
     });
   }
   return stuecke;
@@ -247,10 +389,15 @@ async function main() {
     const h = await hilfeStuecke(sprache, unbekannt);
     const f = await funktionsStuecke(sprache);
     const q = await faqStuecke(sprache);
-    alle.push(...h, ...f, ...q);
+    const e = await entwicklerStuecke(sprache);
+    const r = await rechtsStuecke(sprache);
+    alle.push(...h, ...f, ...q, ...e, ...r);
     console.log(
       `  ${sprache}: ${String(h.length).padStart(3)} Hilfe · ` +
-        `${String(f.length).padStart(2)} Funktionen · ${String(q.length).padStart(2)} FAQ`,
+        `${String(f.length).padStart(2)} Funktionen · ` +
+        `${String(q.length).padStart(2)} FAQ · ` +
+        `${String(e.length).padStart(2)} Entwickler · ` +
+        `${String(r.length).padStart(3)} Recht`,
     );
   }
 
