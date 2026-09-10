@@ -598,12 +598,23 @@ class InventarMixin:
                     "den Objektdaten ergänzen.",
                     422,
                 )
-        if "geprueft" in felder and felder["geprueft"]:
-            # Die Sichtpruefung beim Rundgang. Nur setzen, wenn ausdruecklich
-            # gemeldet — ein Nebeneffekt beim Umbenennen waere eine
+        if "geprueft" in felder:
+            # Die Sichtpruefung beim Rundgang. Nur wenn das Feld ausdruecklich
+            # mitkommt — ein Nebeneffekt beim Umbenennen waere eine
             # Falschaussage ueber den Pruefstand.
-            werte["geprueft_am"] = datetime.now(UTC).isoformat()
-            werte["geprueft_von"] = user_id
+            #
+            # `false` NIMMT DIE PRUEFUNG ZURUECK. Vorher fiel es stumm durch:
+            # ein Fehlklick auf das Haekchen (die Symbole der Zeile liegen
+            # dicht beieinander) stand fuer immer als geprueft in der
+            # Inventur, ohne jeden Rueckweg. Eine Aktion, die man nicht
+            # ruecknehmen kann, braucht dafuer einen Grund — hier gibt es
+            # keinen: die Sichtpruefung ist eine Beobachtung, kein Beleg.
+            if felder["geprueft"]:
+                werte["geprueft_am"] = datetime.now(UTC).isoformat()
+                werte["geprueft_von"] = user_id
+            else:
+                werte["geprueft_am"] = None
+                werte["geprueft_von"] = None
         try:
             z = (
                 self._db()

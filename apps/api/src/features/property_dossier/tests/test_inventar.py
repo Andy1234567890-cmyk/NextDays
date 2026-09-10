@@ -687,3 +687,37 @@ def test_raum_entfernen_bleibt_erlaubt() -> None:
     svc.inventar_aendern(TID, PID, IID, felder={"room_id": None}, user_id="u1")
     aend = [e for e in prot if e[0] == "update" and e[1] == "inventory_items"]
     assert aend[0][2]["room_id"] is None
+
+
+# --- Pruefung ist umschaltbar ------------------------------------------------
+def test_pruefung_setzen() -> None:
+    svc, prot = _svc({"inventory_items": [_gegenstandzeile()]})
+    svc.inventar_aendern(TID, PID, IID, felder={"geprueft": True}, user_id="u1")
+    werte = [e for e in prot if e[0] == "update"][0][2]
+    assert werte["geprueft_am"] is not None
+    assert werte["geprueft_von"] == "u1"
+
+
+def test_pruefung_zuruecknehmen() -> None:
+    """Ein Fehlklick stand vorher FUER IMMER als geprueft in der Inventur:
+    `false` fiel stumm durch, es gab keinen Rueckweg. Die Sichtpruefung ist
+    eine Beobachtung, kein Beleg — sie darf zurueckgenommen werden."""
+    svc, prot = _svc({
+        "inventory_items": [
+            _gegenstandzeile(geprueft_am="2026-09-01T10:00:00+00:00"),
+        ],
+    })
+    svc.inventar_aendern(TID, PID, IID, felder={"geprueft": False}, user_id="u1")
+    werte = [e for e in prot if e[0] == "update"][0][2]
+    assert werte["geprueft_am"] is None
+    assert werte["geprueft_von"] is None
+
+
+def test_ohne_feld_bleibt_die_pruefung_stehen() -> None:
+    """Umbenennen darf den Pruefstand NICHT anfassen — das waere eine
+    Falschaussage darueber, wann zuletzt jemand hingesehen hat."""
+    svc, prot = _svc({"inventory_items": [_gegenstandzeile()]})
+    svc.inventar_aendern(TID, PID, IID, felder={"name": "Neu"}, user_id="u1")
+    werte = [e for e in prot if e[0] == "update"][0][2]
+    assert "geprueft_am" not in werte
+    assert "geprueft_von" not in werte

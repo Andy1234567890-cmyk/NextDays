@@ -3030,7 +3030,8 @@
       "ausgewaehlt": "{count} от {gesamt} избрани",
       "ziehenHinweis": "Плъзнете елемент в стая, за да го зададете.",
       "raumLeer": "В тази стая все още няма нищо.",
-      "raumWaehlen": "Стая"
+      "raumWaehlen": "Стая",
+      "pruefungZuruecknehmen": "Отмяна на прегледа"
     }
   },
   "finance": {

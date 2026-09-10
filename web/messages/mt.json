@@ -3030,7 +3030,8 @@
       "ausgewaehlt": "{count} minn {gesamt} magħżula",
       "ziehenHinweis": "Drag oġġett għal kamra biex tassenjah.",
       "raumLeer": "Din il-kamra għadha vojta.",
-      "raumWaehlen": "Kamra"
+      "raumWaehlen": "Kamra",
+      "pruefungZuruecknehmen": "Neħħi r-reviżjoni"
     }
   },
   "finance": {

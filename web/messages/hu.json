@@ -3030,7 +3030,8 @@
       "ausgewaehlt": "{count} / {gesamt} kiválasztva",
       "ziehenHinweis": "Húzza az elemet egy szobába a hozzárendeléshez.",
       "raumLeer": "Ebben a szobában még nincs semmi.",
-      "raumWaehlen": "Szoba"
+      "raumWaehlen": "Szoba",
+      "pruefungZuruecknehmen": "Értékelés visszavonása"
     }
   },
   "finance": {

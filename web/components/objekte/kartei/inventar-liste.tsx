@@ -811,11 +811,15 @@ function Zeile({
         </span>
       </span>
 
+      {/* Umschalter, kein Einbahnknopf: die Symbole liegen dicht beieinander,
+          und ein Fehlklick stand vorher fuer immer als geprueft in der
+          Inventur. Der Titel sagt, was der naechste Klick tut. */}
       <button
         type="button"
-        title={t("inventar.geprueft")}
-        aria-label={t("inventar.geprueft")}
-        onClick={() => void speichern({ geprueft: true })}
+        title={g.geprueft_am ? t("inventar.pruefungZuruecknehmen") : t("inventar.geprueft")}
+        aria-label={g.geprueft_am ? t("inventar.pruefungZuruecknehmen") : t("inventar.geprueft")}
+        aria-pressed={g.geprueft_am !== null}
+        onClick={() => void speichern({ geprueft: !g.geprueft_am })}
         className={`flex size-8 items-center justify-center rounded-full transition-colors hover:bg-secondary ${
           g.geprueft_am ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"
         }`}

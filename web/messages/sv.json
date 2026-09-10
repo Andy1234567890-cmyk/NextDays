@@ -3030,7 +3030,8 @@
       "ausgewaehlt": "{count} av {gesamt} valda",
       "ziehenHinweis": "Dra och släpp objekt till ett rum för att tilldela det.",
       "raumLeer": "Inget finns i detta rum än.",
-      "raumWaehlen": "Rum"
+      "raumWaehlen": "Rum",
+      "pruefungZuruecknehmen": "Återkalla recension"
     }
   },
   "finance": {

@@ -3030,7 +3030,8 @@
       "ausgewaehlt": "{count} of {gesamt} selected",
       "ziehenHinweis": "Drag item to a room to assign it.",
       "raumLeer": "This room is still empty.",
-      "raumWaehlen": "Room"
+      "raumWaehlen": "Room",
+      "pruefungZuruecknehmen": "Undo review"
     }
   },
   "finance": {

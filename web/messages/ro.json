@@ -3030,7 +3030,8 @@
       "ausgewaehlt": "{count} din {gesamt} selectate",
       "ziehenHinweis": "Trageți elementul într-o cameră pentru a-l aloca.",
       "raumLeer": "Această cameră este încă goală.",
-      "raumWaehlen": "Cameră"
+      "raumWaehlen": "Cameră",
+      "pruefungZuruecknehmen": "Anulați verificarea"
     }
   },
   "finance": {

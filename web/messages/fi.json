@@ -3030,7 +3030,8 @@
       "ausgewaehlt": "{count} / {gesamt} valittu",
       "ziehenHinweis": "Vedä kohde huoneeseen määrittääksesi sen.",
       "raumLeer": "Tässä huoneessa ei ole vielä mitään.",
-      "raumWaehlen": "Huone"
+      "raumWaehlen": "Huone",
+      "pruefungZuruecknehmen": "Peruuta tarkistus"
     }
   },
   "finance": {

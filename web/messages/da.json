@@ -3030,7 +3030,8 @@
       "ausgewaehlt": "{count} af {gesamt} valgt",
       "ziehenHinweis": "Træk element til et rum for at tildele det.",
       "raumLeer": "Dette rum er tomt.",
-      "raumWaehlen": "Rum"
+      "raumWaehlen": "Rum",
+      "pruefungZuruecknehmen": "Fortryd anmeldelse"
     }
   },
   "finance": {

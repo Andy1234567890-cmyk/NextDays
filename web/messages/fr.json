@@ -3030,7 +3030,8 @@
       "ausgewaehlt": "{count} sur {gesamt} sélectionné",
       "ziehenHinweis": "Faites glisser l'objet vers un espace pour l'attribuer.",
       "raumLeer": "Rien n'est encore dans cet espace.",
-      "raumWaehlen": "Espace"
+      "raumWaehlen": "Espace",
+      "pruefungZuruecknehmen": "Annuler la vérification"
     }
   },
   "finance": {

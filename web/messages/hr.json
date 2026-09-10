@@ -3030,7 +3030,8 @@
       "ausgewaehlt": "Odabrano {count} od {gesamt}",
       "ziehenHinweis": "Povucite stavku u prostoriju da biste je dodijelili.",
       "raumLeer": "U ovoj prostoriji još nema ničega.",
-      "raumWaehlen": "Prostorija"
+      "raumWaehlen": "Prostorija",
+      "pruefungZuruecknehmen": "Poništi recenziju"
     }
   },
   "finance": {

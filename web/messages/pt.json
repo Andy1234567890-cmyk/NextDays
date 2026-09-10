@@ -3030,7 +3030,8 @@
       "ausgewaehlt": "{count} de {gesamt} selecionados",
       "ziehenHinweis": "Arraste um item para uma sala para atribuí-lo.",
       "raumLeer": "Esta sala ainda não tem nada.",
-      "raumWaehlen": "Sala"
+      "raumWaehlen": "Sala",
+      "pruefungZuruecknehmen": "Retirar avaliação"
     }
   },
   "finance": {

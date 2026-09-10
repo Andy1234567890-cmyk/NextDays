@@ -3030,7 +3030,8 @@
       "ausgewaehlt": "{count} van {gesamt} geselecteerd",
       "ziehenHinweis": "Sleep een item naar een ruimte om het toe te wijzen.",
       "raumLeer": "Deze ruimte is nog leeg.",
-      "raumWaehlen": "Ruimte"
+      "raumWaehlen": "Ruimte",
+      "pruefungZuruecknehmen": "Beoordeling intrekken"
     }
   },
   "finance": {

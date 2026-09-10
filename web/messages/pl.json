@@ -3030,7 +3030,8 @@
       "ausgewaehlt": "Wybrano {count} z {gesamt}",
       "ziehenHinweis": "Przeciągnij element do pokoju, aby go przypisać.",
       "raumLeer": "W tym pokoju nic jeszcze nie ma.",
-      "raumWaehlen": "Pokój"
+      "raumWaehlen": "Pokój",
+      "pruefungZuruecknehmen": "Cofnij recenzję"
     }
   },
   "finance": {

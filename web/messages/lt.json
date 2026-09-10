@@ -3030,7 +3030,8 @@
       "ausgewaehlt": "Pasirinkta {count} iš {gesamt}",
       "ziehenHinweis": "Nuvilkite elementą į kambarį, kad jį priskirtumėte.",
       "raumLeer": "Šiame kambaryje dar nieko nėra.",
-      "raumWaehlen": "Kambarys"
+      "raumWaehlen": "Kambarys",
+      "pruefungZuruecknehmen": "Anuliuoti peržiūrą"
     }
   },
   "finance": {

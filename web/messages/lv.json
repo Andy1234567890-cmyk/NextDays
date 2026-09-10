@@ -3030,7 +3030,8 @@
       "ausgewaehlt": "Atlasīti {count} no {gesamt}",
       "ziehenHinweis": "Velciet objektu uz telpu, lai to piešķirtu.",
       "raumLeer": "Šajā telpā vēl nekas neatrodas.",
-      "raumWaehlen": "Telpa"
+      "raumWaehlen": "Telpa",
+      "pruefungZuruecknehmen": "Atsaukt pārskatīšanu"
     }
   },
   "finance": {

@@ -3030,7 +3030,8 @@
       "ausgewaehlt": "{count} di {gesamt} selezionati",
       "ziehenHinweis": "Trascinare un elemento su una stanza per assegnarlo.",
       "raumLeer": "Questa stanza è vuota.",
-      "raumWaehlen": "Stanza"
+      "raumWaehlen": "Stanza",
+      "pruefungZuruecknehmen": "Annulla revisione"
     }
   },
   "finance": {

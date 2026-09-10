@@ -3030,7 +3030,8 @@
       "ausgewaehlt": "Vybráno {count} z {gesamt}",
       "ziehenHinweis": "Přetáhněte položku do místnosti a přiřaďte ji.",
       "raumLeer": "V této místnosti ještě nic není.",
-      "raumWaehlen": "Místnost"
+      "raumWaehlen": "Místnost",
+      "pruefungZuruecknehmen": "Zrušit kontrolu"
     }
   },
   "finance": {

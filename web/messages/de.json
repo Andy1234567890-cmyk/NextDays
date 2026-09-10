@@ -3030,7 +3030,8 @@
       "ausgewaehlt": "{count} von {gesamt} ausgewählt",
       "ziehenHinweis": "Gegenstand auf einen Raum ziehen, um ihn zuzuweisen.",
       "raumLeer": "In diesem Raum steht noch nichts.",
-      "raumWaehlen": "Raum"
+      "raumWaehlen": "Raum",
+      "pruefungZuruecknehmen": "Prüfung zurücknehmen"
     }
   },
   "finance": {
