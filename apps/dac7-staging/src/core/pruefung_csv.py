@@ -76,7 +76,14 @@ _PFLICHT: dict[str, tuple[str, ...]] = {
         "DOC_TYPE_INDIC",
         "RESIDENCE",
         "ADDR_COUNTRY",
-        "RS_ENT_ORGANISATION_NAME",
+        # `ORGANISATION_NAME`, nicht `RS_ENT_ORGANISATION_NAME`: Die Spalte
+        # heisst in der Vorlage ohne Praefix und wird von Betreiber- UND
+        # Firmenzeile geteilt. Hier stand ein erfundener Name — die Pruefung
+        # verlangte damit ein Feld, das es nicht gibt, und wies jede Meldung
+        # mit einer Gesellschaft als Verkaeufer ab. Aufgefallen an der
+        # Demo-Meldung, nicht an einem Test: Die Testdaten hatten keine
+        # Firmenzeile.
+        "ORGANISATION_NAME",
     ),
     _AKTIVITAET: (
         "RS_DOC_REF_ID",
