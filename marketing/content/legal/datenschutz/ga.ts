@@ -209,6 +209,15 @@ export const datenschutz: LegalDoc = {
           ],
         },
         {
+          titel: "Comhairleoir táirge ar an suíomh Gréasáin seo",
+          paragraphs: [
+            "Ar an suíomh Gréasáin seo, freagraíonn comhairleoir táirge atá bunaithe ar AI ceisteanna faoinár mbogearraí. Ní úsáideann sé ach ábhar atá ar fáil go poiblí ar an suíomh Gréasáin seo (ailt cabhrach, tuairiscí feidhme, ceisteanna coitianta, téacsanna dlíthiúla) chomh maith leis na praghsanna reatha ónár mbilleáil. Níl sonraí custaiméirí, áirithintí nó sonraí aoi ar fáil dó.",
+            "Murab ionann agus na moltaí freagraí san ionchur, freagraíonn an comhairleoir seo LÁITHREACH agus gan cead daonna. Is córas AI é dá bhrí sin de réir Airteagal 50(1) den Rialachán AI, a idirghníomhaíonn go díreach le daoine nádúrtha. Dá bhrí sin, cuirfear in iúl duit go soiléir ag tús an idirphlé go dtagann na freagraí ó chúntóir AI agus go bhféadfadh earráidí a bheith iontu.",
+            "Déantar do cheist agus an teanga roghnaithe a phróiseáil. Seoltar an dá rud chuig Google Cloud (Vertex AI) i réigiún europe-west4 (An Ísiltír) le haghaidh freagra; ní tharlaíonn próiseáil lasmuigh den AE. Ní stórálaimid na ceisteanna go buan agus ní úsáidimid iad chun samhlacha AI a oiliúint. Is é an bonn dlíthiúil ár leas dlisteanach i bhfreagra tapa do pháirtithe leasmhara (Airteagal 6(1)(f) GDPR).",
+            "Mura féidir leis an gcomhairleoir ceist a fhreagairt ó na hábhair atá ann cheana féin, tairgeann sé atreorú chuig ár dtacaíocht. Ansin amháin — agus ach amháin má chomhlánaíonn tú an fhoirm — bailímid ainm, seoladh ríomhphoist agus, go roghnach, d'uimhir theileafóin; déanaimid na sonraí seo a phróiseáil de réir na rialacha sa chuid “Cumarsáid”.",
+          ],
+        },
+        {
           titel: "Róil faoin Rialachán maidir le hIntleacht Shaorga",
           paragraphs: [
             "Maidir leis na feidhmeanna intleachta saorga atá tógtha isteach sa táirge, is úsáideoir gairmiúil sinne de réir bhrí Airteagal 3(4) den Rialachán maidir le hIntleacht Shaorga; is iad soláthraithe na samhlacha faoi seach soláthraithe na samhlacha teanga bunúsacha. Má úsáideann gnólacht na feidhmeanna sin faoi chuimsiú a ghníomhaíochta gairmiúla, is úsáideoir gairmiúil é féin ina leith agus tá an oibleagáid maidir le litearthacht intleachta saorga faoi Airteagal 4 den Rialachán maidir le hIntleacht Shaorga air, oibleagáid atá i bhfeidhm ó 2 Feabhra 2025 gan spleáchas ar mhéid an ghnóthais. Ó 27 Iúil 2026 tá sí i bhfeidhm i bhfoirm Rialachán (AE) 2026/1744: glacann soláthraithe agus úsáideoirí gairmiúla bearta chun tacú le forbairt litearthachta intleachta saorga a bhfoirne; go sainráite ní gá leibhéal áirithe a ráthú. Tacaímid le nótaí san fheidhmchlár agus inár nIonad Cabhrach; is faoin ngnólacht a fhanann oiliúint a fhoirne féin.",

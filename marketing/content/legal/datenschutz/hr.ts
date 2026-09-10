@@ -209,6 +209,15 @@ export const datenschutz: LegalDoc = {
           ],
         },
         {
+          titel: "Savjetnik za proizvode na ovoj web stranici",
+          paragraphs: [
+            "Na ovoj web stranici, savjetnik za proizvode podržan umjetnom inteligencijom odgovara na pitanja o našem softveru. Koristi isključivo javno dostupne sadržaje s ove web stranice (članci pomoći, opisi funkcija, često postavljana pitanja, pravni tekstovi) kao i aktualne cijene iz našeg obračuna. Podaci o klijentima, rezervacije ili podaci o gostima mu nisu dostupni.",
+            "Za razliku od predloženih odgovora u pristigloj pošti, ovaj savjetnik odgovara ODMAH i bez ljudskog odobrenja. Stoga je to sustav umjetne inteligencije u smislu članka 50. stavka 1. Uredbe o umjetnoj inteligenciji, koji izravno komunicira s fizičkim osobama. Stoga ćete na početku dijaloga biti vidljivo obaviješteni da odgovori potječu od asistenta umjetne inteligencije i da mogu sadržavati pogreške.",
+            "Obrađuju se vaše pitanje i odabrani jezik. Oboje se prosljeđuje Google Cloudu (Vertex AI) u regiji europe-west4 (Nizozemska) radi odgovora; obrada izvan EU-a se ne odvija. Pitanja ne pohranjujemo trajno i ne koristimo ih za obuku modela umjetne inteligencije. Pravna osnova je naš legitimni interes za brzim informacijama za zainteresirane strane (članak 6. stavak 1. točka f GDPR-a).",
+            "Ako savjetnik ne može odgovoriti na pitanje iz dostupnih sadržaja, nudi prosljeđivanje našoj podršci. Tek tada – i samo ako ispunite obrazac – prikupljamo ime, e-mail adresu i opcionalno vaš telefonski broj; te podatke obrađujemo prema pravilima u odjeljku „Komunikacija“.",
+          ],
+        },
+        {
           titel: "Uloge prema Uredbi o umjetnoj inteligenciji",
           paragraphs: [
             "Za funkcije umjetne inteligencije ugrađene u proizvod mi smo subjekt koji uvodi sustav u smislu čl. 3. t. 4. Uredbe o umjetnoj inteligenciji; dobavljači osnovnih jezičnih modela su dotični pružatelji modela. Ako objekt te funkcije koristi u okviru svoje profesionalne djelatnosti, on je s te strane subjekt koji uvodi sustav i na njega se primjenjuje obveza pismenosti u području umjetne inteligencije iz čl. 4. Uredbe o umjetnoj inteligenciji, koja se od 2. veljače 2025. primjenjuje neovisno o veličini poduzeća. Od 27. srpnja 2026. primjenjuje se u tekstu Uredbe (EU) 2026/1744: dobavljači i subjekti koji uvode sustav poduzimaju mjere za podupiranje razvoja pismenosti svojeg osoblja u području umjetne inteligencije; pri tome se izričito ne mora jamčiti određena razina. Mi pružamo podršku obavijestima u aplikaciji i u našem centru za pomoć; osposobljavanje vlastitih zaposlenika ostaje zadatak objekta.",

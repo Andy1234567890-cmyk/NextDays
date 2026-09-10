@@ -211,6 +211,15 @@ export const datenschutz: LegalDoc = {
           ],
         },
         {
+          titel: "Produktkonsult på denna webbplats",
+          paragraphs: [
+            "På denna webbplats besvarar en AI-driven produktkonsult frågor om vår programvara. Den använder sig uteslutande av offentligt tillgängligt innehåll från denna webbplats (hjälpartiklar, funktionsbeskrivningar, vanliga frågor, juridiska texter) samt aktuella priser från vår fakturering. Kunddata, bokningar eller gästdata är inte tillgängliga för den.",
+            "Till skillnad från svarsförslagen i inkorgen svarar denna konsult OMEDELBART och utan mänskligt godkännande. Det är därmed ett AI-system i enlighet med artikel 50.1 i AI-förordningen, som interagerar direkt med fysiska personer. Du kommer därför att informeras synligt i början av dialogen att svaren kommer från en AI-assistent och kan innehålla fel.",
+            "Din fråga och det valda språket behandlas. Båda överförs till Google Cloud (Vertex AI) i regionen europe-west4 (Nederländerna) för att besvara frågan; ingen behandling sker utanför EU. Vi lagrar inte frågorna permanent och använder dem inte för att träna AI-modeller. Rättslig grund är vårt berättigade intresse av snabb information för intresserade parter (artikel 6.1 f GDPR).",
+            "Om konsulten inte kan besvara en fråga utifrån befintligt innehåll, erbjuder den att vidarebefordra den till vår support. Först då – och endast om du fyller i formuläret – samlar vi in namn, e-postadress och eventuellt ditt telefonnummer; dessa uppgifter behandlar vi enligt reglerna i avsnittet \"Kommunikation\".",
+          ],
+        },
+        {
           titel: "Roller enligt AI-förordningen",
           paragraphs: [
             "För de AI-funktioner som är inbyggda i produkten är vi tillämpare i den mening som avses i artikel 3.4 i AI-förordningen; leverantörer av de underliggande språkmodellerna är respektive modelleverantör. Använder en verksamhet dessa funktioner inom ramen för sin yrkesverksamhet är den i sin tur tillämpare och omfattas av skyldigheten om AI-kunnighet enligt artikel 4 i AI-förordningen, som gäller sedan den 2 februari 2025 oberoende av företagets storlek. Sedan den 27 juli 2026 gäller den i den lydelse som följer av förordning (EU) 2026/1744: leverantörer och tillämpare vidtar åtgärder för att stödja utvecklingen av sin personals AI-kunnighet; någon bestämd nivå behöver uttryckligen inte garanteras. Vi stöder genom upplysningar i applikationen och i vårt hjälpcenter; utbildningen av de egna medarbetarna förblir verksamhetens uppgift.",

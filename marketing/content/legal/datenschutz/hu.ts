@@ -208,6 +208,15 @@ export const datenschutz: LegalDoc = {
           ],
         },
         {
+          titel: "Termék tanácsadó ezen a weboldalon",
+          paragraphs: [
+            "Ezen a weboldalon egy AI-alapú terméktanácsadó válaszol a szoftverünkkel kapcsolatos kérdésekre. Kizárólag a weboldal nyilvánosan elérhető tartalmait (súgócikkek, funkcióleírások, gyakran ismételt kérdések, jogi szövegek), valamint az aktuális árakat használja fel a számlázásunkból. Ügyféladatok, foglalások vagy vendégadatok nem állnak rendelkezésére.",
+            "Ellentétben a beérkező üzenetekben található válaszjavaslatokkal, ez a tanácsadó AZONNAL és emberi jóváhagyás nélkül válaszol. Ezért az AI-rendelet 50. cikk (1) bekezdése értelmében egy olyan AI-rendszer, amely közvetlenül interakcióba lép természetes személyekkel. Ezért a párbeszéd elején láthatóan figyelmeztetést kap arról, hogy a válaszok egy AI-asszisztenstől származnak, és hibákat tartalmazhatnak.",
+            "A kérdése és a kiválasztott nyelv feldolgozásra kerül. Mindkettő továbbításra kerül a Google Cloud (Vertex AI) részére az europe-west4 régióban (Hollandia) a válaszadás céljából; az EU-n kívüli feldolgozás nem történik. A kérdéseket nem tároljuk tartósan, és nem használjuk fel AI-modellek képzésére. A jogalap az érdeklődők gyors tájékoztatásához fűződő jogos érdekünk (GDPR 6. cikk (1) bekezdés f) pont).",
+            "Ha a tanácsadó nem tud válaszolni egy kérdésre a rendelkezésre álló tartalmakból, felajánlja a továbbítást az ügyfélszolgálatunkhoz. Csak ekkor – és csak akkor, ha kitölti az űrlapot – gyűjtjük be a nevét, e-mail címét és opcionálisan a telefonszámát; ezeket az adatokat a „Kommunikáció” szakaszban leírt szabályok szerint dolgozzuk fel.",
+          ],
+        },
+        {
           titel: "Szerepek az MI-rendelet szerint",
           paragraphs: [
             "A termékbe beépített MI-funkciók tekintetében mi az MI-rendelet 3. cikk 4. pontja értelmében vett alkalmazók vagyunk; az alapul szolgáló nyelvi modellek szolgáltatói az adott modellszolgáltatók. Ha egy vállalkozás e funkciókat a szakmai tevékenysége keretében használja, ő maga is alkalmazónak minősül, és őt terheli az MI-rendelet 4. cikke szerinti MI-jártassági kötelezettség, amely 2025. február 2. óta a vállalkozás méretétől függetlenül alkalmazandó. 2026. július 27. óta ez az (EU) 2026/1744 rendelet szerinti szövegváltozatban alkalmazandó: a szolgáltatók és az alkalmazók intézkedéseket tesznek a személyzetük MI-jártasságának fejlesztése érdekében; meghatározott szintet ennek során kifejezetten nem kell garantálni. Mi az alkalmazásban és a súgóközpontunkban elhelyezett tájékoztatással támogatjuk ezt; a saját munkavállalók képzése továbbra is a vállalkozás feladata.",

@@ -211,6 +211,15 @@ export const datenschutz: LegalDoc = {
           ],
         },
         {
+          titel: "Consultor de produto neste site",
+          paragraphs: [
+            "Neste site, um consultor de produto com IA responde a perguntas sobre nosso software. Ele usa exclusivamente conteúdo disponível publicamente neste site (artigos de ajuda, descrições de recursos, perguntas frequentes, textos legais), bem como os preços atuais de nossa faturação. Dados de clientes, reservas ou dados de hóspedes não estão disponíveis para ele.",
+            "Ao contrário das sugestões de resposta na caixa de entrada, este consultor responde IMEDIATAMENTE e sem aprovação humana. É, portanto, um sistema de IA no sentido do Art. 50, parágrafo 1 do Regulamento de IA, que interage diretamente com pessoas físicas. Por isso, no início do diálogo, você será explicitamente informado de que as respostas vêm de um assistente de IA e podem conter erros.",
+            "Sua pergunta e o idioma selecionado são processados. Ambos são transmitidos para o Google Cloud (Vertex AI) na região europe-west4 (Holanda) para resposta; nenhum processamento fora da UE ocorre. Não armazenamos as perguntas permanentemente e não as usamos para treinar modelos de IA. A base legal é nosso interesse legítimo em fornecer informações rápidas para interessados (Art. 6, parágrafo 1, alínea f do RGPD).",
+            "Se o consultor não conseguir responder a uma pergunta com o conteúdo existente, ele oferece o encaminhamento para nosso suporte. Somente então — e apenas se você preencher o formulário — coletamos nome, endereço de e-mail e, opcionalmente, seu número de telefone; processamos esses dados de acordo com as regras na seção \"Comunicação\".",
+          ],
+        },
+        {
           titel: "Papéis ao abrigo do Regulamento da Inteligência Artificial",
           paragraphs: [
             "Quanto às funcionalidades de IA integradas no produto, somos responsáveis pela implantação na aceção do artigo 3.º, n.º 4, do Regulamento da Inteligência Artificial; prestadores dos modelos de linguagem subjacentes são os respetivos fornecedores de modelos. Se uma empresa utilizar estas funcionalidades no âmbito da sua atividade profissional, é ela própria responsável pela implantação e recai sobre ela o dever de literacia em IA previsto no artigo 4.º do Regulamento da Inteligência Artificial, aplicável desde 2 de fevereiro de 2025 independentemente da dimensão da empresa. Desde 27 de julho de 2026 aplica-se na redação do Regulamento (UE) 2026/1744: os prestadores e os responsáveis pela implantação tomam medidas para apoiar o desenvolvimento da literacia em IA do seu pessoal; expressamente, não tem de ser garantido um determinado nível. Apoiamos através de indicações na aplicação e no nosso centro de ajuda; a formação dos próprios colaboradores continua a ser tarefa da empresa.",

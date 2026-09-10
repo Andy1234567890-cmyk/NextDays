@@ -900,7 +900,10 @@
     "beraterDenkt": "Estoy buscando…",
     "beraterQuellen": "Para leer:",
     "beraterUebergabe": "No puedo responder esto con seguridad desde la ayuda. Reenviaré tu pregunta a un colega; por favor, introduce tus datos de contacto brevemente.",
-    "beraterFormularHinweis": "Un colega te responderá por correo electrónico, normalmente en unas pocas horas."
+    "beraterFormularHinweis": "Un colega te responderá por correo electrónico, normalmente en unas pocas horas.",
+    "beraterRecht": "Las respuestas son generadas por un asistente de IA y pueden contener errores. Se aplican nuestras <agb>Condiciones Generales</agb> y la <link>Política de Privacidad</link>.",
+    "hinweisRecht": "Utilizamos tus datos únicamente para responder a esta solicitud. Más detalles en la <link>Política de Privacidad</link>; se aplican nuestras <agb>Condiciones Generales</agb>.",
+    "beraterUnterMensch": "Asistente de IA · El soporte responde personalmente"
   },
   "einblicke": {
     "eyebrow": "Por dentro",

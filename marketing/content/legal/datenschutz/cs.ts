@@ -208,6 +208,15 @@ export const datenschutz: LegalDoc = {
           ],
         },
         {
+          titel: "Produktový poradce na tomto webu",
+          paragraphs: [
+            "Na tomto webu odpovídá produktový poradce s umělou inteligencí na otázky týkající se našeho softwaru. Využívá výhradně veřejně dostupné obsahy tohoto webu (články nápovědy, popisy funkcí, často kladené otázky, právní texty) a aktuální ceny z našeho účetnictví. Zákaznická data, rezervace ani data hostů mu nejsou k dispozici.",
+            "Na rozdíl od návrhů odpovědí v doručené poště odpovídá tento poradce OKAMŽITĚ a bez lidského schválení. Jedná se tedy o systém umělé inteligence ve smyslu čl. 50 odst. 1 nařízení o umělé inteligenci, který přímo interaguje s fyzickými osobami. Proto budete na začátku dialogu viditelně upozorněni, že odpovědi pocházejí od asistenta AI a mohou obsahovat chyby.",
+            "Zpracovává se vaše otázka a zvolený jazyk. Obojí se pro zodpovězení předává do Google Cloud (Vertex AI) v regionu europe-west4 (Nizozemsko); zpracování mimo EU se nekoná. Otázky trvale neukládáme a nepoužíváme je k trénování modelů AI. Právním základem je náš oprávněný zájem na rychlém poskytování informací zájemcům (čl. 6 odst. 1 písm. f GDPR).",
+            "Pokud poradce nemůže odpovědět na otázku z dostupných obsahů, nabídne přesměrování na naši podporu. Teprve poté – a pouze pokud vyplníte formulář – shromažďujeme jméno, e-mailovou adresu a volitelně vaše telefonní číslo; tyto údaje zpracováváme podle pravidel v sekci „Komunikace“.",
+          ],
+        },
+        {
           titel: "Role podle nařízení o umělé inteligenci",
           paragraphs: [
             "U funkcí umělé inteligence zabudovaných do produktu jsme provozovatelem (subjektem zavádějícím systém AI) ve smyslu čl. 3 bodu 4 nařízení o umělé inteligenci; poskytovateli základních jazykových modelů jsou příslušní poskytovatelé modelů. Využívá-li podnik tyto funkce v rámci své profesní činnosti, je za ně sám provozovatelem a dopadá na něj povinnost gramotnosti v oblasti umělé inteligence podle čl. 4 nařízení o umělé inteligenci, která platí od 2. února 2025 nezávisle na velikosti podniku. Od 27. července 2026 platí ve znění nařízení (EU) 2026/1744: poskytovatelé a provozovatelé přijímají opatření na podporu rozvoje gramotnosti svého personálu v oblasti umělé inteligence; určitá úroveň přitom výslovně zaručena být nemusí. Podporujeme prostřednictvím upozornění v aplikaci a v našem centru nápovědy; školení vlastních zaměstnanců zůstává úkolem podniku.",

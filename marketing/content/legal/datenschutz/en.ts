@@ -210,6 +210,15 @@ export const datenschutz: LegalDoc = {
           ],
         },
         {
+          titel: "Product Advisor on this Website",
+          paragraphs: [
+            "On this website, an AI-powered product advisor answers questions about our software. It exclusively uses publicly available content from this website (help articles, feature descriptions, frequently asked questions, legal texts) as well as current prices from our billing system. Customer data, bookings, or guest data are not available to it.",
+            "Unlike the suggested replies in the inbox, this advisor responds IMMEDIATELY and without human approval. It is therefore an AI system within the meaning of Art. 50 (1) of the AI Regulation that directly interacts with natural persons. You will therefore be visibly informed at the beginning of the dialogue that the answers come from an AI assistant and may contain errors.",
+            "Your question and the selected language are processed. Both are transmitted to Google Cloud (Vertex AI) in the europe-west4 region (Netherlands) for answering; processing outside the EU does not take place. We do not permanently store the questions and do not use them for training AI models. The legal basis is our legitimate interest in providing quick information to interested parties (Art. 6 (1) lit. f GDPR).",
+            "If the advisor cannot answer a question from the available content, it offers to forward it to our support. Only then - and only if you fill out the form - do we collect your name, email address, and optionally your phone number; we process this information according to the rules in the \"Communication\" section.",
+          ],
+        },
+        {
           titel: "Roles under the AI Act",
           paragraphs: [
             "For the AI features built into the product we are the deployer within the meaning of Art. 3(4) of the AI Act; the providers of the underlying language models are the respective model providers. If a business uses these features in the course of its professional activity, it is itself a deployer in that respect and is subject to the AI literacy obligation under Art. 4 of the AI Act, which has applied since 2 February 2025 regardless of company size. Since 27 July 2026 it has applied in the version introduced by Regulation (EU) 2026/1744: providers and deployers take measures to support the development of AI literacy among their staff; expressly, no particular level has to be guaranteed. We provide support through notices in the application and in our help centre; training its own staff remains the responsibility of the business.",

@@ -23,6 +23,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import Image from "next/image";
 import Link from "next/link";
 import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 
@@ -249,19 +250,32 @@ export function SupportChat() {
           className="fixed bottom-24 right-6 z-50 flex max-h-[min(34rem,calc(100vh-8rem))] w-[min(23rem,calc(100vw-3rem))] flex-col overflow-hidden rounded-3xl bg-card shadow-float-lg"
         >
           <header className="flex items-center gap-3 border-b border-border px-5 py-4">
-            {/* Kein Fantasie-Porträt und kein erfundener Vorname: der Berater
-                ist eine Software, und das steht auch so da. Ein Bot, der sich
-                als „Amy" ausgibt, ist eine Falschaussage über die Gegenseite
-                — und beim ersten „bist du ein Mensch?" verbrannt. */}
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-accent text-accent">
-              <Icon icon="ph:sparkle" className="size-5" />
+            {/* Echtes Foto einer echten Person: Jeanine Ågaard, eingetragene
+                Geschäftsführerin (content/legal/anbieter.ts). KEIN erfundener
+                Vorname wie bei der Referenz („Amy") — ein Bot, der sich als
+                Person ausgibt, die es nicht gibt, ist beim ersten „bist du ein
+                Mensch?" verbrannt, und nach Art. 50 Abs. 1 der KI-Verordnung
+                muss ohnehin erkennbar sein, dass eine Maschine antwortet.
+
+                Deshalb beides: das Gesicht sagt, WER hinter dem Angebot steht,
+                die Zeile darunter sagt, WAS gerade antwortet. */}
+            <span className="relative size-9 shrink-0 overflow-hidden rounded-full ring-1 ring-border">
+              <Image
+                src="/marketing/team/jeanine-aagaard.png"
+                alt=""
+                width={72}
+                height={72}
+                className="size-full object-cover"
+              />
             </span>
             <div className="min-w-0">
               <p className="truncate font-display text-base font-semibold">
                 {t("beraterTitel")}
               </p>
               <p className="truncate text-xs text-muted-foreground">
-                {zustand === "ticket" ? t("untertitel") : t("beraterUnter")}
+                {zustand === "ticket"
+                  ? t("untertitel")
+                  : t("beraterUnterMensch")}
               </p>
             </div>
           </header>
@@ -378,7 +392,7 @@ export function SupportChat() {
               <Button type="submit" variant="accent" disabled={laeuft}>
                 {laeuft ? t("sendet") : t("absenden")}
               </Button>
-              <p className="text-xs text-muted-foreground">{t("hinweis")}</p>
+              <RechtsHinweis schluessel="hinweisRecht" />
             </form>
           ) : null}
 
@@ -487,6 +501,42 @@ function BeraterFenster({
           <Icon icon="ph:paper-plane-tilt-fill" className="size-4" />
         </Button>
       </form>
+
+      {/* Rechtshinweis AUCH hier, nicht nur im Formular. Vorher stand er
+          ausschliesslich unter den Kontaktfeldern — wer nur mit dem Bot
+          sprach, sah keinen. Dabei ist gerade hier die Offenlegung fällig:
+          es antwortet eine Maschine (EU AI Act Art. 50 Abs. 1: der Nutzer
+          muss wissen, dass er mit einem KI-System spricht). */}
+      <div className="px-4 pb-3">
+        <RechtsHinweis schluessel="beraterRecht" />
+      </div>
     </>
+  );
+}
+
+/** Ein Rechtshinweis mit Links auf Datenschutz und AGB.
+ *
+ *  `t.rich` statt zusammengeklebter Textschnipsel: „Es gelten unsere AGB und
+ *  die Datenschutzerklärung" hat nur auf Deutsch diese Wortstellung. In 24
+ *  Sprachen steht der Link an anderer Stelle im Satz — mit Vor-/Nachtext
+ *  wäre die Hälfte grammatisch falsch. Dasselbe Muster wie im
+ *  Kontaktformular (`kontakt-formular.tsx`). */
+function RechtsHinweis({ schluessel }: { schluessel: string }) {
+  const t = useTranslations("chat");
+  return (
+    <p className="text-xs leading-relaxed text-muted-foreground">
+      {t.rich(schluessel, {
+        link: (teile) => (
+          <Link href="/datenschutz" className="underline underline-offset-2">
+            {teile}
+          </Link>
+        ),
+        agb: (teile) => (
+          <Link href="/agb" className="underline underline-offset-2">
+            {teile}
+          </Link>
+        ),
+      })}
+    </p>
   );
 }

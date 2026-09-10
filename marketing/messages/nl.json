@@ -900,7 +900,10 @@
     "beraterDenkt": "Ik zoek het op …",
     "beraterQuellen": "Ter referentie:",
     "beraterUebergabe": "Ik kan dit niet met zekerheid beantwoorden vanuit de help. Ik stuur je vraag door naar een collega — vul hiervoor je contactgegevens in.",
-    "beraterFormularHinweis": "Een collega antwoordt je per e-mail, meestal binnen enkele uren."
+    "beraterFormularHinweis": "Een collega antwoordt je per e-mail, meestal binnen enkele uren.",
+    "beraterRecht": "De antwoorden worden gegenereerd door een AI-assistent en kunnen fouten bevatten. Onze <agb>algemene voorwaarden</agb> en het <link>privacybeleid</link> zijn van toepassing.",
+    "hinweisRecht": "We gebruiken je gegevens alleen om deze aanvraag te beantwoorden. Meer informatie vind je in het <link>privacybeleid</link>; onze <agb>algemene voorwaarden</agb> zijn van toepassing.",
+    "beraterUnterMensch": "AI-assistent · Support antwoordt persoonlijk"
   },
   "einblicke": {
     "eyebrow": "Inkijk",

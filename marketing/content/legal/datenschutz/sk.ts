@@ -211,6 +211,15 @@ export const datenschutz: LegalDoc = {
           ],
         },
         {
+          titel: "Produktový poradca na tejto webovej stránke",
+          paragraphs: [
+            "Na tejto webovej stránke odpovedá produktový poradca s podporou AI na otázky týkajúce sa nášho softvéru. Využíva výhradne verejne dostupné obsahy tejto webovej stránky (články pomoci, popisy funkcií, často kladené otázky, právne texty) a aktuálne ceny z našej fakturácie. Zákaznícke údaje, rezervácie ani údaje hostí mu nie sú k dispozícii.",
+            "Na rozdiel od návrhov odpovedí v doručenej pošte, tento poradca odpovedá OKAMŽITE a bez ľudského schválenia. Je to teda systém AI v zmysle čl. 50 ods. 1 nariadenia o AI, ktorý priamo interaguje s fyzickými osobami. Preto budete na začiatku dialógu viditeľne upozornení, že odpovede pochádzajú od asistenta AI a môžu obsahovať chyby.",
+            "Spracováva sa vaša otázka a zvolený jazyk. Oboje sa prenáša na zodpovedanie do Google Cloud (Vertex AI) v regióne europe-west4 (Holandsko); spracovanie mimo EÚ sa neuskutočňuje. Otázky trvalo neukladáme a nepoužívame ich na trénovanie modelov AI. Právnym základom je náš oprávnený záujem o rýchle poskytovanie informácií pre záujemcov (čl. 6 ods. 1 písm. f GDPR).",
+            "Ak poradca nedokáže odpovedať na otázku z dostupných obsahov, ponúkne presmerovanie na našu podporu. Až potom – a len ak vyplníte formulár – zhromažďujeme meno, e-mailovú adresu a voliteľne vaše telefónne číslo; tieto údaje spracovávame podľa pravidiel v sekcii „Komunikácia“.",
+          ],
+        },
+        {
           titel: "Úlohy podľa aktu o umelej inteligencii",
           paragraphs: [
             "V súvislosti s funkciami umelej inteligencie zabudovanými do produktu sme nasadzujúcim subjektom v zmysle čl. 3 bodu 4 aktu o umelej inteligencii; poskytovateľmi jazykových modelov, ktoré sú ich základom, sú príslušní poskytovatelia modelov. Ak prevádzka používa tieto funkcie v rámci svojej profesijnej činnosti, je za ne sama nasadzujúcim subjektom a vzťahuje sa na ňu povinnosť gramotnosti v oblasti umelej inteligencie podľa čl. 4 aktu o umelej inteligencii, ktorá platí od 2. februára 2025 nezávisle od veľkosti podniku. Od 27. júla 2026 platí v znení nariadenia (EÚ) 2026/1744: poskytovatelia a nasadzujúce subjekty prijímajú opatrenia na podporu rozvoja gramotnosti svojho personálu v oblasti umelej inteligencie; určitá úroveň sa pritom výslovne garantovať nemusí. Podporujeme upozorneniami v aplikácii a v našom centre pomoci; školenie vlastných zamestnancov zostáva úlohou prevádzky.",

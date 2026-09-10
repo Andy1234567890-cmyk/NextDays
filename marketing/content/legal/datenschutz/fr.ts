@@ -207,6 +207,15 @@ export const datenschutz: LegalDoc = {
           ],
         },
         {
+          titel: "Conseiller produit sur ce site web",
+          paragraphs: [
+            "Sur ce site web, un conseiller produit basé sur l'IA répond aux questions concernant notre logiciel. Il utilise exclusivement le contenu publiquement disponible sur ce site web (articles d'aide, descriptions de fonctionnalités, questions fréquentes, textes juridiques) ainsi que les prix actuels de notre facturation. Les données clients, les réservations ou les données des hôtes ne lui sont pas accessibles.",
+            "Contrairement aux suggestions de réponse dans la boîte de réception, ce conseiller répond IMMÉDIATEMENT et sans approbation humaine. Il s'agit donc d'un système d'IA au sens de l'article 50, paragraphe 1, du règlement sur l'IA, qui interagit directement avec des personnes physiques. Vous serez donc clairement informé au début du dialogue que les réponses proviennent d'un assistant IA et peuvent contenir des erreurs.",
+            "Votre question et la langue choisie sont traitées. Les deux sont transmises à Google Cloud (Vertex AI) dans la région europe-west4 (Pays-Bas) pour la réponse ; aucun traitement n'a lieu en dehors de l'UE. Nous ne stockons pas les questions de manière permanente et ne les utilisons pas pour l'entraînement de modèles d'IA. La base juridique est notre intérêt légitime à fournir des informations rapides aux personnes intéressées (article 6, paragraphe 1, point f du RGPD).",
+            "Si le conseiller ne peut pas répondre à une question à partir du contenu existant, il propose de la transmettre à notre support. Ce n'est qu'alors – et seulement si vous remplissez le formulaire – que nous collectons votre nom, votre adresse e-mail et éventuellement votre numéro de téléphone ; nous traitons ces informations conformément aux règles de la section « Communication ».",
+          ],
+        },
+        {
           titel: "Rôles au titre du règlement sur l’intelligence artificielle",
           paragraphs: [
             "Pour les fonctions d’IA intégrées au produit, nous sommes déployeur au sens de l’art. 3, point 4), du règlement sur l’intelligence artificielle ; les fournisseurs des modèles de langage sous-jacents sont les fournisseurs de modèles concernés. Lorsqu’un établissement utilise ces fonctions dans le cadre de son activité professionnelle, il en est lui-même déployeur et l’obligation de maîtrise de l’IA prévue à l’art. 4 du règlement lui incombe, obligation applicable depuis le 2 février 2025 indépendamment de la taille de l’entreprise. Depuis le 27 juillet 2026, elle s’applique dans sa version issue du règlement (UE) 2026/1744 : les fournisseurs et les déployeurs prennent des mesures pour soutenir le développement de la maîtrise de l’IA de leur personnel ; un niveau déterminé n’a expressément pas à être garanti. Nous apportons notre soutien par des indications dans l’application et dans notre centre d’aide ; la formation de son propre personnel demeure à la charge de l’établissement.",

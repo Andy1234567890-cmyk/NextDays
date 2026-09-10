@@ -211,6 +211,15 @@ export const datenschutz: LegalDoc = {
           ],
         },
         {
+          titel: "Productadviseur op deze website",
+          paragraphs: [
+            "Op deze website beantwoordt een AI-gestuurde productadviseur vragen over onze software. De adviseur maakt uitsluitend gebruik van openbaar beschikbare inhoud van deze website (help-artikelen, functieomschrijvingen, veelgestelde vragen, juridische teksten) en van de actuele prijzen uit onze facturatie. Klantgegevens, boekingen of gastgegevens zijn niet beschikbaar voor de adviseur.",
+            "In tegenstelling tot de antwoordsuggesties in de inbox, antwoordt deze adviseur ONMIDDELLIJK en zonder menselijke goedkeuring. Het is daarmee een AI-systeem in de zin van artikel 50 lid 1 van de AI-verordening, dat direct interactie heeft met natuurlijke personen. U wordt daarom aan het begin van de dialoog zichtbaar geïnformeerd dat de antwoorden afkomstig zijn van een AI-assistent en fouten kunnen bevatten.",
+            "Uw vraag en de gekozen taal worden verwerkt. Beide worden voor de beantwoording doorgestuurd naar Google Cloud (Vertex AI) in de regio europe-west4 (Nederland); verwerking buiten de EU vindt daarbij niet plaats. Wij slaan de vragen niet permanent op en gebruiken ze niet voor het trainen van AI-modellen. De rechtsgrondslag is ons gerechtvaardigd belang bij snelle informatie voor geïnteresseerden (artikel 6 lid 1 lit. f AVG).",
+            "Als de adviseur een vraag niet kan beantwoorden op basis van de beschikbare inhoud, biedt hij aan om de vraag door te sturen naar onze support. Pas dan – en alleen als u het formulier invult – verzamelen wij uw naam, e-mailadres en optioneel uw telefoonnummer; deze gegevens verwerken wij volgens de regels in de sectie „Communicatie“.",
+          ],
+        },
+        {
           titel: "Rollen op grond van de AI-verordening",
           paragraphs: [
             "Voor de in het product ingebouwde AI-functies zijn wij gebruiksverantwoordelijke in de zin van artikel 3, punt 4, van de AI-verordening; aanbieder van de onderliggende taalmodellen zijn de betreffende modelaanbieders. Gebruikt een bedrijf deze functies in het kader van zijn beroepsactiviteit, dan is het daarvoor op zijn beurt gebruiksverantwoordelijke en rust op hem de plicht tot AI-geletterdheid op grond van artikel 4 van de AI-verordening, die sinds 2 februari 2025 onafhankelijk van de bedrijfsgrootte geldt. Sinds 27 juli 2026 geldt zij in de versie van Verordening (EU) 2026/1744: aanbieders en gebruiksverantwoordelijken nemen maatregelen om de ontwikkeling van de AI-geletterdheid van hun personeel te ondersteunen; een bepaald niveau hoeft daarbij uitdrukkelijk niet te worden gegarandeerd. Wij ondersteunen met aanwijzingen in de toepassing en in ons helpcentrum; de opleiding van de eigen medewerkers blijft de taak van het bedrijf.",

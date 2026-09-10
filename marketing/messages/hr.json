@@ -900,7 +900,10 @@
     "beraterDenkt": "Provjeravam …",
     "beraterQuellen": "Za čitanje:",
     "beraterUebergabe": "Ne mogu sa sigurnošću odgovoriti na ovo iz pomoći. Proslijedit ću vaše pitanje kolegi — molimo vas da ukratko unesete svoje kontakt podatke.",
-    "beraterFormularHinweis": "Kolega će vam odgovoriti e-poštom, obično u roku od nekoliko sati."
+    "beraterFormularHinweis": "Kolega će vam odgovoriti e-poštom, obično u roku od nekoliko sati.",
+    "beraterRecht": "Odgovore generira AI asistent i mogu sadržavati pogreške. Primjenjuju se naši <agb>Opći uvjeti poslovanja</agb> i <link>Pravila o privatnosti</link>.",
+    "hinweisRecht": "Vaše podatke koristimo samo za odgovor na ovaj upit. Više detalja u <link>Pravilima o privatnosti</link>; primjenjuju se naši <agb>Opći uvjeti poslovanja</agb>.",
+    "beraterUnterMensch": "AI asistent · Podrška odgovara osobno"
   },
   "einblicke": {
     "eyebrow": "Pogled iznutra",

@@ -900,7 +900,10 @@
     "beraterDenkt": "Szukam …",
     "beraterQuellen": "Do poczytania:",
     "beraterUebergabe": "Nie mogę odpowiedzieć na to pytanie z pewnością na podstawie dostępnych informacji. Przekazuję Twoje pytanie koledze — proszę, podaj swoje dane kontaktowe.",
-    "beraterFormularHinweis": "Kolega odpowie Ci e-mailem, zazwyczaj w ciągu kilku godzin."
+    "beraterFormularHinweis": "Kolega odpowie Ci e-mailem, zazwyczaj w ciągu kilku godzin.",
+    "beraterRecht": "Odpowiedzi generowane są przez asystenta AI i mogą zawierać błędy. Obowiązują nasze <agb>Ogólne Warunki Handlowe</agb> i <link>Polityka Prywatności</link>.",
+    "hinweisRecht": "Używamy Twoich danych wyłącznie w celu odpowiedzi na to zapytanie. Więcej szczegółów w <link>Polityce Prywatności</link>; obowiązują nasze <agb>Ogólne Warunki Handlowe</agb>.",
+    "beraterUnterMensch": "Asystent AI · Wsparcie odpowiada osobiście"
   },
   "einblicke": {
     "eyebrow": "Od środka",

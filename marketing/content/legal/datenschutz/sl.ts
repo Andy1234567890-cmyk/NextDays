@@ -210,6 +210,15 @@ export const datenschutz: LegalDoc = {
           ],
         },
         {
+          titel: "Svetovalec za izdelke na tem spletnem mestu",
+          paragraphs: [
+            "Na tem spletnem mestu svetovalec za izdelke, ki ga poganja umetna inteligenca, odgovarja na vprašanja o naši programski opremi. Uporablja izključno javno dostopne vsebine tega spletnega mesta (članki pomoči, opisi funkcij, pogosta vprašanja, pravna besedila) in trenutne cene iz našega obračuna. Podatki o strankah, rezervacije ali podatki o gostih mu niso na voljo.",
+            "Za razliko od predlaganih odgovorov v nabiralniku, ta svetovalec odgovarja TAKOJ in brez človeške odobritve. Zato je sistem umetne inteligence v smislu člena 50(1) Uredbe o umetni inteligenci, ki neposredno komunicira s fizičnimi osebami. Zato boste na začetku dialoga vidno opozorjeni, da odgovori prihajajo od pomočnika umetne inteligence in lahko vsebujejo napake.",
+            "Obdelana sta vaše vprašanje in izbrani jezik. Oboje se za odgovor posreduje v Google Cloud (Vertex AI) v regiji europe-west4 (Nizozemska); obdelava zunaj EU ne poteka. Vprašanj ne shranjujemo trajno in jih ne uporabljamo za usposabljanje modelov umetne inteligence. Pravna podlaga je naš zakoniti interes za hitro posredovanje informacij zainteresiranim strankam (člen 6(1)(f) GDPR).",
+            "Če svetovalec ne more odgovoriti na vprašanje iz obstoječih vsebin, ponudi posredovanje naši podpori. Šele takrat – in samo, če izpolnite obrazec – zbiramo ime, e-poštni naslov in po želji vašo telefonsko številko; te podatke obdelujemo v skladu s pravili v razdelku „Komunikacija“.",
+          ],
+        },
+        {
           titel: "Vloge po aktu o umetni inteligenci",
           paragraphs: [
             "Za funkcije umetne inteligence, vgrajene v izdelek, smo uvajalec v smislu člena 3(4) akta o umetni inteligenci; ponudniki jezikovnih modelov, na katerih temeljijo, so posamezni ponudniki modelov. Če obrat te funkcije uporablja v okviru svoje poklicne dejavnosti, je za to sam uvajalec in ga zadeva obveznost pismenosti na področju umetne inteligence po členu 4 akta o umetni inteligenci, ki velja od 2. februarja 2025 neodvisno od velikosti podjetja. Od 27. julija 2026 velja v besedilu Uredbe (EU) 2026/1744: ponudniki in uvajalci sprejmejo ukrepe za podporo razvoju pismenosti svojega osebja na področju umetne inteligence; določene ravni pri tem izrecno ni treba zagotoviti. Podpiramo z napotki v aplikaciji in v našem središču za pomoč; usposabljanje lastnih zaposlenih ostaja naloga obrata.",

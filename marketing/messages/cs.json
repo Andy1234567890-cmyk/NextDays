@@ -900,7 +900,10 @@
     "beraterDenkt": "Hledám …",
     "beraterQuellen": "Pro přečtení:",
     "beraterUebergabe": "Na to ti z nápovědy nedokážu s jistotou odpovědět. Předám tvou otázku kolegovi – zadej prosím své kontaktní údaje.",
-    "beraterFormularHinweis": "Kolega ti odpoví e-mailem, obvykle během několika hodin."
+    "beraterFormularHinweis": "Kolega ti odpoví e-mailem, obvykle během několika hodin.",
+    "beraterRecht": "Odpovědi generuje asistent AI a mohou obsahovat chyby. Platí naše <agb>Všeobecné obchodní podmínky</agb> a <link>Zásady ochrany osobních údajů</link>.",
+    "hinweisRecht": "Vaše údaje použijeme pouze k zodpovězení tohoto dotazu. Více informací naleznete v <link>Zásadách ochrany osobních údajů</link>; platí naše <agb>Všeobecné obchodní podmínky</agb>.",
+    "beraterUnterMensch": "Asistent AI · Podpora odpovídá osobně"
   },
   "einblicke": {
     "eyebrow": "Pohled dovnitř",

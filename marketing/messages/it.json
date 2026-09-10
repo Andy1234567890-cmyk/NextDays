@@ -900,7 +900,10 @@
     "beraterDenkt": "Controllo...",
     "beraterQuellen": "Per saperne di più:",
     "beraterUebergabe": "Non posso rispondere con certezza a questa domanda usando l'aiuto. Passo la tua domanda a un collega — inserisci brevemente i tuoi dati di contatto.",
-    "beraterFormularHinweis": "Un collega ti risponderà via e-mail, di solito entro poche ore."
+    "beraterFormularHinweis": "Un collega ti risponderà via e-mail, di solito entro poche ore.",
+    "beraterRecht": "Le risposte sono generate da un assistente AI e possono contenere errori. Si applicano le nostre <agb>Condizioni Generali</agb> e l'<link>Informativa sulla Privacy</link>.",
+    "hinweisRecht": "Utilizziamo i tuoi dati solo per rispondere a questa richiesta. Maggiori dettagli nell'<link>Informativa sulla Privacy</link>; si applicano le nostre <agb>Condizioni Generali</agb>.",
+    "beraterUnterMensch": "Assistente AI · Il supporto risponde personalmente"
   },
   "einblicke": {
     "eyebrow": "Dentro il prodotto",

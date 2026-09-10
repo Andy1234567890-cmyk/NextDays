@@ -209,6 +209,15 @@ export const datenschutz: LegalDoc = {
           ],
         },
         {
+          titel: "Konsulent tal-prodott fuq din il-websajt",
+          paragraphs: [
+            "Fuq din il-websajt, konsulent tal-prodott imħaddem bl-AI jwieġeb mistoqsijiet dwar is-software tagħna. Huwa juża biss kontenut disponibbli pubblikament minn din il-websajt (artikli ta' għajnuna, deskrizzjonijiet tal-funzjonijiet, mistoqsijiet frekwenti, testi legali) kif ukoll il-prezzijiet attwali mill-kontijiet tagħna. Data tal-klijenti, prenotazzjonijiet jew data tal-mistednin mhumiex disponibbli għalih.",
+            "B'differenza mis-suġġerimenti ta' tweġibiet fl-inbox, dan il-konsulent iwieġeb IMMEDJATAMENT u mingħajr approvazzjoni umana. Għalhekk huwa sistema tal-AI fis-sens tal-Art. 50(1) tar-Regolament dwar l-AI, li jinteraġixxi direttament ma' persuni fiżiċi. Għalhekk, fil-bidu tad-djalogu, tkun infurmat b'mod viżibbli li t-tweġibiet ġejjin minn assistent tal-AI u jistgħu jkun fihom żbalji.",
+            "Il-mistoqsija tiegħek u l-lingwa magħżula jiġu pproċessati. It-tnejn jintbagħtu lil Google Cloud (Vertex AI) fir-reġjun europe-west4 (l-Olanda) għat-tweġiba; l-ebda proċessar barra l-UE ma jseħħ. Aħna ma naħżnux il-mistoqsijiet b'mod permanenti u ma nużawhomx għat-taħriġ ta' mudelli tal-AI. Il-bażi legali hija l-interess leġittimu tagħna li nipprovdu informazzjoni rapida lill-partijiet interessati (Art. 6(1)(f) GDPR).",
+            "Jekk il-konsulent ma jistax iwieġeb mistoqsija mill-kontenut eżistenti, joffri li jgħaddiha lill-appoġġ tagħna. Biss imbagħad — u biss jekk timla l-formola — niġbru l-isem, l-indirizz elettroniku u, b'għażla, in-numru tat-telefon tiegħek; din l-informazzjoni tiġi pproċessata skont ir-regoli fit-taqsima “Komunikazzjoni”.",
+          ],
+        },
+        {
           titel: "Rwoli skont ir-Regolament dwar l-Intelliġenza Artifiċjali",
           paragraphs: [
             "Fir-rigward tal-funzjonijiet tal-IA integrati fil-prodott aħna implimentaturi fis-sens tal-Artikolu 3(4) tar-Regolament dwar l-Intelliġenza Artifiċjali; il-fornituri tal-mudelli tal-lingwa sottostanti huma l-fornituri tal-mudelli rispettivi. Jekk impriża tuża dawn il-funzjonijiet fil-qafas tal-attività professjonali tagħha, hija min-naħa tagħha implimentatur u jaqa’ fuqha l-obbligu tal-litteriżmu fl-IA skont l-Artikolu 4 tar-Regolament dwar l-Intelliġenza Artifiċjali, li mit-2 ta’ Frar 2025 japplika indipendentement mid-daqs tal-impriża. Mis-27 ta’ Lulju 2026 japplika fil-verżjoni tar-Regolament (UE) 2026/1744: il-fornituri u l-implimentaturi jieħdu miżuri biex jappoġġjaw l-iżvilupp tal-litteriżmu fl-IA tal-persunal tagħhom; livell partikolari espliċitament ma għandux jiġi garantit. Aħna nappoġġjaw permezz ta’ avviżi fl-applikazzjoni u fiċ-ċentru tal-għajnuna tagħna; it-taħriġ tal-impjegati tagħha jibqa’ kompitu tal-impriża.",

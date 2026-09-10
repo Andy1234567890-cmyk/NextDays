@@ -209,6 +209,15 @@ export const datenschutz: LegalDoc = {
           ],
         },
         {
+          titel: "Asesor de producto en este sitio web",
+          paragraphs: [
+            "En este sitio web, un asesor de producto basado en IA responde preguntas sobre nuestro software. Accede exclusivamente a contenido disponible públicamente en este sitio web (artículos de ayuda, descripciones de funciones, preguntas frecuentes, textos legales) así como a los precios actuales de nuestra facturación. Los datos de clientes, reservas o huéspedes no están a su disposición.",
+            "A diferencia de las sugerencias de respuesta en la bandeja de entrada, este asesor responde INMEDIATAMENTE y sin aprobación humana. Por lo tanto, es un sistema de IA en el sentido del Artículo 50, párrafo 1 del Reglamento de IA, que interactúa directamente con personas físicas. Por ello, al inicio del diálogo, se le informará visiblemente de que las respuestas provienen de un asistente de IA y pueden contener errores.",
+            "Se procesan su pregunta y el idioma seleccionado. Ambos se transmiten a Google Cloud (Vertex AI) en la región europe-west4 (Países Bajos) para su respuesta; no se realiza ningún procesamiento fuera de la UE. No almacenamos las preguntas de forma permanente y no las utilizamos para entrenar modelos de IA. La base legal es nuestro interés legítimo en proporcionar información rápida a los interesados (Artículo 6, párrafo 1, letra f del RGPD).",
+            "Si el asesor no puede responder una pregunta con el contenido existente, ofrece la opción de redirigirla a nuestro soporte. Solo entonces, y solo si completa el formulario, recopilaremos su nombre, dirección de correo electrónico y, opcionalmente, su número de teléfono; procesamos esta información de acuerdo con las reglas de la sección «Comunicación».",
+          ],
+        },
+        {
           titel: "Roles conforme al Reglamento de Inteligencia Artificial",
           paragraphs: [
             "Respecto de las funciones de IA integradas en el producto, somos responsables del despliegue en el sentido del art. 3, punto 4, del Reglamento de Inteligencia Artificial; proveedores de los modelos de lenguaje subyacentes son los respectivos proveedores de modelos. Si un establecimiento utiliza estas funciones en el marco de su actividad profesional, será a su vez responsable del despliegue y le corresponderá la obligación de alfabetización en materia de IA conforme al art. 4 del Reglamento de Inteligencia Artificial, que se aplica desde el 2 de febrero de 2025 con independencia del tamaño de la empresa. Desde el 27 de julio de 2026 se aplica en la redacción del Reglamento (UE) 2026/1744: los proveedores y los responsables del despliegue adoptan medidas para apoyar el desarrollo de la alfabetización en materia de IA de su personal, sin que deba garantizarse expresamente un nivel determinado. Nosotros prestamos apoyo mediante indicaciones en la aplicación y en nuestro centro de ayuda; la formación de sus propios empleados sigue siendo tarea del establecimiento.",

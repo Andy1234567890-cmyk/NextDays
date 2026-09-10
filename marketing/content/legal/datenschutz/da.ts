@@ -209,6 +209,15 @@ export const datenschutz: LegalDoc = {
           ],
         },
         {
+          titel: "Produktkonsulent på denne hjemmeside",
+          paragraphs: [
+            "På denne hjemmeside besvarer en AI-drevet produktkonsulent spørgsmål om vores software. Den bruger udelukkende offentligt tilgængeligt indhold fra denne hjemmeside (hjælpeartikler, funktionsbeskrivelser, ofte stillede spørgsmål, juridiske tekster) samt aktuelle priser fra vores fakturering. Kundedata, bookinger eller gæstedata er ikke tilgængelige for den.",
+            "I modsætning til de foreslåede svar i indbakken svarer denne konsulent ØJEBLIKKELIGT og uden menneskelig godkendelse. Den er således et AI-system i henhold til artikel 50, stk. 1, i AI-forordningen, der interagerer direkte med fysiske personer. Du vil derfor i starten af dialogen blive tydeligt informeret om, at svarene kommer fra en AI-assistent og kan indeholde fejl.",
+            "Din forespørgsel og det valgte sprog behandles. Begge dele overføres til Google Cloud (Vertex AI) i regionen europe-west4 (Holland) for at blive besvaret; der sker ingen behandling uden for EU. Vi gemmer ikke spørgsmålene permanent og bruger dem ikke til træning af AI-modeller. Retsgrundlaget er vores berettigede interesse i hurtig information til interesserede parter (artikel 6, stk. 1, litra f, GDPR).",
+            "Hvis konsulenten ikke kan besvare et spørgsmål ud fra det eksisterende indhold, tilbyder den at videresende det til vores support. Først da – og kun hvis du udfylder formularen – indsamler vi navn, e-mailadresse og eventuelt dit telefonnummer; disse oplysninger behandler vi i henhold til reglerne i afsnittet „Kommunikation“.",
+          ],
+        },
+        {
           titel: "Roller efter AI-forordningen",
           paragraphs: [
             "For de AI-funktioner, der er indbygget i produktet, er vi idriftsætter som omhandlet i art. 3, nr. 4, i AI-forordningen; udbydere af de underliggende sprogmodeller er de pågældende modeludbydere. Bruger en virksomhed disse funktioner som led i sin erhvervsmæssige virksomhed, er den selv idriftsætter herfor og omfattet af pligten til AI-færdigheder efter art. 4 i AI-forordningen, som siden den 2. februar 2025 gælder uafhængigt af virksomhedens størrelse. Siden den 27. juli 2026 gælder den i den affattelse, der følger af forordning (EU) 2026/1744: udbydere og idriftsættere træffer foranstaltninger for at understøtte udviklingen af deres personales AI-færdigheder; et bestemt niveau skal udtrykkeligt ikke garanteres. Vi understøtter det med vejledninger i applikationen og i vores hjælpecenter; oplæringen af egne medarbejdere er fortsat virksomhedens opgave.",

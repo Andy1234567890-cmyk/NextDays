@@ -206,6 +206,15 @@ export const datenschutz: LegalDoc = {
           ],
         },
         {
+          titel: "Produkto konsultantas šioje svetainėje",
+          paragraphs: [
+            "Šioje svetainėje dirbantis dirbtinio intelekto (DI) pagrindu veikiantis produkto konsultantas atsako į klausimus apie mūsų programinę įrangą. Jis naudoja tik viešai prieinamą šios svetainės turinį (pagalbos straipsnius, funkcijų aprašymus, dažnai užduodamus klausimus, teisinius tekstus) ir dabartines kainas iš mūsų atsiskaitymo sistemos. Klientų duomenys, užsakymai ar svečių duomenys jam nėra prieinami.",
+            "Skirtingai nei atsakymų pasiūlymai gautuosiuose, šis konsultantas atsako NEDELSIANT ir be žmogaus patvirtinimo. Todėl jis yra DI sistema, atitinkanti DI reglamento 50 straipsnio 1 dalį, kuri tiesiogiai sąveikauja su fiziniais asmenimis. Todėl dialogo pradžioje būsite aiškiai informuoti, kad atsakymai yra iš DI asistento ir gali turėti klaidų.",
+            "Apklausos metu apdorojami jūsų klausimas ir pasirinkta kalba. Abu duomenys siunčiami atsakymui į „Google Cloud“ („Vertex AI“) europe-west4 (Nyderlandai) regione; duomenys neapdorojami už ES ribų. Mes nuolat nesaugome klausimų ir nenaudojame jų DI modelių mokymui. Teisinis pagrindas yra mūsų teisėtas interesas greitai teikti informaciją suinteresuotiems asmenims (BDAR 6 str. 1 d. f punktas).",
+            "Jei konsultantas negali atsakyti į klausimą remdamasis turimu turiniu, jis pasiūlys persiųsti jį mūsų palaikymo tarnybai. Tik tada – ir tik tuo atveju, jei užpildysite formą – mes rinksime vardą, el. pašto adresą ir, pasirinktinai, jūsų telefono numerį; šiuos duomenis apdorosime pagal skyriaus „Komunikacija“ taisykles.",
+          ],
+        },
+        {
           titel: "Vaidmenys pagal Dirbtinio intelekto reglamentą",
           paragraphs: [
             "Produkte integruotų DI funkcijų atžvilgiu esame diegėjas, kaip nurodyta Dirbtinio intelekto reglamento 3 straipsnio 4 punkte; pagrindinių kalbos modelių tiekėjai yra atitinkami modelių teikėjai. Jeigu verslas šias funkcijas naudoja savo profesinėje veikloje, jis savo ruožtu yra diegėjas, ir jam taikoma DI srities išprusimo pareiga pagal Dirbtinio intelekto reglamento 4 straipsnį, kuri nuo 2025 m. vasario 2 d. galioja nepriklausomai nuo įmonės dydžio. Nuo 2026 m. liepos 27 d. ji galioja Reglamentu (ES) 2026/1744 nustatyta redakcija: tiekėjai ir diegėjai imasi priemonių savo darbuotojų DI srities išprusimui ugdyti; tam tikras lygis aiškiai neturi būti garantuojamas. Mes padedame pateikdami nurodymus programoje ir savo pagalbos centre; savo darbuotojų mokymas lieka verslo užduotis.",

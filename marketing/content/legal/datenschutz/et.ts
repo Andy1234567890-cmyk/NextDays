@@ -209,6 +209,15 @@ export const datenschutz: LegalDoc = {
           ],
         },
         {
+          titel: "Selle veebisaidi tootenõustaja",
+          paragraphs: [
+            "Sellel veebisaidil vastab tehisintellektil põhinev tootenõustaja küsimustele meie tarkvara kohta. Ta kasutab ainult selle veebisaidi avalikult kättesaadavat sisu (abitekstid, funktsioonide kirjeldused, korduma kippuvad küsimused, juriidilised tekstid) ja meie arveldussüsteemi praeguseid hindu. Kliendiandmed, broneeringud või külaliste andmed ei ole talle kättesaadavad.",
+            "Erinevalt postkasti vastuseettepanekutest vastab see nõustaja KOHE ja ilma inimliku heakskiiduta. Seega on tegemist tehisintellekti süsteemiga tehisintellekti määruse artikli 50 lõike 1 tähenduses, mis suhtleb otse füüsiliste isikutega. Seetõttu teavitatakse teid dialoogi alguses selgelt, et vastused pärinevad tehisintellekti assistendilt ja võivad sisaldada vigu.",
+            "Töödeldakse teie küsimust ja valitud keelt. Mõlemad edastatakse vastuse saamiseks Google Cloudile (Vertex AI) piirkonnas europe-west4 (Holland); töötlemist väljaspool EL-i ei toimu. Me ei salvesta küsimusi püsivalt ega kasuta neid tehisintellekti mudelite treenimiseks. Õiguslik alus on meie õigustatud huvi pakkuda huvilistele kiiret teavet (GDPR-i artikli 6 lõike 1 punkt f).",
+            "Kui nõustaja ei suuda küsimusele olemasoleva sisu põhjal vastata, pakub ta edastamist meie toele. Alles siis – ja ainult siis, kui täidate vormi – kogume nime, e-posti aadressi ja valikuliselt teie telefoninumbri; neid andmeid töötleme vastavalt jaotises „Suhtlus“ toodud reeglitele.",
+          ],
+        },
+        {
           titel: "Rollid tehisintellektimääruse järgi",
           paragraphs: [
             "Tootesse sisse ehitatud tehisintellektifunktsioonide osas oleme juurutaja tehisintellektimääruse artikli 3 punkti 4 tähenduses; aluseks olevate keelemudelite pakkujad on vastavad mudelipakkujad. Kui ettevõte kasutab neid funktsioone oma kutsetegevuse raames, on ta omakorda nende juurutaja ja tal on tehisintellektimääruse artiklist 4 tulenev tehisintellektipädevuse kohustus, mis kehtib alates 2. veebruarist 2025 sõltumata ettevõtte suurusest. Alates 27. juulist 2026 kehtib see määruse (EL) 2026/1744 redaktsioonis: pakkujad ja juurutajad võtavad meetmeid oma töötajate tehisintellektipädevuse arendamise toetamiseks; kindlat taset ei pea seejuures sõnaselgelt tagama. Meie toetame seda juhistega rakenduses ja meie abikeskuses; oma töötajate koolitamine jääb ettevõtte ülesandeks.",

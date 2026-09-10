@@ -900,7 +900,10 @@
     "beraterDenkt": "Qed infittex …",
     "beraterQuellen": "Għal referenza:",
     "beraterUebergabe": "Ma nistax inwieġeb dan b'ċertezza mill-għajnuna. Se ngħaddi l-mistoqsija tiegħek lil kollega — jekk jogħġbok daħħal id-dettalji tal-kuntatt tiegħek fil-qosor.",
-    "beraterFormularHinweis": "Kollega se jwieġbek bl-email, ġeneralment fi ftit sigħat."
+    "beraterFormularHinweis": "Kollega se jwieġbek bl-email, ġeneralment fi ftit sigħat.",
+    "beraterRecht": "It-tweġibiet huma ġġenerati minn assistent tal-AI u jistgħu jkun fihom żbalji. <agb>It-Termini u Kundizzjonijiet ġenerali tagħna</agb> u <link>l-Politika ta' Privatezza</link> japplikaw.",
+    "hinweisRecht": "Aħna nużaw id-dejta tiegħek biss biex inwieġbu għal din it-talba. Aktar dettalji f<link>il-Politika ta' Privatezza</link>; <agb>it-Termini u Kundizzjonijiet ġenerali tagħna</agb> japplikaw.",
+    "beraterUnterMensch": "Assistent tal-AI · L-appoġġ iwieġeb personalment"
   },
   "einblicke": {
     "eyebrow": "Minn ġewwa",

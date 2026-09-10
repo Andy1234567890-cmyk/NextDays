@@ -208,6 +208,15 @@ export const datenschutz: LegalDoc = {
           ],
         },
         {
+          titel: "Consulente di prodotto su questo sito web",
+          paragraphs: [
+            "Su questo sito web, un consulente di prodotto basato sull'IA risponde a domande sul nostro software. Accede esclusivamente a contenuti pubblicamente disponibili su questo sito web (articoli di aiuto, descrizioni delle funzioni, domande frequenti, testi legali) e ai prezzi attuali della nostra fatturazione. Dati dei clienti, prenotazioni o dati degli ospiti non sono a sua disposizione.",
+            "A differenza dei suggerimenti di risposta nella casella di posta, questo consulente risponde IMMEDIATAMENTE e senza approvazione umana. È quindi un sistema di IA ai sensi dell'Art. 50 Par. 1 del Regolamento sull'IA, che interagisce direttamente con persone fisiche. Per questo motivo, all'inizio del dialogo, le verrà chiaramente indicato che le risposte provengono da un assistente IA e possono contenere errori.",
+            "Vengono elaborate la sua domanda e la lingua scelta. Entrambe vengono trasmesse a Google Cloud (Vertex AI) nella regione europe-west4 (Paesi Bassi) per la risposta; non avviene alcuna elaborazione al di fuori dell'UE. Non memorizziamo le domande in modo permanente e non le utilizziamo per l'addestramento di modelli di IA. La base giuridica è il nostro legittimo interesse a fornire informazioni rapide agli interessati (Art. 6 Par. 1 lett. f GDPR).",
+            "Se il consulente non può rispondere a una domanda basandosi sui contenuti esistenti, offre l'inoltro al nostro supporto. Solo allora — e solo se compila il modulo — raccogliamo nome, indirizzo e-mail e, facoltativamente, il suo numero di telefono; elaboriamo questi dati secondo le regole della sezione \"Comunicazione\".",
+          ],
+        },
+        {
           titel: "Ruoli ai sensi dell’AI Act",
           paragraphs: [
             "Per le funzioni di IA integrate nel prodotto siamo deployer ai sensi dell’art. 3, punto 4), dell’AI Act; fornitori dei modelli linguistici sottostanti sono i rispettivi fornitori dei modelli. Se una struttura utilizza queste funzioni nell’ambito della propria attività professionale, essa è a sua volta deployer e le incombe l’obbligo di alfabetizzazione in materia di IA di cui all’art. 4 dell’AI Act, che si applica dal 2 febbraio 2025 indipendentemente dalle dimensioni dell’impresa. Dal 27 luglio 2026 esso si applica nella versione del regolamento (UE) 2026/1744: fornitori e deployer adottano misure per sostenere lo sviluppo dell’alfabetizzazione in materia di IA del proprio personale; espressamente non deve essere garantito un determinato livello. Noi forniamo sostegno mediante indicazioni nell’applicazione e nel nostro centro assistenza; la formazione dei propri collaboratori resta compito della struttura.",

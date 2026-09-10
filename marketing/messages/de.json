@@ -900,7 +900,10 @@
     "beraterDenkt": "Ich sehe nach …",
     "beraterQuellen": "Zum Nachlesen:",
     "beraterUebergabe": "Das kann ich aus der Hilfe nicht sicher beantworten. Ich gebe deine Frage an einen Kollegen weiter — trag dafür bitte kurz deine Kontaktdaten ein.",
-    "beraterFormularHinweis": "Ein Kollege antwortet dir per E-Mail, in der Regel innerhalb weniger Stunden."
+    "beraterFormularHinweis": "Ein Kollege antwortet dir per E-Mail, in der Regel innerhalb weniger Stunden.",
+    "beraterRecht": "Die Antworten erzeugt ein KI-Assistent und können Fehler enthalten. Es gelten unsere <agb>AGB</agb> und die <link>Datenschutzerklärung</link>.",
+    "hinweisRecht": "Wir nutzen deine Angaben nur, um auf diese Anfrage zu antworten. Näheres in der <link>Datenschutzerklärung</link>; es gelten unsere <agb>AGB</agb>.",
+    "beraterUnterMensch": "KI-Assistent · Support antwortet persönlich"
   },
   "einblicke": {
     "eyebrow": "Einblicke",

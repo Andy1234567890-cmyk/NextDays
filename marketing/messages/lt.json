@@ -900,7 +900,10 @@
     "beraterDenkt": "Ieškau…",
     "beraterQuellen": "Skaityti toliau:",
     "beraterUebergabe": "Negaliu tiksliai atsakyti į tai iš pagalbos. Perduosiu jūsų klausimą kolegai — prašome trumpai įvesti savo kontaktinius duomenis.",
-    "beraterFormularHinweis": "Kolega atsakys jums el. paštu, dažniausiai per kelias valandas."
+    "beraterFormularHinweis": "Kolega atsakys jums el. paštu, dažniausiai per kelias valandas.",
+    "beraterRecht": "Atsakymus generuoja dirbtinio intelekto asistentas, todėl juose gali būti klaidų. Galioja mūsų <agb>taisyklės ir sąlygos</agb> bei <link>privatumo politika</link>.",
+    "hinweisRecht": "Jūsų duomenis naudojame tik atsakydami į šį prašymą. Daugiau informacijos rasite <link>privatumo politikoje</link>; galioja mūsų <agb>taisyklės ir sąlygos</agb>.",
+    "beraterUnterMensch": "DI asistentas · Pagalba atsako asmeniškai"
   },
   "einblicke": {
     "eyebrow": "Žvilgsnis iš vidaus",

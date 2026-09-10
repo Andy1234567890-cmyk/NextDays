@@ -900,7 +900,10 @@
     "beraterDenkt": "Jag söker …",
     "beraterQuellen": "För referens:",
     "beraterUebergabe": "Jag kan inte svara säkert på detta utifrån hjälpen. Jag vidarebefordrar din fråga till en kollega – vänligen fyll i dina kontaktuppgifter kort.",
-    "beraterFormularHinweis": "En kollega svarar dig via e-post, vanligtvis inom några timmar."
+    "beraterFormularHinweis": "En kollega svarar dig via e-post, vanligtvis inom några timmar.",
+    "beraterRecht": "Svaren genereras av en AI-assistent och kan innehålla fel. Våra <agb>allmänna villkor</agb> och <link>sekretesspolicy</link> gäller.",
+    "hinweisRecht": "Vi använder endast dina uppgifter för att svara på denna förfrågan. Mer information finns i <link>sekretesspolicyn</link>; våra <agb>allmänna villkor</agb> gäller.",
+    "beraterUnterMensch": "AI-assistent · Support svarar personligen"
   },
   "einblicke": {
     "eyebrow": "Inblick",

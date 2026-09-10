@@ -211,6 +211,15 @@ export const datenschutz: LegalDoc = {
           ],
         },
         {
+          titel: "Doradca produktowy na tej stronie",
+          paragraphs: [
+            "Na tej stronie doradca produktowy oparty na sztucznej inteligencji odpowiada na pytania dotyczące naszego oprogramowania. Korzysta wyłącznie z publicznie dostępnych treści tej strony (artykuły pomocy, opisy funkcji, często zadawane pytania, teksty prawne) oraz z aktualnych cen z naszego systemu rozliczeniowego. Dane klientów, rezerwacje ani dane gości nie są dla niego dostępne.",
+            "W przeciwieństwie do sugerowanych odpowiedzi w skrzynce odbiorczej, ten doradca odpowiada NATYCHMIAST i bez ludzkiej akceptacji. Jest to zatem system AI w rozumieniu art. 50 ust. 1 rozporządzenia AI, który bezpośrednio wchodzi w interakcje z osobami fizycznymi. Dlatego na początku dialogu zostaną Państwo wyraźnie poinformowani, że odpowiedzi pochodzą od asystenta AI i mogą zawierać błędy.",
+            "Przetwarzane są Państwa pytanie i wybrany język. Oba te elementy są przesyłane do Google Cloud (Vertex AI) w regionie europe-west4 (Holandia) w celu udzielenia odpowiedzi; przetwarzanie poza UE nie ma miejsca. Nie przechowujemy pytań na stałe i nie wykorzystujemy ich do szkolenia modeli AI. Podstawą prawną jest nasz uzasadniony interes w szybkim udzielaniu informacji zainteresowanym (art. 6 ust. 1 lit. f RODO).",
+            "Jeśli doradca nie może odpowiedzieć na pytanie na podstawie dostępnych treści, oferuje przekierowanie do naszego wsparcia. Dopiero wtedy — i tylko wtedy, gdy wypełnią Państwo formularz — zbieramy imię i nazwisko, adres e-mail oraz opcjonalnie numer telefonu; te dane przetwarzamy zgodnie z zasadami zawartymi w sekcji „Komunikacja”.",
+          ],
+        },
+        {
           titel: "Role według aktu w sprawie sztucznej inteligencji",
           paragraphs: [
             "W odniesieniu do funkcji SI wbudowanych w produkt jesteśmy podmiotem stosującym w rozumieniu art. 3 pkt 4 aktu w sprawie sztucznej inteligencji; dostawcami leżących u ich podstaw modeli językowych są poszczególni dostawcy modeli. Jeżeli przedsiębiorstwo korzysta z tych funkcji w ramach swojej działalności zawodowej, samo jest w tym zakresie podmiotem stosującym i ciąży na nim obowiązek zapewnienia kompetencji w zakresie SI zgodnie z art. 4 aktu w sprawie sztucznej inteligencji, który obowiązuje od 2 lutego 2025 r. niezależnie od wielkości przedsiębiorstwa. Od 27 lipca 2026 r. obowiązuje on w brzmieniu rozporządzenia (UE) 2026/1744: dostawcy i podmioty stosujące podejmują środki wspierające rozwój kompetencji swojego personelu w zakresie SI; wyraźnie nie muszą przy tym gwarantować określonego poziomu. Wspieramy poprzez wskazówki w aplikacji i w naszym centrum pomocy; szkolenie własnych pracowników pozostaje zadaniem przedsiębiorstwa.",

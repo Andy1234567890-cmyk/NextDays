@@ -900,7 +900,10 @@
     "beraterDenkt": "Utánanézek…",
     "beraterQuellen": "További információk:",
     "beraterUebergabe": "Ezt nem tudom biztosan megválaszolni a súgó alapján. Továbbítom a kérdésedet egy kollégának – kérjük, add meg elérhetőségeidet.",
-    "beraterFormularHinweis": "Egy kolléga e-mailben válaszol neked, általában néhány órán belül."
+    "beraterFormularHinweis": "Egy kolléga e-mailben válaszol neked, általában néhány órán belül.",
+    "beraterRecht": "A válaszokat egy mesterséges intelligencia asszisztens generálja, és hibákat tartalmazhat. Az <agb>Általános Szerződési Feltételeink</agb> és az <link>Adatvédelmi Nyilatkozatunk</link> érvényesek.",
+    "hinweisRecht": "Adataidat kizárólag a megkeresés megválaszolására használjuk. További részletek az <link>Adatvédelmi Nyilatkozatban</link>; az <agb>Általános Szerződési Feltételeink</agb> érvényesek.",
+    "beraterUnterMensch": "AI asszisztens · A támogatás személyesen válaszol"
   },
   "einblicke": {
     "eyebrow": "Belülről",

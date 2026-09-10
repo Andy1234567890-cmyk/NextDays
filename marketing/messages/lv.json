@@ -900,7 +900,10 @@
     "beraterDenkt": "Meklēju…",
     "beraterQuellen": "Lasīt tālāk:",
     "beraterUebergabe": "Es nevaru droši atbildēt uz šo jautājumu no palīdzības. Es pārsūtīšu jūsu jautājumu kolēģim — lūdzu, īsi ievadiet savus kontaktinformāciju.",
-    "beraterFormularHinweis": "Kolēģis jums atbildēs pa e-pastu, parasti dažu stundu laikā."
+    "beraterFormularHinweis": "Kolēģis jums atbildēs pa e-pastu, parasti dažu stundu laikā.",
+    "beraterRecht": "Atbildes ģenerē AI asistents, un tajās var būt kļūdas. Spēkā ir mūsu <agb>noteikumi un nosacījumi</agb> un <link>privātuma politika</link>.",
+    "hinweisRecht": "Mēs izmantojam jūsu datus tikai, lai atbildētu uz šo pieprasījumu. Sīkāka informācija atrodama <link>privātuma politikā</link>; spēkā ir mūsu <agb>noteikumi un nosacījumi</agb>.",
+    "beraterUnterMensch": "AI asistents · Atbalsta dienests atbild personīgi"
   },
   "einblicke": {
     "eyebrow": "Ieskats",

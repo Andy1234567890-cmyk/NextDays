@@ -900,7 +900,10 @@
     "beraterDenkt": "Otsin ...",
     "beraterQuellen": "Lisalugemiseks:",
     "beraterUebergabe": "Ma ei saa sellele abist kindlalt vastata. Edastan sinu küsimuse kolleegile – palun sisesta oma kontaktandmed.",
-    "beraterFormularHinweis": "Kolleeg vastab sulle e-posti teel, tavaliselt mõne tunni jooksul."
+    "beraterFormularHinweis": "Kolleeg vastab sulle e-posti teel, tavaliselt mõne tunni jooksul.",
+    "beraterRecht": "Vastused genereerib tehisintellekti assistent ja need võivad sisaldada vigu. Kehtivad meie <agb>üldtingimused</agb> ja <link>andmekaitse avaldus</link>.",
+    "hinweisRecht": "Kasutame teie andmeid ainult sellele päringule vastamiseks. Täpsemalt <link>andmekaitse avalduses</link>; kehtivad meie <agb>üldtingimused</agb>.",
+    "beraterUnterMensch": "AI assistent · Tugi vastab isiklikult"
   },
   "einblicke": {
     "eyebrow": "Sissevaade",

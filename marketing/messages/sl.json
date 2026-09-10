@@ -900,7 +900,10 @@
     "beraterDenkt": "Preverjam …",
     "beraterQuellen": "Za branje:",
     "beraterUebergabe": "Na to ne morem z gotovostjo odgovoriti iz pomoči. Tvoje vprašanje bom posredoval sodelavcu — prosim, vpiši svoje kontaktne podatke.",
-    "beraterFormularHinweis": "Sodelavec ti bo odgovoril po e-pošti, običajno v nekaj urah."
+    "beraterFormularHinweis": "Sodelavec ti bo odgovoril po e-pošti, običajno v nekaj urah.",
+    "beraterRecht": "Odgovore ustvarja pomočnik z umetno inteligenco in lahko vsebujejo napake. Veljajo naši <agb>Splošni pogoji poslovanja</agb> in <link>Izjava o varovanju podatkov</link>.",
+    "hinweisRecht": "Vaše podatke uporabljamo samo za odgovor na to povpraševanje. Več podrobnosti najdete v <link>Izjavi o varovanju podatkov</link>; veljajo naši <agb>Splošni pogoji poslovanja</agb>.",
+    "beraterUnterMensch": "Pomočnik z umetno inteligenco · Podpora odgovarja osebno"
   },
   "einblicke": {
     "eyebrow": "Pogled od znotraj",

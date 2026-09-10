@@ -212,6 +212,15 @@ export const datenschutz: LegalDoc = {
           ],
         },
         {
+          titel: "Consultant de produs pe acest site web",
+          paragraphs: [
+            "Pe acest site web, un consultant de produs bazat pe inteligență artificială răspunde la întrebări despre software-ul nostru. Acesta utilizează exclusiv conținut disponibil public de pe acest site web (articole de ajutor, descrieri de funcții, întrebări frecvente, texte legale), precum și prețurile curente din sistemul nostru de facturare. Datele clienților, rezervările sau datele oaspeților nu îi sunt disponibile.",
+            "Spre deosebire de sugestiile de răspuns din căsuța de e-mail, acest consultant răspunde IMEDIAT și fără aprobare umană. Prin urmare, este un sistem AI în sensul articolului 50 alineatul (1) din Regulamentul AI, care interacționează direct cu persoane fizice. Prin urmare, la începutul dialogului, veți fi informat vizibil că răspunsurile provin de la un asistent AI și pot conține erori.",
+            "Întrebarea dumneavoastră și limba selectată sunt procesate. Ambele sunt transmise către Google Cloud (Vertex AI) în regiunea europe-west4 (Țările de Jos) pentru a primi un răspuns; nu are loc nicio prelucrare în afara UE. Nu stocăm întrebările permanent și nu le folosim pentru a antrena modele AI. Baza legală este interesul nostru legitim de a oferi informații rapide persoanelor interesate (art. 6 alin. 1 lit. f GDPR).",
+            "Dacă consultantul nu poate răspunde la o întrebare pe baza conținutului existent, acesta oferă redirecționarea către asistența noastră. Doar atunci – și numai dacă completați formularul – colectăm numele, adresa de e-mail și, opțional, numărul dumneavoastră de telefon; aceste informații le prelucrăm conform regulilor din secțiunea „Comunicare”.",
+          ],
+        },
+        {
           titel:
             "Roluri conform Regulamentului privind inteligența artificială",
           paragraphs: [

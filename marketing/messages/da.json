@@ -900,7 +900,10 @@
     "beraterDenkt": "Jeg kigger efter …",
     "beraterQuellen": "Til gennemlæsning:",
     "beraterUebergabe": "Jeg kan ikke besvare dette spørgsmål med sikkerhed ud fra hjælpen. Jeg videresender dit spørgsmål til en kollega – indtast venligst dine kontaktoplysninger kort.",
-    "beraterFormularHinweis": "En kollega svarer dig via e-mail, normalt inden for få timer."
+    "beraterFormularHinweis": "En kollega svarer dig via e-mail, normalt inden for få timer.",
+    "beraterRecht": "Svar genereres af en AI-assistent og kan indeholde fejl. Vores <agb>vilkår og betingelser</agb> og <link>databeskyttelseserklæring</link> gælder.",
+    "hinweisRecht": "Vi bruger kun dine oplysninger til at besvare denne anmodning. Mere information findes i <link>databeskyttelseserklæring</link>; vores <agb>vilkår og betingelser</agb> gælder.",
+    "beraterUnterMensch": "AI-assistent · Support svarer personligt"
   },
   "einblicke": {
     "eyebrow": "Indblik",

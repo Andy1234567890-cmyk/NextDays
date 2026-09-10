@@ -900,7 +900,10 @@
     "beraterDenkt": "Tarkistan…",
     "beraterQuellen": "Lisätietoja:",
     "beraterUebergabe": "En osaa vastata tähän kysymykseen varmasti ohjeiden perusteella. Välitän kysymyksesi kollegalle – täytäthän yhteystietosi lyhyesti.",
-    "beraterFormularHinweis": "Kollegamme vastaa sinulle sähköpostitse, yleensä muutaman tunnin kuluessa."
+    "beraterFormularHinweis": "Kollegamme vastaa sinulle sähköpostitse, yleensä muutaman tunnin kuluessa.",
+    "beraterRecht": "Vastaukset luo tekoälyavustaja, ja ne voivat sisältää virheitä. Niihin sovelletaan <agb>käyttöehtojamme</agb> ja <link>tietosuojakäytäntöämme</link>.",
+    "hinweisRecht": "Käytämme tietojasi ainoastaan tähän tiedusteluun vastaamiseen. Lisätietoja <link>tietosuojakäytännöstämme</link>; sovelletaan <agb>käyttöehtojamme</agb>.",
+    "beraterUnterMensch": "Tekoälyavustaja · Tuki vastaa henkilökohtaisesti"
   },
   "einblicke": {
     "eyebrow": "Sisältä katsottuna",

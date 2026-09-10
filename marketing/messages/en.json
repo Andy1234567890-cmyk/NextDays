@@ -900,7 +900,10 @@
     "beraterDenkt": "Looking it up...",
     "beraterQuellen": "For reference:",
     "beraterUebergabe": "I can't answer that definitively from the help. I'll forward your question to a colleague — please enter your contact details briefly.",
-    "beraterFormularHinweis": "A colleague will reply to you by email, usually within a few hours."
+    "beraterFormularHinweis": "A colleague will reply to you by email, usually within a few hours.",
+    "beraterRecht": "AI assistant generated responses may contain errors. Our <agb>terms and conditions</agb> and <link>privacy policy</link> apply.",
+    "hinweisRecht": "We only use your information to respond to this request. More details in the <link>privacy policy</link>; our <agb>terms and conditions</agb> apply.",
+    "beraterUnterMensch": "AI assistant · Support responds personally"
   },
   "einblicke": {
     "eyebrow": "Inside the product",

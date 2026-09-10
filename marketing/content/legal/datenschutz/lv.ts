@@ -206,6 +206,15 @@ export const datenschutz: LegalDoc = {
           ],
         },
         {
+          titel: "Produktu konsultants šajā vietnē",
+          paragraphs: [
+            "Šajā vietnē AI darbināts produktu konsultants atbild uz jautājumiem par mūsu programmatūru. Tas izmanto tikai publiski pieejamu saturu no šīs vietnes (palīdzības rakstus, funkciju aprakstus, bieži uzdotos jautājumus, juridiskos tekstus), kā arī aktuālās cenas no mūsu norēķinu sistēmas. Klientu dati, rezervācijas vai viesu dati tam nav pieejami.",
+            "Atšķirībā no atbilžu ieteikumiem iesūtnē, šis konsultants atbild NEKAVĒJOTIES un bez cilvēka apstiprinājuma. Tādējādi tā ir AI sistēma saskaņā ar AI regulas 50. panta 1. punktu, kas tieši mijiedarbojas ar fiziskām personām. Tāpēc dialoga sākumā jums tiks skaidri norādīts, ka atbildes sniedz AI asistents un tās var saturēt kļūdas.",
+            "Tiek apstrādāts jūsu jautājums un izvēlētā valoda. Abi tiek nosūtīti atbildes sniegšanai uz Google Cloud (Vertex AI) reģionā europe-west4 (Nīderlande); apstrāde ārpus ES nenotiek. Mēs neglabājam jautājumus pastāvīgi un neizmantojam tos AI modeļu apmācībai. Juridiskais pamats ir mūsu likumīgās intereses sniegt ātru informāciju interesentiem (Vispārīgās datu aizsardzības regulas 6. panta 1. punkta f) apakšpunkts).",
+            "Ja konsultants nevar atbildēt uz jautājumu, izmantojot pieejamo saturu, tas piedāvā pārsūtīt jautājumu mūsu atbalsta dienestam. Tikai tad — un tikai tad, ja aizpildāt veidlapu — mēs apkopojam vārdu, e-pasta adresi un, pēc izvēles, jūsu tālruņa numuru; šos datus mēs apstrādājam saskaņā ar noteikumiem sadaļā „Komunikācija”.",
+          ],
+        },
+        {
           titel: "Lomas saskaņā ar Mākslīgā intelekta regulu",
           paragraphs: [
             "Attiecībā uz produktā iebūvētajām MI funkcijām mēs esam uzturētājs Mākslīgā intelekta regulas 3. panta 4. punkta izpratnē; pamatā esošo valodas modeļu nodrošinātāji ir attiecīgie modeļu piegādātāji. Ja uzņēmums šīs funkcijas izmanto savā profesionālajā darbībā, tas savukārt ir uzturētājs un uz to attiecas MI pratības pienākums saskaņā ar Mākslīgā intelekta regulas 4. pantu, kas no 2025. gada 2. februāra ir piemērojams neatkarīgi no uzņēmuma lieluma. No 2026. gada 27. jūlija tas ir piemērojams Regulas (ES) 2026/1744 redakcijā: nodrošinātāji un uzturētāji veic pasākumus, lai atbalstītu sava personāla MI pratības attīstību; noteikts līmenis pie tam skaidri nav jāgarantē. Mēs sniedzam atbalstu ar norādēm lietojumprogrammā un mūsu palīdzības centrā; savu darbinieku apmācība paliek uzņēmuma uzdevums.",

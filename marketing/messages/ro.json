@@ -900,7 +900,10 @@
     "beraterDenkt": "Verific…",
     "beraterQuellen": "Pentru referință:",
     "beraterUebergabe": "Nu pot răspunde cu certitudine la asta din ajutor. Voi transmite întrebarea ta unui coleg — te rog să introduci scurt datele tale de contact.",
-    "beraterFormularHinweis": "Un coleg îți va răspunde prin e-mail, de obicei în câteva ore."
+    "beraterFormularHinweis": "Un coleg îți va răspunde prin e-mail, de obicei în câteva ore.",
+    "beraterRecht": "Răspunsurile sunt generate de un asistent AI și pot conține erori. Se aplică <agb>Termenii și condițiile</agb> și <link>Politica de confidențialitate</link>.",
+    "hinweisRecht": "Folosim datele tale doar pentru a răspunde la această solicitare. Mai multe detalii în <link>Politica de confidențialitate</link>; se aplică <agb>Termenii și condițiile</agb> noastre.",
+    "beraterUnterMensch": "Asistent AI · Suportul răspunde personal"
   },
   "einblicke": {
     "eyebrow": "Din interior",

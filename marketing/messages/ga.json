@@ -900,7 +900,10 @@
     "beraterDenkt": "Táim ag féachaint ar …",
     "beraterQuellen": "Le léamh arís:",
     "beraterUebergabe": "Ní féidir liom é seo a fhreagairt go cinnte ón gcabhair. Cuirfidh mé do cheist ar aghaidh chuig comhghleacaí — cuir isteach do shonraí teagmhála go hachomair le do thoil.",
-    "beraterFormularHinweis": "Freagróidh comhghleacaí tú trí ríomhphost, de ghnáth laistigh de chúpla uair an chloig."
+    "beraterFormularHinweis": "Freagróidh comhghleacaí tú trí ríomhphost, de ghnáth laistigh de chúpla uair an chloig.",
+    "beraterRecht": "Is cúntóir AI a ghineann na freagraí agus d'fhéadfadh earráidí a bheith iontu. Tá feidhm lenár <agb>dTéarmaí agus Coinníollacha</agb> agus leis an <link>Beartas Príobháideachais</link>.",
+    "hinweisRecht": "Ní úsáidimid do chuid sonraí ach amháin chun freagra a thabhairt ar an iarratas seo. Tuilleadh sonraí sa <link>Bheartas Príobháideachais</link>; tá feidhm lenár <agb>dTéarmaí agus Coinníollacha</agb>.",
+    "beraterUnterMensch": "Cúntóir AI · Freagraíonn tacaíocht go pearsanta"
   },
   "einblicke": {
     "eyebrow": "Taobh istigh",

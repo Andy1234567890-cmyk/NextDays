@@ -208,6 +208,15 @@ export const datenschutz: LegalDoc = {
           ],
         },
         {
+          titel: "Tämän verkkosivuston tuoteneuvoja",
+          paragraphs: [
+            "Tällä verkkosivustolla tekoälypohjainen tuoteneuvoja vastaa ohjelmistoamme koskeviin kysymyksiin. Se käyttää ainoastaan tältä verkkosivustolta julkisesti saatavilla olevaa sisältöä (ohjeartikkelit, toimintokuvaukset, usein kysytyt kysymykset, oikeudelliset tekstit) sekä ajantasaisia hintoja laskutuksestamme. Asiakastiedot, varaukset tai asiakkaiden tiedot eivät ole sen käytettävissä.",
+            "Toisin kuin postilaatikon vastausvaihtoehdoissa, tämä neuvoja vastaa VÄLITTÖMÄSTI ja ilman ihmisen hyväksyntää. Se on siten tekoälyjärjestelmä tekoälyasetuksen 50 artiklan 1 kohdan mukaisesti, joka on suoraan vuorovaikutuksessa luonnollisten henkilöiden kanssa. Siksi sinua informoidaan selkeästi dialogin alussa, että vastaukset ovat peräisin tekoälyavustajalta ja voivat sisältää virheitä.",
+            "Kysymyksesi ja valitsemasi kieli käsitellään. Molemmat lähetetään vastauksen antamista varten Google Cloudiin (Vertex AI) alueelle europe-west4 (Alankomaat); käsittelyä EU:n ulkopuolella ei tapahdu. Emme tallenna kysymyksiä pysyvästi emmekä käytä niitä tekoälymallien kouluttamiseen. Oikeusperusteena on oikeutettu etumme tarjota nopeaa tietoa kiinnostuneille (GDPR 6 artiklan 1 kohdan f alakohta).",
+            "Jos neuvoja ei pysty vastaamaan kysymykseen olemassa olevan sisällön perusteella, se tarjoaa mahdollisuuden ohjata kysymyksen tukeemme. Vasta silloin – ja vain jos täytät lomakkeen – keräämme nimen, sähköpostiosoitteen ja valinnaisesti puhelinnumerosi; näitä tietoja käsittelemme ”Viestintä”-osiossa kuvattujen sääntöjen mukaisesti.",
+          ],
+        },
+        {
           titel: "Roolit tekoälyasetuksen mukaan",
           paragraphs: [
             "Tuotteeseen sisäänrakennettujen tekoälytoimintojen osalta olemme tekoälyasetuksen 3 artiklan 4 alakohdassa tarkoitettu käyttöönottaja; taustalla olevien kielimallien tarjoajia ovat kyseiset mallien tarjoajat. Jos yritys käyttää näitä toimintoja ammattitoiminnassaan, se on niiden osalta omalta osaltaan käyttöönottaja, ja sitä koskee tekoälyasetuksen 4 artiklan mukainen tekoälylukutaitoa koskeva velvoite, jota on sovellettu 2. helmikuuta 2025 lähtien yrityksen koosta riippumatta. 27. heinäkuuta 2026 lähtien sitä sovelletaan asetuksen (EU) 2026/1744 mukaisessa muodossa: tarjoajat ja käyttöönottajat toteuttavat toimenpiteitä tukeakseen henkilöstönsä tekoälylukutaidon kehittymistä; tiettyä tasoa ei tällöin nimenomaisesti tarvitse takata. Tuemme tätä sovelluksessa ja ohjekeskuksessamme annettavilla ohjeilla; oman henkilöstön kouluttaminen on edelleen yrityksen tehtävä.",
