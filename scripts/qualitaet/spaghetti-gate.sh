@@ -20,7 +20,11 @@
 set -uo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 
-APPS=(web plattform gastgeber marketing builder admin partner)
+# `packages` und `storybook` gehoeren dazu: sie haben eine eigene
+# eslint.config.mjs und fielen im CI mit 16 bzw. 3 Verstoessen, waehrend das
+# Gate hier gruen meldete. Ein Gate, das weniger prueft als die CI, ist eine
+# Zusage, die nicht gilt (10.09.2026).
+APPS=(web plattform gastgeber marketing builder admin partner packages storybook)
 MODUS="${1:-pruefen}"
 FEHLER=0
 

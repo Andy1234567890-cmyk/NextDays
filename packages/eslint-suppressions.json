@@ -1,0 +1,30 @@
+{
+  "auth/src/server.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "baukasten-stil/src/index.ts": {
+    "complexity": {
+      "count": 10
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "security-headers/src/index.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "ui/src/chart.tsx": {
+    "complexity": {
+      "count": 2
+    }
+  },
+  "ui/src/overflow-tabs.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  }
+}

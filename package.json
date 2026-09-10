@@ -16,7 +16,7 @@
   ],
   "packageManager": "bun@1.3.9",
   "scripts": {
-    "lint:packages": "eslint packages",
+    "lint:packages": "cd packages && eslint . --pass-on-unpruned-suppressions",
     "spaghetti": "bash scripts/qualitaet/spaghetti-gate.sh",
     "spaghetti:neu": "bash scripts/qualitaet/spaghetti-gate.sh --neu",
     "spaghetti:bericht": "python3 scripts/qualitaet/komplexitaet-ratchet.py --bericht"

@@ -1,0 +1,22 @@
+{
+  "components/builder/pages-panel.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/docs/team-chat.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/pms/multi-calendar.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/ui/chart.tsx": {
+    "complexity": {
+      "count": 2
+    }
+  }
+}

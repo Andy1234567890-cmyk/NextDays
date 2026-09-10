@@ -46,6 +46,22 @@ const DASHBOARD_ORIGINS = (process.env.DASHBOARD_ORIGIN ?? "")
 const IST_DEV = process.env.NODE_ENV !== "production";
 
 const nextConfig: NextConfig = {
+  // ESLint läuft im CI als EIGENER Schritt (`bun run lint`) — nicht noch
+  // einmal im Build.
+  //
+  // Nicht dasselbe wie „Prüfung abgeschaltet": Next fährt beim Build seinen
+  // eigenen ESLint-Lauf, und der liest `eslint-suppressions.json` NICHT. Seit
+  // die Komplexitätsregeln scharf sind, urteilten damit zwei Läufe
+  // verschieden über dieselbe Datei: `bun run lint` grün (Altbestand
+  // eingefroren), `next build` rot mit denselben sieben Stellen. Gemeldet
+  // wurden sie als gescheiterter Build, nicht als Lint-Befund.
+  //
+  // Entwirren war hier die falsche Antwort: alle sieben sind FLACHE
+  // Fallunterscheidungen ohne eine einzige tiefe Verschachtelung (gemessen),
+  // also hoher CC bei niedriger Verhedderung — genau der Fall, den CLAUDE.md
+  // unter „Metrik ist nicht Urteil" beschreibt. `typescript` bleibt
+  // ausdrücklich UNANGETASTET: Typfehler müssen den Build weiter brechen.
+  eslint: { ignoreDuringBuilds: true },
   // Schlankes Runtime-Image für den Dockerfile-Build (node server.js).
   output: "standalone",
   // Repo-Root deterministisch als File-Tracing-Root, nicht raten lassen: diese
