@@ -113,3 +113,10 @@ marketing-konsistenz|marketing/lib/ packages/tarif/ packages/currency/ scripts/m
 # Breite Pfade mit Absicht: alle drei pruefen quer ueber das Repo, ein enger
 # Filter waere derselbe blinde Fleck in klein.
 statische-fallen|apps/api/ web/ plattform/ gastgeber/ admin/ partner/ builder/ marketing/ scripts/diagnose/
+
+# `db-spalten-pruefen.py` vergleicht JEDE select-, Filter- und Schreibspalte
+# des Backends mit dem LIVE-Schema. Ein falscher Spaltenname ist fuer Python
+# eine Zeichenkette, fuer ruff/pylint unsichtbar, und die Fake-DB der Tests
+# nimmt jede erfundene Spalte an — sichtbar wird er erst als roher 500 beim
+# Kunden. Nur das Backend, denn nur dort steht `db.table(...)`.
+db-spalten|apps/api/src/ apps/public-api/src/ scripts/diagnose/db-spalten-pruefen.py

@@ -343,6 +343,55 @@ jobs:
       - name: Neue Komplexität?
         run: bash scripts/qualitaet/spaghetti-gate.sh
 
+  # Falsche DB-Spalten: fuer Python eine Zeichenkette, fuer ruff und pylint
+  # unsichtbar, und die Fake-DB der Tests nimmt JEDE erfundene Spalte an.
+  # Sichtbar wird der Fehler erst beim echten Aufruf — als roher 500 beim
+  # Kunden. Live am 10.09.2026 achtmal gefunden, u. a. in der
+  # Verdienstrechnung und im Gebuehrenlauf.
+  #
+  # Das Skript nimmt das Schema per PostgREST (`/rest/v1/`, service_role) —
+  # NICHT per SSH: der SSH-Weg braucht root auf der Produktionsmaschine, und
+  # dieser Schluessel gehoert nicht in einen Runner. Beide Wege liefern
+  # nachweislich dasselbe (4937 zu 4937 Angaben, gemessen).
+  db-spalten:
+    name: DB-Spalten gegen das Live-Schema
+    needs: [betroffen]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Betroffen?
+        id: pruefen
+        working-directory: ${{ github.workspace }}
+        run: echo "laufen=${{ needs.betroffen.outputs.db-spalten }}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.pruefen.outputs.laufen == 'true'
+
+      # Ohne Zugangsdaten faellt das Skript auf SSH zurueck und stirbt im
+      # Runner an einem fehlenden Schluessel — eine unverstaendliche
+      # Fehlermeldung fuer ein fehlendes Secret. Deshalb hier die klare
+      # Ansage, und der Job endet ROT: ein uebersprungenes Gate, das gruen
+      # meldet, ist schlimmer als keins.
+      - name: Zugangsdaten vorhanden?
+        if: steps.pruefen.outputs.laufen == 'true'
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::error::SUPABASE_URL und SUPABASE_SERVICE_ROLE_KEY fehlen als Repository-Secret. Ohne sie kann dieser Job das Live-Schema nicht lesen."
+            exit 1
+          fi
+
+      # Das Skript bricht selbst ab, wenn die Spec beschnitten ist (< 300
+      # Tabellen) — ein anon-Key im Secret wuerde sonst nur 9175 statt 14238
+      # Angaben pruefen und trotzdem gruen melden.
+      - name: Jede Spalte existiert wirklich
+        if: steps.pruefen.outputs.laufen == 'true'
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: python3 scripts/diagnose/db-spalten-pruefen.py
+
   # Statische Fallen, die kein anderes Gate sieht. Alle drei Pruefungen gab es
   # laengst — sie liefen nur nie automatisch, und genau deshalb sind ihre
   # Fehlerklassen wiederholt durchgerutscht (zuletzt ein typografisches
@@ -1220,6 +1269,7 @@ jobs:
       mobile-konsistenz: ${{ steps.bereiche.outputs.mobile-konsistenz }}
       marketing-konsistenz: ${{ steps.bereiche.outputs.marketing-konsistenz }}
       statische-fallen: ${{ steps.bereiche.outputs.statische-fallen }}
+      db-spalten: ${{ steps.bereiche.outputs.db-spalten }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

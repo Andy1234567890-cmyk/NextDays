@@ -52,8 +52,11 @@ Ohne Pfad wird `apps/api/src` geprueft. Exit 1, sobald eine Spalte fehlt.
 from __future__ import annotations
 
 import ast
+import json
+import os
 import subprocess
 import sys
+import urllib.request
 from collections import defaultdict
 from pathlib import Path
 
@@ -66,6 +69,12 @@ select table_name || '\t' || column_name
  where table_schema = 'public';
 """
 
+# Untergrenze fuer ein plausibles Schema. Live sind es 392 Tabellen; die
+# Grenze liegt bewusst deutlich darunter, damit ein normales Wachsen oder
+# Aufraeumen sie nicht ausloest — aber weit ueber dem, was ein anon-Key
+# zeigt (198). Sie faengt den falschen Schluessel, nicht den Alltag.
+MIN_TABELLEN = 300
+
 REMOTE = (
     'docker exec -i $(docker ps --format "{{.Names}}" '
     '| grep -E "^db-cdqxi" | head -1) '
@@ -73,8 +82,59 @@ REMOTE = (
 )
 
 
-def live_schema() -> dict[str, set[str]]:
-    """Tabelle -> Spalten, direkt aus der Live-Datenbank."""
+def _schema_per_rest() -> dict[str, set[str]] | None:
+    """Tabelle -> Spalten aus der OpenAPI-Spec von PostgREST.
+
+    Der Weg OHNE SSH: PostgREST veroeffentlicht unter `/rest/v1/` eine Spec
+    mit jeder Tabelle und jeder Spalte. Mit `service_role` ist sie
+    vollstaendig — am 10.09.2026 gegen den SSH-Weg gemessen: 4937 zu 4937
+    Angaben, kein einziger Unterschied.
+
+    Der ANON-Key genuegt NICHT: er sieht nur 198 statt 392 Tabellen (RLS und
+    Grants beschneiden die Spec). Ein Lauf damit waere kein Gate, sondern ein
+    stiller blinder Fleck — deshalb nur service_role, sonst gar nicht.
+
+    Gibt `None` zurueck, wenn die Variablen fehlen; der Aufrufer faellt dann
+    auf SSH zurueck.
+    """
+    url = os.environ.get("SUPABASE_URL", "").rstrip("/")
+    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
+    if not url or not key:
+        return None
+    # Die Adresse kommt aus der Umgebung. Ohne diese Pruefung akzeptierte
+    # `urlopen` auch `file://` — und dann liefe das Gate gegen eine Datei,
+    # die jemand untergeschoben hat, statt gegen die Datenbank (S310).
+    if not url.startswith(("https://", "http://")):
+        raise RuntimeError(
+            f"SUPABASE_URL muss mit http(s):// beginnen, steht aber auf {url!r}."
+        )
+    anfrage = urllib.request.Request(  # noqa: S310 — Schema direkt oben geprueft
+        f"{url}/rest/v1/",
+        headers={"apikey": key, "Authorization": f"Bearer {key}"},
+    )
+    with urllib.request.urlopen(anfrage, timeout=30) as antwort:  # noqa: S310
+        spec = json.load(antwort)
+    schema: dict[str, set[str]] = defaultdict(set)
+    for tabelle, aufbau in (spec.get("definitions") or {}).items():
+        for spalte in (aufbau.get("properties") or {}):
+            schema[tabelle].add(spalte)
+    # Ein BESCHNITTENES Schema ist gefaehrlicher als gar keins: unbekannte
+    # Tabellen ueberspringt die Pruefung stillschweigend, das Gate meldet
+    # gruen und hat die halbe Datenbank nie angesehen. Gemessen mit dem
+    # anon-Key: 198 statt 392 Tabellen, 9175 statt 14238 geprueften Angaben —
+    # bei gruenem Lauf. Lieber laut abbrechen als leise weniger pruefen.
+    if len(schema) < MIN_TABELLEN:
+        raise RuntimeError(
+            f"PostgREST lieferte nur {len(schema)} Tabellen (erwartet: "
+            f"mindestens {MIN_TABELLEN}). Das ist ein beschnittenes Schema — "
+            "vermutlich steht in SUPABASE_SERVICE_ROLE_KEY ein anon-Key. "
+            "Mit einem solchen Schema waere jeder Lauf gruen und wertlos."
+        )
+    return schema
+
+
+def _schema_per_ssh() -> dict[str, set[str]]:
+    """Tabelle -> Spalten direkt aus `information_schema` ueber SSH."""
     roh = subprocess.run(
         ["ssh", "-o", "ConnectTimeout=15", "root@65.21.144.136", REMOTE],
         input=SQL_SPALTEN,
@@ -88,6 +148,19 @@ def live_schema() -> dict[str, set[str]]:
             tab, spalte = zeile.split("\t", 1)
             schema[tab].add(spalte)
     return schema
+
+
+def live_schema() -> dict[str, set[str]]:
+    """Tabelle -> Spalten aus der Live-Datenbank.
+
+    REST zuerst, SSH als Rueckfall. Nicht aus Bequemlichkeit: der SSH-Weg
+    braucht root auf der Produktionsmaschine, und dieser Schluessel gehoert
+    nicht in einen CI-Runner — ein Pruefskript waere sonst der Weg zum
+    Server. Der REST-Weg braucht nur den Service-Key und liefert nachweislich
+    dasselbe.
+    """
+    per_rest = _schema_per_rest()
+    return per_rest if per_rest is not None else _schema_per_ssh()
 
 
 def _tabelle_der_kette(knoten: ast.AST) -> str | None:
