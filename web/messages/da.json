@@ -1163,7 +1163,10 @@
     "eigentuemerChatText": "Disse beskeder kan kun læses på den enhed, hvor chatten er oprettet. Åbn historikken i myNextDays-appen.",
     "eigentuemerKanal": "Ejer",
     "e2eVorschau": "Ny besked",
-    "e2eVorschauBild": "Billede"
+    "e2eVorschauBild": "Billede",
+    "langClear": "Tøm udkast på {sprache}",
+    "langClearConfirm": "Tøm teksterne på {sprache} i denne skabelon? Andre skabeloner og regler forbliver uberørte.",
+    "langClearedPendingSave": "{sprache} er tømt – det træder først i kraft ved lagring."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp er endnu ikke forbundet. Angiv adgangsoplysningerne (Meta Cloud API) i serverindstillingerne, så er afsendelse aktiv.",
@@ -3021,7 +3024,8 @@
         "quartal": "kvartalsvis",
         "jaehrlich": "årligt",
         "nie": "tæl ikke med"
-      }
+      },
+      "ausgewaehlt": "{count} af {gesamt} valgt"
     }
   },
   "finance": {

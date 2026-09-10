@@ -1163,7 +1163,10 @@
     "eigentuemerChatText": "Ní féidir na teachtaireachtaí seo a léamh ach ar an ngléas ar a bhfuil an comhrá socraithe. Oscail an stair san aip myNextDays.",
     "eigentuemerKanal": "Úinéir",
     "e2eVorschau": "Teachtaireacht Nua",
-    "e2eVorschauBild": "Íomhá"
+    "e2eVorschauBild": "Íomhá",
+    "langClear": "Fholmigh an leagan i {sprache}",
+    "langClearConfirm": "An bhfuil tú cinnte gur mian leat na téacsanna i {sprache} a fholmhú sa teimpléad seo? Fanfaidh teimpléid agus rialacha eile gan athrú.",
+    "langClearedPendingSave": "Tá {sprache} folmhaigh — ní bheidh sé éifeachtach ach amháin tar éis sábháil."
   },
   "whatsapp": {
     "notConfigured": "Níl WhatsApp nasctha fós. Cuir na dintiúir (Meta Cloud API) i socruithe an fhreastalaí, ansin beidh an seoladh gníomhach.",
@@ -3021,7 +3024,8 @@
         "quartal": "gach ráithe",
         "jaehrlich": "go bliantúil",
         "nie": "gan a chomhaireamh"
-      }
+      },
+      "ausgewaehlt": "{count} as {gesamt} roghnaithe"
     }
   },
   "finance": {

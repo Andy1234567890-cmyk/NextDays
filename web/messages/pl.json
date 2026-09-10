@@ -1163,7 +1163,10 @@
     "eigentuemerChatText": "Te wiadomości można odczytać tylko na urządzeniu, na którym skonfigurowano czat. Otwórz historię w aplikacji myNextDays.",
     "eigentuemerKanal": "Właściciel",
     "e2eVorschau": "Nowa wiadomość",
-    "e2eVorschauBild": "Obraz"
+    "e2eVorschauBild": "Obraz",
+    "langClear": "Opróżnij wersję w języku {sprache}",
+    "langClearConfirm": "Opróżnić teksty w języku {sprache} w tym szablonie? Inne szablony i reguły pozostaną nienaruszone.",
+    "langClearedPendingSave": "Język {sprache} został opróżniony — zmiany zostaną zastosowane po zapisaniu."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp nie jest jeszcze połączony. Wprowadź dane dostępowe (Meta Cloud API) w ustawieniach serwera, aby aktywować wysyłkę.",
@@ -3021,7 +3024,8 @@
         "quartal": "kwartalnie",
         "jaehrlich": "rocznie",
         "nie": "nie wliczaj"
-      }
+      },
+      "ausgewaehlt": "Wybrano {count} z {gesamt}"
     }
   },
   "finance": {

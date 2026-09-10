@@ -1163,7 +1163,10 @@
     "eigentuemerChatText": "Deze berichten kunnen alleen worden gelezen op het apparaat waarop de chat is ingesteld. Open de geschiedenis in de myNextDays-app.",
     "eigentuemerKanal": "Eigenaar",
     "e2eVorschau": "Nieuw bericht",
-    "e2eVorschauBild": "Afbeelding"
+    "e2eVorschauBild": "Afbeelding",
+    "langClear": "Cache voor {sprache} legen",
+    "langClearConfirm": "De teksten voor {sprache} in deze sjabloon legen? Andere sjablonen en regels blijven ongewijzigd.",
+    "langClearedPendingSave": "{sprache} is geleegd — dit wordt pas van kracht na het opslaan."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp is nog niet verbonden. Voer de inloggegevens (Meta Cloud API) in de serverinstellingen in, dan is verzending actief.",
@@ -3021,7 +3024,8 @@
         "quartal": "per kwartaal",
         "jaehrlich": "jaarlijks",
         "nie": "niet tellen"
-      }
+      },
+      "ausgewaehlt": "{count} van {gesamt} geselecteerd"
     }
   },
   "finance": {

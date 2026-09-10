@@ -1163,7 +1163,10 @@
     "eigentuemerChatText": "Aceste mesaje pot fi citite doar pe dispozitivul pe care a fost inițiat chat-ul. Deschideți istoricul în aplicația myNextDays.",
     "eigentuemerKanal": "Proprietar",
     "e2eVorschau": "Mesaj nou",
-    "e2eVorschauBild": "Imagine"
+    "e2eVorschauBild": "Imagine",
+    "langClear": "Goliți versiunea în {sprache}",
+    "langClearConfirm": "Goliți textele în {sprache} din acest șablon? Alte șabloane și reguli rămân neatinse.",
+    "langClearedPendingSave": "{sprache} este golit — va deveni efectiv doar la salvare."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp nu este încă conectat. Introduceți datele de acces (Meta Cloud API) în setările serverului, apoi trimiterea este activă.",
@@ -3021,7 +3024,8 @@
         "quartal": "trimestrial",
         "jaehrlich": "anual",
         "nie": "nu se numără"
-      }
+      },
+      "ausgewaehlt": "{count} din {gesamt} selectate"
     }
   },
   "finance": {

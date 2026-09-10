@@ -1163,7 +1163,10 @@
     "eigentuemerChatText": "Neid sõnumeid saab lugeda ainult seadmes, kus vestlus on loodud. Avage ajalugu rakenduses myNextDays.",
     "eigentuemerKanal": "Omanik",
     "e2eVorschau": "Uus sõnum",
-    "e2eVorschauBild": "Pilt"
+    "e2eVorschauBild": "Pilt",
+    "langClear": "Tühjenda {sprache} versioon",
+    "langClearConfirm": "Kas tühjendada selle malli {sprache} tekstid? Teised mallid ja reeglid jäävad puutumata.",
+    "langClearedPendingSave": "{sprache} on tühjendatud – see jõustub alles salvestamisel."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp pole veel ühendatud. Sisesta juurdepääsuandmed (Meta Cloud API) serveri seadetesse, siis on saatmine aktiivne.",
@@ -3021,7 +3024,8 @@
         "quartal": "kord kvartalis",
         "jaehrlich": "aastas",
         "nie": "ära loe"
-      }
+      },
+      "ausgewaehlt": "{count} {gesamt} valitud"
     }
   },
   "finance": {

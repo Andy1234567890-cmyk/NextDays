@@ -1163,7 +1163,10 @@
     "eigentuemerChatText": "Estas mensagens só podem ser lidas no dispositivo onde o chat foi configurado. Abra o histórico no aplicativo myNextDays.",
     "eigentuemerKanal": "Proprietário",
     "e2eVorschau": "Nova mensagem",
-    "e2eVorschauBild": "Imagem"
+    "e2eVorschauBild": "Imagem",
+    "langClear": "Esvaziar rascunho em {sprache}",
+    "langClearConfirm": "Esvaziar os textos em {sprache} neste modelo? Outros modelos e regras não serão afetados.",
+    "langClearedPendingSave": "{sprache} está vazio — só entrará em vigor após salvar."
   },
   "whatsapp": {
     "notConfigured": "O WhatsApp ainda não está ligado. Introduza as credenciais (Meta Cloud API) nas definições do servidor para ativar o envio.",
@@ -3021,7 +3024,8 @@
         "quartal": "trimestralmente",
         "jaehrlich": "anualmente",
         "nie": "não contar"
-      }
+      },
+      "ausgewaehlt": "{count} de {gesamt} selecionados"
     }
   },
   "finance": {

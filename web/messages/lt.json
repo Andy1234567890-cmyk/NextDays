@@ -1163,7 +1163,10 @@
     "eigentuemerChatText": "Šias žinutes galima perskaityti tik įrenginyje, kuriame nustatytas pokalbis. Atidarykite istoriją programėlėje „myNextDays“.",
     "eigentuemerKanal": "Savininkas",
     "e2eVorschau": "Naujas pranešimas",
-    "e2eVorschauBild": "Paveikslėlis"
+    "e2eVorschauBild": "Paveikslėlis",
+    "langClear": "Išvalyti {sprache} versiją",
+    "langClearConfirm": "Išvalyti {sprache} tekstus šiame šablone? Kiti šablonai ir taisyklės liks nepakitę.",
+    "langClearedPendingSave": "{sprache} išvalyta – tai įsigalios tik išsaugojus."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp dar neprijungtas. Įveskite prisijungimo duomenis (Meta Cloud API) serverio nustatymuose, tada siuntimas bus aktyvus.",
@@ -3021,7 +3024,8 @@
         "quartal": "kas ketvirtį",
         "jaehrlich": "kasmet",
         "nie": "neskaičiuoti"
-      }
+      },
+      "ausgewaehlt": "Pasirinkta {count} iš {gesamt}"
     }
   },
   "finance": {

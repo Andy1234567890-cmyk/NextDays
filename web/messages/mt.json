@@ -1163,7 +1163,10 @@
     "eigentuemerChatText": "Dawn il-messaġġi jistgħu jinqraw biss fuq l-apparat fejn ġiet stabbilita ċ-chat. Iftaħ l-istorja fl-app myNextDays.",
     "eigentuemerKanal": "Sid",
     "e2eVorschau": "Messaġġ ġdid",
-    "e2eVorschauBild": "Stampa"
+    "e2eVorschauBild": "Stampa",
+    "langClear": "Żvojta l-verżjoni bil-{sprache}",
+    "langClearConfirm": "Żvojta t-testi bil-{sprache} f'dan il-mudell? Mudelli u regoli oħra jibqgħu intatti.",
+    "langClearedPendingSave": "{sprache} hija żvojtata — dan jidħol fis-seħħ biss meta tissejvja."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp għadu mhux imqabbad. Daħħal il-kredenzjali (Meta Cloud API) fis-settings tas-server, imbagħad il-konsenja tkun attiva.",
@@ -3021,7 +3024,8 @@
         "quartal": "kull tliet xhur",
         "jaehrlich": "kull sena",
         "nie": "ma tgħoddx"
-      }
+      },
+      "ausgewaehlt": "{count} minn {gesamt} magħżula"
     }
   },
   "finance": {

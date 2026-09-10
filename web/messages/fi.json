@@ -1163,7 +1163,10 @@
     "eigentuemerChatText": "Nämä viestit voi lukea vain laitteella, jolla keskustelu on aloitettu. Avaa historia myNextDays-sovelluksessa.",
     "eigentuemerKanal": "Omistaja",
     "e2eVorschau": "Uusi viesti",
-    "e2eVorschauBild": "Kuva"
+    "e2eVorschauBild": "Kuva",
+    "langClear": "Tyhjennä versio kielellä {sprache}",
+    "langClearConfirm": "Tyhjennetään tämän mallin tekstit kielellä {sprache}? Muut mallit ja säännöt pysyvät ennallaan.",
+    "langClearedPendingSave": "Kieli {sprache} on tyhjennetty – muutokset astuvat voimaan tallennettaessa."
   },
   "whatsapp": {
     "notConfigured": "WhatsAppia ei ole vielä yhdistetty. Syötä tunnukset (Meta Cloud API) palvelimen asetuksiin, niin lähetys on käytössä.",
@@ -3021,7 +3024,8 @@
         "quartal": "neljännesvuosittain",
         "jaehrlich": "vuosittain",
         "nie": "älä laske"
-      }
+      },
+      "ausgewaehlt": "{count} / {gesamt} valittu"
     }
   },
   "finance": {

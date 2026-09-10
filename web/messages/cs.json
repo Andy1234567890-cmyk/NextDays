@@ -1163,7 +1163,10 @@
     "eigentuemerChatText": "Tyto zprávy lze číst pouze na zařízení, na kterém je chat nastaven. Otevřete historii v aplikaci myNextDays.",
     "eigentuemerKanal": "Majitel",
     "e2eVorschau": "Nová zpráva",
-    "e2eVorschauBild": "Obrázek"
+    "e2eVorschauBild": "Obrázek",
+    "langClear": "Vyprázdnit verzi v {sprache}",
+    "langClearConfirm": "Vyprázdnit texty v {sprache} v této šabloně? Jiné šablony a pravidla zůstanou nedotčena.",
+    "langClearedPendingSave": "{sprache} je vyprázdněn – projeví se až po uložení."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp zatím není propojen. Zadejte přístupové údaje (Meta Cloud API) v nastavení serveru, poté bude odesílání aktivní.",
@@ -3021,7 +3024,8 @@
         "quartal": "čtvrtletně",
         "jaehrlich": "ročně",
         "nie": "nepočítat"
-      }
+      },
+      "ausgewaehlt": "Vybráno {count} z {gesamt}"
     }
   },
   "finance": {

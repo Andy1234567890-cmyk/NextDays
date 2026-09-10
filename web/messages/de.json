@@ -1163,7 +1163,10 @@
     "whatsappWithGuest": "WhatsApp mit {name}",
     "yesterday": "Gestern",
     "autoTrigger_on_checkin": "Am Anreisetag",
-    "autoTrigger_on_checkout": "Am Abreisetag"
+    "autoTrigger_on_checkout": "Am Abreisetag",
+    "langClear": "Fassung auf {sprache} leeren",
+    "langClearConfirm": "Die Texte auf {sprache} in dieser Vorlage leeren? Andere Vorlagen und Regeln bleiben unberührt.",
+    "langClearedPendingSave": "{sprache} ist geleert — wirksam wird es erst beim Speichern."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp ist noch nicht verbunden. Zugangsdaten (Meta Cloud API) in den Server-Einstellungen hinterlegen, dann ist der Versand aktiv.",
@@ -3021,7 +3024,8 @@
         "quartal": "vierteljährlich",
         "jaehrlich": "jährlich",
         "nie": "nicht zählen"
-      }
+      },
+      "ausgewaehlt": "{count} von {gesamt} ausgewählt"
     }
   },
   "finance": {

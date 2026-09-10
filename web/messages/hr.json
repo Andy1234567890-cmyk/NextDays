@@ -1163,7 +1163,10 @@
     "eigentuemerChatText": "Ove se poruke mogu čitati samo na uređaju na kojem je chat postavljen. Otvorite povijest u aplikaciji myNextDays.",
     "eigentuemerKanal": "Vlasnik",
     "e2eVorschau": "Nova poruka",
-    "e2eVorschauBild": "Slika"
+    "e2eVorschauBild": "Slika",
+    "langClear": "Ispraznite verziju na {sprache}",
+    "langClearConfirm": "Isprazniti tekstove na {sprache} u ovom predlošku? Ostali predlošci i pravila ostaju netaknuti.",
+    "langClearedPendingSave": "{sprache} je ispražnjen — stupa na snagu tek nakon spremanja."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp još nije povezan. Unesite pristupne podatke (Meta Cloud API) u postavkama poslužitelja, nakon toga je slanje aktivno.",
@@ -3021,7 +3024,8 @@
         "quartal": "tromjesečno",
         "jaehrlich": "godišnje",
         "nie": "ne broji se"
-      }
+      },
+      "ausgewaehlt": "Odabrano {count} od {gesamt}"
     }
   },
   "finance": {

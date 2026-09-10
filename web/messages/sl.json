@@ -1163,7 +1163,10 @@
     "eigentuemerChatText": "Ta sporočila je mogoče prebrati samo v napravi, v kateri je klepet nastavljen. Odprite zgodovino v aplikaciji myNextDays.",
     "eigentuemerKanal": "Lastnik",
     "e2eVorschau": "Novo sporočilo",
-    "e2eVorschauBild": "Slika"
+    "e2eVorschauBild": "Slika",
+    "langClear": "Počisti osnutek v {sprache}",
+    "langClearConfirm": "Počistim besedila v {sprache} v tej predlogi? Druge predloge in pravila ostanejo nespremenjena.",
+    "langClearedPendingSave": "{sprache} je očiščen – v veljavo stopi šele ob shranjevanju."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp še ni povezan. Vnesite dostopne podatke (Meta Cloud API) v nastavitvah strežnika, nato bo pošiljanje aktivno.",
@@ -3021,7 +3024,8 @@
         "quartal": "četrtletno",
         "jaehrlich": "letno",
         "nie": "ne šteje"
-      }
+      },
+      "ausgewaehlt": "Izbranih je {count} od {gesamt}"
     }
   },
   "finance": {

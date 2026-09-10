@@ -1163,7 +1163,10 @@
     "eigentuemerChatText": "These messages can only be read on the device where the chat was set up. Open the history in the myNextDays app.",
     "eigentuemerKanal": "Owner",
     "e2eVorschau": "New message",
-    "e2eVorschauBild": "Image"
+    "e2eVorschauBild": "Image",
+    "langClear": "Clear {sprache} version",
+    "langClearConfirm": "Clear the {sprache} texts in this template? Other templates and rules remain unaffected.",
+    "langClearedPendingSave": "{sprache} is cleared — this will take effect upon saving."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp is not connected yet. Add the credentials (Meta Cloud API) in the server settings to activate sending.",
@@ -3021,7 +3024,8 @@
         "quartal": "quarterly",
         "jaehrlich": "annually",
         "nie": "do not count"
-      }
+      },
+      "ausgewaehlt": "{count} of {gesamt} selected"
     }
   },
   "finance": {

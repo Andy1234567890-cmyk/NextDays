@@ -1163,7 +1163,10 @@
     "eigentuemerChatText": "Šīs ziņas var nolasīt tikai ierīcē, kurā tērzēšana ir iestatīta. Atveriet vēsturi lietotnē myNextDays.",
     "eigentuemerKanal": "Īpašnieks",
     "e2eVorschau": "Jauns ziņojums",
-    "e2eVorschauBild": "Attēls"
+    "e2eVorschauBild": "Attēls",
+    "langClear": "Iztukšot {sprache} versiju",
+    "langClearConfirm": "Iztukšot tekstus šajā veidnē valodā {sprache}? Citas veidnes un noteikumi paliks neskarti.",
+    "langClearedPendingSave": "{sprache} ir iztukšota — izmaiņas stāsies spēkā tikai pēc saglabāšanas."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp vēl nav savienots. Ievadiet piekļuves datus (Meta Cloud API) servera iestatījumos, tad sūtīšana būs aktīva.",
@@ -3021,7 +3024,8 @@
         "quartal": "reizi ceturksnī",
         "jaehrlich": "katru gadu",
         "nie": "neskaitīt"
-      }
+      },
+      "ausgewaehlt": "Atlasīti {count} no {gesamt}"
     }
   },
   "finance": {
