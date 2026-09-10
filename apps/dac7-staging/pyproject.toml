@@ -89,6 +89,10 @@ disable = [
     "redefined-outer-name",
     "too-many-arguments",
     "too-many-positional-arguments",
+    # Zwei Importe stehen im Funktionsrumpf, beide gegen einen Zirkelbezug:
+    # `main` baut die App, `v1.einreichung` braucht die Einstellungen daraus.
+    # Auf Modulebene importierten sich beide gegenseitig.
+    "import-outside-toplevel",
     # Die internen Dataclasses (`core/pruefung_csv.Befund`, `.Eintrag`) und die
     # Pydantic-Schemas (`v1/schemas`) tragen dieselben Feldnamen — das ist
     # ABSICHT, nicht Kopie: Das eine ist die interne Darstellung, das andere

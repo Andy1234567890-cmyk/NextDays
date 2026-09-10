@@ -41,12 +41,13 @@ from __future__ import annotations
 
 import os
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 
 from .core.config import get_settings
 from .core.logging import configure_logging, get_logger
+from .oberflaeche import ergebnisseite, startseite
 from .v1 import router as v1_router
 
 log = get_logger("dac7staging")
@@ -112,6 +113,54 @@ def create_app() -> FastAPI:
 
     app.include_router(v1_router)
 
+    # --- Oberflaeche -------------------------------------------------------
+    # Die Behoerde hat eine (TastSelv Erhverv). Eine Teststufe, die nur per
+    # curl bedienbar ist, uebt den Weg nicht, den ein Betrieb spaeter geht.
+    # `include_in_schema=False`: Die Seiten gehoeren nicht in die
+    # API-Referenz, sie SIND die Bedienung.
+
+    @app.get("/", include_in_schema=False)
+    def seite() -> HTMLResponse:
+        return HTMLResponse(startseite())
+
+    @app.post("/einreichen", include_in_schema=False)
+    async def formular(
+        datei: UploadFile,
+        verhalten: str = Form(default="normal"),
+    ) -> HTMLResponse:
+        """Der Weg ueber die Oberflaeche — dieselbe Pruefung wie /v1.
+
+        Ruft bewusst denselben Endpunkt auf, statt die Pruefung zu
+        wiederholen: Zwei Wege mit eigener Logik liefen auseinander, und
+        die Oberflaeche zeigte dann etwas anderes als die Schnittstelle.
+        """
+        from .v1.einreichung import PROTOKOLL, einreichen
+
+        try:
+            quittung = await einreichen(datei=datei, x_staging_verhalten=verhalten)
+        except HTTPException as exc:
+            # 503 (Wartung) und 413 (zu gross) sind erwuenschte Antworten der
+            # Teststufe, keine Programmfehler — als Seite zeigen statt als
+            # nackter Statuscode.
+            return HTMLResponse(
+                startseite().replace(
+                    "</h1>",
+                    f"</h1><div class='karte'><h2 class='fehler'>Abgewiesen "
+                    f"({exc.status_code})</h2><p>{exc.detail}</p></div>",
+                ),
+                status_code=exc.status_code,
+            )
+
+        eintrag = PROTOKOLL.holen(quittung.quittungsnummer)
+        return HTMLResponse(
+            ergebnisseite(
+                _als_quittung(eintrag),
+                quittung.quittungsnummer,
+                quittung.pruefsumme,
+                quittung.dateiname,
+            )
+        )
+
     @app.get("/health", include_in_schema=False)
     def health() -> JSONResponse:
         return JSONResponse({"status": "ok", "dienst": "dac7-staging"})
@@ -121,3 +170,21 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
+
+
+def _als_quittung(eintrag: object) -> object:
+    """Protokolleintrag in die Form, die `ergebnisseite` erwartet.
+
+    Ein schmaler Adapter statt eines gemeinsamen Typs: Der Eintrag traegt
+    zusaetzlich Zeitpunkt und Dateiname, die Quittung nur das
+    Pruefergebnis. Sie zusammenzulegen hiesse, dass eine Aenderung am
+    Protokoll die Anzeige mitzieht.
+    """
+    from .core.pruefung_csv import Quittung
+
+    q = Quittung()
+    q.zeilen = eintrag.zeilen  # type: ignore[attr-defined]
+    q.zeilentypen = eintrag.zeilentypen  # type: ignore[attr-defined]
+    q.fehler = list(eintrag.fehler)  # type: ignore[attr-defined]
+    q.hinweise = list(eintrag.hinweise)  # type: ignore[attr-defined]
+    return q
