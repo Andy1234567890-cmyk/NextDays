@@ -80,6 +80,33 @@ def arbeitgeber_satz(
     return satz, waehrung
 
 
+def _kosten_einer_person(  # noqa: PLR0913 — Grundzeit plus vier Zuschlagsarten
+    satz: int | None,
+    regeln: rw.Regeln | None,
+    *,
+    ist: int,
+    nacht: int,
+    sonntag: int,
+    feiertag: int,
+    ueber: int,
+) -> int | None:
+    """Personalkosten in Minor — Grundzeit plus vier Zuschlaege.
+
+    Herausgezogen am 10.09.2026 aus `AuswertungService.auswerten`. `None`
+    statt 0, wenn der Satz fehlt: eine 0 hiesse „diese Person kostet nichts"
+    und summierte sich stillschweigend in die Gesamtkosten (Wurzel 4). Der
+    Aufrufer benennt die Person stattdessen im Hinweis.
+    """
+    if satz is None or regeln is None:
+        return None
+    kosten = round(satz * ist / 60)
+    kosten += rw.zuschlag_betrag_minor(satz, nacht, regeln.zuschlag_nacht_pct)
+    kosten += rw.zuschlag_betrag_minor(satz, sonntag, regeln.zuschlag_sonntag_pct)
+    kosten += rw.zuschlag_betrag_minor(satz, feiertag, regeln.zuschlag_feiertag_pct)
+    kosten += rw.zuschlag_betrag_minor(satz, ueber, regeln.zuschlag_ueberstunden_pct)
+    return kosten
+
+
 class AuswertungService(PersonalBase):
     def auswerten(  # noqa: PLR0912, PLR0915 — eine Auswertung mit allen Größen
         self,
@@ -186,14 +213,12 @@ class AuswertungService(PersonalBase):
                         als_dec(a.get("tage_berechnet"))
                     )
             satz, waehrung = self._satz(akte, firma)
-            kosten = None
-            if satz is not None and regeln is not None:
-                kosten = round(satz * ist / 60)
-                kosten += rw.zuschlag_betrag_minor(satz, nacht, regeln.zuschlag_nacht_pct)
-                kosten += rw.zuschlag_betrag_minor(satz, sonntag, regeln.zuschlag_sonntag_pct)
-                kosten += rw.zuschlag_betrag_minor(satz, feiertag, regeln.zuschlag_feiertag_pct)
-                kosten += rw.zuschlag_betrag_minor(satz, ueber, regeln.zuschlag_ueberstunden_pct)
-            elif satz is None and ist > 0:
+            kosten = _kosten_einer_person(
+                satz, regeln,
+                ist=ist, nacht=nacht, sonntag=sonntag,
+                feiertag=feiertag, ueber=ueber,
+            )
+            if satz is None and ist > 0:
                 ohne_lohn.append(str(u.get("full_name") or uid))
             personen.append(
                 PersonAuswertung(

@@ -3049,3 +3049,52 @@ def test_satz_waehlen_vorrang_und_regelsatz() -> None:
     # 5) Gar nichts steht fest — kein erfundener Satz (Wurzel 4).
     w = _satz_waehlen(None, None, None)
     assert (w.quelle, w.pct, w.regeln) == (None, None, None)
+
+
+def test_zeilenbefund_bleibt_offen_statt_null_zu_zahlen() -> None:
+    """Wurzel 4: ohne Anteil gibt es KEINE Auszahlung, nicht 0 und nicht 100 %.
+
+    `owner_payout` kann auf drei Wegen entstehen und auf zwei Wegen wieder
+    `None` werden — verstreut ueber eine 490-Zeilen-Schleife war das nicht
+    ueberschaubar. Der wichtigste Fall: fehlt der Miteigentumsanteil, gehoert
+    das Objekt diesem Eigentuemer laut Stammdaten nicht. Ein erfundener
+    Vollanteil zahlte ihm fremden Ertrag aus.
+    """
+    from decimal import Decimal
+
+    from src.features.owner_statements import common
+    from src.features.owner_statements.zeilen import _satz_waehlen, _Vertragslage
+
+    svc = _svc()
+    r = {
+        "id": "r-1",
+        "property_id": "p-1",
+        "total_amount": 1000,
+        "channel": "direct",
+        "check_out": "2026-03-05",
+    }
+    wahl = _satz_waehlen(None, common.Vertragsregeln(provisions_pct=Decimal("20")), None)
+    gemeinsam = {
+        "rid": "r-1",
+        "listing_id": "p-1",
+        "wahl": wahl,
+        "vertragslage": _Vertragslage(regeln={"r-1": wahl.regeln}, naechster_beginn={}),
+        "kontext": svc._gebuehren_kontext("t-1", [r]),  # noqa: SLF001
+        "portal_saetze": {},
+        "payout": Decimal("1000"),
+        "addon_total": Decimal("0"),
+        "src_currency": "DKK",
+    }
+
+    ohne = svc._betrag_ermitteln(r, anteil=None, **gemeinsam)  # noqa: SLF001
+    assert ohne.owner_payout is None, "kein erfundener Vollanteil"
+    assert ohne.grund == "anteil"
+    assert ohne.detail and "Miteigentumsanteil" in ohne.detail
+
+    halb = svc._betrag_ermitteln(r, anteil=Decimal("50"), **gemeinsam)  # noqa: SLF001
+    voll = svc._betrag_ermitteln(r, anteil=Decimal("100"), **gemeinsam)  # noqa: SLF001
+    assert voll.owner_payout is not None and halb.owner_payout is not None
+    # Der Anteil greift GANZ AM ENDE: der Betrieb rechnet Provision auf die
+    # ganze Buchung, geteilt wird erst der Rest.
+    assert halb.owner_payout == voll.owner_payout / 2
+    assert halb.grund is None, "ein gueltiger Anteil ist kein Mangel"

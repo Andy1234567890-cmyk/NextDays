@@ -21,11 +21,6 @@
     "C901": 1,
     "PLR0912": 1
   },
-  "apps/api/src/features/buchhaltung/service.py": {
-    "C901": 1,
-    "PLR0912": 1,
-    "PLR0915": 1
-  },
   "apps/api/src/features/calendar/service.py": {
     "C901": 1,
     "PLR0912": 1
@@ -50,11 +45,6 @@
   },
   "apps/api/src/features/channel_manager/content_sync.py": {
     "PLR0913": 1
-  },
-  "apps/api/src/features/channel_manager/csv_import.py": {
-    "C901": 1,
-    "PLR0912": 1,
-    "PLR0915": 1
   },
   "apps/api/src/features/channel_manager/full_sync.py": {
     "C901": 2,
@@ -114,9 +104,6 @@
   "apps/api/src/features/owner_statements/service.py": {
     "C901": 1,
     "PLR0913": 1
-  },
-  "apps/api/src/features/owner_statements/zeilen.py": {
-    "C901": 1
   },
   "apps/api/src/features/payments/service.py": {
     "PLR0913": 1

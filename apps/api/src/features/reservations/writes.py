@@ -853,6 +853,112 @@ class WritesMixin(ReservationsBase):
             block_request_id=str(antrag_id),
         )
 
+    def _alte_einheit_bestimmen(  # noqa: PLR0913 — Bestand, Ziel und Kalender
+        self,
+        tenant_id: str,
+        current: dict,
+        *,
+        reservation_id: str,
+        old_property: str,
+        old_nights: set[str],
+        new_keys: set[str],
+        same_property: bool,
+        avail_rows: list[dict],
+    ) -> str | None:
+        """Welche Einheit die Buchung BISHER haelt — oder ein sauberer 409.
+
+        Herausgezogen am 10.09.2026 aus `move`. Die Frage entscheidet, ob der
+        Alt-Tag-Filter die EIGENEN Naechte wiederfindet; faellt sie falsch aus,
+        zaehlt die Buchung sich selbst als Fremdbelegung und jede Verlaengerung
+        endet in „Ziel-Zeitraum enthaelt bereits belegte Tage" — eine Meldung,
+        die den Betrieb im Gast-Kalender suchen laesst statt bei der fehlenden
+        Einheit.
+        """
+        alte_unit = str(current["unit_id"]) if current.get("unit_id") else None
+        if alte_unit is None:
+            # Ohne Einheit findet der Alt-Tag-Filter unten die EIGENEN Nächte
+            # nicht wieder (`r["unit_id"] == None` trifft nie) — die Buchung
+            # zählte sich selbst als Fremdbelegung und jede Verlängerung endete
+            # in „Ziel-Zeitraum enthält bereits belegte/gesperrte Tage".
+            # Live am 24.08.2026 an allen 10 Website-Buchungen: `unit_id` leer,
+            # die Kalenderzeilen dagegen einheiten-genau. Deshalb aus dem
+            # Kalender ableiten (Wurzel 4: kein geratener Ersatzwert — bleibt
+            # es mehrdeutig, kommt None und der Move scheitert präzise).
+            alte_unit = self._gehaltene_einheit(
+                tenant_id, old_property, sorted(old_nights), reservation_id
+            )
+        if (
+            alte_unit is None
+            and same_property
+            and old_nights & new_keys
+            # NUR wenn die eigenen Alt-Tage im Kalender überhaupt eine Einheit
+            # nennen. Im Altbestand vor 0266 tragen die Zeilen selbst keine
+            # (`unit_id is null`) — dort trifft `None == None` und der Filter
+            # unten erkennt die eigenen Tage wie eh und je. Ohne diese
+            # Bedingung hätte der Guard genau diesen intakten Fall gesperrt.
+            and any(
+                r["date"] in old_nights and r.get("unit_id")
+                for r in avail_rows
+            )
+        ):
+            # Eigene Tage im Ziel-Zeitraum, aber die eigene Einheit ist nicht
+            # bestimmbar: jede Antwort wäre geraten. Fail-closed mit der
+            # WAHREN Ursache statt der irreführenden Belegt-Meldung, sonst
+            # sucht der Betrieb den Fehler beim Gast-Kalender (Wurzel 5).
+            raise ReservationError(
+                "Diese Buchung ist keiner Einheit zugeordnet — der Zeitraum "
+                "lässt sich deshalb nicht ändern. Bitte die Einheit der "
+                "Buchung setzen und erneut versuchen.",
+                status_code=409,
+            )
+        return alte_unit
+
+    def _neu_bepreisen(
+        self, req: ReservationMove, current: dict
+    ) -> dict:
+        """Betrag, Waehrung und Positionen fuer den neuen Zeitraum/Ort.
+
+        Herausgezogen am 10.09.2026 aus `move`: die Neuberechnung ist ein
+        eigenes Thema mit eigenen Fallstricken und schreibt nur in
+        `update_fields` — sie musste nicht in einer 519-Zeilen-Funktion
+        stehen.
+        """
+        quote = self._quote(
+            req.property_id,
+            req.check_in,
+            req.check_out,
+            int(current.get("num_guests") or 1),
+            current.get("channel") or "direct",
+            # Denselben Plan bepreisen wie die Erstbuchung — außer beim
+            # Objektwechsel: dort gehört der alte Plan nicht zum Ziel-Objekt.
+            rate_plan_id=(
+                current.get("rate_plan_id")
+                if req.property_id == current.get("property_id")
+                else None
+            ),
+            # Die Tierzahl gehört zur Buchung, nicht zum Zeitraum — beim
+            # Neurechnen darf die Haustiergebühr nicht verschwinden.
+            pets=int(current.get("pets") or 0),
+        )
+        return {
+            "total_amount": quote.total,
+            # Währung MIT umziehen: beim Objektwechsel über eine Währungsgrenze
+            # (EU-27) gehört der neu gerechnete Betrag zur Währung des ZIELS.
+            # Ohne diese Zeile behielte die Zeile die alte Währung und der
+            # Provisions-Ledger bekäme Betrag und Währung aus zwei Welten
+            # (Wurzel 4). `quote.currency` kommt aus Konfig/Rate-Plan des Ziels.
+            "currency": quote.currency,
+            "quote_items": [
+                {
+                    "label": line.label,
+                    "amount": line.amount,
+                    "kind": line.kind,
+                    "tax_rate": line.tax_rate,
+                }
+                for line in quote.lines
+            ],
+        }
+
     def move(
         self, ctx: AuthContext, reservation_id: str, req: ReservationMove
     ) -> ReservationResponse:
@@ -949,43 +1055,16 @@ class WritesMixin(ReservationsBase):
             .execute()
         )
         same_property = req.property_id == old_property
-        alte_unit = str(current["unit_id"]) if current.get("unit_id") else None
-        if alte_unit is None:
-            # Ohne Einheit findet der Alt-Tag-Filter unten die EIGENEN Nächte
-            # nicht wieder (`r["unit_id"] == None` trifft nie) — die Buchung
-            # zählte sich selbst als Fremdbelegung und jede Verlängerung endete
-            # in „Ziel-Zeitraum enthält bereits belegte/gesperrte Tage".
-            # Live am 24.08.2026 an allen 10 Website-Buchungen: `unit_id` leer,
-            # die Kalenderzeilen dagegen einheiten-genau. Deshalb aus dem
-            # Kalender ableiten (Wurzel 4: kein geratener Ersatzwert — bleibt
-            # es mehrdeutig, kommt None und der Move scheitert präzise).
-            alte_unit = self._gehaltene_einheit(
-                tenant_id, old_property, sorted(old_nights), reservation_id
-            )
-        if (
-            alte_unit is None
-            and same_property
-            and old_nights & new_keys
-            # NUR wenn die eigenen Alt-Tage im Kalender überhaupt eine Einheit
-            # nennen. Im Altbestand vor 0266 tragen die Zeilen selbst keine
-            # (`unit_id is null`) — dort trifft `None == None` und der Filter
-            # unten erkennt die eigenen Tage wie eh und je. Ohne diese
-            # Bedingung hätte der Guard genau diesen intakten Fall gesperrt.
-            and any(
-                r["date"] in old_nights and r.get("unit_id")
-                for r in (avail.data or [])
-            )
-        ):
-            # Eigene Tage im Ziel-Zeitraum, aber die eigene Einheit ist nicht
-            # bestimmbar: jede Antwort wäre geraten. Fail-closed mit der
-            # WAHREN Ursache statt der irreführenden Belegt-Meldung, sonst
-            # sucht der Betrieb den Fehler beim Gast-Kalender (Wurzel 5).
-            raise ReservationError(
-                "Diese Buchung ist keiner Einheit zugeordnet — der Zeitraum "
-                "lässt sich deshalb nicht ändern. Bitte die Einheit der "
-                "Buchung setzen und erneut versuchen.",
-                status_code=409,
-            )
+        alte_unit = self._alte_einheit_bestimmen(
+            tenant_id,
+            current,
+            reservation_id=reservation_id,
+            old_property=old_property,
+            old_nights=old_nights,
+            new_keys=new_keys,
+            same_property=same_property,
+            avail_rows=avail.data or [],
+        )
         # Wie in create() je EINHEIT (0265/0266): die Frage lautet „bleibt eine
         # Einheit im ganzen Zeitraum frei?", nicht „ist irgendein Tag irgendeiner
         # Einheit belegt?". Objektweit gefragt war ein Typ mit zwei Einheiten ab
@@ -1080,40 +1159,7 @@ class WritesMixin(ReservationsBase):
         if ziel_unit:
             update_fields["unit_id"] = ziel_unit
         if req.reprice:
-            guests_total = int(current.get("num_guests") or 1)
-            quote = self._quote(
-                req.property_id,
-                req.check_in,
-                req.check_out,
-                guests_total,
-                current.get("channel") or "direct",
-                # Denselben Plan bepreisen wie die Erstbuchung — außer beim
-                # Objektwechsel: dort gehört der alte Plan nicht zum Ziel-Objekt.
-                rate_plan_id=(
-                    current.get("rate_plan_id")
-                    if req.property_id == current.get("property_id")
-                    else None
-                ),
-                # Die Tierzahl gehört zur Buchung, nicht zum Zeitraum — beim
-                # Neurechnen darf die Haustiergebühr nicht verschwinden.
-                pets=int(current.get("pets") or 0),
-            )
-            update_fields["total_amount"] = quote.total
-            # Währung MIT umziehen: beim Objektwechsel über eine Währungsgrenze
-            # (EU-27) gehört der neu gerechnete Betrag zur Währung des ZIELS.
-            # Ohne diese Zeile behielte die Zeile die alte Währung und der
-            # Provisions-Ledger bekäme Betrag und Währung aus zwei Welten
-            # (Wurzel 4). `quote.currency` kommt aus Konfig/Rate-Plan des Ziels.
-            update_fields["currency"] = quote.currency
-            update_fields["quote_items"] = [
-                {
-                    "label": line.label,
-                    "amount": line.amount,
-                    "kind": line.kind,
-                    "tax_rate": line.tax_rate,
-                }
-                for line in quote.lines
-            ]
+            update_fields.update(self._neu_bepreisen(req, current))
 
         # Ein offener Nachberechnungs-Link (0469) lautet auf einen Betrag, der
         # aus DIESEM Stand der Buchung abgeleitet wurde (Zeitraum + Preis).

@@ -30,6 +30,7 @@ from . import (
     systemseiten,
 )
 from . import templates as site_templates
+from .baum import huellen_kaskade
 from .fehler import SiteConfigError
 from .schemas import (
     BlockCreate,
@@ -958,7 +959,6 @@ class BloeckeMixin:
         ]
         self._pflicht_baustein_pruefen(tenant_id, page_id, bleibende_typen)
         if entfallen:
-            zu_loeschen = set(entfallen)
             eltern = {
                 r["id"]: r.get("parent_id")
                 for r in (
@@ -970,37 +970,14 @@ class BloeckeMixin:
                 ).data
                 or []
             }
-            # Spalten, die ein GESENDETER Baustein als Ziel nennt, sind
-            # tabu — auch wenn ihr bisheriger Inhalt entfällt.
-            #
-            # Ohne das riss das Aufräumen genau die Spalte weg, in die der
-            # Kunde gerade etwas gezogen hatte: `parent_id` zeigte danach ins
-            # Leere. Der Fall entsteht beim Verschieben zwischen zwei Spalten,
-            # also beim ersten Handgriff, den ein Spaltenlayout überhaupt
-            # nahelegt.
-            ziele = {
-                item.parent_id for item in req.items if item.parent_id is not None
-            }
-            for wid in entfallen:
-                spalte_id = eltern.get(wid)
-                if spalte_id in ziele:
-                    continue
-                section_id = eltern.get(spalte_id) if spalte_id else None
-                # Die Hülle fällt nur, wenn sie AUSSCHLIESSLICH diesen
-                # Baustein trägt. Eine Spalte mit zwei Bausteinen, von denen
-                # einer bleibt, gehört nicht gelöscht — sonst risse das
-                # Entfernen des einen den anderen mit (dasselbe `cascade`,
-                # das hier nützt, wäre dann der Schaden).
-                if spalte_id and all(
-                    kind_eltern != spalte_id or bid in zu_loeschen
-                    for bid, kind_eltern in eltern.items()
-                ):
-                    zu_loeschen.add(spalte_id)
-                    if section_id and all(
-                        kind_eltern != section_id or bid in zu_loeschen
-                        for bid, kind_eltern in eltern.items()
-                    ):
-                        zu_loeschen.add(section_id)
+            # Welche Huellen mitgehen, entscheidet `_huellen_kaskade` —
+            # reine Mengenlogik, dort einzeln geprueft (beide Regeln samt
+            # ihrer Begruendung stehen in ihrem Docstring).
+            zu_loeschen = huellen_kaskade(
+                set(entfallen),
+                eltern,
+                {item.parent_id for item in req.items if item.parent_id is not None},
+            )
             # LAUT protokollieren, was mitgeht. Ein Löschen ist die eine
             # Operation, die man nicht nachträglich untersuchen kann — die
             # Zeilen sind dann weg. Ohne diese Zeile war „mein Abschnitt ist

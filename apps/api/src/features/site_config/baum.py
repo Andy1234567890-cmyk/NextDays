@@ -218,3 +218,50 @@ def widget_zeile(
         "content": content,
         "settings": settings or {},
     }
+
+
+def huellen_kaskade(
+    entfallen: set[str],
+    eltern: dict[str, str | None],
+    ziele: set[str],
+) -> set[str]:
+    """Welche Huellen (Spalte, Abschnitt) mit den Bausteinen mitgehen.
+
+    Reine Mengenlogik, herausgezogen am 10.09.2026 aus `replace_blocks`: dort
+    stand sie als vierfach verschachtelte Schleife mitten in einer
+    492-Zeilen-Funktion. Loeschen ist die eine Operation, die man nicht
+    nachtraeglich untersuchen kann — die Zeilen sind dann weg. Genau deshalb
+    gehoert die Entscheidung, WAS mitgeht, einzeln pruefbar.
+
+    Zwei Regeln, beide aus realen Fehlern:
+
+    1. Spalten, die ein GESENDETER Baustein als Ziel nennt, sind tabu — auch
+       wenn ihr bisheriger Inhalt entfaellt. Ohne das riss das Aufraeumen
+       genau die Spalte weg, in die der Kunde gerade etwas gezogen hatte:
+       `parent_id` zeigte danach ins Leere. Der Fall entsteht beim
+       Verschieben zwischen zwei Spalten, also beim ersten Handgriff, den
+       ein Spaltenlayout ueberhaupt nahelegt.
+
+    2. Die Huelle faellt nur, wenn sie AUSSCHLIESSLICH entfallende Bausteine
+       traegt. Eine Spalte mit zwei Bausteinen, von denen einer bleibt,
+       gehoert nicht geloescht — sonst risse das Entfernen des einen den
+       anderen mit (dasselbe `cascade`, das hier nuetzt, waere dann der
+       Schaden).
+    """
+    zu_loeschen = set(entfallen)
+    for wid in entfallen:
+        spalte_id = eltern.get(wid)
+        if spalte_id in ziele:
+            continue
+        section_id = eltern.get(spalte_id) if spalte_id else None
+        if spalte_id and all(
+            kind_eltern != spalte_id or bid in zu_loeschen
+            for bid, kind_eltern in eltern.items()
+        ):
+            zu_loeschen.add(spalte_id)
+            if section_id and all(
+                kind_eltern != section_id or bid in zu_loeschen
+                for bid, kind_eltern in eltern.items()
+            ):
+                zu_loeschen.add(section_id)
+    return zu_loeschen

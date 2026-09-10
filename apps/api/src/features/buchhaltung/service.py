@@ -608,6 +608,72 @@ class BuchhaltungService:
         tax_total = _q(tax_total)
         return net_total, tax_total, _q(net_total + tax_total)
 
+    def _rechnung_aus_buchung_pruefen(
+        self, tenant_id: str, reservation_id: str, payload: dict
+    ) -> dict:
+        """Vorbedingungen einer Buchungs-Rechnung — und die Debitor-Verknuepfung.
+
+        Herausgezogen am 10.09.2026 aus `create_invoice_from_bestand` (235
+        Zeilen): vier Riegel (Buchung existiert, nicht storniert, eingecheckt,
+        noch keine Rechnung) und die Gast-zu-Debitor-Verknuepfung sind ein
+        eigener Vorgang. Gibt das ggf. um `customerId` ergaenzte Payload
+        zurueck.
+        """
+        res_rows = (
+            self._db.table("reservations")
+            .select(
+                "id, status, checked_in_at, guest_id, guest_email, "
+                "guest_phone, guest_country"
+            )
+            .eq("id", reservation_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not res_rows:
+            raise BuchhaltungError("Buchung nicht gefunden.", status_code=404)
+        if res_rows[0].get("status") == "cancelled":
+            raise BuchhaltungError(
+                "Stornierte Buchung kann nicht abgerechnet werden.",
+                status_code=409,
+            )
+        if not res_rows[0].get("checked_in_at"):
+            raise BuchhaltungError(
+                "Der Gast ist noch nicht eingecheckt — Rechnungen aus "
+                "Buchungen sind erst nach dem Check-in möglich.",
+                status_code=409,
+            )
+        from . import reservation_invoice  # noqa: PLC0415 — Import-Zyklus
+
+        existing = reservation_invoice.find_active_invoice(
+            self._db, tenant_id, str(reservation_id)
+        )
+        if existing:
+            raise BuchhaltungError(
+                f"Zu dieser Buchung existiert bereits Rechnung "
+                f"{existing.get('invoice_number')}.",
+                status_code=409,
+            )
+        # Gast→Debitor erst JETZT (Schreibpfad) anlegen/verknüpfen — die
+        # Vorschau ist bewusst nebenwirkungsfrei. Gast ohne Namen blockiert
+        # den manuellen Flow nicht (der Nutzer hat den Empfänger im
+        # Formular ausgefüllt) — dann bleibt nur die FK-Verknüpfung leer.
+        if not (payload.get("customerId") or payload.get("customer_id")):
+            try:
+                guest_customer = reservation_invoice.ensure_customer_for_guest(
+                    self._db, tenant_id, res_rows[0]
+                )
+                payload = {**payload, "customerId": guest_customer["id"]}
+            except BuchhaltungError as exc:
+                log.warning(
+                    "reservation_invoice_customer_link_skipped",
+                    reservation_id=reservation_id,
+                    reason=exc.message,
+                )
+
+        return payload
+
+
     def create_invoice_from_bestand(self, ctx: AuthContext, payload: dict) -> dict:
         """Rechnung aus dem reichen camelCase-Payload des Buchhaltungs-Bestands
         anlegen. Mappt auf die GoBD-Tabelle (Migration 0023); Beträge werden
@@ -655,57 +721,9 @@ class BuchhaltungService:
         # scheitert sie, darf keine fortlaufende Nummer verbrannt sein (Lücke).
         reservation_id = payload.get("reservationId") or payload.get("reservation_id")
         if reservation_id:
-            res_rows = (
-                self._db.table("reservations")
-                .select(
-                    "id, status, checked_in_at, guest_id, guest_email, "
-                    "guest_phone, guest_country"
-                )
-                .eq("id", reservation_id)
-                .eq("tenant_id", tenant_id)
-                .limit(1)
-                .execute()
-            ).data
-            if not res_rows:
-                raise BuchhaltungError("Buchung nicht gefunden.", status_code=404)
-            if res_rows[0].get("status") == "cancelled":
-                raise BuchhaltungError(
-                    "Stornierte Buchung kann nicht abgerechnet werden.",
-                    status_code=409,
-                )
-            if not res_rows[0].get("checked_in_at"):
-                raise BuchhaltungError(
-                    "Der Gast ist noch nicht eingecheckt — Rechnungen aus "
-                    "Buchungen sind erst nach dem Check-in möglich.",
-                    status_code=409,
-                )
-            from . import reservation_invoice  # noqa: PLC0415 — Import-Zyklus
-
-            existing = reservation_invoice.find_active_invoice(
-                self._db, tenant_id, str(reservation_id)
+            payload = self._rechnung_aus_buchung_pruefen(
+                tenant_id, str(reservation_id), payload
             )
-            if existing:
-                raise BuchhaltungError(
-                    f"Zu dieser Buchung existiert bereits Rechnung "
-                    f"{existing.get('invoice_number')}.",
-                    status_code=409,
-                )
-            # Gast→Debitor erst JETZT (Schreibpfad) anlegen/verknüpfen — die
-            # Vorschau ist bewusst nebenwirkungsfrei. Gast ohne Namen blockiert
-            # den manuellen Flow nicht (der Nutzer hat den Empfänger im
-            # Formular ausgefüllt) — dann bleibt nur die FK-Verknüpfung leer.
-            if not (payload.get("customerId") or payload.get("customer_id")):
-                try:
-                    guest_customer = reservation_invoice.ensure_customer_for_guest(
-                        self._db, tenant_id, res_rows[0]
-                    )
-                    payload = {**payload, "customerId": guest_customer["id"]}
-                except BuchhaltungError as exc:
-                    log.warning(
-                        "reservation_invoice_customer_link_skipped",
-                        reservation_id=reservation_id,
-                        reason=exc.message,
-                    )
 
         # GoBD-Nummer NUR bei Finalisierung und NUR serverseitig atomar ziehen —
         # nie die (fälschbare/fabrizierte) Client-Nummer übernehmen. Entwürfe

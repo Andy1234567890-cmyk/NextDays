@@ -16,6 +16,7 @@ import csv
 import difflib
 import io
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import date
 from typing import Any
 
@@ -108,6 +109,118 @@ def _normalisiert(titel: str) -> str:
     return " ".join(ohne.replace("-", " ").lower().split())
 
 
+@dataclass(frozen=True, slots=True)
+class _Objektregister:
+    """Fuenf Wege, eine CSV-Zeile ihrem Objekt zuzuordnen.
+
+    Herausgezogen am 10.09.2026 aus `import_bookings_csv`: der Aufbau der
+    Register war ein 73-Zeilen-Block mit hoher Verzweigungsdichte mitten in
+    einer 256-Zeilen-Funktion, und alle fuenf wurden ohnehin gebuendelt
+    weitergereicht. Als eigene Struktur sind sie einzeln pruefbar — was
+    zaehlt, denn eine falsche Zuordnung sperrt echte Naechte am falschen
+    Objekt und verschiebt Umsatz auf den falschen Eigentuemer.
+
+    Absteigend nach Verlaesslichkeit: ID, exakter Titel, normalisierter
+    Titel, Adresse mit Hausnummer, Strasse ohne Nummer.
+    """
+
+    by_id: dict[str, str]
+    by_title: dict[str, str]
+    by_normal: dict[str, str]
+    by_adresse: dict[str, str]
+    by_strasse: dict[str, str]
+
+
+def _objektregister(props: list[dict[str, Any]]) -> _Objektregister:
+    """Die fuenf Register aus den Objekt-Stammdaten aufbauen.
+
+    Mehrdeutige Schluessel werden durchgaengig VERWORFEN statt nach
+    Ladereihenfolge aufgeloest (Wurzel 4): tragen zwei Objekte denselben
+    Schluessel, darf nicht der Zufall entscheiden, welches gewinnt — dann
+    muss die naechste Stufe greifen.
+    """
+    by_id = {p["id"]: p["id"] for p in props}
+    by_title = {
+        (p.get("title") or "").strip().lower(): p["id"]
+        for p in props
+        if p.get("title")
+    }
+    # ZWEITER Weg: normalisierter Titel. Die Portale geben denselben Namen
+    # ohne Zierzeichen aus — live am 31.08.2026 fielen 111 von 252 Zeilen
+    # eines Booking.com-Exports allein daran durch:
+    #   Export „Feriehus Perlen Tversted" ≠ Titel „Feriehus \"Perlen\" Tversted"
+    #   Export „FeWo Stjerneskud"         ≠ Titel „FeWo *Stjerneskud*"
+    # Das ist DASSELBE Objekt, nur ohne die Anfuehrungszeichen bzw.
+    # Sternchen, die der Betrieb in seinen Titel geschrieben hat.
+    #
+    # Normalisiert wird NUR Zeichensetzung und Leerraum — NICHT der
+    # Wortlaut. „Odden-hus-mygdal" bleibt damit verschieden von
+    # „Odden-hygge-mygdal", und „Holiday home Dora" trifft nicht auf
+    # „Feriehus Dora". Solche Zeilen MUESSEN scheitern: eine Buchung dem
+    # falschen Objekt zuzuordnen sperrt dort echte Naechte und verschiebt
+    # Umsatz auf den falschen Eigentuemer — ein Fehler, den niemand sieht.
+    # Kein Raten per Aehnlichkeit (Wurzel 4).
+    #
+    # Mehrdeutige Normalformen werden VERWORFEN statt zufaellig aufgeloest:
+    # tragen zwei Objekte nach dem Entfernen der Zierzeichen denselben
+    # Namen, entscheidet sonst die Ladereihenfolge, welches gewinnt.
+    normal: dict[str, str | None] = {}
+    for prop in props:
+        schluessel = _normalisiert(prop.get("title") or "")
+        if not schluessel:
+            continue
+        if schluessel in normal and normal[schluessel] != prop["id"]:
+            normal[schluessel] = None  # mehrdeutig → nicht verwenden
+        else:
+            normal.setdefault(schluessel, prop["id"])
+    by_normal = {k: v for k, v in normal.items() if v}
+
+    # DRITTER Weg: die Adresse. Sie traegt weiter als der Name, weil der
+    # Portal-Export KEINE Objektkennung enthaelt (gemessen am echten
+    # Booking.com-Export vom 31.08.2026: zwoelf Spalten, darunter „Lage",
+    # aber keine Unterkunfts-ID) und Namen auseinanderlaufen, sobald jemand
+    # ein Inserat umbenennt:
+    #   „Odden-hus-mygdal"  hier „Odden-hygge-mygdal"   — Oddenvej, Mygdal
+    #   „Holiday home Dora" hier „Feriehus Dora"        — Doravej, Bindslev
+    #   „Lærke-huset"       hier „Lærke-huset-Bindslev" — Lærkevej, Bindslev
+    # Alle drei loesen ueber die Adresse eindeutig auf.
+    #
+    # Zwei Stufen, weil beide gebraucht werden: MIT Hausnummer trennt sie
+    # Nachbarhaeuser (Iver Christensens Vej 11 vs. 13 — zwei verschiedene
+    # Objekte). OHNE Hausnummer greift sie, wenn das Portal die Nummer
+    # anders schreibt („2A links" statt „2A"). Mehrdeutige Schluessel
+    # werden VERWORFEN, nicht nach Ladereihenfolge aufgeloest: am
+    # Højenevej 2A liegen zwei Objekte, dort MUSS der Name entscheiden.
+    mit_nr: dict[str, str | None] = {}
+    ohne_nr: dict[str, str | None] = {}
+    for prop in props:
+        ort = prop.get("city") or ""
+        strasse = prop.get("street") or ""
+        nummer = prop.get("house_number") or ""
+        for index, roh in (
+            (mit_nr, f"{strasse} {nummer} {ort}"),
+            (ohne_nr, f"{strasse} {ort}"),
+        ):
+            schluessel = _adress_schluessel(roh)
+            # Ein Objekt ohne Strasse ergaebe den Schluessel des blossen
+            # Ortes — daran haengen sonst alle Objekte desselben Ortes.
+            if not schluessel or not strasse.strip():
+                continue
+            if index.get(schluessel, prop["id"]) != prop["id"]:
+                index[schluessel] = None
+            else:
+                index.setdefault(schluessel, prop["id"])
+    by_adresse = {k: v for k, v in mit_nr.items() if v}
+    by_strasse = {k: v for k, v in ohne_nr.items() if v}
+    return _Objektregister(
+        by_id=by_id,
+        by_title=by_title,
+        by_normal=by_normal,
+        by_adresse=by_adresse,
+        by_strasse=by_strasse,
+    )
+
+
 class CsvImportMixin:
     """CSV-Bestandsimport von Buchungen."""
 
@@ -175,79 +288,14 @@ class CsvImportMixin:
             .eq("tenant_id", tenant_id)
             .execute()
         ).data or []
-        by_id = {p["id"]: p["id"] for p in props}
-        by_title = {
-            (p.get("title") or "").strip().lower(): p["id"]
-            for p in props
-            if p.get("title")
-        }
-        # ZWEITER Weg: normalisierter Titel. Die Portale geben denselben Namen
-        # ohne Zierzeichen aus — live am 31.08.2026 fielen 111 von 252 Zeilen
-        # eines Booking.com-Exports allein daran durch:
-        #   Export „Feriehus Perlen Tversted" ≠ Titel „Feriehus \"Perlen\" Tversted"
-        #   Export „FeWo Stjerneskud"         ≠ Titel „FeWo *Stjerneskud*"
-        # Das ist DASSELBE Objekt, nur ohne die Anfuehrungszeichen bzw.
-        # Sternchen, die der Betrieb in seinen Titel geschrieben hat.
-        #
-        # Normalisiert wird NUR Zeichensetzung und Leerraum — NICHT der
-        # Wortlaut. „Odden-hus-mygdal" bleibt damit verschieden von
-        # „Odden-hygge-mygdal", und „Holiday home Dora" trifft nicht auf
-        # „Feriehus Dora". Solche Zeilen MUESSEN scheitern: eine Buchung dem
-        # falschen Objekt zuzuordnen sperrt dort echte Naechte und verschiebt
-        # Umsatz auf den falschen Eigentuemer — ein Fehler, den niemand sieht.
-        # Kein Raten per Aehnlichkeit (Wurzel 4).
-        #
-        # Mehrdeutige Normalformen werden VERWORFEN statt zufaellig aufgeloest:
-        # tragen zwei Objekte nach dem Entfernen der Zierzeichen denselben
-        # Namen, entscheidet sonst die Ladereihenfolge, welches gewinnt.
-        normal: dict[str, str | None] = {}
-        for prop in props:
-            schluessel = _normalisiert(prop.get("title") or "")
-            if not schluessel:
-                continue
-            if schluessel in normal and normal[schluessel] != prop["id"]:
-                normal[schluessel] = None  # mehrdeutig → nicht verwenden
-            else:
-                normal.setdefault(schluessel, prop["id"])
-        by_normal = {k: v for k, v in normal.items() if v}
-
-        # DRITTER Weg: die Adresse. Sie traegt weiter als der Name, weil der
-        # Portal-Export KEINE Objektkennung enthaelt (gemessen am echten
-        # Booking.com-Export vom 31.08.2026: zwoelf Spalten, darunter „Lage",
-        # aber keine Unterkunfts-ID) und Namen auseinanderlaufen, sobald jemand
-        # ein Inserat umbenennt:
-        #   „Odden-hus-mygdal"  hier „Odden-hygge-mygdal"   — Oddenvej, Mygdal
-        #   „Holiday home Dora" hier „Feriehus Dora"        — Doravej, Bindslev
-        #   „Lærke-huset"       hier „Lærke-huset-Bindslev" — Lærkevej, Bindslev
-        # Alle drei loesen ueber die Adresse eindeutig auf.
-        #
-        # Zwei Stufen, weil beide gebraucht werden: MIT Hausnummer trennt sie
-        # Nachbarhaeuser (Iver Christensens Vej 11 vs. 13 — zwei verschiedene
-        # Objekte). OHNE Hausnummer greift sie, wenn das Portal die Nummer
-        # anders schreibt („2A links" statt „2A"). Mehrdeutige Schluessel
-        # werden VERWORFEN, nicht nach Ladereihenfolge aufgeloest: am
-        # Højenevej 2A liegen zwei Objekte, dort MUSS der Name entscheiden.
-        mit_nr: dict[str, str | None] = {}
-        ohne_nr: dict[str, str | None] = {}
-        for prop in props:
-            ort = prop.get("city") or ""
-            strasse = prop.get("street") or ""
-            nummer = prop.get("house_number") or ""
-            for index, roh in (
-                (mit_nr, f"{strasse} {nummer} {ort}"),
-                (ohne_nr, f"{strasse} {ort}"),
-            ):
-                schluessel = _adress_schluessel(roh)
-                # Ein Objekt ohne Strasse ergaebe den Schluessel des blossen
-                # Ortes — daran haengen sonst alle Objekte desselben Ortes.
-                if not schluessel or not strasse.strip():
-                    continue
-                if index.get(schluessel, prop["id"]) != prop["id"]:
-                    index[schluessel] = None
-                else:
-                    index.setdefault(schluessel, prop["id"])
-        by_adresse = {k: v for k, v in mit_nr.items() if v}
-        by_strasse = {k: v for k, v in ohne_nr.items() if v}
+        # Die fuenf Zuordnungswege stehen als eigene Struktur daneben
+        # (`_objektregister`) — samt der Live-Belege, die sie begruenden.
+        register = _objektregister(props)
+        by_id = register.by_id
+        by_title = register.by_title
+        by_normal = register.by_normal
+        by_adresse = register.by_adresse
+        by_strasse = register.by_strasse
 
         # Welche Buchungen aus frueheren Uploads liegen schon da? EINMAL laden,
         # nicht je Zeile — 252 zusaetzliche Selects waeren bei ~3,5 s/Zeile
