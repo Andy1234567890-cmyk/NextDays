@@ -2947,7 +2947,9 @@
         "de": "Ġermaniż",
         "en": "Ingliż",
         "da": "Daniż"
-      }
+      },
+      "vorschauFehler": "Ma setgħetx titgħabba l-previżjoni (żball {status}).",
+      "imNeuenTab": "Iftaħ f'tab ġdida"
     },
     "inventar": {
       "abschnitt": "Inventarju",

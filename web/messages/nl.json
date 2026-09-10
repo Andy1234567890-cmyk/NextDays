@@ -2947,7 +2947,9 @@
         "de": "Duits",
         "en": "Engels",
         "da": "Deens"
-      }
+      },
+      "vorschauFehler": "Voorbeeld kon niet worden geladen (fout {status}).",
+      "imNeuenTab": "Openen in nieuw tabblad"
     },
     "inventar": {
       "abschnitt": "Inventaris",

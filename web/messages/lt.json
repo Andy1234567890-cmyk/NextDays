@@ -2947,7 +2947,9 @@
         "de": "Vokiečių",
         "en": "Anglų",
         "da": "Danų"
-      }
+      },
+      "vorschauFehler": "Peržiūros įkelti nepavyko (klaida {status}).",
+      "imNeuenTab": "Atidaryti naujame skirtuke"
     },
     "inventar": {
       "abschnitt": "Inventorius",

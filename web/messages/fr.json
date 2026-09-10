@@ -2947,7 +2947,9 @@
         "de": "Allemand",
         "en": "Anglais",
         "da": "Danois"
-      }
+      },
+      "vorschauFehler": "L'aperçu n'a pas pu être chargé (erreur {status}).",
+      "imNeuenTab": "Ouvrir dans un nouvel onglet"
     },
     "inventar": {
       "abschnitt": "Inventaire",

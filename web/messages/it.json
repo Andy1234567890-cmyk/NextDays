@@ -2947,7 +2947,9 @@
         "de": "Tedesco",
         "en": "Inglese",
         "da": "Danese"
-      }
+      },
+      "vorschauFehler": "Impossibile caricare l'anteprima (errore {status}).",
+      "imNeuenTab": "Apri in una nuova scheda"
     },
     "inventar": {
       "abschnitt": "Inventario",

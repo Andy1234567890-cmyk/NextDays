@@ -2947,7 +2947,9 @@
         "de": "Német",
         "en": "Angol",
         "da": "Dán"
-      }
+      },
+      "vorschauFehler": "Az előnézet betöltése sikertelen ({status} hiba).",
+      "imNeuenTab": "Megnyitás új lapon"
     },
     "inventar": {
       "abschnitt": "Leltár",

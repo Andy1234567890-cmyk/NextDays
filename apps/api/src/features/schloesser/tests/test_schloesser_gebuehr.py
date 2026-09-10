@@ -51,8 +51,11 @@ def _daten(db: FakeDb, *, waehrung: str | None = "EUR", verbunden: bool = True) 
         },
     ])
     if waehrung is not None:
-        db.rows.setdefault("tenant_billing_profile", []).extend([
-            {"tenant_id": _TENANT, "currency": waehrung},
+        # `tenants`, nicht `tenant_billing_profile`: dort gibt es die Spalte
+        # `currency` nicht. Die FakeDb nahm den erfundenen Namen an, der echte
+        # Aufruf warf 42703 (10.09.2026, db-spalten-pruefen.py).
+        db.rows.setdefault("tenants", []).extend([
+            {"id": _TENANT, "currency": waehrung},
         ])
 
 

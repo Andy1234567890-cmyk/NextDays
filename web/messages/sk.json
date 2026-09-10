@@ -2947,7 +2947,9 @@
         "de": "Nemčina",
         "en": "Angličtina",
         "da": "Dánčina"
-      }
+      },
+      "vorschauFehler": "Náhľad sa nepodarilo načítať (chyba {status}).",
+      "imNeuenTab": "Otvoriť na novej karte"
     },
     "inventar": {
       "abschnitt": "Inventár",

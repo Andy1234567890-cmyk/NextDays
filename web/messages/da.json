@@ -2947,7 +2947,9 @@
         "de": "Tysk",
         "en": "Engelsk",
         "da": "Dansk"
-      }
+      },
+      "vorschauFehler": "Forhåndsvisning kunne ikke indlæses (fejl {status}).",
+      "imNeuenTab": "Åbn i ny fane"
     },
     "inventar": {
       "abschnitt": "Inventar",

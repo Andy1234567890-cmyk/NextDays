@@ -2947,7 +2947,9 @@
         "de": "Tyska",
         "en": "Engelska",
         "da": "Danska"
-      }
+      },
+      "vorschauFehler": "Förhandsgranskningen kunde inte laddas (fel {status}).",
+      "imNeuenTab": "Öppna i ny flik"
     },
     "inventar": {
       "abschnitt": "Inventarier",

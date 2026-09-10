@@ -2947,7 +2947,9 @@
         "de": "Alemán",
         "en": "Inglés",
         "da": "Danés"
-      }
+      },
+      "vorschauFehler": "No se pudo cargar la vista previa (error {status}).",
+      "imNeuenTab": "Abrir en una pestaña nueva"
     },
     "inventar": {
       "abschnitt": "Inventario",

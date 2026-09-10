@@ -2947,7 +2947,9 @@
         "de": "Germană",
         "en": "Engleză",
         "da": "Daneză"
-      }
+      },
+      "vorschauFehler": "Previzualizarea nu a putut fi încărcată (eroare {status}).",
+      "imNeuenTab": "Deschideți într-o filă nouă"
     },
     "inventar": {
       "abschnitt": "Inventar",

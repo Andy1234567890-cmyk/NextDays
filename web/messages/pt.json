@@ -2947,7 +2947,9 @@
         "de": "Alemão",
         "en": "Inglês",
         "da": "Dinamarquês"
-      }
+      },
+      "vorschauFehler": "Não foi possível carregar a pré-visualização (erro {status}).",
+      "imNeuenTab": "Abrir em nova aba"
     },
     "inventar": {
       "abschnitt": "Inventário",

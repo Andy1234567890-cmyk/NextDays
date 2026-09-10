@@ -2947,7 +2947,9 @@
         "de": "Gearmáinis",
         "en": "Béarla",
         "da": "Danmhairgis"
-      }
+      },
+      "vorschauFehler": "Níorbh fhéidir an réamhamharc a luchtú (Earráid {status}).",
+      "imNeuenTab": "Oscail i gcluaisín nua"
     },
     "inventar": {
       "abschnitt": "Fardal",

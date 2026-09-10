@@ -2947,7 +2947,9 @@
         "de": "Njemački",
         "en": "Engleski",
         "da": "Danski"
-      }
+      },
+      "vorschauFehler": "Pregled se ne može učitati (greška {status}).",
+      "imNeuenTab": "Otvori u novoj kartici"
     },
     "inventar": {
       "abschnitt": "Inventar",

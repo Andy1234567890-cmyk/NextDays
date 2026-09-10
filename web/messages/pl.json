@@ -2947,7 +2947,9 @@
         "de": "Niemiecki",
         "en": "Angielski",
         "da": "Duński"
-      }
+      },
+      "vorschauFehler": "Nie udało się załadować podglądu (błąd {status}).",
+      "imNeuenTab": "Otwórz w nowej karcie"
     },
     "inventar": {
       "abschnitt": "Inwentarz",

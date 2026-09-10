@@ -2947,7 +2947,9 @@
         "de": "Saksa",
         "en": "Englanti",
         "da": "Tanska"
-      }
+      },
+      "vorschauFehler": "Esikatselua ei voitu ladata (virhe {status}).",
+      "imNeuenTab": "Avaa uudessa välilehdessä"
     },
     "inventar": {
       "abschnitt": "Inventaari",

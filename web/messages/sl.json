@@ -2947,7 +2947,9 @@
         "de": "Nemščina",
         "en": "Angleščina",
         "da": "Danščina"
-      }
+      },
+      "vorschauFehler": "Predogleda ni bilo mogoče naložiti (napaka {status}).",
+      "imNeuenTab": "Odpri v novem zavihku"
     },
     "inventar": {
       "abschnitt": "Inventar",

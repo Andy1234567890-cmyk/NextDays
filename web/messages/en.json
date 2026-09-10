@@ -2947,7 +2947,9 @@
         "de": "German",
         "en": "English",
         "da": "Danish"
-      }
+      },
+      "vorschauFehler": "Could not load preview (error {status}).",
+      "imNeuenTab": "Open in new tab"
     },
     "inventar": {
       "abschnitt": "Inventory",

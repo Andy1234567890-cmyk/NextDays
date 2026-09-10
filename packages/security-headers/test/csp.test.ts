@@ -1,11 +1,15 @@
-// Lauf: `bun test packages/security-headers/src/csp.test.ts`
+// Lauf: `bun test packages/security-headers/test/csp.test.ts`
+//
+// Liegt bewusst in `test/`, nicht in `src/`: `packages/tsconfig.json`
+// inkludiert nur `*/src/**`, und `bun:test` hat dort keine Typen — `tsc -p
+// packages` bricht sonst mit TS2307. Gleiches Muster wie baukasten-stil.
 //
 // Die CSP ist eine Sicherheitsgrenze — jede Lockerung muss eng und begruendet
 // sein. Diese Tests halten fest, dass der STANDARD eng bleibt und eine
 // Freigabe nur genau das oeffnet, was sie verspricht.
 import { describe, expect, test } from "bun:test";
 
-import { buildCsp } from "./index";
+import { buildCsp } from "../src/index";
 
 const direktive = (csp: string, name: string) =>
   csp.split("; ").find((z) => z.startsWith(`${name} `)) ?? "";

@@ -2947,7 +2947,9 @@
         "de": "Saksa",
         "en": "Inglise",
         "da": "Taani"
-      }
+      },
+      "vorschauFehler": "Eelvaadet ei saanud laadida (viga {status}).",
+      "imNeuenTab": "Ava uuel vahelehel"
     },
     "inventar": {
       "abschnitt": "Inventar",

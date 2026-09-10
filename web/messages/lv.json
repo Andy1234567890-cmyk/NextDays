@@ -2947,7 +2947,9 @@
         "de": "Vācu",
         "en": "Angļu",
         "da": "Dāņu"
-      }
+      },
+      "vorschauFehler": "Priekšskatījumu nevarēja ielādēt (kļūda {status}).",
+      "imNeuenTab": "Atvērt jaunā cilnē"
     },
     "inventar": {
       "abschnitt": "Inventārs",

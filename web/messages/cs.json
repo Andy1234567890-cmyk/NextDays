@@ -2947,7 +2947,9 @@
         "de": "Němčina",
         "en": "Angličtina",
         "da": "Dánština"
-      }
+      },
+      "vorschauFehler": "Náhled nelze načíst (chyba {status}).",
+      "imNeuenTab": "Otevřít v nové kartě"
     },
     "inventar": {
       "abschnitt": "Inventář",
