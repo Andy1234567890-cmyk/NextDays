@@ -26,11 +26,24 @@ services:
       dockerfile: Dockerfile
     image: nextdays-dac7-staging:prod
     restart: unless-stopped
-    # NUR auf localhost. Von außen erreichbar ausschließlich über den nginx
-    # von mailcow — der Dienst nimmt Dateien mit CPR-Nummern entgegen und
-    # gehört nicht offen ins Netz.
-    ports:
-      - "127.0.0.1:8100:8000"
+    # KEIN veröffentlichter Port. Erreichbar ist der Dienst ausschließlich
+    # aus dem mailcow-Netz heraus, per Containername `dac7-staging` — so
+    # steht es in der nginx-Konfiguration daneben.
+    #
+    # Warum nicht `127.0.0.1:8100:8000`: Damit lief er zwar, aber der nginx
+    # von mailcow ist selbst ein Container. Für ihn zeigt `127.0.0.1` auf
+    # sich selbst (502), und die Brücken-Adresse 172.17.0.1 half nicht
+    # (504) — der Port hing am Loopback des HOSTS. Über das gemeinsame Netz
+    # braucht es gar keinen offenen Port: eine Angriffsfläche weniger für
+    # einen Dienst, der Dateien mit CPR-Nummern entgegennimmt.
+    networks:
+      # Der Alias ist der Name, unter dem nginx den Dienst anspricht. Ohne
+      # ihn heißt der Container `dac7-staging-<uuid>-<zeitstempel>` und die
+      # nginx-Konfiguration liefe bei jedem Deployment auf einen anderen
+      # Namen — sie müsste dann nach jedem Deploy angefasst werden.
+      mailcowdockerized_mailcow-network:
+        aliases: [dac7-staging]
+      default:
     environment:
       # PFLICHT, ohne Vorgabewert: Fehlt das Token, fährt der Dienst nicht
       # hoch (fail-closed). In Coolify als Secret setzen, nie hier eintragen.
@@ -56,3 +69,11 @@ services:
         # begrenzt, damit ein Dauerlauf die Platte des Mailservers nicht füllt.
         max-size: "10m"
         max-file: "3"
+
+networks:
+  # Von mailcow angelegt und betrieben — dieser Stack hängt sich nur hinein.
+  # `external: true` ist hier zwingend: Würde Coolify das Netz selbst
+  # anlegen, entstünde ein zweites gleichen Namens und nginx fände den
+  # Dienst nicht.
+  mailcowdockerized_mailcow-network:
+    external: true
