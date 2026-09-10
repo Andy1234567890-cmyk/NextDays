@@ -264,18 +264,25 @@ function NeueZeile({
         className="w-24"
       />
       {raeume.length > 0 && (
-        <select
-          value={raum}
-          onChange={(e) => setRaum(e.target.value)}
-          className="rounded-lg border border-border bg-background py-2 pl-3 pr-9 text-sm"
-        >
-          <option value="">{t("inventar.ohneRaum")}</option>
-          {raeume.map((r) => (
-            <option key={r.id} value={r.id}>
-              {r.name}
-            </option>
-          ))}
-        </select>
+        <span className="relative inline-flex">
+          <select
+            value={raum}
+            onChange={(e) => setRaum(e.target.value)}
+            className="cursor-pointer appearance-none rounded-xl border border-border bg-background py-2 pl-3 pr-9 text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          >
+            <option value="">{t("inventar.ohneRaum")}</option>
+            {raeume.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.name}
+              </option>
+            ))}
+          </select>
+          <Icon
+            icon="ph:caret-down"
+            className="pointer-events-none absolute right-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
+            aria-hidden
+          />
+        </span>
       )}
       <Button type="button" onClick={() => void anlegen()} disabled={laeuft || !name.trim()}>
         <Icon icon="ph:plus" className="size-4" />
