@@ -11,6 +11,7 @@ von der Fassade; Patch-Ziel für Modul-Helfer ist channel_manager.common.
 # dreimal kopiert — die teuerste Fehlerklasse laut ADR-0016.
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any, TypeVar
 from urllib.parse import urlparse
 from uuid import uuid4
@@ -61,6 +62,106 @@ def _geprueftes_ziel(url: str | None) -> str | None:
             status_code=422,
         )
     return url
+
+
+@dataclass(frozen=True, slots=True)
+class _KanalWahl:
+    """Welcher Channex-Kanal verbunden wird — und WARUM genau dieser.
+
+    Herausgezogen am 10.09.2026 aus `begin_channel_oauth`: die Entscheidung
+    stand als vierteilige if/elif-Kette mitten in einer 541-Zeilen-Funktion,
+    die davor Properties anlegt und danach Kanaele haengt. Sie ist zweimal
+    live falsch gelaufen (Belege im Docstring von `_kanal_waehlen`) — eine
+    Entscheidung mit dieser Geschichte gehoert isoliert und einzeln testbar.
+
+    `grund` ist kein Debug-Beiwerk: er steht im `channex_oauth_kanal_wahl`-Log
+    und war das einzige, woran sich der Fehlgriff vom 07.08.2026 ueberhaupt
+    nachvollziehen liess.
+    """
+
+    channel_id: str | None
+    grund: str
+    kandidaten: list[str]
+    autorisiert: str | None
+    eigener_kanal: str | None
+
+    @property
+    def ist_eigener(self) -> bool:
+        """Zeigt die Zeile DIESES Objekts auf den gewaehlten Kanal?"""
+        return self.channel_id is not None and self.channel_id == self.eigener_kanal
+
+    @property
+    def neu_anlegen(self) -> bool:
+        return self.channel_id is None
+
+
+def _kanal_waehlen(
+    *,
+    kandidaten: list[str],
+    autorisiert: str | None,
+    eigener_kanal: str | None,
+    konto_kanal: str | None,
+    account_id: str | None,
+    neues_konto: bool,
+) -> _KanalWahl:
+    """Vorrang: benanntes Konto → neues Konto (keiner) → autorisiert → eigene
+    Zeile → erster im Betrieb.
+
+    WELCHES KONTO wird gerade verbunden? Diese Frage entscheidet den Kanal und
+    fiel frueher auf `autorisiert` zurueck — also auf den Kanal, der bereits
+    Tokens hat, mithin IMMER auf Konto A.
+
+    Live gemessen am 07.08.2026 (channex_debug_log, Tenant AirSmil):
+      13:08:39  connection_link  channel_id 8e3292d3  ← Konto B, richtig
+      13:09:08  connection_link  channel_id 9a46827b  ← Konto A
+      13:09:34  connection_link  channel_id 9a46827b  ← Konto A
+      13:14:35  connection_link  channel_id 9a46827b  ← Konto A
+    Channex merkt sich je Verbindung nur den ZULETZT erzeugten `state`. Der
+    eine richtige Link lebte damit 29 Sekunden; danach fuehrte jeder Link nach
+    Konto A. Kanal 8e3292d3 stand deshalb dauerhaft auf `settings: null` — nie
+    autorisiert —, waehrend der Betrieb dreissigmal bestaetigte. Der Fehlgriff
+    hing zusaetzlich das Geruest per PUT an Kanal A (13:09:07), was dort 19
+    statt 18 Properties ergab.
+
+    `account_id` ist der Gegenentwurf: es benennt das Konto explizit, steht in
+    `ota_account` (0304) und ueberlebt jeden Seitenwechsel.
+
+    Ein ZWEITES Portal-Konto (0304) darf gerade NICHT wiederverwenden: die
+    Wiederverwendung ist richtig, solange es um dasselbe Konto geht — fuer ein
+    anderes Konto ist sie die Sperre. `autorisiert` gaebe den Kanal von Konto A
+    zurueck, der Kunde landete wieder in dessen Airbnb-Login und kaeme nie zu
+    Konto B. Airbnb erlaubt das: die Kopplung „nur EINE Software" gilt je
+    KONTO, nicht je Channex-Zugang (`has_already_channel` bezieht sich auf das
+    Airbnb-Konto); zwei Konten = zwei Kanaele ist der Normalfall jeder Agentur.
+
+    Sonst gewinnt der AUTORISIERTE Kanal — nicht der aus unserer DB-Zeile.
+    Sobald fuer ein Objekt ein leerer Zweit-Kanal entstanden war, zeigte dessen
+    eigene Zeile darauf, und jeder weitere Versuch lief wieder in genau diesen
+    leeren Kanal: der Kunde sah endlos „warte auf die Bestaetigung", waehrend
+    die echte Autorisierung am ERSTEN Kanal hing (live: 9a46827b hat
+    tokens/host_id 529591717, f729554c ist leer, Objekt ed885e62 zeigte auf
+    f729554c). Die Tokens sind die Wahrheit — Airbnb autorisiert das KONTO,
+    also genau einen Kanal.
+    """
+    if account_id:
+        gewaehlt, grund = konto_kanal, "konto benannt"
+    elif neues_konto:
+        gewaehlt, grund = None, "neues konto"
+    elif autorisiert:
+        gewaehlt, grund = autorisiert, "autorisiert"
+    elif eigener_kanal:
+        gewaehlt, grund = eigener_kanal, "eigene zeile"
+    elif kandidaten:
+        gewaehlt, grund = kandidaten[0], "erster im betrieb"
+    else:
+        gewaehlt, grund = None, "keiner - neu anlegen"
+    return _KanalWahl(
+        channel_id=gewaehlt,
+        grund=grund,
+        kandidaten=kandidaten,
+        autorisiert=autorisiert,
+        eigener_kanal=eigener_kanal,
+    )
 
 
 class OAuthChannelsMixin:
@@ -297,71 +398,34 @@ class OAuthChannelsMixin:
              and r.get("channex_channel_id")),
             None,
         )
-        # WELCHES KONTO wird gerade verbunden? Diese Frage entscheidet den Kanal,
-        # und sie muss aus einem ZUSTAND beantwortet werden, nicht aus einem
-        # Flag des laufenden Requests.
-        #
-        # Warum: `neues_konto` lebt nur für einen Aufruf. Jeder Folge-Aufruf
-        # (Seite neu geladen, Link erneut angefordert, Status geprüft) kam ohne
-        # das Flag und fiel unten auf `autorisiert` zurück — also auf den Kanal,
-        # der bereits Tokens hat, mithin IMMER auf Konto A.
-        #
-        # Live gemessen am 07.08.2026 (channex_debug_log, Tenant AirSmil):
-        #   13:08:39  connection_link  channel_id 8e3292d3  ← Konto B, richtig
-        #   13:09:08  connection_link  channel_id 9a46827b  ← Konto A
-        #   13:09:34  connection_link  channel_id 9a46827b  ← Konto A
-        #   13:14:35  connection_link  channel_id 9a46827b  ← Konto A
-        # Channex merkt sich je Verbindung nur den ZULETZT erzeugten `state`.
-        # Der eine richtige Link lebte damit 29 Sekunden; danach führte jeder
-        # Link nach Konto A. Kanal 8e3292d3 stand deshalb dauerhaft auf
-        # `settings: null` — nie autorisiert —, während der Betrieb dreißigmal
-        # bestätigte. Der Fehlgriff hängte zusätzlich das Gerüst per PUT an
-        # Kanal A (13:09:07), was dort 19 statt 18 Properties ergab.
-        #
-        # `account_id` ist der Gegenentwurf: es benennt das Konto explizit, steht
-        # in `ota_account` (0304) und überlebt jeden Seitenwechsel.
-        if account_id:
-            existing_channel_id = self._kanal_des_kontos(
-                db, tenant_id, account_id, portal_code
-            )
-        elif neues_konto:
-            # Ein ZWEITES Portal-Konto verbinden (0304): dann darf gerade NICHT
-            # wiederverwendet werden. Die Wiederverwendung unten ist richtig,
-            # solange es um dasselbe Konto geht — sie war der Fix gegen den
-            # leeren Zweit-Kanal. Für ein anderes Konto ist sie die Sperre:
-            # `autorisiert` gäbe den Kanal von Konto A zurück, der Kunde landete
-            # wieder in dessen Airbnb-Login und käme nie zu Konto B.
-            #
-            # Airbnb selbst erlaubt das: die Kopplung „nur EINE Software" gilt je
-            # KONTO, nicht je Channex-Zugang (`has_already_channel` bezieht sich
-            # auf das Airbnb-Konto). Zwei Konten = zwei Kanäle ist der Normalfall
-            # jeder Agentur.
-            existing_channel_id = None
-        else:
-            existing_channel_id = autorisiert or eigener_kanal or (
-                kandidaten[0] if kandidaten else None
-            )
-        eigener = existing_channel_id is not None and (
-            existing_channel_id == eigener_kanal
+        # Die Wahl selbst steht als reine Funktion daneben (`_kanal_waehlen`)
+        # — samt der beiden Live-Fehlgriffe, die sie begruenden. Hier bleibt
+        # nur, das benannte Konto aufzuloesen und das Ergebnis zu protokollieren.
+        wahl = _kanal_waehlen(
+            kandidaten=kandidaten,
+            autorisiert=autorisiert,
+            eigener_kanal=eigener_kanal,
+            konto_kanal=(
+                self._kanal_des_kontos(db, tenant_id, account_id, portal_code)
+                if account_id
+                else None
+            ),
+            account_id=account_id,
+            neues_konto=neues_konto,
         )
+        existing_channel_id = wahl.channel_id
+        eigener = wahl.ist_eigener
         log.info(
             "channex_oauth_kanal_wahl",
             tenant_id=tenant_id, property_id=property_id,
             portal_code=portal_code,
-            kanaele_im_betrieb=kandidaten,
-            autorisierter_kanal=autorisiert,
-            kanal_dieses_objekts=eigener_kanal,
+            kanaele_im_betrieb=wahl.kandidaten,
+            autorisierter_kanal=wahl.autorisiert,
+            kanal_dieses_objekts=wahl.eigener_kanal,
             konto_id=account_id,
-            gewaehlt=existing_channel_id,
-            grund=(
-                "konto benannt" if account_id
-                else "neues konto" if neues_konto
-                else "autorisiert" if autorisiert
-                else "eigene zeile" if eigener_kanal
-                else "erster im betrieb" if kandidaten
-                else "keiner - neu anlegen"
-            ),
-            neu_anlegen=existing_channel_id is None,
+            gewaehlt=wahl.channel_id,
+            grund=wahl.grund,
+            neu_anlegen=wahl.neu_anlegen,
         )
 
         # `channex_property_id` kann None sein (OAuth-Portal ohne registrierte

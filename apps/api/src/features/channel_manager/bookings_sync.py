@@ -1161,6 +1161,372 @@ class BookingsSyncMixin:
                 tenant_id=tenant_id, booking_id=booking_id, error=str(exc)[:200],
             )
 
+    def _storno_projizieren(  # noqa: PLR0913 — der Storno braucht Payload, Bestand und Alt-Zustand
+        self,
+        db: Client,
+        tenant_id: str,
+        *,
+        attrs: dict[str, Any],
+        existing: list[dict[str, Any]] | None,
+        alt: _AltZustand,
+        property_id: str,
+        local_property_id: str | None,
+        arrival: str,
+        departure: str,
+        channel: str,
+        ota_name: str | None,
+        booking_id: str,
+        already_checked_out: bool,
+        bestandsimport: bool,
+    ) -> bool:
+        """Eine stornierte OTA-Meldung verarbeiten. Gibt immer True zurueck.
+
+        Herausgezogen am 10.09.2026 aus `_project_booking_to_reservation`: dort
+        war der Storno ein 169-Zeilen-Zweig mit eigenem `return` mitten in einer
+        795-Zeilen-Funktion — ein vollstaendig eigener Ablauf, der mit der
+        Projektion einer AKTIVEN Buchung nichts gemeinsam hat ausser den
+        Eingangsdaten.
+
+        Der Gegenzustand (Wurzel 1) haengt vollstaendig am `alt`-Stand, nicht an
+        der eingehenden Payload: freizugeben sind die Naechte, die LOKAL gebucht
+        waren. Weicht die Storno-Revision davon ab (anderer Zeitraum, anderes
+        Objekt), blieben sonst die echten Alt-Naechte gesperrt.
+        """
+        if already_checked_out:
+            log.warning(
+                "booking_cancel_after_checkout_ignored",
+                tenant_id=tenant_id,
+                booking_id=booking_id,
+            )
+            return True
+        if existing:
+            cancel_update: dict[str, Any] = {
+                "status": "cancelled",
+                # WER storniert hat (0410). `portal` heisst hier: der Storno
+                # kam über das PORTAL zu uns — Booking/Airbnb melden im Feed
+                # nur „cancelled", nicht ob Gast oder Gastgeber ihn
+                # ausgelöst hat. Das ist trotzdem eine echte Angabe und
+                # nicht dasselbe wie `null`: null hiesse „nicht erfasst",
+                # und ohne diese Zeile wäre jeder laufende OTA-Storno von
+                # einem Altbestands-Storno nicht zu unterscheiden.
+                #
+                # NICHT als „kein Verschulden" lesen: dahinter kann ein
+                # Gast-Storno stecken. Für die 8 %-Provision spielt es
+                # ohnehin keine Rolle — die hängt an channel='portal'
+                # (myBestDays), OTA-Buchungen tragen keine platform_fees.
+                "cancelled_by_party": "portal",
+                "cancel_reason_code": "portal_storno",
+            }
+            # Von UNS abgeleitetes Portal-bezahlt zurücknehmen (Wurzel 1):
+            # das Portal erstattet beim Storno im Regelfall — eine
+            # stornierte Buchung darf nicht als „bezahlt" in Statistiken
+            # und Gast-Ansichten weiterleben. Eigene Gateway-/Rezeptions-
+            # zahlungen laufen nie über payment_collect='ota'.
+            if existing[0].get("payment_collect") == "ota":
+                cancel_update["paid_amount"] = 0
+                cancel_update["payment_status"] = "unpaid"
+            db.table("reservations").update(cancel_update).eq(
+                "id", existing[0]["id"]
+            ).execute()
+            # Gegenzustand zur Stornierung (Wurzel 1): die für diese Buchung
+            # erzeugten Aufgaben wegräumen bzw. auf 'cancelled' setzen —
+            # sonst steht die Reinigung für einen Aufenthalt, den es nicht
+            # mehr gibt, weiter auf dem Handy der Reinigungskraft.
+            # `sync_for_reservation` erkennt den Storno am Status und ruft
+            # `_on_cancelled`; manuelle Aufgaben bleiben unangetastet.
+            sync_nach_id(db, tenant_id, str(existing[0]["id"]))
+            # Zusatzleistungs-Zahlungslinks abschließen (0473). Genau dieser
+            # Pfad hat den Fall vom 25.08.2026 erzeugt: Buchung 6179a5d0
+            # wurde von Booking.com storniert, `cancel()` läuft hier NICHT
+            # (eine OTA-Buchung ist lokal gar nicht stornierbar, 409), und
+            # der bezahlte Addon-Link über 150,00 DKK blieb bei uns `open`,
+            # während das Geld im Verbundkonto lag.
+            #
+            # ANDERS ALS IM LOKALEN STORNO: hier best-effort, NICHT
+            # fail-closed. Der lokale Storno darf abbrechen und wiederholt
+            # werden; dieser Import-Lauf darf es nicht — bleibt der OTA-Storno
+            # ungeschrieben, sind die Nächte weiter belegt, obwohl das Portal
+            # sie wieder verkauft: Überbuchung. Eine Stripe-Störung darf
+            # diesen Schaden nicht auslösen. Sie wird deshalb LAUT geloggt
+            # (und `scripts/diagnose/erstattung-pruefen.sh` findet den
+            # Rückstand: offener Link auf stornierter Buchung), statt den
+            # Lauf zu kippen oder still zu bleiben (Wurzel 5).
+            self._addon_links_bei_ota_storno(
+                db, tenant_id, str(existing[0]["id"])
+            )
+        elif local_property_id is not None:
+            # Bestandsimport (CSV/Lodgify): eine bereits stornierte Buchung,
+            # die wir noch nicht kennen, TROTZDEM als storniert anlegen —
+            # sonst fehlte sie in Historie/Zeitleiste/Gastprofil. Ohne
+            # Kalender-Block (Status cancelled) und ohne Nächte zu belegen.
+            self._insert_cancelled_reservation(db, tenant_id, attrs, property_id)
+        # Alle Nächte dieser Buchung quellengenau freigeben (lokal + Channex).
+        # Wurzel 1: den LOKAL gebuchten Alt-Zeitraum auf dem LOKAL gebuchten
+        # Alt-Objekt freigeben — NICHT den Zeitraum/das Objekt aus dem Storno-
+        # Payload. Weicht die Storno-Revision ab (anderer Zeitraum / anderes
+        # property_id), blieben sonst die echten gesperrten Alt-Nächte hängen.
+        free_property_id = alt.property_id or property_id
+        if existing and alt.check_in and alt.check_out:
+            cancel_nights = self._date_range_nights(
+                str(alt.check_in), str(alt.check_out)
+            )
+        else:
+            cancel_nights = self._date_range_nights(arrival, departure)
+        self._free_ota_nights(
+            db,
+            tenant_id,
+            free_property_id,
+            channel,
+            cancel_nights,
+            unit_id=alt.unit_id,
+        )
+        # Offene externe Provision dieser Buchung entfernen (Gegenzustand,
+        # Wurzel 1). Best-effort — Storno-Pfad darf nie kippen (Wurzel 5).
+        if existing:
+            self._cancel_commission_safe(tenant_id, existing[0]["id"])
+            self._cancel_dynpricing_safe(tenant_id, existing[0]["id"])
+        # Auslastung/Orphan-Lücken haben sich geändert → Dynamic Pricing
+        # neu rechnen (coalesced; ohne Trigger altern die Empfehlungen
+        # bis zum nächsten Tages-Cron). Best-effort wie beim Direktkanal.
+        try_enqueue_recompute(db, tenant_id, free_property_id)
+        # Zeitleiste + Meldung zum Storno.
+        #
+        # WARUM DAS HIER FEHLTE UND WAS ES ANRICHTET: gemeldet wurde bisher
+        # ausschliesslich `kind="created"` (weiter unten im Neuanlage-Zweig).
+        # Der Storno-Pfad kehrt vorher zurueck — die Glocke behielt also
+        # dauerhaft ihre „Neue Buchung"-Zeile, waehrend die Buchung schon
+        # storniert war.
+        #
+        # Live gemessen am 21.08.2026 (Buchung 5135385573, Raevlingehuset):
+        # drei „New booking"-Meldungen um 10:11, Storno um 10:22, KEINE
+        # weitere Meldung. Kalender und Aufgaben waren korrekt aufgeraeumt —
+        # nur der Betrieb erfuhr es nicht und sah in der Glocke weiterhin
+        # eine Buchung, die es nicht mehr gab.
+        #
+        # `melde_buchungs_ereignis` kennt `cancelled` bereits als
+        # Ereignisart (`_BUCHUNG_BETREFF_KEY`) samt Uebersetzungsschluessel
+        # `benachrichtigung.buchung_storniert`; es fehlte allein der Aufruf.
+        #
+        # NUR bei `existing`: eine Storno-Revision zu einer Buchung, die wir
+        # nie hatten, ist keine Aenderung an unserem Bestand — dazu etwas zu
+        # melden waere eine Meldung ueber ein Ereignis, das beim Betrieb nie
+        # stattgefunden hat.
+        if existing:
+            reservation_id = existing[0]["id"]
+            try:
+                db.table("reservation_events").insert({
+                    "tenant_id": tenant_id,
+                    "reservation_id": reservation_id,
+                    "kind": "cancelled",
+                    "detail": {"channel": channel, "ota_name": ota_name},
+                }).execute()
+            except Exception as exc:  # noqa: BLE001 — Zeitleiste ist best-effort
+                log.warning(
+                    "reservation_event_log_failed",
+                    reservation_id=reservation_id,
+                    kind="cancelled",
+                    error=str(exc)[:200],
+                )
+            # Best-effort wie bei `created`: die Funktion faengt intern
+            # breit, ein Meldungsfehler darf den Storno nicht kippen
+            # (Wurzel 5 — der Kalender ist zu diesem Zeitpunkt schon frei).
+            #
+            # AM SCHALTER WIE `created` (nachgezogen 09.09.2026): Dieser
+            # Aufruf war ungegated, waehrend die `created`-Meldung schon
+            # hinter `if not bestandsimport` stand. Damit meldete ein
+            # Bestandsimport jeden Storno erneut — dasselbe Symptom wie bei
+            # den Neubuchungen, nur fuer die andere Ereignisart, und in der
+            # Glocke des Nutzers stand genau das („Buchung storniert"
+            # zwischen den Altbuchungen). Aufgefallen ist es erst, weil der
+            # Voll-Abgleich seit heute ueber den GESAMTEN Bestand meldet.
+            if not bestandsimport:
+                melde_buchungs_ereignis(
+                    db,
+                    tenant_id=tenant_id,
+                    reservation_id=str(reservation_id),
+                    kind="cancelled",
+                    property_id=free_property_id,
+                    gast_vorname=self._gast_name(
+                        db, tenant_id, existing[0].get("guest_id")
+                    ),
+                    quelle=ota_name,
+                    kanal=channel,
+                    # Der STORNIERTE Zeitraum, also der aus der bestehenden
+                    # Zeile — nicht der aus der eingehenden Payload. Wer die
+                    # Meldung liest, muss wissen, welche Nächte gerade wieder
+                    # frei geworden sind.
+                    check_in=alt.check_in,
+                    check_out=alt.check_out,
+                    erwachsene=existing[0].get("adults"),
+                    kinder=existing[0].get("children"),
+                )
+        return True
+
+    def _nachlauf(  # noqa: PLR0913 — Kalender, Finanzen und Meldung einer Buchung
+        self,
+        db: Client,
+        tenant_id: str,
+        *,
+        attrs: dict[str, Any],
+        row: dict[str, Any],
+        existing: list[dict[str, Any]] | None,
+        alt: _AltZustand,
+        reservation_id: str | None,
+        property_id: str,
+        einheit: str | None,
+        arrival: str,
+        departure: str,
+        channel: str,
+        total_amount: float | None,
+        already_checked_out: bool,
+        bestandsimport: bool,
+    ) -> bool:
+        """Was NACH dem Schreiben der Reservierung faellig wird. Gibt True.
+
+        Herausgezogen am 10.09.2026 aus `_project_booking_to_reservation`: die
+        eigentliche Projektion (Payload auf Felder abbilden) und ihre Folgen
+        (Kalender sperren, Alt-Naechte freigeben, Verfuegbarkeit pushen,
+        Portal-Finanzen, Provision, Dynamic Pricing, Aufgaben) sind zwei
+        Themen, die nur die Reihenfolge verband.
+
+        Die Wurzel-1-Kette liegt damit BEISAMMEN statt ueber 600 Zeilen
+        verteilt: Sperren der neuen Naechte, Freigabe der durch eine
+        Modifikation geraeumten Alt-Naechte und der Push an Channex stehen
+        hier untereinander und sind gemeinsam zu lesen.
+        """
+        if already_checked_out:
+            # Auch Kalender/Channex nicht mehr anfassen: die OTA-Revision kann
+            # einen ANDEREN Zeitraum liefern als der eingefrorene Aufenthalt —
+            # ihre Nächte zu sperren erzeugte verwaiste Blockierungen.
+            return True
+
+        new_nights = self._date_range_nights(arrival, departure)
+        # Welche EINHEIT belegt diese Buchung? Bei einem Objekt mit genau einer
+        # Einheit ist das die eine — Verhalten wie bisher. Führt der Typ mehrere,
+        # bekommt die Buchung die erste freie; ist keine frei, hat das Portal
+        # mehr verkauft als da ist. Dann wird der Zeitraum für den GANZEN Typ
+        # gesperrt (unit_id=None) und der Fall geloggt: lieber alles zu als eine
+        # stille Doppelbelegung auf einer schon belegten Einheit.
+        # Kalender: belegte Nächte sperren (Buchung ist autoritativ für 'booked').
+        self._set_availability(
+            db,
+            property_id,
+            new_nights,
+            status="booked",
+            source=channel,
+            unit_id=einheit,
+        )
+        # Realtime an Channex: die belegten Tage neu melden. Bei einem Objekt mit
+        # EINER Einheit ist das die bisherige 0; führt der Typ mehrere identische
+        # Einheiten (0265), bleiben die übrigen verkäuflich — sonst nähme eine
+        # einzige Buchung dem ganzen Typ die Verfügbarkeit.
+        for von, bis, frei in freie_einheiten_spannen(
+            db, tenant_id, property_id,
+            date.fromisoformat(arrival),
+            date.fromisoformat(departure) - timedelta(days=1),
+        ):
+            self.push_availability_for_property(tenant_id, property_id, von, bis, frei)
+        # Buchungs-MODIFIKATION (Verkürzung/Verschiebung/OBJEKTWECHSEL einer
+        # bestehenden OTA-Buchung): die neuen Nächte sind jetzt gesperrt, aber die
+        # durch die Änderung GERÄUMTEN Alt-Nächte bleiben sonst dauerhaft
+        # 'booked'/avail=0 → Phantom-Belegung, auf allen Kanälen unverkäuflich.
+        if existing and alt.check_in and alt.check_out:
+            old_nights = self._date_range_nights(str(alt.check_in), str(alt.check_out))
+            if alt.property_id and alt.property_id != property_id:
+                # Objektwechsel (Gast bucht auf der OTA von Objekt A auf B um): die
+                # Reservierung wurde oben auf Objekt B umgehängt. Der KOMPLETTE
+                # alte Zeitraum auf dem ALTEN Objekt A muss frei werden — sonst
+                # bleibt A dauerhaft phantombelegt. Der Datums-Diff (der auf B
+                # rechnet) träfe A nie.
+                self._free_ota_nights(
+                    db, tenant_id, alt.property_id, channel, old_nights,
+                    unit_id=alt.unit_id,
+                )
+            else:
+                # Gleiches Objekt: nur die aus dem alten Zeitraum herausfallenden
+                # Tage (Verkürzung/Verschiebung) freigeben.
+                freed_nights = [d for d in old_nights if d not in set(new_nights)]
+                if freed_nights:
+                    self._free_ota_nights(
+                        db, tenant_id, property_id, channel, freed_nights,
+                        unit_id=alt.unit_id,
+                    )
+        # Die Portal-Zerlegung dieser Buchung festhalten (0366). Sie liefert
+        # zugleich den GASTPREIS — die Bezugsgröße für unsere eigene Provision.
+        # Best-effort: ein Datenloch in der Zerlegung (unzugeordnete Gebührenart,
+        # fehlender Portal-Satz) darf den Buchungs-Import nicht kippen; die
+        # Buchung selbst ist dann korrekt importiert, nur ihre Aufschlüsselung
+        # fehlt und wird beim nächsten Lauf nachgeholt.
+        gastpreis = None
+        if reservation_id:
+            gastpreis = self._record_portal_finanzen_safe(
+                db,
+                tenant_id=tenant_id,
+                reservation_id=reservation_id,
+                property_id=property_id,
+                row=row,
+                attrs=attrs,
+                channel=channel,
+            )
+        # Externe Provision (0,5 %) für diese OTA-Buchung erfassen. Best-effort
+        # — der Buchungs-Import darf nie an der Provision scheitern (Wurzel 5).
+        # Idempotent über reservation_id (Wurzel 2).
+        if reservation_id:
+            # BEZUGSGRÖSSE ist der GASTPREIS, nicht `total_amount`: bei Airbnb
+            # ist Letzteres der Netto-Payout nach Abzug der 15,5 %
+            # Portal-Provision (0366). Auf ihn gerechnet fiel unsere eigene
+            # Provision rund 13 % zu niedrig aus — bei der Live-Buchung
+            # HMTH2N8PPM 7.106,45 statt 8.410,00 als Basis. Fehlt die Zerlegung
+            # (Datenloch), bleibt `total_amount` die einzige verfügbare Größe;
+            # das ist dann sichtbar zu niedrig statt gar keine Provision.
+            basis = gastpreis if gastpreis is not None else total_amount
+            self._record_commission_safe(
+                db, tenant_id, reservation_id, channel, basis, row["currency"]
+            )
+            # Dynamische Preise 0,5 %: gilt kanalunabhängig für JEDE Buchung des
+            # Objekts (anders als die Provision, die nur externe Kanäle trifft) —
+            # die Engine hat den Preis gesetzt, egal wo verkauft wurde.
+            self._record_dynpricing_safe(
+                db, tenant_id, reservation_id, basis, row["currency"]
+            )
+        # Neue/geänderte OTA-Buchung ändert Auslastung + Orphan-Lücken →
+        # Dynamic Pricing neu rechnen (coalesced je Objekt, best-effort) —
+        # derselbe Trigger, den Direktbuchungen längst haben (reservations/
+        # _base). Beim Objektwechsel auch das ALTE Objekt (Wurzel 1).
+        try_enqueue_recompute(db, tenant_id, property_id)
+        if existing and alt.property_id and alt.property_id != property_id:
+            try_enqueue_recompute(db, tenant_id, alt.property_id)
+        # Planmäßige Aufgaben (0272) — derselbe Trigger, den Direktbuchungen
+        # längst haben (`reservations._base._sync_task_rules`). Dieser Pfad rief
+        # ihn bis 15.08.2026 NICHT: live standen 235 Portalbuchungen genau 1
+        # regelerzeugten Aufgabe gegenüber, während 34 Direktbuchungen 55
+        # erzeugten. Für einen Betrieb, dessen Buchungen über die Portale
+        # kommen, entstand also für KEINE Anreise eine Reinigung.
+        #
+        # Der Aufruf steht bewusst NACH der Kalenderpflege und deckt BEIDE
+        # Zweige ab (Neuanlage wie Modifikation): `sync_for_reservation` ist
+        # idempotent und verschiebend — eine Umbuchung verschiebt die vorhandene
+        # Aufgabe, statt eine zweite anzulegen (Wurzel 1/2).
+        #
+        # Beim Bestandsimport nur fuer Aufenthalte, die noch bevorstehen. Fuer
+        # einen abgereisten Gast eine Reinigung anzulegen ist keine Planung,
+        # sondern Muell in der Aufgabenliste — live beobachtet am 31.08.2026
+        # („Neue Aufgabe: Reng J" fuer Aufenthalte aus 2024). Die Grenze ist die
+        # ABREISE, nicht die Anreise: ein laufender Aufenthalt braucht seine
+        # Endreinigung noch.
+        # `departure` ist ein ISO-STRING aus der Payload, kein date — ein
+        # direkter Vergleich mit date.today() wuerfe TypeError. Vergleich
+        # deshalb textuell (ISO-8601 sortiert lexikografisch korrekt); ein
+        # unlesbarer Wert gilt als „nicht vergangen", damit im Zweifel die
+        # Aufgabe entsteht statt stillschweigend zu fehlen (fail-open ist hier
+        # richtig: eine Aufgabe zu viel faellt auf, eine fehlende nicht).
+        nachtrag_vergangen = bestandsimport and bool(
+            departure and str(departure)[:10] < date.today().isoformat()
+        )
+        if reservation_id and not nachtrag_vergangen:
+            sync_nach_id(db, tenant_id, str(reservation_id))
+        return True
+
     def _project_booking_to_reservation(  # pylint: disable=too-many-return-statements
         # Der siebte Ausstieg ist der Riegel „aermere Quelle laesst reichere in
         # Ruhe" (31.08.2026). Ihn in einen Helfer zu verlagern aendert die Zahl
@@ -1355,182 +1721,25 @@ class BookingsSyncMixin:
         # sonst weiss danach niemand mehr, welche Naechte und welche Einheit
         # freizugeben sind). Begruendung und Historie: siehe `_AltZustand`.
         alt = _AltZustand.aus(existing)
-        old_check_in = alt.check_in
-        old_check_out = alt.check_out
-        old_property_id = alt.property_id
-        alte_einheit = alt.unit_id
 
         # Storno: reservation stornieren + Nächte dieser OTA-Quelle wieder frei.
         if status_in == "cancelled":
-            if already_checked_out:
-                log.warning(
-                    "booking_cancel_after_checkout_ignored",
-                    tenant_id=tenant_id,
-                    booking_id=booking_id,
-                )
-                return True
-            if existing:
-                cancel_update: dict[str, Any] = {
-                    "status": "cancelled",
-                    # WER storniert hat (0410). `portal` heisst hier: der Storno
-                    # kam über das PORTAL zu uns — Booking/Airbnb melden im Feed
-                    # nur „cancelled", nicht ob Gast oder Gastgeber ihn
-                    # ausgelöst hat. Das ist trotzdem eine echte Angabe und
-                    # nicht dasselbe wie `null`: null hiesse „nicht erfasst",
-                    # und ohne diese Zeile wäre jeder laufende OTA-Storno von
-                    # einem Altbestands-Storno nicht zu unterscheiden.
-                    #
-                    # NICHT als „kein Verschulden" lesen: dahinter kann ein
-                    # Gast-Storno stecken. Für die 8 %-Provision spielt es
-                    # ohnehin keine Rolle — die hängt an channel='portal'
-                    # (myBestDays), OTA-Buchungen tragen keine platform_fees.
-                    "cancelled_by_party": "portal",
-                    "cancel_reason_code": "portal_storno",
-                }
-                # Von UNS abgeleitetes Portal-bezahlt zurücknehmen (Wurzel 1):
-                # das Portal erstattet beim Storno im Regelfall — eine
-                # stornierte Buchung darf nicht als „bezahlt" in Statistiken
-                # und Gast-Ansichten weiterleben. Eigene Gateway-/Rezeptions-
-                # zahlungen laufen nie über payment_collect='ota'.
-                if existing[0].get("payment_collect") == "ota":
-                    cancel_update["paid_amount"] = 0
-                    cancel_update["payment_status"] = "unpaid"
-                db.table("reservations").update(cancel_update).eq(
-                    "id", existing[0]["id"]
-                ).execute()
-                # Gegenzustand zur Stornierung (Wurzel 1): die für diese Buchung
-                # erzeugten Aufgaben wegräumen bzw. auf 'cancelled' setzen —
-                # sonst steht die Reinigung für einen Aufenthalt, den es nicht
-                # mehr gibt, weiter auf dem Handy der Reinigungskraft.
-                # `sync_for_reservation` erkennt den Storno am Status und ruft
-                # `_on_cancelled`; manuelle Aufgaben bleiben unangetastet.
-                sync_nach_id(db, tenant_id, str(existing[0]["id"]))
-                # Zusatzleistungs-Zahlungslinks abschließen (0473). Genau dieser
-                # Pfad hat den Fall vom 25.08.2026 erzeugt: Buchung 6179a5d0
-                # wurde von Booking.com storniert, `cancel()` läuft hier NICHT
-                # (eine OTA-Buchung ist lokal gar nicht stornierbar, 409), und
-                # der bezahlte Addon-Link über 150,00 DKK blieb bei uns `open`,
-                # während das Geld im Verbundkonto lag.
-                #
-                # ANDERS ALS IM LOKALEN STORNO: hier best-effort, NICHT
-                # fail-closed. Der lokale Storno darf abbrechen und wiederholt
-                # werden; dieser Import-Lauf darf es nicht — bleibt der OTA-Storno
-                # ungeschrieben, sind die Nächte weiter belegt, obwohl das Portal
-                # sie wieder verkauft: Überbuchung. Eine Stripe-Störung darf
-                # diesen Schaden nicht auslösen. Sie wird deshalb LAUT geloggt
-                # (und `scripts/diagnose/erstattung-pruefen.sh` findet den
-                # Rückstand: offener Link auf stornierter Buchung), statt den
-                # Lauf zu kippen oder still zu bleiben (Wurzel 5).
-                self._addon_links_bei_ota_storno(
-                    db, tenant_id, str(existing[0]["id"])
-                )
-            elif local_property_id is not None:
-                # Bestandsimport (CSV/Lodgify): eine bereits stornierte Buchung,
-                # die wir noch nicht kennen, TROTZDEM als storniert anlegen —
-                # sonst fehlte sie in Historie/Zeitleiste/Gastprofil. Ohne
-                # Kalender-Block (Status cancelled) und ohne Nächte zu belegen.
-                self._insert_cancelled_reservation(db, tenant_id, attrs, property_id)
-            # Alle Nächte dieser Buchung quellengenau freigeben (lokal + Channex).
-            # Wurzel 1: den LOKAL gebuchten Alt-Zeitraum auf dem LOKAL gebuchten
-            # Alt-Objekt freigeben — NICHT den Zeitraum/das Objekt aus dem Storno-
-            # Payload. Weicht die Storno-Revision ab (anderer Zeitraum / anderes
-            # property_id), blieben sonst die echten gesperrten Alt-Nächte hängen.
-            free_property_id = old_property_id or property_id
-            if existing and old_check_in and old_check_out:
-                cancel_nights = self._date_range_nights(
-                    str(old_check_in), str(old_check_out)
-                )
-            else:
-                cancel_nights = self._date_range_nights(arrival, departure)
-            self._free_ota_nights(
+            return self._storno_projizieren(
                 db,
                 tenant_id,
-                free_property_id,
-                channel,
-                cancel_nights,
-                unit_id=alte_einheit,
+                attrs=attrs,
+                existing=existing,
+                alt=alt,
+                property_id=property_id,
+                local_property_id=local_property_id,
+                arrival=arrival,
+                departure=departure,
+                channel=channel,
+                ota_name=ota_name,
+                booking_id=booking_id,
+                already_checked_out=already_checked_out,
+                bestandsimport=bestandsimport,
             )
-            # Offene externe Provision dieser Buchung entfernen (Gegenzustand,
-            # Wurzel 1). Best-effort — Storno-Pfad darf nie kippen (Wurzel 5).
-            if existing:
-                self._cancel_commission_safe(tenant_id, existing[0]["id"])
-                self._cancel_dynpricing_safe(tenant_id, existing[0]["id"])
-            # Auslastung/Orphan-Lücken haben sich geändert → Dynamic Pricing
-            # neu rechnen (coalesced; ohne Trigger altern die Empfehlungen
-            # bis zum nächsten Tages-Cron). Best-effort wie beim Direktkanal.
-            try_enqueue_recompute(db, tenant_id, free_property_id)
-            # Zeitleiste + Meldung zum Storno.
-            #
-            # WARUM DAS HIER FEHLTE UND WAS ES ANRICHTET: gemeldet wurde bisher
-            # ausschliesslich `kind="created"` (weiter unten im Neuanlage-Zweig).
-            # Der Storno-Pfad kehrt vorher zurueck — die Glocke behielt also
-            # dauerhaft ihre „Neue Buchung"-Zeile, waehrend die Buchung schon
-            # storniert war.
-            #
-            # Live gemessen am 21.08.2026 (Buchung 5135385573, Raevlingehuset):
-            # drei „New booking"-Meldungen um 10:11, Storno um 10:22, KEINE
-            # weitere Meldung. Kalender und Aufgaben waren korrekt aufgeraeumt —
-            # nur der Betrieb erfuhr es nicht und sah in der Glocke weiterhin
-            # eine Buchung, die es nicht mehr gab.
-            #
-            # `melde_buchungs_ereignis` kennt `cancelled` bereits als
-            # Ereignisart (`_BUCHUNG_BETREFF_KEY`) samt Uebersetzungsschluessel
-            # `benachrichtigung.buchung_storniert`; es fehlte allein der Aufruf.
-            #
-            # NUR bei `existing`: eine Storno-Revision zu einer Buchung, die wir
-            # nie hatten, ist keine Aenderung an unserem Bestand — dazu etwas zu
-            # melden waere eine Meldung ueber ein Ereignis, das beim Betrieb nie
-            # stattgefunden hat.
-            if existing:
-                reservation_id = existing[0]["id"]
-                try:
-                    db.table("reservation_events").insert({
-                        "tenant_id": tenant_id,
-                        "reservation_id": reservation_id,
-                        "kind": "cancelled",
-                        "detail": {"channel": channel, "ota_name": ota_name},
-                    }).execute()
-                except Exception as exc:  # noqa: BLE001 — Zeitleiste ist best-effort
-                    log.warning(
-                        "reservation_event_log_failed",
-                        reservation_id=reservation_id,
-                        kind="cancelled",
-                        error=str(exc)[:200],
-                    )
-                # Best-effort wie bei `created`: die Funktion faengt intern
-                # breit, ein Meldungsfehler darf den Storno nicht kippen
-                # (Wurzel 5 — der Kalender ist zu diesem Zeitpunkt schon frei).
-                #
-                # AM SCHALTER WIE `created` (nachgezogen 09.09.2026): Dieser
-                # Aufruf war ungegated, waehrend die `created`-Meldung schon
-                # hinter `if not bestandsimport` stand. Damit meldete ein
-                # Bestandsimport jeden Storno erneut — dasselbe Symptom wie bei
-                # den Neubuchungen, nur fuer die andere Ereignisart, und in der
-                # Glocke des Nutzers stand genau das („Buchung storniert"
-                # zwischen den Altbuchungen). Aufgefallen ist es erst, weil der
-                # Voll-Abgleich seit heute ueber den GESAMTEN Bestand meldet.
-                if not bestandsimport:
-                    melde_buchungs_ereignis(
-                        db,
-                        tenant_id=tenant_id,
-                        reservation_id=str(reservation_id),
-                        kind="cancelled",
-                        property_id=free_property_id,
-                        gast_vorname=self._gast_name(
-                            db, tenant_id, existing[0].get("guest_id")
-                        ),
-                        quelle=ota_name,
-                        kanal=channel,
-                        # Der STORNIERTE Zeitraum, also der aus der bestehenden
-                        # Zeile — nicht der aus der eingehenden Payload. Wer die
-                        # Meldung liest, muss wissen, welche Nächte gerade wieder
-                        # frei geworden sind.
-                        check_in=old_check_in,
-                        check_out=old_check_out,
-                        erwachsene=existing[0].get("adults"),
-                        kinder=existing[0].get("children"),
-                    )
-            return True
 
         if guest_id is None:
             guest_id = resolve_or_create_guest(
@@ -1572,9 +1781,9 @@ class BookingsSyncMixin:
         # `alte_einheit`, beide aus derselben Zeile.
         eigene_naechte: list[str] = []
         alte_unit = alt.eigene_unit_fuer(property_id)
-        if alte_unit and old_check_in and old_check_out:
+        if alte_unit and alt.check_in and alt.check_out:
             eigene_naechte = self._date_range_nights(
-                str(old_check_in), str(old_check_out)
+                str(alt.check_in), str(alt.check_out)
             )
         einheit = freie_einheit(
             db, property_id, arrival, departure, tenant_id=tenant_id,
@@ -1825,138 +2034,23 @@ class BookingsSyncMixin:
                         kinder=children,
                     )
 
-        if already_checked_out:
-            # Auch Kalender/Channex nicht mehr anfassen: die OTA-Revision kann
-            # einen ANDEREN Zeitraum liefern als der eingefrorene Aufenthalt —
-            # ihre Nächte zu sperren erzeugte verwaiste Blockierungen.
-            return True
-
-        new_nights = self._date_range_nights(arrival, departure)
-        # Welche EINHEIT belegt diese Buchung? Bei einem Objekt mit genau einer
-        # Einheit ist das die eine — Verhalten wie bisher. Führt der Typ mehrere,
-        # bekommt die Buchung die erste freie; ist keine frei, hat das Portal
-        # mehr verkauft als da ist. Dann wird der Zeitraum für den GANZEN Typ
-        # gesperrt (unit_id=None) und der Fall geloggt: lieber alles zu als eine
-        # stille Doppelbelegung auf einer schon belegten Einheit.
-        # Kalender: belegte Nächte sperren (Buchung ist autoritativ für 'booked').
-        self._set_availability(
+        return self._nachlauf(
             db,
-            property_id,
-            new_nights,
-            status="booked",
-            source=channel,
-            unit_id=einheit,
+            tenant_id,
+            attrs=attrs,
+            row=row,
+            existing=existing,
+            alt=alt,
+            reservation_id=reservation_id,
+            property_id=property_id,
+            einheit=einheit,
+            arrival=arrival,
+            departure=departure,
+            channel=channel,
+            total_amount=total_amount,
+            already_checked_out=already_checked_out,
+            bestandsimport=bestandsimport,
         )
-        # Realtime an Channex: die belegten Tage neu melden. Bei einem Objekt mit
-        # EINER Einheit ist das die bisherige 0; führt der Typ mehrere identische
-        # Einheiten (0265), bleiben die übrigen verkäuflich — sonst nähme eine
-        # einzige Buchung dem ganzen Typ die Verfügbarkeit.
-        for von, bis, frei in freie_einheiten_spannen(
-            db, tenant_id, property_id,
-            date.fromisoformat(arrival),
-            date.fromisoformat(departure) - timedelta(days=1),
-        ):
-            self.push_availability_for_property(tenant_id, property_id, von, bis, frei)
-        # Buchungs-MODIFIKATION (Verkürzung/Verschiebung/OBJEKTWECHSEL einer
-        # bestehenden OTA-Buchung): die neuen Nächte sind jetzt gesperrt, aber die
-        # durch die Änderung GERÄUMTEN Alt-Nächte bleiben sonst dauerhaft
-        # 'booked'/avail=0 → Phantom-Belegung, auf allen Kanälen unverkäuflich.
-        if existing and old_check_in and old_check_out:
-            old_nights = self._date_range_nights(str(old_check_in), str(old_check_out))
-            if old_property_id and old_property_id != property_id:
-                # Objektwechsel (Gast bucht auf der OTA von Objekt A auf B um): die
-                # Reservierung wurde oben auf Objekt B umgehängt. Der KOMPLETTE
-                # alte Zeitraum auf dem ALTEN Objekt A muss frei werden — sonst
-                # bleibt A dauerhaft phantombelegt. Der Datums-Diff (der auf B
-                # rechnet) träfe A nie.
-                self._free_ota_nights(
-                    db, tenant_id, old_property_id, channel, old_nights,
-                    unit_id=alte_einheit,
-                )
-            else:
-                # Gleiches Objekt: nur die aus dem alten Zeitraum herausfallenden
-                # Tage (Verkürzung/Verschiebung) freigeben.
-                freed_nights = [d for d in old_nights if d not in set(new_nights)]
-                if freed_nights:
-                    self._free_ota_nights(
-                        db, tenant_id, property_id, channel, freed_nights,
-                        unit_id=alte_einheit,
-                    )
-        # Die Portal-Zerlegung dieser Buchung festhalten (0366). Sie liefert
-        # zugleich den GASTPREIS — die Bezugsgröße für unsere eigene Provision.
-        # Best-effort: ein Datenloch in der Zerlegung (unzugeordnete Gebührenart,
-        # fehlender Portal-Satz) darf den Buchungs-Import nicht kippen; die
-        # Buchung selbst ist dann korrekt importiert, nur ihre Aufschlüsselung
-        # fehlt und wird beim nächsten Lauf nachgeholt.
-        gastpreis = None
-        if reservation_id:
-            gastpreis = self._record_portal_finanzen_safe(
-                db,
-                tenant_id=tenant_id,
-                reservation_id=reservation_id,
-                property_id=property_id,
-                row=row,
-                attrs=attrs,
-                channel=channel,
-            )
-        # Externe Provision (0,5 %) für diese OTA-Buchung erfassen. Best-effort
-        # — der Buchungs-Import darf nie an der Provision scheitern (Wurzel 5).
-        # Idempotent über reservation_id (Wurzel 2).
-        if reservation_id:
-            # BEZUGSGRÖSSE ist der GASTPREIS, nicht `total_amount`: bei Airbnb
-            # ist Letzteres der Netto-Payout nach Abzug der 15,5 %
-            # Portal-Provision (0366). Auf ihn gerechnet fiel unsere eigene
-            # Provision rund 13 % zu niedrig aus — bei der Live-Buchung
-            # HMTH2N8PPM 7.106,45 statt 8.410,00 als Basis. Fehlt die Zerlegung
-            # (Datenloch), bleibt `total_amount` die einzige verfügbare Größe;
-            # das ist dann sichtbar zu niedrig statt gar keine Provision.
-            basis = gastpreis if gastpreis is not None else total_amount
-            self._record_commission_safe(
-                db, tenant_id, reservation_id, channel, basis, row["currency"]
-            )
-            # Dynamische Preise 0,5 %: gilt kanalunabhängig für JEDE Buchung des
-            # Objekts (anders als die Provision, die nur externe Kanäle trifft) —
-            # die Engine hat den Preis gesetzt, egal wo verkauft wurde.
-            self._record_dynpricing_safe(
-                db, tenant_id, reservation_id, basis, row["currency"]
-            )
-        # Neue/geänderte OTA-Buchung ändert Auslastung + Orphan-Lücken →
-        # Dynamic Pricing neu rechnen (coalesced je Objekt, best-effort) —
-        # derselbe Trigger, den Direktbuchungen längst haben (reservations/
-        # _base). Beim Objektwechsel auch das ALTE Objekt (Wurzel 1).
-        try_enqueue_recompute(db, tenant_id, property_id)
-        if existing and old_property_id and old_property_id != property_id:
-            try_enqueue_recompute(db, tenant_id, old_property_id)
-        # Planmäßige Aufgaben (0272) — derselbe Trigger, den Direktbuchungen
-        # längst haben (`reservations._base._sync_task_rules`). Dieser Pfad rief
-        # ihn bis 15.08.2026 NICHT: live standen 235 Portalbuchungen genau 1
-        # regelerzeugten Aufgabe gegenüber, während 34 Direktbuchungen 55
-        # erzeugten. Für einen Betrieb, dessen Buchungen über die Portale
-        # kommen, entstand also für KEINE Anreise eine Reinigung.
-        #
-        # Der Aufruf steht bewusst NACH der Kalenderpflege und deckt BEIDE
-        # Zweige ab (Neuanlage wie Modifikation): `sync_for_reservation` ist
-        # idempotent und verschiebend — eine Umbuchung verschiebt die vorhandene
-        # Aufgabe, statt eine zweite anzulegen (Wurzel 1/2).
-        #
-        # Beim Bestandsimport nur fuer Aufenthalte, die noch bevorstehen. Fuer
-        # einen abgereisten Gast eine Reinigung anzulegen ist keine Planung,
-        # sondern Muell in der Aufgabenliste — live beobachtet am 31.08.2026
-        # („Neue Aufgabe: Reng J" fuer Aufenthalte aus 2024). Die Grenze ist die
-        # ABREISE, nicht die Anreise: ein laufender Aufenthalt braucht seine
-        # Endreinigung noch.
-        # `departure` ist ein ISO-STRING aus der Payload, kein date — ein
-        # direkter Vergleich mit date.today() wuerfe TypeError. Vergleich
-        # deshalb textuell (ISO-8601 sortiert lexikografisch korrekt); ein
-        # unlesbarer Wert gilt als „nicht vergangen", damit im Zweifel die
-        # Aufgabe entsteht statt stillschweigend zu fehlen (fail-open ist hier
-        # richtig: eine Aufgabe zu viel faellt auf, eine fehlende nicht).
-        nachtrag_vergangen = bestandsimport and bool(
-            departure and str(departure)[:10] < date.today().isoformat()
-        )
-        if reservation_id and not nachtrag_vergangen:
-            sync_nach_id(db, tenant_id, str(reservation_id))
-        return True
 
     def _record_portal_finanzen_safe(  # noqa: PLR0913 — benannte Eingänge
         self,

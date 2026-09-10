@@ -60,7 +60,20 @@ class _Db:
 
 
 class _Sync(BookingsSyncMixin):
-    """Nur die Projektion — die Umgebung des Mixins wird nicht gebraucht."""
+    """Nur die Projektion — die Umgebung des Mixins wird nicht gebraucht.
+
+    `_as_int` liegt in einem SCHWESTER-Mixin (`channels.py`), das der echte
+    `ChannelManagerService` mit erbt. Die Storno-Tests erreichen die Stelle nie
+    (sie kehren vorher zurueck); die Modifikations-Tests laufen bis ans Ende
+    von `_nachlauf` durch und brauchen sie.
+    """
+
+    @staticmethod
+    def _as_int(value: object) -> int | None:
+        try:
+            return int(str(value))
+        except (TypeError, ValueError):
+            return None
 
 
 def _attrs(**over: Any) -> dict[str, Any]:
@@ -81,6 +94,66 @@ def _attrs(**over: Any) -> dict[str, Any]:
 
 def _storno_payload(store: dict[str, Any]) -> dict[str, Any]:
     return next(p for t, p in store["updates"] if t == "reservations")
+
+
+def _stumm(
+    monkeypatch: Any, _sync: Any, freigaben: list[list[str]] | None
+) -> None:
+    """Alles ausser dem Gegenzustand stummschalten.
+
+    Der MODIFIKATIONS-Pfad laeuft bis ans Ende von `_nachlauf` durch: Kalender
+    sperren, Verfuegbarkeit pushen, Portal-Finanzen, Provision, Dynamic
+    Pricing, Aufgaben. Jedes davon hat eigene Tests; hier interessiert
+    ausschliesslich, WELCHE Naechte freigegeben werden.
+    """
+    for name in (
+        "sync_nach_id",
+        "try_enqueue_recompute",
+        "melde_buchungs_ereignis",
+        "recompute_guest_aggregates",
+    ):
+        monkeypatch.setattr(
+            f"src.features.channel_manager.bookings_sync.{name}",
+            lambda *_a, **_k: None,
+            raising=False,
+        )
+    monkeypatch.setattr(
+        "src.features.channel_manager.bookings_sync.freie_einheiten_spannen",
+        lambda *_a, **_k: [],
+    )
+    monkeypatch.setattr(
+        "src.features.channel_manager.bookings_sync.freie_einheit",
+        lambda *_a, **_k: None,
+    )
+    for meth in (
+        "_projection_precheck",
+        "_set_availability",
+        "push_availability_for_property",
+        "_record_portal_finanzen_safe",
+        "_record_commission_safe",
+        "_cancel_commission_safe",
+        "_cancel_dynpricing_safe",
+        "_addon_links_bei_ota_storno",
+    ):
+        monkeypatch.setattr(
+            _Sync,
+            meth,
+            (lambda *_a, **_k: True) if meth == "_projection_precheck"
+            else (lambda *_a, **_k: None),
+            raising=False,
+        )
+    monkeypatch.setattr(
+        _Sync, "_gast_name", staticmethod(lambda *_a, **_k: "Test"), raising=False
+    )
+    if freigaben is not None:
+        monkeypatch.setattr(
+            _Sync,
+            "_free_ota_nights",
+            lambda self, _db, _t, _p, _k, naechte, unit_id=None: freigaben.append(
+                naechte
+            ),
+            raising=False,
+        )
 
 
 def test_bekannte_buchung_wird_als_portal_storno_vermerkt(monkeypatch) -> None:
@@ -264,3 +337,173 @@ def test_unbekannte_buchung_meldet_keinen_storno(monkeypatch) -> None:
     )
 
     assert gemeldet == []
+
+
+def test_storno_gibt_den_LOKALEN_alt_zeitraum_frei_nicht_den_aus_der_payload(
+    monkeypatch,
+) -> None:
+    """Wurzel 1: freigegeben wird, was LOKAL gebucht war.
+
+    Weicht die Storno-Revision vom Bestand ab — anderer Zeitraum, anderes
+    Objekt, andere Einheit —, dann stehen im Payload die NEUEN Werte, gesperrt
+    sind aber die ALTEN. Wer die Payload freigibt, laesst die echten
+    Alt-Naechte gesperrt: das Portal verkauft sie wieder, unser Kalender haelt
+    sie zu.
+
+    Dieser Fall war bis 10.09.2026 ungetestet, obwohl der Code ihn ausdruecklich
+    behandelt. Beim Herausziehen von `_storno_projizieren` haengt der ganze
+    Gegenzustand jetzt an `_AltZustand` — genau deshalb wird er hier
+    festgenagelt.
+    """
+    alt_property = "55555555-5555-4555-8555-555555555555"
+    db = _Db(
+        {
+            "reservations": [
+                {
+                    "id": _RESERVATION,
+                    "checked_out_at": None,
+                    # LOKAL gebucht: 01.-04.09. auf dem ALTEN Objekt, Einheit u-9
+                    "check_in": "2026-09-01",
+                    "check_out": "2026-09-04",
+                    "property_id": alt_property,
+                    "unit_id": "u-9",
+                    "payment_collect": "ota",
+                }
+            ]
+        }
+    )
+    sync = _Sync()
+    monkeypatch.setattr(
+        "src.features.channel_manager.bookings_sync.sync_nach_id",
+        lambda *_a, **_k: None,
+    )
+    monkeypatch.setattr(
+        _Sync, "_projection_precheck", lambda *_a, **_k: True, raising=False
+    )
+    freigaben: list[dict[str, Any]] = []
+    monkeypatch.setattr(
+        _Sync,
+        "_free_ota_nights",
+        lambda self, _db, _t, pid, kanal, naechte, unit_id=None: freigaben.append(
+            {"property_id": pid, "naechte": naechte, "unit_id": unit_id}
+        ),
+        raising=False,
+    )
+
+    # Die Storno-Meldung nennt einen ANDEREN Zeitraum und ein anderes Objekt.
+    sync._project_booking_to_reservation(  # noqa: SLF001
+        db,
+        _TENANT,
+        _attrs(arrival_date="2026-12-24", departure_date="2026-12-27"),
+        guest_id="g-1",
+        local_property_id=_PROPERTY,
+    )
+
+    assert len(freigaben) == 1, "genau eine Freigabe je Storno"
+    frei = freigaben[0]
+    # Das ALTE Objekt, nicht das aus der Payload.
+    assert frei["property_id"] == alt_property
+    # Die ALTE Einheit — sonst bleibt u-9 gesperrt.
+    assert frei["unit_id"] == "u-9"
+    # Die ALTEN Naechte (01.-03.09., Abreisetag zaehlt nicht).
+    assert frei["naechte"] == ["2026-09-01", "2026-09-02", "2026-09-03"]
+    # Und ausdruecklich NICHT der Dezember aus der Payload.
+    assert not any(n.startswith("2026-12") for n in frei["naechte"])
+
+
+def test_verkuerzung_gibt_nur_die_herausfallenden_naechte_frei(monkeypatch) -> None:
+    """Wurzel 1: eine Modifikation raeumt Naechte — die muessen frei werden.
+
+    Verkuerzt das Portal eine Buchung, sind die neuen Naechte gesperrt, die
+    weggefallenen blieben ohne Gegenzustand dauerhaft 'booked': eine
+    Phantom-Belegung, auf allen Kanaelen unverkaeuflich. Freizugeben sind
+    GENAU die Tage, die aus dem alten Zeitraum herausfallen — nicht der ganze
+    alte Zeitraum, sonst gaebe man die weiter gebuchten Naechte mit frei.
+    """
+    db = _Db(
+        {
+            "reservations": [
+                {
+                    "id": _RESERVATION,
+                    "checked_out_at": None,
+                    # Alt: 01.-06.09. (5 Naechte)
+                    "check_in": "2026-09-01",
+                    "check_out": "2026-09-06",
+                    "property_id": _PROPERTY,
+                    "unit_id": None,
+                    "payment_collect": "ota",
+                }
+            ]
+        }
+    )
+    sync = _Sync()
+    freigaben: list[list[str]] = []
+    _stumm(monkeypatch, sync, freigaben)
+
+    # Neu: 01.-04.09. — der 04. und 05. fallen heraus.
+    sync._project_booking_to_reservation(  # noqa: SLF001
+        db,
+        _TENANT,
+        _attrs(status="confirmed", arrival_date="2026-09-01",
+               departure_date="2026-09-04"),
+        guest_id="g-1",
+        local_property_id=_PROPERTY,
+    )
+
+    assert freigaben, "die geraeumten Naechte muessen freigegeben werden"
+    assert freigaben[0] == ["2026-09-04", "2026-09-05"]
+
+
+def test_objektwechsel_gibt_den_GANZEN_alt_zeitraum_am_alten_objekt_frei(
+    monkeypatch,
+) -> None:
+    """Wurzel 1: beim Objektwechsel trifft der Datums-Diff das alte Objekt nie.
+
+    Bucht der Gast bei der OTA von Objekt A auf B um, wird die Reservierung auf
+    B umgehaengt. Auf A ist dann der KOMPLETTE alte Zeitraum freizugeben — ein
+    Diff der Daten (der auf B rechnet) laesst A dauerhaft phantombelegt, selbst
+    wenn die Daten gleich bleiben.
+    """
+    alt_property = "55555555-5555-4555-8555-555555555555"
+    db = _Db(
+        {
+            "reservations": [
+                {
+                    "id": _RESERVATION,
+                    "checked_out_at": None,
+                    "check_in": "2026-09-01",
+                    "check_out": "2026-09-04",
+                    "property_id": alt_property,
+                    "unit_id": "u-3",
+                    "payment_collect": "ota",
+                }
+            ]
+        }
+    )
+    sync = _Sync()
+    ziele: list[tuple[str, list[str], str | None]] = []
+    monkeypatch.setattr(
+        _Sync,
+        "_free_ota_nights",
+        lambda self, _db, _t, pid, _k, naechte, unit_id=None: ziele.append(
+            (pid, naechte, unit_id)
+        ),
+        raising=False,
+    )
+    _stumm(monkeypatch, sync, None)
+
+    # Gleiche Daten, aber ANDERES Objekt.
+    sync._project_booking_to_reservation(  # noqa: SLF001
+        db,
+        _TENANT,
+        _attrs(status="confirmed", arrival_date="2026-09-01",
+               departure_date="2026-09-04"),
+        guest_id="g-1",
+        local_property_id=_PROPERTY,
+    )
+
+    assert ziele, "das ALTE Objekt braucht seine Freigabe"
+    pid, naechte, unit_id = ziele[0]
+    assert pid == alt_property, "freigegeben wird auf dem ALTEN Objekt"
+    assert naechte == ["2026-09-01", "2026-09-02", "2026-09-03"]
+    assert unit_id == "u-3", "und auf der ALTEN Einheit"
