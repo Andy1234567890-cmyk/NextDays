@@ -18,6 +18,7 @@
 // die wir überall sonst abgeschafft haben.
 
 import type { AppMotivMobil } from "@/lib/app-mobil";
+import type { AusschnittName } from "@/components/marketing/oberflaechen-ausschnitt";
 
 /** Schlüssel = Schlüssel der Funktionsgruppe in `features.gruppen`. */
 export type FunktionsSchluessel =
@@ -30,7 +31,8 @@ export type FunktionsSchluessel =
   | "preise"
   | "team"
   | "app"
-  | "auswertungen";
+  | "auswertungen"
+  | "eigentuemer";
 
 export type Funktion = {
   key: FunktionsSchluessel;
@@ -55,6 +57,14 @@ export type Funktion = {
    */
   telefonHero?: readonly AppMotivMobil[];
   telefonBlock?: readonly AppMotivMobil[];
+  /**
+   * Telefon-Aufnahmen für einen EIGENEN App-Abschnitt zwischen Beleg-Block und
+   * Weiterführung. Gesetzt, wenn die App nicht ein Detail der Funktion ist,
+   * sondern ihre zweite Hälfte — bei der Eigentümer-Abrechnung sieht der
+   * Eigentümer alles ausschließlich dort. Braucht die Texte
+   * `funktionen.<key>.appAbschnitt.*`.
+   */
+  appReihe?: readonly AppMotivMobil[];
   /** Gruppierung im Menü und auf der Übersicht. */
   bereich: "verkauf" | "gast" | "betrieb";
   /**
@@ -71,7 +81,15 @@ export type Funktion = {
    * Schlüssel zeigt auf `funktionen.<key>.reiter.<key>`, `grafik` bestimmt die
    * gebaute Szene daneben.
    */
-  reiter: readonly { key: string; grafik: GrafikArt; telefon?: readonly AppMotivMobil[] }[];
+  reiter: readonly {
+    key: string;
+    grafik: GrafikArt;
+    telefon?: readonly AppMotivMobil[];
+    /** Echte Ausschnitte aus der Oberfläche (`AUSSCHNITTE` in
+     *  `components/marketing/oberflaechen-ausschnitt.tsx`) — einer oder zwei.
+     *  Schlagen wie `telefon` die gebaute Grafik. */
+    ausschnitt?: readonly AusschnittName[];
+  }[];
 };
 
 /** Grafik-Arten aus `components/funktionen/funktions-grafiken.tsx`. */
@@ -196,6 +214,52 @@ export const FUNKTIONEN: readonly Funktion[] = [
     aufnahmeBlock: "belegungsplan-hotel",
     bereich: "betrieb",
     reiter: [{ key: "auslastung", grafik: "balken" }, { key: "kanaele", grafik: "kanaele" }, { key: "berichte", grafik: "checkliste" }, { key: "ausblick", grafik: "belegung" }],
+  },
+  {
+    // Eigentümer-Abrechnung und Eigentümer-App auf EINER Seite.
+    //
+    // Warum zusammen und nicht zwei Seiten: die App IST die Ansicht dieser
+    // Abrechnung. Zwei Seiten müssten dieselben Beträge zweimal erklären, und
+    // wer „Eigentümerabrechnung Ferienwohnung" sucht, will beides sehen — was
+    // der Verwalter rechnet UND was der Eigentümer davon zu sehen bekommt.
+    //
+    // Es ist die einzige Seite mit Aufnahmen aus BEIDEN Welten: Hero und
+    // Beleg-Block zeigen das Programmfenster des Betriebs, die Reiter die
+    // Eigentümer-App. Das ist Absicht — die Funktion hat zwei Seiten eines
+    // Vorgangs, und genau das trägt die Seite.
+    key: "eigentuemer",
+    slug: "eigentuemer-abrechnung",
+    // Hero: das Programmfenster mit der fertigen Abrechnung — die Seite
+    // handelt zuerst von dem, was der Verwalter rechnet.
+    aufnahme: "eigentuemer-abrechnung",
+    // Beleg-Block: die Eigentümer-Verwaltung mit Satz und zugeordneten
+    // Objekten, passend zum Text „Mehrere Eigentümer, jeder mit eigenem Satz".
+    aufnahmeBlock: "eigentuemer-liste",
+    // Die App als eigener Abschnitt: Objektbestand, Auslastung und der Beleg
+    // im Telefon — die drei Ansichten, die die Reiter nicht schon zeigen.
+    appReihe: ["owner-auslastung", "owner-beleg", "owner-abrechnungen"],
+    bereich: "betrieb",
+    // Jeder Reiter zeigt eine ECHTE Aufnahme, keiner eine gebaute Grafik —
+    // die einzige Seite, für die alle fünf vorliegen. Die `grafik` bleibt
+    // trotzdem gesetzt: sie ist der Rückfall, falls eine Aufnahme später
+    // wegfällt, und der Typ verlangt sie.
+    reiter: [
+      { key: "abrechnung", grafik: "balken", ausschnitt: ["beleg"] },
+      { key: "vertrag", grafik: "checkliste", ausschnitt: ["vertrag", "zuweisung"] },
+      { key: "portale", grafik: "kanaele", ausschnitt: ["abzugssaetze"] },
+      { key: "app", grafik: "belegung", telefon: ["owner-finanzen", "owner-abrechnungen"] },
+      { key: "eigennutzung", grafik: "zeichnung", telefon: ["owner-kalender", "owner-buchen"] },
+      // Die Objektakte statt eines eigenen Chat-Reiters: Der Chat existiert,
+      // aber die vorliegende Aufnahme zeigt einen LEEREN Verlauf und die Zeile
+      // „Ende-zu-Ende verschlüsselt" — seit dem Umbau auf serverseitige
+      // Verschlüsselung eine Falschaussage, am 09.09.2026 aus der App
+      // entfernt. Ein leerer Verlauf beweist nichts, ein retuschiertes Bild
+      // wäre ein gefälschter Produktbeweis. Der Reiter zeigt deshalb, WORAN
+      // die Korrespondenz hängt — am Objekt —, und der Text nennt sie als
+      // Teil der Akte. Liegt eine Aufnahme mit echtem Verlauf vor, wird
+      // daraus ein eigener Reiter.
+      { key: "objektakte", grafik: "nachrichten", telefon: ["owner-objekte", "owner-objekt"] },
+    ],
   },
 ];
 

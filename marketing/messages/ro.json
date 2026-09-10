@@ -715,6 +715,10 @@
       "auswertungen": {
         "title": "Analize",
         "items": "Grad de ocupare, venituri, ADR, rapoarte automate, comparație între canale, metacăutare în curând"
+      },
+      "eigentuemer": {
+        "title": "Decont proprietar",
+        "items": "Decont per proprietar cu deduceri de portal, chitanță în format PDF, aplicație proprie pentru proprietari"
       }
     }
   },
@@ -842,7 +846,8 @@
       "channelManager": "Channel manager",
       "direktbuchung": "Rezervare directă",
       "zahlungen": "Plăți",
-      "mobileApp": "Aplicație mobilă"
+      "mobileApp": "Aplicație mobilă",
+      "eigentuemerAbrechnung": "Decont proprietar"
     },
     "ressourcen": {
       "hilfeCenter": "Centru de ajutor",
@@ -1947,6 +1952,105 @@
             "c": "Liber"
           }
         }
+      }
+    },
+    "eigentuemer": {
+      "metaBeschreibung": "Decontul proprietarului pentru apartamente și cabane de vacanță: comision per contract, deduceri portal per rezervare, chitanță în format PDF — și o aplicație proprie în care proprietarul vede totul singur.",
+      "headline": "Decontul care nu generează întrebări suplimentare.",
+      "sub": "Din fiecare rezervare se calculează partea proprietarului — deducere portal, comision, taxă fixă, totul transparent până la fiecare noapte. Proprietarul vede în aplicația sa înainte de a întreba.",
+      "bildAlt": "Decontul proprietarului cu indicatori cheie și defalcare per rezervare",
+      "nutzen": {
+        "a": {
+          "titel": "Fiecare rând se explică de la sine",
+          "text": "Prețul oaspetelui, comisionul portalului, comisionul dumneavoastră, cota — deschis, întreaga factură este acolo, în loc de o sumă fără proveniență."
+        },
+        "b": {
+          "titel": "Un contract, fără dispute",
+          "text": "Rata comisionului, comisionul minim și taxa fixă sunt valabile cu o perioadă. Decontarea se face întotdeauna conform contractului valabil la momentul respectiv."
+        },
+        "c": {
+          "titel": "Nu mai întreabă",
+          "text": "Plata, ocuparea și chitanțele sunt în aplicația sa, el pune întrebări în scris acolo – apelurile de la începutul lunii încetează."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Mai mulți proprietari, fiecare cu propria rată.",
+          "text": "Fiecare proprietar are proprietățile sale și rata sa de comision — 15%, 22%, 25%, în funcție de acord. Decontarea calculează pentru fiecare cu rata sa, fără ca dumneavoastră să gestionați tabele.",
+          "punkte": {
+            "a": "Rata per proprietar",
+            "b": "Obiecte alocate",
+            "c": "Firmă sau persoană fizică"
+          }
+        }
+      },
+      "bildAltBlock": "Administrarea proprietarului cu rata comisionului și obiecte alocate",
+      "reiter": {
+        "abrechnung": {
+          "titel": "Decontare",
+          "heading": "De la rezervare la cotă.",
+          "text": "Prețul oaspetelui conform portalului, minus comisionul portalului, minus comisionul dumneavoastră de administrare — deschizibil per rezervare. Sumele per obiect și pentru întreaga perioadă sunt afișate dedesubt.",
+          "punkte": {
+            "a": "Per rezervare",
+            "b": "Per obiect",
+            "c": "Chitanță în format PDF"
+          }
+        },
+        "vertrag": {
+          "titel": "Contract",
+          "heading": "Ceea ce a fost convenit, este valabil.",
+          "text": "Rata comisionului cu perioadă de valabilitate, plus comision minim și taxă fixă per rezervare. Dacă rata se modifică, decontările vechi rămân corecte — ele calculează conform contractului din perioada lor.",
+          "punkte": {
+            "a": "Valabil de la și până la",
+            "b": "Comision minim",
+            "c": "Taxă fixă per rezervare"
+          }
+        },
+        "portale": {
+          "titel": "Deduceri portal",
+          "heading": "Ceea ce reține portalul.",
+          "text": "Per portal o rată în cazul în care nu își raportează singur deducerea. Dacă raportează o sumă, este întotdeauna valabilă suma raportată — nimic nu este estimat.",
+          "punkte": {
+            "a": "O rată per portal",
+            "b": "Comision și taxă de plată",
+            "c": "Suma raportată are prioritate"
+          }
+        },
+        "app": {
+          "titel": "Aplicația proprietarului",
+          "heading": "El vede singur.",
+          "text": "Plata pe parcursul a douăsprezece luni, gradul de ocupare, prețul mediu pe noapte — și fiecare decont cu chitanță pentru vizualizare. O aplicație proprie, doar pentru proprietari.",
+          "punkte": {
+            "a": "Plata în timp",
+            "b": "Decontări lunare",
+            "c": "Chitanță în telefon"
+          }
+        },
+        "eigennutzung": {
+          "titel": "Utilizare proprie",
+          "heading": "Sosiți singur, fără a apela.",
+          "text": "Proprietarul vede gradul de ocupare al proprietăților sale și înregistrează direct propriile șederi. Zilele ocupate sunt blocate — o rezervare dublă nici nu apare.",
+          "punkte": {
+            "a": "Ocupare per proprietate",
+            "b": "Înregistrați șederea",
+            "c": "Zilele ocupate sunt blocate"
+          }
+        },
+        "objektakte": {
+          "titel": "Fișa proprietății",
+          "heading": "Totul despre proprietate într-un singur loc.",
+          "text": "Date de bază, caracteristici cheie, dotări și album foto: Proprietarul își vede proprietatea așa cum apare pe portaluri. Întrebările și acordurile legate de proprietate se gestionează prin aplicație și rămân documentate – în loc să fie dispersate prin apeluri telefonice și trei căsuțe poștale.",
+          "punkte": {
+            "a": "Date de bază și dotări",
+            "b": "Album foto pentru fiecare proprietate",
+            "c": "Acorduri documentate"
+          }
+        }
+      },
+      "appAbschnitt": {
+        "eyebrow": "Aplicația proprietarului",
+        "titel": "Tot ce vrea să știe — fără să vă întrebe.",
+        "text": "Proprietățile sale, gradul de ocupare pe douăsprezece luni și fiecare chitanță pentru verificare: proprietarul deschide aplicația și vede situația. O aplicație proprie, separată de cea a companiei, cu acces doar la propriile proprietăți."
       }
     }
   },

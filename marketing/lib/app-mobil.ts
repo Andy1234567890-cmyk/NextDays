@@ -11,8 +11,15 @@
 // kein plausibler Ersatz für fehlende Daten).
 //
 // Anders als bei den Browser-Aufnahmen (`lib/app-aufnahmen.json`) gibt es hier
-// KEINE Sprach- und Themavarianten: es existiert genau eine Aufnahmereihe
+// KEINE Sprach- und Themavarianten: es existiert je Motiv genau eine Aufnahme
 // (deutsch, hell). Eine erfundene Variante wäre ein fehlendes Bild.
+//
+// Die Liste führt ZWEI Apps (ADR-0019/0022): die PMS-App `mobile-nextdays`
+// (Betrieb) und die Eigentümer-App `mobile-owner` — Motive mit `owner-`.
+// Sie stehen bewusst in EINER Liste, weil beide denselben Telefon-Rahmen und
+// dieselbe Anzeigelogik nutzen; getrennt wird über den Namen, nicht über eine
+// zweite Datei mit denselben drei Funktionen. Wer ein Motiv der falschen App
+// auf eine Seite setzt, sieht es sofort — die Oberflächen sind verschieden.
 
 export const APP_MOTIVE_MOBIL = [
   "uebersicht",
@@ -26,6 +33,20 @@ export const APP_MOTIVE_MOBIL = [
   "nachricht",
   "inserate",
   "login",
+  // --- Eigentümer-App (`mobile-owner`, iPhone 17, 09.09.2026) ---------------
+  // Die Chat-Ansicht der App liegt als Aufnahme vor, steht hier aber NICHT:
+  // sie trägt noch die Zeile „Ende-zu-Ende verschlüsselt", während der Chat
+  // seit dem Umbau serverseitig verschlüsselt. Ein überholtes
+  // Sicherheitsversprechen auf einer Marketingseite ist teurer als ein Bild
+  // weniger — sie kommt zurück, sobald die App neu aufgenommen ist.
+  "owner-finanzen",
+  "owner-abrechnungen",
+  "owner-beleg",
+  "owner-kalender",
+  "owner-buchen",
+  "owner-auslastung",
+  "owner-objekte",
+  "owner-objekt",
 ] as const;
 
 export type AppMotivMobil = (typeof APP_MOTIVE_MOBIL)[number];
@@ -54,6 +75,18 @@ export const APP_STORE_LINKS = {
   google: "https://play.google.com/store/apps/details?id=com.mynextdays.app",
   // iOS liegt noch in der Prüfung — hier die Adresse eintragen, sobald die
   // App im App Store steht, dann verlinkt der Knopf von selbst.
+  apple: null,
+} as const satisfies Record<"google" | "apple", string | null>;
+
+/** Store-Links der EIGENTÜMER-App (`mobile-owner`, `com.mynextdays.owner`).
+ *
+ *  Eine eigene App mit eigener Kennung (ADR-0022), also eigene Adressen —
+ *  nicht dieselben wie oben. Beide stehen auf `null`: die App ist in keinem
+ *  Store veröffentlicht. Sobald sie es ist, hier eintragen; bis dahin zeigt
+ *  die Eigentümer-Seite die Knöpfe ohne Link, statt auf eine fremde App zu
+ *  verweisen (Wurzel 4). */
+export const OWNER_STORE_LINKS = {
+  google: null,
   apple: null,
 } as const satisfies Record<"google" | "apple", string | null>;
 

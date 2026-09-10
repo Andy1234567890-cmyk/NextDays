@@ -715,6 +715,10 @@
       "auswertungen": {
         "title": "Analyses",
         "items": "Taux d'occupation, chiffre d'affaires, RevPAR moyen (ADR), rapports automatiques, comparaison des canaux, métamoteurs bientôt disponibles"
+      },
+      "eigentuemer": {
+        "title": "Facturation propriétaire",
+        "items": "Facturation par propriétaire avec déductions portail, reçu en PDF, application propriétaire dédiée"
       }
     }
   },
@@ -842,7 +846,8 @@
       "channelManager": "Channel manager",
       "direktbuchung": "Réservation directe",
       "zahlungen": "Paiements",
-      "mobileApp": "Application mobile"
+      "mobileApp": "Application mobile",
+      "eigentuemerAbrechnung": "Facturation propriétaire"
     },
     "ressourcen": {
       "hilfeCenter": "Centre d'aide",
@@ -1947,6 +1952,105 @@
             "c": "Libre"
           }
         }
+      }
+    },
+    "eigentuemer": {
+      "metaBeschreibung": "Facturation propriétaire pour appartements et chalets : commission par contrat, déductions portail par réservation, reçu PDF — et une application dédiée où le propriétaire voit tout lui-même.",
+      "headline": "La facturation qui ne suscite aucune question.",
+      "sub": "La part du propriétaire est calculée à partir de chaque réservation — déduction portail, commission, forfait, tout est traçable jusqu'à la nuit individuelle. Le propriétaire le voit dans son application avant de demander.",
+      "bildAlt": "Facturation propriétaire avec indicateurs clés et détail par réservation",
+      "nutzen": {
+        "a": {
+          "titel": "Chaque ligne s'explique",
+          "text": "Prix invité, commission portail, votre commission, part — le détail complet de la facture est affiché, au lieu d'un montant sans origine."
+        },
+        "b": {
+          "titel": "Un contrat, pas de litige",
+          "text": "Taux de commission, commission minimale et forfait s'appliquent avec une période. La facturation se fait toujours avec le contrat en vigueur à l'époque."
+        },
+        "c": {
+          "titel": "Il ne demande plus",
+          "text": "Le paiement, l'occupation et les reçus se trouvent dans son application, il y pose des questions par écrit — les appels du début du mois cessent."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Plusieurs propriétaires, chacun avec son propre taux.",
+          "text": "Chaque propriétaire a ses objets et son taux de commission — 15 %, 22 %, 25 %, selon l'accord. La facturation calcule pour chacun avec son taux, sans que vous ayez à gérer des tableaux.",
+          "punkte": {
+            "a": "Taux par propriétaire",
+            "b": "Objets attribués",
+            "c": "Entreprise ou particulier"
+          }
+        }
+      },
+      "bildAltBlock": "Gestion des propriétaires avec taux de commission et objets attribués",
+      "reiter": {
+        "abrechnung": {
+          "titel": "Facturation",
+          "heading": "De la réservation à la part.",
+          "text": "Prix invité selon le portail, moins la commission du portail, moins votre commission de gestion — dépliable par réservation. Les totaux par objet et pour toute la période sont en dessous.",
+          "punkte": {
+            "a": "Par réservation",
+            "b": "Par objet",
+            "c": "Reçu en PDF"
+          }
+        },
+        "vertrag": {
+          "titel": "Contrat",
+          "heading": "Ce qui a été convenu s'applique.",
+          "text": "Taux de commission avec période de validité, plus commission minimale et forfait par réservation. Si le taux change, les anciennes factures restent correctes — elles calculent avec le contrat de leur période.",
+          "punkte": {
+            "a": "Valide du et au",
+            "b": "Commission minimale",
+            "c": "Forfait par réservation"
+          }
+        },
+        "portale": {
+          "titel": "Déductions portail",
+          "heading": "Ce que le portail retient.",
+          "text": "Un taux par portail au cas où il ne signale pas sa déduction lui-même. S'il signale un montant, c'est toujours le montant signalé qui s'applique — rien n'est estimé.",
+          "punkte": {
+            "a": "Un taux par portail",
+            "b": "Commission et frais de paiement",
+            "c": "Le montant signalé a priorité"
+          }
+        },
+        "app": {
+          "titel": "Application propriétaire",
+          "heading": "Il le voit lui-même.",
+          "text": "Paiement sur douze mois, taux d'occupation, prix moyen par nuit — et chaque facture avec reçu à consulter. Une application dédiée, uniquement pour les propriétaires.",
+          "punkte": {
+            "a": "Paiement au fil du temps",
+            "b": "Factures par mois",
+            "c": "Reçu sur le téléphone"
+          }
+        },
+        "eigennutzung": {
+          "titel": "Usage personnel",
+          "heading": "Arrivée autonome, sans appel.",
+          "text": "Le propriétaire voit l'occupation de ses biens et enregistre directement ses propres séjours. Les jours occupés sont bloqués — aucune double réservation n'est possible.",
+          "punkte": {
+            "a": "Occupation par objet",
+            "b": "Enregistrer le séjour",
+            "c": "Jours occupés bloqués"
+          }
+        },
+        "objektakte": {
+          "titel": "Dossier de l'objet",
+          "heading": "Tout sur l'objet en un seul endroit.",
+          "text": "Données de base, données clés, équipement et album photo : Le propriétaire voit son objet tel qu'il apparaît sur les portails. Les questions et les accords sont gérés via l'application et restent documentés, au lieu d'être répartis entre des appels téléphoniques et trois boîtes de réception.",
+          "punkte": {
+            "a": "Données de base et équipement",
+            "b": "Album photo par objet",
+            "c": "Accords documentés"
+          }
+        }
+      },
+      "appAbschnitt": {
+        "eyebrow": "L'application du propriétaire",
+        "titel": "Tout ce qu'il veut savoir — sans vous le demander.",
+        "text": "Ses biens, le taux d'occupation sur douze mois et chaque reçu à consulter : le propriétaire ouvre l'application et voit la situation. Une application distincte, séparée de celle de l'entreprise, avec accès uniquement à ses propres biens."
       }
     }
   },

@@ -715,6 +715,10 @@
       "auswertungen": {
         "title": "Analītika",
         "items": "Noslodze, ieņēmumi, ADR, automātiskās atskaites, kanālu salīdzinājums, metameklēšana drīzumā"
+      },
+      "eigentuemer": {
+        "title": "Īpašnieka norēķini",
+        "items": "Norēķini katram īpašniekam ar portāla atskaitījumiem, kvīts kā PDF, sava lietotne īpašniekiem"
       }
     }
   },
@@ -842,7 +846,8 @@
       "channelManager": "Kanālu pārvaldnieks",
       "direktbuchung": "Tiešā rezervācija",
       "zahlungen": "Maksājumi",
-      "mobileApp": "Mobilā lietotne"
+      "mobileApp": "Mobilā lietotne",
+      "eigentuemerAbrechnung": "Īpašnieka norēķini"
     },
     "ressourcen": {
       "hilfeCenter": "Palīdzības centrs",
@@ -1947,6 +1952,105 @@
             "c": "Brīvs"
           }
         }
+      }
+    },
+    "eigentuemer": {
+      "metaBeschreibung": "Īpašnieka norēķini par brīvdienu mājām un kotedžām: komisija par katru līgumu, portāla atskaitījumi par katru rezervāciju, kvīts kā PDF — un sava lietotne, kurā īpašnieks visu redz pats.",
+      "headline": "Norēķins, kas nerada jautājumus.",
+      "sub": "No katras rezervācijas tiek aprēķināta īpašnieka daļa — portāla atskaitījums, komisija, fiksēta maksa, viss ir izsekojams līdz pat katrai naktij. Īpašnieks to redz savā lietotnē, pirms jautā.",
+      "bildAlt": "Īpašnieka norēķini ar galvenajiem rādītājiem un pārskatu par katru rezervāciju",
+      "nutzen": {
+        "a": {
+          "titel": "Katra rinda izskaidro sevi",
+          "text": "Viesa cena, portāla komisija, jūsu komisija, daļa — atverot, redzams viss rēķins, nevis summa bez izcelsmes."
+        },
+        "b": {
+          "titel": "Viens līgums, bez strīdiem",
+          "text": "Komisijas likme, minimālā komisija un fiksētā maksa ir spēkā ar periodu. Norēķini vienmēr tiek veikti saskaņā ar līgumu, kas bija spēkā tobrīd."
+        },
+        "c": {
+          "titel": "Viņš vairs nejautā",
+          "text": "Izmaksa, noslogojums un kvītis ir viņa lietotnē, jautājumus viņš uzdod tur rakstiski — mēneša sākuma zvani beidzas."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Vairāki īpašnieki, katrs ar savu likmi.",
+          "text": "Katram īpašniekam ir savi objekti un sava komisijas likme — 15%, 22%, 25%, atkarībā no vienošanās. Norēķini katram tiek aprēķināti ar viņa likmi, bez nepieciešamības uzturēt tabulas.",
+          "punkte": {
+            "a": "Likme par īpašnieku",
+            "b": "Piešķirtie objekti",
+            "c": "Uzņēmums vai privātpersona"
+          }
+        }
+      },
+      "bildAltBlock": "Īpašnieku pārvaldība ar komisijas likmi un piešķirtajiem objektiem",
+      "reiter": {
+        "abrechnung": {
+          "titel": "Norēķini",
+          "heading": "No rezervācijas līdz daļai.",
+          "text": "Viesa cena saskaņā ar portālu, mīnus portāla komisija, mīnus jūsu administrēšanas komisija — atverama par katru rezervāciju. Summas par katru objektu un par visu periodu ir zemāk.",
+          "punkte": {
+            "a": "Par katru rezervāciju",
+            "b": "Par katru objektu",
+            "c": "Kvīts kā PDF"
+          }
+        },
+        "vertrag": {
+          "titel": "Līgums",
+          "heading": "Kas tika saskaņots, tas ir spēkā.",
+          "text": "Komisijas likme ar derīguma termiņu, kā arī minimālā komisija un fiksētā maksa par katru rezervāciju. Ja likme mainās, vecie norēķini paliek pareizi — tie tiek aprēķināti saskaņā ar līgumu par attiecīgo periodu.",
+          "punkte": {
+            "a": "Spēkā no un līdz",
+            "b": "Minimālā komisija",
+            "c": "Fiksētā maksa par rezervāciju"
+          }
+        },
+        "portale": {
+          "titel": "Portāla atskaitījumi",
+          "heading": "Ko portāls patur.",
+          "text": "Par katru portālu viena likme gadījumam, ja tas pats nepaziņo par savu atskaitījumu. Ja tas paziņo summu, vienmēr ir spēkā paziņotā summa — nekas netiek lēsts.",
+          "punkte": {
+            "a": "Par katru portālu viena likme",
+            "b": "Komisija un maksas maksa",
+            "c": "Paziņotajai summai ir prioritāte"
+          }
+        },
+        "app": {
+          "titel": "Īpašnieka lietotne",
+          "heading": "Viņš to redz pats.",
+          "text": "Izmaksa divpadsmit mēnešu laikā, noslogojums, vidējā cena par nakti — un katrs norēķins ar kvīti apskatei. Sava lietotne, tikai īpašniekiem.",
+          "punkte": {
+            "a": "Izmaksa laika gaitā",
+            "b": "Norēķini par mēnesi",
+            "c": "Kvīts telefonā"
+          }
+        },
+        "eigennutzung": {
+          "titel": "Pašpatēriņš",
+          "heading": "Ierasties pašam, bez zvana.",
+          "text": "Īpašnieks redz savu īpašumu noslogojumu un tieši ievada savus uzturēšanās datus. Aizņemtās dienas ir bloķētas — dubultrezervācija pat nerodas.",
+          "punkte": {
+            "a": "Noslogojums pa objektiem",
+            "b": "Ievadīt uzturēšanos",
+            "c": "Aizņemtās dienas bloķētas"
+          }
+        },
+        "objektakte": {
+          "titel": "Objekta karte",
+          "heading": "Viss par objektu vienuviet.",
+          "text": "Pamatdati, galvenie dati, aprīkojums un fotoalbums: Īpašnieks redz savu īpašumu tā, kā tas ir portālos. Jautājumi un vienošanās par īpašumu tiek apstrādāti, izmantojot lietotni, un tiek dokumentēti — nevis izplatīti pa tālruņa zvaniem un trim pastkastēm.",
+          "punkte": {
+            "a": "Pamatdati un aprīkojums",
+            "b": "Fotoalbums katram objektam",
+            "c": "Vienošanās dokumentētas"
+          }
+        }
+      },
+      "appAbschnitt": {
+        "eyebrow": "Īpašnieka lietotne",
+        "titel": "Viss, ko viņš vēlas zināt — jums nejautājot.",
+        "text": "Viņa īpašumi, noslogojums divpadsmit mēnešu garumā un katrs dokuments, ko var izlasīt: īpašnieks atver lietotni un redz statusu. Atsevišķa lietotne, kas nav saistīta ar uzņēmuma lietotni, ar piekļuvi tikai viņa pašu īpašumiem."
       }
     }
   },

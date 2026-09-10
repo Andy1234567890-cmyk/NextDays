@@ -38,7 +38,14 @@ import { SystemStatus } from "./system-status";
 const FOOTER_COLUMNS = [
   {
     key: "produkt",
-    links: ["pms", "channelManager", "direktbuchung", "zahlungen", "mobileApp"],
+    links: [
+      "pms",
+      "channelManager",
+      "direktbuchung",
+      "zahlungen",
+      "mobileApp",
+      "eigentuemerAbrechnung",
+    ],
   },
   {
     key: "ressourcen",
@@ -58,6 +65,7 @@ const PRODUKT_ZIELE: Record<string, string> = {
   direktbuchung: `/funktionen/${FUNKTIONEN.find((f) => f.key === "direkt")?.slug ?? ""}`,
   zahlungen: `/funktionen/${FUNKTIONEN.find((f) => f.key === "zahlungen")?.slug ?? ""}`,
   mobileApp: `/funktionen/${FUNKTIONEN.find((f) => f.key === "app")?.slug ?? ""}`,
+  eigentuemerAbrechnung: `/funktionen/${FUNKTIONEN.find((f) => f.key === "eigentuemer")?.slug ?? ""}`,
 };
 
 // Unternehmens-Spalte → echte Seite. Bis eben zeigte „Über uns" auf „#";

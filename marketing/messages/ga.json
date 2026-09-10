@@ -715,6 +715,10 @@
       "auswertungen": {
         "title": "Léargais",
         "items": "Áitíocht, ioncam, ADR, tuarascálacha uathoibríocha, comparáid cainéal, meiticuardach ag teacht go luath"
+      },
+      "eigentuemer": {
+        "title": "Billeáil an úinéara",
+        "items": "Billeáil in aghaidh an úinéara le hasbhaintí tairsí, admháil mar PDF, aip féin don úinéir"
       }
     }
   },
@@ -842,7 +846,8 @@
       "channelManager": "Channel manager",
       "direktbuchung": "Áirithint dhíreach",
       "zahlungen": "Íocaíochtaí",
-      "mobileApp": "Aip mhóibíleach"
+      "mobileApp": "Aip mhóibíleach",
+      "eigentuemerAbrechnung": "Billeáil an úinéara"
     },
     "ressourcen": {
       "hilfeCenter": "Ionad cabhrach",
@@ -1947,6 +1952,105 @@
             "c": "Saor"
           }
         }
+      }
+    },
+    "eigentuemer": {
+      "metaBeschreibung": "Billeáil Úinéara le haghaidh Árasáin Saoire agus Seallaí: Coimisiún in aghaidh an Chonartha, Asbhaintí Tairsí in aghaidh an Áirithinte, Admháil mar PDF — agus Aip féin ina bhfeiceann an t-úinéir gach rud é féin.",
+      "headline": "An billeáil nach gcuireann ceist ar bith.",
+      "sub": "Ríomhtar sciar an úinéara ó gach áirithint — asbhaint tairsí, coimisiún, táille chomhréidh, gach rud inrianaithe síos go dtí an oíche aonair. Feiceann an t-úinéir é ina Aip sula gcuireann sé ceist.",
+      "bildAlt": "Billeáil Úinéara le príomhtháscairí agus miondealú in aghaidh an áirithinte",
+      "nutzen": {
+        "a": {
+          "titel": "Míníonn gach líne í féin",
+          "text": "Praghas an Aoi, Coimisiún Tairsí, do Choimisiún, Scair — taispeántar an bille iomlán, in ionad suime gan foinse."
+        },
+        "b": {
+          "titel": "Conradh amháin, gan aon aighneas",
+          "text": "Tá ráta coimisiúin, íoschoimisiún agus táille chomhréidh bailí le tréimhse. Déantar billeáil i gcónaí leis an gconradh a bhí bailí ag an am sin."
+        },
+        "c": {
+          "titel": "Ní chuireann sé ceist a thuilleadh",
+          "text": "Tá an íocaíocht, an áitíocht agus na hadmhálacha ina aip, cuireann sé ceisteanna i scríbhinn ansin - stopann na glaonna ag tús na míosa."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Il-úinéirí, gach ceann acu lena ráta féin.",
+          "text": "Tá a chuid réadmhaoine agus a ráta coimisiúin féin ag gach úinéir — 15%, 22%, 25%, ag brath ar an gcomhaontú. Déanann an billeáil ríomh do gach ceann lena ráta féin, gan ort táblaí a chothabháil.",
+          "punkte": {
+            "a": "Ráta in aghaidh an úinéara",
+            "b": "Réadmhaoine sannta",
+            "c": "Cuideachta nó Duine Príobháideach"
+          }
+        }
+      },
+      "bildAltBlock": "Bainistíocht Úinéara le ráta coimisiúin agus réadmhaoine sannta",
+      "reiter": {
+        "abrechnung": {
+          "titel": "Billeáil",
+          "heading": "Ón áirithint go dtí an sciar.",
+          "text": "Praghas an Aoi de réir na tairsí, lúide Coimisiún Tairsí, lúide do Choimisiún Bainistíochta — inoscailte in aghaidh an áirithinte. Tá suimeanna in aghaidh na réadmhaoine agus don tréimhse iomlán thíos.",
+          "punkte": {
+            "a": "In aghaidh an áirithinte",
+            "b": "In aghaidh na réadmhaoine",
+            "c": "Admháil mar PDF"
+          }
+        },
+        "vertrag": {
+          "titel": "Conradh",
+          "heading": "Is é an rud a comhaontaíodh atá bailí.",
+          "text": "Ráta coimisiúin le tréimhse bailíochta, chomh maith le híoschoimisiún agus táille chomhréidh in aghaidh an áirithinte. Má athraíonn an ráta, fanann seanbhilleálacha ceart — ríomhann siad leis an gconradh dá dtréimhse.",
+          "punkte": {
+            "a": "Bailí ó agus go dtí",
+            "b": "Íoschoimisiún",
+            "c": "Táille chomhréidh in aghaidh an áirithinte"
+          }
+        },
+        "portale": {
+          "titel": "Asbhaintí Tairsí",
+          "heading": "An méid a choinníonn an tairseach.",
+          "text": "Ráta in aghaidh na tairsí ar eagla nach dtuairiscíonn sí a hasbhaint féin. Má thuairiscíonn sí méid, is é an méid tuairiscithe a bhíonn bailí i gcónaí — ní dhéantar aon mheastachán.",
+          "punkte": {
+            "a": "Ráta in aghaidh na tairsí",
+            "b": "Coimisiún agus Táille Íocaíochta",
+            "c": "Tá tosaíocht ag an méid tuairiscithe"
+          }
+        },
+        "app": {
+          "titel": "Aip Úinéara",
+          "heading": "Feiceann sé é féin.",
+          "text": "Íocaíocht thar dhá mhí dhéag, ráta áitíochta, meánphraghas in aghaidh na hoíche — agus gach billeáil le hadmháil le féachaint air. Aip féin, do na húinéirí amháin.",
+          "punkte": {
+            "a": "Íocaíocht le himeacht ama",
+            "b": "Billeálacha in aghaidh na míosa",
+            "c": "Admháil sa Fón"
+          }
+        },
+        "eigennutzung": {
+          "titel": "Úsáid phearsanta",
+          "heading": "Teacht gan glaoch.",
+          "text": "Féachann an t-úinéir ar áitíocht a chuid réadmhaoine agus cuireann sé a chuid fanachta féin isteach go díreach. Tá na laethanta áitithe blocáilte - ní tharlaíonn áirithint dhúbailte ar chor ar bith.",
+          "punkte": {
+            "a": "Áitíocht in aghaidh an réadmhaoine",
+            "b": "Cuir isteach fanacht",
+            "c": "Laethanta áitithe blocáilte"
+          }
+        },
+        "objektakte": {
+          "titel": "Comhad Réadmhaoine",
+          "heading": "Gach eolas faoin réadmhaoin in aon áit amháin.",
+          "text": "Príomhshonraí, sonraí bunúsacha, trealamh agus albam grianghraf: Feiceann an t-úinéir a réadmhaoin mar atá sé ar na tairseacha. Déantar fiosrúcháin agus comhaontuithe a bhaineann leis an réadmhaoin tríd an aip agus fanann siad doiciméadaithe — in ionad a bheith scaipthe thar ghlaonna teileafóin agus trí bhosca poist.",
+          "punkte": {
+            "a": "Príomhshonraí agus Trealamh",
+            "b": "Albam Grianghraf in aghaidh na Réadmhaoine",
+            "c": "Comhaontuithe Doiciméadaithe"
+          }
+        }
+      },
+      "appAbschnitt": {
+        "eyebrow": "Aip an úinéara",
+        "titel": "Gach a theastaíonn uaidh a fháil amach — gan tú a cheistiú.",
+        "text": "A chuid réadmhaoine, an ráta áitíochta thar dhá mhí dhéag agus gach admháil le haghaidh tagartha: osclaíonn an t-úinéir an aip agus feiceann sé an stádas. Aip ar leith, ar leithligh ó aip an ghnó, le rochtain ar a chuid réadmhaoine féin amháin."
       }
     }
   },

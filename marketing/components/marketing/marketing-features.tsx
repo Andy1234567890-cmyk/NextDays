@@ -28,6 +28,7 @@ const GRUPPEN: { key: string; icon: IconName; bald?: boolean }[] = [
   { key: "zahlungen", icon: "ph:credit-card" },
   { key: "team", icon: "ph:key" },
   { key: "app", icon: "ph:device-mobile-camera" },
+  { key: "eigentuemer", icon: "ph:file-text" },
   { key: "auswertungen", icon: "ph:chart-bar" },
 ];
 

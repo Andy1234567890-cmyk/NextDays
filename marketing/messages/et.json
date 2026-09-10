@@ -715,6 +715,10 @@
       "auswertungen": {
         "title": "Analüütika",
         "items": "Täituvus, käive, ADR, automaatsed aruanded, kanalite võrdlus, metaotsing tulekul"
+      },
+      "eigentuemer": {
+        "title": "Omaniku arveldus",
+        "items": "Arveldus iga omaniku kohta koos portaali mahaarvamistega, kviitung PDF-ina, oma rakendus omanikele"
       }
     }
   },
@@ -842,7 +846,8 @@
       "channelManager": "Channel manager",
       "direktbuchung": "Otsebroneering",
       "zahlungen": "Maksed",
-      "mobileApp": "Mobiilirakendus"
+      "mobileApp": "Mobiilirakendus",
+      "eigentuemerAbrechnung": "Omaniku arveldus"
     },
     "ressourcen": {
       "hilfeCenter": "Abikeskus",
@@ -1947,6 +1952,105 @@
             "c": "Vaba"
           }
         }
+      }
+    },
+    "eigentuemer": {
+      "metaBeschreibung": "Omaniku arveldus puhkemajadele ja suvilatele: vahendustasu lepingu kohta, portaali mahaarvamised broneeringu kohta, kviitung PDF-ina – ja oma rakendus, kus omanik näeb kõike ise.",
+      "headline": "Arveldus, mis ei tekita lisaküsimusi.",
+      "sub": "Iga broneeringu puhul arvutatakse omaniku osa – portaali mahaarvamine, vahendustasu, fikseeritud tasu, kõik on jälgitav kuni üksiku ööni. Omanik näeb seda oma rakenduses, enne kui ta küsib.",
+      "bildAlt": "Omaniku arveldus võtmenäitajate ja iga broneeringu kohta käiva aruandega",
+      "nutzen": {
+        "a": {
+          "titel": "Iga rida selgitab ennast",
+          "text": "Külalise hind, portaali vahendustasu, teie vahendustasu, osa – lahtivõetuna on kogu arve olemas, mitte summa ilma päritoluta."
+        },
+        "b": {
+          "titel": "Üks leping, ei mingit vaidlust",
+          "text": "Vahendustasu määr, miinimumvahendustasu ja fikseeritud tasu kehtivad koos perioodiga. Arveldatakse alati selle lepinguga, mis tol ajal kehtis."
+        },
+        "c": {
+          "titel": "Ta ei küsi enam järele",
+          "text": "Väljamaksed, broneeringud ja kviitungid on tema rakenduses, küsimused esitab ta seal kirjalikult – kuu alguse kõned lõppevad."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Mitu omanikku, igaühel oma määr.",
+          "text": "Igal omanikul on oma objektid ja oma vahendustasu määr – 15%, 22%, 25%, vastavalt kokkuleppele. Arveldus arvestab igaühega tema määraga, ilma et te peaksite tabeleid haldama.",
+          "punkte": {
+            "a": "Määr omaniku kohta",
+            "b": "Objektid määratud",
+            "c": "Ettevõte või eraisik"
+          }
+        }
+      },
+      "bildAltBlock": "Omanike haldamine vahendustasu määra ja määratud objektidega",
+      "reiter": {
+        "abrechnung": {
+          "titel": "Arveldus",
+          "heading": "Broneeringust osani.",
+          "text": "Külalise hind portaali järgi, miinus portaali vahendustasu, miinus teie haldustasu – iga broneeringu kohta lahtivõetav. Summad objekti kohta ja kogu perioodi kohta on allpool.",
+          "punkte": {
+            "a": "Iga broneeringu kohta",
+            "b": "Iga objekti kohta",
+            "c": "Kviitung PDF-ina"
+          }
+        },
+        "vertrag": {
+          "titel": "Leping",
+          "heading": "Mis kokku lepiti, see kehtib.",
+          "text": "Vahendustasu määr kehtivusajaga, lisaks miinimumvahendustasu ja fikseeritud tasu broneeringu kohta. Kui määr muutub, jäävad vanad arveldused õigeks – need arvestavad oma perioodi lepinguga.",
+          "punkte": {
+            "a": "Kehtib alates ja kuni",
+            "b": "Miinimumvahendustasu",
+            "c": "Fikseeritud tasu broneeringu kohta"
+          }
+        },
+        "portale": {
+          "titel": "Portaali mahaarvamised",
+          "heading": "Mida portaal kinni peab.",
+          "text": "Iga portaali kohta määr juhuks, kui see oma mahaarvamist ise ei teata. Kui see teatab summa, kehtib alati teatatud summa – midagi ei hinnata.",
+          "punkte": {
+            "a": "Iga portaali kohta määr",
+            "b": "Vahendustasu ja maksetasu",
+            "c": "Teatatud summal on eelis"
+          }
+        },
+        "app": {
+          "titel": "Omaniku rakendus",
+          "heading": "Ta näeb seda ise.",
+          "text": "Väljamakse kaheteistkümne kuu jooksul, täituvus, keskmine hind öö kohta – ja iga arveldus koos kviitungiga vaatamiseks. Oma rakendus, ainult omanikele.",
+          "punkte": {
+            "a": "Väljamakse aja jooksul",
+            "b": "Arveldused kuu kohta",
+            "c": "Kviitung telefonis"
+          }
+        },
+        "eigennutzung": {
+          "titel": "Oma kasutus",
+          "heading": "Saabuge ise, ilma helistamata.",
+          "text": "Omanik näeb oma objektide täituvust ja sisestab oma peatumised otse. Broneeritud päevad on blokeeritud – topeltbroneeringut ei teki.",
+          "punkte": {
+            "a": "Täituvus objekti kohta",
+            "b": "Sisesta peatumine",
+            "c": "Broneeritud päevad blokeeritud"
+          }
+        },
+        "objektakte": {
+          "titel": "Objekti andmed",
+          "heading": "Kõik objekti kohta ühes kohas.",
+          "text": "Põhiandmed, põhinäitajad, sisustus ja fotoalbum: Omanik näeb oma objekti nii, nagu see portaalides kuvatakse. Päringud ja kokkulepped toimuvad objekti kohta rakenduse kaudu ja jäävad dokumenteerituks – selle asemel, et olla jaotatud telefonikõnede ja kolme postkasti vahel.",
+          "punkte": {
+            "a": "Põhiandmed ja sisustus",
+            "b": "Fotoalbum objekti kohta",
+            "c": "Kokkulepped dokumenteeritud"
+          }
+        }
+      },
+      "appAbschnitt": {
+        "eyebrow": "Omaniku rakendus",
+        "titel": "Kõik, mida ta teada tahab – ilma teilt küsimata.",
+        "text": "Tema objektid, täituvus kaheteistkümne kuu jooksul ja iga kviitung ülevaatamiseks: omanik avab rakenduse ja näeb olukorda. Eraldi rakendus, mis on eraldatud ettevõtte omast, millel on juurdepääs ainult tema enda objektidele."
       }
     }
   },

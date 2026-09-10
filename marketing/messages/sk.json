@@ -715,6 +715,10 @@
       "auswertungen": {
         "title": "Vyhodnotenia",
         "items": "Obsadenosť, tržby, ADR, automatické reporty, porovnanie kanálov, metavyhľadávače už čoskoro"
+      },
+      "eigentuemer": {
+        "title": "Vyúčtovanie majiteľa",
+        "items": "Vyúčtovanie pre každého majiteľa s odpočtami portálu, doklad ako PDF, vlastná aplikácia pre majiteľov"
       }
     }
   },
@@ -842,7 +846,8 @@
       "channelManager": "Channel manager",
       "direktbuchung": "Priame rezervácie",
       "zahlungen": "Platby",
-      "mobileApp": "Mobilná aplikácia"
+      "mobileApp": "Mobilná aplikácia",
+      "eigentuemerAbrechnung": "Vyúčtovanie majiteľa"
     },
     "ressourcen": {
       "hilfeCenter": "Centrum pomoci",
@@ -1947,6 +1952,105 @@
             "c": "Voľné"
           }
         }
+      }
+    },
+    "eigentuemer": {
+      "metaBeschreibung": "Vyúčtovanie pre majiteľov dovolenkových bytov a chát: provízia za zmluvu, portálové zrážky za rezerváciu, doklad ako PDF – a vlastná aplikácia, v ktorej majiteľ vidí všetko sám.",
+      "headline": "Vyúčtovanie, ktoré nevyvoláva žiadne otázky.",
+      "sub": "Z každej rezervácie sa vypočíta podiel majiteľa – portálová zrážka, provízia, paušál, všetko transparentne až po jednotlivú noc. Majiteľ to vidí vo svojej aplikácii, skôr než sa spýta.",
+      "bildAlt": "Vyúčtovanie pre majiteľov s kľúčovými ukazovateľmi a rozpisom za rezerváciu",
+      "nutzen": {
+        "a": {
+          "titel": "Každý riadok je vysvetlený",
+          "text": "Cena pre hosťa, provízia portálu, vaša provízia, podiel – rozbalené zobrazuje celý účet namiesto sumy bez pôvodu."
+        },
+        "b": {
+          "titel": "Jedna zmluva, žiadne spory",
+          "text": "Sadzba provízie, minimálna provízia a paušál platia s obdobím. Vyúčtovanie sa vždy vykonáva podľa zmluvy, ktorá platila vtedy."
+        },
+        "c": {
+          "titel": "Už sa nepýta",
+          "text": "Výplata, obsadenosť a doklady sú v jeho aplikácii, otázky kladie písomne tam – telefonáty na začiatku mesiaca prestanú."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Viacero majiteľov, každý s vlastnou sadzbou.",
+          "text": "Každý majiteľ má svoje objekty a svoju sadzbu provízie – 15 %, 22 %, 25 %, podľa dohody. Vyúčtovanie počíta pre každého s jeho sadzbou, bez toho, aby ste museli udržiavať tabuľky.",
+          "punkte": {
+            "a": "Sadzba za majiteľa",
+            "b": "Priradené objekty",
+            "c": "Firma alebo súkromná osoba"
+          }
+        }
+      },
+      "bildAltBlock": "Správa majiteľov so sadzbou provízie a priradenými objektmi",
+      "reiter": {
+        "abrechnung": {
+          "titel": "Vyúčtovanie",
+          "heading": "Od rezervácie k podielu.",
+          "text": "Cena pre hosťa podľa portálu, mínus provízia portálu, mínus vaša provízia za správu – rozbaliteľné za rezerváciu. Súhrny za objekt a za celé obdobie sú uvedené nižšie.",
+          "punkte": {
+            "a": "Za rezerváciu",
+            "b": "Za objekt",
+            "c": "Doklad ako PDF"
+          }
+        },
+        "vertrag": {
+          "titel": "Zmluva",
+          "heading": "Platí to, čo bolo dohodnuté.",
+          "text": "Sadzba provízie s dobou platnosti, k tomu minimálna provízia a paušál za rezerváciu. Ak sa sadzba zmení, staré vyúčtovania zostávajú správne – počítajú sa podľa zmluvy z ich obdobia.",
+          "punkte": {
+            "a": "Platné od a do",
+            "b": "Minimálna provízia",
+            "c": "Paušál za rezerváciu"
+          }
+        },
+        "portale": {
+          "titel": "Portálové zrážky",
+          "heading": "Čo si portál ponechá.",
+          "text": "Za každý portál sadzba pre prípad, že si svoju zrážku neoznámi sám. Ak oznámi sumu, vždy platí oznámená – nič sa neodhaduje.",
+          "punkte": {
+            "a": "Za každý portál sadzba",
+            "b": "Provízia a poplatok za platbu",
+            "c": "Oznámená suma má prednosť"
+          }
+        },
+        "app": {
+          "titel": "Aplikácia pre majiteľov",
+          "heading": "Vidí to sám.",
+          "text": "Výplata počas dvanástich mesiacov, obsadenosť, priemerná cena za noc – a každé vyúčtovanie s dokladom na prezeranie. Vlastná aplikácia, len pre majiteľov.",
+          "punkte": {
+            "a": "Výplata v priebehu",
+            "b": "Vyúčtovania za mesiac",
+            "c": "Doklad v telefóne"
+          }
+        },
+        "eigennutzung": {
+          "titel": "Vlastné použitie",
+          "heading": "Príchod bez ohlásenia.",
+          "text": "Majiteľ vidí obsadenosť svojich objektov a priamo zadáva vlastné pobyty. Obsadené dni sú zablokované – dvojitá rezervácia vôbec nevznikne.",
+          "punkte": {
+            "a": "Obsadenosť podľa objektu",
+            "b": "Zadať pobyt",
+            "c": "Obsadené dni zablokované"
+          }
+        },
+        "objektakte": {
+          "titel": "Súbor objektu",
+          "heading": "Všetko o objekte na jednom mieste.",
+          "text": "Kmeňové údaje, kľúčové údaje, vybavenie a fotoalbum: Majiteľ vidí svoj objekt tak, ako je uvedený na portáloch. Otázky a dohody týkajúce sa objektu prebiehajú cez aplikáciu a zostávajú zdokumentované – namiesto toho, aby boli roztrúsené po telefonátoch a troch poštových schránkach.",
+          "punkte": {
+            "a": "Kmeňové údaje a vybavenie",
+            "b": "Fotoalbum pre každý objekt",
+            "c": "Dohody zdokumentované"
+          }
+        }
+      },
+      "appAbschnitt": {
+        "eyebrow": "Aplikácia pre majiteľa",
+        "titel": "Všetko, čo chce vedieť – bez toho, aby sa vás pýtal.",
+        "text": "Jeho objekty, obsadenosť za dvanásť mesiacov a každý doklad na prečítanie: majiteľ otvorí aplikáciu a vidí stav. Samostatná aplikácia, oddelená od aplikácie prevádzky, s prístupom len k jeho vlastným objektom."
       }
     }
   },

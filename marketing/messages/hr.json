@@ -715,6 +715,10 @@
       "auswertungen": {
         "title": "Analitika",
         "items": "Popunjenost, prihod, ADR, automatska izvješća, usporedba kanala, metapretraživanje uskoro"
+      },
+      "eigentuemer": {
+        "title": "Obračun vlasnika",
+        "items": "Obračun po vlasniku s odbicima portala, potvrda kao PDF, vlastita aplikacija za vlasnike"
       }
     }
   },
@@ -842,7 +846,8 @@
       "channelManager": "Channel manager",
       "direktbuchung": "Izravna rezervacija",
       "zahlungen": "Plaćanja",
-      "mobileApp": "Mobilna aplikacija"
+      "mobileApp": "Mobilna aplikacija",
+      "eigentuemerAbrechnung": "Obračun vlasnika"
     },
     "ressourcen": {
       "hilfeCenter": "Centar za pomoć",
@@ -1947,6 +1952,105 @@
             "c": "Slobodno"
           }
         }
+      }
+    },
+    "eigentuemer": {
+      "metaBeschreibung": "Obračun vlasnika za apartmane i planinske kuće: provizija po ugovoru, odbici portala po rezervaciji, potvrda kao PDF — i vlastita aplikacija u kojoj vlasnik sve sam vidi.",
+      "headline": "Obračun koji ne izaziva dodatna pitanja.",
+      "sub": "Iz svake rezervacije izračunava se udio vlasnika — odbitak portala, provizija, paušal, sve je transparentno do pojedine noći. Vlasnik to vidi u svojoj aplikaciji prije nego što pita.",
+      "bildAlt": "Obračun vlasnika s ključnim brojevima i popisom po rezervaciji",
+      "nutzen": {
+        "a": {
+          "titel": "Svaki redak se objašnjava",
+          "text": "Cijena za gosta, provizija portala, vaša provizija, udio — razvijeno prikazuje cijeli račun, umjesto sume bez porijekla."
+        },
+        "b": {
+          "titel": "Jedan ugovor, bez spora",
+          "text": "Stopa provizije, minimalna provizija i paušal vrijede s razdobljem. Obračunava se uvijek prema ugovoru koji je tada vrijedio."
+        },
+        "c": {
+          "titel": "Više ne pita",
+          "text": "Isplata, popunjenost i računi nalaze se u njegovoj aplikaciji, upite postavlja tamo pismeno — pozivi početkom mjeseca prestaju."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Više vlasnika, svaki sa svojom stopom.",
+          "text": "Svaki vlasnik ima svoje objekte i svoju stopu provizije — 15 %, 22 %, 25 %, ovisno o dogovoru. Obračun računa za svakoga s njegovom stopom, bez da vi održavate tablice.",
+          "punkte": {
+            "a": "Stopa po vlasniku",
+            "b": "Dodijeljeni objekti",
+            "c": "Tvrtka ili privatna osoba"
+          }
+        }
+      },
+      "bildAltBlock": "Upravljanje vlasnicima s stopom provizije i dodijeljenim objektima",
+      "reiter": {
+        "abrechnung": {
+          "titel": "Obračun",
+          "heading": "Od rezervacije do udjela.",
+          "text": "Cijena za gosta prema portalu, minus provizija portala, minus vaša administrativna provizija — po rezervaciji se može razviti. Sume po objektu i za cijelo razdoblje nalaze se ispod.",
+          "punkte": {
+            "a": "Po rezervaciji",
+            "b": "Po objektu",
+            "c": "Potvrda kao PDF"
+          }
+        },
+        "vertrag": {
+          "titel": "Ugovor",
+          "heading": "Što je dogovoreno, vrijedi.",
+          "text": "Stopa provizije s razdobljem valjanosti, uz to minimalna provizija i paušal po rezervaciji. Ako se stopa promijeni, stari obračuni ostaju ispravni — računaju se prema ugovoru iz svog razdoblja.",
+          "punkte": {
+            "a": "Vrijedi od i do",
+            "b": "Minimalna provizija",
+            "c": "Paušal po rezervaciji"
+          }
+        },
+        "portale": {
+          "titel": "Odbici portala",
+          "heading": "Što portal zadržava.",
+          "text": "Po portalu jedna stopa za slučaj da ne prijavi svoj odbitak sam. Ako prijavi iznos, uvijek vrijedi prijavljeni — ništa se ne procjenjuje.",
+          "punkte": {
+            "a": "Po portalu jedna stopa",
+            "b": "Provizija i naknada za plaćanje",
+            "c": "Prijavljeni iznos ima prednost"
+          }
+        },
+        "app": {
+          "titel": "Aplikacija za vlasnike",
+          "heading": "Sam vidi.",
+          "text": "Isplata tijekom dvanaest mjeseci, popunjenost, prosječna cijena po noći — i svaki obračun s potvrdom za pregled. Vlastita aplikacija, samo za vlasnike.",
+          "punkte": {
+            "a": "Isplata tijekom vremena",
+            "b": "Obračuni po mjesecu",
+            "c": "Potvrda na telefonu"
+          }
+        },
+        "eigennutzung": {
+          "titel": "Vlastito korištenje",
+          "heading": "Dođite sami, bez poziva.",
+          "text": "Vlasnik vidi popunjenost svojih objekata i izravno unosi vlastite boravke. Zauzeti dani su blokirani – dvostruka rezervacija se uopće ne može dogoditi.",
+          "punkte": {
+            "a": "Popunjenost po objektu",
+            "b": "Unesite boravak",
+            "c": "Zauzeti dani blokirani"
+          }
+        },
+        "objektakte": {
+          "titel": "Datoteka objekta",
+          "heading": "Sve o objektu na jednom mjestu.",
+          "text": "Osnovni podaci, ključni podaci, oprema i foto album: Vlasnik vidi svoj objekt onako kako je prikazan na portalima. Upiti i dogovori vezani uz objekt odvijaju se putem aplikacije i ostaju dokumentirani — umjesto da su raspršeni po telefonskim pozivima i tri poštanska sandučića.",
+          "punkte": {
+            "a": "Osnovni podaci i oprema",
+            "b": "Foto album po objektu",
+            "c": "Dogovori dokumentirani"
+          }
+        }
+      },
+      "appAbschnitt": {
+        "eyebrow": "Aplikacija za vlasnike",
+        "titel": "Sve što vlasnik želi znati — bez da vas pita.",
+        "text": "Njegovi objekti, popunjenost tijekom dvanaest mjeseci i svaki račun za pregled: vlasnik otvara aplikaciju i vidi stanje. Vlastita aplikacija, odvojena od aplikacije tvrtke, s pristupom samo vlastitim objektima."
       }
     }
   },

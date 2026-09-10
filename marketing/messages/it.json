@@ -715,6 +715,10 @@
       "auswertungen": {
         "title": "Analisi",
         "items": "Occupazione, ricavi, ADR, report automatici, confronto tra canali, metamotori in arrivo"
+      },
+      "eigentuemer": {
+        "title": "Fatturazione proprietario",
+        "items": "Fatturazione per proprietario con detrazioni del portale, ricevuta in PDF, app proprietaria dedicata"
       }
     }
   },
@@ -842,7 +846,8 @@
       "channelManager": "Channel manager",
       "direktbuchung": "Prenotazione diretta",
       "zahlungen": "Pagamenti",
-      "mobileApp": "App mobile"
+      "mobileApp": "App mobile",
+      "eigentuemerAbrechnung": "Fatturazione proprietario"
     },
     "ressourcen": {
       "hilfeCenter": "Centro assistenza",
@@ -1947,6 +1952,105 @@
             "c": "Libero"
           }
         }
+      }
+    },
+    "eigentuemer": {
+      "metaBeschreibung": "Fatturazione proprietari per appartamenti e chalet: commissione per contratto, detrazioni portale per prenotazione, ricevuta in PDF — e un'app dedicata dove il proprietario vede tutto da sé.",
+      "headline": "La fatturazione che non genera domande.",
+      "sub": "Da ogni prenotazione viene calcolata la quota del proprietario — detrazione portale, commissione, forfettario, tutto tracciabile fino alla singola notte. Il proprietario lo vede nella sua app prima di chiedere.",
+      "bildAlt": "Fatturazione proprietari con indicatori e dettaglio per prenotazione",
+      "nutzen": {
+        "a": {
+          "titel": "Ogni riga si spiega da sé",
+          "text": "Prezzo ospite, commissione portale, la tua commissione, quota — espandendo si vede l'intera fattura, invece di una somma senza origine."
+        },
+        "b": {
+          "titel": "Un contratto, nessuna disputa",
+          "text": "Tasso di commissione, commissione minima e forfettario sono validi per un periodo. La fatturazione avviene sempre con il contratto valido in quel momento."
+        },
+        "c": {
+          "titel": "Non chiede più",
+          "text": "Pagamenti, occupazione e ricevute sono nella sua app, le domande vengono poste lì per iscritto — le chiamate all'inizio del mese cessano."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Più proprietari, ognuno con la propria tariffa.",
+          "text": "Ogni proprietario ha i suoi oggetti e il suo tasso di commissione — 15%, 22%, 25%, a seconda dell'accordo. La fatturazione calcola per ognuno con il suo, senza che tu debba gestire tabelle.",
+          "punkte": {
+            "a": "Tariffa per proprietario",
+            "b": "Oggetti assegnati",
+            "c": "Azienda o persona fisica"
+          }
+        }
+      },
+      "bildAltBlock": "Gestione proprietari con tasso di commissione e oggetti assegnati",
+      "reiter": {
+        "abrechnung": {
+          "titel": "Fatturazione",
+          "heading": "Dalla prenotazione alla quota.",
+          "text": "Prezzo ospite secondo il portale, meno commissione portale, meno la tua commissione di gestione — espandibile per ogni prenotazione. I totali per oggetto e per l'intero periodo sono sotto.",
+          "punkte": {
+            "a": "Per prenotazione",
+            "b": "Per oggetto",
+            "c": "Ricevuta in PDF"
+          }
+        },
+        "vertrag": {
+          "titel": "Contratto",
+          "heading": "Ciò che è stato concordato, è valido.",
+          "text": "Tasso di commissione con periodo di validità, più commissione minima e forfettario per prenotazione. Se il tasso cambia, le vecchie fatture rimangono corrette — calcolano con il contratto del loro periodo.",
+          "punkte": {
+            "a": "Valido da e fino a",
+            "b": "Commissione minima",
+            "c": "Forfettario per prenotazione"
+          }
+        },
+        "portale": {
+          "titel": "Detrazioni portale",
+          "heading": "Ciò che il portale trattiene.",
+          "text": "Per ogni portale una tariffa nel caso in cui non comunichi la sua detrazione. Se comunica un importo, vale sempre quello comunicato — nulla viene stimato.",
+          "punkte": {
+            "a": "Una tariffa per portale",
+            "b": "Commissione e costo di pagamento",
+            "c": "L'importo comunicato ha la precedenza"
+          }
+        },
+        "app": {
+          "titel": "App proprietari",
+          "heading": "Lo vede da sé.",
+          "text": "Pagamento su dodici mesi, occupazione, prezzo medio per notte — e ogni fattura con ricevuta da visualizzare. Un'app dedicata, solo per i proprietari.",
+          "punkte": {
+            "a": "Pagamento nel tempo",
+            "b": "Fatture mensili",
+            "c": "Ricevuta sul telefono"
+          }
+        },
+        "eigennutzung": {
+          "titel": "Uso personale",
+          "heading": "Arrivo autonomo, senza preavviso.",
+          "text": "Il proprietario visualizza l'occupazione delle sue proprietà e inserisce direttamente i propri soggiorni. I giorni occupati sono bloccati — non si verifica alcuna doppia prenotazione.",
+          "punkte": {
+            "a": "Occupazione per oggetto",
+            "b": "Inserisci soggiorno",
+            "c": "Giorni occupati bloccati"
+          }
+        },
+        "objektakte": {
+          "titel": "Scheda immobile",
+          "heading": "Tutto sull'immobile in un unico posto.",
+          "text": "Dati anagrafici, dati chiave, dotazioni e album fotografico: il proprietario vede il suo immobile così come appare sui portali. Domande e accordi relativi all'immobile vengono gestiti tramite l'app e rimangono documentati, invece di essere distribuiti tra telefonate e tre caselle di posta.",
+          "punkte": {
+            "a": "Dati anagrafici e dotazioni",
+            "b": "Album fotografico per immobile",
+            "c": "Accordi documentati"
+          }
+        }
+      },
+      "appAbschnitt": {
+        "eyebrow": "L'app del proprietario",
+        "titel": "Tutto ciò che vuole sapere, senza chiederlo a voi.",
+        "text": "Le sue proprietà, l'occupazione su dodici mesi e ogni ricevuta da consultare: il proprietario apre l'app e vede lo stato. Un'app separata, distinta da quella dell'azienda, con accesso solo alle sue proprietà."
       }
     }
   },

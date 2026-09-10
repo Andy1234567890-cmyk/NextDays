@@ -715,6 +715,10 @@
       "auswertungen": {
         "title": "Analiżi",
         "items": "Okkupanza, dħul, ADR, rapporti awtomatiċi, tqabbil bejn il-kanali, metasearch dalwaqt"
+      },
+      "eigentuemer": {
+        "title": "Kontabilità tas-sid",
+        "items": "Kontabilità għal kull sid bi tnaqqis tal-portal, irċevuta bħala PDF, app proprja għas-sidien"
       }
     }
   },
@@ -842,7 +846,8 @@
       "channelManager": "Channel manager",
       "direktbuchung": "Booking dirett",
       "zahlungen": "Ħlasijiet",
-      "mobileApp": "App mobbli"
+      "mobileApp": "App mobbli",
+      "eigentuemerAbrechnung": "Kontabilità tas-sid"
     },
     "ressourcen": {
       "hilfeCenter": "Ċentru tal-għajnuna",
@@ -1947,6 +1952,105 @@
             "c": "Ħieles"
           }
         }
+      }
+    },
+    "eigentuemer": {
+      "metaBeschreibung": "Kontabilità tas-sidien għal appartamenti u chalets tal-vaganzi: Kummissjoni għal kull kuntratt, tnaqqis tal-portal għal kull prenotazzjoni, irċevuta bħala PDF — u app proprja fejn is-sid jara kollox hu stess.",
+      "headline": "Il-kontabilità li ma tqajjem l-ebda mistoqsija.",
+      "sub": "Minn kull prenotazzjoni, il-parti tas-sid tiġi kkalkulata — tnaqqis tal-portal, kummissjoni, rata fissa, kollox traċċabbli sal-lejl individwali. Is-sid jaraha fl-app tiegħu qabel ma jistaqsi.",
+      "bildAlt": "Kontabilità tas-sidien b'indikaturi ewlenin u lista għal kull prenotazzjoni",
+      "nutzen": {
+        "a": {
+          "titel": "Kull linja tispjega ruħha",
+          "text": "Prezz tal-mistieden, kummissjoni tal-portal, il-kummissjoni tiegħek, sehem — meta tinfetaħ, il-kont sħiħ jidher, minflok somma mingħajr oriġini."
+        },
+        "b": {
+          "titel": "Kuntratt wieħed, l-ebda tilwima",
+          "text": "Ir-rata tal-kummissjoni, il-kummissjoni minima u r-rata fissa japplikaw b'perjodu. Il-kontabilità dejjem issir bil-kuntratt li kien validu dak iż-żmien."
+        },
+        "c": {
+          "titel": "Ma jistaqsix aktar",
+          "text": "Il-ħlas, l-okkupazzjoni u l-irċevuti jinsabu fl-app tiegħu, u hu jagħmel mistoqsijiet bil-miktub hemmhekk — it-telefonati fil-bidu tax-xahar jieqfu."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Diversi sidien, kull wieħed bir-rata tiegħu.",
+          "text": "Kull sid għandu l-oġġetti tiegħu u r-rata tal-kummissjoni tiegħu — 15%, 22%, 25%, skont il-ftehim. Il-kontabilità tikkalkula għal kull wieħed bir-rata tiegħu, mingħajr ma jkollok iżżomm tabelli.",
+          "punkte": {
+            "a": "Rata għal kull sid",
+            "b": "Oġġetti assenjati",
+            "c": "Kumpanija jew persuna privata"
+          }
+        }
+      },
+      "bildAltBlock": "Ġestjoni tas-sidien b'rata ta' kummissjoni u oġġetti assenjati",
+      "reiter": {
+        "abrechnung": {
+          "titel": "Kontabilità",
+          "heading": "Mill-prenotazzjoni għas-sehem.",
+          "text": "Prezz tal-mistieden skont il-portal, nieqes il-kummissjoni tal-portal, nieqes il-kummissjoni tal-ġestjoni tiegħek — jista' jinfetaħ għal kull prenotazzjoni. Is-somom għal kull oġġett u għall-perjodu kollu jinsabu taħt.",
+          "punkte": {
+            "a": "Għal kull prenotazzjoni",
+            "b": "Għal kull oġġett",
+            "c": "Irċevuta bħala PDF"
+          }
+        },
+        "vertrag": {
+          "titel": "Kuntratt",
+          "heading": "Dak li kien miftiehem japplika.",
+          "text": "Rata ta' kummissjoni b'perjodu ta' validità, flimkien ma' kummissjoni minima u rata fissa għal kull prenotazzjoni. Jekk ir-rata tinbidel, il-kontijiet qodma jibqgħu korretti — jikkalkulaw bil-kuntratt tal-perjodu tagħhom.",
+          "punkte": {
+            "a": "Validu minn u sa",
+            "b": "Kummissjoni minima",
+            "c": "Rata fissa għal kull prenotazzjoni"
+          }
+        },
+        "portale": {
+          "titel": "Tnaqqis tal-portal",
+          "heading": "Dak li jżomm il-portal.",
+          "text": "Għal kull portal rata f'każ li ma jirrapportax it-tnaqqis tiegħu stess. Jekk jirrapporta ammont, dejjem japplika l-ammont irrapportat — xejn ma jiġi stmat.",
+          "punkte": {
+            "a": "Rata għal kull portal",
+            "b": "Kummissjoni u tariffa tal-ħlas",
+            "c": "Ammont irrapportat għandu prijorità"
+          }
+        },
+        "app": {
+          "titel": "App tas-sid",
+          "heading": "Jaraha hu stess.",
+          "text": "Ħlas fuq tnax-il xahar, okkupazzjoni, prezz medju għal kull lejl — u kull kontabilità b'irċevuta biex taraha. App proprja, biss għas-sidien.",
+          "punkte": {
+            "a": "Ħlas matul iż-żmien",
+            "b": "Kontijiet għal kull xahar",
+            "c": "Irċevuta fuq it-telefon"
+          }
+        },
+        "eigennutzung": {
+          "titel": "Użu personali",
+          "heading": "Wasal waħdek, mingħajr telefonata.",
+          "text": "Is-sid jara l-okkupanza tal-proprjetajiet tiegħu u jdaħħal direttament is-soġġorni tiegħu stess. Il-ġranet okkupati huma mblukkati — ma tinħoloqx prenotazzjoni doppja.",
+          "punkte": {
+            "a": "Okkupanza għal kull proprjetà",
+            "b": "Daħħal soġġorn",
+            "c": "Ġranet okkupati mblukkati"
+          }
+        },
+        "objektakte": {
+          "titel": "Fajl tal-proprjetà",
+          "heading": "Kollox dwar il-proprjetà f'post wieħed.",
+          "text": "Dejta bażika, dejta ewlenija, tagħmir u album tar-ritratti: Is-sid jara l-proprjetà tiegħu kif tidher fuq il-portali. Mistoqsijiet u ftehimiet relatati mal-proprjetà jiġu ġestiti permezz tal-app u jibqgħu dokumentati — minflok ma jkunu mxerrda fuq telefonati u tliet kaxxi tal-posta.",
+          "punkte": {
+            "a": "Dejta bażika u tagħmir",
+            "b": "Album tar-ritratti għal kull proprjetà",
+            "c": "Ftehimiet dokumentati"
+          }
+        }
+      },
+      "appAbschnitt": {
+        "eyebrow": "L-app tas-sid",
+        "titel": "Dak kollu li jrid ikun jaf — mingħajr ma jistaqsik.",
+        "text": "Il-proprjetajiet tiegħu, l-okkupanza fuq tnax-il xahar u kull irċevuta għal referenza: is-sid jiftaħ l-app u jara s-sitwazzjoni. App separata, differenti minn dik tal-operat, b'aċċess biss għall-proprjetajiet tiegħu stess."
       }
     }
   },

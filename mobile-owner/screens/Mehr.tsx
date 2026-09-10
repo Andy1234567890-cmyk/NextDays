@@ -61,7 +61,7 @@ export default function Mehr({ navigation }: { navigation: Nav }) {
           <Reihe
             icon="chat"
             titel={txt("chat.titel")}
-            unter={txt("chat.verschluesselt")}
+            unter={txt("chat.unter")}
             auf={() => navigation.navigate("Nachrichten")}
           />
           <Reihe

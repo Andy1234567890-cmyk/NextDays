@@ -35,6 +35,11 @@ import {
   AppAufnahmenMobilReihe,
   TelefonBuehne,
 } from "@/components/marketing/app-aufnahme-mobil";
+import {
+  AusschnittPaar,
+  OberflaechenAusschnitt,
+  type AusschnittName,
+} from "@/components/marketing/oberflaechen-ausschnitt";
 import { Button } from "@/components/ui/button";
 import { SIGNUP_URL } from "@/lib/app-url";
 
@@ -57,6 +62,10 @@ export type Reiter = {
   /** Echte Telefon-Aufnahmen; gesetzt schlagen sie die gebaute Grafik. Eine
    *  Aufnahme der Sache ist immer der stärkere Beleg als eine Nachbildung. */
   telefon?: readonly AppMotivMobil[];
+  /** Echte Ausschnitte aus der Oberfläche (ein oder zwei). Gelten wie
+   *  `telefon`: liegt eine Aufnahme vor, wird sie gezeigt — die gebaute
+   *  Grafik ist der Ersatz für das, was noch nicht fotografiert ist. */
+  ausschnitt?: readonly AusschnittName[];
 };
 
 export function FunktionsReiter({
@@ -84,7 +93,17 @@ export function FunktionsReiter({
   }
 
   return (
-    <section className="bg-background">
+    // `relative` + `isolate`: Der Farbschimmer darunter liegt in einer eigenen
+    // Ebene, damit er hinter den Knöpfen liegt und nicht über dem Inhalt. Ohne
+    // ihn hätte `backdrop-blur` an den Knöpfen nichts zu verwischen — auf einer
+    // einfarbigen Fläche ist der Effekt physikalisch unsichtbar.
+    <section className="relative isolate overflow-hidden bg-background">
+      {/* Zwei weiche Farbflecken in der Akzentfarbe, sehr blass. Sie tragen
+          die Glasoptik der Reiterknöpfe und bleiben sonst unauffällig. */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -top-24 left-1/2 -z-10 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-surface-accent opacity-60 blur-3xl"
+      />
       <div className="mx-auto max-w-7xl px-6 py-20">
         <h2 className="mx-auto max-w-3xl text-center font-display text-3xl font-extrabold tracking-tight sm:text-4xl">
           {tr("reiterHeading")}
@@ -95,7 +114,21 @@ export function FunktionsReiter({
           role="tablist"
           aria-label={tr("reiterHeading")}
           onKeyDown={beiTaste}
-          className="mx-auto mt-10 flex max-w-5xl flex-wrap justify-center gap-3"
+          // Am Telefon EINE gerollte Reihe, ab `lg` umbrechend zentriert.
+          //
+          // Zwei Fassungen davor waren falsch, beide am 10.09.2026 am Gerät
+          // gesehen: `flex-wrap` gab jedem Knopf seine Textbreite und ergab
+          // zerfranste Reihen; ein Zweispalten-Raster machte die Spalten zwar
+          // gleich breit, presste aber „Portal-Abzüge" und „Eigentümer-App"
+          // auf zwei Zeilen — also unterschiedlich hohe Knöpfe, schlimmer als
+          // vorher. Die Wortlängen sind je Seite und je Sprache verschieden;
+          // kein festes Spaltenraster trifft sie alle.
+          // Deshalb: `whitespace-nowrap` verbietet den Umbruch IM Knopf,
+          // waagerechtes Rollen fängt auf, was nicht in eine Reihe passt.
+          // `snap` lässt die Leiste an Knopfkanten einrasten,
+          // `[-ms-overflow-style:none] [scrollbar-width:none]` blendet den
+          // Balken aus, ohne das Rollen zu nehmen.
+          className="mx-auto mt-10 flex max-w-5xl snap-x snap-mandatory gap-3 overflow-x-auto px-6 pb-2 [-ms-overflow-style:none] [scrollbar-width:none] lg:flex-wrap lg:justify-center lg:overflow-visible lg:px-0 [&::-webkit-scrollbar]:hidden"
         >
           {reiter.map((r, i) => (
             <button
@@ -110,10 +143,20 @@ export function FunktionsReiter({
               aria-controls={`${id}-panel-${i}`}
               tabIndex={aktiv === i ? 0 : -1}
               onClick={() => setAktiv(i)}
-              className={`rounded-2xl border px-5 py-3 text-sm font-semibold transition-colors ${
+              // `whitespace-nowrap` + `shrink-0`: Der Knopf behält seine eine
+              // Zeile und wird nicht schmalgedrückt, bis der Text umbricht.
+              // Zweizeilige Knöpfe sind ausgeschlossen — sie ergeben
+              // unterschiedlich hohe Schaltflächen in einer Reihe.
+              // Glasoptik: `backdrop-blur` allein bleibt UNSICHTBAR, solange
+              // hinter dem Knopf eine einfarbige Fläche liegt — es gibt dann
+              // nichts zu verwischen. Sichtbar wird der Effekt durch die
+              // Kombination: durchscheinender Grund, heller Innenrand
+              // (`ring-inset` als Lichtkante) und weicher Schatten. Der aktive
+              // Knopf bleibt deckend, damit die Wahl eindeutig bleibt.
+              className={`shrink-0 snap-start whitespace-nowrap rounded-2xl px-5 py-3 text-sm font-semibold shadow-lg shadow-foreground/5 ring-1 ring-inset backdrop-blur-xl transition-all ${
                 aktiv === i
-                  ? "border-accent bg-accent text-accent-foreground shadow-float"
-                  : "border-border bg-card text-foreground hover:border-accent/40 hover:bg-surface-warm"
+                  ? "bg-accent/90 text-accent-foreground ring-accent/50 shadow-float"
+                  : "bg-card/40 text-foreground ring-border/50 hover:bg-card/70 hover:ring-accent/40"
               }`}
             >
               {t(`${r.key}.titel`)}
@@ -121,8 +164,10 @@ export function FunktionsReiter({
           ))}
         </div>
 
-        {/* Panels */}
-        <div className="mt-14">
+        {/* Panels. Der Abstand ist am Telefon kleiner, damit das Bild sichtbar
+            zum eben gedrückten Knopf gehört — 3,5 rem schoben es dort unter
+            die Falz, und der Zusammenhang ging verloren. */}
+        <div className="mt-8 lg:mt-14">
           {reiter.map((r, i) => (
             <div
               key={r.key}
@@ -130,7 +175,7 @@ export function FunktionsReiter({
               id={`${id}-panel-${i}`}
               aria-labelledby={`${id}-tab-${i}`}
               hidden={aktiv !== i}
-              className="grid min-w-0 items-center gap-12 lg:grid-cols-2"
+              className="grid min-w-0 items-center gap-8 lg:grid-cols-2 lg:gap-12"
             >
               <div className="order-2 min-w-0 lg:order-1">
                 <p className="eyebrow">{t(`${r.key}.titel`)}</p>
@@ -157,6 +202,20 @@ export function FunktionsReiter({
                     alt={t(`${r.key}.heading`)}
                   />
                 </TelefonBuehne>
+              ) : r.ausschnitt ? (
+                <div className="order-1 min-w-0 lg:order-2">
+                  {r.ausschnitt.length === 2 ? (
+                    <AusschnittPaar
+                      namen={[r.ausschnitt[0], r.ausschnitt[1]]}
+                      alt={t(`${r.key}.heading`)}
+                    />
+                  ) : (
+                    <OberflaechenAusschnitt
+                      name={r.ausschnitt[0]}
+                      alt={t(`${r.key}.heading`)}
+                    />
+                  )}
+                </div>
               ) : (
                 <div className="order-1 min-w-0 rounded-[2rem] bg-surface-warm p-6 sm:p-8 lg:order-2 lg:p-10">
                   <Grafik

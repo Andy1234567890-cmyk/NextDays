@@ -715,6 +715,10 @@
       "auswertungen": {
         "title": "Analizy",
         "items": "Obłożenie, przychód, ADR, automatyczne raporty, porównanie kanałów, metawyszukiwarki wkrótce"
+      },
+      "eigentuemer": {
+        "title": "Rozliczenie właściciela",
+        "items": "Rozliczenie dla każdego właściciela z potrąceniami portalu, potwierdzenie w PDF, własna aplikacja dla właściciela"
       }
     }
   },
@@ -842,7 +846,8 @@
       "channelManager": "Channel manager",
       "direktbuchung": "Rezerwacje bezpośrednie",
       "zahlungen": "Płatności",
-      "mobileApp": "Aplikacja mobilna"
+      "mobileApp": "Aplikacja mobilna",
+      "eigentuemerAbrechnung": "Rozliczenie właściciela"
     },
     "ressourcen": {
       "hilfeCenter": "Centrum pomocy",
@@ -1947,6 +1952,105 @@
             "c": "Wolne"
           }
         }
+      }
+    },
+    "eigentuemer": {
+      "metaBeschreibung": "Rozliczenia właścicieli apartamentów i domków letniskowych: prowizja za umowę, potrącenia portalu za rezerwację, dowód w PDF — i własna aplikacja, w której właściciel widzi wszystko sam.",
+      "headline": "Rozliczenie, które nie budzi pytań.",
+      "sub": "Z każdej rezerwacji obliczany jest udział właściciela — potrącenie portalu, prowizja, ryczałt, wszystko możliwe do prześledzenia aż do pojedynczej nocy. Właściciel widzi to w swojej aplikacji, zanim zapyta.",
+      "bildAlt": "Rozliczenie właściciela z kluczowymi wskaźnikami i zestawieniem dla każdej rezerwacji",
+      "nutzen": {
+        "a": {
+          "titel": "Każda linia jest zrozumiała",
+          "text": "Cena dla gościa, prowizja portalu, Twoja prowizja, udział — po rozwinięciu widoczny jest cały rachunek, zamiast sumy bez pochodzenia."
+        },
+        "b": {
+          "titel": "Jedna umowa, żadnych sporów",
+          "text": "Stawka prowizji, minimalna prowizja i ryczałt obowiązują z okresem. Rozliczenie zawsze odbywa się na podstawie umowy, która obowiązywała w danym czasie."
+        },
+        "c": {
+          "titel": "Już nie pyta",
+          "text": "Wypłaty, obłożenie i dokumenty są w jego aplikacji, zapytania składa tam pisemnie — telefony na początku miesiąca ustają."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Wielu właścicieli, każdy z własną stawką.",
+          "text": "Każdy właściciel ma swoje obiekty i swoją stawkę prowizji — 15%, 22%, 25%, w zależności od umowy. Rozliczenie oblicza dla każdego według jego stawki, bez konieczności prowadzenia tabel.",
+          "punkte": {
+            "a": "Stawka za właściciela",
+            "b": "Przypisane obiekty",
+            "c": "Firma lub osoba prywatna"
+          }
+        }
+      },
+      "bildAltBlock": "Zarządzanie właścicielami ze stawką prowizji i przypisanymi obiektami",
+      "reiter": {
+        "abrechnung": {
+          "titel": "Rozliczenie",
+          "heading": "Od rezerwacji do udziału.",
+          "text": "Cena dla gościa według portalu, minus prowizja portalu, minus Twoja prowizja za zarządzanie — rozwijane dla każdej rezerwacji. Sumy dla każdego obiektu i za cały okres znajdują się poniżej.",
+          "punkte": {
+            "a": "Za rezerwację",
+            "b": "Za obiekt",
+            "c": "Dowód w PDF"
+          }
+        },
+        "vertrag": {
+          "titel": "Umowa",
+          "heading": "Obowiązuje to, co zostało uzgodnione.",
+          "text": "Stawka prowizji z okresem ważności, do tego minimalna prowizja i ryczałt za rezerwację. Jeśli stawka się zmieni, stare rozliczenia pozostają prawidłowe — obliczają się według umowy z ich okresu.",
+          "punkte": {
+            "a": "Obowiązuje od i do",
+            "b": "Minimalna prowizja",
+            "c": "Ryczałt za rezerwację"
+          }
+        },
+        "portale": {
+          "titel": "Potrącenia portalu",
+          "heading": "Co portal zatrzymuje.",
+          "text": "Dla każdego portalu stawka na wypadek, gdyby nie zgłaszał własnego potrącenia. Jeśli zgłosi kwotę, zawsze obowiązuje zgłoszona — nic nie jest szacowane.",
+          "punkte": {
+            "a": "Stawka za portal",
+            "b": "Prowizja i opłata za płatność",
+            "c": "Zgłoszona kwota ma pierwszeństwo"
+          }
+        },
+        "app": {
+          "titel": "Aplikacja właściciela",
+          "heading": "Widzi to sam.",
+          "text": "Wypłata przez dwanaście miesięcy, obłożenie, średnia cena za noc — i każde rozliczenie z dowodem do wglądu. Własna aplikacja, tylko dla właścicieli.",
+          "punkte": {
+            "a": "Przebieg wypłat",
+            "b": "Rozliczenia miesięczne",
+            "c": "Dowód w telefonie"
+          }
+        },
+        "eigennutzung": {
+          "titel": "Użytek własny",
+          "heading": "Przyjazd samodzielny, bez dzwonienia.",
+          "text": "Właściciel widzi obłożenie swoich obiektów i bezpośrednio wprowadza własne pobyty. Zajęte dni są zablokowane — podwójna rezerwacja w ogóle nie powstaje.",
+          "punkte": {
+            "a": "Obłożenie na obiekt",
+            "b": "Wprowadź pobyt",
+            "c": "Zajęte dni zablokowane"
+          }
+        },
+        "objektakte": {
+          "titel": "Karta obiektu",
+          "heading": "Wszystko o obiekcie w jednym miejscu.",
+          "text": "Dane podstawowe, kluczowe dane, wyposażenie i album zdjęć: Właściciel widzi swój obiekt tak, jak jest prezentowany na portalach. Zapytania i ustalenia dotyczące obiektu odbywają się za pośrednictwem aplikacji i są dokumentowane — zamiast być rozproszone w rozmowach telefonicznych i trzech skrzynkach pocztowych.",
+          "punkte": {
+            "a": "Dane podstawowe i wyposażenie",
+            "b": "Album zdjęć dla każdego obiektu",
+            "c": "Ustalenia udokumentowane"
+          }
+        }
+      },
+      "appAbschnitt": {
+        "eyebrow": "Aplikacja właściciela",
+        "titel": "Wszystko, co chce wiedzieć — bez pytania.",
+        "text": "Jego obiekty, obłożenie w ciągu dwunastu miesięcy i każdy dokument do wglądu: właściciel otwiera aplikację i widzi stan. Własna aplikacja, oddzielona od aplikacji operacyjnej, z dostępem tylko do jego własnych obiektów."
       }
     }
   },

@@ -48,6 +48,8 @@ const FUNKTION_NOTIZ: Record<FunktionsSchluessel, string> = {
   preise: "Rates, seasons, length-of-stay pricing and discounts",
   team: "Team accounts, roles and permissions",
   app: "Mobile apps for operators and guests",
+  eigentuemer:
+    "Owner statements: per-booking breakdown from gross rate through channel deduction to the owner's share, commission contracts with validity periods, PDF statement, and a dedicated owner app",
   auswertungen: "Reports on occupancy, revenue and channel performance",
 };
 

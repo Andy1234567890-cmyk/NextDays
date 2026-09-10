@@ -715,6 +715,10 @@
       "auswertungen": {
         "title": "Analyser",
         "items": "Beläggning, intäkter, ADR, automatiska rapporter, kanaljämförelse, metasök kommer snart"
+      },
+      "eigentuemer": {
+        "title": "Ägarfakturering",
+        "items": "Fakturering per ägare med portalavdrag, kvitto som PDF, egen app för ägare"
       }
     }
   },
@@ -842,7 +846,8 @@
       "channelManager": "Channel manager",
       "direktbuchung": "Direktbokning",
       "zahlungen": "Betalningar",
-      "mobileApp": "Mobilapp"
+      "mobileApp": "Mobilapp",
+      "eigentuemerAbrechnung": "Ägarfakturering"
     },
     "ressourcen": {
       "hilfeCenter": "Hjälpcenter",
@@ -1787,6 +1792,105 @@
             "c": "Ledigt"
           }
         }
+      }
+    },
+    "eigentuemer": {
+      "metaBeschreibung": "Ägarredovisning för semesterbostäder och stugor: provision per avtal, portalavdrag per bokning, kvitto som PDF – och en egen app där ägaren ser allt själv.",
+      "headline": "Redovisningen som inte väcker följdfrågor.",
+      "sub": "Från varje bokning beräknas ägarens andel – portalavdrag, provision, fast avgift, allt spårbart ner till enskild natt. Ägaren ser det i sin app innan hen frågar.",
+      "bildAlt": "Ägarredovisning med nyckeltal och specifikation per bokning",
+      "nutzen": {
+        "a": {
+          "titel": "Varje rad förklarar sig själv",
+          "text": "Gästpris, portalprovision, din provision, andel – utfällt visas hela fakturan, istället för en summa utan ursprung."
+        },
+        "b": {
+          "titel": "Ett avtal, ingen tvist",
+          "text": "Provisionssats, minimiprovision och fast avgift gäller med tidsperiod. Avräkning sker alltid med det avtal som gällde då."
+        },
+        "c": {
+          "titel": "Hen frågar inte längre",
+          "text": "Utbetalning, beläggning och kvitton finns i hans app, frågor ställer han skriftligen där – samtalen i början av månaden upphör."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Flera ägare, var och en med egen sats.",
+          "text": "Varje ägare har sina objekt och sin provisionssats – 15 %, 22 %, 25 %, beroende på överenskommelse. Redovisningen beräknar för var och en med sin egen, utan att du behöver underhålla tabeller.",
+          "punkte": {
+            "a": "Sats per ägare",
+            "b": "Objekt tilldelade",
+            "c": "Företag eller privatperson"
+          }
+        }
+      },
+      "bildAltBlock": "Ägaradministration med provisionssats och tilldelade objekt",
+      "reiter": {
+        "abrechnung": {
+          "titel": "Redovisning",
+          "heading": "Från bokning till andel.",
+          "text": "Gästpris enligt portal, minus portalprovision, minus din administrationsprovision – utfällbart per bokning. Summor per objekt och för hela perioden står nedanför.",
+          "punkte": {
+            "a": "Per bokning",
+            "b": "Per objekt",
+            "c": "Kvitto som PDF"
+          }
+        },
+        "vertrag": {
+          "titel": "Avtal",
+          "heading": "Det som överenskommits gäller.",
+          "text": "Provisionssats med giltighetsperiod, samt minimiprovision och fast avgift per bokning. Om satsen ändras förblir gamla redovisningar korrekta – de beräknas med avtalet för sin period.",
+          "punkte": {
+            "a": "Giltigt från och till",
+            "b": "Minimiprovision",
+            "c": "Fast avgift per bokning"
+          }
+        },
+        "portale": {
+          "titel": "Portalavdrag",
+          "heading": "Vad portalen behåller.",
+          "text": "Per portal en sats för det fall att den inte själv rapporterar sitt avdrag. Om den rapporterar ett belopp, gäller alltid det rapporterade – inget uppskattas.",
+          "punkte": {
+            "a": "En sats per portal",
+            "b": "Provision och betalningsavgift",
+            "c": "Rapporterat belopp har företräde"
+          }
+        },
+        "app": {
+          "titel": "Ägarapp",
+          "heading": "Hen ser det själv.",
+          "text": "Utbetalning över tolv månader, beläggning, genomsnittspris per natt – och varje redovisning med kvitto att se. En egen app, endast för ägare.",
+          "punkte": {
+            "a": "Utbetalning över tid",
+            "b": "Redovisningar per månad",
+            "c": "Kvitto i telefonen"
+          }
+        },
+        "eigennutzung": {
+          "titel": "Egen användning",
+          "heading": "Anländ själv, utan att ringa.",
+          "text": "Ägaren ser beläggningen för sina objekt och registrerar egna vistelser direkt. Bokade dagar är spärrade – en dubbelbokning uppstår inte ens.",
+          "punkte": {
+            "a": "Beläggning per objekt",
+            "b": "Registrera vistelse",
+            "c": "Bokade dagar spärrade"
+          }
+        },
+        "objektakte": {
+          "titel": "Objektfil",
+          "heading": "Allt om objektet på ett ställe.",
+          "text": "Grunddata, nyckeldata, utrustning och fotoalbum: Ägaren ser sitt objekt som det presenteras på portalerna. Frågor och överenskommelser hanteras objektrelaterat via appen och dokumenteras – istället för att spridas över telefonsamtal och tre inkorgar.",
+          "punkte": {
+            "a": "Grunddata och utrustning",
+            "b": "Fotoalbum per objekt",
+            "c": "Överenskommelser dokumenterade"
+          }
+        }
+      },
+      "appAbschnitt": {
+        "eyebrow": "Ägarens app",
+        "titel": "Allt han vill veta – utan att fråga dig.",
+        "text": "Hans objekt, beläggningen över tolv månader och varje kvitto för granskning: ägaren öppnar appen och ser statusen. En egen app, separat från företagets, med åtkomst endast till hans egna objekt."
       }
     }
   },

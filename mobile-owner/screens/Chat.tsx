@@ -322,8 +322,6 @@ export function Chat({ route }: Props) {
           rollen.current?.scrollToEnd({ animated: false })
         }
       >
-        <Hinweis text={t("chat.verschluesseltErklaerung")} />
-
         {/* Der Meldeweg muss GEFUNDEN werden — ein Menü, das nur hinter einem
             langen Druck liegt, findet niemand. Deshalb steht der Zugang auch
             sichtbar über dem Verlauf. */}
@@ -516,6 +514,13 @@ function Nachricht({ blase, melden }: { blase: Blase; melden: () => void }) {
   );
 }
 
+// Derzeit ungenutzt: sie trug die Zeile „Ende-zu-Ende verschlüsselt" über dem
+// Verlauf. Die ist am 09.09.2026 entfallen, weil der Chat seit dem Umbau
+// serverseitig verschlüsselt ist (`owner_chat/serverkrypto.py`) und die Zusage
+// damit nicht mehr galt. Die Komponente bleibt stehen, weil ein zentrierter
+// Hinweis mit Schloss-Symbol über dem Verlauf wiederkommen kann — etwa wenn
+// der Chat eine andere Zusicherung bekommt, die belegbar ist.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function Hinweis({ text }: { text: string }) {
   const theme = useTheme();
   return (

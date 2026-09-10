@@ -715,6 +715,10 @@
       "auswertungen": {
         "title": "Analyser",
         "items": "Belægning, omsætning, ADR, automatiske rapporter, kanalsammenligning, metasøgning kommer snart"
+      },
+      "eigentuemer": {
+        "title": "Ejerregnskab",
+        "items": "Fakturering pr. ejer med portalfradrag, kvittering som PDF, egen app til ejere"
       }
     }
   },
@@ -842,7 +846,8 @@
       "channelManager": "Channel manager",
       "direktbuchung": "Direkte booking",
       "zahlungen": "Betalinger",
-      "mobileApp": "Mobilapp"
+      "mobileApp": "Mobilapp",
+      "eigentuemerAbrechnung": "Ejerregnskab"
     },
     "ressourcen": {
       "hilfeCenter": "Hjælpecenter",
@@ -1787,6 +1792,105 @@
             "c": "Ledigt"
           }
         }
+      }
+    },
+    "eigentuemer": {
+      "metaBeschreibung": "Ejerafregning for ferieboliger og hytter: provision pr. kontrakt, portalfradrag pr. booking, kvittering som PDF – og en egen app, hvor ejeren selv kan se alt.",
+      "headline": "Afregningen, der ikke udløser spørgsmål.",
+      "sub": "Fra hver booking beregnes ejerens andel – portalfradrag, provision, fast gebyr, alt kan spores ned til den enkelte nat. Ejeren ser det i sin app, før han spørger.",
+      "bildAlt": "Ejerafregning med nøgletal og opgørelse pr. booking",
+      "nutzen": {
+        "a": {
+          "titel": "Hver linje forklarer sig selv",
+          "text": "Gæstepris, portalprovision, din provision, andel – udfoldet vises hele regningen i stedet for en sum uden oprindelse."
+        },
+        "b": {
+          "titel": "Én kontrakt, ingen strid",
+          "text": "Provisionssats, minimumsprovision og fast gebyr gælder med periode. Afregning sker altid med den kontrakt, der var gældende dengang."
+        },
+        "c": {
+          "titel": "Han spørger ikke længere",
+          "text": "Udbetaling, belægning og kvitteringer er i hans app, han stiller spørgsmål skriftligt der – opkaldene i begyndelsen af måneden stopper."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Flere ejere, hver med egen sats.",
+          "text": "Hver ejer har sine objekter og sin provisionssats – 15 %, 22 %, 25 %, afhængigt af aftalen. Afregningen beregner for hver med sin egen, uden at du skal vedligeholde tabeller.",
+          "punkte": {
+            "a": "Sats pr. ejer",
+            "b": "Objekter tildelt",
+            "c": "Firma eller privatperson"
+          }
+        }
+      },
+      "bildAltBlock": "Ejeradministration med provisionssats og tildelte objekter",
+      "reiter": {
+        "abrechnung": {
+          "titel": "Afregning",
+          "heading": "Fra booking til andel.",
+          "text": "Gæstepris ifølge portal, minus portalprovision, minus din administrationsprovision – kan udfoldes pr. booking. Summer pr. objekt og for hele perioden står nedenunder.",
+          "punkte": {
+            "a": "Pr. booking",
+            "b": "Pr. objekt",
+            "c": "Kvittering som PDF"
+          }
+        },
+        "vertrag": {
+          "titel": "Kontrakt",
+          "heading": "Det aftalte gælder.",
+          "text": "Provisionssats med gyldighedsperiode, dertil minimumsprovision og fast gebyr pr. booking. Ændres satsen, forbliver gamle afregninger korrekte – de beregner med kontraktens periode.",
+          "punkte": {
+            "a": "Gældende fra og til",
+            "b": "Minimumsprovision",
+            "c": "Fast gebyr pr. booking"
+          }
+        },
+        "portale": {
+          "titel": "Portalfradrag",
+          "heading": "Hvad portalen tilbageholder.",
+          "text": "Pr. portal en sats for det tilfælde, at den ikke selv meddeler sit fradrag. Meddeler den et beløb, gælder altid det meddelte – intet estimeres.",
+          "punkte": {
+            "a": "Pr. portal en sats",
+            "b": "Provision og betalingsgebyr",
+            "c": "Meddelt beløb har forrang"
+          }
+        },
+        "app": {
+          "titel": "Ejer-app",
+          "heading": "Han ser det selv.",
+          "text": "Udbetaling over tolv måneder, belægning, gennemsnitspris pr. nat – og hver afregning med kvittering til gennemsyn. En egen app, kun for ejere.",
+          "punkte": {
+            "a": "Udbetaling over tid",
+            "b": "Afregninger pr. måned",
+            "c": "Kvittering på telefonen"
+          }
+        },
+        "eigennutzung": {
+          "titel": "Egen brug",
+          "heading": "Ankom selv, uden at ringe.",
+          "text": "Ejeren ser belægningen af sine ejendomme og indtaster selv egne ophold direkte. Optagede dage er spærret – en dobbeltbooking opstår slet ikke.",
+          "punkte": {
+            "a": "Belægning pr. ejendom",
+            "b": "Indtast ophold",
+            "c": "Optagede dage spærret"
+          }
+        },
+        "objektakte": {
+          "titel": "Objektmappe",
+          "heading": "Alt om objektet samlet ét sted.",
+          "text": "Stamdata, nøgledata, udstyr og fotoalbum: Ejeren ser sit objekt, som det vises på portalerne. Forespørgsler og aftaler vedrørende objektet håndteres via appen og forbliver dokumenteret – i stedet for at være spredt ud over telefonopkald og tre indbakker.",
+          "punkte": {
+            "a": "Stamdata og udstyr",
+            "b": "Fotoalbum pr. objekt",
+            "c": "Aftaler dokumenteret"
+          }
+        }
+      },
+      "appAbschnitt": {
+        "eyebrow": "Ejerens app",
+        "titel": "Alt, hvad han vil vide – uden at spørge dig.",
+        "text": "Hans ejendomme, belægning over tolv måneder og hver kvittering til gennemlæsning: ejeren åbner appen og ser status. En separat app, adskilt fra virksomhedens, med adgang kun til hans egne ejendomme."
       }
     }
   },

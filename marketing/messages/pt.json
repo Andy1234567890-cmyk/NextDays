@@ -715,6 +715,10 @@
       "auswertungen": {
         "title": "Análises",
         "items": "Ocupação, receita, ADR, relatórios automáticos, comparação de canais, metapesquisa em breve"
+      },
+      "eigentuemer": {
+        "title": "Faturação do proprietário",
+        "items": "Faturação por proprietário com deduções do portal, recibo em PDF, aplicação própria para proprietários"
       }
     }
   },
@@ -842,7 +846,8 @@
       "channelManager": "Channel manager",
       "direktbuchung": "Reserva direta",
       "zahlungen": "Pagamentos",
-      "mobileApp": "Aplicação móvel"
+      "mobileApp": "Aplicação móvel",
+      "eigentuemerAbrechnung": "Faturação do proprietário"
     },
     "ressourcen": {
       "hilfeCenter": "Centro de ajuda",
@@ -1947,6 +1952,105 @@
             "c": "Livre"
           }
         }
+      }
+    },
+    "eigentuemer": {
+      "metaBeschreibung": "Fatura do proprietário para apartamentos e chalés de férias: comissão por contrato, deduções do portal por reserva, recibo em PDF — e um aplicativo próprio onde o proprietário vê tudo por si mesmo.",
+      "headline": "A fatura que não gera dúvidas.",
+      "sub": "A parte do proprietário é calculada a partir de cada reserva — dedução do portal, comissão, taxa fixa, tudo rastreável até a noite individual. O proprietário vê isso em seu aplicativo antes de perguntar.",
+      "bildAlt": "Fatura do proprietário com indicadores e detalhamento por reserva",
+      "nutzen": {
+        "a": {
+          "titel": "Cada linha se explica",
+          "text": "Preço do hóspede, comissão do portal, sua comissão, participação — a fatura completa é exibida, em vez de um total sem origem."
+        },
+        "b": {
+          "titel": "Um contrato, sem disputas",
+          "text": "A taxa de comissão, a comissão mínima e a taxa fixa são válidas por um período. A faturação é sempre feita com base no contrato que estava em vigor na época."
+        },
+        "c": {
+          "titel": "Ele não pergunta mais",
+          "text": "Pagamento, ocupação e recibos estão na sua aplicação, ele faz perguntas por escrito lá — as chamadas no início do mês param."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Vários proprietários, cada um com sua própria taxa.",
+          "text": "Cada proprietário tem seus objetos e sua taxa de comissão — 15%, 22%, 25%, dependendo do acordo. A fatura calcula para cada um com a sua, sem que você precise manter tabelas.",
+          "punkte": {
+            "a": "Taxa por proprietário",
+            "b": "Objetos atribuídos",
+            "c": "Empresa ou pessoa física"
+          }
+        }
+      },
+      "bildAltBlock": "Gestão de proprietários com taxa de comissão e objetos atribuídos",
+      "reiter": {
+        "abrechnung": {
+          "titel": "Fatura",
+          "heading": "Da reserva à participação.",
+          "text": "Preço do hóspede de acordo com o portal, menos a comissão do portal, menos sua comissão de administração — expansível por reserva. Os totais por objeto e para todo o período são exibidos abaixo.",
+          "punkte": {
+            "a": "Por reserva",
+            "b": "Por objeto",
+            "c": "Recibo em PDF"
+          }
+        },
+        "vertrag": {
+          "titel": "Contrato",
+          "heading": "O que foi acordado, vale.",
+          "text": "Taxa de comissão com período de validade, além de comissão mínima e taxa fixa por reserva. Se a taxa mudar, as faturas antigas permanecem corretas — elas calculam com o contrato de seu período.",
+          "punkte": {
+            "a": "Válido de e até",
+            "b": "Comissão mínima",
+            "c": "Taxa fixa por reserva"
+          }
+        },
+        "portale": {
+          "titel": "Deduções do portal",
+          "heading": "O que o portal retém.",
+          "text": "Para cada portal, uma taxa para o caso de não reportar sua dedução. Se reportar um valor, o valor reportado sempre prevalece — nada é estimado.",
+          "punkte": {
+            "a": "Uma taxa por portal",
+            "b": "Comissão e taxa de pagamento",
+            "c": "O valor reportado tem prioridade"
+          }
+        },
+        "app": {
+          "titel": "Aplicativo do proprietário",
+          "heading": "Ele vê por si mesmo.",
+          "text": "Pagamento ao longo de doze meses, ocupação, preço médio por noite — e cada fatura com recibo para visualização. Um aplicativo próprio, apenas para proprietários.",
+          "punkte": {
+            "a": "Pagamento ao longo do tempo",
+            "b": "Faturas por mês",
+            "c": "Recibo no telefone"
+          }
+        },
+        "eigennutzung": {
+          "titel": "Uso próprio",
+          "heading": "Chegue por conta própria, sem ligar.",
+          "text": "O proprietário vê a ocupação dos seus imóveis e regista diretamente as suas próprias estadias. Os dias ocupados são bloqueados — assim, não há reservas duplas.",
+          "punkte": {
+            "a": "Ocupação por imóvel",
+            "b": "Registar estadia",
+            "c": "Dias ocupados bloqueados"
+          }
+        },
+        "objektakte": {
+          "titel": "Ficha do imóvel",
+          "heading": "Tudo sobre o imóvel num só lugar.",
+          "text": "Dados mestre, dados chave, comodidades e álbum de fotos: O proprietário vê o seu imóvel como ele aparece nos portais. Perguntas e acordos relacionados com o imóvel são tratados através da aplicação e permanecem documentados — em vez de estarem espalhados por chamadas telefónicas e três caixas de correio.",
+          "punkte": {
+            "a": "Dados mestre e comodidades",
+            "b": "Álbum de fotos por imóvel",
+            "c": "Acordos documentados"
+          }
+        }
+      },
+      "appAbschnitt": {
+        "eyebrow": "O aplicativo do proprietário",
+        "titel": "Tudo o que ele quer saber — sem perguntar a você.",
+        "text": "Os imóveis dele, a ocupação ao longo de doze meses e cada recibo para consulta: o proprietário abre o aplicativo e vê o status. Um aplicativo próprio, separado do aplicativo da empresa, com acesso apenas aos próprios imóveis."
       }
     }
   },

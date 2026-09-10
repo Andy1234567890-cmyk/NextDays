@@ -47,7 +47,7 @@ const MAX_OBJEKTE = 250;
 // Kleinvermieter, Agentur, Hotel. Ein Klick statt 99-mal Plus.
 const SPRUNGMARKEN = [1, 5, 20, 50, 100] as const;
 
-// Was im Tarif enthalten ist: die ZEHN Funktionsgruppen aus `features.gruppen`.
+// Was im Tarif enthalten ist: die ELF Funktionsgruppen aus `features.gruppen`.
 // Bewusst dieselben Texte wie auf der Startseite — eine zweite, eigene Liste
 // würde beim nächsten Feature auseinanderlaufen, und dann verspricht die
 // Preisseite etwas anderes als die Funktionsseite. Die Zeichnungen liegen in
@@ -62,6 +62,7 @@ const GRUPPEN = [
   "zahlungen",
   "team",
   "app",
+  "eigentuemer",
   "auswertungen",
 ] as const;
 

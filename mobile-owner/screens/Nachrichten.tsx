@@ -76,8 +76,10 @@ export function Nachrichten({ navigation }: Props) {
         </Txt>
       ) : null}
 
-      {/* Der Hinweis ist zugleich der Weg zur Geräteliste: Wer über die
-          Verschlüsselung nachdenkt, will wissen, WER mitliest. */}
+      {/* Der Weg zur Geräteliste. Hier stand bis zum 09.09.2026
+          „Ende-zu-Ende verschlüsselt" — eine Zusage, die seit dem Umbau auf
+          serverseitige Verschlüsselung nicht mehr gilt. Die Frage dahinter
+          bleibt dieselbe und ist weiterhin beantwortbar: WER kann mitlesen. */}
       <TouchableOpacity
         onPress={() => navigation.navigate("ChatGeraete")}
         style={{
@@ -90,7 +92,7 @@ export function Nachrichten({ navigation }: Props) {
       >
         <Icon n="lock" s={12} c={theme.palette.soft} />
         <Txt v="klein" soft>
-          {t("chat.verschluesselt")}
+          {t("chat.geraete")}
         </Txt>
       </TouchableOpacity>
 

@@ -53,16 +53,22 @@ const NAV_LINKS = [
   { key: "ressourcen", href: "/#ressourcen" },
 ] as const;
 
-// Die zehn Funktionsgruppen, in drei Spalten gruppiert — dieselbe Ordnung wie
+// Die elf Funktionsgruppen, in drei Spalten gruppiert — dieselbe Ordnung wie
 // auf der Funktionsseite: erst das Kerngeschäft, dann Gast und Geld, dann
 // Betrieb und Auswertung.
+//
+// Diese Liste ist NICHT aus `FUNKTIONEN` abgeleitet, sondern die Reihenfolge
+// im Menü — ein neuer Katalogeintrag erscheint hier also nicht von selbst.
+// Wer eine Funktionsseite anlegt und diese Zeile vergisst, baut eine Seite,
+// die niemand findet; `scripts/funktionen-im-menue-pruefen.mjs` bricht
+// deshalb ab, wenn ein Katalogeintrag hier fehlt.
 const MENU_SPALTEN: readonly {
   titel: "kern" | "gast" | "betrieb";
   gruppen: readonly string[];
 }[] = [
   { titel: "kern", gruppen: ["pms", "channel", "direkt"] },
   { titel: "gast", gruppen: ["gaeste", "ki", "zahlungen", "preise"] },
-  { titel: "betrieb", gruppen: ["team", "app", "auswertungen"] },
+  { titel: "betrieb", gruppen: ["team", "app", "eigentuemer", "auswertungen"] },
 ];
 
 /**

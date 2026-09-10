@@ -715,6 +715,10 @@
       "auswertungen": {
         "title": "Analyses",
         "items": "Bezetting, omzet, ADR, automatische rapporten, kanaalvergelijking, metasearch binnenkort"
+      },
+      "eigentuemer": {
+        "title": "Eigenaarsafrekening",
+        "items": "Afschrift per eigenaar met portaal-aftrekkingen, bewijs als PDF, eigen app voor eigenaar"
       }
     }
   },
@@ -842,7 +846,8 @@
       "channelManager": "Channel manager",
       "direktbuchung": "Directe boekingen",
       "zahlungen": "Betalingen",
-      "mobileApp": "Mobiele app"
+      "mobileApp": "Mobiele app",
+      "eigentuemerAbrechnung": "Eigenaarsafrekening"
     },
     "ressourcen": {
       "hilfeCenter": "Helpcentrum",
@@ -1947,6 +1952,105 @@
             "c": "Vrij"
           }
         }
+      }
+    },
+    "eigentuemer": {
+      "metaBeschreibung": "Eigenaarsafrekening voor vakantiewoningen en chalets: provisie per contract, portaalafhoudingen per boeking, bewijs als PDF – en een eigen app waarin de eigenaar alles zelf ziet.",
+      "headline": "De afrekening die geen vragen oproept.",
+      "sub": "Van elke boeking wordt het eigenaarsaandeel berekend – portaalafhouding, provisie, forfait, alles traceerbaar tot op de individuele nacht. De eigenaar ziet het in zijn app voordat hij vragen stelt.",
+      "bildAlt": "Eigenaarsafrekening met kengetallen en specificatie per boeking",
+      "nutzen": {
+        "a": {
+          "titel": "Elke regel spreekt voor zich",
+          "text": "Gastprijs, portaalprovisie, uw provisie, aandeel – uitgevouwen staat de hele rekening er, in plaats van een bedrag zonder herkomst."
+        },
+        "b": {
+          "titel": "Eén contract, geen discussie",
+          "text": "Provisiepercentage, minimumprovisie en forfait gelden met periode. Er wordt altijd afgerekend met het contract dat destijds gold."
+        },
+        "c": {
+          "titel": "Hij vraagt niet meer na",
+          "text": "Uitbetaling, bezetting en bonnen staan in zijn app, vragen stelt hij daar schriftelijk — de telefoontjes aan het begin van de maand houden op."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Meerdere eigenaars, elk met een eigen percentage.",
+          "text": "Elke eigenaar heeft zijn objecten en zijn provisiepercentage – 15%, 22%, 25%, afhankelijk van de afspraak. De afrekening berekent voor iedereen met zijn percentage, zonder dat u tabellen bijhoudt.",
+          "punkte": {
+            "a": "Percentage per eigenaar",
+            "b": "Objecten toegewezen",
+            "c": "Bedrijf of privépersoon"
+          }
+        }
+      },
+      "bildAltBlock": "Eigenaarsbeheer met provisiepercentage en toegewezen objecten",
+      "reiter": {
+        "abrechnung": {
+          "titel": "Afrekening",
+          "heading": "Van boeking tot aandeel.",
+          "text": "Gastprijs volgens portaal, minus portaalprovisie, minus uw beheersprovisie – per boeking uitklapbaar. Totalen per object en voor de hele periode staan eronder.",
+          "punkte": {
+            "a": "Per boeking",
+            "b": "Per object",
+            "c": "Bewijs als PDF"
+          }
+        },
+        "vertrag": {
+          "titel": "Contract",
+          "heading": "Wat is afgesproken, geldt.",
+          "text": "Provisiepercentage met geldigheidsperiode, plus minimumprovisie en forfait per boeking. Als het percentage verandert, blijven oude afrekeningen correct – ze rekenen met het contract van hun periode.",
+          "punkte": {
+            "a": "Geldig vanaf en tot",
+            "b": "Minimumprovisie",
+            "c": "Forfait per boeking"
+          }
+        },
+        "portale": {
+          "titel": "Portaalafhoudingen",
+          "heading": "Wat het portaal inhoudt.",
+          "text": "Per portaal een percentage voor het geval het zijn afhouding niet zelf meldt. Meldt het een bedrag, dan geldt altijd het gemelde – er wordt niets geschat.",
+          "punkte": {
+            "a": "Per portaal een percentage",
+            "b": "Provisie en betalingskosten",
+            "c": "Gemeld bedrag heeft voorrang"
+          }
+        },
+        "app": {
+          "titel": "Eigenaars-app",
+          "heading": "Hij ziet het zelf.",
+          "text": "Uitbetaling over twaalf maanden, bezettingsgraad, gemiddelde prijs per nacht – en elke afrekening met bewijs om te bekijken. Een eigen app, alleen voor eigenaars.",
+          "punkte": {
+            "a": "Uitbetaling in de loop van de tijd",
+            "b": "Afrekeningen per maand",
+            "c": "Bewijs op de telefoon"
+          }
+        },
+        "eigennutzung": {
+          "titel": "Eigen gebruik",
+          "heading": "Zelf aankomen, zonder te bellen.",
+          "text": "De eigenaar ziet de bezetting van zijn objecten en voert eigen verblijven direct in. Bezetting is geblokkeerd — een dubbele boeking ontstaat niet eens.",
+          "punkte": {
+            "a": "Bezetting per object",
+            "b": "Verblijf invoeren",
+            "c": "Bezetting geblokkeerd"
+          }
+        },
+        "objektakte": {
+          "titel": "Objectdossier",
+          "heading": "Alles over het object op één plek.",
+          "text": "Stamgegevens, kerngegevens, faciliteiten en fotoalbum: De eigenaar ziet zijn object zoals het op de portals staat. Vragen en afspraken worden objectgerelateerd via de app afgehandeld en gedocumenteerd — in plaats van verspreid over telefoongesprekken en drie mailboxen.",
+          "punkte": {
+            "a": "Stamgegevens en faciliteiten",
+            "b": "Fotoalbum per object",
+            "c": "Afspraken gedocumenteerd"
+          }
+        }
+      },
+      "appAbschnitt": {
+        "eyebrow": "De app van de eigenaar",
+        "titel": "Alles wat hij wil weten — zonder u te vragen.",
+        "text": "Zijn objecten, de bezetting over twaalf maanden en elk document om na te lezen: de eigenaar opent de app en ziet de status. Een eigen app, gescheiden van die van het bedrijf, met toegang alleen tot zijn eigen objecten."
       }
     }
   },

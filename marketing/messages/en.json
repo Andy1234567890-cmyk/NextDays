@@ -715,6 +715,10 @@
       "auswertungen": {
         "title": "Insights",
         "items": "Occupancy, revenue, ADR, automatic reports, channel comparison, metasearch coming soon"
+      },
+      "eigentuemer": {
+        "title": "Owner billing",
+        "items": "Billing per owner with portal deductions, receipt as PDF, own app for owners"
       }
     }
   },
@@ -842,7 +846,8 @@
       "channelManager": "Channel manager",
       "direktbuchung": "Direct booking",
       "zahlungen": "Payments",
-      "mobileApp": "Mobile app"
+      "mobileApp": "Mobile app",
+      "eigentuemerAbrechnung": "Owner billing"
     },
     "ressourcen": {
       "hilfeCenter": "Help centre",
@@ -1787,6 +1792,105 @@
             "c": "Free"
           }
         }
+      }
+    },
+    "eigentuemer": {
+      "metaBeschreibung": "Owner billing for holiday apartments and chalets: commission per contract, portal deductions per booking, receipt as PDF – and a dedicated app where the owner sees everything themselves.",
+      "headline": "The billing that doesn't trigger queries.",
+      "sub": "The owner's share is calculated from each booking – portal deduction, commission, flat rate, all traceable down to the single night. The owner sees it in their app before they ask.",
+      "bildAlt": "Owner billing with key figures and breakdown per booking",
+      "nutzen": {
+        "a": {
+          "titel": "Every line explains itself",
+          "text": "Guest price, portal commission, your commission, share – the entire invoice is displayed, instead of a sum without origin."
+        },
+        "b": {
+          "titel": "One contract, no dispute",
+          "text": "Commission rate, minimum commission, and flat rate apply with a period. Billing is always based on the contract that was valid at the time."
+        },
+        "c": {
+          "titel": "They no longer ask",
+          "text": "Payouts, occupancy, and receipts are in his app; he submits queries there in writing — the calls at the beginning of the month stop."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Multiple owners, each with their own rate.",
+          "text": "Each owner has their properties and their commission rate – 15%, 22%, 25%, depending on the agreement. The billing calculates for each with their own, without you maintaining tables.",
+          "punkte": {
+            "a": "Rate per owner",
+            "b": "Properties assigned",
+            "c": "Company or private person"
+          }
+        }
+      },
+      "bildAltBlock": "Owner management with commission rate and assigned properties",
+      "reiter": {
+        "abrechnung": {
+          "titel": "Billing",
+          "heading": "From booking to share.",
+          "text": "Guest price according to portal, minus portal commission, minus your management commission – expandable per booking. Totals per property and for the entire period are listed below.",
+          "punkte": {
+            "a": "Per booking",
+            "b": "Per property",
+            "c": "Receipt as PDF"
+          }
+        },
+        "vertrag": {
+          "titel": "Contract",
+          "heading": "What was agreed, applies.",
+          "text": "Commission rate with validity period, plus minimum commission and flat rate per booking. If the rate changes, old invoices remain correct – they calculate with the contract of their period.",
+          "punkte": {
+            "a": "Valid from and to",
+            "b": "Minimum commission",
+            "c": "Flat rate per booking"
+          }
+        },
+        "portale": {
+          "titel": "Portal deductions",
+          "heading": "What the portal retains.",
+          "text": "A rate per portal for cases where it does not report its deduction itself. If it reports an amount, the reported amount always applies – nothing is estimated.",
+          "punkte": {
+            "a": "A rate per portal",
+            "b": "Commission and payment fee",
+            "c": "Reported amount takes precedence"
+          }
+        },
+        "app": {
+          "titel": "Owner app",
+          "heading": "They see it themselves.",
+          "text": "Payout over twelve months, occupancy, average price per night – and every invoice with a receipt for viewing. A dedicated app, just for owners.",
+          "punkte": {
+            "a": "Payout over time",
+            "b": "Invoices per month",
+            "c": "Receipt on phone"
+          }
+        },
+        "eigennutzung": {
+          "titel": "Owner usage",
+          "heading": "Arrive yourself, without calling.",
+          "text": "The owner sees the occupancy of their properties and directly enters their own stays. Occupied days are blocked — double bookings do not occur.",
+          "punkte": {
+            "a": "Occupancy per property",
+            "b": "Enter stay",
+            "c": "Occupied days blocked"
+          }
+        },
+        "objektakte": {
+          "titel": "Property file",
+          "heading": "All property information in one place.",
+          "text": "Master data, key data, features, and photo album: The owner sees their property as it appears on the portals. Queries and agreements are handled property-specific via the app and remain documented — instead of being spread across phone calls and three inboxes.",
+          "punkte": {
+            "a": "Master data and features",
+            "b": "Photo album per property",
+            "c": "Agreements documented"
+          }
+        }
+      },
+      "appAbschnitt": {
+        "eyebrow": "The owner's app",
+        "titel": "Everything he wants to know — without asking you.",
+        "text": "His properties, occupancy over twelve months and every receipt for review: the owner opens the app and sees the status. A separate app, distinct from the operational app, with access only to his own properties."
       }
     }
   },

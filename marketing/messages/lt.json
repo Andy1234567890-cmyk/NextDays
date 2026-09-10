@@ -715,6 +715,10 @@
       "auswertungen": {
         "title": "Analitika",
         "items": "Užimtumas, pajamos, ADR, automatinės ataskaitos, kanalų palyginimas, metapaieška netrukus"
+      },
+      "eigentuemer": {
+        "title": "Savininko atsiskaitymas",
+        "items": "Atsiskaitymas kiekvienam savininkui su portalo atskaitymais, kvitas PDF formatu, atskira programėlė savininkams"
       }
     }
   },
@@ -842,7 +846,8 @@
       "channelManager": "Kanalų valdymo sistema",
       "direktbuchung": "Tiesioginė rezervacija",
       "zahlungen": "Mokėjimai",
-      "mobileApp": "Mobilioji programėlė"
+      "mobileApp": "Mobilioji programėlė",
+      "eigentuemerAbrechnung": "Savininko atsiskaitymas"
     },
     "ressourcen": {
       "hilfeCenter": "Pagalbos centras",
@@ -1947,6 +1952,105 @@
             "c": "Laisva"
           }
         }
+      }
+    },
+    "eigentuemer": {
+      "metaBeschreibung": "Savininko atsiskaitymas už atostogų būstus ir kotedžus: komisinis mokestis už sutartį, portalo atskaitymai už užsakymą, kvitas PDF formatu – ir atskira programėlė, kurioje savininkas viską mato pats.",
+      "headline": "Atsiskaitymas, kuris nesukelia papildomų klausimų.",
+      "sub": "Iš kiekvieno užsakymo apskaičiuojama savininko dalis – portalo atskaitymas, komisinis mokestis, fiksuotas mokestis, viskas atsekama iki vienos nakties. Savininkas tai mato savo programėlėje, prieš jam paklausiant.",
+      "bildAlt": "Savininko atsiskaitymas su pagrindiniais rodikliais ir išklotine pagal užsakymą",
+      "nutzen": {
+        "a": {
+          "titel": "Kiekviena eilutė paaiškina save",
+          "text": "Svečio kaina, portalo komisinis mokestis, jūsų komisinis mokestis, dalis – išskleidus matomas visas atsiskaitymas, o ne suma be kilmės."
+        },
+        "b": {
+          "titel": "Viena sutartis, jokių ginčų",
+          "text": "Komisinis tarifas, minimalus komisinis mokestis ir fiksuotas mokestis galioja su laikotarpiu. Atsiskaitoma visada pagal tuo metu galiojusią sutartį."
+        },
+        "c": {
+          "titel": "Jis daugiau neklausia",
+          "text": "Išmokėjimas, užimtumas ir kvitai yra jo programėlėje, klausimus jis pateikia raštu – skambučiai mėnesio pradžioje liaujasi."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Keli savininkai, kiekvienas su savo tarifu.",
+          "text": "Kiekvienas savininkas turi savo objektus ir savo komisinį tarifą – 15 %, 22 %, 25 %, priklausomai nuo susitarimo. Atsiskaitymas kiekvienam skaičiuojamas pagal jo tarifą, jums nereikia tvarkyti lentelių.",
+          "punkte": {
+            "a": "Tarifas pagal savininką",
+            "b": "Priskirti objektai",
+            "c": "Įmonė ar privatus asmuo"
+          }
+        }
+      },
+      "bildAltBlock": "Savininkų valdymas su komisiniu tarifu ir priskirtais objektais",
+      "reiter": {
+        "abrechnung": {
+          "titel": "Atsiskaitymas",
+          "heading": "Nuo užsakymo iki dalies.",
+          "text": "Svečio kaina pagal portalą, minus portalo komisinis mokestis, minus jūsų administravimo komisinis mokestis – išskleidžiama pagal užsakymą. Sumos pagal objektą ir visam laikotarpiui pateikiamos žemiau.",
+          "punkte": {
+            "a": "Pagal užsakymą",
+            "b": "Pagal objektą",
+            "c": "Kvitas PDF formatu"
+          }
+        },
+        "vertrag": {
+          "titel": "Sutartis",
+          "heading": "Kas buvo sutarta, tas galioja.",
+          "text": "Komisinis tarifas su galiojimo laikotarpiu, taip pat minimalus komisinis mokestis ir fiksuotas mokestis už užsakymą. Jei tarifas keičiasi, seni atsiskaitymai lieka teisingi – jie skaičiuojami pagal jų laikotarpio sutartį.",
+          "punkte": {
+            "a": "Galioja nuo ir iki",
+            "b": "Minimalus komisinis mokestis",
+            "c": "Fiksuotas mokestis už užsakymą"
+          }
+        },
+        "portale": {
+          "titel": "Portalo atskaitymai",
+          "heading": "Ką portalas pasilieka.",
+          "text": "Kiekvienam portalui nustatomas tarifas, jei jis pats nepraneša apie savo atskaitymą. Jei pranešama suma, visada galioja pranešta suma – niekas nevertinama.",
+          "punkte": {
+            "a": "Kiekvienam portalui nustatomas tarifas",
+            "b": "Komisinis mokestis ir mokėjimo mokestis",
+            "c": "Pranešta suma turi pirmenybę"
+          }
+        },
+        "app": {
+          "titel": "Savininko programėlė",
+          "heading": "Jis mato pats.",
+          "text": "Išmokėjimas per dvylika mėnesių, užimtumas, vidutinė kaina už naktį – ir kiekvienas atsiskaitymas su kvitu peržiūrai. Atskira programėlė, skirta tik savininkams.",
+          "punkte": {
+            "a": "Išmokėjimas eigoje",
+            "b": "Atsiskaitymai pagal mėnesį",
+            "c": "Kvitas telefone"
+          }
+        },
+        "eigennutzung": {
+          "titel": "Savininko naudojimasis",
+          "heading": "Atvykite patys, be skambučio.",
+          "text": "Savininkas mato savo objektų užimtumą ir tiesiogiai įveda savo viešnages. Užimtos dienos yra užblokuotos – dvigubas užsakymas net neįvyksta.",
+          "punkte": {
+            "a": "Užimtumas pagal objektą",
+            "b": "Įvesti viešnagę",
+            "c": "Užimtos dienos užblokuotos"
+          }
+        },
+        "objektakte": {
+          "titel": "Objekto kortelė",
+          "heading": "Viskas apie objektą vienoje vietoje.",
+          "text": "Pagrindiniai duomenys, pagrindiniai faktai, įranga ir nuotraukų albumas: savininkas mato savo objektą taip, kaip jis pateikiamas portaluose. Užklausos ir susitarimai dėl objekto vyksta per programėlę ir yra dokumentuojami – užuot pasklidę po telefono skambučius ir tris pašto dėžutes.",
+          "punkte": {
+            "a": "Pagrindiniai duomenys ir įranga",
+            "b": "Kiekvieno objekto nuotraukų albumas",
+            "c": "Susitarimai dokumentuoti"
+          }
+        }
+      },
+      "appAbschnitt": {
+        "eyebrow": "Savininko programėlė",
+        "titel": "Viskas, ką jis nori žinoti – neklausdamas jūsų.",
+        "text": "Jo objektai, užimtumas per dvylika mėnesių ir kiekvienas kvitas peržiūrai: savininkas atidaro programėlę ir mato būseną. Atskira programėlė, atskirta nuo įmonės programėlės, su prieiga tik prie jo paties objektų."
       }
     }
   },

@@ -715,6 +715,10 @@
       "auswertungen": {
         "title": "Raportit",
         "items": "Käyttöaste, myynti, ADR, automaattiset raportit, kanavavertailu, metahaku pian"
+      },
+      "eigentuemer": {
+        "title": "Omistajan laskutus",
+        "items": "Laskutus omistajakohtaisesti portaalivähennyksineen, kuitti PDF-muodossa, oma sovellus omistajille"
       }
     }
   },
@@ -842,7 +846,8 @@
       "channelManager": "Channel manager",
       "direktbuchung": "Suoravaraus",
       "zahlungen": "Maksut",
-      "mobileApp": "Mobiilisovellus"
+      "mobileApp": "Mobiilisovellus",
+      "eigentuemerAbrechnung": "Omistajan laskutus"
     },
     "ressourcen": {
       "hilfeCenter": "Ohjekeskus",
@@ -1947,6 +1952,105 @@
             "c": "Vapaa"
           }
         }
+      }
+    },
+    "eigentuemer": {
+      "metaBeschreibung": "Omistajan laskutus loma-asunnoille ja mökeille: provisio per sopimus, portaalin vähennykset per varaus, kuitti PDF-muodossa – ja oma sovellus, jossa omistaja näkee kaiken itse.",
+      "headline": "Laskutus, joka ei herätä kysymyksiä.",
+      "sub": "Jokaisesta varauksesta lasketaan omistajan osuus – portaalin vähennys, provisio, kiinteä maksu, kaikki jäljitettävissä yksittäiseen yöhön asti. Omistaja näkee sen sovelluksessaan ennen kuin kysyy.",
+      "bildAlt": "Omistajan laskutus tunnusluvuilla ja erittelyllä per varaus",
+      "nutzen": {
+        "a": {
+          "titel": "Jokainen rivi selittää itsensä",
+          "text": "Asiakkaan hinta, portaalin provisio, sinun provisiosi, osuus – avattuna koko lasku on siinä, summan sijaan ilman alkuperää."
+        },
+        "b": {
+          "titel": "Yksi sopimus, ei riitaa",
+          "text": "Provisioprosentti, minimiprovisio ja kiinteä maksu ovat voimassa ajanjaksolla. Laskutus tapahtuu aina silloin voimassa olleen sopimuksen mukaisesti."
+        },
+        "c": {
+          "titel": "Hän ei enää kysy",
+          "text": "Maksu, varaukset ja kuitit ovat hänen sovelluksessaan, hän tekee kyselyt sinne kirjallisesti – kuukauden alussa tulevat puhelut loppuvat."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Useita omistajia, jokaisella oma prosenttinsa.",
+          "text": "Jokaisella omistajalla on omat kohteensa ja provisioprosenttinsa – 15 %, 22 %, 25 %, sopimuksen mukaan. Laskutus laskee jokaiselle hänen omansa, ilman että sinun tarvitsee ylläpitää taulukoita.",
+          "punkte": {
+            "a": "Prosentti per omistaja",
+            "b": "Kohteet liitetty",
+            "c": "Yritys tai yksityishenkilö"
+          }
+        }
+      },
+      "bildAltBlock": "Omistajan hallinta provisioprosentilla ja liitetyillä kohteilla",
+      "reiter": {
+        "abrechnung": {
+          "titel": "Laskutus",
+          "heading": "Varauksesta osuuteen.",
+          "text": "Asiakkaan hinta portaalin mukaan, miinus portaalin provisio, miinus sinun hallintaprovisiosi – avattavissa per varaus. Summat per kohde ja koko ajanjaksolta ovat alla.",
+          "punkte": {
+            "a": "Per varaus",
+            "b": "Per kohde",
+            "c": "Kuitti PDF-muodossa"
+          }
+        },
+        "vertrag": {
+          "titel": "Sopimus",
+          "heading": "Mitä sovittiin, on voimassa.",
+          "text": "Provisioprosentti voimassaoloajalla, lisäksi minimiprovisio ja kiinteä maksu per varaus. Jos prosentti muuttuu, vanhat laskut pysyvät oikeina – ne laskevat ajanjaksonsa sopimuksen mukaisesti.",
+          "punkte": {
+            "a": "Voimassa alkaen ja päättyen",
+            "b": "Minimiprovisio",
+            "c": "Kiinteä maksu per varaus"
+          }
+        },
+        "portale": {
+          "titel": "Portaalin vähennykset",
+          "heading": "Mitä portaali pidättää.",
+          "text": "Jokaiselle portaalille prosentti siltä varalta, että se ei ilmoita omaa vähennystään. Jos se ilmoittaa summan, ilmoitettu summa on aina voimassa – mitään ei arvioida.",
+          "punkte": {
+            "a": "Prosentti per portaali",
+            "b": "Provisio ja maksukulu",
+            "c": "Ilmoitetulla summalla on etusija"
+          }
+        },
+        "app": {
+          "titel": "Omistajan sovellus",
+          "heading": "Hän näkee sen itse.",
+          "text": "Maksu kahdentoista kuukauden ajalta, käyttöaste, keskihinta per yö – ja jokainen lasku kuitilla katsottavaksi. Oma sovellus, vain omistajille.",
+          "punkte": {
+            "a": "Maksu ajan mittaan",
+            "b": "Laskut kuukausittain",
+            "c": "Kuitti puhelimessa"
+          }
+        },
+        "eigennutzung": {
+          "titel": "Oma käyttö",
+          "heading": "Saavu itse, ilman puhelua.",
+          "text": "Omistaja näkee kohteidensa varaustilanteen ja syöttää omat oleskelunsa suoraan. Varatut päivät on estetty – tuplavarausta ei pääse syntymään.",
+          "punkte": {
+            "a": "Varaustilanne kohteen mukaan",
+            "b": "Lisää oleskelu",
+            "c": "Varatut päivät estetty"
+          }
+        },
+        "objektakte": {
+          "titel": "Kohteen tiedot",
+          "heading": "Kaikki kohteen tiedot yhdessä paikassa.",
+          "text": "Perustiedot, avaintiedot, varustus ja valokuva-albumi: Omistaja näkee kohteensa sellaisena kuin se näkyy portaaleissa. Kysymykset ja sopimukset käsitellään kohdekohtaisesti sovelluksen kautta ja ne dokumentoidaan – puheluiden ja kolmen postilaatikon sijaan.",
+          "punkte": {
+            "a": "Perustiedot ja varustus",
+            "b": "Valokuva-albumi per kohde",
+            "c": "Sopimukset dokumentoitu"
+          }
+        }
+      },
+      "appAbschnitt": {
+        "eyebrow": "Omistajan sovellus",
+        "titel": "Kaikki, mitä hän haluaa tietää – kysymättä sinulta.",
+        "text": "Hänen kohteensa, käyttöaste kahdentoista kuukauden ajalta ja kaikki kuitit tarkistettavaksi: omistaja avaa sovelluksen ja näkee tilanteen. Oma sovellus, erillään yrityksen sovelluksesta, jolla pääsee käsiksi vain hänen omiin kohteisiinsa."
       }
     }
   },

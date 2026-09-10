@@ -715,6 +715,10 @@
       "auswertungen": {
         "title": "Auswertungen",
         "items": "Auslastung, Umsatz, ADR, automatische Berichte, Kanalvergleich, Metasuche in Kürze"
+      },
+      "eigentuemer": {
+        "title": "Eigentümer-Abrechnung",
+        "items": "Abrechnung je Eigentümer mit Portal-Abzügen, Beleg als PDF, eigene App für Eigentümer"
       }
     }
   },
@@ -842,7 +846,8 @@
       "channelManager": "Channel-Manager",
       "direktbuchung": "Direktbuchung",
       "zahlungen": "Zahlungen",
-      "mobileApp": "Mobile App"
+      "mobileApp": "Mobile App",
+      "eigentuemerAbrechnung": "Eigentümer-Abrechnung"
     },
     "ressourcen": {
       "hilfeCenter": "Hilfe-Center",
@@ -1787,6 +1792,105 @@
             "c": "Frei"
           }
         }
+      }
+    },
+    "eigentuemer": {
+      "metaBeschreibung": "Eigentümer-Abrechnung für Ferienwohnungen und Chalets: Provision je Vertrag, Portal-Abzüge je Buchung, Beleg als PDF — und eine eigene App, in der der Eigentümer alles selbst sieht.",
+      "headline": "Die Abrechnung, die keine Rückfrage auslöst.",
+      "sub": "Aus jeder Buchung wird der Eigentümer-Anteil gerechnet — Portal-Abzug, Provision, Pauschale, alles nachvollziehbar bis zur einzelnen Nacht. Der Eigentümer sieht es in seiner App, bevor er fragt.",
+      "bildAlt": "Eigentümer-Abrechnung mit Kennzahlen und Aufstellung je Buchung",
+      "nutzen": {
+        "a": {
+          "titel": "Jede Zeile erklärt sich",
+          "text": "Gastpreis, Portal-Provision, deine Provision, Anteil — aufgeklappt steht die ganze Rechnung da, statt einer Summe ohne Herkunft."
+        },
+        "b": {
+          "titel": "Ein Vertrag, kein Streit",
+          "text": "Provisionssatz, Mindestprovision und Pauschale gelten mit Zeitraum. Abgerechnet wird immer mit dem Vertrag, der damals galt."
+        },
+        "c": {
+          "titel": "Er fragt nicht mehr nach",
+          "text": "Auszahlung, Belegung und Belege liegen in seiner App, Rückfragen stellt er dort schriftlich — die Anrufe zum Monatsanfang hören auf."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Mehrere Eigentümer, jeder mit eigenem Satz.",
+          "text": "Jeder Eigentümer hat seine Objekte und seinen Provisionssatz — 15 %, 22 %, 25 %, je nach Vereinbarung. Die Abrechnung rechnet für jeden mit seinem, ohne dass du Tabellen pflegst.",
+          "punkte": {
+            "a": "Satz je Eigentümer",
+            "b": "Objekte zugeordnet",
+            "c": "Firma oder Privatperson"
+          }
+        }
+      },
+      "bildAltBlock": "Eigentümer-Verwaltung mit Provisionssatz und zugeordneten Objekten",
+      "reiter": {
+        "abrechnung": {
+          "titel": "Abrechnung",
+          "heading": "Von der Buchung zum Anteil.",
+          "text": "Gastpreis laut Portal, minus Portal-Provision, minus deine Verwaltungsprovision — je Buchung aufklappbar. Summen je Objekt und für den ganzen Zeitraum stehen darunter.",
+          "punkte": {
+            "a": "Je Buchung",
+            "b": "Je Objekt",
+            "c": "Beleg als PDF"
+          }
+        },
+        "vertrag": {
+          "titel": "Vertrag",
+          "heading": "Was vereinbart war, gilt.",
+          "text": "Provisionssatz mit Gültigkeitszeitraum, dazu Mindestprovision und Pauschale je Buchung. Ändert sich der Satz, bleiben alte Abrechnungen richtig — sie rechnen mit dem Vertrag ihres Zeitraums.",
+          "punkte": {
+            "a": "Gültig ab und bis",
+            "b": "Mindestprovision",
+            "c": "Pauschale je Buchung"
+          }
+        },
+        "portale": {
+          "titel": "Portal-Abzüge",
+          "heading": "Was das Portal einbehält.",
+          "text": "Je Portal ein Satz für den Fall, dass es seinen Abzug nicht selbst meldet. Meldet es einen Betrag, gilt immer der gemeldete — geschätzt wird nichts.",
+          "punkte": {
+            "a": "Je Portal ein Satz",
+            "b": "Provision und Zahlungsgebühr",
+            "c": "Gemeldeter Betrag hat Vorrang"
+          }
+        },
+        "app": {
+          "titel": "Eigentümer-App",
+          "heading": "Er sieht es selbst.",
+          "text": "Auszahlung über zwölf Monate, Auslastung, Durchschnittspreis je Nacht — und jede Abrechnung mit Beleg zum Ansehen. Eine eigene App, nur für Eigentümer.",
+          "punkte": {
+            "a": "Auszahlung im Verlauf",
+            "b": "Abrechnungen je Monat",
+            "c": "Beleg im Telefon"
+          }
+        },
+        "eigennutzung": {
+          "titel": "Eigennutzung",
+          "heading": "Selbst anreisen, ohne Anruf.",
+          "text": "Der Eigentümer sieht die Belegung seiner Objekte und trägt eigene Aufenthalte direkt ein. Belegte Tage sind gesperrt — eine Doppelbuchung entsteht gar nicht erst.",
+          "punkte": {
+            "a": "Belegung je Objekt",
+            "b": "Aufenthalt eintragen",
+            "c": "Belegte Tage gesperrt"
+          }
+        },
+        "objektakte": {
+          "titel": "Objektakte",
+          "heading": "Alles zum Objekt an einer Stelle.",
+          "text": "Stammdaten, Eckdaten, Ausstattung und Fotoalbum: Der Eigentümer sieht sein Objekt so, wie es bei den Portalen steht. Rückfragen und Absprachen laufen objektbezogen über die App und bleiben dokumentiert — statt verteilt über Telefonate und drei Postfächer.",
+          "punkte": {
+            "a": "Stammdaten und Ausstattung",
+            "b": "Fotoalbum je Objekt",
+            "c": "Absprachen dokumentiert"
+          }
+        }
+      },
+      "appAbschnitt": {
+        "eyebrow": "Die App des Eigentümers",
+        "titel": "Alles, was er wissen will — ohne dich zu fragen.",
+        "text": "Seine Objekte, die Auslastung über zwölf Monate und jeder Beleg zum Nachlesen: der Eigentümer öffnet die App und sieht den Stand. Eine eigene App, getrennt von der des Betriebs, mit Zugriff nur auf seine eigenen Objekte."
       }
     }
   },

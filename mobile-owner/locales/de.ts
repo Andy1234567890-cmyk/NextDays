@@ -433,10 +433,11 @@ export const de = {
   "kal.verschiebeHinweis": "Buchung gedrückt halten und auf andere Tage ziehen.",
   "kal.wirdVerschoben": "Buchung wird verschoben …",
   // --- Chat mit der Verwaltung (0611, ADR-0029) ------------------------------
-  // Die Texte zur Verschlüsselung sind bewusst konkret: „Ende-zu-Ende
-  // verschlüsselt" allein sagt dem Eigentümer nichts über die FOLGEN (Verlauf
-  // weg ohne Sicherungscode). Wer die Folgen erst im Ernstfall erfährt, hält
-  // sie für einen Fehler.
+  // Die Texte zur Verschlüsselung sind bewusst konkret und benennen genau das,
+  // was das Verfahren hergibt — nicht mehr. Sie beschrieben bis zum 09.09.2026
+  // eine Ende-zu-Ende-Verschlüsselung; seit dem Umbau auf serverseitige
+  // Verschlüsselung stimmt das nicht mehr, und eine Zusicherung, die nicht
+  // mehr gilt, ist schlimmer als keine.
   "chat.titel": "Nachrichten",
   "chat.leer": "Noch keine Nachrichten. Schreiben Sie der Verwaltung.",
   "chat.eingabe": "Nachricht schreiben …",
@@ -455,8 +456,16 @@ export const de = {
   "chat.manipuliert": "Diese Nachricht wurde nach dem Senden verändert und kann nicht angezeigt werden.",
   "chat.nichtLesbarAnzahl": "{anzahl} ältere Nachrichten sind auf diesem Gerät nicht lesbar.",
   "chat.freigabeBitten": "Bitten Sie die Verwaltung, den Verlauf für dieses Gerät freizugeben.",
-  "chat.verschluesselt": "Ende-zu-Ende verschlüsselt",
-  "chat.verschluesseltErklaerung": "Ihre Nachrichten sind verschlüsselt gespeichert. Lesen können sie nur Sie und Ihre Verwaltung.",
+  // NICHT „Ende-zu-Ende": Seit dem Umbau auf serverseitige Verschlüsselung
+  // (AES-256-GCM, `owner_chat/serverkrypto.py`) hält diese Zusicherung nicht
+  // mehr — wer an den Serverschlüssel kommt, liest mit. Der Vorgänger stand
+  // hier bis zum 09.09.2026 und war damit eine Falschaussage in der
+  // Oberfläche. Was stimmt und weiterhin etwas wert ist: verschlüsselt
+  // gespeichert, also nichts im Klartext in der Datenbank.
+  // Unterzeile der Chat-Kachel im Menü: sagt, WOZU der Chat da ist. Vorher
+  // stand hier die Verschlüsselungszusage — die ist entfallen, und eine
+  // Kachel ohne Unterzeile sähe aus wie ein Ladefehler.
+  "chat.unter": "Direkt an Ihre Verwaltung",
   "chat.einrichten": "Chat einrichten",
   "chat.einrichtenText": "Für verschlüsselte Nachrichten legt dieses Gerät einen Schlüssel an. Er bleibt auf dem Gerät.",
   "chat.einrichtenKnopf": "Jetzt einrichten",
@@ -509,4 +518,15 @@ export const de = {
   "konto.beantragt": "Löschung beantragt",
   "konto.beantragtAm": "Löschung beantragt am {datum}",
   "konto.antragLaeuft": "Wir prüfen den Antrag und melden uns per E-Mail.",
+  "auf.aufhebungAnfragen": "Aufenthalt stornieren",
+  "auf.aufhebungHinweis": "Ihre Verwaltung entscheidet über die Stornierung. Bis dahin bleibt der Aufenthalt bestehen.",
+  "auf.aufhebungGrund": "Grund (freiwillig)",
+  "auf.aufhebungSenden": "Anfrage senden",
+  "auf.aufhebungSendet": "Wird gesendet …",
+  "auf.aufhebungGesendet": "Anfrage gesendet",
+  "auf.aufhebungGesendetText": "Ihre Verwaltung entscheidet über die Stornierung. Bis dahin bleibt der Aufenthalt bestehen.",
+  "auf.aufhebungFehler": "Anfrage nicht gesendet",
+  "auf.aufhebungLaeuft": "Stornierung angefragt — Ihre Verwaltung entscheidet. Der Aufenthalt besteht bis dahin.",
+  "auf.aufhebungAbgelehnt": "Stornierung abgelehnt",
+  "auf.aufhebungErledigt": "Aufenthalt storniert",
 } as const;

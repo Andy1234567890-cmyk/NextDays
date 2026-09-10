@@ -270,10 +270,28 @@ function KiRegeln({ className }: Props) {
   );
 }
 
+/** Eigentümer-Abrechnung: ein Beleg, dessen Summe sich in zwei Anteile teilt.
+ *
+ *  Die zwei Balken unten sind der Kern der Funktion — aus einer Buchung wird
+ *  der Anteil des Eigentümers und der des Betriebs. Deshalb kein Geldschein
+ *  und kein Personen-Symbol: gezeigt wird die Aufteilung, nicht der Empfänger. */
+function Eigentuemer({ className }: Props) {
+  return (
+    <svg viewBox="0 0 96 96" className={className} aria-hidden>
+      <path d="M22 12h38l14 14v58H22z" {...STROKE} />
+      <path d="M60 12v14h14" {...STROKE} />
+      <path d="M32 38h32M32 48h32" {...STROKE} />
+      <rect x="32" y="60" width="24" height="8" rx="4" fill="currentColor" opacity="0.85" />
+      <rect x="58" y="60" width="6" height="8" rx="3" fill="currentColor" opacity="0.35" />
+    </svg>
+  );
+}
+
 export const GRUPPEN_ILLUSTRATION: Record<
   string,
   (props: Props) => React.ReactElement
 > = {
+  eigentuemer: Eigentuemer,
   pms: Pms,
   channel: Channel,
   direkt: Direkt,

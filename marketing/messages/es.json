@@ -715,6 +715,10 @@
       "auswertungen": {
         "title": "Análisis",
         "items": "Ocupación, ingresos, ADR, informes automáticos, comparativa de canales, metabuscadores muy pronto"
+      },
+      "eigentuemer": {
+        "title": "Facturación del propietario",
+        "items": "Facturación por propietario con deducciones del portal, recibo en PDF, aplicación propia para propietarios"
       }
     }
   },
@@ -842,7 +846,8 @@
       "channelManager": "Channel manager",
       "direktbuchung": "Reserva directa",
       "zahlungen": "Pagos",
-      "mobileApp": "App móvil"
+      "mobileApp": "App móvil",
+      "eigentuemerAbrechnung": "Facturación del propietario"
     },
     "ressourcen": {
       "hilfeCenter": "Centro de ayuda",
@@ -1947,6 +1952,105 @@
             "c": "Libre"
           }
         }
+      }
+    },
+    "eigentuemer": {
+      "metaBeschreibung": "Facturación a propietarios de apartamentos y chalets vacacionales: comisión por contrato, deducciones del portal por reserva, recibo en PDF — y una aplicación propia donde el propietario ve todo por sí mismo.",
+      "headline": "La facturación que no genera consultas.",
+      "sub": "De cada reserva se calcula la parte del propietario — deducción del portal, comisión, tarifa plana, todo rastreable hasta la noche individual. El propietario lo ve en su aplicación antes de preguntar.",
+      "bildAlt": "Facturación a propietarios con indicadores clave y desglose por reserva",
+      "nutzen": {
+        "a": {
+          "titel": "Cada línea se explica por sí misma",
+          "text": "Precio del huésped, comisión del portal, su comisión, parte — desplegado se muestra la factura completa, en lugar de una suma sin origen."
+        },
+        "b": {
+          "titel": "Un contrato, sin disputas",
+          "text": "La tasa de comisión, la comisión mínima y la tarifa plana se aplican con un período. La facturación siempre se realiza con el contrato que estaba vigente en ese momento."
+        },
+        "c": {
+          "titel": "Ya no pregunta",
+          "text": "El pago, la ocupación y los recibos están en su aplicación, las consultas las hace por escrito allí, las llamadas a principios de mes cesan."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Varios propietarios, cada uno con su propia tarifa.",
+          "text": "Cada propietario tiene sus propiedades y su tasa de comisión — 15 %, 22 %, 25 %, según el acuerdo. La facturación calcula para cada uno con su tarifa, sin que usted mantenga tablas.",
+          "punkte": {
+            "a": "Tarifa por propietario",
+            "b": "Propiedades asignadas",
+            "c": "Empresa o persona física"
+          }
+        }
+      },
+      "bildAltBlock": "Gestión de propietarios con tasa de comisión y propiedades asignadas",
+      "reiter": {
+        "abrechnung": {
+          "titel": "Facturación",
+          "heading": "De la reserva a la parte.",
+          "text": "Precio del huésped según el portal, menos la comisión del portal, menos su comisión de gestión — desplegable por reserva. Los totales por propiedad y para todo el período se muestran debajo.",
+          "punkte": {
+            "a": "Por reserva",
+            "b": "Por propiedad",
+            "c": "Recibo en PDF"
+          }
+        },
+        "vertrag": {
+          "titel": "Contrato",
+          "heading": "Lo acordado es válido.",
+          "text": "Tasa de comisión con período de validez, además de comisión mínima y tarifa plana por reserva. Si la tasa cambia, las facturas antiguas siguen siendo correctas — se calculan con el contrato de su período.",
+          "punkte": {
+            "a": "Válido desde y hasta",
+            "b": "Comisión mínima",
+            "c": "Tarifa plana por reserva"
+          }
+        },
+        "portale": {
+          "titel": "Deducciones del portal",
+          "heading": "Lo que retiene el portal.",
+          "text": "Por portal, una tarifa en caso de que no informe su deducción. Si informa un monto, siempre se aplica el monto informado — no se estima nada.",
+          "punkte": {
+            "a": "Una tarifa por portal",
+            "b": "Comisión y tarifa de pago",
+            "c": "El monto informado tiene prioridad"
+          }
+        },
+        "app": {
+          "titel": "Aplicación para propietarios",
+          "heading": "Lo ve por sí mismo.",
+          "text": "Pago durante doce meses, ocupación, precio promedio por noche — y cada factura con recibo para ver. Una aplicación propia, solo para propietarios.",
+          "punkte": {
+            "a": "Pago a lo largo del tiempo",
+            "b": "Facturas por mes",
+            "c": "Recibo en el teléfono"
+          }
+        },
+        "eigennutzung": {
+          "titel": "Uso propio",
+          "heading": "Llegada autónoma, sin llamar.",
+          "text": "El propietario ve la ocupación de sus propiedades y registra directamente sus propias estancias. Los días ocupados están bloqueados, por lo que no se producen reservas dobles.",
+          "punkte": {
+            "a": "Ocupación por propiedad",
+            "b": "Registrar estancia",
+            "c": "Días ocupados bloqueados"
+          }
+        },
+        "objektakte": {
+          "titel": "Ficha del objeto",
+          "heading": "Todo sobre el objeto en un solo lugar.",
+          "text": "Datos maestros, datos clave, equipamiento y álbum de fotos: El propietario ve su objeto tal como aparece en los portales. Las consultas y acuerdos relacionados con el objeto se gestionan a través de la aplicación y quedan documentados, en lugar de dispersarse en llamadas telefónicas y tres buzones de correo.",
+          "punkte": {
+            "a": "Datos maestros y equipamiento",
+            "b": "Álbum de fotos por objeto",
+            "c": "Acuerdos documentados"
+          }
+        }
+      },
+      "appAbschnitt": {
+        "eyebrow": "La aplicación del propietario",
+        "titel": "Todo lo que quiere saber, sin preguntarle a usted.",
+        "text": "Sus propiedades, la ocupación durante doce meses y cada recibo para consultar: el propietario abre la aplicación y ve el estado. Una aplicación propia, separada de la del negocio, con acceso solo a sus propias propiedades."
       }
     }
   },

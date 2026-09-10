@@ -715,6 +715,10 @@
       "auswertungen": {
         "title": "Kimutatások",
         "items": "Kihasználtság, bevétel, ADR, automatikus riportok, csatorna-összehasonlítás, metakeresés hamarosan"
+      },
+      "eigentuemer": {
+        "title": "Tulajdonosi elszámolás",
+        "items": "Elszámolás tulajdonosonként portállevonásokkal, bizonylat PDF-ként, saját alkalmazás tulajdonosoknak"
       }
     }
   },
@@ -842,7 +846,8 @@
       "channelManager": "Channel manager",
       "direktbuchung": "Közvetlen foglalás",
       "zahlungen": "Fizetés",
-      "mobileApp": "Mobilalkalmazás"
+      "mobileApp": "Mobilalkalmazás",
+      "eigentuemerAbrechnung": "Tulajdonosi elszámolás"
     },
     "ressourcen": {
       "hilfeCenter": "Súgóközpont",
@@ -1947,6 +1952,105 @@
             "c": "Szabad"
           }
         }
+      }
+    },
+    "eigentuemer": {
+      "metaBeschreibung": "Tulajdonosi elszámolás nyaralók és faházak számára: jutalék szerződésenként, portállevonások foglalásonként, bizonylat PDF-ként – és egy saját alkalmazás, ahol a tulajdonos mindent maga lát.",
+      "headline": "Az elszámolás, ami nem igényel visszakérdezést.",
+      "sub": "Minden foglalásból kiszámításra kerül a tulajdonosi rész – portállevonás, jutalék, átalánydíj, minden nyomon követhető az egyes éjszakákig. A tulajdonos látja az alkalmazásában, mielőtt kérdezne.",
+      "bildAlt": "Tulajdonosi elszámolás kulcsszámokkal és foglalásonkénti kimutatással",
+      "nutzen": {
+        "a": {
+          "titel": "Minden sor magyarázza önmagát",
+          "text": "Vendégár, portáljutalék, az Ön jutaléka, részesedés – kibontva ott van a teljes számla, nem csak egy eredet nélküli összeg."
+        },
+        "b": {
+          "titel": "Egy szerződés, nincs vita",
+          "text": "A jutalékkulcs, a minimális jutalék és az átalánydíj időszakra vonatkozik. Az elszámolás mindig az akkor érvényes szerződés alapján történik."
+        },
+        "c": {
+          "titel": "Nem kérdez többé",
+          "text": "A kifizetés, a foglaltság és a bizonylatok az alkalmazásában vannak, a kérdéseket ott írásban teszi fel – a hónap eleji hívások megszűnnek."
+        }
+      },
+      "block": {
+        "eins": {
+          "titel": "Több tulajdonos, mindegyik saját kulccsal.",
+          "text": "Minden tulajdonosnak megvannak a saját objektumai és a jutalékkulcsa – 15%, 22%, 25%, megállapodás szerint. Az elszámolás mindenki számára a sajátjával számol, anélkül, hogy Ön táblázatokat vezetne.",
+          "punkte": {
+            "a": "Kulcs tulajdonosonként",
+            "b": "Objektumok hozzárendelve",
+            "c": "Cég vagy magánszemély"
+          }
+        }
+      },
+      "bildAltBlock": "Tulajdonoskezelés jutalékkulccsal és hozzárendelt objektumokkal",
+      "reiter": {
+        "abrechnung": {
+          "titel": "Elszámolás",
+          "heading": "A foglalástól a részesedésig.",
+          "text": "Vendégár a portál szerint, mínusz portáljutalék, mínusz az Ön kezelési jutaléka – foglalásonként kibontható. Az objektumonkénti és a teljes időszakra vonatkozó összegek alatta találhatók.",
+          "punkte": {
+            "a": "Foglalásonként",
+            "b": "Objektumonként",
+            "c": "Bizonylat PDF-ként"
+          }
+        },
+        "vertrag": {
+          "titel": "Szerződés",
+          "heading": "Ami megállapodásra került, az érvényes.",
+          "text": "Jutalékkulcs érvényességi idővel, plusz minimális jutalék és átalánydíj foglalásonként. Ha a kulcs változik, a régi elszámolások helyesek maradnak – az adott időszak szerződésével számolnak.",
+          "punkte": {
+            "a": "Érvényes ettől és eddig",
+            "b": "Minimális jutalék",
+            "c": "Átalánydíj foglalásonként"
+          }
+        },
+        "portale": {
+          "titel": "Portállevonások",
+          "heading": "Amit a portál visszatart.",
+          "text": "Portálonként egy kulcs arra az esetre, ha nem jelenti be a levonását. Ha egy összeget jelent be, mindig a bejelentett összeg érvényes – semmi sem becsült.",
+          "punkte": {
+            "a": "Portálonként egy kulcs",
+            "b": "Jutalék és fizetési díj",
+            "c": "A bejelentett összeg elsőbbséget élvez"
+          }
+        },
+        "app": {
+          "titel": "Tulajdonosi alkalmazás",
+          "heading": "Maga látja.",
+          "text": "Kifizetés tizenkét hónapon keresztül, kihasználtság, átlagár éjszakánként – és minden elszámolás bizonylattal megtekinthető. Egy saját alkalmazás, csak tulajdonosoknak.",
+          "punkte": {
+            "a": "Kifizetés az idő múlásával",
+            "b": "Elszámolások havonta",
+            "c": "Bizonylat a telefonban"
+          }
+        },
+        "eigennutzung": {
+          "titel": "Saját használat",
+          "heading": "Érkezés bejelentés nélkül.",
+          "text": "A tulajdonos látja az ingatlanai foglaltságát, és közvetlenül beírja saját tartózkodásait. A foglalt napok zárolva vannak – így nem jöhet létre dupla foglalás.",
+          "punkte": {
+            "a": "Foglaltság ingatlanonként",
+            "b": "Tartózkodás rögzítése",
+            "c": "Foglalt napok zárolva"
+          }
+        },
+        "objektakte": {
+          "titel": "Objektum adatai",
+          "heading": "Minden az objektumról egy helyen.",
+          "text": "Alapadatok, kulcsadatok, felszereltség és fotóalbum: A tulajdonos úgy látja az objektumát, ahogyan az a portálokon megjelenik. A lekérdezések és egyeztetések az alkalmazáson keresztül, objektumspecifikusan zajlanak és dokumentálva maradnak – a telefonhívások és három postafiók közötti szétszórtság helyett.",
+          "punkte": {
+            "a": "Alapadatok és felszereltség",
+            "b": "Fotóalbum objektumonként",
+            "c": "Egyeztetések dokumentálva"
+          }
+        }
+      },
+      "appAbschnitt": {
+        "eyebrow": "Tulajdonosi alkalmazás",
+        "titel": "Minden, amit tudni szeretne – anélkül, hogy Önt kérdezné.",
+        "text": "Ingatlanai, a tizenkét havi kihasználtság és minden bizonylat áttekinthetően: a tulajdonos megnyitja az alkalmazást, és látja az aktuális állapotot. Egy saját alkalmazás, elkülönítve a cég alkalmazásától, kizárólag a saját ingatlanaihoz való hozzáféréssel."
       }
     }
   },

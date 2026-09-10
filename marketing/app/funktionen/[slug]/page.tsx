@@ -381,6 +381,36 @@ export default async function FunktionsSeite({
           </section>
         ))}
 
+        {/* 4b. Die App als eigener Abschnitt.
+            Nur für Seiten mit `appReihe` — derzeit die Eigentümer-Seite, deren
+            Funktion zwei Seiten hat: was der Betrieb rechnet (die Aufnahmen
+            oben) und was der Eigentümer davon sieht (diese Reihe). Ein Reiter
+            hätte dafür nicht gereicht: die App IST die halbe Funktion, keine
+            Unterfunktion. Store-Knöpfe stehen hier bewusst NICHT — die
+            Eigentümer-App ist in keinem Store, und ein Knopf ohne Ziel wäre
+            ein Versprechen, das die Seite nicht hält (Wurzel 4). */}
+        {funktion.appReihe ? (
+          <section className="bg-surface-warm">
+            <div className="mx-auto max-w-7xl px-6 py-24">
+              <div className="mx-auto max-w-3xl text-center">
+                <p className="eyebrow">{t("appAbschnitt.eyebrow")}</p>
+                <h2 className="mt-5 font-display text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl">
+                  {t("appAbschnitt.titel")}
+                </h2>
+                <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+                  {t("appAbschnitt.text")}
+                </p>
+              </div>
+              <div className="mt-16">
+                <AppAufnahmenMobilReihe
+                  motive={funktion.appReihe}
+                  alt={t("appAbschnitt.titel")}
+                />
+              </div>
+            </div>
+          </section>
+        ) : null}
+
         {/* 5. Weiter zu den anderen Funktionen */}
         <section className="bg-background">
           <div className="mx-auto max-w-7xl px-6 py-20">
