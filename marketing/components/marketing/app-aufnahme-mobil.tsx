@@ -28,6 +28,17 @@ export function AppAufnahmeMobil({
   priority = false,
   sizes = "(min-width: 1024px) 20vw, 42vw",
   className = "",
+  // Positionierung des Gehäuses. Standard `relative` — für ein Gerät, das im
+  // Textfluss steht. Ein Aufrufer, der es als Overlay über ein anderes Bild
+  // legt, gibt hier "absolute" an.
+  //
+  // Warum als Parameter und nicht einfach `absolute` in `className`: die
+  // Klasse stand fest im Gehäuse-String, und Tailwind entscheidet bei zwei
+  // gleichrangigen Regeln nach der Reihenfolge im STYLESHEET, nicht im
+  // Attribut. `relative` gewann dadurch immer. Gemessen am 10.09.2026:
+  // `position: relative`, das Telefon ragte exakt um seine volle Höhe (378 px)
+  // unter das Fenster — es stand darunter statt darüber.
+  position = "relative",
 }: {
   motiv: AppMotivMobil;
   /** Leer = schmückendes Zweitgerät; dann überspringen Screenreader es. */
@@ -35,10 +46,11 @@ export function AppAufnahmeMobil({
   priority?: boolean;
   sizes?: string;
   className?: string;
+  position?: "relative" | "absolute";
 }) {
   return (
     <figure
-      className={`relative aspect-[860/1870] rounded-[1.6rem] bg-neutral-900 p-[0.3rem] shadow-float ring-1 ring-black/10 sm:rounded-[2rem] sm:p-[0.4rem] dark:bg-neutral-800 ${className}`}
+      className={`${position} aspect-[860/1870] rounded-[1.6rem] bg-neutral-900 p-[0.3rem] shadow-float ring-1 ring-black/10 sm:rounded-[2rem] sm:p-[0.4rem] dark:bg-neutral-800 ${className}`}
     >
       {/* Seitentasten — sie machen aus dem Rechteck ein Gerät. Reine
           Gestaltung, deshalb aria-hidden. */}

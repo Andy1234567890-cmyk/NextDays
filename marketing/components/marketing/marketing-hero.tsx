@@ -13,6 +13,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 import { AppAufnahme } from "@/components/marketing/app-aufnahme";
+import { AppAufnahmeMobil } from "@/components/marketing/app-aufnahme-mobil";
 import { MarketingChannels } from "@/components/marketing/marketing-channels";
 import { Button } from "@/components/ui/button";
 import { SIGNUP_URL, DEMO_URL } from "@/lib/app-url";
@@ -113,8 +114,38 @@ export function MarketingHero() {
             Dasselbe Motiv steht auch im Einblicke-Block weiter unten. Das ist
             Absicht und geprüft: zwischen beiden liegen 12 716 px, also gut
             14 Bildschirmhöhen — sie sind nie zusammen im Bild. */}
-        <div className="pb-12 lg:pb-0">
+        {/* `relative`, damit das Telefon daran hängt. */}
+        <div className="relative">
           <AppAufnahme name="belegungsplan-hotel" alt={t("aufnahmeHotel")} priority />
+
+          {/* Zweites Gerät, über die untere Kante des Programmfensters gelegt.
+              Es zeigt dieselbe Ansicht am Telefon und belegt damit in einem
+              Bild, was der Text daneben verspricht: dieselbe Software am
+              Schreibtisch und unterwegs.
+
+              Verankert an `-bottom-6`, NICHT an einem Prozentwert von oben.
+              Das Gerät ist durch sein Seitenverhältnis (860:1870) gut doppelt
+              so hoch wie breit; jede Verankerung von oben lässt es unten aus
+              dem Abschnitt herauswachsen. Gemessen am 10.09.2026: es ragte
+              103 px (Desktop) bis 205 px (Tablet) unter das Fenster und lief
+              dort in die Logo-Reihe. Von unten verankert bleibt der Überstand
+              fest, egal wie hoch das Fenster gerade ist.
+
+              Erst ab `lg` sichtbar, nicht schon ab `sm`: darunter steht der
+              Hero einspaltig, die Bildspalte ist dann so breit wie die Seite,
+              und ein Gerät darauf verdeckt den Belegungsplan statt ihn zu
+              ergänzen — genau das war bei 820 px zu sehen. */}
+          <AppAufnahmeMobil
+            motiv="kalender-mehrere"
+            // Leerer Alt-Text: die Ansicht ist dieselbe wie im Bild daneben,
+            // das bereits beschrieben ist. Ein zweiter, fast gleicher Satz ist
+            // für Screenreader Lärm statt Information.
+            alt=""
+            priority
+            sizes="14vw"
+            position="absolute"
+            className="-bottom-8 right-[10%] hidden w-[23%] lg:block"
+          />
         </div>
       </div>
 
