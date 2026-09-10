@@ -1,0 +1,95 @@
+# apps/dac7-versand/pyproject.toml — die Versand-API von myNextDays
+#
+# EIGENER Dienst. Er ist die EINZIGE Stelle, die mit der Steuerbehörde
+# spricht — weder die PMS-API (`apps/api`) noch das Frontend rufen die
+# Behörde je direkt an.
+#
+# WARUM GETRENNT
+# ==============
+# Eine Steuermeldung geht nach draußen und ist nicht zurückholbar. Was
+# diesen Weg geht, soll an einer Stelle sichtbar sein: eine Datei, ein
+# Empfänger, ein Protokoll. Läge der Versand in der PMS-API, wäre er ein
+# Endpunkt unter zweihundert anderen — und jede Änderung am Dashboard
+# könnte ihn mitreißen.
+#
+# Dazu kommt die Angriffsfläche: Dieser Dienst hält die Zugangsdaten zur
+# Behörde. Je weniger Code neben ihnen liegt, desto besser.
+#
+# KEIN DATENBANKZUGANG. Der Dienst rechnet nichts aus und liest keine
+# Buchungen — er bekommt eine FERTIGE Meldedatei übergeben, reicht sie
+# weiter und gibt die Quittung zurück. Das Erzeugen bleibt im PMS, wo die
+# Daten liegen.
+
+[project]
+name = "dac7-versand"
+version = "1.0.0"
+description = "Versand-API: reicht DAC7-Meldungen bei der Steuerbehörde ein"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.14.2", # >=2.14.2 wegen GHSA-4xgf-cpjx-pc3j
+    "structlog>=24.4",
+    "httpx>=0.27",               # der Aufruf zur Behörde
+    "python-multipart>=0.0.18",  # Datei-Entgegennahme; <0.0.18 = GHSA-2jv5-9r88-3w3p
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3", "ruff>=0.7", "pylint>=3.3"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "S", "C4", "SIM", "BLE", "ANN"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/tests/*" = ["S101", "S105", "S106", "ANN"]
+# FastAPI-Idiom: File()/Form()/Header() im Vorgabewert deklarieren die
+# Herkunft des Parameters und werden je Anfrage ausgewertet.
+"src/v1/versand.py" = ["B008"]
+
+[tool.pylint.main]
+py-version = "3.12"
+ignore-paths = ["^.*/tests/.*$"]
+
+[tool.pylint.basic]
+const-naming-style = "any"
+class-attribute-naming-style = "any"
+class-const-naming-style = "any"
+
+[tool.pylint.variables]
+ignored-argument-names = "_.*|^ignored_|^unused_|request|app"
+
+[tool.pylint."messages control"]
+disable = [
+    "missing-module-docstring",
+    "missing-class-docstring",
+    "missing-function-docstring",
+    "too-few-public-methods",
+    "redefined-outer-name",
+    "too-many-arguments",
+    "too-many-positional-arguments",
+    # Interne Dataclass und veröffentlichtes Schema tragen dieselben
+    # Feldnamen — Absicht, nicht Kopie (siehe apps/dac7-staging).
+    "duplicate-code",
+    "too-many-instance-attributes",
+]
+
+[tool.pylint.format]
+max-line-length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["src/tests"]
