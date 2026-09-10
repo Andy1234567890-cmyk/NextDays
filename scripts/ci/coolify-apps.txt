@@ -10,6 +10,11 @@
 # der deploy-Job deployt genau dieselben. Beide lesen diese Datei über
 # scripts/ci/betroffene-apps.sh, damit sie nicht auseinanderlaufen können.
 #
+# nextdays-dac7-staging läuft auf dem ZWEITEN Server (nextdays-mail,
+# 62.238.4.193) — als einzige App dieses Repos. Das ist Absicht: Der Dienst
+# spielt die Steuerbehörde und muss vom PMS aus über eine echte
+# Netzwerkstrecke erreichbar sein, nicht über localhost.
+#
 # apps/api/ gehört an nextdays-api + nextdays-worker — NICHT an
 # nextdays-supabase (sonst reißt jeder API-Push den DB-Stack mit →
 # Container-Race/WAL-Korruptionsrisiko). supabase deployt NUR bei
@@ -24,6 +29,7 @@ cdqxi7d0w34sxzr4wr8jy8um|nextdays-supabase|deploy/supabase/
 kilcrxob5u434k3vsyf54ble|nextdays-api|apps/api/ deploy/api-standalone/
 ly4w6vw4ffxk2987nyg5z5kt|nextdays-worker|apps/api/ deploy/worker/
 bok2ol51jn1936lxs66zuujs|nextdays-public-api|apps/public-api/ deploy/public-api/
+ordggcvukpqei9ftesp1rweo|nextdays-dac7-staging|apps/dac7-staging/ deploy/dac7-staging/
 bln3q0n1l1se2hna8utkuag9|nextdays-web|web/ packages/
 lx65cb93ivz5il1suejtaz7g|nextdays-builder|builder/ packages/
 zcjrx4czu338zghc58d41yp7|nextdays-docs|deploy/docs/

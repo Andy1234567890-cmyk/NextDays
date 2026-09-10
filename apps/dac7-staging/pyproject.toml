@@ -1,0 +1,111 @@
+# apps/dac7-staging/pyproject.toml — die simulierte Steuerbehörde
+#
+# EIGENES Projekt, bewusst getrennt von `apps/api`. Es teilt keinen Prozess,
+# kein Image, kein Deployment und KEINEN IMPORT mit dem Modul, das es prüfen
+# soll.
+#
+# Warum die Trennung hier wichtiger ist als anderswo: Diese Anwendung spielt
+# eine FREMDE Gegenstelle. Würde sie die Prüflogik aus `apps/api` importieren,
+# prüfte unsere Datei gegen unsere eigene Vorstellung von ihr — ein Fehler in
+# der Erzeugung wäre auch ein Fehler in der Prüfung und fiele nie auf. Genau
+# dieser Kurzschluss ist bei der Facility-Map schon einmal passiert: Der
+# Unit-Test verglich die Map mit sich selbst und war grün, während bei allen
+# Portalen die Ausstattung fehlte.
+#
+# Die Spaltenliste und die Regeln sind deshalb hier NEU aus der amtlichen
+# Vorlage abgeschrieben, nicht importiert. Weichen die beiden Fassungen
+# voneinander ab, ist das ein Befund — und der Sinn dieses Dienstes.
+#
+# Keine Datenbank-Abhängigkeit: Die Behörde kennt unsere Tabellen nicht. Was
+# sie empfängt, legt sie in ihrem eigenen Speicher ab.
+
+[project]
+name = "dac7-staging"
+version = "1.0.0"
+description = "Simulierte Empfangsstelle für DAC7-Meldungen (CSV/XML) — Teststufe"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.14.2", # >=2.14.2 wegen GHSA-4xgf-cpjx-pc3j
+    "structlog>=24.4",
+    "python-multipart>=0.0.18",  # Datei-Upload; <0.0.18 = GHSA-2jv5-9r88-3w3p
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "httpx>=0.27",  # TestClient
+    "ruff>=0.7",
+    "pylint>=3.3",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "S", "C4", "SIM", "BLE", "ANN"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/tests/*" = ["S101", "S105", "S106", "ANN"]
+# B008 verbietet Funktionsaufrufe in Vorgabewerten. Bei FastAPI sind
+# `File(...)`, `Header(...)` und `Query(...)` an genau dieser Stelle das
+# vorgeschriebene Idiom — sie deklarieren die Herkunft des Parameters und
+# werden vom Rahmenwerk je Anfrage ausgewertet, nicht einmal beim Import.
+# Sie in den Rumpf zu ziehen hiesse, das Schema von Hand nachzubauen.
+"src/v1/einreichung.py" = ["B008"]
+"src/v1/quittungen.py" = ["B008"]
+
+[tool.pylint.main]
+py-version = "3.12"
+ignore-paths = ["^.*/tests/.*$"]
+
+[tool.pylint.basic]
+const-naming-style = "any"
+class-attribute-naming-style = "any"
+class-const-naming-style = "any"
+
+[tool.pylint.variables]
+ignored-argument-names = "_.*|^ignored_|^unused_|request|app"
+
+[tool.pylint."messages control"]
+disable = [
+    "missing-module-docstring",
+    "missing-class-docstring",
+    "missing-function-docstring",
+    "too-few-public-methods",
+    "redefined-outer-name",
+    "too-many-arguments",
+    "too-many-positional-arguments",
+    # Die internen Dataclasses (`core/pruefung_csv.Befund`, `.Eintrag`) und die
+    # Pydantic-Schemas (`v1/schemas`) tragen dieselben Feldnamen — das ist
+    # ABSICHT, nicht Kopie: Das eine ist die interne Darstellung, das andere
+    # der veroeffentlichte Vertrag der API. Sie zu verschmelzen hiesse, dass
+    # eine interne Umbenennung stillschweigend die Antwort aendert, die ein
+    # Aufrufer schon auswertet.
+    "duplicate-code",
+    # `Eintrag` hat elf Felder, weil eine Quittung elf Angaben traegt
+    # (Nummer, Zeitpunkt, Format, Dateiname, Groesse, Pruefsumme, Status,
+    # Zeilenzahl, Zeilentypen, Fehler, Hinweise). Das ist eine
+    # Datenstruktur, keine Klasse mit zu viel Verantwortung — sie
+    # aufzuteilen brächte zwei Objekte, die immer gemeinsam auftreten.
+    "too-many-instance-attributes",
+]
+
+[tool.pylint.format]
+max-line-length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["src/tests"]

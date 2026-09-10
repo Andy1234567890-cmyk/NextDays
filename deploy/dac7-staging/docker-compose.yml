@@ -1,0 +1,58 @@
+# ──────────────────────────────────────────────────────────────────────────
+# nextdays-dac7-staging — die simulierte Steuerbehörde als eigene Coolify-App.
+#
+# LÄUFT AUF DEM ZWEITEN SERVER (ubuntu-8gb-hel1-1, 62.238.4.193), NICHT auf
+# dem Server des PMS. Das ist keine Kapazitätsfrage, sondern der Zweck: Der
+# Dienst spielt eine FREMDE Gegenstelle. Erst auf einer anderen Maschine ist
+# die Einreichung eine echte Netzwerkstrecke — Zeitüberschreitungen,
+# Verbindungsabbrüche und TLS-Fehler treten dann wirklich auf, statt im
+# selben Docker-Netz wegoptimiert zu werden.
+#
+# KEIN TRAEFIK AUF DIESEM SERVER. Die Ports 80/443 hält mailcow mit einem
+# Catch-all (`server_name _`). Ein zweiter Ingress-Proxy dort wäre ein
+# Konflikt mit dem produktiven Mailverkehr — deshalb bindet dieser Dienst
+# NUR auf 127.0.0.1:8100, und mailcows nginx reicht die Domain durch
+# (siehe deploy/dac7-staging/nginx-dac7-test.conf).
+#
+# KEINE DATENBANK, KEIN SUPABASE, KEIN REDIS. Die Behörde kennt unsere
+# Tabellen nicht. Was sie empfängt, hält sie im Arbeitsspeicher — und ein
+# Neustart löscht es (siehe apps/dac7-staging/README.md, Abschnitt
+# Datenschutz).
+# ──────────────────────────────────────────────────────────────────────────
+services:
+  dac7-staging:
+    build:
+      context: ./apps/dac7-staging
+      dockerfile: Dockerfile
+    image: nextdays-dac7-staging:prod
+    restart: unless-stopped
+    # NUR auf localhost. Von außen erreichbar ausschließlich über den nginx
+    # von mailcow — der Dienst nimmt Dateien mit CPR-Nummern entgegen und
+    # gehört nicht offen ins Netz.
+    ports:
+      - "127.0.0.1:8100:8000"
+    environment:
+      # PFLICHT, ohne Vorgabewert: Fehlt das Token, fährt der Dienst nicht
+      # hoch (fail-closed). In Coolify als Secret setzen, nie hier eintragen.
+      STAGING_TOKEN: ${STAGING_TOKEN:?STAGING_TOKEN fehlt}
+      AUFBEWAHRUNG_STUNDEN: ${AUFBEWAHRUNG_STUNDEN:-24}
+      MAX_DATEI_BYTES: ${MAX_DATEI_BYTES:-20971520}
+      # Das PMS ruft die Teststufe serverseitig auf, nicht aus dem Browser.
+      # Leer lassen, solange keine Oberfläche direkt zugreift.
+      ERLAUBTE_HERKUENFTE: ${ERLAUBTE_HERKUENFTE:-}
+      ENV: production
+    healthcheck:
+      # Prüft den Prozess, nicht nur den Container: Ein uvicorn, der wegen
+      # fehlendem STAGING_TOKEN nicht hochkam, soll als ungesund gelten.
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        # Der Dienst protokolliert nur Kennzahlen, nie Feldwerte — trotzdem
+        # begrenzt, damit ein Dauerlauf die Platte des Mailservers nicht füllt.
+        max-size: "10m"
+        max-file: "3"

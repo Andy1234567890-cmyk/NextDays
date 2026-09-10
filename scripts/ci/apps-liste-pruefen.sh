@@ -13,7 +13,11 @@ liste="$wurzel/scripts/ci/coolify-apps.txt"
 ci="$wurzel/.github/workflows/ci.yml"
 
 aus_liste=$(grep -v '^\s*#' "$liste" | grep -v '^\s*$' | cut -d'|' -f2 | sort)
-aus_matrix=$(grep -oE '^\s+- app: nextdays-[a-z-]+' "$ci" | awk '{print $3}' | sort -u)
+# ZIFFERN gehoeren ins Muster: `nextdays-dac7-staging` brach an der 7 ab und
+# wurde als `nextdays-dac` gelesen — das Skript meldete eine Abweichung, die
+# es nicht gab, und haette umgekehrt einen echten Namensfehler dahinter
+# verdeckt. Latent seit dem ersten App-Namen mit Ziffer.
+aus_matrix=$(grep -oE '^\s+- app: nextdays-[a-z0-9-]+' "$ci" | awk '{print $3}' | sort -u)
 
 if [ "$aus_liste" != "$aus_matrix" ]; then
   echo "::error::coolify-apps.txt und die images-Matrix in ci.yml weichen ab:"

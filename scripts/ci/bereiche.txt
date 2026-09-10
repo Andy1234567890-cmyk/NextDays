@@ -22,6 +22,12 @@
 # nicht durchrutschen.
 api|apps/api/ apps/public-api/
 public-api|apps/public-api/ apps/api/ deploy/public-api/
+# Die simulierte Steuerbehörde. `apps/api/` steht bewusst NICHT in dieser
+# Zeile: Der Dienst importiert nichts von dort und darf es auch nicht (der
+# CI-Schritt „Kein Import aus apps/api" erzwingt das). Eine Änderung an der
+# Erzeugung muss die Prüfung NICHT mitziehen — genau darin liegt ihr Wert als
+# unabhängige zweite Lesung der amtlichen Vorlage.
+dac7-staging|apps/dac7-staging/ deploy/dac7-staging/
 
 # --- Geteilte Pakete -------------------------------------------------------
 packages|packages/

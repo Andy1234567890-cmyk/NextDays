@@ -228,6 +228,104 @@ jobs:
         working-directory: .
         run: docker compose -f deploy/public-api/docker-compose.yml config --quiet
 
+  # ────────────────────────────────────────────────────────────────────────
+  # Die simulierte Steuerbehörde (apps/dac7-staging) — eigener Dienst, eigener
+  # Job.
+  #
+  # Bewusst NICHT an den api-Job gehängt, und das ist hier mehr als Hygiene:
+  # Der Dienst prüft die DAC7-Datei, die apps/api erzeugt, und darf deshalb
+  # nichts von ihr importieren. Ein gemeinsamer Job würde beide
+  # Abhängigkeitsbäume installieren und genau die Trennung aufheben, die der
+  # ganze Sinn dieses Dienstes ist.
+  #
+  # Die Tests brauchen weder Datenbank noch Netz: Die Empfangsstelle kennt
+  # unsere Tabellen nicht, sie sieht nur die Bytes einer eingereichten Datei.
+  # ────────────────────────────────────────────────────────────────────────
+  dac7-staging:
+    name: DAC7-Teststufe (lint + tests)
+    needs: [betroffen]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/dac7-staging
+    steps:
+      # Kein Job-`if:` — siehe Begründung beim public-api-Job: ein per Job-`if`
+      # übersprungener needs-Job gilt GitHub als NICHT erfolgreich und zieht
+      # `deploy` mit ins Überspringen.
+      - name: Betroffen?
+        id: pruefen
+        working-directory: ${{ github.workspace }}
+        run: echo "laufen=${{ needs.betroffen.outputs.dac7-staging }}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.pruefen.outputs.laufen == 'true'
+
+      - name: Kein Import aus apps/api
+        if: steps.pruefen.outputs.laufen == 'true'
+        working-directory: .
+        # DIE Kernregel dieses Dienstes, deshalb im CI und nicht nur in der
+        # Doku: Würde die Empfangsstelle die Prüfregeln aus apps/api
+        # importieren, prüfte unsere Datei gegen genau die Vorstellung, aus der
+        # sie entstanden ist — ein Denkfehler in der Erzeugung wäre dann auch
+        # einer in der Prüfung und bliebe unsichtbar. Genau dieser Kurzschluss
+        # ist bei der Channex-Facility-Map passiert (Test verglich die Map mit
+        # sich selbst, grün, während bei allen Portalen die Ausstattung fehlte).
+        run: |
+          if grep -rn "from src.features\|import src.features\|apps.api\|apps/api" \
+               apps/dac7-staging/src --include='*.py'; then
+            echo "::error::apps/dac7-staging importiert aus apps/api — das hebt die Unabhängigkeit der Prüfung auf."
+            exit 1
+          fi
+          echo "Keine Importe aus apps/api — die zweite Lesung bleibt unabhängig."
+
+      - name: uv installieren
+        if: steps.pruefen.outputs.laufen == 'true'
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+
+      - name: Abhängigkeiten installieren
+        if: steps.pruefen.outputs.laufen == 'true'
+        run: |
+          uv venv --python 3.12 .venv
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+          uv pip install --python .venv/bin/python -e ".[dev]"
+
+      - name: Lint (ruff)
+        if: steps.pruefen.outputs.laufen == 'true'
+        run: ruff check src
+
+      - name: Lint (pylint 10/10)
+        if: steps.pruefen.outputs.laufen == 'true'
+        run: pylint --fail-under=10 src/core src/v1 src/main.py
+
+      - name: Tests (pytest)
+        if: steps.pruefen.outputs.laufen == 'true'
+        env:
+          # Der Dienst fährt ohne Token nicht hoch (fail-closed). Hier steht
+          # ein Platzhalter, damit die App im Test überhaupt entsteht — die
+          # Auth-Tests prüfen mit genau diesem Wert, dass 401 kommt, wenn er
+          # fehlt oder falsch ist.
+          STAGING_TOKEN: ci-platzhalter-token-nicht-echt
+        run: pytest -q
+
+      - name: Ohne Token fährt der Dienst nicht hoch
+        if: steps.pruefen.outputs.laufen == 'true'
+        # Die Gegenprobe zur fail-closed-Zusage. Ohne sie wäre nicht belegt,
+        # dass ein vergessenes Secret auffällt — eine offene Empfangsstelle
+        # für Dateien mit CPR-Nummern fiele sonst niemandem auf.
+        run: |
+          if STAGING_TOKEN= python -c "from src.main import create_app; create_app()" 2>/dev/null; then
+            echo "::error::Der Dienst startet ohne STAGING_TOKEN — fail-closed ist gebrochen."
+            exit 1
+          fi
+          echo "Ohne STAGING_TOKEN kein Start — wie vorgesehen."
+
+      - name: Deploy-Stack ist gültig
+        if: steps.pruefen.outputs.laufen == 'true'
+        working-directory: .
+        env:
+          STAGING_TOKEN: ci-platzhalter-token-nicht-echt
+        run: docker compose -f deploy/dac7-staging/docker-compose.yml config --quiet
+
   packages:
     name: Packages (Typprüfung + Lint)
     needs: [betroffen]
@@ -617,6 +715,19 @@ jobs:
       - name: Länderliste vollständig und ISO-konform
         if: steps.pruefen.outputs.laufen == 'true'
         run: node scripts/i18n/laenderliste-pruefen.mjs
+
+      # Sprache und Länderwissen fest verdrahtet statt durchgereicht — dieselbe
+      # Wurzel wie ein hartkodiertes „€", nur bei Datum, Zahl, Sortierung und
+      # Beispielwert. Live am 10.09.2026: `gastgeber/lib/laender.ts` hielt
+      # `const SPRACHE = "de"` und speiste damit Intl.DisplayNames — alle
+      # Ländernamen standen in allen 45 Sprachen auf Deutsch. Vier Formulare
+      # trugen fest `placeholder="DE123456789"` neben einer Länderauswahl, die
+      # nicht nachzog; ein dänischer Partner tippt danach eine Nummer, die es
+      # in DK nicht gibt. Beides sieht im Code plausibel aus und fällt nur dem
+      # auf, der die Oberfläche in einer Fremdsprache öffnet.
+      - name: Kein fest verdrahtetes Sprach-/Länderwissen
+        if: steps.pruefen.outputs.laufen == 'true'
+        run: node scripts/i18n/laender-formwissen-pruefen.mjs
 
       # Dieselbe Logik in mehreren Kopien — die Fehlerklasse, die bei der
       # Nachprüfung des Baukastens am 27.08.2026 DREIMAL zuschlug: die
@@ -1251,6 +1362,7 @@ jobs:
       # bereiche-pruefen.sh die einzige Absicherung gegen den Tippfehler.
       api: ${{ steps.bereiche.outputs.api }}
       public-api: ${{ steps.bereiche.outputs.public-api }}
+      dac7-staging: ${{ steps.bereiche.outputs.dac7-staging }}
       packages: ${{ steps.bereiche.outputs.packages }}
       web: ${{ steps.bereiche.outputs.web }}
       plattform: ${{ steps.bereiche.outputs.plattform }}
@@ -1431,6 +1543,13 @@ jobs:
             kind: compose
             projectdir: .
             compose: deploy/public-api/docker-compose.yml
+          # Die simulierte Steuerbehoerde. Laeuft als einzige App dieses Repos
+          # auf dem ZWEITEN Server — der Dienst muss vom PMS aus ueber eine
+          # echte Netzwerkstrecke erreichbar sein, nicht ueber localhost.
+          - app: nextdays-dac7-staging
+            kind: compose
+            projectdir: .
+            compose: deploy/dac7-staging/docker-compose.yml
     steps:
       # Die Matrix bleibt die vollständige, lesbare Abbildung aller 12
       # Coolify-Resources; ob dieser Eintrag WIRKLICH baut, entscheidet die
@@ -1507,7 +1626,7 @@ jobs:
   # ────────────────────────────────────────────────────────────────────────
   deploy:
     name: Deploy to Coolify
-    needs: [betroffen, api, public-api, packages, frontends, frontend-geheimnisse, kanal-enums, mobile, mobile-konsistenz, marketing-konsistenz, images]
+    needs: [betroffen, api, public-api, dac7-staging, packages, frontends, frontend-geheimnisse, kanal-enums, mobile, mobile-konsistenz, marketing-konsistenz, images]
     # `always()` ist ZWINGEND: ohne es prueft GitHub die `needs` VOR der
     # if-Auswertung und ueberspringt den Job, sobald irgendein needs-Job
     # `skipped` ist — egal wie wahr die Bedingung ist (belegt: Lauf 32505375969,
