@@ -99,3 +99,17 @@ mobile-konsistenz|mobile-bestdays/ mobile-nextdays/ mobile-owner/ web/messages/ 
 #   packages/tarif/src/index.ts    ↔ marketing/lib/tarif.ts
 #   packages/currency/src/index.ts ↔ marketing/lib/currency.ts
 marketing-konsistenz|marketing/lib/ packages/tarif/ packages/currency/ scripts/marketing/
+
+# Statische Fallen, die weder tsc noch ruff noch pytest sehen — jede hat einen
+# realen Vorfall hinter sich, und alle drei liefen bis zum 10.09.2026 NUR von
+# Hand (34 von 67 Pruefskripten liefen nie automatisch):
+#   * typografische-quotes-pruefen.py  — ein „ oder ' im String-Literal bricht
+#     den Code; in dieser Sitzung selbst passiert (PropertyKartei.tsx).
+#   * use-server-exporte-pruefen.mjs   — ein `export const` in einer
+#     "use server"-Datei legt die Seite mit 500 lahm, erst in „Collecting page
+#     data". tsc und ESLint sehen es NICHT.
+#   * dashboard-kacheln-pruefen.mjs    — Backend-Literal, web-Katalog und
+#     Kachel-Inhalt muessen deckungsgleich sein.
+# Breite Pfade mit Absicht: alle drei pruefen quer ueber das Repo, ein enger
+# Filter waere derselbe blinde Fleck in klein.
+statische-fallen|apps/api/ web/ plattform/ gastgeber/ admin/ partner/ builder/ marketing/ scripts/diagnose/

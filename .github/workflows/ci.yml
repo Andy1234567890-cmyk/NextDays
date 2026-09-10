@@ -343,6 +343,43 @@ jobs:
       - name: Neue Komplexität?
         run: bash scripts/qualitaet/spaghetti-gate.sh
 
+  # Statische Fallen, die kein anderes Gate sieht. Alle drei Pruefungen gab es
+  # laengst — sie liefen nur nie automatisch, und genau deshalb sind ihre
+  # Fehlerklassen wiederholt durchgerutscht (zuletzt ein typografisches
+  # Anfuehrungszeichen am 10.09.2026, gefunden vom Nutzer statt vom Gate).
+  # Reine Quelltextpruefungen: kein Netz, keine DB, keine Secrets.
+  statische-fallen:
+    name: Statische Fallen (Quotes, use server, Kacheln)
+    needs: [betroffen]
+    runs-on: ubuntu-latest
+    steps:
+      # Kein Job-`if:` — gleiche Ueberlegung wie bei kanal-enums: ein per
+      # Job-`if` uebersprungener needs-Job gilt GitHub als NICHT erfolgreich.
+      - name: Betroffen?
+        id: pruefen
+        working-directory: ${{ github.workspace }}
+        run: echo "laufen=${{ needs.betroffen.outputs.statische-fallen }}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.pruefen.outputs.laufen == 'true'
+
+      # Ein typografisches Anfuehrungszeichen im String-Literal ist fuer den
+      # Menschen unsichtbar und fuer den Parser ein Fehler. Betrifft NUR
+      # Python — in TS/TSX faengt es der Compiler.
+      - name: Keine typografischen Quotes in Python-Strings
+        if: steps.pruefen.outputs.laufen == 'true'
+        run: python3 scripts/diagnose/typografische-quotes-pruefen.py
+
+      # Ein `export const` in einer "use server"-Datei bricht erst in
+      # „Collecting page data" — nach tsc, nach ESLint, mitten im Deploy.
+      - name: 'Dateien mit use-server-Direktive exportieren nur async functions'
+        if: steps.pruefen.outputs.laufen == 'true'
+        run: node scripts/diagnose/use-server-exporte-pruefen.mjs
+
+      - name: Kachel-Katalog deckungsgleich
+        if: steps.pruefen.outputs.laufen == 'true'
+        run: node scripts/diagnose/dashboard-kacheln-pruefen.mjs
+
   # Typprüfung je Frontend — schnelles, präzises Signal VOR den langsamen
   # Image-Builds. Der Produktions-Build läuft für die deployten Apps im
   # images-Job (dort exakt wie Coolify baut), nicht doppelt hier.
@@ -1182,6 +1219,7 @@ jobs:
       mobile-android-owner: ${{ steps.bereiche.outputs.mobile-android-owner }}
       mobile-konsistenz: ${{ steps.bereiche.outputs.mobile-konsistenz }}
       marketing-konsistenz: ${{ steps.bereiche.outputs.marketing-konsistenz }}
+      statische-fallen: ${{ steps.bereiche.outputs.statische-fallen }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
