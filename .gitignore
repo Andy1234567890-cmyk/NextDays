@@ -53,3 +53,7 @@ web/private/
 graphify-out/
 graph.json
 .claudeignore
+
+# Amtliche DAC7-Vorlage: enthaelt eine ECHTE Meldung mit 18 CPR-Nummern,
+# Namen, Anschriften und Bankverbindungen. Gehoert nicht ins Repo.
+docs/Duck7/

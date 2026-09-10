@@ -165,6 +165,17 @@ function modulFehlt(href: string, module: string[]): boolean {
 // Punkte oben nicht verdrängen. Eigener Block NACH den Gruppen — `MAIN` würde
 // sie an den Anfang setzen.
 const BOTTOM: readonly NavItem[] = [
+  // DAC7: die gesetzliche Jahresmeldung der Vermietungsumsaetze an die
+  // Steuerbehoerde (EU-Richtlinie 2021/514). EIGENES MODUL, kein Unterpunkt
+  // der Buchhaltung — es ist kein Beleg- oder Zahlungsvorgang, sondern eine
+  // Meldepflicht gegenueber einer Behoerde, die einmal im Jahr erfuellt wird
+  // und einen eigenen Ablauf hat (berechnen, pruefen, abgeben, korrigieren).
+  //
+  // Unten, weil sie einmal jaehrlich anfaellt und die taeglichen Punkte oben
+  // nicht verdraengen soll. `manage_billing`, weil die Meldung Steuerdaten
+  // des Betriebs offenlegt — Eigentuemer und Mitarbeiter haben damit nichts
+  // zu tun (§4.2/§4.3).
+  { key: "dac7", href: "/dac7", icon: "ph:file-text", req: "manage_billing" },
   // „Erweiterungen" ist der Modul-Verkauf (Kacheln + Detailseite mit
   // „Aktivieren") — bewusst NICHT in der Abrechnung, dort stehen Tarif und
   // Rechnungen. Buchen kostet Geld → manage_billing.

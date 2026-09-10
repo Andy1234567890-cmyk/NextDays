@@ -44,10 +44,29 @@ _SPALTEN = (
 )
 
 # Spalten fuer die Objektangaben (§ 14 Abs. 4 Nr. 6).
+#
+# `bfe_number` gehoert dazu, obwohl sie keine Grundbuchnummer ist: In
+# Daenemark meldet DAC7 ueber die BFE-Nummer (RS_ACT_DK_REAL_PROP_REG_NUM),
+# nicht ueber die Matrikelnummer (RS_ACT_LAND_REG_NUM). Beide sind eigene
+# Felder der amtlichen Vorlage und beide werden gemeldet — wer nur die
+# Grundbuchnummer prueft, haelt ein vollstaendig erfasstes daenisches Objekt
+# faelschlich fuer unvollstaendig.
 _OBJEKT_SPALTEN = (
-    "id, title, city, country, land_registration_number, "
+    "id, title, city, country, bfe_number, land_registration_number, "
     "land_registration_unavailable, land_registration_confirmed_at"
 )
+
+
+def _als_text(wert: object) -> str | None:
+    """Die BFE-Nummer als Text.
+
+    In der Datenbank ist sie eine Ganzzahl, in der Meldedatei ein Feld wie
+    jedes andere. Als Zahl durch JSON geschickt verlöre eine fuehrende Null
+    ihre Bedeutung — deshalb hier einmal sauber umwandeln.
+    """
+    if wert is None or wert == "":
+        return None
+    return str(wert).strip() or None
 
 
 class TaxpayerService:
@@ -87,6 +106,7 @@ class TaxpayerService:
                 title=r.get("title"),
                 city=r.get("city"),
                 country=r.get("country"),
+                bfe_number=_als_text(r.get("bfe_number")),
                 land_registration_number=r.get("land_registration_number"),
                 land_registration_unavailable=bool(
                     r.get("land_registration_unavailable")

@@ -171,13 +171,28 @@ class ObjektAngabeStatus(ObjektAngabe):
     title: str | None = None
     city: str | None = None
     country: str | None = None
+    # BFE-Nummer: die daenische Kennung der Immobilie. Sie wird in der
+    # Objektkartei gepflegt und ist fuer eine daenische DAC7-Meldung die
+    # massgebliche Objektkennung (RS_ACT_DK_REAL_PROP_REG_NUM) — die
+    # Matrikelnummer daneben ist ein anderes Feld.
+    bfe_number: str | None = None
     confirmed_at: datetime | None = None
 
     @property
     def erledigt(self) -> bool:
-        """Erhoben ist erhoben — auch wenn das Ergebnis „keine Nummer" war."""
+        """Erhoben ist erhoben — auch wenn das Ergebnis „keine Nummer" war.
+
+        Die BFE-Nummer zaehlt mit: Ein daenisches Objekt wird ueber sie
+        gemeldet (RS_ACT_DK_REAL_PROP_REG_NUM), nicht ueber die
+        Matrikelnummer. Ohne diesen Zweig galten 18 vollstaendig gepflegte
+        Objekte als „ohne Angabe", weil nur `land_registration_number` und
+        das Bestaetigungsdatum geprueft wurden — beide sind in Daenemark
+        nicht die massgebliche Kennung.
+        """
         return bool(
-            self.land_registration_number or self.land_registration_unavailable
+            self.bfe_number
+            or self.land_registration_number
+            or self.land_registration_unavailable
         )
 
 
