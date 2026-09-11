@@ -89,6 +89,11 @@ export function SupportChat() {
   // konnte. Sie füllt das Formular vor — der Besucher tippt sie nicht neu.
   const [offeneFrage, setOffeneFrage] = useState<string | null>(null);
 
+  // Der aktuelle Token als Ref — gelesen vom Selbstoeffner unten, der bewusst
+  // NICHT auf ihn als Abhaengigkeit hoert (siehe dort).
+  const tokenRef = useRef<string | null>(null);
+  tokenRef.current = token;
+
   // Vorhandene Konversation nach einem Seitenwechsel wiederfinden.
   useEffect(() => {
     setToken(gespeichertesToken());
@@ -106,8 +111,16 @@ export function SupportChat() {
   // NICHT, wenn schon ein Ticket läuft: dann wartet der Besucher auf eine
   // Antwort von uns, und ein aufspringendes Fenster mit der Frage „kann ich
   // helfen?" ist dort keine Hilfe, sondern eine Verhöhnung.
+  // KEINE Abhaengigkeit ausser `locale`: Der Effekt darf GENAU EINMAL je
+  // Seitenaufruf laufen. Haengt er zusaetzlich an `token`, raeumt jede
+  // Zustandsaenderung waehrend der Wartezeit den Timer ab und startet ihn neu
+  // — der Merker stand dann schon, und der neue Durchlauf stieg sofort
+  // wieder aus. Das Fenster blieb zu, obwohl die Merkung sagte, es sei
+  // aufgegangen (11.09.2026 gemessen).
+  //
+  // Das laufende Ticket wird deshalb IM TIMER geprueft, ueber ein Ref, das
+  // immer den aktuellen Wert traegt — nicht ueber die Abhaengigkeitsliste.
   useEffect(() => {
-    if (token) return undefined;
     try {
       if (sessionStorage.getItem(SELBST_GEOEFFNET) === "1") return undefined;
     } catch {
@@ -118,17 +131,26 @@ export function SupportChat() {
     }
 
     const timer = window.setTimeout(() => {
+      // Laeuft inzwischen ein Ticket, wartet der Besucher auf eine Antwort
+      // von uns. Ein aufspringendes „kann ich helfen?" ist dort keine Hilfe.
+      // Der Merker bleibt in diesem Fall bewusst UNGESETZT: gefragt haben wir
+      // ja nicht.
+      if (tokenRef.current) return;
+
+      setOffen(true);
+      // Erst NACH dem Oeffnen merken. Umgekehrt herum stand die Merkung auch
+      // dann, wenn das Oeffnen nicht mehr ankam — und der Besucher bekam die
+      // Begruessung nie zu sehen, obwohl sie als erledigt galt.
       try {
         sessionStorage.setItem(SELBST_GEOEFFNET, "1");
       } catch {
-        return;
+        // Nicht schlimm: das Fenster steht offen, nur die Merkung fehlt.
       }
-      setOffen(true);
       ereignisMelden("chat_selbst_geoeffnet", undefined, locale);
     }, SELBST_OEFFNEN_MS);
 
     return () => window.clearTimeout(timer);
-  }, [token, locale]);
+  }, [locale]);
 
   const uebernehmen = useCallback((k: SupportConversation) => {
     setVerlauf(k.messages);
