@@ -49,6 +49,14 @@ import {
 // spürbar „live", ohne den öffentlichen Endpunkt zu fluten.
 const ABRUF_MS = 8000;
 
+// Wartezeit, bis der Chat von selbst aufgeht. Kurz genug, dass die Frage noch
+// zum Seitenbesuch gehört, lang genug, dass sie nicht in den Seitenaufbau
+// platzt: 2 s.
+const SELBST_OEFFNEN_MS = 2000;
+
+// Merker, dass wir in DIESER Browser-Sitzung schon von selbst aufgegangen sind.
+const SELBST_GEOEFFNET = "nd-chat-selbst-geoeffnet";
+
 function neueId(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
@@ -85,6 +93,42 @@ export function SupportChat() {
   useEffect(() => {
     setToken(gespeichertesToken());
   }, []);
+
+  // Von selbst aufgehen und fragen, ob wir helfen können.
+  //
+  // EINMAL PRO BROWSER-SITZUNG, nicht pro Seitenaufruf: wer sich durch sechs
+  // Unterseiten liest, bekäme sonst sechsmal dasselbe Fenster ins Gesicht.
+  // `sessionStorage` statt `localStorage`, damit ein späterer Besuch wieder
+  // begrüßt wird — und damit die Merkung ohne Einwilligung zulässig bleibt
+  // (technisch erforderlich für genau diese Funktion, kein Profil über
+  // Sitzungsgrenzen).
+  //
+  // NICHT, wenn schon ein Ticket läuft: dann wartet der Besucher auf eine
+  // Antwort von uns, und ein aufspringendes Fenster mit der Frage „kann ich
+  // helfen?" ist dort keine Hilfe, sondern eine Verhöhnung.
+  useEffect(() => {
+    if (token) return undefined;
+    try {
+      if (sessionStorage.getItem(SELBST_GEOEFFNET) === "1") return undefined;
+    } catch {
+      // Privater Modus oder gesperrter Speicher: dann lieber gar nicht
+      // aufgehen als bei jedem Seitenwechsel erneut. Ein Fenster, das sich
+      // nicht merken kann, dass es schon da war, ist aufdringlich.
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      try {
+        sessionStorage.setItem(SELBST_GEOEFFNET, "1");
+      } catch {
+        return;
+      }
+      setOffen(true);
+      ereignisMelden("chat_selbst_geoeffnet", undefined, locale);
+    }, SELBST_OEFFNEN_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [token, locale]);
 
   const uebernehmen = useCallback((k: SupportConversation) => {
     setVerlauf(k.messages);
@@ -225,6 +269,14 @@ export function SupportChat() {
   function umschalten() {
     const neuOffen = !offen;
     setOffen(neuOffen);
+    // Wer selbst greift, braucht die Einladung nicht mehr — auch dann nicht,
+    // wenn er gleich wieder schliesst. Der Merker gehoert deshalb an JEDE
+    // eigene Handlung am Fenster, nicht nur ans Oeffnen.
+    try {
+      sessionStorage.setItem(SELBST_GEOEFFNET, "1");
+    } catch {
+      // Ohne Speicher geht der Selbstoeffner ohnehin nicht los.
+    }
     if (neuOffen) ereignisMelden("chat_geoeffnet", undefined, locale);
   }
 

@@ -319,6 +319,11 @@ export type Ga4Ereignis =
   // Support-Chat geöffnet. Zählt den Bedarf an Rückfragen je Seite; die
   // Seite steht im `page_view` davor, nicht als Parameter hier.
   | "chat_geoeffnet"
+  // Der Chat ging von selbst auf (Begrüßung nach kurzer Verweildauer). Ein
+  // EIGENES Ereignis, weil es keinen Bedarf misst, sondern nur, dass wir
+  // gefragt haben — in `chat_geoeffnet` gezählt würde es die Nachfrage-Zahl
+  // aufblasen und jede Auswertung davor entwerten.
+  | "chat_selbst_geoeffnet"
   // Der Produktberater (0626): eine beantwortete Frage ist ein Ticket, das
   // nie entstand — und eine Übergabe zeigt, wo das Wissen fehlt. Beide
   // getrennt zählen, sonst lässt sich die Wirkung nicht messen.
