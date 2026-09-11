@@ -82,63 +82,48 @@ _STIL = """<!doctype html>
   .zahlen b { display:block; font-size:1.25rem; opacity:1; }
   /* Die Satztabelle traegt so viele Spalten wie die CSV belegt — sie
      rollt waagerecht, statt die Seite zu sprengen. */
-  .breit { overflow-x:auto; overflow-y:auto; max-height:75vh; margin:0 -.25rem;
-           /* Ein sichtbarer Rollbalken, nicht der ausgeblendete von macOS:
-              Sonst sieht niemand, dass rechts noch 50 Spalten stehen. */
+  /* Die Datentabelle.
+
+     Sie zeigt die eingereichte Datei als Raster: bis zu 89 Spalten, eine
+     Zeile je Satz. Sie rollt waagerecht als GANZES — nichts bleibt beim
+     Rollen stehen.
+
+     Klebende Spalten standen hier bis zum 11.09.2026 und waren ein
+     Fehler: In Zeilen mit wenigen belegten Feldern schien der Text
+     weggerollter Spalten durch sie hindurch ("000019DEMO01" quer ueber
+     der Zeilennummer). Drei Anlaeufe ueber Stapelreihenfolge, deckende
+     Hintergruende und feste Tabellenbreiten haben es nicht behoben.
+     Eine Darstellung, die Werte uebereinanderlegt, ist bei einer
+     Steuermeldung schlimmer als eine, die beim Rollen die Zeilennummer
+     verliert: Wer zwei Zahlen uebereinander sieht, liest eine falsche.
+     Die Orientierung traegt der ROW_TYPE, der in jeder Zeile als eigene
+     Spalte mitlaeuft. */
+  .breit { overflow:auto; max-height:75vh; margin:0 -.25rem;
+           /* Sichtbarer Rollbalken: macOS blendet ihn sonst aus, und
+              niemand sieht, dass rechts noch 50 Spalten stehen. */
            scrollbar-width:auto; }
   .breit::-webkit-scrollbar { height:.85rem; width:.85rem; }
   .breit::-webkit-scrollbar-thumb { background:#9aa3ad; border-radius:.45rem; }
   .breit::-webkit-scrollbar-track { background:#e7eaee; border-radius:.45rem; }
-  @media (prefers-color-scheme: dark) {
-    .breit::-webkit-scrollbar-thumb { background:#4a525c; }
-    .breit::-webkit-scrollbar-track { background:#20252b; } }
-  /* `table-layout:fixed` statt `auto`: Bei `auto` verteilt der Browser die
-     Breiten nach Inhalt und laesst lange Werte ueber den Zellenrand
-     hinauslaufen. Der ueberstehende Text wird dann UEBER die angeheftete
-     Spalte gemalt — sichtbar war "000019DEMO01" quer ueber der
-     Zeilennummer. Feste Breiten plus `clip` beenden das. */
-  table.csv { font-size:.8rem; white-space:nowrap; table-layout:fixed;
-              width:auto; min-width:100%; }
-  table.csv td, table.csv th { overflow:clip; text-overflow:ellipsis;
-                               min-width:9rem; max-width:16rem; }
+
+  table.csv { font-size:.8rem; white-space:nowrap; border-collapse:collapse; }
+  table.csv td, table.csv th { padding:.35rem .55rem; background:#fff;
+                               border-bottom:1px solid #e6e9ed; }
+  /* Der Spaltenkopf bleibt beim SENKRECHTEN Rollen stehen. Waagerecht
+     rollt er mit — anders als die frueheren Spalten kann er nichts
+     ueberdecken, weil unter ihm nur Kopfzellen liegen. */
   table.csv th { font-weight:600; opacity:.8; position:sticky; top:0;
-                 background:#fff; }
-  @media (prefers-color-scheme: dark) { table.csv th { background:#1d2126; } }
-  table.csv td, table.csv th { padding:.35rem .55rem; }
+                 z-index:1; }
+  table.csv tr:nth-child(even) td { background:#fafbfc; }
   table.csv td.zahl { text-align:right; font-variant-numeric:tabular-nums; }
   table.csv td:empty::after { content:"·"; opacity:.25; }
-  /* Zebra ZUERST: Die angehefteten Spalten weiter unten muessen sie
-     ueberschreiben, sonst scheint beim Rollen der Text darunter durch.
-     Genau das war der Fehler — die Regel stand hinter den sticky-Regeln
-     und gewann bei gerader Zeilennummer. */
-  /* JEDE Zelle deckend, nicht nur die angehefteten. Eine Zelle ohne
-     eigenen Hintergrund ist durchsichtig — rollt sie unter die klebende
-     Spalte, scheint ihr Text dort durch. Genau das war zu sehen: unter
-     der Zeilennummer stand die weggerollte RS_DOC_REF_ID. */
-  table.csv td, table.csv th { background:#fff; }
-  table.csv tr:nth-child(even) td { background:#fafbfc; }
+  td.zeilennr { text-align:right; opacity:.5;
+                font-variant-numeric:tabular-nums; }
   @media (prefers-color-scheme: dark) {
-    table.csv td, table.csv th { background:#1d2126; }
+    .breit::-webkit-scrollbar-thumb { background:#4a525c; }
+    .breit::-webkit-scrollbar-track { background:#20252b; }
+    table.csv td, table.csv th { background:#1d2126; border-color:#2e343c; }
     table.csv tr:nth-child(even) td { background:#191d22; } }
-
-  /* KEINE klebenden Spalten mehr.
-
-     Sie sollten beim Rollen die Orientierung halten, haben aber genau das
-     Gegenteil bewirkt: In Zeilen mit wenigen belegten Feldern schien der
-     Text weggerollter Spalten durch die klebende Zelle hindurch — "_ID"
-     ueber dem Spaltenkopf "#", "000019DEMO01" quer ueber der
-     Zeilennummer. Drei Anlaeufe ueber Stapelreihenfolge, deckende
-     Hintergruende und feste Tabellenbreiten haben es nicht behoben.
-
-     Eine Darstellung, die Werte uebereinanderlegt, ist bei einer
-     Steuermeldung schlimmer als eine, die beim Rollen die Zeilennummer
-     verliert: Wer zwei Zahlen uebereinander sieht, liest eine falsche.
-     Deshalb rollt die Tabelle jetzt als Ganzes — wie eine CSV im Editor.
-
-     Die Orientierung uebernimmt stattdessen der ROW_TYPE, der in JEDER
-     Zeile als eigene Spalte mitlaeuft, und die Zeilennummer, die der
-     Nummer in der Datei entspricht. */
-  td.zeilennr { opacity:.5; font-variant-numeric:tabular-nums; }
   pre.roh { overflow-x:auto; margin:0; padding:.9rem; border-radius:.5rem;
             background:#f0f2f5; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
             font-size:.78rem; line-height:1.5; white-space:pre; }
