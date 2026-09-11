@@ -57,3 +57,9 @@ graph.json
 # Amtliche DAC7-Vorlage: enthaelt eine ECHTE Meldung mit 18 CPR-Nummern,
 # Namen, Anschriften und Bankverbindungen. Gehoert nicht ins Repo.
 docs/Duck7/
+
+# Produktwissen-Zwischendatei: Erzeugnis von
+# marketing/scripts/produktwissen-sammeln.mjs, 8 MB, bei jedem Lauf neu.
+# Die Quelle sind die Sprachdateien und Hilfe-Artikel im Repo, das Ziel ist
+# die Tabelle `produktwissen` — dazwischen liegt nichts Aufbewahrenswertes.
+produktwissen.json

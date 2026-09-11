@@ -49,13 +49,71 @@ EINBETTUNG_DIMENSION = 768
 #: gespeichert hat. Wir schneiden deshalb selbst und sagen es (Wurzel 5).
 MAX_EINBETTUNG_ZEICHEN = 8000
 
-#: Wie viele Texte in einem Aufruf. Vertex nimmt bis zu 250 Instanzen; 32 hält
-#: die Nutzlast klein genug, dass ein Netzwerkfehler nicht einen ganzen
-#: Aufbaulauf zurückwirft.
+#: Wie viele Texte HÖCHSTENS in einem Aufruf. Vertex nimmt bis zu 250
+#: Instanzen; 32 hält die Nutzlast klein genug, dass ein Netzwerkfehler nicht
+#: einen ganzen Aufbaulauf zurückwirft.
 STAPEL_GROESSE = 32
+
+#: Token-Obergrenze je AUFRUF (nicht je Text). Das Modell weist einen Stapel
+#: komplett ab, sobald die Summe darüber liegt:
+#:
+#:   "input token count is 22903 but the model supports up to 20000"
+#:
+#: Genau das passierte am 11.09.2026, als die Funktionsseiten von ~680 auf
+#: ~2000 Zeichen wuchsen: 32 Texte blieben 32 Texte, aber ihre Token-Summe
+#: sprengte die Grenze. Eine feste Stückzahl kann das nicht treffen — 32 kurze
+#: Texte liegen weit darunter, 32 lange weit darüber.
+MAX_TOKEN_JE_AUFRUF = 20000
+
+#: Zeichen je Token, konservativ geschätzt. Gemessen am Fehlerfall lag das
+#: Verhältnis bei etwa 2,33; mit 2,0 gerechnet wird der Stapel eher zu klein
+#: als zu groß. Ein zu kleiner Stapel kostet einen Aufruf mehr, ein zu großer
+#: wirft den ganzen Lauf ab — die Asymmetrie bestimmt die Richtung des
+#: Schätzfehlers.
+#:
+#: Warum nicht die CountTokens-API: sie wäre ein zusätzlicher Netzaufruf je
+#: Stapel, um einen Wert zu bestimmen, den wir mit Sicherheitsabstand ohnehin
+#: unterschreiten. Die Schätzung ist hier die billigere richtige Antwort.
+_ZEICHEN_JE_TOKEN = 2.0
+
+#: Wieviel Zeichen ein Stapel damit tragen darf.
+MAX_ZEICHEN_JE_AUFRUF = int(MAX_TOKEN_JE_AUFRUF * _ZEICHEN_JE_TOKEN * 0.9)
 
 _TIMEOUT_SEKUNDEN = 60.0
 _TOKEN_PUFFER_SEKUNDEN = 300
+
+
+def _stapeln(texte: list[str]) -> list[list[str]]:
+    """Texte zu Aufrufen bündeln — nach Stückzahl UND Zeichensumme.
+
+    Beide Grenzen gelten: `STAPEL_GROESSE` hält die Nutzlast klein, damit ein
+    Netzwerkfehler nicht viel Arbeit vernichtet, `MAX_ZEICHEN_JE_AUFRUF` hält
+    den Stapel unter der Token-Grenze des Modells.
+
+    Ein einzelner Text, der die Zeichengrenze allein überschreitet, bekommt
+    seinen eigenen Aufruf. Er ist durch `MAX_EINBETTUNG_ZEICHEN` (8000) ohnehin
+    gedeckelt und liegt damit klar unter der Aufrufgrenze — der Fall ist
+    abgedeckt, nicht bloß angenommen.
+    """
+    stapel: list[list[str]] = []
+    laufend: list[str] = []
+    zeichen = 0
+
+    for text in texte:
+        passt_nicht = laufend and (
+            len(laufend) >= STAPEL_GROESSE
+            or zeichen + len(text) > MAX_ZEICHEN_JE_AUFRUF
+        )
+        if passt_nicht:
+            stapel.append(laufend)
+            laufend = []
+            zeichen = 0
+        laufend.append(text)
+        zeichen += len(text)
+
+    if laufend:
+        stapel.append(laufend)
+    return stapel
 
 
 class EinbettungClient:
@@ -151,8 +209,7 @@ class EinbettungClient:
             gekuerzt.append(sauber)
 
         vektoren: list[list[float]] = []
-        for start in range(0, len(gekuerzt), STAPEL_GROESSE):
-            stapel = gekuerzt[start : start + STAPEL_GROESSE]
+        for stapel in _stapeln(gekuerzt):
             vektoren.extend(self._stapel_senden(stapel, aufgabe=aufgabe))
         return vektoren
 

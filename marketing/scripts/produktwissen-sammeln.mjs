@@ -142,6 +142,54 @@ async function sprachdatei(sprache) {
   }
 }
 
+/** EIN Stück, das myNextDays als Ganzes beschreibt.
+ *
+ *  WARUM ES DAS BRAUCHT: Auf „kannst du mir das tool erklären" fand die Suche
+ *  am 11.09.2026 drei Entwickler-Artikel und den Website-Baukasten — und der
+ *  Bot erklärte prompt den Baukasten. Jede EINZELNE Funktionsseite beschreibt
+ *  ihren Bereich gut, aber keine beschreibt das Produkt; der Überblick lag
+ *  nur in einem FAQ-Eintrag („Was ist myNextDays genau?"), den diese
+ *  Frageform nicht trifft.
+ *
+ *  Der Text wird NICHT neu geschrieben, sondern aus den elf Bereichsnamen und
+ *  ihren Stichworten zusammengesetzt. Eine handgeschriebene Produktübersicht
+ *  wäre eine zwölfte Stelle, die bei jeder neuen Funktion nachgezogen werden
+ *  müsste — und die als erste veraltet (Wurzel 4). */
+function ueberblickStueck(liste, texte, sprache) {
+  const zeilen = liste
+    .map((f) => {
+      const g = texte?.features?.gruppen?.[f.key];
+      const name = feld(g ?? {}, "title", "name");
+      if (!name) return null;
+      const was = feld(g ?? {}, "items", "stichworte");
+      return was ? `${name}: ${was}` : name;
+    })
+    .filter(Boolean);
+  if (zeilen.length < 3) return null;
+
+  const kopf = feld(texte?.faq?.was ?? {}, "a", "antwort", "answer");
+  const inhalt = [
+    "myNextDays im Überblick",
+    kopf,
+    "Diese Bereiche gehören dazu:",
+    ...zeilen,
+  ]
+    .filter(Boolean)
+    .join("\n\n")
+    .trim();
+
+  return {
+    quelle: "funktion",
+    quelle_id: "ueberblick",
+    abschnitt: 0,
+    sprache,
+    titel: "myNextDays im Überblick",
+    inhalt,
+    pfad: "/funktionen",
+    inhalt_hash: hash(inhalt),
+  };
+}
+
 /** Funktionsseiten: Name, Stichwortzeile und die Reiter-Texte aus der
  *  Sprachdatei. Der Katalog (`content/funktionen.ts`) liefert nur die
  *  Struktur — die Texte stehen in `messages/<sprache>.json`. */
@@ -156,24 +204,84 @@ async function funktionsStuecke(sprache) {
     const stueck = funktionsStueck(f, texte, sprache);
     if (stueck) stuecke.push(stueck);
   }
+
+  const ueberblick = ueberblickStueck(liste, texte, sprache);
+  if (ueberblick) stuecke.push(ueberblick);
+
   return stuecke;
 }
 
-/** Eine Funktionsseite wird ein Wissensstück — oder null ohne Texte. */
+/** Die Nutzen-/Block-Kacheln einer Funktionsseite als Text.
+ *
+ *  Sie liegen als Objekt mit den Schlüsseln `a`, `b`, `c` … — eine Liste
+ *  wäre in den 24 Sprachdateien schwerer zu pflegen. Für uns zählt nur der
+ *  Text, nicht die Position. */
+function kachelTexte(kacheln) {
+  return Object.values(kacheln ?? {})
+    .filter((k) => k && typeof k === "object")
+    .map((k) => [feld(k, "titel"), feld(k, "text")].filter(Boolean).join(" — "))
+    .filter(Boolean);
+}
+
+/** Die Reiter einer Funktionsseite als je eine Textzeile. */
+function reiterZeilen(reiter, seite) {
+  return (reiter ?? [])
+    .map((r) => seite?.reiter?.[r.key])
+    .filter(Boolean)
+    .map((r) =>
+      [
+        feld(r, "titel"),
+        feld(r, "heading"),
+        feld(r, "text"),
+        Object.values(r?.punkte ?? {}).filter(Boolean).join(", "),
+      ]
+        .filter(Boolean)
+        .join(" — "),
+    );
+}
+
+/** Der Fließtext einer Funktionsseite: Überschrift, Einleitung, Kacheln,
+ *  Reiter — in der Reihenfolge, in der ein Leser sie auf der Seite sieht. */
+function funktionsInhalt(name, gruppe, seite, reiterTexte) {
+  return [
+    name,
+    feld(gruppe ?? {}, "items", "stichworte"),
+    feld(seite ?? {}, "headline", "heroText"),
+    feld(seite ?? {}, "sub"),
+    ...kachelTexte(seite?.nutzen),
+    ...kachelTexte(seite?.block),
+    ...reiterTexte,
+  ]
+    .filter(Boolean)
+    .join("\n\n")
+    .trim();
+}
+
+/** Eine Funktionsseite wird ein Wissensstück — oder null ohne Texte.
+ *
+ *  DIE FELDNAMEN SIND GEMESSEN, NICHT GERATEN. Bis zum 11.09.2026 las diese
+ *  Funktion `gruppe.name`, `gruppe.stichworte` und `seite.heroText` — drei
+ *  Namen, die es in `messages/*.json` nicht gibt. Ergebnis: alle ELF
+ *  Funktionsseiten landeten mit dem rohen Schlüssel als Titel in der
+ *  Datenbank („preise", „pms", „gaeste"), und ihr Inhalt bestand nur aus den
+ *  Reitern — Überschrift, Einleitung und Stichworte fehlten.
+ *
+ *  Das war beides gleichzeitig sichtbar: der Bot zeigte „preise" als Quelle
+ *  neben zwei lesbaren Titeln, und auf „kannst du mir das tool erklären"
+ *  antwortete er über den Website-Baukasten — weil genau der Teil fehlte, der
+ *  sagt, worum es auf der Seite überhaupt geht. */
 function funktionsStueck(f, texte, sprache) {
   const gruppe = texte?.features?.gruppen?.[f.key];
   const seite = texte?.funktionen?.[f.key];
   if (!gruppe && !seite) return null;
 
-  const reiterTexte = (f.reiter ?? [])
-    .map((r) => seite?.reiter?.[r.key])
-    .filter(Boolean)
-    .map((r) => [r.titel, r.heading, r.text].filter(Boolean).join(" — "));
+  const reiterTexte = reiterZeilen(f.reiter, seite);
 
-  const inhalt = [gruppe?.name, gruppe?.stichworte, seite?.heroText, ...reiterTexte]
-    .filter(Boolean)
-    .join("\n\n")
-    .trim();
+  const name = feld(gruppe ?? {}, "title", "name");
+  // Ohne lesbaren Namen gar kein Stück — siehe `titel` unten.
+  if (!name) return null;
+
+  const inhalt = funktionsInhalt(name, gruppe, seite, reiterTexte);
   if (!inhalt) return null;
 
   return {
@@ -181,7 +289,10 @@ function funktionsStueck(f, texte, sprache) {
     quelle_id: f.key,
     abschnitt: 0,
     sprache,
-    titel: gruppe?.name ?? f.key,
+    // Ohne lesbaren Namen KEIN Stück: ein Quellenhinweis „preise" unter einer
+    // Antwort ist für den Besucher wertlos und verrät nur unsere Schlüssel.
+    // Lieber eine Quelle weniger als eine unverständliche (Wurzel 4).
+    titel: name,
     inhalt,
     pfad: `/funktionen/${f.slug}`,
     inhalt_hash: hash(inhalt),
@@ -277,12 +388,24 @@ async function entwicklerStuecke(sprache) {
     if (werte.length < 2) continue;
     const inhalt = werte.join("\n\n").trim();
     if (inhalt.length < 80) continue;
+
+    // OHNE ÜBERSCHRIFT KEIN STÜCK. Der Filter oben nimmt jeden Block mit zwei
+    // Zeichenketten — und traf damit auch reine Oberflächen-Beschriftungen:
+    // `sidebar` („Springen zu …", „Auf dieser Seite") und `referenz`
+    // („Pfad-Parameter", „Anfrage-Körper"). Beide landeten als Wissensstücke
+    // in der Datenbank, mit dem rohen Schlüssel als Titel, und konnten dem
+    // Bot als Quelle untergeschoben werden, ohne eine Frage zu beantworten.
+    // Eine Überschrift ist das verlässliche Unterscheidungsmerkmal: ein
+    // echter Doku-Abschnitt hat eine, eine Label-Sammlung nicht.
+    const ueberschrift = feld(block, "heading", "titel", "title");
+    if (!ueberschrift) continue;
+
     stuecke.push({
       quelle: "funktion",
       quelle_id: `entwickler.${key}`,
       abschnitt: 0,
       sprache,
-      titel: `Entwickler — ${feld(block, "heading", "titel", "title") ?? key}`,
+      titel: `Entwickler — ${ueberschrift}`,
       inhalt,
       pfad: "/entwickler",
       inhalt_hash: hash(inhalt),

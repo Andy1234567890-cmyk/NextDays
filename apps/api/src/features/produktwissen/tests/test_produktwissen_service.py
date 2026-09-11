@@ -25,9 +25,15 @@ import pytest
 
 from src.core.ki import KiError
 from src.features.produktwissen.service import (
+    _UEBERBLICK_CACHE,
     MAX_FRAGE_ZEICHEN,
     MINDEST_AEHNLICHKEIT,
+    UEBERBLICK_TITEL,
     ProduktwissenService,
+    Treffer,
+    _ist_allgemeine_frage,
+    _ist_rechtsfrage,
+    _nach_rang,
 )
 
 
@@ -62,12 +68,54 @@ class _FakeEinbettung:
         return [0.1] * 768
 
 
-class _FakeDb:
-    """Nur `rpc` — der Service liest nichts anderes."""
+class _FakeTabelle:
+    """Der Kettenaufruf `.select().eq().eq().eq().limit().execute()`."""
 
-    def __init__(self, zeilen: list[dict[str, Any]] | None = None) -> None:
+    def __init__(self, zeilen: list[dict[str, Any]]) -> None:
+        self._zeilen = zeilen
+
+    def select(self, *_a: object, **_k: object) -> _FakeTabelle:
+        return self
+
+    def eq(self, *_a: object, **_k: object) -> _FakeTabelle:
+        return self
+
+    def limit(self, *_a: object, **_k: object) -> _FakeTabelle:
+        return self
+
+    def execute(self) -> Any:
+        zeilen = self._zeilen
+
+        class _Res:
+            data = zeilen
+
+        return _Res()
+
+
+class _FakeDb:
+    """`rpc` für die Suche, `table` für den Produktüberblick.
+
+    `table` GEHÖRT HIERHER, auch wenn die Tests ohne es grün liefen: der
+    Service fängt dort `Exception` ab (Auskunft ohne Rahmen ist besser als
+    keine). Eine Fake-DB ohne `table` hätte diesen Pfad also nie geprüft,
+    sondern nur bewiesen, dass der AttributeError geschluckt wird — genau die
+    Sorte grüner Test, die nichts zusagt (Wurzel 5).
+    """
+
+    def __init__(
+        self,
+        zeilen: list[dict[str, Any]] | None = None,
+        ueberblick: str | None = None,
+    ) -> None:
         self.zeilen = zeilen or []
         self.rpc_argumente: list[dict[str, Any]] = []
+        self._ueberblick = ueberblick
+        self.table_aufrufe = 0
+
+    def table(self, _name: str) -> _FakeTabelle:
+        self.table_aufrufe += 1
+        zeilen = [{"inhalt": self._ueberblick}] if self._ueberblick else []
+        return _FakeTabelle(zeilen)
 
     def rpc(self, name: str, params: dict[str, Any]) -> Any:
         self.rpc_argumente.append({"name": name, **params})
@@ -99,8 +147,10 @@ def _service(
     *,
     ki_fehler: bool = False,
     antwort: str = "Ja, das geht.",
+    ueberblick: str | None = None,
 ) -> tuple[ProduktwissenService, _FakeDb, _FakeText, _FakeEinbettung]:
-    db = _FakeDb(zeilen)
+    _UEBERBLICK_CACHE.clear()
+    db = _FakeDb(zeilen, ueberblick=ueberblick)
     s = ProduktwissenService(db=db)  # type: ignore[arg-type]
     text = _FakeText(antwort=antwort, fehler=ki_fehler)
     einb = _FakeEinbettung()
@@ -226,3 +276,214 @@ def test_sprache_wird_durchgereicht(sprache: str) -> None:
     s.suchen("Frage", sprache=sprache)
 
     assert db.rpc_argumente[0]["p_sprache"] == sprache
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Rangfolge: Rechtstexte hinter die Produktauskunft
+#
+# ANLASS (11.09.2026): „Was kann eure Software alles?" lieferte auf FÜNF von
+# sechs Plätzen AGB- und Datenschutz-Abschnitte und keine einzige
+# Funktionsseite. Die Rechtstexte sind die größte Quelle (72 Abschnitte je
+# Sprache), und AGB § 2 ist eine dichte Aufzählung des Leistungsumfangs — für
+# eine Vektorsuche klingt sie wie die Antwort, für den Fragenden ist sie
+# Vertragsrecht statt Produktauskunft.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def _t(quelle: str, aehnlichkeit: float, titel: str = "x") -> Treffer:
+    return Treffer(
+        quelle=quelle,
+        quelle_id=titel,
+        titel=titel,
+        inhalt="Inhalt",
+        pfad=None,
+        aehnlichkeit=aehnlichkeit,
+    )
+
+
+def test_rechtstext_weicht_der_produktauskunft() -> None:
+    """Der reale Fall: Rechtstext knapp vorn, Produktseite knapp dahinter."""
+    geordnet = _nach_rang(
+        [_t("legal", 0.683, "AGB § 2"), _t("funktion", 0.662, "Property-Management")],
+        rechtsfrage=False,
+    )
+
+    assert geordnet[0].titel == "Property-Management"
+
+
+def test_bei_einer_rechtsfrage_bleibt_die_reihenfolge() -> None:
+    """„Ist das DSGVO-konform?" soll den Rechtstext bekommen, nicht die App."""
+    treffer = [_t("legal", 0.683, "AVV"), _t("funktion", 0.662, "App")]
+
+    assert _nach_rang(treffer, rechtsfrage=True) == treffer
+
+
+def test_deutlich_besserer_rechtstext_bleibt_vorn() -> None:
+    """Der Abschlag dreht knappe Fälle, nicht klare.
+
+    Sonst bekäme „Wie kündige ich?" die App-Seite statt der Kündigungsregel.
+    """
+    geordnet = _nach_rang(
+        [_t("legal", 0.80, "Kündigung"), _t("funktion", 0.70, "App")],
+        rechtsfrage=False,
+    )
+
+    assert geordnet[0].titel == "Kündigung"
+
+
+def test_kein_treffer_geht_beim_umsortieren_verloren() -> None:
+    """Die Rangfolge ist eine Reihenfolge, keine Auswahl."""
+    treffer = [_t("legal", 0.9), _t("faq", 0.8), _t("hilfe", 0.7)]
+
+    assert sorted(t.aehnlichkeit for t in _nach_rang(treffer, rechtsfrage=False)) == [
+        0.7,
+        0.8,
+        0.9,
+    ]
+
+
+@pytest.mark.parametrize(
+    "frage",
+    [
+        "Ist das DSGVO-konform?",
+        "Gibt es einen AV-Vertrag?",
+        "Wie kündige ich meinen Vertrag?",
+        "Where are your servers?",
+        "What are your terms?",
+        "Hvordan opsiger jeg aftalen?",
+    ],
+)
+def test_rechtsfragen_werden_erkannt(frage: str) -> None:
+    assert _ist_rechtsfrage(frage) is True
+
+
+@pytest.mark.parametrize(
+    "frage",
+    [
+        "Wie verbinde ich Airbnb?",
+        "Was kann eure Software alles?",
+        "Kann ich Dynamic Pricing nutzen?",
+    ],
+)
+def test_produktfragen_sind_keine_rechtsfragen(frage: str) -> None:
+    assert _ist_rechtsfrage(frage) is False
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Der Produktüberblick hängt an JEDER Antwort
+#
+# ANLASS (11.09.2026): „kannst du mir das tool erklären" fand drei
+# Entwickler-Artikel und den Website-Baukasten — das Wort „Tool" zieht zu
+# „Fragen, Änderungen, WERKZEUGE". Der Bot antwortete daraufhin, myNextDays
+# helfe „deine Website zu erstellen und zu verwalten": aus vier fachlich
+# korrekten Auszügen eine falsche Gesamtaussage über das Produkt.
+#
+# Eine Vektorsuche kann das nicht lösen — sie findet Ähnlichkeit, und eine
+# allgemeine Frage ähnelt allem ein bisschen. Der Rahmen gehört deshalb fest
+# dazu, nicht in den Wettbewerb um sechs Plätze.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def test_ueberblick_steht_im_prompt() -> None:
+    s, _db, text, _e = _service(
+        [_treffer(aehnlich=0.9)],
+        ueberblick="myNextDays ist ein PMS und ein Channel-Manager.",
+    )
+
+    s.antworten("kannst du mir das tool erklären", sprache="de")
+
+    prompt = text.aufrufe[0]["user"]
+    assert "[myNextDays im Überblick]" in prompt
+    assert "myNextDays ist ein PMS und ein Channel-Manager." in prompt
+
+
+def test_ohne_ueberblick_antwortet_der_bot_trotzdem() -> None:
+    """Eine fehlende Übersicht darf die Auskunft nicht verhindern.
+
+    Neue Sprache, Wissen noch nicht aufgebaut: dann eben ohne Rahmen — aber
+    keine erfundene Produktbeschreibung (Wurzel 4).
+    """
+    s, _db, text, _e = _service([_treffer(aehnlich=0.9)], ueberblick=None)
+
+    antwort = s.antworten("Wie verbinde ich Airbnb?", sprache="de")
+
+    assert antwort.uebergeben is False
+    assert "[myNextDays im Überblick]" not in text.aufrufe[0]["user"]
+
+
+def test_ueberblick_wird_nur_einmal_je_sprache_geholt() -> None:
+    """Sonst eine Datenbankabfrage je Besucherfrage für einen festen Text."""
+    s, db, _t, _e = _service([_treffer(aehnlich=0.9)], ueberblick="Überblick")
+
+    s.antworten("Frage eins", sprache="de")
+    s.antworten("Frage zwei", sprache="de")
+
+    assert db.table_aufrufe == 1
+
+
+def test_ohne_treffer_wird_das_modell_auch_mit_ueberblick_nicht_gefragt() -> None:
+    """Der Überblick darf die Übergabe nicht aushebeln.
+
+    Sonst beantwortete der Bot „Wie ist das Wetter?" aus der Produktübersicht,
+    statt an den Support zu übergeben.
+    """
+    s, _db, text, _e = _service([], ueberblick="Überblick")
+
+    antwort = s.antworten("Wie ist das Wetter?", sprache="de")
+
+    assert antwort.uebergeben is True
+    assert text.aufrufe == []
+
+
+def test_ueberblick_erscheint_auch_als_quelle() -> None:
+    """Sonst nennt die Antwort den Überblick und verlinkt Fremdes.
+
+    Live gesehen (11.09.2026): der Text kam aus der Produktübersicht, darunter
+    standen drei Entwickler-Artikel, in denen nichts davon steht.
+    """
+    s, _db, _t, _e = _service([_treffer(aehnlich=0.9)], ueberblick="Überblick")
+
+    antwort = s.antworten("erklär mir das tool", sprache="de")
+
+    titel = [q.titel for q in antwort.quellen]
+    assert UEBERBLICK_TITEL in titel
+    pfade = [q.pfad for q in antwort.quellen if q.titel == UEBERBLICK_TITEL]
+    assert pfade == ["/funktionen"]
+
+
+@pytest.mark.parametrize(
+    "frage",
+    [
+        "kannst du mir das tool erklären",
+        "Was kann eure Software alles?",
+        "erkläre mir myNextDays",
+        "Welche Funktionen habt ihr?",
+        "explain your product",
+    ],
+)
+def test_allgemeine_fragen_werden_erkannt(frage: str) -> None:
+    assert _ist_allgemeine_frage(frage) is True
+
+
+@pytest.mark.parametrize(
+    "frage",
+    [
+        "Wie verbinde ich Airbnb?",
+        "Kann ich Dynamic Pricing nutzen?",
+        "Wie lege ich ein Objekt an?",
+        "Wie funktioniert die Eigentümer-Abrechnung?",
+    ],
+)
+def test_konkrete_fragen_sind_nicht_allgemein(frage: str) -> None:
+    """Sonst hinge unter jeder Antwort eine siebte, unpassende Quelle."""
+    assert _ist_allgemeine_frage(frage) is False
+
+
+def test_bei_konkreter_frage_steht_der_ueberblick_nur_im_prompt() -> None:
+    """Im Prompt ja (verhindert falsche Gesamtaussagen), als Quelle nein."""
+    s, _db, text, _e = _service([_treffer(aehnlich=0.9)], ueberblick="Überblick")
+
+    antwort = s.antworten("Wie verbinde ich Airbnb?", sprache="de")
+
+    assert UEBERBLICK_TITEL in text.aufrufe[0]["user"]
+    assert UEBERBLICK_TITEL not in [q.titel for q in antwort.quellen]
