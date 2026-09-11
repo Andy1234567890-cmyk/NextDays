@@ -528,7 +528,7 @@ class TestMeldungsansicht:
         """Im Raster ist der Satztyp eine SPALTE, keine Ueberschrift."""
         nummer = _senden(client, _gueltig()).json()["quittungsnummer"]
         seite = client.get(f"/meldung/{nummer}").text
-        assert "<th><code>ROW_TYPE</code></th>" in seite
+        assert "<th><div><code>ROW_TYPE</code></div></th>" in seite
 
     def test_spaltenkopf_steht_einmal_je_typ(self, client: TestClient) -> None:
         """Nicht je Satz ein eigener Block — ein Kopf, darunter die Saetze."""
@@ -540,7 +540,7 @@ class TestMeldungsansicht:
         seite = client.get(f"/meldung/{nummer}").text
         # Genau EIN Tabellenkopf. Das zweite Vorkommen im Quelltext ist der
         # Spaltenkopf in der Rohansicht der Datei — der gehoert dorthin.
-        assert seite.count("<th><code>RS_ACT_PROP_TYPE</code></th>") == 1
+        assert seite.count("<code>RS_ACT_PROP_TYPE</code></div></th>") == 1
 
     def test_spalten_in_der_reihenfolge_der_vorlage(
         self, client: TestClient

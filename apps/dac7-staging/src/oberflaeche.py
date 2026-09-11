@@ -118,11 +118,23 @@ _STIL = """<!doctype html>
                                /* Beschneiden, nicht ueberlaufen lassen.
                                   Der volle Wert steht in der Rohansicht
                                   darunter und im Titel der Zelle. */
-                               overflow:hidden; text-overflow:ellipsis;
-                               width:12rem; }
-  table.csv td.zeilennr, table.csv th:first-child { width:3.5rem; }
+                               overflow:hidden; }
+  /* Das <div> beschneidet, nicht die Zelle: `overflow:hidden` auf einem
+     `td` wirkt nicht, weil eine Tabellenzelle kein Block-Container ist.
+     Ohne diesen Umweg ragte "DK202637000019DEMO01" quer ueber die
+     stehende Zeilennummer — gemessen von -32px bis 160px. */
+  table.csv td > div, table.csv th > div { overflow:hidden;
+      text-overflow:ellipsis; white-space:nowrap; }
+  /* Bei `table-layout:fixed` bestimmt AUSSCHLIESSLICH die erste Zeile die
+     Spaltenbreiten — also der Kopf. Stand die Breite nur auf `td`, blieb
+     sie wirkungslos: Der Kopf legte schmalere Spalten fest, und lange
+     Werte in den Datenzeilen liefen quer darueber hinaus. Genau so ragte
+     "DK202637000019DEMO01" ueber die stehende Zeilennummer. */
+  table.csv th { width:12rem; }
+  table.csv th:first-child { width:3.5rem; }
+  table.csv th:nth-child(2) { width:13rem; }
   /* Der Spaltenkopf bleibt beim senkrechten Rollen stehen. */
-  table.csv th { font-weight:600; opacity:.8; position:sticky; top:0;
+  table.csv th { font-weight:600; color:#5c656f; position:sticky; top:0;
                  z-index:2; }
   /* Zeilennummer und ROW_TYPE bleiben beim waagerechten Rollen stehen.
      `left` der zweiten Spalte ist exakt die Breite der ersten (3.5rem) —
@@ -139,13 +151,20 @@ _STIL = """<!doctype html>
   table.csv tr:nth-child(even) td { background:#fafbfc; }
   table.csv td.zahl { text-align:right; font-variant-numeric:tabular-nums; }
   table.csv td:empty::after { content:"·"; opacity:.25; }
-  td.zeilennr { text-align:right; opacity:.5;
+  /* Blass ueber die SCHRIFTFARBE, nie ueber `opacity`: `opacity` macht die
+     ganze Zelle durchsichtig, also auch ihren Hintergrund. Bei einer
+     klebenden Spalte scheinen dann die darunter durchrollenden Werte
+     hindurch — genau so stand "DK2026DK37000019DEMO01" quer in der
+     Zeilennummer. */
+  td.zeilennr { text-align:right; color:#9aa3ad;
                 font-variant-numeric:tabular-nums; }
   @media (prefers-color-scheme: dark) {
     .breit::-webkit-scrollbar-thumb { background:#4a525c; }
     .breit::-webkit-scrollbar-track { background:#20252b; }
     table.csv td, table.csv th { background:#1d2126; border-color:#2e343c; }
+    table.csv th { color:#9aa3ad; }
     table.csv tr:nth-child(even) td { background:#191d22; }
+    td.zeilennr { color:#6b747e; }
     table.csv th:nth-child(2), table.csv td:nth-child(2) {
         box-shadow:1px 0 0 #2e343c; } }
   /* Die stehenden Zellen muessen in JEDER Zeile decken, auch in den
@@ -437,12 +456,22 @@ def _satztabelle(saetze: list[dict]) -> str:
     spalten = [s for s in vorlage.SPALTEN if s in belegt]
     leer = len(vorlage.SPALTEN) - len(spalten)
 
-    kopf = "".join(f"<th><code>{html.escape(s)}</code></th>" for s in spalten)
+    # Jeder Wert steckt in einem <div>. Grund: `overflow:hidden` auf einer
+    # Tabellenzelle wirkt NICHT — eine Zelle ist kein Block-Container, ihr
+    # Inhalt laeuft trotzdem heraus und wird ueber die stehende Spalte
+    # gemalt. Erst das <div> beschneidet wirklich.
+    kopf = "".join(
+        f"<th><div><code>{html.escape(s)}</code></div></th>" for s in spalten
+    )
     zeilen = "".join(
-        '<tr>'
-        + f'<td class="zeilennr">{html.escape(satz.get("__nr", "?"))}</td>'
+        "<tr>"
+        + '<td class="zeilennr"><div>'
+        + html.escape(satz.get("__nr", "?"))
+        + "</div></td>"
         + "".join(
-            f'<td class="{_zellklasse(s)}">{html.escape(satz.get(s, ""))}</td>'
+            f'<td class="{_zellklasse(s)}"><div>'
+            + html.escape(satz.get(s, ""))
+            + "</div></td>"
             for s in spalten
         )
         + "</tr>"
