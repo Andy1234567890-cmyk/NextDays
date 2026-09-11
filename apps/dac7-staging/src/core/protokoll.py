@@ -41,15 +41,30 @@ class Eintrag:
     format: str
     dateiname: str
     bytes_gesamt: int
-    # SHA-256 der eingereichten Bytes. Damit laesst sich spaeter belegen,
-    # dass genau DIESE Datei ankam — der Rohinhalt muss dafuer nicht liegen
-    # bleiben.
+    # SHA-256 der eingereichten Bytes. Damit laesst sich belegen, dass
+    # genau DIESE Datei ankam, und sie erkennt eine zweite Einreichung
+    # desselben Inhalts wieder.
     pruefsumme: str
     angenommen: bool
     zeilen: int
     zeilentypen: dict[str, int]
     fehler: list[Befund] = field(default_factory=list)
     hinweise: list[Befund] = field(default_factory=list)
+    # Die uebermittelten Saetze. Sie sind der Grund, warum es diese Stelle
+    # gibt: Der Betrieb muss SEHEN koennen, was in seiner Meldung steht,
+    # bevor sie zur Behoerde geht. Pruefsumme und Zeilenzahl allein
+    # beantworten die Frage "was wurde uebermittelt" nicht.
+    #
+    # Sie verfallen mit dem Eintrag (Aufbewahrungsfrist) und liegen nur im
+    # Arbeitsspeicher — ein Neustart loescht sie.
+    saetze: list[dict[str, str]] = field(default_factory=list)
+    # Die eingereichte Datei im Original. Ohne sie laesst sich nicht
+    # zeigen, was uebermittelt wurde — und das ist der Zweck der Stelle.
+    #
+    # Sie liegt NUR im Arbeitsspeicher, verfaellt mit dem Eintrag und wird
+    # nie auf Platte geschrieben. Ein Neustart loescht sie, `DELETE
+    # /v1/quittungen` ebenso.
+    rohtext: str = ""
 
 
 class Protokoll:

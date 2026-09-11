@@ -33,21 +33,27 @@ zu werden.
 DATENSCHUTZ
 ===========
 Eingereichte Dateien enthalten CPR-Nummern, Namen, Anschriften und
-Bankverbindungen. Dieser Dienst speichert den Rohinhalt NICHT — nur
-Pruefsumme, Kennzahlen und Befunde, und auch die nur befristet im
-Arbeitsspeicher. Ein Neustart loescht alles.
+Bankverbindungen. Der Rohinhalt wird AUFBEWAHRT — er muss es, sonst kann
+die Stelle nicht zeigen, was uebermittelt wurde, und genau dafuer gibt es
+sie. Aber ausschliesslich im Arbeitsspeicher, befristet auf die
+Aufbewahrungsdauer: Ein Neustart loescht alles, `DELETE /v1/quittungen`
+ebenso. Nichts geht auf Platte, nichts in ein Log.
+
+Hier stand bis zum 11.09.2026 "speichert den Rohinhalt NICHT". Das war
+richtig, solange die Seite nur Pruefsumme und Zeilenzahl zeigte — und
+damit unbrauchbar: Niemand konnte pruefen, WAS in der Meldung steht.
 """
 from __future__ import annotations
 
 import os
 
-from fastapi import FastAPI, Form, HTTPException, UploadFile
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 
 from .core.config import get_settings
 from .core.logging import configure_logging, get_logger
-from .oberflaeche import ergebnisseite, startseite
+from .oberflaeche import meldungsseite, startseite
 from .v1 import router as v1_router
 
 log = get_logger("dac7staging")
@@ -125,43 +131,54 @@ def create_app() -> FastAPI:
 
         return HTMLResponse(startseite(PROTOKOLL.liste()))
 
-    @app.post("/einreichen", include_in_schema=False)
-    async def formular(
-        datei: UploadFile,
-        verhalten: str = Form(default="normal"),
-    ) -> HTMLResponse:
-        """Der Weg ueber die Oberflaeche — dieselbe Pruefung wie /v1.
+    @app.get("/meldung/{nummer}", include_in_schema=False)
+    def meldung(nummer: str) -> HTMLResponse:
+        """Was in EINER eingegangenen Meldung steht — Satz fuer Satz.
 
-        Ruft bewusst denselben Endpunkt auf, statt die Pruefung zu
-        wiederholen: Zwei Wege mit eigener Logik liefen auseinander, und
-        die Oberflaeche zeigte dann etwas anderes als die Schnittstelle.
+        Der Posteingang nennt nur Pruefsumme und Zeilenzahl. Damit laesst
+        sich nicht pruefen, WAS uebermittelt wurde — und genau dafuer gibt
+        es diese Stelle: sehen, was in der Meldung steht, bevor sie zur
+        Behoerde geht.
         """
-        from .v1.einreichung import PROTOKOLL, einreichen
+        from .v1.einreichung import PROTOKOLL
 
-        try:
-            quittung = await einreichen(datei=datei, x_staging_verhalten=verhalten)
-        except HTTPException as exc:
-            # 503 (Wartung) und 413 (zu gross) sind erwuenschte Antworten der
-            # Teststufe, keine Programmfehler — als Seite zeigen statt als
-            # nackter Statuscode.
+        eintrag = PROTOKOLL.holen(nummer)
+        if eintrag is None:
             return HTMLResponse(
                 startseite(PROTOKOLL.liste()).replace(
                     "</h1>",
-                    f"</h1><div class='karte'><h2 class='fehler'>Abgewiesen "
-                    f"({exc.status_code})</h2><p>{exc.detail}</p></div>",
+                    "</h1><div class='karte'><h2 class='fehler'>Unbekannte "
+                    "Quittung</h2><p>Zu dieser Nummer liegt nichts vor. "
+                    "Eintraege verfallen nach der Aufbewahrungsfrist.</p></div>",
                 ),
-                status_code=exc.status_code,
+                status_code=404,
             )
+        return HTMLResponse(meldungsseite(eintrag))
 
-        eintrag = PROTOKOLL.holen(quittung.quittungsnummer)
-        return HTMLResponse(
-            ergebnisseite(
-                _als_quittung(eintrag),
-                quittung.quittungsnummer,
-                quittung.pruefsumme,
-                quittung.dateiname,
-                PROTOKOLL.liste(),
-            )
+    @app.get("/meldung/{nummer}/datei", include_in_schema=False)
+    def meldungsdatei(nummer: str) -> Response:
+        """Die eingereichte Datei im Original zum Herunterladen.
+
+        `text/plain` und `Content-Disposition: attachment`: Der Inhalt
+        stammt von aussen und darf im Browser nie als Markup ausgefuehrt
+        werden (Wurzel 8).
+        """
+        from .v1.einreichung import PROTOKOLL
+
+        eintrag = PROTOKOLL.holen(nummer)
+        if eintrag is None or not eintrag.rohtext:
+            return Response("Nicht vorhanden.", status_code=404,
+                            media_type="text/plain; charset=utf-8")
+        sicher = "".join(
+            z for z in eintrag.dateiname if z.isalnum() or z in "._-"
+        )[:80]
+        return Response(
+            eintrag.rohtext,
+            media_type="text/plain; charset=utf-8",
+            headers={
+                "Content-Disposition": f'attachment; filename="{sicher or "meldung.csv"}"',
+                "X-Content-Type-Options": "nosniff",
+            },
         )
 
     @app.get("/health", include_in_schema=False)

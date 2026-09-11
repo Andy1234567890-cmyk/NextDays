@@ -86,6 +86,8 @@ async def einreichen(
         zeilentypen=quittung.zeilentypen,
         fehler=quittung.fehler,
         hinweise=quittung.hinweise,
+        saetze=quittung.saetze,
+        rohtext=inhalt,
     )
     log.info(
         "einreichung",
@@ -230,4 +232,5 @@ def _als_ausgabe(eintrag: Eintrag) -> QuittungAusgabe:
         zeilentypen=eintrag.zeilentypen,
         fehler=[BefundAusgabe(**asdict(b)) for b in eintrag.fehler],
         hinweise=[BefundAusgabe(**asdict(b)) for b in eintrag.hinweise],
+        saetze=eintrag.saetze,
     )

@@ -442,3 +442,74 @@ class TestPosteingang:
         assert "<b>2</b>Meldungen" in seite
         assert "<b>1</b>angenommen" in seite
         assert "<b>1</b>abgewiesen" in seite
+
+
+class TestMeldungsansicht:
+    """Was uebermittelt wurde, muss SICHTBAR sein.
+
+    Die Stelle zeigte nur Pruefsumme und Zeilenzahl. Damit laesst sich
+    nicht pruefen, was in der Meldung steht — und genau dafuer gibt es
+    sie: sehen, was gemeldet wird, bevor es zur Behoerde geht.
+    """
+
+    def test_quittung_liefert_die_saetze(self, client: TestClient) -> None:
+        daten = _senden(client, _gueltig()).json()
+        assert len(daten["saetze"]) == daten["zeilen"]
+        erster = daten["saetze"][0]
+        assert erster["ROW_TYPE"] == "Message"
+        assert erster["MSG_MESSAGE_REF_ID"] == "DK2025DK44179377_AS25"
+
+    def test_leere_spalten_fehlen(self, client: TestClient) -> None:
+        """Eine Zeile traegt 89 Spalten und fuellt ein Dutzend."""
+        satz = _senden(client, _gueltig()).json()["saetze"][0]
+        assert len(satz) < 20
+        assert all(w.strip() for s, w in satz.items() if s != "__nr")
+
+    def test_detailseite_zeigt_die_felder(self, client: TestClient) -> None:
+        nummer = _senden(client, _gueltig()).json()["quittungsnummer"]
+        seite = client.get(f"/meldung/{nummer}").text
+        assert "Übermittelte Daten" in seite
+        assert "MSG_MESSAGE_REF_ID" in seite
+        assert "DK2025DK44179377_AS25" in seite
+        assert "Beispielbureau" in seite
+
+    def test_detailseite_zeigt_die_rohdatei(self, client: TestClient) -> None:
+        nummer = _senden(client, _gueltig()).json()["quittungsnummer"]
+        seite = client.get(f"/meldung/{nummer}").text
+        assert "Datei im Original" in seite
+        # Der Spaltenkopf der Vorlage steht darin, unveraendert.
+        assert "ROW_TYPE;MSG_MESSAGE_REF_ID" in seite
+
+    def test_datei_laesst_sich_herunterladen(self, client: TestClient) -> None:
+        inhalt = _gueltig()
+        nummer = _senden(client, inhalt).json()["quittungsnummer"]
+        antwort = client.get(f"/meldung/{nummer}/datei")
+        assert antwort.status_code == 200
+        assert antwort.text == inhalt
+        # Niemals als Markup ausliefern — der Inhalt kommt von aussen.
+        assert antwort.headers["content-type"].startswith("text/plain")
+        assert "attachment" in antwort.headers["content-disposition"]
+
+    def test_unbekannte_quittung_gibt_404(self, client: TestClient) -> None:
+        assert client.get("/meldung/DK-19700101-000000").status_code == 404
+
+    def test_leeren_verwirft_auch_die_inhalte(self, client: TestClient) -> None:
+        """Der Notausgang muss die Rohdaten mitnehmen, nicht nur die Liste."""
+        nummer = _senden(client, _gueltig()).json()["quittungsnummer"]
+        client.delete("/v1/quittungen", headers={KOPF: TOKEN})
+        assert client.get(f"/meldung/{nummer}").status_code == 404
+        assert client.get(f"/meldung/{nummer}/datei").status_code == 404
+
+
+class TestKeinFormular:
+    def test_startseite_hat_kein_hochladeformular(self, client: TestClient) -> None:
+        """Ein Amt reicht nichts ein, es empfaengt."""
+        seite = client.get("/").text
+        assert "<form" not in seite
+        assert "type=\"file\"" not in seite
+
+    def test_einreichen_route_gibt_es_nicht_mehr(self, client: TestClient) -> None:
+        antwort = client.post(
+            "/einreichen", files={"datei": ("m.csv", b"x", "text/csv")}
+        )
+        assert antwort.status_code == 405 or antwort.status_code == 404

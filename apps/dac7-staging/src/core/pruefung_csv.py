@@ -158,6 +158,14 @@ class Quittung:
     zeilentypen: dict[str, int] = field(default_factory=dict)
     fehler: list[Befund] = field(default_factory=list)
     hinweise: list[Befund] = field(default_factory=list)
+    # Die eingereichten Saetze, Feld fuer Feld — nur die BELEGTEN Spalten,
+    # eine CSV-Zeile traegt 89 und fuellt davon ein Dutzend.
+    #
+    # Ohne das zeigt die Empfangsstelle nur Pruefsumme und Zeilenzahl, und
+    # niemand kann sehen, WAS uebermittelt wurde. Genau dafuer ist die
+    # Stelle aber da: bevor die Meldung zur Behoerde geht, muss der Betrieb
+    # pruefen koennen, was in ihr steht.
+    saetze: list[dict[str, str]] = field(default_factory=list)
 
     @property
     def angenommen(self) -> bool:
@@ -234,6 +242,10 @@ def _zeile_pruefen(
     typ = werte.get("ROW_TYPE", "")
     q.zeilen += 1
     q.zeilentypen[typ] = q.zeilentypen.get(typ, 0) + 1
+    # Leere Spalten weglassen: von 89 traegt eine Zeile ein Dutzend.
+    q.saetze.append(
+        {"__nr": str(nr), **{s: w for s, w in werte.items() if w.strip()}}
+    )
 
     if typ not in vorlage.ROW_TYPES:
         _melden(q, nr, typ, "ROW_TYPE", "Werteliste", "unbekannter Zeilentyp", typ)

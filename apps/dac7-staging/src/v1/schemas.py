@@ -33,6 +33,10 @@ class QuittungAusgabe(BaseModel):
     zeilentypen: dict[str, int] = Field(default_factory=dict)
     fehler: list[BefundAusgabe] = Field(default_factory=list)
     hinweise: list[BefundAusgabe] = Field(default_factory=list)
+    # Die uebermittelten Saetze, je Satz die BELEGTEN Spalten. Eine
+    # Quittung ohne sie beantwortet nicht, WAS uebermittelt wurde —
+    # Pruefsumme und Zeilenzahl allein reichen dafuer nicht.
+    saetze: list[dict[str, str]] = Field(default_factory=list)
 
 
 class ProtokollZeile(BaseModel):

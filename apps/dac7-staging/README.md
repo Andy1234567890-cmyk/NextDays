@@ -88,11 +88,15 @@ Eingereichte Dateien enthalten CPR-Nummern, Namen, Anschriften und
 Bankverbindungen — auch in einer Teststufe, sobald jemand eine echte Meldung
 hochlädt.
 
-Der Dienst speichert den **Rohinhalt nicht**. Abgelegt werden nur
-Prüfsumme, Kennzahlen und Befunde, und auch die nur befristet im
-Arbeitsspeicher. Ein Neustart löscht alles. Das ist keine Schwäche, sondern
-die Absicht: Eine Teststufe, deren Inhalt einen Neustart überlebt, ist ein
-Datenlager.
+Der Rohinhalt wird **aufbewahrt** — nur so lässt sich zeigen, was
+übermittelt wurde, und dafür gibt es diese Stelle. Aber ausschliesslich
+**im Arbeitsspeicher** und nur für die Aufbewahrungsdauer: Ein Neustart
+löscht alles. Nichts wird auf Platte geschrieben, nichts in ein Log.
+
+Bis zum 11.09.2026 wurde der Rohinhalt verworfen. Das war sicherer und
+zugleich nutzlos: Die Seite zeigte Prüfsumme und Zeilenzahl, und niemand
+konnte sehen, was in der Meldung steht. Eine Prüfstelle, die den Inhalt
+nicht zeigt, prüft nichts.
 
 `DELETE /v1/quittungen` verwirft alles sofort — für den Fall, dass
 versehentlich eine echte Meldung eingereicht wurde.

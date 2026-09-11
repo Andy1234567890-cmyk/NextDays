@@ -75,6 +75,10 @@ _KOPF = """<!doctype html>
   .zahlen { display:flex; gap:1.5rem; flex-wrap:wrap; margin:.5rem 0 1rem; }
   .zahlen div { font-size:.85rem; opacity:.8; }
   .zahlen b { display:block; font-size:1.25rem; opacity:1; }
+  pre.roh { overflow-x:auto; margin:0; padding:.9rem; border-radius:.5rem;
+            background:#f0f2f5; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+            font-size:.78rem; line-height:1.5; white-space:pre; }
+  @media (prefers-color-scheme: dark) { pre.roh { background:#12151a; } }
   .fuss { font-size:.82rem; opacity:.65; margin-top:2rem; }
   .fuss a { color:inherit; }
 </style>
@@ -86,39 +90,10 @@ Posteingang der DAC7-Meldungen.</p>
   <strong>Keine Behörde.</strong> Diese Stelle gehört myNextDays, nicht der
   Skattestyrelsen. Eine Annahme hier ist keine Zusage der Behörde — die
   Meldung muss weiterhin über TastSelv Erhverv eingereicht werden.
-  <br>Eingereichte Dateien werden <strong>nicht gespeichert</strong>:
-  abgelegt werden nur Prüfsumme, Kennzahlen und Befunde, und auch die nur
-  befristet.
+  <br>Eingereichte Dateien liegen <strong>nur im Arbeitsspeicher</strong>
+  und nur befristet: Ein Neustart löscht sie, ebenso „Protokoll leeren".
+  Nichts wird auf Platte geschrieben.
 </div>
-"""
-
-_FORMULAR = """
-<form class="karte" method="post" action="/einreichen" enctype="multipart/form-data">
-  <h2>Eingang von Hand erzeugen</h2>
-  <p style="font-size:.88rem;opacity:.75;margin:-.35rem 0 1rem">
-    Werkzeug zum Erproben der Gegenstelle: eine Datei einspielen, als käme
-    sie von einem Betrieb. Im Betrieb reicht der Absender über seine eigene
-    Oberfläche ein — diese Stelle nimmt entgegen.
-  </p>
-  <label for="datei">Meldedatei (CSV oder XML)</label>
-  <input id="datei" type="file" name="datei" accept=".csv,.xml,text/csv,application/xml" required>
-  <div class="reihe">
-    <div>
-      <label for="verhalten">Verhalten der Empfangsstelle</label>
-      <select id="verhalten" name="verhalten">
-        <option value="normal">regulär prüfen</option>
-        <option value="ablehnen">ablehnen (unabhängig vom Inhalt)</option>
-        <option value="wartung">nicht erreichbar (503)</option>
-        <option value="doppelt">bereits eingereicht</option>
-      </select>
-    </div>
-    <div style="flex:0 0 auto"><button type="submit">Eingang erzeugen</button></div>
-  </div>
-  <p style="font-size:.85rem;opacity:.7;margin:.9rem 0 0">
-    Der Gutfall lässt sich einmal im Jahr auch gegen die echte Behörde prüfen —
-    der Fehlerpfad nie. Dafür ist die Auswahl da.
-  </p>
-</form>
 """
 
 _FUSS = """
@@ -155,8 +130,10 @@ def _eingangszeile(e) -> str:  # noqa: ANN001 — Eintrag, Import waere zirkulae
     )
     befunde = len(e.fehler)
     spalte_befunde = f'<span class="fehler">{befunde}</span>' if befunde else "—"
+    nummer = html.escape(e.quittungsnummer)
     return (
-        f"<tr><td><code>{html.escape(e.quittungsnummer)}</code></td>"
+        f'<tr><td><a href="/meldung/{nummer}"><code>{nummer}</code></a></td>'
+
         f"<td>{e.empfangen_am:%d-%m-%Y %H:%M} UTC</td>"
         f"<td>{stand}</td>"
         f"<td>{html.escape(e.format.upper())}</td>"
@@ -195,7 +172,105 @@ def _posteingang(eintraege: list) -> str:
 
 def startseite(eintraege: list | None = None) -> str:
     """Die Startseite: erst der Posteingang, dann das Pruefwerkzeug."""
-    return _KOPF + _posteingang(eintraege or []) + _FORMULAR + _FUSS
+    return _KOPF + _posteingang(eintraege or []) + _FUSS
+
+
+def _satzkarte(satz: dict) -> str:
+    """Ein uebermittelter Satz mit allen belegten Feldern.
+
+    Gezeigt wird, was WIRKLICH in der Datei stand — Spaltenname und Wert.
+    Das ist der Zweck dieser Stelle: Der Betrieb sieht vor dem Gang zur
+    Behoerde, was er meldet. Eine Pruefsumme beantwortet das nicht.
+
+    Jeder Wert ist escaped — er stammt aus einer fremden Datei.
+    """
+    nr = satz.get("__nr", "?")
+    typ = satz.get("ROW_TYPE", "—")
+    zeilen = "".join(
+        f"<tr><td><code>{html.escape(spalte)}</code></td>"
+        f"<td>{html.escape(wert)}</td></tr>"
+        for spalte, wert in satz.items()
+        if spalte not in ("__nr", "ROW_TYPE")
+    )
+    return (
+        f'<div class="karte"><h2>{html.escape(typ)} '
+        f'<span style="opacity:.55;font-weight:400">Zeile {html.escape(nr)}'
+        f"</span></h2>"
+        f"<table><tr><th>Spalte</th><th>Wert</th></tr>{zeilen}</table></div>"
+    )
+
+
+def _rohansicht(eintrag) -> str:  # noqa: ANN001 — Eintrag, Import waere zirkulaer
+    """Die eingereichte Datei im Original, Zeile fuer Zeile.
+
+    Die Feldansicht darueber ist aufbereitet; hier steht, was wirklich
+    ankam — jedes Semikolon, jedes leere Feld. Wer eine Abweichung sucht,
+    braucht genau das und keine Darstellung davon.
+    """
+    if not eintrag.rohtext:
+        return ""
+    zeilen = eintrag.rohtext.replace("\r\n", "\n").split("\n")
+    nummeriert = "\n".join(
+        f"{nr:>3}  {html.escape(z)}"
+        for nr, z in enumerate(zeilen, start=1)
+        if z.strip()
+    )
+    art = "XML" if eintrag.format == "xml" else "CSV"
+    return f"""
+<div class="karte">
+  <h2>Datei im Original ({art})</h2>
+  <p style="margin:-.35rem 0 .9rem;font-size:.88rem;opacity:.75">
+    Was wirklich ankam — unveraendert.
+    <a href="/meldung/{html.escape(eintrag.quittungsnummer)}/datei">herunterladen</a>
+  </p>
+  <pre class="roh">{nummeriert}</pre>
+</div>
+"""
+
+
+def meldungsseite(eintrag) -> str:  # noqa: ANN001 — Eintrag, Import waere zirkulaer
+    """Eine einzelne Meldung: was uebermittelt wurde, Satz fuer Satz."""
+    stand = (
+        '<span class="ok">angenommen</span>'
+        if eintrag.angenommen
+        else '<span class="fehler">abgewiesen</span>'
+    )
+    kopf = f"""
+<p class="fuss" style="margin:0 0 1rem"><a href="/">← Posteingang</a></p>
+<div class="karte">
+  <h2>Meldung {html.escape(eintrag.quittungsnummer)}</h2>
+  <div class="zahlen">
+    <div><b>{stand}</b>Ergebnis</div>
+    <div><b>{eintrag.zeilen}</b>Sätze</div>
+    <div><b>{len(eintrag.fehler)}</b>Fehler</div>
+  </div>
+  <table>
+    <tr><th>Empfangen</th><td>{eintrag.empfangen_am:%d-%m-%Y %H:%M} UTC</td></tr>
+    <tr><th>Datei</th><td>{html.escape(eintrag.dateiname)}</td></tr>
+    <tr><th>Prüfsumme</th><td><code>{html.escape(eintrag.pruefsumme)}</code></td></tr>
+  </table>
+</div>
+"""
+    saetze = "".join(_satzkarte(z) for z in eintrag.saetze) or (
+        '<div class="karte"><p style="margin:0;opacity:.75">Keine lesbaren '
+        "Sätze — die Datei war nicht auswertbar.</p></div>"
+    )
+    return (
+        _KOPF
+        + kopf
+        + _befundtabelle(
+            "Fehler — so nimmt die Behörde die Datei nicht an",
+            eintrag.fehler,
+            "fehler",
+        )
+        + _befundtabelle(
+            "Hinweise — verhindern die Annahme nicht", eintrag.hinweise, "ok"
+        )
+        + '<h2 style="margin:2rem 0 1rem">Übermittelte Daten</h2>'
+        + saetze
+        + _rohansicht(eintrag)
+        + _FUSS
+    )
 
 
 def _eine_zeile(b) -> str:  # noqa: ANN001 — Befund aus zwei Modulen
@@ -264,6 +339,5 @@ def ergebnisseite(
         + _befundtabelle("Hinweise — verhindern die Annahme nicht",
                          quittung.hinweise, "ok")
         + _posteingang(eintraege or [])
-        + _FORMULAR
         + _FUSS
     )
