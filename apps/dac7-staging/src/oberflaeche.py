@@ -92,7 +92,15 @@ _STIL = """<!doctype html>
   @media (prefers-color-scheme: dark) {
     .breit::-webkit-scrollbar-thumb { background:#4a525c; }
     .breit::-webkit-scrollbar-track { background:#20252b; } }
-  table.csv { font-size:.8rem; white-space:nowrap; width:auto; min-width:100%; }
+  /* `table-layout:fixed` statt `auto`: Bei `auto` verteilt der Browser die
+     Breiten nach Inhalt und laesst lange Werte ueber den Zellenrand
+     hinauslaufen. Der ueberstehende Text wird dann UEBER die angeheftete
+     Spalte gemalt — sichtbar war "000019DEMO01" quer ueber der
+     Zeilennummer. Feste Breiten plus `clip` beenden das. */
+  table.csv { font-size:.8rem; white-space:nowrap; table-layout:fixed;
+              width:auto; min-width:100%; }
+  table.csv td, table.csv th { overflow:clip; text-overflow:ellipsis;
+                               min-width:9rem; max-width:16rem; }
   table.csv th { font-weight:600; opacity:.8; position:sticky; top:0;
                  background:#fff; }
   @media (prefers-color-scheme: dark) { table.csv th { background:#1d2126; } }
@@ -103,48 +111,33 @@ _STIL = """<!doctype html>
      ueberschreiben, sonst scheint beim Rollen der Text darunter durch.
      Genau das war der Fehler — die Regel stand hinter den sticky-Regeln
      und gewann bei gerader Zeilennummer. */
+  /* JEDE Zelle deckend, nicht nur die angehefteten. Eine Zelle ohne
+     eigenen Hintergrund ist durchsichtig — rollt sie unter die klebende
+     Spalte, scheint ihr Text dort durch. Genau das war zu sehen: unter
+     der Zeilennummer stand die weggerollte RS_DOC_REF_ID. */
+  table.csv td, table.csv th { background:#fff; }
   table.csv tr:nth-child(even) td { background:#fafbfc; }
   @media (prefers-color-scheme: dark) {
+    table.csv td, table.csv th { background:#1d2126; }
     table.csv tr:nth-child(even) td { background:#191d22; } }
 
-  /* Zeilennummer und ROW_TYPE bleiben beim waagerechten Rollen stehen,
-     sonst weiss man in Spalte 60 nicht mehr, welche Zeile man liest.
-     Die Breiten sind FESTGELEGT, nicht geraten: `left` der zweiten
-     Spalte muss exakt der Breite der ersten entsprechen. Stand dort ein
-     Schaetzwert, schoben sich beide uebereinander, sobald der Inhalt
-     schmaler ausfiel. */
-  table.csv th:first-child, table.csv td:first-child {
-      position:sticky; left:0; z-index:3; width:3rem; min-width:3rem;
-      max-width:3rem; text-align:right; }
-  table.csv th:nth-child(2), table.csv td:nth-child(2) {
-      position:sticky; left:3rem; z-index:3; font-weight:600;
-      box-shadow:1px 0 0 #dfe3e8; }
-  /* Der Kopf muss ueber den angehefteten Spalten liegen, nicht darunter. */
-  table.csv th:first-child, table.csv th:nth-child(2) { z-index:4; }
-  /* Deckender Hintergrund fuer die angehefteten Zellen — auch in geraden
-     Zeilen, deshalb hier unten und mit derselben Genauigkeit. */
-  table.csv tr td:first-child, table.csv tr td:nth-child(2),
-  table.csv th:first-child, table.csv th:nth-child(2) { background:#fff; }
-  @media (prefers-color-scheme: dark) {
-    table.csv tr td:first-child, table.csv tr td:nth-child(2),
-    table.csv th:first-child, table.csv th:nth-child(2) { background:#1d2126; }
-    table.csv th:nth-child(2), table.csv td:nth-child(2) {
-        box-shadow:1px 0 0 #2e343c; } }
+  /* KEINE klebenden Spalten mehr.
 
-  /* Schmales Fenster: Zwei angeheftete Spalten fressen die halbe Breite,
-     und vom Rest bleibt nichts. Dann heftet nur noch die Zeilennummer. */
-  @media (max-width: 40rem) {
-    table.csv th:nth-child(2), table.csv td:nth-child(2) {
-        position:static; box-shadow:none; }
-    body { padding:1.25rem .75rem; }
-    .kopfzahlen { gap:.6rem 1rem; }
-    /* Die Pruefsumme ist 64 Zeichen lang und sprengt jedes Telefon. */
-    .kopfzahlen .pruefsumme { overflow-wrap:anywhere; }
-    .seitenkopf h1 { font-size:1.1rem; overflow-wrap:anywhere; }
-    table.schutz th { width:auto; white-space:normal; }
-    /* Nebeneinander gibt es hier nicht mehr — Bezeichnung ueber Text. */
-    table.schutz th, table.schutz td { display:block; }
-    table.schutz td { padding-top:0; padding-bottom:.7rem; } }
+     Sie sollten beim Rollen die Orientierung halten, haben aber genau das
+     Gegenteil bewirkt: In Zeilen mit wenigen belegten Feldern schien der
+     Text weggerollter Spalten durch die klebende Zelle hindurch — "_ID"
+     ueber dem Spaltenkopf "#", "000019DEMO01" quer ueber der
+     Zeilennummer. Drei Anlaeufe ueber Stapelreihenfolge, deckende
+     Hintergruende und feste Tabellenbreiten haben es nicht behoben.
+
+     Eine Darstellung, die Werte uebereinanderlegt, ist bei einer
+     Steuermeldung schlimmer als eine, die beim Rollen die Zeilennummer
+     verliert: Wer zwei Zahlen uebereinander sieht, liest eine falsche.
+     Deshalb rollt die Tabelle jetzt als Ganzes — wie eine CSV im Editor.
+
+     Die Orientierung uebernimmt stattdessen der ROW_TYPE, der in JEDER
+     Zeile als eigene Spalte mitlaeuft, und die Zeilennummer, die der
+     Nummer in der Datei entspricht. */
   td.zeilennr { opacity:.5; font-variant-numeric:tabular-nums; }
   pre.roh { overflow-x:auto; margin:0; padding:.9rem; border-radius:.5rem;
             background:#f0f2f5; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
