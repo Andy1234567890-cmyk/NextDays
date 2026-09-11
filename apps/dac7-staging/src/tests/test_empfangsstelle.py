@@ -8,14 +8,30 @@ from __future__ import annotations
 
 import os
 
-os.environ.setdefault("STAGING_TOKEN", "test-token-nicht-echt")
+# `setdefault` waere hier falsch, und zwar auf eine Weise, die lokal nie
+# auffaellt: Es setzt den Wert NUR, wenn die Variable fehlt. Lokal fehlt sie,
+# also greift der Testwert und alle 58 Tests sind gruen. In der CI setzt
+# `ci.yml` `STAGING_TOKEN=ci-platzhalter-token-nicht-echt` (der Dienst faehrt
+# fail-closed nicht ohne Token hoch) — `setdefault` liess diesen Wert stehen,
+# waehrend die Tests weiter mit `test-token-nicht-echt` anfragten. Folge: JEDE
+# Anfrage 401, und weil eine 401-Antwort die Felder der Quittung nicht traegt,
+# meldete pytest 24x `KeyError: 'angenommen'` statt „falsches Token". Der
+# Fehler stand also nie da, wo er aussah.
+os.environ["STAGING_TOKEN"] = "test-token-nicht-echt"
 
 import pytest
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
 
 from src.core import vorlage
+from src.core.config import get_settings
 from src.main import create_app
 from src.v1 import einreichung
+
+# `get_settings` ist `lru_cache`-gecacht. Hat irgendein Import die
+# Einstellungen schon gelesen, haelt der Cache den CI-Wert fest und das
+# Setzen oben waere wirkungslos.
+get_settings.cache_clear()
 
 KOPF = "X-Staging-Token"
 TOKEN = "test-token-nicht-echt"
@@ -685,3 +701,37 @@ class TestApiReferenz:
     ) -> None:
         schema = client.get("/openapi.json").json()["components"]["schemas"]
         assert "saetze" in schema["QuittungAusgabe"]["properties"]
+
+
+class TestFailClosed:
+    """Ohne Geheimnis darf der Dienst nicht hochfahren.
+
+    Die CI faehrt diese Gegenprobe als Shell-Schritt, aber mit
+    `2>/dev/null` — ein Start, der gelingt, waere dort an der Ausgabe nicht
+    zu erkennen, nur am Exit-Code. Hier steht sie als Test, weil das die
+    Stelle ist, die jemand liest, der die Zusage aendert.
+    """
+
+    def test_ohne_variable_kein_start(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("STAGING_TOKEN", raising=False)
+        get_settings.cache_clear()
+        with pytest.raises(ValidationError):
+            get_settings()
+        get_settings.cache_clear()
+
+    def test_leeres_geheimnis_kein_start(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """„Fehlt" und „ist leer" sind fuer Pydantic zwei Dinge.
+
+        Mit `STAGING_TOKEN=` fuhr der Dienst bis zum 11.09.2026 hoch und
+        hielt den Leerstring als Geheimnis. Abgewiesen haette er weiter
+        jeden, weil `core/auth.py` einen leeren Header vor dem Vergleich
+        ablehnt — die Zusage „ohne Token kein Start" galt aber nur fuer eine
+        der beiden Arten, keines zu haben.
+        """
+        monkeypatch.setenv("STAGING_TOKEN", "")
+        get_settings.cache_clear()
+        with pytest.raises(ValidationError):
+            get_settings()
+        get_settings.cache_clear()
