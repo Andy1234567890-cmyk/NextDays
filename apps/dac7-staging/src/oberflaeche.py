@@ -97,20 +97,54 @@ _STIL = """<!doctype html>
                  background:#fff; }
   @media (prefers-color-scheme: dark) { table.csv th { background:#1d2126; } }
   table.csv td, table.csv th { padding:.35rem .55rem; }
-  /* Zeilennummer und ROW_TYPE bleiben beim waagerechten Rollen stehen —
-     sonst weiss man in Spalte 60 nicht mehr, welche Zeile man liest. */
-  table.csv td:first-child, table.csv th:first-child { position:sticky; left:0;
-      background:#fff; z-index:2; }
-  table.csv td:nth-child(2), table.csv th:nth-child(2) { position:sticky;
-      left:2.5rem; background:#fff; z-index:2; font-weight:600; }
-  @media (prefers-color-scheme: dark) {
-    table.csv td:first-child, table.csv th:first-child,
-    table.csv td:nth-child(2), table.csv th:nth-child(2) { background:#1d2126; } }
   table.csv td.zahl { text-align:right; font-variant-numeric:tabular-nums; }
   table.csv td:empty::after { content:"·"; opacity:.25; }
+  /* Zebra ZUERST: Die angehefteten Spalten weiter unten muessen sie
+     ueberschreiben, sonst scheint beim Rollen der Text darunter durch.
+     Genau das war der Fehler — die Regel stand hinter den sticky-Regeln
+     und gewann bei gerader Zeilennummer. */
   table.csv tr:nth-child(even) td { background:#fafbfc; }
   @media (prefers-color-scheme: dark) {
     table.csv tr:nth-child(even) td { background:#191d22; } }
+
+  /* Zeilennummer und ROW_TYPE bleiben beim waagerechten Rollen stehen,
+     sonst weiss man in Spalte 60 nicht mehr, welche Zeile man liest.
+     Die Breiten sind FESTGELEGT, nicht geraten: `left` der zweiten
+     Spalte muss exakt der Breite der ersten entsprechen. Stand dort ein
+     Schaetzwert, schoben sich beide uebereinander, sobald der Inhalt
+     schmaler ausfiel. */
+  table.csv th:first-child, table.csv td:first-child {
+      position:sticky; left:0; z-index:3; width:3rem; min-width:3rem;
+      max-width:3rem; text-align:right; }
+  table.csv th:nth-child(2), table.csv td:nth-child(2) {
+      position:sticky; left:3rem; z-index:3; font-weight:600;
+      box-shadow:1px 0 0 #dfe3e8; }
+  /* Der Kopf muss ueber den angehefteten Spalten liegen, nicht darunter. */
+  table.csv th:first-child, table.csv th:nth-child(2) { z-index:4; }
+  /* Deckender Hintergrund fuer die angehefteten Zellen — auch in geraden
+     Zeilen, deshalb hier unten und mit derselben Genauigkeit. */
+  table.csv tr td:first-child, table.csv tr td:nth-child(2),
+  table.csv th:first-child, table.csv th:nth-child(2) { background:#fff; }
+  @media (prefers-color-scheme: dark) {
+    table.csv tr td:first-child, table.csv tr td:nth-child(2),
+    table.csv th:first-child, table.csv th:nth-child(2) { background:#1d2126; }
+    table.csv th:nth-child(2), table.csv td:nth-child(2) {
+        box-shadow:1px 0 0 #2e343c; } }
+
+  /* Schmales Fenster: Zwei angeheftete Spalten fressen die halbe Breite,
+     und vom Rest bleibt nichts. Dann heftet nur noch die Zeilennummer. */
+  @media (max-width: 40rem) {
+    table.csv th:nth-child(2), table.csv td:nth-child(2) {
+        position:static; box-shadow:none; }
+    body { padding:1.25rem .75rem; }
+    .kopfzahlen { gap:.6rem 1rem; }
+    /* Die Pruefsumme ist 64 Zeichen lang und sprengt jedes Telefon. */
+    .kopfzahlen .pruefsumme { overflow-wrap:anywhere; }
+    .seitenkopf h1 { font-size:1.1rem; overflow-wrap:anywhere; }
+    table.schutz th { width:auto; white-space:normal; }
+    /* Nebeneinander gibt es hier nicht mehr — Bezeichnung ueber Text. */
+    table.schutz th, table.schutz td { display:block; }
+    table.schutz td { padding-top:0; padding-bottom:.7rem; } }
   td.zeilennr { opacity:.5; font-variant-numeric:tabular-nums; }
   pre.roh { overflow-x:auto; margin:0; padding:.9rem; border-radius:.5rem;
             background:#f0f2f5; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
