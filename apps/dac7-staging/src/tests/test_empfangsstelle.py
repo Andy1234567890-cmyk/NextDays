@@ -15,6 +15,7 @@ from fastapi.testclient import TestClient
 
 from src.core import vorlage
 from src.main import create_app
+from src.v1 import einreichung
 
 KOPF = "X-Staging-Token"
 TOKEN = "test-token-nicht-echt"
@@ -22,6 +23,12 @@ TOKEN = "test-token-nicht-echt"
 
 @pytest.fixture
 def client() -> TestClient:
+    # Das Protokoll ist ein Modul-Global und ueberlebt daher den einzelnen
+    # Test. Seit die Empfangsstelle dieselbe Datei kein zweites Mal annimmt,
+    # wuerde jeder Test, der die Standarddatei sendet, an der Einreichung
+    # eines FRUEHEREN Tests scheitern. Deshalb hier ein frischer Speicher je
+    # Test — sonst haengt das Ergebnis an der Ausfuehrungsreihenfolge.
+    einreichung.PROTOKOLL.leeren()
     return TestClient(create_app())
 
 
@@ -147,11 +154,17 @@ class TestGueltigeDatei:
 
     def test_quittung_traegt_nummer_und_pruefsumme(self, client: TestClient) -> None:
         daten = _senden(client, _gueltig()).json()
+        # `angenommen` mitpruefen: Nummer und Pruefsumme traegt auch eine
+        # ZURUECKGEWIESENE Quittung. Ohne diese Zeile blieben beide Tests
+        # gruen, obwohl die Datei abgelehnt wurde.
+        assert daten["angenommen"], daten["fehler"]
         assert daten["quittungsnummer"].startswith("DK-")
         assert len(daten["pruefsumme"]) == 64
 
     def test_quittung_ist_abrufbar(self, client: TestClient) -> None:
-        nummer = _senden(client, _gueltig()).json()["quittungsnummer"]
+        erste = _senden(client, _gueltig()).json()
+        assert erste["angenommen"], erste["fehler"]
+        nummer = erste["quittungsnummer"]
         antwort = client.get(f"/v1/quittungen/{nummer}", headers={KOPF: TOKEN})
         assert antwort.status_code == 200
         assert antwort.json()["quittungsnummer"] == nummer
@@ -324,3 +337,108 @@ class TestProtokoll:
         antwort = client.delete("/v1/quittungen", headers={KOPF: TOKEN})
         assert antwort.status_code == 200
         assert client.get("/v1/quittungen", headers={KOPF: TOKEN}).json() == []
+
+
+class TestEinmaligkeit:
+    """Dieselbe Datei zweimal — die Behoerde nimmt sie nur einmal an.
+
+    "Indtaegten skal kun indberettes een gang og ikke dobbelt"
+    (DAC7-Anleitung feriehusudlejerne.dk, S. 5). Aufgefallen ist die Luecke
+    nicht im Test, sondern beim ersten echten Versand aus dem PMS: derselbe
+    Inhalt bekam zwei Quittungen, und damit waere dieselbe Einnahme zweimal
+    gemeldet gewesen.
+    """
+
+    def test_zweite_einreichung_wird_zurueckgewiesen(
+        self, client: TestClient
+    ) -> None:
+        inhalt = _gueltig()
+        erste = _senden(client, inhalt).json()
+        assert erste["angenommen"], erste["fehler"]
+
+        zweite = _senden(client, inhalt).json()
+        assert not zweite["angenommen"]
+        assert any(f["regel"] == "Einmaligkeit" for f in zweite["fehler"])
+        # Die Quittung der ersten Einreichung wird genannt, damit der
+        # Absender nachvollziehen kann, was schon vorliegt.
+        assert erste["quittungsnummer"] in str(zweite["fehler"])
+
+    def test_dateiname_aendert_nichts(self, client: TestClient) -> None:
+        """Geprueft wird der Inhalt, nicht der Name — er ist eine Behauptung."""
+        inhalt = _gueltig()
+        _senden(client, inhalt, name="meldung.csv")
+        zweite = _senden(client, inhalt, name="anders.csv").json()
+        assert not zweite["angenommen"]
+
+    def test_andere_datei_wird_angenommen(self, client: TestClient) -> None:
+        """Eine geaenderte Meldung ist keine Dublette."""
+        _senden(client, _gueltig())
+        andere = _datei(
+            _message(MSG_MESSAGE_REF_ID="DK2025DK44179377_AS26"),
+            _betreiber(),
+            _verkaeufer(),
+            _objekt(),
+        )
+        assert _senden(client, andere).json()["angenommen"]
+
+    def test_zurueckgewiesene_datei_sperrt_nicht(self, client: TestClient) -> None:
+        """Nur ANGENOMMENES sperrt.
+
+        Sonst koennte eine fehlerhafte Datei nach der Korrektur nicht mehr
+        eingereicht werden — und wer unveraendert erneut sendet, soll
+        weiterhin SEINEN Fehler sehen, nicht den Dublettenhinweis.
+        """
+        kaputt = _datei(_betreiber(), _verkaeufer(), _objekt())
+        erste = _senden(client, kaputt).json()
+        assert not erste["angenommen"]
+
+        zweite = _senden(client, kaputt).json()
+        assert not zweite["angenommen"]
+        assert not any(f["regel"] == "Einmaligkeit" for f in zweite["fehler"])
+
+
+class TestPosteingang:
+    """Die Startseite ist die Sicht der BEHOERDE: was ist angekommen.
+
+    Sie zeigte zuerst nur ein Hochladeformular — die Sicht des Absenders.
+    Ein Amt reicht nichts ein, es empfaengt.
+    """
+
+    def test_leerer_eingang_wird_benannt(self, client: TestClient) -> None:
+        seite = client.get("/").text
+        assert "Posteingang" in seite
+        assert "keine Meldung vor" in seite
+
+    def test_eingegangene_meldung_erscheint(self, client: TestClient) -> None:
+        nummer = _senden(client, _gueltig()).json()["quittungsnummer"]
+        seite = client.get("/").text
+        assert nummer in seite
+        assert "angenommen" in seite
+
+    def test_abgewiesene_meldung_erscheint_als_abgewiesen(
+        self, client: TestClient
+    ) -> None:
+        _senden(client, _datei(_betreiber(), _verkaeufer(), _objekt()))
+        assert "abgewiesen" in client.get("/").text
+
+    def test_posteingang_nennt_keine_inhalte_der_datei(
+        self, client: TestClient
+    ) -> None:
+        """Kein Name, keine CPR, kein Betrag — die Stelle protokolliert nur.
+
+        Die Vorlage traegt echte Personendaten; was hier versehentlich
+        angezeigt wuerde, stuende auf einer oeffentlich erreichbaren Seite.
+        """
+        _senden(client, _gueltig())
+        seite = client.get("/").text
+        assert "Beispielbureau" not in seite
+        assert "5836" not in seite
+
+    def test_zaehler_stimmt(self, client: TestClient) -> None:
+        _senden(client, _gueltig())
+        _senden(client, _datei(_betreiber()))
+        seite = client.get("/").text
+        # zwei Meldungen, davon eine angenommen
+        assert "<b>2</b>Meldungen" in seite
+        assert "<b>1</b>angenommen" in seite
+        assert "<b>1</b>abgewiesen" in seite

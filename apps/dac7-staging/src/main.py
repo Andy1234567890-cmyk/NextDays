@@ -121,7 +121,9 @@ def create_app() -> FastAPI:
 
     @app.get("/", include_in_schema=False)
     def seite() -> HTMLResponse:
-        return HTMLResponse(startseite())
+        from .v1.einreichung import PROTOKOLL
+
+        return HTMLResponse(startseite(PROTOKOLL.liste()))
 
     @app.post("/einreichen", include_in_schema=False)
     async def formular(
@@ -143,7 +145,7 @@ def create_app() -> FastAPI:
             # Teststufe, keine Programmfehler — als Seite zeigen statt als
             # nackter Statuscode.
             return HTMLResponse(
-                startseite().replace(
+                startseite(PROTOKOLL.liste()).replace(
                     "</h1>",
                     f"</h1><div class='karte'><h2 class='fehler'>Abgewiesen "
                     f"({exc.status_code})</h2><p>{exc.detail}</p></div>",
@@ -158,6 +160,7 @@ def create_app() -> FastAPI:
                 quittung.quittungsnummer,
                 quittung.pruefsumme,
                 quittung.dateiname,
+                PROTOKOLL.liste(),
             )
         )
 

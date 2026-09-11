@@ -76,6 +76,29 @@ class Protokoll:
             self._eintraege[eintrag.quittungsnummer] = eintrag
         return eintrag
 
+    def bereits_angenommen(self, summe: str) -> Eintrag | None:
+        """Der angenommene Eintrag mit dieser Pruefsumme, falls es ihn gibt.
+
+        Die Behoerde nimmt dieselbe Meldung kein zweites Mal an: "Indtaegten
+        skal kun indberettes een gang og ikke dobbelt" (DAC7-Anleitung
+        feriehusudlejerne.dk, S. 5). Ein Wiederholungsversuch nach einem
+        Zeitlimit oder ein Doppelklick darf keine zweite Meldung erzeugen
+        (Wurzel 2).
+
+        Nur ANGENOMMENE Einreichungen sperren. Eine zurueckgewiesene Datei
+        soll nach der Korrektur wieder eingereicht werden koennen — und wer
+        unveraendert erneut sendet, bekommt dieselbe Zurueckweisung, nicht
+        den Dublettenhinweis.
+        """
+        with self._sperre:
+            self._aufraeumen()
+            treffer = [
+                e
+                for e in self._eintraege.values()
+                if e.pruefsumme == summe and e.angenommen
+            ]
+        return min(treffer, key=lambda e: e.empfangen_am) if treffer else None
+
     def holen(self, nummer: str) -> Eintrag | None:
         with self._sperre:
             self._aufraeumen()

@@ -73,11 +73,14 @@ async def einreichen(
 
     quittung = _pruefen(formatname, inhalt, verhalten)
 
+    summe = pruefsumme(rohdaten)
+    _dublette_pruefen(summe, quittung)
+
     eintrag = PROTOKOLL.ablegen(
         format=formatname,
         dateiname=datei.filename or "(ohne Namen)",
         bytes_gesamt=len(rohdaten),
-        pruefsumme=pruefsumme(rohdaten),
+        pruefsumme=summe,
         angenommen=quittung.angenommen,
         zeilen=quittung.zeilen,
         zeilentypen=quittung.zeilentypen,
@@ -173,6 +176,37 @@ def _pruefen(formatname: str, inhalt: str, verhalten: str) -> Quittung:
             )
         )
     return quittung
+
+
+def _dublette_pruefen(summe: str, quittung: Quittung) -> None:
+    """Dieselbe Datei ein zweites Mal — die Behoerde nimmt sie nicht an.
+
+    Geprueft wird die Pruefsumme der Bytes, nicht die Meldungskennung: Zwei
+    Einreichungen, die sich in keinem Byte unterscheiden, sind derselbe
+    Vorgang. Eine Korrektur sieht anders aus — sie traegt DPI402 und
+    CORR_DOC_REF_ID und hat damit eine andere Pruefsumme.
+
+    Warum das hier steht und nicht nur hinter `X-Staging-Verhalten:
+    doppelt`: Die Teststufe soll die Behoerde nachbilden. Nahm sie dieselbe
+    Datei zweimal an, bestand das PMS einen Test, den die echte Stelle
+    nicht durchgehen laesst — und die Einnahme waere doppelt gemeldet.
+    """
+    frueher = PROTOKOLL.bereits_angenommen(summe)
+    if frueher is None:
+        return
+    quittung.fehler.append(
+        Befund(
+            0,
+            "Message",
+            "MSG_MESSAGE_REF_ID",
+            "Einmaligkeit",
+            "Diese Datei wurde bereits angenommen "
+            f"(Quittung {frueher.quittungsnummer}, "
+            f"{frueher.empfangen_am:%d-%m-%Y %H:%M} UTC). Eine Einnahme "
+            "wird nur einmal gemeldet. Eine Korrektur traegt DPI402 und "
+            "verweist ueber CORR_DOC_REF_ID auf die urspruengliche Kennung.",
+        )
+    )
 
 
 def _als_ausgabe(eintrag: Eintrag) -> QuittungAusgabe:

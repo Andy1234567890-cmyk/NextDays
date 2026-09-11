@@ -1,24 +1,26 @@
-"""Die Startseite der Teststufe — hochladen, prüfen, Quittung lesen.
+"""Die Oberfläche der Empfangsstelle — der Posteingang des Amtes.
 
-WOZU EINE OBERFLAECHE
-=====================
-Die Behoerde hat eine: TastSelv Erhverv ist eine Webseite, auf der man
-eine Datei auswaehlt und eine Quittung zurueckbekommt. Eine Teststufe,
-die nur per `curl` bedienbar ist, uebt den Weg nicht, den ein Betrieb
-spaeter geht — und niemand ausser einem Entwickler kann sie benutzen.
+DIE PERSPEKTIVE IST DIE DER BEHÖRDE, NICHT DIE DES ABSENDERS.
+Das Amt reicht nichts ein. Es sieht, WAS ANGEKOMMEN IST: welche Meldung
+wann von wem, angenommen oder abgewiesen, und mit welchen Befunden.
+
+Hier stand zuerst ein Hochladeformular. Das war die Sicht des Betriebs —
+genau verkehrt herum: Bei TastSelv Erhverv lädt der Betrieb in SEINER
+Ansicht hoch, die Behörde sieht in IHRER den Eingang. Wer beides in eine
+Seite legt, verwischt, wer hier wem gegenübersteht.
+
+Das Hochladen bleibt möglich, aber als das, was es ist: ein Werkzeug zum
+Prüfen der Gegenstelle, nachgeordnet und als solches benannt.
 
 Bewusst EINE Datei ohne Vorlagen-System, ohne Javascript-Rahmenwerk und
-ohne externe Schriften: Dieser Dienst soll klein bleiben. Er nimmt
-Steuerdaten entgegen, jede zusaetzliche Abhaengigkeit ist Angriffsflaeche.
-Das Formular ist reines HTML, das Ergebnis kommt serverseitig gerendert
-zurueck.
+ohne externe Schriften: Dieser Dienst nimmt Steuerdaten entgegen, jede
+zusätzliche Abhängigkeit ist Angriffsfläche.
 
-WAS HIER NIE HINEINGEHOERT
-==========================
-Kein Feldwert einer eingereichten Datei ausser dem, was der Pruefbericht
+WAS HIER NIE HINEINGEHÖRT
+=========================
+Kein Feldwert einer eingereichten Datei außer dem, was der Prüfbericht
 ohnehin nennt (Spalte, Regel, beanstandeter Wert). Keine Namen, keine
-CPR-Nummern, keine Betraege. Wer die Datei sehen will, oeffnet seine
-eigene.
+CPR-Nummern, keine Beträge.
 """
 from __future__ import annotations
 
@@ -78,8 +80,8 @@ _KOPF = """<!doctype html>
 </style>
 <div class="rahmen">
 <h1>DAC7 Teststufe</h1>
-<p class="unterzeile">Simulierte Empfangsstelle — prüft eine Meldung gegen die
-amtliche Vorlage, bevor sie zur Behörde geht.</p>
+<p class="unterzeile">Simulierte Empfangsstelle der Steuerbehörde —
+Posteingang der DAC7-Meldungen.</p>
 <div class="hinweisfeld">
   <strong>Keine Behörde.</strong> Diese Stelle gehört myNextDays, nicht der
   Skattestyrelsen. Eine Annahme hier ist keine Zusage der Behörde — die
@@ -92,7 +94,12 @@ amtliche Vorlage, bevor sie zur Behörde geht.</p>
 
 _FORMULAR = """
 <form class="karte" method="post" action="/einreichen" enctype="multipart/form-data">
-  <h2>Meldung einreichen</h2>
+  <h2>Eingang von Hand erzeugen</h2>
+  <p style="font-size:.88rem;opacity:.75;margin:-.35rem 0 1rem">
+    Werkzeug zum Erproben der Gegenstelle: eine Datei einspielen, als käme
+    sie von einem Betrieb. Im Betrieb reicht der Absender über seine eigene
+    Oberfläche ein — diese Stelle nimmt entgegen.
+  </p>
   <label for="datei">Meldedatei (CSV oder XML)</label>
   <input id="datei" type="file" name="datei" accept=".csv,.xml,text/csv,application/xml" required>
   <div class="reihe">
@@ -105,7 +112,7 @@ _FORMULAR = """
         <option value="doppelt">bereits eingereicht</option>
       </select>
     </div>
-    <div style="flex:0 0 auto"><button type="submit">Einreichen</button></div>
+    <div style="flex:0 0 auto"><button type="submit">Eingang erzeugen</button></div>
   </div>
   <p style="font-size:.85rem;opacity:.7;margin:.9rem 0 0">
     Der Gutfall lässt sich einmal im Jahr auch gegen die echte Behörde prüfen —
@@ -124,8 +131,71 @@ _FUSS = """
 """
 
 
-def startseite() -> str:
-    return _KOPF + _FORMULAR + _FUSS
+_LEERER_EINGANG = """
+<div class="karte">
+  <h2>Posteingang</h2>
+  <p style="opacity:.75;margin:0">Es liegt keine Meldung vor. Eingegangene
+  Meldungen erscheinen hier, sobald ein Betrieb eine einreicht.</p>
+</div>
+"""
+
+
+def _eingangszeile(e) -> str:  # noqa: ANN001 — Eintrag, Import waere zirkulaer
+    """Eine eingegangene Meldung als Zeile des Posteingangs.
+
+    Gezeigt wird NUR, was die Behoerde protokolliert: wann, welches Format,
+    angenommen oder nicht, wie viele Zeilen, welche Pruefsumme. Kein Name,
+    keine Nummer, kein Betrag aus der Datei — die stehen hier nie
+    (siehe Kopf dieser Datei).
+    """
+    stand = (
+        '<span class="ok">angenommen</span>'
+        if e.angenommen
+        else '<span class="fehler">abgewiesen</span>'
+    )
+    befunde = len(e.fehler)
+    spalte_befunde = f'<span class="fehler">{befunde}</span>' if befunde else "—"
+    return (
+        f"<tr><td><code>{html.escape(e.quittungsnummer)}</code></td>"
+        f"<td>{e.empfangen_am:%d-%m-%Y %H:%M} UTC</td>"
+        f"<td>{stand}</td>"
+        f"<td>{html.escape(e.format.upper())}</td>"
+        f"<td>{e.zeilen}</td>"
+        f"<td>{spalte_befunde}</td>"
+        f"<td><code>{html.escape(e.pruefsumme[:12])}…</code></td></tr>"
+    )
+
+
+def _posteingang(eintraege: list) -> str:
+    """Was bei der Stelle angekommen ist — der eigentliche Inhalt der Seite.
+
+    Das Amt reicht nichts ein, es empfaengt. Deshalb steht diese Tabelle
+    oben und das Pruefwerkzeug darunter.
+    """
+    if not eintraege:
+        return _LEERER_EINGANG
+    angenommen = sum(1 for e in eintraege if e.angenommen)
+    zeilen = "".join(_eingangszeile(e) for e in eintraege)
+    return f"""
+<div class="karte">
+  <h2>Posteingang</h2>
+  <div class="zahlen">
+    <div><b>{len(eintraege)}</b>Meldungen</div>
+    <div><b>{angenommen}</b>angenommen</div>
+    <div><b>{len(eintraege) - angenommen}</b>abgewiesen</div>
+  </div>
+  <table>
+    <tr><th>Quittung</th><th>Empfangen</th><th>Ergebnis</th><th>Format</th>
+        <th>Zeilen</th><th>Fehler</th><th>Prüfsumme</th></tr>
+    {zeilen}
+  </table>
+</div>
+"""
+
+
+def startseite(eintraege: list | None = None) -> str:
+    """Die Startseite: erst der Posteingang, dann das Pruefwerkzeug."""
+    return _KOPF + _posteingang(eintraege or []) + _FORMULAR + _FUSS
 
 
 def _eine_zeile(b) -> str:  # noqa: ANN001 — Befund aus zwei Modulen
@@ -151,8 +221,19 @@ def _befundtabelle(titel: str, befunde: list, klasse: str) -> str:
     )
 
 
-def ergebnisseite(quittung: Quittung, nummer: str, pruefsumme: str, name: str) -> str:
-    """Die Quittung als Seite — dieselben Angaben wie in der JSON-Antwort."""
+def ergebnisseite(
+    quittung: Quittung,
+    nummer: str,
+    pruefsumme: str,
+    name: str,
+    eintraege: list | None = None,
+) -> str:
+    """Die Quittung als Seite — dieselben Angaben wie in der JSON-Antwort.
+
+    Der Posteingang bleibt darunter stehen: Die soeben quittierte Meldung
+    ist eine von mehreren, und die Stelle zeigt ihren Eingang, nicht nur
+    den letzten Vorgang.
+    """
     status = (
         '<span class="ok">angenommen</span>'
         if quittung.angenommen
@@ -182,6 +263,7 @@ def ergebnisseite(quittung: Quittung, nummer: str, pruefsumme: str, name: str) -
                          quittung.fehler, "fehler")
         + _befundtabelle("Hinweise — verhindern die Annahme nicht",
                          quittung.hinweise, "ok")
+        + _posteingang(eintraege or [])
         + _FORMULAR
         + _FUSS
     )
