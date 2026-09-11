@@ -270,10 +270,26 @@ jobs:
         # einer in der Prüfung und bliebe unsichtbar. Genau dieser Kurzschluss
         # ist bei der Channex-Facility-Map passiert (Test verglich die Map mit
         # sich selbst, grün, während bei allen Portalen die Ausstattung fehlte).
+        #
+        # Geprueft werden IMPORT-ANWEISUNGEN, nicht Zeichenketten irgendwo in
+        # der Datei: Die erste Fassung grepte den ganzen Quelltext nach
+        # "apps/api" und schlug damit auf ihre eigene Dokumentation an — vier
+        # Kommentare, die genau erklaeren, dass hier NICHT importiert wird,
+        # liessen den Job rot laufen (11.09.2026). Eine Pruefung, die ihre
+        # eigene Begruendung als Verstoss meldet, wird abgeschaltet statt
+        # befolgt; deshalb praezisiert statt entschaerft.
         run: |
-          if grep -rn "from src.features\|import src.features\|apps.api\|apps/api" \
+          if grep -rnE "^[[:space:]]*(from|import)[[:space:]]+(src\.features|apps\.api)" \
                apps/dac7-staging/src --include='*.py'; then
             echo "::error::apps/dac7-staging importiert aus apps/api — das hebt die Unabhängigkeit der Prüfung auf."
+            exit 1
+          fi
+          # Der zweite Weg hinein: sys.path-Basteleien auf den Nachbardienst.
+          # Ein Import muss nicht "apps.api" heissen, wenn der Pfad vorher
+          # eingehaengt wurde.
+          if grep -rnE "(sys\.path|importlib).*(apps/api|apps\.api)" \
+               apps/dac7-staging/src --include='*.py'; then
+            echo "::error::apps/dac7-staging haengt apps/api in den Suchpfad — derselbe Kurzschluss auf Umwegen."
             exit 1
           fi
           echo "Keine Importe aus apps/api — die zweite Lesung bleibt unabhängig."
@@ -1608,6 +1624,17 @@ jobs:
         # (Coolify injiziert sie) — leere Interpolation ist eine Warnung, kein
         # Fehler, und `config` prüft genau, was hier prüfbar ist: Syntax,
         # Service-/Netz-/Config-Referenzen, Build-Kontexte.
+        #
+        # AUSNAHME `${VAR:?…}`: diese Form ist KEINE Warnung, sie bricht ab.
+        # Der DAC7-Stack benutzt sie fuer STAGING_TOKEN, und das ist dort
+        # richtig — eine Empfangsstelle fuer Dateien mit CPR-Nummern soll ohne
+        # Token gar nicht erst hochkommen. Nur hat `config` keinen Wert dafuer,
+        # und der Job lief deshalb rot, ohne dass am Stack etwas falsch war
+        # (11.09.2026). Der Platzhalter ist derselbe wie in den DAC7-Tests und
+        # hat mit dem echten Secret nichts zu tun: er faellt nie in ein Image,
+        # `config` schreibt nichts und startet nichts.
+        env:
+          STAGING_TOKEN: ci-platzhalter-token-nicht-echt
         run: docker compose --project-directory "${{ matrix.projectdir }}" -f "${{ matrix.compose }}" config -q
 
       - name: Compose-Images bauen
@@ -1615,6 +1642,13 @@ jobs:
         # Nur Stacks mit build:-Sektion bauen tatsächlich etwas (api, worker,
         # docs); die reinen Image-Stacks (kong, redis, supabase) sind hier ein
         # No-Op — `build` ohne baubaren Service ist erfolgreich.
+        #
+        # Derselbe Platzhalter wie einen Schritt zuvor: auch `build` liest die
+        # Datei erst vollstaendig, und `${STAGING_TOKEN:?…}` bricht dabei
+        # genauso ab. Der Wert landet NICHT im Image — er steht in
+        # `environment:` (Laufzeit), nicht in `build.args`.
+        env:
+          STAGING_TOKEN: ci-platzhalter-token-nicht-echt
         run: docker compose --project-directory "${{ matrix.projectdir }}" -f "${{ matrix.compose }}" build
 
   # ────────────────────────────────────────────────────────────────────────
