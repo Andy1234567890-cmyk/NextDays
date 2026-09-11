@@ -473,6 +473,50 @@ class TestMeldungsansicht:
         assert "DK2025DK44179377_AS25" in seite
         assert "Beispielbureau" in seite
 
+    def test_je_objekt_eine_zeile(self, client: TestClient) -> None:
+        """Die Tabelle ist aufgebaut wie die CSV: ein Satz, eine Zeile.
+
+        Ein Betrieb mit 100 Objekten hat 100 ACT-Zeilen — sie gehoeren
+        untereinander in EINE Tabelle, sonst laesst sich eine Spalte nicht
+        ueber alle Objekte vergleichen.
+        """
+        drei = _datei(
+            _message(),
+            _betreiber(),
+            _verkaeufer(),
+            _objekt(ADDR_CITY="Aarhus"),
+            _objekt(ADDR_CITY="Odense"),
+            _objekt(ADDR_CITY="Aalborg"),
+        )
+        nummer = _senden(client, drei).json()["quittungsnummer"]
+        seite = client.get(f"/meldung/{nummer}").text
+        assert "ACT_Immovable_Property" in seite
+        assert "3 Zeilen" in seite
+        for ort in ("Aarhus", "Odense", "Aalborg"):
+            assert ort in seite
+
+    def test_spaltenkopf_steht_einmal_je_typ(self, client: TestClient) -> None:
+        """Nicht je Satz ein eigener Block — ein Kopf, darunter die Saetze."""
+        zwei = _datei(
+            _message(), _betreiber(), _verkaeufer(),
+            _objekt(ADDR_CITY="Aarhus"), _objekt(ADDR_CITY="Odense"),
+        )
+        nummer = _senden(client, zwei).json()["quittungsnummer"]
+        seite = client.get(f"/meldung/{nummer}").text
+        # Genau EIN Tabellenkopf. Das zweite Vorkommen im Quelltext ist der
+        # Spaltenkopf in der Rohansicht der Datei — der gehoert dorthin.
+        assert seite.count("<th><code>RS_ACT_PROP_TYPE</code></th>") == 1
+
+    def test_spalten_in_der_reihenfolge_der_vorlage(
+        self, client: TestClient
+    ) -> None:
+        """Wer die CSV danebenlegt, findet die Spalte an derselben Stelle."""
+        nummer = _senden(client, _gueltig()).json()["quittungsnummer"]
+        seite = client.get(f"/meldung/{nummer}").text
+        # RESIDENCE (15) steht in der Vorlage vor TIN (16) vor ADDR_CITY (27)
+        assert seite.index("RESIDENCE") < seite.index(">TIN<")
+        assert seite.index(">TIN<") < seite.index("ADDR_CITY")
+
     def test_detailseite_zeigt_die_rohdatei(self, client: TestClient) -> None:
         nummer = _senden(client, _gueltig()).json()["quittungsnummer"]
         seite = client.get(f"/meldung/{nummer}").text

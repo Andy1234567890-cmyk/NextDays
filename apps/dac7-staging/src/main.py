@@ -190,21 +190,3 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
-
-
-def _als_quittung(eintrag: object) -> object:
-    """Protokolleintrag in die Form, die `ergebnisseite` erwartet.
-
-    Ein schmaler Adapter statt eines gemeinsamen Typs: Der Eintrag traegt
-    zusaetzlich Zeitpunkt und Dateiname, die Quittung nur das
-    Pruefergebnis. Sie zusammenzulegen hiesse, dass eine Aenderung am
-    Protokoll die Anzeige mitzieht.
-    """
-    from .core.pruefung_csv import Quittung
-
-    q = Quittung()
-    q.zeilen = eintrag.zeilen  # type: ignore[attr-defined]
-    q.zeilentypen = eintrag.zeilentypen  # type: ignore[attr-defined]
-    q.fehler = list(eintrag.fehler)  # type: ignore[attr-defined]
-    q.hinweise = list(eintrag.hinweise)  # type: ignore[attr-defined]
-    return q

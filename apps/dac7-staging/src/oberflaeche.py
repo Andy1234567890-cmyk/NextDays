@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import html
 
-from .core.pruefung_csv import Quittung
+from .core import vorlage
 
 _KOPF = """<!doctype html>
 <html lang="da">
@@ -75,6 +75,18 @@ _KOPF = """<!doctype html>
   .zahlen { display:flex; gap:1.5rem; flex-wrap:wrap; margin:.5rem 0 1rem; }
   .zahlen div { font-size:.85rem; opacity:.8; }
   .zahlen b { display:block; font-size:1.25rem; opacity:1; }
+  /* Die Satztabelle traegt so viele Spalten wie die CSV belegt — sie
+     rollt waagerecht, statt die Seite zu sprengen. */
+  .breit { overflow-x:auto; margin:0 -.25rem; }
+  table.csv { font-size:.8rem; white-space:nowrap; width:auto; min-width:100%; }
+  table.csv th { font-weight:600; opacity:.8; position:sticky; top:0;
+                 background:#fff; }
+  @media (prefers-color-scheme: dark) { table.csv th { background:#1d2126; } }
+  table.csv td, table.csv th { padding:.35rem .55rem; }
+  table.csv tr:nth-child(even) td { background:#fafbfc; }
+  @media (prefers-color-scheme: dark) {
+    table.csv tr:nth-child(even) td { background:#191d22; } }
+  td.zeilennr { opacity:.5; font-variant-numeric:tabular-nums; }
   pre.roh { overflow-x:auto; margin:0; padding:.9rem; border-radius:.5rem;
             background:#f0f2f5; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
             font-size:.78rem; line-height:1.5; white-space:pre; }
@@ -175,29 +187,75 @@ def startseite(eintraege: list | None = None) -> str:
     return _KOPF + _posteingang(eintraege or []) + _FUSS
 
 
-def _satzkarte(satz: dict) -> str:
-    """Ein uebermittelter Satz mit allen belegten Feldern.
+def _satztabelle(saetze: list[dict]) -> str:
+    """Die uebermittelten Saetze als Tabelle — aufgebaut wie die CSV.
 
-    Gezeigt wird, was WIRKLICH in der Datei stand — Spaltenname und Wert.
-    Das ist der Zweck dieser Stelle: Der Betrieb sieht vor dem Gang zur
-    Behoerde, was er meldet. Eine Pruefsumme beantwortet das nicht.
+    EINE ZEILE JE SATZ, so wie die Datei sie fuehrt: Ein Betrieb mit 100
+    Objekten hat 100 ACT_Immovable_Property-Zeilen, und die gehoeren
+    untereinander in EINE Tabelle, nicht in 100 Bloecke. Nur so laesst
+    sich eine Spalte ueber alle Objekte vergleichen — genau das tut, wer
+    eine Meldung prueft.
+
+    Gezeigt werden die Spalten, die in DIESEM Satztyp belegt sind: Die
+    Vorlage hat 89, und ein Satz fuellt davon ein Dutzend. Alle 89 zu
+    zeigen hiesse, die belegten in leeren Spalten zu verstecken. Die
+    Reihenfolge ist die der Vorlage, nicht die des Auftretens.
 
     Jeder Wert ist escaped — er stammt aus einer fremden Datei.
     """
-    nr = satz.get("__nr", "?")
-    typ = satz.get("ROW_TYPE", "—")
+    if not saetze:
+        return ""
+    belegt = {s for satz in saetze for s in satz if s not in ("__nr", "ROW_TYPE")}
+    # Reihenfolge der Vorlage beibehalten: Wer die CSV daneben legt, findet
+    # die Spalte an derselben Stelle.
+    spalten = [s for s in vorlage.SPALTEN if s in belegt]
+    ausgelassen = len(vorlage.SPALTEN) - len(spalten) - 1
+
+    kopf = "".join(f"<th><code>{html.escape(s)}</code></th>" for s in spalten)
     zeilen = "".join(
-        f"<tr><td><code>{html.escape(spalte)}</code></td>"
-        f"<td>{html.escape(wert)}</td></tr>"
-        for spalte, wert in satz.items()
-        if spalte not in ("__nr", "ROW_TYPE")
+        "<tr>"
+        + f'<td class="zeilennr">{html.escape(satz.get("__nr", "?"))}</td>'
+        + "".join(
+            f"<td>{html.escape(satz.get(s, ''))}</td>" for s in spalten
+        )
+        + "</tr>"
+        for satz in saetze
     )
-    return (
-        f'<div class="karte"><h2>{html.escape(typ)} '
-        f'<span style="opacity:.55;font-weight:400">Zeile {html.escape(nr)}'
-        f"</span></h2>"
-        f"<table><tr><th>Spalte</th><th>Wert</th></tr>{zeilen}</table></div>"
-    )
+    typ = saetze[0].get("ROW_TYPE", "—")
+    return f"""
+<div class="karte">
+  <h2>{html.escape(typ)}
+    <span style="opacity:.55;font-weight:400">{len(saetze)} Zeilen</span></h2>
+  <div class="breit">
+    <table class="csv">
+      <tr><th>#</th>{kopf}</tr>
+      {zeilen}
+    </table>
+  </div>
+  <p style="margin:.7rem 0 0;font-size:.82rem;opacity:.65">
+    {ausgelassen} weitere Spalten der Vorlage sind in diesen Sätzen leer.
+  </p>
+</div>
+"""
+
+
+def _saetze_nach_typ(saetze: list[dict]) -> str:
+    """Je Satztyp eine Tabelle, in der Reihenfolge des Auftretens.
+
+    Getrennt wird nach Typ, weil die Vorlage je Typ ANDERE Spalten fuellt:
+    Ein Verkaeufersatz traegt Namen und Steuernummer, ein Objektsatz
+    Quartalswerte und Matrikel. In einer gemeinsamen Tabelle stuenden
+    ueberall Luecken.
+    """
+    reihenfolge: list[str] = []
+    nach_typ: dict[str, list[dict]] = {}
+    for satz in saetze:
+        typ = satz.get("ROW_TYPE", "—")
+        if typ not in nach_typ:
+            nach_typ[typ] = []
+            reihenfolge.append(typ)
+        nach_typ[typ].append(satz)
+    return "".join(_satztabelle(nach_typ[t]) for t in reihenfolge)
 
 
 def _rohansicht(eintrag) -> str:  # noqa: ANN001 — Eintrag, Import waere zirkulaer
@@ -251,7 +309,7 @@ def meldungsseite(eintrag) -> str:  # noqa: ANN001 — Eintrag, Import waere zir
   </table>
 </div>
 """
-    saetze = "".join(_satzkarte(z) for z in eintrag.saetze) or (
+    saetze = _saetze_nach_typ(eintrag.saetze) or (
         '<div class="karte"><p style="margin:0;opacity:.75">Keine lesbaren '
         "Sätze — die Datei war nicht auswertbar.</p></div>"
     )
@@ -293,51 +351,4 @@ def _befundtabelle(titel: str, befunde: list, klasse: str) -> str:
         f'<div class="karte"><h2 class="{klasse}">{html.escape(titel)}'
         f" ({len(befunde)})</h2><table><tr><th>Zeile</th><th>Spalte</th>"
         f"<th>Regel</th><th>Grund</th><th>Wert</th></tr>{zeilen}</table></div>"
-    )
-
-
-def ergebnisseite(
-    quittung: Quittung,
-    nummer: str,
-    pruefsumme: str,
-    name: str,
-    eintraege: list | None = None,
-) -> str:
-    """Die Quittung als Seite — dieselben Angaben wie in der JSON-Antwort.
-
-    Der Posteingang bleibt darunter stehen: Die soeben quittierte Meldung
-    ist eine von mehreren, und die Stelle zeigt ihren Eingang, nicht nur
-    den letzten Vorgang.
-    """
-    status = (
-        '<span class="ok">angenommen</span>'
-        if quittung.angenommen
-        else '<span class="fehler">abgewiesen</span>'
-    )
-    typen = ", ".join(f"{k}: {v}" for k, v in sorted(quittung.zeilentypen.items()))
-    kopf = f"""
-<div class="karte">
-  <h2>Quittung {html.escape(nummer)}</h2>
-  <div class="zahlen">
-    <div><b>{status}</b>Ergebnis</div>
-    <div><b>{quittung.zeilen}</b>Zeilen</div>
-    <div><b>{len(quittung.fehler)}</b>Fehler</div>
-    <div><b>{len(quittung.hinweise)}</b>Hinweise</div>
-  </div>
-  <table>
-    <tr><th>Datei</th><td>{html.escape(name)}</td></tr>
-    <tr><th>Prüfsumme</th><td><code>{html.escape(pruefsumme)}</code></td></tr>
-    <tr><th>Zeilentypen</th><td>{html.escape(typen) or "—"}</td></tr>
-  </table>
-</div>
-"""
-    return (
-        _KOPF
-        + kopf
-        + _befundtabelle("Fehler — so nimmt die Behörde die Datei nicht an",
-                         quittung.fehler, "fehler")
-        + _befundtabelle("Hinweise — verhindern die Annahme nicht",
-                         quittung.hinweise, "ok")
-        + _posteingang(eintraege or [])
-        + _FUSS
     )
