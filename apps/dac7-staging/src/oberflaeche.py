@@ -85,19 +85,20 @@ _STIL = """<!doctype html>
   /* Die Datentabelle.
 
      Sie zeigt die eingereichte Datei als Raster: bis zu 89 Spalten, eine
-     Zeile je Satz. Sie rollt waagerecht als GANZES — nichts bleibt beim
-     Rollen stehen.
+     Zeile je Satz. Zeilennummer und ROW_TYPE bleiben beim waagerechten
+     Rollen stehen, sonst weiss man in Spalte 60 nicht mehr, welche Zeile
+     man liest.
 
-     Klebende Spalten standen hier bis zum 11.09.2026 und waren ein
-     Fehler: In Zeilen mit wenigen belegten Feldern schien der Text
-     weggerollter Spalten durch sie hindurch ("000019DEMO01" quer ueber
-     der Zeilennummer). Drei Anlaeufe ueber Stapelreihenfolge, deckende
-     Hintergruende und feste Tabellenbreiten haben es nicht behoben.
-     Eine Darstellung, die Werte uebereinanderlegt, ist bei einer
-     Steuermeldung schlimmer als eine, die beim Rollen die Zeilennummer
-     verliert: Wer zwei Zahlen uebereinander sieht, liest eine falsche.
-     Die Orientierung traegt der ROW_TYPE, der in jeder Zeile als eigene
-     Spalte mitlaeuft. */
+     Lange her war hier ein Fehler, der wie ein Sticky-Problem aussah und
+     keines war: Text ragte quer ueber die stehenden Spalten
+     ("019DEMO01" ueber der Zeilennummer). Ursache war
+     `table-layout:auto` — der Browser bemisst die Spalten am laengsten
+     Inhalt und laesst lange Werte ueber den Zellenrand HINAUSLAUFEN,
+     statt sie abzuschneiden. Der ueberstehende Text gehoert zur
+     Nachbarzelle und wird deshalb ueber die stehende Spalte gemalt,
+     ganz gleich welchen z-index sie hat. Behoben wird das durch
+     `table-layout:fixed` + `overflow:hidden`, nicht durch
+     Stapelreihenfolge. */
   .breit { overflow:auto; max-height:75vh; margin:0 -.25rem;
            /* Sichtbarer Rollbalken: macOS blendet ihn sonst aus, und
               niemand sieht, dass rechts noch 50 Spalten stehen. */
@@ -106,14 +107,35 @@ _STIL = """<!doctype html>
   .breit::-webkit-scrollbar-thumb { background:#9aa3ad; border-radius:.45rem; }
   .breit::-webkit-scrollbar-track { background:#e7eaee; border-radius:.45rem; }
 
-  table.csv { font-size:.8rem; white-space:nowrap; border-collapse:collapse; }
+  table.csv { font-size:.8rem; white-space:nowrap; border-collapse:collapse;
+              /* `fixed` statt `auto`: Bei `auto` bemisst der Browser die
+                 Spalten am laengsten Inhalt und laesst lange Werte ueber
+                 den Zellenrand hinauslaufen, statt sie abzuschneiden.
+                 Sichtbar war "019DEMO01" links ausserhalb der Tabelle. */
+              table-layout:fixed; }
   table.csv td, table.csv th { padding:.35rem .55rem; background:#fff;
-                               border-bottom:1px solid #e6e9ed; }
-  /* Der Spaltenkopf bleibt beim SENKRECHTEN Rollen stehen. Waagerecht
-     rollt er mit — anders als die frueheren Spalten kann er nichts
-     ueberdecken, weil unter ihm nur Kopfzellen liegen. */
+                               border-bottom:1px solid #e6e9ed;
+                               /* Beschneiden, nicht ueberlaufen lassen.
+                                  Der volle Wert steht in der Rohansicht
+                                  darunter und im Titel der Zelle. */
+                               overflow:hidden; text-overflow:ellipsis;
+                               width:12rem; }
+  table.csv td.zeilennr, table.csv th:first-child { width:3.5rem; }
+  /* Der Spaltenkopf bleibt beim senkrechten Rollen stehen. */
   table.csv th { font-weight:600; opacity:.8; position:sticky; top:0;
-                 z-index:1; }
+                 z-index:2; }
+  /* Zeilennummer und ROW_TYPE bleiben beim waagerechten Rollen stehen.
+     `left` der zweiten Spalte ist exakt die Breite der ersten (3.5rem) —
+     mit `table-layout:fixed` steht diese Breite fest, ein Schaetzwert
+     waere hier wieder der Fehler. */
+  table.csv th:first-child, table.csv td:first-child {
+      position:sticky; left:0; z-index:3; }
+  table.csv th:nth-child(2), table.csv td:nth-child(2) {
+      position:sticky; left:3.5rem; z-index:3; font-weight:600;
+      box-shadow:1px 0 0 #dfe3e8; }
+  /* Die Kopfzellen der stehenden Spalten liegen in BEIDEN Richtungen
+     oben, also ueber beiden. */
+  table.csv th:first-child, table.csv th:nth-child(2) { z-index:4; }
   table.csv tr:nth-child(even) td { background:#fafbfc; }
   table.csv td.zahl { text-align:right; font-variant-numeric:tabular-nums; }
   table.csv td:empty::after { content:"·"; opacity:.25; }
@@ -123,7 +145,17 @@ _STIL = """<!doctype html>
     .breit::-webkit-scrollbar-thumb { background:#4a525c; }
     .breit::-webkit-scrollbar-track { background:#20252b; }
     table.csv td, table.csv th { background:#1d2126; border-color:#2e343c; }
-    table.csv tr:nth-child(even) td { background:#191d22; } }
+    table.csv tr:nth-child(even) td { background:#191d22; }
+    table.csv th:nth-child(2), table.csv td:nth-child(2) {
+        box-shadow:1px 0 0 #2e343c; } }
+  /* Die stehenden Zellen muessen in JEDER Zeile decken, auch in den
+     gestreiften — sonst scheint beim Rollen durch. Hoehere Genauigkeit
+     als die Zebra-Regel, damit es nicht an der Reihenfolge haengt. */
+  table.csv tr:nth-child(n) td:first-child,
+  table.csv tr:nth-child(n) td:nth-child(2) { background:#fff; }
+  @media (prefers-color-scheme: dark) {
+    table.csv tr:nth-child(n) td:first-child,
+    table.csv tr:nth-child(n) td:nth-child(2) { background:#1d2126; } }
   pre.roh { overflow-x:auto; margin:0; padding:.9rem; border-radius:.5rem;
             background:#f0f2f5; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
             font-size:.78rem; line-height:1.5; white-space:pre; }
