@@ -130,6 +130,14 @@ _STIL = """<!doctype html>
      stehende Zeilennummer — gemessen von -32px bis 160px. */
   table.csv td > div, table.csv th > div { overflow:hidden;
       text-overflow:ellipsis; white-space:nowrap; }
+  /* Der Spaltenname wird UMGEBROCHEN, nicht gekuerzt. Bei fester Breite
+     verschwand sonst gerade das Ende, das die Spalten unterscheidet:
+     RS_ACT_DK_REAL_PROP_REG_… gibt es mehrfach, der Rest trug die
+     Bedeutung. Die Datenzellen bleiben einzeilig — dort steht der volle
+     Wert in der Rohansicht darunter. */
+  table.csv th > div { white-space:normal; overflow-wrap:anywhere;
+      text-overflow:clip; line-height:1.25; }
+  table.csv th { vertical-align:bottom; }
   /* Bei `table-layout:fixed` bestimmt AUSSCHLIESSLICH die erste Zeile die
      Spaltenbreiten — also der Kopf. Stand die Breite nur auf `td`, blieb
      sie wirkungslos: Der Kopf legte schmalere Spalten fest, und lange
