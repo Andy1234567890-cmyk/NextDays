@@ -87,6 +87,38 @@ Fehlerpfad nicht:
 | `zeitueberschreitung` | Antwort verzoegern, bis der Aufrufer aufgibt |
 | `doppelt` | Meldung als bereits eingereicht zurueckweisen |
 
+`doppelt` erzwingt die Zurueckweisung; sie passiert aber ohnehin von
+selbst, sobald dieselbe Datei ein zweites Mal ankommt (siehe unten).
+
+### Einmaligkeit
+
+Dieselbe Datei wird kein zweites Mal angenommen — erkannt an der
+SHA-256-Summe der Bytes. "Indtaegten skal kun indberettes een gang og
+ikke dobbelt": Ein Wiederholungsversuch nach einem Zeitlimit darf keine
+zweite Meldung erzeugen. Gesperrt wird nur gegen ANGENOMMENES; eine
+korrigierte Datei geht durch, und wer unveraendert erneut sendet,
+bekommt weiterhin seinen eigenen Fehler.
+
+### Was eingereicht wurde, ansehen
+
+Die Quittung traegt die uebermittelten Saetze mit (`saetze`), je Satz
+die belegten Spalten. Im Browser zeigt `/meldung/<quittungsnummer>`
+dieselbe Meldung als Raster wie die CSV, darunter die Datei im Original;
+`/meldung/<quittungsnummer>/datei` liefert sie unveraendert zum
+Herunterladen.
+
+### Zustand und Guete
+
+`/health` gibt ohne Anmeldung Annahmequote und Laufzeiten zurueck
+(Mittel, langsamstes Fuenftel, schlechtester Wert) — keine Inhalte, keine
+Quittungsnummern.
+
+### Aufbewahrung
+
+Einreichungen liegen NUR im Arbeitsspeicher und nur befristet
+(Vorgabe 24 Stunden). Ein Neustart loescht sie, `DELETE /v1/quittungen`
+ebenso. Nichts wird auf Platte geschrieben, nichts in ein Log.
+
 ### Grenzen dieser Nachbildung
 
 * Kein amtliches XSD — die XML-Pruefung prueft Struktur und Werte, ersetzt

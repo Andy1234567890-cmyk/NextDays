@@ -652,3 +652,36 @@ class TestUebermittlungUndSchutz:
         assert TOKEN not in seite
         assert TOKEN[:6] not in seite
         assert str(len(TOKEN)) + " Zeichen" not in seite
+
+
+class TestApiReferenz:
+    """Die Referenz muss beschreiben, was der Dienst WIRKLICH kann.
+
+    Sie hinkte nach: Einmaligkeit, die Saetze in der Quittung, die
+    Meldungsansicht und die Kennzahlen aus `/health` kamen dazu, ohne
+    dass sie es erwaehnte. Eine Beschreibung, die etwas verschweigt, ist
+    schlechter als keine — man verlaesst sich auf sie.
+    """
+
+    def test_alle_verhalten_stehen_in_der_referenz(
+        self, client: TestClient
+    ) -> None:
+        from src.v1.einreichung import _VERHALTEN
+
+        text = client.get("/openapi.json").json()["info"]["description"]
+        for wert in _VERHALTEN:
+            assert f"`{wert}`" in text
+
+    def test_referenz_nennt_die_neuen_faehigkeiten(
+        self, client: TestClient
+    ) -> None:
+        text = client.get("/openapi.json").json()["info"]["description"]
+        for stichwort in ("Einmaligkeit", "saetze", "/meldung/", "/health",
+                          "Arbeitsspeicher"):
+            assert stichwort in text
+
+    def test_quittung_im_schema_traegt_die_saetze(
+        self, client: TestClient
+    ) -> None:
+        schema = client.get("/openapi.json").json()["components"]["schemas"]
+        assert "saetze" in schema["QuittungAusgabe"]["properties"]
