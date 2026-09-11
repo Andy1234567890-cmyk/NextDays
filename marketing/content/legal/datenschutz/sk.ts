@@ -7,7 +7,7 @@
 // unübersetzt.
 import { AGB_URL } from "@/lib/app-url";
 
-import { ANBIETER, AUFSICHTSBEHOERDE, RECHTSSTAND_ISO } from "../anbieter";
+import { ANBIETER, AUFSICHTSBEHOERDE, DATENSCHUTZ_STAND_ISO } from "../anbieter";
 
 import type { LegalDoc } from "../types";
 
@@ -16,7 +16,7 @@ export const datenschutz: LegalDoc = {
   title: "Zásady ochrany osobných údajov",
   metaDescription:
     "Ako myNextDays spracúva osobné údaje: účely, právne základy, príjemcovia, doby uchovávania a vaše práva podľa GDPR.",
-  standIso: RECHTSSTAND_ISO,
+  standIso: DATENSCHUTZ_STAND_ISO,
   numbered: true,
   toc: true,
   intro: [
@@ -205,7 +205,7 @@ export const datenschutz: LegalDoc = {
           titel: "Návrhy odpovedí",
           paragraphs: [
             "Na návrhy odpovedí v doručenej pošte správ používame — ak je funkcia pre prevádzku aktivovaná — ponuku jazykových modelov spoločnosti Groq, Inc., USA. Príslušný kontext správy sa pritom poskytne tejto službe. Návrhy sa neodosielajú automaticky; o odoslaní rozhoduje vždy človek. K automatizovanému rozhodovaniu s právnym účinkom v zmysle čl. 22 GDPR nedochádza.",
-            "Nejde teda o systém umelej inteligencie, ktorý v zmysle čl. 50 ods. 1 aktu o umelej inteligencii priamo interaguje s fyzickými osobami: povinnosť predpokladá PRIAMU interakciu, pri ktorej umelá inteligencia sama komunikuje s osobou a nie prostredníctvom ľudského prostredníka. Tu funkcia navrhne prevádzke text, ktorý zamestnanec skontroluje, môže zmeniť a sám odošle — zamestnanec je týmto prostredníkom, hosť si dopisuje s prevádzkou a nie s chatbotom. Automaticky odpovedajúci asistent nie je v prevádzke. Podľa nášho posúdenia funkcia nenaplňuje ani žiadnu zo skutkových podstát vysokorizikovej umelej inteligencie podľa prílohy III k aktu o umelej inteligencii.",
+            "Nejde teda o systém umelej inteligencie, ktorý by v zmysle článku 50 ods. 1 nariadenia o umelej inteligencii priamo interagoval s fyzickými osobami: Povinnosť predpokladá PRIAMU interakciu, pri ktorej samotná umelá inteligencia komunikuje s osobou a nie prostredníctvom ľudského sprostredkovateľa. Tu funkcia navrhuje prevádzke text, ktorý zamestnanec skontroluje, môže zmeniť a sám odošle – zamestnanec je týmto sprostredkovateľom, hosť si korešponduje s prevádzkou a nie s chatbotom. Asistent, ktorý by automaticky odpovedal hosťom, nie je v prevádzke; produktový poradca na tejto webovej stránke (pozri nižšie) sa týka výlučne záujemcov a nie komunikácie s hosťami. Podľa nášho posúdenia funkcia nespĺňa ani jednu zo skutočností pre vysokorizikovú umelú inteligenciu podľa prílohy III nariadenia o umelej inteligencii.",
             "Správy hosťom navyše nie sú „textom o veciach verejného záujmu“ v zmysle čl. 50 ods. 4 aktu o umelej inteligencii: nezverejňujú sa, ale posielajú sa individuálne určitej osobe a týkajú sa priebehu pobytu. Nezávisle od toho tu platí ľudská kontrola zo strany odosielajúceho zamestnanca.",
             "Ak by sa v budúcnosti ponúkala funkcia, ktorá samostatne — bez ľudského schválenia — odpovedá hosťom, hosť bude na začiatku dialógu viditeľne upozornený, že píše so systémom umelej inteligencie. Bez tohto upozornenia sa takáto funkcia neposkytne.",
           ],

@@ -112,17 +112,43 @@ export const AUFSICHTSBEHOERDE = {
 export const RECHTSSTAND_ISO = "2026-08-26";
 
 /**
+ * Eigener Stand der DATENSCHUTZERKLÄRUNG.
+ *
+ * Warum nicht `RECHTSSTAND_ISO` hochziehen: An dieser Konstante hängen auch
+ * Impressum, Cookie-Richtlinie und Auftragsverarbeitung. Die haben sich seit
+ * dem 26.08.2026 nicht geändert — ein gemeinsames Hochsetzen würde für drei
+ * unveränderte Dokumente ein Prüfdatum behaupten, das es nicht gab. Ein
+ * Stand-Datum ist eine Zusicherung, kein Zeitstempel des letzten Deploys.
+ *
+ * 11.09.2026: Der Produktberater auf der Website ging in Betrieb — ein
+ * KI-System, das nach Art. 50 Abs. 1 der KI-Verordnung unmittelbar mit
+ * natürlichen Personen interagiert. Dazu kam ein eigener Unterpunkt, und der
+ * Absatz zu den Antwortvorschlägen wurde in allen 24 Fassungen präzisiert:
+ * sein Satz „Ein Assistent, der Gästen selbsttätig antwortet, ist nicht im
+ * Einsatz" sagt jetzt dazu, dass der Produktberater ausschließlich
+ * Interessenten betrifft. Ohne diesen Zusatz las er sich, als gäbe es gar
+ * keinen — seit dem 10.09.2026 falsch.
+ */
+export const DATENSCHUTZ_STAND_ISO = "2026-09-11";
+
+/**
  * @deprecated Der fertige deutsche Satz. KEINE Sprachdatei zeigt mehr darauf —
  * die 96 Fassungen von Datenschutz, Impressum, Cookie-Richtlinie und
  * Auftragsverarbeitung setzen `standIso: RECHTSSTAND_ISO`.
  *
  * Steht trotzdem noch hier, weil die 24 AGB-Fassungen ihren Stand als
- * übersetztes Literal tragen und dabei ein ANDERES Datum nennen: `agb/de.ts`
- * den 13. August 2026, die 23 Übersetzungen den 30. Juli 2026. Die AGB hat
- * damit einen eigenen — und in sich widersprüchlichen — Stand, der nicht
- * stillschweigend auf RECHTSSTAND_ISO gezogen werden darf. Erst wenn geklärt
- * ist, welches Datum gilt, bekommt die AGB ihr eigenes `AGB_STAND_ISO`; dann
- * entfallen diese Konstante UND `stand?: string` in `types.ts` samt dem
- * Rückfall-Zweig in `components/legal/legal-document.tsx`.
+ * übersetztes Literal tragen — in jeder Sprache eigener Satzbau und eigener
+ * Monatsname. Sie nennen seit dem 11.09.2026 alle DASSELBE Datum; der hier
+ * zuvor beschriebene Widerspruch (`de` 13. August, die Übersetzungen 30. Juli)
+ * bestand zu diesem Zeitpunkt schon nicht mehr — geprüft gegen die Dateien,
+ * nicht gegen diesen Kommentar.
+ *
+ * Die AGB behält gleichwohl ihren EIGENEN Stand: sie ändert sich aus anderen
+ * Anlässen als Datenschutz, Impressum, Cookie-Richtlinie und
+ * Auftragsverarbeitung, und ein gemeinsames Datum würde bei jeder Änderung
+ * einer Seite für alle anderen ein Prüfdatum behaupten, das es nicht gab.
+ * Sauber wäre ein eigenes `AGB_STAND_ISO` samt Renderer-Satz; dann entfallen
+ * diese Konstante UND `stand?: string` in `types.ts` samt dem Rückfall-Zweig
+ * in `components/legal/legal-document.tsx`.
  */
 export const RECHTSSTAND = "Stand: 6. August 2026";

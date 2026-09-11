@@ -6,7 +6,7 @@
 // deckungsgleich zu halten.
 import { AGB_URL } from "@/lib/app-url";
 
-import { ANBIETER, AUFSICHTSBEHOERDE, RECHTSSTAND_ISO } from "../anbieter";
+import { ANBIETER, AUFSICHTSBEHOERDE, DATENSCHUTZ_STAND_ISO } from "../anbieter";
 
 import type { LegalDoc } from "../types";
 
@@ -15,7 +15,7 @@ export const datenschutz: LegalDoc = {
   title: "Zásady ochrany osobních údajů",
   metaDescription:
     "Jak myNextDays zpracovává osobní údaje: účely, právní základy, příjemci, doba uchování a vaše práva podle GDPR.",
-  standIso: RECHTSSTAND_ISO,
+  standIso: DATENSCHUTZ_STAND_ISO,
   numbered: true,
   toc: true,
   intro: [
@@ -202,7 +202,7 @@ export const datenschutz: LegalDoc = {
           titel: "Návrhy odpovědí",
           paragraphs: [
             "Pro návrhy odpovědí ve schránce zpráv využíváme — je-li tato funkce pro podnik aktivována — nabídku jazykových modelů společnosti Groq, Inc., USA. Přitom je této službě předán příslušný kontext zprávy. Návrhy nejsou odesílány automaticky; o odeslání vždy rozhoduje člověk. K automatizovanému rozhodování s právními účinky ve smyslu čl. 22 GDPR nedochází.",
-            "Nejde tedy o systém umělé inteligence, který ve smyslu čl. 50 odst. 1 nařízení o umělé inteligenci přímo interaguje s fyzickými osobami: tato povinnost předpokládá PŘÍMOU interakci, při níž umělá inteligence komunikuje s osobou sama, a nikoli prostřednictvím lidského prostředníka. Zde funkce navrhne podniku text, který zaměstnanec zkontroluje, může jej změnit a sám jej odešle — zaměstnanec je tímto prostředníkem, host komunikuje s podnikem, a nikoli s chatbotem. Automaticky odpovídající asistent není v provozu. Podle našeho zařazení nesplňuje tato funkce ani žádnou ze skutkových podstat pro vysoce rizikovou umělou inteligenci podle přílohy III nařízení o umělé inteligenci.",
+            "Nejedná se tedy o systém umělé inteligence, který by ve smyslu čl. 50 odst. 1 nařízení o umělé inteligenci přímo interagoval s fyzickými osobami: Povinnost předpokládá PŘÍMOU interakci, při níž AI sama komunikuje s osobou, a nikoli prostřednictvím lidského prostředníka. Zde funkce navrhuje text provozovateli, který zaměstnanec zkontroluje, může změnit a sám odešle – zaměstnanec je tímto prostředníkem, host koresponduje s provozovatelem, nikoli s chatbotem. Asistent, který by hostům automaticky odpovídal, není používán; produktový poradce na této webové stránce (viz níže) se týká výhradně zájemců a nikoli komunikace s hosty. Podle našeho posouzení funkce nesplňuje ani žádnou ze skutečností pro vysoce rizikovou AI podle přílohy III nařízení o umělé inteligenci.",
             "Zprávy hostům nejsou navíc „textem o otázkách veřejného zájmu“ ve smyslu čl. 50 odst. 4 nařízení o umělé inteligenci: nejsou zveřejňovány, nýbrž zasílány individuálně určité osobě, a týkají se organizace pobytu. Nezávisle na tom zde nastupuje lidská kontrola odesílajícím zaměstnancem.",
             "Bude-li v budoucnu nabízena funkce, která hostům odpovídá samostatně — bez lidského schválení —, bude host na začátku dialogu viditelně upozorněn na to, že píše se systémem umělé inteligence. Bez tohoto upozornění taková funkce poskytována nebude.",
           ],

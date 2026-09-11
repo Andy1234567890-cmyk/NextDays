@@ -40,7 +40,7 @@
 // keine Frist konfiguriert ist, wird hier bewusst KEINE Zahl behauptet.
 import { AGB_URL } from "@/lib/app-url";
 
-import { ANBIETER, AUFSICHTSBEHOERDE, RECHTSSTAND_ISO } from "../anbieter";
+import { ANBIETER, AUFSICHTSBEHOERDE, DATENSCHUTZ_STAND_ISO } from "../anbieter";
 
 import type { LegalDoc } from "../types";
 
@@ -49,7 +49,7 @@ export const datenschutz: LegalDoc = {
   title: "Datenschutzerklärung",
   metaDescription:
     "Wie myNextDays personenbezogene Daten verarbeitet: Zwecke, Rechtsgrundlagen, Empfänger, Speicherdauer und Ihre Rechte nach der DSGVO.",
-  standIso: RECHTSSTAND_ISO,
+  standIso: DATENSCHUTZ_STAND_ISO,
   numbered: true,
   toc: true,
   intro: [

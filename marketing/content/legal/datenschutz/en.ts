@@ -6,7 +6,7 @@
 // `de.ts` deckungsgleich zu halten.
 import { AGB_URL } from "@/lib/app-url";
 
-import { ANBIETER, AUFSICHTSBEHOERDE, RECHTSSTAND_ISO } from "../anbieter";
+import { ANBIETER, AUFSICHTSBEHOERDE, DATENSCHUTZ_STAND_ISO } from "../anbieter";
 
 import type { LegalDoc } from "../types";
 
@@ -15,7 +15,7 @@ export const datenschutz: LegalDoc = {
   title: "Privacy Policy",
   metaDescription:
     "How myNextDays processes personal data: purposes, legal bases, recipients, retention periods and your rights under the GDPR.",
-  standIso: RECHTSSTAND_ISO,
+  standIso: DATENSCHUTZ_STAND_ISO,
   numbered: true,
   toc: true,
   intro: [
@@ -204,7 +204,7 @@ export const datenschutz: LegalDoc = {
           titel: "Reply suggestions",
           paragraphs: [
             "For reply suggestions in the message inbox we use — where the feature is activated for the business — the language model offering of Groq, Inc., USA. In doing so the relevant message context is transmitted to that service. Suggestions are never sent automatically; a human always decides whether to send them. There is no automated decision-making with legal effect within the meaning of Art. 22 GDPR.",
-            "This is therefore not an AI system that interacts directly with natural persons within the meaning of Art. 50(1) of the AI Act: that obligation presupposes DIRECT interaction in which the AI itself communicates with the person rather than through a human intermediary. Here the feature proposes a text to the business which a member of staff reviews, may amend and sends themselves — that member of staff is the intermediary, and the guest corresponds with the business and not with a chatbot. No automatically replying assistant is in use. On our assessment, the feature also does not meet any of the criteria for high-risk AI under Annex III of the AI Act.",
+            "It is therefore not an AI system that directly interacts with natural persons within the meaning of Art. 50 (1) of the AI Regulation: The obligation requires DIRECT interaction, where the AI itself communicates with the person and not through a human intermediary. Here, the function suggests a text to the business, which an employee reviews, can change, and sends themselves — the employee is this intermediary; the guest corresponds with the business and not with a chatbot. An assistant that automatically responds to guests is not in use; the product advisor on this website (see below) exclusively concerns interested parties and not guest communication. In our assessment, the function also does not meet any of the criteria for high-risk AI according to Annex III of the AI Regulation.",
             "Furthermore, messages to guests are not a “text on matters of public interest” within the meaning of Art. 50(4) of the AI Act: they are not published but sent individually to a specific person, and they concern the handling of a stay. Irrespective of this, the human review by the member of staff sending the message applies here.",
             "Should a feature be offered in future that replies to guests on its own — without human approval — the guest will be informed visibly at the start of the dialogue that they are writing to an AI system. Without that notice, no such feature will be provided.",
           ],

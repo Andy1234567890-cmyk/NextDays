@@ -5,7 +5,7 @@
 // mit `de.ts` deckungsgleich zu halten.
 import { AGB_URL } from "@/lib/app-url";
 
-import { ANBIETER, AUFSICHTSBEHOERDE, RECHTSSTAND_ISO } from "../anbieter";
+import { ANBIETER, AUFSICHTSBEHOERDE, DATENSCHUTZ_STAND_ISO } from "../anbieter";
 
 import type { LegalDoc } from "../types";
 
@@ -14,7 +14,7 @@ export const datenschutz: LegalDoc = {
   title: "Política de privacidad",
   metaDescription:
     "Cómo trata myNextDays los datos personales: finalidades, bases jurídicas, destinatarios, plazos de conservación y sus derechos conforme al RGPD.",
-  standIso: RECHTSSTAND_ISO,
+  standIso: DATENSCHUTZ_STAND_ISO,
   numbered: true,
   toc: true,
   intro: [
@@ -203,7 +203,7 @@ export const datenschutz: LegalDoc = {
           titel: "Propuestas de respuesta",
           paragraphs: [
             "Para las propuestas de respuesta en la bandeja de entrada de mensajes recurrimos —siempre que la función esté activada para el establecimiento— a la oferta de modelos de lenguaje de Groq, Inc., EE. UU. En ese proceso se transmite al servicio el contexto del mensaje correspondiente. Las propuestas no se envían automáticamente; sobre el envío decide siempre una persona. No se produce ninguna decisión automatizada con efectos jurídicos en el sentido del art. 22 del RGPD.",
-            "No se trata, por tanto, de un sistema de IA que interactúe directamente con personas físicas en el sentido del art. 50, apdo. 1, del Reglamento de Inteligencia Artificial: la obligación presupone una interacción DIRECTA en la que la propia IA se comunica con la persona y no a través de un intermediario humano. Aquí la función propone al establecimiento un texto que un empleado revisa, puede modificar y envía él mismo — el empleado es ese intermediario, y el huésped se comunica con el establecimiento y no con un chatbot. No se emplea ningún asistente que responda de forma automática. Según nuestra valoración, la función tampoco cumple ninguno de los supuestos de IA de alto riesgo del anexo III del Reglamento de Inteligencia Artificial.",
+            "Por lo tanto, no se trata de un sistema de IA que interactúe directamente con personas físicas en el sentido del artículo 50, apartado 1, del Reglamento de IA: La obligación presupone una interacción DIRECTA en la que la IA se comunica con la persona y no a través de un intermediario humano. Aquí, la función sugiere un texto al establecimiento, que un empleado revisa, puede modificar y envía él mismo — el empleado es este intermediario, el huésped se corresponde con el establecimiento y no con un chatbot. No se utiliza un asistente que responda automáticamente a los huéspedes; el asesor de productos en este sitio web (véase más abajo) se refiere exclusivamente a los interesados y no a la comunicación con los huéspedes. Según nuestra clasificación, la función tampoco cumple ninguno de los criterios para la IA de alto riesgo según el Anexo III del Reglamento de IA.",
             "Los mensajes a los huéspedes tampoco son un «texto sobre asuntos de interés público» en el sentido del art. 50, apdo. 4, del Reglamento de Inteligencia Artificial: no se publican, sino que se envían individualmente a una persona determinada, y se refieren a la gestión de una estancia. Con independencia de ello, aquí interviene la revisión humana del empleado que realiza el envío.",
             "Si en el futuro se ofreciera una función que respondiera a los huéspedes por sí misma, sin aprobación humana, se advertirá al huésped de forma visible al inicio del diálogo de que está escribiendo con un sistema de IA. Sin esa advertencia, tal función no se pondrá a disposición.",
           ],

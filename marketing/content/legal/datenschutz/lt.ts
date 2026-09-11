@@ -4,7 +4,7 @@
 // Listen) muss deckungsgleich mit `de.ts` bleiben.
 import { AGB_URL } from "@/lib/app-url";
 
-import { ANBIETER, AUFSICHTSBEHOERDE, RECHTSSTAND_ISO } from "../anbieter";
+import { ANBIETER, AUFSICHTSBEHOERDE, DATENSCHUTZ_STAND_ISO } from "../anbieter";
 
 import type { LegalDoc } from "../types";
 
@@ -13,7 +13,7 @@ export const datenschutz: LegalDoc = {
   title: "Privatumo pranešimas",
   metaDescription:
     "Kaip myNextDays tvarko asmens duomenis: tikslai, teisiniai pagrindai, gavėjai, saugojimo terminai ir jūsų teisės pagal BDAR.",
-  standIso: RECHTSSTAND_ISO,
+  standIso: DATENSCHUTZ_STAND_ISO,
   numbered: true,
   toc: true,
   intro: [
@@ -200,7 +200,7 @@ export const datenschutz: LegalDoc = {
           titel: "Atsakymų pasiūlymai",
           paragraphs: [
             "Atsakymų pasiūlymams pranešimų gautuosiuose naudojame — jeigu ši funkcija verslui įjungta — Groq, Inc., JAV, kalbos modelių paslaugą. Šiuo tikslu paslaugai perduodamas atitinkamas pranešimo kontekstas. Pasiūlymai nėra išsiunčiami automatiškai; dėl išsiuntimo visada sprendžia žmogus. Automatizuotas sprendimų priėmimas, turintis teisinių pasekmių, kaip nurodyta BDAR 22 straipsnyje, nevyksta.",
-            "Taigi tai nėra DI sistema, kuri, kaip nurodyta Dirbtinio intelekto reglamento 50 straipsnio 1 dalyje, tiesiogiai sąveikauja su fiziniais asmenimis: ši pareiga reiškia TIESIOGINĘ sąveiką, kai DI pats komunikuoja su asmeniu, o ne per žmogų tarpininką. Čia funkcija pasiūlo verslui tekstą, kurį darbuotojas patikrina, gali pakeisti ir išsiunčia pats — darbuotojas ir yra tas tarpininkas, o svečias susirašinėja su verslu, ne su pokalbių robotu. Automatiškai atsakančio asistento nenaudojame. Mūsų vertinimu, funkcija taip pat neatitinka nė vieno Dirbtinio intelekto reglamento III priede nurodyto didelės rizikos DI atvejo.",
+            "Todėl tai nėra DI sistema, kuri tiesiogiai sąveikauja su fiziniais asmenimis pagal DI reglamento 50 straipsnio 1 dalį: įpareigojimas reikalauja TIESIOGINĖS sąveikos, kai DI pati bendrauja su asmeniu, o ne per žmogaus tarpininką. Čia funkcija siūlo tekstą įmonei, kurį darbuotojas peržiūri, gali pakeisti ir pats išsiųsti – darbuotojas yra šis tarpininkas, svečias susirašinėja su įmone, o ne su pokalbių robotu. Asistentas, kuris automatiškai atsako svečiams, nenaudojamas; produkto konsultantas šioje svetainėje (žr. žemiau) yra skirtas tik suinteresuotiems asmenims, o ne svečių komunikacijai. Mūsų vertinimu, ši funkcija taip pat neatitinka jokių didelės rizikos DI kriterijų pagal DI reglamento III priedą.",
             "Be to, pranešimai svečiams nėra „tekstas visuomenei aktualiais klausimais“, kaip nurodyta Dirbtinio intelekto reglamento 50 straipsnio 4 dalyje: jie nėra skelbiami, o siunčiami individualiai konkrečiam asmeniui ir susiję su apsistojimo organizavimu. Nepaisant to, čia taikoma išsiunčiančio darbuotojo atliekama žmogaus patikra.",
             "Jeigu ateityje būtų pasiūlyta funkcija, kuri savarankiškai — be žmogaus patvirtinimo — atsakytų svečiams, svečias pokalbio pradžioje būtų matomai informuotas, kad rašosi su DI sistema. Be tokio pranešimo tokia funkcija nebus teikiama.",
           ],

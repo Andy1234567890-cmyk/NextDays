@@ -7,7 +7,7 @@
 // unübersetzt.
 import { AGB_URL } from "@/lib/app-url";
 
-import { ANBIETER, AUFSICHTSBEHOERDE, RECHTSSTAND_ISO } from "../anbieter";
+import { ANBIETER, AUFSICHTSBEHOERDE, DATENSCHUTZ_STAND_ISO } from "../anbieter";
 
 import type { LegalDoc } from "../types";
 
@@ -16,7 +16,7 @@ export const datenschutz: LegalDoc = {
   title: "Integritetspolicy",
   metaDescription:
     "Så behandlar myNextDays personuppgifter: ändamål, rättsliga grunder, mottagare, lagringstider och dina rättigheter enligt dataskyddsförordningen.",
-  standIso: RECHTSSTAND_ISO,
+  standIso: DATENSCHUTZ_STAND_ISO,
   numbered: true,
   toc: true,
   intro: [
@@ -205,7 +205,7 @@ export const datenschutz: LegalDoc = {
           titel: "Svarsförslag",
           paragraphs: [
             "För svarsförslag i meddelandeinkorgen använder vi — i den mån funktionen är aktiverad för verksamheten — språkmodellerbjudandet från Groq, Inc., USA. Därvid överförs det aktuella meddelandesammanhanget till tjänsten. Förslag skickas inte automatiskt; om utskicket beslutar alltid en människa. Något automatiserat beslutsfattande med rättslig verkan i den mening som avses i artikel 22 i dataskyddsförordningen sker inte.",
-            "Det är därmed inte ett AI-system som i den mening som avses i artikel 50.1 i AI-förordningen interagerar direkt med fysiska personer: skyldigheten förutsätter en DIREKT interaktion där AI:n själv kommunicerar med personen och inte via en mänsklig mellanhand. Här föreslår funktionen verksamheten en text som en medarbetare kontrollerar, kan ändra och själv skickar — medarbetaren är denna mellanhand, gästen korresponderar med verksamheten och inte med en chattrobot. Någon automatiskt svarande assistent används inte. Enligt vår bedömning uppfyller funktionen inte heller något av fallen för AI med hög risk enligt bilaga III till AI-förordningen.",
+            "Detta är alltså inte ett AI-system som direkt interagerar med fysiska personer i den mening som avses i artikel 50.1 i AI-förordningen: Skyldigheten förutsätter en DIREKT interaktion där AI:n själv kommunicerar med personen och inte via en mänsklig förmedlare. Här föreslår funktionen en text till verksamheten, som en anställd granskar, kan ändra och själv skickar – den anställde är denna förmedlare, gästen korresponderar med verksamheten och inte med en chatbot. En assistent som automatiskt svarar gäster används inte; produktkonsulten på denna webbplats (se nedan) gäller uteslutande intressenter och inte gästkommunikation. Enligt vår bedömning uppfyller funktionen inte heller något av kriterierna för högrisks-AI enligt bilaga III i AI-förordningen.",
             "Meddelanden till gäster är dessutom inte ”text om frågor av allmänt intresse” i den mening som avses i artikel 50.4 i AI-förordningen: de publiceras inte utan skickas individuellt till en bestämd person och rör genomförandet av en vistelse. Oberoende av detta gäller här den mänskliga kontrollen genom den medarbetare som skickar.",
             "Skulle det i framtiden erbjudas en funktion som självständigt — utan mänskligt godkännande — svarar gäster, informeras gästen synligt i början av dialogen om att han eller hon skriver med ett AI-system. Utan denna upplysning tillhandahålls ingen sådan funktion.",
           ],

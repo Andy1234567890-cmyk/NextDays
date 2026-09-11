@@ -4,7 +4,7 @@
 // Listen) muss deckungsgleich mit `de.ts` bleiben.
 import { AGB_URL } from "@/lib/app-url";
 
-import { ANBIETER, AUFSICHTSBEHOERDE, RECHTSSTAND_ISO } from "../anbieter";
+import { ANBIETER, AUFSICHTSBEHOERDE, DATENSCHUTZ_STAND_ISO } from "../anbieter";
 
 import type { LegalDoc } from "../types";
 
@@ -13,7 +13,7 @@ export const datenschutz: LegalDoc = {
   title: "Avviż dwar il-privatezza",
   metaDescription:
     "Kif myNextDays tipproċessa d-data personali: skopijiet, bażijiet legali, riċevituri, perjodi ta’ żamma u d-drittijiet tiegħek skont il-GDPR.",
-  standIso: RECHTSSTAND_ISO,
+  standIso: DATENSCHUTZ_STAND_ISO,
   numbered: true,
   toc: true,
   intro: [
@@ -203,7 +203,7 @@ export const datenschutz: LegalDoc = {
           titel: "Suġġerimenti ta’ tweġiba",
           paragraphs: [
             "Għal suġġerimenti ta’ tweġiba fl-inbox tal-messaġġi nużaw — sakemm il-funzjoni tkun attivata għall-impriża — l-offerta ta’ mudelli tal-lingwa ta’ Groq, Inc., l-Istati Uniti. B’dan jintbagħat lis-servizz il-kuntest tal-messaġġ ikkonċernat. Is-suġġerimenti ma jintbagħtux awtomatikament; dwar il-bagħt jiddeċiedi dejjem bniedem. Ma jsirx teħid ta’ deċiżjonijiet awtomatizzat b’effett legali fis-sens tal-Artikolu 22 tal-GDPR.",
-            "Għaldaqstant ma jirrigwardax sistema tal-IA li, fis-sens tal-Artikolu 50(1) tar-Regolament dwar l-Intelliġenza Artifiċjali, tinteraġixxi direttament ma’ persuni fiżiċi: l-obbligu jippresupponi interazzjoni DIRETTA, fejn l-IA nnifisha tikkomunika mal-persuna u mhux permezz ta’ intermedjarju uman. Hawnhekk il-funzjoni tissuġġerixxi lill-impriża test li impjegat jiċċekkja, jista’ jibdel u jibgħat huwa stess — l-impjegat huwa dan l-intermedjarju, u l-ospitu jikkorrispondi mal-impriża u mhux ma’ chatbot. Ma huwiex użat assistent li jwieġeb awtomatikament. Skont il-klassifikazzjoni tagħna, il-funzjoni lanqas tissodisfa xi wieħed mill-każijiet ta’ IA b’riskju għoli skont l-Anness III tar-Regolament dwar l-Intelliġenza Artifiċjali.",
+            "Għalhekk, din mhijiex sistema tal-IA li tinteraġixxi direttament ma' persuni fiżiċi fis-sens tal-Artikolu 50(1) tar-Regolament dwar l-IA: L-obbligu jeħtieġ interazzjoni DIRETTA fejn l-IA nnifisha tikkomunika mal-persuna u mhux permezz ta' intermedjarju uman. Hawnhekk, il-funzjoni tipproponi test lill-operatur, li impjegat jirrevedi, jista' jibdel, u jibgħat hu stess — l-impjegat huwa dan l-intermedjarju, il-mistieden jikkorrispondi mal-operatur u mhux ma' chatbot. Assistent li jwieġeb lill-mistednin awtomatikament mhuwiex fis-servizz; il-konsulent tal-prodott fuq din il-websajt (ara hawn taħt) jikkonċerna esklussivament lill-partijiet interessati u mhux il-komunikazzjoni mal-mistednin. Skont il-klassifikazzjoni tagħna, il-funzjoni lanqas ma tissodisfa l-kundizzjonijiet għal IA b'riskju għoli skont l-Anness III tar-Regolament dwar l-IA.",
             "Barra minn hekk, il-messaġġi lill-ospiti ma humiex „test dwar kwistjonijiet ta’ interess pubbliku“ fis-sens tal-Artikolu 50(4) tar-Regolament dwar l-Intelliġenza Artifiċjali: ma jiġux ippubblikati, iżda jintbagħtu individwalment lil persuna partikolari, u jirrigwardaw l-organizzazzjoni ta’ soġġorn. Indipendentement minn dan, hawnhekk tapplika l-verifika umana mill-impjegat li jibgħat.",
             "Jekk fil-futur tiġi offruta funzjoni li twieġeb lill-ospiti b’mod awtonomu — mingħajr approvazzjoni umana — l-ospitu jiġi infurmat b’mod viżibbli fil-bidu tad-djalogu li huwa qed jikteb ma’ sistema tal-IA. Mingħajr dan l-avviż, tali funzjoni ma tiġix ipprovduta.",
           ],

@@ -5,7 +5,7 @@
 // deckungsgleich zu halten.
 import { AGB_URL } from "@/lib/app-url";
 
-import { ANBIETER, AUFSICHTSBEHOERDE, RECHTSSTAND_ISO } from "../anbieter";
+import { ANBIETER, AUFSICHTSBEHOERDE, DATENSCHUTZ_STAND_ISO } from "../anbieter";
 
 import type { LegalDoc } from "../types";
 
@@ -14,7 +14,7 @@ export const datenschutz: LegalDoc = {
   title: "Privatlivspolitik",
   metaDescription:
     "Hvordan myNextDays behandler personoplysninger: formål, retsgrundlag, modtagere, opbevaringsperioder og dine rettigheder efter databeskyttelsesforordningen.",
-  standIso: RECHTSSTAND_ISO,
+  standIso: DATENSCHUTZ_STAND_ISO,
   numbered: true,
   toc: true,
   intro: [
@@ -203,7 +203,7 @@ export const datenschutz: LegalDoc = {
           titel: "Svarforslag",
           paragraphs: [
             "Til svarforslag i beskedindbakken bruger vi — hvis funktionen er aktiveret for virksomheden — sprogmodeltilbuddet fra Groq, Inc., USA. I den forbindelse overføres den pågældende beskedkontekst til tjenesten. Forslag sendes ikke automatisk; det er altid et menneske, der beslutter, om de sendes. Der finder ingen automatiseret afgørelse med retsvirkning som omhandlet i art. 22 i databeskyttelsesforordningen sted.",
-            "Der er dermed ikke tale om et AI-system, som i den forstand, der følger af art. 50, stk. 1, i AI-forordningen, interagerer umiddelbart med fysiske personer: Forpligtelsen forudsætter en DIREKTE interaktion, hvor AI-systemet selv kommunikerer med personen og ikke gennem et menneskeligt mellemled. Her foreslår funktionen virksomheden en tekst, som en medarbejder gennemgår, kan ændre og selv sender — medarbejderen er dette mellemled, og gæsten korresponderer med virksomheden og ikke med en chatbot. Der er ikke en automatisk svarende assistent i drift. Efter vores vurdering opfylder funktionen heller ikke nogen af kriterierne for højrisiko-AI efter bilag III til AI-forordningen.",
+            "Der er således ikke tale om et AI-system, der interagerer direkte med fysiske personer i henhold til artikel 50, stk. 1, i AI-forordningen: Forpligtelsen forudsætter en DIREKTE interaktion, hvor AI'en selv kommunikerer med personen og ikke via en menneskelig mellemmand. Her foreslår funktionen en tekst til virksomheden, som en medarbejder gennemgår, kan ændre og selv sender – medarbejderen er denne mellemmand, gæsten korresponderer med virksomheden og ikke med en chatbot. En assistent, der automatisk svarer gæster, er ikke i brug; produktkonsulenten på denne hjemmeside (se nedenfor) vedrører udelukkende interesserede parter og ingen gæstekommunikation. Ifølge vores vurdering opfylder funktionen heller ikke nogen af betingelserne for højrisiko-AI i henhold til bilag III i AI-forordningen.",
             "Beskeder til gæster er desuden ikke en »tekst om spørgsmål af offentlig interesse« som omhandlet i art. 50, stk. 4, i AI-forordningen: De offentliggøres ikke, men sendes individuelt til en bestemt person, og de vedrører afviklingen af et ophold. Uafhængigt heraf gælder her den menneskelige gennemgang, som den afsendende medarbejder foretager.",
             "Skulle der fremover blive tilbudt en funktion, der selvstændigt — uden menneskelig godkendelse — svarer gæster, bliver gæsten ved dialogens begyndelse synligt gjort opmærksom på, at vedkommende skriver med et AI-system. Uden denne oplysning stilles en sådan funktion ikke til rådighed.",
           ],

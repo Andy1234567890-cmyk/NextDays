@@ -7,7 +7,7 @@
 // unübersetzt.
 import { AGB_URL } from "@/lib/app-url";
 
-import { ANBIETER, AUFSICHTSBEHOERDE, RECHTSSTAND_ISO } from "../anbieter";
+import { ANBIETER, AUFSICHTSBEHOERDE, DATENSCHUTZ_STAND_ISO } from "../anbieter";
 
 import type { LegalDoc } from "../types";
 
@@ -16,7 +16,7 @@ export const datenschutz: LegalDoc = {
   title: "Politica de confidențialitate",
   metaDescription:
     "Cum prelucrează myNextDays datele cu caracter personal: scopuri, temeiuri juridice, destinatari, durate de stocare și drepturile dumneavoastră conform RGPD.",
-  standIso: RECHTSSTAND_ISO,
+  standIso: DATENSCHUTZ_STAND_ISO,
   numbered: true,
   toc: true,
   intro: [
@@ -206,7 +206,7 @@ export const datenschutz: LegalDoc = {
           titel: "Sugestii de răspuns",
           paragraphs: [
             "Pentru sugestiile de răspuns din căsuța de mesaje folosim — în măsura în care funcția este activată pentru unitatea de cazare — oferta de modele lingvistice a Groq, Inc., SUA. În acest context, contextul mesajului respectiv este transmis către serviciu. Sugestiile nu sunt trimise automat; asupra expedierii decide întotdeauna un om. Nu are loc niciun proces decizional automatizat cu efect juridic în sensul art. 22 din RGPD.",
-            "Nu este vorba, prin urmare, despre un sistem de IA care interacționează direct cu persoane fizice în sensul art. 50 alin. (1) din Regulamentul privind inteligența artificială: obligația presupune o interacțiune DIRECTĂ, în care IA însăși comunică cu persoana și nu prin intermediul unei persoane. Aici funcția propune unității de cazare un text pe care un angajat îl verifică, îl poate modifica și îl trimite el însuși — angajatul este acest intermediar, oaspetele corespondează cu unitatea de cazare și nu cu un chatbot. Nu este utilizat niciun asistent care răspunde automat. Potrivit aprecierii noastre, funcția nu îndeplinește nici vreuna dintre situațiile privind IA cu grad ridicat de risc prevăzute în anexa III la Regulamentul privind inteligența artificială.",
+            "Prin urmare, acesta nu este un sistem AI care interacționează direct cu persoane fizice în sensul articolului 50 alineatul (1) din Regulamentul AI: obligația presupune o interacțiune DIRECTĂ în care AI-ul însuși comunică cu persoana și nu printr-un intermediar uman. Aici, funcția propune un text operatorului, pe care un angajat îl verifică, îl poate modifica și îl trimite el însuși – angajatul este acest intermediar, oaspetele corespondează cu operatorul și nu cu un chatbot. Nu este utilizat un asistent care să răspundă automat oaspeților; consultantul de produs de pe acest site web (vezi mai jos) se referă exclusiv la părțile interesate și nu la comunicarea cu oaspeții. Conform clasificării noastre, funcția nu îndeplinește niciuna dintre condițiile pentru AI cu risc ridicat conform Anexei III a Regulamentului AI.",
             "Mesajele către oaspeți nu sunt, în plus, „text privind chestiuni de interes public” în sensul art. 50 alin. (4) din Regulamentul privind inteligența artificială: ele nu sunt publicate, ci trimise individual unei anumite persoane și privesc derularea unui sejur. Independent de aceasta, se aplică aici verificarea umană efectuată de angajatul care expediază.",
             "În cazul în care în viitor va fi oferită o funcție care răspunde oaspeților în mod autonom — fără aprobare umană —, oaspetele va fi informat vizibil la începutul dialogului că scrie cu un sistem de IA. Fără această informare, o astfel de funcție nu va fi pusă la dispoziție.",
           ],

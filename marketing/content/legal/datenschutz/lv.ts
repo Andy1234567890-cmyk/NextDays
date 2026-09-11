@@ -4,7 +4,7 @@
 // Listen) muss deckungsgleich mit `de.ts` bleiben.
 import { AGB_URL } from "@/lib/app-url";
 
-import { ANBIETER, AUFSICHTSBEHOERDE, RECHTSSTAND_ISO } from "../anbieter";
+import { ANBIETER, AUFSICHTSBEHOERDE, DATENSCHUTZ_STAND_ISO } from "../anbieter";
 
 import type { LegalDoc } from "../types";
 
@@ -13,7 +13,7 @@ export const datenschutz: LegalDoc = {
   title: "Privātuma paziņojums",
   metaDescription:
     "Kā myNextDays apstrādā personas datus: nolūki, tiesiskais pamats, saņēmēji, glabāšanas termiņi un jūsu tiesības saskaņā ar VDAR.",
-  standIso: RECHTSSTAND_ISO,
+  standIso: DATENSCHUTZ_STAND_ISO,
   numbered: true,
   toc: true,
   intro: [
@@ -200,7 +200,7 @@ export const datenschutz: LegalDoc = {
           titel: "Atbilžu ieteikumi",
           paragraphs: [
             "Atbilžu ieteikumiem ziņojumu iesūtnē izmantojam — ja funkcija uzņēmumam ir aktivizēta — Groq, Inc., ASV, valodas modeļu piedāvājumu. Pie tam pakalpojumam tiek nosūtīts attiecīgais ziņojuma konteksts. Ieteikumi netiek nosūtīti automātiski; par nosūtīšanu vienmēr lemj cilvēks. Automatizēta lēmumu pieņemšana ar juridiskām sekām VDAR 22. panta izpratnē nenotiek.",
-            "Tādējādi tā nav MI sistēma, kas Mākslīgā intelekta regulas 50. panta 1. punkta izpratnē tieši mijiedarbojas ar fiziskām personām: šis pienākums paredz TIEŠU mijiedarbību, kurā MI pats sazinās ar personu, nevis caur cilvēku kā starpnieku. Šeit funkcija piedāvā uzņēmumam tekstu, ko darbinieks pārbauda, var mainīt un nosūta pats — darbinieks ir šis starpnieks, un viesis sarakstās ar uzņēmumu, nevis ar tērzēšanas robotu. Automātiski atbildošs asistents netiek izmantots. Pēc mūsu vērtējuma funkcija neatbilst arī nevienam no Mākslīgā intelekta regulas III pielikumā noteiktajiem augsta riska MI gadījumiem.",
+            "Tādējādi šī nav mākslīgā intelekta sistēma, kas tieši mijiedarbojas ar fiziskām personām saskaņā ar Mākslīgā intelekta regulas 50. panta 1. punktu: prasība paredz TIEŠU mijiedarbību, kurā mākslīgais intelekts pats sazinās ar personu, nevis ar cilvēka starpniecību. Šeit funkcija piedāvā uzņēmumam tekstu, ko darbinieks pārbauda, var mainīt un pats nosūta — darbinieks ir šis starpnieks, viesis sarakstās ar uzņēmumu, nevis ar tērzēšanas robotu. Asistents, kas patstāvīgi atbild viesiem, netiek izmantots; produktu konsultants šajā tīmekļa vietnē (skatīt zemāk) attiecas tikai uz interesentiem, nevis uz viesu komunikāciju. Pēc mūsu vērtējuma šī funkcija neatbilst arī nevienam no augsta riska mākslīgā intelekta kritērijiem saskaņā ar Mākslīgā intelekta regulas III pielikumu.",
             "Turklāt ziņojumi viesiem nav „teksts par sabiedrības interešu jautājumiem“ Mākslīgā intelekta regulas 50. panta 4. punkta izpratnē: tie netiek publicēti, bet gan individuāli nosūtīti konkrētai personai un attiecas uz uzturēšanās organizēšanu. Neatkarīgi no tā šeit darbojas nosūtošā darbinieka veiktā cilvēka pārbaude.",
             "Ja nākotnē tiktu piedāvāta funkcija, kas patstāvīgi — bez cilvēka apstiprinājuma — atbildētu viesiem, viesis dialoga sākumā tiktu redzami informēts, ka viņš sarakstās ar MI sistēmu. Bez šāda norādījuma tāda funkcija netiks nodrošināta.",
           ],

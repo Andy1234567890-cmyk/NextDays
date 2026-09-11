@@ -7,7 +7,7 @@
 // unübersetzt.
 import { AGB_URL } from "@/lib/app-url";
 
-import { ANBIETER, AUFSICHTSBEHOERDE, RECHTSSTAND_ISO } from "../anbieter";
+import { ANBIETER, AUFSICHTSBEHOERDE, DATENSCHUTZ_STAND_ISO } from "../anbieter";
 
 import type { LegalDoc } from "../types";
 
@@ -16,7 +16,7 @@ export const datenschutz: LegalDoc = {
   title: "Polityka prywatności",
   metaDescription:
     "Jak myNextDays przetwarza dane osobowe: cele, podstawy prawne, odbiorcy, okresy przechowywania oraz Państwa prawa wynikające z RODO.",
-  standIso: RECHTSSTAND_ISO,
+  standIso: DATENSCHUTZ_STAND_ISO,
   numbered: true,
   toc: true,
   intro: [
@@ -205,7 +205,7 @@ export const datenschutz: LegalDoc = {
           titel: "Propozycje odpowiedzi",
           paragraphs: [
             "Do propozycji odpowiedzi w skrzynce wiadomości wykorzystujemy — o ile funkcja jest włączona dla przedsiębiorstwa — ofertę modeli językowych firmy Groq, Inc., USA. Przekazywany jest przy tym dany kontekst wiadomości. Propozycje nie są wysyłane automatycznie; o wysłaniu zawsze decyduje człowiek. Zautomatyzowane podejmowanie decyzji o skutku prawnym w rozumieniu art. 22 RODO nie ma miejsca.",
-            "Nie jest to zatem system SI, który w rozumieniu art. 50 ust. 1 aktu w sprawie sztucznej inteligencji wchodzi w bezpośrednią interakcję z osobami fizycznymi: obowiązek ten zakłada BEZPOŚREDNIĄ interakcję, w której SI sama komunikuje się z osobą, a nie za pośrednictwem człowieka. Tutaj funkcja proponuje przedsiębiorstwu tekst, który pracownik sprawdza, może zmienić i sam wysyła — pracownik jest tym pośrednikiem, gość koresponduje z przedsiębiorstwem, a nie z chatbotem. Asystent odpowiadający automatycznie nie jest stosowany. Zgodnie z naszą oceną funkcja nie spełnia również żadnej z przesłanek SI wysokiego ryzyka według załącznika III do aktu w sprawie sztucznej inteligencji.",
+            "Nie jest to system AI, który w rozumieniu art. 50 ust. 1 rozporządzenia AI bezpośrednio wchodzi w interakcje z osobami fizycznymi: Obowiązek ten zakłada BEZPOŚREDNIĄ interakcję, w której AI sama komunikuje się z osobą, a nie za pośrednictwem ludzkiego pośrednika. W tym przypadku funkcja proponuje tekst, który pracownik sprawdza, może zmienić i sam wysyła – pracownik jest tym pośrednikiem, gość koresponduje z obiektem, a nie z chatbotem. Asystent, który samodzielnie odpowiada gościom, nie jest używany; doradca produktu na tej stronie (patrz poniżej) dotyczy wyłącznie zainteresowanych stron, a nie komunikacji z gośćmi. Zgodnie z naszą oceną, funkcja ta nie spełnia również żadnego z kryteriów dla AI wysokiego ryzyka zgodnie z załącznikiem III rozporządzenia AI.",
             "Wiadomości do gości nie są ponadto „tekstem w sprawach interesu publicznego” w rozumieniu art. 50 ust. 4 aktu w sprawie sztucznej inteligencji: nie są publikowane, lecz wysyłane indywidualnie do określonej osoby i dotyczą obsługi pobytu. Niezależnie od tego obowiązuje tu kontrola ludzka sprawowana przez wysyłającego pracownika.",
             "Gdyby w przyszłości oferowana była funkcja, która samodzielnie — bez zatwierdzenia przez człowieka — odpowiada gościom, gość zostanie na początku dialogu w widoczny sposób poinformowany, że pisze z systemem SI. Bez takiej informacji funkcja ta nie zostanie udostępniona.",
           ],

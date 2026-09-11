@@ -7,7 +7,7 @@
 // unübersetzt.
 import { AGB_URL } from "@/lib/app-url";
 
-import { ANBIETER, AUFSICHTSBEHOERDE, RECHTSSTAND_ISO } from "../anbieter";
+import { ANBIETER, AUFSICHTSBEHOERDE, DATENSCHUTZ_STAND_ISO } from "../anbieter";
 
 import type { LegalDoc } from "../types";
 
@@ -16,7 +16,7 @@ export const datenschutz: LegalDoc = {
   title: "Privacyverklaring",
   metaDescription:
     "Hoe myNextDays persoonsgegevens verwerkt: doeleinden, rechtsgronden, ontvangers, bewaartermijnen en uw rechten op grond van de AVG.",
-  standIso: RECHTSSTAND_ISO,
+  standIso: DATENSCHUTZ_STAND_ISO,
   numbered: true,
   toc: true,
   intro: [
@@ -205,7 +205,7 @@ export const datenschutz: LegalDoc = {
           titel: "Antwoordsuggesties",
           paragraphs: [
             "Voor antwoordsuggesties in de berichtenmap gebruiken wij — voor zover de functie voor het bedrijf is geactiveerd — het taalmodelaanbod van Groq, Inc., VS. Daarbij wordt de betreffende berichtcontext aan de dienst doorgegeven. Suggesties worden niet automatisch verzonden; over de verzending beslist altijd een mens. Geautomatiseerde besluitvorming met rechtsgevolgen in de zin van art. 22 AVG vindt niet plaats.",
-            "Het gaat daarmee niet om een AI-systeem dat in de zin van artikel 50, lid 1, van de AI-verordening rechtstreeks met natuurlijke personen interacteert: de verplichting veronderstelt een DIRECTE interactie waarbij de AI zelf met de persoon communiceert en niet via een menselijke tussenschakel. Hier stelt de functie het bedrijf een tekst voor die een medewerker controleert, kan wijzigen en zelf verzendt — de medewerker is die tussenschakel, de gast correspondeert met het bedrijf en niet met een chatbot. Een automatisch antwoordende assistent is niet in gebruik. Naar onze inschatting vervult de functie ook geen van de gevallen voor AI met een hoog risico volgens bijlage III van de AI-verordening.",
+            "Het betreft dus geen AI-systeem dat in de zin van artikel 50, lid 1, van de AI-verordening rechtstreeks interactie heeft met natuurlijke personen: de verplichting vereist een DIRECTE interactie, waarbij de AI zelf met de persoon communiceert en niet via een menselijke bemiddelaar. Hier stelt de functie de onderneming een tekst voor die een medewerker controleert, kan wijzigen en zelf verzendt — de medewerker is deze bemiddelaar, de gast correspondeert met de onderneming en niet met een chatbot. Een assistent die zelfstandig antwoordt aan gasten is niet in gebruik; de productadviseur op deze website (zie hieronder) betreft uitsluitend geïnteresseerden en geen gastcommunicatie. Volgens onze inschatting voldoet de functie ook niet aan een van de criteria voor hoogrisico-AI volgens bijlage III van de AI-verordening.",
             "Berichten aan gasten zijn bovendien geen “tekst over aangelegenheden van algemeen belang” in de zin van artikel 50, lid 4, van de AI-verordening: zij worden niet gepubliceerd, maar individueel aan een bepaalde persoon verzonden, en betreffen de afhandeling van een verblijf. Los daarvan geldt hier de menselijke controle door de verzendende medewerker.",
             "Mocht in de toekomst een functie worden aangeboden die zelfstandig — zonder menselijke goedkeuring — aan gasten antwoordt, dan wordt de gast aan het begin van de dialoog zichtbaar erop gewezen dat hij met een AI-systeem schrijft. Zonder die melding wordt een dergelijke functie niet aangeboden.",
           ],

@@ -5,7 +5,7 @@
 // diese Datei nachgezogen. Struktur und Reihenfolge müssen `de.ts` entsprechen.
 import { AGB_URL } from "@/lib/app-url";
 
-import { ANBIETER, AUFSICHTSBEHOERDE, RECHTSSTAND_ISO } from "../anbieter";
+import { ANBIETER, AUFSICHTSBEHOERDE, DATENSCHUTZ_STAND_ISO } from "../anbieter";
 
 import type { LegalDoc } from "../types";
 
@@ -14,7 +14,7 @@ export const datenschutz: LegalDoc = {
   title: "Fógra Príobháideachais",
   metaDescription:
     "Conas a phróiseálann myNextDays sonraí pearsanta: cuspóirí, bunúis dlí, faighteoirí, tréimhsí coinneála agus do chearta faoin RGCS.",
-  standIso: RECHTSSTAND_ISO,
+  standIso: DATENSCHUTZ_STAND_ISO,
   numbered: true,
   toc: true,
   intro: [
@@ -203,7 +203,7 @@ export const datenschutz: LegalDoc = {
           titel: "Moltaí freagra",
           paragraphs: [
             "Le haghaidh moltaí freagra i mbosca isteach na dteachtaireachtaí, úsáidimid — sa chás go bhfuil an fheidhm gníomhachtaithe don ghnólacht — tairiscint samhlacha teanga Groq, Inc., SAM. Aistrítear comhthéacs na teachtaireachta faoi seach chuig an tseirbhís. Ní sheoltar moltaí go huathoibríoch; is duine daonna a chinneann faoin seoladh i gcónaí. Ní tharlaíonn aon chinnteoireacht uathoibrithe le héifeacht dhlíthiúil de réir bhrí Airteagal 22 den RGCS.",
-            "Ní córas intleachta saorga é sin, dá bhrí sin, a idirghníomhaíonn go díreach le daoine nádúrtha de réir bhrí Airteagal 50(1) den Rialachán maidir le hIntleacht Shaorga: éilíonn an oibleagáid sin idirghníomhaíocht DHÍREACH, ina ndéanann an intleacht shaorga féin cumarsáid leis an duine agus nach trí idirghabhálaí daonna. Anseo, molann an fheidhm téacs don ghnólacht, a ndéanann ball foirne athbhreithniú air, a fhéadfaidh é a athrú agus a sheolann é féin — is é an ball foirne an t-idirghabhálaí sin, agus is leis an ngnólacht agus nach le róbat comhrá a bhíonn an aoi ag comhfhreagras. Níl aon chúntóir a fhreagraíonn go huathoibríoch in úsáid. De réir ár measúnaithe, ní chomhlíonann an fheidhm aon cheann de na cásanna d’intleacht shaorga ardriosca faoi Iarscríbhinn III den Rialachán maidir le hIntleacht Shaorga ach oiread.",
+            "Ní córas intleachta saorga é seo a idirghníomhaíonn go díreach le daoine nádúrtha de réir bhrí Airteagal 50(1) den Rialachán maidir le hIntleacht Shaorga: Éilíonn an oibleagáid idirghníomhaíocht DHÍREACH ina ndéanann an intleacht shaorga féin cumarsáid leis an duine agus ní trí idirghabhálaí daonna. Anseo, molann an fheidhm téacs don ghnó, a ndéanann fostaí athbhreithniú air, ar féidir leis é a athrú agus a sheoladh amach é féin — is é an fostaí an t-idirghabhálaí seo, déanann an t-aoi comhfhreagras leis an ngnó agus ní le comhráiteán. Níl cúntóir i bhfeidhm a fhreagraíonn d'aíonna go huathoibríoch; ní bhaineann an comhairleoir táirge ar an suíomh Gréasáin seo (féach thíos) ach le páirtithe leasmhara agus ní le cumarsáid aoi. De réir ár n-aicmithe, ní chomhlíonann an fheidhm aon cheann de na critéir maidir le hIntleacht Shaorga Ardriosca de réir Iarscríbhinn III den Rialachán maidir le hIntleacht Shaorga.",
             "Ní „téacs faoi ábhair leasa phoiblí“ de réir bhrí Airteagal 50(4) den Rialachán maidir le hIntleacht Shaorga teachtaireachtaí chuig aíonna ach oiread: ní fhoilsítear iad, ach seoltar go leithleach chuig duine sonrach iad, agus baineann siad le riar fanachta. Beag beann air sin, tá an t-athbhreithniú daonna ag an mball foirne a sheolann i bhfeidhm anseo.",
             "Má thairgtear feidhm amach anseo a fhreagraíonn d’aíonna go huathoibríoch — gan cead daonna — cuirfear in iúl don aoi go feiceálach ag tús an dialóige go bhfuil sé ag scríobh le córas intleachta saorga. Gan an fógra sin, ní chuirfear feidhm den sórt sin ar fáil.",
           ],

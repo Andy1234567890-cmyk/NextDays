@@ -5,7 +5,7 @@
 // Reihenfolge, Anzahl der Absätze) ist mit `de.ts` deckungsgleich zu halten.
 import { AGB_URL } from "@/lib/app-url";
 
-import { ANBIETER, AUFSICHTSBEHOERDE, RECHTSSTAND_ISO } from "../anbieter";
+import { ANBIETER, AUFSICHTSBEHOERDE, DATENSCHUTZ_STAND_ISO } from "../anbieter";
 
 import type { LegalDoc } from "../types";
 
@@ -14,7 +14,7 @@ export const datenschutz: LegalDoc = {
   title: "Andmekaitseteade",
   metaDescription:
     "Kuidas myNextDays isikuandmeid töötleb: eesmärgid, õiguslikud alused, vastuvõtjad, säilitamise tähtajad ja teie õigused isikuandmete kaitse üldmääruse (IKÜM) järgi.",
-  standIso: RECHTSSTAND_ISO,
+  standIso: DATENSCHUTZ_STAND_ISO,
   numbered: true,
   toc: true,
   intro: [
@@ -203,7 +203,7 @@ export const datenschutz: LegalDoc = {
           titel: "Vastusesoovitused",
           paragraphs: [
             "Sõnumite postkastis pakutavate vastusesoovituste jaoks kasutame — kui funktsioon on ettevõtte jaoks aktiveeritud — ettevõtja Groq, Inc. (USA) keelemudeliteenust. Seejuures edastatakse teenusele vastav sõnumikontekst. Soovitusi ei saadeta automaatselt; saatmise üle otsustab alati inimene. Automatiseeritud otsuste tegemist õigusliku mõjuga IKÜM artikli 22 tähenduses ei toimu.",
-            "Seega ei ole tegemist tehisintellektisüsteemiga, mis suhtleb tehisintellektimääruse artikli 50 lõike 1 tähenduses vahetult füüsiliste isikutega: kohustuse eelduseks on OTSENE suhtlus, mille käigus tehisintellekt ise suhtleb isikuga ja mitte inimvahendaja kaudu. Siin pakub funktsioon ettevõttele teksti, mida töötaja kontrollib, saab muuta ja ise ära saadab — töötaja on see vahendaja, külaline peab kirjavahetust ettevõttega ja mitte vestlusrobotiga. Automaatselt vastavat assistenti kasutusel ei ole. Meie hinnangul ei täida funktsioon ka ühtegi tehisintellektimääruse III lisas nimetatud suure riskiga tehisintellekti koosseisu.",
+            "Seega ei ole tegemist tehisintellekti süsteemiga, mis suhtleb otseselt füüsiliste isikutega tehisintellekti määruse artikli 50 lõike 1 tähenduses: kohustus eeldab OTSESEID suhtlusi, kus tehisintellekt ise suhtleb isikuga ja mitte inimvahendaja kaudu. Siin pakub funktsioon ettevõttele teksti, mida töötaja kontrollib, saab muuta ja ise saadab – töötaja on see vahendaja, külaline suhtleb ettevõttega ja mitte vestlusrobotiga. Ise vastav assistent ei ole kasutusel; selle veebisaidi tootenõustaja (vt allpool) puudutab ainult huvilisi ja mitte külaliste suhtlust. Meie hinnangu kohaselt ei vasta funktsioon ka ühelegi tehisintellekti määruse III lisas sätestatud kõrge riskiga tehisintellekti kriteeriumile.",
             "Külalistele saadetavad sõnumid ei ole ühtlasi „avalikku huvi pakkuvaid küsimusi käsitlev tekst“ tehisintellektimääruse artikli 50 lõike 4 tähenduses: neid ei avaldata, vaid saadetakse individuaalselt kindlale isikule, ja need puudutavad viibimise korraldamist. Sellest sõltumata kehtib siin saatva töötaja tehtav inimkontroll.",
             "Kui edaspidi pakutaks funktsiooni, mis vastab külalistele iseseisvalt — ilma inimese heakskiiduta —, juhitakse külalise tähelepanu dialoogi alguses nähtavalt sellele, et ta kirjutab tehisintellektisüsteemiga. Ilma sellist teadet sellist funktsiooni ei pakuta.",
           ],

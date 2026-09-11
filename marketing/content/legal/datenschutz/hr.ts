@@ -5,7 +5,7 @@
 // muss mit `de.ts` deckungsgleich bleiben.
 import { AGB_URL } from "@/lib/app-url";
 
-import { ANBIETER, AUFSICHTSBEHOERDE, RECHTSSTAND_ISO } from "../anbieter";
+import { ANBIETER, AUFSICHTSBEHOERDE, DATENSCHUTZ_STAND_ISO } from "../anbieter";
 
 import type { LegalDoc } from "../types";
 
@@ -14,7 +14,7 @@ export const datenschutz: LegalDoc = {
   title: "Izjava o zaštiti osobnih podataka",
   metaDescription:
     "Kako myNextDays obrađuje osobne podatke: svrhe, pravne osnove, primatelji, rokovi čuvanja i vaša prava iz GDPR-a.",
-  standIso: RECHTSSTAND_ISO,
+  standIso: DATENSCHUTZ_STAND_ISO,
   numbered: true,
   toc: true,
   intro: [
@@ -203,7 +203,7 @@ export const datenschutz: LegalDoc = {
           titel: "Predlošci odgovora",
           paragraphs: [
             "Za predloške odgovora u ulaznom pretincu poruka koristimo — ako je funkcija aktivirana za objekt — ponudu jezičnih modela društva Groq, Inc., SAD. Pri tome se toj usluzi prenosi kontekst pojedine poruke. Predlošci se ne šalju automatski; o otpremi uvijek odlučuje čovjek. Automatizirano donošenje odluka s pravnim učinkom u smislu čl. 22. GDPR-a ne provodi se.",
-            "Time se ne radi o sustavu umjetne inteligencije koji u smislu čl. 50. st. 1. Uredbe o umjetnoj inteligenciji neposredno stupa u interakciju s fizičkim osobama: ta obveza pretpostavlja NEPOSREDNU interakciju u kojoj umjetna inteligencija sama komunicira s osobom, a ne putem ljudskog posrednika. Ovdje funkcija objektu predlaže tekst koji zaposlenik provjerava, može izmijeniti i sam otprema — zaposlenik je taj posrednik, a gost dopisuje s objektom, a ne s chatbotom. Asistent koji automatski odgovara nije u upotrebi. Prema našoj procjeni funkcija ne ispunjava ni jedan od uvjeta za umjetnu inteligenciju visokog rizika iz Priloga III. Uredbe o umjetnoj inteligenciji.",
+            "Stoga se ne radi o sustavu umjetne inteligencije koji izravno komunicira s fizičkim osobama u smislu članka 50. stavka 1. Uredbe o umjetnoj inteligenciji: Obveza pretpostavlja IZRAVNU interakciju u kojoj sama umjetna inteligencija komunicira s osobom, a ne putem ljudskog posrednika. Ovdje funkcija predlaže tekst tvrtki, koji zaposlenik provjerava, može promijeniti i sam poslati – zaposlenik je taj posrednik, gost komunicira s tvrtkom, a ne s chatbotom. Asistent koji samostalno odgovara gostima nije u upotrebi; savjetnik za proizvode na ovoj web stranici (vidi dolje) odnosi se isključivo na zainteresirane strane, a ne na komunikaciju s gostima. Prema našoj procjeni, funkcija također ne ispunjava nijedan od kriterija za visokorizičnu umjetnu inteligenciju prema Prilogu III. Uredbe o umjetnoj inteligenciji.",
             "Poruke gostima nadalje nisu „tekst o pitanjima od javnog interesa” u smislu čl. 50. st. 4. Uredbe o umjetnoj inteligenciji: ne objavljuju se, nego se pojedinačno šalju određenoj osobi i odnose se na provedbu jednog odmora. Neovisno od toga, ovdje se primjenjuje ljudska provjera od strane zaposlenika koji otprema poruku.",
             "Ako bi se u budućnosti nudila funkcija koja samostalno — bez ljudskog odobrenja — odgovara gostima, gost će na početku dijaloga biti vidljivo upozoren da dopisuje sa sustavom umjetne inteligencije. Bez te obavijesti takva se funkcija ne pruža.",
           ],

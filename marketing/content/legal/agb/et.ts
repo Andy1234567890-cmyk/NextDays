@@ -15,7 +15,7 @@ export const agb: LegalDoc = {
   numbered: false,
   toc: true,
   title: "Üldtingimused agentuuridele ja üürileandjatele",
-  stand: "Seisuga: 13. august 2026",
+  stand: "Seisuga: 11. september 2026",
   intro: [
     "Käesolevad üldtingimused (edaspidi „tingimused“) reguleerivad tarkvaraplatvormi myNextDays (edaspidi „platvorm“) kasutamist agentuuride, üürileandjate, kinnisvarahaldurite ja muude ärikasutajate (edaspidi „kasutaja“) poolt.",
     "Platvormi pakkuja on myNextDays ApS, Taani õiguse alusel asutatud osaühing (anpartsselskab), Hirtshalsvej 21, 9881 Bindslev, Taani, registreeritud Taani äriregistris (CVR) numbri CVR 46615182 all (edaspidi „myNextDays“ või „meie“).",
@@ -119,7 +119,8 @@ export const agb: LegalDoc = {
       heading: "§ 12 Tehisintellekti kasutamine",
       paragraphs: [
         "myNextDays kasutab üksikutes funktsioonides tehisintellektisüsteeme, eelkõige hinnasoovituste (dünaamiline hinnastamine), sõnumite postkasti vastusesoovituste ja klienditoe abistamise jaoks. Need funktsioonid loovad ettepanekuid; otsus ja vastutus nende kasutamise eest lasuvad kasutajal. Hinnasoovitused ei asenda kasutaja enda ärilist kontrolli.",
-        "Kui külalised suhtlevad vahetult tehisintellektisüsteemiga, avaldatakse see neile (määruse (EL) 2024/1689, „tehisintellekti määrus“, artikli 50 lõige 1). Tekstid, mille tehisintellektisüsteem on loonud või oluliselt muutnud ja mida kasutaja külalistele edastab, peab kasutaja tähistama niivõrd, kuivõrd tal on selleks seadusest tulenev kohustus.",
+                "Platvormil ei vasta ükski tehisintellekti süsteem iseseisvalt külalistele ega kasutajale: iga tehisintellekti loodud sõnum esitatakse inimesele ülevaatamiseks, kes saab seda muuta ja saata või mitte. Kasutajatoe pakuvad inimesed. Sellest tuleb eristada meie veebisaidi tootenõustajat: see vastab huviliste küsimustele teenuste ulatuse kohta vahetult ja ilma inimliku heakskiiduta, ei ole platvormi osa ega käesoleva lepingu objekt. Selle nõustaja antud teave ei anna omaduste kohta kinnitust ega ole ülimuslik käesolevate tingimuste ja kehtiva teenusekirjelduse sätete suhtes; määrav on § 2. Andmetöötluse üksikasjad leiate meie andmekaitse teabest.",
+        "Kui füüsiline isik suhtleb vahetult tehisintellekti süsteemiga, avaldatakse see talle (määruse (EL) 2024/1689 – „tehisintellekti määrus“ artikli 50 lõige 1); meie veebisaidi tootenõustaja puhul toimub see dialoogi alguses. Tekstid, mille tehisintellekti süsteem on loonud või oluliselt muutnud ja mille kasutaja külalistele edastab, peab kasutaja märgistama, kui tal on selleks seaduslik kohustus.",
         "myNextDays ei käita tehisintellektisüsteeme, mis on tehisintellekti määruse III lisa kohaselt suure riskiga süsteemid, ega tehisintellekti määruse artikli 5 kohaselt keelatud tavasid. Kasutaja sisestatud andmeid ja tema külaliste andmeid ei kasutata ilma eraldi tellimuseta mudelite treenimiseks.",
         "Kasutaja ei tohi kasutada tehisintellekti funktsioone selleks, et jätta külalistele mulje inimestevahelisest suhtlusest seal, kus kehtib avaldamiskohustus, ega selleks, et anda õiguslikult siduvaid kinnitusi ilma omapoolset kontrolli teostamata.",
         "Kui kasutaja ühendab oma konto selleks ette nähtud liidese kaudu enda tehisintellekti assistendiga (näiteks Anthropic’i Claude), kehtib järgmine: kasutaja sõlmib selle teenuse lepingu ise ja vastutab selle kasutamise eest. Ühendus on tema korraldus myNextDaysile anda vabastatud andmed sinna välja — sealhulgas edastamine kolmandasse riiki, kui teenusepakkuja asukoht on väljaspool Euroopa Liitu. Kasutaja tagab, et tal on selleks õiguslik alus, et tema enda andmekaitseteabes on nimetatud vastuvõtja ja et edastamiseks nõutavad tagatised on olemas.",

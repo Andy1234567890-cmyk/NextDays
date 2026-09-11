@@ -6,7 +6,7 @@
 // deckungsgleich zu halten.
 import { AGB_URL } from "@/lib/app-url";
 
-import { ANBIETER, AUFSICHTSBEHOERDE, RECHTSSTAND_ISO } from "../anbieter";
+import { ANBIETER, AUFSICHTSBEHOERDE, DATENSCHUTZ_STAND_ISO } from "../anbieter";
 
 import type { LegalDoc } from "../types";
 
@@ -15,7 +15,7 @@ export const datenschutz: LegalDoc = {
   title: "Tietosuojaseloste",
   metaDescription:
     "Miten myNextDays käsittelee henkilötietoja: käsittelyn tarkoitukset, oikeusperusteet, vastaanottajat, säilytysajat ja oikeutesi yleisen tietosuoja-asetuksen mukaan.",
-  standIso: RECHTSSTAND_ISO,
+  standIso: DATENSCHUTZ_STAND_ISO,
   numbered: true,
   toc: true,
   intro: [
@@ -202,7 +202,7 @@ export const datenschutz: LegalDoc = {
           titel: "Vastausehdotukset",
           paragraphs: [
             "Viestien saapuneet-kansion vastausehdotuksiin käytämme — mikäli toiminto on aktivoitu yritykselle — Groq, Inc:n (USA) kielimallitarjontaa. Tällöin kyseinen viestikonteksti välitetään palvelulle. Ehdotuksia ei lähetetä automaattisesti; lähettämisestä päättää aina ihminen. Yleisen tietosuoja-asetuksen 22 artiklassa tarkoitettua oikeudellisia vaikutuksia tuottavaa automaattista päätöksentekoa ei tapahdu.",
-            "Kyse ei siten ole tekoälyjärjestelmästä, joka tekoälyasetuksen 50 artiklan 1 kohdassa tarkoitetulla tavalla on välittömässä vuorovaikutuksessa luonnollisten henkilöiden kanssa: velvoite edellyttää SUORAA vuorovaikutusta, jossa tekoäly itse viestii henkilön kanssa eikä ihmisen välittäjän kautta. Tässä toiminto ehdottaa yritykselle tekstiä, jonka työntekijä tarkistaa, voi muuttaa ja lähettää itse — työntekijä on tämä välittäjä, ja vieras on kirjeenvaihdossa yrityksen kanssa eikä chatbotin kanssa. Automaattisesti vastaavaa avustajaa ei ole käytössä. Arviomme mukaan toiminto ei täytä myöskään mitään tekoälyasetuksen liitteessä III tarkoitetun suuririskisen tekoälyn tunnusmerkkiä.",
+            "Tämä ei ole tekoälyjärjestelmä, joka olisi suoraan vuorovaikutuksessa luonnollisten henkilöiden kanssa tekoälyasetuksen 50 artiklan 1 kohdan mukaisesti: Velvoite edellyttää SUORAA vuorovaikutusta, jossa tekoäly itse kommunikoi henkilön kanssa eikä ihmisvälittäjän kautta. Tässä toiminto ehdottaa yritykselle tekstiä, jonka työntekijä tarkistaa, voi muuttaa ja lähettää itse – työntekijä on tämä välittäjä, vieras vastaa yritykselle eikä chatbotille. Itsenäisesti vieraille vastaavaa avustajaa ei ole käytössä; tämän verkkosivuston tuoteneuvoja (katso alla) koskee ainoastaan kiinnostuneita osapuolia eikä vierasviestintää. Arviomme mukaan toiminto ei myöskään täytä mitään tekoälyasetuksen liitteessä III mainittuja korkean riskin tekoälyn kriteerejä.",
             "Vieraille lähetetyt viestit eivät myöskään ole tekoälyasetuksen 50 artiklan 4 kohdassa tarkoitettua ”yleisen edun kannalta merkittäviä asioita koskevaa tekstiä”: niitä ei julkaista, vaan ne lähetetään yksilöllisesti tietylle henkilölle, ja ne koskevat oleskelun käytännön hoitamista. Tästä riippumatta tässä vaikuttaa lähettävän työntekijän tekemä ihmisen suorittama tarkistus.",
             "Jos jatkossa tarjotaan toiminto, joka vastaa vieraille itsenäisesti ilman ihmisen hyväksyntää, vieraalle ilmoitetaan keskustelun alussa näkyvästi, että hän kirjoittaa tekoälyjärjestelmän kanssa. Ilman tätä ilmoitusta tällaista toimintoa ei tarjota.",
           ],

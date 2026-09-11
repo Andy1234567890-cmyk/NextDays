@@ -4,7 +4,7 @@
 // Belege zu den Empfängern) und werden von dort nachgezogen — nie nur hier.
 import { AGB_URL } from "@/lib/app-url";
 
-import { ANBIETER, AUFSICHTSBEHOERDE, RECHTSSTAND_ISO } from "../anbieter";
+import { ANBIETER, AUFSICHTSBEHOERDE, DATENSCHUTZ_STAND_ISO } from "../anbieter";
 
 import type { LegalDoc } from "../types";
 
@@ -13,7 +13,7 @@ export const datenschutz: LegalDoc = {
   title: "Adatvédelmi nyilatkozat",
   metaDescription:
     "Hogyan kezeli a myNextDays a személyes adatokat: célok, jogalapok, címzettek, tárolási idő és az Ön GDPR szerinti jogai.",
-  standIso: RECHTSSTAND_ISO,
+  standIso: DATENSCHUTZ_STAND_ISO,
   numbered: true,
   toc: true,
   intro: [
@@ -202,7 +202,7 @@ export const datenschutz: LegalDoc = {
           titel: "Válaszjavaslatok",
           paragraphs: [
             "Az üzenetek beérkező mappájában megjelenő válaszjavaslatokhoz — amennyiben a funkció a vállalkozás számára aktiválva van — a Groq, Inc. (USA) nyelvimodell-szolgáltatását alkalmazzuk. Ennek során az adott üzenetkontextus továbbításra kerül a szolgáltatáshoz. A javaslatok nem kerülnek automatikusan elküldésre; az elküldésről mindig ember dönt. A GDPR 22. cikke értelmében vett, joghatással járó automatizált döntéshozatal nem történik.",
-            "Ez tehát nem olyan MI-rendszer, amely az MI-rendelet 50. cikk (1) bekezdése értelmében közvetlenül természetes személyekkel lép interakcióba: a kötelezettség KÖZVETLEN interakciót feltételez, amelyben maga az MI kommunikál a személlyel, és nem emberi közvetítőn keresztül. Itt a funkció olyan szöveget javasol a vállalkozásnak, amelyet egy munkatárs ellenőriz, módosíthat és maga küld el — ez a munkatárs a közvetítő, a vendég a vállalkozással és nem egy chatbottal levelez. Automatikusan válaszoló asszisztens nincs használatban. A megítélésünk szerint a funkció az MI-rendelet III. melléklete szerinti nagy kockázatú MI egyik tényállását sem teljesíti.",
+            "Ezért nem olyan mesterséges intelligencia rendszerről van szó, amely az MI-rendelet 50. cikk (1) bekezdése értelmében közvetlenül interakcióba lép természetes személyekkel: A kötelezettség KÖZVETLEN interakciót feltételez, ahol az MI maga kommunikál a személlyel, és nem emberi közvetítőn keresztül. Itt a funkció egy szöveget javasol a szálláshelynek, amelyet egy alkalmazott ellenőriz, módosíthat és maga küld el – az alkalmazott a közvetítő, a vendég a szálláshellyel levelezik, és nem egy chatbottal. Olyan asszisztens, amely önállóan válaszol a vendégeknek, nincs használatban; az ezen a weboldalon található terméktanácsadó (lásd alább) kizárólag az érdeklődőkre vonatkozik, és nem a vendégkommunikációra. Értékelésünk szerint a funkció az MI-rendelet III. mellékletében meghatározott magas kockázatú MI-re vonatkozó tényállások egyikét sem teljesíti.",
             "A vendégekhez küldött üzenetek továbbá nem minősülnek az MI-rendelet 50. cikk (4) bekezdése értelmében vett „közérdekű kérdésekről szóló szövegnek”: nem kerülnek közzétételre, hanem egyénileg, egy meghatározott személynek kerülnek elküldésre, és egy tartózkodás lebonyolítására vonatkoznak. Ettől függetlenül itt érvényesül az elküldő munkatárs emberi ellenőrzése.",
             "Ha a jövőben olyan funkciót ajánlanánk, amely önállóan — emberi jóváhagyás nélkül — válaszol a vendégeknek, a vendéget a párbeszéd elején látható módon tájékoztatjuk arról, hogy MI-rendszerrel levelez. E tájékoztatás nélkül ilyen funkciót nem biztosítunk.",
           ],

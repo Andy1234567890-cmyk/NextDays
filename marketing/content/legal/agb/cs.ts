@@ -15,7 +15,7 @@ export const agb: LegalDoc = {
   numbered: false,
   toc: true,
   title: "Všeobecné obchodní podmínky (VOP) pro agentury a pronajímatele",
-  stand: "Stav ke dni: 13. srpna 2026",
+  stand: "Stav ke dni: 11. září 2026",
   intro: [
     "Tyto všeobecné obchodní podmínky (dále jen „VOP“) upravují užívání softwarové platformy myNextDays (dále jen „platforma“) agenturami, pronajímateli, správci nemovitostí a dalšími podnikatelskými uživateli (dále jen „uživatel“).",
     "Provozovatelem platformy je myNextDays ApS, společnost s ručením omezeným (anpartsselskab) podle dánského práva, Hirtshalsvej 21, 9881 Bindslev, Dánsko, zapsaná v dánském Centrálním registru podniků (CVR) pod CVR č. 46615182 (dále jen „myNextDays“ nebo „my“).",
@@ -119,7 +119,8 @@ export const agb: LegalDoc = {
       heading: "§ 12 Využití umělé inteligence",
       paragraphs: [
         "myNextDays v jednotlivých funkcích využívá systémy umělé inteligence, zejména pro cenová doporučení (dynamic pricing), pro návrhy odpovědí v doručené poště zpráv a pro podporu v rámci zákaznické podpory. Tyto funkce vytvářejí návrhy; rozhodnutí o jejich použití a odpovědnost za ně nese uživatel. Cenová doporučení nenahrazují vlastní obchodní posouzení.",
-        "Pokud hosté komunikují přímo se systémem umělé inteligence, je jim to oznámeno (čl. 50 odst. 1 nařízení (EU) 2024/1689 — „aktu o umělé inteligenci“). Texty, které systém umělé inteligence vytvořil nebo podstatně změnil a které uživatel předává hostům, je uživatel povinen označit, pokud mu to ukládá zákonná povinnost.",
+                "V rámci platformy žádný systém umělé inteligence neodpovídá automaticky hostům ani uživateli: Každá zpráva vygenerovaná umělou inteligencí je předložena člověku ke kontrole, který ji může, ale nemusí změnit a odeslat. Podpora uživatelů je poskytována lidmi. Odlišný je produktový poradce na našich webových stránkách: Ten odpovídá na dotazy zájemců o rozsah služeb okamžitě a bez lidského schválení, není součástí platformy a není předmětem této smlouvy. Informace poskytnuté tímto poradcem nezakládají záruku vlastnosti a nepřevažují nad ustanoveními těchto VOP a aktuálního popisu služeb; rozhodující je § 2. Podrobnosti o zpracování dat naleznete v našich zásadách ochrany osobních údajů.",
+        "Pokud fyzická osoba přímo komunikuje se systémem umělé inteligence, je jí to sděleno (článek 50 odstavec 1 nařízení (EU) 2024/1689 – „Nařízení o umělé inteligenci“); u produktového poradce na našich webových stránkách se tak děje na začátku dialogu. Texty, které systém umělé inteligence vytvořil nebo podstatně změnil a které uživatel předává hostům, musí uživatel označit, pokud mu to ukládá zákonná povinnost.",
         "myNextDays neprovozuje systémy umělé inteligence, které se podle přílohy III aktu o umělé inteligenci považují za vysoce rizikové, ani praktiky zakázané podle čl. 5 aktu o umělé inteligenci. Vstupy uživatele a údaje jeho hostů se bez zvláštního pokynu nepoužívají k trénování modelů.",
         "Uživatel nesmí funkce umělé inteligence používat k tomu, aby u hostů vyvolával dojem lidské komunikace tam, kde existuje povinnost informovat, ani k tomu, aby činil právně závazná prohlášení bez vlastního posouzení.",
         "Pokud uživatel propojí svůj účet prostřednictvím k tomu určeného rozhraní s vlastním asistentem umělé inteligence (například Claude od Anthropic), platí následující: uživatel uzavírá smlouvu o této službě sám a je odpovědný za její využití. Propojení je jeho pokynem myNextDays, aby tam uvolněné údaje vydala — včetně přenosu do třetí země, má-li poskytovatel sídlo mimo Evropskou unii. Uživatel zajistí, že k tomu má právní základ, že jeho vlastní informace o ochraně osobních údajů uvádějí příjemce a že jsou dány potřebné záruky pro přenos.",
