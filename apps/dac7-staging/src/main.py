@@ -127,9 +127,13 @@ def create_app() -> FastAPI:
 
     @app.get("/", include_in_schema=False)
     def seite() -> HTMLResponse:
+        from .core.protokoll import kennzahlen
         from .v1.einreichung import PROTOKOLL
 
-        return HTMLResponse(startseite(PROTOKOLL.liste()))
+        eintraege = PROTOKOLL.liste()
+        return HTMLResponse(
+            startseite(eintraege, kennzahlen(eintraege), get_settings())
+        )
 
     @app.get("/meldung/{nummer}", include_in_schema=False)
     def meldung(nummer: str) -> HTMLResponse:
@@ -183,7 +187,31 @@ def create_app() -> FastAPI:
 
     @app.get("/health", include_in_schema=False)
     def health() -> JSONResponse:
-        return JSONResponse({"status": "ok", "dienst": "dac7-staging"})
+        """Zustand und Uebermittlungsgueten — maschinenlesbar.
+
+        Ein blosses "ok" sagt nur, dass der Prozess laeuft. Wer wissen
+        will, ob der Weg zur Behoerde traegt, braucht die Laufzeiten und
+        die Annahmequote. Keine Inhalte, keine Quittungsnummern: Die
+        Antwort geht ohne Anmeldung hinaus.
+        """
+        from .core.protokoll import kennzahlen
+        from .v1.einreichung import PROTOKOLL
+
+        k = kennzahlen(PROTOKOLL.liste())
+        return JSONResponse(
+            {
+                "status": "ok",
+                "dienst": "dac7-staging",
+                "einreichungen": k.gesamt,
+                "angenommen": k.angenommen,
+                "abgewiesen": k.abgewiesen,
+                "annahmequote_prozent": round(k.annahmequote, 1),
+                "dauer_mittel_ms": round(k.dauer_mittel_ms, 1),
+                "dauer_p80_ms": round(k.dauer_p80_ms, 1),
+                "dauer_langsamste_ms": round(k.dauer_langsamste_ms, 1),
+                "aufbewahrung_stunden": get_settings().aufbewahrung_stunden,
+            }
+        )
 
     log.info("dac7_staging_gestartet", herkuenfte=len(herkuenfte))
     return app

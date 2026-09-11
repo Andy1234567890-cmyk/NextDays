@@ -592,3 +592,63 @@ class TestKeinFormular:
             "/einreichen", files={"datei": ("m.csv", b"x", "text/csv")}
         )
         assert antwort.status_code == 405 or antwort.status_code == 404
+
+
+class TestUebermittlungUndSchutz:
+    """Die Stelle muss zeigen, wie zuverlaessig sie laeuft und wie sie schuetzt.
+
+    Eine DAC7-Meldung wird einmal im Jahr eingereicht. Laeuft sie dann in
+    ein Zeitlimit, steht der Betrieb ohne Quittung da. Wer das vorher
+    wissen will, braucht Laufzeiten — und wer der Stelle Steuerdaten
+    anvertraut, muss sehen koennen, was sie schuetzt.
+    """
+
+    def test_kennzahlen_erscheinen(self, client: TestClient) -> None:
+        _senden(client, _gueltig())
+        seite = client.get("/").text
+        assert "Übermittlung" in seite
+        assert "angenommen" in seite
+        assert "im Mittel" in seite
+        assert "langsamstes Fünftel" in seite
+
+    def test_ohne_einreichung_keine_leeren_kennzahlen(
+        self, client: TestClient
+    ) -> None:
+        """Eine Quote ueber null Faelle waere eine erfundene Zahl."""
+        assert "langsamstes Fünftel" not in client.get("/").text
+
+    def test_quote_rechnet_richtig(self, client: TestClient) -> None:
+        _senden(client, _gueltig())
+        _senden(client, _datei(_betreiber()))
+        assert "50 %" in client.get("/").text
+
+    def test_dauer_wird_gemessen(self, client: TestClient) -> None:
+        _senden(client, _gueltig())
+        gesundheit = client.get("/health").json()
+        assert gesundheit["einreichungen"] == 1
+        assert gesundheit["dauer_mittel_ms"] > 0
+        assert gesundheit["annahmequote_prozent"] == 100.0
+
+    def test_health_nennt_keine_inhalte(self, client: TestClient) -> None:
+        """`/health` geht ohne Anmeldung hinaus — nur Zahlen, nie Daten."""
+        _senden(client, _gueltig())
+        roh = client.get("/health").text
+        assert "Beispielbureau" not in roh
+        assert "DK-" not in roh
+
+    def test_schutz_wird_benannt(self, client: TestClient) -> None:
+        seite = client.get("/").text
+        for punkt in ("Zugang", "Fail-closed", "Obergrenze", "Einmaligkeit",
+                      "Aufbewahrung", "CORS"):
+            assert punkt in seite
+
+    def test_schutz_verraet_kein_geheimnis(self, client: TestClient) -> None:
+        """Die Seite ist erreichbar — wer angreift, soll nichts mitnehmen.
+
+        Kein Token, kein Auszug, keine Laenge: Schon die Zeichenzahl
+        grenzt den Suchraum ein.
+        """
+        seite = client.get("/").text
+        assert TOKEN not in seite
+        assert TOKEN[:6] not in seite
+        assert str(len(TOKEN)) + " Zeichen" not in seite

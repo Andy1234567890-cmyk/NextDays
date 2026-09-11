@@ -129,6 +129,19 @@ _STIL = """<!doctype html>
   .blockkopf span { font-weight:400; opacity:.6; font-size:.85rem;
                     margin-left:.5rem; }
   .blockkopf a { color:inherit; }
+  .kacheln { display:grid; gap:.75rem; margin-bottom:.5rem;
+             grid-template-columns:repeat(auto-fit,minmax(11rem,1fr)); }
+  .kacheln > div { border:1px solid #dfe3e8; border-radius:.6rem;
+                   padding:.8rem .9rem; font-size:.82rem; opacity:.85; }
+  .kacheln b { display:block; font-size:1.5rem; opacity:1; font-weight:600;
+               font-variant-numeric:tabular-nums; }
+  .kacheln i { display:block; font-style:normal; opacity:.6; font-size:.76rem;
+               margin-top:.2rem; }
+  @media (prefers-color-scheme: dark) { .kacheln > div { border-color:#2e343c; } }
+  .anmerkung { font-size:.8rem; opacity:.6; margin:.6rem 0 0; max-width:44rem; }
+  table.schutz { max-width:52rem; }
+  table.schutz th { width:9rem; white-space:nowrap; vertical-align:top; }
+  table.schutz td { font-size:.86rem; opacity:.85; }
   .fuss { font-size:.82rem; opacity:.65; margin-top:2rem; }
   .fuss a { color:inherit; }
 </style>
@@ -173,6 +186,89 @@ _LEERER_EINGANG = """
   <p style="opacity:.75;margin:0">Es liegt keine Meldung vor. Eingegangene
   Meldungen erscheinen hier, sobald ein Betrieb eine einreicht.</p>
 </div>
+"""
+
+
+def _dauer(ms: float) -> str:
+    """Millisekunden lesbar. Unter 1000 als ms, darueber als Sekunden."""
+    return f"{ms:.0f} ms" if ms < 1000 else f"{ms / 1000:.1f} s"
+
+
+def _uebermittlung(k) -> str:  # noqa: ANN001 — Kennzahlen, Import waere zirkulaer
+    """Wie die Uebermittlung laeuft: Quote, Laufzeiten, Menge.
+
+    Gerechnet aus den aufbewahrten Einreichungen, nicht aus einem eigenen
+    Zaehler — was verfaellt, faellt auch aus der Statistik, sonst liesse
+    sich die Zahl nicht nachpruefen.
+    """
+    if not k.gesamt:
+        return ""
+    return f"""
+<div class="blockkopf">Übermittlung
+  <span>über die aufbewahrten {k.gesamt} Einreichungen</span></div>
+<div class="kacheln">
+  <div><b>{k.annahmequote:.0f} %</b>angenommen
+    <i>{k.angenommen} von {k.gesamt}</i></div>
+  <div><b>{_dauer(k.dauer_mittel_ms)}</b>im Mittel
+    <i>schnellste {_dauer(k.dauer_schnellste_ms)}</i></div>
+  <div><b>{_dauer(k.dauer_p80_ms)}</b>langsamstes Fünftel
+    <i>schlechteste {_dauer(k.dauer_langsamste_ms)}</i></div>
+  <div><b>{k.bytes_gesamt / 1024:.0f} kB</b>empfangen
+    <i>{k.bytes_gesamt // max(k.gesamt, 1) // 1024} kB je Meldung</i></div>
+</div>
+<p class="anmerkung">Gemessen vom Eintreffen der Bytes bis zur Quittung,
+ohne Netzlaufzeit. Das langsamste Fünftel steht dabei, weil der
+Mittelwert den einen langsamen Fall zwischen neunundneunzig schnellen
+verschweigt.</p>
+"""
+
+
+def _schutz(einstellungen) -> str:  # noqa: ANN001 — Settings, Import waere zirkulaer
+    """Womit die Schnittstelle geschuetzt ist — nachpruefbar, nicht behauptet.
+
+    Jede Zeile nennt den Mechanismus und was er bewirkt. Es steht hier,
+    weil eine Empfangsstelle fuer Steuerdaten sonst niemand beurteilen
+    kann: Wer nicht sieht, wie sie schuetzt, muss es glauben.
+
+    Bewusst OHNE Werte: keine Tokenlaenge, kein Auszug, keine Herkunft.
+    Die Seite ist erreichbar, und wer angreift, soll nichts mitnehmen.
+    """
+    stunden = einstellungen.aufbewahrung_stunden
+    grenze = einstellungen.max_datei_bytes // (1024 * 1024)
+    cors = (
+        f"{len(einstellungen.herkunft_liste())} erlaubte Herkunft(en)"
+        if einstellungen.herkunft_liste()
+        else "aus — kein Browser-Zugriff von fremden Seiten"
+    )
+    punkte = [
+        ("Zugang", "Gemeinsames Geheimnis im Kopf <code>X-Staging-Token</code>, "
+                   "byteweise verglichen (<code>secrets.compare_digest</code>) — "
+                   "die Antwortzeit verrät nicht, wie viele Zeichen stimmten."),
+        ("Fail-closed", "Fehlt das Geheimnis in der Umgebung, fährt der Dienst "
+                        "nicht hoch. Kein Vorgabewert: Ein Standardpasswort wird "
+                        "nie geändert."),
+        ("Transport", "Nur über HTTPS erreichbar, davor Basic-Auth im Webserver. "
+                      "Zwei Schranken, die unabhängig voneinander greifen."),
+        ("Obergrenze", f"{grenze} MB je Einreichung. Eine echte Meldung liegt weit "
+                       "darunter; alles darüber wird abgewiesen, statt Speicher "
+                       "zu belegen."),
+        ("XML", "Ohne DTD und ohne externe Entitäten. Ein Verweis auf eine "
+                "lokale Datei oder eine fremde Adresse wird abgewiesen, nicht "
+                "aufgelöst."),
+        ("Einmaligkeit", "Dieselbe Datei wird kein zweites Mal angenommen — "
+                         "eine Einnahme darf nicht doppelt gemeldet werden."),
+        ("Aufbewahrung", f"{stunden} Stunden, nur im Arbeitsspeicher. Neustart "
+                         "und „Protokoll leeren“ löschen alles; nichts geht auf "
+                         "Platte, nichts in ein Log."),
+        ("CORS", cors),
+    ]
+    zeilen = "".join(
+        f"<tr><th>{n}</th><td>{t}</td></tr>" for n, t in punkte
+    )
+    return f"""
+<div class="blockkopf">Schutz der Schnittstelle
+  <span>was greift, und wogegen</span></div>
+<table class="schutz">{zeilen}</table>
 """
 
 
@@ -231,9 +327,20 @@ def _posteingang(eintraege: list) -> str:
 """
 
 
-def startseite(eintraege: list | None = None) -> str:
-    """Die Startseite: erst der Posteingang, dann das Pruefwerkzeug."""
-    return _KOPF + _posteingang(eintraege or []) + _FUSS
+def startseite(eintraege: list | None = None, k=None, einstellungen=None) -> str:  # noqa: ANN001
+    """Die Startseite: Posteingang, Uebermittlungsgueten, Schutz.
+
+    In dieser Reihenfolge, weil sie der Frage folgt, die jemand an eine
+    Empfangsstelle hat: Was ist angekommen — wie zuverlaessig laeuft das —
+    und wie ist der Weg abgesichert.
+    """
+    return (
+        _KOPF
+        + _posteingang(eintraege or [])
+        + (_uebermittlung(k) if k else "")
+        + (_schutz(einstellungen) if einstellungen else "")
+        + _FUSS
+    )
 
 
 def _eine_zeile(b) -> str:  # noqa: ANN001 — Befund aus zwei Modulen

@@ -65,6 +65,76 @@ class Eintrag:
     # nie auf Platte geschrieben. Ein Neustart loescht sie, `DELETE
     # /v1/quittungen` ebenso.
     rohtext: str = ""
+    # Wie lange die Stelle fuer diese Einreichung gebraucht hat, in
+    # Millisekunden. Gemessen vom Eintreffen der Bytes bis zur Quittung.
+    #
+    # Die Zahl beantwortet die Frage, ob der Weg zur Behoerde traegt: Eine
+    # Meldung wird einmal im Jahr eingereicht, und wenn sie dann in ein
+    # Zeitlimit laeuft, steht der Betrieb ohne Quittung da und weiss
+    # nicht, ob sie angekommen ist.
+    dauer_ms: float = 0.0
+
+
+@dataclass(frozen=True, slots=True)
+class Kennzahlen:
+    """Wie die Uebermittlung laeuft — gerechnet, nicht behauptet.
+
+    Eine DAC7-Meldung wird einmal im Jahr eingereicht. Genau dann muss der
+    Weg tragen: Laeuft die Einreichung in ein Zeitlimit, steht der Betrieb
+    ohne Quittung da und weiss nicht, ob die Meldung angekommen ist.
+    Deshalb wird die Laufzeit jeder Einreichung gemessen und hier
+    zusammengefasst, statt sich auf "laeuft" zu verlassen.
+
+    Der Mittelwert allein taugt dafuer nicht: Er verschweigt den einen
+    langsamen Fall zwischen neunundneunzig schnellen. Ausgewiesen wird
+    deshalb auch das langsamste Fuenftel (p80) und der schlechteste Wert.
+    """
+
+    gesamt: int
+    angenommen: int
+    abgewiesen: int
+    bytes_gesamt: int
+    dauer_schnellste_ms: float
+    dauer_mittel_ms: float
+    dauer_p80_ms: float
+    dauer_langsamste_ms: float
+    erste: datetime | None
+    letzte: datetime | None
+
+    @property
+    def annahmequote(self) -> float:
+        """Anteil angenommener Einreichungen in Prozent."""
+        return 100.0 * self.angenommen / self.gesamt if self.gesamt else 0.0
+
+
+def kennzahlen(eintraege: list[Eintrag]) -> Kennzahlen:
+    """Die Kennzahlen ueber die aufbewahrten Einreichungen.
+
+    Die Grundgesamtheit ist bewusst das Protokoll und nicht ein eigener
+    Zaehler: Was nach der Aufbewahrungsfrist verfaellt, faellt auch aus
+    der Statistik. Eine Quote ueber Eintraege, die es nicht mehr gibt,
+    liesse sich nicht nachpruefen.
+    """
+    if not eintraege:
+        return Kennzahlen(0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, None, None)
+    dauern = sorted(e.dauer_ms for e in eintraege)
+    angenommen = sum(1 for e in eintraege if e.angenommen)
+    zeiten = [e.empfangen_am for e in eintraege]
+    # p80 ueber den Index, nicht interpoliert: bei wenigen Werten ist jede
+    # Interpolation eine Erfindung.
+    p80 = dauern[min(len(dauern) - 1, int(len(dauern) * 0.8))]
+    return Kennzahlen(
+        gesamt=len(eintraege),
+        angenommen=angenommen,
+        abgewiesen=len(eintraege) - angenommen,
+        bytes_gesamt=sum(e.bytes_gesamt for e in eintraege),
+        dauer_schnellste_ms=dauern[0],
+        dauer_mittel_ms=sum(dauern) / len(dauern),
+        dauer_p80_ms=p80,
+        dauer_langsamste_ms=dauern[-1],
+        erste=min(zeiten),
+        letzte=max(zeiten),
+    )
 
 
 class Protokoll:

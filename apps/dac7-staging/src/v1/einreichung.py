@@ -18,6 +18,7 @@ Meldung erkennt — und genau das faellt dann am 31. Januar auf.
 from __future__ import annotations
 
 import asyncio
+import time
 from dataclasses import asdict
 
 from fastapi import APIRouter, Depends, File, Header, HTTPException, UploadFile, status
@@ -65,6 +66,7 @@ async def einreichen(
             detail=f"Unbekanntes Verhalten. Moeglich: {', '.join(_VERHALTEN)}",
         )
 
+    begonnen = time.perf_counter()
     await _verhalten_anwenden(verhalten)
 
     rohdaten = await _rohdaten_lesen(datei)
@@ -88,6 +90,7 @@ async def einreichen(
         hinweise=quittung.hinweise,
         saetze=quittung.saetze,
         rohtext=inhalt,
+        dauer_ms=(time.perf_counter() - begonnen) * 1000,
     )
     log.info(
         "einreichung",
