@@ -23,9 +23,9 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse
 
 from .core import errors
 from .core.config import get_settings
@@ -234,10 +234,75 @@ def create_app() -> FastAPI:
             "Allow: /openapi.json",
             "Disallow: /v1",
             "",
+            f"Sitemap: {get_settings().public_base_url.rstrip('/')}/sitemap.xml",
+            "",
             "# Entwicklerdokumentation: https://www.mynextdays.com/entwickler",
             "",
         ]
         return "\n".join(zeilen)
+
+    @app.get("/", include_in_schema=False)
+    def wurzel() -> RedirectResponse:
+        """Die Wurzel dieser Domaene fuehrt auf die Dokumentation.
+
+        Sie gab bis zum 11.09.2026 einen 404: FastAPI legt ohne eigene Route
+        keine Wurzel an, und die API-Pfade liegen alle unter `/v1`. Sichtbar
+        war das nur in Googles Daten — die Search-Console-Pruefung meldete
+        fuer `https://open-api.mynextdays.com/` `pageFetchState: NOT_FOUND`
+        (Crawl vom 28.08.2026). Wer die Domaene ohne Pfad aufruft, ist ein
+        Entwickler, der die API sucht; ein 404 laesst sie wie einen toten
+        Dienst aussehen — fuer Googlebot wie fuer den Menschen.
+
+        307 statt 301: Die Wahl der Einstiegsseite ist eine Produkt-
+        entscheidung, keine dauerhafte Umbenennung dieser URL. Ein 301 wird
+        von Browsern und Crawlern unbegrenzt gecacht und liesse sich spaeter
+        nicht mehr zurueckholen, ohne dass Clients mit altem Cache weiter auf
+        `/docs` landen.
+        """
+        return RedirectResponse("/docs", status_code=307)
+
+    @app.get(
+        "/sitemap.xml",
+        tags=["Betrieb"],
+        include_in_schema=False,
+        response_class=Response,
+    )
+    def sitemap() -> Response:
+        """Sitemap der oeffentlichen Doku-Seiten dieser Domaene.
+
+        Sie fehlte, und das war der eigentliche Befund hinter der Meldung in
+        der Search Console: `/docs`, `/referenz` und sogar `/robots.txt`
+        standen am 11.09.2026 auf `URL ist Google nicht bekannt` — Google
+        hatte sie NIE abgerufen. Die `robots.txt` erlaubt sie ausdruecklich,
+        aber eine Allow-Regel laedt nichts ein; sie erlaubt nur, was ein
+        Crawler ohnehin gefunden hat. Gefunden wurde von dieser Domaene
+        ausschliesslich `/openapi.json`, weil `/entwickler` genau dorthin
+        verlinkt — die beiden Doku-Ansichten waren unauffindbar.
+
+        `/openapi.json` steht bewusst NICHT drin: Google hat es gecrawlt und
+        als `Gecrawlt – zurzeit nicht indexiert` eingeordnet, weil rohes JSON
+        keinen Titel und keinen Text hat. Das ist richtig. Es in die Sitemap
+        zu heben wuerde die Einordnung nicht aendern, sondern nur eine
+        Dauer-Warnung erzeugen — dieselbe Ueberlegung, aus der in der
+        robots.txt keine `Host:`-Zeile steht.
+        """
+        basis = get_settings().public_base_url.rstrip("/")
+        # Kein lastmod: er muesste bei jedem Schema-Deploy stimmen, sonst ist
+        # er eine Falschaussage gegenueber dem Crawler (Wurzel 5b — unsere
+        # Uhr ist nicht der Zeitpunkt der letzten inhaltlichen Aenderung).
+        eintraege = "".join(
+            f"<url><loc>{basis}{pfad}</loc><changefreq>weekly</changefreq>"
+            f"<priority>{prio}</priority></url>"
+            for pfad, prio in (("/docs", "1.0"), ("/referenz", "0.8"))
+        )
+        return Response(
+            content=(
+                '<?xml version="1.0" encoding="UTF-8"?>'
+                '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+                f"{eintraege}</urlset>"
+            ),
+            media_type="application/xml",
+        )
 
     _schema_mit_auth(app)
     return app

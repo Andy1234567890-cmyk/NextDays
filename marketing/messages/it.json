@@ -299,7 +299,11 @@
       "schemaText": "OpenAPI 3.1, generato dal codice. Va bene come input per i generatori di client più comuni.",
       "woAnfangen": "Da dove iniziare",
       "erstLesen": "Prima leggi",
-      "dannBauen": "Poi sviluppa"
+      "dannBauen": "Poi sviluppa",
+      "konsoleTitel": "Riferimento con console",
+      "konsoleText": "Ogni endpoint con tutti i parametri e un campo per provarlo direttamente.",
+      "referenzTitel": "Riferimento per la lettura",
+      "referenzText": "Lo stesso file in una versione di lettura tranquilla, senza campi di input."
     },
     "bereiche": {
       "leitfaden": "Documentazione",

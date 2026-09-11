@@ -299,7 +299,11 @@
       "schemaText": "OpenAPI 3.1, cruthaithe as an gcód. Oireann sé mar ionchur do na gineadóirí cliaint coitianta.",
       "woAnfangen": "Cá dtosú",
       "erstLesen": "Léigh ar dtús",
-      "dannBauen": "Tóg ansin"
+      "dannBauen": "Tóg ansin",
+      "konsoleTitel": "Tagairt le Consól",
+      "konsoleText": "Gach críochphointe leis na paraiméadair go léir — agus réimse chun é a thriail go díreach.",
+      "referenzTitel": "Tagairt le Léamh",
+      "referenzText": "An comhad céanna mar leagan léitheoireachta ciúin, gan réimsí ionchuir."
     },
     "bereiche": {
       "leitfaden": "Doiciméadú",

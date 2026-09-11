@@ -13,6 +13,7 @@ import {
   kapitelPfad,
   naechstesKapitel,
 } from "@/lib/entwickler-navigation";
+import { API_LINKS } from "@/content/api/referenz";
 import { API_INFO, alleEndpunkte } from "@/lib/openapi";
 
 import type { Metadata } from "next";
@@ -79,6 +80,51 @@ export default async function EntwicklerStartSeite() {
         </a>
       </dl>
       <p className="mt-2 text-xs text-muted-foreground">{t("start.schemaText")}</p>
+
+      {/* Die beiden Doku-Ansichten des Schemas. Sie standen als `API_LINKS`
+          seit ihrer Einfuehrung im Code, wurden aber NIRGENDS verlinkt — und
+          waren damit unauffindbar: die Google Search Console fuehrte
+          `/docs` und `/referenz` am 11.09.2026 als „URL ist Google nicht
+          bekannt", obwohl die robots.txt der API-Domaene beide ausdruecklich
+          erlaubt. Eine Allow-Regel laedt nichts ein; ein Crawler braucht
+          einen Link oder eine Sitemap. Von hier zeigte nur ein Link auf
+          `openapi.json`, also kannte Google genau diese eine Datei. */}
+      <div className="mt-6 grid gap-3 sm:grid-cols-2">
+        {([
+          {
+            href: API_LINKS.konsole,
+            titel: t("start.konsoleTitel"),
+            text: t("start.konsoleText"),
+            icon: "ph:play-circle",
+          },
+          {
+            href: API_LINKS.referenz,
+            titel: t("start.referenzTitel"),
+            text: t("start.referenzText"),
+            icon: "ph:book-open",
+          },
+        ] as const).map((k) => (
+          <a
+            key={k.href}
+            href={k.href}
+            target="_blank"
+            rel="noreferrer"
+            className="group rounded-xl border border-border bg-surface-warm/50 px-4 py-3 transition-colors hover:border-accent"
+          >
+            <span className="flex items-center gap-1.5 text-sm font-medium">
+              <Icon icon={k.icon} className="size-4 text-accent" />
+              {k.titel}
+              <Icon
+                icon="ph:arrow-up-right"
+                className="size-3.5 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+              />
+            </span>
+            <span className="mt-1 block text-xs text-muted-foreground">
+              {k.text}
+            </span>
+          </a>
+        ))}
+      </div>
 
       {/* Der Leseweg als Ganzes — dieselben Gruppen wie in der Sidebar, damit
           man einmal sieht, was es überhaupt gibt. */}

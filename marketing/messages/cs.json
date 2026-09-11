@@ -299,7 +299,11 @@
       "schemaText": "OpenAPI 3.1, generováno z kódu. Hodí se jako vstup pro běžné generátory klientů.",
       "woAnfangen": "Kde začít",
       "erstLesen": "Nejdřív si přečti",
-      "dannBauen": "Pak vyvíjej"
+      "dannBauen": "Pak vyvíjej",
+      "konsoleTitel": "Reference s konzolí",
+      "konsoleText": "Každý koncový bod se všemi parametry – a polem pro okamžité vyzkoušení.",
+      "referenzTitel": "Reference pro čtení",
+      "referenzText": "Stejný soubor ve verzi pro klidné čtení, bez vstupních polí."
     },
     "bereiche": {
       "leitfaden": "Dokumentace",

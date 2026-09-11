@@ -299,7 +299,11 @@
       "schemaText": "OpenAPI 3.1, generirano iz koda. Može se koristiti kao ulaz za uobičajene generatore klijenata.",
       "woAnfangen": "Gdje početi",
       "erstLesen": "Prvo pročitaj",
-      "dannBauen": "Zatim gradi"
+      "dannBauen": "Zatim gradi",
+      "konsoleTitel": "Referenca s konzolom",
+      "konsoleText": "Svaka krajnja točka sa svim parametrima — i poljem za izravno isprobavanje.",
+      "referenzTitel": "Referenca za čitanje",
+      "referenzText": "Ista datoteka kao mirna verzija za čitanje, bez ulaznih polja."
     },
     "bereiche": {
       "leitfaden": "Dokumentacija",

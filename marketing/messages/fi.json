@@ -299,7 +299,11 @@
       "schemaText": "OpenAPI 3.1, luotu koodista. Sopii syötteeksi tavallisille asiakasgeneraattoreille.",
       "woAnfangen": "Mistä aloittaa",
       "erstLesen": "Lue ensin",
-      "dannBauen": "Rakenna sitten"
+      "dannBauen": "Rakenna sitten",
+      "konsoleTitel": "Konsoliviite",
+      "konsoleText": "Jokainen päätepiste kaikkine parametreineen – ja kenttä, jolla sitä voi kokeilla suoraan.",
+      "referenzTitel": "Viite lukemista varten",
+      "referenzText": "Sama tiedosto rauhallisena lukuversiona, ilman syöttökenttiä."
     },
     "bereiche": {
       "leitfaden": "Dokumentaatio",

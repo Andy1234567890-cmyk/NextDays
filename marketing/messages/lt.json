@@ -299,7 +299,11 @@
       "schemaText": "OpenAPI 3.1, sugeneruota iš kodo. Tinka kaip įvestis įprastiems kliento generatoriams.",
       "woAnfangen": "Kur pradėti",
       "erstLesen": "Pirmiausia perskaityk",
-      "dannBauen": "Paskui kurk"
+      "dannBauen": "Paskui kurk",
+      "konsoleTitel": "Nuoroda su konsole",
+      "konsoleText": "Kiekvienas galinis punktas su visais parametrais – ir laukeliu, kad galėtumėte iškart išbandyti.",
+      "referenzTitel": "Nuoroda skaitymui",
+      "referenzText": "Tas pats failas ramiam skaitymui, be įvesties laukelių."
     },
     "bereiche": {
       "leitfaden": "Dokumentacija",

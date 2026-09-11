@@ -299,7 +299,11 @@
       "schemaText": "OpenAPI 3.1, ustvarjeno iz kode. Primerno kot vhod za običajne generatorje odjemalcev.",
       "woAnfangen": "Kje začeti",
       "erstLesen": "Najprej preberi",
-      "dannBauen": "Nato gradi"
+      "dannBauen": "Nato gradi",
+      "konsoleTitel": "Referenca s konzolo",
+      "konsoleText": "Vsaka končna točka z vsemi parametri — in poljem za takojšnje preizkušanje.",
+      "referenzTitel": "Referenca za branje",
+      "referenzText": "Ista datoteka kot mirna bralna različica, brez vnosnih polj."
     },
     "bereiche": {
       "leitfaden": "Dokumentacija",

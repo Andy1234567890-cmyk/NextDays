@@ -299,7 +299,11 @@
       "schemaText": "OpenAPI 3.1, iġġenerat mill-kodiċi. Jaqbel bħala input għall-ġeneraturi tal-klijenti tas-soltu.",
       "woAnfangen": "Minn fejn tibda",
       "erstLesen": "Aqra l-ewwel",
-      "dannBauen": "Imbagħad ibni"
+      "dannBauen": "Imbagħad ibni",
+      "konsoleTitel": "Referenza bil-console",
+      "konsoleText": "Kull endpoint bil-parametri kollha — u qasam biex tipprovah direttament.",
+      "referenzTitel": "Referenza għall-qari",
+      "referenzText": "L-istess fajl bħala verżjoni ta' qari kalm, mingħajr oqsma ta' input."
     },
     "bereiche": {
       "leitfaden": "Dokumentazzjoni",

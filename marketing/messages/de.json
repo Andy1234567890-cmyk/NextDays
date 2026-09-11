@@ -297,6 +297,10 @@
       "versionHinweis": "im Pfad",
       "schemaTitel": "Schema",
       "schemaText": "OpenAPI 3.1, erzeugt aus dem Code. Taugt als Eingabe für die üblichen Client-Generatoren.",
+      "konsoleTitel": "Referenz mit Konsole",
+      "konsoleText": "Jeder Endpunkt mit allen Parametern — und einem Feld, um ihn direkt auszuprobieren.",
+      "referenzTitel": "Referenz zum Lesen",
+      "referenzText": "Dieselbe Datei als ruhige Lesefassung, ohne Eingabefelder.",
       "woAnfangen": "Wo anfangen",
       "erstLesen": "Erst lesen",
       "dannBauen": "Dann bauen"

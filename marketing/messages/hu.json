@@ -299,7 +299,11 @@
       "schemaText": "OpenAPI 3.1, a kódból generálva. Bemenetként használható a szokásos kliensgenerátorokhoz.",
       "woAnfangen": "Hol kezdd",
       "erstLesen": "Először olvasd el",
-      "dannBauen": "Aztán fejlessz"
+      "dannBauen": "Aztán fejlessz",
+      "konsoleTitel": "Referencia konzollal",
+      "konsoleText": "Minden végpont az összes paraméterrel – és egy mezővel, ahol közvetlenül kipróbálhatja.",
+      "referenzTitel": "Referencia olvasáshoz",
+      "referenzText": "Ugyanaz a fájl nyugodt olvasási változatban, beviteli mezők nélkül."
     },
     "bereiche": {
       "leitfaden": "Dokumentáció",

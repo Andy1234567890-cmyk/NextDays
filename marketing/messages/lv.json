@@ -299,7 +299,11 @@
       "schemaText": "OpenAPI 3.1, ģenerēts no koda. Noder kā ievade ierastajiem klientu ģeneratoriem.",
       "woAnfangen": "Kur sākt",
       "erstLesen": "Vispirms izlasi",
-      "dannBauen": "Tad veido"
+      "dannBauen": "Tad veido",
+      "konsoleTitel": "Atsauce ar konsoli",
+      "konsoleText": "Katrs galapunkts ar visiem parametriem — un lauks, lai to izmēģinātu tieši.",
+      "referenzTitel": "Atsauce lasīšanai",
+      "referenzText": "Tas pats fails kā mierīga lasīšanas versija, bez ievades laukiem."
     },
     "bereiche": {
       "leitfaden": "Dokumentācija",

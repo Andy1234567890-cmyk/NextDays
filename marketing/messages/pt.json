@@ -299,7 +299,11 @@
       "schemaText": "OpenAPI 3.1, gerado a partir do código. Serve como entrada para os geradores de clientes habituais.",
       "woAnfangen": "Por onde começar",
       "erstLesen": "Primeiro lê",
-      "dannBauen": "Depois desenvolve"
+      "dannBauen": "Depois desenvolve",
+      "konsoleTitel": "Referência com console",
+      "konsoleText": "Cada endpoint com todos os parâmetros — e um campo para testá-lo diretamente.",
+      "referenzTitel": "Referência para leitura",
+      "referenzText": "O mesmo arquivo em uma versão de leitura tranquila, sem campos de entrada."
     },
     "bereiche": {
       "leitfaden": "Documentação",

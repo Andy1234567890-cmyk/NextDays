@@ -299,7 +299,11 @@
       "schemaText": "OpenAPI 3.1, genereret ud fra koden. Kan bruges som input til de gængse klientgeneratorer.",
       "woAnfangen": "Hvor du begynder",
       "erstLesen": "Læs først",
-      "dannBauen": "Byg derefter"
+      "dannBauen": "Byg derefter",
+      "konsoleTitel": "Reference med konsol",
+      "konsoleText": "Hvert endepunkt med alle parametre – og et felt til at prøve det direkte.",
+      "referenzTitel": "Reference til læsning",
+      "referenzText": "Den samme fil som en rolig læseudgave, uden indtastningsfelter."
     },
     "bereiche": {
       "leitfaden": "Dokumentation",

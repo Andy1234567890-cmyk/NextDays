@@ -299,7 +299,11 @@
       "schemaText": "OpenAPI 3.1, loodud koodist. Sobib sisendiks tavalistele kliendigeneraatoritele.",
       "woAnfangen": "Kust alustada",
       "erstLesen": "Loe esmalt",
-      "dannBauen": "Seejärel ehita"
+      "dannBauen": "Seejärel ehita",
+      "konsoleTitel": "Konsooliga viide",
+      "konsoleText": "Iga lõpp-punkt koos kõigi parameetritega – ja väljaga, et seda otse proovida.",
+      "referenzTitel": "Viide lugemiseks",
+      "referenzText": "Sama fail rahulikuks lugemiseks, ilma sisestusväljadeta."
     },
     "bereiche": {
       "leitfaden": "Dokumentatsioon",

@@ -299,7 +299,11 @@
       "schemaText": "OpenAPI 3.1, generat din cod. Este potrivit ca intrare pentru generatoarele obișnuite de clienți.",
       "woAnfangen": "De unde să începi",
       "erstLesen": "Citește mai întâi",
-      "dannBauen": "Apoi construiește"
+      "dannBauen": "Apoi construiește",
+      "konsoleTitel": "Referință cu consolă",
+      "konsoleText": "Fiecare endpoint cu toți parametrii — și un câmp pentru a-l încerca direct.",
+      "referenzTitel": "Referință pentru lectură",
+      "referenzText": "Același fișier ca o versiune de lectură liniștită, fără câmpuri de introducere."
     },
     "bereiche": {
       "leitfaden": "Documentație",

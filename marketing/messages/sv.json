@@ -299,7 +299,11 @@
       "schemaText": "OpenAPI 3.1, genererat ur koden. Fungerar som indata till de vanliga klientgeneratorerna.",
       "woAnfangen": "Var du börjar",
       "erstLesen": "Läs först",
-      "dannBauen": "Bygg sedan"
+      "dannBauen": "Bygg sedan",
+      "konsoleTitel": "Referens med konsol",
+      "konsoleText": "Varje slutpunkt med alla parametrar – och ett fält för att prova den direkt.",
+      "referenzTitel": "Referens för läsning",
+      "referenzText": "Samma fil som en lugn läsversion, utan inmatningsfält."
     },
     "bereiche": {
       "leitfaden": "Dokumentation",

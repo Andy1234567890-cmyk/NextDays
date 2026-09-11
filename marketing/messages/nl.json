@@ -299,7 +299,11 @@
       "schemaText": "OpenAPI 3.1, gegenereerd uit de code. Geschikt als invoer voor de gebruikelijke clientgeneratoren.",
       "woAnfangen": "Waar te beginnen",
       "erstLesen": "Eerst lezen",
-      "dannBauen": "Dan bouwen"
+      "dannBauen": "Dan bouwen",
+      "konsoleTitel": "Referentie met console",
+      "konsoleText": "Elk eindpunt met alle parameters — en een veld om het direct uit te proberen.",
+      "referenzTitel": "Referentie om te lezen",
+      "referenzText": "Hetzelfde bestand als rustige leesversie, zonder invoervelden."
     },
     "bereiche": {
       "leitfaden": "Documentatie",
