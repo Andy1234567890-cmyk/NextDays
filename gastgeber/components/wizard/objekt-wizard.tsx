@@ -2,9 +2,9 @@
 
 // Objekt-Wizard (Airbnb-„Become a Host"-Flow). Vollbild, ein Schritt pro Screen,
 // Draft wird beim ersten Weiter angelegt (POST) und danach je Schritt gepatcht.
-import { currencyForCountry, LAENDER } from "@nextdays/laender";
+import { currencyForCountry, laenderNachName } from "@nextdays/laender";
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -104,6 +104,9 @@ const TOTAL = 15;
 
 export function ObjektWizard() {
   const t = useTranslations("wizard");
+  const locale = useLocale();
+  // Ländernamen und Sortierung in der Sprache des Nutzers, nicht auf Deutsch.
+  const laender = useMemo(() => laenderNachName(locale), [locale]);
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
@@ -375,7 +378,7 @@ export function ObjektWizard() {
                 value={d.country}
                 onChange={(e) => set("country", e.target.value)}
               >
-                {LAENDER.map((l) => (
+                {laender.map((l) => (
                   <option key={l.code} value={l.code}>
                     {l.name}
                   </option>

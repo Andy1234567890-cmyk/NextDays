@@ -75,3 +75,60 @@ export function landName(code: string, locale: string): string {
     return code;
   }
 }
+
+// USt-IdNr.-Beispiel je Land — Platzhalter für das Eingabefeld.
+//
+// Bis zum 10.09.2026 stand im Formular fest `placeholder="DE123456789"` NEBEN
+// der Länderauswahl, die nicht nachzog: ein dänischer Bewerber las ein
+// deutsches Beispiel und tippte eine Nummer, die es in DK nicht gibt.
+//
+// Warum die Tabelle hier steht statt in `@nextdays/laender`: marketing baut
+// BEWUSST isoliert (eigene bun.lock, eigener Dockerfile ohne Root-Kontext,
+// ADR-0016) und nutzt daher KEINE Workspace-Packages — dieselbe dokumentierte
+// Ausnahme wie bei der CSP-Kopie in `next.config.ts` und bei `LAENDER`/
+// `landName` oben. Wer die Formate ändert, ändert BEIDE Stellen; die
+// Deckungsgleichheit prüft `scripts/i18n/laender-formwissen-pruefen.mjs`.
+//
+// Quelle: EU-Kommission, „VAT identification number structure" (TAXUD, Anhang
+// zum VIES-Dienst) je Mitgliedstaat; CH aus dem UID-Register der ESTV, GB aus
+// HMRC VAT Notice 700.
+const VAT_BEISPIEL: Readonly<Record<string, string>> = {
+  DE: "DE123456789", // 9 Ziffern
+  AT: "ATU12345678", // U + 8 Ziffern
+  CH: "CHE-123.456.789 MWST", // ESTV UID/MWST (Nicht-EU)
+  BE: "BE0123456789", // 10 Ziffern (führende 0/1)
+  BG: "BG123456789", // 9 oder 10 Ziffern
+  HR: "HR12345678901", // 11 Ziffern
+  CY: "CY12345678L", // 8 Ziffern + 1 Buchstabe
+  CZ: "CZ12345678", // 8, 9 oder 10 Ziffern
+  DK: "DK12345678", // 8 Ziffern
+  EE: "EE123456789", // 9 Ziffern
+  FI: "FI12345678", // 8 Ziffern
+  FR: "FRXX123456789", // 2 Prüfzeichen + 9 Ziffern (SIREN)
+  GR: "EL123456789", // Präfix EL, 9 Ziffern
+  HU: "HU12345678", // 8 Ziffern
+  IE: "IE1234567L", // 7 Zeichen + 1–2 Buchstaben
+  IT: "IT12345678901", // 11 Ziffern
+  LV: "LV12345678901", // 11 Ziffern
+  LT: "LT123456789", // 9 oder 12 Ziffern
+  LU: "LU12345678", // 8 Ziffern
+  MT: "MT12345678", // 8 Ziffern
+  NL: "NL123456789B01", // 9 Ziffern + B + 2 Ziffern
+  PL: "PL1234567890", // 10 Ziffern
+  PT: "PT123456789", // 9 Ziffern
+  RO: "RO123456789", // 2–10 Ziffern
+  SK: "SK1234567890", // 10 Ziffern
+  SI: "SI12345678", // 8 Ziffern
+  ES: "ESX1234567X", // Zeichen + 7 Ziffern + Zeichen
+  SE: "SE123456789012", // 12 Ziffern
+  GB: "GB123456789", // 9 Ziffern (HMRC, seit dem Brexit kein VIES-Land)
+};
+
+/** Platzhalter-Beispiel für die USt-IdNr. eines Landes.
+ *
+ *  Leer, solange das Format nicht belegt ist: Wurzel 4 — ein zusammengebautes
+ *  `XX123456789` sähe echt aus und wäre geraten. Ein leerer Platzhalter ist
+ *  ehrlich, ein falscher führt in die Irre. */
+export function vatBeispielFuerLand(code: string): string {
+  return VAT_BEISPIEL[code.trim().toUpperCase()] ?? "";
+}

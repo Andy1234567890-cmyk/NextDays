@@ -12,7 +12,7 @@
 // fehlt. So kann die UI nicht behaupten, etwas sei in Ordnung, was der Server
 // ablehnt.
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@nextdays/ui/button";
@@ -20,7 +20,7 @@ import { Dialog, DialogClose, DialogContent } from "@nextdays/ui/dialog";
 import { Input } from "@nextdays/ui/input";
 
 import { SuchAuswahl } from "@/components/ui/such-auswahl";
-import { alleLaender, landName } from "@/lib/laender";
+import { useLaender } from "@/lib/laender";
 import type {
   LandRegel,
   TaxpayerEntry,
@@ -53,6 +53,8 @@ export function SteuerWizard({
   bearbeiten?: TaxpayerEntry;
 }) {
   const t = useTranslations("steuern");
+  const locale = useLocale();
+  const laenderNamen = useLaender();
   const [schritt, setSchritt] = useState<Schritt>(
     bearbeiten ? "felder" : vorbelegtesLand ? "art" : "land",
   );
@@ -97,14 +99,14 @@ export function SteuerWizard({
   const steuerLaender = useMemo(
     () =>
       (regeln ?? [])
-        .map((r) => ({ code: r.country, name: landName(r.country) }))
-        .sort((a, b) => a.name.localeCompare(b.name, "de")),
-    [regeln],
+        .map((r) => ({ code: r.country, name: laenderNamen.name(r.country) }))
+        .sort((a, b) => a.name.localeCompare(b.name, locale)),
+    [regeln, laenderNamen, locale],
   );
 
   // Geburtsland ist NICHT auf die Steuerländer begrenzt: wer in Brasilien
   // geboren ist und in Spanien vermietet, muss beides angeben können.
-  const geburtsLaender = useMemo(() => alleLaender(), []);
+  const geburtsLaender = useMemo(() => laenderNamen.alle(), [laenderNamen]);
 
   function setzeWert(feld: keyof TaxpayerInput, wert: string) {
     setWerte((v) => ({ ...v, [feld]: wert || null }));

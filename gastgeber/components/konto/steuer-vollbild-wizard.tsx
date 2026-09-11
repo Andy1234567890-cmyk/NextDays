@@ -12,7 +12,7 @@
 // ändert sich per Gesetz. Eine zweite Kopie im Client liefe auseinander
 // (Wurzel 4).
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
@@ -20,7 +20,7 @@ import { Button } from "@nextdays/ui/button";
 import { Input } from "@nextdays/ui/input";
 
 import { SuchAuswahl } from "@/components/ui/such-auswahl";
-import { alleLaender, landName } from "@/lib/laender";
+import { useLaender } from "@/lib/laender";
 import type { LandRegel, TaxpayerInput, TaxpayerKind } from "@/lib/steuern";
 import { speichereSteuerangaben } from "@/lib/steuern-actions";
 
@@ -58,9 +58,16 @@ const ID_CODES = [
   "vat",
 ] as const;
 
-/** Basispunkte lesbar machen: 10 → „0,1 %", 2000 → „20 %". */
-function satz(bps: number): string {
-  return `${(bps / 100).toLocaleString("de-DE", { maximumFractionDigits: 2 })} %`;
+/** Basispunkte lesbar machen: 10 → „0,1 %", 2000 → „20 %".
+ *
+ *  Prozentzeichen und Position kommen von Intl, nicht von uns: im Türkischen
+ *  steht es vorn, im Indischen ohne schmales Leerzeichen. Ein festes „de-DE"
+ *  zeigte in allen 45 Sprachen deutsche Trennzeichen (lib/formatierung.ts). */
+function satz(bps: number, locale: string): string {
+  return (bps / 10000).toLocaleString(locale, {
+    style: "percent",
+    maximumFractionDigits: 2,
+  });
 }
 
 export function SteuerVollbildWizard({
@@ -72,6 +79,8 @@ export function SteuerVollbildWizard({
   gruppe: string;
 }) {
   const t = useTranslations("steuern");
+  const locale = useLocale();
+  const laenderNamen = useLaender();
   const router = useRouter();
 
   function idName(code: string): string {
@@ -91,13 +100,13 @@ export function SteuerVollbildWizard({
           : r.regime === "oecd_dpi";
     return laender
       .filter(passt)
-      .map((r) => ({ ...r, name: landName(r.country) }))
-      .sort((a, b) => a.name.localeCompare(b.name, "de"));
-  }, [laender, gruppe]);
+      .map((r) => ({ ...r, name: laenderNamen.name(r.country) }))
+      .sort((a, b) => a.name.localeCompare(b.name, locale));
+  }, [laender, gruppe, laenderNamen, locale]);
 
   // Geburtsland kennt keine Regime-Grenze — jemand kann in Brasilien geboren
   // sein und in Spanien vermieten. Deshalb die volle ISO-Liste.
-  const geburtsLaender = useMemo(() => alleLaender(), []);
+  const geburtsLaender = useMemo(() => laenderNamen.alle(), [laenderNamen]);
 
   const [schritt, setSchritt] = useState<Schritt>(
     auswahl.length === 1 ? "art" : "land",
@@ -267,7 +276,7 @@ export function SteuerVollbildWizard({
           {schritt === "felder" && regel && (
             <>
               <h1 className="font-display text-[2.5rem] font-bold leading-tight tracking-tight">
-                {t("felderSchrittTitel", { land: landName(land) })}
+                {t("felderSchrittTitel", { land: laenderNamen.name(land) })}
               </h1>
 
               {/* Was eine fehlende Nummer KOSTET — der Gastgeber soll das
@@ -287,14 +296,14 @@ export function SteuerVollbildWizard({
                           muss den ganzen Satz am Stück umstellen können. */}
                       {regel.host_tax_bps_with_id != null
                         ? t.rich("ohneNummerSatzVergleich", {
-                            land: landName(land),
-                            satzOhne: satz(regel.host_tax_bps_without_id),
-                            satzMit: satz(regel.host_tax_bps_with_id),
+                            land: laenderNamen.name(land),
+                            satzOhne: satz(regel.host_tax_bps_without_id, locale),
+                            satzMit: satz(regel.host_tax_bps_with_id, locale),
                             stark: (c) => <strong>{c}</strong>,
                           })
                         : t.rich("ohneNummerSatz", {
-                            land: landName(land),
-                            satzOhne: satz(regel.host_tax_bps_without_id),
+                            land: laenderNamen.name(land),
+                            satzOhne: satz(regel.host_tax_bps_without_id, locale),
                             stark: (c) => <strong>{c}</strong>,
                           })}
                     </span>
@@ -450,7 +459,7 @@ export function SteuerVollbildWizard({
               </p>
 
               <dl className="mt-10 divide-y divide-border rounded-2xl border border-border px-6">
-                <Zeile label={t("landKurz")} wert={landName(land)} />
+                <Zeile label={t("landKurz")} wert={laenderNamen.name(land)} />
                 <Zeile
                   label={t("artKurz")}
                   wert={
@@ -491,7 +500,7 @@ export function SteuerVollbildWizard({
                     wert={[
                       werte.birth_place_city,
                       werte.birth_place_country
-                        ? landName(werte.birth_place_country)
+                        ? laenderNamen.name(werte.birth_place_country)
                         : null,
                     ]
                       .filter(Boolean)
@@ -612,9 +621,9 @@ export function SteuerVollbildWizard({
               {regel?.host_tax_bps_without_id != null &&
                 regel.host_tax_bps_without_id > 0 &&
                 ` ${t("abbruchSatzHinweis", {
-                  land: landName(land),
-                  satzOhne: satz(regel.host_tax_bps_without_id),
-                  satzMit: satz(regel.host_tax_bps_with_id ?? 0),
+                  land: laenderNamen.name(land),
+                  satzOhne: satz(regel.host_tax_bps_without_id, locale),
+                  satzMit: satz(regel.host_tax_bps_with_id ?? 0, locale),
                 })}`}
             </p>
             <div className="mt-7 flex gap-3">

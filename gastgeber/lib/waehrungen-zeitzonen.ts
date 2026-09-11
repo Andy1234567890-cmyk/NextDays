@@ -48,7 +48,7 @@ function waehrungsName(code: string, sprache: string): string {
   return symbol && symbol !== code ? `${name} (${symbol})` : `${name} (${code})`;
 }
 
-export function waehrungen(sprache = "de"): Waehrung[] {
+export function waehrungen(sprache: string): Waehrung[] {
   return WAEHRUNGS_CODES.map((code) => ({
     code,
     label: waehrungsName(code, sprache),
@@ -57,7 +57,10 @@ export function waehrungen(sprache = "de"): Waehrung[] {
 
 /** Anzeige einer einzelnen Währung; unbekannte Codes kommen unverändert
  *  zurück statt einen erfundenen Namen zu bekommen. */
-export function waehrungLabel(code: string | null, sprache = "de"): string | null {
+export function waehrungLabel(
+  code: string | null,
+  sprache: string,
+): string | null {
   if (!code) return null;
   return waehrungsName(code.toUpperCase(), sprache);
 }
@@ -73,12 +76,15 @@ export interface Zeitzone {
  *  `supportedValuesOf` liefert die echte Zonenliste der Laufzeit — dieselbe
  *  Quelle, gegen die der DB-Trigger prüft. Damit kann die Auswahl keinen Wert
  *  anbieten, den der Server ablehnt. */
-export function zeitzonen(sprache = "de"): Zeitzone[] {
+export function zeitzonen(sprache: string): Zeitzone[] {
   const ids = Intl.supportedValuesOf("timeZone");
   const jetzt = new Date();
 
   return ids
     .map((id) => {
+      // locale-fest: maschinelles Parsen — der Versatz wird gleich als
+      // „GMT+01:00" zerlegt. Das sieht kein Nutzer; eine nutzerabhängige
+      // Locale würde die Zerlegung brechen.
       const teile = new Intl.DateTimeFormat("en-US", {
         timeZone: id,
         timeZoneName: "longOffset",
@@ -106,8 +112,12 @@ export function zeitzonen(sprache = "de"): Zeitzone[] {
     .map(({ id, label }) => ({ id, label }));
 }
 
-/** Anzeige einer einzelnen Zone; unbekannte IDs kommen unverändert zurück. */
-export function zeitzoneLabel(id: string | null): string | null {
+/** Anzeige einer einzelnen Zone; unbekannte IDs kommen unverändert zurück.
+ *
+ *  Die Sprache ist Pflicht: `zeitzonen()` ohne Argument sortierte bis zum
+ *  10.09.2026 still nach deutschen Regeln — derselbe Fehler wie ein fest
+ *  verdrahtetes „de-DE" bei Datum und Zahl (lib/formatierung.ts). */
+export function zeitzoneLabel(id: string | null, sprache: string): string | null {
   if (!id) return null;
-  return zeitzonen().find((z) => z.id === id)?.label ?? id;
+  return zeitzonen(sprache).find((z) => z.id === id)?.label ?? id;
 }

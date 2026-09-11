@@ -301,3 +301,176 @@ const REGISTERGERICHT_LAENDER: ReadonlySet<string> = new Set([
 export function hatRegistergericht(code: string): boolean {
   return REGISTERGERICHT_LAENDER.has(code.toUpperCase());
 }
+
+// ---------------------------------------------------------------------------
+// Länderabhängige STEUER-/RECHTSFELDER (Wurzel: „Land statt Sprache")
+//
+// Welche Felder eine Firmendaten-Maske zeigt, entscheidet der FIRMENSITZ, nicht
+// die UI-Sprache. Dasselbe Prinzip steht in `lib/laender-funktionen.ts`
+// (DATEV-Ländergate) — hier für die Feldebene.
+//
+// Anlass (10.09.2026): Ein dänischer Betrieb, der die Oberfläche auf Deutsch
+// gestellt hat, sah unter /konto ein Feld „Steuernummer". In Dänemark gibt es
+// die nicht: CVR = SE = TIN, und die USt-IdNr. ist dieselbe Zahl mit „DK"
+// davor (live: vat_id 'DK44179377', tax_number null). Ein Feld, das der
+// Betrieb in seinem Land gar nicht befüllen KANN, sieht aus wie eine Lücke in
+// seinen Stammdaten — er sucht den Fehler bei sich.
+// ---------------------------------------------------------------------------
+
+// Länder, in denen es KEINE separate Steuernummer neben der USt-IdNr. gibt.
+//
+// Der Unterschied, um den es geht:
+//   DE: Steuernummer 12/345/67890 (Finanzamt) UND USt-IdNr. DE123456789 —
+//       zwei verschiedene Nummernkreise, zwei Behörden, beide eintragbar.
+//   DK: CVR 44179377 → USt-IdNr. DK44179377 — dieselbe Zahl mit Präfix.
+//       Ein zweites Feld hätte schlicht keinen Inhalt.
+//
+// Bewusst eine DENYLIST, nicht die sonst übliche Allowlist — hier zeigt die
+// Allowlist in die SCHÄDLICHE Richtung. Ein Land, das in einer Allowlist
+// fehlte, verlöre das Feld und könnte seine echte Steuernummer nirgends mehr
+// eintragen: stiller Datenverlust, den niemand als Bug meldet. Ein Land, das
+// in dieser Denylist fehlt, behält ein Feld, das es vielleicht nicht braucht —
+// das ist die harmlose Richtung (Wurzel 5, fail-closed auf die Datenhaltung).
+//
+// Aufnahme NUR mit Beleg, dass die USt-IdNr. buchstäblich die nationale
+// Unternehmensnummer mit vorangestelltem Länderkürzel ist. Nicht belegte
+// Länder bleiben draußen — auch die, bei denen es plausibel wäre (SE, NL, LU,
+// MT, SI, PT, CY, BE …); sie behalten das Feld, bis jemand die Behördenquelle
+// nachträgt.
+//
+// Ausdrücklich NICHT hier, weil dort wirklich zwei Nummern existieren
+// (Recherche 10.09.2026, gegengeprüft):
+//   EE — Registrikood (8 Ziffern) ≠ KMKR-Nummer („EE" + 9 Ziffern):
+//        verschiedene Länge, also nicht dieselbe Zahl mit Präfix.
+//   IE — Tax Reference Number neben der VAT-Nummer.
+//   FR — SIRET (14 Ziffern), auf Rechnungen erwartet, neben der TVA-Nummer.
+//   HU — Adószám (11 Ziffern); die USt-IdNr. sind nur deren erste 8 Stellen,
+//        aus der USt-IdNr. also NICHT rückrechenbar.
+const OHNE_SEPARATE_STEUERNUMMER: ReadonlySet<string> = new Set([
+  // CVR = SE-nummer = TIN; die USt-IdNr. ist „DK" + dieselben acht Ziffern.
+  // Belegt durch die amtliche DAC7-Vorlage der Skattestyrelsen und live in
+  // den Stammdaten des Beta-Betriebs (vat_id 'DK44179377', tax_number null).
+  // Quelle: https://erhvervsstyrelsen.dk/cvr
+  "DK",
+  // Y-tunnus (Business ID) ist die einzige Nummer; die USt-IdNr. ist „FI" +
+  // dieselben Ziffern ohne den Bindestrich. Quelle: Verohallinto/PRH,
+  // ytj.fi („ALV-numero muodostetaan Y-tunnuksesta").
+  "FI",
+  // ΑΦΜ ist die einzige Nummer; die USt-IdNr. ist „EL" + derselbe ΑΦΜ.
+  // Quelle: AADE (Unabhängige Behörde für Staatseinnahmen).
+  "GR",
+]);
+
+// Italien ist bewusst NICHT in der Liste, obwohl es dort halb zuträfe: bei
+// GESELLSCHAFTEN sind Codice fiscale und Partita IVA dieselbe 11-stellige
+// Zahl, bei EINZELUNTERNEHMERN ist der Codice fiscale eine eigene,
+// 16-stellige persönliche Kennung neben der 11-stelligen Partita IVA. Die
+// Antwort hängt also an der Rechtsform, nicht am Land. Solange diese Maske
+// das nicht sauber unterscheidet, zeigt sie für IT BEIDE Felder — ein Feld zu
+// viel ist harmlos, ein fehlendes Pflichtfeld nicht (Wurzel 5).
+
+/**
+ * Gibt es in diesem Land eine separate Steuernummer NEBEN der USt-IdNr.?
+ *
+ * Unbekanntes/leeres Land → `true`: solange wir es nicht besser wissen, bleibt
+ * das Feld stehen. Ein geratenes „nein" nähme einem Betrieb ein Feld weg, das
+ * er braucht (Wurzel 4: kein erfundener Fallback in die schädliche Richtung).
+ */
+export function hatSeparateSteuernummer(
+  code: string | null | undefined,
+): boolean {
+  if (!code) return true;
+  return !OHNE_SEPARATE_STEUERNUMMER.has(code.toUpperCase());
+}
+
+// Bezeichnung der Verwaltungsebene unterhalb des Staates — und zugleich die
+// Entscheidung, OB die Firmenanschrift dieses Landes eine solche Zeile kennt.
+// Der Wert ist ein i18n-Schlüssel im Namensraum `regionLabel`: der Begriff wird
+// in der UI-Sprache angezeigt, ausgewählt wird er aber vom LAND.
+//
+// Warum es die Liste gibt: das Feld hieß in ALLEN 24 Sprachen „Bundesland /
+// Region" mit dem Platzhalter „z. B. Bayern" (da.json: „f.eks. Bayern"). Ein
+// dänischer Betrieb las also ein deutsches Beispiel für eine Verwaltungsebene,
+// die in seiner Anschrift gar nicht vorkommt.
+//
+// Zwei Quellen, bewusst kombiniert:
+//  1. Googles Adress-Metadaten „libaddressinput" (chromium-i18n.appspot.com/
+//     ssl-address/data/<CC>, Grundlage von Chrome-Autofill und der
+//     Google-Places-Adressen, die diese Maske selbst befüllt): trägt der
+//     `fmt`-String eine `%S`-Komponente, gehört die Ebene in die ANSCHRIFT.
+//     Abgefragt am 10.09.2026 → EE, IE, IT, LV, LT, RO, ES.
+//  2. Stripe verlangt `address.state` für DE/AT/CH beim Connected Account,
+//     und der gespeicherte Wert (`companyState`) geht genau dorthin. Diese
+//     drei stehen deshalb mit ihrem eigenen Begriff hier, obwohl sie kein `%S`
+//     haben — das Bundesland gehört nicht in die deutsche Postanschrift, wohl
+//     aber in die Stammdaten des Betriebs.
+//
+// Bewusst eine ALLOWLIST: ein nicht gelistetes Land bekommt das Feld NICHT.
+// Für Dänemark ist das die richtige Antwort (Kommunalreform 2007: nur fünf
+// Regionen und Kommunen, keine davon Teil einer Firmenanschrift). Ein Land,
+// dessen Ebene jemand belegt, wird hier ergänzt — mit Begriff und Quelle.
+//
+// Die Begriffe folgen den belegten Recherchestände vom 10.09.2026:
+//   EE = Kreis (maakond, 15) — NICHT „Bezirk", das ist linnaosa (Stadtteil)
+//   IE = Grafschaft (county, 26 traditionelle; die Reform 2014 auf 31 local
+//        authorities betrifft die ADRESSE nicht)
+//   IT = Provinz (provincia inkl. Metropolitanstädte, 111; 2-stelliges Kürzel
+//        hinter dem Ort)
+//   ES = Provinz (provincia, 52 inkl. Ceuta/Melilla laut INE) — NICHT die
+//        autonome Gemeinschaft
+// Für Länder ohne eigenen belegten Begriff wäre der neutrale Schlüssel
+// `region` richtig — „Bundesland" ist ausschließlich DE/AT, „Kanton" CH.
+const REGION_LABEL_NACH_LAND: Readonly<Record<string, string>> = {
+  // Stripe-Pflichtfeld `address.state` (Quelle 2)
+  DE: "state", // Bundesland (16)
+  AT: "state", // Bundesland (9)
+  CH: "canton", // Kanton (26)
+  // Teil der Postanschrift laut libaddressinput (Quelle 1)
+  EE: "county", // maakond (15)
+  IE: "county", // county (26 traditionelle)
+  IT: "province", // provincia (111, Kürzel hinter dem Ort)
+  LV: "region", // novads
+  LT: "county", // apskritis
+  RO: "county", // județ
+  ES: "province", // provincia (52)
+};
+
+/**
+ * i18n-Schlüssel (Namensraum `regionLabel`) für die Regionsbezeichnung eines
+ * Landes — oder `null`, wenn die Firmenanschrift dort keine solche Ebene kennt.
+ *
+ * `null` heißt: Feld ausblenden. Ein leeres „Bundesland" in einer dänischen
+ * Anschrift ist keine Lücke, die der Betrieb schließen könnte — er sucht den
+ * Fehler dann bei sich.
+ */
+export function regionLabelKeyFuerLand(
+  code: string | null | undefined,
+): string | null {
+  if (!code) return null;
+  return REGION_LABEL_NACH_LAND[code.toUpperCase()] ?? null;
+}
+
+// ---------------------------------------------------------------------------
+// Bezeichnung der Umsatzsteuer-Identifikationsnummer je Land.
+//
+// Hierher verschoben aus `packages/ui/src/countries.ts` (10.09.2026): das Paket
+// `@nextdays/ui` ist als „i18n-frei, props-rein" dokumentiert und darf kein
+// länderfachliches Wissen und keine deutschen Beschriftungen tragen. Genau das
+// tat `countries.ts` aber — deutsche Ländernamen plus deutsche Steuer-Labels.
+// Laenderfachliches Wissen gehört in diese Datei, die Anzeige in die
+// Sprachdateien.
+//
+// Die ID selbst ist EU-weit harmonisiert, nur ihr nationaler NAME unterscheidet
+// sich. Wo kein eigener Name belegt ist, steht der neutrale EU-Begriff — das
+// ist kein erfundener Ersatzwert, sondern die sachlich richtige Bezeichnung
+// (Wurzel 4).
+const VAT_ID_LABELS: Readonly<Record<string, string>> = {
+  DE: "USt-IdNr.",
+  AT: "UID-Nr.",
+  CH: "MWST-Nr. (UID)",
+};
+
+/** Landesspezifische Bezeichnung der USt-IdNr.; sonst der neutrale EU-Begriff. */
+export function vatIdLabel(country: string | undefined | null): string {
+  return VAT_ID_LABELS[(country || "").toUpperCase()] ?? "VAT ID";
+}

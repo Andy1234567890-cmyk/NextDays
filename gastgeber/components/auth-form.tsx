@@ -3,12 +3,12 @@
 "use client";
 
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { login, loginSms, loginTotp, registerHost } from "@/lib/auth";
-import { currencyForCountry, LAENDER } from "@nextdays/laender";
+import { currencyForCountry, laenderNachName } from "@nextdays/laender";
 
 import { CodeEingabe } from "./konto/code-eingabe";
 
@@ -25,6 +25,9 @@ type MfaState = {
 
 export function AuthForm({ weiter }: { weiter: string }) {
   const t = useTranslations("auth");
+  const locale = useLocale();
+  // Ländernamen und Sortierung in der Sprache des Nutzers, nicht auf Deutsch.
+  const laender = useMemo(() => laenderNachName(locale), [locale]);
   const router = useRouter();
   const [modus, setModus] = useState<Modus>("login");
   const [email, setEmail] = useState("");
@@ -235,7 +238,7 @@ export function AuthForm({ weiter }: { weiter: string }) {
               onChange={(e) => setCountry(e.target.value)}
               className="w-full rounded-full border border-border bg-background px-4 py-3"
             >
-              {LAENDER.map((l) => (
+              {laender.map((l) => (
                 <option key={l.code} value={l.code}>
                   {l.name}
                 </option>

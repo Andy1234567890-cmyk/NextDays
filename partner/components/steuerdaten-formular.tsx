@@ -7,11 +7,11 @@
 // Verbundkonto (`components/verbundkonto.tsx`), und die Bankverbindung liegt
 // bei Stripe, nicht bei uns. Ein zweites IBAN-Feld an dieser Stelle wäre eine
 // Attrappe — es würde einen Weg anbieten, den der Auszahlungslauf nicht geht.
-import { useTranslations } from "next-intl";
-import { useState, useTransition } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 
-import { LAENDER } from "@nextdays/laender";
+import { laenderNachName, vatBeispielFuerLand } from "@nextdays/laender";
 
 import type { Profil } from "@/lib/partner";
 import { steuerdatenSetzen } from "@/lib/partner-actions";
@@ -19,6 +19,9 @@ import { PasswortFeld } from "./passwort-feld";
 
 export function SteuerdatenFormular({ profil }: { profil: Profil }) {
   const t = useTranslations("profil");
+  const locale = useLocale();
+  // Ländernamen und Sortierung in der Sprache des Nutzers, nicht auf Deutsch.
+  const laender = useMemo(() => laenderNachName(locale), [locale]);
   const [laeuft, starte] = useTransition();
   const [rechtsform, setRechtsform] = useState<"company" | "private">(profil.legal_form);
   const [land, setLand] = useState(profil.country);
@@ -61,7 +64,7 @@ export function SteuerdatenFormular({ profil }: { profil: Profil }) {
         <label className="flex flex-col gap-1">
           <span className="font-medium">{t("land")}</span>
           <select value={land} onChange={(e) => setLand(e.target.value)} className="rounded-full border border-border bg-transparent pl-4 pr-10 py-2">
-            {LAENDER.map((l) => (
+            {laender.map((l) => (
               <option key={l.code} value={l.code}>
                 {l.code} — {l.name}
               </option>
@@ -71,7 +74,7 @@ export function SteuerdatenFormular({ profil }: { profil: Profil }) {
         {rechtsform === "company" && (
           <label className="flex flex-col gap-1">
             <span className="font-medium">{t("ustId")}</span>
-            <input value={ustId} onChange={(e) => setUstId(e.target.value.toUpperCase())} required placeholder="DE123456789" maxLength={20} className="rounded-full border border-border bg-transparent px-4 py-2 font-mono outline-none focus-visible:border-foreground" />
+            <input value={ustId} onChange={(e) => setUstId(e.target.value.toUpperCase())} required placeholder={vatBeispielFuerLand(land)} maxLength={20} className="rounded-full border border-border bg-transparent px-4 py-2 font-mono outline-none focus-visible:border-foreground" />
             <span className="text-xs text-muted-foreground">{t("ustIdHinweis")}</span>
           </label>
         )}

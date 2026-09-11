@@ -9,6 +9,8 @@ import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@nextdays/ui/button";
 
+import { useFormatierung } from "@/lib/formatierung";
+
 import type {
   HostMessage,
   HostThreadDetail,
@@ -256,6 +258,7 @@ export function ChatSpalte({
 }
 
 function Blase({ nachricht }: { nachricht: HostMessage }) {
+  const f = useFormatierung();
   const vomHost = nachricht.sender === "host";
   return (
     <div className={`flex ${vomHost ? "justify-end" : "justify-start"}`}>
@@ -270,17 +273,14 @@ function Blase({ nachricht }: { nachricht: HostMessage }) {
         <p
           className={`mt-1.5 text-end text-[0.6875rem] ${vomHost ? "text-background/55" : "text-muted-foreground"}`}
         >
-          {uhrzeit(nachricht.created_at)}
+          {nachricht.created_at
+            ? f.zeit(nachricht.created_at, {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : ""}
         </p>
       </div>
     </div>
   );
-}
-
-function uhrzeit(iso: string | null): string {
-  if (!iso) return "";
-  return new Date(iso).toLocaleTimeString("de-DE", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }

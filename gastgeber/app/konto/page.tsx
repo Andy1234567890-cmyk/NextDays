@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 
 import { AuszahlungenTab } from "@/components/konto/auszahlungen-tab";
 import { BenachrichtigungenAbschnitt } from "@/components/konto/benachrichtigungen-abschnitt";
+import { Dac7Meldung } from "@/components/konto/dac7-meldung";
 import { SteuernAbschnitt } from "@/components/konto/steuern-abschnitt";
 import { DatenschutzAbschnitt } from "@/components/konto/datenschutz-abschnitt";
 import { KontoNav } from "@/components/konto/konto-nav";
@@ -22,6 +23,7 @@ import { ZahlungenAbschnitt } from "@/components/konto/zahlungen-abschnitt";
 import { ZahlungenTabs } from "@/components/konto/zahlungen-tabs";
 import { getAuszahlungsUebersicht, getStripeGuthaben } from "@/lib/auszahlungen";
 import { getNotificationOverview } from "@/lib/benachrichtigungen";
+import { getMeldelaeufe } from "@/lib/dac7";
 import { getObjektangaben, getTaxpayerOverview } from "@/lib/steuern";
 import { getPrivacySettings } from "@/lib/datenschutz";
 import { getDebugSessions } from "@/lib/diagnose";
@@ -93,10 +95,18 @@ export default async function KontoPage({
     aktiv === "benachrichtigungen" ? await getNotificationOverview() : null;
   // Beide Steuer-Abfragen parallel: die Objektangaben sind ein eigener
   // Endpunkt, aber derselbe Tab — nacheinander wäre der Tab doppelt langsam.
-  const [steuern, objektangaben] =
+  // Drei Abfragen desselben Tabs parallel — nacheinander waere er dreifach
+  // langsam. `getMeldelaeufe` gibt bei fehlender Rolle `null` statt einer
+  // leeren Liste: die UI unterscheidet „nichts gemeldet" von „darf nicht
+  // sehen" und erfindet keinen Ersatzwert.
+  const [steuern, objektangaben, meldelaeufe] =
     aktiv === "steuern"
-      ? await Promise.all([getTaxpayerOverview(), getObjektangaben()])
-      : [null, null];
+      ? await Promise.all([
+          getTaxpayerOverview(),
+          getObjektangaben(),
+          getMeldelaeufe(),
+        ])
+      : [null, null, null];
 
   return (
     <div className="mx-auto max-w-6xl px-8 py-12">
@@ -161,10 +171,18 @@ export default async function KontoPage({
             <BenachrichtigungenAbschnitt uebersicht={benachrichtigungen} />
           )}
           {aktiv === "steuern" && (
-            <SteuernAbschnitt
-              uebersicht={steuern}
-              objektangaben={objektangaben}
-            />
+            <>
+              <SteuernAbschnitt
+                uebersicht={steuern}
+                objektangaben={objektangaben}
+              />
+              {/* Die DAC7-Meldung gehoert unter die Steuerangaben, weil sie
+                  auf ihnen aufbaut: ohne Steuer-Identifikation und
+                  Objektangaben ist keine Meldung erzeugbar. Die Komponente
+                  war fertig gebaut, wurde aber von keiner Seite importiert
+                  und war damit fuer den Gastgeber nicht erreichbar. */}
+              <Dac7Meldung laeufe={meldelaeufe} />
+            </>
           )}
           {aktiv === "unternehmen" && (
             <UnternehmenTab

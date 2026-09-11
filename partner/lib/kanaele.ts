@@ -109,7 +109,7 @@ export function plattformAusUrl(url: string): Plattform | null {
 }
 
 /** Reichweite kompakt: 12 300 → „12,3k“, 1 200 000 → „1,2M“. */
-export function reichweite(n: number | null, locale = "de"): string {
+export function reichweite(n: number | null, locale: string): string {
   if (n === null) return "";
   return new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 1 }).format(n);
 }

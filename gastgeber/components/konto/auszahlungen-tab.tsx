@@ -28,6 +28,7 @@ import type {
   PayoutInterval,
   Verrechnungsposten,
 } from "@/lib/auszahlungen";
+import { useFormatierung } from "@/lib/formatierung";
 import type { AuszahlungsStatus } from "@/lib/payments";
 
 type Uebersetzer = ReturnType<typeof useTranslations<"konto">>;
@@ -493,6 +494,7 @@ function Posten({ posten }: { posten: Verrechnungsposten[] }) {
 
 function Verlauf({ zeilen }: { zeilen: AuszahlungsZeile[] }) {
   const t = useTranslations("konto");
+  const f = useFormatierung();
   if (!zeilen.length) return null;
 
   return (
@@ -523,7 +525,7 @@ function Verlauf({ zeilen }: { zeilen: AuszahlungsZeile[] }) {
             <li key={z.id} className="flex items-center justify-between gap-4 py-4">
               <div className="min-w-0">
                 <p className="text-[0.9375rem]">
-                  {new Date(datum).toLocaleDateString("de-DE", {
+                  {f.datum(datum, {
                     day: "2-digit",
                     month: "long",
                     year: "numeric",

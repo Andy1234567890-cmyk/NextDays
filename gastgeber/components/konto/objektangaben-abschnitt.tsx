@@ -18,7 +18,7 @@ import { useState } from "react";
 
 import { Button } from "@nextdays/ui/button";
 
-import { landName } from "@/lib/laender";
+import { useLaender } from "@/lib/laender";
 import { angabeErledigt, type ObjektAngabeStatus } from "@/lib/steuern";
 import { speichereObjektangabe } from "@/lib/steuern-actions";
 
@@ -30,6 +30,7 @@ function Zeile({
   onGespeichert: (a: ObjektAngabeStatus) => void;
 }) {
   const t = useTranslations("konto");
+  const laenderNamen = useLaender();
   const [offen, setOffen] = useState(false);
   const [nummer, setNummer] = useState(angabe.land_registration_number ?? "");
   const [keine, setKeine] = useState(angabe.land_registration_unavailable);
@@ -53,7 +54,7 @@ function Zeile({
     }
   }
 
-  const ort = [angabe.city, angabe.country ? landName(angabe.country) : null]
+  const ort = [angabe.city, angabe.country ? laenderNamen.name(angabe.country) : null]
     .filter(Boolean)
     .join(", ");
 

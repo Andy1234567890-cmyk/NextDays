@@ -14,7 +14,7 @@ import { useState } from "react";
 
 import { Button } from "@nextdays/ui/button";
 
-import { landName } from "@/lib/laender";
+import { useLaender } from "@/lib/laender";
 import type {
   ObjektAngabeStatus,
   TaxpayerEntry,
@@ -48,6 +48,7 @@ export function SteuernAbschnitt({
   objektangaben: ObjektAngabeStatus[] | null;
 }) {
   const t = useTranslations("konto");
+  const laenderNamen = useLaender();
   const [daten, setDaten] = useState(uebersicht);
   const [reiter, setReiter] = useState<Reiter>("steuerzahler");
   const [wizardOffen, setWizardOffen] = useState(false);
@@ -133,7 +134,7 @@ export function SteuernAbschnitt({
                   />
                   <span>
                     {t("sxFehlendeLaender", {
-                      laender: daten.fehlende_laender.map(landName).join(", "),
+                      laender: daten.fehlende_laender.map(laenderNamen.name).join(", "),
                     })}
                   </span>
                 </p>
@@ -145,7 +146,7 @@ export function SteuernAbschnitt({
                       size="sm"
                       onClick={() => oeffneWizard(land)}
                     >
-                      {t("sxLandErgaenzen", { land: landName(land) })}
+                      {t("sxLandErgaenzen", { land: laenderNamen.name(land) })}
                     </Button>
                   ))}
                 </div>
@@ -161,7 +162,7 @@ export function SteuernAbschnitt({
                   >
                     <div className="flex flex-col gap-1">
                       <span className="flex items-center gap-2 text-[0.9375rem] font-medium">
-                        {landName(e.country)}
+                        {laenderNamen.name(e.country)}
                         {e.confirmed_at ? (
                           <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
                             {t("sxStatusAbgeschlossen")}

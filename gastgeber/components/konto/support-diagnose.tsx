@@ -18,6 +18,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import type { DebugSession } from "@/lib/diagnose";
+import { useFormatierung } from "@/lib/formatierung";
 import { diagnoseFreigeben, diagnoseWiderrufen } from "@/lib/diagnose-actions";
 
 // Auswählbare Dauer. Bewusst kurz gehalten — eine lange Freigabe wäre faktisch
@@ -26,6 +27,7 @@ const DAUERN = [1, 2, 8, 24];
 
 export function SupportDiagnose({ sessions }: { sessions: DebugSession[] }) {
   const t = useTranslations("konto");
+  const f = useFormatierung();
   const [laeuft, setLaeuft] = useState(false);
   const [dauer, setDauer] = useState(2);
   const [notiz, setNotiz] = useState("");
@@ -104,7 +106,7 @@ export function SupportDiagnose({ sessions }: { sessions: DebugSession[] }) {
               <p className="font-semibold">{t("sdLaeuft")}</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 {t("sdEndetAm", {
-                  datum: new Date(aktiv.expires_at).toLocaleString("de-DE"),
+                  datum: f.datumZeit(aktiv.expires_at),
                 })}
               </p>
               {aktiv.note && (
@@ -189,7 +191,7 @@ export function SupportDiagnose({ sessions }: { sessions: DebugSession[] }) {
                   className="flex items-baseline justify-between gap-4 px-4 py-3 text-sm"
                 >
                   <span className="text-muted-foreground">
-                    {new Date(s.started_at).toLocaleString("de-DE")}
+                    {f.datumZeit(s.started_at)}
                   </span>
                   <span className="text-muted-foreground">
                     {s.ended_at

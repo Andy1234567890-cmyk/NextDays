@@ -5,9 +5,9 @@
 // (serverseitig bewertet) gegen Bots.
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 
-import { LAENDER } from "@nextdays/laender";
+import { laenderNachName, vatBeispielFuerLand } from "@nextdays/laender";
 
 import { type KanalEingabe, KanaeleFeld, kanaeleZuApi, LEERER_KANAL } from "@/components/kanaele-feld";
 import { bewerben } from "@/lib/auth";
@@ -19,6 +19,8 @@ const MARKETING_URL = (process.env.NEXT_PUBLIC_MARKETING_URL ?? "").replace(/\/$
 export function BewerbungsFormular({ termsVersion, sponsorVorgabe = "" }: { termsVersion: string; sponsorVorgabe?: string }) {
   const t = useTranslations("bewerben");
   const locale = useLocale();
+  // Ländernamen und Sortierung in der Sprache des Nutzers, nicht auf Deutsch.
+  const laender = useMemo(() => laenderNachName(locale), [locale]);
   const router = useRouter();
   const [laeuft, starte] = useTransition();
   const [fehler, setFehler] = useState<string | null>(null);
@@ -98,7 +100,7 @@ export function BewerbungsFormular({ termsVersion, sponsorVorgabe = "" }: { term
         </Feld>
         <Feld label={t("land")}>
           <select value={land} onChange={(e) => setLand(e.target.value)} className={INPUT + " pr-10"}>
-            {LAENDER.map((l) => (
+            {laender.map((l) => (
               <option key={l.code} value={l.code}>
                 {l.code} — {l.name}
               </option>
@@ -107,7 +109,7 @@ export function BewerbungsFormular({ termsVersion, sponsorVorgabe = "" }: { term
         </Feld>
         {rechtsform === "company" && (
           <Feld label={t("ustId")} hinweis={t("ustIdHinweis")}>
-            <input value={ustId} onChange={(e) => setUstId(e.target.value.toUpperCase())} required placeholder="DE123456789" maxLength={20} className={INPUT + " font-mono"} />
+            <input value={ustId} onChange={(e) => setUstId(e.target.value.toUpperCase())} required placeholder={vatBeispielFuerLand(land)} maxLength={20} className={INPUT + " font-mono"} />
           </Feld>
         )}
       </div>

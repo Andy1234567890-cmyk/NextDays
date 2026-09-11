@@ -36,7 +36,7 @@ import {
   PLATTFORMEN,
   plattformAusUrl,
 } from "@/lib/kanaele";
-import { BewerbungFehler, bewerbungSenden, LAENDER, landName, PARTNER_TERMS_VERSION } from "@/lib/partner-bewerbung";
+import { BewerbungFehler, bewerbungSenden, LAENDER, landName, PARTNER_TERMS_VERSION, vatBeispielFuerLand } from "@/lib/partner-bewerbung";
 
 type KanalEingabe = { platform: Plattform; url: string; handle: string; followers: string };
 const LEER: KanalEingabe = { platform: "instagram", url: "", handle: "", followers: "" };
@@ -213,7 +213,7 @@ export function PartnerBewerbungFormular({ sponsorVorgabe }: { sponsorVorgabe: s
         {rechtsform === "company" && (
           <label className="block text-sm sm:col-span-2">
             <span className="font-medium">{t("ustId")}</span>
-            <input required maxLength={20} placeholder="DE123456789" value={ustId} onChange={(e) => setUstId(e.target.value.toUpperCase())} className={FELD + " mt-1 font-mono"} />
+            <input required maxLength={20} placeholder={vatBeispielFuerLand(land)} value={ustId} onChange={(e) => setUstId(e.target.value.toUpperCase())} className={FELD + " mt-1 font-mono"} />
             <span className="mt-1 block text-xs text-muted-foreground">{t("ustIdHinweis")}</span>
           </label>
         )}

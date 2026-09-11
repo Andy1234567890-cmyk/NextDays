@@ -187,7 +187,10 @@ export function SpracheAbschnitt({ account }: { account: Account }) {
 
       <KontoZeile
         label={t("zeitzoneLabel")}
-        value={zeitzoneLabel(account.preferred_timezone) ?? t("nichtAngegeben")}
+        value={
+          zeitzoneLabel(account.preferred_timezone, sprache) ??
+          t("nichtAngegeben")
+        }
         hasValue={!!account.preferred_timezone}
         open={offen === "zeitzone"}
         dimmed={offen !== null && offen !== "zeitzone"}

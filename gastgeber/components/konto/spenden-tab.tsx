@@ -15,6 +15,7 @@ import { toast } from "sonner";
 
 import { formatCurrency } from "@nextdays/currency";
 
+import { useFormatierung } from "@/lib/formatierung";
 import { setzeSpendenAnteil } from "@/lib/spenden-actions";
 import type { SpendenUebersicht } from "@/lib/spenden";
 
@@ -265,6 +266,7 @@ function SpendenVerlauf({
   waehrung: string | null;
 }) {
   const t = useTranslations("konto");
+  const f = useFormatierung();
   const { summary, recent } = uebersicht;
   if (!summary.length) return null;
 
@@ -299,7 +301,7 @@ function SpendenVerlauf({
             <li key={z.id} className="flex items-center justify-between gap-4 py-3">
               <div className="min-w-0">
                 <p className="text-[0.9375rem]">
-                  {new Date(z.created_at).toLocaleDateString("de-DE", {
+                  {f.datum(z.created_at, {
                     day: "2-digit",
                     month: "long",
                     year: "numeric",
