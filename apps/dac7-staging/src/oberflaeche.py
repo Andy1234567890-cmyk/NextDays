@@ -72,7 +72,12 @@ _STIL = """<!doctype html>
   th, td { text-align:left; padding:.45rem .6rem; vertical-align:top;
            border-bottom:1px solid #e6e9ed; }
   @media (prefers-color-scheme: dark) { th,td { border-color:#2e343c; } }
-  th { font-weight:600; opacity:.72; }
+  /* Blass ueber die Schriftfarbe, nie ueber `opacity`: `opacity` macht die
+     ganze Zelle durchsichtig, Hintergrund eingeschlossen. Bei den klebenden
+     Kopfzellen des CSV-Rasters schoben sich die Werte dann sichtbar
+     untereinander durch. */
+  th { font-weight:600; color:#5c656f; }
+  @media (prefers-color-scheme: dark) { th { color:#9aa3ad; } }
   code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.86em; }
   .ok { color:#1a7f45; font-weight:600; }
   .fehler { color:#b3261e; font-weight:600; }
