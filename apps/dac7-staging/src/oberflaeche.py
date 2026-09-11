@@ -28,7 +28,7 @@ import html
 
 from .core import vorlage
 
-_KOPF = """<!doctype html>
+_STIL = """<!doctype html>
 <html lang="da">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -41,6 +41,11 @@ _KOPF = """<!doctype html>
          background:#f6f7f9; color:#1a1d21; }
   @media (prefers-color-scheme: dark) { body { background:#14161a; color:#e6e8ea; } }
   .rahmen { max-width:52rem; margin:0 auto; }
+  /* Die Meldungsseite traegt eine Tabelle mit bis zu 89 Spalten. In
+     52rem gequetscht sieht man fuenf davon und rollt durch einen
+     Briefschlitz — unbrauchbar fuer eine Pruefung. Sie bekommt deshalb
+     die ganze Fensterbreite. */
+  .rahmen.weit { max-width:none; }
   .karte { background:#fff; border:1px solid #dfe3e8; border-radius:.75rem;
            padding:1.5rem; margin-bottom:1.25rem; }
   @media (prefers-color-scheme: dark) {
@@ -77,7 +82,16 @@ _KOPF = """<!doctype html>
   .zahlen b { display:block; font-size:1.25rem; opacity:1; }
   /* Die Satztabelle traegt so viele Spalten wie die CSV belegt — sie
      rollt waagerecht, statt die Seite zu sprengen. */
-  .breit { overflow-x:auto; margin:0 -.25rem; }
+  .breit { overflow-x:auto; overflow-y:auto; max-height:75vh; margin:0 -.25rem;
+           /* Ein sichtbarer Rollbalken, nicht der ausgeblendete von macOS:
+              Sonst sieht niemand, dass rechts noch 50 Spalten stehen. */
+           scrollbar-width:auto; }
+  .breit::-webkit-scrollbar { height:.85rem; width:.85rem; }
+  .breit::-webkit-scrollbar-thumb { background:#9aa3ad; border-radius:.45rem; }
+  .breit::-webkit-scrollbar-track { background:#e7eaee; border-radius:.45rem; }
+  @media (prefers-color-scheme: dark) {
+    .breit::-webkit-scrollbar-thumb { background:#4a525c; }
+    .breit::-webkit-scrollbar-track { background:#20252b; } }
   table.csv { font-size:.8rem; white-space:nowrap; width:auto; min-width:100%; }
   table.csv th { font-weight:600; opacity:.8; position:sticky; top:0;
                  background:#fff; }
@@ -102,9 +116,28 @@ _KOPF = """<!doctype html>
             background:#f0f2f5; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
             font-size:.78rem; line-height:1.5; white-space:pre; }
   @media (prefers-color-scheme: dark) { pre.roh { background:#12151a; } }
+  /* Meldungsseite: schmaler Kopf, darunter die Daten ueber die ganze
+     Breite. Keine Karte — sie wuerde die Tabelle nur einschnueren. */
+  .seitenkopf { margin-bottom:1.5rem; }
+  .zurueck { font-size:.85rem; opacity:.7; color:inherit; }
+  .seitenkopf h1 { margin:.5rem 0 .4rem; font-size:1.35rem;
+                   font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+  .kopfzahlen { display:flex; gap:1.2rem; flex-wrap:wrap; align-items:baseline;
+                font-size:.85rem; opacity:.8; }
+  .kopfzahlen .pruefsumme { opacity:.55; font-size:.78rem; }
+  .blockkopf { font-weight:600; font-size:1.05rem; margin:2rem 0 .75rem; }
+  .blockkopf span { font-weight:400; opacity:.6; font-size:.85rem;
+                    margin-left:.5rem; }
+  .blockkopf a { color:inherit; }
   .fuss { font-size:.82rem; opacity:.65; margin-top:2rem; }
   .fuss a { color:inherit; }
 </style>
+"""
+
+# Der Rumpf beginnt hier: Die Startseite fuehrt Titel und Hinweiskasten,
+# die Meldungsseite nicht — dort steht die Tabelle im Mittelpunkt, und
+# sie traegt ihren eigenen Kopf.
+_KOPF = _STIL + """
 <div class="rahmen">
 <h1>DAC7 Teststufe</h1>
 <p class="unterzeile">Simulierte Empfangsstelle der Steuerbehörde —
@@ -118,6 +151,11 @@ Posteingang der DAC7-Meldungen.</p>
   Nichts wird auf Platte geschrieben.
 </div>
 """
+
+# Die Meldungsseite: ganze Fensterbreite, kein Titel, kein Hinweiskasten.
+# In einem 52rem-Rahmen sieht man von 89 Spalten fuenf.
+_KOPF_WEIT = _STIL + '\n<div class="rahmen weit">\n'
+
 
 _FUSS = """
 <p class="fuss">
@@ -198,6 +236,30 @@ def startseite(eintraege: list | None = None) -> str:
     return _KOPF + _posteingang(eintraege or []) + _FUSS
 
 
+def _eine_zeile(b) -> str:  # noqa: ANN001 — Befund aus zwei Modulen
+    """Ein Befund als Tabellenzeile. Alles escaped: Der beanstandete WERT
+    stammt aus einer fremden Datei und ist angreiferkontrolliert."""
+    return (
+        f"<tr><td><code>{b.zeile}</code></td>"
+        f"<td><code>{html.escape(b.spalte or '—')}</code></td>"
+        f"<td>{html.escape(b.regel)}</td>"
+        f"<td>{html.escape(b.grund)}</td>"
+        f"<td><code>{html.escape(b.wert[:40]) if b.wert else ''}</code></td></tr>"
+    )
+
+
+def _befundtabelle(titel: str, befunde: list, klasse: str) -> str:
+    if not befunde:
+        return ""
+    zeilen = "".join(_eine_zeile(b) for b in befunde)
+    return (
+        f'<div class="blockkopf {klasse}">{html.escape(titel)}'
+        f" ({len(befunde)})</div>"
+        f"<table class=\"befunde\"><tr><th>Zeile</th><th>Spalte</th>"
+        f"<th>Regel</th><th>Grund</th><th>Wert</th></tr>{zeilen}</table>"
+    )
+
+
 def _satztabelle(saetze: list[dict]) -> str:
     """Alle Saetze in EINER Tabelle — genau so wie die CSV.
 
@@ -244,18 +306,15 @@ def _satztabelle(saetze: list[dict]) -> str:
         else ""
     )
     return f"""
-<div class="karte">
-  <h2>Übermittelte Daten
-    <span style="opacity:.55;font-weight:400">{len(saetze)} Zeilen,
-    {len(spalten)} belegte Spalten</span></h2>
-  <div class="breit">
-    <table class="csv">
-      <tr><th>#</th>{kopf}</tr>
-      {zeilen}
-    </table>
-  </div>
-  {nachsatz}
+<div class="blockkopf">Übermittelte Daten
+  <span>{len(saetze)} Zeilen · {len(spalten)} von 89 Spalten belegt</span></div>
+<div class="breit">
+  <table class="csv">
+    <tr><th>#</th>{kopf}</tr>
+    {zeilen}
+  </table>
 </div>
+{nachsatz}
 """
 
 
@@ -267,8 +326,8 @@ def _zellklasse(spalte: str) -> str:
 def _rohansicht(eintrag) -> str:  # noqa: ANN001 — Eintrag, Import waere zirkulaer
     """Die eingereichte Datei im Original, Zeile fuer Zeile.
 
-    Die Feldansicht darueber ist aufbereitet; hier steht, was wirklich
-    ankam — jedes Semikolon, jedes leere Feld. Wer eine Abweichung sucht,
+    Die Tabelle darueber ist ausgerichtet; hier steht, was wirklich ankam
+    — jedes Semikolon, jedes leere Feld. Wer eine Abweichung sucht,
     braucht genau das und keine Darstellung davon.
     """
     if not eintrag.rohtext:
@@ -280,47 +339,47 @@ def _rohansicht(eintrag) -> str:  # noqa: ANN001 — Eintrag, Import waere zirku
         if z.strip()
     )
     art = "XML" if eintrag.format == "xml" else "CSV"
+    nummer = html.escape(eintrag.quittungsnummer)
     return f"""
-<div class="karte">
-  <h2>Datei im Original ({art})</h2>
-  <p style="margin:-.35rem 0 .9rem;font-size:.88rem;opacity:.75">
-    Was wirklich ankam — unveraendert.
-    <a href="/meldung/{html.escape(eintrag.quittungsnummer)}/datei">herunterladen</a>
-  </p>
-  <pre class="roh">{nummeriert}</pre>
-</div>
+<div class="blockkopf">Datei im Original ({art})
+  <span>unverändert, wie sie ankam ·
+    <a href="/meldung/{nummer}/datei">herunterladen</a></span></div>
+<pre class="roh">{nummeriert}</pre>
 """
 
 
 def meldungsseite(eintrag) -> str:  # noqa: ANN001 — Eintrag, Import waere zirkulaer
-    """Eine einzelne Meldung: was uebermittelt wurde, Satz fuer Satz."""
+    """Eine einzelne Meldung: die Datei als Raster, darunter im Original.
+
+    Ohne Karten und ohne Breitenbegrenzung: Die Tabelle hat bis zu 89
+    Spalten, und in einer 52rem breiten Karte sieht man fuenf davon. Wer
+    eine Meldung prueft, braucht sie so breit wie das Fenster.
+    """
     stand = (
         '<span class="ok">angenommen</span>'
         if eintrag.angenommen
         else '<span class="fehler">abgewiesen</span>'
     )
     kopf = f"""
-<p class="fuss" style="margin:0 0 1rem"><a href="/">← Posteingang</a></p>
-<div class="karte">
-  <h2>Meldung {html.escape(eintrag.quittungsnummer)}</h2>
-  <div class="zahlen">
-    <div><b>{stand}</b>Ergebnis</div>
-    <div><b>{eintrag.zeilen}</b>Sätze</div>
-    <div><b>{len(eintrag.fehler)}</b>Fehler</div>
+<div class="seitenkopf">
+  <a href="/" class="zurueck">← Posteingang</a>
+  <h1>{html.escape(eintrag.quittungsnummer)}</h1>
+  <div class="kopfzahlen">
+    {stand}
+    <span>{eintrag.zeilen} Sätze</span>
+    <span>{len(eintrag.fehler)} Fehler</span>
+    <span>{eintrag.empfangen_am:%d-%m-%Y %H:%M} UTC</span>
+    <span>{html.escape(eintrag.dateiname)}</span>
+    <span class="pruefsumme"><code>{html.escape(eintrag.pruefsumme)}</code></span>
   </div>
-  <table>
-    <tr><th>Empfangen</th><td>{eintrag.empfangen_am:%d-%m-%Y %H:%M} UTC</td></tr>
-    <tr><th>Datei</th><td>{html.escape(eintrag.dateiname)}</td></tr>
-    <tr><th>Prüfsumme</th><td><code>{html.escape(eintrag.pruefsumme)}</code></td></tr>
-  </table>
 </div>
 """
-    saetze = _satztabelle(eintrag.saetze) or (
-        '<div class="karte"><p style="margin:0;opacity:.75">Keine lesbaren '
-        "Sätze — die Datei war nicht auswertbar.</p></div>"
+    tabelle = _satztabelle(eintrag.saetze) or (
+        '<p style="opacity:.75">Keine lesbaren Sätze — die Datei war nicht '
+        "auswertbar.</p>"
     )
     return (
-        _KOPF
+        _KOPF_WEIT
         + kopf
         + _befundtabelle(
             "Fehler — so nimmt die Behörde die Datei nicht an",
@@ -330,30 +389,7 @@ def meldungsseite(eintrag) -> str:  # noqa: ANN001 — Eintrag, Import waere zir
         + _befundtabelle(
             "Hinweise — verhindern die Annahme nicht", eintrag.hinweise, "ok"
         )
-        + saetze
+        + tabelle
         + _rohansicht(eintrag)
         + _FUSS
-    )
-
-
-def _eine_zeile(b) -> str:  # noqa: ANN001 — Befund aus zwei Modulen
-    """Ein Befund als Tabellenzeile. Alles escaped: Der beanstandete WERT
-    stammt aus einer fremden Datei und ist angreiferkontrolliert."""
-    return (
-        f"<tr><td><code>{b.zeile}</code></td>"
-        f"<td><code>{html.escape(b.spalte or '—')}</code></td>"
-        f"<td>{html.escape(b.regel)}</td>"
-        f"<td>{html.escape(b.grund)}</td>"
-        f"<td><code>{html.escape(b.wert[:40]) if b.wert else ''}</code></td></tr>"
-    )
-
-
-def _befundtabelle(titel: str, befunde: list, klasse: str) -> str:
-    if not befunde:
-        return ""
-    zeilen = "".join(_eine_zeile(b) for b in befunde)
-    return (
-        f'<div class="karte"><h2 class="{klasse}">{html.escape(titel)}'
-        f" ({len(befunde)})</h2><table><tr><th>Zeile</th><th>Spalte</th>"
-        f"<th>Regel</th><th>Grund</th><th>Wert</th></tr>{zeilen}</table></div>"
     )

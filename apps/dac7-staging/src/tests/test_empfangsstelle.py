@@ -497,6 +497,22 @@ class TestMeldungsansicht:
         for ort in ("Aarhus", "Odense", "Aalborg"):
             assert ort in seite
 
+    def test_volle_breite_ohne_karten(self, client: TestClient) -> None:
+        """Die Tabelle hat bis zu 89 Spalten.
+
+        In einer 52rem breiten Karte sieht man fuenf davon und rollt durch
+        einen Briefschlitz — fuer eine Pruefung unbrauchbar.
+        """
+        nummer = _senden(client, _gueltig()).json()["quittungsnummer"]
+        seite = client.get(f"/meldung/{nummer}").text
+        assert 'class="rahmen weit"' in seite
+        assert 'class="karte"' not in seite
+
+    def test_startseite_bleibt_schmal(self, client: TestClient) -> None:
+        """Nur die Meldungsseite ist weit — der Posteingang liest sich schmal."""
+        seite = client.get("/").text
+        assert "rahmen weit" not in seite
+
     def test_nur_eine_tabelle(self, client: TestClient) -> None:
         """Die Datei ist EIN Raster, keine Sammlung von Bloecken.
 
