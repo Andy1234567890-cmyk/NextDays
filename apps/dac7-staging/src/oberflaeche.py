@@ -171,10 +171,13 @@ _STIL = """<!doctype html>
      gestreiften — sonst scheint beim Rollen durch. Hoehere Genauigkeit
      als die Zebra-Regel, damit es nicht an der Reihenfolge haengt. */
   table.csv tr:nth-child(n) td:first-child,
-  table.csv tr:nth-child(n) td:nth-child(2) { background:#fff; }
+  table.csv tr:nth-child(n) td:nth-child(2),
+  table.csv th:first-child, table.csv th:nth-child(2) { background:#fff; }
   @media (prefers-color-scheme: dark) {
     table.csv tr:nth-child(n) td:first-child,
-    table.csv tr:nth-child(n) td:nth-child(2) { background:#1d2126; } }
+    table.csv tr:nth-child(n) td:nth-child(2),
+    table.csv th:first-child,
+    table.csv th:nth-child(2) { background:#1d2126; } }
   pre.roh { overflow-x:auto; margin:0; padding:.9rem; border-radius:.5rem;
             background:#f0f2f5; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
             font-size:.78rem; line-height:1.5; white-space:pre; }
