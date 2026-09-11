@@ -490,10 +490,29 @@ class TestMeldungsansicht:
         )
         nummer = _senden(client, drei).json()["quittungsnummer"]
         seite = client.get(f"/meldung/{nummer}").text
-        assert "ACT_Immovable_Property" in seite
-        assert "3 Zeilen" in seite
+        # EINE Tabelle ueber die ganze Datei: 3 Objekte + Message +
+        # Betreiber + Verkaeufer = 6 Zeilen.
+        assert "6 Zeilen" in seite
+        assert seite.count("ACT_Immovable_Property") >= 3
         for ort in ("Aarhus", "Odense", "Aalborg"):
             assert ort in seite
+
+    def test_nur_eine_tabelle(self, client: TestClient) -> None:
+        """Die Datei ist EIN Raster, keine Sammlung von Bloecken.
+
+        Erst standen die Saetze in Bloecken je Satztyp — das ist nicht,
+        wie die CSV aussieht. Eine Tabelle, ein Spaltenkopf, jede Zeile
+        der Datei eine Zeile der Tabelle.
+        """
+        nummer = _senden(client, _gueltig()).json()["quittungsnummer"]
+        seite = client.get(f"/meldung/{nummer}").text
+        assert seite.count('<table class="csv">') == 1
+
+    def test_row_type_steht_als_spalte(self, client: TestClient) -> None:
+        """Im Raster ist der Satztyp eine SPALTE, keine Ueberschrift."""
+        nummer = _senden(client, _gueltig()).json()["quittungsnummer"]
+        seite = client.get(f"/meldung/{nummer}").text
+        assert "<th><code>ROW_TYPE</code></th>" in seite
 
     def test_spaltenkopf_steht_einmal_je_typ(self, client: TestClient) -> None:
         """Nicht je Satz ein eigener Block — ein Kopf, darunter die Saetze."""

@@ -83,6 +83,17 @@ _KOPF = """<!doctype html>
                  background:#fff; }
   @media (prefers-color-scheme: dark) { table.csv th { background:#1d2126; } }
   table.csv td, table.csv th { padding:.35rem .55rem; }
+  /* Zeilennummer und ROW_TYPE bleiben beim waagerechten Rollen stehen —
+     sonst weiss man in Spalte 60 nicht mehr, welche Zeile man liest. */
+  table.csv td:first-child, table.csv th:first-child { position:sticky; left:0;
+      background:#fff; z-index:2; }
+  table.csv td:nth-child(2), table.csv th:nth-child(2) { position:sticky;
+      left:2.5rem; background:#fff; z-index:2; font-weight:600; }
+  @media (prefers-color-scheme: dark) {
+    table.csv td:first-child, table.csv th:first-child,
+    table.csv td:nth-child(2), table.csv th:nth-child(2) { background:#1d2126; } }
+  table.csv td.zahl { text-align:right; font-variant-numeric:tabular-nums; }
+  table.csv td:empty::after { content:"·"; opacity:.25; }
   table.csv tr:nth-child(even) td { background:#fafbfc; }
   @media (prefers-color-scheme: dark) {
     table.csv tr:nth-child(even) td { background:#191d22; } }
@@ -188,74 +199,69 @@ def startseite(eintraege: list | None = None) -> str:
 
 
 def _satztabelle(saetze: list[dict]) -> str:
-    """Die uebermittelten Saetze als Tabelle — aufgebaut wie die CSV.
+    """Alle Saetze in EINER Tabelle — genau so wie die CSV.
 
-    EINE ZEILE JE SATZ, so wie die Datei sie fuehrt: Ein Betrieb mit 100
-    Objekten hat 100 ACT_Immovable_Property-Zeilen, und die gehoeren
-    untereinander in EINE Tabelle, nicht in 100 Bloecke. Nur so laesst
-    sich eine Spalte ueber alle Objekte vergleichen — genau das tut, wer
-    eine Meldung prueft.
+    Die Datei ist ein Raster: 89 Spalten, und jede Zeile fuellt die, die
+    ihr Satztyp braucht. Genau das steht hier. Kein Block je Satztyp, denn
+    die Datei kennt keine Bloecke — sie kennt Zeilen. Wer die Meldung
+    prueft, liest sie wie die CSV im Editor, nur lesbar ausgerichtet.
 
-    Gezeigt werden die Spalten, die in DIESEM Satztyp belegt sind: Die
-    Vorlage hat 89, und ein Satz fuellt davon ein Dutzend. Alle 89 zu
-    zeigen hiesse, die belegten in leeren Spalten zu verstecken. Die
-    Reihenfolge ist die der Vorlage, nicht die des Auftretens.
+    Leere Zellen bleiben leer. Sie sind Teil des Rasters: Dass ein
+    Objektsatz keinen Namen traegt und ein Verkaeufersatz keine
+    Quartalswerte, sieht man nur, wenn die Spalte da ist.
+
+    Gezeigt werden die Spalten, die IRGENDEINE Zeile der Datei belegt, in
+    der Reihenfolge der Vorlage. Die durchweg leeren wegzulassen ist keine
+    Auswahl, sondern Platz: Von 89 Spalten fuellt eine echte Meldung rund
+    die Haelfte, und die restlichen wuerden die belegten
+    auseinanderziehen.
 
     Jeder Wert ist escaped — er stammt aus einer fremden Datei.
     """
     if not saetze:
         return ""
-    belegt = {s for satz in saetze for s in satz if s not in ("__nr", "ROW_TYPE")}
-    # Reihenfolge der Vorlage beibehalten: Wer die CSV daneben legt, findet
-    # die Spalte an derselben Stelle.
+    belegt = {s for satz in saetze for s in satz if s != "__nr"}
     spalten = [s for s in vorlage.SPALTEN if s in belegt]
-    ausgelassen = len(vorlage.SPALTEN) - len(spalten) - 1
+    leer = len(vorlage.SPALTEN) - len(spalten)
 
     kopf = "".join(f"<th><code>{html.escape(s)}</code></th>" for s in spalten)
     zeilen = "".join(
-        "<tr>"
+        '<tr>'
         + f'<td class="zeilennr">{html.escape(satz.get("__nr", "?"))}</td>'
         + "".join(
-            f"<td>{html.escape(satz.get(s, ''))}</td>" for s in spalten
+            f'<td class="{_zellklasse(s)}">{html.escape(satz.get(s, ""))}</td>'
+            for s in spalten
         )
         + "</tr>"
         for satz in saetze
     )
-    typ = saetze[0].get("ROW_TYPE", "—")
+    nachsatz = (
+        f'<p style="margin:.7rem 0 0;font-size:.82rem;opacity:.65">'
+        f"{leer} der 89 Spalten sind in der ganzen Datei leer und stehen "
+        f"deshalb nicht in der Tabelle. Die Datei im Original steht "
+        f"darunter.</p>"
+        if leer
+        else ""
+    )
     return f"""
 <div class="karte">
-  <h2>{html.escape(typ)}
-    <span style="opacity:.55;font-weight:400">{len(saetze)} Zeilen</span></h2>
+  <h2>Übermittelte Daten
+    <span style="opacity:.55;font-weight:400">{len(saetze)} Zeilen,
+    {len(spalten)} belegte Spalten</span></h2>
   <div class="breit">
     <table class="csv">
       <tr><th>#</th>{kopf}</tr>
       {zeilen}
     </table>
   </div>
-  <p style="margin:.7rem 0 0;font-size:.82rem;opacity:.65">
-    {ausgelassen} weitere Spalten der Vorlage sind in diesen Sätzen leer.
-  </p>
+  {nachsatz}
 </div>
 """
 
 
-def _saetze_nach_typ(saetze: list[dict]) -> str:
-    """Je Satztyp eine Tabelle, in der Reihenfolge des Auftretens.
-
-    Getrennt wird nach Typ, weil die Vorlage je Typ ANDERE Spalten fuellt:
-    Ein Verkaeufersatz traegt Namen und Steuernummer, ein Objektsatz
-    Quartalswerte und Matrikel. In einer gemeinsamen Tabelle stuenden
-    ueberall Luecken.
-    """
-    reihenfolge: list[str] = []
-    nach_typ: dict[str, list[dict]] = {}
-    for satz in saetze:
-        typ = satz.get("ROW_TYPE", "—")
-        if typ not in nach_typ:
-            nach_typ[typ] = []
-            reihenfolge.append(typ)
-        nach_typ[typ].append(satz)
-    return "".join(_satztabelle(nach_typ[t]) for t in reihenfolge)
+def _zellklasse(spalte: str) -> str:
+    """Zahlen rechtsbuendig, damit sich Betraege einer Spalte vergleichen lassen."""
+    return "zahl" if spalte.startswith("RS_ACT_") and not spalte.endswith("_CCY") else ""
 
 
 def _rohansicht(eintrag) -> str:  # noqa: ANN001 — Eintrag, Import waere zirkulaer
@@ -309,7 +315,7 @@ def meldungsseite(eintrag) -> str:  # noqa: ANN001 — Eintrag, Import waere zir
   </table>
 </div>
 """
-    saetze = _saetze_nach_typ(eintrag.saetze) or (
+    saetze = _satztabelle(eintrag.saetze) or (
         '<div class="karte"><p style="margin:0;opacity:.75">Keine lesbaren '
         "Sätze — die Datei war nicht auswertbar.</p></div>"
     )
@@ -324,7 +330,6 @@ def meldungsseite(eintrag) -> str:  # noqa: ANN001 — Eintrag, Import waere zir
         + _befundtabelle(
             "Hinweise — verhindern die Annahme nicht", eintrag.hinweise, "ok"
         )
-        + '<h2 style="margin:2rem 0 1rem">Übermittelte Daten</h2>'
         + saetze
         + _rohansicht(eintrag)
         + _FUSS
