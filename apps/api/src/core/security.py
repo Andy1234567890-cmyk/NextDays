@@ -184,12 +184,27 @@ def get_current_user(
         session_id=session_id if isinstance(session_id, str) else None,
         aal=aal if isinstance(aal, str) else "aal1",
     )
+    _welt_gate(ctx, app_meta)
     _mfa_gate(request, ctx)
     _aktiv_gate(ctx)
     _demo_gate(request, ctx)
     _modul_gate(request, ctx)
     _sitzung_protokollieren(request, ctx)
     return ctx
+
+
+def _welt_gate(ctx: AuthContext, app_meta: object) -> None:
+    """Gehört das Konto überhaupt ins PMS (Betrieb oder Backoffice)?
+
+    ZUERST, vor jedem Riegel mit DB-Zugriff: ein Partner-, Gast- oder
+    kennungsloses Konto hat hier nichts verloren — vorher wurde es mit
+    `tenant_id=None`/`role=None` durchgereicht und scheiterte erst an den
+    Rechte-Guards mit „Unzureichende Berechtigung." (12.09.2026). Import in
+    der Funktion, weil `features.auth` seinerseits `core.security` importiert.
+    """
+    from src.features.auth.welt_gate import pms_zugang_pruefen  # noqa: PLC0415
+
+    pms_zugang_pruefen(ctx.user_id, app_meta)
 
 
 def _sitzung_protokollieren(request: Request, ctx: AuthContext) -> None:

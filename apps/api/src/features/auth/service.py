@@ -414,6 +414,7 @@ class AuthService:
         """
         session = self._sign_in(req.email, req.password, user_agent)
         user_id = session.user.id
+        self._welt_pruefen(user_id, getattr(session.user, "app_metadata", None))
 
         # Hat der Nutzer einen NATIVEN GoTrue-Faktor (0341), ist dieser Weg
         # nicht mehr zustaendig: Die Session, die wir hier ausstellen wuerden,
@@ -577,6 +578,25 @@ class AuthService:
         if res.session is None or res.user is None:
             raise AuthError("Login fehlgeschlagen.", status_code=401)
         return res
+
+    def _welt_pruefen(self, user_id: str, app_meta: object) -> None:
+        """Kein Session-Ausstellen für Konten aus einer fremden Auth-Welt.
+
+        Partner (ADR-0020) und Marktplatz-Gäste liegen in derselben
+        `auth.users`, ihre Passwörter stimmen also auch hier. Der Login muss
+        sie abweisen und den richtigen Weg nennen — sonst landen sie mit einer
+        Session ohne Betrieb in einer Oberfläche, die ihnen nur 403 zeigt
+        (12.09.2026). Dieselbe Regel wie im Token-Riegel `welt_gate`.
+        """
+        from .welt_gate import pms_abweisung, welt_bestimmen  # noqa: PLC0415
+
+        meldung = pms_abweisung(app_meta, get_settings())
+        if meldung is None:
+            return
+        log.warning(
+            "login_falsche_welt", user_id=user_id, welt=welt_bestimmen(app_meta)
+        )
+        raise AuthError(meldung, status_code=403)
 
     @staticmethod
     def _to_session(res: AuthResponse) -> SessionResponse:
