@@ -39,6 +39,12 @@ MODUL_PRAEFIXE: dict[str, tuple[str, ...]] = {
     # 06.09.2026 gegen die Router-Praefixe, nicht aus dem Frontend abgeleitet.
     "personal": ("/personal",),
     "website_builder": ("/site-config",),
+    # DAC7 (14.09.2026, Betreiber): die Jahresmeldung ist ein Pay-Modul in
+    # Entwicklung und stand bis dahin in KEINER der beiden Praefix-Listen —
+    # jeder Admin mit `manage_billing` sah den Menuepunkt und erreichte die
+    # Routen. `/taxpayer/dac7`, weil der Router dort haengt
+    # (`features/taxpayer/dac7/router.py`), im Browser ist es `/dac7`.
+    "dac7": ("/taxpayer/dac7",),
 }
 
 

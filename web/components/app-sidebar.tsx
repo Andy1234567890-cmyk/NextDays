@@ -147,6 +147,9 @@ const MAIN: readonly NavItem[] = [
 const MODUL_PFADE: Record<string, string> = {
   "/hr": "personal",
   "/website": "website_builder",
+  // 14.09.2026: DAC7 ist ein Pay-Modul in Entwicklung; bis dahin fehlte es
+  // hier UND im Server — jeder Admin mit `manage_billing` sah es.
+  "/dac7": "dac7",
 };
 
 /** Braucht dieser Pfad ein Modul, das der Betrieb nicht hat? */
