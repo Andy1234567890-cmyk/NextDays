@@ -858,7 +858,37 @@ export type AutomationNachricht = {
    *  unsere Uhr und ausdrücklich kein Fremdereignis (Wurzel 5b). */
   updated_at: string | null;
   last_error: string | null;
+  /** Die Buchung dahinter (14.09.2026) — damit der Betrieb sieht, WEN es betrifft. */
+  thread_id: string | null;
+  gast: string | null;
+  ota_name: string | null;
+  arrival_date: string | null;
+  departure_date: string | null;
+  property_id: string | null;
+  objekt: string | null;
+  /** Platzhalter ohne Wert laut Fehlertext; `heute_leer` = davon am Objekt noch leer. */
+  fehlende_felder: string[];
+  heute_leer: string[];
 };
+
+/** Fehlgeschlagene/übersprungene Zeile erneut einplanen — Versand im nächsten
+ *  Minutentakt mit den heutigen Werten. 'sent' lehnt der Server ab (409). */
+export async function retryAutomationNachricht(
+  id: string,
+): Promise<Result<AutomationNachricht>> {
+  return call<AutomationNachricht>(`/automations/nachrichten/${id}/erneut`, {
+    method: "POST",
+  });
+}
+
+/** Alle fehlgeschlagenen Zeilen EINER Regel erneut einplanen. */
+export async function retryAllFailedAutomation(
+  automationId: string,
+): Promise<Result<{ erneut: number }>> {
+  return call<{ erneut: number }>(`/automations/${automationId}/erneut-alle`, {
+    method: "POST",
+  });
+}
 
 export async function getAutomationStand(): Promise<Result<AutomationStandListe>> {
   return call<AutomationStandListe>("/automations/stand");

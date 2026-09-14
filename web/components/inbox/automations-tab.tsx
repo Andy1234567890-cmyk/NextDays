@@ -43,6 +43,7 @@ import { Input } from "@nextdays/ui/input";
 import { MultiSelect } from "@nextdays/ui/multi-select";
 import { InfoHinweis } from "@nextdays/ui/info-hinweis";
 import { NativeSelect } from "@nextdays/ui/native-select";
+import { AutomationProtokollDialog } from "@/components/inbox/automation-protokoll-dialog";
 import { type ComposerGriff } from "@/components/inbox/composer-editor";
 import {
   AutomationStandChips,
@@ -151,6 +152,8 @@ export function AutomationsTab() {
   // Zustand je Regel (Versandprotokoll). `undefined` = noch nicht geladen —
   // die Chips bleiben dann weg, statt vier Nullen zu behaupten.
   const [stand, setStand] = useState<Record<string, AutomationStand>>({});
+  // Versandprotokoll-Dialog (Klick auf die Chips einer Regel).
+  const [protokollRegel, setProtokollRegel] = useState<Automation | null>(null);
   const [standGekappt, setStandGekappt] = useState(false);
   // Regel, für die die Löschbestätigung offensteht (nie `confirm()`: der
   // Browserdialog lässt sich weder gestalten noch übersetzen).
@@ -495,6 +498,7 @@ export function AutomationsTab() {
                   <AutomationStandChips
                     stand={stand[a.id]}
                     zeitpunktText={zeitpunktText}
+                    onOeffnen={() => setProtokollRegel(a)}
                   />
                   <AutomationStandFehler
                     stand={stand[a.id]}
@@ -895,6 +899,13 @@ export function AutomationsTab() {
           </div>
         </DialogContent>
       </Dialog>
+      <AutomationProtokollDialog
+        regel={protokollRegel}
+        offen={protokollRegel !== null}
+        onClose={() => setProtokollRegel(null)}
+        onGeaendert={() => void load()}
+        zeitpunktText={zeitpunktText}
+      />
     </div>
   );
 }

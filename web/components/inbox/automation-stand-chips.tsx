@@ -13,6 +13,7 @@
 // EIN Baustein und nicht zwei: Tab und Panel zeigen denselben Zustand
 // derselben Regel. Zwei Kopien liefen unweigerlich auseinander — genau so ist
 // aus einer Zeitplan-Zeile zweimal eine unterschiedliche geworden.
+import type React from "react";
 import { useTranslations } from "next-intl";
 
 import type { AutomationStand } from "@/lib/inbox";
@@ -30,10 +31,7 @@ export const STAND_ZUSTAENDE = [
 /** Beschriftung eines Protokoll-Zustands. Ein UNBEKANNTER Wert wird roh
  *  angezeigt, nicht auf einen bekannten geraten (Wurzel 4) — sonst sähe ein
  *  neuer Serverzustand aus wie „gesendet". */
-export function zustandName(
-  status: string,
-  t: (k: string) => string,
-): string {
+export function zustandName(status: string, t: (k: string) => string): string {
   return (STAND_ZUSTAENDE as readonly string[]).includes(status)
     ? t(`autoStandStatus_${status}`)
     : status;
@@ -55,10 +53,7 @@ function Chip({
         ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
         : "bg-muted text-muted-foreground";
   return (
-    <span
-      title={titel}
-      className={`rounded-full px-2 py-0.5 text-xs ${farbe}`}
-    >
+    <span title={titel} className={`rounded-full px-2 py-0.5 text-xs ${farbe}`}>
       {text}
     </span>
   );
@@ -77,26 +72,43 @@ function Chip({
 export function AutomationStandChips({
   stand,
   zeitpunktText,
+  onOeffnen,
 }: {
   stand?: AutomationStand;
   /** Formatierer für ISO-Zeitstempel (Ortsformat des Nutzers). */
   zeitpunktText: (iso: string) => string;
+  /** Klick auf die Chips öffnet das Versandprotokoll der Regel (14.09.2026):
+   *  dort steht, WELCHE Buchung betroffen ist, und Fehlgeschlagenes lässt sich
+   *  erneut senden. Ohne Handler sind die Chips reine Anzeige. */
+  onOeffnen?: () => void;
 }) {
   const t = useTranslations("inbox");
   if (!stand) return null;
-  if (stand.gesamt === 0) {
-    return (
-      <span className="flex flex-wrap items-center gap-1">
-        <Chip text={t("autoStandNever")} />
-      </span>
+  const huelle = (kinder: React.ReactNode) =>
+    onOeffnen ? (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onOeffnen();
+        }}
+        title={t("autoProtokollOeffnenHint")}
+        className="flex flex-wrap items-center gap-1 rounded-md text-left hover:bg-muted/60"
+      >
+        {kinder}
+      </button>
+    ) : (
+      <span className="flex flex-wrap items-center gap-1">{kinder}</span>
     );
+  if (stand.gesamt === 0) {
+    return huelle(<Chip text={t("autoStandNever")} />);
   }
   // „geplant" umfasst `sending`: eine Zeile im Versand-Claim ist noch nicht
   // draußen. Sie als eigenen Chip zu führen hieße, einen Sekundenzustand zu
   // erklären, den niemand bedienen kann.
   const geplant = stand.pending + stand.sending;
-  return (
-    <span className="flex flex-wrap items-center gap-1">
+  return huelle(
+    <>
       <Chip text={t("autoStandPlanned", { count: geplant })} />
       <Chip
         text={t("autoStandSent", { count: stand.sent })}
@@ -118,7 +130,7 @@ export function AutomationStandChips({
           })}
         />
       )}
-    </span>
+    </>,
   );
 }
 

@@ -44,6 +44,7 @@ import {
   zeitachse,
   zeitplanText,
 } from "@/lib/automation-phasen";
+import { AutomationProtokollDialog } from "@/components/inbox/automation-protokoll-dialog";
 import {
   AutomationStandChips,
   AutomationStandFehler,
@@ -121,6 +122,9 @@ export function AutomatisierenPanel({
   // (Wurzel 6) — ein Abo wäre eine stumme Attrappe. Deshalb wird nach JEDER
   // eigenen Aktion ausdrücklich neu geladen.
   const [stand, setStand] = useState<Record<string, AutomationStand>>({});
+  // Versandprotokoll-Dialog (Klick auf die Chips einer Regel, Liste oder Detail).
+  const [protokollRegel, setProtokollRegel] = useState<Automation | null>(null);
+  const zeitpunktTextRoot = useZeitpunktText();
 
   /** Lädt alles neu und gibt die frischen Regeln zurück (für die Detailansicht). */
   async function load(): Promise<Automation[]> {
@@ -224,6 +228,7 @@ export function AutomatisierenPanel({
             objekte={objekte}
             stand={stand}
             onOeffnen={(r) => setAnsicht({ regel: r })}
+            onProtokoll={setProtokollRegel}
           />
         ) : (
           <DetailAnsicht
@@ -231,6 +236,7 @@ export function AutomatisierenPanel({
             objekte={objekte}
             vorlagen={vorlagen}
             stand={stand[ansicht.regel.id]}
+            onProtokoll={() => setProtokollRegel(ansicht.regel)}
             // Bearbeiten: neu laden und IN der Regel bleiben — wer gerade
             // Kanäle gesetzt hat, will das Ergebnis sehen, nicht in der Liste
             // stehen. Die frisch geladene Fassung ersetzt die angezeigte.
@@ -246,6 +252,13 @@ export function AutomatisierenPanel({
             }}
           />
         )}
+        <AutomationProtokollDialog
+          regel={protokollRegel}
+          offen={protokollRegel !== null}
+          onClose={() => setProtokollRegel(null)}
+          onGeaendert={() => void load()}
+          zeitpunktText={zeitpunktTextRoot}
+        />
       </SheetContent>
     </Sheet>
   );
@@ -313,12 +326,14 @@ function ListenAnsicht({
   items,
   geladen,
   objekte,
+  onProtokoll,
   stand,
   onOeffnen,
 }: {
   items: Automation[];
   geladen: boolean;
   objekte: PanelObjekt[];
+  onProtokoll: (a: Automation) => void;
   stand: Record<string, AutomationStand>;
   onOeffnen: (a: Automation) => void;
 }) {
@@ -364,6 +379,7 @@ function ListenAnsicht({
                       objekte={objekte}
                       stand={stand[a.id]}
                       onClick={() => onOeffnen(a)}
+                      onProtokoll={() => onProtokoll(a)}
                     />
                   </li>
                 ))}
@@ -398,11 +414,13 @@ function RegelZeile({
   objekte,
   stand,
   onClick,
+  onProtokoll,
 }: {
   regel: Automation;
   objekte: PanelObjekt[];
   stand?: AutomationStand;
   onClick: () => void;
+  onProtokoll: () => void;
 }) {
   const t = useTranslations("inbox");
   const zeitpunktText = useZeitpunktText();
@@ -443,7 +461,11 @@ function RegelZeile({
           {/* Was die Regel bisher WIRKLICH getan hat. Ohne diese Zeile sah eine
               Regel, die seit Wochen an einem fehlenden Platzhalter scheitert,
               genauso aus wie eine, die täglich zustellt. */}
-          <AutomationStandChips stand={stand} zeitpunktText={zeitpunktText} />
+          <AutomationStandChips
+            stand={stand}
+            zeitpunktText={zeitpunktText}
+            onOeffnen={onProtokoll}
+          />
           <AutomationStandFehler stand={stand} zeitpunktText={zeitpunktText} />
         </span>
         <Icon icon="ph:caret-right" className="size-4 shrink-0 text-muted-foreground" />
@@ -498,6 +520,7 @@ function DetailAnsicht({
   objekte,
   vorlagen,
   stand,
+  onProtokoll,
   onGeaendert,
   onGeloescht,
 }: {
@@ -505,6 +528,7 @@ function DetailAnsicht({
   objekte: PanelObjekt[];
   vorlagen: MessageTemplate[];
   stand?: AutomationStand;
+  onProtokoll: () => void;
   onGeaendert: () => void;
   onGeloescht: () => void;
 }) {
@@ -641,7 +665,11 @@ function DetailAnsicht({
             ganz: der Zustand stand allein in `automation_scheduled_message`
             und wurde von keiner Oberfläche gelesen. */}
         <Abschnitt titel={t("autoStandTitle")} offenAnfangs>
-          <AutomationStandChips stand={stand} zeitpunktText={zeitpunktText} />
+          <AutomationStandChips
+            stand={stand}
+            zeitpunktText={zeitpunktText}
+            onOeffnen={onProtokoll}
+          />
           <AutomationStandFehler stand={stand} zeitpunktText={zeitpunktText} />
           <VersandProtokoll regelId={regel.id} />
         </Abschnitt>
